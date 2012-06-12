@@ -3063,17 +3063,10 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 #ifdef _MSC_VER
   extern "C" int Ng_stl_Init (Tcl_Interp * interp);
   extern "C" int Ng_geom2d_Init (Tcl_Interp * interp);
-#endif
-
 #ifdef OCCGEOMETRY
-  // extern "C" int Ng_occ_Init (Tcl_Interp * interp);
+  extern "C" int Ng_occ_Init (Tcl_Interp * interp);
 #endif
-
-  // extern "C" int Ng_Geom2d_Init (Tcl_Interp * interp); 
-
-  //   int main_Eero (ClientData clientData,
-  // 	       Tcl_Interp * interp,
-  // 		 int argc, tcl_const char *argv[]);
+#endif
 
 
   int Ng_Init (Tcl_Interp * interp)
@@ -3087,6 +3080,9 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 #ifdef _MSC_VER
     Ng_stl_Init(interp);
     Ng_geom2d_Init (interp);
+#ifdef OCCGEOMETRY
+    Ng_occ_Init (interp);
+#endif
 #endif
 
 

@@ -10,9 +10,6 @@ netgen_LDADD = $(top_builddir)/libsrc/visualization/libvisual.a \
 	$(top_builddir)/libsrc/csg/libcsgvis.la \
 	$(top_builddir)/libsrc/interface/libinterface.la \
 	$(top_builddir)/libsrc/meshing/libmesh.la \
-	$(top_builddir)/libsrc/gprim/libgprim.la \
-	$(top_builddir)/libsrc/linalg/libla.la \
-	$(top_builddir)/libsrc/general/libgen.la \
 	-L$(TK_BIN_DIR)/Togl1.7 $(TOGLLIBDIR) -lTogl1.7 $(LIBGLU) $(TK_LIB_SPEC) $(TCL_LIB_SPEC) $(MPI_LIBS) $(FFMPEG_LIBS) $(JPEGLIB_LIBS) $(PKG_LIBS)
 #
 #	$(top_builddir)/libsrc/occ/liboccvis.la 
@@ -21,6 +18,9 @@ netgen_LDADD = $(top_builddir)/libsrc/visualization/libvisual.a \
 #	$(top_builddir)/libsrc/stlgeom/libstl.la 
 #	$(top_builddir)/libsrc/geom2d/libgeom2d.la 
 #	$(top_builddir)/libsrc/geom2d/libgeom2dvis.la 
+#	$(top_builddir)/libsrc/gprim/libgprim.la \
+#	$(top_builddir)/libsrc/linalg/libla.la \
+#	$(top_builddir)/libsrc/general/libgen.la 
 
 
 # add for static linkage of ngsolve:
