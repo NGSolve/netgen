@@ -226,7 +226,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)..&quot;;&quot;$(SolutionDir)..\ng&quot;;&quot;$(SolutionDir)..\libsrc\include&quot;;&quot;$(SolutionDir)..\libsrc\interface&quot;;&quot;$(SolutionDir)..\..\ext_libs\tcl\include&quot;;&quot;$(SolutionDir)..\..\ext_libs\pthread-w32\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)..&quot;;&quot;$(SolutionDir)..\ng&quot;;&quot;$(SolutionDir)..\libsrc\include&quot;;&quot;$(SolutionDir)..\libsrc\interface&quot;;&quot;$(SolutionDir)..\..\ext_libs\tcl\include&quot;;&quot;$(SolutionDir)..\..\ext_libs\pthreads-Win32\include&quot;;&quot;$(SolutionDir)..\..\ext_libs\zlib\include&quot;;$(NOINHERIT)"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;MSVC_EXPRESS;OPENGL;_WIN32_WINNT=0x0502;NGINTERFACE_EXPORTS"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -248,11 +248,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkLibraryDependencies="false"
-				AdditionalDependencies="pthreadVC2.lib tcl85.lib tk85.lib tix84.lib Togl17.lib glu32.lib opengl32.lib"
+				AdditionalDependencies="pthreadVC2.lib tcl85.lib tk85.lib tix84.lib zdll.lib Togl17.lib glu32.lib opengl32.lib"
 				ShowProgress="0"
 				Version=""
 				LinkIncremental="0"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\..\ext_libs\tcl\lib&quot;;&quot;$(SolutionDir)..\..\ext_libs\pthread-w32\lib&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\..\ext_libs\tcl\lib\x86&quot;;&quot;$(SolutionDir)..\..\ext_libs\pthreads-Win32\lib\x86&quot;;&quot;$(SolutionDir)..\..\ext_libs\zlib\x86\lib&quot;"
 				GenerateManifest="true"
 				EnableUAC="true"
 				GenerateDebugInformation="false"
@@ -320,7 +320,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)..&quot;;&quot;$(SolutionDir)..\ng&quot;;&quot;$(SolutionDir)..\libsrc\include&quot;;&quot;$(SolutionDir)..\libsrc\interface&quot;;&quot;$(SolutionDir)..\..\ext_libs\tcl-64\include&quot;;&quot;$(SolutionDir)..\..\ext_libs\pthread-w64\include&quot;;$(NOINHERIT)"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)..&quot;;&quot;$(SolutionDir)..\ng&quot;;&quot;$(SolutionDir)..\libsrc\include&quot;;&quot;$(SolutionDir)..\libsrc\interface&quot;;&quot;$(SolutionDir)..\..\ext_libs\tcl\include&quot;;&quot;$(SolutionDir)..\..\ext_libs\pthreads-Win32\include&quot;;&quot;$(SolutionDir)..\..\ext_libs\zlib\include&quot;;$(NOINHERIT)"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;MSVC_EXPRESS;OPENGL;_WIN32_WINNT=0x0502;NGINTERFACE_EXPORTS"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -342,12 +342,12 @@
 			<Tool
 				Name="VCLinkerTool"
 				LinkLibraryDependencies="false"
-				AdditionalDependencies="pthreadVC2_64.lib tcl85.lib tk85.lib tix84.lib Togl17.lib glu32.lib opengl32.lib"
+				AdditionalDependencies="pthreadVC2.lib zlib1.lib tcl85.lib tk85.lib Togl17.lib glu32.lib opengl32.lib"
 				ShowProgress="0"
 				OutputFile="$(OutDir)\$(ProjectName).exe"
 				Version=""
 				LinkIncremental="0"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\..\ext_libs\tcl-64\lib&quot;;&quot;$(SolutionDir)..\..\ext_libs\pthread-w64\lib&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\..\ext_libs\tcl\lib\x64&quot;;&quot;$(SolutionDir)..\..\ext_libs\pthreads-Win32\lib\x64&quot;;&quot;$(SolutionDir)..\..\ext_libs\zlib\x64\lib&quot;"
 				GenerateManifest="true"
 				EnableUAC="true"
 				GenerateDebugInformation="false"
@@ -1531,6 +1531,10 @@
 			</File>
 			<File
 				RelativePath="..\libsrc\meshing\global.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\libsrc\general\gzstream.cpp"
 				>
 			</File>
 			<File
