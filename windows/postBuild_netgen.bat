@@ -97,9 +97,9 @@ if /i "%BUILD_ARCH%" == "x64" (
    xcopy "%PROJ_DIR%..\..\ext_libs\pthreads-Win32\dll\x64\pthreadVC2.dll" "%INSTALL_FOLDER%\bin" /i /d /y   
    xcopy "%PROJ_DIR%..\..\ext_libs\zlib\x64\lib\zlib1.dll" "%INSTALL_FOLDER%\bin" /i /d /y   
    xcopy "%PROJ_DIR%..\..\ext_libs\tcl\bin\x64\*.dll" "%INSTALL_FOLDER%\bin" /i /d /y
-   xcopy "%PROJ_DIR%..\..\ext_libs\tcl\lib\x64\tcl8.5" "%INSTALL_FOLDER%\lib\tcl8.5" /i /d /y /e
-   xcopy "%PROJ_DIR%..\..\ext_libs\tcl\lib\x64\tix8.4.3" "%INSTALL_FOLDER%\lib\tix8.4.3" /i /d /y /e
-   xcopy "%PROJ_DIR%..\..\ext_libs\tcl\lib\x64\tk8.5" "%INSTALL_FOLDER%\lib\tk8.5" /i /d /y /e
+   xcopy "%PROJ_DIR%..\..\ext_libs\tcl\lib\x64\tcl8.5" "%INSTALL_FOLDER%\lib\tcl8.5" /i /d /y /e /q
+   xcopy "%PROJ_DIR%..\..\ext_libs\tcl\lib\x64\tix8.4.3" "%INSTALL_FOLDER%\lib\tix8.4.3" /i /d /y /e /q
+   xcopy "%PROJ_DIR%..\..\ext_libs\tcl\lib\x64\tk8.5" "%INSTALL_FOLDER%\lib\tk8.5" /i /d /y /e /q
    REM if errorlevel 1 goto externalInstallFailed
 )   
 
@@ -107,9 +107,9 @@ if /i "%BUILD_ARCH%" == "win32" (
    xcopy "%PROJ_DIR%..\..\ext_libs\pthreads-Win32\dll\x86\pthreadVC2.dll" "%INSTALL_FOLDER%\bin" /i /d /y   
    xcopy "%PROJ_DIR%..\..\ext_libs\zlib\x86\lib\zlib1.dll" "%INSTALL_FOLDER%\bin" /i /d /y   
    xcopy "%PROJ_DIR%..\..\ext_libs\tcl\bin\x86\*.dll" "%INSTALL_FOLDER%\bin" /i /d /y
-   xcopy "%PROJ_DIR%..\..\ext_libs\tcl\lib\x86\tcl8.5" "%INSTALL_FOLDER%\lib\tcl8.5" /i /d /y /e
-   xcopy "%PROJ_DIR%..\..\ext_libs\tcl\lib\x86\tix8.4.3" "%INSTALL_FOLDER%\lib\tix8.4.3" /i /d /y /e
-   xcopy "%PROJ_DIR%..\..\..\ext_libs\tcl\lib\x86\tk8.5" "%INSTALL_FOLDER%\lib\tk8.5" /i /d /y /e
+   xcopy "%PROJ_DIR%..\..\ext_libs\tcl\lib\x86\tcl8.5" "%INSTALL_FOLDER%\lib\tcl8.5" /i /d /y /e /q
+   xcopy "%PROJ_DIR%..\..\ext_libs\tcl\lib\x86\tix8.4.3" "%INSTALL_FOLDER%\lib\tix8.4.3" /i /d /y /e /q
+   xcopy "%PROJ_DIR%..\..\ext_libs\tcl\lib\x86\tk8.5" "%INSTALL_FOLDER%\lib\tk8.5" /i /d /y /e /q
    REM if errorlevel 1 goto externalInstallFailed
 )
 

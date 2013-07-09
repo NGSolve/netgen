@@ -83,14 +83,14 @@ xcopy "%NETGEN_NGSINC%\visualization\soldata.hpp" "%INSTALL_FOLDER%\include\" /i
 
 echo Installing external dependencies
 if /i "%BUILD_ARCH%" == "x64" (   
-   xcopy "%PROJ_DIR%..\..\..\ext_libs\pthreads-Win32\dll\x64\pthreadVC2.dll" "%INSTALL_FOLDER%\bin" /i /d /y   
-   xcopy "%PROJ_DIR%..\..\..\ext_libs\zlib\x64\lib\zlib1.dll" "%INSTALL_FOLDER%\bin" /i /d /y   
+   xcopy "%PROJ_DIR%..\..\ext_libs\pthreads-Win32\dll\x64\pthreadVC2.dll" "%INSTALL_FOLDER%\bin" /i /d /y   
+   xcopy "%PROJ_DIR%..\..\ext_libs\zlib\x64\lib\zlib1.dll" "%INSTALL_FOLDER%\bin" /i /d /y   
    REM if errorlevel 1 goto externalInstallFailed
 )   
 
 if /i "%BUILD_ARCH%" == "win32" (   
-   xcopy "%PROJ_DIR%..\..\..\ext_libs\pthreads-Win32\dll\x86\pthreadVC2.dll" "%INSTALL_FOLDER%\bin" /i /d /y   
-   xcopy "%PROJ_DIR%..\..\..\ext_libs\zlib\x86\lib\zlib1.dll" "%INSTALL_FOLDER%\bin" /i /d /y   
+   xcopy "%PROJ_DIR%..\..\ext_libs\pthreads-Win32\dll\x86\pthreadVC2.dll" "%INSTALL_FOLDER%\bin" /i /d /y   
+   xcopy "%PROJ_DIR%..\..\ext_libs\zlib\x86\lib\zlib1.dll" "%INSTALL_FOLDER%\bin" /i /d /y   
    REM if errorlevel 1 goto externalInstallFailed
 )
 
