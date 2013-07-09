@@ -34,6 +34,8 @@ if defined NETGENDIR (
    
 set NGLIB_LIBINC=%PROJ_DIR%..\nglib
 
+set NETGEN_NGSINC=%PROJ_DIR%..\libsrc
+
 
 echo POSTBUILD Script for %PROJ_NAME% ........
 
@@ -71,6 +73,28 @@ xcopy "%NGLIB_LIBINC%\%PROJ_NAME%.h" "%INSTALL_FOLDER%\include\" /i /d /y
 if errorlevel 1 goto LibInstallFailed
 echo Installing %PROJ_NAME%.h: Completed OK!!
 
+echo Installing NgSolve dependent header files into %INSTALL_FOLDER%\include ....
+xcopy "%NETGEN_NGSINC%\include\nginterface.h" "%INSTALL_FOLDER%\include\" /i /d /y
+xcopy "%NETGEN_NGSINC%\include\nginterface_v2.hpp" "%INSTALL_FOLDER%\include\" /i /d /y
+xcopy "%NETGEN_NGSINC%\general\dynamicmem.hpp" "%INSTALL_FOLDER%\include\" /i /d /y
+xcopy "%NETGEN_NGSINC%\general\ngexception.hpp" "%INSTALL_FOLDER%\include\" /i /d /y
+xcopy "%NETGEN_NGSINC%\visualization\soldata.hpp" "%INSTALL_FOLDER%\include\" /i /d /y
+
+
+echo Installing external dependencies
+if /i "%BUILD_ARCH%" == "x64" (   
+   xcopy "%PROJ_DIR%..\..\..\ext_libs\pthreads-Win32\dll\x64\pthreadVC2.dll" "%INSTALL_FOLDER%\bin" /i /d /y   
+   xcopy "%PROJ_DIR%..\..\..\ext_libs\zlib\x64\lib\zlib1.dll" "%INSTALL_FOLDER%\bin" /i /d /y   
+   REM if errorlevel 1 goto externalInstallFailed
+)   
+
+if /i "%BUILD_ARCH%" == "win32" (   
+   xcopy "%PROJ_DIR%..\..\..\ext_libs\pthreads-Win32\dll\x86\pthreadVC2.dll" "%INSTALL_FOLDER%\bin" /i /d /y   
+   xcopy "%PROJ_DIR%..\..\..\ext_libs\zlib\x86\lib\zlib1.dll" "%INSTALL_FOLDER%\bin" /i /d /y   
+   REM if errorlevel 1 goto externalInstallFailed
+)
+
+
 
 REM *** Clean up the build directory by deleting the OBJ files ***
 REM echo Deleting the %PROJ_NAME% build folder %PROJ_DIR%%PROJ_NAME% ....
@@ -91,6 +115,9 @@ echo POSTBUILD Script for %PROJ_NAME% FAILED..... Error copying the %PROJ_NAME% 
 exit 1
 :LibInstallFailed
 echo POSTBUILD Script for %PROJ_NAME% FAILED..... Error copying %PROJ_NAME%.lib or %PROJ_NAME%.h into install folder!!!
+exit 1
+:externalInstallFailed
+echo POSTBUILD Script for %PROJ_NAME% FAILED..... Error copying external dependencies to install folder!!!
 exit 1
 
 :BuildEventOK
