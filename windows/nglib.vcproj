@@ -209,7 +209,7 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\..\ext_libs\pthread-w32\include&quot;;&quot;$(SolutionDir)..\libsrc\include&quot;;&quot;$(SolutionDir)..\nglib&quot;;&quot;$(SolutionDir)..\&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)..&quot;;&quot;$(SolutionDir)..\ng&quot;;&quot;$(SolutionDir)..\libsrc\include&quot;;&quot;$(SolutionDir)..\libsrc\interface&quot;;&quot;$(SolutionDir)..\..\..\ext_libs\tcl\include&quot;;&quot;$(SolutionDir)..\..\..\ext_libs\pthreads-Win32\include&quot;;&quot;$(SolutionDir)..\..\..\ext_libs\zlib\include&quot;;$(NOINHERIT)"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;NGLIB_EXPORTS;MSVC_EXPRESS;_WIN32_WINNT=0x0502"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -232,8 +232,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="pthreadVC2.lib"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\..\ext_libs\pthread-w32\lib&quot;"
+				AdditionalDependencies="pthreadVC2.lib zdll.lib"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\..\..\ext_libs\pthreads-Win32\lib\x86&quot;;&quot;$(SolutionDir)..\..\..\ext_libs\zlib\x86\lib&quot;"
 				ManifestFile="$(OutDir)\$(TargetFileName).intermediate.manifest"
 			/>
 			<Tool
@@ -293,7 +293,7 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\..\ext_libs\pthread-w64\include&quot;;&quot;$(SolutionDir)..\libsrc\include&quot;;&quot;$(SolutionDir)..\nglib&quot;;&quot;$(SolutionDir)..\&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)..&quot;;&quot;$(SolutionDir)..\ng&quot;;&quot;$(SolutionDir)..\libsrc\include&quot;;&quot;$(SolutionDir)..\libsrc\interface&quot;;&quot;$(SolutionDir)..\..\..\ext_libs\tcl\include&quot;;&quot;$(SolutionDir)..\..\..\ext_libs\pthreads-Win32\include&quot;;&quot;$(SolutionDir)..\..\..\ext_libs\zlib\include&quot;;$(NOINHERIT)"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;NGLIB_EXPORTS;MSVC_EXPRESS;_WIN32_WINNT=0x0502;NOTCL"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -316,8 +316,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="pthreadVC2_64.lib"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\..\ext_libs\pthread-w64\lib&quot;"
+				AdditionalDependencies="pthreadVC2.lib zlib1.lib"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\..\..\ext_libs\pthreads-Win32\lib\x64&quot;;&quot;$(SolutionDir)..\..\..\ext_libs\zlib\x64\lib&quot;"
 				ManifestFile="$(OutDir)\$(TargetFileName).intermediate.manifest"
 				TargetMachine="17"
 			/>
@@ -665,6 +665,10 @@
 			</File>
 			<File
 				RelativePath="..\libsrc\meshing\global.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\libsrc\general\gzstream.cpp"
 				>
 			</File>
 			<File
@@ -1190,11 +1194,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\libsrc\include\geometry2d.hpp"
+				RelativePath="..\libsrc\geom2d\geometry2d.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\libsrc\geom2d\geometry2d.hpp"
+				RelativePath="..\libsrc\include\geometry2d.hpp"
 				>
 			</File>
 			<File
@@ -1234,11 +1238,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\libsrc\gprim\gprim.hpp"
+				RelativePath="..\libsrc\include\gprim.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\libsrc\include\gprim.hpp"
+				RelativePath="..\libsrc\gprim\gprim.hpp"
 				>
 			</File>
 			<File
@@ -1290,11 +1294,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\libsrc\linalg\linalg.hpp"
+				RelativePath="..\libsrc\include\linalg.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\libsrc\include\linalg.hpp"
+				RelativePath="..\libsrc\linalg\linalg.hpp"
 				>
 			</File>
 			<File
@@ -1314,11 +1318,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\libsrc\include\meshing.hpp"
+				RelativePath="..\libsrc\meshing\meshing.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\libsrc\meshing\meshing.hpp"
+				RelativePath="..\libsrc\include\meshing.hpp"
 				>
 			</File>
 			<File
@@ -1354,11 +1358,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\libsrc\include\myadt.hpp"
+				RelativePath="..\libsrc\general\myadt.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\libsrc\general\myadt.hpp"
+				RelativePath="..\libsrc\include\myadt.hpp"
 				>
 			</File>
 			<File
@@ -1394,11 +1398,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\libsrc\include\opti.hpp"
+				RelativePath="..\libsrc\linalg\opti.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\libsrc\linalg\opti.hpp"
+				RelativePath="..\libsrc\include\opti.hpp"
 				>
 			</File>
 			<File
@@ -1616,5 +1620,9 @@
 		</Filter>
 	</Files>
 	<Globals>
+		<Global
+			Name="HPC_Debug"
+			Value="﻿&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;&lt;Properties xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:xsd=&quot;http://www.w3.org/2001/XMLSchema&quot;&gt;&lt;ProjectNameDisplay /&gt;&lt;CollapseAdvanced&gt;true&lt;/CollapseAdvanced&gt;&lt;ApplicationPlatform&gt;x86&lt;/ApplicationPlatform&gt;&lt;/Properties&gt;"
+		/>
 	</Globals>
 </VisualStudioProject>
