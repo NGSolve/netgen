@@ -53,12 +53,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Vienna UT"
             VALUE "FileDescription", "Netgen Meshing Software"
-            VALUE "FileVersion", "5.1-dev"
+            VALUE "FileVersion", "5.1"
             VALUE "InternalName", "Netgen"
             VALUE "LegalCopyright", "GNU Public License (GPL)"
             VALUE "OriginalFilename", "Netgen.exe"
             VALUE "ProductName", "Netgen"
-            VALUE "ProductVersion", "5.1-dev"
+            VALUE "ProductVersion", "5.1"
         END
     END
     BLOCK "VarFileInfo"
