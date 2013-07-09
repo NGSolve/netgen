@@ -209,7 +209,7 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)..&quot;;&quot;$(SolutionDir)..\ng&quot;;&quot;$(SolutionDir)..\libsrc\include&quot;;&quot;$(SolutionDir)..\libsrc\interface&quot;;&quot;$(SolutionDir)..\..\..\ext_libs\tcl\include&quot;;&quot;$(SolutionDir)..\..\..\ext_libs\pthreads-Win32\include&quot;;&quot;$(SolutionDir)..\..\..\ext_libs\zlib\include&quot;;$(NOINHERIT)"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)..&quot;;&quot;$(SolutionDir)..\ng&quot;;&quot;$(SolutionDir)..\libsrc\include&quot;;&quot;$(SolutionDir)..\libsrc\interface&quot;;&quot;$(SolutionDir)..\..\ext_libs\tcl\include&quot;;&quot;$(SolutionDir)..\..\ext_libs\pthreads-Win32\include&quot;;&quot;$(SolutionDir)..\..\ext_libs\zlib\include&quot;;$(NOINHERIT)"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;NGLIB_EXPORTS;MSVC_EXPRESS;_WIN32_WINNT=0x0502"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -233,7 +233,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="pthreadVC2.lib zdll.lib"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\..\..\ext_libs\pthreads-Win32\lib\x86&quot;;&quot;$(SolutionDir)..\..\..\ext_libs\zlib\x86\lib&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\..\ext_libs\pthreads-Win32\lib\x86&quot;;&quot;$(SolutionDir)..\..\ext_libs\zlib\x86\lib&quot;"
 				ManifestFile="$(OutDir)\$(TargetFileName).intermediate.manifest"
 			/>
 			<Tool
@@ -293,7 +293,7 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)..&quot;;&quot;$(SolutionDir)..\ng&quot;;&quot;$(SolutionDir)..\libsrc\include&quot;;&quot;$(SolutionDir)..\libsrc\interface&quot;;&quot;$(SolutionDir)..\..\..\ext_libs\tcl\include&quot;;&quot;$(SolutionDir)..\..\..\ext_libs\pthreads-Win32\include&quot;;&quot;$(SolutionDir)..\..\..\ext_libs\zlib\include&quot;;$(NOINHERIT)"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)..&quot;;&quot;$(SolutionDir)..\ng&quot;;&quot;$(SolutionDir)..\libsrc\include&quot;;&quot;$(SolutionDir)..\libsrc\interface&quot;;&quot;$(SolutionDir)..\..\ext_libs\tcl\include&quot;;&quot;$(SolutionDir)..\..\ext_libs\pthreads-Win32\include&quot;;&quot;$(SolutionDir)..\..\ext_libs\zlib\include&quot;;$(NOINHERIT)"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;NGLIB_EXPORTS;MSVC_EXPRESS;_WIN32_WINNT=0x0502;NOTCL"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -317,7 +317,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="pthreadVC2.lib zlib1.lib"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\..\..\ext_libs\pthreads-Win32\lib\x64&quot;;&quot;$(SolutionDir)..\..\..\ext_libs\zlib\x64\lib&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\..\ext_libs\pthreads-Win32\lib\x64&quot;;&quot;$(SolutionDir)..\..\ext_libs\zlib\x64\lib&quot;"
 				ManifestFile="$(OutDir)\$(TargetFileName).intermediate.manifest"
 				TargetMachine="17"
 			/>
