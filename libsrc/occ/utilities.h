@@ -109,4 +109,9 @@
 
 #endif /* ifdef _DEBUG_*/
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+
 #endif /* ifndef UTILITIES_H */
