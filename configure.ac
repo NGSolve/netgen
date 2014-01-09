@@ -6,7 +6,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_PREFIX_DEFAULT(["/opt/netgen"])
 
 
-
+AM_PROG_AR
 
 
 # AC_HEADER_STDC
