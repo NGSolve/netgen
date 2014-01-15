@@ -408,7 +408,7 @@
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
     </ProjectReference>
     <Link>
-      <AdditionalDependencies>pthreadVC2_64.lib;tcl85.lib;tk85.lib;tix84.lib;Togl17.lib;glu32.lib;opengl32.lib;TKernel.lib;TKGeomBase.lib;TKMath.lib;TKG2d.lib;TKG3d.lib;TKXSBase.lib;TKOffset.lib;TKFillet.lib;TKShHealing.lib;TKMesh.lib;TKMeshVS.lib;TKTopAlgo.lib;TKGeomAlgo.lib;TKBool.lib;TKPrim.lib;TKBO.lib;TKIGES.lib;TKBRep.lib;TKSTEPBase.lib;TKSTEP.lib;TKSTL.lib;TKSTEPAttr.lib;TKSTEP209.lib;TKXDESTEP.lib;TKXDEIGES.lib;TKXCAF.lib;TKLCAF.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>pthreadVC2.lib;tcl85.lib;tk85.lib;zlib1.lib;tix84.lib;Togl17.lib;glu32.lib;opengl32.lib;avcodec.lib;avdevice.lib;avfilter.lib;avformat.lib;avutil.lib;postproc.lib;swresample.lib;swscale.lib;TKernel.lib;TKGeomBase.lib;TKMath.lib;TKG2d.lib;TKG3d.lib;TKXSBase.lib;TKOffset.lib;TKFillet.lib;TKShHealing.lib;TKMesh.lib;TKMeshVS.lib;TKTopAlgo.lib;TKGeomAlgo.lib;TKBool.lib;TKPrim.lib;TKBO.lib;TKIGES.lib;TKBRep.lib;TKSTEPBase.lib;TKSTEP.lib;TKSTL.lib;TKSTEPAttr.lib;TKSTEP209.lib;TKXDESTEP.lib;TKXDEIGES.lib;TKXCAF.lib;TKLCAF.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <Version />
       <AdditionalLibraryDirectories>$(SolutionDir)..\..\ext_libs\tcl\lib\x64;$(SolutionDir)..\..\ext_libs\pthreads-Win32\lib\x64;$(SolutionDir)..\..\ext_libs\FFMPEG\lib\x64;$(SolutionDir)..\..\ext_libs\zlib\x64\lib;$(CASROOT)\win64\vc9\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
