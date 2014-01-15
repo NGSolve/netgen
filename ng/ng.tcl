@@ -1,8 +1,10 @@
-if {[catch {package require Tix } result ]} {
-     puts "cannot load package Tix"
-     puts "error : $result"
+set batchmode [Ng_GetCommandLineParameter batchmode]
+if {$batchmode=="undefined"} {
+	if {[catch {package require Tix } result ]} {
+		puts "cannot load package Tix"
+		puts "error : $result"
+	}
 }
-
 # if {[catch {package require Togl 2.0 } result ]} {
 #    puts "cannot load package Togl 2.0"
 #    puts "error : $result"
@@ -38,7 +40,7 @@ if { [string length $nguserdir] == 0 } {
 
 
 
-set batchmode [Ng_GetCommandLineParameter batchmode]
+# set batchmode [Ng_GetCommandLineParameter batchmode]
 
 set solvemode 0
 if { [Ng_GetCommandLineParameter solve] != "undefined" || \
@@ -192,6 +194,7 @@ set refinementfilename [Ng_GetCommandLineParameter refinementfile]
 
 if { $batchmode == "defined" && $solvemode != "defined"} {
     set options.parthread 0
+	
     if { $shellmode == "undefined" } {
 # old batchmode: only processes commandline arguments    
       set selectvisual mesh
