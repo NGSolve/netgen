@@ -49,7 +49,7 @@ namespace netgen
 #ifdef JPEGLIB
 #include <jpeglib.h>
 #endif
-
+#define FFMPEG
 #ifdef FFMPEG
 extern "C" {
   /*
@@ -2321,12 +2321,15 @@ namespace netgen
         // Init codec context etc.:
         //--------------------------
         // context = avcodec_alloc_context();
-	context = avcodec_alloc_context3(codec);
+	  context = avcodec_alloc_context3(codec);
 
         context->bit_rate = bitrate;
         context->width = nx;
-        context->height = ny;
-	context->time_base = (AVRational){ 1, 25 };
+        context->height = ny;        
+        AVRational u;
+        u.den=25;
+        u.num=1;
+	  context->time_base = u;
         context->gop_size = gopsize;
         context->max_b_frames = bframes;
         context->pix_fmt = PIX_FMT_YUV420P;
