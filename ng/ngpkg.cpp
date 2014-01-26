@@ -49,7 +49,7 @@ namespace netgen
 #ifdef JPEGLIB
 #include <jpeglib.h>
 #endif
-#define FFMPEG
+
 #ifdef FFMPEG
 extern "C" {
   /*
