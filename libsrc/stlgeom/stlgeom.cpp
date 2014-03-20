@@ -41,6 +41,7 @@ void STLMeshing (STLGeometry & geom,
     lineendpoints(), spiralpoints(), selectedmultiedge()
   */
 {
+  ref = NULL;
   edgedata = new STLEdgeDataList(*this);
   externaledges.SetSize(0);
   Clear();
@@ -57,10 +58,11 @@ void STLMeshing (STLGeometry & geom,
   smoothedges = NULL;
   area = -1;
 }
-
+  
 STLGeometry :: ~STLGeometry()
 {
   delete edgedata;
+  delete ref;
 }
 
 void STLGeometry :: Save (string filename) const
@@ -98,7 +100,11 @@ int STLGeometry :: GenerateMesh (Mesh*& mesh, MeshingParameters & mparam,
 
 const Refinement & STLGeometry :: GetRefinement () const
 {
-  return RefinementSTLGeometry (*this);
+  // return RefinementSTLGeometry (*this);
+  delete ref;
+  ref = new RefinementSTLGeometry(*this);
+  // ref -> Set2dOptimizer(new MeshOptimizeSTLSurface(*this)); ??? copied from CSG
+  return *ref;
 }
 
 
