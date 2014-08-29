@@ -1,4 +1,4 @@
-AC_INIT([netgen],[5.3-dev],[],[])
+AC_INIT([netgen],[5.3],[],[])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 AC_CONFIG_MACRO_DIR([m4])
@@ -145,16 +145,6 @@ AC_ARG_ENABLE([mkl],
         [if test "$enableval" = yes; then mklon=true; else mklon=false; fi]
         )
 
-AM_PATH_PYTHON([3.2])
-AX_PYTHON_DEVEL([>= '3.2'])
-
-pythonon=false
-AC_ARG_ENABLE([python],
-        [AS_HELP_STRING([--enable-python],[link boost python, necessary for ngsolve])],
-        [if test "$enableval" = yes; then pythonon=true; else pythonon=false; fi]
-	[CXXFLAGS+=" $PYTHON_CPPFLAGS -DNGPYTHON"]
-	[LDFLAGS+=" $PYTHON_LDFLAGS"]
-        )
 
 
 
@@ -215,7 +205,6 @@ fi
 AM_CONDITIONAL([NGLIB], [test x$nglibon = xtrue])
 AM_CONDITIONAL([NGGUI], [test x$ngguion = xtrue])
 AM_CONDITIONAL([NGMKL], [test x$mklon = xtrue])
-AM_CONDITIONAL([NGPYTHON], [test x$pythonon = xtrue])
 
 # AC_CHECK_HEADER(pthread.h)
 
