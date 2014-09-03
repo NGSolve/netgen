@@ -1,0 +1,1084 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="..\libsrc\general\archive_base.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\gzstream.h">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\edgeflw.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\explicitcurve2d.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\extrusion.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\gencyl.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\geoml.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\identify.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\manifold.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\meshsurf.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\polyhedra.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\revolution.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\singularref.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\solid.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\specpoin.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\spline3d.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\surface.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\triapprox.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\vscsg.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\algprim.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\brick.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\csg.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\csgeom.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\csgparser.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\csg\curve2d.hpp">
+      <Filter>Header Files\libsrc\csg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\array.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\autodiff.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\autoptr.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\bitarray.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\dynamicmem.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\flags.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\hashtabl.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\mpi_interface.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\myadt.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\mystring.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\netgenout.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\ngexception.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\optmem.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\parthreads.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\profiler.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\seti.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\sort.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\spbita2d.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\stack.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\symbolta.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\table.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\general\template.hpp">
+      <Filter>Header Files\libsrc\general</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\geom2d\spline2d.hpp">
+      <Filter>Header Files\libsrc\geom2d</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\geom2d\splinegeometry2.hpp">
+      <Filter>Header Files\libsrc\geom2d</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\geom2d\vsgeom2d.hpp">
+      <Filter>Header Files\libsrc\geom2d</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\geom2d\geom2dmesh.hpp">
+      <Filter>Header Files\libsrc\geom2d</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\geom2d\geometry2d.hpp">
+      <Filter>Header Files\libsrc\geom2d</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\gprim\geomtest3d.hpp">
+      <Filter>Header Files\libsrc\gprim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\gprim\gprim.hpp">
+      <Filter>Header Files\libsrc\gprim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\gprim\spline.hpp">
+      <Filter>Header Files\libsrc\gprim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\gprim\splinegeometry.hpp">
+      <Filter>Header Files\libsrc\gprim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\gprim\transform3d.hpp">
+      <Filter>Header Files\libsrc\gprim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\gprim\adtree.hpp">
+      <Filter>Header Files\libsrc\gprim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\gprim\geom2d.hpp">
+      <Filter>Header Files\libsrc\gprim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\gprim\geom3d.hpp">
+      <Filter>Header Files\libsrc\gprim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\gprim\geomfuncs.hpp">
+      <Filter>Header Files\libsrc\gprim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\gprim\geomobjects.hpp">
+      <Filter>Header Files\libsrc\gprim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\gprim\geomobjects2.hpp">
+      <Filter>Header Files\libsrc\gprim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\gprim\geomops.hpp">
+      <Filter>Header Files\libsrc\gprim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\gprim\geomops2.hpp">
+      <Filter>Header Files\libsrc\gprim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\include\incvis.hpp">
+      <Filter>Header Files\libsrc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\include\linalg.hpp">
+      <Filter>Header Files\libsrc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\include\meshing.hpp">
+      <Filter>Header Files\libsrc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\include\myadt.hpp">
+      <Filter>Header Files\libsrc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\include\mydefs.hpp">
+      <Filter>Header Files\libsrc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\include\mystdlib.h">
+      <Filter>Header Files\libsrc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\include\nginterface.h">
+      <Filter>Header Files\libsrc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\include\nginterface_v2.hpp">
+      <Filter>Header Files\libsrc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\include\nginterface_v2_impl.hpp">
+      <Filter>Header Files\libsrc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\include\occgeom.hpp">
+      <Filter>Header Files\libsrc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\include\opti.hpp">
+      <Filter>Header Files\libsrc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\include\parallel.hpp">
+      <Filter>Header Files\libsrc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\include\parallelinterface.hpp">
+      <Filter>Header Files\libsrc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\include\stlgeom.hpp">
+      <Filter>Header Files\libsrc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\include\visual.hpp">
+      <Filter>Header Files\libsrc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\include\acisgeom.hpp">
+      <Filter>Header Files\libsrc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\include\csg.hpp">
+      <Filter>Header Files\libsrc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\include\geometry2d.hpp">
+      <Filter>Header Files\libsrc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\include\gprim.hpp">
+      <Filter>Header Files\libsrc\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\interface\writeuser.hpp">
+      <Filter>Header Files\libsrc\interface</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\linalg\linalg.hpp">
+      <Filter>Header Files\libsrc\linalg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\linalg\opti.hpp">
+      <Filter>Header Files\libsrc\linalg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\linalg\polynomial.hpp">
+      <Filter>Header Files\libsrc\linalg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\linalg\vector.hpp">
+      <Filter>Header Files\libsrc\linalg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\linalg\densemat.hpp">
+      <Filter>Header Files\libsrc\linalg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\meshtype.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\msghandler.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\paralleltop.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\ruler2.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\ruler3.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\specials.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\topology.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\validate.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\adfront2.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\adfront3.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\basegeom.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\bcfunctions.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\bisect.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\boundarylayer.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\classifyhpel.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\clusters.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\curvedelems.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\findip.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\findip2.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\geomsearch.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\global.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\hpref_hex.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\hpref_prism.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\hpref_pyramid.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\hpref_quad.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\hpref_segm.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\hpref_tet.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\hpref_trig.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\hprefinement.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\improve2.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\improve3.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\localh.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\meshclass.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\meshfunc.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\meshing.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\meshing2.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\meshing3.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\meshing\meshtool.hpp">
+      <Filter>Header Files\libsrc\meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\occ\Partition_Loop2d.hxx">
+      <Filter>Header Files\libsrc\occ</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\occ\Partition_Loop3d.hxx">
+      <Filter>Header Files\libsrc\occ</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\occ\Partition_Spliter.hxx">
+      <Filter>Header Files\libsrc\occ</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\occ\utilities.h">
+      <Filter>Header Files\libsrc\occ</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\occ\vsocc.hpp">
+      <Filter>Header Files\libsrc\occ</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\occ\occgeom.hpp">
+      <Filter>Header Files\libsrc\occ</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\occ\occmeshsurf.hpp">
+      <Filter>Header Files\libsrc\occ</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\occ\Partition_Inter2d.hxx">
+      <Filter>Header Files\libsrc\occ</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\occ\Partition_Inter3d.hxx">
+      <Filter>Header Files\libsrc\occ</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\occ\Partition_Loop.hxx">
+      <Filter>Header Files\libsrc\occ</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\stlgeom\stltool.hpp">
+      <Filter>Header Files\libsrc\stlgeom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\stlgeom\stltopology.hpp">
+      <Filter>Header Files\libsrc\stlgeom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\stlgeom\vsstl.hpp">
+      <Filter>Header Files\libsrc\stlgeom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\stlgeom\meshstlsurface.hpp">
+      <Filter>Header Files\libsrc\stlgeom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\stlgeom\stlgeom.hpp">
+      <Filter>Header Files\libsrc\stlgeom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\stlgeom\stlline.hpp">
+      <Filter>Header Files\libsrc\stlgeom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\visualization\vispar.hpp">
+      <Filter>Header Files\libsrc\visualization</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\visualization\visual.hpp">
+      <Filter>Header Files\libsrc\visualization</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\visualization\vssolution.hpp">
+      <Filter>Header Files\libsrc\visualization</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\visualization\meshdoc.hpp">
+      <Filter>Header Files\libsrc\visualization</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\visualization\mvdraw.hpp">
+      <Filter>Header Files\libsrc\visualization</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libsrc\visualization\soldata.hpp">
+      <Filter>Header Files\libsrc\visualization</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ng\ng_acis.hpp">
+      <Filter>Header Files\ng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ng\parallelfunc.hpp">
+      <Filter>Header Files\ng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ng\togl_1_7.h">
+      <Filter>Header Files\ng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ng\demoview.hpp">
+      <Filter>Header Files\ng</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{e490ccc3-7a9d-4088-94df-345dd9ca2d54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\libsrc">
+      <UniqueIdentifier>{c83d7f7c-e227-4d18-89ee-d66aa178c2bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\libsrc\general">
+      <UniqueIdentifier>{618cd2d8-5d76-40c4-9da6-761f42f4e1e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\libsrc\csg">
+      <UniqueIdentifier>{80852dad-1be3-4e15-b08d-a48b18e6601d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{2eb8abf5-3d8e-4237-b335-b81e339faa43}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\libsrc">
+      <UniqueIdentifier>{2e39f871-9f7e-4a33-9d15-d754054154bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\libsrc\general">
+      <UniqueIdentifier>{22456ea0-80ee-40d9-b158-e9139a0b5e27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\libsrc\csg">
+      <UniqueIdentifier>{ab0eebdf-a99c-4e30-9056-7b2a43cdb14e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\libsrc\geom2d">
+      <UniqueIdentifier>{46b7b2f8-807f-4b9a-906b-39234ad70e5e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\libsrc\geom2d">
+      <UniqueIdentifier>{13370b72-3a51-4b67-92e7-48a7455c187a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\libsrc\gprim">
+      <UniqueIdentifier>{075a4b8d-5ba2-4dea-8628-4ae301c0dab0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\libsrc\gprim">
+      <UniqueIdentifier>{fd1eff9f-b4b0-4a42-96e4-a6204f8377e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\libsrc\include">
+      <UniqueIdentifier>{f285801d-6ac1-4c66-9c5a-efe6cb187e73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ng">
+      <UniqueIdentifier>{0075c10e-b303-4cd0-8cb7-dd8f15b98d24}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\libsrc\interface">
+      <UniqueIdentifier>{60cd37c9-efbc-4be2-95b7-224827e6305b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\libsrc\interface">
+      <UniqueIdentifier>{2b48cf99-6c63-403d-ad0f-fa0014a6482c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\libsrc\linalg">
+      <UniqueIdentifier>{d1a10401-21a5-4c08-bc76-6bdaa62cf17e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\libsrc\linalg">
+      <UniqueIdentifier>{78a800fc-84d3-4a62-9727-354771a1e871}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\libsrc\meshing">
+      <UniqueIdentifier>{9135312b-ca1b-435b-bd7f-8ffe2f4a3593}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\libsrc\meshing">
+      <UniqueIdentifier>{38ae9189-fd3e-4ff6-90ba-21d305371d0c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\libsrc\occ">
+      <UniqueIdentifier>{10e0431a-b2ee-45dd-a91b-8b7a1168964f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\libsrc\occ">
+      <UniqueIdentifier>{3c104e3c-e09d-4723-af4c-705638ef8a5c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\libsrc\stlgeom">
+      <UniqueIdentifier>{0a9f4075-fcbc-4b84-a903-1bd549f6c9f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\libsrc\stlgeom">
+      <UniqueIdentifier>{a7c49a0a-7f7e-4e30-8f37-d80deedbfed9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\libsrc\visualization">
+      <UniqueIdentifier>{dbe56ad2-5a62-45af-b619-50ade9b54931}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\libsrc\visualization">
+      <UniqueIdentifier>{01336a24-a08b-464c-b4ed-9f1cceb9df4a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ng">
+      <UniqueIdentifier>{825b94fe-a09a-4c97-9c19-b6fd36d16f53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{490e1e63-9f70-4585-af83-3d9c80047161}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\libsrc\general\array.cpp">
+      <Filter>Source Files\libsrc\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\general\bitarray.cpp">
+      <Filter>Source Files\libsrc\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\general\dynamicmem.cpp">
+      <Filter>Source Files\libsrc\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\general\flags.cpp">
+      <Filter>Source Files\libsrc\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\general\gzstream.cpp">
+      <Filter>Source Files\libsrc\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\general\hashtabl.cpp">
+      <Filter>Source Files\libsrc\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\general\mpi_interface.cpp">
+      <Filter>Source Files\libsrc\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\general\mystring.cpp">
+      <Filter>Source Files\libsrc\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\general\ngexception.cpp">
+      <Filter>Source Files\libsrc\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\general\optmem.cpp">
+      <Filter>Source Files\libsrc\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\general\parthreads.cpp">
+      <Filter>Source Files\libsrc\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\general\profiler.cpp">
+      <Filter>Source Files\libsrc\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\general\seti.cpp">
+      <Filter>Source Files\libsrc\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\general\sort.cpp">
+      <Filter>Source Files\libsrc\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\general\spbita2d.cpp">
+      <Filter>Source Files\libsrc\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\general\symbolta.cpp">
+      <Filter>Source Files\libsrc\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\general\table.cpp">
+      <Filter>Source Files\libsrc\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\explicitcurve2d.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\extrusion.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\gencyl.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\genmesh.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\identify.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\manifold.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\meshsurf.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\polyhedra.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\revolution.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\singularref.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\solid.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\specpoin.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\spline3d.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\surface.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\triapprox.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\vscsg.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\algprim.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\brick.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\bspline2d.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\csgeom.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\csgparser.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\csgpkg.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\curve2d.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\csg\edgeflw.cpp">
+      <Filter>Source Files\libsrc\csg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\geom2d\geom2dmesh.cpp">
+      <Filter>Source Files\libsrc\geom2d</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\geom2d\geom2dpkg.cpp">
+      <Filter>Source Files\libsrc\geom2d</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\geom2d\geometry2d.cpp">
+      <Filter>Source Files\libsrc\geom2d</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\geom2d\vsgeom2d.cpp">
+      <Filter>Source Files\libsrc\geom2d</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\geom2d\genmesh2d.cpp">
+      <Filter>Source Files\libsrc\geom2d</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\gprim\geomfuncs.cpp">
+      <Filter>Source Files\libsrc\gprim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\gprim\geomtest3d.cpp">
+      <Filter>Source Files\libsrc\gprim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\gprim\spline.cpp">
+      <Filter>Source Files\libsrc\gprim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\gprim\splinegeometry.cpp">
+      <Filter>Source Files\libsrc\gprim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\gprim\transform3d.cpp">
+      <Filter>Source Files\libsrc\gprim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\gprim\adtree.cpp">
+      <Filter>Source Files\libsrc\gprim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\gprim\geom2d.cpp">
+      <Filter>Source Files\libsrc\gprim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\gprim\geom3d.cpp">
+      <Filter>Source Files\libsrc\gprim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\writefeap.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\writefluent.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\writegmsh.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\writegmsh2.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\writejcm.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\writeOpenFOAM15x.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\writepermas.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\writetecplot.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\writetet.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\writetochnog.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\writeuser.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\wuchemnitz.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\nginterface.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\nginterface_v2.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\read_fnf_mesh.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\readtetmesh.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\readuser.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\writeabaqus.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\writediffpack.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\writedolfin.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\interface\writeelmer.cpp">
+      <Filter>Source Files\libsrc\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\linalg\linsearch.cpp">
+      <Filter>Source Files\libsrc\linalg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\linalg\polynomial.cpp">
+      <Filter>Source Files\libsrc\linalg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\linalg\bfgs.cpp">
+      <Filter>Source Files\libsrc\linalg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\linalg\densemat.cpp">
+      <Filter>Source Files\libsrc\linalg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\linalg\linopt.cpp">
+      <Filter>Source Files\libsrc\linalg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\prism2rls.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\pyramid2rls.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\pyramidrls.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\quadrls.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\refine.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\ruler2.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\ruler3.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\secondorder.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\smoothing2.5.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\smoothing2.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\smoothing3.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\specials.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\tetrarls.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\topology.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\triarls.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\validate.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\zrefine.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\adfront2.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\adfront3.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\basegeom.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\bcfunctions.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\bisect.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\boundarylayer.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\clusters.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\curvedelems.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\delaunay.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\delaunay2d.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\geomsearch.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\global.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\hprefinement.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\improve2.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\improve2gen.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\improve3.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\localh.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\meshclass.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\meshfunc.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\meshfunc2d.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\meshing2.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\meshing3.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\meshtool.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\meshtype.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\msghandler.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\netrule2.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\netrule3.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\parallelmesh.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\paralleltop.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\parser2.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\meshing\parser3.cpp">
+      <Filter>Source Files\libsrc\meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\occ\Partition_Inter3d.cxx">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\occ\Partition_Loop.cxx">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\occ\Partition_Loop2d.cxx">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\occ\Partition_Loop3d.cxx">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\occ\Partition_Spliter.cxx">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\occ\vsocc.cpp">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\occ\occconstruction.cpp">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\occ\occgenmesh.cpp">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\occ\occgeom.cpp">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\occ\occmeshsurf.cpp">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\occ\occpkg.cpp">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\occ\Partition_Inter2d.cxx">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\stlgeom\stlline.cpp">
+      <Filter>Source Files\libsrc\stlgeom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\stlgeom\stlpkg.cpp">
+      <Filter>Source Files\libsrc\stlgeom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\stlgeom\stltool.cpp">
+      <Filter>Source Files\libsrc\stlgeom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\stlgeom\stltopology.cpp">
+      <Filter>Source Files\libsrc\stlgeom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\stlgeom\vsstl.cpp">
+      <Filter>Source Files\libsrc\stlgeom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\stlgeom\meshstlsurface.cpp">
+      <Filter>Source Files\libsrc\stlgeom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\stlgeom\stlgeom.cpp">
+      <Filter>Source Files\libsrc\stlgeom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\stlgeom\stlgeomchart.cpp">
+      <Filter>Source Files\libsrc\stlgeom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\stlgeom\stlgeommesh.cpp">
+      <Filter>Source Files\libsrc\stlgeom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\visualization\vsfieldlines.cpp">
+      <Filter>Source Files\libsrc\visualization</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\visualization\vsmesh.cpp">
+      <Filter>Source Files\libsrc\visualization</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\visualization\vssolution.cpp">
+      <Filter>Source Files\libsrc\visualization</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\visualization\importsolution.cpp">
+      <Filter>Source Files\libsrc\visualization</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\visualization\meshdoc.cpp">
+      <Filter>Source Files\libsrc\visualization</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libsrc\visualization\mvdraw.cpp">
+      <Filter>Source Files\libsrc\visualization</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ng\ngpkg.cpp">
+      <Filter>Source Files\ng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ng\onetcl.cpp">
+      <Filter>Source Files\ng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ng\parallelfunc.cpp">
+      <Filter>Source Files\ng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ng\demoview.cpp">
+      <Filter>Source Files\ng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ng\ngappinit.cpp">
+      <Filter>Source Files\ng</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\libsrc\occ\Partition_Inter2d.ixx">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </None>
+    <None Include="..\libsrc\occ\Partition_Inter3d.ixx">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </None>
+    <None Include="..\libsrc\occ\Partition_Loop.ixx">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </None>
+    <None Include="..\libsrc\occ\Partition_Loop2d.ixx">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </None>
+    <None Include="..\libsrc\occ\Partition_Loop3d.ixx">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </None>
+    <None Include="..\libsrc\occ\Partition_Spliter.ixx">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </None>
+    <None Include="..\libsrc\occ\Partition_Inter2d.jxx">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </None>
+    <None Include="..\libsrc\occ\Partition_Inter3d.jxx">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </None>
+    <None Include="..\libsrc\occ\Partition_Loop.jxx">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </None>
+    <None Include="..\libsrc\occ\Partition_Loop2d.jxx">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </None>
+    <None Include="..\libsrc\occ\Partition_Loop3d.jxx">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </None>
+    <None Include="..\libsrc\occ\Partition_Spliter.jxx">
+      <Filter>Source Files\libsrc\occ</Filter>
+    </None>
+    <None Include="resource." />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="netgen.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="netgen.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
