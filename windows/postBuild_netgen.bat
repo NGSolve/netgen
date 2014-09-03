@@ -116,11 +116,11 @@ if /i "%BUILD_ARCH%" == "win32" (
 REM *** Finally copy the FFMPEG dlls to the bin folder ***
 if /i "%BUILD_ARCH%"=="x64" (
 		echo Copying FFMPEG dlls
-		C:\Windows\System32\xcopy "%PROJ_DIR%..\..\ext_libs\FFMPEG\dll\x64\*.dll" "%INSTALL_FOLDER%\bin" /i /d /y		
+		xcopy "%PROJ_DIR%..\..\ext_libs\FFMPEG\dll\x64\*.dll" "%INSTALL_FOLDER%\bin" /i /d /y		
 )
 if /i "%BUILD_ARCH%"=="win32" (
 		echo Copying FFMPEG dlls
-		C:\Windows\System32\xcopy "%PROJ_DIR%..\..\ext_libs\FFMPEG\dll\Win32\*.dll" "%INSTALL_FOLDER%\bin" /i /d /y		
+		xcopy "%PROJ_DIR%..\..\ext_libs\FFMPEG\dll\Win32\*.dll" "%INSTALL_FOLDER%\bin" /i /d /y		
 )
 
 echo Copying tutorials
