@@ -2421,7 +2421,10 @@ namespace netgen
               double hminv = numeric_limits<double>::max();
               double hmaxv = -numeric_limits<double>::max();
               bool hhasit = false;
+
+#if defined _OPENMP && _OPENMP >= 201107
 #pragma omp parallel for reduction (max : hmaxv) reduction (min : hminv) reduction (|| : hhasit)
+#endif
               for (int i = 0; i < ne; i++) 
                 {
                   double val;
