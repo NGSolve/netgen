@@ -701,7 +701,7 @@ void AdFront3 :: GetGroup (int fi,
   
 
   for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
-    if (points.Get(i).Valid())
+    if (points[pi].Valid())
       {
 	grouppoints.Append (points[pi].P());
 	pindex.Append (pi);
