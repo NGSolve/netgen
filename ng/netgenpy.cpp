@@ -1,3 +1,7 @@
+#ifdef WIN32
+
+// a wrapper to load netgen-dll into python
+
 #include <iostream>
 #include <boost/python.hpp>
 
@@ -15,3 +19,6 @@ BOOST_PYTHON_MODULE(nglib)
     ExportMeshVis();
     ExportGeom2d();
 }
+
+
+#endif
