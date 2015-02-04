@@ -2650,6 +2650,21 @@ namespace netgen
 		Tcl_Interp * interp,
 		int argc, tcl_const char *argv[])
   {
+    if (!mesh)
+      {
+	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+	return TCL_ERROR;
+      }
+
+    int nparts = atoi (argv[1]);
+    ntasks = nparts+1;
+    cout << "calling metis ... " << flush;
+    mesh->ParallelMetis();
+    cout << "done" << endl;
+    ntasks = 1;
+    for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
+      (*mesh)[ei].SetIndex ( (*mesh)[ei].GetPartition() );
+    
 #ifdef METISold
 
     if (!mesh)
