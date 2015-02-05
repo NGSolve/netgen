@@ -2650,6 +2650,7 @@ namespace netgen
 		Tcl_Interp * interp,
 		int argc, tcl_const char *argv[])
   {
+#ifdef PARALLEL
     if (!mesh)
       {
 	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
@@ -2664,6 +2665,17 @@ namespace netgen
     ntasks = 1;
     for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
       (*mesh)[ei].SetIndex ( (*mesh)[ei].GetPartition() );
+
+    return TCL_OK;
+
+#else
+    Tcl_SetResult (interp, (char*)"metis not available", TCL_STATIC);
+    return TCL_ERROR;
+    
+#endif
+
+
+
     
 #ifdef METISold
 
@@ -2741,7 +2753,6 @@ namespace netgen
 
 
 #endif
-    return TCL_OK;
   }
 
 
