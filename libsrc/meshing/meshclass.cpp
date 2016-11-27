@@ -4296,38 +4296,45 @@ namespace netgen
 
     Array<Element2d> loctrigs;
 
-
+    
     //SZ 
     if(SurfaceElement(element).GetType()==QUAD)
       {
-        // cout << "check quad element" << endl;
+        //cout << "check quad element" << endl;
         const Element2d & el = SurfaceElement(element); 
 
         const Point3d & p1 = Point(el.PNum(1)); 
         const Point3d & p2 = Point(el.PNum(2));
         const Point3d & p3 = Point(el.PNum(3));
         const Point3d & p4 = Point(el.PNum(4));
-
+	
         // Coefficients of Bilinear Mapping from Ref-Elem to global Elem
         // X = a + b x + c y + d x y 
         Vec3d a = p1; 
         Vec3d b = p2 - a; 
         Vec3d c = p4 - a; 
-        Vec3d d = p3 - a - b - c; 
-
+        Vec3d d = p3 - a - b - c;
+	
         double dxb = d.X()*b.Y()-d.Y()*b.X();
         double dxc = d.X()*c.Y()-d.Y()*c.X(); 
         double dxa = d.X()*a.Y()-d.Y()*a.X(); 
-        double dxp = d.X()*p.Y()-d.Y()*p.X(); 
+        double dxp = d.X()*p.Y()-d.Y()*p.X();
 
+	
         double c0,c1,c2; // ,rt; 
         lami[2]=0.; 
-        double eps = 1.E-12; 
+        double eps = 1.E-12;
 
+	Vec3d dp13 = p3-p1;
+	Vec3d dp24 = p4-p2;
+	double d1 = dp13.Length2();
+	double d2 = dp24.Length2();
+	
         // if(fabs(d.X()) <= eps && fabs(d.Y())<= eps)
-        if (d.Length2() < sqr(eps))
+	//if (d.Length2() < sqr(eps))
+        if (d.Length2() < sqr(eps)*d1 && d.Length2() < sqr(eps)*d2)
           {
-            //Solve Linear System
+	    //Solve Linear System
 
             Vec2d sol;
             SolveLinearSystemLS (b, c, p-a, sol);
@@ -4341,52 +4348,64 @@ namespace netgen
             */
           } 
         else
-          if(fabs(dxb) <= eps) 
+          //if(fabs(dxb) <= eps)
+	  if(fabs(dxb) <= eps*fabs(dxc))
             {
-              lami[1] = (dxp-dxa)/dxc;
-              if(fabs(b.X()-d.X()*lami[1])>=eps)
+	      lami[1] = (dxp-dxa)/dxc;
+              //if(fabs(b.X()-d.X()*lami[1])>=eps)
+	      if(fabs(b.X()+d.X()*lami[1])>=fabs(b.Y()+d.Y()*lami[1]))
                 lami[0] = (p.X()-a.X() - c.X()*lami[1])/(b.X()+d.X()*lami[1]); 
               else
-                lami[0] = (p.Y()-a.Y() - c.Y()*lami[1])/(b.Y()+d.Y()*lami[1]); 
+                lami[0] = (p.Y()-a.Y() - c.Y()*lami[1])/(b.Y()+d.Y()*lami[1]);
+	      
             }
           else
-            if(fabs(dxc) <= eps)
+            //if(fabs(dxc) <= eps)
+	    if(fabs(dxc) <= eps*fabs(dxb))
               {
-                lami[0] = (dxp-dxa)/dxb;
-                if(fabs(c.X()-d.X()*lami[0])>=eps)
+		lami[0] = (dxp-dxa)/dxb;
+                //if(fabs(c.X()-d.X()*lami[0])>=eps)
+		if(fabs(c.X()+d.X()*lami[0])>=fabs(c.Y()+d.Y()*lami[0]))
                   lami[1] = (p.X()-a.X() - b.X()*lami[0])/(c.X()+d.X()*lami[0]); 
                 else
-                  lami[1] = (p.Y()-a.Y() - b.Y()*lami[0])/(c.Y()+d.Y()*lami[0]); 
+                  lami[1] = (p.Y()-a.Y() - b.Y()*lami[0])/(c.Y()+d.Y()*lami[0]);
+		
               }
             else //Solve quadratic equation
               {
-                if(fabs(d.X()) >= eps)
+		//if(fabs(d.X()) >= eps)
+		if(fabs(d.X()) >= fabs(d.Y()))
                   {
                     c2 = d.X()*dxc;
-                    c1 = d.X()*dxc - c.X()*dxb - d.X()*(dxp-dxa);
+                    //c1 = d.X()*dxc - c.X()*dxb - d.X()*(dxp-dxa);
+		    c1 = b.X()*dxc - c.X()*dxb - d.X()*(dxp-dxa);
                     c0 = -b.X()*(dxp -dxa) - (a.X()-p.X())*dxb;
-                  }
+		  }
                 else 
                   {
                     c2 = d.Y()*dxc;
-                    c1 = d.Y()*dxc - c.Y()*dxb - d.Y()*(dxp-dxa);
+                    //c1 = d.Y()*dxc - c.Y()*dxb - d.Y()*(dxp-dxa);
+		    c1 = b.Y()*dxc - c.Y()*dxb - d.Y()*(dxp-dxa);
                     c0 = -b.Y()*(dxp -dxa) - (a.Y()-p.Y())*dxb;
                   }
 
                 double rt =  c1*c1 - 4*c2*c0;
+		
                 if (rt < 0.) return false; 
                 lami[1] = (-c1 + sqrt(rt))/2/c2;
-                if(lami[1]<=1. && lami[1]>=0.)
+
+		if(lami[1]<=1.+eps && lami[1]>=0.-eps)
                   {
                     lami[0] = (dxp - dxa -dxc*lami[1])/dxb;
-                    if(lami[0]<=1. && lami[0]>=0.)
+		    
+                    if(lami[0]<=1.+eps && lami[0]>=0.-eps)
                       return true;
                   }
 
                 lami[1] = (-c1 - sqrt(rt))/2/c2;
                 lami[0] = (dxp - dxa -dxc*lami[1])/dxb;
               }
-        // cout << "lam0,1 = " << lami[0] << ", " << lami[1] << endl;
+        //cout << "lam0,1 = " << lami[0] << ", " << lami[1] << endl;
         
         if( lami[0] <= 1.+eps  && lami[0] >= -eps && lami[1]<=1.+eps && lami[1]>=-eps)
           {
