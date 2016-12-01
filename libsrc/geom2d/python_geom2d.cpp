@@ -195,8 +195,8 @@ DLL_HEADER void ExportGeom2d(py::module &m)
 			  {
 				  cout << "spline is neither line nor spline3" << endl;
 			  }
-			  xpoints.append(py::cast(xp));
-			  ypoints.append(py::cast(yp));
+			  xpoints.append(xp);
+			  ypoints.append(yp);
 				  
 		  }
 		  return py::tuple(py::make_tuple(xlim, ylim, xpoints, ypoints));
