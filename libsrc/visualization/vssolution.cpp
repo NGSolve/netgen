@@ -4805,3 +4805,22 @@ void Ng_Redraw (bool blocking)
 #endif
 }
 
+#ifdef OPENGL
+#ifdef WIN32
+void (*glBindBuffer) (GLenum a, GLuint b);
+void (*glDeleteBuffers) (GLsizei a, const GLuint *b);
+void (*glGenBuffers) (GLsizei a, GLuint *b);
+void (*glBufferData) (GLenum a, GLsizeiptr b, const GLvoid *c, GLenum d);
+void (*glBufferSubData) (GLenum a, GLintptr b, GLsizeiptr c, const GLvoid *d);
+DLL_HEADER void LoadOpenGLFunctionPointers() {
+  glBindBuffer = (decltype(glBindBuffer)) wglGetProcAddress("glBindBuffer");
+  glBufferSubData = (decltype(glBufferSubData)) wglGetProcAddress("glBufferSubData");
+  glBufferData = (decltype(glBufferData)) wglGetProcAddress("glBufferData");
+  glDeleteBuffers = (decltype(glDeleteBuffers)) wglGetProcAddress("glDeleteBuffers");
+  glGenBuffers = (decltype(glGenBuffers)) wglGetProcAddress("glGenBuffers");
+  if(!glBindBuffer) throw std::runtime_error("Could not load OpenGL functions!");
+}
+#else  // WIN32
+DLL_HEADER void LoadOpenGLFunctionPointers() { }
+#endif // WIN32
+#endif // OPENGL
