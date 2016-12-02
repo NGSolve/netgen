@@ -32,6 +32,8 @@ namespace netgen
      int nonconsist = 0;
      for (int k = 1; k <= mesh3d.GetNDomains(); k++)
      {
+       if(mp.only3D_domain_nr && mp.only3D_domain_nr !=k)
+	 continue;
         PrintMessage (3, "Check subdomain ", k, " / ", mesh3d.GetNDomains());
 
         mesh3d.FindOpenElements(k);
@@ -63,6 +65,8 @@ namespace netgen
 
      for (int k = 1; k <= mesh3d.GetNDomains(); k++)
        {
+	 if(mp.only3D_domain_nr && mp.only3D_domain_nr !=k)
+	   continue;
 	 if (multithread.terminate)
            break;
 	 

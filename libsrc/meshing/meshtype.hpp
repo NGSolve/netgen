@@ -1110,6 +1110,8 @@ namespace netgen
     double badellimit = 175;
 
     bool check_impossible = 0;
+
+    int only3D_domain_nr = -1;
   
     ///
     int secondorder = 0;

@@ -18,6 +18,7 @@ namespace netgen
   point is inner point.
 */
 
+
 void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 				       OPTIMIZEGOAL goal)
 {
@@ -41,6 +42,8 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
   double totalbad = 0;
   for (ElementIndex ei = 0; ei < ne; ei++)
     {
+      if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
+	continue;
       double elerr = CalcBad (mesh.Points(), mesh[ei], 0);
       totalbad += elerr;
       elerrs[ei] = elerr;
@@ -55,8 +58,9 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 
   for (ElementIndex ei = 0; ei < ne; ei++)
     if (!mesh[ei].IsDeleted())
-      for (int j = 0; j < mesh[ei].GetNP(); j++)
-	elementsonnode.Add (mesh[ei][j], ei);
+      if(!(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex()))
+	for (int j = 0; j < mesh[ei].GetNP(); j++)
+	  elementsonnode.Add (mesh[ei][j], ei);
   
   INDEX_2_HASHTABLE<int> edgetested (np+1);
 
@@ -64,6 +68,8 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 
   for (ElementIndex ei = 0; ei < ne; ei++)
     {
+      if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
+	continue;
       if (multithread.terminate)
 	break;
       
@@ -238,7 +244,8 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 
   totalbad = 0;
   for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
-    totalbad += CalcBad (mesh.Points(), mesh[ei], 0);
+    if(!(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex()))
+      totalbad += CalcBad (mesh.Points(), mesh[ei], 0);
 
   if (goal == OPT_QUALITY)
     {
@@ -247,8 +254,9 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 
       int cntill = 0;
       for (ElementIndex ei = 0; ei < ne; ei++)
-	if (!mesh.LegalTet (mesh[ei]))
-	  cntill++;
+	if(!(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex()))
+	  if (!mesh.LegalTet (mesh[ei]))
+	    cntill++;
 
       PrintMessage (5, cntill, " illegal tets");
     }
