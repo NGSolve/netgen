@@ -14,12 +14,11 @@ namespace netgen
 
 
   
-  int NetgenGeometry :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam,
-				      int perfstepsstart, int perfstepsend)
+  int NetgenGeometry :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
   {
     if (!mesh) return 1;
 
-    if (perfstepsstart <= MESHCONST_MESHVOLUME)
+    if (mparam.perfstepsstart <= MESHCONST_MESHVOLUME)
       {
 	multithread.task = "Volume meshing";
 	
@@ -37,11 +36,11 @@ namespace netgen
       }
 
     
-    if (multithread.terminate || perfstepsend <= MESHCONST_MESHVOLUME)
+    if (multithread.terminate || mparam.perfstepsend <= MESHCONST_MESHVOLUME)
       return 0;
 
 
-    if (perfstepsstart <= MESHCONST_OPTVOLUME)
+    if (mparam.perfstepsstart <= MESHCONST_OPTVOLUME)
       {
 	multithread.task = "Volume optimization";
 	

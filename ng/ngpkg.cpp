@@ -1328,8 +1328,9 @@ namespace netgen
               // vsmesh.SetMesh (mesh);
               SetGlobalMesh (mesh);
               mesh -> SetGeometry(ng_geometry);
-              
-              int res = ng_geometry -> GenerateMesh (mesh, mparam, perfstepsstart, perfstepsend);
+              mparam.perfstepsstart = perfstepsstart;
+	      mparam.perfstepsend = perfstepsend;
+              int res = ng_geometry -> GenerateMesh (mesh, mparam);
 
 	      if (res != MESHING3_OK) 
 		{
@@ -1938,6 +1939,7 @@ namespace netgen
     if (nodisplay)
       return;
       
+    LoadOpenGLFunctionPointers();
     fontbase = Togl_LoadBitmapFont( togl, TOGL_BITMAP_8_BY_13 );
     Set_OpenGLText_Callback (&MyOpenGLText_GUI);
     
@@ -2077,6 +2079,8 @@ namespace netgen
 
     // possible values: 12,14,16,18,20,22,24,28,32
     font = selectFont(18);
+
+    LoadOpenGLFunctionPointers();
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();

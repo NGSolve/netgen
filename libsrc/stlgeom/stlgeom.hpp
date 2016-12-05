@@ -452,8 +452,7 @@ namespace netgen
     friend class MeshingSTLSurface;
 
 
-    virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam,
-			      int perfstepsstart, int perfstepsend);
+    virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
     
     virtual const Refinement & GetRefinement () const;
   };
@@ -463,8 +462,7 @@ namespace netgen
 
 
 
-  extern int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, MeshingParameters & mparam,
-			      int perfstepsstart, int perfstepsend);
+  extern int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
 
 
 }

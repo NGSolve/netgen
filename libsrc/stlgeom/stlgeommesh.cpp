@@ -1329,16 +1329,15 @@ void STLGeometry :: RestrictHChartDistOneChart(int chartnum, Array<int>& acttrig
 }
 
 
-int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, MeshingParameters & mparam,
-                     int perfstepsstart, int perfstepsend)
+int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
 {
-  if (perfstepsstart > perfstepsend) return 0;
+  if (mparam.perfstepsstart > mparam.perfstepsend) return 0;
 
   multithread.terminate = 0;
   int success = 1;
   //int trialcntouter = 0;
 
-  if (perfstepsstart <= MESHCONST_MESHEDGES)
+  if (mparam.perfstepsstart <= MESHCONST_MESHEDGES)
     {
       if (mesh)
         mesh -> DeleteMesh();
@@ -1368,8 +1367,8 @@ int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, MeshingP
   if (multithread.terminate)
     return 0;
 
-  if (perfstepsstart <= MESHCONST_MESHSURFACE && 
-      perfstepsend >= MESHCONST_MESHSURFACE)
+  if (mparam.perfstepsstart <= MESHCONST_MESHSURFACE && 
+      mparam.perfstepsend >= MESHCONST_MESHSURFACE)
     {
 
       if (!stlgeometry->edgesfound) 
@@ -1417,8 +1416,8 @@ int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, MeshingP
 
   if (success)
     {
-      if (perfstepsstart <= MESHCONST_OPTSURFACE && 
-	  perfstepsend >= MESHCONST_OPTSURFACE)
+      if (mparam.perfstepsstart <= MESHCONST_OPTSURFACE && 
+	  mparam.perfstepsend >= MESHCONST_OPTSURFACE)
 	{
 	  if (!stlgeometry->edgesfound) 
 	    {
@@ -1469,8 +1468,8 @@ int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, MeshingP
       if (multithread.terminate)
 	return 0;
 
-      if (perfstepsstart <= MESHCONST_MESHVOLUME && 
-	  perfstepsend >= MESHCONST_MESHVOLUME)
+      if (mparam.perfstepsstart <= MESHCONST_MESHVOLUME && 
+	  mparam.perfstepsend >= MESHCONST_MESHVOLUME)
 	{
 	  if (stlgeometry->volumemeshed) 
 	    {
@@ -1540,8 +1539,8 @@ int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, MeshingP
       if (multithread.terminate)
 	return 0;
 
-      if (perfstepsstart <= MESHCONST_OPTVOLUME && 
-	  perfstepsend >= MESHCONST_OPTVOLUME)
+      if (mparam.perfstepsstart <= MESHCONST_OPTVOLUME && 
+	  mparam.perfstepsend >= MESHCONST_OPTVOLUME)
 	{
 	  if (!stlgeometry->edgesfound) 
 	    {

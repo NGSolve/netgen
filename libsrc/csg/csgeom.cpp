@@ -129,14 +129,12 @@ namespace netgen
 
 
   extern int CSGGenerateMesh (CSGeometry & geom, 
-			      shared_ptr<Mesh> & mesh, MeshingParameters & mparam,
-			      int perfstepsstart, int perfstepsend);
+			      shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
 
 
-  int CSGeometry :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam,
-				 int perfstepsstart, int perfstepsend)
+  int CSGeometry :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
   {
-    return CSGGenerateMesh (*this, mesh, mparam, perfstepsstart, perfstepsend);
+    return CSGGenerateMesh (*this, mesh, mparam);
   }
   
   const Refinement & CSGeometry :: GetRefinement () const

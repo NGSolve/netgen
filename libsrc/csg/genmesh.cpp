@@ -658,17 +658,16 @@ namespace netgen
 
 
   int CSGGenerateMesh (CSGeometry & geom, 
-		       shared_ptr<Mesh> & mesh, MeshingParameters & mparam,
-		       int perfstepsstart, int perfstepsend)
+		       shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
   {
     if (mesh && mesh->GetNSE() &&
 	!geom.GetNSolids())
       {
-	if (perfstepsstart < MESHCONST_MESHVOLUME)
-	  perfstepsstart = MESHCONST_MESHVOLUME;
+	if (mparam.perfstepsstart < MESHCONST_MESHVOLUME)
+	  mparam.perfstepsstart = MESHCONST_MESHVOLUME;
       }
 
-    if (perfstepsstart <= MESHCONST_ANALYSE)
+    if (mparam.perfstepsstart <= MESHCONST_ANALYSE)
       {
         if (mesh)
           mesh -> DeleteMesh();
@@ -709,11 +708,11 @@ namespace netgen
       }
 
 
-    if (multithread.terminate || perfstepsend <= MESHCONST_ANALYSE) 
+    if (multithread.terminate || mparam.perfstepsend <= MESHCONST_ANALYSE) 
       return TCL_OK;
 
 
-    if (perfstepsstart <= MESHCONST_MESHEDGES)
+    if (mparam.perfstepsstart <= MESHCONST_MESHEDGES)
       {
 	FindEdges (geom, *mesh, mparam, true);
 	if (multithread.terminate) return TCL_OK;
@@ -746,11 +745,11 @@ namespace netgen
 	  }
       }
   
-    if (multithread.terminate || perfstepsend <= MESHCONST_MESHEDGES)
+    if (multithread.terminate || mparam.perfstepsend <= MESHCONST_MESHEDGES)
       return TCL_OK;
 
 
-    if (perfstepsstart <= MESHCONST_MESHSURFACE)
+    if (mparam.perfstepsstart <= MESHCONST_MESHSURFACE)
       {
 	MeshSurface (geom, *mesh, mparam);  
 	if (multithread.terminate) return TCL_OK;
@@ -791,10 +790,11 @@ namespace netgen
 	mesh->CalcSurfacesOfNode();
       }
   
-    if (multithread.terminate || perfstepsend <= MESHCONST_OPTSURFACE)
+    if (multithread.terminate || mparam.perfstepsend <= MESHCONST_OPTSURFACE)
       return TCL_OK;
 
-    if (perfstepsstart <= MESHCONST_MESHVOLUME)
+
+    if (mparam.perfstepsstart <= MESHCONST_MESHVOLUME)
       {
 	multithread.task = "Volume meshing";
 
@@ -825,11 +825,11 @@ namespace netgen
 #endif
       }
 
-    if (multithread.terminate || perfstepsend <= MESHCONST_MESHVOLUME)
+    if (multithread.terminate || mparam.perfstepsend <= MESHCONST_MESHVOLUME)
       return TCL_OK;
 
 
-    if (perfstepsstart <= MESHCONST_OPTVOLUME)
+    if (mparam.perfstepsstart <= MESHCONST_OPTVOLUME)
       {
 	multithread.task = "Volume optimization";
       
