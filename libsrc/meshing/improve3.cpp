@@ -68,7 +68,7 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
   for (ElementIndex ei = 0; ei < ne; ei++)
     {
       if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
-	continue;
+      	continue;
       if (multithread.terminate)
 	break;
       
@@ -314,7 +314,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
   for (ei = 0; ei < ne; ei++)
     {
       if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
-	continue;
+      	continue;
       elerrs[ei] = CalcBad (mesh.Points(), mesh[ei], 0);
       bad1 += elerrs[ei];
       if (elerrs[ei] > badmax) badmax = elerrs[ei];
@@ -360,7 +360,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
   for (ei = 0; ei < ne; ei++)
     {
       if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
-	continue;
+      	continue;
       if (multithread.terminate)
 	break;
 
