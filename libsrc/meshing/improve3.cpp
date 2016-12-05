@@ -58,9 +58,8 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 
   for (ElementIndex ei = 0; ei < ne; ei++)
     if (!mesh[ei].IsDeleted())
-      if(!(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex()))
-	for (int j = 0; j < mesh[ei].GetNP(); j++)
-	  elementsonnode.Add (mesh[ei][j], ei);
+      for (int j = 0; j < mesh[ei].GetNP(); j++)
+	elementsonnode.Add (mesh[ei][j], ei);
   
   INDEX_2_HASHTABLE<int> edgetested (np+1);
 
@@ -314,6 +313,8 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
   badmax = 0;
   for (ei = 0; ei < ne; ei++)
     {
+      if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
+	continue;
       elerrs[ei] = CalcBad (mesh.Points(), mesh[ei], 0);
       bad1 += elerrs[ei];
       if (elerrs[ei] > badmax) badmax = elerrs[ei];
@@ -345,12 +346,12 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
       int cntill = 0;
       for (ei = 0; ei < ne; ei++)
 	{
-	  //	  if (!LegalTet (volelements.Get(i)))
-	  if (mesh[ei].flags.illegal)
-	    {
-	      cntill++;
-	      illegaltet.Set (ei+1);
-	    }
+	    //	  if (!LegalTet (volelements.Get(i)))
+	    if (mesh[ei].flags.illegal)
+	      {
+		cntill++;
+		illegaltet.Set (ei+1);
+	      }
 	}
       //      (*mycout) << cntill << " illegal tets" << endl;
     }
@@ -358,6 +359,8 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 
   for (ei = 0; ei < ne; ei++)
     {
+      if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
+	continue;
       if (multithread.terminate)
 	break;
 
