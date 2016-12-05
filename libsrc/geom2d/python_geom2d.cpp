@@ -258,7 +258,7 @@ DLL_HEADER void ExportGeom2d(py::module &m)
                   mesh->SetGeometry(self);
                   SetGlobalMesh (mesh);
                   ng_geometry = self;
-		  self->GenerateMesh(mesh, mparam, 0, 0);
+		  self->GenerateMesh(mesh, mparam);
 		  return mesh;
 	  }))
 	  

@@ -626,7 +626,7 @@ DLL_HEADER void ExportCSG(py::module &m)
              geo->FindIdenticSurfaces(1e-8 * geo->MaxSize());
              try
                {
-                 geo->GenerateMesh (dummy, param, 0, 6);
+                 geo->GenerateMesh (dummy, param);
                }
              catch (NgException ex)
                {

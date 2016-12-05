@@ -387,8 +387,7 @@ namespace netgen
 
 //      void WriteOCC_STL(char * filename);
 
-     DLL_HEADER virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam, 
-         int perfstepsstart, int perfstepsend);
+     DLL_HEADER virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
 
       DLL_HEADER virtual const Refinement & GetRefinement () const;
    };

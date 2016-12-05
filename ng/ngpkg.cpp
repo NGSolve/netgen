@@ -1328,8 +1328,9 @@ namespace netgen
               // vsmesh.SetMesh (mesh);
               SetGlobalMesh (mesh);
               mesh -> SetGeometry(ng_geometry);
-              
-              int res = ng_geometry -> GenerateMesh (mesh, mparam, perfstepsstart, perfstepsend);
+              mparam.perfstepsstart = perfstepsstart;
+	      mparam.perfstepsend = perfstepsend;
+              int res = ng_geometry -> GenerateMesh (mesh, mparam);
 
 	      if (res != MESHING3_OK) 
 		{
