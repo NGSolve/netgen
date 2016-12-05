@@ -794,9 +794,6 @@ namespace netgen
     if (multithread.terminate || perfstepsend <= MESHCONST_OPTSURFACE)
       return TCL_OK;
 
-    if(mparam.onlySurface)
-      return TCL_OK;
-
     if (perfstepsstart <= MESHCONST_MESHVOLUME)
       {
 	multithread.task = "Volume meshing";
