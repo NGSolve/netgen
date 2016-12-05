@@ -613,7 +613,6 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 	 py::arg("optsteps3d") = 3,
 	 py::arg("only3D_domain") = 0,
 	 py::arg("perfstepsend") = MESHCONST_OPTVOLUME,
-           ,
          "create meshing parameters"
           )
     .def("__str__", &ToString<MP>)
