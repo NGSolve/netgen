@@ -1116,7 +1116,7 @@ namespace netgen
 
     bool check_impossible = 0;
 
-    int only3D_domain_nr = -1;
+    int only3D_domain_nr = 0;
   
     ///
     int secondorder = 0;

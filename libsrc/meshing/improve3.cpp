@@ -648,6 +648,9 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
       if (multithread.terminate)
 	break;
       
+      if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
+      	continue;
+      
       multithread.percent = 100.0 * (ei+1) / ne;
 
       if ((mesh.ElementType(ei)) == FIXEDELEMENT)
@@ -1236,6 +1239,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 		  int oldpi = suroundpts[l-1];
 		  int newpi = 0;
 
+
 		  for (int k = 0; k < nsuround && !newpi; k++)
 		    if (!tetused[k])
 		      {
@@ -1247,13 +1251,14 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 			      newpi = 
 				nel[0] + nel[1] + nel[2] + nel[3] 
 				- pi1 - pi2 - oldpi;
-			      
+
 			      tetused[k] = 1; 
 			      suroundpts[l] = newpi;
-			    }			
-		      }
+			    
+			    }
+			}
 		}
-
+	      
 	      
 	      bad1 = 0;
 	      for (int k = 0; k < nsuround; k++)
@@ -2391,6 +2396,9 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 	  mesh.LegalTet (mesh[eli1]) &&
 	  CalcBad (mesh.Points(), mesh[eli1], 0) < 1e3)
 	continue;
+      
+      if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
+      	continue;
 
       // cout << "eli = " << eli1 << endl;
       //      (*testout) << "swapimp2, eli = " << eli1 << "; el = " << mesh[eli1] << endl;
