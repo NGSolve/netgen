@@ -2397,7 +2397,7 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 	  CalcBad (mesh.Points(), mesh[eli1], 0) < 1e3)
 	continue;
       
-      if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
+      if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(eli1).GetIndex())
       	continue;
 
       // cout << "eli = " << eli1 << endl;
