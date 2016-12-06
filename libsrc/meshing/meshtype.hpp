@@ -344,6 +344,7 @@ namespace netgen
 	default:
 	  PrintSysError ("Element2d::SetType, illegal type ", int(typ));
 	}
+      is_curved = (np >= 4); 
     }
     ///
     int GetNP() const { return np; }
