@@ -1092,6 +1092,11 @@ namespace netgen
     double elsizeweight = 0.2;
     /// init with default values
 
+    /// start at step
+    int perfstepsstart = 0;
+    /// end at step
+    int perfstepsend = 6;
+
 
     /// from mp3:
     /// give up quality class, 2d meshing

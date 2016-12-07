@@ -313,8 +313,7 @@ namespace netgen
 
     Array<BCModification> bcmodifications;
 
-    virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam, 
-			      int perfstepsstart, int perfstepsend);
+    virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
 
     virtual const Refinement & GetRefinement () const; 
   };

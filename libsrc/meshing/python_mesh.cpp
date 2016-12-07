@@ -586,23 +586,31 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     ;
   
 
+  py::enum_<MESHING_STEP>(m,"MeshingStep")
+    .value("MESHEDGES",MESHCONST_MESHEDGES)
+    .value("MESHSURFACE",MESHCONST_OPTSURFACE)
+    .value("MESHVOLUME",MESHCONST_OPTVOLUME)
+    ;
+  
   typedef MeshingParameters MP;
   py::class_<MP> (m, "MeshingParameters")
     .def(py::init<>())
     .def("__init__",
-         [](MP *instance, double maxh, bool quad_dominated, int optsteps2d, int optsteps3d)
+         [](MP *instance, double maxh, bool quad_dominated, int optsteps2d, int optsteps3d,
+	    MESHING_STEP perfstepsend)
                            {
                              new (instance) MeshingParameters;
                              instance->maxh = maxh;
                              instance->quad = int(quad_dominated);
                              instance->optsteps2d = optsteps2d;
                              instance->optsteps3d = optsteps3d;
+			     instance->perfstepsend = perfstepsend;
                            },
            py::arg("maxh")=1000,
            py::arg("quad_dominated")=false,
            py::arg("optsteps2d") = 3,
-           py::arg("optsteps3d") = 3
-           ,
+	 py::arg("optsteps3d") = 3,
+	 py::arg("perfstepsend") = MESHCONST_OPTVOLUME,
          "create meshing parameters"
           )
     .def("__str__", &ToString<MP>)

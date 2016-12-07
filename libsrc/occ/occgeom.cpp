@@ -1564,10 +1564,9 @@ namespace netgen
 
 
 
-  int OCCGeometry :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam,
-      int perfstepsstart, int perfstepsend)
+  int OCCGeometry :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
    {
-     return OCCGenerateMesh (*this, mesh, mparam, perfstepsstart, perfstepsend);
+     return OCCGenerateMesh (*this, mesh, mparam);
    }
 
 
