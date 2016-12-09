@@ -136,8 +136,7 @@ namespace netgen
   {
     return CSGGenerateMesh (*this, mesh, mparam);
   }
-
-
+  
   const Refinement & CSGeometry :: GetRefinement () const
   {
     // cout << "get CSGeometry - Refinement" << endl;

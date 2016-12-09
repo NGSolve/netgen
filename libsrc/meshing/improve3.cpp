@@ -18,6 +18,7 @@ namespace netgen
   point is inner point.
 */
 
+
 void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 				       OPTIMIZEGOAL goal)
 {
@@ -41,6 +42,8 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
   double totalbad = 0;
   for (ElementIndex ei = 0; ei < ne; ei++)
     {
+      if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
+	continue;
       double elerr = CalcBad (mesh.Points(), mesh[ei], 0);
       totalbad += elerr;
       elerrs[ei] = elerr;
@@ -64,6 +67,8 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 
   for (ElementIndex ei = 0; ei < ne; ei++)
     {
+      if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
+      	continue;
       if (multithread.terminate)
 	break;
       
@@ -238,7 +243,8 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 
   totalbad = 0;
   for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
-    totalbad += CalcBad (mesh.Points(), mesh[ei], 0);
+    if(!(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex()))
+      totalbad += CalcBad (mesh.Points(), mesh[ei], 0);
 
   if (goal == OPT_QUALITY)
     {
@@ -247,8 +253,9 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 
       int cntill = 0;
       for (ElementIndex ei = 0; ei < ne; ei++)
-	if (!mesh.LegalTet (mesh[ei]))
-	  cntill++;
+	if(!(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex()))
+	  if (!mesh.LegalTet (mesh[ei]))
+	    cntill++;
 
       PrintMessage (5, cntill, " illegal tets");
     }
@@ -306,6 +313,8 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
   badmax = 0;
   for (ei = 0; ei < ne; ei++)
     {
+      if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
+      	continue;
       elerrs[ei] = CalcBad (mesh.Points(), mesh[ei], 0);
       bad1 += elerrs[ei];
       if (elerrs[ei] > badmax) badmax = elerrs[ei];
@@ -337,12 +346,12 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
       int cntill = 0;
       for (ei = 0; ei < ne; ei++)
 	{
-	  //	  if (!LegalTet (volelements.Get(i)))
-	  if (mesh[ei].flags.illegal)
-	    {
-	      cntill++;
-	      illegaltet.Set (ei+1);
-	    }
+	    //	  if (!LegalTet (volelements.Get(i)))
+	    if (mesh[ei].flags.illegal)
+	      {
+		cntill++;
+		illegaltet.Set (ei+1);
+	      }
 	}
       //      (*mycout) << cntill << " illegal tets" << endl;
     }
@@ -350,6 +359,8 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 
   for (ei = 0; ei < ne; ei++)
     {
+      if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
+      	continue;
       if (multithread.terminate)
 	break;
 
@@ -636,6 +647,9 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
     {
       if (multithread.terminate)
 	break;
+      
+      if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
+      	continue;
       
       multithread.percent = 100.0 * (ei+1) / ne;
 
@@ -1225,6 +1239,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 		  int oldpi = suroundpts[l-1];
 		  int newpi = 0;
 
+
 		  for (int k = 0; k < nsuround && !newpi; k++)
 		    if (!tetused[k])
 		      {
@@ -1236,13 +1251,14 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 			      newpi = 
 				nel[0] + nel[1] + nel[2] + nel[3] 
 				- pi1 - pi2 - oldpi;
-			      
+
 			      tetused[k] = 1; 
 			      suroundpts[l] = newpi;
-			    }			
-		      }
+			    
+			    }
+			}
 		}
-
+	      
 	      
 	      bad1 = 0;
 	      for (int k = 0; k < nsuround; k++)
@@ -2380,6 +2396,9 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 	  mesh.LegalTet (mesh[eli1]) &&
 	  CalcBad (mesh.Points(), mesh[eli1], 0) < 1e3)
 	continue;
+      
+      if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(eli1).GetIndex())
+      	continue;
 
       // cout << "eli = " << eli1 << endl;
       //      (*testout) << "swapimp2, eli = " << eli1 << "; el = " << mesh[eli1] << endl;
