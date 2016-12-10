@@ -86,6 +86,20 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (int nr) const
   ret.faces.num = 0;
   ret.faces.ptr = NULL;
 
+  if (mesh->GetDimension() == 2)
+    {
+      ret.facets.num = 1;
+      ret.facets.ptr = (int*)ret.edges.ptr;
+    }
+  else
+    {
+      ret.facets.num = 0;
+      ret.facets.ptr = nullptr;
+      // not working as long as vertices are 1-based
+      // ret.facets.num = 2;
+      // ret.facets.ptr = (int*)&(el[0]);
+    }
+
   // ret.is_curved = mesh->GetCurvedElements().IsSegmentCurved(nr);
   ret.is_curved = el.IsCurved();
 
@@ -117,6 +131,16 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<2> (int nr) const
   ret.faces.num = MeshTopology::GetNFaces (el.GetType());
   ret.faces.ptr = (T_FACE2*)mesh->GetTopology().GetSurfaceElementFacesPtr (nr);
 
+  if (mesh->GetDimension() == 3)
+    {
+      ret.facets.num = ret.faces.num;
+      ret.facets.ptr = (int*)ret.faces.ptr;
+    }
+  else
+    {
+      ret.facets.num = ret.edges.num;
+      ret.facets.ptr = (int*)ret.edges.ptr;
+    }
   ret.is_curved = el.IsCurved();
   return ret;
 }
@@ -141,6 +165,9 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<3> (int nr) const
 
   ret.faces.num = MeshTopology::GetNFaces (el.GetType());
   ret.faces.ptr = (T_FACE2*)mesh->GetTopology().GetElementFacesPtr (nr);
+
+  ret.facets.num = ret.faces.num;
+  ret.facets.ptr = (int*)ret.faces.ptr;
 
   ret.is_curved = el.IsCurved();
   return ret;

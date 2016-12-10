@@ -17,14 +17,14 @@ namespace netgen
   
 struct T_EDGE
 {
-  int orient:1;
-  int nr:31;    // 0-based
+  // int orient:1;
+  int nr;    // 0-based
 };
 
 struct T_FACE
 {
-  int forient:3;
-  int fnr:29;    // 0-based
+  // int forient:3;
+  int fnr;    // 0-based
 };
 
 
@@ -87,7 +87,8 @@ public:
   void GetSegmentEdge (int segnr, int & enr, int & orient) const
   {
     enr = segedges.Get(segnr).nr+1;
-    orient = segedges.Get(segnr).orient;
+    // orient = segedges.Get(segnr).orient;
+    orient = GetSegmentEdgeOrientation(segnr);
   }
 
   void GetElementEdges (int elnr, Array<int> & edges) const;
@@ -98,6 +99,13 @@ public:
   int GetElementEdges (int elnr, int * edges, int * orient) const;
   int GetElementFaces (int elnr, int * faces, int * orient) const;
 
+  int GetElementEdgeOrientation (int elnr, int locedgenr) const; // old style
+  int GetElementFaceOrientation (int elnr, int locfacenr) const; // old style
+  int GetSurfaceElementEdgeOrientation (int elnr, int locedgenr) const; // old style
+  int GetSurfaceElementFaceOrientation2 (int elnr) const; // old style
+  int GetSegmentEdgeOrientation (int elnr) const; // old style
+  
+  
   void GetFaceVertices (int fnr, Array<int> & vertices) const;
   void GetFaceVertices (int fnr, int * vertices) const;
   void GetEdgeVertices (int enr, int & v1, int & v2) const;
