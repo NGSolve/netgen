@@ -648,7 +648,8 @@ namespace netgen
 
   int CSGeometry :: SetTopLevelObject (Solid * sol, Surface * surf)
   {
-    return toplevelobjects.Append (new TopLevelObject (sol, surf)) - 1;
+    toplevelobjects.Append (new TopLevelObject (sol, surf));
+    return toplevelobjects.Size()-1;
   }
 
   TopLevelObject * CSGeometry :: 

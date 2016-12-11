@@ -159,8 +159,9 @@ INDEX AdFront3 :: AddFace (const MiniElement2d & aface)
 
   for (i = 1; i <= aface.GetNP(); i++)
     points[aface.PNum(i)].DecFrontNr (minfn+1);
-
-  int nfn = faces.Append(FrontFace (aface));
+  
+  faces.Append(FrontFace (aface));
+  int nfn = faces.Size();
   faces.Elem(nfn).cluster = cluster;
 
   if (hashon && hashcreated) 

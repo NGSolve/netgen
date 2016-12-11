@@ -19,7 +19,8 @@ int AddPointIfNotExists(Array<Point3d>& ap, const Point3d& p, double eps)
   for (int i = 1; i <= ap.Size(); i++)
     if (Dist2(ap.Get(i),p) <= eps2 ) 
       return i;
-  return ap.Append(p);
+  ap.Append(p);
+  return ap.Size();
 }
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -499,7 +499,8 @@ int Polyhedra :: AddPoint (const Point<3> & p)
   else
     poly_bbox.Add(p);
 
-  return points.Append (p);
+  points.Append (p);
+  return points.Size();
 }
 
 int Polyhedra :: AddFace (int pi1, int pi2, int pi3, int inputnum)

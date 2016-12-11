@@ -1158,7 +1158,8 @@ namespace netgen
 			//seg.surfnr2 = s2_rep;
 			seg.surfnr1 = s1;
 			seg.surfnr2 = s2;
-			hi = refedges.Append (seg);
+                        refedges.Append (seg);
+                        hi = refedges.Size();
 			refedgesinv.Append (edgeinv);
 			edges_priority.Append((pre_ok[k-1]) ? 1 : 0);
 		      }

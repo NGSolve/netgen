@@ -88,7 +88,8 @@ namespace netgen
       }
     else
       {
-	pi = points.Append (FrontPoint2 (p, globind, mgi, pointonsurface)) - 1;
+	points.Append (FrontPoint2 (p, globind, mgi, pointonsurface));
+        pi = points.Size()-1;
       }
 
     if (mgi)
@@ -128,7 +129,8 @@ namespace netgen
       }
     else
       {
-	li = lines.Append(FrontLine (INDEX_2(pi1, pi2))) - 1;
+	lines.Append(FrontLine (INDEX_2(pi1, pi2)));
+        li = lines.Size()-1;
       }
 
   
@@ -332,7 +334,8 @@ namespace netgen
 	      {
 		pindex.Append (pi);
 		invpindex[pi] = pindex.Size();
-		loclines[i][j] = locpoints.Append (points[pi].P());
+                locpoints.Append (points[pi].P());
+		loclines[i][j] = locpoints.Size();
 	      }
 	    else
 	      loclines[i][j] = invpindex[pi];
@@ -349,7 +352,8 @@ namespace netgen
 	    // Dist2 (points.Get(i).P(), p0) <= xh2 &&
 	    invpindex[i] <= 0)
 	  {
-	    invpindex[i] = locpoints.Append (points[i].P());
+            locpoints.Append (points[i].P());
+	    invpindex[i] = locpoints.Size();
 	    pindex.Append(i);
 	  }
       }

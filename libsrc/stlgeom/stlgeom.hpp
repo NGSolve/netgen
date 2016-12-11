@@ -302,11 +302,11 @@ namespace netgen
 	DLL_HEADER int GetNodeOfSelTrig() const;
 
 
-    int AddNormal(const Vec3d& n) {return normals.Append(n);}
+    int AddNormal(const Vec3d& n) { normals.Append(n); return normals.Size(); }
     const Vec3d & GetNormal(int nr) const {return normals.Get(nr);}
     void SetNormal(int nr, const Vec3d& n) {normals.Elem(nr) = n;}
 
-    int AddEdge(const STLEdge& v) {return edges.Append(v);}
+    int AddEdge(const STLEdge& v) { edges.Append(v); return edges.Size(); }
     int AddEdge(int p1, int p2);
 
     STLEdge GetEdge(int nr) {return edges.Get(nr);}
@@ -434,7 +434,7 @@ namespace netgen
     int ProjectOnWholeSurface (Point<3> & p3d) const;
 
     int GetNLines() const {return lines.Size();}
-    int AddLine(STLLine* line) {return lines.Append(line);}
+    int AddLine(STLLine* line) { lines.Append(line); return lines.Size(); }
     STLLine* GetLine(int nr) const {return lines.Get(nr);}
     int GetLineP(int lnr, int pnr) const {return lines.Get(lnr)->PNum(pnr);}
     int GetLineNP(int nr) const {return lines.Get(nr)->NP();}

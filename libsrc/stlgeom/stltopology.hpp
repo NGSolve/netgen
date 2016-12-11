@@ -293,7 +293,7 @@ public:
 
 
   int GetNP() const { return points.Size(); }
-  int AddPoint(const Point<3> & p) { return points.Append(p); }
+  int AddPoint(const Point<3> & p) { points.Append(p); return points.Size(); }
   const Point<3> & GetPoint(int nr) const { return points.Get(nr); }
   int GetPointNum (const Point<3> & p);
   void SetPoint(int nr, const Point<3> & p) { points.Elem(nr) = p; }

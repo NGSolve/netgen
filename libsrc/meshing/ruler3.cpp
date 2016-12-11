@@ -870,8 +870,8 @@ int Meshing3 :: ApplyRules
 			      np.X() += newu (3 * (i-oldnp) - 3);
 			      np.Y() += newu (3 * (i-oldnp) - 2);
 			      np.Z() += newu (3 * (i-oldnp) - 1);
-			      
-			      pmap.Elem(i) = lpoints.Append (np)-1+PointIndex::BASE;
+			      lpoints.Append (np);
+                              pmap.Elem(i) = lpoints.Size()-1+PointIndex::BASE;
 			    }
 			  
 			  // Set new Faces:

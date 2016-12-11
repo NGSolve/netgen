@@ -455,7 +455,8 @@ int STLGeometry :: AddEdge(int ap1, int ap2)
   STLEdge e(ap1,ap2);
   e.SetLeftTrig(GetLeftTrig(ap1,ap2));
   e.SetRightTrig(GetRightTrig(ap1,ap2));
-  return edges.Append(e);
+  edges.Append(e);
+  return edges.Size();
 }
 
 void STLGeometry :: STLDoctorConfirmEdge()

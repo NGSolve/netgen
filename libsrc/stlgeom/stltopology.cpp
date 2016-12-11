@@ -592,7 +592,8 @@ void STLTopology :: FindNeighbourTrigs()
 	    }
 	  else
 	    {
-	      enr = topedges.Append (STLTopEdge (pi1, pi2, i, 0));
+	      topedges.Append (STLTopEdge (pi1, pi2, i, 0));
+              enr = topedges.Size();
 	      ht_topedges->Set (i2, enr);
 	      trig.EdgeNum(j) = enr;
 	    }

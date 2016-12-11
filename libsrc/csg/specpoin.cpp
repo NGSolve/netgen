@@ -2027,7 +2027,8 @@ namespace netgen
 		      
 		      if (spi == -1)
 			{
-			  spi = specpoints.Append (SpecialPoint()) - 1;
+			  specpoints.Append (SpecialPoint());
+                          spi = specpoints.Size()-1;
 			  specpoint2point.Append (i);
 			  specpoints.Last().unconditional = 0;
 			  searchtree.Insert (apoints[i], spi);

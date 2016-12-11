@@ -577,10 +577,10 @@ namespace netgen
 
     ///
     int AddFaceDescriptor(const FaceDescriptor& fd)
-    { return facedecoding.Append(fd); }
+    { facedecoding.Append(fd); return facedecoding.Size(); }
 
     int AddEdgeDescriptor(const EdgeDescriptor & fd)
-    { return edgedecoding.Append(fd) - 1; }
+    { edgedecoding.Append(fd); return edgedecoding.Size() - 1; }
 
     ///
     DLL_HEADER void SetMaterial (int domnr, const string & mat);

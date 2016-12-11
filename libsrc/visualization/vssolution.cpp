@@ -4216,8 +4216,8 @@ namespace netgen
                                             Point<3> p2 = locgrid[teti[pi2]];
                                             cppt.lami =  p2 + edgelam[ednr] * (p1-p2);
                                            
- 
-                                            pnr = pts.Append (cppt)-1;
+                                            pts.Append (cppt);
+                                            pnr = pts.Size()-1;
                                             edges.Set (pair, pnr);
                                           }
 
