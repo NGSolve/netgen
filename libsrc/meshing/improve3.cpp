@@ -274,15 +274,7 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 				     OPTIMIZEGOAL goal)
 {
-  int j, k, l;
-  Point3d p1, p2, pnew;
-
-  ElementIndex ei;
-  SurfaceElementIndex sei;
-  PointIndex pi1, pi2;
-
   double bad1, bad2, badmax, badlimit;
-
 
   int cnt = 0;
   int np = mesh.GetNP();
@@ -291,7 +283,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
   TABLE<ElementIndex,PointIndex::BASE> elementsonnode(np); 
   Array<ElementIndex> hasbothpoints;
 
-  BitArray origpoint(np), boundp(np);
+  BitArray origpoint(np+1), boundp(np+1);  // big enough for 0 and 1-based
   origpoint.Set();
 
   Array<double> elerrs(ne);
@@ -300,7 +292,6 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 
   const char * savetask = multithread.task;
   multithread.task = "Split Improve";
-
 
   PrintMessage (3, "SplitImprove");
   (*testout)  << "start SplitImprove" << "\n";
@@ -311,10 +302,11 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 
   bad1 = 0;
   badmax = 0;
-  for (ei = 0; ei < ne; ei++)
+  for (ElementIndex ei = 0; ei < ne; ei++)
     {
-      if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
+      if(mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
       	continue;
+      
       elerrs[ei] = CalcBad (mesh.Points(), mesh[ei], 0);
       bad1 += elerrs[ei];
       if (elerrs[ei] > badmax) badmax = elerrs[ei];
@@ -325,41 +317,40 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 
 
   boundp.Clear();
-  for (sei = 0; sei < mesh.GetNSE(); sei++)
-    for (j = 0; j < 3; j++)
-      boundp.Set (mesh[sei][j]);
-
+  for (auto & el : mesh.SurfaceElements())
+    for (PointIndex pi : el.PNums())
+      boundp.Set (pi);
+  
   if (goal == OPT_QUALITY)
     {
       bad1 = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
       (*testout) << "Total badness = " << bad1 << endl;
     }
 
-  for (ei = 0; ei < ne; ei++)
-    for (j = 0; j < mesh[ei].GetNP(); j++)
-      elementsonnode.Add (mesh[ei][j], ei);
-
+  for (ElementIndex ei : mesh.VolumeElements().Range())
+    for (PointIndex pi : mesh[ei].PNums())
+      elementsonnode.Add (pi, ei);
 
   mesh.MarkIllegalElements();
   if (goal == OPT_QUALITY || goal == OPT_LEGAL)
     {
       int cntill = 0;
-      for (ei = 0; ei < ne; ei++)
+      for (ElementIndex ei = 0; ei < ne; ei++)
 	{
-	    //	  if (!LegalTet (volelements.Get(i)))
-	    if (mesh[ei].flags.illegal)
-	      {
-		cntill++;
-		illegaltet.Set (ei+1);
-	      }
+          //	  if (!LegalTet (volelements.Get(i)))
+          if (mesh[ei].flags.illegal)
+            {
+              cntill++;
+              illegaltet.Set (ei);
+            }
 	}
-      //      (*mycout) << cntill << " illegal tets" << endl;
     }
 
-
-  for (ei = 0; ei < ne; ei++)
+  for (ElementIndex ei : mesh.VolumeElements().Range())    
     {
-      if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
+      Element & elem = mesh[ei];
+      
+      if(mp.only3D_domain_nr && mp.only3D_domain_nr != elem.GetIndex())
       	continue;
       if (multithread.terminate)
 	break;
@@ -368,82 +359,74 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 
       bool ltestmode = 0;
 
-
-      if (elerrs[ei] < badlimit && !illegaltet.Test(ei+1)) continue;
+      if (elerrs[ei] < badlimit && !illegaltet.Test(ei)) continue;
 
       if ((goal == OPT_LEGAL) &&
-	  !illegaltet.Test(ei+1) &&
-	  CalcBad (mesh.Points(), mesh[ei], 0) < 1e3) 
+	  !illegaltet.Test(ei) &&
+	  CalcBad (mesh.Points(), elem, 0) < 1e3) 
 	continue;
-
-      
-      Element & elem = mesh[ei];
 
       if (ltestmode)
 	{
 	  (*testout) << "test el " << ei << endl;
-	  for (j = 0; j < 4; j++)
+	  for (int j = 0; j < 4; j++)
 	    (*testout) << elem[j] << " ";
 	  (*testout) << endl;
 	}
 
-
-      for (j = 0; j < 6; j++)
+      for (int j = 0; j < 6; j++)
 	{
-
 	  static const int tetedges[6][2] =
 	    { { 0, 1 }, { 0, 2 }, { 0, 3 },
 	      { 1, 2 }, { 1, 3 }, { 2, 3 } };
 
-	  pi1 = elem[tetedges[j][0]];
-	  pi2 = elem[tetedges[j][1]];
+	  PointIndex pi1 = elem[tetedges[j][0]];
+	  PointIndex pi2 = elem[tetedges[j][1]];
 
 	  if (pi2 < pi1) Swap (pi1, pi2);
-	  if (pi2 > elementsonnode.Size()) continue;
+	  if (pi2 >= elementsonnode.Size()+PointIndex::BASE) continue; // old number of points
 
 	  if (!origpoint.Test(pi1) || !origpoint.Test(pi2))
 	    continue;
-
   
 	  INDEX_2 i2(pi1, pi2);
 	  i2.Sort();
 
 	  if (mesh.BoundaryEdge (pi1, pi2)) continue;
 
-	  if (edgetested.Used (i2) && !illegaltet.Test(ei+1)) continue;
+	  if (edgetested.Used (i2) && !illegaltet.Test(ei)) continue;
 	  edgetested.Set (i2, 1);
 
 	  hasbothpoints.SetSize (0);
-	  for (k = 1; k <= elementsonnode.EntrySize(pi1); k++)
+          /*
+	  for (int k = 1; k <= elementsonnode.EntrySize(pi1); k++)
 	    {
-	      bool has1 = 0, has2 = 0;
-
 	      ElementIndex elnr = elementsonnode.Get(pi1, k);
-	      Element & el = mesh[elnr];
+          */
+          for (ElementIndex ei : elementsonnode[pi1])
+            {
+	      Element & el = mesh[ei];
+              bool has1 = el.PNums().Contains(pi1);
+              bool has2 = el.PNums().Contains(pi2);
 
-	      for (l = 0; l < el.GetNP(); l++)
-		{
-		  if (el[l] == pi1) has1 = 1;
-		  if (el[l] == pi2) has2 = 1;
-		}
 	      if (has1 && has2) 
-		if (!hasbothpoints.Contains (elnr))
-		  hasbothpoints.Append (elnr);
+		if (!hasbothpoints.Contains (ei))
+		  hasbothpoints.Append (ei);
 	    }
 	  
 	  bad1 = 0;
-	  for (k = 0; k < hasbothpoints.Size(); k++)
-	    bad1 += CalcBad (mesh.Points(), mesh[hasbothpoints[k]], 0);
-	  
 
+          for (ElementIndex ei : hasbothpoints)
+	    bad1 += CalcBad (mesh.Points(), mesh[ei], 0);            
+          
 	  bool puretet = 1;
-	  for (k = 0; k < hasbothpoints.Size(); k++)
-	    if (mesh[hasbothpoints[k]].GetType() != TET)
+	  for (ElementIndex ei : hasbothpoints)
+	    if (mesh[ei].GetType() != TET)
 	      puretet = 0;
 	  if (!puretet) continue;
 
-	  p1 = mesh[pi1];
-	  p2 = mesh[pi2];
+	  Point3d p1 = mesh[pi1];
+	  Point3d p2 = mesh[pi2];
 
 	  /*
 	    pnew = Center (p1, p2);
@@ -463,13 +446,12 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 	    points.Elem(pi2) = p2;
 	  */
 
-
 	  locfaces.SetSize (0);
-	  for (k = 0; k < hasbothpoints.Size(); k++)
+	  for (ElementIndex ei : hasbothpoints)
 	    {
-	      const Element & el = mesh[hasbothpoints[k]];
-
-	      for (l = 0; l < 4; l++)
+	      const Element & el = mesh[ei];
+              
+	      for (int l = 0; l < 4; l++)
 		if (el[l] == pi1 || el[l] == pi2)
 		  {
 		    INDEX_3 i3;
@@ -486,7 +468,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 	  par.maxit_linsearch = 50;
 	  par.maxit_bfgs = 20;
 
-	  pnew = Center (p1, p2);
+	  Point3d pnew = Center (p1, p2);
 	  Vector px(3);
 	  px(0) = pnew.X();
 	  px(1) = pnew.Y();
@@ -501,11 +483,10 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 	  pnew.Y() = px(1);
 	  pnew.Z() = px(2);
 
-
-	  int hpinew = mesh.AddPoint (pnew);
+	  PointIndex hpinew = mesh.AddPoint (pnew);
 	  //	  ptyps.Append (INNERPOINT);
 
-	  for (k = 0; k < hasbothpoints.Size(); k++)
+	  for (int k = 0; k < hasbothpoints.Size(); k++)
 	    {
 	      Element & oldel = mesh[hasbothpoints[k]];
 	      Element newel1 = oldel;
@@ -515,7 +496,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 	      newel1.flags.illegal_valid = 0;
 	      newel2.flags.illegal_valid = 0;
 	      
-	      for (l = 0; l < 4; l++)
+	      for (int l = 0; l < 4; l++)
 		{
 		  if (newel1[l] == pi2) newel1[l] = hpinew;
 		  if (newel2[l] == pi1) newel2[l] = hpinew;
@@ -536,15 +517,15 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 
 	      PointIndex pinew = mesh.AddPoint (pnew);
 	      
-	      for (k = 0; k < hasbothpoints.Size(); k++)
+	      for (ElementIndex ei : hasbothpoints)
 		{
-		  Element & oldel = mesh[hasbothpoints[k]];
+		  Element & oldel = mesh[ei];
 		  Element newel = oldel;
-
+                  
 		  newel.flags.illegal_valid = 0;
 		  oldel.flags.illegal_valid = 0;
 
-		  for (l = 0; l < 4; l++)
+		  for (int l = 0; l < 4; l++)
 		    {
 		      origpoint.Clear (oldel[l]);
 
@@ -554,7 +535,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 		  mesh.AddVolumeElement (newel);
 		}
 	      
-	      j = 10;
+	      j = 10;  // end j-loop
 	    }
 	}
     }
@@ -572,11 +553,9 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 
       int cntill = 0;
       ne = mesh.GetNE();
-      for (ei = 0; ei < ne; ei++)
-	{
-	  if (!mesh.LegalTet (mesh[ei]))
-	    cntill++;
-	}
+      for (ElementIndex ei = 0; ei < ne; ei++)
+        if (!mesh.LegalTet (mesh[ei]))
+          cntill++;
       //      cout << cntill << " illegal tets" << endl;
     }
 

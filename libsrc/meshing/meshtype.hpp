@@ -156,8 +156,10 @@ namespace netgen
     ElementIndex & operator= (const ElementIndex & ai) { i = ai.i; return *this; }
     ElementIndex & operator= (int ai) { i = ai; return *this; }
     operator int () const { return i; }
-    ElementIndex & operator++ (int) { i++; return *this; }
-    ElementIndex & operator-- (int) { i--; return *this; }
+    ElementIndex operator++ (int) { return ElementIndex(i++); }    
+    ElementIndex operator-- (int) { return ElementIndex(i--); }
+    ElementIndex & operator++ () { ++i; return *this; }
+    ElementIndex & operator-- () { --i; return *this; }
   };
 
   inline istream & operator>> (istream & ist, ElementIndex & pi)
@@ -181,9 +183,11 @@ namespace netgen
     { i = ai.i; return *this; }
     SurfaceElementIndex & operator= (int ai) { i = ai; return *this; }
     operator int () const { return i; }
-    SurfaceElementIndex & operator++ (int) { i++; return *this; }
+    SurfaceElementIndex operator++ (int) { SurfaceElementIndex hi(*this); i++; return hi; }
+    SurfaceElementIndex operator-- (int) { SurfaceElementIndex hi(*this); i--; return hi; }
+    SurfaceElementIndex & operator++ () { ++i; return *this; }
+    SurfaceElementIndex & operator-- () { --i; return *this; }
     SurfaceElementIndex & operator+= (int inc) { i+=inc; return *this; }
-    SurfaceElementIndex & operator-- (int) { i--; return *this; }
   };
 
   inline istream & operator>> (istream & ist, SurfaceElementIndex & pi)
@@ -389,6 +393,8 @@ namespace netgen
 
     FlatArray<const PointIndex> PNums () const 
     { return FlatArray<const PointIndex> (np, &pnum[0]); }
+    FlatArray<PointIndex> PNums ()
+    { return FlatArray<PointIndex> (np, &pnum[0]); }
     
     ///
     PointIndex & PNum (int i) { return pnum[i-1]; }
@@ -477,8 +483,7 @@ namespace netgen
     void Delete ()
     {
       deleted = 1;
-      for (PointIndex & p : pnum)
-        p.Invalidate(); 
+      for (PointIndex & p : pnum) p.Invalidate(); 
     }
     
     bool IsDeleted () const 

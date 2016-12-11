@@ -656,9 +656,10 @@ namespace netgen
       }
     
 
-    for (int i = 1; i <= nseg; i++)
+    // for (int i = 1; i <= nseg; i++)
+    for (Segment & seg : mesh.LineSegments())
       {
-	Segment & seg = mesh.LineSegment (i);
+	// Segment & seg = mesh.LineSegment (i);
 	if (seg.edgenr >= 1 && seg.edgenr <= cntedge)
 	  {
 	    if (osedges.Get(seg.edgenr) != -1)

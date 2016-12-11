@@ -658,8 +658,6 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	      pindex.Elem(i) = adfront -> AddPoint (locpoints.Get(i), globind);
 	    }
 
-          cout << "bbb121212" << endl;
-          
 	  for (int i = 1; i <= locelements.Size(); i++)
 	    {
 	      Point3d * hp1, * hp2, * hp3, * hp4;

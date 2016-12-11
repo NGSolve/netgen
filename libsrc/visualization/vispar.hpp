@@ -76,7 +76,7 @@ public:
   int drawcurveprojedge;
   
 
-  int centerpoint;
+  PointIndex centerpoint;
   int drawelement;
 
   // stl:

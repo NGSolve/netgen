@@ -440,12 +440,12 @@ namespace netgen
 	char buf[30];
 
 	if (vispar.drawpointnumbers)
-	  for (int i = 1; i <= mesh->GetNP(); i++)
+	  for (PointIndex pi : mesh->Points().Range())
             {
-	      const Point3d & p = mesh->Point(i);
+	      const Point3d & p = mesh->Point(pi);
 	      glRasterPos3d (p.X(), p.Y(), p.Z());
 
-	      sprintf (buf, "%d", i);
+	      sprintf (buf, "%d", int(pi));
 
 	      // glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
 	      MyOpenGLText (buf);
@@ -663,12 +663,12 @@ namespace netgen
 
 
 
-	for (int i = 1; i <= mesh->GetNE(); i++)
+	for (ElementIndex ei : mesh->VolumeElements().Range())
 	  {
-            if (mesh->VolumeElement(i).flags.badel)
+            if (mesh->VolumeElement(ei).flags.badel)
 	      {
 		// copy to be thread-safe
-		Element el = mesh->VolumeElement (i);
+		Element el = mesh->VolumeElement (ei);
 		if ( (el.GetNP() == 4) || (el.GetNP() == 10))
 		  {
 		    glBegin (GL_LINES);
@@ -747,17 +747,16 @@ namespace netgen
 	      }
 	  }
 
-
-	for (int i = 1; i <= mesh->GetNSE(); i++)
+        for (SurfaceElementIndex sei : mesh->SurfaceElements().Range())
 	  {
-            Element2d el = mesh->SurfaceElement(i);
+            Element2d el = mesh->SurfaceElement(sei); // copy to be thread-safe
             if (!el.BadElement())
 	      continue;
 
-            int drawel = 1;
+            bool drawel = true;
             for (int j = 1; j <= el.GetNP(); j++)
-	      if (!el.PNum(j))
-		drawel = 0;
+	      if (!el.PNum(j).IsValid())
+		drawel = false;
 
             if (!drawel)
 	      continue;

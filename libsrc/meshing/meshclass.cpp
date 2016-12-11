@@ -5367,30 +5367,9 @@ namespace netgen
   int Mesh :: MarkIllegalElements ()
   {
     int cnt = 0;
-    int i;
-
-    for (i = 1; i <= GetNE(); i++)
-      {
-        LegalTet (VolumeElement(i));
-
-        /*
-          Element & el = VolumeElement(i);
-          int leg1 = LegalTet (el);
-          el.flags.illegal_valid = 0;
-          int leg2 = LegalTet (el);
-
-          if (leg1 != leg2) 
-          {
-          cerr << "legal differs!!" << endl;
-          (*testout) << "legal differs" << endl;
-          (*testout) << "elnr = " << i << ", el = " << el
-          << " leg1 = " << leg1 << ", leg2 = " << leg2 << endl;
-          }
-
-          //      el.flags.illegal = !LegalTet (el);
-          */
-        cnt += VolumeElement(i).Illegal();
-      }
+    for (auto & el : VolumeElements())
+      if (!LegalTet (el))
+        cnt++;
     return cnt;
   }
 

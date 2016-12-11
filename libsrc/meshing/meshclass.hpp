@@ -24,8 +24,8 @@ namespace netgen
   {
   public:
     typedef ::netgen::T_POINTS T_POINTS;
-    typedef Array<Element> T_VOLELEMENTS;
-    typedef Array<Element2d> T_SURFELEMENTS;
+    typedef Array<Element, 0, ElementIndex> T_VOLELEMENTS;
+    typedef Array<Element2d, 0, SurfaceElementIndex> T_SURFELEMENTS;
 
   private:
     /// point coordinates
@@ -192,24 +192,24 @@ namespace netgen
     void ClearSurfaceElements();
 
     ///
-	DLL_HEADER void ClearVolumeElements()
+    DLL_HEADER void ClearVolumeElements()
     {
       volelements.SetSize(0); 
       timestamp = NextTimeStamp();
     }
 
     ///
-	DLL_HEADER void ClearSegments()
+    DLL_HEADER void ClearSegments()
     { 
       segments.SetSize(0); 
       timestamp = NextTimeStamp();
     }
-  
+    
     ///
     bool TestOk () const;
 
     void SetAllocSize(int nnodes, int nsegs, int nsel, int nel);
-
+    
 
     DLL_HEADER PointIndex AddPoint (const Point3d & p, int layer = 1);
     DLL_HEADER PointIndex AddPoint (const Point3d & p, int layer, POINTTYPE type);
@@ -236,13 +236,17 @@ namespace netgen
       segments.Elem(segnr)[0].Invalidate();
       segments.Elem(segnr)[1].Invalidate();
     }
+    /*
     void FullDeleteSegment (int segnr)  // von wem ist das ???
     {
       segments.Delete(segnr-PointIndex::BASE);
     }
+    */
 
     int GetNSeg () const { return segments.Size(); }
+    [[deprecated("Use LineSegment(SegmentIndex) instead of int !")]]                
     Segment & LineSegment(int i) { return segments.Elem(i); }
+    [[deprecated("Use LineSegment(SegmentIndex) instead of int !")]]                    
     const Segment & LineSegment(int i) const { return segments.Get(i); }
 
     Segment & LineSegment(SegmentIndex si) { return segments[si]; }
@@ -256,6 +260,8 @@ namespace netgen
     Array<Element0d> pointelements;  // only via python interface
 
     DLL_HEADER SurfaceElementIndex AddSurfaceElement (const Element2d & el);
+    
+    [[deprecated("Use DeleteSurfaceElement(SurfaceElementIndex) instead of int !")]]
     void DeleteSurfaceElement (int eli)
     { 
       surfelements.Elem(eli).Delete();
@@ -267,11 +273,16 @@ namespace netgen
 
     void DeleteSurfaceElement (SurfaceElementIndex eli)
     {
-      DeleteSurfaceElement (int(eli)+1);
+      for (auto & p : surfelements[eli].PNums()) p.Invalidate();
+      surfelements[eli].Delete();
+      timestamp = NextTimeStamp();
     }
 
     int GetNSE () const { return surfelements.Size(); }
+
+    [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]    
     Element2d & SurfaceElement(int i) { return surfelements.Elem(i); }
+    [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]        
     const Element2d & SurfaceElement(int i) const { return surfelements.Get(i); }
     Element2d & SurfaceElement(SurfaceElementIndex i) { return surfelements[i]; }
     const Element2d & SurfaceElement(SurfaceElementIndex i) const { return surfelements[i]; }
@@ -309,9 +320,8 @@ namespace netgen
     ELEMENTTYPE ElementType (ElementIndex i) const 
     { return (volelements[i].flags.fixed) ? FIXEDELEMENT : FREEELEMENT; }
 
-    const T_VOLELEMENTS & VolumeElements() const { return volelements; }
-    T_VOLELEMENTS & VolumeElements() { return volelements; }
-
+    const auto & VolumeElements() const { return volelements; }
+    auto & VolumeElements() { return volelements; }
 
     ///
     DLL_HEADER double ElementError (int eli, const MeshingParameters & mp) const;
@@ -321,17 +331,13 @@ namespace netgen
     ///
     void ClearLockedPoints ();
 
-    const Array<PointIndex> & LockedPoints() const
-    { return lockedpoints; }
+    const auto & LockedPoints() const { return lockedpoints; }
 
     /// Returns number of domains
     int GetNDomains() const;
-
     ///
-    int GetDimension() const 
-    { return dimension; }
-    void SetDimension(int dim)
-    { dimension = dim; }
+    int GetDimension() const { return dimension; }
+    void SetDimension (int dim) { dimension = dim; }
 
     /// sets internal tables
     void CalcSurfacesOfNode ();

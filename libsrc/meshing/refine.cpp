@@ -383,11 +383,11 @@ namespace netgen
 	     swap (pnums.Elem(3), pnums.Elem(4));
 
 	     for (int j = 0; j < 6; j++)
-	     {
-	       INDEX_2 i2;
-	       i2.I1() = pnums.Get(betw[j][0]);
-	       i2.I2() = pnums.Get(betw[j][1]);
-	       i2.Sort();
+               {
+                 PointIndex pi1 = pnums.Get(betw[j][0]);
+                 PointIndex pi2 = pnums.Get(betw[j][1]);
+                 INDEX_2 i2 (pi1, pi2);
+                 i2.Sort();
 
 	       /*
 	       if (between.Used(i2))
@@ -405,8 +405,8 @@ namespace netgen
 	       if (!pointset[pinew])
 		 {
 		   pointset[pinew] = true;
-		   mesh.Point(pinew) = Center(mesh.Point(i2.I1()),
-					      mesh.Point(i2.I2()));
+		   mesh.Point(pinew) = Center(mesh.Point(pi1),
+					      mesh.Point(pi2));
 		 }
 	    }
 

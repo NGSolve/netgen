@@ -304,8 +304,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   
 
-  ExportArray<Element>(m);
-  ExportArray<Element2d>(m);
+  ExportArray<Element,0,ElementIndex>(m);
+  ExportArray<Element2d,0,SurfaceElementIndex>(m);
   ExportArray<Segment>(m);
   ExportArray<Element0d>(m);
   ExportArray<MeshPoint,PointIndex::BASE,PointIndex>(m);
@@ -384,11 +384,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def_property("dim", &Mesh::GetDimension, &Mesh::SetDimension)
 
     .def("Elements3D", 
-         static_cast<Array<Element>&(Mesh::*)()> (&Mesh::VolumeElements),
+         static_cast<Array<Element,0,ElementIndex>&(Mesh::*)()> (&Mesh::VolumeElements),
          py::return_value_policy::reference)
 
     .def("Elements2D", 
-         static_cast<Array<Element2d>&(Mesh::*)()> (&Mesh::SurfaceElements),
+         static_cast<Array<Element2d,0,SurfaceElementIndex>&(Mesh::*)()> (&Mesh::SurfaceElements),
          py::return_value_policy::reference)
 
     .def("Elements1D", 
