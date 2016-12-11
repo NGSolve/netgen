@@ -590,7 +590,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 				    const BitArray * working_elements)
 {
-  PointIndex pi1(0), pi2(0), pi3(0), pi4(0), pi5(0), pi6(0);
+  PointIndex pi3(0), pi4(0), pi5(0), pi6(0);
   int cnt = 0;
 
   Element el21(TET), el22(TET), el31(TET), el32(TET), el33(TET);
@@ -636,8 +636,12 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
   
   // find elements on node
   for (ElementIndex ei = 0; ei < ne; ei++)
+    for (PointIndex pi : mesh[ei].PNums())
+      elementsonnode.Add (pi, ei);
+    /*
     for (int j = 0; j < mesh[ei].GetNP(); j++)
       elementsonnode.Add (mesh[ei][j], ei);
+    */
 
 
   // INDEX_2_HASHTABLE<int> edgeused(2 * ne + 5);
@@ -648,7 +652,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
       if (multithread.terminate)
 	break;
       
-      if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
+      if (mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
       	continue;
       
       multithread.percent = 100.0 * (ei+1) / ne;
@@ -678,18 +682,14 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 	  const Element & elemi = mesh[ei];
 	  if (elemi.IsDeleted()) continue;
 
-
-	  //	  (*testout) << "check element " << elemi << endl;
-
 	  int mattyp = elemi.GetIndex();
 	  
 	  static const int tetedges[6][2] =
 	    { { 0, 1 }, { 0, 2 }, { 0, 3 },
 	      { 1, 2 }, { 1, 3 }, { 2, 3 } };
 
-	  pi1 = elemi[tetedges[j][0]];
-	  pi2 = elemi[tetedges[j][1]];
-	  
+	  PointIndex pi1 = elemi[tetedges[j][0]];
+	  PointIndex pi2 = elemi[tetedges[j][1]];
 
 	  if (pi2 < pi1) Swap (pi1, pi2);
 	 	  
@@ -718,21 +718,22 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 
 	      if (has1 && has2) 
 		{ // only once
-		  for (int l = 0; l < hasbothpoints.Size(); l++)
-		    if (hasbothpoints[l] == elnr)
-		      has1 = 0;
-		  
+                  if (hasbothpoints.Contains (elnr))
+                    has1 = false;
+                  
 		  if (has1)
-		    hasbothpoints.Append (elnr);
+                    {
+                      hasbothpoints.Append (elnr);
+                    }
 		}
 	    }
 	  
-	  bool puretet = 1;
-	  for (int k = 0; k < hasbothpoints.Size(); k++)
-	    if (mesh[hasbothpoints[k]].GetType () != TET)
-	      puretet = 0;
-	  if (!puretet)
-	    continue;
+	  bool puretet = true;
+	  for (ElementIndex ei : hasbothpoints)
+	    if (mesh[ei].GetType () != TET)
+	      puretet = false;
+          
+	  if (!puretet) continue;
 
 	  int nsuround = hasbothpoints.Size();
 
@@ -763,10 +764,10 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 	      for (int k = 0; k < 3; k++)   // JS, 201212
 		{
 		  const Element & elemk = mesh[hasbothpoints[k]];
-		  bool has1 = 0;
+		  bool has1 = false;
 		  for (int l = 0; l < 4; l++)
 		    if (elemk[l] == pi4)
-		      has1 = 1;
+		      has1 = true;
 		  if (has1)
 		    {
 		      for (int l = 0; l < 4; l++)
@@ -775,9 +776,8 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 		    }
 		}
 
-	      if(pi5 == 0)
+	      if (!pi5.IsValid())
                 throw NgException("Illegal state observed in SwapImprove");
-
 
 	      
 	      el32[0] = pi1;  
@@ -882,7 +882,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 		  mesh[hasbothpoints[0]] = el21;
 		  mesh[hasbothpoints[1]] = el22;
 		  for (int l = 0; l < 4; l++)
-		    mesh[hasbothpoints[2]][l] = 0;
+		    mesh[hasbothpoints[2]][l].Invalidate();
 		  mesh[hasbothpoints[2]].Delete();
 
 		  for (int k = 0; k < 2; k++)
@@ -912,14 +912,11 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 		  el1[3] = pi4;
 		}
 	      
-	      pi5 = 0;
+	      pi5.Invalidate();
 	      for (int k = 0; k < 4; k++)
 		{
 		  const Element & elem = mesh[hasbothpoints[k]];
-		  bool has1 = 0;
-		  for (int l = 0; l < 4; l++)
-		    if (elem[l] == pi4)
-		      has1 = 1;
+                  bool has1 = elem.PNums().Contains(pi4);
 		  if (has1)
 		    {
 		      for (int l = 0; l < 4; l++)
@@ -928,14 +925,11 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 		    }
 		}
 	      
-	      pi6 = 0;
+	      pi6.Invalidate();
 	      for (int k = 0; k < 4; k++)
 		{
 		  const Element & elem = mesh[hasbothpoints[k]];
-		  bool has1 = 0;
-		  for (int l = 0; l < 4; l++)
-		    if (elem[l] == pi3)
-		      has1 = 1;
+                  bool has1 = elem.PNums().Contains(pi3);
 		  if (has1)
 		    {
 		      for (int l = 0; l < 4; l++)
@@ -1202,7 +1196,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 	      Element hel(TET);
 
 	      ArrayMem<PointIndex, 50> suroundpts(nsuround);
-	      ArrayMem<char, 50> tetused(nsuround);
+	      ArrayMem<bool, 50> tetused(nsuround);
 
 	      Element & elem = mesh[hasbothpoints[0]];
 
@@ -1228,33 +1222,32 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 
 	      
 	      // suroundpts.SetSize (nsuround);
+              suroundpts = -17;
 	      suroundpts[0] = pi3;
 	      suroundpts[1] = pi4;
 
-	      tetused = 0;
-	      tetused[0] = 1;
+	      tetused = false;
+	      tetused[0] = true;
 
 	      for (int l = 2; l < nsuround; l++)
 		{
-		  int oldpi = suroundpts[l-1];
-		  int newpi = 0;
+		  PointIndex oldpi = suroundpts[l-1];
+		  PointIndex newpi;
+                  newpi.Invalidate();
 
-
-		  for (int k = 0; k < nsuround && !newpi; k++)
+		  for (int k = 0; k < nsuround && !newpi.IsValid(); k++)
 		    if (!tetused[k])
 		      {
 			const Element & nel = mesh[hasbothpoints[k]];
-
-			for (int k2 = 0; k2 < 4 && !newpi; k2++)
+			for (int k2 = 0; k2 < 4 && !newpi.IsValid(); k2++)
 			  if (nel[k2] == oldpi)
 			    {
 			      newpi = 
 				nel[0] + nel[1] + nel[2] + nel[3] 
 				- pi1 - pi2 - oldpi;
 
-			      tetused[k] = 1; 
+			      tetused[k] = true; 
 			      suroundpts[l] = newpi;
-			    
 			    }
 			}
 		}
@@ -1406,8 +1399,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 		      */
 		      rel.Delete();
 		      for (int k1 = 0; k1 < 4; k1++)
-			rel[k1] = 0;
-
+			rel[k1].Invalidate();
 		    }
 		}
 	    }

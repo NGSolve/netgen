@@ -260,9 +260,9 @@ public:
 
   ///
   int GetLocals (int baseelement,
-		 Array<Point3d > & locpoints,
+		 Array<Point3d, PointIndex::BASE> & locpoints,
                  Array<MiniElement2d> & locfaces,   // local index
-                 Array<PointIndex> & pindex,
+                 Array<PointIndex, PointIndex::BASE> & pindex,
                  Array<INDEX> & findex,
 		 INDEX_2_HASHTABLE<int> & connectedpairs,
                  float xh,
@@ -271,9 +271,9 @@ public:
   
   ///
   void GetGroup (int fi,
-                 Array<MeshPoint> & grouppoints,
+                 Array<MeshPoint, PointIndex::BASE> & grouppoints,
                  Array<MiniElement2d> & groupelements,
-                 Array<PointIndex> & pindex,
+                 Array<PointIndex, PointIndex::BASE> & pindex,
                  Array<INDEX> & findex);
 
   ///

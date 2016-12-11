@@ -484,9 +484,9 @@ int AdFront3 :: SelectBaseElement ()
 
 
 int AdFront3 :: GetLocals (int fstind,
-			   Array<Point3d > & locpoints,
+			   Array<Point3d, PointIndex::BASE> & locpoints,
 			   Array<MiniElement2d> & locfaces,   // local index
-			   Array<PointIndex> & pindex,
+			   Array<PointIndex, PointIndex::BASE> & pindex,
 			   Array<INDEX> & findex,
 			   INDEX_2_HASHTABLE<int> & getconnectedpairs,
 			   float xh,
@@ -600,12 +600,13 @@ int AdFront3 :: GetLocals (int fstind,
 	  if (invpindex[pi] == -1)
 	    {
 	      pindex.Append (pi);
-	      invpindex[pi] = pindex.Size();  // -1+PointIndex::BASE;
-	      locfaces.Elem(i).PNum(j) = locpoints.Append (points[pi].P());
-	    }
-	  else
-	    locfaces.Elem(i).PNum(j) = invpindex[pi];
-
+              locpoints.Append (points[pi].P());
+	      invpindex[pi] = pindex.Size()-1+PointIndex::BASE;
+            }
+          // locfaces.Elem(i).PNum(j) = locpoints.Append (points[pi].P());
+          // }
+	  // else
+          locfaces.Elem(i).PNum(j) = invpindex[pi];
 	}
     }
 
@@ -655,9 +656,9 @@ int AdFront3 :: GetLocals (int fstind,
 
 // returns all points connected with fi
 void AdFront3 :: GetGroup (int fi,
-			   Array<MeshPoint> & grouppoints,
+			   Array<MeshPoint, PointIndex::BASE> & grouppoints,
 			   Array<MiniElement2d> & groupelements,
-			   Array<PointIndex> & pindex,
+			   Array<PointIndex, PointIndex::BASE> & pindex,
 			   Array<INDEX> & findex) 
 {
   // static Array<char> pingroup;

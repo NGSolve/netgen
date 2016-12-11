@@ -646,6 +646,8 @@ namespace netgen
           dshape(3,1) = (1-p(0));
           break;
         }
+      default:
+        throw NgException ("illegal element type in GetDShapeNew");
       }
   }
 
@@ -1744,12 +1746,14 @@ namespace netgen
         { 0, 0, 1, 1 },
         { 0, 0, 0, 1 },
       };
-  
+    
     double * pp = NULL;
     switch (typ)
       {
       case TET: pp = &eltetqp[0][0]; break;
       case TET10: pp = &eltet10qp[ip-1][0]; break;
+      default:
+        throw NgException ("illegal element shape in GetIntegrationPoint");
       }
 
     p(0) = pp[0];
