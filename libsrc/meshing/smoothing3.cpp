@@ -1422,19 +1422,18 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
 
   if(lochfunc)
     {
-      for(int i=1; i<=points.Size(); i++)
-	pointh[i] = GetH(points.Get(i));
+      for (PointIndex pi : points.Range())
+	pointh[pi] = GetH(points[pi]);
     }
   else
     {
       pointh = 0;
-      for(int i=0; i<GetNE(); i++)
+      for (Element & el : VolumeElements())
 	{
-	  const Element & el = VolumeElement(i+1);
 	  double h = pow(el.Volume(points),1./3.);
-	  for(int j=1; j<=el.GetNV(); j++)
-	    if(h > pointh[el.PNum(j)])
-	      pointh[el.PNum(j)] = h;
+          for (PointIndex pi : el.PNums())
+	    if (h > pointh[pi])
+              pointh[pi] = h;
 	}
     }
  
@@ -1455,21 +1454,15 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
 
   const char * savetask = multithread.task;
   multithread.task = "Smooth Mesh";
-  
-  for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+
+  for (PointIndex pi : points.Range())
     if ( (*this)[pi].Type() == INNERPOINT && perrs[pi] > 0.01 * badmax)
       {
 	if (multithread.terminate)
 	  throw NgException ("Meshing stopped");
 
 	multithread.percent = 100.0 * (pi+1-PointIndex::BASE) / points.Size();
-        /*
-	if (points.Size() < 1000)
-	  PrintDot ();
-	else
-	  if ( (i+1-PointIndex::BASE) % 10 == 0)
-	    PrintDot ('+');
-        */
+
         if (  (pi+1-PointIndex::BASE) % printmod == 0) PrintDot (printdot);
 
 	double lh = pointh[pi];
@@ -1502,7 +1495,6 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
 	  }
       }
   PrintDot ('\n');
-  
   
   delete pf;
 

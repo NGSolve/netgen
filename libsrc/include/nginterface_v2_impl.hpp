@@ -1,6 +1,6 @@
 NGX_INLINE DLL_HEADER Ng_Point Ngx_Mesh :: GetPoint (int nr) const
 {
-  return Ng_Point (&mesh->Point(nr + PointIndex::BASE)(0));
+  return Ng_Point (&mesh->Point(PointIndex(nr+PointIndex::BASE))(0));
 }
 
 

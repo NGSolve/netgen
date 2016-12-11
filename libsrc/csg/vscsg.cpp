@@ -130,18 +130,18 @@ namespace netgen
     int hasp = 0;
     for (int i = 0; i < geometry->GetNTopLevelObjects(); i++)
       {
-	const TriangleApproximation & ta =
-	  *geometry->GetTriApprox(i);
-	if (!&ta) continue;
+	const TriangleApproximation * ta =
+	  geometry->GetTriApprox(i);
+	if (!ta) continue;
 
-	for (int j = 0; j < ta.GetNP(); j++)      
+	for (int j = 0; j < ta->GetNP(); j++)      
 	  {
 	    if (hasp)
-	      box.Add (ta.GetPoint(j));
+	      box.Add (ta->GetPoint(j));
 	    else
 	      {
 		hasp = 1;
-		box.Set (ta.GetPoint(j));
+		box.Set (ta->GetPoint(j));
 	      }
 	  }
       }
@@ -167,18 +167,18 @@ namespace netgen
 	trilists.Append (glGenLists (1));
 	glNewList (trilists.Last(), GL_COMPILE); 
 	glEnable (GL_NORMALIZE);
-	const TriangleApproximation & ta =
-	  *geometry->GetTriApprox(i);
-	if (&ta) 
+	const TriangleApproximation * ta =
+	  geometry->GetTriApprox(i);
+	if (ta) 
 	  {
 	    glEnableClientState(GL_VERTEX_ARRAY);
-	    glVertexPointer(3, GL_DOUBLE, 0, &ta.GetPoint(0)(0));
+	    glVertexPointer(3, GL_DOUBLE, 0, &ta->GetPoint(0)(0));
 
 	    glEnableClientState(GL_NORMAL_ARRAY);
-	    glNormalPointer(GL_DOUBLE, 0, &ta.GetNormal(0)(0));
+	    glNormalPointer(GL_DOUBLE, 0, &ta->GetNormal(0)(0));
 	    
-	    for (int j = 0; j < ta.GetNT(); j++)
-	      glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, & (ta.GetTriangle(j)[0]));
+	    for (int j = 0; j < ta->GetNT(); j++)
+	      glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, & (ta->GetTriangle(j)[0]));
 
 	    glDisableClientState(GL_VERTEX_ARRAY);
 	    glDisableClientState(GL_NORMAL_ARRAY);
@@ -382,13 +382,20 @@ namespace netgen
 	glDisable (GL_COLOR_MATERIAL);
 	glDisable (GL_LIGHTING);
 	glDisable (GL_CLIP_PLANE0);
-      
+
+        /*
 	for (int i = 1; i <= mesh -> GetNP(); i++)
 	  {
 	    const Point3d & p = mesh -> Point(i);
 	    glRasterPos3d (p.X(), p.Y(), p.Z());
 	    glBitmap (7, 7, 3, 3, 0, 0, &knoedel[0]);
 	  }
+        */
+        for (const Point3d & p : mesh->Points())
+          {
+	    glRasterPos3d (p.X(), p.Y(), p.Z());
+	    glBitmap (7, 7, 3, 3, 0, 0, &knoedel[0]);
+          }
       }
 
     if (vispar.drawedpointnrs)
@@ -403,7 +410,8 @@ namespace netgen
 	// glListBase (fontbase);
       
 	char buf[20];
-	for (int i = 1; i <= mesh->GetNP(); i++)
+	// for (int i = 1; i <= mesh->GetNP(); i++)
+        for (auto i : mesh->Points().Range())
 	  {
 	    const Point3d & p = mesh->Point(i);
 	    glRasterPos3d (p.X(), p.Y(), p.Z());

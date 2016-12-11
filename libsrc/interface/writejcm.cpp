@@ -33,7 +33,7 @@ void WriteJCMFormat (const Mesh & mesh,
   int np = mesh.GetNP();
 
   // Identic points
-  Array<int,1> identmap1, identmap2, identmap3;
+  Array<int,PointIndex::BASE> identmap1, identmap2, identmap3;
   mesh.GetIdentifications().GetMap(1, identmap1);
   mesh.GetIdentifications().GetMap(2, identmap2);
   mesh.GetIdentifications().GetMap(3, identmap3);

@@ -14,6 +14,9 @@
 
 namespace netgen
 {
+
+  static constexpr int POINTINDEX_BASE = 1;
+  
   struct T_EDGE2
   {
     // int orient:1;
@@ -37,7 +40,7 @@ namespace netgen
       const int * ptr;
   
       int Size() const { return num; }
-      int operator[] (int i) const { return ptr[i]-1; }
+      int operator[] (int i) const { return ptr[i]-POINTINDEX_BASE; }
     };
 
 
@@ -48,7 +51,7 @@ namespace netgen
       const int * ptr;
   
       int Size() const { return num; }
-      int operator[] (int i) const { return ptr[i]-1; }
+      int operator[] (int i) const { return ptr[i]-POINTINDEX_BASE; }
     };
 
     class Ng_Edges
@@ -145,7 +148,7 @@ namespace netgen
       const int * ptr;
   
       int Size() const { return 2; }
-      int operator[] (int i) const { return ptr[i]-1; }
+      int operator[] (int i) const { return ptr[i]-POINTINDEX_BASE; }
     };
 
 
@@ -165,7 +168,7 @@ namespace netgen
       const int * ptr;
   
       int Size() const { return nv; }
-      int operator[] (int i) const { return ptr[i]-1; }
+      int operator[] (int i) const { return ptr[i]-POINTINDEX_BASE; }
     };
 
     class Ng_Edges

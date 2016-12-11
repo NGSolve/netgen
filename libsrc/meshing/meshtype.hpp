@@ -125,6 +125,8 @@ namespace netgen
     PointIndex operator-- (int) { PointIndex hi(*this); i--; return hi; }
     PointIndex operator++ () { i++; return *this; }
     PointIndex operator-- () { i--; return *this; }
+    void Invalidate() { i = PointIndex::BASE-1; }
+    bool IsValid() const { return i != PointIndex::BASE-1; }
 #ifdef BASE0
     enum { BASE = 0 };
 #else
@@ -134,7 +136,7 @@ namespace netgen
 
   inline istream & operator>> (istream & ist, PointIndex & pi)
   {
-    int i; ist >> i; pi = i; return ist;
+    int i; ist >> i; pi = PointIndex(i); return ist;
   }
 
   inline ostream & operator<< (ostream & ost, const PointIndex & pi)
@@ -471,8 +473,14 @@ namespace netgen
 					int pi, Vec2d & dir, double & dd) const;
 
 
-
-    void Delete () { deleted = 1; pnum[0] = pnum[1] = pnum[2] = pnum[3] = PointIndex::BASE-1; }
+    
+    void Delete ()
+    {
+      deleted = 1;
+      for (PointIndex & p : pnum)
+        p.Invalidate(); 
+    }
+    
     bool IsDeleted () const 
     {
 #ifdef DEBUG

@@ -216,8 +216,10 @@ namespace netgen
 
     int GetNP () const { return points.Size(); }
 
+    // [[deprecated("Use Point(PointIndex) instead of int !")]]        
     MeshPoint & Point(int i) { return points.Elem(i); }
     MeshPoint & Point(PointIndex pi) { return points[pi]; }
+    // [[deprecated("Use Point(PointIndex) instead of int !")]]            
     const MeshPoint & Point(int i) const { return points.Get(i); }
     const MeshPoint & Point(PointIndex pi) const { return points[pi]; }
 
@@ -231,8 +233,8 @@ namespace netgen
     DLL_HEADER SegmentIndex AddSegment (const Segment & s);
     void DeleteSegment (int segnr)
     {
-      segments.Elem(segnr)[0] = PointIndex::BASE-1;
-      segments.Elem(segnr)[1] = PointIndex::BASE-1;
+      segments.Elem(segnr)[0].Invalidate();
+      segments.Elem(segnr)[1].Invalidate();
     }
     void FullDeleteSegment (int segnr)  // von wem ist das ???
     {
@@ -257,9 +259,9 @@ namespace netgen
     void DeleteSurfaceElement (int eli)
     { 
       surfelements.Elem(eli).Delete();
-      surfelements.Elem(eli).PNum(1) = -1; 
-      surfelements.Elem(eli).PNum(2) = -1; 
-      surfelements.Elem(eli).PNum(3) = -1; 
+      surfelements.Elem(eli).PNum(1).Invalidate();
+      surfelements.Elem(eli).PNum(2).Invalidate();
+      surfelements.Elem(eli).PNum(3).Invalidate();
       timestamp = NextTimeStamp();
     }
 
@@ -290,7 +292,9 @@ namespace netgen
 
     int GetNE () const { return volelements.Size(); }
 
+    // [[deprecated("Use VolumeElement(ElementIndex) instead of int !")]]    
     Element & VolumeElement(int i) { return volelements.Elem(i); }
+    // [[deprecated("Use VolumeElement(ElementIndex) instead of int !")]]        
     const Element & VolumeElement(int i) const { return volelements.Get(i); }
     Element & VolumeElement(ElementIndex i) { return volelements[i]; }
     const Element & VolumeElement(ElementIndex i) const { return volelements[i]; }

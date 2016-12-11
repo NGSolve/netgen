@@ -617,7 +617,9 @@ namespace netgen
 			(*testout) << "Point on edge" << endl
 				   << "seg = " << i2 << ", p = " << pi << endl
 				   << "pos = " << p << ", projected = " << hp << endl
-				   << "seg is = " << mesh.Point(i2.I1()) << " - " << mesh.Point(i2.I2()) << endl;
+                                   << "seg is = "
+                                   << mesh.Point(PointIndex(i2.I1())) << " - "
+                                   << mesh.Point(PointIndex(i2.I2())) << endl;
 		      }
 		  }
 	      }

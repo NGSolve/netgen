@@ -9,7 +9,7 @@ namespace netgen
 
 FrontPoint3 :: FrontPoint3 () 
 { 
-  globalindex = -1;
+  globalindex.Invalidate(); //  = -1;
   nfacetopoint = 0; 
   frontnr = 1000; 
   cluster = 0;

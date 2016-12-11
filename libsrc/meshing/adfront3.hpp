@@ -17,15 +17,15 @@
 class FrontPoint3
 {
   /// coordinates
-Point<3> p;           
+  Point<3> p;           
   /// global node index
-PointIndex globalindex;   
+  PointIndex globalindex;   
   /// number of faces connected to point 
-int nfacetopoint;    
+  int nfacetopoint;    
   /// distance to original boundary
-int frontnr;
+  int frontnr;
   /// 
-int cluster;
+  int cluster;
 public:
   ///
   FrontPoint3 ();
@@ -43,7 +43,7 @@ public:
   void AddFace ()
   { nfacetopoint++; }
 
-  ///
+  /// if last face is removed, then point is invalidated
   void RemoveFace()
   { 
     nfacetopoint--;
@@ -51,7 +51,7 @@ public:
   }
   
   ///
-  int Valid () const
+  bool Valid () const
   { return nfacetopoint >= 0; }
 
   ///
@@ -74,7 +74,7 @@ class MiniElement2d
 {
 protected:
   int np;
-  PointIndex pnum[4];
+  PointIndex pnum[4]; // can be global or local nums
   bool deleted;
 public:
   MiniElement2d ()
@@ -89,8 +89,8 @@ public:
   const PointIndex PNum (int i) const { return pnum[i-1]; }
   PointIndex & PNum (int i) { return pnum[i-1]; }
   const PointIndex PNumMod (int i) const { return pnum[(i-1)%np]; }
-
-  void Delete () { deleted = 1; pnum[0] = pnum[1] = pnum[2] = pnum[3] = PointIndex::BASE-1; }
+  auto PNums() const { return FlatArray<const PointIndex> (np, &pnum[0]); }
+  void Delete () { deleted = true; for (PointIndex & p : pnum) p.Invalidate(); }
   bool IsDeleted () const { return deleted; }
 };
 
@@ -120,7 +120,7 @@ private:
   int hashvalue;
   ///
   int cluster;
-
+  
 public:
   ///
   FrontFace ();
@@ -178,43 +178,43 @@ class AdFront3
   ///
   Array<FrontPoint3, PointIndex::BASE, PointIndex> points;
   ///
-Array<FrontFace> faces;
+  Array<FrontFace> faces;
   ///
-Array<PointIndex> delpointl;
-
+  Array<PointIndex> delpointl;
+  
   /// which points are connected to pi ?
-TABLE<int, PointIndex::BASE> * connectedpairs;
+  TABLE<int, PointIndex::BASE> * connectedpairs;
   
   /// number of total front faces;
-int nff;
+  int nff;
   /// number of quads in front
-int nff4; 
+  int nff4; 
   
   ///
-double vol;
-
+  double vol;
+  
   ///
-GeomSearch3d hashtable;
-
+  GeomSearch3d hashtable;
+  
   /// 
-int hashon;
+  int hashon;
 
   ///
-int hashcreated;
-
+  int hashcreated;
+  
   /// counter for rebuilding internal tables
-int rebuildcounter;
+  int rebuildcounter;
   /// last base element
-int lasti;
+  int lasti;
   /// minimal selection-value of baseelements
-int minval;
-  Array<int, PointIndex::BASE, PointIndex> invpindex;
+  int minval;
+  Array<PointIndex, PointIndex::BASE, PointIndex> invpindex;
   Array<char> pingroup;
   
   ///
-class Box3dTree * facetree;
+  class Box3dTree * facetree;
 public:
-
+  
   ///
   AdFront3 ();
   ///

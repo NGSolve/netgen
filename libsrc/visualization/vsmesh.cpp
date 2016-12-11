@@ -3343,8 +3343,8 @@ namespace netgen
 			    const Point3d & center,
 			    const double rad,
 			    const int displaylist,
-			    int & selelement, int & selface, int & seledge, int & selpoint,
-			    int & selpoint2, int & locpi)
+			    int & selelement, int & selface, int & seledge, PointIndex & selpoint,
+			    PointIndex & selpoint2, int & locpi)
   {
     auto mesh = vsmesh.GetMesh();
 

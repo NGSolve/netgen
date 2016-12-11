@@ -415,9 +415,9 @@ namespace netgen
 
 		      INDEX_3 i3 = tempels.Get(helind).GetFace (k-1);
 
-		      const Point3d & p1 = mesh.Point ( i3.I1());
-		      const Point3d & p2 = mesh.Point ( i3.I2());
-		      const Point3d & p3 = mesh.Point ( i3.I3());
+		      const Point3d & p1 = mesh.Point ( PointIndex (i3.I1()) );
+		      const Point3d & p2 = mesh.Point ( PointIndex (i3.I2()) );
+		      const Point3d & p3 = mesh.Point ( PointIndex (i3.I3()) );
 
 
 		      Vec3d v1(p1, p2);
@@ -612,20 +612,20 @@ namespace netgen
     for (int i = 1; i <= adfront->GetNF(); i++)
       {
 	const MiniElement2d & face = adfront->GetFace(i);
-	for (int j = 0; j < face.GetNP(); j++)
+        for (PointIndex pi : face.PNums())
 	  {
-	    pmin.SetToMin  (mesh.Point (face[j]));
-	    pmax.SetToMax  (mesh.Point (face[j]));
+	    pmin.SetToMin  (mesh.Point (pi));
+	    pmax.SetToMax  (mesh.Point (pi));
 	  }
       }
   
-    for (int i = 0; i < mesh.LockedPoints().Size(); i++)
+    for (PointIndex pi : mesh.LockedPoints())
       {
-	pmin.SetToMin (mesh.Point (mesh.LockedPoints()[i]));
-	pmax.SetToMax (mesh.Point (mesh.LockedPoints()[i]));
+	pmin.SetToMin (mesh.Point (pi));
+	pmax.SetToMax (mesh.Point (pi));
       }
-  
-
+    
+    
 
     Vec3d vdiag(pmin, pmax);
     // double r1 = vdiag.Length();

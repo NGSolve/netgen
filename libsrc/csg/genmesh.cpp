@@ -759,8 +759,9 @@ namespace netgen
 		  << "time = " << GetTime() << " sec" << endl
 		  << "points: " << mesh->GetNP() << endl;
 #endif      
-      
-	if (mparam.uselocalh && 0)
+
+        /*
+	if (mparam.uselocalh)
 	  {
 	    mesh->CalcLocalH(mparam.grading);      
 	    mesh->DeleteMesh();
@@ -773,6 +774,7 @@ namespace netgen
 	    MeshSurface (geom, *mesh, mparam);  
 	    if (multithread.terminate) return TCL_OK;
 	  }
+        */
 
 #ifdef LOG_STREAM      
 	(*logout) << "Surfaces remeshed" << endl

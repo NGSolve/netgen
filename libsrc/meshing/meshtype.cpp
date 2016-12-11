@@ -538,6 +538,9 @@ namespace netgen
           shape(3) = (1-p(0))*   p(1) ;
           break;
         }
+
+      default:
+        throw NgException ("illegal element type in GetShapeNew");
       }
   }
 
@@ -562,6 +565,8 @@ namespace netgen
           shape(3) = (1-p(0))*   p(1) ;
           break;
         }
+      default:
+        throw NgException ("illegal element type in GetShapeNew");
       }
   }
 
