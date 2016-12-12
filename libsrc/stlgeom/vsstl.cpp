@@ -1245,8 +1245,8 @@ DLL_HEADER void ExportSTLVis(py::module &m)
 	});
 }
 
-PYBIND11_PLUGIN(libcsgvis) {
-  py::module m("csg", "pybind csg");
+PYBIND11_PLUGIN(libstlvis) {
+  py::module m("stlvis", "pybind stl vis");
   ExportSTLVis(m);
   return m.ptr();
 }
