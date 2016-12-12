@@ -2148,7 +2148,7 @@ namespace netgen
                 INDEX_2 seg (el.PNumMod(j), el.PNumMod(j+1));
                 INDEX_2 data;
 
-                if (seg.I1() <= 0 || seg.I2() <= 0)
+                if (seg.I1() < PointIndex::BASE || seg.I2() < PointIndex::BASE)
                   cerr << "seg = " << seg << endl;
 
                 if (faceht.Used(seg))
@@ -2355,34 +2355,33 @@ namespace netgen
 
   void Mesh :: RemoveOneLayerSurfaceElements ()
   {
-    int i, j;
     int np = GetNP();
 
     FindOpenSegments();
-    BitArray frontpoints(np);
-
+    BitArray frontpoints(np+1);  // for 0- and 1-based
     frontpoints.Clear();
-    for (i = 1; i <= GetNOpenSegments(); i++)
+    
+    for (int i = 1; i <= GetNOpenSegments(); i++)
       {
         const Segment & seg = GetOpenSegment(i);
         frontpoints.Set (seg[0]);
         frontpoints.Set (seg[1]);
       }
 
-    for (i = 1; i <= GetNSE(); i++)
+    for (int i = 1; i <= GetNSE(); i++)
       {
         Element2d & sel = surfelements.Elem(i);
-        int remove = 0;
-        for (j = 1; j <= sel.GetNP(); j++)
+        bool remove = false;
+        for (int j = 1; j <= sel.GetNP(); j++)
           if (frontpoints.Test(sel.PNum(j)))
-            remove = 1;
+            remove = true;
         if (remove)
-          sel.PNum(1) = 0;
+          sel.PNum(1).Invalidate();
       }
 
-    for (i = surfelements.Size(); i >= 1; i--)
+    for (int i = surfelements.Size(); i >= 1; i--)
       {
-        if (surfelements.Elem(i).PNum(1) == 0)
+        if (!surfelements.Elem(i).PNum(1).IsValid())
           {
             surfelements.Elem(i) = surfelements.Last();
             surfelements.DeleteLast();

@@ -144,7 +144,18 @@ namespace netgen
     return (ost << int(pi));
   }
 
-
+  template <int N> class PointIndices;
+  template <> class PointIndices<2> : public INDEX_2
+  {
+  public:
+    PointIndices () = default;
+    PointIndices (INDEX_2 i2) : INDEX_2(i2) { ; }
+    PointIndices (PointIndex i1, PointIndex i2) : INDEX_2(i1,i2) { ; } 
+    PointIndex operator[] (int i) const { return PointIndex(INDEX_2::operator[](i)); }
+    PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_2::operator[](i)); }
+    static PointIndices Sort(PointIndex i1, PointIndex i2) { return INDEX_2::Sort(i1, i2); } 
+  };
+  
 
 
   class ElementIndex
