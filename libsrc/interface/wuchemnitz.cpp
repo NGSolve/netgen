@@ -202,7 +202,8 @@ namespace netgen
                 fa.p1 = i3.I1();
                 fa.p2 = i3.I2();
                 fa.p3 = i3.I3();
-                facei = faces.Append (fa);
+                faces.Append (fa);
+                facei = faces.Size();
                 faceindex.Set (i3, facei);
               } 
         
@@ -241,7 +242,8 @@ namespace netgen
                 EDGE ed;
                 ed.p1 = i2.I1();
                 ed.p2 = i2.I2();
-                edgei = edges.Append (ed);
+                edges.Append (ed);
+                edgei = edges.Size();
                 edgeindex.Set (i2, edgei);
               } 
         

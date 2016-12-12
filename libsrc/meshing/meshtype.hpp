@@ -125,6 +125,8 @@ namespace netgen
     PointIndex operator-- (int) { PointIndex hi(*this); i--; return hi; }
     PointIndex operator++ () { i++; return *this; }
     PointIndex operator-- () { i--; return *this; }
+    void Invalidate() { i = PointIndex::BASE-1; }
+    bool IsValid() const { return i != PointIndex::BASE-1; }
 #ifdef BASE0
     enum { BASE = 0 };
 #else
@@ -134,7 +136,7 @@ namespace netgen
 
   inline istream & operator>> (istream & ist, PointIndex & pi)
   {
-    int i; ist >> i; pi = i; return ist;
+    int i; ist >> i; pi = PointIndex(i); return ist;
   }
 
   inline ostream & operator<< (ostream & ost, const PointIndex & pi)
@@ -154,8 +156,10 @@ namespace netgen
     ElementIndex & operator= (const ElementIndex & ai) { i = ai.i; return *this; }
     ElementIndex & operator= (int ai) { i = ai; return *this; }
     operator int () const { return i; }
-    ElementIndex & operator++ (int) { i++; return *this; }
-    ElementIndex & operator-- (int) { i--; return *this; }
+    ElementIndex operator++ (int) { return ElementIndex(i++); }    
+    ElementIndex operator-- (int) { return ElementIndex(i--); }
+    ElementIndex & operator++ () { ++i; return *this; }
+    ElementIndex & operator-- () { --i; return *this; }
   };
 
   inline istream & operator>> (istream & ist, ElementIndex & pi)
@@ -179,9 +183,11 @@ namespace netgen
     { i = ai.i; return *this; }
     SurfaceElementIndex & operator= (int ai) { i = ai; return *this; }
     operator int () const { return i; }
-    SurfaceElementIndex & operator++ (int) { i++; return *this; }
+    SurfaceElementIndex operator++ (int) { SurfaceElementIndex hi(*this); i++; return hi; }
+    SurfaceElementIndex operator-- (int) { SurfaceElementIndex hi(*this); i--; return hi; }
+    SurfaceElementIndex & operator++ () { ++i; return *this; }
+    SurfaceElementIndex & operator-- () { --i; return *this; }
     SurfaceElementIndex & operator+= (int inc) { i+=inc; return *this; }
-    SurfaceElementIndex & operator-- (int) { i--; return *this; }
   };
 
   inline istream & operator>> (istream & ist, SurfaceElementIndex & pi)
@@ -344,6 +350,7 @@ namespace netgen
 	default:
 	  PrintSysError ("Element2d::SetType, illegal type ", int(typ));
 	}
+      is_curved = (np >= 4); 
     }
     ///
     int GetNP() const { return np; }
@@ -386,6 +393,8 @@ namespace netgen
 
     FlatArray<const PointIndex> PNums () const 
     { return FlatArray<const PointIndex> (np, &pnum[0]); }
+    FlatArray<PointIndex> PNums ()
+    { return FlatArray<PointIndex> (np, &pnum[0]); }
     
     ///
     PointIndex & PNum (int i) { return pnum[i-1]; }
@@ -470,8 +479,13 @@ namespace netgen
 					int pi, Vec2d & dir, double & dd) const;
 
 
-
-    void Delete () { deleted = 1; pnum[0] = pnum[1] = pnum[2] = pnum[3] = PointIndex::BASE-1; }
+    
+    void Delete ()
+    {
+      deleted = 1;
+      for (PointIndex & p : pnum) p.Invalidate(); 
+    }
+    
     bool IsDeleted () const 
     {
 #ifdef DEBUG

@@ -35,7 +35,7 @@
     ///
     FrontPoint2 ()
     {
-      globalindex = -1;
+      globalindex.Invalidate(); //  = -1;
       nlinetopoint = 0;
       frontnr = INT_MAX-10;    // attention: overflow on calculating  INT_MAX + 1
       mgi = NULL;

@@ -9,7 +9,7 @@ namespace netgen
 
 FrontPoint3 :: FrontPoint3 () 
 { 
-  globalindex = -1;
+  globalindex.Invalidate(); //  = -1;
   nfacetopoint = 0; 
   frontnr = 1000; 
   cluster = 0;
@@ -159,8 +159,9 @@ INDEX AdFront3 :: AddFace (const MiniElement2d & aface)
 
   for (i = 1; i <= aface.GetNP(); i++)
     points[aface.PNum(i)].DecFrontNr (minfn+1);
-
-  int nfn = faces.Append(FrontFace (aface));
+  
+  faces.Append(FrontFace (aface));
+  int nfn = faces.Size();
   faces.Elem(nfn).cluster = cluster;
 
   if (hashon && hashcreated) 
@@ -484,9 +485,9 @@ int AdFront3 :: SelectBaseElement ()
 
 
 int AdFront3 :: GetLocals (int fstind,
-			   Array<Point3d > & locpoints,
+			   Array<Point3d, PointIndex::BASE> & locpoints,
 			   Array<MiniElement2d> & locfaces,   // local index
-			   Array<PointIndex> & pindex,
+			   Array<PointIndex, PointIndex::BASE> & pindex,
 			   Array<INDEX> & findex,
 			   INDEX_2_HASHTABLE<int> & getconnectedpairs,
 			   float xh,
@@ -600,12 +601,13 @@ int AdFront3 :: GetLocals (int fstind,
 	  if (invpindex[pi] == -1)
 	    {
 	      pindex.Append (pi);
-	      invpindex[pi] = pindex.Size();  // -1+PointIndex::BASE;
-	      locfaces.Elem(i).PNum(j) = locpoints.Append (points[pi].P());
-	    }
-	  else
-	    locfaces.Elem(i).PNum(j) = invpindex[pi];
-
+              locpoints.Append (points[pi].P());
+	      invpindex[pi] = pindex.Size()-1+PointIndex::BASE;
+            }
+          // locfaces.Elem(i).PNum(j) = locpoints.Append (points[pi].P());
+          // }
+	  // else
+          locfaces.Elem(i).PNum(j) = invpindex[pi];
 	}
     }
 
@@ -655,9 +657,9 @@ int AdFront3 :: GetLocals (int fstind,
 
 // returns all points connected with fi
 void AdFront3 :: GetGroup (int fi,
-			   Array<MeshPoint> & grouppoints,
+			   Array<MeshPoint, PointIndex::BASE> & grouppoints,
 			   Array<MiniElement2d> & groupelements,
-			   Array<PointIndex> & pindex,
+			   Array<PointIndex, PointIndex::BASE> & pindex,
 			   Array<INDEX> & findex) 
 {
   // static Array<char> pingroup;

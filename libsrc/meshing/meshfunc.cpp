@@ -708,7 +708,7 @@ namespace netgen
 	  break;
 
 	PrintMessage (5, nillegal, " illegal tets");
-	optmesh.SplitImprove (mesh3d, OPT_LEGAL);
+        optmesh.SplitImprove (mesh3d, OPT_LEGAL);
 
 	mesh3d.MarkIllegalElements();  // test
 	optmesh.SwapImprove (mesh3d, OPT_LEGAL);

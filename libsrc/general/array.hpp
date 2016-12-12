@@ -293,13 +293,13 @@ namespace netgen
 
 
     /// Add element at end of array. reallocation if necessary.
-    int Append (const T & el)
+    void Append (const T & el)
     {
       if (size == allocsize) 
 	ReSize (size+1);
       data[size] = el;
       size++;
-      return size;
+      // return size;
     }
 
     template <typename T2, int B2>

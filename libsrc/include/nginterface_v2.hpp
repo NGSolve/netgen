@@ -14,15 +14,20 @@
 
 namespace netgen
 {
+
+  static constexpr int POINTINDEX_BASE = 1;
+  
   struct T_EDGE2
   {
-    int orient:1;
-    int nr:31;    // 0-based
+    // int orient:1;
+    // int nr:31;    // 0-based
+    int nr;    // 0-based
   };
   struct T_FACE2
   {
-    int orient:3;
-    int nr:29;    // 0-based
+    // int orient:3;
+    // int nr:29;    // 0-based
+    int nr;    // 0-based
   };
 
   class Ng_Element
@@ -35,7 +40,7 @@ namespace netgen
       const int * ptr;
   
       int Size() const { return num; }
-      int operator[] (int i) const { return ptr[i]-1; }
+      int operator[] (int i) const { return ptr[i]-POINTINDEX_BASE; }
     };
 
 
@@ -46,7 +51,7 @@ namespace netgen
       const int * ptr;
   
       int Size() const { return num; }
-      int operator[] (int i) const { return ptr[i]-1; }
+      int operator[] (int i) const { return ptr[i]-POINTINDEX_BASE; }
     };
 
     class Ng_Edges
@@ -71,6 +76,17 @@ namespace netgen
       int operator[] (int i) const { return ptr[i].nr; }
     };
 
+    class Ng_Facets
+    {
+    public:
+      int num;
+      const int * ptr;
+  
+      int Size() const { return num; }
+      int operator[] (int i) const { return ptr[i]; }
+    };
+
+    
   public:
     NG_ELEMENT_TYPE type;
     int index;           // material / boundary condition 
@@ -81,6 +97,7 @@ namespace netgen
     Ng_Vertices vertices;
     Ng_Edges edges;
     Ng_Faces faces;
+    Ng_Facets facets;
     bool is_curved;
   };
 
@@ -131,7 +148,7 @@ namespace netgen
       const int * ptr;
   
       int Size() const { return 2; }
-      int operator[] (int i) const { return ptr[i]-1; }
+      int operator[] (int i) const { return ptr[i]-POINTINDEX_BASE; }
     };
 
 
@@ -151,7 +168,7 @@ namespace netgen
       const int * ptr;
   
       int Size() const { return nv; }
-      int operator[] (int i) const { return ptr[i]-1; }
+      int operator[] (int i) const { return ptr[i]-POINTINDEX_BASE; }
     };
 
     class Ng_Edges

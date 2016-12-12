@@ -144,7 +144,7 @@ namespace netgen
                 { swap (face.I2(), face.I3()); facedir += 2; }
               if (face.I1() > face.I2())
                 { swap (face.I1(), face.I2()); facedir += 4; }
-              
+
               if (face.I1() != v) continue;
 
               func (face, elnr, j, true, facedir);
@@ -608,15 +608,15 @@ namespace netgen
                                     {
                                     case 3:
                                       edges[elnr][loc_edge].nr = edgenum;
-                                      edges[elnr][loc_edge].orient = edgedir;
+                                      // edges[elnr][loc_edge].orient = edgedir;
                                       break;
                                     case 2:
                                       surfedges[elnr][loc_edge].nr = edgenum;
-                                      surfedges[elnr][loc_edge].orient = edgedir;
+                                      // surfedges[elnr][loc_edge].orient = edgedir;
                                       break;
                                     case 1:
                                       segedges[elnr].nr = edgenum;
-                                      segedges[elnr].orient = edgedir;
+                                      // segedges[elnr].orient = edgedir;
                                       break;
                                     }
                                 });
@@ -783,12 +783,12 @@ namespace netgen
                                    if (volume)
                                      {
                                        faces[elnr][j].fnr = facenum;
-                                       faces[elnr][j].forient = facedir;
+                                       // faces[elnr][j].forient = facedir;
                                      }
                                    else
                                      {
                                        surffaces[elnr].fnr = facenum;
-                                       surffaces[elnr].forient = facedir;
+                                       // surffaces[elnr].forient = facedir;
                                      }
                                  });
                 }
@@ -1346,7 +1346,8 @@ namespace netgen
     eorient.SetSize (ned);
     for (int i = 1; i <= ned; i++)
       // eorient.Elem(i) = (edges.Get(elnr)[i-1] > 0) ? 1 : -1;
-      eorient.Elem(i) = (edges.Get(elnr)[i-1].orient) ? -1 : 1;
+      // eorient.Elem(i) = (edges.Get(elnr)[i-1].orient) ? -1 : 1;
+      eorient.Elem(i) = GetElementEdgeOrientation (elnr, i-1) ? -1 : 1;
   }
 
   void MeshTopology :: GetElementFaceOrientations (int elnr, Array<int> & forient) const
@@ -1354,8 +1355,9 @@ namespace netgen
     int nfa = GetNFaces (mesh.VolumeElement(elnr).GetType());
     forient.SetSize (nfa);
     for (int i = 1; i <= nfa; i++)
-      forient.Elem(i) = faces.Get(elnr)[i-1].forient;
-    // forient.Elem(i) = (faces.Get(elnr)[i-1]-1) % 8;
+      // forient.Elem(i) = faces.Get(elnr)[i-1].forient;
+      // forient.Elem(i) = (faces.Get(elnr)[i-1]-1) % 8;
+      forient.Elem(i) = GetElementFaceOrientation(elnr, i-1);
   }
 
 
@@ -1377,7 +1379,8 @@ namespace netgen
                 */
                 if (edges.Get(elnr)[i].nr == -1) return i;
                 eledges[i] = edges.Get(elnr)[i].nr+1;
-		orient[i] = edges.Get(elnr)[i].orient ? -1 : 1;
+		// orient[i] = edges.Get(elnr)[i].orient ? -1 : 1;
+                orient[i] = GetElementEdgeOrientation(elnr, i) ? -1 : 1;
 	      }
 	  }
 	else
@@ -1432,7 +1435,8 @@ namespace netgen
             */
 	    if (faces.Get(elnr)[i].fnr == -1) return i;
 	    elfaces[i] = faces.Get(elnr)[i].fnr+1;
-	    orient[i] = faces.Get(elnr)[i].forient;
+	    // orient[i] = faces.Get(elnr)[i].forient;
+            orient[i] = GetElementFaceOrientation (elnr, i);
 	  }
       }
     else
@@ -1484,13 +1488,15 @@ namespace netgen
     eorient.SetSize (ned);
     for (int i = 0; i < ned; i++)
       // eorient[i] = (surfedges.Get(elnr)[i] > 0) ? 1 : -1;
-      eorient[i] = (surfedges.Get(elnr)[i].orient) ? -1 : 1;
+      // eorient[i] = (surfedges.Get(elnr)[i].orient) ? -1 : 1;
+      eorient[i] = GetSurfaceElementEdgeOrientation(elnr, i) ? -1 : 1;
   }
 
   int MeshTopology :: GetSurfaceElementFaceOrientation (int elnr) const
   {
     // return (surffaces.Get(elnr)-1) % 8;
-    return surffaces.Get(elnr).forient;
+    // return surffaces.Get(elnr).forient;
+    return GetSurfaceElementFaceOrientation2(elnr);
   }
 
   int MeshTopology :: GetSurfaceElementEdges (int elnr, int * eledges, int * orient) const
@@ -1509,7 +1515,8 @@ namespace netgen
                 */
 		if (surfedges.Get(elnr)[i].nr == -1) return i;
 		eledges[i] = surfedges.Get(elnr)[i].nr+1;
-		orient[i] = (surfedges.Get(elnr)[i].orient) ? -1 : 1;
+		// orient[i] = (surfedges.Get(elnr)[i].orient) ? -1 : 1;
+                orient[i] = GetSurfaceElementEdgeOrientation(elnr, i) ? -1 : 1;
 
 	      }
 	  }
@@ -1536,12 +1543,159 @@ namespace netgen
         */
 	eledges[0] = segedges.Get(elnr).nr+1;
 	if (orient)
-	  orient[0] = segedges.Get(elnr).orient ? -1 : 1;
+	  // orient[0] = segedges.Get(elnr).orient ? -1 : 1;
+          orient[0] = GetSegmentEdgeOrientation(elnr) ? -1 : 1;
       }
     return 1;
   }
 
 
+  int MeshTopology :: GetElementEdgeOrientation (int elnr, int locedgenr) const
+  {
+    const Element & el = mesh.VolumeElement (elnr);
+    const ELEMENT_EDGE * eledges = MeshTopology::GetEdges0 (el.GetType());    
+
+    int k = locedgenr;
+    INDEX_2 edge(el[eledges[k][0]], el[eledges[k][1]]);
+    int edgedir = (edge.I1() > edge.I2());
+    return edgedir;
+  }
+
+  
+  int MeshTopology :: GetElementFaceOrientation (int elnr, int locfacenr) const
+  {
+    const Element & el = mesh.VolumeElement (elnr);
+    
+    const ELEMENT_FACE * elfaces = MeshTopology::GetFaces0 (el.GetType());
+
+    int j = locfacenr;
+    if (elfaces[j][3] < 0)
+      { // triangle
+        INDEX_4 face(el[elfaces[j][0]], el[elfaces[j][1]], 
+                     el[elfaces[j][2]], 0);
+        
+        int facedir = 0;
+        if (face.I1() > face.I2())
+          { swap (face.I1(), face.I2()); facedir += 1; }
+        if (face.I2() > face.I3())
+          { swap (face.I2(), face.I3()); facedir += 2; }
+        if (face.I1() > face.I2())
+          { swap (face.I1(), face.I2()); facedir += 4; }
+
+        return facedir;
+      }
+    else
+      {
+        // quad
+        int facenum;
+        INDEX_4 face4(el[elfaces[j][0]], el[elfaces[j][1]],
+                      el[elfaces[j][2]], el[elfaces[j][3]]);
+        
+        int facedir = 0;
+        if (min2 (face4.I1(), face4.I2()) > 
+            min2 (face4.I4(), face4.I3())) 
+          {  // z - flip
+            facedir += 1; 
+            swap (face4.I1(), face4.I4());
+            swap (face4.I2(), face4.I3());
+          }
+        if (min2 (face4.I1(), face4.I4()) >
+            min2 (face4.I2(), face4.I3())) 
+          {  // x - flip
+            facedir += 2; 
+            swap (face4.I1(), face4.I2());
+            swap (face4.I3(), face4.I4());
+          }
+        if (face4.I2() > face4.I4())
+          {  // diagonal flip
+            facedir += 4; 
+            swap (face4.I2(), face4.I4());
+          }
+        
+        return facedir;
+      }
+  }        
+    
+
+  
+  int MeshTopology :: GetSurfaceElementEdgeOrientation (int elnr, int locedgenr) const
+  {
+    const Element2d & el = mesh.SurfaceElement (elnr);
+    const ELEMENT_EDGE * eledges = MeshTopology::GetEdges0 (el.GetType());    
+
+    int k = locedgenr;
+    INDEX_2 edge(el[eledges[k][0]], el[eledges[k][1]]);
+    int edgedir = (edge.I1() > edge.I2());
+    return edgedir;
+  }
+  
+  int MeshTopology :: GetSurfaceElementFaceOrientation2 (int elnr) const
+  {
+    const Element2d & el = mesh.SurfaceElement (elnr);
+    
+    const ELEMENT_FACE * elfaces = MeshTopology::GetFaces0 (el.GetType());
+
+    int j = 0;
+    if (elfaces[j][3] < 0)
+      { // triangle
+        INDEX_4 face(el[elfaces[j][0]], el[elfaces[j][1]], 
+                     el[elfaces[j][2]], 0);
+        
+        int facedir = 0;
+        if (face.I1() > face.I2())
+          { swap (face.I1(), face.I2()); facedir += 1; }
+        if (face.I2() > face.I3())
+          { swap (face.I2(), face.I3()); facedir += 2; }
+        if (face.I1() > face.I2())
+          { swap (face.I1(), face.I2()); facedir += 4; }
+
+        return facedir;
+      }
+    else
+      {
+        // quad
+        int facenum;
+        INDEX_4 face4(el[elfaces[j][0]], el[elfaces[j][1]],
+                      el[elfaces[j][2]], el[elfaces[j][3]]);
+        
+        int facedir = 0;
+        if (min2 (face4.I1(), face4.I2()) > 
+            min2 (face4.I4(), face4.I3())) 
+          {  // z - flip
+            facedir += 1; 
+            swap (face4.I1(), face4.I4());
+            swap (face4.I2(), face4.I3());
+          }
+        if (min2 (face4.I1(), face4.I4()) >
+            min2 (face4.I2(), face4.I3())) 
+          {  // x - flip
+            facedir += 2; 
+            swap (face4.I1(), face4.I2());
+            swap (face4.I3(), face4.I4());
+          }
+        if (face4.I2() > face4.I4())
+          {  // diagonal flip
+            facedir += 4; 
+            swap (face4.I2(), face4.I4());
+          }
+        
+        return facedir;
+      }
+  }
+  
+  int MeshTopology :: GetSegmentEdgeOrientation (int elnr) const
+  {
+    const Segment & el = mesh.LineSegment (elnr);
+    const ELEMENT_EDGE * eledges = MeshTopology::GetEdges0 (el.GetType());    
+
+    int k = 0;
+    INDEX_2 edge(el[eledges[k][0]], el[eledges[k][1]]);
+    int edgedir = (edge.I1() > edge.I2());
+    return edgedir;
+  }
+
+
+  
   void MeshTopology :: GetFaceVertices (int fnr, Array<int> & vertices) const
   {
     vertices.SetSize(4);

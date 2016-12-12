@@ -38,7 +38,8 @@
 
 
 
-
+// #define BASE0
+// #define DEBUG
 
 
 #define noDEMOVERSION

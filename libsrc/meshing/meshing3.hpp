@@ -42,7 +42,8 @@ public:
   MESHING3_RESULT GenerateMesh (Mesh & mesh, const MeshingParameters & mp);
   
   ///
-  int ApplyRules (Array<Point3d> & lpoints, Array<int> & allowpoint,
+  int ApplyRules (Array<Point3d, PointIndex::BASE> & lpoints,
+                  Array<int, PointIndex::BASE> & allowpoint,
 		  Array<MiniElement2d> & lfaces, INDEX lfacesplit,
 		  INDEX_2_HASHTABLE<int> & connectedpairs,
 		  Array<Element> & elements,

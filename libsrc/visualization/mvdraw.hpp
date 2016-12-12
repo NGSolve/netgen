@@ -26,8 +26,8 @@ namespace netgen
 
     static int DLL_HEADER selface;
     static int selelement;
-    static int DLL_HEADER selpoint;
-    static int selpoint2;
+    static PointIndex DLL_HEADER selpoint;
+    static PointIndex selpoint2;
     static int locpi;
     static int DLL_HEADER seledge;
 
@@ -235,8 +235,8 @@ namespace netgen
                             const Point3d & center,
                             const double rad,
                             const int displaylist,
-                            int & selelement, int & selface, int & seledge, int & selpoint,
-                            int & selpoint2, int & locpi);
+                            int & selelement, int & selface, int & seledge, PointIndex & selpoint,
+                            PointIndex & selpoint2, int & locpi);
 
 
 }
