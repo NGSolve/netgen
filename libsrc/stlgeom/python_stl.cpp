@@ -4,6 +4,12 @@
 #include <../general/ngpython.hpp>
 #include <stlgeom.hpp>
 
+#ifdef WIN32
+   #define DLL_HEADER   __declspec(dllexport)
+#else
+   #define DLL_HEADER 
+#endif
+
 using namespace netgen;
 namespace netgen
 {

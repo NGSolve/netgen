@@ -1214,6 +1214,14 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
 
 
 #ifdef NG_PYTHON
+
+
+#ifdef WIN32
+   #define DLL_HEADER   __declspec(dllexport)
+#else
+   #define DLL_HEADER 
+#endif
+
 #include <../general/ngpython.hpp>
 
 DLL_HEADER void ExportSTLVis(py::module &m)
