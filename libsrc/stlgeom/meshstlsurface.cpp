@@ -121,8 +121,8 @@ static void STLFindEdges (STLGeometry & geom,
 	  */
 	  Point3d hp, hp2;
 	  Segment seg;
-	  seg[0] = p1;
-	  seg[1] = p2;
+	  seg[0] = p1 + PointIndex::BASE-1;
+	  seg[1] = p2 + PointIndex::BASE-1;
 	  seg.si = geom.GetTriangle(trig1).GetFaceNum();
 	  seg.edgenr = i;
 
@@ -177,8 +177,8 @@ static void STLFindEdges (STLGeometry & geom,
 
 
 	  Segment seg2;
-	  seg2[0] = p2;
-	  seg2[1] = p1;
+	  seg2[0] = p2 + PointIndex::BASE-1;;
+	  seg2[1] = p1 + PointIndex::BASE-1;;
 	  seg2.si = geom.GetTriangle(trig2).GetFaceNum();
 	  seg2.edgenr = i;
 

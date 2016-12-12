@@ -54,14 +54,13 @@ namespace netgen
 	  case TRIG:
 	  case TRIG6:
 	    {
-	      static int betw[3][3] =
-		{ { 2, 3, 4 },
-		  { 1, 3, 5 },
-		  { 1, 2, 6 } };
-
+              static int betw[3][3] =
+		{ { 1, 2, 3 },
+		  { 0, 2, 4 },
+		  { 0, 1, 5 } };
               for (int j = 0; j < 3; j++)
                 {
-                  INDEX_2 i2 = INDEX_2::Sort(el.PNum(betw[j][0]),el.PNum(betw[j][1]));
+                  auto i2 = PointIndices<2>::Sort(el[betw[j][0]],el[betw[j][1]]);
                   if (!between.Used(i2))
                     {
                       between.Set (i2, 0);          
@@ -771,12 +770,9 @@ namespace netgen
 
 	BitArray boundp(np);
 	boundp.Clear();
-	for (int i = 1; i <= mesh.GetNSE(); i++)
-	  {
-	    const Element2d & sel = mesh.SurfaceElement(i);
-	    for (int j = 1; j <= sel.GetNP(); j++)
-	      boundp.Set(sel.PNum(j));
-	  }
+	for (auto & sel : mesh.SurfaceElements())
+          for (auto pi : sel.PNums())
+            boundp.Set(pi);
 
 
 	double lam = 0.5;
@@ -835,11 +831,9 @@ namespace netgen
 		    (*testout) << "p " << i << endl;
 
 		(*testout) << "surf points: " << endl;
-		for (int i = 1; i <= mesh.GetNSE(); i++)
-		  for (int j = 1; j <= 3; j++)
-		    (*testout) << mesh.SurfaceElement(i).PNum(j) << endl;
-		  
-
+		for (auto & sel : mesh.SurfaceElements())
+		  for (auto pi : sel.PNums())
+		    (*testout) << pi << endl;
 
 		mesh.CalcSurfacesOfNode();
 		free.Invert();

@@ -170,7 +170,7 @@ namespace netgen
     /// number of refinement levels
     int mglevels;
     /// refinement hierarchy
-    Array<INDEX_2,PointIndex::BASE> mlbetweennodes;
+    Array<PointIndices<2>,PointIndex::BASE> mlbetweennodes;
     /// parent element of volume element
     Array<int> mlparentelement;
     /// parent element of surface element
