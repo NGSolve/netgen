@@ -1,6 +1,6 @@
 add_library(stl ${NG_LIB_TYPE} 
         meshstlsurface.cpp stlgeom.cpp stlgeomchart.cpp 
-        stlgeommesh.cpp stlline.cpp stltool.cpp stltopology.cpp
+        stlgeommesh.cpp stlline.cpp stltool.cpp stltopology.cpp python_stl.cpp
         )
 
 if(NOT WIN32)
