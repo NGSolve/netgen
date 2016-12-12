@@ -244,9 +244,9 @@ namespace netgen
     */
 
     int GetNSeg () const { return segments.Size(); }
-    [[deprecated("Use LineSegment(SegmentIndex) instead of int !")]]                
+    // [[deprecated("Use LineSegment(SegmentIndex) instead of int !")]]                
     Segment & LineSegment(int i) { return segments.Elem(i); }
-    [[deprecated("Use LineSegment(SegmentIndex) instead of int !")]]                    
+    // [[deprecated("Use LineSegment(SegmentIndex) instead of int !")]]                    
     const Segment & LineSegment(int i) const { return segments.Get(i); }
 
     Segment & LineSegment(SegmentIndex si) { return segments[si]; }
@@ -261,7 +261,7 @@ namespace netgen
 
     DLL_HEADER SurfaceElementIndex AddSurfaceElement (const Element2d & el);
     
-    [[deprecated("Use DeleteSurfaceElement(SurfaceElementIndex) instead of int !")]]
+    // [[deprecated("Use DeleteSurfaceElement(SurfaceElementIndex) instead of int !")]]
     void DeleteSurfaceElement (int eli)
     { 
       surfelements.Elem(eli).Delete();
@@ -280,9 +280,9 @@ namespace netgen
 
     int GetNSE () const { return surfelements.Size(); }
 
-    [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]    
+    // [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]    
     Element2d & SurfaceElement(int i) { return surfelements.Elem(i); }
-    [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]        
+    // [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]        
     const Element2d & SurfaceElement(int i) const { return surfelements.Get(i); }
     Element2d & SurfaceElement(SurfaceElementIndex i) { return surfelements[i]; }
     const Element2d & SurfaceElement(SurfaceElementIndex i) const { return surfelements[i]; }
