@@ -1210,3 +1210,36 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
   }
  
 }
+
+
+
+#ifdef NG_PYTHON
+#include <../general/ngpython.hpp>
+
+DLL_HEADER void ExportSTLVis(py::module &m)
+{
+	using namespace netgen;
+
+	py::class_<VisualSceneSTLGeometry, shared_ptr<VisualSceneSTLGeometry>>
+		(m, "VisualSceneSTLGeometry")
+		.def("Draw", &VisualSceneSTLGeometry::DrawScene)
+		;
+
+    m.def("SetBackGroundColor", &VisualSceneSTLGeometry::SetBackGroundColor);
+
+	m.def("VS",
+		[](STLGeometry & geom)
+	{
+		auto vs = make_shared<VisualSceneSTLGeometry>();
+
+		vs->SetGeometry(&geom);
+		return vs;
+	});
+}
+
+PYBIND11_PLUGIN(libcsgvis) {
+  py::module m("csg", "pybind csg");
+  ExportSTLVis(m);
+  return m.ptr();
+}
+#endif

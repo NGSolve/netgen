@@ -7,6 +7,7 @@
 using namespace netgen;
 namespace netgen
 {
+  //extern shared_ptr<Mesh> mesh;
   extern shared_ptr<NetgenGeometry> ng_geometry;
 }
 
@@ -15,13 +16,12 @@ DLL_HEADER void ExportSTL(py::module & m)
 {
   py::class_<STLGeometry,shared_ptr<STLGeometry>> (m,"STLGeometry")
     .def(py::init<>())
-    .def("Load", FunctionPointer([] (shared_ptr<STLGeometry> self, const string & filename)
-				 {
-				   ifstream ist(filename);
-				   self->Load(ist);
-				   
-				 }))
     ;
+  m.def("LoadSTLGeometry", FunctionPointer([] (const string & filename)
+					   {
+					     ifstream ist(filename);
+					     return shared_ptr<STLGeometry>(STLGeometry::Load(ist));
+					   }));
   m.def("GenerateMesh", FunctionPointer([] (shared_ptr<STLGeometry> geo, MeshingParameters &param)
 					{
 					  auto mesh = make_shared<Mesh>();
@@ -46,4 +46,5 @@ PYBIND11_PLUGIN(libstl) {
   ExportSTL(m);
   return m.ptr();
 }
+
 #endif
