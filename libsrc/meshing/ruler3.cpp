@@ -78,7 +78,7 @@ int Meshing3 :: ApplyRules
   Array<int, PointIndex::BASE> pused;      // point is already mapped, number of uses
   Array<char> fused;                       // face is already mapped
   Array<PointIndex> pmap;                  // map of reference point to local point
-  Array<bool, PointIndex::BASE> pfixed;    // point mapped by face-map
+  Array<bool> pfixed;                      // point mapped by face-map
   Array<int> fmapi;                        // face in reference is mapped to face nr ...
   Array<int> fmapr;                        // face in reference is rotated to map 
   Array<Point3d> transfreezone;            // transformed free-zone
