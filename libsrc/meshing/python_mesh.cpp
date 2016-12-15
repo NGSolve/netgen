@@ -447,6 +447,17 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                     return self.AddFaceDescriptor (fd);
                                   }))
 
+    .def ("DeleteSurfaceElement", FunctionPointer ([](Mesh & self, int i)
+                                                   {
+                                                     return self.DeleteSurfaceElement (i);
+                                                   }))
+
+    .def ("Compress", FunctionPointer ([](Mesh & self)
+                                  {
+                                    return self.Compress ();
+                                  }))
+
+
     .def ("SetBCName", &Mesh::SetBCName)
     .def ("GetBCName", FunctionPointer([](Mesh & self, int bc)->string 
                                        { return self.GetBCName(bc); }))
