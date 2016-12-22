@@ -16,9 +16,8 @@ stages:
   before_script:
     - "echo off"
     - 'call "%VS140COMNTOOLS%\..\..\VC\bin\vcvars32.bat"'
-    - set EXT_LIBS=C:\external_libs\x86
     - set CMAKE_GENERATOR=Visual Studio 14 2015
-    - set INSTALL_DIR=C:/install32_%CI_BUILD_REF_NAME%
+    - set INSTALL_DIR=C:/install32_%CI_BUILD_REF_NAME%/
     - set NETGENDIR=C:\install32_%CI_BUILD_REF_NAME%\bin
     - set PYTHONPATH=C:\install32_%CI_BUILD_REF_NAME%\lib\site-packages
     - set PYTHON_LIB=C:/Python3.5_32/libs/python35.lib
@@ -31,9 +30,8 @@ stages:
   before_script:
     - "echo off"
     - 'call "%VS140COMNTOOLS%\..\..\VC\bin\amd64\vcvars64.bat"'
-    - set EXT_LIBS=C:\external_libs\x64
     - set CMAKE_GENERATOR=Visual Studio 14 2015 Win64
-    - set INSTALL_DIR=C:/install64_%CI_BUILD_REF_NAME%
+    - set INSTALL_DIR=C:/install64_%CI_BUILD_REF_NAME%/
     - set NETGENDIR=C:\install64_%CI_BUILD_REF_NAME%\bin
     - set PYTHONPATH=C:\install64_%CI_BUILD_REF_NAME%\lib\site-packages
     - set PYTHON_LIB=C:/Python3.5/libs/python35.lib
@@ -72,12 +70,11 @@ stages:
     - RD /S /Q CMakeFiles
     - >-
         cmake ..\
-        -DADDITIONAL_PATHS="%EXT_LIBS%\ext_libs;%EXT_LIBS%\occ"
         %PYTHON_CONFIG%
         -G"%CMAKE_GENERATOR%"
         -DINSTALL_DIR="%INSTALL_DIR%"
         -DUSE_OCC=ON
-        -DCMAKE_CXX_FLAGS_RELEASE="/W0"
+        -DCMAKE_BUILD_TYPE=Release
     - cmake --build . --target INSTALL --config Release
 
 build_netgen_win32:
@@ -126,6 +123,7 @@ build_ubuntu_1604:
   stage: test
   script:
     - cd build
+    - cd netgen
     - ctest -C Release -V
 
 # skip since we have no machine with 32 bits
@@ -151,7 +149,7 @@ test_netgen_win64:
 .template_test_linux: &test_linux
   stage: test
   script:
-    - docker run netgen_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION} bash -c 'cd /root/build/netgen && make test ARGS="-V"'
+    - docker run netgen_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION} bash -c 'cd /root/build/netgen && make test_netgen ARGS="-V"'
 
 test_ubuntu_1510:
   <<: *ubuntu_1510

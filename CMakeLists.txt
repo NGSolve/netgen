@@ -3,21 +3,12 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 cmake_minimum_required(VERSION 2.8.9)
-project(Netgen)
-set(NETGEN_VERSION_MAJOR 6)
-set(NETGEN_VERSION_MINOR 2)
-string(TIMESTAMP NETGEN_VERSION_PATCH "%y%U%w" )
-set(NETGEN_VERSION "${NETGEN_VERSION_MAJOR}.${NETGEN_VERSION_MINOR}-dev")
-set(PACKAGE_VERSION "${NETGEN_VERSION_MAJOR}.${NETGEN_VERSION_MINOR}-${NETGEN_VERSION_PATCH}")
-set(CPACK_PACKAGE_VERSION "${PACKAGE_VERSION}")
-# set(CPACK_DEBIAN_PACKAGE_VERSION "${PACKAGE_VERSION}"
-
 if(NOT WIN32)
     option( USE_NATIVE_ARCH  "build which -march=native" ON)
 endif(NOT WIN32)
 
 option( USE_GUI     "don't build netgen with GUI" ON )
-option( USE_PYTHON  "link boost python, necessary for ngsolve" ON )
+option( USE_PYTHON  "build with python interface" ON )
 option( USE_MPI     "enable mpi parallelization" OFF )
 option( USE_OCC     "(not supported) compile with OpenCascade geometry kernel" OFF)
 option( USE_JPEG    "enable snapshots using library libjpeg" OFF )
@@ -26,6 +17,26 @@ option( INTEL_MIC        "cross compile for intel xeon phi")
 option( INSTALL_PROFILES "install environment variable settings to /etc/profile.d" OFF )
 option( INSTALL_DEPENDENCIES "install dependencies like tcl, useful for packaging" OFF )
 option( USE_CCACHE       "use ccache")
+
+option( USE_SUPERBUILD       "use ccache" ON)
+
+if (USE_SUPERBUILD)
+  project (SUPERBUILD)
+  # execute the superbuild (this script will be invoked again without the
+  # USE_SUPERBUILD option this time)
+  include (cmake_modules/SuperBuild.cmake)
+  return()                      # stop processing this file further
+else()
+  project(Netgen)
+endif()
+
+set(NETGEN_VERSION_MAJOR 6)
+set(NETGEN_VERSION_MINOR 2)
+string(TIMESTAMP NETGEN_VERSION_PATCH "%y%U%w" )
+set(NETGEN_VERSION "${NETGEN_VERSION_MAJOR}.${NETGEN_VERSION_MINOR}-dev")
+set(PACKAGE_VERSION "${NETGEN_VERSION_MAJOR}.${NETGEN_VERSION_MINOR}-${NETGEN_VERSION_PATCH}")
+set(CPACK_PACKAGE_VERSION "${PACKAGE_VERSION}")
+# set(CPACK_DEBIAN_PACKAGE_VERSION "${PACKAGE_VERSION}"
 
 
 #######################################################################
@@ -146,19 +157,17 @@ if(APPLE)
 endif(APPLE)
 
 #######################################################################
-find_package(ZLIB REQUIRED)
+if(NOT ZLIB_INCLUDE_DIRS)
+  find_package(ZLIB REQUIRED)
+endif(NOT ZLIB_INCLUDE_DIRS)
 include_directories(${ZLIB_INCLUDE_DIRS})
 
 #######################################################################
 if (USE_GUI)
-    find_package(TCL 8.5)
+    find_package(TCL 8.5 REQUIRED)
     find_package(Threads REQUIRED)
     if(APPLE)
-#           find_library(OPENGL_gl_LIBRARY AppKit REQUIRED)
-#           find_library(OPENGL_gl_LIBRARY OpenGL REQUIRED)
-#          find_package(AppKit REQUIRED) 
           set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -framework AppKit")
-          message("linker flags: ${CMAKE_EXE_LINKER_FLAGS}")
     else(APPLE)
           find_package(X11 REQUIRED) 
     endif(APPLE)
@@ -170,10 +179,6 @@ if (USE_GUI)
     set(LIBTOGL togl)
 
     if(WIN32)
-        get_filename_component(MY_LIB_DIR ${TK_LIBRARY} DIRECTORY)
-        install( DIRECTORY "${MY_LIB_DIR}/tcl8.6"   DESTINATION lib COMPONENT netgen )
-        install( DIRECTORY "${MY_LIB_DIR}/tk8.6"    DESTINATION lib COMPONENT netgen )
-        install( DIRECTORY "${MY_LIB_DIR}/../bin" DESTINATION . COMPONENT netgen )
         add_definitions(-DTOGL_WGL)
     else(WIN32)
         if(APPLE)
@@ -186,36 +191,13 @@ endif (USE_GUI)
 
 #######################################################################
 if (USE_PYTHON)
-    find_path(PYBIND_INCLUDE_DIR pybind11/pybind11.h ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies/pybind11/include)
-    if( NOT PYBIND_INCLUDE_DIR )
-      execute_process(COMMAND git submodule update --init --recursive WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        find_path(PYBIND_INCLUDE_DIR pybind11/pybind11.h ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies/pybind11/include)
-    endif( NOT PYBIND_INCLUDE_DIR )
-    if( PYBIND_INCLUDE_DIR )
-        message("-- Found Pybind11: ${PYBIND_INCLUDE_DIR}")
-    else( PYBIND_INCLUDE_DIR )
-        message(FATAL_ERROR "Could NOT find pybind11!")
-    endif( PYBIND_INCLUDE_DIR )
-    include_directories(${PYBIND_INCLUDE_DIR})
-    set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${PROJECT_SOURCE_DIR}/cmake_modules/python")
-    set(PYTHON_VERSION "3" CACHE STRING "")
-    set(Python_ADDITIONAL_VERSIONS 3.5)
-    if( PYTHON_VERSION VERSION_LESS 3 )
-        message(FATAL_ERROR "NGSolve supports only Python 3")
-    endif( PYTHON_VERSION VERSION_LESS 3 )
-    if( PYTHON_VERSION STREQUAL "3")
-        find_package(PythonInterp ${PYTHON_VERSION} REQUIRED)
-        find_package(PythonLibs ${PYTHON_VERSION}  REQUIRED)
-    else( PYTHON_VERSION STREQUAL "3")
-        find_package(PythonInterp ${PYTHON_VERSION} EXACT REQUIRED)
-        find_package(PythonLibs ${PYTHON_VERSION}  EXACT REQUIRED)
-    endif( PYTHON_VERSION STREQUAL "3")
-
     add_definitions(-DNG_PYTHON)
-    include_directories(${PYTHON_INCLUDE_DIRS})
-    set(PYTHON_LIBS "${PYTHON_LIBRARIES}")
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1,0,''))" OUTPUT_VARIABLE PYTHON_PACKAGES_INSTALL_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
-    message("python install path: ${PYTHON_PACKAGES_INSTALL_DIR}")
+
+    include_directories(${PYBIND_INCLUDE_DIR})
+    include_directories(${PYTHON_INCLUDE_DIR})
+
+    install(DIRECTORY ${PYBIND_INCLUDE_DIR}/pybind11 DESTINATION include COMPONENT netgen_devel)
+    install(FILES ${PYBIND_INCLUDE_DIR}/../LICENSE DESTINATION include/pybind11 COMPONENT netgen_devel)
 endif (USE_PYTHON)
 
 #######################################################################
@@ -232,10 +214,6 @@ if (USE_OCC)
     find_package(OpenCasCade REQUIRED)
     add_definitions(-DOCCGEOMETRY -D_OCC64)
     include_directories(${OCC_INCLUDE_DIR})
-    if(WIN32)
-        install( DIRECTORY "${OCC_LIBRARY_DIR}/../bin" DESTINATION . COMPONENT netgen )
-        install( FILES ${OCC_LIBRARIES_BIN} DESTINATION bin COMPONENT netgen )
-    endif(WIN32)
 endif (USE_OCC)
 
 #######################################################################
@@ -417,6 +395,10 @@ configure_file(
 add_custom_target(uninstall
     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/NetgenConfig.cmake.in
+	${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake @ONLY)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake DESTINATION share/cmake)
 
 #######################################################################
 # Configure message
