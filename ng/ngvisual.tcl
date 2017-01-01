@@ -1443,7 +1443,7 @@ proc visual_dialog { } {
         foreach i { none scal vec } {
             set textval $clipsollabs($i)
             $f.m add command -label "$textval" -command \
-                "$f.b configure -text \"$textval\" ; set visoptions.clipsolution $i ; Ng_Vis_Set parameters ; redraw ; puts \"call redraw\" "                
+                "$f.b configure -text \"$textval\" ; set visoptions.clipsolution $i ; Ng_Vis_Set parameters ; redraw "                
         }
 
         pack $f.b $f.l -side right
