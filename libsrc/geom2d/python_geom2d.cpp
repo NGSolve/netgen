@@ -15,8 +15,7 @@ namespace netgen
 
 DLL_HEADER void ExportGeom2d(py::module &m) 
 {
-
-  py::class_<SplineGeometry2d, shared_ptr<SplineGeometry2d>>
+  py::class_<SplineGeometry2d, NetgenGeometry, shared_ptr<SplineGeometry2d>>
     (m, "SplineGeometry",
      "a 2d boundary representation geometry model by lines and splines")
     .def(py::init<>())

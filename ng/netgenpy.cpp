@@ -21,14 +21,14 @@ void DLL_HEADER ExportSTLVis(py::module &m);
 PYBIND11_PLUGIN(libngpy)
 {
     py::module ngpy("libngpy", "pybind netgen module");
-    py::module csg = ngpy.def_submodule("_csg", "pybind csg module");
-    ExportCSG(csg);
-    py::module csgvis = ngpy.def_submodule("csgvis", "pybind csgvis module");
-    ExportCSGVis(csgvis);
     py::module meshing = ngpy.def_submodule("_meshing", "pybind meshing module");
     ExportNetgenMeshing(meshing);
     py::module meshvis = ngpy.def_submodule("meshvis", "pybind meshvis module");
     ExportMeshVis(meshvis);
+    py::module csg = ngpy.def_submodule("_csg", "pybind csg module");
+    ExportCSG(csg);
+    py::module csgvis = ngpy.def_submodule("csgvis", "pybind csgvis module");
+    ExportCSGVis(csgvis);
     py::module geom2d = ngpy.def_submodule("_geom2d", "pybind geom2d module");
     ExportGeom2d(geom2d);
     py::module stl = ngpy.def_submodule("_stl", "pybind stl module");

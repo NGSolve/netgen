@@ -4,8 +4,8 @@
 
 #include <mystdlib.h>
 #include "meshing.hpp"
-#include <csg.hpp>
-#include <geometry2d.hpp>
+// #include <csg.hpp>
+// #include <geometry2d.hpp>
 #include <../interface/writeuser.hpp>
 
 
@@ -45,10 +45,78 @@ void TranslateException (const NgException & ex)
   PyErr_SetString(PyExc_RuntimeError, err.c_str());
 }
 
+static Transformation<3> global_trafo(Vec<3> (0,0,0));
 
 DLL_HEADER void ExportNetgenMeshing(py::module &m) 
 {
+  py::class_<NGDummyArgument>(m, "NGDummyArgument")
+    .def("__bool__", []( NGDummyArgument &self ) { return false; } )
+    ;
   
+  py::class_<Point<2>> (m, "Point2d")
+    .def(py::init<double,double>())
+    .def ("__str__", &ToString<Point<2>>)
+    .def(py::self-py::self)
+    .def(py::self+Vec<2>())
+    .def(py::self-Vec<2>())
+    ;
+
+  py::class_<Point<3>> (m, "Point3d")
+    .def(py::init<double,double,double>())
+    .def ("__str__", &ToString<Point<3>>)
+    .def(py::self-py::self)
+    .def(py::self+Vec<3>())
+    .def(py::self-Vec<3>())
+    ;
+
+  m.def ("Pnt", FunctionPointer
+           ([](double x, double y, double z) { return global_trafo(Point<3>(x,y,z)); }));
+  m.def ("Pnt", FunctionPointer
+           ([](double x, double y) { return Point<2>(x,y); }));
+
+           
+  m.def ("Pnt", FunctionPointer
+           ([](double x, double y, double z) { return Point<3>(x,y,z); }));
+  m.def ("Pnt", FunctionPointer
+           ([](double x, double y) { return Point<2>(x,y); }));
+
+  py::class_<Vec<2>> (m, "Vec2d")
+    .def(py::init<double,double>())
+    .def ("__str__", &ToString<Vec<3>>)
+    .def(py::self+py::self)
+    .def(py::self-py::self)
+    .def(-py::self)
+    .def(double()*py::self)
+    .def("Norm", &Vec<2>::Length)
+    ;
+
+  py::class_<Vec<3>> (m, "Vec3d")
+    .def(py::init<double,double,double>())
+    .def ("__str__", &ToString<Vec<3>>)
+    .def(py::self+py::self)
+    .def(py::self-py::self)
+    .def(-py::self)
+    .def(double()*py::self)
+    .def("Norm", &Vec<3>::Length)
+    ;
+
+  m.def ("Vec", FunctionPointer
+           ([] (double x, double y, double z) { return global_trafo(Vec<3>(x,y,z)); }));
+  m.def ("Vec", FunctionPointer
+           ([] (double x, double y) { return Vec<2>(x,y); }));
+
+
+  m.def ("SetTransformation", FunctionPointer
+           ([](int dir, double angle)
+            {
+              if (dir > 0)
+                global_trafo.SetAxisRotation (dir, angle*M_PI/180);
+              else
+                global_trafo = Transformation<3> (Vec<3>(0,0,0));
+            }),
+         py::arg("dir")=int(0), py::arg("angle")=int(0));
+
+
   
   py::class_<PointIndex>(m, "PointId")
     .def(py::init<int>())
@@ -312,6 +380,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   ExportArray<FaceDescriptor>(m);
 
   py::implicitly_convertible< int, PointIndex>();
+
+  py::class_<NetgenGeometry, shared_ptr<NetgenGeometry>> (m, "NetgenGeometry")
+             ;
   
   py::class_<Mesh,shared_ptr<Mesh>>(m, "Mesh")
     // .def(py::init<>("create empty mesh"))
@@ -517,18 +588,19 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
            }))
 
     .def ("SetGeometry", FunctionPointer
-          ([](Mesh & self, shared_ptr<CSGeometry> geo)
+          ([](Mesh & self, shared_ptr<NetgenGeometry> geo)
            {
              self.SetGeometry(geo);
            }))
 
-    // TODO: fix this dependency on libgeom2d.so
-//     .def ("SetGeometry", FunctionPointer
-//           ([](Mesh & self, shared_ptr<SplineGeometry2d> geo)
-//            {
-//              self.SetGeometry(geo);
-//            }))
-
+    /*
+    .def ("SetGeometry", FunctionPointer
+          ([](Mesh & self, shared_ptr<CSGeometry> geo)
+           {
+             self.SetGeometry(geo);
+           }))
+    */
+    
     .def ("BuildSearchTree", &Mesh::BuildElementSearchTree)
 
     .def ("BoundaryLayer", FunctionPointer 
