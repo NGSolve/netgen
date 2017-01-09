@@ -32,7 +32,7 @@ if(USE_OCC AND NOT WIN32)
 endif(USE_OCC AND NOT WIN32)
 
 if(USE_PYTHON)
-    target_link_libraries(nglib ${PYTHON_LIBS})
+    target_link_libraries(nglib ${PYTHON_LIBRARIES})
 endif(USE_PYTHON)
 
 # if(NOT WIN32)

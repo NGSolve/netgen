@@ -12,7 +12,7 @@ endif(USE_GUI)
 add_library(visual ${NG_LIB_TYPE} ${LIB_VISUAL_SOURCES})
 
 if(NOT WIN32)
-    target_link_libraries( visual ${PYTHON_LIBS} ${MPI_CXX_LIBRARIES} ${OPENGL_LIBRARIES} ${TCL_LIBRARY} )
+    target_link_libraries( visual ${PYTHON_LIBRARIES} ${MPI_CXX_LIBRARIES} ${OPENGL_LIBRARIES} ${TCL_LIBRARY} )
     install( TARGETS visual ${ng_install_dir})
 endif(NOT WIN32)
 

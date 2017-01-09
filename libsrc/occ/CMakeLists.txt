@@ -7,7 +7,7 @@ add_library(occ ${NG_LIB_TYPE}
 add_library(occvis ${NG_LIB_TYPE} vsocc.cpp)
 
 if(NOT WIN32)
-    target_link_libraries( occ ${OCC_LIBRARIES} ${PYTHON_LIBS})
+    target_link_libraries( occ ${OCC_LIBRARIES} ${PYTHON_LIBRARIES})
     target_link_libraries( occvis occ )
     install( TARGETS occ occvis ${ng_install_dir})
 endif(NOT WIN32)

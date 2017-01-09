@@ -5,7 +5,7 @@ if(APPLE)
 endif(APPLE)
 
 if(NOT WIN32)
-    target_link_libraries(geom2d mesh ${PYTHON_LIBS})
+    target_link_libraries(geom2d mesh ${PYTHON_LIBRARIES})
     install( TARGETS geom2d ${ng_install_dir})
 endif(NOT WIN32)
 
