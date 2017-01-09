@@ -194,7 +194,7 @@ if (USE_PYTHON)
     add_definitions(-DNG_PYTHON)
 
     include_directories(${PYBIND_INCLUDE_DIR})
-    include_directories(${PYTHON_INCLUDE_DIR})
+    include_directories(${PYTHON_INCLUDE_DIRS})
 
     install(DIRECTORY ${PYBIND_INCLUDE_DIR}/pybind11 DESTINATION include COMPONENT netgen_devel)
     install(FILES ${PYBIND_INCLUDE_DIR}/../LICENSE DESTINATION include/pybind11 COMPONENT netgen_devel)
