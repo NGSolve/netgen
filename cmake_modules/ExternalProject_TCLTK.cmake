@@ -5,7 +5,7 @@ if(APPLE)
     UPDATE_COMMAND "" # Disable update
     BUILD_IN_SOURCE 1
     CONFIGURE_COMMAND ""
-    BUILD_COMMAND make -C macosx install INSTALL_ROOT=${HOME}/ NATIVE_TCLSH=${HOME}/usr/local/bin/tclsh
+    BUILD_COMMAND make -C macosx install-embedded INSTALL_ROOT=${INSTALL_DIR}/../../ INSTALL_PATH=/Frameworks #NATIVE_TCLSH=${HOME}/usr/local/bin/tclsh
     INSTALL_COMMAND ""
     LOG_DOWNLOAD 1
     LOG_BUILD 1
@@ -18,7 +18,7 @@ if(APPLE)
     UPDATE_COMMAND "" # Disable update
     BUILD_IN_SOURCE 1
     CONFIGURE_COMMAND ""
-    BUILD_COMMAND make -C macosx install INSTALL_ROOT=${HOME}/
+    BUILD_COMMAND make -C macosx install-embedded INSTALL_ROOT=${INSTALL_DIR}/../../ INSTALL_PATH=/Frameworks 
     INSTALL_COMMAND ""#make -C macosx install
     LOG_DOWNLOAD 1
     LOG_BUILD 1
@@ -31,7 +31,7 @@ if(APPLE)
     PATCH_COMMAND  patch -p1 < ${CMAKE_CURRENT_LIST_DIR}/tkdnd_macosx.patch
     UPDATE_COMMAND "" # Disable update
     BUILD_IN_SOURCE 1
-    CONFIGURE_COMMAND ./configure --libdir=${HOME}/Library/Tcl --with-tcl=${HOME}/Library/Frameworks/Tcl.framework --with-tk=${HOME}/Library/Frameworks/Tk.framework --prefix=${HOME}
+    CONFIGURE_COMMAND ./configure --with-tcl=${INSTALL_DIR}/../../Frameworks/Tcl.framework --with-tk=${INSTALL_DIR}/../../Frameworks/Tk.framework --prefix=${INSTALL_DIR}
     BUILD_COMMAND make
     INSTALL_COMMAND make install
     LOG_DOWNLOAD 1
