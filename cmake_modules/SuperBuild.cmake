@@ -45,10 +45,11 @@ endif(WIN32)
 
 #######################################################################
 # find netgen
-set(INSTALL_DIR /opt/netgen CACHE PATH "Install path")
 if(APPLE)
+  set(INSTALL_DIR /Applications CACHE PATH "Install path")
   set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR}/Netgen.app/Contents/Resources" CACHE INTERNAL "Prefix prepended to install directories" FORCE)
 else(APPLE)
+  set(INSTALL_DIR /opt/netgen CACHE PATH "Install path")
   set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR}" CACHE INTERNAL "Prefix prepended to install directories" FORCE)
 endif(APPLE)
 if(UNIX)

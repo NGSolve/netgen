@@ -69,12 +69,6 @@ if (ADDITIONAL_PATHS)
   set(CMAKE_PREFIX_PATH ${ADDITIONAL_PATHS})
 endif (ADDITIONAL_PATHS)
 
-#######################################################################
-# install dir
-if(NOT INSTALL_DIR)
-    set(INSTALL_DIR "/opt/netgen" CACHE PATH "Prefix prepended to install directories")
-endif(NOT INSTALL_DIR)
-
 if(APPLE)
   set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR}/Netgen.app/Contents/Resources" CACHE INTERNAL "Prefix prepended to install directories" FORCE)
 else(APPLE)
