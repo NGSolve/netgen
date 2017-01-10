@@ -4,6 +4,7 @@ import libngpy.csgvis as csgvis
 from libngpy.csgvis import MouseMove
 from libngpy._meshing import MeshingParameters
 from libngpy._meshing import Pnt
+from libngpy._meshing import Vec
 
 
 CSGeometry.VS = csgvis.VS
