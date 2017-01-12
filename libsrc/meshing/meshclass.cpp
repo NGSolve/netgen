@@ -4720,6 +4720,9 @@ namespace netgen
                                  bool build_searchtree,
                                  const bool allowindex) const
   {
+    const double pointtol = 1e-12;
+    netgen::Point<3> pmin = p - Vec<3> (pointtol, pointtol, pointtol);
+    netgen::Point<3> pmax = p + Vec<3> (pointtol, pointtol, pointtol);
     if (dimension == 2)
       {
         int ne;
@@ -4733,7 +4736,7 @@ namespace netgen
           {
             // update if necessary:
             const_cast<Mesh&>(*this).BuildElementSearchTree (); 
-            elementsearchtree->GetIntersecting (p, p, locels);
+            elementsearchtree->GetIntersecting (pmin, pmax, locels);
             ne = locels.Size();
           }
         else
@@ -4776,7 +4779,7 @@ namespace netgen
           {
             // update if necessary:
             const_cast<Mesh&>(*this).BuildElementSearchTree (); 
-            elementsearchtree->GetIntersecting (p, p, locels);
+            elementsearchtree->GetIntersecting (pmin, pmax, locels);
             ne = locels.Size();
           }
         else
