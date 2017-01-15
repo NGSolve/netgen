@@ -335,7 +335,7 @@ export NETGENDIR=$Netgen_MACOS
 export DYLD_LIBRARY_PATH=$Netgen_MACOS:$DYLD_LIBRARY_PATH
 # export TIX_LIBRARY=$Netgen_MACOS/library
 # export TCLLIBPATH=$Netgen_MACOS:$TCLLIBPATH
-export PYTHONPATH=$Netgen_BUNDLE/Contents/Resources/lib/python3.5/site-packages:$PYTHONPATH
+export PYTHONPATH=$Netgen_BUNDLE/Contents/Resources/${PYTHON_PACKAGES_INSTALL_DIR}:$PYTHONPATH
 cd $Netgen_MACOS
 $Netgen_MACOS/netgen
 ")

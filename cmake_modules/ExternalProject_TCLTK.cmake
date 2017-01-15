@@ -7,7 +7,7 @@ if(APPLE)
     UPDATE_COMMAND "" # Disable update
     BUILD_IN_SOURCE 1
     CONFIGURE_COMMAND ""
-    BUILD_COMMAND make -C macosx install INSTALL_ROOT=${CMAKE_INSTALL_PREFIX}/../ INSTALL_PATH=/Frameworks #NATIVE_TCLSH=${HOME}/usr/local/bin/tclsh
+    BUILD_COMMAND make -C macosx install-embedded INSTALL_ROOT=/ INSTALL_PATH=${CMAKE_INSTALL_PREFIX}/../Frameworks
     INSTALL_COMMAND ""
     LOG_DOWNLOAD 1
     LOG_BUILD 1
@@ -20,9 +20,10 @@ if(APPLE)
     URL_MD5 261754d7dc2a582f00e35547777e1fea
     DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
     UPDATE_COMMAND "" # Disable update
+    PATCH_COMMAND  patch -p1 < ${CMAKE_CURRENT_LIST_DIR}/tk_macosx.patch
     BUILD_IN_SOURCE 1
     CONFIGURE_COMMAND ""
-    BUILD_COMMAND make -C macosx install INSTALL_ROOT=${CMAKE_INSTALL_PREFIX}/../ INSTALL_PATH=/Frameworks 
+    BUILD_COMMAND make -C macosx install-embedded INSTALL_ROOT=/ INSTALL_PATH=${CMAKE_INSTALL_PREFIX}/../Frameworks TCL_FRAMEWORK_DIR=${CMAKE_INSTALL_PREFIX}/../Frameworks/Tcl.framework
     INSTALL_COMMAND ""#make -C macosx install
     LOG_DOWNLOAD 1
     LOG_BUILD 1
@@ -47,12 +48,11 @@ if(APPLE)
     )
 
   list(APPEND NETGEN_DEPENDENCIES tcl tk tkdnd)
-  set(TCL_INCLUDE_PATH ${HOME}/Library/Frameworks/Tcl.framework/Headers)
-  set(TCL_LIBRARY ${HOME}/Library/Frameworks/Tcl.framework)
-  set(TK_LIBRARY ${HOME}/Library/Frameworks/Tk.framework)
-  set(TK_INCLUDE_PATH ${HOME}/Library/Frameworks/Tk.framework/Headers)
-  set(TCL_TCLSH ${HOME}/usr/local/bin/tclsh)
-  set(TK_WISH ${HOME}/usr/local/bin/wish)
+  list(APPEND CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX}../Frameworks)
+  set(TCL_INCLUDE_PATH ${CMAKE_INSTALL_PREFIX}/../Frameworks/Tcl.framework/Headers)
+  set(TCL_LIBRARY ${CMAKE_INSTALL_PREFIX}/../Frameworks/Tcl.framework)
+  set(TK_LIBRARY ${CMAKE_INSTALL_PREFIX}/../Frameworks/Tk.framework)
+  set(TK_INCLUDE_PATH ${CMAKE_INSTALL_PREFIX}/../Frameworks/Tk.framework/Headers)
 
 elseif(WIN32)
 
