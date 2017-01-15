@@ -2,6 +2,8 @@ if(APPLE)
   set(HOME $ENV{HOME})
   ExternalProject_Add(tcl
     URL "http://sourceforge.net/projects/tcl/files/Tcl/8.6.4/tcl8.6.4-src.tar.gz"
+    URL_MD5 d7cbb91f1ded1919370a30edd1534304
+    DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
     UPDATE_COMMAND "" # Disable update
     BUILD_IN_SOURCE 1
     CONFIGURE_COMMAND ""
@@ -15,6 +17,8 @@ if(APPLE)
   ExternalProject_Add(tk
     DEPENDS tcl
     URL "http://sourceforge.net/projects/tcl/files/Tcl/8.6.4/tk8.6.4-src.tar.gz"
+    URL_MD5 261754d7dc2a582f00e35547777e1fea
+    DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
     UPDATE_COMMAND "" # Disable update
     BUILD_IN_SOURCE 1
     CONFIGURE_COMMAND ""
@@ -28,6 +32,8 @@ if(APPLE)
   ExternalProject_Add(tkdnd
     DEPENDS tcl tk
     URL "http://sourceforge.net/projects/tkdnd/files/TkDND/TkDND%202.8/tkdnd2.8-src.tar.gz"
+    URL_MD5 a6d47a996ea957416469b12965d4db91
+    DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
     PATCH_COMMAND  patch -p1 < ${CMAKE_CURRENT_LIST_DIR}/tkdnd_macosx.patch
     UPDATE_COMMAND "" # Disable update
     BUILD_IN_SOURCE 1
