@@ -7,7 +7,7 @@ if(APPLE)
     DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
     UPDATE_COMMAND "" # Disable update
     CONFIGURE_COMMAND ../tcl/macosx/configure --enable-threads --enable-framework --prefix=${tcl_prefix} --libdir=${tcl_prefix}/Contents/Frameworks --bindir=${tcl_prefix}/Contents/Frameworks/Tcl.framework/bin
-    BUILD_COMMAND make -j4
+    BUILD_COMMAND make -j4 binaries libraries
     INSTALL_COMMAND make install-binaries install-headers install-libraries install-private-headers
     LOG_DOWNLOAD 1
     LOG_BUILD 1
@@ -22,7 +22,7 @@ if(APPLE)
     DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
     UPDATE_COMMAND "" # Disable update
     CONFIGURE_COMMAND ../tk/macosx/configure --enable-aqua=yes --enable-threads --enable-framework --prefix=${tcl_prefix} --libdir=${tcl_prefix}/Contents/Frameworks --bindir=${tcl_prefix}/Contents/Frameworks/Tcl.framework/bin --with-tcl=${tcl_prefix}/Contents/Frameworks/Tcl.framework
-    BUILD_COMMAND make -j4
+    BUILD_COMMAND make -j4 binaries libraries
     INSTALL_COMMAND make install-binaries install-headers install-libraries install-private-headers
     LOG_DOWNLOAD 1
     LOG_BUILD 1
