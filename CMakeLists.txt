@@ -97,6 +97,7 @@ include_directories ("${PROJECT_BINARY_DIR}")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${PROJECT_SOURCE_DIR}/cmake_modules")
 
+set(INCDIR include CACHE PATH "install directory for header files")
 if(APPLE)
   set(ng_install_dir_bin ../MacOS)
   set(ng_install_dir_lib ../MacOS)
@@ -190,8 +191,8 @@ if (USE_PYTHON)
     include_directories(${PYBIND_INCLUDE_DIR})
     include_directories(${PYTHON_INCLUDE_DIRS})
 
-    install(DIRECTORY ${PYBIND_INCLUDE_DIR}/pybind11 DESTINATION include COMPONENT netgen_devel)
-    install(FILES ${PYBIND_INCLUDE_DIR}/../LICENSE DESTINATION include/pybind11 COMPONENT netgen_devel)
+    install(DIRECTORY ${PYBIND_INCLUDE_DIR}/pybind11 DESTINATION ${INCDIR} COMPONENT netgen_devel)
+    install(FILES ${PYBIND_INCLUDE_DIR}/../LICENSE DESTINATION ${INCDIR}/pybind11 COMPONENT netgen_devel)
 endif (USE_PYTHON)
 
 #######################################################################

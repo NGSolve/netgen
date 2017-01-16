@@ -33,3 +33,14 @@ if(NOT WIN32)
     install( TARGETS mesh ${ng_install_dir})
 endif(NOT WIN32)
 
+install(FILES
+  adfront2.hpp adfront3.hpp basegeom.hpp bcfunctions.hpp bisect.hpp
+  boundarylayer.hpp classifyhpel.hpp clusters.hpp curvedelems.hpp
+  findip2.hpp findip.hpp geomsearch.hpp global.hpp hpref_hex.hpp
+  hprefinement.hpp hpref_prism.hpp hpref_pyramid.hpp hpref_quad.hpp
+  hpref_segm.hpp hpref_tet.hpp hpref_trig.hpp improve2.hpp improve3.hpp
+  localh.hpp meshclass.hpp meshfunc.hpp meshing2.hpp meshing3.hpp
+  meshing.hpp meshtool.hpp meshtype.hpp msghandler.hpp paralleltop.hpp
+  ruler2.hpp ruler3.hpp specials.hpp topology.hpp validate.hpp
+  DESTINATION ${INCDIR}/meshing COMPONENT netgen_devel
+)

@@ -29,3 +29,12 @@ if(USE_GUI)
     endif(NOT WIN32)
 endif(USE_GUI)
 
+install(FILES
+  algprim.hpp brick.hpp csgeom.hpp csg.hpp csgparser.hpp
+  curve2d.hpp edgeflw.hpp explicitcurve2d.hpp extrusion.hpp
+  gencyl.hpp geoml.hpp identify.hpp manifold.hpp meshsurf.hpp
+  polyhedra.hpp revolution.hpp singularref.hpp solid.hpp
+  specpoin.hpp spline3d.hpp splinesurface.hpp surface.hpp
+  triapprox.hpp vscsg.hpp
+  DESTINATION ${INCDIR}/csg COMPONENT netgen_devel
+)

@@ -23,3 +23,7 @@ if(NOT WIN32)
     install( TARGETS interface ${ng_install_dir})
 endif(NOT WIN32)
 
+install(FILES
+  writeuser.hpp
+  DESTINATION ${INCDIR}/interface COMPONENT netgen_devel
+)

@@ -1,5 +1,5 @@
 add_definitions(-DNGINTERFACE_EXPORTS)
-install(FILES soldata.hpp DESTINATION include COMPONENT netgen_devel )
+install(FILES soldata.hpp DESTINATION ${INCDIR} COMPONENT netgen_devel )
 
 # AM_CPPFLAGS =  $(MPI_INCLUDES) -I$(top_srcdir)/libsrc/include  -DOPENGL -D$(TOGL_WINDOWINGSYSTEM) $(OCCFLAGS) $(TCL_INCLUDES)
 
@@ -16,7 +16,8 @@ if(NOT WIN32)
     install( TARGETS visual ${ng_install_dir})
 endif(NOT WIN32)
 
-
-
-
-
+install(FILES
+  meshdoc.hpp mvdraw.hpp
+  vispar.hpp visual.hpp vssolution.hpp
+  DESTINATION ${INCDIR}/visualization COMPONENT netgen_devel
+)

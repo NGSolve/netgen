@@ -19,3 +19,8 @@ if(USE_GUI)
     endif(NOT WIN32)
 endif(USE_GUI)
 
+install(FILES
+  meshstlsurface.hpp stlgeom.hpp stlline.hpp
+  stltool.hpp stltopology.hpp vsstl.hpp
+  DESTINATION ${INCDIR}/stlgeom COMPONENT netgen_devel
+)

@@ -12,3 +12,7 @@ if(NOT WIN32)
     install( TARGETS occ occvis ${ng_install_dir})
 endif(NOT WIN32)
 
+install(FILES
+  occgeom.hpp occmeshsurf.hpp vsocc.hpp
+  DESTINATION ${INCDIR}/occ COMPONENT netgen_devel
+)

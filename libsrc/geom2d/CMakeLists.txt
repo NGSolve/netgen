@@ -17,3 +17,8 @@ if(USE_GUI)
     endif(NOT WIN32)
 endif(USE_GUI)
 
+install(FILES
+  geom2dmesh.hpp geometry2d.hpp spline2d.hpp
+  splinegeometry2.hpp vsgeom2d.hpp
+  DESTINATION ${INCDIR}/geom2d COMPONENT netgen_devel
+)
