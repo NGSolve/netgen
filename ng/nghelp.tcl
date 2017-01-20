@@ -97,11 +97,11 @@ proc sensitivehelpdialog { show } {
 	pack $w.scroll -side right -fill y
 	pack $w.text -expand yes -fill both
 
-	frame $w.bu
+	ttk::frame $w.bu
 	pack $w.bu
 	# -fill x
 	
-	button $w.close -text "Close" \
+	ttk::button $w.close -text "Close" \
 	    -command { 
 		wm withdraw .senshelp_dlg
 		set showsensitivehelp 0

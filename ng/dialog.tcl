@@ -320,7 +320,7 @@ proc meshingoptionsdialog { } {
  	pack $f.msf.btn -side left -anchor s -padx 4 -pady 4
 
 
-	label $f.lab -text "Additional mesh size restrictions:"
+	ttk::label $f.lab -text "Additional mesh size restrictions:"
 
 	#csg-meshsize options
 
@@ -1816,9 +1816,9 @@ proc bcpropdialog { } {
 	
 	frame $w.face  -borderwidth 3
 	pack $w.face -fill x
-	label $w.face.lab -text "face index:"
-	label $w.face.ent -text 1 -padx 4
-	button $w.face.next -text "next" -command {
+	ttk::label $w.face.lab -text "face index:"
+	ttk::label $w.face.ent -text 1 -padx 4
+	ttk::button $w.face.next -text "next" -command {
 	    set w .bcprop_dlg;	
 	    set facenr [$w.face.ent cget -text]
 	    if {$facenr == [Ng_BCProp getnfd]} {
@@ -1834,7 +1834,7 @@ proc bcpropdialog { } {
 
 	    redraw
 	} 
-	button $w.face.prev -text "prev" -command {
+	ttk::button $w.face.prev -text "prev" -command {
 	    set w .bcprop_dlg;	
 	    set facenr [$w.face.ent cget -text]
 	    if {$facenr == 1} {
@@ -1856,13 +1856,13 @@ proc bcpropdialog { } {
 	
 	frame $w.bc  -borderwidth 3
 	pack $w.bc -fill x
-	label $w.bc.lab -text "bc property:"
+	ttk::label $w.bc.lab -text "bc property:"
 	entry $w.bc.ent -width 5 -relief sunken 
-	button $w.bc.but -text "change" -command { 
+	ttk::button $w.bc.but -text "change" -command { 
 	    set w .bcprop_dlg;	    
 	    Ng_BCProp setbc [$w.face.ent cget -text] [$w.bc.ent get]; 
 	}
-	button $w.bc.but2 -text "all" -command { 
+	ttk::button $w.bc.but2 -text "all" -command { 
 	    set w .bcprop_dlg;	    
 	    Ng_BCProp setall [$w.bc.ent get]; 
 	}
@@ -1870,15 +1870,15 @@ proc bcpropdialog { } {
 
 	frame $w.bcname  -borderwidth 3
 	pack $w.bcname -fill x
-	label $w.bcname.lab -text "bc name:"
-	label $w.bcname.ent -text "-"
+	ttk::label $w.bcname.lab -text "bc name:"
+	ttk::label $w.bcname.ent -text "-"
 	pack $w.bcname.lab $w.bcname.ent -side left  -expand yes
 	
 
 	frame $w.bu
 	pack $w.bu -fill x -ipady 3
 
-	button $w.bu.close -text "Close" -command { destroy .bcprop_dlg }
+	ttk::button $w.bu.close -text "Close" -command { destroy .bcprop_dlg }
 
 	pack $w.bu.close  -expand yes -side left
 		
@@ -1938,37 +1938,37 @@ proc currmeshcoloursdialog { } {
 	    $w.facecols.list insert end $hel }
 
 	frame $w.bu1 -borderwidth 3
-    button $w.bu1.showonly -text "show only" -command {
+    ttk::button $w.bu1.showonly -text "show only" -command {
         Ng_CurrentFaceColours showonly [.currmeshcolours_dlg.facecols.list curselection]
         redraw
     }
-    button $w.bu1.hideonly -text "hide only" -command {
+    ttk::button $w.bu1.hideonly -text "hide only" -command {
         Ng_CurrentFaceColours hideonly [.currmeshcolours_dlg.facecols.list curselection]
         redraw
     }
-    button $w.bu1.showalso -text "show" -command {
+    ttk::button $w.bu1.showalso -text "show" -command {
         Ng_CurrentFaceColours showalso [.currmeshcolours_dlg.facecols.list curselection]
         redraw
     }
-    button $w.bu1.hidealso -text "hide" -command {
+    ttk::button $w.bu1.hidealso -text "hide" -command {
         Ng_CurrentFaceColours hidealso [.currmeshcolours_dlg.facecols.list curselection]
         redraw
     }
     pack $w.bu1.showonly $w.bu1.hideonly $w.bu1.showalso $w.bu1.hidealso -expand yes -fill x -padx 2 -pady 2 -side left    
     
     frame $w.bu2
-    button $w.bu2.showall -text "show all" -command {
+    ttk::button $w.bu2.showall -text "show all" -command {
         Ng_CurrentFaceColours showall
         redraw
     }
-    button $w.bu2.hideall -text "hide all" -command {
+    ttk::button $w.bu2.hideall -text "hide all" -command {
         Ng_CurrentFaceColours hideall
         redraw
     }
     pack $w.bu2.showall $w.bu2.hideall -expand yes -fill x -padx 2 -pady 2 -side left 
     
     frame $w.bu3
-	button $w.bu3.close -text "close" -command {
+	ttk::button $w.bu3.close -text "close" -command {
 	    destroy .currmeshcolours_dlg
 	}
     pack $w.bu3.close -expand yes -fill x -pady 3 -side right
@@ -2008,9 +2008,9 @@ proc surfacemeshsizedialog { } {
 
 	frame $w.face  -borderwidth 3
 	pack $w.face -fill x -padx 5
-	label $w.face.lab -text "face index:"
-	label $w.face.ent -text 1 -padx 4
-	button $w.face.next -text "next" -command {
+	ttk::label $w.face.lab -text "face index:"
+	ttk::label $w.face.ent -text 1 -padx 4
+	ttk::button $w.face.next -text "next" -command {
 	    set w .surfacemeshsize_dlg;	
 	    set facenr [$w.face.ent cget -text]
 	    if {$facenr == [Ng_SurfaceMeshSize getnfd]} {
@@ -2026,7 +2026,7 @@ proc surfacemeshsizedialog { } {
 
 	    redraw
 	} 
-	button $w.face.prev -text "prev" -command {
+	ttk::button $w.face.prev -text "prev" -command {
 	    set w .surfacemeshsize_dlg;
 	    set facenr [$w.face.ent cget -text]
 	    if {$facenr == 1} {
@@ -2048,13 +2048,13 @@ proc surfacemeshsizedialog { } {
 
 	frame $w.sms  -borderwidth 3
 	pack $w.sms -fill x
-	label $w.sms.lab -text "max mesh size:"
+	ttk::label $w.sms.lab -text "max mesh size:"
 	entry $w.sms.ent -width 8 -relief sunken 
-	button $w.sms.but -text "change" -command { 
+	ttk::button $w.sms.but -text "change" -command { 
 	    set w .surfacemeshsize_dlg;	    
 	    Ng_SurfaceMeshSize setsurfms [$w.face.ent cget -text] [$w.sms.ent get];
 	}
-	button $w.sms.but2 -text "all" -command {
+	ttk::button $w.sms.but2 -text "all" -command {
 	    set w .surfacemeshsize_dlg;	    
 	    Ng_SurfaceMeshSize setall [$w.sms.ent get];
 	}
@@ -2063,7 +2063,7 @@ proc surfacemeshsizedialog { } {
 	frame $w.bu
 	pack $w.bu -fill x -ipady 3
 
-	button $w.bu.close -text "Close" -command { destroy .surfacemeshsize_dlg }
+	ttk::button $w.bu.close -text "Close" -command { destroy .surfacemeshsize_dlg }
 
 	pack $w.bu.close  -expand yes -side left
 
@@ -2106,14 +2106,14 @@ proc METISdialog { } {
 	frame $w.b -borderwidth 0
 	pack $w.a $w.b
 
-	label $w.a.lab -text "Number of partitions:"
+	ttk::label $w.a.lab -text "Number of partitions:"
 	entry $w.a.ent -textvariable w.parts -width 4 -relief sunken
 
-	button $w.b.start -text "Start METIS" -command { 
+	ttk::button $w.b.start -text "Start METIS" -command { 
 	    Ng_Metis ${w.parts}
 	    redraw
 	}
-	button $w.b.cancel -text "Cancel" -command { destroy .metis_dlg }
+	ttk::button $w.b.cancel -text "Cancel" -command { destroy .metis_dlg }
 	pack $w.a.lab $w.a.ent -side left  -expand yes
 	pack $w.b.start $w.b.cancel -side left
 
@@ -2213,8 +2213,8 @@ proc stloptionsdialog { } {
 
 # -fill x
 
-    button $w.bu.apply -text "Apply" -command { redraw; Ng_GenerateMesh 1 2}
-	button $w.bu.cancle -text "Done" -command { destroy .stlopts_dlg }
+    ttk::button $w.bu.apply -text "Apply" -command { redraw; Ng_GenerateMesh 1 2}
+	ttk::button $w.bu.cancle -text "Done" -command { destroy .stlopts_dlg }
     pack $w.bu.cancle  $w.bu.apply  -side left -expand yes
     
 
@@ -2556,13 +2556,13 @@ proc stldoctordialog { } {
 
 
 #    button $f.edg2.addlonglines -text "make long lines candidates (% of diam)" -command {Ng_STLDoctor addlonglines; redraw}
-    label $f.edg2.lab -text "length (%):"
+    ttk::label $f.edg2.lab -text "length (%):"
     scale $f.edg2.sc -orient horizontal -length 200 -from 0 -to 100 \
 	-resolution 0.5 \
         -variable stldoctor.longlinefact 
 
  #   button $f.edg2.deletedirtyedges -text "make dirty edges candidates" -command {Ng_STLDoctor deletedirtyedges; redraw}
-    button $f.edg2.undoedge -text "undo last edge change" -command {Ng_STLDoctor undoedgechange; redraw}
+    ttk::button $f.edg2.undoedge -text "undo last edge change" -command {Ng_STLDoctor undoedgechange; redraw}
     
  #   pack $f.edg2.addlonglines $f.edg2.deletedirtyedges -expand yes
  #   pack $f.edg2.lab $f.edg2.sc -side left
@@ -2820,7 +2820,7 @@ proc qualityviewdialog { show } {
 	pack $w.bu
 	# -fill x
 	
-	button $w.close -text "Close" \
+	ttk::button $w.close -text "Close" \
 	    -command { 
 		wm withdraw .qualityview_dlg
 		set viewqualityplot 0
@@ -2891,11 +2891,11 @@ proc memusedialog { show } {
 	$c create text 562 90 -text "4 GB" -anchor n -font $plotFont
 
 
-	frame $w.bu
+	ttk::frame $w.bu
 	pack $w.bu
 	# -fill x
 	
-	button $w.close -text "Close" \
+	ttk::button $w.close -text "Close" \
 	    -command { 
 		wm withdraw .memuse_dlg
 		set memuseplot 0
@@ -2956,11 +2956,11 @@ proc STLinfodialog { show } {
 	$c create line 100 250 400 250 -width 2
 	$c create line 100 250 100 50 -width 2
 
-	frame $w.bu
+	ttk::frame $w.bu
 	pack $w.bu
 	# -fill x
 	
-	button $w.close -text "Close" \
+	ttk::button $w.close -text "Close" \
 	    -command { 
 		wm withdraw .STLinfo_dlg
 		#set STLinfoopen 0
@@ -3049,7 +3049,7 @@ proc printwarning { textvar } {
     set w .$w
     toplevel $w
     message $w.mes -aspect 2000 -text "WARNING:\n$textvar"
-    button $w.done -text "Done" -command "destroy $w"
+    ttk::button $w.done -text "Done" -command "destroy $w"
     pack $w.mes
     pack $w.done
     wm withdraw $w

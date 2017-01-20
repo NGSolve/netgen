@@ -820,7 +820,7 @@ ttk::frame .bubar
 #-relief raised -bd 2
 pack .bubar -side top -fill x
 
-button .bubar.testb -text "Test" -command { Ng_SaveGeometry }
+ttk::button .bubar.testb -text "Test" -command { Ng_SaveGeometry }
 ttk::button .bubar.surfm -text "Generate Mesh" -command \
     { 
 	.ngmenu.mesh invoke "Generate Mesh"; 
@@ -947,7 +947,7 @@ proc selvis_monitor { name args } {
 #                                                   #
 #####################################################
 
-label .helpline -text "None"
+ttk::label .helpline -text "None"
 pack forget .helpline -side bottom -fill x
 
 ttk::frame .statbar -relief flat

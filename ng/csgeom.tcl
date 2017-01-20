@@ -49,7 +49,7 @@ proc geometryoptionsdialog { } {
 
 	frame $w.fac
 	pack $w.fac -pady 5
-	label $w.fac.lab -text "Facets:";
+	ttk::label $w.fac.lab -text "Facets:";
 	entry $w.fac.ent -width 8 -relief sunken \
 	    -textvariable geooptions.facets
 	pack $w.fac.lab $w.fac.ent  -side left
@@ -57,14 +57,14 @@ proc geometryoptionsdialog { } {
  
 	frame $w.det
 	pack $w.det -pady 5
-	label $w.det.lab -text "Detail:";
+	ttk::label $w.det.lab -text "Detail:";
 	entry $w.det.ent -width 8 -relief sunken \
 	    -textvariable geooptions.detail
 	pack $w.det.lab $w.det.ent  -side left
 	
 	frame $w.cox
 	pack $w.cox -pady 5
-	label $w.cox.lab -text "min/max x:";
+	ttk::label $w.cox.lab -text "min/max x:";
 	entry $w.cox.ent1 -width 8 -relief sunken \
 	    -textvariable geooptions.minx
 	entry $w.cox.ent2 -width 8 -relief sunken \
@@ -74,7 +74,7 @@ proc geometryoptionsdialog { } {
 	
 	frame $w.coy
 	pack $w.coy -pady 5
-	label $w.coy.lab -text "min/max y:";
+	ttk::label $w.coy.lab -text "min/max y:";
 	entry $w.coy.ent1 -width 8 -relief sunken \
 	    -textvariable geooptions.miny
 	entry $w.coy.ent2 -width 8 -relief sunken \
@@ -84,7 +84,7 @@ proc geometryoptionsdialog { } {
 	
 	frame $w.coz
 	pack $w.coz -pady 5
-	label $w.coz.lab -text "min/max z:";
+	ttk::label $w.coz.lab -text "min/max z:";
 	entry $w.coz.ent1 -width 8 -relief sunken \
 	    -textvariable geooptions.minz
 	entry $w.coz.ent2 -width 8 -relief sunken \
@@ -110,10 +110,10 @@ proc geometryoptionsdialog { } {
 	pack $w.bu -fill x -ipady 3
 
 
- 	button $w.bu.app -text "Apply" -command {
+ 	ttk::button $w.bu.app -text "Apply" -command {
  	    Ng_GeometryOptions set
  	}
- 	button $w.bu.ok -text "Done" -command {
+ 	ttk::button $w.bu.ok -text "Done" -command {
  	    Ng_GeometryOptions set
  	    destroy .geometry_dlg
  	}
@@ -159,8 +159,8 @@ proc editprimitivedialog2 { name } {
     Ng_GetPrimitiveData $name classname valuelist
         
     
-    label $w.lab1 -text "Primitive Name:  $name";
-    label $w.lab2 -text "Primitive Class: $classname";
+    ttk::label $w.lab1 -text "Primitive Name:  $name";
+    ttk::label $w.lab2 -text "Primitive Class: $classname";
     pack $w.lab1 $w.lab2 -fill x -pady 1m -padx 5m 
     
     frame $w.specific -relief groove
@@ -178,7 +178,7 @@ proc editprimitivedialog2 { name } {
 	frame $w.specific.f$cnt 
 	pack $w.specific.f$cnt -side top -anchor ne
 
-	label $w.specific.f$cnt.lab -text "$field"
+	ttk::label $w.specific.f$cnt.lab -text "$field"
 	entry $w.specific.f$cnt.ent -textvariable dataval($cnt) \
 	    -width 6 -relief sunken
 	pack $w.specific.f$cnt.ent $w.specific.f$cnt.lab -side right
@@ -189,11 +189,11 @@ proc editprimitivedialog2 { name } {
     pack $w.specific
 
 
-    button $w.cancel -text "cancel" -command {
+    ttk::button $w.cancel -text "cancel" -command {
 	destroy $w 
     }
 
-    button $w.ok -text "ok" -command {
+    ttk::button $w.ok -text "ok" -command {
 
 	set valuelist ""
 	set cnt 0
@@ -245,8 +245,8 @@ proc editprimitivedialog { } {
     foreach el $primlist {
 	$w.frame.list insert end $el }
 
-    button $w.cancel -text "cancel" -command { destroy $w }
-    button $w.ok -text "ok" -command {
+    ttk::button $w.cancel -text "cancel" -command { destroy $w }
+    ttk::button $w.ok -text "ok" -command {
 	set name [.ep_dlg.frame.list get active]
 	puts "name=($name)"
 	destroy $w
@@ -285,7 +285,7 @@ proc newprimitivedialog { } {
     set name ""
     frame $w.f1
     pack $w.f1 -pady 2m
-    label $w.f1.lab -text "Primitive Name: ";
+    ttk::label $w.f1.lab -text "Primitive Name: ";
     entry $w.f1.ent -width 5 -relief sunken \
 	-textvariable name
     pack $w.f1.lab $w.f1.ent -side left
@@ -301,13 +301,13 @@ proc newprimitivedialog { } {
     $w.frame.list insert 0 sphere cylinder plane cone brick
     $w.frame.list activate 0
     
-    button $w.ok -text "ok" -command {
+    ttk::button $w.ok -text "ok" -command {
 	Ng_CreatePrimitive [$w.frame.list get active]  $name
 	destroy $w
 	editprimitivedialog2 $name
     }
 
-    button $w.cancel -text "cancel" -command {
+    ttk::button $w.cancel -text "cancel" -command {
 	destroy $w
     }
     
@@ -339,11 +339,11 @@ proc newsoliddialog { } {
 
     set name ""
     frame $w.f1
-    label $w.f1.lab -text "Solid Name: ";
+    ttk::label $w.f1.lab -text "Solid Name: ";
     entry $w.f1.ent -width 5 -relief sunken \
 	-textvariable name
     $w.f1.ent delete 0 end
-    button $w.f1.getsel -text "Get Selected" -command { 
+    ttk::button $w.f1.getsel -text "Get Selected" -command { 
 	$w.f1.ent delete 0 end
 	$w.f1.ent insert 0 [$w.f3.list get active]
 	$w.bu.get invoke
@@ -363,7 +363,7 @@ proc newsoliddialog { } {
 	$w.f3.list insert end $el }
 
     frame $w.f2
-    label $w.f2.lab -text "Solid Description: ";
+    ttk::label $w.f2.lab -text "Solid Description: ";
     pack $w.f2.lab
 
 
@@ -377,15 +377,15 @@ proc newsoliddialog { } {
 
 
     frame $w.bu
-    button $w.bu.close -text "close" -command {
+    ttk::button $w.bu.close -text "close" -command {
 	destroy $w
     }
 
-    button $w.bu.get -text "get data" -command {
+    ttk::button $w.bu.get -text "get data" -command {
 	Ng_GetSolidData $name val
     }
 
-    button $w.bu.set -text "set data" -command {
+    ttk::button $w.bu.set -text "set data" -command {
 	Ng_SetSolidData $name $val
     }
 
@@ -437,17 +437,17 @@ proc toplevelproperties { w solname surfname } {
     } {
 	toplevel $w
     
-	label $w.lab1 -text "Red"
+	ttk::label $w.lab1 -text "Red"
 	scale $w.scale1 -orient horizontal -length 300 -from 0 -to 1 \
 	    -resolution 0.01  -tickinterval 0.2 \
 	    -command { Ng_TopLevel setprop $solname $surfname properties; redraw } -variable  properties(red)
 	
-	label $w.lab2 -text "Green"
+	ttk::label $w.lab2 -text "Green"
 	scale $w.scale2 -orient horizontal -length 300 -from 0 -to 1 \
 	    -resolution 0.01  -tickinterval 0.2 \
 	-command { Ng_TopLevel setprop $solname $surfname properties; redraw } -variable  properties(green)
 	
-	label $w.lab3 -text "Blue"
+	ttk::label $w.lab3 -text "Blue"
 	scale $w.scale3 -orient horizontal -length 300 -from 0 -to 1 \
 	    -resolution 0.01  -tickinterval 0.2 \
 	    -command { Ng_TopLevel setprop $solname $surfname properties; redraw } -variable  properties(blue)
@@ -469,7 +469,7 @@ proc toplevelproperties { w solname surfname } {
 	
 	frame $w.bu
 	pack $w.bu -fill x
-	button $w.bu.ok -text "Ok" -command "destroy .tlprop_dlg"
+	ttk::button $w.bu.ok -text "Ok" -command "destroy .tlprop_dlg"
 	pack $w.bu.ok  -expand yes
     
 	wm withdraw $w
@@ -544,17 +544,17 @@ proc topleveldialog { } {
 
     frame $w.bu
 
-    button $w.bu.close -text "close" -command {
+    ttk::button $w.bu.close -text "close" -command {
 	destroy $w
     }
-    button $w.bu.addsol -text "Add Solid" -command {
+    ttk::button $w.bu.addsol -text "Add Solid" -command {
 	set solname [$w.sol.list get active]
 	Ng_TopLevel set $solname ""
 	Ng_ParseGeometry
 	$w.topl.list insert end $solname
     }
 
-    button $w.bu.addsurf -text "Add Surface" -command {
+    ttk::button $w.bu.addsurf -text "Add Surface" -command {
 	set solname [$w.sol.list get active]
 	set surfname [$w.sul.list get active]
 	Ng_TopLevel set $solname $surfname
@@ -563,7 +563,7 @@ proc topleveldialog { } {
 	$w.topl.list insert end "$surfname on $solname"
     }
 
-    button $w.bu.remsol -text "Remove" -command {
+    ttk::button $w.bu.remsol -text "Remove" -command {
 	set solname [$w.topl.list get active]
 	set surfname ""
 	if { [llength $solname] == 3 } {
@@ -575,7 +575,7 @@ proc topleveldialog { } {
 	$w.topl.list delete active
     }
 
-    button $w.bu.prop -text "Properties" -command {
+    ttk::button $w.bu.prop -text "Properties" -command {
 	set solname [$w.topl.list get active]
 	set surfname ""
 	if { [llength $solname] == 3 } {
@@ -644,12 +644,12 @@ proc topleveldialog2 { } {
 	
 	frame $w.bu
 	
-	button $w.bu.close -text "close" -command {
+	ttk::button $w.bu.close -text "close" -command {
 	    destroy .tl2_dlg
 	}
 	
 
-	button $w.bu.prop -text "Properties" -command {
+	ttk::button $w.bu.prop -text "Properties" -command {
 	    set solname [.tl2_dlg.topl.list get active]
 	    set surfname ""
 	    if { [llength $solname] == 2 } {
