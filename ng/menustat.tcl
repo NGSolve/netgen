@@ -1,3 +1,12 @@
+if { $tcl_platform(os) eq "Linux" && [tk scaling] > 1.5 } {
+  # On some Linux systems, the scaling setting is only applied after
+  # overwriting some default font settings.
+  # This is a workaround to scale up fonts on high resolution displays.
+  font create ngFont -family Helvetica
+  option add *font ngFont
+  ttk::style configure "." -font ngFont
+}
+
 # netgen menus:
 
 menu .ngmenu -tearoff 0  -relief raised -bd 2
