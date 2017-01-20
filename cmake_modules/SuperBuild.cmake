@@ -79,6 +79,7 @@ endif(NOT WIN32)
 if (USE_PYTHON)
   find_path(PYBIND_INCLUDE_DIR pybind11/pybind11.h PATHS ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies/pybind11/include NO_DEFAULT_PATH)
     if( NOT PYBIND_INCLUDE_DIR )
+      # if the pybind submodule is missing, try to initialize and update all submodules
       execute_process(COMMAND git submodule update --init --recursive WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         find_path(PYBIND_INCLUDE_DIR pybind11/pybind11.h ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies/pybind11/include)
     endif( NOT PYBIND_INCLUDE_DIR )
@@ -150,6 +151,23 @@ ExternalProject_Add (netgen
   BUILD_COMMAND ${NETGEN_BUILD_COMMAND}
   STEP_TARGETS build
 )
+
+# Check if the git submodules (i.e. pybind11) are up to date
+# in case, something is wrong, emit a warning but continue
+ ExternalProject_Add_Step(netgen check_submodules
+   COMMAND cmake -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/check_submodules.cmake
+   DEPENDERS install # Steps on which this step depends
+   )
+
+# Due to 'ALWAYS 1', this step is always run which also forces a build of
+# the Netgen subproject
+ ExternalProject_Add_Step(netgen check_submodules1
+   COMMAND cmake -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/check_submodules.cmake
+   DEPENDEES configure # Steps on which this step depends
+   DEPENDERS build     # Steps that depend on this step
+   ALWAYS 1            # No stamp file, step always runs
+   )
+
 
 install(CODE "execute_process(COMMAND cmake --build . --target install --config ${CMAKE_BUILD_TYPE} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/netgen)")
 
