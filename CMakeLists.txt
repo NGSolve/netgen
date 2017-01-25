@@ -241,15 +241,13 @@ if(INSTALL_PROFILES)
 endif(INSTALL_PROFILES)
 
 #######################################################################
-if(INSTALL_DEPENDENCIES)
-    include (InstallRequiredSystemLibraries)
-    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/fixup.cmake "\
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/fixup.cmake "\
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/netgen_fixup.cmake)
 set(APP ${INSTALL_DIR}/Netgen.app)
 message(\${APP})
+set(BU_CHMOD_BUNDLE_ITEMS ON)
 
 file(GLOB libs ${CMAKE_INSTALL_PREFIX}/${ng_install_dir_lib}/*.dylib ${CMAKE_INSTALL_PREFIX}/${ng_install_dir_lib}/*.so)
-# set(libs ${CMAKE_INSTALL_PREFIX}/${ng_install_dir_lib}/libTix8.4.3.dylib)
 message(\"\${libs}\")
 netgen_fixup_bundle( \${APP}/Contents/MacOS/netgen \"\${libs}\" ${CMAKE_INSTALL_PREFIX}/${ng_install_dir_lib} )
 execute_process(COMMAND ln -s /Applications ${INSTALL_DIR}/Applications)
@@ -260,7 +258,6 @@ endif(NOT bundle_filename)
 execute_process(COMMAND hdiutil create -volname Netgen -srcfolder ${INSTALL_DIR} -ov -format UDZO \${bundle_filename}-${PACKAGE_VERSION}.dmg)
 ")
   add_custom_target(bundle COMMAND ${CMAKE_COMMAND} "-P" "${CMAKE_CURRENT_BINARY_DIR}/fixup.cmake")
-endif(INSTALL_DEPENDENCIES)
 #######################################################################
 
 add_subdirectory(libsrc)
