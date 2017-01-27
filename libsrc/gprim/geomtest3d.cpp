@@ -92,8 +92,8 @@ IntersectTriangleLine (const Point<3> ** tri, const Point<3> ** line)
 		 << "line = " << *line[0] << " - " << *line[1] << endl
 		 << "tri = " << *tri[0] << " - " << *tri[1] << " - " << *tri[2] << endl
 		 << "lami = " << lami << endl
-		 << "pc = " << ( *line[0] + lami.Get(1) * vl ) << endl
-		 << "   = " << ( *tri[0] + lami.Get(2) * vt1 + lami.Get(3) * vt2) << endl
+		 << "pc = " << ( *line[0] + lami(0) * vl ) << endl
+		 << "   = " << ( *tri[0] + lami(1) * vt1 + lami(2) * vt2) << endl
 		 << " a = " << a << endl
 		 << " ainv = " << ainv << endl
 		 << " det(a) = " << det << endl

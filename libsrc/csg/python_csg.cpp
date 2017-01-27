@@ -187,6 +187,7 @@ DLL_HEADER void ExportCSG(py::module &m)
     ;
 
   py::class_<SplineGeometry<3>,shared_ptr<SplineGeometry<3>>> (m,"SplineCurve3d")
+    .def(py::init<>())
     .def ("AddPoint", FunctionPointer
           ([] (SplineGeometry<3> & self, double x, double y, double z)
            {
@@ -301,11 +302,25 @@ DLL_HEADER void ExportCSG(py::module &m)
                                            Solid * sol = new Solid (brick);
                                            return make_shared<SPSolid> (sol);
                                          }));
+  m.def ("Torus", FunctionPointer([](Point<3> c, Vec<3> n, double R, double r)
+                                         {
+                                           Torus * torus = new Torus (c,n,R,r);
+                                           Solid * sol = new Solid (torus);
+                                           return make_shared<SPSolid> (sol);
+                                         }));
   m.def ("Revolution", FunctionPointer([](Point<3> p1, Point<3> p2,
                                             const SplineGeometry<2> & spline)
                                          {
                                            Revolution * rev = new Revolution (p1, p2, spline);
                                            Solid * sol = new Solid(rev);
+                                           return make_shared<SPSolid> (sol);
+                                         }));
+  m.def ("Extrusion", FunctionPointer([](const SplineGeometry<3> & path,
+					 const SplineGeometry<2> & profile,
+					 Vec<3> n)
+                                         {
+                                           Extrusion * extr = new Extrusion (path,profile,n);
+                                           Solid * sol = new Solid(extr);
                                            return make_shared<SPSolid> (sol);
                                          }));
   
