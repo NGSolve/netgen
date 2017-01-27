@@ -110,7 +110,7 @@ namespace netgen
   {
   private:
     const SplineGeometry<3> & path;
-    const SplineGeometry<2> & profile;
+    const SplineGeometry<2> & profile; // closed, clockwise oriented curve
 
     const Vec<3> & z_direction;
 

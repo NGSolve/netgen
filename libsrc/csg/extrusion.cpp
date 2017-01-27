@@ -186,7 +186,7 @@ namespace netgen
 
     for(int i=0; i<path->GetNSplines(); i++)
       {
-	if(mindist[i] > cutdist) continue;
+	if(mindist[i] > cutdist*(1+1e-10)) continue;
 
 	double thist = CalcProj(point3d,testpoint2d,i);
 
