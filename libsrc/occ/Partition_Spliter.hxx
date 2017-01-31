@@ -10,6 +10,10 @@
 #ifndef _Partition_Spliter_HeaderFile
 #define _Partition_Spliter_HeaderFile
 
+#ifndef _Standard_Version_HeaderFile
+#include <Standard_Version.hxx>
+#endif
+
 #ifndef _TopAbs_ShapeEnum_HeaderFile
 #include <TopAbs_ShapeEnum.hxx>
 #endif
@@ -28,9 +32,16 @@
 #ifndef _TopTools_DataMapOfShapeShape_HeaderFile
 #include <TopTools_DataMapOfShapeShape.hxx>
 #endif
-#ifndef _Handle_BRepAlgo_AsDes_HeaderFile
-#include <Handle_BRepAlgo_AsDes.hxx>
+
+#if OCC_VERSION_HEX < 0x070000
+   #ifndef _Handle_BRepAlgo_AsDes_HeaderFile
+      #include <Handle_BRepAlgo_AsDes.hxx>
+   #endif
+#else
+   #include <BRepAlgo_AsDes.hxx>
+   #include <TopTools_MapOfShape.hxx>
 #endif
+
 #ifndef _BRepAlgo_Image_HeaderFile
 #include <BRepAlgo_Image.hxx>
 #endif
@@ -45,7 +56,10 @@
 #endif
 class BRepAlgo_AsDes;
 class TopoDS_Shape;
-class TopTools_ListOfShape;
+
+#if OCC_VERSION_HEX < 0x070000
+   class TopTools_ListOfShape;
+#endif
 class TopoDS_Edge;
 
 

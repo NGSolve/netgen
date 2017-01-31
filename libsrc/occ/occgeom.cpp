@@ -8,14 +8,24 @@
 #include "ShapeAnalysis_CheckSmallFace.hxx"
 #include "ShapeAnalysis_DataMapOfShapeListOfReal.hxx"
 #include "ShapeAnalysis_Surface.hxx"
-#include "BRepAlgoAPI_Fuse.hxx"
+
 #include "BRepCheck_Analyzer.hxx"
 #include "BRepLib.hxx"
 #include "ShapeBuild_ReShape.hxx"
 #include "ShapeFix.hxx"
 #include "ShapeFix_FixSmallFace.hxx"
 #include "Partition_Spliter.hxx"
+#include "BRepAlgoAPI_Fuse.hxx"
 
+#ifndef _Standard_Version_HeaderFile
+#include <Standard_Version.hxx>
+#endif
+
+#if OCC_VERSION_HEX < 0x070000
+#else
+   #include "StlTransfer.hxx"
+   #include "TopoDS_Iterator.hxx"
+#endif
 
 namespace netgen
 {
@@ -938,7 +948,11 @@ namespace netgen
    void OCCGeometry :: CalcBoundingBox ()
    {
       Bnd_Box bb;
+#if OCC_VERSION_HEX < 0x070000
       BRepBndLib::Add (shape, bb);
+#else
+      BRepBndLib::Add ((const TopoDS_Shape) shape, bb,(Standard_Boolean)true);
+#endif
 
       double x1,y1,z1,x2,y2,z2;
       bb.Get (x1,y1,z1,x2,y2,z2);

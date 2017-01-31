@@ -36,9 +36,14 @@
 #ifndef _TopTools_DataMapOfShapeListOfShape_HeaderFile
 #include <TopTools_DataMapOfShapeListOfShape.hxx>
 #endif
+#ifndef _Standard_Version_HeaderFile
+#include <Standard_Version.hxx>
+#endif
 class TopoDS_Face;
 class TopoDS_Edge;
-class TopTools_ListOfShape;
+#if OCC_VERSION_HEX < 0x070000
+   class TopTools_ListOfShape;
+#endif
 
 
 #ifndef _Standard_HeaderFile

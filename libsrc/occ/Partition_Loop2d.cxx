@@ -52,6 +52,8 @@
 #include <gp_Pnt.hxx>
 #include <gp_Pnt2d.hxx>
 
+#define PI 3.14159265358979323846
+
 //=======================================================================
 //function : Partition_Loop2d
 //purpose  :
