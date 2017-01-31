@@ -27,9 +27,19 @@
 #ifndef _Partition_Inter2d_HeaderFile
 #define _Partition_Inter2d_HeaderFile
 
-#ifndef _Handle_BRepAlgo_AsDes_HeaderFile
-#include <Handle_BRepAlgo_AsDes.hxx>
+#ifndef _Standard_Version_HeaderFile
+   #include <Standard_Version.hxx>
 #endif
+
+#if OCC_VERSION_HEX < 0x070000
+   #ifndef _Handle_BRepAlgo_AsDes_HeaderFile
+      #include <Handle_BRepAlgo_AsDes.hxx>
+   #endif
+#else
+   #include <BRepAlgo_AsDes.hxx>
+   #include <TopTools_MapOfShape.hxx>
+#endif
+
 #ifndef _Standard_Real_HeaderFile
 #include <Standard_Real.hxx>
 #endif
@@ -38,9 +48,13 @@
 #endif
 class BRepAlgo_AsDes;
 class TopoDS_Face;
-class TopTools_MapOfShape;
+
+#if OCC_VERSION_HEX < 0x070000
+   class TopTools_MapOfShape;
+   class TopTools_ListOfShape;
+#endif
+
 class TopoDS_Vertex;
-class TopTools_ListOfShape;
 class TopoDS_Edge;
 
 

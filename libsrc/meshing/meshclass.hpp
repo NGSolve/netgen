@@ -334,7 +334,7 @@ namespace netgen
     const auto & LockedPoints() const { return lockedpoints; }
 
     /// Returns number of domains
-    int GetNDomains() const;
+    DLL_HEADER int GetNDomains() const;
     ///
     int GetDimension() const { return dimension; }
     void SetDimension (int dim) { dimension = dim; }
@@ -416,7 +416,7 @@ namespace netgen
     ///
 	DLL_HEADER void SetMaxHDomain (const Array<double> & mhd);
     ///
-    double GetH (const Point3d & p) const;
+    DLL_HEADER double GetH (const Point3d & p) const;
     ///
     double GetMinH (const Point3d & pmin, const Point3d & pmax);
     ///

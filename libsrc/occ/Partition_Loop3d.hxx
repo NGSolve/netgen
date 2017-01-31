@@ -22,9 +22,24 @@
 #ifndef _Standard_Real_HeaderFile
 #include <Standard_Real.hxx>
 #endif
+#ifndef _Standard_Version_HeaderFile
+#include <Standard_Version.hxx>
+#endif
+
+#if OCC_VERSION_HEX < 0x070000
+#else
+   #include <TopTools_ShapeMapHasher.hxx>
+   #include <TopTools_OrientedShapeMapHasher.hxx>
+   #include <TopTools_MapOfOrientedShape.hxx>
+#endif
+
 class TopoDS_Shape;
-class TopTools_ListOfShape;
-class TopTools_MapOfOrientedShape;
+
+#if OCC_VERSION_HEX < 0x070000
+   class TopTools_ListOfShape;
+   class TopTools_MapOfOrientedShape;
+#endif
+
 class TopoDS_Edge;
 class TopoDS_Face;
 class gp_Vec;

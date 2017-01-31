@@ -394,7 +394,7 @@ namespace netgen
 
 
 
-   class OCCParameters
+   class DLL_HEADER OCCParameters
    {
    public:
 
@@ -443,11 +443,11 @@ namespace netgen
    extern int OCCGenerateMesh (OCCGeometry & occgeometry, shared_ptr<Mesh> & mesh,
 			       MeshingParameters & mparam);
 
-  extern void OCCSetLocalMeshSize(OCCGeometry & geom, Mesh & mesh);
+   DLL_HEADER extern void OCCSetLocalMeshSize(OCCGeometry & geom, Mesh & mesh);
 
-   extern void OCCMeshSurface (OCCGeometry & geom, Mesh & mesh, int perfstepsend);
+   DLL_HEADER extern void OCCMeshSurface (OCCGeometry & geom, Mesh & mesh, int perfstepsend);
 
-   extern void OCCFindEdges (OCCGeometry & geom, Mesh & mesh);
+   DLL_HEADER extern void OCCFindEdges (OCCGeometry & geom, Mesh & mesh);
 }
 
 #endif

@@ -31,7 +31,7 @@ namespace netgen
 
   DLL_HEADER extern mutex tcl_todo_mutex;
 
-  class multithreadt
+  class DLL_HEADER multithreadt
   {
   public:
     int pause;
