@@ -1,19 +1,22 @@
 import libngpy
 from libngpy._csg import *
-import libngpy.csgvis as csgvis
-from libngpy.csgvis import MouseMove
 from libngpy._meshing import MeshingParameters
 from libngpy._meshing import Pnt
 from libngpy._meshing import Vec
 
 
-CSGeometry.VS = csgvis.VS
-SetBackGroundColor = csgvis.SetBackGroundColor
-del csgvis
+try:
+    import libngpy.csgvis as csgvis
+    from libngpy.csgvis import MouseMove
+    CSGeometry.VS = csgvis.VS
+    SetBackGroundColor = csgvis.SetBackGroundColor
+    del csgvis
 
-def VS (obj):
-    return obj.VS()
+    def VS (obj):
+        return obj.VS()
 
+except:
+    pass
 
 
 def csg_meshing_func (geom, **args):
