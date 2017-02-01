@@ -1,4 +1,4 @@
-lappend auto_path $env(NETGENDIR) 
+catch {lappend auto_path $env(NETGENDIR) }
 
 set batchmode [Ng_GetCommandLineParameter batchmode]
 if {$batchmode=="undefined"} {
