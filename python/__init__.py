@@ -10,5 +10,4 @@ if __platform.startswith('darwin'):
     path.append(os.path.dirname(__file__) + '/../../../../../MacOS')
 
 import libngpy
-del environ
 del path
