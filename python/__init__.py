@@ -1,23 +1,14 @@
-from os import environ
+import os
 from sys import path
 from sys import platform as __platform
+
 if __platform.startswith('linux'):
-    path.append(environ['NETGENDIR']+'/../lib')
+    path.append(os.path.dirname(__file__) + '/../../..')
 if __platform.startswith('win'):
-    path.append(environ['NETGENDIR'])
+    path.append(os.path.dirname(__file__) + '/../../../bin')
 if __platform.startswith('darwin'):
-    path.append(environ['NETGENDIR'])
+    path.append(os.path.dirname(__file__) + '/../../../../../MacOS')
 
- 
-# from libngpy import *
 import libngpy
-# from libngpy import *
-
-# import libngpy 
-
-# from . import csg
-# from . import meshing
-# from . import geom2d
-
 del environ
 del path
