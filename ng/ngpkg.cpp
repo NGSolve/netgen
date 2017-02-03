@@ -24,11 +24,7 @@ The interface between the GUI and the netgen library
 
 
 // to be sure to include the 'right' togl-version
-#ifdef USE_TOGL_2
 #include "Togl2.1/togl.h"
-#else // USE_TOGL_2
-#include "togl_1_7.h"
-#endif // USE_TOGL_2
 #include "fonts.hpp"
 
 extern bool nodisplay;
@@ -56,16 +52,7 @@ namespace netgen
 #endif
 
 #ifdef FFMPEG
-extern "C" {
-  /*
-#include <ffmpeg/avcodec.h>
-#include <ffmpeg/avformat.h>
-#include <ffmpeg/swscale.h>
-  */
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libswscale/swscale.h>
-}
+#include "encoding.hpp"
 #endif
 
 #ifdef NGSOLVE
@@ -1908,150 +1895,6 @@ namespace netgen
 
 
 
-
-
-
-#if TOGL_MAJOR_VERSION==1
-
-
-  // Togl
-  
-  static int fontbase = 0;
-
-  void MyOpenGLText_GUI (const char * text)
-  {
-    if (nodisplay)
-      return;
-      
-    glListBase (fontbase);
-    glCallLists (GLsizei(strlen(text)), GL_UNSIGNED_BYTE, text);
-  }
-
-  static int
-  Ng_ToglVersion(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const *objv)
-  {
-    Tcl_SetResult (interp,  (char*)"1", TCL_STATIC);
-    return TCL_OK;
-  }
-
-  static void init( struct Togl *togl )
-  {
-    if (nodisplay)
-      return;
-      
-    LoadOpenGLFunctionPointers();
-    fontbase = Togl_LoadBitmapFont( togl, TOGL_BITMAP_8_BY_13 );
-    Set_OpenGLText_Callback (&MyOpenGLText_GUI);
-    
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glMatrixMode(GL_MODELVIEW);
-
-    SetVisualScene (Togl_Interp(togl));
-    vs->DrawScene();
-  }
-
-  static void zap( struct Togl *togl )
-  {
-    ;
-  }
-
-  static void draw( struct Togl *togl )
-  {
-    if (nodisplay)
-      return;
-
-
-    int w = Togl_Width (togl);
-    int h = Togl_Height (togl);
-
-    glViewport(0, 0, w, h);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    
-    // OpenGL near and far clipping planes
-    double pnear = 0.1;
-    double pfar = 10;
-
-    gluPerspective(20.0f, double(w) / h, pnear, pfar);
-    glMatrixMode(GL_MODELVIEW);
-
-
-      
-    Tcl_Interp * interp = Togl_Interp(togl);
-
-    SetVisualScene (interp);
-
-#ifdef STEREO
-    if (1) // vispar.stereo)
-      {
-	glMatrixMode (GL_MODELVIEW);
-	glPushMatrix();
-
-	glLoadIdentity ();
-
-	//  glTranslatef (0.1, 0, 0);
-	gluLookAt (0.3, 0, 6, 0, 0, 0, 0, 1, 0);
-	Togl_StereoDrawBuffer(GL_BACK_RIGHT);
-	vs->DrawScene();
-
-	glLoadIdentity ();
-	// glTranslatef (-0.1, 0, 0);
-	gluLookAt (-0.3, 0, 6, 0, 0, 0, 0, 1, 0);
-	Togl_StereoDrawBuffer(GL_BACK_LEFT);
-	vs->DrawScene();
-	glPopMatrix();
-
-	Togl_SwapBuffers(togl);
-      }
-    else
-#endif
-      {
-	glPushMatrix();
-	glLoadIdentity();
-	// gluLookAt (0, 0, 6, 0, 0, 0, 0, 1, 0);
-	vs->DrawScene();
-	glPopMatrix();
-	Togl_SwapBuffers(togl);
-      }
-  }
-
-  static void reshape( struct Togl *togl)
-  {
-    /*
-    if (nodisplay)
-      return;
-    
-    int w = Togl_Width (togl);
-    int h = Togl_Height (togl);
-
-    glViewport(0, 0, w, h);
-	netgen::VisualScene::viewport[0]=0;
-	netgen::VisualScene::viewport[1]=0;
-	netgen::VisualScene::viewport[2]=w;
-	netgen::VisualScene::viewport[3]=h;
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    
-    // OpenGL near and far clipping planes
-    double pnear = 0.1;
-    double pfar = 10;
-
-    gluPerspective(20.0f, double(w) / h, pnear, pfar);
-    glMatrixMode(GL_MODELVIEW);
-
-    draw (togl);
-    */
-  }
-
-
-
-#else
-
-
-  // Sorry, Togl 2.0 not supported
-
   Font * font = nullptr;
   Togl * togl = NULL;
 
@@ -2149,15 +1992,6 @@ namespace netgen
 
     return TCL_OK;
   }
-
-
-
-
-
-#endif
-
-
-
 
 
 #if TOGL_MAJOR_VERSION==1
@@ -2292,302 +2126,63 @@ namespace netgen
 #endif
 
 
+#else
+
+// TODO: JPEGLIB for Togl2
+
+
+#endif
+
 
 
 
 #ifdef FFMPEG
+  static int Ng_VideoClip(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const *argv)
+    {
+      static Mpeg mpeg;
+      struct Togl *togl;
+    if (Togl_GetToglFromObj(interp, argv[1], &togl) != TCL_OK) 
+      return TCL_ERROR;
 
-  // thanks to Mikko Lyly @ CSC, Helsinki
-  
-#define STATE_READY 0
-#define STATE_STARTED 1
-
-
-#define INBUF_SIZE 4096
-#define DEFAULT_B_FRAMES 3
-  // #define DEFAULT_B_FRAMES 0
-#define DEFAULT_GOP_SIZE 200
-  // #define DEFAULT_GOP_SIZE 10
-  // #define DEFAULT_BITRATE 500000
-#define DEFAULT_BITRATE 5000000
-  // #define DEFAULT_MPG_BUFSIZE 500000
-#define DEFAULT_MPG_BUFSIZE 500000
-
-  typedef struct buffer_s {
-    uint8_t *MPG;
-    uint8_t *YUV;
-    uint8_t *RGB;
-    uint8_t *ROW;
-  } buffer_t;
-
-  void free_buffers( buffer_t *buff ) {
-    free( buff->MPG );
-    free( buff->YUV );
-    free( buff->RGB );
-    free( buff->ROW );
-  }
-
-  static double psnr( double d ) {
-    if( d==0 )
-      return INFINITY;
-    return -10.0*log( d )/log( 10.0 );
-  }
-
-  void print_info( int count_frames, AVCodecContext *context, int bytes ) {
-    double tmp = context->width * context->height * 255.0 * 255.0;
-    double Ypsnr = psnr( context->coded_frame->error[0] / tmp );
-    double quality = context->coded_frame->quality/(double)FF_QP2LAMBDA;
-    char pict_type = av_get_picture_type_char(context->coded_frame->pict_type);
-    cout << "video: frame=" << count_frames << " type=" << pict_type;
-    cout << " size=" << bytes << " PSNR(Y)=" << Ypsnr << " dB q=" << (float)quality << endl;
-  }
-
- 
-
-  static int Ng_VideoClip (struct Togl * togl,
-                           int argc, tcl_const char *argv[])
-  {
-    static AVCodec *codec = NULL;
-    static AVCodecContext *context = NULL;
-    static AVFrame *YUVpicture = NULL;
-    static AVFrame *RGBpicture = NULL;
-    static int bytes, PIXsize, stride;
-    static int y, nx, ny;
-    // static int ox, oy, viewp[4];
-    static int i_state = STATE_READY;
-    static int initialized = 0;
-    static int count_frames = 0;
-    static int bitrate = DEFAULT_BITRATE;
-    static int gopsize = DEFAULT_GOP_SIZE;
-    static int bframes = DEFAULT_B_FRAMES;
-    static int MPGbufsize = DEFAULT_MPG_BUFSIZE;
-    static AVCodecID codec_id = CODEC_ID_MPEG1VIDEO;
-    static FILE *MPGfile;
-    static buffer_t buff;
-    static struct SwsContext *img_convert_ctx;
-
-
-    if (strcmp (argv[2], "init") == 0)
+    if (strcmp (Tcl_GetString(argv[2]), "init") == 0)
       {
         // Can't initialize when running:
         //-------------------------------
-        if( i_state != STATE_READY ) {
+        if( mpeg.IsStarted() )  {
           cout << "cannot initialize: already running" << endl;
           return TCL_ERROR;
         }
 
-
-
-        // Open output file:
-        //-------------------
-        const char * filename = argv[3];
-        cout << "Saving videoclip to file '" << filename << "'" << endl;
-        MPGfile = fopen(filename, "wb");
-
-        // Determine picture size:
-        //------------------------
-        nx = Togl_Width (togl);
-        nx = int((nx + 1) / 4) * 4 + 4;
-        ny = Togl_Height (togl);
-        ny = 2 * (ny/2);
-        cout << "Width=" << nx << ", height=" << ny << endl;
-
-        // Allocate buffers:
-        //------------------
-        PIXsize = nx*ny;
-        stride = 3*nx;
-        buff.RGB = (uint8_t*)malloc(stride*ny);
-        buff.ROW = (uint8_t*)malloc(stride);
-        buff.YUV = (uint8_t*)malloc(3*(PIXsize/2));
-        buff.MPG = (uint8_t*)malloc(MPGbufsize);
-
-
-        // Initialize libavcodec:
-        //-----------------------
-        if( !initialized ) {
-          av_register_all();
-          initialized = 1;
-        }
-
-        // Choose codec:
-        //--------------
-        codec = avcodec_find_encoder( codec_id );
-        if( !codec ) {
-          free_buffers( &buff );
-          fclose( MPGfile );
-          cout << "can't find codec" << endl;
-          return TCL_ERROR;
-        }
-
-        // Init codec context etc.:
-        //--------------------------
-        // context = avcodec_alloc_context();
-	context = avcodec_alloc_context3(codec);
-
-        context->bit_rate = bitrate;
-        context->width = nx;
-        context->height = ny;
-        AVRational s;
-        s.num = 1;
-        s.den = 25;
-        context->time_base = s;
-        context->gop_size = gopsize;
-        context->max_b_frames = bframes;
-        context->pix_fmt = PIX_FMT_YUV420P;
-        context->flags |= CODEC_FLAG_PSNR;
-
-        // if( avcodec_open( context, codec ) < 0 ) {
-	if( avcodec_open2( context, codec, NULL) < 0 ) {
-          cout << "can't open codec" << endl;
-          avcodec_close( context );
-          av_free( context );
-          free_buffers( &buff );
-          fclose( MPGfile );
-          return TCL_ERROR;
-        }
-
-        YUVpicture = avcodec_alloc_frame();
-
-        YUVpicture->data[0] = buff.YUV;
-        YUVpicture->data[1] = buff.YUV + PIXsize;
-        YUVpicture->data[2] = buff.YUV + PIXsize + PIXsize / 4;
-        YUVpicture->linesize[0] = nx;
-        YUVpicture->linesize[1] = nx / 2;
-        YUVpicture->linesize[2] = nx / 2;
-
-        RGBpicture = avcodec_alloc_frame();
-
-        RGBpicture->data[0] = buff.RGB;
-        RGBpicture->data[1] = buff.RGB;
-        RGBpicture->data[2] = buff.RGB;
-        RGBpicture->linesize[0] = stride;
-        RGBpicture->linesize[1] = stride;
-        RGBpicture->linesize[2] = stride;
-
-        // Set state "started":
-        //----------------------
-        i_state = STATE_STARTED;
-        cout << "savempg: state: started" << endl;
+        const char * filename = Tcl_GetString(argv[3]);
+        mpeg.Start(filename);
 
         return TCL_OK;
       }
 
 
 
-    else if (strcmp (argv[2], "addframe") == 0)
+    else if (strcmp (Tcl_GetString(argv[2]), "addframe") == 0)
       {
-        // Can't compress if status != started:
-        //-------------------------------------
-        if( i_state != STATE_STARTED ) {
-          cout << "cannot add frame: codec not initialized" << endl;
+        if(mpeg.AddFrame())
           return TCL_ERROR;
-        }
-
-        // Read RGB data:
-        //---------------
-        glReadPixels (0, 0, nx, ny, GL_RGB, GL_UNSIGNED_BYTE, buff.RGB );
-
-        // The picture is upside down - flip it:
-        //---------------------------------------
-        for( y=0; y<ny/2; y++ ) {
-          uint8_t *r1 = buff.RGB + stride*y;
-          uint8_t *r2 = buff.RGB + stride*(ny-1-y);
-          memcpy( buff.ROW, r1, stride );
-          memcpy( r1, r2, stride );
-          memcpy( r2, buff.ROW, stride );
-        }
-
-        // Convert to YUV:
-        //----------------
-        if( img_convert_ctx == NULL )
-          img_convert_ctx = sws_getContext( nx, ny, PIX_FMT_RGB24,
-                                            nx, ny, PIX_FMT_YUV420P,
-                                            SWS_BICUBIC, NULL, NULL, NULL );
-        
-        if( img_convert_ctx == NULL ) {
-          cout << "can't initialize scaler context" << endl;
-          return TCL_ERROR;
-        }
-        
-        sws_scale( img_convert_ctx, RGBpicture->data, RGBpicture->linesize,
-                   0, ny, YUVpicture->data, YUVpicture->linesize );
-
-
-        // Encode frame:
-        //--------------
-        bytes = avcodec_encode_video( context, buff.MPG,
-                                      MPGbufsize, YUVpicture );
-        count_frames++;
-        print_info( count_frames, context, bytes );
-        fwrite( buff.MPG, 1, bytes, MPGfile );
-
-        return TCL_OK;
       }
 
 
 
-    else if (strcmp (argv[2], "finalize") == 0)
+    else if (strcmp (Tcl_GetString(argv[2]), "finalize") == 0)
       {
-        // Can't stop if status != started:
-        //---------------------------------
-        if( i_state != STATE_STARTED ) {
-          cout << "cannot finalize: codec not initialized" << endl;
-          return TCL_ERROR;
-        }
-
-        // Get the delayed frames, if any:
-        //--------------------------------
-        for( ; bytes; ) {
-          bytes = avcodec_encode_video( context, buff.MPG, MPGbufsize, NULL );
-          count_frames++;
-          print_info( count_frames, context, bytes );
-          fwrite( buff.MPG, 1, bytes, MPGfile );
-        }
-
-        // Add sequence end code:
-        //-----------------------
-        if( codec_id == CODEC_ID_MPEG1VIDEO ) {
-          buff.MPG[0] = 0x00;
-          buff.MPG[1] = 0x00;
-          buff.MPG[2] = 0x01;
-          buff.MPG[3] = 0xb7;
-          fwrite( buff.MPG, 1, 4, MPGfile );
-        }
-
-        // Finalize:
-        //-----------
-        avcodec_close( context );
-        av_free( context );
-        av_free( YUVpicture );
-        av_free( RGBpicture );
-        free_buffers( &buff );
-        fclose( MPGfile );
-
-        i_state = STATE_READY;
-        cout <<  "finalized" << endl;
-
-        return TCL_OK;
+        mpeg.Stop();
       }
     return TCL_OK;
   }
 
-
-
-#else
-  static int Ng_VideoClip (struct Togl * togl,
-                           int argc, tcl_const char *argv[])
+#else // FFMPEG
+  static int Ng_VideoClip(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const *argv)
   {
     Tcl_SetResult (Togl_Interp(togl), (char*)"Video not available, Netgen was not compiled with FFMPEG library", TCL_STATIC);
     return TCL_ERROR;
   }
-#endif
-
-#endif
-
-
-
-
-
+#endif // FFMPEG
 
 
 
@@ -3476,22 +3071,6 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
      */
     Tcl_CreateObjCommand(interp, "Ng_GetToglVersion", Ng_ToglVersion, NULL, NULL);
 
-#if TOGL_MAJOR_VERSION==1
-    if (!nodisplay)
-      {
-	if (Togl_Init(interp) == TCL_ERROR) 
-	  return TCL_ERROR;
-	
-	Togl_CreateFunc( init );
-	Togl_DestroyFunc( zap );
-	Togl_DisplayFunc( draw );
-	Togl_ReshapeFunc( reshape );
-	//   Togl_TimerFunc(  idle );
-	Togl_CreateCommand( (char*)"Ng_SnapShot", Ng_SnapShot);
-	Togl_CreateCommand( (char*)"Ng_VideoClip", Ng_VideoClip);
-	//   Togl_CreateCommand("position",position);
-      }
-#else
     if (!nodisplay)
       {
 	if (Togl_Init(interp) == TCL_ERROR) 
@@ -3505,11 +3084,8 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 	
 	//   Togl_TimerFunc(  idle );
 	// Togl_CreateCommand( (char*)"Ng_SnapShot", Ng_SnapShot);
-	// Togl_CreateCommand( (char*)"Ng_VideoClip", Ng_VideoClip);
-	//   Togl_CreateCommand("position",position);
+        Tcl_CreateObjCommand(interp, "Ng_VideoClip", Ng_VideoClip, NULL, NULL);
       }
-
-#endif
 
 
     multithread.pause = 0;

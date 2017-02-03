@@ -319,7 +319,7 @@ proc demoredraw { } {
     global videoactive
     if { $videoactive == 1 } {
         puts "addframe"
-        .ndraw Ng_VideoClip addframe
+        Ng_VideoClip .ndraw addframe
     }
     if { $result == 0 && $stopdemo == 0 } {
 	after 1 { demoredraw }
@@ -367,14 +367,14 @@ set videoactive 0
  	}
  	set file [tk_getSaveFile -filetypes $types]
  	if {$file != ""} {
- 	    .ndraw Ng_VideoClip init $file 
+ 	    Ng_VideoClip .ndraw init $file 
             global videoactive
             set videoactive 1
         }
      }
 
 .ngmenu.file.video add command -label "add frame..." \
-    -command {.ndraw Ng_VideoClip addframe }
+    -command {Ng_VideoClip .ndraw addframe }
 
 .ngmenu.file.video add command -label "one cycle" \
     -command {
@@ -383,14 +383,14 @@ set videoactive 0
 	    puts "j =  $j"
 	    Ng_Vis_Set time [expr (1000 * $j / 100)]
 	    redraw
-	    .ndraw Ng_VideoClip addframe 
+	    Ng_VideoClip .ndraw addframe 
 	    after 200
 	}
     }
 
 .ngmenu.file.video add command -label "finalize..." \
     -command {
-        .ndraw Ng_VideoClip finalize 
+        Ng_VideoClip .ndraw finalize 
         global videoactive
         set videoactive 0
     }
@@ -1017,7 +1017,7 @@ proc timer2 { } {
         global videoactive
         if { $videoactive == 1 } {
             puts "addframe"
-            .ndraw Ng_VideoClip addframe
+            Ng_VideoClip .ndraw addframe
         }
     }
     if { $multithread_redraw == 2 } {
@@ -1028,7 +1028,7 @@ proc timer2 { } {
         global videoactive
         if { $videoactive == 1 } {
             puts "addframe"
-            .ndraw Ng_VideoClip addframe
+            Ng_VideoClip .ndraw addframe
         }
         after 1 { timer2 }
         return
