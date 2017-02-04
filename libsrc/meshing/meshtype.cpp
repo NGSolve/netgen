@@ -1879,6 +1879,8 @@ namespace netgen
           shape(7) = (1-hp(0))*(  hp(1))*(  hp(2));
           break;
         }
+      default:
+        throw NgException("Element :: GetShape not implemented for that element");
       }
   }
 
@@ -1966,6 +1968,8 @@ namespace netgen
           shape(7) = (1-p(0))*(  p(1))*(  p(2));
           break;
         }
+      default:
+        throw NgException("Element :: GetNewShape not implemented for that element");
       }
   }
 
