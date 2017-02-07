@@ -111,6 +111,7 @@ endif(USE_GUI)
 #######################################################################
 # propagate cmake variables to Netgen subproject
 set_vars( NETGEN_CMAKE_ARGS
+  CMAKE_CXX_COMPILER
   CMAKE_BUILD_TYPE
   CMAKE_SHARED_LINKER_FLAGS
   CMAKE_SHARED_LINKER_FLAGS_RELEASE
