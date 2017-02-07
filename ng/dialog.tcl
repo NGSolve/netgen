@@ -1814,10 +1814,10 @@ proc bcpropdialog { } {
     } {
 	toplevel $w
 	
-	frame $w.face  -borderwidth 3
+	ttk::frame $w.face  -borderwidth 3
 	pack $w.face -fill x
 	ttk::label $w.face.lab -text "face index:"
-	ttk::label $w.face.ent -text 1 -padx 4
+	ttk::label $w.face.ent -text 1  
 	ttk::button $w.face.next -text "next" -command {
 	    set w .bcprop_dlg;	
 	    set facenr [$w.face.ent cget -text]
@@ -1854,7 +1854,7 @@ proc bcpropdialog { } {
 	
 	pack $w.face.lab $w.face.ent $w.face.prev $w.face.next  -side left  
 	
-	frame $w.bc  -borderwidth 3
+	ttk::frame $w.bc  -borderwidth 3
 	pack $w.bc -fill x
 	ttk::label $w.bc.lab -text "bc property:"
 	entry $w.bc.ent -width 5 -relief sunken 
@@ -1868,14 +1868,14 @@ proc bcpropdialog { } {
 	}
 	pack $w.bc.lab $w.bc.ent $w.bc.but $w.bc.but2 -side left  -expand yes
 
-	frame $w.bcname  -borderwidth 3
+	ttk::frame $w.bcname  -borderwidth 3
 	pack $w.bcname -fill x
 	ttk::label $w.bcname.lab -text "bc name:"
 	ttk::label $w.bcname.ent -text "-"
 	pack $w.bcname.lab $w.bcname.ent -side left  -expand yes
 	
 
-	frame $w.bu
+	ttk::frame $w.bu
 	pack $w.bu -fill x -ipady 3
 
 	ttk::button $w.bu.close -text "Close" -command { destroy .bcprop_dlg }
