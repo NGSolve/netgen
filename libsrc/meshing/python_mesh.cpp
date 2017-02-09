@@ -359,7 +359,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def_property("domin", &FaceDescriptor::DomainIn, &FaceDescriptor::SetDomainIn)
     .def_property("domout", &FaceDescriptor::DomainOut, &FaceDescriptor::SetDomainOut)
     .def_property("bc", &FaceDescriptor::BCProperty, &FaceDescriptor::SetBCProperty)
-    .def_property_readonly("bcname", FunctionPointer ([](FaceDescriptor & self) -> string { return self.GetBCName(); }))
+    .def_property("bcname",
+                  [](FaceDescriptor & self) -> string { return self.GetBCName(); },
+                  [](FaceDescriptor & self, string name) { self.SetBCName(new string(name)); } // memleak
+                  )
     .def("SetSurfaceColor", [](FaceDescriptor & self, py::list color )
           {
             Vec3d c;
