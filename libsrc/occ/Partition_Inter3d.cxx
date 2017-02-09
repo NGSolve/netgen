@@ -702,7 +702,7 @@ TopTools_MapOfShape& Partition_Inter3d::TouchedFaces()
 //purpose  : 
 //=======================================================================
 
-Handle(BRepAlgo_AsDes) Partition_Inter3d::AsDes() const 
+Handle_BRepAlgo_AsDes Partition_Inter3d::AsDes() const 
 {
   return myAsDes;
 }
@@ -829,7 +829,7 @@ TopoDS_Vertex Partition_Inter3d::ReplaceSameDomainV(const TopoDS_Vertex& V,
 //purpose  : 
 //=======================================================================
 
-Handle(BRepAlgo_AsDes) Partition_Inter3d::SectionEdgesAD() const
+Handle_BRepAlgo_AsDes Partition_Inter3d::SectionEdgesAD() const
 {
   return mySectionEdgesAD;
 }

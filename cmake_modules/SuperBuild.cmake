@@ -88,7 +88,7 @@ endif (USE_PYTHON)
 
 #######################################################################
 
-if(USE_OCC AND WIN32)
+if(USE_OCC AND WIN32 AND NOT OCC_INCLUDE_DIR)
     ExternalProject_Add(win_download_occ
       PREFIX ${CMAKE_CURRENT_BINARY_DIR}/tcl
       URL ${OCC_DOWNLOAD_URL_WIN}
@@ -100,7 +100,7 @@ if(USE_OCC AND WIN32)
       LOG_DOWNLOAD 1
       )
     list(APPEND NETGEN_DEPENDENCIES win_download_occ)
-endif(USE_OCC AND WIN32)
+endif(USE_OCC AND WIN32 AND NOT OCC_INCLUDE_DIR)
 
 #######################################################################
 
@@ -132,6 +132,8 @@ set_vars( NETGEN_CMAKE_ARGS
   INSTALL_DEPENDENCIES
   INTEL_MIC
   CMAKE_PREFIX_PATH
+  OCC_INCLUDE_DIR
+  OCC_LIBRARY_DIR
   )
 
 if(${CMAKE_GENERATOR} STREQUAL "Unix Makefiles")
