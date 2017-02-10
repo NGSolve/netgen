@@ -4,7 +4,7 @@ set_property (DIRECTORY PROPERTY EP_PREFIX dependencies)
 
 set (NETGEN_DEPENDENCIES)
 set (LAPACK_DEPENDENCIES)
-set (NETGEN_CMAKE_ARGS)
+set (NETGEN_CMAKE_ARGS "" CACHE INTERNAL "")
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${PROJECT_SOURCE_DIR}/cmake_modules")
 
@@ -12,7 +12,7 @@ macro(set_vars VAR_OUT)
   foreach(varname ${ARGN})
     if(NOT "${${varname}}" STREQUAL "")
       string(REPLACE ";" "$<SEMICOLON>" varvalue "${${varname}}" )
-      list(APPEND ${VAR_OUT} -D${varname}=${varvalue})
+      set(${VAR_OUT} ${${VAR_OUT}};-D${varname}=${varvalue} CACHE INTERNAL "")
     endif()
   endforeach()
 endmacro()
@@ -132,9 +132,18 @@ set_vars( NETGEN_CMAKE_ARGS
   INSTALL_DEPENDENCIES
   INTEL_MIC
   CMAKE_PREFIX_PATH
-  OCC_INCLUDE_DIR
-  OCC_LIBRARY_DIR
   )
+
+# propagate all variables set on the command line using cmake -DFOO=BAR
+# to Netgen subproject
+get_cmake_property(CACHE_VARS CACHE_VARIABLES)
+foreach(CACHE_VAR ${CACHE_VARS})
+  get_property(CACHE_VAR_HELPSTRING CACHE ${CACHE_VAR} PROPERTY HELPSTRING)
+  if(CACHE_VAR_HELPSTRING STREQUAL "No help, variable specified on the command line.")
+    get_property(CACHE_VAR_TYPE CACHE ${CACHE_VAR} PROPERTY TYPE)
+    set(NETGEN_CMAKE_ARGS ${NETGEN_CMAKE_ARGS};-D${CACHE_VAR}:${CACHE_VAR_TYPE}=${${CACHE_VAR}} CACHE INTERNAL "")
+  endif()
+endforeach()
 
 if(${CMAKE_GENERATOR} STREQUAL "Unix Makefiles")
   set(NETGEN_BUILD_COMMAND $(MAKE) --silent )
