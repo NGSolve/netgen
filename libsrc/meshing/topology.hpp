@@ -114,14 +114,16 @@ public:
   const int * GetFaceVerticesPtr (int fnr) const { return &face2vert[fnr][0]; }
   void GetFaceEdges (int fnr, Array<int> & edges, bool withorientation = false) const;
 
-  ELEMENT_TYPE GetFaceType (int fnr) const;
+  ELEMENT_TYPE GetFaceType (int fnr) const
+  { return (face2vert.Get(fnr)[3] == 0) ? TRIG : QUAD; }
 
   void GetSurfaceElementEdges (int elnr, Array<int> & edges) const;
   int GetSurfaceElementFace (int elnr) const;
   void GetSurfaceElementEdgeOrientations (int elnr, Array<int> & eorient) const;
   int GetSurfaceElementFaceOrientation (int elnr) const;
   void GetEdges (SurfaceElementIndex elnr, Array<int> & edges) const;
-  int GetFace (SurfaceElementIndex elnr) const;
+  int GetFace (SurfaceElementIndex elnr) const
+  { return surffaces[elnr].fnr; }
 
   int GetSurfaceElementEdges (int elnr, int * edges, int * orient) const;
 

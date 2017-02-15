@@ -1474,11 +1474,13 @@ namespace netgen
   {
     return surffaces.Get(elnr).fnr+1;
   }
-
+  
+  /*
   int MeshTopology :: GetFace (SurfaceElementIndex elnr) const
   {
     return surffaces[elnr].fnr;
   }
+  */
 
 
   void MeshTopology :: 
@@ -1837,11 +1839,12 @@ namespace netgen
       }
   }
 
-
+  /*
   ELEMENT_TYPE MeshTopology :: GetFaceType (int fnr) const
   {
     if (face2vert.Get(fnr)[3] == 0) return TRIG; else return QUAD;
   }
+  */
 
 
   void MeshTopology :: GetVertexElements (int vnr, Array<ElementIndex> & elements) const
