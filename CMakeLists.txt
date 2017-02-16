@@ -15,7 +15,6 @@ option( USE_JPEG    "enable snapshots using library libjpeg" OFF )
 option( USE_MPEG    "enable video recording with FFmpeg, uses libavcodec" OFF )
 option( INTEL_MIC        "cross compile for intel xeon phi")
 option( INSTALL_PROFILES "install environment variable settings to /etc/profile.d" OFF )
-option( INSTALL_DEPENDENCIES "install dependencies like tcl, useful for packaging" OFF )
 option( USE_CCACHE       "use ccache")
 
 option( USE_SUPERBUILD       "use ccache" ON)
