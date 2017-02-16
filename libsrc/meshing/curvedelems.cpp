@@ -693,9 +693,9 @@ namespace netgen
       {
 	facecoeffsindex[i] = nd;
 	if (top.GetFaceType(i+1) == TRIG)
-	  nd += max (0, (faceorder[i]-1)*(faceorder[i]-2)/2);
+	  nd += max2 (0, (faceorder[i]-1)*(faceorder[i]-2)/2);
 	else
-	  nd += max (0, sqr(faceorder[i]-1));
+	  nd += max2 (0, sqr(faceorder[i]-1));
       }
     facecoeffsindex[nfaces] = nd;
 
