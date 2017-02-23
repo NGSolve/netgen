@@ -6,7 +6,7 @@ if(APPLE)
     URL_MD5 d7cbb91f1ded1919370a30edd1534304
     DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
     UPDATE_COMMAND "" # Disable update
-    CONFIGURE_COMMAND ../tcl/macosx/configure --enable-threads --enable-framework --prefix=${tcl_prefix} --libdir=${tcl_prefix}/Contents/Frameworks --bindir=${tcl_prefix}/Contents/Frameworks/Tcl.framework/bin
+    CONFIGURE_COMMAND ../project_tcl/macosx/configure --enable-threads --enable-framework --prefix=${tcl_prefix} --libdir=${tcl_prefix}/Contents/Frameworks --bindir=${tcl_prefix}/Contents/Frameworks/Tcl.framework/bin
     BUILD_COMMAND make -j4 binaries libraries
     INSTALL_COMMAND make install-binaries install-headers install-libraries install-private-headers
     LOG_DOWNLOAD 1
@@ -21,7 +21,7 @@ if(APPLE)
     URL_MD5 261754d7dc2a582f00e35547777e1fea
     DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
     UPDATE_COMMAND "" # Disable update
-    CONFIGURE_COMMAND ../tk/macosx/configure --enable-aqua=yes --enable-threads --enable-framework --prefix=${tcl_prefix} --libdir=${tcl_prefix}/Contents/Frameworks --bindir=${tcl_prefix}/Contents/Frameworks/Tcl.framework/bin --with-tcl=${tcl_prefix}/Contents/Frameworks/Tcl.framework
+    CONFIGURE_COMMAND ../project_tk/macosx/configure --enable-aqua=yes --enable-threads --enable-framework --prefix=${tcl_prefix} --libdir=${tcl_prefix}/Contents/Frameworks --bindir=${tcl_prefix}/Contents/Frameworks/Tcl.framework/bin --with-tcl=${tcl_prefix}/Contents/Frameworks/Tcl.framework
     BUILD_COMMAND make -j4 binaries libraries
     INSTALL_COMMAND make install-binaries install-headers install-libraries install-private-headers
     LOG_DOWNLOAD 1
