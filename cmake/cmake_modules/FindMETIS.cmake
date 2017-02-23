@@ -49,14 +49,8 @@ if (METIS_INCLUDE_DIR)
             NAMES ${metis_inc_names}
             HINTS ${METIS_INCLUDE_DIR}
             NO_DEFAULT_PATH)
-if(NOT metis_test_include_path)
-    message(SEND_ERROR "Can not locate ${metis_inc_names} in ${METIS_INCLUDE_DIR}")
-endif()
     set(METIS_INCLUDE_DIR "${metis_test_include_path}")
-else()
-    message(SEND_ERROR "METIS_INCLUDE_DIR=${METIS_INCLUDE_DIR} does not exist")
-    set(METIS_INCLUDE_DIR "METIS_INCLUDE_DIR-NOTFOUND")
-    endif()
+endif()
 else() 
 # Metis sometimes puts the include files in a subdir called Lib
     set(metis_inc_suffixes "include" "Lib")
@@ -67,19 +61,13 @@ if(METIS_DIR)
             HINTS ${METIS_DIR}
             PATH_SUFFIXES ${metis_inc_suffixes}
             NO_DEFAULT_PATH)
-else()
-    message(SEND_ERROR "METIS_DIR=${METIS_DIR} does not exist")
-    set(METIS_INCLUDE_DIR "METIS_INCLUDE_DIR-NOTFOUND")
-    endif()   
+    endif()
 else()
     find_path(METIS_INCLUDE_DIR
             NAMES ${metis_inc_names}
             PATH_SUFFIXES ${metis_inc_suffixes})
     endif()
     endif()
-if ( NOT METIS_INCLUDE_DIR )
-    message(SEND_ERROR "Can not locate METIS include directory")
-endif()
 # Search for libraries
 # Search order preference:
 #  (1) METIS_LIBRARY_DIR - check existence of path AND if the library file exists
@@ -93,9 +81,6 @@ if (METIS_LIBRARY_DIR)
             NAMES ${metis_lib_names}
             HINTS ${METIS_LIBRARY_DIR}
             NO_DEFAULT_PATH)
-else()
-    message(SEND_ERROR "METIS_LIBRARY_DIR=${METIS_LIBRARY_DIR} does not exist")
-    set(METIS_LIBRARY "METIS_LIBRARY-NOTFOUND")
     endif()
 else() 
     list(APPEND metis_lib_suffixes "lib" "Lib")
@@ -106,9 +91,6 @@ if(METIS_DIR)
             HINTS ${METIS_DIR}
             PATH_SUFFIXES ${metis_lib_suffixes}
             NO_DEFAULT_PATH)
-else()
-    message(SEND_ERROR "METIS_DIR=${METIS_DIR} does not exist")
-    set(METISLIBRARY "METIS_LIBRARY-NOTFOUND")
     endif()   
 else()
     find_library(METIS_LIBRARY
@@ -116,9 +98,6 @@ else()
             PATH_SUFFIXES ${metis_lib_suffixes})
     endif()
     endif()
-if ( NOT METIS_LIBRARY )
-    message(SEND_ERROR "Can not locate METIS library")
-endif()   
 
 # Define prerequisite packages
 set(METIS_INCLUDE_DIRS ${METIS_INCLUDE_DIR})

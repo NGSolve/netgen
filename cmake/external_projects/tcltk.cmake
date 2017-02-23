@@ -1,7 +1,7 @@
 if(APPLE)
   set(HOME $ENV{HOME})
   set(tcl_prefix ${CMAKE_INSTALL_PREFIX}/../../)
-  ExternalProject_Add(tcl
+  ExternalProject_Add(project_tcl
     URL "http://sourceforge.net/projects/tcl/files/Tcl/8.6.4/tcl8.6.4-src.tar.gz"
     URL_MD5 d7cbb91f1ded1919370a30edd1534304
     DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
@@ -15,8 +15,8 @@ if(APPLE)
     LOG_INSTALL 1
     )
 
-  ExternalProject_Add(tk
-    DEPENDS tcl
+  ExternalProject_Add(project_tk
+    DEPENDS project_tcl
     URL "http://sourceforge.net/projects/tcl/files/Tcl/8.6.4/tk8.6.4-src.tar.gz"
     URL_MD5 261754d7dc2a582f00e35547777e1fea
     DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
@@ -47,7 +47,7 @@ if(APPLE)
     #LOG_INSTALL 1
     #)
  
-  list(APPEND NETGEN_DEPENDENCIES tcl tk)
+  list(APPEND NETGEN_DEPENDENCIES project_tcl project_tk)
   list(APPEND CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX}../Frameworks)
   set(TCL_INCLUDE_PATH ${CMAKE_INSTALL_PREFIX}/../Frameworks/Tcl.framework/Headers)
   set(TCL_LIBRARY ${CMAKE_INSTALL_PREFIX}/../Frameworks/Tcl.framework)
@@ -56,7 +56,7 @@ if(APPLE)
 
 elseif(WIN32)
 
-  ExternalProject_Add(win_extlibs
+  ExternalProject_Add(project_win_extlibs
     URL ${EXT_LIBS_DOWNLOAD_URL_WIN}
     UPDATE_COMMAND "" # Disable update
     BUILD_IN_SOURCE 1
@@ -66,7 +66,7 @@ elseif(WIN32)
     LOG_DOWNLOAD 1
     )
 
-  list(APPEND NETGEN_DEPENDENCIES win_extlibs)
+  list(APPEND NETGEN_DEPENDENCIES project_win_extlibs)
 else(WIN32)
     find_package(TCL 8.5 REQUIRED)
 endif(APPLE)

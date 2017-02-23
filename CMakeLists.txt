@@ -19,11 +19,13 @@ option( USE_CCACHE       "use ccache")
 
 option( USE_SUPERBUILD       "use ccache" ON)
 
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_modules")
+
 if (USE_SUPERBUILD)
   project (SUPERBUILD)
   # execute the superbuild (this script will be invoked again without the
   # USE_SUPERBUILD option this time)
-  include (cmake_modules/SuperBuild.cmake)
+  include (cmake/SuperBuild.cmake)
   return()                      # stop processing this file further
 else()
   project(Netgen)
@@ -55,7 +57,7 @@ endif(USE_NATIVE_ARCH)
 #######################################################################
 if(INTEL_MIC)
     set(MKL_ARCH "mic")
-    include(cmake_modules/mic.cmake)
+    include(cmake/mic.cmake)
 else(INTEL_MIC)
     set(MKL_ARCH "intel64")
 endif(INTEL_MIC)
@@ -94,7 +96,6 @@ include_directories ("${PROJECT_SOURCE_DIR}/libsrc/include")
 include_directories ("${PROJECT_BINARY_DIR}")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${PROJECT_SOURCE_DIR}/cmake_modules")
 
 set(INCDIR include CACHE PATH "install directory for header files")
 if(APPLE)
@@ -241,7 +242,7 @@ endif(INSTALL_PROFILES)
 
 #######################################################################
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/fixup.cmake "\
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/netgen_fixup.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/netgen_fixup.cmake)
 set(APP ${INSTALL_DIR})
 message(\${APP})
 set(BU_CHMOD_BUNDLE_ITEMS ON)
@@ -366,13 +367,13 @@ endif()
 #######################################################################
 # uninstall target
 configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/cmake_uninstall.cmake.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
     IMMEDIATE @ONLY)
 add_custom_target(uninstall
     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/NetgenConfig.cmake.in
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NetgenConfig.cmake.in
 	${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake @ONLY)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake DESTINATION share/cmake)
