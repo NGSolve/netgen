@@ -391,7 +391,16 @@ namespace netgen
 	  T * p = new T[nsize];
 	
 	  int mins = (nsize < size) ? nsize : size; 
-	  memcpy (p, data, mins * sizeof(T));
+          // memcpy (p, data, mins * sizeof(T));
+
+#if defined(__GNUG__) && __GNUC__ < 5 && !defined(__clang__)
+          for (size_t i = 0; i < mins; i++) p[i] = move(data[i]);
+#else
+          if (std::is_trivially_copyable<T>::value)
+            memcpy (p, data, sizeof(T)*mins);
+          else
+            for (size_t i = 0; i < mins; i++) p[i] = move(data[i]);
+#endif
 
 	  if (ownmem)
 	    delete [] data;
