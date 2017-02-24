@@ -234,6 +234,9 @@ namespace netgen
     template <int DIM> 
     int GetElementIndex (int nr) const;
 
+    /// material/boundary label of region, template argument is co-dimension
+    template <int DIM> 
+    const string & GetMaterialCD (int region_nr) const;
 
     /// Curved Elements:
     /// elnr .. element nr

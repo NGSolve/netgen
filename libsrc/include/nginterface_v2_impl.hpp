@@ -175,8 +175,23 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<3> (int nr) const
 
 
 
+template <> NGX_INLINE DLL_HEADER
+const string &  Ngx_Mesh :: GetMaterialCD<0> (int region_nr) const
+{
+  return mesh->GetMaterial(region_nr+1);
+}
 
+template <> NGX_INLINE DLL_HEADER
+const string &  Ngx_Mesh :: GetMaterialCD<1> (int region_nr) const
+{
+  return mesh->GetBCName(region_nr);
+}
 
+template <> NGX_INLINE DLL_HEADER
+const string &  Ngx_Mesh :: GetMaterialCD<2> (int region_nr) const
+{
+  return mesh->GetCD2Name(region_nr);
+}
 
 
 
