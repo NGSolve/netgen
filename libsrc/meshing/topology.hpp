@@ -38,7 +38,7 @@ struct T_FACE
 
 class MeshTopology
 {
-  const Mesh & mesh;
+  const Mesh * mesh;
   bool buildedges;
   bool buildfaces;
 
@@ -57,17 +57,22 @@ class MeshTopology
   Array<T_FACE> surffaces;
   Array<INDEX_2> surf2volelement;
   Array<int> face2surfel;
-  TABLE<ElementIndex,PointIndex::BASE> *vert2element;
-  TABLE<SurfaceElementIndex,PointIndex::BASE> *vert2surfelement;
-  TABLE<SegmentIndex,PointIndex::BASE> *vert2segment;
-  TABLE<int,PointIndex::BASE> *vert2pointelement = nullptr;
+  TABLE<ElementIndex,PointIndex::BASE> vert2element;
+  TABLE<SurfaceElementIndex,PointIndex::BASE> vert2surfelement;
+  TABLE<SegmentIndex,PointIndex::BASE> vert2segment;
+  TABLE<int,PointIndex::BASE> vert2pointelement;
   int timestamp;
 public:
   int GetNSurfedges() const {return surfedges.Size();}
 
+  MeshTopology () = default;
+  MeshTopology (const MeshTopology & top) = default;
+  MeshTopology (MeshTopology && top) = default;
   MeshTopology (const Mesh & amesh);
   ~MeshTopology ();
-
+  MeshTopology & operator= (const MeshTopology & top) = default;
+  MeshTopology & operator= (MeshTopology && top) = default;
+  
   void SetBuildEdges (bool be)
   { buildedges = be; }
   void SetBuildFaces (bool bf)
@@ -159,17 +164,17 @@ public:
   
   void GetVertexElements (int vnr, Array<ElementIndex> & elements) const;
   FlatArray<ElementIndex> GetVertexElements (int vnr) const
-  { return (*vert2element)[vnr]; }
+  { return vert2element[vnr]; }
 
   void GetVertexSurfaceElements( int vnr, Array<SurfaceElementIndex>& elements ) const;
   FlatArray<SurfaceElementIndex> GetVertexSurfaceElements (int vnr) const
-  { return (*vert2surfelement)[vnr]; }
+  { return vert2surfelement[vnr]; }
 
   FlatArray<SegmentIndex> GetVertexSegments (int vnr) const
-  { return (*vert2segment)[vnr]; }
+  { return vert2segment[vnr]; }
 
   FlatArray<int> GetVertexPointElements (int vnr) const
-  { return (*vert2pointelement)[vnr]; }
+  { return vert2pointelement[vnr]; }
   
   int GetVerticesEdge ( int v1, int v2) const;
   void GetSegmentVolumeElements ( int segnr, Array<ElementIndex> & els ) const;
