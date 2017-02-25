@@ -5,13 +5,13 @@ NGX_INLINE DLL_HEADER Ng_Point Ngx_Mesh :: GetPoint (int nr) const
 
 
 template <>
-NGX_INLINE DLL_HEADER int Ngx_Mesh :: GetElementIndex<0> (int nr) const
+NGX_INLINE DLL_HEADER int Ngx_Mesh :: GetElementIndex<0> (size_t nr) const
 {
   return (*mesh).pointelements[nr].index;
 }
 
 template <>
-NGX_INLINE DLL_HEADER int Ngx_Mesh :: GetElementIndex<1> (int nr) const
+NGX_INLINE DLL_HEADER int Ngx_Mesh :: GetElementIndex<1> (size_t nr) const
 {
   if(mesh->GetDimension()==3)
     return (*mesh)[SegmentIndex(nr)].edgenr;
@@ -20,21 +20,21 @@ NGX_INLINE DLL_HEADER int Ngx_Mesh :: GetElementIndex<1> (int nr) const
 }
   
 template <>
-NGX_INLINE DLL_HEADER int Ngx_Mesh :: GetElementIndex<2> (int nr) const
+NGX_INLINE DLL_HEADER int Ngx_Mesh :: GetElementIndex<2> (size_t nr) const
 {
   int ind = (*mesh)[SurfaceElementIndex(nr)].GetIndex(); 
   return mesh->GetFaceDescriptor(ind).BCProperty();
 }
 
 template <>
-NGX_INLINE DLL_HEADER int Ngx_Mesh :: GetElementIndex<3> (int nr) const
+NGX_INLINE DLL_HEADER int Ngx_Mesh :: GetElementIndex<3> (size_t nr) const
 {
   return (*mesh)[ElementIndex(nr)].GetIndex();
 }
 
 
 template <>
-NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<0> (int nr) const
+NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<0> (size_t nr) const
 {
   const Element0d & el = mesh->pointelements[nr];
   
@@ -60,7 +60,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<0> (int nr) const
 
 
 template <> 
-NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (int nr) const
+NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
 {
   const Segment & el = mesh->LineSegment (SegmentIndex(nr));
 
@@ -107,7 +107,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (int nr) const
 }
 
 template <> 
-NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<2> (int nr) const
+NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<2> (size_t nr) const
 {
   const Element2d & el = mesh->SurfaceElement (SurfaceElementIndex (nr));
   
@@ -146,7 +146,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<2> (int nr) const
 }
 
 template <> 
-NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<3> (int nr) const
+NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<3> (size_t nr) const
 {
   const Element & el = mesh->VolumeElement (ElementIndex (nr));
   
