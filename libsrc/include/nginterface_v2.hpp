@@ -36,54 +36,52 @@ namespace netgen
     class Ng_Points
     {
     public:
-      int num;
+      size_t num;
       const int * ptr;
   
-      int Size() const { return num; }
-      int operator[] (int i) const { return ptr[i]-POINTINDEX_BASE; }
+      size_t Size() const { return num; }
+      int operator[] (size_t i) const { return ptr[i]-POINTINDEX_BASE; }
     };
 
 
     class Ng_Vertices
     {
     public:
-      int num;
+      size_t num;
       const int * ptr;
   
-      int Size() const { return num; }
-      int operator[] (int i) const { return ptr[i]-POINTINDEX_BASE; }
+      size_t Size() const { return num; }
+      int operator[] (size_t i) const { return ptr[i]-POINTINDEX_BASE; }
     };
 
     class Ng_Edges
     {
     public:
-      int num;
+      size_t num;
       const T_EDGE2 * ptr;
   
-      int Size() const { return num; }
-      // int operator[] (int i) const { return abs (ptr[i])-1; }
-      int operator[] (int i) const { return ptr[i].nr; }
+      size_t Size() const { return num; }
+      int operator[] (size_t i) const { return ptr[i].nr; }
     };
 
     class Ng_Faces
     {
     public:
-      int num;
+      size_t num;
       const T_FACE2 * ptr;
   
-      int Size() const { return num; }
-      // int operator[] (int i) const { return (ptr[i]-1) / 8; }
-      int operator[] (int i) const { return ptr[i].nr; }
+      size_t Size() const { return num; }
+      int operator[] (size_t i) const { return ptr[i].nr; }
     };
 
     class Ng_Facets
     {
     public:
-      int num;
+      size_t num;
       const int * ptr;
   
-      int Size() const { return num; }
-      int operator[] (int i) const { return ptr[i]; }
+      size_t Size() const { return num; }
+      int operator[] (size_t i) const { return ptr[i]; }
     };
 
     
@@ -229,11 +227,14 @@ namespace netgen
     Ng_Point GetPoint (int nr) const;
 
     template <int DIM> 
-    Ng_Element GetElement (int nr) const;
+    Ng_Element GetElement (size_t nr) const;
 
     template <int DIM> 
-    int GetElementIndex (int nr) const;
+    int GetElementIndex (size_t nr) const;
 
+    /// material/boundary label of region, template argument is co-dimension
+    template <int DIM> 
+    const string & GetMaterialCD (int region_nr) const;
 
     /// Curved Elements:
     /// elnr .. element nr
