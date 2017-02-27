@@ -144,7 +144,7 @@ namespace netgen
     string filename;
 
     /// store splinesurfaces, such that added ones do not get deleted before geometry does
-    std::vector<shared_ptr<SplineSurface>> spline_surfaces;
+    Array<shared_ptr<SplineSurface>> spline_surfaces;
 
   public:
     CSGeometry ();
@@ -320,7 +320,7 @@ namespace netgen
 
     virtual const Refinement & GetRefinement () const;
 
-    void AddSplineSurface (shared_ptr<SplineSurface> ss) { spline_surfaces.push_back(ss); }
+    void AddSplineSurface (shared_ptr<SplineSurface> ss) { spline_surfaces.Append(ss); }
   };
 
 

@@ -7,27 +7,27 @@ namespace netgen
   class SplineSurface  : public  OneSurfacePrimitive
   {
   protected:
-    std::vector<GeomPoint<3>> geompoints;
-    std::vector<shared_ptr<SplineSeg<3>>> splines;
-    std::vector<string> bcnames;
+    Array<GeomPoint<3>> geompoints;
+    Array<shared_ptr<SplineSeg<3>>> splines;
+    Array<string> bcnames;
     Array<double> maxh;
     shared_ptr<OneSurfacePrimitive> baseprimitive;
-    shared_ptr<std::vector<shared_ptr<OneSurfacePrimitive>>> cuts;
-    shared_ptr<std::vector<shared_ptr<OneSurfacePrimitive>>> all_cuts;
+    shared_ptr<Array<shared_ptr<OneSurfacePrimitive>>> cuts;
+    shared_ptr<Array<shared_ptr<OneSurfacePrimitive>>> all_cuts;
     
   public:
-    SplineSurface(shared_ptr<OneSurfacePrimitive> abaseprimitive, shared_ptr<std::vector<shared_ptr<OneSurfacePrimitive>>> acuts) :
+    SplineSurface(shared_ptr<OneSurfacePrimitive> abaseprimitive, shared_ptr<Array<shared_ptr<OneSurfacePrimitive>>> acuts) :
       OneSurfacePrimitive(), baseprimitive(abaseprimitive), cuts(acuts)
     { ; }
     virtual ~SplineSurface() { ; }
     
     const auto & GetSplines() const { return splines; }
-    int GetNSplines() const { return splines.size(); }
-    const std::vector<GeomPoint<3>>& GetPoints() const { return geompoints; }
+    int GetNSplines() const { return splines.Size(); }
+    const Array<GeomPoint<3>>& GetPoints() const { return geompoints; }
     string GetSplineType(const int i) const { return splines[i]->GetType(); }
     SplineSeg<3> & GetSpline(const int i) { return *splines[i]; }
     const SplineSeg<3> & GetSpline(const int i) const { return *splines[i]; }
-    int GetNP() const { return geompoints.size(); }
+    int GetNP() const { return geompoints.Size(); }
     const GeomPoint<3> & GetPoint(int i) const { return geompoints[i]; }
     string GetBCName(int i) const { return bcnames[i]; }
     string GetBCNameOf(Point<3> p1, Point<3> p2) const;
@@ -35,8 +35,8 @@ namespace netgen
     DLL_HEADER void AppendPoint(const Point<3> & p, const double reffac = 1., const bool hpref=false);
     void AppendSegment(shared_ptr<SplineSeg<3>> spline, string & bcname, double amaxh = -1);
 
-    const shared_ptr<std::vector<shared_ptr<OneSurfacePrimitive>>> CreateCuttingSurfaces();
-    const shared_ptr<std::vector<shared_ptr<OneSurfacePrimitive>>> GetCuts() const { return all_cuts; }
+    const shared_ptr<Array<shared_ptr<OneSurfacePrimitive>>> CreateCuttingSurfaces();
+    const shared_ptr<Array<shared_ptr<OneSurfacePrimitive>>> GetCuts() const { return all_cuts; }
     const shared_ptr<OneSurfacePrimitive> GetBase() const { return baseprimitive; }
     
     virtual void Project (Point<3> & p3d) const { baseprimitive->Project(p3d); }

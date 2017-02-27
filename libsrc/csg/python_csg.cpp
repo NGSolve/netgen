@@ -211,7 +211,7 @@ DLL_HEADER void ExportCSG(py::module &m)
     .def("__init__", FunctionPointer  ([](SplineSurface* instance, shared_ptr<SPSolid> base, py::list cuts)
 	     {
 	       auto primitive = dynamic_cast<OneSurfacePrimitive*> (base->GetSolid()->GetPrimitive());
-	       auto acuts = make_shared<std::vector<shared_ptr<OneSurfacePrimitive>>>();
+	       auto acuts = make_shared<Array<shared_ptr<OneSurfacePrimitive>>>();
 	       for(int i = 0; i<py::len(cuts);i++)
 		 {
 		   py::extract<shared_ptr<SPSolid>> sps(cuts[i]);
@@ -219,7 +219,7 @@ DLL_HEADER void ExportCSG(py::module &m)
 		     throw NgException("Cut must be SurfacePrimitive in constructor of SplineSurface!");
 		   auto sp = dynamic_cast<OneSurfacePrimitive*>(sps()->GetSolid()->GetPrimitive());
 		   if(sp)
-		     acuts->push_back(shared_ptr<OneSurfacePrimitive>(sp));
+		     acuts->Append(shared_ptr<OneSurfacePrimitive>(sp));
 		   else
 		     throw NgException("Cut must be SurfacePrimitive in constructor of SplineSurface!");
 		 }

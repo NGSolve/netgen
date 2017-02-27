@@ -6,14 +6,14 @@ namespace netgen
 void SplineSurface :: AppendPoint(const Point<3> & p, const double reffac, const bool hpref)
 {
   auto pp = Point<3>(p);
-  geompoints.push_back(GeomPoint<3>(pp,reffac));
-  geompoints.back().hpref = hpref;
+  geompoints.Append(GeomPoint<3>(pp,reffac));
+  geompoints.Last().hpref = hpref;
 }
   
   void SplineSurface :: AppendSegment(shared_ptr<SplineSeg<3>> sp, string & bcname, double amaxh)
   {
-    splines.push_back(sp);
-    bcnames.push_back(bcname);
+    splines.Append(sp);
+    bcnames.Append(bcname);
     maxh.Append(amaxh);
   }
 
@@ -21,7 +21,7 @@ void SplineSurface :: AppendPoint(const Point<3> & p, const double reffac, const
   {
     
     double eps = 1e-5;
-    for(int i=0; i<splines.size(); i++)
+    for(int i=0; i<splines.Size(); i++)
       {
 	auto pp1 = Point<3>(splines[i]->GetPoint(0));
 	Project(pp1);
@@ -35,14 +35,14 @@ void SplineSurface :: AppendPoint(const Point<3> & p, const double reffac, const
     return "default";
   }
 
-  const shared_ptr<std::vector<shared_ptr<OneSurfacePrimitive>>> SplineSurface :: CreateCuttingSurfaces()
+  const shared_ptr<Array<shared_ptr<OneSurfacePrimitive>>> SplineSurface :: CreateCuttingSurfaces()
   {
     if(all_cuts)
       return all_cuts;
-    auto cuttings = make_shared<std::vector<shared_ptr<OneSurfacePrimitive>>>();
+    auto cuttings = make_shared<Array<shared_ptr<OneSurfacePrimitive>>>();
     for (auto cut : *cuts)
-      cuttings->push_back(cut);
-    for(int i = 0; i<splines.size(); i++)
+      cuttings->Append(cut);
+    for(int i = 0; i<splines.Size(); i++)
       {
 	auto spline = splines[i];
 	auto lineseg = dynamic_cast<LineSeg<3>*>(spline.get());
@@ -58,7 +58,7 @@ void SplineSurface :: AppendPoint(const Point<3> & p, const double reffac, const
               {
                 plane->SetMaxH(maxh[i]);
               }
-            cuttings->push_back(plane);
+            cuttings->Append(plane);
           }
         else
           throw NgException("Spline type not implemented for SplineSurface!");
