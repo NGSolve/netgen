@@ -5,6 +5,8 @@ if(USE_GUI)
       # add icon to netgen executable
       enable_language(RC)
       set(netgen_sources ${netgen_sources} ../windows/netgen.rc)
+      # Don't use ccache here due to incompatiblity with the resource compiler
+      set_directory_properties(PROPERTIES RULE_LAUNCH_COMPILE "")
     endif(WIN32)
 
     add_executable(netgen ${netgen_sources})
