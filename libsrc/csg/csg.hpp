@@ -10,7 +10,6 @@
 #include <myadt.hpp>
 #include <gprim.hpp>
 #include <meshing.hpp>
-#include <vector>
 // #include <geometry2d.hpp>
 #include "../gprim/spline.hpp"
 #include "../gprim/splinegeometry.hpp"
