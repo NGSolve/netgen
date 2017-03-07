@@ -718,7 +718,7 @@ namespace netgen
 
     NgProfiler::StopTimer (timerloc2);
 
-    topology -> Update();
+    topology.Update();
     clusters -> Update();
 
     // paralleltop -> UpdateCoarseGrid();
@@ -1218,7 +1218,7 @@ namespace netgen
     int ne = GetNE();
     
     int nn = GetNP();
-    int nedges = topology->GetNEdges();
+    int nedges = topology.GetNEdges();
 
     idxtype  *xadj, * adjacency, *v_weights = NULL, *e_weights = NULL;
 
@@ -1240,7 +1240,7 @@ namespace netgen
     for ( int edge = 1; edge <= nedges; edge++ )
       {
 	int v1, v2;
-	topology->GetEdgeVertices ( edge, v1, v2);
+	topology.GetEdgeVertices ( edge, v1, v2);
 	cnt[v1-1] ++;
 	cnt[v2-1] ++;
       }
@@ -1257,7 +1257,7 @@ namespace netgen
     for ( int edge = 1; edge <= nedges; edge++ )
       {
 	int v1, v2;
-	topology->GetEdgeVertices ( edge, v1, v2);
+	topology.GetEdgeVertices ( edge, v1, v2);
 	adjacency[ xadj[v1-1] + cnt[v1-1] ] = v2-1;
 	adjacency[ xadj[v2-1] + cnt[v2-1] ] = v1-1;
 	cnt[v1-1]++;
@@ -1313,7 +1313,7 @@ namespace netgen
     
     // int nn = GetNP();
     // int nedges = topology->GetNEdges();
-    int nfaces = topology->GetNFaces();
+    int nfaces = topology.GetNFaces();
 
     idxtype  *xadj, * adjacency, *v_weights = NULL, *e_weights = NULL;
 
@@ -1340,7 +1340,7 @@ namespace netgen
     for ( int el=1; el <= ne; el++ )
       {
 	Element volel = VolumeElement(el);
-	topology->GetElementFaces(el, elfaces);
+	topology.GetElementFaces(el, elfaces);
 	for ( int i = 0; i < elfaces.Size(); i++ )
 	  {
 	    if ( facevolels1[elfaces[i]-1] == -1 )
