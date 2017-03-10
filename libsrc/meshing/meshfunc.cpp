@@ -75,7 +75,7 @@ namespace netgen
 	 (*testout) << "Meshing subdomain " << k << endl;
 	 
 	 mp.maxh = min2 (globmaxh, mesh3d.MaxHDomain(k));
-	 
+
 	 mesh3d.CalcSurfacesOfNode();
 	 mesh3d.FindOpenElements(k);
 	 

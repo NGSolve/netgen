@@ -491,7 +491,7 @@ namespace netgen
 	    if(splinesurface)
 	      {
 		auto name = splinesurface->GetBCNameOf(specpoints[startpoints.Get(refedges[i].edgenr)].p,specpoints[endpoints.Get(refedges[i].edgenr)].p);
-		mesh.SetCD2Name(refedges[i].edgenr,*name);
+		mesh.SetCD2Name(refedges[i].edgenr,name);
 	      }
 	    else
 	      {
@@ -499,7 +499,7 @@ namespace netgen
 	    if(splinesurface2)
 	      {
 		auto name = splinesurface2->GetBCNameOf(specpoints[startpoints.Get(refedges[i].edgenr)].p,specpoints[endpoints.Get(refedges[i].edgenr)].p);
-		mesh.SetCD2Name(refedges[i].edgenr,*name);
+		mesh.SetCD2Name(refedges[i].edgenr,name);
 	      }
 		
 	      }

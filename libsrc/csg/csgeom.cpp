@@ -345,7 +345,25 @@ namespace netgen
 	const ExtrusionFace * ef = dynamic_cast< const ExtrusionFace * > (GetSurface(i));
 	const RevolutionFace * rf = dynamic_cast< const RevolutionFace * > (GetSurface(i));
 	const DummySurface * dummyf = dynamic_cast< const DummySurface * > (GetSurface(i));
+        const SplineSurface * splines = dynamic_cast<const SplineSurface *> (GetSurface(i));
 
+        if (splines)
+          {
+            splines->GetBase()->GetPrimitiveData(classname,coeffs);
+            out << classname << " " << coeffs.Size() << "\n";
+            for (int j=0; j<coeffs.Size(); j++)
+              out << coeffs[j] << " ";
+            out << "\n";
+            for (auto cut : *(splines->GetCuts()))
+              {
+                cut->GetPrimitiveData(classname,coeffs);
+                out << classname << " " << coeffs.Size() << "\n";
+                for (int j=0; j<coeffs.Size(); j++)
+                  out << coeffs[j] << " ";
+                out << "\n";
+              }
+            return;
+          }
 
 	if(sp)
 	  {
@@ -818,6 +836,7 @@ namespace netgen
   {
     int inv;
     int nsurf = GetNSurf();
+
 
     isidenticto.SetSize(nsurf);
     for (int i = 0; i < nsurf; i++)

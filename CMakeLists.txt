@@ -42,10 +42,9 @@ set(CPACK_PACKAGE_VERSION "${PACKAGE_VERSION}")
 
 #######################################################################
 if(USE_CCACHE)
-  find_program(CCACHE_FOUND ccache)
+  find_program(CCACHE_FOUND NAMES ccache ccache.bat)
   if(CCACHE_FOUND)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_FOUND})
   endif(CCACHE_FOUND)
 endif(USE_CCACHE)
 
@@ -259,6 +258,11 @@ execute_process(COMMAND hdiutil create -volname Netgen -srcfolder ${INSTALL_DIR}
 ")
   add_custom_target(bundle COMMAND ${CMAKE_COMMAND} "-P" "${CMAKE_CURRENT_BINARY_DIR}/fixup.cmake")
 #######################################################################
+# CTest
+enable_testing()
+include(CTest)
+
+#######################################################################
 
 add_subdirectory(libsrc)
 add_subdirectory(ng)
@@ -270,12 +274,8 @@ add_subdirectory(py_tutorials)
 add_subdirectory(doc)
 add_subdirectory(windows)
 add_subdirectory(nglib)
+add_subdirectory(tests)
 
-
-#######################################################################
-# CTest
-enable_testing()
-include(CTest)
 
 #######################################################################
 # Debian packager

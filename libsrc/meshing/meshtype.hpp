@@ -25,9 +25,25 @@ namespace netgen
     HEX = 25
   };
 
+  /*
   typedef int ELEMENT_EDGE[2];      // initial point, end point
   typedef int ELEMENT_FACE[4];      // points, last one is -1 for trig
+  */
 
+  struct ELEMENT_EDGE
+  {
+    int vals[2];
+    int & operator[] (size_t i) { return vals[i]; }
+    int operator[] (size_t i) const { return vals[i]; }
+  };
+  
+  struct ELEMENT_FACE
+  {
+    int vals[4];
+    int & operator[] (size_t i) { return vals[i]; }
+    int operator[] (size_t i) const { return vals[i]; }
+  };
+  
 
 #define ELEMENT_MAXPOINTS 12
 #define ELEMENT2D_MAXPOINTS 8

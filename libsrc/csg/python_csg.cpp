@@ -207,11 +207,11 @@ DLL_HEADER void ExportCSG(py::module &m)
     ;
 
   py::class_<SplineSurface, shared_ptr<SplineSurface>> (m, "SplineSurface",
-			 "A surface for co dim 2 integrals on the splines")
+                        "A surface for co dim 2 integrals on the splines")
     .def("__init__", FunctionPointer  ([](SplineSurface* instance, shared_ptr<SPSolid> base, py::list cuts)
 	     {
 	       auto primitive = dynamic_cast<OneSurfacePrimitive*> (base->GetSolid()->GetPrimitive());
-	       auto acuts = new Array<OneSurfacePrimitive*>();
+	       auto acuts = make_shared<Array<shared_ptr<OneSurfacePrimitive>>>();
 	       for(int i = 0; i<py::len(cuts);i++)
 		 {
 		   py::extract<shared_ptr<SPSolid>> sps(cuts[i]);
@@ -219,13 +219,14 @@ DLL_HEADER void ExportCSG(py::module &m)
 		     throw NgException("Cut must be SurfacePrimitive in constructor of SplineSurface!");
 		   auto sp = dynamic_cast<OneSurfacePrimitive*>(sps()->GetSolid()->GetPrimitive());
 		   if(sp)
-		     acuts->Append(sp);
+		     acuts->Append(shared_ptr<OneSurfacePrimitive>(sp));
 		   else
 		     throw NgException("Cut must be SurfacePrimitive in constructor of SplineSurface!");
 		 }
 	       if(!primitive)
 		 throw NgException("Base is not a SurfacePrimitive in constructor of SplineSurface!");
-	       new (instance) SplineSurface(primitive,acuts);
+	       new (instance) SplineSurface(shared_ptr<OneSurfacePrimitive>(primitive),acuts);
+               py::object obj = py::cast(instance);
 	     }),py::arg("base"), py::arg("cuts")=py::list())
     .def("AddPoint", FunctionPointer
 	 ([] (SplineSurface & self, double x, double y, double z, bool hpref)
@@ -237,8 +238,8 @@ DLL_HEADER void ExportCSG(py::module &m)
     .def("AddSegment", FunctionPointer
 	 ([] (SplineSurface & self, int i1, int i2, string bcname, double maxh)
 	  {
-	    auto str = new string(bcname);
-	    self.AppendSegment(new LineSeg<3>(self.GetPoint(i1),self.GetPoint(i2)),str,maxh);
+            auto seg = make_shared<LineSeg<3>>(self.GetPoint(i1),self.GetPoint(i2));
+	    self.AppendSegment(seg,bcname,maxh);
 	  }),
 	 py::arg("pnt1"),py::arg("pnt2"),py::arg("bcname")="default", py::arg("maxh")=-1.)
     ;
@@ -433,14 +434,15 @@ DLL_HEADER void ExportCSG(py::module &m)
 	 ([] (CSGeometry & self, shared_ptr<SplineSurface> surf)
 	  {
 	    auto cuttings = surf->CreateCuttingSurfaces();
-	    auto spsol = make_shared<SPSolid>(new Solid(&*surf));
+	    auto spsol = make_shared<SPSolid>(new Solid(surf.get()));
 	    for(auto cut : (*cuttings)){
-	      spsol = make_shared<SPSolid>(SPSolid::SECTION,spsol,make_shared<SPSolid>(new Solid(cut)));
+	      spsol = make_shared<SPSolid>(SPSolid::SECTION,spsol,make_shared<SPSolid>(new Solid(cut.get())));
 	    }
 	    spsol->AddSurfaces(self);
-	    int tlonr = self.SetTopLevelObject(spsol->GetSolid(), &*surf);
+	    int tlonr = self.SetTopLevelObject(spsol->GetSolid(), surf.get());
 	    for(auto p : surf->GetPoints())
 		self.AddUserPoint(p);
+            self.AddSplineSurface(surf);
 	  }),
 	  py::arg("SplineSurface"))
 

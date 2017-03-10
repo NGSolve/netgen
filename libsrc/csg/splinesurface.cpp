@@ -10,14 +10,14 @@ void SplineSurface :: AppendPoint(const Point<3> & p, const double reffac, const
   geompoints.Last().hpref = hpref;
 }
   
-  void SplineSurface :: AppendSegment(SplineSeg<3>* spline, string* bcname, double amaxh)
+  void SplineSurface :: AppendSegment(shared_ptr<SplineSeg<3>> sp, string & bcname, double amaxh)
   {
-    splines.Append(spline);
+    splines.Append(sp);
     bcnames.Append(bcname);
     maxh.Append(amaxh);
   }
 
-  string* SplineSurface :: GetBCNameOf (Point<3> p1, Point<3> p2) const
+  string SplineSurface :: GetBCNameOf (Point<3> p1, Point<3> p2) const
   {
     
     double eps = 1e-5;
@@ -32,36 +32,44 @@ void SplineSurface :: AppendPoint(const Point<3> & p, const double reffac, const
 	    return bcnames[i];
 	  }
       }
-    return new string("default");
+    return "default";
   }
 
-  Array<OneSurfacePrimitive*>* SplineSurface :: CreateCuttingSurfaces() const
+  const shared_ptr<Array<shared_ptr<OneSurfacePrimitive>>> SplineSurface :: CreateCuttingSurfaces()
   {
-    auto cuttings = new Array<OneSurfacePrimitive*>();
+    if(all_cuts)
+      return all_cuts;
+    auto cuttings = make_shared<Array<shared_ptr<OneSurfacePrimitive>>>();
     for (auto cut : *cuts)
       cuttings->Append(cut);
     for(int i = 0; i<splines.Size(); i++)
       {
 	auto spline = splines[i];
-	auto lineseg = dynamic_cast<LineSeg<3>*>(spline);
-	auto p1 = Point<3>(spline->GetPoint(0));
-	Project(p1);
-	auto p2 = Point<3>(spline->GetPoint(1));
-	Project(p2);
-	auto vec = Vec<3>(p2)-Vec<3>(p1);
-	auto plane = new Plane(p1,-Cross(vec,baseprimitive->GetNormalVector(p1)));
-	if(maxh[i]>0)
-	  {
-	  plane->SetMaxH(maxh[i]);
-	  }
-	cuttings->Append(plane);
+	auto lineseg = dynamic_cast<LineSeg<3>*>(spline.get());
+        if(lineseg)
+          {
+            auto p1 = Point<3>(spline->GetPoint(0));
+            Project(p1);
+            auto p2 = Point<3>(spline->GetPoint(1));
+            Project(p2);
+            auto vec = Vec<3>(p2)-Vec<3>(p1);
+            auto plane = make_shared<Plane>(p1,-Cross(vec,baseprimitive->GetNormalVector(p1)));
+            if(maxh[i]>0)
+              {
+                plane->SetMaxH(maxh[i]);
+              }
+            cuttings->Append(plane);
+          }
+        else
+          throw NgException("Spline type not implemented for SplineSurface!");
       }
+    all_cuts = cuttings;
     return cuttings;
   }
   
   void SplineSurface :: Print(ostream & str) const
 {
-  str << "SplineSurface " << endl;
+  str << "SplineSurface with base " << *baseprimitive << endl;
 }
 
 }

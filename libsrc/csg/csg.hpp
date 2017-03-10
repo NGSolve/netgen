@@ -10,7 +10,6 @@
 #include <myadt.hpp>
 #include <gprim.hpp>
 #include <meshing.hpp>
-
 // #include <geometry2d.hpp>
 #include "../gprim/spline.hpp"
 #include "../gprim/splinegeometry.hpp"
@@ -21,12 +20,12 @@
 #include "solid.hpp"
 #include "identify.hpp"
 #include "singularref.hpp"
+#include "splinesurface.hpp"
 #include "csgeom.hpp"
 #include "csgparser.hpp"
 
 #include "triapprox.hpp"
 #include "algprim.hpp"
-#include "splinesurface.hpp"
 #include "brick.hpp"
 #include "spline3d.hpp"
 #include "manifold.hpp"

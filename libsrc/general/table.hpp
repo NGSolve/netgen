@@ -34,11 +34,25 @@ protected:
 
 public:
   ///
+  BASE_TABLE (BASE_TABLE && table2)
+    : data(move(table2.data)), oneblock(table2.oneblock)
+  {
+    table2.oneblock = nullptr;
+  }
+
   BASE_TABLE (int size);
   ///
   BASE_TABLE (const FlatArray<int> & entrysizes, int elemsize);
   ///
   ~BASE_TABLE ();
+
+  BASE_TABLE & operator= (BASE_TABLE && table2)
+  {
+    data = move(table2.data);
+    Swap (oneblock, table2.oneblock);
+    return *this;
+  }
+  
   ///
   void SetSize (int size);
   ///
@@ -94,7 +108,7 @@ class TABLE : public BASE_TABLE
 public:
   /// Creates table.
   inline TABLE () : BASE_TABLE(0) { ; }
-
+  
   /// Creates table of size size
   inline TABLE (int size) : BASE_TABLE (size) { ; }
 
