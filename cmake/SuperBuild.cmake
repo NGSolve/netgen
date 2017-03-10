@@ -108,11 +108,15 @@ endif(USE_GUI)
 
 #######################################################################
 if(USE_MPI)
-  find_package(METIS QUIET)
-  if(NOT METIS_FOUND)
-    message(STATUS "Could not find METIS, it will be built from source")
-    include(cmake/external_projects/metis.cmake)
-  endif()
+  if(UNIX)
+    find_package(METIS QUIET)
+    if(NOT METIS_FOUND)
+      message(STATUS "Could not find METIS, it will be built from source")
+      include(cmake/external_projects/metis.cmake)
+    endif()
+  else(UNIX)
+    find_package(METIS REQUIRED)
+  endif(UNIX)
 endif(USE_MPI)
 
 
