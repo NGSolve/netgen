@@ -6,8 +6,6 @@ set (NETGEN_DEPENDENCIES)
 set (LAPACK_DEPENDENCIES)
 set (NETGEN_CMAKE_ARGS "" CACHE INTERNAL "")
 
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${PROJECT_SOURCE_DIR}/cmake_modules")
-
 macro(set_vars VAR_OUT)
   foreach(varname ${ARGN})
     if(NOT "${${varname}}" STREQUAL "")
@@ -105,8 +103,22 @@ endif(USE_OCC AND WIN32 AND NOT OCC_INCLUDE_DIR)
 #######################################################################
 
 if(USE_GUI)
-  include(cmake_modules/ExternalProject_TCLTK.cmake)
+  include(cmake/external_projects/tcltk.cmake)
 endif(USE_GUI)
+
+#######################################################################
+if(USE_MPI)
+  if(UNIX)
+    find_package(METIS QUIET)
+    if(NOT METIS_FOUND)
+      message(STATUS "Could not find METIS, it will be built from source")
+      include(cmake/external_projects/metis.cmake)
+    endif()
+  else(UNIX)
+    find_package(METIS REQUIRED)
+  endif(UNIX)
+endif(USE_MPI)
+
 
 #######################################################################
 # propagate cmake variables to Netgen subproject
@@ -164,14 +176,14 @@ ExternalProject_Add (netgen
 # Check if the git submodules (i.e. pybind11) are up to date
 # in case, something is wrong, emit a warning but continue
  ExternalProject_Add_Step(netgen check_submodules
-   COMMAND cmake -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/check_submodules.cmake
+   COMMAND cmake -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/check_submodules.cmake
    DEPENDERS install # Steps on which this step depends
    )
 
 # Due to 'ALWAYS 1', this step is always run which also forces a build of
 # the Netgen subproject
  ExternalProject_Add_Step(netgen check_submodules1
-   COMMAND cmake -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/check_submodules.cmake
+   COMMAND cmake -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/check_submodules.cmake
    DEPENDEES configure # Steps on which this step depends
    DEPENDERS build     # Steps that depend on this step
    ALWAYS 1            # No stamp file, step always runs
