@@ -374,7 +374,7 @@ DLL_HEADER void ExportCSG(py::module &m)
                                    self.Save (filename);
                                  }))
     .def("Add",
-         [] (CSGeometry & self, shared_ptr<SPSolid> solid, py::list bcmod)
+         [] (CSGeometry & self, shared_ptr<SPSolid> solid, py::list bcmod, double maxh)
           {
             solid->AddSurfaces (self);
             solid->GiveUpOwner();
@@ -382,6 +382,7 @@ DLL_HEADER void ExportCSG(py::module &m)
             self.GetTopLevelObject(tlonr) -> SetMaterial(solid->GetMaterial());
             self.GetTopLevelObject(tlonr) -> SetRGB(solid->GetRed(),solid->GetGreen(),solid->GetBlue());
             self.GetTopLevelObject(tlonr)->SetTransparent(solid->IsTransparent());
+            self.GetTopLevelObject(tlonr)->SetMaxH(maxh);
 
             // bcmod is list of tuples ( solid, bcnr )
             for (int i = 0; i < py::len(bcmod); i++)
@@ -411,7 +412,7 @@ DLL_HEADER void ExportCSG(py::module &m)
               }
             return tlonr;
           },
-          py::arg("solid"), py::arg("bcmod")=py::list()
+         py::arg("solid"), py::arg("bcmod")=py::list(), py::arg("maxh")=1e99
          )
 
     .def("AddSurface", FunctionPointer
