@@ -10,6 +10,7 @@
 /*
   Parallel thread, Mutex,
 */
+#include <functional>
 
 namespace netgen
 {
@@ -95,9 +96,9 @@ void ParallelFor( int first, int next, const TFunc & f )
 
 
 
-  typedef void (*TaskManager)(function<void(int,int)>);
+  typedef void (*TaskManager)(std::function<void(int,int)>);
 
-  inline void DummyTaskManager (function<void(int,int)> func)
+  inline void DummyTaskManager (std::function<void(int,int)> func)
   {
     func(0,2);
     func(1,2);
