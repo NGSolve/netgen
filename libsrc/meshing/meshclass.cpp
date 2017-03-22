@@ -7,7 +7,7 @@ namespace netgen
   static mutex buildsearchtree_mutex;
 
   Mesh :: Mesh ()
-    : surfarea(*this)
+    : surfarea(*this), topology(*this)
   {
     // volelements.SetName ("vol elements");
     // surfelements.SetName ("surf elements");
@@ -27,7 +27,7 @@ namespace netgen
     numvertices = -1;
     dimension = 3;
 
-    topology = new MeshTopology (*this);
+    // topology = new MeshTopology (*this);
     curvedelems = new CurvedElements (*this);
     clusters = new AnisotropicClusters (*this);
     ident = new Identifications (*this);
@@ -57,7 +57,7 @@ namespace netgen
     delete segmentht;
     delete curvedelems;
     delete clusters;
-    delete topology;
+    // delete topology;
     delete ident;
     delete elementsearchtree;
     delete coarsemesh;
@@ -126,8 +126,9 @@ namespace netgen
 
     delete ident;
     ident = new Identifications (*this);
-    delete topology;
-    topology = new MeshTopology (*this);
+    // delete topology;
+    // topology = new MeshTopology (*this);
+    topology = MeshTopology (*this);
     delete curvedelems;
     curvedelems = new CurvedElements (*this);
     delete clusters;
@@ -1241,7 +1242,7 @@ namespace netgen
  
     if (ntasks == 1) // sequential run only
       {
-	topology -> Update();
+	topology.Update();
 	clusters -> Update();
       }
 
@@ -1481,7 +1482,7 @@ namespace netgen
 
     CalcSurfacesOfNode ();
 
-    topology -> Update();
+    topology.Update();
     clusters -> Update();
 
     SetNextMajorTimeStamp();
@@ -4878,12 +4879,12 @@ namespace netgen
         //(*testout) << "velement " << velement << endl;
 
         Array<int> faces;
-        topology->GetElementFaces(velement,faces);
+        topology.GetElementFaces(velement,faces);
 
         //(*testout) << "faces " << faces << endl;
 
         for(int i=0; i<faces.Size(); i++)
-          faces[i] = topology->GetFace2SurfaceElement(faces[i]);
+          faces[i] = topology.GetFace2SurfaceElement(faces[i]);
 
         //(*testout) << "surfel " << faces << endl;
 
@@ -4910,7 +4911,7 @@ namespace netgen
           }
 
         Array<int> faces2;
-        topology->GetElementFaces(velement,faces2);
+        topology.GetElementFaces(velement,faces2);
         /*
         cout << "no matching surf element" << endl
              << "p = " << p << endl
@@ -5709,7 +5710,7 @@ namespace netgen
 
   void Mesh :: UpdateTopology (TaskManager tm)
   {
-    topology->Update(tm);
+    topology.Update(tm);
     clusters->Update(tm);
 #ifdef PARALLEL
     if (paralleltop)

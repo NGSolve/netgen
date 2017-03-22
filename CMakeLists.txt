@@ -19,11 +19,13 @@ option( USE_CCACHE       "use ccache")
 
 option( USE_SUPERBUILD       "use ccache" ON)
 
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_modules")
+
 if (USE_SUPERBUILD)
   project (SUPERBUILD)
   # execute the superbuild (this script will be invoked again without the
   # USE_SUPERBUILD option this time)
-  include (cmake_modules/SuperBuild.cmake)
+  include (cmake/SuperBuild.cmake)
   return()                      # stop processing this file further
 else()
   project(Netgen)
@@ -40,10 +42,9 @@ set(CPACK_PACKAGE_VERSION "${PACKAGE_VERSION}")
 
 #######################################################################
 if(USE_CCACHE)
-  find_program(CCACHE_FOUND ccache)
+  find_program(CCACHE_FOUND NAMES ccache ccache.bat)
   if(CCACHE_FOUND)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_FOUND})
   endif(CCACHE_FOUND)
 endif(USE_CCACHE)
 
@@ -55,7 +56,7 @@ endif(USE_NATIVE_ARCH)
 #######################################################################
 if(INTEL_MIC)
     set(MKL_ARCH "mic")
-    include(cmake_modules/mic.cmake)
+    include(cmake/mic.cmake)
 else(INTEL_MIC)
     set(MKL_ARCH "intel64")
 endif(INTEL_MIC)
@@ -69,7 +70,7 @@ if (ADDITIONAL_PATHS)
 endif (ADDITIONAL_PATHS)
 
 if(APPLE)
-  set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR}/Netgen.app/Contents/Resources" CACHE INTERNAL "Prefix prepended to install directories" FORCE)
+  set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR}/Contents/Resources" CACHE INTERNAL "Prefix prepended to install directories" FORCE)
 else(APPLE)
   set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR}" CACHE INTERNAL "Prefix prepended to install directories" FORCE) 
 endif(APPLE)
@@ -94,7 +95,6 @@ include_directories ("${PROJECT_SOURCE_DIR}/libsrc/include")
 include_directories ("${PROJECT_BINARY_DIR}")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${PROJECT_SOURCE_DIR}/cmake_modules")
 
 set(INCDIR include CACHE PATH "install directory for header files")
 if(APPLE)
@@ -241,15 +241,15 @@ endif(INSTALL_PROFILES)
 
 #######################################################################
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/fixup.cmake "\
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/netgen_fixup.cmake)
-set(APP ${INSTALL_DIR}/Netgen.app)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/netgen_fixup.cmake)
+set(APP ${INSTALL_DIR})
 message(\${APP})
 set(BU_CHMOD_BUNDLE_ITEMS ON)
 
 file(GLOB libs ${CMAKE_INSTALL_PREFIX}/${ng_install_dir_lib}/*.dylib ${CMAKE_INSTALL_PREFIX}/${ng_install_dir_lib}/*.so)
 message(\"\${libs}\")
 netgen_fixup_bundle( \${APP}/Contents/MacOS/netgen \"\${libs}\" ${CMAKE_INSTALL_PREFIX}/${ng_install_dir_lib} )
-execute_process(COMMAND ln -s /Applications ${INSTALL_DIR}/Applications)
+execute_process(COMMAND ln -s /Applications ${INSTALL_DIR}/../Applications)
 set (bundle_filename \$ENV{NETGEN_BUNDLE_NAME})
 if(NOT bundle_filename)
   set(bundle_filename netgen)
@@ -257,6 +257,11 @@ endif(NOT bundle_filename)
 execute_process(COMMAND hdiutil create -volname Netgen -srcfolder ${INSTALL_DIR} -ov -format UDZO \${bundle_filename}-${PACKAGE_VERSION}.dmg)
 ")
   add_custom_target(bundle COMMAND ${CMAKE_COMMAND} "-P" "${CMAKE_CURRENT_BINARY_DIR}/fixup.cmake")
+#######################################################################
+# CTest
+enable_testing()
+include(CTest)
+
 #######################################################################
 
 add_subdirectory(libsrc)
@@ -269,12 +274,8 @@ add_subdirectory(py_tutorials)
 add_subdirectory(doc)
 add_subdirectory(windows)
 add_subdirectory(nglib)
+add_subdirectory(tests)
 
-
-#######################################################################
-# CTest
-enable_testing()
-include(CTest)
 
 #######################################################################
 # Debian packager
@@ -366,13 +367,13 @@ endif()
 #######################################################################
 # uninstall target
 configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/cmake_uninstall.cmake.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
     IMMEDIATE @ONLY)
 add_custom_target(uninstall
     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/NetgenConfig.cmake.in
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NetgenConfig.cmake.in
 	${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake @ONLY)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake DESTINATION share/cmake)

@@ -27,33 +27,52 @@ struct T_FACE
   int fnr;    // 0-based
 };
 
+  template <typename T, int S>
+  struct FixArray
+  {
+    T vals[S];
+    T & operator[] (size_t i) { return vals[i]; }
+    T operator[] (size_t i) const { return vals[i]; }
+  };
+  
 
 class MeshTopology
 {
-  const Mesh & mesh;
+  const Mesh * mesh;
   bool buildedges;
   bool buildfaces;
 
   Array<INDEX_2> edge2vert;
   Array<INDEX_4> face2vert;
+  /*
   Array<T_EDGE[12]> edges;
   Array<T_FACE[6]> faces;
   Array<T_EDGE[4]> surfedges;
+  */
+  Array<FixArray<T_EDGE,12>> edges;
+  Array<FixArray<T_FACE,6>> faces;
+  Array<FixArray<T_EDGE,4>> surfedges;
+  
   Array<T_EDGE> segedges;
   Array<T_FACE> surffaces;
   Array<INDEX_2> surf2volelement;
   Array<int> face2surfel;
-  TABLE<ElementIndex,PointIndex::BASE> *vert2element;
-  TABLE<SurfaceElementIndex,PointIndex::BASE> *vert2surfelement;
-  TABLE<SegmentIndex,PointIndex::BASE> *vert2segment;
-  TABLE<int,PointIndex::BASE> *vert2pointelement = nullptr;
+  TABLE<ElementIndex,PointIndex::BASE> vert2element;
+  TABLE<SurfaceElementIndex,PointIndex::BASE> vert2surfelement;
+  TABLE<SegmentIndex,PointIndex::BASE> vert2segment;
+  TABLE<int,PointIndex::BASE> vert2pointelement;
   int timestamp;
 public:
   int GetNSurfedges() const {return surfedges.Size();}
 
+  MeshTopology () = default;
+  MeshTopology (const MeshTopology & top) = default;
+  MeshTopology (MeshTopology && top) = default;
   MeshTopology (const Mesh & amesh);
   ~MeshTopology ();
-
+  MeshTopology & operator= (const MeshTopology & top) = default;
+  MeshTopology & operator= (MeshTopology && top) = default;
+  
   void SetBuildEdges (bool be)
   { buildedges = be; }
   void SetBuildFaces (bool bf)
@@ -145,17 +164,17 @@ public:
   
   void GetVertexElements (int vnr, Array<ElementIndex> & elements) const;
   FlatArray<ElementIndex> GetVertexElements (int vnr) const
-  { return (*vert2element)[vnr]; }
+  { return vert2element[vnr]; }
 
   void GetVertexSurfaceElements( int vnr, Array<SurfaceElementIndex>& elements ) const;
   FlatArray<SurfaceElementIndex> GetVertexSurfaceElements (int vnr) const
-  { return (*vert2surfelement)[vnr]; }
+  { return vert2surfelement[vnr]; }
 
   FlatArray<SegmentIndex> GetVertexSegments (int vnr) const
-  { return (*vert2segment)[vnr]; }
+  { return vert2segment[vnr]; }
 
   FlatArray<int> GetVertexPointElements (int vnr) const
-  { return (*vert2pointelement)[vnr]; }
+  { return vert2pointelement[vnr]; }
   
   int GetVerticesEdge ( int v1, int v2) const;
   void GetSegmentVolumeElements ( int segnr, Array<ElementIndex> & els ) const;
@@ -337,22 +356,22 @@ inline short int MeshTopology :: GetNFaces (ELEMENT_TYPE et)
 
 const ELEMENT_EDGE * MeshTopology :: GetEdges1 (ELEMENT_TYPE et)
 {
-  static int segm_edges[1][2] =
+  static ELEMENT_EDGE segm_edges[1] =
     { { 1, 2 }};
 
-  static int trig_edges[3][2] =
+  static ELEMENT_EDGE trig_edges[3] =
     { { 3, 1 },
       { 2, 3 },        
       { 1, 2 }};
 
-  static int quad_edges[4][2] =
+  static ELEMENT_EDGE quad_edges[4] =
     { { 1, 2 },
       { 3, 4 },
       { 4, 1 },
       { 2, 3 }};
 
 
-  static int tet_edges[6][2] =
+  static ELEMENT_EDGE tet_edges[6] =
     { { 4, 1 },
       { 4, 2 },
       { 4, 3 }, 
@@ -360,7 +379,7 @@ const ELEMENT_EDGE * MeshTopology :: GetEdges1 (ELEMENT_TYPE et)
       { 1, 3 },
       { 2, 3 }};
 
-  static int prism_edges[9][2] =
+  static ELEMENT_EDGE prism_edges[9] =
     { { 3, 1 },
       { 1, 2 },
       { 3, 2 },
@@ -371,7 +390,7 @@ const ELEMENT_EDGE * MeshTopology :: GetEdges1 (ELEMENT_TYPE et)
       { 1, 4 },
       { 2, 5 }};
 
-  static int pyramid_edges[8][2] =
+  static ELEMENT_EDGE pyramid_edges[8] =
     { { 1, 2 },
       { 2, 3 },
       { 1, 4 },
@@ -381,7 +400,7 @@ const ELEMENT_EDGE * MeshTopology :: GetEdges1 (ELEMENT_TYPE et)
       { 3, 5 },
       { 4, 5 }};
 
-  static int hex_edges[12][2] =
+  static ELEMENT_EDGE hex_edges[12] =
     {
       { 1, 2 },
       { 3, 4 },
@@ -435,22 +454,22 @@ const ELEMENT_EDGE * MeshTopology :: GetEdges1 (ELEMENT_TYPE et)
 
 const ELEMENT_EDGE * MeshTopology :: GetEdges0 (ELEMENT_TYPE et)
 {
-  static int segm_edges[1][2] =
+  static ELEMENT_EDGE segm_edges[1] =
     { { 0, 1 }};
 
-  static int trig_edges[3][2] =
+  static ELEMENT_EDGE trig_edges[3] =
     { { 2, 0 },
       { 1, 2 },        
       { 0, 1 }};
 
-  static int quad_edges[4][2] =
+  static ELEMENT_EDGE quad_edges[4] =
     { { 0, 1 },
       { 2, 3 },
       { 3, 0 },
       { 1, 2 }};
 
 
-  static int tet_edges[6][2] =
+  static ELEMENT_EDGE tet_edges[6] =
     { { 3, 0 },
       { 3, 1 },
       { 3, 2 }, 
@@ -458,7 +477,7 @@ const ELEMENT_EDGE * MeshTopology :: GetEdges0 (ELEMENT_TYPE et)
       { 0, 2 },
       { 1, 2 }};
 
-  static int prism_edges[9][2] =
+  static ELEMENT_EDGE prism_edges[9] =
     { { 2, 0 },
       { 0, 1 },
       { 2, 1 },
@@ -469,7 +488,7 @@ const ELEMENT_EDGE * MeshTopology :: GetEdges0 (ELEMENT_TYPE et)
       { 0, 3 },
       { 1, 4 }};
 
-  static int pyramid_edges[8][2] =
+  static ELEMENT_EDGE pyramid_edges[8] =
     { { 0, 1 },
       { 1, 2 },
       { 0, 3 },
@@ -479,7 +498,7 @@ const ELEMENT_EDGE * MeshTopology :: GetEdges0 (ELEMENT_TYPE et)
       { 2, 4 },
       { 3, 4 }};
 
-  static int hex_edges[12][2] =
+  static ELEMENT_EDGE hex_edges[12] =
     {
       { 0, 1 },
       { 2, 3 },
@@ -540,18 +559,18 @@ const ELEMENT_EDGE * MeshTopology :: GetEdges0 (ELEMENT_TYPE et)
 
 inline const ELEMENT_FACE * MeshTopology :: GetFaces1 (ELEMENT_TYPE et)
 {
-  static const int trig_faces[1][4] = 
+  static const ELEMENT_FACE trig_faces[1] = 
     { { 1, 2, 3, 0 } };
-  static const int quad_faces[1][4] = 
+  static const ELEMENT_FACE quad_faces[1] = 
     { { 1, 2, 3, 4 } };
 
-  static const int tet_faces[4][4] =
+  static const ELEMENT_FACE tet_faces[4] =
     { { 4, 2, 3, 0 },
       { 4, 3, 1, 0 },
       { 4, 1, 2, 0 },
       { 1, 3, 2, 0 } };
   
-  static const int prism_faces[5][4] =
+  static const ELEMENT_FACE prism_faces[5] =
     {
       { 1, 3, 2, 0 },
       { 4, 5, 6, 0 },
@@ -560,7 +579,7 @@ inline const ELEMENT_FACE * MeshTopology :: GetFaces1 (ELEMENT_TYPE et)
       { 2, 3, 6, 5 } 
     };
 
-  static const int pyramid_faces[5][4] =
+  static const ELEMENT_FACE pyramid_faces[5] =
     {
       { 1, 2, 5, 0 },
       { 2, 3, 5, 0 },
@@ -569,7 +588,7 @@ inline const ELEMENT_FACE * MeshTopology :: GetFaces1 (ELEMENT_TYPE et)
       { 1, 4, 3, 2 } 
     };
 
-  static const int hex_faces[6][4] =
+  static const ELEMENT_FACE hex_faces[6] =
     {
       { 1, 4, 3, 2 },
       { 5, 6, 7, 8 },
@@ -622,18 +641,18 @@ inline const ELEMENT_FACE * MeshTopology :: GetFaces1 (ELEMENT_TYPE et)
 
 inline const ELEMENT_FACE * MeshTopology :: GetFaces0 (ELEMENT_TYPE et)
 {
-  static const int trig_faces[1][4] = 
+  static const ELEMENT_FACE trig_faces[1] = 
     { { 0, 1, 2, -1 } };
-  static const int quad_faces[1][4] = 
+  static const ELEMENT_FACE quad_faces[1] = 
     { { 0, 1, 2, 3 } };
 
-  static const int tet_faces[4][4] =
+  static const ELEMENT_FACE tet_faces[4] =
     { { 3, 1, 2, -1 },
       { 3, 2, 0, -1 },
       { 3, 0, 1, -1 },
       { 0, 2, 1, -1 } };
   
-  static const int prism_faces[5][4] =
+  static const ELEMENT_FACE prism_faces[5] =
     {
       { 0, 2, 1, -1 },
       { 3, 4, 5, -1 },
@@ -642,7 +661,7 @@ inline const ELEMENT_FACE * MeshTopology :: GetFaces0 (ELEMENT_TYPE et)
       { 1, 2, 5, 4 } 
     };
 
-  static const int pyramid_faces[5][4] =
+  static const ELEMENT_FACE pyramid_faces[5] =
     {
       { 0, 1, 4, -1 },
       { 1, 2, 4, -1 },
@@ -651,7 +670,7 @@ inline const ELEMENT_FACE * MeshTopology :: GetFaces0 (ELEMENT_TYPE et)
       { 0, 3, 2, 1 } 
     };
 
-  static const int hex_faces[6][4] =
+  static const ELEMENT_FACE hex_faces[6] =
     {
       { 0, 3, 2, 1 },
       { 4, 5, 6, 7 },

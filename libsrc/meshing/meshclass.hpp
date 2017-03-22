@@ -103,7 +103,7 @@ namespace netgen
     mutable int elementsearchtreets;
 
     /// element -> face, element -> edge etc ...
-    MeshTopology * topology;
+    MeshTopology topology;
     /// methods for high order elements
     class CurvedElements * curvedelems;
 
@@ -687,7 +687,7 @@ namespace netgen
 
 
     const MeshTopology & GetTopology () const
-    { return *topology; }
+    { return topology; }
 
     DLL_HEADER void UpdateTopology (TaskManager tm = &DummyTaskManager);
   

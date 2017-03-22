@@ -143,6 +143,9 @@ namespace netgen
     /// filename of inputfile
     string filename;
 
+    /// store splinesurfaces, such that added ones do not get deleted before geometry does
+    Array<shared_ptr<SplineSurface>> spline_surfaces;
+
   public:
     CSGeometry ();
     CSGeometry (const string & afilename);
@@ -315,7 +318,9 @@ namespace netgen
 
     virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
 
-    virtual const Refinement & GetRefinement () const; 
+    virtual const Refinement & GetRefinement () const;
+
+    void AddSplineSurface (shared_ptr<SplineSurface> ss) { spline_surfaces.Append(ss); }
   };
 
 

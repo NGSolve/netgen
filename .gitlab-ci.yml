@@ -138,7 +138,12 @@ test_win64:
 .template_test_linux: &test_linux
   stage: test
   script:
-    - docker run netgen_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION} bash -c 'cd /root/build/netgen && make test_netgen ARGS="-V"'
+    - >-
+      docker run
+      -e NETGENDIR=/opt/netgen/bin
+      -e PYTHONPATH=/opt/netgen/lib/python3/dist-packages
+      netgen_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION}
+      bash -c 'cd /root/build/netgen && make test_netgen ARGS="-V"'
 
 test_ubuntu_1510:
   <<: *ubuntu_1510
@@ -150,6 +155,20 @@ test_ubuntu_1604:
 ############################################
 # Deploy stage
 ############################################
+
+deploy_sourceforge:
+  stage: deploy
+  tags:
+    - linux
+    - docker
+  script:
+    - git remote add sourceforge ssh://mhochste@git.code.sf.net/p/netgen-mesher/git || true
+    - git remote update
+    - git checkout master
+    - git pull origin master
+    - git push sourceforge master
+  only:
+    - master
 
 ############################################
 # Cleanup stage
