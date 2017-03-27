@@ -269,6 +269,9 @@ namespace netgen
     template <int DIM>
     int GetNNodes ();
 
+    // returns domain numbers of domains next to boundary bnr -> (domin, domout)
+    // 3D only
+    // std::pair<int,int> GetBoundaryNeighbouringDomains (int bnr);
 
     void Refine (NG_REFINEMENT_TYPE reftype,
                  void (*taskmanager)(function<void(int,int)>) = &DummyTaskManager2);
