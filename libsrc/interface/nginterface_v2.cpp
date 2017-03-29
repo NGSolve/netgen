@@ -141,6 +141,16 @@ namespace netgen
     return -1;
   }
 
+  std::pair<int,int> Ngx_Mesh :: GetBoundaryNeighbouringDomains (int bnr)
+  {
+    if ( mesh->GetDimension() == 3 )
+      return std::pair<int,int>(mesh->GetFaceDescriptor(bnr+1).DomainIn(),
+				mesh->GetFaceDescriptor(bnr+1).DomainOut());
+    else
+      return std::pair<int,int>(-1,-1);
+  }
+
+
   /*
   Ng_Point Ngx_Mesh :: GetPoint (int nr) const
   {
