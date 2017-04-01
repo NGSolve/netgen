@@ -24,8 +24,9 @@ namespace netgen
   {
   public:
     typedef ::netgen::T_POINTS T_POINTS;
-    typedef Array<Element, 0, ElementIndex> T_VOLELEMENTS;
-    typedef Array<Element2d, 0, SurfaceElementIndex> T_SURFELEMENTS;
+    typedef Array<Element, 0, size_t> T_VOLELEMENTS;
+    // typedef Array<Element2d, 0, SurfaceElementIndex> T_SURFELEMENTS;
+    typedef Array<Element2d, 0, size_t> T_SURFELEMENTS;
 
   private:
     /// point coordinates

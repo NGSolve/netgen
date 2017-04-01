@@ -116,7 +116,8 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
 template <> 
 NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<2> (size_t nr) const
 {
-  const Element2d & el = mesh->SurfaceElement (SurfaceElementIndex (nr));
+  // const Element2d & el = mesh->SurfaceElement (SurfaceElementIndex (nr));
+  const Element2d & el = mesh->SurfaceElements()[nr];
   
   Ng_Element ret;
   ret.type = NG_ELEMENT_TYPE(el.GetType());
@@ -155,7 +156,8 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<2> (size_t nr) const
 template <> 
 NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<3> (size_t nr) const
 {
-  const Element & el = mesh->VolumeElement (ElementIndex (nr));
+  // const Element & el = mesh->VolumeElement (ElementIndex (nr));
+  const Element & el = mesh->VolumeElements()[nr];
   
   Ng_Element ret;
   ret.type = NG_ELEMENT_TYPE(el.GetType());
