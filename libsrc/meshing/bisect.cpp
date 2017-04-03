@@ -46,7 +46,7 @@ namespace netgen
 
     MarkedTet()
     { 
-      for (int i = 0; i < 4; i++) { faceedges[i] = 255; }
+      for (int i = 0; i < 4; i++) { faceedges[i] = 127; }
     }
   };
 
