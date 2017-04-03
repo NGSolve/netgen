@@ -78,10 +78,11 @@ namespace netgen
     {
     public:
       size_t num;
+      int base;
       const int * ptr;
-  
+      
       size_t Size() const { return num; }
-      int operator[] (size_t i) const { return ptr[i]; }
+      int operator[] (size_t i) const { return ptr[i]-base; }
     };
 
     
