@@ -606,6 +606,12 @@ namespace netgen
     DLL_HEADER void SetCD2Name (int cd2nr, const string & abcname);
 
     const string & GetCD2Name (int cd2nr ) const;
+    static string cd2_default_name;
+    string * GetCD2NamePtr (int cd2nr ) const
+    {
+      if (cd2nr < cd2names.Size() && cd2names[cd2nr]) return cd2names[cd2nr];
+      return &cd2_default_name;
+    }
     size_t GetNCD2Names() const { return cd2names.Size(); }
 
     string * GetBCNamePtr (int bcnr) const

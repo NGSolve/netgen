@@ -74,9 +74,8 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
     ret.mat = mesh->GetBCNamePtr(el.si-1);
   else
     {
-      if (mesh->GetDimension() == 3){
-        ret.mat = &mesh->GetCD2Name(el.edgenr-1);
-      }
+      if (mesh->GetDimension() == 3)
+        ret.mat = mesh->GetCD2NamePtr(el.edgenr-1);
       else
         ret.mat = nullptr;
     }

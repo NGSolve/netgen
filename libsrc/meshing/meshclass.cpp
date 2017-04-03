@@ -5832,6 +5832,7 @@ namespace netgen
       cd2names[cd2nr] = nullptr;
   }
 
+  string Mesh :: cd2_default_name = "default";
   const string & Mesh :: GetCD2Name (int cd2nr) const
   {
     static string defaultstring  = "default";
