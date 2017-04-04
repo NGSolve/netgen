@@ -3350,8 +3350,6 @@ namespace netgen
                 double lam1, double lam2, 
                 int comp, double & val) const
   {
-    shared_ptr<Mesh> mesh = GetMesh();
-
     bool ok;
     if (comp == 0)
       {
@@ -3399,6 +3397,7 @@ namespace netgen
 
       case SOL_NODAL:
         {
+          shared_ptr<Mesh> mesh = GetMesh();
           const Element2d & el = (*mesh)[selnr];
 
           double lami[8];
@@ -3457,6 +3456,7 @@ namespace netgen
 
       case SOL_ELEMENT:
         {
+          shared_ptr<Mesh> mesh = GetMesh();          
           int el1, el2;
           mesh->GetTopology().GetSurface2VolumeElement (selnr+1, el1, el2);
           el1--;
@@ -3480,6 +3480,7 @@ namespace netgen
 
       case SOL_SURFACE_NONCONTINUOUS:
         {
+          shared_ptr<Mesh> mesh = GetMesh();          
           const Element2d & el = (*mesh)[selnr];
 
           double lami[8];
@@ -3554,12 +3555,14 @@ namespace netgen
 
       case SOL_MARKED_ELEMENTS:
         {
+          shared_ptr<Mesh> mesh = GetMesh();          
           val = (*mesh)[selnr].TestRefinementFlag();
           return 1;
         }
       
       case SOL_ELEMENT_ORDER:
-        {       
+        {
+          shared_ptr<Mesh> mesh = GetMesh();          
           val = (*mesh)[selnr].GetOrder();
           return 1;
         }
