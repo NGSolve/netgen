@@ -1928,12 +1928,12 @@ namespace netgen
     Array<Point<3> > grid(n3);
     Array<Point<3> > locgrid(n3);
     Array<Mat<3,3> > trans(n3);
-    Array<double> val(n3);
-    Array<Vec<3> > grads(n3);
+    Array<double> val1(n3*sol->components);
+    Array<Vec<3> > grads1(n3);
     Array<int> compress(n3);
     
     MatrixFixWidth<3> pointmat(8);
-    grads = Vec<3> (0.0);
+    grads1 = Vec<3> (0.0);
 
     for (ElementIndex ei = 0; ei < ne; ei++)
       {
@@ -2023,26 +2023,47 @@ namespace netgen
               }
 
             bool has_pos = 0, has_neg = 0;
-                
+            GetMultiValues( sol, ei, -1, n3, 
+                            &locgrid[0](0), &locgrid[1](0)-&locgrid[0](0),
+                            &grid[0](0), &grid[1](0)-&grid[0](0),
+                            &trans[0](0), &trans[1](0)-&trans[0](0),
+                            &val1[0], sol->components);
             for (int i = 0; i < cnt_valid; i++)
               {
-                GetValue (sol, ei, &locgrid[i](0), &grid[i](0), &trans[i](0), comp, val[i]);
-        
-                val[i] -= minval;
+                // GetValue (sol, ei, &locgrid[i](0), &grid[i](0), &trans[i](0), comp, val[i]);
 
-                if (vsol)
-                  GetValues (vsol, ei, &locgrid[i](0), &grid[i](0), &trans[i](0), &grads[i](0));
-                grads[i] *= -1;
+                // val[i] -= minval;
+                val1[sol->components*i+comp-1] -= minval;
 
 
-                if (val[i] > 0)
+                // if (vsol)
+                  // GetValues (vsol, ei, &locgrid[i](0), &grid[i](0), &trans[i](0), &grads[i](0));
+                // grads[i] *= -1;
+
+                if (val1[i*sol->components+comp-1] > 0)
                   has_pos = 1;
                 else
                   has_neg = 1;
+                // if (val[i] > 0)
+                  // has_pos = 1;
+                // else
+                  // has_neg = 1;
               }
 
             if (!has_pos || !has_neg) continue;
-            
+            if (vsol)
+            {
+              GetMultiValues(vsol, ei, -1, n3,
+                           &locgrid[0](0), &locgrid[1](0)-&locgrid[0](0),
+                           &grid[0](0), &grid[1](0)-&grid[0](0),
+                           &trans[0](0), &trans[1](0)-&trans[0](0),
+                           &grads1[0](0), vsol->components);
+              // for (int i = 0; i < cnt_valid; i++)
+                // grads1[i*sol->components+comp-1] *= -1;
+              for (int i = 0; i < cnt_valid; i++)
+                grads1[i] *= -1;
+                
+            }
             for (int ix = 0; ix < n; ix++)
               for (int iy = 0; iy < n; iy++)
                 for (int iz = 0; iz < n; iz++)
@@ -2075,8 +2096,10 @@ namespace netgen
                         
                         if (!is_valid) continue;
                         
+                        // for (int j = 0; j < 4; j++)
+                          // nodevali[j] = val[teti[j]];
                         for (int j = 0; j < 4; j++)
-                          nodevali[j] = val[teti[j]];
+                          nodevali[j] = val1[sol->components*teti[j]+comp-1];
                         
                         cntce = 0;
                         for (int j = 0; j < 6; j++)
@@ -2091,8 +2114,9 @@ namespace netgen
 
                                 edgelam[j] = nodevali[lpi2] / (nodevali[lpi2] - nodevali[lpi1]);
                                 edgep[j] = grid[teti[lpi1]] + (1-edgelam[j]) * (grid[teti[lpi2]]-grid[teti[lpi1]]);
-                                normp[j] = grads[teti[lpi1]] + (1-edgelam[j]) * (grads[teti[lpi2]]-grads[teti[lpi1]]);
-                                
+                                // normp[j] = grads[teti[lpi1]] + (1-edgelam[j]) * (grads[teti[lpi2]]-grads[teti[lpi1]]);
+                                normp[j] = grads1[teti[lpi1]] + (1-edgelam[j]) * (grads1[teti[lpi2]]-grads1[teti[lpi1]]);
+                                // normp[j] = grads1[sol->components*teti[lpi1]+comp-1] + (1-edgelam[j]) * (grads1[sol->components*teti[lpi2]+comp-1]-grads1[sol->components*teti[lpi1]+comp-1]);
                                 cntce++;
                                 cpe3 = cpe2;
                                 cpe2 = cpe1;
