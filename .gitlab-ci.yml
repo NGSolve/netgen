@@ -76,7 +76,7 @@ stages:
         -DCMAKE_BUILD_TYPE=Release
     - cmake --build . --target INSTALL --config Release
 
-build_netgen_win32:
+.build_netgen_win32:
   <<: *win32
   <<: *tbuild_netgen_win
   cache:
@@ -126,7 +126,7 @@ build_ubuntu_1604:
     - cd ..
 
 # skip since we have no machine with 32 bits
-test_win32:
+.test_win32:
   <<: *win32
   <<: *test_win
 
@@ -197,7 +197,7 @@ win64_cleanup:
   when: always
   allow_failure: true
 
-win32_cleanup:
+.win32_cleanup:
   <<: *win32
   stage: cleanup
   tags:
