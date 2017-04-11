@@ -707,31 +707,65 @@ protected:
 template <class T>
 class INDEX_2_CLOSED_HASHTABLE : public BASE_INDEX_2_CLOSED_HASHTABLE
 {
-  ///
-// MoveableArray<T> cont;
   Array<T> cont;
-
 public:
+  INDEX_2_CLOSED_HASHTABLE (size_t size)
+    : BASE_INDEX_2_CLOSED_HASHTABLE(size), cont(RoundUp2(size))
+  { ; }
+
+  void Set (const INDEX_2 & ahash, const T & acont)
+  {
+    int pos;
+    PositionCreate0 (ahash, pos);
+    hash[pos] = ahash;
+    cont[pos] = acont;
+  }
+    
+  const T & Get (const INDEX_2 & ahash) const
+  {
+    int pos = Position0 (ahash);
+    return cont[pos];
+  }
+    
+  inline bool Used (const INDEX_2 & ahash) const
+  {
+    int pos = Position0 (ahash);
+    return (pos != -1);
+  }
+    
+  inline void SetData0 (int pos, const INDEX_2 & ahash, const T & acont)
+  {
+    hash[pos] = ahash;
+    cont[pos] = acont;
+  }
+    
   ///
-  inline INDEX_2_CLOSED_HASHTABLE (int size);
-  ///
-  inline void Set (const INDEX_2 & ahash, const T & acont);
-  ///
-  inline const T & Get (const INDEX_2 & ahash) const;
-  ///
-  inline bool Used (const INDEX_2 & ahash) const;
-  ///
-  inline void SetData0 (int pos, const INDEX_2 & ahash, const T & acont);
-  ///
-  inline void GetData0 (int pos, INDEX_2 & ahash, T & acont) const;
-  ///
-  inline void SetData0 (int pos, const T & acont);
-  ///
-  inline void GetData0 (int pos, T & acont) const;
+  inline void GetData0 (int pos, INDEX_2 & ahash, T & acont) const
+  {
+    ahash = hash[pos];
+    acont = cont[pos];
+  }
+    
+  inline void SetData0 (int pos, const T & acont)
+  {
+    cont[pos] = acont;
+  }
+  
+  inline void GetData0 (int pos, T & acont) const
+  {
+    acont = cont[pos];
+  }
+  
   ///
   const T & GetData0 (int pos) { return cont[pos]; }
   ///
-  inline void SetSize (int size);
+  inline void SetSize (size_t size)
+  {
+    BaseSetSize(size);
+    cont.SetSize(RoundUp2(size));
+  }
+
+    
   ///
   inline void PrintMemInfo (ostream & ost) const;
   ///
@@ -756,7 +790,7 @@ inline ostream & operator<< (ostream & ost, const INDEX_2_CLOSED_HASHTABLE<T> & 
       {
 	INDEX_2 hash;
 	T data;
-	ht.GetData (i, hash, data);
+	ht.GetData0 (i, hash, data);
 	ost << "hash = " << hash << ", data = " << data << endl;
       }
   return ost;
@@ -1189,83 +1223,6 @@ inline void INDEX_HASHTABLE<T> :: PrintMemInfo (ostream & ost) const
 
 
 /* *********** Closed Hashing ************************* */
-
-
-
-template<class T>
-inline INDEX_2_CLOSED_HASHTABLE<T> :: 
-INDEX_2_CLOSED_HASHTABLE (int size)
-  : BASE_INDEX_2_CLOSED_HASHTABLE(size), cont(RoundUp2(size))
-{
-  // cont.SetName ("i2-hashtable, contents");
-}
-
-template<class T>
-inline void INDEX_2_CLOSED_HASHTABLE<T> :: 
-Set (const INDEX_2 & ahash, const T & acont)
-{
-  int pos;
-  PositionCreate0 (ahash, pos);
-  hash[pos] = ahash;
-  cont[pos] = acont;
-}
-
-template<class T>
-inline const T & INDEX_2_CLOSED_HASHTABLE<T> :: 
-Get (const INDEX_2 & ahash) const
-{
-  int pos = Position0 (ahash);
-  return cont[pos];
-}
-
-template<class T>
-inline bool INDEX_2_CLOSED_HASHTABLE<T> :: 
-Used (const INDEX_2 & ahash) const
-{
-  int pos = Position0 (ahash);
-  return (pos != -1);
-}
-
-template<class T>
-inline void INDEX_2_CLOSED_HASHTABLE<T> :: 
-SetData0 (int pos, const INDEX_2 & ahash, const T & acont)
-{
-  hash[pos] = ahash;
-  cont[pos] = acont;
-}
-  
-template<class T>
-inline void INDEX_2_CLOSED_HASHTABLE<T> :: 
-GetData0 (int pos, INDEX_2 & ahash, T & acont) const
-{
-  ahash = hash[pos];
-  acont = cont[pos];
-}
-
-template<class T>
-inline void INDEX_2_CLOSED_HASHTABLE<T> :: 
-SetData0 (int pos, const T & acont)
-{
-  cont[pos] = acont;
-}
-  
-template<class T>
-inline void INDEX_2_CLOSED_HASHTABLE<T> :: 
-GetData0 (int pos, T & acont) const
-{
-  acont = cont[pos];
-}
-
-
-template<class T>
-inline void INDEX_2_CLOSED_HASHTABLE<T> :: 
-SetSize (int size)
-{
-  BaseSetSize(size);
-  cont.SetSize(size);
-}
-
-
   
 template<class T>
 inline void INDEX_2_CLOSED_HASHTABLE<T> :: 

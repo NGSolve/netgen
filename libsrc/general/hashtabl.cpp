@@ -232,8 +232,8 @@ namespace netgen
     mask = size-1;
     
     hash.SetSize(size);
-    for (int i = 1; i <= size; i++)
-      hash.Elem(i).I1() = invalid;
+    for (size_t i = 0; i < size; i++)
+      hash[i].I1() = invalid;
   }
 
 
