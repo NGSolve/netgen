@@ -54,7 +54,7 @@ namespace netgen
   enum OPTIMIZEGOAL { OPT_QUALITY, OPT_CONFORM, OPT_REST, OPT_WORSTCASE, OPT_LEGAL };
 
 
-  extern size_t timestamp;
+  extern DLL_HEADER size_t timestamp;
   inline size_t GetTimeStamp() 
   { 
     return timestamp; 
