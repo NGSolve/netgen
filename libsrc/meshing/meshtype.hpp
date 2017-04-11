@@ -422,6 +422,8 @@ namespace netgen
     { return FlatArray<const PointIndex> (np, &pnum[0]); }
     FlatArray<PointIndex> PNums ()
     { return FlatArray<PointIndex> (np, &pnum[0]); }
+    auto Vertices() const
+    { return FlatArray<const PointIndex> (GetNV(), &pnum[0]); }
     
     ///
     PointIndex & PNum (int i) { return pnum[i-1]; }

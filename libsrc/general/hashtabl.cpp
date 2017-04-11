@@ -213,19 +213,24 @@ namespace netgen
 
 
   BASE_INDEX_2_CLOSED_HASHTABLE ::
-  BASE_INDEX_2_CLOSED_HASHTABLE (int size)
-    : hash(size)
+  BASE_INDEX_2_CLOSED_HASHTABLE (size_t size)
+    : hash(RoundUp2(size))
   {
+    size = hash.Size();
+    mask = size-1;
     // hash.SetName ("i2-hashtable, hash");
 
     invalid = -1;
-    for (int i = 1; i <= size; i++)
-      hash.Elem(i).I1() = invalid;
+    for (size_t i = 0; i < size; i++)
+      hash[i].I1() = invalid;
   }
 
   void BASE_INDEX_2_CLOSED_HASHTABLE ::
   BaseSetSize (int size)
   {
+    size = RoundUp2 (size);
+    mask = size-1;
+    
     hash.SetSize(size);
     for (int i = 1; i <= size; i++)
       hash.Elem(i).I1() = invalid;
@@ -245,25 +250,28 @@ namespace netgen
       }
   }
 
-  int BASE_INDEX_2_CLOSED_HASHTABLE ::
+  bool BASE_INDEX_2_CLOSED_HASHTABLE ::
   PositionCreate2 (const INDEX_2 & ind, int & apos) 
   {
     int i = HashValue(ind);
     int startpos = i;
     while (1)
       {
+        /*
 	i++;
 	if (i > hash.Size()) i = 1;
-	if (hash.Get(i) == ind) 
+        */
+        i = (i+1) % hash.Size();
+	if (hash[i] == ind) 
 	  {
 	    apos = i;
-	    return 0;
+	    return false;
 	  }
-	if (hash.Get(i).I1() == invalid) 
+	if (hash[i].I1() == invalid) 
 	  {
-	    hash.Elem(i) = ind;
+	    hash[i] = ind;
 	    apos = i;
-	    return 1;
+	    return true;
 	  }
 	if (i == startpos)
 	  throw NgException ("Try to set new element in full closed hashtable");

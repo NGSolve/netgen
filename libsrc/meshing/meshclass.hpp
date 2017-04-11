@@ -43,7 +43,7 @@ namespace netgen
 
 
     /// surface indices at boundary nodes
-    TABLE<int,PointIndex::BASE> surfacesonnode;
+    // TABLE<int,PointIndex::BASE> surfacesonnode;
     /// boundary edges  (1..normal bedge, 2..segment)
     INDEX_2_CLOSED_HASHTABLE<int> * boundaryedges;
     ///

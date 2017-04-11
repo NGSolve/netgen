@@ -116,7 +116,7 @@ namespace netgen
     surfelements.SetSize(0);
     volelements.SetSize(0);
     lockedpoints.SetSize(0);
-    surfacesonnode.SetSize(0);
+    // surfacesonnode.SetSize(0);
 
     delete boundaryedges;
     boundaryedges = NULL;
@@ -1593,12 +1593,14 @@ namespace netgen
 
   void Mesh :: CalcSurfacesOfNode ()
   {
-    surfacesonnode.SetSize (GetNP());
+    // surfacesonnode.SetSize (GetNP());
+    TABLE<int,PointIndex::BASE> surfacesonnode(GetNP());
 
     delete boundaryedges;
     boundaryedges = NULL;
 
     delete surfelementht;
+    surfelementht = nullptr;
     delete segmentht;
 
     /*
@@ -1606,9 +1608,11 @@ namespace netgen
       segmentht = new INDEX_2_HASHTABLE<int> (GetNSeg() + 1);
     */
 
-    surfelementht = new INDEX_3_CLOSED_HASHTABLE<int> (3*GetNSE() + 1);
+    if (dimension == 3)
+      surfelementht = new INDEX_3_CLOSED_HASHTABLE<int> (3*GetNSE() + 1);
     segmentht = new INDEX_2_CLOSED_HASHTABLE<int> (3*GetNSeg() + 1);
 
+    if (dimension == 3)
     for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
       {
         const Element2d & sel = surfelements[sei];
@@ -1619,6 +1623,9 @@ namespace netgen
         for (int j = 0; j < sel.GetNP(); j++)
           {
             PointIndex pi = sel[j];
+            if (!surfacesonnode[pi].Contains(si))
+              surfacesonnode.Add (pi, si);
+            /*
             bool found = 0;
             for (int k = 0; k < surfacesonnode[pi].Size(); k++)
               if (surfacesonnode[pi][k] == si)
@@ -1629,6 +1636,7 @@ namespace netgen
 
             if (!found)
               surfacesonnode.Add (pi, si);
+            */
           }
       }
     /*
@@ -1647,6 +1655,8 @@ namespace netgen
 
       surfelementht -> AllocateElements();
     */
+
+    if (dimension==3)
     for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
       {
         const Element2d & sel = surfelements[sei];
@@ -3665,11 +3675,11 @@ namespace netgen
         {
           bool sege = false, be = false;
 
-          int pos = boundaryedges -> Position(INDEX_2::Sort(el[i], el[j]));
-          if (pos)
+          int pos = boundaryedges -> Position0(INDEX_2::Sort(el[i], el[j]));
+          if (pos != -1)
             {
               be = true;
-              if (boundaryedges -> GetData(pos) == 2)
+              if (boundaryedges -> GetData0(pos) == 2)
                 sege = true;
             }
 
@@ -5545,6 +5555,7 @@ namespace netgen
           if (el[j] > numvertices)
             numvertices = el[j];
       }
+    /*
     for (i = 1; i <= nse; i++)
       {
         const Element2d & el = SurfaceElement(i);
@@ -5553,6 +5564,10 @@ namespace netgen
           if (el.PNum(j) > numvertices)
             numvertices = el.PNum(j);
       } 
+    */
+    for (auto & el : SurfaceElements())
+      for (PointIndex v : el.Vertices())
+        if (v > numvertices) numvertices = v;
 
     numvertices += 1- PointIndex::BASE;
   }
@@ -5917,8 +5932,8 @@ namespace netgen
         << sizeof (Element) << " = " 
         << GetNE() * sizeof(Element) << endl;
 
-    ost << "surfs on node:";
-    surfacesonnode.PrintMemInfo (cout);
+    // ost << "surfs on node:";
+    // surfacesonnode.PrintMemInfo (cout);
 
     ost << "boundaryedges: ";
     if (boundaryedges)
