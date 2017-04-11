@@ -455,7 +455,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 		if (el[l] == pi1 || el[l] == pi2)
 		  {
 		    INDEX_3 i3;
-		    Element2d face;
+		    Element2d face(TRIG);
 		    el.GetFace (l+1, face);
 		    for (int kk = 1; kk <= 3; kk++)
 		      i3.I(kk) = face.PNum(kk);

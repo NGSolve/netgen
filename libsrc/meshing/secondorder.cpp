@@ -112,7 +112,7 @@ namespace netgen
 
 	int onp(0);
       
-	Element2d newel;
+	Element2d newel(TRIG);
 	newel.SetIndex (el.GetIndex());
 
 	static int betw_trig[3][3] =

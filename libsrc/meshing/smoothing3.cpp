@@ -432,7 +432,7 @@ namespace netgen
 	for (int k = 1; k <= 4; k++)
 	  if (el.PNum(k) == actpind)
 	    {
-	      Element2d face;
+	      Element2d face(TRIG);
 	      el.GetFace (k, face);
 	      Swap (face.PNum(2), face.PNum(3));
 	      faces.Append (face);

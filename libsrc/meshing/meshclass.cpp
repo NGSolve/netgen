@@ -1901,7 +1901,7 @@ namespace netgen
     int ii;
     PointIndex pi;
     SurfaceElementIndex sei;
-    Element2d hel;
+    // Element2d hel;
 
 
     INDEX_3_CLOSED_HASHTABLE<INDEX_2> faceht(100);   
@@ -1915,7 +1915,7 @@ namespace netgen
           FlatArray<SurfaceElementIndex> row = selsonpoint[pi];
           for (ii = 0; ii < row.Size(); ii++)
             {
-              hel = SurfaceElement(row[ii]);
+              Element2d hel = SurfaceElement(row[ii]);
               if (hel.GetType() == TRIG6) hel.SetType(TRIG);
               int ind = hel.GetIndex();	  
 
@@ -1960,6 +1960,7 @@ namespace netgen
                 {
                   for (int j = 1; j <= el.GetNFaces(); j++)
                     {
+                      Element2d hel;
                       el.GetFace (j, hel);
                       hel.Invert();
                       hel.NormalizeNumbering();
@@ -2014,8 +2015,9 @@ namespace netgen
                 faceht.GetData (i, i3, i2);
                 if (i2.I1() != PointIndex::BASE-1)
                   {
-                    Element2d tri;
-                    tri.SetType ( (i2.I2() == PointIndex::BASE-1) ? TRIG : QUAD);
+                    // Element2d tri;
+                    // tri.SetType ( (i2.I2() == PointIndex::BASE-1) ? TRIG : QUAD);
+                    Element2d tri ( (i2.I2() == PointIndex::BASE-1) ? TRIG : QUAD);
                     for (int l = 0; l < 3; l++)
                       tri[l] = i3.I(l+1);
                     tri.PNum(4) = i2.I2();
@@ -5361,7 +5363,7 @@ namespace netgen
         // angles in faces
         for (j = 1; j <= 4; j++)
           {
-            Element2d face;
+            Element2d face(TRIG);
             el.GetFace (j, face);
             for (lpi1 = 1; lpi1 <= 3; lpi1++)
               {

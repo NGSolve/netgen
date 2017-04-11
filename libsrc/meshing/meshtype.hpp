@@ -76,8 +76,13 @@ namespace netgen
     int trignum;   // for STL Meshing
     double u, v;   // for OCC Meshing
 
-    PointGeomInfo () 
-      : trignum(-1), u(0), v(0) { ; }
+    PointGeomInfo () = default;
+    // : trignum(-1), u(0), v(0) { ; }
+    PointGeomInfo (const PointGeomInfo&) = default;
+    PointGeomInfo (PointGeomInfo &&) = default;
+    PointGeomInfo & operator= (const PointGeomInfo&) = default;
+    PointGeomInfo & operator= (PointGeomInfo&&) = default;
+    
   };
 
   inline ostream & operator<< (ostream & ost, const PointGeomInfo & gi)
@@ -145,9 +150,14 @@ namespace netgen
   {
     int i;
   public:
-    PointIndex () { ; }
+    PointIndex () = default;
+    PointIndex (const PointIndex&) = default;
+    PointIndex (PointIndex &&) = default;
+    PointIndex & operator= (const PointIndex&) = default;
+    PointIndex & operator= (PointIndex&&) = default;
+     
     PointIndex (int ai) : i(ai) { ; }
-    PointIndex & operator= (const PointIndex &ai) { i = ai.i; return *this; }
+    // PointIndex & operator= (const PointIndex &ai) { i = ai.i; return *this; }
     operator int () const { return i; }
     PointIndex operator++ (int) { PointIndex hi(*this); i++; return hi; }
     PointIndex operator-- (int) { PointIndex hi(*this); i--; return hi; }
@@ -364,7 +374,11 @@ namespace netgen
 
   public:
     ///
-    Element2d ();
+    Element2d () = default;
+    Element2d (const Element2d &) = default;
+    Element2d (Element2d &&) = default;
+    Element2d & operator= (const Element2d &) = default;
+    Element2d & operator= (Element2d &&) = default;
     ///
     Element2d (int anp);
     ///

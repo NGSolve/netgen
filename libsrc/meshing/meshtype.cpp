@@ -157,10 +157,9 @@ namespace netgen
       << " si = " << seg.si << ", edgenr = " << seg.edgenr;
     return s;
   }
-
-
+  /*
   Element2d :: Element2d ()
-  { 
+  {
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
       {
 	pnum[i] = 0;
@@ -177,8 +176,7 @@ namespace netgen
     strongrefflag = false;
     is_curved = false;
   } 
-
-
+  */
   Element2d :: Element2d (int anp)
   { 
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)

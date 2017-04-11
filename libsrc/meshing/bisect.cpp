@@ -178,6 +178,12 @@ namespace netgen
   class MarkedTri
   {
   public:
+    MarkedTri () = default;
+    MarkedTri (const MarkedTri&) = default;
+    MarkedTri (MarkedTri &&) = default;
+    MarkedTri & operator= (const MarkedTri&) = default;
+    MarkedTri & operator= (MarkedTri&&) = default;
+    
     /// three point numbers
     PointIndex pnums[3];
     /// three geominfos
