@@ -54,10 +54,22 @@ namespace netgen
   enum OPTIMIZEGOAL { OPT_QUALITY, OPT_CONFORM, OPT_REST, OPT_WORSTCASE, OPT_LEGAL };
 
 
+  extern size_t timestamp;
+  inline size_t GetTimeStamp() 
+  { 
+    return timestamp; 
+  }
 
+  inline size_t NextTimeStamp()
+  {
+    timestamp++;
+    return timestamp;
+  }
+  
+  /*
   extern DLL_HEADER int GetTimeStamp();
   extern DLL_HEADER int NextTimeStamp();
-
+  */
   class PointGeomInfo
   {
   public:

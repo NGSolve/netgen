@@ -88,7 +88,8 @@ namespace netgen
   DebugParameters debugparam;
   bool verbose = 0;
 
-  int timestamp = 0;
+  size_t timestamp = 0;
+  /*
   int GetTimeStamp() 
   { 
     return timestamp; 
@@ -99,4 +100,5 @@ namespace netgen
     timestamp++;
     return timestamp;
   }
+  */
 }
