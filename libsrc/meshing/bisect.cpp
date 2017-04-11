@@ -1724,30 +1724,39 @@ namespace netgen
 
 
   bool MarkHangingTris (T_MTRIS & mtris, 
-		       const INDEX_2_CLOSED_HASHTABLE<PointIndex> & cutedges)
+                        const INDEX_2_CLOSED_HASHTABLE<PointIndex> & cutedges,
+                        TaskManager tm)
   {
     bool hanging = false;
     // for (int i = 1; i <= mtris.Size(); i++)
-    for (auto & tri : mtris)
-      {
-	if (tri.marked)
-	  {
-	    hanging = true;
-	    continue;
-	  }
-	for (int j = 0; j < 2; j++)
-	  for (int k = j+1; k < 3; k++)
-	    {
-	      INDEX_2 edge(tri.pnums[j],
-			   tri.pnums[k]);
-	      edge.Sort();
-	      if (cutedges.Used (edge))
-		{
-		  tri.marked = 1;
-		  hanging = true;
-                }
-	    }
-      }  
+    // for (auto & tri : mtris)
+    ParallelForRange
+      (tm, mtris.Size(), [&] (size_t begin, size_t end)
+       {
+         bool my_hanging = false;
+         for (size_t i = begin; i < end; i++)
+           {
+             auto & tri = mtris[i];
+             if (tri.marked)
+               {
+                 my_hanging = true;
+                 continue; 
+               }
+             for (int j = 0; j < 2; j++)
+               for (int k = j+1; k < 3; k++)
+                 {
+                   INDEX_2 edge(tri.pnums[j],
+                                tri.pnums[k]);
+                   edge.Sort();
+                   if (cutedges.Used (edge))
+                     {
+                       tri.marked = 1;
+                       my_hanging = true;
+                     }
+                 }
+           }
+         if (my_hanging) hanging = true;
+      });
     return hanging;
   }
 
@@ -3476,7 +3485,7 @@ namespace netgen
 
             NgProfiler::StartTimer (timer1b);            
 	    hangingsurf = 
-	      MarkHangingTris (mtris, cutedges) +
+	      MarkHangingTris (mtris, cutedges, opt.task_manager) +
 	      MarkHangingQuads (mquads, cutedges);
 
 	    hangingedge = 0;
