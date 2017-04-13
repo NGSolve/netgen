@@ -204,7 +204,7 @@ namespace netgen
 	const Element & el = mesh.VolumeElement(i);
 	int onp = 0;
 
-	Element newel;
+	Element newel(TET);
 	newel.SetIndex (el.GetIndex());
 
 	static int betw_tet[6][3] =

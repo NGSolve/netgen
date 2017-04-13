@@ -1663,32 +1663,43 @@ namespace netgen
 
 
   int MarkHangingTets (T_MTETS & mtets, 
-		       const INDEX_2_CLOSED_HASHTABLE<PointIndex> & cutedges)
+		       const INDEX_2_CLOSED_HASHTABLE<PointIndex> & cutedges,
+                       TaskManager tm)                       
   {
+    static int timer = NgProfiler::CreateTimer ("MarkHangingTets");    
+    NgProfiler::RegionTimer reg (timer);    
+    
     int hanging = 0;
-    for (int i = 1; i <= mtets.Size(); i++)
-      {
-	MarkedTet & teti = mtets.Elem(i);
-
-	if (teti.marked)
-	  {
-	    hanging = 1;
-	    continue;
-	  }
-
-	for (int j = 0; j < 3; j++)
-	  for (int k = j+1; k < 4; k++)
-	    {
-	      INDEX_2 edge(teti.pnums[j],
-			   teti.pnums[k]);
-	      edge.Sort();
-	      if (cutedges.Used (edge))
-		{
-		  teti.marked = 1;
-		  hanging = 1;
-		}
-	    }
-      }
+    // for (int i = 1; i <= mtets.Size(); i++)
+    ParallelForRange
+      (tm, mtets.Size(), [&] (size_t begin, size_t end)
+       {
+         bool my_hanging = false;
+         for (size_t i = begin; i < end; i++)
+           {
+             MarkedTet & teti = mtets[i];
+             
+             if (teti.marked)
+               {
+                 my_hanging = true;
+                 continue;
+               }
+             
+             for (int j = 0; j < 3; j++)
+               for (int k = j+1; k < 4; k++)
+                 {
+                   INDEX_2 edge(teti.pnums[j],
+                                teti.pnums[k]);
+                   edge.Sort();
+                   if (cutedges.Used (edge))
+                     {
+                       teti.marked = 1;
+                       my_hanging = true;
+                     }
+                 }
+           }
+         if (my_hanging) hanging = true;         
+       });
 
     return hanging;
   }
@@ -3336,7 +3347,7 @@ namespace netgen
 
 
 	    hangingvol = 
-	      MarkHangingTets (mtets, cutedges) +
+	      MarkHangingTets (mtets, cutedges, opt.task_manager) +
 	      MarkHangingPrisms (mprisms, cutedges) +
 	      MarkHangingIdentifications (mids, cutedges);
 

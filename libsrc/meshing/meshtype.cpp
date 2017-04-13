@@ -967,7 +967,7 @@ namespace netgen
     return s;
   }
 
-
+  /*
   Element :: Element ()
   {
     typ = TET;
@@ -990,9 +990,8 @@ namespace netgen
 #ifdef PARALLEL
     partitionNumber = -1;
 #endif
-
   }
-
+  */
 
   Element :: Element (int anp)
   {
@@ -1061,12 +1060,15 @@ namespace netgen
     flags.fixed = 0;
     orderx = ordery = orderz = 1;
     is_curved =  typ != TET; // false;
+#ifdef PARALLEL
+    partitionNumber = -1;
+#endif
   }
 
 
 
 
-
+  /*
   Element & Element :: operator= (const Element & el2)
   {
     typ = el2.typ;
@@ -1083,7 +1085,7 @@ namespace netgen
     is_curved = el2.is_curved;
     return *this;
   }
-
+  */
 
 
   void Element :: SetNP (int anp)

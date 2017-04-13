@@ -660,13 +660,18 @@ namespace netgen
     flagstruct flags;
 
     ///
-    DLL_HEADER Element ();
+    DLL_HEADER Element () = default;
+    Element (const Element &) = default;
+    Element (Element &&) = default;
+    Element & operator= (const Element &) = default;
+    Element & operator= (Element &&) = default;
+
     ///
     Element (int anp);
     ///
     Element (ELEMENT_TYPE type);
     ///
-    Element & operator= (const Element & el2);
+    // Element & operator= (const Element & el2);
   
     ///
     void SetNP (int anp);

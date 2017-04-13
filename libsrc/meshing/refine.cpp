@@ -436,7 +436,7 @@ namespace netgen
 	   int ind = el.GetIndex();
 	   for (int j = 0; j < 8; j++)
 	   {
-	      Element nel;
+             Element nel(TET);
 	      for (int k = 1; k <= 4; k++)
 	        nel.PNum(k) = pnums.Get(reftab[j][k-1]);
 	      nel.SetIndex(ind);

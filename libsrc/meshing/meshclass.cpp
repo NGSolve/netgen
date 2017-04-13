@@ -926,7 +926,7 @@ namespace netgen
             PrintMessage (3, n, " volume elements");
             for (i = 1; i <= n; i++)
               {
-                Element el;
+                Element el(TET);
                 int hi, nep;
                 infile >> hi;
                 if (hi == 0) hi = 1;
@@ -1423,7 +1423,7 @@ namespace netgen
             PrintMessage (3, n, " volume elements");
             for (i = 1; i <= n; i++)
               {
-                Element el;
+                Element el(TET);
                 int hi, nep;
                 infile >> hi;
                 if (hi == 0) hi = 1;
@@ -1960,7 +1960,7 @@ namespace netgen
                 {
                   for (int j = 1; j <= el.GetNFaces(); j++)
                     {
-                      Element2d hel;
+                      Element2d hel(TRIG);
                       el.GetFace (j, hel);
                       hel.Invert();
                       hel.NormalizeNumbering();
