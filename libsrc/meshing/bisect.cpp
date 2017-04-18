@@ -44,10 +44,17 @@ namespace netgen
     bool incorder;
     unsigned int order:6;
 
-    MarkedTet()
+    MarkedTet() = default;
+    /*
     { 
       for (int i = 0; i < 4; i++) { faceedges[i] = 127; }
     }
+    */
+    MarkedTet (const MarkedTet&) = default;
+    MarkedTet (MarkedTet &&) = default;
+    MarkedTet & operator= (const MarkedTet&) = default;
+    MarkedTet & operator= (MarkedTet&&) = default;
+    
   };
 
   ostream & operator<< (ostream & ost, const MarkedTet & mt)
