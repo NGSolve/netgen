@@ -108,7 +108,8 @@ void Ng_LoadMeshFromStream ( istream & input )
 	  break;
 	}
     }
-
+  if (!ng_geometry)
+    ng_geometry = make_shared<NetgenGeometry>();
   mesh->SetGeometry (ng_geometry);
 }
 
