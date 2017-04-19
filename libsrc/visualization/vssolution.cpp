@@ -1279,7 +1279,6 @@ namespace netgen
 
     Array<double> mvalues(npt);
     int sol_comp = (sol && sol->draw_surface) ? sol->components : 0;
-#ifdef __AVX__
     Array<Point<2,SIMD<double>> > simd_pref ( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
     Array<Point<3,SIMD<double>> > simd_points ( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
     Array<Mat<3,2,SIMD<double>> > simd_dxdxis ( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
@@ -1287,7 +1286,6 @@ namespace netgen
     Array<SIMD<double>> simd_values( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() * sol_comp);
 
     
-#endif
     
     // Array<Point<3,float>> glob_pnts;
     // Array<Vec<3,float>> glob_nvs;
@@ -1486,7 +1484,6 @@ namespace netgen
     NgProfiler::StartTimer(timerloops);
     size_t base_pi = 0;
 
-#ifdef __AVX__
     for (int iy = 0, ii = 0; iy <= n; iy++)
       for (int ix = 0; ix <= n-iy; ix++, ii++)
         pref[ii] = Point<2> (ix*invn, iy*invn);
@@ -1496,10 +1493,9 @@ namespace netgen
     
     for (size_t i = 0; i < simd_npt; i++)
       {
-        simd_pref[i](0).SIMD_function ([&] (size_t j) { size_t ii = i*simd_size+j; return (ii < npt) ? pref[ii](0) : 0; }, std::true_type());
-        simd_pref[i](1).SIMD_function ([&] (size_t j) { size_t ii = i*simd_size+j; return (ii < npt) ? pref[ii](1) : 0; }, std::true_type());
+        simd_pref[i](0) = [&] (size_t j) { size_t ii = i*simd_size+j; return (ii < npt) ? pref[ii](0) : 0; };
+        simd_pref[i](1) = [&] (size_t j) { size_t ii = i*simd_size+j; return (ii < npt) ? pref[ii](1) : 0; };
       }
-#endif
 
     Array<int> ind_reftrig;
     for (int iy = 0, ii = 0; iy < n; iy++,ii++)
