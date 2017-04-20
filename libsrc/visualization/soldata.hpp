@@ -92,15 +92,17 @@ namespace netgen
       return res;
     }
 
+#ifdef __AVX__
     virtual bool GetMultiSurfValue (size_t selnr, size_t facetnr, size_t npts,
-                                    const SIMD<double> * xref,
-                                    const SIMD<double> * x,
-                                    const SIMD<double> * dxdxref,
-                                    SIMD<double> * values)
+                                    const __m256d * xref, 
+                                    const __m256d * x, 
+                                    const __m256d * dxdxref, 
+                                    __m256d * values)
     {
       cerr << "GetMultiSurfVaue not overloaded for SIMD<double>" << endl;
       return false;
     }
+#endif
     
     virtual bool GetSegmentValue (int segnr, double xref, double * values)
     { return false; }
