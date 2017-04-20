@@ -646,29 +646,26 @@ namespace netgen
 
 
 
-#ifdef __AVX__
-#include <immintrin.h>
-  
   template<> DLL_HEADER void Ngx_Mesh :: 
   MultiElementTransformation<1,1> (int elnr, int npts,
-                                   const __m256d * xi, size_t sxi,
-                                   __m256d * x, size_t sx,
-                                   __m256d * dxdxi, size_t sdxdxi) const
+                                   const SIMD<double> * xi, size_t sxi,
+                                   SIMD<double> * x, size_t sx,
+                                   SIMD<double> * dxdxi, size_t sdxdxi) const
   {
     cout << "multi-eltrafo simd called, 1,1,simd" << endl;
   }
 
   template<> DLL_HEADER void Ngx_Mesh :: 
   MultiElementTransformation<2,2> (int elnr, int npts,
-                                   const __m256d * xi, size_t sxi,
-                                   __m256d * x, size_t sx,
-                                   __m256d * dxdxi, size_t sdxdxi) const
+                                   const SIMD<double> * xi, size_t sxi,
+                                   SIMD<double> * x, size_t sx,
+                                   SIMD<double> * dxdxi, size_t sdxdxi) const
   {
     mesh->GetCurvedElements().CalcMultiPointSurfaceTransformation<2>
       (elnr, npts,
-       reinterpret_cast<const SIMD<double>*> (xi), sxi,
-       reinterpret_cast<SIMD<double>*> (x), sx,
-       reinterpret_cast<SIMD<double>*> (dxdxi), sdxdxi);
+       xi, sxi,
+       x, sx,
+       dxdxi, sdxdxi);
     /*
     for (int i = 0; i < npts; i++)
       {
@@ -695,15 +692,15 @@ namespace netgen
 
   template<> DLL_HEADER void Ngx_Mesh :: 
   MultiElementTransformation<3,3> (int elnr, int npts,
-                                   const __m256d * xi, size_t sxi,
-                                   __m256d * x, size_t sx,
-                                   __m256d * dxdxi, size_t sdxdxi) const
+                                   const SIMD<double> * xi, size_t sxi,
+                                   SIMD<double> * x, size_t sx,
+                                   SIMD<double> * dxdxi, size_t sdxdxi) const
   {
     mesh->GetCurvedElements().CalcMultiPointElementTransformation
       (elnr, npts,
-       reinterpret_cast<const SIMD<double>*> (xi), sxi,
-       reinterpret_cast<SIMD<double>*> (x), sx,
-       reinterpret_cast<SIMD<double>*> (dxdxi), sdxdxi);
+       xi, sxi,
+       x, sx,
+       dxdxi, sdxdxi);
     /*
     for (int i = 0; i < npts; i++)
       {
@@ -730,27 +727,27 @@ namespace netgen
 
   template<> DLL_HEADER void Ngx_Mesh ::
   MultiElementTransformation<0,2> (int elnr, int npts,
-				   const __m256d *xi, size_t sxi,
-				   __m256d * x, size_t sx,
-				   __m256d * dxdxi, size_t sdxdxi) const
+				   const SIMD<double> *xi, size_t sxi,
+				   SIMD<double> * x, size_t sx,
+				   SIMD<double> * dxdxi, size_t sdxdxi) const
   {
     cout << "MultiElementtransformation<0,2> simd not implemented" << endl;
   }
   
   template<> DLL_HEADER void Ngx_Mesh :: 
   MultiElementTransformation<0,1> (int elnr, int npts,
-                                   const __m256d * xi, size_t sxi,
-                                   __m256d * x, size_t sx,
-                                   __m256d * dxdxi, size_t sdxdxi) const
+                                   const SIMD<double> * xi, size_t sxi,
+                                   SIMD<double> * x, size_t sx,
+                                   SIMD<double> * dxdxi, size_t sdxdxi) const
   {
     cout << "multi-eltrafo simd called, 0,1,simd" << endl;
   }
 
   template<> DLL_HEADER void Ngx_Mesh :: 
   MultiElementTransformation<1,3> (int elnr, int npts,
-                                   const __m256d * xi, size_t sxi,
-                                   __m256d * x, size_t sx,
-                                   __m256d * dxdxi, size_t sdxdxi) const
+                                   const SIMD<double> * xi, size_t sxi,
+                                   SIMD<double> * x, size_t sx,
+                                   SIMD<double> * dxdxi, size_t sdxdxi) const
   {
     double hxi[4][1];
     double hx[4][3];
@@ -772,9 +769,9 @@ namespace netgen
   
   template<> DLL_HEADER void Ngx_Mesh :: 
   MultiElementTransformation<1,2> (int elnr, int npts,
-                                   const __m256d * xi, size_t sxi,
-                                   __m256d * x, size_t sx,
-                                   __m256d * dxdxi, size_t sdxdxi) const
+                                   const SIMD<double> * xi, size_t sxi,
+                                   SIMD<double> * x, size_t sx,
+                                   SIMD<double> * dxdxi, size_t sdxdxi) const
   {
     for (int i = 0; i < npts; i++)
       {
@@ -801,15 +798,15 @@ namespace netgen
 
   template<> DLL_HEADER void Ngx_Mesh :: 
   MultiElementTransformation<2,3> (int elnr, int npts,
-                                   const __m256d * xi, size_t sxi,
-                                   __m256d * x, size_t sx,
-                                   __m256d * dxdxi, size_t sdxdxi) const
+                                   const SIMD<double> * xi, size_t sxi,
+                                   SIMD<double> * x, size_t sx,
+                                   SIMD<double> * dxdxi, size_t sdxdxi) const
   {
     mesh->GetCurvedElements().CalcMultiPointSurfaceTransformation<3>
       (elnr, npts,
-       reinterpret_cast<const SIMD<double>*> (xi), sxi,
-       reinterpret_cast<SIMD<double>*> (x), sx,
-       reinterpret_cast<SIMD<double>*> (dxdxi), sdxdxi);
+       xi, sxi,
+       x, sx,
+       dxdxi, sdxdxi);
     /*
     for (int i = 0; i < npts; i++)
       {
@@ -834,7 +831,6 @@ namespace netgen
     */
   }
 
-#endif
   
 
 

@@ -13,7 +13,7 @@ install( FILES ngexception.hpp DESTINATION ${INCDIR} COMPONENT netgen_devel )
 install(FILES
   archive_base.hpp array.hpp autodiff.hpp autoptr.hpp bitarray.hpp
   dynamicmem.hpp flags.hpp hashtabl.hpp mpi_interface.hpp myadt.hpp
-  mysimd.hpp mystring.hpp netgenout.hpp ngexception.hpp ngpython.hpp
+  ngsimd.hpp mystring.hpp netgenout.hpp ngexception.hpp ngpython.hpp
   optmem.hpp parthreads.hpp profiler.hpp seti.hpp sort.hpp
   spbita2d.hpp stack.hpp symbolta.hpp table.hpp template.hpp
   gzstream.h
