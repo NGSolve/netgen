@@ -36,6 +36,22 @@
 #endif
 
 
+#ifndef NG_INLINE
+#ifdef __INTEL_COMPILER
+#ifdef WIN32
+#define NG_INLINE __forceinline inline
+#else
+#define NG_INLINE __forceinline inline
+#endif
+#else
+#ifdef __GNUC__
+#define NG_INLINE __attribute__ ((__always_inline__)) inline
+#define VLA
+#else
+#define NG_INLINE inline
+#endif
+#endif
+#endif
 
 
 // #define BASE0

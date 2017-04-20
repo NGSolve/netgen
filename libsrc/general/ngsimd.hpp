@@ -16,31 +16,31 @@
 #ifdef WIN32
 #ifndef AVX_OPERATORS_DEFINED
 #define AVX_OPERATORS_DEFINED
-inline __m128d operator- (__m128d a) { return _mm_xor_pd(a, _mm_set1_pd(-0.0)); }
-inline __m128d operator+ (__m128d a, __m128d b) { return _mm_add_pd(a,b); }
-inline __m128d operator- (__m128d a, __m128d b) { return _mm_sub_pd(a,b); }
-inline __m128d operator* (__m128d a, __m128d b) { return _mm_mul_pd(a,b); }
-inline __m128d operator/ (__m128d a, __m128d b) { return _mm_div_pd(a,b); }
-inline __m128d operator* (double a, __m128d b) { return _mm_set1_pd(a)*b; }
-inline __m128d operator* (__m128d b, double a) { return _mm_set1_pd(a)*b; }
+NG_INLINE __m128d operator- (__m128d a) { return _mm_xor_pd(a, _mm_set1_pd(-0.0)); }
+NG_INLINE __m128d operator+ (__m128d a, __m128d b) { return _mm_add_pd(a,b); }
+NG_INLINE __m128d operator- (__m128d a, __m128d b) { return _mm_sub_pd(a,b); }
+NG_INLINE __m128d operator* (__m128d a, __m128d b) { return _mm_mul_pd(a,b); }
+NG_INLINE __m128d operator/ (__m128d a, __m128d b) { return _mm_div_pd(a,b); }
+NG_INLINE __m128d operator* (double a, __m128d b) { return _mm_set1_pd(a)*b; }
+NG_INLINE __m128d operator* (__m128d b, double a) { return _mm_set1_pd(a)*b; }
 
-inline __m128d operator+= (__m128d &a, __m128d b) { return a = a+b; }
-inline __m128d operator-= (__m128d &a, __m128d b) { return a = a-b; }
-inline __m128d operator*= (__m128d &a, __m128d b) { return a = a*b; }
-inline __m128d operator/= (__m128d &a, __m128d b) { return a = a/b; }
+NG_INLINE __m128d operator+= (__m128d &a, __m128d b) { return a = a+b; }
+NG_INLINE __m128d operator-= (__m128d &a, __m128d b) { return a = a-b; }
+NG_INLINE __m128d operator*= (__m128d &a, __m128d b) { return a = a*b; }
+NG_INLINE __m128d operator/= (__m128d &a, __m128d b) { return a = a/b; }
 
-inline __m256d operator- (__m256d a) { return _mm256_xor_pd(a, _mm256_set1_pd(-0.0)); }
-inline __m256d operator+ (__m256d a, __m256d b) { return _mm256_add_pd(a,b); }
-inline __m256d operator- (__m256d a, __m256d b) { return _mm256_sub_pd(a,b); }
-inline __m256d operator* (__m256d a, __m256d b) { return _mm256_mul_pd(a,b); }
-inline __m256d operator/ (__m256d a, __m256d b) { return _mm256_div_pd(a,b); }
-inline __m256d operator* (double a, __m256d b) { return _mm256_set1_pd(a)*b; }
-inline __m256d operator* (__m256d b, double a) { return _mm256_set1_pd(a)*b; }
+NG_INLINE __m256d operator- (__m256d a) { return _mm256_xor_pd(a, _mm256_set1_pd(-0.0)); }
+NG_INLINE __m256d operator+ (__m256d a, __m256d b) { return _mm256_add_pd(a,b); }
+NG_INLINE __m256d operator- (__m256d a, __m256d b) { return _mm256_sub_pd(a,b); }
+NG_INLINE __m256d operator* (__m256d a, __m256d b) { return _mm256_mul_pd(a,b); }
+NG_INLINE __m256d operator/ (__m256d a, __m256d b) { return _mm256_div_pd(a,b); }
+NG_INLINE __m256d operator* (double a, __m256d b) { return _mm256_set1_pd(a)*b; }
+NG_INLINE __m256d operator* (__m256d b, double a) { return _mm256_set1_pd(a)*b; }
 
-inline __m256d operator+= (__m256d &a, __m256d b) { return a = a+b; }
-inline __m256d operator-= (__m256d &a, __m256d b) { return a = a-b; }
-inline __m256d operator*= (__m256d &a, __m256d b) { return a = a*b; }
-inline __m256d operator/= (__m256d &a, __m256d b) { return a = a/b; }
+NG_INLINE __m256d operator+= (__m256d &a, __m256d b) { return a = a+b; }
+NG_INLINE __m256d operator-= (__m256d &a, __m256d b) { return a = a-b; }
+NG_INLINE __m256d operator*= (__m256d &a, __m256d b) { return a = a*b; }
+NG_INLINE __m256d operator/= (__m256d &a, __m256d b) { return a = a/b; }
 #endif
 #endif
 
@@ -71,27 +71,27 @@ namespace ngsimd
 
   template <typename T1, typename T2, typename T3>
   // a*b+c
-  inline auto FMA(T1 a, T2 b, T3 c)
+  NG_INLINE auto FMA(T1 a, T2 b, T3 c)
   {
     return a*b+c;
   }
 
   template<int N, typename T, typename std::enable_if<std::is_arithmetic<T>::value, int>::type = 0>
-    inline SIMD<double,N> operator+ (T a, SIMD<double,N> b) { return SIMD<double,N>(a) + b; }
+    NG_INLINE SIMD<double,N> operator+ (T a, SIMD<double,N> b) { return SIMD<double,N>(a) + b; }
   template<int N, typename T, typename std::enable_if<std::is_arithmetic<T>::value, int>::type = 0>
-    inline SIMD<double,N> operator- (T a, SIMD<double,N> b) { return SIMD<double,N>(a) - b; }
+    NG_INLINE SIMD<double,N> operator- (T a, SIMD<double,N> b) { return SIMD<double,N>(a) - b; }
   template<int N, typename T, typename std::enable_if<std::is_arithmetic<T>::value, int>::type = 0>
-    inline SIMD<double,N> operator* (T a, SIMD<double,N> b) { return SIMD<double,N>(a) * b; }
+    NG_INLINE SIMD<double,N> operator* (T a, SIMD<double,N> b) { return SIMD<double,N>(a) * b; }
   template<int N, typename T, typename std::enable_if<std::is_arithmetic<T>::value, int>::type = 0>
-    inline SIMD<double,N> operator/ (T a, SIMD<double,N> b) { return SIMD<double,N>(a) / b; }
+    NG_INLINE SIMD<double,N> operator/ (T a, SIMD<double,N> b) { return SIMD<double,N>(a) / b; }
   template<int N, typename T, typename std::enable_if<std::is_arithmetic<T>::value, int>::type = 0>
-    inline SIMD<double,N> operator+ (SIMD<double,N> a, T b) { return a + SIMD<double,N>(b); }
+    NG_INLINE SIMD<double,N> operator+ (SIMD<double,N> a, T b) { return a + SIMD<double,N>(b); }
   template<int N, typename T, typename std::enable_if<std::is_arithmetic<T>::value, int>::type = 0>
-    inline SIMD<double,N> operator- (SIMD<double,N> a, T b) { return a - SIMD<double,N>(b); }
+    NG_INLINE SIMD<double,N> operator- (SIMD<double,N> a, T b) { return a - SIMD<double,N>(b); }
   template<int N, typename T, typename std::enable_if<std::is_arithmetic<T>::value, int>::type = 0>
-    inline SIMD<double,N> operator* (SIMD<double,N> a, T b) { return a * SIMD<double,N>(b); }
+    NG_INLINE SIMD<double,N> operator* (SIMD<double,N> a, T b) { return a * SIMD<double,N>(b); }
   template<int N, typename T, typename std::enable_if<std::is_arithmetic<T>::value, int>::type = 0>
-    inline SIMD<double,N> operator/ (SIMD<double,N> a, T b) { return a / SIMD<double,N>(b); }
+    NG_INLINE SIMD<double,N> operator/ (SIMD<double,N> a, T b) { return a / SIMD<double,N>(b); }
 
 
 #ifdef __AVX__
@@ -141,43 +141,43 @@ using std::fabs;
   };
 
   using std::exp;
-  template<int N> inline SIMD<double,N> exp (SIMD<double,N> a)
+  template<int N> NG_INLINE SIMD<double,N> exp (SIMD<double,N> a)
   {
     return SIMD<double,N>([&](int i)->double { return exp(a[i]); } );
   }
 
   using std::log;
-  template<int N> inline SIMD<double,N> log (SIMD<double,N> a)
+  template<int N> NG_INLINE SIMD<double,N> log (SIMD<double,N> a)
   {
     return SIMD<double,N>([&](int i)->double { return log(a[i]); } );
   }
 
   using std::pow;
-  template<int N> inline SIMD<double,N> pow (SIMD<double,N> a, double x)
+  template<int N> NG_INLINE SIMD<double,N> pow (SIMD<double,N> a, double x)
   {
     return SIMD<double,N>([&](int i)->double { return pow(a[i],x); } );
   }
 
   using std::sin;
-  template<int N> inline SIMD<double,N> sin (SIMD<double,N> a)
+  template<int N> NG_INLINE SIMD<double,N> sin (SIMD<double,N> a)
   {
     return SIMD<double,N>([&](int i)->double { return sin(a[i]); } );
   }
 
   using std::cos;
-  template<int N> inline SIMD<double,N> cos (SIMD<double,N> a)
+  template<int N> NG_INLINE SIMD<double,N> cos (SIMD<double,N> a)
   {
     return SIMD<double,N>([&](int i)->double { return cos(a[i]); } );
   }
 
   using std::tan;
-  template<int N> inline SIMD<double,N> tan (SIMD<double,N> a)
+  template<int N> NG_INLINE SIMD<double,N> tan (SIMD<double,N> a)
   {
     return SIMD<double,N>([&](int i)->double { return tan(a[i]); } );
   }
 
   using std::atan;
-  template<int N> inline SIMD<double,N> atan (SIMD<double,N> a)
+  template<int N> NG_INLINE SIMD<double,N> atan (SIMD<double,N> a)
   {
     return SIMD<double,N>([&](int i)->double { return atan(a[i]); } );
   }
@@ -216,39 +216,39 @@ using std::fabs;
       data = *p;
     }
 
-    inline operator double() const { return data; }
-    inline double operator[] (int i) const { return ((double*)(&data))[i]; }
-    inline double Data() const { return data; }
-    inline double & Data() { return data; }
+    NG_INLINE operator double() const { return data; }
+    NG_INLINE double operator[] (int i) const { return ((double*)(&data))[i]; }
+    NG_INLINE double Data() const { return data; }
+    NG_INLINE double & Data() { return data; }
 
-    inline SIMD<double,1> &operator+= (SIMD<double,1> b) { data+=b.Data(); return *this; }
-    inline SIMD<double,1> &operator-= (SIMD<double,1> b) { data-=b.Data(); return *this; }
-    inline SIMD<double,1> &operator*= (SIMD<double,1> b) { data*=b.Data(); return *this; }
-    inline SIMD<double,1> &operator/= (SIMD<double,1> b) { data/=b.Data(); return *this; }
+    NG_INLINE SIMD<double,1> &operator+= (SIMD<double,1> b) { data+=b.Data(); return *this; }
+    NG_INLINE SIMD<double,1> &operator-= (SIMD<double,1> b) { data-=b.Data(); return *this; }
+    NG_INLINE SIMD<double,1> &operator*= (SIMD<double,1> b) { data*=b.Data(); return *this; }
+    NG_INLINE SIMD<double,1> &operator/= (SIMD<double,1> b) { data/=b.Data(); return *this; }
 
   };
 
-  inline SIMD<double,1> operator+ (SIMD<double,1> a, SIMD<double,1> b) { return a.Data()+b.Data(); }
-  inline SIMD<double,1> operator- (SIMD<double,1> a, SIMD<double,1> b) { return a.Data()-b.Data(); }
-  inline SIMD<double,1> operator- (SIMD<double,1> a) { return -a.Data(); }
-  inline SIMD<double,1> operator* (SIMD<double,1> a, SIMD<double,1> b) { return a.Data()*b.Data(); }
-  inline SIMD<double,1> operator/ (SIMD<double,1> a, SIMD<double,1> b) { return a.Data()/b.Data(); }
+  NG_INLINE SIMD<double,1> operator+ (SIMD<double,1> a, SIMD<double,1> b) { return a.Data()+b.Data(); }
+  NG_INLINE SIMD<double,1> operator- (SIMD<double,1> a, SIMD<double,1> b) { return a.Data()-b.Data(); }
+  NG_INLINE SIMD<double,1> operator- (SIMD<double,1> a) { return -a.Data(); }
+  NG_INLINE SIMD<double,1> operator* (SIMD<double,1> a, SIMD<double,1> b) { return a.Data()*b.Data(); }
+  NG_INLINE SIMD<double,1> operator/ (SIMD<double,1> a, SIMD<double,1> b) { return a.Data()/b.Data(); }
 
-  inline SIMD<double,1> sqrt (SIMD<double,1> a) { return std::sqrt(a.Data()); }
-  inline SIMD<double,1> fabs (SIMD<double,1> a) { return std::fabs(a.Data()); }
-  inline SIMD<double,1> L2Norm2 (SIMD<double,1> a) { return a.Data()*a.Data(); }
-  inline SIMD<double,1> Trans (SIMD<double,1> a) { return a; }
-  inline SIMD<double,1> IfPos (SIMD<double,1> a, SIMD<double,1> b, SIMD<double,1> c)
+  NG_INLINE SIMD<double,1> sqrt (SIMD<double,1> a) { return std::sqrt(a.Data()); }
+  NG_INLINE SIMD<double,1> fabs (SIMD<double,1> a) { return std::fabs(a.Data()); }
+  NG_INLINE SIMD<double,1> L2Norm2 (SIMD<double,1> a) { return a.Data()*a.Data(); }
+  NG_INLINE SIMD<double,1> Trans (SIMD<double,1> a) { return a; }
+  NG_INLINE SIMD<double,1> IfPos (SIMD<double,1> a, SIMD<double,1> b, SIMD<double,1> c)
   {
     return (a.Data() > 0) ? b : c;
   }
 
-  inline double HSum (SIMD<double,1> sd)
+  NG_INLINE double HSum (SIMD<double,1> sd)
   {
     return sd.Data();
   }
 
-  inline auto HSum (SIMD<double,1> sd1, SIMD<double,1> sd2)
+  NG_INLINE auto HSum (SIMD<double,1> sd1, SIMD<double,1> sd2)
   {
     return std::make_tuple(sd1.Data(), sd2.Data());
   }
@@ -291,48 +291,48 @@ using std::fabs;
       data = _mm256_loadu_pd(p);
     }
 
-    inline operator __m256d() const { return data; }
-    inline double operator[] (int i) const { return ((double*)(&data))[i]; }
-    inline __m256d Data() const { return data; }
-    inline __m256d & Data() { return data; }
+    NG_INLINE operator __m256d() const { return data; }
+    NG_INLINE double operator[] (int i) const { return ((double*)(&data))[i]; }
+    NG_INLINE __m256d Data() const { return data; }
+    NG_INLINE __m256d & Data() { return data; }
 
-    inline SIMD<double,4> &operator+= (SIMD<double,4> b) { data+=b.Data(); return *this; }
-    inline SIMD<double,4> &operator-= (SIMD<double,4> b) { data-=b.Data(); return *this; }
-    inline SIMD<double,4> &operator*= (SIMD<double,4> b) { data*=b.Data(); return *this; }
-    inline SIMD<double,4> &operator/= (SIMD<double,4> b) { data/=b.Data(); return *this; }
+    NG_INLINE SIMD<double,4> &operator+= (SIMD<double,4> b) { data+=b.Data(); return *this; }
+    NG_INLINE SIMD<double,4> &operator-= (SIMD<double,4> b) { data-=b.Data(); return *this; }
+    NG_INLINE SIMD<double,4> &operator*= (SIMD<double,4> b) { data*=b.Data(); return *this; }
+    NG_INLINE SIMD<double,4> &operator/= (SIMD<double,4> b) { data/=b.Data(); return *this; }
 
   };
 
-  inline SIMD<double,4> operator+ (SIMD<double,4> a, SIMD<double,4> b) { return a.Data()+b.Data(); }
-  inline SIMD<double,4> operator- (SIMD<double,4> a, SIMD<double,4> b) { return a.Data()-b.Data(); }
-  inline SIMD<double,4> operator- (SIMD<double,4> a) { return -a.Data(); }
-  inline SIMD<double,4> operator* (SIMD<double,4> a, SIMD<double,4> b) { return a.Data()*b.Data(); }
-  inline SIMD<double,4> operator/ (SIMD<double,4> a, SIMD<double,4> b) { return a.Data()/b.Data(); }
+  NG_INLINE SIMD<double,4> operator+ (SIMD<double,4> a, SIMD<double,4> b) { return a.Data()+b.Data(); }
+  NG_INLINE SIMD<double,4> operator- (SIMD<double,4> a, SIMD<double,4> b) { return a.Data()-b.Data(); }
+  NG_INLINE SIMD<double,4> operator- (SIMD<double,4> a) { return -a.Data(); }
+  NG_INLINE SIMD<double,4> operator* (SIMD<double,4> a, SIMD<double,4> b) { return a.Data()*b.Data(); }
+  NG_INLINE SIMD<double,4> operator/ (SIMD<double,4> a, SIMD<double,4> b) { return a.Data()/b.Data(); }
 
-  inline SIMD<double,4> sqrt (SIMD<double,4> a) { return _mm256_sqrt_pd(a.Data()); }
-  inline SIMD<double,4> fabs (SIMD<double,4> a) { return _mm256_max_pd(a.Data(), -a.Data()); }
-  inline SIMD<double,4> L2Norm2 (SIMD<double,4> a) { return a.Data()*a.Data(); }
-  inline SIMD<double,4> Trans (SIMD<double,4> a) { return a; }
-  inline SIMD<double,4> IfPos (SIMD<double,4> a, SIMD<double,4> b, SIMD<double,4> c)
+  NG_INLINE SIMD<double,4> sqrt (SIMD<double,4> a) { return _mm256_sqrt_pd(a.Data()); }
+  NG_INLINE SIMD<double,4> fabs (SIMD<double,4> a) { return _mm256_max_pd(a.Data(), -a.Data()); }
+  NG_INLINE SIMD<double,4> L2Norm2 (SIMD<double,4> a) { return a.Data()*a.Data(); }
+  NG_INLINE SIMD<double,4> Trans (SIMD<double,4> a) { return a; }
+  NG_INLINE SIMD<double,4> IfPos (SIMD<double,4> a, SIMD<double,4> b, SIMD<double,4> c)
   {
     auto cp = _mm256_cmp_pd (a.Data(), _mm256_setzero_pd(), _CMP_GT_OS);
     return _mm256_blendv_pd(c.Data(), b.Data(), cp);
   }
 
-  inline double HSum (SIMD<double,4> sd)
+  NG_INLINE double HSum (SIMD<double,4> sd)
   {
     __m128d hv = _mm_add_pd (_mm256_extractf128_pd(sd.Data(),0), _mm256_extractf128_pd(sd.Data(),1));
     return _mm_cvtsd_f64 (_mm_hadd_pd (hv, hv));
   }
 
-  inline auto HSum (SIMD<double,4> sd1, SIMD<double,4> sd2)
+  NG_INLINE auto HSum (SIMD<double,4> sd1, SIMD<double,4> sd2)
   {
     __m256d hv = _mm256_hadd_pd(sd1.Data(), sd2.Data());
     __m128d hv2 = _mm_add_pd (_mm256_extractf128_pd(hv,0), _mm256_extractf128_pd(hv,1));
     return std::make_tuple(_mm_cvtsd_f64 (hv2),  _mm_cvtsd_f64(_mm_shuffle_pd (hv2, hv2, 3)));
   }
 
-  inline SIMD<double,4> HSum (SIMD<double,4> v1, SIMD<double,4> v2, SIMD<double,4> v3, SIMD<double,4> v4)
+  NG_INLINE SIMD<double,4> HSum (SIMD<double,4> v1, SIMD<double,4> v2, SIMD<double,4> v3, SIMD<double,4> v4)
   {
     __m256d hsum1 = _mm256_hadd_pd (v1.Data(), v2.Data());
     __m256d hsum2 = _mm256_hadd_pd (v3.Data(), v4.Data());
@@ -382,54 +382,54 @@ using std::fabs;
       data = _mm512_loadu_pd(p);
     }
 
-    inline operator __m512d() const { return data; }
-    inline double operator[] (int i) const { return ((double*)(&data))[i]; }
-    inline __m512d Data() const { return data; }
-    inline __m512d & Data() { return data; }
+    NG_INLINE operator __m512d() const { return data; }
+    NG_INLINE double operator[] (int i) const { return ((double*)(&data))[i]; }
+    NG_INLINE __m512d Data() const { return data; }
+    NG_INLINE __m512d & Data() { return data; }
 
-    inline SIMD<double,8> &operator+= (SIMD<double,8> b) { data+=b.Data(); return *this; }
-    inline SIMD<double,8> &operator-= (SIMD<double,8> b) { data-=b.Data(); return *this; }
-    inline SIMD<double,8> &operator*= (SIMD<double,8> b) { data*=b.Data(); return *this; }
-    inline SIMD<double,8> &operator/= (SIMD<double,8> b) { data/=b.Data(); return *this; }
+    NG_INLINE SIMD<double,8> &operator+= (SIMD<double,8> b) { data+=b.Data(); return *this; }
+    NG_INLINE SIMD<double,8> &operator-= (SIMD<double,8> b) { data-=b.Data(); return *this; }
+    NG_INLINE SIMD<double,8> &operator*= (SIMD<double,8> b) { data*=b.Data(); return *this; }
+    NG_INLINE SIMD<double,8> &operator/= (SIMD<double,8> b) { data/=b.Data(); return *this; }
 
   };
 
-  inline SIMD<double,8> operator- (SIMD<double,8> a) { return _mm512_sub_pd(_mm512_setzero_pd(), a.Data()); }
+  NG_INLINE SIMD<double,8> operator- (SIMD<double,8> a) { return _mm512_sub_pd(_mm512_setzero_pd(), a.Data()); }
 
-  inline SIMD<double,8> operator+ (SIMD<double,8> a, SIMD<double,8> b) { return _mm512_add_pd(a.Data(),b.Data()); }
-  inline SIMD<double,8> operator- (SIMD<double,8> a, SIMD<double,8> b) { return _mm512_sub_pd(a.Data(),b.Data()); }
-  inline SIMD<double,8> operator* (SIMD<double,8> a, SIMD<double,8> b) { return _mm512_mul_pd(a.Data(),b.Data()); }
-  inline SIMD<double,8> operator/ (SIMD<double,8> a, SIMD<double,8> b) { return _mm512_div_pd(a.Data(),b.Data()); }
+  NG_INLINE SIMD<double,8> operator+ (SIMD<double,8> a, SIMD<double,8> b) { return _mm512_add_pd(a.Data(),b.Data()); }
+  NG_INLINE SIMD<double,8> operator- (SIMD<double,8> a, SIMD<double,8> b) { return _mm512_sub_pd(a.Data(),b.Data()); }
+  NG_INLINE SIMD<double,8> operator* (SIMD<double,8> a, SIMD<double,8> b) { return _mm512_mul_pd(a.Data(),b.Data()); }
+  NG_INLINE SIMD<double,8> operator/ (SIMD<double,8> a, SIMD<double,8> b) { return _mm512_div_pd(a.Data(),b.Data()); }
 
-  inline SIMD<double,8> sqrt (SIMD<double,8> a) { return _mm512_sqrt_pd(a.Data()); }
-  inline SIMD<double,8> fabs (SIMD<double,8> a) { return _mm512_max_pd(a.Data(), -a.Data()); }
-  inline SIMD<double,8> L2Norm2 (SIMD<double,8> a) { return a.Data()*a.Data(); }
-  inline SIMD<double,8> Trans (SIMD<double,8> a) { return a; }
-  inline SIMD<double,8> IfPos (SIMD<double,8> a, SIMD<double,8> b, SIMD<double,8> c)
+  NG_INLINE SIMD<double,8> sqrt (SIMD<double,8> a) { return _mm512_sqrt_pd(a.Data()); }
+  NG_INLINE SIMD<double,8> fabs (SIMD<double,8> a) { return _mm512_max_pd(a.Data(), -a.Data()); }
+  NG_INLINE SIMD<double,8> L2Norm2 (SIMD<double,8> a) { return a.Data()*a.Data(); }
+  NG_INLINE SIMD<double,8> Trans (SIMD<double,8> a) { return a; }
+  NG_INLINE SIMD<double,8> IfPos (SIMD<double,8> a, SIMD<double,8> b, SIMD<double,8> c)
   {
     auto cp = _mm512_cmp_pd_mask (a.Data(), _mm512_setzero_pd(), _MM_CMPINT_GT);
     return _mm512_mask_blend_pd(cp, c.Data(), b.Data());
   }
 
 
-  template<> inline auto FMA (SIMD<double,8> a, SIMD<double,8> b, SIMD<double,8> c)
+  template<> NG_INLINE auto FMA (SIMD<double,8> a, SIMD<double,8> b, SIMD<double,8> c)
   {
     return _mm512_fmadd_pd (a.Data(), b.Data(), c.Data());
   }
 
-  inline double HSum (SIMD<double,8> sd)
+  NG_INLINE double HSum (SIMD<double,8> sd)
   {
     SIMD<double,4> low = _mm512_extractf64x4_pd(sd.Data(),0);
     SIMD<double,4> high = _mm512_extractf64x4_pd(sd.Data(),1);
     return HSum(low)+HSum(high);
   }
 
-  inline auto HSum (SIMD<double,8> sd1, SIMD<double,8> sd2)
+  NG_INLINE auto HSum (SIMD<double,8> sd1, SIMD<double,8> sd2)
   {
     return std::make_tuple(HSum(sd1), HSum(sd2));
   }
 
-  inline SIMD<double,4> HSum (SIMD<double,8> v1, SIMD<double,8> v2, SIMD<double,8> v3, SIMD<double,8> v4)
+  NG_INLINE SIMD<double,4> HSum (SIMD<double,8> v1, SIMD<double,8> v2, SIMD<double,8> v3, SIMD<double,8> v4)
   {
     SIMD<double,4> high1 = _mm512_extractf64x4_pd(v1.Data(),1);
     SIMD<double,4> high2 = _mm512_extractf64x4_pd(v2.Data(),1);
@@ -490,48 +490,48 @@ using std::fabs;
     SIMD<T> & Get() { return NR==0 ? v0 : v1; }
   };
 
-  template <int D> inline MultiSIMD<D,double> operator+ (MultiSIMD<D,double> a, MultiSIMD<D,double> b)
+  template <int D> NG_INLINE MultiSIMD<D,double> operator+ (MultiSIMD<D,double> a, MultiSIMD<D,double> b)
   { return MultiSIMD<D,double> (a.Head()+b.Head(), a.Tail()+b.Tail()); }
-  template <int D> inline MultiSIMD<D,double> operator+ (double a, MultiSIMD<D,double> b)
+  template <int D> NG_INLINE MultiSIMD<D,double> operator+ (double a, MultiSIMD<D,double> b)
   { return MultiSIMD<D,double> (a+b.Head(), a+b.Tail()); }
-  template <int D> inline MultiSIMD<D,double> operator+ (MultiSIMD<D,double> b, double a)
+  template <int D> NG_INLINE MultiSIMD<D,double> operator+ (MultiSIMD<D,double> b, double a)
   { return MultiSIMD<D,double> (a+b.Head(), a+b.Tail()); }
 
-  template <int D> inline MultiSIMD<D,double> operator- (MultiSIMD<D,double> a, MultiSIMD<D,double> b)
+  template <int D> NG_INLINE MultiSIMD<D,double> operator- (MultiSIMD<D,double> a, MultiSIMD<D,double> b)
   { return MultiSIMD<D,double> (a.Head()-b.Head(), a.Tail()-b.Tail()); }
-  template <int D> inline MultiSIMD<D,double> operator- (double a, MultiSIMD<D,double> b)
+  template <int D> NG_INLINE MultiSIMD<D,double> operator- (double a, MultiSIMD<D,double> b)
   { return MultiSIMD<D,double> (a-b.Head(), a-b.Tail()); }
-  template <int D> inline MultiSIMD<D,double> operator- (MultiSIMD<D,double> b, double a)
+  template <int D> NG_INLINE MultiSIMD<D,double> operator- (MultiSIMD<D,double> b, double a)
   { return MultiSIMD<D,double> (b.Head()-a, b.Tail()-a); }
-  template <int D> inline MultiSIMD<D,double> operator- (MultiSIMD<D,double> a)
+  template <int D> NG_INLINE MultiSIMD<D,double> operator- (MultiSIMD<D,double> a)
   { return MultiSIMD<D,double> (-a.Head(), -a.Tail()); }
-  template <int D> inline MultiSIMD<D,double> operator* (MultiSIMD<D,double> a, MultiSIMD<D,double> b)
+  template <int D> NG_INLINE MultiSIMD<D,double> operator* (MultiSIMD<D,double> a, MultiSIMD<D,double> b)
   { return MultiSIMD<D,double> (a.Head()*b.Head(), a.Tail()*b.Tail()); }
-  template <int D> inline MultiSIMD<D,double> operator/ (MultiSIMD<D,double> a, MultiSIMD<D,double> b)
+  template <int D> NG_INLINE MultiSIMD<D,double> operator/ (MultiSIMD<D,double> a, MultiSIMD<D,double> b)
   { return MultiSIMD<D,double> (a.Head()/b.Head(), a.Tail()/b.Tail()); }
-  template <int D> inline MultiSIMD<D,double> operator* (double a, MultiSIMD<D,double> b)
+  template <int D> NG_INLINE MultiSIMD<D,double> operator* (double a, MultiSIMD<D,double> b)
   { return MultiSIMD<D,double> ( a*b.Head(), a*b.Tail()); }
-  template <int D> inline MultiSIMD<D,double> operator* (MultiSIMD<D,double> b, double a)
+  template <int D> NG_INLINE MultiSIMD<D,double> operator* (MultiSIMD<D,double> b, double a)
   { return MultiSIMD<D,double> ( a*b.Head(), a*b.Tail()); }
 
-  template <int D> inline MultiSIMD<D,double> & operator+= (MultiSIMD<D,double> & a, MultiSIMD<D,double> b)
+  template <int D> NG_INLINE MultiSIMD<D,double> & operator+= (MultiSIMD<D,double> & a, MultiSIMD<D,double> b)
   { a.Head()+=b.Head(); a.Tail()+=b.Tail(); return a; }
-  template <int D> inline MultiSIMD<D,double> operator-= (MultiSIMD<D,double> & a, double b)
+  template <int D> NG_INLINE MultiSIMD<D,double> operator-= (MultiSIMD<D,double> & a, double b)
   { a.Head()-=b; a.Tail()-=b; return a; }
-  template <int D> inline MultiSIMD<D,double> operator-= (MultiSIMD<D,double> & a, MultiSIMD<D,double> b)
+  template <int D> NG_INLINE MultiSIMD<D,double> operator-= (MultiSIMD<D,double> & a, MultiSIMD<D,double> b)
   { a.Head()-=b.Head(); a.Tail()-=b.Tail(); return a; }
-  template <int D> inline MultiSIMD<D,double> & operator*= (MultiSIMD<D,double> & a, MultiSIMD<D,double> b)
+  template <int D> NG_INLINE MultiSIMD<D,double> & operator*= (MultiSIMD<D,double> & a, MultiSIMD<D,double> b)
   { a.Head()*=b.Head(); a.Tail()*=b.Tail(); return a; }
-  template <int D> inline MultiSIMD<D,double> & operator*= (MultiSIMD<D,double> & a, double b)
+  template <int D> NG_INLINE MultiSIMD<D,double> & operator*= (MultiSIMD<D,double> & a, double b)
   { a.Head()*=b; a.Tail()*=b; return a; }
-  // inline MultiSIMD<double> operator/= (MultiSIMD<double> & a, MultiSIMD<double> b) { return a.Data()/=b.Data(); }
+  // NG_INLINE MultiSIMD<double> operator/= (MultiSIMD<double> & a, MultiSIMD<double> b) { return a.Data()/=b.Data(); }
 
-  inline SIMD<double> HVSum (SIMD<double> a) { return a; }
+  NG_INLINE SIMD<double> HVSum (SIMD<double> a) { return a; }
   template <int D>
-  inline SIMD<double> HVSum (MultiSIMD<D,double> a) { return a.Head() + HVSum(a.Tail()); }
+  NG_INLINE SIMD<double> HVSum (MultiSIMD<D,double> a) { return a.Head() + HVSum(a.Tail()); }
 
-  template <int D> inline double HSum (MultiSIMD<D,double> a) { return HSum(HVSum(a)); }
-  template <int D> inline auto HSum (MultiSIMD<D,double> a, MultiSIMD<D,double> b)
+  template <int D> NG_INLINE double HSum (MultiSIMD<D,double> a) { return HSum(HVSum(a)); }
+  template <int D> NG_INLINE auto HSum (MultiSIMD<D,double> a, MultiSIMD<D,double> b)
   { return HSum(HVSum(a), HVSum(b)); }
 
   template <int D, typename T>
