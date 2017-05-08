@@ -4836,12 +4836,14 @@ void (*glGenBuffers) (GLsizei a, GLuint *b);
 void (*glBufferData) (GLenum a, GLsizeiptr b, const GLvoid *c, GLenum d);
 void (*glBufferSubData) (GLenum a, GLintptr b, GLsizeiptr c, const GLvoid *d);
 DLL_HEADER void LoadOpenGLFunctionPointers() {
+#ifdef USE_BUFFERS
   glBindBuffer = (decltype(glBindBuffer)) wglGetProcAddress("glBindBuffer");
   glBufferSubData = (decltype(glBufferSubData)) wglGetProcAddress("glBufferSubData");
   glBufferData = (decltype(glBufferData)) wglGetProcAddress("glBufferData");
   glDeleteBuffers = (decltype(glDeleteBuffers)) wglGetProcAddress("glDeleteBuffers");
   glGenBuffers = (decltype(glGenBuffers)) wglGetProcAddress("glGenBuffers");
   if(!glBindBuffer) throw std::runtime_error("Could not load OpenGL functions!");
+#endif
 }
 #else  // WIN32
 DLL_HEADER void LoadOpenGLFunctionPointers() { }
