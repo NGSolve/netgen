@@ -34,6 +34,7 @@ namespace netgen
 namespace netgen
 {
   Flags parameters;
+  DLL_HEADER extern bool netgen_executable_started;
 }
  
 
@@ -70,6 +71,7 @@ bool shellmode = false;
 
 int main(int argc, char ** argv)
 {
+  netgen::netgen_executable_started = true;
 
 #ifdef PARALLEL
   int mpi_required = MPI_THREAD_MULTIPLE;
