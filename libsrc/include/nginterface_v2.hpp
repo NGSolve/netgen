@@ -184,6 +184,7 @@ namespace netgen
   public:
     Ng_Vertices vertices;
     Ng_Edges edges;
+    int surface_el;  // -1 if face not on surface
   };
 
 
