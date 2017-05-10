@@ -1,4 +1,11 @@
-set(netgen_sources demoview.cpp ngappinit.cpp onetcl.cpp parallelfunc.cpp ngpkg.cpp ../libsrc/stlgeom/stlpkg.cpp ../libsrc/visualization/visualpkg.cpp ../libsrc/csg/csgpkg.cpp ../libsrc/geom2d/geom2dpkg.cpp ../libsrc/occ/occpkg.cpp ../libsrc/occ/vsocc.cpp)
+set(gui_sources
+    gui.cpp ngpkg.cpp demoview.cpp parallelfunc.cpp
+    ../libsrc/stlgeom/stlpkg.cpp ../libsrc/visualization/visualpkg.cpp
+    ../libsrc/csg/csgpkg.cpp ../libsrc/geom2d/geom2dpkg.cpp
+    ../libsrc/occ/occpkg.cpp ../libsrc/occ/vsocc.cpp
+  )
+
+set(netgen_sources ngappinit.cpp onetcl.cpp )
 
 if(USE_GUI)
     if(WIN32)
@@ -10,21 +17,26 @@ if(USE_GUI)
     endif(WIN32)
 
     add_executable(netgen ${netgen_sources})
-    target_link_libraries( netgen nglib ${ZLIB_LIBRARIES} ${LIBTOGL} ${TK_LIBRARY} ${TCL_LIBRARY} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_X11_LIB} ${OCC_LIBRARIES})
-    add_library(gui SHARED ${netgen_sources} gui.cpp)
-    target_link_libraries( gui nglib ${ZLIB_LIBRARIES} ${LIBTOGL} ${TK_LIBRARY} ${TCL_LIBRARY} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_X11_LIB} ${OCC_LIBRARIES})
+    add_library(gui SHARED ${gui_sources})
+
+    target_link_libraries( netgen nglib gui ${ZLIB_LIBRARIES} ${TK_LIBRARY} ${TCL_LIBRARY} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_X11_LIB} ${OCC_LIBRARIES})
+    target_link_libraries( gui PUBLIC nglib ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_X11_LIB} ${OCC_LIBRARIES} )
+    target_link_libraries( gui PRIVATE ${LIBTOGL})
+
     if(NOT WIN32)
       target_link_libraries( netgen mesh stlvis stl geom2dvis interface geom2d csg stl visual csgvis )
-      target_link_libraries( gui mesh stlvis stl geom2dvis interface geom2d csg stl visual csgvis )
+      target_link_libraries( gui PUBLIC mesh stlvis stl geom2dvis interface geom2d csg stl visual csgvis )
     endif(NOT WIN32)
 
     install(TARGETS netgen    ${ng_install_dir})
-    install(TARGETS gui  DESTINATION ${PYTHON_PACKAGES_INSTALL_DIR}/netgen)
-    set_target_properties( gui PROPERTIES PREFIX "") # name output file gui.so instead of libgui.so
+    install(TARGETS gui ${ng_install_dir})
 
     if(APPLE)
         set_target_properties(netgen PROPERTIES OUTPUT_NAME netgen)
     endif(APPLE)
+    if(WIN32)
+        set_target_properties( gui PROPERTIES OUTPUT_NAME libgui )
+    endif(WIN32)
 
 endif(USE_GUI)
 
