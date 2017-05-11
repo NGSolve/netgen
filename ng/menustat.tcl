@@ -421,6 +421,7 @@ set videoactive 0
             # puts "error: $result"
         } 
 
+        after cancel { timer2 }
         Ng_Exit; 
         destroy . 
     }
