@@ -16,12 +16,13 @@ if(USE_GUI)
       set_directory_properties(PROPERTIES RULE_LAUNCH_COMPILE "")
     endif(WIN32)
 
-    add_executable(netgen ${netgen_sources})
     add_library(gui SHARED ${gui_sources})
+    add_executable(netgen ${netgen_sources})
 
-    target_link_libraries( netgen nglib gui ${ZLIB_LIBRARIES} ${TK_LIBRARY} ${TCL_LIBRARY} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_X11_LIB} ${OCC_LIBRARIES})
-    target_link_libraries( gui PUBLIC nglib ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_X11_LIB} ${OCC_LIBRARIES} )
+    target_link_libraries( gui PUBLIC nglib ${TK_LIBRARY} ${TCL_LIBRARY} ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_X11_LIB} ${OCC_LIBRARIES} )
     target_link_libraries( gui PRIVATE ${LIBTOGL})
+
+    target_link_libraries( netgen nglib gui )
 
     if(NOT WIN32)
       target_link_libraries( netgen mesh stlvis stl geom2dvis interface geom2d csg stl visual csgvis )
