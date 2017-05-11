@@ -329,7 +329,7 @@ namespace netgen
       RangeCheck (i+1);
 #endif
 
-      data[i] = data[size-1];
+      data[i] = std::move(data[size-1]);
       size--;
       //    DeleteElement (i+1);
     }
@@ -342,7 +342,7 @@ namespace netgen
       RangeCheck (i);
 #endif
 
-      data[i-1] = data[size-1];
+      data[i-1] = std::move(data[size-1]);
       size--;
     }
 
