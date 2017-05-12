@@ -39,3 +39,4 @@ if(USE_PYTHON)
 endif(USE_PYTHON)
 
 install(TARGETS nglib ${ng_install_dir})
+install(FILES nglib.h DESTINATION ${INCDIR}/include COMPONENT netgen_devel)
