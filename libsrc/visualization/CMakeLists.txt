@@ -1,8 +1,6 @@
 add_definitions(-DNGINTERFACE_EXPORTS)
 install(FILES soldata.hpp DESTINATION ${INCDIR} COMPONENT netgen_devel )
 
-# AM_CPPFLAGS =  $(MPI_INCLUDES) -I$(top_srcdir)/libsrc/include  -DOPENGL -D$(TOGL_WINDOWINGSYSTEM) $(OCCFLAGS) $(TCL_INCLUDES)
-
 if(USE_GUI)
     set( LIB_VISUAL_SOURCES meshdoc.cpp mvdraw.cpp vsfieldlines.cpp vsmesh.cpp vssolution.cpp importsolution.cpp )
 else(USE_GUI)

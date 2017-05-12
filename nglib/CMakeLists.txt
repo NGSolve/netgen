@@ -38,16 +38,4 @@ if(USE_PYTHON)
     target_link_libraries(nglib ${PYTHON_LIBRARIES})
 endif(USE_PYTHON)
 
-# if(NOT WIN32)
-#     add_executable(ng_vol ng_vol.cpp ${nglib_objects})
-#     target_link_libraries( ng_vol nglib ${OCC_LIBRARIES} ${MPI_CXX_LIBRARIES} )
-#     target_link_libraries( ng_vol nglib interface geom2d csg stl occ mesh )
-# 
-#     add_executable(ng_stl ng_stl.cpp ${nglib_objects})
-#     target_link_libraries( ng_stl nglib ${OCC_LIBRARIES} ${OCC_OCAF_LIBRARIES} ${MPI_CXX_LIBRARIES} )
-#     target_link_libraries( ng_stl nglib interface geom2d csg stl occ mesh )
-# 
-#     install(TARGETS nglib ng_vol ng_stl ${ng_install_dir})
-# endif(NOT WIN32)
-
 install(TARGETS nglib ${ng_install_dir})

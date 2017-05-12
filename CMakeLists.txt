@@ -37,7 +37,6 @@ string(TIMESTAMP NETGEN_VERSION_PATCH "%y%U%w" )
 set(NETGEN_VERSION "${NETGEN_VERSION_MAJOR}.${NETGEN_VERSION_MINOR}-dev")
 set(PACKAGE_VERSION "${NETGEN_VERSION_MAJOR}.${NETGEN_VERSION_MINOR}-${NETGEN_VERSION_PATCH}")
 set(CPACK_PACKAGE_VERSION "${PACKAGE_VERSION}")
-# set(CPACK_DEBIAN_PACKAGE_VERSION "${PACKAGE_VERSION}"
 
 
 #######################################################################
@@ -133,8 +132,6 @@ if(WIN32)
     get_WIN32_WINNT(ver)
     add_definitions(-D_WIN32_WINNT=${ver} -DWNT -DWNT_WINDOW -DNOMINMAX)
     set(CMAKE_MFC_FLAG 0)
-#     add_definitions(-DNGINTERFACE_EXPORTS)
-#     add_definitions(-DNGLIB_EXPORTS)
     add_definitions(-DMSVC_EXPRESS -D_CRT_SECURE_NO_WARNINGS -DHAVE_STRUCT_TIMESPEC)
     # build convenience (aka object) libraries in windows)
     set(NG_LIB_TYPE OBJECT)
@@ -145,9 +142,7 @@ else(WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 endif(WIN32)
 if(APPLE)
-#    set(MACOSX_BUNDLE ON)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
-#     set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
 endif(APPLE)
 
 #######################################################################
