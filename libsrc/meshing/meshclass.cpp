@@ -5758,8 +5758,8 @@ namespace netgen
       {
         int olds = materials.Size();
         materials.SetSize (domnr);
-        for (int i = olds; i < domnr; i++)
-          materials[i] = 0;
+        for (int i = olds; i < domnr-1; i++)
+          materials[i] = new string("default");
       }
     /*
     materials.Elem(domnr) = new char[strlen(mat)+1];
@@ -5772,7 +5772,7 @@ namespace netgen
   {
     if (domnr <= materials.Size())
       return *materials.Get(domnr);
-    static string emptystring;
+    static string emptystring("default");
     return emptystring;
   }
 

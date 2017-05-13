@@ -594,7 +594,10 @@ namespace netgen
     ///
     const string & GetMaterial (int domnr) const;
     const string * GetMaterialPtr (int domnr) const // 1-based
-    { return domnr <= materials.Size() ? materials.Get(domnr) : nullptr; }
+    {
+      static string defaultmat = "default";
+      return domnr <= materials.Size() ? materials.Get(domnr) : &defaultmat;
+    }
     
     DLL_HEADER void SetNBCNames ( int nbcn );
 
