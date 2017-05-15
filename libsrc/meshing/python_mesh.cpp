@@ -13,6 +13,7 @@ using namespace netgen;
 
 namespace netgen
 {
+  extern bool netgen_executable_started;
   extern shared_ptr<NetgenGeometry> ng_geometry;
 }
 
@@ -49,6 +50,8 @@ static Transformation<3> global_trafo(Vec<3> (0,0,0));
 
 DLL_HEADER void ExportNetgenMeshing(py::module &m) 
 {
+  m.attr("_netgen_executable_started") = py::cast(netgen::netgen_executable_started);
+
   py::class_<NGDummyArgument>(m, "NGDummyArgument")
     .def("__bool__", []( NGDummyArgument &self ) { return false; } )
     ;
