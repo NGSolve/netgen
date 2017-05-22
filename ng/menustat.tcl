@@ -352,7 +352,7 @@ proc demoredraw { } {
 	set file [tk_getSaveFile -filetypes $types]
 #  -defaultextension ".ppm"]
 	if {$file != ""} {
-	    .ndraw Ng_SnapShot $file }
+	    Ng_SnapShot .ndraw $file }
     }
 
 
