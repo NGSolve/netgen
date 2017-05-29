@@ -11,6 +11,8 @@
 
 using namespace netgen;
 
+extern const char *ngscript[];
+
 namespace netgen
 {
   extern bool netgen_executable_started;
@@ -51,6 +53,12 @@ static Transformation<3> global_trafo(Vec<3> (0,0,0));
 DLL_HEADER void ExportNetgenMeshing(py::module &m) 
 {
   m.attr("_netgen_executable_started") = py::cast(netgen::netgen_executable_started);
+  string script;
+  const char ** hcp = ngscript;
+  while (*hcp)
+      script += *hcp++;
+
+  m.attr("_ngscript") = py::cast(script);
 
   py::class_<NGDummyArgument>(m, "NGDummyArgument")
     .def("__bool__", []( NGDummyArgument &self ) { return false; } )

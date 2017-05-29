@@ -1,23 +1,28 @@
-set(gui_sources
-    gui.cpp ngpkg.cpp demoview.cpp parallelfunc.cpp
-    ../libsrc/stlgeom/stlpkg.cpp ../libsrc/visualization/visualpkg.cpp
-    ../libsrc/csg/csgpkg.cpp ../libsrc/geom2d/geom2dpkg.cpp
-    ../libsrc/occ/occpkg.cpp ../libsrc/occ/vsocc.cpp
-  )
+if(USE_INTERNAL_TCL)
+  add_definitions(-DINTERNAL_TCL_DEFAULT=1)
+else()
+  add_definitions(-DINTERNAL_TCL_DEFAULT=0)
+endif()
 
-set(netgen_sources ngappinit.cpp onetcl.cpp )
+set(netgen_sources ngappinit.cpp onetcl.cpp)
+if(WIN32)
+    # add icon to netgen executable
+    enable_language(RC)
+    set(netgen_sources ${netgen_sources} ../windows/netgen.rc)
+    # Don't use ccache here due to incompatiblity with the resource compiler
+    set_directory_properties(PROPERTIES RULE_LAUNCH_COMPILE "")
+endif(WIN32)
 
 if(USE_GUI)
-    if(WIN32)
-      # add icon to netgen executable
-      enable_language(RC)
-      set(netgen_sources ${netgen_sources} ../windows/netgen.rc)
-      # Don't use ccache here due to incompatiblity with the resource compiler
-      set_directory_properties(PROPERTIES RULE_LAUNCH_COMPILE "")
-    endif(WIN32)
 
-    add_library(gui SHARED ${gui_sources})
-    add_executable(netgen ${netgen_sources})
+    add_library(gui SHARED
+        gui.cpp ngpkg.cpp demoview.cpp parallelfunc.cpp
+        ../libsrc/stlgeom/stlpkg.cpp ../libsrc/visualization/visualpkg.cpp
+        ../libsrc/csg/csgpkg.cpp ../libsrc/geom2d/geom2dpkg.cpp
+        ../libsrc/occ/occpkg.cpp ../libsrc/occ/vsocc.cpp
+    )
+
+    add_executable(netgen ngappinit.cpp onetcl.cpp)
 
     target_link_libraries( gui PUBLIC nglib ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_X11_LIB} ${OCC_LIBRARIES} )
     target_link_libraries( gui PRIVATE ${LIBTOGL})
@@ -38,8 +43,8 @@ if(USE_GUI)
       target_link_libraries( gui PUBLIC mesh stlvis stl geom2dvis interface geom2d csg stl visual csgvis )
     endif(NOT WIN32)
 
-    install(TARGETS netgen    ${ng_install_dir})
-    install(TARGETS gui ${ng_install_dir})
+    install(TARGETS netgen ${NG_INSTALL_DIR})
+    install(TARGETS gui ${NG_INSTALL_DIR})
 
     if(APPLE)
         set_target_properties(netgen PROPERTIES OUTPUT_NAME netgen)
@@ -59,18 +64,20 @@ if(USE_PYTHON)
         set_target_properties( ngpy PROPERTIES SUFFIX ".pyd")
         set_target_properties( ngpy PROPERTIES OUTPUT_NAME "libngpy")
     endif()
-    install(TARGETS ngpy ${ng_install_dir})
+    set_target_properties(ngpy PROPERTIES INSTALL_RPATH "${NG_RPATH_TOKEN}/../${NETGEN_PYTHON_RPATH}")
+    install(TARGETS ngpy DESTINATION ${NG_INSTALL_DIR_PYTHON}/${NG_INSTALL_SUFFIX})
 endif(USE_PYTHON)
 
 if(USE_GUI)
-  install(FILES
-      dialog.tcl menustat.tcl ngicon.tcl ng.tcl	
-      ngvisual.tcl sockets.tcl nghelp.tcl ngshell.tcl	  
-      ngtesting.tcl parameters.tcl variables.tcl csgeom.tcl stlgeom.tcl 
-      occgeom.tcl acisgeom.tcl netgen.ocf
-      DESTINATION ${ng_install_dir_bin} COMPONENT netgen)
+  if(NOT USE_INTERNAL_TCL)
+    install(FILES
+        dialog.tcl menustat.tcl ngicon.tcl ng.tcl
+        ngvisual.tcl sockets.tcl nghelp.tcl ngshell.tcl
+        ngtesting.tcl parameters.tcl variables.tcl csgeom.tcl stlgeom.tcl
+        occgeom.tcl acisgeom.tcl netgen.ocf drawing.tcl
+        DESTINATION ${NG_INSTALL_DIR_BIN} COMPONENT netgen)
+  endif()
 
   add_subdirectory(Togl2.1)
-  install(FILES drawing.tcl DESTINATION ${ng_install_dir_bin} COMPONENT netgen)
 endif(USE_GUI)
 

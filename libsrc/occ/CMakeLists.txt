@@ -10,10 +10,10 @@ add_library(occvis ${NG_LIB_TYPE} vsocc.cpp)
 if(NOT WIN32)
     target_link_libraries( occ ${OCC_LIBRARIES} ${PYTHON_LIBRARIES})
     target_link_libraries( occvis occ )
-    install( TARGETS occ occvis ${ng_install_dir})
+    install( TARGETS occ occvis ${NG_INSTALL_DIR})
 endif(NOT WIN32)
 
 install(FILES
   occgeom.hpp occmeshsurf.hpp vsocc.hpp
-  DESTINATION ${INCDIR}/occ COMPONENT netgen_devel
+  DESTINATION ${NG_INSTALL_DIR_INCLUDE}/occ COMPONENT netgen_devel
 )

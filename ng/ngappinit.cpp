@@ -191,7 +191,7 @@ int main(int argc, char ** argv)
       // parse tcl-script
       int errcode;
 
-      bool internaltcl = false;
+      bool internaltcl = INTERNAL_TCL_DEFAULT;
       if (shellmode)
         internaltcl = false;
   

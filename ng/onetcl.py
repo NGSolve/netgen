@@ -40,5 +40,6 @@ for line in tclfiles["ng.tcl"].split('\n'):
         s = ',"' + line.replace('\\', r'\\').replace('"', r'\"') + '\\n"\n'
         onetclcpp.write(s)
 
-onetclcpp.write('};'+'\n');
+onetclcpp.write(', nullptr\n');
+onetclcpp.write('};\n');
 onetclcpp.close();

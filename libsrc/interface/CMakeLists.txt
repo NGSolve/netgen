@@ -12,10 +12,10 @@ if(NOT WIN32)
     if(USE_GUI)
         target_link_libraries(interface visual)
     endif(USE_GUI)
-    install( TARGETS interface ${ng_install_dir})
+    install( TARGETS interface ${NG_INSTALL_DIR})
 endif(NOT WIN32)
 
 install(FILES
   writeuser.hpp
-  DESTINATION ${INCDIR}/interface COMPONENT netgen_devel
+  DESTINATION ${NG_INSTALL_DIR_INCLUDE}/interface COMPONENT netgen_devel
 )
