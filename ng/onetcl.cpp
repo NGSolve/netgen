@@ -1,7 +1,9 @@
 const char * ngscript[] = {""
 ,"catch {lappend auto_path $env(NETGENDIR) }\n"
 ,"catch {lappend auto_path $env(NETGENDIR)/../lib }\n"
+,"if {[catch {Ng_GetCommandLineParameter batchmode} result ]} {\n"
 ,"load libgui[info sharedlibextension] gui\n"
+,"}\n"
 ,"set batchmode [Ng_GetCommandLineParameter batchmode]\n"
 ,"if {$batchmode==\"undefined\"} {\n"
 ,"if {[catch {package require tkdnd } result ]} {\n"
@@ -5971,4 +5973,5 @@ const char * ngscript[] = {""
 ,"source startup.tcl }\n"
 ,"catch { source ${ngdir}/demoapp.tcl }\n"
 ,"catch { source ${ngdir}/dropsexp.tcl }\n"
+, nullptr
 };

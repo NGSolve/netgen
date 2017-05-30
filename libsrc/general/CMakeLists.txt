@@ -8,7 +8,7 @@ add_library(gen OBJECT
 
 set_target_properties( gen PROPERTIES POSITION_INDEPENDENT_CODE ON )
 
-install( FILES ngexception.hpp DESTINATION ${INCDIR} COMPONENT netgen_devel )
+install( FILES ngexception.hpp DESTINATION ${NG_INSTALL_DIR_INCLUDE} COMPONENT netgen_devel )
 
 install(FILES
   archive_base.hpp array.hpp autodiff.hpp autoptr.hpp bitarray.hpp
@@ -17,5 +17,5 @@ install(FILES
   optmem.hpp parthreads.hpp profiler.hpp seti.hpp sort.hpp
   spbita2d.hpp stack.hpp symbolta.hpp table.hpp template.hpp
   gzstream.h
-  DESTINATION ${INCDIR}/general COMPONENT netgen_devel
+  DESTINATION ${NG_INSTALL_DIR_INCLUDE}/general COMPONENT netgen_devel
 )

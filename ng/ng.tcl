@@ -1,7 +1,9 @@
 catch {lappend auto_path $env(NETGENDIR) }
 catch {lappend auto_path $env(NETGENDIR)/../lib }
 
-load libgui[info sharedlibextension] gui
+if {[catch {Ng_GetCommandLineParameter batchmode} result ]} {
+	load libgui[info sharedlibextension] gui
+}
 
 set batchmode [Ng_GetCommandLineParameter batchmode]
 if {$batchmode=="undefined"} {

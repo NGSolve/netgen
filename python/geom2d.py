@@ -1,5 +1,5 @@
-from libngpy._geom2d import *
-from libngpy._meshing import *
+from netgen.libngpy._geom2d import *
+from netgen.libngpy._meshing import *
 
 tmp_generate_mesh = SplineGeometry.GenerateMesh
 

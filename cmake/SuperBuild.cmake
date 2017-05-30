@@ -40,19 +40,10 @@ if(WIN32)
   endif(${CMAKE_SIZEOF_VOID_P} MATCHES 4)
 endif(WIN32)
 
-#######################################################################
-# find netgen
-if(APPLE)
-  set(INSTALL_DIR /Applications/Netgen.app CACHE PATH "Install path")
-  set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR}/Contents/Resources" CACHE INTERNAL "Prefix prepended to install directories" FORCE)
-else(APPLE)
-  set(INSTALL_DIR /opt/netgen CACHE PATH "Install path")
-  set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR}" CACHE INTERNAL "Prefix prepended to install directories" FORCE)
-endif(APPLE)
 if(UNIX)
   message("Checking for write permissions in install directory...")
-  execute_process(COMMAND mkdir -p ${INSTALL_DIR})
-  execute_process(COMMAND test -w ${INSTALL_DIR} RESULT_VARIABLE res)
+  execute_process(COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX})
+  execute_process(COMMAND test -w ${CMAKE_INSTALL_PREFIX} RESULT_VARIABLE res)
   if(res)
     message(WARNING "No write access at install directory, please set correct permissions")
   endif()
@@ -94,7 +85,7 @@ if(USE_OCC AND WIN32 AND NOT OCC_INCLUDE_DIR)
       BUILD_IN_SOURCE 1
       CONFIGURE_COMMAND ""
       BUILD_COMMAND ""
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory . ${INSTALL_DIR}
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory . ${CMAKE_INSTALL_PREFIX}
       LOG_DOWNLOAD 1
       )
     list(APPEND NETGEN_DEPENDENCIES win_download_occ)
@@ -140,10 +131,11 @@ set_vars( NETGEN_CMAKE_ARGS
   USE_NATIVE_ARCH
   USE_OCC
   USE_MPEG
-  INSTALL_DIR
+  USE_INTERNAL_TCL
   INSTALL_PROFILES
   INTEL_MIC
   CMAKE_PREFIX_PATH
+  CMAKE_INSTALL_PREFIX
   )
 
 # propagate all variables set on the command line using cmake -DFOO=BAR
@@ -166,7 +158,7 @@ endif()
 ExternalProject_Add (netgen
   DEPENDS ${NETGEN_DEPENDENCIES}
   SOURCE_DIR ${PROJECT_SOURCE_DIR}
-  CMAKE_ARGS -DUSE_SUPERBUILD=OFF ${NETGEN_CMAKE_ARGS} -DCMAKE_PREFIX_PATH=${INSTALL_DIR}
+  CMAKE_ARGS -DUSE_SUPERBUILD=OFF ${NETGEN_CMAKE_ARGS}
   INSTALL_COMMAND ""
   BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/netgen
   BUILD_COMMAND ${NETGEN_BUILD_COMMAND}
@@ -176,21 +168,21 @@ ExternalProject_Add (netgen
 # Check if the git submodules (i.e. pybind11) are up to date
 # in case, something is wrong, emit a warning but continue
  ExternalProject_Add_Step(netgen check_submodules
-   COMMAND cmake -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/check_submodules.cmake
+   COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/check_submodules.cmake
    DEPENDERS install # Steps on which this step depends
    )
 
 # Due to 'ALWAYS 1', this step is always run which also forces a build of
 # the Netgen subproject
  ExternalProject_Add_Step(netgen check_submodules1
-   COMMAND cmake -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/check_submodules.cmake
+   COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/check_submodules.cmake
    DEPENDEES configure # Steps on which this step depends
    DEPENDERS build     # Steps that depend on this step
    ALWAYS 1            # No stamp file, step always runs
    )
 
 
-install(CODE "execute_process(COMMAND cmake --build . --target install --config ${CMAKE_BUILD_TYPE} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/netgen)")
+install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} --build . --target install --config ${CMAKE_BUILD_TYPE} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/netgen)")
 
 add_custom_target(test_netgen
   ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/netgen

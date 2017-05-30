@@ -1,8 +1,7 @@
-import libngpy
-from libngpy._csg import *
-from libngpy._meshing import MeshingParameters
-from libngpy._meshing import Pnt
-from libngpy._meshing import Vec
+from netgen.libngpy._csg import *
+from netgen.libngpy._meshing import MeshingParameters
+from netgen.libngpy._meshing import Pnt
+from netgen.libngpy._meshing import Vec
 
 
 try:
