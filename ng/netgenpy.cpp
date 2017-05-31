@@ -17,6 +17,7 @@ void DLL_HEADER ExportCSGVis(py::module &m);
 void DLL_HEADER ExportGeom2d(py::module &m);
 void DLL_HEADER ExportSTL(py::module &m);
 void DLL_HEADER ExportSTLVis(py::module &m);
+void DLL_HEADER ExportNgOCC(py::module &m);
 
 PYBIND11_PLUGIN(libngpy)
 {
@@ -29,6 +30,8 @@ PYBIND11_PLUGIN(libngpy)
     ExportGeom2d(geom2d);
     py::module stl = ngpy.def_submodule("_stl", "pybind stl module");
     ExportSTL(stl);
+    py::module NgOCC = ngpy.def_submodule("_NgOCC", "pybind NgOCC module");
+    ExportNgOCC(NgOCC);
 #ifdef OPENGL
     py::module meshvis = ngpy.def_submodule("meshvis", "pybind meshvis module");
     ExportMeshVis(meshvis);

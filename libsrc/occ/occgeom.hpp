@@ -198,7 +198,7 @@ namespace netgen
       TopTools_IndexedMapOfShape fmap, emap, vmap, somap, shmap, wmap;
       Array<bool> fsingular, esingular, vsingular;
       Box<3> boundingbox;
-
+      Array<string> fnames, enames, snames;
       // Philippose - 29/01/2009
       // OpenCascade XDE Support
       // XCAF Handle to make the face colours available to the rest of

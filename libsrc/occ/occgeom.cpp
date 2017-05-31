@@ -17,6 +17,10 @@
 #include "Partition_Spliter.hxx"
 #include "BRepAlgoAPI_Fuse.hxx"
 
+#include "XSControl_WorkSession.hxx"
+#include "XSControl_TransferReader.hxx"
+#include "StepRepr_RepresentationItem.hxx"
+
 #ifndef _Standard_Version_HeaderFile
 #include <Standard_Version.hxx>
 #endif
@@ -29,6 +33,44 @@
 
 namespace netgen
 {
+void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * aReader, char * acName)
+{
+   const Handle(XSControl_WorkSession)& theSession = aReader->Reader().WS();
+   const Handle(XSControl_TransferReader)& aTransferReader =
+      theSession->TransferReader();
+
+   Handle(Standard_Transient) anEntity =
+      aTransferReader->EntityFromShapeResult(theShape, 1);
+
+   if (anEntity.IsNull()) {
+      // as just mapped
+      anEntity = aTransferReader->EntityFromShapeResult (theShape,-1);
+   }
+
+   if (anEntity.IsNull()) {
+      // as anything
+      anEntity = aTransferReader->EntityFromShapeResult (theShape,4);
+   }
+
+   if (anEntity.IsNull()) {
+      cout<<"Warning: XSInterVertex_STEPReader::ReadAttributes()\nentity not found"<<endl;
+      strcpy(acName, "none");
+   }
+   else
+   {
+      Handle(StepRepr_RepresentationItem) aReprItem;
+      aReprItem =
+         Handle(StepRepr_RepresentationItem)::DownCast(anEntity);
+
+      if (aReprItem.IsNull()) {
+         cout<<"Error: STEPReader::ReadAttributes():\nStepRepr_RepresentationItem Is NULL"<<endl;
+      }
+      else
+         strcpy(acName, aReprItem->Name()->ToCString());
+   }
+}
+
+
    void OCCGeometry :: PrintNrShapes ()
    {
       TopExp_Explorer e;
@@ -1169,7 +1211,7 @@ namespace netgen
 
       // Enable transfer of colours
       reader.SetColorMode(Standard_True);
-
+      reader.SetNameMode(Standard_True);
       Standard_Integer stat = reader.ReadFile((char*)filename);
 
       if(stat != IFSelect_RetDone)
@@ -1210,7 +1252,38 @@ namespace netgen
 
       occgeo->CalcBoundingBox();
       PrintContents (occgeo);
-
+      char * name = new char(50);
+      //string name;
+      STEP_GetEntityName(occgeo->shape,&reader,name);
+      occgeo->snames.Append(name);
+      TopExp_Explorer exp0,exp1;
+      
+      for (exp0.Init(occgeo->shape, TopAbs_FACE); exp0.More(); exp0.Next())
+      {
+         TopoDS_Face face = TopoDS::Face(exp0.Current());
+         STEP_GetEntityName(face,&reader,name);
+         occgeo->fnames.Append(name);
+         for (exp1.Init(face, TopAbs_EDGE); exp1.More(); exp1.Next())
+         {
+            TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
+            STEP_GetEntityName(edge,&reader,name);
+            occgeo->enames.Append(name);
+         }
+      }
+      // Gerhard BEGIN
+//       cout << "Solid Names: "<<endl;
+//       for (int i=0;i<occgeo->snames.Size();i++)
+//         cout << occgeo->snames[i] << endl;
+//       cout << " " <<endl;
+//       cout << "Face Names: "<<endl;
+//       for (int i=0;i<occgeo->fnames.Size();i++)
+//         cout << occgeo->fnames[i] << endl;
+//       cout << " " <<endl;
+//       cout << "Edge Names: "<<endl;
+//       for (int i=0;i<occgeo->enames.Size();i++)
+//         cout << occgeo->enames[i] << endl;
+//       cout << " " <<endl;
+      // Gerhard END
       return occgeo;
    }
 
