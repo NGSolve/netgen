@@ -237,6 +237,14 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                        li.append (py::cast(self[i]));
                                      return li;
                                    }))
+    .def_property_readonly("points", 
+                  FunctionPointer ([](const Element & self) -> py::list
+                                   {
+                                     py::list li;
+                                     for (int i = 0; i < self.GetNP(); i++)
+                                       li.append (py::cast(self[i]));
+                                     return li;
+                                   }))
     ;
 
   py::class_<Element2d>(m, "Element2D")
@@ -599,6 +607,15 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                self.GetGeometry()->GetRefinement().Refine(self);
              else
                Refinement().Refine(self);
+           }))
+
+    .def ("SecondOrder", FunctionPointer
+          ([](Mesh & self)
+           {
+             if (self.GetGeometry())
+               self.GetGeometry()->GetRefinement().MakeSecondOrder(self);
+             else
+               Refinement().MakeSecondOrder(self);
            }))
 
     .def ("SetGeometry", FunctionPointer
