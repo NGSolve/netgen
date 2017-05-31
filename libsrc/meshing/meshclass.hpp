@@ -593,9 +593,9 @@ namespace netgen
     DLL_HEADER void SetMaterial (int domnr, const string & mat);
     ///
     const string & GetMaterial (int domnr) const;
+    static string defaultmat;
     const string * GetMaterialPtr (int domnr) const // 1-based
     {
-      static string defaultmat = "default";
       return domnr <= materials.Size() ? materials.Get(domnr) : &defaultmat;
     }
     

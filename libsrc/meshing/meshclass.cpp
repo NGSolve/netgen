@@ -5768,6 +5768,7 @@ namespace netgen
     materials.Elem(domnr) = new string(mat);
   }
 
+  string Mesh :: defaultmat = "default";
   const string & Mesh :: GetMaterial (int domnr) const
   {
     if (domnr <= materials.Size())
