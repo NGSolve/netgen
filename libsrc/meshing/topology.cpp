@@ -1119,8 +1119,8 @@ namespace netgen
 			(*testout) << "points = " << face2vert[i] << endl;
 			(*testout) << "pos = ";
 			for (int j = 0; j < 4; j++)
-			  if (face2vert[i].I(j+1) >= 1)
-			    (*testout) << mesh[(PointIndex)face2vert[i].I(j+1)] << " ";
+                          if (face2vert[i].I(j+1) >= 1)
+                            (*testout) << (*mesh)[(PointIndex)face2vert[i].I(j+1)] << " ";
 			(*testout) << endl;
 
 			FlatArray<ElementIndex> vertels = GetVertexElements (face2vert[i].I(1));
