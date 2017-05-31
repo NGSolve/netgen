@@ -106,7 +106,7 @@ namespace netgen
     double * pt;
   public:
     Ng_Point (double * apt) : pt(apt) { ; }
-    double operator[] (int i)
+    double operator[] (size_t i)
     { return pt[i]; }
     operator const double * () { return pt; }
   };
@@ -122,11 +122,11 @@ namespace netgen
     class Ng_Elements
     {
     public:
-      int ne;
+      size_t ne;
       const int * ptr;
   
-      int Size() const { return ne; }
-      int operator[] (int i) const { return ptr[i]; }
+      size_t Size() const { return ne; }
+      int operator[] (size_t i) const { return ptr[i]; }
     };
 
 
@@ -146,8 +146,8 @@ namespace netgen
     public:
       const int * ptr;
   
-      int Size() const { return 2; }
-      int operator[] (int i) const { return ptr[i]-POINTINDEX_BASE; }
+      size_t Size() const { return 2; }
+      int operator[] (size_t i) const { return ptr[i]-POINTINDEX_BASE; }
     };
 
 
@@ -163,21 +163,21 @@ namespace netgen
     class Ng_Vertices
     {
     public:
-      int nv;
+      size_t nv;
       const int * ptr;
   
-      int Size() const { return nv; }
-      int operator[] (int i) const { return ptr[i]-POINTINDEX_BASE; }
+      size_t Size() const { return nv; }
+      int operator[] (size_t i) const { return ptr[i]-POINTINDEX_BASE; }
     };
 
     class Ng_Edges
     {
     public:
-      int ned;
+      size_t ned;
       const int * ptr;
   
-      int Size() const { return ned; }
-      int operator[] (int i) const { return ptr[i]-1; }
+      size_t Size() const { return ned; }
+      int operator[] (size_t i) const { return ptr[i]-1; }
     };
 
 
