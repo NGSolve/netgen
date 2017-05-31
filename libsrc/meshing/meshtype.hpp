@@ -680,7 +680,7 @@ namespace netgen
     ///
     int GetNP () const { return np; }
     ///
-    short int GetNV() const
+    uint8_t GetNV() const
     {
       __assume(typ >= TET && typ <= HEX);        
       switch (typ)
@@ -699,7 +699,8 @@ namespace netgen
 #ifdef DEBUG
           PrintSysError ("Element3d::GetNV not implemented for typ ", typ);
 #endif
-            return -1;
+          __assume(false);
+          return -1;
         }
     }
 
