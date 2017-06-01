@@ -441,6 +441,9 @@ DLL_HEADER void ExportCSG(py::module &m)
 	    }
 	    spsol->AddSurfaces(self);
 	    int tlonr = self.SetTopLevelObject(spsol->GetSolid(), surf.get());
+	    self.GetTopLevelObject(tlonr) -> SetBCProp(surf->GetBase()->GetBCProperty());
+	    self.GetTopLevelObject(tlonr) -> SetBCName(surf->GetBase()->GetBCName());
+	    self.GetTopLevelObject(tlonr) -> SetMaxH(surf->GetBase()->GetMaxH());
 	    for(auto p : surf->GetPoints())
 		self.AddUserPoint(p);
             self.AddSplineSurface(surf);
