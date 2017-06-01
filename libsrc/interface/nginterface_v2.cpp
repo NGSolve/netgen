@@ -757,7 +757,7 @@ namespace netgen
     double hdxdxi[4][3];
     for (int j = 0; j<4;j++)
       hxi[j][0] = ((double*)&(xi[0]))[j];
-    MultiElementTransformation<1,3> (elnr, 4, &hxi[0][0], 1, &hx[0][0], 2, &hdxdxi[0][0],4);
+    MultiElementTransformation<1,3> (elnr, 4, &hxi[0][0], 1, &hx[0][0], 3, &hdxdxi[0][0],3);
     for(int j=0; j<4; j++)
       for(int k=0; k<3; k++)
 	((double*)&(x[k]))[j] = hx[j][k];
