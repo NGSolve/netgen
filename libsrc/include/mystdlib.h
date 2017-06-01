@@ -1,11 +1,6 @@
 #ifndef FILE_MYSTDLIB
 #define FILE_MYSTDLIB
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-
 #include <iostream>
 #include <iomanip>
 #include <fstream>

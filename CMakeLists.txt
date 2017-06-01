@@ -170,8 +170,11 @@ set(CMAKE_INSTALL_RPATH "${NG_RPATH_TOKEN};${NG_RPATH_TOKEN}/${NETGEN_RPATH}")
 
 include (CheckIncludeFiles)
 check_include_files (dlfcn.h HAVE_DLFCN_H)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-add_definitions(-DHAVE_CONFIG_H)
+if(HAVE_DLFCN_H)
+  add_definitions(-DHAVE_DLFCN_H)
+endif()
+add_definitions(-DPACKAGE_VERSION="${NETGEN_VERSION}")
+
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR})
 
 #######################################################################
