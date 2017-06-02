@@ -417,15 +417,15 @@ namespace netgen
             && (geom.face_colours->GetColor(face,XCAFDoc_ColorSurf,face_colour)))
          {
             mesh.GetFaceDescriptor(facenr).SetSurfColour(Vec3d(face_colour.Red(),face_colour.Green(),face_colour.Blue()));
-            mesh.GetFaceDescriptor(facenr).SetBCName(&geom.fnames[facenr-1]);
-            mesh.GetFaceDescriptor(facenr).SetBCProperty(facenr);
          }
          else
          {
             mesh.GetFaceDescriptor(facenr).SetSurfColour(Vec3d(0.0,1.0,0.0));
-            mesh.GetFaceDescriptor(facenr).SetBCName(&geom.fnames[facenr-1]);
-            mesh.GetFaceDescriptor(facenr).SetBCProperty(facenr);
          }
+
+         if(geom.fnames.Size()>=facenr) 
+             mesh.GetFaceDescriptor(facenr).SetBCName(&geom.fnames[facenr-1]);
+         mesh.GetFaceDescriptor(facenr).SetBCProperty(facenr);
          // ACHTUNG! STIMMT NICHT ALLGEMEIN (RG)
 
 
@@ -1471,7 +1471,8 @@ namespace netgen
          (*testout) << mesh->LineSegment(i) << endl;
 
       for (int i = 0; i < mesh->GetNDomains(); i++)
-        mesh->SetMaterial (i+1, geom.snames[i]);
+          if(geom.snames.Size())
+              mesh->SetMaterial( i+1, geom.snames[i] );
       return TCL_OK;
    }
 }
