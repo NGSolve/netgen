@@ -438,7 +438,7 @@ add_custom_target(uninstall
 get_directory_property(NETGEN_COMPILE_DEFINITIONS COMPILE_DEFINITIONS)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NetgenConfig.cmake.in
-	${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake @ONLY)
+    ${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake @ONLY ESCAPE_QUOTES)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake DESTINATION ${NG_INSTALL_DIR_CMAKE})
 
