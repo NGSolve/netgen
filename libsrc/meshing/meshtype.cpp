@@ -157,10 +157,9 @@ namespace netgen
       << " si = " << seg.si << ", edgenr = " << seg.edgenr;
     return s;
   }
-
-
+  /*
   Element2d :: Element2d ()
-  { 
+  {
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
       {
 	pnum[i] = 0;
@@ -177,8 +176,7 @@ namespace netgen
     strongrefflag = false;
     is_curved = false;
   } 
-
-
+  */
   Element2d :: Element2d (int anp)
   { 
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
@@ -969,7 +967,7 @@ namespace netgen
     return s;
   }
 
-
+  /*
   Element :: Element ()
   {
     typ = TET;
@@ -992,9 +990,8 @@ namespace netgen
 #ifdef PARALLEL
     partitionNumber = -1;
 #endif
-
   }
-
+  */
 
   Element :: Element (int anp)
   {
@@ -1063,12 +1060,15 @@ namespace netgen
     flags.fixed = 0;
     orderx = ordery = orderz = 1;
     is_curved =  typ != TET; // false;
+#ifdef PARALLEL
+    partitionNumber = -1;
+#endif
   }
 
 
 
 
-
+  /*
   Element & Element :: operator= (const Element & el2)
   {
     typ = el2.typ;
@@ -1085,7 +1085,7 @@ namespace netgen
     is_curved = el2.is_curved;
     return *this;
   }
-
+  */
 
 
   void Element :: SetNP (int anp)

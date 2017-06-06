@@ -7,17 +7,6 @@
 #include <inctcl.hpp>
 #include <meshing.hpp>
 
-#ifdef NGPYTHON
-#include <boost/python.hpp>
-#endif
-
-/*
-namespace netgen
-{
-  int id = 0, ntasks = 1;
-}
-*/
-
 #ifdef PARALLEL
 #include <mpi.h>
 
@@ -33,9 +22,11 @@ namespace netgen
 
 namespace netgen
 {
-  Flags parameters;
+  DLL_HEADER extern Flags parameters;
+  DLL_HEADER extern bool netgen_executable_started;
 }
  
+DLL_HEADER extern bool nodisplay;
 
 
 using netgen::parameters;
@@ -58,7 +49,6 @@ using netgen::RegisterUserFormats;
 extern "C" int Ng_ServerSocketManagerInit (int port);
 extern "C" int Ng_ServerSocketManagerRun (void);
  
-bool nodisplay = false;
 bool shellmode = false;
 
 
@@ -70,6 +60,7 @@ bool shellmode = false;
 
 int main(int argc, char ** argv)
 {
+  netgen::netgen_executable_started = true;
 
 #ifdef PARALLEL
   int mpi_required = MPI_THREAD_MULTIPLE;
@@ -200,7 +191,7 @@ int main(int argc, char ** argv)
       // parse tcl-script
       int errcode;
 
-      bool internaltcl = false;
+      bool internaltcl = INTERNAL_TCL_DEFAULT;
       if (shellmode)
         internaltcl = false;
   
@@ -348,26 +339,6 @@ int Tcl_AppInit(Tcl_Interp * interp)
     // return TCL_ERROR;
   }
 
-
-  if (Ng_Init(interp) == TCL_ERROR) {
-    cerr << "Problem in Ng_Init: " << endl;
-    cout << "result = " << Tcl_GetStringResult (interp) << endl;
-    // cerr << interp->result << endl;
-    // return TCL_ERROR;
-  }
- 
-  if (!nodisplay && Ng_Vis_Init(interp) == TCL_ERROR) {
-    cerr << "Problem in Ng_Vis_Init: " << endl;
-    cout << "result = " << Tcl_GetStringResult (interp) << endl;
-    // cerr << interp->result << endl;
-    // return TCL_ERROR;
-  }
-
-
-
-
-
-
 #ifdef TRAFO
   //   extern int Trafo_Init (Tcl_Interp * interp);
   //   if (Trafo_Init(interp) == TCL_ERROR) 
@@ -427,21 +398,3 @@ int Tcl_AppInit(Tcl_Interp * interp)
   return TCL_OK;
 }
 
-
-
-
-
-// link MKL with netgen
-// necessary for MKL 11.x, since MKL complains if started
-// from the ngsolve shared library
-
-#ifdef LINKMKL
-extern "C" double ddot_(int *n, double *dx, int *incx, double *dy, 
-                        int *incy);
-void mkldummy()
-{
-  int n = 1, one = 1;
-  double a = 1, b = 1; 
-  ddot_(&n, &a, &one, &b, &one);
-}
-#endif

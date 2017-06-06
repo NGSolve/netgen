@@ -757,7 +757,7 @@ namespace netgen
     double hdxdxi[4][3];
     for (int j = 0; j<4;j++)
       hxi[j][0] = ((double*)&(xi[0]))[j];
-    MultiElementTransformation<1,3> (elnr, 4, &hxi[0][0], 1, &hx[0][0], 2, &hdxdxi[0][0],4);
+    MultiElementTransformation<1,3> (elnr, 4, &hxi[0][0], 1, &hx[0][0], 3, &hdxdxi[0][0],3);
     for(int j=0; j<4; j++)
       for(int k=0; k<3; k++)
 	((double*)&(x[k]))[j] = hx[j][k];
@@ -780,16 +780,16 @@ namespace netgen
       {
         double hxi[4][1];
         double hx[4][2];
-        double hdxdxi[4][4];
+        double hdxdxi[4][2];
         for (int j = 0; j < 4; j++)
           for (int k = 0; k < 1; k++)
             hxi[j][k] = ((double*)&(xi[k]))[j];
-        MultiElementTransformation<1,2> (elnr, 4, &hxi[0][0], 1, &hx[0][0], 2, &hdxdxi[0][0], 4);
+        MultiElementTransformation<1,2> (elnr, 4, &hxi[0][0], 1, &hx[0][0], 2, &hdxdxi[0][0], 2);
         for (int j = 0; j < 4; j++)
           for (int k = 0; k < 2; k++)
             ((double*)&(x[k]))[j] = hx[j][k];
         for (int j = 0; j < 4; j++)
-          for (int k = 0; k < 4; k++)
+          for (int k = 0; k < 2; k++)
             ((double*)&(dxdxi[k]))[j] = hdxdxi[j][k];
         
         xi += sxi;

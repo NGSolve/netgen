@@ -1279,7 +1279,6 @@ namespace netgen
 
     Array<double> mvalues(npt);
     int sol_comp = (sol && sol->draw_surface) ? sol->components : 0;
-#ifdef __AVX__
     Array<Point<2,SIMD<double>> > simd_pref ( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
     Array<Point<3,SIMD<double>> > simd_points ( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
     Array<Mat<3,2,SIMD<double>> > simd_dxdxis ( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
@@ -1287,7 +1286,6 @@ namespace netgen
     Array<SIMD<double>> simd_values( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() * sol_comp);
 
     
-#endif
     
     // Array<Point<3,float>> glob_pnts;
     // Array<Vec<3,float>> glob_nvs;
@@ -1486,7 +1484,6 @@ namespace netgen
     NgProfiler::StartTimer(timerloops);
     size_t base_pi = 0;
 
-#ifdef __AVX__
     for (int iy = 0, ii = 0; iy <= n; iy++)
       for (int ix = 0; ix <= n-iy; ix++, ii++)
         pref[ii] = Point<2> (ix*invn, iy*invn);
@@ -1496,10 +1493,9 @@ namespace netgen
     
     for (size_t i = 0; i < simd_npt; i++)
       {
-        simd_pref[i](0).SIMD_function ([&] (size_t j) { size_t ii = i*simd_size+j; return (ii < npt) ? pref[ii](0) : 0; }, std::true_type());
-        simd_pref[i](1).SIMD_function ([&] (size_t j) { size_t ii = i*simd_size+j; return (ii < npt) ? pref[ii](1) : 0; }, std::true_type());
+        simd_pref[i](0) = [&] (size_t j) { size_t ii = i*simd_size+j; return (ii < npt) ? pref[ii](0) : 0; };
+        simd_pref[i](1) = [&] (size_t j) { size_t ii = i*simd_size+j; return (ii < npt) ? pref[ii](1) : 0; };
       }
-#endif
 
     Array<int> ind_reftrig;
     for (int iy = 0, ii = 0; iy < n; iy++,ii++)
@@ -1928,12 +1924,12 @@ namespace netgen
     Array<Point<3> > grid(n3);
     Array<Point<3> > locgrid(n3);
     Array<Mat<3,3> > trans(n3);
-    Array<double> val(n3);
-    Array<Vec<3> > grads(n3);
+    Array<double> val1(n3*sol->components);
+    Array<Vec<3> > grads1(n3);
     Array<int> compress(n3);
     
     MatrixFixWidth<3> pointmat(8);
-    grads = Vec<3> (0.0);
+    grads1 = Vec<3> (0.0);
 
     for (ElementIndex ei = 0; ei < ne; ei++)
       {
@@ -2023,26 +2019,47 @@ namespace netgen
               }
 
             bool has_pos = 0, has_neg = 0;
-                
+            GetMultiValues( sol, ei, -1, n3, 
+                            &locgrid[0](0), &locgrid[1](0)-&locgrid[0](0),
+                            &grid[0](0), &grid[1](0)-&grid[0](0),
+                            &trans[0](0), &trans[1](0)-&trans[0](0),
+                            &val1[0], sol->components);
             for (int i = 0; i < cnt_valid; i++)
               {
-                GetValue (sol, ei, &locgrid[i](0), &grid[i](0), &trans[i](0), comp, val[i]);
-        
-                val[i] -= minval;
+                // GetValue (sol, ei, &locgrid[i](0), &grid[i](0), &trans[i](0), comp, val[i]);
 
-                if (vsol)
-                  GetValues (vsol, ei, &locgrid[i](0), &grid[i](0), &trans[i](0), &grads[i](0));
-                grads[i] *= -1;
+                // val[i] -= minval;
+                val1[sol->components*i+comp-1] -= minval;
 
 
-                if (val[i] > 0)
+                // if (vsol)
+                  // GetValues (vsol, ei, &locgrid[i](0), &grid[i](0), &trans[i](0), &grads[i](0));
+                // grads[i] *= -1;
+
+                if (val1[i*sol->components+comp-1] > 0)
                   has_pos = 1;
                 else
                   has_neg = 1;
+                // if (val[i] > 0)
+                  // has_pos = 1;
+                // else
+                  // has_neg = 1;
               }
 
             if (!has_pos || !has_neg) continue;
-            
+            if (vsol)
+            {
+              GetMultiValues(vsol, ei, -1, n3,
+                           &locgrid[0](0), &locgrid[1](0)-&locgrid[0](0),
+                           &grid[0](0), &grid[1](0)-&grid[0](0),
+                           &trans[0](0), &trans[1](0)-&trans[0](0),
+                           &grads1[0](0), vsol->components);
+              // for (int i = 0; i < cnt_valid; i++)
+                // grads1[i*sol->components+comp-1] *= -1;
+              for (int i = 0; i < cnt_valid; i++)
+                grads1[i] *= -1;
+                
+            }
             for (int ix = 0; ix < n; ix++)
               for (int iy = 0; iy < n; iy++)
                 for (int iz = 0; iz < n; iz++)
@@ -2075,8 +2092,10 @@ namespace netgen
                         
                         if (!is_valid) continue;
                         
+                        // for (int j = 0; j < 4; j++)
+                          // nodevali[j] = val[teti[j]];
                         for (int j = 0; j < 4; j++)
-                          nodevali[j] = val[teti[j]];
+                          nodevali[j] = val1[sol->components*teti[j]+comp-1];
                         
                         cntce = 0;
                         for (int j = 0; j < 6; j++)
@@ -2091,8 +2110,9 @@ namespace netgen
 
                                 edgelam[j] = nodevali[lpi2] / (nodevali[lpi2] - nodevali[lpi1]);
                                 edgep[j] = grid[teti[lpi1]] + (1-edgelam[j]) * (grid[teti[lpi2]]-grid[teti[lpi1]]);
-                                normp[j] = grads[teti[lpi1]] + (1-edgelam[j]) * (grads[teti[lpi2]]-grads[teti[lpi1]]);
-                                
+                                // normp[j] = grads[teti[lpi1]] + (1-edgelam[j]) * (grads[teti[lpi2]]-grads[teti[lpi1]]);
+                                normp[j] = grads1[teti[lpi1]] + (1-edgelam[j]) * (grads1[teti[lpi2]]-grads1[teti[lpi1]]);
+                                // normp[j] = grads1[sol->components*teti[lpi1]+comp-1] + (1-edgelam[j]) * (grads1[sol->components*teti[lpi2]+comp-1]-grads1[sol->components*teti[lpi1]+comp-1]);
                                 cntce++;
                                 cpe3 = cpe2;
                                 cpe2 = cpe1;
@@ -3350,8 +3370,6 @@ namespace netgen
                 double lam1, double lam2, 
                 int comp, double & val) const
   {
-    shared_ptr<Mesh> mesh = GetMesh();
-
     bool ok;
     if (comp == 0)
       {
@@ -3399,6 +3417,7 @@ namespace netgen
 
       case SOL_NODAL:
         {
+          shared_ptr<Mesh> mesh = GetMesh();
           const Element2d & el = (*mesh)[selnr];
 
           double lami[8];
@@ -3457,6 +3476,7 @@ namespace netgen
 
       case SOL_ELEMENT:
         {
+          shared_ptr<Mesh> mesh = GetMesh();          
           int el1, el2;
           mesh->GetTopology().GetSurface2VolumeElement (selnr+1, el1, el2);
           el1--;
@@ -3480,6 +3500,7 @@ namespace netgen
 
       case SOL_SURFACE_NONCONTINUOUS:
         {
+          shared_ptr<Mesh> mesh = GetMesh();          
           const Element2d & el = (*mesh)[selnr];
 
           double lami[8];
@@ -3554,12 +3575,14 @@ namespace netgen
 
       case SOL_MARKED_ELEMENTS:
         {
+          shared_ptr<Mesh> mesh = GetMesh();          
           val = (*mesh)[selnr].TestRefinementFlag();
           return 1;
         }
       
       case SOL_ELEMENT_ORDER:
-        {       
+        {
+          shared_ptr<Mesh> mesh = GetMesh();          
           val = (*mesh)[selnr].GetOrder();
           return 1;
         }
@@ -4813,12 +4836,14 @@ void (*glGenBuffers) (GLsizei a, GLuint *b);
 void (*glBufferData) (GLenum a, GLsizeiptr b, const GLvoid *c, GLenum d);
 void (*glBufferSubData) (GLenum a, GLintptr b, GLsizeiptr c, const GLvoid *d);
 DLL_HEADER void LoadOpenGLFunctionPointers() {
+#ifdef USE_BUFFERS
   glBindBuffer = (decltype(glBindBuffer)) wglGetProcAddress("glBindBuffer");
   glBufferSubData = (decltype(glBufferSubData)) wglGetProcAddress("glBufferSubData");
   glBufferData = (decltype(glBufferData)) wglGetProcAddress("glBufferData");
   glDeleteBuffers = (decltype(glDeleteBuffers)) wglGetProcAddress("glDeleteBuffers");
   glGenBuffers = (decltype(glGenBuffers)) wglGetProcAddress("glGenBuffers");
   if(!glBindBuffer) throw std::runtime_error("Could not load OpenGL functions!");
+#endif
 }
 #else  // WIN32
 DLL_HEADER void LoadOpenGLFunctionPointers() { }

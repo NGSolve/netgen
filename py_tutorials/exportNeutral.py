@@ -17,8 +17,8 @@ def Export (mesh, filename):
     print (len(volels), file=f)
     for el in volels:
         print (el.index, end="   ", file=f)
-        for j in el.vertices:
-            print (j.nr, end=" ", file=f)
+        for p in el.points:
+            print (p.nr, end=" ", file=f)
         print(file=f)
 
 

@@ -24,8 +24,9 @@ namespace netgen
   {
   public:
     typedef ::netgen::T_POINTS T_POINTS;
-    typedef Array<Element, 0, ElementIndex> T_VOLELEMENTS;
-    typedef Array<Element2d, 0, SurfaceElementIndex> T_SURFELEMENTS;
+    typedef Array<Element, 0, size_t> T_VOLELEMENTS;
+    // typedef Array<Element2d, 0, SurfaceElementIndex> T_SURFELEMENTS;
+    typedef Array<Element2d, 0, size_t> T_SURFELEMENTS;
 
   private:
     /// point coordinates
@@ -42,7 +43,7 @@ namespace netgen
 
 
     /// surface indices at boundary nodes
-    TABLE<int,PointIndex::BASE> surfacesonnode;
+    // TABLE<int,PointIndex::BASE> surfacesonnode;
     /// boundary edges  (1..normal bedge, 2..segment)
     INDEX_2_CLOSED_HASHTABLE<int> * boundaryedges;
     ///
@@ -592,8 +593,11 @@ namespace netgen
     DLL_HEADER void SetMaterial (int domnr, const string & mat);
     ///
     const string & GetMaterial (int domnr) const;
+    static string defaultmat;
     const string * GetMaterialPtr (int domnr) const // 1-based
-    { return domnr <= materials.Size() ? materials.Get(domnr) : nullptr; }
+    {
+      return domnr <= materials.Size() ? materials.Get(domnr) : &defaultmat;
+    }
     
     DLL_HEADER void SetNBCNames ( int nbcn );
 
@@ -605,6 +609,12 @@ namespace netgen
     DLL_HEADER void SetCD2Name (int cd2nr, const string & abcname);
 
     const string & GetCD2Name (int cd2nr ) const;
+    static string cd2_default_name;
+    string * GetCD2NamePtr (int cd2nr ) const
+    {
+      if (cd2nr < cd2names.Size() && cd2names[cd2nr]) return cd2names[cd2nr];
+      return &cd2_default_name;
+    }
     size_t GetNCD2Names() const { return cd2names.Size(); }
 
     string * GetBCNamePtr (int bcnr) const

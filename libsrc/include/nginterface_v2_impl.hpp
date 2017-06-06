@@ -73,7 +73,13 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
   if (mesh->GetDimension() == 2)
     ret.mat = mesh->GetBCNamePtr(el.si-1);
   else
-    ret.mat = nullptr;
+    {
+      if (mesh->GetDimension() == 3)
+        ret.mat = mesh->GetCD2NamePtr(el.edgenr-1);
+      else
+        ret.mat = nullptr;
+    }
+
   ret.points.num = el.GetNP();
   ret.points.ptr = (int*)&(el[0]);
 
@@ -89,15 +95,14 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
   if (mesh->GetDimension() == 2)
     {
       ret.facets.num = 1;
+      ret.facets.base = 0;
       ret.facets.ptr = (int*)ret.edges.ptr;
     }
   else
     {
-      ret.facets.num = 0;
-      ret.facets.ptr = nullptr;
-      // not working as long as vertices are 1-based
-      // ret.facets.num = 2;
-      // ret.facets.ptr = (int*)&(el[0]);
+      ret.facets.num = 2;
+      ret.facets.base = 1;
+      ret.facets.ptr = (int*)&(el[0]);
     }
 
   // ret.is_curved = mesh->GetCurvedElements().IsSegmentCurved(nr);
@@ -109,7 +114,8 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
 template <> 
 NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<2> (size_t nr) const
 {
-  const Element2d & el = mesh->SurfaceElement (SurfaceElementIndex (nr));
+  // const Element2d & el = mesh->SurfaceElement (SurfaceElementIndex (nr));
+  const Element2d & el = mesh->SurfaceElements()[nr];
   
   Ng_Element ret;
   ret.type = NG_ELEMENT_TYPE(el.GetType());
@@ -134,11 +140,13 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<2> (size_t nr) const
   if (mesh->GetDimension() == 3)
     {
       ret.facets.num = ret.faces.num;
+      ret.facets.base = 0;
       ret.facets.ptr = (int*)ret.faces.ptr;
     }
   else
     {
       ret.facets.num = ret.edges.num;
+      ret.facets.base = 0;      
       ret.facets.ptr = (int*)ret.edges.ptr;
     }
   ret.is_curved = el.IsCurved();
@@ -148,7 +156,8 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<2> (size_t nr) const
 template <> 
 NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<3> (size_t nr) const
 {
-  const Element & el = mesh->VolumeElement (ElementIndex (nr));
+  // const Element & el = mesh->VolumeElement (ElementIndex (nr));
+  const Element & el = mesh->VolumeElements()[nr];
   
   Ng_Element ret;
   ret.type = NG_ELEMENT_TYPE(el.GetType());
@@ -167,6 +176,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<3> (size_t nr) const
   ret.faces.ptr = (T_FACE2*)mesh->GetTopology().GetElementFacesPtr (nr);
 
   ret.facets.num = ret.faces.num;
+  ret.facets.base = 0;
   ret.facets.ptr = (int*)ret.faces.ptr;
 
   ret.is_curved = el.IsCurved();
@@ -264,6 +274,7 @@ template <> NGX_INLINE DLL_HEADER const Ng_Node<2> Ngx_Mesh :: GetNode<2> (int n
   Ng_Node<2> node;
   node.vertices.ptr = mesh->GetTopology().GetFaceVerticesPtr(nr);
   node.vertices.nv = (node.vertices.ptr[3] == 0) ? 3 : 4;
+  node.surface_el = mesh->GetTopology().GetFace2SurfaceElement (nr+1)-1;
   return node;
 }
 

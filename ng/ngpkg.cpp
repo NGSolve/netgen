@@ -1994,90 +1994,25 @@ namespace netgen
   }
 
 
-#if TOGL_MAJOR_VERSION==1
-
-#ifndef JPEGLIB
-  static int Ng_SnapShot (struct Togl * togl,
-                          int argc, tcl_const char *argv[])
+  static int Ng_SnapShot(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const *argv)
   {
-    const char * filename = argv[2];
+    struct Togl *togl;
+    if (Togl_GetToglFromObj(interp, argv[1], &togl) != TCL_OK) 
+      return TCL_ERROR;
+    const char * filename = Tcl_GetString(argv[2]);
 
-    char str[250];
-    char filename2[250];
     int len = strlen(filename);
-    strcpy (filename2, filename);
-
-    filename2[len-3] = 'p';
-    filename2[len-2] = 'p';
-    filename2[len-1] = 'm';
-    filename2[len] = 0;
-
-    cout << "Snapshot to file '" << filename << endl;
 
     int w = Togl_Width (togl);
-    w = int((w + 1) / 4) * 4 + 4;
     int h = Togl_Height (togl);
 
-    // unsigned char * buffer = new unsigned char[w*h*4];
-    unsigned char * buffer = new unsigned char[w*h*3];
-    glReadPixels (0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, buffer);
+    Array<char> buffer(w*h*3);
+    glReadPixels (0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, &buffer[0]);
 
-    ofstream outfile(filename2);
-    outfile << "P6" << endl
-    << "# CREATOR: Netgen" << endl
-    << w << " " << h << endl
-    << "255" << endl;
-    for (int i = 0; i < h; i++)
-    for (int j = 0; j < w; j++)
-    for (int k = 0; k < 3; k++)
-    outfile.put (buffer[k+3*j+3*w*(h-i-1)]);
-    outfile << flush;
-
-    delete[] buffer;
-
-    // convert image file (Unix/Linux only):
-    sprintf(str,"convert -quality 100 %s %s", filename2, filename);
-
-    int err = system(str);
-    if (err != 0)
-    {
-      Tcl_SetResult (Togl_Interp(togl), (char*)"Cannot convert image file", TCL_VOLATILE);
-      return TCL_ERROR;
-    }
-    sprintf(str,"rm %s", filename2);
-
-    err = system(str);
-    if (err != 0)
-      {
-        Tcl_SetResult (Togl_Interp(togl), (char*)"Cannot delete temporary file", TCL_VOLATILE);
-        return TCL_ERROR;
-      }
-
-    return TCL_OK;
-  }
-
-
-
-#else
-
-
-  static int Ng_SnapShot (struct Togl * togl,
-			  int argc, tcl_const char *argv[])
-  {
-    const char * filename = argv[2];
-    int len = strlen(filename);
-
+#ifdef JPEGLIB
     if (strcmp ("jpg", filename+len-3) == 0)
       {
         cout << "Snapshot to file '" << filename << "'" << endl;
-
-        int w = Togl_Width (togl);
-        // w = int((w + 1) / 4) * 4 + 4;
-        int h = Togl_Height (togl);
-
-        // unsigned char * buffer = new unsigned char[w*h*4];
-        unsigned char * buffer = new unsigned char[w*h*3];
-        glReadPixels (0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, buffer);
 
         struct jpeg_compress_struct cinfo;
         struct jpeg_error_mgr jerr;
@@ -2112,27 +2047,62 @@ namespace netgen
         fprintf( stdout, "done [ok]\n" );
         fflush( stdout );
 
-        free( buffer );
         return TCL_OK;
       }
-    else
+#endif // JPEGLIB
+    {
+        char str[250];
+        char filename2[250];
+        int len = strlen(filename);
+        strcpy (filename2, filename);
+
+        filename2[len-3] = 'p';
+        filename2[len-2] = 'p';
+        filename2[len-1] = 'm';
+        filename2[len] = 0;
+
+        cout << "Snapshot to file '" << filename << endl;
+
+        int w = Togl_Width (togl);
+        w = int((w + 1) / 4) * 4 + 4;
+        int h = Togl_Height (togl);
+
+        ofstream outfile(filename2);
+        outfile << "P6" << endl
+          << "# CREATOR: Netgen" << endl
+          << w << " " << h << endl
+          << "255" << endl;
+        for (int i = 0; i < h; i++)
+            for (int j = 0; j < w; j++)
+                for (int k = 0; k < 3; k++)
+                    outfile.put (buffer[k+3*j+3*w*(h-i-1)]);
+        outfile << flush;
+
+        // convert image file (Unix/Linux only):
+        sprintf(str,"convert -quality 100 %s %s", filename2, filename);
+
+        int err = system(str);
+        if (err != 0)
+        {
+            Tcl_SetResult (Togl_Interp(togl), (char*)"Cannot convert image file", TCL_VOLATILE);
+            return TCL_ERROR;
+        }
+        sprintf(str,"rm %s", filename2);
+
+        err = system(str);
+        if (err != 0)
+        {
+            Tcl_SetResult (Togl_Interp(togl), (char*)"Cannot delete temporary file", TCL_VOLATILE);
+            return TCL_ERROR;
+        }
+
+    }
+
       {
         cout << "Snapshot to " << filename << " not supported" << endl;
         return TCL_ERROR;
       }
   }
-
-
-#endif
-
-
-#else
-
-// TODO: JPEGLIB for Togl2
-
-
-#endif
-
 
 
 
@@ -3083,7 +3053,7 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 	Tcl_CreateObjCommand(interp, "reshape", reshape, NULL, NULL);
 	
 	//   Togl_TimerFunc(  idle );
-	// Togl_CreateCommand( (char*)"Ng_SnapShot", Ng_SnapShot);
+	Tcl_CreateObjCommand(interp, "Ng_SnapShot", Ng_SnapShot, NULL, NULL);
         Tcl_CreateObjCommand(interp, "Ng_VideoClip", Ng_VideoClip, NULL, NULL);
       }
 

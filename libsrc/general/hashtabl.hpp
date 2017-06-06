@@ -628,7 +628,12 @@ public:
 
 
 
-
+  inline size_t RoundUp2 (size_t i)
+  {
+    size_t res = 1;
+    while (res < i) res *= 2; // hope it will never be too large 
+    return res; 
+  }
 
 /// Closed Hashing HT
 
@@ -640,47 +645,52 @@ protected:
   Array<INDEX_2> hash;
   ///
   int invalid;
+  size_t mask;
 public:
   ///
-  BASE_INDEX_2_CLOSED_HASHTABLE (int size);
+  BASE_INDEX_2_CLOSED_HASHTABLE (size_t size);
 
   int Size() const { return hash.Size(); }
-  int UsedPos (int pos) const { return ! (hash.Get(pos).I1() == invalid); }
+  bool UsedPos0 (int pos) const { return ! (hash[pos].I1() == invalid); }
   int UsedElements () const;
 
   ///
   int HashValue (const INDEX_2 & ind) const
     {
-      return (ind.I1() + 71 * ind.I2()) % hash.Size() + 1;
+      // return (ind.I1() + 71 * ind.I2()) % hash.Size() + 1;
+      return (ind.I1() + 71 * ind.I2()) & mask; 
     }
 
 
-  int Position (const INDEX_2 & ind) const
+  int Position0 (const INDEX_2 & ind) const
   {
     int i = HashValue(ind);
     while (1)
       {
-	if (hash.Get(i) == ind) return i;
-	if (hash.Get(i).I1() == invalid) return 0;
+	if (hash[i] == ind) return i;
+	if (hash[i].I1() == invalid) return -1;
+        i = (i+1) & mask;        
+        /*
 	i++;
 	if (i > hash.Size()) i = 1;
+        */
       }
   }
 
   // returns 1, if new postion is created
-  int PositionCreate (const INDEX_2 & ind, int & apos)
+  bool PositionCreate0 (const INDEX_2 & ind, int & apos)
   {
     int i = HashValue (ind);
-    if (hash.Get(i) == ind) 
+    if (hash[i] == ind) 
       {
 	apos = i;
-	return 0;
+	return false;
       }
-    if (hash.Get(i).I1() == invalid)
+    if (hash[i].I1() == invalid)
       {
-	hash.Elem(i) = ind; 
+	hash[i] = ind; 
 	apos = i;
-	return 1;
+	return true;
       }
     return PositionCreate2 (ind, apos);    
   }
@@ -689,7 +699,7 @@ protected:
   ///
 
   int Position2 (const INDEX_2 & ind) const;
-  int PositionCreate2 (const INDEX_2 & ind, int & apos);
+  bool PositionCreate2 (const INDEX_2 & ind, int & apos);
   void BaseSetSize (int asize);
 };
 
@@ -697,31 +707,65 @@ protected:
 template <class T>
 class INDEX_2_CLOSED_HASHTABLE : public BASE_INDEX_2_CLOSED_HASHTABLE
 {
-  ///
-// MoveableArray<T> cont;
   Array<T> cont;
-
 public:
+  INDEX_2_CLOSED_HASHTABLE (size_t size)
+    : BASE_INDEX_2_CLOSED_HASHTABLE(size), cont(RoundUp2(size))
+  { ; }
+
+  void Set (const INDEX_2 & ahash, const T & acont)
+  {
+    int pos;
+    PositionCreate0 (ahash, pos);
+    hash[pos] = ahash;
+    cont[pos] = acont;
+  }
+    
+  const T & Get (const INDEX_2 & ahash) const
+  {
+    int pos = Position0 (ahash);
+    return cont[pos];
+  }
+    
+  inline bool Used (const INDEX_2 & ahash) const
+  {
+    int pos = Position0 (ahash);
+    return (pos != -1);
+  }
+    
+  inline void SetData0 (int pos, const INDEX_2 & ahash, const T & acont)
+  {
+    hash[pos] = ahash;
+    cont[pos] = acont;
+  }
+    
   ///
-  inline INDEX_2_CLOSED_HASHTABLE (int size);
+  inline void GetData0 (int pos, INDEX_2 & ahash, T & acont) const
+  {
+    ahash = hash[pos];
+    acont = cont[pos];
+  }
+    
+  inline void SetData0 (int pos, const T & acont)
+  {
+    cont[pos] = acont;
+  }
+  
+  inline void GetData0 (int pos, T & acont) const
+  {
+    acont = cont[pos];
+  }
+  
   ///
-  inline void Set (const INDEX_2 & ahash, const T & acont);
+  const T & GetData0 (int pos) { return cont[pos]; }
   ///
-  inline const T & Get (const INDEX_2 & ahash) const;
-  ///
-  inline bool Used (const INDEX_2 & ahash) const;
-  ///
-  inline void SetData (int pos, const INDEX_2 & ahash, const T & acont);
-  ///
-  inline void GetData (int pos, INDEX_2 & ahash, T & acont) const;
-  ///
-  inline void SetData (int pos, const T & acont);
-  ///
-  inline void GetData (int pos, T & acont) const;
-  ///
-  const T & GetData (int pos) { return cont.Get(pos); }
-  ///
-  inline void SetSize (int size);
+  inline void SetSize (size_t size)
+  {
+    BaseSetSize(size);
+    cont.SetSize(RoundUp2(size));
+  }
+
+    
   ///
   inline void PrintMemInfo (ostream & ost) const;
   ///
@@ -746,7 +790,7 @@ inline ostream & operator<< (ostream & ost, const INDEX_2_CLOSED_HASHTABLE<T> & 
       {
 	INDEX_2 hash;
 	T data;
-	ht.GetData (i, hash, data);
+	ht.GetData0 (i, hash, data);
 	ost << "hash = " << hash << ", data = " << data << endl;
       }
   return ost;
@@ -754,13 +798,6 @@ inline ostream & operator<< (ostream & ost, const INDEX_2_CLOSED_HASHTABLE<T> & 
 
 
 
-
-  inline size_t RoundUp2 (size_t i)
-  {
-    size_t res = 1;
-    while (res < i) res *= 2; // hope it will never be too large 
-    return res; 
-  }
 
 class BASE_INDEX_3_CLOSED_HASHTABLE
 {
@@ -1186,83 +1223,6 @@ inline void INDEX_HASHTABLE<T> :: PrintMemInfo (ostream & ost) const
 
 
 /* *********** Closed Hashing ************************* */
-
-
-
-template<class T>
-inline INDEX_2_CLOSED_HASHTABLE<T> :: 
-INDEX_2_CLOSED_HASHTABLE (int size)
-  : BASE_INDEX_2_CLOSED_HASHTABLE(size), cont(size)
-{
-  // cont.SetName ("i2-hashtable, contents");
-}
-
-template<class T>
-inline void INDEX_2_CLOSED_HASHTABLE<T> :: 
-Set (const INDEX_2 & ahash, const T & acont)
-{
-  int pos;
-  PositionCreate (ahash, pos);
-  hash.Elem(pos) = ahash;
-  cont.Elem(pos) = acont;
-}
-
-template<class T>
-inline const T & INDEX_2_CLOSED_HASHTABLE<T> :: 
-Get (const INDEX_2 & ahash) const
-{
-  int pos = Position (ahash);
-  return cont.Get(pos);
-}
-
-template<class T>
-inline bool INDEX_2_CLOSED_HASHTABLE<T> :: 
-Used (const INDEX_2 & ahash) const
-{
-  int pos = Position (ahash);
-  return (pos != 0);
-}
-
-template<class T>
-inline void INDEX_2_CLOSED_HASHTABLE<T> :: 
-SetData (int pos, const INDEX_2 & ahash, const T & acont)
-{
-  hash.Elem(pos) = ahash;
-  cont.Elem(pos) = acont;
-}
-  
-template<class T>
-inline void INDEX_2_CLOSED_HASHTABLE<T> :: 
-GetData (int pos, INDEX_2 & ahash, T & acont) const
-{
-  ahash = hash.Get(pos);
-  acont = cont.Get(pos);
-}
-
-template<class T>
-inline void INDEX_2_CLOSED_HASHTABLE<T> :: 
-SetData (int pos, const T & acont)
-{
-  cont.Elem(pos) = acont;
-}
-  
-template<class T>
-inline void INDEX_2_CLOSED_HASHTABLE<T> :: 
-GetData (int pos, T & acont) const
-{
-  acont = cont.Get(pos);
-}
-
-
-template<class T>
-inline void INDEX_2_CLOSED_HASHTABLE<T> :: 
-SetSize (int size)
-{
-  BaseSetSize(size);
-  cont.SetSize(size);
-}
-
-
   
 template<class T>
 inline void INDEX_2_CLOSED_HASHTABLE<T> :: 

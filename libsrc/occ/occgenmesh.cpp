@@ -422,6 +422,10 @@ namespace netgen
          {
             mesh.GetFaceDescriptor(facenr).SetSurfColour(Vec3d(0.0,1.0,0.0));
          }
+
+         if(geom.fnames.Size()>=facenr) 
+             mesh.GetFaceDescriptor(facenr).SetBCName(&geom.fnames[facenr-1]);
+         mesh.GetFaceDescriptor(facenr).SetBCProperty(facenr);
          // ACHTUNG! STIMMT NICHT ALLGEMEIN (RG)
 
 
@@ -974,6 +978,13 @@ namespace netgen
       NgProfiler::StopTimer (timer_opt2d);
 
       multithread.task = savetask;
+
+      // Gerhard BEGIN
+      for(int i = 0; i<mesh.GetNFD();i++)
+        mesh.SetBCName(i,mesh.GetFaceDescriptor(i+1).GetBCName());
+      // for(int i = 0; i<mesh.GetNDomains();i++)
+        // mesh.SetMaterial(i,geom.snames[i]);
+      // Gerhard END
    }
 
 
@@ -1459,6 +1470,9 @@ namespace netgen
       for (int i = 1; i <= mesh->GetNSeg(); i++)
          (*testout) << mesh->LineSegment(i) << endl;
 
+      for (int i = 0; i < mesh->GetNDomains(); i++)
+          if(geom.snames.Size())
+              mesh->SetMaterial( i+1, geom.snames[i] );
       return TCL_OK;
    }
 }

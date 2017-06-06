@@ -11,8 +11,11 @@
 
 using namespace netgen;
 
+extern const char *ngscript[];
+
 namespace netgen
 {
+  extern bool netgen_executable_started;
   extern shared_ptr<NetgenGeometry> ng_geometry;
 }
 
@@ -49,6 +52,14 @@ static Transformation<3> global_trafo(Vec<3> (0,0,0));
 
 DLL_HEADER void ExportNetgenMeshing(py::module &m) 
 {
+  m.attr("_netgen_executable_started") = py::cast(netgen::netgen_executable_started);
+  string script;
+  const char ** hcp = ngscript;
+  while (*hcp)
+      script += *hcp++;
+
+  m.attr("_ngscript") = py::cast(script);
+
   py::class_<NGDummyArgument>(m, "NGDummyArgument")
     .def("__bool__", []( NGDummyArgument &self ) { return false; } )
     ;
@@ -226,6 +237,14 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                        li.append (py::cast(self[i]));
                                      return li;
                                    }))
+    .def_property_readonly("points", 
+                  FunctionPointer ([](const Element & self) -> py::list
+                                   {
+                                     py::list li;
+                                     for (int i = 0; i < self.GetNP(); i++)
+                                       li.append (py::cast(self[i]));
+                                     return li;
+                                   }))
     ;
 
   py::class_<Element2d>(m, "Element2D")
@@ -375,8 +394,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   
 
-  ExportArray<Element,0,ElementIndex>(m);
-  ExportArray<Element2d,0,SurfaceElementIndex>(m);
+  ExportArray<Element,0,size_t>(m);
+  ExportArray<Element2d,0,size_t>(m);
   ExportArray<Segment>(m);
   ExportArray<Element0d>(m);
   ExportArray<MeshPoint,PointIndex::BASE,PointIndex>(m);
@@ -458,11 +477,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def_property("dim", &Mesh::GetDimension, &Mesh::SetDimension)
 
     .def("Elements3D", 
-         static_cast<Array<Element,0,ElementIndex>&(Mesh::*)()> (&Mesh::VolumeElements),
+         static_cast<Array<Element,0,size_t>&(Mesh::*)()> (&Mesh::VolumeElements),
          py::return_value_policy::reference)
 
     .def("Elements2D", 
-         static_cast<Array<Element2d,0,SurfaceElementIndex>&(Mesh::*)()> (&Mesh::SurfaceElements),
+         static_cast<Array<Element2d,0,size_t>&(Mesh::*)()> (&Mesh::SurfaceElements),
          py::return_value_policy::reference)
 
     .def("Elements1D", 
@@ -590,6 +609,15 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                Refinement().Refine(self);
            }))
 
+    .def ("SecondOrder", FunctionPointer
+          ([](Mesh & self)
+           {
+             if (self.GetGeometry())
+               self.GetGeometry()->GetRefinement().MakeSecondOrder(self);
+             else
+               Refinement().MakeSecondOrder(self);
+           }))
+
     .def ("SetGeometry", FunctionPointer
           ([](Mesh & self, shared_ptr<NetgenGeometry> geo)
            {
@@ -684,7 +712,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def(py::init<>())
     .def("__init__",
          [](MP *instance, double maxh, bool quad_dominated, int optsteps2d, int optsteps3d,
-	    MESHING_STEP perfstepsend, int only3D_domain)
+	    MESHING_STEP perfstepsend, int only3D_domain, const string & meshsizefilename)
                            {
                              new (instance) MeshingParameters;
                              instance->maxh = maxh;
@@ -693,6 +721,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                              instance->optsteps3d = optsteps3d;			     
 			     instance->only3D_domain_nr = only3D_domain;
                              instance->perfstepsend = perfstepsend;
+                             instance->meshsizefilename = meshsizefilename;
                            },
            py::arg("maxh")=1000,
            py::arg("quad_dominated")=false,
@@ -700,6 +729,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 	 py::arg("optsteps3d") = 3,
 	 py::arg("perfstepsend") = MESHCONST_OPTVOLUME,
 	 py::arg("only3D_domain") = 0,
+         py::arg("meshsizefilename") = "",
          "create meshing parameters"
           )
     .def("__str__", &ToString<MP>)

@@ -1,4 +1,9 @@
 catch {lappend auto_path $env(NETGENDIR) }
+catch {lappend auto_path $env(NETGENDIR)/../lib }
+
+if {[catch {Ng_GetCommandLineParameter batchmode} result ]} {
+	load libgui[info sharedlibextension] gui
+}
 
 set batchmode [Ng_GetCommandLineParameter batchmode]
 if {$batchmode=="undefined"} {
@@ -264,7 +269,22 @@ if { $stereo == "defined" } {
 }
 
 
-catch { source ${ngdir}/ngsolve.tcl } 
+set ngsolve_loaded 0
+catch {
+  source ${ngdir}/ngsolve.tcl;
+  set ngsolve_loaded 1
+}
+
+# try to find ngsolve.tcl in PATH
+set pathlist [split $::env(PATH) \ [expr {$::tcl_platform(platform) == "windows" ? ";" : ":"}]]
+foreach dir $pathlist {
+  if { $ngsolve_loaded != 1 } {
+    catch {
+      source ${dir}/ngsolve.tcl
+      set ngsolve_loaded 1
+    }
+  }
+}
 
 
 set scriptfilename [Ng_GetCommandLineParameter script]

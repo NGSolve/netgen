@@ -27,7 +27,9 @@ namespace netgen
     global_mesh = m;
   }
   
-
+  // true if netgen was started using the netgen executable
+  // false if netgen.gui was imported from python
+  DLL_HEADER bool netgen_executable_started = false;
   
   //  Flags parameters;
   int silentflag = 0;
@@ -88,7 +90,8 @@ namespace netgen
   DebugParameters debugparam;
   bool verbose = 0;
 
-  int timestamp = 0;
+  size_t timestamp = 0;
+  /*
   int GetTimeStamp() 
   { 
     return timestamp; 
@@ -99,4 +102,5 @@ namespace netgen
     timestamp++;
     return timestamp;
   }
+  */
 }

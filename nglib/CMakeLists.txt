@@ -28,7 +28,7 @@ if(NOT WIN32)
       endif(USE_GUI)
 endif(NOT WIN32)
 
-target_link_libraries( nglib ${OCC_LIBRARIES} ${MPI_CXX_LIBRARIES} ${OPENGL_LIBRARIES} ${TK_LIBRARY} ${TCL_LIBRARY} ${CMAKE_THREAD_LIBS_INIT} ${X11_Xmu_LIB} ${JPEG_LIBRARIES} ${MKL_LIBRARIES} ${ZLIB_LIBRARIES} ${OCC_LIBRARIES} )
+target_link_libraries( nglib ${OCC_LIBRARIES} ${MPI_CXX_LIBRARIES} ${OPENGL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${X11_Xmu_LIB} ${JPEG_LIBRARIES} ${MKL_LIBRARIES} ${ZLIB_LIBRARIES} ${OCC_LIBRARIES} )
 
 if(USE_OCC AND NOT WIN32)
     target_link_libraries(nglib occ)
@@ -38,16 +38,5 @@ if(USE_PYTHON)
     target_link_libraries(nglib ${PYTHON_LIBRARIES})
 endif(USE_PYTHON)
 
-# if(NOT WIN32)
-#     add_executable(ng_vol ng_vol.cpp ${nglib_objects})
-#     target_link_libraries( ng_vol nglib ${OCC_LIBRARIES} ${MPI_CXX_LIBRARIES} )
-#     target_link_libraries( ng_vol nglib interface geom2d csg stl occ mesh )
-# 
-#     add_executable(ng_stl ng_stl.cpp ${nglib_objects})
-#     target_link_libraries( ng_stl nglib ${OCC_LIBRARIES} ${OCC_OCAF_LIBRARIES} ${MPI_CXX_LIBRARIES} )
-#     target_link_libraries( ng_stl nglib interface geom2d csg stl occ mesh )
-# 
-#     install(TARGETS nglib ng_vol ng_stl ${ng_install_dir})
-# endif(NOT WIN32)
-
-install(TARGETS nglib ${ng_install_dir})
+install(TARGETS nglib ${NG_INSTALL_DIR})
+install(FILES nglib.h DESTINATION ${NG_INSTALL_DIR_INCLUDE}/include COMPONENT netgen_devel)

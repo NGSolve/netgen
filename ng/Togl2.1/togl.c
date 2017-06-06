@@ -165,11 +165,12 @@
 #  endif
 #endif /* TOGL_AGL */
 
-#if defined(TOGL_NSOPENGL)
-#  if TK_MAJOR_VERSION < 8 || (TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION < 6)
-#    error Sorry Mac Cocoa version requires Tcl/Tk ver 8.6.0 or higher.
-#  endif
-#endif /* TOGL_NSOPENGL */
+// Seems to work with Apple Tcl 8.5 too....
+// #if defined(TOGL_NSOPENGL)
+// #  if TK_MAJOR_VERSION < 8 || (TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION < 6)
+// #    error Sorry Mac Cocoa version requires Tcl/Tk ver 8.6.0 or higher.
+// #  endif
+// #endif /* TOGL_NSOPENGL */
 
 #if defined(TOGL_WGL) && defined(_MSC_VER)
 #  define snprintf _snprintf

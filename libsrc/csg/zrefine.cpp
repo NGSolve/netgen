@@ -259,11 +259,11 @@ namespace netgen
     first_id.Set();
 
   
-    INDEX_2_HASHTABLE<int> & identpts = 
-      mesh.GetIdentifications().GetIdentifiedPoints ();
-
-    if (&identpts)
+    if (mesh.GetIdentifications().HasIdentifiedPoints())
       {
+        INDEX_2_HASHTABLE<int> & identpts = 
+          mesh.GetIdentifications().GetIdentifiedPoints ();
+        
 	for (i = 1; i <= identpts.GetNBags(); i++)
 	  for (j = 1; j <= identpts.GetBagSize(i); j++)
 	    {

@@ -352,7 +352,7 @@ proc demoredraw { } {
 	set file [tk_getSaveFile -filetypes $types]
 #  -defaultextension ".ppm"]
 	if {$file != ""} {
-	    .ndraw Ng_SnapShot $file }
+	    Ng_SnapShot .ndraw $file }
     }
 
 
@@ -421,6 +421,7 @@ set videoactive 0
             # puts "error: $result"
         } 
 
+        after cancel { timer2 }
         Ng_Exit; 
         destroy . 
     }

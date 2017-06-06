@@ -44,10 +44,17 @@ namespace netgen
     bool incorder;
     unsigned int order:6;
 
-    MarkedTet()
+    MarkedTet() = default;
+    /*
     { 
-      for (int i = 0; i < 4; i++) { faceedges[i] = 255; }
+      for (int i = 0; i < 4; i++) { faceedges[i] = 127; }
     }
+    */
+    MarkedTet (const MarkedTet&) = default;
+    MarkedTet (MarkedTet &&) = default;
+    MarkedTet & operator= (const MarkedTet&) = default;
+    MarkedTet & operator= (MarkedTet&&) = default;
+    
   };
 
   ostream & operator<< (ostream & ost, const MarkedTet & mt)
@@ -178,6 +185,12 @@ namespace netgen
   class MarkedTri
   {
   public:
+    MarkedTri () = default;
+    MarkedTri (const MarkedTri&) = default;
+    MarkedTri (MarkedTri &&) = default;
+    MarkedTri & operator= (const MarkedTri&) = default;
+    MarkedTri & operator= (MarkedTri&&) = default;
+    
     /// three point numbers
     PointIndex pnums[3];
     /// three geominfos
@@ -1657,32 +1670,43 @@ namespace netgen
 
 
   int MarkHangingTets (T_MTETS & mtets, 
-		       const INDEX_2_CLOSED_HASHTABLE<PointIndex> & cutedges)
+		       const INDEX_2_CLOSED_HASHTABLE<PointIndex> & cutedges,
+                       TaskManager tm)                       
   {
+    static int timer = NgProfiler::CreateTimer ("MarkHangingTets");    
+    NgProfiler::RegionTimer reg (timer);    
+    
     int hanging = 0;
-    for (int i = 1; i <= mtets.Size(); i++)
-      {
-	MarkedTet & teti = mtets.Elem(i);
-
-	if (teti.marked)
-	  {
-	    hanging = 1;
-	    continue;
-	  }
-
-	for (int j = 0; j < 3; j++)
-	  for (int k = j+1; k < 4; k++)
-	    {
-	      INDEX_2 edge(teti.pnums[j],
-			   teti.pnums[k]);
-	      edge.Sort();
-	      if (cutedges.Used (edge))
-		{
-		  teti.marked = 1;
-		  hanging = 1;
-		}
-	    }
-      }
+    // for (int i = 1; i <= mtets.Size(); i++)
+    ParallelForRange
+      (tm, mtets.Size(), [&] (size_t begin, size_t end)
+       {
+         bool my_hanging = false;
+         for (size_t i = begin; i < end; i++)
+           {
+             MarkedTet & teti = mtets[i];
+             
+             if (teti.marked)
+               {
+                 my_hanging = true;
+                 continue;
+               }
+             
+             for (int j = 0; j < 3; j++)
+               for (int k = j+1; k < 4; k++)
+                 {
+                   INDEX_2 edge(teti.pnums[j],
+                                teti.pnums[k]);
+                   edge.Sort();
+                   if (cutedges.Used (edge))
+                     {
+                       teti.marked = 1;
+                       my_hanging = true;
+                     }
+                 }
+           }
+         if (my_hanging) hanging = true;         
+       });
 
     return hanging;
   }
@@ -1723,30 +1747,40 @@ namespace netgen
 
 
 
-  int MarkHangingTris (T_MTRIS & mtris, 
-		       const INDEX_2_CLOSED_HASHTABLE<PointIndex> & cutedges)
+  bool MarkHangingTris (T_MTRIS & mtris, 
+                        const INDEX_2_CLOSED_HASHTABLE<PointIndex> & cutedges,
+                        TaskManager tm)
   {
-    int hanging = 0;
-    for (int i = 1; i <= mtris.Size(); i++)
-      {
-	if (mtris.Get(i).marked)
-	  {
-	    hanging = 1;
-	    continue;
-	  }
-	for (int j = 0; j < 2; j++)
-	  for (int k = j+1; k < 3; k++)
-	    {
-	      INDEX_2 edge(mtris.Get(i).pnums[j],
-			   mtris.Get(i).pnums[k]);
-	      edge.Sort();
-	      if (cutedges.Used (edge))
-		{
-		  mtris.Elem(i).marked = 1;
-		  hanging = 1;
-                }
-	    }
-      }  
+    bool hanging = false;
+    // for (int i = 1; i <= mtris.Size(); i++)
+    // for (auto & tri : mtris)
+    ParallelForRange
+      (tm, mtris.Size(), [&] (size_t begin, size_t end)
+       {
+         bool my_hanging = false;
+         for (size_t i = begin; i < end; i++)
+           {
+             auto & tri = mtris[i];
+             if (tri.marked)
+               {
+                 my_hanging = true;
+                 continue; 
+               }
+             for (int j = 0; j < 2; j++)
+               for (int k = j+1; k < 3; k++)
+                 {
+                   INDEX_2 edge(tri.pnums[j],
+                                tri.pnums[k]);
+                   edge.Sort();
+                   if (cutedges.Used (edge))
+                     {
+                       tri.marked = 1;
+                       my_hanging = true;
+                     }
+                 }
+           }
+         if (my_hanging) hanging = true;
+      });
     return hanging;
   }
 
@@ -2620,14 +2654,22 @@ namespace netgen
 
     static int timer = NgProfiler::CreateTimer ("Bisect");
     static int timer1 = NgProfiler::CreateTimer ("Bisect 1");
+    static int timer1a = NgProfiler::CreateTimer ("Bisect 1a");
+    static int timer1b = NgProfiler::CreateTimer ("Bisect 1b");
     static int timer2 = NgProfiler::CreateTimer ("Bisect 2");
+    static int timer2a = NgProfiler::CreateTimer ("Bisect 2a");
+    static int timer2b = NgProfiler::CreateTimer ("Bisect 2b");
+    static int timer2c = NgProfiler::CreateTimer ("Bisect 2c");
     static int timer3 = NgProfiler::CreateTimer ("Bisect 3");
+    static int timer3a = NgProfiler::CreateTimer ("Bisect 3a");
+    static int timer3b = NgProfiler::CreateTimer ("Bisect 3b");
     static int timer_bisecttet = NgProfiler::CreateTimer ("Bisect tets");
     static int timer_bisecttrig = NgProfiler::CreateTimer ("Bisect trigs");
+    static int timer_bisectsegms = NgProfiler::CreateTimer ("Bisect segms");
     NgProfiler::RegionTimer reg1 (timer);
     
     NgProfiler::StartTimer (timer1);
-
+    NgProfiler::StartTimer (timer1a);
     static int localizetimer = NgProfiler::CreateTimer("localize edgepoints");
     NgProfiler::RegionTimer * loct = new NgProfiler::RegionTimer(localizetimer);   
     LocalizeEdgePoints(mesh);
@@ -2756,7 +2798,8 @@ namespace netgen
     INDEX_2_CLOSED_HASHTABLE<PointIndex> cutedges(10 + 9 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
 
     bool noprojection = false;
-
+    NgProfiler::StopTimer (timer1a);
+    
     for (int l = 1; l <= 1; l++)
       {
 	int marked = 0;
@@ -3169,7 +3212,6 @@ namespace netgen
 	//string yn;
 	//cin >> yn;
         
-        NgProfiler::StopTimer (timer1);
     
         (*testout) << "refine volume elements" << endl;
 	do
@@ -3312,7 +3354,7 @@ namespace netgen
 
 
 	    hangingvol = 
-	      MarkHangingTets (mtets, cutedges) +
+	      MarkHangingTets (mtets, cutedges, opt.task_manager) +
 	      MarkHangingPrisms (mprisms, cutedges) +
 	      MarkHangingIdentifications (mids, cutedges);
 
@@ -3369,7 +3411,10 @@ namespace netgen
 		  mtris.Append (newtri2);
 		  mesh.mlparentsurfaceelement.Append (i);
 		}
-	  
+
+            NgProfiler::StopTimer (timer_bisecttrig);
+            
+            
 	    int nquad = mquads.Size();
 	    for (int i = 1; i <= nquad; i++)
 	      if (mquads.Elem(i).marked)
@@ -3461,15 +3506,15 @@ namespace netgen
 		  mquads.Elem(i) = newquad1;
 		  mquads.Append (newquad2);
 		}
-	  
-            NgProfiler::StopTimer (timer_bisecttrig);
-            
+
+            NgProfiler::StartTimer (timer1b);            
 	    hangingsurf = 
-	      MarkHangingTris (mtris, cutedges) +
+	      MarkHangingTris (mtris, cutedges, opt.task_manager) +
 	      MarkHangingQuads (mquads, cutedges);
 
 	    hangingedge = 0;
-	  
+            NgProfiler::StopTimer (timer1b);                        
+            NgProfiler::StartTimer (timer_bisectsegms);            	  
 	    int nseg = mesh.GetNSeg ();
 	    for (int i = 1; i <= nseg; i++)
 	      {
@@ -3506,6 +3551,8 @@ namespace netgen
 		    mesh.AddSegment (nseg2);
 		  }
 	      }
+
+            NgProfiler::StopTimer (timer_bisectsegms);            	              
 	  }
 	while (hangingvol || hangingsurf || hangingedge);
         
@@ -3533,6 +3580,8 @@ namespace netgen
 	  }
 	PrintMessage (4, mesh.GetNP(), " points");
       }
+
+    NgProfiler::StopTimer (timer1);
 
 
     // (*testout) << "mtets = " << mtets << endl;
@@ -3579,6 +3628,8 @@ namespace netgen
       }
 
     NgProfiler::StartTimer (timer2);
+
+    NgProfiler::StartTimer (timer2a);    
     
     mtets.SetAllocSize (mtets.Size());
     mprisms.SetAllocSize (mprisms.Size());
@@ -3654,15 +3705,18 @@ namespace netgen
       }
   
     mesh.ClearSurfaceElements();
-    for (int i = 1; i <= mtris.Size(); i++)
+    mesh.SurfaceElements().SetAllocSize (mtris.Size()+mquads.Size());    
+    NgProfiler::StopTimer (timer2a);        
+    NgProfiler::StartTimer (timer2b);
+    for (auto & trig : mtris)
       {
 	Element2d el(TRIG);
-	el.SetIndex (mtris.Get(i).surfid);
-	el.SetOrder (mtris.Get(i).order);
-	for (int j = 1; j <= 3; j++)
+	el.SetIndex (trig.surfid);
+	el.SetOrder (trig.order);
+	for (int j = 0; j < 3; j++)
 	  {
-	    el.PNum(j) = mtris.Get(i).pnums[j-1];
-	    el.GeomInfoPi(j) = mtris.Get(i).pgeominfo[j-1];
+	    el[j] = trig.pnums[j];
+	    el.GeomInfoPi(j+1) = trig.pgeominfo[j];
 	  }
 	mesh.AddSurfaceElement (el);
       }
@@ -3675,7 +3729,7 @@ namespace netgen
 	Swap (el.PNum(3), el.PNum(4));
 	mesh.AddSurfaceElement (el);
       }
-
+    NgProfiler::StopTimer (timer2b);        
 
       
     // write multilevel hierarchy to mesh:
@@ -3705,12 +3759,12 @@ namespace netgen
     BitArray isnewpoint(np);
     isnewpoint.Clear();
 
-    for (int i = 1; i <= cutedges.Size(); i++)
-      if (cutedges.UsedPos(i))
+    for (int i = 0; i < cutedges.Size(); i++)
+      if (cutedges.UsedPos0(i))
 	{
 	  INDEX_2 edge;
 	  PointIndex newpi;
-	  cutedges.GetData (i, edge, newpi);
+	  cutedges.GetData0 (i, edge, newpi);
 	  isnewpoint.Set(newpi);
 	  mesh.mlbetweennodes.Elem(newpi) = edge;
 	}
@@ -3811,12 +3865,12 @@ namespace netgen
 	  }
 	*/
 
-	for (int j = 1; j <= cutedges.Size(); j++)
-	  if (cutedges.UsedPos(j))
+	for (int j = 0; j < cutedges.Size(); j++)
+	  if (cutedges.UsedPos0(j))
 	    {
 	      INDEX_2 i2;
 	      PointIndex newpi;
-	      cutedges.GetData (j, i2, newpi);
+	      cutedges.GetData0 (j, i2, newpi);
 	      INDEX_2 oi2(identmap.Get(i2.I1()),
 			  identmap.Get(i2.I2()));
 	      oi2.Sort();
@@ -3960,9 +4014,10 @@ namespace netgen
 
     NgProfiler::StopTimer (timer2);
     NgProfiler::StartTimer (timer3);
-    
-    mesh.UpdateTopology(opt.task_manager);
 
+    NgProfiler::StartTimer (timer3a);    
+    mesh.UpdateTopology(opt.task_manager);
+    NgProfiler::StopTimer (timer3a);    
 
 
 
@@ -3976,8 +4031,9 @@ namespace netgen
 	ofst.close();
       }
 
-
+    NgProfiler::StartTimer (timer3b);    
     mesh.CalcSurfacesOfNode();
+    NgProfiler::StopTimer (timer3b);        
 
     PrintMessage (1, "Bisection done");
 

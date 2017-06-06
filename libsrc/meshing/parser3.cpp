@@ -84,7 +84,7 @@ void vnetrule :: LoadRule (istream & ist)
   char buf[256];
   char ch, ok;
   Point3d p;
-  Element2d face;
+  Element2d face(TRIG);
   int i, j, i1, i2, i3, fs, ii, ii1, ii2, ii3;
   twoint edge;
   DenseMatrix tempoldutonewu(30, 20), 

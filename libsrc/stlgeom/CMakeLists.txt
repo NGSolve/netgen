@@ -6,7 +6,7 @@ add_library(stl ${NG_LIB_TYPE}
 if(NOT WIN32)
     target_link_libraries( stl mesh  ${PYTHON_LIBRARIES})
     target_link_libraries( stl ${PYTHON_LIBRARIES})
-    install( TARGETS stl ${ng_install_dir})
+    install( TARGETS stl ${NG_INSTALL_DIR})
 endif(NOT WIN32)
 
 if(USE_GUI)
@@ -15,12 +15,12 @@ if(USE_GUI)
             )
     if(NOT WIN32)
         target_link_libraries( stlvis stl )
-        install( TARGETS stlvis ${ng_install_dir})
+        install( TARGETS stlvis ${NG_INSTALL_DIR})
     endif(NOT WIN32)
 endif(USE_GUI)
 
 install(FILES
   meshstlsurface.hpp stlgeom.hpp stlline.hpp
   stltool.hpp stltopology.hpp vsstl.hpp
-  DESTINATION ${INCDIR}/stlgeom COMPONENT netgen_devel
+  DESTINATION ${NG_INSTALL_DIR_INCLUDE}/stlgeom COMPONENT netgen_devel
 )

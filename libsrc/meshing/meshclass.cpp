@@ -116,7 +116,7 @@ namespace netgen
     surfelements.SetSize(0);
     volelements.SetSize(0);
     lockedpoints.SetSize(0);
-    surfacesonnode.SetSize(0);
+    // surfacesonnode.SetSize(0);
 
     delete boundaryedges;
     boundaryedges = NULL;
@@ -926,7 +926,7 @@ namespace netgen
             PrintMessage (3, n, " volume elements");
             for (i = 1; i <= n; i++)
               {
-                Element el;
+                Element el(TET);
                 int hi, nep;
                 infile >> hi;
                 if (hi == 0) hi = 1;
@@ -1423,7 +1423,7 @@ namespace netgen
             PrintMessage (3, n, " volume elements");
             for (i = 1; i <= n; i++)
               {
-                Element el;
+                Element el(TET);
                 int hi, nep;
                 infile >> hi;
                 if (hi == 0) hi = 1;
@@ -1593,12 +1593,14 @@ namespace netgen
 
   void Mesh :: CalcSurfacesOfNode ()
   {
-    surfacesonnode.SetSize (GetNP());
+    // surfacesonnode.SetSize (GetNP());
+    TABLE<int,PointIndex::BASE> surfacesonnode(GetNP());
 
     delete boundaryedges;
     boundaryedges = NULL;
 
     delete surfelementht;
+    surfelementht = nullptr;
     delete segmentht;
 
     /*
@@ -1606,9 +1608,11 @@ namespace netgen
       segmentht = new INDEX_2_HASHTABLE<int> (GetNSeg() + 1);
     */
 
-    surfelementht = new INDEX_3_CLOSED_HASHTABLE<int> (3*GetNSE() + 1);
+    if (dimension == 3)
+      surfelementht = new INDEX_3_CLOSED_HASHTABLE<int> (3*GetNSE() + 1);
     segmentht = new INDEX_2_CLOSED_HASHTABLE<int> (3*GetNSeg() + 1);
 
+    if (dimension == 3)
     for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
       {
         const Element2d & sel = surfelements[sei];
@@ -1619,6 +1623,9 @@ namespace netgen
         for (int j = 0; j < sel.GetNP(); j++)
           {
             PointIndex pi = sel[j];
+            if (!surfacesonnode[pi].Contains(si))
+              surfacesonnode.Add (pi, si);
+            /*
             bool found = 0;
             for (int k = 0; k < surfacesonnode[pi].Size(); k++)
               if (surfacesonnode[pi][k] == si)
@@ -1629,6 +1636,7 @@ namespace netgen
 
             if (!found)
               surfacesonnode.Add (pi, si);
+            */
           }
       }
     /*
@@ -1647,6 +1655,8 @@ namespace netgen
 
       surfelementht -> AllocateElements();
     */
+
+    if (dimension==3)
     for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
       {
         const Element2d & sel = surfelements[sei];
@@ -1891,7 +1901,7 @@ namespace netgen
     int ii;
     PointIndex pi;
     SurfaceElementIndex sei;
-    Element2d hel;
+    // Element2d hel;
 
 
     INDEX_3_CLOSED_HASHTABLE<INDEX_2> faceht(100);   
@@ -1905,7 +1915,7 @@ namespace netgen
           FlatArray<SurfaceElementIndex> row = selsonpoint[pi];
           for (ii = 0; ii < row.Size(); ii++)
             {
-              hel = SurfaceElement(row[ii]);
+              Element2d hel = SurfaceElement(row[ii]);
               if (hel.GetType() == TRIG6) hel.SetType(TRIG);
               int ind = hel.GetIndex();	  
 
@@ -1950,6 +1960,7 @@ namespace netgen
                 {
                   for (int j = 1; j <= el.GetNFaces(); j++)
                     {
+                      Element2d hel(TRIG);
                       el.GetFace (j, hel);
                       hel.Invert();
                       hel.NormalizeNumbering();
@@ -2004,8 +2015,9 @@ namespace netgen
                 faceht.GetData (i, i3, i2);
                 if (i2.I1() != PointIndex::BASE-1)
                   {
-                    Element2d tri;
-                    tri.SetType ( (i2.I2() == PointIndex::BASE-1) ? TRIG : QUAD);
+                    // Element2d tri;
+                    // tri.SetType ( (i2.I2() == PointIndex::BASE-1) ? TRIG : QUAD);
+                    Element2d tri ( (i2.I2() == PointIndex::BASE-1) ? TRIG : QUAD);
                     for (int l = 0; l < 3; l++)
                       tri[l] = i3.I(l+1);
                     tri.PNum(4) = i2.I2();
@@ -3665,11 +3677,11 @@ namespace netgen
         {
           bool sege = false, be = false;
 
-          int pos = boundaryedges -> Position(INDEX_2::Sort(el[i], el[j]));
-          if (pos)
+          int pos = boundaryedges -> Position0(INDEX_2::Sort(el[i], el[j]));
+          if (pos != -1)
             {
               be = true;
-              if (boundaryedges -> GetData(pos) == 2)
+              if (boundaryedges -> GetData0(pos) == 2)
                 sege = true;
             }
 
@@ -5351,7 +5363,7 @@ namespace netgen
         // angles in faces
         for (j = 1; j <= 4; j++)
           {
-            Element2d face;
+            Element2d face(TRIG);
             el.GetFace (j, face);
             for (lpi1 = 1; lpi1 <= 3; lpi1++)
               {
@@ -5545,6 +5557,7 @@ namespace netgen
           if (el[j] > numvertices)
             numvertices = el[j];
       }
+    /*
     for (i = 1; i <= nse; i++)
       {
         const Element2d & el = SurfaceElement(i);
@@ -5553,6 +5566,10 @@ namespace netgen
           if (el.PNum(j) > numvertices)
             numvertices = el.PNum(j);
       } 
+    */
+    for (auto & el : SurfaceElements())
+      for (PointIndex v : el.Vertices())
+        if (v > numvertices) numvertices = v;
 
     numvertices += 1- PointIndex::BASE;
   }
@@ -5741,8 +5758,8 @@ namespace netgen
       {
         int olds = materials.Size();
         materials.SetSize (domnr);
-        for (int i = olds; i < domnr; i++)
-          materials[i] = 0;
+        for (int i = olds; i < domnr-1; i++)
+          materials[i] = new string("default");
       }
     /*
     materials.Elem(domnr) = new char[strlen(mat)+1];
@@ -5751,11 +5768,12 @@ namespace netgen
     materials.Elem(domnr) = new string(mat);
   }
 
+  string Mesh :: defaultmat = "default";
   const string & Mesh :: GetMaterial (int domnr) const
   {
     if (domnr <= materials.Size())
       return *materials.Get(domnr);
-    static string emptystring;
+    static string emptystring("default");
     return emptystring;
   }
 
@@ -5832,6 +5850,7 @@ namespace netgen
       cd2names[cd2nr] = nullptr;
   }
 
+  string Mesh :: cd2_default_name = "default";
   const string & Mesh :: GetCD2Name (int cd2nr) const
   {
     static string defaultstring  = "default";
@@ -5916,8 +5935,8 @@ namespace netgen
         << sizeof (Element) << " = " 
         << GetNE() * sizeof(Element) << endl;
 
-    ost << "surfs on node:";
-    surfacesonnode.PrintMemInfo (cout);
+    // ost << "surfs on node:";
+    // surfacesonnode.PrintMemInfo (cout);
 
     ost << "boundaryedges: ";
     if (boundaryedges)

@@ -16,19 +16,51 @@ option( USE_MPEG    "enable video recording with FFmpeg, uses libavcodec" OFF )
 option( INTEL_MIC        "cross compile for intel xeon phi")
 option( INSTALL_PROFILES "install environment variable settings to /etc/profile.d" OFF )
 option( USE_CCACHE       "use ccache")
+option( USE_INTERNAL_TCL "Compile tcl files into the code and don't install them" ON)
 
 option( USE_SUPERBUILD       "use ccache" ON)
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_modules")
 
+if(APPLE)
+  set(INSTALL_DIR_DEFAULT /Applications/Netgen.app)
+else(APPLE)
+  if(WIN32)
+    set(INSTALL_DIR_DEFAULT "C:/netgen")
+  else(WIN32)
+    set(INSTALL_DIR_DEFAULT /opt/netgen)
+  endif(WIN32)
+endif(APPLE)
+
+if(INSTALL_DIR)
+  message(WARNING "INSTALL_DIR is deprecated, use CMAKE_INSTALL_PREFIX instead")
+  set(INSTALL_DIR_DEFAULT ${INSTALL_DIR})
+endif(INSTALL_DIR)
+
+if(UNIX)
+  message("Checking for write permissions in install directory...")
+  execute_process(COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX})
+  execute_process(COMMAND test -w ${CMAKE_INSTALL_PREFIX} RESULT_VARIABLE res)
+  if(res)
+    message(WARNING "No write access at install directory, please set correct permissions")
+  endif()
+endif(UNIX)
+
 if (USE_SUPERBUILD)
   project (SUPERBUILD)
+  if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR_DEFAULT}" CACHE PATH "Install directory" FORCE)
+  endif()
+
   # execute the superbuild (this script will be invoked again without the
   # USE_SUPERBUILD option this time)
   include (cmake/SuperBuild.cmake)
   return()                      # stop processing this file further
 else()
   project(Netgen)
+  if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR_DEFAULT}" CACHE PATH "Install directory" FORCE)
+  endif()
 endif()
 
 set(NETGEN_VERSION_MAJOR 6)
@@ -37,7 +69,6 @@ string(TIMESTAMP NETGEN_VERSION_PATCH "%y%U%w" )
 set(NETGEN_VERSION "${NETGEN_VERSION_MAJOR}.${NETGEN_VERSION_MINOR}-dev")
 set(PACKAGE_VERSION "${NETGEN_VERSION_MAJOR}.${NETGEN_VERSION_MINOR}-${NETGEN_VERSION_PATCH}")
 set(CPACK_PACKAGE_VERSION "${PACKAGE_VERSION}")
-# set(CPACK_DEBIAN_PACKAGE_VERSION "${PACKAGE_VERSION}"
 
 
 #######################################################################
@@ -69,48 +100,81 @@ if (ADDITIONAL_PATHS)
   set(CMAKE_PREFIX_PATH ${ADDITIONAL_PATHS})
 endif (ADDITIONAL_PATHS)
 
-if(APPLE)
-  set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR}/Contents/Resources" CACHE INTERNAL "Prefix prepended to install directories" FORCE)
-else(APPLE)
-  set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR}" CACHE INTERNAL "Prefix prepended to install directories" FORCE) 
-endif(APPLE)
-
-#######################################################################
-# use rpath
-SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
-SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
-SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
-IF("${isSystemDir}" STREQUAL "-1")
-   SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-ENDIF("${isSystemDir}" STREQUAL "-1")
-
 #######################################################################
 # build options
-add_definitions(-DUSE_TIMEOFDAY)
-
 include_directories ("${PROJECT_SOURCE_DIR}/include")
 include_directories ("${PROJECT_SOURCE_DIR}/libsrc/include")
 include_directories ("${PROJECT_BINARY_DIR}")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-set(INCDIR include CACHE PATH "install directory for header files")
+set(NG_INSTALL_SUFFIX netgen CACHE STRING "Suffix appended to install directories (project name)")
+
 if(APPLE)
-  set(ng_install_dir_bin ../MacOS)
-  set(ng_install_dir_lib ../MacOS)
+  set(NG_INSTALL_DIR_BIN_DEFAULT Contents/MacOS)
+  set(NG_INSTALL_DIR_LIB_DEFAULT Contents/MacOS)
+  set(NG_INSTALL_DIR_CMAKE_DEFAULT Contents/Resources/CMake)
+  set(NG_INSTALL_DIR_PYTHON_DEFAULT Contents/Resources/${PYTHON_PACKAGES_INSTALL_DIR})
+  set(NG_INSTALL_DIR_RES_DEFAULT Contents/Resources/share)
+  set(NG_INSTALL_DIR_INCLUDE_DEFAULT Contents/Resources/include)
+
+  set(NG_RPATH_TOKEN "@loader_path")
 else(APPLE)
-  set(ng_install_dir_bin bin)
-  set(ng_install_dir_lib lib)
+  set(NG_INSTALL_DIR_BIN_DEFAULT bin)
+  set(NG_INSTALL_DIR_LIB_DEFAULT lib)
+  if(WIN32)
+    set(NG_INSTALL_DIR_CMAKE_DEFAULT cmake)
+  else(WIN32)
+    set(NG_INSTALL_DIR_CMAKE_DEFAULT lib/cmake/${NG_INSTALL_SUFFIX})
+  endif(WIN32)
+  set(NG_INSTALL_DIR_PYTHON_DEFAULT ${PYTHON_PACKAGES_INSTALL_DIR})
+  set(NG_INSTALL_DIR_RES_DEFAULT share)
+  set(NG_INSTALL_DIR_INCLUDE_DEFAULT include)
+
+  set(NG_RPATH_TOKEN "\$ORIGIN")
 endif(APPLE)
-set(ng_install_dir EXPORT netgen-targets RUNTIME DESTINATION ${ng_install_dir_bin} COMPONENT netgen LIBRARY DESTINATION ${ng_install_dir_lib} COMPONENT netgen_devel ARCHIVE DESTINATION ${ng_install_dir_lib} COMPONENT netgen_devel)
-install(EXPORT netgen-targets DESTINATION share/cmake)
+
+set(NG_INSTALL_DIR_PYTHON ${NG_INSTALL_DIR_PYTHON_DEFAULT} CACHE STRING "Install directory for Python files")
+set(NG_INSTALL_DIR_BIN ${NG_INSTALL_DIR_BIN_DEFAULT} CACHE STRING "Install directory for executables")
+set(NG_INSTALL_DIR_LIB ${NG_INSTALL_DIR_LIB_DEFAULT} CACHE STRING "Install directory for libraries")
+set(NG_INSTALL_DIR_INCLUDE ${NG_INSTALL_DIR_INCLUDE_DEFAULT} CACHE STRING "Install directory for header files")
+set(NG_INSTALL_DIR_CMAKE ${NG_INSTALL_DIR_CMAKE_DEFAULT} CACHE STRING "Install directory for CMake files")
+set(NG_INSTALL_DIR_RES ${NG_INSTALL_DIR_RES_DEFAULT} CACHE STRING "Install directory for resources")
+
+get_filename_component(NETGEN_CMAKE_DIR_ABSOLUTE ${NG_INSTALL_DIR_CMAKE} ABSOLUTE BASE_DIR ${CMAKE_INSTALL_PREFIX})
+get_filename_component(NETGEN_BINARY_DIR_ABSOLUTE ${NG_INSTALL_DIR_BIN} ABSOLUTE BASE_DIR ${CMAKE_INSTALL_PREFIX})
+get_filename_component(NETGEN_LIBRARY_DIR_ABSOLUTE ${NG_INSTALL_DIR_LIB} ABSOLUTE BASE_DIR ${CMAKE_INSTALL_PREFIX})
+get_filename_component(NETGEN_INCLUDE_DIR_ABSOLUTE ${NG_INSTALL_DIR_INCLUDE} ABSOLUTE BASE_DIR ${CMAKE_INSTALL_PREFIX})
+get_filename_component(NETGEN_PYTHON_DIR_ABSOLUTE ${NG_INSTALL_DIR_PYTHON} ABSOLUTE BASE_DIR ${CMAKE_INSTALL_PREFIX})
+get_filename_component(NETGEN_RESOURCE_DIR_ABSOLUTE ${NG_INSTALL_DIR_RES} ABSOLUTE BASE_DIR ${CMAKE_INSTALL_PREFIX})
+
+file(RELATIVE_PATH NETGEN_DIR ${NETGEN_CMAKE_DIR_ABSOLUTE} ${CMAKE_INSTALL_PREFIX})
+file(RELATIVE_PATH NETGEN_BINARY_DIR ${NETGEN_CMAKE_DIR_ABSOLUTE} ${NETGEN_BINARY_DIR_ABSOLUTE})
+file(RELATIVE_PATH NETGEN_LIBRARY_DIR ${NETGEN_CMAKE_DIR_ABSOLUTE} ${NETGEN_LIBRARY_DIR_ABSOLUTE})
+file(RELATIVE_PATH NETGEN_INCLUDE_DIR ${NETGEN_CMAKE_DIR_ABSOLUTE} ${NETGEN_INCLUDE_DIR_ABSOLUTE})
+file(RELATIVE_PATH NETGEN_PYTHON_DIR ${NETGEN_CMAKE_DIR_ABSOLUTE} ${NETGEN_PYTHON_DIR_ABSOLUTE})
+file(RELATIVE_PATH NETGEN_RESOURCE_DIR ${NETGEN_CMAKE_DIR_ABSOLUTE} ${NETGEN_RESOURCE_DIR_ABSOLUTE})
+
+file(RELATIVE_PATH NETGEN_RPATH ${NETGEN_BINARY_DIR_ABSOLUTE} ${NETGEN_LIBRARY_DIR_ABSOLUTE})
+file(RELATIVE_PATH NETGEN_PYTHON_RPATH_BIN ${NETGEN_PYTHON_DIR_ABSOLUTE} ${NETGEN_BINARY_DIR_ABSOLUTE})
+file(RELATIVE_PATH NETGEN_PYTHON_RPATH ${NETGEN_PYTHON_DIR_ABSOLUTE} ${NETGEN_LIBRARY_DIR_ABSOLUTE})
+if(WIN32)
+	set(NETGEN_PYTHON_RPATH ${NETGEN_PYTHON_RPATH_BIN})
+endif(WIN32)
+
+set(NG_INSTALL_DIR EXPORT netgen-targets RUNTIME DESTINATION ${NG_INSTALL_DIR_BIN} COMPONENT netgen LIBRARY DESTINATION ${NG_INSTALL_DIR_LIB} COMPONENT netgen_devel ARCHIVE DESTINATION ${NG_INSTALL_DIR_LIB} COMPONENT netgen_devel)
+install(EXPORT netgen-targets DESTINATION ${NG_INSTALL_DIR_CMAKE} )
+
+set(CMAKE_MACOSX_RPATH TRUE)
+set(CMAKE_INSTALL_RPATH "${NG_RPATH_TOKEN};${NG_RPATH_TOKEN}/${NETGEN_RPATH}")
 
 include (CheckIncludeFiles)
 check_include_files (dlfcn.h HAVE_DLFCN_H)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-add_definitions(-DHAVE_CONFIG_H)
+if(HAVE_DLFCN_H)
+  add_definitions(-DHAVE_DLFCN_H)
+endif()
+add_definitions(-DPACKAGE_VERSION="${NETGEN_VERSION}")
+
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR})
 
 #######################################################################
@@ -133,8 +197,6 @@ if(WIN32)
     get_WIN32_WINNT(ver)
     add_definitions(-D_WIN32_WINNT=${ver} -DWNT -DWNT_WINDOW -DNOMINMAX)
     set(CMAKE_MFC_FLAG 0)
-#     add_definitions(-DNGINTERFACE_EXPORTS)
-#     add_definitions(-DNGLIB_EXPORTS)
     add_definitions(-DMSVC_EXPRESS -D_CRT_SECURE_NO_WARNINGS -DHAVE_STRUCT_TIMESPEC)
     # build convenience (aka object) libraries in windows)
     set(NG_LIB_TYPE OBJECT)
@@ -145,9 +207,7 @@ else(WIN32)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 endif(WIN32)
 if(APPLE)
-#    set(MACOSX_BUNDLE ON)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
-#     set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
 endif(APPLE)
 
 #######################################################################
@@ -190,8 +250,8 @@ if (USE_PYTHON)
     include_directories(${PYBIND_INCLUDE_DIR})
     include_directories(${PYTHON_INCLUDE_DIRS})
 
-    install(DIRECTORY ${PYBIND_INCLUDE_DIR}/pybind11 DESTINATION ${INCDIR} COMPONENT netgen_devel)
-    install(FILES ${PYBIND_INCLUDE_DIR}/../LICENSE DESTINATION ${INCDIR}/pybind11 COMPONENT netgen_devel)
+    install(DIRECTORY ${PYBIND_INCLUDE_DIR}/pybind11 DESTINATION ${NG_INSTALL_DIR_INCLUDE} COMPONENT netgen_devel)
+    install(FILES ${PYBIND_INCLUDE_DIR}/../LICENSE DESTINATION ${NG_INSTALL_DIR_INCLUDE}/pybind11 COMPONENT netgen_devel)
 endif (USE_PYTHON)
 
 #######################################################################
@@ -227,10 +287,10 @@ endif (USE_MPEG)
 #######################################################################
 if(INSTALL_PROFILES)
     file(WRITE  ${CMAKE_CURRENT_BINARY_DIR}/netgen.sh "#!/bin/sh\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/netgen.sh "export PATH=${INSTALL_DIR}/bin:$PATH\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/netgen.sh "export NETGENDIR=${INSTALL_DIR}/bin\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/netgen.sh "export PYTHONPATH=${INSTALL_DIR}/${PYTHON_PACKAGES_INSTALL_DIR}:.\n")
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/netgen.sh "export LD_LIBRARY_PATH=${INSTALL_DIR}/lib:.\n")
+    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/netgen.sh "export PATH=${CMAKE_INSTALL_PREFIX}/bin:$PATH\n")
+    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/netgen.sh "export NETGENDIR=${CMAKE_INSTALL_PREFIX}/bin\n")
+    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/netgen.sh "export PYTHONPATH=${CMAKE_INSTALL_PREFIX}/${PYTHON_PACKAGES_INSTALL_DIR}:.\n")
+    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/netgen.sh "export LD_LIBRARY_PATH=${CMAKE_INSTALL_PREFIX}/lib:.\n")
     install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/netgen.sh DESTINATION /etc/profile.d COMPONENT netgen)
 
     string(ASCII 27 Esc)
@@ -242,19 +302,19 @@ endif(INSTALL_PROFILES)
 #######################################################################
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/fixup.cmake "\
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/netgen_fixup.cmake)
-set(APP ${INSTALL_DIR})
+set(APP ${CMAKE_INSTALL_PREFIX})
 message(\${APP})
 set(BU_CHMOD_BUNDLE_ITEMS ON)
 
-file(GLOB libs ${CMAKE_INSTALL_PREFIX}/${ng_install_dir_lib}/*.dylib ${CMAKE_INSTALL_PREFIX}/${ng_install_dir_lib}/*.so)
+file(GLOB libs ${CMAKE_INSTALL_PREFIX}/${NG_INSTALL_DIR_LIB}/*.dylib ${CMAKE_INSTALL_PREFIX}/${NG_INSTALL_DIR_LIB}/*.so)
 message(\"\${libs}\")
-netgen_fixup_bundle( \${APP}/Contents/MacOS/netgen \"\${libs}\" ${CMAKE_INSTALL_PREFIX}/${ng_install_dir_lib} )
-execute_process(COMMAND ln -s /Applications ${INSTALL_DIR}/../Applications)
+netgen_fixup_bundle( \${APP}/Contents/MacOS/netgen \"\${libs}\" ${CMAKE_INSTALL_PREFIX}/${NG_INSTALL_DIR_LIB} )
+execute_process(COMMAND ln -s /Applications ${CMAKE_INSTALL_PREFIX}/../Applications)
 set (bundle_filename \$ENV{NETGEN_BUNDLE_NAME})
 if(NOT bundle_filename)
   set(bundle_filename netgen)
 endif(NOT bundle_filename)
-execute_process(COMMAND hdiutil create -volname Netgen -srcfolder ${INSTALL_DIR} -ov -format UDZO \${bundle_filename}-${PACKAGE_VERSION}.dmg)
+execute_process(COMMAND hdiutil create -volname Netgen -srcfolder ${CMAKE_INSTALL_PREFIX} -ov -format UDZO \${bundle_filename}-${PACKAGE_VERSION}.dmg)
 ")
   add_custom_target(bundle COMMAND ${CMAKE_COMMAND} "-P" "${CMAKE_CURRENT_BINARY_DIR}/fixup.cmake")
 #######################################################################
@@ -328,7 +388,7 @@ export PYTHONPATH=$Netgen_BUNDLE/Contents/Resources/${PYTHON_PACKAGES_INSTALL_DI
 cd $Netgen_MACOS
 $Netgen_MACOS/netgen
 ")
-    install(PROGRAMS ${mac_startup} DESTINATION ${ng_install_dir_bin})
+    install(PROGRAMS ${mac_startup} DESTINATION ${NG_INSTALL_DIR_BIN})
 
     set(mac_ngsuite ${CMAKE_CURRENT_BINARY_DIR}/ngsuite.sh)
     file(WRITE ${mac_ngsuite} "\
@@ -337,7 +397,7 @@ Netgen_BUNDLE=\"`echo \"$0\" | sed -e 's/\\/Contents\\/MacOS\\/Netgen1//'`\"
 Netgen_MACOS=\"$Netgen_BUNDLE/Contents/MacOS\"
 open -a /Applications/Utilities/Terminal.app $Netgen_MACOS/startup.sh
 ")
-    install(PROGRAMS ${mac_ngsuite} DESTINATION ../MacOS RENAME Netgen1)
+    install(PROGRAMS ${mac_ngsuite} DESTINATION ${NG_INSTALL_DIR_BIN} RENAME Netgen1)
 
     set(mac_plist ${CMAKE_CURRENT_BINARY_DIR}/Info.plist)
     file(WRITE ${mac_plist} "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
@@ -355,8 +415,8 @@ open -a /Applications/Utilities/Terminal.app $Netgen_MACOS/startup.sh
 </dict>
 </plist>
 ")
-    install(FILES ${mac_plist} DESTINATION ../)
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/netgen.icns DESTINATION . RENAME Netgen.icns)
+    install(FILES ${mac_plist} DESTINATION ${NG_INSTALL_DIR_BIN}/../)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/netgen.icns DESTINATION ${NG_INSTALL_DIR_RES}/../ RENAME Netgen.icns)
 
 endif(APPLE)
 
@@ -373,10 +433,14 @@ configure_file(
 add_custom_target(uninstall
     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NetgenConfig.cmake.in
-	${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake @ONLY)
+#######################################################################
+# Generate package config file
+get_directory_property(NETGEN_COMPILE_DEFINITIONS COMPILE_DEFINITIONS)
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake DESTINATION share/cmake)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NetgenConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake @ONLY ESCAPE_QUOTES)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake DESTINATION ${NG_INSTALL_DIR_CMAKE})
 
 #######################################################################
 # Configure message

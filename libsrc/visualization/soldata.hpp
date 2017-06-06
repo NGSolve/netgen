@@ -99,7 +99,7 @@ namespace netgen
                                     const __m256d * dxdxref, 
                                     __m256d * values)
     {
-      cerr << "GetMultiSurfVaue not overloaded" << endl;
+      cerr << "GetMultiSurfVaue not overloaded for SIMD<double>" << endl;
       return false;
     }
 #endif

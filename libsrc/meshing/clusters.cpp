@@ -21,6 +21,7 @@ namespace netgen
     static int timer = NgProfiler::CreateTimer ("clusters");
     static int timer1 = NgProfiler::CreateTimer ("clusters1");
     static int timer2 = NgProfiler::CreateTimer ("clusters2");
+    static int timer3 = NgProfiler::CreateTimer ("clusters3");
     NgProfiler::RegionTimer reg (timer);
 
     const MeshTopology & top = mesh.GetTopology();
@@ -110,7 +111,7 @@ namespace netgen
     
     NgProfiler::StopTimer(timer1);
     NgProfiler::StartTimer(timer2);      
-
+    /*
     for (int i = 1; i <= nse; i++)
       {
 	const Element2d & el = mesh.SurfaceElement(i);
@@ -132,7 +133,40 @@ namespace netgen
 	for (int j = 0; j < nnums.Size(); j++)
 	  cluster_reps.Elem(nnums[j]) = nnums[j];
       }
+    */
+    ParallelForRange
+      (tm, nse,
+       [&] (size_t begin, size_t end)
+       {
+         ArrayMem<int,9> nnums, ednums;
+         for (int i = begin+1; i <= end; i++)
+           {
+             const Element2d & el = mesh.SurfaceElement(i);
+             ELEMENT_TYPE typ = el.GetType();
+             
+             top.GetSurfaceElementEdges (i, ednums);
+             int fanum = top.GetSurfaceElementFace (i);             
+             
+             int elnv = top.GetNVertices (typ);
+             int elned = ednums.Size();
+             
+             nnums.SetSize(elnv+elned+1);
+             for (int j = 1; j <= elnv; j++)
+               nnums.Elem(j) = el.PNum(j)+1-PointIndex::BASE;
+             for (int j = 1; j <= elned; j++)
+               nnums.Elem(elnv+j) = nv+ednums.Elem(j);
+             nnums.Elem(elnv+elned+1) = fanum;             
+             
+             for (int j = 0; j < nnums.Size(); j++)
+               cluster_reps.Elem(nnums[j]) = nnums[j];
+           }
+       });
 
+    
+    NgProfiler::StopTimer(timer2);
+    NgProfiler::StartTimer(timer3);      
+
+    
     static const int hex_cluster[] =
       { 
 	1, 2, 3, 4, 1, 2, 3, 4, 
@@ -300,7 +334,7 @@ namespace netgen
 	  }
       }
     while (changed);
-    NgProfiler::StopTimer(timer2);
+    NgProfiler::StopTimer(timer3);
     /*
       (*testout) << "cluster reps:" << endl;
       for (i = 1; i <= cluster_reps.Size(); i++)

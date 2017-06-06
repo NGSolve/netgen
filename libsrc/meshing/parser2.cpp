@@ -329,7 +329,7 @@ void netrule :: LoadRule (istream & ist)
 
 	  while (ch == '(')
 	    {
-	      elements.Append (Element2d());
+	      elements.Append (Element2d(TRIG));
 
 	      ist >> elements.Last().PNum(1);
 	      ist >> ch;    // ','

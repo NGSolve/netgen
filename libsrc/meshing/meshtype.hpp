@@ -54,18 +54,35 @@ namespace netgen
   enum OPTIMIZEGOAL { OPT_QUALITY, OPT_CONFORM, OPT_REST, OPT_WORSTCASE, OPT_LEGAL };
 
 
+  extern DLL_HEADER size_t timestamp;
+  inline size_t GetTimeStamp() 
+  { 
+    return timestamp; 
+  }
 
+  inline size_t NextTimeStamp()
+  {
+    timestamp++;
+    return timestamp;
+  }
+  
+  /*
   extern DLL_HEADER int GetTimeStamp();
   extern DLL_HEADER int NextTimeStamp();
-
+  */
   class PointGeomInfo
   {
   public:
     int trignum;   // for STL Meshing
     double u, v;   // for OCC Meshing
 
-    PointGeomInfo () 
-      : trignum(-1), u(0), v(0) { ; }
+    PointGeomInfo () = default;
+    // : trignum(-1), u(0), v(0) { ; }
+    PointGeomInfo (const PointGeomInfo&) = default;
+    PointGeomInfo (PointGeomInfo &&) = default;
+    PointGeomInfo & operator= (const PointGeomInfo&) = default;
+    PointGeomInfo & operator= (PointGeomInfo&&) = default;
+    
   };
 
   inline ostream & operator<< (ostream & ost, const PointGeomInfo & gi)
@@ -133,9 +150,14 @@ namespace netgen
   {
     int i;
   public:
-    PointIndex () { ; }
+    PointIndex () = default;
+    PointIndex (const PointIndex&) = default;
+    PointIndex (PointIndex &&) = default;
+    PointIndex & operator= (const PointIndex&) = default;
+    PointIndex & operator= (PointIndex&&) = default;
+     
     PointIndex (int ai) : i(ai) { ; }
-    PointIndex & operator= (const PointIndex &ai) { i = ai.i; return *this; }
+    // PointIndex & operator= (const PointIndex &ai) { i = ai.i; return *this; }
     operator int () const { return i; }
     PointIndex operator++ (int) { PointIndex hi(*this); i++; return hi; }
     PointIndex operator-- (int) { PointIndex hi(*this); i--; return hi; }
@@ -352,7 +374,11 @@ namespace netgen
 
   public:
     ///
-    Element2d ();
+    Element2d () = default;
+    Element2d (const Element2d &) = default;
+    Element2d (Element2d &&) = default;
+    Element2d & operator= (const Element2d &) = default;
+    Element2d & operator= (Element2d &&) = default;
     ///
     Element2d (int anp);
     ///
@@ -422,6 +448,8 @@ namespace netgen
     { return FlatArray<const PointIndex> (np, &pnum[0]); }
     FlatArray<PointIndex> PNums ()
     { return FlatArray<PointIndex> (np, &pnum[0]); }
+    auto Vertices() const
+    { return FlatArray<const PointIndex> (GetNV(), &pnum[0]); }
     
     ///
     PointIndex & PNum (int i) { return pnum[i-1]; }
@@ -632,13 +660,18 @@ namespace netgen
     flagstruct flags;
 
     ///
-    DLL_HEADER Element ();
+    DLL_HEADER Element () = default;
+    Element (const Element &) = default;
+    Element (Element &&) = default;
+    Element & operator= (const Element &) = default;
+    Element & operator= (Element &&) = default;
+
     ///
     Element (int anp);
     ///
     Element (ELEMENT_TYPE type);
     ///
-    Element & operator= (const Element & el2);
+    // Element & operator= (const Element & el2);
   
     ///
     void SetNP (int anp);
@@ -647,7 +680,7 @@ namespace netgen
     ///
     int GetNP () const { return np; }
     ///
-    short int GetNV() const
+    uint8_t GetNV() const
     {
       __assume(typ >= TET && typ <= HEX);        
       switch (typ)
@@ -666,7 +699,8 @@ namespace netgen
 #ifdef DEBUG
           PrintSysError ("Element3d::GetNV not implemented for typ ", typ);
 #endif
-            return -1;
+          __assume(false);
+          return -1;
         }
     }
 

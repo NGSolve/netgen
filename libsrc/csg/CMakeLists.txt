@@ -14,7 +14,7 @@ endif(APPLE)
 if(NOT WIN32)
     target_link_libraries(csg mesh ${PYTHON_LIBRARIES})
     target_link_libraries(csg ${PYTHON_LIBRARIES})
-    install( TARGETS csg ${ng_install_dir})
+    install( TARGETS csg ${NG_INSTALL_DIR})
 endif(NOT WIN32)
 
 
@@ -25,7 +25,7 @@ if(USE_GUI)
         if(APPLE)
             set_target_properties( csgvis PROPERTIES SUFFIX ".so")
         endif(APPLE)
-        install( TARGETS csgvis ${ng_install_dir})
+        install( TARGETS csgvis ${NG_INSTALL_DIR})
     endif(NOT WIN32)
 endif(USE_GUI)
 
@@ -36,5 +36,5 @@ install(FILES
   polyhedra.hpp revolution.hpp singularref.hpp solid.hpp
   specpoin.hpp spline3d.hpp splinesurface.hpp surface.hpp
   triapprox.hpp vscsg.hpp
-  DESTINATION ${INCDIR}/csg COMPONENT netgen_devel
+  DESTINATION ${NG_INSTALL_DIR_INCLUDE}/csg COMPONENT netgen_devel
 )
