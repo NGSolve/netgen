@@ -182,7 +182,7 @@ ExternalProject_Add (netgen
    )
 
 
-install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} --build . --target install --config ${CMAKE_BUILD_TYPE} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/netgen)")
+install(CODE "execute_process(COMMAND \"${CMAKE_COMMAND}\" --build . --target install --config ${CMAKE_BUILD_TYPE} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/netgen)")
 
 add_custom_target(test_netgen
   ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/netgen
