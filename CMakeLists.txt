@@ -163,7 +163,7 @@ if(WIN32)
 endif(WIN32)
 
 set(NG_INSTALL_DIR EXPORT netgen-targets RUNTIME DESTINATION ${NG_INSTALL_DIR_BIN} COMPONENT netgen LIBRARY DESTINATION ${NG_INSTALL_DIR_LIB} COMPONENT netgen_devel ARCHIVE DESTINATION ${NG_INSTALL_DIR_LIB} COMPONENT netgen_devel)
-install(EXPORT netgen-targets DESTINATION ${NG_INSTALL_DIR_CMAKE} )
+install(EXPORT netgen-targets DESTINATION ${NG_INSTALL_DIR_CMAKE} COMPONENT netgen_devel)
 
 set(CMAKE_MACOSX_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH "${NG_RPATH_TOKEN};${NG_RPATH_TOKEN}/${NETGEN_RPATH}")
@@ -440,7 +440,7 @@ get_directory_property(NETGEN_COMPILE_DEFINITIONS COMPILE_DEFINITIONS)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NetgenConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake @ONLY ESCAPE_QUOTES)
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake DESTINATION ${NG_INSTALL_DIR_CMAKE})
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake DESTINATION ${NG_INSTALL_DIR_CMAKE} COMPONENT netgen_devel)
 
 #######################################################################
 # Configure message
