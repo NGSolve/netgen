@@ -423,26 +423,48 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("Load",  FunctionPointer 
 	 ([](Mesh & self, const string & filename)
 	  {
-            istream * infile;
+	    istream * infile;
+
+#ifdef PARALLEL
+	    MPI_Comm_rank(MPI_COMM_WORLD, &id);
+	    MPI_Comm_size(MPI_COMM_WORLD, &ntasks);
+	    
+	    char* buf = nullptr;
+	    int strs = 0;
+	    if(id==0) {
+#endif
             if (filename.find(".vol.gz") != string::npos)
               infile = new igzstream (filename.c_str());
             else
               infile = new ifstream (filename.c_str());
 	    // ifstream input(filename);
 #ifdef PARALLEL
-	    // int id;
-	    MPI_Comm_rank(MPI_COMM_WORLD, &id);
-	    MPI_Comm_size(MPI_COMM_WORLD, &ntasks);
-
-	    if (id == 0)
-	      {
-		self.Load(*infile);	      
+	    //still inside id==0-bracket...
+	        self.Load(*infile);	      
 		self.Distribute();
+
+		/** Copy the rest of the file into a string (for geometry) **/
+		stringstream geom_part;
+		geom_part << infile->rdbuf();
+		string geom_part_string = geom_part.str();
+		strs = geom_part_string.size();
+		buf = new char[strs];
+		memcpy(buf, geom_part_string.c_str(), strs*sizeof(char));
 	      }
-	    else
-	      {
-		self.SendRecvMesh();
-	      }
+	    else {
+	      self.SendRecvMesh();
+	    }
+
+	    /** Scatter the geometry-string **/
+	    MPI_Bcast(&strs, 1, MPI_INT, 0, MPI_COMM_WORLD); 
+	    if(id!=0)
+	      buf = new char[strs];
+	    MPI_Bcast(buf, strs, MPI_CHAR, 0, MPI_COMM_WORLD);
+	    if(id==0)
+	      delete infile;
+	    infile = new istringstream(string((const char*)buf, (size_t)strs));
+	    delete buf;
+	    
 #else
 	    self.Load(*infile);
 #endif
@@ -455,6 +477,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 		    break;
 		  }
 	      }
+	    if (!ng_geometry)
+	      ng_geometry = make_shared<NetgenGeometry>();
+	    self.SetGeometry(ng_geometry);
+	    delete infile;
 	  }))
     // static_cast<void(Mesh::*)(const string & name)>(&Mesh::Load))
     .def("Save", static_cast<void(Mesh::*)(const string & name)const>(&Mesh::Save))

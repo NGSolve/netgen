@@ -577,8 +577,8 @@ namespace netgen
     PrintMessage (1, "Curve elements, order = ", aorder);
     if (rational) PrintMessage (1, "curved elements with rational splines");
 
-    if (working)
-      const_cast<Mesh&> (mesh).UpdateTopology();
+    // if (working)
+    const_cast<Mesh&> (mesh).UpdateTopology();
     const MeshTopology & top = mesh.GetTopology();
 
     rational = arational;
