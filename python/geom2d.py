@@ -27,7 +27,6 @@ def MakeRectangle (geo, p1, p2, bc=None, bcs=None, **args):
     p1x,p2x = min(p1x,p2x), max(p1x, p2x)
     p1y,p2y = min(p1y,p2y), max(p1y, p2y)
     if not bcs: bcs=4*[bc]
-    print ("bcs = ", bcs)
     pts = [geo.AppendPoint(*p) for p in [(p1x,p1y), (p2x, p1y), (p2x, p2y), (p1x, p2y)]]
     for p1,p2,bc in [(0,1,bcs[0]), (1, 2, bcs[1]), (2, 3, bcs[2]), (3, 0, bcs[3])]:
         geo.Append( ["line", pts[p1], pts[p2]], bc=bc, **args)
