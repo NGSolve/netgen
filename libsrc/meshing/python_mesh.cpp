@@ -452,6 +452,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 		if (hgeom)
 		  {
 		    ng_geometry.reset (hgeom);
+                    self.SetGeometry(ng_geometry);
 		    break;
 		  }
 	      }
