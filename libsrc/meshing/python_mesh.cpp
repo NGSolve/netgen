@@ -463,7 +463,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 	    if(id==0)
 	      delete infile;
 	    infile = new istringstream(string((const char*)buf, (size_t)strs));
-	    delete buf;
+	    delete[] buf;
 	    
 #else
 	    self.Load(*infile);
