@@ -527,6 +527,55 @@ namespace netgen
 
     MPI_Waitall (sendrequests.Size(), &sendrequests[0], MPI_STATUS_IGNORE);
 
+    PrintMessage ( 3, "Sending domain+bc - names");
+
+    sendrequests.SetSize(6*(ntasks-1));
+    /** Send bc-names **/
+    int nbcs = bcnames.Size();
+    Array<int> bcname_sizes(nbcs);
+    int tot_bcsize = 0;
+    for(int k=0;k<nbcs;k++) {
+      bcname_sizes[k] = bcnames[k]->size();
+      tot_bcsize += bcname_sizes[k];
+    }
+    char compiled_bcnames[tot_bcsize];
+    tot_bcsize = 0;
+    for(int k=0;k<nbcs;k++)
+      for(int j=0;j<bcname_sizes[k];j++)
+	compiled_bcnames[tot_bcsize++] = (*bcnames[k])[j];
+    
+    for(int k=1;k<ntasks;k++) {
+      sendrequests[6*(k-1)] = MyMPI_ISend(FlatArray<int>(1, &nbcs), k, MPI_TAG_MESH+6);
+      sendrequests[6*(k-1)+1] = MyMPI_ISend(bcname_sizes, k, MPI_TAG_MESH+6);
+      (void) MPI_Isend(compiled_bcnames, tot_bcsize, MPI_CHAR, k, MPI_TAG_MESH+6, MPI_COMM_WORLD, &sendrequests[6*(k-1)+2]);
+    }
+    
+    /** Send mat-names **/
+    int nmats = materials.Size();
+    Array<int> mat_sizes(nmats);
+    int tot_matsize = 0;
+    for(int k=0;k<nmats;k++) {
+      mat_sizes[k] = materials[k]->size();
+      tot_matsize += mat_sizes[k];
+    }
+    char compiled_mats[tot_matsize];
+    tot_matsize = 0;
+    for(int k=0;k<nmats;k++)
+      for(int j=0;j<mat_sizes[k];j++)
+	compiled_mats[tot_matsize++] = (*materials[k])[j];
+    for(int k=1;k<ntasks;k++) {
+      sendrequests[6*(k-1)+3] = MyMPI_ISend(FlatArray<int>(1, &nmats), k, MPI_TAG_MESH+6);
+      sendrequests[6*(k-1)+4] = MyMPI_ISend(mat_sizes, k, MPI_TAG_MESH+6);
+      (void) MPI_Isend(compiled_mats, tot_matsize, MPI_CHAR, k, MPI_TAG_MESH+6, MPI_COMM_WORLD, &sendrequests[6*(k-1)+5]);
+    }
+
+    /* now wait ... **/
+    PrintMessage( 3, "now wait for domain+bc - names");
+
+    MPI_Waitall (sendrequests.Size(), &sendrequests[0], MPI_STATUS_IGNORE);
+    
+    PrintMessage( 3, "send mesh complete");
+
     MPI_Barrier(MPI_COMM_WORLD);
   }
 
@@ -697,6 +746,42 @@ namespace netgen
 	    }
 	  
 	}
+    }
+
+    /** Recv bc-names **/
+    int nbcs;
+    MyMPI_Recv(nbcs, 0, MPI_TAG_MESH+6);
+    Array<int> bcs(nbcs);
+    MyMPI_Recv(bcs, 0, MPI_TAG_MESH+6);
+    int size_bc = 0;
+    for(int k=0;k<nbcs;k++)
+      size_bc += bcs[k];
+    char compiled_bcnames[size_bc];
+    MPI_Recv(compiled_bcnames, size_bc, MPI_CHAR, 0, MPI_TAG_MESH+6, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    
+    SetNBCNames(nbcs);
+    int cnt = 0;
+    for(int k=0;k<nbcs;k++) {
+      SetBCName(k, string(&compiled_bcnames[cnt], bcs[k]));
+      cnt += bcs[k];
+    }
+
+    /** Recv mat-names **/
+    int nmats;
+    MyMPI_Recv(nmats, 0, MPI_TAG_MESH+6);
+    Array<int> matsz(nmats);
+    MyMPI_Recv(matsz, 0, MPI_TAG_MESH+6);
+    int size_mats = 0;
+    for(int k=0;k<nmats;k++)
+      size_mats += matsz[k];
+    char compiled_mats[size_mats];
+    MPI_Recv(compiled_mats, size_mats, MPI_CHAR, 0, MPI_TAG_MESH+6, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    cnt = 0;
+    materials.SetSize(nmats);
+    for(int k=0;k<nmats;k++) {
+      // setmaterial is 1-based ... 
+      SetMaterial(k+1, string(&compiled_mats[cnt], matsz[k]));
+      cnt += matsz[k];
     }
     
     MPI_Barrier(MPI_COMM_WORLD);
