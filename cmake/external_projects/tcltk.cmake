@@ -65,6 +65,11 @@ elseif(WIN32)
     LOG_DOWNLOAD 1
     )
 
+  set (TK_INCLUDE_PATH ${CMAKE_INSTALL_PREFIX}/include)
+  set (TCL_INCLUDE_PATH ${CMAKE_INSTALL_PREFIX}/include)
+  set (TCL_LIBRARY ${CMAKE_INSTALL_PREFIX}/lib/tcl86.lib)
+  set (TK_LIBRARY ${CMAKE_INSTALL_PREFIX}/lib/tk86.lib)
+
   list(APPEND NETGEN_DEPENDENCIES project_win_extlibs)
 else(WIN32)
     find_package(TCL 8.5 REQUIRED)
