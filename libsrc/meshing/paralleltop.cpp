@@ -112,7 +112,7 @@ namespace netgen
 
   void ParallelMeshTopology :: UpdateCoarseGridGlobal ()
   {
-    cout << "updatecoarsegridglobal called" << endl;
+    // cout << "updatecoarsegridglobal called" << endl;
     if (id == 0)
       PrintMessage ( 3, "UPDATE GLOBAL COARSEGRID STARTS" );      
 
@@ -203,7 +203,7 @@ namespace netgen
 
   void ParallelMeshTopology :: UpdateCoarseGrid ()
   {
-    cout << "UpdateCoarseGrid" << endl;
+    // cout << "UpdateCoarseGrid" << endl;
     // if (is_updated) return;
 
     Reset();
@@ -241,7 +241,7 @@ namespace netgen
     // update new vertices after mesh-refinement
     if (mesh.mlbetweennodes.Size() > 0)
       {
-	cout << "UpdateCoarseGrid - vertices" << endl;
+	// cout << "UpdateCoarseGrid - vertices" << endl;
         int newnv = mesh.mlbetweennodes.Size();
         loc2distvert.ChangeSize(mesh.mlbetweennodes.Size());
 	/*
@@ -376,7 +376,7 @@ namespace netgen
       }
 
     Array<int> sendarray, recvarray;
-    cout << "UpdateCoarseGrid - edges" << endl;
+    // cout << "UpdateCoarseGrid - edges" << endl;
 
     // static int timerv = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex vertices");
     static int timere = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex edges");
@@ -442,10 +442,10 @@ namespace netgen
           }
       }
 
-    cout << "UpdateCoarseGrid - edges mpi-exchange" << endl;
+    // cout << "UpdateCoarseGrid - edges mpi-exchange" << endl;
     TABLE<int> recv_edges(ntasks-1);
     MyMPI_ExchangeTable (send_edges, recv_edges, MPI_TAG_MESH+9, MPI_LocalComm);
-    cout << "UpdateCoarseGrid - edges mpi-exchange done" << endl;
+    // cout << "UpdateCoarseGrid - edges mpi-exchange done" << endl;
 
     /*
     for (int dest = 1; dest < ntasks; dest++)
@@ -493,7 +493,7 @@ namespace netgen
 
     // MPI_Barrier (MPI_LocalComm);
 
-    cout << "UpdateCoarseGrid - faces" << endl;
+    // cout << "UpdateCoarseGrid - faces" << endl;
     if (mesh.GetDimension() == 3)
       {
 	NgProfiler::StartTimer (timerf);
@@ -558,10 +558,10 @@ namespace netgen
 		}
 	    }
 	
-	cout << "UpdateCoarseGrid - faces mpi-exchange" << endl;
+	// cout << "UpdateCoarseGrid - faces mpi-exchange" << endl;
 	TABLE<int> recv_faces(ntasks-1);
 	MyMPI_ExchangeTable (send_faces, recv_faces, MPI_TAG_MESH+9, MPI_LocalComm);
-	cout << "UpdateCoarseGrid - faces mpi-exchange done" << endl;
+	// cout << "UpdateCoarseGrid - faces mpi-exchange done" << endl;
 
 	/*
 	for (int dest = 1; dest < ntasks; dest++)
@@ -682,7 +682,7 @@ namespace netgen
 	
 	NgProfiler::StopTimer (timerf);
       }
-    cout << "UpdateCoarseGrid - done" << endl;
+    // cout << "UpdateCoarseGrid - done" << endl;
     
     is_updated = true;
   }
