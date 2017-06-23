@@ -53,6 +53,10 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<0> (size_t nr) const
   
   ret.faces.num = 0;
   ret.faces.ptr = NULL;
+
+  ret.facets.num = 1;
+  ret.facets.base = 1;
+  ret.facets.ptr = (int*)&el.pnum;
   
   return ret;
 }
