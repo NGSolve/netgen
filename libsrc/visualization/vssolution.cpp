@@ -24,12 +24,12 @@ namespace netgen
 
 
   VisualSceneSolution :: SolData :: SolData ()
-    : name (0), data (0), solclass(0)
+    : data (0), solclass(0)
   { ; }
 
   VisualSceneSolution :: SolData :: ~SolData ()
   {
-    delete [] name;
+    // delete [] name;
     delete data;
     delete solclass;
   }
@@ -86,7 +86,8 @@ namespace netgen
     int funcnr = -1;
     for (int i = 0; i < soldata.Size(); i++)
       {
-        if (strcmp (soldata[i]->name, sd->name) == 0)
+        // if (strcmp (soldata[i]->name, sd->name) == 0)
+        if (soldata[i]->name == sd->name)
           {
             delete soldata[i];
             soldata[i] = sd;
@@ -4778,7 +4779,7 @@ void Ng_ClearSolutionData ()
 
 void Ng_InitSolutionData (Ng_SolutionData * soldata)
 {
-  soldata -> name = NULL;
+  // soldata -> name = NULL;
   soldata -> data = NULL;
   soldata -> components = 1;
   soldata -> dist = 1;
@@ -4797,9 +4798,9 @@ void Ng_SetSolutionData (Ng_SolutionData * soldata)
   //   vssolution.ClearSolutionData ();
   netgen::VisualSceneSolution::SolData * vss = new netgen::VisualSceneSolution::SolData;
 
-  vss->name = new char[strlen (soldata->name)+1];
-  strcpy (vss->name, soldata->name);
-
+  // vss->name = new char[strlen (soldata->name)+1];
+  // strcpy (vss->name, soldata->name);
+  vss->name = soldata->name;
   vss->data = soldata->data;
   vss->components = soldata->components;
   vss->dist = soldata->dist;

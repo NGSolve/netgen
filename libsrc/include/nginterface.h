@@ -308,7 +308,7 @@ extern "C" {
   
   struct Ng_SolutionData
   {
-    const char * name; // name of gridfunction
+    string name;      // name of gridfunction
     double * data;    // solution values
     int components;   // relevant (double) components in solution vector
     int dist;         // # doubles per entry alignment! 

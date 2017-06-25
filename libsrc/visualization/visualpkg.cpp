@@ -79,8 +79,8 @@ namespace netgen
 	    
             for (int i = 0; i < vssolution.soldata.Size(); i++)
               {
-                if ( (strlen (vssolution.soldata[i]->name) == size_t(pointpos-1)) &&
-                     (strncmp (vssolution.soldata[i]->name, scalname, pointpos-1) == 0) )
+                if ( (strlen (vssolution.soldata[i]->name.c_str()) == size_t(pointpos-1)) &&
+                     (strncmp (vssolution.soldata[i]->name.c_str(), scalname, pointpos-1) == 0) )
                   {
                     vssolution.scalfunction = i;
                     vssolution.scalcomp = atoi (scalname + pointpos);
@@ -96,10 +96,10 @@ namespace netgen
                       Tcl_SetVar ( interp, "::visoptions.scalfunction", newscalname, TCL_GLOBAL_ONLY );
 		    scalname = Tcl_GetVar (interp, "::visoptions.scalfunction", TCL_GLOBAL_ONLY);
                   }
-                if (strcmp (vssolution.soldata[i]->name, vecname) == 0)
+                if (strcmp (vssolution.soldata[i]->name.c_str(), vecname) == 0)
 		  vssolution.vecfunction = i;
 
-                if (strcmp (vssolution.soldata[i]->name, fieldlines_vecname) == 0)
+                if (strcmp (vssolution.soldata[i]->name.c_str(), fieldlines_vecname) == 0)
 		  vssolution.fieldlines_vecfunction = i;
               }
 
@@ -315,7 +315,7 @@ namespace netgen
               return TCL_ERROR;
 
             for (i = 0; i < vssolution.GetNSolData(); i++)
-              if (strcmp (vssolution.GetSolData(i)->name, argv[2]) == 0)
+              if (strcmp (vssolution.GetSolData(i)->name.c_str(), argv[2]) == 0)
                 {
                   cout << "found soldata " << i << endl;
                 }
@@ -328,7 +328,7 @@ namespace netgen
       
         if (strcmp (argv[1], "getfieldname") == 0)
           {
-            sprintf (buf, "%s", vssolution.GetSolData(atoi(argv[2])-1)->name);
+            sprintf (buf, "%s", vssolution.GetSolData(atoi(argv[2])-1)->name.c_str());
           }
 
         if (strcmp (argv[1], "iscomplex") == 0)
@@ -346,7 +346,7 @@ namespace netgen
           {
             for (i = 0; i < vssolution.GetNSolData(); i++)
               {
-                strcat (buf, vssolution.GetSolData(i)->name);
+                strcat (buf, vssolution.GetSolData(i)->name.c_str());
                 strcat (buf, " ");
               }
             strcat (buf, "var1 var2 var3");

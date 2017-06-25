@@ -136,7 +136,7 @@ public:
     SolData ();
     ~SolData ();
     
-    char * name;
+    string name;
     double * data;
     int components;
     int dist;
