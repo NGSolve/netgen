@@ -195,6 +195,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
               throw py::index_error();
 	  return self[index];
 	}))
+    .def("__setitem__", FunctionPointer([](MeshPoint & self, int index, double val) {
+	  if(index<0 || index>2)
+              throw py::index_error();
+	  self(index) = val;
+	}))
     ;
   
   py::class_<Element>(m, "Element3D")
