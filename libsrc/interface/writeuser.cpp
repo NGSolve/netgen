@@ -250,7 +250,11 @@ void WriteNeutralFormat (const Mesh & mesh,
 	  outfile << " ";
 	  outfile.width(8);
 	  outfile << seg[1];
-
+          if (seg[2] != -1)
+            {
+              outfile.width(8);
+              outfile << seg[2];
+            }
 	  outfile << "\n";
 	}
     }
