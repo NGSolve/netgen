@@ -284,6 +284,14 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                       li.append(py::cast(self[i]));
                                     return li;
                                   }))
+    .def_property_readonly("points", 
+                  FunctionPointer ([](const Element2d & self) -> py::list
+                                   {
+                                     py::list li;
+                                     for (int i = 0; i < self.GetNP(); i++)
+                                       li.append (py::cast(self[i]));
+                                     return li;
+                                   }))
     ;
 
   py::class_<Segment>(m, "Element1D")
@@ -313,6 +321,14 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                    {
                                      py::list li;
                                      for (int i = 0; i < 2; i++)
+                                       li.append (py::cast(self[i]));
+                                     return li;
+                                   }))
+    .def_property_readonly("points", 
+                  FunctionPointer ([](const Segment & self) -> py::list
+                                   {
+                                     py::list li;
+                                     for (int i = 0; i < self.GetNP(); i++)
                                        li.append (py::cast(self[i]));
                                      return li;
                                    }))

@@ -238,12 +238,19 @@ void WriteNeutralFormat (const Mesh & mesh,
   if (mesh.GetDimension() == 2)
     {
       outfile << nseg << "\n";
-      for (i = 1; i <= nseg; i++)
+      for (int i = 1; i <= nseg; i++)
 	{
 	  const Segment & seg = mesh.LineSegment(i);
 	  outfile.width(4);
 	  outfile << seg.si << "    ";
 
+          for (int j = 0; j < seg.GetNP(); j++)
+            {
+              outfile << " ";
+              outfile.width(8);
+              outfile << seg[j];
+            }
+          /*
 	  outfile << " ";
 	  outfile.width(8);
 	  outfile << seg[0];
@@ -255,6 +262,7 @@ void WriteNeutralFormat (const Mesh & mesh,
               outfile.width(8);
               outfile << seg[2];
             }
+          */
 	  outfile << "\n";
 	}
     }
