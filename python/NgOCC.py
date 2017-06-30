@@ -1,6 +1,5 @@
-import libngpy
-from libngpy._NgOCC import *
-from libngpy._meshing import MeshingParameters
+from netgen.libngpy._NgOCC import *
+from netgen.libngpy._meshing import MeshingParameters
 
 def NgOCC_meshing_func (geom, **args):
     if "mp" in args:
