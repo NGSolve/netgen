@@ -58,10 +58,11 @@ namespace netgen
 
 bool WriteUserFormat (const string & format,
 		      const Mesh & mesh,
-		      const NetgenGeometry & hgeom,
 		      const string & filename)
 {
-  const CSGeometry & geom = *dynamic_cast<const CSGeometry*> (&hgeom);
+  // cout << "write user &hgeom = " << &hgeom << endl;
+  // const CSGeometry & geom = *dynamic_cast<const CSGeometry*> (&hgeom);
+  const CSGeometry & geom = *dynamic_pointer_cast<CSGeometry> (mesh.GetGeometry());  
 
   PrintMessage (1, "Export mesh to file ", filename,
 		", format is ", format);

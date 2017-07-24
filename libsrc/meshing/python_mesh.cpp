@@ -509,7 +509,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("Export",
          [] (Mesh & self, string filename, string format)
           {
-            if (WriteUserFormat (format, self, *self.GetGeometry(), filename))
+            if (WriteUserFormat (format, self, /* *self.GetGeometry(), */ filename))
               {
                 string err = string ("nothing known about format")+format;
                 Array<const char*> names, extensions;

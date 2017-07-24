@@ -1250,6 +1250,6 @@ void Ng_InitSolutionData (Ng_SolutionData * soldata) { ; }
 #include <../interface/writeuser.hpp>
 void MyDummyToForceLinkingLibInterface(Mesh &mesh, NetgenGeometry &geom)
 {
-  netgen::WriteUserFormat("", mesh, geom, "");
+  netgen::WriteUserFormat("", mesh, /* geom, */ "");
 }
 

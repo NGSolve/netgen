@@ -159,9 +159,9 @@ extern void DLL_HEADER RegisterUserFormats (Array<const char*> & names,
 
 
 extern bool DLL_HEADER WriteUserFormat (const string & format,
-                             const Mesh & mesh,
-                             const NetgenGeometry & geom,
-                             const string & filename);
+                                        const Mesh & mesh,
+                                        // const NetgenGeometry & geom,
+                                        const string & filename);
 
 }
 

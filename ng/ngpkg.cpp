@@ -362,7 +362,7 @@ namespace netgen
     PrintMessage (1, "Export mesh to file ", filename, ".... Please Wait!");
 
     // CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry);
-    if (WriteUserFormat (filetype, *mesh, *ng_geometry, filename))
+    if (WriteUserFormat (filetype, *mesh, /* *ng_geometry, */ filename))
       {
 	ostringstream ost;
 	ost << "Sorry, nothing known about file format " << filetype << endl;
