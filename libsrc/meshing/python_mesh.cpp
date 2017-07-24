@@ -760,7 +760,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def(py::init<>())
     .def("__init__",
          [](MP *instance, double maxh, bool quad_dominated, int optsteps2d, int optsteps3d,
-	    MESHING_STEP perfstepsend, int only3D_domain, const string & meshsizefilename)
+	    MESHING_STEP perfstepsend, int only3D_domain, const string & meshsizefilename,
+            double grading, double curvaturesafety, double segmentsperedge)
                            {
                              new (instance) MeshingParameters;
                              instance->maxh = maxh;
@@ -770,6 +771,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 			     instance->only3D_domain_nr = only3D_domain;
                              instance->perfstepsend = perfstepsend;
                              instance->meshsizefilename = meshsizefilename;
+
+                             instance->grading = grading;
+                             instance->curvaturesafety = curvaturesafety;
+                             instance->segmentsperedge = segmentsperedge;
                            },
            py::arg("maxh")=1000,
            py::arg("quad_dominated")=false,
@@ -778,6 +783,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 	 py::arg("perfstepsend") = MESHCONST_OPTVOLUME,
 	 py::arg("only3D_domain") = 0,
          py::arg("meshsizefilename") = "",
+           py::arg("grading")=0.3,
+           py::arg("curvaturesafety")=2,
+           py::arg("segmentsperedge")=1,
          "create meshing parameters"
           )
     .def("__str__", &ToString<MP>)
