@@ -27,6 +27,7 @@ set options.elsizeweight 0.2
 set options.secondorder 0
 set options.elementorder 1
 set options.quad 0
+set options.try_hexes 0
 set options.inverttets 0
 set options.inverttrigs 0
 set options.autozrefine 0
@@ -410,7 +411,8 @@ proc saveoptions { } {
 	    puts $datei "options.secondorder  ${options.secondorder}" 
 	    puts $datei "options.elementorder  ${options.elementorder}" 
 #	    puts $datei "options.memory  ${options.memory}" 
-	    puts $datei "options.quad  ${options.quad}" 
+	    puts $datei "options.quad  ${options.quad}"
+            puts $datei "options.try_hexes  ${options.try_hexes}" 
 	    puts $datei "options.inverttets  ${options.inverttets}" 
 	    puts $datei "options.inverttrigs  ${options.inverttrigs}" 
 	    puts $datei "options.autozrefine ${options.autozrefine}" 

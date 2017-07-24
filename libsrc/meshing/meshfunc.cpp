@@ -103,6 +103,8 @@ namespace netgen
          for (int qstep = 0; qstep <= 3; qstep++)
            // for (int qstep = 0; qstep <= 0; qstep++)  // for hex-filling
 	  {
+            if (qstep == 0 && !mp.try_hexes) continue;
+            
 	    // cout << "openquads = " << mesh3d.HasOpenQuads() << endl;
 	    if (mesh3d.HasOpenQuads())
 	      {

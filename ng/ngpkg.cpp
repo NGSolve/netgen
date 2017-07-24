@@ -1183,6 +1183,7 @@ namespace netgen
     mparam.secondorder = atoi (Tcl_GetVar (interp, "::options.secondorder", 0));
     mparam.elementorder = atoi (Tcl_GetVar (interp, "::options.elementorder", 0));
     mparam.quad = atoi (Tcl_GetVar (interp, "::options.quad", 0));
+    mparam.try_hexes = atoi (Tcl_GetVar (interp, "::options.try_hexes", 0));
 
     mparam.inverttets = atoi (Tcl_GetVar (interp, "::options.inverttets", 0));
     mparam.inverttrigs = atoi (Tcl_GetVar (interp, "::options.inverttrigs", 0));

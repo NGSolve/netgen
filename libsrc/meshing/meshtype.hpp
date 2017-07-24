@@ -1200,6 +1200,8 @@ namespace netgen
     /// quad-dominated surface meshing
     int quad = 0;
     ///
+    bool try_hexes = false;
+    ///
     int inverttets = 0;
     ///
     int inverttrigs = 0;
