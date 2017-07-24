@@ -164,7 +164,10 @@ class Mpeg {
             enc->bit_rate = BITRATE;
             enc->width    = width;
             enc->height   = height;
-            st->time_base = (AVRational){ 1, framerate };
+            AVRational tb;
+            tb.num=1;
+            tb.den=framerate;
+            st->time_base = tb;
             enc->time_base       = st->time_base;
 
             enc->gop_size      = 200;

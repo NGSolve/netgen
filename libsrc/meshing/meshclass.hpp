@@ -592,8 +592,8 @@ namespace netgen
     ///
     DLL_HEADER void SetMaterial (int domnr, const string & mat);
     ///
-    const string & GetMaterial (int domnr) const;
-    static string defaultmat;
+    DLL_HEADER const string & GetMaterial (int domnr) const;
+    DLL_HEADER static string defaultmat;
     const string * GetMaterialPtr (int domnr) const // 1-based
     {
       return domnr <= materials.Size() ? materials.Get(domnr) : &defaultmat;
@@ -603,13 +603,13 @@ namespace netgen
 
     DLL_HEADER void SetBCName ( int bcnr, const string & abcname );
 
-    const string & GetBCName ( int bcnr ) const;
+    DLL_HEADER const string & GetBCName ( int bcnr ) const;
 
     DLL_HEADER void SetNCD2Names (int ncd2n);
     DLL_HEADER void SetCD2Name (int cd2nr, const string & abcname);
 
-    const string & GetCD2Name (int cd2nr ) const;
-    static string cd2_default_name;
+    DLL_HEADER const string & GetCD2Name (int cd2nr ) const;
+    DLL_HEADER static string cd2_default_name;
     string * GetCD2NamePtr (int cd2nr ) const
     {
       if (cd2nr < cd2names.Size() && cd2names[cd2nr]) return cd2names[cd2nr];
