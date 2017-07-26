@@ -3974,7 +3974,7 @@ Togl_MacInit(void)
 
     /* 
      * Tk needs us to set the qd pointer it uses.  This is needed
-     * so Tk doesn't have to assume the availablity of the qd global
+     * so Tk doesn't have to assume the availability of the qd global
      * variable.  Which in turn allows Tk to be used in code resources.
      */
     tcl_macQdPtr = &qd;

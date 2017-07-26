@@ -138,7 +138,7 @@ set_menu_help "Quit" "Quits Netgen"
 set_menu_help "Geometry" "Preparing geometries, visualiztion of geometries."
 set_menu_help "Scan CSG Geometry" "Generates surface triangulation for rendering"
 set_menu_help "CSG Options" "Sets Options for CSG visualization (bounding box, detail size, number of facets)."
-set_menu_help "CSG Properties" "Defines appearence of current CSG geometry (color, visibility, transparency)"
+set_menu_help "CSG Properties" "Defines appearance of current CSG geometry (color, visibility, transparency)"
 set_menu_help "STL Doctor" "Calls STL Doctor for preprocessing STL geometry files."
 set_menu_help "STL Info" "Retrieves information about current STL geometry."
 

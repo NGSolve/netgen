@@ -67,7 +67,7 @@ File hierarchy:
 	    *.html		Start with index.html
 
 The contents of the include and lib directories can be placed verbatim
-in the Tcl installataion hierachy.
+in the Tcl installataion hierarchy.
 
 Documentation is in the doc directory.  Start with doc/index.html in
 your web browser.
