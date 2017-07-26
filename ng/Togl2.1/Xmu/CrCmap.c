@@ -298,7 +298,7 @@ static Status readwrite_map(dpy, vinfo, colormap)
 #undef calc
     }
     /* We have a read-only map defined.  Now free unused cells,
-     * first those occuring before the contiguous sequence begins,
+     * first those occurring before the contiguous sequence begins,
      * then any following the contiguous sequence.
      */
 
@@ -439,7 +439,7 @@ static void free_cells(dpy, cmap, pixels, npixels,  p)
 {
     /* One of the npixels allocated has already been freed.
      * p is the index of the freed pixel.
-     * First free the pixels preceeding p, and there are p of them;
+     * First free the pixels preceding p, and there are p of them;
      * then free the pixels following p, there are npixels - p - 1 of them.
      */
     XFreeColors(dpy, cmap, pixels, p, (unsigned long) 0);

@@ -142,7 +142,7 @@ proc ngtest { {t all} {f ""}} {
     puts "*** pde tests complete"    
 
   } else {
-    puts $logfile "error: unkown test program '$t'"; flush $logfile 
+    puts $logfile "error: unknown test program '$t'"; flush $logfile 
   }
   puts ""
 }

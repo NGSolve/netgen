@@ -95,7 +95,7 @@ endif(INTEL_MIC)
 #######################################################################
 # Append install paths of software in non-standard paths (e.g. openmpi, metis, intel mkl, ...)
 # cmake -DUSE_MPI=ON -DCMAKE_PREFIX_PATH="/opt/openmpi165;/opt/metis51" ../
-set(ADDITIONAL_PATHS "" CACHE PATH "List of paths to additional libraries in non-standard locations, seperated by ';'")
+set(ADDITIONAL_PATHS "" CACHE PATH "List of paths to additional libraries in non-standard locations, separated by ';'")
 if (ADDITIONAL_PATHS)
   set(CMAKE_PREFIX_PATH ${ADDITIONAL_PATHS})
 endif (ADDITIONAL_PATHS)
@@ -496,6 +496,6 @@ message("
 ------------------------------------------------------------------------
 ")
 if (ADDITIONAL_PATHS)
-  message(WARNING "The use of ADDITIONAL_PATHS is depricated, use CMAKE_PREFIX_PATH instead")
+  message(WARNING "The use of ADDITIONAL_PATHS is deprecated, use CMAKE_PREFIX_PATH instead")
 endif (ADDITIONAL_PATHS)
 

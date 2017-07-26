@@ -5,7 +5,7 @@
  * and <togl.h> should be included before this.  If included into a C file,
  * there should be a static keyword just before the include.
  * 
- * There should be one copy of getToglFromWidget per-shared libary so that
+ * There should be one copy of getToglFromWidget per-shared library so that
  * the library's Tcl/Tk/Togl stub pointers are properly initialized.
  *
  * Copyright (C) 2006  Greg Couch

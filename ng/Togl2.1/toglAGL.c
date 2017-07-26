@@ -144,7 +144,7 @@ togl_pixelFormat(Togl *togl)
     }
 
     /* TODO: since we aglDestroyPixelFormat elsewhere, this code may leak
-     * memory if the pixel format choosen is not the original (because
+     * memory if the pixel format chosen is not the original (because
      * aglDestroyPixelFormat will give an error). */
     count = 0;
     do {

@@ -11,7 +11,7 @@ for fname in glob.glob('*.tcl'):
 fnames = list(tclfiles.keys())
 fnames.sort(key=functools.cmp_to_key( lambda x,y: tclfiles[x].find('/'+y) ))
 
-# replace all occurences of 'source bla.tcl' with the code of bla.tcl
+# replace all occurrences of 'source bla.tcl' with the code of bla.tcl
 for f in fnames:
     for g in fnames:
         if(tclfiles[f].find('/'+g) >= 0):

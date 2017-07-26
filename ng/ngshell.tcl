@@ -215,7 +215,7 @@ proc ngoptimizesurface { {step all} } {
   } elseif {$step == "combinepoints"} {
     Ng_GenerateMesh os os c 
   } else {
-    puts "error: unkown option in ngoptimizesurface"
+    puts "error: unknown option in ngoptimizesurface"
     return
   }
   Ng_ReadStatus
