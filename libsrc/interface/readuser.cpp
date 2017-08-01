@@ -263,7 +263,8 @@ namespace netgen
               }
 
             mesh.AddFaceDescriptor (FaceDescriptor (1, 1, 0, 0));
-	  
+            int nfd = 1;
+
             in >> nse;
             for (i = 1; i <= nse; i++)
               {
@@ -271,6 +272,11 @@ namespace netgen
                 in >> mat;
                 Element2d el (TRIG);
                 el.SetIndex (mat);
+                while(nfd<mat)
+                  {
+                    ++nfd;
+                    mesh.AddFaceDescriptor(FaceDescriptor(nfd,nfd,0,0));
+                  }
                 for (j = 1; j <= 3; j++)
                   in >> el.PNum(j);
                 mesh.AddSurfaceElement (el);
