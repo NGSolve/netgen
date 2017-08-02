@@ -5,7 +5,8 @@ namespace netgen
 {
 void SplineSurface :: AppendPoint(const Point<3> & p, const double reffac, const bool hpref)
 {
-  auto pp = Point<3>(p);
+  auto pp = p;
+  Project(pp);
   geompoints.Append(GeomPoint<3>(pp,reffac));
   geompoints.Last().hpref = hpref;
 }
@@ -20,13 +21,13 @@ void SplineSurface :: AppendPoint(const Point<3> & p, const double reffac, const
   string SplineSurface :: GetBCNameOf (Point<3> p1, Point<3> p2) const
   {
     
-    double eps = 1e-5;
     for(int i=0; i<splines.Size(); i++)
       {
 	auto pp1 = Point<3>(splines[i]->GetPoint(0));
 	Project(pp1);
 	auto pp2 = Point<3>(splines[i]->GetPoint(1));
 	Project(pp2);
+        double eps = (p1-p2).Length() * 1e-4;
 	if (((pp1-p1).Length()<eps && (pp2-p2).Length() < eps) || ((pp1-p2).Length() < eps && (pp2-p1).Length() < eps))
 	  {
 	    return bcnames[i];
