@@ -3193,6 +3193,10 @@ namespace netgen
           i--;
         }
 
+    for(int i=0; i < segments.Size(); i++)
+      if(segments[i].edgenr < 0)
+          segments.Delete(i--);
+
     pused.Clear();
     for (int i = 0; i < volelements.Size(); i++)
       {
