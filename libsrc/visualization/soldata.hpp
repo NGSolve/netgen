@@ -113,7 +113,7 @@ namespace netgen
       return 1;
     }
 
-    void SetMultiDimComponent (int mc)
+    virtual void SetMultiDimComponent (int mc)
     { 
       if (mc >= GetNumMultiDimComponents()) mc = GetNumMultiDimComponents()-1;
       if (mc < 0) mc = 0;
