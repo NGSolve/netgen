@@ -226,7 +226,7 @@ namespace netgen
   {
     int i;
   public:
-    SurfaceElementIndex () { ; }
+    SurfaceElementIndex () = default;
     SurfaceElementIndex (int ai) : i(ai) { ; }
     /*
     SurfaceElementIndex & operator= (const SurfaceElementIndex & ai) 
