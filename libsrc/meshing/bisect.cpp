@@ -3742,6 +3742,7 @@ namespace netgen
             mesh.SetSurfaceElement (SurfaceElementIndex(i), el);
           }
        });
+    mesh.RebuildSurfaceElementLists();
     
     for (int i = 1; i <= mquads.Size(); i++)
       {

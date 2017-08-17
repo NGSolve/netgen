@@ -345,26 +345,14 @@ namespace netgen
     if (el.index > facedecoding.Size())
       cerr << "has no facedecoding: fd.size = " << facedecoding.Size() << ", ind = " << el.index << endl;
 
+    // add lock-free to list ... slow, call RebuildSurfaceElementLists later
     /*
-    surfelements.Last().next = facedecoding[el.index-1].firstelement;
-    facedecoding[el.index-1].firstelement = sei;
-    */
-
-    // add lock-free to list
-
     surfelements[sei].next = facedecoding[el.index-1].firstelement;
     auto & head = reinterpret_cast<atomic<SurfaceElementIndex>&> (facedecoding[el.index-1].firstelement);
     while (!head.compare_exchange_weak (surfelements[sei].next, sei))
       ;
-
-    /*
-    surfelements[sei].next = facedecoding[el.index-1].firstelement;
-    auto & head = reinterpret_cast<atomic<int>&> (facedecoding[el.index-1].firstelement);
-    auto & next = reinterpret_cast<int&> (surfelements[sei].next);
-    while (!head.compare_exchange_weak (next, sei))
-      ;
     */
-    
+
     /*
     if (SurfaceArea().Valid())
       SurfaceArea().Add (el);
