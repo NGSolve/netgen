@@ -350,10 +350,18 @@ namespace netgen
     */
 
     // add lock-free to list
+    /*
     surfelements[sei].next = facedecoding[el.index-1].firstelement;
     auto & head = reinterpret_cast<atomic<SurfaceElementIndex>&> (facedecoding[el.index-1].firstelement);
     while (!head.compare_exchange_weak (surfelements[sei].next, sei))
       ;
+    */
+    surfelements[sei].next = facedecoding[el.index-1].firstelement;
+    auto & head = reinterpret_cast<atomic<int>&> (facedecoding[el.index-1].firstelement);
+    auto & next = reinterpret_cast<int&> (surfelements[sei].next);
+    while (!head.compare_exchange_weak (next, sei))
+      ;
+
     
     /*
     if (SurfaceArea().Valid())
