@@ -325,6 +325,42 @@ namespace netgen
     return si;
   }
 
+  void Mesh :: SetSurfaceElement (SurfaceElementIndex sei, const Element2d & el)
+  {
+    int maxn = el[0];
+    for (int i = 1; i < el.GetNP(); i++)
+      if (el[i] > maxn) maxn = el[i];
+
+    maxn += 1-PointIndex::BASE;
+
+    if (maxn <= points.Size())
+      {
+        for (int i = 0; i < el.GetNP(); i++)
+          if (points[el[i]].Type() > SURFACEPOINT)
+            points[el[i]].SetType(SURFACEPOINT);
+      }
+
+    surfelements[sei] = el;
+    if (el.index > facedecoding.Size())
+      cerr << "has no facedecoding: fd.size = " << facedecoding.Size() << ", ind = " << el.index << endl;
+
+    /*
+    surfelements.Last().next = facedecoding[el.index-1].firstelement;
+    facedecoding[el.index-1].firstelement = sei;
+    */
+
+    // add lock-free to list
+    surfelements[sei].next = facedecoding[el.index-1].firstelement;
+    auto & head = reinterpret_cast<atomic<SurfaceElementIndex>&> (facedecoding[el.index-1].firstelement);
+    while (!head.compare_exchange_weak (surfelements[sei].next, sei))
+      ;
+    
+    /*
+    if (SurfaceArea().Valid())
+      SurfaceArea().Add (el);
+    */
+  }
+
 
   ElementIndex Mesh :: AddVolumeElement (const Element & el)
   { 

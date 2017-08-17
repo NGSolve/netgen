@@ -261,6 +261,8 @@ namespace netgen
     Array<Element0d> pointelements;  // only via python interface
 
     DLL_HEADER SurfaceElementIndex AddSurfaceElement (const Element2d & el);
+    // write to pre-allocated container, thread-safe
+    DLL_HEADER void SetSurfaceElement (SurfaceElementIndex sei, const Element2d & el);
     
     // [[deprecated("Use DeleteSurfaceElement(SurfaceElementIndex) instead of int !")]]
     void DeleteSurfaceElement (int eli)

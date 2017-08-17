@@ -3708,6 +3708,7 @@ namespace netgen
     mesh.SurfaceElements().SetAllocSize (mtris.Size()+mquads.Size());    
     NgProfiler::StopTimer (timer2a);        
     NgProfiler::StartTimer (timer2b);
+    /*
     for (auto & trig : mtris)
       {
 	Element2d el(TRIG);
@@ -3720,6 +3721,28 @@ namespace netgen
 	  }
 	mesh.AddSurfaceElement (el);
       }
+    */
+
+    mesh.SurfaceElements().SetSize(mtris.Size());
+    // for (size_t i = 0; i < mtris.Size(); i++)
+    ParallelForRange
+      (opt.task_manager, mtris.Size(), [&] (size_t begin, size_t end)
+       {
+         for (size_t i = begin; i < end; i++)
+          {
+            Element2d el(TRIG);
+            auto & trig = mtris[i];
+            el.SetIndex (trig.surfid);
+            el.SetOrder (trig.order);
+            for (int j = 0; j < 3; j++)
+              {
+                el[j] = trig.pnums[j];
+                el.GeomInfoPi(j+1) = trig.pgeominfo[j];
+              }
+            mesh.SetSurfaceElement (SurfaceElementIndex(i), el);
+          }
+       });
+    
     for (int i = 1; i <= mquads.Size(); i++)
       {
 	Element2d el(QUAD);

@@ -228,8 +228,11 @@ namespace netgen
   public:
     SurfaceElementIndex () { ; }
     SurfaceElementIndex (int ai) : i(ai) { ; }
+    /*
     SurfaceElementIndex & operator= (const SurfaceElementIndex & ai) 
     { i = ai.i; return *this; }
+    */
+    SurfaceElementIndex & operator= (const SurfaceElementIndex & ai) = default;
     SurfaceElementIndex & operator= (int ai) { i = ai; return *this; }
     operator int () const { return i; }
     SurfaceElementIndex operator++ (int) { SurfaceElementIndex hi(*this); i++; return hi; }
