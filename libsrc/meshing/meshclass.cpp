@@ -1,4 +1,5 @@
 #include <mystdlib.h>
+#include <atomic>
 #include "meshing.hpp"
 
 namespace netgen
