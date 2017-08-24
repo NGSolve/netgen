@@ -52,6 +52,7 @@ static Transformation<3> global_trafo(Vec<3> (0,0,0));
 
 DLL_HEADER void ExportNetgenMeshing(py::module &m) 
 {
+  py::register_exception<NgException>(m, "NgException");
   m.attr("_netgen_executable_started") = py::cast(netgen::netgen_executable_started);
   string script;
   const char ** hcp = ngscript;

@@ -11,10 +11,10 @@ namespace netgen
 {
 
 /// Base class for all ng exceptions
-class NgException 
+class NgException : public std::exception
 {
   /// verbal description of exception
-  string what;
+  string m_what;
 public:
   ///
   DLL_HEADER NgException (const string & s);
@@ -26,7 +26,8 @@ public:
   //  void Append (const char * s);
   
   /// verbal description of exception
-  const string & What() const { return what; }
+  const string & What() const { return m_what; }
+  virtual const char* what() const noexcept override { return m_what.c_str(); }
 };
 }
 
