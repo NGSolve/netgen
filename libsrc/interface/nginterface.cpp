@@ -118,6 +118,11 @@ void Ng_LoadMeshFromStream ( istream & input )
 
 void Ng_LoadMesh (const char * filename)
 {
+  {
+      auto infile = ifstream (filename);
+      if(!infile.good())
+          throw NgException(string("Error opening file ") + filename);
+  }
 #ifdef PARALLEL
   MPI_Comm_size(MPI_COMM_WORLD, &ntasks);
   MPI_Comm_rank(MPI_COMM_WORLD, &id);
