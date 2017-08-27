@@ -487,7 +487,8 @@ DLL_HEADER void ExportCSG(py::module &m)
          py::arg("solid1"), py::arg("solid2"), py::arg("slices")
          )
     .def("CloseSurfaces", FunctionPointer
-         ([] (CSGeometry & self, shared_ptr<SPSolid> s1, shared_ptr<SPSolid> s2, int reflevels)
+         ([] (CSGeometry & self, shared_ptr<SPSolid> s1, shared_ptr<SPSolid> s2,
+              int reflevels, shared_ptr<SPSolid> domain_solid)
           {
             Array<int> si1, si2;
             s1->GetSolid()->GetSurfaceIndices (si1);
@@ -496,7 +497,8 @@ DLL_HEADER void ExportCSG(py::module &m)
             cout << "surface ids2 = " << si2 << endl;
 
             Flags flags;
-            const TopLevelObject * domain = nullptr;
+            const TopLevelObject * domain = self.GetTopLevelObject(domain_solid->GetSolid());
+              
             self.AddIdentification 
               (new CloseSurfaceIdentification 
                (self.GetNIdentifications()+1, self, 
@@ -504,7 +506,7 @@ DLL_HEADER void ExportCSG(py::module &m)
                 domain,
                 flags));
           }),
-         py::arg("solid1"), py::arg("solid2"), py::arg("reflevels")=2
+         py::arg("solid1"), py::arg("solid2"), py::arg("reflevels")=2, py::arg("domain")=nullptr
          )
     
     .def("PeriodicSurfaces", FunctionPointer
