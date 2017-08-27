@@ -3222,17 +3222,13 @@ namespace netgen
 	    for (int i = 1; i <= nel; i++)
 	      if (mtets.Elem(i).marked)
 		{
-		  MarkedTet oldtet;
-		  MarkedTet newtet1, newtet2;
-		  PointIndex newp;
-
-
-		  oldtet = mtets.Get(i);
-		  //if(yn == "y")
-		  //  (*testout) << "bisected tet " << oldtet;
+		  MarkedTet oldtet = mtets.Get(i);
+                  
 		  INDEX_2 edge(oldtet.pnums[oldtet.tetedge1],
 			       oldtet.pnums[oldtet.tetedge2]);
 		  edge.Sort();
+
+		  PointIndex newp;
 		  if (cutedges.Used (edge))
 		    {
 		      newp = cutedges.Get(edge);
@@ -3240,21 +3236,16 @@ namespace netgen
 		  else
 		    {
 		      Point<3> npt = Center (mesh.Point (edge.I1()),
-					   mesh.Point (edge.I2()));
+                                             mesh.Point (edge.I2()));
                       newp = mesh.AddPoint (npt);
 		      cutedges.Set (edge, newp);
 		    }
 
+		  MarkedTet newtet1, newtet2;
 		  BTBisectTet (oldtet, newp, newtet1, newtet2);
 
 		  mtets.Elem(i) = newtet1;
 		  mtets.Append (newtet2);
-
-#ifdef DEBUG
-                  *testout << "tet1 has elnr = " << i << ", tet2 has elnr = " << mtets.Size() << endl;
-#endif
-		  //if(yn == "y")
-		  //  (*testout) << "and got " << newtet1 << "and " << newtet2 << endl;
 
 		  mesh.mlparentelement.Append (i);
 		}
@@ -3359,22 +3350,19 @@ namespace netgen
 	      MarkHangingIdentifications (mids, cutedges);
 
 
-	    int nsel = mtris.Size();
+	    size_t nsel = mtris.Size();
             NgProfiler::StartTimer (timer_bisecttrig);
-	    for (int i = 1; i <= nsel; i++)
-	      if (mtris.Elem(i).marked)
+	    for (size_t i = 0; i < nsel; i++)
+	      if (mtris[i].marked)
 		{
-		  MarkedTri oldtri;
 		  MarkedTri newtri1, newtri2;
 		  PointIndex newp;
 		
-		  oldtri = mtris.Get(i);
-		  int oldpi1 = oldtri.pnums[(oldtri.markededge+1)%3];
-		  int oldpi2 = oldtri.pnums[(oldtri.markededge+2)%3];
+		  MarkedTri oldtri = mtris[i];
+		  PointIndex oldpi1 = oldtri.pnums[(oldtri.markededge+1)%3];
+		  PointIndex oldpi2 = oldtri.pnums[(oldtri.markededge+2)%3];
 		  INDEX_2 edge(oldpi1, oldpi2);
 		  edge.Sort();
-
-		  //		cerr << "edge = " << edge.I1() << "-" << edge.I2() << endl;
 
 		  if (cutedges.Used (edge))
 		    {
@@ -3383,33 +3371,26 @@ namespace netgen
 		  else
 		    {
 		      Point<3> npt = Center (mesh.Point (edge.I1()),
-					    mesh.Point (edge.I2()));
+                                             mesh.Point (edge.I2()));
 		      newp = mesh.AddPoint (npt);
                       cutedges.Set (edge, newp);
 		    }
-		  //		newp = cutedges.Get(edge);
 		
 		  int si = mesh.GetFaceDescriptor (oldtri.surfid).SurfNr();
-		  //  geom->GetSurface(si)->Project (mesh.Point(newp));
 		  PointGeomInfo npgi;
 		
-//                   cerr << "project point " << newp << " old: " << mesh.Point(newp);
                   if (mesh[newp].Type() != EDGEPOINT)
                     PointBetween (mesh.Point (oldpi1), mesh.Point (oldpi2),
                                   0.5, si,
                                   oldtri.pgeominfo[(oldtri.markededge+1)%3],
                                   oldtri.pgeominfo[(oldtri.markededge+2)%3],
                                   mesh.Point (newp), npgi);
-//                   cerr << " new: " << mesh.Point(newp) << endl;
 		
 		  BTBisectTri (oldtri, newp, npgi, newtri1, newtri2);
-		  //if(yn == "y")
-		  //  (*testout) << "bisected tri " << oldtri << "and got " << newtri1 << "and " << newtri2 << endl;
 		
-		
-		  mtris.Elem(i) = newtri1;
+		  mtris[i] = newtri1;
 		  mtris.Append (newtri2);
-		  mesh.mlparentsurfaceelement.Append (i);
+		  mesh.mlparentsurfaceelement.Append (i+1);
 		}
 
             NgProfiler::StopTimer (timer_bisecttrig);
