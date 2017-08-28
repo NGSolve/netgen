@@ -38,6 +38,7 @@ namespace netgen
                   int argc, tcl_const char *argv[])
 
   {
+    auto & vssolution = netgen::GetVSSolution();
     if (argc >= 2)
       {
         if (strcmp (argv[1], "parameters") == 0)
@@ -306,6 +307,7 @@ namespace netgen
     int i;
     char buf[1000];
     buf[0] = 0;
+    auto & vssolution = netgen::GetVSSolution();
 
     if (argc >= 2)
       {

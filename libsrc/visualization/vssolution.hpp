@@ -447,7 +447,8 @@ public:
 
 
 
-DLL_HEADER extern VisualSceneSolution vssolution;
+  // DLL_HEADER extern VisualSceneSolution vssolution;
+DLL_HEADER extern VisualSceneSolution & GetVSSolution();
 
 
 }

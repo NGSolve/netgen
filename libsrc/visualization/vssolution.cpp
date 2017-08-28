@@ -12,14 +12,22 @@
 namespace netgen
 {
 
-  VisualSceneSolution vssolution;
+
+  DLL_HEADER VisualSceneSolution & GetVSSolution()
+  {
+    static VisualSceneSolution vssolution;
+    return vssolution;
+  }
+
+  
   // extern shared_ptr<Mesh> mesh;
   extern VisualSceneMesh vsmesh;
 
 
   void AddUserVisualizationObject (UserVisualizationObject * vis)
   {
-    vssolution.AddUserVisualizationObject (vis);
+    // vssolution.AddUserVisualizationObject (vis);
+    GetVSSolution().AddUserVisualizationObject (vis);
   }
 
 
@@ -38,6 +46,7 @@ namespace netgen
   VisualSceneSolution :: VisualSceneSolution ()
     : VisualScene()
   {
+    // cout << "init VisualSceneSolution" << endl;
     surfellist = 0;
     linelist = 0;
     element1dlist = 0;
@@ -68,6 +77,7 @@ namespace netgen
   
   VisualSceneSolution :: ~VisualSceneSolution ()
   {
+    // cout << "exit VisualSceneSolution" << endl;    
     ClearSolutionData();
   }
 
@@ -416,7 +426,7 @@ namespace netgen
         else
           {
             glTranslatef (0.5, 0, 0);
-            glRotatef(360 * vssolution.time, 0, 0, -1);
+            glRotatef(360 * netgen::GetVSSolution().time, 0, 0, -1);
             if (fabs (maxval) > 1e-10)
               glScalef(0.5/maxval, 0.5/maxval, 0.5/maxval);
             else
@@ -4773,7 +4783,8 @@ void Ng_ClearSolutionData ()
 {
 #ifdef OPENGL
   // if (nodisplay) return;
-  netgen::vssolution.ClearSolutionData();
+  // netgen::vssolution.ClearSolutionData();
+  netgen::GetVSSolution().ClearSolutionData();
 #endif
 }
 
@@ -4810,7 +4821,8 @@ void Ng_SetSolutionData (Ng_SolutionData * soldata)
   vss->draw_volume = soldata->draw_volume;
   vss->soltype = netgen::VisualSceneSolution::SolType (soldata->soltype);
   vss->solclass = soldata->solclass;
-  netgen::vssolution.AddSolutionData (vss);
+  // netgen::vssolution.AddSolutionData (vss);
+  netgen::GetVSSolution().AddSolutionData (vss);
 #endif
 }
 
@@ -4824,7 +4836,8 @@ namespace netgen
 void Ng_Redraw (bool blocking)
 {
 #ifdef OPENGL
-  netgen::vssolution.UpdateSolutionTimeStamp();
+  //netgen::vssolution.UpdateSolutionTimeStamp();
+  netgen::GetVSSolution().UpdateSolutionTimeStamp();
   netgen::Render(blocking);
 #endif
 }

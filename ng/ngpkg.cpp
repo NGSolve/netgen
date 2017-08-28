@@ -470,7 +470,7 @@ namespace netgen
     const char * filename = argv[1];
     PrintMessage (1, "Save solution to file ", filename);
 
-    vssolution.SaveSolutionData (filename);
+    netgen::GetVSSolution().SaveSolutionData (filename);
     return TCL_OK;
   }
 
@@ -1890,7 +1890,7 @@ namespace netgen
 
 	// if (strcmp (vismode, "surfmeshing") == 0) vs = &vssurfacemeshing;
 	if (strcmp (vismode, "specpoints") == 0) vs = &vsspecpoints;
-        if (strcmp (vismode, "solution") == 0) vs = &vssolution;
+        if (strcmp (vismode, "solution") == 0) vs = &netgen::GetVSSolution();
       }
   }
 
@@ -2414,7 +2414,7 @@ void Ng_SetMouseEventHandler (netgen::MouseEventHandler * handler)
 
 void Ng_SetUserVisualizationObject (netgen::UserVisualizationObject * vis)
 {
-  vssolution.AddUserVisualizationObject (vis);
+  netgen::GetVSSolution().AddUserVisualizationObject (vis);
 }
 
 
@@ -2651,7 +2651,7 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 			  Tcl_Interp * interp,
 			  int argc, tcl_const char *argv[])
   {
-    vssolution.BuildFieldLinesPlot();
+    netgen::GetVSSolution().BuildFieldLinesPlot();
     return TCL_OK;
   }
 
