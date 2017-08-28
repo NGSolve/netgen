@@ -103,13 +103,11 @@ namespace netgen
 
   Ngx_Mesh :: ~Ngx_Mesh ()
   { 
-    /*
-      // causes crashes when global variable netgen::mesh is destructed
-      // before visualization data 
-
+    // causes crashes when global variable netgen::mesh is destructed
+    // before visualization data 
+    
     if (mesh == netgen::mesh)
       netgen::mesh = nullptr;
-    */
   }
 
   int Ngx_Mesh :: GetDimension() const
