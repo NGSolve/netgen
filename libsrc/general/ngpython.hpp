@@ -6,7 +6,8 @@ namespace py = pybind11;
 #include <iostream>
 #include <sstream>
 
-namespace pybind11 {
+
+namespace PYBIND11_NAMESPACE {
 template<typename T>
 bool CheckCast( py::handle obj ) {
   try{

@@ -21,9 +21,8 @@ void DLL_HEADER ExportSTLVis(py::module &m);
 void DLL_HEADER ExportNgOCC(py::module &m);
 #endif // OCCGEOMETRY
 
-PYBIND11_PLUGIN(libngpy)
+PYBIND11_MODULE(libngpy, ngpy)
 {
-    py::module ngpy("libngpy", "pybind netgen module");
     py::module meshing = ngpy.def_submodule("_meshing", "pybind meshing module");
     ExportNetgenMeshing(meshing);
     py::module csg = ngpy.def_submodule("_csg", "pybind csg module");
@@ -44,7 +43,6 @@ PYBIND11_PLUGIN(libngpy)
     py::module stlvis = ngpy.def_submodule("stlvis", "pybind stlvis module");
     ExportSTLVis(stlvis);
 #endif // OPENGL
-    return ngpy.ptr();
 }
 
 // Force linking libnglib to libnetgenpy

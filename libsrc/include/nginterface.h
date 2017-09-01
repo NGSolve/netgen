@@ -23,7 +23,11 @@
       #define DLL_HEADER   __declspec(dllimport)
    #endif
 #else
-   #define DLL_HEADER 
+   #if __GNUC__ >= 4
+      #define DLL_HEADER __attribute__ ((visibility ("default")))
+   #else
+      #define DLL_HEADER
+   #endif
 #endif
 
 

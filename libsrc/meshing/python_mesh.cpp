@@ -816,10 +816,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                                    }));
 }
 
-PYBIND11_PLUGIN(libmesh) {
-  py::module m("mesh", "pybind mesh");
+PYBIND11_MODULE(libmesh, m) {
   ExportNetgenMeshing(m);
-  return m.ptr();
 }
 #endif
 

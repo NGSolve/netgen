@@ -265,10 +265,8 @@ DLL_HEADER void ExportGeom2d(py::module &m)
   
 }
 
-PYBIND11_PLUGIN(libgeom2d) {
-  py::module m("geom2d", "pybind geom2d");
+PYBIND11_MODULE(libgeom2d, m) {
   ExportGeom2d(m);
-  return m.ptr();
 }
 
 #endif

@@ -1218,8 +1218,6 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
 
 #ifdef WIN32
    #define DLL_HEADER   __declspec(dllexport)
-#else
-   #define DLL_HEADER 
 #endif
 
 #include <../general/ngpython.hpp>
@@ -1245,9 +1243,7 @@ DLL_HEADER void ExportSTLVis(py::module &m)
 	});
 }
 
-PYBIND11_PLUGIN(libstlvis) {
-  py::module m("stlvis", "pybind stl vis");
+PYBIND11_MODULE(libstlvis, m) {
   ExportSTLVis(m);
-  return m.ptr();
 }
 #endif
