@@ -6,8 +6,6 @@
 
 #ifdef WIN32
    #define DLL_HEADER   __declspec(dllexport)
-#else
-   #define DLL_HEADER 
 #endif
 
 using namespace netgen;
@@ -47,10 +45,8 @@ DLL_HEADER void ExportSTL(py::module & m)
     ;
 }
 
-PYBIND11_PLUGIN(libstl) {
-  py::module m("stl", "pybind stl");
+PYBIND11_MODULE(libstl, m) {
   ExportSTL(m);
-  return m.ptr();
 }
 
 #endif

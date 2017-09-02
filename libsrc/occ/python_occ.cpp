@@ -46,10 +46,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     ;
 }
 
-PYBIND11_PLUGIN(libNgOCC) {
-  py::module m("NgOCC", "pybind NgOCC");
+PYBIND11_MODULE(libNgOCC, m) {
   ExportNgOCC(m);
-  return m.ptr();
 }
 
 #endif // OCCGEOMETRY

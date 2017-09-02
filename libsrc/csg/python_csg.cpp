@@ -627,10 +627,8 @@ DLL_HEADER void ExportCSG(py::module &m)
     ;
 }
 
-PYBIND11_PLUGIN(libcsg) {
-  py::module m("csg", "pybind csg");
+PYBIND11_MODULE(libcsg, m) {
   ExportCSG(m);
-  return m.ptr();
 }
 #endif
 
