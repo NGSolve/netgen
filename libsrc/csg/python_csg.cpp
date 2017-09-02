@@ -24,7 +24,7 @@ class SPSolid
   double maxh = -1;
   string material;
   bool owner;
-  double red, green, blue;
+  double red = 0, green = 0, blue = 1;
   bool transp = false;
 public:
   enum optyp { TERM, SECTION, UNION, SUB };
@@ -375,14 +375,15 @@ DLL_HEADER void ExportCSG(py::module &m)
                                  }))
     .def("Add",
          [] (CSGeometry & self, shared_ptr<SPSolid> solid, py::list bcmod, double maxh,
-             py::tuple col)
+             py::tuple col, bool transparent)
           {
             solid->AddSurfaces (self);
             solid->GiveUpOwner();
             int tlonr = self.SetTopLevelObject (solid->GetSolid());
             self.GetTopLevelObject(tlonr) -> SetMaterial(solid->GetMaterial());
             self.GetTopLevelObject(tlonr) -> SetRGB(solid->GetRed(),solid->GetGreen(),solid->GetBlue());
-            self.GetTopLevelObject(tlonr)->SetTransparent(solid->IsTransparent());
+            // self.GetTopLevelObject(tlonr)->SetTransparent(solid->IsTransparent());
+            self.GetTopLevelObject(tlonr)->SetTransparent(transparent);
             self.GetTopLevelObject(tlonr)->SetMaxH(maxh);
 
             // cout << "rgb = " << py::len(rgb) << endl;
@@ -420,7 +421,7 @@ DLL_HEADER void ExportCSG(py::module &m)
             return tlonr;
           },
          py::arg("solid"), py::arg("bcmod")=py::list(), py::arg("maxh")=1e99,
-         py::arg("col")=py::tuple()
+         py::arg("col")=py::tuple(), py::arg("transparent")=false
          )
 
     .def("AddSurface", FunctionPointer
