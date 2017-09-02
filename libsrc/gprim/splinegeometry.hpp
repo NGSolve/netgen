@@ -29,6 +29,7 @@ namespace netgen
     Array < GeomPoint<D> > geompoints;
     Array < SplineSeg<D>* > splines;
 
+    SplineGeometry() : geompoints{}, splines{} { ; }
     DLL_HEADER ~SplineGeometry();
 
     DLL_HEADER int Load (const Array<double> & raw_data, const int startpos = 0);
