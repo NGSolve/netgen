@@ -431,6 +431,17 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   py::class_<Mesh,shared_ptr<Mesh>>(m, "Mesh")
     // .def(py::init<>("create empty mesh"))
 
+    .def(py::init( [] (int dim)
+                   {
+                     auto mesh = make_shared<Mesh>();
+                     mesh -> SetDimension(dim);
+                     SetGlobalMesh(mesh);  // for visualization
+                     return mesh;
+                   } ),
+         py::arg("dim")=3         
+         )
+
+    /*
     .def("__init__",
          [](Mesh *instance, int dim)
                            {
@@ -439,7 +450,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                            },
            py::arg("dim")=3
           )
-
+    */
     
     .def("__str__", &ToString<Mesh>)
     .def("Load",  FunctionPointer 
