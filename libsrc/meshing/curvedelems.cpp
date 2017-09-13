@@ -3085,7 +3085,7 @@ namespace netgen
 		}
 	    }
 
-          if (typeid(T) == typeid(SIMD<double>)) return;
+          // if (typeid(T) == typeid(SIMD<double>)) return;
 
 
 	  for (int i = 6; i < 9; i++)    // vertical edges
@@ -3176,7 +3176,7 @@ namespace netgen
 
       case PYRAMID:
 	{
-          if (typeid(T) == typeid(SIMD<double>)) return;
+          // if (typeid(T) == typeid(SIMD<double>)) return;
           
 	  dshapes = T(0.0);
 	  T x = xi(0);
