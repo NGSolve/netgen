@@ -30,7 +30,7 @@ namespace netgen
       }
 
     // limit slope
-    double gradh = 1/elto0;
+    double gradh = min(1/elto0,mp.grading);
     for (int i = 0; i < n-1; i++)
       {
 	double hnext = hi[i] + gradh * (xi[i+1]-xi[i]).Length();
