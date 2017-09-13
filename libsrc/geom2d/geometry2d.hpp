@@ -129,7 +129,7 @@ namespace netgen
     Array<bool> tensormeshing;
     Array<int> layer;
     Array<string*> bcnames;
-    double elto0;
+    double elto0 = 1.0;
 
 
   public:
