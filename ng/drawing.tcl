@@ -147,40 +147,42 @@ bind . <MouseWheel> { Ng_MouseMove 0 0 0 [expr {%D/-5}] zoom; redraw }
 # Drop callbacks:
 bind .ndraw <<Drop:DND_Files>> {
   #tk_messageBox -message "Dropped files: \"[join %D {, }]\""
+  set filename [join %D " "]
+
   #%W state !active  
-  set index [string first . %D end-6]
+  set index [string last . $filename]
   #tk_messageBox -message $index
-  set type [string range %D $index+1 end]
+  set type [string range $filename $index+1 end]
   # tk_messageBox -message $type
   set ispde [string match -nocase $type "pde"]
   set isgeo [expr max([string match -nocase $type "geo"],[string match -nocase $type "in2d"])]
   set ismesh [expr max([string match -nocase $type "vol"],[string match -nocase $type "vol.gz"])]
   set ispy [string match -nocase $type "py"]
   if {$ispde == 1} {
-      AddRecentNGSFile %D;
-      NGS_LoadPDE  %D;
+      AddRecentNGSFile $filename;
+      NGS_LoadPDE  $filename;
       SetNumProcHelpMenu
       set selectvisual mesh;
       Ng_SetVisParameters
   }
   if {$ispy == 1} {
-      AddRecentPYNGSFile %D;
-      NGS_LoadPy  %D;
+      AddRecentPYNGSFile $filename;
+      NGS_LoadPy  $filename;
   }
   if {$isgeo == 1} {
-	    AddRecentFile %D;
-	    Ng_LoadGeometry %D;
+	    AddRecentFile $filename;
+	    Ng_LoadGeometry $filename;
 	    Ng_ParseGeometry
 	    set selectvisual geometry
 	    Ng_SetVisParameters
 	    redraw
-	    wm title . [concat "$progname - " %D]
-	    set dirname [file dirname %D]
-	    set basefilename [file tail [file rootname %D]]
+	    wm title . [concat "$progname - " $filename]
+	    set dirname [file dirname $filename]
+	    set basefilename [file tail [file rootname $filename]]
 	}
 	if {$ismesh == 1} {
-	    AddRecentMeshFile %D;
-	    Ng_LoadMesh %D; 
+	    AddRecentMeshFile $filename;
+	    Ng_LoadMesh $filename; 
 	    set selectvisual mesh
 	    Ng_SetVisParameters
 	    redraw
