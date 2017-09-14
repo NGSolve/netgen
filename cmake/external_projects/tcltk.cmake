@@ -63,7 +63,7 @@ ExternalProject_Add(project_tkdnd
   PATCH_COMMAND  patch -p1 < ${CMAKE_CURRENT_LIST_DIR}/tkdnd_macosx.patch
   UPDATE_COMMAND "" # Disable update
   BUILD_IN_SOURCE 1
-  CONFIGURE_COMMAND ./configure --prefix=${CMAKE_INSTALL_PREFIX}/../MacOS --libdir=${CMAKE_INSTALL_PREFIX}/../MacOS
+  CONFIGURE_COMMAND ./configure --prefix=${CMAKE_INSTALL_PREFIX}/Contents/MacOS --libdir=${CMAKE_INSTALL_PREFIX}/Contents/MacOS
   BUILD_COMMAND make
   INSTALL_COMMAND make install
   LOG_DOWNLOAD 1
