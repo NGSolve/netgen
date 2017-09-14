@@ -53,6 +53,26 @@ if(APPLE)
 #   set(TK_LIBRARY ${CMAKE_INSTALL_PREFIX}/../Frameworks/Tk.framework)
 #   set(TK_INCLUDE_PATH ${CMAKE_INSTALL_PREFIX}/../Frameworks/Tk.framework/Headers)
 # 
+
+
+
+ExternalProject_Add(project_tkdnd
+  URL "http://sourceforge.net/projects/tkdnd/files/TkDND/TkDND%202.8/tkdnd2.8-src.tar.gz"
+  URL_MD5 a6d47a996ea957416469b12965d4db91
+  DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
+  PATCH_COMMAND  patch -p1 < ${CMAKE_CURRENT_LIST_DIR}/tkdnd_macosx.patch
+  UPDATE_COMMAND "" # Disable update
+  BUILD_IN_SOURCE 1
+  CONFIGURE_COMMAND ./configure --prefix=${CMAKE_INSTALL_PREFIX}/Contents/MacOS --libdir=${CMAKE_INSTALL_PREFIX}/Contents/MacOS
+  BUILD_COMMAND make
+  INSTALL_COMMAND make install
+  LOG_DOWNLOAD 1
+  LOG_CONFIGURE 1
+  LOG_BUILD 1
+  LOG_INSTALL 1
+)
+list(APPEND NETGEN_DEPENDENCIES project_tkdnd)
+
 elseif(WIN32)
 
   ExternalProject_Add(project_win_extlibs
