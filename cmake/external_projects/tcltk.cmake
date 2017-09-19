@@ -92,7 +92,7 @@ elseif(WIN32)
 
   list(APPEND NETGEN_DEPENDENCIES project_win_extlibs)
 else(WIN32)
-#     find_package(TCL 8.5 REQUIRED)
+    find_package(TCL 8.5 REQUIRED)
 #     ExternalProject_Add(project_tkdnd
 #       GIT_REPOSITORY https://github.com/petasis/tkdnd.git
 #       GIT_TAG d7cfd96087b248255da5349086ef70cc4bbfb619
