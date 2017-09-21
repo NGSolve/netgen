@@ -104,7 +104,7 @@ build_netgen_win64:
     - docker commit `cat netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id` netgen_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION}
     - rm netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id
 
-build_ubuntu_1510:
+.build_ubuntu_1510:
   <<: *ubuntu_1510
   <<: *build_linux
 
@@ -145,7 +145,7 @@ test_win64:
       netgen_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION}
       bash -c 'cd /root/build/netgen && make test_netgen ARGS="-V"'
 
-test_ubuntu_1510:
+.test_ubuntu_1510:
   <<: *ubuntu_1510
   <<: *test_linux
 test_ubuntu_1604:
