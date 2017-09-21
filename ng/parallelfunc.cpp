@@ -50,7 +50,7 @@ namespace netgen {
   extern std::shared_ptr<NetgenGeometry> ng_geometry;
   extern shared_ptr<Mesh>  mesh;
   extern VisualSceneMesh vsmesh;
-  extern VisualSceneSolution vssolution;
+  extern VisualSceneSolution & GetVSSolution();
   extern Flags parameters;
   extern DLL_HEADER MeshingParameters mparam;
 }
@@ -62,6 +62,8 @@ using netgen::RegisterUserFormats;
 
 void ParallelRun()
 {   
+  VisualSceneSolution vssolution = GetVSSolution();
+
   string message;
   MPI_Status status;
       

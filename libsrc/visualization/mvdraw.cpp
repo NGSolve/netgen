@@ -832,7 +832,7 @@ namespace netgen
 
     MyMPI_Bcast (selface);
 
-    vssolution.Broadcast ();
+    netgen::GetVSSolution().Broadcast ();
   }
 #endif 
 
