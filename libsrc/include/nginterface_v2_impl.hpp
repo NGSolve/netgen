@@ -207,6 +207,13 @@ const string &  Ngx_Mesh :: GetMaterialCD<2> (int region_nr) const
   return mesh->GetCD2Name(region_nr);
 }
 
+template <> NGX_INLINE DLL_HEADER
+const string &  Ngx_Mesh :: GetMaterialCD<3> (int region_nr) const
+{
+  static string def("default");
+  return def;
+}
+
 
 
 

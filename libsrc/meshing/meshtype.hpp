@@ -1001,6 +1001,9 @@ namespace netgen
   public:
     PointIndex pnum;
     int index;
+    Element0d () = default;
+    Element0d (PointIndex _pnum, int _index)
+      : pnum(_pnum), index(_index) { ; } 
   };
 
   ostream & operator<<(ostream  & s, const Element0d & el);

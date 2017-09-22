@@ -455,7 +455,7 @@ namespace netgen
     /// Refines mesh and projects points to true surface
     // void Refine (int levels, const CSGeometry * geom);
   
-
+    
     bool BoundaryEdge (PointIndex pi1, PointIndex pi2) const
     {
       if(!boundaryedges)

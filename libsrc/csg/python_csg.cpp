@@ -532,6 +532,12 @@ DLL_HEADER void ExportCSG(py::module &m)
           }),
          py::arg("solid1"), py::arg("solid2")
          )
+
+    .def("AddPoint", [] (CSGeometry & self, Point<3> p, int index) -> CSGeometry&
+         {
+           self.AddUserPoint(CSGeometry::UserPoint(p, index));
+           return self;
+         })
     
     .def("GetTransparent", FunctionPointer
          ([] (CSGeometry & self, int tlonr)

@@ -475,7 +475,19 @@ namespace netgen
       for(int i=0;i<3;i++) dxdxi[i] = dx(i);
   }
 
+  template <> DLL_HEADER void Ngx_Mesh ::
+  ElementTransformation<0,3> (int elnr,
+			      const double * xi,
+			      double * x,
+			      double * dxdxi) const
+  {
+    PointIndex pi = mesh->pointelements[elnr].pnum;
+    Point<3> xg = mesh->Point(pi);
+    if (x)
+      for(int i=0;i<3;i++) x[i] = xg(i);
+  }
 
+  
   template <> DLL_HEADER void Ngx_Mesh ::
   ElementTransformation<2,2> (int elnr,
                                  const double * xi, 
@@ -604,6 +616,16 @@ namespace netgen
     mesh->GetCurvedElements().CalcMultiPointSegmentTransformation<3> (elnr, npts, xi, sxi, x, sx, dxdxi, sdxdxi);
   }
 
+  template <> DLL_HEADER void Ngx_Mesh ::
+  MultiElementTransformation<0,3> (int elnr, int npts,
+				   const double * xi, size_t sxi,
+                                   double * x, size_t sx,
+                                   double * dxdxi, size_t sdxdxi) const
+  {
+    for (int i = 0; i < npts; i++)
+      ElementTransformation<0,3> (elnr, xi+i*sxi, x+i*sx, dxdxi+i*sdxdxi);
+  }
+    
   template <> DLL_HEADER void Ngx_Mesh :: 
   MultiElementTransformation<1,2> (int elnr, int npts,
                                    const double * xi, size_t sxi,
@@ -837,6 +859,30 @@ namespace netgen
     */
   }
 
+  template<> DLL_HEADER void Ngx_Mesh :: 
+  MultiElementTransformation<0,3> (int elnr, int npts,
+                                   const __m256d * xi, size_t sxi,
+                                   __m256d * x, size_t sx,
+                                   __m256d * dxdxi, size_t sdxdxi) const
+  {
+    for (int i = 0; i < npts; i++)
+      {
+        double hxi[4][1];
+        double hx[4][3];
+        for (int j = 0; j < 4; j++)
+          for (int k = 0; k < 1; k++)
+            hxi[j][k] = ((double*)&(xi[k]))[j];
+        MultiElementTransformation<0,3> (elnr, 4, &hxi[0][0], 2, &hx[0][0], 3, (double*)nullptr, 0);
+        for (int j = 0; j < 4; j++)
+          for (int k = 0; k < 3; k++)
+            ((double*)&(x[k]))[j] = hx[j][k];
+        xi += sxi;
+        x += sx;
+        dxdxi += sdxdxi;
+      }
+  }
+
+  
 #endif
   
 

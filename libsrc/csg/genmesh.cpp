@@ -25,11 +25,14 @@ namespace netgen
     const char * savetask = multithread.task;
     multithread.task = "Find points";
 
+    mesh.pointelements.SetSize(0);
     for (int i = 0; i < geom.GetNUserPoints(); i++)
       {
-	mesh.AddPoint(geom.GetUserPoint (i));
+        auto up = geom.GetUserPoint(i);
+	auto pnum = mesh.AddPoint(up);
 	mesh.Points().Last().Singularity (geom.GetUserPointRefFactor(i));
 	mesh.AddLockedPoint (PointIndex (i+1));
+        mesh.pointelements.Append (Element0d(pnum, up.GetIndex()));
       }
 
     SpecialPointCalculation spc;

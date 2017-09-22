@@ -115,8 +115,20 @@ namespace netgen
     /// all top level objects: solids and surfaces
     Array<TopLevelObject*> toplevelobjects;
 
+  public:
     /// additional points specified by user
-    Array<Point<3> > userpoints;
+    class UserPoint : public Point<3>
+    {
+      int index;
+    public:
+      UserPoint() = default;
+      UserPoint (Point<3> p, int _index) : Point<3>(p), index(_index) { ; }
+      int GetIndex() const { return index; }
+    };
+    
+  private:
+    // Array<Point<3> > userpoints;
+    Array<UserPoint> userpoints;
     Array<double> userpoints_ref_factor;
 
     mutable Array<Point<3> > identpoints;
@@ -213,11 +225,13 @@ namespace netgen
     void RemoveTopLevelObject (Solid * sol, Surface * surf = NULL); 
 
 
-    void AddUserPoint (const Point<3> & p, double ref_factor = 0)
-    { userpoints.Append (p); userpoints_ref_factor.Append (ref_factor); }
+    void AddUserPoint (const Point<3> & p, double ref_factor = 0)      
+    { userpoints.Append (UserPoint(p,1)); userpoints_ref_factor.Append (ref_factor); }
+    void AddUserPoint (const UserPoint up, double ref_factor = 0)
+    { userpoints.Append (up); userpoints_ref_factor.Append (ref_factor); }
     int GetNUserPoints () const
     { return userpoints.Size(); }
-    const Point<3> & GetUserPoint (int nr) const
+    const UserPoint & GetUserPoint (int nr) const
     { return userpoints[nr]; }
     double GetUserPointRefFactor (int nr) const
     { return userpoints_ref_factor[nr]; }
