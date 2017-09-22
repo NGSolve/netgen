@@ -443,6 +443,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                      auto mesh = make_shared<Mesh>();
                      mesh -> SetDimension(dim);
                      SetGlobalMesh(mesh);  // for visualization
+                     mesh -> SetGeometry (make_shared<NetgenGeometry>());
                      return mesh;
                    } ),
          py::arg("dim")=3         
