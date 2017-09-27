@@ -213,13 +213,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                    (*instance)[i] = py::extract<PointIndex>(vertices[i])();
                                  instance->SetIndex(index);
                                }
-			     else if (py::len(vertices) == 5)
-			       {
-				 new (instance) Element(PYRAMID);
-				 for (int i=0; i < 5; i++)
-				   (*instance)[i] = py::extract<PointIndex>(vertices[i])();
-				 instance->SetIndex(index);
-			       }
+			                 else if (py::len(vertices) == 5)
+			                   {
+				                 new (instance) Element(PYRAMID);
+				                 for (int i = 0; i < 5; i++)
+				                   (*instance)[i] = py::extract<PointIndex>(vertices[i])();
+				                 instance->SetIndex(index);
+			                   }
                              else if (py::len(vertices) == 6)
                                {
                                  new (instance) Element(PRISM);
