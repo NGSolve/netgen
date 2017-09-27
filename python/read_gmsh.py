@@ -202,11 +202,11 @@ def ReadGmsh(filename):
                         if tags[1] in bbcmap:
                             index = bbcmap[tags[1]]
                         else:
-                            index = len(bbcmap)
+                            index = len(bbcmap)+1
                             if len(namemap):
-                                mesh.SetCD2Name(index + 1, namemap[tags[0]])
+                                mesh.SetCD2Name(index, namemap[tags[0]])
                             else:
-                                mesh.SetCD2Name(index+1, "line" + str(tags[1]))
+                                mesh.SetCD2Name(index, "line" + str(tags[1]))
                             bbcmap[tags[1]] = index
 
                     elif meshdim == 2:
