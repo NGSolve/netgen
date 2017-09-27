@@ -2007,7 +2007,9 @@ namespace netgen
     int w = Togl_Width (togl);
     int h = Togl_Height (togl);
 
-    Array<char> buffer(w*h*3);
+    Array<unsigned char> buffer(w*h*3);
+    glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+    glPixelStorei(GL_PACK_ALIGNMENT,1);
     glReadPixels (0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, &buffer[0]);
 
 #ifdef JPEGLIB
@@ -2052,20 +2054,17 @@ namespace netgen
       }
 #endif // JPEGLIB
     {
-        char str[250];
-        char filename2[250];
-        int len = strlen(filename);
-        strcpy (filename2, filename);
+        string command;
+        string filename2;
 
-        filename2[len-3] = 'p';
-        filename2[len-2] = 'p';
-        filename2[len-1] = 'm';
-        filename2[len] = 0;
+        filename2 = filename;
+
+        if(filename2.substr(len-3) != ".ppm")
+            filename2 += ".ppm";
 
         cout << "Snapshot to file '" << filename << endl;
 
         int w = Togl_Width (togl);
-        w = int((w + 1) / 4) * 4 + 4;
         int h = Togl_Height (togl);
 
         ofstream outfile(filename2);
@@ -2079,30 +2078,31 @@ namespace netgen
                     outfile.put (buffer[k+3*j+3*w*(h-i-1)]);
         outfile << flush;
 
-        // convert image file (Unix/Linux only):
-        sprintf(str,"convert -quality 100 %s %s", filename2, filename);
-
-        int err = system(str);
-        if (err != 0)
+        if (filename2 == string(filename))
+            return TCL_OK;
+        else
         {
-            Tcl_SetResult (Togl_Interp(togl), (char*)"Cannot convert image file", TCL_VOLATILE);
-            return TCL_ERROR;
-        }
-        sprintf(str,"rm %s", filename2);
+          // convert image file (Unix/Linux only):
+          command = string("convert -quality 100 ") + filename2 + " " + filename;
 
-        err = system(str);
-        if (err != 0)
-        {
-            Tcl_SetResult (Togl_Interp(togl), (char*)"Cannot delete temporary file", TCL_VOLATILE);
-            return TCL_ERROR;
-        }
+          int err = system(command.c_str());
+          if (err != 0)
+          {
+              Tcl_SetResult (Togl_Interp(togl), (char*)"Cannot convert image file, stored as .ppm", TCL_VOLATILE);
+              return TCL_ERROR;
+          }
 
+          command  = string("rm ") + filename2;
+          err = system(command.c_str());
+
+          if (err != 0)
+          {
+              Tcl_SetResult (Togl_Interp(togl), (char*)"Cannot delete temporary file", TCL_VOLATILE);
+              return TCL_ERROR;
+          }
+          return TCL_OK;
+        }
     }
-
-      {
-        cout << "Snapshot to " << filename << " not supported" << endl;
-        return TCL_ERROR;
-      }
   }
 
 
