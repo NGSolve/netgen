@@ -31,7 +31,7 @@ DLL_HEADER void ExportGeom2d(py::module &m)
     
 	.def("Load",&SplineGeometry2d::Load)
     .def("AppendPoint", FunctionPointer
-         ([](SplineGeometry2d &self, double px, double py, double maxh, bool hpref)
+         ([](SplineGeometry2d &self, double px, double py, double maxh, double hpref)
           {
             Point<2> p;
             p(0) = px;
@@ -42,9 +42,9 @@ DLL_HEADER void ExportGeom2d(py::module &m)
             self.geompoints.Append(gp);
             return self.geompoints.Size()-1;
 	  }),
-         py::arg("x"), py::arg("y"), py::arg("maxh") = 1e99, py::arg("hpref")=false)
+         py::arg("x"), py::arg("y"), py::arg("maxh") = 1e99, py::arg("hpref")=0)
     .def("Append", FunctionPointer([](SplineGeometry2d &self, py::list segment, int leftdomain, int rightdomain,
-                                      py::object bc, py::object copy, double maxh, bool hpref)
+                                      py::object bc, py::object copy, double maxh, double hpref)
 	  {
             py::extract<std::string> segtype(segment[0]);
             
@@ -96,8 +96,7 @@ DLL_HEADER void ExportGeom2d(py::module &m)
             self.AppendSegment(seg);
             return self.GetNSplines()-1;
 	  }), py::arg("point_indices"), py::arg("leftdomain") = 1, py::arg("rightdomain") = py::int_(0),
-               py::arg("bc")=NGDummyArgument(), py::arg("copy")=NGDummyArgument(), py::arg("maxh")=1e99, py::arg("hpref")=false
-               )
+               py::arg("bc")=NGDummyArgument(), py::arg("copy")=NGDummyArgument(), py::arg("maxh")=1e99, py::arg("hpref")=0)
 
     
     .def("AppendSegment", FunctionPointer([](SplineGeometry2d &self, py::list point_indices, int leftdomain, int rightdomain)

@@ -27,13 +27,13 @@ namespace netgen
     /// max mesh-size at point
     double hmax;
     /// hp-refinement
-    bool hpref;
+    double hpref;
 
     ///
     GeomPoint () { ; }
 
     ///
-    GeomPoint (const Point<D> & ap, double aref = 1, bool ahpref=false)
+    GeomPoint (const Point<D> & ap, double aref = 1, double ahpref=0)
       : Point<D>(ap), refatpoint(aref), hmax(1e99), hpref(ahpref) { ; }
   };
 

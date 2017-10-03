@@ -416,7 +416,7 @@ namespace netgen
 		mpi = pi;
 		mindist = Dist2(gp3, (*mesh)[pi]);
 	      }
-	  (*mesh)[mpi].Singularity(1.);
+	  (*mesh)[mpi].Singularity(geometry.GetPoint(i).hpref);
 	}
 
 
