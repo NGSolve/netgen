@@ -235,6 +235,8 @@ using std::fabs;
   NG_INLINE SIMD<double,1> operator/ (SIMD<double,1> a, SIMD<double,1> b) { return a.Data()/b.Data(); }
 
   NG_INLINE SIMD<double,1> sqrt (SIMD<double,1> a) { return std::sqrt(a.Data()); }
+  NG_INLINE SIMD<double,1> floor (SIMD<double,1> a) { return std::floor(a.Data()); }
+  NG_INLINE SIMD<double,1> ceil (SIMD<double,1> a) { return std::ceil(a.Data()); }
   NG_INLINE SIMD<double,1> fabs (SIMD<double,1> a) { return std::fabs(a.Data()); }
   NG_INLINE SIMD<double,1> L2Norm2 (SIMD<double,1> a) { return a.Data()*a.Data(); }
   NG_INLINE SIMD<double,1> Trans (SIMD<double,1> a) { return a; }
@@ -251,6 +253,11 @@ using std::fabs;
   NG_INLINE auto HSum (SIMD<double,1> sd1, SIMD<double,1> sd2)
   {
     return std::make_tuple(sd1.Data(), sd2.Data());
+  }
+
+  NG_INLINE auto HSum (SIMD<double,1> sd1, SIMD<double,1> sd2, SIMD<double,1> sd3, SIMD<double,1> sd4)
+  {
+    return std::make_tuple(sd1.Data(), sd2.Data(), sd3.Data(), sd4.Data());
   }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -293,8 +300,13 @@ using std::fabs;
 
     NG_INLINE operator __m256d() const { return data; }
     NG_INLINE double operator[] (int i) const { return ((double*)(&data))[i]; }
+    NG_INLINE double& operator[] (int i) { return ((double*)(&data))[i]; }
     NG_INLINE __m256d Data() const { return data; }
     NG_INLINE __m256d & Data() { return data; }
+
+    NG_INLINE operator std::tuple<double&,double&,double&,double&> ()
+    { return std::tuple<double&,double&,double&,double&>((*this)[0], (*this)[1], (*this)[2], (*this)[3]); }
+
 
     NG_INLINE SIMD<double,4> &operator+= (SIMD<double,4> b) { data+=b.Data(); return *this; }
     NG_INLINE SIMD<double,4> &operator-= (SIMD<double,4> b) { data-=b.Data(); return *this; }
@@ -310,6 +322,8 @@ using std::fabs;
   NG_INLINE SIMD<double,4> operator/ (SIMD<double,4> a, SIMD<double,4> b) { return a.Data()/b.Data(); }
 
   NG_INLINE SIMD<double,4> sqrt (SIMD<double,4> a) { return _mm256_sqrt_pd(a.Data()); }
+  NG_INLINE SIMD<double,4> floor (SIMD<double,4> a) { return _mm256_floor_pd(a.Data()); }
+  NG_INLINE SIMD<double,4> ceil (SIMD<double,4> a) { return _mm256_ceil_pd(a.Data()); }
   NG_INLINE SIMD<double,4> fabs (SIMD<double,4> a) { return _mm256_max_pd(a.Data(), -a.Data()); }
   NG_INLINE SIMD<double,4> L2Norm2 (SIMD<double,4> a) { return a.Data()*a.Data(); }
   NG_INLINE SIMD<double,4> Trans (SIMD<double,4> a) { return a; }
@@ -332,13 +346,13 @@ using std::fabs;
     return std::make_tuple(_mm_cvtsd_f64 (hv2),  _mm_cvtsd_f64(_mm_shuffle_pd (hv2, hv2, 3)));
   }
 
-  NG_INLINE SIMD<double,4> HSum (SIMD<double,4> v1, SIMD<double,4> v2, SIMD<double,4> v3, SIMD<double,4> v4)
+  NG_INLINE auto HSum (SIMD<double,4> v1, SIMD<double,4> v2, SIMD<double,4> v3, SIMD<double,4> v4)
   {
     __m256d hsum1 = _mm256_hadd_pd (v1.Data(), v2.Data());
     __m256d hsum2 = _mm256_hadd_pd (v3.Data(), v4.Data());
     __m256d hsum = _mm256_add_pd (_mm256_permute2f128_pd (hsum1, hsum2, 1+2*16),
                                   _mm256_blend_pd (hsum1, hsum2, 12));
-    return hsum;
+    return SIMD<double,4>(hsum);
   }
 
 #endif // __AVX__
@@ -402,6 +416,8 @@ using std::fabs;
   NG_INLINE SIMD<double,8> operator/ (SIMD<double,8> a, SIMD<double,8> b) { return _mm512_div_pd(a.Data(),b.Data()); }
 
   NG_INLINE SIMD<double,8> sqrt (SIMD<double,8> a) { return _mm512_sqrt_pd(a.Data()); }
+  NG_INLINE SIMD<double,8> floor (SIMD<double,8> a) { return _mm512_floor_pd(a.Data()); }
+  NG_INLINE SIMD<double,8> ceil (SIMD<double,8> a) { return _mm512_ceil_pd(a.Data()); }
   NG_INLINE SIMD<double,8> fabs (SIMD<double,8> a) { return _mm512_max_pd(a.Data(), -a.Data()); }
   NG_INLINE SIMD<double,8> L2Norm2 (SIMD<double,8> a) { return a.Data()*a.Data(); }
   NG_INLINE SIMD<double,8> Trans (SIMD<double,8> a) { return a; }
@@ -467,6 +483,8 @@ using std::fabs;
     SIMD<T> Get() const { return NR==0 ? head : tail.template Get<NR-1>(); }
     template <int NR>
     SIMD<T> & Get() { return NR==0 ? head : tail.template Get<NR-1>(); }
+    auto MakeTuple() { return std::tuple_cat(std::tuple<SIMD<T>&> (head), tail.MakeTuple()); }
+    operator auto () { return MakeTuple(); }
   };
 
   template <typename T>
@@ -488,6 +506,8 @@ using std::fabs;
     SIMD<T> Get() const { return NR==0 ? v0 : v1; }
     template <int NR>
     SIMD<T> & Get() { return NR==0 ? v0 : v1; }
+    auto MakeTuple() { return std::tuple<SIMD<T>&, SIMD<T>&> (v0, v1); }
+    operator auto () { return MakeTuple(); }
   };
 
   template <int D> NG_INLINE MultiSIMD<D,double> operator+ (MultiSIMD<D,double> a, MultiSIMD<D,double> b)
