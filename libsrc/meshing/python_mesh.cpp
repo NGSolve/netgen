@@ -643,6 +643,14 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
            py::arg("pid2"),
            py::arg("identnr"),
            py::arg("type"))
+    .def ("CalcLocalH", &Mesh::CalcLocalH)
+    .def ("SetMaxHDomain", [] (Mesh& self, py::list maxhlist)
+          {
+            Array<double> maxh;
+            for(auto el : maxhlist)
+              maxh.Append(py::cast<double>(el));
+            self.SetMaxHDomain(maxh);
+          })
     .def ("GenerateVolumeMesh", 
           [](Mesh & self, py::object pymp)
            {
