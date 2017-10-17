@@ -484,7 +484,8 @@ using std::fabs;
     template <int NR>
     SIMD<T> & Get() { return NR==0 ? head : tail.template Get<NR-1>(); }
     auto MakeTuple() { return std::tuple_cat(std::tuple<SIMD<T>&> (head), tail.MakeTuple()); }
-    operator auto () { return MakeTuple(); }
+    // not yet possible for MSVC
+    // operator auto () { return MakeTuple(); }
   };
 
   template <typename T>
@@ -507,7 +508,7 @@ using std::fabs;
     template <int NR>
     SIMD<T> & Get() { return NR==0 ? v0 : v1; }
     auto MakeTuple() { return std::tuple<SIMD<T>&, SIMD<T>&> (v0, v1); }
-    operator auto () { return MakeTuple(); }
+    operator std::tuple<SIMD<T>&, SIMD<T>&>() { return MakeTuple(); }
   };
 
   template <int D> NG_INLINE MultiSIMD<D,double> operator+ (MultiSIMD<D,double> a, MultiSIMD<D,double> b)
