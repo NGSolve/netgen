@@ -33,6 +33,12 @@ DLL_HEADER void ExportNgOCC(py::module &m)
 					  SetGlobalMesh(mesh);
 					  mesh->SetGeometry(geo);
 					  ng_geometry = geo;
+
+                                          occparam.resthcloseedgefac = 2.0;
+                                          occparam.resthcloseedgeenable = 1;
+                                          occparam.resthminedgelen = 0.2;
+                                          occparam.resthminedgelenenable = 1;
+
 					  try
 					    {
 					      geo->GenerateMesh(mesh,param);
