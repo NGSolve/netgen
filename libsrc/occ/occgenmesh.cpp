@@ -1291,10 +1291,6 @@ namespace netgen
 
   int OCCGenerateMesh (OCCGeometry & geom, shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
    {
-     cout << "MeshingParameters: " << mparam << endl;
-     cout << "OCCParameters: " << endl;
-     occparam.Print(cout);
-     
       multithread.percent = 0;
 
       if (mparam.perfstepsstart <= MESHCONST_ANALYSE)
