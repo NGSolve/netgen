@@ -425,7 +425,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   ExportArray<Element,0,size_t>(m);
   ExportArray<Element2d,0,size_t>(m);
-  ExportArray<Segment>(m);
+  ExportArray<Segment,0,size_t>(m);
   ExportArray<Element0d>(m);
   ExportArray<MeshPoint,PointIndex::BASE,PointIndex>(m);
   ExportArray<FaceDescriptor>(m);
@@ -553,7 +553,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          py::return_value_policy::reference)
 
     .def("Elements1D", 
-         static_cast<Array<Segment>&(Mesh::*)()> (&Mesh::LineSegments),
+         static_cast<Array<Segment,0,size_t>&(Mesh::*)()> (&Mesh::LineSegments),
          py::return_value_policy::reference)
 
     .def("Elements0D", FunctionPointer([] (Mesh & self) -> Array<Element0d>&

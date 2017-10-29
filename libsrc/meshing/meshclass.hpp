@@ -33,7 +33,7 @@ namespace netgen
     T_POINTS points;
 
     /// line-segments at edges
-    Array<Segment> segments;
+    Array<Segment, 0, size_t> segments;
     /// surface elements, 2d-inner elements
     T_SURFELEMENTS surfelements;
     /// volume elements
@@ -255,8 +255,12 @@ namespace netgen
     const Segment & operator[] (SegmentIndex si) const { return segments[si]; }
     Segment & operator[] (SegmentIndex si) { return segments[si]; }
 
+    /*
     const Array<Segment> & LineSegments() const { return segments; }
     Array<Segment> & LineSegments() { return segments; }
+    */
+    const auto & LineSegments() const { return segments; }
+    auto & LineSegments() { return segments; }
     
     Array<Element0d> pointelements;  // only via python interface
 
