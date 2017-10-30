@@ -410,9 +410,9 @@ namespace netgen
   void Mesh :: Save (const string & filename) const
   {
     ostream * outfile;
-    if (filename.substr(filename.length()-7,7) == ".vol.gz")
+    if (filename.find(".vol.gz")!=string::npos)
       outfile = new ogzstream(filename.c_str());
-    else if (filename.substr(filename.length()-4,4) == ".vol")
+    else if (filename.find(".vol")!=string::npos)
       outfile = new ofstream(filename.c_str());
     else
       outfile = new ogzstream((filename+".vol.gz").c_str());
