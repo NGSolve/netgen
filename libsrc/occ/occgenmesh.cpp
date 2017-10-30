@@ -1137,7 +1137,12 @@ namespace netgen
             Handle(Geom_Surface) surf = BRep_Tool::Surface (face);
             Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation (face, loc);
 
-            if (triangulation.IsNull()) continue;
+            if (triangulation.IsNull())
+              {
+                BRepTools::Clean (geom.shape);
+                BRepMesh_IncrementalMesh (geom.shape, 0.01, true);
+                triangulation = BRep_Tool::Triangulation (face, loc);
+              }
 
             BRepAdaptor_Surface sf(face, Standard_True);
             BRepLProp_SLProps prop(sf, 2, 1e-5);
