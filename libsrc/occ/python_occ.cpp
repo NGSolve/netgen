@@ -16,8 +16,20 @@ namespace netgen
 
 DLL_HEADER void ExportNgOCC(py::module &m) 
 {
-  py::class_<OCCGeometry, shared_ptr<OCCGeometry>> (m, "OCCGeometry")
+  py::class_<OCCGeometry, shared_ptr<OCCGeometry>> (m, "OCCGeometry", R"raw_string(Use LoadOCCGeometry to load the geometry from a *.step file.)raw_string")
     .def(py::init<>())
+    .def("Heal",[](OCCGeometry & self, double tolerance, bool fixsmalledges, bool fixspotstripfaces, bool sewfaces, bool makesolids, bool splitpartitions)
+         {
+           self.tolerance = tolerance;
+           self.fixsmalledges = fixsmalledges;
+           self.fixspotstripfaces = fixspotstripfaces;
+           self.sewfaces = sewfaces;
+           self.makesolids = makesolids;
+           self.splitpartitions = splitpartitions;
+
+           self.HealGeometry();
+           self.BuildFMap();
+         },py::arg("tolerance")=1e-3, py::arg("fixsmalledges")=true, py::arg("fixspotstripfaces")=true, py::arg("sewfaces")=true, py::arg("makesolids")=true, py::arg("splitpartitions")=false,R"raw_string(Heal the OCCGeometry.)raw_string")
       ;
     m.def("LoadOCCGeometry",FunctionPointer([] (const string & filename)
            {
