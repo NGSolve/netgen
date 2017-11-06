@@ -1,3 +1,8 @@
+if(USE_GUI)
+  set(IMPORT_TKINTER True)
+else()
+  set(IMPORT_TKINTER False)
+endif()
 configure_file(__init__.py ${CMAKE_CURRENT_BINARY_DIR}/__init__.py @ONLY)
 
 install(FILES
