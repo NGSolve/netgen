@@ -304,7 +304,7 @@ const char * triarules[] = {
 "\n",\
 "elements\n",\
 "(1, 2, 4);\n",\
-"(2, 3, 4);\n",\
+"(1, 4, 3);\n",\
 "\n",\
 "endrule\n",\
 "\n",\

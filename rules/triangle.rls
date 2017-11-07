@@ -301,7 +301,7 @@ freearea
 
 elements
 (1, 2, 4);
-(2, 3, 4);
+(1, 4, 3);
 
 endrule
 
