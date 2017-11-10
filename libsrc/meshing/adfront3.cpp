@@ -245,7 +245,7 @@ void AdFront3 :: CreateTrees ()
   pmin = pmin + 0.5 * (pmin - pmax);
 
   delete facetree;
-  facetree = new Box3dTree (pmin, pmax);
+  facetree = new BoxTree<3> (pmin, pmax);
   
   for (i = 1; i <= GetNF(); i++)
     {

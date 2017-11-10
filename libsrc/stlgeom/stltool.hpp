@@ -45,7 +45,7 @@ private:
   STLGeometry * geometry;
   Array<int>* charttrigs; // trigs which only belong to this chart
   Array<int>* outertrigs; // trigs which belong to other charts
-  Box3dTree * searchtree; // ADT containing outer trigs
+  BoxTree<3> * searchtree; // ADT containing outer trigs
 
   Array<twoint>* olimit; //outer limit of outer chart
   Array<twoint>* ilimit; //outer limit of inner chart
@@ -160,9 +160,10 @@ private:
   STLGeometry * geometry;
   const STLChart * chart;
   Array<STLBoundarySeg> boundary;
+  BoxTree<2> * searchtree = nullptr;
 public:
   STLBoundary(STLGeometry * ageometry);
-  // : boundary() {};
+  ~STLBoundary() { delete searchtree; }
 
   void Clear() {boundary.SetSize(0);};
   void SetChart (const STLChart * achart) { chart = achart; }
@@ -175,6 +176,8 @@ public:
   int NOSegments() {return boundary.Size();};
   const STLBoundarySeg & GetSegment(int i) {return boundary.Get(i);}
 
+  void BuildSearchTree();
+  void DeleteSearchTree();
   int TestSeg(const Point<3> & p1, const Point<3> & p2, const Vec<3> & sn, 
 	      double sinchartangle, int divisions, Array<Point<3> >& points,
 	      double eps);

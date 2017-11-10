@@ -18,6 +18,7 @@ void STLMeshing (STLGeometry & geom,
   geom.Clear();
   geom.BuildEdges();
   geom.MakeAtlas(mesh);
+  if (multithread.terminate) { return; }
   geom.CalcFaceNums();
   geom.AddFaceEdges();
   geom.LinkEdges();
@@ -48,8 +49,8 @@ void STLMeshing (STLGeometry & geom,
   meshchart = 0; // initialize all ?? JS
 
   if (geomsearchtreeon)
-    searchtree = new Box3dTree (GetBoundingBox().PMin() - Vec3d(1,1,1),
-				GetBoundingBox().PMax() + Vec3d(1,1,1));
+    searchtree = new BoxTree<3> (GetBoundingBox().PMin() - Vec3d(1,1,1),
+                                 GetBoundingBox().PMax() + Vec3d(1,1,1));
   else
     searchtree = NULL;
 
@@ -2115,7 +2116,7 @@ int STLGeometry :: CheckGeometryOverlapping()
   Point<3> pmin = geombox.PMin();
   Point<3> pmax = geombox.PMax();
 
-  Box3dTree setree(pmin, pmax);
+  BoxTree<3> setree(pmin, pmax);
 
   int oltrigs = 0;
   markedtrigs.SetSize(GetNT());

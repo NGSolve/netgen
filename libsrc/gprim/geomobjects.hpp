@@ -232,8 +232,13 @@ namespace netgen
     enum EB_TYPE { EMPTY_BOX = 1 };
     Box ( EB_TYPE et ) 
     {
-      pmin = Point<3> (1e99, 1e99, 1e99);
-      pmax = Point<3> (-1e99, -1e99, -1e99);
+      for (int i = 0; i < D; i++)
+        {
+          pmin(i) = 1e99;
+          pmax(i) = -1e99;
+        }
+      // pmin = Point<D> (1e99, 1e99, 1e99);
+      // pmax = Point<D> (-1e99, -1e99, -1e99);
     }
 
     const Point<D> & PMin () const { return pmin; }

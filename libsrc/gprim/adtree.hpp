@@ -382,6 +382,97 @@ public:
 
 
 
+
+template <int DIM>
+class T_ADTreeNode
+{
+public:
+  T_ADTreeNode *left, *right, *father;
+  float sep;
+  float data[DIM];
+  int pi;
+  int nchilds;
+
+  T_ADTreeNode ()
+  {
+    pi = -1;
+    left = NULL;
+    right = NULL;
+    father = NULL;
+    nchilds = 0;
+  }
+  
+  void DeleteChilds ()
+  {
+    if (left)
+      {
+	left->DeleteChilds();
+	delete left;
+	left = NULL;
+      }
+    if (right)
+      {
+	right->DeleteChilds();
+	delete right;
+	right = NULL;
+      }
+  }
+  
+  // friend class T_ADTree<DIM>;
+
+  static BlockAllocator ball;
+  void * operator new(size_t)
+  {
+    return ball.Alloc();
+  }
+  
+  void operator delete (void * p)
+  {
+    ball.Free(p);
+  }
+};
+
+
+
+
+  template <int dim>
+  class T_ADTree
+  {
+    T_ADTreeNode<dim> * root;
+    float cmin[dim], cmax[dim];
+    Array<T_ADTreeNode<dim>*> ela;
+
+  public:
+    T_ADTree (const float * acmin, 
+             const float * acmax);
+    ~T_ADTree ();
+    
+    void Insert (const float * p, int pi);
+    void GetIntersecting (const float * bmin, const float * bmax,
+                          Array<int> & pis) const;
+    
+    void DeleteElement (int pi);
+    
+    
+    void Print (ostream & ost) const
+    { PrintRec (ost, root); }
+    int Depth () const
+    { return DepthRec (root); }
+    int Elements () const
+    { return ElementsRec (root); }
+    
+    void PrintRec (ostream & ost, const T_ADTreeNode<dim> * node) const;
+    int DepthRec (const T_ADTreeNode<dim> * node) const;
+    int ElementsRec (const T_ADTreeNode<dim> * node) const;
+    
+    void PrintMemInfo (ostream & ost) const;
+  };
+  
+  
+
+
+
+
 /*
 
 class ADTreeNode6F
@@ -460,26 +551,26 @@ public:
 };
 
 
-
-class Box3dTree
-{
-  ADTree6 * tree;
-  Point<3> boxpmin, boxpmax;
-public:
-  Box3dTree (const Box<3> & abox);
-  Box3dTree (const Point<3> & apmin, const Point<3> & apmax);
-  ~Box3dTree ();
-  void Insert (const Point<3> & bmin, const Point<3> & bmax, int pi);
-  void Insert (const Box<3> & box, int pi)
+  template <int dim>
+  class BoxTree
   {
-    Insert (box.PMin(), box.PMax(), pi);
-  }
-  void DeleteElement (int pi) 
+    T_ADTree<2*dim> * tree;
+    Point<dim> boxpmin, boxpmax;
+  public:
+    BoxTree (const Box<dim> & abox);
+    BoxTree (const Point<dim> & apmin, const Point<dim> & apmax);
+    ~BoxTree ();
+    void Insert (const Point<dim> & bmin, const Point<dim> & bmax, int pi);
+    void Insert (const Box<dim> & box, int pi)
+    {
+      Insert (box.PMin(), box.PMax(), pi);
+    }
+    void DeleteElement (int pi) 
     { tree->DeleteElement(pi); }
-  void GetIntersecting (const Point<3> & pmin, const Point<3> & pmax, 
-			Array<int> & pis) const;
-
-  const ADTree6 & Tree() const { return *tree; };
+    void GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax, 
+                          Array<int> & pis) const;
+    
+    const T_ADTree<2*dim> & Tree() const { return *tree; };
 };
 
 }

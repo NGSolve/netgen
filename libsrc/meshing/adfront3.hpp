@@ -212,7 +212,7 @@ class AdFront3
   Array<char> pingroup;
   
   ///
-  class Box3dTree * facetree;
+  class BoxTree<3> * facetree;
 public:
   
   ///

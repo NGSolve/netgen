@@ -1181,8 +1181,8 @@ namespace netgen
 
             Array<Line> lines(sections*nedges);
 
-            Box3dTree* searchtree =
-               new Box3dTree (bb.PMin(), bb.PMax());
+            BoxTree<3> * searchtree =
+              new BoxTree<3> (bb.PMin(), bb.PMax());
 
             int nlines = 0;
             for (int i = 1; i <= nedges && !multithread.terminate; i++)

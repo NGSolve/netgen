@@ -127,7 +127,7 @@ namespace netgen
     
     Point3d pmin, pmax;
     mesh.GetBox (pmin, pmax);
-    Box3dTree segtree (pmin, pmax);
+    BoxTree<3> segtree (pmin, pmax);
     
     for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
       {

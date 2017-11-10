@@ -24,6 +24,10 @@ void STLGeometry :: MakeAtlas(Mesh & mesh)
   int timer3 = NgProfiler::CreateTimer ("makeatlas - part 3");
   int timer4 = NgProfiler::CreateTimer ("makeatlas - part 4");
   int timer5 = NgProfiler::CreateTimer ("makeatlas - part 5");
+  int timer5a = NgProfiler::CreateTimer ("makeatlas - part 5a");
+  int timer5b = NgProfiler::CreateTimer ("makeatlas - part 5b");
+  int timer5cs = NgProfiler::CreateTimer ("makeatlas - part 5cs");
+  int timer5cl = NgProfiler::CreateTimer ("makeatlas - part 5cl");
 
   PushStatusF("Make Atlas");
 
@@ -61,6 +65,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh)
   Array<int> innerpointstochart(GetNP()); //point in chart becomes chartnum
   Array<int> chartpoints;             //point in chart becomes chartnum
   Array<int> innerchartpoints;
+  Array<Point<3>> innerchartpts;
   Array<int> dirtycharttrigs;
 
   Array<int> chartdistacttrigs (GetNT());   //outercharttrigs
@@ -131,6 +136,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh)
 
       chartpoints.SetSize(0);  
       innerchartpoints.SetSize(0);
+      innerchartpts.SetSize(0);
       chartbound.Clear();
       chartbound.SetChart(chart);
 
@@ -169,7 +175,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh)
       int oldstartic = 1;
       int oldstartic2;
 
-  NgProfiler::StartTimer (timer2);
+      NgProfiler::StartTimer (timer2);
 
 
       while (changed)
@@ -279,9 +285,14 @@ void STLGeometry :: MakeAtlas(Mesh & mesh)
 	    }
 	}
 
-  NgProfiler::StopTimer (timer2);
-  NgProfiler::StartTimer (timer3);
-
+      innerchartpts.SetSize(innerchartpoints.Size());
+      for (size_t i = 0; i < innerchartpoints.Size(); i++)
+        innerchartpts[i] = GetPoint(innerchartpoints[i]);
+      chartbound.BuildSearchTree();
+      
+      NgProfiler::StopTimer (timer2);
+      NgProfiler::StartTimer (timer3);
+      
       //find outertrigs
 
       //      chartbound.Clear(); 
@@ -328,7 +339,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh)
 		    {
 		      accepted = 1;
 		      
-                      NgProfiler::StartTimer (timer4);
+                      // NgProfiler::StartTimer (timer4);
 
 		      bool isdirtytrig = false;
 		      Vec<3> gn = GetTriangle(nt).GeomNormal(points);
@@ -368,16 +379,17 @@ void STLGeometry :: MakeAtlas(Mesh & mesh)
 			    if (!accepted) break;
 			  }
 		      
-                      NgProfiler::StopTimer (timer4);		      
+                      // NgProfiler::StopTimer (timer4);		      
 
-                      NgProfiler::RegionTimer reg5(timer5);		      
+                      // NgProfiler::RegionTimer reg5(timer5);		      
 
-
+                      
 		      // outer chart is only small environment of
 		      //    inner chart:
 		      
 		      if (accepted)
 			{
+                          // NgProfiler::StartTimer (timer5a);
 			  accepted = 0;
 			  
 			  for (int k = 1; k <= 3; k++)
@@ -386,16 +398,30 @@ void STLGeometry :: MakeAtlas(Mesh & mesh)
 				accepted = 1; 
 				break;
 			      }
+
+                          // NgProfiler::StopTimer (timer5a);
+                          // int timer5csl = (innerchartpts.Size() < 100) ? timer5cs : timer5cl;
+                          // NgProfiler::StartTimer (timer5csl);
 			  
 			  if (!accepted)
 			    for (int k = 1; k <= 3; k++)
 			      {
 				Point<3> pt = GetPoint(ntrig.PNum(k));					  
 				double h2 = sqr(mesh.GetH(pt));
-				for (int l = 1; l <= innerchartpoints.Size(); l++)
+                                /*
+                                for (int l = 1; l <= innerchartpoints.Size(); l++)
 				  {
-				    double tdist = 
-				      Dist2(pt, GetPoint (innerchartpoints.Get(l)));
+				    double tdist = Dist2(pt, GetPoint (innerchartpoints.Get(l)));
+				    if (tdist < 4 * h2)
+				      {
+					accepted = 1; 
+					break;
+				      }
+				  }
+                                */
+                                for (int l = 0; l < innerchartpts.Size(); l++)
+				  {
+				    double tdist = Dist2(pt, innerchartpts[l]);
 				    if (tdist < 4 * h2)
 				      {
 					accepted = 1; 
@@ -404,8 +430,10 @@ void STLGeometry :: MakeAtlas(Mesh & mesh)
 				  }
 				if (accepted) break;
 			      }
+                          
+                          // NgProfiler::StopTimer (timer5csl);
 			}
-		      
+                      // NgProfiler::StartTimer (timer5b);
 		      
 		      if (accepted)
 			{
@@ -427,10 +455,13 @@ void STLGeometry :: MakeAtlas(Mesh & mesh)
 				}
 			    }
 			}
+                      // NgProfiler::StopTimer (timer5b);
 		    }	       
 		}
 	    }
 	}            
+
+      chartbound.DeleteSearchTree();
 
       NgProfiler::StopTimer (timer3);
 

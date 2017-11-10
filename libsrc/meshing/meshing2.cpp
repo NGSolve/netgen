@@ -244,8 +244,8 @@ namespace netgen
 
 
     // test for 3d overlaps
-    Box3dTree surfeltree (boundingbox.PMin(),
-			  boundingbox.PMax());
+    BoxTree<3> surfeltree (boundingbox.PMin(),
+                           boundingbox.PMax());
 
     Array<int> intersecttrias;
     Array<Point3d> critpoints;

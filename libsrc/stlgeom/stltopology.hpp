@@ -252,7 +252,7 @@ protected:
   
   // searchtree for trigs and points
 
-  Box3dTree * searchtree; // ADT
+  BoxTree<3> * searchtree; // ADT
   Point3dTree * pointtree;
 
   Box<3> boundingbox;

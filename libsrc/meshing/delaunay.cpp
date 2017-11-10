@@ -246,7 +246,7 @@ namespace netgen
   void AddDelaunayPoint (PointIndex newpi, const Point3d & newp, 
 			 Array<DelaunayTet> & tempels, 
 			 Mesh & mesh,
-			 Box3dTree & tettree, 
+			 BoxTree<3> & tettree, 
 			 MeshNB & meshnb,
 			 Array<Point<3> > & centers, Array<double> & radi2,
 			 Array<int> & connected, Array<int> & treesearch, 
@@ -680,7 +680,7 @@ namespace netgen
     pmin2 = pmin2 + 0.1 * (pmin2 - pmax2);
     pmax2 = pmax2 + 0.1 * (pmax2 - pmin2);
 
-    Box3dTree tettree(pmin2, pmax2);
+    BoxTree<3> tettree(pmin2, pmax2);
 
 
     tempels.Append (startel);
@@ -1110,7 +1110,7 @@ namespace netgen
     PrintMessage (3, "Remove intersecting");
     if (openels.Size())
       {
-	Box3dTree setree(pmin, pmax);
+	BoxTree<3> setree(pmin, pmax);
 
 	/*      
 		cout << "open elements in search tree: " << openels.Size() << endl;

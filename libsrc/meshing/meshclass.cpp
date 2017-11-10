@@ -3464,7 +3464,7 @@ namespace netgen
 
     Point3d pmin, pmax;
     GetBox (pmin, pmax);
-    Box3dTree setree(pmin, pmax);
+    BoxTree<3> setree(pmin, pmax);
     Array<int> inters;
 
     bool overlap = 0;
@@ -4282,7 +4282,7 @@ namespace netgen
                     box.Add (points[surfelements[sei].PNums()]);
                   
                   box.Increase (1.01 * box.Diam());
-                  elementsearchtree = new Box3dTree (box);
+                  elementsearchtree = new BoxTree<3> (box);
                   
                   for (SurfaceElementIndex sei = 0; sei < ne; sei++)
                     {
@@ -4297,7 +4297,7 @@ namespace netgen
                     box.Add (points[volelements[ei].PNums()]);
                   
                   box.Increase (1.01 * box.Diam());
-                  elementsearchtree = new Box3dTree (box);
+                  elementsearchtree = new BoxTree<3> (box);
                   
                   for (ElementIndex ei = 0; ei < ne; ei++)
                     {

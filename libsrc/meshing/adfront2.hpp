@@ -169,7 +169,7 @@ class AdFront2
   Array<FrontLine> lines;     /// front lines
 
   Box3d boundingbox;
-  Box3dTree linesearchtree;       /// search tree for lines
+  BoxTree<3> linesearchtree;       /// search tree for lines
   Point3dTree pointsearchtree;    /// search tree for points
   Point3dTree cpointsearchtree;   /// search tree for cone points (not used ???)
 

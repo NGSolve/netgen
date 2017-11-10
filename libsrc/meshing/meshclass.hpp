@@ -99,7 +99,7 @@ namespace netgen
     int numvertices;
 
     /// geometric search tree for interval intersection search
-    Box3dTree * elementsearchtree;
+    BoxTree<3> * elementsearchtree;
     /// time stamp for tree
     mutable int elementsearchtreets;
 

@@ -930,8 +930,8 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh)
       double mindist = 1E50;
       
       PrintMessage(7,"build search tree...");
-      Box3dTree* lsearchtree = new Box3dTree (GetBoundingBox().PMin() - Vec3d(1,1,1),
-					     GetBoundingBox().PMax() + Vec3d(1,1,1));
+      BoxTree<3> * lsearchtree = new BoxTree<3> (GetBoundingBox().PMin() - Vec3d(1,1,1),
+                                                 GetBoundingBox().PMax() + Vec3d(1,1,1));
       
       Array<Point3d> pmins(GetNLines());
       Array<Point3d> pmaxs(GetNLines());

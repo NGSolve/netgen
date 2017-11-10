@@ -285,7 +285,7 @@ namespace netgen
     Point<3> hp = mesh[startel[0]];
     hp(2) = 1;  hbox.Add (hp);
     hp(2) = -1; hbox.Add (hp);
-    Box3dTree searchtree(hbox);
+    BoxTree<3> searchtree(hbox);
 
     Array<DelaunayTrig> tempels;
     startel.CalcCenter (mesh);

@@ -617,8 +617,8 @@ STLChart :: STLChart(STLGeometry * ageometry)
   geometry = ageometry;
 
   if ( stlparam.usesearchtree == 1)
-    searchtree = new Box3dTree (geometry->GetBoundingBox().PMin() - Vec3d(1,1,1),
-				geometry->GetBoundingBox().PMax() + Vec3d(1,1,1));
+    searchtree = new BoxTree<3> (geometry->GetBoundingBox().PMin() - Vec3d(1,1,1),
+                                 geometry->GetBoundingBox().PMax() + Vec3d(1,1,1));
   else
     searchtree = NULL;
 }
@@ -745,8 +745,8 @@ void STLChart :: DelChartTrigs(const Array<int>& trigs)
     {
       PrintMessage(7, "Warning: unsecure routine due to first use of searchtrees!!!");
       //bould new searchtree!!!
-      searchtree = new Box3dTree (geometry->GetBoundingBox().PMin() - Vec3d(1,1,1),
-				  geometry->GetBoundingBox().PMax() + Vec3d(1,1,1));
+      searchtree = new BoxTree<3> (geometry->GetBoundingBox().PMin() - Vec3d(1,1,1),
+                                   geometry->GetBoundingBox().PMax() + Vec3d(1,1,1));
 
       for (int i = 1; i <= charttrigs->Size(); i++)
 	{
@@ -1088,17 +1088,52 @@ int STLBoundary :: TestSeg(const Point<3>& p1, const Point<3> & p2, const Vec<3>
   //  return (maxvalnew < eps);
 }
 
+void STLBoundary :: BuildSearchTree()
+{
+  static int timer = NgProfiler::CreateTimer ("BuildSearchTree");
+  NgProfiler::RegionTimer reg(timer);
+  
+  delete searchtree;
 
+  Box<2> box2d(Box<2>::EMPTY_BOX);  
+
+  int nseg = NOSegments();  
+  for (int j = 1; j <= nseg; j++)
+    {
+      const STLBoundarySeg & seg = GetSegment(j);
+      if (seg.IsSmoothEdge()) continue;
+      box2d.Add(seg.BoundingBox().PMin());
+      box2d.Add(seg.BoundingBox().PMax());
+    }
+
+  searchtree = new BoxTree<2> (box2d);
+
+  for (int j = 1; j <= nseg; j++)
+    {
+      const STLBoundarySeg & seg = GetSegment(j);
+      if (seg.IsSmoothEdge()) continue;
+      searchtree -> Insert (seg.BoundingBox(), j);
+    }  
+}
+
+void STLBoundary :: DeleteSearchTree()
+{
+  static int timer = NgProfiler::CreateTimer ("DeleteSearchTree");
+  NgProfiler::RegionTimer reg(timer);
+  
+  delete searchtree;
+  searchtree = nullptr;
+}
 
 // checks, whether 2d projection intersects
 int STLBoundary :: TestSegChartNV(const Point3d & p1, const Point3d& p2, 
 				  const Vec3d& sn)
 {
-  int timer = NgProfiler::CreateTimer ("TestSegChartNV");
-  NgProfiler::StartTimer (timer);
+  static int timerquick = NgProfiler::CreateTimer ("TestSegChartNV-searchtree");
+  static int timer = NgProfiler::CreateTimer ("TestSegChartNV");
 
   int nseg = NOSegments();
-
+ 
   Point<2> p2d1 = chart->Project2d (p1);
   Point<2> p2d2 = chart->Project2d (p2);
 
@@ -1120,30 +1155,64 @@ int STLBoundary :: TestSegChartNV(const Point3d & p1, const Point3d& p2,
   cout << "avg nseg = " << double(totnseg)/cnt << endl;
   */
 
-  for (int j = 1; j <= nseg; j++)
+  if (searchtree)
     {
-      const STLBoundarySeg & seg = GetSegment(j);
-
-      if (seg.IsSmoothEdge()) continue;
-      if (!box2d.Intersect (seg.BoundingBox())) continue;
-
-      const Point<2> & sp1 = seg.P2D1();
-      const Point<2> & sp2 = seg.P2D2();
+      // NgProfiler::RegionTimer reg(timerquick);      
       
-      Line2d l2 (sp1, sp2);
-      double lam1, lam2;
+      ArrayMem<int,100> pis;
+      searchtree -> GetIntersecting (box2d.PMin(), box2d.PMax(), pis);
       
-      int err = CrossPointBarycentric (l1, l2, lam1, lam2);
-
-      if (!err && lam1 > eps && lam1 < 1-eps &&
-	  lam2 > eps && lam2 < 1-eps)
+      for (int j : pis)
         {
-          ok = false;
-          break;
+          const STLBoundarySeg & seg = GetSegment(j);
+          
+          if (seg.IsSmoothEdge()) continue;
+          if (!box2d.Intersect (seg.BoundingBox())) continue;
+          
+          const Point<2> & sp1 = seg.P2D1();
+          const Point<2> & sp2 = seg.P2D2();
+          
+          Line2d l2 (sp1, sp2);
+          double lam1, lam2;
+          
+          int err = CrossPointBarycentric (l1, l2, lam1, lam2);
+          
+          if (!err && lam1 > eps && lam1 < 1-eps &&
+              lam2 > eps && lam2 < 1-eps)
+            {
+              ok = false;
+              break;
+            }
         }
     }
-
-  NgProfiler::StopTimer (timer);
+  
+  else
+    {      
+      // NgProfiler::RegionTimer reg(timer);      
+    for (int j = 1; j <= nseg; j++)
+      {
+        const STLBoundarySeg & seg = GetSegment(j);
+        
+        if (seg.IsSmoothEdge()) continue;
+        if (!box2d.Intersect (seg.BoundingBox())) continue;
+        
+        const Point<2> & sp1 = seg.P2D1();
+        const Point<2> & sp2 = seg.P2D2();
+        
+        Line2d l2 (sp1, sp2);
+        double lam1, lam2;
+      
+        int err = CrossPointBarycentric (l1, l2, lam1, lam2);
+        
+        if (!err && lam1 > eps && lam1 < 1-eps &&
+	  lam2 > eps && lam2 < 1-eps)
+          {
+            ok = false;
+            break;
+          }
+      }
+    
+    }
 
   return ok;
 }
