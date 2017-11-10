@@ -16,6 +16,10 @@ macro(set_vars VAR_OUT)
 endmacro()
 #######################################################################
 if(WIN32)
+  set (DEPS_DOWNLOAD_URL "https://github.com/NGSolve/ngsolve_dependencies/releases/download/v1.0.0" CACHE STRING INTERNAL)
+  set (OCC_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/occ_win64.zip" CACHE STRING INTERNAL)
+  set (TCLTK_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/tcltk_win64.zip" CACHE STRING INTERNAL)
+  set (ZLIB_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/zlib_win64.zip" CACHE STRING INTERNAL)
   if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
     string(REGEX REPLACE "/W[0-4]" "/W0" CMAKE_CXX_FLAGS_NEW ${CMAKE_CXX_FLAGS})
     set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS_NEW} CACHE STRING "compile flags" FORCE)
@@ -28,16 +32,6 @@ if(WIN32)
     set(CMAKE_EXE_LINKER_FLAGS"${CMAKE_EXE_LINKER_FLAGS_NEW}/IGNORE:4217,4049" CACHE STRING "compile flags" FORCE)
 
   endif(NOT CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-
-  if(${CMAKE_SIZEOF_VOID_P} MATCHES 4)
-    # 32 bit
-    set(EXT_LIBS_DOWNLOAD_URL_WIN "http://www.asc.tuwien.ac.at/~mhochsteger/ngsuite/ext_libs32.zip" CACHE STRING INTERNAL)
-    set(OCC_DOWNLOAD_URL_WIN "http://www.asc.tuwien.ac.at/~mhochsteger/ngsuite/occ32.zip" CACHE STRING INTERNAL)
-  else(${CMAKE_SIZEOF_VOID_P} MATCHES 4)
-    # 64 bit
-    set(EXT_LIBS_DOWNLOAD_URL_WIN "http://www.asc.tuwien.ac.at/~mhochsteger/ngsuite/ext_libs64.zip" CACHE STRING INTERNAL)
-    set(OCC_DOWNLOAD_URL_WIN "http://www.asc.tuwien.ac.at/~mhochsteger/ngsuite/occ64.zip" CACHE STRING INTERNAL)
-  endif(${CMAKE_SIZEOF_VOID_P} MATCHES 4)
 endif(WIN32)
 
 if(UNIX)
@@ -93,6 +87,7 @@ endif(USE_OCC AND WIN32 AND NOT OCC_INCLUDE_DIR)
 
 #######################################################################
 
+include(cmake/external_projects/zlib.cmake)
 if(USE_GUI)
   include(cmake/external_projects/tcltk.cmake)
 endif(USE_GUI)
