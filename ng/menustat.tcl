@@ -406,7 +406,7 @@ set videoactive 0
 .ngmenu.file add separator
 
 
-## herbert tcl load menue
+## herbert tcl load menu
 # .ngmenu.file add command -label "Run tests ..." \
 \#    -command { runtestdialog }
 ##
@@ -797,7 +797,7 @@ menu .ngmenu.help
 # .ngmenu.help add command -label "Ng Help..." \
 \#	-command { help_main }
 # .ngmenu.view add checkbutton -variable showsensitivehelp \
-#	-label "Sensitve Help" \
+#	-label "Sensitive Help" \
 #	-command { sensitivehelpdialog $showsensitivehelp }
 .ngmenu.view add checkbutton -label "Help Line" -variable showhelpline \
 	-command {

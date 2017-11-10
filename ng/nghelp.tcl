@@ -168,7 +168,7 @@ set_menu_help "Center" "Defines center of rotation"
 set_menu_help "Viewing Options" "Sets viewing options for geometry, mesh, lighting"
 set_menu_help "Clipping Plane" "Introduces clipping plane. The clipping plane is defined by the normal vector, and a scaled offset. Clipping of performed by OpenGl rendering"
 set_menu_help "Quality Plot" "Shows the element quality distribution histogram. Measure is volume scaled by edge-length to the third. Optimal elements have measure 1."
-set_menu_help "Sensitve Help" "Shows this help window"
+set_menu_help "Sensitive Help" "Shows this help window"
 
 set_menu_help "Mesh-size" "Manipulations of existing mesh"
 set_menu_help "Refine uniform" "Refines mesh by splitting elements into eight childs (algorithm of J. Bey)"
