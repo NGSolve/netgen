@@ -625,6 +625,9 @@ STLChart :: STLChart(STLGeometry * ageometry)
 
 void STLChart :: AddChartTrig(int i)
 {
+  // static int timer = NgProfiler::CreateTimer ("STLChart::AddChartTrig");
+  // NgProfiler::RegionTimer reg(timer);
+  
   charttrigs->Append(i);
   
   const STLTriangle & trig = geometry->GetTriangle(i);
@@ -644,6 +647,9 @@ void STLChart :: AddChartTrig(int i)
 
 void STLChart :: AddOuterTrig(int i)
 {
+  // static int timer = NgProfiler::CreateTimer ("STLChart::AddOuterTrig");
+  // NgProfiler::RegionTimer reg(timer);
+  
   outertrigs->Append(i);
 
   const STLTriangle & trig = geometry->GetTriangle(i);
@@ -853,6 +859,12 @@ void STLBoundary :: AddOrDelSegment(const STLBoundarySeg & seg)
 
 void STLBoundary ::AddTriangle(const STLTriangle & t)
 {
+  // static int timer_old = NgProfiler::CreateTimer ("STLChart::AddTriangle_old");
+  // static int timer_new = NgProfiler::CreateTimer ("STLChart::AddTriangle_new");
+
+  // NgProfiler::StartTimer (timer_old);
+
+#ifdef ADDTRIGOLD
   int i;
   int found1 = 0;
   int found2 = 0;
@@ -892,9 +904,127 @@ void STLBoundary ::AddTriangle(const STLTriangle & t)
 	{ boundary.DeleteElement (i); found3 = 1; } 
     }
 
-  if (!found1) {seg1.Swap(); boundary.Append(seg1);}
-  if (!found2) {seg2.Swap(); boundary.Append(seg2);}
-  if (!found3) {seg3.Swap(); boundary.Append(seg3);}
+  if (!found1)
+    {
+      seg1.Swap();
+      boundary.Append(seg1);      
+      /*
+      int newnr;
+      if (freelist.Size())
+        {
+          newnr = freelist.Last();
+          freelist.DeleteLast();
+          boundary[newnr] = seg1;
+        }
+      else
+        {
+          boundary.Append(seg1);
+          newnr = boundary.Size();
+        }
+      // cout << "tree add el " << boundary.Size() << endl;
+      if (searchtree)
+        {
+          // cout << "add " << boundary.Size() << endl;
+          searchtree->Insert (seg1.BoundingBox(), newnr);
+        }
+      */
+    }
+  
+  if (!found2)
+    {
+      seg2.Swap();
+      boundary.Append(seg2);
+      /*
+      int newnr;
+      if (freelist.Size())
+        {
+          newnr = freelist.Last();
+          freelist.DeleteLast();
+          boundary[newnr] = seg2;
+        }
+      else
+        {
+          boundary.Append(seg2);
+          newnr = boundary.Size();
+        }
+      
+      // boundary.Append(seg2);
+      // cout << "tree add el " << boundary.Size() << endl;
+      if (searchtree)
+        {
+          // cout << "add " << boundary.Size() << endl;
+          searchtree->Insert (seg2.BoundingBox(), newnr);
+        }
+      */
+    }
+  if (!found3)
+    {
+      seg3.Swap();
+      boundary.Append(seg3);      
+      /*
+      int newnr;
+      if (freelist.Size())
+        {
+          newnr = freelist.Last();
+          freelist.DeleteLast();
+          boundary[newnr] = seg3;
+        }
+      else
+        {
+          boundary.Append(seg3);
+          newnr = boundary.Size();
+        }
+      
+      // cout << "tree add el " << boundary.Size() << endl;
+      if (searchtree)                            
+        {
+          // cout << "add " << boundary.Size() << endl;
+          searchtree->Insert (seg3.BoundingBox(), newnr);
+        }
+      */
+    }
+#endif
+  
+  // NgProfiler::StopTimer (timer_old);  
+
+  // NgProfiler::StartTimer (timer_new);
+
+  INDEX_2 segs[3];
+  segs[0] = INDEX_2(t[0], t[1]);
+  segs[1] = INDEX_2(t[1], t[2]);
+  segs[2] = INDEX_2(t[2], t[0]);
+
+  for (auto seg : segs)
+    {
+      STLBoundarySeg bseg(seg[0], seg[1], geometry->GetPoints(), chart);
+      bseg.SetSmoothEdge (geometry->IsSmoothEdge (seg[0],seg[1]));
+      
+      INDEX_2 op(seg[1], seg[0]);
+      if (boundary_ht.Used(op))
+        {
+          // cout << "delete " << op << endl;
+          boundary_ht.Delete(op);
+        }
+      else
+        {
+          // cout << "insert " << seg << endl;
+          boundary_ht[seg] = bseg;
+        }
+    }
+  /*
+    // cout << "bounds = " << boundary << endl;
+      cout << "bounds:";
+      for (auto & val : boundary)
+        cout << val.I1() << "-" << val.I2() << endl;
+      cout << "ht = " << boundary_ht << endl;
+      if (boundary_ht.UsedElements() != boundary.Size())
+        {
+          cout << "wrong count" << endl;
+          char key;                          
+          cin >> key;
+        }
+  */
+  // NgProfiler::StopTimer (timer_new);  
 }
 
 int STLBoundary :: TestSeg(const Point<3>& p1, const Point<3> & p2, const Vec<3> & sn, 
@@ -1090,11 +1220,12 @@ int STLBoundary :: TestSeg(const Point<3>& p1, const Point<3> & p2, const Vec<3>
 
 void STLBoundary :: BuildSearchTree()
 {
-  static int timer = NgProfiler::CreateTimer ("BuildSearchTree");
-  NgProfiler::RegionTimer reg(timer);
+  // static int timer = NgProfiler::CreateTimer ("BuildSearchTree");
+  // NgProfiler::RegionTimer reg(timer);
   
   delete searchtree;
 
+  /*
   Box<2> box2d(Box<2>::EMPTY_BOX);  
 
   int nseg = NOSegments();  
@@ -1114,12 +1245,18 @@ void STLBoundary :: BuildSearchTree()
       if (seg.IsSmoothEdge()) continue;
       searchtree -> Insert (seg.BoundingBox(), j);
     }  
+  */
+  Box<2> box2d(Box<2>::EMPTY_BOX);
+  Box<3> box3d = geometry->GetBoundingBox();
+  for (size_t i = 0; i < 8; i++)
+    box2d.Add ( chart->Project2d (box3d.GetPointNr(i)));
+  searchtree = new BoxTree<2,INDEX_2> (box2d);  
 }
 
 void STLBoundary :: DeleteSearchTree()
 {
-  static int timer = NgProfiler::CreateTimer ("DeleteSearchTree");
-  NgProfiler::RegionTimer reg(timer);
+  // static int timer = NgProfiler::CreateTimer ("DeleteSearchTree");
+  // NgProfiler::RegionTimer reg(timer);
   
   delete searchtree;
   searchtree = nullptr;
@@ -1129,11 +1266,11 @@ void STLBoundary :: DeleteSearchTree()
 int STLBoundary :: TestSegChartNV(const Point3d & p1, const Point3d& p2, 
 				  const Vec3d& sn)
 {
-  static int timerquick = NgProfiler::CreateTimer ("TestSegChartNV-searchtree");
-  static int timer = NgProfiler::CreateTimer ("TestSegChartNV");
+  // static int timerquick = NgProfiler::CreateTimer ("TestSegChartNV-searchtree");
+  // static int timer = NgProfiler::CreateTimer ("TestSegChartNV");
 
   int nseg = NOSegments();
- 
+  
   Point<2> p2d1 = chart->Project2d (p1);
   Point<2> p2d2 = chart->Project2d (p2);
 
@@ -1159,12 +1296,13 @@ int STLBoundary :: TestSegChartNV(const Point3d & p1, const Point3d& p2,
     {
       // NgProfiler::RegionTimer reg(timerquick);      
       
-      ArrayMem<int,100> pis;
+      ArrayMem<INDEX_2,100> pis;
       searchtree -> GetIntersecting (box2d.PMin(), box2d.PMax(), pis);
       
-      for (int j : pis)
+      for (auto i2 : pis)
         {
-          const STLBoundarySeg & seg = GetSegment(j);
+          // const STLBoundarySeg & seg = GetSegment(j);
+          const STLBoundarySeg & seg = boundary_ht[i2];
           
           if (seg.IsSmoothEdge()) continue;
           if (!box2d.Intersect (seg.BoundingBox())) continue;

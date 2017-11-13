@@ -160,12 +160,13 @@ private:
   STLGeometry * geometry;
   const STLChart * chart;
   Array<STLBoundarySeg> boundary;
-  BoxTree<2> * searchtree = nullptr;
+  ClosedHashTable<INDEX_2, STLBoundarySeg> boundary_ht;  
+  BoxTree<2,INDEX_2> * searchtree = nullptr;
 public:
   STLBoundary(STLGeometry * ageometry);
   ~STLBoundary() { delete searchtree; }
 
-  void Clear() {boundary.SetSize(0);};
+  void Clear() {boundary.SetSize(0); boundary_ht = ClosedHashTable<INDEX_2,STLBoundarySeg>(); }
   void SetChart (const STLChart * achart) { chart = achart; }
   //don't check, if already exists!
   void AddNewSegment(const STLBoundarySeg & seg) {boundary.Append(seg);};

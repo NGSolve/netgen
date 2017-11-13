@@ -22,13 +22,14 @@ void STLGeometry :: MakeAtlas(Mesh & mesh)
   int timer1 = NgProfiler::CreateTimer ("makeatlas");
   int timer2 = NgProfiler::CreateTimer ("makeatlas - part 2");
   int timer3 = NgProfiler::CreateTimer ("makeatlas - part 3");
+  /*
   int timer4 = NgProfiler::CreateTimer ("makeatlas - part 4");
   int timer5 = NgProfiler::CreateTimer ("makeatlas - part 5");
   int timer5a = NgProfiler::CreateTimer ("makeatlas - part 5a");
   int timer5b = NgProfiler::CreateTimer ("makeatlas - part 5b");
   int timer5cs = NgProfiler::CreateTimer ("makeatlas - part 5cs");
   int timer5cl = NgProfiler::CreateTimer ("makeatlas - part 5cl");
-
+  */
   PushStatusF("Make Atlas");
 
   double h = mparam.maxh;
@@ -139,6 +140,8 @@ void STLGeometry :: MakeAtlas(Mesh & mesh)
       innerchartpts.SetSize(0);
       chartbound.Clear();
       chartbound.SetChart(chart);
+      
+      chartbound.BuildSearchTree();  // different !!!
 
       if (!found) { PrintSysError("Make Atlas, no starttrig found"); return; }
 
@@ -288,7 +291,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh)
       innerchartpts.SetSize(innerchartpoints.Size());
       for (size_t i = 0; i < innerchartpoints.Size(); i++)
         innerchartpts[i] = GetPoint(innerchartpoints[i]);
-      chartbound.BuildSearchTree();
+      // chartbound.BuildSearchTree();  // different !!!
       
       NgProfiler::StopTimer (timer2);
       NgProfiler::StartTimer (timer3);
@@ -461,8 +464,6 @@ void STLGeometry :: MakeAtlas(Mesh & mesh)
 	    }
 	}            
 
-      chartbound.DeleteSearchTree();
-
       NgProfiler::StopTimer (timer3);
 
       //end of while loop for outer chart
@@ -490,6 +491,10 @@ void STLGeometry :: MakeAtlas(Mesh & mesh)
 	  lastunmarked = prelastunmarked;
 	}
 
+      chartbound.DeleteSearchTree();
+      // cout << "key" << endl;
+      // char key;
+      // cin >> key;
       //calculate an estimate meshsize, not to produce too large outercharts, with factor 2 larger!
       RestrictHChartDistOneChart(chartnum, chartdistacttrigs, mesh, h, 0.5, atlasminh);
       // NgProfiler::Print(stdout);

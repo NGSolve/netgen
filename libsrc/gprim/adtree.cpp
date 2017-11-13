@@ -1525,7 +1525,7 @@ namespace netgen
 
 
 #endif
-
+  
 
 
 
@@ -1795,52 +1795,49 @@ namespace netgen
 
 
   
-  template <int dim>
-  T_ADTree<dim> :: T_ADTree (const float * acmin, 
-                             const float * acmax)
-    : ela(0)
+  template <int dim, typename T>
+  T_ADTree<dim,T> :: T_ADTree (Point<dim> acmin, Point<dim> acmax)
+  // : ela(0)
   {
-    memcpy (cmin, acmin, dim * sizeof(float));
-    memcpy (cmax, acmax, dim * sizeof(float));
+    cmin = acmin;
+    cmax = acmax;
     
-    root = new T_ADTreeNode<dim>;
+    root = new T_ADTreeNode<dim,T>;
     root->sep = (cmin[0] + cmax[0]) / 2;
   }
 
-  template <int dim>  
-  T_ADTree<dim> :: ~T_ADTree ()
+  template <int dim, typename T>  
+  T_ADTree<dim,T> :: ~T_ADTree ()
   {
     root->DeleteChilds();
     delete root;
   }
 
-  template <int dim>
-  void T_ADTree<dim> :: Insert (const float * p, int pi)
+  template <int dim, typename T>
+  void T_ADTree<dim,T> :: Insert (Point<dim> p, T pi)
   {
-    T_ADTreeNode<dim> *node(NULL);
-    T_ADTreeNode<dim> *next;
+    T_ADTreeNode<dim,T> *node(NULL);
+    T_ADTreeNode<dim,T> *next;
     int dir;
     int lr(0);
 
-    float bmin[dim];
-    float bmax[dim];
+    Point<dim> bmin = cmin;
+    Point<dim> bmax = cmax;
   
-    memcpy (bmin, cmin, dim * sizeof(float));
-    memcpy (bmax, cmax, dim * sizeof(float));
-
     next = root;
     dir = 0;
     while (next)
       {
 	node = next;
 
-	if (node->pi == -1)
+	if (IsInvalid(node->pi))
 	  {    
-	    memcpy (node->data, p, dim * sizeof(float));
+	    // memcpy (node->data, p, dim * sizeof(float));
+            node->data = p;
 	    node->pi = pi;
 
-	    if (ela.Size() < pi+1)
-	      ela.SetSize (pi+1);
+	    // if (ela.Size() < pi+1)
+            // ela.SetSize (pi+1);
 	    ela[pi] = node;
 
 	    return;
@@ -1849,13 +1846,13 @@ namespace netgen
 	if (node->sep > p[dir])
 	  {
 	    next = node->left;
-	    bmax[dir] = node->sep;
+	    bmax(dir) = node->sep;
 	    lr = 0;
 	  }
 	else
 	  {
 	    next = node->right;
-	    bmin[dir] = node->sep;
+	    bmin(dir) = node->sep;
 	    lr = 1;
 	  }
 
@@ -1864,13 +1861,14 @@ namespace netgen
       }
 
 
-    next = new T_ADTreeNode<dim>;
-    memcpy (next->data, p, dim * sizeof(float));
+    next = new T_ADTreeNode<dim,T>;
+    // memcpy (next->data, p, dim * sizeof(float));
+    next->data = p;
     next->pi = pi;
     next->sep = (bmin[dir] + bmax[dir]) / 2;
 
-    if (ela.Size() < pi+1)
-      ela.SetSize (pi+1);
+    // if (ela.Size() < pi+1)
+    // ela.SetSize (pi+1);
     ela[pi] = next;
 
     if (lr)
@@ -1886,12 +1884,13 @@ namespace netgen
       }
   }
 
-  template <int dim>
-  void T_ADTree<dim> :: DeleteElement (int pi)
+  template <int dim, typename T>
+  void T_ADTree<dim,T> :: DeleteElement (T pi)
   {
-    T_ADTreeNode<dim> * node = ela[pi];
-
-    node->pi = -1;
+    T_ADTreeNode<dim,T> * node = ela[pi];
+    ela.Delete(pi);
+    
+    SetInvalid(node->pi); //  = -1;
 
     node = node->father;
     while (node)
@@ -1901,32 +1900,31 @@ namespace netgen
       }
   }
 
-  template <int dim>
-  void T_ADTree<dim> :: PrintMemInfo (ostream & ost) const
+  template <int dim, typename T>
+  void T_ADTree<dim,T> :: PrintMemInfo (ostream & ost) const
   {
     ost << Elements() << " elements a " << sizeof(ADTreeNode6) 
 	<< " Bytes = "
-	<< Elements() * sizeof(T_ADTreeNode<dim>) << endl;
-    ost << "maxind = " << ela.Size() << " = " << sizeof(T_ADTreeNode<dim>*) * ela.Size() << " Bytes" << endl;
+	<< Elements() * sizeof(T_ADTreeNode<dim,T>) << endl;
+    ost << "maxind = " << ela.Size() << " = " << sizeof(T_ADTreeNode<dim,T>*) * ela.Size() << " Bytes" << endl;
   }
 
 
-  template <int dim>
+  template <int dim, typename T>
   class inttn {
   public:
     int dir;
-    T_ADTreeNode<dim> * node;
+    T_ADTreeNode<dim,T> * node;
   };
 
 
-  template <int dim>
-  void T_ADTree<dim> :: GetIntersecting (const float * bmin, 
-                                         const float * bmax,
-                                         Array<int> & pis) const
+  template <int dim, typename T>
+  void T_ADTree<dim,T> :: GetIntersecting (Point<dim> bmin, Point<dim> bmax,
+                                           Array<T> & pis) const
   {
     // static Array<inttn6> stack(10000);
     // stack.SetSize (10000);
-    ArrayMem<inttn<dim>,10000> stack(10000);
+    ArrayMem<inttn<dim,T>,10000> stack(10000);
     pis.SetSize(0);
 
     stack[0].node = root;
@@ -1935,11 +1933,11 @@ namespace netgen
 
     while (stacks >= 0)
       {
-	T_ADTreeNode<dim> * node = stack[stacks].node;
+	T_ADTreeNode<dim,T> * node = stack[stacks].node;
 	int dir = stack[stacks].dir; 
 
 	stacks--;
-	if (node->pi != -1)
+	if (!IsInvalid(node->pi)) //  != -1)
 	  {
             bool found = true;
             for (int i = 0; i < dim/2; i++)
@@ -1982,8 +1980,8 @@ namespace netgen
       }
   }
 
-  template <int dim>
-  void T_ADTree<dim> :: PrintRec (ostream & ost, const T_ADTreeNode<dim> * node) const
+  template <int dim, typename T>
+  void T_ADTree<dim,T> :: PrintRec (ostream & ost, const T_ADTreeNode<dim,T> * node) const
   {
     
     // if (node->data)     // true anyway
@@ -2000,8 +1998,8 @@ namespace netgen
       PrintRec (ost, node->right);
   }
 
-  template <int dim>
-  int T_ADTree<dim> :: DepthRec (const T_ADTreeNode<dim> * node) const
+  template <int dim, typename T>
+  int T_ADTree<dim,T> :: DepthRec (const T_ADTreeNode<dim,T> * node) const
   {
     int ldepth = 0;
     int rdepth = 0;
@@ -2013,8 +2011,8 @@ namespace netgen
     return 1 + max2 (ldepth, rdepth);
   }
 
-  template <int dim>
-  int T_ADTree<dim> :: ElementsRec (const T_ADTreeNode<dim> * node) const
+  template <int dim, typename T>
+  int T_ADTree<dim,T> :: ElementsRec (const T_ADTreeNode<dim,T> * node) const
   {
     int els = 1;
     if (node->left)
@@ -2349,80 +2347,83 @@ namespace netgen
 
 
 
-  template <int dim>
-  BoxTree<dim> :: BoxTree (const Box<dim> & abox)
+  template <int dim, typename T>
+  BoxTree<dim,T> :: BoxTree (const Box<dim> & abox)
   {
     boxpmin = abox.PMin();
     boxpmax = abox.PMax();
-    float tpmin[2*dim], tpmax[2*dim];
+    Point<2*dim> tpmin, tpmax;
     for (int i = 0; i < dim; i++)
       {
-	tpmin[i] = tpmin[i+dim] = boxpmin(i);
-	tpmax[i] = tpmax[i+dim] = boxpmax(i);
+	tpmin(i) = tpmin(i+dim) = boxpmin(i);
+	tpmax(i) = tpmax(i+dim) = boxpmax(i);
       }
-    tree = new T_ADTree<2*dim> (tpmin, tpmax);
+    tree = new T_ADTree<2*dim,T> (tpmin, tpmax);
   }
 
-  template <int dim>
-  BoxTree<dim> :: BoxTree (const Point<dim> & apmin, const Point<dim> & apmax)
+  template <int dim, typename T>
+  BoxTree<dim,T> :: BoxTree (const Point<dim> & apmin, const Point<dim> & apmax)
   {
     boxpmin = apmin;
     boxpmax = apmax;
-    float tpmin[2*dim], tpmax[2*dim];
+    Point<2*dim> tpmin, tpmax;
     for (int i = 0; i < dim; i++)
       {
-	tpmin[i] = tpmin[i+dim] = boxpmin(i);
-	tpmax[i] = tpmax[i+dim] = boxpmax(i);
+	tpmin(i) = tpmin(i+dim) = boxpmin(i);
+	tpmax(i) = tpmax(i+dim) = boxpmax(i);
       }
-    tree = new T_ADTree<2*dim> (tpmin, tpmax);
+    tree = new T_ADTree<2*dim,T> (tpmin, tpmax);
   }
 
-  template <int dim>
-  BoxTree<dim> :: ~BoxTree ()
+  template <int dim, typename T>
+  BoxTree<dim,T> :: ~BoxTree ()
   {
     delete tree;
   }
 
-  template <int dim>
-  void BoxTree<dim> :: Insert (const Point<dim> & bmin, const Point<dim> & bmax, int pi)
+  template <int dim, typename T>
+  void BoxTree<dim,T> :: Insert (const Point<dim> & bmin, const Point<dim> & bmax, T pi)
   {
-    float tp[2*dim];
+    Point<2*dim> tp;
 
-    for (int i = 0; i < dim; i++)
+    for (size_t i = 0; i < dim; i++)
       {
-	tp[i] = bmin(i);
-	tp[i+dim] = bmax(i);
+	tp(i) = bmin(i);
+	tp(i+dim) = bmax(i);
       }
 
     tree->Insert (tp, pi);
   }
 
-  template <int dim>
-  void BoxTree<dim> ::GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax, 
-                                       Array<int> & pis) const
+  template <int dim, typename T>
+  void BoxTree<dim,T> ::GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax, 
+                                         Array<T> & pis) const
   {
-    float tpmin[2*dim];
-    float tpmax[2*dim];
+    Point<2*dim> tpmin, tpmax;
 
-    for (int i = 0; i < dim; i++)
+    for (size_t i = 0; i < dim; i++)
       {
-	tpmin[i] = boxpmin(i);
-	tpmax[i] = pmax(i);
+	tpmin(i) = boxpmin(i);
+	tpmax(i) = pmax(i);
         
-	tpmin[i+dim] = pmin(i);
-	tpmax[i+dim] = boxpmax(i);
+	tpmin(i+dim) = pmin(i);
+	tpmax(i+dim) = boxpmax(i);
       }
 
     tree->GetIntersecting (tpmin, tpmax, pis);
   }
 
 
-  template<> BlockAllocator T_ADTreeNode<4> :: ball(sizeof (T_ADTreeNode<4>));
-  template class T_ADTree<4>;
-  template class BoxTree<2>;
+  template<> BlockAllocator T_ADTreeNode<4,INDEX> :: ball(sizeof (T_ADTreeNode<4,INDEX>));
+  template class T_ADTree<4,INDEX>;
+  template class BoxTree<2,INDEX>;
 
+  template<> BlockAllocator T_ADTreeNode<4,INDEX_2> :: ball(sizeof (T_ADTreeNode<4,INDEX_2>));
+  template class T_ADTree<4,INDEX_2>;
+  template class BoxTree<2,INDEX_2>;
   
-  template<> BlockAllocator T_ADTreeNode<6> :: ball(sizeof (T_ADTreeNode<6>));
-  template class T_ADTree<6>;
-  template class BoxTree<3>;
+  
+  template<> BlockAllocator T_ADTreeNode<6,INDEX> :: ball(sizeof (T_ADTreeNode<6,INDEX>));
+  template class T_ADTree<6,INDEX>;
+  template class BoxTree<3,INDEX>;
 }

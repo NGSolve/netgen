@@ -503,7 +503,8 @@ namespace netgen
 	for (int k = 0; k < 4; k++)
 	  tempels.Elem(celind)[k] = -1;
         
-	((ADTree6&)tettree.Tree()).DeleteElement (celind);
+	// ((ADTree6&)tettree.Tree()).DeleteElement (celind);
+        tettree.DeleteElement (celind);
 	freelist.Append (celind);
       }
 
