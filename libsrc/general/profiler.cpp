@@ -88,7 +88,11 @@ namespace netgen
       if (counts[i] != 0 || usedcounter[i] != 0)
 	{
 	  //fprintf(prof,"job %3i calls %8i, time %6.2f sec",i,counts[i],double(tottimes[i]) / CLOCKS_PER_SEC);
-	  fprintf(prof,"calls %8li, time %6.2f sec",counts[i],double(tottimes[i]) / CLOCKS_PER_SEC);
+#ifndef USE_TSC
+          fprintf(prof,"calls %8li, time %6.2f sec",counts[i],double(tottimes[i]) / CLOCKS_PER_SEC);
+#else
+          fprintf(prof,"calls %8li, time %6.2f sec",counts[i],double(tottimes[i]) / 2.7e9);
+#endif
 	  if(usedcounter[i])
 	    fprintf(prof," %s",names[i].c_str());
 	  else

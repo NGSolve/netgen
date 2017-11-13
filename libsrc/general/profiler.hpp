@@ -17,6 +17,12 @@
   #define VT_TRACER(n)
 #endif
 
+
+// #define USE_TSC
+#ifdef USE_TSC
+#include <x86intrin.h>   // for __rdtsc()  CPU time step counter
+#endif
+
 namespace netgen
 {
 
@@ -35,7 +41,7 @@ public:
   NgProfiler();
   ~NgProfiler();
   static int CreateTimer (const string & name);
-  
+#ifndef USE_TSC
   static void StartTimer (int nr) 
   { 
     starttimes[nr] = clock(); counts[nr]++; 
@@ -47,7 +53,21 @@ public:
     tottimes[nr] += clock()-starttimes[nr]; 
     VT_USER_END (const_cast<char*> (names[nr].c_str())); 
   }
-
+#else
+  static void StartTimer (int nr) 
+  { 
+    starttimes[nr] = __rdtsc(); counts[nr]++; 
+    // VT_USER_START (const_cast<char*> (names[nr].c_str())); 
+    // VT_USER_START ( (char * const) (names[nr].c_str())); 
+  }
+  static void StopTimer (int nr) 
+  { 
+    tottimes[nr] += __rdtsc()-starttimes[nr]; 
+    VT_USER_END (const_cast<char*> (names[nr].c_str())); 
+  }
+#endif
+  
+  
   //static void Print (ostream & ost);
   static void Print (FILE * prof);
 
