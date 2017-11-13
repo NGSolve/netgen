@@ -75,8 +75,8 @@ list(APPEND NETGEN_DEPENDENCIES project_tkdnd)
 
 elseif(WIN32)
 
-  ExternalProject_Add(project_win_extlibs
-    URL ${EXT_LIBS_DOWNLOAD_URL_WIN}
+  ExternalProject_Add(project_win_tcltk
+    URL ${TCLTK_DOWNLOAD_URL_WIN}
     UPDATE_COMMAND "" # Disable update
     BUILD_IN_SOURCE 1
     CONFIGURE_COMMAND ""
@@ -87,10 +87,10 @@ elseif(WIN32)
 
   set (TK_INCLUDE_PATH ${CMAKE_INSTALL_PREFIX}/include)
   set (TCL_INCLUDE_PATH ${CMAKE_INSTALL_PREFIX}/include)
-  set (TCL_LIBRARY ${CMAKE_INSTALL_PREFIX}/lib/tcl86.lib)
-  set (TK_LIBRARY ${CMAKE_INSTALL_PREFIX}/lib/tk86.lib)
+  set (TCL_LIBRARY ${CMAKE_INSTALL_PREFIX}/lib/tcl86t.lib)
+  set (TK_LIBRARY ${CMAKE_INSTALL_PREFIX}/lib/tk86t.lib)
 
-  list(APPEND NETGEN_DEPENDENCIES project_win_extlibs)
+  list(APPEND NETGEN_DEPENDENCIES project_win_tcltk)
 else(WIN32)
     find_package(TCL 8.5 REQUIRED)
 #     ExternalProject_Add(project_tkdnd
