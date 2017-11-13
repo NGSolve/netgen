@@ -1342,6 +1342,268 @@ PrintMemInfo (ostream & ost) const
 */
 
 
+inline void SetInvalid (INDEX & i) { i = -1; }
+inline bool IsInvalid (INDEX i) { return i == -1; }
+inline size_t HashValue (INDEX i, size_t size) { return size_t(i) % size; }
+
+inline void SetInvalid (INDEX_2 & i2) { i2[0] = -1; }
+inline bool IsInvalid (INDEX_2 i2) { return i2[0] == -1; }
+inline size_t HashValue (INDEX_2 i2, size_t size) { return (113*size_t(i2[0])+size_t(i2[1])) % size; }
+
+
+  /**
+     A closed hash-table.
+     All information is stored in one fixed array.
+     The array should be allocated with the double size of the expected number of entries.
+  */
+  template <class T_HASH, class T>
+  class ClosedHashTable
+  {
+  protected:
+    ///
+    size_t size;
+    ///
+    size_t used;
+    ///
+    Array<T_HASH> hash;
+    ///
+    Array<T> cont;
+  public:
+    ///
+    ClosedHashTable (size_t asize = 128)
+      : size(asize), used(0), hash(asize), cont(asize)
+    {
+      for (auto & v : hash)
+        SetInvalid(v);
+    }
+
+    ClosedHashTable (ClosedHashTable && ht2) = default;
+
+      // who needs that ? 
+    ClosedHashTable (FlatArray<T_HASH> _hash, FlatArray<T> _cont)
+      : size(_hash.Size()), used(0), hash(_hash.Size(), _hash.Addr(0)), cont(_cont.Size(), _cont.Addr(0))
+    {
+      for (auto & v : hash)
+        SetInvalid(v);
+    }
+
+
+    ClosedHashTable & operator= (ClosedHashTable && ht2) = default;
+
+    /// 
+    size_t Size() const
+    {
+      return size;
+    }
+
+    /// is position used
+    bool UsedPos (size_t pos) const
+    {
+      return ! (IsInvalid(hash[pos]));
+    }
+
+    /// number of used elements
+    size_t UsedElements () const
+    {
+      return used;
+      /*
+      size_t cnt = 0;
+      for (size_t i = 0; i < size; i++)
+	if (hash[i] != invalid)
+	  cnt++;
+      return cnt;
+      */
+    }
+
+    size_t Position (const T_HASH ind) const
+    {
+      size_t i = HashValue(ind, size);
+      while (1)
+	{
+	  if (hash[i] == ind) return i;
+	  if (IsInvalid(hash[i])) return size_t(-1);
+	  i++;
+	  if (i >= size) i = 0;
+	}
+    }
+
+    void DoubleSize()
+    {
+      ClosedHashTable tmp(2*Size());
+      for (auto both : *this)
+        tmp[both.first] = both.second;
+      *this = move(tmp);
+    }
+    
+    // returns true if new position is created
+    bool PositionCreate (const T_HASH ind, size_t & apos)
+    {
+      if (UsedElements()*2 > Size()) DoubleSize();
+      
+      size_t i = HashValue (ind, size);
+
+      while (1)
+	{
+	  if (IsInvalid(hash[i]))
+	    { 
+	      hash[i] = ind; 
+	      apos = i;
+              used++;
+	      return true;
+	    }
+	  if (hash[i] == ind) 
+	    { 
+	      apos = i; 
+	      return false; 
+	    }
+	  i++;
+	  if (i >= size) i = 0;
+	}
+    }
+
+
+    ///
+    void Set (const T_HASH & ahash, const T & acont)
+    {
+      size_t pos;
+      PositionCreate (ahash, pos);
+      hash[pos] = ahash;
+      cont[pos] = acont;
+    }
+
+    ///
+    const T & Get (const T_HASH & ahash) const
+    {
+      size_t pos = Position (ahash);
+      if (pos == size_t(-1))
+        throw Exception (string("illegal key: ") + ToString(ahash) );
+      return cont[pos];
+    }
+
+    ///
+    bool Used (const T_HASH & ahash) const
+    {
+      return (Position (ahash) != size_t(-1));
+    }
+
+    void SetData (size_t pos, const T_HASH & ahash, const T & acont)
+    {
+      hash[pos] = ahash;
+      cont[pos] = acont;
+    }
+
+    void GetData (size_t pos, T_HASH & ahash, T & acont) const
+    {
+      ahash = hash[pos];
+      acont = cont[pos];
+    }
+  
+    void SetData (size_t pos, const T & acont)
+    {
+      cont[pos] = acont;
+    }
+
+    void GetData (size_t pos, T & acont) const
+    {
+      acont = cont[pos];
+    }
+
+    pair<T_HASH,T> GetBoth (size_t pos) const
+    {
+      return pair<T_HASH,T> (hash[pos], cont[pos]);
+    }
+
+    const T & operator[] (T_HASH key) const { return Get(key); }
+    T & operator[] (T_HASH key)
+    {
+      size_t pos;
+      PositionCreate(key, pos);
+      return cont[pos];
+    }
+    
+    void SetSize (size_t asize)
+    {
+      size = asize;
+      hash.Alloc(size);
+      cont.Alloc(size);
+
+      // for (size_t i = 0; i < size; i++)
+      // hash[i] = invalid;
+      // hash = T_HASH(invalid);
+      for (auto & v : hash)
+        SetInvalid(v);
+    }
+
+    void Delete (T_HASH key)
+    {
+      size_t pos = Position(key);
+      if (pos == size_t(-1)) return;
+      SetInvalid (hash[pos]); used--;
+      
+      while (1)
+        {
+          size_t nextpos = pos+1;
+          if (nextpos == size) nextpos = 0;
+          if (IsInvalid(hash[nextpos])) break;
+
+          auto key = hash[nextpos];
+          auto val = cont[nextpos];
+          SetInvalid (hash[nextpos]); used--;
+          
+          Set (key, val);
+          pos = nextpos;
+        }
+    }
+    
+    class Iterator
+    {
+      const ClosedHashTable & tab;
+      size_t nr;
+    public:
+      Iterator (const ClosedHashTable & _tab, size_t _nr)
+        : tab(_tab), nr(_nr)
+      {
+        while (nr < tab.Size() && !tab.UsedPos(nr)) nr++;
+      }
+      Iterator & operator++()
+      {
+        nr++;
+        while (nr < tab.Size() && !tab.UsedPos(nr)) nr++;
+        return *this;
+      }
+      bool operator!= (const Iterator & it2) { return nr != it2.nr; }
+      auto operator* () const
+      {
+        T_HASH hash;
+        T val;
+        tab.GetData(nr, hash,val);
+        return std::make_pair(hash,val);
+      }
+    };
+
+    Iterator begin() const { return Iterator(*this, 0); }
+    Iterator end() const { return Iterator(*this, Size()); } 
+  };
+
+  template <class T_HASH, class T>  
+  ostream & operator<< (ostream & ost,
+                        const ClosedHashTable<T_HASH,T> & tab)
+  {
+    for (size_t i = 0; i < tab.Size(); i++)
+      if (tab.UsedPos(i))
+        {
+          T_HASH key;
+          T val;
+          tab.GetData (i, key, val);
+          ost << key << ": " << val << ", ";
+        }
+    return ost;
+  }
+    
+
+  
+
+
 }
 
 
