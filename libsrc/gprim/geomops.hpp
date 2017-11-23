@@ -18,10 +18,10 @@ namespace netgen
   */
 
 
-  template <int D>
-  inline Vec<D> operator+ (const Vec<D> & a, const Vec<D> & b)
+  template <int D, typename T>
+  inline Vec<D,T> operator+ (Vec<D,T> a, Vec<D,T> b)
   {
-    Vec<D> res;
+    Vec<D,T> res;
     for (int i = 0; i < D; i++)
       res(i) = a(i) + b(i);
     return res;
@@ -30,7 +30,7 @@ namespace netgen
 
 
   template <int D, typename T>
-  inline Point<D,T> operator+ (const Point<D,T> & a, const Vec<D,T> & b)
+  inline Point<D,T> operator+ (Point<D,T> a, Vec<D,T> b)
   {
     Point<D,T> res;
     for (int i = 0; i < D; i++)
@@ -41,7 +41,7 @@ namespace netgen
 
 
   template <int D, typename T>
-  inline Vec<D,T> operator- (const Point<D,T> & a, const Point<D,T> & b)
+  inline Vec<D,T> operator- (Point<D,T> a, Point<D,T> b)
   {
     Vec<D,T> res;
     for (int i = 0; i < D; i++)
@@ -49,19 +49,19 @@ namespace netgen
     return res;
   }
 
-  template <int D>
-  inline Point<D> operator- (const Point<D> & a, const Vec<D> & b)
+  template <int D, typename T>
+  inline Point<D,T> operator- (Point<D,T> a, Vec<D,T> b)
   {
-    Point<D> res;
+    Point<D,T> res;
     for (int i = 0; i < D; i++)
       res(i) = a(i) - b(i);
     return res;
   }
 
-  template <int D>
-  inline Vec<D> operator- (const Vec<D> & a, const Vec<D> & b)
+  template <int D, typename T>
+  inline Vec<D,T> operator- (Vec<D,T> a, Vec<D,T> b)
   {
-    Vec<D> res;
+    Vec<D,T> res;
     for (int i = 0; i < D; i++)
       res(i) = a(i) - b(i);
     return res;
@@ -70,7 +70,7 @@ namespace netgen
 
 
   template <int D, typename T>
-  inline Vec<D,T> operator* (T s, const Vec<D,T> & b)
+  inline Vec<D,T> operator* (T s, Vec<D,T> b)
   {
     Vec<D,T> res;
     for (int i = 0; i < D; i++)
@@ -80,7 +80,7 @@ namespace netgen
 
 
   template <int D>
-  inline double operator* (const Vec<D> & a, const Vec<D> & b)
+  inline double operator* (Vec<D> a, Vec<D> b)
   {
     double sum = 0;
     for (int i = 0; i < D; i++)
@@ -90,26 +90,26 @@ namespace netgen
 
 
 
-  template <int D>
-  inline Vec<D> operator- (const Vec<D> & b)
+  template <int D, typename T>
+  inline Vec<D,T> operator- (Vec<D,T> b)
   {
-    Vec<D> res;
+    Vec<D,T> res;
     for (int i = 0; i < D; i++)
       res(i) = -b(i);
     return res;
   }
 
 
-  template <int D>
-  inline Point<D> & operator+= (Point<D> & a, const Vec<D> & b)
+  template <int D, typename T>
+  inline Point<D,T> & operator+= (Point<D,T> & a, Vec<D,T> b)
   {
     for (int i = 0; i < D; i++)
       a(i) += b(i);
     return a;
   }
 
-  template <int D>
-  inline Vec<D> & operator+= (Vec<D> & a, const Vec<D> & b)
+  template <int D, typename T>
+  inline Vec<D,T> & operator+= (Vec<D,T> & a, Vec<D> b)
   {
     for (int i = 0; i < D; i++)
       a(i) += b(i);
@@ -135,8 +135,8 @@ namespace netgen
 
 
 
-  template <int D>
-  inline Vec<D> & operator*= (Vec<D> & a, double s)
+  template <int D, typename T1, typename T2>
+  inline Vec<D,T1> & operator*= (Vec<D,T1> & a, T2 s)
   {
     for (int i = 0; i < D; i++)
       a(i) *= s;

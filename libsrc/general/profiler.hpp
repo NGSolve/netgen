@@ -18,7 +18,7 @@
 #endif
 
 
-// #define USE_TSC
+#define USE_TSC
 #ifdef USE_TSC
 #include <x86intrin.h>   // for __rdtsc()  CPU time step counter
 #endif

@@ -7,6 +7,7 @@
 #include <meshing.hpp>
 
 #include "stlgeom.hpp"
+#include <vector>
 
 namespace netgen
 {
@@ -348,7 +349,7 @@ STLGeometry *  STLTopology ::Load (istream & ist)
   int cntface = 0;
   int vertex = 0;
   bool badnormals = false;
-
+  
   while (ist.good())
     {
       ist >> buf;
@@ -369,7 +370,7 @@ STLGeometry *  STLTopology ::Load (istream & ist)
 	      >> normal(2);
 	  normal.Normalize();
 	}
-      
+
       if (strcmp (buf, "vertex") == 0)
 	{
 	  ist >> pts[vertex](0)
@@ -404,7 +405,7 @@ STLGeometry *  STLTopology ::Load (istream & ist)
 		   (Dist2 (pts[1], pts[2]) > 1e-16) )
 		
 		{
-		  readtrigs.Append (STLReadTriangle (pts, normal));
+                  readtrigs.Append (STLReadTriangle (pts, normal));
 
 		  if (readtrigs.Size() % 100000 == 0)
 		    PrintMessageCR (3, readtrigs.Size(), " triangles loaded\r");

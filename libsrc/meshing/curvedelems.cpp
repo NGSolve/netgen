@@ -71,11 +71,12 @@ namespace netgen
       } 
   }
 
-  
-  static void CalcEdgeDx (int n, double x, double * dshape)
+
+  template <typename T>
+  static void CalcEdgeDx (int n, T x, T * dshape)
   {
-    double p1 = x, p2 = -1, p3 = 0;
-    double p1dx = 1, p2dx = 0, p3dx = 0;
+    T p1 = x, p2 = -1, p3 = 0;
+    T p1dx = 1, p2dx = 0, p3dx = 0;
 
     for (int j=2; j<=n; j++)
       {
@@ -1408,10 +1409,10 @@ namespace netgen
 
  
   
-
+  template <typename T>
   void CurvedElements :: 
-  CalcSegmentTransformation (double xi, SegmentIndex elnr,
-			     Point<3> * x, Vec<3> * dxdxi, bool * curved)
+  CalcSegmentTransformation (T xi, SegmentIndex elnr,
+			     Point<3,T> * x, Vec<3,T> * dxdxi, bool * curved)
   {
     if (mesh.coarsemesh)
       {
@@ -1419,11 +1420,11 @@ namespace netgen
 	  (*mesh.hpelements) [mesh[elnr].hp_elnr];
 	
 	// xi umrechnen
-	double lami[2] = { xi, 1-xi };
-	double dlami[2] = { 1, -1 };
+	T lami[2] = { xi, 1-xi };
+	T dlami[2] = { 1, -1 };
 
-	double coarse_xi = 0;
-	double trans = 0;
+	T coarse_xi = 0;
+	T trans = 0;
 	for (int i = 0; i < 2; i++)
 	  {
 	    coarse_xi += hpref_el.param[i][0] * lami[i];
@@ -1437,8 +1438,9 @@ namespace netgen
       }
     
 
-    Vector shapes, dshapes;
-    Array<Vec<3> > coefs;
+
+    // TVector<T> shapes, dshapes;
+    //     Array<Vec<3> > coefs;
 
     SegmentInfo info;
     info.elnr = elnr;
@@ -1452,12 +1454,21 @@ namespace netgen
 	info.ndof += edgeorder[info.edgenr]-1;
       }
 
+    ArrayMem<Vec<3>,100> coefs(info.ndof);
+    ArrayMem<T, 100> shapes_mem(info.ndof);
+    TFlatVector<T> shapes(info.ndof, &shapes_mem[0]);
+    ArrayMem<T, 200> dshapes_mem(info.ndof);
+    TFlatVector<T> dshapes(info.ndof, &dshapes_mem[0]);
+
+    
     CalcElementShapes (info, xi, shapes);
     GetCoefficients (info, coefs);
 
     *x = 0;
     for (int i = 0; i < shapes.Size(); i++)
-      *x += shapes(i) * coefs[i];
+      // *x += shapes(i) * coefs[i];
+      for (int j = 0; j < 3; j++)
+        (*x)(j) += shapes(i) * coefs[i](j);
 
 
     if (dxdxi)
@@ -1477,10 +1488,11 @@ namespace netgen
   }
 
 
-
+  template <typename T>
   void CurvedElements :: 
-  CalcElementShapes (SegmentInfo & info, double xi, Vector & shapes) const
+  CalcElementShapes (SegmentInfo & info, T xi, TFlatVector<T> shapes) const
   {
+    /*
     if (rational && info.order == 2)
       {
 	shapes.SetSize(3);
@@ -1491,9 +1503,9 @@ namespace netgen
 	shapes *= 1.0 / (1 + (w-1) *2*xi*(1-xi));
 	return;
       }
+    */
 
-
-    shapes.SetSize(info.ndof);
+    // shapes.SetSize(info.ndof);
     shapes(0) = xi;
     shapes(1) = 1-xi;
 
@@ -1505,9 +1517,11 @@ namespace netgen
       }
   }
 
+  template <typename T>
   void CurvedElements :: 
-  CalcElementDShapes (SegmentInfo & info, double xi, Vector & dshapes) const
+  CalcElementDShapes (SegmentInfo & info, T xi, TFlatVector<T> dshapes) const
   {
+    /*
     if (rational && info.order == 2)
       {
 	dshapes.SetSize(3);
@@ -1527,13 +1541,11 @@ namespace netgen
 	  dshapes(j) = dshapes(j) / w - shapes[j] * dw / (w*w);
 	return;
       }
+    */
 
 
 
-
-
-
-    dshapes.SetSize(info.ndof);
+    // dshapes.SetSize(info.ndof);
     dshapes = 0;
     dshapes(0) = 1;
     dshapes(1) = -1;
@@ -1542,7 +1554,7 @@ namespace netgen
 
     if (info.order >= 2)
       {
-	double fac = 2;
+	T fac = 2;
 	if (mesh[info.elnr][0] > mesh[info.elnr][1])
 	  {
 	    xi = 1-xi; 
@@ -3651,7 +3663,7 @@ namespace netgen
 
 
 
-
+  /*
   void CurvedElements :: 
   CalcMultiPointSegmentTransformation (Array<double> * xi, SegmentIndex segnr,
 				       Array<Point<3> > * x,
@@ -3659,22 +3671,22 @@ namespace netgen
   {
     ;
   }
+  */
 
-
-  template <int DIM_SPACE>
+  template <int DIM_SPACE, typename T>
   void CurvedElements :: 
   CalcMultiPointSegmentTransformation (SegmentIndex elnr, int n,
-				       const double * xi, size_t sxi,
-				       double * x, size_t sx,
-				       double * dxdxi, size_t sdxdxi)
+				       const T * xi, size_t sxi,
+				       T * x, size_t sx,
+				       T * dxdxi, size_t sdxdxi)
   {
     for (int ip = 0; ip < n; ip++)
       {
-	Point<3> xg;
-	Vec<3> dx;
+	Point<3,T> xg;
+	Vec<3,T> dx;
 
 	// mesh->GetCurvedElements().
-	CalcSegmentTransformation (xi[ip*sxi], elnr, xg, dx);
+	CalcSegmentTransformation<T> (xi[ip*sxi], elnr, &xg, &dx);
       
 	if (x)
 	  for (int i = 0; i < DIM_SPACE; i++)
@@ -3698,6 +3710,18 @@ namespace netgen
 					  const double * xi, size_t sxi,
 					  double * x, size_t sx,
 					  double * dxdxi, size_t sdxdxi);
+
+  template void CurvedElements :: 
+  CalcMultiPointSegmentTransformation<2> (SegmentIndex elnr, int npts,
+					  const SIMD<double> * xi, size_t sxi,
+					  SIMD<double> * x, size_t sx,
+					  SIMD<double> * dxdxi, size_t sdxdxi);
+
+  template void CurvedElements :: 
+  CalcMultiPointSegmentTransformation<3> (SegmentIndex elnr, int npts,
+					  const SIMD<double> * xi, size_t sxi,
+					  SIMD<double> * x, size_t sx,
+					  SIMD<double> * dxdxi, size_t sdxdxi);
 
 
 

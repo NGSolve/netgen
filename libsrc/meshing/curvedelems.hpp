@@ -57,15 +57,15 @@ public:
 
   void CalcSegmentTransformation (double xi, SegmentIndex segnr,
 				  Point<3> & x)
-  { CalcSegmentTransformation (xi, segnr, &x, NULL); };
+  { CalcSegmentTransformation<double> (xi, segnr, &x, NULL); };
 
   void CalcSegmentTransformation (double xi, SegmentIndex segnr,
 				  Vec<3> & dxdxi)
-  { CalcSegmentTransformation (xi, segnr, NULL, &dxdxi); };
+  { CalcSegmentTransformation<double> (xi, segnr, NULL, &dxdxi); };
 
   void CalcSegmentTransformation (double xi, SegmentIndex segnr,
 				  Point<3> & x, Vec<3> & dxdxi)
-  { CalcSegmentTransformation (xi, segnr, &x, &dxdxi, NULL); };
+  { CalcSegmentTransformation<double> (xi, segnr, &x, &dxdxi, NULL); };
 
   void CalcSegmentTransformation (double xi, SegmentIndex segnr,
 				  Point<3> & x, Vec<3> & dxdxi, bool & curved)
@@ -115,16 +115,17 @@ public:
   //   { CalcElementTransformation (xi, elnr, &x, &dxdxi /* , &curved * ); }
 
 
-
+  /*
   void CalcMultiPointSegmentTransformation (Array<double> * xi, SegmentIndex segnr,
 					    Array<Point<3> > * x,
 					    Array<Vec<3> > * dxdxi);
-
-  template <int DIM_SPACE>
+  */
+  
+  template <int DIM_SPACE, typename T>
   void CalcMultiPointSegmentTransformation (SegmentIndex elnr, int n,
-                                            const double * xi, size_t sxi,
-                                            double * x, size_t sx,
-                                            double * dxdxi, size_t sdxdxi);
+                                            const T * xi, size_t sxi,
+                                            T * x, size_t sx,
+                                            T * dxdxi, size_t sdxdxi);
 
   void CalcMultiPointSurfaceTransformation (Array< Point<2> > * xi, SurfaceElementIndex elnr,
 					    Array< Point<3> > * x,
@@ -150,9 +151,10 @@ public:
 
 
 private:
-  
-  void CalcSegmentTransformation (double xi, SegmentIndex segnr,
-				  Point<3> * x = NULL, Vec<3> * dxdxi = NULL, bool * curved = NULL);
+
+  template <typename T>
+  void CalcSegmentTransformation (T xi, SegmentIndex segnr,
+				  Point<3,T> * x = NULL, Vec<3,T> * dxdxi = NULL, bool * curved = NULL);
 
   void CalcSurfaceTransformation (Point<2> xi, SurfaceElementIndex elnr,
 				  Point<3> * x = NULL, Mat<3,2> * dxdxi = NULL, bool * curved = NULL);
@@ -176,9 +178,11 @@ private:
     int edgenr;
   };
 
-  void CalcElementShapes (SegmentInfo &  elnr, double xi, Vector & shapes) const;
+  template <typename T>
+  void CalcElementShapes (SegmentInfo &  elnr, T xi, TFlatVector<T> shapes) const;
   void GetCoefficients (SegmentInfo & elnr, Array<Vec<3> > & coefs) const;
-  void CalcElementDShapes (SegmentInfo & elnr, double xi, Vector & dshapes) const;
+  template <typename T>
+  void CalcElementDShapes (SegmentInfo & elnr, T xi, TFlatVector<T> dshapes) const;
 
 
   class ElementInfo
