@@ -3723,6 +3723,9 @@ namespace netgen
 					  SIMD<double> * x, size_t sx,
 					  SIMD<double> * dxdxi, size_t sdxdxi);
 
+  template void CurvedElements :: 
+  CalcSegmentTransformation<double> (double xi, SegmentIndex elnr,
+                                     Point<3,double> * x, Vec<3,double> * dxdxi, bool * curved);
 
 
   void CurvedElements :: 
