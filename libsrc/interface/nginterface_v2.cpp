@@ -671,7 +671,7 @@ namespace netgen
 
 
 
-#ifdef __AVX__
+#ifdef __SSE__
 #include <immintrin.h>
   
   template<> DLL_HEADER void Ngx_Mesh :: 

@@ -6,7 +6,7 @@ namespace netgen
 {
 
   using namespace std;
-
+  /*
 #if defined __AVX512F__
   typedef __m512 tAVX;
   typedef __m512d tAVXd;
@@ -14,7 +14,7 @@ namespace netgen
   typedef __m256 tAVX;
   typedef __m256d tAVXd; 
 #endif
-
+  */
   
   class SolutionData
   {
@@ -101,7 +101,7 @@ namespace netgen
       return res;
     }
 
-#ifdef __AVX__
+#ifdef __SSE__
     virtual bool GetMultiSurfValue (size_t selnr, size_t facetnr, size_t npts,
                                     const tAVXd * xref, 
                                     const tAVXd * x, 

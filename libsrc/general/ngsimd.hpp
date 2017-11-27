@@ -48,11 +48,25 @@ NG_INLINE __m256d operator/= (__m256d &a, __m256d b) { return a = a/b; }
 
 namespace ngsimd
 {
+
+  // MSVC does not define SSE. It's always present on 64bit cpus
+#if (defined(_M_AMD64) || defined(_M_X64) || defined(__AVX__))
+#ifndef __SSE__
+#define __SSE__
+#endif
+#ifndef __SSE2__
+#define __SSE2__
+#endif
+#endif
+
+  
   constexpr int GetDefaultSIMDSize() {
 #if defined __AVX512F__
     return 8;
 #elif defined __AVX__
     return 4;
+#elif defined __SSE__
+    return 2;
 #else
     return 1;
 #endif
@@ -63,7 +77,10 @@ namespace ngsimd
     typedef __m512d tAVXd;
 #elif defined __AVX__
     typedef __m256 tAVX;
-    typedef __m256d tAVXd; 
+    typedef __m256d tAVXd;
+#elif defined __SSE__
+    typedef __m128 tAVX;
+    typedef __m128d tAVXd;
 #endif
 
 
@@ -269,6 +286,107 @@ using std::fabs;
   {
     return std::make_tuple(sd1.Data(), sd2.Data(), sd3.Data(), sd4.Data());
   }
+
+
+/////////////////////////////////////////////////////////////////////////////
+// SSE - Simd width 2
+/////////////////////////////////////////////////////////////////////////////
+#ifdef __SSE__
+  template<>
+  class alignas(16) SIMD<double,2> //  : public AlignedAlloc<SIMD<double,4>>
+  {
+    __m128d data;
+
+  public:
+    static constexpr int Size() { return 2; }
+    SIMD () = default;
+    SIMD (const SIMD &) = default;
+    SIMD & operator= (const SIMD &) = default;
+
+    SIMD (__m128d adata)
+      : data(adata)
+      { ; }
+
+    // only called if T has a call operator of appropriate type
+    template<typename T, typename std::enable_if<std::is_convertible<T, std::function<double(int)>>::value, int>::type = 0>
+    SIMD (const T & func)
+    {
+      data = _mm_set_pd(func(3), func(2), func(1), func(0));
+    }
+
+    // only called if T is arithmetic (integral or floating point types)
+    template<typename T, typename std::enable_if<std::is_arithmetic<T>::value, int>::type = 0>
+    SIMD (const T & val)
+    {
+      data = _mm_set1_pd(val);
+    }
+
+    SIMD (double const * p)
+    {
+      data = _mm_loadu_pd(p);
+    }
+
+    NG_INLINE operator __m128d() const { return data; }
+    NG_INLINE double operator[] (int i) const { return ((double*)(&data))[i]; }
+    NG_INLINE double& operator[] (int i) { return ((double*)(&data))[i]; }
+    NG_INLINE __m128d Data() const { return data; }
+    NG_INLINE __m128d & Data() { return data; }
+
+    // NG_INLINE operator std::tuple<double&,double&,double&,double&> ()
+    // { return std::tuple<double&,double&,double&,double&>((*this)[0], (*this)[1], (*this)[2], (*this)[3]); }
+
+
+    NG_INLINE SIMD<double,2> &operator+= (SIMD<double,2> b) { data+=b.Data(); return *this; }
+    NG_INLINE SIMD<double,2> &operator-= (SIMD<double,2> b) { data-=b.Data(); return *this; }
+    NG_INLINE SIMD<double,2> &operator*= (SIMD<double,2> b) { data*=b.Data(); return *this; }
+    NG_INLINE SIMD<double,2> &operator/= (SIMD<double,2> b) { data/=b.Data(); return *this; }
+
+  };
+
+  NG_INLINE SIMD<double,2> operator+ (SIMD<double,2> a, SIMD<double,2> b) { return a.Data()+b.Data(); }
+  NG_INLINE SIMD<double,2> operator- (SIMD<double,2> a, SIMD<double,2> b) { return a.Data()-b.Data(); }
+  NG_INLINE SIMD<double,2> operator- (SIMD<double,2> a) { return -a.Data(); }
+  NG_INLINE SIMD<double,2> operator* (SIMD<double,2> a, SIMD<double,2> b) { return a.Data()*b.Data(); }
+  NG_INLINE SIMD<double,2> operator/ (SIMD<double,2> a, SIMD<double,2> b) { return a.Data()/b.Data(); }
+
+  /*
+  NG_INLINE SIMD<double,4> sqrt (SIMD<double,4> a) { return _mm256_sqrt_pd(a.Data()); }
+  NG_INLINE SIMD<double,4> floor (SIMD<double,4> a) { return _mm256_floor_pd(a.Data()); }
+  NG_INLINE SIMD<double,4> ceil (SIMD<double,4> a) { return _mm256_ceil_pd(a.Data()); }
+  NG_INLINE SIMD<double,4> fabs (SIMD<double,4> a) { return _mm256_max_pd(a.Data(), -a.Data()); }
+  NG_INLINE SIMD<double,4> L2Norm2 (SIMD<double,4> a) { return a.Data()*a.Data(); }
+  NG_INLINE SIMD<double,4> Trans (SIMD<double,4> a) { return a; }
+  NG_INLINE SIMD<double,4> IfPos (SIMD<double,4> a, SIMD<double,4> b, SIMD<double,4> c)
+  {
+    auto cp = _mm256_cmp_pd (a.Data(), _mm256_setzero_pd(), _CMP_GT_OS);
+    return _mm256_blendv_pd(c.Data(), b.Data(), cp);
+  }
+
+  NG_INLINE double HSum (SIMD<double,4> sd)
+  {
+    __m128d hv = _mm_add_pd (_mm256_extractf128_pd(sd.Data(),0), _mm256_extractf128_pd(sd.Data(),1));
+    return _mm_cvtsd_f64 (_mm_hadd_pd (hv, hv));
+  }
+
+  NG_INLINE auto HSum (SIMD<double,4> sd1, SIMD<double,4> sd2)
+  {
+    __m256d hv = _mm256_hadd_pd(sd1.Data(), sd2.Data());
+    __m128d hv2 = _mm_add_pd (_mm256_extractf128_pd(hv,0), _mm256_extractf128_pd(hv,1));
+    return std::make_tuple(_mm_cvtsd_f64 (hv2),  _mm_cvtsd_f64(_mm_shuffle_pd (hv2, hv2, 3)));
+  }
+
+  NG_INLINE auto HSum (SIMD<double,4> v1, SIMD<double,4> v2, SIMD<double,4> v3, SIMD<double,4> v4)
+  {
+    __m256d hsum1 = _mm256_hadd_pd (v1.Data(), v2.Data());
+    __m256d hsum2 = _mm256_hadd_pd (v3.Data(), v4.Data());
+    __m256d hsum = _mm256_add_pd (_mm256_permute2f128_pd (hsum1, hsum2, 1+2*16),
+                                  _mm256_blend_pd (hsum1, hsum2, 12));
+    return SIMD<double,4>(hsum);
+  }
+  */
+#endif // __SSE__
+
+  
 
 /////////////////////////////////////////////////////////////////////////////
 // AVX - Simd width 4
