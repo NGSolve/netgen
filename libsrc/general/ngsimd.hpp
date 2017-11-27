@@ -311,7 +311,7 @@ using std::fabs;
     template<typename T, typename std::enable_if<std::is_convertible<T, std::function<double(int)>>::value, int>::type = 0>
     SIMD (const T & func)
     {
-      data = _mm_set_pd(func(3), func(2), func(1), func(0));
+      data = _mm_set_pd(func(1), func(0));
     }
 
     // only called if T is arithmetic (integral or floating point types)
