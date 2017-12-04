@@ -283,7 +283,7 @@ namespace netgen
 
 
          // Add quad surface elements at edges for surfaces which 
-         // dont have boundary layers
+         // don't have boundary layers
 
          // Bit array to keep track of segments already processed
          BitArray segsel(nseg);

@@ -95,7 +95,7 @@ namespace netgen
     ost << "Hashtable: " << endl
 	<< "size             : " << n << endl
 	<< "elements per row : " << (double(sumn) / double(n)) << endl
-	<< "av. acces time   : " 
+	<< "av. access time  : " 
 	<< (sumn ? (double (sumnn) / double(sumn)) : 0) << endl;
   }
 

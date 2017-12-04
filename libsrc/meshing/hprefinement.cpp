@@ -1968,7 +1968,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 
     for (int i = 0; i < misses.Size(); i++)
       if (misses[i])
-	cout << " in update classification missing case " << i << " occured " << misses[i] << " times" << endl;
+	cout << " in update classification missing case " << i << " occurred " << misses[i] << " times" << endl;
 
     return(sing); 
   }

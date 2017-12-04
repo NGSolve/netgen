@@ -814,8 +814,8 @@ namespace netgen
     Vec3d n, ng;
     Array<Vec3d> ngs(3);
 
-    (*mycout) << "Check Surface Approxiamtion" << endl;
-    (*testout) << "Check Surface Approxiamtion" << endl;
+    (*mycout) << "Check Surface Approximation" << endl;
+    (*testout) << "Check Surface Approximation" << endl;
 
     for (i = 1; i <= ne; i++)
     {

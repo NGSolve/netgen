@@ -515,7 +515,7 @@ public:
 
 
 
-  // returns 1, if new postion is created
+  // returns 1, if new position is created
   int PositionCreate (const INDEX & ind, int & apos)
   {
     int i = HashValue (ind);
@@ -677,7 +677,7 @@ public:
       }
   }
 
-  // returns 1, if new postion is created
+  // returns 1, if new position is created
   bool PositionCreate0 (const INDEX_2 & ind, int & apos)
   {
     int i = HashValue (ind);
@@ -875,7 +875,7 @@ public:
 
 
   
-  // returns true, if new postion is created
+  // returns true, if new position is created
   bool PositionCreate (const INDEX_3 & ind, int & apos)
   {
     int i = HashValue (ind);

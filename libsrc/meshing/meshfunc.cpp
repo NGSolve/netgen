@@ -584,7 +584,7 @@ namespace netgen
     if (res)
       {
 	mesh3d.FindOpenElements();
-	PrintSysError (1, "Open elemetns: ", mesh3d.GetNOpenElements());
+	PrintSysError (1, "Open elements: ", mesh3d.GetNOpenElements());
 	exit (1);
       }
 

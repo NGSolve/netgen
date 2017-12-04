@@ -58,7 +58,7 @@ typedef int NG_FACE[4];      // points, last one is 0 for trig
 extern "C" {
 #endif
   
-  // load geomtry from file 
+  // load geometry from file 
   DLL_HEADER void Ng_LoadGeometry (const char * filename);
   
   // load netgen mesh
@@ -149,12 +149,12 @@ extern "C" {
                                                const int * const indices = NULL, const int numind = 0);
   
 
-  // is elment ei curved ?
+  // is element ei curved ?
   DLL_HEADER int Ng_IsElementCurved (int ei);
-  // is elment sei curved ?
+  // is element sei curved ?
   DLL_HEADER int Ng_IsSurfaceElementCurved (int sei);
 
-  /// Curved Elemens:
+  /// Curved Elements:
   /// xi..local coordinates
   /// x ..global coordinates
   /// dxdxi...D x D Jacobian matrix (row major storage)
@@ -169,7 +169,7 @@ extern "C" {
   
 
 
-  /// Curved Elemens:
+  /// Curved Elements:
   /// xi..local coordinates
   /// x ..global coordinates
   /// dxdxi...D x D-1 Jacobian matrix (row major storage)
@@ -177,7 +177,7 @@ extern "C" {
   DLL_HEADER void Ng_GetSurfaceElementTransformation (int sei, const double * xi, 
                                                       double * x, double * dxdxi);
   
-  /// Curved Elemens:
+  /// Curved Elements:
   /// xi..local coordinates
   /// sxi..step xi
   /// x ..global coordinates
@@ -281,7 +281,7 @@ extern "C" {
 
 #ifdef PARALLEL
 
-  // the folling functions are 0-base  !!
+  // the following functions are 0-base  !!
 
   // number on distant processor 
   // returns pairs  (dist_proc, num_on_dist_proc)

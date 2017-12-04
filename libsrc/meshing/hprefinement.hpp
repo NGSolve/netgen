@@ -118,7 +118,7 @@ enum HPREF_ELEMENT_TYPE {
   HP_TET_1E_4V,     // V1,2,3,4
 
 
-  // 2 connected edges, additonally marked Vs
+  // 2 connected edges, additionally marked Vs
   HP_TET_2EA_0V = 220,    // E1-2, E1-3
   HP_TET_2EA_1VA,   // V2
   HP_TET_2EA_1VB,   // V3

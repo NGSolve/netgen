@@ -5,7 +5,7 @@
 //
 // project:              doctoral thesis
 //
-// autor:                Dipl.-Ing. Gerstmayr Johannes
+// author:               Dipl.-Ing. Gerstmayr Johannes
 //
 // generated:            20.12.98
 // last change:          20.12.98
