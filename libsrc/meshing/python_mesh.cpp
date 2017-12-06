@@ -694,11 +694,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                Refinement().MakeSecondOrder(self);
            }))
 
-    .def ("SetGeometry", FunctionPointer
-          ([](Mesh & self, shared_ptr<NetgenGeometry> geo)
+    .def ("GetGeometry", [] (Mesh& self) { return self.GetGeometry(); })
+    .def ("SetGeometry", [](Mesh & self, shared_ptr<NetgenGeometry> geo)
            {
              self.SetGeometry(geo);
-           }))
+           })
 
     /*
     .def ("SetGeometry", FunctionPointer
