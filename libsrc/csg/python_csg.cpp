@@ -279,6 +279,12 @@ DLL_HEADER void ExportCSG(py::module &m)
                                        Solid * sol = new Solid (sp);
                                        return make_shared<SPSolid> (sol);
                                      }));
+  m.def ("Ellipsoid", FunctionPointer([](Point<3> m, Vec<3> a, Vec<3> b, Vec<3> c)
+                                     {
+                                       Ellipsoid * ell = new Ellipsoid (m, a, b, c);
+                                       Solid * sol = new Solid (ell);
+                                       return make_shared<SPSolid> (sol);
+                                     }));
   m.def ("Plane", FunctionPointer([](Point<3> p, Vec<3> n)
                                     {
                                       Plane * sp = new Plane (p,n);
