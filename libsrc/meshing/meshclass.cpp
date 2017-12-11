@@ -1598,7 +1598,7 @@ namespace netgen
               }
           }
         else 
-          cerr << "illegal elemenet for buildboundaryedges" << endl;
+          cerr << "illegal element for buildboundaryedges" << endl;
       }
 
 
@@ -3270,7 +3270,7 @@ namespace netgen
 
 
     /*
-    // compress points doesnt work for identified points !
+    // compress points doesn't work for identified points !
     if (identifiedpoints)
     {
     for (i = 1; i <= identifiedpoints->GetNBags(); i++)

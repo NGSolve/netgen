@@ -22,7 +22,7 @@
 
 #ifdef WIN32
 // part of OpenGL 1.2, but not in Microsoft's OpenGL 1.1 header:
-// GL version sould be checked at runtime
+// GL version should be checked at runtime
 #define GL_CLAMP_TO_EDGE                  0x812F
 #define GL_ARRAY_BUFFER                   0x8892
 #define GL_ELEMENT_ARRAY_BUFFER           0x8893

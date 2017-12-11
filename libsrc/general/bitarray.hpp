@@ -18,7 +18,7 @@ namespace netgen
    
    BitArray is a compressed array of Boolean information. By Set and Clear
    the whole array or one bit can be set or reset, respectively. 
-   Test returns the state of the accoring bit.
+   Test returns the state of the occurring bit.
    No range checking is done.
 
    index ranges from 0 to size-1
@@ -152,7 +152,7 @@ int BitArray :: Test (INDEX i) const
    
    BitArray is an array of Boolean information. By Set and Clear
    the whole array or one bit can be set or reset, respectively. 
-   Test returns the state of the accoring bit.
+   Test returns the state of the occurring bit.
    No range checking is done.
 */
 template <int BASE = 1>

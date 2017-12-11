@@ -748,7 +748,7 @@ namespace netgen
 
     ///
     void GetBox (const T_POINTS & points, Box3d & box) const;
-    /// Calculates Volume of elemenet
+    /// Calculates Volume of element
     double Volume (const T_POINTS & points) const;
     ///
     DLL_HEADER void Print (ostream & ost) const;
@@ -1162,7 +1162,7 @@ namespace netgen
     int checkoverlappingboundary = 1;
     /// check chart boundary (sometimes too restrictive)
     int checkchartboundary = 1;
-    /// safty factor for curvatures (elemetns per radius)
+    /// safety factor for curvatures (elements per radius)
     double curvaturesafety = 2;
     /// minimal number of segments per edge
     double segmentsperedge = 1;
