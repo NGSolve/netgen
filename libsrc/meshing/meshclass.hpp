@@ -307,6 +307,8 @@ namespace netgen
     DLL_HEADER void GetSurfaceElementsOfFace (int facenr, Array<SurfaceElementIndex> & sei) const;
 
     DLL_HEADER ElementIndex AddVolumeElement (const Element & el);
+    // write to pre-allocated container, thread-safe
+    DLL_HEADER void SetVolumeElement (ElementIndex sei, const Element & el);
 
     int GetNE () const { return volelements.Size(); }
 

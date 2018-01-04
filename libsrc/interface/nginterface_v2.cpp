@@ -1009,7 +1009,7 @@ namespace netgen
     ref.Bisect (*mesh, biopt);
 
     (*tracer)("call updatetop", false);
-    mesh -> UpdateTopology(task_manager);
+    mesh -> UpdateTopology(task_manager, tracer);
     (*tracer)("call updatetop", true);
     mesh -> GetCurvedElements().SetIsHighOrder (false);
   }

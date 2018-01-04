@@ -402,6 +402,19 @@ namespace netgen
     return ve;
   }
 
+  void Mesh :: SetVolumeElement (ElementIndex ei, const Element & el)
+  {
+    /*
+    int maxn = el[0];
+    for (int i = 1; i < el.GetNP(); i++)
+      if (el[i] > maxn) maxn = el[i];
+
+    maxn += 1-PointIndex::BASE;
+    */
+
+    volelements[ei]  = el;
+    volelements.Last().flags.illegal_valid = 0;
+  }
 
 
 

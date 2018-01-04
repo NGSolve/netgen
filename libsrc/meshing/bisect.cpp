@@ -3346,13 +3346,15 @@ namespace netgen
 
 	    
 	    //IdentifyCutEdges(mesh, cutedges);
-
+            
+            (*opt.tracer)("mark elements", false);
 
 	    hangingvol = 
 	      MarkHangingTets (mtets, cutedges, opt.task_manager) +
 	      MarkHangingPrisms (mprisms, cutedges) +
 	      MarkHangingIdentifications (mids, cutedges);
 
+            (*opt.tracer)("mark elements", true);
 
 	    size_t nsel = mtris.Size();
             NgProfiler::StartTimer (timer_bisecttrig);
@@ -3625,6 +3627,8 @@ namespace netgen
     (*opt.tracer)("copy tets", false);
     mesh.ClearVolumeElements();
     mesh.VolumeElements().SetAllocSize (mtets.Size()+mprisms.Size());
+    mesh.VolumeElements().SetSize(mtets.Size());
+    /*
     for (int i = 1; i <= mtets.Size(); i++)
       {
 	Element el(TET);
@@ -3634,6 +3638,22 @@ namespace netgen
 	el.SetOrder (mtets.Get(i).order);
 	mesh.AddVolumeElement (el);
       }
+    */
+    ParallelForRange
+      (opt.task_manager, mtets.Size(), [&] (size_t begin, size_t end)
+       {
+         for (size_t i = begin; i < end; i++)
+          {
+            Element el(TET);
+            auto & tet = mtets[i];
+            el.SetIndex (tet.matindex);
+            el.SetOrder (tet.order);
+            for (int j = 0; j < 4; j++)
+              el[j] = tet.pnums[j];
+            mesh.SetVolumeElement (ElementIndex(i), el);
+          }
+       });
+
     (*opt.tracer)("copy tets", true);
     
     for (int i = 1; i <= mprisms.Size(); i++)
