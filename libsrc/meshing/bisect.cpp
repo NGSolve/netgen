@@ -2667,6 +2667,8 @@ namespace netgen
     static int timer_bisecttrig = NgProfiler::CreateTimer ("Bisect trigs");
     static int timer_bisectsegms = NgProfiler::CreateTimer ("Bisect segms");
     NgProfiler::RegionTimer reg1 (timer);
+
+    (*opt.tracer)("Bisect", false);
     
     NgProfiler::StartTimer (timer1);
     NgProfiler::StartTimer (timer1a);
@@ -3218,6 +3220,7 @@ namespace netgen
 	  {
 	    // refine volume elements
             NgProfiler::StartTimer (timer_bisecttet);
+            (*opt.tracer)("bisecttet", false);
 	    int nel = mtets.Size();
 	    for (int i = 1; i <= nel; i++)
 	      if (mtets.Elem(i).marked)
@@ -3250,6 +3253,7 @@ namespace netgen
 		  mesh.mlparentelement.Append (i);
 		}
             NgProfiler::StopTimer (timer_bisecttet);
+            (*opt.tracer)("bisecttet", true);            
 	    int npr = mprisms.Size();
 	    for (int i = 1; i <= npr; i++)
 	      if (mprisms.Elem(i).marked)
@@ -3886,7 +3890,8 @@ namespace netgen
 		}
 	    }
       }
-
+    
+    (*opt.tracer)("Bisect", true);
 
     // Repair works only for tets!
     bool do_repair = mesh.PureTetMesh ();
@@ -4020,8 +4025,10 @@ namespace netgen
     NgProfiler::StopTimer (timer2);
     NgProfiler::StartTimer (timer3);
 
-    NgProfiler::StartTimer (timer3a);    
+    NgProfiler::StartTimer (timer3a);
+    (*opt.tracer)("topology from bisect", false);
     mesh.UpdateTopology(opt.task_manager);
+    (*opt.tracer)("topology from bisect", true);
     NgProfiler::StopTimer (timer3a);    
 
 

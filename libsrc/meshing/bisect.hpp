@@ -13,6 +13,7 @@ public:
   bool refine_hp;
   bool refine_p;
   TaskManager task_manager = &DummyTaskManager;
+  Tracer tracer = &DummyTracer;
   DLL_HEADER BisectionOptions ();
 };
 

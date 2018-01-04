@@ -199,6 +199,7 @@ namespace netgen
 
   inline void DummyTaskManager2 (function<void(int,int)> func)
   { func(0,1); }
+  inline void DummyTracer2 (string, bool) { ; } 
   
   class DLL_HEADER Ngx_Mesh
   {
@@ -276,7 +277,8 @@ namespace netgen
     // std::pair<int,int> GetBoundaryNeighbouringDomains (int bnr);
 
     void Refine (NG_REFINEMENT_TYPE reftype,
-                 void (*taskmanager)(function<void(int,int)>) = &DummyTaskManager2);
+                 void (*taskmanager)(function<void(int,int)>) = &DummyTaskManager2,
+                 void (*tracer)(string, bool) = &DummyTracer2);
 
 
     // Find element of point, returns local coordinates

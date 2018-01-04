@@ -97,12 +97,15 @@ void ParallelFor( int first, int next, const TFunc & f )
 
 
   typedef void (*TaskManager)(std::function<void(int,int)>);
+  typedef void (*Tracer)(string, bool);  // false .. start, true .. stop
 
   inline void DummyTaskManager (std::function<void(int,int)> func)
   {
     func(0,2);
     func(1,2);
   }
+
+  inline void DummyTracer (string, bool) { ; }
   
   template <typename FUNC>
   inline void ParallelFor (TaskManager tm, size_t n, FUNC func)

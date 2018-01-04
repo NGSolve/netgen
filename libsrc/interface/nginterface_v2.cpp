@@ -989,7 +989,8 @@ namespace netgen
 
   
   void Ngx_Mesh :: Refine (NG_REFINEMENT_TYPE reftype,
-                           void (*task_manager)(function<void(int,int)>))
+                           void (*task_manager)(function<void(int,int)>),
+                           Tracer tracer)
   {
     NgLock meshlock (mesh->MajorMutex(), 1);
     
@@ -1002,11 +1003,14 @@ namespace netgen
     if (reftype == NG_REFINE_HP)
       biopt.refine_hp = 1;
     biopt.task_manager = task_manager;
+    biopt.tracer = tracer;
     
     const Refinement & ref = mesh->GetGeometry()->GetRefinement();
     ref.Bisect (*mesh, biopt);
-    
+
+    (*tracer)("call updatetop", false);
     mesh -> UpdateTopology(task_manager);
+    (*tracer)("call updatetop", true);
     mesh -> GetCurvedElements().SetIsHighOrder (false);
   }
 
