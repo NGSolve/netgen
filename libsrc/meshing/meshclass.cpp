@@ -5768,10 +5768,13 @@ namespace netgen
     return 1;
   }
 
-  void Mesh :: UpdateTopology (TaskManager tm)
+  void Mesh :: UpdateTopology (TaskManager tm,
+                               Tracer tracer)
   {
-    topology.Update(tm);
+    topology.Update(tm, tracer);
+    (*tracer)("call update clusters", false);
     clusters->Update(tm);
+    (*tracer)("call update clusters", true);
 #ifdef PARALLEL
     if (paralleltop)
       {

@@ -3622,7 +3622,7 @@ namespace netgen
     mtris.SetAllocSize (mtris.Size());
     mquads.SetAllocSize (mquads.Size());
   
-    
+    (*opt.tracer)("copy tets", false);
     mesh.ClearVolumeElements();
     mesh.VolumeElements().SetAllocSize (mtets.Size()+mprisms.Size());
     for (int i = 1; i <= mtets.Size(); i++)
@@ -3634,6 +3634,8 @@ namespace netgen
 	el.SetOrder (mtets.Get(i).order);
 	mesh.AddVolumeElement (el);
       }
+    (*opt.tracer)("copy tets", true);
+    
     for (int i = 1; i <= mprisms.Size(); i++)
       {
 	Element el(PRISM);
@@ -3845,7 +3847,10 @@ namespace netgen
 
 
     mesh.ComputeNVertices();
+
+    (*opt.tracer)("call RebuildSurfElList", false);
     mesh.RebuildSurfaceElementLists();
+    (*opt.tracer)("call RebuildSurfElList", true);
   
     
     // update identification tables
@@ -4027,7 +4032,7 @@ namespace netgen
 
     NgProfiler::StartTimer (timer3a);
     (*opt.tracer)("topology from bisect", false);
-    mesh.UpdateTopology(opt.task_manager);
+    mesh.UpdateTopology(opt.task_manager, opt.tracer);
     (*opt.tracer)("topology from bisect", true);
     NgProfiler::StopTimer (timer3a);    
 

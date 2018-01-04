@@ -4,6 +4,11 @@
 namespace netgen
 {
 
+  template<typename T>
+  inline atomic<T> & AsAtomic (T & d)
+  {
+    return reinterpret_cast<atomic<T>&> (d);
+  }
 
 
   
@@ -331,7 +336,7 @@ namespace netgen
   }
   
   
-  void MeshTopology :: Update (TaskManager tm)
+  void MeshTopology :: Update (TaskManager tm, Tracer tracer)
   {
     static int timer = NgProfiler::CreateTimer ("topology");
     NgProfiler::RegionTimer reg (timer);
@@ -358,7 +363,8 @@ namespace netgen
     (*testout) << "nseg = " << nseg << endl;
     (*testout) << "np   = " << np << endl;
     (*testout) << "nv   = " << nv << endl;
-    
+
+    (*tracer) ("Topology::Update setup tables", false);
     Array<int,PointIndex::BASE> cnt(nv);
     Array<int> vnums;
 
@@ -369,13 +375,26 @@ namespace netgen
       vertex to segment 
     */
     cnt = 0;
+    /*
     for (ElementIndex ei = 0; ei < ne; ei++)
       {
 	const Element & el = (*mesh)[ei];
 	for (int j = 0; j < el.GetNV(); j++)
 	  cnt[el[j]]++;
       }
-
+    */
+    ParallelForRange
+      (tm, ne,
+       [&] (size_t begin, size_t end)
+       {
+         for (ElementIndex ei = begin; ei < end; ei++)
+           {
+             const Element & el = (*mesh)[ei];
+             for (int j = 0; j < el.GetNV(); j++)
+               AsAtomic(cnt[el[j]])++;
+           }
+       });
+    
     vert2element = TABLE<ElementIndex,PointIndex::BASE> (cnt);
     for (ElementIndex ei = 0; ei < ne; ei++)
       {
@@ -385,12 +404,27 @@ namespace netgen
       }
 
     cnt = 0;
+    /*
     for (SurfaceElementIndex sei = 0; sei < nse; sei++)
       {
 	const Element2d & el = (*mesh)[sei];
 	for (int j = 0; j < el.GetNV(); j++)
 	  cnt[el[j]]++;
       }
+    */
+    ParallelForRange
+      (tm, nse,
+       [&] (size_t begin, size_t end)
+       {
+         for (SurfaceElementIndex ei = begin; ei < end; ei++)
+           {
+             const Element2d & el = (*mesh)[ei];
+             for (int j = 0; j < el.GetNV(); j++)
+               AsAtomic(cnt[el[j]])++;
+           }
+       });
+
+    
 
     vert2surfelement = TABLE<SurfaceElementIndex,PointIndex::BASE> (cnt);
     for (SurfaceElementIndex sei = 0; sei < nse; sei++)
@@ -430,6 +464,7 @@ namespace netgen
 	const Element0d & pointel = mesh->pointelements[pei];
 	vert2pointelement.AddSave (pointel.pnum, pei);
       }
+    (*tracer) ("Topology::Update setup tables", true);
 
     
     if (buildedges)
