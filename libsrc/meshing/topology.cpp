@@ -1,16 +1,8 @@
 #include <mystdlib.h>
 #include "meshing.hpp"
-#include <atomic>
 
 namespace netgen
 {
-
-  template<typename T>
-  inline atomic<T> & AsAtomic (T & d)
-  {
-    return reinterpret_cast<atomic<T>&> (d);
-  }
-
 
   
   template <class T>
@@ -397,13 +389,26 @@ namespace netgen
        });
     
     vert2element = TABLE<ElementIndex,PointIndex::BASE> (cnt);
+    /*
     for (ElementIndex ei = 0; ei < ne; ei++)
       {
 	const Element & el = (*mesh)[ei];
 	for (int j = 0; j < el.GetNV(); j++)
 	  vert2element.AddSave (el[j], ei);
       }
-
+    */
+    ParallelForRange
+      (tm, ne,
+       [&] (size_t begin, size_t end)
+       {
+         for (ElementIndex ei = begin; ei < end; ei++)
+           {
+             const Element & el = (*mesh)[ei];
+             for (int j = 0; j < el.GetNV(); j++)
+               vert2element.ParallelAdd (el[j], ei);
+           }
+       });
+    
     cnt = 0;
     /*
     for (SurfaceElementIndex sei = 0; sei < nse; sei++)

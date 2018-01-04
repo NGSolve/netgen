@@ -5773,7 +5773,7 @@ namespace netgen
   {
     topology.Update(tm, tracer);
     (*tracer)("call update clusters", false);
-    clusters->Update(tm);
+    clusters->Update(tm, tracer);
     (*tracer)("call update clusters", true);
 #ifdef PARALLEL
     if (paralleltop)

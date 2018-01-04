@@ -27,7 +27,7 @@ public:
   AnisotropicClusters (const Mesh & amesh);
   ~AnisotropicClusters();
 
-  void Update(TaskManager tm = &DummyTaskManager);
+  void Update(TaskManager tm = &DummyTaskManager, Tracer trace = &DummyTracer);
 
   int GetVertexRepresentant (int vnr) const
   { return cluster_reps.Get(vnr); }

@@ -18,7 +18,7 @@
 #include <memory>
 #include <thread>
 #include <mutex>
-
+#include <atomic>
 
 #include <new>
 #include <string>

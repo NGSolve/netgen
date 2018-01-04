@@ -160,6 +160,12 @@ public:
       data[i-BASE].size++;
     }
 
+  inline void ParallelAdd (int i, const T & acont)
+    {
+      auto oldval = AsAtomic (data[i-BASE].size)++;
+      ((T*)data[i-BASE].col)[oldval] = acont;
+    }
+
   /// Inserts element acont into row i. 1-based. Does not test if already used, assumes to have mem
   inline void AddSave1 (int i, const T & acont)
     {

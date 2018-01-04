@@ -16,7 +16,7 @@ namespace netgen
     ;
   }
 
-  void AnisotropicClusters ::  Update(TaskManager tm)
+  void AnisotropicClusters ::  Update(TaskManager tm, Tracer tracer)
   {
     static int timer = NgProfiler::CreateTimer ("clusters");
     static int timer1 = NgProfiler::CreateTimer ("clusters1");
@@ -212,7 +212,7 @@ namespace netgen
 
     do
       {
-
+        (*tracer) ("update cluster, identify", false);
 	cnt++;
 	changed = 0;
       
@@ -332,6 +332,7 @@ namespace netgen
 	      }
 	    */
 	  }
+        (*tracer) ("update cluster, identify", true);        
       }
     while (changed);
     NgProfiler::StopTimer(timer3);
