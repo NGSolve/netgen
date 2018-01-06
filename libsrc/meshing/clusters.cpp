@@ -220,24 +220,7 @@ namespace netgen
 	  {
 	    const Element & el = mesh.VolumeElement(i);
 	    ELEMENT_TYPE typ = el.GetType();
-	  
-	    top.GetElementEdges (i, ednums);
-	    top.GetElementFaces (i, fanums);
-	  
-	    int elnv = top.GetNVertices (typ);
-	    int elned = ednums.Size();
-	    int elnfa = fanums.Size();
-	  
-	    nnums.SetSize(elnv+elned+elnfa+1);
-	    for (int j = 1; j <= elnv; j++)
-	      nnums.Elem(j) = el.PNum(j)+1-PointIndex::BASE;
-	    for (int j = 1; j <= elned; j++)
-	      nnums.Elem(elnv+j) = nv+ednums.Elem(j);
-	    for (int j = 1; j <= elnfa; j++)
-	      nnums.Elem(elnv+elned+j) = nv+ned+fanums.Elem(j);
-	    nnums.Elem(elnv+elned+elnfa+1) = nv+ned+nfa+i;
-
-	  
+	  	  
 	    const int * clustertab = NULL;
 	    switch (typ)
 	      {
@@ -280,6 +263,25 @@ namespace netgen
 	      }
 	  
 	    if (clustertab)
+              {
+                top.GetElementEdges (i, ednums);
+                top.GetElementFaces (i, fanums);
+                
+                int elnv = top.GetNVertices (typ);
+                int elned = ednums.Size();
+                int elnfa = fanums.Size();
+                
+                nnums.SetSize(elnv+elned+elnfa+1);
+                for (int j = 1; j <= elnv; j++)
+                  nnums.Elem(j) = el.PNum(j)+1-PointIndex::BASE;
+                for (int j = 1; j <= elned; j++)
+                  nnums.Elem(elnv+j) = nv+ednums.Elem(j);
+                for (int j = 1; j <= elnfa; j++)
+                  nnums.Elem(elnv+elned+j) = nv+ned+fanums.Elem(j);
+                nnums.Elem(elnv+elned+elnfa+1) = nv+ned+nfa+i;
+                
+
+                
 	      for (int j = 0; j < nnums.Size(); j++)
 		for (int k = 0; k < j; k++)
 		  if (clustertab[j] == clustertab[k])
@@ -312,6 +314,7 @@ namespace netgen
 			  changed = 1;
 			}
 		    }
+              }
 
 	    /*
 	      if (clustertab)

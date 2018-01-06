@@ -1096,6 +1096,7 @@ namespace netgen
 	    surf2volelement.Elem(i)[0] = 0;
 	    surf2volelement.Elem(i)[1] = 0;
 	  }
+        (*tracer) ("Topology::Update build surf2vol", false);        
 	for (int i = 1; i <= ne; i++)
 	  for (int j = 0; j < 6; j++)
 	    {
@@ -1109,6 +1110,7 @@ namespace netgen
 		  surf2volelement.Elem(sel)[0] = i;
 		}
 	    }
+        (*tracer) ("Topology::Update build surf2vol", true);        
 
 	face2vert.SetAllocSize (face2vert.Size());
 
@@ -1120,9 +1122,11 @@ namespace netgen
 	// paralleltop.Reset ();
 #endif
 
+        (*tracer) ("Topology::Update count face_els", false);
 	Array<short int> face_els(nfa), face_surfels(nfa);
 	face_els = 0;
 	face_surfels = 0;
+        /*
 	Array<int> hfaces;
 	for (int i = 1; i <= ne; i++)
 	  {
@@ -1130,8 +1134,22 @@ namespace netgen
 	    for (int j = 0; j < hfaces.Size(); j++)
 	      face_els[hfaces[j]-1]++;
 	  }
+        */
+        ParallelForRange
+          (tm, ne,
+            [&] (size_t begin, size_t end)
+            {
+              Array<int> hfaces;              
+              for (ElementIndex ei = begin; ei < end; ei++)
+                {
+                  GetElementFaces (ei+1, hfaces);
+                  for (auto f : hfaces)
+                    AsAtomic(face_els[f-1])++;
+                }
+            });        
 	for (int i = 1; i <= nse; i++)
 	  face_surfels[GetSurfaceElementFace (i)-1]++;
+        (*tracer) ("Topology::Update count face_els", true);
 
 
 	if (ne)
