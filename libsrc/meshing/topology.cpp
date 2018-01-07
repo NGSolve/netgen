@@ -433,12 +433,26 @@ namespace netgen
     
 
     vert2surfelement = TABLE<SurfaceElementIndex,PointIndex::BASE> (cnt);
+    /*
     for (SurfaceElementIndex sei = 0; sei < nse; sei++)
       {
 	const Element2d & el = (*mesh)[sei];
 	for (int j = 0; j < el.GetNV(); j++)
 	  vert2surfelement.AddSave (el[j], sei);
       }
+    */
+    ParallelForRange
+      (tm, nse,
+       [&] (size_t begin, size_t end)
+       {
+         for (SurfaceElementIndex sei = begin; sei < end; sei++)
+           {
+             const Element2d & el = (*mesh)[sei];
+             for (int j = 0; j < el.GetNV(); j++)
+               vert2surfelement.ParallelAdd (el[j], sei);
+           }
+       });
+
 
     cnt = 0;
     for (SegmentIndex si = 0; si < nseg; si++)
