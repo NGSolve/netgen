@@ -11,7 +11,7 @@ builtin(include,tclconfig/tcl.m4)
 #------------------------------------------------------------------------
 # TOGL_ENABLE_STUBS --
 #
-#	Specifiy if stubs should be used.
+#	Specify if stubs should be used.
 #
 # Arguments:
 #	none

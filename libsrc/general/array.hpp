@@ -29,7 +29,7 @@ namespace netgen
     bool operator != (ArrayRangeIterator d2) { return ind != d2.ind; }
   };
 
-  /// a range of intergers
+  /// a range of integers
   template <typename T>
   class T_Range
   {

@@ -24,9 +24,9 @@ class Transformation3d
 public:
   ///
   Transformation3d ();
-  /// Unit tet is mapped to tet descibed by pp
+  /// Unit tet is mapped to tet described by pp
   Transformation3d (const Point3d ** pp);
-  /// Unit tet is mapped to tet descibed by pp
+  /// Unit tet is mapped to tet described by pp
   Transformation3d (const Point3d pp[]);
   /// translation
   Transformation3d (const Vec3d & translate);
@@ -90,7 +90,7 @@ public:
   ///
   Transformation () { m = 0; v = 0; }
 
-  /// Unit tet is mapped to tet descibed by pp
+  /// Unit tet is mapped to tet described by pp
   Transformation (const Point<D> * pp);
 
   /// translation

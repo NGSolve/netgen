@@ -62,7 +62,7 @@ public:
   int bc;
   /// copy spline mesh from other spline (-1.. do not copy)
   int copyfrom;
-  /// perfrom anisotropic refinement (hp-refinement) to edge
+  /// perform anisotropic refinement (hp-refinement) to edge
   bool hpref_left;
   bool hpref_right;
   /// calculates length of curve

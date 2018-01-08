@@ -161,7 +161,7 @@ namespace netgen
 	// cout << "add spline " << i << ", left = " << leftdom << ", right = " << rightdom << endl;
       
 	infile >> buf;
-	// type of spline segement
+	// type of spline segment
 	if (strcmp (buf, "2") == 0)
 	  { // a line
 	    infile >> hi1 >> hi2;
@@ -332,7 +332,7 @@ namespace netgen
 	// cout << "add spline " << i << ", left = " << leftdom << endl;
 
 	infile >> buf;
-	// type of spline segement
+	// type of spline segment
 	if (strcmp (buf, "2") == 0)
 	  { // a line
 	    infile >> hi1 >> hi2;
@@ -629,7 +629,7 @@ namespace netgen
 
 	      
 		infile >> buf;
-		// type of spline segement
+		// type of spline segment
 		if (strcmp (buf, "2") == 0)
 		  { // a line
 		    infile >> hi1 >> hi2;

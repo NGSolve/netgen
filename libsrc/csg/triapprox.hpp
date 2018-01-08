@@ -12,7 +12,7 @@ namespace netgen
 {
 
   /**
-     Triangulated approxiamtion to true surface
+     Triangulated approximation to true surface
   */
  
 

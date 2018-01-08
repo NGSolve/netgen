@@ -1137,7 +1137,7 @@ void STLGeometry :: RestrictHChartDistOneChart(int chartnum, Array<int>& acttrig
   Array<Point3d> plimes1;
   Array<Point3d> plimes2;
 	  
-  Array<int> plimes1trigs; //check from wich trig the points come
+  Array<int> plimes1trigs; //check from which trig the points come
   Array<int> plimes2trigs;
 	  
   Array<int> plimes1origin; //either the original pointnumber or zero, if new point

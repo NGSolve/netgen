@@ -13,7 +13,7 @@ multisampling support (can be worked-around by passing in a pixelformat)
 
 add vertical sync control
 
-update documention
+update documentation
 	- update build instructions
 	- update stereo documentation
 	- separate Tcl API from C API

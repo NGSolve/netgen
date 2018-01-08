@@ -179,7 +179,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   Array<Point3d, PointIndex::BASE> locpoints;      // local points
   Array<MiniElement2d> locfaces;                   // local faces
   Array<PointIndex, PointIndex::BASE> pindex;      // mapping from local to front point numbering
-  Array<int, PointIndex::BASE> allowpoint;         // point is allowd ?
+  Array<int, PointIndex::BASE> allowpoint;         // point is allowed ?
   Array<INDEX> findex;                             // mapping from local to front face numbering
   //INDEX_2_HASHTABLE<int> connectedpairs(100);    // connecgted pairs for prism meshing
 

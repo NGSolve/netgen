@@ -182,7 +182,7 @@ void STLGeometry :: SmoothNormals()
 
   Vec<3> ri;
 
-  double wnb = stldoctor.smoothnormalsweight;   // neigbour normal weight
+  double wnb = stldoctor.smoothnormalsweight;   // neighbour normal weight
   double wgeom = 1-wnb;   // geometry normal weight
 
 

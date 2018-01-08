@@ -631,7 +631,7 @@ namespace netgen
       bool marked:1;  // marked for refinement
       bool badel:1;   // angles worse then limit
       bool reverse:1; // for refinement a la Bey
-      bool illegal:1; // illegal, will be split or swaped 
+      bool illegal:1; // illegal, will be split or swapped 
       bool illegal_valid:1; // is illegal-flag valid ?
       bool badness_valid:1; // is badness valid ?
       bool refflag:1;     // mark element for refinement

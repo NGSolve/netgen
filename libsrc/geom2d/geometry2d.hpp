@@ -35,9 +35,9 @@ namespace netgen
     int bc;
     /// copy spline mesh from other spline (-1.. do not copy)
     int copyfrom;
-    /// perfrom anisotropic refinement (hp-refinement) to edge
+    /// perform anisotropic refinement (hp-refinement) to edge
     double hpref_left;
-    /// perfrom anisotropic refinement (hp-refinement) to edge
+    /// perform anisotropic refinement (hp-refinement) to edge
     double hpref_right;
     ///
     int layer;

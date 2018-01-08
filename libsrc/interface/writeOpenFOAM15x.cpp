@@ -165,7 +165,7 @@ namespace netgen
                neighbour_celllist.Elem(owner_face) = elind;
 
                // From this point on, the code within this "if" block 
-               // basically sorts the order of the the Neighbour cells (along 
+               // basically sorts the order of the Neighbour cells (along 
                // with the faces list) in ascending order.
                // The approach used is..... to traverse the owner and neighbour cell lists
                // up and down, and sort the neighbour cells of a given owner cell 
