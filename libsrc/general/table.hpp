@@ -84,8 +84,8 @@ public:
   ///
   void AllocateElementsOneBlock (int elemsize);
   
-  int AllocatedElements () const;
-  int UsedElements () const;
+  size_t AllocatedElements () const;
+  size_t UsedElements () const;
 
   void SetElementSizesToMaxSizes ();
 };
