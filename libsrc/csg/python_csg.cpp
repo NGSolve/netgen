@@ -513,7 +513,9 @@ DLL_HEADER void ExportCSG(py::module &m)
             cout << "surface ids2 = " << si2 << endl;
 
             Flags flags;
-            const TopLevelObject * domain = self.GetTopLevelObject(domain_solid->GetSolid());
+            const TopLevelObject * domain = nullptr;
+            if (domain_solid)
+              domain = self.GetTopLevelObject(domain_solid->GetSolid());
               
             self.AddIdentification 
               (new CloseSurfaceIdentification 
