@@ -870,7 +870,7 @@ namespace netgen
 		   const BoxSphere<3> & box) const
   {
     // perform newton steps. normals parallel ?
-    // if not decideable: return 0 
+    // if not decidable: return 0 
   
     Point<3> p = box.Center();
     Vec<3> g1, g2, sol;

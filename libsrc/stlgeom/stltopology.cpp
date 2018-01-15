@@ -425,7 +425,7 @@ STLGeometry *  STLTopology ::Load (istream & ist)
 
   if (badnormals) 
     {
-      PrintWarning("File has normal vectors which differ extremly from geometry->correct with stldoctor!!!");
+      PrintWarning("File has normal vectors which differ extremely from geometry->correct with stldoctor!!!");
     }
 
   geom->InitSTLGeometry(readtrigs);

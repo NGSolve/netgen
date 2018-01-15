@@ -362,7 +362,7 @@ namespace netgen
 
   /**
      Projects point to edge.
-     The point hp is projected to the edge descibed by f1 and f2.
+     The point hp is projected to the edge described by f1 and f2.
      It is assumed that the edge is non-degenerated, and the
      (generalized) Newton method converges.
   */

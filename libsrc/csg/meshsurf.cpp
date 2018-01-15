@@ -120,7 +120,7 @@ RefinementSurfaces :: RefinementSurfaces (const CSGeometry & ageometry)
 {
   if(geometry.GetNSurf() == 0)
     *testout << endl 
-             << "WARNING: Intializing 2D refinement with 0-surface geometry" << endl
+             << "WARNING: Initializing 2D refinement with 0-surface geometry" << endl
              << "==========================================================" << endl
              << endl << endl;
 }

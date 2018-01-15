@@ -666,7 +666,7 @@ proc meshingoptionsdialog { } {
             -variable debug.slowchecks -command { Ng_SetDebugParameters }
         ttk::checkbutton $f.cb1.debugoutput -text "Debugging outout" \
             -variable debug.debugoutput -command { Ng_SetDebugParameters }
-        ttk::checkbutton $f.cb1.haltexline -text "Halt on exising line" \
+        ttk::checkbutton $f.cb1.haltexline -text "Halt on existing line" \
             -variable debug.haltexistingline  -command { Ng_SetDebugParameters }
         ttk::checkbutton $f.cb1.haltoverlap -text "Halt on Overlap" \
             -variable debug.haltoverlap  -command { Ng_SetDebugParameters }

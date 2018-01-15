@@ -430,7 +430,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh)
 	{
 	  PrintMessage(5,"mesh is closed, verifying ...");
 
-	  // no open elements, check wrong elemetns (intersecting..)
+	  // no open elements, check wrong elements (intersecting..)
 
 
 

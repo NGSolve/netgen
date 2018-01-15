@@ -3427,7 +3427,7 @@ Togl_MakeWindow(Tk_Window tkwin, Window parent, ClientData instanceData)
         /* Colormap for CI mode */
 #ifdef TOGL_WGL
         /* this logic is to overcome a combination driver/compiler bug: (1)
-         * cColorBits may be unusally large (e.g., 32 instead of 8 or 12) and
+         * cColorBits may be unusually large (e.g., 32 instead of 8 or 12) and
          * (2) 1 << 32 might be 1 instead of zero (gcc for ia32) */
         if (pfd.cColorBits >= MAX_CI_COLORMAP_BITS) {
             togl->CiColormapSize = MAX_CI_COLORMAP_SIZE;

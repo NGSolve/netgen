@@ -915,7 +915,7 @@ Togl_ResetDefaultCallbacks(void)
 
 
 /* 
- * Chnage the create callback for a specific Togl widget.
+ * Change the create callback for a specific Togl widget.
  */
 void
 Togl_SetCreateFunc(Togl *togl, Togl_Callback *proc)
@@ -3944,7 +3944,7 @@ Togl_StereoFrustum(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top,
  *
  * MacintoshInit --
  *
- *      This procedure calls Mac specific initilization calls.  Most of
+ *      This procedure calls Mac specific initialization calls.  Most of
  *      these calls must be made as soon as possible in the startup
  *      process.
  *

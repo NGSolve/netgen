@@ -1797,7 +1797,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 		edgepoint.Set(i);
 	      }
 	
-	    // mark points for refinement that are explicity specified in input file
+	    // mark points for refinement that are explicitly specified in input file
 	    if (mesh.Point(i).Singularity()*levels >= act_ref)
 	      {
 		cornerpoint.Set(i);

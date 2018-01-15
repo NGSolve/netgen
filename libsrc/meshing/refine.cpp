@@ -490,7 +490,7 @@ namespace netgen
 	       };
              */
              
-             // udpated by anonymous supporter, donations please to Karo W.
+             // updated by anonymous supporter, donations please to Karo W.
              static int fbetw[12][3] =
                { { 11, 12, 22 },
                  { 9, 10, 22 },

@@ -42,7 +42,7 @@ public:
   DLL_HEADER void SetFlag (const char * name, double val);
   /// Sets boolean flag
   DLL_HEADER void SetFlag (const char * name);
-  /// Sets string arary falg
+  /// Sets string arary flag
   DLL_HEADER void SetFlag (const char * name, const Array<char*> & val);
   /// Sets double array flag
   DLL_HEADER void SetFlag (const char * name, const Array<double> & val);

@@ -182,7 +182,7 @@ namespace netgen
 
 
   /*
-    send a table entry to each of the prcesses in the group ...
+    send a table entry to each of the processes in the group ...
     receive-table entries will be set
    */
 
