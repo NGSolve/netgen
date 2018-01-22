@@ -465,7 +465,17 @@ DLL_HEADER void ExportCSG(py::module &m)
             self.AddSplineSurface(surf);
 	  }),
 	  py::arg("SplineSurface"))
-
+    .def("SingularEdge", [] (CSGeometry & self, shared_ptr<SPSolid> s1,shared_ptr<SPSolid> s2, double factor)
+         {
+           auto singedge = new SingularEdge(1, -1, self, s1->GetSolid(), s2->GetSolid(), factor);
+           self.singedges.Append (singedge);
+         })
+    .def("SingularPoint", [] (CSGeometry & self, shared_ptr<SPSolid> s1,shared_ptr<SPSolid> s2,
+                             shared_ptr<SPSolid> s3, double factor)
+         {
+           auto singpoint = new SingularPoint(1, s1->GetSolid(), s2->GetSolid(), s3->GetSolid(), factor);
+           self.singpoints.Append (singpoint);
+         })
     .def("CloseSurfaces", FunctionPointer
          ([] (CSGeometry & self, shared_ptr<SPSolid> s1, shared_ptr<SPSolid> s2, py::list aslices )
           {
