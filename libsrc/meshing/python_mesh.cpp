@@ -270,15 +270,25 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                  for (int i = 0; i < 3; i++)
                                    (*instance)[i] = py::extract<PointIndex>(vertices[i])();
                                  instance->SetIndex(index);
+                                 return;
                                }
-                             else
+                             if (py::len(vertices) == 4)
                                {
                                  new (instance) Element2d(QUAD);
                                  for (int i = 0; i < 4; i++)
                                    (*instance)[i] = py::extract<PointIndex>(vertices[i])();
                                  instance->SetIndex(index);
+                                 return;
                                }
-                               
+                             if (py::len(vertices) == 6)
+                               {
+                                 new (instance) Element2d(TRIG6);
+                                 for(int i = 0; i<6; i++)
+                                   (*instance)[i] = py::extract<PointIndex>(vertices[i])();
+                                 instance->SetIndex(index);
+                                 return;
+                               }
+                             throw NgException("Inconsistent number of vertices in Element2D");
                            },
           py::arg("index")=1,py::arg("vertices"),
          "create surface element"
