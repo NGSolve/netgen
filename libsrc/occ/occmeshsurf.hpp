@@ -4,6 +4,7 @@
 #define FILE_OCCMESHSURF
 
 #include "occgeom.hpp"
+#include "mydefs.hpp"
 
 #define PARAMETERSPACE -1
 #define PLANESPACE     1
@@ -169,7 +170,7 @@ public:
 class OCCGeometry;
 
 
-class OCCRefinementSurfaces : public Refinement
+class DLL_HEADER OCCRefinementSurfaces : public Refinement
 {
   const OCCGeometry & geometry;
 

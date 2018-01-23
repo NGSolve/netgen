@@ -383,13 +383,13 @@ namespace netgen
     Element2d & operator= (const Element2d &) = default;
     Element2d & operator= (Element2d &&) = default;
     ///
-    Element2d (int anp);
+    DLL_HEADER Element2d (int anp);
     ///
     DLL_HEADER Element2d (ELEMENT_TYPE type);
     ///
-    Element2d (int pi1, int pi2, int pi3);
+    DLL_HEADER Element2d (int pi1, int pi2, int pi3);
     ///
-    Element2d (int pi1, int pi2, int pi3, int pi4);
+    DLL_HEADER Element2d (int pi1, int pi2, int pi3, int pi4);
     ///
     ELEMENT_TYPE GetType () const { return typ; }
     /// 

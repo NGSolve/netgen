@@ -26,8 +26,11 @@
 #endif
 
 #if OCC_VERSION_HEX < 0x070000
-#else
+// pass
+#elif OCC_VERSION_HEX < 0x070200
    #include "StlTransfer.hxx"
+   #include "TopoDS_Iterator.hxx"
+#else
    #include "TopoDS_Iterator.hxx"
 #endif
 
@@ -170,7 +173,7 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
          {
             TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
             if ( BRep_Tool::Degenerated(edge) )
-               rebuild->Remove(edge, false);
+               rebuild->Remove(edge);
          }
          shape = rebuild->Apply(shape);
       }
@@ -239,7 +242,7 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
                   cout << "(natural bounds added)" <<endl;
                TopoDS_Face newface = sff->Face();
 
-               rebuild->Replace(face, newface, Standard_False);
+               rebuild->Replace(face, newface);
             }
 
             // Set the original colour of the face to the newly created 
@@ -258,7 +261,7 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
          {
             TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
             if ( BRep_Tool::Degenerated(edge) )
-               rebuild->Remove(edge, false);
+               rebuild->Remove(edge);
          }
          shape = rebuild->Apply(shape);
       }
@@ -322,7 +325,7 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
                if(replace)
                {
                   TopoDS_Wire newwire = sfw->Wire();
-                  rebuild->Replace(oldwire, newwire, Standard_False);
+                  rebuild->Replace(oldwire, newwire);
                }
 
                //delete sfw; sfw = NULL;
@@ -352,7 +355,7 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
                      cout << "removing degenerated edge " << emap.FindIndex(edge)
                         << " from vertex " << vmap.FindIndex(TopExp::FirstVertex (edge))
                         << " to vertex " << vmap.FindIndex(TopExp::LastVertex (edge)) << endl;
-                     rebuild->Remove(edge, false);
+                     rebuild->Remove(edge);
                   }
                }
             }
@@ -370,7 +373,7 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
             {
                TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
                if ( BRep_Tool::Degenerated(edge) )
-                  rebuild->Remove(edge, false);
+                  rebuild->Remove(edge);
             }
             shape = rebuild->Apply(shape);
          }
@@ -496,7 +499,7 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
          {
             TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
             if ( BRep_Tool::Degenerated(edge) )
-               rebuild->Remove(edge, false);
+               rebuild->Remove(edge);
          }
          shape = rebuild->Apply(shape);
       }
@@ -537,7 +540,7 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
                   BRepLib::OrientClosedSolid (newsolid);
                   Handle_ShapeBuild_ReShape rebuild = new ShapeBuild_ReShape;
                   //		  rebuild->Apply(shape);
-                  rebuild->Replace(solid, newsolid, Standard_False);
+                  rebuild->Replace(solid, newsolid);
                   TopoDS_Shape newshape = rebuild->Apply(shape, TopAbs_COMPSOLID);//, 1);
                   //		  TopoDS_Shape newshape = rebuild->Apply(shape);
                   shape = newshape;
@@ -959,7 +962,7 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
             TopoDS_Solid newsolid = solid;
             BRepLib::OrientClosedSolid (newsolid);
             Handle_ShapeBuild_ReShape rebuild = new ShapeBuild_ReShape;
-            rebuild->Replace(solid, newsolid, Standard_False);
+            rebuild->Replace(solid, newsolid);
 
             TopoDS_Shape newshape = rebuild->Apply(shape, TopAbs_SHAPE, 1);
             shape = newshape;

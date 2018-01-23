@@ -244,7 +244,7 @@ namespace netgen
       }
 
 
-     virtual void Save (string filename) const;
+      DLL_HEADER virtual void Save (string filename) const;
 
 
       DLL_HEADER void BuildFMap();
@@ -275,7 +275,7 @@ namespace netgen
          return OCCSurface (TopoDS::Face(fmap(surfi)), PLANESPACE);
       }
 
-      void CalcBoundingBox ();
+      DLL_HEADER void CalcBoundingBox ();
       DLL_HEADER void BuildVisualizationMesh (double deflection);
 
       void RecursiveTopologyTree (const TopoDS_Shape & sh,
@@ -440,7 +440,7 @@ namespace netgen
    // Philippose - 31.09.2009
    // External access to the mesh generation functions within the OCC
    // subsystem (Not sure if this is the best way to implement this....!!)
-   extern int OCCGenerateMesh (OCCGeometry & occgeometry, shared_ptr<Mesh> & mesh,
+   DLL_HEADER extern int OCCGenerateMesh (OCCGeometry & occgeometry, shared_ptr<Mesh> & mesh,
 			       MeshingParameters & mparam);
 
    DLL_HEADER extern void OCCSetLocalMeshSize(OCCGeometry & geom, Mesh & mesh);
