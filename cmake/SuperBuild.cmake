@@ -51,10 +51,11 @@ endif(NOT WIN32)
 #######################################################################
 if (USE_PYTHON)
   find_path(PYBIND_INCLUDE_DIR pybind11/pybind11.h PATHS ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies/pybind11/include NO_DEFAULT_PATH)
+    set(NG_INSTALL_PYBIND ON)
     if( NOT PYBIND_INCLUDE_DIR )
       # if the pybind submodule is missing, try to initialize and update all submodules
       execute_process(COMMAND git submodule update --init --recursive WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-        find_path(PYBIND_INCLUDE_DIR pybind11/pybind11.h ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies/pybind11/include)
+      find_path(PYBIND_INCLUDE_DIR pybind11/pybind11.h PATHS ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies/pybind11/include NO_DEFAULT_PATH)
     endif( NOT PYBIND_INCLUDE_DIR )
     if( PYBIND_INCLUDE_DIR )
         message("-- Found Pybind11: ${PYBIND_INCLUDE_DIR}")
@@ -64,7 +65,14 @@ if (USE_PYTHON)
     find_package(PythonInterp 3 REQUIRED)
     find_package(PythonLibs 3 REQUIRED)
 
-    set_vars(NETGEN_CMAKE_ARGS PYTHON_INCLUDE_DIRS PYTHON_LIBRARIES PYTHON_EXECUTABLE PYTHON_VERSION PYBIND_INCLUDE_DIR)
+    set_vars(NETGEN_CMAKE_ARGS
+      PYTHON_INCLUDE_DIRS
+      PYTHON_LIBRARIES
+      PYTHON_EXECUTABLE
+      PYTHON_VERSION
+      PYBIND_INCLUDE_DIR
+      NG_INSTALL_PYBIND
+      )
 endif (USE_PYTHON)
 
 #######################################################################
