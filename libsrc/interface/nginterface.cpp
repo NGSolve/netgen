@@ -119,7 +119,7 @@ void Ng_LoadMeshFromStream ( istream & input )
 void Ng_LoadMesh (const char * filename)
 {
   {
-      auto infile = ifstream (filename);
+      ifstream infile(filename);
       if(!infile.good())
           throw NgException(string("Error opening file ") + filename);
   }
