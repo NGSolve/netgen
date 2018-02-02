@@ -11,6 +11,7 @@
   defines for graphics, testmodes, ...
 */
 
+#define PACKAGE_VERSION "6.2-dev"
 
 // #define DEBUG
 
