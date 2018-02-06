@@ -150,7 +150,7 @@ static Standard_Boolean  SelectEdge(const TopoDS_Face&    F,
   if (LE.Extent() > 1) {
     //--------------------------------------------------------------
     // Several possible edges.   
-    // - Test the edges differents of CE 
+    // - Test the edge difference of CE 
     //--------------------------------------------------------------
     Standard_Real   cf, cl, f, l;
     TopoDS_Face FForward = F;

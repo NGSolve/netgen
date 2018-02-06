@@ -191,7 +191,7 @@ void WriteGmshFormat (const Mesh & mesh,
 
      else
     {
-    cout << " Invalide element type for Gmsh volume Format !\n";
+    cout << " Invalid element type for Gmsh volume Format !\n";
     }
 
 

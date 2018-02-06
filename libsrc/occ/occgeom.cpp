@@ -1168,7 +1168,7 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
       }
 
 
-      // For the IGES Reader, all the shapes can be exported as one compund shape 
+      // For the IGES Reader, all the shapes can be exported as one compound shape
       // using the "OneShape" member
       occgeo->shape = reader.OneShape();
       occgeo->face_colours = iges_colour_contents;
@@ -1563,7 +1563,7 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
                if (!stretchedpinfaces++)
                   str << "StretchedPinFace {Stretched pin face} ";
 
-               (*testout) << "Face " << i << " is a streched pin" << endl;
+               (*testout) << "Face " << i << " is a stretched pin" << endl;
                str << "StretchedPinFace/Face" << i << " ";
                str << "{Face " << i << " } ";
             }
