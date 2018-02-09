@@ -219,7 +219,7 @@ static void PutInBounds (const TopoDS_Face&          F,
   gp_Pnt2d Pm = C2d->Value( Um );
 
   // sometimes on shpere, pcurve is out of domain by V though S is
-  // UPeriodic, sometimes it is in domain but nontheless it has
+  // UPeriodic, sometimes it is in domain but nonetheless it has
   // wrong position.
   // Check pcurve position by 3D point
   if (S->IsKind(STANDARD_TYPE( Geom_SphericalSurface )))
@@ -526,7 +526,7 @@ void Partition_Inter3d::Inter3D(const TopoDS_Face& F1,
 	  C3d = new Geom_TrimmedCurve( C3d, umin, umax);
 	pc = TopOpeBRepTool_CurveTool::MakePCurveOnFace (F,C3d,tol);
 	if (pc.IsNull()) {
-	  MESSAGE (" CANT BUILD PCURVE ");
+	  MESSAGE (" CANNOT BUILD PCURVE ");
 	}
 	B.UpdateEdge( se, pc, F, tol);
       }

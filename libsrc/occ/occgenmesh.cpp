@@ -669,7 +669,7 @@ namespace netgen
             PrintMessage (2, "Face ", k, " / ", mesh.GetNFD(), " (parameter space projection)");
 
          if (surfmesherror)
-            cout << "Surface meshing error occured before (in " << surfmesherror << " faces)" << endl;
+            cout << "Surface meshing error occurred before (in " << surfmesherror << " faces)" << endl;
 
          //      Meshing2OCCSurfaces meshing(f2, bb);
          meshing.SetStartTime (starttime);
@@ -855,7 +855,7 @@ namespace netgen
       if (surfmesherror)
       {
          cout << "WARNING! NOT ALL FACES HAVE BEEN MESHED" << endl;
-         cout << "SURFACE MESHING ERROR OCCURED IN " << surfmesherror << " FACES:" << endl;
+         cout << "SURFACE MESHING ERROR OCCURRED IN " << surfmesherror << " FACES:" << endl;
          for (int i = 1; i <= geom.fmap.Extent(); i++)
             if (geom.facemeshstatus[i-1] == -1)
             {

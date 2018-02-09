@@ -1584,7 +1584,7 @@ void Mesh :: ImproveMeshJacobian (const MeshingParameters & mp,
 
       if (goal == OPT_WORSTCASE && !badnodes.Test(i))
 	continue;
-      //	(*testout) << "smoot p " << i << endl;
+      //	(*testout) << "smooth p " << i << endl;
 
       /*
 	if (multithread.terminate)
@@ -1733,7 +1733,7 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
 
 	if (goal == OPT_WORSTCASE && !badnodes.Test(i))
 	  continue;
-	//	(*testout) << "smoot p " << i << endl;
+	//	(*testout) << "smooth p " << i << endl;
 
 	/*
 	if (multithread.terminate)

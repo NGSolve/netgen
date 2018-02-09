@@ -156,7 +156,7 @@ static Standard_Real preciseU (const BRepAdaptor_Surface&  theSurf,
   {
     // u for test
     u = u0 + du;
-    du *= 10; // for the next iteration: increase du untill du3d is large enough
+    du *= 10; // for the next iteration: increase du until du3d is large enough
 
     // find out how u is far from u0 in 3D
     gp_Pnt2d aP2d  = theC->Value( u );
@@ -194,7 +194,7 @@ static Standard_Boolean  SelectEdge(const BRepAdaptor_Surface& Surf,
   if (LE.Extent() > 1) {
     //--------------------------------------------------------------
     // Several possible edges.
-    // - Test the edges differents of CE
+    // - Test the edge difference of CE
     //--------------------------------------------------------------
     TopoDS_Face FForward = Surf.Face();
     TopoDS_Edge aPrevNE;
@@ -734,7 +734,7 @@ void Partition_Loop2d::Perform()
           }
         }
       }
-      // removal of doulbe edges can explode a wire into parts,
+      // removal of double edges can explode a wire into parts,
       // make new wires of them.
       // A Loop like previous one but without 2d check
       while ( !WEL.IsEmpty() ) {
@@ -901,7 +901,8 @@ const TopTools_ListOfShape&  Partition_Loop2d::NewFaces() const
 
 //=======================================================================
 //function : findEqual
-//purpose  : move wires form <WL> to <EqWL> pairs of wires build of the same edges
+//purpose  : move wires form <WL> to <EqWL> pairs of wires build of the
+//           same edges
 //=======================================================================
 
 static void findEqual (TopTools_ListOfShape& WL,

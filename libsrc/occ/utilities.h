@@ -26,7 +26,7 @@
 //  Module : SALOME
 //  $Header: /cvs/netgen/netgen/libsrc/occ/utilities.h,v 1.3 2008/03/31 14:20:28 wabro Exp $
 
-/* ---  Definition macros file to print informations if _DEBUG_ is defined --- */
+/* ---  Definition macros file to print information if _DEBUG_ is defined --- */
 
 #ifndef UTILITIES_H
 #define UTILITIES_H

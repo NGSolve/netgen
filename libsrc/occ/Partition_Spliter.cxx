@@ -874,7 +874,7 @@ TopoDS_Shape Partition_Spliter::FindFacesInside(const TopoDS_Shape& theShape,
   // ultimate list of internal faces
   TopTools_ListOfShape KeptFaces;
 
-  // add to MFP not split tool faces as well, they may be connected with
+  // add to MFP unsplit tool faces as well, they may be connected with
   // tool faces interfering with theShape
   for ( itm.Initialize(myMapTools); itm.More(); itm.Next() ) {
     const TopoDS_Shape& aToolFace = itm.Key();
@@ -1226,7 +1226,7 @@ TopoDS_Shape Partition_Spliter::MakeFaces (const TopoDS_Shape& S)
 
       // add splits to loops
 
-      // LE: old edges + new not splitted edges
+      // LE: old edges + new unsplit edges
       const TopTools_ListOfShape& LE = myAsDes->Descendant(F);
       for (itl.Initialize(LE); itl.More(); itl.Next()) {
 	const TopoDS_Edge& E = TopoDS::Edge( itl.Value() );
@@ -1606,7 +1606,7 @@ void Partition_Spliter::MergeEqualEdges (const TopTools_ListOfShape& LSE)
           C3d = new Geom_TrimmedCurve( C3d, f,l);
           pc = TopOpeBRepTool_CurveTool::MakePCurveOnFace (F,C3d,tol);
           if (pc.IsNull()) {
-            MESSAGE (" CANT BUILD PCURVE ");
+            MESSAGE (" CANNOT BUILD PCURVE ");
           }
           myBuilder.UpdateEdge( EKeep, pc, F, tol);
         }
@@ -1918,7 +1918,7 @@ Standard_Boolean Partition_Spliter::CheckTool(const TopoDS_Shape& S)
       }
     }
     if (hasNewE) {
-      // add new adges
+      // add new edges
       NEL = myAsDes->Descendant( F );
       for ( itNE.Initialize( NEL ); itNE.More(); itNE.Next()) {
 	TopTools_ListOfShape SEL; // splits
