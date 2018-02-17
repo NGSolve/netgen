@@ -1,4 +1,5 @@
 #include <mystdlib.h>
+#include <float.h>
 
 #include "meshing.hpp"  
 
@@ -703,7 +704,7 @@ namespace netgen
 
         double det = trans.Det();
 
-        if (det <= 0)
+        if (det <= DBL_MIN)
           err += 1e12;
         else
           err += frob * frob / det;
@@ -759,7 +760,7 @@ namespace netgen
 
             double det = trans(0,0)*trans(1,1)-trans(1,0)*trans(0,1);
 
-            if (det <= 0)
+            if (det <= DBL_MIN)
               {
                 dd = 0;
                 return 1e12;
@@ -843,7 +844,7 @@ namespace netgen
           = dtrans(0,0) * trans(1,1) - trans(0,1) * dtrans(1,0)
           + trans(0,0) * dtrans(1,1) - dtrans(0,1) * trans(1,0);
 
-        if (det <= 0)
+        if (det <= DBL_MIN)
           err += 1e12;
         else
           {
@@ -893,7 +894,7 @@ namespace netgen
         frob /= 2;
 
         double det = trans.Det();
-        if (det <= 0)
+        if (det <= DBL_MIN)
           err += 1e12;
         else
           err += frob * frob / det;
@@ -2119,7 +2120,7 @@ namespace netgen
 
         double det = -trans.Det();
       
-        if (det <= 0)
+        if (det <= DBL_MIN)
           err += 1e12;
         else
           err += frob * frob * frob / det;
@@ -2191,7 +2192,7 @@ namespace netgen
         ddet *= -1;
 
       
-        if (det <= 0)
+        if (det <= DBL_MIN)
           err += 1e12;
         else
           {
@@ -2273,7 +2274,7 @@ namespace netgen
       
         det *= -1;
       
-        if (det <= 0)
+        if (det <= DBL_MIN)
           err += 1e12;
         else
           {

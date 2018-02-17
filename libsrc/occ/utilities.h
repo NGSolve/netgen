@@ -33,6 +33,7 @@
 
 #include <string>
 #include <iostream>
+#include <iomanip>
 #include <cstdlib>
 // #include "SALOME_Log.hxx"
 

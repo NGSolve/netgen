@@ -91,7 +91,8 @@ namespace nglib
    // Clean-up functions before ending usage of nglib
    DLL_HEADER void Ng_Exit ()
    {
-      ;
+      delete testout;
+      testout = 0;
    }
 
 
