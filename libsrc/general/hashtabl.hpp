@@ -1344,7 +1344,7 @@ PrintMemInfo (ostream & ost) const
 
 inline void SetInvalid (INDEX & i) { i = -1; }
 inline bool IsInvalid (INDEX i) { return i == -1; }
-inline size_t HashValue (INDEX i, size_t size) { return size_t(i) % size; }
+inline size_t HashValue (INDEX i, size_t size) { return (113*size_t(i)) % size; }
 
 inline void SetInvalid (INDEX_2 & i2) { i2[0] = -1; }
 inline bool IsInvalid (INDEX_2 i2) { return i2[0] == -1; }
