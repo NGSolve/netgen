@@ -796,8 +796,16 @@ namespace nglib
    }
 
 
+   DLL_HEADER Ng_OCC_Geometry * Ng_UseOCCGeometry ( Ng_OCC_Shape shape )
+   {
+     // Call the function to use OCC shape. Note.. the geometry class
+     // is created and instantiated within that function
+     OCCGeometry * occgeo = UseOCCGeometry( (TopoDS_Shape*) shape );
 
+     return ((Ng_OCC_Geometry *)occgeo);
+   }
    
+
    // Loads geometry from STEP File
    DLL_HEADER Ng_OCC_Geometry * Ng_OCC_Load_STEP (const char * filename)
    {

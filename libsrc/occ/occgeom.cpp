@@ -1322,6 +1322,27 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
       return occgeo;
    }
 
+   // Found at https://sourceforge.net/p/netgen-mesher/discussion/905307/thread/2652dcac/
+   OCCGeometry * UseOCCGeometry ( TopoDS_Shape* shape )
+   {
+     OCCGeometry * occgeo;
+     occgeo = new OCCGeometry;
+
+     occgeo->shape = *shape;
+
+     // We do not use colour data right now.
+     // Hence, the face_colours Handle needs to be created as a NULL handle.
+     occgeo->face_colours = Handle_XCAFDoc_ColorTool();
+     occgeo->face_colours.Nullify();
+     occgeo->changed = 1;
+     occgeo->BuildFMap();
+
+     occgeo->CalcBoundingBox();
+     PrintContents (occgeo);
+
+     return occgeo;
+  }
+
 
   void OCCGeometry :: Save (string sfilename) const
   {

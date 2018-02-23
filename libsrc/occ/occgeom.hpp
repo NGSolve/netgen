@@ -296,6 +296,7 @@ namespace netgen
 
       DLL_HEADER void HealGeometry();
 
+
       // Philippose - 15/01/2009
       // Sets the maximum mesh size for a given face
       // (Note: Local mesh size limited by the global max mesh size)
@@ -433,6 +434,7 @@ namespace netgen
    DLL_HEADER OCCGeometry * LoadOCC_IGES (const char * filename);
    DLL_HEADER OCCGeometry * LoadOCC_STEP (const char * filename);
    DLL_HEADER OCCGeometry * LoadOCC_BREP (const char * filename);
+   DLL_HEADER OCCGeometry * UseOCCGeometry(TopoDS_Shape* shape);
 
    DLL_HEADER extern OCCParameters occparam;
 

@@ -61,6 +61,7 @@ typedef void * Ng_STL_Geometry;
 /// Data type for NETGEN OpenCascade geometry
 typedef void * Ng_OCC_Geometry;
 typedef void * Ng_OCC_TopTools_IndexedMapOfShape;
+typedef void * Ng_OCC_Shape;
 #endif
 
 
@@ -660,6 +661,9 @@ DLL_HEADER Ng_OCC_Geometry * Ng_OCC_NewGeometry ();
 
 // Delete an OCC Geometry Object
 DLL_HEADER Ng_Result Ng_OCC_DeleteGeometry (Ng_OCC_Geometry * geom);
+
+// Use OpenCascade TopoDS_Shape shape as geometry
+DLL_HEADER Ng_OCC_Geometry * Ng_UseOCCGeometry(Ng_OCC_Shape shape);
 
 // Loads geometry from STEP file
 DLL_HEADER Ng_OCC_Geometry * Ng_OCC_Load_STEP (const char * filename);
