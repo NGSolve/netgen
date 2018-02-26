@@ -1493,8 +1493,215 @@ namespace netgen
 
 
 
+/// Elliptic Cone
+/// Josephat Kalezhi (kalezhi@cbu.ac.zm)
+/// February 21st, 2018
+///
+
+EllipticCone :: EllipticCone (const Point<3> & aa, const Vec<3> & avl,
+	      const Vec<3> & avs, double ah, double avlr)
+{
+  a = aa;
+  h = ah;
+  vlr = avlr;
+
+  if (avl.Length2() >= avs.Length2())
+     {
+ 	vl = avl;
+ 	vs = avs;
+      }
+  else
+     {
+	vl = avs;
+	vs = avl;
+     }
 
 
+  CalcData();
+  // Print (cout);
+}
+
+
+Primitive * EllipticCone :: CreateDefault ()
+  {
+    return new EllipticCone (Point<3> (0,0,0), Vec<3> (1,0,0), Vec<3> (0,1,0), 1, 0.5);
+  }
+
+
+ void EllipticCone :: GetPrimitiveData (const char *& classname, Array<double> & coeffs) const
+  {
+    classname = "ellipticcone";
+    coeffs.SetSize (15);
+    coeffs.Elem(1) = a(0);
+    coeffs.Elem(2) = a(1);
+    coeffs.Elem(3) = a(2);
+    coeffs.Elem(4) = vl(0);
+    coeffs.Elem(5) = vl(1);
+    coeffs.Elem(6) = vl(2);
+    coeffs.Elem(7) = vs(0);
+    coeffs.Elem(8) = vs(1);
+    coeffs.Elem(9) = vs(2);
+    coeffs.Elem(10) = h;
+    coeffs.Elem(11) = vlr;
+
+  }
+
+
+  void EllipticCone :: SetPrimitiveData (Array<double> & coeffs)
+  {
+
+    a(0) = coeffs.Elem(1);
+    a(1) = coeffs.Elem(2);
+    a(2) = coeffs.Elem(3);
+    vl(0) = coeffs.Elem(4);
+    vl(1) = coeffs.Elem(5);
+    vl(2) = coeffs.Elem(6);
+    vs(0) = coeffs.Elem(7);
+    vs(1) = coeffs.Elem(8);
+    vs(2) = coeffs.Elem(9);
+    h = coeffs.Elem(10);
+    vlr = coeffs.Elem(11);
+    CalcData();
+  }
+
+
+
+void EllipticCone :: CalcData ()
+{
+  Vec<3> nh = Cross(vl, vs);
+  nh.Normalize();
+
+  double lvl = vl.Length();
+  double lvs = vs.Length();
+
+  Vec<3> t1vec = lvl*(vlr -1)*(1/h)*nh;
+
+  Vec<3> va (a);
+  double t1 = lvl*(1 - (vlr -1)*(1/h)*(va*nh));
+
+  Vec<3> nvl = (1.0/lvl)*vl;
+  Vec<3> nvs = (1.0/lvs)*vs;
+  double ellipt2 = sqr(lvl/lvs);
+
+  cxx = nvl(0)*nvl(0) + ellipt2*nvs(0)*nvs(0) - t1vec(0)*t1vec(0);
+  cyy = nvl(1)*nvl(1) + ellipt2*nvs(1)*nvs(1) - t1vec(1)*t1vec(1);
+  czz = nvl(2)*nvl(2) + ellipt2*nvs(2)*nvs(2) - t1vec(2)*t1vec(2);
+
+  cxy = 2*(nvl(0)*nvl(1) + ellipt2*nvs(0)*nvs(1) - t1vec(0)*t1vec(1));
+  cxz = 2*(nvl(0)*nvl(2) + ellipt2*nvs(0)*nvs(2) - t1vec(0)*t1vec(2));
+  cyz = 2*(nvl(1)*nvl(2) + ellipt2*nvs(1)*nvs(2) - t1vec(1)*t1vec(2));
+
+  Vec<3> v = -2*((va*nvl)*nvl + ellipt2*(va*nvs)*nvs + t1*t1vec);
+  cx = v(0);
+  cy = v(1);
+  cz = v(2);
+
+  c1 = pow(va*nvl,2) + ellipt2*pow(va*nvs,2) - t1*t1;
+
+  double lvltop = vlr*lvl;
+  double minlvl = (lvl < lvltop) ? lvl : lvltop;
+  double maxlvl = max2( lvl,lvltop);
+  cxx /= maxlvl; cyy /= maxlvl; czz /= maxlvl;
+  cxy /= maxlvl; cxz /= maxlvl; cyz /= maxlvl;
+  cx /= maxlvl;  cy /= maxlvl;	cz /= maxlvl;
+  c1 /= maxlvl;
+}
+
+
+INSOLID_TYPE EllipticCone :: BoxInSolid (const BoxSphere<3> & box) const
+{
+  double rp, dist;
+
+  Vec<3> cv( box.Center());
+  Vec<3> nh = Cross(vl, vs);
+  nh.Normalize();
+
+  double lvl = vl.Length();
+  Vec<3> t1vec = lvl*(vlr -1)*(1/h)*nh;
+  Vec<3> va (a);
+  double t1 = lvl*(1 - (vlr -1)*(1/h)*(va*nh));
+  rp = cv*t1vec + t1;
+  double lvltop = vlr*lvl;
+  double maxlvl = max2( lvl,lvltop);
+
+  dist = sqrt( CalcFunctionValue(box.Center())*maxlvl + rp*rp) - rp;
+
+  if (dist -  box.Diam() > 0) return IS_OUTSIDE;
+  if (dist + box.Diam() < 0) return IS_INSIDE;
+  return DOES_INTERSECT;
+}
+
+double EllipticCone :: HesseNorm () const
+{
+  return 1.0/min(vs.Length2 (),vl.Length2());
+}
+
+double EllipticCone :: MaxCurvature () const
+{
+  double a = vs.Length();
+  double b = vl.Length();
+
+  return max2(b/(a*a),a/(b*b));
+}
+
+double EllipticCone :: MaxCurvatureLoc (const Point<3> & c,
+                                            double rad) const
+{
+#ifdef JOACHIMxxx
+  cout << "max curv local" << endl;
+  return 0.02;
+#endif
+
+  // saubere Loesung wird noch notwendig !!!
+  double a = vs.Length();
+  double b = vl.Length();
+  return max2(b/(a*a),a/(b*b));
+}
+
+Point<3> EllipticCone :: GetSurfacePoint () const
+{
+  return a + vl;
+}
+
+
+void EllipticCone :: GetTriangleApproximation
+(TriangleApproximation & tas,
+ const Box<3> & boundingbox, double facets) const
+{
+  int i, j;
+  double lg, bg;
+  int n = int(facets) + 1;
+
+  Vec<3> nh = Cross(vl, vs);
+  nh.Normalize();
+  Vec<3> vh = h*nh;
+
+  double lvl = vl.Length();
+  double lvs = vs.Length();
+  Vec<3> nvl = (1.0/lvl)*vl;
+  Vec<3> nvs = (1.0/lvs)*vs;
+
+  for ( j = 0; j <= n; j++ )
+    for (i = 0; i <= n; i++)
+      {
+	lg = 2 *M_PI * double (i) /n;
+	bg = double(j) /n;
+
+	Point<3> p = a + (bg *vh)
+	  + (( lvl*(1 + (vlr -1)*bg) * cos(lg)) * nvl)
+          + (( lvs*(1 + (vlr -1)*bg)* sin(lg) ) * nvs);
+
+	tas.AddPoint (p);
+     }
+
+  for ( j = 0; j < n; j++)
+    for ( i = 0; i < n; i++)
+      {
+	int pi = i + (n+1) * j;
+	tas.AddTriangle (TATriangle (0, pi, pi+1, pi+n+2));
+	tas.AddTriangle (TATriangle (0, pi, pi+n+2, pi+n+1));
+      }
+}
 
 
 

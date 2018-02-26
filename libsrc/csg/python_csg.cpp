@@ -330,6 +330,23 @@ DLL_HEADER void ExportCSG(py::module &m)
                                            Solid * sol = new Solid(extr);
                                            return make_shared<SPSolid> (sol);
                                          }));
+  m.def("EllipticCone", [](const Point<3>& a, const Vec<3>& v, const Vec<3>& w,
+                            double h, double r)
+        {
+          auto ellcone = new EllipticCone(a,v,w,h,r);
+          auto sol = new Solid(ellcone);
+          return make_shared<SPSolid>(sol);
+        }, py::arg("a"), py::arg("vl"), py::arg("vs"), py::arg("h"), py::arg("r"),
+        R"raw_string(
+An elliptic cone, given by the point 'a' at the base of the cone along the main axis,
+the vectors v and w of the long and short axis of the ellipse, respectively,
+the height of the cone, h, and ratio of base long axis length to top long axis length, r
+
+Note: The elliptic cone has to be truncated by planes similar to a cone or an elliptic cylinder.
+When r =1, the truncated elliptic cone becomes an elliptic cylinder.
+When r tends to zero, the truncated elliptic cone tends to a full elliptic cone.
+However, when r = 0, the top part becomes a point(tip) and meshing fails!
+)raw_string");
   
   m.def ("Or", FunctionPointer([](shared_ptr<SPSolid> s1, shared_ptr<SPSolid> s2)
                                  {
