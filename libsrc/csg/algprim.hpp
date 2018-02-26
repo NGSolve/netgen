@@ -365,10 +365,46 @@ namespace netgen
   };
 
 
+///
 
+/// Elliptic Cone
+/// Josephat Kalezhi (kalezhi@cbu.ac.zm)
+/// February 21st, 2018
+///
 
+  ///
+  class EllipticCone : public QuadraticSurface
+  {
+	Point<3> a;
+	Vec<3> vl, vs;
+	double h, vlr;
 
+  public:
+  ///
+  EllipticCone (const Point<3> & aa, const Vec<3> & avl,
+	      const Vec<3> & avs, double ah, double avlr);
 
+  static Primitive * CreateDefault ();
+  virtual void GetPrimitiveData (const char *& classname, Array<double> & coeffs) const;
+  virtual void SetPrimitiveData (Array<double> & coeffs);
+
+  ///
+  virtual INSOLID_TYPE BoxInSolid (const BoxSphere<3> & box) const;
+  ///
+  virtual double HesseNorm () const;
+  virtual double MaxCurvature () const;
+  virtual double MaxCurvatureLoc (const Point<3> & /* c */ ,
+				  double /* rad */) const;
+  ///
+  virtual Point<3> GetSurfacePoint () const;
+
+  virtual void GetTriangleApproximation (TriangleApproximation & tas,
+					 const Box<3> & bbox,
+					 double facets) const;
+
+  private:
+  void CalcData();
+  };
 
 
   /** Torus 

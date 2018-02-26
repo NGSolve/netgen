@@ -39,6 +39,7 @@ namespace netgen
       { TOK_SPHERE,    "sphere" },
       { TOK_CYLINDER,  "cylinder" },
       { TOK_CONE,      "cone" },
+      { TOK_ELLIPTICCONE, "ellipticcone" },
       { TOK_ELLIPTICCYLINDER, "ellipticcylinder" },
       { TOK_ELLIPSOID, "ellipsoid" },
       { TOK_ORTHOBRICK, "orthobrick" },
@@ -327,7 +328,19 @@ namespace netgen
 	      return new Solid (surf);
 	    }
 
+	  case TOK_ELLIPTICCONE:
+	    {
+              Point<3> a;
+	      Vec<3> vl, vs;
+	      double h, vlr;
 
+	      scan.ReadNext();
+	      scan >> '(' >> a >> ';' >> vl >> ';' >> vs >> ';' >> h >>';' >> vlr >>  ')';
+
+	      OneSurfacePrimitive * surf = new EllipticCone ( a, vl, vs, h, vlr );
+	      geom->AddSurfaces (surf);
+	      return new Solid (surf);
+	    }
 
 	  case TOK_SPHERE:
 	    {

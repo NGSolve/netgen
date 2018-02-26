@@ -477,6 +477,15 @@ namespace netgen
 	    delete_them.Append(cone);
 	  }
 
+       else if(classname == "ellipticcone")
+         {
+	    EllipticCone * ellipticcone = new EllipticCone(dummypoint,dummyvec,dummyvec,dummydouble,dummydouble);
+
+	    ellipticcone->SetPrimitiveData(coeffs);
+
+	    AddSurface(ellipticcone);
+	    delete_them.Append(ellipticcone);
+	  }
 	else if(classname == "extrusionface")
 	  {
 	    ExtrusionFace * ef =
