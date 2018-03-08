@@ -162,10 +162,11 @@ namespace netgen
     Point<2> p;
     CalcProj(point,p);
 
+    /*
     double val = spline_coefficient(0)*p(0)*p(0) + spline_coefficient(1)*p(1)*p(1)
       + spline_coefficient(2)*p(0)*p(1) + spline_coefficient(3)*p(0)
       + spline_coefficient(4)*p(1) + spline_coefficient(5);
-
+    */
     Vec<2> pr = p-spline->StartPI();
 
 

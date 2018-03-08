@@ -198,13 +198,10 @@ Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 	      const TABLE<int> & specpoint2solid,
 	      const TABLE<int> & specpoint2surface) const
 {
-  int i;
-  double val;
-  
   SpecialPoint hsp1 = sp1;
   SpecialPoint hsp2 = sp2;
 
-  for (i = 1; i <= 1; i++)
+  for (int i = 1; i <= 1; i++)
     {
       //      Swap (hsp1, hsp2);
 
@@ -1260,7 +1257,7 @@ BuildSurfaceElements (Array<Segment> & segs,
                 Vec<3> t1 = mesh[s1[1]] - mesh[s1[0]];
                 Vec<3> t2 = mesh[s2[1]] - mesh[s2[0]];
                 Vec<3> nst1 = Cross(t1, ns);
-                Vec<3> nst2 = Cross(t2, ns);
+                // Vec<3> nst2 = Cross(t2, ns);
                 Vec<3> dvec = Center(mesh[s1[0]], mesh[s1[1]])-Center(mesh[s2[0]], mesh[s2[1]]);
                 if (nst1 * dvec < 0) continue;
                 

@@ -129,8 +129,8 @@ namespace netgen
 #ifdef OCCGEOMETRY
     OCCGeometry * occgeometry = dynamic_cast<OCCGeometry*> (ng_geometry.get());
 
-    static char buf[1000];
-    buf[0] = 0;
+    // static char buf[1000];
+    // buf[0] = 0;
     stringstream str;
 
     if (argc >= 2)
