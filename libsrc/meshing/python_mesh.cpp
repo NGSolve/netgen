@@ -204,39 +204,41 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     ;
   
   py::class_<Element>(m, "Element3D")
-    .def("__init__", [](Element *instance, int index, py::list vertices)
-                           {
-                             if (py::len(vertices) == 4)
-                               {
-                                 new (instance) Element(TET);
-                                 for (int i = 0; i < 4; i++)
-                                   (*instance)[i] = py::extract<PointIndex>(vertices[i])();
-                                 instance->SetIndex(index);
-                               }
-                             else if (py::len(vertices) == 5)
-                               {
-                                 new (instance) Element(PYRAMID);
-                                 for (int i = 0; i < 5; i++)
-                                   (*instance)[i] = py::extract<PointIndex>(vertices[i])();
-                                 instance->SetIndex(index);
-                               }
-                             else if (py::len(vertices) == 6)
-                               {
-                                 new (instance) Element(PRISM);
-                                 for (int i = 0; i < 6; i++)
-                                   (*instance)[i] = py::extract<PointIndex>(vertices[i])();
-                                 instance->SetIndex(index);
-                               }
-                             else if (py::len(vertices) == 8)
-                               {
-                                 new (instance) Element(HEX);
-                                 for (int i = 0; i < 8; i++)
-                                   (*instance)[i] = py::extract<PointIndex>(vertices[i])();
-                                 instance->SetIndex(index);
-                               }
-                             else
-                               throw NgException ("cannot create element");                             
-                           },
+    .def(py::init([](int index, py::list vertices)
+                  {
+                    Element * newel = nullptr;
+                    if (py::len(vertices) == 4)
+                      {
+                        newel = new Element(TET);
+                        for (int i = 0; i < 4; i++)
+                          (*newel)[i] = py::extract<PointIndex>(vertices[i])();
+                        newel->SetIndex(index);
+                      }
+                    else if (py::len(vertices) == 5)
+                      {
+                        newel = new Element(PYRAMID);
+                        for (int i = 0; i < 5; i++)
+                          (*newel)[i] = py::extract<PointIndex>(vertices[i])();
+                        newel->SetIndex(index);
+                      }
+                    else if (py::len(vertices) == 6)
+                      {
+                        newel = new Element(PRISM);
+                        for (int i = 0; i < 6; i++)
+                          (*newel)[i] = py::extract<PointIndex>(vertices[i])();
+                        newel->SetIndex(index);
+                      }
+                    else if (py::len(vertices) == 8)
+                      {
+                        newel = new Element(HEX);
+                        for (int i = 0; i < 8; i++)
+                          (*newel)[i] = py::extract<PointIndex>(vertices[i])();
+                        newel->SetIndex(index);
+                      }
+                    else
+                      throw NgException ("cannot create element");
+                    return newel;
+                  }),
           py::arg("index")=1,py::arg("vertices"),
          "create volume element"
          )
@@ -261,36 +263,35 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     ;
 
   py::class_<Element2d>(m, "Element2D")
-    .def("__init__", 
-         [](Element2d *instance, int index, py::list vertices)
-                           {
-                             if (py::len(vertices) == 3)
-                               {
-                                 new (instance) Element2d(TRIG);
-                                 for (int i = 0; i < 3; i++)
-                                   (*instance)[i] = py::extract<PointIndex>(vertices[i])();
-                                 instance->SetIndex(index);
-                                 return;
-                               }
-                             if (py::len(vertices) == 4)
-                               {
-                                 new (instance) Element2d(QUAD);
-                                 for (int i = 0; i < 4; i++)
-                                   (*instance)[i] = py::extract<PointIndex>(vertices[i])();
-                                 instance->SetIndex(index);
-                                 return;
-                               }
-                             if (py::len(vertices) == 6)
-                               {
-                                 new (instance) Element2d(TRIG6);
-                                 for(int i = 0; i<6; i++)
-                                   (*instance)[i] = py::extract<PointIndex>(vertices[i])();
-                                 instance->SetIndex(index);
-                                 return;
-                               }
-                             throw NgException("Inconsistent number of vertices in Element2D");
-                           },
-          py::arg("index")=1,py::arg("vertices"),
+    .def(py::init ([](int index, py::list vertices)
+                   {
+                     Element2d * newel = nullptr;
+                     if (py::len(vertices) == 3)
+                       {
+                         newel = new Element2d(TRIG);
+                         for (int i = 0; i < 3; i++)
+                           (*newel)[i] = py::extract<PointIndex>(vertices[i])();
+                         newel->SetIndex(index);
+                       }
+                     else if (py::len(vertices) == 4)
+                       {
+                         newel = new Element2d(QUAD);
+                         for (int i = 0; i < 4; i++)
+                           (*newel)[i] = py::extract<PointIndex>(vertices[i])();
+                         newel->SetIndex(index);
+                       }
+                     else if (py::len(vertices) == 6)
+                       {
+                         newel = new Element2d(TRIG6);
+                         for(int i = 0; i<6; i++)
+                           (*newel)[i] = py::extract<PointIndex>(vertices[i])();
+                         newel->SetIndex(index);
+                       }
+                     else 
+                       throw NgException("Inconsistent number of vertices in Element2D");
+                     return newel;
+                   }),
+                   py::arg("index")=1,py::arg("vertices"),
          "create surface element"
          )
     .def_property("index", &Element2d::GetIndex, &Element2d::SetIndex)
@@ -313,21 +314,21 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     ;
 
   py::class_<Segment>(m, "Element1D")
-    .def("__init__",
-         [](Segment *instance, py::list vertices, py::list surfaces, int index)
-                           {
-                             new (instance) Segment();
-                             for (int i = 0; i < 2; i++)
-                               (*instance)[i] = py::extract<PointIndex>(vertices[i])();
-                             instance -> si = index;
-			     // needed for codim2 in 3d
-			     instance -> edgenr = index;
-                             if (len(surfaces))
-                               {
-                                 instance->surfnr1 = py::extract<int>(surfaces[0])();
-                                 instance->surfnr2 = py::extract<int>(surfaces[1])();
-                               }
-                           },
+    .def(py::init([](py::list vertices, py::list surfaces, int index)
+                  {
+                    Segment * newel = new Segment();
+                    for (int i = 0; i < 2; i++)
+                      (*newel)[i] = py::extract<PointIndex>(vertices[i])();
+                    newel -> si = index;
+                    // needed for codim2 in 3d
+                    newel -> edgenr = index;
+                    if (len(surfaces))
+                      {
+                        newel->surfnr1 = py::extract<int>(surfaces[0])();
+                        newel->surfnr2 = py::extract<int>(surfaces[1])();
+                      }
+                    return newel;
+                  }),
           py::arg("vertices"),
            py::arg("surfaces")=py::list(),
            py::arg("index")=1,
@@ -370,13 +371,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
 
   py::class_<Element0d>(m, "Element0D")
-    .def("__init__",
-         [](Element0d *instance, PointIndex vertex, int index)
-                           {
-                             new (instance) Element0d;
-                             instance->pnum = vertex;
-                             instance->index = index;
-                           },
+    .def(py::init([](PointIndex vertex, int index)
+                  {
+                    Element0d * instance = new Element0d;
+                    instance->pnum = vertex;
+                    instance->index = index;
+                    return instance;
+                  }),
          py::arg("vertex"),
          py::arg("index")=1,
          "create point element"
@@ -397,19 +398,19 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   py::class_<FaceDescriptor>(m, "FaceDescriptor")
     .def(py::init<const FaceDescriptor&>())
-    .def("__init__", 
-         [](FaceDescriptor *instance, int surfnr, int domin, int domout, int bc)
-                           {
-                             new (instance) FaceDescriptor();
-                             instance->SetSurfNr(surfnr);
-                             instance->SetDomainIn(domin);
-                             instance->SetDomainOut(domout);
-                             instance->SetBCProperty(bc);
-                           },
-           py::arg("surfnr")=1, 
-           py::arg("domin")=1,
-           py::arg("domout")=py::int_(0),
-           py::arg("bc")=py::int_(0),
+    .def(py::init([](int surfnr, int domin, int domout, int bc)
+                  {
+                    FaceDescriptor * instance = new FaceDescriptor();
+                    instance->SetSurfNr(surfnr);
+                    instance->SetDomainIn(domin);
+                    instance->SetDomainOut(domout);
+                    instance->SetBCProperty(bc);
+                             return instance;
+                  }),
+         py::arg("surfnr")=1, 
+         py::arg("domin")=1,
+         py::arg("domout")=py::int_(0),
+         py::arg("bc")=py::int_(0),
          "create facedescriptor")
     .def("__str__", &ToString<FaceDescriptor>)
     .def("__repr__", &ToString<FaceDescriptor>)
@@ -792,40 +793,40 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .value("MESHSURFACE",MESHCONST_OPTSURFACE)
     .value("MESHVOLUME",MESHCONST_OPTVOLUME)
     ;
-  
+         
   typedef MeshingParameters MP;
   py::class_<MP> (m, "MeshingParameters")
     .def(py::init<>())
-    .def("__init__",
-         [](MP *instance, double maxh, bool quad_dominated, int optsteps2d, int optsteps3d,
-	    MESHING_STEP perfstepsend, int only3D_domain, const string & meshsizefilename,
-            double grading, double curvaturesafety, double segmentsperedge)
-                           {
-                             new (instance) MeshingParameters;
-                             instance->maxh = maxh;
-                             instance->quad = int(quad_dominated);
-                             instance->optsteps2d = optsteps2d;
-                             instance->optsteps3d = optsteps3d;			     
-			     instance->only3D_domain_nr = only3D_domain;
-                             instance->perfstepsend = perfstepsend;
-                             instance->meshsizefilename = meshsizefilename;
-
-                             instance->grading = grading;
-                             instance->curvaturesafety = curvaturesafety;
-                             instance->segmentsperedge = segmentsperedge;
-                           },
-           py::arg("maxh")=1000,
-           py::arg("quad_dominated")=false,
-           py::arg("optsteps2d") = 3,
+    .def(py::init([](double maxh, bool quad_dominated, int optsteps2d, int optsteps3d,
+                     MESHING_STEP perfstepsend, int only3D_domain, const string & meshsizefilename,
+                     double grading, double curvaturesafety, double segmentsperedge)
+                  {
+                    MP * instance = new MeshingParameters;
+                    instance->maxh = maxh;
+                    instance->quad = int(quad_dominated);
+                    instance->optsteps2d = optsteps2d;
+                    instance->optsteps3d = optsteps3d;			     
+                    instance->only3D_domain_nr = only3D_domain;
+                    instance->perfstepsend = perfstepsend;
+                    instance->meshsizefilename = meshsizefilename;
+                    
+                    instance->grading = grading;
+                    instance->curvaturesafety = curvaturesafety;
+                    instance->segmentsperedge = segmentsperedge;
+                    return instance;
+                  }),
+         py::arg("maxh")=1000,
+         py::arg("quad_dominated")=false,
+         py::arg("optsteps2d") = 3,
 	 py::arg("optsteps3d") = 3,
 	 py::arg("perfstepsend") = MESHCONST_OPTVOLUME,
 	 py::arg("only3D_domain") = 0,
          py::arg("meshsizefilename") = "",
-           py::arg("grading")=0.3,
-           py::arg("curvaturesafety")=2,
-           py::arg("segmentsperedge")=1,
+         py::arg("grading")=0.3,
+         py::arg("curvaturesafety")=2,
+         py::arg("segmentsperedge")=1,
          "create meshing parameters"
-          )
+         )
     .def("__str__", &ToString<MP>)
     .def_property("maxh", 
                   FunctionPointer ([](const MP & mp ) { return mp.maxh; }),
