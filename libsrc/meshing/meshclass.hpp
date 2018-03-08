@@ -625,8 +625,9 @@ namespace netgen
     }
     size_t GetNCD2Names() const { return cd2names.Size(); }
 
+    DLL_HEADER static string default_bc;
     string * GetBCNamePtr (int bcnr) const
-    { return bcnr < bcnames.Size() ? bcnames[bcnr] : nullptr; }
+    { return (bcnr < bcnames.Size() && bcnames[bcnr]) ? bcnames[bcnr] : &default_bc; }
 
     ///
     void ClearFaceDescriptors()

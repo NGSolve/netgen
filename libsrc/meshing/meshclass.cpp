@@ -5910,6 +5910,7 @@ namespace netgen
   }
 
   string Mesh :: cd2_default_name = "default";
+  string Mesh :: default_bc = "default";
   const string & Mesh :: GetCD2Name (int cd2nr) const
   {
     static string defaultstring  = "default";
