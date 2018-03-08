@@ -222,7 +222,7 @@ namespace netgen
     ata.Solve (f, u);
 
     // the sign
-    Point<D> p0 = GetPoint(0);
+    // Point<D> p0 = GetPoint(0);
     Vec<D> ht = GetTangent(0);
     Vec<2> tang(ht(0), ht(1));
 

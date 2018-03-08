@@ -15,14 +15,15 @@ namespace netgen
   DenseMatrix :: DenseMatrix (int h, int w)
   {
     if (!w) w = h;
-    width = w;
+    width = w; 
     height = h;
-    if (h*w)
-      data = new double[h*w];
+    int hw = h*w;
+    if (hw)
+      data = new double[hw];
     else 
       data = 0;
 
-    for (int i = 0 ; i < (h * w); i++)
+    for (int i = 0 ; i < (hw); i++)
       data[i] = 0;
   }
 

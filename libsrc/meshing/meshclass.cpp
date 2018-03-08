@@ -8,7 +8,7 @@ namespace netgen
   static mutex buildsearchtree_mutex;
 
   Mesh :: Mesh ()
-    : surfarea(*this), topology(*this)
+    : topology(*this), surfarea(*this)
   {
     // volelements.SetName ("vol elements");
     // surfelements.SetName ("surf elements");
@@ -5602,7 +5602,7 @@ namespace netgen
   {
     int i, j, nv;
     int ne = GetNE();
-    int nse = GetNSE();
+    // int nse = GetNSE();
 
     numvertices = 0;
     for (i = 1; i <= ne; i++)
