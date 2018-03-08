@@ -19,7 +19,7 @@ int chartdebug = 0;
 
 void STLGeometry :: MakeAtlas(Mesh & mesh)
 {
-  int timer1 = NgProfiler::CreateTimer ("makeatlas");
+  // int timer1 = NgProfiler::CreateTimer ("makeatlas");
   /*
   int timerb = NgProfiler::CreateTimer ("makeatlas - begin");
   int timere = NgProfiler::CreateTimer ("makeatlas - end");  

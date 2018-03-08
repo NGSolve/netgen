@@ -3563,7 +3563,7 @@ namespace netgen
             x    +   y +(z),
             (1-x)+   y +(z),
           };
-	  int ii = 8;
+	  // int ii = 8;
 	  const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (HEX);
 	  
 	  for (int i = 0; i < 8; i++)

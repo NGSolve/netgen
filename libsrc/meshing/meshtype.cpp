@@ -105,8 +105,8 @@ namespace netgen
     surfnr2(other.surfnr2),
     epgeominfo(),
     meshdocval(other.meshdocval),
-    hp_elnr(other.hp_elnr),
-    is_curved(other.is_curved)
+    is_curved(other.is_curved),
+    hp_elnr(other.hp_elnr)
   {
     for (int j = 0; j < 3; j++)
       pnums[j] = other.pnums[j];

@@ -159,7 +159,7 @@ namespace netgen
           else
             {
               // quad
-              int facenum;
+              // int facenum;
               INDEX_4 face4(el[elfaces[j][0]], el[elfaces[j][1]],
                             el[elfaces[j][2]], el[elfaces[j][3]]);
               
@@ -224,7 +224,7 @@ namespace netgen
           
           { // triangle
             
-            int facenum;
+            // int facenum;
             int facedir;
             
             INDEX_4 face(el.PNum(elfaces[0][0]),
@@ -273,7 +273,7 @@ namespace netgen
           
           {
             // quad
-            int facenum;
+            // int facenum;
             int facedir;
             
             INDEX_4 face4(el.PNum(elfaces[0][0]),
@@ -1646,7 +1646,7 @@ namespace netgen
     else
       {
         // quad
-        int facenum;
+        // int facenum;
         INDEX_4 face4(el[elfaces[j][0]], el[elfaces[j][1]],
                       el[elfaces[j][2]], el[elfaces[j][3]]);
         
@@ -1713,7 +1713,7 @@ namespace netgen
     else
       {
         // quad
-        int facenum;
+        // int facenum;
         INDEX_4 face4(el[elfaces[j][0]], el[elfaces[j][1]],
                       el[elfaces[j][2]], el[elfaces[j][3]]);
         

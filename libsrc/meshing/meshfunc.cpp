@@ -208,11 +208,11 @@ namespace netgen
 
         int cntsteps = 0;
         if (mesh3d.GetNOpenElements())
-           do
-           {
+          do
+            {
               if (multithread.terminate)
-                 break;
-
+                break;
+              
               mesh3d.FindOpenElements(k);
               PrintMessage (5, mesh3d.GetNOpenElements(), " open faces");
               cntsteps++;
@@ -248,10 +248,10 @@ namespace netgen
               mp.giveuptol = 15 + 10 * cntsteps; 
               mp.sloppy = 5;
               meshing.GenerateMesh (mesh3d, mp);
-
+              
               for (ElementIndex ei = oldne; ei < mesh3d.GetNE(); ei++)
                  mesh3d[ei].SetIndex (k);
-
+              
 
               mesh3d.CalcSurfacesOfNode();
               mesh3d.FindOpenElements(k);
@@ -288,17 +288,17 @@ namespace netgen
                  mesh3d.FindOpenElements(k);
               }
               else
-              {
+                {
                  meshed = 1;
                  PrintMessage (1, "Success !");
-              }
-           }
-           while (!meshed);
-
-           PrintMessage (1, mesh3d.GetNP(), " points, ",
-              mesh3d.GetNE(), " elements");
-     }
-
+                }
+            }
+          while (!meshed);
+        
+        PrintMessage (1, mesh3d.GetNP(), " points, ",
+                      mesh3d.GetNE(), " elements");
+       }
+     
      mp.maxh = globmaxh;
 
      MeshQuality3d (mesh3d);

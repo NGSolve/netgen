@@ -2659,7 +2659,7 @@ namespace netgen
     static int timer2 = NgProfiler::CreateTimer ("Bisect 2");
     static int timer2a = NgProfiler::CreateTimer ("Bisect 2a");
     static int timer2b = NgProfiler::CreateTimer ("Bisect 2b");
-    static int timer2c = NgProfiler::CreateTimer ("Bisect 2c");
+    // static int timer2c = NgProfiler::CreateTimer ("Bisect 2c");
     static int timer3 = NgProfiler::CreateTimer ("Bisect 3");
     static int timer3a = NgProfiler::CreateTimer ("Bisect 3a");
     static int timer3b = NgProfiler::CreateTimer ("Bisect 3b");

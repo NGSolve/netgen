@@ -1599,7 +1599,7 @@ void EllipticCone :: CalcData ()
   c1 = pow(va*nvl,2) + ellipt2*pow(va*nvs,2) - t1*t1;
 
   double lvltop = vlr*lvl;
-  double minlvl = (lvl < lvltop) ? lvl : lvltop;
+  // double minlvl = (lvl < lvltop) ? lvl : lvltop;
   double maxlvl = max2( lvl,lvltop);
   cxx /= maxlvl; cyy /= maxlvl; czz /= maxlvl;
   cxy /= maxlvl; cxz /= maxlvl; cyz /= maxlvl;

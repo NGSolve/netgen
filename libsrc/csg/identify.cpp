@@ -1255,7 +1255,7 @@ BuildSurfaceElements (Array<Segment> & segs,
 		Vec<3> ns = surf->GetNormalVector (mesh[s1[0]]);
 
                 Vec<3> t1 = mesh[s1[1]] - mesh[s1[0]];
-                Vec<3> t2 = mesh[s2[1]] - mesh[s2[0]];
+                // Vec<3> t2 = mesh[s2[1]] - mesh[s2[0]];
                 Vec<3> nst1 = Cross(t1, ns);
                 // Vec<3> nst2 = Cross(t2, ns);
                 Vec<3> dvec = Center(mesh[s1[0]], mesh[s1[1]])-Center(mesh[s2[0]], mesh[s2[1]]);
