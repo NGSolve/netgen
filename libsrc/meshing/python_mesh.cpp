@@ -86,11 +86,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   m.def ("Pnt", FunctionPointer
            ([](double x, double y) { return Point<2>(x,y); }));
 
-           
+  /*
+    // duplicated functions ????
   m.def ("Pnt", FunctionPointer
            ([](double x, double y, double z) { return Point<3>(x,y,z); }));
   m.def ("Pnt", FunctionPointer
            ([](double x, double y) { return Point<2>(x,y); }));
+  */
 
   py::class_<Vec<2>> (m, "Vec2d")
     .def(py::init<double,double>())
@@ -117,6 +119,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   m.def ("Vec", FunctionPointer
            ([] (double x, double y) { return Vec<2>(x,y); }));
 
+  py::class_<Transformation<3>> (m, "Trafo")
+    .def(py::init<Vec<3>>())
+    .def("__call__", [] (Transformation<3> trafo, Point<3> p) { return trafo(p); })
+    // .def ("__str__", &ToString<Transformation<3>>)    
+    ;
 
   m.def ("SetTransformation", FunctionPointer
            ([](int dir, double angle)

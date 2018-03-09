@@ -129,7 +129,14 @@ public:
   }
 
   /// 
-  void CalcInverse (Transformation & inv) const;
+  Transformation CalcInverse () const
+  {
+    Transformation inv;
+    // inv.m = Inv(m);
+    ::netgen::CalcInverse (m, inv.m);
+    inv.v = inv.m * (-v);
+    return inv;
+  }
 
   /// this = ta x tb
   void Combine (const Transformation & ta, const Transformation & tb)

@@ -555,7 +555,8 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
          )
     
     .def("PeriodicSurfaces", FunctionPointer
-         ([] (CSGeometry & self, shared_ptr<SPSolid> s1, shared_ptr<SPSolid> s2)
+         ([] (CSGeometry & self, shared_ptr<SPSolid> s1, shared_ptr<SPSolid> s2,
+              Transformation<3> trafo)
           {
             Array<int> si1, si2;
             s1->GetSolid()->GetSurfaceIndices (si1);
@@ -564,9 +565,11 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
             self.AddIdentification 
               (new PeriodicIdentification 
                (self.GetNIdentifications()+1, self, 
-                self.GetSurface (si1[0]), self.GetSurface (si2[0])));
+                self.GetSurface (si1[0]), self.GetSurface (si2[0]),
+                trafo));
           }),
-         py::arg("solid1"), py::arg("solid2")
+         py::arg("solid1"), py::arg("solid2"),
+         py::arg("trafo")=Transformation<3>(Vec<3>(0,0,0))
          )
 
     .def("AddPoint", [] (CSGeometry & self, Point<3> p, int index) -> CSGeometry&

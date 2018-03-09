@@ -120,9 +120,11 @@ PeriodicIdentification ::
 PeriodicIdentification (int anr,
 			const CSGeometry & ageom,
 			const Surface * as1,
-			const Surface * as2)
-  : Identification(anr, ageom)
+			const Surface * as2,
+                        Transformation<3> atrafo)
+  : Identification(anr, ageom), trafo(atrafo)
 {
+  inv_trafo = trafo.CalcInverse();
   s1 = as1;
   s2 = as2;
 }
@@ -256,25 +258,26 @@ GetIdentifiedPoint (class Mesh & mesh,  int pi)
   const Surface *snew;
   const Point<3> & p = mesh.Point (pi);
 
+  Point<3> hp = p;
   if (s1->PointOnSurface (p))
     {
       snew = s2;
+      hp = trafo(hp);
     }
   else
     {
       if (s2->PointOnSurface (p))
 	{
 	  snew = s1;
+          hp = inv_trafo(hp);
 	}
       else
 	{
-	  cerr << "GetIdenfifiedPoint: Not possible" << endl;
-	  exit (1);
+          throw NgException("GetIdenfifiedPoint: Not possible");
 	}    
     }
   
   // project to other surface
-  Point<3> hp = p;
   snew->Project (hp);
 
   int newpi = 0;
@@ -306,15 +309,15 @@ GetIdentifiedPoint (class Mesh & mesh,  int pi)
 
 void PeriodicIdentification :: IdentifyPoints (class Mesh & mesh)
 {
-  int i, j;
-  for (i = 1; i <= mesh.GetNP(); i++)
+  for (int i = 1; i <= mesh.GetNP(); i++)
     {
       Point<3> p = mesh.Point(i);
       if (s1->PointOnSurface (p))
 	{
 	  Point<3> pp = p;
+          pp = trafo(pp);
 	  s2->Project (pp);
-	  for (j = 1; j <= mesh.GetNP(); j++)
+	  for (int j = 1; j <= mesh.GetNP(); j++)
 	    if (Dist2(mesh.Point(j), pp) < 1e-6)
 	      {
 		mesh.GetIdentifications().Add (i, j, nr);

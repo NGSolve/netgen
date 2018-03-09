@@ -78,11 +78,14 @@ namespace netgen
   {
     const Surface * s1;
     const Surface * s2;
+    Transformation<3> trafo; // from s1 to s2
+    Transformation<3> inv_trafo; // from s2 to s1
   public:
     PeriodicIdentification (int anr,
 			    const CSGeometry & ageom,
 			    const Surface * as1,
-			    const Surface * as2);
+			    const Surface * as2,
+                            Transformation<3> atrafo = Vec<3>(0,0,0));
     virtual ~PeriodicIdentification ();
     virtual void Print (ostream & ost) const;
     virtual void GetData (ostream & ost) const;
