@@ -44,8 +44,8 @@ namespace netgen
   MeshTopology ::  MeshTopology (const Mesh & amesh)
     : mesh(&amesh)
   {
-    buildedges = 1;
-    buildfaces = 1;
+    buildedges = true;
+    buildfaces = true;
     timestamp = -1;
   }
 

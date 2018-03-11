@@ -122,7 +122,6 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   py::class_<Transformation<3>> (m, "Trafo")
     .def(py::init<Vec<3>>())
     .def("__call__", [] (Transformation<3> trafo, Point<3> p) { return trafo(p); })
-    // .def ("__str__", &ToString<Transformation<3>>)    
     ;
 
   m.def ("SetTransformation", FunctionPointer
@@ -786,6 +785,15 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
            }
            ))
 
+    .def ("EnableTable", [] (Mesh & self, string name, bool set)
+          {
+            if (name == "edges")
+              const_cast<MeshTopology&>(self.GetTopology()).SetBuildEdges(set);
+            if (name == "faces")
+              const_cast<MeshTopology&>(self.GetTopology()).SetBuildFaces(set);
+          },
+          py::arg("name"), py::arg("set")=true)
+    
     .def ("Scale", FunctionPointer([](Mesh & self, double factor)
 				   {
 				     for(auto i = 0; i<self.GetNP();i++)
