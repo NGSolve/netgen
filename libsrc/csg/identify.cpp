@@ -225,21 +225,30 @@ Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
       n2 /= n2.Length();
       if ( fabs(n2 * hsp2.v) > 1e-3)
 	continue;
-
-
-      Vec<3> v = hsp2.p - hsp1.p;
-      double vl = v.Length();
-      double cl = fabs (v*n1);
       
+      if ((trafo(hsp1.v)-hsp2.v).Length2() > 1e-12)
+        return false;
 
-      double val1 = 1 - cl*cl/(vl*vl);
-      double val2 = (hsp1.v - hsp2.v).Length();
-    
-      if (val1 < 1e-10 && val2 < 1e-6)
-        return 1;
+      double d2typ = Dist2(hsp1.p, hsp2.p);
+      
+      if (Dist2 (trafo(hsp1.p),hsp2.p) < 1e-18*d2typ)
+        return true;
+      
+      if (Dist2 (hsp1.p, trafo(hsp1.p)) < 1e-18*d2typ)
+        { // old style without trafo, but normal projection
+          Vec<3> v = hsp2.p - hsp1.p;
+          double vl = v.Length();
+          double cl = fabs (v*n1);
+          
+          double val1 = 1 - cl*cl/(vl*vl);
+          double val2 = (hsp1.v - hsp2.v).Length();
+          
+          if (val1 < 1e-10 && val2 < 1e-6)
+            return true;
+        }
     }
 
-  return 0;
+  return false;
 }
 
 int PeriodicIdentification :: 
