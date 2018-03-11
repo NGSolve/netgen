@@ -2,6 +2,7 @@ from netgen.libngpy._csg import *
 from netgen.libngpy._meshing import MeshingParameters
 from netgen.libngpy._meshing import Pnt
 from netgen.libngpy._meshing import Vec
+from netgen.libngpy._meshing import Trafo
 
 
 try:
