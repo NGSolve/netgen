@@ -642,7 +642,7 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
                  cout << "Caught NgException: " << ex.What() << endl;
                }
              return dummy;
-           }))
+           }),py::call_guard<py::gil_scoped_release>())
     ;
 
   m.def("Save", FunctionPointer 
@@ -658,7 +658,7 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
              *outfile << endl << endl << "endmesh" << endl << endl;
              geom.SaveToMeshFile (*outfile);
              delete outfile;
-           }))
+           }),py::call_guard<py::gil_scoped_release>())
     ;
 
 
@@ -669,7 +669,7 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
             ZRefinementOptions opt;
             opt.minref = 5;
             ZRefinement (mesh, &geom, opt);
-          }))
+          }),py::call_guard<py::gil_scoped_release>())
     ;
 }
 

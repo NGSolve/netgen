@@ -29,7 +29,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
 
            self.HealGeometry();
            self.BuildFMap();
-         },py::arg("tolerance")=1e-3, py::arg("fixsmalledges")=true, py::arg("fixspotstripfaces")=true, py::arg("sewfaces")=true, py::arg("makesolids")=true, py::arg("splitpartitions")=false,R"raw_string(Heal the OCCGeometry.)raw_string")
+         },py::arg("tolerance")=1e-3, py::arg("fixsmalledges")=true, py::arg("fixspotstripfaces")=true, py::arg("sewfaces")=true, py::arg("makesolids")=true, py::arg("splitpartitions")=false,R"raw_string(Heal the OCCGeometry.)raw_string",py::call_guard<py::gil_scoped_release>())
       ;
     m.def("LoadOCCGeometry",FunctionPointer([] (const string & filename)
            {
@@ -38,7 +38,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
              OCCGeometry * instance = new OCCGeometry();
              instance = LoadOCC_STEP(filename.c_str());
              return shared_ptr<OCCGeometry>(instance, NOOP_Deleter);
-           }));
+           }),py::call_guard<py::gil_scoped_release>());
   m.def("GenerateMesh", FunctionPointer([] (shared_ptr<OCCGeometry> geo, MeshingParameters &param)
 					{
 					  auto mesh = make_shared<Mesh>();
@@ -55,7 +55,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
 					      cout << "Caught NgException: " << ex.What() << endl;
 					    }
 					  return mesh;
-					}))
+					}),py::call_guard<py::gil_scoped_release>())
     ;
 }
 

@@ -25,7 +25,7 @@ DLL_HEADER void ExportSTL(py::module & m)
 					   {
 					     ifstream ist(filename);
 					     return shared_ptr<STLGeometry>(STLGeometry::Load(ist));
-					   }));
+					   }),py::call_guard<py::gil_scoped_release>());
   m.def("GenerateMesh", FunctionPointer([] (shared_ptr<STLGeometry> geo, MeshingParameters &param)
 					{
 					  auto mesh = make_shared<Mesh>();
@@ -41,7 +41,7 @@ DLL_HEADER void ExportSTL(py::module & m)
 					      cout << "Caught NgException: " << ex.What() << endl;
 					    }
 					  return mesh;
-					}))
+					}),py::call_guard<py::gil_scoped_release>())
     ;
 }
 

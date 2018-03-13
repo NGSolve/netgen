@@ -540,9 +540,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 	      ng_geometry = make_shared<NetgenGeometry>();
 	    self.SetGeometry(ng_geometry);
 	    delete infile;
-	  }))
+	  }),py::call_guard<py::gil_scoped_release>())
     // static_cast<void(Mesh::*)(const string & name)>(&Mesh::Load))
-    .def("Save", static_cast<void(Mesh::*)(const string & name)const>(&Mesh::Save))
+    .def("Save", static_cast<void(Mesh::*)(const string & name)const>(&Mesh::Save),py::call_guard<py::gil_scoped_release>())
     .def("Export",
          [] (Mesh & self, string filename, string format)
           {
@@ -557,7 +557,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                 throw NgException (err);
               }
           },
-         py::arg("filename"), py::arg("format"))
+         py::arg("filename"), py::arg("format"),py::call_guard<py::gil_scoped_release>())
     
     .def_property("dim", &Mesh::GetDimension, &Mesh::SetDimension)
 
@@ -634,7 +634,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def ("Compress", FunctionPointer ([](Mesh & self)
                                        {
                                          return self.Compress ();
-                                       }))
+                                       }),py::call_guard<py::gil_scoped_release>())
     
     
     .def ("SetBCName", &Mesh::SetBCName)
@@ -674,16 +674,19 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
              cout << "generate vol mesh" << endl;
 
              MeshingParameters mp;
+             {
+               py::gil_scoped_acquire acquire;
              if (py::extract<MeshingParameters>(pymp).check())
                mp = py::extract<MeshingParameters>(pymp)();
              else
                {
                  mp.optsteps3d = 5;
                }
+             }
              MeshVolume (mp, self);
              OptimizeVolume (mp, self);
            },
-          py::arg("mp")=NGDummyArgument())
+          py::arg("mp")=NGDummyArgument(),py::call_guard<py::gil_scoped_release>())
 
    .def ("OptimizeVolumeMesh", FunctionPointer
          ([](Mesh & self)
@@ -691,7 +694,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             MeshingParameters mp;
             mp.optsteps3d = 5;
             OptimizeVolume (mp, self);
-          }))
+          }),py::call_guard<py::gil_scoped_release>())
 
     .def ("Refine", FunctionPointer
           ([](Mesh & self)
@@ -700,7 +703,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                self.GetGeometry()->GetRefinement().Refine(self);
              else
                Refinement().Refine(self);
-           }))
+           }),py::call_guard<py::gil_scoped_release>())
 
     .def ("SecondOrder", FunctionPointer
           ([](Mesh & self)
@@ -725,7 +728,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
            }))
     */
     
-    .def ("BuildSearchTree", &Mesh::BuildElementSearchTree)
+    .def ("BuildSearchTree", &Mesh::BuildElementSearchTree,py::call_guard<py::gil_scoped_release>())
 
     .def ("BoundaryLayer", FunctionPointer 
           ([](Mesh & self, int bc, py::list thicknesses, int volnr, py::list materials)
