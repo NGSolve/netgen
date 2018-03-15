@@ -113,7 +113,7 @@ MyStr::MyStr(int i)
     str = shortstr;
   strcpy(str, buffer);
 }
-
+  /*
 MyStr::MyStr(unsigned int i)
 {
   char buffer[32];
@@ -125,7 +125,7 @@ MyStr::MyStr(unsigned int i)
     str = shortstr;
   strcpy(str, buffer);
 }
-
+  */
 MyStr::MyStr(void * p)
 {
   char buffer[32];
@@ -138,7 +138,7 @@ MyStr::MyStr(void * p)
   strcpy(str, buffer);
 }
 
-
+  /*
 MyStr::MyStr(long l)
 {
   char buffer[32];
@@ -150,8 +150,9 @@ MyStr::MyStr(long l)
     str = shortstr;
   strcpy(str, buffer);
 }
+  */
 
-MyStr::MyStr(unsigned long l)
+MyStr::MyStr(size_t l)
 {
   char buffer[32];
   sprintf(buffer, "%ld", l);

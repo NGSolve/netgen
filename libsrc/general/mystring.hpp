@@ -50,10 +50,10 @@ public:
   MyStr(char);
   MyStr(const MyStr &);
   MyStr(int);
-  MyStr(unsigned);
+  MyStr(size_t);
   MyStr(void *);
-  MyStr(long);
-  MyStr(unsigned long);
+  // MyStr(long);
+  // MyStr(unsigned long);
   MyStr(double);
   MyStr(const Point3d& p);
   MyStr(const Vec3d& p);
