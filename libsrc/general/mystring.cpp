@@ -114,6 +114,18 @@ MyStr::MyStr(int i)
   strcpy(str, buffer);
 }
 
+MyStr::MyStr(unsigned int i)
+{
+  char buffer[32];
+  sprintf(buffer, "%d", i);
+  length = unsigned(strlen(buffer));
+  if (length > SHORTLEN)
+    str = new char[length + 1];
+  else
+    str = shortstr;
+  strcpy(str, buffer);
+}
+
 MyStr::MyStr(void * p)
 {
   char buffer[32];
@@ -128,6 +140,18 @@ MyStr::MyStr(void * p)
 
 
 MyStr::MyStr(long l)
+{
+  char buffer[32];
+  sprintf(buffer, "%ld", l);
+  length = unsigned(strlen(buffer));
+  if (length > SHORTLEN)
+    str = new char[length + 1];
+  else
+    str = shortstr;
+  strcpy(str, buffer);
+}
+
+MyStr::MyStr(unsigned long l)
 {
   char buffer[32];
   sprintf(buffer, "%ld", l);

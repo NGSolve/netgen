@@ -78,18 +78,18 @@ namespace netgen
   {
   protected:
     /// the size
-    int size;
+    size_t size;
     /// the data
     T * data;
   public:
     typedef T TELEM;
 
     /// provide size and memory
-    FlatArray (int asize, T * adata) 
+    FlatArray (size_t asize, T * adata) 
       : size(asize), data(adata) { ; }
 
     /// the size
-    int Size() const { return size; }
+    size_t Size() const { return size; }
 
     ArrayIterator<T,BASE,TIND> begin() const
     { return ArrayIterator<T,BASE,TIND> (*this, BASE); }
@@ -228,7 +228,7 @@ namespace netgen
     using FlatArray<T,BASE,TIND>::data;
 
     /// physical size of array
-    int allocsize;
+    size_t allocsize;
     /// memory is responsibility of container
     bool ownmem;
 
@@ -242,7 +242,7 @@ namespace netgen
       ownmem = 1;
     }
 
-    explicit Array(int asize)
+    explicit Array(size_t asize)
       : FlatArray<T, BASE, TIND> (asize, new T[asize])
     {
       allocsize = asize; 
@@ -286,7 +286,7 @@ namespace netgen
     }
 
     /// Change logical size. If necessary, do reallocation. Keeps contents.
-    void SetSize(int nsize)
+    void SetSize(size_t nsize)
     {
       if (nsize > allocsize) 
 	ReSize (nsize);
@@ -294,7 +294,7 @@ namespace netgen
     }
 
     /// Change physical size. Keeps logical size. Keeps contents.
-    void SetAllocSize (int nallocsize)
+    void SetAllocSize (size_t nallocsize)
     {
       if (nallocsize > allocsize)
 	ReSize (nallocsize);
@@ -398,16 +398,16 @@ namespace netgen
   private:
 
     /// resize array, at least to size minsize. copy contents
-    void ReSize (int minsize)
+    void ReSize (size_t minsize)
     {
-      int nsize = 2 * allocsize;
+      size_t nsize = 2 * allocsize;
       if (nsize < minsize) nsize = minsize;
 
       if (data)
 	{
 	  T * p = new T[nsize];
 	
-	  int mins = (nsize < size) ? nsize : size; 
+	  size_t mins = (nsize < size) ? nsize : size; 
           // memcpy (p, data, mins * sizeof(T));
 
 #if defined(__GNUG__) && __GNUC__ < 5 && !defined(__clang__)
@@ -448,7 +448,7 @@ namespace netgen
     // double mem[(S*sizeof(T)+7) / 8];
   public:
     /// Generate array of logical and physical size asize
-    explicit ArrayMem(int asize = 0)
+    explicit ArrayMem(size_t asize = 0)
       : Array<T> (S, static_cast<T*> (static_cast<void*>(&mem[0])))
     {
       size = asize;
@@ -470,7 +470,7 @@ namespace netgen
     ArrayMem & operator= (const FlatArray<T> & a2)
     {
       this->SetSize (a2.Size());
-      for (int i = 0; i < size; i++)
+      for (size_t i = 0; i < size; i++)
 	(*this)[i] = a2[i];
       return *this;
     }
