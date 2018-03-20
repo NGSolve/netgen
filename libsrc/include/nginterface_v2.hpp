@@ -280,6 +280,10 @@ namespace netgen
                  void (*taskmanager)(function<void(int,int)>) = &DummyTaskManager2,
                  void (*tracer)(string, bool) = &DummyTracer2);
 
+    void GetParentNodes (int ni, int * parents) const;
+    int GetParentElement (int ei) const;
+    int GetParentSElement (int ei) const;
+
 
     // Find element of point, returns local coordinates
     template <int DIM>
