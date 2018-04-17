@@ -18,7 +18,7 @@ namespace netgen
 
 DLL_HEADER void ExportSTL(py::module & m)
 {
-  py::class_<STLGeometry,shared_ptr<STLGeometry>> (m,"STLGeometry")
+  py::class_<STLGeometry,shared_ptr<STLGeometry>, NetgenGeometry> (m,"STLGeometry")
     .def(py::init<>())
     ;
   m.def("LoadSTLGeometry", FunctionPointer([] (const string & filename)
