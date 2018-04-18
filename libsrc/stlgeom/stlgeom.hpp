@@ -98,7 +98,7 @@ namespace netgen
 
 
 
-  class STLGeometry : public STLTopology, public NetgenGeometry
+  class STLGeometry : public NetgenGeometry, public STLTopology
   {
     // edges to be meshed:
     Array<STLEdge> edges;
