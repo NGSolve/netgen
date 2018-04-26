@@ -37,16 +37,53 @@ namespace netgen
 		Point<3> & newp, EdgePointGeomInfo & newgi) const
   {
     Point<2> p2d;
-  
-    p2d = geometry.GetSplines().Get(ap1.edgenr) -> 
-      GetPoint (((1-secpoint)*ap1.dist+secpoint*ap2.dist));
+    double newdist;
+    auto spline = geometry.GetSplines().Get(ap1.edgenr);
+    if( (ap1.dist == 0.0) && (ap2.dist == 0.0) )
+      {
+        // used for manually generated meshes
+        const SplineSeg3<2> * ss3;
+        const LineSeg<2> * ls;
+        auto ext = dynamic_cast<const SplineSegExt *>(spline);
+        if(ext)
+          {
+            ss3 = dynamic_cast<const SplineSeg3<2> *>(&ext->seg);
+            ls = dynamic_cast<const LineSeg<2> *>(&ext->seg);
+          }
+        else
+          {
+            ss3 = dynamic_cast<const SplineSeg3<2> *>(spline);
+            ls = dynamic_cast<const LineSeg<2> *>(spline);
+          }
+        Point<2> p12d(p1(0),p1(1)), p22d(p2(0),p2(1));
+        Point<2> p1_proj(0.0,0.0), p2_proj(0.0,0.0);
+        double t1_proj = 0.0;
+        double t2_proj = 0.0;
+        if(ss3)
+          {
+            ss3->Project(p12d,p1_proj,t1_proj);
+            ss3->Project(p22d,p2_proj,t2_proj);
+          }
+        else if(ls)
+          {
+            ls->Project(p12d,p1_proj,t1_proj);
+            ls->Project(p22d,p2_proj,t2_proj);
+          }
+        p2d = spline->GetPoint (((1-secpoint)*t1_proj+secpoint*t2_proj));
+        newdist = (1-secpoint)*t1_proj+secpoint*t2_proj;
+      }
+    else
+      {
+        p2d = spline->GetPoint (((1-secpoint)*ap1.dist+secpoint*ap2.dist));
+        newdist = (1-secpoint)*ap1.dist+secpoint*ap2.dist;
+      }
   
     //  (*testout) << "refine 2d line, ap1.dist, ap2.dist = " << ap1.dist << ", " << ap2.dist << endl;
     //  (*testout) << "p1, p2 = " << p1 << p2 << ", newp = " << p2d << endl;
 
     newp = Point3d (p2d(0), p2d(1), 0);
     newgi.edgenr = ap1.edgenr;
-    newgi.dist = ((1-secpoint)*ap1.dist+secpoint*ap2.dist);
+    newgi.dist = newdist;
   };
 
 
