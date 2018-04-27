@@ -1309,18 +1309,13 @@ namespace netgen
     archive & points;
     archive & surfelements;
     archive & volelements;
+    archive & segments;
     archive & facedecoding;
+    archive & materials & bcnames & cd2names;
     
     if (archive.Input())
       {
         RebuildSurfaceElementLists();
-
-        for (int faceindex = 1; faceindex <= GetNFD(); faceindex++)
-          {
-            Array<SurfaceElementIndex> seia;
-            GetSurfaceElementsOfFace (faceindex, seia);
-            cout << "seia = " << seia.Size() << endl;
-          }
         
         CalcSurfacesOfNode ();
         if (ntasks == 1) // sequential run only

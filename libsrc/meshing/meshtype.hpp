@@ -340,11 +340,7 @@ namespace netgen
     ngstd::Archive & DoArchive (ngstd::Archive & ar)
     {
       ar & x[0] & x[1] & x[2] & layer & singular;
-      unsigned char _type;
-      if (ar.Output())
-        { _type = type; ar & _type; }
-      else
-        { ar & _type; type = POINTTYPE(_type); }
+      ar & (unsigned char&)(type);
       return ar;
     }
   };
@@ -1053,7 +1049,19 @@ namespace netgen
 #else
     int GetPartition () const { return 0; }
 #endif
+    ngstd::Archive & DoArchive (ngstd::Archive & ar)
+    {
+      return ar & pnums[0] & pnums[1] & pnums[2]
+        & edgenr & singedge_left & singedge_right
+        & si & cd2i & domin & domout & tlosurf
+        & surfnr1 & surfnr2
+        & bcname;
+    }
+    
   };
+
+  inline ngstd::Archive & operator & (ngstd::Archive & archive, Segment & mp)
+  { return mp.DoArchive(archive);   }
 
   ostream & operator<<(ostream  & s, const Segment & seg);
 
@@ -1146,9 +1154,9 @@ namespace netgen
     {
       return ar & surfnr & domin & domout & tlosurf & bcprop
         & surfcolour.X() & surfcolour.Y() & surfcolour.Z()
-        // & bcname       // how to do that ? 
-        // & firstelement    // don't need it 
+        & bcname   
         & domin_singular & domout_singular ;
+      // don't need:  firstelement
     }
     
   };
