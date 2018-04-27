@@ -71,7 +71,16 @@ namespace netgen
 
   void Ngx_Mesh :: DoArchive (ngstd::Archive & archive)
   {
-
+    cout << "ngx_mesh, doarchive, output = " << archive.Output() << endl;
+    cout << "mesh = " << mesh.get() << endl;
+    if (archive.Input()) mesh = make_shared<Mesh>();
+    mesh->DoArchive(archive);
+    if (archive.Input())
+      {
+        netgen::mesh = mesh;
+        SetGlobalMesh (mesh);
+      }
+    /*
     if (archive.Output())
       {
         stringstream str;
@@ -86,6 +95,7 @@ namespace netgen
         stringstream str(st);
         LoadMesh (str);
       }
+    */
   }
 
   void Ngx_Mesh :: UpdateTopology ()

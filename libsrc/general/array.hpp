@@ -774,6 +774,28 @@ namespace netgen
   }
 
 
+
+
+  template <typename T, int BASE, typename TIND> 
+  ngstd::Archive & operator & (ngstd::Archive & archive, Array<T,BASE,TIND> & a)
+  {
+    if (archive.Output())
+      archive << a.Size();
+    else
+      {
+        size_t size;
+        archive & size;
+        a.SetSize (size);
+      }
+
+    /*
+    for (auto & ai : a)
+      archive & ai;
+    */
+    archive.Do (&a[BASE], a.Size());
+    return archive;
+  }  
+
 }
 
 #endif

@@ -21,6 +21,7 @@
 #include "parthreads.hpp"
 // #include "moveablemem.hpp"
 #include "dynamicmem.hpp"
+#include "archive_base.hpp"
 
 #include "template.hpp"
 #include "array.hpp"
@@ -44,7 +45,6 @@
 #include "mpi_interface.hpp"
 #include "netgenout.hpp"
 #include "gzstream.h"
-#include "archive_base.hpp"
 
 #include "ngsimd.hpp"
 

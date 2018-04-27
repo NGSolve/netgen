@@ -509,6 +509,7 @@ namespace netgen
 	DLL_HEADER void Merge (const string & filename, const int surfindex_offset = 0);
 
 
+    DLL_HEADER void DoArchive (ngstd::Archive & archive);
     ///
 	DLL_HEADER void ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal = OPT_QUALITY);
 

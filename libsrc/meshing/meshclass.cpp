@@ -1303,7 +1303,34 @@ namespace netgen
   }
 
 
+  void Mesh :: DoArchive (ngstd::Archive & archive)
+  {
+    archive & dimension;
+    archive & points;
+    archive & surfelements;
+    archive & volelements;
+    archive & facedecoding;
+    
+    if (archive.Input())
+      {
+        RebuildSurfaceElementLists();
 
+        for (int faceindex = 1; faceindex <= GetNFD(); faceindex++)
+          {
+            Array<SurfaceElementIndex> seia;
+            GetSurfaceElementsOfFace (faceindex, seia);
+            cout << "seia = " << seia.Size() << endl;
+          }
+        
+        CalcSurfacesOfNode ();
+        if (ntasks == 1) // sequential run only
+          {
+            topology.Update();
+            clusters -> Update();
+          }
+        SetNextMajorTimeStamp();
+      }
+  }
 
 
   void Mesh :: Merge (const string & filename, const int surfindex_offset)

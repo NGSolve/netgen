@@ -170,8 +170,14 @@ namespace netgen
 #else
     enum { BASE = 1 };
 #endif  
+
+    ngstd::Archive & DoArchive (ngstd::Archive & ar) { return ar & i; }
   };
 
+  inline ngstd::Archive & operator & (ngstd::Archive & archive, PointIndex & mp)
+  { return mp.DoArchive(archive);   }
+
+  
   inline istream & operator>> (istream & ist, PointIndex & pi)
   {
     int i; ist >> i; pi = PointIndex(i); return ist;
@@ -240,7 +246,14 @@ namespace netgen
     SurfaceElementIndex & operator++ () { ++i; return *this; }
     SurfaceElementIndex & operator-- () { --i; return *this; }
     SurfaceElementIndex & operator+= (int inc) { i+=inc; return *this; }
+
+    ngstd::Archive & DoArchive (ngstd::Archive & ar) { return ar & i; }
   };
+
+  inline ngstd::Archive & operator & (ngstd::Archive & archive, SurfaceElementIndex & mp)
+  { return mp.DoArchive(archive);   }
+
+  
 
   inline istream & operator>> (istream & ist, SurfaceElementIndex & pi)
   {
@@ -324,8 +337,23 @@ namespace netgen
     static MPI_Datatype MyGetMPIType ( );
 #endif
 
+    ngstd::Archive & DoArchive (ngstd::Archive & ar)
+    {
+      ar & x[0] & x[1] & x[2] & layer & singular;
+      unsigned char _type;
+      if (ar.Output())
+        { _type = type; ar & _type; }
+      else
+        { ar & _type; type = POINTTYPE(_type); }
+      return ar;
+    }
   };
 
+  inline ngstd::Archive & operator & (ngstd::Archive & archive, MeshPoint & mp)
+  { return mp.DoArchive(archive);   }
+  
+
+  
   inline ostream & operator<<(ostream  & s, const MeshPoint & pt)
   { 
     return (s << Point<3> (pt)); 
@@ -349,7 +377,7 @@ namespace netgen
     PointGeomInfo geominfo[ELEMENT2D_MAXPOINTS];
 
     /// surface nr
-    int index:16;
+    short int index;
     ///
     ELEMENT_TYPE typ;
     /// number of points
@@ -473,6 +501,22 @@ namespace netgen
     ///
     const PointGeomInfo & GeomInfoPiMod (int i) const { return geominfo[(i-1) % np]; }
 
+    ngstd::Archive & DoArchive (ngstd::Archive & ar)
+    {
+      short _np, _typ;
+      bool _curved, _vis, _deleted;
+      if (ar.Output())
+        { _np = np; _typ = typ; _curved = is_curved;
+          _vis = visible; _deleted = deleted; }
+      ar & _np & _typ & index & _curved & _vis & _deleted;
+      // ar & next; don't need 
+      if (ar.Input())
+        { np = _np; typ = ELEMENT_TYPE(_typ); is_curved = _curved;
+          visible = _vis; deleted = _deleted; }
+      for (size_t i = 0; i < np; i++)
+        ar & pnum[i];
+      return ar;
+    }
 
     void SetIndex (int si) { index = si; }
     ///
@@ -590,6 +634,8 @@ namespace netgen
 #endif
   };
 
+  inline ngstd::Archive & operator & (ngstd::Archive & archive, Element2d & mp)
+  { return mp.DoArchive(archive);   }
 
   ostream & operator<<(ostream  & s, const Element2d & el);
 
@@ -731,7 +777,20 @@ namespace netgen
     PointIndex & PNumMod (int i) { return pnum[(i-1) % np]; }
     ///
     const PointIndex & PNumMod (int i) const { return pnum[(i-1) % np]; }
-  
+
+    ngstd::Archive & DoArchive (ngstd::Archive & ar)
+    {
+      short _np, _typ;
+      if (ar.Output())
+        { _np = np; _typ = typ; }
+      ar & _np & _typ & index;
+      if (ar.Input())
+        { np = _np; typ = ELEMENT_TYPE(_typ); }
+      for (size_t i = 0; i < np; i++)
+        ar & pnum[i];
+      return ar;
+    }
+
     ///
     void SetIndex (int si) { index = si; }
     ///
@@ -873,6 +932,9 @@ namespace netgen
     int hp_elnr;
   };
 
+  inline ngstd::Archive & operator & (ngstd::Archive & archive, Element & mp)
+  { return mp.DoArchive(archive);   }
+  
   ostream & operator<<(ostream  & s, const Element & el);
 
 
@@ -1079,7 +1141,21 @@ namespace netgen
     SurfaceElementIndex FirstElement() { return firstelement; }
     // friend ostream & operator<<(ostream  & s, const FaceDescriptor & fd);
     friend class Mesh;
+
+    ngstd::Archive & DoArchive (ngstd::Archive & ar)
+    {
+      return ar & surfnr & domin & domout & tlosurf & bcprop
+        & surfcolour.X() & surfcolour.Y() & surfcolour.Z()
+        // & bcname       // how to do that ? 
+        // & firstelement    // don't need it 
+        & domin_singular & domout_singular ;
+    }
+    
   };
+
+  inline ngstd::Archive & operator & (ngstd::Archive & archive, FaceDescriptor & mp)
+  { return mp.DoArchive(archive);   }
+  
 
   ostream & operator<< (ostream  & s, const FaceDescriptor & fd);
 
