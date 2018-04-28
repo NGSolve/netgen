@@ -81,6 +81,8 @@ protected:
   
 public:
   ///
+  BASE_INDEX_2_HASHTABLE () { ; } 
+
   BASE_INDEX_2_HASHTABLE (int size)
     : hash (size) { };
 
@@ -113,6 +115,8 @@ class INDEX_2_HASHTABLE : public BASE_INDEX_2_HASHTABLE
   
 public:
   ///
+  INDEX_2_HASHTABLE () { ; } 
+
  INDEX_2_HASHTABLE (int size)
    : BASE_INDEX_2_HASHTABLE (size), cont(size)
   { ; }  
@@ -254,7 +258,18 @@ public:
 
   const T & GetData (const Iterator & it) const
   { return cont[it.BagNr()][it.Pos()]; }
+
+  ngstd::Archive & DoArchive (ngstd::Archive & ar)
+  {
+    ar & hash & cont;
+    return ar;
+  }    
+  
 };
+
+  template <typename T>
+  inline ngstd::Archive & operator & (ngstd::Archive & archive, INDEX_2_HASHTABLE<T> & mp)
+  { return mp.DoArchive(archive);   }
 
 
 
@@ -285,6 +300,7 @@ protected:
 
 public:
   ///
+  BASE_INDEX_3_HASHTABLE () { ; } 
   BASE_INDEX_3_HASHTABLE (int size)
     : hash (size) { };
 
@@ -322,6 +338,7 @@ class INDEX_3_HASHTABLE : private BASE_INDEX_3_HASHTABLE
 
 public:
   ///
+  inline INDEX_3_HASHTABLE () { ; }
   inline INDEX_3_HASHTABLE (int size);
   ///
   inline void Set (const INDEX_3 & ahash, const T & acont);
@@ -419,10 +436,20 @@ public:
   { return cont[it.BagNr()][it.Pos()]; }
 
 
+  ngstd::Archive & DoArchive (ngstd::Archive & ar)
+  {
+    ar & hash & cont;
+    return ar;
+  }    
+
 
 };
 
 
+
+  template <typename T>
+  inline ngstd::Archive & operator & (ngstd::Archive & archive, INDEX_3_HASHTABLE<T> & mp)
+  { return mp.DoArchive(archive);   }
 
 
 

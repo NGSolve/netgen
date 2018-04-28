@@ -211,4 +211,40 @@ namespace netgen
       data[i].size = data[i].maxsize;
   }
 
+
+  
+  ngstd::Archive & BASE_TABLE :: DoArchive (ngstd::Archive & ar, int elemsize)
+  {
+    if (ar.Output())
+      {
+        size_t entries = 0, size = data.Size();
+        for (size_t i = 0; i < data.Size(); i++)
+          entries += data[i].size;
+        ar & size & entries;
+        for (size_t i = 0; i < data.Size(); i++)
+          {
+            ar & data[i].size;
+            ar.Do ((unsigned char*)data[i].col, data[i].size*elemsize);
+          }
+      }
+    else
+      {
+        size_t entries, size;
+        ar & size & entries;
+        data.SetSize(size);
+        oneblock = new char [entries*elemsize];
+        char * ptr = oneblock;
+        for (size_t i = 0; i < data.Size(); i++)
+          {
+            ar & data[i].size;
+            data[i].col = ptr;
+            data[i].maxsize = data[i].size;
+            ar.Do ((unsigned char*)data[i].col, data[i].size*elemsize);
+            ptr += size*elemsize;
+          }
+      }
+    return ar;
+  }    
+
+  
 }

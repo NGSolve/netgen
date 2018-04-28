@@ -88,6 +88,8 @@ public:
   size_t UsedElements () const;
 
   void SetElementSizesToMaxSizes ();
+
+  ngstd::Archive & DoArchive (ngstd::Archive & ar, int elemsize);
 };
 
 
@@ -235,7 +237,20 @@ public:
 
     return FlatArray<T> (data[i-BASE].size, (T*)data[i-BASE].col);
   }
+
+  ngstd::Archive & DoArchive (ngstd::Archive & ar)
+  {
+    return BASE_TABLE::DoArchive(ar, sizeof(T));
+  }
+
 };
+
+  
+template <typename T, int BASE>
+  inline ngstd::Archive & operator & (ngstd::Archive & archive, TABLE<T,BASE> & mp)
+  { return mp.DoArchive(archive);   }
+  
+
 
 
 template <class T, int BASE>

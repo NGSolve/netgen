@@ -1445,17 +1445,17 @@ namespace netgen
   class Identifications
   {
   public:
-    enum ID_TYPE { UNDEFINED = 1, PERIODIC = 2, CLOSESURFACES = 3, CLOSEEDGES = 4};
+    enum ID_TYPE : unsigned char { UNDEFINED = 1, PERIODIC = 2, CLOSESURFACES = 3, CLOSEEDGES = 4};
   
 
   private:
     class Mesh & mesh;
 
     /// identify points (thin layers, periodic b.c.)  
-    INDEX_2_HASHTABLE<int> * identifiedpoints;
+    INDEX_2_HASHTABLE<int> identifiedpoints;
   
     /// the same, with info about the id-nr
-    INDEX_3_HASHTABLE<int> * identifiedpoints_nr;
+    INDEX_3_HASHTABLE<int> identifiedpoints_nr;
 
     /// sorted by identification nr
     TABLE<INDEX_2> idpoints_table;
@@ -1486,23 +1486,23 @@ namespace netgen
     bool Get (PointIndex pi1, PointIndex pi2, int identnr) const;
     bool GetSymmetric (PointIndex pi1, PointIndex pi2, int identnr) const;
 
-    bool HasIdentifiedPoints() const { return identifiedpoints != nullptr; } 
+    // bool HasIdentifiedPoints() const { return identifiedpoints != nullptr; } 
     ///
     INDEX_2_HASHTABLE<int> & GetIdentifiedPoints () 
     { 
-      return *identifiedpoints; 
+      return identifiedpoints; 
     }
 
     bool Used (PointIndex pi1, PointIndex pi2)
     {
-      return identifiedpoints->Used (INDEX_2 (pi1, pi2));
+      return identifiedpoints.Used (INDEX_2 (pi1, pi2));
     }
 
     bool UsedSymmetric (PointIndex pi1, PointIndex pi2)
     {
       return 
-	identifiedpoints->Used (INDEX_2 (pi1, pi2)) ||
-	identifiedpoints->Used (INDEX_2 (pi2, pi1));
+	identifiedpoints.Used (INDEX_2 (pi1, pi2)) ||
+	identifiedpoints.Used (INDEX_2 (pi2, pi1));
     }
 
     ///
@@ -1531,9 +1531,39 @@ namespace netgen
     void SetMaxPointNr (int maxpnum);
 
     DLL_HEADER void Print (ostream & ost) const;
+
+    ngstd::Archive & DoArchive (ngstd::Archive & ar)
+    {
+      ar & maxidentnr;
+      ar & identifiedpoints & identifiedpoints_nr;
+      ar & idpoints_table;
+      if (ar.Output())
+        {
+          size_t s = type.Size();
+          ar & s;
+          for (auto & t : type)
+            ar & (unsigned char&)(t);
+        }
+      else
+        {
+          size_t s;
+          ar & s;
+          type.SetSize(s);
+          for (auto & t : type)
+            ar & (unsigned char&)(t);
+        }
+      
+      cout << "identifiedpoints = " << identifiedpoints << endl;
+      cout << "identifiedpoints_nr = " << identifiedpoints_nr << endl;
+      cout << "idpoints_table = " << idpoints_table << endl;
+      cout << "type = " << type << endl;
+      return ar;
+    }    
   };
 
-
+  inline ngstd::Archive & operator & (ngstd::Archive & archive, Identifications & mp)
+  { return mp.DoArchive(archive);   }
+  
 }
 
 

@@ -861,7 +861,7 @@ namespace netgen
 
 	if (mesh -> HasIdentifications() )
 	  {
-            if (mesh->GetIdentifications().HasIdentifiedPoints())
+            // if (mesh->GetIdentifications().HasIdentifiedPoints())
 	      {
                 INDEX_2_HASHTABLE<int> & idpts =
                   mesh->GetIdentifications().GetIdentifiedPoints();

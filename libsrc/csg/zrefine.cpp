@@ -259,7 +259,7 @@ namespace netgen
     first_id.Set();
 
   
-    if (mesh.GetIdentifications().HasIdentifiedPoints())
+    // if (mesh.GetIdentifications().HasIdentifiedPoints())
       {
         INDEX_2_HASHTABLE<int> & identpts = 
           mesh.GetIdentifications().GetIdentifiedPoints ();
