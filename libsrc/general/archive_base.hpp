@@ -67,11 +67,13 @@ namespace ngstd
     std::map<void*,int> ptr2nr;
     std::vector<void*> nr2ptr;
 
+    /*
     // necessary for msvc ??? 
     Archive & operator& (string* & ps)
     {
       return operator&<string> (ps);
     }
+    */
     
     template <typename T>
     Archive & operator& (T *& p)

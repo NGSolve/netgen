@@ -1049,15 +1049,7 @@ namespace netgen
 #else
     int GetPartition () const { return 0; }
 #endif
-    ngstd::Archive & DoArchive (ngstd::Archive & ar)
-    {
-      return ar & pnums[0] & pnums[1] & pnums[2]
-        & edgenr & singedge_left & singedge_right
-        & si & cd2i & domin & domout & tlosurf
-        & surfnr1 & surfnr2
-        & bcname;
-    }
-    
+    ngstd::Archive & DoArchive (ngstd::Archive & ar);
   };
 
   inline ngstd::Archive & operator & (ngstd::Archive & archive, Segment & mp)
@@ -1150,15 +1142,7 @@ namespace netgen
     // friend ostream & operator<<(ostream  & s, const FaceDescriptor & fd);
     friend class Mesh;
 
-    ngstd::Archive & DoArchive (ngstd::Archive & ar)
-    {
-      return ar & surfnr & domin & domout & tlosurf & bcprop
-        & surfcolour.X() & surfcolour.Y() & surfcolour.Z()
-        & bcname   
-        & domin_singular & domout_singular ;
-      // don't need:  firstelement
-    }
-    
+    ngstd::Archive & DoArchive (ngstd::Archive & ar);
   };
 
   inline ngstd::Archive & operator & (ngstd::Archive & archive, FaceDescriptor & mp)

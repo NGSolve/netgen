@@ -147,6 +147,15 @@ namespace netgen
     
     return *this;
   }
+  
+  ngstd::Archive & Segment :: DoArchive (ngstd::Archive & ar)
+  {
+    return ar & pnums[0] & pnums[1] & pnums[2]
+      & edgenr & singedge_left & singedge_right
+      & si & cd2i & domin & domout & tlosurf
+      & surfnr1 & surfnr2
+      & bcname;
+  }
 
 
   ostream & operator<<(ostream  & s, const Segment & seg)
@@ -2416,7 +2425,18 @@ namespace netgen
     else
       bcn = &default_bcname;
   }
+  
+  ngstd::Archive & FaceDescriptor :: DoArchive (ngstd::Archive & ar)
+  {
+    return ar & surfnr & domin & domout & tlosurf & bcprop
+      & surfcolour.X() & surfcolour.Y() & surfcolour.Z()
+      & bcname   
+      & domin_singular & domout_singular ;
+      // don't need:  firstelement
+  }
+  
 
+  
   ostream & operator<<(ostream  & s, const FaceDescriptor & fd)
   {
     s << "surfnr = " << fd.SurfNr() 
