@@ -2461,6 +2461,32 @@ namespace netgen
     maxidentnr = 0;
   }
 
+    ngstd::Archive & Identifications :: DoArchive (ngstd::Archive & ar)
+    {
+      ar & maxidentnr;
+      ar & identifiedpoints & identifiedpoints_nr;
+
+      ar & idpoints_table;
+      if (ar.Output())
+        {
+          size_t s = type.Size();
+          ar & s;
+          for (auto & t : type)
+            ar & (unsigned char&)(t);
+        }
+      else
+        {
+          size_t s;
+          ar & s;
+          type.SetSize(s);
+          for (auto & t : type)
+            ar & (unsigned char&)(t);
+        }
+      return ar;
+    }    
+
+  
+
   void Identifications :: Add (PointIndex pi1, PointIndex pi2, int identnr)
   {
     //  (*testout) << "Identification::Add, pi1 = " << pi1 << ", pi2 = " << pi2 << ", identnr = " << identnr << endl;

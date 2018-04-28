@@ -1313,13 +1313,7 @@ namespace netgen
     archive & facedecoding;
     archive & materials & bcnames & cd2names;
 
-    if (archive.Output())
-      archive & *ident;
-    else
-      {
-        // ident = new Identifications(*this);
-        archive & *ident;
-      }
+    archive & *ident;
     
     if (archive.Input())
       {

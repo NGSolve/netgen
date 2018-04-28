@@ -1532,33 +1532,7 @@ namespace netgen
 
     DLL_HEADER void Print (ostream & ost) const;
 
-    ngstd::Archive & DoArchive (ngstd::Archive & ar)
-    {
-      ar & maxidentnr;
-      ar & identifiedpoints & identifiedpoints_nr;
-      ar & idpoints_table;
-      if (ar.Output())
-        {
-          size_t s = type.Size();
-          ar & s;
-          for (auto & t : type)
-            ar & (unsigned char&)(t);
-        }
-      else
-        {
-          size_t s;
-          ar & s;
-          type.SetSize(s);
-          for (auto & t : type)
-            ar & (unsigned char&)(t);
-        }
-      
-      cout << "identifiedpoints = " << identifiedpoints << endl;
-      cout << "identifiedpoints_nr = " << identifiedpoints_nr << endl;
-      cout << "idpoints_table = " << idpoints_table << endl;
-      cout << "type = " << type << endl;
-      return ar;
-    }    
+    ngstd::Archive & DoArchive (ngstd::Archive & ar);
   };
 
   inline ngstd::Archive & operator & (ngstd::Archive & archive, Identifications & mp)

@@ -225,6 +225,11 @@ namespace netgen
           {
             ar & data[i].size;
             ar.Do ((unsigned char*)data[i].col, data[i].size*elemsize);
+            /*
+            for (size_t j = 0; j < data[i].size*elemsize; j++)
+              ar &  ((unsigned char*) data[i].col)[j];
+            cout << "write " << data[i].size*elemsize << " chars" << endl;
+            */
           }
       }
     else
@@ -233,14 +238,14 @@ namespace netgen
         ar & size & entries;
         data.SetSize(size);
         oneblock = new char [entries*elemsize];
-        char * ptr = oneblock;
-        for (size_t i = 0; i < data.Size(); i++)
+        size_t cnt = 0;
+        for (size_t i = 0; i < size; i++)
           {
             ar & data[i].size;
-            data[i].col = ptr;
+            data[i].col = oneblock+cnt;
             data[i].maxsize = data[i].size;
-            ar.Do ((unsigned char*)data[i].col, data[i].size*elemsize);
-            ptr += size*elemsize;
+            ar.Do ((unsigned char*)(oneblock+cnt), data[i].size*elemsize);
+            cnt += data[i].size*elemsize;
           }
       }
     return ar;
