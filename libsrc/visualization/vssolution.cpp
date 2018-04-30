@@ -1164,8 +1164,12 @@ namespace netgen
     const SolData * sol = NULL;
     if (scalfunction != -1) sol = soldata[scalfunction];
 
+    const SolData * vsol = NULL;
+    if (deform && vecfunction != -1) vsol = soldata[vecfunction];
+
     int ncomp = 0;
     if (sol) ncomp = sol->components;
+    if (vsol) ncomp = vsol->components;
     Array<double> mvalues(ncomp);
 
 
@@ -1180,7 +1184,17 @@ namespace netgen
         for (int j = 0; j < npt; j++)
           mesh->GetCurvedElements().
             CalcSegmentTransformation (pref[j], i, points[j]);
-        if (sol)
+        if (vsol)
+          {
+            for (int j = 0; j < npt; j++)
+              {
+                vsol->solclass->GetSegmentValue (i, pref[j], &mvalues[0]);
+                // values[j] = ExtractValue (sol, scalcomp, &mvalues[0]);
+                points[j](0) += scaledeform * mvalues[0];
+                points[j](1) += scaledeform * mvalues[1];
+              }
+          }
+        else if (sol)
           {
             for (int j = 0; j < npt; j++)
               {
