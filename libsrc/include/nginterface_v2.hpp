@@ -276,7 +276,7 @@ namespace netgen
     // 3D only
     // std::pair<int,int> GetBoundaryNeighbouringDomains (int bnr);
 
-    DLL_HEADER void Curve (int order);
+    void Curve (int order);
     void Refine (NG_REFINEMENT_TYPE reftype,
                  void (*taskmanager)(function<void(int,int)>) = &DummyTaskManager2,
                  void (*tracer)(string, bool) = &DummyTracer2);
