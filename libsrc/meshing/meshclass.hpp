@@ -716,6 +716,7 @@ namespace netgen
     { return *curvedelems; }
     
     DLL_HEADER void BuildCurvedElements  (const class Refinement * ref, int aorder, bool arational = false);
+    DLL_HEADER void BuildCurvedElements  (int aorder);
 
     const class AnisotropicClusters & GetClusters () const
     { return *clusters; }

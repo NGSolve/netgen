@@ -1105,13 +1105,15 @@ void Ng_HighOrder (int order, bool rational)
     (&const_cast<Refinement&> (ng_geometry -> GetRefinement()),
      order, rational);
   */
+  /*
   if (!mesh->GetGeometry())
     throw NgException ("don't have a geometry for mesh curving");
   mesh->BuildCurvedElements 
     (&const_cast<Refinement&> (mesh->GetGeometry()->GetRefinement()),
      order, rational);
-
   mesh -> SetNextMajorTimeStamp();
+  */
+  mesh->BuildCurvedElements(order);
 }
 
 

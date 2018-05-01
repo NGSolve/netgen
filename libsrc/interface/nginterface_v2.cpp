@@ -1040,6 +1040,11 @@ namespace netgen
     return ind-1;
   }
 
+  void Ngx_Mesh :: Curve (int order)
+  {
+    NgLock meshlock (mesh->MajorMutex(), true);
+    mesh->BuildCurvedElements(order);
+  }
   
   void Ngx_Mesh :: Refine (NG_REFINEMENT_TYPE reftype,
                            void (*task_manager)(function<void(int,int)>),
