@@ -49,6 +49,8 @@ namespace netgen
       for (int i = 0; i < Size(); i++)
         delete (*this)[i];
     }
+
+    virtual shared_ptr<NetgenGeometry> LoadFromMeshFile (istream & ist) const;
   };
 
   // extern DLL_HEADER Array<GeometryRegister*> geometryregister; 

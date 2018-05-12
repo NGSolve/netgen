@@ -154,7 +154,8 @@ namespace netgen
       & edgenr & singedge_left & singedge_right
       & si & cd2i & domin & domout & tlosurf
       & surfnr1 & surfnr2
-      & bcname;
+      & bcname
+      & epgeominfo[0].edgenr & epgeominfo[1].edgenr;
   }
 
 

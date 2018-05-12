@@ -19,6 +19,6 @@ endif(USE_GUI)
 
 install(FILES
   geom2dmesh.hpp geometry2d.hpp spline2d.hpp
-  splinegeometry2.hpp vsgeom2d.hpp
+  vsgeom2d.hpp
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/geom2d COMPONENT netgen_devel
 )

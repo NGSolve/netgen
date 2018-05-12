@@ -1314,6 +1314,23 @@ namespace netgen
     archive & materials & bcnames & cd2names;
 
     archive & *ident;
+
+
+    // archive geometry
+    if (archive.Output())
+      {
+        ostringstream ost;
+        if (geometry)
+          geometry -> SaveToMeshFile (ost);
+        archive << ost.str();
+      }
+    else
+      {
+        string str;
+        archive & str;
+        istringstream ist(str);
+        geometry = geometryregister.LoadFromMeshFile (ist);        
+      }
     
     if (archive.Input())
       {

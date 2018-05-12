@@ -10,6 +10,17 @@ namespace netgen
   GeometryRegister :: ~GeometryRegister()
   { ; }
 
+  
+  shared_ptr<NetgenGeometry> GeometryRegisterArray :: LoadFromMeshFile (istream & ist) const
+  {
+    for (int i = 0; i < Size(); i++)
+      {
+        NetgenGeometry * hgeom = (*this)[i]->LoadFromMeshFile (ist);
+        if (hgeom)
+          return shared_ptr<NetgenGeometry>(hgeom);
+      }
+    return nullptr;
+  }
 
 
 
