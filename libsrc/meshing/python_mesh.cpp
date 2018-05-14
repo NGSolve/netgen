@@ -482,7 +482,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     */
     
     .def("__str__", &ToString<Mesh>)
-    .def_property_readonly("timestamp", &Mesh::GetTimeStamp)
+    .def_property_readonly("_timestamp", &Mesh::GetTimeStamp)
     .def("Load",  FunctionPointer 
 	 ([](Mesh & self, const string & filename)
 	  {
