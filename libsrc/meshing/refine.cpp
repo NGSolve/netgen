@@ -15,6 +15,8 @@ namespace netgen
   {
     PrintMessage (3, "Refine mesh");
 
+    mesh.SetNextMajorTimeStamp();
+    
     if (ntasks > 1 && id == 0)
       return;
 

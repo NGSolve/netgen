@@ -296,3 +296,6 @@ template <> NGX_INLINE DLL_HEADER const Ng_Node<2> Ngx_Mesh :: GetNode<2> (int n
   return node;
 }
 
+
+
+inline auto Ngx_Mesh :: GetTimeStamp() const { return mesh->GetTimeStamp(); }

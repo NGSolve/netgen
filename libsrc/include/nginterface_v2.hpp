@@ -300,6 +300,7 @@ namespace netgen
 
     shared_ptr<Mesh> GetMesh () const { return mesh; } 
     shared_ptr<Mesh> SelectMesh () const;
+    inline auto GetTimeStamp() const;
   };
 
 
