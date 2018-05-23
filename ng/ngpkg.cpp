@@ -25,7 +25,7 @@ The interface between the GUI and the netgen library
 
 // to be sure to include the 'right' togl-version
 #include "Togl2.1/togl.h"
-EXTERN int Togl_PixelScale (const Togl * togl);
+// EXTERN int Togl_PixelScale (const Togl * togl);
 
 #include "fonts.hpp"
 

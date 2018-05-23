@@ -50,6 +50,11 @@ EXTERN int		Togl_Width(const Togl *togl);
 /* 6 */
 EXTERN int		Togl_Height(const Togl *togl);
 #endif
+#ifndef Togl_PixelScale_TCL_DECLARED
+#define Togl_PixelScale_TCL_DECLARED
+/* 6 */
+EXTERN int		Togl_PixelScale(const Togl *togl);
+#endif
 #ifndef Togl_Interp_TCL_DECLARED
 #define Togl_Interp_TCL_DECLARED
 /* 7 */

@@ -4044,7 +4044,7 @@ Togl_Height(const Togl *togl)
     return togl->Height;
 }
 
-EXTERN int
+int
 Togl_PixelScale(const Togl *togl)
 {
     return togl->PixelScale;
