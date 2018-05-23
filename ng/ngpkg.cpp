@@ -25,6 +25,8 @@ The interface between the GUI and the netgen library
 
 // to be sure to include the 'right' togl-version
 #include "Togl2.1/togl.h"
+extern "C" int Togl_PixelScale (const Togl * togl);
+
 #include "fonts.hpp"
 
 extern bool nodisplay;
@@ -1994,7 +1996,6 @@ namespace netgen
     return TCL_OK;
   }
 
-
   static int Ng_SnapShot(ClientData clientData, Tcl_Interp *interp, int argc, Tcl_Obj *const *argv)
   {
     struct Togl *togl;
@@ -2003,9 +2004,8 @@ namespace netgen
     const char * filename = Tcl_GetString(argv[2]);
 
     int len = strlen(filename);
-
-    int w = Togl_Width (togl);
-    int h = Togl_Height (togl);
+    int w = Togl_PixelScale(togl)*Togl_Width (togl);
+    int h = Togl_PixelScale(togl)*Togl_Height (togl);
 
     Array<unsigned char> buffer(w*h*3);
     glPixelStorei(GL_UNPACK_ALIGNMENT,1);
@@ -2064,8 +2064,8 @@ namespace netgen
 
         cout << "Snapshot to file '" << filename << endl;
 
-        int w = Togl_Width (togl);
-        int h = Togl_Height (togl);
+        // int w = Togl_Width (togl);
+        // int h = Togl_Height (togl);
 
         ofstream outfile(filename2);
         outfile << "P6" << endl
@@ -2184,10 +2184,8 @@ namespace netgen
 			Tcl_Interp * interp,
 			int argc, tcl_const char *argv[])
   {
-    int px, py;
-
-    px = atoi (argv[1]);
-    py = atoi (argv[2]);
+    int px = Togl_PixelScale(togl)*atoi (argv[1]);
+    int py = Togl_PixelScale(togl)*atoi (argv[2]);
 
     SetVisualScene(interp);
     vs->MouseDblClick (px, py);
