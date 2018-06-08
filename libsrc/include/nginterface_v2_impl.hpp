@@ -297,5 +297,14 @@ template <> NGX_INLINE DLL_HEADER const Ng_Node<2> Ngx_Mesh :: GetNode<2> (int n
 }
 
 
+NGX_INLINE DLL_HEADER Ng_Buffer<int[2]> Ngx_Mesh :: GetPeriodicVertices(int idnr) const
+{
+  Array<INDEX_2> apairs;
+  mesh->GetIdentifications().GetPairs (idnr, apairs);
+  typedef int ti2[2];
+  return { apairs.Size(), (ti2*)(void*)apairs.Release() };
+}
+
+
 
 inline auto Ngx_Mesh :: GetTimeStamp() const { return mesh->GetTimeStamp(); }

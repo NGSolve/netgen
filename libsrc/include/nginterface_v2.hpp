@@ -30,6 +30,21 @@ namespace netgen
     int nr;    // 0-based
   };
 
+  template <typename T>
+  class Ng_Buffer
+  {
+    size_t s;
+    T * data;
+  public:
+    Ng_Buffer (size_t as, T * adata)
+      : s(as), data(adata) { ; }
+    Ng_Buffer (Ng_Buffer && buffer)
+      : s(buffer.Size()), data(buffer.Release()) { ; }
+    ~Ng_Buffer () { delete [] data; }
+    size_t Size() const { return s; }
+    T * Release() { T * hd = data; data = nullptr; return hd; }
+  };
+  
   class Ng_Element
   {
 
@@ -285,6 +300,7 @@ namespace netgen
     int GetParentElement (int ei) const;
     int GetParentSElement (int ei) const;
 
+    Ng_Buffer<int[2]> GetPeriodicVertices(int idnr) const;
 
     // Find element of point, returns local coordinates
     template <int DIM>

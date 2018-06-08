@@ -394,6 +394,12 @@ namespace netgen
       Swap (ownmem, a2.ownmem);
       return *this;
     }
+
+    T * Release()
+    {
+      ownmem = false;
+      return data;
+    }
     
   private:
 
