@@ -5856,6 +5856,8 @@ namespace netgen
   {
     if (!GetGeometry())
       throw NgException ("don't have a geometry for mesh curving");
+
+    cout << "Build Curved Elements, order = " << aorder << endl;
     
     GetCurvedElements().BuildCurvedElements (&GetGeometry()->GetRefinement(), aorder, false);
 

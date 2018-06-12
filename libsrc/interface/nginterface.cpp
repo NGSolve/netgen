@@ -128,14 +128,13 @@ void Ng_LoadMesh (const char * filename)
   }
   
   istream * infile;
+  char* buf; // for distributing geometry!
+  int strs;
 
 #ifdef PARALLEL
   MPI_Comm_size(MPI_COMM_WORLD, &ntasks);
   MPI_Comm_rank(MPI_COMM_WORLD, &id);
 
-  char* buf; // for distributing geometry!
-  int strs;
-  
   if (id == 0)
     {
 #endif
