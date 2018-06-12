@@ -144,9 +144,9 @@ namespace netgen
   class MarkedIdentification
   {
   public:
-    // number of points of one face (3 or 4)
+    // number of points of one face (3 or 4) - or edge (in 2d)
     int np;
-    /// 6 or 8 point numbers
+    /// 6 or 8 point numbers - or 4 in 2d
     PointIndex pnums[8];
     /// marked for refinement
     int marked;
@@ -1403,6 +1403,16 @@ namespace netgen
       }
     newid1.np = newid2.np = oldid.np;
 
+    if(oldid.np == 2)
+      {
+        newid1.pnums[1] = newp[0];
+        newid2.pnums[0] = newp[0];
+        newid1.pnums[3] = newp[1];
+        newid2.pnums[2] = newp[1];
+        newid1.markededge = 0;
+        newid2.markededge = 0;
+      }
+
     if(oldid.np == 3)
       {
 	newid1.pnums[(oldid.markededge+1)%3] = newp[0];
@@ -2129,12 +2139,42 @@ namespace netgen
 		BTDefineMarkedQuad (el, edgenumber, mq);
 		mquads.Append (mq);
 	      }
-	    
-	    MarkedIdentification mi;
-	    for(int j=0; j<idmaps.Size(); j++)
-	      if(BTDefineMarkedId(el, edgenumber, *idmaps[j], mi))
-		mids.Append(mi);
+
+            if(mesh.GetDimension() == 3)
+              {
+                MarkedIdentification mi;
+                for(int j=0; j<idmaps.Size(); j++)
+                  if(BTDefineMarkedId(el, edgenumber, *idmaps[j], mi))
+                    mids.Append(mi);
+              }
 	  }
+        if(mesh.GetDimension() == 2)
+          {
+            for (SegmentIndex j=1; j<=mesh.GetNSeg(); j++)
+              {
+                auto seg = mesh[j];
+                for (auto map : idmaps)
+                  {
+                    if (seg[0] > 0 && seg[1] > 0 && (*map)[seg[0]] && (*map)[seg[1]])
+                      {
+                        MarkedIdentification mi;
+                        mi.np = 2;
+                        mi.pnums[0] = seg[0];
+                        mi.pnums[1] = seg[1];
+                        mi.pnums[2] = (*map)[seg[0]];
+                        mi.pnums[3] = (*map)[seg[1]];
+                        auto min1 = mi.pnums[0] < mi.pnums[1] ? mi.pnums[0] : mi.pnums[1];
+                        auto min2 = mi.pnums[2] < mi.pnums[3] ? mi.pnums[2] : mi.pnums[3];
+                        if (min1 > min2)
+                          continue;
+                        mi.marked = 0;
+                        mi.markededge = 0;
+                        mi.incorder = 0;
+                        mids.Append(mi);
+                      }
+                  }
+              }
+          }
       }
 	
 
@@ -3499,7 +3539,7 @@ namespace netgen
 	      MarkHangingTris (mtris, cutedges, opt.task_manager) +
 	      MarkHangingQuads (mquads, cutedges);
 
-	    hangingedge = 0;
+	    hangingedge = mesh.GetDimension() == 3 ? 0 : MarkHangingIdentifications(mids, cutedges);
             NgProfiler::StopTimer (timer1b);                        
             NgProfiler::StartTimer (timer_bisectsegms);            	  
 	    int nseg = mesh.GetNSeg ();
