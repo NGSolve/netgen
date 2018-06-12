@@ -301,6 +301,11 @@ NGX_INLINE DLL_HEADER Ng_Buffer<int[2]> Ngx_Mesh :: GetPeriodicVertices(int idnr
 {
   Array<INDEX_2> apairs;
   mesh->GetIdentifications().GetPairs (idnr, apairs);
+  for(auto& ind : apairs)
+    {
+      ind.I1()--;
+      ind.I2()--;
+    }
   typedef int ti2[2];
   return { apairs.Size(), (ti2*)(void*)apairs.Release() };
 }
