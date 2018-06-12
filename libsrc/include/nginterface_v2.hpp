@@ -300,6 +300,8 @@ namespace netgen
     int GetParentElement (int ei) const;
     int GetParentSElement (int ei) const;
 
+    int GetNIdentifications() const;
+    int GetIdentificationType(int idnr) const;
     Ng_Buffer<int[2]> GetPeriodicVertices(int idnr) const;
 
     // Find element of point, returns local coordinates

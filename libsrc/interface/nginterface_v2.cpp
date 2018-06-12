@@ -720,6 +720,16 @@ namespace netgen
       return -1;
   }
 
+  int Ngx_Mesh :: GetNIdentifications () const
+  {
+    return mesh->GetIdentifications().GetMaxNr();
+  }
+
+  int Ngx_Mesh :: GetIdentificationType(int idnr) const
+  {
+    return mesh->GetIdentifications().GetType(idnr+1);
+  }
+
 
 
 
