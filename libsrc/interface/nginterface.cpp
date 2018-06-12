@@ -71,7 +71,6 @@ using namespace netgen;
 
 void Ng_LoadGeometry (const char * filename)
 {
-
   // he: if filename is empty, return
   // can be used to reset geometry
   if (!filename || strcmp(filename,"")==0) 
@@ -79,7 +78,7 @@ void Ng_LoadGeometry (const char * filename)
       ng_geometry.reset (new NetgenGeometry());
       return;
     }
-  
+
   for (int i = 0; i < geometryregister.Size(); i++)
     {
       NetgenGeometry * hgeom = geometryregister[i]->Load (filename);
@@ -90,6 +89,7 @@ void Ng_LoadGeometry (const char * filename)
 	  return;
 	}
     }
+
 
   // if (id == 0)
   cerr << "cannot load geometry '" << filename << "'" << ", id = " << id << endl;
@@ -271,12 +271,12 @@ void Ng_LoadMesh (const char * filename)
     mesh->SetGeometry(ng_geometry);
 }
 
- void Ng_LoadMeshFromString (const char * mesh_as_string)
- {
+void Ng_LoadMeshFromString (const char * mesh_as_string)
+{
   istringstream instream(mesh_as_string);
   Ng_LoadMeshFromStream(instream);
 }
- 
+  
 
 
 
