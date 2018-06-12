@@ -68,6 +68,9 @@ using namespace netgen;
 
 void Ng_LoadGeometry (const char * filename)
 {
+
+  cout << endl << "LOAD GEOMETRY FROM FILE " << filename << endl;
+  
   // he: if filename is empty, return
   // can be used to reset geometry
   if (!filename || strcmp(filename,"")==0) 
@@ -127,6 +130,10 @@ void Ng_LoadMesh (const char * filename)
   MPI_Comm_size(MPI_COMM_WORLD, &ntasks);
   MPI_Comm_rank(MPI_COMM_WORLD, &id);
 
+  char* buf; // for distributing geometry!
+  int strs;
+  istream * infile;
+  
   if (id == 0)
     {
 #endif
@@ -136,6 +143,10 @@ void Ng_LoadMesh (const char * filename)
 	   strcmp (filename + (strlen (filename)-4), ".vol") != 0 )
         */
 	{
+#ifdef PARALLEL
+	  if(ntasks>1)
+	    throw NgException("Not sure what to do with this?? Does this work with MPI??");
+#endif
 	  mesh.reset (new Mesh());
 	  ReadFile(*mesh,filename);
 	  
@@ -146,13 +157,22 @@ void Ng_LoadMesh (const char * filename)
 
       string fn(filename);
 
-      istream * infile;
       if (fn.substr (fn.length()-3, 3) == ".gz")
         infile = new igzstream (filename);
       else
         infile = new ifstream (filename);
+      
+      // Ng_LoadMeshFromStream(*infile);
+      mesh.reset (new Mesh());
+      mesh -> Load(*infile);
 
-      Ng_LoadMeshFromStream(*infile);
+      stringstream geom_part;
+      geom_part << infile->rdbuf();
+      string geom_part_string = geom_part.str();
+      strs = geom_part_string.size();
+      buf = new char[strs];
+      memcpy(buf, geom_part_string.c_str(), strs*sizeof(char));
+      
       delete infile;
       
 #ifdef PARALLEL
@@ -222,11 +242,34 @@ void Ng_LoadMesh (const char * filename)
   else
     {
       mesh.reset (new Mesh());
-//       vssolution.SetMesh(mesh);
-//       vsmesh.SetMesh(mesh);
+      //       vssolution.SetMesh(mesh);
+      //       vsmesh.SetMesh(mesh);
       SetGlobalMesh (mesh);
       mesh->SendRecvMesh();
     }
+  if(ntasks>1) {
+    /** Scatter the geometry-string **/
+    MPI_Bcast(&strs, 1, MPI_INT, 0, MPI_COMM_WORLD); 
+    if(id!=0)
+      buf = new char[strs];
+    MPI_Bcast(buf, strs, MPI_CHAR, 0, MPI_COMM_WORLD);
+    infile = new istringstream(string((const char*)buf, (size_t)strs));
+    delete[] buf;
+    for (int i = 0; i < geometryregister.Size(); i++)
+      {
+	NetgenGeometry * hgeom = geometryregister[i]->LoadFromMeshFile (*infile);
+	if (hgeom)
+	  {
+	    ng_geometry.reset (hgeom);
+	    mesh->SetGeometry(ng_geometry);
+	    break;
+	  }
+      }
+    if (!ng_geometry)
+      ng_geometry = make_shared<NetgenGeometry>();
+    mesh->SetGeometry(ng_geometry);
+    delete infile;
+  }
 #endif
 }
 
