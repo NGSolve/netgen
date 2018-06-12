@@ -247,12 +247,15 @@ void Ng_LoadMesh (const char * filename)
       SetGlobalMesh (mesh);
       mesh->SendRecvMesh();
     }
+
   if(ntasks>1) {
     /** Scatter the geometry-string **/
     MPI_Bcast(&strs, 1, MPI_INT, 0, MPI_COMM_WORLD); 
     if(id!=0)
       buf = new char[strs];
     MPI_Bcast(buf, strs, MPI_CHAR, 0, MPI_COMM_WORLD);
+}
+#endif
     infile = new istringstream(string((const char*)buf, (size_t)strs));
     delete[] buf;
     for (int i = 0; i < geometryregister.Size(); i++)
@@ -269,8 +272,6 @@ void Ng_LoadMesh (const char * filename)
       ng_geometry = make_shared<NetgenGeometry>();
     mesh->SetGeometry(ng_geometry);
     delete infile;
-  }
-#endif
 }
 
 void Ng_LoadMeshFromString (const char * mesh_as_string)
