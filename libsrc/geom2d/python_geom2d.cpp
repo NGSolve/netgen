@@ -86,10 +86,8 @@ DLL_HEADER void ExportGeom2d(py::module &m)
             else if (py::extract<string>(bc).check())
               {
                 string bcname = py::extract<string>(bc)();
-                int bcnum = self.GetBCNumber(bcname);
-                if (bcnum == 0)
-                  bcnum = self.AddBCName(bcname);
-                seg->bc = bcnum;
+                seg->bc = self.GetNSplines()+1;
+                self.SetBCName(seg->bc, bcname);
               }
             else
               seg->bc = self.GetNSplines()+1;
