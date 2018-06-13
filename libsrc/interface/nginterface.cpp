@@ -160,6 +160,7 @@ void Ng_LoadMesh (const char * filename)
       infile = new ifstream (filename);
     mesh.reset (new Mesh());
     mesh -> Load(*infile);
+    SetGlobalMesh (mesh);
 
     // make string from rest of file (for geometry info!)
     if(!ng_geometry) {
