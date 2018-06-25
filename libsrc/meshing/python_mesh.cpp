@@ -124,15 +124,26 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("__call__", [] (Transformation<3> trafo, Point<3> p) { return trafo(p); })
     ;
 
-  m.def ("SetTransformation", FunctionPointer
-           ([](int dir, double angle)
-            {
-              if (dir > 0)
-                global_trafo.SetAxisRotation (dir, angle*M_PI/180);
-              else
-                global_trafo = Transformation<3> (Vec<3>(0,0,0));
-            }),
+  m.def ("SetTransformation", 
+         [](int dir, double angle)
+         {
+           if (dir > 0)
+             global_trafo.SetAxisRotation (dir, angle*M_PI/180);
+           else
+             global_trafo = Transformation<3> (Vec<3>(0,0,0));
+         },
          py::arg("dir")=int(0), py::arg("angle")=int(0));
+  m.def ("SetTransformation", 
+         [](Point<3> p0, Vec<3> ex, Vec<3> ey, Vec<3> ez)
+            {
+              Point<3> pnts[4];
+              pnts[0] = p0;
+              pnts[1] = p0 + ex;
+              pnts[2] = p0 + ey;
+              pnts[3] = p0 + ez;
+              global_trafo = Transformation<3> (pnts);
+            },
+         py::arg("p0"), py::arg("ex"), py::arg("ey"), py::arg("ez"));
 
 
   

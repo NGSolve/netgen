@@ -162,4 +162,16 @@ ostream & operator<< (ostream & ost, Transformation3d & trans)
     }
   return ost;
 }
+
+
+  template <int D>
+  Transformation<D> :: Transformation (const Point<D> * pp)
+  {
+    v = Vec<D> (pp[0]);
+    for (int i = 0; i < D; i++)
+      for (int j = 0; j < D; j++)
+        m(j,i) = pp[i+1](j)-pp[0](j);
+  }
+  
+  template class Transformation<3>;
 }
