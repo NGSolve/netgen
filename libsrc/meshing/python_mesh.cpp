@@ -124,6 +124,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("__call__", [] (Transformation<3> trafo, Point<3> p) { return trafo(p); })
     ;
 
+  m.def ("GetTransformation", [] () { return global_trafo; });
+  m.def ("SetTransformation", [] (Transformation<3> trafo) { global_trafo = trafo; });
   m.def ("SetTransformation", 
          [](int dir, double angle)
          {
