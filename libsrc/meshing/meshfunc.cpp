@@ -144,11 +144,20 @@ namespace netgen
 		
 		for (PointIndex pi = mesh3d.Points().Begin(); pi < mesh3d.Points().End(); pi++)
 		  meshing.AddPoint (mesh3d[pi], pi);
-		
+
+                /*
 		mesh3d.GetIdentifications().GetPairs (0, connectednodes);
 		for (int i = 1; i <= connectednodes.Size(); i++)
 		  meshing.AddConnectedPair (connectednodes.Get(i));
-		
+                */
+                for (int nr = 1; nr <= mesh3d.GetIdentifications().GetMaxNr(); nr++)
+                  if (mesh3d.GetIdentifications().GetType(nr) != Identifications::PERIODIC)
+                    {
+                      mesh3d.GetIdentifications().GetPairs (nr, connectednodes);
+                      for (auto pair : connectednodes)
+                        meshing.AddConnectedPair (pair);
+                    }
+                
 		for (int i = 1; i <= mesh3d.GetNOpenElements(); i++)
 		  {
 		    Element2d hel = mesh3d.OpenElement(i);
