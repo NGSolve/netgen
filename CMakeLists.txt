@@ -3,6 +3,8 @@ if(NOT CMAKE_BUILD_TYPE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 cmake_minimum_required(VERSION 3.1.3)
+include ( CMakePackageConfigHelpers )
+
 if(NOT WIN32)
     option( USE_NATIVE_ARCH  "build which -march=native" ON)
 endif(NOT WIN32)
@@ -456,8 +458,19 @@ add_custom_target(uninstall
 # Generate package config file
 get_directory_property(NETGEN_COMPILE_DEFINITIONS COMPILE_DEFINITIONS)
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NetgenConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake @ONLY ESCAPE_QUOTES)
+# use relative paths to libraries (needed on Windows/MacOS, when we provide some dependencies ourselves)
+list(APPEND CONFIGURE_PATH_VARS ZLIB_INCLUDE_DIRS ZLIB_LIBRARIES)
+if(USE_OCC)
+list(APPEND CONFIGURE_PATH_VARS OCC_INCLUDE_DIR OCC_LIBRARIES_BIN OCC_LIBRARIES OCC_LIBRARY_DIR)
+endif()
+if(USE_GUI)
+list(APPEND CONFIGURE_PATH_VARS TCL_INCLUDE_PATH TCL_LIBRARY TK_INCLUDE_PATH TK_LIBRARY LIBTOGL)
+endif()
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NetgenConfig.cmake.in
+	${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake INSTALL_DESTINATION ${NG_INSTALL_DIR_CMAKE}
+	PATH_VARS
+	${CONFIGURE_PATH_VARS}
+	)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake DESTINATION ${NG_INSTALL_DIR_CMAKE} COMPONENT netgen_devel)
 
