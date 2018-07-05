@@ -235,6 +235,7 @@ class Mpeg {
         sws_ctx = sws_getContext( width, height, AV_PIX_FMT_RGB24,
                                  width, height, AV_PIX_FMT_YUV420P,
                                  SWS_BICUBIC, NULL, NULL, NULL );
+        return 0;
     }
 
     void Stop() {
