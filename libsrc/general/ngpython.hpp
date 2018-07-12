@@ -2,10 +2,20 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
+#include <pybind11/numpy.h>
 namespace py = pybind11;
 #include <iostream>
 #include <sstream>
 
+
+template <typename T>
+py::array MoveToNumpy(std::vector<T>& vec)
+{
+  auto newvec = new std::vector<T>();
+  std::swap(*newvec, vec);
+  auto capsule = py::capsule(newvec, [](void *v) { delete reinterpret_cast<std::vector<T>*>(v); });
+  return py::array(newvec->size(), newvec->data(), capsule);
+}
 
 namespace PYBIND11_NAMESPACE {
 template<typename T>
