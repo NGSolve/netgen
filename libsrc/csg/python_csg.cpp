@@ -623,6 +623,68 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
           })
          )
     .def_property_readonly ("ntlo", &CSGeometry::GetNTopLevelObjects)
+    .def("_visualizationData", [](shared_ptr<CSGeometry> csg_geo)
+         {
+           std::vector<float> vertices;
+           std::vector<int> trigs;
+           std::vector<float> normals;
+           std::vector<float> min = {std::numeric_limits<float>::max(),
+                                     std::numeric_limits<float>::max(),
+                                     std::numeric_limits<float>::max()};
+           std::vector<float> max = {std::numeric_limits<float>::lowest(),
+                                     std::numeric_limits<float>::lowest(),
+                                     std::numeric_limits<float>::lowest()};
+           std::vector<string> surfnames;
+           for (int i = 0; i < csg_geo->GetNSurf(); i++)
+             {
+               auto surf = csg_geo->GetSurface(i);
+               surfnames.push_back(surf->GetBCName());
+             }
+           csg_geo->FindIdenticSurfaces(1e-6);
+           csg_geo->CalcTriangleApproximation(0.01,100);
+           auto nto = csg_geo->GetNTopLevelObjects();
+           size_t np = 0;
+           size_t ntrig = 0;
+           for (int i = 0; i < nto; i++){
+             np += csg_geo->GetTriApprox(i)->GetNP();
+             ntrig += csg_geo->GetTriApprox(i)->GetNT();
+           }
+           vertices.reserve(np*3);
+           trigs.reserve(ntrig*4);
+           normals.reserve(np*3);
+           int offset_points = 0;
+           for (int i = 0; i < nto; i++)
+             {
+               auto triapprox = csg_geo->GetTriApprox(i);
+               for (int j = 0; j < triapprox->GetNP(); j++)
+                 for(int k = 0; k < 3; k++) {
+                   float val = triapprox->GetPoint(j)[k];
+                   vertices.push_back(val);
+                   min[k] = min2(min[k], val);
+                   max[k] = max2(max[k],val);
+                   normals.push_back(triapprox->GetNormal(j)[k]);
+                 }
+               for (int j = 0; j < triapprox->GetNT(); j++)
+                 {
+                   for(int k = 0; k < 3; k++)
+                     trigs.push_back(triapprox->GetTriangle(j)[k]+offset_points);
+                   trigs.push_back(triapprox->GetTriangle(j).SurfaceIndex());
+                 }
+               offset_points += triapprox->GetNP();
+             }
+           py::gil_scoped_acquire ac;
+           py::dict res;
+           py::list snames;
+           for(auto name : surfnames)
+             snames.append(py::cast(name));
+           res["vertices"] = MoveToNumpy(vertices);
+           res["triangles"] = MoveToNumpy(trigs);
+           res["normals"] = MoveToNumpy(normals);
+           res["surfnames"] = snames;
+           res["min"] = MoveToNumpy(min);
+           res["max"] = MoveToNumpy(max);
+           return res;
+         }, py::call_guard<py::gil_scoped_release>())
     ;
 
   m.def("GenerateMesh", FunctionPointer
