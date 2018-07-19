@@ -44,6 +44,7 @@ namespace netgen
     cd2names.SetSize(0);
 
 #ifdef PARALLEL
+    this->comm = MPI_COMM_WORLD;
     paralleltop = new ParallelMeshTopology (*this);
 #endif
   }

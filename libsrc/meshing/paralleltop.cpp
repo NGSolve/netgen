@@ -241,7 +241,7 @@ namespace netgen
     // update new vertices after mesh-refinement
     if (mesh.mlbetweennodes.Size() > 0)
       {
-	// cout << "UpdateCoarseGrid - vertices" << endl;
+	cout << "UpdateCoarseGrid - vertices" << endl;
         int newnv = mesh.mlbetweennodes.Size();
         loc2distvert.ChangeSize(mesh.mlbetweennodes.Size());
 	/*
@@ -376,7 +376,7 @@ namespace netgen
       }
 
     Array<int> sendarray, recvarray;
-    // cout << "UpdateCoarseGrid - edges" << endl;
+    cout << "UpdateCoarseGrid - edges" << endl;
 
     // static int timerv = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex vertices");
     static int timere = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex edges");
@@ -493,7 +493,7 @@ namespace netgen
 
     // MPI_Barrier (MPI_LocalComm);
 
-    // cout << "UpdateCoarseGrid - faces" << endl;
+    cout << "UpdateCoarseGrid - faces" << endl;
     if (mesh.GetDimension() == 3)
       {
 	NgProfiler::StartTimer (timerf);
