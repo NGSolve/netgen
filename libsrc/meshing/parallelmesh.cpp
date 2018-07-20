@@ -484,9 +484,6 @@ namespace netgen
 	    }
 	    const Element2d & sel2 = (*this)[sei];
 	    FlatArray<const PointIndex> points2 = sel2.PNums();
-	    for (int l = 0; l < points2.Size(); l++)
-	      cout << points2[l] << " ";
-	    cout << endl << endl;
 	    has_ided_sels = true;
 	    ided_sel[sei] = os1[0];
 	    ided_sel[os1[0]] = sei;
@@ -640,7 +637,6 @@ namespace netgen
 	    const Segment & seg = (*this)[segi];
 	    dests.SetSize(0);
 	    dests.Append(seg.GetPartition());
-	    // cout << "partition of seg " << segi << " is " << dests[0] << endl;
 	    for (int l = 0; l < per_seg_trans[segi].Size(); l++)
 	      {
 		int dest2 = (*this)[per_seg_trans[segi][l]].GetPartition();
@@ -773,8 +769,6 @@ namespace netgen
     MyMPI_Recv (verts, 0, MPI_TAG_MESH+1);
 
 
-    cout << " got vertex data : " << endl << verts << endl;
-    
     int numvert = verts.Size();
     paralleltop -> SetNV (numvert);
     
@@ -807,7 +801,6 @@ namespace netgen
     	idents.SetType(idnr, (Identifications::ID_TYPE)pp_data[idnr]);
       }
 
-    cout << "vertex identifications: " << endl;
     int offset = 2*maxidentnr+1;
     for(int idnr = 1; idnr < maxidentnr+1; idnr++)
       {
@@ -817,8 +810,6 @@ namespace netgen
 	for (int k = 0; k<npairs; k++) {
 	  PointIndex loc1 = glob2loc_vert_ht.Get(pairdata[2*k]);
 	  PointIndex loc2 = glob2loc_vert_ht.Get(pairdata[2*k+1]);
-	  cout << loc1 << " <--> " << loc2 << " ||  ";
-	  cout << pairdata[2*k] << " <--> " << pairdata[2*k+1] << endl;
 	  idents.Add(loc1, loc2, idnr);
 	}
       }
@@ -848,19 +839,8 @@ namespace netgen
 	  el.SetIndex(elarray[ind++]);
 	  el.SetNP(elarray[ind++]);
 
-	  int ind0 = ind;
-	  int ind1 = ind;
 	  for ( int j = 0; j < el.GetNP(); j++)
 	    el[j] = glob2loc_vert_ht.Get (elarray[ind++]); 
-
-	  cout << "Add element, glob: " << endl;
-	  for ( int j = 0; j < el.GetNP(); j++)
-	    cout << elarray[ind0++] << " ";
-	  cout << endl;
-	  cout << "-> LOC: " << endl;
-	  for ( int j = 0; j < el.GetNP(); j++)
-	    cout << glob2loc_vert_ht.Get (elarray[ind1++]) << " ";
-	  cout << endl;
 	  
 	  AddVolumeElement (el);
 	}
@@ -899,25 +879,11 @@ namespace netgen
 	  int nep = selbuf[ii++];
 	  Element2d tri(nep);
 	  tri.SetIndex(faceind);
-	  int ii0 = ii;
-	  int ii1 = ii;
-	  cout << "Add Surfel, glob: " << endl;
-	  for(int j = 1; j <= nep; j++) {
-	    cout << selbuf[ii0++] << " ";
-	    ii0++;
-	  }
-	  cout << endl;
 	  for(int j = 1; j <= nep; j++)
 	    {
 	      tri.PNum(j) = glob2loc_vert_ht.Get (selbuf[ii++]);
 	      tri.GeomInfoPi(j).trignum = selbuf[ii++];
 	    }
-	  cout << "-> LOC: " << endl;
-	  for(int j = 1; j <= nep; j++) {
-	    cout << selbuf[ii1++] << " ";
-	    glob2loc_vert_ht.Get (selbuf[ii1++]);
-	  }
-	  cout << endl;
 	  paralleltop->SetLoc2Glob_SurfEl ( sel+1, globsel );
 	  AddSurfaceElement (tri);
 	  sel ++;
@@ -942,12 +908,8 @@ namespace netgen
 	  globsegi = int (segmbuf[ii++]);
 	  seg.si = int (segmbuf[ii++]);
 
-	  cout << "add segm, glob: " << endl;
-	  cout << segmbuf[ii] << " "  << segmbuf[ii+1] << endl;
 	  seg.pnums[0] = glob2loc_vert_ht.Get (int(segmbuf[ii++]));
 	  seg.pnums[1] = glob2loc_vert_ht.Get (int(segmbuf[ii++]));
-	  cout << "-> LOC: " << endl;
-	  cout << seg.pnums[0] << " "  << seg.pnums[1] << endl;
 	  seg.geominfo[0].trignum = int( segmbuf[ii++] );
 	  seg.geominfo[1].trignum = int ( segmbuf[ii++]);
 	  seg.surfnr1 = int ( segmbuf[ii++]);
