@@ -46,7 +46,7 @@ namespace netgen
     if (id == 0)
       PrintMessage (1, "Send/Receive mesh");
 
-    // TODO: why is this here??
+    // Why is this here??
     if (id == 0)
       {
 	paralleltop -> SetNV (GetNV());
@@ -838,7 +838,7 @@ namespace netgen
 	  
 	  el.SetIndex(elarray[ind++]);
 	  el.SetNP(elarray[ind++]);
-
+	  
 	  for ( int j = 0; j < el.GetNP(); j++)
 	    el[j] = glob2loc_vert_ht.Get (elarray[ind++]); 
 	  
@@ -907,7 +907,7 @@ namespace netgen
 	{
 	  globsegi = int (segmbuf[ii++]);
 	  seg.si = int (segmbuf[ii++]);
-
+	  
 	  seg.pnums[0] = glob2loc_vert_ht.Get (int(segmbuf[ii++]));
 	  seg.pnums[1] = glob2loc_vert_ht.Get (int(segmbuf[ii++]));
 	  seg.geominfo[0].trignum = int( segmbuf[ii++] );
@@ -1000,7 +1000,7 @@ namespace netgen
     SetNextMajorTimeStamp();
   }
   
-  
+
 
   
   
