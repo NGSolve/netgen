@@ -97,8 +97,6 @@ namespace netgen
 
     PrintMessage ( 3, "Building vertex/proc mapping");
 
-    // TODO: sels/segs also have to consider identifications
-    
     Array<int> num_sels_on_proc(ntasks);
     num_sels_on_proc = 0;
     for (SurfaceElementIndex ei = 0; ei < GetNSE(); ei++)
@@ -119,21 +117,24 @@ namespace netgen
 
 
     /**
-       Counts for proc->vertex, vertex->proc mapping.
-       
+            ----- STRATEGY FOR PERIODIC MESHES -----
+
        Whenever two vertices are identified by periodicity, any proc 
        that gets one of the vertices actually gets both of them.
        This has to be transitive, that is, if
        a <-> b and  b <-> c,
        then any proc that has vertex a also has vertices b and c!
+
+       Surfaceelements and Segments that are identified by
+       periodicity are treated the same way.
+       
+       We need to duplicate these so we have containers to
+       hold the edges/facets. Afaik, a mesh cannot have nodes 
+       that are not part of some sort of element.
+
      **/
 
-    Array<int, PointIndex::BASE> vert_flag (GetNV());
-    Array<int, PointIndex::BASE> num_procs_on_vert (GetNV());
-    Array<int> num_verts_on_proc (ntasks);
-    num_verts_on_proc = 0;
-    num_procs_on_vert = 0;
-    
+    /** First, we build tables for vertex identification. **/
     Array<INDEX_2> per_pairs;
     Array<INDEX_2> pp2;
     auto & idents = GetIdentifications();
@@ -145,14 +146,13 @@ namespace netgen
 	idents.GetPairs(idnr, pp2);
 	per_pairs.Append(pp2);
       }
-    
-    cout << "per_pairs: " << endl << per_pairs << endl;
     Array<int, PointIndex::BASE> npvs(GetNV());
     npvs = 0;
     for (int k = 0; k < per_pairs.Size(); k++) {
       npvs[per_pairs[k].I1()]++;
       npvs[per_pairs[k].I2()]++;
     }
+
     /** for each vertex, gives us all identified vertices **/
     TABLE<PointIndex, PointIndex::BASE> per_verts(npvs);
     for (int k = 0; k < per_pairs.Size(); k++) {
@@ -162,9 +162,8 @@ namespace netgen
     for (int k = PointIndex::BASE; k < GetNV()+PointIndex::BASE; k++) {
       BubbleSort(per_verts[k]);
     }
-    cout << "per_verts: " << endl << per_verts << endl;
-    
-    
+
+    /** The same table as per_verts, but TRANSITIVE!! **/
     auto iterate_per_verts_trans = [&](auto f){
       Array<int> allvs;
       for (int k = PointIndex::BASE; k < GetNV()+PointIndex::BASE; k++)
@@ -189,24 +188,24 @@ namespace netgen
 	  f(k, allvs);
 	}
     };
-
     iterate_per_verts_trans([&](auto k, auto & allvs) {
 	npvs[k] = allvs.Size();
       });
-    /** as per_verts, but TRANSITIVE **/
     TABLE<PointIndex, PointIndex::BASE> per_verts_trans(npvs);
     iterate_per_verts_trans([&](auto k, auto & allvs) {
 	for (int j = 0; j<allvs.Size(); j++)
 	  per_verts_trans.Add(k, allvs[j]);
       });
-    cout << "per_verts_trans: " << endl << per_verts_trans << endl;
     for (int k = PointIndex::BASE; k < GetNV()+PointIndex::BASE; k++) {
       BubbleSort(per_verts_trans[k]);
     }
-    cout << "per_verts_trans: " << endl << per_verts_trans << endl;
 
-    
-    /** iterates over all vertices, calls lambda function for (vertex, destination) **/
+    /** Now we build the vertex-data to send to the workers. **/
+    Array<int, PointIndex::BASE> vert_flag (GetNV());
+    Array<int, PointIndex::BASE> num_procs_on_vert (GetNV());
+    Array<int> num_verts_on_proc (ntasks);
+    num_verts_on_proc = 0;
+    num_procs_on_vert = 0;
     auto iterate_vertices = [&](auto f) {
       vert_flag = -1;
       for (int dest = 1; dest < ntasks; dest++)
@@ -234,7 +233,6 @@ namespace netgen
 	    }
 	}
     };
-
     /** count vertices per proc and procs per vertex **/
     iterate_vertices([&](auto vertex, auto dest){
 	auto countit = [&] (auto vertex, auto dest) {
@@ -251,11 +249,9 @@ namespace netgen
 	for(int j = 0; j < pers.Size(); j++)
 	  countit(pers[j], dest);
       });
-      
     TABLE<PointIndex> verts_of_proc (num_verts_on_proc);
     TABLE<int, PointIndex::BASE> procs_of_vert (num_procs_on_vert);
     TABLE<int, PointIndex::BASE> loc_num_of_vert (num_procs_on_vert);
-
     /** Write vertex/proc mappingfs to tables **/
     iterate_vertices([&](auto vertex, auto dest) {
 	auto addit = [&] (auto vertex, auto dest) {
@@ -270,8 +266,10 @@ namespace netgen
 	for(int j = 0; j < pers.Size(); j++)
 	  addit(pers[j], dest);
       });
-  
-    /** local vertex numbers on distant procs (I think this was only used for debugging??) **/
+    /** 
+	local vertex numbers on distant procs 
+	(I think this was only used for debugging??) 
+    **/
     for (int vert = 1; vert <= GetNP(); vert++ )
       {
 	FlatArray<int> procs = procs_of_vert[vert];
@@ -282,7 +280,6 @@ namespace netgen
 	    loc_num_of_vert.Add (vert, verts_of_proc[dest].Size());
 	  }
       }
-
     PrintMessage ( 3, "Sending Vertices - vertices");
 
     for (int dest = 1; dest < ntasks; dest++)
@@ -311,9 +308,10 @@ namespace netgen
     Array<int> num_distpnums(ntasks);
     num_distpnums = 0;
 
-    PrintMessage ( 3, "Sending Vertices - identifications");
 
     /**
+       Next, we send the identifications themselfs.
+       
        Info about periodic identifications sent to each proc is an array of
        integers.
        - maxidentnr
@@ -321,6 +319,7 @@ namespace netgen
        - nr of pairs for each identification (each pair is local!)
        - pairs for each periodic ident (global numbers)
     **/
+    PrintMessage ( 3, "Sending Vertices - identifications");
     int maxidentnr = idents.GetMaxNr();
     Array<int> ppd_sizes(ntasks);
     ppd_sizes = 1 + 2*maxidentnr;
@@ -366,14 +365,11 @@ namespace netgen
 	      }
 	  }
       }
-    
-    cout << "periodic data: " << endl << pp_data << endl;
-    
     Array<MPI_Request> req_per;
     for(int dest = 1; dest < ntasks; dest++)
       req_per.Append(MyMPI_ISend(pp_data[dest], dest, MPI_TAG_MESH+1));
     MPI_Waitall(req_per.Size(), &req_per[0], MPI_STATUS_IGNORE);
-    
+
     PrintMessage ( 3, "Sending Vertices - distprocs");
     
     for (int vert = 1; vert <= GetNP(); vert++)
@@ -477,7 +473,6 @@ namespace netgen
 		  os2.Append(GetTopology().GetVertexSurfaceElements(ided2[l]));
 		for (int m = 0; m<os1.Size(); m++) {
 		  if(!os2.Contains(os1[m])) {
-		    cout << "remove " << os1[m] << endl;
 		    os1.Delete(m);
 		    m--;
 		  }
@@ -487,7 +482,6 @@ namespace netgen
 	    if(os1.Size()>1) {
 	      throw NgException("SurfaceElement identified with more than one other??");
 	    }
-	    cout << "ID it with SEL " << os1[0] << " with points: " << endl;
 	    const Element2d & sel2 = (*this)[sei];
 	    FlatArray<const PointIndex> points2 = sel2.PNums();
 	    for (int l = 0; l < points2.Size(); l++)
@@ -498,13 +492,6 @@ namespace netgen
 	    ided_sel[os1[0]] = sei;
 	  }
       }
-    cout << endl << "IDED SELS: " << endl;
-    for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++ )
-      {
-	if(ided_sel[sei]==-1 || ided_sel[sei]<sei) continue;
-	cout << sei << " <--> " << ided_sel[sei] << endl;
-      }
-    cout << endl;
     // build sel data to send
     auto iterate_sels = [&](auto f) {
       for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++ )
@@ -540,50 +527,13 @@ namespace netgen
 	    selbuf.Add (dest, sel.GeomInfoPi(ii).trignum);
 	  }
       });
-    cout << "Surface Element Data: " << endl << selbuf << endl;
     // distribute sel data
     for (int dest = 1; dest < ntasks; dest++)
       sendrequests.Append (MyMPI_ISend(selbuf[dest], dest, MPI_TAG_MESH+4));
     
 
-    /**     
-	    ---Segments---
-
-	Segments always have a twin (one for each surface). These will
-        be counted as identified, but whatever...
-    **/
+    /** Segments **/
     PrintMessage ( 3, "Sending Edge Segments");
-    // segment identifications (cannot use transitive
-    // because false identifications)
-    cout << "NSEG TOTAL: " << GetNSeg() << endl;
-    for(SegmentIndex segi = 0; segi < GetNSeg(); segi++)
-      {
-	cout << "segment " << segi << ": " << endl;
-	const Segment & seg = (*this)[segi];
-	cout << seg[0] << " " << seg[1] << endl;
-      }
-    // for(PointIndex pi = PointIndex::BASE; pi<GetNP(); pi++)
-    //   {
-    // 	cout << endl << "---" << endl;
-    // 	cout << "segments for PI " << pi << ": " << endl;
-    // 	cout << GetTopology().GetVertexSegments(pi) << endl;
-    // 	cout << "---" << endl << endl;
-    //   }
-    // Array<int, PointIndex::BASE> v2ss(GetNP());
-    // v2ss = 0;
-    // for(SegmentIndex segi = 0; segi < GetNSeg(); segi++)
-    //   {
-    // 	const Segment & seg = (*this)[segi];
-    // 	v2ss[seg[0]]++;
-    // 	v2ss[seg[1]]++;
-    //   }
-    // TABLE<SegmentIndex,PointIndex::BASE> vert2segment(v2ss);
-    // for(SegmentIndex segi = 0; segi < GetNSeg(); segi++)
-    //   {
-    // 	const Segment & seg = (*this)[segi];
-    // 	vert2segment.Add(seg[0], segi);
-    // 	vert2segment.Add(seg[1], segi);
-    //   }
     auto iterate_segs1 = [&](auto f) {
       Array<SegmentIndex> osegs1, osegs2, osegs_both;
       Array<int> type1, type2;
@@ -592,22 +542,19 @@ namespace netgen
 	  const Segment & seg = (*this)[segi];
 	  int segnp = seg.GetNP();
 	  PointIndex pi1 = seg[0];
-	  // auto ided1 = per_verts_trans[pi1];
 	  auto ided1 = per_verts[pi1];
 	  PointIndex pi2 = seg[1];
-	  // auto ided2 = per_verts_trans[pi2];
 	  auto ided2 = per_verts[pi2];
 	  if (!(ided1.Size() && ided2.Size())) continue;
 	  osegs1.SetSize(0);
 	  type1.SetSize(0);
 	  for (int l = 0; l<ided1.Size(); l++)
 	    {
-	      // auto ospart = vert2segment[ided1[l]];
 	      auto ospart = GetTopology().GetVertexSegments(ided1[l]);
 	      for(int j=0; j<ospart.Size(); j++)
 		{
 		  if(osegs1.Contains(ospart[j]))
-		    throw NgException("double ospart?? contact Lukas...");
+		    throw NgException("Periodic Mesh did something weird.");
 		  osegs1.Append(ospart[j]);
 		  type1.Append(idents.GetSymmetric(pi1, ided1[l]));
 		}
@@ -616,12 +563,11 @@ namespace netgen
 	  type2.SetSize(0);
 	  for (int l = 0; l<ided2.Size(); l++)
 	    {
-	      // auto ospart = vert2segment[ided2[l]];
 	      auto ospart = GetTopology().GetVertexSegments(ided2[l]);
 	      for(int j=0; j<ospart.Size(); j++)
 		{
 		  if(osegs2.Contains(ospart[j]))
-		    throw NgException("double ospart?? contact Lukas...");
+		    throw NgException("Periodic Mesh did something weird.");
 		  osegs2.Append(ospart[j]);
 		  type2.Append(idents.GetSymmetric(pi2, ided2[l]));
 		}
@@ -650,7 +596,6 @@ namespace netgen
     TABLE<SegmentIndex> per_seg(per_seg_size);
     iterate_segs1([&](SegmentIndex segi1, SegmentIndex segi2)
 		  { per_seg.Add(segi1, segi2); });
-    cout << endl << "IDED SEGS: " << endl << per_seg << endl;
     // make per_seg transitive
     auto iterate_per_seg_trans = [&](auto f){
       Array<SegmentIndex> allsegs;
@@ -686,7 +631,6 @@ namespace netgen
 	for (int j = 0; j < segs.Size(); j++)
 	  per_seg_trans.Add(segi, segs[j]);
       });
-    cout << endl << "TRANS IDED SEGS: " << endl << per_seg_trans << endl;
     // build segment data
     Array<int> dests;
     auto iterate_segs2 = [&](auto f)
@@ -700,7 +644,6 @@ namespace netgen
 	    for (int l = 0; l < per_seg_trans[segi].Size(); l++)
 	      {
 		int dest2 = (*this)[per_seg_trans[segi][l]].GetPartition();
-		// cout << "ided with seg " << per_seg_trans[segi][l] << ", partition " << dest2 << endl;
 		if(!dests.Contains(dest2))
 		  dests.Append(dest2);
 	      }
@@ -735,124 +678,9 @@ namespace netgen
 		    segm_buf.Add (dest, seg.singedge_right);
 		    segm_buf.Add (dest, seg.singedge_left);
 		  });
-    cout << "SEGMENT DATA: " << endl << segm_buf << endl;
     // distrubute segment data
     for (int dest = 1; dest < ntasks; dest++)
       sendrequests.Append (MyMPI_ISend(segm_buf[dest], dest, MPI_TAG_MESH+5));
-    // Segments done
-
-    
-    // Array <int> nloc(ntasks); 
-    // nloc = 0;
-    // bufsize = 1;
-      
-    // for (int i = 1; i <= GetNSeg(); i++ )
-    //   {
-    // 	const Segment & seg = LineSegment (i);
-    // 	int dest = seg.GetPartition();
-    // 	nloc[dest] ++;
-    // 	bufsize[dest] += 14;
-    //   }
-    
-    // TABLE<double> segm_buf(bufsize);
-    
-    // /*
-    // for (int dest = 1; dest < ntasks; dest++ )
-    //   segm_buf.Add (dest, nloc[dest]);
-    // */
-    // for (int i = 1; i <= GetNSeg(); i++ )
-    //   {
-    // 	const Segment & seg = LineSegment (i);
-    // 	int dest = seg.GetPartition();
-	
-    // 	segm_buf.Add (dest, i);
-    // 	segm_buf.Add (dest, seg.si);
-    // 	segm_buf.Add (dest, seg.pnums[0]);
-    // 	segm_buf.Add (dest, seg.pnums[1]);
-    // 	segm_buf.Add (dest, seg.geominfo[0].trignum);
-    // 	segm_buf.Add (dest, seg.geominfo[1].trignum);
-    // 	segm_buf.Add (dest, seg.surfnr1);
-    // 	segm_buf.Add (dest, seg.surfnr2);
-    // 	segm_buf.Add (dest, seg.edgenr);
-    // 	segm_buf.Add (dest, seg.epgeominfo[0].dist);
-    // 	segm_buf.Add (dest, seg.epgeominfo[1].edgenr);
-    // 	segm_buf.Add (dest, seg.epgeominfo[1].dist);
-    // 	segm_buf.Add (dest, seg.singedge_right);
-    // 	segm_buf.Add (dest, seg.singedge_left);
-    //   }
-    
-    // for (int dest = 1; dest < ntasks; dest++)
-    //   sendrequests.Append (MyMPI_ISend(segm_buf[dest], dest, MPI_TAG_MESH+5));
-
-    /*
-    Array <int> nlocseg(ntasks), segi(ntasks);
-    for ( int i = 0; i < ntasks; i++)
-      {
-	nlocseg[i] = 0;
-	bufsize[i] = 0;
-	segi[i] = 0;
-      }
-
-    for (int segi = 1; segi <= GetNSeg(); segi ++ )
-      {
-	Array<int> volels;
-	const MeshTopology & topol = GetTopology();
-	topol . GetSegmentSurfaceElements ( segi, volels );
-        for (int j = 0; j < volels.Size(); j++)
-          {
-            int ei = volels[j];
-            if ( ei > 0 && ei <= GetNSE() )
-              {
-                const Element2d & el = SurfaceElement (ei);
-                int dest = el.GetPartition();
-		nlocseg[dest] ++;
-		bufsize[dest] += 14;
-              }
-	  }
-      }
-
-    TABLE<double> segmbuf(bufsize);
-
-    for ( int ls=1; ls <= GetNSeg(); ls++)
-      {
-	Array<int> volels;
-	GetTopology().GetSegmentSurfaceElements ( ls, volels );
-	const Segment & seg = LineSegment (ls);
-
-        for (int j = 0; j < volels.Size(); j++)
-          {
-            int ei = volels[j];
-            if ( ei > 0 && ei <= GetNSE() )
-              {
-                const Element2d & el = SurfaceElement (ei);
-                int dest = el.GetPartition();
-
-		if ( dest > 0 )
-		  {
-		    segmbuf.Add (dest, ls);
-		    segmbuf.Add (dest, seg.si);
-		    segmbuf.Add (dest, seg.pnums[0]);
-		    segmbuf.Add (dest, seg.pnums[1]);
-		    segmbuf.Add (dest, seg.geominfo[0].trignum);
-		    segmbuf.Add (dest, seg.geominfo[1].trignum);
-		    segmbuf.Add (dest, seg.surfnr1);
-		    segmbuf.Add (dest, seg.surfnr2);
-		    segmbuf.Add (dest, seg.edgenr);
-		    segmbuf.Add (dest, seg.epgeominfo[0].dist);
-		    segmbuf.Add (dest, seg.epgeominfo[1].edgenr);
-		    segmbuf.Add (dest, seg.epgeominfo[1].dist);
-		    segmbuf.Add (dest, seg.singedge_right);
-		    segmbuf.Add (dest, seg.singedge_left);
-		    segi[dest] += 14;
-		  }
-		// paralleltop -> SetDistantSegm ( dest, ls, int ( segi[dest] / 14 ) );
-	      }
-	  }
-      }
-
-    for ( int dest = 1; dest < ntasks; dest++)
-      sendrequests.Append (MyMPI_ISend(segmbuf[dest], dest, MPI_TAG_MESH+5));
-    */
 
     PrintMessage ( 3, "now wait ...");
 
