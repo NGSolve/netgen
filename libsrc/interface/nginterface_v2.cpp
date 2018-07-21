@@ -675,19 +675,6 @@ namespace netgen
   }
 
 
-  void Ngx_Mesh :: GetParentNodes (int ni, int * parents) const
-  {
-      ni++;
-      if (ni <= mesh->mlbetweennodes.Size())
-      {
-          parents[0] = mesh->mlbetweennodes.Get(ni).I1()-1;
-          parents[1] = mesh->mlbetweennodes.Get(ni).I2()-1;
-      }
-      else
-          parents[0] = parents[1] = -1;
-  }
-
-
   int Ngx_Mesh :: GetParentElement (int ei) const
   {
       ei++;
