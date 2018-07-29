@@ -26,6 +26,7 @@
 
 namespace netgen
 {
+  /*
   inline int IsInArray(int n, const Array<int>& ia)
   {
     return ia.Contains(n); 
@@ -37,6 +38,7 @@ namespace netgen
     list.Append(x);
     return true;
   }
+  */
   
   extern DLL_HEADER MeshingParameters mparam;
   

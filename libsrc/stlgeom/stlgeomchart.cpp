@@ -818,7 +818,8 @@ void STLGeometry :: GetDirtyChartTrigs(int chartnum, STLChart& chart,
 		  
 		  if (GetChartNr(tn2) != chartnum && outercharttrigs.Get(tn2) != chartnum) {problem = 1;}
 		}
-	      if (problem && !IsInArray(j,dirtytrigs))
+	      // if (problem && !IsInArray(j,dirtytrigs))
+              if (problem && !dirtytrigs.Contains(j))
 		{
 		  dirtytrigs.Append(j);
 		  cnt++;

@@ -229,6 +229,12 @@ namespace netgen
 	}
     }
 
+    Box (const Point<D> & p1, const Point<D> & p2, const Point<D> & p3)
+      : Box(p1,p2)
+    {
+      Add (p3);
+    }
+
     enum EB_TYPE { EMPTY_BOX = 1 };
     Box ( EB_TYPE et ) 
     {

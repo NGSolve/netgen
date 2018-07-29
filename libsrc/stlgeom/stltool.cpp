@@ -609,18 +609,30 @@ STLTopEdge :: STLTopEdge (int p1, int p2, int trig1, int trig2)
 
 STLChart :: STLChart(STLGeometry * ageometry)
 {
-  charttrigs = new Array<int> (0,0);
-  outertrigs = new Array<int> (0,0);
-  ilimit = new Array<twoint> (0,0);
-  olimit = new Array<twoint> (0,0);
+  // charttrigs = new Array<int> (0,0);
+  // outertrigs = new Array<int> (0,0);
+  // ilimit = new Array<twoint> (0,0);
+  // olimit = new Array<twoint> (0,0);
 
   geometry = ageometry;
 
   if ( stlparam.usesearchtree == 1)
-    searchtree = new BoxTree<3> (geometry->GetBoundingBox().PMin() - Vec3d(1,1,1),
-                                 geometry->GetBoundingBox().PMax() + Vec3d(1,1,1));
+    {
+      Box<3> box = geometry->GetBoundingBox();
+      box.Increase (0.2*box.Diam()+1e-12);
+      searchtree = new BoxTree<3> (box);
+      /*
+      searchtree = new BoxTree<3> (geometry->GetBoundingBox().PMin() - Vec3d(1,1,1),
+                                   geometry->GetBoundingBox().PMax() + Vec3d(1,1,1));
+      */
+    }
   else
     searchtree = NULL;
+}
+
+STLChart :: ~STLChart()
+{
+  delete searchtree;
 }
 
 void STLChart :: AddChartTrig(int i)
@@ -628,21 +640,31 @@ void STLChart :: AddChartTrig(int i)
   // static int timer = NgProfiler::CreateTimer ("STLChart::AddChartTrig");
   // NgProfiler::RegionTimer reg(timer);
   
-  charttrigs->Append(i);
+  charttrigs.Append(i);
   
   const STLTriangle & trig = geometry->GetTriangle(i);
-  const Point3d & p1 = geometry->GetPoint (trig.PNum(1));
-  const Point3d & p2 = geometry->GetPoint (trig.PNum(2));
-  const Point3d & p3 = geometry->GetPoint (trig.PNum(3));
+  const Point<3> & p1 = geometry->GetPoint (trig.PNum(1));
+  const Point<3> & p2 = geometry->GetPoint (trig.PNum(2));
+  const Point<3> & p3 = geometry->GetPoint (trig.PNum(3));
 
+  /*
   Point3d pmin(p1), pmax(p1);
   pmin.SetToMin (p2);
   pmin.SetToMin (p3);
   pmax.SetToMax (p2);
   pmax.SetToMax (p3);
-  
+  */
+  /*
+  Box<3> box(p1);
+  box.Add(p2);
+  box.Add(p3);
+  */
+  Box<3> box(p1,p2,p3);
   if (!geomsearchtreeon && (stlparam.usesearchtree == 1))
-    {searchtree->Insert (pmin, pmax, i);}
+    // {searchtree->Insert (pmin, pmax, i);}
+    {
+      searchtree->Insert (box, i);
+    }
 }
 
 void STLChart :: AddOuterTrig(int i)
@@ -650,7 +672,7 @@ void STLChart :: AddOuterTrig(int i)
   // static int timer = NgProfiler::CreateTimer ("STLChart::AddOuterTrig");
   // NgProfiler::RegionTimer reg(timer);
   
-  outertrigs->Append(i);
+  outertrigs.Append(i);
 
   const STLTriangle & trig = geometry->GetTriangle(i);
   const Point3d & p1 = geometry->GetPoint (trig.PNum(1));
@@ -669,11 +691,11 @@ void STLChart :: AddOuterTrig(int i)
 
 int STLChart :: IsInWholeChart(int nr) const
 {
-  for (int i = 1; i <= charttrigs->Size(); i++)
-    if (charttrigs->Get(i) == nr) return 1;
+  for (int i = 1; i <= charttrigs.Size(); i++)
+    if (charttrigs.Get(i) == nr) return 1;
 
-  for (int i = 1; i <= outertrigs->Size(); i++)
-    if (outertrigs->Get(i) == nr) return 1;
+  for (int i = 1; i <= outertrigs.Size(); i++)
+    if (outertrigs.Get(i) == nr) return 1;
 
   return 0;
 }
@@ -688,9 +710,8 @@ void STLChart :: GetTrianglesInBox (const Point3d & pmin,
     searchtree -> GetIntersecting (pmin, pmax, trias);
   else
     {
-      Box3d box1(pmin, pmax);
-      box1.Increase (1e-4);
-      Box3d box2;
+      Box<3> box1(pmin, pmax);
+      box1.Increase (1e-2*box1.Diam());
 
       trias.SetSize(0);
       
@@ -699,9 +720,9 @@ void STLChart :: GetTrianglesInBox (const Point3d & pmin,
 	{
 	  int trignum = GetTrig(i);
 	  const STLTriangle & trig = geometry->GetTriangle(trignum);
-	  box2.SetPoint (geometry->GetPoint (trig.PNum(1)));
-	  box2.AddPoint (geometry->GetPoint (trig.PNum(2)));
-	  box2.AddPoint (geometry->GetPoint (trig.PNum(3)));
+          Box<3> box2(geometry->GetPoint (trig.PNum(1)),
+                      geometry->GetPoint (trig.PNum(2)),
+                      geometry->GetPoint (trig.PNum(3)));
 	  
 	  if (box1.Intersect (box2))
 	    trias.Append (trignum);
@@ -712,12 +733,12 @@ void STLChart :: GetTrianglesInBox (const Point3d & pmin,
 //trigs may contain the same triangle double
 void STLChart :: MoveToOuterChart(const Array<int>& trigs)
 {
-  if (!trigs.Size()) {return;}
+  if (!trigs.Size()) return;
   for (int i = 1; i <= trigs.Size(); i++)
     {
-      if (charttrigs->Get(trigs.Get(i)) != -1) 
-	{AddOuterTrig(charttrigs->Get(trigs.Get(i)));}
-      charttrigs->Elem(trigs.Get(i)) = -1;
+      if (charttrigs.Get(trigs.Get(i)) != -1) 
+	{AddOuterTrig(charttrigs.Get(trigs.Get(i)));}
+      charttrigs.Elem(trigs.Get(i)) = -1;
     }
   DelChartTrigs(trigs);
 }
@@ -725,27 +746,22 @@ void STLChart :: MoveToOuterChart(const Array<int>& trigs)
 //trigs may contain the same triangle double
 void STLChart :: DelChartTrigs(const Array<int>& trigs)
 {
-  if (!trigs.Size()) {return;}
+  if (!trigs.Size()) return;
 
   for (int i = 1; i <= trigs.Size(); i++)
-    {
-      charttrigs->Elem(trigs.Get(i)) = -1;
-    }
+    charttrigs.Elem(trigs.Get(i)) = -1;
 
   int cnt = 0;
-  for (int i = 1; i <= charttrigs->Size(); i++)
+  for (int i = 1; i <= charttrigs.Size(); i++)
     {
-      if (charttrigs->Elem(i) == -1)
-	{
-	  cnt++;
-	}
-      if (cnt != 0 && i < charttrigs->Size())
-	{
-	  charttrigs->Elem(i-cnt+1) = charttrigs->Get(i+1);
-	}
+      if (charttrigs.Elem(i) == -1)
+        cnt++;
+      if (cnt != 0 && i < charttrigs.Size())
+        charttrigs.Elem(i-cnt+1) = charttrigs.Get(i+1);
     }
-  int i = charttrigs->Size() - trigs.Size();
-  charttrigs->SetSize(i);
+  
+  int i = charttrigs.Size() - trigs.Size();
+  charttrigs.SetSize(i);
 
   if (!geomsearchtreeon && stlparam.usesearchtree == 1)
     {
@@ -754,7 +770,7 @@ void STLChart :: DelChartTrigs(const Array<int>& trigs)
       searchtree = new BoxTree<3> (geometry->GetBoundingBox().PMin() - Vec3d(1,1,1),
                                    geometry->GetBoundingBox().PMax() + Vec3d(1,1,1));
 
-      for (int i = 1; i <= charttrigs->Size(); i++)
+      for (int i = 1; i <= charttrigs.Size(); i++)
 	{
 	  const STLTriangle & trig = geometry->GetTriangle(i);
 	  const Point3d & p1 = geometry->GetPoint (trig.PNum(1));
@@ -767,7 +783,7 @@ void STLChart :: DelChartTrigs(const Array<int>& trigs)
 	  pmax.SetToMax (p2);
 	  pmax.SetToMax (p3);
 	  
-	  searchtree->Insert (pmin, pmax, i);	  
+	  searchtree->Insert (pmin, pmax, i);
 	}
     }
 }
@@ -831,21 +847,17 @@ void STLBoundarySeg :: Swap ()
 
 
 STLBoundary :: STLBoundary (STLGeometry * ageometry)
-  : // boundary(), 
-    geometry(ageometry)
-{
-  ;
-}
+  : geometry(ageometry)
+{ ; }
 
 
 void STLBoundary :: AddOrDelSegment(const STLBoundarySeg & seg)
 {
-  int i;
-  int found = 0;
-  for (i = 1; i <= boundary.Size(); i++)
+  bool found = false;
+  for (int i = 1; i <= boundary.Size(); i++)
     {
-      if (found) {boundary.Elem(i-1) = boundary.Get(i);}
-      if (boundary.Get(i) == seg) {found = 1;}
+      if (found) { boundary.Elem(i-1) = boundary.Get(i); }
+      if (boundary.Get(i) == seg) { found = true; }
     }
   if (!found) 
     {

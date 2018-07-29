@@ -43,49 +43,50 @@ class STLChart
 {
 private:
   STLGeometry * geometry;
-  Array<int>* charttrigs; // trigs which only belong to this chart
-  Array<int>* outertrigs; // trigs which belong to other charts
+  Array<int> charttrigs; // trigs which only belong to this chart
+  Array<int> outertrigs; // trigs which belong to other charts
   BoxTree<3> * searchtree; // ADT containing outer trigs
 
-  Array<twoint>* olimit; //outer limit of outer chart
-  Array<twoint>* ilimit; //outer limit of inner chart
+  Array<twoint> olimit; //outer limit of outer chart
+  Array<twoint> ilimit; //outer limit of inner chart
 
 
 public:
   
   STLChart(STLGeometry * ageometry);
+  ~STLChart();
   void AddChartTrig(int i);
   void AddOuterTrig(int i);
   
   int IsInWholeChart(int nr) const;
 
-  int GetChartTrig(int i) const {return charttrigs->Get(i);}
-  int GetOuterTrig(int i) const {return outertrigs->Get(i);}
+  int GetChartTrig(int i) const {return charttrigs.Get(i);}
+  int GetOuterTrig(int i) const {return outertrigs.Get(i);}
   //get all trigs:
   int GetTrig(int i) const
     {
-      if (i <= charttrigs->Size()) {return charttrigs->Get(i);}
-      else {return outertrigs->Get(i-charttrigs->Size());}
+      if (i <= charttrigs.Size()) {return charttrigs.Get(i);}
+      else {return outertrigs.Get(i-charttrigs.Size());}
     }
   
-  int GetNChartT() const {return charttrigs->Size();}
-  int GetNOuterT() const {return outertrigs->Size();}
-  int GetNT() const {return charttrigs->Size()+outertrigs->Size(); }
+  int GetNChartT() const {return charttrigs.Size();}
+  int GetNOuterT() const {return outertrigs.Size();}
+  int GetNT() const {return charttrigs.Size()+outertrigs.Size(); }
 
   void GetTrianglesInBox (const Point3d & pmin,
 			  const Point3d & pmax,
 			  Array<int> & trias) const;
-  void AddOLimit(twoint l) {olimit->Append(l);}
-  void AddILimit(twoint l) {ilimit->Append(l);}
+  void AddOLimit(twoint l) {olimit.Append(l);}
+  void AddILimit(twoint l) {ilimit.Append(l);}
 
-  void ClearOLimit() {olimit->SetSize(0);}
-  void ClearILimit() {ilimit->SetSize(0);}
+  void ClearOLimit() {olimit.SetSize(0);}
+  void ClearILimit() {ilimit.SetSize(0);}
 
-  int GetNOLimit() const {return olimit->Size();}
-  int GetNILimit() const {return ilimit->Size();}
+  int GetNOLimit() const {return olimit.Size();}
+  int GetNILimit() const {return ilimit.Size();}
 
-  twoint GetOLimit(int i) const {return olimit->Get(i);}
-  twoint GetILimit(int i) const {return ilimit->Get(i);}
+  twoint GetOLimit(int i) const {return olimit.Get(i);}
+  twoint GetILimit(int i) const {return ilimit.Get(i);}
 
   //move triangles trigs (local chart-trig numbers) to outer chart
   void MoveToOuterChart(const Array<int>& trigs);

@@ -1174,14 +1174,18 @@ void STLGeometry :: RestrictHChartDistOneChart(int chartnum, Array<int>& acttrig
 		{
 		  Point3d p3p1 = GetPoint(np1);
 		  Point3d p3p2 = GetPoint(np2);
-		  if (AddIfNotExists(limes1,np1)) 
+		  // if (AddIfNotExists(limes1,np1))
+                  if (!limes1.Contains(np1))
 		    {
+                      limes1.Append(np1);
 		      plimes1.Append(p3p1); 
 		      plimes1trigs.Append(t);
 		      plimes1origin.Append(np1); 			      
 		    }
-		  if (AddIfNotExists(limes1,np2)) 
+		  // if (AddIfNotExists(limes1,np2))
+                  if (!limes1.Contains(np2))                  
 		    {
+                      limes1.Append(np2);                      
 		      plimes1.Append(p3p2); 
 		      plimes1trigs.Append(t);
 		      plimes1origin.Append(np2); 			      
@@ -1226,8 +1230,20 @@ void STLGeometry :: RestrictHChartDistOneChart(int chartnum, Array<int>& acttrig
 		  Point3d p3p1 = GetPoint(np1);
 		  Point3d p3p2 = GetPoint(np2);
 			  
-		  if (AddIfNotExists(limes2,np1)) {plimes2.Append(p3p1); plimes2trigs.Append(t);}
-		  if (AddIfNotExists(limes2,np2)) {plimes2.Append(p3p2); plimes2trigs.Append(t);}
+		  // if (AddIfNotExists(limes2,np1)) {plimes2.Append(p3p1); plimes2trigs.Append(t);}
+		  // if (AddIfNotExists(limes2,np2)) {plimes2.Append(p3p2); plimes2trigs.Append(t);}
+		  if (!limes2.Contains(np1))
+                    {
+                      limes2.Append(np1);
+                      plimes2.Append(p3p1);
+                      plimes2trigs.Append(t);
+                    }
+		  if (!limes2.Contains(np2))
+                    {
+                      limes2.Append(np2);
+                      plimes2.Append(p3p2);
+                      plimes2trigs.Append(t);
+                    }
 		  chart.AddOLimit(twoint(np1,np2));
 
 		  for (int di = 1; di <= divisions; di++)

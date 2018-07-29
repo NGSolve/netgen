@@ -62,6 +62,7 @@ void STLMeshing (STLGeometry & geom,
 
 STLGeometry :: ~STLGeometry()
 {
+  for (auto p : atlas) delete p;
   delete edgedata;
   delete ref;
 }
