@@ -113,7 +113,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
              ifstream ist(filename);
              OCCGeometry * instance = new OCCGeometry();
              instance = LoadOCC_STEP(filename.c_str());
-             return shared_ptr<OCCGeometry>(instance, NOOP_Deleter);
+             ng_geometry = shared_ptr<OCCGeometry>(instance, NOOP_Deleter);
+             return ng_geometry;
            }),py::call_guard<py::gil_scoped_release>());
   m.def("GenerateMesh", FunctionPointer([] (shared_ptr<OCCGeometry> geo, MeshingParameters &param)
 					{
