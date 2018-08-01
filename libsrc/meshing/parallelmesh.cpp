@@ -1092,51 +1092,87 @@ namespace netgen
       LineSegment(i+1).SetPartition(epart[i+GetNE()+GetNSE()] + 1);
 
 
+    // surface elements attached to volume elements
+    Array<bool, PointIndex::BASE> boundarypoints (GetNP());
+    boundarypoints = false;
+
+    if(GetDimension() == 3)
+      for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
+	{
+	  const Element2d & el = (*this)[sei];
+	  for (int j = 0; j < el.GetNP(); j++)
+	    boundarypoints[el[j]] = true;
+	}
+    else
+      for (SegmentIndex segi = 0; segi < GetNSeg(); segi++)
+	{
+	  const Segment & seg = (*this)[segi];
+	  for (int j = 0; j < 2; j++)
+	    boundarypoints[seg[j]] = true;
+	}
+
+    
+    // Build Pnt2Element table, boundary points only
+    Array<int, PointIndex::BASE> cnt(GetNP());
+    cnt = 0;
+
+    auto loop_els_2d = [&](auto f) {
+      for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
+	{
+	  const Element2d & el = (*this)[sei];
+	  cout << "surf-el " << sei << " verts: " << endl;
+	  for (int j = 0; j < el.GetNP(); j++) {
+	    cout << el[j] << " ";
+	    f(el[j], sei);
+	  }
+	  cout << endl;
+	}
+    };
+    auto loop_els_3d = [&](auto f) {
+      for (ElementIndex ei = 0; ei < GetNE(); ei++)
+	{
+	  const Element & el = (*this)[ei];
+	  for (int j = 0; j < el.GetNP(); j++)
+	    f(el[j], ei);
+	}
+    };
+    auto loop_els = [&](auto f)
+      {
+	if (GetDimension() == 3 ) 
+	  loop_els_3d(f);
+	else
+	  loop_els_2d(f);
+      };
+
+    
+    loop_els([&](auto vertex, int index)
+	{
+	  if(boundarypoints[vertex])
+	    cnt[vertex]++;
+	});
+    cout << "count: " << endl << cnt << endl;
+    TABLE<int, PointIndex::BASE> pnt2el(cnt);
+    loop_els([&](auto vertex, int index)
+	{
+	  if(boundarypoints[vertex])
+	    pnt2el.Add(vertex, index);
+	});
+
 
     if (GetDimension() == 3)
       {
-	
-	// surface elements attached to volume elements
-	Array<bool, PointIndex::BASE> boundarypoints (GetNP());
-	boundarypoints = false;
-	
-	for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
-	  {
-	    const Element2d & el = (*this)[sei];
-	    for (int j = 0; j < el.GetNP(); j++)
-	      boundarypoints[el[j]] = true;
-	  }
-	// Build Pnt2Element table, boundary points only
-	Array<int, PointIndex::BASE> cnt(GetNP());
-	cnt = 0;
-	for (ElementIndex ei = 0; ei < GetNE(); ei++)
-	  {
-	    const Element & el = (*this)[ei];
-	    for (int j = 0; j < el.GetNP(); j++)
-	      if (boundarypoints[el[j]])
-		cnt[el[j]]++;
-	  }
-	TABLE<ElementIndex, PointIndex::BASE> pnt2el(cnt);
-	cnt = 0;
-	for (ElementIndex ei = 0; ei < GetNE(); ei++)
-	  {
-	    const Element & el = (*this)[ei];
-	    for (int j = 0; j < el.GetNP(); j++)
-	      if (boundarypoints[el[j]])
-		pnt2el.Add (el[j], ei);
-	  }
-	
 	for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
 	  {
 	    Element2d & sel = (*this)[sei];
 	    PointIndex pi1 = sel[0];
-	    FlatArray<ElementIndex> els = pnt2el[pi1];
+	    // FlatArray<ElementIndex> els = pnt2el[pi1];
+	    FlatArray<int> els = pnt2el[pi1];
 	    
 	    sel.SetPartition (-1);
 	    
 	    for (int j = 0; j < els.Size(); j++)
 	      {
-		const Element & el = (*this)[els[j]];
+		const Element & el = (*this)[ElementIndex(els[j])];
 		
 		bool hasall = true;
 		
@@ -1165,13 +1201,13 @@ namespace netgen
 	  {
 	    Segment & sel = (*this)[si];
 	    PointIndex pi1 = sel[0];
-	    FlatArray<ElementIndex> els = pnt2el[pi1];
+	    FlatArray<int> els = pnt2el[pi1];
 	    
 	    sel.SetPartition (-1);
 	    
 	    for (int j = 0; j < els.Size(); j++)
 	      {
-		const Element & el = (*this)[els[j]];
+		const Element & el = (*this)[ElementIndex(els[j])];
 		
 		bool haspi[9] = { false };  // max surfnp
 		
@@ -1193,7 +1229,36 @@ namespace netgen
 	    if (sel.GetPartition() == -1)
 	      cerr << "no volume element found" << endl;
 	  }
-	
+      }
+    else
+      {
+	for (SegmentIndex segi = 0; segi < GetNSeg(); segi++)
+	  {
+	    Segment & seg = (*this)[segi];
+	    seg.SetPartition(-1);
+	    PointIndex pi1 = seg[0];
+
+	    FlatArray<int> sels = pnt2el[pi1];
+	    for (int j = 0; j < sels.Size(); j++)
+	      {
+		SurfaceElementIndex sei = sels[j];
+		Element2d & se = (*this)[sei];
+		bool found = false;
+		for (int l = 0; l < se.GetNP(); l++ && !found)
+		  found |= (se[l]==seg[1]);
+		if(found) {
+		  seg.SetPartition(se.GetPartition());
+		  break;
+		}
+	      }
+	    
+	    if (seg.GetPartition() == -1) {
+	      cout << endl << "segi: " << segi << endl;
+	      cout << "points: " << seg[0] << " " << seg[1] << endl;
+	      cout << "surfels: " << endl << sels << endl;
+	      throw NgException("no surface element found");
+	    }
+	  }
 	
       }
   }
