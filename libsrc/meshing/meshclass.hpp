@@ -32,6 +32,11 @@ namespace netgen
     /// point coordinates
     T_POINTS points;
 
+#ifdef PARALLEL
+    // The communicator for this mesh. (more or less dummy for now!)  
+    MPI_Comm comm;
+#endif
+    
     /// line-segments at edges
     Array<Segment, 0, size_t> segments;
     /// surface elements, 2d-inner elements
