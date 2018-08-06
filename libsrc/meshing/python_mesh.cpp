@@ -663,7 +663,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                          { return string(self.GetMaterial(domnr)); }))
 
     .def ("GetCD2Name", &Mesh::GetCD2Name)
-    .def("SetCD2Name", &Mesh::SetCD2Name)
+    .def ("SetCD2Name", &Mesh::SetCD2Name)
+
+    .def ("GetCD3Name", &Mesh::GetCD3Name)
+    .def ("SetCD3Name", &Mesh::SetCD3Name)
 
     .def ("AddPointIdentification", [](Mesh & self, py::object pindex1, py::object pindex2, int identnr, int type)
                            {
