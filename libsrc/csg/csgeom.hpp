@@ -226,7 +226,7 @@ namespace netgen
 
 
     void AddUserPoint (const Point<3> & p, double ref_factor = 0)      
-    { userpoints.Append (UserPoint(p,userpoints.Size())); userpoints_ref_factor.Append (ref_factor); }
+    { userpoints.Append (UserPoint(p,userpoints.Size()+1)); userpoints_ref_factor.Append (ref_factor); }
     void AddUserPoint (const UserPoint up, double ref_factor = 0)
     { userpoints.Append (up); userpoints_ref_factor.Append (ref_factor); }
     int GetNUserPoints () const
