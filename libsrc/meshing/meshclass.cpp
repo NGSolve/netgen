@@ -5985,6 +5985,48 @@ namespace netgen
       return defaultstring;
   }
 
+  void Mesh :: SetNCD3Names( int ncd3n )
+  {
+    if (cd3names.Size())
+      for(int i=0; i<cd3names.Size(); i++)
+	if(cd3names[i]) delete cd3names[i];
+    cd3names.SetSize(ncd3n);
+    cd3names = 0;
+  }
+
+  void Mesh :: SetCD3Name ( int cd3nr, const string & abcname )
+  {
+    cd3nr--;
+    (*testout) << "setCD3Name on vertex " << cd3nr << " to " << abcname << endl;
+    if (cd3nr >= cd3names.Size())
+      {
+	int oldsize = cd3names.Size();
+	cd3names.SetSize(cd3nr+1);
+	for(int i= oldsize; i<= cd3nr; i++)
+	  cd3names[i] = nullptr;
+      }
+    if (abcname != "default")
+      cd3names[cd3nr] = new string(abcname);
+    else
+      cd3names[cd3nr] = nullptr;
+  }
+
+  string Mesh :: cd3_default_name = "default";
+  const string & Mesh :: GetCD3Name (int cd3nr) const
+  {
+    static string defaultstring  = "default";
+    if (!cd3names.Size())
+      return defaultstring;
+
+    if (cd3nr < 0 || cd3nr >= cd3names.Size())
+      return defaultstring;
+
+    if (cd3names[cd3nr])
+      return *cd3names[cd3nr];
+    else
+      return defaultstring;
+  }
+
   void Mesh :: SetUserData(const char * id, Array<int> & data)
   {
     if(userdata_int.Used(id))

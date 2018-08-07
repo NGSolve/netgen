@@ -217,8 +217,7 @@ const string &  Ngx_Mesh :: GetMaterialCD<2> (int region_nr) const
 template <> NGX_INLINE DLL_HEADER
 const string &  Ngx_Mesh :: GetMaterialCD<3> (int region_nr) const
 {
-  static string def("default");
-  return def;
+  return mesh->GetCD3Name(region_nr);
 }
 
 
