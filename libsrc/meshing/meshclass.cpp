@@ -4327,10 +4327,12 @@ namespace netgen
           elementsearchtree = NULL;
           
           int ne = (dimension == 2) ? GetNSE() : GetNE();
-          
+          if (dimension == 3 && !GetNE() && GetNSE())
+            ne = GetNSE();
+
           if (ne) 
             {
-              if (dimension == 2)
+              if (dimension == 2 || (dimension == 3 && !GetNE()) )
                 {
                   Box<3> box (Box<3>::EMPTY_BOX);
                   for (SurfaceElementIndex sei = 0; sei < ne; sei++)
@@ -4834,7 +4836,7 @@ namespace netgen
     const double pointtol = 1e-12;
     netgen::Point<3> pmin = p - Vec<3> (pointtol, pointtol, pointtol);
     netgen::Point<3> pmax = p + Vec<3> (pointtol, pointtol, pointtol);
-    if (dimension == 2)
+    if (dimension == 2 || (dimension==3 && !GetNE() && GetNSE()))
       {
         int ne;
         int ps_startelement = 0;  // disable global buffering
@@ -4988,6 +4990,9 @@ namespace netgen
         //(*testout) << "p " << p << endl;
         //(*testout) << "velement " << velement << endl;
 
+        if (!GetNE() && GetNSE() )
+          return velement;
+        
         Array<int> faces;
         topology.GetElementFaces(velement,faces);
 
