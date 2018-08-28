@@ -1,6 +1,40 @@
 if(APPLE)
   # use system tcl/tk
-  find_package(TCL 8.5 REQUIRED)
+  if(${PYTHON_VERSION_STRING} STREQUAL "3.7")
+    # fetch tcl/tk sources to match the one used in Python 3.7
+    ExternalProject_Add(project_tcl
+      URL "https://prdownloads.sourceforge.net/tcl/tcl8.6.8-src.tar.gz"
+      URL_MD5 81656d3367af032e0ae6157eff134f89
+      DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
+      UPDATE_COMMAND "" # Disable update
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND ""
+      INSTALL_COMMAND ""
+      )
+    ExternalProject_Add(project_tk
+      URL "https://prdownloads.sourceforge.net/tcl/tk8.6.8-src.tar.gz"
+      URL_MD5 5e0faecba458ee1386078fb228d008ba
+      DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
+      UPDATE_COMMAND "" # Disable update
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND ""
+      INSTALL_COMMAND ""
+      )
+
+    get_filename_component(PYTHON_LIB_DIR ${PYTHON_LIBRARY} DIRECTORY)
+    find_library(TCL_LIBRARY libtcl8.6.dylib PATHS ${PYTHON_LIB_DIR} NO_DEFAULT_PATH)
+    find_library(TK_LIBRARY libtk8.6.dylib PATHS ${PYTHON_LIB_DIR} NO_DEFAULT_PATH)
+
+    set(TCL_DIR ${CMAKE_CURRENT_BINARY_DIR}/dependencies/src/project_tcl)
+    set(TK_DIR ${CMAKE_CURRENT_BINARY_DIR}/dependencies/src/project_tk)
+    set(TCL_INCLUDE_PATH ${TCL_DIR}/generic;${TCL_DIR}/macosx)
+    set(TK_INCLUDE_PATH ${TK_DIR}/generic;${TK_DIR}/macosx;${TK_DIR}/xlib)
+    find_package(TCL 8.6 REQUIRED)
+    list(APPEND NETGEN_DEPENDENCIES project_tcl project_tk)
+
+  else()
+    find_package(TCL 8.5 REQUIRED)
+  endif()
 #   set(HOME $ENV{HOME})
 #   set(tcl_prefix ${CMAKE_INSTALL_PREFIX}/../../)
 #   ExternalProject_Add(project_tcl
