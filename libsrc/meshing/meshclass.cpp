@@ -314,7 +314,7 @@ namespace netgen
     SurfaceElementIndex si = surfelements.Size();
     surfelements.Append (el); 
 
-    if (el.index > facedecoding.Size())
+    if (el.index<=0 || el.index > facedecoding.Size())
       cerr << "has no facedecoding: fd.size = " << facedecoding.Size() << ", ind = " << el.index << endl;
 
     surfelements.Last().next = facedecoding[el.index-1].firstelement;

@@ -1274,6 +1274,7 @@ BuildSurfaceElements (Array<Segment> & segs,
                 if (nst1 * dvec < 0) continue;
                 
 		Element2d el(s1[0], s1[1], s2[0], s2[1]);
+                el.SetIndex(s1.si);
 
 		Vec<3> n = Cross (mesh[el[1]] - mesh[el[0]],
 				  mesh[el[3]] - mesh[el[0]]);
