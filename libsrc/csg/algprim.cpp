@@ -558,7 +558,7 @@ namespace netgen
   Point<3> Sphere :: GetSurfacePoint () const
   {
     // if two spheres touch at exactly that point meshing fails.
-    return c + Vec<3> (0.12345, 0.54321, 0.8304715488203073);
+    return c + r * Vec<3> (0.12345, 0.54321, 0.8304715488203073);
   }
 
 
