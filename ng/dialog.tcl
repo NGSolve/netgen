@@ -2009,7 +2009,7 @@ proc surfacemeshsizedialog { } {
 	frame $w.face  -borderwidth 3
 	pack $w.face -fill x -padx 5
 	ttk::label $w.face.lab -text "face index:"
-	ttk::label $w.face.ent -text 1 -padx 4
+	ttk::label $w.face.ent -text 1
 	ttk::button $w.face.next -text "next" -command {
 	    set w .surfacemeshsize_dlg;	
 	    set facenr [$w.face.ent cget -text]
