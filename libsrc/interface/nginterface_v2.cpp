@@ -675,6 +675,26 @@ namespace netgen
   }
 
 
+  int Ngx_Mesh :: GetElementLevel (int ei) const
+  {
+    ei++;
+    
+    if (mesh->hpelements)
+      {
+	int hpelnr = -1;
+	if (mesh->GetDimension() == 2)
+	  hpelnr = mesh->SurfaceElement(ei).hp_elnr;
+	else
+	  hpelnr = mesh->VolumeElement(ei).hp_elnr;
+
+	return (*mesh->hpelements)[hpelnr].levelx;
+      }
+    //else
+    //  throw NgException("Ngx_Mesh::GetElementLevel only for HPRefinement implemented!");
+
+    return -1;	  
+  }
+  
   int Ngx_Mesh :: GetParentElement (int ei) const
   {
       ei++;
