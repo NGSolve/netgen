@@ -237,7 +237,10 @@ namespace netgen
 	    mesh2d.RestrictLocalH (Point<3> (x(0), x(1), 0), min2(hc, hcurve));
 	  }
       }
-
+    
+    for (auto mspnt : mp.meshsize_points)
+      mesh2d.RestrictLocalH (mspnt.pnt, mspnt.h);
+    
     // first add all vertices (for compatible orientation on periodic bnds)
     {
       double diam2 = Dist2(pmin, pmax);
