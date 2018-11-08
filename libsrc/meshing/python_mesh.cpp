@@ -61,6 +61,15 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   m.attr("_ngscript") = py::cast(script);
 
+  m.def("_GetStatus", []()
+        {
+          MyStr s; double percent;
+          GetStatus(s, percent);
+          return py::make_tuple(s.c_str(), percent);
+        });
+  m.def("_PushStatus", [](string s) { PushStatus(MyStr(s)); });
+  m.def("_SetThreadPercentage", [](double percent) { SetThreadPercent(percent); });
+
   py::class_<NGDummyArgument>(m, "NGDummyArgument")
     .def("__bool__", []( NGDummyArgument &self ) { return false; } )
     ;
