@@ -24,10 +24,10 @@ if(USE_GUI)
 
     add_executable(netgen ngappinit.cpp onetcl.cpp)
 
-    target_link_libraries( gui PUBLIC nglib ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_X11_LIB} ${OCC_LIBRARIES} )
-    target_link_libraries( gui PRIVATE ${LIBTOGL})
+    target_link_libraries( gui PUBLIC nglib )
+    target_link_libraries( gui PRIVATE ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} ${LIBTOGL} )
 
-    target_link_libraries( netgen nglib gui )
+    target_link_libraries( netgen nglib gui ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} ${LIBTOGL} )
 
     if(APPLE)
       # Leave decision about which tcl/tk version to use open to python (and it's tkinter package).
@@ -57,7 +57,7 @@ endif(USE_GUI)
 
 if(USE_PYTHON)
     add_library(ngpy SHARED netgenpy.cpp)
-    target_link_libraries( ngpy nglib )
+    target_link_libraries( ngpy PUBLIC nglib PRIVATE ${PYTHON_LIBRARIES})
     if(APPLE)
         set_target_properties( ngpy PROPERTIES SUFFIX ".so")
     elseif(WIN32)

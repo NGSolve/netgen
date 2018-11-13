@@ -26,20 +26,20 @@ endif(WIN32)
 
 add_library(nglib SHARED nglib.cpp ${nglib_objects})
 if(NOT WIN32)
-      target_link_libraries( nglib mesh stl interface geom2d csg stl visual)
+      target_link_libraries( nglib PUBLIC mesh stl interface geom2d csg stl visual)
       if(USE_GUI)
-          target_link_libraries( nglib stlvis geom2dvis csgvis )
+          target_link_libraries( nglib PUBLIC stlvis geom2dvis csgvis )
       endif(USE_GUI)
 endif(NOT WIN32)
 
-target_link_libraries( nglib ${OCC_LIBRARIES} ${MPI_CXX_LIBRARIES} ${OPENGL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${X11_Xmu_LIB} ${JPEG_LIBRARIES} ${MKL_LIBRARIES} ${ZLIB_LIBRARIES} ${OCC_LIBRARIES} )
+target_link_libraries( nglib PRIVATE ${OCC_LIBRARIES} ${MPI_CXX_LIBRARIES} ${OPENGL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${X11_Xmu_LIB} ${JPEG_LIBRARIES} ${MKL_LIBRARIES} ${ZLIB_LIBRARIES} ${OCC_LIBRARIES} )
 
 if(USE_OCC AND NOT WIN32)
-    target_link_libraries(nglib occ)
+    target_link_libraries(nglib PUBLIC occ)
 endif(USE_OCC AND NOT WIN32)
 
 if(USE_PYTHON)
-    target_link_libraries(nglib ${PYTHON_LIBRARIES})
+    target_link_libraries(nglib PRIVATE ${PYTHON_LIBRARIES})
 endif(USE_PYTHON)
 
 install(TARGETS nglib ${NG_INSTALL_DIR})
