@@ -35,7 +35,7 @@ if(USE_GUI)
       target_link_libraries( netgen ${TK_LIBRARY} ${TCL_LIBRARY})
     else(APPLE)
       # On other systems assume that the found libraries are compatible with python/tkinter
-      target_link_libraries( gui PUBLIC ${TK_LIBRARY} ${TCL_LIBRARY})
+      target_link_libraries( gui PRIVATE ${TK_LIBRARY} ${TCL_LIBRARY})
     endif(APPLE)
 
     if(NOT WIN32)
