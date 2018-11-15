@@ -27,16 +27,7 @@ if(USE_GUI)
     target_link_libraries( gui PUBLIC nglib )
     target_link_libraries( gui PRIVATE ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} ${LIBTOGL} )
 
-    target_link_libraries( netgen nglib gui ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} ${LIBTOGL} )
-
-    if(APPLE)
-      # Leave decision about which tcl/tk version to use open to python (and it's tkinter package).
-      # Thus, only link tcl/tk to the netgen executable and not to the gui library.
-      target_link_libraries( netgen ${TK_LIBRARY} ${TCL_LIBRARY})
-    else(APPLE)
-      # On other systems assume that the found libraries are compatible with python/tkinter
-      target_link_libraries( gui PUBLIC ${TK_LIBRARY} ${TCL_LIBRARY})
-    endif(APPLE)
+    target_link_libraries( netgen nglib gui ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} ${LIBTOGL} ${TK_LIBRARY} ${TCL_LIBRARY})
 
     if(NOT WIN32)
       target_link_libraries( netgen mesh stlvis stl geom2dvis interface geom2d csg stl visual csgvis )
