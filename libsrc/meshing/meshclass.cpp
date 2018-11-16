@@ -1173,7 +1173,7 @@ namespace netgen
 		for (i = 1; i<= GetNSeg(); i++)
 		  {
 		    Segment & seg = LineSegment(i);
-		    if ( seg.cd2i <= n )
+		    if ( seg.edgenr <= n )
 		      seg.SetBCName (cd2names[seg.edgenr-1]);
 		    else
 		      seg.SetBCName(0);
