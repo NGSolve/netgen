@@ -323,6 +323,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          "create surface element"
          )
     .def_property("index", &Element2d::GetIndex, &Element2d::SetIndex)
+    .def_property("curved", &Element2d::IsCurved, &Element2d::SetCurved)
     .def_property_readonly("vertices",
                   FunctionPointer([](const Element2d & self) -> py::list
                                   {
