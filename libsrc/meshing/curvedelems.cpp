@@ -1752,6 +1752,18 @@ namespace netgen
 	  }
       }
 
+    
+    Point<2> _xi(xi);
+    Point<3> _x;
+    Mat<3,2> _dxdxi;
+    if (EvaluateMapping (info, _xi, _x, _dxdxi))
+      {
+        if (x) *x = _x;
+        if (dxdxi) *dxdxi = _dxdxi;
+        return;
+      }
+
+    
     ArrayMem<Vec<3>,100> coefs(info.ndof);
     ArrayMem<double, 100> shapes_mem(info.ndof);
     TFlatVector<double> shapes(info.ndof, &shapes_mem[0]);
