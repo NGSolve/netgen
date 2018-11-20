@@ -272,6 +272,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          )
     .def("__repr__", &ToString<Element>)
     .def_property("index", &Element::GetIndex, &Element::SetIndex)
+    .def_property("curved", &Element::IsCurved, &Element::SetCurved)    
     .def_property_readonly("vertices", 
                   FunctionPointer ([](const Element & self) -> py::list
                                    {
