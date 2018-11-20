@@ -26,6 +26,9 @@ if(USE_GUI)
 
     target_link_libraries( gui PUBLIC nglib )
     target_link_libraries( gui PRIVATE ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} ${LIBTOGL} )
+    if(NOT APPLE)
+      target_link_libraries( gui PRIVATE ${TCL_LIBRARY} ${TK_LIBRARY})
+    endif(NOT APPLE)
 
     target_link_libraries( netgen nglib gui ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} ${LIBTOGL} ${TK_LIBRARY} ${TCL_LIBRARY})
 
