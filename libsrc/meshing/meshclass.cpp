@@ -1324,6 +1324,7 @@ namespace netgen
         if (geometry)
           geometry -> SaveToMeshFile (ost);
         archive << ost.str();
+        archive << (geometry ? curvedelems->GetOrder() : 1);
       }
     else
       {
@@ -1331,7 +1332,10 @@ namespace netgen
         archive & str;
         istringstream ist(str);
         geometry = geometryregister.LoadFromMeshFile (ist);
-        archive << curvedelems->GetOrder();
+        int order;
+        archive & order;
+        if(geometry && order > 1)
+          BuildCurvedElements(order);
       }
     
     if (archive.Input())
@@ -1344,9 +1348,6 @@ namespace netgen
             topology.Update();
             clusters -> Update();
           }
-        int order;
-        archive << order;
-        BuildCurvedElements(order);
         SetNextMajorTimeStamp();
       }
   }
