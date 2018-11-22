@@ -1330,7 +1330,8 @@ namespace netgen
         string str;
         archive & str;
         istringstream ist(str);
-        geometry = geometryregister.LoadFromMeshFile (ist);        
+        geometry = geometryregister.LoadFromMeshFile (ist);
+        archive << curvedelems->GetOrder();
       }
     
     if (archive.Input())
@@ -1343,6 +1344,9 @@ namespace netgen
             topology.Update();
             clusters -> Update();
           }
+        int order;
+        archive << order;
+        BuildCurvedElements(order);
         SetNextMajorTimeStamp();
       }
   }
