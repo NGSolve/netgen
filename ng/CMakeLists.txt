@@ -25,12 +25,12 @@ if(USE_GUI)
     add_executable(netgen ngappinit.cpp onetcl.cpp)
 
     target_link_libraries( gui PUBLIC nglib )
-    target_link_libraries( gui PRIVATE ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} ${LIBTOGL} )
+    target_link_libraries( gui PRIVATE ${LIBTOGL} ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} )
     if(NOT APPLE)
       target_link_libraries( gui PRIVATE ${TCL_LIBRARY} ${TK_LIBRARY})
     endif(NOT APPLE)
 
-    target_link_libraries( netgen nglib gui ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} ${LIBTOGL} ${TK_LIBRARY} ${TCL_LIBRARY})
+    target_link_libraries( netgen nglib gui ${LIBTOGL} ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} ${TK_LIBRARY} ${TCL_LIBRARY})
 
     if(NOT WIN32)
       target_link_libraries( netgen mesh stlvis stl geom2dvis interface geom2d csg stl visual csgvis )
