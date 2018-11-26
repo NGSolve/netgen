@@ -1236,7 +1236,15 @@ namespace netgen
     return max2(bb/(aa*aa),aa/(bb*bb));
   }
 
+  int EllipticCylinder :: IsIdentic(const Surface& s2, int& inv, double eps) const
+  {
+    const EllipticCylinder* ps2 = dynamic_cast<const EllipticCylinder*>(&s2);
+    if (!ps2) return 0;
 
+    if((vl - ps2->vl).Length() > eps || (vs - ps2->vs).Length() > eps || (a-ps2->a).Length() > eps)
+      return 0;
+    return 1;
+  }
 
   Point<3> EllipticCylinder :: GetSurfacePoint () const
   {
