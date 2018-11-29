@@ -69,7 +69,7 @@ namespace netgen
     mesh -> Save (ost);
   }
 
-  void Ngx_Mesh :: DoArchive (ngstd::Archive & archive)
+  void Ngx_Mesh :: DoArchive (Archive & archive)
   {
     if (archive.Input()) mesh = make_shared<Mesh>();
     mesh->DoArchive(archive);

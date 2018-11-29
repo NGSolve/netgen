@@ -4,6 +4,7 @@ if(NOT WIN32)
         $<TARGET_OBJECTS:la>
         $<TARGET_OBJECTS:gprim>
         $<TARGET_OBJECTS:gen>
+        $<TARGET_OBJECTS:ngcore>
         )
 endif(NOT WIN32)
 

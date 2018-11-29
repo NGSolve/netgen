@@ -204,7 +204,7 @@ macro(get_dll_from_lib dll_path lib_path)
         get_filename_component(lib_name ${lib} name)
 endmacro()
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 if(WIN32)
     get_WIN32_WINNT(ver)
     add_definitions(-D_WIN32_WINNT=${ver} -DWNT -DWNT_WINDOW -DNOMINMAX)

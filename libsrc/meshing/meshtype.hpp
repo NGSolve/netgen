@@ -171,13 +171,9 @@ namespace netgen
     enum { BASE = 1 };
 #endif  
 
-    ngstd::Archive & DoArchive (ngstd::Archive & ar) { return ar & i; }
+    void DoArchive (Archive & ar) { ar & i; }
   };
 
-  inline ngstd::Archive & operator & (ngstd::Archive & archive, PointIndex & mp)
-  { return mp.DoArchive(archive);   }
-
-  
   inline istream & operator>> (istream & ist, PointIndex & pi)
   {
     int i; ist >> i; pi = PointIndex(i); return ist;
@@ -247,13 +243,8 @@ namespace netgen
     SurfaceElementIndex & operator-- () { --i; return *this; }
     SurfaceElementIndex & operator+= (int inc) { i+=inc; return *this; }
 
-    ngstd::Archive & DoArchive (ngstd::Archive & ar) { return ar & i; }
+    void DoArchive (Archive & ar) { ar & i; }
   };
-
-  inline ngstd::Archive & operator & (ngstd::Archive & archive, SurfaceElementIndex & mp)
-  { return mp.DoArchive(archive);   }
-
-  
 
   inline istream & operator>> (istream & ist, SurfaceElementIndex & pi)
   {
@@ -337,19 +328,13 @@ namespace netgen
     static MPI_Datatype MyGetMPIType ( );
 #endif
 
-    ngstd::Archive & DoArchive (ngstd::Archive & ar)
+    void DoArchive (Archive & ar)
     {
       ar & x[0] & x[1] & x[2] & layer & singular;
       ar & (unsigned char&)(type);
-      return ar;
     }
   };
 
-  inline ngstd::Archive & operator & (ngstd::Archive & archive, MeshPoint & mp)
-  { return mp.DoArchive(archive);   }
-  
-
-  
   inline ostream & operator<<(ostream  & s, const MeshPoint & pt)
   { 
     return (s << Point<3> (pt)); 
@@ -497,7 +482,7 @@ namespace netgen
     ///
     const PointGeomInfo & GeomInfoPiMod (int i) const { return geominfo[(i-1) % np]; }
 
-    ngstd::Archive & DoArchive (ngstd::Archive & ar)
+    void DoArchive (Archive & ar)
     {
       short _np, _typ;
       bool _curved, _vis, _deleted;
@@ -511,7 +496,6 @@ namespace netgen
           visible = _vis; deleted = _deleted; }
       for (size_t i = 0; i < np; i++)
         ar & pnum[i];
-      return ar;
     }
 
     void SetIndex (int si) { index = si; }
@@ -629,9 +613,6 @@ namespace netgen
     void SetPartition (int nr) { partitionNumber = nr; }; 
 #endif
   };
-
-  inline ngstd::Archive & operator & (ngstd::Archive & archive, Element2d & mp)
-  { return mp.DoArchive(archive);   }
 
   ostream & operator<<(ostream  & s, const Element2d & el);
 
@@ -774,7 +755,7 @@ namespace netgen
     ///
     const PointIndex & PNumMod (int i) const { return pnum[(i-1) % np]; }
 
-    ngstd::Archive & DoArchive (ngstd::Archive & ar)
+    void DoArchive (Archive & ar)
     {
       short _np, _typ;
       if (ar.Output())
@@ -784,7 +765,6 @@ namespace netgen
         { np = _np; typ = ELEMENT_TYPE(_typ); }
       for (size_t i = 0; i < np; i++)
         ar & pnum[i];
-      return ar;
     }
 
     ///
@@ -928,9 +908,6 @@ namespace netgen
     int hp_elnr;
   };
 
-  inline ngstd::Archive & operator & (ngstd::Archive & archive, Element & mp)
-  { return mp.DoArchive(archive);   }
-  
   ostream & operator<<(ostream  & s, const Element & el);
 
 
@@ -1049,11 +1026,8 @@ namespace netgen
 #else
     int GetPartition () const { return 0; }
 #endif
-    ngstd::Archive & DoArchive (ngstd::Archive & ar);
+    void DoArchive (Archive & ar);
   };
-
-  inline ngstd::Archive & operator & (ngstd::Archive & archive, Segment & mp)
-  { return mp.DoArchive(archive);   }
 
   ostream & operator<<(ostream  & s, const Segment & seg);
 
@@ -1142,12 +1116,8 @@ namespace netgen
     // friend ostream & operator<<(ostream  & s, const FaceDescriptor & fd);
     friend class Mesh;
 
-    ngstd::Archive & DoArchive (ngstd::Archive & ar);
+    void DoArchive (Archive & ar);
   };
-
-  inline ngstd::Archive & operator & (ngstd::Archive & archive, FaceDescriptor & mp)
-  { return mp.DoArchive(archive);   }
-  
 
   ostream & operator<< (ostream  & s, const FaceDescriptor & fd);
 
@@ -1516,12 +1486,8 @@ namespace netgen
 
     DLL_HEADER void Print (ostream & ost) const;
 
-    ngstd::Archive & DoArchive (ngstd::Archive & ar);
+    void DoArchive (Archive & ar);
   };
-
-  inline ngstd::Archive & operator & (ngstd::Archive & archive, Identifications & mp)
-  { return mp.DoArchive(archive);   }
-  
 }
 
 

@@ -400,6 +400,19 @@ namespace netgen
       ownmem = false;
       return data;
     }
+
+    void DoArchive(Archive& archive)
+    {
+      if(archive.Output())
+        archive << size;
+      else
+        {
+          size_t s;
+          archive & s;
+          SetSize(s);
+        }
+      archive.Do(data, size);
+    }
     
   private:
 
@@ -778,30 +791,6 @@ namespace netgen
       if(in2.Contains(in1[i]) && in3.Contains(in1[i]))
 	out.Append(in1[i]);
   }
-
-
-
-
-  template <typename T, int BASE, typename TIND> 
-  ngstd::Archive & operator & (ngstd::Archive & archive, Array<T,BASE,TIND> & a)
-  {
-    if (archive.Output())
-      archive << a.Size();
-    else
-      {
-        size_t size;
-        archive & size;
-        a.SetSize (size);
-      }
-
-    /*
-    for (auto & ai : a)
-      archive & ai;
-    */
-    archive.Do (&a[BASE], a.Size());
-    return archive;
-  }  
-
 }
 
 #endif

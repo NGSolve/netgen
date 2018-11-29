@@ -64,6 +64,12 @@ namespace netgen
     const T & operator() (int i) const { return x[i]; }
 
     operator const T* () const { return x; }
+
+    void DoArchive(Archive& archive)
+    {
+      for(int i=0; i<D; i++)
+        archive & x[i];
+    }
   };
 
   template <int D, typename T>
@@ -116,6 +122,12 @@ namespace netgen
     const T & operator() (int i) const { return x[i]; }
 
     operator const T* () const { return x; }
+
+    void DoArchive(Archive& archive)
+    {
+      for(int i=0; i<D; i++)
+        archive & x[i];
+    }
 
     T Length () const
     {
@@ -324,6 +336,9 @@ namespace netgen
 	  pmax(i) += dist;
 	}
     }
+
+    void DoArchive(Archive& archive)
+    { archive & pmin & pmax; }
   };
 
 
