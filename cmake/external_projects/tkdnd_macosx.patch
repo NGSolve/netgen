@@ -1,35 +1,36 @@
-diff -Naur orig/tkdnd2.8/configure changed/tkdnd2.8/configure
---- tkdnd2.8/configure	2015-05-13 19:24:32.000000000 +0200
-+++ tkdnd2.8/configure	2016-02-22 15:26:37.000000000 +0100
-@@ -6145,7 +6145,7 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 4eb497c..c6424fc 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -43,17 +43,17 @@ IF ( WIN32 )
+ ELSE  ( WIN32 )
+   ## Unix and OS X...
+   IF ( APPLE )
+-    SET ( CMAKE_OSX_ARCHITECTURES "x86_64;i386" )
++    SET ( CMAKE_OSX_ARCHITECTURES "x86_64")
+     FIND_LIBRARY ( COCOA_LIBRARY Cocoa )
+     INCLUDE_DIRECTORIES ( macosx )
+-    INCLUDE_DIRECTORIES ( /Library/Frameworks/Tk.framework/Versions/8.6/PrivateHeaders )
+-    INCLUDE_DIRECTORIES ( /System/Library/Frameworks/Tk.framework/Versions/8.5/Headers/tk-private )
+-    INCLUDE_DIRECTORIES ( /System/Library/Frameworks/Tk.framework/Versions/8.5/Headers/tk-private )
++#   INCLUDE_DIRECTORIES ( /Library/Frameworks/Tk.framework/Versions/8.6/PrivateHeaders )
++#   INCLUDE_DIRECTORIES ( /System/Library/Frameworks/Tk.framework/Versions/8.5/Headers/tk-private )
++#   INCLUDE_DIRECTORIES ( /System/Library/Frameworks/Tk.framework/Versions/8.5/Headers/tk-private )
+     ADD_DEFINITIONS     ( -DMAC_TK_COCOA -DMAC_OSX_TK)
+     ADD_DEFINITIONS     ( -DMAC_OSX_TK )
+     ADD_DEFINITIONS     ( -std=gnu99 )
+     ADD_DEFINITIONS     ( -x objective-c )
+-    ADD_DEFINITIONS     ( -fobjc-gc  )
++#   ADD_DEFINITIONS     ( -fobjc-gc  )
+     ADD_DEFINITIONS     ( -fno-objc-arc )
+ #   ADD_DEFINITIONS     ( -fobjc-arc )
+     LINK_LIBRARIES      ( ${COCOA_LIBRARY} )
+@@ -125,7 +125,7 @@ SET ( CP           ${CMAKE_COMMAND} -E copy )
+ ##  Locate Tcl/Tk
+ ## ===========================================================================
+ MESSAGE ( STATUS "Searching for Tcl/Tk..." )
+-FIND_PACKAGE ( TCL REQUIRED )
++#FIND_PACKAGE ( TCL REQUIRED )
+ FIND_PACKAGE ( TclStub REQUIRED )
  
- 
- 
--    PKG_CFLAGS="$PKG_CFLAGS -DMAC_TK_COCOA -std=gnu99 -x objective-c -fobjc-gc"
-+    PKG_CFLAGS="$PKG_CFLAGS -DMAC_TK_COCOA -std=gnu99 -x objective-c"
- 
- 
- 
-diff -Naur orig/tkdnd2.8/configure.in changed/tkdnd2.8/configure.in
---- tkdnd2.8/configure.in	2015-05-13 19:24:32.000000000 +0200
-+++ tkdnd2.8/configure.in	2016-02-22 15:26:44.000000000 +0100
-@@ -126,7 +126,7 @@
- 
- if test "${TEA_WINDOWINGSYSTEM}" = "aqua"; then
-     TEA_ADD_SOURCES([macosx/macdnd.m])
--    TEA_ADD_CFLAGS([-DMAC_TK_COCOA -std=gnu99 -x objective-c -fobjc-gc])
-+    TEA_ADD_CFLAGS([-DMAC_TK_COCOA -std=gnu99 -x objective-c])
-     TEA_ADD_LIBS([-framework Cocoa -framework Carbon])
- fi
- 
-diff -Naur orig/tkdnd2.8/macosx/macdnd.m changed/tkdnd2.8/macosx/macdnd.m
---- tkdnd2.8/macosx/macdnd.m	2015-07-06 21:49:14.000000000 +0200
-+++ tkdnd2.8/macosx/macdnd.m	2016-02-22 15:27:04.000000000 +0100
-@@ -16,6 +16,7 @@
- #import <tcl.h>
- #import <tk.h>
- #import <tkInt.h>
-+#undef panic
- #import <tkMacOSXInt.h>
- #import <Cocoa/Cocoa.h>
- 
+ ## Tcl/Tk info (useful for debug purposes)...
