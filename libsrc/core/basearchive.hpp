@@ -153,17 +153,14 @@ namespace ngcore
           // Downcasting is only possible for our registered classes
           if(typeid(T) != typeid(*ptr))
             {
-              if constexpr(has_DoArchive<T>::value)
-                            {
-                              if(GetArchiveRegister().count(std::string(typeid(*ptr).name())) == 0)
-                                throw std::runtime_error(std::string("Archive error: Polymorphic type ")
-                                                         + typeid(*ptr).name()
-                                                         + " not registered for archive");
-                              reg_ptr = GetArchiveRegister()[typeid(*ptr).name()].downcaster(typeid(T), ptr.get());
-                              // if there was a true downcast we have to store more information
-                              if(reg_ptr != (void*) ptr.get())
-                                neededDowncast = true;
-                            }
+              if(GetArchiveRegister().count(std::string(typeid(*ptr).name())) == 0)
+                  throw std::runtime_error(std::string("Archive error: Polymorphic type ")
+                                           + typeid(*ptr).name()
+                                           + " not registered for archive");
+              reg_ptr = GetArchiveRegister()[typeid(*ptr).name()].downcaster(typeid(T), ptr.get());
+              // if there was a true downcast we have to store more information
+              if(reg_ptr != (void*) ptr.get())
+                  neededDowncast = true;
             }
           auto pos = shared_ptr2nr.find(reg_ptr);
           // if not found store -1 and the pointer
@@ -225,19 +222,14 @@ namespace ngcore
                 {
                   // if there was a downcast we can expect the class to be registered (since archiving
                   // wouldn't have worked else)
-                  if constexpr(has_DoArchive<T>::value)
-                                {
-                                  std::string name;
-                                  (*this) & name;
-                                  auto info = GetArchiveRegister()[name];
-                                  // same trick as above, create a shared ptr sharing lifetime with
-                                  // the shared_ptr<void> in the register, but pointing to our object
-                                  ptr = std::static_pointer_cast<T>(std::shared_ptr<void>(other,
-                                                                                          info.upcaster(typeid(T),
-                                                                                               other.get())));
-                                }
-                  else
-                    throw std::runtime_error("Shouldn't get here...");
+                  std::string name;
+                  (*this) & name;
+                  auto info = GetArchiveRegister()[name];
+                  // same trick as above, create a shared ptr sharing lifetime with
+                  // the shared_ptr<void> in the register, but pointing to our object
+                  ptr = std::static_pointer_cast<T>(std::shared_ptr<void>(other,
+                                                                          info.upcaster(typeid(T),
+                                                                               other.get())));
                 }
               else
                 ptr = std::static_pointer_cast<T>(other);
@@ -258,15 +250,12 @@ namespace ngcore
           void* reg_ptr = (void*)p;
           if(typeid(T) != typeid(*p))
             {
-              if constexpr(has_DoArchive<T>::value)
-                            {
-                              if(GetArchiveRegister().count(std::string(typeid(*p).name())) == 0)
-                                throw std::runtime_error(std::string("Archive error: Polymorphic type ")
-                                                         + typeid(*p).name()
-                                                         + " not registered for archive");
-                              else
-                                reg_ptr = GetArchiveRegister()[typeid(*p).name()].downcaster(typeid(T), p);
-                            }
+              if(GetArchiveRegister().count(std::string(typeid(*p).name())) == 0)
+                throw std::runtime_error(std::string("Archive error: Polymorphic type ")
+                                         + typeid(*p).name()
+                                         + " not registered for archive");
+              else
+                reg_ptr = GetArchiveRegister()[typeid(*p).name()].downcaster(typeid(T), p);
             }
           auto pos = ptr2nr.find(reg_ptr);
           // if the pointer is not found in the map create a new entry
@@ -274,7 +263,7 @@ namespace ngcore
             {
               ptr2nr[reg_ptr] = ptr_count++;
               if(typeid(*p) == typeid(T))
-                if constexpr (std::is_constructible<T>::value)
+                if (std::is_constructible<T>::value)
                                {
                                  return (*this) << -1 & (*p);
                                }
@@ -287,19 +276,12 @@ namespace ngcore
                   // to avoid compile time issues we allow this behaviour only for "our" classes that
                   // implement a void DoArchive(Archive&) member function
                   // To recreate the object we need to store the true type of it
-                  if constexpr(has_DoArchive<T>::value)
-                                {
-                                  if(GetArchiveRegister().count(std::string(typeid(*p).name())) == 0)
-                                    throw std::runtime_error(std::string("Archive error: Polymorphic type ")
-                                                             + typeid(*p).name()
-                                                             + " not registered for archive");
-                                  else
-                                    return (*this) << -3 << std::string(typeid(*p).name()) & (*p);
-                                }
-                  else
-                    throw std::runtime_error(std::string("Archive error: Class ")
+                  if(GetArchiveRegister().count(std::string(typeid(*p).name())) == 0)
+                    throw std::runtime_error(std::string("Archive error: Polymorphic type ")
                                              + typeid(*p).name()
-                                             + " is polymorphic but not registered for archiving");
+                                             + " not registered for archive");
+                  else
+                    return (*this) << -3 << std::string(typeid(*p).name()) & (*p);
                 }
             }
           else
@@ -318,7 +300,7 @@ namespace ngcore
               p = nullptr;
           else if (nr == -1) // create a new pointer of standard type (no virtual or multiple inheritance,...)
             {
-              if constexpr (std::is_constructible<T>::value)
+              if (std::is_constructible<T>::value)
                              {
                                p = new T;
                                nr2ptr.push_back(p);
@@ -330,22 +312,17 @@ namespace ngcore
             }
           else if(nr == -3) // restore one of our registered classes that can have multiple inheritance,...
             {
-              // As stated above, we want this special behaviour only for our classes that implement DoArchive
-              if constexpr(has_DoArchive<T>::value)
-                            {
-                              std::string name;
-                              (*this) & name;
-                              auto info = GetArchiveRegister()[name];
-                              // the creator creates a new object of type name, and returns a void* pointing
-                              // to T (which may have an offset)
-                              p = (T*) info.creator(typeid(T));
-                              // we store the downcasted pointer (to be able to find it again from
-                              // another class in a multiple inheritance tree)
-                              nr2ptr.push_back(info.downcaster(typeid(T),p));
-                              (*this) & *p;
-                            }
-              else
-                throw std::runtime_error("Class isn't registered properly");
+                // As stated above, we want this special behaviour only for our classes that implement DoArchive
+                std::string name;
+                (*this) & name;
+                auto info = GetArchiveRegister()[name];
+                // the creator creates a new object of type name, and returns a void* pointing
+                // to T (which may have an offset)
+                p = (T*) info.creator(typeid(T));
+                // we store the downcasted pointer (to be able to find it again from
+                // another class in a multiple inheritance tree)
+                nr2ptr.push_back(info.downcaster(typeid(T),p));
+                (*this) & *p;
             }
           else
             {
@@ -354,12 +331,9 @@ namespace ngcore
               (*this) & downcasted & name;
               if(downcasted)
                 {
-                  // if the class has been downcasted we can assume it is in the register
-                  if constexpr(has_DoArchive<T>::value)
-                                {
-                                  auto info = GetArchiveRegister()[name];
-                                  p = (T*) info.upcaster(typeid(T), nr2ptr[nr]);
-                                }
+                    // if the class has been downcasted we can assume it is in the register
+                    auto info = GetArchiveRegister()[name];
+                    p = (T*) info.upcaster(typeid(T), nr2ptr[nr]);
                 }
               else
                 p = (T*) nr2ptr[nr];
@@ -386,7 +360,7 @@ namespace ngcore
   public:
     RegisterClassForArchive()
     {
-      static_assert(std::is_constructible_v<T>, "Class registered for archive must be default constructible");
+      static_assert(std::is_constructible<T>::value, "Class registered for archive must be default constructible");
       ClassArchiveInfo info;
       info.creator = [this,&info](const std::type_info& ti) -> void*
                      { return typeid(T) == ti ? new T : Caster<T, Bases...>::tryUpcast(ti, new T); };
