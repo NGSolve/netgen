@@ -6,10 +6,11 @@ using namespace std;
 
 class CommonBase
 {
-  public:
+public:
+  int a;
   virtual ~CommonBase() {}
 
-  virtual void DoArchive(Archive& archive) { }
+  virtual void DoArchive(Archive& archive) { archive & a; }
 };
 
 class SharedPtrHolder : virtual public CommonBase
@@ -19,7 +20,11 @@ public:
   virtual ~SharedPtrHolder()
   { }
 
-  virtual void DoArchive(Archive& archive) {  archive & names; }
+  virtual void DoArchive(Archive& archive)
+  {
+    CommonBase::DoArchive(archive);
+    archive & names;
+  }
 };
 
 class PtrHolder : virtual public CommonBase
@@ -28,7 +33,11 @@ public:
   vector<int*> numbers;
   virtual ~PtrHolder() {}
 
-  virtual void DoArchive(Archive& archive) {  archive & numbers; }
+  virtual void DoArchive(Archive& archive)
+  {
+    CommonBase::DoArchive(archive);
+    archive & numbers;
+  }
 };
 
 class SharedPtrAndPtrHolder : public SharedPtrHolder, public PtrHolder
@@ -42,6 +51,18 @@ public:
   }
 };
 
+// Classes without virt. or multiple inheritance do not need to be registered
+class SimpleClass : public CommonBase
+{
+public:
+  double d;
+  virtual void DoArchive(Archive& ar)
+  {
+    CommonBase::DoArchive(ar);
+    ar & d;
+  }
+};
+
 class NotRegisteredForArchive : public SharedPtrAndPtrHolder {};
 
 class OneMoreDerivedClass : public SharedPtrAndPtrHolder {};
@@ -51,6 +72,19 @@ static RegisterClassForArchive<SharedPtrHolder, CommonBase> regsp;
 static RegisterClassForArchive<PtrHolder, CommonBase> regp;
 static RegisterClassForArchive<SharedPtrAndPtrHolder, SharedPtrHolder, PtrHolder> regspp;
 static RegisterClassForArchive<OneMoreDerivedClass, SharedPtrAndPtrHolder> regom;
+
+void testNullPtr(Archive& in, Archive& out)
+{
+  SharedPtrHolder* p = nullptr;
+  shared_ptr<string> sp = nullptr;
+  out & p & sp;
+  out.FlushBuffer();
+  SharedPtrHolder* pin;
+  shared_ptr<string> spin;
+  in & pin & spin;
+  CHECK(pin == nullptr);
+  CHECK(spin == nullptr);
+}
 
 void testSharedPointer(Archive& in, Archive& out)
 {
@@ -92,6 +126,7 @@ void testMultipleInheritance(Archive& in, Archive& out)
 {
   PtrHolder* p = new OneMoreDerivedClass;
   p->numbers.push_back(new int(2));
+  p->a = 5;
   auto p2 = dynamic_cast<SharedPtrHolder*>(p);
   p2->names.push_back(make_shared<string>("test"));
   auto sp1 = shared_ptr<PtrHolder>(p);
@@ -103,6 +138,8 @@ void testMultipleInheritance(Archive& in, Archive& out)
       CHECK(*pin2->names[0] == "test");
       CHECK(*pin->numbers[0] == 2);
       CHECK(dynamic_cast<SharedPtrAndPtrHolder*>(pin) == dynamic_cast<SharedPtrAndPtrHolder*>(pin2));
+      CHECK(pin->a == pin2->a);
+      CHECK(pin->a == 5);
       REQUIRE(dynamic_cast<SharedPtrAndPtrHolder*>(pin2) != nullptr);
       CHECK(*dynamic_cast<SharedPtrAndPtrHolder*>(pin2)->numbers[0] == 2);
       CHECK(*pin->numbers[0] == *dynamic_cast<SharedPtrAndPtrHolder*>(pin2)->numbers[0]);
@@ -136,6 +173,31 @@ void testMultipleInheritance(Archive& in, Archive& out)
       in & bin & pin;
       checkPtr(pin, dynamic_cast<SharedPtrHolder*>(bin));
     }
+  SECTION("Simple class without register")
+    {
+      auto a = new SimpleClass;
+      a->a = 5;
+      a->d = 2.3;
+      SECTION("check pointer")
+        {
+          out & a;
+          out.FlushBuffer();
+          SimpleClass* ain;
+          in & ain;
+          CHECK(ain->a == 5);
+          CHECK(ain->d == 2.3);
+        }
+      SECTION("check shared pointer")
+        {
+          auto spa = shared_ptr<SimpleClass>(a);
+          out & spa;
+          out.FlushBuffer();
+          shared_ptr<SimpleClass> spain;
+          in & spain;
+          CHECK(spain->a == 5);
+          CHECK(spain->d == 2.3);
+        }
+    }
 }
 
 void testArchive(Archive& in, Archive& out)
@@ -156,6 +218,10 @@ void testArchive(Archive& in, Archive& out)
     {
       SharedPtrAndPtrHolder* p = new NotRegisteredForArchive;
       REQUIRE_THROWS(out & p, Catch::Contains("not registered for archive"));
+    }
+  SECTION("nullptr")
+    {
+      testNullPtr(in, out);
     }
 }
 
