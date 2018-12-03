@@ -40,6 +40,11 @@ namespace netgen
     TopLevelObject (Solid * asolid,
 		    Surface * asurface = NULL);
 
+    void DoArchive(Archive& archive)
+    {
+      archive & solid & surface & red & blue & green & visible & transp & maxh
+        & material & layer & bc & bcname;
+    }
     const Solid * GetSolid() const { return solid; }
     Solid * GetSolid() { return solid; }
 

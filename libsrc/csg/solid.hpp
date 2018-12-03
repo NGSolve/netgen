@@ -57,6 +57,18 @@ namespace netgen
     Solid (optyp aop, Solid * as1, Solid * as2 = NULL);
     ~Solid ();
 
+    void DoArchive(Archive& archive)
+    {
+      archive & name & prim & s1 & s2 & visited & maxh & num_surfs;
+      if(archive.Output())
+        archive << int(op);
+      else
+        {
+          int iop;
+          archive & iop;
+          op = optyp(iop);
+        }
+    }
     const char * Name () const { return name; }
     void SetName (const char * aname);
 

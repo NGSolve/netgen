@@ -5,6 +5,17 @@ namespace ngcore
 {
   class Archive;
 
+  // create new pointer of type T if it is default constructible, else throw
+  template<typename T>
+  T* constructIfPossible_impl(...)
+  { throw std::runtime_error(std::string(typeid(T).name()) + " is not default constructible!"); }
+
+  template<typename T, typename= typename std::enable_if<std::is_constructible<T>::value>::type>
+  T* constructIfPossible_impl(int) { return new T; }
+
+  template<typename T>
+  T* constructIfPossible() { return constructIfPossible_impl<T>(int{}); }
+
   // Type trait to check if a class implements a 'void DoArchive(Archive&)' function
   template<typename T>
   struct has_DoArchive
@@ -255,7 +266,7 @@ namespace ngcore
                                          + typeid(*p).name()
                                          + " not registered for archive");
               else
-                reg_ptr = GetArchiveRegister()[typeid(*p).name()].downcaster(typeid(T), p);
+                reg_ptr = GetArchiveRegister()[typeid(*p).name()].downcaster(typeid(T), (void*) p);
             }
           auto pos = ptr2nr.find(reg_ptr);
           // if the pointer is not found in the map create a new entry
@@ -300,29 +311,23 @@ namespace ngcore
               p = nullptr;
           else if (nr == -1) // create a new pointer of standard type (no virtual or multiple inheritance,...)
             {
-              if (std::is_constructible<T>::value)
-                             {
-                               p = new T;
-                               nr2ptr.push_back(p);
-                               (*this) & *p;
-                             }
-              else
-                throw std::runtime_error("Class isn't registered properly");
-
+              p = constructIfPossible<T>();
+              nr2ptr.push_back(p);
+              (*this) & *p;
             }
           else if(nr == -3) // restore one of our registered classes that can have multiple inheritance,...
             {
-                // As stated above, we want this special behaviour only for our classes that implement DoArchive
-                std::string name;
-                (*this) & name;
-                auto info = GetArchiveRegister()[name];
-                // the creator creates a new object of type name, and returns a void* pointing
-                // to T (which may have an offset)
-                p = (T*) info.creator(typeid(T));
-                // we store the downcasted pointer (to be able to find it again from
-                // another class in a multiple inheritance tree)
-                nr2ptr.push_back(info.downcaster(typeid(T),p));
-                (*this) & *p;
+              // As stated above, we want this special behaviour only for our classes that implement DoArchive
+              std::string name;
+              (*this) & name;
+              auto info = GetArchiveRegister()[name];
+              // the creator creates a new object of type name, and returns a void* pointing
+              // to T (which may have an offset)
+              p = (T*) info.creator(typeid(T));
+              // we store the downcasted pointer (to be able to find it again from
+              // another class in a multiple inheritance tree)
+              nr2ptr.push_back(info.downcaster(typeid(T),p));
+              (*this) & *p;
             }
           else
             {
@@ -360,10 +365,10 @@ namespace ngcore
   public:
     RegisterClassForArchive()
     {
-      static_assert(std::is_constructible<T>::value, "Class registered for archive must be default constructible");
       ClassArchiveInfo info;
       info.creator = [this,&info](const std::type_info& ti) -> void*
-                     { return typeid(T) == ti ? new T : Caster<T, Bases...>::tryUpcast(ti, new T); };
+                     { return typeid(T) == ti ? constructIfPossible<T>()
+                         : Caster<T, Bases...>::tryUpcast(ti, constructIfPossible<T>()); };
       info.upcaster = [this](const std::type_info& ti, void* p) -> void*
                     { return typeid(T) == ti ? p : Caster<T, Bases...>::tryUpcast(ti, (T*) p); };
       info.downcaster = [this](const std::type_info& ti, void* p) -> void*

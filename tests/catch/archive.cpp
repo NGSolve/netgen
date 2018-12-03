@@ -13,6 +13,7 @@ public:
   virtual void DoArchive(Archive& archive) { archive & a; }
 };
 
+// pure abstract base class
 class SharedPtrHolder : virtual public CommonBase
 {
 public:
@@ -20,6 +21,7 @@ public:
   virtual ~SharedPtrHolder()
   { }
 
+  virtual void abstract() = 0;
   virtual void DoArchive(Archive& archive)
   {
     CommonBase::DoArchive(archive);
@@ -49,6 +51,7 @@ public:
     SharedPtrHolder::DoArchive(archive);
     PtrHolder::DoArchive(archive);
   }
+  virtual void abstract() {}
 };
 
 // Classes without virt. or multiple inheritance do not need to be registered
@@ -91,12 +94,12 @@ void testSharedPointer(Archive& in, Archive& out)
   SECTION("Same shared ptr")
     {
       static_assert(has_DoArchive<SharedPtrHolder>::value, "");
-      SharedPtrHolder holder, holder2;
+      SharedPtrAndPtrHolder holder, holder2;
       holder.names.push_back(make_shared<string>("name"));
       holder2.names = holder.names; // same shared ptr
       out & holder & holder2;
       out.FlushBuffer();
-      SharedPtrHolder inholder, inholder2;
+      SharedPtrAndPtrHolder inholder, inholder2;
       in & inholder & inholder2;
       CHECK(inholder.names.size() == 1);
       CHECK(inholder.names[0] == inholder2.names[0]);

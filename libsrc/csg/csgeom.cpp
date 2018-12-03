@@ -326,9 +326,9 @@ namespace netgen
 
   void CSGeometry :: DoArchive(Archive& archive)
   {
-    archive & surfaces & surf2prim & solids & toplevelobjects & userpoints & userpoints_ref_factor
+    archive & surfaces & solids & toplevelobjects & userpoints & userpoints_ref_factor
       & identpoints & boundingbox & identicsurfaces & isidenticto & ideps
-      & filename & spline_surfaces; // TODO: & splinecurves2d & splinecurves3d
+      & filename & spline_surfaces; // TODO: & splinecurves2d & splinecurves3d & surf2prim
   }
 
   void CSGeometry :: SaveSurfaces (ostream & out) const
