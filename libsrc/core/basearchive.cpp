@@ -3,9 +3,9 @@
 
 namespace ngcore
 {
-  std::map<std::string, std::function<void*()>>& GetArchiveRegister()
+  std::map<std::string, ClassArchiveInfo>& GetArchiveRegister()
   {
-    static std::map<std::string, std::function<void*()>> type_register = {};
+    static std::map<std::string, ClassArchiveInfo> type_register;
     return type_register;
   }
 }

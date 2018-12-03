@@ -16,6 +16,7 @@ namespace ngcore
       : BinaryOutArchive(std::make_shared<std::ofstream>(filename)) {}
     virtual ~BinaryOutArchive () { FlushBuffer(); }
 
+    using Archive::operator&;
     virtual Archive & operator & (double & d)
     { return Write(d); }
     virtual Archive & operator & (int & i)
@@ -81,6 +82,7 @@ namespace ngcore
     BinaryInArchive (std::string filename)
       : BinaryInArchive(std::make_shared<std::ifstream>(filename)) {}
 
+    using Archive::operator&;
     virtual Archive & operator & (double & d)
     { Read(d); return *this; }
     virtual Archive & operator & (int & i)

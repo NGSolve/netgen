@@ -4,7 +4,6 @@ if(NOT WIN32)
         $<TARGET_OBJECTS:la>
         $<TARGET_OBJECTS:gprim>
         $<TARGET_OBJECTS:gen>
-        $<TARGET_OBJECTS:ngcore>
         )
 endif(NOT WIN32)
 
@@ -31,7 +30,7 @@ if(APPLE)
 endif(APPLE)
 
 if(NOT WIN32)
-    target_link_libraries( mesh ${ZLIB_LIBRARIES} ${MPI_CXX_LIBRARIES} ${PYTHON_LIBRARIES} ${METIS_LIBRARY})
+    target_link_libraries( mesh ngcore ${ZLIB_LIBRARIES} ${MPI_CXX_LIBRARIES} ${PYTHON_LIBRARIES} ${METIS_LIBRARY})
     install( TARGETS mesh ${NG_INSTALL_DIR})
 endif(NOT WIN32)
 

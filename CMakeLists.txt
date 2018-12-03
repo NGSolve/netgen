@@ -17,6 +17,7 @@ option( INTEL_MIC        "cross compile for intel xeon phi")
 option( INSTALL_PROFILES "install environment variable settings to /etc/profile.d" OFF )
 option( USE_CCACHE       "use ccache")
 option( USE_INTERNAL_TCL "Compile tcl files into the code and don't install them" ON)
+option( ENABLE_UNIT_TESTS "Enable Catch unit tests")
 
 option( USE_SUPERBUILD       "use ccache" ON)
 
@@ -340,6 +341,11 @@ execute_process(COMMAND hdiutil create -volname Netgen -srcfolder ${CMAKE_INSTAL
 # CTest
 enable_testing()
 include(CTest)
+
+if(ENABLE_UNIT_TESTS)
+  include(${CMAKE_CURRENT_LIST_DIR}/cmake/external_projects/catch.cmake)
+endif(ENABLE_UNIT_TESTS)
+
 
 #######################################################################
 

@@ -140,6 +140,7 @@ set_vars( NETGEN_CMAKE_ARGS
   INTEL_MIC
   CMAKE_PREFIX_PATH
   CMAKE_INSTALL_PREFIX
+  ENABLE_UNIT_TESTS
   )
 
 # propagate all variables set on the command line using cmake -DFOO=BAR
