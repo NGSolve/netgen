@@ -601,8 +601,10 @@ namespace netgen
         // not complete, use at own risk ...
         // meshing.Delaunay(*mesh, domnr, mp);
         mp.checkoverlap = 0;
-        meshing.GenerateMesh (*mesh, mp, h, domnr);
-
+        auto res = meshing.GenerateMesh (*mesh, mp, h, domnr);
+        if (res != 0)
+          throw NgException("meshing failed");
+        
 	for (SurfaceElementIndex sei = oldnf; sei < mesh->GetNSE(); sei++)
 	  (*mesh)[sei].SetIndex (domnr);
 
