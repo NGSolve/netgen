@@ -207,6 +207,9 @@ namespace netgen
 
 
     // mesh size restrictions ...
+
+    for (auto & point : geompoints)
+      mesh2d.RestrictLocalH (Point<3> (point(0), point(1), 0), point.hmax);
     
     for (int i = 0; i < splines.Size(); i++)
       {
@@ -240,7 +243,21 @@ namespace netgen
     
     for (auto mspnt : mp.meshsize_points)
       mesh2d.RestrictLocalH (mspnt.pnt, mspnt.h);
-    
+
+    // add point elements
+    for (auto & point : geompoints)
+      if (point.name.length())
+        {
+          Point<3> newp(point(0), point(1), 0);
+          PointIndex npi = mesh2d.AddPoint (newp, 1, FIXEDPOINT);
+          mesh2d.AddLockedPoint(npi);
+          Element0d el(npi, npi);
+          el.name = point.name;
+          mesh2d.SetCD2Name(npi, point.name);
+          mesh2d.pointelements.Append (el);
+          searchtree.Insert (newp, npi);          
+        }
+
     // first add all vertices (for compatible orientation on periodic bnds)
     {
       double diam2 = Dist2(pmin, pmax);

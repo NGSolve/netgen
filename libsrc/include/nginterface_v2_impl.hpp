@@ -47,6 +47,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<0> (size_t nr) const
   Ng_Element ret;
   ret.type = NG_PNT;
   ret.index = el.index;
+  ret.mat = &el.name;
   
   ret.points.num = 1;
   ret.points.ptr = (int*)&el.pnum;
