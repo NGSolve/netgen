@@ -4,11 +4,12 @@
 namespace ngcore
 {
   class Archive;
+  std::string demangle(const char* typeinfo);
 
   // create new pointer of type T if it is default constructible, else throw
   template<typename T>
   T* constructIfPossible_impl(...)
-  { throw std::runtime_error(std::string(typeid(T).name()) + " is not default constructible!"); }
+  { throw std::runtime_error(std::string(demangle(typeid(T).name())) + " is not default constructible!"); }
 
   template<typename T, typename= typename std::enable_if<std::is_constructible<T>::value>::type>
   T* constructIfPossible_impl(int) { return new T; }
@@ -164,11 +165,11 @@ namespace ngcore
           // Downcasting is only possible for our registered classes
           if(typeid(T) != typeid(*ptr))
             {
-              if(GetArchiveRegister().count(std::string(typeid(*ptr).name())) == 0)
+              if(GetArchiveRegister().count(demangle(typeid(*ptr).name())) == 0)
                   throw std::runtime_error(std::string("Archive error: Polymorphic type ")
-                                           + typeid(*ptr).name()
+                                           + demangle(typeid(*ptr).name())
                                            + " not registered for archive");
-              reg_ptr = GetArchiveRegister()[typeid(*ptr).name()].downcaster(typeid(T), ptr.get());
+              reg_ptr = GetArchiveRegister()[demangle(typeid(*ptr).name())].downcaster(typeid(T), ptr.get());
               // if there was a true downcast we have to store more information
               if(reg_ptr != (void*) ptr.get())
                   neededDowncast = true;
@@ -182,14 +183,14 @@ namespace ngcore
               (*this) & neededDowncast & p;
               // if we did downcast we store the true type as well
               if(neededDowncast)
-                (*this) << std::string(typeid(*ptr).name());
+                (*this) << demangle(typeid(*ptr).name());
               shared_ptr2nr[reg_ptr] = shared_ptr_count++;
               return *this;
             }
           // if found store the position and if it has to be downcasted and how
           (*this) << pos->second << neededDowncast;
           if(neededDowncast)
-              (*this) << std::string(typeid(*ptr).name());
+            (*this) << demangle(typeid(*ptr).name());
           return (*this);
         }
       else // Input
@@ -261,12 +262,12 @@ namespace ngcore
           void* reg_ptr = (void*)p;
           if(typeid(T) != typeid(*p))
             {
-              if(GetArchiveRegister().count(std::string(typeid(*p).name())) == 0)
+              if(GetArchiveRegister().count(demangle(typeid(*p).name())) == 0)
                 throw std::runtime_error(std::string("Archive error: Polymorphic type ")
-                                         + typeid(*p).name()
+                                         + demangle(typeid(*p).name())
                                          + " not registered for archive");
               else
-                reg_ptr = GetArchiveRegister()[typeid(*p).name()].downcaster(typeid(T), (void*) p);
+                reg_ptr = GetArchiveRegister()[demangle(typeid(*p).name())].downcaster(typeid(T), (void*) p);
             }
           auto pos = ptr2nr.find(reg_ptr);
           // if the pointer is not found in the map create a new entry
@@ -280,19 +281,19 @@ namespace ngcore
                                }
                 else
                   throw std::runtime_error(std::string("Archive error: Class ") +
-                                           typeid(*p).name() + " does not provide a default constructor!");
+                                           demangle(typeid(*p).name()) + " does not provide a default constructor!");
               else
                 {
                   // if a pointer to a base class is archived, the class hierarchy must be registered
                   // to avoid compile time issues we allow this behaviour only for "our" classes that
                   // implement a void DoArchive(Archive&) member function
                   // To recreate the object we need to store the true type of it
-                  if(GetArchiveRegister().count(std::string(typeid(*p).name())) == 0)
+                  if(GetArchiveRegister().count(demangle(typeid(*p).name())) == 0)
                     throw std::runtime_error(std::string("Archive error: Polymorphic type ")
-                                             + typeid(*p).name()
+                                             + demangle(typeid(*p).name())
                                              + " not registered for archive");
                   else
-                    return (*this) << -3 << std::string(typeid(*p).name()) & (*p);
+                    return (*this) << -3 << demangle(typeid(*p).name()) & (*p);
                 }
             }
           else
@@ -300,7 +301,7 @@ namespace ngcore
               (*this) & pos->second;
               bool downcasted = !(reg_ptr == (void*) p);
               // store if the class has been downcasted and the name
-              (*this) << downcasted << std::string(typeid(*p).name());
+              (*this) << downcasted << demangle(typeid(*p).name());
             }
         }
       else
@@ -373,7 +374,7 @@ namespace ngcore
                     { return typeid(T) == ti ? p : Caster<T, Bases...>::tryUpcast(ti, (T*) p); };
       info.downcaster = [this](const std::type_info& ti, void* p) -> void*
                         { return typeid(T) == ti ? p : Caster<T, Bases...>::tryDowncast(ti, p); };
-      GetArchiveRegister()[std::string(typeid(T).name())] = info;
+      GetArchiveRegister()[std::string(demangle(typeid(T).name()))] = info;
     }
   };
 
@@ -396,7 +397,7 @@ namespace ngcore
     static void* tryUpcast(const std::type_info& ti, T* p)
     {
       try
-        { return GetArchiveRegister()[typeid(B1).name()].upcaster(ti, (void*) (dynamic_cast<B1*>(p))); }
+        { return GetArchiveRegister()[demangle(typeid(B1).name())].upcaster(ti, (void*) (dynamic_cast<B1*>(p))); }
       catch(std::exception)
         { return Caster<T, Brest...>::tryUpcast(ti, p); }
     }
@@ -406,7 +407,7 @@ namespace ngcore
       if(typeid(B1) == ti)
         return dynamic_cast<T*>((B1*) p);
       try
-        { return GetArchiveRegister()[typeid(B1).name()].downcaster(ti, (void*) ((B1*)p)); }
+        { return GetArchiveRegister()[demangle(typeid(B1).name())].downcaster(ti, (void*) ((B1*)p)); }
       catch(std::exception)
         { return Caster<T, Brest...>::tryDowncast(ti, p); }
     }
