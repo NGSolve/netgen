@@ -37,7 +37,7 @@ if(APPLE)
       URL_MD5 a6d47a996ea957416469b12965d4db91
       DEPENDS project_tcl project_tk
       DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
-      PATCH_COMMAND  patch -p1 < ${CMAKE_CURRENT_LIST_DIR}/tkdnd_macosx.patch
+      PATCH_COMMAND  patch < ${CMAKE_CURRENT_LIST_DIR}/tkdnd_macosx.patch
       UPDATE_COMMAND "" # Disable update
       BUILD_IN_SOURCE 1
       CMAKE_ARGS
