@@ -9,9 +9,7 @@ add_library(interface ${NG_LIB_TYPE}
 
 if(NOT WIN32)
     target_link_libraries(interface mesh csg geom2d)
-    if(USE_GUI)
-        target_link_libraries(interface visual)
-    endif(USE_GUI)
+    target_link_libraries(interface visual)
     install( TARGETS interface ${NG_INSTALL_DIR})
 endif(NOT WIN32)
 
