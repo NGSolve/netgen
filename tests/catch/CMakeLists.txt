@@ -27,4 +27,5 @@ macro(add_unit_test name sources)
 endmacro()
 
 add_unit_test(archive archive.cpp)
+add_unit_test(version version.cpp)
 endif(ENABLE_UNIT_TESTS)

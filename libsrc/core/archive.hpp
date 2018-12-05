@@ -6,15 +6,21 @@ namespace ngcore
   // BinaryOutArchive ======================================================================
   class BinaryOutArchive : public Archive
   {
-    std::shared_ptr<std::ostream> fout;
     size_t ptr = 0;
     enum { BUFFERSIZE = 1024 };
     char buffer[BUFFERSIZE];
+    std::shared_ptr<std::ostream> fout;
   public:
-    BinaryOutArchive (std::shared_ptr<std::ostream> afout) : Archive(true), fout(afout) { ; }
-    BinaryOutArchive (std::string filename)
+    BinaryOutArchive(std::shared_ptr<std::ostream> afout) : Archive(true), fout(afout)
+    {
+      (*this) & GetLibraryVersions();
+    }
+    BinaryOutArchive(std::string filename)
       : BinaryOutArchive(std::make_shared<std::ofstream>(filename)) {}
     virtual ~BinaryOutArchive () { FlushBuffer(); }
+
+    const VersionInfo& getVersion(const std::string& library)
+    { return GetLibraryVersions()[library]; }
 
     using Archive::operator&;
     virtual Archive & operator & (double & d)
@@ -76,11 +82,18 @@ namespace ngcore
   // BinaryInArchive ======================================================================
   class BinaryInArchive : public Archive
   {
+    std::map<std::string, VersionInfo> vinfo;
     std::shared_ptr<std::istream> fin;
   public:
-    BinaryInArchive (std::shared_ptr<std::istream> afin) : Archive(false), fin(afin) { ; }
+    BinaryInArchive (std::shared_ptr<std::istream> afin) : Archive(false), fin(afin)
+    {
+      (*this) & vinfo;
+    }
     BinaryInArchive (std::string filename)
-      : BinaryInArchive(std::make_shared<std::ifstream>(filename)) {}
+      : BinaryInArchive(std::make_shared<std::ifstream>(filename)) { ; }
+
+    const VersionInfo& getVersion(const std::string& library)
+    { return vinfo[library]; }
 
     using Archive::operator&;
     virtual Archive & operator & (double & d)
@@ -133,9 +146,15 @@ namespace ngcore
   {
     std::shared_ptr<std::ostream> fout;
   public:
-    TextOutArchive (std::shared_ptr<std::ostream> afout) : Archive(true), fout(afout) { }
+    TextOutArchive (std::shared_ptr<std::ostream> afout) : Archive(true), fout(afout)
+    {
+      (*this) & GetLibraryVersions();
+    }
     TextOutArchive (std::string filename) :
       TextOutArchive(std::make_shared<std::ofstream>(filename.c_str())) { }
+
+    const VersionInfo& getVersion(const std::string& library)
+    { return GetLibraryVersions()[library]; }
 
     using Archive::operator&;
     virtual Archive & operator & (double & d)
@@ -156,16 +175,22 @@ namespace ngcore
     {
       int len = str.length();
       *fout << len << '\n';
-      fout->write(&str[0], len);
-      *fout << '\n';
+      if(len)
+        {
+          fout->write(&str[0], len);
+          *fout << '\n';
+        }
       return *this;
     }
     virtual Archive & operator & (char *& str)
     {
       int len = strlen (str);
       *fout << len << '\n';
-      fout->write (&str[0], len);
-      *fout << '\n';
+      if(len)
+        {
+          fout->write (&str[0], len);
+          *fout << '\n';
+        }
       return *this;
     }
   };
@@ -173,11 +198,18 @@ namespace ngcore
   // TextInArchive ======================================================================
   class TextInArchive : public Archive
   {
+    std::map<std::string, VersionInfo> vinfo;
     std::shared_ptr<std::istream> fin;
   public:
-    TextInArchive (std::shared_ptr<std::istream> afin) : Archive(false), fin(afin) { ; }
+    TextInArchive (std::shared_ptr<std::istream> afin) : Archive(false), fin(afin)
+    {
+      (*this) & vinfo;
+    }
     TextInArchive (std::string filename)
       : TextInArchive(std::make_shared<std::ifstream>(filename)) {}
+
+    const VersionInfo& getVersion(const std::string& library)
+    { return vinfo[library]; }
 
     using Archive::operator&;
     virtual Archive & operator & (double & d)
@@ -201,7 +233,8 @@ namespace ngcore
       char ch;
       fin->get(ch); // '\n'
       str.resize(len);
-      fin->get(&str[0], len+1, '\0');
+      if(len)
+        fin->get(&str[0], len+1, '\0');
       return *this;
     }
     virtual Archive & operator & (char *& str)
@@ -211,7 +244,8 @@ namespace ngcore
       char ch;
       fin->get(ch); // '\n'
       str = new char[len+1];
-      fin->get(&str[0], len, '\0');
+      if(len)
+        fin->get(&str[0], len, '\0');
       str[len] = 0;
       return *this;
     }

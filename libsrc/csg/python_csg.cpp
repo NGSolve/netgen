@@ -371,19 +371,17 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
     .def(py::pickle(
                     [](CSGeometry& self)
                     {
-                      stringstream ss;
-                      self.Save(ss);
-                      cout << "pickle = " << endl << ss.str() << endl;
-                      return py::make_tuple(ss.str());
+                      auto ss = make_shared<stringstream>();
+                      BinaryOutArchive archive(ss);
+                      archive & self;
+                      return py::make_tuple(ss->str());
                     },
                     [](py::tuple state)
                     {
                       auto geo = make_shared<CSGeometry>();
-                      auto val = py::cast<string>(state[0]);
-                      cout << "unpickle = " << endl << val << endl;
-                      stringstream ss(py::cast<string>(state[0]));
-                      // geo->Load(ss);
-                      // geo->FindIdenticSurfaces(1e-8 * geo->MaxSize());
+                      auto ss = make_shared<stringstream> (py::cast<string>(state[0]));
+                      BinaryInArchive archive(ss);
+                      archive & (*geo);
                       return geo;
                     }))
     .def("Save", FunctionPointer([] (CSGeometry & self, string filename)

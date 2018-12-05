@@ -3,6 +3,10 @@
 
 namespace ngcore
 {
+  class VersionInfo;
+  // Libraries using this archive can store their version here to implement backwards compatibility
+  std::map<std::string, VersionInfo>& GetLibraryVersions();
+
   class Archive;
   std::string demangle(const char* typeinfo);
 
@@ -75,6 +79,7 @@ namespace ngcore
 
     bool Output () { return is_output; }
     bool Input () { return !is_output; }
+    virtual const VersionInfo& getVersion(const std::string& library) = 0;
 
     // Pure virtual functions that have to be implemented by In-/OutArchive
     virtual Archive & operator & (double & d) = 0;
@@ -114,6 +119,29 @@ namespace ngcore
       if(!is_output)
         v.resize(size);
       Do(&v[0], size);
+      return (*this);
+    }
+    template<typename T1, typename T2>
+    Archive& operator& (std::map<T1, T2>& map)
+    {
+      if(is_output)
+        {
+          (*this) << size_t(map.size());
+          for(auto& pair : map)
+              (*this) << pair.first << pair.second;
+        }
+      else
+        {
+          size_t size;
+          (*this) & size;
+          T1 key; T2 val;
+          for(size_t i = 0; i < size; i++)
+            {
+              T1 key; T2 val;
+              (*this) & key & val;
+              map[key] = val;
+            }
+        }
       return (*this);
     }
     // Archive arrays =====================================================

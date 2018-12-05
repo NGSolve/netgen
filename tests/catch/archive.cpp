@@ -203,8 +203,24 @@ void testMultipleInheritance(Archive& in, Archive& out)
     }
 }
 
+void testLibraryVersion(Archive& in, Archive& out)
+{
+  GetLibraryVersions()["netgen"] = "v6.2.1812";
+  CHECK(in.getVersion("netgen") == "v6.2.1811");
+  CHECK(out.getVersion("netgen") == "v6.2.1812");
+}
+
 void testArchive(Archive& in, Archive& out)
 {
+  SECTION("Empty String")
+    {
+      out << string("") << 1;
+      out.FlushBuffer();
+      string str; int i;
+      in & str & i;
+      CHECK(str == "");
+      CHECK(i == 1);
+    }
   SECTION("SharedPtr")
     {
       testSharedPointer(in, out);
@@ -226,10 +242,15 @@ void testArchive(Archive& in, Archive& out)
     {
       testNullPtr(in, out);
     }
+  SECTION("Library Version")
+    {
+      testLibraryVersion(in,out);
+    }
 }
 
 TEST_CASE("BinaryArchive")
 {
+  GetLibraryVersions()["netgen"] = "v6.2.1811";
   auto stream = make_shared<stringstream>();
   BinaryOutArchive out(stream);
   BinaryInArchive in(stream);
@@ -238,6 +259,7 @@ TEST_CASE("BinaryArchive")
 
 TEST_CASE("TextArchive")
 {
+  GetLibraryVersions()["netgen"] = "v6.2.1811";
   auto stream = make_shared<stringstream>();
   TextOutArchive out(stream);
   TextInArchive in(stream);

@@ -7,6 +7,11 @@
 
 namespace ngcore
 {
+  std::map<std::string, VersionInfo>& GetLibraryVersions()
+  {
+    static std::map<std::string, VersionInfo> library_versions;
+    return library_versions;
+  }
 #ifdef WIN
   // windows does demangling in typeid(T).name()
   std::string demangle(const char* typeinfo) { return typeinfo; }
