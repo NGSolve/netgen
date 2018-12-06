@@ -374,12 +374,13 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
                       auto ss = make_shared<stringstream>();
                       BinaryOutArchive archive(ss);
                       archive & self;
-                      return py::make_tuple(ss->str());
+                      archive.FlushBuffer();
+                      return py::make_tuple(py::bytes(ss->str()));
                     },
                     [](py::tuple state)
                     {
                       auto geo = make_shared<CSGeometry>();
-                      auto ss = make_shared<stringstream> (py::cast<string>(state[0]));
+                      auto ss = make_shared<stringstream> (py::cast<py::bytes>(state[0]));
                       BinaryInArchive archive(ss);
                       archive & (*geo);
                       return geo;

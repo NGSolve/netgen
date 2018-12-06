@@ -28,7 +28,15 @@ namespace netgen
 
   public:
     Parallelogram3d (Point<3> ap1, Point<3> ap2, Point<3> ap3);
+    // default constructor for archive
+    Parallelogram3d() {}
     virtual ~Parallelogram3d ();
+
+    virtual void DoArchive(Archive& ar)
+    {
+      Surface::DoArchive(ar);
+      ar & p1 & p2 & p3 & p4 & v12 & v13 & n;
+    }
 
     void SetPoints (Point<3> ap1, Point<3> ap2, Point<3> ap3);
 
@@ -60,7 +68,15 @@ namespace netgen
 
   public:
     Brick (Point<3> ap1, Point<3> ap2, Point<3> ap3, Point<3> ap4);
+    // default constructor for archive
+    Brick() {}
     virtual ~Brick ();
+
+    virtual void DoArchive(Archive& ar)
+    {
+      Primitive::DoArchive(ar);
+      ar & p1 & p2 & p3 & p4 & v12 & v13 & v14 & faces;
+    }
     static Primitive * CreateDefault ();
 
     virtual Primitive * Copy () const;
@@ -116,7 +132,15 @@ namespace netgen
     Point<3> pmin, pmax;
   public:
     OrthoBrick (const Point<3> & ap1, const Point<3> & ap2);
-  
+    // default constructor for archive
+    OrthoBrick() {}
+
+    virtual void DoArchive(Archive& ar)
+    {
+      Brick::DoArchive(ar);
+      ar & pmin & pmax;
+    }
+
     virtual INSOLID_TYPE BoxInSolid (const BoxSphere<3> & box) const;
     virtual void Reduce (const BoxSphere<3> & box);
   };

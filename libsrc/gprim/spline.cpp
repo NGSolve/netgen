@@ -551,11 +551,10 @@ namespace netgen
   template class  SplineSeg3<2>;
   template class  SplineSeg3<3>;
 
-
-
-
-
-
-
-
+  RegisterClassForArchive<SplineSeg<2>> regss2;
+  RegisterClassForArchive<SplineSeg<3>> regss3;
+  RegisterClassForArchive<LineSeg<2>, SplineSeg<2>> regls2;
+  RegisterClassForArchive<LineSeg<3>, SplineSeg<3>> regls3;
+  RegisterClassForArchive<SplineSeg3<2>, SplineSeg<2>> regsss2;
+  RegisterClassForArchive<SplineSeg3<3>, SplineSeg<3>> regsss3;
 }

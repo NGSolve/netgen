@@ -39,18 +39,20 @@ namespace ngcore
     { return Write(b); }
     virtual Archive & operator & (std::string & str)
     {
-      if (ptr > 0) FlushBuffer();
       int len = str.length();
-      fout->write (reinterpret_cast<char*>(&len), sizeof(int));
-      fout->write (&str[0], len);
+      (*this) & len;
+      FlushBuffer();
+      if(len)
+        fout->write (&str[0], len);
       return *this;
     }
     virtual Archive & operator & (char *& str)
     {
-      if (ptr > 0) FlushBuffer();
-      int len = strlen (str);
-      fout->write (reinterpret_cast<char*>(&len), sizeof(int));
-      fout->write (&str[0], len);
+      long len = str ? strlen (str) : -1;
+      (*this) & len;
+      FlushBuffer();
+      if(len > 0)
+        fout->write (&str[0], len);
       return *this;
     }
     void FlushBuffer()
@@ -113,18 +115,24 @@ namespace ngcore
     virtual Archive & operator & (std::string & str)
     {
       int len;
-      Read(len);
+      (*this) & len;
       str.resize(len);
-      fin->read(&str[0], len);
+      if(len)
+        fin->read(&str[0], len);
       return *this;
     }
     virtual Archive & operator & (char *& str)
     {
-      int len;
-      Read(len);
-      str = new char[len+1];
-      fin->read(&str[0], len);
-      str[len] = '\0';
+      long len;
+      (*this) & len;
+      if(len == -1)
+        str = nullptr;
+      else
+        {
+          str = new char[len+1];
+          fin->read(&str[0], len);
+          str[len] = '\0';
+        }
       return *this;
     }
 
@@ -184,9 +192,9 @@ namespace ngcore
     }
     virtual Archive & operator & (char *& str)
     {
-      int len = strlen (str);
-      *fout << len << '\n';
-      if(len)
+      long len = str ? strlen (str) : -1;
+      *this & len;
+      if(len > 0)
         {
           fout->write (&str[0], len);
           *fout << '\n';
@@ -239,14 +247,21 @@ namespace ngcore
     }
     virtual Archive & operator & (char *& str)
     {
-      int len;
-      *fin >> len;
+      long len;
+      (*this) & len;
       char ch;
-      fin->get(ch); // '\n'
+      if(len == -1)
+        {
+          str = nullptr;
+          return (*this);
+        }
       str = new char[len+1];
       if(len)
-        fin->get(&str[0], len, '\0');
-      str[len] = 0;
+        {
+          fin->get(ch); // \n
+          fin->get(&str[0], len+1, '\0');
+        }
+      str[len] = '\0';
       return *this;
     }
   };

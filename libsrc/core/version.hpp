@@ -4,13 +4,13 @@ namespace ngcore
   class VersionInfo
   {
   private:
-    size_t mayor, minor, date, commit_offset;
+    size_t mayor, minor, release, patch;
     std::string git_hash;
   public:
-    VersionInfo() : mayor(0), minor(0), date(0), commit_offset(0), git_hash("") {}
+    VersionInfo() : mayor(0), minor(0), release(0), patch(0), git_hash("") {}
     VersionInfo(std::string vstring)
     {
-      minor = date = commit_offset = 0;
+      minor = release = patch = 0;
       git_hash = "";
       if(vstring.substr(0,1) == "v")
         vstring = vstring.substr(1,vstring.size()-1);
@@ -27,13 +27,13 @@ namespace ngcore
           if(vstring.size())
             {
               dot = vstring.find("-");
-              date = std::stoi(vstring.substr(0,dot));
+              release = std::stoi(vstring.substr(0,dot));
               if(dot == size_t(-1)) vstring = "";
               else vstring = vstring.substr(dot+1,vstring.size()-dot-1);
               if(vstring.size())
                 {
                   dot = vstring.find("-");
-                  commit_offset = std::stoi(vstring.substr(0,dot));
+                  patch = std::stoi(vstring.substr(0,dot));
                   if(dot == size_t(-1)) vstring = "";
                   else vstring = vstring.substr(dot+1, vstring.size()-dot-1);
                   if(vstring.size())
@@ -46,15 +46,15 @@ namespace ngcore
 
     std::string to_string() const
     { std::string vstring = "v" + std::to_string(mayor);
-      if(minor || date || commit_offset || git_hash.size())
+      if(minor || release || patch || git_hash.size())
         {
           vstring += "." + std::to_string(minor);
-          if(date || commit_offset || git_hash.size())
+          if(release || patch || git_hash.size())
             {
-              vstring += "." + std::to_string(date);
-              if(commit_offset || git_hash.size())
+              vstring += "." + std::to_string(release);
+              if(patch || git_hash.size())
                 {
-                  vstring += "-" + std::to_string(commit_offset);
+                  vstring += "-" + std::to_string(patch);
                   if(git_hash.size())
                     vstring += "-" + git_hash;
                 }
@@ -64,13 +64,13 @@ namespace ngcore
     }
     bool operator <(const VersionInfo& other) const
     {
-      return std::tie(mayor, minor, date, commit_offset) <
-        std::tie(other.mayor, other.minor, other.date, other.commit_offset);
+      return std::tie(mayor, minor, release, patch) <
+        std::tie(other.mayor, other.minor, other.release, other.patch);
     }
     bool operator ==(const VersionInfo& other) const
     {
-      return mayor == other.mayor && minor == other.minor && date == other.date
-        && commit_offset == other.commit_offset;
+      return mayor == other.mayor && minor == other.minor && release == other.release
+        && patch == other.patch;
     }
     bool operator >(const VersionInfo& other) const { return other < (*this); }
     bool operator <=(const VersionInfo& other) const { return !((*this) > other); }
@@ -78,7 +78,7 @@ namespace ngcore
 
     void DoArchive(Archive& ar)
     {
-      ar & mayor & minor & date & commit_offset & git_hash;
+      ar & mayor & minor & release & patch & git_hash;
     }
   };
 }

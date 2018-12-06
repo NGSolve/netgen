@@ -55,6 +55,8 @@ namespace netgen
   public:
     Solid (Primitive * aprim);
     Solid (optyp aop, Solid * as1, Solid * as2 = NULL);
+    // default constructor for archive
+    Solid () {}
     ~Solid ();
 
     void DoArchive(Archive& archive)

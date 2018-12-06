@@ -68,6 +68,21 @@ public:
 
 class NotRegisteredForArchive : public SharedPtrAndPtrHolder {};
 
+class ClassWithConstPtr
+{
+private:
+  const int* ptr;
+public:
+  ClassWithConstPtr(const int* aptr) : ptr(aptr) { }
+  // constructor only for archive
+  ClassWithConstPtr() {}
+  void DoArchive(Archive& ar)
+  {
+    ar & ptr;
+  }
+  const int* getPtr() { return ptr; }
+};
+
 class OneMoreDerivedClass : public SharedPtrAndPtrHolder {};
 
 static RegisterClassForArchive<CommonBase> regb;
@@ -110,18 +125,36 @@ void testSharedPointer(Archive& in, Archive& out)
 
 void testPointer(Archive& in, Archive& out)
 {
-  SECTION("Same pointer")
+  PtrHolder holder, holder2;
+  holder.numbers.push_back(new int(3));
+  holder2.numbers = holder.numbers; // same shared ptr
+  out & holder & holder2;
+  out.FlushBuffer();
+  PtrHolder inholder, inholder2;
+  in & inholder & inholder2;
+  CHECK(inholder.numbers.size() == 1);
+  CHECK(inholder.numbers[0] == inholder2.numbers[0]);
+  CHECK(*inholder.numbers[0] == 3);
+}
+
+void testConstPointer(Archive& in, Archive& out)
+{
+  SECTION("Const pointer")
     {
-      PtrHolder holder, holder2;
-      holder.numbers.push_back(new int(3));
-      holder2.numbers = holder.numbers; // same shared ptr
-      out & holder & holder2;
+      int* iptr = new int(4);
+      double d = 0.1;
+      ClassWithConstPtr cls(iptr);
+      out & cls & iptr & d;
       out.FlushBuffer();
-      PtrHolder inholder, inholder2;
-      in & inholder & inholder2;
-      CHECK(inholder.numbers.size() == 1);
-      CHECK(inholder.numbers[0] == inholder2.numbers[0]);
-      CHECK(*inholder.numbers[0] == 3);
+      ClassWithConstPtr incls;
+      int* iniptr;
+      double ind;
+      in & incls & iniptr & ind;
+      CHECK(*incls.getPtr() == 4);
+      CHECK(incls.getPtr() == iniptr);
+      CHECK(ind == 0.1);
+      delete iptr;
+      delete iniptr;
     }
 }
 
@@ -205,7 +238,7 @@ void testMultipleInheritance(Archive& in, Archive& out)
 
 void testLibraryVersion(Archive& in, Archive& out)
 {
-  GetLibraryVersions()["netgen"] = "v6.2.1812";
+  SetLibraryVersion("netgen","v6.2.1812");
   CHECK(in.getVersion("netgen") == "v6.2.1811");
   CHECK(out.getVersion("netgen") == "v6.2.1812");
 }
@@ -214,12 +247,25 @@ void testArchive(Archive& in, Archive& out)
 {
   SECTION("Empty String")
     {
-      out << string("") << 1;
+      char* cstr = nullptr;
+      char* empty = new char[1];
+      char* simple = new char[7] {'s','i','m','p','l','e','\0'};
+      empty[0] = '\0';
+      out << string("") << cstr << empty << simple << string("simple") << long(1);
       out.FlushBuffer();
-      string str; int i;
-      in & str & i;
+      string str; long i; char* readempty; char* readsimple;
+      string simplestr;
+      in & str & cstr & readempty & readsimple & simplestr & i;
       CHECK(str == "");
+      CHECK(cstr == nullptr);
+      CHECK(strcmp(readempty,"") == 0);
+      CHECK(strcmp(readsimple,"simple") == 0);
       CHECK(i == 1);
+      CHECK(simplestr == "simple");
+      delete[] readempty;
+      delete[] empty;
+      delete[] simple;
+      delete[] readsimple;
     }
   SECTION("SharedPtr")
     {
@@ -228,6 +274,10 @@ void testArchive(Archive& in, Archive& out)
   SECTION("Pointer")
     {
       testPointer(in, out);
+    }
+  SECTION("Const Pointer")
+    {
+      testConstPointer(in, out);
     }
   SECTION("Multiple inheritance")
     {
@@ -250,7 +300,7 @@ void testArchive(Archive& in, Archive& out)
 
 TEST_CASE("BinaryArchive")
 {
-  GetLibraryVersions()["netgen"] = "v6.2.1811";
+  SetLibraryVersion("netgen","v6.2.1811");
   auto stream = make_shared<stringstream>();
   BinaryOutArchive out(stream);
   BinaryInArchive in(stream);
@@ -259,7 +309,7 @@ TEST_CASE("BinaryArchive")
 
 TEST_CASE("TextArchive")
 {
-  GetLibraryVersions()["netgen"] = "v6.2.1811";
+  SetLibraryVersion("netgen","v6.2.1811");
   auto stream = make_shared<stringstream>();
   TextOutArchive out(stream);
   TextInArchive in(stream);

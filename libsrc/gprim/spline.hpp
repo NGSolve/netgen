@@ -35,6 +35,11 @@ namespace netgen
     ///
     GeomPoint (const Point<D> & ap, double aref = 1, double ahpref=0)
       : Point<D>(ap), refatpoint(aref), hmax(1e99), hpref(ahpref) { ; }
+    void DoArchive(Archive& ar)
+    {
+      Point<D>::DoArchive(ar);
+      ar & refatpoint & hmax & hpref;
+    }
   };
 
 
@@ -72,6 +77,7 @@ namespace netgen
       second = 1.0/sqr(eps) * ( (pr-point)+(pl-point));
     }
 
+    virtual void DoArchive(Archive& ar) = 0;
 
     /// returns initial point on curve
     virtual const GeomPoint<D> & StartPI () const = 0;
@@ -122,6 +128,12 @@ namespace netgen
     ///
     LineSeg (const GeomPoint<D> & ap1, const GeomPoint<D> & ap2);
     ///
+    // default constructor for archive
+    LineSeg() {}
+    virtual void DoArchive(Archive& ar)
+    {
+      ar & p1 & p2;
+    }
     virtual double Length () const;
     ///
     inline virtual Point<D> GetPoint (double t) const;
@@ -172,7 +184,13 @@ namespace netgen
     SplineSeg3 (const GeomPoint<D> & ap1, 
 		const GeomPoint<D> & ap2, 
 		const GeomPoint<D> & ap3);
+    // default constructor for archive
+    SplineSeg3() {}
     ///
+    virtual void DoArchive(Archive& ar)
+    {
+      ar & p1 & p2 & p3 & weight & proj_latest_t;
+    }
     inline virtual Point<D> GetPoint (double t) const;
     ///
     virtual Vec<D> GetTangent (const double t) const;
@@ -226,6 +244,12 @@ namespace netgen
     CircleSeg (const GeomPoint<D> & ap1, 
 	       const GeomPoint<D> & ap2, 
 	       const GeomPoint<D> & ap3);
+    // default constructor for archive
+    CircleSeg() {}
+    virtual void DoArchive(Archive& ar)
+    {
+      ar & p1 & p2 & p3 & pm & radius & w1 & w3;
+    }
     ///
     virtual Point<D> GetPoint (double t) const;
     ///
@@ -270,6 +294,12 @@ namespace netgen
   public:
     ///
     DiscretePointsSeg (const Array<Point<D> > & apts);
+    // default constructor for archive
+    DiscretePointsSeg() {}
+    virtual void DoArchive(Archive& ar)
+    {
+      ar & pts & p1n & p2n;
+    }
     ///
     virtual ~DiscretePointsSeg ();
     ///
@@ -624,8 +654,14 @@ namespace netgen
     ///
     BSplineSeg (const Array<Point<D> > & apts);
     ///
+    //default constructor for archive
+    BSplineSeg() {}
     virtual ~BSplineSeg();
     ///
+    virtual void DoArchive(Archive& ar)
+    {
+      ar & pts & p1n & p2n & ti;
+    }
     virtual Point<D> GetPoint (double t) const;
     ///
     virtual const GeomPoint<D> & StartPI () const { return p1n; };

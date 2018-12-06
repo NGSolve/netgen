@@ -28,6 +28,7 @@ namespace ngcore
 }
 
 // own includes
+#include "type_traits.hpp"
 #include "basearchive.hpp"
 #include "version.hpp"
 #include "archive.hpp"

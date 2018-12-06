@@ -39,6 +39,8 @@ namespace netgen
   public:
     TopLevelObject (Solid * asolid,
 		    Surface * asurface = NULL);
+    // default constructor for archive
+    TopLevelObject() {}
 
     void DoArchive(Archive& archive)
     {

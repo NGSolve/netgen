@@ -47,8 +47,8 @@ namespace netgen
         auto ext = dynamic_cast<const SplineSegExt *>(spline);
         if(ext)
           {
-            ss3 = dynamic_cast<const SplineSeg3<2> *>(&ext->seg);
-            ls = dynamic_cast<const LineSeg<2> *>(&ext->seg);
+            ss3 = dynamic_cast<const SplineSeg3<2> *>(ext->seg);
+            ls = dynamic_cast<const LineSeg<2> *>(ext->seg);
           }
         else
           {

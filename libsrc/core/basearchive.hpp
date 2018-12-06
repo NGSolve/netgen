@@ -5,7 +5,8 @@ namespace ngcore
 {
   class VersionInfo;
   // Libraries using this archive can store their version here to implement backwards compatibility
-  std::map<std::string, VersionInfo>& GetLibraryVersions();
+  VersionInfo GetLibraryVersion(const std::string& library);
+  void SetLibraryVersion(const std::string& library, VersionInfo version);
 
   class Archive;
   std::string demangle(const char* typeinfo);
@@ -376,6 +377,13 @@ namespace ngcore
       return *this;
     }
 
+    // const ptr
+    template<typename T>
+    Archive& operator &(const T*& t)
+    {
+      return (*this) & const_cast<T*&>(t);
+    }
+
     // Write a read only variable
     template <typename T>
     Archive & operator << (const T & t)
@@ -386,6 +394,9 @@ namespace ngcore
     }
 
     virtual void FlushBuffer() {}
+
+  protected:
+    static std::map<std::string, VersionInfo>& GetLibraryVersions();
   };
 
   template<typename T, typename ... Bases>
@@ -394,6 +405,8 @@ namespace ngcore
   public:
     RegisterClassForArchive()
     {
+      static_assert(all_of_tmpl<std::is_base_of<Bases,T>::value...>,
+                    "Variadic template arguments must be base classes of T");
       ClassArchiveInfo info;
       info.creator = [this,&info](const std::type_info& ti) -> void*
                      { return typeid(T) == ti ? constructIfPossible<T>()
