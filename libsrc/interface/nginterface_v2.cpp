@@ -675,9 +675,10 @@ namespace netgen
   }
 
 
-  int Ngx_Mesh :: GetElementLevel (int ei) const
+  int Ngx_Mesh :: GetHPElementLevel (int ei, int dir) const
   {
     ei++;
+    int level = -1;
     
     if (mesh->hpelements)
       {
@@ -687,12 +688,22 @@ namespace netgen
 	else
 	  hpelnr = mesh->VolumeElement(ei).hp_elnr;
 
-	return (*mesh->hpelements)[hpelnr].levelx;
+        if (hpelnr < 0)
+          throw NgException("Ngx_Mesh::GetHPElementLevel: Wrong hp-element number!");
+        
+        if (dir == 1)
+          level = (*mesh->hpelements)[hpelnr].levelx;
+        else if (dir == 2)
+          level = (*mesh->hpelements)[hpelnr].levely;
+        else if (dir == 3)
+          level = (*mesh->hpelements)[hpelnr].levelz;
+        else
+          throw NgException("Ngx_Mesh::GetHPElementLevel: dir has to be 1, 2 or 3!");
       }
     //else
-    //  throw NgException("Ngx_Mesh::GetElementLevel only for HPRefinement implemented!");
+    //  throw NgException("Ngx_Mesh::GetHPElementLevel only for HPRefinement implemented!");
 
-    return -1;	  
+    return level;	  
   }
   
   int Ngx_Mesh :: GetParentElement (int ei) const

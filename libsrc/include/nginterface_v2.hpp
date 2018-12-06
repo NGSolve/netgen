@@ -296,7 +296,7 @@ namespace netgen
                  void (*taskmanager)(function<void(int,int)>) = &DummyTaskManager2,
                  void (*tracer)(string, bool) = &DummyTracer2);
 
-    int GetElementLevel (int ei) const;
+    int GetHPElementLevel (int ei, int dir) const;
   
     void GetParentNodes (int ni, int * parents) const;
     int GetParentElement (int ei) const;
