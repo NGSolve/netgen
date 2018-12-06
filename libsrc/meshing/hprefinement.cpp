@@ -684,7 +684,7 @@ namespace netgen
       {
 	HPRefElement el = elements[i];
 	HPRef_Struct * hprs = Get_HPRef_Struct (el.type);
-	int newlevel = el.levelx + 1;
+	int newlevel = el.levelx;
 	int oldnp = 0;
 	switch (hprs->geom)
 	  {
@@ -800,36 +800,33 @@ namespace netgen
 	*testout << endl;
 	*/
 
-	bool last = false;
 	while (hprs->neweltypes[j])
 	  {
-	    if (!hprs->neweltypes[j+1] || !hprs->neweltypes[j+2])
-	      last = true;
-
 	    HPRef_Struct * hprsnew = Get_HPRef_Struct (hprs->neweltypes[j]);
 	    HPRefElement newel(el);
 
 	    newel.type = hprs->neweltypes[j]; 
 	    // newel.index = elements[i].index;
 	    // newel.coarse_elnr = elements[i].coarse_elnr;
-	    newel.levelx = newel.levely = newel.levelz = newlevel;
+            if (newel.type == HP_SEGM ||
+                newel.type == HP_TRIG ||
+                newel.type == HP_QUAD ||
+                newel.type == HP_TET ||
+                newel.type == HP_PRISM ||
+                newel.type == HP_HEX || 
+                newel.type == HP_PYRAMID)
+              newel.levelx = newel.levely = newel.levelz = newlevel;
+            else
+              newel.levelx = newel.levely = newel.levelz = newlevel+1;
 	    
             switch(hprsnew->geom) 
 	      {
-	      case HP_SEGM: newel.np=2; break; 
-	      case HP_QUAD:
-		newel.np=4;
-		if (last)
-		  newlevel--;
-		break; 
-	      case HP_TRIG:
-		newel.np=3;
-		if (last)
-		  newlevel--;
-		break; 
-	      case HP_HEX: newel.np=8; break; 
-	      case HP_PRISM: newel.np=6; break;
-	      case HP_TET: newel.np=4; break; 
+	      case HP_SEGM:    newel.np=2; break; 
+	      case HP_QUAD:    newel.np=4; break;
+	      case HP_TRIG:    newel.np=3; break;
+	      case HP_HEX:     newel.np=8; break; 
+	      case HP_PRISM:   newel.np=6; break;
+	      case HP_TET:     newel.np=4; break; 
 	      case HP_PYRAMID: newel.np=5; break; 
               default:
                 throw NgException (string("hprefinement.cpp: illegal type"));
