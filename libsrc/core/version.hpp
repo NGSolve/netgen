@@ -1,3 +1,5 @@
+#ifndef NGS_VERSION_HPP
+#define NGS_VERSION_HPP
 
 namespace ngcore
 {
@@ -82,3 +84,4 @@ namespace ngcore
     }
   };
 }
+#endif // NGS_VERSION_HPP
