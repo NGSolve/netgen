@@ -1062,6 +1062,7 @@ namespace netgen
   {
   public:
     PointIndex pnum;
+    string name;
     int index;
     Element0d () = default;
     Element0d (PointIndex _pnum, int _index)
