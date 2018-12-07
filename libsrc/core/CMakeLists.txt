@@ -1,7 +1,7 @@
-add_definitions(-DNGINTERFACE_EXPORTS)
 add_library(ngcore basearchive.cpp)
 
 set_target_properties(ngcore PROPERTIES POSITION_INDEPENDENT_CODE ON )
+target_compile_definitions(ngcore PRIVATE -DNGCORE_EXPORTS)
 
 install(TARGETS ngcore DESTINATION ${NG_INSTALL_DIR} COMPONENT netgen)
 

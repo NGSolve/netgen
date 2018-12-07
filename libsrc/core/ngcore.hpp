@@ -15,6 +15,20 @@
 #include <cstring>
 #include <complex>
 
+#ifdef WIN32
+        #define NGCORE_API_EXPORT __declspec(dllexport)
+        #define NGCORE_API_IMPORT __declspec(dllimport)
+#else
+        #define NGCORE_API_EXPORT
+        #define NGCORE_API_IMPORT
+#endif
+
+#ifdef NGCORE_EXPORTS
+        #define NGCORE_API NGCORE_API_EXPORT
+#else
+        #define NGCORE_API NGCORE_API_IMPORT
+#endif
+
 namespace ngcore
 {
 #if defined(__GNUC__)
