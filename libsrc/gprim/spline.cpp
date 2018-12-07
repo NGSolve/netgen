@@ -99,7 +99,7 @@ namespace netgen
   }
 
   template<int D>
-  inline Point<D> SplineSeg3<D> :: GetPoint (double t) const
+  Point<D> SplineSeg3<D> :: GetPoint (double t) const
   {
     double b1, b2, b3;
 

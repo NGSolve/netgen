@@ -25,9 +25,20 @@ namespace ngcore
   std::string demangle(const char* typeinfo) { int status; return abi::__cxa_demangle(typeinfo, 0, 0, &status); }
 #endif
 
-  std::map<std::string, ClassArchiveInfo>& GetArchiveRegister()
+  static std::map<std::string, ClassArchiveInfo>* type_register;
+  const ClassArchiveInfo& Archive :: GetArchiveRegister(const std::string& classname)
   {
-    static std::map<std::string, ClassArchiveInfo> type_register;
-    return type_register;
+    if(!type_register) type_register = new std::map<std::string, ClassArchiveInfo>();
+    return (*type_register)[classname];
+  }
+  void Archive :: SetArchiveRegister(const std::string& classname, ClassArchiveInfo info)
+  {
+    if(!type_register) type_register = new std::map<std::string, ClassArchiveInfo>();
+    (*type_register)[classname] = info;
+  }
+  bool Archive :: IsRegistered(const std::string& classname)
+  {
+    if(!type_register) type_register = new std::map<std::string, ClassArchiveInfo>();
+    return type_register->count(classname) != 0;
   }
 }

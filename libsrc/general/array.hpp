@@ -401,7 +401,9 @@ namespace netgen
       return data;
     }
 
-    void DoArchive(Archive& archive)
+    // Only provide this function if T is archivable
+    template<typename T2=T>
+    auto DoArchive(Archive& archive) -> typename std::enable_if<is_Archivable<T2>::value, void>::type
     {
       if(archive.Output())
         archive << size;

@@ -191,7 +191,7 @@ namespace netgen
     {
       ar & p1 & p2 & p3 & weight & proj_latest_t;
     }
-    inline virtual Point<D> GetPoint (double t) const;
+    virtual Point<D> GetPoint (double t) const;
     ///
     virtual Vec<D> GetTangent (const double t) const;
 

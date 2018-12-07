@@ -15,7 +15,6 @@
 #include <cstring>
 #include <complex>
 
-
 namespace ngcore
 {
 #if defined(__GNUC__)
