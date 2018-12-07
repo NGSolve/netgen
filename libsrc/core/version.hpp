@@ -6,24 +6,24 @@ namespace ngcore
   class VersionInfo
   {
   private:
-    size_t mayor, minor, release, patch;
+    size_t mayor_, minor_, release, patch;
     std::string git_hash;
   public:
-    VersionInfo() : mayor(0), minor(0), release(0), patch(0), git_hash("") {}
+    VersionInfo() : mayor_(0), minor_(0), release(0), patch(0), git_hash("") {}
     VersionInfo(std::string vstring)
     {
-      minor = release = patch = 0;
+      minor_ = release = patch = 0;
       git_hash = "";
       if(vstring.substr(0,1) == "v")
         vstring = vstring.substr(1,vstring.size()-1);
       auto dot = vstring.find(".");
-      mayor = std::stoi(vstring.substr(0,dot));
+      mayor_ = std::stoi(vstring.substr(0,dot));
       if(dot == size_t(-1)) vstring = "";
       else vstring = vstring.substr(dot+1, vstring.size()-dot-1);
       if(vstring.size())
         {
           dot = vstring.find(".");
-          minor = std::stoi(vstring.substr(0,dot));
+          minor_ = std::stoi(vstring.substr(0,dot));
           if (dot == size_t(-1)) vstring = "";
           else vstring = vstring.substr(dot+1, vstring.size()-dot-1);
           if(vstring.size())
@@ -47,10 +47,10 @@ namespace ngcore
     VersionInfo(const char* cstr) : VersionInfo(std::string(cstr)) { }
 
     std::string to_string() const
-    { std::string vstring = "v" + std::to_string(mayor);
-      if(minor || release || patch || git_hash.size())
+    { std::string vstring = "v" + std::to_string(mayor_);
+      if(minor_ || release || patch || git_hash.size())
         {
-          vstring += "." + std::to_string(minor);
+          vstring += "." + std::to_string(minor_);
           if(release || patch || git_hash.size())
             {
               vstring += "." + std::to_string(release);
@@ -66,12 +66,12 @@ namespace ngcore
     }
     bool operator <(const VersionInfo& other) const
     {
-      return std::tie(mayor, minor, release, patch) <
-        std::tie(other.mayor, other.minor, other.release, other.patch);
+      return std::tie(mayor_, minor_, release, patch) <
+        std::tie(other.mayor_, other.minor_, other.release, other.patch);
     }
     bool operator ==(const VersionInfo& other) const
     {
-      return mayor == other.mayor && minor == other.minor && release == other.release
+      return mayor_ == other.mayor_ && minor_ == other.minor_ && release == other.release
         && patch == other.patch;
     }
     bool operator >(const VersionInfo& other) const { return other < (*this); }
@@ -80,7 +80,7 @@ namespace ngcore
 
     void DoArchive(Archive& ar)
     {
-      ar & mayor & minor & release & patch & git_hash;
+      ar & mayor_ & minor_ & release & patch & git_hash;
     }
   };
 }
