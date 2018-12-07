@@ -9,7 +9,7 @@ namespace ngcore
   void SetLibraryVersion(const std::string& library, VersionInfo version);
 
   class Archive;
-  std::string demangle(const char* typeinfo);
+  DLL_HEADER std::string demangle(const char* typeinfo);
 
   // create new pointer of type T if it is default constructible, else throw
   template<typename T>
@@ -34,7 +34,7 @@ namespace ngcore
     static constexpr std::false_type check(...);
     typedef decltype(check<T>(0)) type;
   public:
-    static constexpr bool value = type::value;
+    DLL_HEADER static constexpr bool value = type::value;
   };
 
   // Check if class is archivable
@@ -49,7 +49,7 @@ namespace ngcore
     static constexpr std::false_type check(...);
     typedef decltype(check<T>(nullptr)) type;
   public:
-    static constexpr bool value = type::value;
+    DLL_HEADER static constexpr bool value = type::value;
   };
 
   struct ClassArchiveInfo
@@ -66,7 +66,7 @@ namespace ngcore
   };
 
   // Base Archive class
-  class Archive
+  class DLL_HEADER Archive
   {
     bool is_output;
     // how many different shared_ptr/pointer have been (un)archived
@@ -454,7 +454,7 @@ namespace ngcore
   };
 
   template<typename T, typename ... Bases>
-  class RegisterClassForArchive
+  class DLL_HEADER RegisterClassForArchive
   {
   public:
     RegisterClassForArchive()

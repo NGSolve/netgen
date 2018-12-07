@@ -4,7 +4,7 @@
 namespace ngcore
 {
   // BinaryOutArchive ======================================================================
-  class BinaryOutArchive : public Archive
+  class DLL_HEADER BinaryOutArchive : public Archive
   {
     size_t ptr = 0;
     enum { BUFFERSIZE = 1024 };
@@ -82,7 +82,7 @@ namespace ngcore
   };
 
   // BinaryInArchive ======================================================================
-  class BinaryInArchive : public Archive
+  class DLL_HEADER BinaryInArchive : public Archive
   {
     std::map<std::string, VersionInfo> vinfo;
     std::shared_ptr<std::istream> fin;
@@ -150,7 +150,7 @@ namespace ngcore
   };
 
   // TextOutArchive ======================================================================
-  class TextOutArchive : public Archive
+  class DLL_HEADER TextOutArchive : public Archive
   {
     std::shared_ptr<std::ostream> fout;
   public:
@@ -204,7 +204,7 @@ namespace ngcore
   };
 
   // TextInArchive ======================================================================
-  class TextInArchive : public Archive
+  class DLL_HEADER TextInArchive : public Archive
   {
     std::map<std::string, VersionInfo> vinfo;
     std::shared_ptr<std::istream> fin;
