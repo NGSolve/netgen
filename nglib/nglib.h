@@ -24,7 +24,7 @@
 // Philippose - 14.02.2009
 // Modifications for creating a DLL in Windows
 #ifdef WIN32
-   #ifdef NGLIB_EXPORTS || nglib_EXPORTS
+   #if defined NGLIB_EXPORTS || defined nglib_EXPORTS
       #define DLL_HEADER   __declspec(dllexport)
    #else
       #define DLL_HEADER   __declspec(dllimport)

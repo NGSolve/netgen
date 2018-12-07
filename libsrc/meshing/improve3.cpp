@@ -1207,6 +1207,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 
 	      tetused = false;
 	      tetused[0] = true;
+		  int nbtetused = 0;
 
 	      for (int l = 2; l < nsuround; l++)
 		{
@@ -1227,10 +1228,13 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 
 			      tetused[k] = true; 
 			      suroundpts[l] = newpi;
+				  ++nbtetused;
 			    }
 			}
 		}
-	      
+
+		  if (nbtetused < nsuround)
+			  continue;
 	      
 	      bad1 = 0;
 	      for (int k = 0; k < nsuround; k++)

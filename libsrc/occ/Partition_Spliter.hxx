@@ -143,7 +143,7 @@ private:
    TopTools_DataMapOfShapeShape myFaceShapeMap;
    TopTools_DataMapOfShapeShape myInternalFaces;
    TopTools_DataMapOfShapeShape myIntNotClFaces;
-   Handle_BRepAlgo_AsDes myAsDes;
+   Handle(BRepAlgo_AsDes) myAsDes;
    BRepAlgo_Image myImagesFaces;
    BRepAlgo_Image myImagesEdges;
    BRepAlgo_Image myImageShape;

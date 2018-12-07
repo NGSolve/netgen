@@ -75,6 +75,9 @@ inline int FindInnerPoint (POINTArray & points,
   static int timer = NgProfiler::CreateTimer ("FindInnerPoint");
   NgProfiler::RegionTimer reg (timer);
 
+  if (points.Size() < 3)
+	  return 0;
+
   Array<Vec3d> a;
   Array<double> c;
   Mat<3> m, inv;
