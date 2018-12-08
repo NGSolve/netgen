@@ -28,4 +28,10 @@ endmacro()
 
 add_unit_test(archive archive.cpp)
 add_unit_test(version version.cpp)
+
+if(ENABLE_CPP_CORE_GUIDELINES_CHECK)
+  set_target_properties(test_archive PROPERTIES CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
+  set_target_properties(test_version PROPERTIES CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
+endif(ENABLE_CPP_CORE_GUIDELINES_CHECK)
+
 endif(ENABLE_UNIT_TESTS)

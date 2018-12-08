@@ -1,8 +1,13 @@
-#ifndef NGS_VERSION_HPP
-#define NGS_VERSION_HPP
+#ifndef NETGEN_CORE_VERSION_HPP
+#define NETGEN_CORE_VERSION_HPP
+
+#include <string>
+#include <tuple>
+#include "ngcore_api.hpp"
 
 namespace ngcore
 {
+  class Archive;
   class VersionInfo
   {
   private:
@@ -78,10 +83,8 @@ namespace ngcore
     bool operator <=(const VersionInfo& other) const { return !((*this) > other); }
     bool operator >=(const VersionInfo& other) const { return !((*this) < other); }
 
-    void DoArchive(Archive& ar)
-    {
-      ar & mayor_ & minor_ & release & patch & git_hash;
-    }
+    void DoArchive(Archive& ar);
   };
-}
-#endif // NGS_VERSION_HPP
+} // namespace ngcore
+
+#endif // NETGEN_CORE_VERSION_HPP
