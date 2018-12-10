@@ -360,7 +360,7 @@ if(ENABLE_CPP_CORE_GUIDELINES_CHECK)
     message(WARNING "clang-tidy not found.")
   else()
     message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
-    set(DO_CLANG_TIDY "${CLANG_TIDY_EXE}" "-warnings-as-errors=*" "-header-filter=libsrc/core/")
+    set(DO_CLANG_TIDY "${CLANG_TIDY_EXE}" "-header-filter=libsrc/core/")
   endif()
 endif(ENABLE_CPP_CORE_GUIDELINES_CHECK)
 

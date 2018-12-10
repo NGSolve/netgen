@@ -97,8 +97,8 @@ void testNullPtr(Archive& in, Archive& out)
   shared_ptr<string> sp = nullptr;
   out & p & sp;
   out.FlushBuffer();
-  SharedPtrHolder* pin;
-  shared_ptr<string> spin;
+  SharedPtrHolder* pin = nullptr;
+  shared_ptr<string> spin = nullptr;
   in & pin & spin;
   CHECK(pin == nullptr);
   CHECK(spin == nullptr);
@@ -186,8 +186,8 @@ void testMultipleInheritance(Archive& in, Archive& out)
     {
       out & p & p2;
       out.FlushBuffer();
-      PtrHolder* pin;
-      SharedPtrHolder* pin2;
+      PtrHolder* pin = nullptr;
+      SharedPtrHolder* pin2 = nullptr;
       in & pin & pin2;
       checkPtr(pin, pin2);
     }
