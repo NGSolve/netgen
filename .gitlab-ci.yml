@@ -46,15 +46,10 @@ stages:
     - ls
     - docker info
 
-.template_ubuntu_1510: &ubuntu_1510
+.template_ubuntu: &ubuntu
   <<: *ubuntu
   variables:
-    UBUNTU_VERSION: "15.10"
-
-.template_ubuntu_1604: &ubuntu_1604
-  <<: *ubuntu
-  variables:
-    UBUNTU_VERSION: "16.04"
+    UBUNTU_VERSION: "18.04"
 
 ############################################
 # Build stage
@@ -98,18 +93,14 @@ build_netgen_win64:
 .template_build_linux: &build_linux
   stage: build
   script:
-    - docker build -t netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} -f tests/docker_${UBUNTU_VERSION} .
+    - docker build -t netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} -f tests/dockerfile .
     - rm -f netgen_${CI_BUILD_REF_NAME}_$UBUNTU_VERSION.id
     - docker run --cidfile netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build.sh
     - docker commit `cat netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id` netgen_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION}
     - rm netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id
 
-.build_ubuntu_1510:
-  <<: *ubuntu_1510
-  <<: *build_linux
-
-build_ubuntu_1604:
-  <<: *ubuntu_1604
+build_ubuntu:
+  <<: *ubuntu
   <<: *build_linux
 
 
@@ -145,11 +136,8 @@ test_win64:
       netgen_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION}
       bash -c 'cd /root/build/netgen && make test_netgen ARGS="-V"'
 
-.test_ubuntu_1510:
-  <<: *ubuntu_1510
-  <<: *test_linux
-test_ubuntu_1604:
-  <<: *ubuntu_1604
+test_ubuntu:
+  <<: *ubuntu
   <<: *test_linux
 
 ############################################
