@@ -1,9 +1,9 @@
 #ifndef NETGEN_CORE_VERSION_HPP
 #define NETGEN_CORE_VERSION_HPP
 
+#include "ngcore_api.hpp"
 #include <string>
 #include <tuple>
-#include "ngcore_api.hpp"
 
 namespace ngcore
 {
@@ -11,39 +11,39 @@ namespace ngcore
   class VersionInfo
   {
   private:
-    size_t mayor_, minor_, release, patch;
-    std::string git_hash;
+    size_t mayor_{}, minor_{}, release{}, patch{};
+    std::string git_hash{};
   public:
-    VersionInfo() : mayor_(0), minor_(0), release(0), patch(0), git_hash("") {}
+    VersionInfo() = default;
     VersionInfo(std::string vstring)
     {
       minor_ = release = patch = 0;
       git_hash = "";
       if(vstring.substr(0,1) == "v")
         vstring = vstring.substr(1,vstring.size()-1);
-      auto dot = vstring.find(".");
+      auto dot = vstring.find('.');
       mayor_ = std::stoi(vstring.substr(0,dot));
       if(dot == size_t(-1)) vstring = "";
       else vstring = vstring.substr(dot+1, vstring.size()-dot-1);
-      if(vstring.size())
+      if(!vstring.empty())
         {
-          dot = vstring.find(".");
+          dot = vstring.find('.');
           minor_ = std::stoi(vstring.substr(0,dot));
           if (dot == size_t(-1)) vstring = "";
           else vstring = vstring.substr(dot+1, vstring.size()-dot-1);
-          if(vstring.size())
+          if(!vstring.empty())
             {
-              dot = vstring.find("-");
+              dot = vstring.find('-');
               release = std::stoi(vstring.substr(0,dot));
               if(dot == size_t(-1)) vstring = "";
               else vstring = vstring.substr(dot+1,vstring.size()-dot-1);
-              if(vstring.size())
+              if(!vstring.empty())
                 {
-                  dot = vstring.find("-");
+                  dot = vstring.find('-');
                   patch = std::stoi(vstring.substr(0,dot));
                   if(dot == size_t(-1)) vstring = "";
                   else vstring = vstring.substr(dot+1, vstring.size()-dot-1);
-                  if(vstring.size())
+                  if(!vstring.empty())
                     git_hash = vstring;
                 }
             }

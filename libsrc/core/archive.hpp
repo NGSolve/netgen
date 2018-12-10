@@ -506,25 +506,25 @@ namespace ngcore
       : BinaryOutArchive(std::make_shared<std::ofstream>(filename)) {}
     virtual ~BinaryOutArchive () { FlushBuffer(); }
 
-    const VersionInfo& getVersion(const std::string& library)
+    const VersionInfo& getVersion(const std::string& library) override
     { return GetLibraryVersions()[library]; }
 
     using Archive::operator&;
-    virtual Archive & operator & (double & d)
+    Archive & operator & (double & d) override
     { return Write(d); }
-    virtual Archive & operator & (int & i)
+    Archive & operator & (int & i) override
     { return Write(i); }
-    virtual Archive & operator & (short & i)
+    Archive & operator & (short & i) override
     { return Write(i); }
-    virtual Archive & operator & (long & i)
+    Archive & operator & (long & i) override
     { return Write(i); }
-    virtual Archive & operator & (size_t & i)
+    Archive & operator & (size_t & i) override
     { return Write(i); }
-    virtual Archive & operator & (unsigned char & i)
+    Archive & operator & (unsigned char & i) override
     { return Write(i); }
-    virtual Archive & operator & (bool & b)
+    Archive & operator & (bool & b) override
     { return Write(b); }
-    virtual Archive & operator & (std::string & str)
+    Archive & operator & (std::string & str) override
     {
       int len = str.length();
       (*this) & len;
@@ -533,7 +533,7 @@ namespace ngcore
         fout->write (&str[0], len);
       return *this;
     }
-    virtual Archive & operator & (char *& str)
+    Archive & operator & (char *& str) override
     {
       long len = str ? strlen (str) : -1;
       (*this) & len;
@@ -542,7 +542,7 @@ namespace ngcore
         fout->write (&str[0], len);
       return *this;
     }
-    void FlushBuffer()
+    void FlushBuffer() override
     {
       if (ptr > 0)
         {
@@ -581,25 +581,25 @@ namespace ngcore
     BinaryInArchive (std::string filename)
       : BinaryInArchive(std::make_shared<std::ifstream>(filename)) { ; }
 
-    const VersionInfo& getVersion(const std::string& library)
+    const VersionInfo& getVersion(const std::string& library) override
     { return vinfo[library]; }
 
     using Archive::operator&;
-    virtual Archive & operator & (double & d)
+    Archive & operator & (double & d) override
     { Read(d); return *this; }
-    virtual Archive & operator & (int & i)
+    Archive & operator & (int & i) override
     { Read(i); return *this; }
-    virtual Archive & operator & (short & i)
+    Archive & operator & (short & i) override
     { Read(i); return *this; }
-    virtual Archive & operator & (long & i)
+    Archive & operator & (long & i) override
     { Read(i); return *this; }
-    virtual Archive & operator & (size_t & i)
+    Archive & operator & (size_t & i) override
     { Read(i); return *this; }
-    virtual Archive & operator & (unsigned char & i)
+    Archive & operator & (unsigned char & i) override
     { Read(i); return *this; }
-    virtual Archive & operator & (bool & b)
+    Archive & operator & (bool & b) override
     { Read(b); return *this; }
-    virtual Archive & operator & (std::string & str)
+    Archive & operator & (std::string & str) override
     {
       int len;
       (*this) & len;
@@ -608,7 +608,7 @@ namespace ngcore
         fin->read(&str[0], len);
       return *this;
     }
-    virtual Archive & operator & (char *& str)
+    Archive & operator & (char *& str) override
     {
       long len;
       (*this) & len;
@@ -623,11 +623,11 @@ namespace ngcore
       return *this;
     }
 
-    virtual Archive & Do (double * d, size_t n)
+    Archive & Do (double * d, size_t n) override
     { fin->read(reinterpret_cast<char*>(d), n*sizeof(double)); return *this; }
-    virtual Archive & Do (int * i, size_t n)
+    Archive & Do (int * i, size_t n) override
     { fin->read(reinterpret_cast<char*>(i), n*sizeof(int)); return *this; }
-    virtual Archive & Do (size_t * i, size_t n)
+    Archive & Do (size_t * i, size_t n) override
     { fin->read(reinterpret_cast<char*>(i), n*sizeof(size_t)); return *this; }
 
   private:
@@ -648,25 +648,25 @@ namespace ngcore
     TextOutArchive (std::string filename) :
       TextOutArchive(std::make_shared<std::ofstream>(filename)) { }
 
-    const VersionInfo& getVersion(const std::string& library)
+    const VersionInfo& getVersion(const std::string& library) override
     { return GetLibraryVersions()[library]; }
 
     using Archive::operator&;
-    virtual Archive & operator & (double & d)
+    Archive & operator & (double & d) override
     { *fout << d << '\n'; return *this; }
-    virtual Archive & operator & (int & i)
+    Archive & operator & (int & i) override
     { *fout << i << '\n'; return *this; }
-    virtual Archive & operator & (short & i)
+    Archive & operator & (short & i) override
     { *fout << i << '\n'; return *this; }
-    virtual Archive & operator & (long & i)
+    Archive & operator & (long & i) override
     { *fout << i << '\n'; return *this; }
-    virtual Archive & operator & (size_t & i)
+    Archive & operator & (size_t & i) override
     { *fout << i << '\n'; return *this; }
-    virtual Archive & operator & (unsigned char & i)
+    Archive & operator & (unsigned char & i) override
     { *fout << int(i) << '\n'; return *this; }
-    virtual Archive & operator & (bool & b)
+    Archive & operator & (bool & b) override
     { *fout << (b ? 't' : 'f') << '\n'; return *this; }
-    virtual Archive & operator & (std::string & str)
+    Archive & operator & (std::string & str) override
     {
       int len = str.length();
       *fout << len << '\n';
@@ -677,7 +677,7 @@ namespace ngcore
         }
       return *this;
     }
-    virtual Archive & operator & (char *& str)
+    Archive & operator & (char *& str) override
     {
       long len = str ? strlen (str) : -1;
       *this & len;
@@ -703,25 +703,25 @@ namespace ngcore
     TextInArchive (std::string filename)
       : TextInArchive(std::make_shared<std::ifstream>(filename)) {}
 
-    const VersionInfo& getVersion(const std::string& library)
+    const VersionInfo& getVersion(const std::string& library) override
     { return vinfo[library]; }
 
     using Archive::operator&;
-    virtual Archive & operator & (double & d)
+    Archive & operator & (double & d) override
     { *fin >> d; return *this; }
-    virtual Archive & operator & (int & i)
+    Archive & operator & (int & i) override
     { *fin >> i; return *this; }
-    virtual Archive & operator & (short & i)
+    Archive & operator & (short & i) override
     { *fin >> i; return *this; }
-    virtual Archive & operator & (long & i)
+    Archive & operator & (long & i) override
     { *fin >> i; return *this; }
-    virtual Archive & operator & (size_t & i)
+    Archive & operator & (size_t & i) override
     { *fin >> i; return *this; }
-    virtual Archive & operator & (unsigned char & i)
+    Archive & operator & (unsigned char & i) override
     { int _i; *fin >> _i; i = _i; return *this; }
-    virtual Archive & operator & (bool & b)
+    Archive & operator & (bool & b) override
     { char c; *fin >> c; b = (c=='t'); return *this; }
-    virtual Archive & operator & (std::string & str)
+    Archive & operator & (std::string & str) override
     {
       int len;
       *fin >> len;
@@ -732,7 +732,7 @@ namespace ngcore
         fin->get(&str[0], len+1, '\0');
       return *this;
     }
-    virtual Archive & operator & (char *& str)
+    Archive & operator & (char *& str) override
     {
       long len;
       (*this) & len;
