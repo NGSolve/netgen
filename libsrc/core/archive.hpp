@@ -387,7 +387,7 @@ namespace ngcore
               auto info = GetArchiveRegister(name);
               // the creator creates a new object of type name, and returns a void* pointing
               // to T (which may have an offset)
-              p = dynamic_cast<T*>(info.creator(typeid(T)));
+              p = static_cast<T*>(info.creator(typeid(T)));
               // we store the downcasted pointer (to be able to find it again from
               // another class in a multiple inheritance tree)
               nr2ptr.push_back(info.downcaster(typeid(T),p));
@@ -402,10 +402,10 @@ namespace ngcore
                 {
                   // if the class has been downcasted we can assume it is in the register
                   auto info = GetArchiveRegister(name);
-                  p = dynamic_cast<T*>(info.upcaster(typeid(T), nr2ptr[nr]));
+                  p = static_cast<T*>(info.upcaster(typeid(T), nr2ptr[nr]));
                 }
               else
-                p = dynamic_cast<T*>(nr2ptr[nr]);
+                p = static_cast<T*>(nr2ptr[nr]);
             }
         }
       return *this;
@@ -459,7 +459,7 @@ namespace ngcore
       static void* tryDowncast(const std::type_info& ti, void* p)
       {
         if(typeid(B1) == ti)
-          return dynamic_cast<T*>(dynamic_cast<B1*>(p));
+          return dynamic_cast<T*>(static_cast<B1*>(p));
         try
           { return GetArchiveRegister(demangle(typeid(B1).name())).downcaster(ti, static_cast<void*>(dynamic_cast<B1*>(p))); }
         catch(std::exception)
@@ -481,7 +481,7 @@ namespace ngcore
                      { return typeid(T) == ti ? constructIfPossible<T>()
                          : Archive::Caster<T, Bases...>::tryUpcast(ti, constructIfPossible<T>()); };
       info.upcaster = [this](const std::type_info& ti, void* p) -> void*
-                      { return typeid(T) == ti ? p : Archive::Caster<T, Bases...>::tryUpcast(ti, dynamic_cast<T*>(p)); };
+                      { return typeid(T) == ti ? p : Archive::Caster<T, Bases...>::tryUpcast(ti, static_cast<T*>(p)); };
       info.downcaster = [this](const std::type_info& ti, void* p) -> void*
                         { return typeid(T) == ti ? p : Archive::Caster<T, Bases...>::tryDowncast(ti, p); };
       Archive::SetArchiveRegister(std::string(demangle(typeid(T).name())),info);
@@ -558,11 +558,11 @@ namespace ngcore
       if (unlikely(ptr > BUFFERSIZE-sizeof(T)))
         {
           fout->write(&buffer[0], ptr);
-          *dynamic_cast<T*>(&buffer[0]) = x;
+          *static_cast<T*>(&buffer[0]) = x;
           ptr = sizeof(T);
           return *this;
         }
-      *dynamic_cast<T*>(&buffer[ptr]) = x;
+      *static_cast<T*>(&buffer[ptr]) = x;
       ptr += sizeof(T);
       return *this;
     }
