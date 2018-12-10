@@ -415,7 +415,7 @@ namespace ngcore
     template<typename T>
     Archive& operator &(const T*& t)
     {
-      return (*this) & const_cast<T*&>(t);
+      return (*this) & const_cast<T*&>(t); // NOLINT
     }
 
     // Write a read only variable
@@ -435,11 +435,11 @@ namespace ngcore
     template<typename T>
     struct Caster<T>
     {
-      static void* tryUpcast (const std::type_info& ti, T* p)
+      static void* tryUpcast (const std::type_info& /*unused*/, T* /*unused*/)
       {
         throw std::runtime_error("Upcast not successful, some classes are not registered properly for archiving!");
       }
-      static void* tryDowncast (const std::type_info& ti, void* p)
+      static void* tryDowncast (const std::type_info& /*unused*/, void* /*unused*/)
       {
         throw std::runtime_error("Downcast not successful, some classes are not registered properly for archiving!");
       }
@@ -495,7 +495,7 @@ namespace ngcore
   {
     size_t ptr = 0;
     enum { BUFFERSIZE = 1024 };
-    char buffer[BUFFERSIZE];
+    char buffer[BUFFERSIZE] alignas(64);
     std::shared_ptr<std::ostream> fout;
   public:
     BinaryOutArchive(std::shared_ptr<std::ostream> afout) : Archive(true), fout(afout)
@@ -558,11 +558,11 @@ namespace ngcore
       if (unlikely(ptr > BUFFERSIZE-sizeof(T)))
         {
           fout->write(&buffer[0], ptr);
-          *static_cast<T*>(&buffer[0]) = x;
+          *reinterpret_cast<T*>(&buffer[0]) = x; // NOLINT
           ptr = sizeof(T);
           return *this;
         }
-      *static_cast<T*>(&buffer[ptr]) = x;
+      *reinterpret_cast<T*>(&buffer[ptr]) = x; // NOLINT
       ptr += sizeof(T);
       return *this;
     }
