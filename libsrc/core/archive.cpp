@@ -1,4 +1,10 @@
 
+#include <bits/std_function.h>  // for function
+#include <stdexcept>            // for runtime_error
+#include <type_traits>          // for declval, enable_if, false_type, is_co...
+#include <typeinfo>             // for type_info
+#include <utility>              // for move, swap, pair
+
 #include "archive.hpp"
 
 #ifndef WIN32

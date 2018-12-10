@@ -1,19 +1,22 @@
 #ifndef NETGEN_CORE_ARCHIVE_HPP
 #define NETGEN_CORE_ARCHIVE_HPP
 
-#include <complex>
-#include <cstring>
-#include <fstream>
-#include <functional>
-#include <iostream>
-#include <map>
-#include <memory>
-#include <string>
-#include <vector>
+#include <complex>              // for complex
+#include <cstring>              // for size_t, strlen
+#include <fstream>              // for operator<<, ifstream, ofstream, basic...
+#include <functional>           // for function
+#include <map>                  // for map, _Rb_tree_iterator
+#include <memory>               // for __shared_ptr_access, __shared_ptr_acc...
+#include <stdexcept>            // for runtime_error
+#include <string>               // for string, operator+
+#include <type_traits>          // for declval, enable_if, false_type, is_co...
+#include <typeinfo>             // for type_info
+#include <utility>              // for move, swap, pair
+#include <vector>               // for vector
 
-#include "ngcore_api.hpp"
-#include "type_traits.hpp"
-#include "version.hpp"
+#include "ngcore_api.hpp"       // for NGCORE_API, unlikely
+#include "type_traits.hpp"      // for all_of_tmpl
+#include "version.hpp"          // for VersionInfo
 
 namespace ngcore
 {
@@ -30,7 +33,7 @@ namespace ngcore
   { throw std::runtime_error(std::string(demangle(typeid(T).name())) + " is not default constructible!"); }
 
   template<typename T, typename= typename std::enable_if<std::is_constructible<T>::value>::type>
-  T* constructIfPossible_impl(int /*unused*/) { return new T; }
+  T* constructIfPossible_impl(int /*unused*/) { return new T; } // NOLINT
 
   template<typename T>
   T* constructIfPossible() { return constructIfPossible_impl<T>(int{}); }
@@ -45,7 +48,7 @@ namespace ngcore
       typename std::is_same<decltype(std::declval<T2>().DoArchive(std::declval<Archive&>())),void>::type;
     template<typename>
     static constexpr std::false_type check(...);
-    using type = decltype(check<T>(nullptr));
+    using type = decltype(check<T>(nullptr)); // NOLINT
   public:
     NGCORE_API static constexpr bool value = type::value;
   };
@@ -60,7 +63,7 @@ namespace ngcore
       typename std::is_same<decltype(std::declval<Archive>() & std::declval<T2&>()),Archive&>::type;
     template<typename>
     static constexpr std::false_type check(...);
-    using type = decltype(check<T>(nullptr));
+    using type = decltype(check<T>(nullptr)); // NOLINT
   public:
     NGCORE_API static constexpr bool value = type::value;
   };
@@ -107,10 +110,16 @@ namespace ngcore
     static void SetArchiveRegister(const std::string& classname, const ClassArchiveInfo& info);
     static bool IsRegistered(const std::string& classname);
   public:
+    Archive() = delete;
+    Archive(const Archive&) = delete;
+    Archive(Archive&&) = delete;
     Archive (bool ais_output) :
       is_output(ais_output), shared_ptr_count(0), ptr_count(0) { ; }
 
     virtual ~Archive() { ; }
+
+    Archive& operator=(const Archive&) = delete;
+    Archive& operator=(Archive&&) = delete;
 
     bool Output () { return is_output; }
     bool Input () { return !is_output; }
@@ -183,28 +192,28 @@ namespace ngcore
     // this functions can be overloaded in Archive implementations for more efficiency
     template <typename T, typename = typename std::enable_if<is_Archivable<T>::value>::type>
     Archive & Do (T * data, size_t n)
-    { for (size_t j = 0; j < n; j++) { (*this) & data[j]; }; return *this; };
+    { for (size_t j = 0; j < n; j++) { (*this) & data[j]; }; return *this; }; // NOLINT
 
     virtual Archive & Do (double * d, size_t n)
-    { for (size_t j = 0; j < n; j++) { (*this) & d[j]; }; return *this; };
+    { for (size_t j = 0; j < n; j++) { (*this) & d[j]; }; return *this; }; // NOLINT
 
     virtual Archive & Do (int * i, size_t n)
-    { for (size_t j = 0; j < n; j++) { (*this) & i[j]; }; return *this; };
+    { for (size_t j = 0; j < n; j++) { (*this) & i[j]; }; return *this; }; // NOLINT
 
     virtual Archive & Do (long * i, size_t n)
-    { for (size_t j = 0; j < n; j++) { (*this) & i[j]; }; return *this; };
+    { for (size_t j = 0; j < n; j++) { (*this) & i[j]; }; return *this; }; // NOLINT
 
     virtual Archive & Do (size_t * i, size_t n)
-    { for (size_t j = 0; j < n; j++) { (*this) & i[j]; }; return *this; };
+    { for (size_t j = 0; j < n; j++) { (*this) & i[j]; }; return *this; }; // NOLINT
 
     virtual Archive & Do (short * i, size_t n)
-    { for (size_t j = 0; j < n; j++) { (*this) & i[j]; }; return *this; };
+    { for (size_t j = 0; j < n; j++) { (*this) & i[j]; }; return *this; }; // NOLINT
 
     virtual Archive & Do (unsigned char * i, size_t n)
-    { for (size_t j = 0; j < n; j++) { (*this) & i[j]; }; return *this; };
+    { for (size_t j = 0; j < n; j++) { (*this) & i[j]; }; return *this; }; // NOLINT
 
     virtual Archive & Do (bool * b, size_t n)
-    { for (size_t j = 0; j < n; j++) { (*this) & b[j]; }; return *this; };
+    { for (size_t j = 0; j < n; j++) { (*this) & b[j]; }; return *this; }; // NOLINT
 
     // Archive a class implementing a (void DoArchive(Archive&)) method =======
     template<typename T, typename=std::enable_if_t<has_DoArchive<T>::value>>
@@ -254,7 +263,6 @@ namespace ngcore
           (*this) << pos->second << neededDowncast;
           if(neededDowncast)
             (*this) << demangle(typeid(*ptr).name());
-          return (*this);
         }
       else // Input
         {
@@ -267,7 +275,7 @@ namespace ngcore
               return *this;
             }
           // -1 restores a new shared ptr by restoring the inner pointer and creating a shared_ptr to it
-          else if (nr == -1)
+          if (nr == -1)
             {
               T* p;
               bool neededDowncast;
@@ -329,8 +337,7 @@ namespace ngcore
                 throw std::runtime_error(std::string("Archive error: Polymorphic type ")
                                          + demangle(typeid(*p).name())
                                          + " not registered for archive");
-              else
-                reg_ptr = GetArchiveRegister(demangle(typeid(*p).name())).downcaster(typeid(T), static_cast<void*>(p));
+              reg_ptr = GetArchiveRegister(demangle(typeid(*p).name())).downcaster(typeid(T), static_cast<void*>(p));
             }
           auto pos = ptr2nr.find(reg_ptr);
           // if the pointer is not found in the map create a new entry
@@ -355,8 +362,7 @@ namespace ngcore
                     throw std::runtime_error(std::string("Archive error: Polymorphic type ")
                                              + demangle(typeid(*p).name())
                                              + " not registered for archive");
-                  else
-                    return (*this) << -3 << demangle(typeid(*p).name()) & (*p);
+                  return (*this) << -3 << demangle(typeid(*p).name()) & (*p);
                 }
             }
           else
@@ -452,7 +458,7 @@ namespace ngcore
       {
         try
           { return GetArchiveRegister(demangle(typeid(B1).name())).upcaster(ti, static_cast<void*>(dynamic_cast<B1*>(p))); }
-        catch(std::exception)
+        catch(std::exception&)
           { return Caster<T, Brest...>::tryUpcast(ti, p); }
       }
 
@@ -461,8 +467,8 @@ namespace ngcore
         if(typeid(B1) == ti)
           return dynamic_cast<T*>(static_cast<B1*>(p));
         try
-          { return GetArchiveRegister(demangle(typeid(B1).name())).downcaster(ti, static_cast<void*>(dynamic_cast<B1*>(p))); }
-        catch(std::exception)
+          { return GetArchiveRegister(demangle(typeid(B1).name())).downcaster(ti, static_cast<void*>(dynamic_cast<T*>(static_cast<B1*>(p)))); }
+        catch(std::exception&)
           { return Caster<T, Brest...>::tryDowncast(ti, p); }
       }
     };
@@ -494,17 +500,24 @@ namespace ngcore
   class NGCORE_API BinaryOutArchive : public Archive
   {
     size_t ptr = 0;
-    enum { BUFFERSIZE = 1024 };
-    char buffer[BUFFERSIZE] alignas(64);
+    static constexpr size_t BUFFERSIZE = 1024;
+    alignas(64) char buffer[BUFFERSIZE] = {};
     std::shared_ptr<std::ostream> fout;
   public:
-    BinaryOutArchive(std::shared_ptr<std::ostream> afout) : Archive(true), fout(afout)
+    BinaryOutArchive() = delete;
+    BinaryOutArchive(const BinaryOutArchive&) = delete;
+    BinaryOutArchive(BinaryOutArchive&&) = delete;
+    BinaryOutArchive(std::shared_ptr<std::ostream>&& afout)
+      : Archive(true), fout(std::move(afout))
     {
       (*this) & GetLibraryVersions();
     }
-    BinaryOutArchive(std::string filename)
+    BinaryOutArchive(const std::string& filename)
       : BinaryOutArchive(std::make_shared<std::ofstream>(filename)) {}
-    virtual ~BinaryOutArchive () { FlushBuffer(); }
+    ~BinaryOutArchive () override { FlushBuffer(); }
+
+    BinaryOutArchive& operator=(const BinaryOutArchive&) = delete;
+    BinaryOutArchive& operator=(BinaryOutArchive&&) = delete;
 
     const VersionInfo& getVersion(const std::string& library) override
     { return GetLibraryVersions()[library]; }
@@ -539,7 +552,7 @@ namespace ngcore
       (*this) & len;
       FlushBuffer();
       if(len > 0)
-        fout->write (&str[0], len);
+        fout->write (&str[0], len); // NOLINT
       return *this;
     }
     void FlushBuffer() override
@@ -571,14 +584,15 @@ namespace ngcore
   // BinaryInArchive ======================================================================
   class NGCORE_API BinaryInArchive : public Archive
   {
-    std::map<std::string, VersionInfo> vinfo;
+    std::map<std::string, VersionInfo> vinfo{};
     std::shared_ptr<std::istream> fin;
   public:
-    BinaryInArchive (std::shared_ptr<std::istream> afin) : Archive(false), fin(afin)
+    BinaryInArchive (std::shared_ptr<std::istream>&& afin)
+      : Archive(false), fin(std::move(afin))
     {
       (*this) & vinfo;
     }
-    BinaryInArchive (std::string filename)
+    BinaryInArchive (const std::string& filename)
       : BinaryInArchive(std::make_shared<std::ifstream>(filename)) { ; }
 
     const VersionInfo& getVersion(const std::string& library) override
@@ -605,7 +619,7 @@ namespace ngcore
       (*this) & len;
       str.resize(len);
       if(len)
-        fin->read(&str[0], len);
+        fin->read(&str[0], len); // NOLINT
       return *this;
     }
     Archive & operator & (char *& str) override
@@ -616,24 +630,24 @@ namespace ngcore
         str = nullptr;
       else
         {
-          str = new char[len+1];
-          fin->read(&str[0], len);
-          str[len] = '\0';
+          str = new char[len+1]; // NOLINT
+          fin->read(&str[0], len); // NOLINT
+          str[len] = '\0'; // NOLINT
         }
       return *this;
     }
 
     Archive & Do (double * d, size_t n) override
-    { fin->read(reinterpret_cast<char*>(d), n*sizeof(double)); return *this; }
+    { fin->read(reinterpret_cast<char*>(d), n*sizeof(double)); return *this; } // NOLINT
     Archive & Do (int * i, size_t n) override
-    { fin->read(reinterpret_cast<char*>(i), n*sizeof(int)); return *this; }
+    { fin->read(reinterpret_cast<char*>(i), n*sizeof(int)); return *this; } // NOLINT
     Archive & Do (size_t * i, size_t n) override
-    { fin->read(reinterpret_cast<char*>(i), n*sizeof(size_t)); return *this; }
+    { fin->read(reinterpret_cast<char*>(i), n*sizeof(size_t)); return *this; } // NOLINT
 
   private:
     template<typename T>
     inline void Read(T& val)
-    { fin->read(reinterpret_cast<char*>(&val), sizeof(T)); }
+    { fin->read(reinterpret_cast<char*>(&val), sizeof(T)); } // NOLINT
   };
 
   // TextOutArchive ======================================================================
@@ -641,11 +655,12 @@ namespace ngcore
   {
     std::shared_ptr<std::ostream> fout;
   public:
-    TextOutArchive (std::shared_ptr<std::ostream> afout) : Archive(true), fout(afout)
+    TextOutArchive (std::shared_ptr<std::ostream>&& afout)
+      : Archive(true), fout(std::move(afout))
     {
       (*this) & GetLibraryVersions();
     }
-    TextOutArchive (std::string filename) :
+    TextOutArchive (const std::string& filename) :
       TextOutArchive(std::make_shared<std::ofstream>(filename)) { }
 
     const VersionInfo& getVersion(const std::string& library) override
@@ -672,7 +687,7 @@ namespace ngcore
       *fout << len << '\n';
       if(len)
         {
-          fout->write(&str[0], len);
+          fout->write(&str[0], len); // NOLINT
           *fout << '\n';
         }
       return *this;
@@ -683,7 +698,7 @@ namespace ngcore
       *this & len;
       if(len > 0)
         {
-          fout->write (&str[0], len);
+          fout->write (&str[0], len); // NOLINT
           *fout << '\n';
         }
       return *this;
@@ -693,14 +708,15 @@ namespace ngcore
   // TextInArchive ======================================================================
   class NGCORE_API TextInArchive : public Archive
   {
-    std::map<std::string, VersionInfo> vinfo;
+    std::map<std::string, VersionInfo> vinfo{};
     std::shared_ptr<std::istream> fin;
   public:
-    TextInArchive (std::shared_ptr<std::istream> afin) : Archive(false), fin(afin)
+    TextInArchive (std::shared_ptr<std::istream>&& afin) :
+      Archive(false), fin(std::move(afin))
     {
       (*this) & vinfo;
     }
-    TextInArchive (std::string filename)
+    TextInArchive (const std::string& filename)
       : TextInArchive(std::make_shared<std::ifstream>(filename)) {}
 
     const VersionInfo& getVersion(const std::string& library) override
@@ -742,13 +758,13 @@ namespace ngcore
           str = nullptr;
           return (*this);
         }
-      str = new char[len+1];
+      str = new char[len+1]; // NOLINT
       if(len)
         {
           fin->get(ch); // \n
-          fin->get(&str[0], len+1, '\0');
+          fin->get(&str[0], len+1, '\0'); // NOLINT
         }
-      str[len] = '\0';
+      str[len] = '\0'; // NOLINT
       return *this;
     }
   };

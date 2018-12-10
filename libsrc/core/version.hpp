@@ -1,9 +1,10 @@
 #ifndef NETGEN_CORE_VERSION_HPP
 #define NETGEN_CORE_VERSION_HPP
 
-#include "ngcore_api.hpp"
 #include <string>
 #include <tuple>
+
+#include "ngcore_api.hpp"
 
 namespace ngcore
 {
