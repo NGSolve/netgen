@@ -53,16 +53,16 @@ namespace ngcore
 
     std::string to_string() const
     { std::string vstring = "v" + std::to_string(mayor_);
-      if(minor_ || release || patch || git_hash.size())
+      if(minor_ || release || patch || !git_hash.empty())
         {
           vstring += "." + std::to_string(minor_);
-          if(release || patch || git_hash.size())
+          if(release || patch || !git_hash.empty())
             {
               vstring += "." + std::to_string(release);
-              if(patch || git_hash.size())
+              if(patch || !git_hash.empty())
                 {
                   vstring += "-" + std::to_string(patch);
-                  if(git_hash.size())
+                  if(!git_hash.empty())
                     vstring += "-" + git_hash;
                 }
             }

@@ -3,8 +3,8 @@
 
 #include <complex>
 #include <cstring>
-#include <functional>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -25,12 +25,12 @@ namespace ngcore
   NGCORE_API std::string demangle(const char* typeinfo);
 
   // create new pointer of type T if it is default constructible, else throw
-  template<typename T>
-  T* constructIfPossible_impl(...)
+  template<typename T, typename ...Rest>
+  T* constructIfPossible_impl(Rest... /*unused*/)
   { throw std::runtime_error(std::string(demangle(typeid(T).name())) + " is not default constructible!"); }
 
   template<typename T, typename= typename std::enable_if<std::is_constructible<T>::value>::type>
-  T* constructIfPossible_impl(int) { return new T; }
+  T* constructIfPossible_impl(int /*unused*/) { return new T; }
 
   template<typename T>
   T* constructIfPossible() { return constructIfPossible_impl<T>(int{}); }
@@ -45,7 +45,7 @@ namespace ngcore
       typename std::is_same<decltype(std::declval<T2>().DoArchive(std::declval<Archive&>())),void>::type;
     template<typename>
     static constexpr std::false_type check(...);
-    typedef decltype(check<T>(0)) type;
+    using type = decltype(check<T>(nullptr));
   public:
     NGCORE_API static constexpr bool value = type::value;
   };
@@ -60,7 +60,7 @@ namespace ngcore
       typename std::is_same<decltype(std::declval<Archive>() & std::declval<T2&>()),Archive&>::type;
     template<typename>
     static constexpr std::false_type check(...);
-    typedef decltype(check<T>(nullptr)) type;
+    using type = decltype(check<T>(nullptr));
   public:
     NGCORE_API static constexpr bool value = type::value;
   };
@@ -107,7 +107,8 @@ namespace ngcore
     static void SetArchiveRegister(const std::string& classname, const ClassArchiveInfo& info);
     static bool IsRegistered(const std::string& classname);
   public:
-    Archive (bool ais_output) : is_output(ais_output), shared_ptr_count(0), ptr_count(0) { ; }
+    Archive (bool ais_output) : is_output(ais_output), shared_ptr_count(0), ptr_count(0)
+    shared_ptr2nr(), ptr2nr(), nr2shared_ptr(), nr2prt() { ; }
     virtual ~Archive() { ; }
 
     bool Output () { return is_output; }

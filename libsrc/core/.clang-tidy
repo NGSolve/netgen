@@ -1,0 +1,4 @@
+Checks: '*,-clang-analyzer-alpha.*,-*braces-around-statements,-fuchsia-*,-google-runtime-references,-readability-implicit-bool-conversion'
+CheckOptions:
+        - key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor
+          value: 1
