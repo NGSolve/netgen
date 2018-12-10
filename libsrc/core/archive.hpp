@@ -107,8 +107,10 @@ namespace ngcore
     static void SetArchiveRegister(const std::string& classname, const ClassArchiveInfo& info);
     static bool IsRegistered(const std::string& classname);
   public:
-    Archive (bool ais_output) : is_output(ais_output), shared_ptr_count(0), ptr_count(0)
-    shared_ptr2nr(), ptr2nr(), nr2shared_ptr(), nr2prt() { ; }
+    Archive (bool ais_output) :
+      is_output(ais_output), shared_ptr_count(0), ptr_count(0),
+      shared_ptr2nr(), ptr2nr(), nr2shared_ptr(), nr2ptr() { ; }
+
     virtual ~Archive() { ; }
 
     bool Output () { return is_output; }
