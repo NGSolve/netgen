@@ -224,9 +224,9 @@ else(WIN32)
     # build shared libraries
     set(NG_LIB_TYPE SHARED)
 endif(WIN32)
-if(APPLE AND NOT BUILD_WITH_CONDA)
+if(APPLE)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
-endif(APPLE AND NOT BUILD_WITH_CONDA)
+endif(APPLE)
 
 #######################################################################
 if(NOT ZLIB_INCLUDE_DIRS)
