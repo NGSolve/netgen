@@ -463,7 +463,8 @@ namespace ngcore
       static void* tryUpcast(const std::type_info& ti, T* p)
       {
         try
-          { return GetArchiveRegister(Demangle(typeid(B1).name())).upcaster(ti, static_cast<void*>(dynamic_cast<B1*>(p))); }
+          { return GetArchiveRegister(Demangle(typeid(B1).name())).
+              upcaster(ti, static_cast<void*>(dynamic_cast<B1*>(p))); }
         catch(std::exception&)
           { return Caster<T, Brest...>::tryUpcast(ti, p); }
       }
@@ -473,9 +474,14 @@ namespace ngcore
         if(typeid(B1) == ti)
           return dynamic_cast<T*>(static_cast<B1*>(p));
         try
-          { return GetArchiveRegister(Demangle(typeid(B1).name())).downcaster(ti, static_cast<void*>(dynamic_cast<T*>(static_cast<B1*>(p)))); }
+          {
+            return dynamic_cast<T*>(static_cast<B1*>(GetArchiveRegister(Demangle(typeid(B1).name())).
+                                                     downcaster(ti, p)));
+          }
         catch(std::exception&)
-          { return Caster<T, Brest...>::tryDowncast(ti, p); }
+          {
+            return Caster<T, Brest...>::tryDowncast(ti, p);
+          }
       }
     };
   };
