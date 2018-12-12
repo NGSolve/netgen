@@ -108,7 +108,7 @@ void testSharedPointer(Archive& in, Archive& out)
 {
   SECTION("Same shared ptr")
     {
-      static_assert(has_DoArchive<SharedPtrHolder>::value, "");
+      static_assert(detail::has_DoArchive<SharedPtrHolder>::value, "");
       SharedPtrAndPtrHolder holder, holder2;
       holder.names.push_back(make_shared<string>("name"));
       holder2.names = holder.names; // same shared ptr

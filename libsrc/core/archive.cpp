@@ -32,32 +32,32 @@ namespace ngcore
 
 #ifdef WIN
   // windows does demangling in typeid(T).name()
-  std::string demangle(const char* typeinfo) { return typeinfo; }
+  std::string Demangle(const char* typeinfo) { return typeinfo; }
 #else
-  std::string demangle(const char* typeinfo) { int status; return abi::__cxa_demangle(typeinfo,
+  std::string Demangle(const char* typeinfo) { int status; return abi::__cxa_demangle(typeinfo,
                                                                                       nullptr,
                                                                                       nullptr,
                                                                                       &status); }
 #endif
 
   // clang-tidy should ignore this static object
-  static std::unique_ptr<std::map<std::string, ClassArchiveInfo>> type_register;  // NOLINT
-  const ClassArchiveInfo& Archive :: GetArchiveRegister(const std::string& classname)
+  static std::unique_ptr<std::map<std::string, detail::ClassArchiveInfo>> type_register;  // NOLINT
+  const detail::ClassArchiveInfo& Archive :: GetArchiveRegister(const std::string& classname)
   {
     if(type_register == nullptr) type_register =
-                                   std::make_unique<std::map<std::string, ClassArchiveInfo>>();
+                                   std::make_unique<std::map<std::string, detail::ClassArchiveInfo>>();
     return (*type_register)[classname];
   }
-  void Archive :: SetArchiveRegister(const std::string& classname, const ClassArchiveInfo& info)
+  void Archive :: SetArchiveRegister(const std::string& classname, const detail::ClassArchiveInfo& info)
   {
     if(type_register == nullptr) type_register =
-                                   std::make_unique<std::map<std::string, ClassArchiveInfo>>();
+                                   std::make_unique<std::map<std::string, detail::ClassArchiveInfo>>();
     (*type_register)[classname] = info;
   }
   bool Archive :: IsRegistered(const std::string& classname)
   {
     if(type_register == nullptr) type_register =
-                                   std::make_unique<std::map<std::string, ClassArchiveInfo>>();
+                                   std::make_unique<std::map<std::string, detail::ClassArchiveInfo>>();
     return type_register->count(classname) != 0;
   }
 } // namespace ngcore
