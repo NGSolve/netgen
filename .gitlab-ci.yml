@@ -45,9 +45,6 @@ stages:
     - pwd
     - ls
     - docker info
-
-.template_ubuntu: &ubuntu
-  <<: *ubuntu
   variables:
     UBUNTU_VERSION: "18.04"
 
@@ -142,6 +139,7 @@ test_ubuntu:
 
 # cpp guideline checks
 test_guidelines:
+  <<: *ubuntu
   stage: test
   script:
     - docker run -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_guidelines.sh
