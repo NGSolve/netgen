@@ -7,11 +7,6 @@
 
 namespace ngcore
 {
-  void VersionInfo :: DoArchive(Archive& ar)
-  {
-    ar & mayor_ & minor_ & release & patch & git_hash;
-  }
-
   // clang-tidy should ignore this static object
   static std::map<std::string, VersionInfo> library_versions;  // NOLINT
   std::map<std::string, VersionInfo>& Archive :: GetLibraryVersions()
