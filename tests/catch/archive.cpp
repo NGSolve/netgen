@@ -239,8 +239,8 @@ void testMultipleInheritance(Archive& in, Archive& out)
 void testLibraryVersion(Archive& in, Archive& out)
 {
   SetLibraryVersion("netgen","v6.2.1812");
-  CHECK(in.getVersion("netgen") == "v6.2.1811");
-  CHECK(out.getVersion("netgen") == "v6.2.1812");
+  CHECK(in.GetVersion("netgen") == "v6.2.1811");
+  CHECK(out.GetVersion("netgen") == "v6.2.1812");
 }
 
 void testArchive(Archive& in, Archive& out)

@@ -129,7 +129,7 @@ namespace ngcore
 
     bool Output () const { return is_output; }
     bool Input () const { return !is_output; }
-    virtual const VersionInfo& getVersion(const std::string& library) = 0;
+    virtual const VersionInfo& GetVersion(const std::string& library) = 0;
 
     // Pure virtual functions that have to be implemented by In-/OutArchive
     virtual Archive & operator & (double & d) = 0;
@@ -525,7 +525,7 @@ namespace ngcore
     BinaryOutArchive& operator=(const BinaryOutArchive&) = delete;
     BinaryOutArchive& operator=(BinaryOutArchive&&) = delete;
 
-    const VersionInfo& getVersion(const std::string& library) override
+    const VersionInfo& GetVersion(const std::string& library) override
     { return GetLibraryVersions()[library]; }
 
     using Archive::operator&;
@@ -601,7 +601,7 @@ namespace ngcore
     BinaryInArchive (const std::string& filename)
       : BinaryInArchive(std::make_shared<std::ifstream>(filename)) { ; }
 
-    const VersionInfo& getVersion(const std::string& library) override
+    const VersionInfo& GetVersion(const std::string& library) override
     { return vinfo[library]; }
 
     using Archive::operator&;
@@ -669,7 +669,7 @@ namespace ngcore
     TextOutArchive (const std::string& filename) :
       TextOutArchive(std::make_shared<std::ofstream>(filename)) { }
 
-    const VersionInfo& getVersion(const std::string& library) override
+    const VersionInfo& GetVersion(const std::string& library) override
     { return GetLibraryVersions()[library]; }
 
     using Archive::operator&;
@@ -725,7 +725,7 @@ namespace ngcore
     TextInArchive (const std::string& filename)
       : TextInArchive(std::make_shared<std::ifstream>(filename)) {}
 
-    const VersionInfo& getVersion(const std::string& library) override
+    const VersionInfo& GetVersion(const std::string& library) override
     { return vinfo[library]; }
 
     using Archive::operator&;
