@@ -1,7 +1,6 @@
 
 import netgen.csg as csg
 import pickle, numpy
-from ngsolve import Draw, Mesh
 
 def test_pickle_csg():
     geo = csg.CSGeometry()
