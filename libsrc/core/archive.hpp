@@ -336,7 +336,7 @@ namespace ngcore
           // if the pointer is null store -2
           if (!p)
             return (*this) << -2;
-          void* reg_ptr = static_cast<void*>(p);
+          auto reg_ptr = static_cast<void*>(p);
           if(typeid(T) != typeid(*p))
             {
               if(!IsRegistered(Demangle(typeid(*p).name())))
