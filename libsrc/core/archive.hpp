@@ -24,7 +24,7 @@ namespace ngcore
   const VersionInfo& GetLibraryVersion(const std::string& library);
   void SetLibraryVersion(const std::string& library, const VersionInfo& version);
 
-  class Archive;
+  class NGCORE_API Archive;
   NGCORE_API std::string Demangle(const char* typeinfo);
 
   namespace detail
@@ -481,7 +481,7 @@ namespace ngcore
   };
 
   template<typename T, typename ... Bases>
-  class NGCORE_API RegisterClassForArchive
+  class RegisterClassForArchive
   {
   public:
     RegisterClassForArchive()
