@@ -142,6 +142,18 @@ namespace ngcore
     virtual Archive & operator & (std::string & str) = 0;
     virtual Archive & operator & (char *& str) = 0;
 
+    virtual Archive & operator & (VersionInfo & version)
+    {
+        if(Output())
+            (*this) << version.to_string();
+        else
+        {
+            std::string s;
+            (*this) & s;
+            version = VersionInfo(s);
+        }
+        return *this;
+    }
 
     // Archive std classes ================================================
     template<typename T>
@@ -182,7 +194,7 @@ namespace ngcore
         }
       else
         {
-          size_t size;
+          size_t size = 0;
           (*this) & size;
           T1 key; T2 val;
           for(size_t i = 0; i < size; i++)

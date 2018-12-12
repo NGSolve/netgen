@@ -8,7 +8,6 @@
 
 namespace ngcore
 {
-  class Archive;
   class VersionInfo
   {
   private:
@@ -83,8 +82,6 @@ namespace ngcore
     bool operator >(const VersionInfo& other) const { return other < (*this); }
     bool operator <=(const VersionInfo& other) const { return !((*this) > other); }
     bool operator >=(const VersionInfo& other) const { return !((*this) < other); }
-
-    void DoArchive(Archive& ar);
   };
 } // namespace ngcore
 

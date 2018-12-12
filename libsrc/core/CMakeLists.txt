@@ -1,4 +1,4 @@
-add_library(ngcore SHARED archive.cpp version.cpp)
+add_library(ngcore SHARED archive.cpp)
 
 target_compile_definitions(ngcore PRIVATE -DNGCORE_EXPORTS)
 
