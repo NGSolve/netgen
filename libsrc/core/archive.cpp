@@ -24,7 +24,7 @@ namespace ngcore
   void SetLibraryVersion(const std::string& library, const VersionInfo& version)
   { library_versions[library] = version; }
 
-#ifdef WIN
+#ifdef WIN32
   // windows does demangling in typeid(T).name()
   std::string Demangle(const char* typeinfo) { return typeinfo; }
 #else

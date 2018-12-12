@@ -140,6 +140,11 @@ test_ubuntu:
   <<: *ubuntu
   <<: *test_linux
 
+# cpp guideline checks
+test_guidelines:
+  stage: test
+  script:
+    - docker run netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_guidelines.sh
 ############################################
 # Deploy stage
 ############################################
