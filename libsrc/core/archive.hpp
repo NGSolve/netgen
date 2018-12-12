@@ -21,11 +21,11 @@
 namespace ngcore
 {
   // Libraries using this archive can store their version here to implement backwards compatibility
-  const VersionInfo& GetLibraryVersion(const std::string& library);
-  void SetLibraryVersion(const std::string& library, const VersionInfo& version);
+  NGCORE_API const VersionInfo& GetLibraryVersion(const std::string& library);
+  NGCORE_API void SetLibraryVersion(const std::string& library, const VersionInfo& version);
+  NGCORE_API std::string Demangle(const char* typeinfo);
 
   class NGCORE_API Archive;
-  NGCORE_API std::string Demangle(const char* typeinfo);
 
   namespace detail
   {
@@ -99,22 +99,6 @@ namespace ngcore
     std::vector<std::shared_ptr<void>> nr2shared_ptr;
     std::vector<void*> nr2ptr;
 
-    // Helper class for up-/downcasting
-    template<typename T, typename ... Bases>
-    struct Caster
-    {
-      static void* tryUpcast(const std::type_info& ti, T* p);
-      static void* tryDowncast(const std::type_info& ti, void* p);
-    };
-    template<typename T, typename ... Bases>
-    friend class RegisterClassForArchive;
-
-    // Returns ClassArchiveInfo of Demangled typeid
-    static const detail::ClassArchiveInfo& GetArchiveRegister(const std::string& classname);
-    // Set ClassArchiveInfo for Demangled typeid, this is done by creating an instance of
-    // RegisterClassForArchive<type, bases...>
-    static void SetArchiveRegister(const std::string& classname, const detail::ClassArchiveInfo& info);
-    static bool IsRegistered(const std::string& classname);
   public:
     Archive() = delete;
     Archive(const Archive&) = delete;
@@ -455,7 +439,22 @@ namespace ngcore
 
   protected:
     static std::map<std::string, VersionInfo>& GetLibraryVersions();
+
   private:
+    template<typename T, typename ... Bases>
+    friend class RegisterClassForArchive;
+
+    // Returns ClassArchiveInfo of Demangled typeid
+    static const detail::ClassArchiveInfo& GetArchiveRegister(const std::string& classname);
+    // Set ClassArchiveInfo for Demangled typeid, this is done by creating an instance of
+    // RegisterClassForArchive<type, bases...>
+    static void SetArchiveRegister(const std::string& classname, const detail::ClassArchiveInfo& info);
+    static bool IsRegistered(const std::string& classname);
+
+    // Helper class for up-/downcasting
+    template<typename T, typename ... Bases>
+    struct Caster{};
+
     template<typename T>
     struct Caster<T>
     {
@@ -504,7 +503,7 @@ namespace ngcore
   public:
     RegisterClassForArchive()
     {
-      static_assert(all_of_tmpl<std::is_base_of<Bases,T>::value...>,
+      static_assert(detail::all_of_tmpl<std::is_base_of<Bases,T>::value...>,
                     "Variadic template arguments must be base classes of T");
       detail::ClassArchiveInfo info;
       info.creator = [this,&info](const std::type_info& ti) -> void*
