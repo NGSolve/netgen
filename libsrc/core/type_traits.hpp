@@ -1,5 +1,5 @@
-#ifndef NETGEN_LIBSRC_CORE_TYPE_TRAITS_HPP
-#define NETGEN_LIBSRC_CORE_TYPE_TRAITS_HPP
+#ifndef NETGEN_CORE_TYPE_TRAITS_HPP
+#define NETGEN_CORE_TYPE_TRAITS_HPP
 
 #include <type_traits>
 
@@ -14,4 +14,4 @@ namespace ngcore
   } // namespace detail
 } // namespace ngcore
 
-#endif // NETGEN_LIBSRC_CORE_TYPE_TRAITS_HPP
+#endif // NETGEN_CORE_TYPE_TRAITS_HPP
