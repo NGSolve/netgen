@@ -22,7 +22,7 @@ namespace netgen
 	mgi = new MultiPointGeomInfo (*amgi);
 	for (int i = 1; i <= mgi->GetNPGI(); i++)
 	  if (mgi->GetPGI(i).trignum <= 0)
-	    cout << "Add FrontPoint2, illegal geominfo = " << mgi->GetPGI(i).trignum << endl;
+	    cout << "WARNING: Add FrontPoint2, illegal geominfo = " << mgi->GetPGI(i).trignum << endl;
       }
     else
       mgi = NULL;
@@ -136,7 +136,7 @@ namespace netgen
   
     if (!gi1.trignum || !gi2.trignum)
       {
-	cout << "ERROR: in AdFront::AddLine, illegal geominfo" << endl;
+	cout << "WARNING: in AdFront::AddLine, illegal geominfo" << endl;
       }
   
     lines[li].SetGeomInfo (gi1, gi2);

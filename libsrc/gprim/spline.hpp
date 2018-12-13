@@ -28,7 +28,8 @@ namespace netgen
     double hmax;
     /// hp-refinement
     double hpref;
-
+    /// 
+    string name;
     ///
     GeomPoint () { ; }
 
