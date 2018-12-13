@@ -324,6 +324,14 @@ namespace netgen
   }
 
 
+  void CSGeometry :: DoArchive(Archive& archive)
+  {
+    archive & surfaces & solids & toplevelobjects & userpoints & userpoints_ref_factor
+      & identpoints & boundingbox & isidenticto & ideps
+      & filename & spline_surfaces & splinecurves2d & splinecurves3d & surf2prim;
+    if(archive.Input())
+      FindIdenticSurfaces(1e-6);
+  }
 
   void CSGeometry :: SaveSurfaces (ostream & out) const
   {

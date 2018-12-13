@@ -73,4 +73,5 @@ void SplineSurface :: AppendPoint(const Point<3> & p, const double reffac, const
   str << "SplineSurface with base " << *baseprimitive << endl;
 }
 
+  static RegisterClassForArchive<SplineSurface, OneSurfacePrimitive> regss;
 }

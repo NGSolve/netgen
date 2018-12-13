@@ -49,9 +49,18 @@ namespace netgen
 		  const Vec<3> & z_direction);
 
     ExtrusionFace(const Array<double> & raw_data);
-    
+    // default constructor for archive
+    ExtrusionFace() {}
 
     ~ExtrusionFace();
+
+    virtual void DoArchive(Archive& ar)
+    {
+      Surface::DoArchive(ar);
+      ar & profile & path & glob_z_direction & deletable & spline3_path & line_path &
+        x_dir & y_dir & z_dir & loc_z_dir & p0 & profile_tangent & profile_par &
+        profile_spline_coeff & latest_seg & latest_t & latest_point2d & latest_point3d;
+    }
   
     virtual int IsIdentic (const Surface & s2, int & inv, double eps) const; 
   
@@ -109,10 +118,10 @@ namespace netgen
   class Extrusion : public Primitive
   {
   private:
-    const SplineGeometry<3> & path;
-    const SplineGeometry<2> & profile; // closed, clockwise oriented curve
+    const SplineGeometry<3>* path;
+    const SplineGeometry<2>* profile; // closed, clockwise oriented curve
 
-    const Vec<3> & z_direction;
+    Vec<3> z_direction;
 
     Array<ExtrusionFace*> faces;
 
@@ -122,7 +131,15 @@ namespace netgen
     Extrusion(const SplineGeometry<3> & path_in,
 	      const SplineGeometry<2> & profile_in,
 	      const Vec<3> & z_dir);
+    // default constructor for archive
+    Extrusion() {}
     ~Extrusion();
+
+    virtual void DoArchive(Archive& ar)
+    {
+      Primitive::DoArchive(ar);
+      ar & path & profile & z_direction & faces & latestfacenum;
+    }
     virtual INSOLID_TYPE BoxInSolid (const BoxSphere<3> & box) const;
     virtual INSOLID_TYPE PointInSolid (const Point<3> & p,
 				       double eps) const;

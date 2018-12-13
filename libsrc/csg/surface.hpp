@@ -63,6 +63,12 @@ namespace netgen
     //@}
   public:
 
+    virtual void DoArchive(Archive& archive)
+    {
+      archive & inverse & maxh & name & bcprop & bcname
+        & p1 & p2 & ex & ey & ez;
+    }
+
     void SetName (const char * aname);
     const char * Name () const { return name; }
 
@@ -234,6 +240,9 @@ namespace netgen
 
   class Primitive
   {
+  protected:
+    Array<int> surfaceids;
+    Array<int> surfaceactive;
 
   public:
 
@@ -241,6 +250,10 @@ namespace netgen
 
     virtual ~Primitive();
 
+    virtual void DoArchive(Archive& archive)
+    {
+      archive & surfaceids & surfaceactive;
+    }
   
     /*
       Check, whether box intersects solid defined by surface.
@@ -299,9 +312,6 @@ namespace netgen
     virtual Surface & GetSurface (int i = 0) = 0;
     virtual const Surface & GetSurface (int i = 0) const = 0;
 
-    Array<int> surfaceids;
-    Array<int> surfaceactive;
-
     int GetSurfaceId (int i = 0) const;
     void SetSurfaceId (int i, int id);
     int SurfaceActive (int i) const { return surfaceactive[i]; }
@@ -328,6 +338,12 @@ namespace netgen
   public:
     OneSurfacePrimitive();
     ~OneSurfacePrimitive();
+
+    virtual void DoArchive(Archive& archive)
+    {
+      Surface::DoArchive(archive);
+      Primitive::DoArchive(archive);
+    }
 
     virtual INSOLID_TYPE PointInSolid (const Point<3> & p,
 				       double eps) const;

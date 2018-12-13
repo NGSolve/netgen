@@ -523,4 +523,8 @@ void OrthoBrick :: Reduce (const BoxSphere<3> & box)
   surfaceactive.Elem(6) =
     (box.PMin()(0) < pmax(0)) && (pmax(0) < box.PMax()(0));
 }
+
+RegisterClassForArchive<Parallelogram3d, Surface> regpar;
+RegisterClassForArchive<Brick, Primitive> regbrick;
+RegisterClassForArchive<OrthoBrick, Brick> regob;
 }

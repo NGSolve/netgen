@@ -1,3 +1,4 @@
+add_subdirectory(core)
 add_subdirectory(general)
 add_subdirectory(gprim)
 add_subdirectory(linalg)

@@ -640,9 +640,9 @@ namespace netgen
   Revolution :: Revolution(const Point<3> & p0_in,
 			   const Point<3> & p1_in,
 			   const SplineGeometry<2> & spline_in) :
-    p0(p0_in), p1(p1_in), splinecurve(spline_in),
-    nsplines(spline_in.GetNSplines())
+    p0(p0_in), p1(p1_in)
   {
+    auto nsplines = spline_in.GetNSplines();
     surfaceactive.SetSize(0);
     surfaceids.SetSize(0);
 
@@ -650,21 +650,21 @@ namespace netgen
 
     v_axis.Normalize();
 
-    if(splinecurve.GetSpline(0).StartPI()(1) <= 0. &&
-       splinecurve.GetSpline(nsplines-1).EndPI()(1) <= 0.)
+    if(spline_in.GetSpline(0).StartPI()(1) <= 0. &&
+       spline_in.GetSpline(nsplines-1).EndPI()(1) <= 0.)
       type = 2;
-    else if (Dist(splinecurve.GetSpline(0).StartPI(),
-		  splinecurve.GetSpline(nsplines-1).EndPI()) < 1e-7)
+    else if (Dist(spline_in.GetSpline(0).StartPI(),
+		  spline_in.GetSpline(nsplines-1).EndPI()) < 1e-7)
       type = 1;
     else
       cerr << "Surface of revolution cannot be constructed" << endl;
 
-    for(int i=0; i<splinecurve.GetNSplines(); i++)
+    for(int i=0; i<spline_in.GetNSplines(); i++)
       {
-	RevolutionFace * face = new RevolutionFace(splinecurve.GetSpline(i),
+	RevolutionFace * face = new RevolutionFace(spline_in.GetSpline(i),
 						   p0,v_axis,
 						   type==2 && i==0,
-						   type==2 && i==splinecurve.GetNSplines()-1);
+						   type==2 && i==spline_in.GetNSplines()-1);
 	faces.Append(face);
 	surfaceactive.Append(1);
 	surfaceids.Append(0);
@@ -959,4 +959,7 @@ namespace netgen
     for(int i=0; i<faces.Size(); i++)
       surfaceactive[i] = true;
   }
+
+  RegisterClassForArchive<RevolutionFace, Surface> regrevf;
+  RegisterClassForArchive<Revolution, Primitive> regrev;
 }
