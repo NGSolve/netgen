@@ -653,15 +653,15 @@ namespace netgen
   Extrusion :: Extrusion(const SplineGeometry<3> & path_in,
 			 const SplineGeometry<2> & profile_in,
 			 const Vec<3> & z_dir) :
-    path(path_in), profile(profile_in), z_direction(z_dir)
+    path(&path_in), profile(&profile_in), z_direction(z_dir)
   {
     surfaceactive.SetSize(0);
     surfaceids.SetSize(0);
 
-    for(int j=0; j<profile.GetNSplines(); j++)
+    for(int j=0; j<profile->GetNSplines(); j++)
       {
-	ExtrusionFace * face = new ExtrusionFace(&(profile.GetSpline(j)),
-						 &path,
+	ExtrusionFace * face = new ExtrusionFace(&((*profile).GetSpline(j)),
+						 path,
 						 z_direction);
 	faces.Append(face);
 	surfaceactive.Append(true);
@@ -872,5 +872,6 @@ namespace netgen
       surfaceactive[i] = true;
   }
 
-
+  RegisterClassForArchive<ExtrusionFace, Surface> regexf;
+  RegisterClassForArchive<Extrusion, Primitive> regextr;
 }

@@ -230,7 +230,7 @@ namespace netgen
     void LoadMesh (istream & str);
     void SaveMesh (ostream & str) const;
     void UpdateTopology ();
-    void DoArchive (ngstd::Archive & archive);
+    void DoArchive (Archive & archive);
 
     virtual ~Ngx_Mesh();
 

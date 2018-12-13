@@ -259,19 +259,12 @@ public:
   const T & GetData (const Iterator & it) const
   { return cont[it.BagNr()][it.Pos()]; }
 
-  ngstd::Archive & DoArchive (ngstd::Archive & ar)
+  void DoArchive (Archive & ar)
   {
     ar & hash & cont;
-    return ar;
   }    
   
 };
-
-  template <typename T>
-  inline ngstd::Archive & operator & (ngstd::Archive & archive, INDEX_2_HASHTABLE<T> & mp)
-  { return mp.DoArchive(archive);   }
-
-
 
 template <typename T> 
 inline ostream & operator<< (ostream & ost, const INDEX_2_HASHTABLE<T> & ht)
@@ -436,22 +429,13 @@ public:
   { return cont[it.BagNr()][it.Pos()]; }
 
 
-  ngstd::Archive & DoArchive (ngstd::Archive & ar)
+  void DoArchive (Archive & ar)
   {
     ar & hash & cont;
-    return ar;
   }    
 
 
 };
-
-
-
-  template <typename T>
-  inline ngstd::Archive & operator & (ngstd::Archive & archive, INDEX_3_HASHTABLE<T> & mp)
-  { return mp.DoArchive(archive);   }
-
-
 
 
 template <typename T> 

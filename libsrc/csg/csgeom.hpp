@@ -39,7 +39,14 @@ namespace netgen
   public:
     TopLevelObject (Solid * asolid,
 		    Surface * asurface = NULL);
+    // default constructor for archive
+    TopLevelObject() {}
 
+    void DoArchive(Archive& archive)
+    {
+      archive & solid & surface & red & blue & green & visible & transp & maxh
+        & material & layer & bc & bcname;
+    }
     const Solid * GetSolid() const { return solid; }
     Solid * GetSolid() { return solid; }
 
@@ -124,6 +131,11 @@ namespace netgen
       UserPoint() = default;
       UserPoint (Point<3> p, int _index) : Point<3>(p), index(_index) { ; }
       int GetIndex() const { return index; }
+      void DoArchive(Archive& archive)
+      {
+        archive & index;
+        Point<3>::DoArchive(archive);
+      }
     };
     
   private:
@@ -198,6 +210,8 @@ namespace netgen
     void SetSplineCurve (const char * name, SplineGeometry<3> * spl);
     const SplineGeometry<2> * GetSplineCurve2d (const string & name) const;
     const SplineGeometry<3> * GetSplineCurve3d (const string & name) const;
+
+    void DoArchive(Archive& archive);
     
 
     void SetFlags (const char * solidname, const Flags & flags);

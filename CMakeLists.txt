@@ -17,6 +17,8 @@ option( INTEL_MIC        "cross compile for intel xeon phi")
 option( INSTALL_PROFILES "install environment variable settings to /etc/profile.d" OFF )
 option( USE_CCACHE       "use ccache")
 option( USE_INTERNAL_TCL "Compile tcl files into the code and don't install them" ON)
+option( ENABLE_UNIT_TESTS "Enable Catch unit tests")
+option( ENABLE_CPP_CORE_GUIDELINES_CHECK "Enable cpp core guideline checks on ngcore" OFF)
 
 option( USE_SUPERBUILD       "use ccache" ON)
 
@@ -341,7 +343,26 @@ execute_process(COMMAND hdiutil create -volname Netgen -srcfolder ${CMAKE_INSTAL
 enable_testing()
 include(CTest)
 
+if(ENABLE_UNIT_TESTS)
+  include(${CMAKE_CURRENT_LIST_DIR}/cmake/external_projects/catch.cmake)
+endif(ENABLE_UNIT_TESTS)
+
+
 #######################################################################
+
+if(ENABLE_CPP_CORE_GUIDELINES_CHECK)
+  find_program(
+    CLANG_TIDY_EXE
+    NAMES "clang-tidy"
+    DOC "Path to clang-tidy executable"
+    )
+  if(NOT CLANG_TIDY_EXE)
+    message(WARNING "clang-tidy not found.")
+  else()
+    message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
+    set(DO_CLANG_TIDY "${CLANG_TIDY_EXE}" "-header-filter=libsrc/core/")
+  endif()
+endif(ENABLE_CPP_CORE_GUIDELINES_CHECK)
 
 add_subdirectory(libsrc)
 add_subdirectory(ng)

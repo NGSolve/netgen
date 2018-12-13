@@ -364,37 +364,31 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
 
   py::class_<CSGeometry, NetgenGeometry, shared_ptr<CSGeometry>> (m, "CSGeometry")
     .def(py::init<>())
-    .def("__init__", 
-                                           [](CSGeometry *instance, const string & filename)
-                                            {
-                                              cout << "load geometry";
-                                              ifstream ist(filename);
-                                              ParseCSG(ist, instance);
-                                              instance -> FindIdenticSurfaces(1e-8 * instance->MaxSize()); 
-                                            })
-    .def("__init__",
-                                           [](CSGeometry *instance, const py::list & solidlist)
-                                            {
-                                              cout << "csg from list";
-                                              new (instance) CSGeometry();
-                                              for (int i = 0; i < len(solidlist); i++)
-                                                {
-                                                  py::object obj = solidlist[i];
-                                                  cout << "obj " << i << endl;
-
-                                                  py::extract<shared_ptr<SPSolid>> solid(solidlist[i]);
-                                                  if(solid.check())
-                                                    {
-                                                      cout << "its a solid" << endl;
-                                                      solid()->AddSurfaces (*instance);
-                                                      solid()->GiveUpOwner();
-                                                      int tlonr = instance->SetTopLevelObject (solid()->GetSolid());
-                                                      instance->GetTopLevelObject(tlonr) -> SetMaterial(solid()->GetMaterial());
-                                                    }
-                                                }
-                                              instance -> FindIdenticSurfaces(1e-8 * instance->MaxSize()); 
-                                            })
-
+    .def(py::init([](const string& filename)
+                  {
+                    ifstream ist (filename);
+                    auto geo = make_shared<CSGeometry>();
+                    ParseCSG(ist, geo.get());
+                    geo->FindIdenticSurfaces(1e-8 * geo->MaxSize());
+                    return geo;
+                  }), py::arg("filename"))
+    .def(py::pickle(
+                    [](CSGeometry& self)
+                    {
+                      auto ss = make_shared<stringstream>();
+                      BinaryOutArchive archive(ss);
+                      archive & self;
+                      archive.FlushBuffer();
+                      return py::make_tuple(py::bytes(ss->str()));
+                    },
+                    [](py::tuple state)
+                    {
+                      auto geo = make_shared<CSGeometry>();
+                      auto ss = make_shared<stringstream> (py::cast<py::bytes>(state[0]));
+                      BinaryInArchive archive(ss);
+                      archive & (*geo);
+                      return geo;
+                    }))
     .def("Save", FunctionPointer([] (CSGeometry & self, string filename)
                                  {
                                    cout << "save geometry to file " << filename << endl;

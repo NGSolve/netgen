@@ -1,28 +1,5 @@
 #ifdef NG_PYTHON
 
-// BEGIN EVIL HACK: Patch PyThread_get_key_value/PyThread_tss_get inside pybind11 to avoid deadlocks
-// see https://github.com/pybind/pybind11/pull/1211 (please merge!)
-#if defined(__GNUG__) && !defined(__clang__)
-#  pragma GCC diagnostic ignored "-Wattributes"
-#endif
-#include <Python.h>
-#include <pythread.h>
-#include <pybind11/cast.h>
-#undef PYBIND11_TLS_GET_VALUE
-#if PY_VERSION_HEX >= 0x03070000
-    inline void * PYBIND11_TLS_GET_VALUE(Py_tss_t *state) {
-        PyThreadState *tstate = (PyThreadState *) PyThread_tss_get(state);
-        if (!tstate) tstate = PyGILState_GetThisThreadState();
-        return tstate;
-    }
-#else
-    inline void * PYBIND11_TLS_GET_VALUE(int state) {
-        PyThreadState *tstate = (PyThreadState *) PyThread_get_key_value(state);
-        if (!tstate) tstate = PyGILState_GetThisThreadState();
-        return tstate;
-    }
-#endif
-// END EVIL HACK
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
 #include <pybind11/numpy.h>

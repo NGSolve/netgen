@@ -1949,6 +1949,13 @@ void EllipticCone :: GetTriangleApproximation
         << R    << "  " << r    << endl;
   }
 
-
-
+RegisterClassForArchive<QuadraticSurface, OneSurfacePrimitive> regqs;
+RegisterClassForArchive<Plane, QuadraticSurface> regpl;
+RegisterClassForArchive<Sphere, QuadraticSurface> regsph;
+RegisterClassForArchive<Cylinder, QuadraticSurface> regcyl;
+RegisterClassForArchive<EllipticCylinder, QuadraticSurface> regelcyl;
+RegisterClassForArchive<Ellipsoid, QuadraticSurface> regell;
+RegisterClassForArchive<Cone, QuadraticSurface> regcone;
+RegisterClassForArchive<EllipticCone, QuadraticSurface> regellcone;
+RegisterClassForArchive<Torus, OneSurfacePrimitive> regtorus;
 }

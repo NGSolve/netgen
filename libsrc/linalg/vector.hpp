@@ -139,6 +139,14 @@ public:
   ~Vector ()
   { if (ownmem) delete [] data; }
 
+  virtual void DoArchive(Archive& ar)
+  {
+    auto size = s;
+    ar & ownmem & size;
+    if(!ar.Output())
+      SetSize(size);
+    ar.Do(data, size);
+  }
   Vector & operator= (const FlatVector & v) 
   { memcpy (data, &v(0), s*sizeof(double)); return *this; }
 

@@ -1304,7 +1304,7 @@ namespace netgen
   }
 
 
-  void Mesh :: DoArchive (ngstd::Archive & archive)
+  void Mesh :: DoArchive (Archive & archive)
   {
     archive & dimension;
     archive & points;
