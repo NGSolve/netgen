@@ -53,7 +53,11 @@ namespace netgen
 
     virtual INSOLID_TYPE BoxInSolid(const BoxSphere<3> & box) const
     { return baseprimitive->BoxInSolid(box); }
-    
+
+    virtual void DoArchive(Archive& ar)
+    {
+      ar & geompoints & splines & bcnames & maxh & baseprimitive & cuts & all_cuts;
+    }
     
     /*
     virtual void Project (Point<3> & p3d) const;
