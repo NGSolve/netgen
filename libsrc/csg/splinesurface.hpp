@@ -19,6 +19,8 @@ namespace netgen
     SplineSurface(shared_ptr<OneSurfacePrimitive> abaseprimitive, shared_ptr<Array<shared_ptr<OneSurfacePrimitive>>> acuts) :
       OneSurfacePrimitive(), baseprimitive(abaseprimitive), cuts(acuts)
     { ; }
+    // default constructor for archive
+    SplineSurface() {}
     virtual ~SplineSurface() { ; }
     
     const auto & GetSplines() const { return splines; }
