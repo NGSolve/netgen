@@ -8,7 +8,7 @@ stages:
 # Windows
 ############################################
 
-.template_windows_64: &win64
+.template_windows: &win
   tags:
     - windows
     - x64
@@ -16,14 +16,14 @@ stages:
     - "echo off"
     - 'call "%VS140COMNTOOLS%\..\..\VC\bin\amd64\vcvars64.bat"'
     - set CMAKE_GENERATOR=Visual Studio 14 2015 Win64
-    - set CI_DIR=C:\ci\%CI_BUILD_REF%_64
+    - set CI_DIR=C:\ci\%CI_BUILD_REF%
     - set NETGEN_BUILD_DIR=%CI_DIR%\build
     - set INSTALL_DIR=%CI_DIR%\install
     - set NETGENDIR=%INSTALL_DIR%\bin
     - set PYTHONPATH=%INSTALL_DIR%\lib\site-packages
 
-build_netgen_win64:
-  <<: *win64
+build_win:
+  <<: *win
   stage: build
   script:
     - git submodule update --init --recursive
@@ -38,16 +38,16 @@ build_netgen_win64:
         -DCMAKE_BUILD_TYPE=Release
     - cmake --build . --target INSTALL --config Release
 
-test_win64:
-  <<: *win64
+test_win:
+  <<: *win
   stage: test
   script:
     - cd %NETGEN_BUILD_DIR%/netgen
     - ctest -C Release -V
     - cd ..
 
-win64_cleanup:
-  <<: *win64
+cleanup_win:
+  <<: *win
   stage: cleanup
   tags:
     - windows
@@ -101,7 +101,7 @@ test_guidelines:
     - docker run -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_guidelines.sh
   when: always
 
-linux_cleanup:
+cleanup_ubuntu:
   stage: cleanup
   tags:
     - linux
@@ -127,7 +127,7 @@ linux_cleanup:
     - export PYTHONPATH=$CMAKE_INSTALL_PREFIX/Contents/Resources/`python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1,0,''))"`:.
     - export PATH=$CMAKE_INSTALL_PREFIX/Contents/MacOS:$PATH
 
-mac_build:
+build_mac:
   <<: *mac
   stage: build
   script:
@@ -149,14 +149,14 @@ mac_build:
         -DCMAKE_OSX_SYSROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
     - make -j5 install
 
-mac_test:
+test_mac:
   <<: *mac
   stage: test
   script:
     - cd $BUILD_DIR/netgen
     - ctest . --output-on-failure
 
-mac_cleanup:
+cleanup_mac:
   <<: *mac
   stage: cleanup
   script:
