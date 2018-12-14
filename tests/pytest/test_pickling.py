@@ -47,7 +47,11 @@ def test_pickle_stl():
 
 
 def test_pickle_occ():
-    import netgen.NgOCC as occ
+    try:
+        import netgen.NgOCC as occ
+    except:
+        import pytest
+        pytest.skip("can't import occ")
     geo = occ.LoadOCCGeometry("../../tutorials/frame.step")
     geo_dump = pickle.dumps(geo)
     geo2 = pickle.loads(geo_dump)
