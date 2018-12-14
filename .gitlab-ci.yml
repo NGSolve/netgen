@@ -16,7 +16,7 @@ stages:
     - "echo off"
     - 'call "%VS140COMNTOOLS%\..\..\VC\bin\amd64\vcvars64.bat"'
     - set CMAKE_GENERATOR=Visual Studio 14 2015 Win64
-    - set CI_DIR=C:\ci\%CI_BUILD_REF%
+    - set CI_DIR=C:\ci\%CI_PIPELINE_ID%
     - set NETGEN_BUILD_DIR=%CI_DIR%\build
     - set INSTALL_DIR=%CI_DIR%\install
     - set NETGENDIR=%INSTALL_DIR%\bin
@@ -42,7 +42,7 @@ test_win:
   <<: *win
   stage: test
   script:
-    - cd %NETGEN_BUILD_DIR%/netgen
+    - cd %NETGEN_BUILD_DIR%\netgen
     - ctest -C Release -V
     - cd ..
 
