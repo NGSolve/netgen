@@ -74,4 +74,5 @@ namespace netgen
     throw NgException("Cannot save geometry - no geometry available");
   }
 
+  static RegisterClassForArchive<NetgenGeometry> regnggeo;
 }

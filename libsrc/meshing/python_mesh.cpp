@@ -488,7 +488,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                      auto mesh = make_shared<Mesh>();
                      mesh -> SetDimension(dim);
                      SetGlobalMesh(mesh);  // for visualization
-                     mesh -> SetGeometry (make_shared<NetgenGeometry>());
+                     mesh -> SetGeometry (nullptr);
                      return mesh;
                    } ),
          py::arg("dim")=3         
@@ -565,8 +565,6 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 		    break;
 		  }
 	      }
-	    if (!ng_geometry)
-	      ng_geometry = make_shared<NetgenGeometry>();
 	    self.SetGeometry(ng_geometry);
 	    delete infile;
 	  }),py::call_guard<py::gil_scoped_release>())

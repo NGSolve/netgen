@@ -184,6 +184,10 @@ namespace netgen
     STLGeometry();
     virtual ~STLGeometry();
 
+    void DoArchive(Archive& ar)
+    {
+      STLTopology::DoArchive(ar);
+    }
 
     void Clear();
 

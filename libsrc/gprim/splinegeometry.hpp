@@ -34,6 +34,11 @@ namespace netgen
 
     DLL_HEADER int Load (const Array<double> & raw_data, const int startpos = 0);
 
+    virtual void DoArchive(Archive& ar)
+    {
+      ar & geompoints & splines;
+    }
+
     DLL_HEADER void GetRawData (Array<double> & raw_data) const;
 
 
@@ -54,11 +59,6 @@ namespace netgen
 
     // void SetGrading (const double grading);
     DLL_HEADER void AppendPoint (const Point<D> & p, const double reffac = 1., const bool hpref = false);
-
-    void DoArchive(Archive& ar)
-    {
-      ar & geompoints & splines;
-    }
 
     void AppendSegment(SplineSeg<D> * spline)
     {

@@ -129,6 +129,8 @@ namespace netgen
 
   template class SplineGeometry<2>;
   template class SplineGeometry<3>;
+  static RegisterClassForArchive<SplineGeometry<2>> regsp2;
+  static RegisterClassForArchive<SplineGeometry<3>> regsp3;
 }
 
 
