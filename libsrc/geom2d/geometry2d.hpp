@@ -151,7 +151,11 @@ namespace netgen
 
     void TestComment ( ifstream & infile ) ;
 
-    
+    void DoArchive(Archive& ar)
+    {
+      SplineGeometry<2>::DoArchive(ar);
+      ar & materials & maxh & quadmeshing & tensormeshing & layer & bcnames & elto0;
+    }
 
     const SplineSegExt & GetSpline (const int i) const 
     { 

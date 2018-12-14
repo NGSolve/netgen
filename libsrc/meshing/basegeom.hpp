@@ -22,6 +22,9 @@ namespace netgen
 
     virtual const Refinement & GetRefinement () const;
 
+  virtual void DoArchive(Archive&)
+  { throw NgException("DoArchive not implemented for " + Demangle(typeid(*this).name())); }
+
     virtual void Save (string filename) const;
     virtual void SaveToMeshFile (ostream & /* ost */) const { ; }
   };
