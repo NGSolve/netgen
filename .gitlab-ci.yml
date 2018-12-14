@@ -9,20 +9,6 @@ stages:
 ############################################
 
 # Windows
-.template_windows_32: &win32
-  tags:
-    - windows
-    - x86
-  before_script:
-    - "echo off"
-    - 'call "%VS140COMNTOOLS%\..\..\VC\bin\vcvars32.bat"'
-    - set CMAKE_GENERATOR=Visual Studio 14 2015
-    - set CI_DIR=C:\ci\%CI_BUILD_REF%_32
-    - set NETGEN_BUILD_DIR=%CI_DIR%\build
-    - set INSTALL_DIR=%CI_DIR%\install
-    - set NETGENDIR=%INSTALL_DIR%\bin
-    - set PYTHONPATH=%INSTALL_DIR%\lib\site-packages
-
 .template_windows_64: &win64
   tags:
     - windows
@@ -53,7 +39,8 @@ stages:
 ############################################
 
 # Windows
-.template_build_win: &tbuild_netgen_win
+build_netgen_win64:
+  <<: *win64
   stage: build
   script:
     - git submodule update --init --recursive
@@ -67,27 +54,15 @@ stages:
         -DUSE_OCC=ON
         -DCMAKE_BUILD_TYPE=Release
     - cmake --build . --target INSTALL --config Release
-
-.build_netgen_win32:
-  <<: *win32
-  <<: *tbuild_netgen_win
   cache:
-    paths:
-      - build/
-      - src/
-    key: "netgen_win32_${CI_BUILD_REF_NAME}"
-
-build_netgen_win64:
-  <<: *win64
-  <<: *tbuild_netgen_win
-  cache:
-    paths:
-      - build/
-      - src/
     key: "netgen_win64_${CI_BUILD_REF_NAME}"
+    paths:
+      - build/
+      - src/
 
 # Linux
-.template_build_linux: &build_linux
+build_ubuntu:
+  <<: *ubuntu
   stage: build
   script:
     - docker build -t netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} -f tests/dockerfile .
@@ -96,34 +71,23 @@ build_netgen_win64:
     - docker commit `cat netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id` netgen_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION}
     - rm netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id
 
-build_ubuntu:
-  <<: *ubuntu
-  <<: *build_linux
-
 
 ############################################
 # Test stage
 ############################################
 
 # Windows
-.template_test_win: &test_win
+test_win64:
+  <<: *win64
   stage: test
   script:
     - cd %NETGEN_BUILD_DIR%/netgen
     - ctest -C Release -V
     - cd ..
 
-# skip since we have no machine with 32 bits
-.test_win32:
-  <<: *win32
-  <<: *test_win
-
-test_win64:
-  <<: *win64
-  <<: *test_win
-
 # Linux
-.template_test_linux: &test_linux
+test_ubuntu:
+  <<: *ubuntu
   stage: test
   script:
     - >-
@@ -133,10 +97,6 @@ test_win64:
       netgen_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION}
       bash -c 'cd /root/build/netgen && make test_netgen ARGS="-V"'
 
-test_ubuntu:
-  <<: *ubuntu
-  <<: *test_linux
-
 # cpp guideline checks
 test_guidelines:
   <<: *ubuntu
@@ -144,6 +104,7 @@ test_guidelines:
   script:
     - docker run -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_guidelines.sh
   when: always
+
 ############################################
 # Deploy stage
 ############################################
@@ -190,16 +151,3 @@ win64_cleanup:
     - rd /s /q %CI_DIR%
   when: always
   allow_failure: true
-
-.win32_cleanup:
-  <<: *win32
-  stage: cleanup
-  tags:
-    - windows
-    - x86
-  script:
-    - cd %CI_PROJECT_DIR%
-    - rd /s /q %CI_DIR%
-  when: always
-  allow_failure: true
-
