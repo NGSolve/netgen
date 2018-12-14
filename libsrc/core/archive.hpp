@@ -524,7 +524,7 @@ namespace ngcore
   {
     size_t ptr = 0;
     static constexpr size_t BUFFERSIZE = 1024;
-    alignas(64) char buffer[BUFFERSIZE] = {};
+    alignas(16) char buffer[BUFFERSIZE] = {};
     std::shared_ptr<std::ostream> fout;
   public:
     BinaryOutArchive() = delete;
