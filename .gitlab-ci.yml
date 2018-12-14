@@ -5,10 +5,9 @@ stages:
   - cleanup
 
 ############################################
-# System templates
+# Windows
 ############################################
 
-# Windows
 .template_windows_64: &win64
   tags:
     - windows
@@ -23,22 +22,6 @@ stages:
     - set NETGENDIR=%INSTALL_DIR%\bin
     - set PYTHONPATH=%INSTALL_DIR%\lib\site-packages
 
-# Linux
-.template_ubuntu: &ubuntu
-  tags:
-    - linux
-  before_script:
-    - pwd
-    - ls
-    - docker info
-  variables:
-    UBUNTU_VERSION: "18.04"
-
-############################################
-# Build stage
-############################################
-
-# Windows
 build_netgen_win64:
   <<: *win64
   stage: build
@@ -60,7 +43,40 @@ build_netgen_win64:
       - build/
       - src/
 
-# Linux
+test_win64:
+  <<: *win64
+  stage: test
+  script:
+    - cd %NETGEN_BUILD_DIR%/netgen
+    - ctest -C Release -V
+    - cd ..
+
+win64_cleanup:
+  <<: *win64
+  stage: cleanup
+  tags:
+    - windows
+    - x64
+  script:
+    - cd %CI_PROJECT_DIR%
+    - rd /s /q %CI_DIR%
+  when: always
+  allow_failure: true
+
+############################################
+# Ubuntu/Linux
+############################################
+
+.template_ubuntu: &ubuntu
+  tags:
+    - linux
+  before_script:
+    - pwd
+    - ls
+    - docker info
+  variables:
+    UBUNTU_VERSION: "18.04"
+
 build_ubuntu:
   <<: *ubuntu
   stage: build
@@ -71,21 +87,6 @@ build_ubuntu:
     - docker commit `cat netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id` netgen_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION}
     - rm netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id
 
-
-############################################
-# Test stage
-############################################
-
-# Windows
-test_win64:
-  <<: *win64
-  stage: test
-  script:
-    - cd %NETGEN_BUILD_DIR%/netgen
-    - ctest -C Release -V
-    - cd ..
-
-# Linux
 test_ubuntu:
   <<: *ubuntu
   stage: test
@@ -104,6 +105,17 @@ test_guidelines:
   script:
     - docker run -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_guidelines.sh
   when: always
+
+linux_cleanup:
+  stage: cleanup
+  tags:
+    - linux
+  script:
+    # remove intermediate and old docker images and containers
+    - docker rm -f `docker ps --no-trunc -aq`
+    - docker images --no-trunc -aqf "dangling=true" | xargs docker rmi -f
+  when: always
+  allow_failure: true
 
 ############################################
 # Deploy stage
@@ -124,30 +136,3 @@ deploy_sourceforge:
     - git push github master
   only:
     - master
-
-############################################
-# Cleanup stage
-############################################
-
-linux_cleanup:
-  stage: cleanup
-  tags:
-    - linux
-  script:
-    # remove intermediate and old docker images and containers
-    - docker rm -f `docker ps --no-trunc -aq`
-    - docker images --no-trunc -aqf "dangling=true" | xargs docker rmi -f
-  when: always
-  allow_failure: true
-
-win64_cleanup:
-  <<: *win64
-  stage: cleanup
-  tags:
-    - windows
-    - x64
-  script:
-    - cd %CI_PROJECT_DIR%
-    - rd /s /q %CI_DIR%
-  when: always
-  allow_failure: true
