@@ -5,25 +5,10 @@ stages:
   - cleanup
 
 ############################################
-# System templates
+# Windows
 ############################################
 
-# Windows
-.template_windows_32: &win32
-  tags:
-    - windows
-    - x86
-  before_script:
-    - "echo off"
-    - 'call "%VS140COMNTOOLS%\..\..\VC\bin\vcvars32.bat"'
-    - set CMAKE_GENERATOR=Visual Studio 14 2015
-    - set CI_DIR=C:\ci\%CI_BUILD_REF%_32
-    - set NETGEN_BUILD_DIR=%CI_DIR%\build
-    - set INSTALL_DIR=%CI_DIR%\install
-    - set NETGENDIR=%INSTALL_DIR%\bin
-    - set PYTHONPATH=%INSTALL_DIR%\lib\site-packages
-
-.template_windows_64: &win64
+.template_windows: &win
   tags:
     - windows
     - x64
@@ -31,29 +16,14 @@ stages:
     - "echo off"
     - 'call "%VS140COMNTOOLS%\..\..\VC\bin\amd64\vcvars64.bat"'
     - set CMAKE_GENERATOR=Visual Studio 14 2015 Win64
-    - set CI_DIR=C:\ci\%CI_BUILD_REF%_64
+    - set CI_DIR=C:\ci\%CI_PIPELINE_ID%
     - set NETGEN_BUILD_DIR=%CI_DIR%\build
     - set INSTALL_DIR=%CI_DIR%\install
     - set NETGENDIR=%INSTALL_DIR%\bin
     - set PYTHONPATH=%INSTALL_DIR%\lib\site-packages
 
-# Linux
-.template_ubuntu: &ubuntu
-  tags:
-    - linux
-  before_script:
-    - pwd
-    - ls
-    - docker info
-  variables:
-    UBUNTU_VERSION: "18.04"
-
-############################################
-# Build stage
-############################################
-
-# Windows
-.template_build_win: &tbuild_netgen_win
+build_win:
+  <<: *win
   stage: build
   script:
     - git submodule update --init --recursive
@@ -68,26 +38,42 @@ stages:
         -DCMAKE_BUILD_TYPE=Release
     - cmake --build . --target INSTALL --config Release
 
-.build_netgen_win32:
-  <<: *win32
-  <<: *tbuild_netgen_win
-  cache:
-    paths:
-      - build/
-      - src/
-    key: "netgen_win32_${CI_BUILD_REF_NAME}"
+test_win:
+  <<: *win
+  stage: test
+  script:
+    - cd %NETGEN_BUILD_DIR%\netgen
+    - ctest -C Release -V
+    - cd ..
 
-build_netgen_win64:
-  <<: *win64
-  <<: *tbuild_netgen_win
-  cache:
-    paths:
-      - build/
-      - src/
-    key: "netgen_win64_${CI_BUILD_REF_NAME}"
+cleanup_win:
+  <<: *win
+  stage: cleanup
+  tags:
+    - windows
+    - x64
+  script:
+    - cd %CI_PROJECT_DIR%
+    - rd /s /q %CI_DIR%
+  when: always
+  allow_failure: true
 
-# Linux
-.template_build_linux: &build_linux
+############################################
+# Ubuntu/Linux
+############################################
+
+.template_ubuntu: &ubuntu
+  tags:
+    - linux
+  before_script:
+    - pwd
+    - ls
+    - docker info
+  variables:
+    UBUNTU_VERSION: "18.04"
+
+build_ubuntu:
+  <<: *ubuntu
   stage: build
   script:
     - docker build -t netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} -f tests/dockerfile .
@@ -96,34 +82,8 @@ build_netgen_win64:
     - docker commit `cat netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id` netgen_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION}
     - rm netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id
 
-build_ubuntu:
+test_ubuntu:
   <<: *ubuntu
-  <<: *build_linux
-
-
-############################################
-# Test stage
-############################################
-
-# Windows
-.template_test_win: &test_win
-  stage: test
-  script:
-    - cd %NETGEN_BUILD_DIR%/netgen
-    - ctest -C Release -V
-    - cd ..
-
-# skip since we have no machine with 32 bits
-.test_win32:
-  <<: *win32
-  <<: *test_win
-
-test_win64:
-  <<: *win64
-  <<: *test_win
-
-# Linux
-.template_test_linux: &test_linux
   stage: test
   script:
     - >-
@@ -133,10 +93,6 @@ test_win64:
       netgen_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION}
       bash -c 'cd /root/build/netgen && make test_netgen ARGS="-V"'
 
-test_ubuntu:
-  <<: *ubuntu
-  <<: *test_linux
-
 # cpp guideline checks
 test_guidelines:
   <<: *ubuntu
@@ -144,6 +100,70 @@ test_guidelines:
   script:
     - docker run -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_guidelines.sh
   when: always
+
+cleanup_ubuntu:
+  stage: cleanup
+  tags:
+    - linux
+  script:
+    # remove intermediate and old docker images and containers
+    - docker rm -f `docker ps --no-trunc -aq`
+    - docker images --no-trunc -aqf "dangling=true" | xargs docker rmi -f || true
+  when: always
+  allow_failure: true
+
+############################################
+# MacOSX
+############################################
+
+.template_mac: &mac
+  tags:
+    - mac
+  before_script:
+    - export ROOT_DIR=/tmp/$CI_PIPELINE_ID
+    - export SRC_DIR=$ROOT_DIR/src
+    - export BUILD_DIR=$ROOT_DIR/build
+    - export CMAKE_INSTALL_PREFIX=/tmp/$CI_PIPELINE_ID/install/Netgen.app
+    - export PYTHONPATH=$CMAKE_INSTALL_PREFIX/Contents/Resources/`python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1,0,''))"`:.
+    - export PATH=$CMAKE_INSTALL_PREFIX/Contents/MacOS:$PATH
+
+build_mac:
+  <<: *mac
+  stage: build
+  script:
+    - git submodule update --init --recursive
+    - rm -rf $BUILD_DIR
+    - mkdir -p $BUILD_DIR
+    - rm -rf $SRC_DIR
+    - mkdir -p $SRC_DIR
+    - cp -a . $SRC_DIR/
+    - cd $BUILD_DIR
+    - >-
+        cmake $SRC_DIR
+        -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX
+        -DCMAKE_BUILD_TYPE=Release
+        -DUSE_NATIVE_ARCH=OFF
+        -DUSE_CCACHE=ON
+        -DENABLE_UNIT_TESTS=ON
+        -DCMAKE_OSX_DEPLOYMENT_TARGET=10.9
+        -DCMAKE_OSX_SYSROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+    - make -j5 install
+
+test_mac:
+  <<: *mac
+  stage: test
+  script:
+    - cd $BUILD_DIR/netgen
+    - ctest . --output-on-failure
+
+cleanup_mac:
+  <<: *mac
+  stage: cleanup
+  script:
+    - rm -rf $ROOT_DIR
+  when: always
+  allow_failure: true
+
 ############################################
 # Deploy stage
 ############################################
@@ -163,43 +183,3 @@ deploy_sourceforge:
     - git push github master
   only:
     - master
-
-############################################
-# Cleanup stage
-############################################
-
-linux_cleanup:
-  stage: cleanup
-  tags:
-    - linux
-  script:
-    # remove intermediate and old docker images and containers
-    - docker rm -f `docker ps --no-trunc -aq`
-    - docker images --no-trunc -aqf "dangling=true" | xargs docker rmi -f
-  when: always
-  allow_failure: true
-
-win64_cleanup:
-  <<: *win64
-  stage: cleanup
-  tags:
-    - windows
-    - x64
-  script:
-    - cd %CI_PROJECT_DIR%
-    - rd /s /q %CI_DIR%
-  when: always
-  allow_failure: true
-
-.win32_cleanup:
-  <<: *win32
-  stage: cleanup
-  tags:
-    - windows
-    - x86
-  script:
-    - cd %CI_PROJECT_DIR%
-    - rd /s /q %CI_DIR%
-  when: always
-  allow_failure: true
-

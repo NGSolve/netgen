@@ -1074,5 +1074,5 @@ void STLTopology :: OrientAfterTrig (int trig)
     }
 }
 
-
+static RegisterClassForArchive<STLTopology> stltop;
 }

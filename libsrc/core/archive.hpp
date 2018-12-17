@@ -522,9 +522,9 @@ namespace ngcore
   // BinaryOutArchive ======================================================================
   class NGCORE_API BinaryOutArchive : public Archive
   {
-    size_t ptr = 0;
     static constexpr size_t BUFFERSIZE = 1024;
-    alignas(64) char buffer[BUFFERSIZE] = {};
+    char buffer[BUFFERSIZE] = {};
+    size_t ptr = 0;
     std::shared_ptr<std::ostream> fout;
   public:
     BinaryOutArchive() = delete;

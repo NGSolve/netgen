@@ -1316,27 +1316,8 @@ namespace netgen
 
     archive & *ident;
 
-
-    // archive geometry
-    if (archive.Output())
-      {
-        ostringstream ost;
-        if (geometry)
-          geometry -> SaveToMeshFile (ost);
-        archive << ost.str();
-        archive << (geometry ? curvedelems->GetOrder() : 1);
-      }
-    else
-      {
-        string str;
-        archive & str;
-        istringstream ist(str);
-        geometry = geometryregister.LoadFromMeshFile (ist);
-        int order;
-        archive & order;
-        if(geometry && order > 1)
-          BuildCurvedElements(order);
-      }
+    archive & geometry;
+    archive & *curvedelems;
     
     if (archive.Input())
       {

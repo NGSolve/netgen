@@ -96,6 +96,17 @@ public:
   STLTriangle (const int * apts);
   STLTriangle () {pts[0]=0;pts[1]=0;pts[2]=0;}
 
+  void DoArchive(Archive& ar)
+  {
+    ar.Do(&topedges[0],3);
+    ar.Do(&nbtrigs[0][0], 6);
+    ar.Do(&pts[0],3);
+    ar.Do(&domains[0],2);
+    size_t i = flags.toperror;
+    ar & normal & box & center & rad & facenum & i;
+    flags.toperror = i;
+  }
+
   int operator[] (int i) const { return pts[i]; }
   int & operator[] (int i) { return pts[i]; }
 
@@ -279,6 +290,13 @@ public:
   void Save (const char* filename) const;
   void SaveBinary (const char* filename, const char* aname) const;
   void SaveSTLE (const char * filename) const; // stores trigs and edges
+
+  virtual void DoArchive(Archive& ar)
+  {
+    ar & trias & points & boundingbox & pointtol;
+    if(ar.Input())
+      FindNeighbourTrigs();
+  }
   
   virtual void InitSTLGeometry (const Array<STLReadTriangle> & readtrigs);
 

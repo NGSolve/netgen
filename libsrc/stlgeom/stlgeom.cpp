@@ -3579,5 +3579,5 @@ void STLGeometry :: SmoothGeometry ()
 
   STLInit stlinit;
 
-
+static RegisterClassForArchive<STLGeometry, NetgenGeometry, STLTopology> stlgeo;
 }

@@ -1592,5 +1592,5 @@ namespace netgen
   };
 
   CSGInit csginit;
-
+  static RegisterClassForArchive<CSGeometry, NetgenGeometry> regcsg;
 }

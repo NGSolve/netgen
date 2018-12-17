@@ -19,15 +19,30 @@ DLL_HEADER void ExportGeom2d(py::module &m)
     (m, "SplineGeometry",
      "a 2d boundary representation geometry model by lines and splines")
     .def(py::init<>())
-    .def("__init__",
-          [](SplineGeometry2d *instance, const string & filename)
-           {
-             cout << "load geometry";
-             ifstream ist(filename);
-             new (instance) SplineGeometry2d();
-             instance->Load (filename.c_str());
-             ng_geometry = shared_ptr<SplineGeometry2d>(instance, NOOP_Deleter);
-           })
+    .def(py::init([](const string& filename)
+                  {
+                    auto geo = make_shared<SplineGeometry2d>();
+                    geo->Load(filename.c_str());
+                    ng_geometry = geo;
+                    return geo;
+                  }))
+    .def(py::pickle(
+                    [](SplineGeometry2d& self)
+                    {
+                      auto ss = make_shared<stringstream>();
+                      BinaryOutArchive archive(ss);
+                      archive & self;
+                      archive.FlushBuffer();
+                      return py::make_tuple(py::bytes(ss->str()));
+                    },
+                    [](py::tuple state)
+                    {
+                      auto geo = make_shared<SplineGeometry2d>();
+                      auto ss = make_shared<stringstream> (py::cast<py::bytes>(state[0]));
+                      BinaryInArchive archive(ss);
+                      archive & (*geo);
+                      return geo;
+                    }))
     
 	.def("Load",&SplineGeometry2d::Load)
     .def("AppendPoint", FunctionPointer
