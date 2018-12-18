@@ -113,7 +113,8 @@ namespace ngcore
 
     bool Output () const { return is_output; }
     bool Input () const { return !is_output; }
-    virtual const VersionInfo& GetVersion(const std::string& library) = 0;
+    virtual const VersionInfo& GetVersion(const std::string& library)
+    { return GetLibraryVersions()[library]; }
 
     // Pure virtual functions that have to be implemented by In-/OutArchive
     virtual Archive & operator & (double & d) = 0;
