@@ -61,7 +61,7 @@ if(USE_PYTHON)
     MESSAGE(STATUS "######################## CHECKING RPATH #######################################")
     MESSAGE(STATUS "${NG_RPATH_TOKEN}/../${NETGEN_PYTHON_RPATH}")
     set_target_properties(ngpy PROPERTIES INSTALL_RPATH "${NG_RPATH_TOKEN}/../${NETGEN_PYTHON_RPATH}")
-    MESSAGE(STATUS "###############################################################################"
+    MESSAGE(STATUS "###############################################################################")
     install(TARGETS ngpy DESTINATION ${NG_INSTALL_DIR_PYTHON}/${NG_INSTALL_SUFFIX} COMPONENT netgen)
 endif(USE_PYTHON)
 
