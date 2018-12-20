@@ -85,5 +85,21 @@ def test_pickle_geom2d():
     for val1, val2 in zip(vd1.values(), vd2.values()):
         assert numpy.array_equal(val1, val2)
 
+def test_pickle_mesh():
+    import netgen.csg as csg
+    geo = csg.CSGeometry()
+    brick = csg.OrthoBrick(csg.Pnt(-3,-3,-3), csg.Pnt(3,3,3))
+    mesh = geo.GenerateMesh(maxh=0.2)
+    assert geo == mesh.GetGeometry()
+    dump = pickle.dumps([geo,mesh])
+    geo2, mesh2 = pickle.loads(dump)
+    assert geo2 == mesh2.GetGeometry()
+    mesh.Save("msh1.vol.gz")
+    mesh2.Save("msh2.vol.gz")
+    import filecmp, os
+    assert filecmp.cmp("msh1.vol.gz", "msh2.vol.gz")
+    os.remove("msh1.vol.gz")
+    os.remove("msh2.vol.gz")
+
 if __name__ == "__main__":
-    test_pickle_csg()
+    test_pickle_mesh()

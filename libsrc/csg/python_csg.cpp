@@ -368,23 +368,7 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
                     geo->FindIdenticSurfaces(1e-8 * geo->MaxSize());
                     return geo;
                   }), py::arg("filename"))
-    .def(py::pickle(
-                    [](CSGeometry& self)
-                    {
-                      auto ss = make_shared<stringstream>();
-                      BinaryOutArchive archive(ss);
-                      archive & self;
-                      archive.FlushBuffer();
-                      return py::make_tuple(py::bytes(ss->str()));
-                    },
-                    [](py::tuple state)
-                    {
-                      auto geo = make_shared<CSGeometry>();
-                      auto ss = make_shared<stringstream> (py::cast<py::bytes>(state[0]));
-                      BinaryInArchive archive(ss);
-                      archive & (*geo);
-                      return geo;
-                    }))
+    .def(NGSPickle<CSGeometry>())
     .def("Save", FunctionPointer([] (CSGeometry & self, string filename)
                                  {
                                    cout << "save geometry to file " << filename << endl;

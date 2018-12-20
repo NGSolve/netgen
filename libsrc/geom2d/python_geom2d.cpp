@@ -26,25 +26,8 @@ DLL_HEADER void ExportGeom2d(py::module &m)
                     ng_geometry = geo;
                     return geo;
                   }))
-    .def(py::pickle(
-                    [](SplineGeometry2d& self)
-                    {
-                      auto ss = make_shared<stringstream>();
-                      BinaryOutArchive archive(ss);
-                      archive & self;
-                      archive.FlushBuffer();
-                      return py::make_tuple(py::bytes(ss->str()));
-                    },
-                    [](py::tuple state)
-                    {
-                      auto geo = make_shared<SplineGeometry2d>();
-                      auto ss = make_shared<stringstream> (py::cast<py::bytes>(state[0]));
-                      BinaryInArchive archive(ss);
-                      archive & (*geo);
-                      return geo;
-                    }))
-    
-	.def("Load",&SplineGeometry2d::Load)
+    .def(NGSPickle<SplineGeometry2d>())
+    .def("Load",&SplineGeometry2d::Load)
     .def("AppendPoint", FunctionPointer
          ([](SplineGeometry2d &self, double px, double py, double maxh, double hpref, string name)
           {

@@ -20,23 +20,7 @@ DLL_HEADER void ExportSTL(py::module & m)
 {
   py::class_<STLGeometry,shared_ptr<STLGeometry>, NetgenGeometry> (m,"STLGeometry")
     .def(py::init<>())
-    .def(py::pickle(
-                    [](STLGeometry& self)
-                    {
-                      auto ss = make_shared<stringstream>();
-                      BinaryOutArchive archive(ss);
-                      archive & self;
-                      archive.FlushBuffer();
-                      return py::make_tuple(py::bytes(ss->str()));
-                    },
-                    [](py::tuple state)
-                    {
-                      auto geo = make_shared<STLGeometry>();
-                      auto ss = make_shared<stringstream> (py::cast<py::bytes>(state[0]));
-                      BinaryInArchive archive(ss);
-                      archive & (*geo);
-                      return geo;
-                    }))
+    .def(NGSPickle<STLGeometry>())
     .def("_visualizationData", [](shared_ptr<STLGeometry> stl_geo)
          {
            std::vector<float> vertices;

@@ -1316,7 +1316,7 @@ namespace netgen
 
     archive & *ident;
 
-    archive & geometry;
+    archive.Shallow(geometry);
     archive & *curvedelems;
     
     if (archive.Input())

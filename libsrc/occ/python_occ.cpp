@@ -18,23 +18,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
 {
   py::class_<OCCGeometry, shared_ptr<OCCGeometry>, NetgenGeometry> (m, "OCCGeometry", R"raw_string(Use LoadOCCGeometry to load the geometry from a *.step file.)raw_string")
     .def(py::init<>())
-    .def(py::pickle(
-                    [](OCCGeometry& self)
-                    {
-                      auto ss = make_shared<stringstream>();
-                      BinaryOutArchive archive(ss);
-                      archive & self;
-                      archive.FlushBuffer();
-                      return py::make_tuple(py::bytes(ss->str()));
-                    },
-                    [](py::tuple state)
-                    {
-                      auto geo = make_shared<OCCGeometry>();
-                      auto ss = make_shared<stringstream> (py::cast<py::bytes>(state[0]));
-                      BinaryInArchive archive(ss);
-                      archive & (*geo);
-                      return geo;
-                    }))
+    .def(NGSPickle<OCCGeometry>())
     .def("Heal",[](OCCGeometry & self, double tolerance, bool fixsmalledges, bool fixspotstripfaces, bool sewfaces, bool makesolids, bool splitpartitions)
          {
            self.tolerance = tolerance;
