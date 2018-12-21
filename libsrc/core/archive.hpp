@@ -806,23 +806,23 @@ namespace ngcore
   };
 
 #ifdef NG_PYTHON
-  namespace py = pybind11;
 
   template<typename ARCHIVE>
   class PyArchive : public ARCHIVE
   {
   private:
-    py::list lst;
+    pybind11::list lst;
     size_t index = 0;
     using ARCHIVE::stream;
   public:
-    PyArchive(const py::object& alst = py::none()) :
+    PyArchive(const pybind11::object& alst = pybind11::none()) :
       ARCHIVE(std::make_shared<std::stringstream>()),
-      lst(alst.is_none() ? py::list() : py::cast<py::list>(alst))
+      lst(alst.is_none() ? pybind11::list() : pybind11::cast<pybind11::list>(alst))
     {
       ARCHIVE::shallow_to_python = true;
       if(Input())
-        stream = std::make_shared<std::stringstream>(py::cast<py::bytes>(lst[py::len(lst)-1]));
+        stream = std::make_shared<std::stringstream>
+          (pybind11::cast<pybind11::bytes>(lst[pybind11::len(lst)-1]));
     }
 
     using ARCHIVE::Output;
@@ -831,32 +831,35 @@ namespace ngcore
     using ARCHIVE::operator&;
     using ARCHIVE::operator<<;
     using ARCHIVE::GetVersion;
-    void ShallowOutPython(py::object val) override { lst.append(val); }
-    py::object ShallowInPython() override { return lst[index++]; }
+    void ShallowOutPython(pybind11::object val) override { lst.append(val); }
+    pybind11::object ShallowInPython() override { return lst[index++]; }
 
-    py::list WriteOut()
+    pybind11::list WriteOut()
     {
       FlushBuffer();
-      lst.append(py::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
+      lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
       return lst;
     }
   };
 
   template<typename T, typename T_ARCHIVE_OUT=BinaryOutArchive, typename T_ARCHIVE_IN=BinaryInArchive>
-  auto NGSPickle()
+  auto NGSPickle(bool printoutput=false)
   {
-    return py::pickle([](T& self)
+    return pybind11::pickle([printoutput](T* self)
                       {
                         PyArchive<T_ARCHIVE_OUT> ar;
                         ar & self;
-                        return py::make_tuple(ar.WriteOut());
+                        auto output = pybind11::make_tuple(ar.WriteOut());
+                        if(printoutput)
+                          pybind11::print("pickle output of", Demangle(typeid(T).name()),"=", output);
+                        return output;
                       },
-                      [](py::tuple state)
+                      [](pybind11::tuple state)
                       {
-                        auto val = std::make_unique<T>();
+                        T* val = nullptr;
                         PyArchive<T_ARCHIVE_IN> ar(state[0]);
-                        ar & *val;
-                        return std::move(val);
+                        ar & val;
+                        return val;
                       });
   }
 
