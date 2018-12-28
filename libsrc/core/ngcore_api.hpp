@@ -5,8 +5,8 @@
         #define NGCORE_API_EXPORT __declspec(dllexport)
         #define NGCORE_API_IMPORT __declspec(dllimport)
 #else
-        #define NGCORE_API_EXPORT
-        #define NGCORE_API_IMPORT
+        #define NGCORE_API_EXPORT __attribute__((visibility("default")))
+        #define NGCORE_API_IMPORT __attribute__((visibility("default")))
 #endif
 
 #ifdef NGCORE_EXPORTS

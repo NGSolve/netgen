@@ -4,6 +4,10 @@ add_library( la OBJECT
 
 set_target_properties(la PROPERTIES POSITION_INDEPENDENT_CODE ON )
 
+if(NOT WIN32)
+  target_link_libraries(la ngcore)
+endif(NOT WIN32)
+
 install(FILES
   densemat.hpp linalg.hpp opti.hpp
   polynomial.hpp vector.hpp

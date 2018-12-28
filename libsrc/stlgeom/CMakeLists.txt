@@ -4,8 +4,7 @@ add_library(stl ${NG_LIB_TYPE}
         )
 
 if(NOT WIN32)
-    target_link_libraries( stl mesh  ${PYTHON_LIBRARIES})
-    target_link_libraries( stl ${PYTHON_LIBRARIES})
+    target_link_libraries( stl ngcore mesh ${PYTHON_LIBRARIES})
     install( TARGETS stl ${NG_INSTALL_DIR})
 endif(NOT WIN32)
 

@@ -6,6 +6,10 @@ add_library(gen OBJECT
         mpi_interface.cpp gzstream.cpp
         )
 
+if(NOT WIN32)
+  target_link_libraries(gen ngcore)
+endif(NOT WIN32)
+
 set_target_properties( gen PROPERTIES POSITION_INDEPENDENT_CODE ON )
 
 install( FILES ngexception.hpp DESTINATION ${NG_INSTALL_DIR_INCLUDE} COMPONENT netgen_devel )
