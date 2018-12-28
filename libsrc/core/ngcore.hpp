@@ -2,6 +2,7 @@
 #define NETGEN_CORE_NGCORE_HPP
 
 #include "archive.hpp"
+#include "exception.hpp"
 #include "logging.hpp"
 #include "version.hpp"
 

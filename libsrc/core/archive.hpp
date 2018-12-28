@@ -7,13 +7,13 @@
 #include <functional>           // for function
 #include <map>                  // for map
 #include <memory>               // for shared_ptr
-#include <stdexcept>            // for runtime_error
 #include <string>               // for string
 #include <type_traits>          // for declval, enable_if, false_type, is_co...
 #include <typeinfo>             // for type_info
 #include <utility>              // for move, swap, pair
 #include <vector>               // for vector
 
+#include "exception.hpp"        // for UnreachableCodeException, Exception
 #include "logging.hpp"          // for logger
 #include "ngcore_api.hpp"       // for NGCORE_API, unlikely
 #include "type_traits.hpp"      // for all_of_tmpl
@@ -37,7 +37,7 @@ namespace ngcore
     // create new pointer of type T if it is default constructible, else throw
     template<typename T, typename ...Rest>
     T* constructIfPossible_impl(Rest... /*unused*/)
-    { throw std::runtime_error(std::string(Demangle(typeid(T).name())) + " is not default constructible!"); }
+    { throw Exception(std::string(Demangle(typeid(T).name())) + " is not default constructible!"); }
 
     template<typename T, typename= typename std::enable_if<std::is_constructible<T>::value>::type>
     T* constructIfPossible_impl(int /*unused*/) { return new T; } // NOLINT
@@ -140,9 +140,9 @@ namespace ngcore
 
 #ifdef NETGEN_PYTHON
     virtual void ShallowOutPython(const pybind11::object& /*unused*/)
-    { throw std::runtime_error("Should not get in ShallowToPython base class implementation!"); }
+    { throw UnreachableCodeException{}; }
     virtual pybind11::object ShallowInPython()
-    { throw std::runtime_error("Should not get in ShallowFromPython base class implementation!"); }
+    { throw UnreachableCodeException{}; }
 #endif // NETGEN_PYTHON
 
     Archive& operator=(const Archive&) = delete;
@@ -284,9 +284,9 @@ namespace ngcore
               NETGEN_DEBUG_LOG(logger, "Typids are different: " + Demangle(typeid(T).name()) + " vs. " +
                                Demangle(typeid(*ptr).name()));
               if(!IsRegistered(Demangle(typeid(*ptr).name())))
-                  throw std::runtime_error(std::string("Archive error: Polymorphic type ")
-                                           + Demangle(typeid(*ptr).name())
-                                           + " not registered for archive");
+                  throw Exception(std::string("Archive error: Polymorphic type ")
+                                  + Demangle(typeid(*ptr).name())
+                                  + " not registered for archive");
               reg_ptr = GetArchiveRegister(Demangle(typeid(*ptr).name())).downcaster(typeid(T), ptr.get());
               // if there was a true downcast we have to store more information
               if(reg_ptr != static_cast<void*>(ptr.get()))
@@ -404,9 +404,9 @@ namespace ngcore
               NETGEN_DEBUG_LOG(logger, "Typeids are different: " + Demangle(typeid(T).name()) + " vs. " +
                                Demangle(typeid(*p).name()));
               if(!IsRegistered(Demangle(typeid(*p).name())))
-                throw std::runtime_error(std::string("Archive error: Polymorphic type ")
-                                         + Demangle(typeid(*p).name())
-                                         + " not registered for archive");
+                throw Exception(std::string("Archive error: Polymorphic type ")
+                                + Demangle(typeid(*p).name())
+                                + " not registered for archive");
               reg_ptr = GetArchiveRegister(Demangle(typeid(*p).name())).downcaster(typeid(T), static_cast<void*>(p));
               if(reg_ptr != static_cast<void*>(p))
                 {
@@ -427,8 +427,8 @@ namespace ngcore
                                  return (*this) << -1 & (*p);
                                }
                 else
-                  throw std::runtime_error(std::string("Archive error: Class ") +
-                                           Demangle(typeid(*p).name()) + " does not provide a default constructor!");
+                  throw Exception(std::string("Archive error: Class ") +
+                                  Demangle(typeid(*p).name()) + " does not provide a default constructor!");
               else
                 {
                   // if a pointer to a base class is archived, the class hierarchy must be registered
@@ -436,9 +436,9 @@ namespace ngcore
                   // implement a void DoArchive(Archive&) member function
                   // To recreate the object we need to store the true type of it
                   if(!IsRegistered(Demangle(typeid(*p).name())))
-                    throw std::runtime_error(std::string("Archive error: Polymorphic type ")
-                                             + Demangle(typeid(*p).name())
-                                             + " not registered for archive");
+                    throw Exception(std::string("Archive error: Polymorphic type ")
+                                    + Demangle(typeid(*p).name())
+                                    + " not registered for archive");
                   NETGEN_DEBUG_LOG(logger, "Store a possibly more complicated pointer");
                   return (*this) << -3 << Demangle(typeid(*p).name()) & (*p);
                 }
@@ -552,11 +552,11 @@ namespace ngcore
     {
       static void* tryUpcast (const std::type_info& /*unused*/, T* /*unused*/)
       {
-        throw std::runtime_error("Upcast not successful, some classes are not registered properly for archiving!");
+        throw Exception("Upcast not successful, some classes are not registered properly for archiving!");
       }
       static void* tryDowncast (const std::type_info& /*unused*/, void* /*unused*/)
       {
-        throw std::runtime_error("Downcast not successful, some classes are not registered properly for archiving!");
+        throw Exception("Downcast not successful, some classes are not registered properly for archiving!");
       }
     };
 
@@ -568,7 +568,7 @@ namespace ngcore
         try
           { return GetArchiveRegister(Demangle(typeid(B1).name())).
               upcaster(ti, static_cast<void*>(dynamic_cast<B1*>(p))); }
-        catch(std::exception&)
+        catch(const Exception&)
           { return Caster<T, Brest...>::tryUpcast(ti, p); }
       }
 
@@ -581,7 +581,7 @@ namespace ngcore
             return dynamic_cast<T*>(static_cast<B1*>(GetArchiveRegister(Demangle(typeid(B1).name())).
                                                      downcaster(ti, p)));
           }
-        catch(std::exception&)
+        catch(const Exception&)
           {
             return Caster<T, Brest...>::tryDowncast(ti, p);
           }
