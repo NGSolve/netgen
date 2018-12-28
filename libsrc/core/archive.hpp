@@ -97,23 +97,21 @@ namespace ngcore
   {
     const bool is_output;
     // how many different shared_ptr/pointer have been (un)archived
-    int shared_ptr_count, ptr_count;
+    int shared_ptr_count{0}, ptr_count{0};
     // maps for archived shared pointers and pointers
-    std::map<void*, int> shared_ptr2nr, ptr2nr;
+    std::map<void*, int> shared_ptr2nr{}, ptr2nr{};
     // vectors for storing the unarchived (shared) pointers
-    std::vector<std::shared_ptr<void>> nr2shared_ptr;
-    std::vector<void*> nr2ptr;
+    std::vector<std::shared_ptr<void>> nr2shared_ptr{};
+    std::vector<void*> nr2ptr{};
   protected:
     bool shallow_to_python = false;
-    // version map is only used in InArchives
-    std::map<std::string, VersionInfo> version_map;
-    std::shared_ptr<spdlog::logger> logger;
+    std::map<std::string, VersionInfo> version_map = GetLibraryVersions();
+    std::shared_ptr<spdlog::logger> logger = GetLogger("Archive");
   public:
     Archive() = delete;
     Archive(const Archive&) = delete;
     Archive(Archive&&) = delete;
-    Archive (bool ais_output) : is_output(ais_output), shared_ptr_count(0),
-    ptr_count(0), logger(GetLogger("Archive")) { ; }
+    Archive (bool ais_output) : is_output(ais_output) { ; }
 
     virtual ~Archive() { ; }
 
@@ -152,8 +150,8 @@ namespace ngcore
 
     bool Output () const { return is_output; }
     bool Input () const { return !is_output; }
-    virtual const VersionInfo& GetVersion(const std::string& library)
-    { return GetLibraryVersions()[library]; }
+    const VersionInfo& GetVersion(const std::string& library)
+    { return version_map[library]; }
 
     // Pure virtual functions that have to be implemented by In-/OutArchive
     virtual Archive & operator & (double & d) = 0;
@@ -166,7 +164,7 @@ namespace ngcore
     virtual Archive & operator & (std::string & str) = 0;
     virtual Archive & operator & (char *& str) = 0;
 
-    virtual Archive & operator & (VersionInfo & version)
+    Archive & operator & (VersionInfo & version)
     {
         if(Output())
             (*this) << version.to_string();
@@ -706,9 +704,6 @@ namespace ngcore
     BinaryInArchive (const std::string& filename)
       : BinaryInArchive(std::make_shared<std::ifstream>(filename)) { ; }
 
-    const VersionInfo& GetVersion(const std::string& library) override
-    { return version_map[library]; }
-
     using Archive::operator&;
     Archive & operator & (double & d) override
     { Read(d); return *this; }
@@ -824,9 +819,6 @@ namespace ngcore
     TextInArchive (const std::string& filename)
       : TextInArchive(std::make_shared<std::ifstream>(filename)) {}
 
-    const VersionInfo& GetVersion(const std::string& library) override
-    { return version_map[library]; }
-
     using Archive::operator&;
     Archive & operator & (double & d) override
     { *stream >> d; return *this; }
@@ -918,6 +910,7 @@ namespace ngcore
       lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
       stream = std::make_shared<std::stringstream>();
       *this & GetLibraryVersions();
+      lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
       return lst;
     }
   };
