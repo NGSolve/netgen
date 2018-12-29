@@ -128,7 +128,7 @@ namespace netgen
 
 
 
-  class SplineGeometry2d : public SplineGeometry<2>, public NetgenGeometry
+  class SplineGeometry2d : public NetgenGeometry, public SplineGeometry<2>
   {
   protected:
     Array<char*> materials;
