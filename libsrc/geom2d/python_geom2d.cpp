@@ -17,7 +17,8 @@ DLL_HEADER void ExportGeom2d(py::module &m)
 {
   py::class_<SplineGeometry2d, NetgenGeometry, shared_ptr<SplineGeometry2d>>
     (m, "SplineGeometry",
-     "a 2d boundary representation geometry model by lines and splines")
+     "a 2d boundary representation geometry model by lines and splines",
+     py::multiple_inheritance())
     .def(py::init<>())
     .def(py::init([](const string& filename)
                   {
