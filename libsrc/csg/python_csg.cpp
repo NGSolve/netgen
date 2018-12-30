@@ -235,13 +235,17 @@ DLL_HEADER void ExportCSG(py::module &m)
 	    return self.GetNP()-1;
 	  }),
 	 py::arg("x"),py::arg("y"),py::arg("z"),py::arg("hpref")=false)
-    .def("AddSegment", FunctionPointer
-	 ([] (SplineSurface & self, int i1, int i2, string bcname, double maxh)
+    .def("AddSegment", [] (SplineSurface & self, int i1, int i2, string bcname, double maxh)
 	  {
             auto seg = make_shared<LineSeg<3>>(self.GetPoint(i1),self.GetPoint(i2));
 	    self.AppendSegment(seg,bcname,maxh);
-	  }),
+	  },
 	 py::arg("pnt1"),py::arg("pnt2"),py::arg("bcname")="default", py::arg("maxh")=-1.)
+    .def("AddSegment", [] (SplineSurface& self, int i1, int i2, int i3, string bcname, double maxh)
+         {
+           auto seg = make_shared<SplineSeg3<3>>(self.GetPoint(i1), self.GetPoint(i2), self.GetPoint(i3));
+           self.AppendSegment(seg, bcname, maxh);
+         }, py::arg("pnt1"),py::arg("pnt2"), py::arg("pnt3"),py::arg("bcname")="default", py::arg("maxh")=-1.)
     ;
   
   py::class_<SPSolid, shared_ptr<SPSolid>> (m, "Solid")
@@ -471,7 +475,12 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
 	    self.GetTopLevelObject(tlonr) -> SetBCProp(surf->GetBase()->GetBCProperty());
 	    self.GetTopLevelObject(tlonr) -> SetBCName(surf->GetBase()->GetBCName());
 	    self.GetTopLevelObject(tlonr) -> SetMaxH(surf->GetBase()->GetMaxH());
-	    for(auto p : surf->GetPoints())
+            Array<Point<3>> non_midpoints;
+            for(auto spline : surf->GetSplines())
+              {
+                non_midpoints.Append(spline->GetPoint(0));
+              }
+	    for(auto p : non_midpoints)
 		self.AddUserPoint(p);
             self.AddSplineSurface(surf);
 	  }),

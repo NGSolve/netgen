@@ -62,7 +62,30 @@ void SplineSurface :: AppendPoint(const Point<3> & p, const double reffac, const
             cuttings->Append(plane);
           }
         else
-          throw NgException("Spline type not implemented for SplineSurface!");
+          {
+            auto spline3 = dynamic_cast<SplineSeg3<3>*>(spline.get());
+            if(spline3)
+              {
+                auto p1 = Point<3>(spline3->StartPI());
+                Project(p1);
+                auto p2 = Point<3>(spline3->TangentPoint());
+                Project(p2);
+                auto p3 = Point<3>(spline3->EndPI());
+                Project(p3);
+                Vec<3> v1 = p2-p1;
+                Vec<3> v2 = p2-p3;
+                Point<3> mid = p1 - v2;
+                cout << "mid point = " << mid << endl;
+                cout << "v1 = " << v1 << endl;
+                cout << "v2 = " << v2 << endl;
+                auto cyl = make_shared<EllipticCylinder>(mid, v1, v2);
+                if(maxh[i] > 0)
+                  cyl->SetMaxH(maxh[i]);
+                cuttings->Append(cyl);
+              }
+            else
+              throw NgException("Spline type not implemented for SplineSurface!");
+          }
       }
     all_cuts = cuttings;
     return cuttings;
