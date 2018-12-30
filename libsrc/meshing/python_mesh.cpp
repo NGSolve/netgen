@@ -493,6 +493,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                    } ),
          py::arg("dim")=3         
          )
+    .def(NGSPickle<Mesh>())
 
     /*
     .def("__init__",

@@ -18,6 +18,10 @@
 #include "type_traits.hpp"      // for all_of_tmpl
 #include "version.hpp"          // for VersionInfo
 
+#ifdef NG_PYTHON
+#include <pybind11/pybind11.h>
+#endif // NG_PYTHON
+
 namespace ngcore
 {
   // Libraries using this archive can store their version here to implement backwards compatibility
@@ -98,7 +102,8 @@ namespace ngcore
     // vectors for storing the unarchived (shared) pointers
     std::vector<std::shared_ptr<void>> nr2shared_ptr;
     std::vector<void*> nr2ptr;
-
+  protected:
+    bool shallow_to_python = false;
   public:
     Archive() = delete;
     Archive(const Archive&) = delete;
@@ -107,6 +112,31 @@ namespace ngcore
       is_output(ais_output), shared_ptr_count(0), ptr_count(0) { ; }
 
     virtual ~Archive() { ; }
+
+    template<typename T>
+    Archive& Shallow(T& val)
+    {
+      static_assert(detail::is_any_pointer<T>, "ShallowArchive must be given pointer type!");
+#ifdef NG_PYTHON
+      if(shallow_to_python)
+        {
+          if(is_output)
+            ShallowOutPython(pybind11::cast(val));
+          else
+            val = pybind11::cast<T>(ShallowInPython());
+        }
+      else
+#endif // NG_PYTHON
+        *this & val;
+      return *this;
+    }
+
+#ifdef NG_PYTHON
+    virtual void ShallowOutPython(pybind11::object /*unused*/) // NOLINT (copy by val is ok for this virt func)
+    { throw std::runtime_error("Should not get in ShallowToPython base class implementation!"); }
+    virtual pybind11::object ShallowInPython()
+    { throw std::runtime_error("Should not get in ShallowFromPython base class implementation!"); }
+#endif // NG_PYTHON
 
     Archive& operator=(const Archive&) = delete;
     Archive& operator=(Archive&&) = delete;
@@ -526,25 +556,21 @@ namespace ngcore
     static constexpr size_t BUFFERSIZE = 1024;
     char buffer[BUFFERSIZE] = {};
     size_t ptr = 0;
-    std::shared_ptr<std::ostream> fout;
+  protected:
+    std::shared_ptr<std::ostream> stream;
   public:
     BinaryOutArchive() = delete;
     BinaryOutArchive(const BinaryOutArchive&) = delete;
     BinaryOutArchive(BinaryOutArchive&&) = delete;
-    BinaryOutArchive(std::shared_ptr<std::ostream>&& afout)
-      : Archive(true), fout(std::move(afout))
-    {
-      (*this) & GetLibraryVersions();
-    }
+    BinaryOutArchive(std::shared_ptr<std::ostream>&& astream)
+      : Archive(true), stream(std::move(astream))
+    { }
     BinaryOutArchive(const std::string& filename)
       : BinaryOutArchive(std::make_shared<std::ofstream>(filename)) {}
     ~BinaryOutArchive () override { FlushBuffer(); }
 
     BinaryOutArchive& operator=(const BinaryOutArchive&) = delete;
     BinaryOutArchive& operator=(BinaryOutArchive&&) = delete;
-
-    const VersionInfo& GetVersion(const std::string& library) override
-    { return GetLibraryVersions()[library]; }
 
     using Archive::operator&;
     Archive & operator & (double & d) override
@@ -567,7 +593,7 @@ namespace ngcore
       (*this) & len;
       FlushBuffer();
       if(len)
-        fout->write (&str[0], len);
+        stream->write (&str[0], len);
       return *this;
     }
     Archive & operator & (char *& str) override
@@ -576,14 +602,14 @@ namespace ngcore
       (*this) & len;
       FlushBuffer();
       if(len > 0)
-        fout->write (&str[0], len); // NOLINT
+        stream->write (&str[0], len); // NOLINT
       return *this;
     }
     void FlushBuffer() override
     {
       if (ptr > 0)
         {
-          fout->write(&buffer[0], ptr);
+          stream->write(&buffer[0], ptr);
           ptr = 0;
         }
     }
@@ -594,7 +620,7 @@ namespace ngcore
     {
       if (unlikely(ptr > BUFFERSIZE-sizeof(T)))
         {
-          fout->write(&buffer[0], ptr);
+          stream->write(&buffer[0], ptr);
           *reinterpret_cast<T*>(&buffer[0]) = x; // NOLINT
           ptr = sizeof(T);
           return *this;
@@ -608,19 +634,14 @@ namespace ngcore
   // BinaryInArchive ======================================================================
   class NGCORE_API BinaryInArchive : public Archive
   {
-    std::map<std::string, VersionInfo> vinfo{};
-    std::shared_ptr<std::istream> fin;
+  protected:
+    std::shared_ptr<std::istream> stream;
   public:
-    BinaryInArchive (std::shared_ptr<std::istream>&& afin)
-      : Archive(false), fin(std::move(afin))
-    {
-      (*this) & vinfo;
-    }
+    BinaryInArchive (std::shared_ptr<std::istream>&& astream)
+      : Archive(false), stream(std::move(astream))
+    { }
     BinaryInArchive (const std::string& filename)
       : BinaryInArchive(std::make_shared<std::ifstream>(filename)) { ; }
-
-    const VersionInfo& GetVersion(const std::string& library) override
-    { return vinfo[library]; }
 
     using Archive::operator&;
     Archive & operator & (double & d) override
@@ -643,7 +664,7 @@ namespace ngcore
       (*this) & len;
       str.resize(len);
       if(len)
-        fin->read(&str[0], len); // NOLINT
+        stream->read(&str[0], len); // NOLINT
       return *this;
     }
     Archive & operator & (char *& str) override
@@ -655,64 +676,60 @@ namespace ngcore
       else
         {
           str = new char[len+1]; // NOLINT
-          fin->read(&str[0], len); // NOLINT
+          stream->read(&str[0], len); // NOLINT
           str[len] = '\0'; // NOLINT
         }
       return *this;
     }
 
     Archive & Do (double * d, size_t n) override
-    { fin->read(reinterpret_cast<char*>(d), n*sizeof(double)); return *this; } // NOLINT
+    { stream->read(reinterpret_cast<char*>(d), n*sizeof(double)); return *this; } // NOLINT
     Archive & Do (int * i, size_t n) override
-    { fin->read(reinterpret_cast<char*>(i), n*sizeof(int)); return *this; } // NOLINT
+    { stream->read(reinterpret_cast<char*>(i), n*sizeof(int)); return *this; } // NOLINT
     Archive & Do (size_t * i, size_t n) override
-    { fin->read(reinterpret_cast<char*>(i), n*sizeof(size_t)); return *this; } // NOLINT
+    { stream->read(reinterpret_cast<char*>(i), n*sizeof(size_t)); return *this; } // NOLINT
 
   private:
     template<typename T>
     inline void Read(T& val)
-    { fin->read(reinterpret_cast<char*>(&val), sizeof(T)); } // NOLINT
+    { stream->read(reinterpret_cast<char*>(&val), sizeof(T)); } // NOLINT
   };
 
   // TextOutArchive ======================================================================
   class NGCORE_API TextOutArchive : public Archive
   {
-    std::shared_ptr<std::ostream> fout;
+  protected:
+    std::shared_ptr<std::ostream> stream;
   public:
-    TextOutArchive (std::shared_ptr<std::ostream>&& afout)
-      : Archive(true), fout(std::move(afout))
-    {
-      (*this) & GetLibraryVersions();
-    }
+    TextOutArchive (std::shared_ptr<std::ostream>&& astream)
+      : Archive(true), stream(std::move(astream))
+    { }
     TextOutArchive (const std::string& filename) :
       TextOutArchive(std::make_shared<std::ofstream>(filename)) { }
 
-    const VersionInfo& GetVersion(const std::string& library) override
-    { return GetLibraryVersions()[library]; }
-
     using Archive::operator&;
     Archive & operator & (double & d) override
-    { *fout << d << '\n'; return *this; }
+    { *stream << d << '\n'; return *this; }
     Archive & operator & (int & i) override
-    { *fout << i << '\n'; return *this; }
+    { *stream << i << '\n'; return *this; }
     Archive & operator & (short & i) override
-    { *fout << i << '\n'; return *this; }
+    { *stream << i << '\n'; return *this; }
     Archive & operator & (long & i) override
-    { *fout << i << '\n'; return *this; }
+    { *stream << i << '\n'; return *this; }
     Archive & operator & (size_t & i) override
-    { *fout << i << '\n'; return *this; }
+    { *stream << i << '\n'; return *this; }
     Archive & operator & (unsigned char & i) override
-    { *fout << int(i) << '\n'; return *this; }
+    { *stream << int(i) << '\n'; return *this; }
     Archive & operator & (bool & b) override
-    { *fout << (b ? 't' : 'f') << '\n'; return *this; }
+    { *stream << (b ? 't' : 'f') << '\n'; return *this; }
     Archive & operator & (std::string & str) override
     {
       int len = str.length();
-      *fout << len << '\n';
+      *stream << len << '\n';
       if(len)
         {
-          fout->write(&str[0], len); // NOLINT
-          *fout << '\n';
+          stream->write(&str[0], len); // NOLINT
+          *stream << '\n';
         }
       return *this;
     }
@@ -722,8 +739,8 @@ namespace ngcore
       *this & len;
       if(len > 0)
         {
-          fout->write (&str[0], len); // NOLINT
-          *fout << '\n';
+          stream->write (&str[0], len); // NOLINT
+          *stream << '\n';
         }
       return *this;
     }
@@ -732,44 +749,39 @@ namespace ngcore
   // TextInArchive ======================================================================
   class NGCORE_API TextInArchive : public Archive
   {
-    std::map<std::string, VersionInfo> vinfo{};
-    std::shared_ptr<std::istream> fin;
+  protected:
+    std::shared_ptr<std::istream> stream;
   public:
-    TextInArchive (std::shared_ptr<std::istream>&& afin) :
-      Archive(false), fin(std::move(afin))
-    {
-      (*this) & vinfo;
-    }
+    TextInArchive (std::shared_ptr<std::istream>&& astream) :
+      Archive(false), stream(std::move(astream))
+    { }
     TextInArchive (const std::string& filename)
       : TextInArchive(std::make_shared<std::ifstream>(filename)) {}
 
-    const VersionInfo& GetVersion(const std::string& library) override
-    { return vinfo[library]; }
-
     using Archive::operator&;
     Archive & operator & (double & d) override
-    { *fin >> d; return *this; }
+    { *stream >> d; return *this; }
     Archive & operator & (int & i) override
-    { *fin >> i; return *this; }
+    { *stream >> i; return *this; }
     Archive & operator & (short & i) override
-    { *fin >> i; return *this; }
+    { *stream >> i; return *this; }
     Archive & operator & (long & i) override
-    { *fin >> i; return *this; }
+    { *stream >> i; return *this; }
     Archive & operator & (size_t & i) override
-    { *fin >> i; return *this; }
+    { *stream >> i; return *this; }
     Archive & operator & (unsigned char & i) override
-    { int _i; *fin >> _i; i = _i; return *this; }
+    { int _i; *stream >> _i; i = _i; return *this; }
     Archive & operator & (bool & b) override
-    { char c; *fin >> c; b = (c=='t'); return *this; }
+    { char c; *stream >> c; b = (c=='t'); return *this; }
     Archive & operator & (std::string & str) override
     {
       int len;
-      *fin >> len;
+      *stream >> len;
       char ch;
-      fin->get(ch); // '\n'
+      stream->get(ch); // '\n'
       str.resize(len);
       if(len)
-        fin->get(&str[0], len+1, '\0');
+        stream->get(&str[0], len+1, '\0');
       return *this;
     }
     Archive & operator & (char *& str) override
@@ -785,13 +797,73 @@ namespace ngcore
       str = new char[len+1]; // NOLINT
       if(len)
         {
-          fin->get(ch); // \n
-          fin->get(&str[0], len+1, '\0'); // NOLINT
+          stream->get(ch); // \n
+          stream->get(&str[0], len+1, '\0'); // NOLINT
         }
       str[len] = '\0'; // NOLINT
       return *this;
     }
   };
+
+#ifdef NG_PYTHON
+
+  template<typename ARCHIVE>
+  class PyArchive : public ARCHIVE
+  {
+  private:
+    pybind11::list lst;
+    size_t index = 0;
+    using ARCHIVE::stream;
+  public:
+    PyArchive(const pybind11::object& alst = pybind11::none()) :
+      ARCHIVE(std::make_shared<std::stringstream>()),
+      lst(alst.is_none() ? pybind11::list() : pybind11::cast<pybind11::list>(alst))
+    {
+      ARCHIVE::shallow_to_python = true;
+      if(Input())
+        stream = std::make_shared<std::stringstream>
+          (pybind11::cast<pybind11::bytes>(lst[pybind11::len(lst)-1]));
+    }
+
+    using ARCHIVE::Output;
+    using ARCHIVE::Input;
+    using ARCHIVE::FlushBuffer;
+    using ARCHIVE::operator&;
+    using ARCHIVE::operator<<;
+    using ARCHIVE::GetVersion;
+    void ShallowOutPython(pybind11::object val) override { lst.append(val); }
+    pybind11::object ShallowInPython() override { return lst[index++]; }
+
+    pybind11::list WriteOut()
+    {
+      FlushBuffer();
+      lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
+      return lst;
+    }
+  };
+
+  template<typename T, typename T_ARCHIVE_OUT=BinaryOutArchive, typename T_ARCHIVE_IN=BinaryInArchive>
+  auto NGSPickle(bool printoutput=false)
+  {
+    return pybind11::pickle([printoutput](T* self)
+                      {
+                        PyArchive<T_ARCHIVE_OUT> ar;
+                        ar & self;
+                        auto output = pybind11::make_tuple(ar.WriteOut());
+                        if(printoutput)
+                          pybind11::print("pickle output of", Demangle(typeid(T).name()),"=", output);
+                        return output;
+                      },
+                      [](pybind11::tuple state)
+                      {
+                        T* val = nullptr;
+                        PyArchive<T_ARCHIVE_IN> ar(state[0]);
+                        ar & val;
+                        return val;
+                      });
+  }
+
+#endif // NG_PYTHON
 } // namespace ngcore
 
 #endif // NETGEN_CORE_ARCHIVE_HPP
