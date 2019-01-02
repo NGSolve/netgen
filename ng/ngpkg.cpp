@@ -1840,9 +1840,9 @@ namespace netgen
 
 
 
-  SYMBOLTABLE<VisualScene*> & GetVisualizationScenes ()
+  SymbolTable<VisualScene*> & GetVisualizationScenes ()
   {
-    static SYMBOLTABLE<VisualScene*> vss;
+    static SymbolTable<VisualScene*> vss;
     return vss;
   }
 
@@ -1860,7 +1860,7 @@ namespace netgen
     vs = &vscross;
     if (GetVisualizationScenes().Used(vismode))
       {
-	vs = GetVisualizationScenes().Get(vismode);
+	vs = GetVisualizationScenes()[vismode];
       }
     else if (vismode)
       {

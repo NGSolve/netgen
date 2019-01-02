@@ -205,6 +205,34 @@ namespace ngcore
       Do(&v[0], size);
       return (*this);
     }
+
+    // vector<bool> has special implementation (like a bitarray) therefore
+    // it needs a special overload (this could probably be more efficient, but we
+    // don't use it that often anyway)
+    template<>
+    Archive& operator& (std::vector<bool>& v)
+    {
+      size_t size;
+      if(Output())
+        size = v.size();
+      (*this) & size;
+      if(Input())
+        {
+          v.resize(size);
+          bool b;
+          for(size_t i=0; i<size; i++)
+            {
+              (*this) & b;
+              v[i] = b;
+            }
+        }
+      else
+        {
+          for(bool b : v)
+            (*this) & b;
+        }
+      return *this;
+    }
     template<typename T1, typename T2>
     Archive& operator& (std::map<T1, T2>& map)
     {

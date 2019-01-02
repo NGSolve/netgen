@@ -33,7 +33,6 @@ namespace netgen
 #include "hashtabl.hpp"
 
 
-#include "symbolta.hpp"
 #include "bitarray.hpp"
 #include "flags.hpp"
 #include "spbita2d.hpp"

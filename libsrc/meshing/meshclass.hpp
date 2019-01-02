@@ -132,8 +132,8 @@ namespace netgen
     /// mesh access semaphors.
     NgMutex majormutex;
 
-    SYMBOLTABLE< Array<int>* > userdata_int;
-    SYMBOLTABLE< Array<double>* > userdata_double; 
+    SymbolTable< Array<int>* > userdata_int;
+    SymbolTable< Array<double>* > userdata_double;
 
 
     mutable Array< Point3d > pointcurves;

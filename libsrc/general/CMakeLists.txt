@@ -2,7 +2,7 @@ add_definitions(-DNGINTERFACE_EXPORTS)
 add_library(gen OBJECT
         array.cpp bitarray.cpp dynamicmem.cpp flags.cpp 
         hashtabl.cpp mystring.cpp ngexception.cpp optmem.cpp parthreads.cpp 
-        profiler.cpp seti.cpp sort.cpp spbita2d.cpp symbolta.cpp table.cpp 
+        profiler.cpp seti.cpp sort.cpp spbita2d.cpp table.cpp
         mpi_interface.cpp gzstream.cpp
         )
 
@@ -19,7 +19,7 @@ install(FILES
   dynamicmem.hpp flags.hpp hashtabl.hpp mpi_interface.hpp myadt.hpp
   ngsimd.hpp mystring.hpp netgenout.hpp ngexception.hpp ngpython.hpp
   optmem.hpp parthreads.hpp profiler.hpp seti.hpp sort.hpp
-  spbita2d.hpp stack.hpp symbolta.hpp table.hpp template.hpp
+  spbita2d.hpp stack.hpp table.hpp template.hpp
   gzstream.h
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/general COMPONENT netgen_devel
 )

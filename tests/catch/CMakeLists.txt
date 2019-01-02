@@ -19,14 +19,14 @@ macro(add_unit_test name sources)
   add_dependencies(unit_tests test_${name})
   add_test(NAME unit_${name} COMMAND test_${name})
   set_tests_properties(unit_${name} PROPERTIES DEPENDS unit_tests_built)
+
+  if(ENABLE_CPP_CORE_GUIDELINES_CHECK)
+    set_target_properties(test_${name} PROPERTIES CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
+  endif(ENABLE_CPP_CORE_GUIDELINES_CHECK)
 endmacro()
 
 add_unit_test(archive archive.cpp)
+add_unit_test(symboltable symboltable.cpp)
 add_unit_test(version version.cpp)
-
-if(ENABLE_CPP_CORE_GUIDELINES_CHECK)
-  set_target_properties(test_archive PROPERTIES CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
-  set_target_properties(test_version PROPERTIES CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
-endif(ENABLE_CPP_CORE_GUIDELINES_CHECK)
 
 endif(ENABLE_UNIT_TESTS)
