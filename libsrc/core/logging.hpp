@@ -26,23 +26,6 @@
 namespace spdlog
 {
   // Dummys if Netgen is compiled with USE_SPDLOG=OFF.
-  class logger
-  {
-  public:
-    template<typename T>
-    void trace(const T& /*unused*/) {}
-    template<typename T>
-    void debug(const T& /*unused*/) {}
-    template<typename T>
-    void info(const T& text) { std::cout << text << std::endl; }
-    template<typename T>
-    void warn(const T& text) { std::cout << text << std::endl; }
-    template<typename T>
-    void error(const T& text) { std::cout << text << std::endl; }
-    template<typename T>
-    void critical(const T& text) { std::cout << text << std::endl; }
-  };
-
   namespace level
   {
     enum level_enum
@@ -56,6 +39,42 @@ namespace spdlog
        off = 6
       };
   } // namespace level
+
+  class logger
+  {
+  public:
+    template<typename T>
+    void log_helper( T t) { std::clog << t; }
+
+    template<typename T, typename ... Args>
+    void log_helper( T t, Args ... args)
+    {
+        std::clog << t;
+        log_helper(args...);
+        std::clog << ", ";
+    }
+
+    template<typename ... Args>
+    void log( level::level_enum level, const char* fmt, Args ... args)
+    {
+        std::clog << level << ": " << fmt << "\t Arguments: ";
+        log_helper(args...);
+        std::clog << "\n";
+    }
+
+    template<typename ... Args>
+    void trace( const char* fmt, Args ... args) { log(level::level_enum::trace, fmt, args...); }
+    template<typename ... Args>
+    void debug( const char* fmt, Args ... args) { log(level::level_enum::debug, fmt, args...); }
+    template<typename ... Args>
+    void info( const char* fmt, Args ... args) { log(level::level_enum::info, fmt, args...); }
+    template<typename ... Args>
+    void warn( const char* fmt, Args ... args) { log(level::level_enum::warn, fmt, args...); }
+    template<typename ... Args>
+    void error( const char* fmt, Args ... args) { log(level::level_enum::err, fmt, args...); }
+    template<typename ... Args>
+    void critical( const char* fmt, Args ... args) { log(level::level_enum::critical, fmt, args...); }
+  };
 
   namespace sinks
   {

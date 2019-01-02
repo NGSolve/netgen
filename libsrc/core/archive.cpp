@@ -19,16 +19,6 @@ namespace ngcore
   void SetLibraryVersion(const std::string& library, const VersionInfo& version)
   { library_versions[library] = version; }
 
-#ifdef WIN32
-  // windows does demangling in typeid(T).name()
-  std::string Demangle(const char* typeinfo) { return typeinfo; }
-#else
-  std::string Demangle(const char* typeinfo) { int status; return abi::__cxa_demangle(typeinfo,
-                                                                                      nullptr,
-                                                                                      nullptr,
-                                                                                      &status); }
-#endif
-
   // clang-tidy should ignore this static object
   static std::unique_ptr<std::map<std::string, detail::ClassArchiveInfo>> type_register;  // NOLINT
   const detail::ClassArchiveInfo& Archive :: GetArchiveRegister(const std::string& classname)

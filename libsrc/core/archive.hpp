@@ -15,8 +15,9 @@
 
 #include "exception.hpp"        // for UnreachableCodeException, Exception
 #include "logging.hpp"          // for logger
-#include "ngcore_api.hpp"       // for NGCORE_API, unlikely
+#include "ngcore_api.hpp"       // for NGCORE_API
 #include "type_traits.hpp"      // for all_of_tmpl
+#include "utils.hpp"            // for Demangle, unlikely
 #include "version.hpp"          // for VersionInfo
 
 #ifdef NETGEN_PYTHON
@@ -28,7 +29,6 @@ namespace ngcore
   // Libraries using this archive can store their version here to implement backwards compatibility
   NGCORE_API const VersionInfo& GetLibraryVersion(const std::string& library);
   NGCORE_API void SetLibraryVersion(const std::string& library, const VersionInfo& version);
-  NGCORE_API std::string Demangle(const char* typeinfo);
 
   class NGCORE_API Archive;
 

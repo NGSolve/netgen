@@ -1,5 +1,5 @@
 
-add_library(ngcore SHARED archive.cpp logging.cpp)
+add_library(ngcore SHARED archive.cpp logging.cpp paje_trace.cpp utils.cpp)
 
 target_compile_definitions(ngcore PRIVATE NGCORE_EXPORTS)
 if(NOT WIN32)
@@ -32,7 +32,7 @@ if(USE_PYTHON)
 endif(USE_PYTHON)
 
 install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp logging.hpp
-  exception.hpp symboltable.hpp
+  exception.hpp symboltable.hpp paje_trace.hpp utils.hpp
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/core COMPONENT netgen_devel)
 
 if(ENABLE_CPP_CORE_GUIDELINES_CHECK)

@@ -15,15 +15,23 @@
         #define NGCORE_API NGCORE_API_IMPORT
 #endif
 
-namespace ngcore
-{
-#if defined(__GNUC__)
-  inline bool likely (bool x) { return bool(__builtin_expect(long(x), 1L)); }
-  inline bool unlikely (bool x) { return bool(__builtin_expect(long(x), 0L)); }
+#ifdef __INTEL_COMPILER
+  #ifdef WIN32
+    #define NETGEN_INLINE __forceinline inline
+    #define NETGEN_LAMBDA_INLINE
+  #else
+    #define NETGEN_INLINE __forceinline inline
+    #define NETGEN_LAMBDA_INLINE __attribute__ ((__always_inline__))
+  #endif
 #else
-  inline bool likely (bool x) { return x; }
-  inline bool unlikely (bool x) { return x; }
+  #ifdef __GNUC__
+    #define NETGEN_INLINE __attribute__ ((__always_inline__)) inline
+    #define NETGEN_LAMBDA_INLINE __attribute__ ((__always_inline__))
+    #define NETGEN_VLA
+  #else
+    #define NETGEN_INLINE inline
+    #define NETGEN_LAMBDA_INLINE
+  #endif
 #endif
-} // namespace ngcore
 
 #endif // NETGEN_CORE_NGCORE_API_HPP
