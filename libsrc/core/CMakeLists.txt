@@ -1,5 +1,5 @@
 
-add_library(ngcore SHARED archive.cpp logging.cpp flags.cpp)
+add_library(ngcore SHARED archive.cpp logging.cpp)
 
 target_compile_definitions(ngcore PRIVATE NGCORE_EXPORTS)
 if(NOT WIN32)
