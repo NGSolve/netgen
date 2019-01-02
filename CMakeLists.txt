@@ -21,6 +21,7 @@ option( ENABLE_UNIT_TESTS "Enable Catch unit tests")
 option( ENABLE_CPP_CORE_GUIDELINES_CHECK "Enable cpp core guideline checks on ngcore" OFF)
 option( USE_SPDLOG "Enable spd log logging" ON)
 option( DEBUG_LOG "Enable more debug output (may increase computation time) - only works with USE_SPDLOG=ON" OFF)
+option( CHECK_RANGE "Check array range access, automatically enabled if built in debug mode" OFF)
 
 option( USE_SUPERBUILD       "use ccache" ON)
 

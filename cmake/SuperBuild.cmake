@@ -144,6 +144,7 @@ set_vars( NETGEN_CMAKE_ARGS
   ENABLE_CPP_CORE_GUIDELINES_CHECK
   USE_SPDLOG
   DEBUG_LOG
+  CHECK_RANGE
   )
 
 # propagate all variables set on the command line using cmake -DFOO=BAR

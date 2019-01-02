@@ -1,10 +1,16 @@
 
-add_library(ngcore SHARED archive.cpp logging.cpp)
+add_library(ngcore SHARED archive.cpp logging.cpp flags.cpp)
 
 target_compile_definitions(ngcore PRIVATE NGCORE_EXPORTS)
 if(NOT WIN32)
   target_compile_options(ngcore PRIVATE -fvisibility=hidden)
 endif(NOT WIN32)
+
+target_compile_definitions(ngcore PUBLIC $<$<CONFIG:DEBUG>:NETGEN_ENABLE_CHECK_RANGE>)
+
+if(CHECK_RANGE)
+  target_compile_definitions(ngcore PUBLIC NETGEN_ENABLE_CHECK_RANGE)
+endif(CHECK_RANGE)
 
 if(USE_SPDLOG)
   include_directories(${SPDLOG_INCLUDE_DIR})
