@@ -14,8 +14,8 @@ stages:
     - x64
   before_script:
     - "echo off"
-    - 'call "%VS140COMNTOOLS%\..\..\VC\bin\amd64\vcvars64.bat"'
-    - set CMAKE_GENERATOR=Visual Studio 14 2015 Win64
+    - 'call "%VS2017INSTALLDIR%\VC\Auxiliary\Build\vcvars64"'
+    - set CMAKE_GENERATOR=Visual Studio 15 2017 Win64
     - set CI_DIR=C:\ci\%CI_PIPELINE_ID%
     - set NETGEN_BUILD_DIR=%CI_DIR%\build
     - set INSTALL_DIR=%CI_DIR%\install
