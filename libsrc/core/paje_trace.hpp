@@ -5,8 +5,9 @@
 #include <vector>
 #include <x86intrin.h>   // for __rdtsc()  CPU time step counter
 
-#include "ngcore_api.hpp"    // for NGCORE_API
 #include "logging.hpp"       // for logger
+#include "ngcore_api.hpp"    // for NGCORE_API
+#include "utils.hpp"
 
 namespace ngcore
 {
@@ -15,15 +16,11 @@ namespace ngcore
   class PajeTrace
     {
     public:
-      typedef std::chrono::system_clock TClock;
-      // typedef TClock::time_point TTimePoint;
-      typedef size_t TTimePoint;
+      using TClock = std::chrono::system_clock;
 
     protected:
       std::shared_ptr<spdlog::logger> logger = GetLogger("PajeTrace");
     private:
-      friend class TraceDisabler;
-
       NGCORE_API static size_t max_tracefile_size;
       static bool trace_thread_counter;
       static bool trace_threads;
@@ -104,24 +101,24 @@ namespace ngcore
       std::vector<TimerEvent> timer_events;
       std::vector<std::vector<ThreadLink> > links;
 
-      TTimePoint GetTime()
-        {
-          // return TClock::now();
-          return TTimePoint(__rdtsc());
-        }
-
     public:
       NGCORE_API void StopTracing();
 
+      PajeTrace() = delete;
+      PajeTrace(const PajeTrace &) = delete;
+      PajeTrace(PajeTrace &&) = delete;
       PajeTrace(int anthreads, std::string aname = "");
       ~PajeTrace();
+
+      void operator=(const PajeTrace &) = delete;
+      void operator=(PajeTrace &&) = delete;
 
       void StartTimer(int timer_id)
         {
           if(!tracing_enabled) return;
           if(unlikely(timer_events.size() == max_num_events_per_thread))
             StopTracing();
-          timer_events.push_back(TimerEvent{timer_id, GetTime(), true});
+          timer_events.push_back(TimerEvent{timer_id, GetTimeCounter(), true});
         }
 
       void StopTimer(int timer_id)
@@ -129,7 +126,7 @@ namespace ngcore
           if(!tracing_enabled) return;
           if(unlikely(timer_events.size() == max_num_events_per_thread))
             StopTracing();
-          timer_events.push_back(TimerEvent{timer_id, GetTime(), false});
+          timer_events.push_back(TimerEvent{timer_id, GetTimeCounter(), false});
         }
 
       NETGEN_INLINE int StartTask(int thread_id, int id, int id_type = Task::ID_NONE, int additional_value = -1)
@@ -139,7 +136,7 @@ namespace ngcore
 	  if(unlikely(tasks[thread_id].size() == max_num_events_per_thread))
             StopTracing();
           int task_num = tasks[thread_id].size();
-          tasks[thread_id].push_back( Task{thread_id, id, id_type, additional_value, GetTime()} );
+          tasks[thread_id].push_back( Task{thread_id, id, id_type, additional_value, GetTimeCounter()} );
           return task_num;
         }
 
@@ -147,7 +144,7 @@ namespace ngcore
         {
           if(!trace_threads && !trace_thread_counter) return;
           if(task_num>=0)
-            tasks[thread_id][task_num].stop_time = GetTime();
+            tasks[thread_id][task_num].stop_time = GetTimeCounter();
         }
 
       void SetTask(int thread_id, int task_num, int additional_value) {
@@ -161,13 +158,13 @@ namespace ngcore
           if(!tracing_enabled) return;
           if(jobs.size() == max_num_events_per_thread)
             StopTracing();
-          jobs.push_back( Job{job_id, &type, GetTime()} );
+          jobs.push_back( Job{job_id, &type, GetTimeCounter()} );
         }
 
       void StopJob()
         {
           if(tracing_enabled)
-            jobs.back().stop_time = GetTime();
+            jobs.back().stop_time = GetTimeCounter();
         }
 
       void StartLink(int thread_id, int key)
@@ -175,7 +172,7 @@ namespace ngcore
           if(!tracing_enabled) return;
           if(links[thread_id].size() == max_num_events_per_thread)
             StopTracing();
-          links[thread_id].push_back( ThreadLink{thread_id, key, GetTime(), true} );
+          links[thread_id].push_back( ThreadLink{thread_id, key, GetTimeCounter(), true} );
         }
 
       void StopLink(int thread_id, int key)
@@ -183,33 +180,12 @@ namespace ngcore
           if(!tracing_enabled) return;
           if(links[thread_id].size() == max_num_events_per_thread)
             StopTracing();
-          links[thread_id].push_back( ThreadLink{thread_id, key, GetTime(), false} );
+          links[thread_id].push_back( ThreadLink{thread_id, key, GetTimeCounter(), false} );
         }
 
-      void Write( std::string filename );
+      void Write( const std::string & filename );
 
     };
-
-  class TraceDisabler
-    {
-      bool trace_thread_counter;
-      bool trace_threads;
-
-    public:
-      TraceDisabler()
-        {
-          trace_thread_counter = PajeTrace::trace_thread_counter;
-          PajeTrace::trace_thread_counter = false;
-          trace_threads = PajeTrace::trace_threads;
-          PajeTrace::trace_threads = false;
-        }
-
-      ~TraceDisabler()
-        {
-          PajeTrace::trace_thread_counter = trace_thread_counter;
-          PajeTrace::trace_threads = trace_threads;
-        }
-    };
-}
+} // namespace ngcore
 
 #endif // NETGEN_CORE_PAJE_TRACE_HPP

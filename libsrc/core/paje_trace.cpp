@@ -1,9 +1,9 @@
 #include <algorithm>
 #include <atomic>
+#include <iostream>
 #include <map>
 #include <set>
 #include <thread>
-#include <iostream>
 
 #include "archive.hpp"           // for Demangle
 #include "paje_trace.hpp"
@@ -23,13 +23,13 @@ namespace ngcore
 
   PajeTrace :: PajeTrace(int anthreads, std::string aname)
   {
-    start_time = GetTime();
+    start_time = GetTimeCounter();
 
     nthreads = anthreads;
-    tracefile_name = aname;
+    tracefile_name = std::move(aname);
 
     int bytes_per_event=33;
-    max_num_events_per_thread = std::min( (size_t)std::numeric_limits<int>::max, max_tracefile_size/bytes_per_event/(2*nthreads+1)*10/7);
+    max_num_events_per_thread = std::min( static_cast<size_t>(std::numeric_limits<int>::max()), max_tracefile_size/bytes_per_event/(2*nthreads+1)*10/7);
     if(max_num_events_per_thread>0)
     {
       logger->info( "Tracefile size = {}MB", max_tracefile_size/1024/1024);
@@ -53,7 +53,7 @@ namespace ngcore
 
   PajeTrace :: ~PajeTrace()
   {
-    if(tracefile_name.size()>0)
+    if(!tracefile_name.empty())
       Write(tracefile_name);
   }
 
@@ -67,11 +67,9 @@ namespace ngcore
       tracing_enabled = false;
     }
 
-  using std::string;
   class PajeFile
     {
     public:
-      typedef PajeTrace::TTimePoint TTimePoint;
       static void Hue2RGB ( double x, double &r, double &g, double &b )
         {
           double d = 1.0/6.0;
@@ -139,36 +137,35 @@ namespace ngcore
           bool value_is_alias = true;
 
           bool operator < (const PajeEvent & other) const {
-              // Same times can occur for very small tasks -> take "starting" events first (eg. PajePushState before PajePopState)
+              // Same start and stop times can occur for very small tasks -> take "starting" events first (eg. PajePushState before PajePopState)
               if(time == other.time)
                 return event_type < other.event_type;
-              else
-                return (time < other.time);
+              return (time < other.time);
           }
 
-          int write(char *buf)
+          int write(FILE *stream)
             {
               const int &key = id;
               const int &end_container = start_container;
               switch(event_type)
                 {
                 case PajeSetVariable:
-                  return sprintf( buf, "%d\t%.15g\ta%d\ta%d\t%.15g\n", PajeSetVariable, time, type, container, var_value );
+                  return fprintf( stream, "%d\t%.15g\ta%d\ta%d\t%.15g\n", PajeSetVariable, time, type, container, var_value ); // NOLINT
                 case PajeAddVariable:
-                  return sprintf( buf, "%d\t%.15g\ta%d\ta%d\t%.15g\n", PajeAddVariable, time, type, container, var_value );
+                  return fprintf( stream, "%d\t%.15g\ta%d\ta%d\t%.15g\n", PajeAddVariable, time, type, container, var_value ); // NOLINT
                 case PajeSubVariable:
-                  return sprintf( buf, "%d\t%.15g\ta%d\ta%d\t%.15g\n", PajeSubVariable, time, type, container, var_value );
+                  return fprintf( stream, "%d\t%.15g\ta%d\ta%d\t%.15g\n", PajeSubVariable, time, type, container, var_value ); // NOLINT
                 case PajePushState:
                   if(value_is_alias)
-                    return sprintf( buf, "%d\t%.15g\ta%d\ta%d\ta%d\t%d\n", PajePushState, time, type, container, value, id);
+                    return fprintf( stream, "%d\t%.15g\ta%d\ta%d\ta%d\t%d\n", PajePushState, time, type, container, value, id); // NOLINT
                   else
-                    return sprintf( buf, "%d\t%.15g\ta%d\ta%d\t%d\t%d\n", PajePushState, time, type, container, value, id);
+                    return fprintf( stream, "%d\t%.15g\ta%d\ta%d\t%d\t%d\n", PajePushState, time, type, container, value, id); // NOLINT
                 case PajePopState:
-                  return sprintf( buf, "%d\t%.15g\ta%d\ta%d\n", PajePopState, time, type, container );
+                  return fprintf( stream, "%d\t%.15g\ta%d\ta%d\n", PajePopState, time, type, container ); // NOLINT
                 case PajeStartLink:
-                  return sprintf( buf, "%d\t%.15g\ta%d\ta%d\t%d\ta%d\t%d\n", PajeStartLink, time, type, container, value, start_container, key );
+                  return fprintf( stream, "%d\t%.15g\ta%d\ta%d\t%d\ta%d\t%d\n", PajeStartLink, time, type, container, value, start_container, key ); // NOLINT
                 case PajeEndLink:
-                  return sprintf( buf, "%d\t%.15g\ta%d\ta%d\t%d\ta%d\t%d\n", PajeEndLink, time, type, container, value, end_container, key );
+                  return fprintf( stream, "%d\t%.15g\ta%d\ta%d\t%d\ta%d\t%d\n", PajeEndLink, time, type, container, value, end_container, key ); // NOLINT
                 }
               return 0;
             }
@@ -177,34 +174,46 @@ namespace ngcore
       std::vector<PajeEvent> events;
 
     public:
-      PajeFile( string filename, TTimePoint astart_time )
+      PajeFile() = delete;
+      PajeFile(const PajeFile &) = delete;
+      PajeFile(PajeFile &&) = delete;
+      void operator=(const PajeFile &) = delete;
+      void operator=(PajeFile &&) = delete;
+
+      PajeFile( const std::string & filename, TTimePoint astart_time )
         {
           start_time = astart_time;
-          ctrace_stream = fopen (filename.c_str(),"w");
-          fprintf(ctrace_stream, "%s", header );
+          ctrace_stream = fopen (filename.c_str(),"w"); // NOLINT
+          fprintf(ctrace_stream, "%s", header ); // NOLINT
           alias_counter = 0;
         }
-      int DefineContainerType ( int parent_type, string name )
+
+      ~PajeFile()
+        {
+          fclose (ctrace_stream); // NOLINT
+        }
+
+      int DefineContainerType ( int parent_type, const std::string & name )
         {
           int alias = ++alias_counter;
           if(parent_type!=0)
-            fprintf( ctrace_stream, "%d\ta%d\ta%d\t\"%s\"\n", PajeDefineContainerType, alias, parent_type, name.c_str() );
+            fprintf( ctrace_stream, "%d\ta%d\ta%d\t\"%s\"\n", PajeDefineContainerType, alias, parent_type, name.c_str() ); // NOLINT
           else
-            fprintf( ctrace_stream, "%d\ta%d\t%d\t\"%s\"\n", PajeDefineContainerType, alias, parent_type, name.c_str() );
+            fprintf( ctrace_stream, "%d\ta%d\t%d\t\"%s\"\n", PajeDefineContainerType, alias, parent_type, name.c_str() ); // NOLINT
           return alias;
         }
 
-      int DefineVariableType ( int container_type, string name )
+      int DefineVariableType ( int container_type, const std::string & name )
         {
           int alias = ++alias_counter;
-          fprintf( ctrace_stream, "%d\ta%d\ta%d\t\"%s\"\t\"1.0 1.0 1.0\"\n", PajeDefineVariableType, alias, container_type, name.c_str() );
+          fprintf( ctrace_stream, "%d\ta%d\ta%d\t\"%s\"\t\"1.0 1.0 1.0\"\n", PajeDefineVariableType, alias, container_type, name.c_str() ); // NOLINT
           return alias;
         }
 
-      int DefineStateType ( int type, string name )
+      int DefineStateType ( int type, const std::string & name )
         {
           int alias = ++alias_counter;
-          fprintf( ctrace_stream, "%d\ta%d\ta%d\t\"%s\"\n", PajeDefineStateType, alias, type, name.c_str() );
+          fprintf( ctrace_stream, "%d\ta%d\ta%d\t\"%s\"\n", PajeDefineStateType, alias, type, name.c_str() ); // NOLINT
           return alias;
         }
 
@@ -213,38 +222,38 @@ namespace ngcore
       //           Write("event not implemented");
       //         }
 
-      int DefineLinkType (int parent_container_type, int start_container_type, int stop_container_type, string name)
+      int DefineLinkType (int parent_container_type, int start_container_type, int stop_container_type, const std::string & name)
         {
           int alias = ++alias_counter;
-          fprintf( ctrace_stream, "%d\ta%d\ta%d\ta%d\ta%d\t\"%s\"\n", PajeDefineLinkType, alias, parent_container_type, start_container_type, stop_container_type, name.c_str() );
+          fprintf( ctrace_stream, "%d\ta%d\ta%d\ta%d\ta%d\t\"%s\"\n", PajeDefineLinkType, alias, parent_container_type, start_container_type, stop_container_type, name.c_str() ); // NOLINT
           return alias;
         }
 
-      int DefineEntityValue (int type, string name, double hue = -1)
+      int DefineEntityValue (int type, const std::string & name, double hue = -1)
         {
           if(hue==-1)
             {
-              std::hash<string> shash;
+              std::hash<std::string> shash;
               size_t h = shash(name);
-              h ^= h>>32;
-              h = (uint32_t)h;
+              h ^= h>>32U;
+              h = static_cast<uint32_t>(h);
               hue = h*1.0/std::numeric_limits<uint32_t>::max();
             }
 
           int alias = ++alias_counter;
           double r,g,b;
           Hue2RGB( hue, r, g, b );
-          fprintf( ctrace_stream, "%d\ta%d\ta%d\t\"%s\"\t\"%.15g %.15g %.15g\"\n", PajeDefineEntityValue, alias, type, name.c_str(), r,g,b );
+          fprintf( ctrace_stream, "%d\ta%d\ta%d\t\"%s\"\t\"%.15g %.15g %.15g\"\n", PajeDefineEntityValue, alias, type, name.c_str(), r,g,b ); // NOLINT
           return alias;
         }
 
-      int CreateContainer ( int type, int parent, string name )
+      int CreateContainer ( int type, int parent, const std::string & name )
         {
           int alias = ++alias_counter;
           if(parent!=0)
-            fprintf( ctrace_stream, "%d\t0\ta%d\ta%d\ta%d\t\"%s\"\n", PajeCreateContainer, alias, type, parent, name.c_str() );
+            fprintf( ctrace_stream, "%d\t0\ta%d\ta%d\ta%d\t\"%s\"\n", PajeCreateContainer, alias, type, parent, name.c_str() ); // NOLINT
           else
-            fprintf( ctrace_stream, "%d\t0\ta%d\ta%d\t%d\t\"%s\"\n", PajeCreateContainer, alias, type, parent, name.c_str() );
+            fprintf( ctrace_stream, "%d\t0\ta%d\ta%d\t%d\t\"%s\"\n", PajeCreateContainer, alias, type, parent, name.c_str() ); // NOLINT
           return alias;
         }
       void DestroyContainer ()
@@ -252,17 +261,17 @@ namespace ngcore
 
       void SetVariable (TTimePoint time, int type, int container, double value )
         {
-          events.push_back( PajeEvent( PajeSetVariable, ConvertTime(time), type, container, value ) );
+          events.emplace_back( PajeEvent( PajeSetVariable, ConvertTime(time), type, container, value ) );
         }
 
       void AddVariable (TTimePoint time, int type, int container, double value )
         {
-          events.push_back( PajeEvent( PajeAddVariable, ConvertTime(time), type, container, value ) );
+          events.emplace_back( PajeEvent( PajeAddVariable, ConvertTime(time), type, container, value ) );
         }
 
       void SubVariable (TTimePoint time, int type, int container, double value )
         {
-          events.push_back( PajeEvent( PajeSubVariable, ConvertTime(time), type, container, value ) );
+          events.emplace_back( PajeEvent( PajeSubVariable, ConvertTime(time), type, container, value ) );
         }
 
       void SetState ()
@@ -270,12 +279,12 @@ namespace ngcore
 
       void PushState ( TTimePoint time, int type, int container, int value, int id = 0, bool value_is_alias = true )
         {
-          events.push_back( PajeEvent( PajePushState, ConvertTime(time), type, container, value, id) );
+          events.emplace_back( PajeEvent( PajePushState, ConvertTime(time), type, container, value, id, value_is_alias) );
         }
 
       void PopState ( TTimePoint time, int type, int container )
         {
-          events.push_back( PajeEvent( PajePopState, ConvertTime(time), type, container ) );
+          events.emplace_back( PajeEvent( PajePopState, ConvertTime(time), type, container ) );
         }
 
       void ResetState ()
@@ -283,12 +292,12 @@ namespace ngcore
 
       void StartLink ( TTimePoint time, int type, int container, int value, int start_container, int key )
         {
-          events.push_back( PajeEvent( PajeStartLink, ConvertTime(time), type, container, value, start_container, key ) );
+          events.emplace_back( PajeEvent( PajeStartLink, ConvertTime(time), type, container, value, start_container, key ) );
         }
 
       void EndLink ( TTimePoint time, int type, int container, int value, int end_container, int key )
         {
-          events.push_back( PajeEvent(  PajeEndLink, ConvertTime(time), type, container, value, end_container, key ) );
+          events.emplace_back( PajeEvent(  PajeEndLink, ConvertTime(time), type, container, value, end_container, key ) );
         }
 
       void NewEvent ()
@@ -299,12 +308,11 @@ namespace ngcore
           logger->info("Sorting traces...");
           std::sort (events.begin(), events.end());
 
-          char buf[2*MAX_TRACE_LINE_SIZE];
           logger->info("Writing traces... ");
-          for (int i = 0; i < events.size(); i++)
+          for (auto & event : events)
           {
-              events[i].write( buf );
-              fprintf( ctrace_stream, "%s", buf );
+              event.write( ctrace_stream );
+//               fprintf( ctrace_stream, "%s", buf ); // NOLINT
           }
           logger->info("Done");
         }
@@ -336,7 +344,7 @@ namespace ngcore
 
   NGCORE_API PajeTrace *trace;
 
-  void PajeTrace::Write( string filename )
+  void PajeTrace::Write( const std::string & filename )
     {
       int n_events = jobs.size() + timer_events.size();
       for(auto & vtasks : tasks)
@@ -352,7 +360,7 @@ namespace ngcore
 
       if(!tracing_enabled)
         {
-            logger->warning("Tracing stopped during computation due to tracefile size limit of {} megabytes.", max_tracefile_size/1024/1024);
+            logger->warn("Tracing stopped during computation due to tracefile size limit of {} megabytes.", max_tracefile_size/1024/1024);
         }
 
       PajeFile paje(filename, start_time);
@@ -374,18 +382,19 @@ namespace ngcore
       paje.SetVariable( start_time, variable_type_active_threads, container_jobs, 0.0 );
 
       const int num_nodes = 1; //task_manager ? task_manager->GetNumNodes() : 1;
-      std::vector<int> container_nodes;
 
+      std::vector<int> container_nodes;
+      container_nodes.reserve(num_nodes);
       for(int i=0; i<num_nodes; i++)
-          container_nodes.push_back( paje.CreateContainer( container_type_node, container_task_manager, "Node " /* TODO: + ToString(i) */));
+          container_nodes.emplace_back( paje.CreateContainer( container_type_node, container_task_manager, "Node " + ToString(i)) );
 
       std::vector <int> thread_aliases;
+      thread_aliases.reserve(nthreads);
       if(trace_threads)
         for (int i=0; i<nthreads; i++)
           {
-            char name[20];
-            sprintf(name, "Thread %d", i);
-            thread_aliases.push_back( paje.CreateContainer( container_type_thread, container_nodes[i*num_nodes/nthreads], name ) );
+            auto name = "Timer level " + ToString(i);
+            thread_aliases.emplace_back( paje.CreateContainer( container_type_thread, container_nodes[i*num_nodes/nthreads], name ) );
           }
 
       std::map<const std::type_info *, int> job_map;
@@ -394,7 +403,7 @@ namespace ngcore
       for(Job & j : jobs)
         if(job_map.find(j.type) == job_map.end())
           {
-            string name = Demangle(j.type->name());
+            std::string name = Demangle(j.type->name());
             job_map[j.type] = paje.DefineEntityValue( state_type_job, name, -1 );
             job_task_map[j.type] = paje.DefineEntityValue( state_type_task, name, -1 );
           }
@@ -437,8 +446,7 @@ namespace ngcore
       timer_container_aliases.resize(maxdepth);
       for(int i=0; i<maxdepth; i++)
         {
-          char name[30];
-          sprintf(name, "Timer level %d", i);
+          auto name = "Timer level " + ToString(i);
           timer_container_aliases[i] =  paje.CreateContainer( container_type_timer, container_task_manager, name );
         }
 
@@ -497,10 +505,10 @@ namespace ngcore
       while(nlinks_merged < nlinks)
         {
           int minpos = -1;
-          TTimePoint mintime;
+          TTimePoint mintime = -1;
           for (int t = 0; t<nthreads; t++)
             {
-              if(pos[t] < links[t].size() && (links[t][pos[t]].time < mintime || minpos==-1))
+              if(pos[t] < links[t].size() && (minpos==-1 || links[t][pos[t]].time < mintime))
                 {
                   minpos = t;
                   mintime = links[t][pos[t]].time;
@@ -544,7 +552,7 @@ namespace ngcore
         }
       paje.WriteEvents();
     }
-}
+} // namespace ngcore
 
 const char *header =
         "%EventDef PajeDefineContainerType 0 \n"
