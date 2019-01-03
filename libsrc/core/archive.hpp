@@ -209,7 +209,6 @@ namespace ngcore
     // vector<bool> has special implementation (like a bitarray) therefore
     // it needs a special overload (this could probably be more efficient, but we
     // don't use it that often anyway)
-    template<>
     Archive& operator& (std::vector<bool>& v)
     {
       size_t size;
