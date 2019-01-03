@@ -13,7 +13,7 @@ namespace ngcore
   size_t dummy_thread_flops[NgProfiler::SIZE];
   size_t * NgProfiler::thread_flops = dummy_thread_flops; // NOLINT
 
-  std::shared_ptr<spdlog::logger> logger = GetLogger("Profiler"); // NOLINT
+  std::shared_ptr<spdlog::logger> NgProfiler::logger = GetLogger("Profiler"); // NOLINT
 
   NgProfiler :: NgProfiler()
   {
