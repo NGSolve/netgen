@@ -943,7 +943,7 @@ namespace ngcore
   };
 
   template<typename T, typename T_ARCHIVE_OUT=BinaryOutArchive, typename T_ARCHIVE_IN=BinaryInArchive>
-  auto NGSPickle()
+  NGCORE_API auto NGSPickle()
   {
     return pybind11::pickle([](T* self)
                       {
