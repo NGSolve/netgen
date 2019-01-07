@@ -4,7 +4,12 @@
 #include <chrono>
 #include <sstream>
 #include <string>
+
+#ifdef WIN32
+#include <intrin.h>   // for __rdtsc()  CPU time step counter
+#else
 #include <x86intrin.h>   // for __rdtsc()  CPU time step counter
+#endif // WIN32
 
 #include "ngcore_api.hpp"       // for NGCORE_API
 
