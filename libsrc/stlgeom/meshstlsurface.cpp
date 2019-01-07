@@ -598,7 +598,6 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 
   for (int fnr = 1; fnr <= mesh.GetNFD(); fnr++)
     {
-      if (fnr == 100) NgProfiler::ClearTimers();
       if (!opensegsperface[fnr]) continue;
       if (multithread.terminate) return;
 

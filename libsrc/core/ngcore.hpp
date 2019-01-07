@@ -4,6 +4,7 @@
 #include "archive.hpp"
 #include "exception.hpp"
 #include "logging.hpp"
+#include "profiler.hpp"
 #include "symboltable.hpp"
 #include "version.hpp"
 

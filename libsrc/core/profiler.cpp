@@ -4,7 +4,7 @@
 
 namespace ngcore
 {
-  std::array<NgProfiler::TimerVal,NgProfiler::SIZE> NgProfiler::timers; // NOLINT
+  std::vector<NgProfiler::TimerVal> NgProfiler::timers(NgProfiler::SIZE); // NOLINT
 
   std::string NgProfiler::filename;
 

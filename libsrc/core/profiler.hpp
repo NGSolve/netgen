@@ -30,7 +30,7 @@ namespace ngcore
         int usedcounter = 0;
     };
 
-    NGCORE_API static std::array<TimerVal,SIZE> timers;
+    NGCORE_API static std::vector<TimerVal> timers;
 
     NGCORE_API static TTimePoint * thread_times;
     NGCORE_API static TTimePoint * thread_flops;
@@ -69,17 +69,17 @@ namespace ngcore
 
     static void StartThreadTimer (size_t nr, size_t tid)
     {
-      thread_times[tid*SIZE+nr] -= GetTimeCounter();
+      thread_times[tid*SIZE+nr] -= GetTimeCounter(); // NOLINT
     }
 
     static void StopThreadTimer (size_t nr, size_t tid)
     {
-      thread_times[tid*SIZE+nr] += GetTimeCounter();
+      thread_times[tid*SIZE+nr] += GetTimeCounter(); // NOLINT
     }
 
     static void AddThreadFlops (size_t nr, size_t tid, size_t flops)
     {
-      thread_flops[tid*SIZE+nr] += flops;
+      thread_flops[tid*SIZE+nr] += flops; // NOLINT
     }
 
     /// if you know number of flops, provide them to obtain the MFlop - rate
@@ -123,6 +123,22 @@ namespace ngcore
     static std::string GetName (int nr) { return timers[nr].name; }
     /// print profile
     NGCORE_API static void Print (FILE * ost);
+
+    class RegionTimer
+    {
+      int nr;
+    public:
+      /// start timer
+      RegionTimer (int anr) : nr(anr) { NgProfiler::StartTimer(nr); }
+      /// stop timer
+      ~RegionTimer () { NgProfiler::StopTimer(nr); }
+
+      RegionTimer() = delete;
+      RegionTimer(const RegionTimer &) = delete;
+      RegionTimer(RegionTimer &&) = delete;
+      void operator=(const RegionTimer &) = delete;
+      void operator=(RegionTimer &&) = delete;
+    };
   };
 
 
@@ -184,8 +200,8 @@ namespace ngcore
     ~RegionTimer () { timer.Stop(); }
 
     RegionTimer() = delete;
-    RegionTimer(RegionTimer &&) = delete;
     RegionTimer(const RegionTimer &) = delete;
+    RegionTimer(RegionTimer &&) = delete;
     void operator=(const RegionTimer &) = delete;
     void operator=(RegionTimer &&) = delete;
   };
