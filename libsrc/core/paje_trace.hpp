@@ -3,7 +3,6 @@
 
 #include <limits>
 #include <vector>
-#include <x86intrin.h>   // for __rdtsc()  CPU time step counter
 
 #include "logging.hpp"       // for logger
 #include "ngcore_api.hpp"    // for NGCORE_API

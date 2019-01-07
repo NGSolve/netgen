@@ -45,7 +45,7 @@ namespace ngcore
     }
 
     /// INDEX of symbol name, throws exception if unused
-    NGCORE_API size_t Index (const std::string & name) const
+    size_t Index (const std::string & name) const
     {
       for (size_t i = 0; i < names.size(); i++)
         if (names[i] == name) return i;
@@ -53,7 +53,7 @@ namespace ngcore
     }
 
     /// Index of symbol name, returns -1 if unused
-    NGCORE_API int CheckIndex (const std::string & name) const
+    int CheckIndex (const std::string & name) const
     {
       for (int i = 0; i < names.size(); i++)
         if (names[i] == name) return i;
