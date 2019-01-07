@@ -35,9 +35,11 @@ namespace ngcore
     NGCORE_API static TTimePoint * thread_times;
     NGCORE_API static TTimePoint * thread_flops;
     NGCORE_API static std::shared_ptr<spdlog::logger> logger;
+    NGCORE_API static size_t dummy_thread_times[NgProfiler::SIZE];
+    NGCORE_API static size_t dummy_thread_flops[NgProfiler::SIZE];
   private:
 
-    static std::string filename;
+    NGCORE_API static std::string filename;
   public:
     NgProfiler();
     ~NgProfiler();
@@ -143,7 +145,7 @@ namespace ngcore
 
 
 
-  class Timer
+  class NGCORE_API Timer
   {
     int timernr;
     int priority;

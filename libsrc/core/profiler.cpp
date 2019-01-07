@@ -8,10 +8,10 @@ namespace ngcore
 
   std::string NgProfiler::filename;
 
-  size_t dummy_thread_times[NgProfiler::SIZE];
-  size_t * NgProfiler::thread_times = dummy_thread_times; // NOLINT
-  size_t dummy_thread_flops[NgProfiler::SIZE];
-  size_t * NgProfiler::thread_flops = dummy_thread_flops; // NOLINT
+  size_t NgProfiler::dummy_thread_times[NgProfiler::SIZE];
+  size_t * NgProfiler::thread_times = NgProfiler::dummy_thread_times; // NOLINT
+  size_t NgProfiler::dummy_thread_flops[NgProfiler::SIZE];
+  size_t * NgProfiler::thread_flops = NgProfiler::dummy_thread_flops; // NOLINT
 
   std::shared_ptr<spdlog::logger> NgProfiler::logger = GetLogger("Profiler"); // NOLINT
 

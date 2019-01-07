@@ -22,8 +22,8 @@ namespace ngcore
       std::shared_ptr<spdlog::logger> logger = GetLogger("PajeTrace");
     private:
       NGCORE_API static size_t max_tracefile_size;
-      static bool trace_thread_counter;
-      static bool trace_threads;
+      NGCORE_API static bool trace_thread_counter;
+      NGCORE_API static bool trace_threads;
 
       bool tracing_enabled;
       TTimePoint start_time;
@@ -107,8 +107,8 @@ namespace ngcore
       PajeTrace() = delete;
       PajeTrace(const PajeTrace &) = delete;
       PajeTrace(PajeTrace &&) = delete;
-      PajeTrace(int anthreads, std::string aname = "");
-      ~PajeTrace();
+      NGCORE_API PajeTrace(int anthreads, std::string aname = "");
+      NGCORE_API ~PajeTrace();
 
       void operator=(const PajeTrace &) = delete;
       void operator=(PajeTrace &&) = delete;
