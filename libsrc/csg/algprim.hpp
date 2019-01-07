@@ -303,7 +303,8 @@ namespace netgen
 					   const Box<3> & bbox, 
 					   double facets) const;
 
-  
+    virtual int IsIdentic (const Surface & s2, int & inv, double eps) const;
+
     virtual double MaxCurvature () const;
 
     virtual double MaxCurvatureLoc (const Point<3> & /* c */ , 
