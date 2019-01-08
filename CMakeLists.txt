@@ -2,7 +2,13 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING INTERNAL)
 endif(NOT CMAKE_BUILD_TYPE)
 
-cmake_minimum_required(VERSION 3.1.3)
+if(WIN32)
+  # we are linking to object libraries on Windows
+  cmake_minimum_required(VERSION 3.12)
+else(WIN32)
+  cmake_minimum_required(VERSION 3.1.3)
+endif(WIN32)
+
 if(NOT WIN32)
     option( USE_NATIVE_ARCH  "build which -march=native" ON)
 endif(NOT WIN32)

@@ -12,11 +12,11 @@ if(APPLE)
 endif(APPLE)
 
 if(NOT WIN32)
-    target_link_libraries(csg mesh ${PYTHON_LIBRARIES})
-    target_link_libraries(csg ${PYTHON_LIBRARIES})
+    target_link_libraries(csg PUBLIC mesh ${PYTHON_LIBRARIES})
     install( TARGETS csg ${NG_INSTALL_DIR})
 endif(NOT WIN32)
 
+target_link_libraries(csg PUBLIC ngcore)
 
 if(USE_GUI)
     add_library(csgvis ${NG_LIB_TYPE} vscsg.cpp )
