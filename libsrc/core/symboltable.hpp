@@ -19,7 +19,7 @@ namespace ngcore
       Complexity by name access is linear, by index is constant.
   */
   template <class T>
-  class NGCORE_API SymbolTable
+  class SymbolTable
   {
     std::vector<std::string> names;
     std::vector<T> data;

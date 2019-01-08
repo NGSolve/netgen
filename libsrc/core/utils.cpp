@@ -16,6 +16,7 @@ namespace ngcore
                                                                                       nullptr,
                                                                                       nullptr,
                                                                                       &status); }
+#endif
 
   double ticks_per_second = [] () noexcept
   {
@@ -35,6 +36,4 @@ namespace ngcore
   const std::chrono::time_point<TClock> wall_time_start = TClock::now();
 
 } // namespace ngcore
-
-#endif
 

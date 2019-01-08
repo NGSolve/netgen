@@ -29,6 +29,7 @@ install(TARGETS ngcore DESTINATION ${NG_INSTALL_DIR} COMPONENT netgen)
 if(USE_PYTHON)
   target_compile_definitions(ngcore PUBLIC NETGEN_PYTHON)
   target_include_directories(ngcore PUBLIC ${PYTHON_INCLUDE_DIRS})
+  target_link_libraries(ngcore PUBLIC ${PYTHON_LIBRARIES})
 endif(USE_PYTHON)
 
 install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp logging.hpp
@@ -41,7 +42,7 @@ endif(ENABLE_CPP_CORE_GUIDELINES_CHECK)
 
 if(USE_PYTHON)
   pybind11_add_module(pyngcore SHARED python_ngcore.cpp)
-  target_link_libraries(pyngcore PUBLIC ngcore)
+  target_link_libraries(pyngcore PUBLIC ngcore ${PYTHON_LIBRARIES})
   set_target_properties(pyngcore PROPERTIES INSTALL_RPATH "${NG_RPATH_TOKEN}/${NETGEN_PYTHON_RPATH}")
   install(TARGETS pyngcore DESTINATION ${NG_INSTALL_DIR_PYTHON} COMPONENT netgen)
 endif(USE_PYTHON)
