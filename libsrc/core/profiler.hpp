@@ -124,7 +124,7 @@ namespace ngcore
     static void SetName (int nr, const std::string & name) { timers[nr].name = name; }
     static std::string GetName (int nr) { return timers[nr].name; }
     /// print profile
-    NGCORE_API static void Print (FILE * ost);
+    NGCORE_API static void Print (FILE * prof);
 
     class RegionTimer
     {

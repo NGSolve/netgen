@@ -44,6 +44,9 @@ namespace spdlog
   {
   public:
     template<typename T>
+    void log_helper() { std::clog << t; }
+
+    template<typename T>
     void log_helper( T t) { std::clog << t; }
 
     template<typename T, typename ... Args>
