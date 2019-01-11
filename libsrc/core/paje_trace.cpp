@@ -427,7 +427,7 @@ namespace ngcore
             timer_ids.insert(t.id);
 
       for(auto id : timer_ids)
-        timer_aliases[id] = paje.DefineEntityValue( state_type_timer, "a timer" /* TODO: NgProfiler::GetName(id).c_str()*/, -1 );
+        timer_aliases[id] = paje.DefineEntityValue( state_type_timer, NgProfiler::GetName(id).c_str(), -1 );
 
       int timerdepth = 0;
       int maxdepth = 0;
