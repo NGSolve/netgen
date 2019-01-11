@@ -7,6 +7,7 @@
 
 #include "archive.hpp"           // for Demangle
 #include "paje_trace.hpp"
+#include "profiler.hpp"
 
 static constexpr int MAX_TRACE_LINE_SIZE = 50;
 extern const char *header;
@@ -427,7 +428,7 @@ namespace ngcore
             timer_ids.insert(t.id);
 
       for(auto id : timer_ids)
-        timer_aliases[id] = paje.DefineEntityValue( state_type_timer, NgProfiler::GetName(id).c_str(), -1 );
+        timer_aliases[id] = paje.DefineEntityValue( state_type_timer, NgProfiler::GetName(id), -1 );
 
       int timerdepth = 0;
       int maxdepth = 0;
