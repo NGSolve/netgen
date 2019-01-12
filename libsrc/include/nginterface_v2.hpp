@@ -44,6 +44,19 @@ namespace netgen
     size_t Size() const { return s; }
     T * Release() { T * hd = data; data = nullptr; return hd; }
   };
+
+  template <typename T, int S>
+  class Ng_BufferMS
+  {
+    size_t s;
+    T data[S];
+  public:
+    Ng_BufferMS (size_t as) : s(as) { ; } 
+    size_t Size() const { return s; }
+    T & operator[] (size_t i) { return data[i]; }
+    T operator[] (size_t i) const { return data[i]; }
+  };
+
   
   class Ng_Element
   {
@@ -185,6 +198,7 @@ namespace netgen
       int operator[] (size_t i) const { return ptr[i]-POINTINDEX_BASE; }
     };
 
+    /*
     class Ng_Edges
     {
     public:
@@ -194,11 +208,11 @@ namespace netgen
       size_t Size() const { return ned; }
       int operator[] (size_t i) const { return ptr[i]-1; }
     };
-
+    */
 
   public:
     Ng_Vertices vertices;
-    Ng_Edges edges;
+    // Ng_Edges edges;
     int surface_el;  // -1 if face not on surface
   };
 
@@ -282,7 +296,8 @@ namespace netgen
 
     template <int DIM>
     const Ng_Node<DIM> GetNode (int nr) const;
-    
+
+    Ng_BufferMS<int,4> GetFaceEdges (int fnr) const;
     
     template <int DIM>
     int GetNNodes ();

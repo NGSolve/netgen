@@ -717,6 +717,16 @@ namespace netgen
     return mesh->GetIdentifications().GetType(idnr+1);
   }
 
+  Ng_BufferMS<int,4> Ngx_Mesh::GetFaceEdges (int fnr) const
+  {
+    const MeshTopology & topology = mesh->GetTopology();
+    ArrayMem<int,4> ia;
+    topology.GetFaceEdges (fnr+1, ia);
+    Ng_BufferMS<int,4> res(ia.Size());
+    for (size_t i = 0; i < ia.Size(); i++)
+      res[i] = ia[i]-1;
+    return res;
+  }
 
 
 
