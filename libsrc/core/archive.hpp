@@ -506,7 +506,7 @@ namespace ngcore
               // As stated above, we want this special behaviour only for our classes that implement DoArchive
               std::string name;
               (*this) & name;
-              logger->debug("Name = " + name);
+              logger->debug("Name = {}", name);
               auto info = GetArchiveRegister(name);
               // the creator creates a new object of type name, and returns a void* pointing
               // to T (which may have an offset)
