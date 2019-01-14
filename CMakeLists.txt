@@ -274,12 +274,12 @@ endif (USE_GUI)
 
 #######################################################################
 if (USE_PYTHON)
-    add_subdirectory(external_dependencies/pybind11)
     add_definitions(-DNG_PYTHON)
     if(BUILD_WITH_CONDA)
         find_package(pybind11 REQUIRED)
         set(PYBIND_INCLUDE_DIR PYBIND11_INCLUDE_DIR)
     else(BUILD_WITH_CONDA)
+        add_subdirectory(external_dependencies/pybind11)
         find_path(PYBIND_INCLUDE_DIR pybind11/pybind11.h HINTS ${PYTHON_INCLUDE_DIR})
         if( PYBIND_INCLUDE_DIR )
             message(STATUS "Found Pybind11: ${PYBIND_INCLUDE_DIR}")
