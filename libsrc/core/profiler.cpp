@@ -35,6 +35,17 @@ namespace ngcore
         fclose(prof); // NOLINT
       }
 
+    if (getenv ("NGPROFILE"))
+      {
+       std::string filename = "netgen.prof";
+#ifdef PARALLEL
+       filename += "."+ToString(id);
+#endif
+       if (id == 0) logger->info( "write profile to file {}", filename );
+       FILE *prof = fopen(filename.c_str(),"w"); // NOLINT
+       Print (prof);
+       fclose(prof); // NOLINT
+      }
   }
 
   void NgProfiler :: Print (FILE * prof)

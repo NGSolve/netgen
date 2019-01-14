@@ -50,10 +50,6 @@ namespace netgen
 
   string ngdir = ".";
 
-  // parallel netgen
-  int id = 0, ntasks = 1;
-
-
   void Ng_PrintDest(const char * s)
   {
     if (id == 0)

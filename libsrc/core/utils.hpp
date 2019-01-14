@@ -15,6 +15,9 @@
 
 namespace ngcore
 {
+  // MPI rank, nranks TODO: Rename
+  extern NGCORE_API int id, ntasks;
+  
   NGCORE_API std::string Demangle(const char* typeinfo);
 
 #if defined(__GNUC__)
