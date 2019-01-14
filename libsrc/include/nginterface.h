@@ -312,7 +312,7 @@ extern "C" {
   
   struct Ng_SolutionData
   {
-    string name;      // name of gridfunction
+    std::string name;      // name of gridfunction
     double * data;    // solution values
     int components;   // relevant (double) components in solution vector
     int dist;         // # doubles per entry alignment! 
@@ -333,7 +333,7 @@ extern "C" {
   // redraw 
   DLL_HEADER void Ng_Redraw(bool blocking = false);
   ///
-  DLL_HEADER void Ng_TclCmd(string cmd);
+  DLL_HEADER void Ng_TclCmd(std::string cmd);
   ///
   DLL_HEADER void Ng_SetMouseEventHandler (netgen::MouseEventHandler * handler);
   ///

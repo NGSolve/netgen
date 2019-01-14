@@ -12,6 +12,21 @@
   C++ interface to Netgen
 */
 
+#ifndef NGINTERFACE
+  // implemented element types:
+enum NG_ELEMENT_TYPE { 
+  NG_PNT = 0,
+  NG_SEGM = 1, NG_SEGM3 = 2,
+  NG_TRIG = 10, NG_QUAD=11, NG_TRIG6 = 12, NG_QUAD6 = 13,
+  NG_TET = 20, NG_TET10 = 21, 
+  NG_PYRAMID = 22, NG_PRISM = 23, NG_PRISM12 = 24,
+  NG_HEX = 25
+};
+
+enum NG_REFINEMENT_TYPE { NG_REFINE_H = 0, NG_REFINE_P = 1, NG_REFINE_HP = 2 };
+#endif
+
+
 namespace netgen
 {
 
@@ -306,7 +321,11 @@ namespace netgen
     // 3D only
     // std::pair<int,int> GetBoundaryNeighbouringDomains (int bnr);
 
+    template <int DIM>
+      void SetRefinementFlag (size_t elnr, bool flag);
+    
     void Curve (int order);
+
     void Refine (NG_REFINEMENT_TYPE reftype,
                  void (*taskmanager)(function<void(int,int)>) = &DummyTaskManager2,
                  void (*tracer)(string, bool) = &DummyTracer2);
@@ -334,6 +353,27 @@ namespace netgen
     shared_ptr<Mesh> GetMesh () const { return mesh; } 
     shared_ptr<Mesh> SelectMesh () const;
     inline auto GetTimeStamp() const;
+
+
+    // also added from nginterface.h, still 1-based, need redesign
+    void HPRefinement (int levels, double parameter = 0.125,
+                       bool setorders = true,bool ref_level = false);
+    size_t GetNP() const;
+    int GetSurfaceElementSurfaceNumber (size_t ei) const;
+    int GetSurfaceElementFDNumber (size_t ei) const;
+
+    int GetElementOrder (int enr) const;
+    void GetElementOrders (int enr, int * ox, int * oy, int * oz) const;
+    void SetElementOrder (int enr, int order);
+    void SetElementOrders (int enr, int ox, int oy, int oz);
+    int GetSurfaceElementOrder (int enr) const;
+    void GetSurfaceElementOrders (int enr, int * ox, int * oy) const;
+    void SetSurfaceElementOrder (int enr, int order);
+    void SetSurfaceElementOrders (int enr, int ox, int oy);
+    int GetClusterRepVertex (int vi) const;
+    int GetClusterRepEdge (int edi) const;
+    int GetClusterRepFace (int fai) const;
+    int GetClusterRepElement (int eli) const;
   };
 
 
