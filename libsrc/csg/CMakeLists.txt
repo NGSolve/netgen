@@ -11,10 +11,8 @@ if(APPLE)
     set_target_properties( csg PROPERTIES SUFFIX ".so")
 endif(APPLE)
 
-if(NOT WIN32)
-    target_link_libraries(csg PUBLIC mesh ${PYTHON_LIBRARIES})
-    install( TARGETS csg ${NG_INSTALL_DIR})
-endif(NOT WIN32)
+target_link_libraries(csg PUBLIC mesh ${PYTHON_LIBRARIES})
+install( TARGETS csg ${NG_INSTALL_DIR})
 
 target_link_libraries(csg PUBLIC ngcore)
 

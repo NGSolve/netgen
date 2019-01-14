@@ -4,10 +4,8 @@ if(APPLE)
     set_target_properties( geom2d PROPERTIES SUFFIX ".so")
 endif(APPLE)
 
-if(NOT WIN32)
-    target_link_libraries(geom2d mesh ${PYTHON_LIBRARIES})
-    install( TARGETS geom2d ${NG_INSTALL_DIR})
-endif(NOT WIN32)
+target_link_libraries(geom2d mesh ${PYTHON_LIBRARIES})
+install( TARGETS geom2d ${NG_INSTALL_DIR})
 
 target_link_libraries(geom2d ngcore)
 

@@ -23,10 +23,8 @@ endif(APPLE)
 
 target_link_libraries( mesh PUBLIC ngcore PRIVATE gprim la gen )
 
-if(NOT WIN32)
-    target_link_libraries( mesh PUBLIC ${ZLIB_LIBRARIES} ${MPI_CXX_LIBRARIES} ${PYTHON_LIBRARIES} ${METIS_LIBRARY})
-    install( TARGETS mesh ${NG_INSTALL_DIR})
-endif(NOT WIN32)
+target_link_libraries( mesh PUBLIC ${ZLIB_LIBRARIES} ${MPI_CXX_LIBRARIES} ${PYTHON_LIBRARIES} ${METIS_LIBRARY})
+install( TARGETS mesh ${NG_INSTALL_DIR})
 
 install(FILES
   adfront2.hpp adfront3.hpp basegeom.hpp bcfunctions.hpp bisect.hpp
