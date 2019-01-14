@@ -562,7 +562,7 @@ namespace netgen
   const Surface * CSGeometry :: GetSurface (const char * name) const
   {
     if (surfaces.Used(name))
-      return surfaces.Get(name);
+      return surfaces[name];
     else
       return NULL;
   }
@@ -585,7 +585,7 @@ namespace netgen
     Solid * oldsol = NULL;
 
     if (solids.Used (name))
-      oldsol = solids.Get(name);
+      oldsol = solids[name];
 
     solids.Set (name, sol);
     sol->SetName (name);
@@ -605,7 +605,7 @@ namespace netgen
   const Solid * CSGeometry :: GetSolid (const char * name) const
   {
     if (solids.Used(name))
-      return solids.Get(name);
+      return solids[name];
     else
       return NULL;
   }
@@ -616,8 +616,8 @@ namespace netgen
 
   const Solid * CSGeometry :: GetSolid (const string & name) const
   {
-    if (solids.Used(name.c_str()))
-      return solids.Get(name.c_str());
+    if (solids.Used(name))
+      return solids[name];
     else
       return NULL;
   }
@@ -637,15 +637,15 @@ namespace netgen
 
   const SplineGeometry<2> * CSGeometry :: GetSplineCurve2d (const string & name) const
   {
-    if (splinecurves2d.Used(name.c_str()))
-      return splinecurves2d.Get(name.c_str());
+    if (splinecurves2d.Used(name))
+      return splinecurves2d[name];
     else
       return NULL;
   }
   const SplineGeometry<3> * CSGeometry :: GetSplineCurve3d (const string & name) const
   {
-    if (splinecurves3d.Used(name.c_str()))
-      return splinecurves3d.Get(name.c_str());
+    if (splinecurves3d.Used(name))
+      return splinecurves3d[name];
     else
       return NULL;
   }
@@ -721,7 +721,7 @@ namespace netgen
 
   void CSGeometry :: SetFlags (const char * solidname, const Flags & flags)
   {
-    Solid * solid = solids.Elem(solidname);
+    Solid * solid = solids[solidname];
     Array<int> surfind;
 
     int i;

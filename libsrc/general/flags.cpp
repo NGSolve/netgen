@@ -83,7 +83,7 @@ namespace netgen
   Flags :: GetStringFlag (const char * name, const char * def) const
   {
     if (strflags.Used (name))
-      return strflags.Get(name);
+      return strflags[name];
     else
       return def;
   }
@@ -91,7 +91,7 @@ namespace netgen
   double Flags :: GetNumFlag (const char * name, double def) const
   {
     if (numflags.Used (name))
-      return numflags.Get(name);
+      return numflags[name];
     else
       return def;
   }
@@ -99,7 +99,7 @@ namespace netgen
   const double * Flags :: GetNumFlagPtr (const char * name) const
   {
     if (numflags.Used (name))
-      return & ((SYMBOLTABLE<double>&)numflags).Elem(name);
+      return & ((SymbolTable<double>&)numflags)[name];
     else
       return NULL;
   }
@@ -107,7 +107,7 @@ namespace netgen
   double * Flags :: GetNumFlagPtr (const char * name) 
   {
     if (numflags.Used (name))
-      return & ((SYMBOLTABLE<double>&)numflags).Elem(name);
+      return & ((SymbolTable<double>&)numflags)[name];
     else
       return NULL;
   }
@@ -122,7 +122,7 @@ namespace netgen
   Flags :: GetStringListFlag (const char * name) const
   {
     if (strlistflags.Used (name))
-      return *strlistflags.Get(name);
+      return *strlistflags[name];
     else
       {
 	static Array<char*> dummy_array(0);
@@ -134,7 +134,7 @@ namespace netgen
   Flags ::GetNumListFlag (const char * name) const
   {
     if (numlistflags.Used (name))
-      return *numlistflags.Get(name);
+      return *numlistflags[name];
     else
       {
 	static Array<double> dummy_array(0);
@@ -170,9 +170,9 @@ namespace netgen
     ofstream outfile (filename);
   
     for (i = 1; i <= strflags.Size(); i++)
-      outfile << strflags.GetName(i) << " = " << strflags.Get(i) << endl;
+      outfile << strflags.GetName(i) << " = " << strflags[i] << endl;
     for (i = 1; i <= numflags.Size(); i++)
-      outfile << numflags.GetName(i) << " = " << numflags.Get(i) << endl;
+      outfile << numflags.GetName(i) << " = " << numflags[i] << endl;
     for (i = 1; i <= defflags.Size(); i++)
       outfile << defflags.GetName(i) << endl;
   }
@@ -184,9 +184,9 @@ namespace netgen
     int i;
   
     for (i = 1; i <= strflags.Size(); i++)
-      ost << strflags.GetName(i) << " = " << strflags.Get(i) << endl;
+      ost << strflags.GetName(i) << " = " << strflags[i] << endl;
     for (i = 1; i <= numflags.Size(); i++)
-      ost << numflags.GetName(i) << " = " << numflags.Get(i) << endl;
+      ost << numflags.GetName(i) << " = " << numflags[i] << endl;
     for (i = 1; i <= defflags.Size(); i++)
       ost << defflags.GetName(i) << endl;
   }

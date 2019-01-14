@@ -102,7 +102,7 @@ namespace netgen
   {
   private:
     /// all surfaces
-    SYMBOLTABLE<Surface*> surfaces;
+    SymbolTable<Surface*> surfaces;
 
   public:
     /// primitive of surface
@@ -112,12 +112,12 @@ namespace netgen
     Array<Surface*> delete_them;
 
     /// all named solids
-    SYMBOLTABLE<Solid*> solids;
+    SymbolTable<Solid*> solids;
 
     /// all 2d splinecurves
-    SYMBOLTABLE< SplineGeometry<2>* > splinecurves2d;
+    SymbolTable< SplineGeometry<2>* > splinecurves2d;
     /// all 3d splinecurves
-    SYMBOLTABLE< SplineGeometry<3>* > splinecurves3d;
+    SymbolTable< SplineGeometry<3>* > splinecurves3d;
 
     /// all top level objects: solids and surfaces
     Array<TopLevelObject*> toplevelobjects;
@@ -203,7 +203,7 @@ namespace netgen
     const Solid * GetSolid (const string & name) const;
     int GetNSolids () const { return solids.Size(); }
     const Solid * GetSolid (int i) const { return solids[i]; }
-    const SYMBOLTABLE<Solid*> & GetSolids () const { return solids; }
+    const SymbolTable<Solid*> & GetSolids () const { return solids; }
 
 
     void SetSplineCurve (const char * name, SplineGeometry<2> * spl);

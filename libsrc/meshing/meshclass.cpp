@@ -6016,7 +6016,7 @@ namespace netgen
   void Mesh :: SetUserData(const char * id, Array<int> & data)
   {
     if(userdata_int.Used(id))
-      delete userdata_int.Get(id);
+      delete userdata_int[id];
 
     Array<int> * newdata = new Array<int>(data);
 
@@ -6026,10 +6026,10 @@ namespace netgen
   {
     if(userdata_int.Used(id))
       {
-        if(data.Size() < (*userdata_int.Get(id)).Size()+shift)
-          data.SetSize((*userdata_int.Get(id)).Size()+shift);
-        for(int i=0; i<(*userdata_int.Get(id)).Size(); i++)
-          data[i+shift] = (*userdata_int.Get(id))[i];
+        if(data.Size() < (*userdata_int[id]).Size()+shift)
+          data.SetSize((*userdata_int[id]).Size()+shift);
+        for(int i=0; i<(*userdata_int[id]).Size(); i++)
+          data[i+shift] = (*userdata_int[id])[i];
         return true;
       }
     else
@@ -6041,7 +6041,7 @@ namespace netgen
   void Mesh :: SetUserData(const char * id, Array<double> & data)
   {
     if(userdata_double.Used(id))
-      delete userdata_double.Get(id);
+      delete userdata_double[id];
 
     Array<double> * newdata = new Array<double>(data);
 
@@ -6051,10 +6051,10 @@ namespace netgen
   {
     if(userdata_double.Used(id))
       {
-        if(data.Size() < (*userdata_double.Get(id)).Size()+shift)
-          data.SetSize((*userdata_double.Get(id)).Size()+shift);
-        for(int i=0; i<(*userdata_double.Get(id)).Size(); i++)
-          data[i+shift] = (*userdata_double.Get(id))[i];
+        if(data.Size() < (*userdata_double[id]).Size()+shift)
+          data.SetSize((*userdata_double[id]).Size()+shift);
+        for(int i=0; i<(*userdata_double[id]).Size(); i++)
+          data[i+shift] = (*userdata_double[id])[i];
         return true;
       }
     else

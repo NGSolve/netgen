@@ -19,15 +19,15 @@ namespace netgen
 class Flags 
 {
   ///
-  SYMBOLTABLE<char *> strflags;
+  SymbolTable<char *> strflags;
   ///
-  SYMBOLTABLE<double> numflags;
+  SymbolTable<double> numflags;
   ///
-  SYMBOLTABLE<int> defflags;
+  SymbolTable<int> defflags;
   ///
-  SYMBOLTABLE<Array<char*>*> strlistflags;
+  SymbolTable<Array<char*>*> strlistflags;
   ///
-  SYMBOLTABLE<Array<double>*> numlistflags;
+  SymbolTable<Array<double>*> numlistflags;
 public:
   ///
   DLL_HEADER Flags ();

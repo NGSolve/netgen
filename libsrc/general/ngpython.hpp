@@ -66,16 +66,7 @@ namespace netgen
     return static_cast<typename function_traits<Function>::pointer>(lambda);
   }
 
-
-  template <class T>
-  inline std::string ToString (const T& t)
-  {
-    std::stringstream ss;
-    ss << t;
-    return ss.str();
-  }
-
-}
+} // namespace netgen
 
 #endif
 

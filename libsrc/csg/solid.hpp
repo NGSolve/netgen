@@ -158,7 +158,7 @@ namespace netgen
     { return maxh; }
 
     void GetSolidData (ostream & ost, int first = 1) const;
-    static Solid * CreateSolid (istream & ist, const SYMBOLTABLE<Solid*> & solids);
+    static Solid * CreateSolid (istream & ist, const SymbolTable<Solid*> & solids);
 
 
     static BlockAllocator ball;

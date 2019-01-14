@@ -101,6 +101,13 @@ test_guidelines:
     - docker run -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_guidelines.sh
   when: always
 
+# check if it compiles without spdlog
+test_noSpdlog:
+  <<: *ubuntu
+  stage: test
+  script:
+    - docker run -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_nospdlog.sh
+
 cleanup_ubuntu:
   stage: cleanup
   tags:

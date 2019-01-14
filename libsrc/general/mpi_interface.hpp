@@ -14,9 +14,8 @@
 
 namespace netgen
 {
-
-  extern DLL_HEADER int id, ntasks;
-  
+  using ngcore::id;
+  using ngcore::ntasks;
 
 #ifdef PARALLEL
   

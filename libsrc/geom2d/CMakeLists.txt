@@ -9,6 +9,8 @@ if(NOT WIN32)
     install( TARGETS geom2d ${NG_INSTALL_DIR})
 endif(NOT WIN32)
 
+target_link_libraries(geom2d ngcore)
+
 if(USE_GUI)
     add_library(geom2dvis ${NG_LIB_TYPE} vsgeom2d.cpp)
     if(NOT WIN32)
