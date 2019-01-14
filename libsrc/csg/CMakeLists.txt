@@ -12,8 +12,8 @@ if(APPLE)
 endif(APPLE)
 
 if(NOT WIN32)
-    target_link_libraries(csg mesh ${PYTHON_LIBRARIES})
-    target_link_libraries(csg ${PYTHON_LIBRARIES})
+    target_link_libraries(csg mesh)
+    target_link_libraries(csg)
     install( TARGETS csg ${NG_INSTALL_DIR})
 endif(NOT WIN32)
 

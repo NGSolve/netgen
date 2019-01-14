@@ -9,7 +9,7 @@ if(USE_GUI)
 endif(USE_GUI)
 
 if(NOT WIN32)
-    target_link_libraries( occ ${OCC_LIBRARIES} ${PYTHON_LIBRARIES})
+    target_link_libraries( occ ${OCC_LIBRARIES})
     install( TARGETS occ ${NG_INSTALL_DIR})
     if (USE_GUI)
         target_link_libraries( occvis occ )

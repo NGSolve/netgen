@@ -39,7 +39,7 @@ if(USE_OCC AND NOT WIN32)
 endif(USE_OCC AND NOT WIN32)
 
 if(USE_PYTHON)
-    target_link_libraries(nglib PRIVATE ${PYTHON_LIBRARIES})
+    target_link_libraries(nglib PRIVATE)
 endif(USE_PYTHON)
 
 install(TARGETS nglib ${NG_INSTALL_DIR})

@@ -51,7 +51,7 @@ endif(USE_GUI)
 
 if(USE_PYTHON)
     add_library(ngpy SHARED netgenpy.cpp)
-    target_link_libraries( ngpy PUBLIC nglib PRIVATE ${PYTHON_LIBRARIES})
+    target_link_libraries( ngpy PUBLIC nglib PRIVATE)
     if(APPLE)
         set_target_properties( ngpy PROPERTIES SUFFIX ".so")
     elseif(WIN32)
