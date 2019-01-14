@@ -38,9 +38,9 @@ if(USE_OCC AND NOT WIN32)
     target_link_libraries(nglib PUBLIC occ)
 endif(USE_OCC AND NOT WIN32)
 
-if(USE_PYTHON)
+if(USE_PYTHON AND DYNAMIC_LINK_PYTHON)
     target_link_libraries(nglib PRIVATE ${PYTHON_LIBRARIES})
-endif(USE_PYTHON)
+endif(USE_PYTHON AND DYNAMIC_LINK_PYTHON)
 
 install(TARGETS nglib ${NG_INSTALL_DIR})
 install(FILES nglib.h DESTINATION ${NG_INSTALL_DIR_INCLUDE} COMPONENT netgen_devel)

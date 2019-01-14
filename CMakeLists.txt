@@ -29,6 +29,7 @@ option( USE_SPDLOG "Enable spd log logging" OFF)
 option( DEBUG_LOG "Enable more debug output (may increase computation time) - only works with USE_SPDLOG=ON" OFF)
 option( CHECK_RANGE "Check array range access, automatically enabled if built in debug mode" OFF)
 option( BUILD_WITH_CONDA "set this to on if the library is compiled with conda-buid" OFF)
+option( DYNAMIC_LINK_PYTHON "set this to OFF for static linking to python" ON)
 
 option( USE_SUPERBUILD       "use ccache" ON)
 

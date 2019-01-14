@@ -4,7 +4,10 @@ add_library(stl ${NG_LIB_TYPE}
         )
 
 if(NOT WIN32)
-    target_link_libraries( stl mesh ${PYTHON_LIBRARIES})
+    target_link_libraries( stl mesh )
+    if(DYNAMIC_LINK_PYTHON)
+        target_link_libraries( stl ${PYTHON_LIBRARIES})
+    endif(DYNAMIC_LINK_PYTHON)
     install( TARGETS stl ${NG_INSTALL_DIR})
 endif(NOT WIN32)
 
