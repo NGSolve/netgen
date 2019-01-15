@@ -309,8 +309,9 @@ namespace ngcore
           // Downcasting is only possible for our registered classes
           if(typeid(T) != typeid(*ptr))
             {
-              logger->debug("Typids are different: " + Demangle(typeid(T).name()) + " vs. " +
-                               Demangle(typeid(*ptr).name()));
+              logger->debug("Typids are different: {} vs {}",
+                            Demangle(typeid(T).name()),
+                            Demangle(typeid(*ptr).name()));
               if(!IsRegistered(Demangle(typeid(*ptr).name())))
                   throw Exception(std::string("Archive error: Polymorphic type ")
                                   + Demangle(typeid(*ptr).name())
@@ -446,8 +447,8 @@ namespace ngcore
           // if the pointer is not found in the map create a new entry
           if (pos == ptr2nr.end())
             {
-              logger->debug("Didn't find pointer, create new registry entry at " +
-                               std::to_string(ptr_count));
+              logger->debug("Didn't find pointer, create new registry entry at {}",
+                            ptr_count);
               ptr2nr[reg_ptr] = ptr_count++;
               if(typeid(*p) == typeid(T))
                 if (std::is_constructible<T>::value)
