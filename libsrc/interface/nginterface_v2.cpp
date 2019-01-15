@@ -1055,13 +1055,13 @@ namespace netgen
 
 
   template <>
-  void Ngx_Mesh :: SetRefinementFlag<2> (size_t elnr, bool flag)
+  DLL_HEADER void Ngx_Mesh :: SetRefinementFlag<2> (size_t elnr, bool flag)
   {
     mesh->SurfaceElement(elnr+1).SetRefinementFlag(flag);
   }
 
   template <>
-  void Ngx_Mesh :: SetRefinementFlag<3> (size_t elnr, bool flag)
+  DLL_HEADER void Ngx_Mesh :: SetRefinementFlag<3> (size_t elnr, bool flag)
   {
     mesh->VolumeElement(elnr+1).SetRefinementFlag(flag);    
   }
