@@ -13,11 +13,12 @@
 #define SPDLOG_DEBUG_ON
 #endif // NETGEN_LOG_DEBUG
 
+#include <spdlog/fmt/ostr.h> // to be able to parse anything to logger that implements operator << ostream
 #include <spdlog/logger.h>
 #include <spdlog/sinks/sink.h>
 #include <spdlog/spdlog.h>
 
-#define NETGEN_DEBUG_LOG(logger, ...) SPDLOG_DEBUG(logger, __VA_ARGS__)
+#define NETGEN_DEBUG_LOG(...) SPDLOG_DEBUG(__VA_ARGS__)
 
 #else // NETGEN_USE_SPDLOG
 
