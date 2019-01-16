@@ -13,10 +13,15 @@ namespace netgen
   extern std::shared_ptr<NetgenGeometry> ng_geometry;
 }
 
+inline bool ends_with(std::string const & value, std::string const & ending)
+{
+  if (ending.size() > value.size()) return false;
+  return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+}
 
 DLL_HEADER void ExportNgOCC(py::module &m) 
 {
-  py::class_<OCCGeometry, shared_ptr<OCCGeometry>, NetgenGeometry> (m, "OCCGeometry", R"raw_string(Use LoadOCCGeometry to load the geometry from a *.step file.)raw_string")
+  py::class_<OCCGeometry, shared_ptr<OCCGeometry>, NetgenGeometry> (m, "OCCGeometry", R"raw_string(Use LoadOCCGeometry to load the geometry from a *.step or *.iges file.)raw_string")
     .def(py::init<>())
     .def(NGSPickle<OCCGeometry>())
     .def("Heal",[](OCCGeometry & self, double tolerance, bool fixsmalledges, bool fixspotstripfaces, bool sewfaces, bool makesolids, bool splitpartitions)
@@ -113,7 +118,15 @@ DLL_HEADER void ExportNgOCC(py::module &m)
              cout << "load OCC geometry";
              ifstream ist(filename);
              OCCGeometry * instance = new OCCGeometry();
-             instance = LoadOCC_STEP(filename.c_str());
+             if (ends_with(filename, ".stp") || ends_with(filename, ".step") ||
+                 ends_with(filename, ".STP") || ends_with(filename, ".STEP"))
+             {
+               instance = LoadOCC_STEP(filename.c_str());
+             }
+             else
+             {
+               instance = LoadOCC_IGES(filename.c_str());
+             }
              ng_geometry = shared_ptr<OCCGeometry>(instance, NOOP_Deleter);
              return ng_geometry;
            }),py::call_guard<py::gil_scoped_release>());
