@@ -18,7 +18,7 @@ namespace ngcore
       using TClock = std::chrono::system_clock;
 
     protected:
-      std::shared_ptr<spdlog::logger> logger = GetLogger("PajeTrace");
+      std::shared_ptr<Logger> logger = GetLogger("PajeTrace");
     private:
       NGCORE_API static size_t max_tracefile_size;
       NGCORE_API static bool trace_thread_counter;

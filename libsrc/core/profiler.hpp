@@ -34,7 +34,7 @@ namespace ngcore
 
     NGCORE_API static TTimePoint * thread_times;
     NGCORE_API static TTimePoint * thread_flops;
-    NGCORE_API static std::shared_ptr<spdlog::logger> logger;
+    NGCORE_API static std::shared_ptr<Logger> logger;
     NGCORE_API static size_t dummy_thread_times[NgProfiler::SIZE];
     NGCORE_API static size_t dummy_thread_flops[NgProfiler::SIZE];
   private:
