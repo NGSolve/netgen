@@ -19,7 +19,8 @@ namespace ngcore
 #ifdef NETGEN_USE_SPDLOG
     logger->log(spdlog::level::level_enum(level), s);
 #else // NETGEN_USE_SPDLOG
-    std::clog << s << '\n';
+    if(level>level::debug)
+      std::clog << s << '\n';
 #endif // NETGEN_USE_SPDLOG
   }
 

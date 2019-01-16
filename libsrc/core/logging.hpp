@@ -43,14 +43,14 @@ namespace ngcore
       critical = 5,
       off = 6
     };
-  }
+  } // namespace level
 
   class Logger
   {
   public:
     std::shared_ptr<spdlog::logger> logger;
 
-    Logger(std::shared_ptr<spdlog::logger> l) : logger(l) {}
+    Logger(std::shared_ptr<spdlog::logger> l) : logger(std::move(l)) {}
 
     void NGCORE_API log( level::level_enum level, std::string && s);
 
