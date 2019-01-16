@@ -8,14 +8,14 @@ using namespace ngcore;
 
 PYBIND11_MODULE(pyngcore, m) // NOLINT
 {
-  py::enum_<spdlog::level::level_enum>(m, "LOG_LEVEL", "Logging level")
-    .value("Trace", spdlog::level::trace)
-    .value("Debug", spdlog::level::debug)
-    .value("Info", spdlog::level::info)
-    .value("Warn", spdlog::level::warn)
-    .value("Error", spdlog::level::err)
-    .value("Critical", spdlog::level::critical)
-    .value("Off", spdlog::level::off);
+  py::enum_<level::level_enum>(m, "LOG_LEVEL", "Logging level")
+    .value("Trace", level::trace)
+    .value("Debug", level::debug)
+    .value("Info", level::info)
+    .value("Warn", level::warn)
+    .value("Error", level::err)
+    .value("Critical", level::critical)
+    .value("Off", level::off);
 
   m.def("SetLoggingLevel", &SetLoggingLevel, py::arg("level"), py::arg("logger")="",
         "Set logging level, if name is given only to the specific logger, else set the global logging level");

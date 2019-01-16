@@ -92,7 +92,7 @@ namespace ngcore
 
       FILE * ctrace_stream;
       TTimePoint start_time;
-      std::shared_ptr<spdlog::logger> logger = GetLogger("PajeTrace");
+      std::shared_ptr<Logger> logger = GetLogger("PajeTrace");
 
 
       double ConvertTime(TTimePoint t) {

@@ -106,7 +106,7 @@ namespace ngcore
   protected:
     bool shallow_to_python = false;
     std::map<std::string, VersionInfo> version_map = GetLibraryVersions();
-    std::shared_ptr<spdlog::logger> logger = GetLogger("Archive");
+    std::shared_ptr<Logger> logger = GetLogger("Archive");
   public:
     Archive() = delete;
     Archive(const Archive&) = delete;
