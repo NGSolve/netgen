@@ -1931,14 +1931,19 @@ namespace netgen
 
       case QUAD8:
 	{
-	  shapes(0) = (1-xi(0))*(1-xi(1));
-	  shapes(1) =    xi(0) *(1-xi(1));
-	  shapes(2) =    xi(0) *   xi(1) ;
-	  shapes(3) = (1-xi(0))*   xi(1) ;
-          shapes(4) = 0.0;
-          shapes(5) = 0.0;
-          shapes(6) = 0.0;
-          shapes(7) = 0.0;
+          auto x = xi(0), y = xi(1);
+	  shapes(0) = (1-x)*(1-y);
+	  shapes(1) = x*(1-y);
+	  shapes(2) = x*y;
+	  shapes(3) = (1-x)*y;
+          shapes(4) = 4*(1-x)*x*(1-y);
+          shapes(5) = 4*(1-x)*x*y;
+          shapes(6) = 4*(1-y)*y*(1-x);
+          shapes(7) = 4*(1-y)*y*x;
+          shapes(0) -= shapes(4) - shapes(6);
+          shapes(1) -= shapes(4) - shapes(7);
+          shapes(2) -= shapes(5) - shapes(7);
+          shapes(3) -= shapes(5) - shapes(6);
           break;
         }
         
