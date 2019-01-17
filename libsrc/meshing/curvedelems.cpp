@@ -1888,7 +1888,6 @@ namespace netgen
 	}
 
       case QUAD:
-      case QUAD8:
 	{
 	  shapes(0) = (1-xi(0))*(1-xi(1));
 	  shapes(1) =    xi(0) *(1-xi(1));
@@ -1928,6 +1927,19 @@ namespace netgen
 
 	  break;
 	}
+
+      case QUAD8:
+	{
+	  shapes(0) = (1-xi(0))*(1-xi(1));
+	  shapes(1) =    xi(0) *(1-xi(1));
+	  shapes(2) =    xi(0) *   xi(1) ;
+	  shapes(3) = (1-xi(0))*   xi(1) ;
+          shapes(4) = 0.0;
+          shapes(5) = 0.0;
+          shapes(6) = 0.0;
+          shapes(7) = 0.0;
+          break;
+        }
         
       default:
 	throw NgException("CurvedElements::CalcShape 2d, element type not handled");
