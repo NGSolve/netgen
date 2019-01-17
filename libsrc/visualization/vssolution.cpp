@@ -1373,7 +1373,7 @@ namespace netgen
 
 
 
-        if ( el.GetType() == QUAD || el.GetType() == QUAD6 )
+        if ( el.GetType() == QUAD || el.GetType() == QUAD6 || el.GetType() == QUAD8 )
           {
             bool curved = curv.IsSurfaceElementCurved (sei);
 
@@ -3482,6 +3482,7 @@ namespace netgen
 
             case QUAD:
             case QUAD6:
+            case QUAD8:
               lami[0] = (1-lam1)*(1-lam2);
               lami[1] = lam1 * (1-lam2);
               lami[2] = lam1 * lam2;
@@ -3723,6 +3724,7 @@ namespace netgen
 
             case QUAD:
             case QUAD6:
+            case QUAD8:
               lami[0] = (1-lam1)*(1-lam2);
               lami[1] = lam1 * (1-lam2);
               lami[2] = lam1 * lam2;
