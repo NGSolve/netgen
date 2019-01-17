@@ -1708,6 +1708,7 @@ namespace netgen
       case TRIG : info.nv = 3; break;
       case QUAD : info.nv = 4; break;
       case TRIG6: info.nv = 6; break;
+      case QUAD8 : info.nv = 8; break;
       default:
 	cerr << "undef element in CalcSurfaceTrafo" << endl;
       }
