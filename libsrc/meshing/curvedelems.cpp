@@ -1888,6 +1888,7 @@ namespace netgen
 	}
 
       case QUAD:
+      case QUAD8:
 	{
 	  shapes(0) = (1-xi(0))*(1-xi(1));
 	  shapes(1) =    xi(0) *(1-xi(1));
@@ -2266,7 +2267,7 @@ namespace netgen
             }
           break;
         }
-      case QUAD:
+      case QUAD: case QUAD8:
         {
           if (info.order >= 2) return false; // not yet supported
           AutoDiff<2,T> lami[4] = { (1-x)*(1-y), x*(1-y), x*y, (1-x)*y };
@@ -3854,8 +3855,9 @@ namespace netgen
       case TRIG : info.nv = 3; break;
       case QUAD : info.nv = 4; break;
       case TRIG6: info.nv = 6; break;
+      case QUAD8 : info.nv = 8; break;
       default:
-	cerr << "undef element in CalcMultPointSurfaceTrao" << endl;
+	cerr << "undef element in CalcMultPointSurfaceTrafo" << endl;
       }
     info.ndof = info.nv;
 
