@@ -263,6 +263,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                           (*newel)[i] = py::extract<PointIndex>(vertices[i])();
                         newel->SetIndex(index);
                       }
+                    else if (py::len(vertices) == 20)
+                      {
+                        newel = new Element(HEX20);
+                        for (int i = 0; i < 20; i++)
+                          (*newel)[i] = py::extract<PointIndex>(vertices[i])();
+                        newel->SetIndex(index);
+                      }
                     else
                       throw NgException ("cannot create element");
                     return newel;
@@ -313,6 +320,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                        {
                          newel = new Element2d(TRIG6);
                          for(int i = 0; i<6; i++)
+                           (*newel)[i] = py::extract<PointIndex>(vertices[i])();
+                         newel->SetIndex(index);
+                       }
+                     else if (py::len(vertices) == 8)
+                       {
+                         newel = new Element2d(QUAD8);
+                         for(int i = 0; i<8; i++)
                            (*newel)[i] = py::extract<PointIndex>(vertices[i])();
                          newel->SetIndex(index);
                        }

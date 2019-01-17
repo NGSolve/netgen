@@ -43,10 +43,10 @@
 enum NG_ELEMENT_TYPE { 
   NG_PNT = 0,
   NG_SEGM = 1, NG_SEGM3 = 2,
-  NG_TRIG = 10, NG_QUAD=11, NG_TRIG6 = 12, NG_QUAD6 = 13,
+  NG_TRIG = 10, NG_QUAD=11, NG_TRIG6 = 12, NG_QUAD6 = 13, NG_QUAD8 = 14,
   NG_TET = 20, NG_TET10 = 21, 
   NG_PYRAMID = 22, NG_PRISM = 23, NG_PRISM12 = 24,
-  NG_HEX = 25
+  NG_HEX = 25, NG_HEX20 = 26
 };
 
 typedef double NG_POINT[3];  // coordinates
