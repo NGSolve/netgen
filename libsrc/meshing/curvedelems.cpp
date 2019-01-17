@@ -2299,10 +2299,10 @@ namespace netgen
         }
       case QUAD8:
         {
-          AutoDiff<2,T> lami[4] = { (1-x)*(1-y), x*(1-y), x*y, (1-x)*y };
+          // AutoDiff<2,T> lami[4] = { (1-x)*(1-y), x*(1-y), x*y, (1-x)*y };
 
           auto x = xi(0), y = xi(1);
-          AutoDiff<2,T> lami =
+          AutoDiff<2,T> lami[8] =
             { (1-x)*(1-y),
               x*(1-y),
               x*y,
