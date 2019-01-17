@@ -1943,7 +1943,7 @@ namespace netgen
           shapes(0) -= 0.5*(shapes(4)+shapes(6));
           shapes(1) -= 0.5*(shapes(4)+shapes(7));
           shapes(2) -= 0.5*(shapes(5)+shapes(7));
-          shapes(3) -= 0.5*(shapes(5)-shapes(6));
+          shapes(3) -= 0.5*(shapes(5)+shapes(6));
           break;
         }
         
@@ -2285,7 +2285,7 @@ namespace netgen
             }
           break;
         }
-      case QUAD: case QUAD8:
+      case QUAD: 
         {
           if (info.order >= 2) return false; // not yet supported
           AutoDiff<2,T> lami[4] = { (1-x)*(1-y), x*(1-y), x*y, (1-x)*y };
@@ -2297,6 +2297,35 @@ namespace netgen
             }
           break;
         }
+      case QUAD8:
+        {
+          AutoDiff<2,T> lami[4] = { (1-x)*(1-y), x*(1-y), x*y, (1-x)*y };
+
+          auto x = xi(0), y = xi(1);
+          AutoDiff<2,T> lami =
+            { (1-x)*(1-y),
+              x*(1-y),
+              x*y,
+              (1-x)*y,
+              4*(1-x)*x*(1-y),
+              4*(1-x)*x*y,
+              4*(1-y)*y*(1-x), 
+              4*(1-y)*y*x };
+          
+          lami[0] -= 0.5*(lami[4]+lami[6]);
+          lami[1] -= 0.5*(lami[4]+lami[7]);
+          lami[2] -= 0.5*(lami[5]+lami[7]);
+          lami[3] -= 0.5*(lami[5]+lami[6]);
+          
+          for (int j = 0; j < 8; j++)
+            {
+              Point<3> p = mesh[el[j]];
+              for (int k = 0; k < DIM_SPACE; k++)
+                mapped_x[k] += p(k) * lami[j];
+            }
+          break;
+        }
+        
       default:
         return false;
       }
