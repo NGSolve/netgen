@@ -1940,10 +1940,10 @@ namespace netgen
           shapes(5) = 4*(1-x)*x*y;
           shapes(6) = 4*(1-y)*y*(1-x);
           shapes(7) = 4*(1-y)*y*x;
-          shapes(0) -= shapes(4) - shapes(6);
-          shapes(1) -= shapes(4) - shapes(7);
-          shapes(2) -= shapes(5) - shapes(7);
-          shapes(3) -= shapes(5) - shapes(6);
+          shapes(0) -= 0.5*(shapes(4)+shapes(6));
+          shapes(1) -= 0.5*(shapes(4)+shapes(7));
+          shapes(2) -= 0.5*(shapes(5)+shapes(7));
+          shapes(3) -= 0.5*(shapes(5)-shapes(6));
           break;
         }
         
