@@ -2706,6 +2706,7 @@ namespace netgen
         << " grading = " <<  grading << endl
         << " delaunay = " <<  delaunay << endl
         << " maxh = " <<  maxh << endl
+        << " minh = " <<  minh << endl
         << " meshsizefilename = " <<  meshsizefilename << endl
         << " startinsurface = " <<  startinsurface << endl
         << " checkoverlap = " <<  checkoverlap << endl

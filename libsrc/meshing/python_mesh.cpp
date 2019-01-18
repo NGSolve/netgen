@@ -846,12 +846,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   typedef MeshingParameters MP;
   py::class_<MP> (m, "MeshingParameters")
     .def(py::init<>())
-    .def(py::init([](double maxh, bool quad_dominated, int optsteps2d, int optsteps3d,
+    .def(py::init([](double maxh, double minh, bool quad_dominated, int optsteps2d, int optsteps3d,
                      MESHING_STEP perfstepsend, int only3D_domain, const string & meshsizefilename,
                      double grading, double curvaturesafety, double segmentsperedge)
                   {
                     MP * instance = new MeshingParameters;
                     instance->maxh = maxh;
+                    instance->minh = minh;
                     instance->quad = int(quad_dominated);
                     instance->optsteps2d = optsteps2d;
                     instance->optsteps3d = optsteps3d;			     
@@ -865,6 +866,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                     return instance;
                   }),
          py::arg("maxh")=1000,
+         py::arg("minh")=0,
          py::arg("quad_dominated")=false,
          py::arg("optsteps2d") = 3,
 	 py::arg("optsteps3d") = 3,
@@ -880,6 +882,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def_property("maxh", 
                   FunctionPointer ([](const MP & mp ) { return mp.maxh; }),
                   FunctionPointer ([](MP & mp, double maxh) { return mp.maxh = maxh; }))
+    .def_property("minh",
+                  FunctionPointer ([](const MP & mp ) { return mp.minh; }),
+                  FunctionPointer ([](MP & mp, double minh) { return mp.minh = minh; }))
     .def("RestrictH", FunctionPointer
          ([](MP & mp, double x, double y, double z, double h)
           {
