@@ -1,6 +1,6 @@
 if(APPLE)
   # use system tcl/tk
-  if(${PYTHON_VERSION_STRING} STREQUAL "3.7")
+  if((${PYTHON_VERSION_STRING} VERSION_EQUAL "3.7") OR (${PYTHON_VERSION_STRING} VERSION_GREATER "3.7"))
     # fetch tcl/tk sources to match the one used in Python 3.7
     ExternalProject_Add(project_tcl
       URL "https://prdownloads.sourceforge.net/tcl/tcl8.6.8-src.tar.gz"
