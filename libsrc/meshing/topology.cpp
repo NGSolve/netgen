@@ -581,7 +581,9 @@ namespace netgen
 
         // accumulate number of edges
         int ned = edge2vert.Size();
-        for (size_t v = 0; v < mesh->GetNV(); v++)
+
+        // for (size_t v = 0; v < mesh->GetNV(); v++)
+        for (size_t v : cnt.Range())
           {
             auto hv = cnt[v];
             cnt[v] = ned;
@@ -755,7 +757,8 @@ namespace netgen
         // accumulate number of faces
         int nfa = oldnfa;
         // for (auto v : Range(mesh->GetNV())) // Points().Range())
-        for (size_t v = 0; v < mesh->GetNV(); v++)          
+        // for (size_t v = 0; v < mesh->GetNV(); v++)
+        for (auto v : cnt.Range())
           {
             auto hv = cnt[v];
             cnt[v] = nfa;
