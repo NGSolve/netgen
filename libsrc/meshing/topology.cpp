@@ -543,7 +543,7 @@ namespace netgen
         cnt = 0;
 
         ParallelForRange
-          (tm, mesh->Points().Size(),
+          (tm, mesh->GetNV(), // Points().Size(),
            [&] (size_t begin, size_t end)
            {
              INDEX_CLOSED_HASHTABLE<int> v2eht(2*max_edge_on_vertex+10); 
@@ -581,7 +581,7 @@ namespace netgen
 
         // accumulate number of edges
         int ned = edge2vert.Size();
-        for (auto v : mesh->Points().Range())
+        for (size_t v = 0; v < mesh->GetNV(); v++)
           {
             auto hv = cnt[v];
             cnt[v] = ned;
@@ -595,7 +595,7 @@ namespace netgen
 	// for (PointIndex v = PointIndex::BASE; v < nv+PointIndex::BASE; v++)
 
         ParallelForRange
-          (tm, mesh->Points().Size(),
+          (tm, mesh->GetNV(), // Points().Size(),
            [&] (size_t begin, size_t end)
            {
              INDEX_CLOSED_HASHTABLE<int> v2eht(2*max_edge_on_vertex+10);
@@ -719,7 +719,7 @@ namespace netgen
         // for (auto v : mesh.Points().Range())
         NgProfiler::StartTimer (timer2b1);
         ParallelForRange
-          (tm, mesh->Points().Size(),
+          (tm, mesh->GetNV(), // Points().Size(),
             [&] (size_t begin, size_t end)
             {
               INDEX_3_CLOSED_HASHTABLE<int> vert2face(2*max_face_on_vertex+10); 
@@ -754,7 +754,8 @@ namespace netgen
         
         // accumulate number of faces
         int nfa = oldnfa;
-        for (auto v : mesh->Points().Range())
+        // for (auto v : Range(mesh->GetNV())) // Points().Range())
+        for (size_t v = 0; v < mesh->GetNV(); v++)          
           {
             auto hv = cnt[v];
             cnt[v] = nfa;
@@ -765,7 +766,7 @@ namespace netgen
         // for (auto v : mesh.Points().Range())
 
         ParallelForRange
-          (tm, mesh->Points().Size(),
+          (tm, mesh->GetNV(), // Points().Size(),
             [&] (size_t begin, size_t end)
             {
               INDEX_3_CLOSED_HASHTABLE<int> vert2face(2*max_face_on_vertex+10); 

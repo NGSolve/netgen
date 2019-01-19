@@ -1028,6 +1028,7 @@ namespace netgen
       case 6: typ = PRISM; break;
       case 8: typ = HEX; break;
       case 10: typ = TET10; break;
+      case 20: typ = HEX20; break;
       default: cerr << "Element::Element: unknown element with " << np << " points" << endl;
       }
     orderx = ordery = orderz = 1;
@@ -1108,6 +1109,7 @@ namespace netgen
       case 6: typ = PRISM; break;
       case 8: typ = HEX; break;
       case 10: typ = TET10; break;
+      case 20: typ = HEX20; break;
         // 
       default: break;
         cerr << "Element::SetNP unknown element with " << np << " points" << endl;
@@ -1127,6 +1129,7 @@ namespace netgen
       case HEX: np = 8; break;
       case TET10: np = 10; break;
       case PRISM12: np = 12; break;
+      case HEX20: np = 20; break;
 
       default: break;
         cerr << "Element::SetType unknown type  " << int(typ) << endl;

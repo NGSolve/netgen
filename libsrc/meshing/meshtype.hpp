@@ -647,7 +647,7 @@ namespace netgen
     ///
     ELEMENT_TYPE typ;
     /// number of points (4..tet, 5..pyramid, 6..prism, 8..hex, 10..quad tet, 12..quad prism)
-    int np:5;
+    int np:6;
     ///
     class flagstruct { 
     public:
@@ -708,7 +708,7 @@ namespace netgen
     ///
     uint8_t GetNV() const
     {
-      __assume(typ >= TET && typ <= HEX);        
+      __assume(typ >= TET && typ <= HEX20);        
       switch (typ)
 	{
         case TET: 
@@ -720,6 +720,7 @@ namespace netgen
 	case PYRAMID:
 	  return 5;
 	case HEX:
+	case HEX20:
 	  return 8;
         default: // not a 3D element
 #ifdef DEBUG
@@ -797,7 +798,8 @@ namespace netgen
 	case PYRAMID: return 5;
 	case PRISM: 
 	case PRISM12: return 5;
-        case HEX: return 6;
+        case HEX: case HEX20:
+          return 6;
 	default:
 #ifdef DEBUG
 	  PrintSysError ("element3d::GetNFaces not implemented for typ", typ)

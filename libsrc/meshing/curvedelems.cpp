@@ -2885,6 +2885,46 @@ namespace netgen
 
           
 	  break;
+        }
+        
+      case HEX20:
+	{
+	  shapes = 0.0;
+	  T x = xi(0);
+	  T y = xi(1);
+	  T z = xi(2);
+	  
+	  shapes[0] = (1-x)*(1-y)*(1-z);
+	  shapes[1] =    x *(1-y)*(1-z);
+	  shapes[2] =    x *   y *(1-z);
+	  shapes[3] = (1-x)*   y *(1-z);
+	  shapes[4] = (1-x)*(1-y)*(z);
+	  shapes[5] =    x *(1-y)*(z);
+	  shapes[6] =    x *   y *(z);
+	  shapes[7] = (1-x)*   y *(z);
+
+          T sigma[8]={(1-x)+(1-y)+(1-z),x+(1-y)+(1-z),x+y+(1-z),(1-x)+y+(1-z),
+                      (1-x)+(1-y)+z,x+(1-y)+z,x+y+z,(1-x)+y+z}; 
+
+          static const int e[12][2] =
+            {
+              { 0, 1 }, { 2, 3 }, { 3, 0 }, { 1, 2 },
+              { 4, 5 }, { 6, 7 }, { 7, 4 }, { 5, 6 },
+              { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 },
+            };
+          
+          for (int i = 0; i < 12; i++)
+            {
+              T lame = shapes[e[i][0]]+shapes[e[i][1]];
+              T xi = sigma[e[i][1]]-sigma[e[i][0]];
+              shapes[8+i] = (1-xi*xi)*lame;
+            }
+          for (int i = 0; i < 12; i++)
+            {
+              shapes[e[i][0]] -= 0.5 * shapes[8+i];
+              shapes[e[i][1]] -= 0.5 * shapes[8+i];
+            }
+          break;
 	}
 
       default:
@@ -3489,12 +3529,49 @@ namespace netgen
 	   *testout << "quad, num dshape = " << endl << dshapes << endl;
 	   */
 	  break;
-
-
-          
-	  break;
 	}
-
+      case HEX20:
+        {
+          AutoDiff<3,T> x(xi(0), 0);
+          AutoDiff<3,T> y(xi(1), 1);
+          AutoDiff<3,T> z(xi(2), 2);
+          AutoDiff<3,T> ad[20];
+          
+          ad[0] = (1-x)*(1-y)*(1-z);
+	  ad[1] =    x *(1-y)*(1-z);
+	  ad[2] =    x *   y *(1-z);
+	  ad[3] = (1-x)*   y *(1-z);
+	  ad[4] = (1-x)*(1-y)*(z);
+	  ad[5] =    x *(1-y)*(z);
+	  ad[6] =    x *   y *(z);
+	  ad[7] = (1-x)*   y *(z);
+          
+          AutoDiff<3,T> sigma[8]={(1-x)+(1-y)+(1-z),x+(1-y)+(1-z),x+y+(1-z),(1-x)+y+(1-z),
+                                  (1-x)+(1-y)+z,x+(1-y)+z,x+y+z,(1-x)+y+z}; 
+          
+          static const int e[12][2] =
+            {
+              { 0, 1 }, { 2, 3 }, { 3, 0 }, { 1, 2 },
+              { 4, 5 }, { 6, 7 }, { 7, 4 }, { 5, 6 },
+              { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 },
+            };
+          
+          for (int i = 0; i < 12; i++)
+            {
+              auto lame = ad[e[i][0]]+ad[e[i][1]];
+              auto xi = sigma[e[i][1]]-sigma[e[i][0]];
+              ad[8+i] = (1-xi*xi)*lame;
+            }
+          for (int i = 0; i < 12; i++)
+            {
+              ad[e[i][0]] -= 0.5 * ad[8+i];
+              ad[e[i][1]] -= 0.5 * ad[8+i];
+            }
+          for (int i = 0; i < 20; i++)
+            for (int j = 0; j < 3; j++)
+              dshapes(i,j) = ad[i].DValue(j);
+          break;
+        }
       default:
 	throw NgException("CurvedElements::CalcDShape 3d, element type not handled");
       }

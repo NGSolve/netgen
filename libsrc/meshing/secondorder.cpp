@@ -223,6 +223,22 @@ namespace netgen
 	    { 3, 4, 10 },
 	    { 4, 5, 11 },
 	  };
+	static int betw_hex[12][3] =
+	  {
+            { 0, 1, 8 },
+            { 2, 3, 9 },
+            { 3, 0, 10 },
+            { 1, 2, 11 },
+            { 4, 5, 12 },
+            { 6, 7, 13 },
+            { 7, 4, 14 },
+            { 5, 6, 15 },
+            { 0, 4, 16 },
+            { 1, 5, 17 },
+            { 2, 6, 18 },
+            { 3, 7, 19 },
+          };
+        
 	int (*betw)[3] = NULL;
 
 	switch (el.GetType())
@@ -241,6 +257,14 @@ namespace netgen
 	      betw = betw_prism;
 	      newel.SetType (PRISM12);
 	      onp = 6;
+	      break;
+	    }
+          case HEX:
+          case HEX20:
+	    {
+	      betw = betw_hex;
+	      newel.SetType (HEX20);
+	      onp = 8;
 	      break;
 	    }
 	  default:
