@@ -4991,7 +4991,12 @@ namespace netgen
         //(*testout) << "velement " << velement << endl;
 
         if (!GetNE() && GetNSE() )
-          return velement;
+          {
+            lami[0] = vlam[0];
+            lami[1] = vlam[1];
+            lami[2] = vlam[2];
+            return velement;
+          }
         
         Array<int> faces;
         topology.GetElementFaces(velement,faces);
