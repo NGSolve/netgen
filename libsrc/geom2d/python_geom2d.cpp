@@ -15,6 +15,22 @@ namespace netgen
 
 DLL_HEADER void ExportGeom2d(py::module &m) 
 {
+  py::class_<SplineSegExt, shared_ptr<SplineSegExt>>
+    (m, "Spline", "Spline of a SplineGeometry object")
+    .def_property("leftdom", [] (SplineSegExt& self) { return self.leftdom; },
+                  [](SplineSegExt& self, int dom) { self.leftdom = dom; })
+    .def_property("rightdom", [] (SplineSegExt& self) { return self.rightdom; },
+                  [](SplineSegExt& self, int dom) { self.rightdom = dom; })
+    .def_property_readonly("bc", [] (SplineSegExt& self) { return self.bc; })
+    .def("GetNormal", [](SplineSegExt& self, double t)
+                      {
+                        auto tang = self.GetTangent(t).Normalize();
+                        return Vec<2>(tang[1], -tang[0]);
+                      })
+    .def("StartPoint", [](SplineSegExt& self) { return Point<2>(self.StartPI()); })
+    .def("EndPoint", [](SplineSegExt& self) { return Point<2>(self.EndPI()); })
+    ;
+    
   py::class_<SplineGeometry2d, NetgenGeometry, shared_ptr<SplineGeometry2d>>
     (m, "SplineGeometry",
      "a 2d boundary representation geometry model by lines and splines",
@@ -121,38 +137,21 @@ DLL_HEADER void ExportGeom2d(py::module &m)
 		  seg->copyfrom = -1;
 		  self.AppendSegment(seg);
                   }), py::arg("point_indices"), py::arg("leftdomain") = 1, py::arg("rightdomain") = py::int_(0))
-	//.def("AppendSegment", FunctionPointer([](SplineGeometry2d &self, int point_index1, int point_index2)//, int leftdomain, int rightdomain)
-	//  {
-	//	  LineSeg<2> * l = new LineSeg<2>(self.GetPoint(point_index1), self.GetPoint(point_index2));
-	//	  SplineSegExt * seg = new SplineSegExt(*l);
-	//	  seg->leftdom = 1;// leftdomain;
-	//	  seg->rightdom = 0;// rightdomain;
-	//	  seg->hmax = 1e99;
-	//	  seg->reffak = 1;
-	//	  seg->copyfrom = -1;
-
-	//	  self.AppendSegment(seg);
-	//  }))//, (py::arg("self"), py::arg("point_index1"), py::arg("point_index2"), py::arg("leftdomain") = 1, py::arg("rightdomain") = 0) )
-	//.def("AppendSegment", FunctionPointer([](SplineGeometry2d &self, int point_index1, int point_index2, int point_index3)//, int leftdomain, int rightdomain)
-	//  {
-	//	  SplineSeg3<2> * seg3 = new SplineSeg3<2>(self.GetPoint(point_index1), self.GetPoint(point_index2), self.GetPoint(point_index3));
-	//	  SplineSegExt * seg = new SplineSegExt(*seg3);
-	//	  seg->leftdom = 1;// leftdomain;
-	//	  seg->rightdom = 0;// rightdomain;
-	//	  seg->hmax = 1e99;
-	//	  seg->reffak = 1;
-	//	  seg->copyfrom = -1;
-	//	  self.AppendSegment(seg);
-	//  }))//, (py::arg("self"), py::arg("point_index1"), py::arg("point_index2"), py::arg("point_index3"), py::arg("leftdomain") = 1, py::arg("rightdomain") = 0 ) )
-
 
     .def("SetMaterial", &SplineGeometry2d::SetMaterial)
     .def("SetDomainMaxH", &SplineGeometry2d::SetDomainMaxh)
 
+    .def("GetBCName", [](SplineGeometry2d& self, size_t index) { return self.GetBCName(index); })
 
+    .def("GetNDomains", [](SplineGeometry2d& self) { return self.GetNDomains(); })
 
+    .def("GetNSplines", [](SplineGeometry2d& self) { return self.splines.Size(); })
+    .def("GetSpline", [](SplineGeometry2d& self, size_t index)
+                      { return shared_ptr<SplineSegExt>(&self.GetSpline(index), NOOP_Deleter); },
+         py::return_value_policy::reference_internal)
+    .def("GetNPoints", [](SplineGeometry2d& self) { return self.GetNP(); })
+    .def("GetPoint", [](SplineGeometry2d& self, size_t index) { return Point<2>(self.GetPoint(index)); })
 
-    
 	.def("PlotData", FunctionPointer([](SplineGeometry2d &self)
 	  {
 		  Box<2> box(self.GetBoundingBox());

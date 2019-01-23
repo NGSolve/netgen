@@ -80,6 +80,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def(py::self-py::self)
     .def(py::self+Vec<2>())
     .def(py::self-Vec<2>())
+    .def("__getitem__", [](Point<2>& self, int index) { return self[index]; })
     ;
 
   py::class_<Point<3>> (m, "Point3d")
@@ -88,6 +89,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def(py::self-py::self)
     .def(py::self+Vec<3>())
     .def(py::self-Vec<3>())
+    .def("__getitem__", [](Point<2>& self, int index) { return self[index]; })
     ;
 
   m.def ("Pnt", FunctionPointer

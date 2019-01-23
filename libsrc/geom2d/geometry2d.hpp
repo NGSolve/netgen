@@ -175,6 +175,7 @@ namespace netgen
     void CopyEdgeMesh (int from, int to, Mesh & mesh2d, Point3dTree & searchtree);
 
 
+    size_t GetNDomains() const { return materials.Size(); }
     void GetMaterial (int  domnr, char* & material );
     void SetMaterial (int  domnr, const string & material);
 
