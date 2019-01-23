@@ -39,11 +39,107 @@ def MakeCircle (geo, c, r, **args):
         geo.Append( ["spline3", pts[p1], pts[p2], pts[p3]], **args)
 
     
+
+def CreatePML(geo, pml_size, tol=1e-12):
+    """Create a pml layer around the geometry. This function works only on convex geometries and
+the highest existing domain number must be named by using the function geo.SetMaterial(domnr, name).
+Points in the geometry are assumed to be the same if (pt1 - pt2).Norm() < tol.
+Returned is a dict with information to create the pml layer:
+  normals: A dict from the names of the linear pml domains to the normal vectors pointing inside the pml."""
+
+    def Start(spline):
+        if spline.rightdom == 0:
+            return spline.StartPoint()
+        return spline.EndPoint()
+    def End(spline):
+        if spline.rightdom == 0:
+            return spline.EndPoint()
+        return spline.StartPoint()
+
+    splines = []
+    for i in range(geo.GetNSplines()):
+        splines.append(geo.GetSpline(i))
+    border = []
+    is_closed = False
+    current_endpoint = None
+    while not is_closed:
+        for spline in splines:
+            if spline.leftdom == 0 or spline.rightdom == 0:
+                if current_endpoint is not None:
+                    if (Start(spline)-current_endpoint).Norm() < tol:
+                        border.append(spline)
+                        current_endpoint = End(spline)
+                        if (current_endpoint - startpoint).Norm() < tol:
+                            is_closed = True
+                        break
+                else:
+                    startpoint = Start(spline)
+                    current_endpoint = End(spline)
+                    border.append(spline)
+                    break
+        else:
+            raise Exception("Couldn't find closed spline around domain")
+    endpointindex_map = []
+    for spline in border:
+        pnt = End(spline)
+        for i in range(geo.GetNPoints()):
+            if (pnt - geo.GetPoint(i)).Norm() < tol:
+                endpointindex_map.append(i)
+                break
+        else:
+            raise Exception("Couldn't find endpoint of spline in geometry")
+    start_ndoms = ndoms = geo.GetNDomains() + 1
+    new_spline_domains = []
+    normals = {}
+    for i, spline in enumerate(border):
+        if i == 0:
+            global_start = Start(spline) + pml_size * spline.GetNormal(0)
+            global_start_pnt = current_start = geo.AppendPoint(global_start[0], global_start[1])
+        next_spline = border[(i+1)%len(border)]
+        new_end =  End(spline) + pml_size * spline.GetNormal(1)
+        spline_name = geo.GetBCName(spline.bc)
+        if (new_end - global_start).Norm() < tol:
+            new_spline_domains.append(ndoms)
+            geo.Append(["line", current_start, global_start_pnt], bc="outer_" + spline_name, leftdomain = ndoms)
+            geo.Append(["line", global_start_pnt, endpointindex_map[i]], leftdomain=ndoms, rightdomain=start_ndoms)
+            geo.SetMaterial(ndoms, "pml_" + spline_name)
+            normals["pml_" + spline_name] = spline.GetNormal(0)
+            ndoms += 1
+            break
+        end = geo.AppendPoint(new_end[0], new_end[1])
+        new_spline_domains.append(ndoms)
+        geo.Append(["line", current_start, end], bc="outer_" + spline_name, leftdomain = ndoms)
+        geo.Append(["line", end, endpointindex_map[i]], leftdomain=ndoms, rightdomain=ndoms+1)
+        geo.SetMaterial(ndoms, "pml_" + spline_name)
+        normals["pml_" + spline_name] = spline.GetNormal(0)
+        ndoms += 1
+        new_start = Start(next_spline) + pml_size * next_spline.GetNormal(0)
+        if (new_start - global_start).Norm() < tol:
+            geo.Append(["line", end, global_start_pnt], bc="outer", leftdomain = ndoms)
+            geo.Append(["line", global_start_pnt, endpointindex_map[i]], leftdomain=ndoms, rightdomain=start_ndoms)
+            geo.SetMaterial(ndoms, "pml_corner")
+            ndoms += 1
+            break
+        if (new_end - new_start).Norm() < tol:
+            current_start = end
+        else:
+            current_start = geo.AppendPoint(new_start[0], new_start[1])
+            geo.Append(["line", end, current_start], bc="outer", leftdomain = ndoms)
+            geo.Append(["line", current_start, endpointindex_map[i]], leftdomain=ndoms, rightdomain=ndoms+1)
+            geo.SetMaterial(ndoms, "pml_corner")
+            ndoms += 1
+    for spline, domnr in zip(border, new_spline_domains):
+        if spline.leftdom == 0:
+            spline.leftdom = domnr
+        else:
+            spline.rightdom = domnr
+    return {"normals" : normals}
+
 SplineGeometry.AddCircle = lambda geo, c, r, **args : MakeCircle(geo, c, r, **args)
 SplineGeometry.AddRectangle = lambda geo, p1, p2, **args : MakeRectangle(geo, p1, p2, **args)
 SplineGeometry.AddSegment = lambda *args, **kwargs : SplineGeometry.Append(*args, **kwargs)
 SplineGeometry.AddPoint = lambda *args, **kwargs : SplineGeometry.AppendPoint(*args, **kwargs)
-
+SplineGeometry.CreatePML = CreatePML
 
 __all__ = ['SplineGeometry', 'unit_square']
 
