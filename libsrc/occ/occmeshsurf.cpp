@@ -676,10 +676,11 @@ namespace netgen
 	double u = gi1.u+secpoint*(gi2.u-gi1.u);
 	double v = gi1.v+secpoint*(gi2.v-gi1.v);
 
-	if (!geometry.FastProject (surfi, hnewp, u, v) || Dist(hnewp, p1) > Dist(p1,p2))
+        auto savept = hnewp;
+	if (!geometry.FastProject (surfi, hnewp, u, v) || Dist(hnewp, savept) > Dist(p1,p2))
 	  {
             //  cout << "Fast projection to surface fails! Using OCC projection" << endl;
-            hnewp = p1+secpoint*(p2-p1);
+            hnewp = savept;
 	    geometry.Project (surfi, hnewp);
 	  }
 
