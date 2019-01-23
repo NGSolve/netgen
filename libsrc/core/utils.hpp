@@ -2,6 +2,8 @@
 #define NETGEN_CORE_UTILS_HPP
 
 #include <chrono>
+#include <map>
+#include <ostream>
 #include <sstream>
 #include <string>
 
@@ -56,7 +58,13 @@ namespace ngcore
       return ss.str();
   }
 
-
+  template<typename T1, typename T2>
+  std::ostream& operator << (std::ostream& ost, const std::map<T1,T2>& map)
+  {
+    for(auto& val : map)
+      ost << "\n" << val.first << ": " << val.second;
+    return ost;
+  }
 } // namespace ngcore
 
 #endif // NETGEN_CORE_UTILS_HPP

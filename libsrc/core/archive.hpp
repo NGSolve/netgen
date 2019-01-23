@@ -153,6 +153,9 @@ namespace ngcore
     const VersionInfo& GetVersion(const std::string& library)
     { return version_map[library]; }
 
+    // only used for PyArchive
+    virtual void NeedsVersion(const std::string& library, const std::string& version) {}
+
     // Pure virtual functions that have to be implemented by In-/OutArchive
     virtual Archive & operator & (double & d) = 0;
     virtual Archive & operator & (int & i) = 0;
@@ -900,6 +903,7 @@ namespace ngcore
   private:
     pybind11::list lst;
     size_t index = 0;
+    std::map<std::string, VersionInfo> version_needed;
   protected:
     using ARCHIVE::stream;
     using ARCHIVE::version_map;
@@ -915,9 +919,26 @@ namespace ngcore
         {
           stream = std::make_shared<std::stringstream>
             (pybind11::cast<pybind11::bytes>(lst[pybind11::len(lst)-1]));
-          *this & version_map;
+          *this & version_needed;
+          logger->debug("versions needed for unpickling = {}", version_needed);
+          for(auto& libversion : version_needed)
+            if(libversion.second > GetLibraryVersion(libversion.first))
+              throw Exception("Error in unpickling data:\nLibrary " + libversion.first +
+                              " must be at least " + libversion.second.to_string());
           stream = std::make_shared<std::stringstream>
             (pybind11::cast<pybind11::bytes>(lst[pybind11::len(lst)-2]));
+          *this & version_map;
+          stream = std::make_shared<std::stringstream>
+            (pybind11::cast<pybind11::bytes>(lst[pybind11::len(lst)-3]));
+        }
+    }
+
+    void NeedsVersion(const std::string& library, const std::string& version) override
+    {
+      if(Output())
+        {
+          logger->debug("Need version {} of library {}.", version, library);
+          version_needed[library] = version_needed[library] > version ? version_needed[library] : version;
         }
     }
 
@@ -936,6 +957,12 @@ namespace ngcore
       lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
       stream = std::make_shared<std::stringstream>();
       *this & GetLibraryVersions();
+      FlushBuffer();
+      lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
+      stream = std::make_shared<std::stringstream>();
+      logger->debug("Writeout version needed = {}", version_needed);
+      *this & version_needed;
+      FlushBuffer();
       lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
       return lst;
     }
@@ -949,17 +976,17 @@ namespace ngcore
                         PyArchive<T_ARCHIVE_OUT> ar;
                         ar & self;
                         auto output = pybind11::make_tuple(ar.WriteOut());
-                        NETGEN_DEBUG_LOG(GetLogger("Archive"), "pickling output for object of type " +
-                                         Demangle(typeid(T).name()) + " = " +
-                                         std::string(pybind11::str(output)));
+                        GetLogger("Archive")->trace("Pickling output for object of type {} = {}",
+                                                    Demangle(typeid(T).name()),
+                                                    std::string(pybind11::str(output)));
                         return output;
                       },
                       [](pybind11::tuple state)
                       {
                         T* val = nullptr;
-                        NETGEN_DEBUG_LOG(GetLogger("Archive"), "State for unpickling of object of type " +
-                                         Demangle(typeid(T).name()) + " = " +
-                                         std::string(pybind11::str(state[0])));
+                        GetLogger("Archive")->trace("State for unpickling of object of type {} = {}",
+                                                    Demangle(typeid(T).name()),
+                                                    std::string(pybind11::str(state[0])));
                         PyArchive<T_ARCHIVE_IN> ar(state[0]);
                         ar & val;
                         return val;
