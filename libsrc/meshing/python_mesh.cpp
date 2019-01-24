@@ -113,6 +113,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def(-py::self)
     .def(double()*py::self)
     .def("Norm", &Vec<2>::Length)
+    .def("__getitem__", [](Vec<2>& vec, int index) { return vec[index]; })
+    .def("__len__", [](Vec<2>& /*unused*/) { return 2; })
     ;
 
   py::class_<Vec<3>> (m, "Vec3d")
@@ -123,6 +125,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def(-py::self)
     .def(double()*py::self)
     .def("Norm", &Vec<3>::Length)
+    .def("__getitem__", [](Vec<3>& vec, int index) { return vec[index]; })
+    .def("__len__", [](Vec<3>& /*unused*/) { return 3; })
     ;
 
   m.def ("Vec", FunctionPointer
