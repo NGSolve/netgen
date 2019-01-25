@@ -154,7 +154,7 @@ namespace ngcore
     { return version_map[library]; }
 
     // only used for PyArchive
-    virtual void NeedsVersion(const std::string& library, const std::string& version) {}
+    virtual void NeedsVersion(const std::string& /*unused*/, const std::string& /*unused*/) {}
 
     // Pure virtual functions that have to be implemented by In-/OutArchive
     virtual Archive & operator & (double & d) = 0;
