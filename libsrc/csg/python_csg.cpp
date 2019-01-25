@@ -477,7 +477,7 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
                tlonum = i;
            if (tlonum == -1) throw NgException("not a top-level-object");
            if (!surfaces) surfaces = sol;
-           auto singface = new SingularFace(tlonum, surfaces->GetSolid(), factor);
+           auto singface = new SingularFace(tlonum+1, surfaces->GetSolid(), factor);
            self.singfaces.Append(singface);
          }, py::arg("solid"), py::arg("surfaces")=nullptr, py::arg("factor")=0.25)
     .def("SingularEdge", [] (CSGeometry & self, shared_ptr<SPSolid> s1,shared_ptr<SPSolid> s2, double factor)
