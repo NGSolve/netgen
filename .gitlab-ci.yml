@@ -100,6 +100,7 @@ test_guidelines:
   script:
     - docker run -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_guidelines.sh
   when: always
+  allow_failure: true
 
 # check if it compiles without spdlog
 test_noSpdlog:
