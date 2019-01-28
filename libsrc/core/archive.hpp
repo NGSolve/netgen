@@ -209,6 +209,19 @@ namespace ngcore
       return (*this);
     }
 
+    // archive implementation for enums
+    template<typename T>
+    auto operator & (T& val) -> typename std::enable_if<std::is_enum<T>::value, Archive&>::type
+    {
+      int enumval;
+      if(Output())
+        enumval = int(val);
+      *this & enumval;
+      if(Input())
+        val = T(enumval);
+      return *this;
+    }
+
     // vector<bool> has special implementation (like a bitarray) therefore
     // it needs a special overload (this could probably be more efficient, but we
     // don't use it that often anyway)
