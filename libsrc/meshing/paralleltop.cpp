@@ -213,8 +213,9 @@ namespace netgen
     // cout << "UpdateCoarseGrid" << endl;
     // if (is_updated) return;
 
-    int id = MyMPI_GetId(mesh.GetCommunicator());
-    int ntasks = MyMPI_GetNTasks(mesh.GetCommunicator());
+    MPI_Comm comm = mesh.GetCommunicator();
+    int id = MyMPI_GetId(comm);
+    int ntasks = MyMPI_GetNTasks(comm);
 
     cout << "Update CG, this = " << this << "   , mesh: " << &mesh << endl;
     
@@ -234,14 +235,14 @@ namespace netgen
     
     // MPI_Barrier (MPI_COMM_WORLD);
 
-    MPI_Group MPI_GROUP_WORLD;
+    MPI_Group MPI_GROUP_comm;
     MPI_Group MPI_LocalGroup;
     MPI_Comm MPI_LocalComm;
 
     int process_ranks[] = { 0 };
-    MPI_Comm_group (MPI_COMM_WORLD, &MPI_GROUP_WORLD);
-    MPI_Group_excl (MPI_GROUP_WORLD, 1, process_ranks, &MPI_LocalGroup);
-    MPI_Comm_create (MPI_COMM_WORLD, MPI_LocalGroup, &MPI_LocalComm);
+    MPI_Comm_group (comm, &MPI_GROUP_comm);
+    MPI_Group_excl (MPI_GROUP_comm, 1, process_ranks, &MPI_LocalGroup);
+    MPI_Comm_create (comm, MPI_LocalGroup, &MPI_LocalComm);
 
     if (id == 0) return;
 

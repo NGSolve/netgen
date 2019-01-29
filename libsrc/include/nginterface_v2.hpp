@@ -249,29 +249,28 @@ namespace netgen
   {
   private:
     shared_ptr<Mesh> mesh;
-#ifdef PARALLEL
-    MPI_Comm comm;
-#endif
     
   public:
     // Ngx_Mesh () { ; }
     // Ngx_Mesh(class Mesh * amesh) : mesh(amesh) { ; }
-    Ngx_Mesh(shared_ptr<Mesh> amesh = NULL);
-    void LoadMesh (const string & filename);
 
-    void LoadMesh (istream & str);
+    /** reuse a netgen-mesh **/
+    Ngx_Mesh (shared_ptr<Mesh> amesh); 
+    /** load a new mesh **/
+    Ngx_Mesh (string filename, MPI_Comm acomm = netgen::ng_comm);
+    
+    void LoadMesh (const string & filename, MPI_Comm comm = netgen::ng_comm);
+
+    void LoadMesh (istream & str, MPI_Comm comm = netgen::ng_comm);
     void SaveMesh (ostream & str) const;
     void UpdateTopology ();
     void DoArchive (Archive & archive);
 
-#ifdef PARALLEL
     MPI_Comm GetCommunicator() const;
-    void SetCommunicator(MPI_Comm acomm); 
-#endif
     
     virtual ~Ngx_Mesh();
 
-    bool Valid () { return mesh != NULL; }
+    bool Valid () const { return mesh != NULL; }
     
     int GetDimension() const;
     int GetNLevels() const;
