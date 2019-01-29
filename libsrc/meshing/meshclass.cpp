@@ -44,7 +44,7 @@ namespace netgen
     cd2names.SetSize(0);
 
 #ifdef PARALLEL
-    this->comm = MPI_COMM_WORLD;
+    this->comm = netgen :: ng_comm;
     paralleltop = new ParallelMeshTopology (*this);
 #endif
   }
@@ -83,6 +83,12 @@ namespace netgen
 #endif
   }
 
+#ifdef PARALLEL
+  void Mesh :: SetCommunicator(MPI_Comm acomm)
+  {
+    this->comm = acomm;
+  }
+#endif
 
   Mesh & Mesh :: operator= (const Mesh & mesh2)
   {
@@ -1321,6 +1327,15 @@ namespace netgen
     
     if (archive.Input())
       {
+	int rank, ntasks;
+#ifdef PARALLEL
+	MPI_Comm_size(this->comm, &ntasks);
+	MPI_Comm_rank(this->comm, &rank);
+#else
+	rank = 0;
+	ntasks = 1;
+#endif
+	
         RebuildSurfaceElementLists();
         
         CalcSurfacesOfNode ();

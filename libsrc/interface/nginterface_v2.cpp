@@ -34,23 +34,40 @@ namespace netgen
 
   Ngx_Mesh :: Ngx_Mesh (shared_ptr<Mesh> amesh) 
   {
-    if (amesh)
+    if (amesh) {
       mesh = amesh;
-    else
+      comm = amesh->GetCommunicator();
+    }
+    else {
       mesh = netgen::mesh;
+      comm = netgen::ng_comm;
+    }
   }
+
+#ifdef PARALLEL
+  void Ngx_Mesh :: SetCommunicator (MPI_Comm acomm)
+  {
+    if (Valid() && acomm!=mesh->GetCommunicator())
+      throw NgException("Redistribution of mesh not possible!");
+    this->comm = acomm;
+  }
+
+
+  MPI_Comm Ngx_Mesh :: GetCommunicator() const
+  { return comm; }
+#endif
   
   Ngx_Mesh * LoadMesh (const string & filename)
   {
     netgen::mesh.reset();
-    Ng_LoadMesh (filename.c_str());
+    Ng_LoadMesh (filename.c_str(), netgen::ng_comm);
     return new Ngx_Mesh (netgen::mesh);
   }
 
   void Ngx_Mesh :: LoadMesh (const string & filename)
   {
     netgen::mesh.reset();
-    Ng_LoadMesh (filename.c_str());
+    Ng_LoadMesh (filename.c_str(), this->comm);
     // mesh = move(netgen::mesh);
     mesh = netgen::mesh;
   }
@@ -71,7 +88,12 @@ namespace netgen
 
   void Ngx_Mesh :: DoArchive (Archive & archive)
   {
-    if (archive.Input()) mesh = make_shared<Mesh>();
+#ifdef PARALLEL
+    if (archive.Input()) {
+      mesh = make_shared<Mesh>();
+      mesh->SetCommunicator(GetCommunicator());
+    }
+#endif
     mesh->DoArchive(archive);
     if (archive.Input())
       {

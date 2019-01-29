@@ -606,6 +606,11 @@ namespace netgen
     int AddEdgeDescriptor(const EdgeDescriptor & fd)
     { edgedecoding.Append(fd); return edgedecoding.Size() - 1; }
 
+#ifdef PARALLEL
+    MPI_Comm GetCommunicator() const { return this->comm; }
+    void SetCommunicator(MPI_Comm acomm);
+#endif
+    
     ///
     DLL_HEADER void SetMaterial (int domnr, const string & mat);
     ///

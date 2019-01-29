@@ -553,14 +553,18 @@ namespace netgen
     order = 1;
 
 
+    MPI_Comm curve_comm;
 #ifdef PARALLEL
     enum { MPI_TAG_CURVE = MPI_TAG_MESH+20 };
 
     const ParallelMeshTopology & partop = mesh.GetParallelTopology ();
-    MPI_Comm curve_comm;
-    MPI_Comm_dup (MPI_COMM_WORLD, &curve_comm);      
+    MPI_Comm_dup (mesh.GetCommunicator(), &curve_comm);      
     Array<int> procs;
+#else
+    curve_comm = ng_comm; // dummy! 
 #endif
+    int rank = MyMPI_GetId(curve_comm);
+    int ntasks = MyMPI_GetNTasks(curve_comm);
 
     if (working)
       order = aorder;

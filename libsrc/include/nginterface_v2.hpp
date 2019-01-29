@@ -249,6 +249,9 @@ namespace netgen
   {
   private:
     shared_ptr<Mesh> mesh;
+#ifdef PARALLEL
+    MPI_Comm comm;
+#endif
     
   public:
     // Ngx_Mesh () { ; }
@@ -261,6 +264,11 @@ namespace netgen
     void UpdateTopology ();
     void DoArchive (Archive & archive);
 
+#ifdef PARALLEL
+    MPI_Comm GetCommunicator() const;
+    void SetCommunicator(MPI_Comm acomm); 
+#endif
+    
     virtual ~Ngx_Mesh();
 
     bool Valid () { return mesh != NULL; }

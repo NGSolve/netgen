@@ -24,12 +24,19 @@ namespace netgen
   void ParallelMeshTopology :: Reset ()
   {
     *testout << "ParallelMeshTopology::Reset" << endl;
+
+    int id = MyMPI_GetId(mesh.GetCommunicator());
+    int ntasks = MyMPI_GetNTasks(mesh.GetCommunicator());
     
     if ( ntasks == 1 ) return;
 
+    cout << "Reset CG, this = " << this << "   , mesh: " << &mesh << endl;
+    
     int ned = mesh.GetTopology().GetNEdges();
     int nfa = mesh.GetTopology().GetNFaces();
 
+    cout << "nnodes : " << mesh.GetNV() << " " << ned << " " << nfa << endl;
+    
     if (glob_edge.Size() != ned)
       {
 	glob_edge.SetSize(ned);
@@ -206,6 +213,11 @@ namespace netgen
     // cout << "UpdateCoarseGrid" << endl;
     // if (is_updated) return;
 
+    int id = MyMPI_GetId(mesh.GetCommunicator());
+    int ntasks = MyMPI_GetNTasks(mesh.GetCommunicator());
+
+    cout << "Update CG, this = " << this << "   , mesh: " << &mesh << endl;
+    
     Reset();
     static int timer = NgProfiler::CreateTimer ("UpdateCoarseGrid");
     NgProfiler::RegionTimer reg(timer);
