@@ -91,6 +91,8 @@ Returned is a dict with information to create the pml layer:
     start_ndoms = ndoms = geo.GetNDomains() + 1
     new_spline_domains = []
     normals = {}
+    duplicate_cnt = 0
+    
     for i, spline in enumerate(border):
         if i == 0:
             global_start = Start(spline) + pml_size * spline.GetNormal(0)
@@ -98,6 +100,14 @@ Returned is a dict with information to create the pml layer:
         next_spline = border[(i+1)%len(border)]
         new_end =  End(spline) + pml_size * spline.GetNormal(1)
         spline_name = geo.GetBCName(spline.bc)
+        
+        if "pml_" + spline_name in normals \
+        and normals["pml_" + spline_name] != spline.GetNormal(0):
+            duplicate_cnt += 1
+            spline_name = spline_name + "_duplicate_" + str(duplicate_cnt)
+            # ~ spline.SetBCName(spline_name + "_duplicate_" + str(duplicate_cnt))
+            # ~ spline_name = geo.GetBCName(spline.bc)
+        
         if (new_end - global_start).Norm() < tol:
             new_spline_domains.append(ndoms)
             geo.Append(["line", current_start, global_start_pnt], bc="outer_" + spline_name, leftdomain = ndoms)
