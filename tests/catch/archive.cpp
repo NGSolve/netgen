@@ -248,6 +248,22 @@ void testMap(Archive& in, Archive& out)
   CHECK(map2["netgen"] == "v6.2.1901");
 }
 
+enum MyEnum
+  {
+   CASE1,
+   CASE2
+  };
+
+void testEnum(Archive& in, Archive& out)
+  {
+   MyEnum en = CASE2;
+   out & en;
+   out.FlushBuffer();
+   MyEnum enin;
+   in & enin;
+   CHECK(enin == CASE2);
+  }
+
 void testArchive(Archive& in, Archive& out)
 {
   SECTION("Empty String")
@@ -300,6 +316,10 @@ void testArchive(Archive& in, Archive& out)
   SECTION("map")
     {
       testMap(in, out);
+    }
+  SECTION("enum")
+    {
+      testEnum(in, out);
     }
 }
 
