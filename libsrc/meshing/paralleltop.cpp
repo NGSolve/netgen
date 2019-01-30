@@ -30,13 +30,9 @@ namespace netgen
     
     if ( ntasks == 1 ) return;
 
-    cout << "Reset CG, this = " << this << "   , mesh: " << &mesh << endl;
-    
     int ned = mesh.GetTopology().GetNEdges();
     int nfa = mesh.GetTopology().GetNFaces();
 
-    cout << "nnodes : " << mesh.GetNV() << " " << ned << " " << nfa << endl;
-    
     if (glob_edge.Size() != ned)
       {
 	glob_edge.SetSize(ned);
@@ -217,8 +213,6 @@ namespace netgen
     int id = MyMPI_GetId(comm);
     int ntasks = MyMPI_GetNTasks(comm);
 
-    cout << "Update CG, this = " << this << "   , mesh: " << &mesh << endl;
-    
     Reset();
     static int timer = NgProfiler::CreateTimer ("UpdateCoarseGrid");
     NgProfiler::RegionTimer reg(timer);
