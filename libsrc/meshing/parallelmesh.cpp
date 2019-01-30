@@ -71,9 +71,10 @@ namespace netgen
   void Mesh :: SendMesh () const   
   {
     Array<MPI_Request> sendrequests;
-    
-    int id = MyMPI_GetId(GetCommunicator());
-    int np = MyMPI_GetNTasks(GetCommunicator());
+
+    MPI_Comm comm = GetCommunicator();
+    int id = MyMPI_GetId(comm);
+    int ntasks = MyMPI_GetNTasks(comm);
 
     int dim = GetDimension();
     MyMPI_Bcast(dim, comm);
@@ -751,7 +752,7 @@ namespace netgen
     NgProfiler::RegionTimer reg(timer);
 
     int id = MyMPI_GetId(GetCommunicator());
-    int np = MyMPI_GetNTasks(GetCommunicator());
+    int ntasks = MyMPI_GetNTasks(GetCommunicator());
     
     int dim;
     MyMPI_Bcast(dim, comm);
@@ -1009,9 +1010,9 @@ namespace netgen
   // call it only for the master !
   void Mesh :: Distribute ()
   {
-    MPI_Comm comm = this->comm;
-    MPI_Comm_size(comm, &ntasks);
-    MPI_Comm_rank(comm, &id);
+    MPI_Comm comm = GetCommunicator();
+    int id = MyMPI_GetId(comm);
+    int ntasks = MyMPI_GetNTasks(comm);
 
     if (id != 0 || ntasks == 1 ) return;
 
@@ -1070,7 +1071,7 @@ namespace netgen
     eptr.Append (eind.Size());
     Array<idx_t> epart(ne), npart(nn);
 
-    idxtype nparts = ntasks-1;
+    idxtype nparts = MyMPI_GetNTasks(GetCommunicator())-1;
     idxtype edgecut;
 
     idxtype ncommon = 3;
@@ -1275,9 +1276,9 @@ namespace netgen
   // call it only for the master !
   void Mesh :: Distribute (Array<int> & volume_weights , Array<int>  & surface_weights, Array<int>  & segment_weights)
   {
-    MPI_Comm comm = this->comm;
-    MPI_Comm_size(comm, &ntasks);
-    MPI_Comm_rank(comm, &id);
+    MPI_Comm comm = GetCommunicator();
+    int id = MyMPI_GetId(comm);
+    int ntasks = MyMPI_GetNTasks(comm);
 
     if (id != 0 || ntasks == 1 ) return;
 
@@ -1367,7 +1368,7 @@ namespace netgen
     eptr.Append (eind.Size());
     Array<idx_t> epart(ne), npart(nn);
 
-    idxtype nparts = ntasks-1;
+    idxtype nparts = MyMPI_GetNTasks(GetCommunicator())-1;
     idxtype edgecut;
 
 

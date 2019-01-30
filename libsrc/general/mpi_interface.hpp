@@ -19,15 +19,17 @@ namespace netgen
 
 #ifndef PARALLEL
   typedef int MPI_Comm;
-  enum { MPI_COMM_WORLD = 12345, MPI_COMM_NULL = 0};
-
-  inline int MyMPI_GetNTasks (MPI_Comm comm = ng_comm) { return 1; }
-  inline int MyMPI_GetId (MPI_Comm comm = ng_comm) { return 0; }
-
 #endif
 
   /** This is the "standard" communicator that will be used for netgen-objects. **/
   extern MPI_Comm ng_comm;
+
+#ifndef PARALLEL
+  enum { MPI_COMM_WORLD = 12345, MPI_COMM_NULL = 0};
+  inline int MyMPI_GetNTasks (MPI_Comm comm = ng_comm) { return 1; }
+  inline int MyMPI_GetId (MPI_Comm comm = ng_comm) { return 0; }
+#endif
+
   
 #ifdef PARALLEL
 
@@ -60,6 +62,10 @@ namespace netgen
   template <>
   inline MPI_Datatype MyGetMPIType<double> ( ) 
   { return MPI_DOUBLE; }
+
+  template <>
+  inline MPI_Datatype MyGetMPIType<char> ( ) 
+  { return MPI_CHAR; }
 
   
   inline void MyMPI_Send (int i, int dest, int tag, MPI_Comm comm = ng_comm)
@@ -284,7 +290,7 @@ namespace netgen
   {
     int size = s.Size();
     MyMPI_Bcast (size, comm);
-    if (id != 0) s.SetSize (size);
+    if (MyMPI_GetId(comm) != 0) s.SetSize (size);
     MPI_Bcast (&s[0], size, MyGetMPIType<T>(), 0, comm);
   }
 

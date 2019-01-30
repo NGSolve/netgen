@@ -141,7 +141,7 @@ void Ng_LoadMesh (const char * filename, MPI_Comm comm)
     }
 
   istream * infile;
-  char* buf; // for distributing geometry!
+  Array<char> buf; // for distributing geometry!
   int strs;
 
   if( id == 0) {
@@ -162,8 +162,9 @@ void Ng_LoadMesh (const char * filename, MPI_Comm comm)
       geom_part << infile->rdbuf();
       string geom_part_string = geom_part.str();
       strs = geom_part_string.size();
-      buf = new char[strs];
-      memcpy(buf, geom_part_string.c_str(), strs*sizeof(char));
+      // buf = new char[strs];
+      buf.SetSize(strs);
+      memcpy(&buf[0], geom_part_string.c_str(), strs*sizeof(char));
     }
     delete infile;
 
@@ -238,15 +239,15 @@ void Ng_LoadMesh (const char * filename, MPI_Comm comm)
   }
 
   if(!ng_geometry && ntasks>1) {
-    /** Scatter the geometry-string **/
-    MPI_Bcast(&strs, 1, MPI_INT, 0, comm); 
-    if(id!=0) buf = new char[strs];
-    MPI_Bcast(buf, strs, MPI_CHAR, 0, comm);
+#ifdef PARALLEL
+    /** Scatter the geometry-string (no dummy-implementation in mpi_interface) **/
+    MyMPI_Bcast(buf, comm);
+#endif
   }
 
   if(!ng_geometry) {
-    infile = new istringstream(string((const char*)buf, (size_t)strs));
-    delete[] buf;
+    infile = new istringstream(string((const char*)&buf[0], (size_t)strs));
+    // delete[] buf;
     for (int i = 0; i < geometryregister.Size(); i++)
       {
 	NetgenGeometry * hgeom = geometryregister[i]->LoadFromMeshFile (*infile);

@@ -37,6 +37,9 @@
 // max number of nodes per surface element
 #define NG_SURFACE_ELEMENT_MAXPOINTS 8
 
+#ifndef PARALLEL
+  typedef int MPI_Comm;
+#endif
 namespace netgen { extern MPI_Comm ng_comm; }
 
 
