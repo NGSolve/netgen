@@ -32,10 +32,8 @@ namespace netgen
     /// point coordinates
     T_POINTS points;
 
-#ifdef PARALLEL
-    // The communicator for this mesh. (more or less dummy for now!)  
+    // The communicator for this mesh. Just a dummy if compiled without MPI.  
     MPI_Comm comm;
-#endif
     
     /// line-segments at edges
     Array<Segment, 0, size_t> segments;
@@ -606,10 +604,8 @@ namespace netgen
     int AddEdgeDescriptor(const EdgeDescriptor & fd)
     { edgedecoding.Append(fd); return edgedecoding.Size() - 1; }
 
-#ifdef PARALLEL
     MPI_Comm GetCommunicator() const { return this->comm; }
     void SetCommunicator(MPI_Comm acomm);
-#endif
     
     ///
     DLL_HEADER void SetMaterial (int domnr, const string & mat);
@@ -863,7 +859,11 @@ namespace netgen
     void SendMesh ( ) const;   // Mesh * mastermesh, Array<int> & neloc) const;
     /// loads a mesh sent from master processor
     void ReceiveParallelMesh ();
-
+#else
+    void Distribute () {}
+    void SendRecvMesh () {}
+    void Distribute (Array<int> & volume_weights, Array<int> & surface_weights, 
+      Array<int> & segment_weights){ }
 #endif
 
 
