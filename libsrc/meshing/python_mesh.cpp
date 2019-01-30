@@ -506,6 +506,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def(py::init( [] (int dim)
                    {
                      auto mesh = make_shared<Mesh>();
+		     mesh->SetCommunicator(netgen::ng_comm);
                      mesh -> SetDimension(dim);
                      SetGlobalMesh(mesh);  // for visualization
                      mesh -> SetGeometry (nullptr);
@@ -533,8 +534,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 	    istream * infile;
 
 #ifdef PARALLEL
-	    MPI_Comm_rank(MPI_COMM_WORLD, &id);
-	    MPI_Comm_size(MPI_COMM_WORLD, &ntasks);
+	    MPI_Comm_rank(netgen::ng_comm, &id);
+	    MPI_Comm_size(netgen::ng_comm, &ntasks);
 	    
 	    char* buf = nullptr;
 	    int strs = 0;
