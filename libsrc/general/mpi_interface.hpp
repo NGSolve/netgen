@@ -18,56 +18,98 @@ namespace netgen
   using ngcore::ntasks;
 
 #ifndef PARALLEL
+  /** without MPI, we need a dummy typedef **/
   typedef int MPI_Comm;
 #endif
 
   /** This is the "standard" communicator that will be used for netgen-objects. **/
   extern MPI_Comm ng_comm;
 
-#ifndef PARALLEL
-  enum { MPI_COMM_WORLD = 12345, MPI_COMM_NULL = 0};
-  inline int MyMPI_GetNTasks (MPI_Comm comm = ng_comm) { return 1; }
-  inline int MyMPI_GetId (MPI_Comm comm = ng_comm) { return 0; }
-#endif
-
-  
 #ifdef PARALLEL
-
   inline int MyMPI_GetNTasks (MPI_Comm comm = ng_comm)
   {
     int ntasks;
     MPI_Comm_size(comm, &ntasks);
     return ntasks;
   }
-  
   inline int MyMPI_GetId (MPI_Comm comm = ng_comm)
   {
     int id;
     MPI_Comm_rank(comm, &id);
     return id;
   }
+#else
+  enum { MPI_COMM_WORLD = 12345, MPI_COMM_NULL = 0};
+  inline int MyMPI_GetNTasks (MPI_Comm comm = ng_comm) { return 1; }
+  inline int MyMPI_GetId (MPI_Comm comm = ng_comm) { return 0; }
+#endif
 
+#ifdef PARALLEL
+  // For python wrapping of communicators
+  struct PyMPI_Comm {
+    MPI_Comm comm;
+    bool owns_comm;
+    PyMPI_Comm (MPI_Comm _comm, bool _owns_comm = false) : comm(_comm), owns_comm(_owns_comm) { }
+    PyMPI_Comm (const PyMPI_Comm & c) = delete;
+    ~PyMPI_Comm () {
+      if (owns_comm)
+	MPI_Comm_free(&comm);
+    }
+    inline int Rank() const { return MyMPI_GetId(comm); }
+    inline int Size() const { return MyMPI_GetNTasks(comm); }
+  };
+#else
+  // dummy without MPI
+  struct PyMPI_Comm {
+    MPI_Comm comm = 0;
+    PyMPI_Comm (MPI_Comm _comm, bool _owns_comm = false) { }
+    ~PyMPI_Comm () { }
+    inline int Rank() const { return 0; }
+    inline int Size() const { return 1; }
+  };
+#endif
+
+#ifdef PARALLEL
+  template <class T>
+  inline MPI_Datatype MyGetMPIType ( ) 
+  { cerr << "ERROR in GetMPIType() -- no type found" << endl;return 0; }
+  template <>
+  inline MPI_Datatype MyGetMPIType<int> ( )
+  { return MPI_INT; }
+  template <>
+  inline MPI_Datatype MyGetMPIType<double> ( ) 
+  { return MPI_DOUBLE; }
+  template <>
+  inline MPI_Datatype MyGetMPIType<char> ( ) 
+  { return MPI_CHAR; }
+  template<>
+  inline MPI_Datatype MyGetMPIType<size_t> ( ) 
+  { return MPI_UINT64_T; }
+#else
+  typedef int MPI_Datatype;
+  template <class T> inline MPI_Datatype MyGetMPIType ( ) { return 0; }
+#endif
+
+#ifdef PARALLEL
+  inline MPI_Comm MyMPI_SubCommunicator(MPI_Comm comm, Array<int> & procs)
+  {
+    MPI_Comm subcomm;
+    MPI_Group gcomm, gsubcomm;
+    MPI_Comm_group(comm, &gcomm);
+    MPI_Group_incl(gcomm, procs.Size(), &(procs[0]), &gsubcomm);
+    MPI_Comm_create_group(comm, gsubcomm, 6969, &subcomm);
+    return subcomm;
+  }
+#else
+  inline MPI_Comm MyMPI_SubCommunicator(MPI_Comm comm, Array<int> & procs)
+  { return comm; }
+#endif
+
+#ifdef PARALLEL
   enum { MPI_TAG_CMD = 110 };
   enum { MPI_TAG_MESH = 210 };
   enum { MPI_TAG_VIS = 310 };
 
-  template <class T>
-  MPI_Datatype MyGetMPIType ( ) 
-  { cerr << "ERROR in GetMPIType() -- no type found" << endl;return 0; }
-
-  template <>
-  inline MPI_Datatype MyGetMPIType<int> ( )
-  { return MPI_INT; }
-  
-  template <>
-  inline MPI_Datatype MyGetMPIType<double> ( ) 
-  { return MPI_DOUBLE; }
-
-  template <>
-  inline MPI_Datatype MyGetMPIType<char> ( ) 
-  { return MPI_CHAR; }
-
-  
   inline void MyMPI_Send (int i, int dest, int tag, MPI_Comm comm = ng_comm)
   {
     int hi = i;
