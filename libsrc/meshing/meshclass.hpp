@@ -221,7 +221,7 @@ namespace netgen
     DLL_HEADER PointIndex AddPoint (const Point3d & p, int layer = 1);
     DLL_HEADER PointIndex AddPoint (const Point3d & p, int layer, POINTTYPE type);
 
-    int GetNP () const { return points.Size(); }
+    auto GetNP () const { return points.Size(); }
 
     // [[deprecated("Use Point(PointIndex) instead of int !")]]        
     MeshPoint & Point(int i) { return points.Elem(i); }
@@ -291,7 +291,7 @@ namespace netgen
       timestamp = NextTimeStamp();
     }
 
-    int GetNSE () const { return surfelements.Size(); }
+    auto GetNSE () const { return surfelements.Size(); }
 
     // [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]    
     Element2d & SurfaceElement(int i) { return surfelements.Elem(i); }
@@ -316,7 +316,7 @@ namespace netgen
     // write to pre-allocated container, thread-safe
     DLL_HEADER void SetVolumeElement (ElementIndex sei, const Element & el);
 
-    int GetNE () const { return volelements.Size(); }
+    auto GetNE () const { return volelements.Size(); }
 
     // [[deprecated("Use VolumeElement(ElementIndex) instead of int !")]]    
     Element & VolumeElement(int i) { return volelements.Elem(i); }

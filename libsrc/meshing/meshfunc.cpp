@@ -14,6 +14,8 @@ namespace netgen
   // extern double teterrpow; 
   MESHING3_RESULT MeshVolume (MeshingParameters & mp, Mesh& mesh3d)
   {
+    static Timer t("MeshVolume"); RegionTimer reg(t);
+    
      int oldne;
      int meshed;
 
@@ -639,6 +641,8 @@ namespace netgen
 				  Mesh & mesh3d)
     //				  const CSGeometry * geometry)
   {
+    static Timer t("OptimizeVolume"); RegionTimer reg(t);
+    
     int i;
 
     PrintMessage (1, "Volume Optimization");
@@ -698,6 +702,8 @@ namespace netgen
 
   void RemoveIllegalElements (Mesh & mesh3d)
   {
+    static Timer t("RemoveIllegalElements"); RegionTimer reg(t);
+    
     int it = 10;
     int nillegal, oldn;
 

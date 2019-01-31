@@ -1353,6 +1353,8 @@ void Mesh :: ImproveMesh (const CSG eometry & geometry, OPTIMIZEGOAL goal)
   
 void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
 {
+  static Timer t("Mesh::ImproveMesh"); RegionTimer reg(t);
+  
   int typ = 1;
   
   (*testout) << "Improve Mesh" << "\n";

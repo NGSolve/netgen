@@ -602,7 +602,9 @@ namespace netgen
 		  Array<DelaunayTet> & tempels,
 		  int oldnp, DelaunayTet & startel, Point3d & pmin, Point3d & pmax)
   {
-    Array<Point<3> > centers;
+    static Timer t("Meshing3::Delaunay1"); RegionTimer reg(t);
+    
+    Array<Point<3>> centers;
     Array<double> radi2;
   
     Point3d tpmin, tpmax;
@@ -783,6 +785,8 @@ namespace netgen
 
   void Meshing3 :: Delaunay (Mesh & mesh, int domainnr, const MeshingParameters & mp)
   {
+    static Timer t("Meshing3::Delaunay"); RegionTimer reg(t);
+    
     int np, ne;
 
     PrintMessage (1, "Delaunay meshing");
