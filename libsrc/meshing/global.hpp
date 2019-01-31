@@ -59,6 +59,10 @@ namespace netgen
 
   DLL_HEADER extern weak_ptr<Mesh> global_mesh;
   DLL_HEADER void SetGlobalMesh (shared_ptr<Mesh> m);
+
+  // global communicator for netgen (dummy if no MPI)
+  extern MPI_Comm ng_comm;
+  
 }
 
 #endif

@@ -37,6 +37,10 @@
 // max number of nodes per surface element
 #define NG_SURFACE_ELEMENT_MAXPOINTS 8
 
+#ifndef PARALLEL
+  typedef int MPI_Comm;
+#endif
+namespace netgen { extern MPI_Comm ng_comm; }
 
 
 // implemented element types:
@@ -60,9 +64,9 @@ extern "C" {
   
   // load geometry from file 
   DLL_HEADER void Ng_LoadGeometry (const char * filename);
-  
+
   // load netgen mesh
-  DLL_HEADER void Ng_LoadMesh (const char * filename);
+  DLL_HEADER void Ng_LoadMesh (const char * filename, MPI_Comm comm = netgen::ng_comm);
 
   // load netgen mesh
   DLL_HEADER void Ng_LoadMeshFromString (const char * mesh_as_string);

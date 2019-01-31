@@ -31,6 +31,9 @@ namespace netgen
   DLL_HEADER shared_ptr<NetgenGeometry> ng_geometry;
   // TraceGlobal glob2("global2");
 
+  // global communicator for netgen
+  MPI_Comm ng_comm = MPI_COMM_WORLD;
+  
   weak_ptr<Mesh> global_mesh;
   void SetGlobalMesh (shared_ptr<Mesh> m)
   {

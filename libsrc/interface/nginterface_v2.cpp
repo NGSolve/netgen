@@ -31,38 +31,38 @@ namespace netgen
     return hmesh;
   }
   
-
-  Ngx_Mesh :: Ngx_Mesh (shared_ptr<Mesh> amesh) 
-  {
-    if (amesh)
-      mesh = amesh;
-    else
-      mesh = netgen::mesh;
-  }
+  Ngx_Mesh :: Ngx_Mesh (shared_ptr<Mesh> amesh)
+  { mesh = amesh ? amesh : netgen::mesh; }
+  Ngx_Mesh :: Ngx_Mesh (string filename, MPI_Comm acomm)
+  { LoadMesh(filename, acomm); }
   
-  Ngx_Mesh * LoadMesh (const string & filename)
+  Ngx_Mesh * LoadMesh (const string & filename, MPI_Comm comm = netgen::ng_comm)
   {
     netgen::mesh.reset();
-    Ng_LoadMesh (filename.c_str());
+    Ng_LoadMesh (filename.c_str(), comm);
     return new Ngx_Mesh (netgen::mesh);
   }
 
-  void Ngx_Mesh :: LoadMesh (const string & filename)
+  void Ngx_Mesh :: LoadMesh (const string & filename, MPI_Comm comm)
   {
     netgen::mesh.reset();
-    Ng_LoadMesh (filename.c_str());
+    Ng_LoadMesh (filename.c_str(), comm);
     // mesh = move(netgen::mesh);
     mesh = netgen::mesh;
   }
 
-  void Ngx_Mesh :: LoadMesh (istream & ist)
+  void Ngx_Mesh :: LoadMesh (istream & ist, MPI_Comm comm)
   {
     netgen::mesh = make_shared<Mesh>();
+    netgen::mesh->SetCommunicator(comm);
     netgen::mesh -> Load (ist);
     // mesh = move(netgen::mesh);
     mesh = netgen::mesh;
     SetGlobalMesh (mesh);
   }
+
+  MPI_Comm Ngx_Mesh :: GetCommunicator() const
+  { return Valid() ? mesh->GetCommunicator() : MPI_COMM_NULL; }
 
   void Ngx_Mesh :: SaveMesh (ostream & ost) const
   {
@@ -71,7 +71,12 @@ namespace netgen
 
   void Ngx_Mesh :: DoArchive (Archive & archive)
   {
-    if (archive.Input()) mesh = make_shared<Mesh>();
+#ifdef PARALLEL
+    if (archive.Input()) {
+      mesh = make_shared<Mesh>();
+      mesh->SetCommunicator(GetCommunicator());
+    }
+#endif
     mesh->DoArchive(archive);
     if (archive.Input())
       {
