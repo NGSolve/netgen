@@ -40,7 +40,7 @@
 #ifndef PARALLEL
   typedef int MPI_Comm;
 #endif
-namespace netgen { extern MPI_Comm ng_comm; }
+namespace netgen { extern DLL_HEADER MPI_Comm ng_comm; }
 
 
 // implemented element types:
