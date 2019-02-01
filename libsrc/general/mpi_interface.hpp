@@ -23,7 +23,7 @@ namespace netgen
 #endif
 
   /** This is the "standard" communicator that will be used for netgen-objects. **/
-  extern MPI_Comm ng_comm;
+  extern DLL_HEADER MPI_Comm ng_comm;
 
 #ifdef PARALLEL
   inline int MyMPI_GetNTasks (MPI_Comm comm = ng_comm)
