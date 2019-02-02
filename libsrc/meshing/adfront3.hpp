@@ -233,6 +233,7 @@ public:
   ///
   const MiniElement2d & GetFace (int i) const
   { return faces.Get(i).Face(); }
+  const auto & Faces() const { return faces; }
   ///
   void Print () const;
   ///

@@ -270,7 +270,8 @@ namespace netgen
       for (int i = 0; i < D; i++)
 	{
 	  if (p(i) < pmin(i)) pmin(i) = p(i);
-	  else if (p(i) > pmax(i)) pmax(i) = p(i);
+	  /* else */ if (p(i) > pmax(i)) pmax(i) = p(i);
+          // optimization invalid for empty-box !
 	}
     }
 

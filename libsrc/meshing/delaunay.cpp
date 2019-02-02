@@ -41,8 +41,8 @@ namespace netgen
     PointIndex & operator[] (int i) { return pnums[i]; }
     PointIndex operator[] (int i) const { return pnums[i]; }
 
-    int & NB1(int i) { return nb[i-1]; }
-    int NB1(int i) const { return nb[i-1]; }
+    // int & NB1(int i) { return nb[i-1]; }
+    // int NB1(int i) const { return nb[i-1]; }
 
     int & NB(int i) { return nb[i]; }
     int NB(int i) const { return nb[i]; }
@@ -57,35 +57,38 @@ namespace netgen
 	  return i;
       return 3;
     }
-    
+
+    /*
     void GetFace1 (int i, INDEX_3 & face) const
     {
       face.I(1) = pnums[deltetfaces[i-1][0]];
       face.I(2) = pnums[deltetfaces[i-1][1]];
       face.I(3) = pnums[deltetfaces[i-1][2]];
     }
-
+    */
     void GetFace (int i, INDEX_3 & face) const
     {
       face.I(1) = pnums[deltetfaces[i][0]];
       face.I(2) = pnums[deltetfaces[i][1]];
       face.I(3) = pnums[deltetfaces[i][2]];
     }
-      
+
+    /*
     INDEX_3 GetFace1 (int i) const
     {
       return INDEX_3 (pnums[deltetfaces[i-1][0]],
 		      pnums[deltetfaces[i-1][1]],
 		      pnums[deltetfaces[i-1][2]]);
     }
-
+    */
     INDEX_3 GetFace (int i) const
     {
       return INDEX_3 (pnums[deltetfaces[i][0]],
 		      pnums[deltetfaces[i][1]],
 		      pnums[deltetfaces[i][2]]);
     }
-     
+
+    /*
     void GetFace1 (int i, Element2d & face) const
     {
       // face.SetType(TRIG);
@@ -93,6 +96,15 @@ namespace netgen
       face[1] = pnums[deltetfaces[i-1][1]];
       face[2] = pnums[deltetfaces[i-1][2]];
     }
+    */
+    void GetFace (int i, Element2d & face) const
+    {
+      // face.SetType(TRIG);
+      face[0] = pnums[deltetfaces[i][0]];
+      face[1] = pnums[deltetfaces[i][1]];
+      face[2] = pnums[deltetfaces[i][2]];
+    }
+
   };
 
 
@@ -135,7 +147,7 @@ namespace netgen
     // get neighbour of element elnr in direction fnr 
     int GetNB (int elnr, int fnr)
     { 
-      return tets.Get(elnr).NB1(fnr); 
+      return tets.Get(elnr).NB(fnr-1); 
     }
 
     //
@@ -456,7 +468,7 @@ namespace netgen
 
 	  if (!nbind || !insphere.IsIn (nbind))
 	    {
-	      tempels.Get (celind).GetFace1 (k, face);
+	      tempels.Get (celind).GetFace (k-1, face);
 		
 	      Element newel(TET);
 	      for (int l = 0; l < 3; l++)
@@ -611,6 +623,7 @@ namespace netgen
 
 
     // new: local box
+    /*
     mesh.GetBox (pmax, pmin);   // lower bound for pmax, upper for pmin
     for (int i = 1; i <= adfront->GetNF(); i++)
       {
@@ -627,8 +640,20 @@ namespace netgen
 	pmin.SetToMin (mesh.Point (pi));
 	pmax.SetToMax (mesh.Point (pi));
       }
+    cout << "pmin = " << pmin << ", pmax = " << pmax << endl;
+    */
+    Box<3> bbox(Box<3>::EMPTY_BOX);
+
+    for (auto & face : adfront->Faces())
+      for (PointIndex pi : face.Face().PNums())      
+        bbox.Add (mesh.Point(pi));
+
+    for (PointIndex pi : mesh.LockedPoints())
+      bbox.Add (mesh.Point (pi));
     
-    
+    pmin = bbox.PMin();
+    pmax = bbox.PMax();
+    // cout << "bbox = " << bbox << endl;
 
     Vec3d vdiag(pmin, pmax);
     // double r1 = vdiag.Length();
@@ -862,7 +887,7 @@ namespace netgen
 	{
 	  Element2d self(TRIG);
 	  self.SetIndex (1);
-	  startel.GetFace1 (i, self);
+	  startel.GetFace (i-1, self);
 	  tempmesh.AddSurfaceElement (self);
 	}
 
@@ -1293,7 +1318,7 @@ namespace netgen
 
 	    for (int j = 1; j <= 4; j++)
 	      {
-		el.GetFace1 (j, hel);
+		el.GetFace (j-1, hel);
 		hel.Invert();
 		hel.NormalizeNumbering();
 	      
@@ -1307,8 +1332,8 @@ namespace netgen
 			  {
 			    INDEX_2 i2 = faceht.Get(i3);
 			  
-			    tempels.Elem(i).NB1(j) = i2.I1();
-			    tempels.Elem(i2.I1()).NB1(i2.I2()) = i;
+			    tempels.Elem(i).NB(j-1) = i2.I1();
+			    tempels.Elem(i2.I1()).NB(i2.I2()-1) = i;
 			  }
 			else
 			  {
@@ -1468,7 +1493,7 @@ namespace netgen
 
 		for (int j = 1; j <= 4; j++)
 		  {
-		    INDEX_3 i3 = tempels.Get(ei).GetFace1(j);
+		    INDEX_3 i3 = tempels.Get(ei).GetFace(j-1);
 		    /*
 		    Element2d face;
 		    tempels.Get(ei).GetFace(j, face);
@@ -1478,8 +1503,8 @@ namespace netgen
 		    i3.Sort();
 		  
 
-		    if (tempels.Get(ei).NB1(j))
-		      elstack.Append (tempels.Get(ei).NB1(j));
+		    if (tempels.Get(ei).NB(j-1))
+		      elstack.Append (tempels.Get(ei).NB(j-1));
 
 		    /*
 		      if (innerfaces.Used(i3))
