@@ -454,7 +454,8 @@ namespace netgen
     const Element2d & OpenElement(int i) const
     { return openelements.Get(i); }
 
-
+    auto & OpenElements() const { return openelements; }
+    
     /// are also quads open elements
     bool HasOpenQuads () const;
 
