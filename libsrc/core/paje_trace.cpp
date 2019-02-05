@@ -9,7 +9,6 @@
 #include "paje_trace.hpp"
 #include "profiler.hpp"
 
-static constexpr int MAX_TRACE_LINE_SIZE = 50;
 extern const char *header;
 
 namespace ngcore
