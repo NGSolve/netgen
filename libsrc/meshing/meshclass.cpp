@@ -1680,6 +1680,7 @@ namespace netgen
 
   void Mesh :: CalcSurfacesOfNode ()
   {
+    static Timer t("Mesh::CalcSurfacesOfNode"); RegionTimer reg (t);    
     // surfacesonnode.SetSize (GetNP());
     TABLE<int,PointIndex::BASE> surfacesonnode(GetNP());
 
@@ -1864,8 +1865,7 @@ namespace netgen
 
   void Mesh :: FindOpenElements (int dom)
   {
-    static int timer = NgProfiler::CreateTimer ("Mesh::FindOpenElements");
-    NgProfiler::RegionTimer reg (timer);
+    static Timer t("Mesh::FindOpenElements"); RegionTimer reg (t);
 
     int np = GetNP();
     int ne = GetNE();
@@ -2717,6 +2717,8 @@ namespace netgen
 
   void Mesh :: CalcLocalH (double grading) 
   {
+    static Timer t("Mesh::CalcLocalH"); RegionTimer reg(t);
+    
     if (!lochfunc)
       {
         Point3d pmin, pmax;
@@ -3242,6 +3244,8 @@ namespace netgen
 
   void Mesh :: Compress ()
   {
+    static Timer t("Mesh::Compress"); RegionTimer reg(t);
+    
     Array<PointIndex,PointIndex::BASE,PointIndex> op2np(GetNP());
     Array<MeshPoint> hpoints;
     BitArrayChar<PointIndex::BASE> pused(GetNP());
@@ -3381,7 +3385,7 @@ namespace netgen
 
     for (int i = 0; i < lockedpoints.Size(); i++)
       lockedpoints[i] = op2np[lockedpoints[i]];
-
+    /*
     for (int i = 0; i < facedecoding.Size(); i++)
       facedecoding[i].firstelement = -1;
     for (int i = surfelements.Size()-1; i >= 0; i--)
@@ -3390,7 +3394,8 @@ namespace netgen
         surfelements[i].next = facedecoding[ind-1].firstelement;
         facedecoding[ind-1].firstelement = i;
       }
-
+    */
+    RebuildSurfaceElementLists ();
     CalcSurfacesOfNode();
 
 
@@ -3508,6 +3513,8 @@ namespace netgen
 
   int Mesh :: CheckOverlappingBoundary () 
   {
+    static Timer t("Mesh::CheckOverlappingBoundary"); RegionTimer reg(t);
+    
     int i, j, k;
 
     Point3d pmin, pmax;
@@ -4824,9 +4831,10 @@ namespace netgen
                                  bool build_searchtree,
                                  const bool allowindex) const
   {
-    const double pointtol = 1e-12;
-    netgen::Point<3> pmin = p - Vec<3> (pointtol, pointtol, pointtol);
-    netgen::Point<3> pmax = p + Vec<3> (pointtol, pointtol, pointtol);
+    // const double pointtol = 1e-12;
+    // netgen::Point<3> pmin = p - Vec<3> (pointtol, pointtol, pointtol);
+    // netgen::Point<3> pmax = p + Vec<3> (pointtol, pointtol, pointtol);
+
     if (dimension == 2)
       {
         int ne;
@@ -4839,8 +4847,11 @@ namespace netgen
         if (elementsearchtree || build_searchtree)
           {
             // update if necessary:
-            const_cast<Mesh&>(*this).BuildElementSearchTree (); 
-            elementsearchtree->GetIntersecting (pmin, pmax, locels);
+            const_cast<Mesh&>(*this).BuildElementSearchTree ();
+            // double tol = elementsearchtree->Tolerance();
+            // netgen::Point<3> pmin = p - Vec<3> (tol, tol, tol);
+            // netgen::Point<3> pmax = p + Vec<3> (tol, tol, tol);
+            elementsearchtree->GetIntersecting (p, p, locels);
             ne = locels.Size();
           }
         else
@@ -4882,8 +4893,11 @@ namespace netgen
         if (elementsearchtree || build_searchtree)
           {
             // update if necessary:
-            const_cast<Mesh&>(*this).BuildElementSearchTree (); 
-            elementsearchtree->GetIntersecting (pmin, pmax, locels);
+            const_cast<Mesh&>(*this).BuildElementSearchTree ();
+            // double tol = elementsearchtree->Tolerance();            
+            // netgen::Point<3> pmin = p - Vec<3> (tol, tol, tol);
+            // netgen::Point<3> pmax = p + Vec<3> (tol, tol, tol);
+            elementsearchtree->GetIntersecting (p, p, locels);
             ne = locels.Size();
           }
         else

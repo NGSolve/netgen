@@ -570,9 +570,9 @@ public:
     { tree->DeleteElement(pi); }
     void GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax, 
                           Array<T> & pis) const;
-    
-    // const T_ADTree<2*dim> & Tree() const { return *tree; };
-    // T_ADTree<2*dim> & Tree() { return *tree; };
+    double Tolerance() const { return 1e-7 * Dist(boxpmax, boxpmin); } // single precision
+    const auto & Tree() const { return *tree; };
+    auto & Tree() { return *tree; };
 };
 
 }

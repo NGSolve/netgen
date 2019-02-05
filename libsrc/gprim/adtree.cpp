@@ -2400,13 +2400,13 @@ namespace netgen
                                          Array<T> & pis) const
   {
     Point<2*dim> tpmin, tpmax;
-
+    double tol = Tolerance();
     for (size_t i = 0; i < dim; i++)
       {
 	tpmin(i) = boxpmin(i);
-	tpmax(i) = pmax(i);
+	tpmax(i) = pmax(i)+tol;
         
-	tpmin(i+dim) = pmin(i);
+	tpmin(i+dim) = pmin(i)-tol;
 	tpmax(i+dim) = boxpmax(i);
       }
 
