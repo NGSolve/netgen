@@ -4712,7 +4712,7 @@ namespace netgen
                   lam(2) > -eps && 
                   lam(0) + lam(1) + lam(2) < 1+eps);
       }
-    else if (el.GetType() == PRISM)
+    else if (el.GetType() == PRISM || el.GetType() == PRISM15)
       {
         retval = (lam(0) > -eps &&
                   lam(1) > -eps &&
@@ -4720,7 +4720,7 @@ namespace netgen
                   lam(2) < 1+eps &&
                   lam(0) + lam(1) < 1+eps);
       }
-    else if (el.GetType() == PYRAMID)
+    else if (el.GetType() == PYRAMID || el.GetType() == PYRAMID13)
       {
         retval = (lam(0) > -eps &&
                   lam(1) > -eps &&
@@ -4728,7 +4728,7 @@ namespace netgen
                   lam(0) + lam(2) < 1+eps &&
                   lam(1) + lam(2) < 1+eps);
       }
-    else if (el.GetType() == HEX)
+    else if (el.GetType() == HEX || el.GetType() == HEX20)
       {
         retval = (lam(0) > -eps && lam(0) < 1+eps &&
                   lam(1) > -eps && lam(1) < 1+eps &&

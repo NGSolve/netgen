@@ -1,9 +1,10 @@
 from netgen.meshing import *
 
-
 def ReadGmsh(filename):
+    if not filename.endswith(".msh"):
+        filename += ".msh"
     meshdim = 1
-    with open(filename + ".msh", 'r') as f:
+    with open(filename, 'r') as f:
         while f.readline().split()[0] != "$Elements":
             pass
         nelem = int(f.readline())
@@ -16,14 +17,57 @@ def ReadGmsh(filename):
                 meshdim = 3
                 break
 
-    f = open(filename + ".msh", 'r')
+    f = open(filename, 'r')
     mesh = Mesh(dim=meshdim)
 
     pointmap = {}
     facedescriptormap = {}
-    namemap = {}
+    namemap = { 0 : "default" }
     materialmap = {}
     bbcmap = {}
+
+    segm = 1
+    trig = 2
+    quad = 3
+    tet = 4
+    hex = 5
+    prism = 6
+    pyramid = 7
+    segm3 = 8      # 2nd order line
+    trig6 = 9      # 2nd order trig
+    tet10 = 11     # 2nd order tet
+    point = 15
+    quad8 = 16     # 2nd order quad
+    hex20 = 17     # 2nd order hex
+    prism15 = 18   # 2nd order prism
+    pyramid13 = 19 # 2nd order pyramid
+    segms = [segm, segm3]
+    trigs = [trig, trig6]
+    quads = [quad, quad8]
+    tets = [tet, tet10]
+    hexes = [hex, hex20]
+    prisms = [prism, prism15]
+    pyramids = [pyramid, pyramid13]
+    elem0d = [point]
+    elem1d = segms
+    elem2d = trigs + quads
+    elem3d = tets + hexes + prisms + pyramids
+
+    num_nodes_map = { segm : 2,
+                      trig : 3,
+                      quad : 4,
+                      tet : 4,
+                      hex : 8,
+                      prism : 6,
+                      pyramid : 5,
+                      segm3 : 3,
+                      trig6 : 6,
+                      tet10 : 10,
+                      point : 1,
+                      quad8 : 8,
+                      hex20 : 20,
+                      prism15 : 18,
+                      pyramid13 : 19 }
 
     while True:
         line = f.readline()
@@ -57,29 +101,14 @@ def ReadGmsh(filename):
                 # the first tag is the physical group nr, the second tag is the group nr of the dim
                 tags = [int(line[3 + k]) for k in range(numtags)]
 
-                if elmtype == 1:  # 2-node line
-                    num_nodes = 2
-                elif elmtype == 2:  # 3-node trig
-                    num_nodes = 3
-                elif elmtype == 3:  # 4-node quad
-                    num_nodes = 4
-                elif elmtype == 4:  # 4-node tet
-                    num_nodes = 4
-                elif elmtype == 5:  # 8-node hex
-                    num_nodes = 8
-                elif elmtype == 6:  # 6-node prism
-                    num_nodes = 6
-                elif elmtype == 7:  # 5-node pyramid
-                    num_nodes = 5
-                elif elmtype == 15:  # 1-node point
-                    num_nodes = 1
-                else:
+                if elmtype not in num_nodes_map:
                     raise Exception("element type", elmtype, "not implemented")
+                num_nodes = num_nodes_map[elmtype]
 
                 nodenums = line[3 + numtags:3 + numtags + num_nodes]
                 nodenums2 = [pointmap[int(nn)] for nn in nodenums]
 
-                if elmtype == 1:
+                if elmtype in elem1d:
                     if meshdim == 3:
                         if tags[1] in bbcmap:
                             index = bbcmap[tags[1]]
@@ -117,7 +146,7 @@ def ReadGmsh(filename):
 
                     mesh.Add(Element1D(index=index, vertices=nodenums2))
 
-                if elmtype in [2, 3]:  # 2d elements
+                if elmtype in elem2d:  # 2d elements
                     if meshdim == 3:
                         if tags[1] in facedescriptormap.keys():
                             index = facedescriptormap[tags[1]]
@@ -142,9 +171,17 @@ def ReadGmsh(filename):
                                 mesh.SetMaterial(index, "surf" + str(tags[1]))
                             materialmap[tags[1]] = index
 
-                    mesh.Add(Element2D(index, nodenums2))
+                    if elmtype in trigs:
+                        ordering = [i for i in range(3)]
+                        if elmtype == trig6:
+                            ordering += [4,5,3]
+                    if elmtype in quads:
+                        ordering = [i for i in range(4)]
+                        if elmtype == quad8:
+                            ordering += [4, 6, 7, 5]
+                    mesh.Add(Element2D(index, [nodenums2[i] for i in ordering]))
 
-                if elmtype in [4, 5, 6, 7]:  # volume elements
+                if elmtype in elem3d:  # volume elements
                     if tags[1] in materialmap:
                         index = materialmap[tags[1]]
                     else:
@@ -157,9 +194,22 @@ def ReadGmsh(filename):
 
                     nodenums2 = [pointmap[int(nn)] for nn in nodenums]
 
-                    if elmtype == 4:
-                        mesh.Add(Element3D(index, [nodenums2[0], nodenums2[1], nodenums2[3], nodenums2[2]]))
-                    elif elmtype in [5, 6, 7]:
-                        mesh.Add(Element3D(index, nodenums2))
+                    if elmtype in tets:
+                        ordering = [0,1,2,3]
+                        if elmtype == tet10:
+                            ordering += [4,6,7,5,9,8]
+                    elif elmtype in hexes:
+                        ordering = [0,1,5,4,3,2,6,7]
+                        if elmtype == hex20:
+                            ordering += [8,16,10,12,13,19,15,14,9,11,18,17]
+                    elif elmtype in prisms:
+                        ordering = [0,2,1,3,5,4]
+                        if elmtype == prism15:
+                            ordering += [7,6,9,8,11,10,13,12,14]
+                    elif elmtype in pyramids:
+                        ordering = [3,2,1,0,4]
+                        if elmtype == pyramid13:
+                            ordering += [10,5,6,8,12,11,9,7]
+                    mesh.Add(Element3D(index, [nodenums2[i] for i in ordering]))
 
     return mesh

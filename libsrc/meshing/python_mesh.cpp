@@ -256,44 +256,19 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   py::class_<Element>(m, "Element3D")
     .def(py::init([](int index, py::list vertices)
                   {
-                    Element * newel = nullptr;
-                    if (py::len(vertices) == 4)
-                      {
-                        newel = new Element(TET);
-                        for (int i = 0; i < 4; i++)
-                          (*newel)[i] = py::extract<PointIndex>(vertices[i])();
-                        newel->SetIndex(index);
-                      }
-                    else if (py::len(vertices) == 5)
-                      {
-                        newel = new Element(PYRAMID);
-                        for (int i = 0; i < 5; i++)
-                          (*newel)[i] = py::extract<PointIndex>(vertices[i])();
-                        newel->SetIndex(index);
-                      }
-                    else if (py::len(vertices) == 6)
-                      {
-                        newel = new Element(PRISM);
-                        for (int i = 0; i < 6; i++)
-                          (*newel)[i] = py::extract<PointIndex>(vertices[i])();
-                        newel->SetIndex(index);
-                      }
-                    else if (py::len(vertices) == 8)
-                      {
-                        newel = new Element(HEX);
-                        for (int i = 0; i < 8; i++)
-                          (*newel)[i] = py::extract<PointIndex>(vertices[i])();
-                        newel->SetIndex(index);
-                      }
-                    else if (py::len(vertices) == 20)
-                      {
-                        newel = new Element(HEX20);
-                        for (int i = 0; i < 20; i++)
-                          (*newel)[i] = py::extract<PointIndex>(vertices[i])();
-                        newel->SetIndex(index);
-                      }
-                    else
-                      throw NgException ("cannot create element");
+                    std::map<int, ELEMENT_TYPE> types = {{4, TET},
+                                                         {5, PYRAMID},
+                                                         {6, PRISM},
+                                                         {8, HEX},
+                                                         {10, TET10},
+                                                         {13, PYRAMID13},
+                                                         {15, PRISM15},
+                                                         {20, HEX20}};
+                    int np = py::len(vertices);
+                    auto newel = new Element(types[np]);
+                    for(int i=0; i<np; i++)
+                      (*newel)[i] = py::cast<PointIndex>(vertices[i]);
+                    newel->SetIndex(index);
                     return newel;
                   }),
           py::arg("index")=1,py::arg("vertices"),
