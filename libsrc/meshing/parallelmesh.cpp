@@ -578,8 +578,8 @@ namespace netgen
 	    osegs_both.Append(osegs1[l]);
 	  }
 	  for(int l = 0; l<osegs_both.Size(); l++) {
-	    int segnp = (*this)[osegs_both[l]].GetNP();
-	    if(segnp!=segnp)
+	    int segnp2 = (*this)[osegs_both[l]].GetNP();
+	    if(segnp!=segnp2)
 	      throw NgException("Tried to identify non-curved and curved Segment!");
 	  }
 	  for(int l = 0; l<osegs_both.Size(); l++) {
@@ -984,7 +984,8 @@ namespace netgen
     stringstream str;
     str << "p" << id << ": got " << GetNE() << " elements and " 
 	 << GetNSE() << " surface elements";
-    cout << str.str() << endl;
+    PrintMessage(2, str.str());
+    // cout << str.str() << endl;
     // PrintMessage (2, "Got ", GetNE(), " elements and ", GetNSE(), " surface elements");
     // PrintMessage (2, "Got ", GetNSE(), " surface elements");
 
