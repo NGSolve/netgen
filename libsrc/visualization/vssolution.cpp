@@ -2857,6 +2857,7 @@ namespace netgen
               }
             case PRISM:
             case PRISM12:
+            case PRISM15:
               {
                 lami[0] = (1-lam3) * (1-lam1-lam2);
                 lami[1] = (1-lam3) * lam1;
@@ -2907,6 +2908,7 @@ namespace netgen
               }
             case PRISM:
             case PRISM12:
+            case PRISM15:
               {
                 lami[0] = (1-lam3) * (1-lam1-lam2);
                 lami[1] = (1-lam3) * lam1;
@@ -2918,6 +2920,7 @@ namespace netgen
                 break;
               }
             case PYRAMID:
+            case PYRAMID13:
               {
                 if (lam3 > 1-1e-5)
                   {
@@ -4019,7 +4022,7 @@ namespace netgen
         if(vispar.donotclipdomain > 0 && vispar.donotclipdomain == (*mesh)[ei].GetIndex()) continue;
 
         ELEMENT_TYPE type = (*mesh)[ei].GetType();
-        if (type == HEX || type == PRISM || type == TET || type == TET10 || type == PYRAMID)
+        if (type == HEX || type == PRISM || type == TET || type == TET10 || type == PYRAMID || type == PYRAMID13 || type == PRISM15 || type == HEX20)
           {
             const Element & el = (*mesh)[ei];
 
@@ -4078,6 +4081,8 @@ namespace netgen
                       switch (type)
                         {
                         case PRISM:
+                        case PRISM12:
+                        case PRISM15:
                           if (ix+iy <= n)
                             {
                               ploc = Point<3> (double(ix) / n, double(iy) / n, double(iz) / n);
@@ -4088,9 +4093,11 @@ namespace netgen
                             compress[ii] = -1;
                           break;
                         case HEX:
+                        case HEX20:
                           ploc = Point<3> (double(ix) / n, double(iy) / n, double(iz) / n);
                           break;
                         case PYRAMID:
+                        case PYRAMID13:
                           ploc = Point<3> (double(ix) / n * (1-double(iz)/n),
                                            double(iy) / n * (1-double(iz)/n),
                                            double(iz)/n);
@@ -4104,7 +4111,7 @@ namespace netgen
                         locgrid[compress[ii]] = ploc;
                     }
 
-            if (type != TET && type != TET10 && type != PRISM) cnt_valid = n3;
+            if (type != TET && type != TET10 && type != PRISM && type != PRISM12 && type != PRISM15) cnt_valid = n3;
 
 	    locgrid.SetSize(cnt_valid);
 

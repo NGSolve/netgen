@@ -2790,6 +2790,32 @@ namespace netgen
 	  break;
 	}
 
+      case PRISM15:
+        {
+	  shapes = 0.0;
+	  T x = xi(0);
+	  T y = xi(1);
+	  T z = xi(2);
+          T lam = 1-x-y;
+          T lamz = 1-z;
+          shapes[0] = (2*x*x-x) * (2*lamz*lamz-lamz);
+          shapes[1] = (2*y*y-y) * (2*lamz*lamz-lamz);
+          shapes[2] = (2*lam*lam-lam) * (2*lamz*lamz-lamz);
+          shapes[3] = (2*x*x-x) * (2*z*z-z);
+          shapes[4] = (2*y*y-y) * (2*z*z-z);
+          shapes[5] = (2*lam*lam-lam) * (2*z*z-z);
+          shapes[6] = 4 * x * y * (2*lamz*lamz-lamz);
+          shapes[7] = 4 * x * lam * (2*lamz*lamz-lamz);
+          shapes[8] = 4 * y * lam * (2*lamz*lamz-lamz);
+          shapes[9] = x * 4 * z * (1-z);
+          shapes[10] = y * 4 * z * (1-z);
+          shapes[11] = lam * 4 * z * (1-z);
+          shapes[12] = 4 * x * y * (2*z*z-z);
+          shapes[13] = 4 * x * lam * (2*z*z-z);
+          shapes[14] = 4 * y * lam * (2*z*z-z);
+          break;
+        }
+
       case PYRAMID:
 	{
 	  shapes = 0.0;
@@ -2838,6 +2864,29 @@ namespace netgen
 
 	  break;
 	}
+
+      case PYRAMID13:
+        {
+	  shapes = 0.0;
+	  T x = xi(0);
+	  T y = xi(1);
+	  T z = xi(2);
+          z *= 1-1e-12;
+          shapes[0] = (-z + z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + (-2*x - z + 2)*(-2*y - z + 2))*(-0.5*x - 0.5*y - 0.5*z + 0.25);
+          shapes[1] = (0.5*x - 0.5*y - 0.25)*(-z - z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + (2*x + z)*(-2*y - z + 2));
+          shapes[2] = (-z + z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + (2*x + z)*(2*y + z))*(0.5*x + 0.5*y + 0.5*z - 0.75);
+          shapes[3] = (-0.5*x + 0.5*y - 0.25)*(-z - z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + (2*y + z)*(-2*x - z + 2));
+          shapes[4] = z*(2*z - 1);
+          shapes[5] = 2*x*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/(-2*z + 2);
+          shapes[6] = 4*x*y*(-2*x - 2*z + 2)/(-2*z + 2);
+          shapes[7] = 2*y*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/(-2*z + 2);
+          shapes[8] = 4*x*y*(-2*y - 2*z + 2)/(-2*z + 2);
+          shapes[9] = z*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/(-z + 1);
+          shapes[10] = 2*x*z*(-2*y - 2*z + 2)/(-z + 1);
+          shapes[11] = 4*x*y*z/(-z + 1);
+          shapes[12] = 2*y*z*(-2*x - 2*z + 2)/(-z + 1);
+          break;
+        }
 
       case HEX:
 	{
@@ -3300,6 +3349,36 @@ namespace netgen
 
 	}
 
+      case PRISM15:
+        {
+          AutoDiff<3,T> x(xi(0), 0);
+          AutoDiff<3,T> y(xi(1), 1);
+          AutoDiff<3,T> z(xi(2), 2);
+          AutoDiff<3,T> ad[15];
+          AutoDiff<3,T> lam = 1-x-y;
+          AutoDiff<3,T> lamz = 1-z;
+
+          ad[0] = (2*x*x-x) * (2*lamz*lamz-lamz);
+          ad[1] = (2*y*y-y) * (2*lamz*lamz-lamz);
+          ad[2] = (2*lam*lam-lam) * (2*lamz*lamz-lamz);
+          ad[3] = (2*x*x-x) * (2*z*z-z);
+          ad[4] = (2*y*y-y) * (2*z*z-z);
+          ad[5] = (2*lam*lam-lam) * (2*z*z-z);
+          ad[6] = 4 * x * y * (2*lamz*lamz-lamz);
+          ad[7] = 4 * x * lam * (2*lamz*lamz-lamz);
+          ad[8] = 4 * y * lam * (2*lamz*lamz-lamz);
+          ad[9] = x * 4 * z * (1-z);
+          ad[10] = y * 4 * z * (1-z);
+          ad[11] = lam * 4 * z * (1-z);
+          ad[12] = 4 * x * y * (2*z*z-z);
+          ad[13] = 4 * x * lam * (2*z*z-z);
+          ad[14] = 4 * y * lam * (2*z*z-z);
+
+          for(int i=0; i<15; i++)
+            for(int j=0; j<3; j++)
+              dshapes(i,j) = ad[i].DValue(j);
+          break;
+        }
       case PYRAMID:
 	{
           // if (typeid(T) == typeid(SIMD<double>)) return;
@@ -3396,6 +3475,54 @@ namespace netgen
           
 	  break;
 	}
+
+      case PYRAMID13:
+        {
+	  T x = xi(0);
+	  T y = xi(1);
+	  T z = xi(2);
+          z *= 1-1e-12;
+          dshapes(0,0) = 0.5*z - 0.5*z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) - 0.5*(-2*x - z + 2)*(-2*y - z + 2) + (-0.5*x - 0.5*y - 0.5*z + 0.25)*(4*y + 2*z + 2*z*(2*y + z - 1)/(-z + 1) - 4);
+          dshapes(0,1) = 0.5*z - 0.5*z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) - 0.5*(-2*x - z + 2)*(-2*y - z + 2) + (-0.5*x - 0.5*y - 0.5*z + 0.25)*(4*x + 2*z + 2*z*(2*x + z - 1)/(-z + 1) - 4);
+          dshapes(0,2) = 0.5*z - 0.5*z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) - 0.5*(-2*x - z + 2)*(-2*y - z + 2) + (-0.5*x - 0.5*y - 0.5*z + 0.25)*(2*x + 2*y + 2*z + z*(2*x + z - 1)/(-z + 1) + z*(2*y + z - 1)/(-z + 1) + z*(2*x + z - 1)*(2*y + z - 1)/((-z + 1)*(-z + 1)) - 5 + (2*x + z - 1)*(2*y + z - 1)/(-z + 1));
+          dshapes(1,0) = -0.5*z - 0.5*z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + 0.5*(2*x + z)*(-2*y - z + 2) + (0.5*x - 0.5*y - 0.25)*(-4*y - 2*z - 2*z*(2*y + z - 1)/(-z + 1) + 4);
+          dshapes(1,1) = 0.5*z + 0.5*z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) - 0.5*(2*x + z)*(-2*y - z + 2) + (-4*x - 2*z - 2*z*(2*x + z - 1)/(-z + 1))*(0.5*x - 0.5*y - 0.25);
+          dshapes(1,2) = (0.5*x - 0.5*y - 0.25)*(-2*x - 2*y - 2*z - z*(2*x + z - 1)/(-z + 1) - z*(2*y + z - 1)/(-z + 1) - z*(2*x + z - 1)*(2*y + z - 1)/((-z + 1)*(-z + 1)) + 1 - (2*x + z - 1)*(2*y + z - 1)/(-z + 1));
+          dshapes(2,0) = -0.5*z + 0.5*z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + 0.5*(2*x + z)*(2*y + z) + (4*y + 2*z + 2*z*(2*y + z - 1)/(-z + 1))*(0.5*x + 0.5*y + 0.5*z - 0.75);
+          dshapes(2,1) = -0.5*z + 0.5*z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + 0.5*(2*x + z)*(2*y + z) + (4*x + 2*z + 2*z*(2*x + z - 1)/(-z + 1))*(0.5*x + 0.5*y + 0.5*z - 0.75);
+          dshapes(2,2) = -0.5*z + 0.5*z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + 0.5*(2*x + z)*(2*y + z) + (0.5*x + 0.5*y + 0.5*z - 0.75)*(2*x + 2*y + 2*z + z*(2*x + z - 1)/(-z + 1) + z*(2*y + z - 1)/(-z + 1) + z*(2*x + z - 1)*(2*y + z - 1)/((-z + 1)*(-z + 1)) - 1 + (2*x + z - 1)*(2*y + z - 1)/(-z + 1));
+          dshapes(3,0) = 0.5*z + 0.5*z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) - 0.5*(2*y + z)*(-2*x - z + 2) + (-0.5*x + 0.5*y - 0.25)*(-4*y - 2*z - 2*z*(2*y + z - 1)/(-z + 1));
+          dshapes(3,1) = -0.5*z - 0.5*z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + 0.5*(2*y + z)*(-2*x - z + 2) + (-0.5*x + 0.5*y - 0.25)*(-4*x - 2*z - 2*z*(2*x + z - 1)/(-z + 1) + 4);
+          dshapes(3,2) = (-0.5*x + 0.5*y - 0.25)*(-2*x - 2*y - 2*z - z*(2*x + z - 1)/(-z + 1) - z*(2*y + z - 1)/(-z + 1) - z*(2*x + z - 1)*(2*y + z - 1)/((-z + 1)*(-z + 1)) + 1 - (2*x + z - 1)*(2*y + z - 1)/(-z + 1));
+          dshapes(4,0) = 0;
+          dshapes(4,1) = 0;
+          dshapes(4,2) = 4*z - 1;
+          dshapes(5,0) = -4*x*(-2*y - 2*z + 2)/(-2*z + 2) + 2*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/(-2*z + 2);
+          dshapes(5,1) = -4*x*(-2*x - 2*z + 2)/(-2*z + 2);
+          dshapes(5,2) = -4*x*(-2*x - 2*z + 2)/(-2*z + 2) - 4*x*(-2*y - 2*z + 2)/(-2*z + 2) + 4*x*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/((-2*z + 2)*(-2*z + 2));
+          dshapes(6,0) = -8*x*y/(-2*z + 2) + 4*y*(-2*x - 2*z + 2)/(-2*z + 2);
+          dshapes(6,1) = 4*x*(-2*x - 2*z + 2)/(-2*z + 2);
+          dshapes(6,2) = -8*x*y/(-2*z + 2) + 8*x*y*(-2*x - 2*z + 2)/((-2*z + 2)*(-2*z + 2));
+          dshapes(7,0) = -4*y*(-2*y - 2*z + 2)/(-2*z + 2);
+          dshapes(7,1) = -4*y*(-2*x - 2*z + 2)/(-2*z + 2) + 2*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/(-2*z + 2);
+          dshapes(7,2) = -4*y*(-2*x - 2*z + 2)/(-2*z + 2) - 4*y*(-2*y - 2*z + 2)/(-2*z + 2) + 4*y*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/((-2*z + 2)*(-2*z + 2));
+          dshapes(8,0) = 4*y*(-2*y - 2*z + 2)/(-2*z + 2);
+          dshapes(8,1) = -8*x*y/(-2*z + 2) + 4*x*(-2*y - 2*z + 2)/(-2*z + 2);
+          dshapes(8,2) = -8*x*y/(-2*z + 2) + 8*x*y*(-2*y - 2*z + 2)/((-2*z + 2)*(-2*z + 2));
+          dshapes(9,0) = -2*z*(-2*y - 2*z + 2)/(-z + 1);
+          dshapes(9,1) = -2*z*(-2*x - 2*z + 2)/(-z + 1);
+          dshapes(9,2) = -2*z*(-2*x - 2*z + 2)/(-z + 1) - 2*z*(-2*y - 2*z + 2)/(-z + 1) + z*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/((-z + 1)*(-z + 1)) + (-2*x - 2*z + 2)*(-2*y - 2*z + 2)/(-z + 1);
+          dshapes(10,0) = 2*z*(-2*y - 2*z + 2)/(-z + 1);
+          dshapes(10,1) = -4*x*z/(-z + 1);
+          dshapes(10,2) = -4*x*z/(-z + 1) + 2*x*z*(-2*y - 2*z + 2)/((-z + 1)*(-z + 1)) + 2*x*(-2*y - 2*z + 2)/(-z + 1);
+          dshapes(11,0) = 4*y*z/(-z + 1);
+          dshapes(11,1) = 4*x*z/(-z + 1);
+          dshapes(11,2) = 4*x*y*z/((-z + 1)*(-z + 1)) + 4*x*y/(-z + 1);
+          dshapes(12,0) = -4*y*z/(-z + 1);
+          dshapes(12,1) = 2*z*(-2*x - 2*z + 2)/(-z + 1);
+          dshapes(12,2) = -4*y*z/(-z + 1) + 2*y*z*(-2*x - 2*z + 2)/((-z + 1)*(-z + 1)) + 2*y*(-2*x - 2*z + 2)/(-z + 1);
+          break;
+        }
 
       case HEX:
 	{

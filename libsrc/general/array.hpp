@@ -243,10 +243,11 @@ namespace netgen
     }
 
     explicit Array(size_t asize)
-      : FlatArray<T, BASE, TIND> (asize, new T[asize])
+      : FlatArray<T, BASE, TIND> (asize, asize ? new T[asize] : nullptr)
     {
-      allocsize = asize; 
-      ownmem = 1;
+      allocsize = asize;
+      if(asize)
+        ownmem = 1;
     }
 
     /// Generate array in user data
