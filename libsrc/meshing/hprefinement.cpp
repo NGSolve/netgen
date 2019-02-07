@@ -22,8 +22,9 @@ namespace netgen
       {
 	pnums[i] = -1;
 	param[i][0] = param[i][1] = param[i][2] = 0;
-        domin=-1; domout=-1; // he:
       }
+    domin=-1; domout=-1; // he:
+    levelx = 0; levely = 0; levelz = 0;
   } 
 
   HPRefElement :: HPRefElement () 
@@ -31,46 +32,40 @@ namespace netgen
     Reset();
   }
 
-  HPRefElement :: HPRefElement(Element & el)
+  HPRefElement :: HPRefElement(Element & el) :
+    np(el.GetNV()), index(el.GetIndex()), levelx(0), levely(0), levelz(0), type(HP_NONE), domin(-1), domout(-1) //domin,out for segements
   { 
     //Reset();
-    np = el.GetNV(); 
     for (int i=0; i<np ; i++) 
       pnums[i] = el[i]; 
     
-    index = el.GetIndex(); 
     const Point3d * points = 
       MeshTopology :: GetVertices (el.GetType());
     for(int i=0;i<np;i++)
       for(int l=0;l<3;l++) 
 	param[i][l] = points[i].X(l+1); 
-    type = HP_NONE; 
-    domin=-1; domout=-1; // he: needed for segments
   }
 
   
-  HPRefElement :: HPRefElement(Element2d & el)
+  HPRefElement :: HPRefElement(Element2d & el) :
+    levelx(0), levely(0), levelz(0), type(HP_NONE), index(el.GetIndex()), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segements
   { 
     //Reset();
-    np = el.GetNV(); 
     
     for (int i=0; i<np ; i++) 
       pnums[i] = el[i]; 
     
-    index = el.GetIndex(); 
     const Point3d * points = 
       MeshTopology :: GetVertices (el.GetType());
     for(int i=0;i<np;i++)
       for(int l=0;l<3;l++) 
 	param[i][l] = points[i].X(l+1); 
-    type = HP_NONE; 
-    domin=-1; domout=-1; // he: needed for segments
   }
 
-  HPRefElement :: HPRefElement(Segment & el)
+  HPRefElement :: HPRefElement(Segment & el) :
+    levelx(0), levely(0), levelz(0), type(HP_NONE), np(2), domin(el.domin), domout(el.domout), singedge_left(el.singedge_left), singedge_right(el.singedge_right) 
   { 
     //Reset();
-    np = 2; 
     for (int i=0; i<np ; i++) 
       pnums[i] = el[i];
     const Point3d * points = 
@@ -86,35 +81,18 @@ namespace netgen
       param[i][1] = -1; param[i][2] = -1;
     }
     */
-
-    singedge_left = el.singedge_left; 
-    singedge_right = el.singedge_right; 
-    type = HP_NONE; 
-    // he: needed for orientation!
-    domin = el.domin;
-    domout = el.domout;
   }
   
-  HPRefElement :: HPRefElement(HPRefElement & el)
+  HPRefElement :: HPRefElement(HPRefElement & el) :
+    np(el.np), levelx(el.levelx), levely(el.levely), levelz(el.levelz), type(el.type), domin(el.domin), domout(el.domout), index(el.index), coarse_elnr(el.coarse_elnr), singedge_left(el.singedge_left), singedge_right(el.singedge_right) 
+    
   {
     //Reset();
-    np = el.np; 
     for (int i=0; i<np ; i++) 
       {
 	pnums[i] = el[i];
 	for(int l=0; l<3; l++) param[i][l] = el.param[i][l]; 
-      }
-    index = el.index; 
-    levelx = el.levelx; 
-    levely = el.levely; 
-    levelz = el.levelz; 
-    type = el.type; 
-    coarse_elnr = el.coarse_elnr; 
-    singedge_left = el.singedge_left; 
-    singedge_right = el.singedge_right; 
-    domin = el.domin; // he: needed for segments
-    domout=el.domout;
-          
+      }      
   }
 
   void HPRefElement :: SetType (HPREF_ELEMENT_TYPE t) 
@@ -706,8 +684,7 @@ namespace netgen
       {
 	HPRefElement el = elements[i];
 	HPRef_Struct * hprs = Get_HPRef_Struct (el.type);
-	int newlevel = el.levelx + 1;
-
+	int newlevel = el.levelx;
 	int oldnp = 0;
 	switch (hprs->geom)
 	  {
@@ -829,18 +806,27 @@ namespace netgen
 	    HPRefElement newel(el);
 
 	    newel.type = hprs->neweltypes[j]; 
-            
 	    // newel.index = elements[i].index;
 	    // newel.coarse_elnr = elements[i].coarse_elnr;
-	    newel.levelx = newel.levely = newel.levelz = newlevel;
+            if (newel.type == HP_SEGM ||
+                newel.type == HP_TRIG ||
+                newel.type == HP_QUAD ||
+                newel.type == HP_TET ||
+                newel.type == HP_PRISM ||
+                newel.type == HP_HEX || 
+                newel.type == HP_PYRAMID)
+              newel.levelx = newel.levely = newel.levelz = newlevel;
+            else
+              newel.levelx = newel.levely = newel.levelz = newlevel+1;
+	    
             switch(hprsnew->geom) 
 	      {
-	      case HP_SEGM: newel.np=2; break; 
-	      case HP_QUAD: newel.np=4; break; 
-	      case HP_TRIG: newel.np=3; break; 
-	      case HP_HEX: newel.np=8; break; 
-	      case HP_PRISM: newel.np=6; break;
-	      case HP_TET: newel.np=4; break; 
+	      case HP_SEGM:    newel.np=2; break; 
+	      case HP_QUAD:    newel.np=4; break;
+	      case HP_TRIG:    newel.np=3; break;
+	      case HP_HEX:     newel.np=8; break; 
+	      case HP_PRISM:   newel.np=6; break;
+	      case HP_TET:     newel.np=4; break; 
 	      case HP_PYRAMID: newel.np=5; break; 
               default:
                 throw NgException (string("hprefinement.cpp: illegal type"));
@@ -868,7 +854,7 @@ namespace netgen
 	    
 	    if (j == 0) 
 	      elements[i] = newel; // overwrite old element
-	    else        
+	    else
 	      elements.Append (newel);
 	    j++;
 	  }
@@ -1337,7 +1323,7 @@ namespace netgen
     Array<HPRefElement> & hpelements = *mesh.hpelements; 
         
     InitHPElements(mesh,hpelements); 
-    
+
     Array<int> nplevel;
     nplevel.Append (mesh.GetNP());
     
