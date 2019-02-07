@@ -1,7 +1,7 @@
 #ifndef FILE_SOLDATA
 #define FILE_SOLDATA
 
-
+#include <myadt.hpp>  // for tAVX
 namespace netgen
 {
 
