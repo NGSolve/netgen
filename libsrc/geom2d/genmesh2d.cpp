@@ -55,7 +55,8 @@ namespace netgen
 	sum += dt / fun;
       }
 
-    int nel = int (sum+1);
+    int nel = int (sum+0.5);
+    if (nel == 0) nel = 1;
     fperel = sum / nel;
 
     points.Append (0);
@@ -129,6 +130,7 @@ namespace netgen
 	      Point3d oldmark3(oldmark(0), oldmark(1), 0);
 
 	      double h = mesh.GetH (Point<3> (oldmark(0), oldmark(1), 0));
+              cout << "edge h = " << h << endl;
 	      Vec<3> v (1e-4*h, 1e-4*h, 1e-4*h);
 	      searchtree.GetIntersecting (oldmark3 - v, oldmark3 + v, locsearch);
 
