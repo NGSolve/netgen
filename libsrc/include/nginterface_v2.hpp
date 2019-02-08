@@ -29,12 +29,15 @@ enum NG_REFINEMENT_TYPE { NG_REFINE_H = 0, NG_REFINE_P = 1, NG_REFINE_HP = 2 };
 #ifndef PARALLEL
   typedef int MPI_Comm;
 #endif
-namespace netgen { extern DLL_HEADER MPI_Comm ng_comm; }
 
 
 namespace netgen
 {
-
+  using namespace std;
+  using namespace ngcore;
+  
+  extern DLL_HEADER MPI_Comm ng_comm;
+  
   static constexpr int POINTINDEX_BASE = 1;
   
   struct T_EDGE2
