@@ -954,11 +954,21 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("Sum", [](PyMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_SUM, c.comm); })
     .def("Min", [](PyMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_MIN, c.comm); })
     .def("Max", [](PyMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_MAX, c.comm); })
-    .def("SubComm", [](PyMPI_Comm  & c, py::list proc_list) -> shared_ptr<PyMPI_Comm> {
+    .def("SubComm", [](PyMPI_Comm  & c, py::list proc_list)  {
+        Array<int> procs(py::len(proc_list));
+        for (int i = 0; i < procs.Size(); i++)
+          procs[i] = py::extract<int>(proc_list[i])();
+        if (!procs.Size())
+	  return make_shared<PyMPI_Comm>(MPI_COMM_NULL);
+
+	MPI_Comm subcomm = MyMPI_SubCommunicator(c.comm, procs);
+	return make_shared<PyMPI_Comm>(subcomm, true);
+          
+        /*
 	Array<int> procs;
 	if (py::extract<py::list> (proc_list).check()) {
 	  py::list pylist = py::extract<py::list> (proc_list)();
-	  procs.SetSize(py::len(pylist));
+	  procs.SetSize(py::len(pyplist));
 	  for (int i = 0; i < py::len(pylist); i++)
 	    procs[i] = py::extract<int>(pylist[i])();
 	}
@@ -974,6 +984,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 	}
 	MPI_Comm subcomm = MyMPI_SubCommunicator(c.comm, procs);
 	return make_shared<PyMPI_Comm>(subcomm, true);
+        */
       }, py::arg("procs"));
   ;
 
