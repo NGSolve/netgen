@@ -525,8 +525,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 	MPI_Comm comm = pycomm!=nullptr ? pycomm->comm : self->GetCommunicator();
 	self->SetCommunicator(comm);
 	if(MyMPI_GetNTasks(comm)==1) return self;
-	if(MyMPI_GetNTasks(comm)==2) throw NgException("Sorry, cannot handle communicators with NP=2!");
-	cout << " rank " << MyMPI_GetId(comm) << " of " << MyMPI_GetNTasks(comm) << " called Distribute " << endl;
+	// if(MyMPI_GetNTasks(comm)==2) throw NgException("Sorry, cannot handle communicators with NP=2!");
+	// cout << " rank " << MyMPI_GetId(comm) << " of " << MyMPI_GetNTasks(comm) << " called Distribute " << endl;
 	if(MyMPI_GetId(comm)==0) self->Distribute();
 	else self->SendRecvMesh();
         return self;

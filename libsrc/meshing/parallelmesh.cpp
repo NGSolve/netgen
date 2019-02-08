@@ -1073,29 +1073,45 @@ namespace netgen
     Array<idx_t> epart(ne), npart(nn);
 
     idxtype nparts = MyMPI_GetNTasks(GetCommunicator())-1;
-    idxtype edgecut;
 
-    idxtype ncommon = 3;
-    METIS_PartMeshDual (&ne, &nn, &eptr[0], &eind[0], NULL, NULL, &ncommon, &nparts,
-			NULL, NULL,
-			&edgecut, &epart[0], &npart[0]);
+    if (nparts == 1)
+      {
+        for (int i = 0; i < GetNE(); i++)
+          VolumeElement(i+1).SetPartition(1);
+        for (int i = 0; i < GetNSE(); i++)
+          SurfaceElement(i+1).SetPartition(1);
+        for (int i = 0; i < GetNSeg(); i++)
+          LineSegment(i+1).SetPartition(1);
+      }
 
-    /*
-    METIS_PartMeshNodal (&ne, &nn, &eptr[0], &eind[0], NULL, NULL, &nparts,
-			 NULL, NULL,
-			 &edgecut, &epart[0], &npart[0]);
-    */
-    PrintMessage (3, "metis complete");
-    // cout << "done" << endl;
+    else
+      
+      {
 
-    for (int i = 0; i < GetNE(); i++)
-      VolumeElement(i+1).SetPartition(epart[i] + 1);
-    for (int i = 0; i < GetNSE(); i++)
-      SurfaceElement(i+1).SetPartition(epart[i+GetNE()] + 1);
-    for (int i = 0; i < GetNSeg(); i++)
-      LineSegment(i+1).SetPartition(epart[i+GetNE()+GetNSE()] + 1);
-
-
+        idxtype edgecut;
+        
+        idxtype ncommon = 3;
+        METIS_PartMeshDual (&ne, &nn, &eptr[0], &eind[0], NULL, NULL, &ncommon, &nparts,
+                            NULL, NULL,
+                            &edgecut, &epart[0], &npart[0]);
+        
+        /*
+          METIS_PartMeshNodal (&ne, &nn, &eptr[0], &eind[0], NULL, NULL, &nparts,
+          NULL, NULL,
+          &edgecut, &epart[0], &npart[0]);
+        */
+        PrintMessage (3, "metis complete");
+        // cout << "done" << endl;
+        
+        for (int i = 0; i < GetNE(); i++)
+          VolumeElement(i+1).SetPartition(epart[i] + 1);
+        for (int i = 0; i < GetNSE(); i++)
+          SurfaceElement(i+1).SetPartition(epart[i+GetNE()] + 1);
+        for (int i = 0; i < GetNSeg(); i++)
+          LineSegment(i+1).SetPartition(epart[i+GetNE()+GetNSE()] + 1);
+      }
+    
+        
     // surface elements attached to volume elements
     Array<bool, PointIndex::BASE> boundarypoints (GetNP());
     boundarypoints = false;
@@ -1370,6 +1386,19 @@ namespace netgen
     Array<idx_t> epart(ne), npart(nn);
 
     idxtype nparts = MyMPI_GetNTasks(GetCommunicator())-1;
+
+    if (nparts == 1)
+      {
+        for (int i = 0; i < GetNE(); i++)
+          VolumeElement(i+1).SetPartition(1);
+        for (int i = 0; i < GetNSE(); i++)
+          SurfaceElement(i+1).SetPartition(1);
+        for (int i = 0; i < GetNSeg(); i++)
+          LineSegment(i+1).SetPartition(1);
+        return;
+      }
+
+    
     idxtype edgecut;
 
 
