@@ -954,13 +954,12 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("Sum", [](PyMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_SUM, c.comm); })
     .def("Min", [](PyMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_MIN, c.comm); })
     .def("Max", [](PyMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_MAX, c.comm); })
-    .def("SubComm", [](PyMPI_Comm  & c, py::list proc_list)  {
-        Array<int> procs(py::len(proc_list));
+    .def("SubComm", [](PyMPI_Comm & c, std::vector<int> proc_list) {
+        Array<int> procs(proc_list.size());
         for (int i = 0; i < procs.Size(); i++)
-          procs[i] = py::extract<int>(proc_list[i])();
-        if (!procs.Size())
-	  return make_shared<PyMPI_Comm>(MPI_COMM_NULL);
-
+          procs[i] = proc_list[i];
+        if (!procs.Contains(c.Rank()))
+          throw Exception("rank "+ToString(c.Rank())+" not in subcomm");
 	MPI_Comm subcomm = MyMPI_SubCommunicator(c.comm, procs);
 	return make_shared<PyMPI_Comm>(subcomm, true);
           
