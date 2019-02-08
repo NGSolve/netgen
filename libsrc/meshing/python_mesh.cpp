@@ -521,15 +521,22 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     */
     
     .def_property_readonly("_timestamp", &Mesh::GetTimeStamp)
-    .def("Distribute", [](Mesh & self, shared_ptr<PyMPI_Comm> pycomm) {
-	MPI_Comm comm = pycomm!=nullptr ? pycomm->comm : self.GetCommunicator();
-	self.SetCommunicator(comm);
-	if(MyMPI_GetNTasks(comm)==1) return;
+    .def("Distribute", [](shared_ptr<Mesh> self, shared_ptr<PyMPI_Comm> pycomm) {
+	MPI_Comm comm = pycomm!=nullptr ? pycomm->comm : self->GetCommunicator();
+	self->SetCommunicator(comm);
+	if(MyMPI_GetNTasks(comm)==1) return self;
 	if(MyMPI_GetNTasks(comm)==2) throw NgException("Sorry, cannot handle communicators with NP=2!");
 	cout << " rank " << MyMPI_GetId(comm) << " of " << MyMPI_GetNTasks(comm) << " called Distribute " << endl;
-	if(MyMPI_GetId(comm)==0) self.Distribute();
-	else self.SendRecvMesh();
+	if(MyMPI_GetId(comm)==0) self->Distribute();
+	else self->SendRecvMesh();
+        return self;
       }, py::arg("comm")=nullptr)
+    .def("Receive", [](shared_ptr<PyMPI_Comm> pycomm) {
+        auto mesh = make_shared<Mesh>();
+        mesh->SetCommunicator(pycomm->comm);
+        mesh->SendRecvMesh();
+        return mesh;
+      })
     .def("Load",  FunctionPointer 
 	 ([](Mesh & self, const string & filename)
 	  {
