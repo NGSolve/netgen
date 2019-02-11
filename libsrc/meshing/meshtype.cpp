@@ -148,9 +148,9 @@ namespace netgen
     return *this;
   }
   
-  ngstd::Archive & Segment :: DoArchive (ngstd::Archive & ar)
+  void Segment :: DoArchive (Archive & ar)
   {
-    return ar & pnums[0] & pnums[1] & pnums[2]
+    ar & pnums[0] & pnums[1] & pnums[2]
       & edgenr & singedge_left & singedge_right
       & si & cd2i & domin & domout & tlosurf
       & surfnr1 & surfnr2
@@ -2427,9 +2427,9 @@ namespace netgen
       bcn = &default_bcname;
   }
   
-  ngstd::Archive & FaceDescriptor :: DoArchive (ngstd::Archive & ar)
+  void FaceDescriptor :: DoArchive (Archive & ar)
   {
-    return ar & surfnr & domin & domout & tlosurf & bcprop
+    ar & surfnr & domin & domout & tlosurf & bcprop
       & surfcolour.X() & surfcolour.Y() & surfcolour.Z()
       & bcname   
       & domin_singular & domout_singular ;
@@ -2482,7 +2482,7 @@ namespace netgen
     maxidentnr = 0;
   }
 
-    ngstd::Archive & Identifications :: DoArchive (ngstd::Archive & ar)
+    void Identifications :: DoArchive (Archive & ar)
     {
       ar & maxidentnr;
       ar & identifiedpoints & identifiedpoints_nr;
@@ -2503,7 +2503,6 @@ namespace netgen
           for (auto & t : type)
             ar & (unsigned char&)(t);
         }
-      return ar;
     }    
 
   

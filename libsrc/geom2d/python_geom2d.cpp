@@ -17,21 +17,20 @@ DLL_HEADER void ExportGeom2d(py::module &m)
 {
   py::class_<SplineGeometry2d, NetgenGeometry, shared_ptr<SplineGeometry2d>>
     (m, "SplineGeometry",
-     "a 2d boundary representation geometry model by lines and splines")
+     "a 2d boundary representation geometry model by lines and splines",
+     py::multiple_inheritance())
     .def(py::init<>())
-    .def("__init__",
-          [](SplineGeometry2d *instance, const string & filename)
-           {
-             cout << "load geometry";
-             ifstream ist(filename);
-             new (instance) SplineGeometry2d();
-             instance->Load (filename.c_str());
-             ng_geometry = shared_ptr<SplineGeometry2d>(instance, NOOP_Deleter);
-           })
-    
-	.def("Load",&SplineGeometry2d::Load)
+    .def(py::init([](const string& filename)
+                  {
+                    auto geo = make_shared<SplineGeometry2d>();
+                    geo->Load(filename.c_str());
+                    ng_geometry = geo;
+                    return geo;
+                  }))
+    .def(NGSPickle<SplineGeometry2d>())
+    .def("Load",&SplineGeometry2d::Load)
     .def("AppendPoint", FunctionPointer
-         ([](SplineGeometry2d &self, double px, double py, double maxh, double hpref)
+         ([](SplineGeometry2d &self, double px, double py, double maxh, double hpref, string name)
           {
             Point<2> p;
             p(0) = px;
@@ -39,10 +38,11 @@ DLL_HEADER void ExportGeom2d(py::module &m)
             GeomPoint<2> gp(p);
             gp.hmax = maxh;
             gp.hpref = hpref;
+            gp.name = name;
             self.geompoints.Append(gp);
             return self.geompoints.Size()-1;
 	  }),
-         py::arg("x"), py::arg("y"), py::arg("maxh") = 1e99, py::arg("hpref")=0)
+         py::arg("x"), py::arg("y"), py::arg("maxh") = 1e99, py::arg("hpref")=0, py::arg("name")="")
     .def("Append", FunctionPointer([](SplineGeometry2d &self, py::list segment, int leftdomain, int rightdomain,
                                       py::object bc, py::object copy, double maxh, double hpref)
 	  {

@@ -246,6 +246,7 @@ namespace netgen
 
       DLL_HEADER virtual void Save (string filename) const;
 
+     void DoArchive(Archive& ar);
 
       DLL_HEADER void BuildFMap();
 

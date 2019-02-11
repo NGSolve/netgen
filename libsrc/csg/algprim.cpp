@@ -557,7 +557,8 @@ namespace netgen
 
   Point<3> Sphere :: GetSurfacePoint () const
   {
-    return c + Vec<3> (r, 0, 0);
+    // if two spheres touch at exactly that point meshing fails.
+    return c + r * Vec<3> (0.12345, 0.54321, 0.8304715488203073);
   }
 
 
@@ -1235,7 +1236,15 @@ namespace netgen
     return max2(bb/(aa*aa),aa/(bb*bb));
   }
 
+  int EllipticCylinder :: IsIdentic(const Surface& s2, int& inv, double eps) const
+  {
+    const EllipticCylinder* ps2 = dynamic_cast<const EllipticCylinder*>(&s2);
+    if (!ps2) return 0;
 
+    if((vl - ps2->vl).Length() > eps || (vs - ps2->vs).Length() > eps || (a-ps2->a).Length() > eps)
+      return 0;
+    return 1;
+  }
 
   Point<3> EllipticCylinder :: GetSurfacePoint () const
   {
@@ -1940,6 +1949,13 @@ void EllipticCone :: GetTriangleApproximation
         << R    << "  " << r    << endl;
   }
 
-
-
+RegisterClassForArchive<QuadraticSurface, OneSurfacePrimitive> regqs;
+RegisterClassForArchive<Plane, QuadraticSurface> regpl;
+RegisterClassForArchive<Sphere, QuadraticSurface> regsph;
+RegisterClassForArchive<Cylinder, QuadraticSurface> regcyl;
+RegisterClassForArchive<EllipticCylinder, QuadraticSurface> regelcyl;
+RegisterClassForArchive<Ellipsoid, QuadraticSurface> regell;
+RegisterClassForArchive<Cone, QuadraticSurface> regcone;
+RegisterClassForArchive<EllipticCone, QuadraticSurface> regellcone;
+RegisterClassForArchive<Torus, OneSurfacePrimitive> regtorus;
 }

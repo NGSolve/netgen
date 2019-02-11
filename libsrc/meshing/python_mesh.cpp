@@ -61,6 +61,15 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   m.attr("_ngscript") = py::cast(script);
 
+  m.def("_GetStatus", []()
+        {
+          MyStr s; double percent;
+          GetStatus(s, percent);
+          return py::make_tuple(s.c_str(), percent);
+        });
+  m.def("_PushStatus", [](string s) { PushStatus(MyStr(s)); });
+  m.def("_SetThreadPercentage", [](double percent) { SetThreadPercent(percent); });
+
   py::class_<NGDummyArgument>(m, "NGDummyArgument")
     .def("__bool__", []( NGDummyArgument &self ) { return false; } )
     ;
@@ -263,6 +272,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          )
     .def("__repr__", &ToString<Element>)
     .def_property("index", &Element::GetIndex, &Element::SetIndex)
+    .def_property("curved", &Element::IsCurved, &Element::SetCurved)    
     .def_property_readonly("vertices", 
                   FunctionPointer ([](const Element & self) -> py::list
                                    {
@@ -314,6 +324,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          "create surface element"
          )
     .def_property("index", &Element2d::GetIndex, &Element2d::SetIndex)
+    .def_property("curved", &Element2d::IsCurved, &Element2d::SetCurved)
     .def_property_readonly("vertices",
                   FunctionPointer([](const Element2d & self) -> py::list
                                   {
@@ -477,11 +488,12 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                      auto mesh = make_shared<Mesh>();
                      mesh -> SetDimension(dim);
                      SetGlobalMesh(mesh);  // for visualization
-                     mesh -> SetGeometry (make_shared<NetgenGeometry>());
+                     mesh -> SetGeometry (nullptr);
                      return mesh;
                    } ),
          py::arg("dim")=3         
          )
+    .def(NGSPickle<Mesh>())
 
     /*
     .def("__init__",
@@ -554,8 +566,6 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 		    break;
 		  }
 	      }
-	    if (!ng_geometry)
-	      ng_geometry = make_shared<NetgenGeometry>();
 	    self.SetGeometry(ng_geometry);
 	    delete infile;
 	  }),py::call_guard<py::gil_scoped_release>())

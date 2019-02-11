@@ -235,13 +235,17 @@ DLL_HEADER void ExportCSG(py::module &m)
 	    return self.GetNP()-1;
 	  }),
 	 py::arg("x"),py::arg("y"),py::arg("z"),py::arg("hpref")=false)
-    .def("AddSegment", FunctionPointer
-	 ([] (SplineSurface & self, int i1, int i2, string bcname, double maxh)
+    .def("AddSegment", [] (SplineSurface & self, int i1, int i2, string bcname, double maxh)
 	  {
             auto seg = make_shared<LineSeg<3>>(self.GetPoint(i1),self.GetPoint(i2));
 	    self.AppendSegment(seg,bcname,maxh);
-	  }),
+	  },
 	 py::arg("pnt1"),py::arg("pnt2"),py::arg("bcname")="default", py::arg("maxh")=-1.)
+    .def("AddSegment", [] (SplineSurface& self, int i1, int i2, int i3, string bcname, double maxh)
+         {
+           auto seg = make_shared<SplineSeg3<3>>(self.GetPoint(i1), self.GetPoint(i2), self.GetPoint(i3));
+           self.AppendSegment(seg, bcname, maxh);
+         }, py::arg("pnt1"),py::arg("pnt2"), py::arg("pnt3"),py::arg("bcname")="default", py::arg("maxh")=-1.)
     ;
   
   py::class_<SPSolid, shared_ptr<SPSolid>> (m, "Solid")
@@ -360,37 +364,15 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
 
   py::class_<CSGeometry, NetgenGeometry, shared_ptr<CSGeometry>> (m, "CSGeometry")
     .def(py::init<>())
-    .def("__init__", 
-                                           [](CSGeometry *instance, const string & filename)
-                                            {
-                                              cout << "load geometry";
-                                              ifstream ist(filename);
-                                              ParseCSG(ist, instance);
-                                              instance -> FindIdenticSurfaces(1e-8 * instance->MaxSize()); 
-                                            })
-    .def("__init__",
-                                           [](CSGeometry *instance, const py::list & solidlist)
-                                            {
-                                              cout << "csg from list";
-                                              new (instance) CSGeometry();
-                                              for (int i = 0; i < len(solidlist); i++)
-                                                {
-                                                  py::object obj = solidlist[i];
-                                                  cout << "obj " << i << endl;
-
-                                                  py::extract<shared_ptr<SPSolid>> solid(solidlist[i]);
-                                                  if(solid.check())
-                                                    {
-                                                      cout << "its a solid" << endl;
-                                                      solid()->AddSurfaces (*instance);
-                                                      solid()->GiveUpOwner();
-                                                      int tlonr = instance->SetTopLevelObject (solid()->GetSolid());
-                                                      instance->GetTopLevelObject(tlonr) -> SetMaterial(solid()->GetMaterial());
-                                                    }
-                                                }
-                                              instance -> FindIdenticSurfaces(1e-8 * instance->MaxSize()); 
-                                            })
-
+    .def(py::init([](const string& filename)
+                  {
+                    ifstream ist (filename);
+                    auto geo = make_shared<CSGeometry>();
+                    ParseCSG(ist, geo.get());
+                    geo->FindIdenticSurfaces(1e-8 * geo->MaxSize());
+                    return geo;
+                  }), py::arg("filename"))
+    .def(NGSPickle<CSGeometry>())
     .def("Save", FunctionPointer([] (CSGeometry & self, string filename)
                                  {
                                    cout << "save geometry to file " << filename << endl;
@@ -477,7 +459,12 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
 	    self.GetTopLevelObject(tlonr) -> SetBCProp(surf->GetBase()->GetBCProperty());
 	    self.GetTopLevelObject(tlonr) -> SetBCName(surf->GetBase()->GetBCName());
 	    self.GetTopLevelObject(tlonr) -> SetMaxH(surf->GetBase()->GetMaxH());
-	    for(auto p : surf->GetPoints())
+            Array<Point<3>> non_midpoints;
+            for(auto spline : surf->GetSplines())
+              {
+                non_midpoints.Append(spline->GetPoint(0));
+              }
+	    for(auto p : non_midpoints)
 		self.AddUserPoint(p);
             self.AddSplineSurface(surf);
 	  }),

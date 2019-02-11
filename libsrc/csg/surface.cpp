@@ -566,4 +566,8 @@ void ProjectToEdge (const Surface * f1, const Surface * f2, Point<3> & hp)
       if (Abs2 (rs) < 1e-24 && i > 1) i = 1;
     }
 }
+
+RegisterClassForArchive<Surface> regsurf;
+RegisterClassForArchive<Primitive> regprim;
+RegisterClassForArchive<OneSurfacePrimitive, Surface, Primitive> regosf;
 }

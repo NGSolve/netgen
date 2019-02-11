@@ -21,7 +21,7 @@ namespace netgen
   class SplineSegExt : public SplineSeg<2>
   {
   public:
-    const SplineSeg<2> & seg;
+    SplineSeg<2>* seg;
     
     /// left domain
     int leftdom;
@@ -42,35 +42,43 @@ namespace netgen
     ///
     int layer;
 
-    SplineSegExt (const SplineSeg<2> & hseg) 
-      : seg(hseg)
+    SplineSegExt (SplineSeg<2> & hseg)
+      : seg(&hseg)
     {
       layer = 1;
     }
+    // default constructor for archive
+    SplineSegExt() {}
 
     ~SplineSegExt ()
     {
-      delete &seg;
+      delete seg;
+    }
+
+    virtual void DoArchive(Archive& ar)
+    {
+      ar & seg & leftdom & rightdom & reffak & hmax & bc & copyfrom
+        & hpref_left & hpref_right & layer;
     }
     
     virtual const GeomPoint<2> & StartPI () const 
     { 
-      return seg.StartPI(); 
+      return seg->StartPI();
     }
 
     virtual const GeomPoint<2> & EndPI () const 
     {
-      return seg.EndPI();
+      return seg->EndPI();
     }
 
     virtual Point<2> GetPoint (double t) const 
     {
-      return seg.GetPoint(t);
+      return seg->GetPoint(t);
     }
 
     virtual Vec<2> GetTangent (const double t) const
     {
-      return seg.GetTangent(t);
+      return seg->GetTangent(t);
     }
 
     virtual void GetDerivatives (const double t,  
@@ -78,27 +86,27 @@ namespace netgen
 				 Vec<2> & first,
 				 Vec<2> & second) const
     {
-      seg.GetDerivatives (t, point, first, second);
+      seg->GetDerivatives (t, point, first, second);
     }
 
     virtual void GetCoeff (Vector & coeffs) const 
     {
-      seg.GetCoeff (coeffs);
+      seg->GetCoeff (coeffs);
     }
 
     virtual void GetPoints (int n, Array<Point<2> > & points) const
     {
-      seg.GetPoints (n, points);
+      seg->GetPoints (n, points);
     }
 
     virtual double MaxCurvature () const 
     {
-      return seg.MaxCurvature();
+      return seg->MaxCurvature();
     }
 
     virtual string GetType () const
     {
-      return seg.GetType();
+      return seg->GetType();
     }
 
     virtual double CalcCurvature (double t) const
@@ -112,7 +120,7 @@ namespace netgen
 
     virtual bool InConvexHull (Point<2> p, double eps) const
     {
-      return seg.InConvexHull (p, eps);
+      return seg->InConvexHull (p, eps);
     }
 
   };
@@ -143,7 +151,11 @@ namespace netgen
 
     void TestComment ( ifstream & infile ) ;
 
-    
+    void DoArchive(Archive& ar)
+    {
+      SplineGeometry<2>::DoArchive(ar);
+      ar & materials & maxh & quadmeshing & tensormeshing & layer & bcnames & elto0;
+    }
 
     const SplineSegExt & GetSpline (const int i) const 
     { 

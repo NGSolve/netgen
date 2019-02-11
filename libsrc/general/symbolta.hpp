@@ -69,6 +69,8 @@ public:
   /// Deletes symboltable
   inline void DeleteAll ();
 
+  void DoArchive(Archive& archive) { archive & names & data;}
+
   inline T & operator[] (int i) 
   { return data[i]; }
   inline const T & operator[] (int i) const

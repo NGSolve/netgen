@@ -17,11 +17,15 @@
 #include "../include/mydefs.hpp"
 
 
+#include "../core/ngcore.hpp"
+namespace netgen
+{
+  using namespace ngcore;
+}
 #include "ngexception.hpp"
 #include "parthreads.hpp"
 // #include "moveablemem.hpp"
 #include "dynamicmem.hpp"
-#include "archive_base.hpp"
 
 #include "template.hpp"
 #include "array.hpp"

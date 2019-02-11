@@ -48,6 +48,11 @@ public:
 
   int GetOrder () { return order; }
 
+  virtual void DoArchive(Archive& ar)
+  {
+    ar & edgeorder & faceorder & edgecoeffsindex & facecoeffsindex & edgecoeffs & facecoeffs
+      & edgeweight & order & rational & ishighorder;
+  }
 
   bool IsSegmentCurved (SegmentIndex segnr) const;
   bool IsSurfaceElementCurved (SurfaceElementIndex sei) const;

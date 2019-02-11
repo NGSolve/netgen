@@ -213,7 +213,7 @@ namespace netgen
 
 
   
-  ngstd::Archive & BASE_TABLE :: DoArchive (ngstd::Archive & ar, int elemsize)
+  void BASE_TABLE :: DoArchive (Archive & ar, int elemsize)
   {
     if (ar.Output())
       {
@@ -248,7 +248,6 @@ namespace netgen
             cnt += data[i].size*elemsize;
           }
       }
-    return ar;
   }    
 
   

@@ -20,6 +20,7 @@ DLL_HEADER void ExportSTL(py::module & m)
 {
   py::class_<STLGeometry,shared_ptr<STLGeometry>, NetgenGeometry> (m,"STLGeometry")
     .def(py::init<>())
+    .def(NGSPickle<STLGeometry>())
     .def("_visualizationData", [](shared_ptr<STLGeometry> stl_geo)
          {
            std::vector<float> vertices;

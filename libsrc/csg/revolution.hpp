@@ -45,8 +45,17 @@ namespace netgen
 		   const int id_in = 0);
 
     RevolutionFace(const Array<double> & raw_data);
+    // default constructor for archive
+    RevolutionFace() {}
 
     ~RevolutionFace();
+
+    virtual void DoArchive(Archive& ar)
+    {
+      Surface::DoArchive(ar);
+      ar & isfirst & islast & spline & deletable & p0 & v_axis & id & spline_coefficient
+        & spline_coefficient_shifted & checklines_vec & checklines_start & checklines_normal;
+    }
 
     virtual int IsIdentic (const Surface & s2, int & inv, double eps) const; 
   
@@ -96,8 +105,6 @@ namespace netgen
   private:
     Point<3> p0,p1;
     Vec<3> v_axis;
-    const SplineGeometry<2> & splinecurve;
-    const int nsplines;
 
     // 1 ... torus-like
     // 2 ... sphere-like
@@ -112,9 +119,16 @@ namespace netgen
     Revolution(const Point<3> & p0_in,
 	       const Point<3> & p1_in,
 	       const SplineGeometry<2> & spline_in);
+    // default constructor for archive
+    Revolution() {}
 
     ~Revolution();
-  
+
+    virtual void DoArchive(Archive& ar)
+    {
+      Primitive::DoArchive(ar);
+      ar & p0 & p1 & v_axis & type & faces & intersecting_face;
+    }
   
     /*
       Check, whether box intersects solid defined by surface.

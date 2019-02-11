@@ -3,6 +3,7 @@
 
 #include <mystdlib.h>
 #include <occgeom.hpp>
+#include <cstdio>
 #include "ShapeAnalysis_ShapeTolerance.hxx"
 #include "ShapeAnalysis_ShapeContents.hxx"
 #include "ShapeAnalysis_CheckSmallFace.hxx"
@@ -1106,94 +1107,8 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
 //    }
 
 
-
-   // Philippose - 23/02/2009
-   /* Special IGES File load function including the ability
-   to extract individual surface colours via the extended
-   OpenCascade XDE and XCAF Feature set.
-   */
-   OCCGeometry *LoadOCC_IGES(const char *filename)
-   {
-      OCCGeometry *occgeo;
-      occgeo = new OCCGeometry;
-
-      // Initiate a dummy XCAF Application to handle the IGES XCAF Document
-      static Handle_XCAFApp_Application dummy_app = XCAFApp_Application::GetApplication();
-
-      // Create an XCAF Document to contain the IGES file itself
-      Handle_TDocStd_Document iges_doc;
-
-      // Check if a IGES File is already open under this handle, if so, close it to prevent
-      // Segmentation Faults when trying to create a new document
-      if(dummy_app->NbDocuments() > 0)
-      {
-         dummy_app->GetDocument(1,iges_doc);
-         dummy_app->Close(iges_doc);
-      }
-      dummy_app->NewDocument ("IGES-XCAF",iges_doc);
-
-      IGESCAFControl_Reader reader;
-
-      Standard_Integer stat = reader.ReadFile((char*)filename);
-
-      if(stat != IFSelect_RetDone)
-      {
-         delete occgeo;
-         return NULL;
-      }
-
-      // Enable transfer of colours
-      reader.SetColorMode(Standard_True);
-
-      reader.Transfer(iges_doc);
-
-      // Read in the shape(s) and the colours present in the IGES File
-      Handle_XCAFDoc_ShapeTool iges_shape_contents = XCAFDoc_DocumentTool::ShapeTool(iges_doc->Main());
-      Handle_XCAFDoc_ColorTool iges_colour_contents = XCAFDoc_DocumentTool::ColorTool(iges_doc->Main());
-
-      TDF_LabelSequence iges_shapes;
-      iges_shape_contents->GetShapes(iges_shapes);
-
-      // List out the available colours in the IGES File as Colour Names
-      TDF_LabelSequence all_colours;
-      iges_colour_contents->GetColors(all_colours);
-      PrintMessage(1,"Number of colours in IGES File: ",all_colours.Length());
-      for(int i = 1; i <= all_colours.Length(); i++)
-      {
-         Quantity_Color col;
-         stringstream col_rgb;
-         iges_colour_contents->GetColor(all_colours.Value(i),col);
-         col_rgb << " : (" << col.Red() << "," << col.Green() << "," << col.Blue() << ")";
-         PrintMessage(1, "Colour [", i, "] = ",col.StringName(col.Name()),col_rgb.str());
-      }
-
-
-      // For the IGES Reader, all the shapes can be exported as one compound shape
-      // using the "OneShape" member
-      occgeo->shape = reader.OneShape();
-      occgeo->face_colours = iges_colour_contents;
-      occgeo->changed = 1;
-      occgeo->BuildFMap();
-
-      occgeo->CalcBoundingBox();
-      PrintContents (occgeo);
-
-      return occgeo;
-   }
-
-
-
-
-
-   // Philippose - 29/01/2009
-   /* Special STEP File load function including the ability
-   to extract individual surface colours via the extended
-   OpenCascade XDE and XCAF Feature set.
-   */
-   OCCGeometry * LoadOCC_STEP (const char * filename)
-   {
-      OCCGeometry * occgeo;
-      occgeo = new OCCGeometry;
+  void LoadOCCInto(OCCGeometry* occgeo, const char* filename)
+  {
 
       // Initiate a dummy XCAF Application to handle the STEP XCAF Document
       static Handle_XCAFApp_Application dummy_app = XCAFApp_Application::GetApplication();
@@ -1219,8 +1134,7 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
 
       if(stat != IFSelect_RetDone)
       {
-         delete occgeo;
-         return NULL;
+        throw NgException("Couldn't load OCC geometry");
       }
 
       reader.Transfer(step_doc);
@@ -1287,6 +1201,94 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
 //         cout << occgeo->enames[i] << endl;
 //       cout << " " <<endl;
       // Gerhard END
+  }
+
+   // Philippose - 23/02/2009
+   /* Special IGES File load function including the ability
+   to extract individual surface colours via the extended
+   OpenCascade XDE and XCAF Feature set.
+   */
+   OCCGeometry *LoadOCC_IGES(const char *filename)
+   {
+      OCCGeometry *occgeo;
+      occgeo = new OCCGeometry;
+      // Initiate a dummy XCAF Application to handle the IGES XCAF Document
+      static Handle_XCAFApp_Application dummy_app = XCAFApp_Application::GetApplication();
+
+      // Create an XCAF Document to contain the IGES file itself
+      Handle_TDocStd_Document iges_doc;
+
+      // Check if a IGES File is already open under this handle, if so, close it to prevent
+      // Segmentation Faults when trying to create a new document
+      if(dummy_app->NbDocuments() > 0)
+      {
+         dummy_app->GetDocument(1,iges_doc);
+         dummy_app->Close(iges_doc);
+      }
+      dummy_app->NewDocument ("IGES-XCAF",iges_doc);
+
+      IGESCAFControl_Reader reader;
+
+      Standard_Integer stat = reader.ReadFile((char*)filename);
+
+      if(stat != IFSelect_RetDone)
+      {
+        throw NgException("Couldn't load occ");
+      }
+
+      // Enable transfer of colours
+      reader.SetColorMode(Standard_True);
+
+      reader.Transfer(iges_doc);
+
+      // Read in the shape(s) and the colours present in the IGES File
+      Handle_XCAFDoc_ShapeTool iges_shape_contents = XCAFDoc_DocumentTool::ShapeTool(iges_doc->Main());
+      Handle_XCAFDoc_ColorTool iges_colour_contents = XCAFDoc_DocumentTool::ColorTool(iges_doc->Main());
+
+      TDF_LabelSequence iges_shapes;
+      iges_shape_contents->GetShapes(iges_shapes);
+
+      // List out the available colours in the IGES File as Colour Names
+      TDF_LabelSequence all_colours;
+      iges_colour_contents->GetColors(all_colours);
+      PrintMessage(1,"Number of colours in IGES File: ",all_colours.Length());
+      for(int i = 1; i <= all_colours.Length(); i++)
+      {
+         Quantity_Color col;
+         stringstream col_rgb;
+         iges_colour_contents->GetColor(all_colours.Value(i),col);
+         col_rgb << " : (" << col.Red() << "," << col.Green() << "," << col.Blue() << ")";
+         PrintMessage(1, "Colour [", i, "] = ",col.StringName(col.Name()),col_rgb.str());
+      }
+
+
+      // For the IGES Reader, all the shapes can be exported as one compound shape
+      // using the "OneShape" member
+      occgeo->shape = reader.OneShape();
+      occgeo->face_colours = iges_colour_contents;
+      occgeo->changed = 1;
+      occgeo->BuildFMap();
+
+      occgeo->CalcBoundingBox();
+      PrintContents (occgeo);
+      return occgeo;
+   }
+
+
+
+
+
+   // Philippose - 29/01/2009
+   /* Special STEP File load function including the ability
+   to extract individual surface colours via the extended
+   OpenCascade XDE and XCAF Feature set.
+   */
+   OCCGeometry * LoadOCC_STEP (const char * filename)
+   {
+      OCCGeometry * occgeo;
+      occgeo = new OCCGeometry;
+
+      LoadOCCInto(occgeo, filename);
       return occgeo;
    }
 
@@ -1355,8 +1357,34 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
       }
   }
 
+  void OCCGeometry :: DoArchive(Archive& ar)
+  {
+    if(ar.Output())
+      {
+        std::stringstream ss;
+        STEPControl_Writer writer;
+        writer.Transfer(shape, STEPControl_AsIs);
+        auto filename = ".tmpfile_out.step";
+        writer.Write(filename);
+        std::ifstream is(filename);
+        ss << is.rdbuf();
+        ar << ss.str();
+        std::remove(filename);
+      }
+    else
+      {
+        std::string str;
+        ar & str;
 
-
+        auto filename = ".tmpfile.step";
+        auto tmpfile = std::fopen(filename, "w");
+        std::fputs(str.c_str(), tmpfile);
+        std::fclose(tmpfile);
+        LoadOCCInto(this, filename);
+        std::remove(filename);
+      }
+  }
+  
   const char * shapesname[] =
    {" ", "CompSolids", "Solids", "Shells",
 

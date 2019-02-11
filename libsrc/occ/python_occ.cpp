@@ -18,6 +18,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
 {
   py::class_<OCCGeometry, shared_ptr<OCCGeometry>, NetgenGeometry> (m, "OCCGeometry", R"raw_string(Use LoadOCCGeometry to load the geometry from a *.step file.)raw_string")
     .def(py::init<>())
+    .def(NGSPickle<OCCGeometry>())
     .def("Heal",[](OCCGeometry & self, double tolerance, bool fixsmalledges, bool fixspotstripfaces, bool sewfaces, bool makesolids, bool splitpartitions)
          {
            self.tolerance = tolerance;
