@@ -1186,7 +1186,7 @@ namespace netgen
 			{
 			  auto othersolid = geometry.GetTopLevelObject(kk)->GetSolid();
 			  auto othersurf = geometry.GetTopLevelObject(kk)->GetSurface();
-			  if(!othersurf)
+			  if(!othersurf && dynamic_cast<SplineSurface*>(othersurf))
 			    {
 			      if(othersolid->IsIn(edgepoints[0])  &&
 				 othersolid->IsIn(edgepoints[edgepoints.Size()-1]))
