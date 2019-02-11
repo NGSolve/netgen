@@ -33,7 +33,7 @@ namespace netgen
     T_POINTS points;
 
     // The communicator for this mesh. Just a dummy if compiled without MPI.  
-    MPI_Comm comm;
+    NgMPI_Comm comm;
     
     /// line-segments at edges
     Array<Segment, 0, size_t> segments;
@@ -605,8 +605,8 @@ namespace netgen
     int AddEdgeDescriptor(const EdgeDescriptor & fd)
     { edgedecoding.Append(fd); return edgedecoding.Size() - 1; }
 
-    MPI_Comm GetCommunicator() const { return this->comm; }
-    void SetCommunicator(MPI_Comm acomm);
+    auto GetCommunicator() const { return this->comm; }
+    void SetCommunicator(NgMPI_Comm acomm);
     
     ///
     DLL_HEADER void SetMaterial (int domnr, const string & mat);

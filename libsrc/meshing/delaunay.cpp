@@ -521,7 +521,6 @@ namespace netgen
 		  int oldnp, DelaunayTet & startel, Point3d & pmin, Point3d & pmax)
   {
     static Timer t("Meshing3::Delaunay1"); RegionTimer reg(t);
-    static Timer tloop("Meshing3::Delaunay1 loop");
     
     Array<Point<3>> centers;
     Array<double> radi2;
@@ -632,7 +631,6 @@ namespace netgen
     for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End()-4; pi++)
       mixed[pi] = PointIndex ( (prim * pi) % np + PointIndex::BASE );
 
-    tloop.Start();
     for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End()-4; pi++)
       {
 	if (pi % 1000 == 0)
@@ -661,7 +659,6 @@ namespace netgen
 			  connected, treesearch, freelist, list, insphere, closesphere);
 
       }
-    tloop.Stop();
     
     for (int i = tempels.Size(); i >= 1; i--)
       if (tempels.Get(i)[0] <= 0)
@@ -775,14 +772,13 @@ namespace netgen
       
       //  for (i = mesh.GetNP() - 3; i <= mesh.GetNP(); i++)
       //    tempmesh.AddLockedPoint (i);
-      for (PointIndex pi = tempmesh.Points().Begin();
-	   pi < tempmesh.Points().End(); pi++)
-	tempmesh.AddLockedPoint (pi);
+      for (auto pi : tempmesh.Points().Range())
+        tempmesh.AddLockedPoint (pi);
       
-      //    tempmesh.PrintMemInfo(cout);
+      //  tempmesh.PrintMemInfo(cout);
       // tempmesh.Save ("tempmesh.vol");
 
-      for (int i = 1; i <= 2; i++)
+      for (int i = 1; i <= 4; i++)
 	{ 
 	  tempmesh.FindOpenElements ();
 
@@ -793,14 +789,14 @@ namespace netgen
 
 	  MeshOptimize3d meshopt(mp);
 	  // tempmesh.CalcSurfacesOfNode();
-	  meshopt.SwapImprove(tempmesh, OPT_CONFORM);
+          meshopt.SwapImprove(tempmesh, OPT_CONFORM);
 	}
     
       MeshQuality3d (tempmesh);
     
       tempels.SetSize(0);
-      for (int i = 1; i <= tempmesh.GetNE(); i++)
-	tempels.Append (tempmesh.VolumeElement(i));
+      for (auto & el : tempmesh.VolumeElements())
+        tempels.Append (el);
     }
 
 
@@ -1588,7 +1584,6 @@ namespace netgen
     mesh.FindOpenElements(domainnr);
 
     mesh.Compress();
-
     PopStatus ();
   }
 }

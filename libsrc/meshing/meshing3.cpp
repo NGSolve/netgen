@@ -732,6 +732,8 @@ enum blocktyp { BLOCKUNDEF, BLOCKINNER, BLOCKBOUND, BLOCKOUTER };
 
 void Meshing3 :: BlockFill (Mesh & mesh, double gh)
 {
+  static Timer t("Mesing3::BlockFill"); RegionTimer reg(t);
+  
   PrintMessage (3, "Block-filling called (obsolete) ");
 
   int i, j(0), i1, i2, i3, j1, j2, j3;
@@ -1096,10 +1098,12 @@ static int TestSameSide (const Point3d & p1, const Point3d & p2)
 void Meshing3 :: BlockFillLocalH (Mesh & mesh, 
 				  const MeshingParameters & mp)
 {
+  static Timer t("Mesing3::BlockFillLocalH"); RegionTimer reg(t);
+  
   double filldist = mp.filldist;
-
-  (*testout) << "blockfill local h" << endl;
-  (*testout) << "rel filldist = " << filldist << endl;
+  
+  // (*testout) << "blockfill local h" << endl;
+  // (*testout) << "rel filldist = " << filldist << endl;
   PrintMessage (3, "blockfill local h");
 
 

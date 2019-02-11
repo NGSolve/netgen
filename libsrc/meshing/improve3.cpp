@@ -277,9 +277,9 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 				     OPTIMIZEGOAL goal)
 {
   static Timer t("MeshOptimize3d::SplitImprove"); RegionTimer reg(t);
+  static Timer tloop("MeshOptimize3d::SplitImprove loop");
   
   double bad1, bad2, badmax, badlimit;
-
   int cnt = 0;
   int np = mesh.GetNP();
   int ne = mesh.GetNE();
@@ -319,7 +319,6 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
   PrintMessage (5, "badmax = ", badmax);
   badlimit = 0.5 * badmax;
 
-
   boundp.Clear();
   for (auto & el : mesh.SurfaceElements())
     for (PointIndex pi : el.PNums())
@@ -350,6 +349,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 	}
     }
 
+  tloop.Start();
   for (ElementIndex ei : mesh.VolumeElements().Range())    
     {
       Element & elem = mesh[ei];
@@ -543,7 +543,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 	    }
 	}
     }
-
+  tloop.Stop();
 
   mesh.Compress();
   PrintMessage (5, cnt, " splits performed");
@@ -574,6 +574,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 				    const BitArray * working_elements)
 {
   static Timer t("MeshOptimize3d::SwapImprove"); RegionTimer reg(t);
+  static Timer tloop("MeshOptimize3d::SwapImprove loop");
   
   PointIndex pi3(0), pi4(0), pi5(0), pi6(0);
   int cnt = 0;
@@ -631,7 +632,8 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 
   // INDEX_2_HASHTABLE<int> edgeused(2 * ne + 5);
   INDEX_2_CLOSED_HASHTABLE<int> edgeused(12 * ne + 5);
-  
+
+  tloop.Start();
   for (ElementIndex ei = 0; ei < ne; ei++)
     {
       if (multithread.terminate)
@@ -1405,7 +1407,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
       */
     }
   //  (*mycout) << endl;
-
+  tloop.Stop();
   /*  
       cout << "edgeused: ";
       edgeused.PrintMemInfo(cout);

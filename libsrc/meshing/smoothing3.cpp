@@ -923,6 +923,8 @@ double CalcTotalBad (const Mesh::T_POINTS & points,
 		     const Mesh::T_VOLELEMENTS & elements,
 		     const MeshingParameters & mp)
 {
+  static Timer t("CalcTotalBad"); RegionTimer reg(t);
+  
   double sum = 0;
   double elbad;
   

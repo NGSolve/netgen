@@ -63,8 +63,11 @@ int Meshing3 :: ApplyRules
  )
 
 {
-  NgProfiler::RegionTimer regtot(97);
+  static Timer t("ruler3 - all"); RegionTimer reg(t);
+  static Timer tstart("ruler3 - rule start");   
+  static Timer tloop("ruler3 - rule loop"); 
 
+  tstart.Start();
   float err, minerr, teterr, minteterr;
   char ok, found, hc;
   // vnetrule * rule;
@@ -76,19 +79,19 @@ int Meshing3 :: ApplyRules
 
 
   Array<int, PointIndex::BASE> pused;      // point is already mapped, number of uses
-  Array<char> fused;                       // face is already mapped
-  Array<PointIndex> pmap;                  // map of reference point to local point
-  Array<bool> pfixed;                      // point mapped by face-map
-  Array<int> fmapi;                        // face in reference is mapped to face nr ...
-  Array<int> fmapr;                        // face in reference is rotated to map 
-  Array<Point3d> transfreezone;            // transformed free-zone
+  ArrayMem<char,100> fused;                       // face is already mapped
+  ArrayMem<PointIndex,100> pmap;                  // map of reference point to local point
+  ArrayMem<bool,100> pfixed;                      // point mapped by face-map
+  ArrayMem<int,100> fmapi;                        // face in reference is mapped to face nr ...
+  ArrayMem<int,100> fmapr;                        // face in reference is rotated to map 
+  ArrayMem<Point3d,100> transfreezone;            // transformed free-zone
   INDEX_2_CLOSED_HASHTABLE<int> ledges(100); // edges in local environment
   
-  Array<Point3d> tempnewpoints;
+  ArrayMem<Point3d,100> tempnewpoints;
   Array<MiniElement2d> tempnewfaces;
-  Array<int> tempdelfaces;
+  ArrayMem<int,100> tempdelfaces;
   Array<Element> tempelements;
-  Array<Box3d> triboxes;         // bounding boxes of local faces
+  ArrayMem<Box3d,100> triboxes;         // bounding boxes of local faces
 
   Array<int, PointIndex::BASE> pnearness;
   Array<int> fnearness;
@@ -221,7 +224,8 @@ int Meshing3 :: ApplyRules
 
 
   // check each rule:
-
+  tstart.Stop();
+  tloop.Start();
   for (int ri = 1; ri <= rules.Size(); ri++)
     {
       int base = (lfaces[0].GetNP() == 3) ? 100 : 200;
@@ -1111,7 +1115,8 @@ int Meshing3 :: ApplyRules
       if (loktestmode)
 	(*testout) << "end rule" << endl;
     }
-
+  tloop.Stop();
+  
   if (found)
     {
       /*
