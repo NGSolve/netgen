@@ -1,12 +1,4 @@
 add_definitions(-DNGINTERFACE_EXPORTS)
-if(NOT WIN32)
-    set(mesh_object_libs 
-        $<TARGET_OBJECTS:la>
-        $<TARGET_OBJECTS:gprim>
-        $<TARGET_OBJECTS:gen>
-        )
-endif(NOT WIN32)
-
 add_library(mesh ${NG_LIB_TYPE}
         adfront2.cpp adfront3.cpp bisect.cpp boundarylayer.cpp 
         clusters.cpp curvedelems.cpp delaunay.cpp delaunay2d.cpp	    
@@ -29,10 +21,10 @@ if(APPLE)
     set_target_properties( mesh PROPERTIES SUFFIX ".so")
 endif(APPLE)
 
-if(NOT WIN32)
-    target_link_libraries( mesh ngcore ${ZLIB_LIBRARIES} ${MPI_CXX_LIBRARIES} ${PYTHON_LIBRARIES} ${METIS_LIBRARY})
-    install( TARGETS mesh ${NG_INSTALL_DIR})
-endif(NOT WIN32)
+target_link_libraries( mesh PUBLIC ngcore PRIVATE gprim la gen )
+
+target_link_libraries( mesh PUBLIC ${ZLIB_LIBRARIES} ${MPI_CXX_LIBRARIES} ${PYTHON_LIBRARIES} ${METIS_LIBRARY})
+install( TARGETS mesh ${NG_INSTALL_DIR})
 
 install(FILES
   adfront2.hpp adfront3.hpp basegeom.hpp bcfunctions.hpp bisect.hpp

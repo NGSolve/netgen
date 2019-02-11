@@ -2,7 +2,13 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING INTERNAL)
 endif(NOT CMAKE_BUILD_TYPE)
 
-cmake_minimum_required(VERSION 3.1.3)
+if(WIN32)
+  # we are linking to object libraries on Windows
+  cmake_minimum_required(VERSION 3.12)
+else(WIN32)
+  cmake_minimum_required(VERSION 3.1.3)
+endif(WIN32)
+
 if(NOT WIN32)
     option( USE_NATIVE_ARCH  "build which -march=native" ON)
 endif(NOT WIN32)
@@ -19,6 +25,9 @@ option( USE_CCACHE       "use ccache")
 option( USE_INTERNAL_TCL "Compile tcl files into the code and don't install them" ON)
 option( ENABLE_UNIT_TESTS "Enable Catch unit tests")
 option( ENABLE_CPP_CORE_GUIDELINES_CHECK "Enable cpp core guideline checks on ngcore" OFF)
+option( USE_SPDLOG "Enable spd log logging" OFF)
+option( DEBUG_LOG "Enable more debug output (may increase computation time) - only works with USE_SPDLOG=ON" OFF)
+option( CHECK_RANGE "Check array range access, automatically enabled if built in debug mode" OFF)
 
 option( USE_SUPERBUILD       "use ccache" ON)
 
@@ -258,6 +267,7 @@ endif (USE_GUI)
 
 #######################################################################
 if (USE_PYTHON)
+    add_subdirectory(external_dependencies/pybind11)
     add_definitions(-DNG_PYTHON)
     find_path(PYBIND_INCLUDE_DIR pybind11/pybind11.h HINTS ${PYTHON_INCLUDE_DIR})
     if( PYBIND_INCLUDE_DIR )
@@ -349,6 +359,11 @@ endif(ENABLE_UNIT_TESTS)
 
 
 #######################################################################
+
+if(USE_SPDLOG)
+  include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/external_projects/spdlog.cmake)
+  include_directories(${SPDLOG_INCLUDE_DIR})
+endif(USE_SPDLOG)
 
 if(ENABLE_CPP_CORE_GUIDELINES_CHECK)
   find_program(

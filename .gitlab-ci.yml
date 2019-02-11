@@ -14,8 +14,8 @@ stages:
     - x64
   before_script:
     - "echo off"
-    - 'call "%VS140COMNTOOLS%\..\..\VC\bin\amd64\vcvars64.bat"'
-    - set CMAKE_GENERATOR=Visual Studio 14 2015 Win64
+    - 'call "%VS2017INSTALLDIR%\VC\Auxiliary\Build\vcvars64"'
+    - set CMAKE_GENERATOR=Visual Studio 15 2017 Win64
     - set CI_DIR=C:\ci\%CI_PIPELINE_ID%
     - set NETGEN_BUILD_DIR=%CI_DIR%\build
     - set INSTALL_DIR=%CI_DIR%\install
@@ -100,6 +100,14 @@ test_guidelines:
   script:
     - docker run -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_guidelines.sh
   when: always
+  allow_failure: true
+
+# check if it compiles without spdlog
+test_noSpdlog:
+  <<: *ubuntu
+  stage: test
+  script:
+    - docker run -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_nospdlog.sh
 
 cleanup_ubuntu:
   stage: cleanup

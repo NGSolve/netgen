@@ -3,31 +3,32 @@
 
 #include <complex>              // for complex
 #include <cstring>              // for size_t, strlen
-#include <fstream>              // for operator<<, ifstream, ofstream, basic...
+#include <fstream>              // for ifstream, ofstream
 #include <functional>           // for function
-#include <map>                  // for map, _Rb_tree_iterator
-#include <memory>               // for __shared_ptr_access, __shared_ptr_acc...
-#include <stdexcept>            // for runtime_error
-#include <string>               // for string, operator+
+#include <map>                  // for map
+#include <memory>               // for shared_ptr
+#include <string>               // for string
 #include <type_traits>          // for declval, enable_if, false_type, is_co...
 #include <typeinfo>             // for type_info
 #include <utility>              // for move, swap, pair
 #include <vector>               // for vector
 
-#include "ngcore_api.hpp"       // for NGCORE_API, unlikely
+#include "exception.hpp"        // for UnreachableCodeException, Exception
+#include "logging.hpp"          // for logger
+#include "ngcore_api.hpp"       // for NGCORE_API
 #include "type_traits.hpp"      // for all_of_tmpl
+#include "utils.hpp"            // for Demangle, unlikely
 #include "version.hpp"          // for VersionInfo
 
-#ifdef NG_PYTHON
+#ifdef NETGEN_PYTHON
 #include <pybind11/pybind11.h>
-#endif // NG_PYTHON
+#endif // NETGEN_PYTHON
 
 namespace ngcore
 {
   // Libraries using this archive can store their version here to implement backwards compatibility
   NGCORE_API const VersionInfo& GetLibraryVersion(const std::string& library);
   NGCORE_API void SetLibraryVersion(const std::string& library, const VersionInfo& version);
-  NGCORE_API std::string Demangle(const char* typeinfo);
 
   class NGCORE_API Archive;
 
@@ -36,7 +37,7 @@ namespace ngcore
     // create new pointer of type T if it is default constructible, else throw
     template<typename T, typename ...Rest>
     T* constructIfPossible_impl(Rest... /*unused*/)
-    { throw std::runtime_error(std::string(Demangle(typeid(T).name())) + " is not default constructible!"); }
+    { throw Exception(std::string(Demangle(typeid(T).name())) + " is not default constructible!"); }
 
     template<typename T, typename= typename std::enable_if<std::is_constructible<T>::value>::type>
     T* constructIfPossible_impl(int /*unused*/) { return new T; } // NOLINT
@@ -96,28 +97,34 @@ namespace ngcore
   {
     const bool is_output;
     // how many different shared_ptr/pointer have been (un)archived
-    int shared_ptr_count, ptr_count;
+    int shared_ptr_count{0}, ptr_count{0};
     // maps for archived shared pointers and pointers
-    std::map<void*, int> shared_ptr2nr, ptr2nr;
+    std::map<void*, int> shared_ptr2nr{}, ptr2nr{};
     // vectors for storing the unarchived (shared) pointers
-    std::vector<std::shared_ptr<void>> nr2shared_ptr;
-    std::vector<void*> nr2ptr;
+    std::vector<std::shared_ptr<void>> nr2shared_ptr{};
+    std::vector<void*> nr2ptr{};
   protected:
     bool shallow_to_python = false;
+    std::map<std::string, VersionInfo> version_map = GetLibraryVersions();
+    std::shared_ptr<Logger> logger = GetLogger("Archive");
   public:
     Archive() = delete;
     Archive(const Archive&) = delete;
     Archive(Archive&&) = delete;
-    Archive (bool ais_output) :
-      is_output(ais_output), shared_ptr_count(0), ptr_count(0) { ; }
+    Archive (bool ais_output) : is_output(ais_output) { ; }
 
     virtual ~Archive() { ; }
 
+    // If the object is pickled, all shallow archived objects will be pickled as a list,
+    // instead of written as a binary archive. This allows pickle to serialize every object only
+    // once and put them together correctly afterwards. Therefore all objects that may live in
+    // Python should be archived using this Shallow function. If Shallow is called from C++ code
+    // it archives the object normally.
     template<typename T>
     Archive& Shallow(T& val)
     {
       static_assert(detail::is_any_pointer<T>, "ShallowArchive must be given pointer type!");
-#ifdef NG_PYTHON
+#ifdef NETGEN_PYTHON
       if(shallow_to_python)
         {
           if(is_output)
@@ -126,25 +133,28 @@ namespace ngcore
             val = pybind11::cast<T>(ShallowInPython());
         }
       else
-#endif // NG_PYTHON
+#endif // NETGEN_PYTHON
         *this & val;
       return *this;
     }
 
-#ifdef NG_PYTHON
-    virtual void ShallowOutPython(pybind11::object /*unused*/) // NOLINT (copy by val is ok for this virt func)
-    { throw std::runtime_error("Should not get in ShallowToPython base class implementation!"); }
+#ifdef NETGEN_PYTHON
+    virtual void ShallowOutPython(const pybind11::object& /*unused*/)
+    { throw UnreachableCodeException{}; }
     virtual pybind11::object ShallowInPython()
-    { throw std::runtime_error("Should not get in ShallowFromPython base class implementation!"); }
-#endif // NG_PYTHON
+    { throw UnreachableCodeException{}; }
+#endif // NETGEN_PYTHON
 
     Archive& operator=(const Archive&) = delete;
     Archive& operator=(Archive&&) = delete;
 
     bool Output () const { return is_output; }
     bool Input () const { return !is_output; }
-    virtual const VersionInfo& GetVersion(const std::string& library)
-    { return GetLibraryVersions()[library]; }
+    const VersionInfo& GetVersion(const std::string& library)
+    { return version_map[library]; }
+
+    // only used for PyArchive
+    virtual void NeedsVersion(const std::string& /*unused*/, const std::string& /*unused*/) {}
 
     // Pure virtual functions that have to be implemented by In-/OutArchive
     virtual Archive & operator & (double & d) = 0;
@@ -157,7 +167,7 @@ namespace ngcore
     virtual Archive & operator & (std::string & str) = 0;
     virtual Archive & operator & (char *& str) = 0;
 
-    virtual Archive & operator & (VersionInfo & version)
+    Archive & operator & (VersionInfo & version)
     {
         if(Output())
             (*this) << version.to_string();
@@ -197,6 +207,47 @@ namespace ngcore
         v.resize(size);
       Do(&v[0], size);
       return (*this);
+    }
+
+    // archive implementation for enums
+    template<typename T>
+    auto operator & (T& val) -> typename std::enable_if<std::is_enum<T>::value, Archive&>::type
+    {
+      int enumval;
+      if(Output())
+        enumval = int(val);
+      *this & enumval;
+      if(Input())
+        val = T(enumval);
+      return *this;
+    }
+
+    // vector<bool> has special implementation (like a bitarray) therefore
+    // it needs a special overload (this could probably be more efficient, but we
+    // don't use it that often anyway)
+    Archive& operator& (std::vector<bool>& v)
+    {
+      logger->debug("In special archive for std::vector<bool>");
+      size_t size;
+      if(Output())
+        size = v.size();
+      (*this) & size;
+      if(Input())
+        {
+          v.resize(size);
+          bool b;
+          for(size_t i=0; i<size; i++)
+            {
+              (*this) & b;
+              v[i] = b;
+            }
+        }
+      else
+        {
+          for(bool b : v)
+            (*this) & b;
+        }
+      return *this;
     }
     template<typename T1, typename T2>
     Archive& operator& (std::map<T1, T2>& map)
@@ -261,28 +312,40 @@ namespace ngcore
     {
       if(Output())
         {
+          logger->debug("Store shared ptr of type {}", Demangle(typeid(T).name()));
           // save -2 for nullptr
           if(!ptr)
-            return (*this) << -2;
+            {
+              logger->debug("Storing nullptr");
+              return (*this) << -2;
+            }
 
           void* reg_ptr = ptr.get();
           bool neededDowncast = false;
           // Downcasting is only possible for our registered classes
           if(typeid(T) != typeid(*ptr))
             {
+              logger->debug("Typids are different: {} vs {}",
+                            Demangle(typeid(T).name()),
+                            Demangle(typeid(*ptr).name()));
               if(!IsRegistered(Demangle(typeid(*ptr).name())))
-                  throw std::runtime_error(std::string("Archive error: Polymorphic type ")
-                                           + Demangle(typeid(*ptr).name())
-                                           + " not registered for archive");
+                  throw Exception(std::string("Archive error: Polymorphic type ")
+                                  + Demangle(typeid(*ptr).name())
+                                  + " not registered for archive");
               reg_ptr = GetArchiveRegister(Demangle(typeid(*ptr).name())).downcaster(typeid(T), ptr.get());
               // if there was a true downcast we have to store more information
-              if(reg_ptr != static_cast<void*>(ptr.get()) )
+              if(reg_ptr != static_cast<void*>(ptr.get()))
+                {
+                  logger->debug("Multiple/Virtual inheritance involved, need to cast pointer");
                   neededDowncast = true;
+                }
             }
           auto pos = shared_ptr2nr.find(reg_ptr);
           // if not found store -1 and the pointer
           if(pos == shared_ptr2nr.end())
             {
+              logger->debug("Didn't find the shared_ptr, create new registry entry at {}",
+                            shared_ptr_count);
               auto p = ptr.get();
               (*this) << -1;
               (*this) & neededDowncast & p;
@@ -293,23 +356,27 @@ namespace ngcore
               return *this;
             }
           // if found store the position and if it has to be downcasted and how
+          logger->debug("Found shared_ptr at position {}", pos->second);
           (*this) << pos->second << neededDowncast;
           if(neededDowncast)
             (*this) << Demangle(typeid(*ptr).name());
         }
       else // Input
         {
+          logger->debug("Reading shared_ptr of type {}", Demangle(typeid(T).name()));
           int nr;
           (*this) & nr;
           // -2 restores a nullptr
           if(nr == -2)
             {
+              logger->debug("Reading a nullptr");
               ptr = nullptr;
               return *this;
             }
           // -1 restores a new shared ptr by restoring the inner pointer and creating a shared_ptr to it
           if (nr == -1)
             {
+              logger->debug("Createing new shared_ptr");
               T* p = nullptr;
               bool neededDowncast;
               (*this) & neededDowncast & p;
@@ -317,6 +384,7 @@ namespace ngcore
               // if we did downcast we need to store a shared_ptr<void> to the true object
               if(neededDowncast)
                 {
+                  logger->debug("Shared pointer needed downcasting");
                   std::string name;
                   (*this) & name;
                   auto info = GetArchiveRegister(name);
@@ -327,15 +395,20 @@ namespace ngcore
                                                                                 ptr.get())));
                 }
               else
-                nr2shared_ptr.push_back(ptr);
+                {
+                  logger->debug("Shared pointer didn't need downcasting");
+                  nr2shared_ptr.push_back(ptr);
+                }
             }
           else
             {
+              logger->debug("Reading already existing pointer at entry {}", nr);
               auto other = nr2shared_ptr[nr];
               bool neededDowncast;
               (*this) & neededDowncast;
               if(neededDowncast)
                 {
+                  logger->debug("Shared pointer needed pointer downcast");
                   // if there was a downcast we can expect the class to be registered (since archiving
                   // wouldn't have worked else)
                   std::string name;
@@ -348,7 +421,10 @@ namespace ngcore
                                                                                other.get())));
                 }
               else
-                ptr = std::static_pointer_cast<T>(other);
+                {
+                  logger->debug("Shared pointer didn't need pointer casts");
+                  ptr = std::static_pointer_cast<T>(other);
+                }
             }
         }
       return *this;
@@ -360,31 +436,45 @@ namespace ngcore
     {
       if (Output())
         {
+          logger->debug("Store pointer of type {}",Demangle(typeid(T).name()));
           // if the pointer is null store -2
           if (!p)
-            return (*this) << -2;
+            {
+              logger->debug("Storing nullptr");
+              return (*this) << -2;
+            }
           auto reg_ptr = static_cast<void*>(p);
           if(typeid(T) != typeid(*p))
             {
+              logger->debug("Typeids are different: {} vs {}",
+                            Demangle(typeid(T).name()),
+                            Demangle(typeid(*p).name()));
               if(!IsRegistered(Demangle(typeid(*p).name())))
-                throw std::runtime_error(std::string("Archive error: Polymorphic type ")
-                                         + Demangle(typeid(*p).name())
-                                         + " not registered for archive");
+                throw Exception(std::string("Archive error: Polymorphic type ")
+                                + Demangle(typeid(*p).name())
+                                + " not registered for archive");
               reg_ptr = GetArchiveRegister(Demangle(typeid(*p).name())).downcaster(typeid(T), static_cast<void*>(p));
+              if(reg_ptr != static_cast<void*>(p))
+                {
+                  logger->debug("Multiple/Virtual inheritance involved, need to cast pointer");
+                }
             }
           auto pos = ptr2nr.find(reg_ptr);
           // if the pointer is not found in the map create a new entry
           if (pos == ptr2nr.end())
             {
+              logger->debug("Didn't find pointer, create new registry entry at {}",
+                            ptr_count);
               ptr2nr[reg_ptr] = ptr_count++;
               if(typeid(*p) == typeid(T))
                 if (std::is_constructible<T>::value)
                                {
+                                 logger->debug("Store standard class pointer (no virt. inh,...)");
                                  return (*this) << -1 & (*p);
                                }
                 else
-                  throw std::runtime_error(std::string("Archive error: Class ") +
-                                           Demangle(typeid(*p).name()) + " does not provide a default constructor!");
+                  throw Exception(std::string("Archive error: Class ") +
+                                  Demangle(typeid(*p).name()) + " does not provide a default constructor!");
               else
                 {
                   // if a pointer to a base class is archived, the class hierarchy must be registered
@@ -392,9 +482,10 @@ namespace ngcore
                   // implement a void DoArchive(Archive&) member function
                   // To recreate the object we need to store the true type of it
                   if(!IsRegistered(Demangle(typeid(*p).name())))
-                    throw std::runtime_error(std::string("Archive error: Polymorphic type ")
-                                             + Demangle(typeid(*p).name())
-                                             + " not registered for archive");
+                    throw Exception(std::string("Archive error: Polymorphic type ")
+                                    + Demangle(typeid(*p).name())
+                                    + " not registered for archive");
+                  logger->debug("Store a possibly more complicated pointer");
                   return (*this) << -3 << Demangle(typeid(*p).name()) & (*p);
                 }
             }
@@ -402,27 +493,37 @@ namespace ngcore
             {
               (*this) & pos->second;
               bool downcasted = !(reg_ptr == static_cast<void*>(p) );
+              logger->debug("Store a the existing position in registry at {}", pos->second);
+              logger->debug("Pointer {} downcasting", downcasted ? "needs" : "doesn't need");
               // store if the class has been downcasted and the name
               (*this) << downcasted << Demangle(typeid(*p).name());
             }
         }
       else
         {
+          logger->debug("Reading pointer of type {}", Demangle(typeid(T).name()));
           int nr;
           (*this) & nr;
           if (nr == -2) // restore a nullptr
+            {
+              logger->debug("Loading a nullptr");
               p = nullptr;
+            }
           else if (nr == -1) // create a new pointer of standard type (no virtual or multiple inheritance,...)
             {
+              logger->debug("Load a new pointer to a simple class");
               p = detail::constructIfPossible<T>();
               nr2ptr.push_back(p);
               (*this) & *p;
             }
           else if(nr == -3) // restore one of our registered classes that can have multiple inheritance,...
             {
+              logger->debug("Load a new pointer to a potentially more complicated class "
+                            "(allows for multiple/virtual inheritance,...)");
               // As stated above, we want this special behaviour only for our classes that implement DoArchive
               std::string name;
               (*this) & name;
+              logger->debug("Name = {}", name);
               auto info = GetArchiveRegister(name);
               // the creator creates a new object of type name, and returns a void* pointing
               // to T (which may have an offset)
@@ -434,9 +535,11 @@ namespace ngcore
             }
           else
             {
+              logger->debug("Restoring pointer to already existing object at registry position {}", nr);
               bool downcasted;
               std::string name;
               (*this) & downcasted & name;
+              logger->debug("{} object of type {}", downcasted ? "Downcasted" : "Not downcasted", name);
               if(downcasted)
                 {
                   // if the class has been downcasted we can assume it is in the register
@@ -491,11 +594,11 @@ namespace ngcore
     {
       static void* tryUpcast (const std::type_info& /*unused*/, T* /*unused*/)
       {
-        throw std::runtime_error("Upcast not successful, some classes are not registered properly for archiving!");
+        throw Exception("Upcast not successful, some classes are not registered properly for archiving!");
       }
       static void* tryDowncast (const std::type_info& /*unused*/, void* /*unused*/)
       {
-        throw std::runtime_error("Downcast not successful, some classes are not registered properly for archiving!");
+        throw Exception("Downcast not successful, some classes are not registered properly for archiving!");
       }
     };
 
@@ -507,7 +610,7 @@ namespace ngcore
         try
           { return GetArchiveRegister(Demangle(typeid(B1).name())).
               upcaster(ti, static_cast<void*>(dynamic_cast<B1*>(p))); }
-        catch(std::exception&)
+        catch(const Exception&)
           { return Caster<T, Brest...>::tryUpcast(ti, p); }
       }
 
@@ -520,7 +623,7 @@ namespace ngcore
             return dynamic_cast<T*>(static_cast<B1*>(GetArchiveRegister(Demangle(typeid(B1).name())).
                                                      downcaster(ti, p)));
           }
-        catch(std::exception&)
+        catch(const Exception&)
           {
             return Caster<T, Brest...>::tryDowncast(ti, p);
           }
@@ -536,7 +639,7 @@ namespace ngcore
     {
       static_assert(detail::all_of_tmpl<std::is_base_of<Bases,T>::value...>,
                     "Variadic template arguments must be base classes of T");
-      detail::ClassArchiveInfo info;
+      detail::ClassArchiveInfo info {};
       info.creator = [this,&info](const std::type_info& ti) -> void*
                      { return typeid(T) == ti ? detail::constructIfPossible<T>()
                          : Archive::Caster<T, Bases...>::tryUpcast(ti, detail::constructIfPossible<T>()); };
@@ -805,7 +908,7 @@ namespace ngcore
     }
   };
 
-#ifdef NG_PYTHON
+#ifdef NETGEN_PYTHON
 
   template<typename ARCHIVE>
   class PyArchive : public ARCHIVE
@@ -813,7 +916,12 @@ namespace ngcore
   private:
     pybind11::list lst;
     size_t index = 0;
+    std::map<std::string, VersionInfo> version_needed;
+  protected:
     using ARCHIVE::stream;
+    using ARCHIVE::version_map;
+    using ARCHIVE::logger;
+    using ARCHIVE::GetLibraryVersions;
   public:
     PyArchive(const pybind11::object& alst = pybind11::none()) :
       ARCHIVE(std::make_shared<std::stringstream>()),
@@ -821,8 +929,30 @@ namespace ngcore
     {
       ARCHIVE::shallow_to_python = true;
       if(Input())
-        stream = std::make_shared<std::stringstream>
-          (pybind11::cast<pybind11::bytes>(lst[pybind11::len(lst)-1]));
+        {
+          stream = std::make_shared<std::stringstream>
+            (pybind11::cast<pybind11::bytes>(lst[pybind11::len(lst)-1]));
+          *this & version_needed;
+          logger->debug("versions needed for unpickling = {}", version_needed);
+          for(auto& libversion : version_needed)
+            if(libversion.second > GetLibraryVersion(libversion.first))
+              throw Exception("Error in unpickling data:\nLibrary " + libversion.first +
+                              " must be at least " + libversion.second.to_string());
+          stream = std::make_shared<std::stringstream>
+            (pybind11::cast<pybind11::bytes>(lst[pybind11::len(lst)-2]));
+          *this & version_map;
+          stream = std::make_shared<std::stringstream>
+            (pybind11::cast<pybind11::bytes>(lst[pybind11::len(lst)-3]));
+        }
+    }
+
+    void NeedsVersion(const std::string& library, const std::string& version) override
+    {
+      if(Output())
+        {
+          logger->debug("Need version {} of library {}.", version, library);
+          version_needed[library] = version_needed[library] > version ? version_needed[library] : version;
+        }
     }
 
     using ARCHIVE::Output;
@@ -831,11 +961,20 @@ namespace ngcore
     using ARCHIVE::operator&;
     using ARCHIVE::operator<<;
     using ARCHIVE::GetVersion;
-    void ShallowOutPython(pybind11::object val) override { lst.append(val); }
+    void ShallowOutPython(const pybind11::object& val) override { lst.append(val); }
     pybind11::object ShallowInPython() override { return lst[index++]; }
 
     pybind11::list WriteOut()
     {
+      FlushBuffer();
+      lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
+      stream = std::make_shared<std::stringstream>();
+      *this & GetLibraryVersions();
+      FlushBuffer();
+      lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
+      stream = std::make_shared<std::stringstream>();
+      logger->debug("Writeout version needed = {}", version_needed);
+      *this & version_needed;
       FlushBuffer();
       lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
       return lst;
@@ -843,27 +982,31 @@ namespace ngcore
   };
 
   template<typename T, typename T_ARCHIVE_OUT=BinaryOutArchive, typename T_ARCHIVE_IN=BinaryInArchive>
-  auto NGSPickle(bool printoutput=false)
+  auto NGSPickle()
   {
-    return pybind11::pickle([printoutput](T* self)
+    return pybind11::pickle([](T* self)
                       {
                         PyArchive<T_ARCHIVE_OUT> ar;
                         ar & self;
                         auto output = pybind11::make_tuple(ar.WriteOut());
-                        if(printoutput)
-                          pybind11::print("pickle output of", Demangle(typeid(T).name()),"=", output);
+                        GetLogger("Archive")->trace("Pickling output for object of type {} = {}",
+                                                    Demangle(typeid(T).name()),
+                                                    std::string(pybind11::str(output)));
                         return output;
                       },
                       [](pybind11::tuple state)
                       {
                         T* val = nullptr;
+                        GetLogger("Archive")->trace("State for unpickling of object of type {} = {}",
+                                                    Demangle(typeid(T).name()),
+                                                    std::string(pybind11::str(state[0])));
                         PyArchive<T_ARCHIVE_IN> ar(state[0]);
                         ar & val;
                         return val;
                       });
   }
 
-#endif // NG_PYTHON
+#endif // NETGEN_PYTHON
 } // namespace ngcore
 
 #endif // NETGEN_CORE_ARCHIVE_HPP

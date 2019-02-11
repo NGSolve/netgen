@@ -1028,6 +1028,9 @@ namespace netgen
       case 6: typ = PRISM; break;
       case 8: typ = HEX; break;
       case 10: typ = TET10; break;
+      case 13: typ = PYRAMID13; break;
+      case 15: typ = PRISM15; break;
+      case 20: typ = HEX20; break;
       default: cerr << "Element::Element: unknown element with " << np << " points" << endl;
       }
     orderx = ordery = orderz = 1;
@@ -1108,6 +1111,9 @@ namespace netgen
       case 6: typ = PRISM; break;
       case 8: typ = HEX; break;
       case 10: typ = TET10; break;
+      case 13: typ = PYRAMID13; break;
+      case 15: typ = PRISM15; break;
+      case 20: typ = HEX20; break;
         // 
       default: break;
         cerr << "Element::SetNP unknown element with " << np << " points" << endl;
@@ -1126,7 +1132,10 @@ namespace netgen
       case PRISM: np = 6; break;
       case HEX: np = 8; break;
       case TET10: np = 10; break;
+      case PYRAMID13: np = 13; break;
       case PRISM12: np = 12; break;
+      case PRISM15: np = 15; break;
+      case HEX20: np = 20; break;
 
       default: break;
         cerr << "Element::SetType unknown type  " << int(typ) << endl;
@@ -1955,7 +1964,27 @@ namespace netgen
           shape(4) = p(2);
           break;
         }
-
+      case PYRAMID13:
+        {
+	  T x = p(0);
+	  T y = p(1);
+	  T z = p(2);
+          z *= 1-1e-12;
+          shape[0] = (-z + z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + (-2*x - z + 2)*(-2*y - z + 2))*(-0.5*x - 0.5*y - 0.5*z + 0.25);
+          shape[1] = (0.5*x - 0.5*y - 0.25)*(-z - z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + (2*x + z)*(-2*y - z + 2));
+          shape[2] = (-z + z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + (2*x + z)*(2*y + z))*(0.5*x + 0.5*y + 0.5*z - 0.75);
+          shape[3] = (-0.5*x + 0.5*y - 0.25)*(-z - z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + (2*y + z)*(-2*x - z + 2));
+          shape[4] = z*(2*z - 1);
+          shape[5] = 2*x*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/(-2*z + 2);
+          shape[6] = 4*x*y*(-2*x - 2*z + 2)/(-2*z + 2);
+          shape[7] = 2*y*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/(-2*z + 2);
+          shape[8] = 4*x*y*(-2*y - 2*z + 2)/(-2*z + 2);
+          shape[9] = z*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/(-z + 1);
+          shape[10] = 2*x*z*(-2*y - 2*z + 2)/(-z + 1);
+          shape[11] = 4*x*y*z/(-z + 1);
+          shape[12] = 2*y*z*(-2*x - 2*z + 2)/(-z + 1);
+          break;
+        }
       case PRISM:
         {
           shape(0) = p(0) * (1-p(2));
@@ -1964,6 +1993,30 @@ namespace netgen
           shape(3) = p(0) * p(2);
           shape(4) = p(1) * p(2);
           shape(5) = (1-p(0)-p(1)) * p(2);
+          break;
+        }
+      case PRISM15:
+        {
+	  T x = p(0);
+	  T y = p(1);
+	  T z = p(2);
+          T lam = 1-x-y;
+          T lamz = 1-z;
+          shape[0] = (2*x*x-x) * (2*lamz*lamz-lamz);
+          shape[1] = (2*y*y-y) * (2*lamz*lamz-lamz);
+          shape[2] = (2*lam*lam-lam) * (2*lamz*lamz-lamz);
+          shape[3] = (2*x*x-x) * (2*z*z-z);
+          shape[4] = (2*y*y-y) * (2*z*z-z);
+          shape[5] = (2*lam*lam-lam) * (2*z*z-z);
+          shape[6] = 4 * x * y * (2*lamz*lamz-lamz);
+          shape[7] = 4 * x * lam * (2*lamz*lamz-lamz);
+          shape[8] = 4 * y * lam * (2*lamz*lamz-lamz);
+          shape[9] = x * 4 * z * (1-z);
+          shape[10] = y * 4 * z * (1-z);
+          shape[11] = lam * 4 * z * (1-z);
+          shape[12] = 4 * x * y * (2*z*z-z);
+          shape[13] = 4 * x * lam * (2*z*z-z);
+          shape[14] = 4 * y * lam * (2*z*z-z);
           break;
         }
       case HEX:
@@ -1978,6 +2031,43 @@ namespace netgen
           shape(7) = (1-p(0))*(  p(1))*(  p(2));
           break;
         }
+      case HEX20:
+	{
+	  T x = p(0);
+	  T y = p(1);
+	  T z = p(2);
+	  shape[0] = (1-x)*(1-y)*(1-z);
+	  shape[1] =    x *(1-y)*(1-z);
+	  shape[2] =    x *   y *(1-z);
+	  shape[3] = (1-x)*   y *(1-z);
+	  shape[4] = (1-x)*(1-y)*(z);
+	  shape[5] =    x *(1-y)*(z);
+	  shape[6] =    x *   y *(z);
+	  shape[7] = (1-x)*   y *(z);
+
+          T sigma[8]={(1-x)+(1-y)+(1-z),x+(1-y)+(1-z),x+y+(1-z),(1-x)+y+(1-z),
+                      (1-x)+(1-y)+z,x+(1-y)+z,x+y+z,(1-x)+y+z};
+
+          static const int e[12][2] =
+            {
+              { 0, 1 }, { 2, 3 }, { 3, 0 }, { 1, 2 },
+              { 4, 5 }, { 6, 7 }, { 7, 4 }, { 5, 6 },
+              { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 },
+            };
+
+          for (int i = 0; i < 12; i++)
+            {
+              T lame = shape[e[i][0]]+shape[e[i][1]];
+              T xi = sigma[e[i][1]]-sigma[e[i][0]];
+              shape[8+i] = (1-xi*xi)*lame;
+            }
+          for (int i = 0; i < 12; i++)
+            {
+              shape[e[i][0]] -= 0.5 * shape[8+i];
+              shape[e[i][1]] -= 0.5 * shape[8+i];
+            }
+          break;
+	}
       default:
         throw NgException("Element :: GetNewShape not implemented for that element");
       }

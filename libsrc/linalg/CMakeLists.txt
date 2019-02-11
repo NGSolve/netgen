@@ -1,8 +1,8 @@
-add_library( la OBJECT
-        densemat.cpp polynomial.cpp bfgs.cpp linopt.cpp linsearch.cpp 
-        )
-
-set_target_properties(la PROPERTIES POSITION_INDEPENDENT_CODE ON )
+add_library( la INTERFACE )
+set(sdir ${CMAKE_CURRENT_SOURCE_DIR})
+target_sources( la INTERFACE
+  ${sdir}/densemat.cpp ${sdir}/polynomial.cpp ${sdir}/bfgs.cpp ${sdir}/linopt.cpp ${sdir}/linsearch.cpp
+)
 
 install(FILES
   densemat.hpp linalg.hpp opti.hpp

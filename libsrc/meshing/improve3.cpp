@@ -22,6 +22,8 @@ namespace netgen
 void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 				       OPTIMIZEGOAL goal)
 {
+  static Timer t("MeshOptimize3d::CombineImprove"); RegionTimer reg(t);
+  
   int np = mesh.GetNP();
   int ne = mesh.GetNE();
 
@@ -274,6 +276,8 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 				     OPTIMIZEGOAL goal)
 {
+  static Timer t("MeshOptimize3d::SplitImprove"); RegionTimer reg(t);
+  
   double bad1, bad2, badmax, badlimit;
 
   int cnt = 0;
@@ -569,6 +573,8 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 				    const BitArray * working_elements)
 {
+  static Timer t("MeshOptimize3d::SwapImprove"); RegionTimer reg(t);
+  
   PointIndex pi3(0), pi4(0), pi5(0), pi6(0);
   int cnt = 0;
 
@@ -2303,6 +2309,8 @@ void MeshOptimize3d :: SwapImproveSurface (Mesh & mesh, OPTIMIZEGOAL goal,
 
 void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 {
+  static Timer t("MeshOptimize3d::SwapImprove2"); RegionTimer reg(t);
+  
   PointIndex pi1(0), pi2(0), pi3(0), pi4(0), pi5(0);
   Element el21(TET), el22(TET), el31(TET), el32(TET), el33(TET);
 

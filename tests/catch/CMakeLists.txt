@@ -3,8 +3,7 @@ if(ENABLE_UNIT_TESTS)
 add_custom_target(unit_tests)
 
 # Build catch_main test object
-message("netgen include dir = ${NETGEN_INCLUDE_DIR_ABSOLUTE} --------------------------------------")
-include_directories(${CATCH_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../../libsrc/include})
+include_directories(${CATCH_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../../libsrc/include ${SPDLOG_INCLUDE_DIR})
 add_library(catch_main STATIC main.cpp)
 set_target_properties(catch_main PROPERTIES CXX_STANDARD 17)
 add_dependencies(unit_tests catch_main)
@@ -15,23 +14,19 @@ add_test(NAME unit_tests_built COMMAND ${CMAKE_COMMAND} --build . --target unit_
 
 macro(add_unit_test name sources)
   add_executable(test_${name} ${sources} )
-  if (WIN32)
-    target_link_libraries(test_${name} ngcore catch_main)
-  else(WIN32)
-    target_link_libraries(test_${name} ngcore catch_main)
-  endif(WIN32)
+  target_link_libraries(test_${name} ngcore catch_main)
 
   add_dependencies(unit_tests test_${name})
   add_test(NAME unit_${name} COMMAND test_${name})
   set_tests_properties(unit_${name} PROPERTIES DEPENDS unit_tests_built)
+
+  if(ENABLE_CPP_CORE_GUIDELINES_CHECK)
+    set_target_properties(test_${name} PROPERTIES CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
+  endif(ENABLE_CPP_CORE_GUIDELINES_CHECK)
 endmacro()
 
 add_unit_test(archive archive.cpp)
+add_unit_test(symboltable symboltable.cpp)
 add_unit_test(version version.cpp)
-
-if(ENABLE_CPP_CORE_GUIDELINES_CHECK)
-  set_target_properties(test_archive PROPERTIES CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
-  set_target_properties(test_version PROPERTIES CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
-endif(ENABLE_CPP_CORE_GUIDELINES_CHECK)
 
 endif(ENABLE_UNIT_TESTS)

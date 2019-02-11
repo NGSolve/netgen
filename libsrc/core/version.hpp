@@ -1,6 +1,7 @@
 #ifndef NETGEN_CORE_VERSION_HPP
 #define NETGEN_CORE_VERSION_HPP
 
+#include <ostream>
 #include <string>
 #include <tuple>
 
@@ -83,6 +84,11 @@ namespace ngcore
     bool operator <=(const VersionInfo& other) const { return !((*this) > other); }
     bool operator >=(const VersionInfo& other) const { return !((*this) < other); }
   };
+
+  inline std::ostream& operator << (std::ostream& ost, const VersionInfo& version)
+  {
+    return ost << version.to_string();
+  }
 } // namespace ngcore
 
 #endif // NETGEN_CORE_VERSION_HPP

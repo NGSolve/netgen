@@ -32,21 +32,25 @@
 
 
 // max number of nodes per element
-#define NG_ELEMENT_MAXPOINTS 12
+#define NG_ELEMENT_MAXPOINTS 20
 
 // max number of nodes per surface element
 #define NG_SURFACE_ELEMENT_MAXPOINTS 8
 
+#ifndef PARALLEL
+  typedef int MPI_Comm;
+#endif
+namespace netgen { extern DLL_HEADER MPI_Comm ng_comm; }
 
 
 // implemented element types:
 enum NG_ELEMENT_TYPE { 
   NG_PNT = 0,
   NG_SEGM = 1, NG_SEGM3 = 2,
-  NG_TRIG = 10, NG_QUAD=11, NG_TRIG6 = 12, NG_QUAD6 = 13,
+  NG_TRIG = 10, NG_QUAD=11, NG_TRIG6 = 12, NG_QUAD6 = 13, NG_QUAD8 = 14,
   NG_TET = 20, NG_TET10 = 21, 
-  NG_PYRAMID = 22, NG_PRISM = 23, NG_PRISM12 = 24,
-  NG_HEX = 25
+  NG_PYRAMID = 22, NG_PRISM = 23, NG_PRISM12 = 24, NG_PRISM15 = 27, NG_PYRAMID13 = 28,
+  NG_HEX = 25, NG_HEX20 = 26
 };
 
 typedef double NG_POINT[3];  // coordinates
@@ -60,9 +64,9 @@ extern "C" {
   
   // load geometry from file 
   DLL_HEADER void Ng_LoadGeometry (const char * filename);
-  
+
   // load netgen mesh
-  DLL_HEADER void Ng_LoadMesh (const char * filename);
+  DLL_HEADER void Ng_LoadMesh (const char * filename, MPI_Comm comm = netgen::ng_comm);
 
   // load netgen mesh
   DLL_HEADER void Ng_LoadMeshFromString (const char * mesh_as_string);
@@ -312,7 +316,7 @@ extern "C" {
   
   struct Ng_SolutionData
   {
-    string name;      // name of gridfunction
+    std::string name;      // name of gridfunction
     double * data;    // solution values
     int components;   // relevant (double) components in solution vector
     int dist;         // # doubles per entry alignment! 
@@ -333,7 +337,7 @@ extern "C" {
   // redraw 
   DLL_HEADER void Ng_Redraw(bool blocking = false);
   ///
-  DLL_HEADER void Ng_TclCmd(string cmd);
+  DLL_HEADER void Ng_TclCmd(std::string cmd);
   ///
   DLL_HEADER void Ng_SetMouseEventHandler (netgen::MouseEventHandler * handler);
   ///

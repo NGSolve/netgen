@@ -3398,6 +3398,7 @@ namespace netgen
 
 	    size_t nsel = mtris.Size();
             NgProfiler::StartTimer (timer_bisecttrig);
+            (*opt.tracer)("Bisect trigs", false);            
 	    for (size_t i = 0; i < nsel; i++)
 	      if (mtris[i].marked)
 		{
@@ -3440,7 +3441,7 @@ namespace netgen
 		}
 
             NgProfiler::StopTimer (timer_bisecttrig);
-            
+            (*opt.tracer)("Bisect trigs", true);                        
             
 	    int nquad = mquads.Size();
 	    for (int i = 1; i <= nquad; i++)

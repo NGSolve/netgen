@@ -32,10 +32,8 @@ namespace netgen
     /// point coordinates
     T_POINTS points;
 
-#ifdef PARALLEL
-    // The communicator for this mesh. (more or less dummy for now!)  
+    // The communicator for this mesh. Just a dummy if compiled without MPI.  
     MPI_Comm comm;
-#endif
     
     /// line-segments at edges
     Array<Segment, 0, size_t> segments;
@@ -132,8 +130,8 @@ namespace netgen
     /// mesh access semaphors.
     NgMutex majormutex;
 
-    SYMBOLTABLE< Array<int>* > userdata_int;
-    SYMBOLTABLE< Array<double>* > userdata_double; 
+    SymbolTable< Array<int>* > userdata_int;
+    SymbolTable< Array<double>* > userdata_double;
 
 
     mutable Array< Point3d > pointcurves;
@@ -223,7 +221,7 @@ namespace netgen
     DLL_HEADER PointIndex AddPoint (const Point3d & p, int layer = 1);
     DLL_HEADER PointIndex AddPoint (const Point3d & p, int layer, POINTTYPE type);
 
-    int GetNP () const { return points.Size(); }
+    auto GetNP () const { return points.Size(); }
 
     // [[deprecated("Use Point(PointIndex) instead of int !")]]        
     MeshPoint & Point(int i) { return points.Elem(i); }
@@ -293,7 +291,7 @@ namespace netgen
       timestamp = NextTimeStamp();
     }
 
-    int GetNSE () const { return surfelements.Size(); }
+    auto GetNSE () const { return surfelements.Size(); }
 
     // [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]    
     Element2d & SurfaceElement(int i) { return surfelements.Elem(i); }
@@ -318,7 +316,7 @@ namespace netgen
     // write to pre-allocated container, thread-safe
     DLL_HEADER void SetVolumeElement (ElementIndex sei, const Element & el);
 
-    int GetNE () const { return volelements.Size(); }
+    auto GetNE () const { return volelements.Size(); }
 
     // [[deprecated("Use VolumeElement(ElementIndex) instead of int !")]]    
     Element & VolumeElement(int i) { return volelements.Elem(i); }
@@ -456,7 +454,8 @@ namespace netgen
     const Element2d & OpenElement(int i) const
     { return openelements.Get(i); }
 
-
+    auto & OpenElements() const { return openelements; }
+    
     /// are also quads open elements
     bool HasOpenQuads () const;
 
@@ -606,6 +605,9 @@ namespace netgen
     int AddEdgeDescriptor(const EdgeDescriptor & fd)
     { edgedecoding.Append(fd); return edgedecoding.Size() - 1; }
 
+    MPI_Comm GetCommunicator() const { return this->comm; }
+    void SetCommunicator(MPI_Comm acomm);
+    
     ///
     DLL_HEADER void SetMaterial (int domnr, const string & mat);
     ///
@@ -858,7 +860,11 @@ namespace netgen
     void SendMesh ( ) const;   // Mesh * mastermesh, Array<int> & neloc) const;
     /// loads a mesh sent from master processor
     void ReceiveParallelMesh ();
-
+#else
+    void Distribute () {}
+    void SendRecvMesh () {}
+    void Distribute (Array<int> & volume_weights, Array<int> & surface_weights, 
+      Array<int> & segment_weights){ }
 #endif
 
 

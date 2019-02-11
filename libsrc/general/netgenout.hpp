@@ -4,14 +4,11 @@
 // #include <ostream>
 // #include <mystdlib.h>
 // #include <meshing.hpp>
+#include "mpi_interface.hpp"
 
 namespace netgen
 {
 
-#ifdef PARALLEL
-extern int id;
-extern int ntasks;
-#endif
 DLL_HEADER extern int printmessage_importance;
 DLL_HEADER extern int printdots;
 

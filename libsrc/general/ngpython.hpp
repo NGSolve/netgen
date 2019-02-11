@@ -3,6 +3,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
 #include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 namespace py = pybind11;
 #include <iostream>
 #include <sstream>
@@ -66,16 +67,7 @@ namespace netgen
     return static_cast<typename function_traits<Function>::pointer>(lambda);
   }
 
-
-  template <class T>
-  inline std::string ToString (const T& t)
-  {
-    std::stringstream ss;
-    ss << t;
-    return ss.str();
-  }
-
-}
+} // namespace netgen
 
 #endif
 

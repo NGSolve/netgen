@@ -419,9 +419,9 @@ namespace netgen
 
 
 
-  static Solid * CreateSolidExpr (istream & ist, const SYMBOLTABLE<Solid*> & solids);
-  static Solid * CreateSolidTerm (istream & ist, const SYMBOLTABLE<Solid*> & solids);
-  static Solid * CreateSolidPrim (istream & ist, const SYMBOLTABLE<Solid*> & solids);
+  static Solid * CreateSolidExpr (istream & ist, const SymbolTable<Solid*> & solids);
+  static Solid * CreateSolidTerm (istream & ist, const SymbolTable<Solid*> & solids);
+  static Solid * CreateSolidPrim (istream & ist, const SymbolTable<Solid*> & solids);
 
   static void ReadString (istream & ist, char * str)
   {
@@ -461,7 +461,7 @@ namespace netgen
   }
 
 
-  Solid * CreateSolidExpr (istream & ist, const SYMBOLTABLE<Solid*> & solids)
+  Solid * CreateSolidExpr (istream & ist, const SymbolTable<Solid*> & solids)
   {
     //  cout << "create expr" << endl;
 
@@ -484,7 +484,7 @@ namespace netgen
     return s1;
   }
 
-  Solid * CreateSolidTerm (istream & ist, const SYMBOLTABLE<Solid*> & solids)
+  Solid * CreateSolidTerm (istream & ist, const SymbolTable<Solid*> & solids)
   {
     //  cout << "create term" << endl;
 
@@ -508,7 +508,7 @@ namespace netgen
     return s1;
   }
 
-  Solid * CreateSolidPrim (istream & ist, const SYMBOLTABLE<Solid*> & solids)
+  Solid * CreateSolidPrim (istream & ist, const SymbolTable<Solid*> & solids)
   {
     Solid * s1;
     char ch;
@@ -533,7 +533,7 @@ namespace netgen
       }
 
     (*testout) << "get terminal " << str << endl;
-    s1 = solids.Get(str);
+    s1 = solids[str];
     if (s1)
       {
 	//      cout << "primitive: " << str << endl;
@@ -545,7 +545,7 @@ namespace netgen
   }
 
 
-  Solid * Solid :: CreateSolid (istream & ist, const SYMBOLTABLE<Solid*> & solids)
+  Solid * Solid :: CreateSolid (istream & ist, const SymbolTable<Solid*> & solids)
   {
     Solid * nsol =  CreateSolidExpr (ist, solids);
     nsol = new Solid (ROOT, nsol);

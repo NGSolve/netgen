@@ -223,6 +223,45 @@ namespace netgen
 	    { 3, 4, 10 },
 	    { 4, 5, 11 },
 	  };
+        static int betw_prism15[9][3] =
+          {
+           { 0, 1, 6 },
+           { 0, 2, 7 },
+           { 1, 2, 8 },
+           { 0, 3, 9 },
+           { 1, 4, 10 },
+           { 2, 5, 11 },
+           { 3, 4, 12 },
+           { 3, 5, 13 },
+           { 4, 5, 14 }
+          };
+        static int betw_pyramid[8][3] =
+          {
+           { 0, 1, 5 },
+           { 3, 2, 6 },
+           { 3, 0, 7 },
+           { 1, 2, 8 },
+           { 0, 4, 9 },
+           { 1, 4, 10 },
+           { 2, 4, 11 },
+           { 3, 4, 12 }
+          };
+	static int betw_hex[12][3] =
+	  {
+            { 0, 1, 8 },
+            { 2, 3, 9 },
+            { 3, 0, 10 },
+            { 1, 2, 11 },
+            { 4, 5, 12 },
+            { 6, 7, 13 },
+            { 7, 4, 14 },
+            { 5, 6, 15 },
+            { 0, 4, 16 },
+            { 1, 5, 17 },
+            { 2, 6, 18 },
+            { 3, 7, 19 },
+          };
+        
 	int (*betw)[3] = NULL;
 
 	switch (el.GetType())
@@ -241,6 +280,29 @@ namespace netgen
 	      betw = betw_prism;
 	      newel.SetType (PRISM12);
 	      onp = 6;
+	      break;
+	    }
+          case PRISM15:
+            {
+              betw = betw_prism15;
+              newel.SetType(PRISM15);
+              onp = 6;
+              break;
+            }
+          case PYRAMID:
+          case PYRAMID13:
+            {
+              betw = betw_pyramid;
+              newel.SetType(PYRAMID13);
+              onp = 5;
+              break;
+            }
+          case HEX:
+          case HEX20:
+	    {
+	      betw = betw_hex;
+	      newel.SetType (HEX20);
+	      onp = 8;
 	      break;
 	    }
 	  default:

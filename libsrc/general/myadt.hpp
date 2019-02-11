@@ -21,8 +21,8 @@
 namespace netgen
 {
   using namespace ngcore;
+  using NgException = Exception;
 }
-#include "ngexception.hpp"
 #include "parthreads.hpp"
 // #include "moveablemem.hpp"
 #include "dynamicmem.hpp"
@@ -33,7 +33,6 @@ namespace netgen
 #include "hashtabl.hpp"
 
 
-#include "symbolta.hpp"
 #include "bitarray.hpp"
 #include "flags.hpp"
 #include "spbita2d.hpp"
@@ -44,7 +43,6 @@ namespace netgen
 #include "sort.hpp"
 #include "stack.hpp"
 #include "mystring.hpp"
-#include "profiler.hpp"
 
 #include "mpi_interface.hpp"
 #include "netgenout.hpp"

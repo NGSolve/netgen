@@ -2682,7 +2682,7 @@ namespace netgen
     for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
       {
 	const Element & el = (*mesh)[ei];
-	if (el.GetType() == PYRAMID && !el.IsDeleted())
+	if ((el.GetType() == PYRAMID || el.GetType() == PYRAMID13) && !el.IsDeleted())
 	  {
             int i = ei + 1;
 

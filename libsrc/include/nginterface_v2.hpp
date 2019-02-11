@@ -12,9 +12,32 @@
   C++ interface to Netgen
 */
 
+#ifndef NGINTERFACE
+  // implemented element types:
+enum NG_ELEMENT_TYPE { 
+  NG_PNT = 0,
+  NG_SEGM = 1, NG_SEGM3 = 2,
+  NG_TRIG = 10, NG_QUAD=11, NG_TRIG6 = 12, NG_QUAD6 = 13, NG_QUAD8 = 14,
+  NG_TET = 20, NG_TET10 = 21, 
+  NG_PYRAMID = 22, NG_PRISM = 23, NG_PRISM12 = 24, NG_PRISM15 = 27, NG_PYRAMID13 = 28,
+  NG_HEX = 25, NG_HEX20 = 26
+};
+
+enum NG_REFINEMENT_TYPE { NG_REFINE_H = 0, NG_REFINE_P = 1, NG_REFINE_HP = 2 };
+#endif
+
+#ifndef PARALLEL
+  typedef int MPI_Comm;
+#endif
+
+
 namespace netgen
 {
-
+  using namespace std;
+  using namespace ngcore;
+  
+  extern DLL_HEADER MPI_Comm ng_comm;
+  
   static constexpr int POINTINDEX_BASE = 1;
   
   struct T_EDGE2
@@ -44,6 +67,19 @@ namespace netgen
     size_t Size() const { return s; }
     T * Release() { T * hd = data; data = nullptr; return hd; }
   };
+
+  template <typename T, int S>
+  class Ng_BufferMS
+  {
+    size_t s;
+    T data[S];
+  public:
+    Ng_BufferMS (size_t as) : s(as) { ; } 
+    size_t Size() const { return s; }
+    T & operator[] (size_t i) { return data[i]; }
+    T operator[] (size_t i) const { return data[i]; }
+  };
+
   
   class Ng_Element
   {
@@ -185,6 +221,7 @@ namespace netgen
       int operator[] (size_t i) const { return ptr[i]-POINTINDEX_BASE; }
     };
 
+    /*
     class Ng_Edges
     {
     public:
@@ -194,11 +231,11 @@ namespace netgen
       size_t Size() const { return ned; }
       int operator[] (size_t i) const { return ptr[i]-1; }
     };
-
+    */
 
   public:
     Ng_Vertices vertices;
-    Ng_Edges edges;
+    // Ng_Edges edges;
     int surface_el;  // -1 if face not on surface
   };
 
@@ -224,17 +261,24 @@ namespace netgen
   public:
     // Ngx_Mesh () { ; }
     // Ngx_Mesh(class Mesh * amesh) : mesh(amesh) { ; }
-    Ngx_Mesh(shared_ptr<Mesh> amesh = NULL);
-    void LoadMesh (const string & filename);
 
-    void LoadMesh (istream & str);
+    /** reuse a netgen-mesh **/
+    Ngx_Mesh (shared_ptr<Mesh> amesh); 
+    /** load a new mesh **/
+    Ngx_Mesh (string filename, MPI_Comm acomm = netgen::ng_comm);
+    
+    void LoadMesh (const string & filename, MPI_Comm comm = netgen::ng_comm);
+
+    void LoadMesh (istream & str, MPI_Comm comm = netgen::ng_comm);
     void SaveMesh (ostream & str) const;
     void UpdateTopology ();
     void DoArchive (Archive & archive);
 
+    MPI_Comm GetCommunicator() const;
+    
     virtual ~Ngx_Mesh();
 
-    bool Valid () { return mesh != NULL; }
+    bool Valid () const { return mesh != NULL; }
     
     int GetDimension() const;
     int GetNLevels() const;
@@ -282,7 +326,8 @@ namespace netgen
 
     template <int DIM>
     const Ng_Node<DIM> GetNode (int nr) const;
-    
+
+    Ng_BufferMS<int,4> GetFaceEdges (int fnr) const;
     
     template <int DIM>
     int GetNNodes ();
@@ -291,11 +336,17 @@ namespace netgen
     // 3D only
     // std::pair<int,int> GetBoundaryNeighbouringDomains (int bnr);
 
+    template <int DIM>
+      void SetRefinementFlag (size_t elnr, bool flag);
+    
     void Curve (int order);
+
     void Refine (NG_REFINEMENT_TYPE reftype,
                  void (*taskmanager)(function<void(int,int)>) = &DummyTaskManager2,
                  void (*tracer)(string, bool) = &DummyTracer2);
 
+    int GetHPElementLevel (int ei, int dir) const;
+  
     void GetParentNodes (int ni, int * parents) const;
     int GetParentElement (int ei) const;
     int GetParentSElement (int ei) const;
@@ -312,13 +363,33 @@ namespace netgen
      int * const indices = NULL, int numind = 0) const;
     
 
-#ifdef PARALLEL
+    // for MPI-parallel
     std::tuple<int,int*> GetDistantProcs (int nodetype, int locnum) const;
-#endif
 
     shared_ptr<Mesh> GetMesh () const { return mesh; } 
     shared_ptr<Mesh> SelectMesh () const;
     inline auto GetTimeStamp() const;
+
+
+    // also added from nginterface.h, still 1-based, need redesign
+    void HPRefinement (int levels, double parameter = 0.125,
+                       bool setorders = true,bool ref_level = false);
+    size_t GetNP() const;
+    int GetSurfaceElementSurfaceNumber (size_t ei) const;
+    int GetSurfaceElementFDNumber (size_t ei) const;
+
+    int GetElementOrder (int enr) const;
+    void GetElementOrders (int enr, int * ox, int * oy, int * oz) const;
+    void SetElementOrder (int enr, int order);
+    void SetElementOrders (int enr, int ox, int oy, int oz);
+    int GetSurfaceElementOrder (int enr) const;
+    void GetSurfaceElementOrders (int enr, int * ox, int * oy) const;
+    void SetSurfaceElementOrder (int enr, int order);
+    void SetSurfaceElementOrders (int enr, int ox, int oy);
+    int GetClusterRepVertex (int vi) const;
+    int GetClusterRepEdge (int edi) const;
+    int GetClusterRepFace (int fai) const;
+    int GetClusterRepElement (int eli) const;
   };
 
 

@@ -55,7 +55,8 @@ namespace netgen
 	sum += dt / fun;
       }
 
-    int nel = int (sum+1);
+    int nel = int (sum+0.5);
+    if (nel == 0) nel = 1;
     fperel = sum / nel;
 
     points.Append (0);
@@ -457,9 +458,9 @@ namespace netgen
     for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
       if ( (*mesh)[si].si > maxsegmentindex) maxsegmentindex = (*mesh)[si].si;
 
-    mesh->SetNBCNames(maxsegmentindex+1);
+    mesh->SetNBCNames(maxsegmentindex);
 
-    for ( int sindex = 0; sindex <= maxsegmentindex; sindex++ )
+    for ( int sindex = 0; sindex < maxsegmentindex; sindex++ )
       mesh->SetBCName ( sindex, geometry.GetBCName( sindex+1 ) );
 
     for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)

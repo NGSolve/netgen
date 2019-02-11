@@ -1,7 +1,7 @@
 #ifndef FILE_SOLDATA
 #define FILE_SOLDATA
 
-
+#include <myadt.hpp>  // for tAVX
 namespace netgen
 {
 
@@ -103,10 +103,10 @@ namespace netgen
 
 #ifdef __SSE__
     virtual bool GetMultiSurfValue (size_t selnr, size_t facetnr, size_t npts,
-                                    const tAVXd * xref, 
-                                    const tAVXd * x, 
-                                    const tAVXd * dxdxref, 
-                                    tAVXd * values)
+                                    const ngsimd::tAVXd * xref, 
+                                    const ngsimd::tAVXd * x, 
+                                    const ngsimd::tAVXd * dxdxref, 
+                                    ngsimd::tAVXd * values)
     {
       cerr << "GetMultiSurfVaue not overloaded for SIMD<double>" << endl;
       return false;

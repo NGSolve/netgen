@@ -212,13 +212,16 @@ inline short int MeshTopology :: GetNVertices (ELEMENT_TYPE et)
       return 4;
 
     case PYRAMID:
+    case PYRAMID13:
       return 5;
 
     case PRISM:
     case PRISM12:
+    case PRISM15:
       return 6;
 
     case HEX:
+    case HEX20:
       return 8;
 
       // default:
@@ -244,8 +247,10 @@ inline short int MeshTopology :: GetNPoints (ELEMENT_TYPE et)
 
     case QUAD:
     case QUAD6:
-    case QUAD8:
       return 4;
+
+    case QUAD8:
+      return 8;
 
     case TET:
       return 4;
@@ -254,14 +259,21 @@ inline short int MeshTopology :: GetNPoints (ELEMENT_TYPE et)
 
     case PYRAMID:
       return 5;
+    case PYRAMID13:
+      return 13;
 
     case PRISM:
-    case PRISM12:
       return 6;
+    case PRISM12:
+      return 12;
+    case PRISM15:
+      return 15;
 
     case HEX:
       return 8;
 
+    case HEX20:
+      return 20;
       // default:
       // cerr << "Ng_ME_GetNVertices, illegal element type " << et << endl;
     }
@@ -272,7 +284,7 @@ inline short int MeshTopology :: GetNPoints (ELEMENT_TYPE et)
 
 inline short int MeshTopology :: GetNEdges (ELEMENT_TYPE et)
 {
-  __assume(et >= SEGMENT && et <= HEX);
+  __assume(et >= SEGMENT && et <= PYRAMID13);
   switch (et)
     {
     case SEGMENT:
@@ -293,13 +305,16 @@ inline short int MeshTopology :: GetNEdges (ELEMENT_TYPE et)
       return 6;
 
     case PYRAMID:
+    case PYRAMID13:
       return 8;
 
     case PRISM:
     case PRISM12:
+    case PRISM15:
       return 9;
 
     case HEX:
+    case HEX20:
       return 12;
     default:
       return 0;
@@ -312,7 +327,7 @@ inline short int MeshTopology :: GetNEdges (ELEMENT_TYPE et)
 
 inline short int MeshTopology :: GetNFaces (ELEMENT_TYPE et)
 {
-  __assume(et >= SEGMENT && et <= HEX);  
+  __assume(et >= SEGMENT && et <= PYRAMID13);
   switch (et)
     {
     case SEGMENT:
@@ -333,13 +348,16 @@ inline short int MeshTopology :: GetNFaces (ELEMENT_TYPE et)
       return 4;
 
     case PYRAMID:
+    case PYRAMID13:
       return 5;
 
     case PRISM:
     case PRISM12:
+    case PRISM15:
       return 5;
 
     case HEX:
+    case HEX20:
       return 6;
 
     default:
@@ -436,13 +454,16 @@ const ELEMENT_EDGE * MeshTopology :: GetEdges1 (ELEMENT_TYPE et)
       return tet_edges;
 
     case PYRAMID:
+    case PYRAMID13:
       return pyramid_edges;
 
     case PRISM:
     case PRISM12:
+    case PRISM15:
       return prism_edges;
 
     case HEX:
+    case HEX20:
       return hex_edges;
       // default:
       // cerr << "Ng_ME_GetEdges, illegal element type " << et << endl;
@@ -513,7 +534,7 @@ const ELEMENT_EDGE * MeshTopology :: GetEdges0 (ELEMENT_TYPE et)
       { 2, 6 },
       { 3, 7 },
     };
-
+  
   switch (et)
     {
     case SEGMENT:
@@ -534,13 +555,16 @@ const ELEMENT_EDGE * MeshTopology :: GetEdges0 (ELEMENT_TYPE et)
       return tet_edges;
 
     case PYRAMID:
+    case PYRAMID13:
       return pyramid_edges;
 
     case PRISM:
     case PRISM12:
+    case PRISM15:
       return prism_edges;
 
     case HEX:
+    case HEX20:
       return hex_edges;
       // default:
       // cerr << "Ng_ME_GetEdges, illegal element type " << et << endl;
@@ -618,15 +642,18 @@ inline const ELEMENT_FACE * MeshTopology :: GetFaces1 (ELEMENT_TYPE et)
 
     case PRISM:
     case PRISM12:
+    case PRISM15:
       return prism_faces;
 
     case PYRAMID:
+    case PYRAMID13:
       return pyramid_faces;
 
     case SEGMENT:
     case SEGMENT3:
 
     case HEX:
+    case HEX20:
       return hex_faces;
 
       // default:
@@ -700,15 +727,18 @@ inline const ELEMENT_FACE * MeshTopology :: GetFaces0 (ELEMENT_TYPE et)
 
     case PRISM:
     case PRISM12:
+    case PRISM15:
       return prism_faces;
 
     case PYRAMID:
+    case PYRAMID13:
       return pyramid_faces;
 
     case SEGMENT:
     case SEGMENT3:
 
     case HEX:
+    case HEX20:
       return hex_faces;
 
       // default:

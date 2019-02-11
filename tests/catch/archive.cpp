@@ -236,6 +236,34 @@ void testMultipleInheritance(Archive& in, Archive& out)
     }
 }
 
+void testMap(Archive& in, Archive& out)
+{
+  map<string, VersionInfo> map1;
+  map1["netgen"] = "v6.2.1901";
+  out & map1;
+  out.FlushBuffer();
+  map<string, VersionInfo> map2;
+  in & map2;
+  CHECK(map2.size() == 1);
+  CHECK(map2["netgen"] == "v6.2.1901");
+}
+
+enum MyEnum
+  {
+   CASE1,
+   CASE2
+  };
+
+void testEnum(Archive& in, Archive& out)
+  {
+   MyEnum en = CASE2;
+   out & en;
+   out.FlushBuffer();
+   MyEnum enin;
+   in & enin;
+   CHECK(enin == CASE2);
+  }
+
 void testArchive(Archive& in, Archive& out)
 {
   SECTION("Empty String")
@@ -285,11 +313,18 @@ void testArchive(Archive& in, Archive& out)
     {
       testNullPtr(in, out);
     }
+  SECTION("map")
+    {
+      testMap(in, out);
+    }
+  SECTION("enum")
+    {
+      testEnum(in, out);
+    }
 }
 
 TEST_CASE("BinaryArchive")
 {
-  SetLibraryVersion("netgen","v6.2.1811");
   auto stream = make_shared<stringstream>();
   BinaryOutArchive out(stream);
   BinaryInArchive in(stream);
@@ -298,7 +333,6 @@ TEST_CASE("BinaryArchive")
 
 TEST_CASE("TextArchive")
 {
-  SetLibraryVersion("netgen","v6.2.1811");
   auto stream = make_shared<stringstream>();
   TextOutArchive out(stream);
   TextInArchive in(stream);

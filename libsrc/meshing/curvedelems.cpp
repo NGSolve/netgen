@@ -553,14 +553,18 @@ namespace netgen
     order = 1;
 
 
+    MPI_Comm curve_comm;
 #ifdef PARALLEL
     enum { MPI_TAG_CURVE = MPI_TAG_MESH+20 };
 
     const ParallelMeshTopology & partop = mesh.GetParallelTopology ();
-    MPI_Comm curve_comm;
-    MPI_Comm_dup (MPI_COMM_WORLD, &curve_comm);      
+    MPI_Comm_dup (mesh.GetCommunicator(), &curve_comm);      
     Array<int> procs;
+#else
+    curve_comm = ng_comm; // dummy! 
 #endif
+    int rank = MyMPI_GetId(curve_comm);
+    int ntasks = MyMPI_GetNTasks(curve_comm);
 
     if (working)
       order = aorder;
@@ -1708,6 +1712,7 @@ namespace netgen
       case TRIG : info.nv = 3; break;
       case QUAD : info.nv = 4; break;
       case TRIG6: info.nv = 6; break;
+      case QUAD8 : info.nv = 8; break;
       default:
 	cerr << "undef element in CalcSurfaceTrafo" << endl;
       }
@@ -1927,6 +1932,24 @@ namespace netgen
 
 	  break;
 	}
+
+      case QUAD8:
+	{
+          auto x = xi(0), y = xi(1);
+	  shapes(0) = (1-x)*(1-y);
+	  shapes(1) = x*(1-y);
+	  shapes(2) = x*y;
+	  shapes(3) = (1-x)*y;
+          shapes(4) = 4*(1-x)*x*(1-y);
+          shapes(5) = 4*(1-x)*x*y;
+          shapes(6) = 4*(1-y)*y*(1-x);
+          shapes(7) = 4*(1-y)*y*x;
+          shapes(0) -= 0.5*(shapes(4)+shapes(6));
+          shapes(1) -= 0.5*(shapes(4)+shapes(7));
+          shapes(2) -= 0.5*(shapes(5)+shapes(7));
+          shapes(3) -= 0.5*(shapes(5)+shapes(6));
+          break;
+        }
         
       default:
 	throw NgException("CurvedElements::CalcShape 2d, element type not handled");
@@ -2266,7 +2289,7 @@ namespace netgen
             }
           break;
         }
-      case QUAD:
+      case QUAD: 
         {
           if (info.order >= 2) return false; // not yet supported
           AutoDiff<2,T> lami[4] = { (1-x)*(1-y), x*(1-y), x*y, (1-x)*y };
@@ -2278,6 +2301,33 @@ namespace netgen
             }
           break;
         }
+      case QUAD8:
+        {
+          // AutoDiff<2,T> lami[4] = { (1-x)*(1-y), x*(1-y), x*y, (1-x)*y };
+          AutoDiff<2,T> lami[8] =
+            { (1-x)*(1-y),
+              x*(1-y),
+              x*y,
+              (1-x)*y,
+              4*(1-x)*x*(1-y),
+              4*(1-x)*x*y,
+              4*(1-y)*y*(1-x), 
+              4*(1-y)*y*x };
+          
+          lami[0] -= 0.5*(lami[4]+lami[6]);
+          lami[1] -= 0.5*(lami[4]+lami[7]);
+          lami[2] -= 0.5*(lami[5]+lami[7]);
+          lami[3] -= 0.5*(lami[5]+lami[6]);
+          
+          for (int j = 0; j < 8; j++)
+            {
+              Point<3> p = mesh[el[j]];
+              for (int k = 0; k < DIM_SPACE; k++)
+                mapped_x[k] += p(k) * lami[j];
+            }
+          break;
+        }
+        
       default:
         return false;
       }
@@ -2740,6 +2790,32 @@ namespace netgen
 	  break;
 	}
 
+      case PRISM15:
+        {
+	  shapes = 0.0;
+	  T x = xi(0);
+	  T y = xi(1);
+	  T z = xi(2);
+          T lam = 1-x-y;
+          T lamz = 1-z;
+          shapes[0] = (2*x*x-x) * (2*lamz*lamz-lamz);
+          shapes[1] = (2*y*y-y) * (2*lamz*lamz-lamz);
+          shapes[2] = (2*lam*lam-lam) * (2*lamz*lamz-lamz);
+          shapes[3] = (2*x*x-x) * (2*z*z-z);
+          shapes[4] = (2*y*y-y) * (2*z*z-z);
+          shapes[5] = (2*lam*lam-lam) * (2*z*z-z);
+          shapes[6] = 4 * x * y * (2*lamz*lamz-lamz);
+          shapes[7] = 4 * x * lam * (2*lamz*lamz-lamz);
+          shapes[8] = 4 * y * lam * (2*lamz*lamz-lamz);
+          shapes[9] = x * 4 * z * (1-z);
+          shapes[10] = y * 4 * z * (1-z);
+          shapes[11] = lam * 4 * z * (1-z);
+          shapes[12] = 4 * x * y * (2*z*z-z);
+          shapes[13] = 4 * x * lam * (2*z*z-z);
+          shapes[14] = 4 * y * lam * (2*z*z-z);
+          break;
+        }
+
       case PYRAMID:
 	{
 	  shapes = 0.0;
@@ -2788,6 +2864,29 @@ namespace netgen
 
 	  break;
 	}
+
+      case PYRAMID13:
+        {
+	  shapes = 0.0;
+	  T x = xi(0);
+	  T y = xi(1);
+	  T z = xi(2);
+          z *= 1-1e-12;
+          shapes[0] = (-z + z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + (-2*x - z + 2)*(-2*y - z + 2))*(-0.5*x - 0.5*y - 0.5*z + 0.25);
+          shapes[1] = (0.5*x - 0.5*y - 0.25)*(-z - z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + (2*x + z)*(-2*y - z + 2));
+          shapes[2] = (-z + z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + (2*x + z)*(2*y + z))*(0.5*x + 0.5*y + 0.5*z - 0.75);
+          shapes[3] = (-0.5*x + 0.5*y - 0.25)*(-z - z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + (2*y + z)*(-2*x - z + 2));
+          shapes[4] = z*(2*z - 1);
+          shapes[5] = 2*x*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/(-2*z + 2);
+          shapes[6] = 4*x*y*(-2*x - 2*z + 2)/(-2*z + 2);
+          shapes[7] = 2*y*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/(-2*z + 2);
+          shapes[8] = 4*x*y*(-2*y - 2*z + 2)/(-2*z + 2);
+          shapes[9] = z*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/(-z + 1);
+          shapes[10] = 2*x*z*(-2*y - 2*z + 2)/(-z + 1);
+          shapes[11] = 4*x*y*z/(-z + 1);
+          shapes[12] = 2*y*z*(-2*x - 2*z + 2)/(-z + 1);
+          break;
+        }
 
       case HEX:
 	{
@@ -2839,6 +2938,46 @@ namespace netgen
 
           
 	  break;
+        }
+        
+      case HEX20:
+	{
+	  shapes = 0.0;
+	  T x = xi(0);
+	  T y = xi(1);
+	  T z = xi(2);
+	  
+	  shapes[0] = (1-x)*(1-y)*(1-z);
+	  shapes[1] =    x *(1-y)*(1-z);
+	  shapes[2] =    x *   y *(1-z);
+	  shapes[3] = (1-x)*   y *(1-z);
+	  shapes[4] = (1-x)*(1-y)*(z);
+	  shapes[5] =    x *(1-y)*(z);
+	  shapes[6] =    x *   y *(z);
+	  shapes[7] = (1-x)*   y *(z);
+
+          T sigma[8]={(1-x)+(1-y)+(1-z),x+(1-y)+(1-z),x+y+(1-z),(1-x)+y+(1-z),
+                      (1-x)+(1-y)+z,x+(1-y)+z,x+y+z,(1-x)+y+z}; 
+
+          static const int e[12][2] =
+            {
+              { 0, 1 }, { 2, 3 }, { 3, 0 }, { 1, 2 },
+              { 4, 5 }, { 6, 7 }, { 7, 4 }, { 5, 6 },
+              { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 },
+            };
+          
+          for (int i = 0; i < 12; i++)
+            {
+              T lame = shapes[e[i][0]]+shapes[e[i][1]];
+              T xi = sigma[e[i][1]]-sigma[e[i][0]];
+              shapes[8+i] = (1-xi*xi)*lame;
+            }
+          for (int i = 0; i < 12; i++)
+            {
+              shapes[e[i][0]] -= 0.5 * shapes[8+i];
+              shapes[e[i][1]] -= 0.5 * shapes[8+i];
+            }
+          break;
 	}
 
       default:
@@ -3210,6 +3349,36 @@ namespace netgen
 
 	}
 
+      case PRISM15:
+        {
+          AutoDiff<3,T> x(xi(0), 0);
+          AutoDiff<3,T> y(xi(1), 1);
+          AutoDiff<3,T> z(xi(2), 2);
+          AutoDiff<3,T> ad[15];
+          AutoDiff<3,T> lam = 1-x-y;
+          AutoDiff<3,T> lamz = 1-z;
+
+          ad[0] = (2*x*x-x) * (2*lamz*lamz-lamz);
+          ad[1] = (2*y*y-y) * (2*lamz*lamz-lamz);
+          ad[2] = (2*lam*lam-lam) * (2*lamz*lamz-lamz);
+          ad[3] = (2*x*x-x) * (2*z*z-z);
+          ad[4] = (2*y*y-y) * (2*z*z-z);
+          ad[5] = (2*lam*lam-lam) * (2*z*z-z);
+          ad[6] = 4 * x * y * (2*lamz*lamz-lamz);
+          ad[7] = 4 * x * lam * (2*lamz*lamz-lamz);
+          ad[8] = 4 * y * lam * (2*lamz*lamz-lamz);
+          ad[9] = x * 4 * z * (1-z);
+          ad[10] = y * 4 * z * (1-z);
+          ad[11] = lam * 4 * z * (1-z);
+          ad[12] = 4 * x * y * (2*z*z-z);
+          ad[13] = 4 * x * lam * (2*z*z-z);
+          ad[14] = 4 * y * lam * (2*z*z-z);
+
+          for(int i=0; i<15; i++)
+            for(int j=0; j<3; j++)
+              dshapes(i,j) = ad[i].DValue(j);
+          break;
+        }
       case PYRAMID:
 	{
           // if (typeid(T) == typeid(SIMD<double>)) return;
@@ -3306,6 +3475,54 @@ namespace netgen
           
 	  break;
 	}
+
+      case PYRAMID13:
+        {
+	  T x = xi(0);
+	  T y = xi(1);
+	  T z = xi(2);
+          z *= 1-1e-12;
+          dshapes(0,0) = 0.5*z - 0.5*z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) - 0.5*(-2*x - z + 2)*(-2*y - z + 2) + (-0.5*x - 0.5*y - 0.5*z + 0.25)*(4*y + 2*z + 2*z*(2*y + z - 1)/(-z + 1) - 4);
+          dshapes(0,1) = 0.5*z - 0.5*z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) - 0.5*(-2*x - z + 2)*(-2*y - z + 2) + (-0.5*x - 0.5*y - 0.5*z + 0.25)*(4*x + 2*z + 2*z*(2*x + z - 1)/(-z + 1) - 4);
+          dshapes(0,2) = 0.5*z - 0.5*z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) - 0.5*(-2*x - z + 2)*(-2*y - z + 2) + (-0.5*x - 0.5*y - 0.5*z + 0.25)*(2*x + 2*y + 2*z + z*(2*x + z - 1)/(-z + 1) + z*(2*y + z - 1)/(-z + 1) + z*(2*x + z - 1)*(2*y + z - 1)/((-z + 1)*(-z + 1)) - 5 + (2*x + z - 1)*(2*y + z - 1)/(-z + 1));
+          dshapes(1,0) = -0.5*z - 0.5*z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + 0.5*(2*x + z)*(-2*y - z + 2) + (0.5*x - 0.5*y - 0.25)*(-4*y - 2*z - 2*z*(2*y + z - 1)/(-z + 1) + 4);
+          dshapes(1,1) = 0.5*z + 0.5*z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) - 0.5*(2*x + z)*(-2*y - z + 2) + (-4*x - 2*z - 2*z*(2*x + z - 1)/(-z + 1))*(0.5*x - 0.5*y - 0.25);
+          dshapes(1,2) = (0.5*x - 0.5*y - 0.25)*(-2*x - 2*y - 2*z - z*(2*x + z - 1)/(-z + 1) - z*(2*y + z - 1)/(-z + 1) - z*(2*x + z - 1)*(2*y + z - 1)/((-z + 1)*(-z + 1)) + 1 - (2*x + z - 1)*(2*y + z - 1)/(-z + 1));
+          dshapes(2,0) = -0.5*z + 0.5*z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + 0.5*(2*x + z)*(2*y + z) + (4*y + 2*z + 2*z*(2*y + z - 1)/(-z + 1))*(0.5*x + 0.5*y + 0.5*z - 0.75);
+          dshapes(2,1) = -0.5*z + 0.5*z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + 0.5*(2*x + z)*(2*y + z) + (4*x + 2*z + 2*z*(2*x + z - 1)/(-z + 1))*(0.5*x + 0.5*y + 0.5*z - 0.75);
+          dshapes(2,2) = -0.5*z + 0.5*z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + 0.5*(2*x + z)*(2*y + z) + (0.5*x + 0.5*y + 0.5*z - 0.75)*(2*x + 2*y + 2*z + z*(2*x + z - 1)/(-z + 1) + z*(2*y + z - 1)/(-z + 1) + z*(2*x + z - 1)*(2*y + z - 1)/((-z + 1)*(-z + 1)) - 1 + (2*x + z - 1)*(2*y + z - 1)/(-z + 1));
+          dshapes(3,0) = 0.5*z + 0.5*z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) - 0.5*(2*y + z)*(-2*x - z + 2) + (-0.5*x + 0.5*y - 0.25)*(-4*y - 2*z - 2*z*(2*y + z - 1)/(-z + 1));
+          dshapes(3,1) = -0.5*z - 0.5*z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + 0.5*(2*y + z)*(-2*x - z + 2) + (-0.5*x + 0.5*y - 0.25)*(-4*x - 2*z - 2*z*(2*x + z - 1)/(-z + 1) + 4);
+          dshapes(3,2) = (-0.5*x + 0.5*y - 0.25)*(-2*x - 2*y - 2*z - z*(2*x + z - 1)/(-z + 1) - z*(2*y + z - 1)/(-z + 1) - z*(2*x + z - 1)*(2*y + z - 1)/((-z + 1)*(-z + 1)) + 1 - (2*x + z - 1)*(2*y + z - 1)/(-z + 1));
+          dshapes(4,0) = 0;
+          dshapes(4,1) = 0;
+          dshapes(4,2) = 4*z - 1;
+          dshapes(5,0) = -4*x*(-2*y - 2*z + 2)/(-2*z + 2) + 2*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/(-2*z + 2);
+          dshapes(5,1) = -4*x*(-2*x - 2*z + 2)/(-2*z + 2);
+          dshapes(5,2) = -4*x*(-2*x - 2*z + 2)/(-2*z + 2) - 4*x*(-2*y - 2*z + 2)/(-2*z + 2) + 4*x*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/((-2*z + 2)*(-2*z + 2));
+          dshapes(6,0) = -8*x*y/(-2*z + 2) + 4*y*(-2*x - 2*z + 2)/(-2*z + 2);
+          dshapes(6,1) = 4*x*(-2*x - 2*z + 2)/(-2*z + 2);
+          dshapes(6,2) = -8*x*y/(-2*z + 2) + 8*x*y*(-2*x - 2*z + 2)/((-2*z + 2)*(-2*z + 2));
+          dshapes(7,0) = -4*y*(-2*y - 2*z + 2)/(-2*z + 2);
+          dshapes(7,1) = -4*y*(-2*x - 2*z + 2)/(-2*z + 2) + 2*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/(-2*z + 2);
+          dshapes(7,2) = -4*y*(-2*x - 2*z + 2)/(-2*z + 2) - 4*y*(-2*y - 2*z + 2)/(-2*z + 2) + 4*y*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/((-2*z + 2)*(-2*z + 2));
+          dshapes(8,0) = 4*y*(-2*y - 2*z + 2)/(-2*z + 2);
+          dshapes(8,1) = -8*x*y/(-2*z + 2) + 4*x*(-2*y - 2*z + 2)/(-2*z + 2);
+          dshapes(8,2) = -8*x*y/(-2*z + 2) + 8*x*y*(-2*y - 2*z + 2)/((-2*z + 2)*(-2*z + 2));
+          dshapes(9,0) = -2*z*(-2*y - 2*z + 2)/(-z + 1);
+          dshapes(9,1) = -2*z*(-2*x - 2*z + 2)/(-z + 1);
+          dshapes(9,2) = -2*z*(-2*x - 2*z + 2)/(-z + 1) - 2*z*(-2*y - 2*z + 2)/(-z + 1) + z*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/((-z + 1)*(-z + 1)) + (-2*x - 2*z + 2)*(-2*y - 2*z + 2)/(-z + 1);
+          dshapes(10,0) = 2*z*(-2*y - 2*z + 2)/(-z + 1);
+          dshapes(10,1) = -4*x*z/(-z + 1);
+          dshapes(10,2) = -4*x*z/(-z + 1) + 2*x*z*(-2*y - 2*z + 2)/((-z + 1)*(-z + 1)) + 2*x*(-2*y - 2*z + 2)/(-z + 1);
+          dshapes(11,0) = 4*y*z/(-z + 1);
+          dshapes(11,1) = 4*x*z/(-z + 1);
+          dshapes(11,2) = 4*x*y*z/((-z + 1)*(-z + 1)) + 4*x*y/(-z + 1);
+          dshapes(12,0) = -4*y*z/(-z + 1);
+          dshapes(12,1) = 2*z*(-2*x - 2*z + 2)/(-z + 1);
+          dshapes(12,2) = -4*y*z/(-z + 1) + 2*y*z*(-2*x - 2*z + 2)/((-z + 1)*(-z + 1)) + 2*y*(-2*x - 2*z + 2)/(-z + 1);
+          break;
+        }
 
       case HEX:
 	{
@@ -3443,12 +3660,49 @@ namespace netgen
 	   *testout << "quad, num dshape = " << endl << dshapes << endl;
 	   */
 	  break;
-
-
-          
-	  break;
 	}
-
+      case HEX20:
+        {
+          AutoDiff<3,T> x(xi(0), 0);
+          AutoDiff<3,T> y(xi(1), 1);
+          AutoDiff<3,T> z(xi(2), 2);
+          AutoDiff<3,T> ad[20];
+          
+          ad[0] = (1-x)*(1-y)*(1-z);
+	  ad[1] =    x *(1-y)*(1-z);
+	  ad[2] =    x *   y *(1-z);
+	  ad[3] = (1-x)*   y *(1-z);
+	  ad[4] = (1-x)*(1-y)*(z);
+	  ad[5] =    x *(1-y)*(z);
+	  ad[6] =    x *   y *(z);
+	  ad[7] = (1-x)*   y *(z);
+          
+          AutoDiff<3,T> sigma[8]={(1-x)+(1-y)+(1-z),x+(1-y)+(1-z),x+y+(1-z),(1-x)+y+(1-z),
+                                  (1-x)+(1-y)+z,x+(1-y)+z,x+y+z,(1-x)+y+z}; 
+          
+          static const int e[12][2] =
+            {
+              { 0, 1 }, { 2, 3 }, { 3, 0 }, { 1, 2 },
+              { 4, 5 }, { 6, 7 }, { 7, 4 }, { 5, 6 },
+              { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 },
+            };
+          
+          for (int i = 0; i < 12; i++)
+            {
+              auto lame = ad[e[i][0]]+ad[e[i][1]];
+              auto xi = sigma[e[i][1]]-sigma[e[i][0]];
+              ad[8+i] = (1-xi*xi)*lame;
+            }
+          for (int i = 0; i < 12; i++)
+            {
+              ad[e[i][0]] -= 0.5 * ad[8+i];
+              ad[e[i][1]] -= 0.5 * ad[8+i];
+            }
+          for (int i = 0; i < 20; i++)
+            for (int j = 0; j < 3; j++)
+              dshapes(i,j) = ad[i].DValue(j);
+          break;
+        }
       default:
 	throw NgException("CurvedElements::CalcDShape 3d, element type not handled");
       }
@@ -3854,8 +4108,9 @@ namespace netgen
       case TRIG : info.nv = 3; break;
       case QUAD : info.nv = 4; break;
       case TRIG6: info.nv = 6; break;
+      case QUAD8 : info.nv = 8; break;
       default:
-	cerr << "undef element in CalcMultPointSurfaceTrao" << endl;
+	cerr << "undef element in CalcMultPointSurfaceTrafo" << endl;
       }
     info.ndof = info.nv;
 

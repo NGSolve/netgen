@@ -31,38 +31,38 @@ namespace netgen
     return hmesh;
   }
   
-
-  Ngx_Mesh :: Ngx_Mesh (shared_ptr<Mesh> amesh) 
-  {
-    if (amesh)
-      mesh = amesh;
-    else
-      mesh = netgen::mesh;
-  }
+  Ngx_Mesh :: Ngx_Mesh (shared_ptr<Mesh> amesh)
+  { mesh = amesh ? amesh : netgen::mesh; }
+  Ngx_Mesh :: Ngx_Mesh (string filename, MPI_Comm acomm)
+  { LoadMesh(filename, acomm); }
   
-  Ngx_Mesh * LoadMesh (const string & filename)
+  Ngx_Mesh * LoadMesh (const string & filename, MPI_Comm comm = netgen::ng_comm)
   {
     netgen::mesh.reset();
-    Ng_LoadMesh (filename.c_str());
+    Ng_LoadMesh (filename.c_str(), comm);
     return new Ngx_Mesh (netgen::mesh);
   }
 
-  void Ngx_Mesh :: LoadMesh (const string & filename)
+  void Ngx_Mesh :: LoadMesh (const string & filename, MPI_Comm comm)
   {
     netgen::mesh.reset();
-    Ng_LoadMesh (filename.c_str());
+    Ng_LoadMesh (filename.c_str(), comm);
     // mesh = move(netgen::mesh);
     mesh = netgen::mesh;
   }
 
-  void Ngx_Mesh :: LoadMesh (istream & ist)
+  void Ngx_Mesh :: LoadMesh (istream & ist, MPI_Comm comm)
   {
     netgen::mesh = make_shared<Mesh>();
+    netgen::mesh->SetCommunicator(comm);
     netgen::mesh -> Load (ist);
     // mesh = move(netgen::mesh);
     mesh = netgen::mesh;
     SetGlobalMesh (mesh);
   }
+
+  MPI_Comm Ngx_Mesh :: GetCommunicator() const
+  { return Valid() ? mesh->GetCommunicator() : MPI_COMM_NULL; }
 
   void Ngx_Mesh :: SaveMesh (ostream & ost) const
   {
@@ -71,7 +71,12 @@ namespace netgen
 
   void Ngx_Mesh :: DoArchive (Archive & archive)
   {
-    if (archive.Input()) mesh = make_shared<Mesh>();
+#ifdef PARALLEL
+    if (archive.Input()) {
+      mesh = make_shared<Mesh>();
+      mesh->SetCommunicator(GetCommunicator());
+    }
+#endif
     mesh->DoArchive(archive);
     if (archive.Input())
       {
@@ -675,6 +680,37 @@ namespace netgen
   }
 
 
+  int Ngx_Mesh :: GetHPElementLevel (int ei, int dir) const
+  {
+    ei++;
+    int level = -1;
+    
+    if (mesh->hpelements)
+      {
+	int hpelnr = -1;
+	if (mesh->GetDimension() == 2)
+	  hpelnr = mesh->SurfaceElement(ei).hp_elnr;
+	else
+	  hpelnr = mesh->VolumeElement(ei).hp_elnr;
+
+        if (hpelnr < 0)
+          throw NgException("Ngx_Mesh::GetHPElementLevel: Wrong hp-element number!");
+        
+        if (dir == 1)
+          level = (*mesh->hpelements)[hpelnr].levelx;
+        else if (dir == 2)
+          level = (*mesh->hpelements)[hpelnr].levely;
+        else if (dir == 3)
+          level = (*mesh->hpelements)[hpelnr].levelz;
+        else
+          throw NgException("Ngx_Mesh::GetHPElementLevel: dir has to be 1, 2 or 3!");
+      }
+    //else
+    //  throw NgException("Ngx_Mesh::GetHPElementLevel only for HPRefinement implemented!");
+
+    return level;	  
+  }
+  
   int Ngx_Mesh :: GetParentElement (int ei) const
   {
       ei++;
@@ -717,6 +753,16 @@ namespace netgen
     return mesh->GetIdentifications().GetType(idnr+1);
   }
 
+  Ng_BufferMS<int,4> Ngx_Mesh::GetFaceEdges (int fnr) const
+  {
+    const MeshTopology & topology = mesh->GetTopology();
+    ArrayMem<int,4> ia;
+    topology.GetFaceEdges (fnr+1, ia);
+    Ng_BufferMS<int,4> res(ia.Size());
+    for (size_t i = 0; i < ia.Size(); i++)
+      res[i] = ia[i]-1;
+    return res;
+  }
 
 
 
@@ -1042,6 +1088,19 @@ namespace netgen
     NgLock meshlock (mesh->MajorMutex(), true);
     mesh->BuildCurvedElements(order);
   }
+
+
+  template <>
+  DLL_HEADER void Ngx_Mesh :: SetRefinementFlag<2> (size_t elnr, bool flag)
+  {
+    mesh->SurfaceElement(elnr+1).SetRefinementFlag(flag);
+  }
+
+  template <>
+  DLL_HEADER void Ngx_Mesh :: SetRefinementFlag<3> (size_t elnr, bool flag)
+  {
+    mesh->VolumeElement(elnr+1).SetRefinementFlag(flag);    
+  }
   
   void Ngx_Mesh :: Refine (NG_REFINEMENT_TYPE reftype,
                            void (*task_manager)(function<void(int,int)>),
@@ -1070,13 +1129,127 @@ namespace netgen
   }
 
 
+
+
+
+  // just copied with redesign
+
+  size_t Ngx_Mesh::GetNP() const
+  {
+    return mesh->GetNP();
+  }
+
+  
+  int Ngx_Mesh::GetSurfaceElementSurfaceNumber (size_t ei) const
+  {
+    if (mesh->GetDimension() == 3)
+      return mesh->GetFaceDescriptor(mesh->SurfaceElement(ei).GetIndex()).SurfNr();
+    else
+      return mesh->LineSegment(ei).si;
+  }
+  int Ngx_Mesh::GetSurfaceElementFDNumber (size_t ei) const
+  {
+    if (mesh->GetDimension() == 3)
+      return mesh->SurfaceElement(ei).GetIndex();
+    else
+      return -1;
+  }
+
+  
+  void Ngx_Mesh::HPRefinement (int levels, double parameter, bool setorders,
+                               bool ref_level)
+  {
+    NgLock meshlock (mesh->MajorMutex(), true);
+    Refinement & ref = const_cast<Refinement&> (mesh->GetGeometry()->GetRefinement());
+    ::netgen::HPRefinement (*mesh, &ref, levels, parameter, setorders, ref_level);
+  }
+  
+int Ngx_Mesh::GetElementOrder (int enr) const
+{
+  if (mesh->GetDimension() == 3)
+    return mesh->VolumeElement(enr).GetOrder();
+  else
+    return mesh->SurfaceElement(enr).GetOrder();
+}
+
+void Ngx_Mesh::GetElementOrders (int enr, int * ox, int * oy, int * oz) const
+{
+  if (mesh->GetDimension() == 3)
+    mesh->VolumeElement(enr).GetOrder(*ox, *oy, *oz);
+  else
+    mesh->SurfaceElement(enr).GetOrder(*ox, *oy, *oz);
+}
+
+void Ngx_Mesh::SetElementOrder (int enr, int order)
+{
+  if (mesh->GetDimension() == 3)
+    return mesh->VolumeElement(enr).SetOrder(order);
+  else
+    return mesh->SurfaceElement(enr).SetOrder(order);
+}
+
+void Ngx_Mesh::SetElementOrders (int enr, int ox, int oy, int oz)
+{
+  if (mesh->GetDimension() == 3)
+    mesh->VolumeElement(enr).SetOrder(ox, oy, oz);
+  else
+    mesh->SurfaceElement(enr).SetOrder(ox, oy);
+}
+
+
+int Ngx_Mesh::GetSurfaceElementOrder (int enr) const
+{
+  return mesh->SurfaceElement(enr).GetOrder();
+}
+
+int Ngx_Mesh::GetClusterRepVertex (int pi) const
+{
+  return mesh->GetClusters().GetVertexRepresentant(pi);
+}
+
+int Ngx_Mesh::GetClusterRepEdge (int pi) const
+{
+  return mesh->GetClusters().GetEdgeRepresentant(pi);
+}
+
+int Ngx_Mesh::GetClusterRepFace (int pi) const
+{
+  return mesh->GetClusters().GetFaceRepresentant(pi);
+}
+
+int Ngx_Mesh::GetClusterRepElement (int pi) const
+{
+  return mesh->GetClusters().GetElementRepresentant(pi);
+}
+
+
+
+
+//HERBERT: falsche Anzahl von Argumenten
+//void Ngx_Mesh::GetSurfaceElementOrders (int enr, int * ox, int * oy, int * oz)
+void Ngx_Mesh::GetSurfaceElementOrders (int enr, int * ox, int * oy) const
+{
+  int d; 
+  mesh->SurfaceElement(enr).GetOrder(*ox, *oy, d);
+}
+
+void Ngx_Mesh::SetSurfaceElementOrder (int enr, int order)
+{
+  return mesh->SurfaceElement(enr).SetOrder(order);
+}
+
+void Ngx_Mesh::SetSurfaceElementOrders (int enr, int ox, int oy)
+{
+  mesh->SurfaceElement(enr).SetOrder(ox, oy);
+}
+
   
 
-#ifdef PARALLEL
+
   
   std::tuple<int,int*>  Ngx_Mesh :: GetDistantProcs (int nodetype, int locnum) const
   {
-    
+#ifdef PARALLEL
     switch (nodetype)
       {
       case 0:
@@ -1097,10 +1270,10 @@ namespace netgen
       default:
 	return std::tuple<int,int*>(0,nullptr);
       }
-  }
-
+#else
+    return std::tuple<int,int*>(0,nullptr);
 #endif
-
+  }
 }
 
 

@@ -14,101 +14,172 @@
 
 namespace netgen
 {
+  using ngcore::id;
+  using ngcore::ntasks;
 
-  extern DLL_HEADER int id, ntasks;
-  
+#ifndef PARALLEL
+  /** without MPI, we need a dummy typedef **/
+  typedef int MPI_Comm;
+#endif
+
+  /** This is the "standard" communicator that will be used for netgen-objects. **/
+  extern DLL_HEADER MPI_Comm ng_comm;
 
 #ifdef PARALLEL
-  
+  inline int MyMPI_GetNTasks (MPI_Comm comm = ng_comm)
+  {
+    int ntasks;
+    MPI_Comm_size(comm, &ntasks);
+    return ntasks;
+  }
+  inline int MyMPI_GetId (MPI_Comm comm = ng_comm)
+  {
+    int id;
+    MPI_Comm_rank(comm, &id);
+    return id;
+  }
+#else
+  enum { MPI_COMM_WORLD = 12345, MPI_COMM_NULL = 0};
+  inline int MyMPI_GetNTasks (MPI_Comm comm = ng_comm) { return 1; }
+  inline int MyMPI_GetId (MPI_Comm comm = ng_comm) { return 0; }
+#endif
+
+#ifdef PARALLEL
+  // For python wrapping of communicators
+  struct PyMPI_Comm {
+    MPI_Comm comm;
+    bool owns_comm;
+    PyMPI_Comm (MPI_Comm _comm, bool _owns_comm = false) : comm(_comm), owns_comm(_owns_comm) { }
+    PyMPI_Comm (const PyMPI_Comm & c) = delete;
+    ~PyMPI_Comm () {
+      if (owns_comm)
+	MPI_Comm_free(&comm);
+    }
+    inline int Rank() const { return MyMPI_GetId(comm); }
+    inline int Size() const { return MyMPI_GetNTasks(comm); }
+  };
+#else
+  // dummy without MPI
+  struct PyMPI_Comm {
+    MPI_Comm comm = 0;
+    PyMPI_Comm (MPI_Comm _comm, bool _owns_comm = false) { }
+    ~PyMPI_Comm () { }
+    inline int Rank() const { return 0; }
+    inline int Size() const { return 1; }
+  };
+#endif
+
+#ifdef PARALLEL
+  template <class T>
+  inline MPI_Datatype MyGetMPIType ( ) 
+  { cerr << "ERROR in GetMPIType() -- no type found" << endl;return 0; }
+  template <>
+  inline MPI_Datatype MyGetMPIType<int> ( )
+  { return MPI_INT; }
+  template <>
+  inline MPI_Datatype MyGetMPIType<double> ( ) 
+  { return MPI_DOUBLE; }
+  template <>
+  inline MPI_Datatype MyGetMPIType<char> ( ) 
+  { return MPI_CHAR; }
+  template<>
+  inline MPI_Datatype MyGetMPIType<size_t> ( ) 
+  { return MPI_UINT64_T; }
+#else
+  typedef int MPI_Datatype;
+  template <class T> inline MPI_Datatype MyGetMPIType ( ) { return 0; }
+#endif
+
+#ifdef PARALLEL
+  inline MPI_Comm MyMPI_SubCommunicator(MPI_Comm comm, Array<int> & procs)
+  {
+    MPI_Comm subcomm;
+    MPI_Group gcomm, gsubcomm;
+    MPI_Comm_group(comm, &gcomm);
+    MPI_Group_incl(gcomm, procs.Size(), &(procs[0]), &gsubcomm);
+    MPI_Comm_create_group(comm, gsubcomm, 6969, &subcomm);
+    return subcomm;
+  }
+#else
+  inline MPI_Comm MyMPI_SubCommunicator(MPI_Comm comm, Array<int> & procs)
+  { return comm; }
+#endif
+
+#ifdef PARALLEL
   enum { MPI_TAG_CMD = 110 };
   enum { MPI_TAG_MESH = 210 };
   enum { MPI_TAG_VIS = 310 };
 
-  extern MPI_Comm mesh_comm;
-
-  template <class T>
-  MPI_Datatype MyGetMPIType ( ) 
-  { cerr << "ERROR in GetMPIType() -- no type found" << endl;return 0; }
-
-  template <>
-  inline MPI_Datatype MyGetMPIType<int> ( )
-  { return MPI_INT; }
-  
-  template <>
-  inline MPI_Datatype MyGetMPIType<double> ( ) 
-  { return MPI_DOUBLE; }
-
-  
-  inline void MyMPI_Send (int i, int dest, int tag)
+  inline void MyMPI_Send (int i, int dest, int tag, MPI_Comm comm = ng_comm)
   {
     int hi = i;
-    MPI_Send( &hi, 1, MPI_INT, dest, tag, MPI_COMM_WORLD);
+    MPI_Send( &hi, 1, MPI_INT, dest, tag, comm);
   }
 
-  inline void MyMPI_Recv (int & i, int src, int tag)
+  inline void MyMPI_Recv (int & i, int src, int tag, MPI_Comm comm = ng_comm)
   {
     MPI_Status status;
-    MPI_Recv( &i, 1, MPI_INT, src, tag, MPI_COMM_WORLD, &status);
+    MPI_Recv( &i, 1, MPI_INT, src, tag, comm, &status);
   }
 
 
 
-  inline void MyMPI_Send (const string & s, int dest, int tag)
+  inline void MyMPI_Send (const string & s, int dest, int tag, MPI_Comm comm = ng_comm)
   {
-    MPI_Send( const_cast<char*> (s.c_str()), s.length(), MPI_CHAR, dest, tag, MPI_COMM_WORLD);
+    MPI_Send( const_cast<char*> (s.c_str()), s.length(), MPI_CHAR, dest, tag, comm);
   }
 
-  inline void MyMPI_Recv (string & s, int src, int tag)
+  inline void MyMPI_Recv (string & s, int src, int tag, MPI_Comm comm = ng_comm)
   {
     MPI_Status status;
     int len;
     MPI_Probe (src, tag, MPI_COMM_WORLD, &status);
     MPI_Get_count (&status, MPI_CHAR, &len);
     s.assign (len, ' ');
-    MPI_Recv( &s[0], len, MPI_CHAR, src, tag, MPI_COMM_WORLD, &status);
+    MPI_Recv( &s[0], len, MPI_CHAR, src, tag, comm, &status);
   }
 
  
 
 
   template <class T, int BASE>
-  inline void MyMPI_Send (FlatArray<T, BASE> s, int dest, int tag)
+  inline void MyMPI_Send (FlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm = ng_comm)
   {
-    MPI_Send( &s.First(), s.Size(), MyGetMPIType<T>(), dest, tag, MPI_COMM_WORLD);
+    MPI_Send( &s.First(), s.Size(), MyGetMPIType<T>(), dest, tag, comm);
   }
 
   template <class T, int BASE>
-  inline void MyMPI_Recv ( FlatArray<T, BASE> s, int src, int tag)
+  inline void MyMPI_Recv ( FlatArray<T, BASE> s, int src, int tag, MPI_Comm comm = ng_comm)
   {
     MPI_Status status;
-    MPI_Recv( &s.First(), s.Size(), MyGetMPIType<T>(), src, tag, MPI_COMM_WORLD, &status);
+    MPI_Recv( &s.First(), s.Size(), MyGetMPIType<T>(), src, tag, comm, &status);
   }
 
   template <class T, int BASE>
-  inline void MyMPI_Recv ( Array <T, BASE> & s, int src, int tag)
+  inline void MyMPI_Recv ( Array <T, BASE> & s, int src, int tag, MPI_Comm comm = ng_comm)
   {
     MPI_Status status;
     int len;
-    MPI_Probe (src, tag, MPI_COMM_WORLD, &status);
+    MPI_Probe (src, tag, comm, &status);
     MPI_Get_count (&status, MyGetMPIType<T>(), &len);
 
     s.SetSize (len);
-    MPI_Recv( &s.First(), len, MyGetMPIType<T>(), src, tag, MPI_COMM_WORLD, &status);
+    MPI_Recv( &s.First(), len, MyGetMPIType<T>(), src, tag, comm, &status);
   }
 
   template <class T, int BASE>
-  inline int MyMPI_Recv ( Array <T, BASE> & s, int tag)
+  inline int MyMPI_Recv ( Array <T, BASE> & s, int tag, MPI_Comm comm = ng_comm)
   {
     MPI_Status status;
     int len;
-    MPI_Probe (MPI_ANY_SOURCE, tag, MPI_COMM_WORLD, &status);
+    MPI_Probe (MPI_ANY_SOURCE, tag, comm, &status);
 
     int src = status.MPI_SOURCE;
 
     MPI_Get_count (&status, MyGetMPIType<T>(), &len);
 
     s.SetSize (len);
-    MPI_Recv( &s.First(), len, MyGetMPIType<T>(), src, tag, MPI_COMM_WORLD, &status);
+    MPI_Recv( &s.First(), len, MyGetMPIType<T>(), src, tag, comm, &status);
 
     return src;
   }
@@ -130,7 +201,7 @@ namespace netgen
   */
 
   template <class T, int BASE>
-  inline MPI_Request MyMPI_ISend (FlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm = MPI_COMM_WORLD)
+  inline MPI_Request MyMPI_ISend (FlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm = ng_comm)
   {
     MPI_Request request;
     MPI_Isend( &s.First(), s.Size(), MyGetMPIType<T>(), dest, tag, comm, &request);
@@ -139,7 +210,7 @@ namespace netgen
 
 
   template <class T, int BASE>
-  inline MPI_Request MyMPI_IRecv (FlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm = MPI_COMM_WORLD)
+  inline MPI_Request MyMPI_IRecv (FlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm = ng_comm)
   {
     MPI_Request request;
     MPI_Irecv( &s.First(), s.Size(), MyGetMPIType<T>(), dest, tag, comm, &request);
@@ -204,11 +275,10 @@ namespace netgen
   template <typename T>
   inline void MyMPI_ExchangeTable (TABLE<T> & send_data, 
 				   TABLE<T> & recv_data, int tag,
-				   MPI_Comm comm = MPI_COMM_WORLD)
+				   MPI_Comm comm = ng_comm)
   {
-    int ntasks, rank;
-    MPI_Comm_size(comm, &ntasks);
-    MPI_Comm_rank(comm, &rank);
+    int rank = MyMPI_GetId(comm);
+    int ntasks = MyMPI_GetNTasks(comm);
 
     Array<int> send_sizes(ntasks);
     Array<int> recv_sizes(ntasks);
@@ -252,22 +322,22 @@ namespace netgen
 
 
   template <class T>
-  inline void MyMPI_Bcast (T & s, MPI_Comm comm = MPI_COMM_WORLD)
+  inline void MyMPI_Bcast (T & s, MPI_Comm comm = ng_comm)
   {
     MPI_Bcast (&s, 1, MyGetMPIType<T>(), 0, comm);
   }
 
   template <class T>
-  inline void MyMPI_Bcast (Array<T, 0> & s, MPI_Comm comm = MPI_COMM_WORLD)
+  inline void MyMPI_Bcast (Array<T, 0> & s, MPI_Comm comm = ng_comm)
   {
     int size = s.Size();
     MyMPI_Bcast (size, comm);
-    if (id != 0) s.SetSize (size);
+    if (MyMPI_GetId(comm) != 0) s.SetSize (size);
     MPI_Bcast (&s[0], size, MyGetMPIType<T>(), 0, comm);
   }
 
   template <class T>
-  inline void MyMPI_Bcast (Array<T, 0> & s, int root, MPI_Comm comm = MPI_COMM_WORLD)
+  inline void MyMPI_Bcast (Array<T, 0> & s, int root, MPI_Comm comm = ng_comm)
   {
     int id;
     MPI_Comm_rank(comm, &id);
@@ -280,19 +350,19 @@ namespace netgen
   }
 
   template <class T, class T2>
-  inline void MyMPI_Allgather (const T & send, FlatArray<T2> recv, MPI_Comm comm)
+  inline void MyMPI_Allgather (const T & send, FlatArray<T2> recv, MPI_Comm comm = ng_comm)
   {
     MPI_Allgather( const_cast<T*> (&send), 1, MyGetMPIType<T>(), &recv[0], 1, MyGetMPIType<T2>(), comm);
   }
 
   template <class T, class T2>
-  inline void MyMPI_Alltoall (FlatArray<T> send, FlatArray<T2> recv, MPI_Comm comm)
+  inline void MyMPI_Alltoall (FlatArray<T> send, FlatArray<T2> recv, MPI_Comm comm = ng_comm)
   {
     MPI_Alltoall( &send[0], 1, MyGetMPIType<T>(), &recv[0], 1, MyGetMPIType<T2>(), comm);
   }
 
 //   template <class T, class T2>
-//   inline void MyMPI_Alltoall_Block (FlatArray<T> send, FlatArray<T2> recv, int blocklen, MPI_Comm comm)
+//   inline void MyMPI_Alltoall_Block (FlatArray<T> send, FlatArray<T2> recv, int blocklen, MPI_Comm comm = ng_comm)
 //   {
 //     MPI_Alltoall( &send[0], blocklen, MyGetMPIType<T>(), &recv[0], blocklen, MyGetMPIType<T2>(), comm);
 //   }

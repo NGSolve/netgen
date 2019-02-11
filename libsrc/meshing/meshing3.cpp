@@ -168,12 +168,17 @@ int Meshing3 :: AddConnectedPair (const INDEX_2 & apair)
 MESHING3_RESULT Meshing3 :: 
 GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 {
-  static int meshing3_timer = NgProfiler::CreateTimer ("Meshing3::GenerateMesh");
-  static int meshing3_timer_a = NgProfiler::CreateTimer ("Meshing3::GenerateMesh a");
-  static int meshing3_timer_b = NgProfiler::CreateTimer ("Meshing3::GenerateMesh b");
-  static int meshing3_timer_c = NgProfiler::CreateTimer ("Meshing3::GenerateMesh c");
-  static int meshing3_timer_d = NgProfiler::CreateTimer ("Meshing3::GenerateMesh d");
-  NgProfiler::RegionTimer reg (meshing3_timer);
+  static Timer t("Meshing3::GenerateMesh"); RegionTimer reg(t);
+  static Timer meshing3_timer_a("Meshing3::GenerateMesh a", 2);
+  static Timer meshing3_timer_b("Meshing3::GenerateMesh b", 2);
+  static Timer meshing3_timer_c("Meshing3::GenerateMesh c", 1);
+  static Timer meshing3_timer_d("Meshing3::GenerateMesh d", 2);
+  // static int meshing3_timer = NgProfiler::CreateTimer ("Meshing3::GenerateMesh");
+  // static int meshing3_timer_a = NgProfiler::CreateTimer ("Meshing3::GenerateMesh a");
+  // static int meshing3_timer_b = NgProfiler::CreateTimer ("Meshing3::GenerateMesh b");
+  // static int meshing3_timer_c = NgProfiler::CreateTimer ("Meshing3::GenerateMesh c");
+  // static int meshing3_timer_d = NgProfiler::CreateTimer ("Meshing3::GenerateMesh d");
+  // NgProfiler::RegionTimer reg (meshing3_timer);
 
 
   Array<Point3d, PointIndex::BASE> locpoints;      // local points
@@ -269,20 +274,16 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	}
 
       const MiniElement2d & bel = adfront->GetFace (baseelem);
-      const Point3d & p1 = adfront->GetPoint (bel[0]);
-      const Point3d & p2 = adfront->GetPoint (bel[1]);
-      const Point3d & p3 = adfront->GetPoint (bel[2]);
+      const Point<3> p1 = adfront->GetPoint (bel[0]);
+      const Point<3> p2 = adfront->GetPoint (bel[1]);
+      const Point<3> p3 = adfront->GetPoint (bel[2]);
+      
 
-      // (*testout) << endl << "base = " << bel << endl;
-
-
-      Point3d pmid = Center (p1, p2, p3);
+      Point<3> pmid = Center (p1, p2, p3);
 
       double his = (Dist (p1, p2) + Dist(p1, p3) + Dist(p2, p3)) / 3;
-      double hshould;
-
-      hshould = mesh.GetH (pmid);
-
+      double hshould = mesh.GetH (pmid);
+      
       if (adfront->GetFace (baseelem).GetNP() == 4)
 	hshould = max2 (his, hshould);
 
@@ -292,13 +293,13 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
       double hinner = hmax * (1 + stat.qualclass);
       double houter = hmax * (1 + 2 * stat.qualclass);
 
-      NgProfiler::StartTimer (meshing3_timer_a);
+      meshing3_timer_a.Start();
       stat.qualclass =
         adfront -> GetLocals (baseelem, locpoints, locfaces, 
 			      pindex, findex, connectedpairs,
 			      houter, hinner,
 			      locfacesplit);
-      NgProfiler::StopTimer (meshing3_timer_a);
+      meshing3_timer_a.Stop();
 
       // (*testout) << "locfaces = " << endl << locfaces << endl;
 
@@ -318,9 +319,6 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
           int pi3 = pindex[locfaces[0].PNum(3)];
 	  (*testout) << "pi = " << pi1 << ", " << pi2 << ", " << pi3 << endl;
 	}
-
-
-
 
 
       if (testmode)
@@ -479,7 +477,8 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	      (*testout) << endl;
 	    }
 
-	  NgProfiler::StartTimer (meshing3_timer_c);	  
+	  // NgProfiler::StartTimer (meshing3_timer_c);
+          meshing3_timer_c.Start();
 
 	  found = ApplyRules (plainpoints, allowpoint, 
 			      locfaces, locfacesplit, connectedpairs,
@@ -489,8 +488,8 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	  if (found >= 0) impossible = 0;
 	  if (found < 0) found = 0;
 
-
-	  NgProfiler::StopTimer (meshing3_timer_c);	  
+          meshing3_timer_c.Stop();
+	  // NgProfiler::StopTimer (meshing3_timer_c);	  
 
 	  if (!found) loktestmode = 0;
 
