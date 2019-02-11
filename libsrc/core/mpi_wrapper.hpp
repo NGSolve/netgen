@@ -100,8 +100,14 @@ namespace ngcore
 
   
 #else
-  class MPI_Comm { };
-  static MPI_Comm MPI_COMM_WORLD, MPI_COMM_NULL;
+  class MPI_Comm {
+    int nr;
+  public:
+    MPI_Comm (int _nr = 0) : nr(_nr) { ; }
+    operator int() const { return nr; }
+    bool operator== (MPI_Comm c2) const { return nr == c2.nr; }
+  };
+  static MPI_Comm MPI_COMM_WORLD = 12345, MPI_COMM_NULL = 10000;
   
   class NgMPI_Comm
   {
