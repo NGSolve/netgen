@@ -23,7 +23,7 @@ namespace netgen
 #endif
 
   /** This is the "standard" communicator that will be used for netgen-objects. **/
-  extern DLL_HEADER MPI_Comm ng_comm;
+  extern DLL_HEADER NgMPI_Comm ng_comm;
 
 #ifdef PARALLEL
   inline int MyMPI_GetNTasks (MPI_Comm comm = ng_comm)
@@ -44,6 +44,7 @@ namespace netgen
   inline int MyMPI_GetId (MPI_Comm comm = ng_comm) { return 0; }
 #endif
 
+  /*
 #ifdef PARALLEL
   // For python wrapping of communicators
   struct PyMPI_Comm {
@@ -68,7 +69,8 @@ namespace netgen
     inline int Size() const { return 1; }
   };
 #endif
-
+  */
+  
 #ifdef PARALLEL
   template <class T>
   inline MPI_Datatype MyGetMPIType ( ) 

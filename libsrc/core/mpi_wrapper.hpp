@@ -23,8 +23,11 @@ namespace ngcore
   template <> struct MPI_typetrait<char> {
     static MPI_Datatype MPIType () { return MPI_CHAR; } };  
 
+  template <> struct MPI_typetrait<unsigned char> {
+    static MPI_Datatype MPIType () { return MPI_CHAR; } };  
+
   template <> struct MPI_typetrait<size_t> {
-    static MPI_Datatype MPIType () { return MPI_UNIT64_T; } };
+    static MPI_Datatype MPIType () { return MPI_UINT64_T; } };
 
   template <> struct MPI_typetrait<double> {
     static MPI_Datatype MPIType () { return MPI_DOUBLE; } };
@@ -43,6 +46,7 @@ namespace ngcore
   {
     MPI_Comm comm;
     int * refcount;
+    int rank, size;
   public:
     NgMPI_Comm (MPI_Comm _comm, bool owns = false)
       : comm(_comm)
@@ -51,16 +55,19 @@ namespace ngcore
         refcount = nullptr;
       else
         refcount = new int{1};
+      
+      MPI_Comm_rank(comm, &rank);
+      MPI_Comm_size(comm, &size);
     }
     
     NgMPI_Comm (const NgMPI_Comm & c)
-      : comm(c.comm), refcount(c.refcount)
+      : comm(c.comm), refcount(c.refcount), rank(c.rank), size(c.siez)
     {
       if (refcount) (*refcount)++;
     }
 
     NgMPI_Comm (NgMPI_Comm && c)
-      : comm(c.comm), refcount(c.refcount)
+      : comm(c.comm), refcount(c.refcount), rank(c.rank), size(c.size)
     {
       c.refcount = nullptr;
     }
@@ -74,8 +81,21 @@ namespace ngcore
     
     operator MPI_Comm() const { return comm; }
 
-    auto Rank() const { int r; MPI_Comm_rank(comm, &r); return r; }
-    auto Size() const { int s; MPI_Comm_size(comm, &s); return s; }    
+    int Rank() const { return rank; } // int r; MPI_Comm_rank(comm, &r); return r; }
+    int Size() const { return size; } // int s; MPI_Comm_size(comm, &s); return s; }
+
+
+    template<typename T, typename T2 = decltype(GetMPIType<T>())>
+    void Send( T & val, int dest, int tag) {
+      MPI_Send (&val, 1, GetMPIType<T>(), dest, tag, comm);
+    }
+    
+    template<typename T, typename T2 = decltype(GetMPIType<T>())> 
+    void MyMPI_Recv (T & val, int src, int tag) {
+      MPI_Recv (&val, 1, GetMPIType<T>(), src, tag, comm, MPI_STATUS_IGNORE);
+    }
+
+    
   };
 
   
@@ -90,6 +110,14 @@ namespace ngcore
 
     size_t Rank() const { return 0; }
     size_t Size() const { return 1; }
+
+
+
+    template<typename T>
+    void Send( T & val, int dest, int tag) { ; }
+    
+    template<typename T>
+    void MyMPI_Recv (T & val, int src, int tag) { ; }
   };  
   
 #endif
