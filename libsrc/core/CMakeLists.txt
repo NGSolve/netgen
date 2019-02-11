@@ -33,7 +33,7 @@ if(USE_PYTHON)
 endif(USE_PYTHON)
 
 install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp logging.hpp
-  exception.hpp symboltable.hpp paje_trace.hpp utils.hpp profiler.hpp
+  exception.hpp symboltable.hpp paje_trace.hpp utils.hpp profiler.hpp mpi_wrapper.hpp
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/core COMPONENT netgen_devel)
 
 if(ENABLE_CPP_CORE_GUIDELINES_CHECK)

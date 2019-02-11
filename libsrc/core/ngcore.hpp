@@ -7,5 +7,6 @@
 #include "profiler.hpp"
 #include "symboltable.hpp"
 #include "version.hpp"
+#include "mpi_wrapper.hpp"
 
 #endif // NETGEN_CORE_NGCORE_HPP
