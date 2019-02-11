@@ -4327,10 +4327,12 @@ namespace netgen
           elementsearchtree = NULL;
           
           int ne = (dimension == 2) ? GetNSE() : GetNE();
-          
+          if (dimension == 3 && !GetNE() && GetNSE())
+            ne = GetNSE();
+
           if (ne) 
             {
-              if (dimension == 2)
+              if (dimension == 2 || (dimension == 3 && !GetNE()) )
                 {
                   Box<3> box (Box<3>::EMPTY_BOX);
                   for (SurfaceElementIndex sei = 0; sei < ne; sei++)
@@ -4393,7 +4395,11 @@ namespace netgen
     sol.Y() = (-a12 * aTrhs.X() + a11 * aTrhs.Y()) / det;
     return 0;
   }
-  
+
+  bool ValidBarCoord(double lami[3], double eps=1e-12)
+  {
+    return (lami[0]<=1.+eps && lami[0]>=0.-eps && lami[1]<=1.+eps && lami[1]>=0.-eps && lami[2]<=1.+eps && lami[2]>=0.-eps );
+  }
 
   bool Mesh :: PointContainedIn2DElement(const Point3d & p,
                                          double lami[3],
@@ -4424,16 +4430,167 @@ namespace netgen
         Vec3d c = p4 - a; 
         Vec3d d = p3 - a - b - c;
 
-     
+        /*cout << "p = " << p << endl;
+        cout << "p1 = " << p1 << endl;
+        cout << "p2 = " << p2 << endl;
+        cout << "p3 = " << p3 << endl;
+        cout << "p4 = " << p4 << endl;
+
+        cout << "a = " << a << endl;
+        cout << "b = " << b << endl;
+        cout << "c = " << c << endl;
+        cout << "d = " << d << endl;*/
+
+
+        Vec3d pa = p-a;
         double dxb = d.X()*b.Y()-d.Y()*b.X();
-        double dxc = d.X()*c.Y()-d.Y()*c.X(); 
+        double dxc = d.X()*c.Y()-d.Y()*c.X();
+        double bxc = b.X()*c.Y()-b.Y()*c.X();
+        double bxpa = b.X()*pa.Y()-b.Y()*pa.X();
+        double cxpa = c.X()*pa.Y()-c.Y()*pa.X();
+        double dxpa = d.X()*pa.Y()-d.Y()*pa.X();
+
+        /*cout << "dxb = " << dxb << endl;
+        cout << "dxc = " << dxc << endl;
+        cout << "bxc = " << bxc << endl;
+        cout << "bxpa = " << bxpa << endl;
+        cout << "cxpa = " << cxpa << endl;
+        cout << "dxpa = " << dxpa << endl;*/
+
+        /*
+          P = a + b x + c y + d x y
+          1) P1 = a1 + b1 x + c1 y + d1 x y
+          2) P2 = a2 + b2 x + c2 y + d2 x y
+          
+          -> det(x,d) = det(a,d) + det(b,d) x + det(c,d) y
+            -> x = 1/det(b,d) *( det(P-a,d)-det(c,d) y )
+            -> y = 1/det(c,d) *( det(P-a,d)-det(b,d) x )
+          
+          -> x = (P1 - a1 - c1 y)/(b1 + d1 y)
+            -> det(c,d) y**2 + [det(d,P-a) + det(c,b)] y + det(b,P-a) = 0
+          ( same if we express x = (P2 - a2 - c2 y)/(b2 + d2 y) )
+
+          -> y = (P1 - a1 - b1 x)/(c1 + d1 x)
+            -> det(b,d) x**2 + [det(d,P-a) + det(b,c)] x + det(c,P-a) = 0
+          ( same if we express y = (P2 - a2 - b2 x)/(c2 + d2 x)
+         */
+
+        lami[2]=0.; 
+        double eps = 1.E-12;
+        double c1,c2,r;
+
+        //First check if point is "exactly" a vertex point
+        Vec3d d1 = p-p1;
+        Vec3d d2 = p-p2;
+        Vec3d d3 = p-p3;
+        Vec3d d4 = p-p4;
+
+        //cout << " d1 = " << d1 << ", d2 = " << d2 << ", d3 = " << d3 << ", d4 = " << d4 << endl;
+        
+        if (d1.Length2() < sqr(eps)*d2.Length2() && d1.Length2() < sqr(eps)*d3.Length2() && d1.Length2() < sqr(eps)*d4.Length2())
+          {
+            lami[0] = lami[1] = 0.;
+            return true;
+          }
+        else if (d2.Length2() < sqr(eps)*d1.Length2() && d2.Length2() < sqr(eps)*d3.Length2() && d2.Length2() < sqr(eps)*d4.Length2())
+          {
+            lami[0] = 1.;
+            lami[1] = 0.;
+            return true;
+          }
+        else if (d3.Length2() < sqr(eps)*d1.Length2() && d3.Length2() < sqr(eps)*d2.Length2() && d3.Length2() < sqr(eps)*d4.Length2())
+          {
+            lami[0] = lami[1] = 1.;
+            return true;
+          }
+        else if (d4.Length2() < sqr(eps)*d1.Length2() && d4.Length2() < sqr(eps)*d2.Length2() && d4.Length2() < sqr(eps)*d3.Length2())
+          {
+            lami[0] = 0.;
+            lami[1] = 1.;
+            return true;
+          }//if d is nearly 0: solve resulting linear system
+        else if (d.Length2() < sqr(eps)*b.Length2() && d.Length2() < sqr(eps)*c.Length2())
+          {
+            Vec2d sol;
+            SolveLinearSystemLS (b, c, p-a, sol);
+            lami[0] = sol.X();
+            lami[1] = sol.Y();
+	    return ValidBarCoord(lami, eps);
+          }// if dxc is nearly 0: solve resulting linear equation for y and compute x
+        else if (fabs(dxc) < sqr(eps))
+          {
+            lami[1] = -bxpa/(dxpa-bxc);
+            lami[0] = (dxpa-dxc*lami[1])/dxb;
+            return ValidBarCoord(lami, eps);
+          }// if dxb is nearly 0: solve resulting linear equation for x and compute y
+        else if (fabs(dxb) < sqr(eps))
+          {
+            lami[0] = -cxpa/(dxpa+bxc);
+            lami[1] = (dxpa-dxb*lami[0])/dxc;
+            return ValidBarCoord(lami, eps);
+          }//if dxb >= dxc: solve quadratic equation in y and compute x
+        else if (fabs(dxb) >= fabs(dxc))
+          {
+            c1 = (bxc-dxpa)/dxc;
+            c2 = -bxpa/dxc;
+            r = c1*c1/4.0-c2;
+
+            //quadratic equation has only 1 (unstable) solution
+            if (fabs(r) < eps) //not eps^2!
+              {
+                lami[1] = -c1/2;
+                lami[0] = (dxpa-dxc*lami[1])/dxb;
+                return ValidBarCoord(lami, eps);
+              }
+            if (r < 0) return false;
+
+            lami[1] = -c1/2+sqrt(r);
+            lami[0] = (dxpa-dxc*lami[1])/dxb;
+
+            if (ValidBarCoord(lami, eps))
+                return true;
+            else
+              {
+                lami[1] = -c1/2-sqrt(r);
+                lami[0] = (dxpa-dxc*lami[1])/dxb;
+                return ValidBarCoord(lami, eps);
+              }
+          }//if dxc > dxb: solve quadratic equation in x and compute y
+        else
+          {
+            c1 = (-bxc-dxpa)/dxb;
+            c2 = -cxpa/dxb;
+            r = c1*c1/4.0-c2;
+
+            //quadratic equation has only 1 (unstable) solution
+            if (fabs(r) < eps) //not eps^2!
+              {
+                lami[0] = -c1/2;
+                lami[1] = (dxpa-dxb*lami[0])/dxc;
+                return ValidBarCoord(lami, eps);
+              }
+            if (r < 0) return false;
+
+            lami[0] = -c1/2+sqrt(r);
+            lami[1] = (dxpa-dxb*lami[0])/dxc;
+
+            if (ValidBarCoord(lami, eps))
+                return true;
+            else
+              {
+                lami[0] = -c1/2-sqrt(r);
+                lami[1] = (dxpa-dxb*lami[0])/dxc;
+                return ValidBarCoord(lami, eps);
+              }
+          }
+        
+        /*
         double dxa = d.X()*a.Y()-d.Y()*a.X(); 
         double dxp = d.X()*p.Y()-d.Y()*p.X();
 	
 	
         double c0,c1,c2; // ,rt; 
-        lami[2]=0.; 
-        double eps = 1.E-12;
+        
 
 	Vec3d dp13 = p3-p1;
 	Vec3d dp24 = p4-p2;
@@ -4453,12 +4610,12 @@ namespace netgen
 	    if(lami[1]<=1.+eps && lami[1]>=0.-eps && lami[0]<=1.+eps && lami[0]>=0.-eps)
 	      return true;
 	    
-            /*
-            lami[0]=(c.Y()*(p.X()-a.X())-c.X()*(p.Y()-a.Y()))/
-              (b.X()*c.Y() -b.Y()*c.X()); 
-            lami[1]=(-b.Y()*(p.X()-a.X())+b.X()*(p.Y()-a.Y()))/
-              (b.X()*c.Y() -b.Y()*c.X()); 
-            */
+            
+              //lami[0]=(c.Y()*(p.X()-a.X())-c.X()*(p.Y()-a.Y()))/
+              //(b.X()*c.Y() -b.Y()*c.X()); 
+            //lami[1]=(-b.Y()*(p.X()-a.X())+b.X()*(p.Y()-a.Y()))/
+             // (b.X()*c.Y() -b.Y()*c.X()); 
+            
           } 
         else
           if(fabs(dxb) <= eps*fabs(dxc))
@@ -4552,7 +4709,7 @@ namespace netgen
 
 		if(lami[1]<=1.+eps && lami[1]>=0.-eps && lami[0]<=1.+eps && lami[0]>=0.-eps)
 		  return true;
-	      }
+                  }*/
 
       
         //cout << "lam0,1 = " << lami[0] << ", " << lami[1] << endl;
@@ -4835,7 +4992,7 @@ namespace netgen
     // netgen::Point<3> pmin = p - Vec<3> (pointtol, pointtol, pointtol);
     // netgen::Point<3> pmax = p + Vec<3> (pointtol, pointtol, pointtol);
 
-    if (dimension == 2)
+    if (dimension == 2 || (dimension==3 && !GetNE() && GetNSE()))
       {
         int ne;
         int ps_startelement = 0;  // disable global buffering
@@ -4995,6 +5152,14 @@ namespace netgen
         //(*testout) << "p " << p << endl;
         //(*testout) << "velement " << velement << endl;
 
+        if (!GetNE() && GetNSE() )
+          {
+            lami[0] = vlam[0];
+            lami[1] = vlam[1];
+            lami[2] = vlam[2];
+            return velement;
+          }
+        
         Array<int> faces;
         topology.GetElementFaces(velement,faces);
 
