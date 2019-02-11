@@ -363,9 +363,8 @@ namespace netgen
      int * const indices = NULL, int numind = 0) const;
     
 
-#ifdef PARALLEL
+    // for MPI-parallel
     std::tuple<int,int*> GetDistantProcs (int nodetype, int locnum) const;
-#endif
 
     shared_ptr<Mesh> GetMesh () const { return mesh; } 
     shared_ptr<Mesh> SelectMesh () const;

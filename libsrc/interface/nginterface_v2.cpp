@@ -1245,11 +1245,11 @@ void Ngx_Mesh::SetSurfaceElementOrders (int enr, int ox, int oy)
 
   
 
-#ifdef PARALLEL
+
   
   std::tuple<int,int*>  Ngx_Mesh :: GetDistantProcs (int nodetype, int locnum) const
   {
-    
+#ifdef PARALLEL
     switch (nodetype)
       {
       case 0:
@@ -1270,10 +1270,10 @@ void Ngx_Mesh::SetSurfaceElementOrders (int enr, int ox, int oy)
       default:
 	return std::tuple<int,int*>(0,nullptr);
       }
-  }
-
+#else
+    return std::tuple<int,int*>(0,nullptr);
 #endif
-
+  }
 }
 
 
