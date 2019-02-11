@@ -86,6 +86,40 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   m.def("_PushStatus", [](string s) { PushStatus(MyStr(s)); });
   m.def("_SetThreadPercentage", [](double percent) { SetThreadPercent(percent); });
 
+  py::class_<NgMPI_Comm> (m, "MPI_Comm")
+    .def_property_readonly ("rank", &NgMPI_Comm::Rank)
+    .def_property_readonly ("size", &NgMPI_Comm::Size)
+
+#ifdef PARALLEL
+    .def("Barrier", [](NgMPI_Comm & c) { MPI_Barrier(c); })
+    .def("WTime", [](NgMPI_Comm  & c) { return MPI_Wtime(); })
+#else
+    .def("Barrier", [](NgMPI_Comm & c) { })
+    .def("WTime", [](NgMPI_Comm  & c) { return -1.0; })
+#endif
+    .def("Sum", [](NgMPI_Comm  & c, double x) { return MyMPI_AllReduceNG(x, MPI_SUM, c); })
+    .def("Min", [](NgMPI_Comm  & c, double x) { return MyMPI_AllReduceNG(x, MPI_MIN, c); })
+    .def("Max", [](NgMPI_Comm  & c, double x) { return MyMPI_AllReduceNG(x, MPI_MAX, c); })
+    .def("Sum", [](NgMPI_Comm  & c, int x) { return MyMPI_AllReduceNG(x, MPI_SUM, c); })
+    .def("Min", [](NgMPI_Comm  & c, int x) { return MyMPI_AllReduceNG(x, MPI_MIN, c); })
+    .def("Max", [](NgMPI_Comm  & c, int x) { return MyMPI_AllReduceNG(x, MPI_MAX, c); })
+    .def("Sum", [](NgMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_SUM, c); })
+    .def("Min", [](NgMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_MIN, c); })
+    .def("Max", [](NgMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_MAX, c); })
+    .def("SubComm", [](NgMPI_Comm & c, std::vector<int> proc_list) {
+        Array<int> procs(proc_list.size());
+        for (int i = 0; i < procs.Size(); i++)
+          procs[i] = proc_list[i];
+        if (!procs.Contains(c.Rank()))
+          throw Exception("rank "+ToString(c.Rank())+" not in subcomm");
+	MPI_Comm subcomm = MyMPI_SubCommunicator(c, procs);
+	return NgMPI_Comm(subcomm, true);
+      }, py::arg("procs"));
+  ;
+
+
+
+  
   py::class_<NGDummyArgument>(m, "NGDummyArgument")
     .def("__bool__", []( NGDummyArgument &self ) { return false; } )
     ;
@@ -503,7 +537,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                      mesh -> SetGeometry (nullptr);
                      return mesh;
                    } ),
-         py::arg("dim")=3, py::arg("comm")=NgMPI_Comm(ng_comm)
+         py::arg("dim")=3, py::arg("comm")=NgMPI_Comm(MPI_COMM_WORLD) // NgMPI_Comm(ng_comm)
          )
     .def(NGSPickle<Mesh>())
     .def_property_readonly("comm", [](const Mesh & amesh) -> NgMPI_Comm
@@ -932,36 +966,6 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                                      return old;
                                                    }));
 
-  py::class_<NgMPI_Comm> (m, "MPI_Comm")
-    .def_property_readonly ("rank", &NgMPI_Comm::Rank)
-    .def_property_readonly ("size", &NgMPI_Comm::Size)
-
-#ifdef PARALLEL
-    .def("Barrier", [](NgMPI_Comm & c) { MPI_Barrier(c); })
-    .def("WTime", [](NgMPI_Comm  & c) { return MPI_Wtime(); })
-#else
-    .def("Barrier", [](NgMPI_Comm & c) { })
-    .def("WTime", [](NgMPI_Comm  & c) { return -1.0; })
-#endif
-    .def("Sum", [](NgMPI_Comm  & c, double x) { return MyMPI_AllReduceNG(x, MPI_SUM, c); })
-    .def("Min", [](NgMPI_Comm  & c, double x) { return MyMPI_AllReduceNG(x, MPI_MIN, c); })
-    .def("Max", [](NgMPI_Comm  & c, double x) { return MyMPI_AllReduceNG(x, MPI_MAX, c); })
-    .def("Sum", [](NgMPI_Comm  & c, int x) { return MyMPI_AllReduceNG(x, MPI_SUM, c); })
-    .def("Min", [](NgMPI_Comm  & c, int x) { return MyMPI_AllReduceNG(x, MPI_MIN, c); })
-    .def("Max", [](NgMPI_Comm  & c, int x) { return MyMPI_AllReduceNG(x, MPI_MAX, c); })
-    .def("Sum", [](NgMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_SUM, c); })
-    .def("Min", [](NgMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_MIN, c); })
-    .def("Max", [](NgMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_MAX, c); })
-    .def("SubComm", [](NgMPI_Comm & c, std::vector<int> proc_list) {
-        Array<int> procs(proc_list.size());
-        for (int i = 0; i < procs.Size(); i++)
-          procs[i] = proc_list[i];
-        if (!procs.Contains(c.Rank()))
-          throw Exception("rank "+ToString(c.Rank())+" not in subcomm");
-	MPI_Comm subcomm = MyMPI_SubCommunicator(c, procs);
-	return NgMPI_Comm(subcomm, true);
-      }, py::arg("procs"));
-  ;
 
 }
 
