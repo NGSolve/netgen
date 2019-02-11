@@ -83,7 +83,7 @@ namespace netgen
 #endif
   }
 
-  void Mesh :: SetCommunicator(MPI_Comm acomm)
+  void Mesh :: SetCommunicator(NgMPI_Comm acomm)
   {
     this->comm = acomm;
   }

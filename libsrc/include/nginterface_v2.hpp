@@ -26,9 +26,9 @@ enum NG_ELEMENT_TYPE {
 enum NG_REFINEMENT_TYPE { NG_REFINE_H = 0, NG_REFINE_P = 1, NG_REFINE_HP = 2 };
 #endif
 
-#ifndef PARALLEL
-  typedef int MPI_Comm;
-#endif
+// #ifndef PARALLEL
+// typedef int MPI_Comm;
+// #endif
 
 
 namespace netgen
@@ -36,7 +36,7 @@ namespace netgen
   using namespace std;
   using namespace ngcore;
   
-  extern DLL_HEADER MPI_Comm ng_comm;
+  extern DLL_HEADER NgMPI_Comm ng_comm;
   
   static constexpr int POINTINDEX_BASE = 1;
   

@@ -40,7 +40,7 @@ namespace ngcore
   inline MPI_Datatype GetMPIType () {
     return MPI_typetrait<T>::MPIType();
   }
-
+  
 
   class NgMPI_Comm
   {
@@ -100,18 +100,19 @@ namespace ngcore
 
   
 #else
+  class MPI_Comm { };
   
   class NgMPI_Comm
   {
     
   public:
-    NgMPI_Comm (int _comm, bool owns = false)
+    NgMPI_Comm (MPI_Comm _comm, bool owns = false)
     { ; }
 
     size_t Rank() const { return 0; }
     size_t Size() const { return 1; }
 
-
+    operator MPI_Comm() const { return MPI_Comm(); }
 
     template<typename T>
     void Send( T & val, int dest, int tag) { ; }

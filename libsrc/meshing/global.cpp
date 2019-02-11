@@ -32,7 +32,7 @@ namespace netgen
   // TraceGlobal glob2("global2");
 
   // global communicator for netgen
-  DLL_HEADER MyMPI_Comm ng_comm = MPI_COMM_WORLD;
+  DLL_HEADER NgMPI_Comm ng_comm = MPI_COMM_WORLD;
   
   weak_ptr<Mesh> global_mesh;
   void SetGlobalMesh (shared_ptr<Mesh> m)
