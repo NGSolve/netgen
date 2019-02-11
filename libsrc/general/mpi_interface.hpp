@@ -40,7 +40,6 @@ namespace netgen
   }
 #else
   // enum { MPI_COMM_WORLD = 12345, MPI_COMM_NULL = 0};
-  extern MPI_Comm MPI_COMM_WORLD, MPI_COMM_NULL;
   inline int MyMPI_GetNTasks (MPI_Comm comm = ng_comm) { return 1; }
   inline int MyMPI_GetId (MPI_Comm comm = ng_comm) { return 0; }
 #endif

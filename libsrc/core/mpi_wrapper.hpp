@@ -101,6 +101,7 @@ namespace ngcore
   
 #else
   class MPI_Comm { };
+  static MPI_Comm MPI_COMM_WORLD, MPI_COMM_NULL;
   
   class NgMPI_Comm
   {
