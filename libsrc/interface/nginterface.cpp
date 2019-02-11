@@ -117,7 +117,7 @@ void Ng_LoadMeshFromStream ( istream & input )
 }
 
 
-void Ng_LoadMesh (const char * filename, MPI_Comm comm)
+void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
 {
   int id = MyMPI_GetId(comm);
   int ntasks = MyMPI_GetNTasks(comm);
