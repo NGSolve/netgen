@@ -274,7 +274,7 @@ namespace netgen
     void UpdateTopology ();
     void DoArchive (Archive & archive);
 
-    MPI_Comm GetCommunicator() const;
+    NgMPI_Comm GetCommunicator() const;
     
     virtual ~Ngx_Mesh();
 
