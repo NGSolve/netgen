@@ -44,6 +44,7 @@ namespace ngcore
 
   class NgMPI_Comm
   {
+  protected:
     MPI_Comm comm;
     int * refcount;
     int rank, size;
@@ -108,6 +109,7 @@ namespace ngcore
     }
     
 
+    /** --- blocking P2P --- **/
 
     template<typename T, typename T2 = decltype(GetMPIType<T>())>
     void Send (T & val, int dest, int tag) const {
@@ -115,13 +117,41 @@ namespace ngcore
     }
     
     template<typename T, typename T2 = decltype(GetMPIType<T>())> 
-    void MyMPI_Recv (T & val, int src, int tag) const {
+    void Recv (T & val, int src, int tag) const {
       MPI_Recv (&val, 1, GetMPIType<T>(), src, tag, comm, MPI_STATUS_IGNORE);
     }
 
 
+    /** --- non-blocking P2P --- **/
+    
+    template<typename T, typename T2 = decltype(GetMPIType<T>())> 
+    MPI_Request ISend (T & val, int dest, int tag) const
+    {
+      MPI_Request request;
+      MPI_Isend (&val, 1, GetMPIType<T>(), dest, tag, comm, &request);
+      return request;
+    }
+    
+    template<typename T, typename T2 = decltype(GetMPIType<T>())> 
+    MPI_Request IRecv (T & val, int dest, int tag) const
+    {
+      MPI_Request request;
+      MPI_Irecv (&val, 1, GetMPIType<T>(), dest, tag, comm, &request);
+      return request;
+    }
+    
     /** --- collectives --- **/
 
+    template <typename T, typename T2 = decltype(GetMPIType<T>())> 
+    T Reduce (T d, const MPI_Op & op, int root = 0)
+    {
+      if (size == 1) return d;
+      
+      T global_d;
+      MPI_Reduce (&d, &global_d, 1, GetMPIType<T>(), op, root, comm);
+      return global_d;
+    }
+    
     template <typename T, typename T2 = decltype(GetMPIType<T>())> 
     T AllReduce (T d, const MPI_Op & op) const
     {
@@ -162,6 +192,8 @@ namespace ngcore
   static MPI_Comm MPI_COMM_WORLD = 12345, MPI_COMM_NULL = 10000;
 
   typedef int MPI_Op;
+  typedef int MPI_Request;
+  
   enum { MPI_SUM = 0, MPI_MIN = 1, MPI_MAX = 2 };
   
   class NgMPI_Comm
@@ -182,6 +214,15 @@ namespace ngcore
     template<typename T>
     void MyMPI_Recv (T & val, int src, int tag) const { ; }
 
+    template<typename T>
+    MPI_Request ISend (T & val, int dest, int tag) const { return 0; } 
+    
+    template<typename T>
+    MPI_Request IRecv (T & val, int dest, int tag) const { return 0; } 
+    
+    template <typename T>
+    T Reduce (T d, const MPI_Op & op, int root = 0) { return d; }
+    
     template <typename T>
     T AllReduce (T d, const MPI_Op & op) const { return d; }
 
