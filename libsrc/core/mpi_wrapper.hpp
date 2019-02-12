@@ -61,7 +61,7 @@ namespace ngcore
     }
     
     NgMPI_Comm (const NgMPI_Comm & c)
-      : comm(c.comm), refcount(c.refcount), rank(c.rank), size(c.siez)
+      : comm(c.comm), refcount(c.refcount), rank(c.rank), size(c.size)
     {
       if (refcount) (*refcount)++;
     }
