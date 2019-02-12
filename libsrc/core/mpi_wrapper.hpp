@@ -179,10 +179,10 @@ namespace ngcore
     template<typename T>
     void MyMPI_Recv (T & val, int src, int tag) const { ; }
 
-    template <typename T, typename T2 = decltype(GetMPIType<T>())> 
+    template <typename T>
     T AllReduce (T d, const MPI_Op & op) const { return d; }
 
-    template <typename T, typename T2 = decltype(GetMPIType<T>())> 
+    template <typename T>
     INLINE void Bcast (T & s, int root = 0) const { ; } 
   };  
   
