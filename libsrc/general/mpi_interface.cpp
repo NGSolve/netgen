@@ -46,7 +46,5 @@ namespace netgen
   // #else
   // MPI_Comm MPI_COMM_WORLD, MPI_COMM_NULL;
 #endif
-
-
 }
 
