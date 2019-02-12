@@ -78,6 +78,21 @@ namespace ngcore
         if (--(*refcount) == 0)
           MPI_Comm_free(&comm);
     }
+
+    NgMPI_Comm & operator= (const NgMPI_Comm & c)
+    {
+      if (refcount)
+        if (--(*refcount) == 0)
+          MPI_Comm_free(&comm);
+
+      refcount = c.refcount;
+      if (refcount) (*refcount)++;      
+      size = c.size;
+      rank = c.rank;
+      return *this;
+    }
+    
+    
     
     operator MPI_Comm() const { return comm; }
 
