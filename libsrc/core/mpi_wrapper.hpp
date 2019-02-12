@@ -183,7 +183,7 @@ namespace ngcore
     T AllReduce (T d, const MPI_Op & op) const { return d; }
 
     template <typename T>
-    INLINE void Bcast (T & s, int root = 0) const { ; } 
+    void Bcast (T & s, int root = 0) const { ; } 
   };  
   
 #endif
