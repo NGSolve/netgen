@@ -91,6 +91,7 @@ namespace ngcore
 
       refcount = c.refcount;
       if (refcount) (*refcount)++;      
+      comm = c.comm;
       size = c.size;
       rank = c.rank;
       return *this;
