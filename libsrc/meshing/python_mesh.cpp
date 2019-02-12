@@ -20,7 +20,7 @@ namespace netgen
 #ifdef PARALLEL
   /** we need allreduce in python-wrapped communicators **/
   template <typename T>
-  inline T MyMPI_AllReduceNG (T d, const MPI_Op & op = MPI_SUM, MPI_Comm comm = ng_comm)
+  inline T MyMPI_AllReduceNG (T d, const MPI_Op & op /* = MPI_SUM */, MPI_Comm comm)
   {
     T global_d;
     MPI_Allreduce ( &d, &global_d, 1, MyGetMPIType<T>(), op, comm);
@@ -30,7 +30,7 @@ namespace netgen
   enum { MPI_SUM = 0, MPI_MIN = 1, MPI_MAX = 2 };
   typedef int MPI_Op;
   template <typename T>
-  inline T MyMPI_AllReduceNG (T d, const MPI_Op & op = MPI_SUM, MPI_Comm comm = ng_comm)
+  inline T MyMPI_AllReduceNG (T d, const MPI_Op & op /* = MPI_SUM */, MPI_Comm comm)
   { return d; }
 #endif
 }
@@ -89,12 +89,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   py::class_<NgMPI_Comm> (m, "MPI_Comm")
     .def_property_readonly ("rank", &NgMPI_Comm::Rank)
     .def_property_readonly ("size", &NgMPI_Comm::Size)
-
+    .def("Barrier", &NgMPI_Comm::Barrier)
+    
 #ifdef PARALLEL
-    .def("Barrier", [](NgMPI_Comm & c) { MPI_Barrier(c); })
     .def("WTime", [](NgMPI_Comm  & c) { return MPI_Wtime(); })
 #else
-    .def("Barrier", [](NgMPI_Comm & c) { })
     .def("WTime", [](NgMPI_Comm  & c) { return -1.0; })
 #endif
     .def("Sum", [](NgMPI_Comm  & c, double x) { return MyMPI_AllReduceNG(x, MPI_SUM, c); })
@@ -557,13 +556,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def_property_readonly("_timestamp", &Mesh::GetTimeStamp)
     .def("Distribute", [](shared_ptr<Mesh> self, NgMPI_Comm comm) {
 	self->SetCommunicator(comm);
-	if(MyMPI_GetNTasks(comm)==1) return self;
+	if(comm.Size()==1) return self;
 	// if(MyMPI_GetNTasks(comm)==2) throw NgException("Sorry, cannot handle communicators with NP=2!");
 	// cout << " rank " << MyMPI_GetId(comm) << " of " << MyMPI_GetNTasks(comm) << " called Distribute " << endl;
-	if(MyMPI_GetId(comm)==0) self->Distribute();
+	if(comm.Rank()==0) self->Distribute();
 	else self->SendRecvMesh();
         return self;
-      }, py::arg("comm")=NgMPI_Comm(ng_comm))
+      }, py::arg("comm"))
     .def("Receive", [](NgMPI_Comm comm) {
         auto mesh = make_shared<Mesh>();
         mesh->SetCommunicator(comm);
@@ -575,9 +574,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 	  {
 	    istream * infile;
 
-	    MPI_Comm comm = self.GetCommunicator();
-	    id = MyMPI_GetId(comm);
-	    ntasks = MyMPI_GetNTasks(comm);
+	    NgMPI_Comm comm = self.GetCommunicator();
+	    id = comm.Rank();
+	    ntasks = comm.Size();
 
 #ifdef PARALLEL
 	    char* buf = nullptr;

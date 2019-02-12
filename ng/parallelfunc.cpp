@@ -125,7 +125,7 @@ void ParallelRun()
       
       else if ( message == "bcastparthread" )
 	{
-	  MyMPI_Bcast (mparam.parthread);
+	  MyMPI_Bcast (mparam.parthread, MPI_COMM_WORLD);
 	}
 
 

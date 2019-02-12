@@ -553,18 +553,19 @@ namespace netgen
     order = 1;
 
 
-    MPI_Comm curve_comm;
+    // MPI_Comm curve_comm;
+    const auto & curve_comm = mesh.GetCommunicator();
 #ifdef PARALLEL
     enum { MPI_TAG_CURVE = MPI_TAG_MESH+20 };
 
     const ParallelMeshTopology & partop = mesh.GetParallelTopology ();
-    MPI_Comm_dup (mesh.GetCommunicator(), &curve_comm);      
+    // MPI_Comm_dup (mesh.GetCommunicator(), &curve_comm);      
     Array<int> procs;
 #else
-    curve_comm = ng_comm; // dummy! 
+    // curve_comm = mesh.GetCommunicator();
 #endif
-    int rank = MyMPI_GetId(curve_comm);
-    int ntasks = MyMPI_GetNTasks(curve_comm);
+    int rank = curve_comm.Rank();
+    int ntasks = curve_comm.Size();
 
     if (working)
       order = aorder;
@@ -656,8 +657,8 @@ namespace netgen
 	  }
       }
 
-    
-    MyMPI_ExchangeTable (send_orders, recv_orders, MPI_TAG_CURVE, curve_comm);
+    if (ntasks > 1)
+      MyMPI_ExchangeTable (send_orders, recv_orders, MPI_TAG_CURVE, curve_comm);
 
     if (ntasks > 1 && working)
       {
@@ -1186,7 +1187,8 @@ namespace netgen
 	  }
       }
 
-    MyMPI_ExchangeTable (send_surfnr, recv_surfnr, MPI_TAG_CURVE, curve_comm);
+    if (ntasks > 1)
+      MyMPI_ExchangeTable (send_surfnr, recv_surfnr, MPI_TAG_CURVE, curve_comm);
 
     if (ntasks > 1 && working)
       {
@@ -1369,8 +1371,8 @@ namespace netgen
 
 
 #ifdef PARALLEL
-    MPI_Barrier (curve_comm);
-    MPI_Comm_free (&curve_comm);      
+    curve_comm.Barrier();
+    // MPI_Comm_free (&curve_comm);      
 #endif
   }
 

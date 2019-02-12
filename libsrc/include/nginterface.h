@@ -40,7 +40,7 @@
 // #ifndef PARALLEL
 // typedef int MPI_Comm;
 // #endif
-namespace netgen { extern DLL_HEADER ngcore::NgMPI_Comm ng_comm; }
+// namespace netgen { extern DLL_HEADER ngcore::NgMPI_Comm ng_comm; }
 
 
 // implemented element types:
@@ -66,7 +66,7 @@ extern "C" {
   DLL_HEADER void Ng_LoadGeometry (const char * filename);
 
   // load netgen mesh
-  DLL_HEADER void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm = netgen::ng_comm);
+  DLL_HEADER void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm = ngcore::NgMPI_Comm{});
 
   // load netgen mesh
   DLL_HEADER void Ng_LoadMeshFromString (const char * mesh_as_string);

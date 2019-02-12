@@ -2650,13 +2650,17 @@ namespace netgen
     static int timer2 = NgProfiler::CreateTimer ("getminmax, surf");
 
 #ifdef PARALLEL
-    if (id == 0)
+    auto comm = mesh->GetCommunicator();
+    if (comm.Size() > 1)
       {
-	MyMPI_SendCmd ("redraw");
-	MyMPI_SendCmd ("getminmax");
+        if (id == 0)
+          {
+            MyMPI_SendCmd ("redraw");
+            MyMPI_SendCmd ("getminmax");
+          }
+        MyMPI_Bcast (funcnr, mesh->GetCommunicator());
+        MyMPI_Bcast (comp, mesh->GetCommunicator());
       }
-    MyMPI_Bcast (funcnr);
-    MyMPI_Bcast (comp);
 #endif
 
     // double val;
@@ -2744,11 +2748,14 @@ namespace netgen
 	minv = 1e99;
 	maxv = -1e99;
       }
-    double hmin, hmax;
-    MPI_Reduce (&minv, &hmin, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
-    MPI_Reduce (&maxv, &hmax, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-    minv = hmin;
-    maxv = hmax;
+    if (ntasks > 1)
+      {
+        double hmin, hmax;
+        MPI_Reduce (&minv, &hmin, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
+        MPI_Reduce (&maxv, &hmax, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+        minv = hmin;
+        maxv = hmax;
+      }
 #endif
   }
 

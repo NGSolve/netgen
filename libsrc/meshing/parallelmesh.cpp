@@ -35,8 +35,8 @@ namespace netgen
 
   void Mesh :: SendRecvMesh ()
   {
-    int id = MyMPI_GetId(GetCommunicator());
-    int np = MyMPI_GetNTasks(GetCommunicator());
+    int id = GetCommunicator().Rank();
+    int np = GetCommunicator().Size();
 
     if (np == 1) {
       throw NgException("SendRecvMesh called, but only one rank in communicator!!");
@@ -72,9 +72,9 @@ namespace netgen
   {
     Array<MPI_Request> sendrequests;
 
-    MPI_Comm comm = GetCommunicator();
-    int id = MyMPI_GetId(comm);
-    int ntasks = MyMPI_GetNTasks(comm);
+    NgMPI_Comm comm = GetCommunicator();
+    int id = comm.Rank();
+    int ntasks = comm.Size();
 
     int dim = GetDimension();
     MyMPI_Bcast(dim, comm);
@@ -751,8 +751,9 @@ namespace netgen
     int timer_sels = NgProfiler::CreateTimer ("Receive surface elements");
     NgProfiler::RegionTimer reg(timer);
 
-    int id = MyMPI_GetId(GetCommunicator());
-    int ntasks = MyMPI_GetNTasks(GetCommunicator());
+    NgMPI_Comm comm = GetCommunicator();
+    int id = comm.Rank();
+    int ntasks = comm.Size();
     
     int dim;
     MyMPI_Bcast(dim, comm);
@@ -1011,9 +1012,9 @@ namespace netgen
   // call it only for the master !
   void Mesh :: Distribute ()
   {
-    MPI_Comm comm = GetCommunicator();
-    int id = MyMPI_GetId(comm);
-    int ntasks = MyMPI_GetNTasks(comm);
+    NgMPI_Comm comm = GetCommunicator();
+    int id = comm.Rank();
+    int ntasks = comm.Size();
 
     if (id != 0 || ntasks == 1 ) return;
 
@@ -1072,7 +1073,7 @@ namespace netgen
     eptr.Append (eind.Size());
     Array<idx_t> epart(ne), npart(nn);
 
-    idxtype nparts = MyMPI_GetNTasks(GetCommunicator())-1;
+    idxtype nparts = GetCommunicator().Size()-1;
 
     if (nparts == 1)
       {
@@ -1293,9 +1294,9 @@ namespace netgen
   // call it only for the master !
   void Mesh :: Distribute (Array<int> & volume_weights , Array<int>  & surface_weights, Array<int>  & segment_weights)
   {
-    MPI_Comm comm = GetCommunicator();
-    int id = MyMPI_GetId(comm);
-    int ntasks = MyMPI_GetNTasks(comm);
+    NgMPI_Comm comm = GetCommunicator();
+    int id = comm.Rank();
+    int ntasks = comm.Size();
 
     if (id != 0 || ntasks == 1 ) return;
 
@@ -1385,7 +1386,7 @@ namespace netgen
     eptr.Append (eind.Size());
     Array<idx_t> epart(ne), npart(nn);
 
-    idxtype nparts = MyMPI_GetNTasks(GetCommunicator())-1;
+    idxtype nparts = GetCommunicator().Size()-1;
 
     if (nparts == 1)
       {

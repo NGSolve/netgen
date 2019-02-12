@@ -77,7 +77,7 @@ int main(int argc, char ** argv)
       throw ngcore::Exception("Netgen GUI cannot run MPI-parallel");
 
   // MPI_COMM_WORLD is just a local communicator
-  netgen::ng_comm = ngcore::NgMPI_Comm{MPI_COMM_WORLD, false};
+  // netgen::ng_comm = ngcore::NgMPI_Comm{MPI_COMM_WORLD, false};
 
 #endif
 

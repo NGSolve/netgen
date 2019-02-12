@@ -25,8 +25,9 @@ namespace netgen
   {
     *testout << "ParallelMeshTopology::Reset" << endl;
 
-    int id = MyMPI_GetId(mesh.GetCommunicator());
-    int ntasks = MyMPI_GetNTasks(mesh.GetCommunicator());
+    NgMPI_Comm comm = mesh.GetCommunicator();
+    int id = comm.Rank();
+    int ntasks = comm.Size();
     
     if ( ntasks == 1 ) return;
 
@@ -125,7 +126,8 @@ namespace netgen
     *testout << "ParallelMeshTopology :: UpdateCoarseGridGlobal" << endl;
 
     const MeshTopology & topology = mesh.GetTopology();
-
+    MPI_Comm comm = mesh.GetCommunicator();
+    
     if ( id == 0 )
       {
 	Array<Array<int>*> sendarrays(ntasks);
@@ -160,7 +162,7 @@ namespace netgen
 
 	Array<MPI_Request> sendrequests;
 	for (int dest = 1; dest < ntasks; dest++)
-	  sendrequests.Append (MyMPI_ISend (*sendarrays[dest], dest, MPI_TAG_MESH+10));
+	  sendrequests.Append (MyMPI_ISend (*sendarrays[dest], dest, MPI_TAG_MESH+10, comm));
 	MPI_Waitall (sendrequests.Size(), &sendrequests[0], MPI_STATUS_IGNORE);
 
 	for (int dest = 1; dest < ntasks; dest++)
@@ -171,7 +173,7 @@ namespace netgen
 
       {
 	Array<int> recvarray;
-	MyMPI_Recv (recvarray, 0, MPI_TAG_MESH+10);
+	MyMPI_Recv (recvarray, 0, MPI_TAG_MESH+10, comm);
 
 	int ii = 0;
 
@@ -209,10 +211,12 @@ namespace netgen
     // cout << "UpdateCoarseGrid" << endl;
     // if (is_updated) return;
 
-    MPI_Comm comm = mesh.GetCommunicator();
-    int id = MyMPI_GetId(comm);
-    int ntasks = MyMPI_GetNTasks(comm);
+    NgMPI_Comm comm = mesh.GetCommunicator();
+    int id = comm.Rank();
+    int ntasks = comm.Size();
 
+    if (ntasks == 1) return;
+    
     Reset();
     static int timer = NgProfiler::CreateTimer ("UpdateCoarseGrid");
     NgProfiler::RegionTimer reg(timer);

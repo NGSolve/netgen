@@ -43,7 +43,7 @@ namespace netgen
     bcnames.SetSize(0);
     cd2names.SetSize(0);
 
-    this->comm = netgen :: ng_comm;
+    // this->comm = netgen :: ng_comm;
 #ifdef PARALLEL
     paralleltop = new ParallelMeshTopology (*this);
 #endif
@@ -1325,8 +1325,8 @@ namespace netgen
     
     if (archive.Input())
       {
-	int rank = MyMPI_GetId(GetCommunicator());
-	int ntasks = MyMPI_GetNTasks(GetCommunicator());
+	int rank = GetCommunicator().Rank();
+	int ntasks = GetCommunicator().Size();
 	
         RebuildSurfaceElementLists();
         

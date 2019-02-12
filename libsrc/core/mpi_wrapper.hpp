@@ -101,18 +101,50 @@ namespace ngcore
     
     operator MPI_Comm() const { return comm; }
 
-    int Rank() const { return rank; } // int r; MPI_Comm_rank(comm, &r); return r; }
-    int Size() const { return size; } // int s; MPI_Comm_size(comm, &s); return s; }
+    int Rank() const { return rank; }
+    int Size() const { return size; }
+    void Barrier() const {
+      if (size > 1) MPI_Barrier (comm);
+    }
+    
 
 
     template<typename T, typename T2 = decltype(GetMPIType<T>())>
-    void Send( T & val, int dest, int tag) {
+    void Send (T & val, int dest, int tag) const {
       MPI_Send (&val, 1, GetMPIType<T>(), dest, tag, comm);
     }
     
     template<typename T, typename T2 = decltype(GetMPIType<T>())> 
-    void MyMPI_Recv (T & val, int src, int tag) {
+    void MyMPI_Recv (T & val, int src, int tag) const {
       MPI_Recv (&val, 1, GetMPIType<T>(), src, tag, comm, MPI_STATUS_IGNORE);
+    }
+
+
+    /** --- collectives --- **/
+
+    template <typename T, typename T2 = decltype(GetMPIType<T>())> 
+    T AllReduce (T d, const MPI_Op & op) const
+    {
+      if (size == 1) return d;
+      
+      T global_d;
+      MPI_Allreduce ( &d, &global_d, 1, GetMPIType<T>(), op, comm);
+      return global_d;
+    }
+
+    template <typename T, typename T2 = decltype(GetMPIType<T>())> 
+    void Bcast (T & s, int root = 0) const {
+      if (size == 1) return ;
+      MPI_Bcast (&s, 1, GetMPIType<T>(), root, comm);
+    }
+    
+    void Bcast (std::string & s, int root = 0) const 
+    {
+      if (size == 1) return;
+      int len = s.length();
+      Bcast (len, root);
+      if (rank != 0) s.resize (len);
+      MPI_Bcast (&s[0], len, MPI_CHAR, root, comm);
     }
 
     
@@ -138,14 +170,20 @@ namespace ngcore
 
     size_t Rank() const { return 0; }
     size_t Size() const { return 1; }
-
+    void Barrier() const { ; } 
     operator MPI_Comm() const { return MPI_Comm(); }
 
     template<typename T>
-    void Send( T & val, int dest, int tag) { ; }
+    void Send( T & val, int dest, int tag) const { ; }
     
     template<typename T>
-    void MyMPI_Recv (T & val, int src, int tag) { ; }
+    void MyMPI_Recv (T & val, int src, int tag) const { ; }
+
+    template <typename T, typename T2 = decltype(GetMPIType<T>())> 
+    T AllReduce (T d, const MPI_Op & op) const { return d; }
+
+    template <typename T, typename T2 = decltype(GetMPIType<T>())> 
+    INLINE void Bcast (T & s, int root = 0) const { ; } 
   };  
   
 #endif

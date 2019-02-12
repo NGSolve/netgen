@@ -14,8 +14,8 @@
 
 namespace netgen
 {
-  using ngcore::id;
-  using ngcore::ntasks;
+  // using ngcore::id;
+  // using ngcore::ntasks;
 
 #ifndef PARALLEL
   /** without MPI, we need a dummy typedef **/
@@ -23,16 +23,17 @@ namespace netgen
 #endif
 
   /** This is the "standard" communicator that will be used for netgen-objects. **/
-  extern DLL_HEADER NgMPI_Comm ng_comm;
+  // extern DLL_HEADER NgMPI_Comm ng_comm;
 
+#ifdef OLD
 #ifdef PARALLEL
-  inline int MyMPI_GetNTasks (MPI_Comm comm = ng_comm)
+  inline int MyMPI_GetNTasks (MPI_Comm comm /* = ng_comm */)
   {
     int ntasks;
     MPI_Comm_size(comm, &ntasks);
     return ntasks;
   }
-  inline int MyMPI_GetId (MPI_Comm comm = ng_comm)
+  inline int MyMPI_GetId (MPI_Comm comm /* = ng_comm */)
   {
     int id;
     MPI_Comm_rank(comm, &id);
@@ -40,10 +41,11 @@ namespace netgen
   }
 #else
   // enum { MPI_COMM_WORLD = 12345, MPI_COMM_NULL = 0};
-  inline int MyMPI_GetNTasks (MPI_Comm comm = ng_comm) { return 1; }
-  inline int MyMPI_GetId (MPI_Comm comm = ng_comm) { return 0; }
+  inline int MyMPI_GetNTasks (MPI_Comm comm /* = ng_comm */) { return 1; }
+  inline int MyMPI_GetId (MPI_Comm comm /* = ng_comm */) { return 0; }
 #endif
-
+#endif
+  
   /*
 #ifdef PARALLEL
   // For python wrapping of communicators
@@ -112,13 +114,13 @@ namespace netgen
   enum { MPI_TAG_MESH = 210 };
   enum { MPI_TAG_VIS = 310 };
 
-  inline void MyMPI_Send (int i, int dest, int tag, MPI_Comm comm = ng_comm)
+  inline void MyMPI_Send (int i, int dest, int tag, MPI_Comm comm /* = ng_comm */)
   {
     int hi = i;
     MPI_Send( &hi, 1, MPI_INT, dest, tag, comm);
   }
 
-  inline void MyMPI_Recv (int & i, int src, int tag, MPI_Comm comm = ng_comm)
+  inline void MyMPI_Recv (int & i, int src, int tag, MPI_Comm comm /* = ng_comm */)
   {
     MPI_Status status;
     MPI_Recv( &i, 1, MPI_INT, src, tag, comm, &status);
@@ -126,12 +128,12 @@ namespace netgen
 
 
 
-  inline void MyMPI_Send (const string & s, int dest, int tag, MPI_Comm comm = ng_comm)
+  inline void MyMPI_Send (const string & s, int dest, int tag, MPI_Comm comm /* = ng_comm */)
   {
     MPI_Send( const_cast<char*> (s.c_str()), s.length(), MPI_CHAR, dest, tag, comm);
   }
 
-  inline void MyMPI_Recv (string & s, int src, int tag, MPI_Comm comm = ng_comm)
+  inline void MyMPI_Recv (string & s, int src, int tag, MPI_Comm comm /* = ng_comm */)
   {
     MPI_Status status;
     int len;
@@ -145,20 +147,20 @@ namespace netgen
 
 
   template <class T, int BASE>
-  inline void MyMPI_Send (FlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm = ng_comm)
+  inline void MyMPI_Send (FlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm /* = ng_comm */)
   {
     MPI_Send( &s.First(), s.Size(), MyGetMPIType<T>(), dest, tag, comm);
   }
 
   template <class T, int BASE>
-  inline void MyMPI_Recv ( FlatArray<T, BASE> s, int src, int tag, MPI_Comm comm = ng_comm)
+  inline void MyMPI_Recv ( FlatArray<T, BASE> s, int src, int tag, MPI_Comm comm /* = ng_comm */)
   {
     MPI_Status status;
     MPI_Recv( &s.First(), s.Size(), MyGetMPIType<T>(), src, tag, comm, &status);
   }
 
   template <class T, int BASE>
-  inline void MyMPI_Recv ( Array <T, BASE> & s, int src, int tag, MPI_Comm comm = ng_comm)
+  inline void MyMPI_Recv ( Array <T, BASE> & s, int src, int tag, MPI_Comm comm /* = ng_comm */)
   {
     MPI_Status status;
     int len;
@@ -170,7 +172,7 @@ namespace netgen
   }
 
   template <class T, int BASE>
-  inline int MyMPI_Recv ( Array <T, BASE> & s, int tag, MPI_Comm comm = ng_comm)
+  inline int MyMPI_Recv ( Array <T, BASE> & s, int tag, MPI_Comm comm /* = ng_comm */)
   {
     MPI_Status status;
     int len;
@@ -203,7 +205,7 @@ namespace netgen
   */
 
   template <class T, int BASE>
-  inline MPI_Request MyMPI_ISend (FlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm = ng_comm)
+  inline MPI_Request MyMPI_ISend (FlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm /* = ng_comm */)
   {
     MPI_Request request;
     MPI_Isend( &s.First(), s.Size(), MyGetMPIType<T>(), dest, tag, comm, &request);
@@ -212,7 +214,7 @@ namespace netgen
 
 
   template <class T, int BASE>
-  inline MPI_Request MyMPI_IRecv (FlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm = ng_comm)
+  inline MPI_Request MyMPI_IRecv (FlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm /* = ng_comm */)
   {
     MPI_Request request;
     MPI_Irecv( &s.First(), s.Size(), MyGetMPIType<T>(), dest, tag, comm, &request);
@@ -277,11 +279,15 @@ namespace netgen
   template <typename T>
   inline void MyMPI_ExchangeTable (TABLE<T> & send_data, 
 				   TABLE<T> & recv_data, int tag,
-				   MPI_Comm comm = ng_comm)
+				   const NgMPI_Comm & comm /* = ng_comm */)
   {
+    /*
     int rank = MyMPI_GetId(comm);
     int ntasks = MyMPI_GetNTasks(comm);
-
+    */
+    int rank = comm.Rank();
+    int ntasks = comm.Size();
+    
     Array<int> send_sizes(ntasks);
     Array<int> recv_sizes(ntasks);
     for (int i = 0; i < ntasks; i++)
@@ -324,22 +330,23 @@ namespace netgen
 
 
   template <class T>
-  inline void MyMPI_Bcast (T & s, MPI_Comm comm = ng_comm)
+  inline void MyMPI_Bcast (T & s, MPI_Comm comm /* = ng_comm */)
   {
     MPI_Bcast (&s, 1, MyGetMPIType<T>(), 0, comm);
   }
 
   template <class T>
-  inline void MyMPI_Bcast (Array<T, 0> & s, MPI_Comm comm = ng_comm)
+  inline void MyMPI_Bcast (Array<T, 0> & s, NgMPI_Comm comm /* = ng_comm */)
   {
     int size = s.Size();
     MyMPI_Bcast (size, comm);
-    if (MyMPI_GetId(comm) != 0) s.SetSize (size);
+    // if (MyMPI_GetId(comm) != 0) s.SetSize (size);
+    if (comm.Rank() != 0) s.SetSize (size);
     MPI_Bcast (&s[0], size, MyGetMPIType<T>(), 0, comm);
   }
 
   template <class T>
-  inline void MyMPI_Bcast (Array<T, 0> & s, int root, MPI_Comm comm = ng_comm)
+  inline void MyMPI_Bcast (Array<T, 0> & s, int root, MPI_Comm comm /* = ng_comm */)
   {
     int id;
     MPI_Comm_rank(comm, &id);
@@ -352,13 +359,13 @@ namespace netgen
   }
 
   template <class T, class T2>
-  inline void MyMPI_Allgather (const T & send, FlatArray<T2> recv, MPI_Comm comm = ng_comm)
+  inline void MyMPI_Allgather (const T & send, FlatArray<T2> recv, MPI_Comm comm /* = ng_comm */)
   {
     MPI_Allgather( const_cast<T*> (&send), 1, MyGetMPIType<T>(), &recv[0], 1, MyGetMPIType<T2>(), comm);
   }
 
   template <class T, class T2>
-  inline void MyMPI_Alltoall (FlatArray<T> send, FlatArray<T2> recv, MPI_Comm comm = ng_comm)
+  inline void MyMPI_Alltoall (FlatArray<T> send, FlatArray<T2> recv, MPI_Comm comm /* = ng_comm */)
   {
     MPI_Alltoall( &send[0], 1, MyGetMPIType<T>(), &recv[0], 1, MyGetMPIType<T2>(), comm);
   }

@@ -1219,7 +1219,7 @@ namespace netgen
 
 #ifdef PARALLEL
     MyMPI_SendCmd ("bcastparthread");
-    MyMPI_Bcast (mparam.parthread);
+    MyMPI_Bcast (mparam.parthread, MPI_COMM_WORLD);
 #endif
 
     return TCL_OK;

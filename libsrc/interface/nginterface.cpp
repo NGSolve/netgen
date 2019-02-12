@@ -119,8 +119,8 @@ void Ng_LoadMeshFromStream ( istream & input )
 
 void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
 {
-  int id = MyMPI_GetId(comm);
-  int ntasks = MyMPI_GetNTasks(comm);
+  int id = comm.Rank();
+  int ntasks = comm.Size();
 
   {
     ifstream infile(filename);

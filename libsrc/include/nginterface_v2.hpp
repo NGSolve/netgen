@@ -36,7 +36,7 @@ namespace netgen
   using namespace std;
   using namespace ngcore;
   
-  extern DLL_HEADER NgMPI_Comm ng_comm;
+  // extern DLL_HEADER NgMPI_Comm ng_comm;
   
   static constexpr int POINTINDEX_BASE = 1;
   
@@ -265,11 +265,11 @@ namespace netgen
     /** reuse a netgen-mesh **/
     Ngx_Mesh (shared_ptr<Mesh> amesh); 
     /** load a new mesh **/
-    Ngx_Mesh (string filename, MPI_Comm acomm = netgen::ng_comm);
+    Ngx_Mesh (string filename, NgMPI_Comm acomm = NgMPI_Comm{});
     
-    void LoadMesh (const string & filename, MPI_Comm comm = netgen::ng_comm);
+    void LoadMesh (const string & filename, NgMPI_Comm comm = NgMPI_Comm{});
 
-    void LoadMesh (istream & str, MPI_Comm comm = netgen::ng_comm);
+    void LoadMesh (istream & str, NgMPI_Comm comm = NgMPI_Comm{});
     void SaveMesh (ostream & str) const;
     void UpdateTopology ();
     void DoArchive (Archive & archive);

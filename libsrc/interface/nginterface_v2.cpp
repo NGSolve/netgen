@@ -33,17 +33,17 @@ namespace netgen
   
   Ngx_Mesh :: Ngx_Mesh (shared_ptr<Mesh> amesh)
   { mesh = amesh ? amesh : netgen::mesh; }
-  Ngx_Mesh :: Ngx_Mesh (string filename, MPI_Comm acomm)
+  Ngx_Mesh :: Ngx_Mesh (string filename, NgMPI_Comm acomm)
   { LoadMesh(filename, acomm); }
   
-  Ngx_Mesh * LoadMesh (const string & filename, MPI_Comm comm = netgen::ng_comm)
+  Ngx_Mesh * LoadMesh (const string & filename, NgMPI_Comm comm)
   {
     netgen::mesh.reset();
     Ng_LoadMesh (filename.c_str(), comm);
     return new Ngx_Mesh (netgen::mesh);
   }
 
-  void Ngx_Mesh :: LoadMesh (const string & filename, MPI_Comm comm)
+  void Ngx_Mesh :: LoadMesh (const string & filename, NgMPI_Comm comm)
   {
     netgen::mesh.reset();
     Ng_LoadMesh (filename.c_str(), comm);
@@ -51,7 +51,7 @@ namespace netgen
     mesh = netgen::mesh;
   }
 
-  void Ngx_Mesh :: LoadMesh (istream & ist, MPI_Comm comm)
+  void Ngx_Mesh :: LoadMesh (istream & ist, NgMPI_Comm comm)
   {
     netgen::mesh = make_shared<Mesh>();
     netgen::mesh->SetCommunicator(comm);
