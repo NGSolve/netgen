@@ -160,6 +160,9 @@ namespace ngcore
     bool operator== (MPI_Comm c2) const { return nr == c2.nr; }
   };
   static MPI_Comm MPI_COMM_WORLD = 12345, MPI_COMM_NULL = 10000;
+
+  typedef int MPI_Op;
+  enum { MPI_SUM = 0, MPI_MIN = 1, MPI_MAX = 2 };
   
   class NgMPI_Comm
   {
