@@ -48,6 +48,10 @@ namespace ngcore
     int * refcount;
     int rank, size;
   public:
+    NgMPI_Comm ()
+      : refcount(nullptr), rank(0), size(1)
+    { ; }
+
     NgMPI_Comm (MPI_Comm _comm, bool owns = false)
       : comm(_comm)
     {
@@ -128,8 +132,8 @@ namespace ngcore
   {
     
   public:
-    NgMPI_Comm (MPI_Comm _comm, bool owns = false)
-    { ; }
+    NgMPI_Comm () { ; } 
+    NgMPI_Comm (MPI_Comm _comm, bool owns = false) { ; }
 
     size_t Rank() const { return 0; }
     size_t Size() const { return 1; }
