@@ -537,7 +537,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                      mesh -> SetGeometry (nullptr);
                      return mesh;
                    } ),
-         py::arg("dim")=3, py::arg("comm")=NgMPI_Comm(MPI_COMM_WORLD) // NgMPI_Comm(ng_comm)
+         py::arg("dim")=3, py::arg("comm")=NgMPI_Comm{}
          )
     .def(NGSPickle<Mesh>())
     .def_property_readonly("comm", [](const Mesh & amesh) -> NgMPI_Comm
