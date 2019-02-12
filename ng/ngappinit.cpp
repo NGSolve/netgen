@@ -73,8 +73,12 @@ int main(int argc, char ** argv)
   MPI_Comm_size(MPI_COMM_WORLD, &netgen::ntasks);
   MPI_Comm_rank(MPI_COMM_WORLD, &netgen::id);
   
+  if(netgen::ntasks!=1)
+      throw ngcore::Exception("Netgen GUI cannot run MPI-parallel");
 
-  MPI_Comm_dup ( MPI_COMM_WORLD, &netgen::mesh_comm);
+  // MPI_COMM_WORLD is just a local communicator
+  netgen::ng_comm = ngcore::NgMPI_Comm{MPI_COMM_WORLD, false};
+
 #endif
 
   if ( netgen::id == 0 )

@@ -13,9 +13,9 @@ Visualization
 
 */
 
-#ifdef PARALLEL
-#define PARALLELGL
-#endif
+// #ifdef PARALLEL
+// #define PARALLELGL
+// #endif
 
 #include "../include/incopengl.hpp"
 

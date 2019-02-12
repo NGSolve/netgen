@@ -33,7 +33,7 @@ namespace netgen
     T_POINTS points;
 
     // The communicator for this mesh. Just a dummy if compiled without MPI.  
-    NgMPI_Comm comm = MPI_COMM_NULL;
+    NgMPI_Comm comm;
     
     /// line-segments at edges
     Array<Segment, 0, size_t> segments;
