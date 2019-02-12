@@ -27,8 +27,8 @@ namespace netgen
     return global_d;
   }
 #else
-  enum { MPI_SUM = 0, MPI_MIN = 1, MPI_MAX = 2 };
-  typedef int MPI_Op;
+  // enum { MPI_SUM = 0, MPI_MIN = 1, MPI_MAX = 2 };
+  // typedef int MPI_Op;
   template <typename T>
   inline T MyMPI_AllReduceNG (T d, const MPI_Op & op /* = MPI_SUM */, MPI_Comm comm)
   { return d; }
