@@ -1007,22 +1007,59 @@ namespace netgen
    int * const indices, int numind) const
 
   {
-    if (mesh->GetDimension() != 1)
-      throw NgException("FindElementOfPoint<1> called for multidim mesh");
-
-    Point<3> p(hp[0], 0,0);
-    for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
+    switch (mesh->GetDimension())
       {
-        auto & seg = (*mesh)[si];
-        Point<3> p1 = (*mesh)[seg[0]];
-        Point<3> p2 = (*mesh)[seg[1]];
-        double lam = (p(0)-p1(0)) / (p2(0)-p1(0));
-        if (lam >= -1e-10 && lam <= 1+1e-10)
-          {
-            lami[0] = 1-lam;
-            return si;
-          }
+      case 1:
+        {
+          Point<3> p(hp[0], 0,0);
+          for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
+            {
+              auto & seg = (*mesh)[si];
+              Point<3> p1 = (*mesh)[seg[0]];
+              Point<3> p2 = (*mesh)[seg[1]];
+              double lam = (p(0)-p1(0)) / (p2(0)-p1(0));
+              if (lam >= -1e-10 && lam <= 1+1e-10)
+                {
+                  lami[0] = 1-lam;
+                  return si;
+                }
+            }
+        }
+        break;
+      case 2:
+        {
+          Point<3> p(hp[0], hp[1],0);
+          for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
+            {
+              auto & seg = (*mesh)[si];
+              Point<3> p1 = (*mesh)[seg[0]];
+              Point<3> p2 = (*mesh)[seg[1]];
+              double lam;
+              double r;
+              if (fabs(p2[0]-p1[0]) >= fabs(p2[1]-p1[1]))
+                {
+                  lam = (p[0]-p1[0])/(p2[0]-p1[0]);
+                  r = p[1] - p1[1] - lam*(p2[1]-p1[1]);
+                }
+              else
+                {
+                  lam = (p[1]-p1[1])/(p2[1]-p1[1]);
+                  r = p[0] - p1[0] - lam*(p2[0]-p1[0]);
+                }
+              if ( lam >= -1e-10 && lam <= 1+1e-10 && fabs(r) <= 1e-10 )
+                {
+                  lami[0] = 1-lam;
+                  return si;
+                }
+            }
+        }
+        break;
+      case 3:
+      default:
+        throw Exception("FindElementOfPoint<1> only implemented for mesh-dimension 1 and 2!");
+        break;
       }
+ 
     return -1;
   }
 
