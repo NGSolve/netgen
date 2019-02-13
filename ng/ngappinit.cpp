@@ -110,21 +110,7 @@ int main(int argc, char ** argv)
 
 
 #ifdef PARALLEL
-      if (netgen::ntasks == 1)
-	{
-	  cout << "Run parallel Netgen with 'mpirun -np xy netgen'" << endl;
-	}
-      else
-	{
-	  cout << "Running MPI - parallel using " 
-	       << netgen::ntasks << " processor" 
-	       << ((netgen::ntasks > 1) ? "s " : " ") << endl;
-	  
-	  cout << "MPI-version = " << MPI_VERSION << '.' << MPI_SUBVERSION << endl;
-
-	  if (mpi_provided == MPI_THREAD_MULTIPLE)
-	    cout << "multithreaded MPI is supported" << endl;
-	}
+      cout << "Including MPI version " << MPI_VERSION << '.' << MPI_SUBVERSION << endl;
 #endif
     }
 
