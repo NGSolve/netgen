@@ -898,8 +898,21 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 				   }))
                                             
     ;
-  
 
+  m.def("ImportMesh", [](const string& filename)
+                      {
+                        auto mesh = make_shared<Mesh>();
+                        ReadFile(*mesh, filename);
+                        return mesh;
+                      }, py::arg("filename"),
+    R"delimiter(Import mesh from other file format, supported file formats are:
+ Neutral format (*.mesh, *.emt)
+ Surface file (*.surf)
+ Universal format (*.unv)
+ Olaf format (*.emt)
+ Tet format (*.tet)
+ Pro/ENGINEER format (*.fnf)
+)delimiter");
   py::enum_<MESHING_STEP>(m,"MeshingStep")
     .value("MESHEDGES",MESHCONST_MESHEDGES)
     .value("MESHSURFACE",MESHCONST_OPTSURFACE)
