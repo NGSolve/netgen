@@ -46,15 +46,16 @@ namespace ngcore
   {
   protected:
     MPI_Comm comm;
+    bool valid_comm;
     int * refcount;
     int rank, size;
   public:
     NgMPI_Comm ()
-      : refcount(nullptr), rank(0), size(1)
+      : valid_comm(false), refcount(nullptr), rank(0), size(1)
     { ; }
 
     NgMPI_Comm (MPI_Comm _comm, bool owns = false)
-      : comm(_comm)
+      : comm(_comm), valid_comm(true)
     {
       if (!owns)
         refcount = nullptr;
@@ -66,13 +67,15 @@ namespace ngcore
     }
     
     NgMPI_Comm (const NgMPI_Comm & c)
-      : comm(c.comm), refcount(c.refcount), rank(c.rank), size(c.size)
+      : comm(c.comm), valid_comm(c.valid_comm), refcount(c.refcount),
+        rank(c.rank), size(c.size)
     {
       if (refcount) (*refcount)++;
     }
 
     NgMPI_Comm (NgMPI_Comm && c)
-      : comm(c.comm), refcount(c.refcount), rank(c.rank), size(c.size)
+      : comm(c.comm), valid_comm(c.valid_comm), refcount(c.refcount),
+        rank(c.rank), size(c.size)
     {
       c.refcount = nullptr;
     }
@@ -93,14 +96,21 @@ namespace ngcore
       refcount = c.refcount;
       if (refcount) (*refcount)++;      
       comm = c.comm;
+      valid_comm = c.valid_comm;
       size = c.size;
       rank = c.rank;
       return *this;
     }
     
+    class InvalidCommException : public Exception {
+    public:
+      InvalidCommException() : Exception("Do not have a valid communicator") { ; }
+    };
     
-    
-    operator MPI_Comm() const { return comm; }
+    operator MPI_Comm() const {
+      if (!valid_comm) throw InvalidCommException();
+      return comm;
+    }
 
     int Rank() const { return rank; }
     int Size() const { return size; }
