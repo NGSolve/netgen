@@ -8,7 +8,7 @@
 #include <map>                  // for map
 #include <memory>               // for shared_ptr
 #include <string>               // for string
-#include <type_traits>          // for declval, enable_if, false_type, is_co...
+#include <type_traits>          // for declval, enable_if_t, false_type, is_co...
 #include <typeinfo>             // for type_info
 #include <utility>              // for move, swap, pair
 #include <vector>               // for vector
@@ -39,7 +39,7 @@ namespace ngcore
     T* constructIfPossible_impl(Rest... /*unused*/)
     { throw Exception(std::string(Demangle(typeid(T).name())) + " is not default constructible!"); }
 
-    template<typename T, typename= typename std::enable_if<std::is_constructible<T>::value>::type>
+    template<typename T, typename= std::enable_if_t<std::is_constructible<T>::value>>
     T* constructIfPossible_impl(int /*unused*/) { return new T; } // NOLINT
 
     template<typename T>
@@ -211,7 +211,7 @@ namespace ngcore
 
     // archive implementation for enums
     template<typename T>
-    auto operator & (T& val) -> typename std::enable_if<std::is_enum<T>::value, Archive&>::type
+    auto operator & (T& val) -> std::enable_if_t<std::is_enum<T>::value, Archive&>
     {
       int enumval;
       if(Output())
@@ -274,7 +274,7 @@ namespace ngcore
     }
     // Archive arrays =====================================================
     // this functions can be overloaded in Archive implementations for more efficiency
-    template <typename T, typename = typename std::enable_if<is_archivable<T>>::type>
+    template <typename T, typename = std::enable_if_t<is_archivable<T>>>
     Archive & Do (T * data, size_t n)
     { for (size_t j = 0; j < n; j++) { (*this) & data[j]; }; return *this; }; // NOLINT
 

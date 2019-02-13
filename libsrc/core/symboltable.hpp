@@ -39,7 +39,7 @@ namespace ngcore
     SymbolTable& operator=(SymbolTable<T>&&) = default;
 
     template<typename T2=T>
-    auto DoArchive(Archive& ar) -> typename std::enable_if<is_archivable<T2>, void>::type
+    auto DoArchive(Archive& ar) -> typename std::enable_if_t<is_archivable<T2>>
     {
       ar & names & data;
     }
