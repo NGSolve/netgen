@@ -714,7 +714,29 @@ namespace netgen
     
   }
 
-
+  void CombineSingularPrisms(Mesh& mesh)
+  {
+    for(int i = 1; i<=mesh.GetNE(); i++)
+      {
+        Element& el = mesh.VolumeElement(i);
+        if(el.GetType() != PRISM)
+          continue;
+        if(el.PNum(3) == el.PNum(6))
+          {
+            if(el.PNum(2) == el.PNum(5))
+              {
+                el.SetType(TET);
+              }
+            else
+              {
+                el.SetType(PYRAMID);
+                int pnr5 = el.PNum(3);
+                el.PNum(3) = el.PNum(5);
+                el.PNum(5) = pnr5;
+              }
+          }
+      }
+  }
 
   void ZRefinement (Mesh & mesh, const NetgenGeometry * hgeom,
 		    ZRefinementOptions & opt)
@@ -729,6 +751,8 @@ namespace netgen
     MakePrismsClosePoints (mesh);
 
     RefinePrisms (mesh, geom, opt);
+
+    CombineSingularPrisms(mesh);
   }
 
 
