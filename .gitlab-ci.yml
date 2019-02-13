@@ -15,10 +15,11 @@ stages:
   before_script:
     - "echo off"
     - 'call "%VS2017INSTALLDIR%\VC\Auxiliary\Build\vcvars64"'
-    - set CMAKE_GENERATOR=Visual Studio 15 2017 Win64
     - set CI_DIR=C:\ci\%CI_PIPELINE_ID%
+    - set CLCACHE_BASEDIR=C:\ci\%CI_PIPELINE_ID%
     - set NETGEN_BUILD_DIR=%CI_DIR%\build
     - set INSTALL_DIR=%CI_DIR%\install
+    - set SRC_DIR=%CI_DIR%\src
     - set NETGENDIR=%INSTALL_DIR%\bin
     - set PYTHONPATH=%INSTALL_DIR%\lib\site-packages
 
@@ -26,17 +27,21 @@ build_win:
   <<: *win
   stage: build
   script:
+    - mkdir %SRC_DIR%
+    - xcopy . %SRC_DIR%\ /O /X /E /H /K /Q
+    - cd %SRC_DIR%
     - git submodule update --init --recursive
     - rd /s /q %NETGEN_BUILD_DIR%
     - mkdir %NETGEN_BUILD_DIR%
     - cd %NETGEN_BUILD_DIR%
     - >-
-        cmake %CI_PROJECT_DIR%
-        -G"%CMAKE_GENERATOR%"
-        -DINSTALL_DIR=%INSTALL_DIR%
+        cmake %SRC_DIR%
+        -G Ninja
+        -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%
         -DUSE_OCC=ON
+        -DUSE_CCACHE=ON
         -DCMAKE_BUILD_TYPE=Release
-    - cmake --build . --target INSTALL --config Release
+    - cmake --build . --target install --config Release
 
 test_win:
   <<: *win
