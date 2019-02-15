@@ -285,22 +285,30 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 	  self(index) = val;
 	}))
     ;
-  
+
   py::class_<Element>(m, "Element3D")
-    .def(py::init([](int index, py::list vertices)
+    .def(py::init([](int index, std::vector<PointIndex> vertices)
                   {
-                    std::map<int, ELEMENT_TYPE> types = {{4, TET},
-                                                         {5, PYRAMID},
-                                                         {6, PRISM},
-                                                         {8, HEX},
-                                                         {10, TET10},
-                                                         {13, PYRAMID13},
-                                                         {15, PRISM15},
-                                                         {20, HEX20}};
-                    int np = py::len(vertices);
-                    auto newel = new Element(types[np]);
+                    int np = vertices.size();
+                    ELEMENT_TYPE et;
+                    switch (np)
+                      {
+                      case 4: et = TET; break;
+                      case 5: et = PYRAMID; break;
+                      case 6: et = PRISM; break;
+                      case 8: et = HEX; break;
+                      case 10: et = TET10; break;
+                      case 13: et = PYRAMID13; break;
+                      case 15: et = PRISM15; break;
+                      case 20: et = HEX20; break;
+                      default:
+                        throw Exception ("no Element3D with " + ToString(np) +
+                                         " points");
+                      }
+
+                    auto newel = new Element(et);
                     for(int i=0; i<np; i++)
-                      (*newel)[i] = py::cast<PointIndex>(vertices[i]);
+                      (*newel)[i] = vertices[i];
                     newel->SetIndex(index);
                     return newel;
                   }),
