@@ -389,11 +389,11 @@ extern "C" {
   DLL_HEADER void Ng_InitPointCurve(double red, double green, double blue);
   DLL_HEADER void Ng_AddPointCurvePoint(const double * point);
 
-
-#ifdef PARALLEL
-  void Ng_SetElementPartition ( int elnr, int part );
-  int  Ng_GetElementPartition ( int elnr );
-#endif
+  
+  // #ifdef PARALLEL
+  // void Ng_SetElementPartition ( int elnr, int part );
+  // int  Ng_GetElementPartition ( int elnr );
+  // #endif
 
   DLL_HEADER void Ng_SaveMesh ( const char * meshfile );
   DLL_HEADER void Ng_Bisect ( const char * refinementfile );

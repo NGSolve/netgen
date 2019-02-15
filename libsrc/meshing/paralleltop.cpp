@@ -141,7 +141,8 @@ namespace netgen
 	    topology.GetElementEdges (el, edges);
 	    const Element & volel = mesh.VolumeElement (el);
 
-	    Array<int> & sendarray = *sendarrays[volel.GetPartition()];
+	    // Array<int> & sendarray = *sendarrays[volel.GetPartition()];
+            Array<int> & sendarray = *sendarrays[mesh.vol_partition[el-1]];
 
 	    for ( int i = 0; i < edges.Size(); i++ )
 	      sendarray.Append (edges[i]);
@@ -153,7 +154,8 @@ namespace netgen
 	  {
 	    topology.GetSurfaceElementEdges (el, edges);
 	    const Element2d & surfel = mesh.SurfaceElement (el);
-	    Array<int> & sendarray = *sendarrays[surfel.GetPartition()];
+	    // Array<int> & sendarray = *sendarrays[surfel.GetPartition()];
+            Array<int> & sendarray = *sendarrays[mesh.surf_partition[el-1]];
 
 	    for ( int i = 0; i < edges.Size(); i++ )
 	      sendarray.Append (edges[i]);

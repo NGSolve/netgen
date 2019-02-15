@@ -2069,7 +2069,7 @@ void Ng_SocketClientGetServerClientID ( const int number, int * id )
 
 
 
-
+/*
 #ifdef PARALLEL
 void Ng_SetElementPartition ( const int elnr, const int part )
 {
@@ -2081,6 +2081,7 @@ int Ng_GetElementPartition ( const int elnr )
   return mesh->VolumeElement(elnr+1).GetPartition();
 }
 #endif
+*/
 
 
 void Ng_InitPointCurve(double red, double green, double blue)

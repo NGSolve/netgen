@@ -1618,12 +1618,15 @@ namespace netgen
       {
 	const Segment & seg = mesh->LineSegment(i);
 
+        /*
 #ifdef PARALLEL
 	if (ntasks > 1 && 
 	    vispar.drawtetsdomain && 
-	    (vispar.drawtetsdomain != seg.GetPartition())) continue;
+	    // (vispar.drawtetsdomain != seg.GetPartition())) continue;
+            (vispar.drawtetsdomain != mesh->seg_partition[i-1]) continue;
 #endif
-
+        */
+        
 	const Point3d & p1 = (*mesh)[seg[0]];
 	const Point3d & p2 = (*mesh)[seg[1]];
 
@@ -1865,9 +1868,11 @@ namespace netgen
       {
 	if (vispar.drawtetsdomain > 0)
 	  {
+            /*
 	    int tetid = vispar.drawmetispartition ? 
-	      (*mesh)[ei].GetPartition() : (*mesh)[ei].GetIndex();
-	    
+              (*mesh)[ei].GetPartition() : (*mesh)[ei].GetIndex();
+            */
+            int tetid =  (*mesh)[ei].GetIndex();
 	    if (vispar.drawtetsdomain != tetid) continue;
 	  }
 
@@ -1884,8 +1889,8 @@ namespace netgen
 
             int ind = el.GetIndex() % 4;
 
-            if (vispar.drawmetispartition && el.GetPartition()!=-1)
-	      ind = el.GetPartition() % 4;
+            // if (vispar.drawmetispartition && el.GetPartition()!=-1)
+            // ind = el.GetPartition() % 4;
 
 	    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, tetcols[ind]);
 

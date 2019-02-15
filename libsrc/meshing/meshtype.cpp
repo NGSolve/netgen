@@ -1073,9 +1073,9 @@ namespace netgen
     flags.fixed = 0;
     orderx = ordery = orderz = 1;
     is_curved =  typ != TET; // false;
-#ifdef PARALLEL
-    partitionNumber = -1;
-#endif
+    // #ifdef PARALLEL
+    // partitionNumber = -1;
+    // #endif
   }
 
 

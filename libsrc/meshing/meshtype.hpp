@@ -377,9 +377,9 @@ namespace netgen
     unsigned int orderx:6;
     unsigned int ordery:6;
 
-#ifdef PARALLEL
-    int partitionNumber; 
-#endif
+    // #ifdef PARALLEL
+    // int partitionNumber; 
+    // #endif
 
     /// a linked list for all segments in the same face
     SurfaceElementIndex next;
@@ -608,10 +608,12 @@ namespace netgen
     ///
     int hp_elnr;
 
+    /*
 #ifdef PARALLEL
     int GetPartition () const { return partitionNumber; }
     void SetPartition (int nr) { partitionNumber = nr; }; 
 #endif
+    */
   };
 
   ostream & operator<<(ostream  & s, const Element2d & el);
@@ -676,11 +678,11 @@ namespace netgen
     float badness;
     bool is_curved:1;   // element is (high order) curved
   
-#ifdef PARALLEL
+    // #ifdef PARALLEL
     /// number of partition for parallel computation 
-    int partitionNumber;
+    // int partitionNumber;
 
-#endif
+    // #endif
 
   public:
     flagstruct flags;
@@ -902,14 +904,15 @@ namespace netgen
     bool IsCurved () const { return is_curved; }
     void SetCurved (bool acurved) { is_curved = acurved; }
 
-
+    /*
 #ifdef PARALLEL
     int GetPartition () const { return partitionNumber; }
     void SetPartition (int nr) { partitionNumber = nr; }; 
 #else
     int GetPartition () const { return 0; }
 #endif
-
+    */
+    
     int hp_elnr;
   };
 
@@ -967,10 +970,10 @@ namespace netgen
     ///
     int meshdocval;
 
-#ifdef PARALLEL
+    // #ifdef PARALLEL
     /// number of partition for parallel computation 
-    int partitionNumber;
-#endif
+    // int partitionNumber;
+    // #endif
 
   private:
     string* bcname;
@@ -1025,12 +1028,15 @@ namespace netgen
     bool IsCurved () const { return is_curved; }
     void SetCurved (bool acurved) { is_curved = acurved; }
 
+    /*
 #ifdef PARALLEL
     int GetPartition () const { return partitionNumber; }
     void SetPartition (int nr) { partitionNumber = nr; }; 
 #else
     int GetPartition () const { return 0; }
 #endif
+    */
+    
     void DoArchive (Archive & ar);
   };
 

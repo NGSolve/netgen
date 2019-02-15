@@ -87,34 +87,39 @@ namespace netgen
     Array<int> num_els_on_proc(ntasks);
     num_els_on_proc = 0;
     for (ElementIndex ei = 0; ei < GetNE(); ei++)
-      num_els_on_proc[(*this)[ei].GetPartition()]++;
+      // num_els_on_proc[(*this)[ei].GetPartition()]++;
+      num_els_on_proc[vol_partition[ei]]++;
 
     MPI_Scatter (&num_els_on_proc[0], 1, MPI_INT,
 		 MPI_IN_PLACE, -1, MPI_INT, 0, comm);
 
     TABLE<ElementIndex> els_of_proc (num_els_on_proc);
     for (ElementIndex ei = 0; ei < GetNE(); ei++)
-      els_of_proc.Add ( (*this)[ei].GetPartition(), ei);
+      // els_of_proc.Add ( (*this)[ei].GetPartition(), ei);
+      els_of_proc.Add (vol_partition[ei], ei);
 
     PrintMessage ( 3, "Building vertex/proc mapping");
 
     Array<int> num_sels_on_proc(ntasks);
     num_sels_on_proc = 0;
     for (SurfaceElementIndex ei = 0; ei < GetNSE(); ei++)
-      num_sels_on_proc[(*this)[ei].GetPartition()]++;
+      // num_sels_on_proc[(*this)[ei].GetPartition()]++;
+      num_sels_on_proc[surf_partition[ei]]++;
 
     TABLE<SurfaceElementIndex> sels_of_proc (num_sels_on_proc);
     for (SurfaceElementIndex ei = 0; ei < GetNSE(); ei++)
-      sels_of_proc.Add ( (*this)[ei].GetPartition(), ei);
+      // sels_of_proc.Add ( (*this)[ei].GetPartition(), ei);
+      sels_of_proc.Add (surf_partition[ei], ei);
 
     Array<int> num_segs_on_proc(ntasks);
     num_segs_on_proc = 0;
     for (SegmentIndex ei = 0; ei < GetNSeg(); ei++)
-      num_segs_on_proc[(*this)[ei].GetPartition()]++;
+      // num_segs_on_proc[(*this)[ei].GetPartition()]++;
+      num_segs_on_proc[seg_partition[ei]]++;
 
     TABLE<SegmentIndex> segs_of_proc (num_segs_on_proc);
     for (SegmentIndex ei = 0; ei < GetNSeg(); ei++)
-      segs_of_proc.Add ( (*this)[ei].GetPartition(), ei);
+      segs_of_proc.Add (seg_partition[ei], ei);
 
 
     /**
@@ -407,7 +412,8 @@ namespace netgen
     for ( int ei = 1; ei <= GetNE(); ei++)
       {
 	const Element & el = VolumeElement (ei);
-	int dest = el.GetPartition();
+	// int dest = el.GetPartition();
+        int dest = vol_partition[ei-1];
 	elarraysize[dest] += 3 + el.GetNP();
       }
 
@@ -416,8 +422,9 @@ namespace netgen
     for (int ei = 1; ei <= GetNE(); ei++)
       {
 	const Element & el = VolumeElement (ei);
-	int dest = el.GetPartition();
-
+	// int dest = el.GetPartition();
+        int dest = vol_partition[ei-1];
+        
 	elementarrays.Add (dest, ei);
 	elementarrays.Add (dest, el.GetIndex());
 	elementarrays.Add (dest, el.GetNP());
@@ -495,11 +502,13 @@ namespace netgen
       for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++ )
 	{
 	  const Element2d & sel = (*this)[sei];
-	  int dest = (*this)[sei].GetPartition();
+	  // int dest = (*this)[sei].GetPartition();
+          int dest = surf_partition[sei];
 	  f(sei, sel, dest);
 	  if(ided_sel[sei]!=-1)
 	    {
-	      int dest2 = (*this)[ided_sel[sei]].GetPartition();
+	      // int dest2 = (*this)[ided_sel[sei]].GetPartition();
+              int dest2 = surf_partition[ided_sel[sei]];
 	      f(sei, sel, dest2);
 	    }
 	}      
@@ -637,10 +646,12 @@ namespace netgen
 	  {
 	    const Segment & seg = (*this)[segi];
 	    dests.SetSize(0);
-	    dests.Append(seg.GetPartition());
+	    // dests.Append(seg.GetPartition());
+            dests.Append(seg_partition[segi]);
 	    for (int l = 0; l < per_seg_trans[segi].Size(); l++)
 	      {
-		int dest2 = (*this)[per_seg_trans[segi][l]].GetPartition();
+		// int dest2 = (*this)[per_seg_trans[segi][l]].GetPartition();
+                int dest2 = seg_partition[per_seg_trans[segi][l]];
 		if(!dests.Contains(dest2))
 		  dests.Append(dest2);
 	      }
@@ -1075,14 +1086,20 @@ namespace netgen
 
     idxtype nparts = GetCommunicator().Size()-1;
 
+    vol_partition.SetSize(GetNE());
+    surf_partition.SetSize(GetNSE());
+    seg_partition.SetSize(GetNSeg());
     if (nparts == 1)
       {
         for (int i = 0; i < GetNE(); i++)
-          VolumeElement(i+1).SetPartition(1);
+          // VolumeElement(i+1).SetPartition(1);
+          vol_partition[i]= 1;
         for (int i = 0; i < GetNSE(); i++)
-          SurfaceElement(i+1).SetPartition(1);
+          // SurfaceElement(i+1).SetPartition(1);
+          surf_partition[i] = 1;
         for (int i = 0; i < GetNSeg(); i++)
-          LineSegment(i+1).SetPartition(1);
+          // LineSegment(i+1).SetPartition(1);
+          seg_partition[i] = 1;
       }
 
     else
@@ -1105,11 +1122,14 @@ namespace netgen
         // cout << "done" << endl;
         
         for (int i = 0; i < GetNE(); i++)
-          VolumeElement(i+1).SetPartition(epart[i] + 1);
+          // VolumeElement(i+1).SetPartition(epart[i] + 1);
+          vol_partition[i]= epart[i] + 1;
         for (int i = 0; i < GetNSE(); i++)
-          SurfaceElement(i+1).SetPartition(epart[i+GetNE()] + 1);
+          // SurfaceElement(i+1).SetPartition(epart[i+GetNE()] + 1);
+          surf_partition[i] = epart[i+GetNE()] + 1;
         for (int i = 0; i < GetNSeg(); i++)
-          LineSegment(i+1).SetPartition(epart[i+GetNE()+GetNSE()] + 1);
+          // LineSegment(i+1).SetPartition(epart[i+GetNE()+GetNSE()] + 1);
+          seg_partition[i] = epart[i+GetNE()+GetNSE()] + 1;
       }
     
         
@@ -1185,7 +1205,8 @@ namespace netgen
 	    // FlatArray<ElementIndex> els = pnt2el[pi1];
 	    FlatArray<int> els = pnt2el[pi1];
 	    
-	    sel.SetPartition (-1);
+	    // sel.SetPartition (-1);
+            surf_partition[sei] = -1;
 	    
 	    for (int j = 0; j < els.Size(); j++)
 	      {
@@ -1205,11 +1226,13 @@ namespace netgen
 		
 		if (hasall)
 		  {
-		    sel.SetPartition (el.GetPartition());
+		    // sel.SetPartition (el.GetPartition());
+                    surf_partition[sei] = vol_partition[ElementIndex(els[j])];
 		    break;
 		  }
 	      }
-	    if (sel.GetPartition() == -1)
+	    // if (sel.GetPartition() == -1)
+            if (surf_partition[sei] == -1)
 	      cerr << "no volume element found" << endl;
 	  }
 
@@ -1220,7 +1243,8 @@ namespace netgen
 	    PointIndex pi1 = sel[0];
 	    FlatArray<int> els = pnt2el[pi1];
 	    
-	    sel.SetPartition (-1);
+	    // sel.SetPartition (-1);
+            seg_partition[si] = -1;
 	    
 	    for (int j = 0; j < els.Size(); j++)
 	      {
@@ -1239,11 +1263,13 @@ namespace netgen
 		
 		if (hasall)
 		  {
-		    sel.SetPartition (el.GetPartition());
+		    // sel.SetPartition (el.GetPartition());
+                    seg_partition[si] = vol_partition[ElementIndex(els[j])];
 		    break;
 		  }
 	      }
-	    if (sel.GetPartition() == -1)
+	    // if (sel.GetPartition() == -1)
+            if (seg_partition[si] == -1)
 	      cerr << "no volume element found" << endl;
 	  }
       }
@@ -1252,7 +1278,8 @@ namespace netgen
 	for (SegmentIndex segi = 0; segi < GetNSeg(); segi++)
 	  {
 	    Segment & seg = (*this)[segi];
-	    seg.SetPartition(-1);
+	    // seg.SetPartition(-1);
+            seg_partition[segi] = -1;
 	    PointIndex pi1 = seg[0];
 
 	    FlatArray<int> sels = pnt2el[pi1];
@@ -1264,12 +1291,14 @@ namespace netgen
 		for (int l = 0; l < se.GetNP(); l++ && !found)
 		  found |= (se[l]==seg[1]);
 		if(found) {
-		  seg.SetPartition(se.GetPartition());
+		  // seg.SetPartition(se.GetPartition());
+                  seg_partition[segi] = surf_partition[sei];
 		  break;
 		}
 	      }
 	    
-	    if (seg.GetPartition() == -1) {
+	    // if (seg.GetPartition() == -1) {
+            if (seg_partition[segi] == -1) {
 	      cout << endl << "segi: " << segi << endl;
 	      cout << "points: " << seg[0] << " " << seg[1] << endl;
 	      cout << "surfels: " << endl << sels << endl;
@@ -1387,15 +1416,21 @@ namespace netgen
     Array<idx_t> epart(ne), npart(nn);
 
     idxtype nparts = GetCommunicator().Size()-1;
-
+    vol_partition.SetSize(GetNE());
+    surf_partition.SetSize(GetNSE());
+    seg_partition.SetSize(GetNSeg());
+    
     if (nparts == 1)
       {
         for (int i = 0; i < GetNE(); i++)
-          VolumeElement(i+1).SetPartition(1);
+          // VolumeElement(i+1).SetPartition(1);
+          vol_partition[i] = 1;
         for (int i = 0; i < GetNSE(); i++)
-          SurfaceElement(i+1).SetPartition(1);
+          // SurfaceElement(i+1).SetPartition(1);
+          surf_partition[i] = 1;
         for (int i = 0; i < GetNSeg(); i++)
-          LineSegment(i+1).SetPartition(1);
+          // LineSegment(i+1).SetPartition(1);
+          seg_partition[i] = 1;
         return;
       }
 
@@ -1416,11 +1451,14 @@ namespace netgen
     // cout << "done" << endl;
 
     for (int i = 0; i < GetNE(); i++)
-      VolumeElement(i+1).SetPartition(epart[i] + 1);
+      // VolumeElement(i+1).SetPartition(epart[i] + 1);
+      vol_partition[i] = epart[i] + 1;
     for (int i = 0; i < GetNSE(); i++)
-      SurfaceElement(i+1).SetPartition(epart[i+GetNE()] + 1);
+      // SurfaceElement(i+1).SetPartition(epart[i+GetNE()] + 1);
+      surf_partition[i] = epart[i+GetNE()] + 1;
     for (int i = 0; i < GetNSeg(); i++)
-      LineSegment(i+1).SetPartition(epart[i+GetNE()+GetNSE()] + 1);
+      // LineSegment(i+1).SetPartition(epart[i+GetNE()+GetNSE()] + 1);
+      seg_partition[i] = epart[i+GetNE()+GetNSE()] + 1;
   }
 #endif 
 
@@ -1648,7 +1686,7 @@ namespace netgen
 #endif
 
     Array<int> nodesinpart(ntasks);
-
+    vol_partition.SetSize(ne);
     for ( int el = 1; el <= ne; el++ )
       {
 	Element & volel = VolumeElement(el);
@@ -1664,7 +1702,8 @@ namespace netgen
 	  if ( nodesinpart[i] > nodesinpart[partition] ) 
 	    partition = i;
 
-	volel.SetPartition(partition);
+	// volel.SetPartition(partition);
+        vol_partition[el-1] = partition;
       }
 
     delete [] xadj;
@@ -1766,13 +1805,14 @@ namespace netgen
 
     Array<int> nodesinpart(ntasks);
 
+    vol_partition.SetSize(ne);
     for ( int el = 1; el <= ne; el++ )
       {
 	// Element & volel = VolumeElement(el);
 	nodesinpart = 0;
 
-	VolumeElement(el).SetPartition(part[el-1 ] + 1);
-	
+	// VolumeElement(el).SetPartition(part[el-1 ] + 1);
+	vol_partition[el-1] = part[el-1 ] + 1;
       }
 
     /*    
@@ -1879,8 +1919,10 @@ namespace netgen
 #endif
 
 
+    surf_partition.SetSize(ne);
     for (SurfaceElementIndex sei = 0; sei < ne; sei++)
-      (*this) [sei].SetPartition (part[sei]+1);
+      // (*this) [sei].SetPartition (part[sei]+1);
+      surf_partition[sei] = part[sei]+1;
 #else
     cout << "partdualmesh not available" << endl;
 #endif

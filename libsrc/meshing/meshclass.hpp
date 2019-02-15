@@ -860,6 +860,11 @@ namespace netgen
     void SendMesh ( ) const;   // Mesh * mastermesh, Array<int> & neloc) const;
     /// loads a mesh sent from master processor
     void ReceiveParallelMesh ();
+
+    Array<int> vol_partition;
+    Array<int> surf_partition;
+    Array<int> seg_partition;
+    
 #else
     void Distribute () {}
     void SendRecvMesh () {}
