@@ -569,7 +569,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 	// cout << " rank " << MyMPI_GetId(comm) << " of " << MyMPI_GetNTasks(comm) << " called Distribute " << endl;
 	if(comm.Rank()==0) self->Distribute();
 	else self->SendRecvMesh();
-        return self;
+	return self;
       }, py::arg("comm"))
     .def("Receive", [](NgMPI_Comm comm) {
         auto mesh = make_shared<Mesh>();
@@ -578,66 +578,139 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
         return mesh;
       })
     .def("Load",  FunctionPointer 
-	 ([](Mesh & self, const string & filename)
+	 ([](shared_ptr<Mesh> self, const string & filename)
 	  {
-	    istream * infile;
 
-	    NgMPI_Comm comm = self.GetCommunicator();
-	    id = comm.Rank();
-	    ntasks = comm.Size();
+	    auto comm = self->GetCommunicator();
+	    int id = comm.Rank();
+	    int ntasks = comm.Size();
+	    auto & mesh = self;
 
-#ifdef PARALLEL
-	    char* buf = nullptr;
-	    int strs = 0;
-	    if(id==0) {
-#endif
-            if (filename.find(".vol.gz") != string::npos)
-              infile = new igzstream (filename.c_str());
-            else
-              infile = new ifstream (filename.c_str());
-	    // ifstream input(filename);
-#ifdef PARALLEL
-	    //still inside id==0-bracket...
-	        self.Load(*infile);	      
-		self.Distribute();
-
-		/** Copy the rest of the file into a string (for geometry) **/
-		stringstream geom_part;
-		geom_part << infile->rdbuf();
-		string geom_part_string = geom_part.str();
-		strs = geom_part_string.size();
-		buf = new char[strs];
-		memcpy(buf, geom_part_string.c_str(), strs*sizeof(char));
-	      }
-	    else {
-	      self.SendRecvMesh();
+	    {
+	      ifstream infile(filename.c_str());
+	      if(!infile.good())
+		throw NgException(string("Error opening file ") + filename);
 	    }
 
-	    /** Scatter the geometry-string **/
-	    MPI_Bcast(&strs, 1, MPI_INT, 0, comm); 
-	    if(id!=0)
-	      buf = new char[strs];
-	    MPI_Bcast(buf, strs, MPI_CHAR, 0, comm);
-	    if(id==0)
-	      delete infile;
-	    infile = new istringstream(string((const char*)buf, (size_t)strs));
-	    delete[] buf;
-	    
-#else
-	    self.Load(*infile);
-#endif
-	    for (int i = 0; i < geometryregister.Size(); i++)
+	    if ( filename.find(".vol") == string::npos )
 	      {
-		NetgenGeometry * hgeom = geometryregister[i]->LoadFromMeshFile (*infile);
-		if (hgeom)
-		  {
-		    ng_geometry.reset (hgeom);
-                    self.SetGeometry(ng_geometry);
-		    break;
-		  }
+		if(ntasks>1)
+		  throw NgException("Not sure what to do with this?? Does this work with MPI??");
+		mesh->SetCommunicator(comm);
+		ReadFile(*mesh,filename.c_str());
+		//mesh->SetGlobalH (mparam.maxh);
+		//mesh->CalcLocalH();
+		return;
 	      }
-	    self.SetGeometry(ng_geometry);
-	    delete infile;
+
+	    istream * infile;
+	    Array<char> buf; // for distributing geometry!
+	    int strs;
+
+	    if( id == 0) {
+
+	      if (filename.substr (filename.length()-3, 3) == ".gz")
+		infile = new igzstream (filename.c_str());
+	      else
+		infile = new ifstream (filename.c_str());
+	      mesh -> Load(*infile);
+
+	      // make string from rest of file (for geometry info!)
+	      // (this might be empty, in which case we take the global ng_geometry)
+	      stringstream geom_part;
+	      geom_part << infile->rdbuf();
+	      string geom_part_string = geom_part.str();
+	      strs = geom_part_string.size();
+	      // buf = new char[strs];
+	      buf.SetSize(strs);
+	      memcpy(&buf[0], geom_part_string.c_str(), strs*sizeof(char));
+
+	      delete infile;
+
+	      if (ntasks > 1)
+		{
+
+		  char * weightsfilename = new char [filename.size()+1];
+		  strcpy (weightsfilename, filename.c_str());            
+		  weightsfilename[strlen (weightsfilename)-3] = 'w';
+		  weightsfilename[strlen (weightsfilename)-2] = 'e';
+		  weightsfilename[strlen (weightsfilename)-1] = 'i';
+
+		  ifstream weightsfile(weightsfilename);      
+		  delete [] weightsfilename;  
+	  
+		  if (!(weightsfile.good()))
+		    {
+		      // cout << "regular distribute" << endl;
+		      mesh -> Distribute();
+		    }
+		  else
+		    {
+		      char str[20];   
+		      bool endfile = false;
+		      int n, dummy;
+	      
+		      Array<int> segment_weights;
+		      Array<int> surface_weights;
+		      Array<int> volume_weights;
+	      
+		      while (weightsfile.good() && !endfile)
+			{
+			  weightsfile >> str;
+		  
+			  if (strcmp (str, "edgeweights") == 0)
+			    {
+			      weightsfile >> n;
+			      segment_weights.SetSize(n);
+			      for (int i = 0; i < n; i++)
+				weightsfile >> dummy >> segment_weights[i];
+			    }
+		  
+			  if (strcmp (str, "surfaceweights") == 0)
+			    {
+			      weightsfile >> n;
+			      surface_weights.SetSize(n);
+			      for (int i=0; i<n; i++)
+				weightsfile >> dummy >> surface_weights[i];
+			    }
+		  
+			  if (strcmp (str, "volumeweights") == 0)
+			    {
+			      weightsfile >> n;
+			      volume_weights.SetSize(n);
+			      for (int i=0; i<n; i++)
+				weightsfile >> dummy >> volume_weights[i];
+			    }
+		  
+			  if (strcmp (str, "endfile") == 0)
+			    endfile = true;  
+			}     
+	      
+		      mesh -> Distribute(volume_weights, surface_weights, segment_weights);
+		    }
+		} // ntasks>1 end
+	    } // id==0 end
+	    else {
+	      mesh->SendRecvMesh();
+	    }
+
+	    if(ntasks>1) {
+#ifdef PARALLEL
+	      /** Scatter the geometry-string (no dummy-implementation in mpi_interface) **/
+	      int strs = buf.Size();
+	      MyMPI_Bcast(strs, comm);
+	      if(strs>0)
+		MyMPI_Bcast(buf, comm);
+#endif
+	    }
+
+	    shared_ptr<NetgenGeometry> geo;
+	    if(buf.Size()) { // if we had geom-info in the file, take it
+	      istringstream geom_infile(string((const char*)&buf[0], buf.Size()));
+	      geo = geometryregister.LoadFromMeshFile(geom_infile);
+	    }
+	    if(geo!=nullptr) mesh->SetGeometry(geo);
+	    else if(ng_geometry!=nullptr) mesh->SetGeometry(ng_geometry);
 	  }),py::call_guard<py::gil_scoped_release>())
     // static_cast<void(Mesh::*)(const string & name)>(&Mesh::Load))
     .def("Save", static_cast<void(Mesh::*)(const string & name)const>(&Mesh::Save),py::call_guard<py::gil_scoped_release>())

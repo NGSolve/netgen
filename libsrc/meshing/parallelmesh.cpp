@@ -702,7 +702,7 @@ namespace netgen
     Array<int> bcname_sizes(nbcs);
     int tot_bcsize = 0;
     for(int k=0;k<nbcs;k++) {
-      bcname_sizes[k] = bcnames[k]->size();
+      bcname_sizes[k] = (bcnames[k]!=NULL) ? bcnames[k]->size() : 0;
       tot_bcsize += bcname_sizes[k];
     }
     char compiled_bcnames[tot_bcsize];
@@ -722,7 +722,7 @@ namespace netgen
     Array<int> mat_sizes(nmats);
     int tot_matsize = 0;
     for(int k=0;k<nmats;k++) {
-      mat_sizes[k] = materials[k]->size();
+      mat_sizes[k] = (materials[k]!=NULL) ? materials[k]->size() : 0;
       tot_matsize += mat_sizes[k];
     }
     char compiled_mats[tot_matsize];
@@ -965,7 +965,7 @@ namespace netgen
     SetNBCNames(nbcs);
     int cnt = 0;
     for(int k=0;k<nbcs;k++) {
-      SetBCName(k, string(&compiled_bcnames[cnt], bcs[k]));
+      if(bcs[k]>0) SetBCName(k, string(&compiled_bcnames[cnt], bcs[k]));
       cnt += bcs[k];
     }
 
@@ -983,7 +983,7 @@ namespace netgen
     materials.SetSize(nmats);
     for(int k=0;k<nmats;k++) {
       // setmaterial is 1-based ... 
-      SetMaterial(k+1, string(&compiled_mats[cnt], matsz[k]));
+      if(matsz[k]>0) SetMaterial(k+1, string(&compiled_mats[cnt], matsz[k]));
       cnt += matsz[k];
     }
     
