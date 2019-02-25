@@ -157,15 +157,15 @@ void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
     SetGlobalMesh (mesh);
 
     // make string from rest of file (for geometry info!)
-    if(!ng_geometry) {
-      stringstream geom_part;
-      geom_part << infile->rdbuf();
-      string geom_part_string = geom_part.str();
-      strs = geom_part_string.size();
-      // buf = new char[strs];
-      buf.SetSize(strs);
-      memcpy(&buf[0], geom_part_string.c_str(), strs*sizeof(char));
-    }
+    // (this might be empty, in which case we take the global ng_geometry)
+    stringstream geom_part;
+    geom_part << infile->rdbuf();
+    string geom_part_string = geom_part.str();
+    strs = geom_part_string.size();
+    // buf = new char[strs];
+    buf.SetSize(strs);
+    memcpy(&buf[0], geom_part_string.c_str(), strs*sizeof(char));
+
     delete infile;
 
     if (ntasks > 1)
@@ -238,32 +238,23 @@ void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
     mesh->SendRecvMesh();
   }
 
-  if(!ng_geometry && ntasks>1) {
+  if(ntasks>1) {
 #ifdef PARALLEL
     /** Scatter the geometry-string (no dummy-implementation in mpi_interface) **/
-    MyMPI_Bcast(buf, comm);
+    int strs = buf.Size();
+    MyMPI_Bcast(strs, comm);
+    if(strs>0)
+      MyMPI_Bcast(buf, comm);
 #endif
   }
 
-  if(!ng_geometry) {
-    infile = new istringstream(string((const char*)&buf[0], (size_t)strs));
-    // delete[] buf;
-    for (int i = 0; i < geometryregister.Size(); i++)
-      {
-	NetgenGeometry * hgeom = geometryregister[i]->LoadFromMeshFile (*infile);
-	if (hgeom)
-	  {
-	    ng_geometry.reset (hgeom);
-	    mesh->SetGeometry(ng_geometry);
-	    break;
-	  }
-      }
+  shared_ptr<NetgenGeometry> geo;
+  if(buf.Size()) { // if we had geom-info in the file, take it
+    istringstream geom_infile(string((const char*)&buf[0], buf.Size()));
+    geo = geometryregister.LoadFromMeshFile(geom_infile);
   }
-  /** Dummy Geometry if we still could not find any geometry info! **/
-  // if (!ng_geometry)
-  //   ng_geometry = make_shared<NetgenGeometry>();
-  if(ng_geometry)
-    mesh->SetGeometry(ng_geometry);
+  if(geo!=nullptr) mesh->SetGeometry(geo);
+  else if(ng_geometry!=nullptr) mesh->SetGeometry(ng_geometry);
 }
 
 void Ng_LoadMeshFromString (const char * mesh_as_string)
