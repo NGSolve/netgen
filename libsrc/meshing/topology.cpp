@@ -338,6 +338,8 @@ namespace netgen
     // ParallelMeshTopology & paralleltop = mesh.GetParallelTopology();
 #endif
 
+    auto id = this->mesh->GetCommunicator().Rank();
+    auto ntasks = this->mesh->GetCommunicator().Size();
   
     if (timestamp > mesh->GetTimeStamp()) return;
   
