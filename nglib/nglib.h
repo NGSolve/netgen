@@ -193,7 +193,7 @@ public:
     program before beginning to use the other Netgen 
     specific functions.
 */
-DLL_HEADER void Ng_Init ();
+DLL_HEADER void Ng_Init (bool cout_to_null = false, bool cerr_to_null = false, bool testout_to_null = false);
 
 
 /*! \brief Exit the Netgen meshing kernel in a clean manner
@@ -312,6 +312,11 @@ DLL_HEADER Ng_Result Ng_MergeMesh(Ng_Mesh * mesh1, Ng_Mesh * mesh2);
 DLL_HEADER void Ng_AddPoint (Ng_Mesh * mesh, double * x);
 
 
+/*! Add locked point which should not get modified by optimization routines
+
+*/
+DLL_HEADER void Ng_AddLockedPoint(Ng_Mesh * mesh, int pi);
+
 /*! \brief Add a surface element to a given Netgen Mesh Structure
 
     This function allows the top-level code to directly add individual 
@@ -332,7 +337,7 @@ DLL_HEADER void Ng_AddPoint (Ng_Mesh * mesh, double * x);
     \param pi   Pointer to an array of integers containing the indices of the 
                 points which constitute the surface element being added
 */
-DLL_HEADER void Ng_AddSurfaceElement (Ng_Mesh * mesh, Ng_Surface_Element_Type et, int * pi);
+DLL_HEADER void Ng_AddSurfaceElement (Ng_Mesh * mesh, Ng_Surface_Element_Type et, int * pi, int domain=1);
 
 
 /*! \brief Add a volume element to a given Netgen Mesh Structure
@@ -356,7 +361,7 @@ DLL_HEADER void Ng_AddSurfaceElement (Ng_Mesh * mesh, Ng_Surface_Element_Type et
                 points which constitute the volume element being added
 
 */
-DLL_HEADER void Ng_AddVolumeElement (Ng_Mesh * mesh, Ng_Volume_Element_Type et, int * pi);
+DLL_HEADER void Ng_AddVolumeElement (Ng_Mesh * mesh, Ng_Volume_Element_Type et, int * pi, int domain=1);
   
 // ------------------------------------------------------------------
 
@@ -471,6 +476,12 @@ DLL_HEADER void Ng_RestrictMeshSizeBox (Ng_Mesh * mesh, double * pmin, double * 
 */
 DLL_HEADER Ng_Result Ng_GenerateVolumeMesh (Ng_Mesh * mesh, Ng_Meshing_Parameters * mp);
 
+
+/*! \brief Improve quality of an existing 3D Volume Mesh
+	
+*/
+DLL_HEADER Ng_Result Ng_OptimizeVolume(Ng_Mesh *mesh, Ng_Meshing_Parameters *mp);
+
 // ------------------------------------------------------------------
 
 
@@ -536,10 +547,10 @@ DLL_HEADER void Ng_GetPoint (Ng_Mesh * mesh, int num, double * x);
 
 // return surface and volume element in pi
 DLL_HEADER Ng_Surface_Element_Type 
-Ng_GetSurfaceElement (Ng_Mesh * mesh, int num, int * pi);
+Ng_GetSurfaceElement (Ng_Mesh * mesh, int num, int * pi, int * domain = nullptr);
 
 DLL_HEADER Ng_Volume_Element_Type
-Ng_GetVolumeElement (Ng_Mesh * mesh, int num, int * pi);
+Ng_GetVolumeElement (Ng_Mesh * mesh, int num, int * pi, int * domain = nullptr);
 
 // ------------------------------------------------------------------
 
@@ -554,7 +565,7 @@ Ng_GetVolumeElement (Ng_Mesh * mesh, int num, int * pi);
 // feeds points and boundary to mesh
 
 DLL_HEADER void Ng_AddPoint_2D (Ng_Mesh * mesh, double * x);
-DLL_HEADER void Ng_AddBoundarySeg_2D (Ng_Mesh * mesh, int pi1, int pi2);
+DLL_HEADER void Ng_AddBoundarySeg_2D (Ng_Mesh * mesh, int pi1, int pi2, int domain_in = -1, int domain_out = -1);
   
 // ask for number of points, elements and boundary segments
 DLL_HEADER int Ng_GetNP_2D (Ng_Mesh * mesh);
@@ -566,10 +577,10 @@ DLL_HEADER void Ng_GetPoint_2D (Ng_Mesh * mesh, int num, double * x);
 
 // return 2d elements
 DLL_HEADER Ng_Surface_Element_Type 
-Ng_GetElement_2D (Ng_Mesh * mesh, int num, int * pi, int * matnum = NULL);
+Ng_GetElement_2D (Ng_Mesh * mesh, int num, int * pi, int * matnum = nullptr);
 
 // return 2d boundary segment
-DLL_HEADER void Ng_GetSegment_2D (Ng_Mesh * mesh, int num, int * pi, int * matnum = NULL);
+DLL_HEADER void Ng_GetSegment_2D (Ng_Mesh * mesh, int num, int * pi, int * matnum = nullptr);
 
 
 // load 2d netgen spline geometry
@@ -606,7 +617,7 @@ DLL_HEADER Ng_STL_Geometry * Ng_STL_NewGeometry ();
 // normal vector may be null-pointer
 DLL_HEADER void Ng_STL_AddTriangle (Ng_STL_Geometry * geom, 
                          double * p1, double * p2, double * p3, 
-                         double * nv = NULL);
+                         double * nv = nullptr);
 
 // add (optional) edges :
 DLL_HEADER void Ng_STL_AddEdge (Ng_STL_Geometry * geom, 

@@ -23,8 +23,6 @@
 #include <occgeom.hpp>
 #endif
 
-#include <nginterface.h>
-
 
 namespace netgen {
    extern void MeshFromSpline2D (SplineGeometry2d & geometry,
@@ -73,16 +71,26 @@ using namespace netgen;
 
 namespace nglib
 {
-  inline void NOOP_Deleter(void *) { ; }
+   inline void NOOP_Deleter(void *) { ; }
 
-  
-   // initialize, deconstruct Netgen library:
-   DLL_HEADER void Ng_Init ()
+   class NullStreambuf : public std::streambuf
    {
-      mycout = &cout;
-      myerr = &cerr;
-      // netgen::testout->SetOutStream (new ofstream ("test.out"));
-      testout = new ofstream ("test.out");
+      char dummyBuffer[64];
+   protected:
+      virtual int overflow(int c)
+      {
+         setp(dummyBuffer, dummyBuffer + sizeof(dummyBuffer));
+         return (c == traits_type::eof()) ? '\0' : c;
+      }
+   };
+
+   // initialize, deconstruct Netgen library:
+   DLL_HEADER void Ng_Init (bool cout_to_null, bool cerr_to_null, bool testout_to_null)
+   {
+      static ostream* null_stream = new ostream(new NullStreambuf);
+      mycout  = cout_to_null ? null_stream : &cout;
+      myerr   = cerr_to_null ? null_stream : &cerr;
+      testout = testout_to_null ? null_stream :  new ofstream("test.out");
    }
 
 
@@ -205,18 +213,39 @@ namespace nglib
    }
 
 
+   // Manually lock a specific point
+   DLL_HEADER void Ng_AddLockedPoint(Ng_Mesh * mesh, int pi)
+   {
+      Mesh * m = (Mesh*)mesh;
+      m->AddLockedPoint(pi);
+   }
 
 
    // Manually add a surface element of a given type to an existing mesh object
    DLL_HEADER void Ng_AddSurfaceElement (Ng_Mesh * mesh, Ng_Surface_Element_Type et,
-                                         int * pi)
+                                         int * pi, int domain)
    {
+      int n = 3;
+      switch (et)
+      {
+      case NG_TRIG:
+         n = 3; break;
+      case NG_QUAD:
+         n = 4; break;
+      case NG_QUAD6:
+         n = 6; break;
+      case NG_TRIG6:
+         n = 6; break;
+      case NG_QUAD8:
+         n = 8; break;
+      default: break;
+      }
+      
       Mesh * m = (Mesh*)mesh;
-      Element2d el (3);
-      el.SetIndex (1);
-      el.PNum(1) = pi[0];
-      el.PNum(2) = pi[1];
-      el.PNum(3) = pi[2];
+      Element2d el (n);
+      el.SetIndex (domain);
+      for (int i=0; i<n; ++i)
+         el.PNum(i+1) = pi[i];
       m->AddSurfaceElement (el);
    }
 
@@ -225,15 +254,27 @@ namespace nglib
 
    // Manually add a volume element of a given type to an existing mesh object
    DLL_HEADER void Ng_AddVolumeElement (Ng_Mesh * mesh, Ng_Volume_Element_Type et,
-                                        int * pi)
+                                        int * pi, int domain)
    {
+      int n = 4;
+      switch (et)
+      {
+      case NG_TET:
+         n = 4; break;
+      case NG_PYRAMID:
+         n = 5; break;
+      case NG_PRISM:
+         n = 6; break;
+      case NG_TET10:
+         n = 10; break;
+      default: break;
+      }
+      
       Mesh * m = (Mesh*)mesh;
-      Element el (4);
-      el.SetIndex (1);
-      el.PNum(1) = pi[0];
-      el.PNum(2) = pi[1];
-      el.PNum(3) = pi[2];
-      el.PNum(4) = pi[3];
+      Element el (n);
+      el.SetIndex (domain);
+      for (int i=0; i<n; ++i)
+         el.PNum(i+1) = pi[i];
       m->AddVolumeElement (el);
    }
 
@@ -281,7 +322,7 @@ namespace nglib
 
    // Return the surface element at a given index "pi"
    DLL_HEADER Ng_Surface_Element_Type 
-      Ng_GetSurfaceElement (Ng_Mesh * mesh, int num, int * pi)
+      Ng_GetSurfaceElement (Ng_Mesh * mesh, int num, int * pi, int * domain)
    {
       const Element2d & el = ((Mesh*)mesh)->SurfaceElement(num);
       for (int i = 1; i <= el.GetNP(); i++)
@@ -304,6 +345,8 @@ namespace nglib
       default:
          et = NG_TRIG; break; // for the compiler
       }
+      if (domain)
+        *domain = el.GetIndex();
       return et;
    }
 
@@ -312,7 +355,7 @@ namespace nglib
 
    // Return the volume element at a given index "pi"
    DLL_HEADER Ng_Volume_Element_Type
-      Ng_GetVolumeElement (Ng_Mesh * mesh, int num, int * pi)
+      Ng_GetVolumeElement (Ng_Mesh * mesh, int num, int * pi, int * domain)
    {
       const Element & el = ((Mesh*)mesh)->VolumeElement(num);
       for (int i = 1; i <= el.GetNP(); i++)
@@ -327,6 +370,8 @@ namespace nglib
       default:
          et = NG_TET; break; // for the compiler
       }
+      if (domain)
+		  *domain = el.GetIndex();
       return et;
    }
 
@@ -386,6 +431,24 @@ namespace nglib
 
 
 
+   // Optimize existing mesh
+   DLL_HEADER Ng_Result Ng_OptimizeVolume(Ng_Mesh *mesh, Ng_Meshing_Parameters *mp)
+   {
+      Mesh * m = (Mesh*)mesh;
+
+      mp->Transfer_Parameters();
+
+      m->CalcLocalH(mparam.grading);
+
+      RemoveIllegalElements(*m);
+      OptimizeVolume(mparam, *m);
+
+      return NG_OK;
+   }
+
+
+
+
    /* ------------------ 2D Meshing Functions ------------------------- */
    DLL_HEADER void Ng_AddPoint_2D (Ng_Mesh * mesh, double * x)
    {
@@ -397,14 +460,16 @@ namespace nglib
 
 
 
-   DLL_HEADER void Ng_AddBoundarySeg_2D (Ng_Mesh * mesh, int pi1, int pi2)
+   DLL_HEADER void Ng_AddBoundarySeg_2D (Ng_Mesh * mesh, int pi1, int pi2, int domain_in, int domain_out)
    {
       Mesh * m = (Mesh*)mesh;
 
       Segment seg;
       seg[0] = pi1;
       seg[1] = pi2;
-      m->AddSegment (seg);
+      seg.domin = domain_in;
+      seg.domout = domain_out;
+	  m->AddSegment(seg);
    }
 
 
