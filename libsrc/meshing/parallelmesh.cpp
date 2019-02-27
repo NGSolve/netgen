@@ -694,56 +694,51 @@ namespace netgen
 
     MPI_Waitall (sendrequests.Size(), &sendrequests[0], MPI_STATUS_IGNORE);
 
-    PrintMessage ( 3, "Sending domain+bc - names");
+    PrintMessage ( 3, "Sending names");
 
-    sendrequests.SetSize(6*(ntasks-1));
-    /** Send bc-names **/
-    int nbcs = bcnames.Size();
-    Array<int> bcname_sizes(nbcs);
-    int tot_bcsize = 0;
-    for(int k=0;k<nbcs;k++) {
-      bcname_sizes[k] = (bcnames[k]!=NULL) ? bcnames[k]->size() : 0;
-      tot_bcsize += bcname_sizes[k];
-    }
-    char compiled_bcnames[tot_bcsize];
-    tot_bcsize = 0;
-    for(int k=0;k<nbcs;k++)
-      for(int j=0;j<bcname_sizes[k];j++)
-	compiled_bcnames[tot_bcsize++] = (*bcnames[k])[j];
-    
-    for(int k=1;k<ntasks;k++) {
-      sendrequests[6*(k-1)] = MyMPI_ISend(FlatArray<int>(1, &nbcs), k, MPI_TAG_MESH+6, comm);
-      sendrequests[6*(k-1)+1] = MyMPI_ISend(bcname_sizes, k, MPI_TAG_MESH+6, comm);
-      (void) MPI_Isend(compiled_bcnames, tot_bcsize, MPI_CHAR, k, MPI_TAG_MESH+6, comm, &sendrequests[6*(k-1)+2]);
-    }
-    
-    /** Send mat-names **/
-    int nmats = materials.Size();
-    Array<int> mat_sizes(nmats);
-    int tot_matsize = 0;
-    for(int k=0;k<nmats;k++) {
-      mat_sizes[k] = (materials[k]!=NULL) ? materials[k]->size() : 0;
-      tot_matsize += mat_sizes[k];
-    }
-    char compiled_mats[tot_matsize];
-    tot_matsize = 0;
-    for(int k=0;k<nmats;k++)
-      for(int j=0;j<mat_sizes[k];j++)
-	compiled_mats[tot_matsize++] = (*materials[k])[j];
-    for(int k=1;k<ntasks;k++) {
-      sendrequests[6*(k-1)+3] = MyMPI_ISend(FlatArray<int>(1, &nmats), k, MPI_TAG_MESH+6, comm);
-      sendrequests[6*(k-1)+4] = MyMPI_ISend(mat_sizes, k, MPI_TAG_MESH+6, comm);
-      (void) MPI_Isend(compiled_mats, tot_matsize, MPI_CHAR, k, MPI_TAG_MESH+6, comm, &sendrequests[6*(k-1)+5]);
-    }
+    sendrequests.SetSize(3*ntasks);
+    /** Send bc/mat/cd*-names **/
+    // nr of names
+    int nnames[4] = {0,0,0,0};
+    nnames[0] = materials.Size();
+    nnames[1] = bcnames.Size();
+    nnames[2] = GetNCD2Names();
+    nnames[3] = GetNCD3Names();
+    int tot_nn = nnames[0] + nnames[1] + nnames[2] + nnames[3];
+    for( int k = 1; k < ntasks; k++)
+      (void) MPI_Isend(nnames, 4, MPI_INT, k, MPI_TAG_MESH+6, comm, &sendrequests[k]);
+    auto iterate_names = [&](auto func) {
+      for (int k = 0; k < nnames[0]; k++) func(materials[k]);
+      for (int k = 0; k < nnames[1]; k++) func(bcnames[k]);
+      for (int k = 0; k < nnames[2]; k++) func(cd2names[k]);
+      for (int k = 0; k < nnames[3]; k++) func(cd3names[k]);
+    };
+    // sizes of names
+    Array<int> name_sizes(tot_nn);
+    tot_nn = 0;
+    iterate_names([&](auto ptr) { name_sizes[tot_nn++] = (ptr==NULL) ? 0 : ptr->size(); });
+    for( int k = 1; k < ntasks; k++)
+      (void) MPI_Isend(&name_sizes[0], tot_nn, MPI_INT, k, MPI_TAG_MESH+6, comm, &sendrequests[ntasks+k]);
+    // names
+    int strs = 0;
+    iterate_names([&](auto ptr) { strs += (ptr==NULL) ? 0 : ptr->size(); });
+    char compiled_names[strs];
+    strs = 0;
+    iterate_names([&](auto ptr) {
+	if (ptr==NULL) return;
+	auto& name = *ptr;
+	for (int j=0; j < name.size(); j++) compiled_names[strs++] = name[j];
+      });
+    for( int k = 1; k < ntasks; k++)
+      (void) MPI_Isend(compiled_names, strs, MPI_CHAR, k, MPI_TAG_MESH+6, comm, &sendrequests[2*ntasks+k]);
 
-    /* now wait ... **/
-    PrintMessage( 3, "now wait for domain+bc - names");
+    PrintMessage ( 3, "wait for names");
 
     MPI_Waitall (sendrequests.Size(), &sendrequests[0], MPI_STATUS_IGNORE);
     
-    PrintMessage( 3, "send mesh complete");
-
     MPI_Barrier(comm);
+
+    PrintMessage( 3, "send mesh complete");
   }
 
 
@@ -952,40 +947,35 @@ namespace netgen
     }
 
     /** Recv bc-names **/
-    int nbcs;
-    MyMPI_Recv(nbcs, 0, MPI_TAG_MESH+6, comm);
-    Array<int> bcs(nbcs);
-    MyMPI_Recv(bcs, 0, MPI_TAG_MESH+6, comm);
-    int size_bc = 0;
-    for(int k=0;k<nbcs;k++)
-      size_bc += bcs[k];
-    char compiled_bcnames[size_bc];
-    MPI_Recv(compiled_bcnames, size_bc, MPI_CHAR, 0, MPI_TAG_MESH+6, comm, MPI_STATUS_IGNORE);
-    
-    SetNBCNames(nbcs);
-    int cnt = 0;
-    for(int k=0;k<nbcs;k++) {
-      if(bcs[k]>0) SetBCName(k, string(&compiled_bcnames[cnt], bcs[k]));
-      cnt += bcs[k];
-    }
+    int nnames[4] = {0,0,0,0};
+    MPI_Recv(nnames, 4, MPI_INT, 0, MPI_TAG_MESH+6, comm, MPI_STATUS_IGNORE);
+    materials.SetSize(nnames[0]);
+    bcnames.SetSize(nnames[1]);
+    cd2names.SetSize(nnames[2]);
+    cd3names.SetSize(nnames[3]);
 
-    /** Recv mat-names **/
-    int nmats;
-    MyMPI_Recv(nmats, 0, MPI_TAG_MESH+6, comm);
-    Array<int> matsz(nmats);
-    MyMPI_Recv(matsz, 0, MPI_TAG_MESH+6, comm);
-    int size_mats = 0;
-    for(int k=0;k<nmats;k++)
-      size_mats += matsz[k];
-    char compiled_mats[size_mats];
-    MPI_Recv(compiled_mats, size_mats, MPI_CHAR, 0, MPI_TAG_MESH+6, comm, MPI_STATUS_IGNORE);
-    cnt = 0;
-    materials.SetSize(nmats);
-    for(int k=0;k<nmats;k++) {
-      // setmaterial is 1-based ... 
-      if(matsz[k]>0) SetMaterial(k+1, string(&compiled_mats[cnt], matsz[k]));
-      cnt += matsz[k];
-    }
+    int tot_nn = nnames[0] + nnames[1] + nnames[2] + nnames[3];
+    Array<int> name_sizes(tot_nn);
+    MPI_Recv(&name_sizes[0], tot_nn, MPI_INT, 0, MPI_TAG_MESH+6, comm, MPI_STATUS_IGNORE);
+    int tot_size = 0;
+    for (int k = 0; k < tot_nn; k++) tot_size += name_sizes[k];
+    
+    char compiled_names[tot_size];
+    MPI_Recv(compiled_names, tot_size, MPI_CHAR, 0, MPI_TAG_MESH+6, comm, MPI_STATUS_IGNORE);
+
+    tot_nn = tot_size = 0;
+    auto write_names = [&] (auto & array) {
+      for (int k = 0; k < array.Size(); k++) {
+	int s = name_sizes[tot_nn];
+	array[k] = new string(&compiled_names[tot_size], s);
+	tot_nn++;
+	tot_size += s;
+      }
+    };
+    write_names(materials);
+    write_names(bcnames);
+    write_names(cd2names);
+    write_names(cd3names);
     
     MPI_Barrier(comm);
 

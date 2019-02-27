@@ -1316,7 +1316,7 @@ namespace netgen
     archive & volelements;
     archive & segments;
     archive & facedecoding;
-    archive & materials & bcnames & cd2names;
+    archive & materials & bcnames & cd2names & cd3names;
 
     archive & *ident;
 
