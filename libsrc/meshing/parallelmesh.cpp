@@ -80,7 +80,14 @@ namespace netgen
     MyMPI_Bcast(dim, comm);
 
     
-    const_cast<MeshTopology&>(GetTopology()).Update();
+    // If the topology is not already updated, we do not need to
+    // build edges/faces.
+    auto & top = const_cast<MeshTopology&>(GetTopology());
+    if(top.NeedsUpdate()) {
+      top.SetBuildEdges(false);
+      top.SetBuildFaces(false);
+      top.Update();
+    }
     
     PrintMessage ( 3, "Sending nr of elements");
     
