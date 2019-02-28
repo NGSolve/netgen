@@ -722,7 +722,7 @@ namespace netgen
     // names
     int strs = 0;
     iterate_names([&](auto ptr) { strs += (ptr==NULL) ? 0 : ptr->size(); });
-    char compiled_names[strs];
+    Array<char> compiled_names(strs);
     strs = 0;
     iterate_names([&](auto ptr) {
 	if (ptr==NULL) return;
@@ -730,7 +730,7 @@ namespace netgen
 	for (int j=0; j < name.size(); j++) compiled_names[strs++] = name[j];
       });
     for( int k = 1; k < ntasks; k++)
-      (void) MPI_Isend(compiled_names, strs, MPI_CHAR, k, MPI_TAG_MESH+6, comm, &sendrequests[2*ntasks+k]);
+      (void) MPI_Isend(&(compiled_names[0]), strs, MPI_CHAR, k, MPI_TAG_MESH+6, comm, &sendrequests[2*ntasks+k]);
 
     PrintMessage ( 3, "wait for names");
 
@@ -960,8 +960,8 @@ namespace netgen
     int tot_size = 0;
     for (int k = 0; k < tot_nn; k++) tot_size += name_sizes[k];
     
-    char compiled_names[tot_size];
-    MPI_Recv(compiled_names, tot_size, MPI_CHAR, 0, MPI_TAG_MESH+6, comm, MPI_STATUS_IGNORE);
+    Array<char> compiled_names(tot_size);
+    MPI_Recv(&(compiled_names[0]), tot_size, MPI_CHAR, 0, MPI_TAG_MESH+6, comm, MPI_STATUS_IGNORE);
 
     tot_nn = tot_size = 0;
     auto write_names = [&] (auto & array) {
