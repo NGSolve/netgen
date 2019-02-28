@@ -1101,7 +1101,9 @@ namespace netgen
               {
                 double s = s0 + j/(double) nsections * (s1-s0);
                 prop.SetParameter (s);
-                double curvature = prop.Curvature();
+                double curvature = 0;
+                if(prop.IsTangentDefined())
+                  curvature = prop.Curvature();
                 if(curvature> maxcur) maxcur = curvature;
 
                 if (curvature >= 1e99)
