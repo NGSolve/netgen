@@ -547,11 +547,9 @@ namespace netgen
   void CurvedElements :: BuildCurvedElements(const Refinement * ref, int aorder,
                                              bool arational)
   {
-    bool working = (ntasks == 1) || (id > 0);
 
     ishighorder = 0;
     order = 1;
-
 
     // MPI_Comm curve_comm;
     const auto & curve_comm = mesh.GetCommunicator();
@@ -566,6 +564,8 @@ namespace netgen
 #endif
     int rank = curve_comm.Rank();
     int ntasks = curve_comm.Size();
+
+    bool working = (ntasks == 1) || (id > 0);
 
     if (working)
       order = aorder;
