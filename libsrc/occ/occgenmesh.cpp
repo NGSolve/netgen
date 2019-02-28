@@ -1031,6 +1031,9 @@ namespace netgen
 
         // setting elements per edge
 
+        TopTools_IndexedDataMapOfShapeListOfShape edge_face_map;
+        TopExp::MapShapesAndAncestors(geom.shape, TopAbs_EDGE, TopAbs_FACE, edge_face_map);
+
         for (int i = 1; i <= nedges && !multithread.terminate; i++)
           {
             TopoDS_Edge e = TopoDS::Edge (geom.emap(i));
@@ -1050,14 +1053,6 @@ namespace netgen
             double localh = len/mparam.segmentsperedge;
             double s0, s1;
 
-            // Philippose - 23/01/2009
-            // Find all the parent faces of a given edge
-            // and limit the mesh size of the edge based on the
-            // mesh size limit of the face
-            TopTools_IndexedDataMapOfShapeListOfShape edge_face_map;
-            edge_face_map.Clear();
-
-            TopExp::MapShapesAndAncestors(geom.shape, TopAbs_EDGE, TopAbs_FACE, edge_face_map);
             const TopTools_ListOfShape& parent_faces = edge_face_map.FindFromKey(e);
 
             TopTools_ListIteratorOfListOfShape parent_face_list;
