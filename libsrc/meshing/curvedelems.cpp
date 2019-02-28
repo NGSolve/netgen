@@ -562,7 +562,7 @@ namespace netgen
 #else
     // curve_comm = mesh.GetCommunicator();
 #endif
-    int rank = curve_comm.Rank();
+    int id = curve_comm.Rank();
     int ntasks = curve_comm.Size();
 
     bool working = (ntasks == 1) || (id > 0);
