@@ -884,6 +884,9 @@ namespace netgen
         throw NgException ("mesh file not found");
       }
 
+    int rank = GetCommunicator().Rank();
+    int ntasks = GetCommunicator().Size();
+    
     char str[100];
     int i, n;
 
