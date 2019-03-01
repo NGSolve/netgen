@@ -253,7 +253,10 @@ void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
     istringstream geom_infile(string((const char*)&buf[0], buf.Size()));
     geo = geometryregister.LoadFromMeshFile(geom_infile);
   }
-  if(geo!=nullptr) mesh->SetGeometry(geo);
+  if(geo!=nullptr) {
+    ng_geometry = geo;
+    mesh->SetGeometry(geo);
+  }
   else if(ng_geometry!=nullptr) mesh->SetGeometry(ng_geometry);
 }
 
