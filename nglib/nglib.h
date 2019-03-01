@@ -23,8 +23,8 @@
 
 // Philippose - 14.02.2009
 // Modifications for creating a DLL in Windows
-#ifdef WIN32
-   #ifdef NGLIB_EXPORTS || nglib_EXPORTS
+#if defined(WIN32)
+   #if defined(NGLIB_EXPORTS) || defined(nglib_EXPORTS)
       #define DLL_HEADER   __declspec(dllexport)
    #else
       #define DLL_HEADER   __declspec(dllimport)
@@ -183,6 +183,49 @@ public:
 };
 
 
+class DLL_HEADER Ng_STL_Parameters
+{
+public:
+   // Algorithm may be somewhat like Canny edge detector 
+   // on mesh?
+   double yangle; // 30
+   double contyangle; // 30
+   
+   // I think this is used to split surface into patches/charts,
+   //which  are flattened to use 2d meshing routines.
+   double chartangle; // 15
+   double outerchartangle; // 70
+   
+   int usesearchtree; // 0
+   
+   double atlasminh; // 1e-4
+   
+   // Factors which influence the local mesh size
+   // as a relation to some metric, e.g. curvature, 
+   // line length, etc.
+   // TODO: document each of these properly
+   int resthatlasenable; // 1
+   double resthatlasfac; // 2
+   
+   int resthchartdistenable; // 1
+   double resthchartdistfac; // 0.3
+   
+   int resthedgeangleenable; // 0
+   double resthedgeanglefac; // 1
+   
+   int resthsurfmeshcurvenable; // 0
+   double resthsurfmeshcurvfac; // 0.5
+   
+   int resthlinelengthenable; // 1
+   double resthlinelengthfac; // 0.5
+   
+   int resthcloseedgeenable; // 1
+   double resthcloseedgefac; // 1.0
+   
+   Ng_STL_Parameters();
+   
+   void Transfer_Parameters();
+};
 
 
 // *** Functions Exported by this Library *************
@@ -620,7 +663,9 @@ DLL_HEADER Ng_STL_Geometry * Ng_STL_LoadGeometry (const char * filename, int bin
 
 // generate new STL Geometry
 DLL_HEADER Ng_STL_Geometry * Ng_STL_NewGeometry ();
-  
+
+
+DLL_HEADER void Ng_STL_DeleteGeometry (Ng_STL_Geometry * geom);
 
 // fills STL Geometry
 // positive orientation
@@ -639,13 +684,15 @@ DLL_HEADER Ng_Result Ng_STL_InitSTLGeometry (Ng_STL_Geometry * geom);
 // automatically generates edges:
 DLL_HEADER Ng_Result Ng_STL_MakeEdges (Ng_STL_Geometry * geom,
                             Ng_Mesh* mesh,
-                            Ng_Meshing_Parameters * mp);
+                            Ng_Meshing_Parameters * mp,
+                            Ng_STL_Parameters * stlp = nullptr);
 
 
 // generates mesh, empty mesh must be already created.
 DLL_HEADER Ng_Result Ng_STL_GenerateSurfaceMesh (Ng_STL_Geometry * geom,
                                                  Ng_Mesh * mesh,
-                                                 Ng_Meshing_Parameters * mp);
+                                                 Ng_Meshing_Parameters * mp,
+                                                 Ng_STL_Parameters * stlp = nullptr);
 
 
 #ifdef ACIS
