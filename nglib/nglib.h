@@ -71,7 +71,7 @@ enum Ng_Surface_Element_Type
 
 /// Currently implemented volume element types
 enum Ng_Volume_Element_Type 
-   { NG_TET = 1, NG_PYRAMID = 2, NG_PRISM = 3, NG_TET10 = 4 };
+   { NG_TET = 1, NG_PYRAMID = 2, NG_PRISM = 3, NG_TET10 = 4, NG_HEX = 5 };
 
 /// Values returned by Netgen functions
 enum Ng_Result 
@@ -258,6 +258,13 @@ DLL_HEADER void Ng_SaveMesh(Ng_Mesh * mesh, const char* filename);
 DLL_HEADER Ng_Mesh * Ng_LoadMesh(const char* filename);
 
 
+/*! \brief Save mesh in various external formats, e.g. fluent, gmsh, gmsh2, vtk, ...
+
+*/
+enum Ng_Export_Formats { NG_GMSH = 1, NG_GMSH2 = 2, NG_VTK = 3, NG_FLUENT = 4, NG_ABAQUS = 5 };
+DLL_HEADER void Ng_ExportMesh(Ng_Mesh * mesh, Ng_Export_Formats format, const char* filename);
+
+
 /*! \brief Merge a Netgen VOL Mesh from disk into an existing mesh in memory
 
     A Netgen mesh saved in the internal VOL format can be merged 
@@ -362,7 +369,7 @@ DLL_HEADER void Ng_AddSurfaceElement (Ng_Mesh * mesh, Ng_Surface_Element_Type et
 
 */
 DLL_HEADER void Ng_AddVolumeElement (Ng_Mesh * mesh, Ng_Volume_Element_Type et, int * pi, int domain=1);
-  
+
 // ------------------------------------------------------------------
 
 
@@ -710,6 +717,14 @@ DLL_HEADER Ng_Result Ng_OCC_GetFMap(Ng_OCC_Geometry * geom,
 
 // uniform mesh refinement
 DLL_HEADER void Ng_Uniform_Refinement (Ng_Mesh * mesh);
+
+
+// non-uniform mesh refinement
+DLL_HEADER void Ng_SetRefinementFlag (Ng_Mesh * ng_mesh, int ei, int flag);
+
+DLL_HEADER void Ng_SetSurfaceRefinementFlag (Ng_Mesh * ng_mesh, int ei, int flag);
+
+DLL_HEADER void Ng_Refine (Ng_Mesh * ng_mesh);
 
 
 // uniform mesh refinement with geometry adaption:

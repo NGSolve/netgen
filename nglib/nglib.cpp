@@ -18,6 +18,7 @@
 #include <geometry2d.hpp>
 #include <meshing.hpp>
 #include <../visualization/soldata.hpp>
+#include <../interface/writeuser.hpp>
 
 #ifdef OCCGEOMETRY
 #include <occgeom.hpp>
@@ -154,6 +155,25 @@ namespace nglib
 
 
 
+   DLL_HEADER void Ng_ExportMesh(Ng_Mesh * ng_mesh, Ng_Export_Formats format, const char* filename)
+   {
+      Mesh * mesh = (Mesh*)ng_mesh;
+      switch (format)
+      {
+      case NG_GMSH:
+         WriteUserFormat( "Gmsh Format", *mesh, filename ); break;
+      case NG_GMSH2:
+         WriteUserFormat( "Gmsh2 Format", *mesh, filename ); break;
+      case NG_VTK:
+         WriteUserFormat( "VTK Format", *mesh, filename ); break;
+      case NG_FLUENT:
+         WriteUserFormat( "Fluent Format", *mesh, filename ); break;
+      case NG_ABAQUS:
+         WriteUserFormat( "Abaqus Format", *mesh, filename ); break;
+      }
+   }
+
+
 
    // Merge another mesh file into the currently loaded one
    DLL_HEADER Ng_Result Ng_MergeMesh( Ng_Mesh* mesh, const char* filename)
@@ -265,6 +285,8 @@ namespace nglib
          n = 5; break;
       case NG_PRISM:
          n = 6; break;
+      case NG_HEX:
+         n = 8; break;
       case NG_TET10:
          n = 10; break;
       default: break;
@@ -277,8 +299,6 @@ namespace nglib
          el.PNum(i+1) = pi[i];
       m->AddVolumeElement (el);
    }
-
-
 
 
    // Obtain the number of points in the mesh
@@ -366,6 +386,7 @@ namespace nglib
       case 4: et = NG_TET; break;
       case 5: et = NG_PYRAMID; break;
       case 6: et = NG_PRISM; break;
+      case 8: et = NG_HEX; break;
       case 10: et = NG_TET10; break;
       default:
          et = NG_TET; break; // for the compiler
@@ -1202,6 +1223,53 @@ namespace nglib
    }
 
 
+   void Ng_SetRefinementFlag (Ng_Mesh * ng_mesh, int ei, int flag)
+   {
+      Mesh * mesh = (Mesh*) ng_mesh;
+      
+      if (mesh->GetDimension() == 3)
+      {
+         mesh->VolumeElement(ei).SetRefinementFlag (flag != 0);
+         mesh->VolumeElement(ei).SetStrongRefinementFlag (flag >= 10);
+      }
+      else
+      {
+         mesh->SurfaceElement(ei).SetRefinementFlag (flag != 0);
+         mesh->SurfaceElement(ei).SetStrongRefinementFlag (flag >= 10);
+      }
+   }
+
+
+   void Ng_SetSurfaceRefinementFlag (Ng_Mesh * ng_mesh, int ei, int flag)
+   {
+      Mesh * mesh = (Mesh*) ng_mesh;
+
+      if (mesh->GetDimension() == 3)
+      {
+         mesh->SurfaceElement(ei).SetRefinementFlag (flag != 0);
+         mesh->SurfaceElement(ei).SetStrongRefinementFlag (flag >= 10);
+      }
+   }
+
+
+   void Ng_Refine (Ng_Mesh * ng_mesh)
+   {
+      Mesh * mesh = (Mesh*) ng_mesh;
+      BisectionOptions biopt;
+      biopt.usemarkedelements = 1;
+      biopt.refine_p = 0; // only h-refinement
+      biopt.refine_hp = 0;
+
+      if (auto geom = mesh->GetGeometry())
+         geom->GetRefinement().Bisect (*mesh, biopt);
+      else
+         Refinement().Bisect (*mesh, biopt);
+
+      // not sure if this is needed?
+      //mesh -> UpdateTopology();
+      //mesh -> GetCurvedElements().SetIsHighOrder (false);
+   }
+
 
 
    DLL_HEADER void Ng_2D_Uniform_Refinement (Ng_Geometry_2D * geom,
@@ -1209,7 +1277,6 @@ namespace nglib
    {
       ( (SplineGeometry2d*)geom ) -> GetRefinement().Refine ( * (Mesh*) mesh );
    }
-
 
 
 
@@ -1312,7 +1379,6 @@ void Ng_InitSolutionData (Ng_SolutionData * soldata) { ; }
 */
 
 // Force linking libinterface to libnglib
-#include <../interface/writeuser.hpp>
 void MyDummyToForceLinkingLibInterface(Mesh &mesh, NetgenGeometry &geom)
 {
   netgen::WriteUserFormat("", mesh, /* geom, */ "");
