@@ -616,6 +616,14 @@ Ng_GetVolumeElement (Ng_Mesh * mesh, int num, int * pi, int * domain = nullptr);
 
 
 // feeds points and boundary to mesh
+DLL_HEADER Ng_Geometry_2D * Ng_NewGeometry_2D();
+
+DLL_HEADER void Ng_DeleteGeometry_2D(Ng_Geometry_2D * geom);
+
+DLL_HEADER void Ng_AppendPoint_2D(Ng_Geometry_2D* geom, double * x, double h);
+
+DLL_HEADER void Ng_AppendLineSegment_2D(Ng_Geometry_2D* geom, int pi1, int pi2,
+	int leftdomain, int rightdomain, double h);
 
 DLL_HEADER void Ng_AddPoint_2D (Ng_Mesh * mesh, double * x);
 DLL_HEADER void Ng_AddBoundarySeg_2D (Ng_Mesh * mesh, int pi1, int pi2, int domain_in = -1, int domain_out = -1);
@@ -629,8 +637,7 @@ DLL_HEADER int Ng_GetNSeg_2D (Ng_Mesh * mesh);
 DLL_HEADER void Ng_GetPoint_2D (Ng_Mesh * mesh, int num, double * x);
 
 // return 2d elements
-DLL_HEADER Ng_Surface_Element_Type 
-Ng_GetElement_2D (Ng_Mesh * mesh, int num, int * pi, int * matnum = nullptr);
+DLL_HEADER Ng_Surface_Element_Type Ng_GetElement_2D (Ng_Mesh * mesh, int num, int * pi, int * matnum = nullptr);
 
 // return 2d boundary segment
 DLL_HEADER void Ng_GetSegment_2D (Ng_Mesh * mesh, int num, int * pi, int * matnum = nullptr);
@@ -643,7 +650,15 @@ DLL_HEADER Ng_Geometry_2D * Ng_LoadGeometry_2D (const char * filename);
 DLL_HEADER Ng_Result Ng_GenerateMesh_2D (Ng_Geometry_2D * geom,
                                          Ng_Mesh ** mesh,
                                          Ng_Meshing_Parameters * mp);
-  
+ 
+// functions added to make Optimize2d mesh accessible from nglib
+DLL_HEADER void Ng_SetupFacedescriptors(Ng_Mesh * mesh, int maxdomnr);
+
+DLL_HEADER void Ng_AddTriangle_2D(Ng_Mesh * mesh, int pi1, int pi2, int pi3, int matnum = 1);
+
+DLL_HEADER Ng_Result Ng_OptimizeMesh_2D(Ng_Mesh *mesh, Ng_Meshing_Parameters * mp);
+
+
 DLL_HEADER void Ng_HP_Refinement (Ng_Geometry_2D * geom,
                                   Ng_Mesh * mesh,
                                   int levels);
