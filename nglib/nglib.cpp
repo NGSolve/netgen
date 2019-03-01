@@ -1067,9 +1067,9 @@ namespace nglib
 
       closeedgeenable = 0;
       closeedgefact = 2.0;
-
-	  minedgelenenable = 0;
-	  minedgelen = 1e-4;
+      
+      minedgelenenable = 0;
+      minedgelen = 1e-4;
 
       second_order = 0;
       quad_dominated = 0;
@@ -1081,6 +1081,9 @@ namespace nglib
 
       optsteps_2d = 3;
       optsteps_3d = 3;
+      
+      optimize3d = "cmdmustm";
+      optimize2d = "smsmsmSmSmSm";
 
       invert_tets = 0;
       invert_trigs = 0;
@@ -1095,39 +1098,7 @@ namespace nglib
    // Reset the local meshing parameters to the default values
    DLL_HEADER void Ng_Meshing_Parameters :: Reset_Parameters()
    {
-      uselocalh = 1;
-
-      maxh = 1000;
-      minh = 0;
-
-      fineness = 0.5;
-      grading = 0.3;
-
-      elementsperedge = 2.0;
-      elementspercurve = 2.0;
-
-      closeedgeenable = 0;
-      closeedgefact = 2.0;
-
-  	  minedgelenenable = 0;
-	  minedgelen = 1e-4;
-
-      second_order = 0;
-      quad_dominated = 0;
-
-      meshsize_filename = 0;
-
-      optsurfmeshenable = 1;
-      optvolmeshenable = 1;
-
-      optsteps_2d = 3;
-      optsteps_3d = 3;
-
-      invert_tets = 0;
-      invert_trigs = 0;
-
-      check_overlap = 1;
-      check_overlapping_boundary = 1;
+      (*this) = Ng_Meshing_Parameters();
    }
 
 
@@ -1154,6 +1125,9 @@ namespace nglib
         mparam.meshsizefilename = "";
       mparam.optsteps2d = optsteps_2d;
       mparam.optsteps3d = optsteps_3d;
+      
+      if (strlen(optimize2d) > 0) mparam.optimize2d = optimize2d;
+      if (strlen(optimize3d) > 0) mparam.optimize3d = optimize3d;
 
       mparam.inverttets = invert_tets;
       mparam.inverttrigs = invert_trigs;
@@ -1216,14 +1190,18 @@ namespace nglib
 
 
    // ------------------ Begin - Uniform Mesh Refinement functions ---------------------
-   DLL_HEADER void Ng_Uniform_Refinement (Ng_Mesh * mesh)
+   DLL_HEADER void Ng_Uniform_Refinement (Ng_Mesh * ng_mesh)
    {
-      Refinement ref;
-      ref.Refine ( * (Mesh*) mesh );
+      Mesh * mesh = (Mesh*) ng_mesh;
+
+      if (auto geom = mesh->GetGeometry())
+         geom->GetRefinement().Refine (*mesh);
+      else
+         Refinement().Refine (*mesh);
    }
 
 
-   void Ng_SetRefinementFlag (Ng_Mesh * ng_mesh, int ei, int flag)
+   DLL_HEADER void Ng_SetRefinementFlag (Ng_Mesh * ng_mesh, int ei, int flag)
    {
       Mesh * mesh = (Mesh*) ng_mesh;
       
@@ -1240,7 +1218,7 @@ namespace nglib
    }
 
 
-   void Ng_SetSurfaceRefinementFlag (Ng_Mesh * ng_mesh, int ei, int flag)
+   DLL_HEADER void Ng_SetSurfaceRefinementFlag (Ng_Mesh * ng_mesh, int ei, int flag)
    {
       Mesh * mesh = (Mesh*) ng_mesh;
 
@@ -1252,7 +1230,7 @@ namespace nglib
    }
 
 
-   void Ng_Refine (Ng_Mesh * ng_mesh)
+   DLL_HEADER void Ng_Refine (Ng_Mesh * ng_mesh)
    {
       Mesh * mesh = (Mesh*) ng_mesh;
       BisectionOptions biopt;
@@ -1265,7 +1243,7 @@ namespace nglib
       else
          Refinement().Bisect (*mesh, biopt);
 
-      // not sure if this is needed?
+      // \todo not sure if this is needed?
       //mesh -> UpdateTopology();
       //mesh -> GetCurvedElements().SetIsHighOrder (false);
    }
