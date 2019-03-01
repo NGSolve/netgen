@@ -50,64 +50,68 @@ void WriteVtkFormat (const Mesh & mesh,
   outfile << "POINTS " << np << " double\n";
   for (int i=0; i<np; i++)
   {
-	auto & p = mesh.Point(i+1);
+  auto & p = mesh.Point(i+1);
     outfile << p[0] << " " << p[1] << " " << p[2] << "\n";
   }
 
   std::vector<int> types;
+  std::vector<int> domains;
   if (ne > 0)
   {
     unsigned int size = 0;
     for (int i=0; i<ne; i++)
-	  size += mesh.VolumeElement(i+1).GetNV() + 1; // only save "linear" corners
+      size += mesh.VolumeElement(i+1).GetNV() + 1; // only save "linear" corners
 
     outfile << "CELLS " << ne << " " << size << "\n";
     for (int i=0; i<ne; i++)
     {
-	  auto& el = mesh.VolumeElement(i+1);
-	  switch (el.GetType())
-	  {
-	  case TET:
-	  case TET10: // reorder to follow VTK convention & zero based indices
+      auto& el = mesh.VolumeElement(i+1);
+      domains.push_back(el.GetIndex());
+      switch (el.GetType())
+      {
+      case TET:
+      case TET10: // reorder to follow VTK convention & zero based indices
         outfile << 4 << " " << el[0]-1 << " " << el[1]-1 << " " << el[3]-1 << " " << el[2]-1 << "\n";
-		types.push_back(10);
-		break;
-	  case PRISM: // reorder to follow VTK convention & zero based indices
+        types.push_back(10);
+        break;
+      case PRISM: // reorder to follow VTK convention & zero based indices
         outfile << 6 << " "
-				<< el[0]-1 << " " << el[2]-1 << " " << el[1]-1 << " " 
-				<< el[3]-1 << " " << el[5]-1 << " " << el[4]-1 << "\n";
-		types.push_back(13);
-		break;
-	  default:
-	    throw ngcore::Exception("Unexpected element type");
-		break;
-	  }
+          << el[0]-1 << " " << el[2]-1 << " " << el[1]-1 << " " 
+          << el[3]-1 << " " << el[5]-1 << " " << el[4]-1 << "\n";
+        types.push_back(13);
+        break;
+      default:
+        throw ngcore::Exception("Unexpected element type");
+        break;
+      }
     }
   }
   else
   {
     unsigned int size = 0;
-    for (int i=0; i<ne; i++)
-	  size += mesh.SurfaceElement(i+1).GetNV() + 1;
+    for (int i=0; i<nse; i++)
+      size += mesh.SurfaceElement(i+1).GetNV() + 1;
 
     outfile << "CELLS " << nse << " " << size << "\n";
     for (int i=0; i<nse; i++)
     {
-	  auto& el = mesh.SurfaceElement(i+1);
-	  switch (el.GetType())
-	  {
-	  case TRIG:
-	  case TRIG6:
-        outfile << el[0]-1 << " " << el[1]-1 << " " << el[2]-1 << "\n";
-		types.push_back(5);
-		break;
-	  case QUAD:
-        outfile << el[0]-1 << " " << el[1]-1 << " " << el[2]-1 << " " << el[3]-1 << "\n";
-		types.push_back(9);
-	  default:
-	    throw ngcore::Exception("Unexpected element type");
-		break;
-	  }
+      auto& el = mesh.SurfaceElement(i+1);
+      domains.push_back(el.GetIndex());
+      switch (el.GetType())
+      {
+      case TRIG:
+      case TRIG6:
+        outfile << 3 << " " << el[0]-1 << " " << el[1]-1 << " " << el[2]-1 << "\n";
+        types.push_back(5);
+        break;
+      case QUAD:
+        outfile << 4 << " " << el[0]-1 << " " << el[1]-1 << " " << el[2]-1 << " " << el[3]-1 << "\n";
+        types.push_back(9);
+        break;
+      default:
+        throw ngcore::Exception("Unexpected element type");
+      break;
+      }
     }
   }
 
@@ -115,6 +119,14 @@ void WriteVtkFormat (const Mesh & mesh,
   for (auto type_id: types)
   {
     outfile << type_id << "\n";
+  }
+
+  outfile << "CELL_DATA " << domains.size() << "\n";
+  outfile << "SCALARS scalars int 1\n";
+  outfile << "LOOKUP_TABLE default\n";
+  for (auto id: domains)
+  {
+    outfile << id << "\n";
   }
 
   outfile.close();

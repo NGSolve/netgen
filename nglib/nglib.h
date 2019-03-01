@@ -625,6 +625,9 @@ DLL_HEADER void Ng_AppendPoint_2D(Ng_Geometry_2D* geom, double * x, double h);
 DLL_HEADER void Ng_AppendLineSegment_2D(Ng_Geometry_2D* geom, int pi1, int pi2,
 	int leftdomain, int rightdomain, double h);
 
+DLL_HEADER void Ng_AppendSplinSegment_2D(Ng_Geometry_2D* geom, int pi1, int pi2, int pi3,
+	int leftdomain, int rightdomain, double h);
+
 DLL_HEADER void Ng_AddPoint_2D (Ng_Mesh * mesh, double * x);
 DLL_HEADER void Ng_AddBoundarySeg_2D (Ng_Mesh * mesh, int pi1, int pi2, int domain_in = -1, int domain_out = -1);
   

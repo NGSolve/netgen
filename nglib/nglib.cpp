@@ -591,6 +591,68 @@ namespace nglib
    }
 
 
+   DLL_HEADER Ng_Geometry_2D * Ng_NewGeometry_2D ()
+   {
+      SplineGeometry2d * geom = new SplineGeometry2d();
+      return (Ng_Geometry_2D *)geom;
+   }
+
+   DLL_HEADER void Ng_DeleteGeometry_2D (Ng_Geometry_2D * geom)
+   {
+      if (geom)
+      {
+         SplineGeometry2d* spline_geom = (SplineGeometry2d*)geom;
+         delete spline_geom;
+         geom = NULL;
+      }
+   }
+
+   DLL_HEADER void Ng_AppendPoint_2D (Ng_Geometry_2D* geom, double * x, double h)
+   {
+      if (geom)
+      {
+         SplineGeometry2d* spline_geom = (SplineGeometry2d*)geom;
+         Point<2> p(x[0],x[1]);
+         spline_geom->AppendPoint(p, h);
+      }
+   }
+
+   DLL_HEADER void Ng_AppendLineSegment_2D (Ng_Geometry_2D* geom, int n1, int n2,
+      int leftdomain, int rightdomain, double h)
+   {
+      if (geom)
+      {
+         SplineGeometry2d* spline_geom = (SplineGeometry2d*)geom;
+         // zero-offset!
+         LineSeg<2>* line = new LineSeg<2>(spline_geom->geompoints[n1-1], spline_geom->geompoints[n2-1]);
+         SplineSegExt* seg = new SplineSegExt(*line);
+         seg->leftdom = leftdomain;
+         seg->rightdom = rightdomain;
+         seg->hmax = h;
+         seg->copyfrom = -1;
+         seg->bc = 1;
+         spline_geom->AppendSegment(seg);
+      }
+   }
+
+   DLL_HEADER void Ng_AppendSplinSegment_2D (Ng_Geometry_2D* geom, int n1, int n2, int n3,
+      int leftdomain, int rightdomain, double h)
+   {
+      if (geom)
+      {
+         SplineGeometry2d* spline_geom = (SplineGeometry2d*)geom;
+         // zero-offset!
+         SplineSeg3<2>* line = new SplineSeg3<2>(spline_geom->geompoints[n1-1], spline_geom->geompoints[n2-1], spline_geom->geompoints[n3-1]);
+         SplineSegExt* seg = new SplineSegExt(*line);
+         seg->leftdom = leftdomain;
+         seg->rightdom = rightdomain;
+         seg->hmax = h;
+         seg->copyfrom = -1;
+         seg->bc = 1;
+         spline_geom->AppendSegment(seg);
+      }
+   }
+
    DLL_HEADER Ng_Result Ng_GenerateMesh_2D (Ng_Geometry_2D * geom,
                                             Ng_Mesh ** mesh,
                                             Ng_Meshing_Parameters * mp)
@@ -601,9 +663,6 @@ namespace nglib
 
       shared_ptr<Mesh> m(new Mesh, &NOOP_Deleter);
       MeshFromSpline2D (*(SplineGeometry2d*)geom, m, mparam);
-      // new shared_ptr<Mesh> (m);  // hack to keep mesh m alive 
-      
-      cout << m->GetNSE() << " elements, " << m->GetNP() << " points" << endl;
 
       *mesh = (Ng_Mesh*)m.get();
       return NG_OK;
