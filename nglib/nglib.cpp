@@ -642,7 +642,12 @@ namespace nglib
       {
          SplineGeometry2d* spline_geom = (SplineGeometry2d*)geom;
          // zero-offset!
-         SplineSeg3<2>* line = new SplineSeg3<2>(spline_geom->geompoints[n1-1], spline_geom->geompoints[n2-1], spline_geom->geompoints[n3-1]);
+         Array<Point<2> > pts;
+         pts.Append(spline_geom->geompoints[n1-1]);
+         pts.Append(spline_geom->geompoints[n2-1]);
+         pts.Append(spline_geom->geompoints[n3-1]);
+         auto line = new BSplineSeg<2,3>(pts);
+         //SplineSeg3<2>* line = new SplineSeg3<2>(spline_geom->geompoints[n1-1], spline_geom->geompoints[n2-1], spline_geom->geompoints[n3-1]);
          SplineSegExt* seg = new SplineSegExt(*line);
          seg->leftdom = leftdomain;
          seg->rightdom = rightdomain;
