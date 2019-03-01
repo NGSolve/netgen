@@ -121,7 +121,7 @@ public:
    int optsteps_2d;                     //!< Number of optimize steps to use for 2-D mesh optimization
 
    const char* optimize3d;              //!< Optimization strategy (s=swap shape, c=collapse, d=divide, m=move, M=cheap move)
-   const char* optimize2d;              //!< Optimization strategy (s=swap tolopgical, S=swap shape, c=collapse, m=move)
+   const char* optimize2d;              //!< Optimization strategy (s=swap topological, S=swap shape, c=collapse, m=move)
 
    // Philippose - 13/09/2010
    // Added a couple more parameters into the meshing parameters list 
