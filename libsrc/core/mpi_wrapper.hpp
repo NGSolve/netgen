@@ -153,7 +153,7 @@ namespace ngcore
     /** --- collectives --- **/
 
     template <typename T, typename T2 = decltype(GetMPIType<T>())> 
-    T Reduce (T d, const MPI_Op & op, int root = 0)
+    T Reduce (T d, const MPI_Op & op, int root = 0) const
     {
       if (size == 1) return d;
       
