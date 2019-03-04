@@ -62,6 +62,11 @@ namespace netgen {
 */
 
 
+// Bryn Lloyd - get rid of warning about macro redefinition (previously defined in mydefs.hpp)
+#if defined(DLL_HEADER)
+   #undef DLL_HEADER
+#endif
+
 namespace nglib {
 #include "nglib.h"
 }
