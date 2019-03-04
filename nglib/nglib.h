@@ -370,6 +370,22 @@ DLL_HEADER void Ng_AddPoint (Ng_Mesh * mesh, double * x);
 */
 DLL_HEADER void Ng_AddLockedPoint(Ng_Mesh * mesh, int pi);
 
+
+/*! \brief Remove any existing face descriptors
+*/
+DLL_HEADER int Ng_AddFaceDescriptor (Ng_Mesh * ng_mesh, int surfnr, int domin, int domout, int bcp);
+
+
+/*! \brief Remove any existing face descriptors
+*/
+DLL_HEADER void Ng_ClearFaceDescriptors (Ng_Mesh * ng_mesh);
+
+
+/*! \brief Generate simple facedescriptors, with facenr==bc, from 1...maxbc
+*/
+DLL_HEADER void Ng_SetupFacedescriptors(Ng_Mesh * mesh, int maxbc);
+
+
 /*! \brief Add a surface element to a given Netgen Mesh Structure
 
     This function allows the top-level code to directly add individual 
@@ -389,8 +405,9 @@ DLL_HEADER void Ng_AddLockedPoint(Ng_Mesh * mesh, int pi);
                 #Ng_Surface_Element_Type 
     \param pi   Pointer to an array of integers containing the indices of the 
                 points which constitute the surface element being added
+    \param facenr Index of face descriptor. Used e.g. to attach boundary condition types to surface elements
 */
-DLL_HEADER void Ng_AddSurfaceElement (Ng_Mesh * mesh, Ng_Surface_Element_Type et, int * pi, int domain=1);
+DLL_HEADER void Ng_AddSurfaceElement (Ng_Mesh * mesh, Ng_Surface_Element_Type et, int * pi, int facenr=1);
 
 
 /*! \brief Add a volume element to a given Netgen Mesh Structure
@@ -597,10 +614,12 @@ DLL_HEADER int Ng_GetNE (Ng_Mesh * mesh);
 DLL_HEADER void Ng_GetPoint (Ng_Mesh * mesh, int num, double * x);
 
 
+// return bcp and surfnr for specified face descriptor (facenr)
+DLL_HEADER bool Ng_GetFaceDescriptor (Ng_Mesh * mesh, int facenr, int &surfnr, int &domin, int &domout, int &bcp);
 
 // return surface and volume element in pi
 DLL_HEADER Ng_Surface_Element_Type 
-Ng_GetSurfaceElement (Ng_Mesh * mesh, int num, int * pi, int * domain = nullptr);
+Ng_GetSurfaceElement (Ng_Mesh * mesh, int num, int * pi, int * facenr = nullptr);
 
 DLL_HEADER Ng_Volume_Element_Type
 Ng_GetVolumeElement (Ng_Mesh * mesh, int num, int * pi, int * domain = nullptr);
@@ -655,8 +674,6 @@ DLL_HEADER Ng_Result Ng_GenerateMesh_2D (Ng_Geometry_2D * geom,
                                          Ng_Meshing_Parameters * mp);
  
 // functions added to make Optimize2d mesh accessible from nglib
-DLL_HEADER void Ng_SetupFacedescriptors(Ng_Mesh * mesh, int maxdomnr);
-
 DLL_HEADER void Ng_AddTriangle_2D(Ng_Mesh * mesh, int pi1, int pi2, int pi3, int matnum = 1);
 
 DLL_HEADER Ng_Result Ng_OptimizeMesh_2D(Ng_Mesh *mesh, Ng_Meshing_Parameters * mp);

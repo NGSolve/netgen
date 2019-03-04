@@ -241,9 +241,52 @@ namespace nglib
    }
 
 
+   DLL_HEADER void Ng_ClearFaceDescriptors (Ng_Mesh * ng_mesh)
+   {
+      Mesh * mesh = (Mesh*)ng_mesh;
+      mesh->ClearFaceDescriptors();
+   }
+
+
+   DLL_HEADER int Ng_AddFaceDescriptor (Ng_Mesh * ng_mesh, int surfnr, int domin, int domout, int bcp)
+   {
+      Mesh * mesh = (Mesh*)ng_mesh;
+      int nfd = mesh->GetNFD();
+      
+      int faceind = 0;
+      for (int j = 1; j <= nfd; j++)
+      {
+         if (mesh->GetFaceDescriptor(j).SurfNr() == surfnr 
+            && mesh->GetFaceDescriptor(j).BCProperty() == bcp 
+            && mesh->GetFaceDescriptor(j).DomainIn() == domin 
+            && mesh->GetFaceDescriptor(j).DomainOut() == domout)
+         {
+            faceind = j;
+            break;
+         }
+      }
+
+      if (!faceind)
+      {
+         faceind = mesh->AddFaceDescriptor (FaceDescriptor(surfnr, domin, domout, 0));
+         mesh->GetFaceDescriptor(faceind).SetBCProperty (bcp);
+      }
+      return faceind;
+   }
+
+
+   DLL_HEADER void Ng_SetupFacedescriptors (Ng_Mesh * mesh, int maxbc)
+   {
+	   Mesh * m = (Mesh*)mesh;
+	   m->ClearFaceDescriptors();
+	   for (int i = 1; i <= maxbc; i++)
+		   m->AddFaceDescriptor (FaceDescriptor (i, 0, 0, i));
+   }
+
+
    // Manually add a surface element of a given type to an existing mesh object
    DLL_HEADER void Ng_AddSurfaceElement (Ng_Mesh * mesh, Ng_Surface_Element_Type et,
-                                         int * pi, int domain)
+                                         int * pi, int facenr)
    {
       int n = 3;
       switch (et)
@@ -263,7 +306,7 @@ namespace nglib
       
       Mesh * m = (Mesh*)mesh;
       Element2d el (n);
-      el.SetIndex (domain);
+      el.SetIndex (facenr);
       for (int i=0; i<n; ++i)
          el.PNum(i+1) = pi[i];
       m->AddSurfaceElement (el);
@@ -338,11 +381,23 @@ namespace nglib
    }
 
 
-
+   DLL_HEADER bool Ng_GetFaceDescriptor (Ng_Mesh * mesh, int facenr, int &surfnr, int &domin, int &domout, int &bcp)
+   {
+      Mesh * m = (Mesh*)mesh;
+      if (facenr <= m->GetNFD())
+      {
+         surfnr = m->GetFaceDescriptor(facenr).SurfNr();
+         domin = m->GetFaceDescriptor(facenr).DomainIn();
+         domout = m->GetFaceDescriptor(facenr).DomainOut();
+         bcp = m->GetFaceDescriptor(facenr).BCProperty();
+         return true;
+      }
+      return false;
+   }
 
    // Return the surface element at a given index "pi"
    DLL_HEADER Ng_Surface_Element_Type 
-      Ng_GetSurfaceElement (Ng_Mesh * mesh, int num, int * pi, int * domain)
+      Ng_GetSurfaceElement (Ng_Mesh * mesh, int num, int * pi, int * facenr)
    {
       const Element2d & el = ((Mesh*)mesh)->SurfaceElement(num);
       for (int i = 1; i <= el.GetNP(); i++)
@@ -365,8 +420,8 @@ namespace nglib
       default:
          et = NG_TRIG; break; // for the compiler
       }
-      if (domain)
-        *domain = el.GetIndex();
+      if (facenr)
+        *facenr = el.GetIndex();
       return et;
    }
 
