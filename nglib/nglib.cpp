@@ -29,6 +29,7 @@ namespace netgen {
    extern void MeshFromSpline2D (SplineGeometry2d & geometry,
                                  shared_ptr<Mesh> & mesh, 
                                  MeshingParameters & mp);
+   extern void Optimize2d(Mesh & mesh, MeshingParameters & mp);
 }
 
 
@@ -734,6 +735,18 @@ namespace nglib
    }
 
 
+   DLL_HEADER Ng_Result Ng_OptimizeMesh_2D(Ng_Mesh *mesh, Ng_Meshing_Parameters * mp)
+   {
+       Mesh * m = (Mesh*)mesh;
+
+       mp->Transfer_Parameters();
+
+       m->CalcLocalH(mparam.grading);
+
+       Optimize2d(*m, mparam);
+
+       return NG_OK;
+   }
 
 
    DLL_HEADER void Ng_HP_Refinement (Ng_Geometry_2D * geom,

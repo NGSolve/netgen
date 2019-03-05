@@ -674,8 +674,6 @@ DLL_HEADER Ng_Result Ng_GenerateMesh_2D (Ng_Geometry_2D * geom,
                                          Ng_Meshing_Parameters * mp);
  
 // functions added to make Optimize2d mesh accessible from nglib
-DLL_HEADER void Ng_AddTriangle_2D(Ng_Mesh * mesh, int pi1, int pi2, int pi3, int matnum = 1);
-
 DLL_HEADER Ng_Result Ng_OptimizeMesh_2D(Ng_Mesh *mesh, Ng_Meshing_Parameters * mp);
 
 
