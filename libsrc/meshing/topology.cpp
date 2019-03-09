@@ -51,6 +51,9 @@ namespace netgen
 
   MeshTopology :: ~MeshTopology () { ;  }
 
+  bool MeshTopology :: NeedsUpdate() const
+  { return (timestamp <= mesh->GetTimeStamp()); }
+
   template <typename FUNC>
   void LoopOverEdges (const Mesh & mesh, MeshTopology & top, PointIndex v,
                       FUNC func)

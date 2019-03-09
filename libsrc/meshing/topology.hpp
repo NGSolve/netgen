@@ -84,6 +84,7 @@ public:
   { return buildfaces; }
 
   void Update(TaskManager tm = &DummyTaskManager, Tracer tracer = &DummyTracer);
+  bool NeedsUpdate() const;
 
 
   int GetNEdges () const { return edge2vert.Size(); }
