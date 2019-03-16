@@ -28,20 +28,22 @@ option( ENABLE_CPP_CORE_GUIDELINES_CHECK "Enable cpp core guideline checks on ng
 option( USE_SPDLOG "Enable spd log logging" OFF)
 option( DEBUG_LOG "Enable more debug output (may increase computation time) - only works with USE_SPDLOG=ON" OFF)
 option( CHECK_RANGE "Check array range access, automatically enabled if built in debug mode" OFF)
+option( BUILD_WITH_CONDA "set this to on if the library is compiled with conda-buid" OFF)
+option( DYNAMIC_LINK_PYTHON "set this to OFF for static linking to python" ON)
 
 option( USE_SUPERBUILD       "use ccache" ON)
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_modules")
 
-if(APPLE)
+if(APPLE AND NOT BUILD_WITH_CONDA)
   set(INSTALL_DIR_DEFAULT /Applications/Netgen.app)
-else(APPLE)
+else(APPLE AND NOT BUILD_WITH_CONDA)
   if(WIN32)
     set(INSTALL_DIR_DEFAULT "C:/netgen")
   else(WIN32)
     set(INSTALL_DIR_DEFAULT /opt/netgen)
   endif(WIN32)
-endif(APPLE)
+endif(APPLE AND NOT BUILD_WITH_CONDA)
 
 if(INSTALL_DIR)
   message(WARNING "INSTALL_DIR is deprecated, use CMAKE_INSTALL_PREFIX instead")
@@ -123,13 +125,18 @@ if(USE_PYTHON)
     find_package(PythonInterp 3 REQUIRED)
     find_package(PythonLibs 3 REQUIRED)
 
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1,0,''))" OUTPUT_VARIABLE PYTHON_PACKAGES_INSTALL_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(BUILD_WITH_CONDA)
+        execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())" OUTPUT_VARIABLE PYTHON_PACKAGES_INSTALL_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+    else(BUILD_WITH_CONDA)
+        execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1,0,''))" OUTPUT_VARIABLE PYTHON_PACKAGES_INSTALL_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+    endif(BUILD_WITH_CONDA)
+
     file(TO_CMAKE_PATH ${PYTHON_PACKAGES_INSTALL_DIR} PYTHON_PACKAGES_INSTALL_DIR)
 endif(USE_PYTHON)
 
 set(NG_INSTALL_SUFFIX netgen CACHE STRING "Suffix appended to install directories (project name)")
 
-if(APPLE)
+if(APPLE AND NOT BUILD_WITH_CONDA)
   set(NG_INSTALL_DIR_BIN_DEFAULT Contents/MacOS)
   set(NG_INSTALL_DIR_LIB_DEFAULT Contents/MacOS)
   set(NG_INSTALL_DIR_CMAKE_DEFAULT Contents/Resources/CMake)
@@ -138,7 +145,7 @@ if(APPLE)
   set(NG_INSTALL_DIR_INCLUDE_DEFAULT Contents/Resources/include)
 
   set(NG_RPATH_TOKEN "@loader_path")
-else(APPLE)
+else(APPLE AND NOT BUILD_WITH_CONDA)
   set(NG_INSTALL_DIR_BIN_DEFAULT bin)
   set(NG_INSTALL_DIR_LIB_DEFAULT lib)
   if(WIN32)
@@ -151,7 +158,7 @@ else(APPLE)
   set(NG_INSTALL_DIR_INCLUDE_DEFAULT include)
 
   set(NG_RPATH_TOKEN "\$ORIGIN")
-endif(APPLE)
+endif(APPLE AND NOT BUILD_WITH_CONDA)
 
 set(NG_INSTALL_DIR_PYTHON ${NG_INSTALL_DIR_PYTHON_DEFAULT} CACHE STRING "Install directory for Python files")
 set(NG_INSTALL_DIR_BIN ${NG_INSTALL_DIR_BIN_DEFAULT} CACHE STRING "Install directory for executables")
@@ -267,21 +274,26 @@ endif (USE_GUI)
 
 #######################################################################
 if (USE_PYTHON)
-    add_subdirectory(external_dependencies/pybind11)
     add_definitions(-DNG_PYTHON)
-    find_path(PYBIND_INCLUDE_DIR pybind11/pybind11.h HINTS ${PYTHON_INCLUDE_DIR})
-    if( PYBIND_INCLUDE_DIR )
-        message(STATUS "Found Pybind11: ${PYBIND_INCLUDE_DIR}")
-    else( PYBIND_INCLUDE_DIR )
-        message(FATAL_ERROR "Could NOT find pybind11!")
-    endif( PYBIND_INCLUDE_DIR )
+    if(BUILD_WITH_CONDA)
+        find_package(pybind11 REQUIRED)
+        set(PYBIND_INCLUDE_DIR PYBIND11_INCLUDE_DIR)
+    else(BUILD_WITH_CONDA)
+        add_subdirectory(external_dependencies/pybind11)
+        find_path(PYBIND_INCLUDE_DIR pybind11/pybind11.h HINTS ${PYTHON_INCLUDE_DIR})
+        if( PYBIND_INCLUDE_DIR )
+            message(STATUS "Found Pybind11: ${PYBIND_INCLUDE_DIR}")
+        else( PYBIND_INCLUDE_DIR )
+            message(FATAL_ERROR "Could NOT find pybind11!")
+        endif( PYBIND_INCLUDE_DIR )
+    endif(BUILD_WITH_CONDA)
 
     include_directories(${PYBIND_INCLUDE_DIR})
     include_directories(${PYTHON_INCLUDE_DIRS})
 
     if(NG_INSTALL_PYBIND)
-      install(DIRECTORY ${PYBIND_INCLUDE_DIR}/pybind11 DESTINATION ${NG_INSTALL_DIR_INCLUDE} COMPONENT netgen_devel)
-      install(FILES ${PYBIND_INCLUDE_DIR}/../LICENSE DESTINATION ${NG_INSTALL_DIR_INCLUDE}/pybind11 COMPONENT netgen_devel)
+        install(DIRECTORY ${PYBIND_INCLUDE_DIR}/pybind11 DESTINATION ${NG_INSTALL_DIR_INCLUDE} COMPONENT netgen_devel)
+        install(FILES ${PYBIND_INCLUDE_DIR}/../LICENSE DESTINATION ${NG_INSTALL_DIR_INCLUDE}/pybind11 COMPONENT netgen_devel)
     endif(NG_INSTALL_PYBIND)
 endif (USE_PYTHON)
 
@@ -428,7 +440,7 @@ if(UNIX)
     endif(temp)
 endif(UNIX)
 
-if(APPLE)
+if(APPLE AND NOT BUILD_WITH_CONDA)
     # create some auxiliary files
     set(mac_startup ${CMAKE_CURRENT_BINARY_DIR}/startup.sh)
     file(WRITE ${mac_startup} "\
@@ -473,7 +485,7 @@ open -a /Applications/Utilities/Terminal.app $Netgen_MACOS/startup.sh
     install(FILES ${mac_plist} DESTINATION ${NG_INSTALL_DIR_BIN}/../)
     install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/netgen.icns DESTINATION ${NG_INSTALL_DIR_RES}/../ RENAME Netgen.icns)
 
-endif(APPLE)
+endif(APPLE AND NOT BUILD_WITH_CONDA)
 
 if(NOT APPLE)
   include(CPack) 

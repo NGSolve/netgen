@@ -22,8 +22,11 @@ if(APPLE)
 endif(APPLE)
 
 target_link_libraries( mesh PUBLIC ngcore PRIVATE gprim la gen )
+target_link_libraries( mesh PUBLIC ${ZLIB_LIBRARIES} ${MPI_CXX_LIBRARIES} ${METIS_LIBRARY})
+if(DYNAMIC_LINK_PYTHON)
+    target_link_libraries(mesh PUBLIC ${PYTHON_LIBRARIES}) 
+endif(DYNAMIC_LINK_PYTHON)
 
-target_link_libraries( mesh PUBLIC ${ZLIB_LIBRARIES} ${MPI_CXX_LIBRARIES} ${PYTHON_LIBRARIES} ${METIS_LIBRARY})
 install( TARGETS mesh ${NG_INSTALL_DIR})
 
 install(FILES
