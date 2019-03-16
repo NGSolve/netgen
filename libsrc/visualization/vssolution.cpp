@@ -1175,7 +1175,7 @@ namespace netgen
 
     for (int i = 0; i < npt; i++)
       pref[i] = double(i) / (npt-1);
-
+    int meshdim = mesh->GetDimension();
     for (SegmentIndex i = 0; i < mesh -> GetNSeg(); i++)
       {
         // mesh->GetCurvedElements().
@@ -1190,8 +1190,10 @@ namespace netgen
               {
                 vsol->solclass->GetSegmentValue (i, pref[j], &mvalues[0]);
                 // values[j] = ExtractValue (sol, scalcomp, &mvalues[0]);
-                points[j](0) += scaledeform * mvalues[0];
-                points[j](1) += scaledeform * mvalues[1];
+                for (int k = 0; k < min(ncomp, 3); k++)
+                  points[j](k) += scaledeform * mvalues[0];
+                // points[j](0) += scaledeform * mvalues[0];
+                // points[j](1) += scaledeform * mvalues[1];
               }
           }
         else if (sol)
@@ -1200,7 +1202,8 @@ namespace netgen
               {
                 sol->solclass->GetSegmentValue (i, pref[j], &mvalues[0]);
                 values[j] = ExtractValue (sol, scalcomp, &mvalues[0]);
-                points[j](1) += scaledeform * values[j];
+                if (meshdim <= 2)
+                  points[j](meshdim) += scaledeform * values[j];
               }
           }
 
