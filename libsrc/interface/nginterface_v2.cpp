@@ -62,7 +62,7 @@ namespace netgen
   }
 
   NgMPI_Comm Ngx_Mesh :: GetCommunicator() const
-  { return Valid() ? mesh->GetCommunicator() : NgMPI_Comm(MPI_COMM_NULL); }
+  { return Valid() ? mesh->GetCommunicator() : NgMPI_Comm{}; }
 
   void Ngx_Mesh :: SaveMesh (ostream & ost) const
   {

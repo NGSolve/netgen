@@ -1217,7 +1217,7 @@ namespace netgen
 	mesh->SetMinimalH (mparam.minh);
       }
 
-#ifdef PARALLEL
+#ifdef PARALLELGL
     MyMPI_SendCmd ("bcastparthread");
     MyMPI_Bcast (mparam.parthread, MPI_COMM_WORLD);
 #endif
@@ -2703,7 +2703,7 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
     //cout << "stopped acis, outcome = " << res.ok() << endl;
 #endif
 
-#ifdef PARALLEL
+#ifdef PARALLELGL
     if (id == 0) MyMPI_SendCmd ("end");
     MPI_Finalize();
 #endif
