@@ -530,7 +530,7 @@ namespace netgen
 	for (int i = mesh->mlbetweennodes.Begin(); i < mesh->mlbetweennodes.End(); i++)
 	  {
 	    INDEX_2 parents = Sort (mesh->mlbetweennodes[i]);
-	    if (parents[0] > PointIndex::BASE) vert2vertcoarse.AddSave (parents[0], parents[1]);
+	    if (parents[0] >= PointIndex::BASE) vert2vertcoarse.AddSave (parents[0], parents[1]);
 	  }
 
 
