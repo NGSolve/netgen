@@ -305,6 +305,7 @@ namespace netgen
       }
     else
       {
+        hesse = 0;
 	(*testout) << "hesse4: " << hesse <<endl;
       }
   }
@@ -795,7 +796,7 @@ namespace netgen
 	  }
       }
 
-    if(intersections_before % 2 == 0)
+    if(intersections_after % 2 == 0)
       return IS_OUTSIDE;
     else
       return IS_INSIDE;
