@@ -102,6 +102,8 @@ public:
       m(i,i) = 1;
   }
 
+  Transformation (const Point<D> & c, const Vec<3> & axes, double angle);
+  
   // rotation with ...
   Transformation (const Point<D> & c, double alpha, double beta, double gamma)
   {

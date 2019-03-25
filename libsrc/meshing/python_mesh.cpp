@@ -184,7 +184,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
            ([] (double x, double y) { return Vec<2>(x,y); }));
 
   py::class_<Transformation<3>> (m, "Trafo")
-    .def(py::init<Vec<3>>())
+    .def(py::init<Vec<3>>(), "a translation")
+    .def(py::init<Point<3>,Vec<3>,double>(), "a rotation given by point on axes, direction of axes, angle")
+    .def("__mul__", [](Transformation<3> a, Transformation<3> b)->Transformation<3>
+         { Transformation<3> res; res.Combine(a,b); return res; })
     .def("__call__", [] (Transformation<3> trafo, Point<3> p) { return trafo(p); })
     ;
 
