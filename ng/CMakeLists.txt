@@ -30,7 +30,7 @@ if(USE_GUI)
       target_link_libraries( gui PRIVATE ${TCL_LIBRARY} ${TK_LIBRARY})
     endif(NOT APPLE)
 
-    target_link_libraries( netgen nglib gui ${LIBTOGL} ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} ${TK_LIBRARY} ${TCL_LIBRARY})
+    target_link_libraries( netgen nglib gui ${LIBTOGL} ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} ${TK_LIBRARY} ${TCL_LIBRARY} ${PYTHON_LIBRARIES})
 
     if(NOT WIN32)
       target_link_libraries( netgen mesh stlvis stl geom2dvis interface geom2d csg stl visual csgvis )
@@ -50,6 +50,7 @@ if(USE_GUI)
 endif(USE_GUI)
 
 if(USE_PYTHON)
+    target_link_libraries( gui PRIVATE ${PYTHON_LIBRARIES})
     add_library(ngpy SHARED netgenpy.cpp)
     target_link_libraries( ngpy PUBLIC nglib PRIVATE ${PYTHON_LIBRARIES})
     if(APPLE)

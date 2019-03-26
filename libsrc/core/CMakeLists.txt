@@ -28,8 +28,8 @@ install(TARGETS ngcore DESTINATION ${NG_INSTALL_DIR} COMPONENT netgen)
 
 if(USE_PYTHON)
   target_compile_definitions(ngcore PUBLIC NETGEN_PYTHON)
-  target_include_directories(ngcore PUBLIC ${PYTHON_INCLUDE_DIRS})
-  target_link_libraries(ngcore PUBLIC ${PYTHON_LIBRARIES})
+  target_include_directories(ngcore PRIVATE ${PYTHON_INCLUDE_DIRS})
+  target_link_libraries(ngcore PRIVATE ${PYTHON_LIBRARIES})
 endif(USE_PYTHON)
 
 install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp logging.hpp
