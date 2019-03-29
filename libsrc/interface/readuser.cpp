@@ -95,14 +95,17 @@ namespace netgen
 
         mesh.ClearFaceDescriptors();
         mesh.AddFaceDescriptor (FaceDescriptor(0,1,0,0));
-
+        mesh.GetFaceDescriptor(1).SetBCProperty (1);
+        // map from unv element nr to our element number + an index if it is vol (0), bnd(1), ...
+        std::map<size_t, std::tuple<size_t, int>> element_map;
 
         while (in.good())
           {
             in >> reco;
-	    cout << "reco = " << reco << endl;
+            if (strcmp(reco, "-1") == 0)
+              continue;
 
-            if (strcmp (reco, "2411") == 0)
+            else if (strcmp (reco, "2411") == 0)
               {
                 cout << "nodes found" << endl;
 
@@ -118,15 +121,12 @@ namespace netgen
                     in >> hi >> hi >> hi;
                     in >> p(0) >> p(1) >> p(2);
 
-		    cout << "p(" << pi << ") = "
-			 << p << endl;
-
                     mesh.AddPoint (p);
                   }
 		cout << "read " << mesh.GetNP() << " points" << endl;
               }
 
-            if (strcmp (reco, "2412") == 0)
+            else if (strcmp (reco, "2412") == 0)
               {
                 cout << "elements found" << endl;
 
@@ -140,8 +140,6 @@ namespace netgen
 		    if (label == -1) break;
 		    in >> fe_id >> phys_prop >> mat_prop >> color >> nnodes;
 		    
-		    cout << "fe_id = " << fe_id << " col = " << color << ", nnodes = " << nnodes << endl;
-
 		    if (fe_id >= 11 && fe_id <= 32)
 		      in >> hi >> hi >> hi;
 		      
@@ -151,33 +149,117 @@ namespace netgen
 		    
 		    switch (fe_id)
 		      {
-		      case 41:
+		      case 41: // TRIG
 			{
 			  Element2d el (TRIG);
 			  el.SetIndex (1);
 			  for (int j = 0; j < nnodes; j++)
 			    el[j] = nodes[j];
-			  mesh.AddSurfaceElement (el);
-			  
+			  auto nr = mesh.AddSurfaceElement (el);
+                          element_map[label] = std::make_tuple(nr+1, 1);
 			  break;
 			}
-		      case 111:
+                      case 42: // TRIG6
+                        {
+                          Element2d el(TRIG6);
+                          el.SetIndex(1);
+                          int jj = 0;
+                          for(auto j : {0,2,4,3,5,1})
+                              el[jj++] = nodes[j];
+                          auto nr = mesh.AddSurfaceElement(el);
+                          element_map[label] = std::make_tuple(nr+1, 1);
+                          break;
+                        }
+		      case 111: // TET
 			{
 			  Element el (TET);
 			  el.SetIndex (1);
 			  for (int j = 0; j < nnodes; j++)
 			    el[j] = nodes[j];
-			  mesh.AddVolumeElement (el);
-			  
+			  auto nr = mesh.AddVolumeElement (el);
+			  element_map[label] = std::make_tuple(nr+1, 0);
 			  break;
 			}
+                      case 118: // TET10
+                        {
+                          Element el(TET10);
+                          el.SetIndex(1);
+                          int jj = 0;
+                          for(auto j : {0,2,4,9,1,5,6,3,7,8})
+                            el[jj++] = nodes[j];
+                          auto nr = mesh.AddVolumeElement(el);
+                          element_map[label] = std::make_tuple(nr+1, 0);
+                          break;
+                        }
 		      }
+                  }
+                cout << mesh.GetNE() << " elements found" << endl;
+                cout << mesh.GetNSE() << " surface elements found" << endl;
+              }
+            else if(strcmp (reco, "2467") == 0)
+              {
+                int matnr = 1;
+                cout << "Groups found" << endl;
+                while(in.good())
+                  {
+                    int len;
+                    string name;
+                    in >> len;
+                    if(len == -1)
+                      break;
+                    for(int i=0; i < 7; i++)
+                      in >> len;
+                    in >> name;
+                    cout << len << " element are in group " << name << endl;
+                    int hi, index;
+                    int fdnr;
+                    bool is_boundary=false;
+                
+                    // use first element to determine if boundary or volume
+                    in >> hi >> index >> hi >> hi;
+                    if (get<1>(element_map[index]) == 1)
+                      {
+                        is_boundary=true;
+                      }
+                    cout << "Group " << name << (is_boundary ? " is boundary" : " is volume") << endl;
+                    if(is_boundary)
+                      {
+                        int bcpr = mesh.GetNFD()+1;
+                        fdnr = mesh.AddFaceDescriptor(FaceDescriptor(bcpr, 0,0,0));
+                        mesh.GetFaceDescriptor(fdnr).SetBCProperty(bcpr+1);
+                        mesh.SetBCName(bcpr, name);
+                        mesh.SurfaceElement(get<0>(element_map[index])).SetIndex(fdnr);
+                      }
+                    else
+                      {
+                        mesh.SetMaterial(++matnr, name);
+                        mesh.VolumeElement(get<0>(element_map[index])).SetIndex(matnr);
+                      }
+                    for(int i=0; i<len-1; i++)
+                      {
+                        in >> hi >> index >> hi >> hi;
+                        if(is_boundary)
+                          mesh.SurfaceElement(get<0>(element_map[index])).SetIndex(fdnr);
+                        else
+                          mesh.VolumeElement(get<0>(element_map[index])).SetIndex(matnr);
+                      }
+                  }
+              }
+            else
+              {
+                cout << "Do not know data field type " << reco << ", skipping it" << endl;
+                while(in.good())
+                  {
+                    in >> reco;
+                    if(strcmp(reco, "-1") == 0)
+                      break;
                   }
               }
           }
       
 
         Point3d pmin, pmax;
+        mesh.ComputeNVertices();
         mesh.GetBox (pmin, pmax);
         cout << "bounding-box = " << pmin << "-" << pmax << endl;
       }
