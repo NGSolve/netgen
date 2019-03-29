@@ -46,11 +46,11 @@ if(USE_GUI)
     if(WIN32)
         set_target_properties( gui PROPERTIES OUTPUT_NAME libgui )
     endif(WIN32)
+    target_link_libraries( gui PRIVATE ${PYTHON_LIBRARIES})
 
 endif(USE_GUI)
 
 if(USE_PYTHON)
-    target_link_libraries( gui PRIVATE ${PYTHON_LIBRARIES})
     add_library(ngpy SHARED netgenpy.cpp)
     target_link_libraries( ngpy PUBLIC nglib PRIVATE ${PYTHON_LIBRARIES})
     if(APPLE)
