@@ -1191,7 +1191,7 @@ namespace netgen
                 vsol->solclass->GetSegmentValue (i, pref[j], &mvalues[0]);
                 // values[j] = ExtractValue (sol, scalcomp, &mvalues[0]);
                 for (int k = 0; k < min(ncomp, 3); k++)
-                  points[j](k) += scaledeform * mvalues[0];
+                  points[j](k) += scaledeform * mvalues[k];
                 // points[j](0) += scaledeform * mvalues[0];
                 // points[j](1) += scaledeform * mvalues[1];
               }
