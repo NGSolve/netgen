@@ -666,11 +666,11 @@ namespace netgen
     char buf[20], lstring[200];
     if (mesh)
       {
-	sprintf (buf, "%d", mesh->GetNP());
+	sprintf (buf, "%u", unsigned(mesh->GetNP()));
         Tcl_SetVar  (interp, "::status_np", buf, 0);
-	sprintf (buf, "%d", mesh->GetNE());
+	sprintf (buf, "%u", unsigned(mesh->GetNE()));
         Tcl_SetVar  (interp, "::status_ne", buf, 0);
-	sprintf (buf, "%d", mesh->GetNSE());
+	sprintf (buf, "%u", unsigned(mesh->GetNSE()));
         Tcl_SetVar  (interp, "::status_nse", buf, 0);
       }
     else
