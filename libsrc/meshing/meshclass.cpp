@@ -5817,34 +5817,17 @@ namespace netgen
 
   void Mesh :: ComputeNVertices ()
   {
-    int i, j, nv;
-    int ne = GetNE();
-    // int nse = GetNSE();
-
     numvertices = 0;
-    for (i = 1; i <= ne; i++)
-      {
-        const Element & el = VolumeElement(i);
-        nv = el.GetNV();
-        for (j = 0; j < nv; j++)
-          if (el[j] > numvertices)
-            numvertices = el[j];
-      }
-    /*
-    for (i = 1; i <= nse; i++)
-      {
-        const Element2d & el = SurfaceElement(i);
-        nv = el.GetNV();
-        for (j = 1; j <= nv; j++)
-          if (el.PNum(j) > numvertices)
-            numvertices = el.PNum(j);
-      } 
-    */
-    for (auto & el : SurfaceElements())
+
+    for (const Element & el : VolumeElements())
+      for (PointIndex v : el.Vertices())
+        if (v > numvertices) numvertices = v;
+        
+    for (const Element2d & el : SurfaceElements())
       for (PointIndex v : el.Vertices())
         if (v > numvertices) numvertices = v;
 
-    numvertices += 1- PointIndex::BASE;
+    numvertices += 1-PointIndex::BASE;
   }
 
   int Mesh :: GetNV () const
