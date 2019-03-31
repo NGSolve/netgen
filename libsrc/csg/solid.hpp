@@ -234,7 +234,7 @@ namespace netgen
 
   class ReducePrimitiveIterator : public SolidIterator
   {
-    const BoxSphere<3> & box;
+    BoxSphere<3> box;
   public:
     ReducePrimitiveIterator (const BoxSphere<3> & abox)
       : SolidIterator(), box(abox) { ; }
