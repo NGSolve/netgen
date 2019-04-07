@@ -33,6 +33,7 @@ class CurvedElements
   bool rational;
 
   bool ishighorder;
+  void buildJacPols();
 
 public:
   DLL_HEADER CurvedElements (const Mesh & amesh);
@@ -50,6 +51,8 @@ public:
 
   virtual void DoArchive(Archive& ar)
   {
+    if(ar.Input())
+      buildJacPols();
     ar & edgeorder & faceorder & edgecoeffsindex & facecoeffsindex & edgecoeffs & facecoeffs
       & edgeweight & order & rational & ishighorder;
   }
