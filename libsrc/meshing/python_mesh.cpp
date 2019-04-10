@@ -17,6 +17,8 @@ namespace netgen
 {
   extern bool netgen_executable_started;
   extern shared_ptr<NetgenGeometry> ng_geometry;
+  extern void Optimize2d (Mesh & mesh, MeshingParameters & mp);
+
 #ifdef PARALLEL
   /** we need allreduce in python-wrapped communicators **/
   template <typename T>
@@ -865,14 +867,21 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
            },
           py::arg("mp")=NGDummyArgument(),py::call_guard<py::gil_scoped_release>())
 
-   .def ("OptimizeVolumeMesh", FunctionPointer
-         ([](Mesh & self)
+    .def ("OptimizeVolumeMesh", [](Mesh & self)
           {
             MeshingParameters mp;
             mp.optsteps3d = 5;
             OptimizeVolume (mp, self);
-          }),py::call_guard<py::gil_scoped_release>())
+          },py::call_guard<py::gil_scoped_release>())
 
+    .def ("OptimizeMesh2d", [](Mesh & self)
+          {
+            self.CalcLocalH(0.5);
+            MeshingParameters mp;
+            mp.optsteps2d = 5;
+            Optimize2d (self, mp);
+          },py::call_guard<py::gil_scoped_release>())
+    
     .def ("Refine", FunctionPointer
           ([](Mesh & self)
            {
@@ -975,12 +984,17 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
           },
           py::arg("name"), py::arg("set")=true)
     
-    .def ("Scale", FunctionPointer([](Mesh & self, double factor)
-				   {
-				     for(auto i = 0; i<self.GetNP();i++)
-				       self.Point(i).Scale(factor);
-				   }))
-                                            
+    .def ("Scale", [](Mesh & self, double factor)
+          {
+            for(auto i = 0; i<self.GetNP();i++)
+              self.Point(i).Scale(factor);
+          })
+    .def ("Copy", [](Mesh & self)
+          {
+            auto m2 = make_shared<Mesh> ();
+            *m2 = self;
+            return m2;
+          })
     ;
 
   m.def("ImportMesh", [](const string& filename)
