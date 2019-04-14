@@ -2241,6 +2241,20 @@ namespace netgen
     
     switch (el.GetType())
       {
+      case TRIG6:
+        {
+          AutoDiff<2,T> lam3 = 1-x-y;
+          AutoDiff<2,T> lami[6] = { x * (2*x-1), y * (2*y-1), lam3 * (2*lam3-1),
+                                    4 * y * lam3, 4 * x * lam3, 4 * x * y };
+          for (int j = 0; j < 6; j++)
+            {
+              Point<3> p = mesh[el[j]];
+              for (int k = 0; k < DIM_SPACE; k++)
+                mapped_x[k] += p(k) * lami[j];
+            }
+          break;
+        }
+        
       case TRIG:
         {
           // if (info.order >= 2) return false; // not yet supported
