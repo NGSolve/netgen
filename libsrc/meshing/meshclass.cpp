@@ -4997,6 +4997,10 @@ namespace netgen
     // netgen::Point<3> pmin = p - Vec<3> (pointtol, pointtol, pointtol);
     // netgen::Point<3> pmax = p + Vec<3> (pointtol, pointtol, pointtol);
 
+    if ( (dimension == 2 && !GetNSE()) ||
+    	 (dimension == 3 && !GetNE() && !GetNSE()) )
+      return -1;
+
     if (dimension == 2 || (dimension==3 && !GetNE() && GetNSE()))
       {
         int ne;
