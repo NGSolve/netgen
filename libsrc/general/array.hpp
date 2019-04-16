@@ -246,8 +246,7 @@ namespace netgen
       : FlatArray<T, BASE, TIND> (asize, asize ? new T[asize] : nullptr)
     {
       allocsize = asize;
-      if(asize)
-        ownmem = 1;
+      ownmem = (asize == 0) ? 0 : 1;
     }
 
     /// Generate array in user data
