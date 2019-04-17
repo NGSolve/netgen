@@ -87,6 +87,16 @@ build_ubuntu:
     - docker commit `cat netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id` netgen_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION}
     - rm netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id
 
+build_ubuntu_mpi:
+  <<: *ubuntu
+  stage: build
+  script:
+    - docker build -t netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} -f tests/dockerfile .
+    - rm -f netgen_${CI_BUILD_REF_NAME}_$UBUNTU_VERSION.id_mpi
+    - docker run --cidfile netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_mpi.sh
+    - docker commit `cat netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id` netgen_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION}
+    - rm netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id
+
 test_ubuntu:
   <<: *ubuntu
   stage: test
@@ -96,6 +106,17 @@ test_ubuntu:
       -e NETGENDIR=/opt/netgen/bin
       -e PYTHONPATH=/opt/netgen/lib/python3/dist-packages
       netgen_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION}
+      bash -c 'cd /root/build/netgen && make test_netgen ARGS="-V"'
+
+test_ubuntu_mpi:
+  <<: *ubuntu
+  stage: test
+  script:
+    - >-
+      docker run
+      -e NETGENDIR=/opt/netgen/bin
+      -e PYTHONPATH=/opt/netgen/lib/python3/dist-packages
+      netgen_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION}_mpi
       bash -c 'cd /root/build/netgen && make test_netgen ARGS="-V"'
 
 # cpp guideline checks
@@ -124,6 +145,7 @@ cleanup_ubuntu:
     - docker images --no-trunc -aqf "dangling=true" | xargs docker rmi -f || true
   when: always
   allow_failure: true
+
 
 ############################################
 # MacOSX
