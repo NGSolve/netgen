@@ -260,6 +260,7 @@ namespace netgen
 
         Point3d pmin, pmax;
         mesh.ComputeNVertices();
+        mesh.RebuildSurfaceElementLists();
         mesh.GetBox (pmin, pmax);
         cout << "bounding-box = " << pmin << "-" << pmax << endl;
       }

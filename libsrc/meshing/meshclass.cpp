@@ -90,6 +90,7 @@ namespace netgen
 
   Mesh & Mesh :: operator= (const Mesh & mesh2)
   {
+    dimension = mesh2.dimension;
     points = mesh2.points;
     // eltyps = mesh2.eltyps;
     segments = mesh2.segments;
@@ -1320,6 +1321,7 @@ namespace netgen
     archive & segments;
     archive & facedecoding;
     archive & materials & bcnames & cd2names & cd3names;
+    archive & numvertices;
 
     archive & *ident;
 
@@ -4994,6 +4996,10 @@ namespace netgen
     // const double pointtol = 1e-12;
     // netgen::Point<3> pmin = p - Vec<3> (pointtol, pointtol, pointtol);
     // netgen::Point<3> pmax = p + Vec<3> (pointtol, pointtol, pointtol);
+
+    if ( (dimension == 2 && !GetNSE()) ||
+    	 (dimension == 3 && !GetNE() && !GetNSE()) )
+      return -1;
 
     if (dimension == 2 || (dimension==3 && !GetNE() && GetNSE()))
       {

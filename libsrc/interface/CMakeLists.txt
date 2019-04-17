@@ -9,7 +9,9 @@ add_library(interface ${NG_LIB_TYPE}
 
 target_link_libraries(interface mesh csg geom2d)
 target_link_libraries(interface visual)
-install( TARGETS interface ${NG_INSTALL_DIR})
+if(NOT WIN32)
+  install( TARGETS interface ${NG_INSTALL_DIR})
+endif(NOT WIN32)
 
 install(FILES
   writeuser.hpp

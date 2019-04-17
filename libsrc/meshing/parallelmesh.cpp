@@ -745,6 +745,38 @@ namespace netgen
     
     MPI_Barrier(comm);
 
+    PrintMessage( 3, "Clean up local memory");
+
+    auto & self = const_cast<Mesh&>(*this);
+    self.points = T_POINTS(0);
+    self.surfelements = T_SURFELEMENTS(0);
+    self.volelements = T_VOLELEMENTS(0);
+    self.segments = Array<Segment, 0, size_t>(0);
+    self.lockedpoints = Array<PointIndex>(0);
+    auto cleanup_ptr = [](auto & ptr) {
+      if (ptr != nullptr) {
+	delete ptr;
+	ptr = nullptr;
+      }
+    };
+    cleanup_ptr(self.boundaryedges);
+    cleanup_ptr(self.boundaryedges);
+    cleanup_ptr(self.segmentht);
+    cleanup_ptr(self.surfelementht);
+    self.openelements = Array<Element2d>(0);
+    self.opensegments = Array<Segment>(0);
+    self.numvertices = 0;
+    self.mlbetweennodes = Array<PointIndices<2>,PointIndex::BASE> (0);
+    self.mlparentelement = Array<int>(0);
+    self.mlparentsurfaceelement = Array<int>(0);
+    self.topology.Update();
+    self.curvedelems = new CurvedElements (self);
+    self.clusters = new AnisotropicClusters (self);
+    self.ident = new Identifications (self);
+    self.BuildElementSearchTree();
+    
+    // const_cast<Mesh&>(*this).DeleteMesh();
+    
     PrintMessage( 3, "send mesh complete");
   }
 

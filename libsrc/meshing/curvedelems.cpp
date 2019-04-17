@@ -409,6 +409,15 @@ namespace netgen
   
   static Array<shared_ptr<RecPol>> jacpols2;
 
+  void CurvedElements::buildJacPols()
+  {
+    if (!jacpols2.Size())
+      {
+	jacpols2.SetSize (100);
+	for (int i = 0; i < 100; i++)
+	  jacpols2[i] = make_shared<JacobiRecPol> (100, i, 2);
+      }
+  }
 
   // compute face bubbles up to order n, 0 < y, y-x < 1, x+y < 1
   template <class Tx, class Ty, class Ts>
@@ -540,7 +549,6 @@ namespace netgen
 
   CurvedElements :: ~CurvedElements()
   {
-    jacpols2.SetSize(0);
   }
 
 
@@ -719,13 +727,7 @@ namespace netgen
 
     ComputeGaussRule (aorder+4, xi, weight);  // on (0,1)
 
-    if (!jacpols2.Size())
-      {
-	jacpols2.SetSize (100);
-	for (int i = 0; i < 100; i++)
-	  jacpols2[i] = make_shared<JacobiRecPol> (100, i, 2);
-      }
-
+    buildJacPols();
     PrintMessage (3, "Curving edges");
 
     if (mesh.GetDimension() == 3 || rational)
@@ -2239,6 +2241,20 @@ namespace netgen
     
     switch (el.GetType())
       {
+      case TRIG6:
+        {
+          AutoDiff<2,T> lam3 = 1-x-y;
+          AutoDiff<2,T> lami[6] = { x * (2*x-1), y * (2*y-1), lam3 * (2*lam3-1),
+                                    4 * y * lam3, 4 * x * lam3, 4 * x * y };
+          for (int j = 0; j < 6; j++)
+            {
+              Point<3> p = mesh[el[j]];
+              for (int k = 0; k < DIM_SPACE; k++)
+                mapped_x[k] += p(k) * lami[j];
+            }
+          break;
+        }
+        
       case TRIG:
         {
           // if (info.order >= 2) return false; // not yet supported

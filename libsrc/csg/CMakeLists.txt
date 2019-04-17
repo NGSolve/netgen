@@ -12,7 +12,9 @@ if(APPLE)
 endif(APPLE)
 
 target_link_libraries(csg PUBLIC mesh ${PYTHON_LIBRARIES})
-install( TARGETS csg ${NG_INSTALL_DIR})
+if(NOT WIN32)
+  install( TARGETS csg ${NG_INSTALL_DIR})
+endif(NOT WIN32)
 
 target_link_libraries(csg PUBLIC ngcore)
 

@@ -1140,6 +1140,7 @@ namespace netgen
       default: break;
         cerr << "Element::SetType unknown type  " << int(typ) << endl;
       }
+    is_curved = (np > 4); 
   }
 
 
