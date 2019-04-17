@@ -576,12 +576,12 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 	else self->SendRecvMesh();
 	return self;
       }, py::arg("comm"))
-    .def("Receive", [](NgMPI_Comm comm) {
+    .def_static("Receive", [](NgMPI_Comm comm) -> shared_ptr<Mesh> {
         auto mesh = make_shared<Mesh>();
         mesh->SetCommunicator(comm);
         mesh->SendRecvMesh();
         return mesh;
-      })
+      }, py::arg("comm"))
     .def("Load",  FunctionPointer 
 	 ([](shared_ptr<Mesh> self, const string & filename)
 	  {
