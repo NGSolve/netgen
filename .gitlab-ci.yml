@@ -81,21 +81,21 @@ build_ubuntu:
   <<: *ubuntu
   stage: build
   script:
-    - docker build -t netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} -f tests/dockerfile .
-    - rm -f netgen_${CI_BUILD_REF_NAME}_$UBUNTU_VERSION.id
-    - docker run --cidfile netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build.sh
-    - docker commit `cat netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id` netgen_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION}
-    - rm netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id
+    - docker build -t netgen_${CI_PIPELINE_ID}:${UBUNTU_VERSION} -f tests/dockerfile .
+    - rm -f netgen_${CI_PIPELINE_ID}_$UBUNTU_VERSION.id
+    - docker run --cidfile netgen_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_PIPELINE_ID}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build.sh
+    - docker commit `cat netgen_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id` netgen_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}
+    - rm netgen_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id
 
 build_ubuntu_mpi:
   <<: *ubuntu
   stage: build
   script:
-    - docker build -t netgen_mpi_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} -f tests/dockerfile_mpi .
-    - rm -f netgen_mpi_${CI_BUILD_REF_NAME}_$UBUNTU_VERSION.id_mpi
-    - docker run --cidfile netgen_mpi_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_mpi_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_mpi.sh
-    - docker commit `cat netgen_mpi_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id` netgen_mpi_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION}
-    - rm netgen_mpi_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id
+    - docker build -t netgen_mpi_${CI_PIPELINE_ID}:${UBUNTU_VERSION} -f tests/dockerfile_mpi .
+    - rm -f netgen_mpi_${CI_PIPELINE_ID}_$UBUNTU_VERSION.id_mpi
+    - docker run --cidfile netgen_mpi_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_mpi_${CI_PIPELINE_ID}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_mpi.sh
+    - docker commit `cat netgen_mpi_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id` netgen_mpi_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}
+    - rm netgen_mpi_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id
 
 test_ubuntu:
   <<: *ubuntu
@@ -105,7 +105,7 @@ test_ubuntu:
       docker run
       -e NETGENDIR=/opt/netgen/bin
       -e PYTHONPATH=/opt/netgen/lib/python3/dist-packages
-      netgen_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION}
+      netgen_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}
       bash -c 'cd /root/build/netgen && make test_netgen ARGS="-V"'
 
 test_ubuntu_mpi:
@@ -116,7 +116,7 @@ test_ubuntu_mpi:
       docker run
       -e NETGENDIR=/opt/netgen/bin
       -e PYTHONPATH=/opt/netgen/lib/python3/dist-packages
-      netgen_mpi_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION}
+      netgen_mpi_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}
       bash -c 'cd /root/build/netgen && make test_netgen ARGS="-V"'
 
 # cpp guideline checks
@@ -124,7 +124,7 @@ test_guidelines:
   <<: *ubuntu
   stage: test
   script:
-    - docker run -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_guidelines.sh
+    - docker run -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_PIPELINE_ID}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_guidelines.sh
   when: always
   allow_failure: true
 
@@ -133,7 +133,7 @@ test_noSpdlog:
   <<: *ubuntu
   stage: test
   script:
-    - docker run -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_nospdlog.sh
+    - docker run -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_PIPELINE_ID}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_nospdlog.sh
 
 cleanup_ubuntu:
   stage: cleanup
