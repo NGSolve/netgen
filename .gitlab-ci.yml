@@ -91,7 +91,7 @@ build_ubuntu_mpi:
   <<: *ubuntu
   stage: build
   script:
-    - docker build -t netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} -f tests/dockerfile .
+    - docker build -t netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} -f tests/dockerfile_mpi .
     - rm -f netgen_${CI_BUILD_REF_NAME}_$UBUNTU_VERSION.id_mpi
     - docker run --cidfile netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_BUILD_REF_NAME}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_mpi.sh
     - docker commit `cat netgen_${CI_BUILD_REF_NAME}_${UBUNTU_VERSION}.id` netgen_${CI_BUILD_REF_NAME}_installed:${UBUNTU_VERSION}
