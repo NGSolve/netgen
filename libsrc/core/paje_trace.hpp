@@ -29,6 +29,7 @@ namespace ngcore
       int nthreads;
 
     public:
+      void WriteSunburstHTML();
 
       // Approximate number of events to trace. Tracing will
       // be stopped if any thread reaches this number of events

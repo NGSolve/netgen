@@ -98,7 +98,7 @@ namespace ngcore
           // return time in milliseconds as double
         // return std::chrono::duration<double>(t-start_time).count()*1000.0;
         // return std::chrono::duration<double>(t-start_time).count() / 2.7e3;
-        return (t-start_time) / 2.7e6;
+        return (t-start_time) / ticks_per_second;
       }
 
       enum PType
@@ -393,7 +393,7 @@ namespace ngcore
       if(trace_threads)
         for (int i=0; i<nthreads; i++)
           {
-            auto name = "Timer level " + ToString(i);
+            auto name = "Thread " + ToString(i);
             thread_aliases.emplace_back( paje.CreateContainer( container_type_thread, container_nodes[i*num_nodes/nthreads], name ) );
           }
 
@@ -550,8 +550,137 @@ namespace ngcore
                 }
             }
         }
+      WriteSunburstHTML();
       paje.WriteEvents();
     }
+
+  ///////////////////////////////////////////////////////////////////
+  // Write HTML file drawing a sunburst chart with cumulated timings
+  struct TreeNode
+  {
+      int id;
+      std::map<int, TreeNode> children;
+      double time;
+      std::string name;
+  };
+
+  void PrintNode (const TreeNode &n, int &level, std::ofstream & f);
+  void PrintNode (const TreeNode &n, int &level, std::ofstream & f)
+  {
+      f << "{ name: \"" + n.name + "\", size: " + ToString(n.time);
+      int size = n.children.size();
+      if(size>0)
+      {
+          int i = 0;
+          f << ", children: [";
+          for(auto & c : n.children)
+          {
+              PrintNode(c.second, level, f);
+              if(++i<size)
+                  f << " , ";
+          }
+          f << ']';
+      }
+      f << '}';
+  }
+
+  void PajeTrace::WriteSunburstHTML( )
+  {
+      std::vector<TimerEvent> events;
+
+      TreeNode root;
+      root.time=0;
+      root.name="all";
+      TreeNode *current = &root;
+
+      std::vector<TreeNode*> node_stack;
+
+      node_stack.push_back(&root);
+
+      TTimePoint stop_time = 0;
+
+      for(auto & event : timer_events)
+      {
+          events.push_back(event);
+          stop_time = std::max(event.time, stop_time);
+      }
+
+      std::map<int, std::string> job_names;
+      for(auto & job : jobs)
+      {
+          events.push_back(TimerEvent{-1, job.start_time, true, job.job_id});
+          events.push_back(TimerEvent{-1, job.stop_time, false, job.job_id});
+          stop_time = std::max(job.stop_time, stop_time);
+
+          if(job_names.count(job.job_id)==0)
+              job_names[job.job_id] = Demangle(job.type->name());
+      }
+
+      std::sort (events.begin(), events.end());
+
+      root.time = 1000.0*(stop_time-start_time)/ticks_per_second;
+
+      for(auto & event : events)
+      {
+          if(event.is_start)
+          {
+              bool need_init = !current->children.count(event.timer_id);
+              node_stack.push_back(current);
+              current = &current->children[event.timer_id];
+
+              if(need_init)
+              {
+                  if(event.timer_id==-1)
+                      current->name = job_names[event.thread_id];
+                  else
+                      current->name = NgProfiler::GetName(event.timer_id);
+                  current->time = 0.0;
+                  current->id = event.timer_id;
+              }
+
+              current->time -= 1000.0*event.time/ticks_per_second;
+          }
+          else
+          {
+              current->time += 1000.0*event.time/ticks_per_second;
+              current = node_stack.back();
+              node_stack.pop_back();
+          }
+      }
+
+      int level = 0;
+      std::ofstream f(tracefile_name+".html");
+      f.precision(4);
+      f << R"CODE_(
+<head>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="https://unpkg.com/sunburst-chart"></script>
+
+  <style>body { margin: 0 }</style>
+</head>
+<body>
+  <div id="chart"></div>
+
+  <script>
+    const data = 
+)CODE_";
+      PrintNode(root, level, f);
+      f << R"CODE_( ;
+
+    const color = d3.scaleOrdinal(d3.schemePaired);
+
+    Sunburst()
+      .data(data)
+      .size('size')
+      .color(d => color(d.name))
+      .tooltipContent((d, node) => `Time: <i>${node.value.toPrecision(6)}ms</i>`)
+      .minSliceAngle(.4)
+      (document.getElementById('chart'));
+  </script>
+</body>
+)CODE_" << std::endl;
+  }
+
 } // namespace ngcore
 
 const char *header =
