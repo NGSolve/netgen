@@ -873,7 +873,7 @@ namespace netgen
     *testout << "got " << numvert << " vertices" << endl;
 
     {
-      Element el(dim==2 ? 3 : 4);
+      Element el(4);
       
       Array<int> elarray;
       MyMPI_Recv (elarray, 0, MPI_TAG_MESH+2, comm);
