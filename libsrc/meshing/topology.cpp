@@ -676,16 +676,16 @@ namespace netgen
     if (buildfaces) 
       {
 	static int timer2 = NgProfiler::CreateTimer ("topology::buildfaces");
-	static int timer2a = NgProfiler::CreateTimer ("topology::buildfacesa");
-	static int timer2b = NgProfiler::CreateTimer ("topology::buildfacesb");
-        static int timer2b1 = NgProfiler::CreateTimer ("topology::buildfacesb1");
-	static int timer2c = NgProfiler::CreateTimer ("topology::buildfacesc");
+	// static int timer2a = NgProfiler::CreateTimer ("topology::buildfacesa");
+	// static int timer2b = NgProfiler::CreateTimer ("topology::buildfacesb");
+        // static int timer2b1 = NgProfiler::CreateTimer ("topology::buildfacesb1");
+	// static int timer2c = NgProfiler::CreateTimer ("topology::buildfacesc");
 	NgProfiler::RegionTimer reg2 (timer2);
 
 	if (id == 0)
 	  PrintMessage (5, "Update faces ");
 
-        NgProfiler::StartTimer (timer2a);
+        // NgProfiler::StartTimer (timer2a);
 
 	faces.SetSize(ne);
 	surffaces.SetSize(nse);
@@ -714,8 +714,8 @@ namespace netgen
 
 
 
-        NgProfiler::StopTimer (timer2a);
-        NgProfiler::StartTimer (timer2b);
+        // NgProfiler::StopTimer (timer2a);
+        // NgProfiler::StartTimer (timer2b);
 
         INDEX_3_CLOSED_HASHTABLE<int> vert2face(2*max_face_on_vertex+10);         
 
@@ -724,7 +724,7 @@ namespace netgen
         // count faces associated with vertices
         cnt = 0;
         // for (auto v : mesh.Points().Range())
-        NgProfiler::StartTimer (timer2b1);
+        // NgProfiler::StartTimer (timer2b1);
         ParallelForRange
           (tm, mesh->GetNV(), // Points().Size(),
             [&] (size_t begin, size_t end)
@@ -757,7 +757,7 @@ namespace netgen
                   cnt[v] = cnti;
                 }
             } );
-        NgProfiler::StopTimer (timer2b1);
+        // NgProfiler::StopTimer (timer2b1);
         
         // accumulate number of faces
         int nfa = oldnfa;
@@ -1093,8 +1093,8 @@ namespace netgen
 
 	// *testout << "face2vert = " << endl << face2vert << endl;
 
-        NgProfiler::StopTimer (timer2b);
-        NgProfiler::StartTimer (timer2c);
+        // NgProfiler::StopTimer (timer2b);
+        // NgProfiler::StartTimer (timer2c);
 
 
 	face2surfel.SetSize (nfa);
@@ -1231,7 +1231,7 @@ namespace netgen
 	    if (cnt_err && ntasks == 1)
 	      cout << cnt_err << " elements are not matching !!!" << endl;
 	  }
-        NgProfiler::StopTimer (timer2c);
+        // NgProfiler::StopTimer (timer2c);
       }
     
 

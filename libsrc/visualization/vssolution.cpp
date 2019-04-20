@@ -451,8 +451,8 @@ namespace netgen
 	glCallList (surfellist);
         
 #ifdef USE_BUFFERS
-        static int timer = NgProfiler::CreateTimer ("Solution::drawing - DrawSurfaceElements VBO");
-        NgProfiler::StartTimer(timer);
+        // static int timer = NgProfiler::CreateTimer ("Solution::drawing - DrawSurfaceElements VBO");
+        // NgProfiler::StartTimer(timer);
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_NORMAL_ARRAY);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -460,7 +460,7 @@ namespace netgen
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_NORMAL_ARRAY);
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-        NgProfiler::StopTimer(timer);
+        // NgProfiler::StopTimer(timer);
 #endif
         
 	glDisable(GL_BLEND); 
@@ -1221,6 +1221,7 @@ namespace netgen
     shared_ptr<Mesh> mesh = GetMesh();
 
     static int timer = NgProfiler::CreateTimer ("Solution::DrawSurfaceElements");
+    /*
     static int timerstart = NgProfiler::CreateTimer ("Solution::DrawSurfaceElements start");
     static int timerloops = NgProfiler::CreateTimer ("Solution::DrawSurfaceElements loops");
     static int timerlist = NgProfiler::CreateTimer ("Solution::DrawSurfaceElements list");
@@ -1232,6 +1233,7 @@ namespace netgen
     static int timer2 = NgProfiler::CreateTimer ("Solution::DrawSurfaceElements 2");
     static int timer2a = NgProfiler::CreateTimer ("Solution::DrawSurfaceElements 2a");
     static int timer2b = NgProfiler::CreateTimer ("Solution::DrawSurfaceElements 2b");
+    */
     NgProfiler::RegionTimer reg (timer);
   
     
@@ -1263,7 +1265,7 @@ namespace netgen
       }
 #endif
 
-    NgProfiler::StartTimer(timerstart);
+    // NgProfiler::StartTimer(timerstart);
 
     if (surfellist)
       glDeleteLists (surfellist, 1);
@@ -1354,7 +1356,7 @@ namespace netgen
 #endif
     
     
-    NgProfiler::StopTimer(timerstart);
+    // NgProfiler::StopTimer(timerstart);
     
     for (SurfaceElementIndex sei = 0; sei < nse; sei++)
       {
@@ -1509,7 +1511,7 @@ namespace netgen
     n = 1 << subdivisions;
     double invn = 1.0 / n;
     npt = (n+1)*(n+2)/2;
-    NgProfiler::StartTimer(timerloops);
+    // NgProfiler::StartTimer(timerloops);
     size_t base_pi = 0;
 
     for (int iy = 0, ii = 0; iy <= n; iy++)
@@ -1561,7 +1563,7 @@ namespace netgen
         
         if ( el.GetType() == TRIG || el.GetType() == TRIG6 )
           {
-            NgProfiler::StartTimer(timer1);
+            // NgProfiler::StartTimer(timer1);
 #ifdef __AVX_try_it_out__
             // NgProfiler::StartTimer(timer1a);            
 	    bool curved = curv.IsSurfaceElementCurved(sei);
@@ -1702,7 +1704,7 @@ namespace netgen
               for (int ii = 0; ii < npt; ii++)
                 points[ii] += GetSurfDeformation (sei, -1, pref[ii](0), pref[ii](1));
 #endif
-            NgProfiler::StopTimer(timer1);
+            // NgProfiler::StopTimer(timer1);
 
             int save_usetexture = usetexture;
             if (!drawelem)
@@ -1711,7 +1713,7 @@ namespace netgen
                 SetTextureMode (usetexture);
               }
 
-            NgProfiler::StartTimer(timer2);
+            // NgProfiler::StartTimer(timer2);
 
 #ifdef USE_BUFFERS
             if (drawelem && usetexture == 1 && !logscale)
@@ -1762,7 +1764,7 @@ namespace netgen
                   glEnd();
                 }
             
-            NgProfiler::StopTimer(timer2);            
+            // NgProfiler::StopTimer(timer2);            
 
 
 
@@ -1774,15 +1776,15 @@ namespace netgen
               }
 	  }
       }
-    NgProfiler::StopTimer(timerloops);
+    // NgProfiler::StopTimer(timerloops);
 
-    NgProfiler::StartTimer(timerbuffer);
+    // NgProfiler::StartTimer(timerbuffer);
 
     // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, surfel_vbo[3]);
     // glBufferData(GL_ELEMENT_ARRAY_BUFFER, glob_ind.Size()*sizeof(int), &glob_ind[0], GL_STATIC_DRAW);
     // surfel_vbo_size = glob_ind.Size();
  
-    NgProfiler::StopTimer(timerbuffer);        
+    // NgProfiler::StopTimer(timerbuffer);        
 
     // glDrawElements(GL_TRIANGLES, surfel_vbo_size, GL_UNSIGNED_INT, 0);
 
@@ -1796,9 +1798,9 @@ namespace netgen
     // glDeleteBuffers (4, &vboId[0]);
 
     
-    NgProfiler::StartTimer(timerlist);
+    // NgProfiler::StartTimer(timerlist);
     glEndList ();
-    NgProfiler::StopTimer(timerlist);
+    // NgProfiler::StopTimer(timerlist);
     
 #ifdef PARALLELGL
     glFinish();
@@ -2649,8 +2651,8 @@ namespace netgen
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
-    static int timer1 = NgProfiler::CreateTimer ("getminmax, vol");
-    static int timer2 = NgProfiler::CreateTimer ("getminmax, surf");
+    // static int timer1 = NgProfiler::CreateTimer ("getminmax, vol");
+    // static int timer2 = NgProfiler::CreateTimer ("getminmax, surf");
 
 #ifdef PARALLEL
     auto comm = mesh->GetCommunicator();
@@ -2683,7 +2685,7 @@ namespace netgen
 
           if (sol->draw_volume)
             {
-              NgProfiler::RegionTimer reg1 (timer1);
+              // NgProfiler::RegionTimer reg1 (timer1);
               
               int ne = mesh->GetNE();
 
@@ -2722,7 +2724,7 @@ namespace netgen
           
           if (sol->draw_surface)
             {
-              NgProfiler::RegionTimer reg2 (timer2);
+              // NgProfiler::RegionTimer reg2 (timer2);
               
               int nse = mesh->GetNSE();
               for (int i = 0; i < nse; i++)
@@ -3965,13 +3967,13 @@ namespace netgen
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
-    static int timer_vals = NgProfiler::CreateTimer ("ClipPlaneTrigs - vertex values");
+    // static int timer_vals = NgProfiler::CreateTimer ("ClipPlaneTrigs - vertex values");
     static int timer1 = NgProfiler::CreateTimer ("ClipPlaneTrigs1");
     // static int timer1a = NgProfiler::CreateTimer ("ClipPlaneTrigs1a");
     // static int timer2 = NgProfiler::CreateTimer ("ClipPlaneTrigs2");
-    static int timer3 = NgProfiler::CreateTimer ("ClipPlaneTrigs3");
-    static int timer4 = NgProfiler::CreateTimer ("ClipPlaneTrigs4");
-    static int timer4b = NgProfiler::CreateTimer ("ClipPlaneTrigs4b");
+    // static int timer3 = NgProfiler::CreateTimer ("ClipPlaneTrigs3");
+    // static int timer4 = NgProfiler::CreateTimer ("ClipPlaneTrigs4");
+    // static int timer4b = NgProfiler::CreateTimer ("ClipPlaneTrigs4b");
 
 
     NgProfiler::RegionTimer reg1 (timer1);
@@ -4004,7 +4006,7 @@ namespace netgen
     Array<bool> locposval(n3);
     Array<int> compress(n3);
 
-    NgProfiler::StartTimer (timer_vals);
+    // NgProfiler::StartTimer (timer_vals);
     Array<double,PointIndex::BASE> vertval(mesh->GetNP());
     Array<bool,PointIndex::BASE> posval(mesh->GetNP());
     for (PointIndex pi = vertval.Begin(); pi < vertval.End(); pi++)
@@ -4017,7 +4019,7 @@ namespace netgen
           clipplane[3]; 
         posval[pi] = vertval[pi] > 0;
       }
-    NgProfiler::StopTimer (timer_vals);
+    // NgProfiler::StopTimer (timer_vals);
 
     INDEX_2_CLOSED_HASHTABLE<int> edges(8*n3);  // point nr of edge
     
@@ -4130,13 +4132,13 @@ namespace netgen
 
             if (mesh->GetCurvedElements().IsHighOrder())
               {
-                NgProfiler::RegionTimer reg4(timer4);
+                // NgProfiler::RegionTimer reg4(timer4);
                 mesh->GetCurvedElements().
                   CalcMultiPointElementTransformation (&locgrid, ei, &grid, 0);
               }
             else
               {
-                NgProfiler::RegionTimer reg4(timer4b);
+                // NgProfiler::RegionTimer reg4(timer4b);
                 Vector shape(el.GetNP());
                 MatrixFixWidth<3> pointmat(el.GetNP());
 
@@ -4158,7 +4160,7 @@ namespace netgen
                   }
               }
 
-            NgProfiler::RegionTimer reg3(timer3);
+            // NgProfiler::RegionTimer reg3(timer3);
 
             bool has_pos = false, all_pos = true;
 

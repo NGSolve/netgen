@@ -19,9 +19,9 @@ namespace netgen
   void AnisotropicClusters ::  Update(TaskManager tm, Tracer tracer)
   {
     static int timer = NgProfiler::CreateTimer ("clusters");
-    static int timer1 = NgProfiler::CreateTimer ("clusters1");
-    static int timer2 = NgProfiler::CreateTimer ("clusters2");
-    static int timer3 = NgProfiler::CreateTimer ("clusters3");
+    // static int timer1 = NgProfiler::CreateTimer ("clusters1");
+    // static int timer2 = NgProfiler::CreateTimer ("clusters2");
+    // static int timer3 = NgProfiler::CreateTimer ("clusters3");
     NgProfiler::RegionTimer reg (timer);
 
     const MeshTopology & top = mesh.GetTopology();
@@ -52,7 +52,7 @@ namespace netgen
     Array<int> nnums, ednums, fanums;
     int changed;
 
-    NgProfiler::StartTimer(timer1);    
+    // NgProfiler::StartTimer(timer1);    
 
   
     /*
@@ -112,8 +112,8 @@ namespace netgen
            }
        });
     
-    NgProfiler::StopTimer(timer1);
-    NgProfiler::StartTimer(timer2);      
+    // NgProfiler::StopTimer(timer1);
+    // NgProfiler::StartTimer(timer2);      
     /*
     for (int i = 1; i <= nse; i++)
       {
@@ -166,8 +166,8 @@ namespace netgen
        });
 
     
-    NgProfiler::StopTimer(timer2);
-    NgProfiler::StartTimer(timer3);      
+    // NgProfiler::StopTimer(timer2);
+    // NgProfiler::StartTimer(timer3);      
 
     
     static const int hex_cluster[] =
@@ -341,7 +341,7 @@ namespace netgen
         (*tracer) ("update cluster, identify", true);        
       }
     while (changed);
-    NgProfiler::StopTimer(timer3);
+    // NgProfiler::StopTimer(timer3);
     /*
       (*testout) << "cluster reps:" << endl;
       for (i = 1; i <= cluster_reps.Size(); i++)
