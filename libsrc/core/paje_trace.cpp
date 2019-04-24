@@ -98,7 +98,7 @@ namespace ngcore
           // return time in milliseconds as double
         // return std::chrono::duration<double>(t-start_time).count()*1000.0;
         // return std::chrono::duration<double>(t-start_time).count() / 2.7e3;
-        return 1000.0*(t-start_time) / ticks_per_second;
+        return 1000.0*static_cast<double>(t-start_time) / ticks_per_second;
       }
 
       enum PType
@@ -241,7 +241,9 @@ namespace ngcore
             }
 
           int alias = ++alias_counter;
-          double r,g,b;
+          double r;
+          double g;
+          double b;
           Hue2RGB( hue, r, g, b );
           fprintf( ctrace_stream, "%d\ta%d\ta%d\t\"%s\"\t\"%.15g %.15g %.15g\"\n", PajeDefineEntityValue, alias, type, name.c_str(), r,g,b ); // NOLINT
           return alias;
@@ -346,7 +348,7 @@ namespace ngcore
 
   void PajeTrace::Write( const std::string & filename )
     {
-      int n_events = jobs.size() + timer_events.size();
+      auto n_events = jobs.size() + timer_events.size();
       for(auto & vtasks : tasks)
         n_events += vtasks.size();
 
@@ -558,11 +560,11 @@ namespace ngcore
   // Write HTML file drawing a sunburst chart with cumulated timings
   struct TreeNode
   {
-      int id;
+      int id = 0;
       std::map<int, TreeNode> children;
-      double time;
+      double time = 0.0;
       std::string name;
-      TTimePoint start_time;
+      TTimePoint start_time = 0;
   };
 
   void PrintNode (const TreeNode &n, int &level, std::ofstream & f);
@@ -627,7 +629,7 @@ namespace ngcore
 
       std::sort (events.begin(), events.end());
 
-      root.time = 1000.0*(stop_time-start_time)/ticks_per_second;
+      root.time = 1000.0*static_cast<double>(stop_time-start_time)/ticks_per_second;
 
       for(auto & event : events)
       {
@@ -652,7 +654,7 @@ namespace ngcore
           }
           else
           {
-              double time = 1000.0*(event.time-current->start_time)/ticks_per_second;
+              double time = 1000.0*static_cast<double>(event.time-current->start_time)/ticks_per_second;
               current->time += time;
               current = node_stack.back();
               current->time -= time;

@@ -33,7 +33,7 @@ namespace ngcore
       auto tick_end = GetTimeCounter();
       tend = WallTime();
 
-      return (tick_end-tick_start)/(tend-tstart);
+      return static_cast<double>(tick_end-tick_start)/(tend-tstart);
   }();
 
   const std::chrono::time_point<TClock> wall_time_start = TClock::now();

@@ -1,6 +1,7 @@
 #ifndef NETGEN_CORE_ARCHIVE_HPP
 #define NETGEN_CORE_ARCHIVE_HPP
 
+#include <array>                // for array
 #include <complex>              // for complex
 #include <cstring>              // for size_t, strlen
 #include <fstream>              // for ifstream, ofstream
@@ -657,7 +658,7 @@ namespace ngcore
   class NGCORE_API BinaryOutArchive : public Archive
   {
     static constexpr size_t BUFFERSIZE = 1024;
-    char buffer[BUFFERSIZE] = {};
+    std::array<char,BUFFERSIZE> buffer{};
     size_t ptr = 0;
   protected:
     std::shared_ptr<std::ostream> stream;
@@ -701,7 +702,7 @@ namespace ngcore
     }
     Archive & operator & (char *& str) override
     {
-      long len = str ? strlen (str) : -1;
+      long len = str ? static_cast<long>(strlen (str)) : -1;
       (*this) & len;
       FlushBuffer();
       if(len > 0)
@@ -838,7 +839,7 @@ namespace ngcore
     }
     Archive & operator & (char *& str) override
     {
-      long len = str ? strlen (str) : -1;
+      long len = str ? static_cast<long>(strlen (str)) : -1;
       *this & len;
       if(len > 0)
         {
@@ -994,7 +995,7 @@ namespace ngcore
                                                     std::string(pybind11::str(output)));
                         return output;
                       },
-                      [](pybind11::tuple state)
+                      [](const pybind11::tuple & state)
                       {
                         T* val = nullptr;
                         GetLogger("Archive")->trace("State for unpickling of object of type {} = {}",
