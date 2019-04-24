@@ -98,7 +98,7 @@ namespace ngcore
           // return time in milliseconds as double
         // return std::chrono::duration<double>(t-start_time).count()*1000.0;
         // return std::chrono::duration<double>(t-start_time).count() / 2.7e3;
-        return (t-start_time) / ticks_per_second;
+        return 1000.0*(t-start_time) / ticks_per_second;
       }
 
       enum PType
@@ -562,6 +562,7 @@ namespace ngcore
       std::map<int, TreeNode> children;
       double time;
       std::string name;
+      TTimePoint start_time;
   };
 
   void PrintNode (const TreeNode &n, int &level, std::ofstream & f);
@@ -605,15 +606,23 @@ namespace ngcore
           stop_time = std::max(event.time, stop_time);
       }
 
-      std::map<int, std::string> job_names;
+      std::map<std::string, int> jobs_map;
+      std::vector<std::string> job_names;
       for(auto & job : jobs)
       {
-          events.push_back(TimerEvent{-1, job.start_time, true, job.job_id});
-          events.push_back(TimerEvent{-1, job.stop_time, false, job.job_id});
-          stop_time = std::max(job.stop_time, stop_time);
+          auto name = Demangle(job.type->name());
+          int id = job_names.size();
+          if(jobs_map.count(name)==0)
+          {
+              jobs_map[name] = id;
+              job_names.push_back(name);
+          }
+          else
+              id = jobs_map[name];
 
-          if(job_names.count(job.job_id)==0)
-              job_names[job.job_id] = Demangle(job.type->name());
+          events.push_back(TimerEvent{-1, job.start_time, true, id});
+          events.push_back(TimerEvent{-1, job.stop_time, false, id});
+          stop_time = std::max(job.stop_time, stop_time);
       }
 
       std::sort (events.begin(), events.end());
@@ -622,28 +631,31 @@ namespace ngcore
 
       for(auto & event : events)
       {
+          bool is_timer_event = event.timer_id != -1;
+          int id = is_timer_event ? event.timer_id : event.thread_id;
+
           if(event.is_start)
           {
-              bool need_init = !current->children.count(event.timer_id);
+              bool need_init = !current->children.count(id);
+
               node_stack.push_back(current);
-              current = &current->children[event.timer_id];
+              current = &current->children[id];
 
               if(need_init)
               {
-                  if(event.timer_id==-1)
-                      current->name = job_names[event.thread_id];
-                  else
-                      current->name = NgProfiler::GetName(event.timer_id);
+                  current->name = is_timer_event ? NgProfiler::GetName(id) : job_names[id];
                   current->time = 0.0;
-                  current->id = event.timer_id;
+                  current->id = id;
               }
 
-              current->time -= 1000.0*event.time/ticks_per_second;
+              current->start_time = event.time;
           }
           else
           {
-              current->time += 1000.0*event.time/ticks_per_second;
+              double time = 1000.0*(event.time-current->start_time)/ticks_per_second;
+              current->time += time;
               current = node_stack.back();
+              current->time -= time;
               node_stack.pop_back();
           }
       }
@@ -674,7 +686,6 @@ namespace ngcore
       .size('size')
       .color(d => color(d.name))
       .tooltipContent((d, node) => `Time: <i>${node.value.toPrecision(6)}ms</i>`)
-      .minSliceAngle(.4)
       (document.getElementById('chart'));
   </script>
 </body>
