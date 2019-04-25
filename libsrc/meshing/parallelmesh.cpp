@@ -873,8 +873,6 @@ namespace netgen
     *testout << "got " << numvert << " vertices" << endl;
 
     {
-      Element el(4);
-      
       Array<int> elarray;
       MyMPI_Recv (elarray, 0, MPI_TAG_MESH+2, comm);
       
@@ -883,9 +881,9 @@ namespace netgen
       for (int ind = 0, elnum = 1; ind < elarray.Size(); elnum++)
 	{
 	  paralleltop->SetLoc2Glob_VolEl ( elnum,  elarray[ind++]);
-	  
+
+          Element el(elarray[ind++]);          
 	  el.SetIndex(elarray[ind++]);
-	  el.SetNP(elarray[ind++]);
 	  
 	  for ( int j = 0; j < el.GetNP(); j++)
 	    el[j] = glob2loc_vert_ht.Get (elarray[ind++]); 
