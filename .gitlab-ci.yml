@@ -119,6 +119,22 @@ test_ubuntu_mpi:
       netgen_mpi_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}
       bash -c 'cd /root/build/netgen && make test_netgen ARGS="-V"'
 
+test_build_ngsolve:
+  <<: *ubuntu
+  allow_failure: true
+  stage: test
+  script:
+    - >-
+      docker run
+      -e NETGENDIR=/opt/netgen/bin
+      -e PYTHONPATH=/opt/netgen/lib/python3/dist-packages
+      -e MKLROOT=/opt/intel/mkl
+      -v /opt/intel:/opt/intel
+      -e CCACHE_DIR=/ccache
+      -v /mnt/ccache:/ccache
+      netgen_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}
+      bash -c 'cd /root/src/netgen/tests/ && ./build_ngsolve.sh'
+
 # cpp guideline checks
 test_guidelines:
   <<: *ubuntu
