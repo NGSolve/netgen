@@ -882,8 +882,9 @@ namespace netgen
 	{
 	  paralleltop->SetLoc2Glob_VolEl ( elnum,  elarray[ind++]);
 
+          int index = elarray[ind++];
           Element el(elarray[ind++]);          
-	  el.SetIndex(elarray[ind++]);
+	  el.SetIndex(index);
 	  
 	  for ( int j = 0; j < el.GetNP(); j++)
 	    el[j] = glob2loc_vert_ht.Get (elarray[ind++]); 
