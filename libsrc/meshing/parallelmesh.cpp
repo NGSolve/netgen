@@ -769,10 +769,11 @@ namespace netgen
     self.mlbetweennodes = Array<PointIndices<2>,PointIndex::BASE> (0);
     self.mlparentelement = Array<int>(0);
     self.mlparentsurfaceelement = Array<int>(0);
-    self.topology.Update();
     self.curvedelems = new CurvedElements (self);
     self.clusters = new AnisotropicClusters (self);
     self.ident = new Identifications (self);
+    self.topology = MeshTopology(*this);
+    self.topology.Update();
     self.BuildElementSearchTree();
     
     // const_cast<Mesh&>(*this).DeleteMesh();
