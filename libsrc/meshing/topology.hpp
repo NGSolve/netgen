@@ -66,11 +66,9 @@ public:
   int GetNSurfedges() const {return surfedges.Size();}
 
   MeshTopology () = default;
-  MeshTopology (const MeshTopology & top) = default;
   MeshTopology (MeshTopology && top) = default;
   MeshTopology (const Mesh & amesh);
   ~MeshTopology ();
-  MeshTopology & operator= (const MeshTopology & top) = default;
   MeshTopology & operator= (MeshTopology && top) = default;
   
   void SetBuildEdges (bool be)
