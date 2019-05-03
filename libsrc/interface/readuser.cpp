@@ -149,6 +149,16 @@ namespace netgen
 		    
 		    switch (fe_id)
 		      {
+                      case 22: // (Tapered beam) SEGM
+                        {
+                          Segment el;
+                          el[0] = nodes[0];
+                          el[1] = nodes[2];
+                          el[2] = nodes[1];
+			  auto nr = mesh.AddSegment (el);
+                          element_map[label] = std::make_tuple(nr+1, 2);
+                          break;
+                        }
 		      case 41: // TRIG
 			{
 			  Element2d el (TRIG);
@@ -191,6 +201,9 @@ namespace netgen
                           element_map[label] = std::make_tuple(nr+1, 0);
                           break;
                         }
+                      default:
+                        cout << "Do not know fe_id = " << fe_id << ", skipping it." << endl;
+                        break;
 		      }
                   }
                 cout << mesh.GetNE() << " elements found" << endl;
@@ -212,36 +225,64 @@ namespace netgen
                     in >> name;
                     cout << len << " element are in group " << name << endl;
                     int hi, index;
-                    int fdnr;
-                    bool is_boundary=false;
+                    int fdnr, ednr;
+
+                    in >> hi >> index >> hi >> hi;
+                    int codim = get<1>(element_map[index]);
                 
                     // use first element to determine if boundary or volume
-                    in >> hi >> index >> hi >> hi;
-                    if (get<1>(element_map[index]) == 1)
+                    
+                    switch (codim)
                       {
-                        is_boundary=true;
+                      case 0:
+                        {
+                          mesh.SetMaterial(++matnr, name);
+                          mesh.VolumeElement(get<0>(element_map[index])).SetIndex(matnr);
+                          break;
+                        }
+                      case 1:
+                        {
+                          int bcpr = mesh.GetNFD()+1;
+                          fdnr = mesh.AddFaceDescriptor(FaceDescriptor(bcpr, 0,0,0));
+                          mesh.GetFaceDescriptor(fdnr).SetBCProperty(bcpr+1);
+                          mesh.SetBCName(bcpr, name);
+                          mesh.SurfaceElement(get<0>(element_map[index])).SetIndex(fdnr);
+                          break;
+                        }
+                      case 2:
+                        {
+                          int bcpr = mesh.GetNCD2Names()+1;
+                          auto ed = EdgeDescriptor();
+                          ed.SetSurfNr(0,bcpr);//?
+                          ednr = mesh.AddEdgeDescriptor(ed);
+                          mesh.SetCD2Name(bcpr, name);
+                          string * bcname = new string(name);
+                          mesh.LineSegment(get<0>(element_map[index])).SetBCName(bcname);
+                          break;
+                        }
+                      default:
+                        {
+                          cout << "Codim " << codim << " not implemented yet!" << endl;
+                        }
                       }
-                    cout << "Group " << name << (is_boundary ? " is boundary" : " is volume") << endl;
-                    if(is_boundary)
-                      {
-                        int bcpr = mesh.GetNFD()+1;
-                        fdnr = mesh.AddFaceDescriptor(FaceDescriptor(bcpr, 0,0,0));
-                        mesh.GetFaceDescriptor(fdnr).SetBCProperty(bcpr+1);
-                        mesh.SetBCName(bcpr, name);
-                        mesh.SurfaceElement(get<0>(element_map[index])).SetIndex(fdnr);
-                      }
-                    else
-                      {
-                        mesh.SetMaterial(++matnr, name);
-                        mesh.VolumeElement(get<0>(element_map[index])).SetIndex(matnr);
-                      }
+                        
                     for(int i=0; i<len-1; i++)
                       {
                         in >> hi >> index >> hi >> hi;
-                        if(is_boundary)
-                          mesh.SurfaceElement(get<0>(element_map[index])).SetIndex(fdnr);
-                        else
-                          mesh.VolumeElement(get<0>(element_map[index])).SetIndex(matnr);
+                        switch (codim)
+                          {
+                          case 0:
+                            mesh.VolumeElement(get<0>(element_map[index])).SetIndex(matnr);
+                            break;
+                          case 1:
+                            mesh.SurfaceElement(get<0>(element_map[index])).SetIndex(fdnr);
+                            break;
+                          case 2:
+                            mesh.LineSegment(get<0>(element_map[index])).edgenr = ednr+1;
+                            break;
+                          default:
+                            break;
+                          }
                       }
                   }
               }
@@ -262,6 +303,7 @@ namespace netgen
         mesh.ComputeNVertices();
         mesh.RebuildSurfaceElementLists();
         mesh.GetBox (pmin, pmax);
+        mesh.UpdateTopology();
         cout << "bounding-box = " << pmin << "-" << pmax << endl;
       }
 
