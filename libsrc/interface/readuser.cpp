@@ -99,6 +99,7 @@ namespace netgen
         // map from unv element nr to our element number + an index if it is vol (0), bnd(1), ...
         std::map<size_t, std::tuple<size_t, int>> element_map;
 
+        Array<Segment, 0, size_t> tmp_segments;
         while (in.good())
           {
             in >> reco;
@@ -155,7 +156,9 @@ namespace netgen
                           el[0] = nodes[0];
                           el[1] = nodes[2];
                           el[2] = nodes[1];
-			  auto nr = mesh.AddSegment (el);
+                          
+                          auto nr = tmp_segments.Size();
+                          tmp_segments.Append(el);
                           element_map[label] = std::make_tuple(nr+1, 2);
                           break;
                         }
@@ -229,7 +232,6 @@ namespace netgen
 
                     in >> hi >> index >> hi >> hi;
                     int codim = get<1>(element_map[index]);
-                
                     // use first element to determine if boundary or volume
                     
                     switch (codim)
@@ -257,7 +259,9 @@ namespace netgen
                           ednr = mesh.AddEdgeDescriptor(ed);
                           mesh.SetCD2Name(bcpr, name);
                           string * bcname = new string(name);
-                          mesh.LineSegment(get<0>(element_map[index])).SetBCName(bcname);
+                          auto nr = mesh.AddSegment(tmp_segments[get<0>(element_map[index])-1]);
+                          mesh.LineSegment(nr+1).SetBCName(bcname);
+                          mesh.LineSegment(nr+1).edgenr = ednr+1;
                           break;
                         }
                       default:
@@ -278,7 +282,12 @@ namespace netgen
                             mesh.SurfaceElement(get<0>(element_map[index])).SetIndex(fdnr);
                             break;
                           case 2:
-                            mesh.LineSegment(get<0>(element_map[index])).edgenr = ednr+1;
+                            {
+                              if (i==0)
+                                continue;
+                              auto nr = mesh.AddSegment(tmp_segments[get<0>(element_map[index])-1]);
+                              mesh.LineSegment(nr+1).edgenr = ednr+1;
+                            }
                             break;
                           default:
                             break;
