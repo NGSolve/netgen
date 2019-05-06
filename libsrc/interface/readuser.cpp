@@ -259,8 +259,8 @@ namespace netgen
                           ednr = mesh.AddEdgeDescriptor(ed);
                           mesh.SetCD2Name(bcpr, name);
                           auto nr = mesh.AddSegment(tmp_segments[get<0>(element_map[index])-1]);
-                          mesh.LineSegment(nr+1).SetBCName(mesh.GetCD2NamePtr(mesh.GetNCD2Names()));
-                          mesh.LineSegment(nr+1).edgenr = ednr+1;
+                          mesh[nr].SetBCName(mesh.GetCD2NamePtr(mesh.GetNCD2Names()));
+                          mesh[nr].edgenr = ednr+1;
                           break;
                         }
                       default:
@@ -283,8 +283,8 @@ namespace netgen
                           case 2:
                             {
                               auto nr = mesh.AddSegment(tmp_segments[get<0>(element_map[index])-1]);
-                              mesh.LineSegment(nr+1).edgenr = ednr+1;
-                              mesh.LineSegment(nr+1).SetBCName(mesh.GetCD2NamePtr(mesh.GetNCD2Names()));
+                              mesh[nr].edgenr = ednr+1;
+                              mesh[nr].SetBCName(mesh.GetCD2NamePtr(mesh.GetNCD2Names()));
                             }
                             break;
                           default:
