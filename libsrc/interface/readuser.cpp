@@ -99,7 +99,7 @@ namespace netgen
         // map from unv element nr to our element number + an index if it is vol (0), bnd(1), ...
         std::map<size_t, std::tuple<size_t, int>> element_map;
 
-        Array<Segment, 0, size_t> tmp_segments;
+        Array<Segment> tmp_segments;
         while (in.good())
           {
             in >> reco;
@@ -258,9 +258,8 @@ namespace netgen
                           ed.SetSurfNr(0,bcpr);//?
                           ednr = mesh.AddEdgeDescriptor(ed);
                           mesh.SetCD2Name(bcpr, name);
-                          string * bcname = new string(name);
                           auto nr = mesh.AddSegment(tmp_segments[get<0>(element_map[index])-1]);
-                          mesh.LineSegment(nr+1).SetBCName(bcname);
+                          mesh.LineSegment(nr+1).SetBCName(mesh.GetCD2NamePtr(mesh.GetNCD2Names()));
                           mesh.LineSegment(nr+1).edgenr = ednr+1;
                           break;
                         }
@@ -283,10 +282,9 @@ namespace netgen
                             break;
                           case 2:
                             {
-                              if (i==0)
-                                continue;
                               auto nr = mesh.AddSegment(tmp_segments[get<0>(element_map[index])-1]);
                               mesh.LineSegment(nr+1).edgenr = ednr+1;
+                              mesh.LineSegment(nr+1).SetBCName(mesh.GetCD2NamePtr(mesh.GetNCD2Names()));
                             }
                             break;
                           default:
