@@ -94,7 +94,7 @@ namespace netgen
                         char ch;
                         string name;
                         sbuf >> ch >> name;
-                        cout << IM(3) << "Title: " << name << endl;
+                        PrintMessage(3, "Title: ", name);
                       }
                     else if (token == "%STATISTICS")
                       {
@@ -106,7 +106,7 @@ namespace netgen
                       }
                     else
                       {
-                        cout << IM(1) << "SECTION HEADER, unknown field: " << buf << endl;
+                        PrintMessage(1, "SECTION HEADER, unknown field: ",buf);
                       }
                   }                
               }
@@ -142,7 +142,7 @@ namespace netgen
                       }
                     else
                       {
-                        cout << IM(1) << "SECTION ELEM_TYPE, unknown field: " << buf << endl;
+                        PrintMessage(1, "SECTION ELEM_TYPE, unknown field: ", buf);
                       }
                   }                
               }
@@ -219,7 +219,7 @@ namespace netgen
                       }
                     else
                       {
-                        cout << IM(1) << "SECTION MATERIALS, unknown field: " << buf << endl;
+                        PrintMessage(1, "SECTION MATERIALS, unknown field: ", buf);
                       }
                   }
               }
@@ -271,7 +271,7 @@ namespace netgen
                       }
                     else
                       {
-                        cout << IM(1) << "SECTION MESH, unknown: " << buf << endl;
+                        PrintMessage(1, "SECTION MESH, unknown: ", buf);
                       }
                   }
               }
@@ -349,7 +349,7 @@ namespace netgen
                       }
                     else
                       {
-                        cout << IM(1) << "SECTION MESH, unknown: " << buf << endl;
+                        PrintMessage(1, "SECTION MESH, unknown: ", buf);
                       }
                   }
               }
@@ -378,10 +378,10 @@ namespace netgen
                         sbuf >> lt->id >> def >> ch >> lt->name >> lt->placement >> lt->valuetype;
                         
                         if (lt->name == "DISPLACEMENT")
-                          cout << IM(3) << "loadtype DISPLACEMENT found" << endl;
+                          PrintMessage(3, "loadtype DISPLACEMENT found");
 
                         if (lt->placement != "FACE" && lt->placement != "EDGE" && lt->placement != "NODE")
-                          cout << IM(1) << "unsupported placement " << lt->placement << endl;
+                          PrintMessage(1, "unsupported placement ", lt->placement);
 
                         loadtypes.Append (lt);
                       }
@@ -412,27 +412,29 @@ namespace netgen
                       {
                         for (int i = 0; i < loadtypes.Size(); i++)
                           {
+                            stringstream str;
+                            str << loadtypes[i]->places;
                             if (loadtypes[i]->placement == "FACE" && loadtypes[i]->name == "DISPLACEMENT")
                               {
                                 mesh.SetUserData ("CONSTRAINT_DISP_FACE", loadtypes[i]->places);
-                                cout << IM(3) << "constrained faces: " << loadtypes[i]->places << endl;
+                                PrintMessage(3, "constrained faces: ", str.str());
                               }
                             if (loadtypes[i]->placement == "EDGE" && loadtypes[i]->name == "DISPLACEMENT")
                               {
                                 mesh.SetUserData ("CONSTRAINT_DISP_EDGE", loadtypes[i]->places);
-                                cout << IM(3) << "constrained edges: " << loadtypes[i]->places << endl;
+                                PrintMessage(3,"constrained edges: ", str.str());
                               }
                             if (loadtypes[i]->placement == "NODE" && loadtypes[i]->name == "DISPLACEMENT")
                               {
                                 mesh.SetUserData ("CONSTRAINT_DISP_NODE", loadtypes[i]->places);
-                                cout << IM(3) << "constrained nodes: " << loadtypes[i]->places << endl;
+                                PrintMessage(3, "constrained nodes: ", str.str());
                               }
                           }
                         break;
                       }
                     else
                       {
-                        cout << IM(1) << "SECTION LOADS, unknown field: " << buf << endl;
+                        PrintMessage(1, "SECTION LOADS, unknown field: ", buf);
                       }
                   }
               }
@@ -441,11 +443,11 @@ namespace netgen
 
             else
               {
-                cout << IM(1) << "unknown section " << token << endl;
+                PrintMessage(1, "unknown section ", token);
               }
           }
         else
-          cout << IM(3) << "parse line: (" << buf << ")" << endl;
+          PrintMessage(3, "parse line: (", buf, ")");
       }
   }
 }
