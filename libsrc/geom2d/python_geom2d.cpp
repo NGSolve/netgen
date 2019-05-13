@@ -138,6 +138,47 @@ DLL_HEADER void ExportGeom2d(py::module &m)
 		  self.AppendSegment(seg);
                   }), py::arg("point_indices"), py::arg("leftdomain") = 1, py::arg("rightdomain") = py::int_(0))
 
+
+    .def("AddCurve", 
+         [] (SplineGeometry2d & self, py::object func,
+                         int leftdomain, int rightdomain, py::object bc, double maxh)
+         {
+           int n = 1000;
+           Array<Point<2>> points;
+           for (int i = 0; i <= n; i++)
+             {
+               double t = double(i)/n;
+               py::tuple xy = func(t);
+               double x = py::cast<double>(xy[0]);
+               double y = py::cast<double>(xy[1]);
+               points.Append (Point<2>(x,y));
+             }
+           auto spline = new DiscretePointsSeg<2> (points);
+           SplineSegExt * spex = new SplineSegExt (*spline);
+           
+           spex -> leftdom = leftdomain;
+           spex -> rightdom = rightdomain;
+           spex->hmax = maxh;
+           spex->reffak = 1;
+           spex->copyfrom = -1;
+           
+           if (py::extract<int>(bc).check())
+             spex->bc = py::extract<int>(bc)();
+           else if (py::extract<string>(bc).check())
+             {
+               string bcname = py::extract<string>(bc)();
+               spex->bc = self.GetNSplines()+1;
+               self.SetBCName(spex->bc, bcname);
+             }
+           else
+             spex->bc = self.GetNSplines()+1;
+
+           
+           self.AppendSegment (spex);
+         }, py::arg("func"), py::arg("leftdomain") = 1, py::arg("rightdomain") = py::int_(0),
+         py::arg("bc")=NGDummyArgument(), py::arg("maxh")=1e99,
+         "Curve is given as parametrization on the interval [0,1]")
+    
     .def("SetMaterial", &SplineGeometry2d::SetMaterial)
     .def("SetDomainMaxH", &SplineGeometry2d::SetDomainMaxh)
 
