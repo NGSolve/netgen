@@ -11,6 +11,8 @@
 /* Date:   20. Nov. 99                                                    */
 /**************************************************************************/
 
+#include "../core/ngcore.hpp"
+
 /*
   Application program interface to Netgen
 
