@@ -1101,7 +1101,7 @@ namespace netgen
         glEndList ();
 
         if (clipplane_isolinelist) glDeleteLists (clipplane_isolinelist, 1);
-            
+
         if (vispar.clipping.enable && clipsolution == 1 && sol)
           {
             clipplane_isolinelist = glGenLists (1);
@@ -1113,7 +1113,8 @@ namespace netgen
             bool drawelem;
           
             glNormal3d (-clipplane[0], -clipplane[1], -clipplane[2]);
-          
+            glBegin (GL_LINES);
+            
             if (numisolines)
               for (int i = 0; i < cpt.Size(); i++)
                 {
@@ -1129,13 +1130,11 @@ namespace netgen
                     DrawIsoLines (pts[trig.points[0].pnr].p,
                                   pts[trig.points[1].pnr].p,
                                   pts[trig.points[2].pnr].p,
-                                  // trig.points[1].p,
-                                  // trig.points[2].p,
                                   vali[0], vali[1], vali[2]);
                 }
+            glEnd();
             glEndList ();
           }
-        glEnd();
       }
   
     clipplanetimestamp = max2 (vispar.clipping.timestamp, solutiontimestamp);
