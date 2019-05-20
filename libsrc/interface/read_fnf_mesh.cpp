@@ -335,6 +335,8 @@ namespace netgen
                                 int fnr = fnums[j+1];
                                 
                                 const Element & el = mesh.VolumeElement (elnr);
+                                if(j == 0)
+                                  mesh.GetFaceDescriptor(nr).SetDomainIn(el.GetIndex());
                                 Element2d el2d;
                                 el.GetFace (fnr, el2d);
                                 el2d.SetIndex (nr);
