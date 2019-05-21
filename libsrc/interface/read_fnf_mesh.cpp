@@ -169,7 +169,21 @@ namespace netgen
                   }                
               }
 
-
+            else if (token == "ANALYSIS")
+              {
+                // ignore this section
+                while (1)
+                  {
+                    ReadLine (fin, buf);
+                    stringstream sbuf(buf);
+                    string token;
+                    sbuf >> token;
+                    if (token == "%END_SECT")
+                      {
+                        break;
+                      }
+                  }                
+              }
  
             else if (token == "MATERIALS")
               {
@@ -408,7 +422,9 @@ namespace netgen
                               if (load_type_id == loadtypes[i]->id)
                                 loadtypes[i]->places.Append (placement);
                           }
-                      }                    
+                      }
+                    else if (token == "%CON_CASE")
+                      { ; }
                     
                     else if (token == "%END_SECT")
                       {

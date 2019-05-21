@@ -18,7 +18,7 @@ namespace netgen
   void ReadFile (Mesh & mesh,
                  const string & hfilename)
   {
-    cout << "Read User File" << endl;
+    PrintMessage(3, "Read User File");
 
     const char * filename = hfilename.c_str();
 
