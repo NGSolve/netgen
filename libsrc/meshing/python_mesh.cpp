@@ -763,6 +763,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          py::return_value_policy::reference)
     .def("GetNFaceDescriptors", &Mesh::GetNFD)
 
+    .def("GetVolumeNeighboursOfSurfaceElement", [](Mesh & self, size_t sel)
+                                                {
+                                                  int elnr1, elnr2;
+                                                  self.GetTopology().GetSurface2VolumeElement(sel+1, elnr1, elnr2);
+                                                  return py::make_tuple(elnr1, elnr2);
+                                                }, "Returns element nrs of volume element connected to surface element, -1 if no volume element")
+
     .def("GetNCD2Names", &Mesh::GetNCD2Names)
     
 
