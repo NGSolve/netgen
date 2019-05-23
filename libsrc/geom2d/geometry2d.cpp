@@ -138,7 +138,7 @@ namespace netgen
 
 	geompoints.Append (GeomPoint<D>(x, hd));
 	geompoints.Last().hpref = flags.GetDefineFlag ("hpref");
-	geompoints.Last().hmax = 1e99;
+	geompoints.Last().hmax = flags.GetNumFlag("hmax", 1e99);
       }
 
     PrintMessage (3, nump, " points loaded");
@@ -201,7 +201,6 @@ namespace netgen
 	infile >> spex->reffak;
 	spex -> leftdom = leftdom;
 	spex -> rightdom = rightdom;
-	spex -> hmax = 1e99;
 	splines.Append (spex);
 
 
@@ -233,6 +232,7 @@ namespace netgen
 	    delete bcnames[mybc];
 	    bcnames[mybc] = new string (flags.GetStringFlag("bcname","") );
 	  }
+	spex -> hmax = flags.GetNumFlag("hmax", 1e99);
       }
   }
 
