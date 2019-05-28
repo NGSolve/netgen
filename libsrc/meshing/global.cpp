@@ -18,7 +18,6 @@ namespace netgen
   // testout -> clear(ios::failbit);
 
   // ostream * testout = &cout;
-  ostream * testout = new ostream(0);
 
   // NetgenOutStream * testout = new NetgenOutStream;
 

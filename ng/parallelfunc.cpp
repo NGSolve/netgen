@@ -71,8 +71,11 @@ void ParallelRun()
   MPI_Comm_size(MPI_COMM_WORLD, &ntasks);
   MPI_Comm_rank(MPI_COMM_WORLD, &id);
 
-  if (parameters.StringFlagDefined ("testout"))      
-    testout = new ofstream (string("testout_proc") + id  );      
+  if (parameters.StringFlagDefined ("testout"))
+    {
+      delete testout;
+      testout = new ofstream (string("testout_proc") + id  );
+    }
 
     
 

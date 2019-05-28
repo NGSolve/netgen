@@ -31,6 +31,8 @@ namespace spdlog
 
 namespace ngcore
 {
+  NGCORE_API extern std::ostream* testout; // NOLINT
+  
   namespace level
   {
     enum level_enum
