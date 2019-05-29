@@ -483,7 +483,6 @@ extern "C" {
 #include <iostream>
 namespace netgen 
 {
-  DLL_HEADER extern std::ostream * testout;
   DLL_HEADER extern int printmessage_importance;
 }
 

@@ -23,7 +23,6 @@ namespace netgen
 // #include <iostream>
 /** output stream for testing.
   testout is opened by main */
-DLL_HEADER extern ostream * testout;
 
 /** use instead of cout */
 DLL_HEADER extern ostream * mycout;

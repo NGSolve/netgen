@@ -13,6 +13,7 @@
 
 namespace ngcore
 {
+  std::ostream* testout = new std::ostream(nullptr); // NOLINT
 
   void Logger::log(level::level_enum level, std::string && s)
   {

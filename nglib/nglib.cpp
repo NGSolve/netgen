@@ -82,7 +82,7 @@ namespace nglib
       mycout = &cout;
       myerr = &cerr;
       // netgen::testout->SetOutStream (new ofstream ("test.out"));
-      testout = new ofstream ("test.out");
+      // testout = new ofstream ("test.out");
    }
 
 
