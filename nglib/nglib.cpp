@@ -44,7 +44,6 @@ namespace netgen
 }
 #endif
 
-
 /*
 namespace netgen
 {
@@ -101,6 +100,19 @@ namespace nglib
    }
 
 
+   DLL_HEADER void Ng_GetStatus(char ** str, double & percent)
+   {
+	   ::netgen::MyStr s;
+	   ::netgen::GetStatus(s, percent);
+	   *str = new char[s.Length() + 1];
+	   strcpy(*str, s.c_str());
+   }
+
+
+   DLL_HEADER void Ng_SetTerminate(bool abort)
+   {
+	   ::netgen::multithread.terminate = abort ? 1 : 0;
+   }
 
 
    // Clean-up functions before ending usage of nglib

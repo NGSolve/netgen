@@ -250,6 +250,16 @@ DLL_HEADER void Ng_Init (bool cout_to_null = false, bool cerr_to_null = false, b
 DLL_HEADER void Ng_Exit ();
   
 
+/*! \brief Get current status, e.g. info string and percent
+*/
+DLL_HEADER void Ng_GetStatus(char ** str, double & percent);
+
+
+/*! \brief Set abort flag
+*/
+DLL_HEADER void Ng_SetTerminate(bool abort);
+
+
 /*! \brief Create a new (and empty) Netgen Mesh Structure
 
     This function creates a new Netgen Mesh, initialises 
