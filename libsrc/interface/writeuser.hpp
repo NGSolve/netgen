@@ -73,6 +73,9 @@ void WriteGmsh2Format (const Mesh & mesh,
                        const NetgenGeometry & geom,
                        const string & filename);
 
+extern
+void WriteVtkFormat (const Mesh & mesh,
+                      const string & filename);
 
 // Philippose - 25/10/2009
 // Added OpenFOAM 1.5+ Mesh Export support
