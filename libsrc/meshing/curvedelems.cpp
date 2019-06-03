@@ -732,6 +732,7 @@ namespace netgen
 
     if (mesh.GetDimension() == 3 || rational)
       {
+        static Timer tce("curve edges"); RegionTimer reg(tce);
 	Array<int> surfnr(nedges);
 	Array<PointGeomInfo> gi0(nedges);
 	Array<PointGeomInfo> gi1(nedges);
@@ -1206,7 +1207,8 @@ namespace netgen
 #endif
 
     if (mesh.GetDimension() == 3 && working)
-      { 
+      {
+        static Timer tcf("curve faces"); RegionTimer reg(tcf);
 	for (int f = 0; f < nfaces; f++)
 	  {
 	    int facenr = f;
@@ -1293,7 +1295,11 @@ namespace netgen
  
 		      Point<3> pp = xa[jj];
 		      // ref -> ProjectToSurface (pp, mesh.GetFaceDescriptor(el.GetIndex()).SurfNr());
-		      ref -> ProjectToSurface (pp, surfnr[facenr]);
+                      SurfaceElementIndex sei = top.GetFace2SurfaceElement (f+1)-1;
+                      PointGeomInfo gi = mesh[sei].GeomInfoPi(1);
+
+		      ref -> ProjectToSurface (pp, surfnr[facenr], gi);
+
 		      Vec<3> dist = pp-xa[jj];
 		
 		      CalcTrigShape (order1, lami[fnums[1]]-lami[fnums[0]],

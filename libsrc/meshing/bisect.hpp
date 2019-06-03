@@ -72,7 +72,7 @@ public:
 
   virtual void ProjectToSurface (Point<3> & p, int surfi) const;
 
-  virtual void ProjectToSurface (Point<3> & p, int surfi, const PointGeomInfo & /* gi */) const
+  virtual void ProjectToSurface (Point<3> & p, int surfi, PointGeomInfo & /* gi */) const
   {
     ProjectToSurface (p, surfi);
   }

@@ -103,16 +103,16 @@ public:
 			     int surfi, 
 			     const PointGeomInfo & gi1, 
 			     const PointGeomInfo & gi2,
-			     Point<3> & newp, PointGeomInfo & newgi) const;
+			     Point<3> & newp, PointGeomInfo & newgi) const override;
 
   virtual void PointBetween (const Point<3> & p1, const Point<3> & p2, double secpoint,
 			     int surfi1, int surfi2, 
 			     const EdgePointGeomInfo & ap1, 
 			     const EdgePointGeomInfo & ap2,
-			     Point<3> & newp, EdgePointGeomInfo & newgi) const;
+			     Point<3> & newp, EdgePointGeomInfo & newgi) const override;
 
-  virtual void ProjectToSurface (Point<3> & p, int surfi) const;
-  virtual void ProjectToSurface (Point<3> & p, int surfi, PointGeomInfo & gi) const;
+  virtual void ProjectToSurface (Point<3> & p, int surfi) const override;
+  virtual void ProjectToSurface (Point<3> & p, int surfi, PointGeomInfo & gi) const override;
 };
 
 
