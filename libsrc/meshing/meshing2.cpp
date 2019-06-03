@@ -195,7 +195,7 @@ namespace netgen
 
   MESHING2_RESULT Meshing2 :: GenerateMesh (Mesh & mesh, const MeshingParameters & mp, double gh, int facenr)
   {
-    static int timer = NgProfiler::CreateTimer ("surface meshing");
+    static Timer timer("surface meshing"); RegionTimer reg(timer);
 
     static int timer1 = NgProfiler::CreateTimer ("surface meshing1");
     static int timer2 = NgProfiler::CreateTimer ("surface meshing2");
@@ -205,8 +205,6 @@ namespace netgen
     static int ts2 = NgProfiler::CreateTimer ("surface meshing start 2");
     static int ts3 = NgProfiler::CreateTimer ("surface meshing start 3");
 
-
-    NgProfiler::RegionTimer reg (timer);
 
     NgProfiler::StartTimer (ts1);
 

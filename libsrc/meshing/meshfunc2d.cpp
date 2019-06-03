@@ -6,8 +6,7 @@ namespace netgen
 
   DLL_HEADER void Optimize2d (Mesh & mesh, MeshingParameters & mp)
   {
-    static int timer = NgProfiler::CreateTimer ("optimize2d");
-    NgProfiler::RegionTimer reg(timer);
+    static Timer timer("optimize2d"); RegionTimer reg(timer);
 
     mesh.CalcSurfacesOfNode();
 

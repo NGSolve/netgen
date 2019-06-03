@@ -1298,8 +1298,7 @@ namespace netgen
                       SurfaceElementIndex sei = top.GetFace2SurfaceElement (f+1)-1;
                       PointGeomInfo gi = mesh[sei].GeomInfoPi(1);
 
-		      ref -> ProjectToSurface (pp, surfnr[facenr], gi);
-
+                      ref -> ProjectToSurface (pp, surfnr[facenr], gi);
 		      Vec<3> dist = pp-xa[jj];
 		
 		      CalcTrigShape (order1, lami[fnums[1]]-lami[fnums[0]],

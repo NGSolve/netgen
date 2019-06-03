@@ -729,11 +729,11 @@ namespace netgen
 	return;
       }
 
-    static int timer = NgProfiler::CreateTimer ("MeshSmoothing 2D");
+    static Timer timer("MeshSmoothing 2D");
     static int timer1 = NgProfiler::CreateTimer ("MeshSmoothing 2D start");
     static int timer2 = NgProfiler::CreateTimer ("MeshSmoothing 2D - BFGS");
 
-    NgProfiler::RegionTimer reg (timer);
+    RegionTimer reg (timer);
     NgProfiler::StartTimer (timer1);
 
     CheckMeshApproximation (mesh);

@@ -899,8 +899,8 @@ namespace netgen
 
       multithread.task = "Optimizing surface";
 
-      static int timer_opt2d = NgProfiler::CreateTimer ("Optimization 2D");
-      NgProfiler::StartTimer (timer_opt2d);
+      static Timer timer_opt2d("Optimization 2D");
+      timer_opt2d.Start();
 
       for (k = 1; k <= mesh.GetNFD(); k++)
       {
@@ -974,8 +974,7 @@ namespace netgen
 
       mesh.CalcSurfacesOfNode();
       mesh.Compress();
-
-      NgProfiler::StopTimer (timer_opt2d);
+      timer_opt2d.Stop();
 
       multithread.task = savetask;
 
