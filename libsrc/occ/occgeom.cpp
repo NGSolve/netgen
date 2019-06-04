@@ -1179,6 +1179,8 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
       {
          TopoDS_Face face = TopoDS::Face(exp0.Current());
          STEP_GetEntityName(face,&reader,name);
+         if (name == string(""))
+             snprintf(name, 50, "bc_%i", occgeo->fnames.Size());
          occgeo->fnames.Append(name);
          for (exp1.Init(face, TopAbs_EDGE); exp1.More(); exp1.Next())
          {
