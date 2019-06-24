@@ -123,6 +123,8 @@ namespace netgen
       if (mesh2.cd3names[i]) cd3names[i] = new string(*mesh2.cd3names[i]);
       else cd3names[i] = 0;
 
+    numvertices = mesh2.numvertices;
+
     return *this;
   }
 
