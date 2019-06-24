@@ -100,15 +100,28 @@ namespace netgen
     facedecoding = mesh2.facedecoding;
     dimension = mesh2.dimension;
 
+
+    materials.SetSize( mesh2.materials.Size() );
+    for ( int i = 0; i < mesh2.materials.Size(); i++ )
+      if ( mesh2.materials[i] ) materials[i] = new string ( *mesh2.materials[i] );
+      else materials[i] = 0;
+
+
     bcnames.SetSize( mesh2.bcnames.Size() );
     for ( int i = 0; i < mesh2.bcnames.Size(); i++ )
       if ( mesh2.bcnames[i] ) bcnames[i] = new string ( *mesh2.bcnames[i] );
       else bcnames[i] = 0;
 
+
     cd2names.SetSize(mesh2.cd2names.Size());
     for (int i=0; i < mesh2.cd2names.Size(); i++)
       if (mesh2.cd2names[i]) cd2names[i] = new string(*mesh2.cd2names[i]);
       else cd2names[i] = 0;
+
+    cd3names.SetSize(mesh2.cd3names.Size());
+    for (int i=0; i < mesh2.cd3names.Size(); i++)
+      if (mesh2.cd3names[i]) cd3names[i] = new string(*mesh2.cd3names[i]);
+      else cd3names[i] = 0;
 
     return *this;
   }
