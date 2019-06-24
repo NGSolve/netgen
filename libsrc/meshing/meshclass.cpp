@@ -3324,8 +3324,8 @@ namespace netgen
     for (int i = 0; i < segments.Size(); i++)
       {
         const Segment & seg = segments[i];
-        pused.Set (seg[0]);
-        pused.Set (seg[1]);
+        for (int j = 0; j < seg.GetNP(); j++)
+          pused.Set (seg[j]);
       }
 
     for (int i = 0; i < openelements.Size(); i++)
@@ -3389,8 +3389,8 @@ namespace netgen
     for (int i = 0; i < segments.Size(); i++)
       {
         Segment & seg = segments[i];
-        seg[0] = op2np[seg[0]];
-        seg[1] = op2np[seg[1]];
+        for (int j = 0; j < seg.GetNP(); j++)
+          seg[j] = op2np[seg[j]];
       }
 
     for (int i = 1; i <= openelements.Size(); i++)
@@ -4789,6 +4789,42 @@ namespace netgen
             //(*testout) << "col1 " << col1 << " col2 " << col2 << " col3 " << col3 << " rhs " << rhs << endl;
             //(*testout) << "sol " << sol << endl;
 
+            if (SurfaceElement(element).GetType() ==TRIG6)
+              {
+                netgen::Point<2> lam(1./3,1./3);
+                Vec<3> rhs;
+                Vec<2> deltalam;
+                netgen::Point<3> x;
+                Mat<3,2> Jac,Jact;
+                
+                double delta=1;
+                
+                bool retval;
+                
+                int i = 0;
+                
+                const int maxits = 30;
+                while(delta > 1e-16 && i<maxits)
+                  {
+                    curvedelems->CalcSurfaceTransformation(lam,element-1,x,Jac);
+                    rhs = p-x;
+                    Jac.Solve(rhs,deltalam);
+                    
+                    lam += deltalam;
+                    
+                    delta = deltalam.Length2();
+                    
+                    i++;
+                    //(*testout) << "pcie i " << i << " delta " << delta << " p " << p << " x " << x << " lam " << lam << endl;
+                    //<< "Jac " << Jac << endl;
+                  }
+                
+                if(i==maxits)
+                  return false;
+                
+                sol.X() = lam(0);
+                sol.Y() = lam(1);
+              }
             if (sol.X() >= -eps && sol.Y() >= -eps && 
                 sol.X() + sol.Y() <= 1+eps)
               {
