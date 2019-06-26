@@ -23,6 +23,14 @@ namespace netgen
 
     INDEX_2_HASHTABLE<PointIndex> between(mesh.GetNP() + 5);
 
+    for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
+      {
+        auto & seg = mesh[si];
+        if (seg.GetType() == SEGMENT3)
+          between.Set(INDEX_2::Sort(seg[0],seg[1]), seg[2]);
+      }
+    
+    
     for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
       {
 	const Element2d & el = mesh[sei];

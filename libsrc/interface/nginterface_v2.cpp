@@ -1089,7 +1089,7 @@ namespace netgen
     
     if (ind > 0)
       {
-        if(mesh->SurfaceElement(ind).GetType()==QUAD)
+        if(mesh->SurfaceElement(ind).GetType()==QUAD || mesh->SurfaceElement(ind).GetType()==TRIG6)
           {
             lami[0] = lam3[0];
             lami[1] = lam3[1];

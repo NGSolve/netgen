@@ -10,6 +10,16 @@ namespace netgen
 
     mesh.CalcSurfacesOfNode();
 
+    bool secondorder = mesh.GetNP() > mesh.GetNV();
+
+
+    if (secondorder)
+      {
+      for (SurfaceElementIndex ei = 0; ei < mesh.GetNSE(); ei++)
+        mesh[ei].SetType(TRIG);
+      }
+    mesh.Compress();
+
     const char * optstr = mp.optimize2d.c_str();
     int optsteps = mp.optsteps2d;
 
@@ -51,6 +61,13 @@ namespace netgen
 	      cerr << "Optimization code " << optstr[j-1] << " not defined" << endl;
 	    }  
 	}
+    if (secondorder)
+      {
+        if (mesh.GetGeometry())
+          mesh.GetGeometry()->GetRefinement().MakeSecondOrder(mesh);
+        else
+          Refinement().MakeSecondOrder(mesh);
+      }
   }
 
 }
