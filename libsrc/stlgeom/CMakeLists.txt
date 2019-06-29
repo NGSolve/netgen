@@ -4,12 +4,11 @@ add_library(stl ${NG_LIB_TYPE}
         )
 
 if(NOT WIN32)
-    target_link_libraries( stl mesh ${PYTHON_LIBRARIES})
+    target_link_libraries( stl PUBLIC mesh PRIVATE ${PYTHON_LIBRARIES})
     install( TARGETS stl ${NG_INSTALL_DIR})
 endif(NOT WIN32)
 
-target_link_libraries( stl ngcore )
-
+target_link_libraries( stl PUBLIC ngcore )
 
 if(USE_GUI)
     add_library(stlvis ${NG_LIB_TYPE}

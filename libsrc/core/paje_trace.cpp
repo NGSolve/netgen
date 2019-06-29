@@ -654,6 +654,10 @@ namespace ngcore
           }
           else
           {
+              if(node_stack.size()==0) {
+                std::cout << "node stack empty!" << std::endl;
+                break;
+              }
               double time = 1000.0*static_cast<double>(event.time-current->start_time)/ticks_per_second;
               current->time += time;
               current = node_stack.back();

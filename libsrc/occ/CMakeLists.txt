@@ -11,7 +11,7 @@ endif(USE_GUI)
 target_link_libraries(occ PUBLIC ngcore)
 
 if(NOT WIN32)
-    target_link_libraries( occ PUBLIC ${OCC_LIBRARIES} ${PYTHON_LIBRARIES})
+    target_link_libraries( occ PRIVATE ${OCC_LIBRARIES} ${PYTHON_LIBRARIES})
     install( TARGETS occ ${NG_INSTALL_DIR})
     if (USE_GUI)
         target_link_libraries( occvis PUBLIC occ )
