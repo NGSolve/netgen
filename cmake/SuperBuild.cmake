@@ -145,6 +145,7 @@ set_vars( NETGEN_CMAKE_ARGS
   USE_SPDLOG
   DEBUG_LOG
   CHECK_RANGE
+  BUILD_STUB_FILES
   )
 
 # propagate all variables set on the command line using cmake -DFOO=BAR
