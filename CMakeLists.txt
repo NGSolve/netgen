@@ -28,6 +28,7 @@ option( ENABLE_CPP_CORE_GUIDELINES_CHECK "Enable cpp core guideline checks on ng
 option( USE_SPDLOG "Enable spd log logging" OFF)
 option( DEBUG_LOG "Enable more debug output (may increase computation time) - only works with USE_SPDLOG=ON" OFF)
 option( CHECK_RANGE "Check array range access, automatically enabled if built in debug mode" OFF)
+option( BUILD_STUB_FILES "Build stub files for better autocompletion" ON)
 
 option( USE_SUPERBUILD       "use ccache" ON)
 
@@ -382,13 +383,13 @@ endif(ENABLE_CPP_CORE_GUIDELINES_CHECK)
 add_subdirectory(libsrc)
 add_subdirectory(ng)
 add_subdirectory(tutorials)
-if (USE_PYTHON)
-  add_subdirectory(python)
-endif (USE_PYTHON)
 add_subdirectory(py_tutorials)
 add_subdirectory(doc)
 add_subdirectory(windows)
 add_subdirectory(nglib)
+if (USE_PYTHON)
+  add_subdirectory(python)
+endif (USE_PYTHON)
 add_subdirectory(tests)
 
 
