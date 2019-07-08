@@ -1842,5 +1842,6 @@ namespace netgen
 
 
 
-  BlockAllocator Solid :: ball(sizeof (Solid));
+  // BlockAllocator Solid :: ball(sizeof (Solid));
+  shared_ptr<BlockAllocator> Solid :: ball = make_shared<BlockAllocator>(sizeof (Solid));
 }

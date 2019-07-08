@@ -161,15 +161,15 @@ namespace netgen
     static Solid * CreateSolid (istream & ist, const SymbolTable<Solid*> & solids);
 
 
-    static BlockAllocator ball;
+    static shared_ptr<BlockAllocator> ball;
     void * operator new(size_t /* s */) 
     {
-      return ball.Alloc();
+      return ball->Alloc();
     }
 
     void operator delete (void * p)
     {
-      ball.Free (p);
+      ball->Free (p);
     }
 
 

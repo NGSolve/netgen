@@ -14,7 +14,7 @@
 
 namespace netgen
 {
-  static mutex block_allocator_mutex;
+  // static mutex block_allocator_mutex;
 
   BlockAllocator :: BlockAllocator (unsigned asize, unsigned ablocks)
     : bablocks (0)

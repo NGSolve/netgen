@@ -170,6 +170,8 @@ namespace netgen
     /// store splinesurfaces, such that added ones do not get deleted before geometry does
     Array<shared_ptr<SplineSurface>> spline_surfaces;
 
+    shared_ptr<BlockAllocator> solid_ball = Solid::ball;
+    
   public:
     CSGeometry ();
     CSGeometry (const string & afilename);
