@@ -1,5 +1,5 @@
-#ifndef FILE_NGSTD_ArrayCPP
-#define FILE_NGSTD_ArrayCPP
+#ifndef FILE_NGSTD_NgArrayCPP
+#define FILE_NGSTD_NgArrayCPP
 // necessary for SGI ????
 
 /**************************************************************************/
@@ -71,5 +71,5 @@ namespace netgen
   }
 #endif
 }
-#endif
+#endif // FILE_NGSTD_NgArrayCPP
 

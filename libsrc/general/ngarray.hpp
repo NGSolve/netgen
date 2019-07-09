@@ -1,8 +1,8 @@
-#ifndef FILE_Array
-#define FILE_Array
+#ifndef NGARRAY_HPP_INCLUDED
+#define NGARRAY_HPP_INCLUDED
 
 /**************************************************************************/
-/* File:   array.hpp                                                      */
+/* File:   ngarray.hpp                                                    */
 /* Author: Joachim Schoeberl                                              */
 /* Date:   01. Jun. 95                                                    */
 /**************************************************************************/
@@ -795,5 +795,5 @@ namespace netgen
   }
 }
 
-#endif
+#endif // NGARRAY_HPP_INCLUDED
 
