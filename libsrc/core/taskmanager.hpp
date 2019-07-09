@@ -47,21 +47,21 @@ namespace ngcore
       atomic<int> participate{0};
     };
     
-    static const function<void(TaskInfo&)> * func;
-    static const function<void()> * startup_function;
-    static const function<void()> * cleanup_function;
-    static atomic<int> ntasks;
-    static Exception * ex;
+    NGCORE_API static const function<void(TaskInfo&)> * func;
+    NGCORE_API static const function<void()> * startup_function;
+    NGCORE_API static const function<void()> * cleanup_function;
+    NGCORE_API static atomic<int> ntasks;
+    NGCORE_API static Exception * ex;
 
-    static atomic<int> jobnr;
+    NGCORE_API static atomic<int> jobnr;
 
     static atomic<int> complete[8];   // max nodes
     static atomic<int> done;
     static atomic<int> active_workers;
     static atomic<int> workers_on_node[8];   // max nodes
     // Array<atomic<int>*> sync;
-    static int sleep_usecs;
-    static bool sleep;
+    NGCORE_API static int sleep_usecs;
+    NGCORE_API static bool sleep;
 
     static NodeData *nodedata[8];
 
@@ -80,12 +80,12 @@ namespace ngcore
     NGCORE_API static bool use_paje_trace;
   public:
     
-    TaskManager();
-    ~TaskManager();
+    NGCORE_API TaskManager();
+    NGCORE_API ~TaskManager();
 
 
-    void StartWorkers();
-    void StopWorkers();
+    NGCORE_API void StartWorkers();
+    NGCORE_API void StopWorkers();
 
     void SuspendWorkers(int asleep_usecs = 1000 )
       {
@@ -94,12 +94,12 @@ namespace ngcore
       }
     void ResumeWorkers() { sleep = false; }
 
-    static void SetNumThreads(int amax_threads);
-    static int GetMaxThreads() { return max_threads; }
+    NGCORE_API static void SetNumThreads(int amax_threads);
+    NGCORE_API static int GetMaxThreads() { return max_threads; }
     // static int GetNumThreads() { return task_manager ? task_manager->num_threads : 1; }
-    static int GetNumThreads() { return num_threads; }
-    static int GetThreadId() { return thread_id; } 
-    int GetNumNodes() const { return num_nodes; }
+    NGCORE_API static int GetNumThreads() { return num_threads; }
+    NGCORE_API static int GetThreadId() { return thread_id; } 
+    NGCORE_API int GetNumNodes() const { return num_nodes; }
 
     static void SetPajeTrace (bool use)  { use_paje_trace = use; }
     
@@ -112,9 +112,9 @@ namespace ngcore
     static void SetCleanupFunction () { cleanup_function = nullptr; }    
 
     void Done() { done = true; }
-    void Loop(int thread_num);
+    NGCORE_API void Loop(int thread_num);
 
-    static std::list<std::tuple<std::string,double>> Timing ();
+    NGCORE_API static std::list<std::tuple<std::string,double>> Timing ();
   };
 
 
@@ -128,8 +128,8 @@ namespace ngcore
   NGCORE_API void RunWithTaskManager (function<void()> alg);
 
   // For Python context manager
-  int  EnterTaskManager ();
-  void ExitTaskManager (int num_threads);
+  NGCORE_API int  EnterTaskManager ();
+  NGCORE_API void ExitTaskManager (int num_threads);
 
   NETGEN_INLINE int TasksPerThread (int tpt)
   {
@@ -888,7 +888,7 @@ public:
 
   void SetSize (size_t size)
   {
-    cerr << "************************* NumaDistArray::SetSize not overloaded" << endl;
+    std::cerr << "************************* NumaDistArray::SetSize not overloaded" << std::endl;
     Array<T>::SetSize(size);
   }
 };
@@ -946,7 +946,7 @@ public:
 
   void SetSize (size_t size)
   {
-    cerr << "************************* NumaDistArray::SetSize not overloaded" << endl;
+    std::cerr << "************************* NumaDistArray::SetSize not overloaded" << std::endl;
     Array<T>::SetSize(size);
   }
 };
@@ -995,7 +995,7 @@ public:
 
   void SetSize (size_t size)
   {
-    cerr << "************************* NumaDistArray::SetSize not overloaded" << endl;
+    std::cerr << "************************* NumaDistArray::SetSize not overloaded" << std::endl;
     Array<T>::SetSize(size);
   }
 };

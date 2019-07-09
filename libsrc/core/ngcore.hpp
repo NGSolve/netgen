@@ -4,6 +4,7 @@
 #include "archive.hpp"
 #include "array.hpp"
 #include "exception.hpp"
+#include "localheap.hpp"
 #include "logging.hpp"
 #include "mpi_wrapper.hpp"
 #include "profiler.hpp"

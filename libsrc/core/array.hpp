@@ -8,6 +8,8 @@
 /**************************************************************************/
 
 
+#include "archive.hpp"
+#include "localheap.hpp"
 #include "utils.hpp"
 
 #ifdef DEBUG
@@ -415,14 +417,14 @@ namespace ngcore
     NETGEN_INLINE FlatArray (size_t asize, T * adata) 
       : size(asize), data(adata) { ; }
     
-//     /// memory from local heap
-//     NETGEN_INLINE FlatArray(size_t asize, Allocator & lh)
-//       : size(asize), data(new (lh) T[asize])
-//     { ; }
-// 
-//     NETGEN_INLINE FlatArray(size_t asize, LocalHeap & lh)
-//       : size(asize), data (lh.Alloc<T> (asize))
-//     { ; }
+    /// memory from local heap
+    NETGEN_INLINE FlatArray(size_t asize, Allocator & lh)
+      : size(asize), data(new (lh) T[asize])
+    { ; }
+
+    NETGEN_INLINE FlatArray(size_t asize, LocalHeap & lh)
+      : size(asize), data (lh.Alloc<T> (asize))
+    { ; }
 
     /// the size
     NETGEN_INLINE size_t Size() const { return size; }
@@ -475,13 +477,13 @@ namespace ngcore
       return *this;
     }
 
-//     /// assigns memory from local heap
-//     NETGEN_INLINE const FlatArray & Assign (size_t asize, LocalHeap & lh)
-//     {
-//       size = asize;
-//       data = lh.Alloc<T> (asize);
-//       return *this;
-//     }
+    /// assigns memory from local heap
+    NETGEN_INLINE const FlatArray & Assign (size_t asize, LocalHeap & lh)
+    {
+      size = asize;
+      data = lh.Alloc<T> (asize);
+      return *this;
+    }
 
     /// Access array. range check by macro CHECK_RANGE
     NETGEN_INLINE T & operator[] (size_t i) const
@@ -721,20 +723,20 @@ namespace ngcore
       delete [] mem_to_delete;
     }
 
-//     // Only provide this function if T is archivable
-//     template<typename T2=T>
-//     auto DoArchive(Archive& archive) -> typename std::enable_if_t<is_archivable<T2>, void>
-//     {
-//       if(archive.Output())
-//         archive << size;
-//       else
-//         {
-//           size_t s;
-//           archive & s;
-//           SetSize(s);
-//         }
-//       archive.Do(data, size);
-//     }
+    // Only provide this function if T is archivable
+    template<typename T2=T>
+    auto DoArchive(Archive& archive) -> typename std::enable_if_t<is_archivable<T2>, void>
+    {
+      if(archive.Output())
+        archive << size;
+      else
+        {
+          size_t s;
+          archive & s;
+          SetSize(s);
+        }
+      archive.Do(data, size);
+    }
 
     /// we tell the compiler that there is no need for deleting the array ..
     NETGEN_INLINE void NothingToDelete () 
@@ -769,15 +771,15 @@ namespace ngcore
     }
 
 
-//     /// assigns memory from local heap
-//     NETGEN_INLINE const Array & Assign (size_t asize, LocalHeap & lh)
-//     {
-//       delete [] mem_to_delete;
-//       size = allocsize = asize;
-//       data = lh.Alloc<T> (asize);
-//       mem_to_delete = nullptr;
-//       return *this;
-//     }
+    /// assigns memory from local heap
+    NETGEN_INLINE const Array & Assign (size_t asize, LocalHeap & lh)
+    {
+      delete [] mem_to_delete;
+      size = allocsize = asize;
+      data = lh.Alloc<T> (asize);
+      mem_to_delete = nullptr;
+      return *this;
+    }
 
     /// Add element at end of array. reallocation if necessary.
     NETGEN_INLINE size_t Append (const T & el)
@@ -803,7 +805,7 @@ namespace ngcore
     {
       if (size == allocsize) 
         ReSize (size+1);
-      data[size] = move(el);
+      data[size] = std::move(el);
       size++;
       return size;
     }
@@ -1011,12 +1013,12 @@ namespace ngcore
       {
         size_t mins = (nsize < size) ? nsize : size;
 #if defined(__GNUG__) && __GNUC__ < 5 && !defined(__clang__)
-        for (size_t i = 0; i < mins; i++) data[i] = move(hdata[i]);
+        for (size_t i = 0; i < mins; i++) data[i] = std::move(hdata[i]);
 #else
         if (std::is_trivially_copyable<T>::value)
           memcpy ((void*)data, hdata, sizeof(T)*mins);
         else
-          for (size_t i = 0; i < mins; i++) data[i] = move(hdata[i]);
+          for (size_t i = 0; i < mins; i++) data[i] = std::move(hdata[i]);
 #endif
         delete [] mem_to_delete;
       }
