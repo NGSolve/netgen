@@ -1704,7 +1704,7 @@ namespace netgen
   {
     // static NgArray<inttn6> stack(10000);
     // stack.SetSize (10000);
-    ArrayMem<inttn6,10000> stack(10000);
+    NgArrayMem<inttn6,10000> stack(10000);
     pis.SetSize(0);
 
     stack[0].node = root;
@@ -1924,7 +1924,7 @@ namespace netgen
   {
     // static NgArray<inttn6> stack(10000);
     // stack.SetSize (10000);
-    ArrayMem<inttn<dim,T>,10000> stack(10000);
+    NgArrayMem<inttn<dim,T>,10000> stack(10000);
     pis.SetSize(0);
 
     stack[0].node = root;

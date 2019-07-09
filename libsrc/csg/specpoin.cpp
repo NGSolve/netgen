@@ -211,7 +211,7 @@ namespace netgen
     bool surecrossp = 0, sureexp = 0;          // sure ...
   
     // static NgArray<int> locsurf;  // attention: array is static
-    ArrayMem<int,100> locsurf; 
+    NgArrayMem<int,100> locsurf; 
 
     // static int cntbox = 0;
     // cntbox++;

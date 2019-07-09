@@ -1308,7 +1308,7 @@ int STLBoundary :: TestSegChartNV(const Point3d & p1, const Point3d& p2,
     {
       // NgProfiler::RegionTimer reg(timerquick);      
       
-      ArrayMem<INDEX_2,100> pis;
+      NgArrayMem<INDEX_2,100> pis;
       searchtree -> GetIntersecting (box2d.PMin(), box2d.PMax(), pis);
       
       for (auto i2 : pis)

@@ -79,19 +79,19 @@ int Meshing3 :: ApplyRules
 
 
   NgArray<int, PointIndex::BASE> pused;      // point is already mapped, number of uses
-  ArrayMem<char,100> fused;                       // face is already mapped
-  ArrayMem<PointIndex,100> pmap;                  // map of reference point to local point
-  ArrayMem<bool,100> pfixed;                      // point mapped by face-map
-  ArrayMem<int,100> fmapi;                        // face in reference is mapped to face nr ...
-  ArrayMem<int,100> fmapr;                        // face in reference is rotated to map 
-  ArrayMem<Point3d,100> transfreezone;            // transformed free-zone
+  NgArrayMem<char,100> fused;                       // face is already mapped
+  NgArrayMem<PointIndex,100> pmap;                  // map of reference point to local point
+  NgArrayMem<bool,100> pfixed;                      // point mapped by face-map
+  NgArrayMem<int,100> fmapi;                        // face in reference is mapped to face nr ...
+  NgArrayMem<int,100> fmapr;                        // face in reference is rotated to map 
+  NgArrayMem<Point3d,100> transfreezone;            // transformed free-zone
   INDEX_2_CLOSED_HASHTABLE<int> ledges(100); // edges in local environment
   
-  ArrayMem<Point3d,100> tempnewpoints;
+  NgArrayMem<Point3d,100> tempnewpoints;
   NgArray<MiniElement2d> tempnewfaces;
-  ArrayMem<int,100> tempdelfaces;
+  NgArrayMem<int,100> tempdelfaces;
   NgArray<Element> tempelements;
-  ArrayMem<Box3d,100> triboxes;         // bounding boxes of local faces
+  NgArrayMem<Box3d,100> triboxes;         // bounding boxes of local faces
 
   NgArray<int, PointIndex::BASE> pnearness;
   NgArray<int> fnearness;

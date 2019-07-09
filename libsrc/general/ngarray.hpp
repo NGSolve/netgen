@@ -458,7 +458,7 @@ namespace netgen
 
 
   template <class T, int S> 
-  class ArrayMem : public NgArray<T>
+  class NgArrayMem : public NgArray<T>
   {
     using NgArray<T>::size;
     using NgArray<T>::data;
@@ -469,7 +469,7 @@ namespace netgen
     // double mem[(S*sizeof(T)+7) / 8];
   public:
     /// Generate array of logical and physical size asize
-    explicit ArrayMem(size_t asize = 0)
+    explicit NgArrayMem(size_t asize = 0)
       : NgArray<T> (S, static_cast<T*> (static_cast<void*>(&mem[0])))
     {
       size = asize;
@@ -481,14 +481,14 @@ namespace netgen
       // SetSize (asize);
     }
 
-    ArrayMem & operator= (const T & val)  
+    NgArrayMem & operator= (const T & val)  
     {
       NgArray<T>::operator= (val);
       return *this;
     }
 
     /// array copy
-    ArrayMem & operator= (const NgFlatArray<T> & a2)
+    NgArrayMem & operator= (const NgFlatArray<T> & a2)
     {
       this->SetSize (a2.Size());
       for (size_t i = 0; i < size; i++)

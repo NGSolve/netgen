@@ -290,8 +290,8 @@ namespace netgen
     loclines.Append(lines[baselineindex].L());
     lindex.Append(baselineindex);  
 
-    ArrayMem<int, 1000> nearlines(0);
-    ArrayMem<int, 1000> nearpoints(0);
+    NgArrayMem<int, 1000> nearlines(0);
+    NgArrayMem<int, 1000> nearpoints(0);
 
     // dominating costs !!
     linesearchtree.GetIntersecting (p0 - Vec3d(xh, xh, xh),

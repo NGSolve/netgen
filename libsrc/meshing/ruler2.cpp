@@ -66,15 +66,15 @@ namespace netgen
     int noldll = llines1.Size();
 
 
-    ArrayMem<int,100> pused(maxlegalpoint), lused(maxlegalline);
-    ArrayMem<int,100> pnearness(noldlp), lnearness(llines1.Size());
+    NgArrayMem<int,100> pused(maxlegalpoint), lused(maxlegalline);
+    NgArrayMem<int,100> pnearness(noldlp), lnearness(llines1.Size());
 
-    ArrayMem<int, 20> pmap, pfixed, lmap;
+    NgArrayMem<int, 20> pmap, pfixed, lmap;
   
-    ArrayMem<Point2d,100> tempnewpoints;
-    ArrayMem<INDEX_2,100> tempnewlines;
-    ArrayMem<int,100> tempdellines;
-    ArrayMem<Element2d,100> tempelements;
+    NgArrayMem<Point2d,100> tempnewpoints;
+    NgArrayMem<INDEX_2,100> tempnewlines;
+    NgArrayMem<int,100> tempdellines;
+    NgArrayMem<Element2d,100> tempelements;
 
 
     elements.SetSize (0);

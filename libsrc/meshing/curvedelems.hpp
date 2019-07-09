@@ -224,7 +224,7 @@ private:
     int order;
     int nv;
     int ndof;
-    ArrayMem<int,4> edgenrs;
+    NgArrayMem<int,4> edgenrs;
     int facenr;
   };
 

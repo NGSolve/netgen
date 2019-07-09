@@ -1148,7 +1148,7 @@ namespace netgen
     //return;
 
     int pinds[6];
-    ArrayMem<int,500> surfused(GetNSurf());
+    NgArrayMem<int,500> surfused(GetNSurf());
   
     ReducePrimitiveIterator rpi(box);
     UnReducePrimitiveIterator urpi;

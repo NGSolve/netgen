@@ -449,9 +449,9 @@ namespace netgen
 
     Box3d boxcfc(c,fc);
 
-    ArrayMem<int, 100> faceused;
-    ArrayMem<int, 100> faceused2;
-    ArrayMem<int, 100> facenotused;
+    NgArrayMem<int, 100> faceused;
+    NgArrayMem<int, 100> faceused2;
+    NgArrayMem<int, 100> facenotused;
 
     /*
     faceused.SetSize(0);
@@ -606,9 +606,9 @@ namespace netgen
     Box3d fboxc(fc-fv, fc+fv);
     Box3d boxcfc(c,fc);
 
-    ArrayMem<int, 100> faceused;
-    ArrayMem<int, 100> faceused2;
-    ArrayMem<int, 100> facenotused;
+    NgArrayMem<int, 100> faceused;
+    NgArrayMem<int, 100> faceused2;
+    NgArrayMem<int, 100> facenotused;
 
     for (int j = 0; j < nfinbox; j++)
       {

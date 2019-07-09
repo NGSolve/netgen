@@ -201,7 +201,7 @@ int vnetrule :: IsTriangleInFreeZone (const Point3d & p1,
   int infreeset, cannot = 0;
 
 
-  ArrayMem<int,3> pfi(3), pfi2(3);
+  NgArrayMem<int,3> pfi(3), pfi2(3);
 
   // convert from local index to freeset index
   int i, j;
@@ -868,7 +868,7 @@ int vnetrule :: IsQuadInFreeZone (const Point3d & p1,
   int infreeset, cannot = 0;
 
 
-  ArrayMem<int,4> pfi(4), pfi2(4);
+  NgArrayMem<int,4> pfi(4), pfi2(4);
 
   // convert from local index to freeset index
   int i, j;
@@ -931,7 +931,7 @@ int vnetrule :: IsQuadInFreeSet (const Point3d & p1, const Point3d & p2,
       return 1;
     }
 
-  ArrayMem<int,3> pi3(3);
+  NgArrayMem<int,3> pi3(3);
   int res;
 
   pi3.Elem(1) = pi.Get(1);

@@ -2146,7 +2146,7 @@ namespace netgen
         {
           int np = GetNP();
           double eps = 1e-6;
-          ArrayMem<T,100> mem(2*np);
+          NgArrayMem<T,100> mem(2*np);
           TFlatVector<T> shaper(np, &mem[0]);
           TFlatVector<T> shapel(np, &mem[np]);
           // Vector shaper(np), shapel(np);

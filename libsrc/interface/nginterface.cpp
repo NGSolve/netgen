@@ -1581,7 +1581,7 @@ int Ng_GetSurfaceElement_Face (int selnr, int * orient)
 int Ng_GetFace_Vertices (int fnr, int * vert)
 {
   const MeshTopology & topology = mesh->GetTopology();
-  ArrayMem<int,4> ia;
+  NgArrayMem<int,4> ia;
   topology.GetFaceVertices (fnr, ia);
   for (int i = 0; i < ia.Size(); i++)
     vert[i] = ia[i];
@@ -1593,7 +1593,7 @@ int Ng_GetFace_Vertices (int fnr, int * vert)
 int Ng_GetFace_Edges (int fnr, int * edge)
 {
   const MeshTopology & topology = mesh->GetTopology();
-  ArrayMem<int,4> ia;
+  NgArrayMem<int,4> ia;
   topology.GetFaceEdges (fnr, ia);
   for (int i = 0; i < ia.Size(); i++)
     edge[i] = ia[i];
@@ -1928,7 +1928,7 @@ int Ng_IsRunning()
 int Ng_GetVertex_Elements( int vnr, int* elems )
 {
   const MeshTopology& topology = mesh->GetTopology();
-  ArrayMem<ElementIndex,4> indexArray;
+  NgArrayMem<ElementIndex,4> indexArray;
   topology.GetVertexElements( vnr, indexArray );
   
   for( int i=0; i<indexArray.Size(); i++ )
@@ -1945,7 +1945,7 @@ int Ng_GetVertex_SurfaceElements( int vnr, int* elems )
     case 3:
       {
         const MeshTopology& topology = mesh->GetTopology();
-        ArrayMem<SurfaceElementIndex,4> indexArray;
+        NgArrayMem<SurfaceElementIndex,4> indexArray;
         topology.GetVertexSurfaceElements( vnr, indexArray );
         
         for( int i=0; i<indexArray.Size(); i++ )
@@ -1977,7 +1977,7 @@ int Ng_GetVertex_SurfaceElements( int vnr, int* elems )
 int Ng_GetVertex_NElements( int vnr )
 {
   const MeshTopology& topology = mesh->GetTopology();
-  ArrayMem<ElementIndex,4> indexArray;
+  NgArrayMem<ElementIndex,4> indexArray;
   topology.GetVertexElements( vnr, indexArray );
   
   return indexArray.Size();
@@ -1991,7 +1991,7 @@ int Ng_GetVertex_NSurfaceElements( int vnr )
     case 3:
       {
         const MeshTopology& topology = mesh->GetTopology();
-        ArrayMem<SurfaceElementIndex,4> indexArray;
+        NgArrayMem<SurfaceElementIndex,4> indexArray;
         topology.GetVertexSurfaceElements( vnr, indexArray );
         return indexArray.Size();
       }

@@ -845,7 +845,7 @@ int AdFront3 :: SameSide (const Point<3> & lp1, const Point<3> & lp2,
   pmin.SetToMin (lp2);
   pmax.SetToMax (lp2);
   
-  ArrayMem<int, 100> aprif;
+  NgArrayMem<int, 100> aprif;
   aprif.SetSize(0);
   
   if (!testfaces)

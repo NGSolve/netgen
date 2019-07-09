@@ -141,7 +141,7 @@ namespace netgen
       (tm, nse,
        [&] (size_t begin, size_t end)
        {
-         ArrayMem<int,9> nnums, ednums;
+         NgArrayMem<int,9> nnums, ednums;
          for (int i = begin+1; i <= end; i++)
            {
              const Element2d & el = mesh.SurfaceElement(i);

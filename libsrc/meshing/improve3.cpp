@@ -1182,8 +1182,8 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 	    {
 	      Element hel(TET);
 
-	      ArrayMem<PointIndex, 50> suroundpts(nsuround);
-	      ArrayMem<bool, 50> tetused(nsuround);
+	      NgArrayMem<PointIndex, 50> suroundpts(nsuround);
+	      NgArrayMem<bool, 50> tetused(nsuround);
 
 	      Element & elem = mesh[hasbothpoints[0]];
 

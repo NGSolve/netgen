@@ -1852,8 +1852,8 @@ namespace netgen
     CurvedElements & curv = mesh->GetCurvedElements();
 
     int n = 1 << subdivisions;
-    ArrayMem<Point<2>, 65> ptsloc(n+1);
-    ArrayMem<Point<3>, 65> ptsglob(n+1);
+    NgArrayMem<Point<2>, 65> ptsloc(n+1);
+    NgArrayMem<Point<3>, 65> ptsglob(n+1);
 
     double trigpts[3][2]  = { { 0, 0 }, { 0, 1 }, { 1, 0} };
     double trigvecs[3][2] = { { 1, 0 }, { 0, -1 }, { -1, 1} };
@@ -2829,7 +2829,7 @@ namespace netgen
 
     if (comp == 0)
       {
-        ArrayMem<double,20> values(data->components);
+        NgArrayMem<double,20> values(data->components);
         ok = GetValues (data, elnr, xref, x, dxdxref, &values[0]);
 
 	val = ExtractValue (data, 0, &values[0]);
@@ -3000,7 +3000,7 @@ namespace netgen
 
     if (comp == 0)
       {
-        ArrayMem<double,20> values(data->components);
+        NgArrayMem<double,20> values(data->components);
         ok = GetValues (data, elnr, lam1, lam2, lam3, &values[0]);
 	val = ExtractValue (data, 0, &values[0]);
 	return ok;
@@ -3383,7 +3383,7 @@ namespace netgen
       {
       case SOL_VIRTUALFUNCTION:
         {
-          ArrayMem<double,20> values(data->components);
+          NgArrayMem<double,20> values(data->components);
           bool ok;
           
           ok = data->solclass->GetSurfValue (selnr, facetnr, lam1, lam2, &values[0]);
@@ -3413,7 +3413,7 @@ namespace netgen
     if (comp == 0)
       {
         val = 0;
-        ArrayMem<double,20> values(data->components);
+        NgArrayMem<double,20> values(data->components);
         ok = GetSurfValues (data, selnr, facetnr, lam1, lam2, &values[0]);
 	val = ExtractValue (data, 0, &values[0]);
 	return ok;
@@ -3425,7 +3425,7 @@ namespace netgen
       case SOL_VIRTUALFUNCTION:
         {
   
-          ArrayMem<double,20> values(data->components);
+          NgArrayMem<double,20> values(data->components);
           bool ok;
 
           ok = data->solclass->GetSurfValue (selnr, facetnr, lam1, lam2, &values[0]);
@@ -3655,7 +3655,7 @@ namespace netgen
     if (comp == 0)
       {
         val = 0;
-        ArrayMem<double,20> values(data->components);
+        NgArrayMem<double,20> values(data->components);
         ok = GetSurfValues (data, selnr, facetnr, xref, x, dxdxref, &values[0]);
 	val = ExtractValue (data, 0, &values[0]);
 	return ok;
@@ -3666,7 +3666,7 @@ namespace netgen
       {
       case SOL_VIRTUALFUNCTION:
         {
-          ArrayMem<double,20> values(data->components);
+          NgArrayMem<double,20> values(data->components);
           bool ok;
 
           // ok = data->solclass->GetSurfValue (selnr, lam1, lam2, &values[0]);

@@ -1800,8 +1800,8 @@ namespace netgen
 
   void MeshTopology :: GetFaceEdges (int fnr, NgArray<int> & fedges, bool withorientation) const
   {
-    ArrayMem<int,4> pi(4);
-    ArrayMem<int,12> eledges;
+    NgArrayMem<int,4> pi(4);
+    NgArrayMem<int,12> eledges;
   
     fedges.SetSize (0);
     GetFaceVertices(fnr, pi);
@@ -1812,7 +1812,7 @@ namespace netgen
     // e3 = op e1(f2,f3) 
     // e4 = op e2(f1,f3) 
 
-    /*  ArrayMem<int,4> fp; 
+    /*  NgArrayMem<int,4> fp; 
 	fp[0] = pi[0]; 
 	for(int k=1;k<pi.Size();k++) 
 	if(fp[k]>fp[0]) swap(fp[k],fp[0]); 

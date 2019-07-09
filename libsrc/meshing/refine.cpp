@@ -192,8 +192,8 @@ namespace netgen
 	  case TRIG:
 	  case TRIG6:
 	    {
-	      ArrayMem<PointIndex,6> pnums(6);
-	      ArrayMem<PointGeomInfo,6> pgis(6);
+	      NgArrayMem<PointIndex,6> pnums(6);
+	      NgArrayMem<PointGeomInfo,6> pgis(6);
 
 	      static int betw[3][3] =
 		{ { 2, 3, 4 },
@@ -275,8 +275,8 @@ namespace netgen
 	  case QUAD6:
 	  case QUAD8:
 	    {
-	      ArrayMem<PointIndex,9> pnums(9);
-	      ArrayMem<PointGeomInfo,9> pgis(9);
+	      NgArrayMem<PointIndex,9> pnums(9);
+	      NgArrayMem<PointGeomInfo,9> pgis(9);
 
 	      static int betw[5][3] =
 		{ { 1, 2, 5 },
@@ -367,7 +367,7 @@ namespace netgen
 	  case TET:
 	  case TET10:
 	    {
-	     ArrayMem<PointIndex,10> pnums(10);
+	     NgArrayMem<PointIndex,10> pnums(10);
 	     static int betw[6][3] =
 	     { { 1, 2, 5 },
 	       { 1, 3, 6 },
@@ -458,7 +458,7 @@ namespace netgen
           }
           case HEX:
           {
-	     ArrayMem<PointIndex,27> pnums(27);
+	     NgArrayMem<PointIndex,27> pnums(27);
 	     static int betw[13][3] =
 	     { { 1, 2, 9 },
 	       { 3, 4, 10 },
@@ -584,7 +584,7 @@ namespace netgen
 	  }
 	  case PRISM:
           {
-	     ArrayMem<PointIndex,18> pnums(18);
+	     NgArrayMem<PointIndex,18> pnums(18);
 	     static int betw[9][3] =
 	     { { 3, 1, 7 },
 	       { 1, 2, 8 },

@@ -1216,7 +1216,7 @@ namespace netgen
 	    // if (el.GetType() == TRIG && order >= 3)
 	    if (top.GetFaceType(facenr+1) == TRIG && order >= 3)
 	      {
-		ArrayMem<int, 3> verts(3);
+		NgArrayMem<int, 3> verts(3);
 		top.GetFaceVertices (facenr+1, verts);
 
 		int fnums[] = { 0, 1, 2 };
@@ -1467,10 +1467,10 @@ namespace netgen
 	info.ndof += edgeorder[info.edgenr]-1;
       }
 
-    ArrayMem<Vec<3>,100> coefs(info.ndof);
-    ArrayMem<T, 100> shapes_mem(info.ndof);
+    NgArrayMem<Vec<3>,100> coefs(info.ndof);
+    NgArrayMem<T, 100> shapes_mem(info.ndof);
     TFlatVector<T> shapes(info.ndof, &shapes_mem[0]);
-    ArrayMem<T, 200> dshapes_mem(info.ndof);
+    NgArrayMem<T, 200> dshapes_mem(info.ndof);
     TFlatVector<T> dshapes(info.ndof, &dshapes_mem[0]);
 
     
@@ -1778,10 +1778,10 @@ namespace netgen
       }
 
     
-    ArrayMem<Vec<3>,100> coefs(info.ndof);
-    ArrayMem<double, 100> shapes_mem(info.ndof);
+    NgArrayMem<Vec<3>,100> coefs(info.ndof);
+    NgArrayMem<double, 100> shapes_mem(info.ndof);
     TFlatVector<double> shapes(info.ndof, &shapes_mem[0]);
-    ArrayMem<double, 200> dshapes_mem(2*info.ndof);
+    NgArrayMem<double, 200> dshapes_mem(2*info.ndof);
     MatrixFixWidth<2> dshapes(info.ndof, &dshapes_mem[0]);
 
 
@@ -2175,7 +2175,7 @@ namespace netgen
 	    { -1, 1 } };
 	    
 	  // double hshapes[20], hdshapes[20];
-	  ArrayMem<T, 20> hshapes(order+1), hdshapes(order+1);
+	  NgArrayMem<T, 20> hshapes(order+1), hdshapes(order+1);
 
 	  int ii = 4;
 	  const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (QUAD);
@@ -2588,9 +2588,9 @@ namespace netgen
 	  }
       }
 
-    ArrayMem<double,100> mem(info.ndof);
+    NgArrayMem<double,100> mem(info.ndof);
     TFlatVector<double> shapes(info.ndof, &mem[0]);
-    ArrayMem<double,100> dshapes_mem(info.ndof*3);
+    NgArrayMem<double,100> dshapes_mem(info.ndof*3);
     MatrixFixWidth<3> dshapes(info.ndof, &dshapes_mem[0]);
     
     CalcElementShapes (info, xi, shapes);
@@ -3248,7 +3248,7 @@ namespace netgen
 		  vi1 = vi1 % 3;
 		  vi2 = vi2 % 3;
 
-                  ArrayMem<T,20> shapei_mem(order+1);
+                  NgArrayMem<T,20> shapei_mem(order+1);
 		  TFlatVector<T> shapei(order+1, &shapei_mem[0]);
 		  CalcScaledEdgeShapeDxDt<3> (order, lami[vi1]-lami[vi2], lami[vi1]+lami[vi2], &dshapes(ii,0) );
 		  CalcScaledEdgeShape(order, lami[vi1]-lami[vi2], lami[vi1]+lami[vi2], &shapei(0) );
@@ -3331,8 +3331,8 @@ namespace netgen
 	      if(el[fav[1]] > el[fav[2]]) swap(fav[1],fav[2]);
 	      if(el[fav[0]] > el[fav[1]]) swap(fav[0],fav[1]); 	
 
-              ArrayMem<T,2*20> dshapei_mem(ndf);
-              ArrayMem<T,20> shapei_mem(ndf);
+              NgArrayMem<T,2*20> dshapei_mem(ndf);
+              NgArrayMem<T,20> shapei_mem(ndf);
 	      MatrixFixWidth<2,T> dshapei(ndf, &dshapei_mem[0]);
 	      TFlatVector<T> shapei(ndf, &shapei_mem[0]);
 
@@ -3472,7 +3472,7 @@ namespace netgen
 		  int vi1 = (edges[i][0]-1), vi2 = (edges[i][1]-1);
 		  if (el[vi1] > el[vi2]) swap (vi1, vi2);
 
-                  ArrayMem<T,20> shapei_mem(eorder+1);
+                  NgArrayMem<T,20> shapei_mem(eorder+1);
 		  TFlatVector<T> shapei(eorder+1,&shapei_mem[0]);
 		  CalcScaledEdgeShapeDxDt<3> (eorder, sigma[vi1]-sigma[vi2], 1-z, &dshapes(ii,0) );
 		  CalcScaledEdgeShape(eorder, sigma[vi1]-sigma[vi2], 1-z, &shapei(0) );
@@ -3633,7 +3633,7 @@ namespace netgen
 	    { -1, 1, 1 }
           };
 	    
-	  ArrayMem<T, 20> hshapes(order+1), hdshapes(order+1);
+	  NgArrayMem<T, 20> hshapes(order+1), hdshapes(order+1);
 
 	  int ii = 8;
 	  const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (HEX);
@@ -4062,7 +4062,7 @@ namespace netgen
 	T lami[4];
 	TFlatVector<T> vlami(4, lami);
 
-	ArrayMem<Point<2,T>, 50> coarse_xi (npts);
+	NgArrayMem<Point<2,T>, 50> coarse_xi (npts);
 	
 	for (int pi = 0; pi < npts; pi++)
 	  {
@@ -4216,13 +4216,13 @@ namespace netgen
     
 // THESE LAST LINES ARE COPIED FROM CurvedElements::CalcSurfaceTransformation
 
-    ArrayMem<Vec<DIM_SPACE>,100> coefs(info.ndof);
+    NgArrayMem<Vec<DIM_SPACE>,100> coefs(info.ndof);
     GetCoefficients (info, coefs);
     
-    ArrayMem<T, 100> shapes_mem(info.ndof);
+    NgArrayMem<T, 100> shapes_mem(info.ndof);
     TFlatVector<T> shapes(info.ndof, &shapes_mem[0]);
 
-    ArrayMem<T, 100> dshapes_mem(info.ndof*2);
+    NgArrayMem<T, 100> dshapes_mem(info.ndof*2);
     MatrixFixWidth<2,T> dshapes(info.ndof,&shapes_mem[0]);
 
 
@@ -4368,7 +4368,7 @@ namespace netgen
 	FlatVector vlami(8, lami);
 
 
-	ArrayMem<Point<3>, 50> coarse_xi (xi->Size());
+	NgArrayMem<Point<3>, 50> coarse_xi (xi->Size());
 	
 	for (int pi = 0; pi < xi->Size(); pi++)
 	  {
@@ -4527,7 +4527,7 @@ namespace netgen
 	TFlatVector<T> vlami(8, &lami[0]);
 
 
-	ArrayMem<T, 100> coarse_xi (3*n);
+	NgArrayMem<T, 100> coarse_xi (3*n);
 	
 	for (int pi = 0; pi < n; pi++)
 	  {
@@ -4645,12 +4645,12 @@ namespace netgen
       }
     if (ok) return;
 
-    ArrayMem<Vec<3>,100> coefs(info.ndof);
-    ArrayMem<T,500> shapes_mem(info.ndof);
+    NgArrayMem<Vec<3>,100> coefs(info.ndof);
+    NgArrayMem<T,500> shapes_mem(info.ndof);
     
     TFlatVector<T> shapes(info.ndof, &shapes_mem[0]);
 
-    ArrayMem<T,1500> dshapes_mem(3*info.ndof);
+    NgArrayMem<T,1500> dshapes_mem(3*info.ndof);
     MatrixFixWidth<3,T> dshapes(info.ndof, &dshapes_mem[0]);
 
     // NgProfiler::StopTimer (timer3);
