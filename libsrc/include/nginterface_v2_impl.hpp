@@ -250,33 +250,33 @@ template <> NGX_INLINE DLL_HEADER const Ng_Node<0> Ngx_Mesh :: GetNode<0> (int v
     {
     case 3:
       {
-        FlatArray<ElementIndex> ia = mesh->GetTopology().GetVertexElements(vnr);
+        NgFlatArray<ElementIndex> ia = mesh->GetTopology().GetVertexElements(vnr);
         node.elements.ne = ia.Size();
         node.elements.ptr = (int*)&ia[0];
         
-        FlatArray<SurfaceElementIndex> bia = mesh->GetTopology().GetVertexSurfaceElements(vnr);
+        NgFlatArray<SurfaceElementIndex> bia = mesh->GetTopology().GetVertexSurfaceElements(vnr);
         node.bnd_elements.ne = bia.Size();
         node.bnd_elements.ptr = (int*)&bia[0];
         break;
       }
     case 2:
       {
-        FlatArray<SurfaceElementIndex> ia = mesh->GetTopology().GetVertexSurfaceElements(vnr);
+        NgFlatArray<SurfaceElementIndex> ia = mesh->GetTopology().GetVertexSurfaceElements(vnr);
         node.elements.ne = ia.Size();
         node.elements.ptr = (int*)&ia[0];
         
-        FlatArray<SegmentIndex> bia = mesh->GetTopology().GetVertexSegments(vnr);
+        NgFlatArray<SegmentIndex> bia = mesh->GetTopology().GetVertexSegments(vnr);
         node.bnd_elements.ne = bia.Size();
         node.bnd_elements.ptr = (int*)&bia[0];
         break;
       }
     case 1:
       {
-        FlatArray<SegmentIndex> ia = mesh->GetTopology().GetVertexSegments(vnr);
+        NgFlatArray<SegmentIndex> ia = mesh->GetTopology().GetVertexSegments(vnr);
         node.elements.ne = ia.Size();
         node.elements.ptr = (int*)&ia[0];
         
-        FlatArray<int> bia = mesh->GetTopology().GetVertexPointElements(vnr);
+        NgFlatArray<int> bia = mesh->GetTopology().GetVertexPointElements(vnr);
         node.bnd_elements.ne = bia.Size();
         node.bnd_elements.ptr = (int*)&bia[0];
         break;

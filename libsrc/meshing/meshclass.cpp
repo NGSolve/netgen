@@ -2019,7 +2019,7 @@ namespace netgen
         {
           faceht.SetSize (2 * selsonpoint[pi].Size() + 4 * elsonpoint[pi].Size());
 
-          FlatArray<SurfaceElementIndex> row = selsonpoint[pi];
+          NgFlatArray<SurfaceElementIndex> row = selsonpoint[pi];
           for (ii = 0; ii < row.Size(); ii++)
             {
               Element2d hel = SurfaceElement(row[ii]);
@@ -2058,7 +2058,7 @@ namespace netgen
             }
 
 
-          FlatArray<ElementIndex> rowel = elsonpoint[pi];
+          NgFlatArray<ElementIndex> rowel = elsonpoint[pi];
           for (ii = 0; ii < rowel.Size(); ii++)
             {
               const Element & el = VolumeElement(rowel[ii]);

@@ -162,17 +162,17 @@ public:
   int GetFace2SurfaceElement (int fnr) const { return face2surfel[fnr-1]; }
   
   void GetVertexElements (int vnr, NgArray<ElementIndex> & elements) const;
-  FlatArray<ElementIndex> GetVertexElements (int vnr) const
+  NgFlatArray<ElementIndex> GetVertexElements (int vnr) const
   { return vert2element[vnr]; }
 
   void GetVertexSurfaceElements( int vnr, NgArray<SurfaceElementIndex>& elements ) const;
-  FlatArray<SurfaceElementIndex> GetVertexSurfaceElements (int vnr) const
+  NgFlatArray<SurfaceElementIndex> GetVertexSurfaceElements (int vnr) const
   { return vert2surfelement[vnr]; }
 
-  FlatArray<SegmentIndex> GetVertexSegments (int vnr) const
+  NgFlatArray<SegmentIndex> GetVertexSegments (int vnr) const
   { return vert2segment[vnr]; }
 
-  FlatArray<int> GetVertexPointElements (int vnr) const
+  NgFlatArray<int> GetVertexPointElements (int vnr) const
   { return vert2pointelement[vnr]; }
   
   int GetVerticesEdge ( int v1, int v2) const;

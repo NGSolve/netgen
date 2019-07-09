@@ -112,7 +112,7 @@ void WriteDiffPackFormat (const Mesh & mesh,
 	      /*
 	      for (j = 1; j <= nse; j++) 
 	      */
-	      FlatArray<SurfaceElementIndex> sels = point2sel[i];
+	      NgFlatArray<SurfaceElementIndex> sels = point2sel[i];
 	      for (int jj = 0; jj < sels.Size(); jj++)
 		{
 		  for (k = 1; k <= mesh[sels[jj]].GetNP(); k++) 

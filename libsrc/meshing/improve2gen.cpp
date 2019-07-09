@@ -296,7 +296,7 @@ namespace netgen
 	    if (mesh[sei].IsDeleted()) continue;
 
 	    elmap[0] = sei;
-	    FlatArray<SurfaceElementIndex> neighbours = nbels[sei];
+	    NgFlatArray<SurfaceElementIndex> neighbours = nbels[sei];
 	    
 	    for (elrot[0] = 0; elrot[0] < mesh[sei].GetNP(); elrot[0]++)
 	      {

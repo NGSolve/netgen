@@ -1638,19 +1638,19 @@ void Ng_GetVertexElements (int vnr, int * els)
     {
     case 3:
       {
-        FlatArray<ElementIndex> ia = mesh->GetTopology().GetVertexElements(vnr);
+        NgFlatArray<ElementIndex> ia = mesh->GetTopology().GetVertexElements(vnr);
         for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
         break;
       }
     case 2:
       {
-        FlatArray<SurfaceElementIndex> ia = mesh->GetTopology().GetVertexSurfaceElements(vnr);
+        NgFlatArray<SurfaceElementIndex> ia = mesh->GetTopology().GetVertexSurfaceElements(vnr);
         for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
         break;
       }
     case 1:
       {
-        FlatArray<SegmentIndex> ia = mesh->GetTopology().GetVertexSegments(vnr);
+        NgFlatArray<SegmentIndex> ia = mesh->GetTopology().GetVertexSegments(vnr);
         for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
         break;
         /*

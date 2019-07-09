@@ -340,7 +340,7 @@ namespace netgen
 	  {
 	  double values[3], sumvalues[3] = { 0, 0, 0 };
 
-	  FlatArray<int> els = mesh->GetTopology().GetVertexElements(pi);
+	  NgFlatArray<int> els = mesh->GetTopology().GetVertexElements(pi);
 
 	  for (int j = 0; j < els.Size(); j++)
 	  {

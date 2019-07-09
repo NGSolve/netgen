@@ -1291,17 +1291,17 @@ void Ngx_Mesh::SetSurfaceElementOrders (int enr, int ox, int oy)
       {
       case 0:
 	{
-	  FlatArray<int> dn = mesh->GetParallelTopology().GetDistantPNums(locnum);
+	  NgFlatArray<int> dn = mesh->GetParallelTopology().GetDistantPNums(locnum);
 	  return std::tuple<int,int*>(dn.Size(), &dn[0]);
 	}
       case 1:
 	{
-	  FlatArray<int> dn = mesh->GetParallelTopology().GetDistantEdgeNums(locnum);
+	  NgFlatArray<int> dn = mesh->GetParallelTopology().GetDistantEdgeNums(locnum);
 	  return std::tuple<int,int*>(dn.Size(), &dn[0]);
 	}
       case 2:
 	{
-	  FlatArray<int> dn = mesh->GetParallelTopology().GetDistantFaceNums(locnum);
+	  NgFlatArray<int> dn = mesh->GetParallelTopology().GetDistantFaceNums(locnum);
 	  return std::tuple<int,int*>(dn.Size(), &dn[0]);
 	}
       default:

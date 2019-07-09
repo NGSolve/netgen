@@ -93,9 +93,9 @@ namespace netgen
       distedgenums = loc2distedge[locedgenum-1];
     } 
 
-    FlatArray<int> GetDistantPNums (int locnum) const { return loc2distvert[locnum]; }
-    FlatArray<int> GetDistantFaceNums (int locnum) const { return loc2distface[locnum]; }
-    FlatArray<int> GetDistantEdgeNums (int locnum) const { return loc2distedge[locnum]; }
+    NgFlatArray<int> GetDistantPNums (int locnum) const { return loc2distvert[locnum]; }
+    NgFlatArray<int> GetDistantFaceNums (int locnum) const { return loc2distface[locnum]; }
+    NgFlatArray<int> GetDistantEdgeNums (int locnum) const { return loc2distedge[locnum]; }
 
     bool IsExchangeVert (int dest, int vnum) const
     {

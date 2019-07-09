@@ -1391,7 +1391,7 @@ inline size_t HashValue (INDEX_2 i2, size_t size) { return (113*size_t(i2[0])+si
     ClosedHashTable (ClosedHashTable && ht2) = default;
 
       // who needs that ? 
-    ClosedHashTable (FlatArray<T_HASH> _hash, FlatArray<T> _cont)
+    ClosedHashTable (NgFlatArray<T_HASH> _hash, NgFlatArray<T> _cont)
       : size(_hash.Size()), used(0), hash(_hash.Size(), _hash.Addr(0)), cont(_cont.Size(), _cont.Addr(0))
     {
       for (auto & v : hash)

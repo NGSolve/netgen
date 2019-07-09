@@ -6,7 +6,7 @@ namespace netgen
 
   
   template <class T>
-  void QuickSortRec (FlatArray<T> data,
+  void QuickSortRec (NgFlatArray<T> data,
 		     int left, int right)
   {
     int i = left;
@@ -30,7 +30,7 @@ namespace netgen
   }
 
   template <class T>
-  void QuickSort (FlatArray<T> data)
+  void QuickSort (NgFlatArray<T> data)
   {
     if (data.Size() > 1)
       QuickSortRec (data, 0, data.Size()-1);
@@ -1205,7 +1205,7 @@ namespace netgen
                             (*testout) << (*mesh)[(PointIndex)face2vert[i].I(j+1)] << " ";
 			(*testout) << endl;
 
-			FlatArray<ElementIndex> vertels = GetVertexElements (face2vert[i].I(1));
+			NgFlatArray<ElementIndex> vertels = GetVertexElements (face2vert[i].I(1));
 			for (int k = 0; k < vertels.Size(); k++)
 			  {
 			    int elfaces[10], orient[10];
@@ -1821,7 +1821,7 @@ namespace netgen
   
 
     //  GetVertexElements (pi[0], els);
-    FlatArray<ElementIndex> els = GetVertexElements (pi[0]);
+    NgFlatArray<ElementIndex> els = GetVertexElements (pi[0]);
 
     // find one element having all vertices of the face
     for (int i = 0; i < els.Size(); i++)
@@ -1925,25 +1925,25 @@ namespace netgen
   }
 
   /*
-  FlatArray<ElementIndex> MeshTopology :: GetVertexElements (int vnr) const
+  NgFlatArray<ElementIndex> MeshTopology :: GetVertexElements (int vnr) const
   {
     if (vert2element)
       return (*vert2element)[vnr];
-    return FlatArray<ElementIndex> (0,0);
+    return NgFlatArray<ElementIndex> (0,0);
   }
 
-  FlatArray<SurfaceElementIndex> MeshTopology :: GetVertexSurfaceElements (int vnr) const
+  NgFlatArray<SurfaceElementIndex> MeshTopology :: GetVertexSurfaceElements (int vnr) const
   {
     if (vert2surfelement)
       return (*vert2surfelement)[vnr];
-    return FlatArray<SurfaceElementIndex> (0,0);
+    return NgFlatArray<SurfaceElementIndex> (0,0);
   }
 
-  FlatArray<SegmentIndex> MeshTopology :: GetVertexSegments (int vnr) const
+  NgFlatArray<SegmentIndex> MeshTopology :: GetVertexSegments (int vnr) const
   {
     if (vert2segment)
       return (*vert2segment)[vnr];
-    return FlatArray<SegmentIndex> (0,0);
+    return NgFlatArray<SegmentIndex> (0,0);
   }
   */
 

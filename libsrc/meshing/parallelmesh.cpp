@@ -223,21 +223,21 @@ namespace netgen
       vert_flag = -1;
       for (int dest = 1; dest < ntasks; dest++)
 	{
-	  FlatArray<ElementIndex> els = els_of_proc[dest];
+	  NgFlatArray<ElementIndex> els = els_of_proc[dest];
 	  for (int hi = 0; hi < els.Size(); hi++)
 	    {
 	      const Element & el = (*this) [ els[hi] ];
 	      for (int i = 0; i < el.GetNP(); i++)
 		f(el[i], dest);
 	    }
-	  FlatArray<SurfaceElementIndex> sels = sels_of_proc[dest];
+	  NgFlatArray<SurfaceElementIndex> sels = sels_of_proc[dest];
 	  for (int hi = 0; hi < sels.Size(); hi++)
 	    {
 	      const Element2d & el = (*this) [ sels[hi] ];
 	      for (int i = 0; i < el.GetNP(); i++)
 		f(el[i], dest);
 	    }
-	  FlatArray<SegmentIndex> segs = segs_of_proc[dest];
+	  NgFlatArray<SegmentIndex> segs = segs_of_proc[dest];
 	  for (int hi = 0; hi < segs.Size(); hi++)
 	    {
 	      const Segment & el = (*this) [segs[hi]];
@@ -285,7 +285,7 @@ namespace netgen
     **/
     for (int vert = 1; vert <= GetNP(); vert++ )
       {
-	FlatArray<int> procs = procs_of_vert[vert];
+	NgFlatArray<int> procs = procs_of_vert[vert];
 	for (int j = 0; j < procs.Size(); j++)
 	  {
 	    int dest = procs[j];
@@ -297,7 +297,7 @@ namespace netgen
 
     for (int dest = 1; dest < ntasks; dest++)
       {
-	FlatArray<PointIndex> verts = verts_of_proc[dest];
+	NgFlatArray<PointIndex> verts = verts_of_proc[dest];
 	sendrequests.Append (MyMPI_ISend (verts, dest, MPI_TAG_MESH+1, comm));
 
 	MPI_Datatype mptype = MeshPoint::MyGetMPIType();
@@ -387,7 +387,7 @@ namespace netgen
     
     for (int vert = 1; vert <= GetNP(); vert++)
       {
-	FlatArray<int> procs = procs_of_vert[vert];
+	NgFlatArray<int> procs = procs_of_vert[vert];
 	for (int j = 0; j < procs.Size(); j++)
 	  num_distpnums[procs[j]] += 3 * (procs.Size()-1);
       }
@@ -396,7 +396,7 @@ namespace netgen
 
     for (int vert = 1; vert <= GetNP(); vert++)
       {
-	FlatArray<int> procs = procs_of_vert[vert];
+	NgFlatArray<int> procs = procs_of_vert[vert];
 	for (int j = 0; j < procs.Size(); j++)
 	  for (int k = 0; k < procs.Size(); k++)
 	    if (j != k)
@@ -474,7 +474,7 @@ namespace netgen
 	  {
 	    if(ided_sel[sei]!=-1) continue;
 	    const Element2d & sel = (*this)[sei];
-	    FlatArray<const PointIndex> points = sel.PNums();
+	    NgFlatArray<const PointIndex> points = sel.PNums();
 	    auto ided1 = per_verts[points[0]];
 	    os1.SetSize(0);
 	    for (int j = 0; j < ided1.Size(); j++)
@@ -498,7 +498,7 @@ namespace netgen
 	      throw NgException("SurfaceElement identified with more than one other??");
 	    }
 	    const Element2d & sel2 = (*this)[sei];
-	    FlatArray<const PointIndex> points2 = sel2.PNums();
+	    NgFlatArray<const PointIndex> points2 = sel2.PNums();
 	    has_ided_sels = true;
 	    ided_sel[sei] = os1[0];
 	    ided_sel[os1[0]] = sei;
@@ -854,7 +854,7 @@ namespace netgen
     for(int idnr = 1; idnr < maxidentnr+1; idnr++)
       {
     	int npairs = pp_data[maxidentnr+idnr];
-    	FlatArray<int> pairdata(2*npairs, &pp_data[offset]);
+    	NgFlatArray<int> pairdata(2*npairs, &pp_data[offset]);
     	offset += 2*npairs;
 	for (int k = 0; k<npairs; k++) {
 	  PointIndex loc1 = glob2loc_vert_ht.Get(pairdata[2*k]);
@@ -1231,8 +1231,8 @@ namespace netgen
 	  {
 	    Element2d & sel = (*this)[sei];
 	    PointIndex pi1 = sel[0];
-	    // FlatArray<ElementIndex> els = pnt2el[pi1];
-	    FlatArray<int> els = pnt2el[pi1];
+	    // NgFlatArray<ElementIndex> els = pnt2el[pi1];
+	    NgFlatArray<int> els = pnt2el[pi1];
 	    
 	    // sel.SetPartition (-1);
             surf_partition[sei] = -1;
@@ -1270,7 +1270,7 @@ namespace netgen
 	  {
 	    Segment & sel = (*this)[si];
 	    PointIndex pi1 = sel[0];
-	    FlatArray<int> els = pnt2el[pi1];
+	    NgFlatArray<int> els = pnt2el[pi1];
 	    
 	    // sel.SetPartition (-1);
             seg_partition[si] = -1;
@@ -1311,7 +1311,7 @@ namespace netgen
             seg_partition[segi] = -1;
 	    PointIndex pi1 = seg[0];
 
-	    FlatArray<int> sels = pnt2el[pi1];
+	    NgFlatArray<int> sels = pnt2el[pi1];
 	    for (int j = 0; j < sels.Size(); j++)
 	      {
 		SurfaceElementIndex sei = sels[j];
@@ -1703,7 +1703,7 @@ namespace netgen
 
     for ( int vert = 0; vert < nn; vert++ )
       {
-	FlatArray<idxtype> array ( cnt[vert], &adjacency[ xadj[vert] ] );
+	NgFlatArray<idxtype> array ( cnt[vert], &adjacency[ xadj[vert] ] );
 	BubbleSort(array);
       }
 
@@ -1815,7 +1815,7 @@ namespace netgen
 
     for ( int el = 0; el < ne; el++ )
       {
-	FlatArray<idxtype> array ( cnt[el], &adjacency[ xadj[el] ] );
+	NgFlatArray<idxtype> array ( cnt[el], &adjacency[ xadj[el] ] );
 	BubbleSort(array);
       }
 

@@ -366,7 +366,7 @@ namespace netgen
 		  for (PointIndex pi : dest2vert[dest-1])
 		    loc2exchange[pi] = cnt++;
 		  
-		  FlatArray<int> recvarray = recv_verts[dest-1];
+		  NgFlatArray<int> recvarray = recv_verts[dest-1];
 		  for (int ii = 0; ii < recvarray.Size(); ii+=2)
 		    for (PointIndex pi : dest2pair[dest-1])
 		      // for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
@@ -464,7 +464,7 @@ namespace netgen
     for (int dest = 1; dest < ntasks; dest++)
       {
 	auto ex2loc = dest2vert[dest-1];
-	FlatArray<int> recvarray = recv_edges[dest-1];
+	NgFlatArray<int> recvarray = recv_edges[dest-1];
         for (int ii = 0; ii < recvarray.Size(); ii+=2)
 	  for (int edge : dest2edge[dest-1])
 	    {
@@ -490,7 +490,7 @@ namespace netgen
 	    vert2edge.Set(INDEX_2(v1,v2), edge);
 	  }
 
-	FlatArray<int> recvarray = recv_edges[dest-1];
+	NgFlatArray<int> recvarray = recv_edges[dest-1];
         for (int ii = 0; ii < recvarray.Size(); ii+=2)
 	  {
 	    INDEX_2 re(ex2loc[recvarray[ii]], 
@@ -585,7 +585,7 @@ namespace netgen
 	      for (PointIndex pi : dest2vert[dest-1])
 		loc2exchange[pi] = cnt++;
 	      
-	      FlatArray<int> recvarray = recv_faces[dest-1];
+	      NgFlatArray<int> recvarray = recv_faces[dest-1];
 	      for (int ii = 0; ii < recvarray.Size(); ii+=3)
 		for (int face : dest2face[dest-1])
 		  {
@@ -611,7 +611,7 @@ namespace netgen
 		vert2face.Set(INDEX_3(verts[0], verts[1], verts[2]), face);
 	      }
 	    
-	    FlatArray<int> recvarray = recv_faces[dest-1];
+	    NgFlatArray<int> recvarray = recv_faces[dest-1];
 	    for (int ii = 0; ii < recvarray.Size(); ii+=3)
 	      {
 		INDEX_3 re(ex2loc[recvarray[ii]], 
@@ -676,7 +676,7 @@ namespace netgen
 	for (int sender = 1; sender < ntasks; sender ++)
 	  if (id != sender)
 	    {
-	      FlatArray<int> recvarray = recv_faces[sender-1];
+	      NgFlatArray<int> recvarray = recv_faces[sender-1];
 	      
 	      for (int ii = 0; ii < recvarray.Size(); )
 		{ 

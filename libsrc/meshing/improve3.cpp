@@ -105,7 +105,7 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 	  hasonepi.SetSize(0);
 	  hasbothpi.SetSize(0);
 
-	  FlatArray<ElementIndex> row1 = elementsonnode[pi1];
+	  NgFlatArray<ElementIndex> row1 = elementsonnode[pi1];
 	  for (int k = 0; k < row1.Size(); k++)
 	    {
 	      Element & elem = mesh[row1[k]];
@@ -122,7 +122,7 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 		}
 	    } 
 	  
-	  FlatArray<ElementIndex> row2 = elementsonnode[pi2];	  
+	  NgFlatArray<ElementIndex> row2 = elementsonnode[pi2];	  
 	  for (int k = 0; k < row2.Size(); k++)
 	    {
 	      Element & elem = mesh[row2[k]];
@@ -209,7 +209,7 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 	      mesh[pi1] = pnew;
 	      cnt++;
 
-	      FlatArray<ElementIndex> row = elementsonnode[pi2];
+	      NgFlatArray<ElementIndex> row = elementsonnode[pi2];
 	      for (int k = 0; k < row.Size(); k++)
 		{
 		  Element & elem = mesh[row[k]];
@@ -2439,7 +2439,7 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 	  if (bface) continue;
 
 
-	  FlatArray<ElementIndex> row = elementsonnode[pi1];
+	  NgFlatArray<ElementIndex> row = elementsonnode[pi1];
 	  for (int k = 0; k < row.Size(); k++)
 	    {
 	      ElementIndex eli2 = row[k];

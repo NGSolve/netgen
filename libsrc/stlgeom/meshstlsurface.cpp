@@ -637,7 +637,7 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 		}
 	}
       */
-      FlatArray<int> segs = opensegments[fnr];
+      NgFlatArray<int> segs = opensegments[fnr];
       for (int hi = 0; hi < segs.Size(); hi++)
 	{
 	  int i = segs[hi];
@@ -706,7 +706,7 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
       */
 
 
-      // FlatArray<int> segs = opensegments[fnr];
+      // NgFlatArray<int> segs = opensegments[fnr];
       for (int hi = 0; hi < segs.Size(); hi++)
 	{
 	  int i = segs[hi];

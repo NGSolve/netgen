@@ -147,13 +147,13 @@ namespace netgen
 
 
   template <class T, int BASE>
-  inline void MyMPI_Send (FlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm /* = ng_comm */)
+  inline void MyMPI_Send (NgFlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm /* = ng_comm */)
   {
     MPI_Send( &s.First(), s.Size(), MyGetMPIType<T>(), dest, tag, comm);
   }
 
   template <class T, int BASE>
-  inline void MyMPI_Recv ( FlatArray<T, BASE> s, int src, int tag, MPI_Comm comm /* = ng_comm */)
+  inline void MyMPI_Recv ( NgFlatArray<T, BASE> s, int src, int tag, MPI_Comm comm /* = ng_comm */)
   {
     MPI_Status status;
     MPI_Recv( &s.First(), s.Size(), MyGetMPIType<T>(), src, tag, comm, &status);
@@ -191,21 +191,21 @@ namespace netgen
 
   /*
   template <class T, int BASE>
-  inline void MyMPI_ISend (FlatArray<T, BASE> s, int dest, int tag, MPI_Request & request)
+  inline void MyMPI_ISend (NgFlatArray<T, BASE> s, int dest, int tag, MPI_Request & request)
   {
     MPI_Isend( &s.First(), s.Size(), MyGetMPIType<T>(), dest, tag, MPI_COMM_WORLD, & request);
   }
 
 
   template <class T, int BASE>
-  inline void MyMPI_IRecv (FlatArray<T, BASE> s, int dest, int tag, MPI_Request & request)
+  inline void MyMPI_IRecv (NgFlatArray<T, BASE> s, int dest, int tag, MPI_Request & request)
   {
     MPI_Irecv( &s.First(), s.Size(), MyGetMPIType<T>(), dest, tag, MPI_COMM_WORLD, & request);
   }
   */
 
   template <class T, int BASE>
-  inline MPI_Request MyMPI_ISend (FlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm /* = ng_comm */)
+  inline MPI_Request MyMPI_ISend (NgFlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm /* = ng_comm */)
   {
     MPI_Request request;
     MPI_Isend( &s.First(), s.Size(), MyGetMPIType<T>(), dest, tag, comm, &request);
@@ -214,7 +214,7 @@ namespace netgen
 
 
   template <class T, int BASE>
-  inline MPI_Request MyMPI_IRecv (FlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm /* = ng_comm */)
+  inline MPI_Request MyMPI_IRecv (NgFlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm /* = ng_comm */)
   {
     MPI_Request request;
     MPI_Irecv( &s.First(), s.Size(), MyGetMPIType<T>(), dest, tag, comm, &request);
@@ -223,7 +223,7 @@ namespace netgen
 
   /*
   template <class T, int BASE>
-  inline void MyMPI_ISend (FlatArray<T, BASE> s, int dest, int tag)
+  inline void MyMPI_ISend (NgFlatArray<T, BASE> s, int dest, int tag)
   {
     MPI_Request request;
     MPI_Isend( &s.First(), s.Size(), MyGetMPIType<T>(), dest, tag, MPI_COMM_WORLD, &request);
@@ -232,7 +232,7 @@ namespace netgen
 
 
   template <class T, int BASE>
-  inline void MyMPI_IRecv (FlatArray<T, BASE> s, int dest, int tag)
+  inline void MyMPI_IRecv (NgFlatArray<T, BASE> s, int dest, int tag)
   {
     MPI_Request request;
     MPI_Irecv( &s.First(), s.Size(), MyGetMPIType<T>(), dest, tag, MPI_COMM_WORLD, &request);
@@ -359,19 +359,19 @@ namespace netgen
   }
 
   template <class T, class T2>
-  inline void MyMPI_Allgather (const T & send, FlatArray<T2> recv, MPI_Comm comm /* = ng_comm */)
+  inline void MyMPI_Allgather (const T & send, NgFlatArray<T2> recv, MPI_Comm comm /* = ng_comm */)
   {
     MPI_Allgather( const_cast<T*> (&send), 1, MyGetMPIType<T>(), &recv[0], 1, MyGetMPIType<T2>(), comm);
   }
 
   template <class T, class T2>
-  inline void MyMPI_Alltoall (FlatArray<T> send, FlatArray<T2> recv, MPI_Comm comm /* = ng_comm */)
+  inline void MyMPI_Alltoall (NgFlatArray<T> send, NgFlatArray<T2> recv, MPI_Comm comm /* = ng_comm */)
   {
     MPI_Alltoall( &send[0], 1, MyGetMPIType<T>(), &recv[0], 1, MyGetMPIType<T2>(), comm);
   }
 
 //   template <class T, class T2>
-//   inline void MyMPI_Alltoall_Block (FlatArray<T> send, FlatArray<T2> recv, int blocklen, MPI_Comm comm = ng_comm)
+//   inline void MyMPI_Alltoall_Block (NgFlatArray<T> send, NgFlatArray<T2> recv, int blocklen, MPI_Comm comm = ng_comm)
 //   {
 //     MPI_Alltoall( &send[0], blocklen, MyGetMPIType<T>(), &recv[0], blocklen, MyGetMPIType<T2>(), comm);
 //   }

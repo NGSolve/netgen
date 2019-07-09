@@ -456,12 +456,12 @@ namespace netgen
     ///
     const PointIndex & operator[] (int i) const { return pnum[i]; }
 
-    FlatArray<const PointIndex> PNums () const 
-    { return FlatArray<const PointIndex> (np, &pnum[0]); }
-    FlatArray<PointIndex> PNums ()
-    { return FlatArray<PointIndex> (np, &pnum[0]); }
+    NgFlatArray<const PointIndex> PNums () const 
+    { return NgFlatArray<const PointIndex> (np, &pnum[0]); }
+    NgFlatArray<PointIndex> PNums ()
+    { return NgFlatArray<PointIndex> (np, &pnum[0]); }
     auto Vertices() const
-    { return FlatArray<const PointIndex> (GetNV(), &pnum[0]); }
+    { return NgFlatArray<const PointIndex> (GetNV(), &pnum[0]); }
     
     ///
     PointIndex & PNum (int i) { return pnum[i-1]; }
@@ -748,10 +748,10 @@ namespace netgen
     ///
     const PointIndex & operator[] (int i) const { return pnum[i]; }
 
-    FlatArray<const PointIndex> PNums () const 
-    { return FlatArray<const PointIndex> (np, &pnum[0]); }
+    NgFlatArray<const PointIndex> PNums () const 
+    { return NgFlatArray<const PointIndex> (np, &pnum[0]); }
 
-    FlatArray<const PointIndex> Vertices() const { return { GetNV(), &pnum[0] }; }
+    NgFlatArray<const PointIndex> Vertices() const { return { GetNV(), &pnum[0] }; }
 
     ///
     PointIndex & PNum (int i) { return pnum[i-1]; }
