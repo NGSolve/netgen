@@ -76,8 +76,8 @@ Meshing3 :: ~Meshing3 ()
 
 /*
   // was war das ????
-static double CalcLocH (const Array<Point3d> & locpoints,
-			const Array<MiniElement2d> & locfaces,
+static double CalcLocH (const NgArray<Point3d> & locpoints,
+			const NgArray<MiniElement2d> & locfaces,
 			double h)
 {
   return h;
@@ -181,16 +181,16 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   // NgProfiler::RegionTimer reg (meshing3_timer);
 
 
-  Array<Point3d, PointIndex::BASE> locpoints;      // local points
-  Array<MiniElement2d> locfaces;                   // local faces
-  Array<PointIndex, PointIndex::BASE> pindex;      // mapping from local to front point numbering
-  Array<int, PointIndex::BASE> allowpoint;         // point is allowed ?
-  Array<INDEX> findex;                             // mapping from local to front face numbering
+  NgArray<Point3d, PointIndex::BASE> locpoints;      // local points
+  NgArray<MiniElement2d> locfaces;                   // local faces
+  NgArray<PointIndex, PointIndex::BASE> pindex;      // mapping from local to front point numbering
+  NgArray<int, PointIndex::BASE> allowpoint;         // point is allowed ?
+  NgArray<INDEX> findex;                             // mapping from local to front face numbering
   //INDEX_2_HASHTABLE<int> connectedpairs(100);    // connecgted pairs for prism meshing
 
-  Array<Point3d, PointIndex::BASE> plainpoints;    // points in reference coordinates
-  Array<int> delpoints, delfaces;   // points and lines to be deleted
-  Array<Element> locelements;       // new generated elements
+  NgArray<Point3d, PointIndex::BASE> plainpoints;    // points in reference coordinates
+  NgArray<int> delpoints, delfaces;   // points and lines to be deleted
+  NgArray<Element> locelements;       // new generated elements
 
   int j, oldnp, oldnf;
   int found;
@@ -211,10 +211,10 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 
   
   // for star-shaped domain meshing
-  Array<MeshPoint, PointIndex::BASE> grouppoints;      
-  Array<MiniElement2d> groupfaces;
-  Array<PointIndex, PointIndex::BASE> grouppindex;
-  Array<INDEX> groupfindex;
+  NgArray<MeshPoint, PointIndex::BASE> grouppoints;      
+  NgArray<MiniElement2d> groupfaces;
+  NgArray<PointIndex, PointIndex::BASE> grouppindex;
+  NgArray<INDEX> groupfindex;
   
   
   float minerr;
@@ -223,10 +223,10 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   // int giveup = 0;
 
   
-  Array<Point3d> tempnewpoints;
-  Array<MiniElement2d> tempnewfaces;
-  Array<int> tempdelfaces;
-  Array<Element> templocelements;
+  NgArray<Point3d> tempnewpoints;
+  NgArray<MiniElement2d> tempnewfaces;
+  NgArray<int> tempdelfaces;
+  NgArray<Element> templocelements;
 
 
   stat.h = mp.maxh;
@@ -774,9 +774,9 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
   
   PrintMessage (5, "n1 = ", n1, " n2 = ", n2, " n3 = ", n3);
 
-  Array<blocktyp> inner(n);
-  Array<PointIndex> pointnr(n);
-  Array<int> frontpointnr(n);
+  NgArray<blocktyp> inner(n);
+  NgArray<PointIndex> pointnr(n);
+  NgArray<int> frontpointnr(n);
 
 
   // initialize inner to 1
@@ -1107,7 +1107,7 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
   PrintMessage (3, "blockfill local h");
 
 
-  Array<Point<3> > npoints;
+  NgArray<Point<3> > npoints;
   
   adfront -> CreateTrees();
 

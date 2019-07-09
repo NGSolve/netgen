@@ -12,7 +12,7 @@ class VisualSceneMeshDoctor : public VisualScene
   int selpoint, selpoint2;
 
   // for edgemarking:
-  Array<int> edgedist;
+  NgArray<int> edgedist;
   int markedgedist;
   
 

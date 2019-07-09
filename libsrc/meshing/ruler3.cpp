@@ -8,7 +8,7 @@ extern double minother;
 extern double minwithoutother;
 
 
-  static double CalcElementBadness (const Array<Point3d, PointIndex::BASE> & points,
+  static double CalcElementBadness (const NgArray<Point3d, PointIndex::BASE> & points,
                                     const Element & elem)
 {
   double vol, l, l4, l5, l6;
@@ -49,13 +49,13 @@ extern double minwithoutother;
 
 int Meshing3 :: ApplyRules 
 (
- Array<Point3d, PointIndex::BASE> & lpoints,     // in: local points, out: old+new local points
- Array<int, PointIndex::BASE> & allowpoint,      // in: 2 .. it is allowed to use pointi, 1..will be allowed later, 0..no means
- Array<MiniElement2d> & lfaces,    // in: local faces, out: old+new local faces
+ NgArray<Point3d, PointIndex::BASE> & lpoints,     // in: local points, out: old+new local points
+ NgArray<int, PointIndex::BASE> & allowpoint,      // in: 2 .. it is allowed to use pointi, 1..will be allowed later, 0..no means
+ NgArray<MiniElement2d> & lfaces,    // in: local faces, out: old+new local faces
  INDEX lfacesplit,	       // for local faces in outer radius
  INDEX_2_HASHTABLE<int> & connectedpairs,  // connected pairs for prism-meshing
- Array<Element> & elements,    // out: new elements
- Array<INDEX> & delfaces,      // out: face indices of faces to delete
+ NgArray<Element> & elements,    // out: new elements
+ NgArray<INDEX> & delfaces,      // out: face indices of faces to delete
  int tolerance,                // quality class: 1 best 
  double sloppy,                // quality strength
  int rotind1,                  // how to rotate base element
@@ -78,7 +78,7 @@ int Meshing3 :: ApplyRules
   int loktestmode;
 
 
-  Array<int, PointIndex::BASE> pused;      // point is already mapped, number of uses
+  NgArray<int, PointIndex::BASE> pused;      // point is already mapped, number of uses
   ArrayMem<char,100> fused;                       // face is already mapped
   ArrayMem<PointIndex,100> pmap;                  // map of reference point to local point
   ArrayMem<bool,100> pfixed;                      // point mapped by face-map
@@ -88,13 +88,13 @@ int Meshing3 :: ApplyRules
   INDEX_2_CLOSED_HASHTABLE<int> ledges(100); // edges in local environment
   
   ArrayMem<Point3d,100> tempnewpoints;
-  Array<MiniElement2d> tempnewfaces;
+  NgArray<MiniElement2d> tempnewfaces;
   ArrayMem<int,100> tempdelfaces;
-  Array<Element> tempelements;
+  NgArray<Element> tempelements;
   ArrayMem<Box3d,100> triboxes;         // bounding boxes of local faces
 
-  Array<int, PointIndex::BASE> pnearness;
-  Array<int> fnearness;
+  NgArray<int, PointIndex::BASE> pnearness;
+  NgArray<int> fnearness;
 
   static int cnt = 0;
   cnt++;
@@ -650,7 +650,7 @@ int Meshing3 :: ApplyRules
 
 		      if (loktestmode)
 			{
-			  const Array<Point3d> & fz = rule->GetTransFreeZone();
+			  const NgArray<Point3d> & fz = rule->GetTransFreeZone();
 			  (*testout) << "Freezone: " << endl;
 			  for (int i = 1; i <= fz.Size(); i++)
 			    (*testout) << fz.Get(i) << endl;
@@ -685,7 +685,7 @@ int Meshing3 :: ApplyRules
 
 		      for (int i = 1; i <= lfaces.Size() && ok; i++)
 			{
-			  static Array<int> lpi(4);
+			  static NgArray<int> lpi(4);
 
 			  if (!fused.Get(i))
 			    { 

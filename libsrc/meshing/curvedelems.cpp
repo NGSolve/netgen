@@ -11,7 +11,7 @@ namespace netgen
   //   bool rational = true;
 
   
-  static void ComputeGaussRule (int n, Array<double> & xi, Array<double> & wi)
+  static void ComputeGaussRule (int n, NgArray<double> & xi, NgArray<double> & wi)
   {
     xi.SetSize (n);
     wi.SetSize (n);
@@ -407,7 +407,7 @@ namespace netgen
   }
 
   
-  static Array<shared_ptr<RecPol>> jacpols2;
+  static NgArray<shared_ptr<RecPol>> jacpols2;
 
   void CurvedElements::buildJacPols()
   {
@@ -566,7 +566,7 @@ namespace netgen
 
     const ParallelMeshTopology & partop = mesh.GetParallelTopology ();
     // MPI_Comm_dup (mesh.GetCommunicator(), &curve_comm);      
-    Array<int> procs;
+    NgArray<int> procs;
 #else
     // curve_comm = mesh.GetCommunicator();
 #endif
@@ -597,7 +597,7 @@ namespace netgen
 
     rational = arational;
 
-    Array<int> edgenrs;
+    NgArray<int> edgenrs;
     int nedges = top.GetNEdges();
     int nfaces = top.GetNFaces();
 
@@ -670,7 +670,7 @@ namespace netgen
 
     if (ntasks > 1 && working)
       {
-	Array<int> cnt(ntasks);
+	NgArray<int> cnt(ntasks);
 	cnt = 0;
 	for (int e = 0; e < edgeorder.Size(); e++)
 	  {
@@ -723,7 +723,7 @@ namespace netgen
 	return; 
       }
     
-    Array<double> xi, weight;
+    NgArray<double> xi, weight;
 
     ComputeGaussRule (aorder+4, xi, weight);  // on (0,1)
 
@@ -733,9 +733,9 @@ namespace netgen
     if (mesh.GetDimension() == 3 || rational)
       {
         static Timer tce("curve edges"); RegionTimer reg(tce);
-	Array<int> surfnr(nedges);
-	Array<PointGeomInfo> gi0(nedges);
-	Array<PointGeomInfo> gi1(nedges);
+	NgArray<int> surfnr(nedges);
+	NgArray<PointGeomInfo> gi0(nedges);
+	NgArray<PointGeomInfo> gi1(nedges);
 	surfnr = -1;
 
 	if (working)
@@ -792,7 +792,7 @@ namespace netgen
 	    MyMPI_ExchangeTable (senddata, recvdata, MPI_TAG_CURVE, curve_comm);
 	    
 
-	    Array<int> cnt(ntasks);
+	    NgArray<int> cnt(ntasks);
 	    cnt = 0;
 	    if (working)
 	      for (int e = 0; e < nedges; e++)
@@ -947,12 +947,12 @@ namespace netgen
       }
 
 
-    Array<int> use_edge(nedges);
-    Array<int> edge_surfnr1(nedges);
-    Array<int> edge_surfnr2(nedges);
-    Array<int> swap_edge(nedges);
-    Array<EdgePointGeomInfo> edge_gi0(nedges);
-    Array<EdgePointGeomInfo> edge_gi1(nedges);
+    NgArray<int> use_edge(nedges);
+    NgArray<int> edge_surfnr1(nedges);
+    NgArray<int> edge_surfnr2(nedges);
+    NgArray<int> swap_edge(nedges);
+    NgArray<EdgePointGeomInfo> edge_gi0(nedges);
+    NgArray<EdgePointGeomInfo> edge_gi1(nedges);
     use_edge = 0;
 
     if (working)
@@ -999,7 +999,7 @@ namespace netgen
 		}
 	    }
 	MyMPI_ExchangeTable (senddata, recvdata, MPI_TAG_CURVE, curve_comm);
-	Array<int> cnt(ntasks);
+	NgArray<int> cnt(ntasks);
 	cnt = 0;
 	if (working)
 	  for (int e = 0; e < edge_surfnr1.Size(); e++)
@@ -1169,7 +1169,7 @@ namespace netgen
     
     PrintMessage (3, "Curving faces");
 
-    Array<int> surfnr(nfaces);
+    NgArray<int> surfnr(nfaces);
     surfnr = -1;
 
     if (working)
@@ -1195,7 +1195,7 @@ namespace netgen
 
     if (ntasks > 1 && working)
       {
-	Array<int> cnt(ntasks);
+	NgArray<int> cnt(ntasks);
 	cnt = 0;
 	for (int f = 0; f < nfaces; f++)
 	  {
@@ -1239,8 +1239,8 @@ namespace netgen
 		dmat = 0.0;
 
 		int np = sqr(xi.Size());
-		Array<Point<2> > xia(np);
-		Array<Point<3> > xa(np);
+		NgArray<Point<2> > xia(np);
+		NgArray<Point<3> > xa(np);
 
 		for (int jx = 0, jj = 0; jx < xi.Size(); jx++)
 		  for (int jy = 0; jy < xi.Size(); jy++, jj++)
@@ -1248,7 +1248,7 @@ namespace netgen
 
 		// CalcMultiPointSurfaceTransformation (&xia, i, &xa, NULL);
 
-		Array<int> edgenrs;
+		NgArray<int> edgenrs;
 		top.GetFaceEdges (facenr+1, edgenrs);
 		for (int k = 0; k < edgenrs.Size(); k++) edgenrs[k]--;
 
@@ -1453,7 +1453,7 @@ namespace netgen
 
 
     // TVector<T> shapes, dshapes;
-    //     Array<Vec<3> > coefs;
+    //     NgArray<Vec<3> > coefs;
 
     SegmentInfo info;
     info.elnr = elnr;
@@ -1582,7 +1582,7 @@ namespace netgen
   }
 
   void CurvedElements :: 
-  GetCoefficients (SegmentInfo & info, Array<Vec<3> > & coefs) const
+  GetCoefficients (SegmentInfo & info, NgArray<Vec<3> > & coefs) const
   {
     const Segment & el = mesh[info.elnr];
 
@@ -2366,7 +2366,7 @@ namespace netgen
 
   template <int DIM_SPACE>
   void CurvedElements :: 
-  GetCoefficients (SurfaceElementInfo & info, Array<Vec<DIM_SPACE> > & coefs) const
+  GetCoefficients (SurfaceElementInfo & info, NgArray<Vec<DIM_SPACE> > & coefs) const
   {
     const Element2d & el = mesh[info.elnr];
     coefs.SetSize (info.ndof);
@@ -2400,10 +2400,10 @@ namespace netgen
 
 
   template void CurvedElements :: 
-  GetCoefficients<2> (SurfaceElementInfo & info, Array<Vec<2> > & coefs) const;
+  GetCoefficients<2> (SurfaceElementInfo & info, NgArray<Vec<2> > & coefs) const;
 
   template void CurvedElements :: 
-  GetCoefficients<3> (SurfaceElementInfo & info, Array<Vec<3> > & coefs) const;
+  GetCoefficients<3> (SurfaceElementInfo & info, NgArray<Vec<3> > & coefs) const;
 
 
 
@@ -3966,9 +3966,9 @@ namespace netgen
 
   /*
   void CurvedElements :: 
-  CalcMultiPointSegmentTransformation (Array<double> * xi, SegmentIndex segnr,
-				       Array<Point<3> > * x,
-				       Array<Vec<3> > * dxdxi)
+  CalcMultiPointSegmentTransformation (NgArray<double> * xi, SegmentIndex segnr,
+				       NgArray<Point<3> > * x,
+				       NgArray<Vec<3> > * dxdxi)
   {
     ;
   }
@@ -4030,9 +4030,9 @@ namespace netgen
 
 
   void CurvedElements :: 
-  CalcMultiPointSurfaceTransformation (Array< Point<2> > * xi, SurfaceElementIndex elnr,
-				       Array< Point<3> > * x,
-				       Array< Mat<3,2> > * dxdxi)
+  CalcMultiPointSurfaceTransformation (NgArray< Point<2> > * xi, SurfaceElementIndex elnr,
+				       NgArray< Point<3> > * x,
+				       NgArray< Mat<3,2> > * dxdxi)
   {
     double * px = (x) ? &(*x)[0](0) : NULL;
     double * pdxdxi = (dxdxi) ? &(*dxdxi)[0](0) : NULL;
@@ -4343,9 +4343,9 @@ namespace netgen
 
 
   void CurvedElements :: 
-  CalcMultiPointElementTransformation (Array< Point<3> > * xi, ElementIndex elnr,
-				       Array< Point<3> > * x,
-				       Array< Mat<3,3> > * dxdxi)
+  CalcMultiPointElementTransformation (NgArray< Point<3> > * xi, ElementIndex elnr,
+				       NgArray< Point<3> > * x,
+				       NgArray< Mat<3,3> > * dxdxi)
   {
     double * px = (x) ? &(*x)[0](0) : NULL;
     double * pdxdxi = (dxdxi) ? &(*dxdxi)[0](0) : NULL;
@@ -4448,7 +4448,7 @@ namespace netgen
 	// info.ndof += facecoeffsindex[info.facenr+1] - facecoeffsindex[info.facenr];
       }
 
-    Array<Vec<3> > coefs(info.ndof);
+    NgArray<Vec<3> > coefs(info.ndof);
     GetCoefficients (info, &coefs[0]);
     if (x)
       {

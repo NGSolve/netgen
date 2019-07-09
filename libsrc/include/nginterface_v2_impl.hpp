@@ -306,7 +306,7 @@ template <> NGX_INLINE DLL_HEADER const Ng_Node<2> Ngx_Mesh :: GetNode<2> (int n
 
 NGX_INLINE DLL_HEADER Ng_Buffer<int[2]> Ngx_Mesh :: GetPeriodicVertices(int idnr) const
 {
-  Array<INDEX_2> apairs;
+  NgArray<INDEX_2> apairs;
   mesh->GetIdentifications().GetPairs (idnr+1, apairs);
   for(auto& ind : apairs)
     {

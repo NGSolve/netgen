@@ -69,16 +69,16 @@ void STLGeometry :: MakeAtlas(Mesh & mesh)
   double sinchartangle = sin(chartangle);
   double sinouterchartangle = sin(outerchartangle);
 
-  Array<int> outermark(GetNT());     //marks all trigs form actual outer region
-  Array<int> outertested(GetNT());   //marks tested trigs for outer region
-  Array<int> pointstochart(GetNP()); //point in chart becomes chartnum
-  Array<int> innerpointstochart(GetNP()); //point in chart becomes chartnum
-  Array<int> chartpoints;             //point in chart becomes chartnum
-  Array<int> innerchartpoints;
-  Array<Point<3>> innerchartpts;
-  Array<int> dirtycharttrigs;
+  NgArray<int> outermark(GetNT());     //marks all trigs form actual outer region
+  NgArray<int> outertested(GetNT());   //marks tested trigs for outer region
+  NgArray<int> pointstochart(GetNP()); //point in chart becomes chartnum
+  NgArray<int> innerpointstochart(GetNP()); //point in chart becomes chartnum
+  NgArray<int> chartpoints;             //point in chart becomes chartnum
+  NgArray<int> innerchartpoints;
+  NgArray<Point<3>> innerchartpts;
+  NgArray<int> dirtycharttrigs;
 
-  Array<int> chartdistacttrigs (GetNT());   //outercharttrigs
+  NgArray<int> chartdistacttrigs (GetNT());   //outercharttrigs
   chartdistacttrigs = 0;
 
 
@@ -86,7 +86,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh)
   //int chartboundarydivisions = 10;
   markedsegs.SetSize(0); //for testing!!!
 
-  Array<int> chartpointchecked(GetNP()); //for dirty-chart-trigs
+  NgArray<int> chartpointchecked(GetNP()); //for dirty-chart-trigs
 
   pointstochart.SetSize(GetNP());
   innerpointstochart.SetSize(GetNP());
@@ -659,7 +659,7 @@ int STLGeometry :: AtlasMade() const
 
 /*
 //return 1 if not exists
-int AddIfNotExists(Array<int>& list, int x)
+int AddIfNotExists(NgArray<int>& list, int x)
 {
   int i;
   for (i = 1; i <= list.Size(); i++)
@@ -671,7 +671,7 @@ int AddIfNotExists(Array<int>& list, int x)
 }
 */
 
-void STLGeometry :: GetInnerChartLimes(Array<twoint>& limes, int chartnum)
+void STLGeometry :: GetInnerChartLimes(NgArray<twoint>& limes, int chartnum)
 {
   int j, k;
   
@@ -732,9 +732,9 @@ void STLGeometry :: GetInnerChartLimes(Array<twoint>& limes, int chartnum)
 
 
 void STLGeometry :: GetDirtyChartTrigs(int chartnum, STLChart& chart,
-				       const Array<int>& outercharttrigs,
-				       Array<int>& chartpointchecked,
-				       Array<int>& dirtytrigs)
+				       const NgArray<int>& outercharttrigs,
+				       NgArray<int>& chartpointchecked,
+				       NgArray<int>& dirtytrigs)
 {
   dirtytrigs.SetSize(0);
   int j,k,n;
@@ -765,7 +765,7 @@ void STLGeometry :: GetDirtyChartTrigs(int chartnum, STLChart& chart,
   cnt = 0;
 
   int ap1, ap2, tn1, tn2, l, problem, pn;
-  Array<int> trigsaroundp;
+  NgArray<int> trigsaroundp;
 
   for (j = chart.GetNChartT(); j >= 1; j--)
     {

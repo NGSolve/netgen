@@ -70,7 +70,7 @@ namespace netgen
 
   void Mesh :: SendMesh () const   
   {
-    Array<MPI_Request> sendrequests;
+    NgArray<MPI_Request> sendrequests;
 
     NgMPI_Comm comm = GetCommunicator();
     int id = comm.Rank();
@@ -91,7 +91,7 @@ namespace netgen
     
     PrintMessage ( 3, "Sending nr of elements");
     
-    Array<int> num_els_on_proc(ntasks);
+    NgArray<int> num_els_on_proc(ntasks);
     num_els_on_proc = 0;
     for (ElementIndex ei = 0; ei < GetNE(); ei++)
       // num_els_on_proc[(*this)[ei].GetPartition()]++;
@@ -107,7 +107,7 @@ namespace netgen
 
     PrintMessage ( 3, "Building vertex/proc mapping");
 
-    Array<int> num_sels_on_proc(ntasks);
+    NgArray<int> num_sels_on_proc(ntasks);
     num_sels_on_proc = 0;
     for (SurfaceElementIndex ei = 0; ei < GetNSE(); ei++)
       // num_sels_on_proc[(*this)[ei].GetPartition()]++;
@@ -118,7 +118,7 @@ namespace netgen
       // sels_of_proc.Add ( (*this)[ei].GetPartition(), ei);
       sels_of_proc.Add (surf_partition[ei], ei);
 
-    Array<int> num_segs_on_proc(ntasks);
+    NgArray<int> num_segs_on_proc(ntasks);
     num_segs_on_proc = 0;
     for (SegmentIndex ei = 0; ei < GetNSeg(); ei++)
       // num_segs_on_proc[(*this)[ei].GetPartition()]++;
@@ -148,8 +148,8 @@ namespace netgen
      **/
 
     /** First, we build tables for vertex identification. **/
-    Array<INDEX_2> per_pairs;
-    Array<INDEX_2> pp2;
+    NgArray<INDEX_2> per_pairs;
+    NgArray<INDEX_2> pp2;
     auto & idents = GetIdentifications();
     bool has_periodic = false; 
     for (int idnr = 1; idnr < idents.GetMaxNr()+1; idnr++)
@@ -159,7 +159,7 @@ namespace netgen
 	idents.GetPairs(idnr, pp2);
 	per_pairs.Append(pp2);
       }
-    Array<int, PointIndex::BASE> npvs(GetNV());
+    NgArray<int, PointIndex::BASE> npvs(GetNV());
     npvs = 0;
     for (int k = 0; k < per_pairs.Size(); k++) {
       npvs[per_pairs[k].I1()]++;
@@ -178,7 +178,7 @@ namespace netgen
 
     /** The same table as per_verts, but TRANSITIVE!! **/
     auto iterate_per_verts_trans = [&](auto f){
-      Array<int> allvs;
+      NgArray<int> allvs;
       for (int k = PointIndex::BASE; k < GetNV()+PointIndex::BASE; k++)
 	{
 	  allvs.SetSize(0);
@@ -214,9 +214,9 @@ namespace netgen
     }
 
     /** Now we build the vertex-data to send to the workers. **/
-    Array<int, PointIndex::BASE> vert_flag (GetNV());
-    Array<int, PointIndex::BASE> num_procs_on_vert (GetNV());
-    Array<int> num_verts_on_proc (ntasks);
+    NgArray<int, PointIndex::BASE> vert_flag (GetNV());
+    NgArray<int, PointIndex::BASE> num_procs_on_vert (GetNV());
+    NgArray<int> num_verts_on_proc (ntasks);
     num_verts_on_proc = 0;
     num_procs_on_vert = 0;
     auto iterate_vertices = [&](auto f) {
@@ -305,7 +305,7 @@ namespace netgen
 	int numv = verts.Size();
 
 	MPI_Datatype newtype;
-	Array<int> blocklen (numv);  
+	NgArray<int> blocklen (numv);  
 	blocklen = 1;
 	
 	MPI_Type_indexed (numv, &blocklen[0], 
@@ -318,7 +318,7 @@ namespace netgen
 	sendrequests.Append (request);
       }
 
-    Array<int> num_distpnums(ntasks);
+    NgArray<int> num_distpnums(ntasks);
     num_distpnums = 0;
 
 
@@ -334,7 +334,7 @@ namespace netgen
     **/
     PrintMessage ( 3, "Sending Vertices - identifications");
     int maxidentnr = idents.GetMaxNr();
-    Array<int> ppd_sizes(ntasks);
+    NgArray<int> ppd_sizes(ntasks);
     ppd_sizes = 1 + 2*maxidentnr;
     for (int idnr = 1; idnr < idents.GetMaxNr()+1; idnr++)
       {
@@ -378,7 +378,7 @@ namespace netgen
 	      }
 	  }
       }
-    Array<MPI_Request> req_per;
+    NgArray<MPI_Request> req_per;
     for(int dest = 1; dest < ntasks; dest++)
       req_per.Append(MyMPI_ISend(pp_data[dest], dest, MPI_TAG_MESH+1, comm));
     MPI_Waitall(req_per.Size(), &req_per[0], MPI_STATUS_IGNORE);
@@ -414,7 +414,7 @@ namespace netgen
 
     PrintMessage ( 3, "Sending elements" );
 
-    Array<int> elarraysize (ntasks);
+    NgArray<int> elarraysize (ntasks);
     elarraysize = 0;
     for ( int ei = 1; ei <= GetNE(); ei++)
       {
@@ -445,7 +445,7 @@ namespace netgen
 
     PrintMessage ( 3, "Sending Face Descriptors" );
 
-    Array<double> fddata (6 * GetNFD());
+    NgArray<double> fddata (6 * GetNFD());
     for (int fdi = 1; fdi <= GetNFD(); fdi++)
       {
 	fddata[6*fdi-6] = GetFaceDescriptor(fdi).SurfNr();
@@ -464,12 +464,12 @@ namespace netgen
     PrintMessage ( 3, "Sending Surface elements" );
     // build sel-identification
     size_t nse = GetNSE();
-    Array<SurfaceElementIndex> ided_sel(nse);
+    NgArray<SurfaceElementIndex> ided_sel(nse);
     ided_sel = -1;
     bool has_ided_sels = false;
     if(GetNE() && has_periodic) //we can only have identified surf-els if we have vol-els (right?)
       {
-	Array<SurfaceElementIndex, 0> os1, os2;
+	NgArray<SurfaceElementIndex, 0> os1, os2;
 	for(SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
 	  {
 	    if(ided_sel[sei]!=-1) continue;
@@ -520,7 +520,7 @@ namespace netgen
 	    }
 	}      
     };
-    Array <int> nlocsel(ntasks), bufsize(ntasks);
+    NgArray <int> nlocsel(ntasks), bufsize(ntasks);
     nlocsel = 0;
     bufsize = 1;
     iterate_sels([&](SurfaceElementIndex sei, const Element2d & sel, int dest){
@@ -549,8 +549,8 @@ namespace netgen
     /** Segments **/
     PrintMessage ( 3, "Sending Edge Segments");
     auto iterate_segs1 = [&](auto f) {
-      Array<SegmentIndex> osegs1, osegs2, osegs_both;
-      Array<int> type1, type2;
+      NgArray<SegmentIndex> osegs1, osegs2, osegs_both;
+      NgArray<int> type1, type2;
       for(SegmentIndex segi = 0; segi < GetNSeg(); segi++)
 	{
 	  const Segment & seg = (*this)[segi];
@@ -603,7 +603,7 @@ namespace netgen
 	  }
 	}
     };
-    Array<int> per_seg_size(GetNSeg());
+    NgArray<int> per_seg_size(GetNSeg());
     per_seg_size = 0;
     iterate_segs1([&](SegmentIndex segi1, SegmentIndex segi2)
 		  { per_seg_size[segi1]++; });
@@ -612,7 +612,7 @@ namespace netgen
 		  { per_seg.Add(segi1, segi2); });
     // make per_seg transitive
     auto iterate_per_seg_trans = [&](auto f){
-      Array<SegmentIndex> allsegs;
+      NgArray<SegmentIndex> allsegs;
       for (SegmentIndex segi = 0; segi < GetNSeg(); segi++)
 	{
 	  allsegs.SetSize(0);
@@ -636,17 +636,17 @@ namespace netgen
 	  f(segi, allsegs);
 	}
     };
-    iterate_per_seg_trans([&](SegmentIndex segi, Array<SegmentIndex> & segs){
+    iterate_per_seg_trans([&](SegmentIndex segi, NgArray<SegmentIndex> & segs){
 	for (int j = 0; j < segs.Size(); j++)
 	  per_seg_size[segi] = segs.Size();
       });
     TABLE<SegmentIndex> per_seg_trans(per_seg_size);
-    iterate_per_seg_trans([&](SegmentIndex segi, Array<SegmentIndex> & segs){
+    iterate_per_seg_trans([&](SegmentIndex segi, NgArray<SegmentIndex> & segs){
 	for (int j = 0; j < segs.Size(); j++)
 	  per_seg_trans.Add(segi, segs[j]);
       });
     // build segment data
-    Array<int> dests;
+    NgArray<int> dests;
     auto iterate_segs2 = [&](auto f)
       {
 	for (SegmentIndex segi = 0; segi<GetNSeg(); segi++)
@@ -666,7 +666,7 @@ namespace netgen
 	      f(segi, seg, dests[l]);
 	  }
       };
-    Array<int> nloc_seg(ntasks);
+    NgArray<int> nloc_seg(ntasks);
     // bufsize = 1; //was originally this - why??
     bufsize = 0;
     nloc_seg = 0;
@@ -721,7 +721,7 @@ namespace netgen
       for (int k = 0; k < nnames[3]; k++) func(cd3names[k]);
     };
     // sizes of names
-    Array<int> name_sizes(tot_nn);
+    NgArray<int> name_sizes(tot_nn);
     tot_nn = 0;
     iterate_names([&](auto ptr) { name_sizes[tot_nn++] = (ptr==NULL) ? 0 : ptr->size(); });
     for( int k = 1; k < ntasks; k++)
@@ -729,7 +729,7 @@ namespace netgen
     // names
     int strs = 0;
     iterate_names([&](auto ptr) { strs += (ptr==NULL) ? 0 : ptr->size(); });
-    Array<char> compiled_names(strs);
+    NgArray<char> compiled_names(strs);
     strs = 0;
     iterate_names([&](auto ptr) {
 	if (ptr==NULL) return;
@@ -751,8 +751,8 @@ namespace netgen
     self.points = T_POINTS(0);
     self.surfelements = T_SURFELEMENTS(0);
     self.volelements = T_VOLELEMENTS(0);
-    self.segments = Array<Segment, 0, size_t>(0);
-    self.lockedpoints = Array<PointIndex>(0);
+    self.segments = NgArray<Segment, 0, size_t>(0);
+    self.lockedpoints = NgArray<PointIndex>(0);
     auto cleanup_ptr = [](auto & ptr) {
       if (ptr != nullptr) {
 	delete ptr;
@@ -763,12 +763,12 @@ namespace netgen
     cleanup_ptr(self.boundaryedges);
     cleanup_ptr(self.segmentht);
     cleanup_ptr(self.surfelementht);
-    self.openelements = Array<Element2d>(0);
-    self.opensegments = Array<Segment>(0);
+    self.openelements = NgArray<Element2d>(0);
+    self.opensegments = NgArray<Segment>(0);
     self.numvertices = 0;
-    self.mlbetweennodes = Array<PointIndices<2>,PointIndex::BASE> (0);
-    self.mlparentelement = Array<int>(0);
-    self.mlparentsurfaceelement = Array<int>(0);
+    self.mlbetweennodes = NgArray<PointIndices<2>,PointIndex::BASE> (0);
+    self.mlparentelement = NgArray<int>(0);
+    self.mlparentsurfaceelement = NgArray<int>(0);
     self.curvedelems = new CurvedElements (self);
     self.clusters = new AnisotropicClusters (self);
     self.ident = new Identifications (self);
@@ -816,7 +816,7 @@ namespace netgen
     // receive vertices
     NgProfiler::StartTimer (timer_pts);
 
-    Array<int> verts;
+    NgArray<int> verts;
     MyMPI_Recv (verts, 0, MPI_TAG_MESH+1, comm);
 
     int numvert = verts.Size();
@@ -839,7 +839,7 @@ namespace netgen
     MPI_Status status;
     MPI_Recv( &points[1], numvert, mptype, 0, MPI_TAG_MESH+1, comm, &status);
 
-    Array<int> pp_data;
+    NgArray<int> pp_data;
     MyMPI_Recv(pp_data, 0, MPI_TAG_MESH+1, comm);
 
     int maxidentnr = pp_data[0];
@@ -863,7 +863,7 @@ namespace netgen
 	}
       }
     
-    Array<int> dist_pnums;
+    NgArray<int> dist_pnums;
     MyMPI_Recv (dist_pnums, 0, MPI_TAG_MESH+1, comm);
     
     for (int hi = 0; hi < dist_pnums.Size(); hi += 3)
@@ -874,7 +874,7 @@ namespace netgen
     *testout << "got " << numvert << " vertices" << endl;
 
     {
-      Array<int> elarray;
+      NgArray<int> elarray;
       MyMPI_Recv (elarray, 0, MPI_TAG_MESH+2, comm);
       
       NgProfiler::RegionTimer reg(timer_els);
@@ -895,7 +895,7 @@ namespace netgen
     }
 
     {
-      Array<double> fddata;
+      NgArray<double> fddata;
       MyMPI_Recv (fddata, 0, MPI_TAG_MESH+3, comm);
       for (int i = 0; i < fddata.Size(); i += 6)
 	{
@@ -909,7 +909,7 @@ namespace netgen
 
     {
       NgProfiler::RegionTimer reg(timer_sels);
-      Array<int> selbuf;
+      NgArray<int> selbuf;
 
       MyMPI_Recv ( selbuf, 0, MPI_TAG_MESH+4, comm);
       
@@ -941,7 +941,7 @@ namespace netgen
 
 
     {
-      Array<double> segmbuf;
+      NgArray<double> segmbuf;
       MyMPI_Recv ( segmbuf, 0, MPI_TAG_MESH+5, comm);
 
       Segment seg;
@@ -994,12 +994,12 @@ namespace netgen
     cd3names.SetSize(nnames[3]);
 
     int tot_nn = nnames[0] + nnames[1] + nnames[2] + nnames[3];
-    Array<int> name_sizes(tot_nn);
+    NgArray<int> name_sizes(tot_nn);
     MPI_Recv(&name_sizes[0], tot_nn, MPI_INT, 0, MPI_TAG_MESH+6, comm, MPI_STATUS_IGNORE);
     int tot_size = 0;
     for (int k = 0; k < tot_nn; k++) tot_size += name_sizes[k];
     
-    Array<char> compiled_names(tot_size);
+    NgArray<char> compiled_names(tot_size);
     MPI_Recv(&(compiled_names[0]), tot_size, MPI_CHAR, 0, MPI_TAG_MESH+6, comm, MPI_STATUS_IGNORE);
 
     tot_nn = tot_size = 0;
@@ -1088,7 +1088,7 @@ namespace netgen
     idx_t ne = GetNE() + GetNSE() + GetNSeg();
     idx_t nn = GetNP();
 
-    Array<idx_t> eptr, eind;
+    NgArray<idx_t> eptr, eind;
     for (int i = 0; i < GetNE(); i++)
       {
 	eptr.Append (eind.Size());
@@ -1111,7 +1111,7 @@ namespace netgen
 	eind.Append (el[1]-1);
       }
     eptr.Append (eind.Size());
-    Array<idx_t> epart(ne), npart(nn);
+    NgArray<idx_t> epart(ne), npart(nn);
 
     idxtype nparts = GetCommunicator().Size()-1;
 
@@ -1163,7 +1163,7 @@ namespace netgen
     
         
     // surface elements attached to volume elements
-    Array<bool, PointIndex::BASE> boundarypoints (GetNP());
+    NgArray<bool, PointIndex::BASE> boundarypoints (GetNP());
     boundarypoints = false;
 
     if(GetDimension() == 3)
@@ -1183,7 +1183,7 @@ namespace netgen
 
     
     // Build Pnt2Element table, boundary points only
-    Array<int, PointIndex::BASE> cnt(GetNP());
+    NgArray<int, PointIndex::BASE> cnt(GetNP());
     cnt = 0;
 
     auto loop_els_2d = [&](auto f) {
@@ -1350,7 +1350,7 @@ namespace netgen
 
   // distribute the mesh to the slave processors
   // call it only for the master !
-  void Mesh :: Distribute (Array<int> & volume_weights , Array<int>  & surface_weights, Array<int>  & segment_weights)
+  void Mesh :: Distribute (NgArray<int> & volume_weights , NgArray<int>  & surface_weights, NgArray<int>  & segment_weights)
   {
     NgMPI_Comm comm = GetCommunicator();
     int id = comm.Rank();
@@ -1378,7 +1378,7 @@ namespace netgen
   
 
 #ifdef METIS5
-  void Mesh :: ParallelMetis (Array<int> & volume_weights , Array<int> & surface_weights, Array<int> & segment_weights)  
+  void Mesh :: ParallelMetis (NgArray<int> & volume_weights , NgArray<int> & surface_weights, NgArray<int> & segment_weights)  
   {
     PrintMessage (3, "call metis 5 with weights ...");
     
@@ -1392,7 +1392,7 @@ namespace netgen
     idx_t ne = GetNE() + GetNSE() + GetNSeg();
     idx_t nn = GetNP();
     
-    Array<idx_t> eptr, eind , nwgt;
+    NgArray<idx_t> eptr, eind , nwgt;
     for (int i = 0; i < GetNE(); i++)
       {
 	eptr.Append (eind.Size());
@@ -1442,7 +1442,7 @@ namespace netgen
       }
       
     eptr.Append (eind.Size());
-    Array<idx_t> epart(ne), npart(nn);
+    NgArray<idx_t> epart(ne), npart(nn);
 
     idxtype nparts = GetCommunicator().Size()-1;
     vol_partition.SetSize(GetNE());
@@ -1555,7 +1555,7 @@ namespace netgen
 	
 	// uniform (TET) mesh,  JS
 	int npe = VolumeElement(1).GetNP();
-	Array<idxtype> elmnts(ne*npe);
+	NgArray<idxtype> elmnts(ne*npe);
 	
 	int etype;
 	if (elementtype == TET)
@@ -1572,7 +1572,7 @@ namespace netgen
 	int nparts = ntasks-1;
 	int ncommon = 3;
 	int edgecut;
-	Array<idxtype> epart(ne), npart(nn);
+	NgArray<idxtype> epart(ne), npart(nn);
 	
 	//     if ( ntasks == 1 ) 
 	//       {
@@ -1604,7 +1604,7 @@ namespace netgen
 	cout << "call metis(5)_PartMeshDual ... " << endl;
 	// idx_t options[METIS_NOPTIONS];
 	
-	Array<idx_t> eptr(ne+1);
+	NgArray<idx_t> eptr(ne+1);
 	for (int j = 0; j < ne+1; j++)
 	  eptr[j] = 4*j;
 	
@@ -1671,7 +1671,7 @@ namespace netgen
     xadj = new idxtype[nn+1];
     part = new idxtype[nn];
 
-    Array<int> cnt(nn+1);
+    NgArray<int> cnt(nn+1);
     cnt = 0;
 
     for ( int edge = 1; edge <= nedges; edge++ )
@@ -1714,7 +1714,7 @@ namespace netgen
     cout << "currently not supported (metis5), A" << endl;
 #endif
 
-    Array<int> nodesinpart(ntasks);
+    NgArray<int> nodesinpart(ntasks);
     vol_partition.SetSize(ne);
     for ( int el = 1; el <= ne; el++ )
       {
@@ -1744,7 +1744,7 @@ namespace netgen
   }
 
 
-  void Mesh :: PartDualHybridMesh ( ) // Array<int> & neloc ) 
+  void Mesh :: PartDualHybridMesh ( ) // NgArray<int> & neloc ) 
   {
 #ifdef METIS
     int ne = GetNE();
@@ -1764,15 +1764,15 @@ namespace netgen
     int edgecut;
     idxtype * part;
 
-    Array<int, 0> facevolels1(nfaces), facevolels2(nfaces);
+    NgArray<int, 0> facevolels1(nfaces), facevolels2(nfaces);
     facevolels1 = -1;
     facevolels2 = -1;
 
-    Array<int, 0> elfaces;
+    NgArray<int, 0> elfaces;
     xadj = new idxtype[ne+1];
     part = new idxtype[ne];
 
-    Array<int, 0> cnt(ne+1);
+    NgArray<int, 0> cnt(ne+1);
     cnt = 0;
 
     for ( int el=1; el <= ne; el++ )
@@ -1832,7 +1832,7 @@ namespace netgen
 
     NgProfiler::StopTimer (timermetis);
 
-    Array<int> nodesinpart(ntasks);
+    NgArray<int> nodesinpart(ntasks);
 
     vol_partition.SetSize(ne);
     for ( int el = 1; el <= ne; el++ )
@@ -1870,11 +1870,11 @@ namespace netgen
     idxtype ne = GetNSE();
     int nv = GetNV();
 
-    Array<idxtype> xadj(ne+1);
-    Array<idxtype> adjacency(ne*4);
+    NgArray<idxtype> xadj(ne+1);
+    NgArray<idxtype> adjacency(ne*4);
 
     // first, build the vertex 2 element table:
-    Array<int, PointIndex::BASE> cnt(nv);
+    NgArray<int, PointIndex::BASE> cnt(nv);
     cnt = 0;
     for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
       for (int j = 0; j < (*this)[sei].GetNP(); j++)
@@ -1888,7 +1888,7 @@ namespace netgen
 
     // find all neighbour elements
     int cntnb = 0;
-    Array<int> marks(ne);   // to visit each neighbour just once
+    NgArray<int> marks(ne);   // to visit each neighbour just once
     marks = -1;
     for (SurfaceElementIndex sei = 0; sei < ne; sei++)
       {
@@ -1928,7 +1928,7 @@ namespace netgen
     idxtype nparts = ntasks - 1;
 
     idxtype edgecut;
-    Array<idxtype> part(ne);
+    NgArray<idxtype> part(ne);
 
     for ( int el = 0; el < ne; el++ )
       BubbleSort (adjacency.Range (xadj[el], xadj[el+1]));

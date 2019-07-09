@@ -552,12 +552,12 @@ namespace netgen
 
   bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoiclt_dom, 
 		       BitArray & cornerpoint, BitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-			INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex::BASE> & facepoint, int & levels, int & act_ref); 
+			INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int & levels, int & act_ref); 
 
-  bool ClassifyHPElements (Mesh & mesh, Array<HPRefElement> & elements, int & act_ref, int & levels);
+  bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, int & act_ref, int & levels);
   
   
-  void  InitHPElements(Mesh & mesh, Array<HPRefElement> & elements) 
+  void  InitHPElements(Mesh & mesh, NgArray<HPRefElement> & elements) 
   { 
     for(ElementIndex i = 0; i < mesh.GetNE(); i++) 
       {
@@ -612,7 +612,7 @@ namespace netgen
  
  
   /* *******************************  DoRefinement *************************************** */
-  void DoRefinement (Mesh & mesh, Array<HPRefElement> & elements,
+  void DoRefinement (Mesh & mesh, NgArray<HPRefElement> & elements,
 		     Refinement * ref, double fac1) 
   {
     elements.SetAllocSize (5 * elements.Size());
@@ -868,7 +868,7 @@ namespace netgen
 
   /* ************************** DoRefineDummies ******************************** */
 
-  void DoRefineDummies (Mesh & mesh, Array<HPRefElement> & elements,
+  void DoRefineDummies (Mesh & mesh, NgArray<HPRefElement> & elements,
 			Refinement * ref)
   {
     int oldelsize = elements.Size();
@@ -947,7 +947,7 @@ namespace netgen
 
 
 
-  void SubdivideDegeneratedHexes (Mesh & mesh, Array<HPRefElement> & elements, double fac1)
+  void SubdivideDegeneratedHexes (Mesh & mesh, NgArray<HPRefElement> & elements, double fac1)
   {
     int oldne = elements.Size();
     for (int i = 0; i < oldne; i++)
@@ -988,7 +988,7 @@ namespace netgen
 
 	      for (int j = 0; j < 6; j++)  
 		{
-		  Array<int> pts;
+		  NgArray<int> pts;
 		  for (int k = 0; k < 4; k++)
 		    {
 		      bool same = 0;
@@ -1086,7 +1086,7 @@ namespace netgen
   }
 
 
-  void CalcStatistics (Array<HPRefElement> & elements)
+  void CalcStatistics (NgArray<HPRefElement> & elements)
   {
     return;
 #ifdef ABC    
@@ -1238,9 +1238,9 @@ namespace netgen
 
 
 
-  void ReorderPoints (Mesh & mesh, Array<HPRefElement> & hpelements)
+  void ReorderPoints (Mesh & mesh, NgArray<HPRefElement> & hpelements)
   {
-    Array<int, 1> map (mesh.GetNP());
+    NgArray<int, 1> map (mesh.GetNP());
     
     for (int i = 1; i <= mesh.GetNP(); i++)
       map[i] = i;
@@ -1281,7 +1281,7 @@ namespace netgen
     cout << nwrong << " wrong prisms, " << nright << " right prisms" << endl;
 
 
-    Array<MeshPoint, 1> hpts(mesh.GetNP());
+    NgArray<MeshPoint, 1> hpts(mesh.GetNP());
 
     for (int i = 1; i <= mesh.GetNP(); i++)
       hpts[map[i]] = mesh.Point(i);
@@ -1318,13 +1318,13 @@ namespace netgen
 
 
     delete mesh.hpelements;
-    mesh.hpelements = new Array<HPRefElement>;
+    mesh.hpelements = new NgArray<HPRefElement>;
         
-    Array<HPRefElement> & hpelements = *mesh.hpelements; 
+    NgArray<HPRefElement> & hpelements = *mesh.hpelements; 
         
     InitHPElements(mesh,hpelements); 
 
-    Array<int> nplevel;
+    NgArray<int> nplevel;
     nplevel.Append (mesh.GetNP());
     
     int act_ref=1;
@@ -1559,7 +1559,7 @@ namespace netgen
 
 bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
 		       BitArray & cornerpoint, BitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-			INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex::BASE> & facepoint, int & levels, int & act_ref)
+			INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int & levels, int & act_ref)
 { 
   bool sing = 0; 
   if (mesh.GetDimension() == 3)
@@ -1567,7 +1567,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	/*
 	// check, if point has as least 3 different surfs:
 
-	Array<INDEX_3, PointIndex::BASE> surfonpoint(mesh.GetNP());
+	NgArray<INDEX_3, PointIndex::BASE> surfonpoint(mesh.GetNP());
   	surfonpoint = INDEX_3(0,0,0);
 
 	for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
@@ -1710,7 +1710,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	// 2D case
 
 	// check, if point has as least 3 different surfs:
-	Array<INDEX_3, PointIndex::BASE> surfonpoint(mesh.GetNP());
+	NgArray<INDEX_3, PointIndex::BASE> surfonpoint(mesh.GetNP());
 
 	for (int i = 1; i <= mesh.GetNP(); i++)
 	  surfonpoint.Elem(i) = INDEX_3(0,0,0);
@@ -1809,7 +1809,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 
 
 
-  bool ClassifyHPElements (Mesh & mesh, Array<HPRefElement> & elements, int & act_ref, int & levels)
+  bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, int & act_ref, int & levels)
   {
     INDEX_2_HASHTABLE<int> edges(mesh.GetNSeg()+1);
     BitArray edgepoint(mesh.GetNP());
@@ -1824,7 +1824,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
     INDEX_3_HASHTABLE<int> faces(mesh.GetNSE()+1);
     INDEX_2_HASHTABLE<int> face_edges(mesh.GetNSE()+1);
     INDEX_2_HASHTABLE<int> surf_edges(mesh.GetNSE()+1);
-    Array<int, PointIndex::BASE> facepoint(mesh.GetNP());
+    NgArray<int, PointIndex::BASE> facepoint(mesh.GetNP());
 
     bool sing = CheckSingularities(mesh, edges, edgepoint_dom, 
 			      cornerpoint, edgepoint, faces, face_edges, 
@@ -1833,7 +1833,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
     if(sing==0) return(sing); 
 
     int cnt_undef = 0, cnt_nonimplement = 0;
-    Array<int> misses(10000);
+    NgArray<int> misses(10000);
     misses = 0;
 
     (*testout) << "edgepoint_dom = " << endl << edgepoint_dom << endl;

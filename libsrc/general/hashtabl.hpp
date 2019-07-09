@@ -480,7 +480,7 @@ class BASE_INDEX_CLOSED_HASHTABLE
 protected:
   ///
   // MoveableArray<INDEX> hash;
-  Array<INDEX> hash;
+  NgArray<INDEX> hash;
   ///
   int invalid;
 public:
@@ -556,7 +556,7 @@ class INDEX_CLOSED_HASHTABLE : public BASE_INDEX_CLOSED_HASHTABLE
 {
   ///
 // MoveableArray<T> cont;
-  Array<T> cont;
+  NgArray<T> cont;
 
 public:
   ///
@@ -653,7 +653,7 @@ class BASE_INDEX_2_CLOSED_HASHTABLE
 protected:
   ///
   // MoveableArray<INDEX_2> hash;
-  Array<INDEX_2> hash;
+  NgArray<INDEX_2> hash;
   ///
   int invalid;
   size_t mask;
@@ -718,7 +718,7 @@ protected:
 template <class T>
 class INDEX_2_CLOSED_HASHTABLE : public BASE_INDEX_2_CLOSED_HASHTABLE
 {
-  Array<T> cont;
+  NgArray<T> cont;
 public:
   INDEX_2_CLOSED_HASHTABLE (size_t size)
     : BASE_INDEX_2_CLOSED_HASHTABLE(size), cont(RoundUp2(size))
@@ -813,7 +813,7 @@ inline ostream & operator<< (ostream & ost, const INDEX_2_CLOSED_HASHTABLE<T> & 
 class BASE_INDEX_3_CLOSED_HASHTABLE
 {
 protected:
-  Array<INDEX_3> hash;
+  NgArray<INDEX_3> hash;
   int invalid;
   size_t mask;
 
@@ -922,7 +922,7 @@ template <class T>
 class INDEX_3_CLOSED_HASHTABLE : public BASE_INDEX_3_CLOSED_HASHTABLE
 {
   // MoveableArray<T,0> cont;
-  Array<T,0> cont;
+  NgArray<T,0> cont;
 
 public:
   INDEX_3_CLOSED_HASHTABLE (int size)
@@ -1376,9 +1376,9 @@ inline size_t HashValue (INDEX_2 i2, size_t size) { return (113*size_t(i2[0])+si
     ///
     size_t used;
     ///
-    Array<T_HASH> hash;
+    NgArray<T_HASH> hash;
     ///
-    Array<T> cont;
+    NgArray<T> cont;
   public:
     ///
     ClosedHashTable (size_t asize = 128)

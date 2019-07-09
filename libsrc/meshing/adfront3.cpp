@@ -84,7 +84,7 @@ AdFront3 :: ~AdFront3 ()
   delete connectedpairs;
 }
 
-void AdFront3 :: GetPoints (Array<Point<3> > & apoints) const
+void AdFront3 :: GetPoints (NgArray<Point<3> > & apoints) const
 {
   for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
     
@@ -267,7 +267,7 @@ void AdFront3 :: CreateTrees ()
 
 
 void AdFront3 :: GetIntersectingFaces (const Point<3> & pmin, const Point<3> & pmax, 
-				       Array<int> & ifaces) const
+				       NgArray<int> & ifaces) const
 {
   facetree -> GetIntersecting (pmin, pmax, ifaces);
 }
@@ -357,7 +357,7 @@ void AdFront3 :: RebuildInternalTables ()
     if (usecl.Test(i))
       cntcl++;
 
-  Array<double, PointIndex::BASE> clvol (np);
+  NgArray<double, PointIndex::BASE> clvol (np);
   clvol = 0.0;
 
   for (int i = 1; i <= faces.Size(); i++)
@@ -485,10 +485,10 @@ int AdFront3 :: SelectBaseElement ()
 
 
 int AdFront3 :: GetLocals (int fstind,
-			   Array<Point3d, PointIndex::BASE> & locpoints,
-			   Array<MiniElement2d> & locfaces,   // local index
-			   Array<PointIndex, PointIndex::BASE> & pindex,
-			   Array<INDEX> & findex,
+			   NgArray<Point3d, PointIndex::BASE> & locpoints,
+			   NgArray<MiniElement2d> & locfaces,   // local index
+			   NgArray<PointIndex, PointIndex::BASE> & pindex,
+			   NgArray<INDEX> & findex,
 			   INDEX_2_HASHTABLE<int> & getconnectedpairs,
 			   float xh,
 			   float relh,
@@ -509,11 +509,11 @@ int AdFront3 :: GetLocals (int fstind,
   PointIndex pstind;
   Point3d midp, p0;
 
-  //  static Array<int, PointIndex::BASE> invpindex;
+  //  static NgArray<int, PointIndex::BASE> invpindex;
   
-  Array<MiniElement2d> locfaces2;           //all local faces in radius xh
-  Array<int> locfaces3;           // all faces in outer radius relh
-  Array<INDEX> findex2;
+  NgArray<MiniElement2d> locfaces2;           //all local faces in radius xh
+  NgArray<int> locfaces3;           // all faces in outer radius relh
+  NgArray<INDEX> findex2;
 
   locfaces2.SetSize(0);
   locfaces3.SetSize(0);
@@ -657,12 +657,12 @@ int AdFront3 :: GetLocals (int fstind,
 
 // returns all points connected with fi
 void AdFront3 :: GetGroup (int fi,
-			   Array<MeshPoint, PointIndex::BASE> & grouppoints,
-			   Array<MiniElement2d> & groupelements,
-			   Array<PointIndex, PointIndex::BASE> & pindex,
-			   Array<INDEX> & findex) 
+			   NgArray<MeshPoint, PointIndex::BASE> & grouppoints,
+			   NgArray<MiniElement2d> & groupelements,
+			   NgArray<PointIndex, PointIndex::BASE> & pindex,
+			   NgArray<INDEX> & findex) 
 {
-  // static Array<char> pingroup;
+  // static NgArray<char> pingroup;
   int changed;
 
   pingroup.SetSize(points.Size());
@@ -833,7 +833,7 @@ bool AdFront3 :: Inside (const Point<3> & p) const
 
 
 int AdFront3 :: SameSide (const Point<3> & lp1, const Point<3> & lp2,
-			  const Array<int> * testfaces) const
+			  const NgArray<int> * testfaces) const
 {
   const Point<3> *line[2];
   line[0] = &lp1;

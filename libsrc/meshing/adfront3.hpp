@@ -176,11 +176,11 @@ public:
 class AdFront3
 {
   ///
-  Array<FrontPoint3, PointIndex::BASE, PointIndex> points;
+  NgArray<FrontPoint3, PointIndex::BASE, PointIndex> points;
   ///
-  Array<FrontFace> faces;
+  NgArray<FrontFace> faces;
   ///
-  Array<PointIndex> delpointl;
+  NgArray<PointIndex> delpointl;
   
   /// which points are connected to pi ?
   TABLE<int, PointIndex::BASE> * connectedpairs;
@@ -208,8 +208,8 @@ class AdFront3
   int lasti;
   /// minimal selection-value of baseelements
   int minval;
-  Array<PointIndex, PointIndex::BASE, PointIndex> invpindex;
-  Array<char> pingroup;
+  NgArray<PointIndex, PointIndex::BASE, PointIndex> invpindex;
+  NgArray<char> pingroup;
   
   ///
   class BoxTree<3> * facetree;
@@ -220,7 +220,7 @@ public:
   ///
   ~AdFront3 ();
   ///
-  void GetPoints (Array<Point<3> > & apoints) const;
+  void GetPoints (NgArray<Point<3> > & apoints) const;
   ///
   int GetNP() const 
   { return points.Size(); }
@@ -254,17 +254,17 @@ public:
 
   ///
   void GetIntersectingFaces (const Point<3> & pmin, const Point<3> & pmax, 
-			     Array<int> & ifaces) const;
+			     NgArray<int> & ifaces) const;
 
   ///
   void GetFaceBoundingBox (int i, Box3d & box) const;
 
   ///
   int GetLocals (int baseelement,
-		 Array<Point3d, PointIndex::BASE> & locpoints,
-                 Array<MiniElement2d> & locfaces,   // local index
-                 Array<PointIndex, PointIndex::BASE> & pindex,
-                 Array<INDEX> & findex,
+		 NgArray<Point3d, PointIndex::BASE> & locpoints,
+                 NgArray<MiniElement2d> & locfaces,   // local index
+                 NgArray<PointIndex, PointIndex::BASE> & pindex,
+                 NgArray<INDEX> & findex,
 		 INDEX_2_HASHTABLE<int> & connectedpairs,
                  float xh,
 		 float relh,
@@ -272,10 +272,10 @@ public:
   
   ///
   void GetGroup (int fi,
-                 Array<MeshPoint, PointIndex::BASE> & grouppoints,
-                 Array<MiniElement2d> & groupelements,
-                 Array<PointIndex, PointIndex::BASE> & pindex,
-                 Array<INDEX> & findex);
+                 NgArray<MeshPoint, PointIndex::BASE> & grouppoints,
+                 NgArray<MiniElement2d> & groupelements,
+                 NgArray<PointIndex, PointIndex::BASE> & pindex,
+                 NgArray<INDEX> & findex);
 
   ///
   void DeleteFace (INDEX fi);
@@ -300,7 +300,7 @@ public:
   bool Inside (const Point<3> & p) const;
   /// both points on same side ?
   int SameSide (const Point<3> & lp1, const Point<3> & lp2, 
-		const Array<int> * testfaces = NULL) const;
+		const NgArray<int> * testfaces = NULL) const;
 
 
   ///

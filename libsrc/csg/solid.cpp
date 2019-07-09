@@ -557,14 +557,14 @@ namespace netgen
 
 
 
-  void Solid :: Boundaries (const Point<3> & p, Array<int> & bounds) const
+  void Solid :: Boundaries (const Point<3> & p, NgArray<int> & bounds) const
   {
     int in, strin;
     bounds.SetSize (0);
     RecBoundaries (p, bounds, in, strin);
   }
 
-  void Solid :: RecBoundaries (const Point<3> & p, Array<int> & bounds,
+  void Solid :: RecBoundaries (const Point<3> & p, NgArray<int> & bounds,
 			       int & in, int & strin) const
   {
     switch (op)
@@ -585,7 +585,7 @@ namespace netgen
       case SECTION:
 	{
 	  int i, in1, in2, strin1, strin2;
-	  Array<int> bounds1, bounds2;
+	  NgArray<int> bounds1, bounds2;
 
 	  s1 -> RecBoundaries (p, bounds1, in1, strin1);
 	  s2 -> RecBoundaries (p, bounds2, in2, strin2);
@@ -604,7 +604,7 @@ namespace netgen
       case UNION:
 	{
 	  int i, in1, in2, strin1, strin2;
-	  Array<int> bounds1, bounds2;
+	  NgArray<int> bounds1, bounds2;
 
 	  s1 -> RecBoundaries (p, bounds1, in1, strin1);
 	  s2 -> RecBoundaries (p, bounds2, in2, strin2);
@@ -638,7 +638,7 @@ namespace netgen
   }
 
 
-  void Solid :: TangentialSolid (const Point<3> & p, Solid *& tansol, Array<int> & surfids, double eps) const
+  void Solid :: TangentialSolid (const Point<3> & p, Solid *& tansol, NgArray<int> & surfids, double eps) const
   {
     int in, strin;
     RecTangentialSolid (p, tansol, surfids, in, strin, eps);
@@ -648,7 +648,7 @@ namespace netgen
   }
 
 
-  void Solid :: RecTangentialSolid (const Point<3> & p, Solid *& tansol, Array<int> & surfids,
+  void Solid :: RecTangentialSolid (const Point<3> & p, Solid *& tansol, NgArray<int> & surfids,
 				    int & in, int & strin, double eps) const
   {
     tansol = NULL;
@@ -742,7 +742,7 @@ namespace netgen
 
   void Solid :: TangentialSolid2 (const Point<3> & p, 
 				  const Vec<3> & t,
-				  Solid *& tansol, Array<int> & surfids, double eps) const
+				  Solid *& tansol, NgArray<int> & surfids, double eps) const
   {
     int in, strin;
     surfids.SetSize (0);
@@ -752,7 +752,7 @@ namespace netgen
   }
 
   void Solid :: RecTangentialSolid2 (const Point<3> & p, const Vec<3> & t,
-				     Solid *& tansol, Array<int> & surfids, 
+				     Solid *& tansol, NgArray<int> & surfids, 
 				     int & in, int & strin, double eps) const
   {
     tansol = NULL;
@@ -856,7 +856,7 @@ namespace netgen
 
   void Solid :: TangentialSolid3 (const Point<3> & p, 
 				  const Vec<3> & t, const Vec<3> & t2,
-				  Solid *& tansol, Array<int> & surfids, 
+				  Solid *& tansol, NgArray<int> & surfids, 
 				  double eps) const
   {
     int in, strin;
@@ -869,7 +869,7 @@ namespace netgen
 
   void Solid :: RecTangentialSolid3 (const Point<3> & p, 
 				     const Vec<3> & t, const Vec<3> & t2,
-				     Solid *& tansol, Array<int> & surfids, 
+				     Solid *& tansol, NgArray<int> & surfids, 
 				     int & in, int & strin, double eps) const
   {
     tansol = NULL;
@@ -967,7 +967,7 @@ namespace netgen
 
   void Solid :: TangentialEdgeSolid (const Point<3> & p, 
 				     const Vec<3> & t, const Vec<3> & t2, const Vec<3> & m, 
-				     Solid *& tansol, Array<int> & surfids, 
+				     Solid *& tansol, NgArray<int> & surfids, 
 				     double eps) const
   {
     int in, strin;
@@ -982,7 +982,7 @@ namespace netgen
 
   void Solid :: RecTangentialEdgeSolid (const Point<3> & p, 
 					const Vec<3> & t, const Vec<3> & t2, const Vec<3> & m,
-					Solid *& tansol, Array<int> & surfids, 
+					Solid *& tansol, NgArray<int> & surfids, 
 					int & in, int & strin, double eps) const
   {
     tansol = NULL;
@@ -1450,13 +1450,13 @@ namespace netgen
     return 0;
   }
 
-  void Solid :: GetSurfaceIndices (Array<int> & surfind) const
+  void Solid :: GetSurfaceIndices (NgArray<int> & surfind) const
   {
     surfind.SetSize (0);
     RecGetSurfaceIndices (surfind);
   }
 
-  void Solid :: RecGetSurfaceIndices (Array<int> & surfind) const
+  void Solid :: RecGetSurfaceIndices (NgArray<int> & surfind) const
   {
     switch (op)
       {
@@ -1533,13 +1533,13 @@ namespace netgen
   }
 
 
-  void Solid :: GetTangentialSurfaceIndices (const Point<3> & p, Array<int> & surfind, double eps) const
+  void Solid :: GetTangentialSurfaceIndices (const Point<3> & p, NgArray<int> & surfind, double eps) const
   {
     surfind.SetSize (0);
     RecGetTangentialSurfaceIndices (p, surfind, eps);
   }
 
-  void Solid :: RecGetTangentialSurfaceIndices (const Point<3> & p, Array<int> & surfind, double eps) const
+  void Solid :: RecGetTangentialSurfaceIndices (const Point<3> & p, NgArray<int> & surfind, double eps) const
   {
     switch (op)
       {
@@ -1576,14 +1576,14 @@ namespace netgen
 
 
   void Solid :: GetTangentialSurfaceIndices2 (const Point<3> & p, const Vec<3> & v,
-					     Array<int> & surfind, double eps) const
+					     NgArray<int> & surfind, double eps) const
   {
     surfind.SetSize (0);
     RecGetTangentialSurfaceIndices2 (p, v, surfind, eps);
   }
 
   void Solid :: RecGetTangentialSurfaceIndices2 (const Point<3> & p, const Vec<3> & v,
-						 Array<int> & surfind, double eps) const
+						 NgArray<int> & surfind, double eps) const
   {
     switch (op)
       {
@@ -1628,14 +1628,14 @@ namespace netgen
 
 
   void Solid :: GetTangentialSurfaceIndices3 (const Point<3> & p, const Vec<3> & v, const Vec<3> & v2, 
-					     Array<int> & surfind, double eps) const
+					     NgArray<int> & surfind, double eps) const
   {
     surfind.SetSize (0);
     RecGetTangentialSurfaceIndices3 (p, v, v2, surfind, eps);
   }
 
   void Solid :: RecGetTangentialSurfaceIndices3 (const Point<3> & p, const Vec<3> & v, const Vec<3> & v2, 
-						 Array<int> & surfind, double eps) const
+						 NgArray<int> & surfind, double eps) const
   {
     switch (op)
       {
@@ -1697,7 +1697,7 @@ namespace netgen
 
 
   void Solid :: RecGetTangentialEdgeSurfaceIndices (const Point<3> & p, const Vec<3> & v, const Vec<3> & v2, const Vec<3> & m,
-						    Array<int> & surfind, double eps) const
+						    NgArray<int> & surfind, double eps) const
   {
     switch (op)
       {
@@ -1801,7 +1801,7 @@ namespace netgen
   }
 
 
-  void Solid :: CalcOnePrimitiveSpecialPoints (const Box<3> & box, Array<Point<3> > & pts) const
+  void Solid :: CalcOnePrimitiveSpecialPoints (const Box<3> & box, NgArray<Point<3> > & pts) const
   {
     double eps = 1e-8 * box.Diam ();
 
@@ -1814,7 +1814,7 @@ namespace netgen
       }
   }
 
-  void Solid :: RecCalcOnePrimitiveSpecialPoints (Array<Point<3> > & pts) const
+  void Solid :: RecCalcOnePrimitiveSpecialPoints (NgArray<Point<3> > & pts) const
   {
     switch (op)
       {

@@ -25,9 +25,9 @@ class Flags
   ///
   SymbolTable<int> defflags;
   ///
-  SymbolTable<Array<char*>*> strlistflags;
+  SymbolTable<NgArray<char*>*> strlistflags;
   ///
-  SymbolTable<Array<double>*> numlistflags;
+  SymbolTable<NgArray<double>*> numlistflags;
 public:
   ///
   DLL_HEADER Flags ();
@@ -43,9 +43,9 @@ public:
   /// Sets boolean flag
   DLL_HEADER void SetFlag (const char * name);
   /// Sets string arary flag
-  DLL_HEADER void SetFlag (const char * name, const Array<char*> & val);
+  DLL_HEADER void SetFlag (const char * name, const NgArray<char*> & val);
   /// Sets double array flag
-  DLL_HEADER void SetFlag (const char * name, const Array<double> & val);
+  DLL_HEADER void SetFlag (const char * name, const NgArray<double> & val);
   
   /// Save flags to file
   DLL_HEADER void SaveFlags (const char * filename) const;
@@ -67,9 +67,9 @@ public:
   /// Returns boolean flag
   DLL_HEADER bool GetDefineFlag (const char * name) const;
   /// Returns string list flag, empty array if not exist
-  DLL_HEADER const Array<char*> & GetStringListFlag (const char * name) const;
+  DLL_HEADER const NgArray<char*> & GetStringListFlag (const char * name) const;
   /// Returns num list flag, empty array if not exist
-  DLL_HEADER const Array<double> & GetNumListFlag (const char * name) const;
+  DLL_HEADER const NgArray<double> & GetNumListFlag (const char * name) const;
 
 
   /// Test, if string flag is defined

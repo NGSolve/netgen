@@ -29,8 +29,8 @@ namespace netgen
     int domnr;
     const Solid *sol;
     double factor; 
-    // Array<Point<3> > points;
-    // Array<INDEX_2> segms;
+    // NgArray<Point<3> > points;
+    // NgArray<INDEX_2> segms;
   public:
     SingularFace (int adomnr, const Solid * asol, double sf)
       : domnr(adomnr), sol(asol), factor(sf) { ; }
@@ -47,8 +47,8 @@ namespace netgen
     int domnr;
     const CSGeometry& geom;
     const Solid *sol1, *sol2;
-    Array<Point<3> > points;
-    Array<INDEX_2> segms;
+    NgArray<Point<3> > points;
+    NgArray<INDEX_2> segms;
     double factor; 
 
     double maxhinit;
@@ -68,7 +68,7 @@ namespace netgen
   public:
     double beta;
     const Solid *sol1, *sol2, *sol3;
-    Array<Point<3> > points;
+    NgArray<Point<3> > points;
     double factor; 
  
   public:

@@ -31,9 +31,9 @@ class Meshing2
   /// the current advancing front
   AdFront2 * adfront;
   /// rules for mesh generation
-  Array<netrule*> rules;
+  NgArray<netrule*> rules;
   /// statistics
-  Array<int> ruleused, canuse, foundmap;
+  NgArray<int> ruleused, canuse, foundmap;
   /// 
   Box<3> boundingbox;
   ///
@@ -126,21 +126,21 @@ protected:
   /*
     get (projected) boundary of current chart
    */
-  virtual void GetChartBoundary (Array<Point2d> & points, 
-				 Array<Point3d> & points3d,
-				 Array<INDEX_2> & lines, double p) const;
+  virtual void GetChartBoundary (NgArray<Point2d> & points, 
+				 NgArray<Point3d> & points3d,
+				 NgArray<INDEX_2> & lines, double p) const;
 
   virtual double Area () const;
 
 
 /** Applies 2D rules.
  Tests all 2D rules */
-  int ApplyRules (Array<Point2d> & lpoints, 
-		  Array<int> & legalpoints,
+  int ApplyRules (NgArray<Point2d> & lpoints, 
+		  NgArray<int> & legalpoints,
 		  int maxlegalpoint,
-		  Array<INDEX_2> & llines,
+		  NgArray<INDEX_2> & llines,
 		  int maxlegelline,
-		  Array<Element2d> & elements, Array<INDEX> & dellines,
+		  NgArray<Element2d> & elements, NgArray<INDEX> & dellines,
 		  int tolerance,
 		  const MeshingParameters & mp);
   

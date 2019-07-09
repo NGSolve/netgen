@@ -44,7 +44,7 @@ namespace netgen
     virtual void SetParameters (Tcl_Interp * /* interp */) { ; }
   };
 
-  class DLL_HEADER GeometryRegisterArray : public Array<GeometryRegister*>
+  class DLL_HEADER GeometryRegisterArray : public NgArray<GeometryRegister*>
   {
   public:
     virtual ~GeometryRegisterArray()
@@ -56,7 +56,7 @@ namespace netgen
     virtual shared_ptr<NetgenGeometry> LoadFromMeshFile (istream & ist) const;
   };
 
-  // extern DLL_HEADER Array<GeometryRegister*> geometryregister; 
+  // extern DLL_HEADER NgArray<GeometryRegister*> geometryregister; 
   extern DLL_HEADER GeometryRegisterArray geometryregister; 
 }
 

@@ -94,8 +94,8 @@ namespace netgen
 #ifdef SOCKETS
   AutoPtr<ClientSocket> clientsocket;
   ServerSocketManager serversocketmanager;
-  //Array< AutoPtr < ServerInfo > > servers;
-  Array< ServerInfo* > servers;
+  //NgArray< AutoPtr < ServerInfo > > servers;
+  NgArray< ServerInfo* > servers;
   AutoPtr<ServerSocketUserNetgen> serversocketusernetgen;
 #endif
 
@@ -1083,7 +1083,7 @@ namespace netgen
      
      // Use an array to support creation of boundary 
      // layers for multiple surfaces in the future...
-     Array<int> surfid;
+     NgArray<int> surfid;
      int surfinp = 0;
      int prismlayers = 1;
      double hfirst = 0.01;
@@ -2007,7 +2007,7 @@ namespace netgen
     int w = Togl_PixelScale(togl)*Togl_Width (togl);
     int h = Togl_PixelScale(togl)*Togl_Height (togl);
 
-    Array<unsigned char> buffer(w*h*3);
+    NgArray<unsigned char> buffer(w*h*3);
     glPixelStorei(GL_UNPACK_ALIGNMENT,1);
     glPixelStorei(GL_PACK_ALIGNMENT,1);
     glReadPixels (0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, &buffer[0]);
@@ -2231,8 +2231,8 @@ namespace netgen
 			    int argc, tcl_const char *argv[])
   {
     SetVisualScene(interp);
-    Array<double> alpha;
-    Array<Vec3d> vec;
+    NgArray<double> alpha;
+    NgArray<Vec3d> vec;
 
     for(int i=1; i<argc; i+=4)
       {

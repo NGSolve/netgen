@@ -37,7 +37,7 @@ namespace netgen
 
     // new version with consistent ordering across sub-domains
 
-    Array<INDEX_2> parents;
+    NgArray<INDEX_2> parents;
     for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
       {
 	const Segment & el = mesh[si];
@@ -109,7 +109,7 @@ namespace netgen
 
     PrintMessage (5, "have points");
     
-    Array<int> par_nr(parents.Size());
+    NgArray<int> par_nr(parents.Size());
     for (int i = 0; i < par_nr.Size(); i++)
       par_nr[i] = i;
     QuickSort (parents, par_nr);
@@ -121,13 +121,13 @@ namespace netgen
       }
     
     mesh.SetNP(mesh.GetNV() + parents.Size());
-    Array<bool, PointIndex::BASE> pointset(mesh.GetNP());
+    NgArray<bool, PointIndex::BASE> pointset(mesh.GetNP());
     pointset = false;
     
     PrintMessage (5, "sorting complete");
     
     // refine edges
-    Array<EdgePointGeomInfo,PointIndex::BASE> epgi;
+    NgArray<EdgePointGeomInfo,PointIndex::BASE> epgi;
 
     int oldns = mesh.GetNSeg();
     for (SegmentIndex si = 0; si < oldns; si++)
@@ -176,7 +176,7 @@ namespace netgen
     PrintMessage (5, "have 1d elements");
     
     // refine surface elements
-    Array<PointGeomInfo,PointIndex::BASE> surfgi (8*mesh.GetNP());
+    NgArray<PointGeomInfo,PointIndex::BASE> surfgi (8*mesh.GetNP());
     for (int i = PointIndex::BASE;
 	 i < surfgi.Size()+PointIndex::BASE; i++)
       surfgi[i].trignum = -1;
@@ -711,7 +711,7 @@ namespace netgen
     // update identification tables
     for (int i = 1; i <= mesh.GetIdentifications().GetMaxNr(); i++)
       {
-	Array<int,PointIndex::BASE> identmap;
+	NgArray<int,PointIndex::BASE> identmap;
 	mesh.GetIdentifications().GetMap (i, identmap);
 
 	for (int j = 1; j <= between.GetNBags(); j++)
@@ -754,8 +754,8 @@ namespace netgen
 	cout << "WARNING: " << wrongels << " with wrong orientation found" << endl;
 
 	int np = mesh.GetNP();
-	Array<Point<3> > should(np);
-	Array<Point<3> > can(np);
+	NgArray<Point<3> > should(np);
+	NgArray<Point<3> > can(np);
 	for (int i = 1; i <= np; i++)
 	  {
 	    should.Elem(i) = can.Elem(i) = mesh.Point(i);

@@ -18,8 +18,8 @@ namespace netgen
   extern MeshingParameters mparam;
 
 
-  void RegisterUserFormats (Array<const char*> & names,
-			    Array<const char*> & extensions)
+  void RegisterUserFormats (NgArray<const char*> & names,
+			    NgArray<const char*> & extensions)
 			    
 {
   const char *types[] =
@@ -392,7 +392,7 @@ void WriteSTLExtFormat (const Mesh & mesh,
 
   int numBCs = 0;
 
-  Array<int> faceBCs;
+  NgArray<int> faceBCs;
   TABLE<int> faceBCMapping;
 
   faceBCs.SetSize(mesh.GetNFD());
@@ -427,7 +427,7 @@ void WriteSTLExtFormat (const Mesh & mesh,
 
       for(int faceNr = 1;faceNr <= faceBCMapping.EntrySize(bcInd); faceNr++)
       {
-          Array<SurfaceElementIndex> faceSei;
+          NgArray<SurfaceElementIndex> faceSei;
           mesh.GetSurfaceElementsOfFace(faceBCMapping.Get(bcInd,faceNr),faceSei);
 
           for (int i = 0; i < faceSei.Size(); i++)
@@ -778,7 +778,7 @@ void WriteEdgeElementFormat (const Mesh & mesh,
 
   int inverttets = mparam.inverttets;
   int invertsurf = mparam.inverttrigs;
-  Array<int> edges;
+  NgArray<int> edges;
 
   ofstream outfile (filename.c_str());
 
@@ -935,7 +935,7 @@ void WriteFile (int typ,
       INDEX_2_HASHTABLE<int> edgeht(mesh.GetNP());
 
       // list of edges
-      Array<INDEX_2> edgelist;
+      NgArray<INDEX_2> edgelist;
 
       // edge (point) on boundary ?
       BitArray bedge, bpoint(mesh.GetNP());

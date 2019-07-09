@@ -12,7 +12,7 @@
 
 namespace netgen
 {
-int EdgeUsed(int p1, int p2, Array<INDEX_2>& edges, INDEX_2_HASHTABLE<int>& hashtab)
+int EdgeUsed(int p1, int p2, NgArray<INDEX_2>& edges, INDEX_2_HASHTABLE<int>& hashtab)
 {
   if (p1 > p2) {swap (p1,p2);}
 
@@ -41,9 +41,9 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
   TABLE<int> edgepointorigines;
   TABLE<int> edgepointoriginps;
 
-  Array<int> edgetrigs;
-  Array<INDEX_2> edgepointnums;
-  Array<int> edgetriglocinds;
+  NgArray<int> edgetrigs;
+  NgArray<INDEX_2> edgepointnums;
+  NgArray<int> edgetriglocinds;
 
   int size = 3*GetNT();
   INDEX_2_HASHTABLE<int> hashtab(size);
@@ -59,8 +59,8 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
   edgepointnums.SetSize(size);
   edgetriglocinds.SetSize(size);
 
-  Array<int> edgelist1;
-  Array<int> edgelist2;
+  NgArray<int> edgelist1;
+  NgArray<int> edgelist2;
 
   edgelist1.SetSize(0);
   edgelist2.SetSize(0);
@@ -238,7 +238,7 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
 
   if (!endpointorigine) {PrintSysError("No connection found!");}
 
-  Array<Point3d> plist;
+  NgArray<Point3d> plist;
 
   plist.Append(ap2);
   int laste = endpointorigine;
@@ -300,9 +300,9 @@ void STLGeometry :: PrepareSurfaceMeshing()
   meshcharttrigs = 0;
 }
 
-void STLGeometry::GetMeshChartBoundary (Array<Point2d > & apoints,
-					Array<Point3d > & points3d,
-					Array<INDEX_2> & alines, double h)
+void STLGeometry::GetMeshChartBoundary (NgArray<Point2d > & apoints,
+					NgArray<Point3d > & points3d,
+					NgArray<INDEX_2> & alines, double h)
 {
   twoint seg, newseg;
   int zone;
@@ -403,7 +403,7 @@ void STLGeometry :: SelectChartOfPoint (const Point<3> & p)
 {
   int i, ii;
 
-  Array<int> trigsinbox;
+  NgArray<int> trigsinbox;
   
   Box<3> box(p,p);
   box.Increase (1e-6);
@@ -462,7 +462,7 @@ void STLGeometry :: ToPlane (const Point<3> & locpoint, int * trigs,
       
       else
 	{
-	  Array<int> trigsinbox;
+	  NgArray<int> trigsinbox;
 
 	  if (!geomsearchtreeon)
 	    {
@@ -473,7 +473,7 @@ void STLGeometry :: ToPlane (const Point<3> & locpoint, int * trigs,
 	    }
 	  else
 	    {
-	      Array<int> trigsinbox2;
+	      NgArray<int> trigsinbox2;
 	      Box<3> box(locpoint, locpoint);
 	      box.Increase (range);
 	      GetTrianglesInBox (box, trigsinbox2);
@@ -737,7 +737,7 @@ void STLGeometry :: RestrictLocalHCurv(class Mesh & mesh, double gh)
 
   if (stlparam.resthatlasenable)
     {
-      Array<double> minh; //minimales h pro punkt
+      NgArray<double> minh; //minimales h pro punkt
       minh.SetSize(GetNP());
       for (i = 1; i <= GetNP(); i++)
 	{
@@ -841,7 +841,7 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh)
     {
       PushStatusF("Restrict H due to surface curvature");
 
-      Array<double> minh; //minimales h pro punkt
+      NgArray<double> minh; //minimales h pro punkt
       minh.SetSize(GetNP());
       for (i = 1; i <= GetNP(); i++)
 	{
@@ -933,8 +933,8 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh)
       BoxTree<3> * lsearchtree = new BoxTree<3> (GetBoundingBox().PMin() - Vec3d(1,1,1),
                                                  GetBoundingBox().PMax() + Vec3d(1,1,1));
       
-      Array<Point3d> pmins(GetNLines());
-      Array<Point3d> pmaxs(GetNLines());
+      NgArray<Point3d> pmins(GetNLines());
+      NgArray<Point3d> pmaxs(GetNLines());
 
       double maxhline;
       for (i = 1; i <= GetNLines(); i++)
@@ -958,7 +958,7 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh)
 	  pmaxs.Elem(i) = box.PMax();
 	}
 
-      Array<int> linenums;
+      NgArray<int> linenums;
       int k2;
 
       for (i = 1; i <= GetNLines(); i++)
@@ -1068,7 +1068,7 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh)
 
       //berechne minimale distanz von chart zu einem nicht-outerchart-punkt in jedem randpunkt einer chart
       
-      Array<int> acttrigs(GetNT()); //outercharttrigs
+      NgArray<int> acttrigs(GetNT()); //outercharttrigs
       acttrigs = 0;
 
       for (i = 1; i <= GetNOCharts(); i++)
@@ -1116,7 +1116,7 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh)
   }
 }
 
-void STLGeometry :: RestrictHChartDistOneChart(int chartnum, Array<int>& acttrigs, 
+void STLGeometry :: RestrictHChartDistOneChart(int chartnum, NgArray<int>& acttrigs, 
 					       class Mesh & mesh, double gh, double fact, double minh)
 {
   static int timer1 = NgProfiler::CreateTimer ("restrictH OneChart 1");
@@ -1131,16 +1131,16 @@ void STLGeometry :: RestrictHChartDistOneChart(int chartnum, Array<int>& acttrig
 
   //  mincalch = 1E10;
   //maxcalch = -1E10;  
-  Array<int> limes1;
-  Array<int> limes2;
+  NgArray<int> limes1;
+  NgArray<int> limes2;
 	  
-  Array<Point3d> plimes1;
-  Array<Point3d> plimes2;
+  NgArray<Point3d> plimes1;
+  NgArray<Point3d> plimes2;
 	  
-  Array<int> plimes1trigs; //check from which trig the points come
-  Array<int> plimes2trigs;
+  NgArray<int> plimes1trigs; //check from which trig the points come
+  NgArray<int> plimes2trigs;
 	  
-  Array<int> plimes1origin; //either the original pointnumber or zero, if new point
+  NgArray<int> plimes1origin; //either the original pointnumber or zero, if new point
 
   int divisions = 10;
 	  
@@ -1276,7 +1276,7 @@ void STLGeometry :: RestrictHChartDistOneChart(int chartnum, Array<int>& acttrig
       Point3dTree stree(bbox.PMin(), bbox.PMax());
       for (int j = 1; j <= plimes2.Size(); j++)
 	stree.Insert (plimes2.Get(j), j);
-      Array<int> foundpts;
+      NgArray<int> foundpts;
 	  
       NgProfiler::StopTimer (timer3a);
       NgProfiler::StartTimer (timer3b);

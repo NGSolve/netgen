@@ -8,8 +8,8 @@ inline int FindInnerPoint2 (POINTArray & points,
   static int timer = NgProfiler::CreateTimer ("FindInnerPoint2");
   NgProfiler::RegionTimer reg (timer);
 
-  Array<Vec3d> a;
-  Array<double> c;
+  NgArray<Vec3d> a;
+  NgArray<double> c;
   Mat<3> m, inv;
   Vec<3> rs, x, pmin;
 

@@ -74,7 +74,7 @@ namespace netgen
     cout << "rel filldist = " << filldist << endl;
     PrintMessage (3, "blockfill local h");
 
-    Array<Point<3> > npoints;
+    NgArray<Point<3> > npoints;
     
     // adfront -> CreateTrees();
 
@@ -287,21 +287,21 @@ namespace netgen
     hp(2) = -1; hbox.Add (hp);
     BoxTree<3> searchtree(hbox);
 
-    Array<DelaunayTrig> tempels;
+    NgArray<DelaunayTrig> tempels;
     startel.CalcCenter (mesh);
 
     tempels.Append (startel);
     searchtree.Insert(startel.BoundingBox(), 0);
 
-    Array<int> closeels;
-    Array<int> intersecting;
-    Array<INDEX_2> edges;
+    NgArray<int> closeels;
+    NgArray<int> intersecting;
+    NgArray<INDEX_2> edges;
 
 
 
 
     // reorder points
-    Array<PointIndex, PointIndex::BASE, PointIndex> mixed(old_points.Size());
+    NgArray<PointIndex, PointIndex::BASE, PointIndex> mixed(old_points.Size());
     int prims[] = { 11, 13, 17, 19, 23, 29, 31, 37 };
     int prim;
   

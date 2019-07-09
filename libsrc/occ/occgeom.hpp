@@ -196,9 +196,9 @@ namespace netgen
    public:
       TopoDS_Shape shape;
       TopTools_IndexedMapOfShape fmap, emap, vmap, somap, shmap, wmap;
-      Array<bool> fsingular, esingular, vsingular;
+      NgArray<bool> fsingular, esingular, vsingular;
       Box<3> boundingbox;
-      Array<string> fnames, enames, snames;
+      NgArray<string> fnames, enames, snames;
       // Philippose - 29/01/2009
       // OpenCascade XDE Support
       // XCAF Handle to make the face colours available to the rest of
@@ -206,25 +206,25 @@ namespace netgen
       Handle_XCAFDoc_ColorTool face_colours;
 
      mutable int changed;
-      Array<int> facemeshstatus;
+      NgArray<int> facemeshstatus;
 
       // Philippose - 15/01/2009
       // Maximum mesh size for a given face
       // (Used to explicitly define mesh size limits on individual faces)
-      Array<double> face_maxh;
+      NgArray<double> face_maxh;
       
       // Philippose - 14/01/2010
       // Boolean array to detect whether a face has been explicitly modified 
       // by the user or not
-      Array<bool> face_maxh_modified;
+      NgArray<bool> face_maxh_modified;
 
       // Philippose - 15/01/2009
       // Indicates which faces have been selected by the user in geometry mode
       // (Currently handles only selection of one face at a time, but an array would
       //  help to extend this to multiple faces)
-      Array<bool> face_sel_status;
+      NgArray<bool> face_sel_status;
 
-      Array<EntityVisualizationCode> fvispar, evispar, vvispar;
+      NgArray<EntityVisualizationCode> fvispar, evispar, vvispar;
 
       double tolerance;
       bool fixsmalledges;

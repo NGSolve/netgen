@@ -81,12 +81,12 @@ namespace netgen
     INDEX_3_CLOSED_HASHTABLE<int> faces;
 
     // 
-    Array<DelaunayTet> & tets;
+    NgArray<DelaunayTet> & tets;
 
   public:
 
     // estimated number of points
-    MeshNB (Array<DelaunayTet> & atets, int np)
+    MeshNB (NgArray<DelaunayTet> & atets, int np)
       : faces(200), tets(atets)
     { ; }
 
@@ -155,7 +155,7 @@ namespace netgen
   */
   class SphereList 
   {
-    Array<int> links;
+    NgArray<int> links;
   public:
     SphereList () 
     { ; }
@@ -178,11 +178,11 @@ namespace netgen
       links.Elem (toi) = eli;
     }
       
-    void GetList (int eli, Array<int> & linked) const;
+    void GetList (int eli, NgArray<int> & linked) const;
   };
 
 
-  void SphereList :: GetList (int eli, Array<int> & linked) const
+  void SphereList :: GetList (int eli, NgArray<int> & linked) const
   {
     linked.SetSize (0);
     int pi = eli;
@@ -212,13 +212,13 @@ namespace netgen
 
 
   void AddDelaunayPoint (PointIndex newpi, const Point3d & newp, 
-			 Array<DelaunayTet> & tempels, 
+			 NgArray<DelaunayTet> & tempels, 
 			 Mesh & mesh,
 			 BoxTree<3> & tettree, 
 			 MeshNB & meshnb,
-			 Array<Point<3> > & centers, Array<double> & radi2,
-			 Array<int> & connected, Array<int> & treesearch, 
-			 Array<int> & freelist, SphereList & list,
+			 NgArray<Point<3> > & centers, NgArray<double> & radi2,
+			 NgArray<int> & connected, NgArray<int> & treesearch, 
+			 NgArray<int> & freelist, SphereList & list,
 			 IndexSet & insphere, IndexSet & closesphere)
   {
     // static Timer t("Meshing3::AddDelaunayPoint"); RegionTimer reg(t);
@@ -363,8 +363,8 @@ namespace netgen
 	    }
       } // while (changed)
 
-    // Array<Element> newels;
-    Array<DelaunayTet> newels;
+    // NgArray<Element> newels;
+    NgArray<DelaunayTet> newels;
 
     Element2d face(TRIG);
 
@@ -517,13 +517,13 @@ namespace netgen
 
 
   void Delaunay1 (Mesh & mesh, const MeshingParameters & mp, AdFront3 * adfront,
-		  Array<DelaunayTet> & tempels,
+		  NgArray<DelaunayTet> & tempels,
 		  int oldnp, DelaunayTet & startel, Point3d & pmin, Point3d & pmax)
   {
     static Timer t("Meshing3::Delaunay1"); RegionTimer reg(t);
     
-    Array<Point<3>> centers;
-    Array<double> radi2;
+    NgArray<Point<3>> centers;
+    NgArray<double> radi2;
   
     Box<3> bbox(Box<3>::EMPTY_BOX);
 
@@ -576,7 +576,7 @@ namespace netgen
       usep.Set (pi);
     
 
-    Array<int> freelist;
+    NgArray<int> freelist;
 
     int cntp = 0;
 
@@ -592,7 +592,7 @@ namespace netgen
     tempels.Append (startel);
     meshnb.Add (1);
     list.AddElement (1);
-    Array<int> connected, treesearch;
+    NgArray<int> connected, treesearch;
 
     Box<3> tbox(Box<3>::EMPTY_BOX);
     for (size_t k = 0; k < 4; k++)
@@ -618,7 +618,7 @@ namespace netgen
     IndexSet closesphere(mesh.GetNP());
 
     // "random" reordering of points  (speeds a factor 3 - 5 !!!)
-    Array<PointIndex, PointIndex::BASE, PointIndex> mixed(np);
+    NgArray<PointIndex, PointIndex::BASE, PointIndex> mixed(np);
     int prims[] = { 11, 13, 17, 19, 23, 29, 31, 37 };
     int prim;
   
@@ -696,7 +696,7 @@ namespace netgen
     PushStatus ("Delaunay meshing");
 
 
-    Array<DelaunayTet> tempels;
+    NgArray<DelaunayTet> tempels;
     Point3d pmin, pmax;
 
     DelaunayTet startel;
@@ -856,7 +856,7 @@ namespace netgen
     // find surface triangles which are no face of any tet
 
     INDEX_3_HASHTABLE<int> openeltab(mesh.GetNOpenElements()+3);
-    Array<int> openels;
+    NgArray<int> openels;
     for (int i = 1; i <= mesh.GetNOpenElements(); i++)
       {
 	const Element2d & tri = mesh.OpenElement(i);
@@ -1044,7 +1044,7 @@ namespace netgen
 	      }
 	  }
       
-	Array<int> neartrias;
+	NgArray<int> neartrias;
 	for (int i = 1; i <= tempels.Size(); i++)
 	  {
 	    const Point<3> *pp[4];
@@ -1321,7 +1321,7 @@ namespace netgen
     BitArray inner(ne), outer(ne);
     inner.Clear();
     outer.Clear();
-    Array<int> elstack;
+    NgArray<int> elstack;
 
     /*
       int starti = 0;

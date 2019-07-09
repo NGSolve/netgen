@@ -63,8 +63,8 @@ namespace netgen
   {
     Point<3> p1, p2, p3, p4;
     Vec<3> v12, v13, v14;
-    // Array<OneSurfacePrimitive*> faces;
-    Array<Plane*> faces;
+    // NgArray<OneSurfacePrimitive*> faces;
+    NgArray<Plane*> faces;
 
   public:
     Brick (Point<3> ap1, Point<3> ap2, Point<3> ap3, Point<3> ap4);
@@ -115,8 +115,8 @@ namespace netgen
     { return *faces[i]; }
 
 
-    virtual void GetPrimitiveData (const char *& classname, Array<double> & coeffs) const;
-    virtual void SetPrimitiveData (Array<double> & coeffs);
+    virtual void GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const;
+    virtual void SetPrimitiveData (NgArray<double> & coeffs);
 
     virtual void Reduce (const BoxSphere<3> & box);
     virtual void UnReduce ();

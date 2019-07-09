@@ -159,7 +159,7 @@ template <int BASE = 1>
 class BitArrayChar
 {
   ///
-  Array<char,BASE> data;
+  NgArray<char,BASE> data;
 
 public:
   ///

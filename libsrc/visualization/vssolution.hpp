@@ -76,7 +76,7 @@ class DLL_HEADER VisualSceneSolution : public VisualScene
   int fieldlineslist;
   int num_fieldlineslists;
   int fieldlines_startarea;
-  Array<double> fieldlines_startarea_parameter;
+  NgArray<double> fieldlines_startarea_parameter;
   int fieldlines_startface;
   string fieldlines_filename;
   double fieldlines_reltolerance;
@@ -102,11 +102,11 @@ class DLL_HEADER VisualSceneSolution : public VisualScene
 
   
 #ifdef PARALLELGL
-  Array<int> par_linelists;
-  Array<int> par_surfellists;
+  NgArray<int> par_linelists;
+  NgArray<int> par_surfellists;
 #endif
 
-  Array<UserVisualizationObject*> user_vis;
+  NgArray<UserVisualizationObject*> user_vis;
 
 public:
 
@@ -154,7 +154,7 @@ public:
   
 
 
-  Array<SolData*> soldata;
+  NgArray<SolData*> soldata;
 
 
   int usetexture;    // 0..no, 1..1D texture (standard), 2..2D-texture (complex)
@@ -183,10 +183,10 @@ public:
   bool imag_part;
 
 private:
-  void BuildFieldLinesFromFile(Array<Point3d> & startpoints);
-  void BuildFieldLinesFromFace(Array<Point3d> & startpoints);
-  void BuildFieldLinesFromBox(Array<Point3d> & startpoints);
-  void BuildFieldLinesFromLine(Array<Point3d> & startpoints);
+  void BuildFieldLinesFromFile(NgArray<Point3d> & startpoints);
+  void BuildFieldLinesFromFace(NgArray<Point3d> & startpoints);
+  void BuildFieldLinesFromBox(NgArray<Point3d> & startpoints);
+  void BuildFieldLinesFromLine(NgArray<Point3d> & startpoints);
   // weak_ptr<Mesh> wp_mesh;
 public:
   VisualSceneSolution ();
@@ -236,8 +236,8 @@ public:
   
 
 private:
-  void GetClippingPlaneTrigs (Array<ClipPlaneTrig> & trigs, Array<ClipPlanePoint> & pts);
-  void GetClippingPlaneGrid (Array<ClipPlanePoint> & pts);
+  void GetClippingPlaneTrigs (NgArray<ClipPlaneTrig> & trigs, NgArray<ClipPlanePoint> & pts);
+  void GetClippingPlaneGrid (NgArray<ClipPlanePoint> & pts);
   void DrawCone (const Point<3> & p1, const Point<3> & p2, double r);
   void DrawCylinder (const Point<3> & p1, const Point<3> & p2, double r);
 
@@ -314,7 +314,7 @@ public:
   void Draw1DElements();
 
   void DrawSurfaceVectors ();
-  void DrawTrigSurfaceVectors(const Array< Point<3> > & lp, const Point<3> & pmin, const Point<3> & pmax,
+  void DrawTrigSurfaceVectors(const NgArray< Point<3> > & lp, const Point<3> & pmin, const Point<3> & pmax,
 			      const int sei, const SolData * vsol);
   void DrawIsoSurface(const SolData * sol, const SolData * grad, int comp);
   
@@ -357,14 +357,14 @@ public:
 class RKStepper
 {
 private:
-  Array<double> c,b;
+  NgArray<double> c,b;
   TABLE<double> *a;
   int steps;
   int order;
   
   double tolerance;
   
-  Array<Vec3d> K;
+  NgArray<Vec3d> K;
   
   int stepcount;
   
@@ -438,9 +438,9 @@ public:
   void Randomized(void) { randomized = true; }
   void NotRandomized(void) { randomized = false; }
 
-  void Calc(const Point3d & startpoint, Array<Point3d> & points, Array<double> & vals, Array<bool> & drawelems, Array<int> & dirstart);
+  void Calc(const Point3d & startpoint, NgArray<Point3d> & points, NgArray<double> & vals, NgArray<bool> & drawelems, NgArray<int> & dirstart);
   
-  void GenerateFieldLines(Array<Point3d> & potential_startpoints, const int numlines, const int gllist,
+  void GenerateFieldLines(NgArray<Point3d> & potential_startpoints, const int numlines, const int gllist,
 			  const double minval, const double maxval, const int logscale, double phaser, double phasei);
 };
 

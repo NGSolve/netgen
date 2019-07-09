@@ -22,7 +22,7 @@ private:
   ///
   void * freelist;
   ///
-  Array<char*> bablocks;
+  NgArray<char*> bablocks;
   mutex block_allocator_mutex;
 public:
   ///

@@ -10,8 +10,8 @@
 
 namespace netgen
 {
-  Array<SpecialPoint> specpoints;
-  static Array<MeshPoint> spoints;
+  NgArray<SpecialPoint> specpoints;
+  static NgArray<MeshPoint> spoints;
 
 #define TCL_OK 0
 #define TCL_ERROR 1
@@ -140,7 +140,7 @@ namespace netgen
 	  }
       }
 
-    Array<int> loc;
+    NgArray<int> loc;
     if (!ec.point_on_edge_problem)
       for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
 	{
@@ -234,17 +234,17 @@ namespace netgen
     const char * savetask = multithread.task;
     multithread.task = "Surface meshing";
   
-    Array<Segment> segments;
+    NgArray<Segment> segments;
     int noldp = mesh.GetNP();
 
     double starttime = GetTime();
 
     // find master faces from identified
-    Array<int> masterface(mesh.GetNFD());
+    NgArray<int> masterface(mesh.GetNFD());
     for (int i = 1; i <= mesh.GetNFD(); i++)
       masterface.Elem(i) = i;
   
-    Array<INDEX_2> fpairs;
+    NgArray<INDEX_2> fpairs;
     bool changed;
     do
       {
@@ -382,7 +382,7 @@ namespace netgen
 
     for (int j = 0; j < geom.singfaces.Size(); j++)
       {
-	Array<int> surfs;
+	NgArray<int> surfs;
 	geom.GetIndependentSurfaceIndices (geom.singfaces[j]->GetSolid(),
 					   geom.BoundingBox(), surfs);
 	for (int k = 1; k <= mesh.GetNFD(); k++)
@@ -680,7 +680,7 @@ namespace netgen
 	mesh->SetGlobalH (mparam.maxh);
 	mesh->SetMinimalH (mparam.minh);
 
-	Array<double> maxhdom(geom.GetNTopLevelObjects());
+	NgArray<double> maxhdom(geom.GetNTopLevelObjects());
 	for (int i = 0; i < maxhdom.Size(); i++)
 	  maxhdom[i] = geom.GetTopLevelObject(i)->GetMaxH();
 

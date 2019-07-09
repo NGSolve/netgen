@@ -36,9 +36,9 @@ namespace netgen
 
   class TriangleApproximation
   {
-    Array<Point<3> > points;
-    Array<Vec<3> > normals;
-    Array<TATriangle> trigs;
+    NgArray<Point<3> > points;
+    NgArray<Vec<3> > normals;
+    NgArray<TATriangle> trigs;
 
   public:
     TriangleApproximation();

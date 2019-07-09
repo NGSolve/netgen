@@ -46,7 +46,7 @@ public:
   
   void Refine (Mesh & mesh) const;
   void Refine (Mesh & mesh);
-  void Bisect (Mesh & mesh, class BisectionOptions & opt, Array<double> * quality_loss = NULL) const;
+  void Bisect (Mesh & mesh, class BisectionOptions & opt, NgArray<double> * quality_loss = NULL) const;
 
   void MakeSecondOrder (Mesh & mesh) const;
   void MakeSecondOrder (Mesh & mesh);
@@ -82,7 +82,7 @@ public:
 
   void ValidateSecondOrder (Mesh & mesh);
   void ValidateRefinedMesh (Mesh & mesh, 
-			    Array<INDEX_2> & parents);
+			    NgArray<INDEX_2> & parents);
 
   MeshOptimize2d * Get2dOptimizer(void) const
   {

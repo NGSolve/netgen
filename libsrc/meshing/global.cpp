@@ -77,7 +77,7 @@ namespace netgen
 
 
 
-  Array<int> tets_in_qualclass;
+  NgArray<int> tets_in_qualclass;
 
   mutex tcl_todo_mutex;
 

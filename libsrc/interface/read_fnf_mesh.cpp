@@ -53,7 +53,7 @@ namespace netgen
     string name;
     string placement;
     string valuetype;
-    Array<double> places;
+    NgArray<double> places;
   };
 
 
@@ -188,7 +188,7 @@ namespace netgen
             else if (token == "MATERIALS")
               {
 		*testout << "parse materials" << endl;
-                Array<double> young_modulus, poisson_ratio, mass_density;
+                NgArray<double> young_modulus, poisson_ratio, mass_density;
 
                 while (1)
                   {
@@ -264,7 +264,7 @@ namespace netgen
                         string propid;
                         sbuf >> elnr >> def >> ch;
                         sbuf >> typid >> matid >> propid;
-                        Array<int> pnums;
+                        NgArray<int> pnums;
                         while (1)
                           {
                             int pn;
@@ -305,7 +305,7 @@ namespace netgen
                         sbuf >> nr >> kw >> ch;
                         if (kw == "NODES")
                           {
-                            Array<int> enums;
+                            NgArray<int> enums;
                             while (1)
                               {
                                 int en;
@@ -329,7 +329,7 @@ namespace netgen
                         sbuf >> nr >> kw >> ch;
                         if (kw == "FACES")
                           {
-                            Array<int> fnums;
+                            NgArray<int> fnums;
                             while (1)
                               {
                                 int fn;
@@ -375,7 +375,7 @@ namespace netgen
  
             else if (token == "LOADS")
               {
-                Array<LoadType*> loadtypes;
+                NgArray<LoadType*> loadtypes;
 
                 while (1)
                   {

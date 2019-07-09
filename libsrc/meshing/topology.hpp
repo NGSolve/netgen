@@ -42,21 +42,21 @@ class MeshTopology
   bool buildedges;
   bool buildfaces;
 
-  Array<INDEX_2> edge2vert;
-  Array<INDEX_4> face2vert;
+  NgArray<INDEX_2> edge2vert;
+  NgArray<INDEX_4> face2vert;
   /*
-  Array<T_EDGE[12]> edges;
-  Array<T_FACE[6]> faces;
-  Array<T_EDGE[4]> surfedges;
+  NgArray<T_EDGE[12]> edges;
+  NgArray<T_FACE[6]> faces;
+  NgArray<T_EDGE[4]> surfedges;
   */
-  Array<FixArray<T_EDGE,12>> edges;
-  Array<FixArray<T_FACE,6>> faces;
-  Array<FixArray<T_EDGE,4>> surfedges;
+  NgArray<FixArray<T_EDGE,12>> edges;
+  NgArray<FixArray<T_FACE,6>> faces;
+  NgArray<FixArray<T_EDGE,4>> surfedges;
   
-  Array<T_EDGE> segedges;
-  Array<T_FACE> surffaces;
-  Array<INDEX_2> surf2volelement;
-  Array<int> face2surfel;
+  NgArray<T_EDGE> segedges;
+  NgArray<T_FACE> surffaces;
+  NgArray<INDEX_2> surf2volelement;
+  NgArray<int> face2surfel;
   TABLE<ElementIndex,PointIndex::BASE> vert2element;
   TABLE<SurfaceElementIndex,PointIndex::BASE> vert2surfelement;
   TABLE<SegmentIndex,PointIndex::BASE> vert2segment;
@@ -109,10 +109,10 @@ public:
     orient = GetSegmentEdgeOrientation(segnr);
   }
 
-  void GetElementEdges (int elnr, Array<int> & edges) const;
-  void GetElementFaces (int elnr, Array<int> & faces, bool withorientation = false) const;
-  void GetElementEdgeOrientations (int elnr, Array<int> & eorient) const;
-  void GetElementFaceOrientations (int elnr, Array<int> & forient) const;
+  void GetElementEdges (int elnr, NgArray<int> & edges) const;
+  void GetElementFaces (int elnr, NgArray<int> & faces, bool withorientation = false) const;
+  void GetElementEdgeOrientations (int elnr, NgArray<int> & eorient) const;
+  void GetElementFaceOrientations (int elnr, NgArray<int> & forient) const;
 
   int GetElementEdges (int elnr, int * edges, int * orient) const;
   int GetElementFaces (int elnr, int * faces, int * orient) const;
@@ -124,22 +124,22 @@ public:
   int GetSegmentEdgeOrientation (int elnr) const; // old style
   
   
-  void GetFaceVertices (int fnr, Array<int> & vertices) const;
+  void GetFaceVertices (int fnr, NgArray<int> & vertices) const;
   void GetFaceVertices (int fnr, int * vertices) const;
   void GetEdgeVertices (int enr, int & v1, int & v2) const;
   void GetEdgeVertices (int enr, PointIndex & v1, PointIndex & v2) const;
   const int * GetEdgeVerticesPtr (int enr) const { return &edge2vert[enr][0]; }
   const int * GetFaceVerticesPtr (int fnr) const { return &face2vert[fnr][0]; }
-  void GetFaceEdges (int fnr, Array<int> & edges, bool withorientation = false) const;
+  void GetFaceEdges (int fnr, NgArray<int> & edges, bool withorientation = false) const;
 
   ELEMENT_TYPE GetFaceType (int fnr) const
   { return (face2vert.Get(fnr)[3] == 0) ? TRIG : QUAD; }
 
-  void GetSurfaceElementEdges (int elnr, Array<int> & edges) const;
+  void GetSurfaceElementEdges (int elnr, NgArray<int> & edges) const;
   int GetSurfaceElementFace (int elnr) const;
-  void GetSurfaceElementEdgeOrientations (int elnr, Array<int> & eorient) const;
+  void GetSurfaceElementEdgeOrientations (int elnr, NgArray<int> & eorient) const;
   int GetSurfaceElementFaceOrientation (int elnr) const;
-  void GetEdges (SurfaceElementIndex elnr, Array<int> & edges) const;
+  void GetEdges (SurfaceElementIndex elnr, NgArray<int> & edges) const;
   int GetFace (SurfaceElementIndex elnr) const
   { return surffaces[elnr].fnr; }
 
@@ -161,11 +161,11 @@ public:
 
   int GetFace2SurfaceElement (int fnr) const { return face2surfel[fnr-1]; }
   
-  void GetVertexElements (int vnr, Array<ElementIndex> & elements) const;
+  void GetVertexElements (int vnr, NgArray<ElementIndex> & elements) const;
   FlatArray<ElementIndex> GetVertexElements (int vnr) const
   { return vert2element[vnr]; }
 
-  void GetVertexSurfaceElements( int vnr, Array<SurfaceElementIndex>& elements ) const;
+  void GetVertexSurfaceElements( int vnr, NgArray<SurfaceElementIndex>& elements ) const;
   FlatArray<SurfaceElementIndex> GetVertexSurfaceElements (int vnr) const
   { return vert2surfelement[vnr]; }
 
@@ -176,8 +176,8 @@ public:
   { return vert2pointelement[vnr]; }
   
   int GetVerticesEdge ( int v1, int v2) const;
-  void GetSegmentVolumeElements ( int segnr, Array<ElementIndex> & els ) const;
-  void GetSegmentSurfaceElements ( int segnr, Array<SurfaceElementIndex> & els ) const;
+  void GetSegmentVolumeElements ( int segnr, NgArray<ElementIndex> & els ) const;
+  void GetSegmentSurfaceElements ( int segnr, NgArray<SurfaceElementIndex> & els ) const;
 };
 
 

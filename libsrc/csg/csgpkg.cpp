@@ -154,7 +154,7 @@ namespace netgen
     tcl_const char * name = argv[1];
     tcl_const char * value = argv[2];
 
-    Array<double> coeffs;
+    NgArray<double> coeffs;
 
 
     cout << "Set primitive data, name = " << name
@@ -222,7 +222,7 @@ namespace netgen
 
     const char * classname;
 
-    Array<double> coeffs;
+    NgArray<double> coeffs;
 
     geometry->GetSolid (name)->GetPrimitive()->GetPrimitiveData (classname, coeffs);
 

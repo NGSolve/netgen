@@ -1616,8 +1616,8 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
 
       // double dmax;
       // int cnt = 0;
-      Array <double> edgeLengths;
-      Array <int> order;
+      NgArray <double> edgeLengths;
+      NgArray <int> order;
       edgeLengths.SetSize (emap.Extent());
       order.SetSize (emap.Extent());
 

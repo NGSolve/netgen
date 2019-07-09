@@ -14,14 +14,14 @@ namespace netgen
 		      // double l, 
 		      MeshingParameters & mp, Mesh & mesh, 
 		      // double h, double h1, double h2, double hcurve, 
-		      double elto0, Array<double> & points)
+		      double elto0, NgArray<double> & points)
   {
     double fperel, oldf, f;
 
     int n = 10000;
     
-    Array<Point<2> > xi(n);
-    Array<double> hi(n);
+    NgArray<Point<2> > xi(n);
+    NgArray<double> hi(n);
     
     for (int i = 0; i < n; i++)
       {
@@ -98,7 +98,7 @@ namespace netgen
     int n = 100;
 
     Point<2> mark, oldmark;
-    Array<double> curvepoints;
+    NgArray<double> curvepoints;
     double edgelength, edgelengthold;
 
     CalcPartition (spline, mp, mesh, elto0, curvepoints);
@@ -111,7 +111,7 @@ namespace netgen
     double lold = 0;
     oldmark = pold;
     edgelengthold = 0;
-    Array<int> locsearch;
+    NgArray<int> locsearch;
     
     for (int i = 1; i <= n; i++)
       {
@@ -310,8 +310,8 @@ namespace netgen
   {
     // const int D = 2;
 
-    Array<int, PointIndex::BASE> mappoints (mesh.GetNP());
-    Array<double, PointIndex::BASE> param (mesh.GetNP());
+    NgArray<int, PointIndex::BASE> mappoints (mesh.GetNP());
+    NgArray<double, PointIndex::BASE> param (mesh.GetNP());
     mappoints = -1;
     param = 0;
 
@@ -452,7 +452,7 @@ namespace netgen
     for (int i = 1; i <= maxdomnr; i++)
       mesh->AddFaceDescriptor (FaceDescriptor (i, 0, 0, i));
 
-    // set Array<string*> bcnames... 
+    // set NgArray<string*> bcnames... 
     // number of bcnames
     int maxsegmentindex = 0;
     for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
@@ -478,8 +478,8 @@ namespace netgen
       if (geometry.GetDomainTensorMeshing (domnr))
         { // tensor product mesh
           
-          Array<PointIndex, PointIndex::BASE> nextpi(bnp);
-          Array<int, PointIndex::BASE> si1(bnp), si2(bnp);
+          NgArray<PointIndex, PointIndex::BASE> nextpi(bnp);
+          NgArray<int, PointIndex::BASE> si1(bnp), si2(bnp);
           PointIndex firstpi;
           
           nextpi = -1;
@@ -518,7 +518,7 @@ namespace netgen
 
 
 
-          Array<PointIndex> pts ( (nex+1) * (ney+1) );   // x ... inner loop
+          NgArray<PointIndex> pts ( (nex+1) * (ney+1) );   // x ... inner loop
           pts = -1;
 
           for (PointIndex pi = c1, i = 0; pi != c2; pi = nextpi[pi], i++)
@@ -572,7 +572,7 @@ namespace netgen
 
 	Meshing2 meshing (mp, Box<3> (pmin, pmax));
 
-	Array<int, PointIndex::BASE> compress(bnp);
+	NgArray<int, PointIndex::BASE> compress(bnp);
 	compress = -1;
 	int cnt = 0;
         for (PointIndex pi : BndPntRange)

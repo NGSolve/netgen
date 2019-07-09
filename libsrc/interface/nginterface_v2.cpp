@@ -1070,7 +1070,7 @@ namespace netgen
    int * const indices, int numind) const
 
   {
-    Array<int> dummy(numind);
+    NgArray<int> dummy(numind);
     for (int i = 0; i < numind; i++) dummy[i] = indices[i]+1;
     
     double lam3[3];
@@ -1111,7 +1111,7 @@ namespace netgen
    int * const indices, int numind) const
 
   {
-    Array<int> dummy(numind);
+    NgArray<int> dummy(numind);
     for (int i = 0; i < numind; i++) dummy[i] = indices[i]+1;
     
     Point<3> p3d(p[0], p[1], p[2]);

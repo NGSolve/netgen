@@ -19,7 +19,7 @@ namespace netgen
       } 
   }
 
-  void GeomSearch3d :: Init (Array <FrontPoint3,PointIndex::BASE, PointIndex> *pointsi, Array <FrontFace> *facesi)
+  void GeomSearch3d :: Init (NgArray <FrontPoint3,PointIndex::BASE, PointIndex> *pointsi, NgArray <FrontFace> *facesi)
   {
     points = pointsi;
     faces = facesi;
@@ -120,7 +120,7 @@ namespace netgen
 		for (k = 1; k <= size.i3; k++)
 		  {
 		    INDEX ind=i+(j-1)*size.i1+(k-1)*size.i2*size.i1;
-		    hashtable.Elem(ind) = new Array <int> ();
+		    hashtable.Elem(ind) = new NgArray <int> ();
 		  }
 	      }
 	  }
@@ -175,7 +175,7 @@ namespace netgen
           }
   }
 
-  void GeomSearch3d :: GetLocals(Array<MiniElement2d> & locfaces,  Array<INDEX> & findex,
+  void GeomSearch3d :: GetLocals(NgArray<MiniElement2d> & locfaces,  NgArray<INDEX> & findex,
 				 INDEX fstind, const Point3d& p0, double xh)
   {
     hashcount++;
@@ -212,7 +212,7 @@ namespace netgen
 		INDEX ind=ix+(iy-1)*size.i1+(iz-1)*size.i2*size.i1;
 	      
 		//go through all elements in one hash area
-		const Array <int> & area = *hashtable.Elem(ind);
+		const NgArray <int> & area = *hashtable.Elem(ind);
 		for (k = 1; k <= area.Size(); k++)
 		  {
 		    cnt2++;

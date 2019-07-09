@@ -7,11 +7,11 @@ namespace netgen
 
 
   // global variable for visualization
-//   static Array<Point3d> locpoints;
-//   static Array<int> legalpoints;
-//   static Array<Point2d> plainpoints;
-//   static Array<int> plainzones;
-//   static Array<INDEX_2> loclines;
+//   static NgArray<Point3d> locpoints;
+//   static NgArray<int> legalpoints;
+//   static NgArray<Point2d> plainpoints;
+//   static NgArray<int> plainzones;
+//   static NgArray<INDEX_2> loclines;
 //   // static int geomtrig;
 //   //static const char * rname;
 //   static int cntelem, trials, nfaces;
@@ -175,9 +175,9 @@ namespace netgen
   }
 
   void Meshing2 ::
-  GetChartBoundary (Array<Point2d> & points, 
-		    Array<Point3d> & points3d, 
-		    Array<INDEX_2> & lines, double h) const
+  GetChartBoundary (NgArray<Point2d> & points, 
+		    NgArray<Point3d> & points3d, 
+		    NgArray<INDEX_2> & lines, double h) const
   {
     points.SetSize (0);
     points3d.SetSize (0);
@@ -208,13 +208,13 @@ namespace netgen
 
     NgProfiler::StartTimer (ts1);
 
-    Array<int> pindex, lindex;
-    Array<int> delpoints, dellines;
+    NgArray<int> pindex, lindex;
+    NgArray<int> delpoints, dellines;
 
-    Array<PointGeomInfo> upgeominfo;  // unique info
-    Array<MultiPointGeomInfo> mpgeominfo;  // multiple info
+    NgArray<PointGeomInfo> upgeominfo;  // unique info
+    NgArray<MultiPointGeomInfo> mpgeominfo;  // multiple info
 
-    Array<Element2d> locelements;
+    NgArray<Element2d> locelements;
 
     int z1, z2, oldnp(-1);
     bool found;
@@ -230,11 +230,11 @@ namespace netgen
     double h, his, hshould;
 
 
-    Array<Point3d> locpoints;
-    Array<int> legalpoints;
-    Array<Point2d> plainpoints;
-    Array<int> plainzones;
-    Array<INDEX_2> loclines;
+    NgArray<Point3d> locpoints;
+    NgArray<int> legalpoints;
+    NgArray<Point2d> plainpoints;
+    NgArray<int> plainzones;
+    NgArray<INDEX_2> loclines;
     int cntelem = 0, trials = 0, nfaces = 0;
     int oldnl = 0;
     int qualclass;
@@ -245,8 +245,8 @@ namespace netgen
     BoxTree<3> surfeltree (boundingbox.PMin(),
                            boundingbox.PMax());
 
-    Array<int> intersecttrias;
-    Array<Point3d> critpoints;
+    NgArray<int> intersecttrias;
+    NgArray<Point3d> critpoints;
 
     // test for doubled edges
     //INDEX_2_HASHTABLE<int> doubleedge(300000);
@@ -256,14 +256,14 @@ namespace netgen
 
     StartMesh();
 
-    Array<Point2d> chartboundpoints;
-    Array<Point3d> chartboundpoints3d;
-    Array<INDEX_2> chartboundlines;
+    NgArray<Point2d> chartboundpoints;
+    NgArray<Point3d> chartboundpoints3d;
+    NgArray<INDEX_2> chartboundlines;
 
     // illegal points: points with more then 50 elements per node
     int maxlegalpoint(-1), maxlegalline(-1);
-    Array<int,PointIndex::BASE> trigsonnode;
-    Array<int,PointIndex::BASE> illegalpoint;
+    NgArray<int,PointIndex::BASE> trigsonnode;
+    NgArray<int,PointIndex::BASE> illegalpoint;
 
     trigsonnode.SetSize (mesh.GetNP());
     illegalpoint.SetSize (mesh.GetNP());
@@ -293,7 +293,7 @@ namespace netgen
 	  }
       }
     */
-    Array<SurfaceElementIndex> seia;
+    NgArray<SurfaceElementIndex> seia;
     mesh.GetSurfaceElementsOfFace (facenr, seia);
     for (int i = 0; i < seia.Size(); i++)
       {

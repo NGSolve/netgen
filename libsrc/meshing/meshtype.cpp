@@ -398,8 +398,8 @@ namespace netgen
 
 
 
-  Array<IntegrationPointData*> ipdtrig;
-  Array<IntegrationPointData*> ipdquad;
+  NgArray<IntegrationPointData*> ipdtrig;
+  NgArray<IntegrationPointData*> ipdquad;
 
 
   int Element2d :: GetNIP () const
@@ -445,7 +445,7 @@ namespace netgen
   }
 
   void Element2d :: 
-  GetTransformation (int ip, const Array<Point2d> & points,
+  GetTransformation (int ip, const NgArray<Point2d> & points,
                      DenseMatrix & trans) const
   {
     int np = GetNP();
@@ -664,7 +664,7 @@ namespace netgen
 
 
   void Element2d :: 
-  GetPointMatrix (const Array<Point2d> & points,
+  GetPointMatrix (const NgArray<Point2d> & points,
                   DenseMatrix & pmat) const
   {
     int np = GetNP();
@@ -689,7 +689,7 @@ namespace netgen
 
 
 
-  double Element2d :: CalcJacobianBadness (const Array<Point2d> & points) const
+  double Element2d :: CalcJacobianBadness (const NgArray<Point2d> & points) const
   {
     int i, j;
     int nip = GetNIP();
@@ -733,7 +733,7 @@ namespace netgen
     };
 
   double Element2d :: 
-  CalcJacobianBadnessDirDeriv (const Array<Point2d> & points,
+  CalcJacobianBadnessDirDeriv (const NgArray<Point2d> & points,
                                int pi, Vec2d & dir, double & dd) const
   {
     if (typ == QUAD)
@@ -1283,7 +1283,7 @@ namespace netgen
 
 
 
-  void Element :: GetTets (Array<Element> & locels) const
+  void Element :: GetTets (NgArray<Element> & locels) const
   {
     GetTetsLocal (locels);
     int i, j;
@@ -1292,7 +1292,7 @@ namespace netgen
         locels.Elem(i).PNum(j) = PNum ( locels.Elem(i).PNum(j) );
   }
 
-  void Element :: GetTetsLocal (Array<Element> & locels) const
+  void Element :: GetTetsLocal (NgArray<Element> & locels) const
   {
     int i, j;
     locels.SetSize(0);
@@ -1400,7 +1400,7 @@ namespace netgen
 
 
 #ifdef OLD
-  void Element :: GetNodesLocal (Array<Point3d> & points) const
+  void Element :: GetNodesLocal (NgArray<Point3d> & points) const
   {
     const static double tetpoints[4][3] =
       { { 0, 0, 0 },
@@ -1500,7 +1500,7 @@ namespace netgen
 
 
 
-  void Element :: GetNodesLocalNew (Array<Point<3> > & points) const
+  void Element :: GetNodesLocalNew (NgArray<Point<3> > & points) const
   {
     const static double tetpoints[4][3] =
       {      
@@ -1617,7 +1617,7 @@ namespace netgen
 
 
 
-  void Element :: GetSurfaceTriangles (Array<Element2d> & surftrigs) const
+  void Element :: GetSurfaceTriangles (NgArray<Element2d> & surftrigs) const
   {
     static int tet4trigs[][3] = 
       { { 2, 3, 4 },
@@ -1730,8 +1730,8 @@ namespace netgen
 
 
 
-  Array< shared_ptr < IntegrationPointData > > ipdtet;
-  Array< shared_ptr < IntegrationPointData > > ipdtet10;
+  NgArray< shared_ptr < IntegrationPointData > > ipdtet;
+  NgArray< shared_ptr < IntegrationPointData > > ipdtet10;
 
 
 
@@ -2650,7 +2650,7 @@ namespace netgen
   }
 
 
-  void Identifications :: GetMap (int identnr, Array<int,PointIndex::BASE> & identmap, bool symmetric) const
+  void Identifications :: GetMap (int identnr, NgArray<int,PointIndex::BASE> & identmap, bool symmetric) const
   {
     identmap.SetSize (mesh.GetNP());
     identmap = 0;
@@ -2688,7 +2688,7 @@ namespace netgen
 
 
   void Identifications :: GetPairs (int identnr, 
-                                    Array<INDEX_2> & identpairs) const
+                                    NgArray<INDEX_2> & identpairs) const
   {
     identpairs.SetSize(0);
   

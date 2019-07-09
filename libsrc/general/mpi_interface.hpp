@@ -95,7 +95,7 @@ namespace netgen
 #endif
 
 #ifdef PARALLEL
-  inline MPI_Comm MyMPI_SubCommunicator(MPI_Comm comm, Array<int> & procs)
+  inline MPI_Comm MyMPI_SubCommunicator(MPI_Comm comm, NgArray<int> & procs)
   {
     MPI_Comm subcomm;
     MPI_Group gcomm, gsubcomm;
@@ -105,7 +105,7 @@ namespace netgen
     return subcomm;
   }
 #else
-  inline MPI_Comm MyMPI_SubCommunicator(MPI_Comm comm, Array<int> & procs)
+  inline MPI_Comm MyMPI_SubCommunicator(MPI_Comm comm, NgArray<int> & procs)
   { return comm; }
 #endif
 
@@ -160,7 +160,7 @@ namespace netgen
   }
 
   template <class T, int BASE>
-  inline void MyMPI_Recv ( Array <T, BASE> & s, int src, int tag, MPI_Comm comm /* = ng_comm */)
+  inline void MyMPI_Recv ( NgArray <T, BASE> & s, int src, int tag, MPI_Comm comm /* = ng_comm */)
   {
     MPI_Status status;
     int len;
@@ -172,7 +172,7 @@ namespace netgen
   }
 
   template <class T, int BASE>
-  inline int MyMPI_Recv ( Array <T, BASE> & s, int tag, MPI_Comm comm /* = ng_comm */)
+  inline int MyMPI_Recv ( NgArray <T, BASE> & s, int tag, MPI_Comm comm /* = ng_comm */)
   {
     MPI_Status status;
     int len;
@@ -257,7 +257,7 @@ namespace netgen
     MPI_Comm_size(comm, &ntasks);
     MPI_Comm_rank(comm, &rank);
 
-    Array<MPI_Request> requests;
+    NgArray<MPI_Request> requests;
     for (int dest = 0; dest < ntasks; dest++)
       if (dest != rank)
 	requests.Append (MyMPI_ISend (send_data[dest], dest, tag, comm));
@@ -288,8 +288,8 @@ namespace netgen
     int rank = comm.Rank();
     int ntasks = comm.Size();
     
-    Array<int> send_sizes(ntasks);
-    Array<int> recv_sizes(ntasks);
+    NgArray<int> send_sizes(ntasks);
+    NgArray<int> recv_sizes(ntasks);
     for (int i = 0; i < ntasks; i++)
       send_sizes[i] = send_data[i].Size();
     
@@ -304,7 +304,7 @@ namespace netgen
     for (int i = 0; i < ntasks; i++)
       recv_data.SetEntrySize (i, recv_sizes[i], sizeof(T));
     
-    Array<MPI_Request> requests;
+    NgArray<MPI_Request> requests;
     for (int dest = 0; dest < ntasks; dest++)
       if (dest != rank && send_data[dest].Size())
 	requests.Append (MyMPI_ISend (send_data[dest], dest, tag, comm));
@@ -336,7 +336,7 @@ namespace netgen
   }
 
   template <class T>
-  inline void MyMPI_Bcast (Array<T, 0> & s, NgMPI_Comm comm /* = ng_comm */)
+  inline void MyMPI_Bcast (NgArray<T, 0> & s, NgMPI_Comm comm /* = ng_comm */)
   {
     int size = s.Size();
     MyMPI_Bcast (size, comm);
@@ -346,7 +346,7 @@ namespace netgen
   }
 
   template <class T>
-  inline void MyMPI_Bcast (Array<T, 0> & s, int root, MPI_Comm comm /* = ng_comm */)
+  inline void MyMPI_Bcast (NgArray<T, 0> & s, int root, MPI_Comm comm /* = ng_comm */)
   {
     int id;
     MPI_Comm_rank(comm, &id);

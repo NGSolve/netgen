@@ -67,7 +67,7 @@ namespace netgen
 
   /**
      A simple array container.
-     Array represented by size and data-pointer.
+     NgArray represented by size and data-pointer.
      No memory allocation and deallocation, must be provided by user.
      Helper functions for printing. 
      Optional range check by macro RANGE_CHECK
@@ -124,7 +124,7 @@ namespace netgen
     {
 #ifdef DEBUG
       if (i < 1 || i > size)
-	cout << "Array<" << typeid(T).name() 
+	cout << "NgArray<" << typeid(T).name() 
 	     << ">::Elem out of range, i = " << i
 	     << ", s = " << size << endl;
 #endif
@@ -137,7 +137,7 @@ namespace netgen
     {
 #ifdef DEBUG
       if (i < 1 || i > size)
-	cout << "Array<" << typeid(T).name() << ">::Get out of range, i = " << i
+	cout << "NgArray<" << typeid(T).name() << ">::Get out of range, i = " << i
 	     << ", s = " << size << endl;
 #endif
 
@@ -149,7 +149,7 @@ namespace netgen
     { 
 #ifdef DEBUG
       if (i < 1 || i > size)
-	cout << "Array<" << typeid(T).name() << ">::Set out of range, i = " << i
+	cout << "NgArray<" << typeid(T).name() << ">::Set out of range, i = " << i
 	     << ", s = " << size << endl;
 #endif
 
@@ -215,13 +215,13 @@ namespace netgen
   /** 
       Dynamic array container.
    
-      Array<T> is an automatically increasing array container.
+      NgArray<T> is an automatically increasing array container.
       The allocated memory doubles on overflow. 
       Either the container takes care of memory allocation and deallocation,
       or the user provides one block of data.
   */
   template <class T, int BASE = 0, typename TIND = int> 
-  class Array : public FlatArray<T, BASE, TIND>
+  class NgArray : public FlatArray<T, BASE, TIND>
   {
   protected:
     using FlatArray<T,BASE,TIND>::size;
@@ -235,14 +235,14 @@ namespace netgen
   public:
 
     /// Generate array of logical and physical size asize
-    explicit Array()
+    explicit NgArray()
       : FlatArray<T, BASE, TIND> (0, NULL)
     {
       allocsize = 0; 
       ownmem = 1;
     }
 
-    explicit Array(size_t asize)
+    explicit NgArray(size_t asize)
       : FlatArray<T, BASE, TIND> (asize, asize ? new T[asize] : nullptr)
     {
       allocsize = asize;
@@ -250,7 +250,7 @@ namespace netgen
     }
 
     /// Generate array in user data
-    Array(TIND asize, T* adata)
+    NgArray(TIND asize, T* adata)
       : FlatArray<T, BASE, TIND> (asize, adata)
     {
       allocsize = asize; 
@@ -258,7 +258,7 @@ namespace netgen
     }
 
     /// array copy 
-    explicit Array (const Array<T,BASE,TIND> & a2)
+    explicit NgArray (const NgArray<T,BASE,TIND> & a2)
       : FlatArray<T, BASE, TIND> (a2.Size(), a2.Size() ? new T[a2.Size()] : 0)
     {
       allocsize = size;
@@ -268,7 +268,7 @@ namespace netgen
     }
 
     /// array move
-    Array (Array && a2)
+    NgArray (NgArray && a2)
       : FlatArray<T,BASE,TIND> (a2.size, a2.data), allocsize(a2.allocsize), ownmem(a2.ownmem)
     {
       a2.size = 0;
@@ -279,7 +279,7 @@ namespace netgen
 
 
     /// if responsible, deletes memory
-    ~Array()
+    ~NgArray()
     {
       if (ownmem)
 	delete [] data;
@@ -362,14 +362,14 @@ namespace netgen
     }
 
     /// Fill array with val
-    Array & operator= (const T & val)
+    NgArray & operator= (const T & val)
     {
       FlatArray<T, BASE, TIND>::operator= (val);
       return *this;
     }
 
     /// array copy
-    Array & operator= (const Array & a2)
+    NgArray & operator= (const NgArray & a2)
     {
       SetSize (a2.Size());
       for (TIND i (BASE); i < size+BASE; i++)
@@ -378,7 +378,7 @@ namespace netgen
     }
 
     /// array copy
-    Array & operator= (const FlatArray<T> & a2)
+    NgArray & operator= (const FlatArray<T> & a2)
     {
       SetSize (a2.Size());
       for (TIND i = BASE; i < size+BASE; i++)
@@ -386,7 +386,7 @@ namespace netgen
       return *this;
     }
 
-    Array & operator= (Array && a2)
+    NgArray & operator= (NgArray && a2)
     {
       Swap (data, a2.data);
       Swap (size, a2.size);
@@ -458,11 +458,11 @@ namespace netgen
 
 
   template <class T, int S> 
-  class ArrayMem : public Array<T>
+  class ArrayMem : public NgArray<T>
   {
-    using Array<T>::size;
-    using Array<T>::data;
-    using Array<T>::ownmem;
+    using NgArray<T>::size;
+    using NgArray<T>::data;
+    using NgArray<T>::ownmem;
 
     T mem[S];     // Intel C++ calls dummy constructor
     // char mem[S*sizeof(T)];
@@ -470,7 +470,7 @@ namespace netgen
   public:
     /// Generate array of logical and physical size asize
     explicit ArrayMem(size_t asize = 0)
-      : Array<T> (S, static_cast<T*> (static_cast<void*>(&mem[0])))
+      : NgArray<T> (S, static_cast<T*> (static_cast<void*>(&mem[0])))
     {
       size = asize;
       if (asize > S)
@@ -483,7 +483,7 @@ namespace netgen
 
     ArrayMem & operator= (const T & val)  
     {
-      Array<T>::operator= (val);
+      NgArray<T>::operator= (val);
       return *this;
     }
 
@@ -777,7 +777,7 @@ namespace netgen
 
   template <class T> 
   void Intersection (const FlatArray<T> & in1, const FlatArray<T> & in2, 
-		     Array<T> & out)
+		     NgArray<T> & out)
   {
     out.SetSize(0);
     for(int i=0; i<in1.Size(); i++)
@@ -786,7 +786,7 @@ namespace netgen
   }
   template <class T> 
   void Intersection (const FlatArray<T> & in1, const FlatArray<T> & in2, const FlatArray<T> & in3,
-		     Array<T> & out)
+		     NgArray<T> & out)
   {
     out.SetSize(0);
     for(int i=0; i<in1.Size(); i++)

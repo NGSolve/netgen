@@ -56,9 +56,9 @@ namespace netgen
   }
 
 
-  void Flags :: SetFlag (const char * name, const Array<char*> & val)
+  void Flags :: SetFlag (const char * name, const NgArray<char*> & val)
   {
-    Array<char*> * strarray = new Array<char*>;
+    NgArray<char*> * strarray = new NgArray<char*>;
     for (int i = 1; i <= val.Size(); i++)
       {
 	strarray->Append (new char[strlen(val.Get(i))+1]);
@@ -67,9 +67,9 @@ namespace netgen
     strlistflags.Set (name, strarray);
   }
 
-  void Flags :: SetFlag (const char * name, const Array<double> & val)
+  void Flags :: SetFlag (const char * name, const NgArray<double> & val)
   {
-    Array<double> * numarray = new Array<double>;
+    NgArray<double> * numarray = new NgArray<double>;
     for (int i = 1; i <= val.Size(); i++)
       numarray->Append (val.Get(i));
     numlistflags.Set (name, numarray);
@@ -118,26 +118,26 @@ namespace netgen
   }
 
 
-  const Array<char*> & 
+  const NgArray<char*> & 
   Flags :: GetStringListFlag (const char * name) const
   {
     if (strlistflags.Used (name))
       return *strlistflags[name];
     else
       {
-	static Array<char*> dummy_array(0);
+	static NgArray<char*> dummy_array(0);
 	return dummy_array;
       }
   }
 
-  const Array<double> & 
+  const NgArray<double> & 
   Flags ::GetNumListFlag (const char * name) const
   {
     if (numlistflags.Used (name))
       return *numlistflags[name];
     else
       {
-	static Array<double> dummy_array(0);
+	static NgArray<double> dummy_array(0);
 	return dummy_array;
       }
   }

@@ -27,7 +27,7 @@ void WriteTecPlotFormat (const Mesh & mesh,
   INDEX ne = mesh.GetNE();
   INDEX nse = mesh.GetNSE();
   
-  Array<int> sn(np);
+  NgArray<int> sn(np);
   ofstream outfile(filename.c_str());
   
   outfile << "TITLE=\" " << filename << "\"" << endl;

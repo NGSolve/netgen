@@ -27,7 +27,7 @@ namespace netgen
   class spline3d
   {
     ///
-    Array<splinesegment3d *> segments;
+    NgArray<splinesegment3d *> segments;
   
   public:
     ///

@@ -29,7 +29,7 @@ protected:
   };
   
   ///
-  Array<linestruct> data;
+  NgArray<linestruct> data;
   char * oneblock;
 
 public:

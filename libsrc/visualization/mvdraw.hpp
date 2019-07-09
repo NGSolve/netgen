@@ -49,7 +49,7 @@ namespace netgen
   
     DLL_HEADER void CalcTransformationMatrices();
     DLL_HEADER void StandardRotation (const char * dir);
-    DLL_HEADER void ArbitraryRotation (const Array<double> & alpha, const Array<Vec3d> & vec);
+    DLL_HEADER void ArbitraryRotation (const NgArray<double> & alpha, const NgArray<Vec3d> & vec);
     DLL_HEADER void ArbitraryRotation (const double alpha, const Vec3d & vec);
 
     DLL_HEADER void MouseMove(int oldx, int oldy,
@@ -142,8 +142,8 @@ namespace netgen
 
 
 #ifdef PARALLELGL
-    Array<int> par_linelists;
-    Array<int> par_filledlists;
+    NgArray<int> par_linelists;
+    NgArray<int> par_filledlists;
 #endif
 
     MouseEventHandler * user_me_handler;

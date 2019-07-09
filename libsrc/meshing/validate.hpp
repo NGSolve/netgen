@@ -4,17 +4,17 @@
 namespace netgen
 {
   
-  void GetPureBadness(Mesh & mesh, Array<double> & pure_badness,
+  void GetPureBadness(Mesh & mesh, NgArray<double> & pure_badness,
 		      const BitArray & isnewpoint);
-  double Validate(const Mesh & mesh, Array<ElementIndex> & bad_elements,
-		  const Array<double> & pure_badness, 
+  double Validate(const Mesh & mesh, NgArray<ElementIndex> & bad_elements,
+		  const NgArray<double> & pure_badness, 
 		  double max_worsening, const bool uselocalworsening,
-		  Array<double> * quality_loss = NULL);
-  void RepairBisection(Mesh & mesh, Array<ElementIndex> & bad_elements, 
+		  NgArray<double> * quality_loss = NULL);
+  void RepairBisection(Mesh & mesh, NgArray<ElementIndex> & bad_elements, 
 		       const BitArray & isnewpoint, const Refinement & refinement,
-		       const Array<double> & pure_badness, 
+		       const NgArray<double> & pure_badness, 
 		       double max_worsening, const bool uselocalworsening,
-		       const Array< Array<int,PointIndex::BASE>* > & idmaps);
+		       const NgArray< NgArray<int,PointIndex::BASE>* > & idmaps);
 
 }
 

@@ -23,7 +23,7 @@ namespace netgen
 
 
   template<int D>
-  void SplineGeometry<D> :: GetRawData (Array<double> & raw_data) const
+  void SplineGeometry<D> :: GetRawData (NgArray<double> & raw_data) const
   {
     raw_data.Append(D);
     // raw_data.Append(elto0);
@@ -36,7 +36,7 @@ namespace netgen
 
 
   template<int D>
-  int SplineGeometry<D> :: Load (const Array<double> & raw_data, const int startpos)
+  int SplineGeometry<D> :: Load (const NgArray<double> & raw_data, const int startpos)
   {
     int pos = startpos;
     if(raw_data[pos] != D)
@@ -49,7 +49,7 @@ namespace netgen
     splines.SetSize(int(raw_data[pos]));
     pos++;
 
-    Array< Point<D> > pts(3);
+    NgArray< Point<D> > pts(3);
 
     for(int i=0; i<splines.Size(); i++)
       {
@@ -99,7 +99,7 @@ namespace netgen
 	return;
       }
 
-    Array<Point<D> > points;
+    NgArray<Point<D> > points;
     for (int i = 0; i < splines.Size(); i++)
       {
 	splines[i]->GetPoints (20, points);

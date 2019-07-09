@@ -21,11 +21,11 @@ class Meshing3
   /// current state of front
   AdFront3 * adfront;
   /// 3d generation rules
-  Array<vnetrule*> rules;
+  NgArray<vnetrule*> rules;
   /// counts how often a rule is used
-  Array<int> ruleused, canuse, foundmap;
+  NgArray<int> ruleused, canuse, foundmap;
   /// describes, why a rule is not applied
-  Array<char*> problems;
+  NgArray<char*> problems;
   /// tolerance criterion
   double tolfak;
 public:
@@ -42,12 +42,12 @@ public:
   MESHING3_RESULT GenerateMesh (Mesh & mesh, const MeshingParameters & mp);
   
   ///
-  int ApplyRules (Array<Point3d, PointIndex::BASE> & lpoints,
-                  Array<int, PointIndex::BASE> & allowpoint,
-		  Array<MiniElement2d> & lfaces, INDEX lfacesplit,
+  int ApplyRules (NgArray<Point3d, PointIndex::BASE> & lpoints,
+                  NgArray<int, PointIndex::BASE> & allowpoint,
+		  NgArray<MiniElement2d> & lfaces, INDEX lfacesplit,
 		  INDEX_2_HASHTABLE<int> & connectedpairs,
-		  Array<Element> & elements,
-		  Array<INDEX> & delfaces, int tolerance, 
+		  NgArray<Element> & elements,
+		  NgArray<INDEX> & delfaces, int tolerance, 
 		  double sloppy, int rotind1,
 		  float & retminerr);
   

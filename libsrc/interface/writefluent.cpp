@@ -65,9 +65,9 @@ void WriteFluentFormat (const Mesh & mesh,
 
   Element2d face, face2;
   int i2, j2;
-  Array<INDEX_3> surfaceelp;
-  Array<int> surfaceeli;
-  Array<int> locels;
+  NgArray<INDEX_3> surfaceelp;
+  NgArray<int> surfaceeli;
+  NgArray<int> locels;
 
   //no cells=no tets
   //no faces=2*tets
