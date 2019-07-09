@@ -65,6 +65,15 @@ namespace ngcore
       ost << "\n" << val.first << ": " << val.second;
     return ost;
   }
+
+  template <class T>
+  NETGEN_INLINE void Swap (T & a, T & b)
+  {
+      T temp = std::move(a);
+      a = std::move(b);
+      b = std::move(temp);
+  }
+
 } // namespace ngcore
 
 #endif // NETGEN_CORE_UTILS_HPP
