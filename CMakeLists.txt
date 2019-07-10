@@ -6,7 +6,7 @@ if(WIN32)
   # we are linking to object libraries on Windows
   cmake_minimum_required(VERSION 3.12)
 else(WIN32)
-  cmake_minimum_required(VERSION 3.1.3)
+  cmake_minimum_required(VERSION 3.8)
 endif(WIN32)
 
 if(NOT WIN32)
@@ -216,7 +216,7 @@ macro(get_dll_from_lib dll_path lib_path)
         get_filename_component(lib_name ${lib} name)
 endmacro()
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 if(WIN32)
     get_WIN32_WINNT(ver)
     add_definitions(-D_WIN32_WINNT=${ver} -DWNT -DWNT_WINDOW -DNOMINMAX)
