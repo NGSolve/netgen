@@ -388,10 +388,10 @@ namespace netgen
 
     NgArray & operator= (NgArray && a2)
     {
-      Swap (data, a2.data);
-      Swap (size, a2.size);
-      Swap (allocsize, a2.allocsize);
-      Swap (ownmem, a2.ownmem);
+      ngcore::Swap (data, a2.data);
+      ngcore::Swap (size, a2.size);
+      ngcore::Swap (allocsize, a2.allocsize);
+      ngcore::Swap (ownmem, a2.ownmem);
       return *this;
     }
 
@@ -745,8 +745,8 @@ namespace netgen
       
 	if (i <= j)
 	  {
-	    Swap (data[i], data[j]);
-	    Swap (slave[i], slave[j]);
+            ngcore::Swap (data[i], data[j]);
+            ngcore::Swap (slave[i], slave[j]);
 	    i++; j--;
 	  }
       }

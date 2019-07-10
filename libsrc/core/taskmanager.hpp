@@ -40,7 +40,7 @@ namespace ngcore
   {
 //     PajeTrace *trace;
 
-    class alignas(64) NodeData //: public AlignedAlloc<NodeData>
+    class alignas(64) NodeData : public AlignedAlloc<NodeData>
     {
     public:
       atomic<int> start_cnt{0};
@@ -390,7 +390,7 @@ public:
 
 
    
-   class alignas(4096) AtomicRange //: public AlignedAlloc<AtomicRange>
+   class alignas(4096) AtomicRange : public AlignedAlloc<AtomicRange>
   {
     atomic<size_t> begin;
     atomic<size_t> end;

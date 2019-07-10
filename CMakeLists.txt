@@ -115,6 +115,7 @@ endif (ADDITIONAL_PATHS)
 #######################################################################
 # build options
 include_directories ("${PROJECT_SOURCE_DIR}/include")
+include_directories ("${PROJECT_SOURCE_DIR}/libsrc")
 include_directories ("${PROJECT_SOURCE_DIR}/libsrc/include")
 include_directories ("${PROJECT_BINARY_DIR}")
 
