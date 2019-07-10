@@ -287,13 +287,20 @@ if (USE_PYTHON)
 endif (USE_PYTHON)
 
 #######################################################################
+add_library(netgen_mpi INTERFACE)
+add_library(netgen_metis INTERFACE)
 if (USE_MPI)
     find_package(MPI REQUIRED)
+    target_include_directories(netgen_mpi INTERFACE ${MPI_CXX_INCLUDE_PATH})
+    target_link_libraries(netgen_mpi INTERFACE ${MPI_mpi_LIBRARY} ${MPI_CXX_LIBRARIES} )
+    target_compile_definitions(netgen_mpi INTERFACE PARALLEL )
+
     find_package(METIS REQUIRED)
-    add_definitions(-DPARALLEL -DMETIS)
-    include_directories(${MPI_CXX_INCLUDE_PATH})
-    include_directories(${METIS_INCLUDE_DIR})
+    target_include_directories(netgen_metis INTERFACE ${METIS_INCLUDE_DIR})
+    target_link_libraries(netgen_metis INTERFACE ${METIS_LIBRARY} )
+    target_compile_definitions(netgen_metis INTERFACE METIS )
 endif (USE_MPI)
+install(TARGETS netgen_mpi netgen_metis ${NG_INSTALL_DIR})
 
 #######################################################################
 if (USE_OCC)

@@ -10,6 +10,7 @@
 #include <chrono>
 
 #include "concurrentqueue.h"
+#include "mpi_wrapper.hpp"
 #include "paje_trace.hpp"
 #include "profiler.hpp"
 #include "taskmanager.hpp"

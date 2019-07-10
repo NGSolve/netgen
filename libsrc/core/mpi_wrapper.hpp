@@ -6,6 +6,7 @@
 #include <mpi.h>
 #endif
 
+#include "exception.hpp"
 
 namespace ngcore
 {
@@ -191,7 +192,7 @@ namespace ngcore
   };
 
   
-#else
+#else // PARALLEL
   class MPI_Comm {
     int nr;
   public:
@@ -240,7 +241,7 @@ namespace ngcore
     void Bcast (T & s, int root = 0) const { ; } 
   };  
   
-#endif
+#endif // PARALLEL
 
 
 
@@ -252,5 +253,5 @@ namespace ngcore
   
 }
 
-#endif
+#endif // NGCORE_MPIWRAPPER_HPP
 
