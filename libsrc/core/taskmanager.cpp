@@ -41,8 +41,6 @@ namespace ngcore
   __thread int TaskManager :: thread_id;
 #endif
   
-  thread_local int thread_id = 0;
-
   const function<void(TaskInfo&)> * TaskManager::func;
   const function<void()> * TaskManager::startup_function = nullptr;
   const function<void()> * TaskManager::cleanup_function = nullptr;
@@ -188,12 +186,10 @@ namespace ngcore
     num_threads = 1;
   }
 
-  /*
   int TaskManager :: GetThreadId()
   {
     return thread_id;
   }
-  */
   
   void TaskManager :: StartWorkers()
   {
@@ -293,7 +289,7 @@ namespace ngcore
         TaskInfo ti;
         ti.task_nr = task.mynr;
         ti.ntasks = task.total;
-        ti.thread_nr = thread_id;
+        ti.thread_nr = TaskManager::GetThreadId();
         ti.nthreads = TaskManager::GetNumThreads();
         /*
         {

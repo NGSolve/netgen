@@ -98,7 +98,7 @@ namespace ngcore
     NGCORE_API static int GetMaxThreads() { return max_threads; }
     // static int GetNumThreads() { return task_manager ? task_manager->num_threads : 1; }
     NGCORE_API static int GetNumThreads() { return num_threads; }
-    NGCORE_API static int GetThreadId() { return thread_id; } 
+    NGCORE_API static int GetThreadId();
     NGCORE_API int GetNumNodes() const { return num_nodes; }
 
     static void SetPajeTrace (bool use)  { use_paje_trace = use; }
