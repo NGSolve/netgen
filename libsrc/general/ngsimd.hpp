@@ -13,6 +13,8 @@
 #include <string>
 #include <type_traits>
 
+#include <core/utils.hpp>
+
 #ifdef WIN32
 #ifndef AVX_OPERATORS_DEFINED
 #define AVX_OPERATORS_DEFINED
@@ -48,6 +50,7 @@ NG_INLINE __m256d operator/= (__m256d &a, __m256d b) { return a = a/b; }
 
 namespace ngsimd
 {
+  using ngcore::AlignedAlloc;
 
   // MSVC does not define SSE. It's always present on 64bit cpus
 #if (defined(_M_AMD64) || defined(_M_X64) || defined(__AVX__))
@@ -120,42 +123,6 @@ namespace ngsimd
   template<int N, typename T, typename std::enable_if<std::is_arithmetic<T>::value, int>::type = 0>
     NG_INLINE SIMD<double,N> operator/ (SIMD<double,N> a, T b) { return a / SIMD<double,N>(b); }
 
-
-#ifdef __AVX__
-  template <typename T>
-  class AlignedAlloc
-  {
-    protected:
-      static void * aligned_malloc(size_t s)
-      {
-        // Assume 16 byte alignment of standard library
-        if(alignof(T)<=16)
-            return malloc(s);
-        else
-            return  _mm_malloc(s, alignof(T));
-      }
-
-      static void aligned_free(void *p)
-      {
-        if(alignof(T)<=16)
-            free(p);
-        else
-            _mm_free(p);
-      }
-
-  public:
-    void * operator new (size_t s, void *p) { return p; }
-    void * operator new (size_t s) { return aligned_malloc(s); }
-    void * operator new[] (size_t s) { return aligned_malloc(s); }
-    void operator delete (void * p) { aligned_free(p); }
-    void operator delete[] (void * p) { aligned_free(p); }
-  };
-#else
-  // it's only a dummy without AVX
-  template <typename T>
-  class AlignedAlloc { ; };
-
-#endif
 
 using std::sqrt;
 using std::fabs;

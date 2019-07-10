@@ -231,8 +231,8 @@ namespace netgen
 
 
 
-   void DivideEdge (TopoDS_Edge & edge, Array<MeshPoint> & ps,
-                    Array<double> & params, Mesh & mesh)
+   void DivideEdge (TopoDS_Edge & edge, NgArray<MeshPoint> & ps,
+                    NgArray<double> & params, Mesh & mesh)
    {
       double s0, s1;
       double maxh = mparam.maxh;
@@ -350,7 +350,7 @@ namespace netgen
 
       int first_ep = mesh.GetNP()+1;
 
-      Array<int> face2solid[2];
+      NgArray<int> face2solid[2];
       for (int i = 0; i<2; i++)
       {
          face2solid[i].SetSize (geom.fmap.Extent());
@@ -471,12 +471,12 @@ namespace netgen
 
                int geomedgenr = geom.emap.FindIndex(edge);
 
-               Array <MeshPoint> mp;
-               Array <double> params;
+               NgArray <MeshPoint> mp;
+               NgArray <double> params;
 
                DivideEdge (edge, mp, params, mesh);
  
-               Array <int> pnums;
+               NgArray <int> pnums;
                pnums.SetSize (mp.Size()+2);
 
                if (!merge_solids)
@@ -620,7 +620,7 @@ namespace netgen
 
       double starttime = GetTime();
 
-      Array<int> glob2loc(noldp);
+      NgArray<int> glob2loc(noldp);
 
       //int projecttype = PARAMETERSPACE;
 
@@ -726,7 +726,7 @@ namespace netgen
                   cntp+=2;
 
 
-            Array< PointGeomInfo > gis;
+            NgArray< PointGeomInfo > gis;
 
             gis.SetAllocSize (cntp);
             gis.SetSize (0);
@@ -993,7 +993,7 @@ namespace netgen
       mesh.SetGlobalH (mparam.maxh);
       mesh.SetMinimalH (mparam.minh);
 
-      Array<double> maxhdom;
+      NgArray<double> maxhdom;
       maxhdom.SetSize (geom.NrSolids());
       maxhdom = mparam.maxh;
 
@@ -1178,7 +1178,7 @@ namespace netgen
 
             int sections = 100;
 
-            Array<Line> lines(sections*nedges);
+            NgArray<Line> lines(sections*nedges);
 
             BoxTree<3> * searchtree =
               new BoxTree<3> (bb.PMin(), bb.PMax());
@@ -1225,7 +1225,7 @@ namespace netgen
                }
             }
 
-            Array<int> linenums;
+            NgArray<int> linenums;
 
             for (int i = 0; i < nlines; i++)
             {
@@ -1313,7 +1313,7 @@ namespace netgen
 
          int i, j;
          int np = mesh->GetNP();
-         Array<int> equalto;
+         NgArray<int> equalto;
 
          equalto.SetSize (np);
          equalto = 0;

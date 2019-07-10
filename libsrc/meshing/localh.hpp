@@ -72,7 +72,7 @@ namespace netgen
     ///
     double grading;
     ///
-    Array<GradingBox*> boxes;
+    NgArray<GradingBox*> boxes;
     ///
     Box<3> boundingbox;
     /// octree or quadtree
@@ -119,10 +119,10 @@ namespace netgen
     void WidenRefinement ();
 
     /// get points in inner elements
-    void GetInnerPoints (Array<Point<3> > & points);
+    void GetInnerPoints (NgArray<Point<3> > & points);
 
     /// get points in outer closure
-    void GetOuterPoints (Array<Point<3> > & points);
+    void GetOuterPoints (NgArray<Point<3> > & points);
 
     ///
     void Convexify ();
@@ -147,8 +147,8 @@ namespace netgen
     ///
     void FindInnerBoxesRec2 (GradingBox * box,
 			     class AdFront3 * adfront,
-			     Array<Box3d> & faceboxes,
-			     Array<int> & finds, int nfinbox);
+			     NgArray<Box3d> & faceboxes,
+			     NgArray<int> & finds, int nfinbox);
 
 
 
@@ -158,8 +158,8 @@ namespace netgen
     ///
     void FindInnerBoxesRec2 (GradingBox * box,
 			     class AdFront2 * adfront,
-			     Array<Box<3> > & faceboxes,
-			     Array<int> & finds, int nfinbox);
+			     NgArray<Box<3> > & faceboxes,
+			     NgArray<int> & finds, int nfinbox);
 
 
 

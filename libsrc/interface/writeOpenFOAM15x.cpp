@@ -39,11 +39,11 @@ namespace netgen
 
    // Global arrays used to maintain the owner, neighbour and face lists 
    // so that they are accessible across functions
-   static Array<int> owner_facelist;
-   static Array<int> owner_celllist;
-   static Array<int> neighbour_celllist;
-   static Array<int> surfelem_bclist;
-   static Array<INDEX_2> surfelem_lists;
+   static NgArray<int> owner_facelist;
+   static NgArray<int> owner_celllist;
+   static NgArray<int> neighbour_celllist;
+   static NgArray<int> surfelem_bclist;
+   static NgArray<INDEX_2> surfelem_lists;
 
 
 
@@ -118,17 +118,17 @@ namespace netgen
       // Initialise arrays to zero if required
       neighbour_celllist = 0;
 
-      // Array used to keep track of Faces which have already been 
+      // NgArray used to keep track of Faces which have already been 
       // processed and added to the Owner list... In addition, also the 
       // location where the face appears in the Owner list is also stored 
       // to speed up creation of the Neighbour list
-      Array<int> ownerfaces(totfaces);
+      NgArray<int> ownerfaces(totfaces);
       ownerfaces = 0;
 
-      // Array to hold the set of local faces of each volume element 
+      // NgArray to hold the set of local faces of each volume element 
       // while running through the set of volume elements
       // NOTE: The size is set automatically by the Netgen topology function
-      Array<int> locfaces;
+      NgArray<int> locfaces;
 
       // Secondary indices used to independently advance the owner 
       // and boundary condition arrays within the main loop
@@ -383,9 +383,9 @@ namespace netgen
 
       *outfile << "(\n";
 
-      // Array to hold the indices of the points of each face to 
+      // NgArray to hold the indices of the points of each face to 
       // flip if required 
-      Array<int> facepnts;
+      NgArray<int> facepnts;
 
       // Write the faces in the order specified in the owners lists of the 
       // internal cells and the boundary cells
@@ -545,7 +545,7 @@ namespace netgen
       *outfile << "\n";
 
 
-      Array<INDEX_3> bcarray;
+      NgArray<INDEX_3> bcarray;
       int ind = 1;
 
       // Since the boundary conditions are already sorted in ascending 

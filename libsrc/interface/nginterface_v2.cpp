@@ -756,7 +756,7 @@ namespace netgen
   Ng_BufferMS<int,4> Ngx_Mesh::GetFaceEdges (int fnr) const
   {
     const MeshTopology & topology = mesh->GetTopology();
-    ArrayMem<int,4> ia;
+    NgArrayMem<int,4> ia;
     topology.GetFaceEdges (fnr+1, ia);
     Ng_BufferMS<int,4> res(ia.Size());
     for (size_t i = 0; i < ia.Size(); i++)
@@ -1070,7 +1070,7 @@ namespace netgen
    int * const indices, int numind) const
 
   {
-    Array<int> dummy(numind);
+    NgArray<int> dummy(numind);
     for (int i = 0; i < numind; i++) dummy[i] = indices[i]+1;
     
     double lam3[3];
@@ -1111,7 +1111,7 @@ namespace netgen
    int * const indices, int numind) const
 
   {
-    Array<int> dummy(numind);
+    NgArray<int> dummy(numind);
     for (int i = 0; i < numind; i++) dummy[i] = indices[i]+1;
     
     Point<3> p3d(p[0], p[1], p[2]);
@@ -1291,17 +1291,17 @@ void Ngx_Mesh::SetSurfaceElementOrders (int enr, int ox, int oy)
       {
       case 0:
 	{
-	  FlatArray<int> dn = mesh->GetParallelTopology().GetDistantPNums(locnum);
+	  NgFlatArray<int> dn = mesh->GetParallelTopology().GetDistantPNums(locnum);
 	  return std::tuple<int,int*>(dn.Size(), &dn[0]);
 	}
       case 1:
 	{
-	  FlatArray<int> dn = mesh->GetParallelTopology().GetDistantEdgeNums(locnum);
+	  NgFlatArray<int> dn = mesh->GetParallelTopology().GetDistantEdgeNums(locnum);
 	  return std::tuple<int,int*>(dn.Size(), &dn[0]);
 	}
       case 2:
 	{
-	  FlatArray<int> dn = mesh->GetParallelTopology().GetDistantFaceNums(locnum);
+	  NgFlatArray<int> dn = mesh->GetParallelTopology().GetDistantFaceNums(locnum);
 	  return std::tuple<int,int*>(dn.Size(), &dn[0]);
 	}
       default:

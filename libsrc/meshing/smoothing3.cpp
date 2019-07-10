@@ -88,7 +88,7 @@ namespace netgen
   }
 
   PointFunction1 :: PointFunction1 (Mesh::T_POINTS & apoints, 
-				    const Array<INDEX_3> & afaces,
+				    const NgArray<INDEX_3> & afaces,
 				    const MeshingParameters & amp,
 				    double ah)
     : points(apoints), faces(afaces), mp(amp)
@@ -176,12 +176,12 @@ namespace netgen
   class CheapPointFunction1 : public MinFunction
   {
     Mesh::T_POINTS & points;
-    const Array<INDEX_3> & faces;
+    const NgArray<INDEX_3> & faces;
     DenseMatrix m;
     double h;
   public:
     CheapPointFunction1 (Mesh::T_POINTS & apoints, 
-			 const Array<INDEX_3> & afaces,
+			 const NgArray<INDEX_3> & afaces,
 			 double ah);
   
     virtual double Func (const Vector & x) const;
@@ -189,7 +189,7 @@ namespace netgen
   };
 
   CheapPointFunction1 :: CheapPointFunction1 (Mesh::T_POINTS & apoints, 
-					      const Array<INDEX_3> & afaces,
+					      const NgArray<INDEX_3> & afaces,
 					      double ah)
     : points(apoints), faces(afaces)
   {
@@ -422,7 +422,7 @@ namespace netgen
   int PointFunction :: MovePointToInner ()
   {
     // try point movement 
-    Array<Element2d> faces;
+    NgArray<Element2d> faces;
   
     for (int j = 0; j < elementsonpoint[actpind].Size(); j++)
       {
@@ -1366,7 +1366,7 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
   int ne = GetNE();
 
 
-  Array<double,PointIndex::BASE> perrs(np);
+  NgArray<double,PointIndex::BASE> perrs(np);
   perrs = 1.0;
 
   double bad1 = 0;
@@ -1422,7 +1422,7 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
   par.maxit_linsearch = 20;
   par.maxit_bfgs = 20;
 
-  Array<double, PointIndex::BASE> pointh (points.Size());
+  NgArray<double, PointIndex::BASE> pointh (points.Size());
 
   if(lochfunc)
     {
@@ -1551,7 +1551,7 @@ void Mesh :: ImproveMeshJacobian (const MeshingParameters & mp,
 	  badnodes.Set (el.PNum(j));
     }
 
-  Array<double, PointIndex::BASE> pointh (points.Size());
+  NgArray<double, PointIndex::BASE> pointh (points.Size());
 
   if(lochfunc)
     {
@@ -1639,9 +1639,9 @@ void Mesh :: ImproveMeshJacobian (const MeshingParameters & mp,
 // Improve Condition number of Jacobian, any elements  
 void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
 					   const BitArray & usepoint, 
-					   const Array< Vec<3>* > & nv,
+					   const NgArray< Vec<3>* > & nv,
 					   OPTIMIZEGOAL goal,
-					   const Array< Array<int,PointIndex::BASE>* > * idmaps)
+					   const NgArray< NgArray<int,PointIndex::BASE>* > * idmaps)
 {
   int i, j;
   
@@ -1658,8 +1658,8 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
   
   JacobianPointFunction pf(points, volelements);
 
-  Array< Array<int,PointIndex::BASE>* > locidmaps;
-  const Array< Array<int,PointIndex::BASE>* > * used_idmaps;
+  NgArray< NgArray<int,PointIndex::BASE>* > locidmaps;
+  const NgArray< NgArray<int,PointIndex::BASE>* > * used_idmaps;
 
   if(idmaps)
     used_idmaps = idmaps;
@@ -1671,7 +1671,7 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
 	{
 	  if(GetIdentifications().GetType(i) == Identifications::PERIODIC)
 	    {
-	      locidmaps.Append(new Array<int,PointIndex::BASE>);
+	      locidmaps.Append(new NgArray<int,PointIndex::BASE>);
 	      GetIdentifications().GetMap(i,*locidmaps.Last(),true);
 	    }
 	}
@@ -1706,7 +1706,7 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
 	  badnodes.Set (el.PNum(j));
     }
 
-  Array<double, PointIndex::BASE> pointh (points.Size());
+  NgArray<double, PointIndex::BASE> pointh (points.Size());
  
   if(lochfunc)
     {

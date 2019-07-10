@@ -415,8 +415,8 @@ namespace netgen
       (*testout) << "inner = " << root->flags.pinner << " =?= " 
 		 << testinner(Point3d(root->xmid[0], root->xmid[1], root->xmid[2])) << endl;
 
-    Array<int> faceinds(nf);
-    Array<Box3d> faceboxes(nf);
+    NgArray<int> faceinds(nf);
+    NgArray<Box3d> faceboxes(nf);
 
     for (int i = 1; i <= nf; i++)
       {
@@ -432,8 +432,8 @@ namespace netgen
   void LocalH :: 
   FindInnerBoxesRec2 (GradingBox * box,
 		      class AdFront3 * adfront, 
-		      Array<Box3d> & faceboxes,
-		      Array<int> & faceinds, int nfinbox)
+		      NgArray<Box3d> & faceboxes,
+		      NgArray<int> & faceinds, int nfinbox)
   {
     if (!box) return;
   
@@ -449,9 +449,9 @@ namespace netgen
 
     Box3d boxcfc(c,fc);
 
-    ArrayMem<int, 100> faceused;
-    ArrayMem<int, 100> faceused2;
-    ArrayMem<int, 100> facenotused;
+    NgArrayMem<int, 100> faceused;
+    NgArrayMem<int, 100> faceused2;
+    NgArrayMem<int, 100> facenotused;
 
     /*
     faceused.SetSize(0);
@@ -569,8 +569,8 @@ namespace netgen
 
 
     int nf = adfront->GetNFL();
-    Array<int> faceinds(nf);
-    Array<Box<3> > faceboxes(nf);
+    NgArray<int> faceinds(nf);
+    NgArray<Box<3> > faceboxes(nf);
 
     for (int i = 0; i < nf; i++)
       {
@@ -590,8 +590,8 @@ namespace netgen
   void LocalH :: 
   FindInnerBoxesRec2 (GradingBox * box,
 		      class AdFront2 * adfront, 
-		      Array<Box<3> > & faceboxes,
-		      Array<int> & faceinds, int nfinbox)
+		      NgArray<Box<3> > & faceboxes,
+		      NgArray<int> & faceinds, int nfinbox)
   {
     if (!box) return;
     
@@ -606,9 +606,9 @@ namespace netgen
     Box3d fboxc(fc-fv, fc+fv);
     Box3d boxcfc(c,fc);
 
-    ArrayMem<int, 100> faceused;
-    ArrayMem<int, 100> faceused2;
-    ArrayMem<int, 100> facenotused;
+    NgArrayMem<int, 100> faceused;
+    NgArrayMem<int, 100> faceused2;
+    NgArrayMem<int, 100> facenotused;
 
     for (int j = 0; j < nfinbox; j++)
       {
@@ -735,7 +735,7 @@ namespace netgen
       }
   }
 
-  void LocalH :: GetInnerPoints (Array<Point<3> > & points)
+  void LocalH :: GetInnerPoints (NgArray<Point<3> > & points)
   {
     if (dimension == 2)
       {
@@ -753,7 +753,7 @@ namespace netgen
   }
 
 
-  void LocalH :: GetOuterPoints (Array<Point<3> > & points)
+  void LocalH :: GetOuterPoints (NgArray<Point<3> > & points)
   {
     for (int i = 0; i < boxes.Size(); i++)
       if (!boxes[i]->flags.isinner && !boxes[i]->flags.cutboundary)

@@ -17,8 +17,8 @@ namespace netgen
 
     TABLE<int> loc2distvert, loc2distedge, loc2distface;
 
-    Array<int> glob_vert, glob_edge, glob_face;
-    Array<int> glob_el, glob_surfel, glob_segm;
+    NgArray<int> glob_vert, glob_edge, glob_face;
+    NgArray<int> glob_el, glob_surfel, glob_segm;
 
     bool is_updated;
 
@@ -77,7 +77,7 @@ namespace netgen
 	distfacenums[i] = loc2distface[locfacenum-1][i];
     } 
 
-    void GetDistantFaceNums (int locfacenum, Array<int> & distfacenums ) const
+    void GetDistantFaceNums (int locfacenum, NgArray<int> & distfacenums ) const
     {
       distfacenums = loc2distface[locfacenum-1];
     }
@@ -88,14 +88,14 @@ namespace netgen
 	distedgenums[i] = loc2distedge[locedgenum-1][i];
     } 
 
-    void GetDistantEdgeNums (int locedgenum, Array<int> & distedgenums ) const
+    void GetDistantEdgeNums (int locedgenum, NgArray<int> & distedgenums ) const
     {
       distedgenums = loc2distedge[locedgenum-1];
     } 
 
-    FlatArray<int> GetDistantPNums (int locnum) const { return loc2distvert[locnum]; }
-    FlatArray<int> GetDistantFaceNums (int locnum) const { return loc2distface[locnum]; }
-    FlatArray<int> GetDistantEdgeNums (int locnum) const { return loc2distedge[locnum]; }
+    NgFlatArray<int> GetDistantPNums (int locnum) const { return loc2distvert[locnum]; }
+    NgFlatArray<int> GetDistantFaceNums (int locnum) const { return loc2distface[locnum]; }
+    NgFlatArray<int> GetDistantEdgeNums (int locnum) const { return loc2distedge[locnum]; }
 
     bool IsExchangeVert (int dest, int vnum) const
     {

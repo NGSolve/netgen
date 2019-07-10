@@ -12,11 +12,11 @@ namespace netgen
   class MarkedTri;
   class MarkedQuad;
   
-  typedef Array<MarkedTet> T_MTETS;
-  typedef Array<MarkedPrism> T_MPRISMS;
-  typedef Array<MarkedIdentification> T_MIDS;
-  typedef Array<MarkedTri> T_MTRIS;
-  typedef Array<MarkedQuad> T_MQUADS;
+  typedef NgArray<MarkedTet> T_MTETS;
+  typedef NgArray<MarkedPrism> T_MPRISMS;
+  typedef NgArray<MarkedIdentification> T_MIDS;
+  typedef NgArray<MarkedTri> T_MTRIS;
+  typedef NgArray<MarkedQuad> T_MQUADS;
 
   
   
@@ -303,7 +303,7 @@ namespace netgen
 
 
   int BTSortEdges (const Mesh & mesh,
-		   const Array< Array<int,PointIndex::BASE>* > & idmaps,
+		   const NgArray< NgArray<int,PointIndex::BASE>* > & idmaps,
 		   INDEX_2_CLOSED_HASHTABLE<int> & edgenumber)
   {
     PrintMessage(4,"sorting ... ");
@@ -313,8 +313,8 @@ namespace netgen
       {
 	// new, fast version
       
-	Array<INDEX_2> edges;
-	Array<int> eclasses;
+	NgArray<INDEX_2> edges;
+	NgArray<int> eclasses;
       
 	int i, j, k;
 	int cntedges = 0;
@@ -585,7 +585,7 @@ namespace netgen
 // 	  }
 	
 	// compute classlength:
-	Array<double> edgelength(cntedges);
+	NgArray<double> edgelength(cntedges);
 
 	/*
 	for (i = 1; i <= cntedges; i++)
@@ -676,7 +676,7 @@ namespace netgen
 
 
 	// sort edges:
-	Array<int> sorted(cntedges);
+	NgArray<int> sorted(cntedges);
       
 	QuickSort (edgelength, sorted);
       
@@ -974,7 +974,7 @@ namespace netgen
 
   bool BTDefineMarkedId(const Element2d & el, 
 			INDEX_2_CLOSED_HASHTABLE<int> & edgenumber, 
-			const Array<int,PointIndex::BASE> & idmap,
+			const NgArray<int,PointIndex::BASE> & idmap,
 			MarkedIdentification & mi)
   {
 
@@ -1392,7 +1392,7 @@ namespace netgen
 
 
   void BTBisectIdentification (const MarkedIdentification & oldid,
-			       Array<PointIndex> & newp,
+			       NgArray<PointIndex> & newp,
 			       MarkedIdentification & newid1,
 			       MarkedIdentification & newid2)
   {
@@ -1626,10 +1626,10 @@ namespace netgen
   {
     int i,j,k;
 
-    Array< Array<int,PointIndex::BASE>* > idmaps;
+    NgArray< NgArray<int,PointIndex::BASE>* > idmaps;
     for(i=1; i<=mesh.GetIdentifications().GetMaxNr(); i++)
       {
-	idmaps.Append(new Array<int,PointIndex::BASE>);
+	idmaps.Append(new NgArray<int,PointIndex::BASE>);
 	mesh.GetIdentifications().GetMap(i,*idmaps.Last());
       }
 
@@ -1847,7 +1847,7 @@ namespace netgen
 
 
   void ConnectToNodeRec (int node, int tonode, 
-			 const TABLE<int> & conto, Array<int> & connecttonode)
+			 const TABLE<int> & conto, NgArray<int> & connecttonode)
   {
     //  (*testout) << "connect " << node << " to " << tonode << endl;
     for (int i = 1; i <= conto.EntrySize(node); i++)
@@ -1955,7 +1955,7 @@ namespace netgen
 
   void BisectTetsCopyMesh (Mesh & mesh, const NetgenGeometry *,
 			   BisectionOptions & opt,
-			   const Array< Array<int,PointIndex::BASE>* > & idmaps,
+			   const NgArray< NgArray<int,PointIndex::BASE>* > & idmaps,
 			   const string & refinfofile)
   {
     // mtets.SetName ("bisection, tets");
@@ -2201,24 +2201,24 @@ namespace netgen
 
   /*
   void UpdateEdgeMarks2(Mesh & mesh,
-			const Array< Array<int,PointIndex::BASE>* > & idmaps)
+			const NgArray< NgArray<int,PointIndex::BASE>* > & idmaps)
   {
-    Array< Array<MarkedTet>*,PointIndex::BASE > mtets_old(mesh.GetNP());
-    Array< Array<MarkedPrism>*,PointIndex::BASE > mprisms_old(mesh.GetNP());
-    Array< Array<MarkedIdentification>*,PointIndex::BASE > mids_old(mesh.GetNP());
-    Array< Array<MarkedTri>*,PointIndex::BASE > mtris_old(mesh.GetNP());
-    Array< Array<MarkedQuad>*,PointIndex::BASE > mquads_old(mesh.GetNP());
+    NgArray< NgArray<MarkedTet>*,PointIndex::BASE > mtets_old(mesh.GetNP());
+    NgArray< NgArray<MarkedPrism>*,PointIndex::BASE > mprisms_old(mesh.GetNP());
+    NgArray< NgArray<MarkedIdentification>*,PointIndex::BASE > mids_old(mesh.GetNP());
+    NgArray< NgArray<MarkedTri>*,PointIndex::BASE > mtris_old(mesh.GetNP());
+    NgArray< NgArray<MarkedQuad>*,PointIndex::BASE > mquads_old(mesh.GetNP());
 
     for(int i=PointIndex::BASE; i<mesh.GetNP()+PointIndex::BASE; i++)
-      mtets_old[i] = new Array<MarkedTet>;
+      mtets_old[i] = new NgArray<MarkedTet>;
     for(int i=PointIndex::BASE; i<mesh.GetNP()+PointIndex::BASE; i++)
-      mprisms_old[i] = new Array<MarkedPrism>;
+      mprisms_old[i] = new NgArray<MarkedPrism>;
     for(int i=PointIndex::BASE; i<mesh.GetNP()+PointIndex::BASE; i++)
-      mids_old[i] = new Array<MarkedIdentification>;
+      mids_old[i] = new NgArray<MarkedIdentification>;
     for(int i=PointIndex::BASE; i<mesh.GetNP()+PointIndex::BASE; i++)
-      mtris_old[i] = new Array<MarkedTri>;
+      mtris_old[i] = new NgArray<MarkedTri>;
     for(int i=PointIndex::BASE; i<mesh.GetNP()+PointIndex::BASE; i++)
-      mquads_old[i] = new Array<MarkedQuad>;
+      mquads_old[i] = new NgArray<MarkedQuad>;
 
     for(int i=0; i<mtets.Size(); i++)
       mtets_old[mtets[i].pnums[0]]->Append(mtets[i]);
@@ -2454,11 +2454,11 @@ namespace netgen
 
   
   void UpdateEdgeMarks (Mesh & mesh,
-			const Array< Array<int,PointIndex::BASE>* > & idmaps)
-  //const Array < Array<Element>* > & elements_before,
-  //const Array < Array<int>* > & markedelts_num,
-  //		const Array < Array<Element2d>* > & surfelements_before,
-  //		const Array < Array<int>* > & markedsurfelts_num)
+			const NgArray< NgArray<int,PointIndex::BASE>* > & idmaps)
+  //const NgArray < NgArray<Element>* > & elements_before,
+  //const NgArray < NgArray<int>* > & markedelts_num,
+  //		const NgArray < NgArray<Element2d>* > & surfelements_before,
+  //		const NgArray < NgArray<int>* > & markedsurfelts_num)
   {
     /*
     T_MTETS mtets_old; mtets_old.Copy(mtets);
@@ -2687,7 +2687,7 @@ namespace netgen
 
   void Refinement :: Bisect (Mesh & mesh, 
 			     BisectionOptions & opt,
-			     Array<double> * quality_loss) const
+			     NgArray<double> * quality_loss) const
   {
     PrintMessage(1,"Mesh bisection");
     PushStatus("Mesh bisection");
@@ -2717,12 +2717,12 @@ namespace netgen
     LocalizeEdgePoints(mesh);
     delete loct;
 
-    Array< Array<int,PointIndex::BASE>* > idmaps;
+    NgArray< NgArray<int,PointIndex::BASE>* > idmaps;
     for(int i=1; i<=mesh.GetIdentifications().GetMaxNr(); i++)
       {
 	if(mesh.GetIdentifications().GetType(i) == Identifications::PERIODIC)
 	  {
-	    idmaps.Append(new Array<int,PointIndex::BASE>);
+	    idmaps.Append(new NgArray<int,PointIndex::BASE>);
 	    mesh.GetIdentifications().GetMap(i,*idmaps.Last(),true);
 	  }
       }
@@ -2805,7 +2805,7 @@ namespace netgen
 
 #ifndef SABINE //Nachbarelemente mit ordx,ordy,ordz 
         
-	  Array<int,PointIndex::BASE> v_order (mesh.GetNP());
+	  NgArray<int,PointIndex::BASE> v_order (mesh.GetNP());
 	  v_order = 0;
 
 	  for (ElementIndex ei = 0; ei < ne; ei++)
@@ -3181,7 +3181,7 @@ namespace netgen
 	    else
 	      {
 		// vertices with 2 different bnds
-		Array<int> bndind(np);
+		NgArray<int> bndind(np);
 		bndind = 0;
 		for (int i = 1; i <= mesh.GetNSeg(); i++)
 		  {
@@ -3347,11 +3347,11 @@ namespace netgen
 	      if (mids.Elem(i).marked)
 		{
 		  MarkedIdentification oldid,newid1,newid2;
-		  Array<PointIndex> newp;
+		  NgArray<PointIndex> newp;
 
 		  oldid = mids.Get(i);
 		  
-		  Array<INDEX_2> edges;
+		  NgArray<INDEX_2> edges;
 		  edges.Append(INDEX_2(oldid.pnums[oldid.markededge],
 				       oldid.pnums[(oldid.markededge+1)%oldid.np]));
 		  edges.Append(INDEX_2(oldid.pnums[oldid.markededge + oldid.np],
@@ -3617,7 +3617,7 @@ namespace netgen
     if (opt.refine_hp)
       {
 	//
-	Array<int> v_order (mesh.GetNP());
+	NgArray<int> v_order (mesh.GetNP());
 	v_order = 0;
 	if (mesh.GetDimension() == 3)
 	  {
@@ -3917,7 +3917,7 @@ namespace netgen
     // update identification tables
     for (int i = 1; i <= mesh.GetIdentifications().GetMaxNr(); i++)
       {
-	Array<int,PointIndex::BASE> identmap;
+	NgArray<int,PointIndex::BASE> identmap;
 
 	mesh.GetIdentifications().GetMap (i, identmap);
 
@@ -3995,8 +3995,8 @@ namespace netgen
 	NgProfiler::RegionTimer * regt(NULL);
     regt = new NgProfiler::RegionTimer(reptimer); 
 
-    Array<ElementIndex> bad_elts;
-    Array<double> pure_badness;
+    NgArray<ElementIndex> bad_elts;
+    NgArray<double> pure_badness;
    
     if(do_repair || quality_loss != NULL)
       {

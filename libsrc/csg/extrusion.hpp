@@ -15,11 +15,11 @@ namespace netgen
 
     bool deletable;
   
-    Array< const SplineSeg3<3> * > spline3_path;
-    Array< const LineSeg<3> * > line_path;
+    NgArray< const SplineSeg3<3> * > spline3_path;
+    NgArray< const LineSeg<3> * > line_path;
   
-    mutable Array < Vec<3> > x_dir, y_dir, z_dir, loc_z_dir;
-    mutable Array < Point<3> > p0;
+    mutable NgArray < Vec<3> > x_dir, y_dir, z_dir, loc_z_dir;
+    mutable NgArray < Point<3> > p0;
 
     mutable Vec<3> profile_tangent;
     mutable double profile_par;
@@ -48,7 +48,7 @@ namespace netgen
 		  const SplineGeometry<3> * path_in,
 		  const Vec<3> & z_direction);
 
-    ExtrusionFace(const Array<double> & raw_data);
+    ExtrusionFace(const NgArray<double> & raw_data);
     // default constructor for archive
     ExtrusionFace() {}
 
@@ -102,7 +102,7 @@ namespace netgen
     const Vec<3> & GetProfileTangent (void) const {return profile_tangent;}
     double GetProfilePar(void) const {return profile_par;}
 
-    void GetRawData(Array<double> & data) const;
+    void GetRawData(NgArray<double> & data) const;
 
     void CalcLocalCoordinates (int seg, double t, 
 			       Vec<3> & ex, Vec<3> & ey, Vec<3> & ez) const;
@@ -123,7 +123,7 @@ namespace netgen
 
     Vec<3> z_direction;
 
-    Array<ExtrusionFace*> faces;
+    NgArray<ExtrusionFace*> faces;
 
     mutable int latestfacenum;
 
@@ -145,7 +145,7 @@ namespace netgen
 				       double eps) const;
     INSOLID_TYPE PointInSolid (const Point<3> & p,
 			       double eps,
-			       Array<int> * const facenums) const;
+			       NgArray<int> * const facenums) const;
     virtual INSOLID_TYPE VecInSolid (const Point<3> & p,
 				     const Vec<3> & v,
 				     double eps) const;

@@ -187,7 +187,7 @@ namespace netgen
 	  {
 	    int npts;
 	    infile >> npts;
-	    Array< Point<D> > pts(npts);
+	    NgArray< Point<D> > pts(npts);
 	    for (int j = 0; j < npts; j++)
 	      for(int k=0; k<D; k++)
 		infile >> pts[j](k);
@@ -358,7 +358,7 @@ namespace netgen
 	  {
 	    int npts;
 	    infile >> npts;
-	    Array< Point<D> > pts(npts);
+	    NgArray< Point<D> > pts(npts);
 	    for (int j = 0; j < npts; j++)
 	      for(int k=0; k<D; k++)
 		infile >> pts[j](k);
@@ -489,8 +489,8 @@ namespace netgen
 
     string keyword;
 
-    Array < GeomPoint<D> > infilepoints (0);
-    Array <int> pointnrs (0);
+    NgArray < GeomPoint<D> > infilepoints (0);
+    NgArray <int> pointnrs (0);
     nump = 0;
     int numdomains = 0;
 
@@ -654,7 +654,7 @@ namespace netgen
 		  {
 		    int npts;
 		    infile >> npts;
-		    Array< Point<D> > pts(npts);
+		    NgArray< Point<D> > pts(npts);
 		    for (int j = 0; j < npts; j++)
 		      for(int k=0; k<D; k++)
 			infile >> pts[j](k);
@@ -666,7 +666,7 @@ namespace netgen
 		    int npts,order;
 		    infile >> npts;    
 		    infile >> order;
-		    Array< Point<D> > pts(npts);
+		    NgArray< Point<D> > pts(npts);
 		    for (int j = 0; j < npts; j++)
 		      for(int k=0; k<D; k++)
 			infile >> pts[j](k);	    		    
@@ -830,7 +830,7 @@ namespace netgen
   /*
   void CalcPartition (const SplineSegExt & spline,
 		      double l, double h, double h1, double h2,
-		      double hcurve, double elto0, Array<double> & points)
+		      double hcurve, double elto0, NgArray<double> & points)
   {
     double fperel, oldf, f;
 

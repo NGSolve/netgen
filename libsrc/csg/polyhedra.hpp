@@ -35,13 +35,13 @@ namespace netgen
 
       Face () { ; }
       Face (int pi1, int pi2, int pi3, 
-	    const Array<Point<3> > & points,
+	    const NgArray<Point<3> > & points,
 	    int ainputnr);
     };
 
-    Array<Point<3> > points;
-    Array<Face> faces;
-    Array<Plane*> planes;
+    NgArray<Point<3> > points;
+    NgArray<Face> faces;
+    NgArray<Plane*> planes;
     Box<3> poly_bbox;
 
     double eps_base1;
@@ -65,15 +65,15 @@ namespace netgen
 				      double eps) const;
 
     virtual void GetTangentialSurfaceIndices (const Point<3> & p, 
-					      Array<int> & surfind, double eps) const;
+					      NgArray<int> & surfind, double eps) const;
 
 
     virtual void GetTangentialVecSurfaceIndices2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
-						  Array<int> & surfind, double eps) const;
+						  NgArray<int> & surfind, double eps) const;
 
-    virtual void CalcSpecialPoints (Array<Point<3> > & pts) const;
+    virtual void CalcSpecialPoints (NgArray<Point<3> > & pts) const;
     virtual void AnalyzeSpecialPoint (const Point<3> & pt, 
-				      Array<Point<3> > & specpts) const;
+				      NgArray<Point<3> > & specpts) const;
     virtual Vec<3> SpecialPointTangentialVector (const Point<3> & p, int s1, int s2) const;
 
     virtual int GetNSurfaces() const 
@@ -83,8 +83,8 @@ namespace netgen
     virtual const Surface & GetSurface (int i) const
     { return *planes[i]; }
 
-    virtual void GetPrimitiveData (const char *& classname, Array<double> & coeffs) const;
-    virtual void SetPrimitiveData (Array<double> & coeffs);
+    virtual void GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const;
+    virtual void SetPrimitiveData (NgArray<double> & coeffs);
 
     virtual void Reduce (const BoxSphere<3> & box);
     virtual void UnReduce ();
@@ -92,7 +92,7 @@ namespace netgen
     int AddPoint (const Point<3> & p);
     int AddFace (int pi1, int pi2, int pi3, int inputnum);
 
-    void GetPolySurfs(Array < Array<int> * > & polysurfs);
+    void GetPolySurfs(NgArray < NgArray<int> * > & polysurfs);
   
   protected:
     int FaceBoxIntersection (int fnr, const BoxSphere<3> & box) const;

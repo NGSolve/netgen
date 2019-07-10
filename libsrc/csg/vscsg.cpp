@@ -18,8 +18,8 @@ namespace netgen
   /* *********************** Draw Geometry **************** */
 
   extern shared_ptr<Mesh> mesh;
-  extern Array<SpecialPoint> specpoints;
-  extern Array<Box<3> > boxes;
+  extern NgArray<SpecialPoint> specpoints;
+  extern NgArray<Box<3> > boxes;
 
 
 

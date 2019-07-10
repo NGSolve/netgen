@@ -20,7 +20,7 @@ namespace netgen
       cout << "Trigs: " << mesh.GetNSE() << endl;
 
       BitArray bndnodes(np);
-      Array<int> mapto(np);
+      NgArray<int> mapto(np);
 
       bndnodes.Clear();
       for (i = 1; i <= mesh.GetNSeg(); i++)
@@ -151,11 +151,11 @@ namespace netgen
       double angleThreshold = 5.0;
 
 
-      Array<int> surfid (blp.surfid);
+      NgArray<int> surfid (blp.surfid);
       int prismlayers = blp.prismlayers;
       double hfirst = blp.hfirst;
       double growthfactor = blp.growthfactor;
-      Array<double> heights (blp.heights);
+      NgArray<double> heights (blp.heights);
 
       bool grow_edges = false; // grow layer at edges
       
@@ -213,11 +213,11 @@ namespace netgen
          BitArray bndnodes(np+1);  // big enough for 1-based array
 
          // Map of the old points to the new points
-         Array<PointIndex, PointIndex::BASE> mapto(np);
+         NgArray<PointIndex, PointIndex::BASE> mapto(np);
 
          // Growth vectors for the prismatic layer based on 
          // the effective surface normal at a given point
-         Array<Vec3d, PointIndex::BASE> growthvectors(np);
+         NgArray<Vec3d, PointIndex::BASE> growthvectors(np);
 
          // Bit array to identify all the points belonging 
          // to the surface of interest
@@ -324,8 +324,8 @@ namespace netgen
                          if(!surfid.Contains(mesh[sej].si))
                            {
                              SurfaceElementIndex pnt_commelem = 0;
-                             Array<SurfaceElementIndex> pnt1_elems;
-                             Array<SurfaceElementIndex> pnt2_elems;
+                             NgArray<SurfaceElementIndex> pnt1_elems;
+                             NgArray<SurfaceElementIndex> pnt2_elems;
                              
                             
                              meshtopo.GetVertexSurfaceElements(segpair_p1,pnt1_elems);
@@ -583,7 +583,7 @@ namespace netgen
          
          for (int i = 1; i <= np; i++)
            {
-            Array<ElementIndex> vertelems;
+            NgArray<ElementIndex> vertelems;
 
             if(bndnodes.Test(i))
               {

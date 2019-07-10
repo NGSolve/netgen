@@ -735,7 +735,7 @@ namespace netgen
     ///
     void ToPlain (const Point3d & p, Point3d & pp) const;
     ///
-    void ToPlain (const Array<Point3d> & p, Array<Point3d> & pp) const;
+    void ToPlain (const NgArray<Point3d> & p, NgArray<Point3d> & pp) const;
     ///
     void FromPlain (const Point3d & pp, Point3d & p) const;
   };

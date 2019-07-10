@@ -99,7 +99,7 @@ namespace netgen
         // map from unv element nr to our element number + an index if it is vol (0), bnd(1), ...
         std::map<size_t, std::tuple<size_t, int>> element_map;
 
-        Array<Segment> tmp_segments;
+        NgArray<Segment> tmp_segments;
         while (in.good())
           {
             in >> reco;
@@ -449,7 +449,7 @@ namespace netgen
         int bcprop;
         ifstream inpkt (pktfile.c_str());
         inpkt >> np;
-        Array<double> values(np);
+        NgArray<double> values(np);
         for (i = 1; i <= np; i++)
           {
             Point3d p(0,0,0);

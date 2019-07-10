@@ -20,7 +20,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
 		othermesh.GetNP(), " points, ",
 		othermesh.GetNSE(), " surface elements.");
 
-  Array<Box3d> otherbounds(nse);  
+  NgArray<Box3d> otherbounds(nse);  
   Box3d otherbox;
 
   double maxh = 0;
@@ -135,7 +135,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
 
 
   
-  Array<PointIndex> pmat(onp);
+  NgArray<PointIndex> pmat(onp);
 
   for (i = 1; i <= onp; i++)
     pmat.Elem(i) = mesh.AddPoint (othermesh.Point(i));

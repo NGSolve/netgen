@@ -130,19 +130,19 @@ namespace netgen
     
     if ( id == 0 )
       {
-	Array<Array<int>*> sendarrays(ntasks);
+	NgArray<NgArray<int>*> sendarrays(ntasks);
 	for (int dest = 1; dest < ntasks; dest++)
-	  sendarrays[dest] = new Array<int>;
+	  sendarrays[dest] = new NgArray<int>;
 
-	Array<int> edges, faces;
+	NgArray<int> edges, faces;
 	for (int el = 1; el <= mesh.GetNE(); el++)
 	  {
 	    topology.GetElementFaces (el, faces);
 	    topology.GetElementEdges (el, edges);
 	    const Element & volel = mesh.VolumeElement (el);
 
-	    // Array<int> & sendarray = *sendarrays[volel.GetPartition()];
-            Array<int> & sendarray = *sendarrays[mesh.vol_partition[el-1]];
+	    // NgArray<int> & sendarray = *sendarrays[volel.GetPartition()];
+            NgArray<int> & sendarray = *sendarrays[mesh.vol_partition[el-1]];
 
 	    for ( int i = 0; i < edges.Size(); i++ )
 	      sendarray.Append (edges[i]);
@@ -154,15 +154,15 @@ namespace netgen
 	  {
 	    topology.GetSurfaceElementEdges (el, edges);
 	    const Element2d & surfel = mesh.SurfaceElement (el);
-	    // Array<int> & sendarray = *sendarrays[surfel.GetPartition()];
-            Array<int> & sendarray = *sendarrays[mesh.surf_partition[el-1]];
+	    // NgArray<int> & sendarray = *sendarrays[surfel.GetPartition()];
+            NgArray<int> & sendarray = *sendarrays[mesh.surf_partition[el-1]];
 
 	    for ( int i = 0; i < edges.Size(); i++ )
 	      sendarray.Append (edges[i]);
 	    sendarray.Append (topology.GetSurfaceElementFace (el));
 	  }
 
-	Array<MPI_Request> sendrequests;
+	NgArray<MPI_Request> sendrequests;
 	for (int dest = 1; dest < ntasks; dest++)
 	  sendrequests.Append (MyMPI_ISend (*sendarrays[dest], dest, MPI_TAG_MESH+10, comm));
 	MPI_Waitall (sendrequests.Size(), &sendrequests[0], MPI_STATUS_IGNORE);
@@ -174,12 +174,12 @@ namespace netgen
     else
 
       {
-	Array<int> recvarray;
+	NgArray<int> recvarray;
 	MyMPI_Recv (recvarray, 0, MPI_TAG_MESH+10, comm);
 
 	int ii = 0;
 
-	Array<int> faces, edges;
+	NgArray<int> faces, edges;
 
 	for (int volel = 1; volel <= mesh.GetNE(); volel++)
 	  {
@@ -248,7 +248,7 @@ namespace netgen
 
     const MeshTopology & topology = mesh.GetTopology();
 
-    Array<int> cnt_send(ntasks-1);
+    NgArray<int> cnt_send(ntasks-1);
 
 
     // update new vertices after mesh-refinement
@@ -322,7 +322,7 @@ namespace netgen
 	    
 	    TABLE<int> send_verts(cnt_send);
 	    
-	    Array<int, PointIndex::BASE> loc2exchange(mesh.GetNV());
+	    NgArray<int, PointIndex::BASE> loc2exchange(mesh.GetNV());
 	    for (int dest = 1; dest < ntasks; dest++)
 	      if (dest != id)
 		{
@@ -366,7 +366,7 @@ namespace netgen
 		  for (PointIndex pi : dest2vert[dest-1])
 		    loc2exchange[pi] = cnt++;
 		  
-		  FlatArray<int> recvarray = recv_verts[dest-1];
+		  NgFlatArray<int> recvarray = recv_verts[dest-1];
 		  for (int ii = 0; ii < recvarray.Size(); ii+=2)
 		    for (PointIndex pi : dest2pair[dest-1])
 		      // for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
@@ -388,7 +388,7 @@ namespace netgen
 	  }
       }
 
-    Array<int> sendarray, recvarray;
+    NgArray<int> sendarray, recvarray;
     // cout << "UpdateCoarseGrid - edges" << endl;
 
     // static int timerv = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex vertices");
@@ -436,7 +436,7 @@ namespace netgen
       }
 
 
-    Array<int, PointIndex::BASE> loc2exchange(mesh.GetNV());
+    NgArray<int, PointIndex::BASE> loc2exchange(mesh.GetNV());
     for (int dest = 1; dest < ntasks; dest++)
       {
         loc2exchange = -1;
@@ -464,7 +464,7 @@ namespace netgen
     for (int dest = 1; dest < ntasks; dest++)
       {
 	auto ex2loc = dest2vert[dest-1];
-	FlatArray<int> recvarray = recv_edges[dest-1];
+	NgFlatArray<int> recvarray = recv_edges[dest-1];
         for (int ii = 0; ii < recvarray.Size(); ii+=2)
 	  for (int edge : dest2edge[dest-1])
 	    {
@@ -490,7 +490,7 @@ namespace netgen
 	    vert2edge.Set(INDEX_2(v1,v2), edge);
 	  }
 
-	FlatArray<int> recvarray = recv_edges[dest-1];
+	NgFlatArray<int> recvarray = recv_edges[dest-1];
         for (int ii = 0; ii < recvarray.Size(); ii+=2)
 	  {
 	    INDEX_2 re(ex2loc[recvarray[ii]], 
@@ -510,7 +510,7 @@ namespace netgen
     if (mesh.GetDimension() == 3)
       {
 	NgProfiler::StartTimer (timerf);
-	Array<int> verts;
+	NgArray<int> verts;
 
 	// exchange faces
 	cnt_send = 0;
@@ -539,7 +539,7 @@ namespace netgen
 
 	for (int & c : cnt_send) c*=3;
 	TABLE<int> send_faces(cnt_send);
-	Array<int, PointIndex::BASE> loc2exchange(mesh.GetNV());
+	NgArray<int, PointIndex::BASE> loc2exchange(mesh.GetNV());
 	for (int dest = 1; dest < ntasks; dest++)
 	  if (dest != id)
 	    {
@@ -585,7 +585,7 @@ namespace netgen
 	      for (PointIndex pi : dest2vert[dest-1])
 		loc2exchange[pi] = cnt++;
 	      
-	      FlatArray<int> recvarray = recv_faces[dest-1];
+	      NgFlatArray<int> recvarray = recv_faces[dest-1];
 	      for (int ii = 0; ii < recvarray.Size(); ii+=3)
 		for (int face : dest2face[dest-1])
 		  {
@@ -611,7 +611,7 @@ namespace netgen
 		vert2face.Set(INDEX_3(verts[0], verts[1], verts[2]), face);
 	      }
 	    
-	    FlatArray<int> recvarray = recv_faces[dest-1];
+	    NgFlatArray<int> recvarray = recv_faces[dest-1];
 	    for (int ii = 0; ii < recvarray.Size(); ii+=3)
 	      {
 		INDEX_3 re(ex2loc[recvarray[ii]], 
@@ -628,7 +628,7 @@ namespace netgen
 	
 
 	/*
-	  Array<int,1> glob2loc;
+	  NgArray<int,1> glob2loc;
 
 	int maxface = 0;
 	for (int face = 1; face <= nfa; face++)
@@ -642,7 +642,7 @@ namespace netgen
 	  glob2loc[GetGlobalFaceNum(loc)] = loc;
 	
 	cnt_send = 0;
-	Array<int> verts;
+	NgArray<int> verts;
 	for (int face = 1; face <= nfa; face++)
 	  {
 	    topology.GetFaceVertices (face, verts);
@@ -676,7 +676,7 @@ namespace netgen
 	for (int sender = 1; sender < ntasks; sender ++)
 	  if (id != sender)
 	    {
-	      FlatArray<int> recvarray = recv_faces[sender-1];
+	      NgFlatArray<int> recvarray = recv_faces[sender-1];
 	      
 	      for (int ii = 0; ii < recvarray.Size(); )
 		{ 

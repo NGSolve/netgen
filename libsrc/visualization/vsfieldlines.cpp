@@ -38,7 +38,7 @@ namespace netgen
       {
 	c.SetSize(2); c[0] = 0; c[1] = 0.5;
 	b.SetSize(2); b[0] = 0; b[1] = 1;
-	Array<int> size(2);
+	NgArray<int> size(2);
 	size[0] = 0; size[1] = 1;
 	a = new TABLE<double>(size);
 	a->Set(2,1,0.5);  // Set, Get: 1-based!
@@ -48,7 +48,7 @@ namespace netgen
       {
 	c.SetSize(3); c[0] = 0; c[1] = 1; c[2] = 0.5;
 	b.SetSize(3); b[0] = b[1] = 1./6.; b[2] = 2./3.;
-	Array<int> size(3);
+	NgArray<int> size(3);
 	size[0] = 0; size[1] = 1; size[2] = 2;
 	a = new TABLE<double>(size);
 	a->Set(2,1,1);
@@ -59,7 +59,7 @@ namespace netgen
       {
 	c.SetSize(4); c[0] = 0; c[1] = c[2] = 0.5; c[3] = 1;
 	b.SetSize(4); b[0] = b[3] = 1./6.; b[1] = b[2] = 1./3.;
-	Array<int> size(4);
+	NgArray<int> size(4);
 	size[0] = 0; size[1] = 1; size[2] = 2; size[3] = 3;
 	a = new TABLE<double>(size);
 	a->Set(2,1,0.5);
@@ -181,15 +181,15 @@ namespace netgen
   
 
 
-  void FieldLineCalc :: GenerateFieldLines(Array<Point3d> & potential_startpoints, const int numlines, const int gllist,
+  void FieldLineCalc :: GenerateFieldLines(NgArray<Point3d> & potential_startpoints, const int numlines, const int gllist,
 					   const double minval, const double maxval, const int logscale, double phaser, double phasei)
   {
 
     
-    Array<Point3d> points;
-    Array<double> values;
-    Array<bool> drawelems;
-    Array<int> dirstart;
+    NgArray<Point3d> points;
+    NgArray<double> values;
+    NgArray<bool> drawelems;
+    NgArray<int> dirstart;
 
 
     if(vsol -> iscomplex)
@@ -317,7 +317,7 @@ namespace netgen
 
 
   
-  void FieldLineCalc :: Calc(const Point3d & startpoint, Array<Point3d> & points, Array<double> & vals, Array<bool> & drawelems, Array<int> & dirstart)
+  void FieldLineCalc :: Calc(const Point3d & startpoint, NgArray<Point3d> & points, NgArray<double> & vals, NgArray<bool> & drawelems, NgArray<int> & dirstart)
   {
     double lami[3], startlami[3];
     double values[6];
@@ -440,7 +440,7 @@ namespace netgen
 
 
   
-  void VisualSceneSolution :: BuildFieldLinesFromBox(Array<Point3d> & startpoints)
+  void VisualSceneSolution :: BuildFieldLinesFromBox(NgArray<Point3d> & startpoints)
   {
     shared_ptr<Mesh> mesh = GetMesh();
     if (!mesh) return;
@@ -470,7 +470,7 @@ namespace netgen
       }
   }
 
-  void VisualSceneSolution :: BuildFieldLinesFromLine(Array<Point3d> & startpoints)
+  void VisualSceneSolution :: BuildFieldLinesFromLine(NgArray<Point3d> & startpoints)
   {
     shared_ptr<Mesh> mesh = GetMesh();
     if (!mesh) return;
@@ -489,7 +489,7 @@ namespace netgen
   }
 
 
-  void VisualSceneSolution :: BuildFieldLinesFromFile(Array<Point3d> & startpoints)
+  void VisualSceneSolution :: BuildFieldLinesFromFile(NgArray<Point3d> & startpoints)
   {
     shared_ptr<Mesh> mesh = GetMesh();
     if (!mesh) return;
@@ -546,7 +546,7 @@ namespace netgen
 	    for(int i=0; i<6; i++) (*infile) >> fieldlines_startarea_parameter[i];
 	    (*infile) >> iparam;
 
-	    Array<Point3d> auxpoints(iparam);
+	    NgArray<Point3d> auxpoints(iparam);
 	    
 	    if (keyword == "box")
 	      BuildFieldLinesFromBox(auxpoints);
@@ -571,12 +571,12 @@ namespace netgen
   }
 
   
-  void VisualSceneSolution :: BuildFieldLinesFromFace(Array<Point3d> & startpoints)
+  void VisualSceneSolution :: BuildFieldLinesFromFace(NgArray<Point3d> & startpoints)
   {
     shared_ptr<Mesh> mesh = GetMesh();
     if (!mesh) return;
 
-    Array<SurfaceElementIndex> elements_2d;
+    NgArray<SurfaceElementIndex> elements_2d;
     
     //cout << "fieldlines_startface " << fieldlines_startface << endl;
     mesh->GetSurfaceElementsOfFace(fieldlines_startface,elements_2d);
@@ -694,7 +694,7 @@ namespace netgen
       num_startpoints *= 10;
 
     
-    Array<Point3d> startpoints(num_startpoints);
+    NgArray<Point3d> startpoints(num_startpoints);
     
 
     for (int ln = 0; ln < num_fieldlineslists; ln++)

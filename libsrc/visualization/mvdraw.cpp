@@ -202,7 +202,7 @@ namespace netgen
   }
 
 
-  void VisualScene :: ArbitraryRotation (const Array<double> & alpha, const Array<Vec3d> & vec)
+  void VisualScene :: ArbitraryRotation (const NgArray<double> & alpha, const NgArray<Vec3d> & vec)
   {
     glPushMatrix();
 
@@ -229,8 +229,8 @@ namespace netgen
 
   void VisualScene :: ArbitraryRotation (const double alpha, const Vec3d & vec)
   {
-    Array<double> a(1); a[0] = alpha;
-    Array<Vec3d> v(1); v[0] = vec;
+    NgArray<double> a(1); a[0] = alpha;
+    NgArray<Vec3d> v(1); v[0] = vec;
 
     ArbitraryRotation(a,v);
   } 

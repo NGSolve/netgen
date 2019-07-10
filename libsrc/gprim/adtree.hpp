@@ -51,11 +51,11 @@ class ADTree
   int dim;
   ADTreeNode * root;
   float *cmin, *cmax;
-  Array<ADTreeNode*> ela;
+  NgArray<ADTreeNode*> ela;
   const ADTreeCriterion * criterion; 
 
-  Array<ADTreeNode*> stack;
-  Array<int> stackdir;
+  NgArray<ADTreeNode*> stack;
+  NgArray<int> stackdir;
   int stackindex;
 
 public:
@@ -65,11 +65,11 @@ public:
 
   void Insert (const float * p, int pi);
   // void GetIntersecting (const float * bmin, const float * bmax,
-  //			Array<int> & pis) const;
+  //			NgArray<int> & pis) const;
   void SetCriterion (ADTreeCriterion & acriterion);
   void Reset ();
   int Next ();
-  void GetMatch (Array<int> & matches);
+  void GetMatch (NgArray<int> & matches);
 
   void DeleteElement (int pi);
 
@@ -105,7 +105,7 @@ class ADTree3
 {
   ADTreeNode3 * root;
   float cmin[3], cmax[3];
-  Array<ADTreeNode3*> ela;
+  NgArray<ADTreeNode3*> ela;
 
 public:
   ADTree3 (const float * acmin, 
@@ -114,7 +114,7 @@ public:
 
   void Insert (const float * p, int pi);
   void GetIntersecting (const float * bmin, const float * bmax,
-			Array<int> & pis) const;
+			NgArray<int> & pis) const;
   
   void DeleteElement (int pi);
 
@@ -155,7 +155,7 @@ class ADTree3Div
 {
   ADTreeNode3Div * root;
   float cmin[3], cmax[3];
-  Array<ADTreeNode3Div*> ela;
+  NgArray<ADTreeNode3Div*> ela;
 
 public:
   ADTree3Div (const float * acmin, 
@@ -164,7 +164,7 @@ public:
 
   void Insert (const float * p, int pi);
   void GetIntersecting (const float * bmin, const float * bmax,
-			Array<int> & pis) const;
+			NgArray<int> & pis) const;
   
   void DeleteElement (int pi);
 
@@ -204,7 +204,7 @@ class ADTree3M
 {
   ADTreeNode3M * root;
   float cmin[3], cmax[3];
-  Array<ADTreeNode3M*> ela;
+  NgArray<ADTreeNode3M*> ela;
 
 public:
   ADTree3M (const float * acmin, 
@@ -213,7 +213,7 @@ public:
 
   void Insert (const float * p, int pi);
   void GetIntersecting (const float * bmin, const float * bmax,
-			Array<int> & pis) const;
+			NgArray<int> & pis) const;
   
   void DeleteElement (int pi);
 
@@ -253,7 +253,7 @@ class ADTree3F
 {
   ADTreeNode3F * root;
   float cmin[3], cmax[3];
-  Array<ADTreeNode3F*> ela;
+  NgArray<ADTreeNode3F*> ela;
 
 public:
   ADTree3F (const float * acmin, 
@@ -262,7 +262,7 @@ public:
 
   void Insert (const float * p, int pi);
   void GetIntersecting (const float * bmin, const float * bmax,
-			Array<int> & pis) const;
+			NgArray<int> & pis) const;
   
   void DeleteElement (int pi);
 
@@ -300,7 +300,7 @@ class ADTree3FM
 {
   ADTreeNode3FM * root;
   float cmin[3], cmax[3];
-  Array<ADTreeNode3FM*> ela;
+  NgArray<ADTreeNode3FM*> ela;
 
 public:
   ADTree3FM (const float * acmin, 
@@ -309,7 +309,7 @@ public:
 
   void Insert (const float * p, int pi);
   void GetIntersecting (const float * bmin, const float * bmax,
-			Array<int> & pis) const;
+			NgArray<int> & pis) const;
   
   void DeleteElement (int pi);
 
@@ -351,7 +351,7 @@ class ADTree6
 {
   ADTreeNode6 * root;
   float cmin[6], cmax[6];
-  Array<ADTreeNode6*> ela;
+  NgArray<ADTreeNode6*> ela;
 
 public:
   ADTree6 (const float * acmin, 
@@ -360,7 +360,7 @@ public:
 
   void Insert (const float * p, int pi);
   void GetIntersecting (const float * bmin, const float * bmax,
-			Array<int> & pis) const;
+			NgArray<int> & pis) const;
   
   void DeleteElement (int pi);
 
@@ -443,7 +443,7 @@ public:
     T_ADTreeNode<dim,T> * root;
     // float cmin[dim], cmax[dim];
     Point<dim> cmin, cmax;
-    // Array<T_ADTreeNode<dim>*> ela;
+    // NgArray<T_ADTreeNode<dim>*> ela;
     ClosedHashTable<T, T_ADTreeNode<dim,T>*> ela;
   public:
     T_ADTree (Point<dim> acmin, Point<dim> acmax);
@@ -451,7 +451,7 @@ public:
     
     void Insert (Point<dim> p, T pi);
     void GetIntersecting (Point<dim> bmin, Point<dim> bmax,
-                          Array<T> & pis) const;
+                          NgArray<T> & pis) const;
     
     void DeleteElement (T pi);
     
@@ -501,7 +501,7 @@ class ADTree6F
 {
   ADTreeNode6F * root;
   float cmin[6], cmax[6];
-  Array<ADTreeNode6F*> ela;
+  NgArray<ADTreeNode6F*> ela;
 
 public:
   ADTree6F (const float * acmin, 
@@ -510,7 +510,7 @@ public:
 
   void Insert (const float * p, int pi);
   void GetIntersecting (const float * bmin, const float * bmax,
-			Array<int> & pis) const;
+			NgArray<int> & pis) const;
   
   void DeleteElement (int pi);
 
@@ -547,7 +547,7 @@ public:
   void DeleteElement (int pi) 
     { tree->DeleteElement(pi); }
   DLL_HEADER void GetIntersecting (const Point<3> & pmin, const Point<3> & pmax, 
-			Array<int> & pis) const;
+			NgArray<int> & pis) const;
   const ADTree3 & Tree() const { return *tree; };
 };
 
@@ -569,7 +569,7 @@ public:
     void DeleteElement (T pi) 
     { tree->DeleteElement(pi); }
     void GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax, 
-                          Array<T> & pis) const;
+                          NgArray<T> & pis) const;
     double Tolerance() const { return 1e-7 * Dist(boxpmax, boxpmin); } // single precision
     const auto & Tree() const { return *tree; };
     auto & Tree() { return *tree; };

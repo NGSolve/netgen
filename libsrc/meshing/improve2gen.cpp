@@ -9,11 +9,11 @@ namespace netgen
   class ImprovementRule
   {
   public:
-    Array<Element2d> oldels;
-    Array<Element2d> newels;
-    Array<INDEX_2> deledges;
-    Array<int> incelsonnode;
-    Array<int> reused;
+    NgArray<Element2d> oldels;
+    NgArray<Element2d> newels;
+    NgArray<INDEX_2> deledges;
+    NgArray<int> incelsonnode;
+    NgArray<int> reused;
     int bonus;
     int onp;
   };
@@ -50,11 +50,11 @@ namespace netgen
     bool ok;
     int olddef, newdef;
 
-    Array<ImprovementRule*> rules;
-    Array<SurfaceElementIndex> elmap;
-    Array<int> elrot;
-    Array<PointIndex> pmap;
-    Array<PointGeomInfo> pgi;
+    NgArray<ImprovementRule*> rules;
+    NgArray<SurfaceElementIndex> elmap;
+    NgArray<int> elrot;
+    NgArray<PointIndex> pmap;
+    NgArray<PointGeomInfo> pgi;
 
     int surfnr = mesh.GetFaceDescriptor (faceindex).SurfNr();
   
@@ -195,8 +195,8 @@ namespace netgen
 
 
 
-    Array<int> mapped(rules.Size());
-    Array<int> used(rules.Size());
+    NgArray<int> mapped(rules.Size());
+    NgArray<int> used(rules.Size());
     used = 0;
     mapped = 0;
 
@@ -236,7 +236,7 @@ namespace netgen
 
   
     TABLE<int,PointIndex::BASE> elonnode(np);
-    Array<int,PointIndex::BASE> nelonnode(np);
+    NgArray<int,PointIndex::BASE> nelonnode(np);
     TABLE<SurfaceElementIndex> nbels(ne);
 
     nelonnode = -4;
@@ -296,7 +296,7 @@ namespace netgen
 	    if (mesh[sei].IsDeleted()) continue;
 
 	    elmap[0] = sei;
-	    FlatArray<SurfaceElementIndex> neighbours = nbels[sei];
+	    NgFlatArray<SurfaceElementIndex> neighbours = nbels[sei];
 	    
 	    for (elrot[0] = 0; elrot[0] < mesh[sei].GetNP(); elrot[0]++)
 	      {

@@ -19,7 +19,7 @@ public:
 		    const BitArray * working_elements = NULL);
   void SwapImproveSurface (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
 			   const BitArray * working_elements = NULL,
-			   const Array< Array<int,PointIndex::BASE>* > * idmaps = NULL);
+			   const NgArray< NgArray<int,PointIndex::BASE>* > * idmaps = NULL);
   void SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
 
   double 
@@ -61,7 +61,7 @@ extern int WrongOrientation (const Mesh::T_POINTS & points, const Element & el);
 class MinFunctionSum : public MinFunction
 {
 protected:
-  Array<MinFunction*> functions;
+  NgArray<MinFunction*> functions;
  
 public:
   
@@ -81,12 +81,12 @@ public:
 class PointFunction1 : public MinFunction
 {
   Mesh::T_POINTS & points;
-  const Array<INDEX_3> & faces;
+  const NgArray<INDEX_3> & faces;
   const MeshingParameters & mp;
   double h;
 public:
   PointFunction1 (Mesh::T_POINTS & apoints, 
-		  const Array<INDEX_3> & afaces,
+		  const NgArray<INDEX_3> & afaces,
 		  const MeshingParameters & amp,
 		  double ah);
   

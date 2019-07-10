@@ -1,5 +1,5 @@
-#ifndef FILE_NGSTD_ArrayCPP
-#define FILE_NGSTD_ArrayCPP
+#ifndef FILE_NGSTD_NgArrayCPP
+#define FILE_NGSTD_NgArrayCPP
 // necessary for SGI ????
 
 /**************************************************************************/
@@ -9,7 +9,7 @@
 /**************************************************************************/
 
 /* 
-   Abstract data type Array
+   Abstract data type NgArray
 */
 
 #include <mystdlib.h>
@@ -65,11 +65,11 @@ namespace netgen
   {
     if (!actsize)
       {
-	throw Exception ("Array should not be empty");
-	//      cerr << "Array souldn't be empty";
+	throw Exception ("NgArray should not be empty");
+	//      cerr << "NgArray souldn't be empty";
       }
   }
 #endif
 }
-#endif
+#endif // FILE_NGSTD_NgArrayCPP
 

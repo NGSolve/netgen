@@ -39,7 +39,7 @@ void netrule :: SetFreeZoneTransformation (const Vector & devp, int tolclass)
     {
       oldutofreearea_i[tolclass-1] -> Mult (devp, devfree);
 
-      Array<Point2d> & fzi = *freezone_i[tolclass-1];
+      NgArray<Point2d> & fzi = *freezone_i[tolclass-1];
       for (int i = 0; i < fzs; i++)
 	{
 	  transfreezone[i].X() = fzi[i].X() + devfree[2*i];

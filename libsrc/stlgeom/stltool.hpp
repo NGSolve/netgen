@@ -18,7 +18,7 @@ extern int usechartnormal;
 extern int chartdebug;
 
 extern int geomsearchtreeon;
-extern int AddPointIfNotExists(Array<Point3d>& ap, const Point3d& p, double eps = 1e-8);
+extern int AddPointIfNotExists(NgArray<Point3d>& ap, const Point3d& p, double eps = 1e-8);
 //get distance from line lp1-lp2 to point p
 extern double GetDistFromLine(const Point<3>& lp1, const Point<3>& lp2, Point<3>& p);
 extern double GetDistFromInfiniteLine(const Point<3>& lp1, const Point<3>& lp2, const Point<3>& p);
@@ -35,7 +35,7 @@ extern void FIOReadStringE(istream& ios, char* str, int len);
 extern void FIOWriteString(ostream& ios, char* str, int len);
 
 
-typedef Array <int> * ArrayINTPTR;
+typedef NgArray <int> * ArrayINTPTR;
 
 class STLGeometry;
 
@@ -43,12 +43,12 @@ class STLChart
 {
 private:
   STLGeometry * geometry;
-  Array<int> charttrigs; // trigs which only belong to this chart
-  Array<int> outertrigs; // trigs which belong to other charts
+  NgArray<int> charttrigs; // trigs which only belong to this chart
+  NgArray<int> outertrigs; // trigs which belong to other charts
   BoxTree<3> * searchtree; // ADT containing outer trigs
 
-  Array<twoint> olimit; //outer limit of outer chart
-  Array<twoint> ilimit; //outer limit of inner chart
+  NgArray<twoint> olimit; //outer limit of outer chart
+  NgArray<twoint> ilimit; //outer limit of inner chart
 
 
 public:
@@ -75,7 +75,7 @@ public:
 
   void GetTrianglesInBox (const Point3d & pmin,
 			  const Point3d & pmax,
-			  Array<int> & trias) const;
+			  NgArray<int> & trias) const;
   void AddOLimit(twoint l) {olimit.Append(l);}
   void AddILimit(twoint l) {ilimit.Append(l);}
 
@@ -89,8 +89,8 @@ public:
   twoint GetILimit(int i) const {return ilimit.Get(i);}
 
   //move triangles trigs (local chart-trig numbers) to outer chart
-  void MoveToOuterChart(const Array<int>& trigs);
-  void DelChartTrigs(const Array<int>& trigs);
+  void MoveToOuterChart(const NgArray<int>& trigs);
+  void DelChartTrigs(const NgArray<int>& trigs);
 
 
   // define local coordinate system, JS:
@@ -120,7 +120,7 @@ class STLBoundarySeg
   int smoothedge;
 public:
   STLBoundarySeg () { ; }
-  STLBoundarySeg (int ai1, int ai2, const Array<Point<3> > & points,
+  STLBoundarySeg (int ai1, int ai2, const NgArray<Point<3> > & points,
 		  const STLChart * chart)
     : p1(points.Get(ai1)), p2(points.Get(ai2)),
       i1(ai1), i2(ai2)
@@ -160,7 +160,7 @@ class STLBoundary
 private:
   STLGeometry * geometry;
   const STLChart * chart;
-  Array<STLBoundarySeg> boundary;
+  NgArray<STLBoundarySeg> boundary;
   ClosedHashTable<INDEX_2, STLBoundarySeg> boundary_ht;  
   BoxTree<2,INDEX_2> * searchtree = nullptr;
 public:
@@ -181,7 +181,7 @@ public:
   void BuildSearchTree();
   void DeleteSearchTree();
   int TestSeg(const Point<3> & p1, const Point<3> & p2, const Vec<3> & sn, 
-	      double sinchartangle, int divisions, Array<Point<3> >& points,
+	      double sinchartangle, int divisions, NgArray<Point<3> >& points,
 	      double eps);
 
   int TestSegChartNV(const Point3d& p1, const Point3d& p2, const Vec3d& sn);

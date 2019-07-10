@@ -5,7 +5,7 @@ namespace netgen
 {
 
 
-  static double CalcElementBadness (const Array<Point2d> & points,
+  static double CalcElementBadness (const NgArray<Point2d> & points,
 				    const Element2d & elem)
   {
     // badness = sqrt(3) /36 * circumference^2 / area - 1 +
@@ -45,13 +45,13 @@ namespace netgen
 
 
 
-  int Meshing2 ::ApplyRules (Array<Point2d> & lpoints, 
-			     Array<int> & legalpoints,
+  int Meshing2 ::ApplyRules (NgArray<Point2d> & lpoints, 
+			     NgArray<int> & legalpoints,
 			     int maxlegalpoint,
-			     Array<INDEX_2> & llines1,
+			     NgArray<INDEX_2> & llines1,
 			     int maxlegalline,
-			     Array<Element2d> & elements,
-			     Array<INDEX> & dellines, int tolerance,
+			     NgArray<Element2d> & elements,
+			     NgArray<INDEX> & dellines, int tolerance,
 			     const MeshingParameters & mp)
   {
     static int timer = NgProfiler::CreateTimer ("meshing2::ApplyRules");
@@ -66,15 +66,15 @@ namespace netgen
     int noldll = llines1.Size();
 
 
-    ArrayMem<int,100> pused(maxlegalpoint), lused(maxlegalline);
-    ArrayMem<int,100> pnearness(noldlp), lnearness(llines1.Size());
+    NgArrayMem<int,100> pused(maxlegalpoint), lused(maxlegalline);
+    NgArrayMem<int,100> pnearness(noldlp), lnearness(llines1.Size());
 
-    ArrayMem<int, 20> pmap, pfixed, lmap;
+    NgArrayMem<int, 20> pmap, pfixed, lmap;
   
-    ArrayMem<Point2d,100> tempnewpoints;
-    ArrayMem<INDEX_2,100> tempnewlines;
-    ArrayMem<int,100> tempdellines;
-    ArrayMem<Element2d,100> tempelements;
+    NgArrayMem<Point2d,100> tempnewpoints;
+    NgArrayMem<INDEX_2,100> tempnewlines;
+    NgArrayMem<int,100> tempdellines;
+    NgArrayMem<Element2d,100> tempelements;
 
 
     elements.SetSize (0);
@@ -135,8 +135,8 @@ namespace netgen
 
 
     // resort lines after lnearness
-    Array<INDEX_2> llines(llines1.Size());
-    Array<int> sortlines(llines1.Size());
+    NgArray<INDEX_2> llines(llines1.Size());
+    NgArray<int> sortlines(llines1.Size());
     int lnearness_class[MAX_NEARNESS];
 
     for (int j = 0; j < MAX_NEARNESS; j++)

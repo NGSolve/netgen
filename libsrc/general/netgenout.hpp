@@ -39,13 +39,13 @@ public:
 
 class Procs
 {
-  const netgen::FlatArray<int> procs;
+  const netgen::NgFlatArray<int> procs;
 
 public:
 
-  Procs ( const netgen::FlatArray<int> & aprocs ) : procs (aprocs) { ; }
+  Procs ( const netgen::NgFlatArray<int> & aprocs ) : procs (aprocs) { ; }
 
-  const netgen::FlatArray<int> & GetProcs () const { return procs; }
+  const netgen::NgFlatArray<int> & GetProcs () const { return procs; }
 };
 
 

@@ -65,6 +65,44 @@ namespace ngcore
       ost << "\n" << val.first << ": " << val.second;
     return ost;
   }
+
+  template <class T>
+  NETGEN_INLINE void Swap (T & a, T & b)
+  {
+      T temp = std::move(a);
+      a = std::move(b);
+      b = std::move(temp);
+  }
+
+  template <typename T>
+  class AlignedAlloc
+  {
+    protected:
+      static void * aligned_malloc(size_t s)
+      {
+        // Assume 16 byte alignment of standard library
+        if(alignof(T)<=16)
+            return malloc(s);
+        else
+            return  _mm_malloc(s, alignof(T));
+      }
+
+      static void aligned_free(void *p)
+      {
+        if(alignof(T)<=16)
+            free(p);
+        else
+            _mm_free(p);
+      }
+
+  public:
+    void * operator new (size_t s, void *p) { return p; }
+    void * operator new (size_t s) { return aligned_malloc(s); }
+    void * operator new[] (size_t s) { return aligned_malloc(s); }
+    void operator delete (void * p) { aligned_free(p); }
+    void operator delete[] (void * p) { aligned_free(p); }
+  };
+
 } // namespace ngcore
 
 #endif // NETGEN_CORE_UTILS_HPP

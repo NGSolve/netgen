@@ -6,7 +6,7 @@ if(WIN32)
   # we are linking to object libraries on Windows
   cmake_minimum_required(VERSION 3.12)
 else(WIN32)
-  cmake_minimum_required(VERSION 3.1.3)
+  cmake_minimum_required(VERSION 3.8)
 endif(WIN32)
 
 if(NOT WIN32)
@@ -115,6 +115,7 @@ endif (ADDITIONAL_PATHS)
 #######################################################################
 # build options
 include_directories ("${PROJECT_SOURCE_DIR}/include")
+include_directories ("${PROJECT_SOURCE_DIR}/libsrc")
 include_directories ("${PROJECT_SOURCE_DIR}/libsrc/include")
 include_directories ("${PROJECT_BINARY_DIR}")
 
@@ -216,7 +217,7 @@ macro(get_dll_from_lib dll_path lib_path)
         get_filename_component(lib_name ${lib} name)
 endmacro()
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 if(WIN32)
     get_WIN32_WINNT(ver)
     add_definitions(-D_WIN32_WINNT=${ver} -DWNT -DWNT_WINDOW -DNOMINMAX)
@@ -287,13 +288,20 @@ if (USE_PYTHON)
 endif (USE_PYTHON)
 
 #######################################################################
+add_library(netgen_mpi INTERFACE)
+add_library(netgen_metis INTERFACE)
 if (USE_MPI)
     find_package(MPI REQUIRED)
+    target_include_directories(netgen_mpi INTERFACE ${MPI_CXX_INCLUDE_PATH})
+    target_link_libraries(netgen_mpi INTERFACE ${MPI_mpi_LIBRARY} ${MPI_CXX_LIBRARIES} )
+    target_compile_definitions(netgen_mpi INTERFACE PARALLEL )
+
     find_package(METIS REQUIRED)
-    add_definitions(-DPARALLEL -DMETIS)
-    include_directories(${MPI_CXX_INCLUDE_PATH})
-    include_directories(${METIS_INCLUDE_DIR})
+    target_include_directories(netgen_metis INTERFACE ${METIS_INCLUDE_DIR})
+    target_link_libraries(netgen_metis INTERFACE ${METIS_LIBRARY} )
+    target_compile_definitions(netgen_metis INTERFACE METIS )
 endif (USE_MPI)
+install(TARGETS netgen_mpi netgen_metis ${NG_INSTALL_DIR})
 
 #######################################################################
 if (USE_OCC)

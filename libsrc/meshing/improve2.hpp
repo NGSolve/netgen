@@ -19,8 +19,8 @@ public:
   void ImproveMesh (Mesh & mesh2d, const MeshingParameters & mp);
   void ImproveMeshJacobian (Mesh & mesh2d, const MeshingParameters & mp);
   void ImproveVolumeMesh (Mesh & mesh);
-  void ProjectBoundaryPoints(Array<int> & surfaceindex, 
-			     const Array<Point<3>* > & from, Array<Point<3>* > & dest);
+  void ProjectBoundaryPoints(NgArray<int> & surfaceindex, 
+			     const NgArray<Point<3>* > & from, NgArray<Point<3>* > & dest);
 
   void EdgeSwapping (Mesh & mesh, int usemetric);
   void CombineImprove (Mesh & mesh);

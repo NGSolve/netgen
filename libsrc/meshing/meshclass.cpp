@@ -637,7 +637,7 @@ namespace netgen
     if (ident -> GetMaxNr() > 0)
       {
         outfile << "identifications\n";
-        Array<INDEX_2> identpairs;
+        NgArray<INDEX_2> identpairs;
         int cnt = 0;
         for (i = 1; i <= ident -> GetMaxNr(); i++)
           {
@@ -1138,7 +1138,7 @@ namespace netgen
         if ( strcmp (str, "bcnames" ) == 0 )
           {
             infile >> n;
-            Array<int,0> bcnrs(n);
+            NgArray<int,0> bcnrs(n);
             SetNBCNames(n);
             for ( i = 1; i <= n; i++ )
               {
@@ -1179,7 +1179,7 @@ namespace netgen
 	if ( strcmp (str, "cd2names" ) == 0)
 	  {
 	    infile >> n;
-	    Array<int,0> cd2nrs(n);
+	    NgArray<int,0> cd2nrs(n);
 	    SetNCD2Names(n);
 	    for( i=1; i<=n; i++)
 	      {
@@ -1891,7 +1891,7 @@ namespace netgen
     int ne = GetNE();
     int nse = GetNSE();
 
-    Array<int,PointIndex::BASE> numonpoint(np);
+    NgArray<int,PointIndex::BASE> numonpoint(np);
 
     numonpoint = 0;
 
@@ -1933,7 +1933,7 @@ namespace netgen
       }
 
 
-    Array<char, 1> hasface(GetNFD());
+    NgArray<char, 1> hasface(GetNFD());
 
     int i;
     for (i = 1; i <= GetNFD(); i++)
@@ -2019,7 +2019,7 @@ namespace netgen
         {
           faceht.SetSize (2 * selsonpoint[pi].Size() + 4 * elsonpoint[pi].Size());
 
-          FlatArray<SurfaceElementIndex> row = selsonpoint[pi];
+          NgFlatArray<SurfaceElementIndex> row = selsonpoint[pi];
           for (ii = 0; ii < row.Size(); ii++)
             {
               Element2d hel = SurfaceElement(row[ii]);
@@ -2058,7 +2058,7 @@ namespace netgen
             }
 
 
-          FlatArray<ElementIndex> rowel = elsonpoint[pi];
+          NgFlatArray<ElementIndex> rowel = elsonpoint[pi];
           for (ii = 0; ii < rowel.Size(); ii++)
             {
               const Element & el = VolumeElement(rowel[ii]);
@@ -2533,7 +2533,7 @@ namespace netgen
     int i, j, k;
     PointIndex pi;
     const int large = 9999;
-    Array<int,PointIndex::BASE> dist(GetNP());
+    NgArray<int,PointIndex::BASE> dist(GetNP());
 
     dist = large;
 
@@ -2666,7 +2666,7 @@ namespace netgen
       return 1e10;
   }
 
-  void Mesh :: SetMaxHDomain (const Array<double> & mhd)
+  void Mesh :: SetMaxHDomain (const NgArray<double> & mhd)
   {
     maxhdomain.SetSize(mhd.Size());
     for (int i = 1; i <= mhd.Size(); i++)
@@ -3003,7 +3003,7 @@ namespace netgen
     int nseg = GetNSeg();
     int nse = GetNSE();
 
-    Array<Vec3d> normals(np);
+    NgArray<Vec3d> normals(np);
     BitArray linepoint(np);
 
     linepoint.Clear();
@@ -3266,8 +3266,8 @@ namespace netgen
   {
     static Timer t("Mesh::Compress"); RegionTimer reg(t);
     
-    Array<PointIndex,PointIndex::BASE,PointIndex> op2np(GetNP());
-    Array<MeshPoint> hpoints;
+    NgArray<PointIndex,PointIndex::BASE,PointIndex> op2np(GetNP());
+    NgArray<MeshPoint> hpoints;
     BitArrayChar<PointIndex::BASE> pused(GetNP());
 
     /*
@@ -3540,7 +3540,7 @@ namespace netgen
     Point3d pmin, pmax;
     GetBox (pmin, pmax);
     BoxTree<3> setree(pmin, pmax);
-    Array<int> inters;
+    NgArray<int> inters;
 
     bool overlap = 0;
     bool incons_layers = 0;
@@ -4430,7 +4430,7 @@ namespace netgen
     Vec3d rhs, sol;
     const double eps = 1e-6;
 
-    Array<Element2d> loctrigs;
+    NgArray<Element2d> loctrigs;
 
     
     //SZ 
@@ -4963,7 +4963,7 @@ namespace netgen
     Vec3d rhs, sol;
     const double eps = 1.e-4;
 
-    Array<Element> loctets;
+    NgArray<Element> loctets;
 
     VolumeElement(element).GetTets (loctets);
 
@@ -4994,8 +4994,8 @@ namespace netgen
         if (sol.X() >= -eps && sol.Y() >= -eps && sol.Z() >= -eps &&
             sol.X() + sol.Y() + sol.Z() <= 1+eps)
           {
-            Array<Element> loctetsloc;
-            Array<netgen::Point<3> > pointsloc;
+            NgArray<Element> loctetsloc;
+            NgArray<netgen::Point<3> > pointsloc;
 
             VolumeElement(element).GetTetsLocal (loctetsloc);
             VolumeElement(element).GetNodesLocalNew (pointsloc);
@@ -5027,7 +5027,7 @@ namespace netgen
   {
     if(index != -1) 
       {
-        Array<int> dummy(1);
+        NgArray<int> dummy(1);
         dummy[0] = index;
         return GetElementOfPoint(p,lami,&dummy,build_searchtree,allowindex);
       }
@@ -5040,7 +5040,7 @@ namespace netgen
 
   int Mesh :: GetElementOfPoint (const netgen::Point<3> & p,
                                  double lami[3],
-                                 const Array<int> * const indices,
+                                 const NgArray<int> * const indices,
                                  bool build_searchtree,
                                  const bool allowindex) const
   {
@@ -5060,7 +5060,7 @@ namespace netgen
         if(ps_startelement != 0 && ps_startelement <= GetNSE() && PointContainedIn2DElement(p,lami,ps_startelement))
           return ps_startelement;
 
-        Array<int> locels;
+        NgArray<int> locels;
         if (elementsearchtree || build_searchtree)
           {
             // update if necessary:
@@ -5106,7 +5106,7 @@ namespace netgen
         if(ps_startelement != 0 && PointContainedIn3DElement(p,lami,ps_startelement))
           return ps_startelement;
 
-        Array<int> locels;
+        NgArray<int> locels;
         if (elementsearchtree || build_searchtree)
           {
             // update if necessary:
@@ -5183,7 +5183,7 @@ namespace netgen
   {
     if(index != -1) 
       {
-        Array<int> dummy(1);
+        NgArray<int> dummy(1);
         dummy[0] = index;
         return GetSurfaceElementOfPoint(p,lami,&dummy,build_searchtree,allowindex);
       }
@@ -5196,7 +5196,7 @@ namespace netgen
 
   int Mesh :: GetSurfaceElementOfPoint (const netgen::Point<3> & p,
                                         double lami[3],
-                                        const Array<int> * const indices,
+                                        const NgArray<int> * const indices,
                                         bool build_searchtree,
                                         const bool allowindex) const
   {
@@ -5220,7 +5220,7 @@ namespace netgen
             return velement;
           }
         
-        Array<int> faces;
+        NgArray<int> faces;
         topology.GetElementFaces(velement,faces);
 
         //(*testout) << "faces " << faces << endl;
@@ -5252,7 +5252,7 @@ namespace netgen
               }
           }
 
-        Array<int> faces2;
+        NgArray<int> faces2;
         topology.GetElementFaces(velement,faces2);
         /*
         cout << "no matching surf element" << endl
@@ -5269,7 +5269,7 @@ namespace netgen
 
 
   void Mesh::GetIntersectingVolEls(const Point3d& p1, const Point3d& p2, 
-                                   Array<int> & locels) const
+                                   NgArray<int> & locels) const
   {
     elementsearchtree->GetIntersecting (p1, p2, locels);
   }
@@ -5394,7 +5394,7 @@ namespace netgen
     int np = GetNP();
 
     BitArray usedp(np);
-    Array<SurfaceElementIndex> els_of_face;
+    NgArray<SurfaceElementIndex> els_of_face;
 
     fdi = 1;
     while (fdi <= GetNFD())
@@ -5568,7 +5568,7 @@ namespace netgen
       }
   }
 
-  void Mesh :: GetSurfaceElementsOfFace (int facenr, Array<SurfaceElementIndex> & sei) const
+  void Mesh :: GetSurfaceElementsOfFace (int facenr, NgArray<SurfaceElementIndex> & sei) const
   {
     static int timer = NgProfiler::CreateTimer ("GetSurfaceElementsOfFace");
     NgProfiler::RegionTimer reg (timer);
@@ -5792,7 +5792,7 @@ namespace netgen
   //   }
 
 
-  //   void Mesh :: GetIdentificationMap (int identnr, Array<int> & identmap) const
+  //   void Mesh :: GetIdentificationMap (int identnr, NgArray<int> & identmap) const
   //   {
   //     int i, j;
 
@@ -5815,7 +5815,7 @@ namespace netgen
   //   }
 
 
-  //   void Mesh :: GetIdentificationPairs (int identnr, Array<INDEX_2> & identpairs) const
+  //   void Mesh :: GetIdentificationPairs (int identnr, NgArray<INDEX_2> & identpairs) const
   //   {
   //     int i, j;
 
@@ -6242,16 +6242,16 @@ namespace netgen
       return defaultstring;
   }
 
-  void Mesh :: SetUserData(const char * id, Array<int> & data)
+  void Mesh :: SetUserData(const char * id, NgArray<int> & data)
   {
     if(userdata_int.Used(id))
       delete userdata_int[id];
 
-    Array<int> * newdata = new Array<int>(data);
+    NgArray<int> * newdata = new NgArray<int>(data);
 
     userdata_int.Set(id,newdata);      
   }
-  bool Mesh :: GetUserData(const char * id, Array<int> & data, int shift) const
+  bool Mesh :: GetUserData(const char * id, NgArray<int> & data, int shift) const
   {
     if(userdata_int.Used(id))
       {
@@ -6267,16 +6267,16 @@ namespace netgen
         return false;
       }
   }
-  void Mesh :: SetUserData(const char * id, Array<double> & data)
+  void Mesh :: SetUserData(const char * id, NgArray<double> & data)
   {
     if(userdata_double.Used(id))
       delete userdata_double[id];
 
-    Array<double> * newdata = new Array<double>(data);
+    NgArray<double> * newdata = new NgArray<double>(data);
 
     userdata_double.Set(id,newdata);      
   }
-  bool Mesh :: GetUserData(const char * id, Array<double> & data, int shift) const
+  bool Mesh :: GetUserData(const char * id, NgArray<double> & data, int shift) const
   {
     if(userdata_double.Used(id))
       {

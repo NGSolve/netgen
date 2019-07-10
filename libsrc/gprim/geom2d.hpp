@@ -613,7 +613,7 @@ namespace netgen
   class Polygon2d
   {
   protected:
-    Array<Point2d> points;
+    NgArray<Point2d> points;
   
   public:
     Polygon2d ();

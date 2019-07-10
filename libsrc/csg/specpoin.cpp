@@ -21,7 +21,7 @@
 
 namespace netgen
 {
-  Array<Box<3> > boxes;
+  NgArray<Box<3> > boxes;
 
 
   void ProjectToEdge (const Surface * f1, const Surface * f2, Point<3> & hp);
@@ -64,7 +64,7 @@ namespace netgen
   }
 
 
-  static Array<int> numprim_hist;
+  static NgArray<int> numprim_hist;
 
   SpecialPointCalculation :: SpecialPointCalculation ()
   {
@@ -73,7 +73,7 @@ namespace netgen
 
   void SpecialPointCalculation :: 
   CalcSpecialPoints (const CSGeometry & ageometry, 
-		     Array<MeshPoint> & apoints)
+		     NgArray<MeshPoint> & apoints)
   {
     static int timer = NgProfiler::CreateTimer ("CSG: find special points");
     NgProfiler::RegionTimer reg (timer);
@@ -112,7 +112,7 @@ namespace netgen
 
 	if (tlo->GetSolid())
 	  {
-	    Array<Point<3> > hpts;
+	    NgArray<Point<3> > hpts;
 	    tlo->GetSolid()->CalcOnePrimitiveSpecialPoints (box, hpts);
             // if (hpts.Size())
             //  cout << "oneprimitivespecialpoints = " << hpts << endl;
@@ -210,8 +210,8 @@ namespace netgen
     bool possiblecrossp, possibleexp;  // possible cross or extremalpoint
     bool surecrossp = 0, sureexp = 0;          // sure ...
   
-    // static Array<int> locsurf;  // attention: array is static
-    ArrayMem<int,100> locsurf; 
+    // static NgArray<int> locsurf;  // attention: array is static
+    NgArrayMem<int,100> locsurf; 
 
     // static int cntbox = 0;
     // cntbox++;
@@ -273,8 +273,8 @@ namespace netgen
 
 	if (nquad == numprim && nplane >= numprim-1)
 	  {
-	    Array<Point<3> > pts;
-	    Array<int> surfids;
+	    NgArray<Point<3> > pts;
+	    NgArray<int> surfids;
 
 	    for (int k1 = 0; k1 < numprim - 2; k1++)
 	      for (int k2 = k1 + 1; k2 < numprim - 1; k2++)
@@ -392,8 +392,8 @@ namespace netgen
 
 	if (nsphere == numprim) //  && calccp == false)
 	  {
-	    Array<Point<3> > pts;
-	    Array<int> surfids;
+	    NgArray<Point<3> > pts;
+	    NgArray<int> surfids;
 
 
 	    
@@ -541,7 +541,7 @@ namespace netgen
 			    BoxSphere<3> boxp (pp, pp);
 			    boxp.Increase (1e-3*size);
 			    boxp.CalcDiamCenter();
-			    Array<int> locsurf2;
+			    NgArray<int> locsurf2;
 
 			    geometry -> GetIndependentSurfaceIndices (sol, boxp, locsurf2);
 			  
@@ -1132,7 +1132,7 @@ namespace netgen
   ComputeCrossPoints (const Plane * plane1, 
 		      const Plane * plane2, 
 		      const Plane * plane3, 
-		      Array<Point<3> > & pts)
+		      NgArray<Point<3> > & pts)
   {
     Mat<3> mat;
     Vec<3> rhs, sol;
@@ -1174,7 +1174,7 @@ namespace netgen
   ComputeCrossPoints (const Plane * plane1, 
 		      const Plane * plane2, 
 		      const QuadraticSurface * quadric, 
-		      Array<Point<3> > & pts)
+		      NgArray<Point<3> > & pts)
   {
     Mat<2,3> mat;
     Mat<3,2> inv;
@@ -1244,7 +1244,7 @@ namespace netgen
   ComputeCrossPoints (const Sphere * sphere1, 
 		      const Sphere * sphere2, 
 		      const Sphere * sphere3, 
-		      Array<Point<3> > & pts)
+		      NgArray<Point<3> > & pts)
   {
     Mat<2,3> mat;
     Mat<3,2> inv;
@@ -1327,7 +1327,7 @@ namespace netgen
   void SpecialPointCalculation :: 
   ComputeExtremalPoints (const Plane * plane, 
 			 const QuadraticSurface * quadric, 
-			 Array<Point<3> > & pts)
+			 NgArray<Point<3> > & pts)
   {
     // 3 equations:
     // surf1 = 0  <===> plane_a + plane_b x = 0;
@@ -1416,7 +1416,7 @@ namespace netgen
   void SpecialPointCalculation :: 
   ComputeExtremalPoints (const Sphere * sphere1,
 			 const Sphere * sphere2,
-			 Array<Point<3> > & pts)
+			 NgArray<Point<3> > & pts)
   {
     // 3 equations:
     // surf1 = 0  <===> |x-c1|^2 - r1^2 = 0;
@@ -1666,19 +1666,19 @@ namespace netgen
 
   void SpecialPointCalculation :: 
   AnalyzeSpecialPoints (const CSGeometry & ageometry,
-			Array<MeshPoint> & apoints, 
-			Array<SpecialPoint> & specpoints)
+			NgArray<MeshPoint> & apoints, 
+			NgArray<SpecialPoint> & specpoints)
   {
     static int timer = NgProfiler::CreateTimer ("CSG: analyze special points");
     NgProfiler::RegionTimer reg (timer);
 
 
-    Array<int> surfind, rep_surfind, surfind2, rep_surfind2, surfind3;
+    NgArray<int> surfind, rep_surfind, surfind2, rep_surfind2, surfind3;
 
-    Array<Vec<3> > normalvecs;
+    NgArray<Vec<3> > normalvecs;
     Vec<3> nsurf = 0.0;
 
-    Array<int> specpoint2point;
+    NgArray<int> specpoint2point;
     specpoints.SetSize (0);
 
     geometry = &ageometry;
@@ -1698,7 +1698,7 @@ namespace netgen
       */
       Vec<3> dir(1.2, 1.7, 0.9);
       
-      Array<double> coord(apoints.Size());
+      NgArray<double> coord(apoints.Size());
       for (int i = 0; i < apoints.Size(); i++)
 	coord[i] = dir * Vec<3> (apoints[i]);
       
@@ -1717,7 +1717,7 @@ namespace netgen
     (*testout) << "points = " << apoints << endl;
 
     Point3dTree searchtree (bbox.PMin(), bbox.PMax());
-    Array<int> locsearch;
+    NgArray<int> locsearch;
 
     for (int si = 0; si < ageometry.GetNTopLevelObjects(); si++)
       {
@@ -1882,7 +1882,7 @@ namespace netgen
 #ifdef DEVELOP
 		      (*testout) << "surfind2 = " << endl << surfind2 << endl;
 #endif
-		      Array<int> surfind2_aux(surfind2);
+		      NgArray<int> surfind2_aux(surfind2);
 		      ageometry.GetIndependentSurfaceIndices (surfind2_aux);
 #ifdef DEVELOP
 		      (*testout) << "surfind2,rep = " << endl << surfind2_aux << endl;
@@ -2067,7 +2067,7 @@ namespace netgen
 	if(testuncond.Test(i))
 	  continue;
 	
-	Array<int> same;
+	NgArray<int> same;
 	same.Append(i);
 	
 	for(int j = i+1; j<specpoints.Size(); j++)

@@ -51,7 +51,7 @@ namespace netgen
        Function to create a list of all the unique colours 
        available in a given mesh
    */
-   void GetFaceColours(Mesh & mesh, Array<Vec3d> & face_colours)
+   void GetFaceColours(Mesh & mesh, NgArray<Vec3d> & face_colours)
    {
       face_colours.SetSize(1);
       face_colours.Elem(1) = mesh.GetFaceDescriptor(1).SurfColour();
@@ -143,9 +143,9 @@ namespace netgen
 
       // Arrays to hold the specified RGB colour triplets as well 
       // as the associated boundary condition number
-      Array<Vec3d> bc_colours(numentries);
-      Array<int> bc_num(numentries);
-      Array<bool> bc_used(numentries);
+      NgArray<Vec3d> bc_colours(numentries);
+      NgArray<int> bc_num(numentries);
+      NgArray<bool> bc_used(numentries);
       
       // Actually read in the data from the file
       for(int i = 1; i <= numentries; i++)
@@ -198,7 +198,7 @@ namespace netgen
 
       PrintMessage(3, "Highest boundary number in list = ",max_bcnum);
 
-      Array<Vec3d> all_colours;
+      NgArray<Vec3d> all_colours;
       
       // Extract all the colours to see how many there are
       GetFaceColours(mesh,all_colours);
@@ -290,9 +290,9 @@ namespace netgen
    */
    void AutoColourAlg_Sorted(Mesh & mesh)
    {
-      Array<Vec3d> all_colours;
-      Array<int> faces_sorted;
-      Array<int> colours_sorted;
+      NgArray<Vec3d> all_colours;
+      NgArray<int> faces_sorted;
+      NgArray<int> colours_sorted;
 
       // Extract all the colours to see how many there are
       GetFaceColours(mesh,all_colours);
@@ -322,7 +322,7 @@ namespace netgen
       colours_sorted.SetSize(all_colours.Size()+1);
       faces_sorted = 0;
       
-      // Slave Array to identify the colours the faces were assigned to, 
+      // Slave NgArray to identify the colours the faces were assigned to, 
       // after the bubble sort routine to sort the automatic boundary 
       // identifiers according to the number of surface mesh elements 
       // of a given colour
@@ -342,7 +342,7 @@ namespace netgen
       // And save this number into an array for later sorting
       for(int face_index = 1; face_index <= nfd; face_index++)
       {
-         Array<SurfaceElementIndex> se_face;
+         NgArray<SurfaceElementIndex> se_face;
 
          mesh.GetSurfaceElementsOfFace(face_index, se_face);
 

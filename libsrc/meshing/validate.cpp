@@ -5,7 +5,7 @@
 
 namespace netgen
 {
-  void GetPureBadness(Mesh & mesh, Array<double> & pure_badness,
+  void GetPureBadness(Mesh & mesh, NgArray<double> & pure_badness,
 		      const BitArray & isnewpoint)
   {
     //const int ne = mesh.GetNE();
@@ -14,7 +14,7 @@ namespace netgen
     pure_badness.SetSize(np+PointIndex::BASE+1);
     pure_badness = -1;
 
-    Array< Point<3>* > backup(np);
+    NgArray< Point<3>* > backup(np);
 
     for(int i=0; i<np; i++)
       {
@@ -47,10 +47,10 @@ namespace netgen
   }
 
 
-  double Validate(const Mesh & mesh, Array<ElementIndex> & bad_elements,
-		  const Array<double> & pure_badness,
+  double Validate(const Mesh & mesh, NgArray<ElementIndex> & bad_elements,
+		  const NgArray<double> & pure_badness,
 		  double max_worsening, const bool uselocalworsening,
-		  Array<double> * quality_loss)
+		  NgArray<double> * quality_loss)
   {
     PrintMessage(3,"!!!! Validating !!!!");
     //if(max_worsening > 0)
@@ -105,7 +105,7 @@ namespace netgen
 
 
   void GetWorkingArea(BitArray & working_elements, BitArray & working_points,
-		      const Mesh & mesh, const Array<ElementIndex> & bad_elements,
+		      const Mesh & mesh, const NgArray<ElementIndex> & bad_elements,
 		      const int width)
   {
     working_elements.Clear();
@@ -151,11 +151,11 @@ namespace netgen
 
 
 
-  void RepairBisection(Mesh & mesh, Array<ElementIndex> & bad_elements, 
+  void RepairBisection(Mesh & mesh, NgArray<ElementIndex> & bad_elements, 
 		       const BitArray & isnewpoint, const Refinement & refinement,
-		       const Array<double> & pure_badness, 
+		       const NgArray<double> & pure_badness, 
 		       double max_worsening, const bool uselocalworsening,
-		       const Array< Array<int,PointIndex::BASE>* > & idmaps)
+		       const NgArray< NgArray<int,PointIndex::BASE>* > & idmaps)
   {
     ostringstream ostrstr;
 
@@ -175,9 +175,9 @@ namespace netgen
 
     PushStatus("Repair Bisection");
 
-    Array<Point<3>* > should(np);
-    Array<Point<3>* > can(np);
-    Array<Vec<3>* > nv(np);
+    NgArray<Point<3>* > should(np);
+    NgArray<Point<3>* > can(np);
+    NgArray<Vec<3>* > nv(np);
     for(int i=0; i<np; i++)
       {
 	nv[i] = new Vec<3>;
@@ -196,7 +196,7 @@ namespace netgen
 	isedgepoint.Set(seg[1]);
       }
 
-    Array<int> surfaceindex(np);
+    NgArray<int> surfaceindex(np);
     surfaceindex = -1;
     
     for (int i = 1; i <= mesh.GetNSE(); i++)

@@ -399,7 +399,7 @@ namespace netgen
 	      int inputface = 0;
 	      while (1)
 		{
-		  Array<int> pnums,cleaned_pnums;
+		  NgArray<int> pnums,cleaned_pnums;
 		  for(int i=0; i<3; i++)
 		    {
 		      pnums.Append((int) (ParseNumber (scan)));
@@ -786,7 +786,7 @@ namespace netgen
 
 		if(scan.GetToken() == '-' || scan.GetToken() == TOK_NUM)
 		  {
-		    Array<double> vals;
+		    NgArray<double> vals;
 		    vals.Append (ParseNumber(scan));
 		    while (scan.GetToken() == ',')
 		      {
@@ -798,7 +798,7 @@ namespace netgen
 		  }
 		else
 		  { // string list
-		    Array<char*> vals;
+		    NgArray<char*> vals;
 		    string val = scan.GetStringValue();
 		    vals.Append(new char[val.size()+1]);
 		    strcpy(vals.Last(),val.c_str());
@@ -908,7 +908,7 @@ namespace netgen
 
 		    if (flags.NumListFlagDefined ("col"))
 		      {
-			const Array<double> & col =
+			const NgArray<double> & col =
 			  flags.GetNumListFlag ("col");
 			tlo->SetRGB (col[0], col[1], col[2]);
 		      }
@@ -934,7 +934,7 @@ namespace netgen
 		    
 		    ParseChar (scan, ';');
 
-		    Array<int> si;
+		    NgArray<int> si;
 		    geom->GetSolid(surfname)->GetSurfaceIndices(si);
 		    int tlonr = 
 		      geom->SetTopLevelObject ((Solid*)geom->GetSolid(name),
@@ -942,7 +942,7 @@ namespace netgen
 		    TopLevelObject * tlo = geom->GetTopLevelObject (tlonr);
 		    if (flags.NumListFlagDefined ("col"))
 		      {
-			const Array<double> & col = flags.GetNumListFlag ("col");
+			const NgArray<double> & col = flags.GetNumListFlag ("col");
 			tlo->SetRGB (col.Get(1), col.Get(2), col.Get(3));
 		      }
 		    if (flags.GetDefineFlag ("transparent"))
@@ -980,7 +980,7 @@ namespace netgen
 		      ParseChar (scan, ';');
 		      
 		      
-		      Array<int> si1, si2;
+		      NgArray<int> si1, si2;
 		      geom->GetSolid(name1)->GetSurfaceIndices(si1);
 		      geom->GetSolid(name2)->GetSurfaceIndices(si2);
 
@@ -1016,7 +1016,7 @@ namespace netgen
 		      ParseChar (scan, ';');
 
 		      
-		      Array<int> si1, si2;
+		      NgArray<int> si1, si2;
 		      geom->GetSolid(name1)->GetSurfaceIndices(si1);
 		      geom->GetSolid(name2)->GetSurfaceIndices(si2);
 		      
@@ -1246,7 +1246,7 @@ namespace netgen
 
 		CSGeometry::BCModification bcm;
 		bcm.bcname = NULL;
-		Array<int> si;
+		NgArray<int> si;
 		
 		geom->GetSolid(name1)->GetSurfaceIndices(si);
 		if(si.Size() == 0)
@@ -1298,7 +1298,7 @@ namespace netgen
 		bcm.bcname = NULL;
 
 
-		Array<int> si;
+		NgArray<int> si;
 		
 		geom->GetSolid(name1)->GetSurfaceIndices(si);
 		if(si.Size() == 0)

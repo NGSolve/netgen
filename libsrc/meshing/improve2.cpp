@@ -84,7 +84,7 @@ namespace netgen
     NgProfiler::StartTimer (timerstart);
 
 
-    Array<SurfaceElementIndex> seia;
+    NgArray<SurfaceElementIndex> seia;
     mesh.GetSurfaceElementsOfFace (faceindex, seia);
 
     for (int i = 0; i < seia.Size(); i++)
@@ -96,13 +96,13 @@ namespace netgen
 
     int surfnr = mesh.GetFaceDescriptor (faceindex).SurfNr();
 
-    Array<Neighbour> neighbors(mesh.GetNSE());
+    NgArray<Neighbour> neighbors(mesh.GetNSE());
     INDEX_2_HASHTABLE<trionedge> other(seia.Size() + 2);
 
 
-    Array<char> swapped(mesh.GetNSE());
-    Array<int,PointIndex::BASE> pdef(mesh.GetNP());
-    Array<double,PointIndex::BASE> pangle(mesh.GetNP());
+    NgArray<char> swapped(mesh.GetNSE());
+    NgArray<int,PointIndex::BASE> pdef(mesh.GetNP());
+    NgArray<double,PointIndex::BASE> pangle(mesh.GetNP());
 
 
     // int e;
@@ -172,7 +172,7 @@ namespace netgen
       }
 
     /*
-      Array<Vec3d> normals(mesh.GetNP());
+      NgArray<Vec3d> normals(mesh.GetNP());
       for (i = 1; i <= mesh.GetNSE(); i++)
       {
       Element2d & hel = mesh.SurfaceElement(i);
@@ -462,7 +462,7 @@ namespace netgen
     // SurfaceElementIndex sei;
 
 
-    Array<SurfaceElementIndex> seia;
+    NgArray<SurfaceElementIndex> seia;
     mesh.GetSurfaceElementsOfFace (faceindex, seia);
 
 
@@ -486,7 +486,7 @@ namespace netgen
     //int nse = mesh.GetNSE();
 
     TABLE<SurfaceElementIndex,PointIndex::BASE> elementsonnode(np); 
-    Array<SurfaceElementIndex> hasonepi, hasbothpi;
+    NgArray<SurfaceElementIndex> hasonepi, hasbothpi;
 
     for (int i = 0; i < seia.Size(); i++)
       {
@@ -495,7 +495,7 @@ namespace netgen
 	  elementsonnode.Add (el[j], seia[i]);
       }
 
-    Array<bool,PointIndex::BASE> fixed(np);
+    NgArray<bool,PointIndex::BASE> fixed(np);
     fixed = false;
 
     NgProfiler::StopTimer  (timerstart1);
@@ -531,7 +531,7 @@ namespace netgen
 
 
 
-    Array<Vec<3>,PointIndex::BASE> normals(np);
+    NgArray<Vec<3>,PointIndex::BASE> normals(np);
 
     for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End(); pi++)
       {
@@ -812,7 +812,7 @@ namespace netgen
     int surfnr;
   
     Vec3d n, ng;
-    Array<Vec3d> ngs(3);
+    NgArray<Vec3d> ngs(3);
 
     (*mycout) << "Check Surface Approximation" << endl;
     (*testout) << "Check Surface Approximation" << endl;

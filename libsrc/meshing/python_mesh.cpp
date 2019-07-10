@@ -41,12 +41,12 @@ namespace netgen
 template <typename T, int BASE = 0, typename TIND = int>
 void ExportArray (py::module &m)
 {
-  using TA = Array<T,BASE,TIND>;
+  using TA = NgArray<T,BASE,TIND>;
   string name = string("Array_") + typeid(T).name();
-  py::class_<Array<T,BASE,TIND>>(m, name.c_str())
-    .def ("__len__", [] ( Array<T,BASE,TIND> &self ) { return self.Size(); } )
+  py::class_<NgArray<T,BASE,TIND>>(m, name.c_str())
+    .def ("__len__", [] ( NgArray<T,BASE,TIND> &self ) { return self.Size(); } )
     .def ("__getitem__", 
-          FunctionPointer ([](Array<T,BASE,TIND> & self, TIND i) -> T&
+          FunctionPointer ([](NgArray<T,BASE,TIND> & self, TIND i) -> T&
                            {
                              if (i < BASE || i >= BASE+self.Size())
                                throw py::index_error();
@@ -108,7 +108,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("Min", [](NgMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_MIN, c); })
     .def("Max", [](NgMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_MAX, c); })
     .def("SubComm", [](NgMPI_Comm & c, std::vector<int> proc_list) {
-        Array<int> procs(proc_list.size());
+        NgArray<int> procs(proc_list.size());
         for (int i = 0; i < procs.Size(); i++)
           procs[i] = proc_list[i];
         if (!procs.Contains(c.Rank()))
@@ -609,7 +609,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 	      }
 
 	    istream * infile;
-	    Array<char> buf; // for distributing geometry!
+	    NgArray<char> buf; // for distributing geometry!
 	    int strs;
 
 	    if( id == 0) {
@@ -655,9 +655,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 		      bool endfile = false;
 		      int n, dummy;
 	      
-		      Array<int> segment_weights;
-		      Array<int> surface_weights;
-		      Array<int> volume_weights;
+		      NgArray<int> segment_weights;
+		      NgArray<int> surface_weights;
+		      NgArray<int> volume_weights;
 	      
 		      while (weightsfile.good() && !endfile)
 			{
@@ -725,7 +725,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             if (WriteUserFormat (format, self, /* *self.GetGeometry(), */ filename))
               {
                 string err = string ("nothing known about format")+format;
-                Array<const char*> names, extensions;
+                NgArray<const char*> names, extensions;
                 RegisterUserFormats (names, extensions);
                 err += "\navailable formats are:\n";
                 for (auto name : names)
@@ -738,18 +738,18 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def_property("dim", &Mesh::GetDimension, &Mesh::SetDimension)
 
     .def("Elements3D", 
-         static_cast<Array<Element,0,size_t>&(Mesh::*)()> (&Mesh::VolumeElements),
+         static_cast<NgArray<Element,0,size_t>&(Mesh::*)()> (&Mesh::VolumeElements),
          py::return_value_policy::reference)
 
     .def("Elements2D", 
-         static_cast<Array<Element2d,0,size_t>&(Mesh::*)()> (&Mesh::SurfaceElements),
+         static_cast<NgArray<Element2d,0,size_t>&(Mesh::*)()> (&Mesh::SurfaceElements),
          py::return_value_policy::reference)
 
     .def("Elements1D", 
-         static_cast<Array<Segment,0,size_t>&(Mesh::*)()> (&Mesh::LineSegments),
+         static_cast<NgArray<Segment,0,size_t>&(Mesh::*)()> (&Mesh::LineSegments),
          py::return_value_policy::reference)
 
-    .def("Elements0D", FunctionPointer([] (Mesh & self) -> Array<Element0d>&
+    .def("Elements0D", FunctionPointer([] (Mesh & self) -> NgArray<Element0d>&
                                        {
                                          return self.pointelements;
                                        } ),
@@ -849,7 +849,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def ("CalcLocalH", &Mesh::CalcLocalH)
     .def ("SetMaxHDomain", [] (Mesh& self, py::list maxhlist)
           {
-            Array<double> maxh;
+            NgArray<double> maxh;
             for(auto el : maxhlist)
               maxh.Append(py::cast<double>(el));
             self.SetMaxHDomain(maxh);

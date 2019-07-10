@@ -186,10 +186,10 @@ namespace netgen
     MeshPoint sp1; 
     PointGeomInfo gi1;
     Vec<3> normal, t1, t2;
-    Array<SurfaceElementIndex> locelements;
-    Array<int> locrots;
-    Array<double> lochs;
-    Array<Point<3> > loc_pnts2, loc_pnts3;
+    NgArray<SurfaceElementIndex> locelements;
+    NgArray<int> locrots;
+    NgArray<double> lochs;
+    NgArray<Point<3> > loc_pnts2, loc_pnts3;
   // static int locerr2;
     double locmetricweight;
     double loch;
@@ -584,7 +584,7 @@ namespace netgen
     //  meshthis -> ProjectPoint (surfi, pp1);
     //  meshthis -> GetNormalVector (surfi, pp1, n);
 
-    static Array<Point2d> pts2d;
+    static NgArray<Point2d> pts2d;
     pts2d.SetSize(mesh.GetNP());
 
     grad = 0;
@@ -655,7 +655,7 @@ namespace netgen
     //    pp1.Add2 (x.Get(1), t1, x.Get(2), t2);
     pp1 = ld.sp1 + x(0) * ld.t1 + x(1) * ld.t2;
 
-    static Array<Point2d> pts2d;
+    static NgArray<Point2d> pts2d;
     pts2d.SetSize(mesh.GetNP());
 
     deriv = 0;
@@ -741,7 +741,7 @@ namespace netgen
     Opti2dLocalData ld;
 
 
-    Array<SurfaceElementIndex> seia;
+    NgArray<SurfaceElementIndex> seia;
     mesh.GetSurfaceElementsOfFace (faceindex, seia);
     bool mixed = 0;
     for (int i = 0; i < seia.Size(); i++)
@@ -753,12 +753,12 @@ namespace netgen
 
     Vector x(2);
 
-    Array<MeshPoint, PointIndex::BASE> savepoints(mesh.GetNP());
+    NgArray<MeshPoint, PointIndex::BASE> savepoints(mesh.GetNP());
 
     ld.uselocalh = mp.uselocalh;
 
-    Array<int, PointIndex::BASE> compress(mesh.GetNP());
-    Array<PointIndex> icompress;
+    NgArray<int, PointIndex::BASE> compress(mesh.GetNP());
+    NgArray<PointIndex> icompress;
     for (int i = 0; i < seia.Size(); i++)
       {
 	const Element2d & el = mesh[seia[i]];
@@ -775,7 +775,7 @@ namespace netgen
 	      icompress.Append(el[j]);
 	    }
       }
-    Array<int> cnta(icompress.Size());
+    NgArray<int> cnta(icompress.Size());
     cnta = 0;
     for (int i = 0; i < seia.Size(); i++)
       {
@@ -793,7 +793,7 @@ namespace netgen
 
     
     /*
-    Array<int, PointIndex::BASE> nelementsonpoint(mesh.GetNP());
+    NgArray<int, PointIndex::BASE> nelementsonpoint(mesh.GetNP());
     nelementsonpoint = 0;
     for (int i = 0; i < seia.Size(); i++)
       {

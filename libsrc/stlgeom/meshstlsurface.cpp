@@ -25,8 +25,8 @@ static void STLFindEdges (STLGeometry & geom,
   
   PushStatusF("Mesh Lines");
 
-  Array<STLLine*> meshlines;
-  Array<Point3d> meshpoints;
+  NgArray<STLLine*> meshlines;
+  NgArray<Point3d> meshpoints;
 
   PrintMessage(3,"Mesh Lines");
 
@@ -451,8 +451,8 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh)
 	  
 	  
 
-	  Array<Point3d> refpts;
-	  Array<double> refh;
+	  NgArray<Point3d> refpts;
+	  NgArray<double> refh;
 
 	  // was commented:
 
@@ -539,7 +539,7 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 
   mesh.FindOpenSegments();
   
-  Array<int> spiralps(0);
+  NgArray<int> spiralps(0);
   spiralps.SetSize(0);
   for (int i = 1; i <= geom.GetNP(); i++)
     if (geom.GetSpiralPoint(i)) 
@@ -549,18 +549,18 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
   //int spfound;
 
   /*
-  Array<int> meshsp(mesh.GetNP());
+  NgArray<int> meshsp(mesh.GetNP());
   meshsp = 0;
   for (int i = 1; i <= mesh.GetNP(); i++)
     for (int j = 1; j <= spiralps.Size(); j++)
       if (Dist2(geom.GetPoint(spiralps.Get(j)), mesh.Point(i)) < 1e-20) 
 	meshsp.Elem(i) = spiralps.Get(j);
-  Array<PointIndex> imeshsp;
+  NgArray<PointIndex> imeshsp;
   for (int i = 1; i <= meshsp.Size(); i++)
     if (meshsp.Elem(i)) imeshsp.Append(i);
   */
-  Array<PointIndex> imeshsp;
-  Array<int> ispiral_point;
+  NgArray<PointIndex> imeshsp;
+  NgArray<int> ispiral_point;
   for (int i = 1; i <= mesh.GetNP(); i++)
     {
       for (int j = 1; j <= spiralps.Size(); j++)
@@ -577,11 +577,11 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 
   // int oldnp = mesh.GetNP();
 
-  Array<int,PointIndex::BASE> compress(mesh.GetNP());
+  NgArray<int,PointIndex::BASE> compress(mesh.GetNP());
   compress = 0;
-  Array<PointIndex> icompress; 
+  NgArray<PointIndex> icompress; 
 
-  Array<int, 1> opensegsperface(mesh.GetNFD());
+  NgArray<int, 1> opensegsperface(mesh.GetNFD());
   opensegsperface = 0;
   for (int i = 1; i <= mesh.GetNOpenSegments(); i++)
     opensegsperface[mesh.GetOpenSegment(i).si]++;
@@ -637,7 +637,7 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 		}
 	}
       */
-      FlatArray<int> segs = opensegments[fnr];
+      NgFlatArray<int> segs = opensegments[fnr];
       for (int hi = 0; hi < segs.Size(); hi++)
 	{
 	  int i = segs[hi];
@@ -706,7 +706,7 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
       */
 
 
-      // FlatArray<int> segs = opensegments[fnr];
+      // NgFlatArray<int> segs = opensegments[fnr];
       for (int hi = 0; hi < segs.Size(); hi++)
 	{
 	  int i = segs[hi];
@@ -926,9 +926,9 @@ IsLineVertexOnChart (const Point3d & p1, const Point3d & p2,
 }
 
 void MeshingSTLSurface :: 
-GetChartBoundary (Array<Point2d > & points, 
-		  Array<Point3d > & points3d,
-		  Array<INDEX_2> & lines, double h) const
+GetChartBoundary (NgArray<Point2d > & points, 
+		  NgArray<Point3d > & points3d,
+		  NgArray<INDEX_2> & lines, double h) const
 {
   points.SetSize (0);
   points3d.SetSize (0);

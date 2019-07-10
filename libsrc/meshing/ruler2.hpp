@@ -23,33 +23,33 @@ private:
   ///
   char * name;
   ///
-  Array<Point2d> points;
+  NgArray<Point2d> points;
   ///
-  Array<INDEX_2> lines;
+  NgArray<INDEX_2> lines;
   ///
-  Array<Point2d> freezone, freezonelimit;
+  NgArray<Point2d> freezone, freezonelimit;
   ///
-  Array<Array<Point2d>*> freezone_i;
+  NgArray<NgArray<Point2d>*> freezone_i;
   ///
-  Array<Point2d> transfreezone;
+  NgArray<Point2d> transfreezone;
 
   ///
-  Array<int> dellines;
+  NgArray<int> dellines;
   ///
-  Array<Element2d> elements;
+  NgArray<Element2d> elements;
   ///
-  Array<threefloat> tolerances, linetolerances;
+  NgArray<threefloat> tolerances, linetolerances;
   ///
-  Array<threeint> orientations;
+  NgArray<threeint> orientations;
   ///
   DenseMatrix oldutonewu, oldutofreearea, oldutofreearealimit;
   ///
-  Array<DenseMatrix*> oldutofreearea_i;
+  NgArray<DenseMatrix*> oldutofreearea_i;
   ///
   MatrixFixWidth<3> freesetinequ;
 
   ///
-  Array<Vec2d> linevecs;
+  NgArray<Vec2d> linevecs;
 
   ///
   int noldp, noldl;
@@ -57,7 +57,7 @@ private:
   float fzminx, fzmaxx, fzminy, fzmaxy;
 
   /// topological distance of line to base element
-  Array<int> lnearness;
+  NgArray<int> lnearness;
 
 public:
 
@@ -96,9 +96,9 @@ public:
   ///
   int GetDelLine (int i) const { return dellines.Get(i); }
   ///
-  const Array<int> & GetDelLines() const { return dellines; }
+  const NgArray<int> & GetDelLines() const { return dellines; }
   ///
-  void GetFreeZone (Array<Point2d> & afreearea);
+  void GetFreeZone (NgArray<Point2d> & afreearea);
   ///
 
   double CalcPointDist (int pi, const Point2d & p) const
@@ -144,7 +144,7 @@ public:
   ///
   int ConvexFreeZone () const;
   ///
-  const Array<Point2d> & GetTransFreeZone () { return transfreezone; }
+  const NgArray<Point2d> & GetTransFreeZone () { return transfreezone; }
 
   ///
   int GetPointNr (int ln, int endp) const { return lines.Get(ln).I(endp); }

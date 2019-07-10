@@ -27,7 +27,7 @@ namespace netgen
     oneblock = NULL;
   }
 
-  BASE_TABLE :: BASE_TABLE (const FlatArray<int> & entrysizes, int elemsize)
+  BASE_TABLE :: BASE_TABLE (const NgFlatArray<int> & entrysizes, int elemsize)
     : data(entrysizes.Size())
   {
     size_t cnt = 0;

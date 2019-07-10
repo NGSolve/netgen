@@ -28,7 +28,7 @@ namespace netgen
 #include "dynamicmem.hpp"
 
 #include "template.hpp"
-#include "array.hpp"
+#include "ngarray.hpp"
 #include "table.hpp"
 #include "hashtabl.hpp"
 

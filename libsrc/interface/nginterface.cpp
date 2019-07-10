@@ -58,8 +58,8 @@ namespace netgen
 
 #ifdef SOCKETS
   extern AutoPtr<ClientSocket> clientsocket;
-  //extern Array< AutoPtr < ServerInfo > > servers;
-  extern Array< ServerInfo* > servers;
+  //extern NgArray< AutoPtr < ServerInfo > > servers;
+  extern NgArray< ServerInfo* > servers;
 #endif
 
   
@@ -141,7 +141,7 @@ void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
     }
 
   istream * infile;
-  Array<char> buf; // for distributing geometry!
+  NgArray<char> buf; // for distributing geometry!
   int strs;
 
   if( id == 0) {
@@ -191,9 +191,9 @@ void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
 	    bool endfile = false;
 	    int n, dummy;
 	      
-	    Array<int> segment_weights;
-	    Array<int> surface_weights;
-	    Array<int> volume_weights;
+	    NgArray<int> segment_weights;
+	    NgArray<int> surface_weights;
+	    NgArray<int> volume_weights;
 	      
 	    while (weightsfile.good() && !endfile)
 	      {
@@ -479,14 +479,14 @@ const char * Ng_GetDomainMaterial (int dom)
 
 int Ng_GetUserDataSize (char * id)
 {
-  Array<double> da;
+  NgArray<double> da;
   mesh->GetUserData (id, da);
   return da.Size();
 }
 
 void Ng_GetUserData (char * id, double * data)
 {
-  Array<double> da;
+  NgArray<double> da;
   mesh->GetUserData (id, da);
   for (int i = 0; i < da.Size(); i++)
     data[i] = da[i];
@@ -640,12 +640,12 @@ int Ng_FindElementOfPoint (double * p, double * lami, int build_searchtree,
 			   const int * const indices, const int numind)
   
 {
-  Array<int> * dummy(NULL);
+  NgArray<int> * dummy(NULL);
   int ind = -1;
 
   if(indices != NULL)
     {
-      dummy = new Array<int>(numind);
+      dummy = new NgArray<int>(numind);
       for(int i=0; i<numind; i++) (*dummy)[i] = indices[i];
     }
 
@@ -686,12 +686,12 @@ int Ng_FindSurfaceElementOfPoint (double * p, double * lami, int build_searchtre
 				  const int * const indices, const int numind)
   
 {
-  Array<int> * dummy(NULL);
+  NgArray<int> * dummy(NULL);
   int ind = -1;
 
   if(indices != NULL)
     {
-      dummy = new Array<int>(numind);
+      dummy = new NgArray<int>(numind);
       for(int i=0; i<numind; i++) (*dummy)[i] = indices[i];
     }
 
@@ -1550,7 +1550,7 @@ int Ng_GetSurfaceElement_Edges (int elnr, int * edges, int * orient)
   /*
     int i, ned;
     const MeshTopology & topology = mesh->GetTopology();
-    Array<int> ia;
+    NgArray<int> ia;
     topology.GetSurfaceElementEdges (elnr, ia);
     ned = ia.Size();
     for (i = 1; i <= ned; i++)
@@ -1581,7 +1581,7 @@ int Ng_GetSurfaceElement_Face (int selnr, int * orient)
 int Ng_GetFace_Vertices (int fnr, int * vert)
 {
   const MeshTopology & topology = mesh->GetTopology();
-  ArrayMem<int,4> ia;
+  NgArrayMem<int,4> ia;
   topology.GetFaceVertices (fnr, ia);
   for (int i = 0; i < ia.Size(); i++)
     vert[i] = ia[i];
@@ -1593,7 +1593,7 @@ int Ng_GetFace_Vertices (int fnr, int * vert)
 int Ng_GetFace_Edges (int fnr, int * edge)
 {
   const MeshTopology & topology = mesh->GetTopology();
-  ArrayMem<int,4> ia;
+  NgArrayMem<int,4> ia;
   topology.GetFaceEdges (fnr, ia);
   for (int i = 0; i < ia.Size(); i++)
     edge[i] = ia[i];
@@ -1638,19 +1638,19 @@ void Ng_GetVertexElements (int vnr, int * els)
     {
     case 3:
       {
-        FlatArray<ElementIndex> ia = mesh->GetTopology().GetVertexElements(vnr);
+        NgFlatArray<ElementIndex> ia = mesh->GetTopology().GetVertexElements(vnr);
         for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
         break;
       }
     case 2:
       {
-        FlatArray<SurfaceElementIndex> ia = mesh->GetTopology().GetVertexSurfaceElements(vnr);
+        NgFlatArray<SurfaceElementIndex> ia = mesh->GetTopology().GetVertexSurfaceElements(vnr);
         for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
         break;
       }
     case 1:
       {
-        FlatArray<SegmentIndex> ia = mesh->GetTopology().GetVertexSegments(vnr);
+        NgFlatArray<SegmentIndex> ia = mesh->GetTopology().GetVertexSegments(vnr);
         for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
         break;
         /*
@@ -1800,7 +1800,7 @@ int Ng_GetClusterRepElement (int pi)
 		
 int Ng_GetNPeriodicVertices (int idnr)
 {
-  Array<INDEX_2> apairs;
+  NgArray<INDEX_2> apairs;
   mesh->GetIdentifications().GetPairs (idnr, apairs);
   return apairs.Size();
 }
@@ -1809,7 +1809,7 @@ int Ng_GetNPeriodicVertices (int idnr)
 // pairs should be an integer array of 2*npairs
 void Ng_GetPeriodicVertices (int idnr, int * pairs)
 {
-  Array<INDEX_2> apairs;
+  NgArray<INDEX_2> apairs;
   mesh->GetIdentifications().GetPairs (idnr, apairs);
   for (int i = 0; i < apairs.Size(); i++)
     {
@@ -1823,7 +1823,7 @@ void Ng_GetPeriodicVertices (int idnr, int * pairs)
 
 int Ng_GetNPeriodicEdges (int idnr)
 {
-  Array<int,PointIndex::BASE> map;
+  NgArray<int,PointIndex::BASE> map;
   //const MeshTopology & top = mesh->GetTopology();
   int nse = mesh->GetNSeg();
 
@@ -1850,7 +1850,7 @@ int Ng_GetNPeriodicEdges (int idnr)
 
 void Ng_GetPeriodicEdges (int idnr, int * pairs)
 {
-  Array<int,PointIndex::BASE> map;
+  NgArray<int,PointIndex::BASE> map;
   const MeshTopology & top = mesh->GetTopology();
   int nse = mesh->GetNSeg();
 
@@ -1928,7 +1928,7 @@ int Ng_IsRunning()
 int Ng_GetVertex_Elements( int vnr, int* elems )
 {
   const MeshTopology& topology = mesh->GetTopology();
-  ArrayMem<ElementIndex,4> indexArray;
+  NgArrayMem<ElementIndex,4> indexArray;
   topology.GetVertexElements( vnr, indexArray );
   
   for( int i=0; i<indexArray.Size(); i++ )
@@ -1945,7 +1945,7 @@ int Ng_GetVertex_SurfaceElements( int vnr, int* elems )
     case 3:
       {
         const MeshTopology& topology = mesh->GetTopology();
-        ArrayMem<SurfaceElementIndex,4> indexArray;
+        NgArrayMem<SurfaceElementIndex,4> indexArray;
         topology.GetVertexSurfaceElements( vnr, indexArray );
         
         for( int i=0; i<indexArray.Size(); i++ )
@@ -1977,7 +1977,7 @@ int Ng_GetVertex_SurfaceElements( int vnr, int* elems )
 int Ng_GetVertex_NElements( int vnr )
 {
   const MeshTopology& topology = mesh->GetTopology();
-  ArrayMem<ElementIndex,4> indexArray;
+  NgArrayMem<ElementIndex,4> indexArray;
   topology.GetVertexElements( vnr, indexArray );
   
   return indexArray.Size();
@@ -1991,7 +1991,7 @@ int Ng_GetVertex_NSurfaceElements( int vnr )
     case 3:
       {
         const MeshTopology& topology = mesh->GetTopology();
-        ArrayMem<SurfaceElementIndex,4> indexArray;
+        NgArrayMem<SurfaceElementIndex,4> indexArray;
         topology.GetVertexSurfaceElements( vnr, indexArray );
         return indexArray.Size();
       }
@@ -2157,9 +2157,9 @@ int Ng_Bisect_WithInfo ( const char * refinementfile, double ** qualityloss, int
   
   mesh->LocalHFunction().SetGrading (mparam.grading);
 
-  Array<double> * qualityloss_arr = NULL;
+  NgArray<double> * qualityloss_arr = NULL;
   if(qualityloss != NULL)
-    qualityloss_arr = new Array<double>;
+    qualityloss_arr = new NgArray<double>;
 
   ref -> Bisect (*mesh, biopt, qualityloss_arr);
 

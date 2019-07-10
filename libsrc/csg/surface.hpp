@@ -241,8 +241,8 @@ namespace netgen
   class Primitive
   {
   protected:
-    Array<int> surfaceids;
-    Array<int> surfaceactive;
+    NgArray<int> surfaceids;
+    NgArray<int> surfaceactive;
 
   public:
 
@@ -268,7 +268,7 @@ namespace netgen
 				       double eps) const = 0;
 
     virtual void GetTangentialSurfaceIndices (const Point<3> & p, 
-					      Array<int> & surfind, double eps) const;
+					      NgArray<int> & surfind, double eps) const;
 
     virtual INSOLID_TYPE VecInSolid (const Point<3> & p,
 				     const Vec<3> & v,
@@ -294,15 +294,15 @@ namespace netgen
 				      double eps) const;
 
     virtual void GetTangentialVecSurfaceIndices (const Point<3> & p, const Vec<3> & v,
-						 Array<int> & surfind, double eps) const;
+						 NgArray<int> & surfind, double eps) const;
 
     virtual void GetTangentialVecSurfaceIndices2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
-						  Array<int> & surfind, double eps) const;
+						  NgArray<int> & surfind, double eps) const;
 
 
-    virtual void CalcSpecialPoints (Array<Point<3> > & /* pts */) const { ; }
+    virtual void CalcSpecialPoints (NgArray<Point<3> > & /* pts */) const { ; }
     virtual void AnalyzeSpecialPoint (const Point<3> & /* pt */, 
-				      Array<Point<3> > & /* specpts */) const { ; }
+				      NgArray<Point<3> > & /* specpts */) const { ; }
     virtual Vec<3> SpecialPointTangentialVector (const Point<3> & /* p */, 
 						 int /* s1 */, int /* s2 */) const 
     { return Vec<3> (0,0,0); }
@@ -318,8 +318,8 @@ namespace netgen
     virtual int SurfaceInverted (int /* i */ = 0) const { return 0; }
 
     virtual void GetPrimitiveData (const char *& classname, 
-				   Array<double> & coeffs) const;
-    virtual void SetPrimitiveData (Array<double> & coeffs);
+				   NgArray<double> & coeffs) const;
+    virtual void SetPrimitiveData (NgArray<double> & coeffs);
     static Primitive * CreatePrimitive (const char * classname);
 
 

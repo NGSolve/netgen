@@ -343,7 +343,7 @@ namespace netgen
 
 
 
-  typedef Array<MeshPoint, PointIndex::BASE, PointIndex> T_POINTS;
+  typedef NgArray<MeshPoint, PointIndex::BASE, PointIndex> T_POINTS;
 
 
 
@@ -456,12 +456,12 @@ namespace netgen
     ///
     const PointIndex & operator[] (int i) const { return pnum[i]; }
 
-    FlatArray<const PointIndex> PNums () const 
-    { return FlatArray<const PointIndex> (np, &pnum[0]); }
-    FlatArray<PointIndex> PNums ()
-    { return FlatArray<PointIndex> (np, &pnum[0]); }
+    NgFlatArray<const PointIndex> PNums () const 
+    { return NgFlatArray<const PointIndex> (np, &pnum[0]); }
+    NgFlatArray<PointIndex> PNums ()
+    { return NgFlatArray<PointIndex> (np, &pnum[0]); }
     auto Vertices() const
-    { return FlatArray<const PointIndex> (GetNV(), &pnum[0]); }
+    { return NgFlatArray<const PointIndex> (GetNV(), &pnum[0]); }
     
     ///
     PointIndex & PNum (int i) { return pnum[i-1]; }
@@ -533,7 +533,7 @@ namespace netgen
     int GetNIP () const;
     void GetIntegrationPoint (int ip, Point2d & p, double & weight) const;
 
-    void GetTransformation (int ip, const Array<Point2d> & points,
+    void GetTransformation (int ip, const NgArray<Point2d> & points,
 			    class DenseMatrix & trans) const;
     void GetTransformation (int ip, class DenseMatrix & pmat,
 			    class DenseMatrix & trans) const;
@@ -548,16 +548,16 @@ namespace netgen
     void GetDShapeNew (const Point<2,T> & p, class MatrixFixWidth<2,T> & dshape) const;
     
     /// matrix 2 * np
-    void GetPointMatrix (const Array<Point2d> & points,
+    void GetPointMatrix (const NgArray<Point2d> & points,
 			 class DenseMatrix & pmat) const; 
 
     void ComputeIntegrationPointData () const;
   
 
-    double CalcJacobianBadness (const Array<Point2d> & points) const;
+    double CalcJacobianBadness (const NgArray<Point2d> & points) const;
     double CalcJacobianBadness (const T_POINTS & points, 
 				const Vec<3> & n) const;
-    double CalcJacobianBadnessDirDeriv (const Array<Point2d> & points,
+    double CalcJacobianBadnessDirDeriv (const NgArray<Point2d> & points,
 					int pi, Vec2d & dir, double & dd) const;
 
 
@@ -748,10 +748,10 @@ namespace netgen
     ///
     const PointIndex & operator[] (int i) const { return pnum[i]; }
 
-    FlatArray<const PointIndex> PNums () const 
-    { return FlatArray<const PointIndex> (np, &pnum[0]); }
+    NgFlatArray<const PointIndex> PNums () const 
+    { return NgFlatArray<const PointIndex> (np, &pnum[0]); }
 
-    FlatArray<const PointIndex> Vertices() const { return { GetNV(), &pnum[0] }; }
+    NgFlatArray<const PointIndex> Vertices() const { return { GetNV(), &pnum[0] }; }
 
     ///
     PointIndex & PNum (int i) { return pnum[i-1]; }
@@ -824,15 +824,15 @@ namespace netgen
     void Invert ();
 
     /// split into 4 node tets
-    void GetTets (Array<Element> & locels) const;
+    void GetTets (NgArray<Element> & locels) const;
     /// split into 4 node tets, local point nrs
-    void GetTetsLocal (Array<Element> & locels) const;
+    void GetTetsLocal (NgArray<Element> & locels) const;
     /// returns coordinates of nodes
-    // void GetNodesLocal (Array<Point<3> > & points) const;
-    void GetNodesLocalNew (Array<Point<3> > & points) const;
+    // void GetNodesLocal (NgArray<Point<3> > & points) const;
+    void GetNodesLocalNew (NgArray<Point<3> > & points) const;
 
     /// split surface into 3 node trigs
-    void GetSurfaceTriangles (Array<Element2d> & surftrigs) const;
+    void GetSurfaceTriangles (NgArray<Element2d> & surftrigs) const;
 
 
     /// get number of 'integration points'
@@ -1290,7 +1290,7 @@ namespace netgen
       MeshSizePoint & operator= (const MeshSizePoint &) = default;
       MeshSizePoint & operator= (MeshSizePoint &&) = default;      
     };
-    Array<MeshSizePoint> meshsize_points;
+    NgArray<MeshSizePoint> meshsize_points;
     
     void (*render_function)(bool) = NULL;
     void Render(bool blocking = false)
@@ -1429,7 +1429,7 @@ namespace netgen
     /// sorted by identification nr
     TABLE<INDEX_2> idpoints_table;
 
-    Array<ID_TYPE> type;
+    NgArray<ID_TYPE> type;
 
     /// number of identifications (or, actually used identifications ?)
     int maxidentnr;
@@ -1475,7 +1475,7 @@ namespace netgen
     }
 
     ///
-    void GetMap (int identnr, Array<int,PointIndex::BASE> & identmap, bool symmetric = false) const;
+    void GetMap (int identnr, NgArray<int,PointIndex::BASE> & identmap, bool symmetric = false) const;
     ///
     ID_TYPE GetType(int identnr) const
     {
@@ -1492,7 +1492,7 @@ namespace netgen
     }
     
     ///
-    void GetPairs (int identnr, Array<INDEX_2> & identpairs) const;
+    void GetPairs (int identnr, NgArray<INDEX_2> & identpairs) const;
     ///
     int GetMaxNr () const { return maxidentnr; }  
 

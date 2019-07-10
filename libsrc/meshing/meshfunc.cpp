@@ -19,7 +19,7 @@ namespace netgen
      int oldne;
      int meshed;
 
-     Array<INDEX_2> connectednodes;
+     NgArray<INDEX_2> connectednodes;
      
      if (!mesh3d.HasLocalHFunction()) mesh3d.CalcLocalH(mp.grading);
 
@@ -237,7 +237,7 @@ namespace netgen
               //	  Meshing3 meshing(rulefile);
               Meshing3 meshing(tetrules);
 
-              Array<int, PointIndex::BASE> glob2loc(mesh3d.GetNP());
+              NgArray<int, PointIndex::BASE> glob2loc(mesh3d.GetNP());
               glob2loc = -1;
 
               for (PointIndex pi = mesh3d.Points().Begin(); pi < mesh3d.Points().End(); pi++)

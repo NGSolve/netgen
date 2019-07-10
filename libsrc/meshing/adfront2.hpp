@@ -165,21 +165,21 @@ class AdFront2
 {
 
   ///
-  Array<FrontPoint2> points;  /// front points
-  Array<FrontLine> lines;     /// front lines
+  NgArray<FrontPoint2> points;  /// front points
+  NgArray<FrontLine> lines;     /// front lines
 
   Box3d boundingbox;
   BoxTree<3> linesearchtree;       /// search tree for lines
   Point3dTree pointsearchtree;    /// search tree for points
   Point3dTree cpointsearchtree;   /// search tree for cone points (not used ???)
 
-  Array<int> delpointl;     /// list of deleted front points
-  Array<int> dellinel;      /// list of deleted front lines
+  NgArray<int> delpointl;     /// list of deleted front points
+  NgArray<int> dellinel;      /// list of deleted front lines
 
   int nfl;                  /// number of front lines;
   INDEX_2_HASHTABLE<int> * allflines; /// all front lines ever have been
 
-  Array<int> invpindex;
+  NgArray<int> invpindex;
 
   int minval;
   int starti;
@@ -192,7 +192,7 @@ public:
   ~AdFront2 ();
 
   ///
-  // void GetPoints (Array<Point<3> > & apoints) const;
+  // void GetPoints (NgArray<Point<3> > & apoints) const;
   ///
   void Print (ostream & ost) const;
 
@@ -216,11 +216,11 @@ public:
 
   ///
   int GetLocals (int baseline, 
-		 Array<Point3d> & locpoints,
-		 Array<MultiPointGeomInfo> & pgeominfo,
-                 Array<INDEX_2> & loclines,   // local index
-                 Array<int> & pindex,
-                 Array<int> & lindex,
+		 NgArray<Point3d> & locpoints,
+		 NgArray<MultiPointGeomInfo> & pgeominfo,
+                 NgArray<INDEX_2> & loclines,   // local index
+                 NgArray<int> & pindex,
+                 NgArray<int> & lindex,
                  double xh);
 
   ///
@@ -262,7 +262,7 @@ public:
   bool Inside (const Point<2> & p) const;
 
   bool SameSide (const Point<2> & lp1, const Point<2> & lp2, 
-                 const Array<int> * /* testfaces */ = NULL) const;
+                 const NgArray<int> * /* testfaces */ = NULL) const;
   /*
   {
     return Inside (lp1) == Inside (lp2);

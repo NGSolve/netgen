@@ -37,7 +37,7 @@ namespace netgen
 
     // new version with consistent ordering across sub-domains
 
-    Array<INDEX_2> parents;
+    NgArray<INDEX_2> parents;
     for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
       {
 	const Segment & el = mesh[si];
@@ -109,7 +109,7 @@ namespace netgen
 
     PrintMessage (5, "have points");
     
-    Array<int> par_nr(parents.Size());
+    NgArray<int> par_nr(parents.Size());
     for (int i = 0; i < par_nr.Size(); i++)
       par_nr[i] = i;
     QuickSort (parents, par_nr);
@@ -121,13 +121,13 @@ namespace netgen
       }
     
     mesh.SetNP(mesh.GetNV() + parents.Size());
-    Array<bool, PointIndex::BASE> pointset(mesh.GetNP());
+    NgArray<bool, PointIndex::BASE> pointset(mesh.GetNP());
     pointset = false;
     
     PrintMessage (5, "sorting complete");
     
     // refine edges
-    Array<EdgePointGeomInfo,PointIndex::BASE> epgi;
+    NgArray<EdgePointGeomInfo,PointIndex::BASE> epgi;
 
     int oldns = mesh.GetNSeg();
     for (SegmentIndex si = 0; si < oldns; si++)
@@ -176,7 +176,7 @@ namespace netgen
     PrintMessage (5, "have 1d elements");
     
     // refine surface elements
-    Array<PointGeomInfo,PointIndex::BASE> surfgi (8*mesh.GetNP());
+    NgArray<PointGeomInfo,PointIndex::BASE> surfgi (8*mesh.GetNP());
     for (int i = PointIndex::BASE;
 	 i < surfgi.Size()+PointIndex::BASE; i++)
       surfgi[i].trignum = -1;
@@ -192,8 +192,8 @@ namespace netgen
 	  case TRIG:
 	  case TRIG6:
 	    {
-	      ArrayMem<PointIndex,6> pnums(6);
-	      ArrayMem<PointGeomInfo,6> pgis(6);
+	      NgArrayMem<PointIndex,6> pnums(6);
+	      NgArrayMem<PointGeomInfo,6> pgis(6);
 
 	      static int betw[3][3] =
 		{ { 2, 3, 4 },
@@ -275,8 +275,8 @@ namespace netgen
 	  case QUAD6:
 	  case QUAD8:
 	    {
-	      ArrayMem<PointIndex,9> pnums(9);
-	      ArrayMem<PointGeomInfo,9> pgis(9);
+	      NgArrayMem<PointIndex,9> pnums(9);
+	      NgArrayMem<PointGeomInfo,9> pgis(9);
 
 	      static int betw[5][3] =
 		{ { 1, 2, 5 },
@@ -367,7 +367,7 @@ namespace netgen
 	  case TET:
 	  case TET10:
 	    {
-	     ArrayMem<PointIndex,10> pnums(10);
+	     NgArrayMem<PointIndex,10> pnums(10);
 	     static int betw[6][3] =
 	     { { 1, 2, 5 },
 	       { 1, 3, 6 },
@@ -458,7 +458,7 @@ namespace netgen
           }
           case HEX:
           {
-	     ArrayMem<PointIndex,27> pnums(27);
+	     NgArrayMem<PointIndex,27> pnums(27);
 	     static int betw[13][3] =
 	     { { 1, 2, 9 },
 	       { 3, 4, 10 },
@@ -584,7 +584,7 @@ namespace netgen
 	  }
 	  case PRISM:
           {
-	     ArrayMem<PointIndex,18> pnums(18);
+	     NgArrayMem<PointIndex,18> pnums(18);
 	     static int betw[9][3] =
 	     { { 3, 1, 7 },
 	       { 1, 2, 8 },
@@ -711,7 +711,7 @@ namespace netgen
     // update identification tables
     for (int i = 1; i <= mesh.GetIdentifications().GetMaxNr(); i++)
       {
-	Array<int,PointIndex::BASE> identmap;
+	NgArray<int,PointIndex::BASE> identmap;
 	mesh.GetIdentifications().GetMap (i, identmap);
 
 	for (int j = 1; j <= between.GetNBags(); j++)
@@ -754,8 +754,8 @@ namespace netgen
 	cout << "WARNING: " << wrongels << " with wrong orientation found" << endl;
 
 	int np = mesh.GetNP();
-	Array<Point<3> > should(np);
-	Array<Point<3> > can(np);
+	NgArray<Point<3> > should(np);
+	NgArray<Point<3> > can(np);
 	for (int i = 1; i <= np; i++)
 	  {
 	    should.Elem(i) = can.Elem(i) = mesh.Point(i);

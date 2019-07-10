@@ -1,5 +1,13 @@
 
-add_library(ngcore SHARED archive.cpp logging.cpp paje_trace.cpp utils.cpp profiler.cpp)
+add_library(ngcore SHARED
+  archive.cpp
+  localheap.cpp
+  logging.cpp
+  paje_trace.cpp
+  profiler.cpp
+  taskmanager.cpp
+  utils.cpp
+  )
 
 target_compile_definitions(ngcore PRIVATE NGCORE_EXPORTS)
 if(NOT WIN32)
@@ -31,9 +39,11 @@ if(USE_PYTHON)
   target_include_directories(ngcore PRIVATE ${PYTHON_INCLUDE_DIRS})
   target_link_libraries(ngcore PRIVATE ${PYTHON_LIBRARIES})
 endif(USE_PYTHON)
+target_link_libraries(ngcore PUBLIC netgen_mpi PRIVATE ${CMAKE_THREAD_LIBS_INIT})
 
 install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp logging.hpp
   exception.hpp symboltable.hpp paje_trace.hpp utils.hpp profiler.hpp mpi_wrapper.hpp
+  array.hpp taskmanager.hpp concurrentqueue.h localheap.hpp
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/core COMPONENT netgen_devel)
 
 if(ENABLE_CPP_CORE_GUIDELINES_CHECK)
