@@ -1110,6 +1110,25 @@ namespace ngcore
       return *this;
     }
 
+    ArrayMem & operator= (ArrayMem && a2)
+    {
+      if (a2.mem_to_delete)
+        {
+          ngcore::Swap (mem_to_delete, a2.mem_to_delete);
+          ngcore::Swap (data, a2.data);
+          ngcore::Swap (allocsize, a2.allocsize);
+          ngcore::Swap (size, a2.size);
+        }
+      else
+        {
+          allocsize = S;
+          for (size_t i = 0; i < S; i++)
+            mem[i] = std::move(a2.mem[i]);
+        }
+      return *this;
+    }
+
+
     /// array copy
     ArrayMem & operator= (const FlatArray<T> & a2)
     {

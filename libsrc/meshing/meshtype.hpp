@@ -97,19 +97,22 @@ namespace netgen
 
 
 
-#define MULTIPOINTGEOMINFO_MAX 100
   class MultiPointGeomInfo
   {
-    int cnt;
-    PointGeomInfo mgi[MULTIPOINTGEOMINFO_MAX];
+    ArrayMem<PointGeomInfo, 100> mgi;
   public:
-    MultiPointGeomInfo () { cnt = 0; }
     int AddPointGeomInfo (const PointGeomInfo & gi);
-    void Init () { cnt = 0; }
-    void DeleteAll () { cnt = 0; }
+    void Init () { mgi.SetSize(0); }
+    void DeleteAll () { mgi.SetSize(0); }
 
-    int GetNPGI () const { return cnt; }
+    int GetNPGI () const { return mgi.Size(); }
     const PointGeomInfo & GetPGI (int i) const { return mgi[i-1]; }
+
+    MultiPointGeomInfo () = default;
+    MultiPointGeomInfo (const MultiPointGeomInfo&) = default;
+    MultiPointGeomInfo (MultiPointGeomInfo &&) = default;
+    MultiPointGeomInfo & operator= (const MultiPointGeomInfo&) = default;
+    MultiPointGeomInfo & operator= (MultiPointGeomInfo&&) = default;
   };
 
 

@@ -7,18 +7,12 @@ namespace netgen
   int MultiPointGeomInfo :: 
   AddPointGeomInfo (const PointGeomInfo & gi)
   {
-    for (int k = 0; k < cnt; k++)
-      if (mgi[k].trignum == gi.trignum)
+    for (auto & pgi : mgi)
+      if (pgi.trignum == gi.trignum)
 	return 0;
   
-    if (cnt < MULTIPOINTGEOMINFO_MAX)
-      {
-	mgi[cnt] = gi;
-	cnt++;
-	return 0;
-      }
-
-    throw NgException ("Please report error: MPGI Size too small\n");
+    mgi.Append(gi);
+    return 0;
   }
   
 
