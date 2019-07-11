@@ -2,6 +2,7 @@
 #ifdef OCCGEOMETRY
 
 #include <../general/ngpython.hpp>
+#include <core/python_ngcore.hpp>
 
 #include <meshing.hpp>
 #include <occgeom.hpp>

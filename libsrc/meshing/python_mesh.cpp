@@ -1,6 +1,7 @@
 #ifdef NG_PYTHON
 
 #include <../general/ngpython.hpp>
+#include <core/python_ngcore.hpp>
 
 #include <mystdlib.h>
 #include "meshing.hpp"
