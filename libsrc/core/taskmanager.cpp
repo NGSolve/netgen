@@ -278,8 +278,7 @@ namespace ngcore
       taskqueue.enqueue (ptoken, { afunc, i, num, endcnt });
   }
 
-  mutex m;
-  bool ProcessTask()
+  bool TaskManager :: ProcessTask()
   {
     TNestedTask task;
     TCToken ctoken(taskqueue); 

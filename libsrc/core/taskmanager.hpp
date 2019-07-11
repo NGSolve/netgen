@@ -103,6 +103,8 @@ namespace ngcore
 
     static void SetPajeTrace (bool use)  { use_paje_trace = use; }
     
+    NGCORE_API static bool ProcessTask();
+
     NGCORE_API static void CreateJob (const function<void(TaskInfo&)> & afunc, 
                     int antasks = task_manager->GetNumThreads());
 
