@@ -17,7 +17,7 @@
 #include "../include/mydefs.hpp"
 
 
-#include "../core/ngcore.hpp"
+#include <core/ngcore.hpp>
 namespace netgen
 {
   using namespace ngcore;
