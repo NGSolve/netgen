@@ -43,7 +43,7 @@ target_link_libraries(ngcore PUBLIC netgen_mpi PRIVATE ${CMAKE_THREAD_LIBS_INIT}
 
 install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp logging.hpp
   exception.hpp symboltable.hpp paje_trace.hpp utils.hpp profiler.hpp mpi_wrapper.hpp
-  array.hpp taskmanager.hpp concurrentqueue.h localheap.hpp
+  array.hpp taskmanager.hpp concurrentqueue.h localheap.hpp python_ngcore.hpp
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/core COMPONENT netgen_devel)
 
 if(ENABLE_CPP_CORE_GUIDELINES_CHECK)

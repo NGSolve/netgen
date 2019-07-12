@@ -2,6 +2,7 @@
 #ifdef NG_PYTHON
 
 #include <../general/ngpython.hpp>
+#include <core/python_ngcore.hpp>
 #include <stlgeom.hpp>
 
 #ifdef WIN32
