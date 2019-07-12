@@ -1115,11 +1115,15 @@ namespace ngcore
       ngcore::Swap (mem_to_delete, a2.mem_to_delete);
       ngcore::Swap (allocsize, a2.allocsize);
       ngcore::Swap (size, a2.size);
-      ngcore::Swap (data, a2.data);
 
       if (mem_to_delete==nullptr)
+      {
         for (auto i : Range(size))
           mem[i] = std::move(a2.mem[i]);
+        data = mem;
+      }
+      else
+        ngcore::Swap (data, a2.data);
 
       return *this;
     }
