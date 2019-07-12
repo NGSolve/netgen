@@ -1090,7 +1090,7 @@ namespace ngcore
       else
         {
           allocsize = S;
-          for (size_t i = 0; i < S; i++)
+          for (auto i : ngcore::Range(size))
             mem[i] = a2.mem[i];
         }
     }
@@ -1118,7 +1118,7 @@ namespace ngcore
 
       if (mem_to_delete==nullptr)
       {
-        for (auto i : Range(size))
+        for (auto i : ngcore::Range(size))
           mem[i] = std::move(a2.mem[i]);
         data = mem;
       }
