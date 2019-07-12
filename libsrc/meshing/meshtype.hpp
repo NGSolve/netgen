@@ -111,7 +111,7 @@ namespace netgen
     MultiPointGeomInfo () = default;
     MultiPointGeomInfo (const MultiPointGeomInfo&) = default;
     MultiPointGeomInfo (MultiPointGeomInfo &&) = default;
-    MultiPointGeomInfo & operator= (const MultiPointGeomInfo&) = default;
+    MultiPointGeomInfo & operator= (const MultiPointGeomInfo&) = delete;
     MultiPointGeomInfo & operator= (MultiPointGeomInfo&&) = default;
   };
 
