@@ -28,9 +28,11 @@ class SPSolid
   double red = 0, green = 0, blue = 1;
   bool transp = false;
 public:
-  enum optyp { TERM, SECTION, UNION, SUB };
+  enum optyp { TERM, SECTION, UNION, SUB, EXISTING };
 
   SPSolid (Solid * as) : solid(as), owner(true), op(TERM) { ; }
+  SPSolid (Solid * as, int /*dummy*/)
+    : solid(as), owner(false), op(EXISTING) { ; }
   ~SPSolid () 
   {
     ; // if (owner) delete solid;
@@ -621,6 +623,13 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
              ng_geometry = self;
           })
          )
+    .def("GetSolids", [](CSGeometry& self)
+                      {
+                        py::list lst;
+                        for(auto i : Range(self.GetSolids().Size()))
+                          lst.append(make_shared<SPSolid>(self.GetSolids()[i], 1234));
+                        return lst;
+                      })
     .def_property_readonly ("ntlo", &CSGeometry::GetNTopLevelObjects)
     .def("_visualizationData", [](shared_ptr<CSGeometry> csg_geo)
          {
