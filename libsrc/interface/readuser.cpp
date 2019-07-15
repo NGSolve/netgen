@@ -4,8 +4,6 @@
 
 
 #include <mystdlib.h>
-
-
 #include <myadt.hpp>
 #include <linalg.hpp>
 #include <csg.hpp>
@@ -242,6 +240,7 @@ namespace netgen
                   }
                 cout << mesh.GetNE() << " elements found" << endl;
                 cout << mesh.GetNSE() << " surface elements found" << endl;
+
               }
             else if(strcmp (reco, "2467") == 0)
               {
@@ -374,11 +373,11 @@ namespace netgen
 	if(dim == 2){
 		// loop through segments to assign default BC to unmarked edges
 		int bccounter_tmp = bccounter;
-		for(int index=0; index < mesh.GetNSeg(); index++){
+		for(int index=1; index <= mesh.GetNSeg(); index++){
                 	Segment & seg = mesh.LineSegment(get<0>(element_map[index]));
 			if(seg.si == -1){
-			  seg.si = bccounter;
-			  mesh.SetBCName(bccounter, "default"); // could be more efficient
+			  seg.si = bccounter + 1;
+			  if(bccounter_tmp == bccounter) mesh.SetBCName(bccounter, "default"); // could be more efficient
 			  seg.SetBCName(mesh.GetBCNamePtr(bccounter));
 			  bccounter_tmp++;
 			}
@@ -397,7 +396,6 @@ namespace netgen
 	for(int i=0; i<bccounter; i++){
 		cout << mesh.GetBCName(i) << endl;
 	}
-
       }
 
 
