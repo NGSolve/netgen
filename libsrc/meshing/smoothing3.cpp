@@ -1364,36 +1364,9 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
   int ne = GetNE();
 
 
-  NgArray<double,PointIndex::BASE> perrs(np);
-  perrs = 1.0;
-
-  double bad1 = 0;
-  double badmax = 0;
-
   if (goal == OPT_QUALITY)
     {
-      for (int i = 1; i <= ne; i++)
-	{
-	  const Element & el = VolumeElement(i);
-	  if (el.GetType() != TET)
-	    continue;
-	  
-	  double hbad = CalcBad (points, el, 0, mp);
-	  for (int j = 0; j < 4; j++)
-	    perrs[el[j]] += hbad;
-	  
-	  bad1 += hbad;
-	}
-      
-      for (int i = perrs.Begin(); i < perrs.End(); i++)
-	if (perrs[i] > badmax) 
-	  badmax = perrs[i];
-      badmax = 0;
-    }
-
-  if (goal == OPT_QUALITY)
-    {
-      bad1 = CalcTotalBad (points, volelements, mp);
+      double bad1 = CalcTotalBad (points, volelements, mp);
       (*testout) << "Total badness = " << bad1 << endl;
       PrintMessage (5, "Total badness = ", bad1);
     }
@@ -1451,7 +1424,7 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
   multithread.task = "Smooth Mesh";
 
   for (PointIndex pi : points.Range())
-    if ( (*this)[pi].Type() == INNERPOINT && perrs[pi] > 0.01 * badmax)
+    if ( (*this)[pi].Type() == INNERPOINT )
       {
 	if (multithread.terminate)
 	  throw NgException ("Meshing stopped");
@@ -1495,7 +1468,7 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
 
   if (goal == OPT_QUALITY)
     {
-      bad1 = CalcTotalBad (points, volelements, mp);
+      double bad1 = CalcTotalBad (points, volelements, mp);
       (*testout) << "Total badness = " << bad1 << endl;
       PrintMessage (5, "Total badness = ", bad1);
     }
