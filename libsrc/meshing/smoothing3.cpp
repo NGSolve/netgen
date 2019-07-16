@@ -1357,8 +1357,6 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
 {
   static Timer t("Mesh::ImproveMesh"); RegionTimer reg(t);
   
-  int typ = 1;
-  
   (*testout) << "Improve Mesh" << "\n";
   PrintMessage (3, "ImproveMesh");
 
@@ -1366,36 +1364,9 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
   int ne = GetNE();
 
 
-  NgArray<double,PointIndex::BASE> perrs(np);
-  perrs = 1.0;
-
-  double bad1 = 0;
-  double badmax = 0;
-
   if (goal == OPT_QUALITY)
     {
-      for (int i = 1; i <= ne; i++)
-	{
-	  const Element & el = VolumeElement(i);
-	  if (el.GetType() != TET)
-	    continue;
-	  
-	  double hbad = CalcBad (points, el, 0, mp);
-	  for (int j = 0; j < 4; j++)
-	    perrs[el[j]] += hbad;
-	  
-	  bad1 += hbad;
-	}
-      
-      for (int i = perrs.Begin(); i < perrs.End(); i++)
-	if (perrs[i] > badmax) 
-	  badmax = perrs[i];
-      badmax = 0;
-    }
-
-  if (goal == OPT_QUALITY)
-    {
-      bad1 = CalcTotalBad (points, volelements, mp);
+      double bad1 = CalcTotalBad (points, volelements, mp);
       (*testout) << "Total badness = " << bad1 << endl;
       PrintMessage (5, "Total badness = ", bad1);
     }
@@ -1407,16 +1378,9 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
   //int uselocalh = mparam.uselocalh;
 
 
-  PointFunction * pf;
-
-  if (typ == 1)
-    pf = new PointFunction(points, volelements, mp);
-  else
-    pf = new CheapPointFunction(points, volelements, mp);
-
-  //  pf->SetLocalH (h);
+  PointFunction pf(points, volelements, mp);
   
-  Opti3FreeMinFunction freeminf(*pf);
+  Opti3FreeMinFunction freeminf(pf);
 
   OptiParameters par;
   par.maxit_linsearch = 20;
@@ -1460,7 +1424,7 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
   multithread.task = "Smooth Mesh";
 
   for (PointIndex pi : points.Range())
-    if ( (*this)[pi].Type() == INNERPOINT && perrs[pi] > 0.01 * badmax)
+    if ( (*this)[pi].Type() == INNERPOINT )
       {
 	if (multithread.terminate)
 	  throw NgException ("Meshing stopped");
@@ -1470,11 +1434,11 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
         if (  (pi+1-PointIndex::BASE) % printmod == 0) PrintDot (printdot);
 
 	double lh = pointh[pi];
-	pf->SetLocalH (lh);
+	pf.SetLocalH (lh);
 	par.typx = lh;
 
 	freeminf.SetPoint (points[pi]);
-	pf->SetPointIndex (pi);
+	pf.SetPointIndex (pi);
 
 	x = 0;
 	int pok;
@@ -1482,10 +1446,10 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
 
 	if (!pok)
 	  {
-	    pok = pf->MovePointToInner ();
+	    pok = pf.MovePointToInner ();
 
 	    freeminf.SetPoint (points[pi]);
-	    pf->SetPointIndex (pi);
+	    pf.SetPointIndex (pi);
 	  }
 
 	if (pok)
@@ -1500,13 +1464,11 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
       }
   PrintDot ('\n');
   
-  delete pf;
-
   multithread.task = savetask;
 
   if (goal == OPT_QUALITY)
     {
-      bad1 = CalcTotalBad (points, volelements, mp);
+      double bad1 = CalcTotalBad (points, volelements, mp);
       (*testout) << "Total badness = " << bad1 << endl;
       PrintMessage (5, "Total badness = ", bad1);
     }
