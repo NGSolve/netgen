@@ -127,7 +127,7 @@ namespace netgen
 		cout << "read " << mesh.GetNP() << " points" << endl;
                 Point3d pmin, pmax;
                 mesh.GetBox (pmin, pmax);
-                if(fabs(pmin.Z() - pmax.Z()) < 1e-10) //hard-coded for now
+                if(fabs(pmin.Z() - pmax.Z()) < 1e-10 * Dist(pmin, pmax))
                 {
                        cout << "Set Dimension to 2." << endl;
                        mesh.SetDimension(2);
@@ -167,14 +167,14 @@ namespace netgen
                           el[2] = -1;
 
                           if(dim == 3){
-                          auto nr = tmp_segments.Size();
-                          tmp_segments.Append(el);
-                          element_map[label] = std::make_tuple(nr+1, 2);
+                            auto nr = tmp_segments.Size();
+                            tmp_segments.Append(el);
+                            element_map[label] = std::make_tuple(nr+1, 2);
                           }
                           else if(dim == 2){
-		          el.si = -1; // add label to segment, will be changed later when BC's are assigned
-                          auto nr = mesh.AddSegment(el);
-                          element_map[label] = std::make_tuple(nr+1, 2);
+		            el.si = -1; // add label to segment, will be changed later when BC's are assigned
+                            auto nr = mesh.AddSegment(el);
+                            element_map[label] = std::make_tuple(nr+1, 2);
                           }
                           break;
                         }
@@ -186,18 +186,26 @@ namespace netgen
                           el[1] = nodes[2];
                           el[2] = nodes[1];
                           
-                          auto nr = tmp_segments.Size();
-                          tmp_segments.Append(el);
-                          element_map[label] = std::make_tuple(nr+1, 2);
+                          if(dim == 3){
+                            auto nr = tmp_segments.Size();
+                            tmp_segments.Append(el);
+                            element_map[label] = std::make_tuple(nr+1, 2);
+                          }
+                          else if(dim == 2){
+		            el.si = -1; // add label to segment, will be changed later when BC's are assigned
+                            auto nr = mesh.AddSegment(el);
+                            element_map[label] = std::make_tuple(nr+1, 2);
+                          }
+
                           break;
                         }
 		      case 41: // TRIG
 			{
 			  Element2d el (TRIG);
-			  el.SetIndex(1);
+			  el.SetIndex (1);
 			  for (int j = 0; j < nnodes; j++)
 			    el[j] = nodes[j];
-			  auto nr = mesh.AddSurfaceElement(el);
+			  auto nr = mesh.AddSurfaceElement (el);
                           element_map[label] = std::make_tuple(nr+1, 1);
 			  break;
 			}
