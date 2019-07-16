@@ -19,4 +19,8 @@ def StartGUI():
         pass
     
 if not netgen.libngpy._meshing._netgen_executable_started:
-    StartGUI()
+    # catch exception for building html docu on server without display
+    try:  
+        StartGUI()
+    except:
+        pass
