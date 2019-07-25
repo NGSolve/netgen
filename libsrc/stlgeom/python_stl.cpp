@@ -4,6 +4,7 @@
 #include <../general/ngpython.hpp>
 #include <core/python_ngcore.hpp>
 #include <stlgeom.hpp>
+#include "../meshing/python_mesh.hpp"
 
 #ifdef WIN32
    #define DLL_HEADER   __declspec(dllexport)
@@ -21,6 +22,12 @@ DLL_HEADER void ExportSTL(py::module & m)
 {
   py::class_<STLGeometry,shared_ptr<STLGeometry>, NetgenGeometry> (m,"STLGeometry")
     .def(py::init<>())
+    .def(py::init<>([](const string& filename)
+                    {
+                      ifstream ist(filename);
+                      return shared_ptr<STLGeometry>(STLGeometry::Load(ist));
+                    }), py::arg("filename"),
+      py::call_guard<py::gil_scoped_release>())
     .def(NGSPickle<STLGeometry>())
     .def("_visualizationData", [](shared_ptr<STLGeometry> stl_geo)
          {
@@ -71,29 +78,29 @@ DLL_HEADER void ExportSTL(py::module & m)
             res["max"] = MoveToNumpy(max);
             return res;
          }, py::call_guard<py::gil_scoped_release>())
+    .def("GenerateMesh", [] (shared_ptr<STLGeometry> geo, py::kwargs kwargs)
+                         {
+                           MeshingParameters mp;
+                           {
+                             py::gil_scoped_acquire aq;
+                             mp = CreateMPfromKwargs(kwargs);
+                           }
+                           auto mesh = make_shared<Mesh>();
+                           SetGlobalMesh(mesh);
+                           mesh->SetGeometry(geo);
+                           ng_geometry = geo;
+                           geo->GenerateMesh(mesh,mp);
+                           return mesh;
+                         },
+      py::call_guard<py::gil_scoped_release>(),
+      meshingparameter_description.c_str())
     ;
-  m.def("LoadSTLGeometry", FunctionPointer([] (const string & filename)
-					   {
-					     ifstream ist(filename);
-					     return shared_ptr<STLGeometry>(STLGeometry::Load(ist));
-					   }),py::call_guard<py::gil_scoped_release>());
-  m.def("GenerateMesh", FunctionPointer([] (shared_ptr<STLGeometry> geo, MeshingParameters &param)
-					{
-					  auto mesh = make_shared<Mesh>();
-					  SetGlobalMesh(mesh);
-					  mesh->SetGeometry(geo);
-					  ng_geometry = geo;
-					  try
-					    {
-					      geo->GenerateMesh(mesh,param);
-					    }
-					  catch (NgException ex)
-					    {
-					      cout << "Caught NgException: " << ex.What() << endl;
-					    }
-					  return mesh;
-					}),py::call_guard<py::gil_scoped_release>())
-    ;
+  m.def("LoadSTLGeometry", [] (const string & filename)
+                           {
+                             cout << "WARNING: LoadSTLGeometry is deprecated, use the STLGeometry(filename) constructor instead!" << endl;
+                             ifstream ist(filename);
+                             return shared_ptr<STLGeometry>(STLGeometry::Load(ist));
+                           },py::call_guard<py::gil_scoped_release>());
 }
 
 PYBIND11_MODULE(libstl, m) {

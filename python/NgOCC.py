@@ -1,10 +1,7 @@
-from netgen.libngpy._NgOCC import *
-from netgen.libngpy._meshing import MeshingParameters
 
-def NgOCC_meshing_func (geom, **args):
-    if "mp" in args:
-        return GenerateMesh (geom, args["mp"])
-    else:
-        return GenerateMesh (geom, MeshingParameters (**args))
+import logging
+logger = logging.getLogger(__name__)
 
-OCCGeometry.GenerateMesh = NgOCC_meshing_func
+logger.warn("This module is deprecated and just a wrapper for netgen.occ, import netgen.occ instead")
+
+from .occ import *

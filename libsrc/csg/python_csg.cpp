@@ -3,6 +3,7 @@
 #include <../general/ngpython.hpp>
 #include <core/python_ngcore.hpp>
 #include <csg.hpp>
+#include "../meshing/python_mesh.hpp"
 
 
 using namespace netgen;
@@ -693,26 +694,22 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
            res["max"] = MoveToNumpy(max);
            return res;
          }, py::call_guard<py::gil_scoped_release>())
-    ;
-
-  m.def("GenerateMesh", FunctionPointer
-          ([](shared_ptr<CSGeometry> geo, MeshingParameters & param)
+  .def("GenerateMesh", [](shared_ptr<CSGeometry> geo, py::kwargs kwargs)
            {
-             auto dummy = make_shared<Mesh>();
-             SetGlobalMesh (dummy);
-             dummy->SetGeometry(geo);
+             MeshingParameters mp;
+             {
+               py::gil_scoped_acquire aq;
+               mp = CreateMPfromKwargs(kwargs);
+             }
+             auto mesh = make_shared<Mesh>();
+             SetGlobalMesh (mesh);
+             mesh->SetGeometry(geo);
 	     ng_geometry = geo;
              geo->FindIdenticSurfaces(1e-8 * geo->MaxSize());
-             try
-               {
-                 geo->GenerateMesh (dummy, param);
-               }
-             catch (NgException ex)
-               {
-                 cout << "Caught NgException: " << ex.What() << endl;
-               }
-             return dummy;
-           }),py::call_guard<py::gil_scoped_release>())
+             geo->GenerateMesh (mesh, mp);
+             return mesh;
+           }, meshingparameter_description.c_str(),
+    py::call_guard<py::gil_scoped_release>())
     ;
 
   m.def("Save", FunctionPointer 
