@@ -857,24 +857,17 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             self.SetMaxHDomain(maxh);
           })
     .def ("GenerateVolumeMesh", 
-          [](Mesh & self, py::object pymp)
+          [](Mesh & self, py::kwargs kwargs)
            {
-             cout << "generate vol mesh" << endl;
-
              MeshingParameters mp;
              {
                py::gil_scoped_acquire acquire;
-             if (py::extract<MeshingParameters>(pymp).check())
-               mp = py::extract<MeshingParameters>(pymp)();
-             else
-               {
-                 mp.optsteps3d = 5;
-               }
+               mp = CreateMPfromKwargs(kwargs);
              }
              MeshVolume (mp, self);
              OptimizeVolume (mp, self);
-           },
-          py::arg("mp")=NGDummyArgument(),py::call_guard<py::gil_scoped_release>())
+           }, meshingparameter_description.c_str(),
+          py::call_guard<py::gil_scoped_release>())
 
     .def ("OptimizeVolumeMesh", [](Mesh & self)
           {

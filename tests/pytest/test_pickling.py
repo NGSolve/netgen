@@ -52,7 +52,7 @@ def test_pickle_occ():
     except:
         import pytest
         pytest.skip("can't import occ")
-    geo = OCCGeometry("../../tutorials/frame.step")
+    geo = occ.OCCGeometry("../../tutorials/frame.step")
     geo_dump = pickle.dumps(geo)
     geo2 = pickle.loads(geo_dump)
     vd1 = geo._visualizationData()
