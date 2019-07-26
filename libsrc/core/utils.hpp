@@ -103,15 +103,16 @@ namespace ngcore
     void operator delete[] (void * p) { aligned_free(p); }
   };
 
-  // Two helper functions for string checking
-  inline bool StartsWith(std::string str, std::string start)
+  // checks if string starts with sequence
+  inline bool StartsWith(const std::string& str, const std::string& start)
   {
     if(start.size() > str.size())
       return false;
     return std::equal(start.begin(), start.end(), str.begin());
   }
 
-  inline bool EndsWith(std::string str, std::string end)
+  // checks if string ends with sequence
+  inline bool EndsWith(const std::string& str, const std::string& end)
   {
     if(end.size() > str.size())
       return false;
