@@ -857,7 +857,7 @@ namespace nglib
       // slate
       me->DeleteMesh();
 
-      OCCSetLocalMeshSize(*occgeom, *me);
+      OCCSetLocalMeshSize(*occgeom, *me, mparam);
 
       return(NG_OK);
    }
@@ -875,7 +875,7 @@ namespace nglib
 
       mp->Transfer_Parameters();
 
-      OCCFindEdges(*occgeom, *me);
+      OCCFindEdges(*occgeom, *me, mparam);
 
       if((me->GetNP()) && (me->GetNFD()))
       {
@@ -920,7 +920,7 @@ namespace nglib
          perfstepsend = MESHCONST_OPTSURFACE;
       }
 
-      OCCMeshSurface(*occgeom, *me, perfstepsend);
+      OCCMeshSurface(*occgeom, *me, perfstepsend, mparam);
 
       me->CalcSurfacesOfNode();
       

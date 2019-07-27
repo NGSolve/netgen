@@ -57,7 +57,7 @@ namespace netgen
 
 
 
-   double ComputeH (double kappa)
+  double ComputeH (double kappa, const MeshingParameters & mparam)
    {
       double hret;
       kappa *= mparam.curvaturesafety;
@@ -77,7 +77,8 @@ namespace netgen
 
 
    void RestrictHTriangle (gp_Pnt2d & par0, gp_Pnt2d & par1, gp_Pnt2d & par2,
-                           BRepLProp_SLProps * prop, Mesh & mesh, int depth, double h = 0)
+                           BRepLProp_SLProps * prop, Mesh & mesh, int depth, double h,
+                           const MeshingParameters & mparam)
    {
       int ls = -1;
 
@@ -166,7 +167,7 @@ namespace netgen
 
 
 
-         h = ComputeH (curvature+1e-10);
+         h = ComputeH (curvature+1e-10, mparam);
 
          if(h < 1e-4*maxside)
             return;
@@ -188,20 +189,20 @@ namespace netgen
          if(ls == 0)
          {
             pm.SetX(0.5*(par1.X()+par2.X())); pm.SetY(0.5*(par1.Y()+par2.Y()));
-            RestrictHTriangle(pm, par2, par0, prop, mesh, depth+1, h);
-            RestrictHTriangle(pm, par0, par1, prop, mesh, depth+1, h);
+            RestrictHTriangle(pm, par2, par0, prop, mesh, depth+1, h, mparam);
+            RestrictHTriangle(pm, par0, par1, prop, mesh, depth+1, h, mparam);
          }
          else if(ls == 1)
          {
             pm.SetX(0.5*(par0.X()+par2.X())); pm.SetY(0.5*(par0.Y()+par2.Y()));
-            RestrictHTriangle(pm, par1, par2, prop, mesh, depth+1, h);
-            RestrictHTriangle(pm, par0, par1, prop, mesh, depth+1, h);
+            RestrictHTriangle(pm, par1, par2, prop, mesh, depth+1, h, mparam);
+            RestrictHTriangle(pm, par0, par1, prop, mesh, depth+1, h, mparam);
          }
          else if(ls == 2)
          {
             pm.SetX(0.5*(par0.X()+par1.X())); pm.SetY(0.5*(par0.Y()+par1.Y()));
-            RestrictHTriangle(pm, par1, par2, prop, mesh, depth+1, h);
-            RestrictHTriangle(pm, par2, par0, prop, mesh, depth+1, h);
+            RestrictHTriangle(pm, par1, par2, prop, mesh, depth+1, h, mparam);
+            RestrictHTriangle(pm, par2, par0, prop, mesh, depth+1, h, mparam);
          }
 
       }
@@ -232,7 +233,8 @@ namespace netgen
 
 
    void DivideEdge (TopoDS_Edge & edge, NgArray<MeshPoint> & ps,
-                    NgArray<double> & params, Mesh & mesh)
+                    NgArray<double> & params, Mesh & mesh,
+                    const MeshingParameters & mparam)
    {
       double s0, s1;
       double maxh = mparam.maxh;
@@ -312,7 +314,7 @@ namespace netgen
 
 
 
-   void OCCFindEdges (OCCGeometry & geom, Mesh & mesh)
+  void OCCFindEdges (OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam)
    {
       const char * savetask = multithread.task;
       multithread.task = "Edge meshing";
@@ -474,7 +476,7 @@ namespace netgen
                NgArray <MeshPoint> mp;
                NgArray <double> params;
 
-               DivideEdge (edge, mp, params, mesh);
+               DivideEdge (edge, mp, params, mesh, mparam);
  
                NgArray <int> pnums;
                pnums.SetSize (mp.Size()+2);
@@ -606,7 +608,8 @@ namespace netgen
 
 
 
-   void OCCMeshSurface (OCCGeometry & geom, Mesh & mesh, int perfstepsend)
+  void OCCMeshSurface (OCCGeometry & geom, Mesh & mesh, int perfstepsend,
+                       MeshingParameters & mparam)
    {
       int i, j, k;
       int changed;
@@ -661,7 +664,7 @@ namespace netgen
 
          //      int projecttype = PLANESPACE;
 
-         Meshing2OCCSurfaces meshing(TopoDS::Face(geom.fmap(k)), bb, projecttype);
+         Meshing2OCCSurfaces meshing(TopoDS::Face(geom.fmap(k)), bb, projecttype, mparam);
 
          if (meshing.GetProjectionType() == PLANESPACE)
             PrintMessage (2, "Face ", k, " / ", mesh.GetNFD(), " (plane space projection)");
@@ -988,10 +991,11 @@ namespace netgen
 
 
 
-   void OCCSetLocalMeshSize(OCCGeometry & geom, Mesh & mesh)
+  void OCCSetLocalMeshSize(OCCGeometry & geom, Mesh & mesh,
+                           const MeshingParameters & mparam)
    {
-      mesh.SetGlobalH (mparam.maxh);
-      mesh.SetMinimalH (mparam.minh);
+     mesh.SetGlobalH (mparam.maxh);
+     mesh.SetMinimalH (mparam.minh);
 
       NgArray<double> maxhdom;
       maxhdom.SetSize (geom.NrSolids());
@@ -1117,7 +1121,7 @@ namespace netgen
 
                gp_Pnt pnt = c->Value (s);
 
-               mesh.RestrictLocalH (Point3d(pnt.X(), pnt.Y(), pnt.Z()), ComputeH (fabs(curvature)));
+               mesh.RestrictLocalH (Point3d(pnt.X(), pnt.Y(), pnt.Z()), ComputeH (fabs(curvature), mparam));
             }
             // (*testout) << "edge " << i << " max. curvature: " << maxcur << endl;
          }
@@ -1165,7 +1169,7 @@ namespace netgen
                //maxside = max (maxside, p[1].Distance(p[2]));
                //cout << "\rFace " << i << " pos11 ntriangles " << ntriangles << " maxside " << maxside << flush;
 
-               RestrictHTriangle (par[0], par[1], par[2], &prop, mesh, 0);
+               RestrictHTriangle (par[0], par[1], par[2], &prop, mesh, 0, 0, mparam);
                //cout << "\rFace " << i << " pos12 ntriangles " << ntriangles << flush;
             }
          }
@@ -1298,7 +1302,7 @@ namespace netgen
            mesh = make_shared<Mesh>();
          mesh->geomtype = Mesh::GEOM_OCC;
          
-         OCCSetLocalMeshSize(geom,*mesh);
+         OCCSetLocalMeshSize(geom,*mesh, mparam);
       }
 
       if (multithread.terminate || mparam.perfstepsend <= MESHCONST_ANALYSE)
@@ -1306,7 +1310,7 @@ namespace netgen
 
       if (mparam.perfstepsstart <= MESHCONST_MESHEDGES)
       {
-         OCCFindEdges (geom, *mesh);
+        OCCFindEdges (geom, *mesh, mparam);
 
          /*
          cout << "Removing redundant points" << endl;
@@ -1379,7 +1383,7 @@ namespace netgen
 
       if (mparam.perfstepsstart <= MESHCONST_MESHSURFACE)
       {
-         OCCMeshSurface (geom, *mesh, mparam.perfstepsend);
+        OCCMeshSurface (geom, *mesh, mparam.perfstepsend, mparam);
          if (multithread.terminate) return TCL_OK;
 
 #ifdef LOG_STREAM

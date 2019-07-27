@@ -114,7 +114,7 @@ namespace netgen
 {
 #include "occmeshsurf.hpp"
 
-  extern DLL_HEADER MeshingParameters mparam;
+  // extern DLL_HEADER MeshingParameters mparam;
 
 #define PROJECTION_TOLERANCE 1e-10
 
@@ -300,7 +300,7 @@ namespace netgen
       // Philippose - 15/01/2009
       // Sets the maximum mesh size for a given face
       // (Note: Local mesh size limited by the global max mesh size)
-      void SetFaceMaxH(int facenr, double faceh)
+     void SetFaceMaxH(int facenr, double faceh, const MeshingParameters & mparam)
       {
          if((facenr> 0) && (facenr <= fmap.Extent()))
          {
@@ -310,7 +310,7 @@ namespace netgen
             // If the face maxh is greater than or equal to the 
             // current global maximum, then identify the face as 
             // not explicitly controlled by the user any more
-            if(faceh >= mparam.maxh)
+           if(faceh >= mparam.maxh)
             {
                face_maxh_modified[facenr-1] = 0;
             }
@@ -444,11 +444,11 @@ namespace netgen
    DLL_HEADER extern int OCCGenerateMesh (OCCGeometry & occgeometry, shared_ptr<Mesh> & mesh,
 			       MeshingParameters & mparam);
 
-   DLL_HEADER extern void OCCSetLocalMeshSize(OCCGeometry & geom, Mesh & mesh);
+  DLL_HEADER extern void OCCSetLocalMeshSize(OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam);
 
-   DLL_HEADER extern void OCCMeshSurface (OCCGeometry & geom, Mesh & mesh, int perfstepsend);
+  DLL_HEADER extern void OCCMeshSurface (OCCGeometry & geom, Mesh & mesh, int perfstepsend, MeshingParameters & mparam);
 
-   DLL_HEADER extern void OCCFindEdges (OCCGeometry & geom, Mesh & mesh);
+  DLL_HEADER extern void OCCFindEdges (OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam);
 }
 
 #endif

@@ -27,6 +27,7 @@ namespace netgen
 {
   extern DLL_HEADER shared_ptr<NetgenGeometry> ng_geometry;
   extern DLL_HEADER shared_ptr<Mesh> mesh;
+  extern DLL_HEADER MeshingParameters mparam;
  
   char * err_needsoccgeometry = (char*) "This operation needs an OCC geometry";
   extern char * err_needsmesh;
@@ -588,7 +589,7 @@ namespace netgen
     {
            if(!occgeometry->GetFaceMaxhModified(i))
            {
-              occgeometry->SetFaceMaxH(i, mparam.maxh);
+             occgeometry->SetFaceMaxH(i, mparam.maxh, mparam);
            }   
     }
 
@@ -597,7 +598,7 @@ namespace netgen
 	   int facenr = atoi (argv[2]);
 	   double surfms = atof (argv[3]);
 	   if (occgeometry && facenr >= 1 && facenr <= occgeometry->NrFaces())
-	     occgeometry->SetFaceMaxH(facenr, surfms);
+	     occgeometry->SetFaceMaxH(facenr, surfms, mparam);
 
     }
 
@@ -608,7 +609,7 @@ namespace netgen
 	   {
 	     int nrFaces = occgeometry->NrFaces();
 	     for (int i = 1; i <= nrFaces; i++)
-	      occgeometry->SetFaceMaxH(i, surfms);
+               occgeometry->SetFaceMaxH(i, surfms, mparam);
 	   }
     }
 
