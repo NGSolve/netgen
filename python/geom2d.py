@@ -1,24 +1,11 @@
-from netgen.libngpy._geom2d import *
-from netgen.libngpy._meshing import *
-
-tmp_generate_mesh = SplineGeometry.GenerateMesh
-
-def geom2d_meshing_func (geom, **args):
-    if "mp" in args:
-        return tmp_generate_mesh (geom, args["mp"])
-    else:
-        return tmp_generate_mesh (geom, MeshingParameters (**args))
-
-
-SplineGeometry.GenerateMesh = geom2d_meshing_func
-
+from .libngpy._geom2d import SplineGeometry
 
 unit_square = SplineGeometry()
-pnts = [ (0,0), (1,0), (1,1), (0,1) ]
-lines = [ (0,1,1,"bottom"), (1,2,2,"right"), (2,3,3,"top"), (3,0,4,"left") ]
-pnums = [unit_square.AppendPoint(*p) for p in pnts]
-for l1,l2,bc,bcname in lines:
-    unit_square.Append( ["line", pnums[l1], pnums[l2]], bc=bcname)
+_pnts = [ (0,0), (1,0), (1,1), (0,1) ]
+_lines = [ (0,1,1,"bottom"), (1,2,2,"right"), (2,3,3,"top"), (3,0,4,"left") ]
+_pnums = [unit_square.AppendPoint(*p) for p in _pnts]
+for l1,l2,bc,bcname in _lines:
+    unit_square.Append( ["line", _pnums[l1], _pnums[l2]], bc=bcname)
 
 
 def MakeRectangle (geo, p1, p2, bc=None, bcs=None, **args):
@@ -140,9 +127,5 @@ SplineGeometry.AddRectangle = lambda geo, p1, p2, **args : MakeRectangle(geo, p1
 SplineGeometry.AddSegment = lambda *args, **kwargs : SplineGeometry.Append(*args, **kwargs)
 SplineGeometry.AddPoint = lambda *args, **kwargs : SplineGeometry.AppendPoint(*args, **kwargs)
 SplineGeometry.CreatePML = CreatePML
-
-__all__ = ['SplineGeometry', 'unit_square']
-
-
 
 

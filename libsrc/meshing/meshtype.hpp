@@ -1191,7 +1191,7 @@ namespace netgen
     /// power of error (to approximate max err optimization)
     double opterrpow = 2;
     /// do block filling ?  
-    int blockfill = 1;
+    bool blockfill = true;
     /// block filling up to distance
     double filldist = 0.1;
     /// radius of local environment (times h)
@@ -1199,11 +1199,11 @@ namespace netgen
     /// radius of active environment (times h)
     double relinnersafety = 3;
     /// use local h ?
-    int uselocalh = 1;
+    bool uselocalh = true;
     /// grading for local h
     double grading = 0.3;
     /// use delaunay meshing
-    int delaunay = 1;
+    bool delaunay = true;
     /// maximal mesh size
     double maxh = 1e10;
     /// minimal mesh size
@@ -1211,19 +1211,19 @@ namespace netgen
     /// file for meshsize
     string meshsizefilename = "";
     /// start surfacemeshing from everywhere in surface
-    int startinsurface = 0;
+    bool startinsurface = false;
     /// check overlapping surfaces (debug)
-    int checkoverlap = 1;
+    bool checkoverlap = true;
     /// check overlapping surface mesh before volume meshing
-    int checkoverlappingboundary = 1;
+    bool checkoverlappingboundary = true;
     /// check chart boundary (sometimes too restrictive)
-    int checkchartboundary = 1;
+    bool checkchartboundary = true;
     /// safety factor for curvatures (elements per radius)
     double curvaturesafety = 2;
     /// minimal number of segments per edge
     double segmentsperedge = 1;
     /// use parallel threads
-    int parthread = 0;
+    bool parthread = 0;
     /// weight of element size w.r.t element shape
     double elsizeweight = 0.2;
     /// init with default values
@@ -1246,29 +1246,29 @@ namespace netgen
     /// if non-zero, baseelement must have baseelnp points
     int baseelnp = 0;        
     /// quality tolerances are handled less careful
-    int sloppy = 1;
+    bool sloppy = true;
   
     /// limit for max element angle (150-180)
     double badellimit = 175;
 
-    bool check_impossible = 0;
+    bool check_impossible = false;
 
     int only3D_domain_nr = 0;
   
     ///
-    int secondorder = 0;
+    bool secondorder = false;
     /// high order element curvature
     int elementorder = 1;
     /// quad-dominated surface meshing
-    int quad = 0;
+    bool quad = false;
     ///
     bool try_hexes = false;
     ///
-    int inverttets = 0;
+    bool inverttets = false;
     ///
-    int inverttrigs = 0;
+    bool inverttrigs = false;
     ///
-    int autozrefine = 0;
+    bool autozrefine = false;
     ///
     MeshingParameters ();
     ///
