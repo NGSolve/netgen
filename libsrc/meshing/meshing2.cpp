@@ -21,6 +21,7 @@ namespace netgen
 
   Meshing2 :: Meshing2 (const MeshingParameters & mp, const Box<3> & aboundingbox)
   {
+    static Timer t("Mesing2::Meshing2"); RegionTimer r(t);
     boundingbox = aboundingbox;
     
     LoadRules (NULL, mp.quad);

@@ -55,6 +55,7 @@ protected:
 public:
   OCCSurface (const TopoDS_Face & aface, int aprojecttype)
   {
+    static Timer t("occurface ctor"); RegionTimer r(t);
     topods_face = aface;
     occface = BRep_Tool::Surface(topods_face);
     orient = topods_face.Orientation();
