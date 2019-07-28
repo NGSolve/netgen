@@ -29,7 +29,7 @@ derive from Meshing2, and replace transformation.
 class Meshing2
 {
   /// the current advancing front
-  AdFront2 * adfront;
+  AdFront2 adfront;
   /// rules for mesh generation
   NgArray<netrule*> rules;
   /// statistics
