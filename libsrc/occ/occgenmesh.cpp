@@ -668,11 +668,14 @@ namespace netgen
         Meshing2OCCSurfaces meshing(TopoDS::Face(geom.fmap(k)), bb, projecttype, mparam);
         tinit.Stop();
 
+
+        static Timer tprint("print");
+        tprint.Start();
         if (meshing.GetProjectionType() == PLANESPACE)
           PrintMessage (2, "Face ", k, " / ", mesh.GetNFD(), " (plane space projection)");
         else
           PrintMessage (2, "Face ", k, " / ", mesh.GetNFD(), " (parameter space projection)");
-
+        tprint.Stop();
         if (surfmesherror)
           cout << "Surface meshing error occurred before (in " << surfmesherror << " faces)" << endl;
 
@@ -795,8 +798,11 @@ namespace netgen
         //      int noldpoints = mesh->GetNP();
         int noldsurfel = mesh.GetNSE();
 
+        static Timer tsurfprop("surfprop");
+        tsurfprop.Start();
         GProp_GProps sprops;
         BRepGProp::SurfaceProperties(TopoDS::Face(geom.fmap(k)),sprops);
+        tsurfprop.Stop();
         meshing.SetMaxArea(2.*sprops.Mass());
 
         MESHING2_RESULT res;

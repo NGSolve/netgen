@@ -53,13 +53,7 @@ namespace netgen
 
 
   Meshing2 :: ~Meshing2 ()
-  {
-    // delete adfront;
-    /*
-    for (int i = 0; i < rules.Size(); i++)
-      delete rules[i];
-    */
-  }
+  { ; } 
 
   void Meshing2 :: AddPoint (const Point3d & p, PointIndex globind, 
 			     MultiPointGeomInfo * mgi,
@@ -77,7 +71,7 @@ namespace netgen
       {
 	PrintSysError ("addboundaryelement: illegal geominfo");
       }
-    adfront. AddLine (i1-1, i2-1, gi1, gi2);
+    adfront.AddLine (i1-1, i2-1, gi1, gi2);
   }
 
 
@@ -239,7 +233,6 @@ namespace netgen
     int z1, z2, oldnp(-1);
     bool found;
     int rulenr(-1);
-    Point<3> p1, p2;
 
     const PointGeomInfo * blgeominfo1;
     const PointGeomInfo * blgeominfo2;
@@ -247,9 +240,8 @@ namespace netgen
     bool morerisc;
     bool debugflag;
 
-    double h, his, hshould;
-
-
+    // double h;
+    
     NgArray<Point3d> locpoints;
     NgArray<int> legalpoints;
     NgArray<Point2d> plainpoints;
@@ -369,6 +361,10 @@ namespace netgen
 
     NgProfiler::StopTimer (ts3);
 
+    static Timer tloop("surfacemeshing mainloop");
+    static Timer tgetlocals("surfacemeshing getlocals");
+    {
+      RegionTimer rloop(tloop);
     while (!adfront.Empty() && !multithread.terminate)
       {
 	NgProfiler::RegionTimer reg1 (timer1);
@@ -384,13 +380,13 @@ namespace netgen
 	  multithread.percent = 0;
 	*/
 
-	locpoints.SetSize(0);
-	loclines.SetSize(0);
-	pindex.SetSize(0);
-	lindex.SetSize(0);
-	delpoints.SetSize(0);
-	dellines.SetSize(0);
-	locelements.SetSize(0);
+	locpoints.SetSize0();
+	loclines.SetSize0();
+	pindex.SetSize0();
+	lindex.SetSize0();
+	delpoints.SetSize0();
+	dellines.SetSize0();
+	locelements.SetSize0();
 
 
 
@@ -408,8 +404,8 @@ namespace netgen
 
 
 	// unique-pgi, multi-pgi
-	upgeominfo.SetSize(0);
-	mpgeominfo.SetSize(0);
+	upgeominfo.SetSize0();
+	mpgeominfo.SetSize0();
 
 
 	nfaces = adfront.GetNFL();
@@ -428,27 +424,27 @@ namespace netgen
 	    (*testout) << "\n";
 	  }
 
-
-	int baselineindex = adfront. SelectBaseLine (p1, p2, blgeominfo1, blgeominfo2, qualclass);
-
+        Point<3> p1, p2;
+	int baselineindex = adfront.SelectBaseLine (p1, p2, blgeominfo1, blgeominfo2, qualclass);
 
 	found = 1;
 
-	his = Dist (p1, p2);
+	double his = Dist (p1, p2);
 
-	Point3d pmid = Center (p1, p2);
-	hshould = CalcLocalH (pmid, mesh.GetH (pmid));
+	Point<3> pmid = Center (p1, p2);
+	double hshould = CalcLocalH (pmid, mesh.GetH (pmid));
 	if (gh < hshould) hshould = gh;
 
 	mesh.RestrictLocalH (pmid, hshould);
 
-	h = hshould;
+	double h = hshould;
 
 	double hinner = (3 + qualclass) * max2 (his, hshould);
 
+        tgetlocals.Start();
 	adfront.GetLocals (baselineindex, locpoints, mpgeominfo, loclines, 
 			     pindex, lindex, 2*hinner);
-
+        tgetlocals.Stop();
 
 	NgProfiler::RegionTimer reg2 (timer2);
 
@@ -476,8 +472,8 @@ namespace netgen
 	morerisc = 0;
 
 
-	PointIndex gpi1 = adfront. GetGlobalIndex (pindex.Get(loclines[0].I1()));
-	PointIndex gpi2 = adfront. GetGlobalIndex (pindex.Get(loclines[0].I2()));
+	PointIndex gpi1 = adfront.GetGlobalIndex (pindex.Get(loclines[0].I1()));
+	PointIndex gpi2 = adfront.GetGlobalIndex (pindex.Get(loclines[0].I2()));
 
 
 	debugflag = 
@@ -535,6 +531,12 @@ namespace netgen
 		*testout << "3d points: " << endl << locpoints << endl;
 	      }
 
+
+	    for (size_t i = 0; i < locpoints.Size(); i++)
+              TransformToPlain (locpoints[i], mpgeominfo[i],
+                                plainpoints[i], h, plainzones[i]);
+            
+            /*
 	    for (int i = 1; i <= locpoints.Size(); i++)
 	      {
 		// (*testout) << "pindex(i) = " << pindex[i-1] << endl;
@@ -545,6 +547,7 @@ namespace netgen
 		//		(*testout) << plainpoints.Get(i).X() << " " << plainpoints.Get(i).Y() << endl;
 		//(*testout) << "transform " << locpoints.Get(i) << " to " << plainpoints.Get(i).X() << " " << plainpoints.Get(i).Y() << endl;
 	      }
+            */
 	    //	    (*testout) << endl << endl << endl;
 
 
@@ -671,31 +674,34 @@ namespace netgen
 
 
 	    legalpoints.SetSize(plainpoints.Size());
+            legalpoints = 1;
+            /*
 	    for (int i = 1; i <= legalpoints.Size(); i++)
 	      legalpoints.Elem(i) = 1;
-
+            */
+            
 	    double avy = 0;
-	    for (int i = 1; i <= plainpoints.Size(); i++)
-	      avy += plainpoints.Elem(i).Y();
+	    for (size_t i = 0; i < plainpoints.Size(); i++)
+	      avy += plainpoints[i].Y();
 	    avy *= 1./plainpoints.Size();
 		
 
-	    for (int i = 1; i <= plainpoints.Size(); i++)
+	    for (auto i : Range(plainpoints))
 	      {
-		if (plainzones.Elem(i) < 0)
+		if (plainzones[i] < 0)
 		  {
-		    plainpoints.Elem(i) = Point2d (1e4, 1e4);
-		    legalpoints.Elem(i) = 0;
+		    plainpoints[i] = Point2d (1e4, 1e4);
+		    legalpoints[i] = 0;
 		  }
-		if (pindex.Elem(i) == -1)
+		if (pindex[i] == -1)
 		  {
-		    legalpoints.Elem(i) = 0;
+		    legalpoints[i] = 0;
 		  }
 		    
 
-		if (plainpoints.Elem(i).Y() < -1e-10*avy) // changed
+		if (plainpoints[i].Y() < -1e-10*avy) // changed
 		  {
-		    legalpoints.Elem(i) = 0;
+		    legalpoints[i] = 0;
 		  }
 	      }
 	    /*
@@ -784,6 +790,8 @@ namespace netgen
 
 	if (found)
 	  {
+            static Timer t("ApplyRules");
+            RegionTimer r(t);
 	    rulenr = ApplyRules (plainpoints, legalpoints, maxlegalpoint,
 				 loclines, maxlegalline, locelements,
 				 dellines, qualclass, mp);
@@ -838,7 +846,7 @@ namespace netgen
 	  
 
 	//      for (i = 1; i <= oldnl; i++)
-	//        adfront. ResetClass (lindex[i]);
+	//        adfront.ResetClass (lindex[i]);
 
 
 	/*
@@ -967,7 +975,7 @@ namespace netgen
 	      for (j = 1; j <= 2; j++)
 	      {
 	      upgeominfo.Elem(loclines.Get(dellines.Get(i)).I(j)) =
-	      adfront. GetLineGeomInfo (lindex.Get(dellines.Get(i)), j);
+	      adfront.GetLineGeomInfo (lindex.Get(dellines.Get(i)), j);
 	      }
 	    */
 
@@ -1165,7 +1173,7 @@ namespace netgen
 			    //		      cout << "overlap !!!" << endl;
 #endif
 			    for (int k = 1; k <= 5; k++)
-			      adfront. IncrementClass (lindex.Get(1));
+			      adfront.IncrementClass (lindex.Get(1));
 
 			    found = 0;
 			  
@@ -1261,7 +1269,7 @@ namespace netgen
 	    for (int i = oldnp+1; i <= locpoints.Size(); i++)
 	      {
 		PointIndex globind = mesh.AddPoint (locpoints.Get(i));
-		pindex.Elem(i) = adfront. AddPoint (locpoints.Get(i), globind);
+		pindex.Elem(i) = adfront.AddPoint (locpoints.Get(i), globind);
 	      }
 	      
 	    for (int i = oldnl+1; i <= loclines.Size(); i++)
@@ -1291,7 +1299,7 @@ namespace netgen
 		    cout << "new el: illegal geominfo" << endl;
 		  }
 
-		adfront. AddLine (pindex.Get(loclines.Get(i).I1()),
+		adfront.AddLine (pindex.Get(loclines.Get(i).I1()),
 				    pindex.Get(loclines.Get(i).I2()),
 				    upgeominfo.Get(loclines.Get(i).I1()),
 				    upgeominfo.Get(loclines.Get(i).I2()));
@@ -1316,7 +1324,7 @@ namespace netgen
 		  {
 		    mtri.PNum(j) = 
 		      locelements.Elem(i).PNum(j) =
-		      adfront. GetGlobalIndex (pindex.Get(locelements.Get(i).PNum(j)));
+		      adfront.GetGlobalIndex (pindex.Get(locelements.Get(i).PNum(j)));
 		  }
 	      
 		
@@ -1395,7 +1403,7 @@ namespace netgen
 	      }
 	      
 	    for (int i = 1; i <= dellines.Size(); i++)
-	      adfront. DeleteLine (lindex.Get(dellines.Get(i)));
+	      adfront.DeleteLine (lindex.Get(dellines.Get(i)));
 	      
 	    //	  rname = rules.Get(rulenr)->Name();
 #ifdef MYGRAPH
@@ -1418,7 +1426,7 @@ namespace netgen
 	  
 	    if ( debugparam.haltsuccess || debugflag )
 	      {
-		// adfront. PrintOpenSegments (*testout);
+		// adfront.PrintOpenSegments (*testout);
 		cout << "success of rule" << rules.Get(rulenr)->Name() << endl;
 		multithread.drawing = 1;
 		multithread.testmode = 1;
@@ -1470,7 +1478,7 @@ namespace netgen
 	  }
 	else
 	  {
-	    adfront. IncrementClass (lindex.Get(1));
+	    adfront.IncrementClass (lindex.Get(1));
 
 	    if ( debugparam.haltnosuccess || debugflag )
 	      {
@@ -1538,7 +1546,7 @@ namespace netgen
 	  }
 
       }
-
+    }
     PrintMessage (3, "Surface meshing done");
 
 
