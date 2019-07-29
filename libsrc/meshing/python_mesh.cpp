@@ -868,7 +868,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
              }
              MeshVolume (mp, self);
              OptimizeVolume (mp, self);
-           }, meshingparameter_description.c_str(),
+           }, py::arg("mp")=nullptr,
+          meshingparameter_description.c_str(),
           py::call_guard<py::gil_scoped_release>())
 
     .def ("OptimizeVolumeMesh", [](Mesh & self)
