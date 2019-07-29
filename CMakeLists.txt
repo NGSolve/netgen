@@ -34,7 +34,7 @@ option( USE_SUPERBUILD       "use ccache" ON)
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_modules")
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(APPLE)
   set(INSTALL_DIR_DEFAULT /Applications/Netgen.app)
