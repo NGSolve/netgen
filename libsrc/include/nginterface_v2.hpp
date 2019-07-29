@@ -284,7 +284,8 @@ namespace netgen
     
     int GetDimension() const;
     int GetNLevels() const;
-
+    size_t GetNVLevel (int level) const;
+    
     int GetNElements (int dim) const;
     int GetNNodes (int nt) const;
 

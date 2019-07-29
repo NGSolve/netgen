@@ -1724,7 +1724,9 @@ void Ng_SetSurfaceElementOrders (int enr, int ox, int oy)
 
 int Ng_GetNLevels ()
 {
-  return (mesh) ? mesh->mglevels : 0;
+  if (!mesh) return 0;
+  return max(size_t(1), mesh -> level_nv.Size());  
+  // return (mesh) ? mesh->mglevels : 0;
 }
 
 

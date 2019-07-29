@@ -2755,14 +2755,15 @@ namespace netgen
 	inf.close();
       }
 	
-
-
-    if (mesh.mglevels == 1 || idmaps.Size() > 0)
-      BisectTetsCopyMesh(mesh, NULL, opt, idmaps, refelementinfofileread);
-
-
     mesh.ComputeNVertices();
-  
+
+    // if (mesh.mglevels == 1 || idmaps.Size() > 0)
+    if (mesh.level_nv.Size() == 0)  // || idmaps.Size()  ????
+      {
+        BisectTetsCopyMesh(mesh, NULL, opt, idmaps, refelementinfofileread);
+        mesh.level_nv.Append (mesh.GetNV());
+      }
+
     int np = mesh.GetNV();
     mesh.SetNP(np);
 
@@ -2773,7 +2774,7 @@ namespace netgen
     // int initnp = np;
     //  int maxsteps = 3;
 
-    mesh.mglevels++;
+    // mesh.mglevels++;
 
     /*
       if (opt.refinementfilename || opt.usemarkedelements)
@@ -3807,7 +3808,8 @@ namespace netgen
     // write multilevel hierarchy to mesh:
     np = mesh.GetNP();
     mesh.mlbetweennodes.SetSize(np);
-    if (mesh.mglevels <= 2)
+    // if (mesh.mglevels <= 2)
+    if (mesh.level_nv.Size() <= 1)
       {
 	PrintMessage(4,"RESETTING mlbetweennodes");
 	for (int i = 1; i <= np; i++)
@@ -3817,6 +3819,9 @@ namespace netgen
 	  }
       }
 
+    mesh.level_nv.Append (np);
+
+    
     /*
       for (i = 1; i <= cutedges.GetNBags(); i++)
       for (j = 1; j <= cutedges.GetBagSize(i); j++)
@@ -3982,11 +3987,12 @@ namespace netgen
 	  }
       }
 
-
+    
     // Check/Repair
 
     static bool repaired_once;
-    if(mesh.mglevels == 1)
+    // if(mesh.mglevels == 1)
+    if(mesh.level_nv.Size() == 1)
       repaired_once = false;
 
     //mesh.Save("before.vol");

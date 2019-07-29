@@ -130,7 +130,15 @@ namespace netgen
 
   int Ngx_Mesh :: GetNLevels() const
   {
-    return mesh -> mglevels;
+    return max(size_t(1), mesh -> level_nv.Size());
+  }
+
+  size_t Ngx_Mesh :: GetNVLevel(int level) const
+  {
+    if (level >= mesh->level_nv.Size())
+      return mesh->GetNV();
+    else
+      return mesh->level_nv[level];
   }
   
   int Ngx_Mesh :: GetNElements (int dim) const

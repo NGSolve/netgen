@@ -175,7 +175,9 @@ namespace netgen
   
   
     /// number of refinement levels
-    int mglevels;
+    // int mglevels;
+    // number of vertices on each refinement level:
+    NgArray<size_t> level_nv;
     /// refinement hierarchy
     NgArray<PointIndices<2>,PointIndex::BASE> mlbetweennodes;
     /// parent element of volume element
