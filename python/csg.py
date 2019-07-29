@@ -1,5 +1,6 @@
 from .libngpy._csg import *
 from .libngpy._meshing import Pnt, Vec, Trafo
+from .meshing import meshsize
 
 try:
     from . import csgvis

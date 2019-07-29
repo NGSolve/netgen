@@ -80,9 +80,8 @@ elsizeweight: float = 0.2
 
 )delimiter";
 
-  inline MeshingParameters CreateMPfromKwargs(py::kwargs kwargs)
+  inline void CreateMPfromKwargs(MeshingParameters& mp, py::kwargs kwargs)
   {
-    MeshingParameters mp;
     if(kwargs.contains("optimize3d"))
       mp.optimize3d = py::cast<string>(kwargs["optimize3d"]);
     if(kwargs.contains("optsteps3d"))
@@ -165,6 +164,5 @@ elsizeweight: float = 0.2
       mp.inverttrigs = py::cast<bool>(kwargs["inverttrigs"]);
     if(kwargs.contains("autozrefine"))
       mp.autozrefine = py::cast<bool>(kwargs["autozrefine"]);
-    return mp;
   }
 } // namespace netgen

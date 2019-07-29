@@ -1,4 +1,5 @@
 from .libngpy._geom2d import SplineGeometry
+from .meshing import meshsize
 
 unit_square = SplineGeometry()
 _pnts = [ (0,0), (1,0), (1,1), (0,1) ]
