@@ -694,12 +694,14 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
            res["max"] = MoveToNumpy(max);
            return res;
          }, py::call_guard<py::gil_scoped_release>())
-  .def("GenerateMesh", [](shared_ptr<CSGeometry> geo, py::kwargs kwargs)
+  .def("GenerateMesh", [](shared_ptr<CSGeometry> geo,
+                          MeshingParameters* pars, py::kwargs kwargs)
            {
              MeshingParameters mp;
+             if(pars) mp = *pars;
              {
                py::gil_scoped_acquire aq;
-               mp = CreateMPfromKwargs(kwargs);
+               CreateMPfromKwargs(mp, kwargs);
              }
              auto mesh = make_shared<Mesh>();
              SetGlobalMesh (mesh);
@@ -708,7 +710,8 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
              geo->FindIdenticSurfaces(1e-8 * geo->MaxSize());
              geo->GenerateMesh (mesh, mp);
              return mesh;
-           }, meshingparameter_description.c_str(),
+           }, py::arg("mp") = nullptr,
+       meshingparameter_description.c_str(),
     py::call_guard<py::gil_scoped_release>())
     ;
 

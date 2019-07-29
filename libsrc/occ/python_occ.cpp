@@ -124,12 +124,14 @@ DLL_HEADER void ExportNgOCC(py::module &m)
             res["max"] = MoveToNumpy(max);
             return res;
          }, py::call_guard<py::gil_scoped_release>())
-    .def("GenerateMesh", [](shared_ptr<OCCGeometry> geo, py::kwargs kwargs)
+    .def("GenerateMesh", [](shared_ptr<OCCGeometry> geo,
+                            MeshingParameters* pars, py::kwargs kwargs)
                          {
                            MeshingParameters mp;
+                           if(pars) mp = *pars;
                            {
                              py::gil_scoped_acquire aq;
-                             mp = CreateMPfromKwargs(kwargs);
+                             CreateMPfromKwargs(mp, kwargs);
                            }
                            auto mesh = make_shared<Mesh>();
                            SetGlobalMesh(mesh);
@@ -137,7 +139,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                            ng_geometry = geo;
                            geo->GenerateMesh(mesh,mp);
                            return mesh;
-                         },
+                         }, py::arg("mp") = nullptr,
       py::call_guard<py::gil_scoped_release>(),
       meshingparameter_description.c_str())
     ;
