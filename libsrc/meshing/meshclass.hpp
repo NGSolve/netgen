@@ -797,8 +797,9 @@ namespace netgen
 
 
     shared_ptr<NetgenGeometry> GetGeometry() const
-    { 
-      return geometry; 
+    {
+      static auto global_geometry = make_shared<NetgenGeometry>();
+      return geometry ? geometry : global_geometry;
     }
     void SetGeometry (shared_ptr<NetgenGeometry> geom) 
     {

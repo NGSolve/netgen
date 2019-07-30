@@ -63,10 +63,7 @@ namespace netgen
 	}
     if (secondorder)
       {
-        if (mesh.GetGeometry())
-          mesh.GetGeometry()->GetRefinement().MakeSecondOrder(mesh);
-        else
-          Refinement().MakeSecondOrder(mesh);
+        mesh.GetGeometry()->GetRefinement().MakeSecondOrder(mesh);
       }
   }
 

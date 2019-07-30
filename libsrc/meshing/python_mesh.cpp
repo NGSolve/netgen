@@ -890,20 +890,14 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def ("Refine", FunctionPointer
           ([](Mesh & self)
            {
-             if (self.GetGeometry())
-               self.GetGeometry()->GetRefinement().Refine(self);
-             else
-               Refinement().Refine(self);
+             self.GetGeometry()->GetRefinement().Refine(self);
              self.UpdateTopology();
            }),py::call_guard<py::gil_scoped_release>())
 
     .def ("SecondOrder", FunctionPointer
           ([](Mesh & self)
            {
-             if (self.GetGeometry())
-               self.GetGeometry()->GetRefinement().MakeSecondOrder(self);
-             else
-               Refinement().MakeSecondOrder(self);
+             self.GetGeometry()->GetRefinement().MakeSecondOrder(self);
            }))
 
     .def ("GetGeometry", [] (Mesh& self) { return self.GetGeometry(); })
