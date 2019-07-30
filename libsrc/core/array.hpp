@@ -9,26 +9,13 @@
 
 
 #include "archive.hpp"
+#include "exception.hpp"
 #include "localheap.hpp"
 #include "utils.hpp"
-
-#ifdef DEBUG
-#define CHECK_RANGE
-#endif
 
 namespace ngcore
 {
   using std::ostream;
-
-  /**
-     Exception thrown by array range check.
-     Only thrown when compiled with RANGE_CHECK
-  */
-  class ArrayRangeException : public Exception
-  {
-  public:
-    ArrayRangeException () : Exception("ArrayRangeException\n") { ; }
-  };
 
   template <typename ... ARGS> class Tuple 
   { 
@@ -392,7 +379,7 @@ namespace ngcore
      Array represented by size and data-pointer.
      No memory allocation and deallocation, must be provided by user.
      Helper functions for printing. 
-     Optional range check by macro CHECK_RANGE
+     Optional range check by macro NETGEN_CHECK_RANGE
   */
   template <class T>
   class FlatArray : public BaseArrayObject<FlatArray<T> >
@@ -485,13 +472,10 @@ namespace ngcore
       return *this;
     }
 
-    /// Access array. range check by macro CHECK_RANGE
+    /// Access array. range check by macro NETGEN_CHECK_RANGE
     NETGEN_INLINE T & operator[] (size_t i) const
     {
-#ifdef CHECK_RANGE
-      if (i < 0 || i >= size)
-        throw RangeException ("FlatArray::operator[]", i, 0, size-1);
-#endif
+      NETGEN_CHECK_RANGE(i,0,size-1);
       return data[i]; 
     }
   
@@ -509,13 +493,10 @@ namespace ngcore
     // { return CArray<T> (data+pos); }
     NETGEN_INLINE T * operator+ (size_t pos) const { return data+pos; }
 
-    /// access last element. check by macro CHECK_RANGE
+    /// access last element. check by macro NETGEN_CHECK_RANGE
     T & Last () const
     {
-#ifdef CHECK_RANGE
-      if (!size)
-        throw Exception ("Array should not be empty");
-#endif
+      NETGEN_CHECK_RANGE(0,size-1,size-1);
       return data[size-1];
     }
 
@@ -857,10 +838,7 @@ namespace ngcore
     /// Delete element i. Move last element to position i.
     NETGEN_INLINE void DeleteElement (size_t i)
     {
-#ifdef CHECK_RANGE
-      // RangeCheck (i);
-#endif
-
+      NETGEN_CHECK_RANGE(i,0,size-1);
       data[i] = std::move(data[size-1]);
       size--;
     }
@@ -878,9 +856,7 @@ namespace ngcore
     /// Delete last element. 
     NETGEN_INLINE void DeleteLast ()
     {
-#ifdef CHECK_RANGE
-      //    CheckNonEmpty();
-#endif
+      NETGEN_CHECK_RANGE(0,size-1,size-1);
       size--;
     }
 
