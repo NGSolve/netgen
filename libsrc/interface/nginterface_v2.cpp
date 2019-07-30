@@ -1163,10 +1163,11 @@ namespace netgen
       biopt.refine_hp = 1;
     biopt.task_manager = task_manager;
     biopt.tracer = tracer;
-    
-    const Refinement & ref = mesh->GetGeometry()->GetRefinement();
-    ref.Bisect (*mesh, biopt);
 
+    if(mesh->GetGeometry())
+      mesh->GetGeometry()->GetRefinement().Bisect (*mesh, biopt);
+    else
+      Refinement().Bisect(*mesh, biopt);
     (*tracer)("call updatetop", false);
     mesh -> UpdateTopology(task_manager, tracer);
     (*tracer)("call updatetop", true);
