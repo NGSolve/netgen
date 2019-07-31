@@ -173,6 +173,53 @@ namespace netgen
 	gp_Vec du, dv;
 	occface->D1 (geominfo1.u, geominfo1.v, pnt, du, dv);
 
+        // static Timer t("occ-defintangplane calculations");
+        // RegionTimer reg(t);
+
+        Mat<3,2> D1_;
+	D1_(0,0) = du.X(); D1_(1,0) = du.Y(); D1_(2,0) = du.Z();
+	D1_(0,1) = dv.X(); D1_(1,1) = dv.Y(); D1_(2,1) = dv.Z();
+        auto D1T_ = Trans(D1_);
+	auto D1TD1_ = D1T_*D1_;
+	if (Det (D1TD1_) == 0) throw SingularMatrixException();
+        Mat<2,2> DDTinv_;
+        CalcInverse (D1TD1_, DDTinv_);
+
+        Mat<3,2> Y_;
+	Vec<3> y1_ = (ap2-ap1).Normalize();
+	Vec<3> y2_ = Cross(n, y1_).Normalize();
+	for (int i = 0; i < 3; i++)
+	  {
+	    Y_(i,0) = y1_(i);
+	    Y_(i,1) = y2_(i);
+	  }
+
+        auto A_ = DDTinv_ * D1T_ * Y_;
+	Mat<2,2> Ainv_;
+	if (Det(A_) == 0) throw SingularMatrixException();
+	CalcInverse (A_, Ainv_);
+
+	Vec<2> temp_ = Ainv_ * (psp2-psp1);
+	double r_ = temp_.Length();
+        Mat<2,2> R_;
+        R_(0,0) = temp_(0)/r_;
+        R_(1,0) = temp_(1)/r_;
+        R_(0,1) = -R_(1,0);
+        R_(1,1) = R_(0,0);
+
+        Ainv_ = Trans(R_) * Ainv_;
+
+	for (int i = 0; i < 2; i++)
+	  for (int j = 0; j < 2; j++)
+	    {
+	      Amat(i,j) = A_(i,j);
+	      Amatinv(i,j) = Ainv_(i,j);
+	    }
+
+	// temp = Amatinv * (psp2-psp1);
+        
+
+#ifdef OLD
 	DenseMatrix D1(3,2), D1T(2,3), DDTinv(2,2);
 	D1(0,0) = du.X(); D1(1,0) = du.Y(); D1(2,0) = du.Z();
 	D1(0,1) = dv.X(); D1(1,1) = dv.Y(); D1(2,1) = dv.Z();
@@ -190,6 +237,8 @@ namespace netgen
 	if (D1TD1.Det() == 0) throw SingularMatrixException();
       
 	CalcInverse (D1TD1, DDTinv);
+        // cout << " =?= inv = " << DDTinv << endl;
+        
 	DenseMatrix Y(3,2);
 	Vec<3> y1 = (ap2-ap1).Normalize();
 	Vec<3> y2 = Cross(n, y1).Normalize();
@@ -226,6 +275,7 @@ namespace netgen
 	R(0,1) = sin (alpha);
 	R(1,1) = cos (alpha);
 
+        // cout << "=?= R = " << R << endl;
 
 	A = A*R;
 
@@ -240,9 +290,10 @@ namespace netgen
 	      Amat(i,j) = A(i,j);
 	      Amatinv(i,j) = Ainv(i,j);
 	    }
-
+        // cout << "=?= Ainv = " << endl << Ainv << endl;
 	temp = Amatinv * (psp2-psp1);
-      
+        cout << " =?= Amatinv = " << Amatinv << endl;        
+#endif
       };
  
   }
@@ -376,7 +427,8 @@ namespace netgen
 
 
   Meshing2OCCSurfaces :: Meshing2OCCSurfaces (const TopoDS_Shape & asurf,
-					      const Box<3> & abb, int aprojecttype)
+					      const Box<3> & abb, int aprojecttype,
+                                              const MeshingParameters & mparam)
     : Meshing2(mparam, Box<3>(abb.PMin(), abb.PMax())), surface(TopoDS::Face(asurf), aprojecttype)
   {
     ;

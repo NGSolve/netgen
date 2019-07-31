@@ -103,6 +103,22 @@ namespace ngcore
     void operator delete[] (void * p) { aligned_free(p); }
   };
 
+  // checks if string starts with sequence
+  inline bool StartsWith(const std::string& str, const std::string& start)
+  {
+    if(start.size() > str.size())
+      return false;
+    return std::equal(start.begin(), start.end(), str.begin());
+  }
+
+  // checks if string ends with sequence
+  inline bool EndsWith(const std::string& str, const std::string& end)
+  {
+    if(end.size() > str.size())
+      return false;
+    return std::equal(end.rbegin(), end.rend(), str.rbegin());
+  }
+
 } // namespace ngcore
 
 #endif // NETGEN_CORE_UTILS_HPP

@@ -166,7 +166,7 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
       for (exp0.Init(shape, TopAbs_COMPSOLID); exp0.More(); exp0.Next()) nrcs++;
 
       double surfacecont = 0;
-
+      
       {
          Handle_ShapeBuild_ReShape rebuild = new ShapeBuild_ReShape;
          rebuild->Apply(shape);
@@ -869,7 +869,7 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
       // Philippose - 15/01/2009
       face_maxh.DeleteAll();
       face_maxh.SetSize (fmap.Extent());
-      face_maxh = mparam.maxh;
+      face_maxh = 1e99; // mparam.maxh;
 
       // Philippose - 15/01/2010      
       face_maxh_modified.DeleteAll();      

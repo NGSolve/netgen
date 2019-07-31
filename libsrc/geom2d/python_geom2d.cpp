@@ -2,6 +2,7 @@
 
 #include <../general/ngpython.hpp>
 #include <core/python_ngcore.hpp>
+#include "../meshing/python_mesh.hpp"
 
 #include <meshing.hpp>
 #include <geometry2d.hpp>
@@ -362,17 +363,26 @@ DLL_HEADER void ExportGeom2d(py::module &m)
 			  //cout << i << " : " << self.splines[i]->GetPoint(0.1) << " , " << self.splines[i]->GetPoint(0.5) << endl;
 		  }
 	  }))
-	  .def("GenerateMesh", [](shared_ptr<SplineGeometry2d> self, MeshingParameters & mparam)
+    // If we change to c++17 this can become optional<MeshingParameters>
+    .def("GenerateMesh", [](shared_ptr<SplineGeometry2d> self,
+                            MeshingParameters* pars, py::kwargs kwargs)
 		{
-		  shared_ptr<Mesh> mesh = make_shared<Mesh> ();
+                  MeshingParameters mp;
+                  if(pars) mp = *pars;
+                  {
+                    py::gil_scoped_acquire aq;
+                    CreateMPfromKwargs(mp, kwargs);
+                  }
+		  auto mesh = make_shared<Mesh>();
                   mesh->SetGeometry(self);
                   SetGlobalMesh (mesh);
                   ng_geometry = self;
-		  self->GenerateMesh(mesh, mparam);
+		  self->GenerateMesh(mesh, mp);
 		  return mesh;
-                },py::call_guard<py::gil_scoped_release>())
-	  
-	  ;
+                }, py::arg("mp") = nullptr,
+      py::call_guard<py::gil_scoped_release>(),
+      meshingparameter_description.c_str())
+    ;
   
 }
 

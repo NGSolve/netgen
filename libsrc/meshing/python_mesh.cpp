@@ -2,6 +2,7 @@
 
 #include <../general/ngpython.hpp>
 #include <core/python_ngcore.hpp>
+#include "python_mesh.hpp"
 
 #include <mystdlib.h>
 #include "meshing.hpp"
@@ -856,24 +857,20 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             self.SetMaxHDomain(maxh);
           })
     .def ("GenerateVolumeMesh", 
-          [](Mesh & self, py::object pymp)
+          [](Mesh & self, MeshingParameters* pars,
+             py::kwargs kwargs)
            {
-             cout << "generate vol mesh" << endl;
-
              MeshingParameters mp;
+             if(pars) mp = *pars;
              {
                py::gil_scoped_acquire acquire;
-             if (py::extract<MeshingParameters>(pymp).check())
-               mp = py::extract<MeshingParameters>(pymp)();
-             else
-               {
-                 mp.optsteps3d = 5;
-               }
+               CreateMPfromKwargs(mp, kwargs);
              }
              MeshVolume (mp, self);
              OptimizeVolume (mp, self);
-           },
-          py::arg("mp")=NGDummyArgument(),py::call_guard<py::gil_scoped_release>())
+           }, py::arg("mp")=nullptr,
+          meshingparameter_description.c_str(),
+          py::call_guard<py::gil_scoped_release>())
 
     .def ("OptimizeVolumeMesh", [](Mesh & self)
           {
@@ -893,20 +890,14 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def ("Refine", FunctionPointer
           ([](Mesh & self)
            {
-             if (self.GetGeometry())
-               self.GetGeometry()->GetRefinement().Refine(self);
-             else
-               Refinement().Refine(self);
+             self.GetGeometry()->GetRefinement().Refine(self);
              self.UpdateTopology();
            }),py::call_guard<py::gil_scoped_release>())
 
     .def ("SecondOrder", FunctionPointer
           ([](Mesh & self)
            {
-             if (self.GetGeometry())
-               self.GetGeometry()->GetRefinement().MakeSecondOrder(self);
-             else
-               Refinement().MakeSecondOrder(self);
+             self.GetGeometry()->GetRefinement().MakeSecondOrder(self);
            }))
 
     .def ("GetGeometry", [] (Mesh& self) { return self.GetGeometry(); })
@@ -1026,42 +1017,19 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     ;
          
   typedef MeshingParameters MP;
-  py::class_<MP> (m, "MeshingParameters")
+  auto mp = py::class_<MP> (m, "MeshingParameters")
     .def(py::init<>())
-    .def(py::init([](double maxh, bool quad_dominated, int optsteps2d, int optsteps3d,
-                     MESHING_STEP perfstepsend, int only3D_domain, const string & meshsizefilename,
-                     double grading, double curvaturesafety, double segmentsperedge)
+    .def(py::init([](py::kwargs kwargs)
                   {
-                    MP * instance = new MeshingParameters;
-                    instance->maxh = maxh;
-                    instance->quad = int(quad_dominated);
-                    instance->optsteps2d = optsteps2d;
-                    instance->optsteps3d = optsteps3d;			     
-                    instance->only3D_domain_nr = only3D_domain;
-                    instance->perfstepsend = perfstepsend;
-                    instance->meshsizefilename = meshsizefilename;
-                    
-                    instance->grading = grading;
-                    instance->curvaturesafety = curvaturesafety;
-                    instance->segmentsperedge = segmentsperedge;
-                    return instance;
-                  }),
-         py::arg("maxh")=1000,
-         py::arg("quad_dominated")=false,
-         py::arg("optsteps2d") = 3,
-	 py::arg("optsteps3d") = 3,
-	 py::arg("perfstepsend") = MESHCONST_OPTVOLUME,
-	 py::arg("only3D_domain") = 0,
-         py::arg("meshsizefilename") = "",
-         py::arg("grading")=0.3,
-         py::arg("curvaturesafety")=2,
-         py::arg("segmentsperedge")=1,
-         "create meshing parameters"
-         )
+                    MeshingParameters mp;
+                    CreateMPfromKwargs(mp, kwargs);
+                    return mp;
+                  }), meshingparameter_description.c_str())
     .def("__str__", &ToString<MP>)
-    .def_property("maxh", 
-                  FunctionPointer ([](const MP & mp ) { return mp.maxh; }),
-                  FunctionPointer ([](MP & mp, double maxh) { return mp.maxh = maxh; }))
+    .def_property("maxh", [](const MP & mp ) { return mp.maxh; },
+                  [](MP & mp, double maxh) { return mp.maxh = maxh; })
+    .def_property("grading", [](const MP & mp ) { return mp.grading; },
+                  [](MP & mp, double grading) { return mp.grading = grading; })
     .def("RestrictH", FunctionPointer
          ([](MP & mp, double x, double y, double z, double h)
           {

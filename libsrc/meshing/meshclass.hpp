@@ -175,7 +175,9 @@ namespace netgen
   
   
     /// number of refinement levels
-    int mglevels;
+    // int mglevels;
+    // number of vertices on each refinement level:
+    NgArray<size_t> level_nv;
     /// refinement hierarchy
     NgArray<PointIndices<2>,PointIndex::BASE> mlbetweennodes;
     /// parent element of volume element
@@ -795,8 +797,9 @@ namespace netgen
 
 
     shared_ptr<NetgenGeometry> GetGeometry() const
-    { 
-      return geometry; 
+    {
+      static auto global_geometry = make_shared<NetgenGeometry>();
+      return geometry ? geometry : global_geometry;
     }
     void SetGeometry (shared_ptr<NetgenGeometry> geom) 
     {

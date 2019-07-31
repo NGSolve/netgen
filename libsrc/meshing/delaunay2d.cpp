@@ -81,12 +81,12 @@ namespace netgen
     Box<3> bbox ( Box<3>::EMPTY_BOX );
     double maxh = 0;
     
-    for (int i = 0; i < adfront->GetNFL(); i++)
+    for (int i = 0; i < adfront.GetNFL(); i++)
       {
-	const FrontLine & line = adfront->GetLine (i);
+	const FrontLine & line = adfront.GetLine (i);
 
-	const Point<3> & p1 = adfront->GetPoint(line.L().I1());
-	const Point<3> & p2 = adfront->GetPoint(line.L().I2());
+	const Point<3> & p1 = adfront.GetPoint(line.L().I1());
+	const Point<3> & p2 = adfront.GetPoint(line.L().I2());
 	
         maxh = max (maxh, Dist (p1, p2));
 	
@@ -115,12 +115,12 @@ namespace netgen
       {
 	mesh.LocalHFunction().ClearFlags();
 	
-	for (int i = 0; i < adfront->GetNFL(); i++)
+	for (int i = 0; i < adfront.GetNFL(); i++)
 	  {
-	    const FrontLine & line = adfront->GetLine(i);
+	    const FrontLine & line = adfront.GetLine(i);
 	    
-	    Box<3> bbox (adfront->GetPoint (line.L().I1()));
-	    bbox.Add (adfront->GetPoint (line.L().I2()));
+	    Box<3> bbox (adfront.GetPoint (line.L().I1()));
+	    bbox.Add (adfront.GetPoint (line.L().I2()));
 
 	    
 	    double filld = filldist * bbox.Diam();
@@ -130,7 +130,7 @@ namespace netgen
 	  }
 	
 
-	mesh.LocalHFunction().FindInnerBoxes (adfront, NULL);
+	mesh.LocalHFunction().FindInnerBoxes (&adfront, NULL);
 	
 	npoints.SetSize(0);
 	mesh.LocalHFunction().GetInnerPoints (npoints);
@@ -162,14 +162,14 @@ namespace netgen
 	if (meshbox.IsIn (npoints.Get(i)))
 	  {
 	    PointIndex gpnum = mesh.AddPoint (npoints.Get(i));
-	    adfront->AddPoint (npoints.Get(i), gpnum);
+	    adfront.AddPoint (npoints.Get(i), gpnum);
 	    
 	    if (debugparam.slowchecks)
 	      {
 		(*testout) << npoints.Get(i) << endl;
 
 		Point<2> p2d (npoints.Get(i)(0), npoints.Get(i)(1));
-		if (!adfront->Inside(p2d))
+		if (!adfront.Inside(p2d))
 		  {
 		    cout << "add outside point" << endl;
 		    (*testout) << "outside" << endl;
@@ -187,29 +187,29 @@ namespace netgen
   
     loch2.ClearFlags();
 
-    for (int i = 0; i < adfront->GetNFL(); i++)
+    for (int i = 0; i < adfront.GetNFL(); i++)
       {
-	const FrontLine & line = adfront->GetLine(i);
+	const FrontLine & line = adfront.GetLine(i);
 	
-	Box<3> bbox (adfront->GetPoint (line.L().I1()));
-	bbox.Add (adfront->GetPoint (line.L().I2()));
+	Box<3> bbox (adfront.GetPoint (line.L().I1()));
+	bbox.Add (adfront.GetPoint (line.L().I2()));
 	
 	loch2.SetH (bbox.Center(), bbox.Diam());
       }
 
 
-    for (int i = 0; i < adfront->GetNFL(); i++)
+    for (int i = 0; i < adfront.GetNFL(); i++)
       {
-	const FrontLine & line = adfront->GetLine(i);
+	const FrontLine & line = adfront.GetLine(i);
 	
-	Box<3> bbox (adfront->GetPoint (line.L().I1()));
-	bbox.Add (adfront->GetPoint (line.L().I2()));
+	Box<3> bbox (adfront.GetPoint (line.L().I1()));
+	bbox.Add (adfront.GetPoint (line.L().I2()));
 
 	bbox.Increase (filldist * bbox.Diam());
 	loch2.CutBoundary (bbox);
       }
     
-    loch2.FindInnerBoxes (adfront, NULL);
+    loch2.FindInnerBoxes (&adfront, NULL);
 
       // outer points : smooth mesh-grading
     npoints.SetSize(0);
@@ -220,7 +220,7 @@ namespace netgen
 	if (meshbox.IsIn (npoints.Get(i)))
 	  {
 	    PointIndex gpnum = mesh.AddPoint (npoints.Get(i));
-	    adfront->AddPoint (npoints.Get(i), gpnum);
+	    adfront.AddPoint (npoints.Get(i), gpnum);
 	  }
       }  
 
@@ -257,11 +257,11 @@ namespace netgen
     // face bounding box:
     Box<3> bbox (Box<3>::EMPTY_BOX);
 
-    for (int i = 0; i < adfront->GetNFL(); i++)
+    for (int i = 0; i < adfront.GetNFL(); i++)
       {
-	const FrontLine & line = adfront->GetLine(i);
-        bbox.Add (Point<3> (adfront->GetPoint (line.L()[0])));
-        bbox.Add (Point<3> (adfront->GetPoint (line.L()[1])));
+	const FrontLine & line = adfront.GetLine(i);
+        bbox.Add (Point<3> (adfront.GetPoint (line.L()[0])));
+        bbox.Add (Point<3> (adfront.GetPoint (line.L()[1])));
       }
 
     for (int i = 0; i < mesh.LockedPoints().Size(); i++)
@@ -402,7 +402,7 @@ namespace netgen
         if (trig[0] < 0) continue;
 
         Point<3> c = Center (mesh[trig[0]], mesh[trig[1]], mesh[trig[2]]);
-        if (!adfront->Inside (Point<2> (c(0),c(1)))) continue;
+        if (!adfront.Inside (Point<2> (c(0),c(1)))) continue;
 
         Vec<3> n = Cross (mesh[trig[1]]-mesh[trig[0]], 
                           mesh[trig[2]]-mesh[trig[0]]);

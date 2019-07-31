@@ -690,7 +690,7 @@ namespace netgen
 	      case 'j': mesh3d.ImproveMeshJacobian(mp); break;
 	      }
 	  }
-	mesh3d.mglevels = 1;
+	// mesh3d.mglevels = 1;
 	MeshQuality3d (mesh3d);
       }
   

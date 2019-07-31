@@ -293,6 +293,11 @@ namespace netgen
       size = nsize; 
     }
 
+    void SetSize0()
+    {
+      size = 0; 
+    }
+
     /// Change physical size. Keeps logical size. Keeps contents.
     void SetAllocSize (size_t nallocsize)
     {

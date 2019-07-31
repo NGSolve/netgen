@@ -20,7 +20,7 @@ namespace netgen
     segmentht = NULL;
 
     lochfunc = NULL;
-    mglevels = 1;
+    // mglevels = 1;
     elementsearchtree = NULL;
     elementsearchtreets = NextTimeStamp();
     majortimestamp = timestamp = NextTimeStamp();

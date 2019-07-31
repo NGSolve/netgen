@@ -130,7 +130,15 @@ namespace netgen
 
   int Ngx_Mesh :: GetNLevels() const
   {
-    return mesh -> mglevels;
+    return max(size_t(1), mesh -> level_nv.Size());
+  }
+
+  size_t Ngx_Mesh :: GetNVLevel(int level) const
+  {
+    if (level >= mesh->level_nv.Size())
+      return mesh->GetNV();
+    else
+      return mesh->level_nv[level];
   }
   
   int Ngx_Mesh :: GetNElements (int dim) const
@@ -1155,10 +1163,8 @@ namespace netgen
       biopt.refine_hp = 1;
     biopt.task_manager = task_manager;
     biopt.tracer = tracer;
-    
-    const Refinement & ref = mesh->GetGeometry()->GetRefinement();
-    ref.Bisect (*mesh, biopt);
 
+    mesh->GetGeometry()->GetRefinement().Bisect (*mesh, biopt);
     (*tracer)("call updatetop", false);
     mesh -> UpdateTopology(task_manager, tracer);
     (*tracer)("call updatetop", true);

@@ -3,6 +3,7 @@
 
 #include <../general/ngpython.hpp>
 #include <core/python_ngcore.hpp>
+#include "../meshing/python_mesh.hpp"
 
 #include <meshing.hpp>
 #include <occgeom.hpp>
@@ -19,6 +20,21 @@ DLL_HEADER void ExportNgOCC(py::module &m)
 {
   py::class_<OCCGeometry, shared_ptr<OCCGeometry>, NetgenGeometry> (m, "OCCGeometry", R"raw_string(Use LoadOCCGeometry to load the geometry from a *.step file.)raw_string")
     .def(py::init<>())
+    .def(py::init([] (const string& filename)
+                  {
+                    shared_ptr<OCCGeometry> geo;
+                    if(EndsWith(filename, ".step") || EndsWith(filename, ".stp"))
+                      geo.reset(LoadOCC_STEP(filename.c_str()));
+                    else if(EndsWith(filename, ".brep"))
+                      geo.reset(LoadOCC_BREP(filename.c_str()));
+                    else if(EndsWith(filename, ".iges"))
+                      geo.reset(LoadOCC_IGES(filename.c_str()));
+                    else
+                      throw Exception("Cannot load file " + filename + "\nValid formats are: step, stp, brep, iges");
+                    ng_geometry = geo;
+                    return geo;
+                  }), py::arg("filename"),
+        "Load OCC geometry from step, brep or iges file")
     .def(NGSPickle<OCCGeometry>())
     .def("Heal",[](OCCGeometry & self, double tolerance, bool fixsmalledges, bool fixspotstripfaces, bool sewfaces, bool makesolids, bool splitpartitions)
          {
@@ -108,34 +124,35 @@ DLL_HEADER void ExportNgOCC(py::module &m)
             res["max"] = MoveToNumpy(max);
             return res;
          }, py::call_guard<py::gil_scoped_release>())
-      ;
-    m.def("LoadOCCGeometry",FunctionPointer([] (const string & filename)
+    .def("GenerateMesh", [](shared_ptr<OCCGeometry> geo,
+                            MeshingParameters* pars, py::kwargs kwargs)
+                         {
+                           MeshingParameters mp;
+                           if(pars) mp = *pars;
+                           {
+                             py::gil_scoped_acquire aq;
+                             CreateMPfromKwargs(mp, kwargs);
+                           }
+                           auto mesh = make_shared<Mesh>();
+                           SetGlobalMesh(mesh);
+                           mesh->SetGeometry(geo);
+                           ng_geometry = geo;
+                           geo->GenerateMesh(mesh,mp);
+                           return mesh;
+                         }, py::arg("mp") = nullptr,
+      py::call_guard<py::gil_scoped_release>(),
+      meshingparameter_description.c_str())
+    ;
+
+  m.def("LoadOCCGeometry",[] (const string & filename)
            {
-             cout << "load OCC geometry";
+             cout << "WARNING: LoadOCCGeometry is deprecated! Just use the OCCGeometry(filename) constructor. It is able to read brep and iges files as well!" << endl;
              ifstream ist(filename);
              OCCGeometry * instance = new OCCGeometry();
              instance = LoadOCC_STEP(filename.c_str());
              ng_geometry = shared_ptr<OCCGeometry>(instance, NOOP_Deleter);
              return ng_geometry;
-           }),py::call_guard<py::gil_scoped_release>());
-  m.def("GenerateMesh", FunctionPointer([] (shared_ptr<OCCGeometry> geo, MeshingParameters &param)
-					{
-					  auto mesh = make_shared<Mesh>();
-					  SetGlobalMesh(mesh);
-					  mesh->SetGeometry(geo);
-					  ng_geometry = geo;
-
-					  try
-					    {
-					      geo->GenerateMesh(mesh,param);
-					    }
-					  catch (NgException ex)
-					    {
-					      cout << "Caught NgException: " << ex.What() << endl;
-					    }
-					  return mesh;
-					}),py::call_guard<py::gil_scoped_release>())
-    ;
+           },py::call_guard<py::gil_scoped_release>());
 }
 
 PYBIND11_MODULE(libNgOCC, m) {

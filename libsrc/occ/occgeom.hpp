@@ -114,7 +114,7 @@ namespace netgen
 {
 #include "occmeshsurf.hpp"
 
-  extern DLL_HEADER MeshingParameters mparam;
+  // extern DLL_HEADER MeshingParameters mparam;
 
 #define PROJECTION_TOLERANCE 1e-10
 
@@ -128,327 +128,323 @@ namespace netgen
 
 
 
-   class EntityVisualizationCode
-   {
-      int code;
+  class EntityVisualizationCode
+  {
+    int code;
 
-   public:
+  public:
 
-      EntityVisualizationCode()
-      {  code = ENTITYISVISIBLE + !ENTITYISHIGHLIGHTED + ENTITYISDRAWABLE;}
+    EntityVisualizationCode()
+    {  code = ENTITYISVISIBLE + !ENTITYISHIGHLIGHTED + ENTITYISDRAWABLE;}
 
-      int IsVisible ()
-      {  return code & ENTITYISVISIBLE;}
+    int IsVisible ()
+    {  return code & ENTITYISVISIBLE;}
 
-      int IsHighlighted ()
-      {  return code & ENTITYISHIGHLIGHTED;}
+    int IsHighlighted ()
+    {  return code & ENTITYISHIGHLIGHTED;}
 
-      int IsDrawable ()
-      {  return code & ENTITYISDRAWABLE;}
+    int IsDrawable ()
+    {  return code & ENTITYISDRAWABLE;}
 
-      void Show ()
-      {  code |= ENTITYISVISIBLE;}
+    void Show ()
+    {  code |= ENTITYISVISIBLE;}
 
-      void Hide ()
-      {  code &= ~ENTITYISVISIBLE;}
+    void Hide ()
+    {  code &= ~ENTITYISVISIBLE;}
 
-      void Highlight ()
-      {  code |= ENTITYISHIGHLIGHTED;}
+    void Highlight ()
+    {  code |= ENTITYISHIGHLIGHTED;}
 
-      void Lowlight ()
-      {  code &= ~ENTITYISHIGHLIGHTED;}
+    void Lowlight ()
+    {  code &= ~ENTITYISHIGHLIGHTED;}
 
-      void SetDrawable ()
-      {  code |= ENTITYISDRAWABLE;}
+    void SetDrawable ()
+    {  code |= ENTITYISDRAWABLE;}
 
-      void SetNotDrawable ()
-      {  code &= ~ENTITYISDRAWABLE;}
-   };
-
-
-
-   class Line
-   {
-   public:
-      Point<3> p0, p1;
-
-      double Dist (Line l);
-
-      double Length ();
-   };
+    void SetNotDrawable ()
+    {  code &= ~ENTITYISDRAWABLE;}
+  };
 
 
 
-   inline double Det3 (double a00, double a01, double a02,
-      double a10, double a11, double a12,
-      double a20, double a21, double a22)
-   {
-      return a00*a11*a22 + a01*a12*a20 + a10*a21*a02 - a20*a11*a02 - a10*a01*a22 - a21*a12*a00;
-   }
+  class Line
+  {
+  public:
+    Point<3> p0, p1;
+    double Dist (Line l);
+    double Length () { return (p1-p0).Length(); }
+  };
+  
+
+
+  inline double Det3 (double a00, double a01, double a02,
+                      double a10, double a11, double a12,
+                      double a20, double a21, double a22)
+  {
+    return a00*a11*a22 + a01*a12*a20 + a10*a21*a02 - a20*a11*a02 - a10*a01*a22 - a21*a12*a00;
+  }
+  
 
 
 
+  class OCCGeometry : public NetgenGeometry
+  {
+    Point<3> center;
 
-   class OCCGeometry : public NetgenGeometry
-   {
-      Point<3> center;
+  public:
+    TopoDS_Shape shape;
+    TopTools_IndexedMapOfShape fmap, emap, vmap, somap, shmap, wmap;
+    NgArray<bool> fsingular, esingular, vsingular;
+    Box<3> boundingbox;
+    NgArray<string> fnames, enames, snames;
+    // Philippose - 29/01/2009
+    // OpenCascade XDE Support
+    // XCAF Handle to make the face colours available to the rest of
+    // the system
+    Handle_XCAFDoc_ColorTool face_colours;
+     
+    mutable int changed;
+    NgArray<int> facemeshstatus;
 
-   public:
-      TopoDS_Shape shape;
-      TopTools_IndexedMapOfShape fmap, emap, vmap, somap, shmap, wmap;
-      NgArray<bool> fsingular, esingular, vsingular;
-      Box<3> boundingbox;
-      NgArray<string> fnames, enames, snames;
-      // Philippose - 29/01/2009
-      // OpenCascade XDE Support
-      // XCAF Handle to make the face colours available to the rest of
-      // the system
-      Handle_XCAFDoc_ColorTool face_colours;
+    // Philippose - 15/01/2009
+    // Maximum mesh size for a given face
+    // (Used to explicitly define mesh size limits on individual faces)
+    NgArray<double> face_maxh;
+     
+    // Philippose - 14/01/2010
+    // Boolean array to detect whether a face has been explicitly modified 
+    // by the user or not
+    NgArray<bool> face_maxh_modified;
+     
+    // Philippose - 15/01/2009
+    // Indicates which faces have been selected by the user in geometry mode
+    // (Currently handles only selection of one face at a time, but an array would
+    //  help to extend this to multiple faces)
+    NgArray<bool> face_sel_status;
+     
+    NgArray<EntityVisualizationCode> fvispar, evispar, vvispar;
+     
+    double tolerance;
+    bool fixsmalledges;
+    bool fixspotstripfaces;
+    bool sewfaces;
+    bool makesolids;
+    bool splitpartitions;
+     
+    OCCGeometry()
+    {
+      somap.Clear();
+      shmap.Clear();
+      fmap.Clear();
+      wmap.Clear();
+      emap.Clear();
+      vmap.Clear();
+    }
+     
+     
+    DLL_HEADER virtual void Save (string filename) const;
+     
+    void DoArchive(Archive& ar);
+     
+    DLL_HEADER void BuildFMap();
+     
+    Box<3> GetBoundingBox() const
+    { return boundingbox; }
 
-     mutable int changed;
-      NgArray<int> facemeshstatus;
+    int NrSolids() const
+    { return somap.Extent(); }
 
-      // Philippose - 15/01/2009
-      // Maximum mesh size for a given face
-      // (Used to explicitly define mesh size limits on individual faces)
-      NgArray<double> face_maxh;
-      
-      // Philippose - 14/01/2010
-      // Boolean array to detect whether a face has been explicitly modified 
-      // by the user or not
-      NgArray<bool> face_maxh_modified;
+    // Philippose - 17/01/2009
+    // Total number of faces in the geometry
+    int NrFaces() const
+    { return fmap.Extent(); }
 
-      // Philippose - 15/01/2009
-      // Indicates which faces have been selected by the user in geometry mode
-      // (Currently handles only selection of one face at a time, but an array would
-      //  help to extend this to multiple faces)
-      NgArray<bool> face_sel_status;
+    void SetCenter()
+    { center = boundingbox.Center(); }
 
-      NgArray<EntityVisualizationCode> fvispar, evispar, vvispar;
+    Point<3> Center() const
+    { return center; }
 
-      double tolerance;
-      bool fixsmalledges;
-      bool fixspotstripfaces;
-      bool sewfaces;
-      bool makesolids;
-      bool splitpartitions;
+    void Project (int surfi, Point<3> & p) const;
+    bool FastProject (int surfi, Point<3> & ap, double& u, double& v) const;
 
-      OCCGeometry()
-      {
-         somap.Clear();
-         shmap.Clear();
-         fmap.Clear();
-         wmap.Clear();
-         emap.Clear();
-         vmap.Clear();
-      }
+    OCCSurface GetSurface (int surfi)
+    {
+      cout << "OCCGeometry::GetSurface using PLANESPACE" << endl;
+      return OCCSurface (TopoDS::Face(fmap(surfi)), PLANESPACE);
+    }
 
+    DLL_HEADER void CalcBoundingBox ();
+    DLL_HEADER void BuildVisualizationMesh (double deflection);
+    
+    void RecursiveTopologyTree (const TopoDS_Shape & sh,
+                                stringstream & str,
+                                TopAbs_ShapeEnum l,
+                                bool free,
+                                const char * lname);
 
-      DLL_HEADER virtual void Save (string filename) const;
+    DLL_HEADER void GetTopologyTree (stringstream & str);
 
-     void DoArchive(Archive& ar);
+    DLL_HEADER void PrintNrShapes ();
 
-      DLL_HEADER void BuildFMap();
+    DLL_HEADER void CheckIrregularEntities (stringstream & str);
 
-      Box<3> GetBoundingBox()
-      {  return boundingbox;}
+    DLL_HEADER void SewFaces();
 
-      int NrSolids()
-      {  return somap.Extent();}
+    DLL_HEADER void MakeSolid();
 
-      // Philippose - 17/01/2009
-      // Total number of faces in the geometry
-      int NrFaces()
-      {  return fmap.Extent();}
+    DLL_HEADER void HealGeometry();
 
-      void SetCenter()
-      {  center = boundingbox.Center();}
-
-      Point<3> Center()
-      {  return center;}
-
-      void Project (int surfi, Point<3> & p) const;
-      bool FastProject (int surfi, Point<3> & ap, double& u, double& v) const;
-
-      OCCSurface GetSurface (int surfi)
-      {
-         cout << "OCCGeometry::GetSurface using PLANESPACE" << endl;
-         return OCCSurface (TopoDS::Face(fmap(surfi)), PLANESPACE);
-      }
-
-      DLL_HEADER void CalcBoundingBox ();
-      DLL_HEADER void BuildVisualizationMesh (double deflection);
-
-      void RecursiveTopologyTree (const TopoDS_Shape & sh,
-         stringstream & str,
-         TopAbs_ShapeEnum l,
-         bool free,
-         const char * lname);
-
-      DLL_HEADER void GetTopologyTree (stringstream & str);
-
-      DLL_HEADER void PrintNrShapes ();
-
-      DLL_HEADER void CheckIrregularEntities (stringstream & str);
-
-      DLL_HEADER void SewFaces();
-
-      DLL_HEADER void MakeSolid();
-
-      DLL_HEADER void HealGeometry();
-
-      // Philippose - 15/01/2009
-      // Sets the maximum mesh size for a given face
-      // (Note: Local mesh size limited by the global max mesh size)
-      void SetFaceMaxH(int facenr, double faceh)
-      {
-         if((facenr> 0) && (facenr <= fmap.Extent()))
-         {
-	   face_maxh[facenr-1] = min(mparam.maxh,faceh);
+    // Philippose - 15/01/2009
+    // Sets the maximum mesh size for a given face
+    // (Note: Local mesh size limited by the global max mesh size)
+    void SetFaceMaxH(int facenr, double faceh, const MeshingParameters & mparam)
+    {
+      if((facenr> 0) && (facenr <= fmap.Extent()))
+        {
+          face_maxh[facenr-1] = min(mparam.maxh,faceh);
             
-            // Philippose - 14/01/2010
-            // If the face maxh is greater than or equal to the 
-            // current global maximum, then identify the face as 
-            // not explicitly controlled by the user any more
-            if(faceh >= mparam.maxh)
+          // Philippose - 14/01/2010
+          // If the face maxh is greater than or equal to the 
+          // current global maximum, then identify the face as 
+          // not explicitly controlled by the user any more
+          if(faceh >= mparam.maxh)
             {
-               face_maxh_modified[facenr-1] = 0;
+              face_maxh_modified[facenr-1] = 0;
             }
-            else
+          else
             {
-               face_maxh_modified[facenr-1] = 1;
+              face_maxh_modified[facenr-1] = 1;
             }
-         }
-      }
+        }
+    }
 
-      // Philippose - 15/01/2009
-      // Returns the local mesh size of a given face
-      double GetFaceMaxH(int facenr)
-      {
-         if((facenr> 0) && (facenr <= fmap.Extent()))
-         {
-            return face_maxh[facenr-1];
-         }
-         else
-         {
-            return 0.0;
-         }
-      }
+    // Philippose - 15/01/2009
+    // Returns the local mesh size of a given face
+    double GetFaceMaxH(int facenr)
+    {
+      if((facenr> 0) && (facenr <= fmap.Extent()))
+        {
+          return face_maxh[facenr-1];
+        }
+      else
+        {
+          return 0.0;
+        }
+    }
       
-      // Philippose - 14/01/2010
-      // Returns the flag whether the given face 
-      // has a mesh size controlled by the user or not
-      bool GetFaceMaxhModified(int facenr)
-      {
-         return face_maxh_modified[facenr-1];
-      }
+    // Philippose - 14/01/2010
+    // Returns the flag whether the given face 
+    // has a mesh size controlled by the user or not
+    bool GetFaceMaxhModified(int facenr)
+    {
+      return face_maxh_modified[facenr-1];
+    }
       
-      // Philippose - 17/01/2009
-      // Returns the index of the currently selected face
-      int SelectedFace()
-      {
-         int i;
-
-         for(i = 1; i <= fmap.Extent(); i++)
-         {
-            if(face_sel_status[i-1])
+    // Philippose - 17/01/2009
+    // Returns the index of the currently selected face
+    int SelectedFace()
+    {
+      for(int i = 1; i <= fmap.Extent(); i++)
+        {
+          if(face_sel_status[i-1])
             {
-               return i;
+              return i;
             }
-         }
+        }
 
-         return 0;
-      }
+      return 0;
+    }
 
-      // Philippose - 17/01/2009
-      // Sets the currently selected face
-      void SetSelectedFace(int facenr)
-      {
-         face_sel_status = 0;
+    // Philippose - 17/01/2009
+    // Sets the currently selected face
+    void SetSelectedFace(int facenr)
+    {
+      face_sel_status = 0;
 
-         if((facenr >= 1) && (facenr <= fmap.Extent()))
-         {
-            face_sel_status[facenr-1] = 1;
-         }
-      }
+      if((facenr >= 1) && (facenr <= fmap.Extent()))
+        {
+          face_sel_status[facenr-1] = 1;
+        }
+    }
 
-      void LowLightAll()
-      {
-         for (int i = 1; i <= fmap.Extent(); i++)
-            fvispar[i-1].Lowlight();
-         for (int i = 1; i <= emap.Extent(); i++)
-            evispar[i-1].Lowlight();
-         for (int i = 1; i <= vmap.Extent(); i++)
-            vvispar[i-1].Lowlight();
-      }
+    void LowLightAll()
+    {
+      for (int i = 1; i <= fmap.Extent(); i++)
+        fvispar[i-1].Lowlight();
+      for (int i = 1; i <= emap.Extent(); i++)
+        evispar[i-1].Lowlight();
+      for (int i = 1; i <= vmap.Extent(); i++)
+        vvispar[i-1].Lowlight();
+    }
 
-      DLL_HEADER void GetUnmeshedFaceInfo (stringstream & str);
-      DLL_HEADER void GetNotDrawableFaces (stringstream & str);
-      DLL_HEADER bool ErrorInSurfaceMeshing ();
+    DLL_HEADER void GetUnmeshedFaceInfo (stringstream & str);
+    DLL_HEADER void GetNotDrawableFaces (stringstream & str);
+    DLL_HEADER bool ErrorInSurfaceMeshing ();
 
-//      void WriteOCC_STL(char * filename);
+    //      void WriteOCC_STL(char * filename);
 
-     DLL_HEADER virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
+    DLL_HEADER virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
 
-      DLL_HEADER virtual const Refinement & GetRefinement () const;
-   };
-
-
-
-   class DLL_HEADER OCCParameters
-   {
-   public:
-
-      /// Factor for meshing close edges 
-      double resthcloseedgefac;
+    DLL_HEADER virtual const Refinement & GetRefinement () const;
+  };
 
 
-      /// Enable / Disable detection of close edges
-      int resthcloseedgeenable;
+
+  class DLL_HEADER OCCParameters
+  {
+  public:
+
+    /// Factor for meshing close edges 
+    double resthcloseedgefac;
 
 
-	  /// Minimum edge length to be used for dividing edges to mesh points
-	  double resthminedgelen;
+    /// Enable / Disable detection of close edges
+    int resthcloseedgeenable;
 
 
-	  /// Enable / Disable use of the minimum edge length (by default use 1e-4)
-	  int resthminedgelenenable;
-
-      /*!
-         Default Constructor for the OpenCascade
-         Mesh generation parameter set
-      */
-      OCCParameters();
+    /// Minimum edge length to be used for dividing edges to mesh points
+    double resthminedgelen;
 
 
-      /*!
-         Dump all the OpenCascade specific meshing parameters 
-         to console
-      */
-      void Print (ostream & ost) const;
-   };
+    /// Enable / Disable use of the minimum edge length (by default use 1e-4)
+    int resthminedgelenenable;
+
+    /*!
+      Default Constructor for the OpenCascade
+      Mesh generation parameter set
+    */
+    OCCParameters();
+
+
+    /*!
+      Dump all the OpenCascade specific meshing parameters 
+      to console
+    */
+    void Print (ostream & ost) const;
+  };
    
 
-   void PrintContents (OCCGeometry * geom);
+  void PrintContents (OCCGeometry * geom);
 
-   DLL_HEADER OCCGeometry * LoadOCC_IGES (const char * filename);
-   DLL_HEADER OCCGeometry * LoadOCC_STEP (const char * filename);
-   DLL_HEADER OCCGeometry * LoadOCC_BREP (const char * filename);
+  DLL_HEADER OCCGeometry * LoadOCC_IGES (const char * filename);
+  DLL_HEADER OCCGeometry * LoadOCC_STEP (const char * filename);
+  DLL_HEADER OCCGeometry * LoadOCC_BREP (const char * filename);
 
-   DLL_HEADER extern OCCParameters occparam;
+  DLL_HEADER extern OCCParameters occparam;
 
 
-   // Philippose - 31.09.2009
-   // External access to the mesh generation functions within the OCC
-   // subsystem (Not sure if this is the best way to implement this....!!)
-   DLL_HEADER extern int OCCGenerateMesh (OCCGeometry & occgeometry, shared_ptr<Mesh> & mesh,
-			       MeshingParameters & mparam);
+  // Philippose - 31.09.2009
+  // External access to the mesh generation functions within the OCC
+  // subsystem (Not sure if this is the best way to implement this....!!)
+  DLL_HEADER extern int OCCGenerateMesh (OCCGeometry & occgeometry, shared_ptr<Mesh> & mesh,
+                                         MeshingParameters & mparam);
 
-   DLL_HEADER extern void OCCSetLocalMeshSize(OCCGeometry & geom, Mesh & mesh);
+  DLL_HEADER extern void OCCSetLocalMeshSize(OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam);
 
-   DLL_HEADER extern void OCCMeshSurface (OCCGeometry & geom, Mesh & mesh, int perfstepsend);
+  DLL_HEADER extern void OCCMeshSurface (OCCGeometry & geom, Mesh & mesh, int perfstepsend, MeshingParameters & mparam);
 
-   DLL_HEADER extern void OCCFindEdges (OCCGeometry & geom, Mesh & mesh);
+  DLL_HEADER extern void OCCFindEdges (OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam);
 }
 
 #endif

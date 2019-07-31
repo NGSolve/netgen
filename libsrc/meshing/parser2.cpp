@@ -578,7 +578,9 @@ void Meshing2 :: LoadRules (const char * filename, bool quad)
       delete ist;
       exit (1);
     }
-    
+
+  Timer t("Parsing rules");
+  t.Start();
   while (!ist->eof())
     {
       buf[0] = 0;
@@ -597,7 +599,8 @@ void Meshing2 :: LoadRules (const char * filename, bool quad)
       //(*testout) << "loop" << endl;
     }
   //(*testout) << "POS3" << endl;
-
+  t.Stop();
+  
   delete ist;
   //delete [] tr1;
 }

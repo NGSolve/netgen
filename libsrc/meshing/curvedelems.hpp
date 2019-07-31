@@ -49,7 +49,7 @@ public:
 
   int GetOrder () { return order; }
 
-  virtual void DoArchive(Archive& ar)
+  void DoArchive(Archive& ar)
   {
     if(ar.Input())
       buildJacPols();
