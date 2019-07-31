@@ -97,7 +97,7 @@ namespace netgen
         // map from unv element nr to our element number + an index if it is vol (0), bnd(1), ...
         std::map<size_t, std::tuple<size_t, int>> element_map;
 	int dim = 3;
-	int bccounter = 0; // for 2D case
+	int bccounter = 0;
 
         NgArray<Segment> tmp_segments;
         while (in.good())
@@ -284,11 +284,12 @@ namespace netgen
                         {
                           if(dim == 3)
                           {
-                            int bcpr = mesh.GetNFD()+1;
+                            int bcpr = mesh.GetNFD();
                             fdnr = mesh.AddFaceDescriptor(FaceDescriptor(bcpr, 0,0,0));
                             mesh.GetFaceDescriptor(fdnr).SetBCProperty(bcpr+1);
                             mesh.SetBCName(bcpr, name);
                             mesh.SurfaceElement(get<0>(element_map[index])).SetIndex(fdnr);
+                            bccounter++;
                           }
                           else if(dim == 2)
                           {
@@ -399,6 +400,7 @@ namespace netgen
         mesh.RebuildSurfaceElementLists();
         mesh.GetBox (pmin, pmax);
         mesh.UpdateTopology();
+        if(dim == 3) bccounter++;
         cout << "bounding-box = " << pmin << "-" << pmax << endl;
 	cout << "Created " << bccounter << " boundaries." << endl;
 	for(int i=0; i<bccounter; i++){
