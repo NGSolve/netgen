@@ -13,15 +13,21 @@ int usechartnormal = 1;
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 void STLMeshing (STLGeometry & geom,
-		 Mesh & mesh)
+		 Mesh & mesh,
+                 const MeshingParameters& mparam)
 {
   geom.Clear();
-  geom.BuildEdges();
-  geom.MakeAtlas(mesh);
+  STLParameters stlpar = stlparam;
+  if(mparam.geometrySpecificParameters.has_value() && mparam.geometrySpecificParameters.type().name() == typeid(STLParameters).name())
+  {
+    stlpar = any_cast<STLParameters>(mparam.geometrySpecificParameters);
+  }
+  geom.BuildEdges(stlpar);
+  geom.MakeAtlas(mesh, mparam, stlpar);
   if (multithread.terminate) { return; }
   geom.CalcFaceNums();
   geom.AddFaceEdges();
-  geom.LinkEdges();
+  geom.LinkEdges(stlpar);
 
   mesh.ClearFaceDescriptors();
   for (int i = 1; i <= geom.GetNOFaces(); i++)
@@ -132,7 +138,7 @@ void STLGeometry :: STLInfo(double* data)
   data[7] = cons;
 }
 
-void STLGeometry :: MarkNonSmoothNormals()
+void STLGeometry :: MarkNonSmoothNormals(const STLParameters& stlparam)
 {
 
   PrintFnStart("Mark Non-Smooth Normals");
@@ -169,13 +175,13 @@ void STLGeometry :: MarkNonSmoothNormals()
 
 }
 
-void STLGeometry :: SmoothNormals()
+void STLGeometry :: SmoothNormals(const STLParameters& stlparam)
 {
   multithread.terminate = 0;
 
   //  UseExternalEdges();
 
-  BuildEdges();
+  BuildEdges(stlparam);
 
 
   DenseMatrix m(3), hm(3);
@@ -1240,13 +1246,13 @@ void STLGeometry :: ClearEdges()
 
 }
 
-void STLGeometry :: STLDoctorBuildEdges()
+void STLGeometry :: STLDoctorBuildEdges(const STLParameters& stlparam)
 {
   //  if (!trigsconverted) {return;}
   ClearEdges();
 
   meshlines.SetSize(0);
-  FindEdgesFromAngles();
+  FindEdgesFromAngles(stlparam);
 }
 
 void STLGeometry :: DeleteExternalEdgeAtSelected()
@@ -1737,7 +1743,7 @@ void STLGeometry :: InitMarkedTrigs()
     }
 }
 
-void STLGeometry :: MarkDirtyTrigs()
+void STLGeometry :: MarkDirtyTrigs(const STLParameters& stlparam)
 {
   PrintFnStart("mark dirty trigs");
   int i,j;
@@ -1813,12 +1819,12 @@ double STLGeometry :: CalcTrigBadness(int i)
 
 }
 
-void STLGeometry :: GeomSmoothRevertedTrigs()
+void STLGeometry :: GeomSmoothRevertedTrigs(const STLParameters& stlparam)
 {
   //double revertedangle = stldoctor.smoothangle/180.*M_PI;
   double fact = stldoctor.dirtytrigfact;
 
-  MarkRevertedTrigs();
+  MarkRevertedTrigs(stlparam);
 
   int i, j, k, l, p;
 
@@ -1860,13 +1866,13 @@ void STLGeometry :: GeomSmoothRevertedTrigs()
 	    }
 	}
     }
-  MarkRevertedTrigs();
+  MarkRevertedTrigs(stlparam);
 }
 
-void STLGeometry :: MarkRevertedTrigs()
+void STLGeometry :: MarkRevertedTrigs(const STLParameters& stlparam)
 {
   int i,j;
-  if (edgesperpoint.Size() != GetNP()) {BuildEdges();}
+  if (edgesperpoint.Size() != GetNP()) {BuildEdges(stlparam);}
 
   PrintFnStart("mark reverted trigs");
 
@@ -1906,11 +1912,11 @@ void STLGeometry :: MarkRevertedTrigs()
 
 }
 
-void STLGeometry :: SmoothDirtyTrigs()
+void STLGeometry :: SmoothDirtyTrigs(const STLParameters& stlparam)
 {
   PrintFnStart("smooth dirty trigs");
 
-  MarkDirtyTrigs();
+  MarkDirtyTrigs(stlparam);
 
   int i,j;
   int changed = 1;
@@ -1953,7 +1959,7 @@ void STLGeometry :: SmoothDirtyTrigs()
   calcedgedataanglesnew = 1;
 
 
-  MarkDirtyTrigs();
+  MarkDirtyTrigs(stlparam);
 
   int cnt = 0;
   for (i = 1; i <= GetNT(); i++)
@@ -2360,12 +2366,12 @@ int STLGeometry :: IsEdgeNum(int ap1, int ap2)
 }
 
 
-void STLGeometry :: BuildEdges()
+void STLGeometry :: BuildEdges(const STLParameters& stlparam)
 {
   //PrintFnStart("build edges");
   edges.SetSize(0);
   meshlines.SetSize(0);
-  FindEdgesFromAngles();
+  FindEdgesFromAngles(stlparam);
 }
 
 void STLGeometry :: UseExternalEdges()
@@ -2487,7 +2493,7 @@ void STLGeometry :: CalcEdgeDataAngles()
   PrintMessage (5,"calc edge data angles ... done");
 }
 
-void STLGeometry :: FindEdgesFromAngles()
+void STLGeometry :: FindEdgesFromAngles(const STLParameters& stlparam)
 {
   //  PrintFnStart("find edges from angles");
 
@@ -2714,7 +2720,7 @@ void STLGeometry :: AddFaceEdges()
   
 }
 
-void STLGeometry :: LinkEdges()
+void STLGeometry :: LinkEdges(const STLParameters& stlparam)
 {
   PushStatusF("Link Edges");
   PrintMessage(5,"have now ", GetNE(), " edges with yellow angle = ", stlparam.yangle, " degree");
@@ -3131,7 +3137,7 @@ int IsInArray(int n, const NgArray<int>& ia)
 }
 */
 
-void STLGeometry :: AddConeAndSpiralEdges()
+void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
 {
   PrintMessage(5,"have now ", GetNE(), " edges with yellow angle = ", stlparam.yangle, " degree");
 

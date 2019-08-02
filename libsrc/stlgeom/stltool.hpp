@@ -38,6 +38,7 @@ extern void FIOWriteString(ostream& ios, char* str, int len);
 typedef NgArray <int> * ArrayINTPTR;
 
 class STLGeometry;
+class STLParameters;
 
 class STLChart
 {
@@ -53,7 +54,7 @@ private:
 
 public:
   
-  STLChart(STLGeometry * ageometry);
+  STLChart(STLGeometry * ageometry, const STLParameters& stlparam);
   ~STLChart();
   void AddChartTrig(int i);
   void AddOuterTrig(int i);
@@ -227,45 +228,46 @@ DLL_HEADER extern STLDoctorParams stldoctor;
 
 
 
+// TODO change enable flag to optional parameters
 class STLParameters
 {
 public:
   /// angle for edge detection
-  double yangle;
+  double yangle = 30.;
   double contyangle; //edges continued with contyangle
   /// angle of geometry edge at which the mesher should set a point
-  double edgecornerangle;
+  double edgecornerangle = 60.;
   /// angle inside on chart
-  double chartangle;
+  double chartangle = 15.;
   /// angle for overlapping parts of char
-  double outerchartangle;
+  double outerchartangle = 70.;
   /// 0 .. no, 1 .. local, (2 .. global)
   int usesearchtree;
   ///
   double resthatlasfac; 
-  int resthatlasenable;
+  bool resthatlasenable;
   double atlasminh;
 
-  double resthsurfcurvfac; 
-  int resthsurfcurvenable;
+  double resthsurfcurvfac = 1.; 
+  bool resthsurfcurvenable = false;
 
-  double resthchartdistfac;
-  int resthchartdistenable;
+  double resthchartdistfac = 1.5;
+  bool resthchartdistenable = true;
 
-  double resthcloseedgefac;
-  int resthcloseedgeenable;
+  double resthcloseedgefac = 2.;
+  bool resthcloseedgeenable = true;
   
-  double resthedgeanglefac;
-  int resthedgeangleenable;
+  double resthedgeanglefac = 1.;
+  bool resthedgeangleenable = false;
   
-  double resthsurfmeshcurvfac;
-  int resthsurfmeshcurvenable;
+  double resthsurfmeshcurvfac = 2.;
+  bool resthsurfmeshcurvenable = false;
   
-  double resthlinelengthfac;
-  int resthlinelengthenable;
+  double resthlinelengthfac = 0.5;
+  bool resthlinelengthenable = true;
 
   ///
-  int recalc_h_opt;
+  bool recalc_h_opt = true;
   ///
   STLParameters();
   ///
@@ -276,11 +278,13 @@ DLL_HEADER extern STLParameters stlparam;
 
 
 void STLMeshing (STLGeometry & geom,
-		 class Mesh & mesh);
+		 class Mesh & mesh,
+                 const MeshingParameters& mparam);
 
 
 int STLSurfaceMeshing (STLGeometry & geom,
-			class Mesh & mesh);
+                       class Mesh & mesh,
+                       MeshingParameters& mparam);
 
 void STLSurfaceOptimization (STLGeometry & geom,
 			     class Mesh & mesh,

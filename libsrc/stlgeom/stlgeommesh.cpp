@@ -1372,7 +1372,7 @@ int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, MeshingP
   
       //mesh->DeleteMesh();
  
-      STLMeshing (*stlgeometry, *mesh);
+      STLMeshing (*stlgeometry, *mesh, mparam);
 
       stlgeometry->edgesfound = 1;
       stlgeometry->surfacemeshed = 0;
@@ -1399,7 +1399,7 @@ int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, MeshingP
 	}
 
       success = 0;
-      int retval = STLSurfaceMeshing (*stlgeometry, *mesh);
+      int retval = STLSurfaceMeshing (*stlgeometry, *mesh, mparam);
       if (retval == MESHING3_OK)
 	{
 	  PrintMessage(3,"Success !!!!");

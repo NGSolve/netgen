@@ -1269,6 +1269,8 @@ namespace netgen
     bool inverttrigs = false;
     ///
     bool autozrefine = false;
+
+    any geometrySpecificParameters;
     ///
     MeshingParameters ();
     ///

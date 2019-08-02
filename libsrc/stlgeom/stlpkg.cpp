@@ -243,15 +243,15 @@ namespace netgen
 	  }
 	else if (strcmp (argv[1], "markdirtytrigs") == 0)
 	  {
-	    stlgeometry->MarkDirtyTrigs();
+	    stlgeometry->MarkDirtyTrigs(stlparam);
 	  }
 	else if (strcmp (argv[1], "smoothdirtytrigs") == 0)
 	  {
-	    stlgeometry->SmoothDirtyTrigs();
+	    stlgeometry->SmoothDirtyTrigs(stlparam);
 	  }
 	else if (strcmp (argv[1], "smoothrevertedtrigs") == 0)
 	  {
-	    stlgeometry->GeomSmoothRevertedTrigs();
+	    stlgeometry->GeomSmoothRevertedTrigs(stlparam);
 	  }
 	else if (strcmp (argv[1], "invertselectedtrig") == 0)
 	  {
@@ -306,11 +306,11 @@ namespace netgen
 	  }
 	else if (strcmp (argv[1], "smoothnormals") == 0)
 	  {
-	    stlgeometry->SmoothNormals();
+	    stlgeometry->SmoothNormals(stlparam);
 	  }
 	else if (strcmp (argv[1], "marknonsmoothnormals") == 0)
 	  {
-	    stlgeometry->MarkNonSmoothNormals();
+	    stlgeometry->MarkNonSmoothNormals(stlparam);
 	  }
 	else if (strcmp (argv[1], "addexternaledge") == 0)
 	  {
@@ -359,7 +359,7 @@ namespace netgen
 	  }
 	else if (strcmp (argv[1], "buildedges") == 0)
 	  {
-	    stlgeometry->STLDoctorBuildEdges();
+	    stlgeometry->STLDoctorBuildEdges(stlparam);
 	  }
 	else if (strcmp (argv[1], "confirmedge") == 0)
 	  {

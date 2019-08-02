@@ -14,7 +14,8 @@ namespace netgen
 {
 
 static void STLFindEdges (STLGeometry & geom,
-			  class Mesh & mesh)
+			  class Mesh & mesh,
+                          MeshingParameters& mparam)
 {
   double h = mparam.maxh;
 
@@ -229,18 +230,18 @@ static void STLFindEdges (STLGeometry & geom,
 
 
 
-void STLSurfaceMeshing1 (STLGeometry & geom, class Mesh & mesh,
+void STLSurfaceMeshing1 (STLGeometry & geom, class Mesh & mesh, MeshingParameters& mparam,
 			 int retrynr);
 
 
-int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh)
+int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, MeshingParameters& mparam)
 {
   PrintFnStart("Do Surface Meshing");
 
   geom.PrepareSurfaceMeshing();
 
   if (mesh.GetNSeg() == 0)
-    STLFindEdges (geom, mesh);
+    STLFindEdges (geom, mesh, mparam);
 
   int nopen;
   int outercnt = 20;
@@ -272,7 +273,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh)
 	      if (multithread.terminate) { return MESHING3_TERMINATE; }
 
 	      trialcnt++;
-	      STLSurfaceMeshing1 (geom, mesh, trialcnt);
+	      STLSurfaceMeshing1 (geom, mesh, mparam, trialcnt);
 
 	      mesh.FindOpenSegments();
 	      nopen = mesh.GetNOpenSegments();
@@ -527,6 +528,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh)
 
 void STLSurfaceMeshing1 (STLGeometry & geom,
 			 class Mesh & mesh,
+                         MeshingParameters& mparam,
 			 int retrynr)
 {
   static int timer1 = NgProfiler::CreateTimer ("STL surface meshing1");
@@ -741,7 +743,7 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 
 void STLSurfaceOptimization (STLGeometry & geom,
 			     class Mesh & mesh,
-			     MeshingParameters & meshparam)
+			     MeshingParameters & mparam)
 {
   PrintFnStart("optimize STL Surface");
 
@@ -749,12 +751,12 @@ void STLSurfaceOptimization (STLGeometry & geom,
 
   optmesh.SetFaceIndex (0);
   optmesh.SetImproveEdges (0);
-  optmesh.SetMetricWeight (meshparam.elsizeweight);
+  optmesh.SetMetricWeight (mparam.elsizeweight);
 
-  PrintMessage(5,"optimize string = ", meshparam.optimize2d, " elsizew = ", meshparam.elsizeweight);
+  PrintMessage(5,"optimize string = ", mparam.optimize2d, " elsizew = ", mparam.elsizeweight);
 
-  for (int i = 1; i <= meshparam.optsteps2d; i++)
-    for (size_t j = 1; j <= meshparam.optimize2d.length(); j++)
+  for (int i = 1; i <= mparam.optsteps2d; i++)
+    for (size_t j = 1; j <= mparam.optimize2d.length(); j++)
       {
 	if (multithread.terminate)
 	  break;
@@ -762,7 +764,7 @@ void STLSurfaceOptimization (STLGeometry & geom,
 	//(*testout) << "optimize, before, step = " << meshparam.optimize2d[j-1] << mesh.Point (3679) << endl;
 
 	mesh.CalcSurfacesOfNode();
-	switch (meshparam.optimize2d[j-1])
+	switch (mparam.optimize2d[j-1])
 	  {
 	  case 's': 
 	    {

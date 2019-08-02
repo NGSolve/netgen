@@ -17,7 +17,7 @@ int chartdebug = 0;
 
 
 
-void STLGeometry :: MakeAtlas(Mesh & mesh)
+void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, const STLParameters& stlparam)
 {
   // int timer1 = NgProfiler::CreateTimer ("makeatlas");
   /*
@@ -128,7 +128,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh)
 
       SetThreadPercent(100.0 * workedarea / atlasarea);
 
-      STLChart * chart = new STLChart(this);
+      STLChart * chart = new STLChart(this, stlparam);
       atlas.Append(chart);
 
       // *testout << "Chart " << atlas.Size() << endl;
@@ -572,7 +572,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh)
   mesh.SetMinimalH(mparam.minh);
   
   
-  AddConeAndSpiralEdges();
+  AddConeAndSpiralEdges(stlparam);
   
   PrintMessage(5,"Make Atlas finished");
 

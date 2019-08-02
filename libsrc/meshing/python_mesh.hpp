@@ -83,86 +83,88 @@ elsizeweight: float = 0.2
   inline void CreateMPfromKwargs(MeshingParameters& mp, py::kwargs kwargs)
   {
     if(kwargs.contains("optimize3d"))
-      mp.optimize3d = py::cast<string>(kwargs["optimize3d"]);
+      mp.optimize3d = py::cast<string>(kwargs.attr("pop")("optimize3d"));
     if(kwargs.contains("optsteps3d"))
-      mp.optsteps3d = py::cast<int>(kwargs["optsteps3d"]);
+      mp.optsteps3d = py::cast<int>(kwargs.attr("pop")("optsteps3d"));
     if(kwargs.contains("optimize2d"))
-      mp.optimize2d = py::cast<string>(kwargs["optimize2d"]);
+      mp.optimize2d = py::cast<string>(kwargs.attr("pop")("optimize2d"));
     if(kwargs.contains("optsteps2d"))
-      mp.optsteps2d = py::cast<int>(kwargs["optsteps2d"]);
+      mp.optsteps2d = py::cast<int>(kwargs.attr("pop")("optsteps2d"));
     if(kwargs.contains("opterrpow"))
-      mp.opterrpow = py::cast<double>(kwargs["opterrpow"]);
+      mp.opterrpow = py::cast<double>(kwargs.attr("pop")("opterrpow"));
     if(kwargs.contains("blockfill"))
-      mp.blockfill = py::cast<bool>(kwargs["blockfill"]);
+      mp.blockfill = py::cast<bool>(kwargs.attr("pop")("blockfill"));
     if(kwargs.contains("filldist"))
-      mp.filldist = py::cast<double>(kwargs["filldist"]);
+      mp.filldist = py::cast<double>(kwargs.attr("pop")("filldist"));
     if(kwargs.contains("safety"))
-      mp.safety = py::cast<double>(kwargs["safety"]);
+      mp.safety = py::cast<double>(kwargs.attr("pop")("safety"));
     if(kwargs.contains("relinnersafety"))
-      mp.relinnersafety = py::cast<double>(kwargs["relinnersafety"]);
+      mp.relinnersafety = py::cast<double>(kwargs.attr("pop")("relinnersafety"));
     if(kwargs.contains("uselocalh"))
-      mp.uselocalh = py::cast<bool>(kwargs["uselocalh"]);
+      mp.uselocalh = py::cast<bool>(kwargs.attr("pop")("uselocalh"));
     if(kwargs.contains("grading"))
-      mp.grading = py::cast<double>(kwargs["grading"]);
+      mp.grading = py::cast<double>(kwargs.attr("pop")("grading"));
     if(kwargs.contains("delaunay"))
-      mp.delaunay = py::cast<bool>(kwargs["delaunay"]);
+      mp.delaunay = py::cast<bool>(kwargs.attr("pop")("delaunay"));
     if(kwargs.contains("maxh"))
-      mp.maxh = py::cast<double>(kwargs["maxh"]);
+      mp.maxh = py::cast<double>(kwargs.attr("pop")("maxh"));
     if(kwargs.contains("minh"))
-      mp.minh = py::cast<double>(kwargs["minh"]);
+      mp.minh = py::cast<double>(kwargs.attr("pop")("minh"));
     if(kwargs.contains("meshsizefilename"))
-      mp.meshsizefilename = py::cast<string>(kwargs["meshsizefilename"]);
+      mp.meshsizefilename = py::cast<string>(kwargs.attr("pop")("meshsizefilename"));
     if(kwargs.contains("startinsurface"))
-      mp.startinsurface = py::cast<bool>(kwargs["startinsurface"]);
+      mp.startinsurface = py::cast<bool>(kwargs.attr("pop")("startinsurface"));
     if(kwargs.contains("checkoverlap"))
-      mp.checkoverlap = py::cast<bool>(kwargs["checkoverlap"]);
+      mp.checkoverlap = py::cast<bool>(kwargs.attr("pop")("checkoverlap"));
     if(kwargs.contains("checkoverlappingboundary"))
-      mp.checkoverlappingboundary = py::cast<bool>(kwargs["checkoverlappingboundary"]);
+      mp.checkoverlappingboundary = py::cast<bool>(kwargs.attr("pop")("checkoverlappingboundary"));
     if(kwargs.contains("checkchartboundary"))
-      mp.checkchartboundary = py::cast<bool>(kwargs["checkchartboundary"]);
+      mp.checkchartboundary = py::cast<bool>(kwargs.attr("pop")("checkchartboundary"));
     if(kwargs.contains("curvaturesafety"))
-      mp.curvaturesafety = py::cast<double>(kwargs["curvaturesafety"]);
+      mp.curvaturesafety = py::cast<double>(kwargs.attr("pop")("curvaturesafety"));
     if(kwargs.contains("segmentsperedge"))
-      mp.segmentsperedge = py::cast<double>(kwargs["segmentsperedge"]);
+      mp.segmentsperedge = py::cast<double>(kwargs.attr("pop")("segmentsperedge"));
     if(kwargs.contains("parthread"))
-      mp.parthread = py::cast<bool>(kwargs["parthread"]);
+      mp.parthread = py::cast<bool>(kwargs.attr("pop")("parthread"));
     if(kwargs.contains("elsizeweight"))
-      mp.elsizeweight = py::cast<double>(kwargs["elsizeweight"]);
+      mp.elsizeweight = py::cast<double>(kwargs.attr("pop")("elsizeweight"));
     if(kwargs.contains("perfstepsstart"))
-      mp.perfstepsstart = py::cast<int>(kwargs["perfstepsstart"]);
+      mp.perfstepsstart = py::cast<int>(kwargs.attr("pop")("perfstepsstart"));
     if(kwargs.contains("perfstepsend"))
-      mp.perfstepsend = py::cast<int>(kwargs["perfstepsend"]);
+      mp.perfstepsend = py::cast<int>(kwargs.attr("pop")("perfstepsend"));
     if(kwargs.contains("giveuptol2d"))
-      mp.giveuptol2d = py::cast<int>(kwargs["giveuptol2d"]);
+      mp.giveuptol2d = py::cast<int>(kwargs.attr("pop")("giveuptol2d"));
     if(kwargs.contains("giveuptol"))
-      mp.giveuptol = py::cast<int>(kwargs["giveuptol"]);
+      mp.giveuptol = py::cast<int>(kwargs.attr("pop")("giveuptol"));
     if(kwargs.contains("maxoutersteps"))
-      mp.maxoutersteps = py::cast<int>(kwargs["maxoutersteps"]);
+      mp.maxoutersteps = py::cast<int>(kwargs.attr("pop")("maxoutersteps"));
     if(kwargs.contains("starshapeclass"))
-      mp.starshapeclass = py::cast<int>(kwargs["starshapeclass"]);
+      mp.starshapeclass = py::cast<int>(kwargs.attr("pop")("starshapeclass"));
     if(kwargs.contains("baseelnp"))
-      mp.baseelnp = py::cast<int>(kwargs["baseelnp"]);
+      mp.baseelnp = py::cast<int>(kwargs.attr("pop")("baseelnp"));
     if(kwargs.contains("sloppy"))
-      mp.sloppy = py::cast<bool>(kwargs["sloppy"]);
+      mp.sloppy = py::cast<bool>(kwargs.attr("pop")("sloppy"));
     if(kwargs.contains("badellimit"))
-      mp.badellimit = py::cast<double>(kwargs["badellimit"]);
+      mp.badellimit = py::cast<double>(kwargs.attr("pop")("badellimit"));
     if(kwargs.contains("check_impossible"))
-      mp.check_impossible = py::cast<bool>(kwargs["check_impossible"]);
+      mp.check_impossible = py::cast<bool>(kwargs.attr("pop")("check_impossible"));
     if(kwargs.contains("only3D_domain_nr"))
-      mp.only3D_domain_nr = py::cast<int>(kwargs["only3D_domain_nr"]);
+      mp.only3D_domain_nr = py::cast<int>(kwargs.attr("pop")("only3D_domain_nr"));
     if(kwargs.contains("secondorder"))
-      mp.secondorder = py::cast<bool>(kwargs["secondorder"]);
+      mp.secondorder = py::cast<bool>(kwargs.attr("pop")("secondorder"));
     if(kwargs.contains("elementorder"))
-      mp.elementorder = py::cast<int>(kwargs["elementorder"]);
+      mp.elementorder = py::cast<int>(kwargs.attr("pop")("elementorder"));
     if(kwargs.contains("quad"))
-      mp.quad = py::cast<bool>(kwargs["quad"]);
+      mp.quad = py::cast<bool>(kwargs.attr("pop")("quad"));
     if(kwargs.contains("try_hexes"))
-      mp.try_hexes = py::cast<bool>(kwargs["try_hexes"]);
+      mp.try_hexes = py::cast<bool>(kwargs.attr("pop")("try_hexes"));
     if(kwargs.contains("inverttets"))
-      mp.inverttets = py::cast<bool>(kwargs["inverttets"]);
+      mp.inverttets = py::cast<bool>(kwargs.attr("pop")("inverttets"));
     if(kwargs.contains("inverttrigs"))
-      mp.inverttrigs = py::cast<bool>(kwargs["inverttrigs"]);
+      mp.inverttrigs = py::cast<bool>(kwargs.attr("pop")("inverttrigs"));
     if(kwargs.contains("autozrefine"))
-      mp.autozrefine = py::cast<bool>(kwargs["autozrefine"]);
+      mp.autozrefine = py::cast<bool>(kwargs.attr("pop")("autozrefine"));
+    if(kwargs.size())
+      mp.geometrySpecificParameters = make_any<py::kwargs>(std::move(kwargs));
   }
 } // namespace netgen

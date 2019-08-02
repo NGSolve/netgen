@@ -196,8 +196,8 @@ namespace netgen
 
 	DLL_HEADER void STLInfo(double* data);
     //stldoctor:
-	DLL_HEADER void SmoothNormals();
-	DLL_HEADER void MarkNonSmoothNormals();
+	DLL_HEADER void SmoothNormals(const STLParameters& stlparam);
+	DLL_HEADER void MarkNonSmoothNormals(const STLParameters& stlparam);
 
 	DLL_HEADER void CalcEdgeData();
 	DLL_HEADER void CalcEdgeDataAngles();
@@ -251,7 +251,7 @@ namespace netgen
 	DLL_HEADER void AddClosedLinesToExternalEdges();
 	DLL_HEADER void AddLongLinesToExternalEdges();
 	DLL_HEADER void AddAllNotSingleLinesToExternalEdges();
-	DLL_HEADER void STLDoctorBuildEdges();
+	DLL_HEADER void STLDoctorBuildEdges(const STLParameters& stlparam);
 	DLL_HEADER void AddExternalEdgesFromGeomLine();
 	DLL_HEADER void DeleteDirtyExternalEdges();
 	DLL_HEADER void DeleteExternalEdgeAtSelected();
@@ -292,10 +292,10 @@ namespace netgen
 	DLL_HEADER int Vicinity(int trig) const;
 
 	DLL_HEADER void InitMarkedTrigs();
-	DLL_HEADER void MarkDirtyTrigs();
-	DLL_HEADER void SmoothDirtyTrigs();
-	DLL_HEADER void GeomSmoothRevertedTrigs();
-	DLL_HEADER void MarkRevertedTrigs();
+	DLL_HEADER void MarkDirtyTrigs(const STLParameters& stlparam);
+	DLL_HEADER void SmoothDirtyTrigs(const STLParameters& stlparam);
+	DLL_HEADER void GeomSmoothRevertedTrigs(const STLParameters& stlparam);
+	DLL_HEADER void MarkRevertedTrigs(const STLParameters& stlparam);
 	DLL_HEADER double CalcTrigBadness(int i);
 	DLL_HEADER int IsMarkedTrig(int trig) const;
 	DLL_HEADER void SetMarkedTrig(int trig, int num);
@@ -353,18 +353,18 @@ namespace netgen
 
     ///Build EdgeSegments
     void ClearEdges();
-    void BuildEdges();
+    void BuildEdges(const STLParameters& stlparam);
     void BuildEdgesPerPoint();
     void UseExternalEdges();
 
 
-    void FindEdgesFromAngles();
+    void FindEdgesFromAngles(const STLParameters& stlparam);
     void CalcFaceNums();
     int GetNOBodys();
     int GetNOFaces() {return facecnt;}
-    void LinkEdges();
+    void LinkEdges(const STLParameters& stlparam);
 
-    void AddConeAndSpiralEdges();
+    void AddConeAndSpiralEdges(const STLParameters& stlparam);
     void AddFaceEdges(); //each face should have at least one starting edge (outherwise it won't be meshed)
 
     void GetDirtyChartTrigs(int chartnum, STLChart& chart, const NgArray<int>& outercharttrigs, 
@@ -382,7 +382,7 @@ namespace netgen
 
 
     //make charts with regions of a max. angle
-    void MakeAtlas(class Mesh & mesh);
+    void MakeAtlas(class Mesh & mesh, const MeshingParameters& mparam, const STLParameters& stlparam);
 
     //outerchartspertrig, sorted!
     int GetOCPTSize() const {return outerchartspertrig.Size();};

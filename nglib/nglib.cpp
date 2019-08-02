@@ -667,7 +667,7 @@ namespace nglib
         }
       */
 
-      STLMeshing (*stlgeometry, *me);
+      STLMeshing (*stlgeometry, *me, mparam);
 
       stlgeometry->edgesfound = 1;
       stlgeometry->surfacemeshed = 0;
@@ -709,7 +709,7 @@ namespace nglib
       stlgeometry->surfaceoptimized = 0;
       stlgeometry->volumemeshed = 0;
       */  
-      int retval = STLSurfaceMeshing (*stlgeometry, *me);
+      int retval = STLSurfaceMeshing (*stlgeometry, *me, mparam);
       if (retval == MESHING3_OK)
       {
          (*mycout) << "Success !!!!" << endl;
