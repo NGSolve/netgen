@@ -54,9 +54,7 @@ namespace netgen
 			     NgArray<INDEX> & dellines, int tolerance,
 			     const MeshingParameters & mp)
   {
-    static int timer = NgProfiler::CreateTimer ("meshing2::ApplyRules");
-    NgProfiler::RegionTimer reg (timer);
-
+    // static Timer timer ("meshing2::ApplyRules"); RegionTimer reg (timer);
 
 
     double maxerr = 0.5 + 0.3 * tolerance;
@@ -76,6 +74,9 @@ namespace netgen
     NgArrayMem<int,100> tempdellines;
     NgArrayMem<Element2d,100> tempelements;
 
+    // a least 2 * maximal number of old points in rules,
+    // what is actually 4 now
+    double oldumem[20];  
 
     elements.SetSize (0);
     dellines.SetSize (0);
@@ -457,7 +458,8 @@ namespace netgen
 
 			if (!ok) continue;
 
-			Vector oldu (2 * rule->GetNOldP());
+			// Vector oldu (2 * rule->GetNOldP());
+                        Vector oldu (2 * rule->GetNOldP(), &oldumem[0]);
 		      
 			for (int i = 1; i <= rule->GetNOldP(); i++)
 			  {

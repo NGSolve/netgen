@@ -362,7 +362,7 @@ namespace netgen
     NgProfiler::StopTimer (ts3);
 
     static Timer tloop("surfacemeshing mainloop");
-    static Timer tgetlocals("surfacemeshing getlocals");
+    // static Timer tgetlocals("surfacemeshing getlocals");
     {
       RegionTimer rloop(tloop);
     while (!adfront.Empty() && !multithread.terminate)
@@ -441,10 +441,10 @@ namespace netgen
 
 	double hinner = (3 + qualclass) * max2 (his, hshould);
 
-        tgetlocals.Start();
+        // tgetlocals.Start();
 	adfront.GetLocals (baselineindex, locpoints, mpgeominfo, loclines, 
 			     pindex, lindex, 2*hinner);
-        tgetlocals.Stop();
+        // tgetlocals.Stop();
 
 	NgProfiler::RegionTimer reg2 (timer2);
 
@@ -790,8 +790,8 @@ namespace netgen
 
 	if (found)
 	  {
-            static Timer t("ApplyRules");
-            RegionTimer r(t);
+            // static Timer t("ApplyRules");
+            // RegionTimer r(t);
 	    rulenr = ApplyRules (plainpoints, legalpoints, maxlegalpoint,
 				 loclines, maxlegalline, locelements,
 				 dellines, qualclass, mp);
