@@ -346,7 +346,21 @@ namespace netgen
   }
 
 
-
+  int Ng_GetExportFormats (ClientData clientData,
+                           Tcl_Interp * interp,
+                           int argc, tcl_const char *argv[])
+  {
+    NgArray<const char*> userformats;
+    NgArray<const char*> extensions;
+    RegisterUserFormats (userformats, extensions);
+    
+    ostringstream fstr;
+    for (int i = 1; i <= userformats.Size(); i++)
+      fstr << "{ {" << userformats.Get(i) << "} {" << extensions.Get(i) << "} }\n";
+    
+    Tcl_SetResult (interp, const_cast<char*>(fstr.str().c_str()), TCL_VOLATILE);
+    return TCL_OK;
+  }
 
 
   int Ng_ExportMesh (ClientData clientData,
@@ -2812,6 +2826,10 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 		       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_MergeMesh", Ng_MergeMesh,
+		       (ClientData)NULL,
+		       (Tcl_CmdDeleteProc*) NULL);
+
+    Tcl_CreateCommand (interp, "Ng_GetExportFormats", Ng_GetExportFormats,
 		       (ClientData)NULL,
 		       (Tcl_CmdDeleteProc*) NULL);
 
