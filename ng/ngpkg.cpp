@@ -1263,6 +1263,28 @@ namespace netgen
 
 
 
+  int Ng_SetCommandLineParameter  (ClientData clientData,
+				   Tcl_Interp * interp,
+				   int argc, tcl_const char *argv[])
+  {
+    if (argc != 2)
+      {
+	Tcl_SetResult (interp, (char*)"Ng_SetCommandLineParameter needs 1 parameter",
+                       TCL_STATIC);
+	return TCL_ERROR;
+      }
+
+    if (argv[1][0] == '-')
+      parameters.SetCommandLineFlag (argv[1]);
+    else
+      {
+        if (strstr(argv[1], ".py"))
+          parameters.SetFlag ("py", argv[1]);
+        else
+          parameters.SetFlag ("geofile", argv[1]);
+      }
+    return TCL_OK;
+  }
 
 
   int Ng_GetCommandLineParameter  (ClientData clientData,
@@ -3029,6 +3051,11 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 		       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_SetDebugParameters", Ng_SetDebugParameters,
+		       (ClientData)NULL,
+		       (Tcl_CmdDeleteProc*) NULL);
+
+    Tcl_CreateCommand (interp, "Ng_SetCommandLineParameter",
+		       Ng_SetCommandLineParameter,
 		       (ClientData)NULL,
 		       (Tcl_CmdDeleteProc*) NULL);
 
