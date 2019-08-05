@@ -475,7 +475,7 @@ namespace ngcore
     /// Access array. range check by macro NETGEN_CHECK_RANGE
     NETGEN_INLINE T & operator[] (size_t i) const
     {
-      NETGEN_CHECK_RANGE(i,0,size-1);
+      NETGEN_CHECK_RANGE(i,0,size);
       return data[i]; 
     }
   
@@ -496,7 +496,7 @@ namespace ngcore
     /// access last element. check by macro NETGEN_CHECK_RANGE
     T & Last () const
     {
-      NETGEN_CHECK_RANGE(0,size-1,size-1);
+      NETGEN_CHECK_RANGE(size-1,0,size);
       return data[size-1];
     }
 
@@ -838,7 +838,7 @@ namespace ngcore
     /// Delete element i. Move last element to position i.
     NETGEN_INLINE void DeleteElement (size_t i)
     {
-      NETGEN_CHECK_RANGE(i,0,size-1);
+      NETGEN_CHECK_RANGE(i,0,size);
       data[i] = std::move(data[size-1]);
       size--;
     }
@@ -856,7 +856,7 @@ namespace ngcore
     /// Delete last element. 
     NETGEN_INLINE void DeleteLast ()
     {
-      NETGEN_CHECK_RANGE(0,size-1,size-1);
+      NETGEN_CHECK_RANGE(size-1,0,size);
       size--;
     }
 
