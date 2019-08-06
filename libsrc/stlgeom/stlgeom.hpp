@@ -450,10 +450,10 @@ namespace netgen
     int LineEndPointsSet() const {return lineendpoints.Size() == GetNP();}
     void ClearLineEndPoints();
 
-	DLL_HEADER void RestrictLocalH(class Mesh & mesh, double gh);
-    void RestrictLocalHCurv(class Mesh & mesh, double gh);
+    DLL_HEADER void RestrictLocalH(class Mesh & mesh, double gh, const STLParameters& stlparam);
+    void RestrictLocalHCurv(class Mesh & mesh, double gh, const STLParameters& stlparam);
     void RestrictHChartDistOneChart(int chartnum, NgArray<int>& acttrigs, class Mesh & mesh, 
-				    double gh, double fact, double minh);
+				    double gh, double fact, double minh, const STLParameters& stlparam);
 
     friend class MeshingSTLSurface;
 

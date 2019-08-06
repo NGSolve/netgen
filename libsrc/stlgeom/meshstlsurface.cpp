@@ -14,14 +14,15 @@ namespace netgen
 {
 
 static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
-                          const MeshingParameters& mparam)
+                          const MeshingParameters& mparam,
+                          const STLParameters& stlparam)
 {
   double h = mparam.maxh;
 
   // mark edge points:
   //int ngp = geom.GetNP();
 
-  geom.RestrictLocalH(mesh, h);
+  geom.RestrictLocalH(mesh, h, stlparam);
   
   PushStatusF("Mesh Lines");
 
@@ -230,17 +231,18 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
 
 
 void STLSurfaceMeshing1 (STLGeometry & geom, class Mesh & mesh, const MeshingParameters& mparam,
-			 int retrynr);
+			 int retrynr, const STLParameters& stlparam);
 
 
-int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParameters& mparam)
+int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParameters& mparam,
+                       const STLParameters& stlparam)
 {
   PrintFnStart("Do Surface Meshing");
 
   geom.PrepareSurfaceMeshing();
 
   if (mesh.GetNSeg() == 0)
-    STLFindEdges (geom, mesh, mparam);
+    STLFindEdges (geom, mesh, mparam, stlparam);
 
   int nopen;
   int outercnt = 20;
@@ -272,7 +274,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 	      if (multithread.terminate) { return MESHING3_TERMINATE; }
 
 	      trialcnt++;
-	      STLSurfaceMeshing1 (geom, mesh, mparam, trialcnt);
+	      STLSurfaceMeshing1 (geom, mesh, mparam, trialcnt, stlparam);
 
 	      mesh.FindOpenSegments();
 	      nopen = mesh.GetNOpenSegments();
@@ -528,7 +530,8 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 void STLSurfaceMeshing1 (STLGeometry & geom,
 			 Mesh & mesh,
                          const MeshingParameters& mparam,
-			 int retrynr)
+			 int retrynr,
+                         const STLParameters& stlparam)
 {
   static int timer1 = NgProfiler::CreateTimer ("STL surface meshing1");
   static int timer1a = NgProfiler::CreateTimer ("STL surface meshing1a");

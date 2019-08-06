@@ -705,7 +705,7 @@ int STLGeometry :: ProjectNearest(Point<3> & p3d) const
 
 	
 //Restrict local h due to curvature for make atlas
-void STLGeometry :: RestrictLocalHCurv(class Mesh & mesh, double gh)
+void STLGeometry :: RestrictLocalHCurv(class Mesh & mesh, double gh, const STLParameters& stlparam)
 {
   PushStatusF("Restrict H due to surface curvature");
 
@@ -810,7 +810,7 @@ void STLGeometry :: RestrictLocalHCurv(class Mesh & mesh, double gh)
 
 }
   //restrict local h due to near edges and due to outer chart distance
-void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh)
+void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParameters& stlparam)
 {
   
   //bei jedem Dreieck alle Nachbardreiecke vergleichen, und, fallskein Kante dazwischen,
@@ -1077,7 +1077,7 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh)
 	  if (multithread.terminate)
 	    {PopStatus(); return;}
 
-	  RestrictHChartDistOneChart(i, acttrigs, mesh, gh, 1., 0.);
+	  RestrictHChartDistOneChart(i, acttrigs, mesh, gh, 1., 0., stlparam);
 	}
       
       PopStatus();
@@ -1117,7 +1117,8 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh)
 }
 
 void STLGeometry :: RestrictHChartDistOneChart(int chartnum, NgArray<int>& acttrigs, 
-					       class Mesh & mesh, double gh, double fact, double minh)
+					       class Mesh & mesh, double gh, double fact, double minh,
+                                               const STLParameters& stlparam)
 {
   static int timer1 = NgProfiler::CreateTimer ("restrictH OneChart 1");
   static int timer2 = NgProfiler::CreateTimer ("restrictH OneChart 2");
@@ -1400,7 +1401,7 @@ int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, const Me
 	}
 
       success = 0;
-      int retval = STLSurfaceMeshing (*stlgeometry, *mesh, mparam);
+      int retval = STLSurfaceMeshing (*stlgeometry, *mesh, mparam, stlparam);
       if (retval == MESHING3_OK)
 	{
 	  PrintMessage(3,"Success !!!!");

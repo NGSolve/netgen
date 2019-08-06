@@ -520,7 +520,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
       // char key;
       // cin >> key;
       //calculate an estimate meshsize, not to produce too large outercharts, with factor 2 larger!
-      RestrictHChartDistOneChart(chartnum, chartdistacttrigs, mesh, h, 0.5, atlasminh);
+      RestrictHChartDistOneChart(chartnum, chartdistacttrigs, mesh, h, 0.5, atlasminh, stlparam);
       // NgProfiler::Print(stdout);
       // NgProfiler::StopTimer (timere2);      
       

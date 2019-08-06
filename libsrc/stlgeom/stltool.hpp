@@ -50,11 +50,12 @@ private:
 
   NgArray<twoint> olimit; //outer limit of outer chart
   NgArray<twoint> ilimit; //outer limit of inner chart
+  const STLParameters& stlparam;
 
 
 public:
   
-  STLChart(STLGeometry * ageometry, const STLParameters& stlparam);
+  STLChart(STLGeometry * ageometry, const STLParameters& astlparam);
   ~STLChart();
   void AddChartTrig(int i);
   void AddOuterTrig(int i);
@@ -274,7 +275,7 @@ public:
   void Print (ostream & ost) const;
 };
 
-DLL_HEADER extern STLParameters stlparam;
+// DLL_HEADER extern STLParameters stlparam;
 
 
 void STLMeshing (STLGeometry & geom,
@@ -285,7 +286,8 @@ void STLMeshing (STLGeometry & geom,
 
 int STLSurfaceMeshing (STLGeometry & geom,
                        Mesh & mesh,
-                       const MeshingParameters& mparam);
+                       const MeshingParameters& mparam,
+                       const STLParameters& stlpar);
 
 void STLSurfaceOptimization (STLGeometry & geom,
 			     Mesh & mesh,

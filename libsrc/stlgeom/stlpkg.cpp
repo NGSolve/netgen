@@ -22,6 +22,7 @@ namespace netgen
   DLL_HEADER extern shared_ptr<NetgenGeometry>  ng_geometry;
   DLL_HEADER extern shared_ptr<Mesh> mesh;
   DLL_HEADER extern MeshingParameters mparam;
+  DLL_HEADER extern STLParameters stlparam;
 
   static VisualSceneSTLGeometry vsstlgeom;
   static VisualSceneSTLMeshing vsstlmeshing;
@@ -527,7 +528,7 @@ namespace netgen
 	mesh -> SetLocalH (stlgeometry->GetBoundingBox().PMin() - Vec3d(10, 10, 10),
 			   stlgeometry->GetBoundingBox().PMax() + Vec3d(10, 10, 10),
 			   mparam.grading);
-	stlgeometry -> RestrictLocalH(*mesh, mparam.maxh);
+	stlgeometry -> RestrictLocalH(*mesh, mparam.maxh, stlparam);
 
 	if (stlparam.resthsurfmeshcurvenable)
 	  mesh -> CalcLocalHFromSurfaceCurvature (mparam.grading, 
