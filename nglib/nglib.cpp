@@ -30,6 +30,8 @@ namespace netgen {
    extern void MeshFromSpline2D (SplineGeometry2d & geometry,
                                  shared_ptr<Mesh> & mesh, 
                                  MeshingParameters & mp);
+   extern MeshingParameters mparam;
+   extern STLParameters stlparam;
 }
 
 
@@ -667,7 +669,7 @@ namespace nglib
         }
       */
 
-      STLMeshing (*stlgeometry, *me, mparam);
+      STLMeshing (*stlgeometry, *me, mparam, stlparam);
 
       stlgeometry->edgesfound = 1;
       stlgeometry->surfacemeshed = 0;

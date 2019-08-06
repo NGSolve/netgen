@@ -1298,7 +1298,7 @@ namespace netgen
     NgArray<MeshSizePoint> meshsize_points;
     
     void (*render_function)(bool) = NULL;
-    void Render(bool blocking = false)
+    void Render(bool blocking = false) const
     {
       if (render_function) 
         (*render_function)(blocking);

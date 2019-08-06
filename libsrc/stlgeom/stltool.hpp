@@ -278,17 +278,18 @@ DLL_HEADER extern STLParameters stlparam;
 
 
 void STLMeshing (STLGeometry & geom,
-		 class Mesh & mesh,
-                 const MeshingParameters& mparam);
+		 Mesh & mesh,
+                 const MeshingParameters& mparam,
+                 const STLParameters& stlpar);
 
 
 int STLSurfaceMeshing (STLGeometry & geom,
-                       class Mesh & mesh,
-                       MeshingParameters& mparam);
+                       Mesh & mesh,
+                       const MeshingParameters& mparam);
 
 void STLSurfaceOptimization (STLGeometry & geom,
-			     class Mesh & mesh,
-			     class MeshingParameters & mparam);
+			     Mesh & mesh,
+			     const MeshingParameters & mparam);
 
 
 

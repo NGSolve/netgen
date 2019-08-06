@@ -13,9 +13,8 @@
 namespace netgen
 {
 
-static void STLFindEdges (STLGeometry & geom,
-			  class Mesh & mesh,
-                          MeshingParameters& mparam)
+static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
+                          const MeshingParameters& mparam)
 {
   double h = mparam.maxh;
 
@@ -230,11 +229,11 @@ static void STLFindEdges (STLGeometry & geom,
 
 
 
-void STLSurfaceMeshing1 (STLGeometry & geom, class Mesh & mesh, MeshingParameters& mparam,
+void STLSurfaceMeshing1 (STLGeometry & geom, class Mesh & mesh, const MeshingParameters& mparam,
 			 int retrynr);
 
 
-int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, MeshingParameters& mparam)
+int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParameters& mparam)
 {
   PrintFnStart("Do Surface Meshing");
 
@@ -527,8 +526,8 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, MeshingParameters&
 
 
 void STLSurfaceMeshing1 (STLGeometry & geom,
-			 class Mesh & mesh,
-                         MeshingParameters& mparam,
+			 Mesh & mesh,
+                         const MeshingParameters& mparam,
 			 int retrynr)
 {
   static int timer1 = NgProfiler::CreateTimer ("STL surface meshing1");
@@ -742,8 +741,8 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 
 
 void STLSurfaceOptimization (STLGeometry & geom,
-			     class Mesh & mesh,
-			     MeshingParameters & mparam)
+			     Mesh & mesh,
+			     const MeshingParameters & mparam)
 {
   PrintFnStart("optimize STL Surface");
 

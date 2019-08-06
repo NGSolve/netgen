@@ -194,36 +194,28 @@ DLL_HEADER void ExportSTL(py::module & m)
                              MeshingParameters* pars, py::kwargs kwargs)
                          {
                            MeshingParameters mp;
-                           {
-                             py::gil_scoped_acquire aq;
+                           { py::gil_scoped_acquire aq;
                              STLParameters stlparam;
                              if(pars)
                              {
                                if(pars->geometrySpecificParameters.has_value() &&
                                   (pars->geometrySpecificParameters.type() == typeid(py::kwargs)))
                                {
-                                 py::gil_scoped_acquire aq;
-                                 py::kwargs mp_kwargs = any_cast<py::kwargs>(pars->geometrySpecificParameters);
+                                 auto mp_kwargs = any_cast<py::kwargs>(pars->geometrySpecificParameters);
                                  py::print("geometry specific kwargs:", mp_kwargs);
                                  CreateSTLParametersFromKwargs(stlparam, mp_kwargs);
                                  pars->geometrySpecificParameters.reset();
                                }
                                mp = *pars;
                              }
-                             CreateMPfromKwargs(mp, kwargs);
                              CreateSTLParametersFromKwargs(stlparam, kwargs);
-                             if(kwargs.size())
-                             {
-                               cout << "WARNING: Given meshing arguments that are ignored:";
-                               for(auto& key : kwargs)
-                                 py::print(key);
-                             }
+                             CreateMPfromKwargs(mp, kwargs); // this will throw if any kwargs are not passed
                              mp.geometrySpecificParameters = stlparam;
                            }
                            auto mesh = make_shared<Mesh>();
-                           SetGlobalMesh(mesh);
                            mesh->SetGeometry(geo);
                            ng_geometry = geo;
+                           SetGlobalMesh(mesh);
                            geo->GenerateMesh(mesh,mp);
                            return mesh;
                          }, py::arg("mp") = nullptr,

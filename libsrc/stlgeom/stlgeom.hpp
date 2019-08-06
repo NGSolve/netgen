@@ -40,7 +40,7 @@ namespace netgen
   }
   */
   
-  extern DLL_HEADER MeshingParameters mparam;
+// extern DLL_HEADER MeshingParameters mparam;
   
 
 
@@ -468,7 +468,8 @@ namespace netgen
 
 
 
-  extern int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
+extern int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, const MeshingParameters & mparam,
+                            const STLParameters& stlpar);
 
 
 }

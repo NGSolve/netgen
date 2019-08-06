@@ -80,7 +80,7 @@ elsizeweight: float = 0.2
 
 )delimiter";
 
-  inline void CreateMPfromKwargs(MeshingParameters& mp, py::kwargs kwargs)
+inline void CreateMPfromKwargs(MeshingParameters& mp, py::kwargs kwargs, bool throw_if_not_all_parsed=true)
   {
     if(kwargs.contains("optimize3d"))
       mp.optimize3d = py::cast<string>(kwargs.attr("pop")("optimize3d"));
@@ -165,6 +165,10 @@ elsizeweight: float = 0.2
     if(kwargs.contains("autozrefine"))
       mp.autozrefine = py::cast<bool>(kwargs.attr("pop")("autozrefine"));
     if(kwargs.size())
-      mp.geometrySpecificParameters = make_any<py::kwargs>(std::move(kwargs));
+    {
+      if(throw_if_not_all_parsed)
+        throw Exception(string("Not all kwargs given to GenerateMesh could be parsed:") + string(py::str(kwargs)));
+      mp.geometrySpecificParameters = kwargs;
+    }
   }
 } // namespace netgen

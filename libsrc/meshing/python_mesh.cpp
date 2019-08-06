@@ -1023,7 +1023,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   {
                     MeshingParameters mp;
                     if(other) mp = *other;
-                    CreateMPfromKwargs(mp, kwargs);
+                    CreateMPfromKwargs(mp, kwargs, false);
                     return mp;
                   }), py::arg("mp")=nullptr, meshingparameter_description.c_str())
     .def("__str__", &ToString<MP>)

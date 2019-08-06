@@ -1345,7 +1345,8 @@ void STLGeometry :: RestrictHChartDistOneChart(int chartnum, NgArray<int>& acttr
 }
 
 
-int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
+int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, const MeshingParameters & mparam,
+                     const STLParameters& stlparam)
 {
   if (mparam.perfstepsstart > mparam.perfstepsend) return 0;
 
@@ -1372,7 +1373,7 @@ int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, MeshingP
   
       //mesh->DeleteMesh();
  
-      STLMeshing (*stlgeometry, *mesh, mparam);
+      STLMeshing (*stlgeometry, *mesh, mparam, stlparam);
 
       stlgeometry->edgesfound = 1;
       stlgeometry->surfacemeshed = 0;
@@ -1471,13 +1472,14 @@ int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, MeshingP
 	      mesh -> LoadLocalMeshSize (mparam.meshsizefilename);	      
 	      mesh -> CalcLocalHFromSurfaceCurvature (mparam.grading, 
 						      stlparam.resthsurfmeshcurvfac);
-	      mparam.optimize2d = "cmsmSm";
-	      STLSurfaceOptimization (*stlgeometry, *mesh, mparam);
+              MeshingParameters mpar = mparam;
+	      mpar.optimize2d = "cmsmSm";
+	      STLSurfaceOptimization (*stlgeometry, *mesh, mpar);
 #ifdef STAT_STREAM
 	      (*statout) << GetTime() << " & ";
 #endif
 
-	      mparam.Render();
+	      mpar.Render();
 	    }
 	  stlgeometry->surfaceoptimized = 1;
 	}

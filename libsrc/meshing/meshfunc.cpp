@@ -12,10 +12,11 @@ namespace netgen
 
 
   // extern double teterrpow; 
-  MESHING3_RESULT MeshVolume (MeshingParameters & mp, Mesh& mesh3d)
+  MESHING3_RESULT MeshVolume (const MeshingParameters & c_mp, Mesh& mesh3d)
   {
     static Timer t("MeshVolume"); RegionTimer reg(t);
-    
+
+     MeshingParameters mp = c_mp; // copy mp to change them here
      int oldne;
      int meshed;
 
@@ -637,7 +638,7 @@ namespace netgen
 
 
 
-  MESHING3_RESULT OptimizeVolume (MeshingParameters & mp, 
+  MESHING3_RESULT OptimizeVolume (const MeshingParameters & mp, 
 				  Mesh & mesh3d)
     //				  const CSGeometry * geometry)
   {

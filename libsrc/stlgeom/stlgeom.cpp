@@ -14,14 +14,10 @@ int usechartnormal = 1;
 
 void STLMeshing (STLGeometry & geom,
 		 Mesh & mesh,
-                 const MeshingParameters& mparam)
+                 const MeshingParameters& mparam,
+                 const STLParameters& stlpar)
 {
   geom.Clear();
-  STLParameters stlpar = stlparam;
-  if(mparam.geometrySpecificParameters.has_value() && mparam.geometrySpecificParameters.type().name() == typeid(STLParameters).name())
-  {
-    stlpar = any_cast<STLParameters>(mparam.geometrySpecificParameters);
-  }
   geom.BuildEdges(stlpar);
   geom.MakeAtlas(mesh, mparam, stlpar);
   if (multithread.terminate) { return; }
@@ -101,7 +97,12 @@ void STLGeometry :: Save (string filename) const
 
 int STLGeometry :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
 {
-  return STLMeshingDummy (this, mesh, mparam);
+  STLParameters stlpar = stlparam;
+  if(mparam.geometrySpecificParameters.has_value() && mparam.geometrySpecificParameters.type().name() == typeid(STLParameters).name())
+  {
+    stlpar = any_cast<STLParameters>(mparam.geometrySpecificParameters);
+  }
+  return STLMeshingDummy (this, mesh, mparam, stlpar);
 }
 
 
