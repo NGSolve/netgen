@@ -7,10 +7,10 @@
 #include "archive.hpp"
 #include "flags.hpp"
 #include "ngcore_api.hpp"
+namespace py = pybind11;
 
 namespace ngcore
 {
-  namespace py = pybind11;
 
   template<typename T>
   Array<T> makeCArray(const py::object& obj)
