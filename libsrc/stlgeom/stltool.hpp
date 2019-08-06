@@ -275,8 +275,6 @@ public:
   void Print (ostream & ost) const;
 };
 
-// DLL_HEADER extern STLParameters stlparam;
-
 
 void STLMeshing (STLGeometry & geom,
 		 Mesh & mesh,
