@@ -3,11 +3,37 @@
 
 #include <pybind11/pybind11.h>
 
+#include "array.hpp"
 #include "archive.hpp"
-
+#include "flags.hpp"
+#include "ngcore_api.hpp"
 
 namespace ngcore
 {
+  namespace py = pybind11;
+
+  template<typename T>
+  Array<T> makeCArray(const py::object& obj)
+  {
+    Array<T> arr;
+    arr.SetAllocSize(py::len(obj));
+    if(py::isinstance<py::list>(obj))
+      for(auto& val : py::cast<py::list>(obj))
+        arr.Append(py::cast<T>(val));
+    else if(py::isinstance<py::tuple>(obj))
+      for(auto& val : py::cast<py::tuple>(obj))
+        arr.Append(py::cast<T>(val));
+    else
+      throw py::type_error("Cannot convert Python object to C Array");
+    return arr;
+  }
+  
+  void NGCORE_API SetFlag(Flags &flags, std::string s, py::object value);
+  // Parse python kwargs to flags
+  Flags NGCORE_API CreateFlagsFromKwArgs(py::object pyclass, const py::kwargs& kwargs, py::list info = py::list());
+
+  // ***************  Archiving functionality  **************
+  
     template<typename T>
     Archive& Archive :: Shallow(T& val)
     {
