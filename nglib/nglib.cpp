@@ -31,7 +31,7 @@ namespace netgen {
                                  shared_ptr<Mesh> & mesh, 
                                  MeshingParameters & mp);
    extern MeshingParameters mparam;
-   extern STLParameters stlparam;
+   DLL_HEADER extern STLParameters stlparam;
 }
 
 
