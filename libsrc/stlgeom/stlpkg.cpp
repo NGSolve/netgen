@@ -22,7 +22,7 @@ namespace netgen
   DLL_HEADER extern shared_ptr<NetgenGeometry>  ng_geometry;
   DLL_HEADER extern shared_ptr<Mesh> mesh;
   DLL_HEADER extern MeshingParameters mparam;
-  DLL_HEADER extern STLParameters stlparam;
+  extern STLParameters stlparam;
 
   static VisualSceneSTLGeometry vsstlgeom;
   static VisualSceneSTLMeshing vsstlmeshing;
