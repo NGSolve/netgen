@@ -198,13 +198,9 @@ DLL_HEADER void ExportSTL(py::module & m)
                            { py::gil_scoped_acquire aq;
                              if(pars)
                              {
-                               try
-                               {
-                                 auto mp_flags = any_cast<Flags>(pars->geometrySpecificParameters);
-                                 auto mp_kwargs = CreateDictFromFlags(mp_flags);
-                                 CreateSTLParametersFromKwargs(stlparam, mp_kwargs);
-                               }
-                               catch(std::bad_any_cast) {}
+                               auto mp_flags = pars->geometrySpecificParameters;
+                               auto mp_kwargs = CreateDictFromFlags(mp_flags);
+                               CreateSTLParametersFromKwargs(stlparam, mp_kwargs);
                                mp = *pars;
                              }
                              CreateSTLParametersFromKwargs(stlparam, kwargs);
