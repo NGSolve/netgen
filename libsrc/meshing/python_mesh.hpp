@@ -143,7 +143,7 @@ elsizeweight: float = 0.2
     if(kwargs.contains("baseelnp"))
       mp.baseelnp = py::cast<int>(kwargs["baseelnp"]);
     if(kwargs.contains("sloppy"))
-      mp.sloppy = py::cast<bool>(kwargs["sloppy"]);
+      mp.sloppy = py::cast<int>(kwargs["sloppy"]);
     if(kwargs.contains("badellimit"))
       mp.badellimit = py::cast<double>(kwargs["badellimit"]);
     if(kwargs.contains("check_impossible"))
