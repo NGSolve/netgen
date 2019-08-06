@@ -99,10 +99,6 @@ extern STLParameters stlparam;
 int STLGeometry :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
 {
   STLParameters stlpar = stlparam;
-  if(mparam.geometrySpecificParameters.has_value() && mparam.geometrySpecificParameters.type().name() == typeid(STLParameters).name())
-  {
-    stlpar = any_cast<STLParameters>(mparam.geometrySpecificParameters);
-  }
   return STLMeshingDummy (this, mesh, mparam, stlpar);
 }
 

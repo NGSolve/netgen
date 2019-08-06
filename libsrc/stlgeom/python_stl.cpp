@@ -194,8 +194,8 @@ DLL_HEADER void ExportSTL(py::module & m)
                              MeshingParameters* pars, py::kwargs kwargs)
                          {
                            MeshingParameters mp;
+                           STLParameters stlparam;
                            { py::gil_scoped_acquire aq;
-                             STLParameters stlparam;
                              if(pars)
                              {
                                try
@@ -203,20 +203,18 @@ DLL_HEADER void ExportSTL(py::module & m)
                                  auto mp_flags = any_cast<Flags>(pars->geometrySpecificParameters);
                                  auto mp_kwargs = CreateDictFromFlags(mp_flags);
                                  CreateSTLParametersFromKwargs(stlparam, mp_kwargs);
-                                 pars->geometrySpecificParameters.reset();
                                }
                                catch(std::bad_any_cast) {}
                                mp = *pars;
                              }
                              CreateSTLParametersFromKwargs(stlparam, kwargs);
                              CreateMPfromKwargs(mp, kwargs); // this will throw if any kwargs are not passed
-                             mp.geometrySpecificParameters = stlparam;
                            }
                            auto mesh = make_shared<Mesh>();
                            mesh->SetGeometry(geo);
                            ng_geometry = geo;
                            SetGlobalMesh(mesh);
-                           geo->GenerateMesh(mesh,mp);
+                           STLMeshingDummy(geo.get(), mesh, mp, stlparam);
                            return mesh;
                          }, py::arg("mp") = nullptr,
       py::call_guard<py::gil_scoped_release>(),

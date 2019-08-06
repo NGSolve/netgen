@@ -1270,7 +1270,7 @@ namespace netgen
     ///
     bool autozrefine = false;
 
-    any geometrySpecificParameters;
+    Flags geometrySpecificParameters;
     ///
     MeshingParameters ();
     ///

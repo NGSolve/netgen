@@ -184,14 +184,14 @@ namespace netgen
     STLGeometry();
     virtual ~STLGeometry();
 
-    void DoArchive(Archive& ar)
+    void DoArchive(Archive& ar) override
     {
       STLTopology::DoArchive(ar);
     }
 
     void Clear();
 
-    virtual void Save (string filename) const;
+    virtual void Save (string filename) const override;
 
 
 	DLL_HEADER void STLInfo(double* data);
@@ -330,8 +330,8 @@ namespace netgen
     ///
 
     ///ReadTriangle->STLTriangle, initialise some important variables, always after load!!!
-    virtual void InitSTLGeometry (const NgArray<STLReadTriangle> & readtrigs);
-    virtual void TopologyChanged(); //do some things, if topology changed!
+    virtual void InitSTLGeometry (const NgArray<STLReadTriangle> & readtrigs) override;
+    virtual void TopologyChanged() override; //do some things, if topology changed!
     int CheckGeometryOverlapping();
 
     //get NO edges per point
@@ -457,10 +457,9 @@ namespace netgen
 
     friend class MeshingSTLSurface;
 
-
-    virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
+    int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam) override;
     
-    virtual const Refinement & GetRefinement () const;
+    virtual const Refinement & GetRefinement () const override;
   };
  
 

@@ -230,7 +230,7 @@ DLL_HEADER extern STLDoctorParams stldoctor;
 
 
 // TODO change enable flag to optional parameters
-class STLParameters
+class DLL_HEADER STLParameters
 {
 public:
   /// angle for edge detection
