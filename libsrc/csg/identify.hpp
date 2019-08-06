@@ -123,7 +123,7 @@ namespace netgen
     int ref_levels_s2;
     ///
     double eps_n;
-    NgArray<double> slices;
+    Array<double> slices;
     /// used only for domain-local identification:
     NgArray<int> domain_surfaces;
     ///
@@ -154,7 +154,7 @@ namespace netgen
     virtual int IdentifyableCandidate (const SpecialPoint & sp1) const;
     virtual int ShortEdge (const SpecialPoint & sp1, const SpecialPoint & sp2) const;
     virtual int GetIdentifiedPoint (class Mesh & mesh, int pi1);
-    const NgArray<double> & GetSlices () const { return slices; }
+    const Array<double> & GetSlices () const { return slices; }
     virtual void IdentifyPoints (class Mesh & mesh);
     virtual void IdentifyFaces (class Mesh & mesh);
     virtual void BuildSurfaceElements (NgArray<class Segment> & segs,

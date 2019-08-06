@@ -786,7 +786,7 @@ namespace netgen
 
 		if(scan.GetToken() == '-' || scan.GetToken() == TOK_NUM)
 		  {
-		    NgArray<double> vals;
+		    Array<double> vals;
 		    vals.Append (ParseNumber(scan));
 		    while (scan.GetToken() == ',')
 		      {
@@ -794,28 +794,22 @@ namespace netgen
 			vals.Append (ParseNumber(scan));
 		      }
 		    ParseChar (scan, ']');
-		    flags.SetFlag (name.c_str(), vals);
+		    flags.SetFlag (name, vals);
 		  }
 		else
 		  { // string list
-		    NgArray<char*> vals;
-		    string val = scan.GetStringValue();
-		    vals.Append(new char[val.size()+1]);
-		    strcpy(vals.Last(),val.c_str());
+		    Array<string> vals;
+                    vals.Append(scan.GetStringValue());
 		    scan.ReadNext();
 
 		    while (scan.GetToken() == ',')
 		      {
 			scan.ReadNext();
-			val = scan.GetStringValue();
-			vals.Append(new char[val.size()+1]);
-			strcpy(vals.Last(),val.c_str());
+                        vals.Append(scan.GetStringValue());
 			scan.ReadNext();
 		      }
 		    ParseChar (scan, ']');
-		    flags.SetFlag (name.c_str(), vals);
-		    for(int i=0; i<vals.Size(); i++)
-		      delete [] vals[i];
+		    flags.SetFlag (name, vals);
 		  }
 	      }
 	    else if (scan.GetToken() == TOK_NUM)
@@ -908,7 +902,7 @@ namespace netgen
 
 		    if (flags.NumListFlagDefined ("col"))
 		      {
-			const NgArray<double> & col =
+			const Array<double> & col =
 			  flags.GetNumListFlag ("col");
 			tlo->SetRGB (col[0], col[1], col[2]);
 		      }
@@ -942,8 +936,8 @@ namespace netgen
 		    TopLevelObject * tlo = geom->GetTopLevelObject (tlonr);
 		    if (flags.NumListFlagDefined ("col"))
 		      {
-			const NgArray<double> & col = flags.GetNumListFlag ("col");
-			tlo->SetRGB (col.Get(1), col.Get(2), col.Get(3));
+			const auto& col = flags.GetNumListFlag ("col");
+			tlo->SetRGB (col[0], col[1], col[2]);
 		      }
 		    if (flags.GetDefineFlag ("transparent"))
 		      tlo->SetTransparent (1);
