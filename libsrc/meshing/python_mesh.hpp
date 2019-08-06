@@ -1,5 +1,9 @@
+#ifndef NETGEN_MESHING_PYTHON_MESH_HPP
+#define NETGEN_MESHING_PYTHON_MESH_HPP
 
 #include <pybind11/pybind11.h>
+
+#include <core/python_ngcore.hpp>
 #include "meshing.hpp"
 
 namespace netgen
@@ -168,7 +172,10 @@ inline void CreateMPfromKwargs(MeshingParameters& mp, py::kwargs kwargs, bool th
     {
       if(throw_if_not_all_parsed)
         throw Exception(string("Not all kwargs given to GenerateMesh could be parsed:") + string(py::str(kwargs)));
-      mp.geometrySpecificParameters = kwargs;
+      mp.geometrySpecificParameters = CreateFlagsFromKwArgs(kwargs);
     }
   }
 } // namespace netgen
+
+#endif // NETGEN_MESHING_PYTHON_MESH_HPP
+ 

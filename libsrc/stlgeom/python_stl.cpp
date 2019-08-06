@@ -32,7 +32,7 @@ edgecornerangle: float =
 
 )delimiter";
 
-void CreateSTLParametersFromKwargs(STLParameters& stlparam, py::kwargs kwargs)
+void CreateSTLParametersFromKwargs(STLParameters& stlparam, py::dict kwargs)
 {
   if(kwargs.contains("yangle"))
     stlparam.yangle = py::cast<double>(kwargs.attr("pop")("yangle"));
@@ -198,14 +198,14 @@ DLL_HEADER void ExportSTL(py::module & m)
                              STLParameters stlparam;
                              if(pars)
                              {
-                               if(pars->geometrySpecificParameters.has_value() &&
-                                  (pars->geometrySpecificParameters.type() == typeid(py::kwargs)))
+                               try
                                {
-                                 auto mp_kwargs = any_cast<py::kwargs>(pars->geometrySpecificParameters);
-                                 py::print("geometry specific kwargs:", mp_kwargs);
+                                 auto mp_flags = any_cast<Flags>(pars->geometrySpecificParameters);
+                                 auto mp_kwargs = CreateDictFromFlags(mp_flags);
                                  CreateSTLParametersFromKwargs(stlparam, mp_kwargs);
                                  pars->geometrySpecificParameters.reset();
                                }
+                               catch(std::bad_any_cast) {}
                                mp = *pars;
                              }
                              CreateSTLParametersFromKwargs(stlparam, kwargs);
