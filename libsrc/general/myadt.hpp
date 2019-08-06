@@ -34,7 +34,6 @@ namespace netgen
 
 
 #include "bitarray.hpp"
-#include "flags.hpp"
 #include "spbita2d.hpp"
 
 #include "seti.hpp"

@@ -509,7 +509,7 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
             try
             {
                 int n = py::len(aslices);
-                NgArray<double> slices(n);
+                Array<double> slices(n);
                 for(int i=0; i<n; i++)
                 {
                     slices[i]= py::extract<double>(aslices[i])();

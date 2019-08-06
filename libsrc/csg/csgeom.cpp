@@ -752,7 +752,7 @@ namespace netgen
 
     if (flags.StringListFlagDefined ("bcname"))
       {
-	const NgArray<char*> & bcname = flags.GetStringListFlag("bcname");
+	auto& bcname = flags.GetStringListFlag("bcname");
 
 	Polyhedra * polyh;
 	if(solid->S1())
@@ -806,7 +806,7 @@ namespace netgen
    
     if (flags.NumListFlagDefined ("bc"))
       {
-	const NgArray<double> & bcnum = flags.GetNumListFlag("bc");
+	const auto& bcnum = flags.GetNumListFlag("bc");
 
 	Polyhedra * polyh;
 	if(solid->S1())
