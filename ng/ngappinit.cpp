@@ -250,7 +250,7 @@ int main(int argc, char ** argv)
           exit (1);
         }
 
-
+      /*
       // lookup user file formats and insert into format list:
       NgArray<const char*> userformats;
       NgArray<const char*> extensions;
@@ -262,13 +262,13 @@ int main(int argc, char ** argv)
       for (int i = 1; i <= userformats.Size(); i++)
 	{
 	  fstr << ".ngmenu.file.filetype add radio -label \"" 
-	       << userformats.Get(i) << "\" -variable exportfiletype\n";
+	       << userformats.Get(i) << "\" -variable exportfiletype -command { .ngmenu.file invoke \"Export Mesh...\" } \n";
 	  fstr << "lappend meshexportformats { {" << userformats.Get(i) << "} {" << extensions.Get(i) << "} }\n";
 	}
 
-      Tcl_Eval (myinterp, (char*)fstr.str().c_str());
+        Tcl_Eval (myinterp, (char*)fstr.str().c_str());
       Tcl_SetVar (myinterp, "exportfiletype", exportft, 0);
-
+      */
 
 #ifdef SOCKETS
       Ng_ServerSocketManagerRun();

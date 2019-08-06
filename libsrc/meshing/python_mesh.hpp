@@ -143,7 +143,7 @@ inline void CreateMPfromKwargs(MeshingParameters& mp, py::kwargs kwargs, bool th
     if(kwargs.contains("baseelnp"))
       mp.baseelnp = py::cast<int>(kwargs.attr("pop")("baseelnp"));
     if(kwargs.contains("sloppy"))
-      mp.sloppy = py::cast<bool>(kwargs.attr("pop")("sloppy"));
+      mp.sloppy = py::cast<int>(kwargs.attr("pop")("sloppy"));
     if(kwargs.contains("badellimit"))
       mp.badellimit = py::cast<double>(kwargs.attr("pop")("badellimit"));
     if(kwargs.contains("check_impossible"))

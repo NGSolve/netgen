@@ -346,7 +346,21 @@ namespace netgen
   }
 
 
-
+  int Ng_GetExportFormats (ClientData clientData,
+                           Tcl_Interp * interp,
+                           int argc, tcl_const char *argv[])
+  {
+    NgArray<const char*> userformats;
+    NgArray<const char*> extensions;
+    RegisterUserFormats (userformats, extensions);
+    
+    ostringstream fstr;
+    for (int i = 1; i <= userformats.Size(); i++)
+      fstr << "{ {" << userformats.Get(i) << "} {" << extensions.Get(i) << "} }\n";
+    
+    Tcl_SetResult (interp, const_cast<char*>(fstr.str().c_str()), TCL_VOLATILE);
+    return TCL_OK;
+  }
 
 
   int Ng_ExportMesh (ClientData clientData,
@@ -1249,6 +1263,28 @@ namespace netgen
 
 
 
+  int Ng_SetCommandLineParameter  (ClientData clientData,
+				   Tcl_Interp * interp,
+				   int argc, tcl_const char *argv[])
+  {
+    if (argc != 2)
+      {
+	Tcl_SetResult (interp, (char*)"Ng_SetCommandLineParameter needs 1 parameter",
+                       TCL_STATIC);
+	return TCL_ERROR;
+      }
+
+    if (argv[1][0] == '-')
+      parameters.SetCommandLineFlag (argv[1]);
+    else
+      {
+        if (strstr(argv[1], ".py"))
+          parameters.SetFlag ("py", argv[1]);
+        else
+          parameters.SetFlag ("geofile", argv[1]);
+      }
+    return TCL_OK;
+  }
 
 
   int Ng_GetCommandLineParameter  (ClientData clientData,
@@ -2815,6 +2851,10 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 		       (ClientData)NULL,
 		       (Tcl_CmdDeleteProc*) NULL);
 
+    Tcl_CreateCommand (interp, "Ng_GetExportFormats", Ng_GetExportFormats,
+		       (ClientData)NULL,
+		       (Tcl_CmdDeleteProc*) NULL);
+
     Tcl_CreateCommand (interp, "Ng_ExportMesh", Ng_ExportMesh,
 		       (ClientData)NULL,
 		       (Tcl_CmdDeleteProc*) NULL);
@@ -3011,6 +3051,11 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 		       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_SetDebugParameters", Ng_SetDebugParameters,
+		       (ClientData)NULL,
+		       (Tcl_CmdDeleteProc*) NULL);
+
+    Tcl_CreateCommand (interp, "Ng_SetCommandLineParameter",
+		       Ng_SetCommandLineParameter,
 		       (ClientData)NULL,
 		       (Tcl_CmdDeleteProc*) NULL);
 

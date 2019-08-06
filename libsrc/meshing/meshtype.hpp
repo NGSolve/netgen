@@ -1246,7 +1246,7 @@ namespace netgen
     /// if non-zero, baseelement must have baseelnp points
     int baseelnp = 0;        
     /// quality tolerances are handled less careful
-    bool sloppy = true;
+    int sloppy = 1;
   
     /// limit for max element angle (150-180)
     double badellimit = 175;

@@ -55,7 +55,7 @@ namespace ngcore
                     int ind, int imin, int imax) : Exception("")
       {
         std::stringstream str;
-        str << where << ": index " << ind << " out of range [" << imin << "," << imax << "]\n";
+        str << where << ": index " << ind << " out of range [" << imin << "," << imax << ")\n";
         Append (str.str());
       }
 
@@ -80,9 +80,9 @@ namespace ngcore
 #define NG_EXCEPTION(s) ngcore::Exception(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t"+std::string(s))
 
 #ifdef NETGEN_ENABLE_CHECK_RANGE
-#define NETGEN_CHECK_RANGE(value, min, max) \
-  { if ((value)<(min) ||  (value)>=(max)) \
-      throw ngcore::RangeException(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t", (value), (min), (max)); }
+#define NETGEN_CHECK_RANGE(value, min, max_plus_one) \
+  { if ((value)<(min) ||  (value)>=(max_plus_one)) \
+      throw ngcore::RangeException(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t", (value), (min), (max_plus_one)); }
 #else // NETGEN_ENABLE_CHECK_RANGE
 #define NETGEN_CHECK_RANGE(value, min, max)
 #endif // NETGEN_ENABLE_CHECK_RANGE
