@@ -389,12 +389,12 @@ namespace netgen
 		edge.Sort();
 		if (!refedges.Used(edge))
 		  {
-		    const NgArray<double> & slices = csid->GetSlices();
+		    const auto& slices = csid->GetSlices();
 		    //(*testout) << "idnr " << idnr << " i " << i << endl;
 		    //(*testout) << "slices " << slices << endl;
-		    double slicefac = slices.Get(slicenr);
+		    double slicefac = slices[slicenr-1];
 		    double slicefaclast = 
-		      (slicenr == slices.Size()) ? 1 : slices.Get(slicenr+1);
+		      (slicenr == slices.Size()) ? 1 : slices[slicenr];
 		    
 		    Point3d np = p1 + (slicefac / slicefaclast) * (p2-p1);
 		    //(*testout) << "slicenr " << slicenr << " slicefac " << slicefac << " quot " << (slicefac / slicefaclast) << " np " << np << endl;

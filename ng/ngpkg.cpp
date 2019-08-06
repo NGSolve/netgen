@@ -1302,7 +1302,7 @@ namespace netgen
 
     if (parameters.StringFlagDefined (argv[1]))
       Tcl_SetResult (interp,
-		     (char*)parameters.GetStringFlag (argv[1], NULL), TCL_STATIC);
+		     (char*)parameters.GetStringFlag (argv[1], NULL).c_str(), TCL_STATIC);
     else if (parameters.NumFlagDefined (argv[1]))
       {
 	sprintf (buf, "%lf", parameters.GetNumFlag (argv[1], 0));

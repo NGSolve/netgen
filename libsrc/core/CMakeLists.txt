@@ -3,11 +3,16 @@ add_library(ngcore SHARED
   archive.cpp
   localheap.cpp
   logging.cpp
+  flags.cpp
   paje_trace.cpp
   profiler.cpp
   taskmanager.cpp
   utils.cpp
   )
+
+if(USE_PYTHON)
+  target_sources(ngcore PRIVATE python_ngcore.cpp)
+endif(USE_PYTHON)
 
 target_compile_definitions(ngcore PRIVATE NGCORE_EXPORTS)
 if(NOT WIN32)
@@ -43,7 +48,8 @@ target_link_libraries(ngcore PUBLIC netgen_mpi PRIVATE ${CMAKE_THREAD_LIBS_INIT}
 
 install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp logging.hpp
   exception.hpp symboltable.hpp paje_trace.hpp utils.hpp profiler.hpp mpi_wrapper.hpp
-  array.hpp taskmanager.hpp concurrentqueue.h localheap.hpp python_ngcore.hpp
+  array.hpp taskmanager.hpp concurrentqueue.h localheap.hpp python_ngcore.hpp flags.hpp
+  xbool.hpp
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/core COMPONENT netgen_devel)
 
 if(ENABLE_CPP_CORE_GUIDELINES_CHECK)
@@ -51,7 +57,7 @@ if(ENABLE_CPP_CORE_GUIDELINES_CHECK)
 endif(ENABLE_CPP_CORE_GUIDELINES_CHECK)
 
 if(USE_PYTHON)
-  pybind11_add_module(pyngcore SHARED python_ngcore.cpp)
+  pybind11_add_module(pyngcore SHARED python_ngcore_export.cpp)
   target_link_libraries(pyngcore PUBLIC ngcore ${PYTHON_LIBRARIES})
   set_target_properties(pyngcore PROPERTIES INSTALL_RPATH "${NG_RPATH_TOKEN}/${NETGEN_PYTHON_RPATH}")
   install(TARGETS pyngcore DESTINATION ${NG_INSTALL_DIR_PYTHON} COMPONENT netgen)

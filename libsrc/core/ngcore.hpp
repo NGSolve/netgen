@@ -4,6 +4,7 @@
 #include "archive.hpp"
 #include "array.hpp"
 #include "exception.hpp"
+#include "flags.hpp"
 #include "localheap.hpp"
 #include "logging.hpp"
 #include "mpi_wrapper.hpp"
@@ -11,5 +12,6 @@
 #include "symboltable.hpp"
 #include "taskmanager.hpp"
 #include "version.hpp"
+#include "xbool.hpp"
 
 #endif // NETGEN_CORE_NGCORE_HPP

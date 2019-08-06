@@ -24,7 +24,7 @@ DLL_HEADER void ImportSolution2 (const char * filename)
   char buf[100], name[1000];
   int i, size, comps, order;
   bool iscomplex;
-  const char * type;
+  std::string type;
   Flags flags;
 
   while (1)
@@ -83,19 +83,19 @@ DLL_HEADER void ImportSolution2 (const char * filename)
 	  soldata.soltype = NG_SOLUTION_NODAL;
           soldata.draw_surface = 1;
           soldata.draw_volume = 1;
-	  if (strcmp (type, "element") == 0)
+	  if (type == "element")
             {
               soldata.soltype = NG_SOLUTION_ELEMENT;
               soldata.draw_surface = 0;
             }
-	  if (strcmp (type, "surfaceelement") == 0)
+	  if (type == "surfaceelement")
             {
               soldata.soltype = NG_SOLUTION_SURFACE_ELEMENT;
               soldata.draw_volume = 0;
             }
-	  if (strcmp (type, "noncontinuous") == 0)
+	  if (type == "noncontinuous")
 	    soldata.soltype = NG_SOLUTION_NONCONTINUOUS;
-	  if (strcmp (type, "surfacenoncontinuous") == 0)
+	  if (type == "surfacenoncontinuous")
 	    soldata.soltype = NG_SOLUTION_SURFACE_NONCONTINUOUS;
 
 	  Ng_SetSolutionData (&soldata);
