@@ -11,10 +11,6 @@ namespace netgen
   Mesh :: Mesh ()
     : topology(*this), surfarea(*this)
   {
-    // volelements.SetName ("vol elements");
-    // surfelements.SetName ("surf elements");
-    // points.SetName ("meshpoints");
-
     boundaryedges = NULL;
     surfelementht = NULL; 
     segmentht = NULL;
@@ -29,7 +25,6 @@ namespace netgen
     numvertices = -1;
     dimension = 3;
 
-    // topology = new MeshTopology (*this);
     curvedelems = new CurvedElements (*this);
     clusters = new AnisotropicClusters (*this);
     ident = new Identifications (*this);
@@ -53,14 +48,12 @@ namespace netgen
 
   Mesh :: ~Mesh()
   {
-    // cout << "******************** deleting Mesh **********" << endl;
     delete lochfunc;
     delete boundaryedges;
     delete surfelementht;
     delete segmentht;
     delete curvedelems;
     delete clusters;
-    // delete topology;
     delete ident;
     delete elementsearchtree;
     delete coarsemesh;
@@ -93,7 +86,6 @@ namespace netgen
   {
     dimension = mesh2.dimension;
     points = mesh2.points;
-    // eltyps = mesh2.eltyps;
     segments = mesh2.segments;
     surfelements = mesh2.surfelements;
     volelements = mesh2.volelements;
@@ -149,8 +141,6 @@ namespace netgen
 
     delete ident;
     ident = new Identifications (*this);
-    // delete topology;
-    // topology = new MeshTopology (*this);
     topology = MeshTopology (*this);
     delete curvedelems;
     curvedelems = new CurvedElements (*this);
@@ -175,10 +165,14 @@ namespace netgen
 
   void Mesh :: ClearSurfaceElements()
   { 
-    surfelements.SetSize(0); 
+    surfelements.SetSize(0);
+    /*
     for (int i = 0; i < facedecoding.Size(); i++)
       facedecoding[i].firstelement = -1;
-
+    */
+    for (auto & fd : facedecoding)
+      fd.firstelement = -1;
+    
     timestamp = NextTimeStamp();
   }
 
@@ -187,19 +181,6 @@ namespace netgen
   PointIndex Mesh :: AddPoint (const Point3d & p, int layer)
   { 
     return AddPoint (p, layer, INNERPOINT);
-    /*
-    NgLock lock(mutex);
-    lock.Lock();
-
-    timestamp = NextTimeStamp();
-
-    PointIndex pi = points.End();
-    points.Append ( MeshPoint (p, layer, INNERPOINT) ); 
-
-    lock.UnLock();
-
-    return pi;
-    */
   }
 
   PointIndex Mesh :: AddPoint (const Point3d & p, int layer, POINTTYPE type)
@@ -216,41 +197,6 @@ namespace netgen
 
     return pi;
   }
-
-  /*
-#ifdef PARALLEL
-  PointIndex Mesh :: AddPoint (const Point3d & p, bool isghost,  int layer)
-  { 
-    NgLock lock(mutex);
-    lock.Lock();
-
-    timestamp = NextTimeStamp();
-
-    PointIndex pi = points.Size() + PointIndex::BASE;
-    points.Append ( MeshPoint (p, layer, INNERPOINT) ); 
-
-    lock.UnLock();
-
-    return pi;
-  }
-
-  PointIndex Mesh :: AddPoint (const Point3d & p, bool isghost, int layer, POINTTYPE type)
-  { 
-    NgLock lock(mutex);
-    lock.Lock();
-
-    timestamp = NextTimeStamp();
-
-    PointIndex pi = points.Size() + PointIndex::BASE;
-    points.Append ( MeshPoint (p, layer, type) ); 
-
-    lock.UnLock();
-
-    return pi;
-  }
-
-#endif
-  */
 
 
   SegmentIndex Mesh :: AddSegment (const Segment & s)
@@ -306,32 +252,21 @@ namespace netgen
     for (int i = 1; i < el.GetNP(); i++)
       if (el[i] > maxn) maxn = el[i];
 
-    maxn += 1-PointIndex::BASE;
-
     /*
-      if (maxn > ptyps.Size())
-      {
-      int maxo = ptyps.Size();
-      ptyps.SetSize (maxn);
-      for (i = maxo+PointIndex::BASE; 
-      i < maxn+PointIndex::BASE; i++)
-      ptyps[i] = INNERPOINT;
-
-      }
-    */
+    maxn += 1-PointIndex::BASE;
     if (maxn <= points.Size())
       {
         for (int i = 0; i < el.GetNP(); i++)
           if (points[el[i]].Type() > SURFACEPOINT)
             points[el[i]].SetType(SURFACEPOINT);
       }
-    /*
-      else
-      {
-      cerr << "surf points nrs > points.Size" << endl;      
-      }
     */
+    if (maxn < points.End())
+      for (PointIndex pi : el.PNums())
+        if (points[pi].Type() > SURFACEPOINT)
+          points[pi].SetType(SURFACEPOINT);
 
+    
     SurfaceElementIndex si = surfelements.Size();
     surfelements.Append (el); 
 
@@ -387,12 +322,14 @@ namespace netgen
     NgLock lock(mutex);
     lock.Lock();
 
+    /*
     int maxn = el[0];
     for (int i = 1; i < el.GetNP(); i++)
       if (el[i] > maxn) maxn = el[i];
 
     maxn += 1-PointIndex::BASE;
-
+    */
+    
     /*
       if (maxn > ptyps.Size())
       {
@@ -494,8 +431,7 @@ namespace netgen
 
     outfile << GetNSE() << "\n";
 
-    SurfaceElementIndex sei;
-    for (sei = 0; sei < GetNSE(); sei++)
+    for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
       {
         if ((*this)[sei].GetIndex())
           {
@@ -777,9 +713,11 @@ namespace netgen
     */
 
     int cnt_sing = 0;
-    for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
-      if ((*this)[pi].Singularity()>=1.) cnt_sing++;
-
+    // for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+    // if ((*this)[pi].Singularity()>=1.) cnt_sing++;
+    for (auto & p : points)
+      if (p.Singularity() >= 1.) cnt_sing++;
+      
     if (cnt_sing)
       {
         outfile << "singular_points" << endl << cnt_sing << endl;
@@ -1722,16 +1660,24 @@ namespace netgen
     segmentht = new INDEX_2_CLOSED_HASHTABLE<int> (3*GetNSeg() + 1);
 
     if (dimension == 3)
+      /*
     for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
       {
         const Element2d & sel = surfelements[sei];
+      */
+      for (const Element2d & sel : surfelements)
+        {
         if (sel.IsDeleted()) continue;
 
         int si = sel.GetIndex();
 
+        /*
         for (int j = 0; j < sel.GetNP(); j++)
           {
             PointIndex pi = sel[j];
+        */
+        for (PointIndex pi : sel.PNums())
+          {
             if (!surfacesonnode[pi].Contains(si))
               surfacesonnode.Add (pi, si);
             /*
@@ -1783,9 +1729,13 @@ namespace netgen
 
     if (dimension == 3)
       {
+        /*
         for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
           points[pi].SetType (INNERPOINT);
-
+        */
+        for (auto & p : points)
+          p.SetType (INNERPOINT);
+        
         if (GetNFD() == 0) 
           {
             for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
@@ -1820,9 +1770,13 @@ namespace netgen
           }
       }
 
+    /*
     for (int i = 0; i < segments.Size(); i++)
       {
         const Segment & seg = segments[i];
+    */
+    for (const Segment & seg : segments)
+      {
         for (int j = 1; j <= 2; j++)
           {
             PointIndex hi = (j == 1) ? seg[0] : seg[1];
