@@ -53,8 +53,8 @@ namespace netgen
   Segment :: Segment() 
     : is_curved(false)
   {
-    pnums[0] = -1;
-    pnums[1] = -1; 
+    pnums[0] = PointIndex::INVALID;
+    pnums[1] = PointIndex::INVALID;
     edgenr = -1;
 
     singedge_left = 0.;
@@ -69,7 +69,7 @@ namespace netgen
 
     surfnr1 = -1;
     surfnr2 = -1;
-    pnums[2] = -1;
+    pnums[2] = PointIndex::INVALID;
     meshdocval = 0;
     /*
       geominfo[0].trignum=-1; 

@@ -55,8 +55,8 @@ namespace netgen
     selface = -1;
     selelement = -1;
     locpi = 1;
-    selpoint = -1;
-    selpoint2 = -1;
+    selpoint = PointIndex::INVALID;
+    selpoint2 = PointIndex::INVALID;
     seledge = -1;
 
     minh = 0.0;

@@ -1326,7 +1326,7 @@ namespace netgen
 
     // generate initial point
     p = edgepoints.Get(1);
-    lastpi = -1;
+    lastpi = PointIndex::INVALID;
 
     /*
     for (pi = PointIndex::BASE; 
@@ -1368,7 +1368,7 @@ namespace netgen
 	np(1) = (1-lam) * edgepoints.Get(j-1)(1) + lam * edgepoints.Get(j)(1);
 	np(2) = (1-lam) * edgepoints.Get(j-1)(2) + lam * edgepoints.Get(j)(2);
       
-	thispi = -1;
+        thispi = PointIndex::INVALID;
 	if (i == ne)
 	  {
 	    /*

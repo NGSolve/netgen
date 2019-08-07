@@ -81,7 +81,7 @@ namespace netgen
     transp = 0.3;
     locviewer = 0;
     showstltrias = 0;
-    centerpoint = 0;
+    centerpoint = PointIndex::INVALID;
     usedispllists = 1;
     strcpy (selectvisual, "cross");
 

@@ -590,7 +590,7 @@ int AdFront3 :: GetLocals (int fstind,
     for (j = 1; j <= locfaces.Get(i).GetNP(); j++)
       {
 	PointIndex pi = locfaces.Get(i).PNum(j);
-	invpindex[pi] = -1;
+        invpindex[pi] = PointIndex::INVALID;
       }
 
   for (i = 1; i <= locfaces.Size(); i++)

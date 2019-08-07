@@ -418,7 +418,7 @@ namespace netgen
 	list.DeleteElement (celind);
 	  
 	for (int k = 0; k < 4; k++)
-	  tempels.Elem(celind)[k] = -1;
+        tempels.Elem(celind)[k] = PointIndex::INVALID;
         
         tettree.DeleteElement (celind);
 	freelist.Append (celind);
