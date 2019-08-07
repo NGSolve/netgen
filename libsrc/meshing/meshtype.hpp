@@ -153,7 +153,7 @@ namespace netgen
   {
     int i;
   public:
-    class t_invalid { };
+    class t_invalid { public: constexpr t_invalid() = default; };
     static constexpr t_invalid INVALID;
     
     PointIndex () = default;
@@ -170,7 +170,7 @@ namespace netgen
         // throw Exception("illegal PointIndex, use PointIndex::INVALID instead");
 #endif
     }
-    PointIndex (t_invalid inv) : i(PointIndex::BASE-1) { ; }
+    constexpr PointIndex (t_invalid inv) : i(PointIndex::BASE-1) { ; }
     // PointIndex & operator= (const PointIndex &ai) { i = ai.i; return *this; }
     operator int () const { return i; }
     PointIndex operator++ (int) { PointIndex hi(*this); i++; return hi; }
