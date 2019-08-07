@@ -153,13 +153,24 @@ namespace netgen
   {
     int i;
   public:
+    class t_invalid { };
+    static constexpr t_invalid INVALID;
+    
     PointIndex () = default;
     PointIndex (const PointIndex&) = default;
     PointIndex (PointIndex &&) = default;
     PointIndex & operator= (const PointIndex&) = default;
     PointIndex & operator= (PointIndex&&) = default;
      
-    PointIndex (int ai) : i(ai) { ; }
+    PointIndex (int ai) : i(ai)
+    {
+#ifdef DEBUG
+      if (ai < PointIndex::BASE)
+        cout << "illegal PointIndex, use PointIndex::INVALID instead" << endl;
+        // throw Exception("illegal PointIndex, use PointIndex::INVALID instead");
+#endif
+    }
+    PointIndex (t_invalid inv) : i(PointIndex::BASE-1) { ; }
     // PointIndex & operator= (const PointIndex &ai) { i = ai.i; return *this; }
     operator int () const { return i; }
     PointIndex operator++ (int) { PointIndex hi(*this); i++; return hi; }

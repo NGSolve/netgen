@@ -533,7 +533,8 @@ namespace netgen
 
     NgArray<Vec<3>,PointIndex::BASE> normals(np);
 
-    for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End(); pi++)
+    // for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End(); pi++)
+    for (PointIndex pi : mesh.Points().Range())
       {
 	if (elementsonnode[pi].Size())
 	  {

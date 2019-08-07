@@ -576,7 +576,8 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
   static Timer t("MeshOptimize3d::SwapImprove"); RegionTimer reg(t);
   static Timer tloop("MeshOptimize3d::SwapImprove loop");
   
-  PointIndex pi3(0), pi4(0), pi5(0), pi6(0);
+  PointIndex pi3(PointIndex::INVALID), pi4(PointIndex::INVALID),
+    pi5(PointIndex::INVALID), pi6(PointIndex::INVALID);
   int cnt = 0;
 
   Element el21(TET), el22(TET), el31(TET), el32(TET), el33(TET);
@@ -1178,6 +1179,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 		}
 	    }
 
+          // if (goal == OPT_QUALITY)
 	  if (nsuround >= 5) 
 	    {
 	      Element hel(TET);
@@ -1209,7 +1211,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 
 	      
 	      // suroundpts.SetSize (nsuround);
-              suroundpts = -17;
+              suroundpts = PointIndex::INVALID;
 	      suroundpts[0] = pi3;
 	      suroundpts[1] = pi4;
 

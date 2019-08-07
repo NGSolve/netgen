@@ -63,11 +63,11 @@ int Meshing3 :: ApplyRules
  )
 
 {
-  static Timer t("ruler3 - all"); RegionTimer reg(t);
-  static Timer tstart("ruler3 - rule start");   
-  static Timer tloop("ruler3 - rule loop"); 
+  // static Timer t("ruler3 - all"); RegionTimer reg(t);
+  // static Timer tstart("ruler3 - rule start");   
+  // static Timer tloop("ruler3 - rule loop"); 
 
-  tstart.Start();
+  // tstart.Start();
   float err, minerr, teterr, minteterr;
   char ok, found, hc;
   // vnetrule * rule;
@@ -224,8 +224,8 @@ int Meshing3 :: ApplyRules
 
 
   // check each rule:
-  tstart.Stop();
-  tloop.Start();
+  // tstart.Stop();
+  // tloop.Start();
   for (int ri = 1; ri <= rules.Size(); ri++)
     {
       int base = (lfaces[0].GetNP() == 3) ? 100 : 200;
@@ -1115,7 +1115,7 @@ int Meshing3 :: ApplyRules
       if (loktestmode)
 	(*testout) << "end rule" << endl;
     }
-  tloop.Stop();
+  // tloop.Stop();
   
   if (found)
     {
