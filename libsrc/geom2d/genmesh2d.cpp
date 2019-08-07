@@ -480,7 +480,7 @@ namespace netgen
           
           NgArray<PointIndex, PointIndex::BASE> nextpi(bnp);
           NgArray<int, PointIndex::BASE> si1(bnp), si2(bnp);
-          PointIndex firstpi;
+          // PointIndex firstpi;
           
           nextpi = -1;
           si1 = -1;

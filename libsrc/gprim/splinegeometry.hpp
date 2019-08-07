@@ -30,7 +30,7 @@ namespace netgen
     NgArray < SplineSeg<D>* > splines;
 
     SplineGeometry() : geompoints{}, splines{} { ; }
-    DLL_HEADER ~SplineGeometry();
+    virtual DLL_HEADER ~SplineGeometry();
 
     DLL_HEADER int Load (const NgArray<double> & raw_data, const int startpos = 0);
 

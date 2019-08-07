@@ -102,7 +102,7 @@ namespace netgen
   }
 
 
-  void Refinement2d :: ProjectToSurface (Point<3> & p, int surfi, const PointGeomInfo & /* gi */) const
+  void Refinement2d :: ProjectToSurface (Point<3> & p, int surfi, PointGeomInfo & /* gi */) const
   {
     p(2) = 0;
   }

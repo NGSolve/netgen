@@ -23,25 +23,25 @@ namespace netgen
 			       int surfi, 
 			       const PointGeomInfo & gi1, 
 			       const PointGeomInfo & gi2,
-			       Point<3> & newp, PointGeomInfo & newgi) const;
+			       Point<3> & newp, PointGeomInfo & newgi) const override;
 
     virtual void PointBetween (const Point<3> & p1, const Point<3> & p2, double secpoint,
 			       int surfi1, int surfi2, 
 			       const EdgePointGeomInfo & ap1, 
 			       const EdgePointGeomInfo & ap2,
-			       Point<3> & newp, EdgePointGeomInfo & newgi) const;
+			       Point<3> & newp, EdgePointGeomInfo & newgi) const override;
 
 
     virtual Vec<3> GetTangent (const Point<3> & p, int surfi1, int surfi2,
-			       const EdgePointGeomInfo & ap1) const;
+			       const EdgePointGeomInfo & ap1) const override;
 
     virtual Vec<3> GetNormal (const Point<3> & p, int surfi1, 
-			      const PointGeomInfo & gi) const;
+			      const PointGeomInfo & gi) const override;
 
-    virtual void ProjectToSurface (Point<3> & p, int surfi, const PointGeomInfo & /* gi */) const;
+    virtual void ProjectToSurface (Point<3> & p, int surfi, PointGeomInfo & /* gi */) const override;
 
     virtual void ProjectToEdge (Point<3> & p, int surfi1, int surfi2, 
-				const EdgePointGeomInfo & egi) const;			     
+				const EdgePointGeomInfo & egi) const override;
   };
 
 
