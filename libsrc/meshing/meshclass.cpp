@@ -3367,8 +3367,9 @@ namespace netgen
           hpoints.Append (points[pi]);
         }
       else
-        op2np[pi] = -1;
-
+        {
+          op2np[pi].Invalidate(); //  = -1;
+        }
 
 
     points.SetSize(0);
