@@ -154,7 +154,7 @@ namespace netgen
     int i;
   public:
     class t_invalid { public: constexpr t_invalid() = default; };
-    static constexpr t_invalid INVALID;
+    static constexpr t_invalid INVALID{};
     
     PointIndex () = default;
     PointIndex (const PointIndex&) = default;
