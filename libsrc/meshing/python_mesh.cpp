@@ -1019,17 +1019,14 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   typedef MeshingParameters MP;
   auto mp = py::class_<MP> (m, "MeshingParameters")
     .def(py::init<>())
-    .def(py::init([](py::kwargs kwargs)
+            .def(py::init([](MeshingParameters* other, py::kwargs kwargs)
                   {
                     MeshingParameters mp;
-                    CreateMPfromKwargs(mp, kwargs);
+                    if(other) mp = *other;
+                    CreateMPfromKwargs(mp, kwargs, false);
                     return mp;
-                  }), meshingparameter_description.c_str())
+                  }), py::arg("mp")=nullptr, meshingparameter_description.c_str())
     .def("__str__", &ToString<MP>)
-    .def_property("maxh", [](const MP & mp ) { return mp.maxh; },
-                  [](MP & mp, double maxh) { return mp.maxh = maxh; })
-    .def_property("grading", [](const MP & mp ) { return mp.grading; },
-                  [](MP & mp, double grading) { return mp.grading = grading; })
     .def("RestrictH", FunctionPointer
          ([](MP & mp, double x, double y, double z, double h)
           {

@@ -23,6 +23,7 @@ void DLL_HEADER ExportNgOCC(py::module &m);
 
 PYBIND11_MODULE(libngpy, ngpy)
 {
+  py::module::import("pyngcore");
     py::module meshing = ngpy.def_submodule("_meshing", "pybind meshing module");
     ExportNetgenMeshing(meshing);
     py::module csg = ngpy.def_submodule("_csg", "pybind csg module");

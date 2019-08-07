@@ -40,7 +40,7 @@ namespace netgen
   }
   */
   
-  extern DLL_HEADER MeshingParameters mparam;
+// extern DLL_HEADER MeshingParameters mparam;
   
 
 
@@ -184,20 +184,20 @@ namespace netgen
     STLGeometry();
     virtual ~STLGeometry();
 
-    void DoArchive(Archive& ar)
+    void DoArchive(Archive& ar) override
     {
       STLTopology::DoArchive(ar);
     }
 
     void Clear();
 
-    virtual void Save (string filename) const;
+    virtual void Save (string filename) const override;
 
 
 	DLL_HEADER void STLInfo(double* data);
     //stldoctor:
-	DLL_HEADER void SmoothNormals();
-	DLL_HEADER void MarkNonSmoothNormals();
+	DLL_HEADER void SmoothNormals(const STLParameters& stlparam);
+	DLL_HEADER void MarkNonSmoothNormals(const STLParameters& stlparam);
 
 	DLL_HEADER void CalcEdgeData();
 	DLL_HEADER void CalcEdgeDataAngles();
@@ -251,7 +251,7 @@ namespace netgen
 	DLL_HEADER void AddClosedLinesToExternalEdges();
 	DLL_HEADER void AddLongLinesToExternalEdges();
 	DLL_HEADER void AddAllNotSingleLinesToExternalEdges();
-	DLL_HEADER void STLDoctorBuildEdges();
+	DLL_HEADER void STLDoctorBuildEdges(const STLParameters& stlparam);
 	DLL_HEADER void AddExternalEdgesFromGeomLine();
 	DLL_HEADER void DeleteDirtyExternalEdges();
 	DLL_HEADER void DeleteExternalEdgeAtSelected();
@@ -292,10 +292,10 @@ namespace netgen
 	DLL_HEADER int Vicinity(int trig) const;
 
 	DLL_HEADER void InitMarkedTrigs();
-	DLL_HEADER void MarkDirtyTrigs();
-	DLL_HEADER void SmoothDirtyTrigs();
-	DLL_HEADER void GeomSmoothRevertedTrigs();
-	DLL_HEADER void MarkRevertedTrigs();
+	DLL_HEADER void MarkDirtyTrigs(const STLParameters& stlparam);
+	DLL_HEADER void SmoothDirtyTrigs(const STLParameters& stlparam);
+	DLL_HEADER void GeomSmoothRevertedTrigs(const STLParameters& stlparam);
+	DLL_HEADER void MarkRevertedTrigs(const STLParameters& stlparam);
 	DLL_HEADER double CalcTrigBadness(int i);
 	DLL_HEADER int IsMarkedTrig(int trig) const;
 	DLL_HEADER void SetMarkedTrig(int trig, int num);
@@ -330,8 +330,8 @@ namespace netgen
     ///
 
     ///ReadTriangle->STLTriangle, initialise some important variables, always after load!!!
-    virtual void InitSTLGeometry (const NgArray<STLReadTriangle> & readtrigs);
-    virtual void TopologyChanged(); //do some things, if topology changed!
+    virtual void InitSTLGeometry (const NgArray<STLReadTriangle> & readtrigs) override;
+    virtual void TopologyChanged() override; //do some things, if topology changed!
     int CheckGeometryOverlapping();
 
     //get NO edges per point
@@ -353,18 +353,18 @@ namespace netgen
 
     ///Build EdgeSegments
     void ClearEdges();
-    void BuildEdges();
+    void BuildEdges(const STLParameters& stlparam);
     void BuildEdgesPerPoint();
     void UseExternalEdges();
 
 
-    void FindEdgesFromAngles();
+    void FindEdgesFromAngles(const STLParameters& stlparam);
     void CalcFaceNums();
     int GetNOBodys();
     int GetNOFaces() {return facecnt;}
-    void LinkEdges();
+    void LinkEdges(const STLParameters& stlparam);
 
-    void AddConeAndSpiralEdges();
+    void AddConeAndSpiralEdges(const STLParameters& stlparam);
     void AddFaceEdges(); //each face should have at least one starting edge (outherwise it won't be meshed)
 
     void GetDirtyChartTrigs(int chartnum, STLChart& chart, const NgArray<int>& outercharttrigs, 
@@ -382,7 +382,7 @@ namespace netgen
 
 
     //make charts with regions of a max. angle
-    void MakeAtlas(class Mesh & mesh);
+    void MakeAtlas(class Mesh & mesh, const MeshingParameters& mparam, const STLParameters& stlparam);
 
     //outerchartspertrig, sorted!
     int GetOCPTSize() const {return outerchartspertrig.Size();};
@@ -450,17 +450,16 @@ namespace netgen
     int LineEndPointsSet() const {return lineendpoints.Size() == GetNP();}
     void ClearLineEndPoints();
 
-	DLL_HEADER void RestrictLocalH(class Mesh & mesh, double gh);
-    void RestrictLocalHCurv(class Mesh & mesh, double gh);
+    DLL_HEADER void RestrictLocalH(class Mesh & mesh, double gh, const STLParameters& stlparam);
+    void RestrictLocalHCurv(class Mesh & mesh, double gh, const STLParameters& stlparam);
     void RestrictHChartDistOneChart(int chartnum, NgArray<int>& acttrigs, class Mesh & mesh, 
-				    double gh, double fact, double minh);
+				    double gh, double fact, double minh, const STLParameters& stlparam);
 
     friend class MeshingSTLSurface;
 
-
-    virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
+    int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam) override;
     
-    virtual const Refinement & GetRefinement () const;
+    virtual const Refinement & GetRefinement () const override;
   };
  
 
@@ -468,7 +467,8 @@ namespace netgen
 
 
 
-  extern int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
+extern int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, const MeshingParameters & mparam,
+                            const STLParameters& stlpar);
 
 
 }

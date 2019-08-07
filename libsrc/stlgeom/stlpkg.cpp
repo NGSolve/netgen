@@ -21,6 +21,8 @@ namespace netgen
 {
   DLL_HEADER extern shared_ptr<NetgenGeometry>  ng_geometry;
   DLL_HEADER extern shared_ptr<Mesh> mesh;
+  DLL_HEADER extern MeshingParameters mparam;
+  DLL_HEADER extern STLParameters stlparam;
 
   static VisualSceneSTLGeometry vsstlgeom;
   static VisualSceneSTLMeshing vsstlmeshing;
@@ -243,15 +245,15 @@ namespace netgen
 	  }
 	else if (strcmp (argv[1], "markdirtytrigs") == 0)
 	  {
-	    stlgeometry->MarkDirtyTrigs();
+	    stlgeometry->MarkDirtyTrigs(stlparam);
 	  }
 	else if (strcmp (argv[1], "smoothdirtytrigs") == 0)
 	  {
-	    stlgeometry->SmoothDirtyTrigs();
+	    stlgeometry->SmoothDirtyTrigs(stlparam);
 	  }
 	else if (strcmp (argv[1], "smoothrevertedtrigs") == 0)
 	  {
-	    stlgeometry->GeomSmoothRevertedTrigs();
+	    stlgeometry->GeomSmoothRevertedTrigs(stlparam);
 	  }
 	else if (strcmp (argv[1], "invertselectedtrig") == 0)
 	  {
@@ -306,11 +308,11 @@ namespace netgen
 	  }
 	else if (strcmp (argv[1], "smoothnormals") == 0)
 	  {
-	    stlgeometry->SmoothNormals();
+	    stlgeometry->SmoothNormals(stlparam);
 	  }
 	else if (strcmp (argv[1], "marknonsmoothnormals") == 0)
 	  {
-	    stlgeometry->MarkNonSmoothNormals();
+	    stlgeometry->MarkNonSmoothNormals(stlparam);
 	  }
 	else if (strcmp (argv[1], "addexternaledge") == 0)
 	  {
@@ -359,7 +361,7 @@ namespace netgen
 	  }
 	else if (strcmp (argv[1], "buildedges") == 0)
 	  {
-	    stlgeometry->STLDoctorBuildEdges();
+	    stlgeometry->STLDoctorBuildEdges(stlparam);
 	  }
 	else if (strcmp (argv[1], "confirmedge") == 0)
 	  {
@@ -526,7 +528,7 @@ namespace netgen
 	mesh -> SetLocalH (stlgeometry->GetBoundingBox().PMin() - Vec3d(10, 10, 10),
 			   stlgeometry->GetBoundingBox().PMax() + Vec3d(10, 10, 10),
 			   mparam.grading);
-	stlgeometry -> RestrictLocalH(*mesh, mparam.maxh);
+	stlgeometry -> RestrictLocalH(*mesh, mparam.maxh, stlparam);
 
 	if (stlparam.resthsurfmeshcurvenable)
 	  mesh -> CalcLocalHFromSurfaceCurvature (mparam.grading, 

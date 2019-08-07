@@ -17,6 +17,118 @@ namespace netgen
   extern shared_ptr<NetgenGeometry> ng_geometry;
 }
 
+static string stlparameter_description = R"delimiter(
+STL Specific Meshing Parameters
+-------------------------------
+
+yangle: float =
+  Angle for edge detection
+
+contyangle: float =
+  Edges continue if angle > contyangle
+
+edgecornerangle: float =
+  Angle of geometry edge at which the mesher should set a point.
+
+)delimiter";
+
+void CreateSTLParametersFromKwargs(STLParameters& stlparam, py::dict kwargs)
+{
+  if(kwargs.contains("yangle"))
+    stlparam.yangle = py::cast<double>(kwargs.attr("pop")("yangle"));
+  if(kwargs.contains("contyangle"))
+    stlparam.contyangle = py::cast<double>(kwargs.attr("pop")("contyangle"));
+  if(kwargs.contains("edgecornerangle"))
+    stlparam.edgecornerangle = py::cast<double>(kwargs.attr("pop")("edgecornerangle"));
+  if(kwargs.contains("chartangle"))
+    stlparam.chartangle = py::cast<double>(kwargs.attr("pop")("chartangle"));
+  if(kwargs.contains("outerchartangle"))
+    stlparam.outerchartangle = py::cast<double>(kwargs.attr("pop")("outerchartangle"));
+  if(kwargs.contains("usesearchtree"))
+    stlparam.usesearchtree = py::cast<int>(kwargs.attr("pop")("usesearchtree"));
+  if(kwargs.contains("resthatlasfac"))
+  {
+    auto val = kwargs.attr("pop")("resthatlasfac");
+    if(val.is_none())
+      stlparam.resthatlasenable = false;
+    else
+    {
+      stlparam.resthatlasenable = true;
+      stlparam.resthatlasfac = py::cast<double>(val);
+    }
+  }
+  if(kwargs.contains("atlasminh"))
+    stlparam.atlasminh = py::cast<double>(kwargs.attr("pop")("atlasminh"));
+  if(kwargs.contains("resthsurfcurvfac"))
+  {
+    auto val = kwargs.attr("pop")("resthsurfcurvfac");
+    if(val.is_none())
+      stlparam.resthsurfcurvenable = false;
+    else
+    {
+      stlparam.resthsurfcurvenable = true;
+      stlparam.resthsurfcurvfac = py::cast<double>(val);
+    }
+  }
+  if(kwargs.contains("resthchartdistfac"))
+  {
+    auto val = kwargs.attr("pop")("resthchartdistfac");
+    if(val.is_none())
+      stlparam.resthchartdistenable = false;
+    else
+    {
+      stlparam.resthchartdistenable = true;
+      stlparam.resthchartdistfac = py::cast<double>(val);
+    }
+  }
+  if(kwargs.contains("resthcloseedgefac"))
+  {
+    auto val = kwargs.attr("pop")("resthcloseedgefac");
+    if(val.is_none())
+      stlparam.resthcloseedgeenable = false;
+    else
+    {
+      stlparam.resthcloseedgeenable = true;
+      stlparam.resthcloseedgefac = py::cast<double>(val);
+    }
+  }
+  if(kwargs.contains("resthedgeanglefac"))
+  {
+    auto val = kwargs.attr("pop")("resthedgeanglefac");
+    if(val.is_none())
+      stlparam.resthedgeangleenable = false;
+    else
+    {
+      stlparam.resthedgeangleenable = true;
+      stlparam.resthedgeanglefac = py::cast<double>(val);
+    }
+  }
+  if(kwargs.contains("resthsurfmeshcurvfac"))
+  {
+    auto val = kwargs.attr("pop")("resthsurfmeshcurvfac");
+    if(val.is_none())
+      stlparam.resthsurfmeshcurvenable = false;
+    else
+    {
+      stlparam.resthsurfmeshcurvenable = true;
+      stlparam.resthsurfmeshcurvfac = py::cast<double>(val);
+    }
+  }
+  if(kwargs.contains("resthlinelengthfac"))
+  {
+    auto val = kwargs.attr("pop")("resthlinelengthfac");
+    if(val.is_none())
+      stlparam.resthlinelengthenable = false;
+    else
+    {
+      stlparam.resthlinelengthenable = true;
+      stlparam.resthlinelengthfac = py::cast<double>(val);
+    }
+  }
+  if(kwargs.contains("recalc_h_opt"))
+    stlparam.recalc_h_opt = py::cast<bool>(kwargs.attr("pop")("recalc_h_opt"));
+}
+
 
 DLL_HEADER void ExportSTL(py::module & m)
 {
@@ -82,20 +194,27 @@ DLL_HEADER void ExportSTL(py::module & m)
                              MeshingParameters* pars, py::kwargs kwargs)
                          {
                            MeshingParameters mp;
-                           if(pars) mp = *pars;
-                           {
-                             py::gil_scoped_acquire aq;
-                             CreateMPfromKwargs(mp, kwargs);
+                           STLParameters stlparam;
+                           { py::gil_scoped_acquire aq;
+                             if(pars)
+                             {
+                               auto mp_flags = pars->geometrySpecificParameters;
+                               auto mp_kwargs = CreateDictFromFlags(mp_flags);
+                               CreateSTLParametersFromKwargs(stlparam, mp_kwargs);
+                               mp = *pars;
+                             }
+                             CreateSTLParametersFromKwargs(stlparam, kwargs);
+                             CreateMPfromKwargs(mp, kwargs); // this will throw if any kwargs are not passed
                            }
                            auto mesh = make_shared<Mesh>();
-                           SetGlobalMesh(mesh);
                            mesh->SetGeometry(geo);
                            ng_geometry = geo;
-                           geo->GenerateMesh(mesh,mp);
+                           SetGlobalMesh(mesh);
+                           STLMeshingDummy(geo.get(), mesh, mp, stlparam);
                            return mesh;
                          }, py::arg("mp") = nullptr,
       py::call_guard<py::gil_scoped_release>(),
-      meshingparameter_description.c_str())
+         (meshingparameter_description + stlparameter_description).c_str())
     ;
   m.def("LoadSTLGeometry", [] (const string & filename)
                            {

@@ -16,10 +16,9 @@ namespace ngcore
   Array<T> makeCArray(const py::object& obj)
   {
     Array<T> arr;
-    arr.SetAllocSize(py::len(obj));
     if(py::isinstance<py::list>(obj))
-      for(auto& val : py::cast<py::list>(obj))
-        arr.Append(py::cast<T>(val));
+        for(auto& val : py::cast<py::list>(obj))
+          arr.Append(py::cast<T>(val));
     else if(py::isinstance<py::tuple>(obj))
       for(auto& val : py::cast<py::tuple>(obj))
         arr.Append(py::cast<T>(val));
@@ -30,7 +29,10 @@ namespace ngcore
   
   void NGCORE_API SetFlag(Flags &flags, std::string s, py::object value);
   // Parse python kwargs to flags
-  Flags NGCORE_API CreateFlagsFromKwArgs(py::object pyclass, const py::kwargs& kwargs, py::list info = py::list());
+  Flags NGCORE_API CreateFlagsFromKwArgs(const py::kwargs& kwargs, py::object pyclass = py::none(),
+                                         py::list info = py::list());
+  // Create python dict from kwargs
+  py::dict NGCORE_API CreateDictFromFlags(const Flags& flags);
 
   // ***************  Archiving functionality  **************
   

@@ -607,7 +607,8 @@ STLTopEdge :: STLTopEdge (int p1, int p2, int trig1, int trig2)
 //+++++++++++++++++++   STL CHART   +++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-STLChart :: STLChart(STLGeometry * ageometry)
+STLChart :: STLChart(STLGeometry * ageometry, const STLParameters& astlparam)
+    : geometry(ageometry), stlparam(astlparam)
 {
   // charttrigs = new NgArray<int> (0,0);
   // outertrigs = new NgArray<int> (0,0);
@@ -1462,7 +1463,6 @@ void STLParameters :: Print (ostream & ost) const
 }
 
 
+DLL_HEADER extern STLParameters stlparam;
 STLParameters stlparam;
-
-
 }

@@ -28,7 +28,7 @@ def CreateGeo():
 def test_BBNDsave():
     mesh = CreateGeo().GenerateMesh(maxh=0.4,perfstepsend = meshing.MeshingStep.MESHSURFACE)
     for i in range(2):
-        mesh.GenerateVolumeMesh(only3D_domain=i+1,maxh=0.4)
+        mesh.GenerateVolumeMesh(only3D_domain_nr=i+1,maxh=0.4)
     mesh.SetGeometry(None)
     mesh.Save("test.vol")
     mesh2 = meshing.Mesh()
