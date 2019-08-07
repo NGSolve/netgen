@@ -209,7 +209,7 @@ class AdFront3
   /// minimal selection-value of baseelements
   int minval;
   NgArray<PointIndex, PointIndex::BASE, PointIndex> invpindex;
-  NgArray<char> pingroup;
+  NgArray<char, PointIndex::BASE> pingroup;
   
   ///
   class BoxTree<3> * facetree;

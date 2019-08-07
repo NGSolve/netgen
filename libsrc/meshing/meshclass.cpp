@@ -1965,8 +1965,8 @@ namespace netgen
     SurfaceElementIndex sei;
     // Element2d hel;
 
-
-    INDEX_3_CLOSED_HASHTABLE<INDEX_2> faceht(100);   
+    struct tval { int index; PointIndex p4; };
+    INDEX_3_CLOSED_HASHTABLE<tval> faceht(100);
     openelements.SetSize(0);
 
     for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
@@ -1988,10 +1988,17 @@ namespace netgen
                   if (hel.PNum(1) == pi)
                     {
                       INDEX_3 i3(hel[0], hel[1], hel[2]);
+                      /*
                       INDEX_2 i2 (GetFaceDescriptor(ind).DomainIn(), 
                                   (hel.GetNP() == 3) 
-                                  ? PointIndex (PointIndex::BASE-1)
+                                  ? PointIndex (PointIndex::INVALID)
                                   : hel.PNum(4));
+                       */
+                      tval i2;
+                      i2.index = GetFaceDescriptor(ind).DomainIn();
+                      i2.p4 = (hel.GetNP() == 3)
+                            ? PointIndex (PointIndex::INVALID)
+                      : hel.PNum(4);
                       faceht.Set (i3, i2);
                     }
                 }
@@ -2003,10 +2010,17 @@ namespace netgen
                   if (hel.PNum(1) == pi)
                     {
                       INDEX_3 i3(hel[0], hel[1], hel[2]);
+                      /*
                       INDEX_2 i2 (GetFaceDescriptor(ind).DomainOut(), 
                                   (hel.GetNP() == 3) 
                                   ? PointIndex (PointIndex::BASE-1)
                                   : hel.PNum(4));
+                       */
+                      tval i2;
+                      i2.index = GetFaceDescriptor(ind).DomainOut();
+                      i2.p4 = (hel.GetNP() == 3)
+                      ? PointIndex (PointIndex::INVALID)
+                      : hel.PNum(4);
                       faceht.Set (i3, i2);
                     }
                 }
@@ -2033,15 +2047,15 @@ namespace netgen
 
                           if (faceht.Used (i3))
                             {
-                              INDEX_2 i2 = faceht.Get(i3);
-                              if (i2.I1() == el.GetIndex())
+                              tval i2 = faceht.Get(i3);
+                              if (i2.index == el.GetIndex())
                                 {
-                                  i2.I1() = PointIndex::BASE-1;
+                                  i2.index = PointIndex::BASE-1;
                                   faceht.Set (i3, i2);
                                 }
                               else
                                 {
-                                  if (i2.I1() == 0)
+                                  if (i2.index == 0)
                                     {
                                       PrintSysError ("more elements on face");
                                       (*testout)  << "more elements on face!!!" << endl;
@@ -2059,10 +2073,17 @@ namespace netgen
                               hel.Invert();
                               hel.NormalizeNumbering();
                               INDEX_3 i3(hel[0], hel[1], hel[2]);
+                              /*
                               INDEX_2 i2(el.GetIndex(), 
                                          (hel.GetNP() == 3) 
                                          ? PointIndex (PointIndex::BASE-1)
                                          : hel[3]);
+                               */
+                              tval i2;
+                              i2.index = el.GetIndex();
+                              i2.p4 = (hel.GetNP() == 3)
+                              ? PointIndex (PointIndex::INVALID)
+                              : hel[3];
                               faceht.Set (i3, i2);
                             }
                         }
@@ -2073,17 +2094,18 @@ namespace netgen
             if (faceht.UsedPos (i))
               {
                 INDEX_3 i3;
-                INDEX_2 i2;
+                //INDEX_2 i2;
+                tval i2;
                 faceht.GetData (i, i3, i2);
-                if (i2.I1() != PointIndex::BASE-1)
+                if (i2.index != PointIndex::BASE-1)
                   {
                     // Element2d tri;
                     // tri.SetType ( (i2.I2() == PointIndex::BASE-1) ? TRIG : QUAD);
-                    Element2d tri ( (i2.I2() == PointIndex::BASE-1) ? TRIG : QUAD);
+                    Element2d tri ( (i2.p4 == PointIndex::BASE-1) ? TRIG : QUAD);
                     for (int l = 0; l < 3; l++)
                       tri[l] = i3.I(l+1);
-                    tri.PNum(4) = i2.I2();
-                    tri.SetIndex (i2.I1());
+                    tri.PNum(4) = i2.p4;
+                    tri.SetIndex (i2.index);
 
                     //	tri.Invert();
 
@@ -2915,12 +2937,12 @@ namespace netgen
                   pi4++;
                 pi4 = elother.PNum(pi4);
 
-                double rad = ComputeCylinderRadius (Point (i2.I1()),
-                                                    Point (i2.I2()),
-                                                    Point (pi3), 
-                                                    Point (pi4));
+                double rad = ComputeCylinderRadius (Point (PointIndex(i2.I1())),
+                                                    Point (PointIndex(i2.I2())),
+                                                    Point (PointIndex(pi3)),
+                                                    Point (PointIndex(pi4)));
 
-                RestrictLocalHLine (Point(i2.I1()), Point(i2.I2()), rad/elperr);
+                RestrictLocalHLine (Point(PointIndex(i2.I1())), Point(PointIndex(i2.I2())), rad/elperr);
 
 
                 /*	      

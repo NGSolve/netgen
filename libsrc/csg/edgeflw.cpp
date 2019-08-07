@@ -1348,7 +1348,7 @@ namespace netgen
 				       
 
 
-    if (lastpi == -1)
+    if (!lastpi.IsValid())
       {
 	lastpi = mesh.AddPoint (p, layer, FIXEDPOINT);
 	meshpoint_tree -> Insert (p, lastpi); 
@@ -1384,7 +1384,7 @@ namespace netgen
 	      thispi = locsearch[0];
 	  }
 
-	if (thispi == -1)
+	if (!thispi.IsValid())
 	  {
 	    ProjectToEdge (surf1, surf2, np);
 	    thispi = mesh.AddPoint (np, layer, (i==ne) ? FIXEDPOINT : EDGEPOINT);
@@ -1496,7 +1496,7 @@ namespace netgen
 
     // generate initial point
     Point<3> p = edgepoints[0];
-    PointIndex pi1 = -1;
+    PointIndex pi1 = PointIndex::INVALID;
     for (pi = PointIndex::BASE; 
 	 pi < mesh.GetNP()+PointIndex::BASE; pi++)
 
@@ -1506,7 +1506,7 @@ namespace netgen
 	  break;
 	}
 
-    if (pi1 == -1) 
+    if (!pi1.IsValid())
       {
 	pi1 = mesh.AddPoint (p, layer, FIXEDPOINT);
 	meshpoint_tree -> Insert (p, pi1);
@@ -1514,7 +1514,7 @@ namespace netgen
       }
 
     p = edgepoints.Last();
-    PointIndex pi2 = -1;
+    PointIndex pi2 = PointIndex::INVALID;
     for (pi = PointIndex::BASE; 
 	 pi < mesh.GetNP()+PointIndex::BASE; pi++)
 
@@ -1523,7 +1523,7 @@ namespace netgen
 	  pi2 = pi;
 	  break;
 	}
-    if (pi2==-1) 
+    if (!pi2.IsValid())
       {
 	pi2 = mesh.AddPoint (p, layer, FIXEDPOINT);
 	meshpoint_tree -> Insert (p, pi2);
@@ -1616,8 +1616,8 @@ namespace netgen
 	Point<3> top =
 	  (i == 1) ? tostart : toend;
       
-	PointIndex frompi = -1;
-	PointIndex topi = -1;
+	PointIndex frompi = PointIndex::INVALID;
+	PointIndex topi = PointIndex::INVALID;
 	for (pi = PointIndex::BASE; 
 	     pi < mesh.GetNP()+PointIndex::BASE; pi++)
 	  {
@@ -1628,7 +1628,7 @@ namespace netgen
 	  }
 
 	
-	if (topi == -1)
+	if (!topi.IsValid())
 	  {
 	    topi = mesh.AddPoint (top, layer, FIXEDPOINT);
 	    meshpoint_tree -> Insert (top, topi);

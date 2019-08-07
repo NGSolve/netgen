@@ -1030,12 +1030,12 @@ namespace netgen
 
     int GetNP() const
     {
-      return (pnums[2] < 0) ? 2 : 3;
+      return pnums[2].IsValid() ? 3 : 2;
     }
 
     ELEMENT_TYPE GetType() const
     {
-      return (pnums[2] < 0) ? SEGMENT : SEGMENT3;
+      return pnums[2].IsValid() ? SEGMENT3 : SEGMENT;
     }
   
     PointIndex & operator[] (int i) { return pnums[i]; }

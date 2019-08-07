@@ -598,7 +598,7 @@ int AdFront3 :: GetLocals (int fstind,
       for (j = 1; j <= locfaces.Get(i).GetNP(); j++)
 	{
 	  PointIndex pi = locfaces.Get(i).PNum(j);
-	  if (invpindex[pi] == -1)
+	  if (!invpindex[pi].IsValid())
 	    {
 	      pindex.Append (pi);
               locpoints.Append (points[pi].P());
@@ -669,7 +669,7 @@ void AdFront3 :: GetGroup (int fi,
 
   pingroup = 0;
   for (int j = 1; j <= 3; j++)
-    pingroup.Elem (faces.Get(fi).Face().PNum(j)) = 1;
+    pingroup[faces.Get(fi).Face().PNum(j)] = 1;
 
   do
     {
@@ -702,14 +702,14 @@ void AdFront3 :: GetGroup (int fi,
 
 	    int fused = 0;
 	    for (int j = 1; j <= 3; j++)
-	      if (pingroup.Elem(face.PNum(j))) 
+	      if (pingroup[face.PNum(j)]) 
 		fused++;
             
 	    if (fused >= 2)
 	      for (int j = 1; j <= 3; j++)
-		if (!pingroup.Elem(face.PNum(j)))
+		if (!pingroup[face.PNum(j)])
 		  {
-		    pingroup.Elem(face.PNum(j)) = 1;
+		    pingroup[face.PNum(j)] = 1;
 		    changed = 1;
 		  }
 	  }
@@ -733,7 +733,7 @@ void AdFront3 :: GetGroup (int fi,
       {
 	int fused = 0;
 	for (int j = 1; j <= 3; j++)
-	  if (pingroup.Get(faces.Get(i).Face().PNum(j)))
+	  if (pingroup[faces.Get(i).Face().PNum(j)])
 	    fused++;
 
 	if (fused >= 2)
@@ -753,7 +753,7 @@ void AdFront3 :: GetGroup (int fi,
   */
   for (auto & e : groupelements)
     for (int j = 1; j <= 3; j++)
-      e.PNum(j) = invpindex.Get(e.PNum(j));
+      e.PNum(j) = invpindex[e.PNum(j)];
 }
 
 
