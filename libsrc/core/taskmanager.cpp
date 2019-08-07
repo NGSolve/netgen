@@ -247,9 +247,9 @@ namespace ngcore
   struct TNestedTask
   {
     const function<void(TaskInfo&)> * func;
-    atomic<int> * endcnt;
     int mynr;
     int total;
+    atomic<int> * endcnt;
 
     TNestedTask () { ; }
     TNestedTask (const function<void(TaskInfo&)> & _func,

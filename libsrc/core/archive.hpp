@@ -629,12 +629,12 @@ namespace ngcore
       static_assert(detail::all_of_tmpl<std::is_base_of<Bases,T>::value...>,
                     "Variadic template arguments must be base classes of T");
       detail::ClassArchiveInfo info {};
-      info.creator = [this,&info](const std::type_info& ti) -> void*
+      info.creator = [](const std::type_info& ti) -> void*
                      { return typeid(T) == ti ? detail::constructIfPossible<T>()
                          : Archive::Caster<T, Bases...>::tryUpcast(ti, detail::constructIfPossible<T>()); };
-      info.upcaster = [this](const std::type_info& ti, void* p) -> void*
+      info.upcaster = [/*this*/](const std::type_info& ti, void* p) -> void*
                       { return typeid(T) == ti ? p : Archive::Caster<T, Bases...>::tryUpcast(ti, static_cast<T*>(p)); };
-      info.downcaster = [this](const std::type_info& ti, void* p) -> void*
+      info.downcaster = [/*this*/](const std::type_info& ti, void* p) -> void*
                         { return typeid(T) == ti ? p : Archive::Caster<T, Bases...>::tryDowncast(ti, p); };
       Archive::SetArchiveRegister(std::string(Demangle(typeid(T).name())),info);
     }
