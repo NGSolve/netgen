@@ -1301,7 +1301,7 @@ namespace netgen
   
     // Calculate optimal element-length
     int i, j, k;
-    PointIndex pi;
+    // PointIndex pi;
     int ne;
 
     double len, corr, lam;
