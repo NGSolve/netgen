@@ -748,7 +748,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 		  el31[3] = pi4;
 		}
 	      
-	      pi5 = 0;
+	      pi5.Invalidate();
 	      for (int k = 0; k < 3; k++)   // JS, 201212
 		{
 		  const Element & elemk = mesh[hasbothpoints[k]];
@@ -2315,7 +2315,7 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 {
   static Timer t("MeshOptimize3d::SwapImprove2"); RegionTimer reg(t);
   
-  PointIndex pi1(0), pi2(0), pi3(0), pi4(0), pi5(0);
+  PointIndex pi1, pi2, pi3, pi4, pi5;
   Element el21(TET), el22(TET), el31(TET), el32(TET), el33(TET);
 
   int cnt = 0;

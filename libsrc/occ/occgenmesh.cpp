@@ -331,7 +331,8 @@ namespace netgen
 
         bool exists = 0;
         if (merge_solids)
-          for (PointIndex pi = 1; pi <= mesh.GetNP(); pi++)
+          // for (PointIndex pi = 1; pi <= mesh.GetNP(); pi++)
+          for (PointIndex pi : Range(mesh.Points()))
             if ( Dist2 (mesh[pi], Point<3>(mp)) < eps*eps)
               {
                 exists = 1;
@@ -346,7 +347,9 @@ namespace netgen
     (*testout) << "different vertices = " << mesh.GetNP() << endl;
 
 
-    int first_ep = mesh.GetNP()+1;
+    // int first_ep = mesh.GetNP()+1;
+    PointIndex first_ep = mesh.Points().End();
+    auto vertexrange = mesh.Points().Range();
 
     NgArray<int> face2solid[2];
     for (int i = 0; i<2; i++)
@@ -437,7 +440,6 @@ namespace netgen
               {
                 curr++;
                 (*testout) << "edge nr " << curr << endl;
-
                 multithread.percent = 100 * curr / double (total);
                 if (multithread.terminate) return;
 
@@ -473,54 +475,62 @@ namespace netgen
                 NgArray <double> params;
 
                 DivideEdge (edge, mp, params, mesh, mparam);
- 
-                NgArray <int> pnums;
+
+                NgArray <PointIndex> pnums;
                 pnums.SetSize (mp.Size()+2);
 
                 if (!merge_solids)
                   {
-                    pnums[0] = geom.vmap.FindIndex (TopExp::FirstVertex (edge));
-                    pnums[pnums.Size()-1] = geom.vmap.FindIndex (TopExp::LastVertex (edge));
+                    pnums[0] = geom.vmap.FindIndex (TopExp::FirstVertex (edge)) + PointIndex::BASE-1;
+                    pnums[pnums.Size()-1] = geom.vmap.FindIndex (TopExp::LastVertex (edge)) + PointIndex::BASE-1;
                   }
                 else
                   {
                     Point<3> fp = occ2ng (BRep_Tool::Pnt (TopExp::FirstVertex (edge)));
                     Point<3> lp = occ2ng (BRep_Tool::Pnt (TopExp::LastVertex (edge)));
 
-                    pnums[0] = -1;
-                    pnums.Last() = -1;
-                    for (PointIndex pi = 1; pi < first_ep; pi++)
+                    pnums[0] = PointIndex::INVALID;
+                    pnums.Last() = PointIndex::INVALID;
+                    // for (PointIndex pi = 1; pi < first_ep; pi++)
+                    for (PointIndex pi : vertexrange)
                       {
                         if (Dist2 (mesh[pi], fp) < eps*eps) pnums[0] = pi;
                         if (Dist2 (mesh[pi], lp) < eps*eps) pnums.Last() = pi;
                       }
                   }
 
-
                 for (int i = 1; i <= mp.Size(); i++)
                   {
                     bool exists = 0;
                     tsearch.Start();
-                    int j;
+                    PointIndex j;
+                    /*
                     for (j = first_ep; j <= mesh.GetNP(); j++)
                       if ((mesh.Point(j)-Point<3>(mp[i-1])).Length() < eps)
                         {
                           exists = 1;
                           break;
                         }
+                    */
+                    for (j = first_ep; j < mesh.Points().End(); j++)
+                      if ((mesh.Point(j)-Point<3>(mp[i-1])).Length() < eps)
+                        {
+                          exists = 1;
+                          break;
+                        }
+                      
                     tsearch.Stop();
                     
                     if (exists)
                       pnums[i] = j;
                     else
                       {
-                        mesh.AddPoint (mp[i-1]);
+                        pnums[i] = mesh.AddPoint (mp[i-1]);
                         (*testout) << "add meshpoint " << mp[i-1] << endl;
-                        pnums[i] = mesh.GetNP();
+                        // pnums[i] = mesh.GetNP();
                       }
                   }
                 (*testout) << "NP = " << mesh.GetNP() << endl;
-
                 //(*testout) << pnums[pnums.Size()-1] << endl;
 
                 for (int i = 1; i <= mp.Size()+1; i++)
@@ -623,7 +633,7 @@ namespace netgen
 
     double starttime = GetTime();
 
-    NgArray<int> glob2loc(noldp);
+    NgArray<int, PointIndex::BASE> glob2loc(noldp);
 
     //int projecttype = PARAMETERSPACE;
 
@@ -696,12 +706,12 @@ namespace netgen
                   {
                     for (int j = 1; j <= 2; j++)
                       {
-                        int pi = (j == 1) ? seg[0] : seg[1];
-                        if (!glob2loc.Get(pi))
+                        PointIndex pi = (j == 1) ? seg[0] : seg[1];
+                        if (glob2loc[pi] == 0)
                           {
                             meshing.AddPoint (mesh.Point(pi), pi);
                             cntp++;
-                            glob2loc.Elem(pi) = cntp;
+                            glob2loc[pi] = cntp;
                           }
                       }
                   }
@@ -719,7 +729,7 @@ namespace netgen
                     gi1.u = seg.epgeominfo[1].u;
                     gi1.v = seg.epgeominfo[1].v;
 
-                    meshing.AddBoundaryElement (glob2loc.Get(seg[0]), glob2loc.Get(seg[1]), gi0, gi1);
+                    meshing.AddBoundaryElement (glob2loc[seg[0]], glob2loc[seg[1]], gi0, gi1);
                     //(*testout) << gi0.u << " " << gi0.v << endl;
                     //(*testout) << gi1.u << " " << gi1.v << endl;
                   }
@@ -770,7 +780,7 @@ namespace netgen
 
                         if (locpnum[j] == 0)
                           {
-                            int pi = (j == 0) ? seg[0] : seg[1];
+                            PointIndex pi = (j == 0) ? seg[0] : seg[1];
                             meshing.AddPoint (mesh.Point(pi), pi);
 
                             gis.SetSize (gis.Size()+1);

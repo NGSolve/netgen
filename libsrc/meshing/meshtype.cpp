@@ -185,7 +185,7 @@ namespace netgen
   { 
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
       {
-	pnum[i] = 0;
+        pnum[i].Invalidate();
 	geominfo[i].trignum = 0;
       }
     np = anp;
@@ -210,7 +210,7 @@ namespace netgen
   { 
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
       {
-	pnum[i] = 0;
+        pnum[i].Invalidate();
 	geominfo[i].trignum = 0;
       }
 
@@ -235,9 +235,9 @@ namespace netgen
     pnum[2] = pi3;
     np = 3;
     typ = TRIG;
-    pnum[3] = 0;
-    pnum[4] = 0;
-    pnum[5] = 0;
+    
+    for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
+        pnum[i].Invalidate();
   
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
       geominfo[i].trignum = 0;
@@ -1000,9 +1000,8 @@ namespace netgen
   Element :: Element (int anp)
   {
     np = anp;
-    int i;
-    for (i = 0; i < ELEMENT_MAXPOINTS; i++)
-      pnum[i] = 0;
+    for (int i = 0; i < ELEMENT_MAXPOINTS; i++)
+        pnum[i].Invalidate();
     index = 0;
     flags.marked = 1;
     flags.badel = 0;
@@ -1051,9 +1050,8 @@ namespace netgen
   {
     SetType (type);
 
-    int i;
-    for (i = 0; i < ELEMENT_MAXPOINTS; i++)
-      pnum[i] = 0;
+    for (int i = 0; i < ELEMENT_MAXPOINTS; i++)
+        pnum[i].Invalidate();
     index = 0;
     flags.marked = 1;
     flags.badel = 0;

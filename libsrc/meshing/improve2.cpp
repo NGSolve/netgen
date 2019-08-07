@@ -562,10 +562,13 @@ namespace netgen
 	    PointIndex pi1 = elem[j];
 	    PointIndex pi2 = elem[(j+1) % 3];
 
+            /*
 	    if (pi1 < PointIndex::BASE || 
 		pi2 < PointIndex::BASE)
 	      continue;
-
+            */
+            if (!pi1.IsValid() || !pi2.IsValid())
+	      continue;              
 	    /*
 	      INDEX_2 i2(pi1, pi2);
 	      i2.Sort();
@@ -597,8 +600,8 @@ namespace netgen
 
 	    double loch = mesh.GetH (mesh[pi1]);
 
-	    INDEX_2 si2 (pi1, pi2);
-	    si2.Sort();
+	    // INDEX_2 si2 (pi1, pi2);
+	    // si2.Sort();
 
 	    /*	  
 	      if (edgetested.Used (si2))
@@ -737,8 +740,8 @@ namespace netgen
 	      
 		Element2d *el1p(NULL);
 		int l = 0;
-		while(mesh[elementsonnode[pi1][l]].IsDeleted() && l<elementsonnode.EntrySize(pi1)) l++;
-		if(l<elementsonnode.EntrySize(pi1))
+		while(mesh[elementsonnode[pi1][l]].IsDeleted() && l<elementsonnode[pi1].Size()) l++;
+		if(l<elementsonnode[pi1].Size())
 		  el1p = &mesh[elementsonnode[pi1][l]];
 		else
 		  cerr << "OOPS!" << endl;
