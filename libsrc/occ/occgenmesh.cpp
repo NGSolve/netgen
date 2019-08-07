@@ -331,11 +331,10 @@ namespace netgen
 
         bool exists = 0;
         if (merge_solids)
-          // for (PointIndex pi = 1; pi <= mesh.GetNP(); pi++)
-          for (PointIndex pi : Range(mesh.Points()))
-            if ( Dist2 (mesh[pi], Point<3>(mp)) < eps*eps)
+          for (PointIndex pi : mesh.Points().Range())
+            if (Dist2 (mesh[pi], Point<3>(mp)) < eps*eps)
               {
-                exists = 1;
+                exists = true;
                 break;
               }
 
@@ -346,13 +345,12 @@ namespace netgen
     
     (*testout) << "different vertices = " << mesh.GetNP() << endl;
 
-
     // int first_ep = mesh.GetNP()+1;
     PointIndex first_ep = mesh.Points().End();
     auto vertexrange = mesh.Points().Range();
 
     NgArray<int> face2solid[2];
-    for (int i = 0; i<2; i++)
+    for (int i = 0; i < 2; i++)
       {
         face2solid[i].SetSize (geom.fmap.Extent());
         face2solid[i] = 0;
@@ -476,13 +474,12 @@ namespace netgen
 
                 DivideEdge (edge, mp, params, mesh, mparam);
 
-                NgArray <PointIndex> pnums;
-                pnums.SetSize (mp.Size()+2);
+                NgArray<PointIndex> pnums(mp.Size()+2);
 
                 if (!merge_solids)
                   {
                     pnums[0] = geom.vmap.FindIndex (TopExp::FirstVertex (edge)) + PointIndex::BASE-1;
-                    pnums[pnums.Size()-1] = geom.vmap.FindIndex (TopExp::LastVertex (edge)) + PointIndex::BASE-1;
+                    pnums.Last() = geom.vmap.FindIndex (TopExp::LastVertex (edge)) + PointIndex::BASE-1;
                   }
                 else
                   {
@@ -491,7 +488,6 @@ namespace netgen
 
                     pnums[0] = PointIndex::INVALID;
                     pnums.Last() = PointIndex::INVALID;
-                    // for (PointIndex pi = 1; pi < first_ep; pi++)
                     for (PointIndex pi : vertexrange)
                       {
                         if (Dist2 (mesh[pi], fp) < eps*eps) pnums[0] = pi;
@@ -499,41 +495,28 @@ namespace netgen
                       }
                   }
 
-                for (int i = 1; i <= mp.Size(); i++)
+                for (size_t i = 1; i <= mp.Size(); i++)
                   {
                     bool exists = 0;
                     tsearch.Start();
-                    PointIndex j;
-                    /*
-                    for (j = first_ep; j <= mesh.GetNP(); j++)
+
+                    for (PointIndex j = first_ep; j < mesh.Points().End(); j++)
                       if ((mesh.Point(j)-Point<3>(mp[i-1])).Length() < eps)
                         {
-                          exists = 1;
-                          break;
-                        }
-                    */
-                    for (j = first_ep; j < mesh.Points().End(); j++)
-                      if ((mesh.Point(j)-Point<3>(mp[i-1])).Length() < eps)
-                        {
-                          exists = 1;
+                          exists = true;
+                          pnums[i] = j;
                           break;
                         }
                       
                     tsearch.Stop();
                     
-                    if (exists)
-                      pnums[i] = j;
-                    else
-                      {
-                        pnums[i] = mesh.AddPoint (mp[i-1]);
-                        (*testout) << "add meshpoint " << mp[i-1] << endl;
-                        // pnums[i] = mesh.GetNP();
-                      }
+                    if (!exists)
+                      pnums[i] = mesh.AddPoint (mp[i-1]);
                   }
                 (*testout) << "NP = " << mesh.GetNP() << endl;
                 //(*testout) << pnums[pnums.Size()-1] << endl;
 
-                for (int i = 1; i <= mp.Size()+1; i++)
+                for (size_t i = 1; i <= mp.Size()+1; i++)
                   {
                     edgenr++;
                     Segment seg;
@@ -656,15 +639,6 @@ namespace netgen
         multithread.percent = 100 * k / (mesh.GetNFD() + VSMALL);
         geom.facemeshstatus[k-1] = -1;
 
-
-        /*
-          if (k != 42)
-          {
-          cout << "skipped" << endl;
-          continue;
-          }
-        */
-
         FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
 
         int oldnf = mesh.GetNSE();
@@ -699,41 +673,37 @@ namespace netgen
             static Timer t("MeshSurface: Find edges and points - Physical"); RegionTimer r(t);
             int cntp = 0;
             glob2loc = 0;
-            for (int i = 1; i <= mesh.GetNSeg(); i++)
-              {
-                Segment & seg = mesh.LineSegment(i);
-                if (seg.si == k)
+
+            for (Segment & seg : mesh.LineSegments())
+              if (seg.si == k)
+                for (int j = 0; j < 2; j++)
                   {
-                    for (int j = 1; j <= 2; j++)
+                    PointIndex pi = seg[j];
+                    if (glob2loc[pi] == 0)
                       {
-                        PointIndex pi = (j == 1) ? seg[0] : seg[1];
-                        if (glob2loc[pi] == 0)
-                          {
-                            meshing.AddPoint (mesh.Point(pi), pi);
-                            cntp++;
-                            glob2loc[pi] = cntp;
-                          }
+                        meshing.AddPoint (mesh.Point(pi), pi);
+                        cntp++;
+                        glob2loc[pi] = cntp;
                       }
                   }
-              }
 
+            /*
             for (int i = 1; i <= mesh.GetNSeg(); i++)
               {
                 Segment & seg = mesh.LineSegment(i);
-                if (seg.si == k)
-                  {
-                    PointGeomInfo gi0, gi1;
-                    gi0.trignum = gi1.trignum = k;
-                    gi0.u = seg.epgeominfo[0].u;
-                    gi0.v = seg.epgeominfo[0].v;
-                    gi1.u = seg.epgeominfo[1].u;
-                    gi1.v = seg.epgeominfo[1].v;
-
-                    meshing.AddBoundaryElement (glob2loc[seg[0]], glob2loc[seg[1]], gi0, gi1);
-                    //(*testout) << gi0.u << " " << gi0.v << endl;
-                    //(*testout) << gi1.u << " " << gi1.v << endl;
-                  }
-              }
+            */
+            for (Segment & seg : mesh.LineSegments())                
+              if (seg.si == k)
+                {
+                  PointGeomInfo gi0, gi1;
+                  gi0.trignum = gi1.trignum = k;
+                  gi0.u = seg.epgeominfo[0].u;
+                  gi0.v = seg.epgeominfo[0].v;
+                  gi1.u = seg.epgeominfo[1].u;
+                  gi1.v = seg.epgeominfo[1].v;
+                  
+                  meshing.AddBoundaryElement (glob2loc[seg[0]], glob2loc[seg[1]], gi0, gi1);
+                }
           }
         else
           {
@@ -741,12 +711,16 @@ namespace netgen
             
             int cntp = 0;
 
+            /*
             for (int i = 1; i <= mesh.GetNSeg(); i++)
               if (mesh.LineSegment(i).si == k)
                 cntp+=2;
+            */
+            for (Segment & seg : mesh.LineSegments())
+              if (seg.si == k)
+                cntp += 2;
 
-
-            NgArray< PointGeomInfo > gis;
+            NgArray<PointGeomInfo> gis;
 
             gis.SetAllocSize (cntp);
             gis.SetSize (0);
@@ -769,6 +743,7 @@ namespace netgen
                       {
                         PointGeomInfo gi = (j == 0) ? gi0 : gi1;
 
+                        /*
                         int l;
                         for (l = 0; l < gis.Size() && locpnum[j] == 0; l++)
                           {
@@ -780,23 +755,38 @@ namespace netgen
 
                         if (locpnum[j] == 0)
                           {
-                            PointIndex pi = (j == 0) ? seg[0] : seg[1];
+                            PointIndex pi = seg[j];
                             meshing.AddPoint (mesh.Point(pi), pi);
 
                             gis.SetSize (gis.Size()+1);
                             gis[l] = gi;
                             locpnum[j] = l+1;
                           }
+                        */
+                        for (int l = 0; l < gis.Size(); l++)
+                          {
+                            double dist = sqr (gis[l].u-gi.u)+sqr(gis[l].v-gi.v);
+                            if (dist < 1e-10)
+                              {
+                                locpnum[j] = l+1;
+                                break;
+                              }
+                          }
+
+                        if (locpnum[j] == 0)
+                          {
+                            PointIndex pi = seg[j];
+                            meshing.AddPoint (mesh.Point(pi), pi);
+
+                            gis.Append (gi);
+                            locpnum[j] = gis.Size();
+                          }
                       }
 
                     meshing.AddBoundaryElement (locpnum[0], locpnum[1], gi0, gi1);
-                    //(*testout) << gi0.u << " " << gi0.v << endl;
-                    //(*testout) << gi1.u << " " << gi1.v << endl;
-
                   }
               }
           }
-
 
 
 
@@ -870,7 +860,6 @@ namespace netgen
 
         for (int i = oldnf+1; i <= mesh.GetNSE(); i++)
           mesh.SurfaceElement(i).SetIndex (k);
-
       }
 
     //      ofstream problemfile("occmesh.rep");
@@ -948,10 +937,7 @@ namespace netgen
               meshopt.SetFaceIndex (k);
               meshopt.SetImproveEdges (0);
               meshopt.SetMetricWeight (mparam.elsizeweight);
-              //meshopt.SetMetricWeight (0.2);
               meshopt.SetWriteStatus (0);
-
-              //	    (*testout) << "EdgeSwapping (mesh, (i > mparam.optsteps2d/2))" << endl;
               meshopt.EdgeSwapping (mesh, (i > mparam.optsteps2d/2));
             }
 
@@ -960,11 +946,8 @@ namespace netgen
               MeshOptimize2dOCCSurfaces meshopt(geom);
               meshopt.SetFaceIndex (k);
               meshopt.SetImproveEdges (0);
-              //meshopt.SetMetricWeight (0.2);
               meshopt.SetMetricWeight (mparam.elsizeweight);
               meshopt.SetWriteStatus (0);
-
-              //	    (*testout) << "ImproveMesh (mesh)" << endl;
               meshopt.ImproveMesh (mesh, mparam);
             }
 
@@ -972,11 +955,8 @@ namespace netgen
               MeshOptimize2dOCCSurfaces meshopt(geom);
               meshopt.SetFaceIndex (k);
               meshopt.SetImproveEdges (0);
-              //meshopt.SetMetricWeight (0.2);
               meshopt.SetMetricWeight (mparam.elsizeweight);
               meshopt.SetWriteStatus (0);
-
-              //	    (*testout) << "CombineImprove (mesh)" << endl;
               meshopt.CombineImprove (mesh);
             }
 
@@ -985,11 +965,8 @@ namespace netgen
               MeshOptimize2dOCCSurfaces meshopt(geom);
               meshopt.SetFaceIndex (k);
               meshopt.SetImproveEdges (0);
-              //meshopt.SetMetricWeight (0.2);
               meshopt.SetMetricWeight (mparam.elsizeweight);
               meshopt.SetWriteStatus (0);
-
-              //	    (*testout) << "ImproveMesh (mesh)" << endl;
               meshopt.ImproveMesh (mesh, mparam);
             }
           }
@@ -1003,12 +980,8 @@ namespace netgen
 
     multithread.task = savetask;
 
-    // Gerhard BEGIN
-    for(int i = 0; i<mesh.GetNFD();i++)
-      mesh.SetBCName(i,mesh.GetFaceDescriptor(i+1).GetBCName());
-    // for(int i = 0; i<mesh.GetNDomains();i++)
-    // mesh.SetMaterial(i,geom.snames[i]);
-    // Gerhard END
+    for (int i = 0; i < mesh.GetNFD(); i++)
+      mesh.SetBCName (i, mesh.GetFaceDescriptor(i+1).GetBCName());
   }
 
 
@@ -1098,13 +1071,6 @@ namespace netgen
             maxedgelen = max (maxedgelen, len);
             minedgelen = min (minedgelen, len);
 
-            // Philippose - 23/01/2009
-            // Modified the calculation of maxj, because the
-            // method used so far always results in maxj = 2,
-            // which causes the localh to be set only at the
-            // starting, mid and end of the edge.
-            // Old Algorithm:
-            // int maxj = 2 * (int) ceil (localh/len);
             int maxj = max((int) ceil(len/localh), 2);
 
             for (int j = 0; j <= maxj; j++)
@@ -1145,7 +1111,6 @@ namespace netgen
 
                 mesh.RestrictLocalH (Point3d(pnt.X(), pnt.Y(), pnt.Z()), ComputeH (fabs(curvature), mparam));
               }
-            // (*testout) << "edge " << i << " max. curvature: " << maxcur << endl;
           }
 
         multithread.task = "Setting local mesh size (face curvature)";
@@ -1206,9 +1171,12 @@ namespace netgen
 
             NgArray<Line> lines(sections*nedges);
 
+            /*
             BoxTree<3> * searchtree =
               new BoxTree<3> (bb.PMin(), bb.PMax());
-
+            */
+            BoxTree<3> searchtree(bb.PMin(), bb.PMax());
+            
             int nlines = 0;
             for (int i = 1; i <= nedges && !multithread.terminate; i++)
               {
@@ -1242,7 +1210,7 @@ namespace netgen
                         box.SetPoint (Point3d(lines[nlines].p0));
                         box.AddPoint (Point3d(lines[nlines].p1));
 
-                        searchtree->Insert (box.PMin(), box.PMax(), nlines+1);
+                        searchtree.Insert (box.PMin(), box.PMax(), nlines+1);
                         nlines++;
 
                         s_start = s;
@@ -1267,7 +1235,7 @@ namespace netgen
 
                 double mindist = 1e99;
                 linenums.SetSize(0);
-                searchtree->GetIntersecting(box.PMin(),box.PMax(),linenums);
+                searchtree.GetIntersecting(box.PMin(),box.PMax(),linenums);
 
                 for (int j = 0; j < linenums.Size(); j++)
                   {
@@ -1298,17 +1266,6 @@ namespace netgen
 
       }
 
-    // Philippose - 09/03/2009
-    // Added the capability to load the mesh size from a 
-    // file also for OpenCascade Geometry
-    // Note: 
-    // ** If the "uselocalh" option is ticked in 
-    // the "mesh options...insider" menu, the mesh 
-    // size will be further modified by the topology 
-    // analysis routines.
-    // ** To use the mesh size file as the sole source 
-    // for defining the mesh size, uncheck the "uselocalh"
-    // option.
     mesh.LoadLocalMeshSize (mparam.meshsizefilename);
   }
 
@@ -1433,21 +1390,7 @@ namespace netgen
 
         MESHING3_RESULT res = MeshVolume (mparam, *mesh);
 
-        /*
-          ofstream problemfile("occmesh.rep",ios_base::app);
-
-          problemfile << "VOLUMEMESHING" << endl << endl;
-          if(res != MESHING3_OK)
-          problemfile << "ERROR" << endl << endl;
-          else
-          problemfile << "OK" << endl
-          << mesh->GetNE() << " elements" << endl << endl;
-
-          problemfile.close();
-        */
-
         if (res != MESHING3_OK) return TCL_ERROR;
-
         if (multithread.terminate) return TCL_OK;
 
         RemoveIllegalElements (*mesh);
@@ -1492,6 +1435,7 @@ namespace netgen
 
       }
 
+    /*
     (*testout) << "NP: " << mesh->GetNP() << endl;
     for (int i = 1; i <= mesh->GetNP(); i++)
       (*testout) << mesh->Point(i) << endl;
@@ -1499,10 +1443,11 @@ namespace netgen
     (*testout) << endl << "NSegments: " << mesh->GetNSeg() << endl;
     for (int i = 1; i <= mesh->GetNSeg(); i++)
       (*testout) << mesh->LineSegment(i) << endl;
-
+    */
+    
     for (int i = 0; i < mesh->GetNDomains(); i++)
-      if(geom.snames.Size())
-        mesh->SetMaterial( i+1, geom.snames[i] );
+      if (geom.snames.Size())
+        mesh->SetMaterial (i+1, geom.snames[i]);
     return TCL_OK;
   }
 }
