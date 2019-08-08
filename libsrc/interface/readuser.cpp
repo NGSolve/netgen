@@ -4,8 +4,6 @@
 
 
 #include <mystdlib.h>
-
-
 #include <myadt.hpp>
 #include <linalg.hpp>
 #include <csg.hpp>
@@ -98,6 +96,8 @@ namespace netgen
         mesh.GetFaceDescriptor(1).SetBCProperty (1);
         // map from unv element nr to our element number + an index if it is vol (0), bnd(1), ...
         std::map<size_t, std::tuple<size_t, int>> element_map;
+	int dim = 3;
+	int bccounter = 0;
 
         NgArray<Segment> tmp_segments;
         while (in.good())
@@ -125,6 +125,15 @@ namespace netgen
                     mesh.AddPoint (p);
                   }
 		cout << "read " << mesh.GetNP() << " points" << endl;
+                Point3d pmin, pmax;
+                mesh.GetBox (pmin, pmax);
+                if(fabs(pmin.Z() - pmax.Z()) < 1e-10 * Dist(pmin, pmax))
+                {
+                       cout << "Set Dimension to 2." << endl;
+                       mesh.SetDimension(2);
+                       dim = 2 ;
+		}
+
               }
 
             else if (strcmp (reco, "2412") == 0)
@@ -150,6 +159,26 @@ namespace netgen
 		    
 		    switch (fe_id)
 		      {
+                      case 11: // (Rod) SEGM
+                        {
+                          Segment el;
+                          el[0] = nodes[0];
+                          el[1] = nodes[1];
+                          el[2] = -1;
+
+                          if(dim == 3){
+                            auto nr = tmp_segments.Size();
+                            tmp_segments.Append(el);
+                            element_map[label] = std::make_tuple(nr+1, 2);
+                          }
+                          else if(dim == 2){
+		            el.si = -1; // add label to segment, will be changed later when BC's are assigned
+                            auto nr = mesh.AddSegment(el);
+                            element_map[label] = std::make_tuple(nr+1, 2);
+                          }
+                          break;
+                        }
+
                       case 22: // (Tapered beam) SEGM
                         {
                           Segment el;
@@ -157,9 +186,17 @@ namespace netgen
                           el[1] = nodes[2];
                           el[2] = nodes[1];
                           
-                          auto nr = tmp_segments.Size();
-                          tmp_segments.Append(el);
-                          element_map[label] = std::make_tuple(nr+1, 2);
+                          if(dim == 3){
+                            auto nr = tmp_segments.Size();
+                            tmp_segments.Append(el);
+                            element_map[label] = std::make_tuple(nr+1, 2);
+                          }
+                          else if(dim == 2){
+		            el.si = -1; // add label to segment, will be changed later when BC's are assigned
+                            auto nr = mesh.AddSegment(el);
+                            element_map[label] = std::make_tuple(nr+1, 2);
+                          }
+
                           break;
                         }
 		      case 41: // TRIG
@@ -211,6 +248,7 @@ namespace netgen
                   }
                 cout << mesh.GetNE() << " elements found" << endl;
                 cout << mesh.GetNSE() << " surface elements found" << endl;
+
               }
             else if(strcmp (reco, "2467") == 0)
               {
@@ -244,24 +282,49 @@ namespace netgen
                         }
                       case 1:
                         {
-                          int bcpr = mesh.GetNFD()+1;
-                          fdnr = mesh.AddFaceDescriptor(FaceDescriptor(bcpr, 0,0,0));
-                          mesh.GetFaceDescriptor(fdnr).SetBCProperty(bcpr+1);
-                          mesh.SetBCName(bcpr, name);
-                          mesh.SurfaceElement(get<0>(element_map[index])).SetIndex(fdnr);
+                          if(dim == 3)
+                          {
+                            int bcpr = mesh.GetNFD();
+                            fdnr = mesh.AddFaceDescriptor(FaceDescriptor(bcpr, 0,0,0));
+                            mesh.GetFaceDescriptor(fdnr).SetBCProperty(bcpr+1);
+                            mesh.SetBCName(bcpr, name);
+                            mesh.SurfaceElement(get<0>(element_map[index])).SetIndex(fdnr);
+                            bccounter++;
+                          }
+                          else if(dim == 2)
+                          {
+                            mesh.SetMaterial(matnr, name);
+                            fdnr = mesh.AddFaceDescriptor(FaceDescriptor(matnr, 0,0,0));
+                            mesh.SurfaceElement(get<0>(element_map[index])).SetIndex(matnr);
+                            mesh.GetFaceDescriptor(fdnr).SetBCProperty(matnr);
+			    matnr++;
+                          }
                           break;
+
                         }
                       case 2:
                         {
-                          int bcpr = mesh.GetNCD2Names()+1;
-                          auto ed = EdgeDescriptor();
-                          ed.SetSurfNr(0,bcpr);//?
-                          ednr = mesh.AddEdgeDescriptor(ed);
-                          mesh.SetCD2Name(bcpr, name);
-                          auto nr = mesh.AddSegment(tmp_segments[get<0>(element_map[index])-1]);
-                          mesh[nr].SetBCName(mesh.GetCD2NamePtr(mesh.GetNCD2Names()));
-                          mesh[nr].edgenr = ednr+1;
+                         if(dim == 3)
+                          {
+                            int bcpr = mesh.GetNCD2Names()+1;
+                            auto ed = EdgeDescriptor();
+                            ed.SetSurfNr(0,bcpr);//?
+                            ednr = mesh.AddEdgeDescriptor(ed);
+                            mesh.SetCD2Name(bcpr, name);
+                            auto nr = mesh.AddSegment(tmp_segments[get<0>(element_map[index])-1]);
+                            mesh[nr].SetBCName(mesh.GetCD2NamePtr(mesh.GetNCD2Names()));
+                            mesh[nr].edgenr = ednr+1;
+                          }
+                          else if(dim == 2)
+                          {
+                            Segment & seg = mesh.LineSegment(get<0>(element_map[index]));
+			    seg.si = bccounter + 1;
+			    mesh.SetBCName(bccounter, name);
+                            seg.SetBCName(mesh.GetBCNamePtr(bccounter));
+		            bccounter++;
+                          }
                           break;
+
                         }
                       default:
                         {
@@ -278,14 +341,25 @@ namespace netgen
                             mesh.VolumeElement(get<0>(element_map[index])).SetIndex(matnr);
                             break;
                           case 1:
-                            mesh.SurfaceElement(get<0>(element_map[index])).SetIndex(fdnr);
+			    if(dim == 3) mesh.SurfaceElement(get<0>(element_map[index])).SetIndex(fdnr);
+			    else if (dim == 2){
+                                    mesh.SurfaceElement(get<0>(element_map[index])).SetIndex(matnr-1);
+				    mesh.GetFaceDescriptor(fdnr).SetBCProperty(matnr);
+			    }
                             break;
                           case 2:
+	   		    if(dim == 3)
                             {
                               auto nr = mesh.AddSegment(tmp_segments[get<0>(element_map[index])-1]);
                               mesh[nr].edgenr = ednr+1;
                               mesh[nr].SetBCName(mesh.GetCD2NamePtr(mesh.GetNCD2Names()));
                             }
+			    else if(dim == 2)
+			    {
+	 			    Segment & seg = mesh.LineSegment(get<0>(element_map[index]));
+			            seg.si = bccounter;
+                            	    seg.SetBCName(mesh.GetBCNamePtr(bccounter-1));
+			    }
                             break;
                           default:
                             break;
@@ -304,6 +378,21 @@ namespace netgen
                   }
               }
           }
+
+	if(dim == 2){
+		// loop through segments to assign default BC to unmarked edges
+		int bccounter_tmp = bccounter;
+		for(int index=1; index <= mesh.GetNSeg(); index++){
+                	Segment & seg = mesh.LineSegment(index);
+			if(seg.si == -1){
+			  seg.si = bccounter + 1;
+			  if(bccounter_tmp == bccounter) mesh.SetBCName(bccounter, "default"); // could be more efficient
+			  seg.SetBCName(mesh.GetBCNamePtr(bccounter));
+			  bccounter_tmp++;
+			}
+		}
+		if(bccounter_tmp > bccounter) bccounter++;
+	}
       
 
         Point3d pmin, pmax;
@@ -311,7 +400,12 @@ namespace netgen
         mesh.RebuildSurfaceElementLists();
         mesh.GetBox (pmin, pmax);
         mesh.UpdateTopology();
+        if(dim == 3) bccounter++;
         cout << "bounding-box = " << pmin << "-" << pmax << endl;
+	cout << "Created " << bccounter << " boundaries." << endl;
+	for(int i=0; i<bccounter; i++){
+		cout << mesh.GetBCName(i) << endl;
+	}
       }
 
 
