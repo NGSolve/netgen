@@ -185,7 +185,7 @@ namespace netgen
     int oldnf = mesh.GetNSE();
     for (SurfaceElementIndex sei = 0; sei < oldnf; sei++)
       {
-	const Element2d & el = mesh.SurfaceElement(sei);
+	const Element2d & el = mesh[sei];
 
 	switch (el.GetType())
 	  {
@@ -265,7 +265,7 @@ namespace netgen
 		  nel.SetIndex(ind);
 
 		  if (j == 0)
-		    mesh.SurfaceElement(sei) = nel;
+		    mesh[sei] = nel;
 		  else
 		    mesh.AddSurfaceElement(nel);
 		}
@@ -343,7 +343,7 @@ namespace netgen
 		  nel.SetIndex(ind);
 
 		  if (j == 0)
-		    mesh.SurfaceElement(sei) = nel;
+		    mesh[sei] = nel;
 		  else
 		    mesh.AddSurfaceElement(nel);
 		}

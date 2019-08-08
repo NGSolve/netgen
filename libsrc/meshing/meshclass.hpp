@@ -36,13 +36,13 @@ namespace netgen
     NgMPI_Comm comm;
     
     /// line-segments at edges
-    NgArray<Segment, 0, size_t> segments;
+    Array<Segment> segments;
     /// surface elements, 2d-inner elements
     Array<Element2d> surfelements;
     /// volume elements
-    NgArray<Element> volelements;
+    Array<Element> volelements;
     /// points will be fixed forever
-    NgArray<PointIndex> lockedpoints;
+    Array<PointIndex> lockedpoints;
 
 
     /// surface indices at boundary nodes
@@ -242,8 +242,8 @@ namespace netgen
     DLL_HEADER SegmentIndex AddSegment (const Segment & s);
     void DeleteSegment (int segnr)
     {
-      segments.Elem(segnr)[0].Invalidate();
-      segments.Elem(segnr)[1].Invalidate();
+      segments[segnr-1][0].Invalidate();
+      segments[segnr-1][1].Invalidate();
     }
     /*
     void FullDeleteSegment (int segnr)  // von wem ist das ???
@@ -254,9 +254,9 @@ namespace netgen
 
     int GetNSeg () const { return segments.Size(); }
     // [[deprecated("Use LineSegment(SegmentIndex) instead of int !")]]                
-    Segment & LineSegment(int i) { return segments.Elem(i); }
+    Segment & LineSegment(int i) { return segments[i-1]; }
     // [[deprecated("Use LineSegment(SegmentIndex) instead of int !")]]                    
-    const Segment & LineSegment(int i) const { return segments.Get(i); }
+    const Segment & LineSegment(int i) const { return segments[i-1]; }
 
     Segment & LineSegment(SegmentIndex si) { return segments[si]; }
     const Segment & LineSegment(SegmentIndex si) const { return segments[si]; }
@@ -266,7 +266,7 @@ namespace netgen
     const auto & LineSegments() const { return segments; }
     auto & LineSegments() { return segments; }
     
-    NgArray<Element0d> pointelements;  // only via python interface
+    Array<Element0d> pointelements;  // only via python interface
 
     DLL_HEADER SurfaceElementIndex AddSurfaceElement (const Element2d & el);
     // write to pre-allocated container, thread-safe
@@ -282,32 +282,34 @@ namespace netgen
       surfelements.Elem(eli).PNum(3).Invalidate();
       */
       surfelements[eli-1].Delete();
+      /*
       surfelements[eli-1].PNum(1).Invalidate();
       surfelements[eli-1].PNum(2).Invalidate();
       surfelements[eli-1].PNum(3).Invalidate();
+      */
       timestamp = NextTimeStamp();
     }
 
     [[deprecated("Use Delete(SurfaceElementIndex) instead !")]]        
     void DeleteSurfaceElement (SurfaceElementIndex eli)
     {
-      for (auto & p : surfelements[eli].PNums()) p.Invalidate();
+      // for (auto & p : surfelements[eli].PNums()) p.Invalidate();
       surfelements[eli].Delete();
       timestamp = NextTimeStamp();
     }
     
     void Delete (SurfaceElementIndex eli)
     {
-      for (auto & p : surfelements[eli].PNums()) p.Invalidate();
+      // for (auto & p : surfelements[eli].PNums()) p.Invalidate();
       surfelements[eli].Delete();
       timestamp = NextTimeStamp();
     }
 
     auto GetNSE () const { return surfelements.Size(); }
 
-    // [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]    
+    [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]    
     Element2d & SurfaceElement(int i) { return surfelements[i-1]; }
-    // [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]        
+    [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]        
     const Element2d & SurfaceElement(int i) const { return surfelements[i-1]; }
     [[deprecated("Use mesh[](SurfaceElementIndex) instead !")]]
     Element2d & SurfaceElement(SurfaceElementIndex i) { return surfelements[i]; }
@@ -333,9 +335,9 @@ namespace netgen
     auto GetNE () const { return volelements.Size(); }
 
     // [[deprecated("Use VolumeElement(ElementIndex) instead of int !")]]    
-    Element & VolumeElement(int i) { return volelements.Elem(i); }
+    Element & VolumeElement(int i) { return volelements[i-1]; }
     // [[deprecated("Use VolumeElement(ElementIndex) instead of int !")]]        
-    const Element & VolumeElement(int i) const { return volelements.Get(i); }
+    const Element & VolumeElement(int i) const { return volelements[i-1]; }
     [[deprecated("Use mesh[](VolumeElementIndex) instead !")]]
     Element & VolumeElement(ElementIndex i) { return volelements[i]; }
     [[deprecated("Use mesh[](VolumeElementIndex) instead !")]]

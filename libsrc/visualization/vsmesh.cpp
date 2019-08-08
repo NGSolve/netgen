@@ -665,10 +665,10 @@ namespace netgen
 
 	for (ElementIndex ei : mesh->VolumeElements().Range())
 	  {
-            if (mesh->VolumeElement(ei).flags.badel)
+            if ((*mesh)[ei].flags.badel)
 	      {
 		// copy to be thread-safe
-		Element el = mesh->VolumeElement (ei);
+		Element el = (*mesh)[ei];
 		if ( (el.GetNP() == 4) || (el.GetNP() == 10))
 		  {
 		    glBegin (GL_LINES);
@@ -749,10 +749,12 @@ namespace netgen
 
         for (SurfaceElementIndex sei : mesh->SurfaceElements().Range())
 	  {
-            Element2d el = mesh->SurfaceElement(sei); // copy to be thread-safe
+            Element2d el = (*mesh)[sei]; // copy to be thread-safe
             if (!el.BadElement())
 	      continue;
 
+            if (el.IsDeleted()) continue;
+            
             bool drawel = true;
             for (int j = 1; j <= el.GetNP(); j++)
 	      if (!el.PNum(j).IsValid())

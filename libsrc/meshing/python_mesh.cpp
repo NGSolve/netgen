@@ -741,7 +741,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def_property("dim", &Mesh::GetDimension, &Mesh::SetDimension)
 
     .def("Elements3D", 
-         static_cast<NgArray<Element>&(Mesh::*)()> (&Mesh::VolumeElements),
+         static_cast<Array<Element>&(Mesh::*)()> (&Mesh::VolumeElements),
          py::return_value_policy::reference)
 
     .def("Elements2D", 
@@ -749,10 +749,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          py::return_value_policy::reference)
 
     .def("Elements1D", 
-         static_cast<NgArray<Segment,0,size_t>&(Mesh::*)()> (&Mesh::LineSegments),
+         static_cast<Array<Segment>&(Mesh::*)()> (&Mesh::LineSegments),
          py::return_value_policy::reference)
 
-    .def("Elements0D", FunctionPointer([] (Mesh & self) -> NgArray<Element0d>&
+    .def("Elements0D", FunctionPointer([] (Mesh & self) -> Array<Element0d>&
                                        {
                                          return self.pointelements;
                                        } ),

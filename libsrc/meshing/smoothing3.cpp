@@ -300,7 +300,7 @@ namespace netgen
   {
   public:
     Mesh::T_POINTS & points;
-    const NgArray<Element> & elements;
+    const Array<Element> & elements;
     TABLE<int,PointIndex::BASE> elementsonpoint;
     const MeshingParameters & mp;
     PointIndex actpind;
@@ -308,7 +308,7 @@ namespace netgen
   
   public:
     PointFunction (Mesh::T_POINTS & apoints, 
-		   const NgArray<Element> & aelements,
+		   const Array<Element> & aelements,
 		   const MeshingParameters & amp);
     virtual ~PointFunction () { ; }
     virtual void SetPointIndex (PointIndex aactpind);
@@ -323,7 +323,7 @@ namespace netgen
 
 
   PointFunction :: PointFunction (Mesh::T_POINTS & apoints, 
-				  const NgArray<Element> & aelements,
+				  const Array<Element> & aelements,
 				  const MeshingParameters & amp)
     : points(apoints), elements(aelements), elementsonpoint(apoints.Size()), mp(amp)
   {
@@ -477,7 +477,7 @@ namespace netgen
     DenseMatrix m;
   public:
     CheapPointFunction (Mesh::T_POINTS & apoints, 
-			const NgArray<Element> & aelements,
+			const Array<Element> & aelements,
 			const MeshingParameters & amp);
     virtual void SetPointIndex (PointIndex aactpind);
     virtual double PointFunctionValue (const Point<3> & pp) const;
@@ -486,7 +486,7 @@ namespace netgen
 
 
   CheapPointFunction :: CheapPointFunction (Mesh::T_POINTS & apoints, 
-					    const NgArray<Element> & aelements,
+					    const Array<Element> & aelements,
 					    const MeshingParameters & amp)
     : PointFunction (apoints, aelements, amp)
   {
@@ -920,7 +920,7 @@ double Opti3EdgeMinFunction :: FuncGrad (const Vector & x, Vector & grad) const
 
 
 double CalcTotalBad (const Mesh::T_POINTS & points, 
-		     const NgArray<Element> & elements,
+		     const Array<Element> & elements,
 		     const MeshingParameters & mp)
 {
   static Timer t("CalcTotalBad"); RegionTimer reg(t);
@@ -933,9 +933,9 @@ double CalcTotalBad (const Mesh::T_POINTS & points,
 
   double teterrpow = mp.opterrpow;
 
-  for (int i = 1; i <= elements.Size(); i++)
+  for (int i = 0; i < elements.Size(); i++)
     {
-      elbad = pow (max2(CalcBad (points, elements.Get(i), 0, mp),1e-10),
+      elbad = pow (max2(CalcBad (points, elements[i], 0, mp),1e-10),
 		   1/teterrpow);
 
       int qualclass = int (20 / elbad + 1);
@@ -1002,17 +1002,12 @@ int WrongOrientation (const Mesh::T_POINTS & points, const Element & el)
 
 JacobianPointFunction :: 
 JacobianPointFunction (Mesh::T_POINTS & apoints, 
-		       const NgArray<Element> & aelements)
+		       const Array<Element> & aelements)
   : points(apoints), elements(aelements), elementsonpoint(apoints.Size())
 {
-  INDEX i;
-  int j;
-  
-  for (i = 1; i <= elements.Size(); i++)
-    {
-      for (j = 1; j <= elements.Get(i).NP(); j++)
-	elementsonpoint.Add1 (elements.Get(i).PNum(j), i);  
-    }
+  for (int i = 0; i < elements.Size(); i++)
+      for (int j = 1; j <= elements[i].NP(); j++)
+          elementsonpoint.Add1 (elements[i].PNum(j), i+1);
 
   onplane = false;
 }
@@ -1039,7 +1034,7 @@ double JacobianPointFunction :: Func (const Vector & v) const
   for (j = 1; j <= elementsonpoint.EntrySize(actpind); j++)
     {
       int eli = elementsonpoint.Get(actpind, j);
-      badness += elements.Get(eli).CalcJacobianBadness (points);
+      badness += elements[eli-1].CalcJacobianBadness (points);
     }
   
   points.Elem(actpind) = hp; 
@@ -1072,7 +1067,7 @@ FuncGrad (const Vector & x, Vector & g) const
   for (j = 1; j <= elementsonpoint.EntrySize(actpind); j++)
     {
       int eli = elementsonpoint.Get(actpind, j);
-      const Element & el = elements.Get(eli);
+      const Element & el = elements[eli-1];
 
       lpi = 0;
       for (k = 1; k <= el.GetNP(); k++)
@@ -1080,7 +1075,7 @@ FuncGrad (const Vector & x, Vector & g) const
 	  lpi = k;
       if (!lpi) cerr << "loc point not found" << endl;
 
-      badness += elements.Get(eli).
+      badness += elements[eli-1].
 	CalcJacobianBadnessGradient (points, lpi, hderiv);
 
       for(k=0; k<3; k++)
@@ -1145,7 +1140,7 @@ FuncDeriv (const Vector & x, const Vector & dir, double & deriv) const
   for (j = 1; j <= elementsonpoint.EntrySize(actpind); j++)
     {
       int eli = elementsonpoint.Get(actpind, j);
-      const Element & el = elements.Get(eli);
+      const Element & el = elements[eli-1];
 
       lpi = 0;
       for (k = 1; k <= el.GetNP(); k++)
@@ -1153,7 +1148,7 @@ FuncDeriv (const Vector & x, const Vector & dir, double & deriv) const
 	  lpi = k;
       if (!lpi) cerr << "loc point not found" << endl;
 
-      badness += elements.Get(eli).
+      badness += elements[eli-1].
 	CalcJacobianBadnessDirDeriv (points, lpi, vdir, hderiv);
       deriv += hderiv;
     }

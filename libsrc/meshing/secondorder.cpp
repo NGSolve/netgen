@@ -115,10 +115,9 @@ namespace netgen
     // refine surface elements
     for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
       {
-	int j;
-	const Element2d & el = mesh.SurfaceElement(sei);
+	const Element2d & el = mesh[sei];
 
-	int onp(0);
+	int onp = 0;
       
 	Element2d newel(TRIG);
 	newel.SetIndex (el.GetIndex());
@@ -168,11 +167,11 @@ namespace netgen
 	    PrintSysError ("Unhandled element in secondorder:", int(el.GetType()));
 	  }
 
-	for (j = 0; j < onp; j++)
+	for (int j = 0; j < onp; j++)
 	  newel[j] = el[j];
       
 	int nnp = newel.GetNP();
-	for (j = 0; j < nnp-onp; j++)
+	for (int j = 0; j < nnp-onp; j++)
 	  {
 	    int pi1 = newel[betw[j][0]];
 	    int pi2 = newel[betw[j][1]];
@@ -198,7 +197,7 @@ namespace netgen
 	      }
 	  }
       
-	mesh.SurfaceElement(sei) = newel;
+	mesh[sei] = newel;
       }
 
  

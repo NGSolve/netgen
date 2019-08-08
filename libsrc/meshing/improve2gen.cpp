@@ -395,8 +395,8 @@ namespace netgen
 		SelectSurfaceOfPoint (mesh.Point(pmap.Get(1)), pgi.Get(1));
 		GetNormalVector (surfnr, mesh.Point(pmap.Get(1)), pgi.Elem(1), n);
 		  
-		for (int j = 1; j <= rule.oldels.Size(); j++)
-		  bad1 += mesh.SurfaceElement(elmap.Get(j)).CalcJacobianBadness (mesh.Points(), n);
+		for (int j = 0; j < rule.oldels.Size(); j++)
+		  bad1 += mesh[elmap[j]].CalcJacobianBadness (mesh.Points(), n);
 		  
 		// check new element:
 		for (int j = 1; j <= rule.newels.Size(); j++)

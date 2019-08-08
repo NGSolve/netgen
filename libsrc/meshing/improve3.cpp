@@ -44,7 +44,7 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
   double totalbad = 0;
   for (ElementIndex ei = 0; ei < ne; ei++)
     {
-      if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
+      if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh[ei].GetIndex())
 	continue;
       double elerr = CalcBad (mesh.Points(), mesh[ei], 0);
       totalbad += elerr;

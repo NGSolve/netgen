@@ -27,7 +27,7 @@ namespace netgen
     const MeshTopology & top = mesh.GetTopology();
 
     auto id = this->mesh.GetCommunicator().Rank();
-    auto ntasks = this->mesh.GetCommunicator().Size();
+    // auto ntasks = this->mesh.GetCommunicator().Size();
 
     bool hasedges = top.HasEdges();
     bool hasfaces = top.HasFaces();

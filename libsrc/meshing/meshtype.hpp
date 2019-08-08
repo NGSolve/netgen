@@ -602,7 +602,7 @@ namespace netgen
     void Delete ()
     {
       deleted = 1;
-      for (PointIndex & p : pnum) p.Invalidate(); 
+      // for (PointIndex & p : pnum) p.Invalidate(); 
     }
     
     bool IsDeleted () const 

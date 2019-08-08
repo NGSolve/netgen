@@ -372,7 +372,7 @@ namespace netgen
     */
 
     volelements[ei]  = el;
-    volelements.Last().flags.illegal_valid = 0;
+    volelements[ei].flags.illegal_valid = 0;
   }
 
 
@@ -3222,7 +3222,7 @@ namespace netgen
 
   double Mesh :: ElementError (int eli, const MeshingParameters & mp) const
   {
-    const Element & el = volelements.Get(eli);
+    const Element & el = volelements[eli-1];
     return CalcTetBadness (points.Get(el[0]), points.Get(el[1]),
                            points.Get(el[2]), points.Get(el[3]), -1, mp);
   }
@@ -3262,7 +3262,7 @@ namespace netgen
       if (volelements[i][0] <= PointIndex::BASE-1 ||
           volelements[i].IsDeleted())
         {
-          volelements.Delete(i);
+          volelements.DeleteElement(i);
           i--;
         }
 
@@ -3277,13 +3277,13 @@ namespace netgen
     for (int i = 0; i < segments.Size(); i++)
       if (segments[i][0] <= PointIndex::BASE-1)
         {
-          segments.Delete(i);
+          segments.DeleteElement(i);
           i--;
         }
 
     for(int i=0; i < segments.Size(); i++)
       if(segments[i].edgenr < 0)
-          segments.Delete(i--);
+          segments.DeleteElement(i--);
 
     pused.Clear();
     for (int i = 0; i < volelements.Size(); i++)
