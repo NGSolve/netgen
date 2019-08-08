@@ -405,6 +405,23 @@ namespace netgen
     Element2d (Element2d &&) = default;
     Element2d & operator= (const Element2d &) = default;
     Element2d & operator= (Element2d &&) = default;
+    Element2d & operator= (initializer_list<PointIndex> list)
+    {
+      size_t cnt = 0;
+      for (auto val : list)
+        pnum[cnt++] = val;
+      return *this;
+    }
+    Element2d & operator= (initializer_list<tuple<PointIndex,PointGeomInfo>> list)
+    {
+      size_t cnt = 0;
+      for (auto val : list)
+        {
+          pnum[cnt] = get<0>(val);
+          geominfo[cnt++] = get<1>(val);
+        }
+      return *this;
+    }
     ///
     DLL_HEADER Element2d (int anp);
     ///
@@ -476,6 +493,12 @@ namespace netgen
     { return NgFlatArray<PointIndex> (np, &pnum[0]); }
     auto Vertices() const
     { return NgFlatArray<const PointIndex> (GetNV(), &pnum[0]); }
+
+    NgFlatArray<const PointGeomInfo> GeomInfo() const 
+    { return NgFlatArray<const PointGeomInfo> (np, &geominfo[0]); }
+    NgFlatArray<PointGeomInfo> GeomInfo()
+    { return NgFlatArray<PointGeomInfo> (np, &geominfo[0]); }
+    
     
     ///
     PointIndex & PNum (int i) { return pnum[i-1]; }

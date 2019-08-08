@@ -25,16 +25,6 @@ namespace netgen
 
     void SetOrientation (int side, int aorient) { orient[side] = aorient; }
     int GetOrientation (int side) { return orient[side]; }
-
-
-
-    /*
-      void SetNr1 (int side, int anr) { nr[side-1] = anr; }
-      int GetNr1 (int side) { return nr[side-1]; }
-
-      void SetOrientation1 (int side, int aorient) { orient[side-1] = aorient; }
-      int GetOrientation1 (int side) { return orient[side-1]; }
-    */
   };
 
 
@@ -100,7 +90,7 @@ namespace netgen
     INDEX_2_HASHTABLE<trionedge> other(seia.Size() + 2);
 
 
-    NgArray<char> swapped(mesh.GetNSE());
+    NgArray<bool> swapped(mesh.GetNSE());
     NgArray<int,PointIndex::BASE> pdef(mesh.GetNP());
     NgArray<double,PointIndex::BASE> pangle(mesh.GetNP());
 
@@ -231,14 +221,14 @@ namespace netgen
       }
 
     for (int i = 0; i < seia.Size(); i++)
-      swapped[seia[i]] = 0;
+      swapped[seia[i]] = false;
 
     NgProfiler::StopTimer (timerstart);
   
 
 
     int t = 4;
-    int done = 0;
+    bool done = false;
     while (!done && t >= 2)
       {
 	for (int i = 0; i < seia.Size(); i++)
@@ -257,7 +247,6 @@ namespace netgen
 	    for (int o1 = 0; o1 < 3; o1++)
 	      {
 		bool should;
-
 
 		SurfaceElementIndex t2 = neighbors[t1].GetNr (o1);
 		int o2 = neighbors[t1].GetOrientation (o1);
@@ -355,15 +344,10 @@ namespace netgen
 		      {
 			double loch = mesh.GetH(mesh[pi1]);
 			should = 
-			  CalcTriangleBadness (mesh.Point(pi4), mesh.Point(pi3), mesh.Point(pi1), 
-					       metricweight, loch) +
-			  CalcTriangleBadness (mesh.Point(pi3), mesh.Point(pi4), mesh.Point(pi2), 
-					       metricweight, loch) <
-			  CalcTriangleBadness (mesh.Point(pi1), mesh.Point(pi2), mesh.Point(pi3), 
-					       metricweight, loch) +
-			  CalcTriangleBadness (mesh.Point(pi2), mesh.Point(pi1), mesh.Point(pi4), 
-					       metricweight, loch);
-
+			  CalcTriangleBadness (mesh[pi4], mesh[pi3], mesh[pi1], metricweight, loch) +
+			  CalcTriangleBadness (mesh[pi3], mesh[pi4], mesh[pi2], metricweight, loch) <
+			  CalcTriangleBadness (mesh[pi1], mesh[pi2], mesh[pi3], metricweight, loch) +
+			  CalcTriangleBadness (mesh[pi2], mesh[pi1], mesh[pi4], metricweight, loch);
 		      }
 		  
 		    if (allowswap)
@@ -377,24 +361,20 @@ namespace netgen
 			int legal2 = 
 			  mesh.LegalTrig (sw1) + mesh.LegalTrig (sw2);
 
-			if (legal1 < legal2) should = 1;
-			if (legal2 < legal1) should = 0;
+			if (legal1 < legal2) should = true;
+			if (legal2 < legal1) should = false;
 		      }
 		  
 		    if (should)
 		      {
 			// do swapping !
 		      
-			done = 1;
-		      
-			mesh[t1].PNum(1) = pi1;
-			mesh[t1].PNum(2) = pi4;
-			mesh[t1].PNum(3) = pi3;
-		      
-			mesh[t2].PNum(1) = pi2;
-			mesh[t2].PNum(2) = pi3;
-			mesh[t2].PNum(3) = pi4;
-		      
+			done = true;
+
+                        /*
+                        mesh[t1] = { pi1, pi4, pi3 };
+                        mesh[t2] = { pi2, pi3, pi4 };
+                        
 			mesh[t1].GeomInfoPi(1) = gi1;
 			mesh[t1].GeomInfoPi(2) = gi4;
 			mesh[t1].GeomInfoPi(3) = gi3;
@@ -402,14 +382,17 @@ namespace netgen
 			mesh[t2].GeomInfoPi(1) = gi2;
 			mesh[t2].GeomInfoPi(2) = gi3;
 			mesh[t2].GeomInfoPi(3) = gi4;
-		      
+                        */
+                        mesh[t1] = { { pi1, gi1 }, { pi4, gi4 }, { pi3, gi3 } };
+                        mesh[t2] = { { pi2, gi2 }, { pi3, gi3 }, { pi4, gi4 } };
+                        
 			pdef[pi1]--;
 			pdef[pi2]--;
 			pdef[pi3]++;
 			pdef[pi4]++;
 		      
-			swapped[t1] = 1;
-			swapped[t2] = 1;
+			swapped[t1] = true;
+			swapped[t2] = true;
 		      }
 		  }
 	      }
@@ -708,19 +691,17 @@ namespace netgen
 
 	    mesh[pi1] = p1;
 	    mesh[pi2] = p2;
-	  
        
 	    if (debugflag)
 	      {
 		(*testout) << "bad1 = " << bad1 << ", bad2 = " << bad2 << endl;
 	      }
 
-
 	    bool should = (bad2 < bad1 && bad2 < 1e4);
 	    if (bad2 < 1e4)
 	      {
-		if (illegal1 > illegal2) should = 1;
-		if (illegal2 > illegal1) should = 0;
+		if (illegal1 > illegal2) should = true;
+		if (illegal2 > illegal1) should = false;
 	      }
 	  
 
@@ -737,7 +718,7 @@ namespace netgen
 		PointGeomInfo gi;
 		// bool gi_set(false);
 	      
-	      
+                /*
 		Element2d *el1p(NULL);
 		int l = 0;
 		while(mesh[elementsonnode[pi1][l]].IsDeleted() && l<elementsonnode[pi1].Size()) l++;
@@ -752,20 +733,38 @@ namespace netgen
 		      gi = el1p->GeomInfoPi (l+1);
 		      // gi_set = true;
 		    }
+                */
+                for (SurfaceElementIndex sei : elementsonnode[pi1])
+                  {
+                    const Element2d & el1p = mesh[sei];
+                    if (el1p.IsDeleted()) continue;
+                      
+                    for (int l = 0; l < el1p.GetNP(); l++)
+                      if (el1p[l] == pi1)
+                        // gi = el1p.GeomInfoPi (l+1);
+                        gi = el1p.GeomInfo()[l];
+                    break;
+                  }
+
+                
 
 		// (*testout) << "Connect point " << pi2 << " to " << pi1 << "\n";
-		for (int k = 0; k < elementsonnode[pi2].Size(); k++)
+		// for (int k = 0; k < elementsonnode[pi2].Size(); k++)
+                for (SurfaceElementIndex sei2 : elementsonnode[pi2])
 		  {
-		    Element2d & el = mesh[elementsonnode[pi2][k]];
+                    Element2d & el = mesh[sei2];
 		    if(el.IsDeleted()) continue;
-		    elementsonnode.Add (pi1, elementsonnode[pi2][k]);
+		    elementsonnode.Add (pi1, sei2);
 
+                    /*
 		    bool haspi1 = 0;
-		    for (l = 0; l < el.GetNP(); l++)
+		    for (int l = 0; l < el.GetNP(); l++)
 		      if (el[l] == pi1)
-			haspi1 = 1;
+			haspi1 = true;
 		    if (haspi1) continue;
-
+                    */
+                    if (el.PNums().Contains(pi1)) continue;
+                    
 		    for (int l = 0; l < el.GetNP(); l++)
 		      {
 			if (el[l] == pi2)
@@ -778,25 +777,8 @@ namespace netgen
 		      }
 		  }
 
-		/*
-		  for (k = 0; k < hasbothpi.Size(); k++)
-		  {
-		  cout << mesh[hasbothpi[k]] << endl;
-		  for (l = 0; l < 3; l++)
-		  cout << mesh[mesh[hasbothpi[k]][l]] << " ";
-		  cout << endl;
-		  }
-		*/
-
-		for (int k = 0; k < hasbothpi.Size(); k++)
-		  {
-		    mesh[hasbothpi[k]].Delete();
-		    /*
-		      for (l = 0; l < 4; l++)
-		      mesh[hasbothpi[k]][l] = PointIndex::BASE-1;
-		    */
-		  }
-
+                for (auto sei : hasbothpi)
+                  mesh[sei].Delete();
 	      }
 	  }
       }
