@@ -741,13 +741,13 @@ namespace netgen
     Opti2dLocalData ld;
 
 
-    NgArray<SurfaceElementIndex> seia;
+    Array<SurfaceElementIndex> seia;
     mesh.GetSurfaceElementsOfFace (faceindex, seia);
     bool mixed = 0;
-    for (int i = 0; i < seia.Size(); i++)
-      if (mesh[seia[i]].GetNP() != 3)
+    for (auto sei : seia)
+      if (mesh[sei].GetNP() != 3)
 	{
-	  mixed = 1;
+	  mixed = true;
 	  break;
 	}
 

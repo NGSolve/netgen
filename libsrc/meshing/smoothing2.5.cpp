@@ -51,7 +51,7 @@ namespace netgen
     int i, j, k;
     SurfaceElementIndex sei;
 
-    NgArray<SurfaceElementIndex> seia;
+    Array<SurfaceElementIndex> seia;
     mesh.GetSurfaceElementsOfFace (faceindex, seia);
 
     /*

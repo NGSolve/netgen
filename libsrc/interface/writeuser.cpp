@@ -427,7 +427,7 @@ void WriteSTLExtFormat (const Mesh & mesh,
 
       for(int faceNr = 1;faceNr <= faceBCMapping.EntrySize(bcInd); faceNr++)
       {
-          NgArray<SurfaceElementIndex> faceSei;
+        Array<SurfaceElementIndex> faceSei;
           mesh.GetSurfaceElementsOfFace(faceBCMapping.Get(bcInd,faceNr),faceSei);
 
           for (int i = 0; i < faceSei.Size(); i++)

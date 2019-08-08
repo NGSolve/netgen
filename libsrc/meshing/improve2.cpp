@@ -74,16 +74,24 @@ namespace netgen
     NgProfiler::StartTimer (timerstart);
 
 
-    NgArray<SurfaceElementIndex> seia;
+    Array<SurfaceElementIndex> seia;
     mesh.GetSurfaceElementsOfFace (faceindex, seia);
 
+    /*
     for (int i = 0; i < seia.Size(); i++)
       if (mesh[seia[i]].GetNP() != 3)
 	{
 	  GenericImprove (mesh);
 	  return;
 	}
-
+    */
+    for (SurfaceElementIndex sei : seia)
+      if (mesh[sei].GetNP() != 3)
+	{
+	  GenericImprove (mesh);
+	  return;
+	}
+      
     int surfnr = mesh.GetFaceDescriptor (faceindex).SurfNr();
 
     NgArray<Neighbour> neighbors(mesh.GetNSE());
@@ -356,8 +364,8 @@ namespace netgen
 			Element2d sw2 (pi3, pi4, pi2);
 
 			int legal1 = 
-			  mesh.LegalTrig (mesh.SurfaceElement (t1)) + 
-			  mesh.LegalTrig (mesh.SurfaceElement (t2));
+			  mesh.LegalTrig (mesh[t1]) + 
+			  mesh.LegalTrig (mesh[t2]);
 			int legal2 = 
 			  mesh.LegalTrig (sw1) + mesh.LegalTrig (sw2);
 
@@ -438,21 +446,14 @@ namespace netgen
     static int timerstart1 = NgProfiler::CreateTimer ("Combineimprove 2D start1");
     NgProfiler::StartTimer  (timerstart1);
 
-
-
-    // int i, j, k, l;
-    // PointIndex pi;
-    // SurfaceElementIndex sei;
-
-
-    NgArray<SurfaceElementIndex> seia;
+    
+    Array<SurfaceElementIndex> seia;
     mesh.GetSurfaceElementsOfFace (faceindex, seia);
 
 
-    for (int i = 0; i < seia.Size(); i++)
-      if (mesh[seia[i]].GetNP() != 3)
+    for (SurfaceElementIndex sei : seia)
+      if (mesh[sei].GetNP() != 3)
 	return;
-
 
 
     int surfnr = 0;
@@ -460,13 +461,9 @@ namespace netgen
       surfnr = mesh.GetFaceDescriptor (faceindex).SurfNr();
 
 
-    // PointIndex pi1, pi2;
-    // MeshPoint p1, p2, pnew;
-    double bad1, bad2;
     Vec<3> nv;
 
     int np = mesh.GetNP();
-    //int nse = mesh.GetNSE();
 
     TABLE<SurfaceElementIndex,PointIndex::BASE> elementsonnode(np); 
     NgArray<SurfaceElementIndex> hasonepi, hasbothpi;
@@ -639,8 +636,9 @@ namespace netgen
 		  hasonepi.Append (elementsonnode[pi2][k]);
 	      } 
 
-	    bad1 = 0;
+	    double bad1 = 0;
 	    int illegal1 = 0, illegal2 = 0;
+            
 	    for (int k = 0; k < hasonepi.Size(); k++)
 	      {
 		const Element2d & el = mesh[hasonepi[k]];
@@ -665,7 +663,7 @@ namespace netgen
 	    mesh[pi1] = pnew;
 	    mesh[pi2] = pnew;
 
-	    bad2 = 0;
+	    double bad2 = 0;
 	    for (int k = 0; k < hasonepi.Size(); k++)
 	      {
 		Element2d & el = mesh[hasonepi[k]];
@@ -753,24 +751,17 @@ namespace netgen
                 for (SurfaceElementIndex sei2 : elementsonnode[pi2])
 		  {
                     Element2d & el = mesh[sei2];
-		    if(el.IsDeleted()) continue;
-		    elementsonnode.Add (pi1, sei2);
-
-                    /*
-		    bool haspi1 = 0;
-		    for (int l = 0; l < el.GetNP(); l++)
-		      if (el[l] == pi1)
-			haspi1 = true;
-		    if (haspi1) continue;
-                    */
+		    if (el.IsDeleted()) continue;
                     if (el.PNums().Contains(pi1)) continue;
+
+		    elementsonnode.Add (pi1, sei2);
                     
-		    for (int l = 0; l < el.GetNP(); l++)
+		    for (auto l : Range(el.GetNP()))
 		      {
 			if (el[l] == pi2)
 			  {
 			    el[l] = pi1;
-			    el.GeomInfoPi (l+1) = gi;
+			    el.GeomInfo()[l] = gi;
 			  }
 
 			fixed[el[l]] = true;

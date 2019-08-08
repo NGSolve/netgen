@@ -749,9 +749,9 @@ namespace netgen
 
     auto & self = const_cast<Mesh&>(*this);
     self.points = T_POINTS(0);
-    self.surfelements = T_SURFELEMENTS(0);
-    self.volelements = T_VOLELEMENTS(0);
-    self.segments = NgArray<Segment, 0, size_t>(0);
+    self.surfelements = Array<Element2d>(0);
+    self.volelements = NgArray<Element>(0);
+    self.segments = NgArray<Segment>(0);
     self.lockedpoints = NgArray<PointIndex>(0);
     auto cleanup_ptr = [](auto & ptr) {
       if (ptr != nullptr) {

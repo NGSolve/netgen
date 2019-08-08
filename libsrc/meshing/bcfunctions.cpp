@@ -341,9 +341,9 @@ namespace netgen
       // Extract the number of surface elements having a given colour
       // And save this number into an array for later sorting
       for(int face_index = 1; face_index <= nfd; face_index++)
-      {
-         NgArray<SurfaceElementIndex> se_face;
-
+        {
+          Array<SurfaceElementIndex> se_face;
+          
          mesh.GetSurfaceElementsOfFace(face_index, se_face);
 
          Vec3d face_colour;

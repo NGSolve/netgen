@@ -430,7 +430,7 @@ namespace netgen
 		  }
 		  
 		for (int j = 0; j < rule.oldels.Size(); j++)
-		  mesh.DeleteSurfaceElement ( elmap[j] );
+		  mesh.Delete (elmap[j]);
 
 		for (int j = 1; j <= pmap.Size(); j++)
 		  nelonnode[pmap.Get(j)] += rule.incelsonnode.Get(j);

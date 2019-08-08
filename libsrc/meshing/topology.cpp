@@ -219,7 +219,7 @@ namespace netgen
     
     for (SurfaceElementIndex elnr : top.GetVertexSurfaceElements(v))          
       {
-        const Element2d & el = mesh.SurfaceElement (elnr);
+        const Element2d & el = mesh[elnr];
         
         const ELEMENT_FACE * elfaces = MeshTopology::GetFaces1 (el.GetType());
 	

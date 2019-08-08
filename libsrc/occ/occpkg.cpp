@@ -711,7 +711,7 @@ namespace netgen
 
         for(int i = 1; i <= mesh->GetNFD(); i++)
         {
-           NgArray<SurfaceElementIndex> surfElems;
+          Array<SurfaceElementIndex> surfElems;
            mesh->GetSurfaceElementsOfFace(i,surfElems);
 
            if(ColourMatch(face_colours[colourind],mesh->GetFaceDescriptor(i).SurfColour()))
@@ -735,7 +735,7 @@ namespace netgen
 
         for(int i = 1; i <= mesh->GetNFD(); i++)
         {
-           NgArray<SurfaceElementIndex> surfElems;
+           Array<SurfaceElementIndex> surfElems;
            mesh->GetSurfaceElementsOfFace(i,surfElems);
 
            if(ColourMatch(face_colours[colourind],mesh->GetFaceDescriptor(i).SurfColour()))
@@ -759,7 +759,7 @@ namespace netgen
 
         for(int i = 1; i <= mesh->GetNFD(); i++)
         {
-           NgArray<SurfaceElementIndex> surfElems;
+           Array<SurfaceElementIndex> surfElems;
            mesh->GetSurfaceElementsOfFace(i,surfElems);
 
            if(ColourMatch(face_colours[colourind],mesh->GetFaceDescriptor(i).SurfColour()))
@@ -783,14 +783,14 @@ namespace netgen
 
      if(strcmp(argv[1], "hideonly") == 0)
      {
-        NgArray<Vec3d> face_colours;
+       NgArray<Vec3d> face_colours;
         GetFaceColours(*mesh,face_colours);
 
         int colourind = atoi (argv[2]);
 
         for(int i = 1; i <= mesh->GetNFD(); i++)
         {
-           NgArray<SurfaceElementIndex> surfElems;
+           Array<SurfaceElementIndex> surfElems;
            mesh->GetSurfaceElementsOfFace(i,surfElems);
 
            if(ColourMatch(face_colours[colourind],mesh->GetFaceDescriptor(i).SurfColour()))

@@ -1005,7 +1005,7 @@ namespace netgen
 
     int hoplotn = 1 << vispar.subdivisions;
     
-    NgArray<SurfaceElementIndex> seia;
+    Array<SurfaceElementIndex> seia;
 
 
     for (int faceindex = 1; faceindex <= mesh->GetNFD(); faceindex++)

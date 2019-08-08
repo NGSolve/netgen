@@ -24,9 +24,9 @@ namespace netgen
   {
   public:
     typedef ::netgen::T_POINTS T_POINTS;
-    typedef NgArray<Element, 0, size_t> T_VOLELEMENTS;
+    // typedef NgArray<Element, 0, size_t> T_VOLELEMENTS;
     // typedef NgArray<Element2d, 0, SurfaceElementIndex> T_SURFELEMENTS;
-    typedef NgArray<Element2d, 0, size_t> T_SURFELEMENTS;
+    // typedef NgArray<Element2d, 0, size_t> T_SURFELEMENTS;
 
   private:
     /// point coordinates
@@ -38,9 +38,9 @@ namespace netgen
     /// line-segments at edges
     NgArray<Segment, 0, size_t> segments;
     /// surface elements, 2d-inner elements
-    T_SURFELEMENTS surfelements;
+    Array<Element2d> surfelements;
     /// volume elements
-    T_VOLELEMENTS volelements;
+    NgArray<Element> volelements;
     /// points will be fixed forever
     NgArray<PointIndex> lockedpoints;
 
@@ -263,10 +263,6 @@ namespace netgen
     const Segment & operator[] (SegmentIndex si) const { return segments[si]; }
     Segment & operator[] (SegmentIndex si) { return segments[si]; }
 
-    /*
-    const NgArray<Segment> & LineSegments() const { return segments; }
-    NgArray<Segment> & LineSegments() { return segments; }
-    */
     const auto & LineSegments() const { return segments; }
     auto & LineSegments() { return segments; }
     
@@ -276,17 +272,31 @@ namespace netgen
     // write to pre-allocated container, thread-safe
     DLL_HEADER void SetSurfaceElement (SurfaceElementIndex sei, const Element2d & el);
     
-    // [[deprecated("Use DeleteSurfaceElement(SurfaceElementIndex) instead of int !")]]
+    [[deprecated("Use Delete(SurfaceElementIndex) instead of int !")]]
     void DeleteSurfaceElement (int eli)
-    { 
+    {
+      /*
       surfelements.Elem(eli).Delete();
       surfelements.Elem(eli).PNum(1).Invalidate();
       surfelements.Elem(eli).PNum(2).Invalidate();
       surfelements.Elem(eli).PNum(3).Invalidate();
+      */
+      surfelements[eli-1].Delete();
+      surfelements[eli-1].PNum(1).Invalidate();
+      surfelements[eli-1].PNum(2).Invalidate();
+      surfelements[eli-1].PNum(3).Invalidate();
       timestamp = NextTimeStamp();
     }
 
+    [[deprecated("Use Delete(SurfaceElementIndex) instead !")]]        
     void DeleteSurfaceElement (SurfaceElementIndex eli)
+    {
+      for (auto & p : surfelements[eli].PNums()) p.Invalidate();
+      surfelements[eli].Delete();
+      timestamp = NextTimeStamp();
+    }
+    
+    void Delete (SurfaceElementIndex eli)
     {
       for (auto & p : surfelements[eli].PNums()) p.Invalidate();
       surfelements[eli].Delete();
@@ -296,10 +306,12 @@ namespace netgen
     auto GetNSE () const { return surfelements.Size(); }
 
     // [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]    
-    Element2d & SurfaceElement(int i) { return surfelements.Elem(i); }
+    Element2d & SurfaceElement(int i) { return surfelements[i-1]; }
     // [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]        
-    const Element2d & SurfaceElement(int i) const { return surfelements.Get(i); }
+    const Element2d & SurfaceElement(int i) const { return surfelements[i-1]; }
+    [[deprecated("Use mesh[](SurfaceElementIndex) instead !")]]
     Element2d & SurfaceElement(SurfaceElementIndex i) { return surfelements[i]; }
+    [[deprecated("Use mesh[](SurfaceElementIndex) instead !")]]
     const Element2d & SurfaceElement(SurfaceElementIndex i) const { return surfelements[i]; }
 
     const Element2d & operator[] (SurfaceElementIndex ei) const
@@ -307,12 +319,12 @@ namespace netgen
     Element2d & operator[] (SurfaceElementIndex ei)
     { return surfelements[ei]; }
 
-    const T_SURFELEMENTS & SurfaceElements() const { return surfelements; }
-    T_SURFELEMENTS & SurfaceElements() { return surfelements; }
+    const auto & SurfaceElements() const { return surfelements; }
+    auto & SurfaceElements() { return surfelements; }
 
   
     DLL_HEADER void RebuildSurfaceElementLists ();
-    DLL_HEADER void GetSurfaceElementsOfFace (int facenr, NgArray<SurfaceElementIndex> & sei) const;
+    DLL_HEADER void GetSurfaceElementsOfFace (int facenr, Array<SurfaceElementIndex> & sei) const;
 
     DLL_HEADER ElementIndex AddVolumeElement (const Element & el);
     // write to pre-allocated container, thread-safe
@@ -324,15 +336,13 @@ namespace netgen
     Element & VolumeElement(int i) { return volelements.Elem(i); }
     // [[deprecated("Use VolumeElement(ElementIndex) instead of int !")]]        
     const Element & VolumeElement(int i) const { return volelements.Get(i); }
+    [[deprecated("Use mesh[](VolumeElementIndex) instead !")]]
     Element & VolumeElement(ElementIndex i) { return volelements[i]; }
+    [[deprecated("Use mesh[](VolumeElementIndex) instead !")]]
     const Element & VolumeElement(ElementIndex i) const { return volelements[i]; }
 
-    const Element & operator[] (ElementIndex ei) const 
-    { return volelements[ei]; }
-    Element & operator[] (ElementIndex ei)
-    { return volelements[ei]; }
-
-
+    const Element & operator[] (ElementIndex ei) const { return volelements[ei]; }
+    Element & operator[] (ElementIndex ei) { return volelements[ei]; }
 
     ELEMENTTYPE ElementType (ElementIndex i) const 
     { return (volelements[i].flags.fixed) ? FIXEDELEMENT : FREEELEMENT; }

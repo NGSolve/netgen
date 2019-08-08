@@ -2467,7 +2467,7 @@ namespace netgen
 
     for (int i = 1; i <= GetNSE(); i++)
       {
-        Element2d & sel = surfelements.Elem(i);
+        Element2d & sel = surfelements[i-1];
         bool remove = false;
         for (int j = 1; j <= sel.GetNP(); j++)
           if (frontpoints.Test(sel.PNum(j)))
@@ -2478,9 +2478,9 @@ namespace netgen
 
     for (int i = surfelements.Size(); i >= 1; i--)
       {
-        if (!surfelements.Elem(i).PNum(1).IsValid())
+        if (!surfelements[i-1].PNum(1).IsValid())
           {
-            surfelements.Elem(i) = surfelements.Last();
+            surfelements[i-1] = surfelements.Last();
             surfelements.DeleteLast();
           }
       }
@@ -3270,8 +3270,12 @@ namespace netgen
     for (int i = 0; i < surfelements.Size(); i++)
       if (surfelements[i].IsDeleted())
         {
+          surfelements[i] = surfelements.Last();
+          surfelements.DeleteLast();
+          /*
           surfelements.Delete(i);
           i--;
+          */
         }
 
     for (int i = 0; i < segments.Size(); i++)
@@ -3907,7 +3911,7 @@ namespace netgen
             for (i = 1; i <= nse; i++)
               if (!used.Test(i))
                 {
-                  Element2d & el = surfelements.Elem(i);
+                  Element2d & el = surfelements[i-1];
                   int found = 0, foundrev = 0;
                   for (j = 1; j <= 3; j++)
                     {
@@ -5372,7 +5376,7 @@ namespace netgen
     int np = GetNP();
 
     BitArray usedp(np);
-    NgArray<SurfaceElementIndex> els_of_face;
+    Array<SurfaceElementIndex> els_of_face;
 
     fdi = 1;
     while (fdi <= GetNFD())
@@ -5546,7 +5550,7 @@ namespace netgen
       }
   }
 
-  void Mesh :: GetSurfaceElementsOfFace (int facenr, NgArray<SurfaceElementIndex> & sei) const
+  void Mesh :: GetSurfaceElementsOfFace (int facenr, Array<SurfaceElementIndex> & sei) const
   {
     static int timer = NgProfiler::CreateTimer ("GetSurfaceElementsOfFace");
     NgProfiler::RegionTimer reg (timer);

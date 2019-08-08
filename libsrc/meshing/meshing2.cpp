@@ -305,7 +305,7 @@ namespace netgen
 	  }
       }
     */
-    NgArray<SurfaceElementIndex> seia;
+    Array<SurfaceElementIndex> seia;
     mesh.GetSurfaceElementsOfFace (facenr, seia);
     for (int i = 0; i < seia.Size(); i++)
       {

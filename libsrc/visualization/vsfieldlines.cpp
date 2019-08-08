@@ -576,7 +576,7 @@ namespace netgen
     shared_ptr<Mesh> mesh = GetMesh();
     if (!mesh) return;
 
-    NgArray<SurfaceElementIndex> elements_2d;
+    Array<SurfaceElementIndex> elements_2d;
     
     //cout << "fieldlines_startface " << fieldlines_startface << endl;
     mesh->GetSurfaceElementsOfFace(fieldlines_startface,elements_2d);
@@ -592,7 +592,7 @@ namespace netgen
 	int i;
     for(i=0; i<elements_2d.Size(); i++)
       {
-	const Element2d & elem = mesh->SurfaceElement(elements_2d[i]);
+	const Element2d & elem = (*mesh)[elements_2d[i]];
 	
 	v1 = mesh->Point(elem[1]) - mesh->Point(elem[0]);
 	v2 = mesh->Point(elem[2]) - mesh->Point(elem[0]);
@@ -613,7 +613,7 @@ namespace netgen
     
     while(startpointsp < startpoints.Size())
       {
-	const Element2d & elem = mesh->SurfaceElement(elements_2d[i]);
+	const Element2d & elem = (*mesh)[elements_2d[i]];
 	
 	int numtri = (elem.GetNV() == 3) ? 1 : 2;
 	

@@ -831,8 +831,8 @@ namespace netgen
           {
             if (notrys == 1)
               {
-                for (int i = noldsurfel+1; i <= mesh.GetNSE(); i++)
-                  mesh.DeleteSurfaceElement (i);
+                for (SurfaceElementIndex sei = noldsurfel; sei < mesh.GetNSE(); sei++)
+                  mesh.Delete(sei);
 
                 mesh.Compress();
 

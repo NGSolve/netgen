@@ -300,7 +300,7 @@ namespace netgen
   {
   public:
     Mesh::T_POINTS & points;
-    const Mesh::T_VOLELEMENTS & elements;
+    const NgArray<Element> & elements;
     TABLE<int,PointIndex::BASE> elementsonpoint;
     const MeshingParameters & mp;
     PointIndex actpind;
@@ -308,7 +308,7 @@ namespace netgen
   
   public:
     PointFunction (Mesh::T_POINTS & apoints, 
-		   const Mesh::T_VOLELEMENTS & aelements,
+		   const NgArray<Element> & aelements,
 		   const MeshingParameters & amp);
     virtual ~PointFunction () { ; }
     virtual void SetPointIndex (PointIndex aactpind);
@@ -323,7 +323,7 @@ namespace netgen
 
 
   PointFunction :: PointFunction (Mesh::T_POINTS & apoints, 
-				  const Mesh::T_VOLELEMENTS & aelements,
+				  const NgArray<Element> & aelements,
 				  const MeshingParameters & amp)
     : points(apoints), elements(aelements), elementsonpoint(apoints.Size()), mp(amp)
   {
@@ -477,7 +477,7 @@ namespace netgen
     DenseMatrix m;
   public:
     CheapPointFunction (Mesh::T_POINTS & apoints, 
-			const Mesh::T_VOLELEMENTS & aelements,
+			const NgArray<Element> & aelements,
 			const MeshingParameters & amp);
     virtual void SetPointIndex (PointIndex aactpind);
     virtual double PointFunctionValue (const Point<3> & pp) const;
@@ -486,7 +486,7 @@ namespace netgen
 
 
   CheapPointFunction :: CheapPointFunction (Mesh::T_POINTS & apoints, 
-					    const Mesh::T_VOLELEMENTS & aelements,
+					    const NgArray<Element> & aelements,
 					    const MeshingParameters & amp)
     : PointFunction (apoints, aelements, amp)
   {
@@ -920,7 +920,7 @@ double Opti3EdgeMinFunction :: FuncGrad (const Vector & x, Vector & grad) const
 
 
 double CalcTotalBad (const Mesh::T_POINTS & points, 
-		     const Mesh::T_VOLELEMENTS & elements,
+		     const NgArray<Element> & elements,
 		     const MeshingParameters & mp)
 {
   static Timer t("CalcTotalBad"); RegionTimer reg(t);
@@ -985,13 +985,13 @@ int WrongOrientation (const Mesh::T_POINTS & points, const Element & el)
 // {
 // public:
 //   Mesh::T_POINTS & points;
-//   const Mesh::T_VOLELEMENTS & elements;
+//   const NgArray<Element> & elements;
 //   TABLE<INDEX> elementsonpoint;
 //   PointIndex actpind;
   
 // public:
 //   JacobianPointFunction (Mesh::T_POINTS & apoints, 
-// 			 const Mesh::T_VOLELEMENTS & aelements);
+// 			 const NgArray<Element> & aelements);
   
 //   virtual void SetPointIndex (PointIndex aactpind);
 //   virtual double Func (const Vector & x) const;
@@ -1002,7 +1002,7 @@ int WrongOrientation (const Mesh::T_POINTS & points, const Element & el)
 
 JacobianPointFunction :: 
 JacobianPointFunction (Mesh::T_POINTS & apoints, 
-		       const Mesh::T_VOLELEMENTS & aelements)
+		       const NgArray<Element> & aelements)
   : points(apoints), elements(aelements), elementsonpoint(apoints.Size())
 {
   INDEX i;
