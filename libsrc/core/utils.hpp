@@ -1,6 +1,7 @@
 #ifndef NETGEN_CORE_UTILS_HPP
 #define NETGEN_CORE_UTILS_HPP
 
+#include <atomic>
 #include <chrono>
 #include <map>
 #include <ostream>
@@ -117,6 +118,41 @@ namespace ngcore
     if(end.size() > str.size())
       return false;
     return std::equal(end.rbegin(), end.rend(), str.rbegin());
+  }
+
+  template<typename T>
+  NETGEN_INLINE std::atomic<T> & AsAtomic (T & d)
+  {
+    return reinterpret_cast<std::atomic<T>&> (d);
+  }
+
+  NETGEN_INLINE double AtomicAdd( double & sum, double val )
+  {
+      std::atomic<double> & asum = AsAtomic(sum);
+      double current = asum.load();
+      while (!asum.compare_exchange_weak(current, current + val))
+          ;
+      return current;
+  }
+
+  template<typename T>
+  NETGEN_INLINE T AtomicMin( T & minval, T val )
+  {
+      std::atomic<T> & aminval = AsAtomic(minval);
+      T current = aminval.load();
+      while (!aminval.compare_exchange_weak(current, std::min(current, val)))
+          ;
+      return current;
+  }
+
+  template<typename T>
+  NETGEN_INLINE T AtomicMax( T & maxval, T val )
+  {
+      std::atomic<T> & amaxval = AsAtomic(maxval);
+      T current = amaxval.load();
+      while (!amaxval.compare_exchange_weak(current, std::max(current, val)))
+          ;
+      return current;
   }
 
 } // namespace ngcore
