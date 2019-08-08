@@ -106,7 +106,7 @@ test_ubuntu:
       -e NETGENDIR=/opt/netgen/bin
       -e PYTHONPATH=/opt/netgen/lib/python3/dist-packages
       netgen_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}
-      bash -c 'cd /root/build/netgen && make test_netgen ARGS="--output-on-failure"'
+      bash -c 'cd /root/build/netgen && make test_netgen ARGS="-V --output-on-failure"'
 
 test_ubuntu_mpi:
   <<: *ubuntu
@@ -117,7 +117,7 @@ test_ubuntu_mpi:
       -e NETGENDIR=/opt/netgen/bin
       -e PYTHONPATH=/opt/netgen/lib/python3/dist-packages
       netgen_mpi_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}
-      bash -c 'cd /root/build/netgen && make test_netgen ARGS="--output-on-failure"'
+      bash -c 'cd /root/build/netgen && make test_netgen ARGS="-V --output-on-failure"'
 
 test_build_ngsolve:
   <<: *ubuntu
@@ -205,7 +205,7 @@ test_mac:
   stage: test
   script:
     - cd $BUILD_DIR/netgen
-    - ctest . --output-on-failure
+    - ctest . -V --output-on-failure
 
 cleanup_mac:
   <<: *mac
