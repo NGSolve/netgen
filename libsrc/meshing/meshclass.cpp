@@ -3270,12 +3270,8 @@ namespace netgen
     for (int i = 0; i < surfelements.Size(); i++)
       if (surfelements[i].IsDeleted())
         {
-          surfelements[i] = surfelements.Last();
-          surfelements.DeleteLast();
-          /*
-          surfelements.Delete(i);
+          surfelements.DeleteElement(i);
           i--;
-          */
         }
 
     for (int i = 0; i < segments.Size(); i++)

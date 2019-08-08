@@ -569,6 +569,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     */
     
     .def_property_readonly("_timestamp", &Mesh::GetTimeStamp)
+    .def_property_readonly("ne", [](Mesh& m) { return m.GetNE(); })
     .def("Distribute", [](shared_ptr<Mesh> self, NgMPI_Comm comm) {
 	self->SetCommunicator(comm);
 	if(comm.Size()==1) return self;
