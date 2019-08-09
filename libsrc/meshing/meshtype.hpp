@@ -188,6 +188,18 @@ namespace netgen
     void DoArchive (Archive & ar) { ar & i; }
   };
 
+}
+
+namespace ngcore
+{
+  template<> 
+  constexpr size_t IndexBASE<netgen::PointIndex> () { return netgen::PointIndex::BASE; }
+}
+
+namespace netgen
+{
+
+  
   inline istream & operator>> (istream & ist, PointIndex & pi)
   {
     int i; ist >> i; pi = PointIndex(i); return ist;
@@ -358,6 +370,7 @@ namespace netgen
 
 
   typedef NgArray<MeshPoint, PointIndex::BASE, PointIndex> T_POINTS;
+  // typedef Array<MeshPoint, PointIndex> T_POINTS;
 
 
 

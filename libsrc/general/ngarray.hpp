@@ -96,10 +96,15 @@ namespace netgen
     ArrayIterator<T,BASE,TIND> end() const
     { return ArrayIterator<T,BASE,TIND> (*this, BASE+size); }
 
-    TIND Begin() const { return TIND(BASE); }
-    TIND End() const { return TIND(size+BASE); }
+    // TIND Begin() const { return TIND(BASE); }
+    // TIND End() const { return TIND(size+BASE); }
     T_Range<TIND> Range() const { return T_Range<TIND>(BASE, size+BASE); }
 
+    [[deprecated("Use *Range().begin() instead")]]
+    auto Begin() const { return *Range().begin(); }
+    [[deprecated("Use *Range().end() instead")]]
+    auto End() const { return *Range().end(); }
+    
     /// Access array. BASE-based
     T & operator[] (TIND i) const
     {
@@ -205,11 +210,11 @@ namespace netgen
   template <typename T, int BASE, typename TIND>
   inline ostream & operator<< (ostream & s, const NgFlatArray<T,BASE,TIND> & a)
   {
-    for (TIND i = a.Begin(); i < a.End(); i++)
+    // for (TIND i = a.Begin(); i < a.End(); i++)
+    for (auto i : a.Range())
       s << i << ": " << a[i] << endl;
     return s;
   }
-
 
 
   /** 
@@ -530,6 +535,9 @@ namespace netgen
     int End() const { return ia.End(); }
 
     const typename TA1::TELEM & operator[] (int i) const { return array[ia[i]]; }
+    auto Range() const { return ia.Range(); }
+    auto begin() const { return ia.begin(); }
+    auto end() const { return ia.end(); }
   };
 
 

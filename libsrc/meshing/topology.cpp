@@ -521,13 +521,15 @@ namespace netgen
 
 	// ensure all coarse grid and intermediate level edges
 	cnt = 0;
-	for (int i = mesh->mlbetweennodes.Begin(); i < mesh->mlbetweennodes.End(); i++)
+	// for (int i = mesh->mlbetweennodes.Begin(); i < mesh->mlbetweennodes.End(); i++)
+        for (int i : mesh->mlbetweennodes.Range())
 	  {
 	    INDEX_2 parents = Sort (mesh->mlbetweennodes[i]);
 	    if (parents[0] >= PointIndex::BASE) cnt[parents[0]]++;
 	  }
 	TABLE<int,PointIndex::BASE> vert2vertcoarse (cnt);
-	for (int i = mesh->mlbetweennodes.Begin(); i < mesh->mlbetweennodes.End(); i++)
+	// for (int i = mesh->mlbetweennodes.Begin(); i < mesh->mlbetweennodes.End(); i++)
+        for (int i : mesh->mlbetweennodes.Range())
 	  {
 	    INDEX_2 parents = Sort (mesh->mlbetweennodes[i]);
 	    if (parents[0] >= PointIndex::BASE) vert2vertcoarse.AddSave (parents[0], parents[1]);

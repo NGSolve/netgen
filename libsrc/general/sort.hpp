@@ -38,7 +38,8 @@ template <class T>
 inline void BubbleSort (NgArray<T> & data)
 {
   if(data.Size() > 0)
-	  BubbleSort (data.Size(), &data[data.Begin()]);
+    // BubbleSort (data.Size(), &data[data.Begin()]);
+    BubbleSort (data.Size(), &data[*data.Range().begin()]);
 }
 
 }

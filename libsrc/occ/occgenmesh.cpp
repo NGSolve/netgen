@@ -346,7 +346,8 @@ namespace netgen
     (*testout) << "different vertices = " << mesh.GetNP() << endl;
 
     // int first_ep = mesh.GetNP()+1;
-    PointIndex first_ep = mesh.Points().End();
+    // PointIndex first_ep = mesh.Points().End();
+    PointIndex first_ep = *mesh.Points().Range().end();
     auto vertexrange = mesh.Points().Range();
 
     NgArray<int> face2solid[2];
@@ -500,7 +501,8 @@ namespace netgen
                     bool exists = 0;
                     tsearch.Start();
 
-                    for (PointIndex j = first_ep; j < mesh.Points().End(); j++)
+                    // for (PointIndex j = first_ep; j < mesh.Points().End(); j++)
+                    for (PointIndex j = first_ep; j < *mesh.Points().Range().end(); j++)
                       if ((mesh.Point(j)-Point<3>(mp[i-1])).Length() < eps)
                         {
                           exists = true;

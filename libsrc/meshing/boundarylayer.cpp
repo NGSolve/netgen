@@ -572,10 +572,11 @@ namespace netgen
          
          // Lock all the prism points so that the rest of the mesh can be 
          // optimised without invalidating the entire mesh
-         for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End(); pi++)
-         {
-           if(bndnodes.Test(pi)) mesh.AddLockedPoint(pi);
-         }
+         // for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End(); pi++)
+         for (PointIndex pi : mesh.Points().Range())
+           {
+             if(bndnodes.Test(pi)) mesh.AddLockedPoint(pi);
+           }
 
          // Now, actually pull back the old surface points to create 
          // the actual boundary layers

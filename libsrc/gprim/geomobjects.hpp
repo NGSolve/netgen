@@ -286,7 +286,8 @@ namespace netgen
     template <typename T1, typename T2>
     void Add (const IndirectArray<T1, T2> & points)
     {
-      for (int i = points.Begin(); i < points.End(); i++)
+      // for (int i = points.Begin(); i < points.End(); i++)
+      for (int i : points.Range())
         Add (points[i]);
     }
 

@@ -86,9 +86,13 @@ AdFront3 :: ~AdFront3 ()
 
 void AdFront3 :: GetPoints (NgArray<Point<3> > & apoints) const
 {
+  /*
   for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
     
     apoints.Append (points[pi].P());
+  */
+  for (auto & p : points)
+    apoints.Append(p.P());
 }
 
 
@@ -105,7 +109,8 @@ PointIndex AdFront3 :: AddPoint (const Point<3> & p, PointIndex globind)
   else
     {
       points.Append (FrontPoint3 (p, globind));
-      return --points.End();
+      // return --points.End();
+      return *points.Range().end()-1;
       // return points.Size()-1+PointIndex::BASE;
     }
 }
@@ -302,7 +307,8 @@ void AdFront3 :: RebuildInternalTables ()
 
   int np = points.Size();
 
-  for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+  // for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+  for (PointIndex pi : points.Range())
     points[pi].cluster = pi;
   
   NgProfiler::StopTimer (timer_a);	  
@@ -395,12 +401,13 @@ void AdFront3 :: RebuildInternalTables ()
       if (clvol[i] < 0)
 	negvol = 1;
     }
-
+  
   if (negvol)
     {
       for (int i = 1; i <= faces.Size(); i++)
 	faces.Elem(i).cluster = 1;
-      for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+      // for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+      for (PointIndex pi : points.Range())
 	points[pi].cluster = 1;
     }
 

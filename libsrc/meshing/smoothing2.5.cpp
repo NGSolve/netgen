@@ -142,7 +142,8 @@ namespace netgen
     NgArray<SurfaceElementIndex> locelements(0);
     NgArray<int> locrots(0);
 
-    for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End(); pi++)
+    // for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End(); pi++)
+    for (PointIndex pi : mesh.Points().Range())
       {
 	if (mesh[pi].Type() != SURFACEPOINT)
 	  continue;

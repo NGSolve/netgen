@@ -39,7 +39,8 @@ namespace netgen
     allflines = 0;
 
     minval = 0;
-    starti = lines.Begin();
+    // starti = lines.Begin();
+    starti = *lines.Range().begin();
   }
 
   AdFront2 :: ~AdFront2 ()
@@ -53,7 +54,8 @@ namespace netgen
     if (nfl > 0)
       {
 	ost << nfl << " open front segments left:" << endl;
-	for (int i = lines.Begin(); i < lines.End(); i++)
+	// for (int i = lines.Begin(); i < lines.End(); i++)
+        for (int i : lines.Range())
 	  if (lines[i].Valid())
 	    ost << i << ": " 
                 << GetGlobalIndex (lines[i].L().I1()) << "-"
@@ -219,8 +221,9 @@ namespace netgen
 				  int & qualclass)
   {
     int baselineindex = -1; 
-
-    for (int i = starti; i < lines.End(); i++)
+    
+    // for (int i = starti; i < lines.End(); i++)
+    for (int i = starti; i < *lines.Range().end(); i++)
       {
 	if (lines[i].Valid())
 	  {
@@ -240,7 +243,8 @@ namespace netgen
     if (baselineindex == -1)
       {
 	minval = INT_MAX;
-	for (int i = lines.Begin(); i < lines.End(); i++)
+	// for (int i = lines.Begin(); i < lines.End(); i++)
+        for (int i : lines.Range())
 	  if (lines[i].Valid())
 	    {
 	      int hi = lines[i].LineClass() +
@@ -432,7 +436,8 @@ namespace netgen
 
   void AdFront2 :: SetStartFront ()
   {
-    for (int i = lines.Begin(); i < lines.End(); i++)
+    // for (int i = lines.Begin(); i < lines.End(); i++)
+    for (int i : lines.Range())
       if (lines[i].Valid())
 	for (int j = 1; j <= 2; j++)
 	  points[lines[i].L().I(j)].DecFrontNr(0);
@@ -442,12 +447,14 @@ namespace netgen
   void AdFront2 :: Print (ostream & ost) const
   {
     ost << points.Size() << " Points: " << endl;
-    for (int i = points.Begin(); i < points.End(); i++)
+    // for (int i = points.Begin(); i < points.End(); i++)
+    for (int i : points.Range())
       if (points[i].Valid())
 	ost << i << "  " << points[i].P() << endl;
 
     ost << nfl << " Lines: " << endl;
-    for (int i = lines.Begin(); i < lines.End(); i++)
+    // for (int i = lines.Begin(); i < lines.End(); i++)
+    for (int i : lines.Range())
       if (lines[i].Valid())
 	ost << lines[i].L().I1() << " - " << lines[i].L().I2() << endl;
 

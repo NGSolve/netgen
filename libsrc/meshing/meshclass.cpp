@@ -188,7 +188,8 @@ namespace netgen
 
     timestamp = NextTimeStamp();
 
-    PointIndex pi = points.End();
+    // PointIndex pi = points.End();
+    PointIndex pi = *points.Range().end();
     points.Append ( MeshPoint (p, layer, type) ); 
 
     lock.UnLock();
@@ -259,7 +260,8 @@ namespace netgen
             points[el[i]].SetType(SURFACEPOINT);
       }
     */
-    if (maxn < points.End())
+    // if (maxn < points.End())
+    if (maxn < *points.Range().end())
       for (PointIndex pi : el.PNums())
         if (points[pi].Type() > SURFACEPOINT)
           points[pi].SetType(SURFACEPOINT);
@@ -719,7 +721,8 @@ namespace netgen
     if (cnt_sing)
       {
         outfile << "singular_points" << endl << cnt_sing << endl;
-        for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+        // for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+        for (PointIndex pi : points.Range())
           if ((*this)[pi].Singularity()>=1.) 
             outfile << int(pi) << "\t" << (*this)[pi].Singularity() << endl;
       }
@@ -1968,8 +1971,9 @@ namespace netgen
     struct tval { int index; PointIndex p4; };
     INDEX_3_CLOSED_HASHTABLE<tval> faceht(100);
     openelements.SetSize(0);
-
-    for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+    
+    // for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+    for (PointIndex pi : points.Range())
       if (selsonpoint[pi].Size()+elsonpoint[pi].Size())
         {
           faceht.SetSize (2 * selsonpoint[pi].Size() + 4 * elsonpoint[pi].Size());
@@ -2149,7 +2153,8 @@ namespace netgen
         for (int j = 1; j <= 3; j++)
           {
             PointIndex pi = sel.PNum(j);
-            if (pi < points.End())
+            // if (pi < points.End())
+            if (pi < *points.Range().end())
               points[pi].SetType (FIXEDPOINT);
           }
       }
@@ -3159,7 +3164,8 @@ namespace netgen
         pmin = Point3d (1e10, 1e10, 1e10);
         pmax = Point3d (-1e10, -1e10, -1e10); 
 
-        for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+        // for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+        for (PointIndex pi : points.Range())
           {
             pmin.SetToMin ( (*this) [pi] );
             pmax.SetToMax ( (*this) [pi] );
@@ -3208,7 +3214,8 @@ namespace netgen
     pmin = Point3d (1e10, 1e10, 1e10);
     pmax = Point3d (-1e10, -1e10, -1e10); 
 
-    for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+    // for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+    for (PointIndex pi : points.Range())
       if (points[pi].Type() <= ptyp)
         {
           pmin.SetToMin ( (*this) [pi] );
@@ -3331,10 +3338,11 @@ namespace netgen
     */
     //  pused.Set();
 
-
+    
     int npi = PointIndex::BASE-1;
 
-    for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+    // for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+    for (PointIndex pi : points.Range())
       if (pused.Test(pi))
         {
           npi++;

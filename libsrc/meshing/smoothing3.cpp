@@ -1533,7 +1533,8 @@ void Mesh :: ImproveMeshJacobian (const MeshingParameters & mp,
   const char * savetask = multithread.task;
   multithread.task = "Smooth Mesh Jacobian";
   
-  for (PointIndex pi = points.Begin(); i < points.End(); pi++)
+  // for (PointIndex pi = points.Begin(); i < points.End(); pi++)
+  for (PointIndex pi : points.Range())
     {
       if ((*this)[pi].Type() != INNERPOINT)
 	continue;
@@ -1687,7 +1688,8 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
   const char * savetask = multithread.task;
   multithread.task = "Smooth Mesh Jacobian";
   
-  for (PointIndex pi = points.Begin(); pi <= points.End(); pi++)
+  // for (PointIndex pi = points.Begin(); pi <= points.End(); pi++)
+  for (PointIndex pi : points.Range())
     if ( usepoint.Test(i) )
       {
 	//(*testout) << "improvejac, p = " << i << endl;

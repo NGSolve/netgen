@@ -145,7 +145,8 @@ namespace netgen
 		mpquad.check_impossible = qstep == 1;   // for prisms only (air domain in trafo)
 		
 		
-		for (PointIndex pi = mesh3d.Points().Begin(); pi < mesh3d.Points().End(); pi++)
+		// for (PointIndex pi = mesh3d.Points().Begin(); pi < mesh3d.Points().End(); pi++)
+                for (PointIndex pi : mesh3d.Points().Range())
 		  meshing.AddPoint (mesh3d[pi], pi);
 
                 /*
@@ -241,7 +242,8 @@ namespace netgen
               NgArray<int, PointIndex::BASE> glob2loc(mesh3d.GetNP());
               glob2loc = -1;
 
-              for (PointIndex pi = mesh3d.Points().Begin(); pi < mesh3d.Points().End(); pi++)
+              // for (PointIndex pi = mesh3d.Points().Begin(); pi < mesh3d.Points().End(); pi++)
+              for (PointIndex pi : mesh3d.Points().Range())
                 if (domain_bbox.IsIn (mesh3d[pi]))
                     glob2loc[pi] = 
                     meshing.AddPoint (mesh3d[pi], pi);

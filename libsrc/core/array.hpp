@@ -201,16 +201,21 @@ namespace ngcore
     NETGEN_INLINE operator T* () const { return data; }
   };
 
-  template <class T> class FlatArray;
+
+  template <typename  T>
+  constexpr size_t IndexBASE () { return 0; }
+
+  
+  template <class T, class IndexType = size_t> class FlatArray;
 
 
-  template <typename TELEM, typename TSIZE>
+  template <typename TELEM, typename IndexType>
   class ArrayIterator
   {
-    FlatArray<TELEM> ar;
-    TSIZE ind;
+    FlatArray<TELEM, IndexType> ar;
+    IndexType ind;
   public:
-    NETGEN_INLINE ArrayIterator (FlatArray<TELEM> aar, TSIZE ai) 
+    NETGEN_INLINE ArrayIterator (FlatArray<TELEM, IndexType> aar, IndexType ai) 
       : ar(aar), ind(ai) { ; }
     NETGEN_INLINE ArrayIterator operator++ (int) 
     { return ArrayIterator(ar, ind++); }
@@ -381,23 +386,24 @@ namespace ngcore
      Helper functions for printing. 
      Optional range check by macro NETGEN_CHECK_RANGE
   */
-  template <class T>
-  class FlatArray : public BaseArrayObject<FlatArray<T> >
+  template <class T, class IndexType>
+  class FlatArray : public BaseArrayObject<FlatArray<T,IndexType> >
   {
   protected:
+    static constexpr size_t BASE = IndexBASE<IndexType>();
     /// the size
     size_t size;
     /// the data
     T * __restrict data;
   public:
-    using BaseArrayObject<FlatArray<T> >::ILLEGAL_POSITION;
+    using BaseArrayObject<FlatArray>::ILLEGAL_POSITION;
 
     /// initialize array 
     NETGEN_INLINE FlatArray () = default;
     // { ; } // size = 0; data = 0; }
 
     /// copy constructor allows size-type conversion 
-    NETGEN_INLINE FlatArray (const FlatArray<T> & a2) = default;
+    NETGEN_INLINE FlatArray (const FlatArray & a2) = default;
     // : size(a2.Size()), data(a2.data) { ; } 
 
     /// provide size and memory
@@ -473,10 +479,10 @@ namespace ngcore
     }
 
     /// Access array. range check by macro NETGEN_CHECK_RANGE
-    NETGEN_INLINE T & operator[] (size_t i) const
+    NETGEN_INLINE T & operator[] (IndexType i) const
     {
       NETGEN_CHECK_RANGE(i,0,size);
-      return data[i]; 
+      return data[i-BASE]; 
     }
   
     NETGEN_INLINE T_Range<size_t> Range () const
@@ -552,10 +558,8 @@ namespace ngcore
       return Pos(elem) != ILLEGAL_POSITION;
     }
     
-    ArrayIterator<T, size_t> begin() const
-    { return ArrayIterator<T,size_t> (*this, 0); }
-    ArrayIterator<T, size_t> end() const
-    { return ArrayIterator<T,size_t> (*this, size); }
+    auto begin() const { return ArrayIterator<T,IndexType> (*this, BASE); }
+    auto end() const { return ArrayIterator<T,IndexType> (*this, size+BASE); }
   };
 
   template <typename T>
@@ -591,8 +595,8 @@ namespace ngcore
       Either the container takes care of memory allocation and deallocation,
       or the user provides one block of data.
   */
-  template <class T>
-  class Array : public FlatArray<T>
+  template <class T, class IndexType = size_t>
+  class Array : public FlatArray<T, IndexType>
   {
   protected:
     /// physical size of array
@@ -600,20 +604,20 @@ namespace ngcore
     /// that's the data we have to delete, nullptr for not owning the memory
     T * mem_to_delete;
 
-    using FlatArray<T>::size;
-    using FlatArray<T>::data;
+    using FlatArray<T,IndexType>::size;
+    using FlatArray<T,IndexType>::data;
 
   public:
     /// Generate array of logical and physical size asize
     NETGEN_INLINE explicit Array()
-      : FlatArray<T> (0, nullptr)
+      : FlatArray<T,IndexType> (0, nullptr)
     {
       allocsize = 0; 
       mem_to_delete = nullptr;
     }
 
     NETGEN_INLINE explicit Array(size_t asize)
-      : FlatArray<T> (asize, new T[asize])
+      : FlatArray<T,IndexType> (asize, new T[asize])
     {
       allocsize = asize; 
       mem_to_delete = data;
@@ -654,19 +658,19 @@ namespace ngcore
 
     /// array copy 
     NETGEN_INLINE explicit Array (const Array & a2)
-      : FlatArray<T> (a2.Size(), a2.Size() ? new T[a2.Size()] : nullptr)
+      : FlatArray<T,IndexType> (a2.Size(), a2.Size() ? new T[a2.Size()] : nullptr)
     {
       allocsize = size;
       mem_to_delete = data;
       for (size_t i = 0; i < size; i++)
-        data[i] = a2[i];
+        data[i] = a2.data[i];
     }
 
     
     template <typename TA>
     explicit Array (const BaseArrayObject<TA> & a2)
-      : FlatArray<T> (a2.Size(), 
-                      a2.Size() ? new T[a2.Size()] : nullptr)
+      : FlatArray<T,IndexType> (a2.Size(), 
+                                a2.Size() ? new T[a2.Size()] : nullptr)
     {
       allocsize = size;
       mem_to_delete = data;
@@ -976,8 +980,8 @@ namespace ngcore
 
   
   /// resize array, at least to size minsize. copy contents
-  template <class T> 
-  NETGEN_INLINE void Array<T> :: ReSize (size_t minsize)
+  template <class T, class IndexType> 
+  NETGEN_INLINE void Array<T, IndexType> :: ReSize (size_t minsize)
   {
     size_t nsize = 2 * allocsize;
     if (nsize < minsize) nsize = minsize;
