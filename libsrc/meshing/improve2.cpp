@@ -332,7 +332,7 @@ namespace netgen
 		  (nvp4 * nv4 > critval);
 	      
 
-		double horder = Dist (mesh.Point(pi1), mesh.Point(pi2));
+		double horder = Dist (mesh[pi1], mesh[pi2]);
 
 		if ( // nv1 * nv2 >= 0 &&
 		    nv1.Length() > 1e-3 * horder * horder &&
@@ -343,8 +343,8 @@ namespace netgen
 		      {
 			int e = pdef[pi1] + pdef[pi2] - pdef[pi3] - pdef[pi4];
 			double d = 
-			  Dist2 (mesh.Point(pi1), mesh.Point(pi2)) - 
-			  Dist2 (mesh.Point(pi3), mesh.Point(pi4));
+			  Dist2 (mesh[pi1], mesh[pi2]) - 
+			  Dist2 (mesh[pi3], mesh[pi4]);
 		      
 			should = e >= t && (e > 2 || d > 0);
 		      }
@@ -468,14 +468,16 @@ namespace netgen
     TABLE<SurfaceElementIndex,PointIndex::BASE> elementsonnode(np); 
     NgArray<SurfaceElementIndex> hasonepi, hasbothpi;
 
-    for (int i = 0; i < seia.Size(); i++)
+    for (SurfaceElementIndex sei : seia)
       {
-	Element2d & el = mesh[seia[i]];
-	for (int j = 0; j < el.GetNP(); j++)
-	  elementsonnode.Add (el[j], seia[i]);
+	// Element2d & el = mesh[sei];
+	// for (int j = 0; j < el.GetNP(); j++)
+        // elementsonnode.Add (el[j], sei);
+        for (PointIndex pi : mesh[sei].PNums())
+          elementsonnode.Add (pi, sei);
       }
 
-    NgArray<bool,PointIndex::BASE> fixed(np);
+    Array<bool,PointIndex> fixed(np);
     fixed = false;
 
     NgProfiler::StopTimer  (timerstart1);
@@ -489,9 +491,9 @@ namespace netgen
       }
     */
 
-    for (int i = 0; i < seia.Size(); i++)
+    for (SurfaceElementIndex sei : seia)
       {
-	Element2d & sel = mesh[seia[i]];
+	Element2d & sel = mesh[sei];
 	for (int j = 0; j < sel.GetNP(); j++)
 	  {
 	    PointIndex pi1 = sel.PNumMod(j+2);
@@ -505,10 +507,12 @@ namespace netgen
       }
 
 
-
+    /*
     for(int i = 0; i < mesh.LockedPoints().Size(); i++)
       fixed[mesh.LockedPoints()[i]] = true;
-
+    */
+    for (PointIndex pi : mesh.LockedPoints())
+      fixed[pi] = true;
 
 
     NgArray<Vec<3>,PointIndex::BASE> normals(np);

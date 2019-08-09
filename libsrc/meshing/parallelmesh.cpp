@@ -314,7 +314,7 @@ namespace netgen
 	MPI_Type_commit (&newtype);
 
 	MPI_Request request;
-	MPI_Isend( &points[0], 1, newtype, dest, MPI_TAG_MESH+1, comm, &request);
+	MPI_Isend( &points[PointIndex(0)], 1, newtype, dest, MPI_TAG_MESH+1, comm, &request);
 	sendrequests.Append (request);
       }
 
@@ -474,7 +474,7 @@ namespace netgen
 	  {
 	    if(ided_sel[sei]!=-1) continue;
 	    const Element2d & sel = (*this)[sei];
-	    NgFlatArray<const PointIndex> points = sel.PNums();
+	    auto points = sel.PNums();
 	    auto ided1 = per_verts[points[0]];
 	    os1.SetSize(0);
 	    for (int j = 0; j < ided1.Size(); j++)
@@ -498,7 +498,7 @@ namespace netgen
 	      throw NgException("SurfaceElement identified with more than one other??");
 	    }
 	    const Element2d & sel2 = (*this)[sei];
-	    NgFlatArray<const PointIndex> points2 = sel2.PNums();
+	    auto points2 = sel2.PNums();
 	    has_ided_sels = true;
 	    ided_sel[sei] = os1[0];
 	    ided_sel[os1[0]] = sei;
@@ -842,7 +842,7 @@ namespace netgen
     
     MPI_Datatype mptype = MeshPoint::MyGetMPIType();
     MPI_Status status;
-    MPI_Recv( &points[1], numvert, mptype, 0, MPI_TAG_MESH+1, comm, &status);
+    MPI_Recv( &points[PointIndex(PointIndex::BASE)], numvert, mptype, 0, MPI_TAG_MESH+1, comm, &status);
 
     NgArray<int> pp_data;
     MyMPI_Recv(pp_data, 0, MPI_TAG_MESH+1, comm);

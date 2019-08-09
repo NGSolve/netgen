@@ -295,9 +295,9 @@ namespace netgen
 
   void Element2d :: GetBox (const T_POINTS & points, Box3d & box) const
   {
-    box.SetPoint (points.Get(pnum[0]));
+    box.SetPoint (points[pnum[0]]);
     for (unsigned i = 1; i < np; i++)
-      box.AddPoint (points.Get(pnum[i]));
+      box.AddPoint (points[pnum[i]]);
   }
 
   bool Element2d :: operator==(const Element2d & el2) const
@@ -879,7 +879,7 @@ namespace netgen
 
     for (i = 1; i <= GetNP(); i++)
       {
-        Point3d p = points.Get(PNum(i));
+        Point3d p = points[PNum(i)];
         pmat.Elem(1, i) = p.X() * t1(0) + p.Y() * t1(1) + p.Z() * t1(2);
         pmat.Elem(2, i) = p.X() * t2(0) + p.Y() * t2(1) + p.Z() * t2(2);
       }
@@ -1172,17 +1172,17 @@ namespace netgen
 
   void Element :: GetBox (const T_POINTS & points, Box3d & box) const
   {
-    box.SetPoint (points.Get(PNum(1)));
-    box.AddPoint (points.Get(PNum(2)));
-    box.AddPoint (points.Get(PNum(3)));
-    box.AddPoint (points.Get(PNum(4)));
+    box.SetPoint (points[PNum(1)]);
+    box.AddPoint (points[PNum(2)]);
+    box.AddPoint (points[PNum(3)]);
+    box.AddPoint (points[PNum(4)]);
   }
 
   double Element :: Volume (const T_POINTS & points) const
   {
-    Vec<3> v1 = points.Get(PNum(2)) - points.Get(PNum(1));
-    Vec<3> v2 = points.Get(PNum(3)) - points.Get(PNum(1));
-    Vec<3> v3 = points.Get(PNum(4)) - points.Get(PNum(1)); 
+    Vec<3> v1 = points[PNum(2)] - points[PNum(1)];
+    Vec<3> v2 = points[PNum(3)] - points[PNum(1)];
+    Vec<3> v3 = points[PNum(4)] - points[PNum(1)]; 
   
     return -(Cross (v1, v2) * v3) / 6;	 
   }  
@@ -2179,7 +2179,7 @@ namespace netgen
     int np = GetNP();
     for (int i = 1; i <= np; i++)
       {
-        const Point3d & p = points.Get(PNum(i));
+        const Point3d & p = points[PNum(i)];
         pmat.Elem(1, i) = p.X();
         pmat.Elem(2, i) = p.Y();
         pmat.Elem(3, i) = p.Z();

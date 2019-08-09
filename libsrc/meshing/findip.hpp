@@ -90,9 +90,9 @@ inline int FindInnerPoint (POINTArray & points,
 
   for (int i = 0; i < nf; i++)
     {
-      Point3d p1 = points.Get(faces[i][0]);
-      a[i] = Cross (points.Get(faces[i][1]) - p1,
-		    points.Get(faces[i][2]) - p1);
+      Point3d p1 = points[faces[i][0]];
+      a[i] = Cross (points[faces[i][1]] - p1,
+		    points[faces[i][2]] - p1);
       a[i] /= a[i].Length();
       c[i] = - (a[i].X() * p1.X() + a[i].Y() * p1.Y() + a[i].Z() * p1.Z());
     }
@@ -107,7 +107,7 @@ inline int FindInnerPoint (POINTArray & points,
   center = 0;
   for (int i = 0; i < faces.Size(); i++)
     for (int j = 0; j < 3; j++)
-      center += Vec<3> (points.Get(faces[i][j]));
+      center += Vec<3> (points[faces[i][j]]);
   center /= (3*faces.Size());
 
 
@@ -120,8 +120,8 @@ inline int FindInnerPoint (POINTArray & points,
       // (*testout) << "el[" << i << "] = " << el << endl;
       for (int j = 1; j <= 3; j++)
 	{
-	  double hi = Dist (points.Get(faces[i].PNumMod(j)),
-			    points.Get(faces[i].PNumMod(j+1)));
+	  double hi = Dist (points[faces[i].PNumMod(j)],
+			    points[faces[i].PNumMod(j+1)]);
 	  if (hi > hmax) hmax = hi;
 	}
     }

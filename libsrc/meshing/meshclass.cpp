@@ -1824,7 +1824,7 @@ namespace netgen
       }
   }
 
-
+  // BitArray base is PointIndex::BASE ... 
   void Mesh :: FixPoints (const BitArray & fixpoints)
   {
     if (fixpoints.Size() != GetNP())
@@ -1833,11 +1833,16 @@ namespace netgen
         return;
       }
     int np = GetNP();
+    /*
     for (int i = 1; i <= np; i++)
       if (fixpoints.Test(i))
         {
           points.Elem(i).SetType (FIXEDPOINT);
         }
+    */
+    for (PointIndex pi : points.Range())
+      if (fixpoints.Test(pi))
+        points[pi].SetType(FIXEDPOINT);
   }
 
 
@@ -2410,9 +2415,13 @@ namespace netgen
       ptyps.Elem(seg[1]) = EDGEPOINT;
       }
     */
+    /*
     for (int i = 1; i <= points.Size(); i++)
       points.Elem(i).SetType(SURFACEPOINT);
-
+    */
+    for (auto & p : points)
+      p.SetType (SURFACEPOINT);
+    
     for (int i = 1; i <= GetNSeg(); i++)
       {
         const Segment & seg = LineSegment (i);
@@ -3229,8 +3238,8 @@ namespace netgen
   double Mesh :: ElementError (int eli, const MeshingParameters & mp) const
   {
     const Element & el = volelements[eli-1];
-    return CalcTetBadness (points.Get(el[0]), points.Get(el[1]),
-                           points.Get(el[2]), points.Get(el[3]), -1, mp);
+    return CalcTetBadness (points[el[0]], points[el[1]],
+                           points[el[2]], points[el[3]], -1, mp);
   }
 
   void Mesh :: AddLockedPoint (PointIndex pi)
@@ -4341,14 +4350,21 @@ namespace netgen
                 {
                   Box<3> box (Box<3>::EMPTY_BOX);
                   for (SurfaceElementIndex sei = 0; sei < ne; sei++)
-                    box.Add (points[surfelements[sei].PNums()]);
+                    // box.Add (points[surfelements[sei].PNums()]);
+                    for (auto pi : surfelements[sei].PNums())
+                      box.Add (points[pi]);
                   
                   box.Increase (1.01 * box.Diam());
                   elementsearchtree = make_unique<BoxTree<3>> (box);
                   
                   for (SurfaceElementIndex sei = 0; sei < ne; sei++)
                     {
-                      box.Set (points[surfelements[sei].PNums()]);
+                      //  box.Set (points[surfelements[sei].PNums()]);
+
+                      Box<3> box (Box<3>::EMPTY_BOX);
+                      for (auto pi : surfelements[sei].PNums())
+                        box.Add (points[pi]);
+                      
                       elementsearchtree -> Insert (box, sei+1);
                     }
                 }
@@ -4356,14 +4372,21 @@ namespace netgen
                 {
                   Box<3> box (Box<3>::EMPTY_BOX);
                   for (ElementIndex ei = 0; ei < ne; ei++)
-                    box.Add (points[volelements[ei].PNums()]);
+                    // box.Add (points[volelements[ei].PNums()]);
+                    for (auto pi : volelements[ei].PNums())
+                      box.Add (points[pi]);
                   
                   box.Increase (1.01 * box.Diam());
                   elementsearchtree = make_unique<BoxTree<3>> (box);
                   
                   for (ElementIndex ei = 0; ei < ne; ei++)
                     {
-                      box.Set (points[volelements[ei].PNums()]);
+                      // box.Set (points[volelements[ei].PNums()]);
+
+                      Box<3> box (Box<3>::EMPTY_BOX);
+                      for (auto pi : volelements[ei].PNums())
+                        box.Add (points[pi]);
+
                       elementsearchtree -> Insert (box, ei+1);
                     }
                 }

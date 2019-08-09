@@ -369,8 +369,8 @@ namespace netgen
 
 
 
-  typedef NgArray<MeshPoint, PointIndex::BASE, PointIndex> T_POINTS;
-  // typedef Array<MeshPoint, PointIndex> T_POINTS;
+  // typedef NgArray<MeshPoint, PointIndex::BASE, PointIndex> T_POINTS;
+  typedef Array<MeshPoint, PointIndex> T_POINTS;
 
 
 
@@ -500,18 +500,12 @@ namespace netgen
     ///
     const PointIndex & operator[] (int i) const { return pnum[i]; }
 
-    NgFlatArray<const PointIndex> PNums () const 
-    { return NgFlatArray<const PointIndex> (np, &pnum[0]); }
-    NgFlatArray<PointIndex> PNums ()
-    { return NgFlatArray<PointIndex> (np, &pnum[0]); }
-    auto Vertices() const
-    { return NgFlatArray<const PointIndex> (GetNV(), &pnum[0]); }
+    auto PNums () const { return FlatArray<const PointIndex> (np, &pnum[0]); }
+    auto PNums ()  { return FlatArray<PointIndex> (np, &pnum[0]); }
+    auto Vertices() const { return FlatArray<const PointIndex> (GetNV(), &pnum[0]); }
 
-    NgFlatArray<const PointGeomInfo> GeomInfo() const 
-    { return NgFlatArray<const PointGeomInfo> (np, &geominfo[0]); }
-    NgFlatArray<PointGeomInfo> GeomInfo()
-    { return NgFlatArray<PointGeomInfo> (np, &geominfo[0]); }
-    
+    auto GeomInfo() const { return FlatArray<const PointGeomInfo> (np, &geominfo[0]); }
+    auto GeomInfo() { return FlatArray<PointGeomInfo> (np, &geominfo[0]); }
     
     ///
     PointIndex & PNum (int i) { return pnum[i-1]; }
@@ -629,17 +623,17 @@ namespace netgen
 
     // Philippose - 08 August 2010
     // Access functions for the new property: visible
-    void Visible(bool vis = 1) 
+    void Visible(bool vis = true) 
     { visible = vis; }
     bool IsVisible () const 
     { return visible; }
    
-    void SetRefinementFlag (bool rflag = 1) 
+    void SetRefinementFlag (bool rflag = true) 
     { refflag = rflag; }
     bool TestRefinementFlag () const
     { return refflag; }
 
-    void SetStrongRefinementFlag (bool rflag = 1) 
+    void SetStrongRefinementFlag (bool rflag = true) 
     { strongrefflag = rflag; }
     bool TestStrongRefinementFlag () const
     { return strongrefflag; }
@@ -798,10 +792,10 @@ namespace netgen
     ///
     const PointIndex & operator[] (int i) const { return pnum[i]; }
 
-    NgFlatArray<const PointIndex> PNums () const 
-    { return NgFlatArray<const PointIndex> (np, &pnum[0]); }
+    auto PNums () const 
+    { return FlatArray<const PointIndex> (np, &pnum[0]); }
 
-    NgFlatArray<const PointIndex> Vertices() const { return { GetNV(), &pnum[0] }; }
+    FlatArray<const PointIndex> Vertices() const { return { GetNV(), &pnum[0] }; }
 
     ///
     PointIndex & PNum (int i) { return pnum[i-1]; }

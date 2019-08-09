@@ -59,6 +59,28 @@ namespace ngcore
   }
 
 
+
+  template <typename AO>
+  class AOWrapperIterator
+  {
+    const AO & ao;
+    size_t ind;
+  public:
+    NETGEN_INLINE AOWrapperIterator (const AO &  aao, size_t ai) 
+      : ao(aao), ind(ai) { ; }
+    NETGEN_INLINE AOWrapperIterator operator++ (int) 
+    { return AOWrapperIterator(ao, ind++); }
+    NETGEN_INLINE AOWrapperIterator operator++ ()
+    { return AOWrapperIterator(ao, ++ind); }
+    NETGEN_INLINE auto operator*() const -> decltype(ao[ind]) { return ao[ind]; }
+    NETGEN_INLINE auto operator*() -> decltype(ao[ind]) { return ao[ind]; }
+    NETGEN_INLINE bool operator != (AOWrapperIterator d2) { return ind != d2.ind; }
+    NETGEN_INLINE bool operator == (AOWrapperIterator d2) { return ind == d2.ind; }
+  };
+
+
+
+  
   /*
     Some class which can be treated as array
    */
@@ -99,27 +121,12 @@ namespace ngcore
 
     // NETGEN_INLINE auto & operator[] (size_t i) { return Spec()[i]; }
     NETGEN_INLINE auto operator[] (size_t i) const { return Spec()[i]; }
+    // NETGEN_INLINE auto begin() const { return Spec().begin(); }
+    // NETGEN_INLINE auto end() const { return Spec().end(); }
+    NETGEN_INLINE auto begin () const { return AOWrapperIterator<BaseArrayObject> (*this, 0); }
+    NETGEN_INLINE auto end () const { return AOWrapperIterator<BaseArrayObject> (*this, Size()); }
   };
-
-
-  template <typename AO>
-  class AOWrapperIterator
-  {
-    const AO & ao;
-    size_t ind;
-  public:
-    NETGEN_INLINE AOWrapperIterator (const AO &  aao, size_t ai) 
-      : ao(aao), ind(ai) { ; }
-    NETGEN_INLINE AOWrapperIterator operator++ (int) 
-    { return AOWrapperIterator(ao, ind++); }
-    NETGEN_INLINE AOWrapperIterator operator++ ()
-    { return AOWrapperIterator(ao, ++ind); }
-    NETGEN_INLINE auto operator*() const -> decltype(ao[ind]) { return ao[ind]; }
-    NETGEN_INLINE auto operator*() -> decltype(ao[ind]) { return ao[ind]; }
-    NETGEN_INLINE bool operator != (AOWrapperIterator d2) { return ind != d2.ind; }
-    NETGEN_INLINE bool operator == (AOWrapperIterator d2) { return ind == d2.ind; }
-  };
-
+  
 
   
   template <typename T>
@@ -262,7 +269,8 @@ namespace ngcore
     NETGEN_INLINE auto Size() const { return next-first; }
     NETGEN_INLINE T operator[] (T i) const { return first+i; }
     NETGEN_INLINE bool Contains (T i) const { return ((i >= first) && (i < next)); }
-
+    NETGEN_INLINE T_Range Modify(int inc_beg, int inc_end) const
+    { return T_Range(first+inc_beg, next+inc_end); }
     NETGEN_INLINE ArrayRangeIterator<T> begin() const { return first; }
     NETGEN_INLINE ArrayRangeIterator<T> end() const { return next; }
 
@@ -437,7 +445,7 @@ namespace ngcore
     {
       size_t hsize = size;
       T * hdata = data;
-      for (size_t i = 0; i < hsize; i++) hdata[i] = a2[i];
+      for (size_t i = 0; i < hsize; i++) hdata[i] = a2.data[i];
       return *this;
     }
 
@@ -446,14 +454,15 @@ namespace ngcore
     {
       size_t hsize = size;
       T * hdata = data;
-      for (size_t i = 0; i < hsize; i++) hdata[i] = a2[i];
+      auto p2 = a2.begin();
+      for (size_t i = 0; i < hsize; i++, p2++) hdata[i] = *p2;
       return *this;
     }
 
     NETGEN_INLINE const FlatArray & operator= (const std::function<T(int)> & func) const
     {
       for (size_t i = 0; i < size; i++)
-        data[i] = func(i);
+        data[i] = func(i+BASE);
       return *this;
     }
 
@@ -481,18 +490,18 @@ namespace ngcore
     /// Access array. range check by macro NETGEN_CHECK_RANGE
     NETGEN_INLINE T & operator[] (IndexType i) const
     {
-      NETGEN_CHECK_RANGE(i,0,size);
+      NETGEN_CHECK_RANGE(i,BASE,size+BASE);
       return data[i-BASE]; 
     }
   
     NETGEN_INLINE T_Range<size_t> Range () const
     {
-      return T_Range<size_t> (0, Size());
+      return T_Range<size_t> (BASE, Size()+BASE);
     }
     
     NETGEN_INLINE const CArray<T> Addr (size_t pos) const
     {
-      return CArray<T> (data+pos);
+      return CArray<T> (data+pos-BASE);
     }
 
     // const CArray<T> operator+ (int pos)
@@ -606,6 +615,7 @@ namespace ngcore
 
     using FlatArray<T,IndexType>::size;
     using FlatArray<T,IndexType>::data;
+    using FlatArray<T,IndexType>::BASE;
 
   public:
     /// Generate array of logical and physical size asize
@@ -674,8 +684,14 @@ namespace ngcore
     {
       allocsize = size;
       mem_to_delete = data;
+      /*
       for (size_t i = 0; i < size; i++)
         data[i] = a2[i];
+      */
+      auto p2 = a2.begin();
+      for (size_t i = 0; i < size; i++, p2++)
+        data[i] = *p2;
+      
     }
 
     Array (std::initializer_list<T> list) 
@@ -697,9 +713,9 @@ namespace ngcore
       allocsize = size;
       mem_to_delete = data;
       for(size_t i = 0; i <  a2.Size(); i++)
-        (*this)[i] = a2[i];
+        data[i] = a2[i];
       for (size_t i = a2.Size(), j=0; i < size; i++,j++)
-        (*this)[i] = a3[j];
+        data[i] = a3[j];
     }
 
     /// if responsible, deletes memory
@@ -842,8 +858,8 @@ namespace ngcore
     /// Delete element i. Move last element to position i.
     NETGEN_INLINE void DeleteElement (size_t i)
     {
-      NETGEN_CHECK_RANGE(i,0,size);
-      data[i] = std::move(data[size-1]);
+      NETGEN_CHECK_RANGE(i,BASE,BASE+size);
+      data[i-BASE] = std::move(data[size-1]);
       size--;
     }
 
@@ -876,7 +892,7 @@ namespace ngcore
     /// Fill array with val
     NETGEN_INLINE Array & operator= (const T & val)
     {
-      FlatArray<T>::operator= (val);
+      FlatArray<T,IndexType>::operator= (val);
       return *this;
     }
 
@@ -886,7 +902,7 @@ namespace ngcore
       SetSize0 ();
       SetSize (a2.Size());
       for (size_t i = 0; i < size; i++)
-        (*this)[i] = a2[i];
+        data[i] = a2.data[i];
       return *this;
     }
 
@@ -906,7 +922,7 @@ namespace ngcore
     {
       SetSize (a2.Size());
       for (size_t i = 0; i < size; i++)
-        (*this)[i] = a2[i];
+        data[i] = a2[i];
       return *this;
     }
 
