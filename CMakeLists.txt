@@ -36,6 +36,9 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Pybind11 2.3 Issue https://github.com/pybind/pybind11/issues/1604
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsized-deallocation")
+
 if(APPLE)
   set(INSTALL_DIR_DEFAULT /Applications/Netgen.app)
 else(APPLE)
