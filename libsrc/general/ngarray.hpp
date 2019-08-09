@@ -39,7 +39,8 @@ namespace netgen
     T Size() const { return next-first; }
     T operator[] (T i) const { return first+i; }
     bool Contains (T i) const { return ((i >= first) && (i < next)); }
-
+    T_Range Modify (int inc_begin, int inc_end) const
+    { return T_Range(first+inc_begin, next+inc_end); }
     ArrayRangeIterator<T> begin() const { return first; }
     ArrayRangeIterator<T> end() const { return next; }
   };
@@ -138,6 +139,7 @@ namespace netgen
     }
   
     /// Access array, one-based  (old fashioned)
+    // [[deprecated("Use operator[] instead")]]    
     const T & Get (int i) const 
     {
 #ifdef DEBUG
@@ -531,13 +533,15 @@ namespace netgen
     IndirectArray (const TA1 & aa, const TA2 & aia)
     : array(aa), ia(aia) { ; }
     int Size() const { return ia.Size(); }
+    [[deprecated("Use *Range().begin() instead")]]    
     int Begin() const { return ia.Begin(); }
+    [[deprecated("Use *Range().end() instead")]]    
     int End() const { return ia.End(); }
 
     const typename TA1::TELEM & operator[] (int i) const { return array[ia[i]]; }
     auto Range() const { return ia.Range(); }
-    auto begin() const { return ia.begin(); }
-    auto end() const { return ia.end(); }
+    // auto begin() const { return ia.begin(); }
+    // auto end() const { return ia.end(); }
   };
 
 

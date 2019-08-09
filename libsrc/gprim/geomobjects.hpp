@@ -278,8 +278,10 @@ namespace netgen
     template <typename T1, typename T2>
     void Set (const IndirectArray<T1, T2> & points)
     {
-      Set (points[points.Begin()]);
-      for (int i = points.Begin()+1; i < points.End(); i++)
+      // Set (points[points.Begin()]);
+      Set (points[*points.Range().begin()]);
+      // for (int i = points.Begin()+1; i < points.End(); i++)
+      for (int i : points.Range().Modify(1,0))
         Add (points[i]);
     }
 

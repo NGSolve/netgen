@@ -628,10 +628,12 @@ namespace netgen
       prim = prims[i];
     }
 
-    for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End()-4; pi++)
+    // for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End()-4; pi++)
+    for (PointIndex pi : mesh.Points().Range().Modify(0, -4))
       mixed[pi] = PointIndex ( (prim * pi) % np + PointIndex::BASE );
 
-    for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End()-4; pi++)
+    // for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End()-4; pi++)
+    for (PointIndex pi : mesh.Points().Range().Modify(0, -4))      
       {
 	if (pi % 1000 == 0)
 	  {
