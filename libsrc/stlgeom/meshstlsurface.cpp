@@ -458,23 +458,23 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 
 	  // was commented:
 
-	  for (int i = 1; i <= mesh.GetNSE(); i++)
-	    if (mesh.SurfaceElement(i).BadElement())
+	  for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
+	    if (mesh[sei].BadElement())
 	      {
 		for (int j = 1; j <= 3; j++)
 		  {
-		    refpts.Append (mesh.Point (mesh.SurfaceElement(i).PNum(j)));
+		    refpts.Append (mesh.Point (mesh[sei].PNum(j)));
 		    refh.Append (mesh.GetH (refpts.Last()) / 2);
 		  }
-		mesh.DeleteSurfaceElement(i);
+		mesh.Delete(sei);
 	      }
 	  	  
 	  // delete wrong oriented element
-	  for (int i = 1; i <= mesh.GetNSE(); i++)
+	  for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
 	    {
-	      const Element2d & el = mesh.SurfaceElement(i);
-	      if (!el.PNum(1))
-		continue;
+	      const Element2d & el = mesh[sei];
+              if (el.IsDeleted()) continue;
+	      if (!el.PNum(1).IsValid()) continue;
 
 	      Vec3d n = Cross (Vec3d (mesh.Point(el.PNum(1)), 
 				      mesh.Point(el.PNum(2))),
@@ -483,9 +483,9 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 	      Vec3d ng = geom.GetTriangle(el.GeomInfoPi(1).trignum).Normal();
 	      if (n * ng < 0)
 		{
-		  refpts.Append (mesh.Point (mesh.SurfaceElement(i).PNum(1)));
+		  refpts.Append (mesh.Point (mesh[sei].PNum(1)));
 		  refh.Append (mesh.GetH (refpts.Last()) / 2);
-		  mesh.DeleteSurfaceElement(i);
+		  mesh.Delete(sei);
 		}
 	    }
 	  // end comments

@@ -433,9 +433,9 @@ void WriteSTLExtFormat (const Mesh & mesh,
           for (int i = 0; i < faceSei.Size(); i++)
           {
         	  *outfile << "facet normal ";
-        	  const Point3d& p1 = mesh.Point(mesh.SurfaceElement(faceSei[i]).PNum(1));
-        	  const Point3d& p2 = mesh.Point(mesh.SurfaceElement(faceSei[i]).PNum(2));
-        	  const Point3d& p3 = mesh.Point(mesh.SurfaceElement(faceSei[i]).PNum(3));
+        	  const Point3d& p1 = mesh.Point(mesh[faceSei[i]].PNum(1));
+        	  const Point3d& p2 = mesh.Point(mesh[faceSei[i]].PNum(2));
+        	  const Point3d& p3 = mesh.Point(mesh[faceSei[i]].PNum(3));
 
         	  Vec3d normal = Cross(p2-p1,p3-p1);
         	  if (normal.Length() != 0)

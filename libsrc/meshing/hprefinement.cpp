@@ -1308,7 +1308,7 @@ namespace netgen
  
     // NgLock mem_lock (mem_mutex,1);
 
-    mesh.coarsemesh = new Mesh; 
+    mesh.coarsemesh = make_unique<Mesh>(); 
     *mesh.coarsemesh = mesh;
     
     // #ifdef CURVEDELEMS_NEW
@@ -1317,8 +1317,8 @@ namespace netgen
     // #endif
 
 
-    delete mesh.hpelements;
-    mesh.hpelements = new NgArray<HPRefElement>;
+    // delete mesh.hpelements;
+    mesh.hpelements = make_unique<NgArray<HPRefElement>>();
         
     NgArray<HPRefElement> & hpelements = *mesh.hpelements; 
         

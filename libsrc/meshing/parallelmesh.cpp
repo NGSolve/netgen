@@ -759,19 +759,24 @@ namespace netgen
 	ptr = nullptr;
       }
     };
-    cleanup_ptr(self.boundaryedges);
+    /*
     cleanup_ptr(self.boundaryedges);
     cleanup_ptr(self.segmentht);
     cleanup_ptr(self.surfelementht);
+    */
+    self.boundaryedges = nullptr;
+    self.segmentht = nullptr;
+    self.surfelementht = nullptr;
+    
     self.openelements = NgArray<Element2d>(0);
     self.opensegments = NgArray<Segment>(0);
     self.numvertices = 0;
     self.mlbetweennodes = NgArray<PointIndices<2>,PointIndex::BASE> (0);
     self.mlparentelement = NgArray<int>(0);
     self.mlparentsurfaceelement = NgArray<int>(0);
-    self.curvedelems = new CurvedElements (self);
-    self.clusters = new AnisotropicClusters (self);
-    self.ident = new Identifications (self);
+    self.curvedelems = make_unique<CurvedElements> (self);
+    self.clusters = make_unique<AnisotropicClusters> (self);
+    self.ident = make_unique<Identifications> (self);
     self.topology = MeshTopology(*this);
     self.topology.Update();
     self.BuildElementSearchTree();

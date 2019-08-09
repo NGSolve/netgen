@@ -17,8 +17,10 @@ namespace netgen
 		   RESTRICTH_SURFACEELEMENT, RESTRICTH_POINT, RESTRICTH_SEGMENT };
 
   class HPRefElement;
-
-
+  class CurvedElements;
+  class AnisotropicClusters;
+  class ParallelMeshTopology;
+  
   /// 2d/3d mesh
   class Mesh
   {
@@ -48,11 +50,11 @@ namespace netgen
     /// surface indices at boundary nodes
     // TABLE<int,PointIndex::BASE> surfacesonnode;
     /// boundary edges  (1..normal bedge, 2..segment)
-    INDEX_2_CLOSED_HASHTABLE<int> * boundaryedges;
+    unique_ptr<INDEX_2_CLOSED_HASHTABLE<int>> boundaryedges;
     ///
-    INDEX_2_CLOSED_HASHTABLE<int> * segmentht;
+    unique_ptr<INDEX_2_CLOSED_HASHTABLE<int>> segmentht;
     ///
-    INDEX_3_CLOSED_HASHTABLE<int> * surfelementht;
+    unique_ptr<INDEX_3_CLOSED_HASHTABLE<int>> surfelementht;
 
     /// faces of rest-solid
     NgArray<Element2d> openelements;
@@ -64,7 +66,7 @@ namespace netgen
     /**
        Representation of local mesh-size h
     */
-    LocalH * lochfunc;
+    unique_ptr<LocalH> lochfunc;
     ///
     double hglob;
     ///
@@ -98,24 +100,24 @@ namespace netgen
     NgArray<string*> cd3names;
 
     /// Periodic surface, close surface, etc. identifications
-    Identifications * ident;
+    unique_ptr<Identifications> ident;
 
 
     /// number of vertices (if < 0, use np)
     int numvertices;
 
     /// geometric search tree for interval intersection search
-    BoxTree<3> * elementsearchtree;
+    unique_ptr<BoxTree<3>> elementsearchtree;
     /// time stamp for tree
     mutable int elementsearchtreets;
 
     /// element -> face, element -> edge etc ...
     MeshTopology topology;
     /// methods for high order elements
-    class CurvedElements * curvedelems;
+    unique_ptr<CurvedElements> curvedelems;
 
     /// nodes identified by close points 
-    class AnisotropicClusters * clusters;
+    unique_ptr<AnisotropicClusters> clusters;
 
     /// space dimension (2 or 3)
     int dimension;
@@ -145,8 +147,7 @@ namespace netgen
 
 #ifdef PARALLEL
     /// connection to parallel meshes
-    class ParallelMeshTopology * paralleltop;
-
+    unique_ptr<ParallelMeshTopology> paralleltop;
 #endif
 
     
@@ -170,8 +171,8 @@ namespace netgen
   public:
 
     // store coarse mesh before hp-refinement
-    NgArray<HPRefElement> * hpelements;
-    Mesh * coarsemesh;
+    unique_ptr<NgArray<HPRefElement>> hpelements;
+    unique_ptr<Mesh> coarsemesh;
   
   
     /// number of refinement levels
@@ -307,13 +308,13 @@ namespace netgen
 
     auto GetNSE () const { return surfelements.Size(); }
 
-    [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]    
+    // [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]    
     Element2d & SurfaceElement(int i) { return surfelements[i-1]; }
-    [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]        
+    // [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]        
     const Element2d & SurfaceElement(int i) const { return surfelements[i-1]; }
-    [[deprecated("Use mesh[](SurfaceElementIndex) instead !")]]
+    // [[deprecated("Use mesh[](SurfaceElementIndex) instead !")]]
     Element2d & SurfaceElement(SurfaceElementIndex i) { return surfelements[i]; }
-    [[deprecated("Use mesh[](SurfaceElementIndex) instead !")]]
+    // [[deprecated("Use mesh[](SurfaceElementIndex) instead !")]]
     const Element2d & SurfaceElement(SurfaceElementIndex i) const { return surfelements[i]; }
 
     const Element2d & operator[] (SurfaceElementIndex ei) const
@@ -338,9 +339,9 @@ namespace netgen
     Element & VolumeElement(int i) { return volelements[i-1]; }
     // [[deprecated("Use VolumeElement(ElementIndex) instead of int !")]]        
     const Element & VolumeElement(int i) const { return volelements[i-1]; }
-    [[deprecated("Use mesh[](VolumeElementIndex) instead !")]]
+    // [[deprecated("Use mesh[](VolumeElementIndex) instead !")]]
     Element & VolumeElement(ElementIndex i) { return volelements[i]; }
-    [[deprecated("Use mesh[](VolumeElementIndex) instead !")]]
+    // [[deprecated("Use mesh[](VolumeElementIndex) instead !")]]
     const Element & VolumeElement(ElementIndex i) const { return volelements[i]; }
 
     const Element & operator[] (ElementIndex ei) const { return volelements[ei]; }

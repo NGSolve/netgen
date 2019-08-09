@@ -361,7 +361,7 @@ namespace netgen
     mesh.VolumeElements().SetAllocSize(8*oldne);
     for (ElementIndex ei = 0; ei < oldne; ei++)
       {
-	const Element & el = mesh.VolumeElement(ei);
+	const Element & el = mesh[ei];
 	switch (el.GetType())
 	  {
 	  case TET:

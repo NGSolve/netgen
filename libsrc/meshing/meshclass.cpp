@@ -11,13 +11,13 @@ namespace netgen
   Mesh :: Mesh ()
     : topology(*this), surfarea(*this)
   {
-    boundaryedges = NULL;
-    surfelementht = NULL; 
-    segmentht = NULL;
+    boundaryedges = nullptr;
+    surfelementht = nullptr; 
+    segmentht = nullptr;
 
-    lochfunc = NULL;
+    lochfunc = nullptr;
     // mglevels = 1;
-    elementsearchtree = NULL;
+    elementsearchtree = nullptr;
     elementsearchtreets = NextTimeStamp();
     majortimestamp = timestamp = NextTimeStamp();
     hglob = 1e10;
@@ -25,9 +25,9 @@ namespace netgen
     numvertices = -1;
     dimension = 3;
 
-    curvedelems = new CurvedElements (*this);
-    clusters = new AnisotropicClusters (*this);
-    ident = new Identifications (*this);
+    curvedelems = make_unique<CurvedElements> (*this);
+    clusters = make_unique<AnisotropicClusters> (*this);
+    ident = make_unique<Identifications> (*this);
 
     hpelements = NULL;
     coarsemesh = NULL;
@@ -41,23 +41,23 @@ namespace netgen
 
     // this->comm = netgen :: ng_comm;
 #ifdef PARALLEL
-    paralleltop = new ParallelMeshTopology (*this);
+    paralleltop = make_unique<ParallelMeshTopology> (*this);
 #endif
   }
 
 
   Mesh :: ~Mesh()
   {
-    delete lochfunc;
-    delete boundaryedges;
-    delete surfelementht;
-    delete segmentht;
-    delete curvedelems;
-    delete clusters;
-    delete ident;
-    delete elementsearchtree;
-    delete coarsemesh;
-    delete hpelements;
+    // delete lochfunc;
+    // delete boundaryedges;
+    // delete surfelementht;
+    // delete segmentht;
+    // delete curvedelems;
+    // delete clusters;
+    // delete ident;
+    // delete elementsearchtree;
+    // delete coarsemesh;
+    // delete hpelements;
 
     for (int i = 0; i < materials.Size(); i++)
       delete materials[i];
@@ -72,9 +72,9 @@ namespace netgen
     for (int i = 0; i < cd2names.Size(); i++)
       delete cd2names[i];
 
-#ifdef PARALLEL
-    delete paralleltop;
-#endif
+    // #ifdef PARALLEL
+    // delete paralleltop;
+    // #endif
   }
 
   void Mesh :: SetCommunicator(NgMPI_Comm acomm)
@@ -133,19 +133,18 @@ namespace netgen
     lockedpoints.SetSize(0);
     // surfacesonnode.SetSize(0);
 
-    delete boundaryedges;
-    boundaryedges = NULL;
+    // delete boundaryedges;
+    boundaryedges = nullptr;
+    segmentht = nullptr;
+    surfelementht = nullptr;
 
     openelements.SetSize(0);
     facedecoding.SetSize(0);
 
-    delete ident;
-    ident = new Identifications (*this);
+    ident = make_unique<Identifications> (*this);
     topology = MeshTopology (*this);
-    delete curvedelems;
-    curvedelems = new CurvedElements (*this);
-    delete clusters;
-    clusters = new AnisotropicClusters (*this);
+    curvedelems = make_unique<CurvedElements> (*this);
+    clusters = make_unique<AnisotropicClusters> (*this);
 
     for ( int i = 0; i < bcnames.Size(); i++ )
       if ( bcnames[i] ) delete bcnames[i];
@@ -153,8 +152,7 @@ namespace netgen
       if (cd2names[i]) delete cd2names[i];
 
 #ifdef PARALLEL
-    delete paralleltop;
-    paralleltop = new ParallelMeshTopology (*this);
+    paralleltop = make_unique<ParallelMeshTopology> (*this);
 #endif
 
     lock.UnLock();
@@ -1571,9 +1569,9 @@ namespace netgen
 
   void Mesh :: BuildBoundaryEdges(void)
   {
-    delete boundaryedges;
+    // delete boundaryedges;
 
-    boundaryedges = new INDEX_2_CLOSED_HASHTABLE<int>
+    boundaryedges = make_unique<INDEX_2_CLOSED_HASHTABLE<int>>
       (3 * (GetNSE() + GetNOpenElements()) + GetNSeg() + 1);
 
 
@@ -1643,12 +1641,14 @@ namespace netgen
     // surfacesonnode.SetSize (GetNP());
     TABLE<int,PointIndex::BASE> surfacesonnode(GetNP());
 
-    delete boundaryedges;
-    boundaryedges = NULL;
+    // delete boundaryedges;
+    // boundaryedges = NULL;
+    boundaryedges = nullptr;
 
-    delete surfelementht;
+    // delete surfelementht;
+    // surfelementht = nullptr;
     surfelementht = nullptr;
-    delete segmentht;
+    // delete segmentht;
 
     /*
       surfelementht = new INDEX_3_HASHTABLE<int> (GetNSE()/4 + 1);
@@ -1656,8 +1656,8 @@ namespace netgen
     */
 
     if (dimension == 3)
-      surfelementht = new INDEX_3_CLOSED_HASHTABLE<int> (3*GetNSE() + 1);
-    segmentht = new INDEX_2_CLOSED_HASHTABLE<int> (3*GetNSeg() + 1);
+      surfelementht = make_unique<INDEX_3_CLOSED_HASHTABLE<int>> (3*GetNSE() + 1);
+    segmentht = make_unique<INDEX_2_CLOSED_HASHTABLE<int>> (3*GetNSeg() + 1);
 
     if (dimension == 3)
       /*
@@ -2582,8 +2582,7 @@ namespace netgen
     Point<3> pmin2 = c - Vec<3> (d, d, d);
     Point<3> pmax2 = c + Vec<3> (d, d, d);
 
-    delete lochfunc;
-    lochfunc = new LocalH (pmin2, pmax2, grading, dimension);
+    lochfunc = make_unique<LocalH> (pmin2, pmax2, grading, dimension);
   }
 
   void Mesh :: RestrictLocalH (const Point3d & p, double hloc)
@@ -3522,11 +3521,12 @@ namespace netgen
 
     bool overlap = 0;
     bool incons_layers = 0;
-
-
+    /*
     for (i = 1; i <= GetNSE(); i++)
       SurfaceElement(i).badel = 0;
-
+    */
+    for (Element2d & el : SurfaceElements())
+      el.badel = false;
 
     for (i = 1; i <= GetNSE(); i++)
       {
@@ -4321,8 +4321,7 @@ namespace netgen
           
           PrintMessage (4, "Rebuild element searchtree");
           
-          delete elementsearchtree;
-          elementsearchtree = NULL;
+          elementsearchtree = nullptr;
           
           int ne = (dimension == 2) ? GetNSE() : GetNE();
           if (dimension == 3 && !GetNE() && GetNSE())
@@ -4337,7 +4336,7 @@ namespace netgen
                     box.Add (points[surfelements[sei].PNums()]);
                   
                   box.Increase (1.01 * box.Diam());
-                  elementsearchtree = new BoxTree<3> (box);
+                  elementsearchtree = make_unique<BoxTree<3>> (box);
                   
                   for (SurfaceElementIndex sei = 0; sei < ne; sei++)
                     {
@@ -4352,7 +4351,7 @@ namespace netgen
                     box.Add (points[volelements[ei].PNums()]);
                   
                   box.Increase (1.01 * box.Diam());
-                  elementsearchtree = new BoxTree<3> (box);
+                  elementsearchtree = make_unique<BoxTree<3>> (box);
                   
                   for (ElementIndex ei = 0; ei < ne; ei++)
                     {
