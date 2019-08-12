@@ -6,6 +6,11 @@ using namespace std;
 
 PYBIND11_MODULE(pyngcore, m) // NOLINT
 {
+  ExportArray<int>(m);
+  ExportArray<unsigned>(m);
+  ExportArray<size_t>(m);
+  ExportArray<double>(m);
+
   py::class_<Flags>(m, "Flags")
     .def(py::init<>())
     .def("__str__", &ToString<Flags>)

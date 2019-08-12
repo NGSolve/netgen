@@ -40,28 +40,6 @@ namespace netgen
 }
 
 
-template <typename T, int BASE = 0, typename TIND = int>
-void ExportArray (py::module &m)
-{
-  using TA = NgArray<T,BASE,TIND>;
-  string name = string("Array_") + typeid(T).name();
-  py::class_<NgArray<T,BASE,TIND>>(m, name.c_str())
-    .def ("__len__", [] ( NgArray<T,BASE,TIND> &self ) { return self.Size(); } )
-    .def ("__getitem__", 
-          FunctionPointer ([](NgArray<T,BASE,TIND> & self, TIND i) -> T&
-                           {
-                             if (i < BASE || i >= BASE+self.Size())
-                               throw py::index_error();
-                             return self[i];
-                           }),
-          py::return_value_policy::reference)
-    .def("__iter__", [] ( TA & self) {
-	return py::make_iterator (self.begin(),self.end());
-      }, py::keep_alive<0,1>()) // keep array alive while iterator is used
-
-    ;
-}
-
 void TranslateException (const NgException & ex)
 {
   string err = string("Netgen exception: ")+ex.What();
@@ -527,11 +505,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   
 
-  ExportArray<Element,0,size_t>(m);
-  ExportArray<Element2d,0,size_t>(m);
-  ExportArray<Segment,0,size_t>(m);
+  ExportArray<Element,size_t>(m);
+  ExportArray<Element2d,size_t>(m);
+  ExportArray<Segment,size_t>(m);
   ExportArray<Element0d>(m);
-  ExportArray<MeshPoint,PointIndex::BASE,PointIndex>(m);
+  ExportArray<MeshPoint,PointIndex>(m);
   ExportArray<FaceDescriptor>(m);
 
   py::implicitly_convertible< int, PointIndex>();

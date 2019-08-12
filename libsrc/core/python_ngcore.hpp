@@ -26,7 +26,48 @@ namespace ngcore
       throw py::type_error("Cannot convert Python object to C Array");
     return arr;
   }
-  
+
+  template <typename T, typename TIND=typename FlatArray<T>::index_type>
+  void ExportArray (py::module &m)
+  {
+      using TFlat = FlatArray<T, TIND>;
+      using TArray = Array<T, TIND>;
+      std::string suffix = std::string(typeid(T).name()) + "_" + typeid(TIND).name();
+      std::string fname = std::string("FlatArray_") + suffix;
+      py::class_<TFlat>(m, fname.c_str())
+        .def ("__len__", [] ( TFlat &self ) { return self.Size(); } )
+        .def ("__getitem__",
+              [](TFlat & self, TIND i) -> T&
+                             {
+                               static constexpr int base = IndexBASE<TIND>();
+                               static_assert(base==0 || base==1, "IndexBASE not in [0,1]");
+                               if (i < 0 || i >= self.Size())
+                                 throw py::index_error();
+                               if(base==1) i++;
+                               return self[i]; // Access from Python is always 0-based
+                             },
+              py::return_value_policy::reference)
+        .def("__iter__", [] ( TFlat & self) {
+             return py::make_iterator (self.begin(),self.end());
+             }, py::keep_alive<0,1>()) // keep array alive while iterator is used
+
+      ;
+
+      std::string aname = std::string("Array_") + suffix;
+      py::class_<TArray, TFlat>(m, aname.c_str())
+        .def(py::init([] (size_t n) { return new TArray(n); }),py::arg("n"), "Makes array of given length")
+        .def(py::init([] (std::vector<T> const & x)
+                  {
+                    size_t s = x.size();
+                    TArray tmp(s);
+                    for (size_t i : Range(tmp))
+                      tmp[TIND(i)] = x[i];
+                    return tmp;
+                  }), py::arg("vec"), "Makes array with given list of elements")
+
+      ;
+    }
+
   void NGCORE_API SetFlag(Flags &flags, std::string s, py::object value);
   // Parse python kwargs to flags
   Flags NGCORE_API CreateFlagsFromKwArgs(const py::kwargs& kwargs, py::object pyclass = py::none(),
