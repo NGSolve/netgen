@@ -404,6 +404,8 @@ namespace ngcore
     /// the data
     T * __restrict data;
   public:
+    typedef T value_type;
+    typedef IndexType index_type;
     using BaseArrayObject<FlatArray>::ILLEGAL_POSITION;
 
     /// initialize array 
@@ -540,7 +542,7 @@ namespace ngcore
     }
 
     /// takes range starting from position start of end-start elements
-    NETGEN_INLINE const FlatArray<T> operator[] (IntRange range) const
+    NETGEN_INLINE const FlatArray<T> operator[] (T_Range<IndexType> range) const
     {
       return FlatArray<T> (range.Size(), data+range.First());
     }
