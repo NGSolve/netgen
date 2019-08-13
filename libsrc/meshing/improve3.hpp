@@ -13,7 +13,15 @@ class MeshOptimize3d
   const MeshingParameters & mp;
 public:
   MeshOptimize3d (const MeshingParameters & amp) : mp(amp) { ; }
+
+  double CombineImproveEdge (Mesh & mesh, const MeshingParameters & mp,
+            TABLE<ElementIndex, PointIndex::BASE> & elements_of_point,
+            Array<double> & elerrs, PointIndex pi0, PointIndex pi1,
+            FlatArray<bool, PointIndex> is_point_removed, bool check_only=false);
+
   void CombineImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
+  void CombineImproveSequential (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
+
   void SplitImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
   void SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
 		    const BitArray * working_elements = NULL);
