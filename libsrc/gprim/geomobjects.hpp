@@ -17,7 +17,7 @@ namespace netgen
 
 
   template <int D, typename T>
-  class Point : public ngsimd::AlignedAlloc<Point<D,T>>
+  class Point
   {
 
   protected:
@@ -73,7 +73,7 @@ namespace netgen
   };
 
   template <int D, typename T>
-  class Vec : public ngsimd::AlignedAlloc<Vec<D,T>>
+  class Vec
   {
 
   protected:
@@ -162,7 +162,7 @@ namespace netgen
 
 
   template <int H, int W=H, typename T = double>
-  class Mat : public ngsimd::AlignedAlloc<Mat<H,W,T>>
+  class Mat
   {
 
   protected:
