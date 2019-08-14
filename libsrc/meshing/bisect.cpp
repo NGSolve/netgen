@@ -2150,7 +2150,7 @@ namespace netgen
 	  }
         if(mesh.GetDimension() == 2)
           {
-            for (SegmentIndex j=1; j<=mesh.GetNSeg(); j++)
+            for (SegmentIndex j=0; j<mesh.GetNSeg(); j++)
               {
                 auto seg = mesh[j];
                 for (auto map : idmaps)
