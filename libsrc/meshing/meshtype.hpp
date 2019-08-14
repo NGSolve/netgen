@@ -292,8 +292,10 @@ namespace netgen
     { i = ai.i; return *this; }
     SegmentIndex & operator= (int ai) { i = ai; return *this; }
     operator int () const { return i; }
-    SegmentIndex & operator++ (int) { i++; return *this; }
-    SegmentIndex & operator-- (int) { i--; return *this; }
+    SegmentIndex& operator++ () { ++i; return *this; }
+    SegmentIndex& operator-- () { --i; return *this; }
+    SegmentIndex operator++ (int) { return i++; }
+    SegmentIndex operator-- (int) { return i--; }
   };
 
   inline istream & operator>> (istream & ist, SegmentIndex & pi)
