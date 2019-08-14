@@ -48,6 +48,10 @@ DLL_HEADER void ExportNgOCC(py::module &m)
            self.HealGeometry();
            self.BuildFMap();
          },py::arg("tolerance")=1e-3, py::arg("fixsmalledges")=true, py::arg("fixspotstripfaces")=true, py::arg("sewfaces")=true, py::arg("makesolids")=true, py::arg("splitpartitions")=false,R"raw_string(Heal the OCCGeometry.)raw_string",py::call_guard<py::gil_scoped_release>())
+    .def("SetFaceMeshsize", [](OCCGeometry& self, size_t fnr, double meshsize)
+                            {
+                              self.SetFaceMaxH(fnr, meshsize);
+                            }, "Set maximum meshsize for face fnr. Face numbers are 0 based.")
     .def("_visualizationData", [] (shared_ptr<OCCGeometry> occ_geo)
          {
            std::vector<float> vertices;

@@ -319,6 +319,14 @@ namespace netgen
         }
     }
 
+    void SetFaceMaxH(size_t facenr, double faceh)
+    {
+      if(facenr >= fmap.Extent())
+        throw RangeException("OCCGeometry faces", facenr, 0, fmap.Extent());
+      face_maxh[facenr] = faceh;
+      face_maxh_modified[facenr] = true;
+    }
+
     // Philippose - 15/01/2009
     // Returns the local mesh size of a given face
     double GetFaceMaxH(int facenr)
