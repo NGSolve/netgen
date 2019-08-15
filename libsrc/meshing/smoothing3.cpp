@@ -924,27 +924,38 @@ double CalcTotalBad (const Mesh::T_POINTS & points,
 		     const MeshingParameters & mp)
 {
   static Timer t("CalcTotalBad"); RegionTimer reg(t);
+  static constexpr int n_classes = 20;
   
   double sum = 0;
-  double elbad;
   
-  tets_in_qualclass.SetSize(20);
+  tets_in_qualclass.SetSize(n_classes);
   tets_in_qualclass = 0;
 
-  double teterrpow = mp.opterrpow;
+  ParallelForRange( IntRange(elements.Size()), [&] (auto myrange) {
+    double local_sum = 0.0;
+    double teterrpow = mp.opterrpow;
 
-  for (int i = 0; i < elements.Size(); i++)
-    {
-      elbad = pow (max2(CalcBad (points, elements[i], 0, mp),1e-10),
-		   1/teterrpow);
+    std::array<int,n_classes> classes_local{};
 
-      int qualclass = int (20 / elbad + 1);
-      if (qualclass < 1) qualclass = 1;
-      if (qualclass > 20) qualclass = 20;
-      tets_in_qualclass.Elem(qualclass)++;
+    for (auto i : myrange)
+      {
+        double elbad = pow (max2(CalcBad (points, elements[i], 0, mp),1e-10),
+                     1/teterrpow);
 
-      sum += elbad;
-    }
+        int qualclass = int (n_classes / elbad + 1);
+        if (qualclass < 1) qualclass = 1;
+        if (qualclass > n_classes) qualclass = n_classes;
+        classes_local[qualclass-1]++;
+
+        local_sum += elbad;
+      }
+
+      AtomicAdd(sum, local_sum);
+
+      for (auto i : Range(n_classes))
+          AsAtomic(tets_in_qualclass[i]) += classes_local[i];
+  });
+
   return sum;
 }
 

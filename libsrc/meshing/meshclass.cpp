@@ -5759,10 +5759,15 @@ namespace netgen
 
   int Mesh :: MarkIllegalElements ()
   {
-    int cnt = 0;
-    for (auto & el : VolumeElements())
-      if (!LegalTet (el))
-        cnt++;
+    atomic<int> cnt = 0;
+    ParallelForRange( Range(volelements), [&] (auto myrange)
+    {
+      int cnt_local = 0;
+      for(auto & el : volelements.Range(myrange))
+        if (!LegalTet (el))
+          cnt_local++;
+      cnt += cnt_local;
+    });
     return cnt;
   }
 

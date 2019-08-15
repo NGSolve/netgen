@@ -1,4 +1,8 @@
 #include <mystdlib.h>
+#include <algorithm>
+
+#include <core/taskmanager.hpp>
+#include <core/logging.hpp>
 
 #include "meshing.hpp"
 
@@ -10,6 +14,20 @@
 namespace netgen
 {
 
+
+// Calc badness of new element where pi1 and pi2 are replaced by pnew
+double CalcBadReplacePoints (const Mesh::T_POINTS & points, const MeshingParameters & mp, const Element & elem, double h, PointIndex &pi1, PointIndex &pi2, MeshPoint &pnew)
+  {
+    if (elem.GetType() != TET) return 0;
+
+    MeshPoint* p[] = {&points[elem[0]], &points[elem[1]], &points[elem[2]], &points[elem[3]]};
+
+    for (auto i : Range(4))
+        if(elem[i]==pi1 || elem[i]==pi2) p[i] = &pnew;
+
+    return CalcTetBadness (*p[0], *p[1], *p[2], *p[3], h, mp);
+  }
+
 /*
   Combine two points to one.
   Set new point into the center, if both are
@@ -17,9 +35,138 @@ namespace netgen
   Connect inner point to boundary point, if one
   point is inner point.
 */
+double MeshOptimize3d :: CombineImproveEdge (Mesh & mesh,
+                            const MeshingParameters & mp,
+                            TABLE<ElementIndex, PointIndex::BASE> & elements_of_point,
+                            Array<double> & elerrs,
+                            PointIndex pi0, PointIndex pi1,
+                            FlatArray<bool, PointIndex> is_point_removed,
+                            bool check_only)
+{
+  if (pi1 < pi0) Swap (pi0, pi1);
+  if(is_point_removed[pi0] || is_point_removed[pi1]) return false;
 
+  MeshPoint p0 = mesh[pi0];
+  MeshPoint p1 = mesh[pi1];
 
-void MeshOptimize3d :: CombineImprove (Mesh & mesh,
+  if (p1.Type() != INNERPOINT)
+      return false;
+
+  ArrayMem<ElementIndex, 50> has_one_point;
+  ArrayMem<ElementIndex, 50> has_both_points;
+
+  for (auto ei : elements_of_point[pi0] )
+  {
+      Element & elem = mesh[ei];
+      if (elem.IsDeleted()) continue;
+
+      if (elem[0] == pi1 || elem[1] == pi1 || elem[2] == pi1 || elem[3] == pi1)
+      {
+          if(!has_both_points.Contains(ei))
+            has_both_points.Append (ei);
+      }
+      else
+      {
+          if(!has_one_point.Contains(ei))
+              has_one_point.Append (ei);
+      }
+  }
+
+  for (auto ei : elements_of_point[pi1] )
+  {
+      Element & elem = mesh[ei];
+      if (elem.IsDeleted()) continue;
+
+      if (elem[0] == pi0 || elem[1] == pi0 || elem[2] == pi0 || elem[3] == pi0)
+      {
+          ;
+      }
+      else
+      {
+          if(!has_one_point.Contains(ei))
+            has_one_point.Append (ei);
+      }
+  }
+
+  double badness_old = 0.0;
+  for (auto ei : has_one_point)
+      badness_old += elerrs[ei];
+  for (auto ei : has_both_points)
+      badness_old += elerrs[ei];
+
+  MeshPoint pnew = p0;
+  if (p0.Type() == INNERPOINT)
+      pnew = Center (p0, p1);
+
+  ArrayMem<double, 50> one_point_badness(has_one_point.Size());
+
+  double badness_new = 0;
+  for (auto i : Range(has_one_point))
+  {
+      const Element & elem = mesh[has_one_point[i]];
+      double badness = CalcBadReplacePoints (mesh.Points(), mp, elem, 0, pi0, pi1, pnew);
+      badness_new += badness;
+      one_point_badness[i] = badness;
+  }
+
+  // Check if changed tets are topologically legal
+  if (p0.Type() != INNERPOINT)
+  {
+      for (auto ei : has_one_point)
+      {
+          Element elem = mesh[ei];
+          int l;
+          for (int l = 0; l < 4; l++)
+              if (elem[l] == pi1)
+              {
+                  elem[l] = pi0;
+                  break;
+              }
+
+          elem.flags.illegal_valid = 0;
+          if (!mesh.LegalTet(elem))
+              badness_new += 1e4;
+      }
+  }
+
+  double d_badness = badness_new / has_one_point.Size() - badness_old / (has_one_point.Size()+has_both_points.Size());
+
+  // Do the actual combine operation
+  if (d_badness < 0.0 && !check_only)
+  {
+      is_point_removed[pi1] = true;
+      mesh[pi0] = pnew;
+
+      for (auto ei : elements_of_point[pi1])
+      {
+          Element & elem = mesh[ei];
+          if (elem.IsDeleted()) continue;
+
+          if(elements_of_point[pi0].Pos(ei)==-1)
+              elements_of_point.Add (pi0, ei); // todo: only add if not already in there!
+          for (int l = 0; l < elem.GetNP(); l++)
+              if (elem[l] == pi1)
+                  elem[l] = pi0;
+
+          elem.flags.illegal_valid = 0;
+          if (!mesh.LegalTet (elem))
+              (*testout) << "illegal tet " << ei << endl;
+      }
+
+      for (auto i : Range(has_one_point))
+          elerrs[has_one_point[i]] = one_point_badness[i];
+
+      for (auto ei : has_both_points)
+      {
+          mesh[ei].flags.illegal_valid = 0;
+          mesh[ei].Delete();
+      }
+  }
+
+  return d_badness;
+}
+
+void MeshOptimize3d :: CombineImproveSequential (Mesh & mesh,
 				       OPTIMIZEGOAL goal)
 {
   static Timer t("MeshOptimize3d::CombineImprove"); RegionTimer reg(t);
@@ -247,6 +394,179 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
   for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
     if(!(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex()))
       totalbad += CalcBad (mesh.Points(), mesh[ei], 0);
+
+  if (goal == OPT_QUALITY)
+    {
+      totalbad = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
+      (*testout) << "Total badness = " << totalbad << endl;
+
+      int cntill = 0;
+      for (ElementIndex ei = 0; ei < ne; ei++)
+	if(!(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex()))
+	  if (!mesh.LegalTet (mesh[ei]))
+	    cntill++;
+
+      PrintMessage (5, cntill, " illegal tets");
+    }
+  multithread.task = savetask;
+} 
+
+void MeshOptimize3d :: CombineImprove (Mesh & mesh,
+				       OPTIMIZEGOAL goal)
+{
+  static Timer t("MeshOptimize3d::CombineImprove"); RegionTimer reg(t);
+  static Timer topt("Optimize");
+  static Timer tsearch("Search");
+  static Timer tbuild_edges("Build edges");
+  static Timer tbuild_elements_table("Build elements table");
+  static Timer tbad("CalcBad");
+
+  // return CombineImproveSequential(mesh, goal);
+  
+  int np = mesh.GetNP();
+  int ne = mesh.GetNE();
+  int ntasks = 4*ngcore::TaskManager::GetNumThreads();
+
+  Array<double> elerrs (ne);
+  Array<bool, PointIndex> is_point_removed (np);
+  is_point_removed = false;
+
+  PrintMessage (3, "CombineImprove");
+  (*testout)  << "Start CombineImprove" << "\n";
+
+  //  mesh.CalcSurfacesOfNode ();
+  const char * savetask = multithread.task;
+  multithread.task = "Combine Improve";
+
+
+  tbad.Start();
+  double totalbad = 0.0;
+  ParallelForRange(Range(ne), [&] (auto myrange)
+  {
+    double totalbad_local = 0.0;
+    for (ElementIndex ei : myrange)
+    {
+      if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh[ei].GetIndex())
+	continue;
+      double elerr = CalcBad (mesh.Points(), mesh[ei], 0);
+      totalbad_local += elerr;
+      elerrs[ei] = elerr;
+    }
+    AtomicAdd(totalbad, totalbad_local);
+  }, ntasks);
+  tbad.Stop();
+
+  if (goal == OPT_QUALITY)
+    {
+      totalbad = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
+      (*testout) << "Total badness = " << totalbad << endl;
+    }
+
+  // TODO: Build table in parallel (using TableCreator)
+  tbuild_elements_table.Start();
+  TABLE<ElementIndex, PointIndex::BASE> elementsonnode(np);
+  for (ElementIndex ei = 0; ei < ne; ei++)
+    if (!mesh[ei].IsDeleted())
+      for (int j = 0; j < mesh[ei].GetNP(); j++)
+	elementsonnode.Add (mesh[ei][j], ei);
+
+  tbuild_elements_table.Stop();
+
+  // Build list of all edges
+  Array<std::tuple<int,int>> edges;
+  Array<Array<std::tuple<int,int>>> thread_edges(ngcore::TaskManager::GetMaxThreads());
+
+  static constexpr int tetedges[6][2] =
+    { { 0, 1 }, { 0, 2 }, { 0, 3 },
+      { 1, 2 }, { 1, 3 }, { 2, 3 } };
+
+  tbuild_edges.Start();
+  ParallelForRange(mesh.Points().Range(), [&] (auto myrange)
+  {
+    ArrayMem<std::tuple<int,int>, 100> local_edges;
+    for (auto pi : myrange)
+    {
+      local_edges.SetSize(0);
+
+      for(auto ei : elementsonnode[pi])
+      {
+          Element & elem = mesh[ei];
+          if (elem.IsDeleted()) continue;
+
+          for (int j = 0; j < 6; j++)
+          {
+              PointIndex pi0 = elem[tetedges[j][0]];
+              PointIndex pi1 = elem[tetedges[j][1]];
+              if (pi1 < pi0) Swap(pi0, pi1);
+              if(pi0==pi)
+                  local_edges.Append(std::make_tuple(pi0, pi1));
+          }
+      }
+      QuickSort(local_edges);
+
+      auto edge_prev = std::make_tuple(-1,-1);
+
+      for(auto edge : local_edges)
+          if(edge != edge_prev)
+          {
+              // TODO: Check for CombineEdge improvement already here and only append edges with improvement
+              thread_edges[ngcore::TaskManager::GetThreadId()].Append(edge);
+              edge_prev = edge;
+          }
+    }
+  }, ntasks);
+
+  int num_edges = 0;
+  for (auto & edg : thread_edges)
+      num_edges += edg.Size();
+  edges.SetAllocSize(num_edges);
+  for (auto & edg : thread_edges)
+      edges.Append(edg);
+
+  tbuild_edges.Stop();
+
+  // Find edges with improvement
+  Array<std::tuple<double, int>> combine_candidate_edges(edges.Size());
+  std::atomic<int> improvement_counter(0);
+
+  tsearch.Start();
+  ParallelForRange(Range(edges), [&] (auto myrange)
+  {
+    for(auto i : myrange)
+    {
+      auto [p0,p1] = edges[i];
+      double d_badness = CombineImproveEdge (mesh, mp, elementsonnode, elerrs, p0, p1, is_point_removed, true);
+      if(d_badness<0.0)
+      {
+        int index = improvement_counter++;
+        combine_candidate_edges[index] = make_tuple(d_badness, i);
+      }
+    }
+  }, ntasks);
+  tsearch.Stop();
+
+  auto edges_with_improvement = combine_candidate_edges.Part(0, improvement_counter.load());
+
+  QuickSort(edges_with_improvement);
+  PrintMessage(5, edges.Size(), " edges");
+  PrintMessage(5, edges_with_improvement.Size(), " edges with improvement");
+
+  // Apply actual optimizations
+  topt.Start();
+  int cnt = 0;
+  for(auto [d_badness, ei] : edges_with_improvement)
+  {
+      auto [p0,p1] = edges[ei];
+      if (CombineImproveEdge (mesh, mp, elementsonnode, elerrs, p0, p1, is_point_removed, false) < 0.0)
+        cnt++;
+  }
+  topt.Stop();
+
+  mesh.Compress();
+  mesh.MarkIllegalElements();
+
+  PrintMessage (5, cnt, " elements combined");
+  (*testout) << "CombineImprove done" << "\n";
 
   if (goal == OPT_QUALITY)
     {
