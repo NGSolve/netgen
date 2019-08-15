@@ -77,13 +77,13 @@ cleanup_win:
   variables:
     UBUNTU_VERSION: "18.04"
 
-build_ubuntu:
+build_ubuntu_debug:
   <<: *ubuntu
   stage: build
   script:
     - docker build -t netgen_${CI_PIPELINE_ID}:${UBUNTU_VERSION} -f tests/dockerfile .
     - rm -f netgen_${CI_PIPELINE_ID}_$UBUNTU_VERSION.id
-    - docker run --cidfile netgen_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_PIPELINE_ID}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build.sh
+    - docker run --cidfile netgen_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_PIPELINE_ID}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_debug.sh
     - docker commit `cat netgen_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id` netgen_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}
     - rm netgen_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id
 
