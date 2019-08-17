@@ -9,6 +9,7 @@
 #include "logging.hpp"
 #include "mpi_wrapper.hpp"
 #include "profiler.hpp"
+#include "signal.hpp"
 #include "symboltable.hpp"
 #include "taskmanager.hpp"
 #include "version.hpp"
