@@ -723,7 +723,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          py::return_value_policy::reference)
 
     .def("Elements2D", 
-         static_cast<Array<Element2d>&(Mesh::*)()> (&Mesh::SurfaceElements),
+         static_cast<Array<Element2d,SurfaceElementIndex>&(Mesh::*)()> (&Mesh::SurfaceElements),
          py::return_value_policy::reference)
 
     .def("Elements1D", 

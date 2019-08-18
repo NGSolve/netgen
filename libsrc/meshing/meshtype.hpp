@@ -268,7 +268,6 @@ namespace netgen
     SurfaceElementIndex & operator++ () { ++i; return *this; }
     SurfaceElementIndex & operator-- () { --i; return *this; }
     SurfaceElementIndex & operator+= (int inc) { i+=inc; return *this; }
-
     void DoArchive (Archive & ar) { ar & i; }
   };
 

@@ -3,11 +3,6 @@
 #include "meshing.hpp"
 #include <opti.hpp>
 
-#ifndef SMALLLIB
-//#ifndef NOTCL
-//#include <visual.hpp>
-//#endif
-#endif
 
 namespace netgen
 {
@@ -33,11 +28,11 @@ namespace netgen
   class trionedge
   {
   public:
-    int tnr;
+    SurfaceElementIndex tnr;
     int sidenr;
 
     trionedge () { tnr = 0; sidenr = 0; }
-    trionedge (int atnr, int asidenr)
+    trionedge (SurfaceElementIndex atnr, int asidenr)
     { tnr = atnr; sidenr = asidenr; }
   };
 
@@ -95,7 +90,7 @@ namespace netgen
     int surfnr = mesh.GetFaceDescriptor (faceindex).SurfNr();
 
     Array<Neighbour> neighbors(mesh.GetNSE());
-    INDEX_2_HASHTABLE<trionedge> other(seia.Size() + 2);
+    INDEX_2_HASHTABLE<trionedge> other(2*seia.Size() + 2);
 
 
     Array<bool> swapped(mesh.GetNSE());
@@ -190,10 +185,16 @@ namespace netgen
       }
     */	    
 
+    /*
     for (int i = 0; i < seia.Size(); i++)
       {
 	const Element2d & sel = mesh[seia[i]];
+    */
 
+    for (SurfaceElementIndex sei : seia)
+      {
+	const Element2d & sel = mesh[sei];
+        
 	for (int j = 0; j < 3; j++)
 	  {
 	    PointIndex pi1 = sel.PNumMod(j+2);
@@ -201,8 +202,8 @@ namespace netgen
 	  
 	    //	    double loch = mesh.GetH(mesh[pi1]);
 	    
-	    INDEX_2 edge(pi1, pi2);
-	    edge.Sort();
+	    // INDEX_2 edge(pi1, pi2);
+	    // edge.Sort();
 	  
 	    if (mesh.IsSegment (pi1, pi2))
 	      continue;
@@ -216,18 +217,23 @@ namespace netgen
 	      {
 		// INDEX_2 i2s(ii2);
 		// i2s.Sort();
-	      
+
+                /*
 		int i2 = other.Get(ii2).tnr;
 		int j2 = other.Get(ii2).sidenr;
-		
-		neighbors[seia[i]].SetNr (j, i2);
-		neighbors[seia[i]].SetOrientation (j, j2);
-		neighbors[i2].SetNr (j2, seia[i]);
+		*/
+                auto othertrig = other.Get(ii2);
+		SurfaceElementIndex i2 = othertrig.tnr;
+		int j2 = othertrig.sidenr;
+                
+		neighbors[sei].SetNr (j, i2);
+		neighbors[sei].SetOrientation (j, j2);
+		neighbors[i2].SetNr (j2, sei);
 		neighbors[i2].SetOrientation (j2, j);
 	      }
 	    else
 	      {
-		other.Set (INDEX_2 (pi2, pi1), trionedge (seia[i], j));
+		other.Set (INDEX_2 (pi2, pi1), trionedge (sei, j));
 	      }
 	  }
       }

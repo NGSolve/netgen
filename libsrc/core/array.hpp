@@ -235,7 +235,7 @@ namespace ngcore
     NETGEN_INLINE bool operator != (ArrayIterator d2) { return ind != d2.ind; }
     NETGEN_INLINE bool operator == (ArrayIterator d2) { return ind == d2.ind; }
   };
-
+  
 
 
   template <typename TSIZE>
@@ -356,14 +356,14 @@ namespace ngcore
   }
 
 
-  template <typename T, typename INDEX_ARRAY>
-  class IndirectArray : public BaseArrayObject<IndirectArray<T, INDEX_ARRAY> >
+  template <typename T, typename TI, typename INDEX_ARRAY>
+  class IndirectArray : public BaseArrayObject<IndirectArray<T, TI, INDEX_ARRAY> >
   {
-    FlatArray<T> ba;
+    FlatArray<T,TI> ba;
     const INDEX_ARRAY & ia;
 
   public:
-    NETGEN_INLINE IndirectArray (FlatArray<T> aba,
+    NETGEN_INLINE IndirectArray (FlatArray<T,TI> aba,
                           const INDEX_ARRAY & aia)
       : ba(aba), ia(aia) { ; }
     
@@ -552,10 +552,9 @@ namespace ngcore
     }
     
     template <typename TI1>
-    IndirectArray<T, BaseArrayObject<TI1> > 
-    operator[] (const BaseArrayObject<TI1> & ind_array) const
+    auto operator[] (const BaseArrayObject<TI1> & ind_array) const
     {
-      return IndirectArray<T, BaseArrayObject<TI1> > (*this, ind_array);
+      return IndirectArray<T, IndexType, BaseArrayObject<TI1> > (*this, ind_array);
     }
 
     /// first position of element elem, returns -1 if element not contained in array 

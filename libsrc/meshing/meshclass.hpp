@@ -40,7 +40,7 @@ namespace netgen
     /// line-segments at edges
     Array<Segment> segments;
     /// surface elements, 2d-inner elements
-    Array<Element2d> surfelements;
+    Array<Element2d, SurfaceElementIndex> surfelements;
     /// volume elements
     Array<Element> volelements;
     /// points will be fixed forever
@@ -788,8 +788,12 @@ namespace netgen
       void ReCalc ()
       {
 	area = 0;
+        /*
 	for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
 	  Add (mesh[sei]);
+        */
+        for (const Element2d & el : mesh.SurfaceElements())
+          Add (el);
 	valid = true;
       }
 
