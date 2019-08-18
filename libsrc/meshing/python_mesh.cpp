@@ -506,7 +506,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   
 
   ExportArray<Element,size_t>(m);
-  ExportArray<Element2d,size_t>(m);
+  ExportArray<Element2d,SurfaceElementIndex>(m);
   ExportArray<Segment,size_t>(m);
   ExportArray<Element0d>(m);
   ExportArray<MeshPoint,PointIndex>(m);
