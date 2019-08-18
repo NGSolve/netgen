@@ -5,7 +5,6 @@
 
 namespace netgen
 {
-
   static mutex buildsearchtree_mutex;
 
   Mesh :: Mesh ()
