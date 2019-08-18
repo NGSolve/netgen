@@ -228,8 +228,10 @@ namespace ngcore
     { return ArrayIterator(ar, ind++); }
     NETGEN_INLINE ArrayIterator operator++ ()
     { return ArrayIterator(ar, ++ind); }
-    NETGEN_INLINE TELEM operator*() const { return ar[ind]; }
-    NETGEN_INLINE TELEM & operator*() { return ar[ind]; }
+    // NETGEN_INLINE const TELEM & operator*() const { return ar[ind]; }
+    // NETGEN_INLINE TELEM & operator*() { return ar[ind]; }
+    NETGEN_INLINE auto operator*() const -> decltype(ar[ind]) { return ar[ind]; }
+    NETGEN_INLINE auto operator*() -> decltype(ar[ind]) { return ar[ind]; }
     NETGEN_INLINE bool operator != (ArrayIterator d2) { return ind != d2.ind; }
     NETGEN_INLINE bool operator == (ArrayIterator d2) { return ind == d2.ind; }
   };
@@ -366,8 +368,8 @@ namespace ngcore
       : ba(aba), ia(aia) { ; }
     
     NETGEN_INLINE size_t Size() const { return ia.Size(); }
-    NETGEN_INLINE T operator[] (size_t i) const { return ba[ia[i]]; }
-    NETGEN_INLINE T & operator[] (size_t i) { return ba[ia[i]]; }
+    NETGEN_INLINE T & operator[] (size_t i) const { return ba[ia[i]]; }
+    // NETGEN_INLINE T & operator[] (size_t i) { return ba[ia[i]]; }
 
     NETGEN_INLINE IndirectArray operator= (const T & val) 
     {
@@ -384,6 +386,8 @@ namespace ngcore
       return IndirectArray (ba, ia);
     }
 
+    NETGEN_INLINE AOWrapperIterator<IndirectArray> begin() const { return { *this, 0 }; }
+    NETGEN_INLINE AOWrapperIterator<IndirectArray> end() const { return { *this, Size() }; }
   };
 
 

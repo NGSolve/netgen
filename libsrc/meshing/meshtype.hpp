@@ -504,6 +504,8 @@ namespace netgen
 
     auto PNums () const { return FlatArray<const PointIndex> (np, &pnum[0]); }
     auto PNums ()  { return FlatArray<PointIndex> (np, &pnum[0]); }
+    template <int NP>
+    auto PNums() const { return FlatArray<const PointIndex> (NP, &pnum[0]); }
     auto Vertices() const { return FlatArray<const PointIndex> (GetNV(), &pnum[0]); }
 
     auto GeomInfo() const { return FlatArray<const PointGeomInfo> (np, &geominfo[0]); }
@@ -796,6 +798,8 @@ namespace netgen
 
     auto PNums () const 
     { return FlatArray<const PointIndex> (np, &pnum[0]); }
+    template <int NP>
+    auto PNums() const { return FlatArray<const PointIndex> (NP, &pnum[0]); }
 
     FlatArray<const PointIndex> Vertices() const { return { GetNV(), &pnum[0] }; }
 

@@ -94,11 +94,11 @@ namespace netgen
       
     int surfnr = mesh.GetFaceDescriptor (faceindex).SurfNr();
 
-    NgArray<Neighbour> neighbors(mesh.GetNSE());
+    Array<Neighbour> neighbors(mesh.GetNSE());
     INDEX_2_HASHTABLE<trionedge> other(seia.Size() + 2);
 
 
-    NgArray<bool> swapped(mesh.GetNSE());
+    Array<bool> swapped(mesh.GetNSE());
     NgArray<int,PointIndex::BASE> pdef(mesh.GetNP());
     NgArray<double,PointIndex::BASE> pangle(mesh.GetNP());
 
@@ -153,21 +153,25 @@ namespace netgen
 	  }
       }
 
+    /*
     for (int i = 0; i < seia.Size(); i++)
       {
 	const Element2d & sel = mesh[seia[i]];
 	for (int j = 0; j < 3; j++)
 	  pdef[sel[j]]++;
       }
-
-    for (int i = 0; i < seia.Size(); i++)
-      {
-	for (int j = 0; j < 3; j++)
-	  {
-	    neighbors[seia[i]].SetNr (j, -1);
-	    neighbors[seia[i]].SetOrientation (j, 0);
-	  }
-      }
+    */
+    for (SurfaceElementIndex sei : seia)
+      for (PointIndex pi : mesh[sei].PNums<3>())
+        pdef[pi]++;
+    
+    // for (int i = 0; i < seia.Size(); i++)
+    for (SurfaceElementIndex sei : seia)
+      for (int j = 0; j < 3; j++)
+        {
+          neighbors[sei].SetNr (j, -1);
+          neighbors[sei].SetOrientation (j, 0);
+        }
 
     /*
       NgArray<Vec3d> normals(mesh.GetNP());
@@ -228,9 +232,9 @@ namespace netgen
 	  }
       }
 
-    for (int i = 0; i < seia.Size(); i++)
-      swapped[seia[i]] = false;
-
+    for (SurfaceElementIndex sei : seia)
+      swapped[sei] = false;
+    
     NgProfiler::StopTimer (timerstart);
   
 
@@ -466,16 +470,11 @@ namespace netgen
     int np = mesh.GetNP();
 
     TABLE<SurfaceElementIndex,PointIndex::BASE> elementsonnode(np); 
-    NgArray<SurfaceElementIndex> hasonepi, hasbothpi;
+    Array<SurfaceElementIndex> hasonepi, hasbothpi;
 
     for (SurfaceElementIndex sei : seia)
-      {
-	// Element2d & el = mesh[sei];
-	// for (int j = 0; j < el.GetNP(); j++)
-        // elementsonnode.Add (el[j], sei);
-        for (PointIndex pi : mesh[sei].PNums())
-          elementsonnode.Add (pi, sei);
-      }
+      for (PointIndex pi : mesh[sei].PNums<3>())
+        elementsonnode.Add (pi, sei);
 
     Array<bool,PointIndex> fixed(np);
     fixed = false;
@@ -515,7 +514,7 @@ namespace netgen
       fixed[pi] = true;
 
 
-    NgArray<Vec<3>,PointIndex::BASE> normals(np);
+    Array<Vec<3>,PointIndex> normals(np);
 
     // for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End(); pi++)
     for (PointIndex pi : mesh.Points().Range())
@@ -596,21 +595,22 @@ namespace netgen
 	    hasonepi.SetSize(0);
 	    hasbothpi.SetSize(0);
 
-	    for (int k = 0; k < elementsonnode[pi1].Size(); k++)
+	    // for (int k = 0; k < elementsonnode[pi1].Size(); k++)
+            for (SurfaceElementIndex sei2 : elementsonnode[pi1])
 	      {
-		const Element2d & el2 = mesh[elementsonnode[pi1][k]];
+		const Element2d & el2 = mesh[sei2];
 
 		if (el2.IsDeleted()) continue;
 
 		if (el2[0] == pi2 || el2[1] == pi2 || el2[2] == pi2)
 		  {
-		    hasbothpi.Append (elementsonnode[pi1][k]);
+		    hasbothpi.Append (sei2);
 		    nv = Cross (Vec3d (mesh[el2[0]], mesh[el2[1]]),
 				Vec3d (mesh[el2[0]], mesh[el2[2]]));
 		  }
 		else
 		  {
-		    hasonepi.Append (elementsonnode[pi1][k]);
+		    hasonepi.Append (sei2);
 		  }
 	      } 
 
@@ -628,29 +628,32 @@ namespace netgen
 	    //	  nv = normals.Get(pi1);
 
 
-
-	    for (int k = 0; k < elementsonnode[pi2].Size(); k++)
+            for (SurfaceElementIndex sei2 :  elementsonnode[pi2])
 	      {
-		const Element2d & el2 = mesh[elementsonnode[pi2][k]];
+		const Element2d & el2 = mesh[sei2];
 		if (el2.IsDeleted()) continue;
-
-		if (el2[0] == pi1 || el2[1] == pi1 || el2[2] == pi1)
-		  ;
-		else
-		  hasonepi.Append (elementsonnode[pi2][k]);
+                if (!el2.PNums<3>().Contains (pi1))
+		  hasonepi.Append (sei2);                  
 	      } 
 
 	    double bad1 = 0;
 	    int illegal1 = 0, illegal2 = 0;
-            
-	    for (int k = 0; k < hasonepi.Size(); k++)
-	      {
-		const Element2d & el = mesh[hasonepi[k]];
+            /*
+            for (SurfaceElementIndex sei : hasonepi)
+              {
+                const Element2d & el = mesh[sei];
 		bad1 += CalcTriangleBadness (mesh[el[0]], mesh[el[1]], mesh[el[2]],
 					     nv, -1, loch);
 		illegal1 += 1-mesh.LegalTrig(el);
 	      }
-	  
+            */
+            for (const Element2d & el : mesh.SurfaceElements()[hasonepi])
+              {
+		bad1 += CalcTriangleBadness (mesh[el[0]], mesh[el[1]], mesh[el[2]],
+					     nv, -1, loch);
+		illegal1 += 1-mesh.LegalTrig(el);
+	      }
+
 	    for (int k = 0; k < hasbothpi.Size(); k++)
 	      {
 		const Element2d & el = mesh[hasbothpi[k]];
