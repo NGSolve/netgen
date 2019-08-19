@@ -207,6 +207,7 @@ namespace netgen
         R_(0,1) = -R_(1,0);
         R_(1,1) = R_(0,0);
 
+        A_ = A_ * R_;
         Ainv_ = Trans(R_) * Ainv_;
 
 	for (int i = 0; i < 2; i++)
