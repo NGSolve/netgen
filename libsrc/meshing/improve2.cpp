@@ -544,10 +544,10 @@ namespace netgen
       {
 	SurfaceElementIndex sei = seia[i];
 	Element2d & elem = mesh[sei];
-	if (elem.IsDeleted()) continue;
 
 	for (int j = 0; j < 3; j++)
 	  {
+            if (elem.IsDeleted()) continue;
 	    PointIndex pi1 = elem[j];
 	    PointIndex pi2 = elem[(j+1) % 3];
 
