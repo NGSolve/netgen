@@ -1,11 +1,13 @@
 
 import os, pytest
-from netgen.meshing import meshsize
+from netgen.meshing import meshsize, MeshingParameters, SetMessageImportance
 import netgen.gui
 import netgen.csg as csg
 import netgen.stl as stl
-import netgen.csg as csg
+import netgen.occ as occ
 from results import *
+
+SetMessageImportance(0)
 
 def getFiles(fileEnding):
     r, d, files = next(os.walk(os.path.join("..","..","tutorials")))
@@ -27,17 +29,22 @@ def getResultFunc(filename):
     return resultFunc
 
 def getMeshingparameters(filename):
-    standard = (meshsize.very_coarse, meshsize.coarse, meshsize.moderate, meshsize.fine, meshsize.very_fine)
+    standard = [{}] + [{ "mp" : ms } for ms in (meshsize.very_coarse, meshsize.coarse, meshsize.moderate, meshsize.fine, meshsize.very_fine)]
     if filename == "shell.geo":
         return [] # do not test this example cause it needs so long...
     if filename == "extrusion.geo":
         return [] # this segfaults right now
-    if filename == "manyholes2.geo" or filename == "manyholes.geo":
-        return standard[:2] # this gets too big for finer meshsizes
+    if filename == "manyholes2.geo":
+        return [standard[1]] # this gets too big for finer meshsizes
+    if filename in ("manyholes.geo", "frame.step"):
+        return standard[:3] # this gets too big for finer meshsizes
+    if filename == "screw.step":
+        return standard[3:] # coarser meshes don't work here
     return standard
 
-# don't test step files as they do not respect all meshing parameters correctly yet.
-_geofiles = [f for f in getFiles(".geo")] + [f for f in getFiles(".stl")] # + [f for f in getFiles(".step")]
+# TODO: step files do not respect gui meshsizes yet.
+_geofiles = [f for f in getFiles(".geo")] + [f for f in getFiles(".stl")] + [f for f in getFiles(".step")]
+
 
 def generateMesh(filename, mp):
     if filename.endswith(".geo"):
@@ -46,7 +53,7 @@ def generateMesh(filename, mp):
         geo = stl.STLGeometry(os.path.join("..","..","tutorials", filename))
     elif filename.endswith(".step"):
         geo = occ.OCCGeometry(os.path.join("..","..","tutorials", filename))
-    return geo.GenerateMesh(mp)
+    return geo.GenerateMesh(**mp)
 
 @pytest.mark.parametrize("filename, checkFunc", [(f, getCheckFunc(f)) for f in _geofiles])
 def test_geoFiles(filename, checkFunc):
