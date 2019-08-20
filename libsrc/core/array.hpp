@@ -59,6 +59,26 @@ namespace ngcore
   }
 
 
+  namespace detail
+  {
+
+    // Type trait to check if a class implements a 'range_type Range()' function
+    template<typename T>
+    struct has_Range
+    {
+    private:
+      template<typename T2>
+      static constexpr auto check(T2*) ->
+        std::enable_if<std::declval<T2>().Range(), std::true_type> { std::true_type(); }
+      template<typename>
+      static constexpr std::false_type check(...);
+      using type = decltype(check<T>(nullptr)); // NOLINT
+    public:
+      NGCORE_API static constexpr bool value = type::value;
+    };
+  }
+  template<typename T>
+  constexpr bool has_range = detail::has_Range<T>::value;
 
   template <typename AO>
   class AOWrapperIterator
@@ -210,7 +230,7 @@ namespace ngcore
 
 
   template <typename  T>
-  constexpr size_t IndexBASE () { return 0; }
+  constexpr T IndexBASE () { return T(0); }
 
   
   template <class T, class IndexType = size_t> class FlatArray;
@@ -293,6 +313,11 @@ namespace ngcore
     return T_Range<T>(a,b);
   }
 
+  template<typename T>
+  NETGEN_INLINE auto Range (const T& ao)
+    -> typename std::enable_if<has_range<T>, decltype(std::declval<T>().Range())>::type
+  { return ao.Range(); }
+
   template <typename T>
   NETGEN_INLINE T_Range<T> Range_impl (T n, std::true_type)
   {
@@ -301,13 +326,15 @@ namespace ngcore
 
   template <typename T>
   NETGEN_INLINE auto Range_impl (const T & ao, std::false_type)
-    -> T_Range<decltype(ao.Size())>
+    -> T_Range<index_type<T>>
   {
-    return T_Range<decltype(ao.Size())> (0, ao.Size());
+    return T_Range<index_type<T>> (IndexBASE<index_type<T>>(),
+                                   IndexBASE<index_type<T>>() + index_type<T>(ao.Size()));
   }
 
   template <typename T>
-  auto Range(const T & x) -> decltype(Range_impl(x, std::is_integral<T>())) {
+  auto Range(const T & x)
+    -> typename std::enable_if<!has_range<T>, decltype(Range_impl(x, std::is_integral<T>()))>::type {
     return Range_impl(x, std::is_integral<T>());
   }
 
@@ -402,7 +429,7 @@ namespace ngcore
   class FlatArray : public BaseArrayObject<FlatArray<T,IndexType> >
   {
   protected:
-    static constexpr size_t BASE = IndexBASE<IndexType>();
+    static constexpr IndexType BASE = IndexBASE<IndexType>();
     /// the size
     size_t size;
     /// the data
@@ -500,9 +527,9 @@ namespace ngcore
       return data[i-BASE]; 
     }
   
-    NETGEN_INLINE T_Range<size_t> Range () const
+    NETGEN_INLINE T_Range<index_type> Range () const
     {
-      return T_Range<size_t> (BASE, Size()+BASE);
+      return T_Range<index_type> (BASE, size+BASE);
     }
     
     NETGEN_INLINE const CArray<T> Addr (size_t pos) const

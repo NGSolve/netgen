@@ -84,6 +84,7 @@ namespace netgen
     T * data;
   public:
     typedef T TELEM;
+    using index_type = TIND;
 
     /// provide size and memory
     NgFlatArray (size_t asize, T * adata) 

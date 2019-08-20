@@ -126,6 +126,26 @@ namespace ngcore
       return current;
   }
 
+  namespace detail
+  {
+    template<typename T>
+    struct IndexTypeHelper
+    {
+    private:
+      template<typename T2>
+      static constexpr auto check(T2* t) -> typename T2::index_type { return *t; }
+      static constexpr auto check(...) -> decltype(std::declval<T>().Size())
+      { return decltype(std::declval<T>().Size())(); }
+    public:
+      using type = decltype(check((T*) nullptr)); // NOLINT
+    };
+  
+  } // namespace detail
+
+  // Get index type of object. If object has a typedef index_type this type is returned
+  // else decltype(obj.Size()) is returned.
+  template<typename T>
+  using index_type = typename detail::IndexTypeHelper<T>::type;
 } // namespace ngcore
 
 #endif // NETGEN_CORE_UTILS_HPP
