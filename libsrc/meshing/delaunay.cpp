@@ -561,19 +561,19 @@ namespace netgen
     startel[3] = mesh.AddPoint (cp4);
 
     // flag points to use for Delaunay:
-    BitArrayChar<PointIndex::BASE> usep(np);
-    usep.Clear();
+    Array<bool, PointIndex> usep(np);
+    usep = false;
 
     for (auto & face : adfront->Faces())
       for (PointIndex pi : face.Face().PNums())      
-        usep.Set (pi);
+        usep[pi] = true;
     
     for (size_t i = oldnp + PointIndex::BASE; 
 	 i < np + PointIndex::BASE; i++)
-      usep.Set (i);
+      usep[i] = true;
 
     for (PointIndex pi : mesh.LockedPoints())
-      usep.Set (pi);
+      usep[pi] = true;
     
 
     NgArray<int> freelist;
@@ -649,7 +649,7 @@ namespace netgen
 
 	PointIndex newpi = mixed[pi];
 
-	if (!usep.Test(newpi)) 
+	if (!usep[newpi])
 	  continue;
 
 	cntp++;

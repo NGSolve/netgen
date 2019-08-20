@@ -3260,7 +3260,7 @@ namespace netgen
     
     NgArray<PointIndex,PointIndex::BASE,PointIndex> op2np(GetNP());
     NgArray<MeshPoint> hpoints;
-    BitArrayChar<PointIndex::BASE> pused(GetNP());
+    Array<bool, PointIndex> pused(GetNP());
 
     /*
       (*testout) << "volels: " << endl;
@@ -3300,37 +3300,37 @@ namespace netgen
       if(segments[i].edgenr < 0)
           segments.DeleteElement(i--);
 
-    pused.Clear();
+    pused = false;
     for (int i = 0; i < volelements.Size(); i++)
       {
         const Element & el = volelements[i];
         for (int j = 0; j < el.GetNP(); j++)
-          pused.Set (el[j]);
+          pused[el[j]] = true;
       }
 
     for (int i = 0; i < surfelements.Size(); i++)
       {
         const Element2d & el = surfelements[i];
         for (int j = 0; j < el.GetNP(); j++)
-          pused.Set (el[j]);
+          pused[el[j]] = true;
       }
 
     for (int i = 0; i < segments.Size(); i++)
       {
         const Segment & seg = segments[i];
         for (int j = 0; j < seg.GetNP(); j++)
-          pused.Set (seg[j]);
+          pused[seg[j]] = true;
       }
 
     for (int i = 0; i < openelements.Size(); i++)
       {
         const Element2d & el = openelements[i];
         for (int j = 0; j < el.GetNP(); j++)
-          pused.Set(el[j]);
+          pused[el[j]] = true;
       }
 
     for (int i = 0; i < lockedpoints.Size(); i++)
-      pused.Set (lockedpoints[i]);
+      pused[lockedpoints[i]] = true;
 
 
     /*
@@ -3352,7 +3352,7 @@ namespace netgen
 
     // for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
     for (PointIndex pi : points.Range())
-      if (pused.Test(pi))
+      if (pused[pi])
         {
           npi++;
           op2np[pi] = npi;

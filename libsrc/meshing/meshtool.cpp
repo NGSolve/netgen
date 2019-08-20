@@ -964,7 +964,7 @@ namespace netgen
     mesh.FindOpenElements(domainnr);
     int np = mesh.GetNP();
 
-    BitArrayChar<PointIndex::BASE> ppoints(np);
+    Array<bool, PointIndex> ppoints(np);
   
     // int ndom = mesh.GetNDomains();
 
@@ -972,7 +972,7 @@ namespace netgen
     // for (k = 1; k <= ndom; k++)
     k = domainnr;
       {
-	ppoints.Clear();
+	ppoints = false;
       
 	for (i = 1; i <= mesh.GetNOpenElements(); i++)
 	  {
@@ -980,7 +980,7 @@ namespace netgen
 	    if (sel.GetIndex() == k)
 	      {
 		for (j = 1; j <= sel.GetNP(); j++)
-		  ppoints.Set (sel.PNum(j));
+		  ppoints[sel.PNum(j)] = true;
 	      }
 	  }
 
@@ -991,7 +991,7 @@ namespace netgen
 	      {
 		int todel = 0;
 		for (j = 0; j < el.GetNP(); j++)
-		  if (ppoints.Test (el[j]))
+		  if (ppoints[el[j]])
 		    todel = 1;
 	      
 		if (el.GetNP() != 4)

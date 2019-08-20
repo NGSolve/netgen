@@ -349,18 +349,18 @@ void AdFront3 :: RebuildInternalTables ()
 
 
 
-  BitArrayChar<PointIndex::BASE> usecl(np);
-  usecl.Clear();
+  Array<bool, PointIndex> usecl(np);
+  usecl = false;
   for (int i = 1; i <= faces.Size(); i++)
     {
-      usecl.Set (points[faces.Get(i).Face().PNum(1)].cluster);
+      usecl[points[faces.Get(i).Face().PNum(1)].cluster] = true;
       faces.Elem(i).cluster =
 	points[faces.Get(i).Face().PNum(1)].cluster;
     }
   int cntcl = 0;
   for (int i = PointIndex::BASE; 
        i < np+PointIndex::BASE; i++)
-    if (usecl.Test(i))
+    if (usecl[i])
       cntcl++;
 
   NgArray<double, PointIndex::BASE> clvol (np);
