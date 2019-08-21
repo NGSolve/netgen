@@ -4,7 +4,11 @@ from netgen.meshing import meshsize, MeshingParameters, SetMessageImportance
 import netgen.gui
 import netgen.csg as csg
 import netgen.stl as stl
-import netgen.occ as occ
+try:
+    import netgen.occ as occ
+    has_occ = True
+except ImportError:
+    has_occ = False
 from results import *
 
 SetMessageImportance(0)
@@ -43,7 +47,9 @@ def getMeshingparameters(filename):
     return standard
 
 # TODO: step files do not respect gui meshsizes yet.
-_geofiles = [f for f in getFiles(".geo")] + [f for f in getFiles(".stl")] + [f for f in getFiles(".step")]
+_geofiles = [f for f in getFiles(".geo")] + [f for f in getFiles(".stl")]
+if has_occ:
+    _geofiles += [f for f in getFiles(".step")]
 
 
 def generateMesh(filename, mp):
