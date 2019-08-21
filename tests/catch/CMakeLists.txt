@@ -26,6 +26,7 @@ macro(add_unit_test name sources)
 endmacro()
 
 add_unit_test(archive archive.cpp)
+add_unit_test(array array.cpp)
 add_unit_test(symboltable symboltable.cpp)
 add_unit_test(utils utils.cpp)
 add_unit_test(version version.cpp)

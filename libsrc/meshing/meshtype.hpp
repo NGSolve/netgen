@@ -162,7 +162,7 @@ namespace netgen
     PointIndex & operator= (const PointIndex&) = default;
     PointIndex & operator= (PointIndex&&) = default;
      
-    PointIndex (int ai) : i(ai)
+    constexpr PointIndex (int ai) : i(ai)
     {
 #ifdef DEBUG
       if (ai < PointIndex::BASE)
@@ -172,7 +172,7 @@ namespace netgen
     }
     constexpr PointIndex (t_invalid inv) : i(PointIndex::BASE-1) { ; }
     // PointIndex & operator= (const PointIndex &ai) { i = ai.i; return *this; }
-    operator int () const { return i; }
+    constexpr operator int () const { return i; }
     PointIndex operator++ (int) { PointIndex hi(*this); i++; return hi; }
     PointIndex operator-- (int) { PointIndex hi(*this); i--; return hi; }
     PointIndex operator++ () { i++; return *this; }
@@ -180,9 +180,9 @@ namespace netgen
     void Invalidate() { i = PointIndex::BASE-1; }
     bool IsValid() const { return i != PointIndex::BASE-1; }
 #ifdef BASE0
-    enum { BASE = 0 };
+    static constexpr size_t BASE = 0;
 #else
-    enum { BASE = 1 };
+    static constexpr size_t BASE = 1;
 #endif  
 
     void DoArchive (Archive & ar) { ar & i; }
@@ -193,7 +193,7 @@ namespace netgen
 namespace ngcore
 {
   template<> 
-  constexpr size_t IndexBASE<netgen::PointIndex> () { return netgen::PointIndex::BASE; }
+  constexpr netgen::PointIndex IndexBASE<netgen::PointIndex> () { return netgen::PointIndex(netgen::PointIndex::BASE); }
 }
 
 namespace netgen
@@ -255,14 +255,14 @@ namespace netgen
     int i;
   public:
     SurfaceElementIndex () = default;
-    SurfaceElementIndex (int ai) : i(ai) { ; }
+    constexpr SurfaceElementIndex (int ai) : i(ai) { ; }
     /*
     SurfaceElementIndex & operator= (const SurfaceElementIndex & ai) 
     { i = ai.i; return *this; }
     */
     SurfaceElementIndex & operator= (const SurfaceElementIndex & ai) = default;
     SurfaceElementIndex & operator= (int ai) { i = ai; return *this; }
-    operator int () const { return i; }
+    constexpr operator int () const { return i; }
     SurfaceElementIndex operator++ (int) { SurfaceElementIndex hi(*this); i++; return hi; }
     SurfaceElementIndex operator-- (int) { SurfaceElementIndex hi(*this); i--; return hi; }
     SurfaceElementIndex & operator++ () { ++i; return *this; }
