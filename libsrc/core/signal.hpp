@@ -16,7 +16,7 @@ namespace ngcore
     Signal() : is_emitting(true) {}
 
     template<typename Cls, typename FUNC>
-    void connect(Cls* self, FUNC f)
+    void Connect(Cls* self, FUNC f)
     {
       auto ptr = self->weak_from_this();
       auto func = [ptr, f](ParameterTypes... args)
@@ -29,14 +29,19 @@ namespace ngcore
       funcs.push_back(func);
     }
 
-    inline void emit(ParameterTypes ...args)
+    inline void Emit(ParameterTypes ...args)
     {
       if(is_emitting)
         funcs.remove_if([&](auto& f){ return !f(args...); });
     }
 
-    inline void setEmitting(bool emitting) { is_emitting = emitting; }
-    inline bool getEmitting() const { return is_emitting; }
+    inline bool SetEmitting(bool emitting)
+    {
+      bool was_emitting = is_emitting;
+      is_emitting = emitting;
+      return was_emitting;
+    }
+    inline bool GetEmitting() const { return is_emitting; }
   };
 } // namespace ngcore
 
