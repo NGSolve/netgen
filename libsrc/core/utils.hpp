@@ -134,6 +134,9 @@ namespace ngcore
     private:
       template<typename T2>
       static constexpr auto check(T2* t) -> typename T2::index_type { return *t; }
+      // this function is needed for visual because it seems to not lazy evaluate template arguments...
+      template<typename T2>
+      static constexpr auto check(T2* t) -> typename enable_if_t<std::is_integral_t<T>> {} 
       static constexpr auto check(...) -> decltype(std::declval<T>().Size())
       { return decltype(std::declval<T>().Size())(); }
     public:
