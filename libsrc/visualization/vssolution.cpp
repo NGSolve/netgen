@@ -2725,10 +2725,11 @@ namespace netgen
             {
               // NgProfiler::RegionTimer reg2 (timer2);
               
-              int nse = mesh->GetNSE();
-              for (int i = 0; i < nse; i++)
+              // int nse = mesh->GetNSE();
+              // for (int i = 0; i < nse; i++)
+              for (SurfaceElementIndex i : mesh->SurfaceElements().Range())
                 {
-                  ELEMENT_TYPE type = mesh->SurfaceElement(i+1).GetType();
+                  ELEMENT_TYPE type = (*mesh)[i].GetType();
                   double val;
                   bool considerElem = (type == QUAD) 
                     ? GetSurfValue (sol, i, -1, 0.5, 0.5, comp, val)

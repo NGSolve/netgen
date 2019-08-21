@@ -210,13 +210,9 @@ namespace netgen
         A_ = A_ * R_;
         Ainv_ = Trans(R_) * Ainv_;
 
-	for (int i = 0; i < 2; i++)
-	  for (int j = 0; j < 2; j++)
-	    {
-	      Amat(i,j) = A_(i,j);
-	      Amatinv(i,j) = Ainv_(i,j);
-	    }
-
+        Amat = A_;
+        Amatinv = Ainv_;
+        
 	// temp = Amatinv * (psp2-psp1);
         
 
