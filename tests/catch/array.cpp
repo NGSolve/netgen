@@ -6,6 +6,24 @@ using namespace std;
 
 #include "meshing.hpp"
 
+template<typename TIND>
+class ClsWithIndexType
+{
+  size_t size;
+public:
+  ClsWithIndexType(size_t asize) : size(asize) {}
+  using index_type = TIND;
+  size_t Size() const { return size; }
+};
+
+template<typename TIND>
+class ClsWithRange : public ClsWithIndexType<TIND>
+{
+public:
+  ClsWithRange(size_t size) : ClsWithIndexType<TIND>(size) {}
+  T_Range<size_t> Range() const { return {1, 1+this->Size()}; }
+};
+
 
 TEST_CASE("Array")
 {
@@ -58,4 +76,18 @@ TEST_CASE("Array")
   i = 1;
   for(auto j : piarray.Range())
     CHECK(j == i++);
+  // a class can implement index_type and Size as well.
+  ClsWithIndexType<int> clsi(3);
+  CHECK(typeid(Range(clsi)) == typeid(T_Range<int>));
+  i = 0;
+  for(auto j : Range(clsi))
+    CHECK(j == i++);
+  // if the class has a Range function prefer that one
+  ClsWithRange<int> clsr(3);
+  CHECK(typeid(Range(clsr)) == typeid(T_Range<size_t>));
+  i=1;
+  for(auto j : Range(clsr))
+    CHECK(j == i++);
+  CHECK(typeid(Range(size_t(4))) == typeid(T_Range<size_t>));
+  CHECK(typeid(Range(4)) == typeid(T_Range<int>));
 }
