@@ -59,27 +59,6 @@ namespace ngcore
   }
 
 
-  namespace detail
-  {
-
-    // Type trait to check if a class implements a 'range_type Range()' function
-    template<typename T>
-    struct has_Range
-    {
-    private:
-      template<typename T2>
-      static constexpr auto check(T2*) ->
-        std::enable_if<std::declval<T2>().Range(), std::true_type> { std::true_type(); }
-      template<typename>
-      static constexpr std::false_type check(...);
-      using type = decltype(check<T>(nullptr)); // NOLINT
-    public:
-      NGCORE_API static constexpr bool value = type::value;
-    };
-  }
-  template<typename T>
-  constexpr bool has_range = detail::has_Range<T>::value;
-
   template <typename AO>
   class AOWrapperIterator
   {
@@ -334,7 +313,8 @@ namespace ngcore
 
   template <typename T>
   auto Range(const T & x)
-    -> typename std::enable_if<!has_range<T>, decltype(Range_impl(x, std::is_integral<T>()))>::type {
+    -> typename std::enable_if<std::is_integral_v<T> || !has_range<T>,
+                               decltype(Range_impl(x, std::is_integral<T>()))>::type {
     return Range_impl(x, std::is_integral<T>());
   }
 
