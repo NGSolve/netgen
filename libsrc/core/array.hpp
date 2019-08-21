@@ -303,14 +303,24 @@ namespace ngcore
     return T_Range<T> (0, n);
   }
 
-  template <typename T>
-  NETGEN_INLINE auto Range_impl (const T & ao, std::false_type)
-    -> T_Range<index_type<T>>
+  template <typename TA>
+  NETGEN_INLINE auto Range_impl (const TA & ao, std::false_type)
+    -> T_Range<index_type<TA>>
   {
-    return T_Range<index_type<T>> (IndexBASE<index_type<T>>(),
-                                   IndexBASE<index_type<T>>() + index_type<T>(ao.Size()));
+    return T_Range<index_type<TA>> (IndexBASE<index_type<TA>>(),
+                                   IndexBASE<index_type<TA>>() + index_type<TA>(ao.Size()));
   }
 
+  /*
+    Range(obj) will create a range in using the following steps:
+    
+    * if obj is an integral type it will create T_Range<type(obj)>(0, obj)
+    * if obj has a function Range() it will return obj.Range()
+    * if obj has a typedef index_type it will return
+      T_Range<index_type>(IndexBASE<index_type>(), IndexBASE<index_type>() + index_type(obj.Size()))
+    * else it will return T_Range<size_t> (0, obj.Size())
+
+   */
   template <typename T>
   auto Range(const T & x)
     -> typename std::enable_if<std::is_integral_v<T> || !has_range<T>,
@@ -630,6 +640,7 @@ namespace ngcore
     using FlatArray<T,IndexType>::BASE;
 
   public:
+    using index_type = typename FlatArray<T, IndexType>::index_type;
     /// Generate array of logical and physical size asize
     NETGEN_INLINE explicit Array()
       : FlatArray<T,IndexType> (0, nullptr)
@@ -795,42 +806,42 @@ namespace ngcore
     }
 
     /// Add element at end of array. reallocation if necessary.
-    NETGEN_INLINE size_t Append (const T & el)
+    /// Returns index of new element.
+    NETGEN_INLINE index_type Append (const T & el)
     {
       if (size == allocsize) 
         ReSize (size+1);
       data[size] = el;
-      size++;
-      return size;
+      return BASE + size++;
     }
 
     /// Add element at end of array. reallocation not necessary.
-    NETGEN_INLINE size_t AppendHaveMem (const T & el)
+    /// Returns index of new element.
+    NETGEN_INLINE index_type AppendHaveMem (const T & el)
     {
+      NETGEN_CHECK_RANGE(size, 0, allocsize);
       data[size] = el;
-      size++;
-      return size;
+      return BASE + size++;
     }
 
     
     /// Add element at end of array. reallocation if necessary.
-    NETGEN_INLINE size_t Append (T && el)
+    /// Returns index of new element.
+    NETGEN_INLINE index_type Append (T && el)
     {
       if (size == allocsize) 
         ReSize (size+1);
       data[size] = std::move(el);
-      size++;
-      return size;
+      return BASE + size++;
     }
 
     // Add elements of initializer list to end of array. Reallocation if necessary.
-    NETGEN_INLINE size_t Append(std::initializer_list<T> lst)
+    NETGEN_INLINE void Append(std::initializer_list<T> lst)
     {
       if(allocsize < size + lst.size())
         ReSize(size+lst.size());
       for(auto val : lst)
         data[size++] = val;
-      return size;
     }
 
     /// Add element at end of array. reallocation if necessary.
@@ -852,8 +863,7 @@ namespace ngcore
 
 
     /// Append array at end of array. reallocation if necessary.
-    // int Append (const Array<T> & source)
-    NETGEN_INLINE size_t Append (FlatArray<T> source)
+    NETGEN_INLINE void Append (FlatArray<T> source)
     {
       if(size + source.Size() >= allocsize)
         ReSize (size + source.Size() + 1);
@@ -862,7 +872,6 @@ namespace ngcore
         data[i] = source[j];
 
       size += source.Size();
-      return size;
     }
 
 
@@ -879,6 +888,7 @@ namespace ngcore
     /// Delete element i. Move all remaining elements forward
     NETGEN_INLINE void RemoveElement (size_t i)
     {
+      NETGEN_CHECK_RANGE(i, BASE, BASE+size);
       for(size_t j = i; j < this->size-1; j++)
 	this->data[j] = this->data[j+1];
       this->size--;
