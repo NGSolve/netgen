@@ -5,9 +5,9 @@ using namespace ngcore;
 using namespace std;
 
 
-long shuffle(long N, long i) {
+uint64_t shuffle(uint64_t N, uint64_t i) {
     // Shuffle the numbers using multiplication with a prime number to force many updates of min, max
-    constexpr long P = 101;
+    constexpr uint64_t P = 101;
     return (N/2 + i*P) % N;
 }
 
@@ -16,29 +16,29 @@ void testThreading(int n_threads)
   TaskManager::SetNumThreads(n_threads);
   n_threads = EnterTaskManager();
 
-  constexpr long N = 100000;
+  constexpr uint64_t N = 100000;
 
 
   SECTION( "atomic operations" ) {
-      long i_min = 2*N;
-      long i_max = 0;
-      long i_sum = 0;
+      uint64_t i_min = 2*N;
+      uint64_t i_max = 0;
+      uint64_t i_sum = 0;
 
       double d_min = 1e100;
       double d_max = 0.0;
       double d_sum = 0.0;
 
-      ParallelFor( Range(N), [&] (long i) {
+      ParallelFor( Range(N), [&] (uint64_t i) {
           AtomicMin(i_min, shuffle(N,i));
       });
       REQUIRE( i_min==0 );
 
-      ParallelFor( Range(N), [&] (long i) {
+      ParallelFor( Range(N), [&] (uint64_t i) {
           AtomicMax(i_max, shuffle(N,i));
       });
       REQUIRE( i_max==N-1 );
 
-      ParallelFor( Range(N), [&] (long i) {
+      ParallelFor( Range(N), [&] (uint64_t i) {
           AsAtomic(i_sum) += i;
       });
       REQUIRE( i_sum==N*(N-1)/2 );

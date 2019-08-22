@@ -22,6 +22,7 @@ stages:
     - set SRC_DIR=%CI_DIR%\src
     - set NETGENDIR=%INSTALL_DIR%\bin
     - set PYTHONPATH=%INSTALL_DIR%\lib\site-packages
+    - set PATH=%NETGENDIR%;%PATH%
 
 build_win:
   <<: *win
@@ -40,6 +41,7 @@ build_win:
         -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%
         -DUSE_OCC=ON
         -DUSE_CCACHE=ON
+        -DENABLE_UNIT_TESTS=ON
         -DCMAKE_BUILD_TYPE=Release
     - cmake --build . --target install --config Release
 
