@@ -1301,8 +1301,8 @@ namespace netgen
     static char buf[10];
 
     if (parameters.StringFlagDefined (argv[1]))
-      Tcl_SetResult (interp,
-		     (char*)parameters.GetStringFlag (argv[1], NULL).c_str(), TCL_STATIC);
+        Tcl_SetResult (interp,
+                       const_cast<char*>(parameters.GetStringFlag (argv[1], NULL).c_str()), TCL_VOLATILE);
     else if (parameters.NumFlagDefined (argv[1]))
       {
 	sprintf (buf, "%lf", parameters.GetNumFlag (argv[1], 0));
