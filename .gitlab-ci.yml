@@ -40,6 +40,7 @@ build_win:
         -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%
         -DUSE_OCC=ON
         -DUSE_CCACHE=ON
+        -DENABLE_UNIT_TESTS=ON
         -DCMAKE_BUILD_TYPE=Release
     - cmake --build . --target install --config Release
 
