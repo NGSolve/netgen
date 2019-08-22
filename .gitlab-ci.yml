@@ -22,6 +22,7 @@ stages:
     - set SRC_DIR=%CI_DIR%\src
     - set NETGENDIR=%INSTALL_DIR%\bin
     - set PYTHONPATH=%INSTALL_DIR%\lib\site-packages
+    - set PATH=%NETGENDIR%;%PATH%
 
 build_win:
   <<: *win
