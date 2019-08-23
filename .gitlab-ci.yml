@@ -198,7 +198,7 @@ build_mac:
         -DUSE_NATIVE_ARCH=OFF
         -DUSE_CCACHE=ON
         -DENABLE_UNIT_TESTS=ON
-        -DCMAKE_OSX_DEPLOYMENT_TARGET=10.9
+        -DCMAKE_OSX_DEPLOYMENT_TARGET=10.12
         -DCMAKE_OSX_SYSROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
     - make -j5 install
 

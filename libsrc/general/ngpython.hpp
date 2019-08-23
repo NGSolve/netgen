@@ -1,13 +1,13 @@
 #ifdef NG_PYTHON
 
-#include <pybind11/pybind11.h>
+#include <core/python_ngcore.hpp>
+
 #include <pybind11/operators.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 #include <iostream>
 #include <sstream>
 
-#include <core/python_ngcore.hpp>
 using namespace ngcore;
 
 template <typename T>

@@ -10,6 +10,11 @@ add_library(ngcore SHARED
   utils.cpp
   )
 
+# Pybind11 2.3 Issue https://github.com/pybind/pybind11/issues/1604
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+  target_compile_options(ngcore PUBLIC -fsized-deallocation -faligned-allocation)
+endif()
+
 if(USE_PYTHON)
   target_sources(ngcore PRIVATE python_ngcore.cpp)
 endif(USE_PYTHON)

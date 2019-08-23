@@ -1,10 +1,6 @@
-#include <pybind11/pybind11.h>
 
-#include "python_ngcore.hpp"
-
-#include "array.hpp"
-#include "flags.hpp"
 #include "logging.hpp"
+#include "python_ngcore.hpp"
 
 namespace py = pybind11;
 using std::string;
