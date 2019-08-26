@@ -95,21 +95,6 @@ namespace netgen
 #endif
 
 #ifdef PARALLEL
-  inline MPI_Comm MyMPI_SubCommunicator(MPI_Comm comm, NgArray<int> & procs)
-  {
-    MPI_Comm subcomm;
-    MPI_Group gcomm, gsubcomm;
-    MPI_Comm_group(comm, &gcomm);
-    MPI_Group_incl(gcomm, procs.Size(), &(procs[0]), &gsubcomm);
-    MPI_Comm_create_group(comm, gsubcomm, 6969, &subcomm);
-    return subcomm;
-  }
-#else
-  inline MPI_Comm MyMPI_SubCommunicator(MPI_Comm comm, NgArray<int> & procs)
-  { return comm; }
-#endif
-
-#ifdef PARALLEL
   enum { MPI_TAG_CMD = 110 };
   enum { MPI_TAG_MESH = 210 };
   enum { MPI_TAG_VIS = 310 };

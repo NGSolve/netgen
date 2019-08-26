@@ -188,8 +188,15 @@ namespace ngcore
       MPI_Bcast (&s[0], len, MPI_CHAR, root, comm);
     }
 
-    
-  };
+    NgMPI_Comm SubCommunicator (FlatArray<int> procs) const
+    {
+      MPI_Comm subcomm;
+      MPI_Group gcomm, gsubcomm;
+      MPI_Comm_group(comm, &gcomm);
+      MPI_Group_incl(gcomm, procs.Size(), procs.Data(), &gsubcomm);
+      MPI_Comm_create_group(comm, gsubcomm, 4242, &subcomm);
+      return NgMPI_Comm(subcomm, true);
+    }
 
   
 #else // PARALLEL
@@ -239,6 +246,9 @@ namespace ngcore
 
     template <typename T>
     void Bcast (T & s, int root = 0) const { ; } 
+
+    NgMPI_Comm SubCommunicator (FlatArray<int> procs) const
+    { return *this; }
   };  
   
 #endif // PARALLEL
