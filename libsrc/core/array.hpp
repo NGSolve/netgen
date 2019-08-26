@@ -453,6 +453,9 @@ namespace ngcore
     /// the size
     NETGEN_INLINE size_t Size() const { return size; }
 
+    /// the data
+    NETGEN_INLINE T* Data() const { return data; }
+
     /// Fill array with value val
     NETGEN_INLINE const FlatArray & operator= (const T & val) const
     {
