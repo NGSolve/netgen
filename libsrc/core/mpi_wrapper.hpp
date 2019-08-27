@@ -199,7 +199,8 @@ namespace ngcore
       return NgMPI_Comm(subcomm, true);
     }
 
-  
+  }; // class NgMPI_Comm
+
 #else // PARALLEL
   class MPI_Comm {
     int nr;
