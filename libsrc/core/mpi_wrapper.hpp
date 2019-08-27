@@ -219,9 +219,6 @@ namespace ngcore
       MPI_Bcast (&s[0], len, MPI_CHAR, root, comm);
     }
 
-    
-  };
-
   }; // class NgMPI_Comm
 
   NETGEN_INLINE void MyMPI_WaitAll (FlatArray<MPI_Request> requests)
