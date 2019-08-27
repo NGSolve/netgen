@@ -15,14 +15,17 @@
 #include <linalg.hpp>
 #include <csg.hpp>
 #include <stlgeom.hpp>
-#include <occgeom.hpp>
 #include <geometry2d.hpp>
 #include <meshing.hpp>
 #include <../visualization/soldata.hpp>
 
 #ifdef OCCGEOMETRY
 #include <occgeom.hpp>
-#endif
+namespace netgen
+{
+   DLL_HEADER extern OCCParameters occparam;
+} // namespace netgen
+#endif // OCCGEOMETRY
 
 #include <nginterface.h>
 
@@ -33,7 +36,6 @@ namespace netgen {
                                  MeshingParameters & mp);
    extern MeshingParameters mparam;
    DLL_HEADER extern STLParameters stlparam;
-   DLL_HEADER extern OCCParameters occparam;
 }
 
 
