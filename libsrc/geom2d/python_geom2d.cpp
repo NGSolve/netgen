@@ -99,9 +99,9 @@ DLL_HEADER void ExportGeom2d(py::module &m)
                   seg->bc = *intptr;
                 else
                   {
-                    auto bcname = get<string>(*bc);
+                    auto bcname = get_if<string>(&*bc);
                     seg->bc = self.GetNSplines() + 1;
-                    self.SetBCName(seg->bc, bcname);
+                    self.SetBCName(seg->bc, *bcname);
                   }
               }
             else
