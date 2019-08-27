@@ -255,15 +255,7 @@ namespace ngcore
   
 #endif // PARALLEL
 
-
-
-
-
-
-  
-
-  
-}
+} // namespace ngcore
 
 #endif // NGCORE_MPIWRAPPER_HPP
 
