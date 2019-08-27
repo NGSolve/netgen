@@ -28,6 +28,7 @@ namespace netgen
   extern DLL_HEADER shared_ptr<NetgenGeometry> ng_geometry;
   extern DLL_HEADER shared_ptr<Mesh> mesh;
   extern DLL_HEADER MeshingParameters mparam;
+  extern DLL_HEADER OCCParameters occparam;
  
   char * err_needsoccgeometry = (char*) "This operation needs an OCC geometry";
   extern char * err_needsmesh;
