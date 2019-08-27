@@ -62,33 +62,27 @@ DLL_HEADER void ExportGeom2d(py::module &m)
 	  }),
          py::arg("x"), py::arg("y"), py::arg("maxh") = 1e99, py::arg("hpref")=0, py::arg("name")="")
     .def("Append", FunctionPointer([](SplineGeometry2d &self, py::list segment, int leftdomain, int rightdomain,
-                                      py::object bc, py::object copy, double maxh, double hpref)
+                                      optional<variant<int, string>> bc, optional<int> copy, double maxh,
+                                      double hpref)
 	  {
-            py::extract<std::string> segtype(segment[0]);
+            auto segtype = py::cast<std::string>(segment[0]);
             
             SplineSegExt * seg;
-            if (segtype().compare("line") == 0)
+            if (segtype == "line")
               {
-                py::extract<int> point_index1(segment[1]);
-                py::extract<int> point_index2(segment[2]);
-                //point_index1.check()
-                
-                LineSeg<2> * l = new LineSeg<2>(self.GetPoint(point_index1()), self.GetPoint(point_index2()));
+                LineSeg<2> * l = new LineSeg<2>(self.GetPoint(py::cast<int>(segment[1])),
+                                                self.GetPoint(py::cast<int>(segment[2])));
                 seg = new SplineSegExt(*l);
               }
-            else if (segtype().compare("spline3") == 0)
+            else if (segtype == "spline3")
               {
-                py::extract<int> point_index1(segment[1]);
-                py::extract<int> point_index2(segment[2]);
-                py::extract<int> point_index3(segment[3]);
-                
-                SplineSeg3<2> * seg3 = new SplineSeg3<2>(self.GetPoint(point_index1()), self.GetPoint(point_index2()), self.GetPoint(point_index3()));
+                SplineSeg3<2> * seg3 = new SplineSeg3<2>(self.GetPoint(py::cast<int>(segment[1])),
+                                                         self.GetPoint(py::cast<int>(segment[2])),
+                                                         self.GetPoint(py::cast<int>(segment[3])));
                 seg = new SplineSegExt(*seg3);
               }
             else
-              {
-                cout << "Appended segment is not a line or a spline3" << endl;
-              }
+                throw Exception("Appended segment is not a line or a spline3");
             seg->leftdom = leftdomain;
             seg->rightdom = rightdomain;
             seg->hmax = maxh;
@@ -96,23 +90,27 @@ DLL_HEADER void ExportGeom2d(py::module &m)
             seg->hpref_right = hpref;
             seg->reffak = 1;
             seg->copyfrom = -1;
-            if (py::extract<int>(copy).check())
-              seg->copyfrom = py::extract<int>(copy)()+1;
-              
-            if (py::extract<int>(bc).check())
-              seg->bc = py::extract<int>(bc)();
-            else if (py::extract<string>(bc).check())
+            if (copy.has_value())
+              seg->copyfrom = *copy+1;
+
+            if (bc.has_value())
               {
-                string bcname = py::extract<string>(bc)();
-                seg->bc = self.GetNSplines()+1;
-                self.SetBCName(seg->bc, bcname);
+                if(auto intptr = get_if<int>(&*bc); intptr)
+                  seg->bc = *intptr;
+                else
+                  {
+                    auto bcname = get<string>(*bc);
+                    seg->bc = self.GetNSplines() + 1;
+                    self.SetBCName(seg->bc, bcname);
+                  }
               }
             else
               seg->bc = self.GetNSplines()+1;
             self.AppendSegment(seg);
             return self.GetNSplines()-1;
 	  }), py::arg("point_indices"), py::arg("leftdomain") = 1, py::arg("rightdomain") = py::int_(0),
-               py::arg("bc")=NGDummyArgument(), py::arg("copy")=NGDummyArgument(), py::arg("maxh")=1e99, py::arg("hpref")=0)
+         py::arg("bc")=nullopt, py::arg("copy")=nullopt, py::arg("maxh")=1e99,
+         py::arg("hpref")=0)
 
     
     .def("AppendSegment", FunctionPointer([](SplineGeometry2d &self, py::list point_indices, int leftdomain, int rightdomain)
@@ -132,6 +130,8 @@ DLL_HEADER void ExportGeom2d(py::module &m)
 			  seg = new SplineSegExt(*seg3);
 
 		  }
+                  else
+                    throw Exception("Can only append segments with 2 or 3 points!");
 		  seg->leftdom = leftdomain;
 		  seg->rightdom = rightdomain;
 		  seg->hmax = 1e99;

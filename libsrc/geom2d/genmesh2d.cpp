@@ -308,55 +308,50 @@ namespace netgen
 
   void SplineGeometry2d :: CopyEdgeMesh (int from, int to, Mesh & mesh, Point3dTree & searchtree)
   {
-    // const int D = 2;
-
-    NgArray<int, PointIndex::BASE> mappoints (mesh.GetNP());
-    NgArray<double, PointIndex::BASE> param (mesh.GetNP());
-    mappoints = -1;
+    Array<PointIndex, PointIndex> mappoints (mesh.GetNP());
+    Array<double, PointIndex> param (mesh.GetNP());
+    mappoints = PointIndex::INVALID;
     param = 0;
 
     Point3d pmin, pmax;
     mesh.GetBox (pmin, pmax);
     double diam2 = Dist2(pmin, pmax);
 
-    if (printmessage_importance>0)
-      cout << "copy edge, from = " << from << " to " << to << endl;
+    PrintMessage(3, string("Copy edge, from ") + ToString(from) + " to " + ToString(to));
   
-    for (int i = 1; i <= mesh.GetNSeg(); i++)
+    for (const auto& seg : mesh.LineSegments())
       {
-	const Segment & seg = mesh.LineSegment(i);
 	if (seg.edgenr == from)
 	  {
-	    mappoints.Elem(seg[0]) = 1;
-	    param.Elem(seg[0]) = seg.epgeominfo[0].dist;
+	    mappoints[seg[0]] = 1;
+	    param[seg[0]] = seg.epgeominfo[0].dist;
 
-	    mappoints.Elem(seg[1]) = 1;
-	    param.Elem(seg[1]) = seg.epgeominfo[1].dist;
+	    mappoints[seg[1]] = 1;
+	    param[seg[1]] = seg.epgeominfo[1].dist;
 	  }
       }
 
     bool mapped = false;
-    for (int i = 1; i <= mappoints.Size(); i++)
+    for (auto i : Range(mappoints))
       {
-	if (mappoints.Get(i) != -1)
+	if (mappoints[i].IsValid())
 	  {
-	    Point<2> newp = splines.Get(to)->GetPoint (param.Get(i));
+	    Point<2> newp = splines.Get(to)->GetPoint (param[i]);
 	    Point<3> newp3 (newp(0), newp(1), 0);
 	  
-	    int npi = -1;
+	    PointIndex npi = PointIndex::INVALID;
 	  
-	    for (PointIndex pi = PointIndex::BASE; 
-		 pi < mesh.GetNP()+PointIndex::BASE; pi++)
+	    for (auto pi : Range(mesh.Points()))
 	      if (Dist2 (mesh.Point(pi), newp3) < 1e-12 * diam2)
 		npi = pi;
 	  
-	    if (npi == -1)
+	    if (!npi.IsValid())
 	      {
 		npi = mesh.AddPoint (newp3);
 		searchtree.Insert (newp3, npi);
 	      }
 
-	    mappoints.Elem(i) = npi;
+	    mappoints[i] = npi;
 
 	    mesh.GetIdentifications().Add (i, npi, to);
 	    mapped = true;
@@ -375,15 +370,15 @@ namespace netgen
 	    Segment nseg;
 	    nseg.edgenr = to;
 	    nseg.si = GetSpline(to-1).bc;      // splines.Get(to)->bc;
-	    nseg[0] = mappoints.Get(seg[0]);
-	    nseg[1] = mappoints.Get(seg[1]);
+	    nseg[0] = mappoints[seg[0]];
+	    nseg[1] = mappoints[seg[1]];
 	    nseg.domin = GetSpline(to-1).leftdom;
 	    nseg.domout = GetSpline(to-1).rightdom;
 	  
 	    nseg.epgeominfo[0].edgenr = to;
-	    nseg.epgeominfo[0].dist = param.Get(seg[0]);
+	    nseg.epgeominfo[0].dist = param[seg[0]];
 	    nseg.epgeominfo[1].edgenr = to;
-	    nseg.epgeominfo[1].dist = param.Get(seg[1]);
+	    nseg.epgeominfo[1].dist = param[seg[1]];
 	    mesh.AddSegment (nseg);
 	  }
       }
