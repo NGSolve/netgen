@@ -6,6 +6,7 @@
 #include <mpi.h>
 #endif
 
+#include "array.hpp"
 #include "exception.hpp"
 
 namespace ngcore
