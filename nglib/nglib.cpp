@@ -32,6 +32,7 @@ namespace netgen {
                                  MeshingParameters & mp);
    extern MeshingParameters mparam;
    DLL_HEADER extern STLParameters stlparam;
+   DLL_HEADER extern OCCParameters occparam;
 }
 
 
@@ -859,7 +860,7 @@ namespace nglib
       // slate
       me->DeleteMesh();
 
-      OCCSetLocalMeshSize(*occgeom, *me, mparam);
+      OCCSetLocalMeshSize(*occgeom, *me, mparam, occparam);
 
       return(NG_OK);
    }

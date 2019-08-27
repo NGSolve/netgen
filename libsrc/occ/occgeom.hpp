@@ -404,26 +404,19 @@ namespace netgen
   public:
 
     /// Factor for meshing close edges 
-    double resthcloseedgefac;
+    double resthcloseedgefac = 2.;
 
 
     /// Enable / Disable detection of close edges
-    int resthcloseedgeenable;
+    int resthcloseedgeenable = true;
 
 
     /// Minimum edge length to be used for dividing edges to mesh points
-    double resthminedgelen;
+    double resthminedgelen = 0.001;
 
 
     /// Enable / Disable use of the minimum edge length (by default use 1e-4)
-    int resthminedgelenenable;
-
-    /*!
-      Default Constructor for the OpenCascade
-      Mesh generation parameter set
-    */
-    OCCParameters();
-
+    int resthminedgelenenable = true;
 
     /*!
       Dump all the OpenCascade specific meshing parameters 
@@ -439,16 +432,14 @@ namespace netgen
   DLL_HEADER OCCGeometry * LoadOCC_STEP (const char * filename);
   DLL_HEADER OCCGeometry * LoadOCC_BREP (const char * filename);
 
-  DLL_HEADER extern OCCParameters occparam;
-
-
   // Philippose - 31.09.2009
   // External access to the mesh generation functions within the OCC
   // subsystem (Not sure if this is the best way to implement this....!!)
   DLL_HEADER extern int OCCGenerateMesh (OCCGeometry & occgeometry, shared_ptr<Mesh> & mesh,
-                                         MeshingParameters & mparam);
+                                         MeshingParameters & mparam, const OCCParameters& occparam);
 
-  DLL_HEADER extern void OCCSetLocalMeshSize(OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam);
+  DLL_HEADER extern void OCCSetLocalMeshSize(OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam,
+                                             const OCCParameters& occparam);
 
   DLL_HEADER extern void OCCMeshSurface (OCCGeometry & geom, Mesh & mesh, int perfstepsend, MeshingParameters & mparam);
 

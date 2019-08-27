@@ -21,15 +21,21 @@ static string stlparameter_description = R"delimiter(
 STL Specific Meshing Parameters
 -------------------------------
 
-yangle: float =
+yangle: float = 30.
   Angle for edge detection
 
-contyangle: float =
+contyangle: float = 20.
   Edges continue if angle > contyangle
 
-edgecornerangle: float =
+edgecornerangle: float = 60.
   Angle of geometry edge at which the mesher should set a point.
 
+closeedgefac: Optional[float] = 1.
+  Factor for meshing close edges, if None it is disabled.
+
+minedgelen: Optional[float] = 0.001
+  Minimum edge length to be used for dividing edges to mesh points. If
+  None this is disabled.
 )delimiter";
 
 void CreateSTLParametersFromKwargs(STLParameters& stlparam, py::dict kwargs)
