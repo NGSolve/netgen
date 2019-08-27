@@ -15,6 +15,7 @@
 #include <linalg.hpp>
 #include <csg.hpp>
 #include <stlgeom.hpp>
+#include <occgeom.hpp>
 #include <geometry2d.hpp>
 #include <meshing.hpp>
 #include <../visualization/soldata.hpp>
