@@ -21,7 +21,11 @@
 
 #ifdef OCCGEOMETRY
 #include <occgeom.hpp>
-#endif
+namespace netgen
+{
+   DLL_HEADER extern OCCParameters occparam;
+} // namespace netgen
+#endif // OCCGEOMETRY
 
 #include <nginterface.h>
 
@@ -859,7 +863,7 @@ namespace nglib
       // slate
       me->DeleteMesh();
 
-      OCCSetLocalMeshSize(*occgeom, *me, mparam);
+      OCCSetLocalMeshSize(*occgeom, *me, mparam, occparam);
 
       return(NG_OK);
    }
