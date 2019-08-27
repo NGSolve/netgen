@@ -1,9 +1,8 @@
 #ifndef NETGEN_MESHING_PYTHON_MESH_HPP
 #define NETGEN_MESHING_PYTHON_MESH_HPP
 
-#include <pybind11/pybind11.h>
-
 #include <core/python_ngcore.hpp>
+
 #include "meshing.hpp"
 
 namespace netgen

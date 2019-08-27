@@ -73,6 +73,7 @@ inline void operator delete[]( void* ptr, std::align_val_t al ) noexcept
   else
     delete[] (char*)ptr;
 }
+
 #endif // __MAC_OS_X_VERSION_MIN_REQUIRED
 #endif // __MAC_OS_X_VERSION_MIN_REQUIRED < 101300
 

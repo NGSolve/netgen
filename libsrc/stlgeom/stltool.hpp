@@ -235,7 +235,7 @@ class DLL_HEADER STLParameters
 public:
   /// angle for edge detection
   double yangle = 30.;
-  double contyangle; //edges continued with contyangle
+  double contyangle = 20.; //edges continued with contyangle
   /// angle of geometry edge at which the mesher should set a point
   double edgecornerangle = 60.;
   /// angle inside on chart
@@ -243,25 +243,25 @@ public:
   /// angle for overlapping parts of char
   double outerchartangle = 70.;
   /// 0 .. no, 1 .. local, (2 .. global)
-  int usesearchtree;
+  int usesearchtree = 0;
   ///
-  double resthatlasfac; 
-  bool resthatlasenable;
-  double atlasminh;
+  double resthatlasfac = 2.; 
+  bool resthatlasenable = true;
+  double atlasminh = 0.1;
 
-  double resthsurfcurvfac = 1.; 
+  double resthsurfcurvfac = 2.; 
   bool resthsurfcurvenable = false;
 
-  double resthchartdistfac = 1.5;
+  double resthchartdistfac = 1.2;
   bool resthchartdistenable = true;
 
-  double resthcloseedgefac = 2.;
+  double resthcloseedgefac = 1.;
   bool resthcloseedgeenable = true;
   
   double resthedgeanglefac = 1.;
   bool resthedgeangleenable = false;
   
-  double resthsurfmeshcurvfac = 2.;
+  double resthsurfmeshcurvfac = 1.;
   bool resthsurfmeshcurvenable = false;
   
   double resthlinelengthfac = 0.5;

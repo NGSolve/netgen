@@ -698,6 +698,9 @@ namespace netgen
     // cout << "UpdateCoarseGrid - done" << endl;
     
     is_updated = true;
+
+    MPI_Group_free(&MPI_LocalGroup);
+    MPI_Comm_free(&MPI_LocalComm);
   }
 }
 
