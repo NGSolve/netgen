@@ -289,12 +289,14 @@ namespace netgen
 	for (int j = 0; j < procs.Size(); j++)
 	  {
 	    int dest = procs[j];
-	    verts_of_proc.Add (dest, vert);
+	    // !! we also use this as offsets for MPI-type, if this is changed, also change ReceiveParallelMesh
+	    verts_of_proc.Add (dest, vert - IndexBASE<T_POINTS::index_type>());
 	    loc_num_of_vert.Add (vert, verts_of_proc[dest].Size());
 	  }
       }
     PrintMessage ( 3, "Sending Vertices - vertices");
 
+    Array<MPI_Datatype> point_types(ntasks-1);
     for (int dest = 1; dest < ntasks; dest++)
       {
 	NgFlatArray<PointIndex> verts = verts_of_proc[dest];
@@ -304,17 +306,16 @@ namespace netgen
 
 	int numv = verts.Size();
 
-	MPI_Datatype newtype;
 	NgArray<int> blocklen (numv);  
 	blocklen = 1;
 	
-	MPI_Type_indexed (numv, &blocklen[0], 
-			  reinterpret_cast<int*> (&verts[0]), 
-			  mptype, &newtype);
-	MPI_Type_commit (&newtype);
+	MPI_Type_indexed (numv, (numv == 0) ? nullptr : &blocklen[0], 
+			  (numv == 0) ? nullptr : reinterpret_cast<int*> (&verts[0]), 
+			  mptype, &point_types[dest-1]);
+	MPI_Type_commit (&point_types[dest-1]);
 
 	MPI_Request request;
-	MPI_Isend( &points[PointIndex(0)], 1, newtype, dest, MPI_TAG_MESH+1, comm, &request);
+	MPI_Isend( points.Data(), 1, point_types[dest-1], dest, MPI_TAG_MESH+1, comm, &request);
 	sendrequests.Append (request);
       }
 
@@ -701,6 +702,10 @@ namespace netgen
 
     MPI_Waitall (sendrequests.Size(), &sendrequests[0], MPI_STATUS_IGNORE);
 
+    // clean up MPI-datatypes we allocated earlier
+    for (auto t : point_types)
+      { MPI_Type_free(&t); }
+
     PrintMessage ( 3, "Sending names");
 
     sendrequests.SetSize(3*ntasks);
@@ -832,7 +837,7 @@ namespace netgen
 
     for (int vert = 0; vert < numvert; vert++)
       {
-	int globvert = verts[vert];
+	int globvert = verts[vert] + IndexBASE<T_POINTS::index_type>();
 	paralleltop->SetLoc2Glob_Vert ( vert+1, globvert  );
 	glob2loc_vert_ht.Set (globvert, vert+1);
       }
@@ -842,7 +847,7 @@ namespace netgen
     
     MPI_Datatype mptype = MeshPoint::MyGetMPIType();
     MPI_Status status;
-    MPI_Recv( &points[PointIndex(PointIndex::BASE)], numvert, mptype, 0, MPI_TAG_MESH+1, comm, &status);
+    MPI_Recv( points.Data(), numvert, mptype, 0, MPI_TAG_MESH+1, comm, &status);
 
     NgArray<int> pp_data;
     MyMPI_Recv(pp_data, 0, MPI_TAG_MESH+1, comm);
