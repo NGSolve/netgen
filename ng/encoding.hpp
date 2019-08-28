@@ -131,7 +131,7 @@ class Mpeg {
         int ret;
         int i;
 
-        av_register_all();
+        // av_register_all();
 
         avformat_alloc_output_context2(&oc, NULL, NULL, filename.c_str());
 //         oc->preload= (int)(0.5*AV_TIME_BASE);
@@ -235,6 +235,7 @@ class Mpeg {
         sws_ctx = sws_getContext( width, height, AV_PIX_FMT_RGB24,
                                  width, height, AV_PIX_FMT_YUV420P,
                                  SWS_BICUBIC, NULL, NULL, NULL );
+        return 0;
     }
 
     void Stop() {
