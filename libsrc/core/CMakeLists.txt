@@ -24,6 +24,10 @@ if(NOT WIN32)
   target_compile_options(ngcore PRIVATE -fvisibility=hidden)
 endif(NOT WIN32)
 
+if(WIN32)
+  target_compile_options(ngcore PUBLIC /bigobj)
+endif(WIN32)
+
 target_compile_definitions(ngcore PUBLIC $<$<CONFIG:DEBUG>:NETGEN_ENABLE_CHECK_RANGE>)
 
 if(CHECK_RANGE)

@@ -18,7 +18,7 @@ namespace netgen
   public:
     DLL_HEADER VisualSceneSTLGeometry ();
 	DLL_HEADER virtual ~VisualSceneSTLGeometry ();
-	DLL_HEADER void SetGeometry (class STLGeometry * astlgeometry) { stlgeometry = astlgeometry; }
+	void SetGeometry (class STLGeometry * astlgeometry) { stlgeometry = astlgeometry; }
 
 	DLL_HEADER virtual void BuildScene (int zoomall = 0);
 	DLL_HEADER virtual void DrawScene ();
