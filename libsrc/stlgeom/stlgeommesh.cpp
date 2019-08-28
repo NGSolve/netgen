@@ -1369,6 +1369,10 @@ int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, const Me
 			 stlgeometry->GetBoundingBox().PMax() + Vec3d(10, 10, 10),
 			 mparam.grading);
       mesh -> LoadLocalMeshSize (mparam.meshsizefilename);
+
+      if (mparam.uselocalh)
+        for (auto mspnt : mparam.meshsize_points)
+          mesh->RestrictLocalH(mspnt.pnt, mspnt.h);
       
       success = 0;
   
