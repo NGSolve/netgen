@@ -164,7 +164,15 @@ namespace ngcore
       MPI_Isend (&val, 1, GetMPIType<T>(), dest, tag, comm, &request);
       return request;
     }
-    
+
+    template<typename T, typename T2 = decltype(GetMPIType<T>())>
+    MPI_Request ISend (const FlatArray<T> & s, int dest, int tag) const
+    {
+      MPI_Request request;
+      MPI_Isend (s.Data(), s.Size(), GetMPIType<T>(), dest, tag, comm, &request);
+      return request;
+    }
+
     template<typename T, typename T2 = decltype(GetMPIType<T>())> 
     MPI_Request IRecv (T & val, int src, int tag) const
     {
