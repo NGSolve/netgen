@@ -17,7 +17,7 @@ namespace netgen
 class IndexSet
 {
   NgArray<int> set;
-  BitArray flags;
+  NgBitArray flags;
 public:
   IndexSet (int maxind);
   

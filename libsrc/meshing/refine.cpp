@@ -770,7 +770,7 @@ namespace netgen
 					can.Elem(parent.I2()));
 	    }
 
-	BitArray boundp(np);
+	NgBitArray boundp(np);
 	boundp.Clear();
 	for (auto & sel : mesh.SurfaceElements())
           for (auto pi : sel.PNums())
@@ -801,7 +801,7 @@ namespace netgen
 		    mesh.Point(i) = can.Get(i);
 	      
 
-		BitArray free (mesh.GetNP()), fhelp(mesh.GetNP());
+		NgBitArray free (mesh.GetNP()), fhelp(mesh.GetNP());
 		free.Clear();
 		for (int i = 1; i <= mesh.GetNE(); i++)
 		  {

@@ -3,6 +3,7 @@
 
 #include "archive.hpp"
 #include "array.hpp"
+#include "bitarray.hpp"
 #include "exception.hpp"
 #include "flags.hpp"
 #include "localheap.hpp"

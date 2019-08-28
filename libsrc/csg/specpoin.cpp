@@ -2060,7 +2060,7 @@ namespace netgen
       }
 
     /*
-    BitArray testuncond (specpoints.Size());
+    NgBitArray testuncond (specpoints.Size());
     testuncond.Clear();
     for(int i = 0; i<specpoints.Size(); i++)
       {
@@ -2093,7 +2093,7 @@ namespace netgen
     // if special point is unconditional on some solid,
     // it must be unconditional everywhere:
 
-    BitArray uncond (apoints.Size());
+    NgBitArray uncond (apoints.Size());
     uncond.Clear();
 
     for (int i = 0; i < specpoints.Size(); i++)

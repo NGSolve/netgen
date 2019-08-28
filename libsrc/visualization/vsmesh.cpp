@@ -1819,7 +1819,7 @@ namespace netgen
 
     NgArray<Element2d> faces;
 
-    BitArray shownode(mesh->GetNP());
+    NgBitArray shownode(mesh->GetNP());
     if (vispar.clipping.enable)
       {
 	shownode.Clear();

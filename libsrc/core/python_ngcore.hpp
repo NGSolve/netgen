@@ -3,6 +3,7 @@
 
 #include "ngcore_api.hpp" // for operator new
 #include <pybind11/pybind11.h>
+#include <pybind11/operators.h>
 
 #include "array.hpp"
 #include "archive.hpp"

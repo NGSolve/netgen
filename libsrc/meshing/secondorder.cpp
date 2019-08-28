@@ -480,7 +480,7 @@ namespace netgen
     double facok = 0;
     double factry;
 
-    BitArray illegalels(ne);
+    NgBitArray illegalels(ne);
     illegalels.Clear();
 
       
@@ -504,7 +504,7 @@ namespace netgen
 				    can.Elem(parents.Get(i).I2()));
 	  }
 
-	BitArray boundp(np);
+	NgBitArray boundp(np);
 	boundp.Clear();
 	for (int i = 1; i <= mesh.GetNSE(); i++)
 	  {

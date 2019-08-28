@@ -381,7 +381,7 @@ namespace netgen
     DLL_HEADER void CalcSurfacesOfNode ();
 
     /// additional (temporarily) fix points 
-    void FixPoints (const BitArray & fixpoints);
+    void FixPoints (const NgBitArray & fixpoints);
 
     /**
        finds elements without neighbour and
@@ -544,10 +544,10 @@ namespace netgen
 	DLL_HEADER void ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal = OPT_QUALITY);
 
     ///
-    void ImproveMeshJacobian (const MeshingParameters & mp, OPTIMIZEGOAL goal = OPT_QUALITY, const BitArray * usepoint = NULL);
+    void ImproveMeshJacobian (const MeshingParameters & mp, OPTIMIZEGOAL goal = OPT_QUALITY, const NgBitArray * usepoint = NULL);
     ///
     void ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
-				       const BitArray & usepoint, 
+				       const NgBitArray & usepoint, 
 				       const NgArray< Vec<3>* > & nv,
 				       OPTIMIZEGOAL goal = OPT_QUALITY,
 				       const NgArray< NgArray<int,PointIndex::BASE>* > * idmaps = NULL);

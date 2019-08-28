@@ -551,7 +551,7 @@ namespace netgen
   }
 
   bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoiclt_dom, 
-		       BitArray & cornerpoint, BitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
+		       NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
 			INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int & levels, int & act_ref); 
 
   bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, int & act_ref, int & levels);
@@ -1558,7 +1558,7 @@ namespace netgen
   }
 
 bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
-		       BitArray & cornerpoint, BitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
+		       NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
 			INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int & levels, int & act_ref)
 { 
   bool sing = 0; 
@@ -1812,11 +1812,11 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
   bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, int & act_ref, int & levels)
   {
     INDEX_2_HASHTABLE<int> edges(mesh.GetNSeg()+1);
-    BitArray edgepoint(mesh.GetNP());
+    NgBitArray edgepoint(mesh.GetNP());
     INDEX_2_HASHTABLE<int> edgepoint_dom(mesh.GetNSeg()+1);
 
     edgepoint.Clear();
-    BitArray cornerpoint(mesh.GetNP());
+    NgBitArray cornerpoint(mesh.GetNP());
     cornerpoint.Clear();
 
     // value = nr > 0 ... refine elements in domain nr

@@ -110,7 +110,7 @@ namespace netgen
     int np = mesh.GetNP();
     int ne = mesh.GetNE();
 
-    BitArray badnodes(np);
+    NgBitArray badnodes(np);
     badnodes.Clear();
 
     for (i = 1; i <= ne; i++)

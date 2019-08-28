@@ -1824,8 +1824,8 @@ namespace netgen
       }
   }
 
-  // BitArray base is PointIndex::BASE ... 
-  void Mesh :: FixPoints (const BitArray & fixpoints)
+  // NgBitArray base is PointIndex::BASE ... 
+  void Mesh :: FixPoints (const NgBitArray & fixpoints)
   {
     if (fixpoints.Size() != GetNP())
       {
@@ -2469,7 +2469,7 @@ namespace netgen
     int np = GetNP();
 
     FindOpenSegments();
-    BitArray frontpoints(np+1);  // for 0- and 1-based
+    NgBitArray frontpoints(np+1);  // for 0- and 1-based
     frontpoints.Clear();
     
     for (int i = 1; i <= GetNOpenSegments(); i++)
@@ -2994,7 +2994,7 @@ namespace netgen
     int nse = GetNSE();
 
     NgArray<Vec3d> normals(np);
-    BitArray linepoint(np);
+    NgBitArray linepoint(np);
 
     linepoint.Clear();
     for (i = 1; i <= nseg; i++)
@@ -3260,7 +3260,7 @@ namespace netgen
     
     NgArray<PointIndex,PointIndex::BASE,PointIndex> op2np(GetNP());
     NgArray<MeshPoint> hpoints;
-    BitArrayChar<PointIndex::BASE> pused(GetNP());
+    Array<bool, PointIndex> pused(GetNP());
 
     /*
       (*testout) << "volels: " << endl;
@@ -3300,37 +3300,37 @@ namespace netgen
       if(segments[i].edgenr < 0)
           segments.DeleteElement(i--);
 
-    pused.Clear();
+    pused = false;
     for (int i = 0; i < volelements.Size(); i++)
       {
         const Element & el = volelements[i];
         for (int j = 0; j < el.GetNP(); j++)
-          pused.Set (el[j]);
+          pused[el[j]] = true;
       }
 
     for (int i = 0; i < surfelements.Size(); i++)
       {
         const Element2d & el = surfelements[i];
         for (int j = 0; j < el.GetNP(); j++)
-          pused.Set (el[j]);
+          pused[el[j]] = true;
       }
 
     for (int i = 0; i < segments.Size(); i++)
       {
         const Segment & seg = segments[i];
         for (int j = 0; j < seg.GetNP(); j++)
-          pused.Set (seg[j]);
+          pused[seg[j]] = true;
       }
 
     for (int i = 0; i < openelements.Size(); i++)
       {
         const Element2d & el = openelements[i];
         for (int j = 0; j < el.GetNP(); j++)
-          pused.Set(el[j]);
+          pused[el[j]] = true;
       }
 
     for (int i = 0; i < lockedpoints.Size(); i++)
-      pused.Set (lockedpoints[i]);
+      pused[lockedpoints[i]] = true;
 
 
     /*
@@ -3352,7 +3352,7 @@ namespace netgen
 
     // for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
     for (PointIndex pi : points.Range())
-      if (pused.Test(pi))
+      if (pused[pi])
         {
           npi++;
           op2np[pi] = npi;
@@ -3899,7 +3899,7 @@ namespace netgen
     int i, j;
     int nse = GetNSE();
 
-    BitArray used(nse);
+    NgBitArray used(nse);
     used.Clear();
     INDEX_2_HASHTABLE<int> edges(nse+1);
 
@@ -5289,8 +5289,8 @@ namespace netgen
     int np = GetNP();
     int nse = GetNSE();
 
-    BitArray surfused(nse);
-    BitArray pused (np);
+    NgBitArray surfused(nse);
+    NgBitArray pused (np);
 
     surfused.Clear();
 
@@ -5401,7 +5401,7 @@ namespace netgen
     int fdi;
     int np = GetNP();
 
-    BitArray usedp(np);
+    NgBitArray usedp(np);
     Array<SurfaceElementIndex> els_of_face;
 
     fdi = 1;

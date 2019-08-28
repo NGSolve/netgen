@@ -24,9 +24,9 @@ public:
 
   void SplitImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
   void SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
-		    const BitArray * working_elements = NULL);
+		    const NgBitArray * working_elements = NULL);
   void SwapImproveSurface (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
-			   const BitArray * working_elements = NULL,
+			   const NgBitArray * working_elements = NULL,
 			   const NgArray< NgArray<int,PointIndex::BASE>* > * idmaps = NULL);
   void SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
 
