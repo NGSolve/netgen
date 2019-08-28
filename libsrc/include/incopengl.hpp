@@ -5,6 +5,7 @@
 #include <mydefs.hpp>
 
 #  if defined(TOGL_AGL) || defined(TOGL_AGL_CLASSIC) || defined(TOGL_NSOPENGL)
+#define GL_SILENCE_DEPRECATION
 #    include <OpenGL/gl.h>
 #    include <OpenGL/glu.h>
 #  else

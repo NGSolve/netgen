@@ -15,6 +15,45 @@ namespace netgen
   extern std::shared_ptr<NetgenGeometry> ng_geometry;
 }
 
+static string occparameter_description = R"delimiter(
+OCC Specific Meshing Parameters
+-------------------------------
+
+closeedgefac: Optional[float] = 1.
+  Factor for meshing close edges, if None it is disabled.
+
+minedgelen: Optional[float] = 0.001
+  Minimum edge length to be used for dividing edges to mesh points. If
+  None this is disabled.
+
+)delimiter";
+
+void CreateOCCParametersFromKwargs(OCCParameters& occparam, py::dict kwargs)
+{
+  if(kwargs.contains("closeedgefac"))
+    {
+      auto val = kwargs.attr("pop")("closeedgefac");
+      if(val.is_none())
+        occparam.resthcloseedgeenable = false;
+      else
+        {
+          occparam.resthcloseedgefac = py::cast<double>(val);
+          occparam.resthcloseedgeenable = true;
+        }
+    }
+  if(kwargs.contains("minedgelen"))
+    {
+      auto val = kwargs.attr("pop")("minedgelen");
+      if(val.is_none())
+        occparam.resthminedgelenenable = false;
+      else
+        {
+          occparam.resthminedgelen = py::cast<double>(val);
+          occparam.resthminedgelenenable = true;
+        }
+    }
+}
+
 
 DLL_HEADER void ExportNgOCC(py::module &m) 
 {
@@ -132,20 +171,27 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                             MeshingParameters* pars, py::kwargs kwargs)
                          {
                            MeshingParameters mp;
-                           if(pars) mp = *pars;
+                           OCCParameters occparam;
                            {
                              py::gil_scoped_acquire aq;
+                             if(pars)
+                               {
+                                 auto mp_kwargs = CreateDictFromFlags(pars->geometrySpecificParameters);
+                                 CreateOCCParametersFromKwargs(occparam, mp_kwargs);
+                                 mp = *pars;
+                               }
+                             CreateOCCParametersFromKwargs(occparam, kwargs);
                              CreateMPfromKwargs(mp, kwargs);
                            }
                            auto mesh = make_shared<Mesh>();
                            SetGlobalMesh(mesh);
                            mesh->SetGeometry(geo);
                            ng_geometry = geo;
-                           geo->GenerateMesh(mesh,mp);
+                           OCCGenerateMesh(*geo, mesh, mp, occparam);
                            return mesh;
                          }, py::arg("mp") = nullptr,
       py::call_guard<py::gil_scoped_release>(),
-      meshingparameter_description.c_str())
+         (meshingparameter_description + occparameter_description).c_str())
     ;
 
   m.def("LoadOCCGeometry",[] (const string & filename)

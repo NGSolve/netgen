@@ -1684,32 +1684,12 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
 
 
 
-  int OCCGeometry :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
-   {
-     return OCCGenerateMesh (*this, mesh, mparam);
-   }
-
-
 
 
    const Refinement & OCCGeometry :: GetRefinement () const
    {
       return * new OCCRefinementSurfaces (*this);
    }
-
-
-
-
-   OCCParameters :: OCCParameters()
-   {
-      resthcloseedgefac = 1;
-      resthcloseedgeenable = 1;
-	  resthminedgelen = 0.001;
-	  resthminedgelenenable = 1;
-   }
-
-
-
 
    void OCCParameters :: Print(ostream & ost) const
    {
@@ -1720,11 +1700,13 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
 		 << ", min len = " << resthminedgelen << endl;
    }
 
+  DLL_HEADER extern OCCParameters occparam;
+  OCCParameters occparam;
 
-
-
-   OCCParameters occparam;
-
+  int OCCGeometry :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
+   {
+     return OCCGenerateMesh (*this, mesh, mparam, occparam);
+   }
 }
 
 

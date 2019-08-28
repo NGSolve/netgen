@@ -236,8 +236,8 @@ namespace netgen
     np = 3;
     typ = TRIG;
     
-    for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
-        pnum[i].Invalidate();
+    for (int i = 3; i < ELEMENT2D_MAXPOINTS; i++)
+      pnum[i].Invalidate();
   
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
       geominfo[i].trignum = 0;

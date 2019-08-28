@@ -989,7 +989,7 @@ namespace netgen
 
 
   void OCCSetLocalMeshSize(OCCGeometry & geom, Mesh & mesh,
-                           const MeshingParameters & mparam)
+                           const MeshingParameters & mparam, const OCCParameters& occparam)
   {
     mesh.SetGlobalH (mparam.maxh);
     mesh.SetMinimalH (mparam.minh);
@@ -1264,6 +1264,9 @@ namespace netgen
               }
           }
 
+        for (auto mspnt : mparam.meshsize_points)
+          mesh.RestrictLocalH(mspnt.pnt, mspnt.h);
+
         multithread.task = savetask;
 
       }
@@ -1273,7 +1276,8 @@ namespace netgen
 
 
 
-  int OCCGenerateMesh (OCCGeometry & geom, shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
+  int OCCGenerateMesh (OCCGeometry & geom, shared_ptr<Mesh> & mesh, MeshingParameters & mparam,
+                       const OCCParameters& occparam)
   {
     multithread.percent = 0;
 
@@ -1283,7 +1287,7 @@ namespace netgen
           mesh = make_shared<Mesh>();
         mesh->geomtype = Mesh::GEOM_OCC;
          
-        OCCSetLocalMeshSize(geom,*mesh, mparam);
+        OCCSetLocalMeshSize(geom,*mesh, mparam, occparam);
       }
 
     if (multithread.terminate || mparam.perfstepsend <= MESHCONST_ANALYSE)

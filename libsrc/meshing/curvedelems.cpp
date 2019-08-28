@@ -1295,10 +1295,17 @@ namespace netgen
  
 		      Point<3> pp = xa[jj];
 		      // ref -> ProjectToSurface (pp, mesh.GetFaceDescriptor(el.GetIndex()).SurfNr());
+		      /**
+			 with MPI and an interior surface element between volume elements assigned to different
+			 procs, only one of them has the surf-el
+		      **/
                       SurfaceElementIndex sei = top.GetFace2SurfaceElement (f+1)-1;
-                      PointGeomInfo gi = mesh[sei].GeomInfoPi(1);
-
-                      ref -> ProjectToSurface (pp, surfnr[facenr], gi);
+		      if (sei != SurfaceElementIndex(-1)) {
+			PointGeomInfo gi = mesh[sei].GeomInfoPi(1);
+			ref -> ProjectToSurface (pp, surfnr[facenr], gi);
+		      }
+		      else
+			{ ref -> ProjectToSurface (pp, surfnr[facenr]); }
 		      Vec<3> dist = pp-xa[jj];
 		
 		      CalcTrigShape (order1, lami[fnums[1]]-lami[fnums[0]],
