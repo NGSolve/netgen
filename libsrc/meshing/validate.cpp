@@ -6,7 +6,7 @@
 namespace netgen
 {
   void GetPureBadness(Mesh & mesh, NgArray<double> & pure_badness,
-		      const BitArray & isnewpoint)
+		      const NgBitArray & isnewpoint)
   {
     //const int ne = mesh.GetNE();
     const int np = mesh.GetNP();
@@ -104,7 +104,7 @@ namespace netgen
   }
 
 
-  void GetWorkingArea(BitArray & working_elements, BitArray & working_points,
+  void GetWorkingArea(NgBitArray & working_elements, NgBitArray & working_points,
 		      const Mesh & mesh, const NgArray<ElementIndex> & bad_elements,
 		      const int width)
   {
@@ -152,7 +152,7 @@ namespace netgen
 
 
   void RepairBisection(Mesh & mesh, NgArray<ElementIndex> & bad_elements, 
-		       const BitArray & isnewpoint, const Refinement & refinement,
+		       const NgBitArray & isnewpoint, const Refinement & refinement,
 		       const NgArray<double> & pure_badness, 
 		       double max_worsening, const bool uselocalworsening,
 		       const NgArray< NgArray<int,PointIndex::BASE>* > & idmaps)
@@ -185,7 +185,7 @@ namespace netgen
 	can[i] = new Point<3>;
       }
     
-    BitArray isboundarypoint(np),isedgepoint(np);
+    NgBitArray isboundarypoint(np),isedgepoint(np);
     isboundarypoint.Clear();
     isedgepoint.Clear();
 
@@ -216,8 +216,8 @@ namespace netgen
     Validate(mesh,bad_elements,pure_badness,
 	     ((uselocalworsening) ?  (0.8*(max_worsening-1.) + 1.) : (0.1*(max_worsening-1.) + 1.)),
 	     uselocalworsening); // -> larger working area
-    BitArray working_elements(ne);
-    BitArray working_points(np);
+    NgBitArray working_elements(ne);
+    NgBitArray working_points(np);
 
     GetWorkingArea(working_elements,working_points,mesh,bad_elements,numbadneighbours);
     //working_elements.Set();
@@ -240,7 +240,7 @@ namespace netgen
     PrintMessage(5,ostrstr.str());
     
 
-    BitArray isworkingboundary(np);
+    NgBitArray isworkingboundary(np);
     for(int i=1; i<=np; i++)
       if(working_points.Test(i) && isboundarypoint.Test(i))
 	isworkingboundary.Set(i);

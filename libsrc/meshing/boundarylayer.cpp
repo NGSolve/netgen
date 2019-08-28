@@ -19,7 +19,7 @@ namespace netgen
       cout << "Old NP: " << mesh.GetNP() << endl;
       cout << "Trigs: " << mesh.GetNSE() << endl;
 
-      BitArray bndnodes(np);
+      NgBitArray bndnodes(np);
       NgArray<int> mapto(np);
 
       bndnodes.Clear();
@@ -210,7 +210,7 @@ namespace netgen
          int nseg = mesh.GetNSeg();
 
          // Indicate which points need to be remapped
-         BitArray bndnodes(np+1);  // big enough for 1-based array
+         NgBitArray bndnodes(np+1);  // big enough for 1-based array
 
          // Map of the old points to the new points
          NgArray<PointIndex, PointIndex::BASE> mapto(np);
@@ -286,7 +286,7 @@ namespace netgen
          // don't have boundary layers
 
          // Bit array to keep track of segments already processed
-         BitArray segsel(nseg);
+         NgBitArray segsel(nseg);
 
          // Set them all to "1" to initially activate all segments
          segsel.Set();

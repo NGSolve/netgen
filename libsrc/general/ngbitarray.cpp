@@ -5,7 +5,7 @@
 /**************************************************************************/
 
 /* 
-   data type BitArray
+   data type NgBitArray
 */
 
 #include <mystdlib.h>
@@ -16,25 +16,25 @@ namespace netgen
 {
   //using namespace netgen;
 
-  BitArray :: BitArray ()
+  NgBitArray :: NgBitArray ()
   {
     size = 0;
     data = NULL;
   }
 
-  BitArray :: BitArray (int asize)
+  NgBitArray :: NgBitArray (int asize)
   {
     size = 0;
     data = NULL;
     SetSize (asize);
   }
 
-  BitArray :: ~BitArray ()
+  NgBitArray :: ~NgBitArray ()
   {
     delete [] data;
   }
 
-  void BitArray :: SetSize (int asize)
+  void NgBitArray :: SetSize (int asize)
   {
     if (size == asize) return;
     delete [] data;
@@ -43,14 +43,14 @@ namespace netgen
     data = new unsigned char [Addr (size)+1];
   }
 
-  void BitArray :: Set ()
+  void NgBitArray :: Set ()
   {
     if (!size) return;
     for (int i = 0; i <= Addr (size); i++)
       data[i] = UCHAR_MAX;
   }
 
-  void BitArray :: Clear ()
+  void NgBitArray :: Clear ()
   {
     if (!size) return;
     for (int i = 0; i <= Addr (size); i++)
@@ -59,14 +59,14 @@ namespace netgen
 
 
 
-  void BitArray :: Invert ()
+  void NgBitArray :: Invert ()
   {
     if (!size) return;
     for (int i = 0; i <= Addr (size); i++)
       data[i] ^= 255;
   }
 
-  void BitArray :: And (const BitArray & ba2)
+  void NgBitArray :: And (const NgBitArray & ba2)
   {
     if (!size) return;
     for (int i = 0; i <= Addr (size); i++)
@@ -74,7 +74,7 @@ namespace netgen
   }
 
 
-  void BitArray :: Or (const BitArray & ba2)
+  void NgBitArray :: Or (const NgBitArray & ba2)
   {
     if (!size) return;
     for (int i = 0; i <= Addr (size); i++)

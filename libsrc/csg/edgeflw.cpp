@@ -1233,7 +1233,7 @@ namespace netgen
 	*testout << "inv: " << endl << refedgesinv << endl;
       }
     
-    BitArray todelete(refedges.Size());
+    NgBitArray todelete(refedges.Size());
     todelete.Clear();
 
 
@@ -1748,7 +1748,7 @@ namespace netgen
     int nsol = geometry.GetNTopLevelObjects();
     
 
-    BitArray pointatsurface (nsurf);
+    NgBitArray pointatsurface (nsurf);
     pointatsurface.Clear();
   
     for (int i = 1; i <= mesh.GetNSeg(); i++)

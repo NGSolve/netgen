@@ -3159,7 +3159,7 @@ namespace netgen
 	if (opt.refine_hp)
 	  {
 	    PrintMessage(3,"refine hp");
-	    BitArray singv(np);
+	    NgBitArray singv(np);
 	    singv.Clear();
 
 	    if (mesh.GetDimension() == 3)
@@ -3833,7 +3833,7 @@ namespace netgen
       }
     */
 
-    BitArray isnewpoint(np);
+    NgBitArray isnewpoint(np);
     isnewpoint.Clear();
 
     for (int i = 0; i < cutedges.Size(); i++)

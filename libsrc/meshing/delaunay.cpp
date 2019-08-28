@@ -805,7 +805,7 @@ namespace netgen
 
     // remove degenerated
 
-    BitArray badnode(mesh.GetNP());
+    NgBitArray badnode(mesh.GetNP());
     badnode.Clear();
     int ndeg = 0;
     for (int i = 1; i <= tempels.Size(); i++)
@@ -1320,7 +1320,7 @@ namespace netgen
  
 
     ne = tempels.Size();
-    BitArray inner(ne), outer(ne);
+    NgBitArray inner(ne), outer(ne);
     inner.Clear();
     outer.Clear();
     NgArray<int> elstack;

@@ -1824,8 +1824,8 @@ namespace netgen
       }
   }
 
-  // BitArray base is PointIndex::BASE ... 
-  void Mesh :: FixPoints (const BitArray & fixpoints)
+  // NgBitArray base is PointIndex::BASE ... 
+  void Mesh :: FixPoints (const NgBitArray & fixpoints)
   {
     if (fixpoints.Size() != GetNP())
       {
@@ -2469,7 +2469,7 @@ namespace netgen
     int np = GetNP();
 
     FindOpenSegments();
-    BitArray frontpoints(np+1);  // for 0- and 1-based
+    NgBitArray frontpoints(np+1);  // for 0- and 1-based
     frontpoints.Clear();
     
     for (int i = 1; i <= GetNOpenSegments(); i++)
@@ -2994,7 +2994,7 @@ namespace netgen
     int nse = GetNSE();
 
     NgArray<Vec3d> normals(np);
-    BitArray linepoint(np);
+    NgBitArray linepoint(np);
 
     linepoint.Clear();
     for (i = 1; i <= nseg; i++)
@@ -3899,7 +3899,7 @@ namespace netgen
     int i, j;
     int nse = GetNSE();
 
-    BitArray used(nse);
+    NgBitArray used(nse);
     used.Clear();
     INDEX_2_HASHTABLE<int> edges(nse+1);
 
@@ -5289,8 +5289,8 @@ namespace netgen
     int np = GetNP();
     int nse = GetNSE();
 
-    BitArray surfused(nse);
-    BitArray pused (np);
+    NgBitArray surfused(nse);
+    NgBitArray pused (np);
 
     surfused.Clear();
 
@@ -5401,7 +5401,7 @@ namespace netgen
     int fdi;
     int np = GetNP();
 
-    BitArray usedp(np);
+    NgBitArray usedp(np);
     Array<SurfaceElementIndex> els_of_face;
 
     fdi = 1;

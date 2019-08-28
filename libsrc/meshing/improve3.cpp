@@ -607,11 +607,11 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
   TABLE<ElementIndex,PointIndex::BASE> elementsonnode(np); 
   NgArray<ElementIndex> hasbothpoints;
 
-  BitArray origpoint(np+1), boundp(np+1);  // big enough for 0 and 1-based
+  NgBitArray origpoint(np+1), boundp(np+1);  // big enough for 0 and 1-based
   origpoint.Set();
 
   NgArray<double> elerrs(ne);
-  BitArray illegaltet(ne);
+  NgBitArray illegaltet(ne);
   illegaltet.Clear();
 
   const char * savetask = multithread.task;
@@ -891,7 +891,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
   
 
 void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
-				    const BitArray * working_elements)
+				    const NgBitArray * working_elements)
 {
   static Timer t("MeshOptimize3d::SwapImprove"); RegionTimer reg(t);
   static Timer tloop("MeshOptimize3d::SwapImprove loop");
@@ -1769,7 +1769,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 
 
 void MeshOptimize3d :: SwapImproveSurface (Mesh & mesh, OPTIMIZEGOAL goal,
-					   const BitArray * working_elements,
+					   const NgBitArray * working_elements,
 					   const NgArray< NgArray<int,PointIndex::BASE>* > * idmaps)
 {
   NgArray< NgArray<int,PointIndex::BASE>* > locidmaps;
@@ -2970,7 +2970,7 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
   }
   }
 
-  BitArray original(GetNE());
+  NgBitArray original(GetNE());
   original.Set();
 
   for (i = 1; i <= GetNSE(); i++)

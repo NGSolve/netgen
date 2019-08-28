@@ -938,7 +938,7 @@ void WriteFile (int typ,
       NgArray<INDEX_2> edgelist;
 
       // edge (point) on boundary ?
-      BitArray bedge, bpoint(mesh.GetNP());
+      NgBitArray bedge, bpoint(mesh.GetNP());
 
       static int eledges[6][2] = { { 1, 2 } , { 1, 3 } , { 1, 4 },
 				   { 2, 3 } , { 2, 4 } , { 3, 4 } };

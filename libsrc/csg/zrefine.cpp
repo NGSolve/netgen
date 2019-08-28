@@ -255,7 +255,7 @@ namespace netgen
     NgArray<INDEX_3> ref_singular;
     NgArray<INDEX_4 > ref_slices;
 
-    BitArray first_id(geom->identifications.Size());
+    NgBitArray first_id(geom->identifications.Size());
     first_id.Set();
 
   

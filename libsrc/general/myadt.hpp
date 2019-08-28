@@ -33,7 +33,7 @@ namespace netgen
 #include "hashtabl.hpp"
 
 
-#include "bitarray.hpp"
+#include "ngbitarray.hpp"
 #include "spbita2d.hpp"
 
 #include "seti.hpp"

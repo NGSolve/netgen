@@ -14,26 +14,26 @@ namespace netgen
 
 
 /**
-   data type BitArray
+   data type NgBitArray
    
-   BitArray is a compressed array of Boolean information. By Set and Clear
+   NgBitArray is a compressed array of Boolean information. By Set and Clear
    the whole array or one bit can be set or reset, respectively. 
    Test returns the state of the occurring bit.
    No range checking is done.
 
    index ranges from 0 to size-1
 */
-class BitArray
+class NgBitArray
 {
   INDEX size;
   unsigned char * data;
 
 public:
-  BitArray ();
+  NgBitArray ();
   ///
-  BitArray (INDEX asize);
+  NgBitArray (INDEX asize);
   ///
-  ~BitArray ();
+  ~NgBitArray ();
 
   /// 
   void SetSize (INDEX asize);
@@ -67,9 +67,9 @@ public:
   ///
   void Invert ();
   ///
-  void And (const BitArray & ba2);
+  void And (const NgBitArray & ba2);
   ///
-  void Or (const BitArray & ba2);
+  void Or (const NgBitArray & ba2);
 private:
   ///
   inline unsigned char Mask (INDEX i) const
@@ -83,15 +83,15 @@ private:
   }
 
   ///
-  BitArray & operator= (BitArray &);
+  NgBitArray & operator= (NgBitArray &);
   ///
-  BitArray (const BitArray &);
+  NgBitArray (const NgBitArray &);
 };
 
 
 
 // print bitarray
-inline ostream & operator<< (ostream & s, const BitArray & a)
+inline ostream & operator<< (ostream & s, const NgBitArray & a)
 {
   for (int i = 1; i <= a.Size(); i++)
     {
@@ -105,37 +105,37 @@ inline ostream & operator<< (ostream & s, const BitArray & a)
 
 /*
 inline
-INDEX BitArray :: Size () const
+INDEX NgBitArray :: Size () const
   {
   return size;
   }
 
 inline
-unsigned char BitArray :: Mask (INDEX i) const
+unsigned char NgBitArray :: Mask (INDEX i) const
   {
   return char(1) << (i % CHAR_BIT);
   }
 
 inline
-INDEX BitArray :: Addr (INDEX i) const
+INDEX NgBitArray :: Addr (INDEX i) const
   {
   return (i / CHAR_BIT);
   }
 inline
-void BitArray :: Set (INDEX i)
+void NgBitArray :: Set (INDEX i)
   {
   data[Addr(i)] |= Mask(i);
   }
 
 inline
-void BitArray :: Clear (INDEX i)
+void NgBitArray :: Clear (INDEX i)
   {
   data[Addr(i)] &= ~Mask(i);
   }
 
 
 inline
-int BitArray :: Test (INDEX i) const
+int NgBitArray :: Test (INDEX i) const
   {
   return (data[i / CHAR_BIT] & (char(1) << (i % CHAR_BIT) ) ) ? 1 : 0;
   }

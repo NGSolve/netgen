@@ -140,7 +140,7 @@ void WriteAbaqusFormat (const Mesh & mesh,
       int masternode(0);
 
       NgArray<INDEX_2> pairs;
-      BitArray master(np), help(np);
+      NgBitArray master(np), help(np);
       master.Set();
       for (i = 1; i <= 3; i++)
 	{
@@ -205,7 +205,7 @@ void WriteAbaqusFormat (const Mesh & mesh,
 	      << "*EQUATION, INPUT=" << mpcfilename << endl;
 	  
 
-      BitArray eliminated(np);
+      NgBitArray eliminated(np);
       eliminated.Clear();
       for (i = 1; i <= mesh.GetIdentifications().GetMaxNr(); i++)
 	{

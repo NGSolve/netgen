@@ -62,7 +62,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
     }
   cout << endl;
 
-  BitArray connected(mesh.GetNP());
+  NgBitArray connected(mesh.GetNP());
   connected.Clear();
   for (i = 1; i <= mesh.GetNSE(); i++)
     {
@@ -120,7 +120,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
   mesh.Compress();
   
   mesh.FindOpenElements();
-  BitArray locked(mesh.GetNP());
+  NgBitArray locked(mesh.GetNP());
   locked.Set();
   for (i = 1; i <= mesh.GetNOpenElements(); i++)
     for (j = 1; j <= 3; j++)
