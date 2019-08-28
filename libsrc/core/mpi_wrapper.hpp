@@ -128,11 +128,32 @@ namespace ngcore
       MPI_Send (&val, 1, GetMPIType<T>(), dest, tag, comm);
     }
     
+    template<typename T, typename T2 = decltype(GetMPIType<T>())>
+    void Send(FlatArray<T> s, int dest, int tag) const {
+      MPI_Send (s.Data(), s.Size(), GetMPIType<T>(), dest, tag, comm);
+    }
+    
     template<typename T, typename T2 = decltype(GetMPIType<T>())> 
     void Recv (T & val, int src, int tag) const {
       MPI_Recv (&val, 1, GetMPIType<T>(), src, tag, comm, MPI_STATUS_IGNORE);
     }
 
+    template <typename T, typename T2 = decltype(GetMPIType<T>())>
+    void Recv (FlatArray <T> s, int src, int tag) const {
+      MPI_Recv (s.Data(), s.Size(), GetMPIType<T> (), src, tag, comm, MPI_STATUS_IGNORE);
+    }
+    
+    template <typename T, typename T2 = decltype(GetMPIType<T>())>
+    void Recv (Array <T> & s, int src, int tag) const
+    {
+      MPI_Status status;
+      int len;
+      const MPI_Datatype MPI_T  = GetMPIType<T> ();
+      MPI_Probe (src, tag, comm, &status);
+      MPI_Get_count (&status, MPI_T, &len);
+      s.SetSize (len);
+      MPI_Recv (s.Data(), len, MPI_T, src, tag, comm, MPI_STATUS_IGNORE);
+    }
 
     /** --- non-blocking P2P --- **/
     
@@ -151,6 +172,15 @@ namespace ngcore
       MPI_Irecv (&val, 1, GetMPIType<T>(), dest, tag, comm, &request);
       return request;
     }
+    
+    template<typename T, typename T2 = decltype(GetMPIType<T>())>
+    MPI_Request IRecv (const FlatArray<T> & s, int src, int tag) const
+    { 
+      MPI_Request request;
+      MPI_Irecv (s.Data(), s.Size(), GetMPIType<T>(), src, tag, comm, &request);
+      return request;
+    }
+
     
     /** --- collectives --- **/
 
@@ -189,17 +219,20 @@ namespace ngcore
       MPI_Bcast (&s[0], len, MPI_CHAR, root, comm);
     }
 
-    NgMPI_Comm SubCommunicator (FlatArray<int> procs) const
-    {
-      MPI_Comm subcomm;
-      MPI_Group gcomm, gsubcomm;
-      MPI_Comm_group(comm, &gcomm);
-      MPI_Group_incl(gcomm, procs.Size(), procs.Data(), &gsubcomm);
-      MPI_Comm_create_group(comm, gsubcomm, 4242, &subcomm);
-      return NgMPI_Comm(subcomm, true);
-    }
-
   }; // class NgMPI_Comm
+
+  NETGEN_INLINE void MyMPI_WaitAll (FlatArray<MPI_Request> requests)
+  {
+    if (!requests.Size()) return;
+    MPI_Waitall (requests.Size(), requests.Data(), MPI_STATUSES_IGNORE);
+  }
+  
+  NETGEN_INLINE int MyMPI_WaitAny (FlatArray<MPI_Request> requests)
+  {
+    int nr;
+    MPI_Waitany (requests.Size(), requests.Data(), &nr, MPI_STATUS_IGNORE);
+    return nr;
+  }
 
 #else // PARALLEL
   class MPI_Comm {
@@ -232,16 +265,31 @@ namespace ngcore
     void Send( T & val, int dest, int tag) const { ; }
     
     template<typename T>
-    void MyMPI_Recv (T & val, int src, int tag) const { ; }
+    void Send(FlatArray<T> s, int dest, int tag) const { ; }
+
+    template<typename T>
+    void Recv (T & val, int src, int tag) const { ; }
+
+    template <typename T>
+    void Recv (FlatArray <T> s, int src, int tag) const { ; }
+
+    template <typename T>
+    void Recv (Array <T> & s, int src, int tag) const { ; }
 
     template<typename T>
     MPI_Request ISend (T & val, int dest, int tag) const { return 0; } 
     
     template<typename T>
+    MPI_Request ISend (const FlatArray<T> & s, int dest, int tag) const { return 0; }
+
+    template<typename T>
     MPI_Request IRecv (T & val, int dest, int tag) const { return 0; } 
     
+    template<typename T>
+    MPI_Request IRecv (const FlatArray<T> & s, int src, int tag) const { return 0; }
+
     template <typename T>
-    T Reduce (T d, const MPI_Op & op, int root = 0) { return d; }
+    T Reduce (T d, const MPI_Op & op, int root = 0) const { return d; }
     
     template <typename T>
     T AllReduce (T d, const MPI_Op & op) const { return d; }
@@ -252,7 +300,9 @@ namespace ngcore
     NgMPI_Comm SubCommunicator (FlatArray<int> procs) const
     { return *this; }
   };  
-  
+
+  NETGEN_INLINE void MyMPI_WaitAll (FlatArray<MPI_Request> requests) { ; }
+
 #endif // PARALLEL
 
 } // namespace ngcore

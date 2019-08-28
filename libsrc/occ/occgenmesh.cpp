@@ -1264,6 +1264,9 @@ namespace netgen
               }
           }
 
+        for (auto mspnt : mparam.meshsize_points)
+          mesh.RestrictLocalH(mspnt.pnt, mspnt.h);
+
         multithread.task = savetask;
 
       }
