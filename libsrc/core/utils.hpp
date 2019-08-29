@@ -146,6 +146,35 @@ namespace ngcore
   template<typename T>
   using index_type = typename detail::IndexTypeHelper<T>::type;
 
+  class MyMutex
+  {
+    std::atomic<bool> m;
+  public:
+    MyMutex() { m.store(false, std::memory_order_relaxed); }
+    void lock()
+    {
+      bool should = false;
+      while (!m.compare_exchange_weak(should, true))
+        {
+          should = false;
+          _mm_pause();
+        }
+    }
+    void unlock()
+    {
+      m = false;
+    }
+  };
+
+  class MyLock
+  {
+    MyMutex & mutex;
+  public:
+    MyLock (MyMutex & amutex) : mutex(amutex) { mutex.lock(); }
+    ~MyLock () { mutex.unlock(); }
+  };
+
+
 } // namespace ngcore
 
 #endif // NETGEN_CORE_UTILS_HPP
