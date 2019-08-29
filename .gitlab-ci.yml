@@ -103,7 +103,14 @@ build_ubuntu_debug:
   script:
     - docker build -t netgen_${CI_PIPELINE_ID}:${UBUNTU_VERSION} -f tests/dockerfile .
     - rm -f netgen_${CI_PIPELINE_ID}_$UBUNTU_VERSION.id
-    - docker run --cidfile netgen_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_PIPELINE_ID}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_debug.sh
+    - >-
+      docker run
+      --cidfile netgen_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id
+      -e CCACHE_DIR=/ccache
+      -e RUN_SLOW_TESTS=${RUN_SLOW_TESTS}
+      -v /mnt/ccache:/ccache
+      netgen_${CI_PIPELINE_ID}:${UBUNTU_VERSION}
+      bash /root/src/netgen/tests/build_debug.sh
     - docker commit `cat netgen_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id` netgen_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}
     - rm netgen_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id
 
@@ -113,7 +120,14 @@ build_ubuntu_mpi:
   script:
     - docker build -t netgen_mpi_${CI_PIPELINE_ID}:${UBUNTU_VERSION} -f tests/dockerfile_mpi .
     - rm -f netgen_mpi_${CI_PIPELINE_ID}_$UBUNTU_VERSION.id_mpi
-    - docker run --cidfile netgen_mpi_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_mpi_${CI_PIPELINE_ID}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_mpi.sh
+    - >-
+      docker run>-
+      --cidfile netgen_mpi_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id>-
+      -e CCACHE_DIR=/ccache
+      -e RUN_SLOW_TESTS=${RUN_SLOW_TESTS}
+      -v /mnt/ccache:/ccache
+      netgen_mpi_${CI_PIPELINE_ID}:${UBUNTU_VERSION}
+      bash /root/src/netgen/tests/build_mpi.sh
     - docker commit `cat netgen_mpi_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id` netgen_mpi_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}
     - rm netgen_mpi_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id
 
@@ -123,6 +137,7 @@ test_ubuntu_debug:
   script:
     - >-
       docker run
+      -e RUN_SLOW_TESTS=${RUN_SLOW_TESTS}
       -e NETGENDIR=/opt/netgen/bin
       -e PYTHONPATH=/opt/netgen/lib/python3/dist-packages
       netgen_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}
@@ -135,6 +150,7 @@ test_ubuntu_mpi:
   script:
     - >-
       docker run
+      -e RUN_SLOW_TESTS=${RUN_SLOW_TESTS}
       -e NETGENDIR=/opt/netgen/bin
       -e PYTHONPATH=/opt/netgen/lib/python3/dist-packages
       netgen_mpi_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}

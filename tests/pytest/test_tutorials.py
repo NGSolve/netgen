@@ -1,7 +1,6 @@
 
 import os, pytest
 from netgen.meshing import meshsize, MeshingParameters, SetMessageImportance
-import netgen.gui
 import netgen.csg as csg
 import netgen.stl as stl
 try:
@@ -46,11 +45,9 @@ def getMeshingparameters(filename):
         return standard[3:] # coarser meshes don't work here
     return standard
 
-# TODO: step files do not respect gui meshsizes yet.
 _geofiles = [f for f in getFiles(".geo")] + [f for f in getFiles(".stl")]
 if has_occ:
     _geofiles += [f for f in getFiles(".step")]
-
 
 def generateMesh(filename, mp):
     if filename.endswith(".geo"):
@@ -61,7 +58,17 @@ def generateMesh(filename, mp):
         geo = occ.OCCGeometry(os.path.join("..","..","tutorials", filename))
     return geo.GenerateMesh(**mp)
 
-@pytest.mark.parametrize("filename, checkFunc", [(f, getCheckFunc(f)) for f in _geofiles])
+def isSlowTest(filename):
+    return filename in ["cubemcyl.geo", "frame.step", "revolution.geo", "manyholes.geo", "torus.geo",
+                        "cubemsphere.geo", "manyholes2.geo", "matrix.geo", "trafo.geo", "ellipticcone.geo",
+                        "period.geo", "shaft.geo", "cubeandring.geo", "ellipticcyl.geo",
+                        "ellipsoid.geo", "cone.geo"]
+
+def getParamForTest(filename):
+    return pytest.param(filename, getCheckFunc(filename), marks=pytest.mark.slow) if isSlowTest(filename) \
+        else (filename, getCheckFunc(filename))
+
+@pytest.mark.parametrize(("filename, checkFunc"), [getParamForTest(f) for f in _geofiles])
 def test_geoFiles(filename, checkFunc):
     for i, mp in enumerate(getMeshingparameters(filename)):
         print("load geo", filename)
