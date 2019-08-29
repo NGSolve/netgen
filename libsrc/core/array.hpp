@@ -69,8 +69,8 @@ namespace ngcore
       : ao(aao), ind(ai) { ; }
     NETGEN_INLINE AOWrapperIterator operator++ (int) 
     { return AOWrapperIterator(ao, ind++); }
-    NETGEN_INLINE AOWrapperIterator operator++ ()
-    { return AOWrapperIterator(ao, ++ind); }
+    NETGEN_INLINE AOWrapperIterator& operator++ ()
+    { ++ind; return *this; }
     NETGEN_INLINE auto operator*() const -> decltype(ao[ind]) { return ao[ind]; }
     NETGEN_INLINE auto operator*() -> decltype(ao[ind]) { return ao[ind]; }
     NETGEN_INLINE bool operator != (AOWrapperIterator d2) { return ind != d2.ind; }
