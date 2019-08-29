@@ -1,7 +1,6 @@
 
 import os, pytest
 from netgen.meshing import meshsize, MeshingParameters, SetMessageImportance
-import netgen.gui
 import netgen.csg as csg
 import netgen.stl as stl
 try:
@@ -61,6 +60,7 @@ def generateMesh(filename, mp):
         geo = occ.OCCGeometry(os.path.join("..","..","tutorials", filename))
     return geo.GenerateMesh(**mp)
 
+@pytest.mark.slow
 @pytest.mark.parametrize("filename, checkFunc", [(f, getCheckFunc(f)) for f in _geofiles])
 def test_geoFiles(filename, checkFunc):
     for i, mp in enumerate(getMeshingparameters(filename)):
