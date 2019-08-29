@@ -1,8 +1,24 @@
 stages:
   - build
   - test
-  - deploy
+  - test_ngsolve
   - cleanup
+
+push_github_sourceforge:
+  stage: build
+  tags:
+    - linux
+    - docker
+  script:
+    - git remote add sourceforge ssh://mhochste@git.code.sf.net/p/netgen-mesher/git || true
+    - git remote add github git@github.com:NGSolve/netgen.git || true
+    - git remote update
+    - git checkout master
+    - git pull origin master
+    - git push sourceforge master
+    - git push github master
+  only:
+    - master
 
 ############################################
 # Windows
@@ -52,6 +68,7 @@ test_win:
     - cd %NETGEN_BUILD_DIR%\netgen
     - ctest -C Release -V --output-on-failure
     - cd ..
+  needs: ["build_win"]
 
 cleanup_win:
   <<: *win
@@ -64,6 +81,7 @@ cleanup_win:
     - rd /s /q %CI_DIR%
   when: always
   allow_failure: true
+  needs: ["test_win"]
 
 ############################################
 # Ubuntu/Linux
@@ -99,7 +117,7 @@ build_ubuntu_mpi:
     - docker commit `cat netgen_mpi_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id` netgen_mpi_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}
     - rm netgen_mpi_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id
 
-test_ubuntu:
+test_ubuntu_debug:
   <<: *ubuntu
   stage: test
   script:
@@ -109,6 +127,7 @@ test_ubuntu:
       -e PYTHONPATH=/opt/netgen/lib/python3/dist-packages
       netgen_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}
       bash -c 'cd /root/build/netgen && make test_netgen ARGS="-V --output-on-failure"'
+  needs: ["build_ubuntu_debug"]
 
 test_ubuntu_mpi:
   <<: *ubuntu
@@ -120,11 +139,12 @@ test_ubuntu_mpi:
       -e PYTHONPATH=/opt/netgen/lib/python3/dist-packages
       netgen_mpi_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}
       bash -c 'cd /root/build/netgen && make test_netgen ARGS="-V --output-on-failure"'
+  needs: ["build_ubuntu_mpi"]
 
 test_build_ngsolve:
   <<: *ubuntu
   allow_failure: true
-  stage: deploy
+  stage: test_ngsolve
   script:
     - >-
       docker run
@@ -208,6 +228,7 @@ test_mac:
   script:
     - cd $BUILD_DIR/netgen
     - ctest . -V --output-on-failure
+  needs: ["build_mac"]
 
 cleanup_mac:
   <<: *mac
@@ -216,23 +237,5 @@ cleanup_mac:
     - rm -rf $ROOT_DIR
   when: always
   allow_failure: true
+  needs: ["test_mac"]
 
-############################################
-# Deploy stage
-############################################
-
-deploy_sourceforge:
-  stage: deploy
-  tags:
-    - linux
-    - docker
-  script:
-    - git remote add sourceforge ssh://mhochste@git.code.sf.net/p/netgen-mesher/git || true
-    - git remote add github git@github.com:NGSolve/netgen.git || true
-    - git remote update
-    - git checkout master
-    - git pull origin master
-    - git push sourceforge master
-    - git push github master
-  only:
-    - master

@@ -6,7 +6,7 @@ cmake \
   -DUSE_MKL=ON \
   -DUSE_CCACHE=ON \
   -DNETGEN_DIR=/opt/netgen \
-  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+  -DCMAKE_BUILD_TYPE=DEBUG \
   ~/src/ngsolve
 make -j12
 make install
