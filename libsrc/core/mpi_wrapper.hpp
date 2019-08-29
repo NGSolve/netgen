@@ -174,10 +174,10 @@ namespace ngcore
     }
 
     template<typename T, typename T2 = decltype(GetMPIType<T>())> 
-    MPI_Request IRecv (T & val, int src, int tag) const
+    MPI_Request IRecv (T & val, int dest, int tag) const
     {
       MPI_Request request;
-      MPI_Irecv (&val, 1, GetMPIType<T>(), src, tag, comm, &request);
+      MPI_Irecv (&val, 1, GetMPIType<T>(), dest, tag, comm, &request);
       return request;
     }
     
@@ -225,6 +225,16 @@ namespace ngcore
       Bcast (len, root);
       if (rank != 0) s.resize (len);
       MPI_Bcast (&s[0], len, MPI_CHAR, root, comm);
+    }
+
+    NgMPI_Comm SubCommunicator (FlatArray<int> procs) const
+    {
+      MPI_Comm subcomm;
+      MPI_Group gcomm, gsubcomm;
+      MPI_Comm_group(comm, &gcomm);
+      MPI_Group_incl(gcomm, procs.Size(), procs.Data(), &gsubcomm);
+      MPI_Comm_create_group(comm, gsubcomm, 4242, &subcomm);
+      return NgMPI_Comm(subcomm, true);
     }
 
   }; // class NgMPI_Comm
@@ -313,15 +323,7 @@ namespace ngcore
 
 #endif // PARALLEL
 
-
-
-
-
-
-  
-
-  
-}
+} // namespace ngcore
 
 #endif // NGCORE_MPIWRAPPER_HPP
 

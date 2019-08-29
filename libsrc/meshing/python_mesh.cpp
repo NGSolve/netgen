@@ -88,13 +88,12 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("Min", [](NgMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_MIN, c); })
     .def("Max", [](NgMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_MAX, c); })
     .def("SubComm", [](NgMPI_Comm & c, std::vector<int> proc_list) {
-        NgArray<int> procs(proc_list.size());
+        Array<int> procs(proc_list.size());
         for (int i = 0; i < procs.Size(); i++)
-          procs[i] = proc_list[i];
+          { procs[i] = proc_list[i]; }
         if (!procs.Contains(c.Rank()))
-          throw Exception("rank "+ToString(c.Rank())+" not in subcomm");
-	MPI_Comm subcomm = MyMPI_SubCommunicator(c, procs);
-	return NgMPI_Comm(subcomm, true);
+          { throw Exception("rank "+ToString(c.Rank())+" not in subcomm"); }
+	return c.SubCommunicator(procs);
       }, py::arg("procs"));
   ;
 
