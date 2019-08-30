@@ -120,7 +120,7 @@ public:
   NETGEN_INLINE Table (size_t asize, size_t entrysize)
     : FlatTable<T>( asize, new size_t[asize+1], new T[asize*entrysize] )
   {
-    for (size_t i : Range(size))
+    for (size_t i : IntRange(size))
       index[i] = i*entrysize;
   }
 
