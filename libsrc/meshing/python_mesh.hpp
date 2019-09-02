@@ -36,7 +36,7 @@ meshsizefilename: str = None
 segmentsperedge: float = 1.
   Minimal number of segments per edge.
 
-quad: bool = False
+quad_dominated: bool = False
   Quad-dominated surface meshing.
 
 blockfill: bool = True
@@ -158,7 +158,12 @@ inline void CreateMPfromKwargs(MeshingParameters& mp, py::kwargs kwargs, bool th
     if(kwargs.contains("elementorder"))
       mp.elementorder = py::cast<int>(kwargs.attr("pop")("elementorder"));
     if(kwargs.contains("quad"))
-      mp.quad = py::cast<bool>(kwargs.attr("pop")("quad"));
+      {
+        cout << "WARNING: Meshing parameter 'quad' is deprecated, use 'quad_dominated' instead!" << endl;
+        mp.quad = py::cast<bool>(kwargs.attr("pop")("quad"));
+      }
+    if(kwargs.contains("quad_dominated"))
+      mp.quad = py::cast<bool>(kwargs.attr("pop")("quad_dominated"));
     if(kwargs.contains("try_hexes"))
       mp.try_hexes = py::cast<bool>(kwargs.attr("pop")("try_hexes"));
     if(kwargs.contains("inverttets"))
