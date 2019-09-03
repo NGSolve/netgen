@@ -48,6 +48,7 @@
 #  if defined(TOGL_AGL)
 #    include <OpenGL/gl.h>
 #  elif defined(TOGL_NSOPENGL)
+#define GL_SILENCE_DEPRECATION
 #    include <OpenGL/OpenGL.h>
 #    include <OpenGL/gl.h>
 #  else

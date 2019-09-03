@@ -40,7 +40,7 @@ if { [Ng_GetToglVersion] == 2 } {
 if { $toglok == 1} {
     
     #
-    pack .ndraw -expand true -fill both -padx 10 -pady 10
+    pack .ndraw -expand true -fill both -padx 0 -pady 0
     catch { tkdnd::drop_target register .ndraw DND_Files }
     #
     bind .ndraw <Button-1> {
