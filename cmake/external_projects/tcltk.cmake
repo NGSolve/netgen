@@ -30,19 +30,23 @@ if(APPLE)
     )
 
   ExternalProject_Add(project_tkdnd
-    URL "https://sourceforge.net/projects/tkdnd/files/OS%20X%20Binaries/TkDND%202.8/tkdnd2.8-OSX-MountainLion.tar.gz"
-    URL_MD5 2dbb471b1d66c5f391f3c3c5b71548fb
+    URL "http://sourceforge.net/projects/tkdnd/files/TkDND/TkDND%202.8/tkdnd2.8-src.tar.gz"
+    URL_MD5 a6d47a996ea957416469b12965d4db91
+    DEPENDS project_tcl project_tk
     DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
+    PATCH_COMMAND  patch < ${CMAKE_CURRENT_LIST_DIR}/tkdnd_macosx.patch
+    UPDATE_COMMAND "" # Disable update
     BUILD_IN_SOURCE 1
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory . ${CMAKE_INSTALL_PREFIX}/../MacOS
+    CMAKE_ARGS
+           -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}/Contents/MacOS
+	   -DTCL_INCLUDE_PATH=${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Tcl.framework/Headers
+	   -DTK_INCLUDE_PATH=${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Tk.framework/Headers
     LOG_DOWNLOAD 1
     LOG_CONFIGURE 1
     LOG_BUILD 1
     LOG_INSTALL 1
-    )
- 
+  )
+
   list(APPEND NETGEN_DEPENDENCIES project_tcl project_tk project_tkdnd)
   list(APPEND CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX}/Contents/Frameworks)
   set(TCL_INCLUDE_PATH ${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Tcl.framework/Headers)
