@@ -208,18 +208,23 @@ namespace netgen
 	rule.incelsonnode.SetSize (rule.onp);
 	rule.reused.SetSize (rule.onp);
 
-	for (int j = 1; j <= rule.onp; j++)
+	for (int j = 0; j < rule.onp; j++)
 	  {
-	    rule.incelsonnode.Elem(j) = 0;
-	    rule.reused.Elem(j) = 0;
+	    rule.incelsonnode[j] = 0;
+	    rule.reused[j] = 0;
 	  }
 
+        /*
 	for (int j = 1; j <= rule.oldels.Size(); j++)
 	  {
 	    const Element2d & el = rule.oldels.Elem(j);
 	    for (int k = 1; k <= el.GetNP(); k++)
 	      rule.incelsonnode.Elem(el.PNum(k))--;
 	  }
+        */
+        for (const Element2d & el : rule.oldels)
+          for (PointIndex pi : el.PNums())
+            rule.incelsonnode[pi-PointIndex::BASE]--;
 
 	for (int j = 1; j <= rule.newels.Size(); j++)
 	  {
