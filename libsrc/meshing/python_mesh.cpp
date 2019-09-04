@@ -250,24 +250,24 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def(py::init<Point<3>>())
     .def("__str__", &ToString<MeshPoint>)
     .def("__repr__", &ToString<MeshPoint>)
-    .def_property_readonly("p", FunctionPointer([](const MeshPoint & self)
-                                       {
-                                         py::list l;
-                                         l.append ( py::cast(self[0]) );
-                                         l.append ( py::cast(self[1]) );
-                                         l.append ( py::cast(self[2]) );
-                                         return py::tuple(l);
-                                       }))
-    .def("__getitem__", FunctionPointer([](const MeshPoint & self, int index) {
+    .def_property_readonly("p", [](const MeshPoint & self)
+                           {
+                             py::list l;
+                             l.append ( py::cast(self[0]) );
+                             l.append ( py::cast(self[1]) );
+                             l.append ( py::cast(self[2]) );
+                             return py::tuple(l);
+                           })
+    .def("__getitem__", [](const MeshPoint & self, int index) {
 	  if(index<0 || index>2)
               throw py::index_error();
 	  return self[index];
-	}))
-    .def("__setitem__", FunctionPointer([](MeshPoint & self, int index, double val) {
+	})
+    .def("__setitem__", [](MeshPoint & self, int index, double val) {
 	  if(index<0 || index>2)
               throw py::index_error();
 	  self(index) = val;
-	}))
+	})
     ;
 
   py::class_<Element>(m, "Element3D")
@@ -753,52 +753,54 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("GetNCD2Names", &Mesh::GetNCD2Names)
     
 
-    .def("__getitem__", FunctionPointer ([](const Mesh & self, PointIndex pi)
-                                         {
-                                           return self[pi];
-                                         }))
+    .def("__getitem__", [](const Mesh & self, PointIndex id) { return self[id]; })
+    .def("__getitem__", [](const Mesh & self, ElementIndex id) { return self[id]; })
+    .def("__getitem__", [](const Mesh & self, SurfaceElementIndex id) { return self[id]; })
+    .def("__getitem__", [](const Mesh & self, SegmentIndex id) { return self[id]; })
 
-    .def ("Add", FunctionPointer ([](Mesh & self, MeshPoint p)
-                                  {
-                                    return self.AddPoint (Point3d(p));
-                                  }))
-
-    .def ("Add", FunctionPointer ([](Mesh & self, const Element & el)
-                                  {
-                                    return self.AddVolumeElement (el);
-                                  }))
-
-    .def ("Add", FunctionPointer ([](Mesh & self, const Element2d & el)
-                                  {
-                                    return self.AddSurfaceElement (el);
-                                  }))
-
-    .def ("Add", FunctionPointer ([](Mesh & self, const Segment & el)
-                                  {
-                                    return self.AddSegment (el);
-                                  }))
+    .def("__setitem__", [](Mesh & self, PointIndex id, const MeshPoint & mp) { return self[id] = mp; })
     
-    .def ("Add", FunctionPointer ([](Mesh & self, const Element0d & el)
-                                  {
-                                    return self.pointelements.Append (el);
-                                  }))
+    .def ("Add", [](Mesh & self, MeshPoint p)
+          {
+            return self.AddPoint (Point3d(p));
+          })
+          
+    .def ("Add", [](Mesh & self, const Element & el)
+          {
+            return self.AddVolumeElement (el);
+          })
+          
+    .def ("Add", [](Mesh & self, const Element2d & el)
+          {
+            return self.AddSurfaceElement (el);
+          })
 
-    .def ("Add", FunctionPointer ([](Mesh & self, const FaceDescriptor & fd)
-                                  {
-                                    return self.AddFaceDescriptor (fd);
-                                  }))
+    .def ("Add", [](Mesh & self, const Segment & el)
+          {
+            return self.AddSegment (el);
+          })
+          
+    .def ("Add", [](Mesh & self, const Element0d & el)
+          {
+            return self.pointelements.Append (el);
+          })
+
+    .def ("Add", [](Mesh & self, const FaceDescriptor & fd)
+          {
+            return self.AddFaceDescriptor (fd);
+          })
     
     .def ("DeleteSurfaceElement",
-          FunctionPointer ([](Mesh & self, SurfaceElementIndex i)
-                           {
-                             return self.Delete(i);
-                           }))
-    
-    .def ("Compress", FunctionPointer ([](Mesh & self)
-                                       {
-                                         return self.Compress ();
-                                       }),py::call_guard<py::gil_scoped_release>())
-    
+          [](Mesh & self, SurfaceElementIndex i)
+          {
+            return self.Delete(i);
+          })
+          
+    .def ("Compress", [](Mesh & self)
+          {
+            return self.Compress ();
+          } ,py::call_guard<py::gil_scoped_release>())
+          
     
     .def ("SetBCName", &Mesh::SetBCName)
     .def ("GetBCName", FunctionPointer([](Mesh & self, int bc)->string 
