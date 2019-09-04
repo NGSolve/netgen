@@ -42,11 +42,9 @@ namespace ngcore
               [](TFlat & self, TIND i) -> T&
                              {
                                static constexpr int base = IndexBASE<TIND>();
-                               static_assert(base==0 || base==1, "IndexBASE not in [0,1]");
-                               if (i < 0 || i >= self.Size())
+                               if (i < base || i >= self.Size()+base)
                                  throw py::index_error();
-                               if(base==1) i++;
-                               return self[i]; // Access from Python is always 0-based
+                               return self[i]; 
                              },
               py::return_value_policy::reference)
         .def("__iter__", [] ( TFlat & self) {
