@@ -3,10 +3,10 @@ if(APPLE)
   # URL "http://sourceforge.net/projects/tcl/files/Tcl/8.6.9/tcl8.6.9-src.tar.gz"
   # URL_MD5 aa0a121d95a0e7b73a036f26028538d4
   ExternalProject_Add(project_tcl
-    URL "https://core.tcl-lang.org/tcl/tarball/87e71bd13b/tcl-87e71bd13b.tar.gz"
-    URL_MD5 6f3393b9598fd32d5acb23b22dac9701
+    URL "https://github.com/NGSolve/tcl/archive/7769161.zip"
+    URL_MD5 1131f188dd26944df557913c475d43b4
     DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
-    UPDATE_COMMAND bash -c "cd ../project_tcl/macosx && autoconf"
+    UPDATE_COMMAND ""
     CONFIGURE_COMMAND ../project_tcl/macosx/configure --enable-threads --enable-framework --prefix=${tcl_prefix} --libdir=${tcl_prefix}/Contents/Frameworks --bindir=${tcl_prefix}/Contents/Frameworks/Tcl.framework/bin
     BUILD_COMMAND make -j4 binaries libraries
     INSTALL_COMMAND make install-binaries install-headers install-libraries install-private-headers
@@ -20,10 +20,10 @@ if(APPLE)
   # URL_MD5 9efe3976468352dc894dae0c4e785a8e
   ExternalProject_Add(project_tk
     DEPENDS project_tcl
-    URL "https://mirror1.tcl.tk/tk/tarball/e23f0c31ac/tk-e23f0c31ac.tar.gz"
-    URL_MD5 c973bcaedc82103deae2d78eede84a2e
+    URL "https://github.com/NGSolve/tk/archive/e7c2bc7.zip"
+    URL_MD5 94044140d4826069c22f1c60cedb6e59
     DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
-    UPDATE_COMMAND bash -c "cd ../project_tk/macosx && autoconf"
+    UPDATE_COMMAND ""
     CONFIGURE_COMMAND ../project_tk/macosx/configure --enable-aqua=yes --enable-threads --enable-framework --prefix=${tcl_prefix} --libdir=${tcl_prefix}/Contents/Frameworks --bindir=${tcl_prefix}/Contents/Frameworks/Tcl.framework/bin --with-tcl=${tcl_prefix}/Contents/Frameworks/Tcl.framework
     BUILD_COMMAND make -j4 binaries libraries
     INSTALL_COMMAND make install-binaries install-headers install-libraries install-private-headers
