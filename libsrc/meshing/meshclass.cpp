@@ -5759,6 +5759,9 @@ namespace netgen
 
   int Mesh :: MarkIllegalElements ()
   {
+    if(!boundaryedges)
+      BuildBoundaryEdges();
+
     atomic<int> cnt = 0;
     ParallelForRange( Range(volelements), [&] (auto myrange)
     {
