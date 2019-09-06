@@ -47,6 +47,30 @@ namespace ngcore
                                return self[i]; 
                              },
               py::return_value_policy::reference)
+        .def ("__setitem__",
+              [](TFlat & self, TIND i, T val) -> T&
+                             {
+                               static constexpr int base = IndexBASE<TIND>();
+                               if (i < base || i >= self.Size()+base)
+                                 throw py::index_error();
+                               self[i] = val;
+                               return self[i]; 
+                             },
+              py::return_value_policy::reference)
+
+        .def ("__setitem__",
+              [](TFlat & self, py::slice slice, T val)
+              {
+                size_t start, stop, step, slicelength;
+                if (!slice.compute(self.Size(), &start, &stop, &step, &slicelength))
+                  throw py::error_already_set();
+                static constexpr int base = IndexBASE<TIND>();
+                if (start < base || start+slicelength*step >= self.Size()+base)
+                  throw py::index_error();                  
+                for (size_t i = 0; i < slicelength; i++, start+=step) 
+                  self[start] = val; 
+              })
+        
         .def("__iter__", [] ( TFlat & self) {
              return py::make_iterator (self.begin(),self.end());
              }, py::keep_alive<0,1>()) // keep array alive while iterator is used
