@@ -29,6 +29,7 @@ public:
 			   const NgBitArray * working_elements = NULL,
 			   const NgArray< NgArray<int,PointIndex::BASE>* > * idmaps = NULL);
   void SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
+  bool SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementIndex eli1, int face, TABLE<ElementIndex, PointIndex::BASE> & elementsonnode, TABLE<SurfaceElementIndex, PointIndex::BASE> & belementsonnode, bool check_only=false );
 
   double 
   CalcBad (const Mesh::T_POINTS & points, const Element & elem, double h)
