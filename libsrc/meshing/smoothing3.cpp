@@ -5,10 +5,13 @@
 #include <csg.hpp>
 #endif
 #include <opti.hpp>
+#include <core/array.hpp>
+#include <core/taskmanager.hpp>
 
 
 namespace netgen
 {
+  using namespace ngcore;
   
 
   double MinFunctionSum :: Func (const Vector & x) const
@@ -301,7 +304,8 @@ namespace netgen
   public:
     Mesh::T_POINTS & points;
     const Array<Element> & elements;
-    TABLE<int,PointIndex::BASE> elementsonpoint;
+    TABLE<int,PointIndex::BASE> &elementsonpoint;
+    bool own_elementsonpoint;
     const MeshingParameters & mp;
     PointIndex actpind;
     double h;
@@ -310,10 +314,12 @@ namespace netgen
     PointFunction (Mesh::T_POINTS & apoints, 
 		   const Array<Element> & aelements,
 		   const MeshingParameters & amp);
-    virtual ~PointFunction () { ; }
+    PointFunction (const PointFunction & pf);
+    virtual ~PointFunction () { if(own_elementsonpoint) delete &elementsonpoint; }
     virtual void SetPointIndex (PointIndex aactpind);
     void SetLocalH (double ah) { h = ah; }
     double GetLocalH () const { return h; }
+    const TABLE<int,PointIndex::BASE> & GetPointToElementTable() { return elementsonpoint; };
     virtual double PointFunctionValue (const Point<3> & pp) const;
     virtual double PointFunctionValueGrad (const Point<3> & pp, Vec<3> & grad) const;
     virtual double PointFunctionValueDeriv (const Point<3> & pp, const Vec<3> & dir, double & deriv) const;
@@ -322,11 +328,16 @@ namespace netgen
   };
 
 
+  PointFunction :: PointFunction (const PointFunction & pf)
+    : points(pf.points), elements(pf.elements), elementsonpoint(pf.elementsonpoint), own_elementsonpoint(false), mp(pf.mp)
+  { }
+
   PointFunction :: PointFunction (Mesh::T_POINTS & apoints, 
 				  const Array<Element> & aelements,
 				  const MeshingParameters & amp)
-    : points(apoints), elements(aelements), elementsonpoint(apoints.Size()), mp(amp)
+    : points(apoints), elements(aelements), elementsonpoint(* new TABLE<int,PointIndex::BASE>(apoints.Size())), own_elementsonpoint(true), mp(amp)
   {
+    static Timer tim("PointFunction - build elementsonpoint table"); RegionTimer reg(tim);
     for (int i = 0; i < elements.Size(); i++)
       if (elements[i].NP() == 4)
         for (int j = 0; j < elements[i].NP(); j++)
@@ -1359,7 +1370,7 @@ void Mesh :: ImproveMesh (const CSG eometry & geometry, OPTIMIZEGOAL goal)
 
 
   
-void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
+void Mesh :: ImproveMeshSequential (const MeshingParameters & mp, OPTIMIZEGOAL goal)
 {
   static Timer t("Mesh::ImproveMesh"); RegionTimer reg(t);
   
@@ -1480,6 +1491,151 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
     }
 }
 
+void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
+{
+  static Timer t("Mesh::ImproveMesh"); RegionTimer reg(t);
+  static Timer tcoloring("coloring");
+  static Timer tcalcbadmax("Calc badmax");
+  static Timer topt("optimize");
+  static Timer trange("range");
+
+  // return ImproveMeshSequential(mp, goal);
+
+  (*testout) << "Improve Mesh" << "\n";
+  PrintMessage (3, "ImproveMesh");
+
+  int np = GetNP();
+  int ne = GetNE();
+
+  PointFunction pf_glob(points, volelements, mp);
+
+  auto & elementsonpoint = pf_glob.GetPointToElementTable();
+
+  const auto & getDofs = [&] (int i)
+  {
+      i += PointIndex::BASE;
+      return FlatArray<int>(elementsonpoint[i].Size(), &elementsonpoint[i][0]);
+  };
+
+  Array<int> colors(points.Size());
+
+  tcoloring.Start();
+  int ncolors = ngcore::ComputeColoring( colors, ne, getDofs );
+  TableCreator<int> creator(ncolors);
+  for ( ; !creator.Done(); creator++)
+  {
+      ParallelForRange( Range(colors), [&](auto myrange)
+          {
+            for(auto i : myrange)
+              creator.Add(colors[i], i);
+          });
+  }
+
+  auto color_table = creator.MoveTable();
+  tcoloring.Stop();
+
+  if (goal == OPT_QUALITY)
+    {
+      double bad1 = CalcTotalBad (points, volelements, mp);
+      (*testout) << "Total badness = " << bad1 << endl;
+      PrintMessage (5, "Total badness = ", bad1);
+    }
+
+
+  (*testout) << setprecision(8);
+
+  NgArray<double, PointIndex::BASE> pointh (points.Size());
+
+  if(lochfunc)
+    {
+      for (PointIndex pi : points.Range())
+	pointh[pi] = GetH(points[pi]);
+    }
+  else
+    {
+      pointh = 0;
+      for (Element & el : VolumeElements())
+	{
+	  double h = pow(el.Volume(points),1./3.);
+          for (PointIndex pi : el.PNums())
+	    if (h > pointh[pi])
+              pointh[pi] = h;
+	}
+    }
+
+  const char * savetask = multithread.task;
+  multithread.task = "Smooth Mesh";
+
+  topt.Start();
+  int counter = 0;
+  for (int color : Range(color_table.Size()))
+  {
+      if (multithread.terminate)
+          throw NgException ("Meshing stopped");
+
+      ParallelForRange( Range(color_table[color].Size()), [&](auto myrange)
+      {
+        RegionTracer reg(ngcore::TaskManager::GetThreadId(), trange, myrange.Size());
+        Vector x(3);
+
+        PointFunction pf{pf_glob};
+
+        Opti3FreeMinFunction freeminf(pf);
+
+        OptiParameters par;
+        par.maxit_linsearch = 20;
+        par.maxit_bfgs = 20;
+
+        for (auto i : myrange)
+        {
+          PointIndex pi(color_table[color][i]+PointIndex::BASE);
+          if ( (*this)[pi].Type() == INNERPOINT )
+          {
+            counter++;
+
+            double lh = pointh[pi];
+            pf.SetLocalH (lh);
+            par.typx = lh;
+
+            freeminf.SetPoint (points[pi]);
+            pf.SetPointIndex (pi);
+
+            x = 0;
+            int pok;
+            pok = freeminf.Func (x) < 1e10;
+
+            if (!pok)
+              {
+                pok = pf.MovePointToInner ();
+
+                freeminf.SetPoint (points[pi]);
+                pf.SetPointIndex (pi);
+              }
+
+            if (pok)
+              {
+                //*testout << "start BFGS, pok" << endl;
+                BFGS (x, freeminf, par);
+                //*testout << "BFGS complete, pok" << endl;
+                points[pi](0) += x(0);
+                points[pi](1) += x(1);
+                points[pi](2) += x(2);
+              }
+          }
+        }
+      }, 4*ngcore::TaskManager::GetNumThreads());
+  }
+  topt.Stop();
+
+  multithread.task = savetask;
+
+  if (goal == OPT_QUALITY)
+    {
+      double bad1 = CalcTotalBad (points, volelements, mp);
+      (*testout) << "Total badness = " << bad1 << endl;
+      PrintMessage (5, "Total badness = ", bad1);
+    }
+}
 
 
 
