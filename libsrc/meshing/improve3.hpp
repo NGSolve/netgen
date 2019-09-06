@@ -28,6 +28,7 @@ public:
   void SwapImproveSurface (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
 			   const NgBitArray * working_elements = NULL,
 			   const NgArray< NgArray<int,PointIndex::BASE>* > * idmaps = NULL);
+  void SwapImprove2Sequential (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
   void SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
   bool SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementIndex eli1, int face, TABLE<ElementIndex, PointIndex::BASE> & elementsonnode, TABLE<SurfaceElementIndex, PointIndex::BASE> & belementsonnode, bool check_only=false );
 

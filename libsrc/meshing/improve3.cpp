@@ -2797,7 +2797,7 @@ bool MeshOptimize3d :: SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementInd
   2 -> 3 conversion
 */
 
-void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
+void MeshOptimize3d :: SwapImprove2Sequential (Mesh & mesh, OPTIMIZEGOAL goal)
 {
   static Timer t("MeshOptimize3d::SwapImprove2"); RegionTimer reg(t);
   
@@ -2899,6 +2899,94 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
   (*testout) << "Total badness = " << bad1 << endl;
   (*testout) << "swapimprove2 done" << "\n";
   //  (*mycout) << "Vol = " << CalcVolume (points, volelements) << "\n";
+}
+
+void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
+{
+  static Timer t("MeshOptimize3d::SwapImprove2"); RegionTimer reg(t);
+
+  // return SwapImprove2Sequential(mesh, goal);
+
+  mesh.BoundaryEdge (1,2); // ensure the boundary-elements table is built
+
+  int cnt = 0;
+  double bad1, bad2;
+
+  int np = mesh.GetNP();
+  int ne = mesh.GetNE();
+  int nse = mesh.GetNSE();
+
+  if (goal == OPT_CONFORM) return;
+
+  // contains at least all elements at node
+  TABLE<ElementIndex, PointIndex::BASE> elementsonnode(np);
+  TABLE<SurfaceElementIndex, PointIndex::BASE> belementsonnode(np);
+
+  PrintMessage (3, "SwapImprove2 ");
+  (*testout) << "\n" << "Start SwapImprove2" << "\n";
+
+  bad1 = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
+  (*testout) << "Total badness = " << bad1 << endl;
+
+  // find elements on node
+
+  for (ElementIndex ei = 0; ei < ne; ei++)
+    for (int j = 0; j < mesh[ei].GetNP(); j++)
+      elementsonnode.Add (mesh[ei][j], ei);
+
+  for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+    for (int j = 0; j < 3; j++)
+      belementsonnode.Add (mesh[sei][j], sei);
+
+  int num_threads = ngcore::TaskManager::GetNumThreads();
+
+  Array<std::tuple<ElementIndex, int>> faces_with_improvement;
+  Array<Array<std::tuple<ElementIndex, int>>> faces_with_improvement_threadlocal(num_threads);
+
+  ParallelForRange( Range(ne), [&]( auto myrange )
+      {
+        int tid = ngcore::TaskManager::GetThreadId();
+        auto & my_faces_with_improvement = faces_with_improvement_threadlocal[tid];
+        for (ElementIndex eli1 : myrange)
+          {
+            if (multithread.terminate)
+              break;
+
+            if (mesh.ElementType (eli1) == FIXEDELEMENT)
+              continue;
+
+            if (mesh[eli1].GetType() != TET)
+              continue;
+
+            if ((goal == OPT_LEGAL) &&
+                mesh.LegalTet (mesh[eli1]) &&
+                CalcBad (mesh.Points(), mesh[eli1], 0) < 1e3)
+              continue;
+
+            if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(eli1).GetIndex())
+              continue;
+
+            for (int j = 0; j < 4; j++)
+              {
+                if(SwapImprove2( mesh, goal, eli1, j, elementsonnode, belementsonnode, true))
+                  my_faces_with_improvement.Append( std::make_tuple(eli1, j) );
+              }
+          }
+      });
+
+  for (auto & a : faces_with_improvement_threadlocal)
+    faces_with_improvement.Append(a);
+
+  QuickSort(faces_with_improvement);
+
+  for (auto [eli,j] : faces_with_improvement)
+    cnt += SwapImprove2( mesh, goal, eli, j, elementsonnode, belementsonnode, false);
+
+  PrintMessage (5, cnt, " swaps performed");
+
+  bad1 = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
+  (*testout) << "Total badness = " << bad1 << endl;
+  (*testout) << "swapimprove2 done" << "\n";
 }
 
 

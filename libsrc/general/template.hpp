@@ -40,26 +40,6 @@ DLL_HEADER extern void MyError (const char * ch);
 DLL_HEADER extern void MyBeep (int nr = 1);
 
 
-template <class T>
-inline void Swap (T & a, T & b)
-{
-  T temp = a;
-  a = b;
-  b = temp;
-}
-
-/*
-template <class T>
-inline void swap (T & a, T & b)
-{
-  T temp = a;
-  a = b;
-  b = temp;
-}
-*/
-
-
-
 /**
   INDEX is a typedef for (at least) 4-byte integer
  */
