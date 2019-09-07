@@ -65,7 +65,7 @@ namespace ngcore
                 if (!slice.compute(self.Size(), &start, &stop, &step, &slicelength))
                   throw py::error_already_set();
                 static constexpr int base = IndexBASE<TIND>();
-                if (start < base || start+slicelength*step >= self.Size()+base)
+                if (start < base || start+(slicelength-1)*step >= self.Size()+base)
                   throw py::index_error();                  
                 for (size_t i = 0; i < slicelength; i++, start+=step) 
                   self[start] = val; 
