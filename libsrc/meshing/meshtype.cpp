@@ -71,10 +71,10 @@ namespace netgen
     surfnr2 = -1;
     pnums[2] = PointIndex::INVALID;
     meshdocval = 0;
-    /*
-      geominfo[0].trignum=-1; 
-      geominfo[1].trignum=-1; 
+    geominfo[0].trignum=-1;
+    geominfo[1].trignum=-1;
 
+    /*
       epgeominfo[0].edgenr = 1;
       epgeominfo[0].dist = 0;
       epgeominfo[1].edgenr = 1;
