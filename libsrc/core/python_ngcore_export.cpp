@@ -1,9 +1,11 @@
 #include "python_ngcore.hpp"
 #include "bitarray.hpp"
+#include "taskmanager.hpp"
 
 
 using namespace ngcore;
 using namespace std;
+using namespace pybind11::literals;
 
 PYBIND11_MODULE(pyngcore, m) // NOLINT
 {
@@ -167,4 +169,52 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
         "Clear sinks of specific logger, or all if none given");
   m.def("FlushOnLoggingLevel", &FlushOnLoggingLevel, py::arg("level"), py::arg("logger")="",
         "Flush every message with level at least `level` for specific logger or all loggers if none given.");
+
+  m.def("RunWithTaskManager",
+          [](py::object lam)
+                           {
+                             GetLogger("TaskManager")->info("running Python function with task-manager");
+                             RunWithTaskManager ([&] () { lam(); });
+                           }, py::arg("lam"), R"raw_string(
+Parameters:
+
+lam : object
+  input function
+
+)raw_string")
+          ;
+
+  m.def("SetNumThreads", &TaskManager::SetNumThreads, py::arg("threads"), R"raw_string(
+Set number of threads
+
+Parameters:
+
+threads : int
+  input number of threads
+
+)raw_string");
+
+  // local TaskManager class to be used as context manager in Python
+  class ParallelContextManager {
+      int num_threads;
+    public:
+      ParallelContextManager() : num_threads(0) {};
+      ParallelContextManager(size_t pajesize) : num_threads(0) {
+        TaskManager::SetPajeTrace(pajesize > 0);
+        PajeTrace::SetMaxTracefileSize(pajesize);
+      }
+      void Enter() {num_threads = EnterTaskManager(); }
+      void Exit(py::object exc_type, py::object exc_value, py::object traceback) {
+          ExitTaskManager(num_threads);
+      }
+    };
+
+  py::class_<ParallelContextManager>(m, "TaskManager")
+    .def(py::init<>())
+    .def(py::init<size_t>(), "pajetrace"_a, "Run paje-tracer, specify buffersize in bytes")
+    .def("__enter__", &ParallelContextManager::Enter)
+    .def("__exit__", &ParallelContextManager::Exit)
+    .def("__timing__", &TaskManager::Timing)
+    ;
+
 }

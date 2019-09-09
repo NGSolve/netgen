@@ -74,8 +74,7 @@ namespace ngcore
 
     task_manager = new TaskManager();
 
-    // TODO: use logger for output
-    std::cout << "task-based parallelization (C++11 threads) using "<< task_manager->GetNumThreads() << " threads" << std::endl;
+    GetLogger("TaskManager")->info("task-based parallelization (C++11 threads) using {} threads", task_manager->GetNumThreads());
 
 #ifdef USE_NUMA
     numa_run_on_node (0);
