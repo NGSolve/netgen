@@ -70,11 +70,19 @@ def getParamForTest(filename):
 
 @pytest.mark.parametrize(("filename, checkFunc"), [getParamForTest(f) for f in _geofiles])
 def test_geoFiles(filename, checkFunc):
+    import filecmp, pyngcore
     for i, mp in enumerate(getMeshingparameters(filename)):
         print("load geo", filename)
         mesh = generateMesh(filename, mp)
         if checkFunc is not None:
             checkFunc(mesh,i)
+        mesh.Save(filename+'_seq.vol.gz')
+
+        with pyngcore.TaskManager():
+            mesh_par = generateMesh(filename, mp)
+            mesh_par.Save(filename+'_par.vol.gz')
+
+        assert filecmp.cmp(filename+'_seq.vol.gz', filename+'_par.vol.gz')
 
 import time
 def generateResultFile():
