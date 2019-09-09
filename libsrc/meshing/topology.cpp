@@ -394,14 +394,14 @@ namespace netgen
        });
     
     vert2element = TABLE<ElementIndex,PointIndex::BASE> (cnt);
-    /*
     for (ElementIndex ei = 0; ei < ne; ei++)
       {
 	const Element & el = (*mesh)[ei];
 	for (int j = 0; j < el.GetNV(); j++)
 	  vert2element.AddSave (el[j], ei);
       }
-    */
+    
+    /*
     ParallelForRange
       (tm, ne,
        [&] (size_t begin, size_t end)
@@ -413,6 +413,8 @@ namespace netgen
                vert2element.ParallelAdd (el[j], ei);
            }
        });
+       requires sorting !!!!
+    */
     
     cnt = 0;
     /*
@@ -438,14 +440,14 @@ namespace netgen
     
 
     vert2surfelement = TABLE<SurfaceElementIndex,PointIndex::BASE> (cnt);
-    /*
+
     for (SurfaceElementIndex sei = 0; sei < nse; sei++)
       {
 	const Element2d & el = (*mesh)[sei];
 	for (int j = 0; j < el.GetNV(); j++)
 	  vert2surfelement.AddSave (el[j], sei);
       }
-    */
+    /*
     ParallelForRange
       (tm, nse,
        [&] (size_t begin, size_t end)
@@ -457,7 +459,8 @@ namespace netgen
                vert2surfelement.ParallelAdd (el[j], sei);
            }
        });
-
+       requires sorting !!!
+    */
 
     cnt = 0;
     for (SegmentIndex si = 0; si < nseg; si++)
