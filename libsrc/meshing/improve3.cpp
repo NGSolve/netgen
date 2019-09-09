@@ -422,6 +422,8 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
   static Timer tbad("CalcBad");
 
   // return CombineImproveSequential(mesh, goal);
+
+  mesh.BoundaryEdge (1,2); // ensure the boundary-elements table is built
   
   int np = mesh.GetNP();
   int ne = mesh.GetNE();
