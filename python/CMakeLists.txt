@@ -13,7 +13,7 @@ find_program(PYBIND11_STUBS NAMES pybind11-stubgen)
 if(PYBIND11_STUBS)
   message("-- Found pybind11-stubgen: ${PYBIND11_STUBS}")
   install(CODE "execute_process(COMMAND ${PYBIND11_STUBS} --no-setup-py netgen)")
-  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../stubs/netgen-stubs/ DESTINATION ${NG_INSTALL_DIR_PYTHON}/netgen/)
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../stubs/netgen-stubs/ DESTINATION ${NG_INSTALL_DIR_PYTHON}/netgen/ COMPONENT netgen)
 else(PYBIND11_STUBS)
   message(WARNING "pybind11-stubgen not found, if you want to create stub files
 for better autocompletion support install it with pip.")
