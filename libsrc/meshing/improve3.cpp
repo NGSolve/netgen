@@ -2632,8 +2632,172 @@ void MeshOptimize3d :: SwapImproveSurface (Mesh & mesh, OPTIMIZEGOAL goal,
   2 -> 3 conversion
 */
 
+bool MeshOptimize3d :: SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementIndex eli1, int face,
+  TABLE<ElementIndex, PointIndex::BASE> & elementsonnode,
+  TABLE<SurfaceElementIndex, PointIndex::BASE> & belementsonnode, bool check_only )
+{
+  PointIndex pi1, pi2, pi3, pi4, pi5;
+  Element el21(TET), el22(TET), el31(TET), el32(TET), el33(TET);
+  int j = face;
+  double bad1, bad2;
 
-void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
+  Element & elem = mesh[eli1];
+  if (elem.IsDeleted()) return false;
+
+  int mattyp = elem.GetIndex();
+
+  switch (j)
+  {
+    case 0:
+      pi1 = elem.PNum(1); pi2 = elem.PNum(2);
+      pi3 = elem.PNum(3); pi4 = elem.PNum(4);
+      break;
+    case 1:
+      pi1 = elem.PNum(1); pi2 = elem.PNum(4);
+      pi3 = elem.PNum(2); pi4 = elem.PNum(3);
+      break;
+    case 2:
+      pi1 = elem.PNum(1); pi2 = elem.PNum(3);
+      pi3 = elem.PNum(4); pi4 = elem.PNum(2);
+      break;
+    case 3:
+      pi1 = elem.PNum(2); pi2 = elem.PNum(4);
+      pi3 = elem.PNum(3); pi4 = elem.PNum(1);
+      break;
+  }
+
+
+  bool bface = 0;
+  for (int k = 0; k < belementsonnode[pi1].Size(); k++)
+  {
+      const Element2d & bel =
+        mesh[belementsonnode[pi1][k]];
+
+      bool bface1 = 1;
+      for (int l = 0; l < 3; l++)
+          if (bel[l] != pi1 && bel[l] != pi2 && bel[l] != pi3)
+          {
+              bface1 = 0;
+              break;
+          }
+
+      if (bface1)
+      {
+          bface = 1;
+          break;
+      }
+  }
+
+  if (bface) return false;
+
+
+  NgFlatArray<ElementIndex> row = elementsonnode[pi1];
+  for (int k = 0; k < row.Size(); k++)
+  {
+      ElementIndex eli2 = row[k];
+
+      if ( eli1 != eli2 )
+      {
+          Element & elem2 = mesh[eli2];
+          if (elem2.IsDeleted()) continue;
+          if (elem2.GetType() != TET)
+              continue;
+
+          int comnodes=0;
+          for (int l = 1; l <= 4; l++)
+              if (elem2.PNum(l) == pi1 || elem2.PNum(l) == pi2 ||
+                  elem2.PNum(l) == pi3)
+              {
+                  comnodes++;
+              }
+              else
+              {
+                  pi5 = elem2.PNum(l);
+              }
+
+          if (comnodes == 3)
+          {
+              bad1 = CalcBad (mesh.Points(), elem, 0) +
+                CalcBad (mesh.Points(), elem2, 0);
+
+              if (!mesh.LegalTet(elem) ||
+                  !mesh.LegalTet(elem2))
+                  bad1 += 1e4;
+
+
+              el31.PNum(1) = pi1;
+              el31.PNum(2) = pi2;
+              el31.PNum(3) = pi5;
+              el31.PNum(4) = pi4;
+              el31.SetIndex (mattyp);
+
+              el32.PNum(1) = pi2;
+              el32.PNum(2) = pi3;
+              el32.PNum(3) = pi5;
+              el32.PNum(4) = pi4;
+              el32.SetIndex (mattyp);
+
+              el33.PNum(1) = pi3;
+              el33.PNum(2) = pi1;
+              el33.PNum(3) = pi5;
+              el33.PNum(4) = pi4;
+              el33.SetIndex (mattyp);
+
+              bad2 = CalcBad (mesh.Points(), el31, 0) +
+                CalcBad (mesh.Points(), el32, 0) +
+                CalcBad (mesh.Points(), el33, 0);
+
+
+              el31.flags.illegal_valid = 0;
+              el32.flags.illegal_valid = 0;
+              el33.flags.illegal_valid = 0;
+
+              if (!mesh.LegalTet(el31) ||
+                  !mesh.LegalTet(el32) ||
+                  !mesh.LegalTet(el33))
+                  bad2 += 1e4;
+
+
+              bool do_swap = (bad2 < bad1);
+
+              if ( ((bad2 < 1e6) || (bad2 < 10 * bad1)) &&
+                  mesh.BoundaryEdge (pi4, pi5))
+                  do_swap = 1;
+
+
+              if (!check_only && do_swap)
+              {
+                  el31.flags.illegal_valid = 0;
+                  el32.flags.illegal_valid = 0;
+                  el33.flags.illegal_valid = 0;
+
+                  mesh[eli1] = el31;
+                  mesh[eli2] = el32;
+
+                  ElementIndex neli =
+                    mesh.AddVolumeElement (el33);
+
+                  for (int l = 0; l < 4; l++)
+                  {
+                      elementsonnode.Add (el31[l], eli1);
+                      elementsonnode.Add (el32[l], eli2);
+                      elementsonnode.Add (el33[l], neli);
+                  }
+
+              }
+              return do_swap;
+          }
+      }
+  }
+
+  return false;
+}
+
+/*
+  2 -> 3 conversion
+*/
+
+void MeshOptimize3d :: SwapImprove2Sequential (Mesh & mesh, OPTIMIZEGOAL goal)
 {
   static Timer t("MeshOptimize3d::SwapImprove2"); RegionTimer reg(t);
   
@@ -2710,171 +2874,7 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 
       for (int j = 0; j < 4; j++)
 	{
-	  // loop over faces
-      
-	  Element & elem = mesh[eli1];
-	  // if (elem[0] < PointIndex::BASE) continue;
-	  if (elem.IsDeleted()) continue;
-
-	  int mattyp = elem.GetIndex();
-	  
-	  switch (j)
-	    {
-	    case 0:
-	      pi1 = elem.PNum(1); pi2 = elem.PNum(2); 
-	      pi3 = elem.PNum(3); pi4 = elem.PNum(4);
-	      break;
-	    case 1:
-	      pi1 = elem.PNum(1); pi2 = elem.PNum(4); 
-	      pi3 = elem.PNum(2); pi4 = elem.PNum(3);
-	      break;
-	    case 2:
-	      pi1 = elem.PNum(1); pi2 = elem.PNum(3); 
-	      pi3 = elem.PNum(4); pi4 = elem.PNum(2);
-	      break;
-	    case 3:
-	      pi1 = elem.PNum(2); pi2 = elem.PNum(4); 
-	      pi3 = elem.PNum(3); pi4 = elem.PNum(1);
-	      break;
-	    }
-	  
-
-	  bool bface = 0;
-	  for (int k = 0; k < belementsonnode[pi1].Size(); k++)
-	    {
-	      const Element2d & bel = 
-		mesh[belementsonnode[pi1][k]];
-
-	      bool bface1 = 1;
-	      for (int l = 0; l < 3; l++)
-		if (bel[l] != pi1 && bel[l] != pi2 && bel[l] != pi3)
-		  {
-		    bface1 = 0;
-		    break;
-		  }
-
-	      if (bface1) 
-		{
-		  bface = 1;
-		  break;
-		}
-	    }
-	  
-	  if (bface) continue;
-
-
-	  NgFlatArray<ElementIndex> row = elementsonnode[pi1];
-	  for (int k = 0; k < row.Size(); k++)
-	    {
-	      ElementIndex eli2 = row[k];
-
-	      // cout << "\rei1 = " << eli1 << ", pi1 = " << pi1 << ", k = " << k << ", ei2 = " << eli2 
-	      // << ", getne = " << mesh.GetNE();
-
-	      if ( eli1 != eli2 )
-		{
-		  Element & elem2 = mesh[eli2];
-		  if (elem2.IsDeleted()) continue;
-		  if (elem2.GetType() != TET)
-		    continue;
-		  
-		  int comnodes=0;
-		  for (int l = 1; l <= 4; l++)
-		    if (elem2.PNum(l) == pi1 || elem2.PNum(l) == pi2 ||
-			elem2.PNum(l) == pi3)
-		      {
-			comnodes++;
-		      }
-		    else
-		      {
-			pi5 = elem2.PNum(l);
-		      }
-		  
-		  if (comnodes == 3)
-		    {
-		      bad1 = CalcBad (mesh.Points(), elem, 0) + 
-			CalcBad (mesh.Points(), elem2, 0); 
-		      
-		      if (!mesh.LegalTet(elem) || 
-			  !mesh.LegalTet(elem2))
-			bad1 += 1e4;
-
-		      
-		      el31.PNum(1) = pi1;
-		      el31.PNum(2) = pi2;
-		      el31.PNum(3) = pi5;
-		      el31.PNum(4) = pi4;
-		      el31.SetIndex (mattyp);
-		      
-		      el32.PNum(1) = pi2;
-		      el32.PNum(2) = pi3;
-		      el32.PNum(3) = pi5;
-		      el32.PNum(4) = pi4;
-		      el32.SetIndex (mattyp);
-		      
-		      el33.PNum(1) = pi3;
-		      el33.PNum(2) = pi1;
-		      el33.PNum(3) = pi5;
-		      el33.PNum(4) = pi4;
-		      el33.SetIndex (mattyp);
-		      
-		      bad2 = CalcBad (mesh.Points(), el31, 0) + 
-			CalcBad (mesh.Points(), el32, 0) +
-			CalcBad (mesh.Points(), el33, 0); 
-		      
-
-		      el31.flags.illegal_valid = 0;
-		      el32.flags.illegal_valid = 0;
-		      el33.flags.illegal_valid = 0;
-
-		      if (!mesh.LegalTet(el31) || 
-			  !mesh.LegalTet(el32) ||
-			  !mesh.LegalTet(el33))
-			bad2 += 1e4;
-
-
-		      bool do_swap = (bad2 < bad1);
-
-		      if ( ((bad2 < 1e6) || (bad2 < 10 * bad1)) &&
-			   mesh.BoundaryEdge (pi4, pi5))
-			do_swap = 1;
-			   
-		      if (do_swap)
-			{
-			  //			  cout << "do swap, eli1 = " << eli1 << "; eli2 = " << eli2 << endl;
-			  //			  (*mycout) << "2->3 " << flush;
-			  cnt++;
-
-			  el31.flags.illegal_valid = 0;
-			  el32.flags.illegal_valid = 0;
-			  el33.flags.illegal_valid = 0;
-
-			  mesh[eli1] = el31;
-			  mesh[eli2] = el32;
-			  
-			  ElementIndex neli =
-			    mesh.AddVolumeElement (el33);
-			  
-			  /*
-			    if (!LegalTet(el31) || !LegalTet(el32) ||
-			    !LegalTet(el33))
-			    {
-			    cout << "Swap to illegal tets !!!" << endl;
-			    }
-			  */
-			  // cout << "neli = " << neli << endl;
-			  for (int l = 0; l < 4; l++)
-			    {
-			      elementsonnode.Add (el31[l], eli1);
-			      elementsonnode.Add (el32[l], eli2);
-			      elementsonnode.Add (el33[l], neli);
-			    }
-
-			  break;
-			}
-		    }
-		}
-	    }
+          cnt += SwapImprove2( mesh, goal, eli1, j, elementsonnode, belementsonnode, false);
 	}
     }
 
@@ -2899,6 +2899,94 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
   (*testout) << "Total badness = " << bad1 << endl;
   (*testout) << "swapimprove2 done" << "\n";
   //  (*mycout) << "Vol = " << CalcVolume (points, volelements) << "\n";
+}
+
+void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
+{
+  static Timer t("MeshOptimize3d::SwapImprove2"); RegionTimer reg(t);
+
+  // return SwapImprove2Sequential(mesh, goal);
+
+  mesh.BoundaryEdge (1,2); // ensure the boundary-elements table is built
+
+  int cnt = 0;
+  double bad1, bad2;
+
+  int np = mesh.GetNP();
+  int ne = mesh.GetNE();
+  int nse = mesh.GetNSE();
+
+  if (goal == OPT_CONFORM) return;
+
+  // contains at least all elements at node
+  TABLE<ElementIndex, PointIndex::BASE> elementsonnode(np);
+  TABLE<SurfaceElementIndex, PointIndex::BASE> belementsonnode(np);
+
+  PrintMessage (3, "SwapImprove2 ");
+  (*testout) << "\n" << "Start SwapImprove2" << "\n";
+
+  bad1 = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
+  (*testout) << "Total badness = " << bad1 << endl;
+
+  // find elements on node
+
+  for (ElementIndex ei = 0; ei < ne; ei++)
+    for (int j = 0; j < mesh[ei].GetNP(); j++)
+      elementsonnode.Add (mesh[ei][j], ei);
+
+  for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+    for (int j = 0; j < 3; j++)
+      belementsonnode.Add (mesh[sei][j], sei);
+
+  int num_threads = ngcore::TaskManager::GetNumThreads();
+
+  Array<std::tuple<ElementIndex, int>> faces_with_improvement;
+  Array<Array<std::tuple<ElementIndex, int>>> faces_with_improvement_threadlocal(num_threads);
+
+  ParallelForRange( Range(ne), [&]( auto myrange )
+      {
+        int tid = ngcore::TaskManager::GetThreadId();
+        auto & my_faces_with_improvement = faces_with_improvement_threadlocal[tid];
+        for (ElementIndex eli1 : myrange)
+          {
+            if (multithread.terminate)
+              break;
+
+            if (mesh.ElementType (eli1) == FIXEDELEMENT)
+              continue;
+
+            if (mesh[eli1].GetType() != TET)
+              continue;
+
+            if ((goal == OPT_LEGAL) &&
+                mesh.LegalTet (mesh[eli1]) &&
+                CalcBad (mesh.Points(), mesh[eli1], 0) < 1e3)
+              continue;
+
+            if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(eli1).GetIndex())
+              continue;
+
+            for (int j = 0; j < 4; j++)
+              {
+                if(SwapImprove2( mesh, goal, eli1, j, elementsonnode, belementsonnode, true))
+                  my_faces_with_improvement.Append( std::make_tuple(eli1, j) );
+              }
+          }
+      });
+
+  for (auto & a : faces_with_improvement_threadlocal)
+    faces_with_improvement.Append(a);
+
+  QuickSort(faces_with_improvement);
+
+  for (auto [eli,j] : faces_with_improvement)
+    cnt += SwapImprove2( mesh, goal, eli, j, elementsonnode, belementsonnode, false);
+
+  PrintMessage (5, cnt, " swaps performed");
+
+  bad1 = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
+  (*testout) << "Total badness = " << bad1 << endl;
+  (*testout) << "swapimprove2 done" << "\n";
 }
 
 
