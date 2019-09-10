@@ -411,13 +411,64 @@ void MeshOptimize3d :: CombineImproveSequential (Mesh & mesh,
   multithread.task = savetask;
 } 
 
+void MeshOptimize3d :: BuildEdgeList( const Mesh & mesh, const TABLE<ElementIndex, PointIndex::BASE> & elementsonnode, Array<std::tuple<PointIndex, PointIndex>> & edges )
+{
+  static Timer tbuild_edges("Build edges"); RegionTimer reg(tbuild_edges);
+
+  static constexpr int tetedges[6][2] =
+    { { 0, 1 }, { 0, 2 }, { 0, 3 },
+      { 1, 2 }, { 1, 3 }, { 2, 3 } };
+
+  Array<Array<std::tuple<PointIndex,PointIndex>>> thread_edges(ngcore::TaskManager::GetMaxThreads());
+
+  ParallelForRange(mesh.Points().Range(), [&] (auto myrange)
+  {
+    ArrayMem<std::tuple<int,int>, 100> local_edges;
+    for (auto pi : myrange)
+    {
+      local_edges.SetSize(0);
+
+      for(auto ei : elementsonnode[pi])
+      {
+          const Element & elem = mesh[ei];
+          if (elem.IsDeleted()) continue;
+
+          for (int j = 0; j < 6; j++)
+          {
+              PointIndex pi0 = elem[tetedges[j][0]];
+              PointIndex pi1 = elem[tetedges[j][1]];
+              if (pi1 < pi0) Swap(pi0, pi1);
+              if(pi0==pi)
+                  local_edges.Append(std::make_tuple(pi0, pi1));
+          }
+      }
+      QuickSort(local_edges);
+
+      auto edge_prev = std::make_tuple(-1,-1);
+
+      for(auto edge : local_edges)
+          if(edge != edge_prev)
+          {
+              thread_edges[ngcore::TaskManager::GetThreadId()].Append(edge);
+              edge_prev = edge;
+          }
+    }
+  }, 4*ngcore::TaskManager::GetNumThreads());
+
+  int num_edges = 0;
+  for (auto & edg : thread_edges)
+      num_edges += edg.Size();
+  edges.SetAllocSize(num_edges);
+  for (auto & edg : thread_edges)
+      edges.Append(edg);
+}
+
 void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 				       OPTIMIZEGOAL goal)
 {
   static Timer t("MeshOptimize3d::CombineImprove"); RegionTimer reg(t);
   static Timer topt("Optimize");
   static Timer tsearch("Search");
-  static Timer tbuild_edges("Build edges");
   static Timer tbuild_elements_table("Build elements table");
   static Timer tbad("CalcBad");
 
@@ -474,58 +525,8 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 
   tbuild_elements_table.Stop();
 
-  // Build list of all edges
-  Array<std::tuple<int,int>> edges;
-  Array<Array<std::tuple<int,int>>> thread_edges(ngcore::TaskManager::GetMaxThreads());
-
-  static constexpr int tetedges[6][2] =
-    { { 0, 1 }, { 0, 2 }, { 0, 3 },
-      { 1, 2 }, { 1, 3 }, { 2, 3 } };
-
-  tbuild_edges.Start();
-  ParallelForRange(mesh.Points().Range(), [&] (auto myrange)
-  {
-    ArrayMem<std::tuple<int,int>, 100> local_edges;
-    for (auto pi : myrange)
-    {
-      local_edges.SetSize(0);
-
-      for(auto ei : elementsonnode[pi])
-      {
-          Element & elem = mesh[ei];
-          if (elem.IsDeleted()) continue;
-
-          for (int j = 0; j < 6; j++)
-          {
-              PointIndex pi0 = elem[tetedges[j][0]];
-              PointIndex pi1 = elem[tetedges[j][1]];
-              if (pi1 < pi0) Swap(pi0, pi1);
-              if(pi0==pi)
-                  local_edges.Append(std::make_tuple(pi0, pi1));
-          }
-      }
-      QuickSort(local_edges);
-
-      auto edge_prev = std::make_tuple(-1,-1);
-
-      for(auto edge : local_edges)
-          if(edge != edge_prev)
-          {
-              // TODO: Check for CombineEdge improvement already here and only append edges with improvement
-              thread_edges[ngcore::TaskManager::GetThreadId()].Append(edge);
-              edge_prev = edge;
-          }
-    }
-  }, ntasks);
-
-  int num_edges = 0;
-  for (auto & edg : thread_edges)
-      num_edges += edg.Size();
-  edges.SetAllocSize(num_edges);
-  for (auto & edg : thread_edges)
-      edges.Append(edg);
-
-  tbuild_edges.Stop();
+  Array<std::tuple<PointIndex,PointIndex>> edges;
+  BuildEdgeList(mesh, elementsonnode, edges);
 
   // Find edges with improvement
   Array<std::tuple<double, int>> combine_candidate_edges(edges.Size());

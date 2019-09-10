@@ -11,6 +11,9 @@ extern double CalcTotalBad (const Mesh::T_POINTS & points,
 class MeshOptimize3d
 {
   const MeshingParameters & mp;
+
+  void BuildEdgeList( const Mesh & mesh, const TABLE<ElementIndex, PointIndex::BASE> & elementsonnode, Array<std::tuple<PointIndex, PointIndex>> & edges );
+
 public:
   MeshOptimize3d (const MeshingParameters & amp) : mp(amp) { ; }
 
