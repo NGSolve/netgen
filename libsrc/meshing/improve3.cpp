@@ -419,10 +419,12 @@ void MeshOptimize3d :: BuildEdgeList( const Mesh & mesh, const TABLE<ElementInde
     { { 0, 1 }, { 0, 2 }, { 0, 3 },
       { 1, 2 }, { 1, 3 }, { 2, 3 } };
 
-  Array<Array<std::tuple<PointIndex,PointIndex>>> thread_edges(ngcore::TaskManager::GetMaxThreads());
+  int ntasks = 2*ngcore::TaskManager::GetMaxThreads();
+  Array<Array<std::tuple<PointIndex,PointIndex>>> task_edges(ntasks);
 
-  ParallelForRange(mesh.Points().Range(), [&] (auto myrange)
+  ParallelFor(IntRange(ntasks), [&] (int ti)
   {
+    auto myrange = mesh.Points().Range().Split(ti, ntasks);
     ArrayMem<std::tuple<int,int>, 100> local_edges;
     for (auto pi : myrange)
     {
@@ -449,17 +451,17 @@ void MeshOptimize3d :: BuildEdgeList( const Mesh & mesh, const TABLE<ElementInde
       for(auto edge : local_edges)
           if(edge != edge_prev)
           {
-              thread_edges[ngcore::TaskManager::GetThreadId()].Append(edge);
+              task_edges[ti].Append(edge);
               edge_prev = edge;
           }
     }
-  }, 4*ngcore::TaskManager::GetNumThreads());
+  }, ntasks);
 
   int num_edges = 0;
-  for (auto & edg : thread_edges)
+  for (auto & edg : task_edges)
       num_edges += edg.Size();
   edges.SetAllocSize(num_edges);
-  for (auto & edg : thread_edges)
+  for (auto & edg : task_edges)
       edges.Append(edg);
 }
 
