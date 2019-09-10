@@ -461,7 +461,7 @@ $Netgen_MACOS/netgen
 #!/bin/sh
 Netgen_BUNDLE=\"`echo \"$0\" | sed -e 's/\\/Contents\\/MacOS\\/Netgen1//'`\"
 Netgen_MACOS=\"$Netgen_BUNDLE/Contents/MacOS\"
-open -a /Applications/Utilities/Terminal.app $Netgen_MACOS/startup.sh
+open -a /Applications/Utilities/Terminal.app $Netgen_MACOS/startup.sh || open -a /System/Applications/Utilities/Terminal.app $Netgen_MACOS/startup.sh
 ")
     install(PROGRAMS ${mac_ngsuite} DESTINATION ${NG_INSTALL_DIR_BIN} RENAME Netgen1)
 
