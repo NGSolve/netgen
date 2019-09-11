@@ -1027,9 +1027,6 @@ bool MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
 	      el33[3] = pi3;  
 	      el33.SetIndex (mattyp);
 	      
-	      elementsonnode.Add (pi4, hasbothpoints[1]);
-	      elementsonnode.Add (pi3, hasbothpoints[2]);
-	      
 	      bad1 = CalcBad (mesh.Points(), el31, 0) + 
 		CalcBad (mesh.Points(), el32, 0) +
 		CalcBad (mesh.Points(), el33, 0);
@@ -1120,6 +1117,9 @@ bool MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
 		  for (int l = 0; l < 4; l++)
 		    mesh[hasbothpoints[2]][l].Invalidate();
 		  mesh[hasbothpoints[2]].Delete();
+
+                  elementsonnode.Add (pi4, hasbothpoints[1]);
+                  elementsonnode.Add (pi3, hasbothpoints[2]);
 
 		  for (int k = 0; k < 2; k++)
 		    for (int l = 0; l < 4; l++)
