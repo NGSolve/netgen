@@ -1540,7 +1540,7 @@ Primitive * EllipticCone :: CreateDefault ()
  void EllipticCone :: GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const
   {
     classname = "ellipticcone";
-    coeffs.SetSize (15);
+    coeffs.SetSize (11);
     coeffs.Elem(1) = a(0);
     coeffs.Elem(2) = a(1);
     coeffs.Elem(3) = a(2);
