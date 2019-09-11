@@ -2,13 +2,18 @@
 #include "bitarray.hpp"
 #include "taskmanager.hpp"
 
-
 using namespace ngcore;
 using namespace std;
 using namespace pybind11::literals;
 
 PYBIND11_MODULE(pyngcore, m) // NOLINT
 {
+  try
+    {
+      auto numpy = py::module::import("numpy");
+      ngcore_have_numpy = !numpy.is_none();
+    }
+  catch(...) {}
   ExportArray<int>(m);
   ExportArray<unsigned>(m);
   ExportArray<size_t>(m);
