@@ -107,7 +107,6 @@ build_ubuntu_debug:
       docker run
       --cidfile netgen_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id
       -e CCACHE_DIR=/ccache
-      -e RUN_SLOW_TESTS=${RUN_SLOW_TESTS}
       -v /mnt/ccache:/ccache
       netgen_${CI_PIPELINE_ID}:${UBUNTU_VERSION}
       bash /root/src/netgen/tests/build_debug.sh
@@ -137,7 +136,6 @@ test_ubuntu_debug:
   script:
     - >-
       docker run
-      -e RUN_SLOW_TESTS=${RUN_SLOW_TESTS}
       -e NETGENDIR=/opt/netgen/bin
       -e PYTHONPATH=/opt/netgen/lib/python3/dist-packages
       netgen_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}
