@@ -50,7 +50,9 @@ namespace ngcore
   {
       using TFlat = FlatArray<T, TIND>;
       using TArray = Array<T, TIND>;
-      std::string suffix = std::string(typeid(T).name()) + "_" + typeid(TIND).name();
+      std::string suffix = std::string(Demangle(typeid(T).name())) + "_" + Demangle(typeid(TIND).name());
+      std::replace(suffix.begin(), suffix.end(), ':', '_');
+      std::replace(suffix.begin(), suffix.end(), ' ', '_');
       std::string fname = std::string("FlatArray_") + suffix;
       auto flatarray_class = py::class_<TFlat>(m, fname.c_str(),
                                                py::buffer_protocol())

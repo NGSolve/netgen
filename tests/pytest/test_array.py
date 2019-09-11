@@ -2,7 +2,7 @@ from pyngcore import *
 from numpy import sort, array
 
 def test_array_numpy():
-    a = Array_i_m(5)
+    a = Array_int_unsigned_long(5)
     a[:] = 0
     a[3:] = 2
     assert(sum(a) == 4)
