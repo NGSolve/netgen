@@ -425,7 +425,7 @@ void MeshOptimize3d :: BuildEdgeList( const Mesh & mesh, const TABLE<ElementInde
   ParallelFor(IntRange(ntasks), [&] (int ti)
   {
     auto myrange = mesh.Points().Range().Split(ti, ntasks);
-    ArrayMem<std::tuple<int,int>, 100> local_edges;
+    ArrayMem<std::tuple<PointIndex,PointIndex>, 100> local_edges;
     for (auto pi : myrange)
     {
       local_edges.SetSize(0);
@@ -446,7 +446,7 @@ void MeshOptimize3d :: BuildEdgeList( const Mesh & mesh, const TABLE<ElementInde
       }
       QuickSort(local_edges);
 
-      auto edge_prev = std::make_tuple(-1,-1);
+      auto edge_prev = std::make_tuple<PointIndex, PointIndex>(-1,-1);
 
       for(auto edge : local_edges)
           if(edge != edge_prev)
