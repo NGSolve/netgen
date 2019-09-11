@@ -21,8 +21,7 @@ namespace ngcore
   struct PyNameTraits {
     static const std::string & GetName()
     {
-      static const std::string name =
-        py::cast<std::string>(py::cast(T()).attr("__class__").attr("__name__"));
+      static const std::string name = typeid(T).name();
       return name;
     }
   };
