@@ -16,6 +16,56 @@ namespace ngcore
 {
   NGCORE_API extern bool ngcore_have_numpy;
 
+  // Python class name type traits
+  template <typename T>
+  struct PyNameTraits {
+    static const std::string & GetName()
+    {
+      static const std::string name =
+        py::cast<std::string>(py::cast(T()).attr("__class__").attr("__name__"));
+      return name;
+    }
+  };
+
+  template <typename T>
+  std::string GetPyName(const char *prefix = 0) {
+    std::string s;
+    if(prefix) s = std::string(prefix);
+    s+= PyNameTraits<T>::GetName();
+    return s;
+  }
+
+  template<>
+  struct PyNameTraits<int> {
+    static std::string GetName() { return "I"; }
+  };
+
+  template<>
+  struct PyNameTraits<unsigned> {
+    static std::string GetName() { return "U"; }
+  };
+
+  template<>
+  struct PyNameTraits<float> {
+    static std::string GetName() { return "F"; }
+  };
+
+  template<>
+  struct PyNameTraits<double> {
+    static std::string GetName() { return "D"; }
+  };
+
+  template<>
+  struct PyNameTraits<size_t> {
+    static std::string GetName() { return "S"; }
+  };
+
+  template<typename T>
+  struct PyNameTraits<std::shared_ptr<T>> {
+    static std::string GetName()
+    { return std::string("sp_")+GetPyName<T>(); }
+  };
+
   template<typename T>
   Array<T> makeCArray(const py::object& obj)
   {
@@ -44,15 +94,14 @@ namespace ngcore
       static constexpr bool value = decltype(check((T*) nullptr))::value;
     };
   } // namespace detail
-  
+
   template <typename T, typename TIND=typename FlatArray<T>::index_type>
   void ExportArray (py::module &m)
   {
       using TFlat = FlatArray<T, TIND>;
       using TArray = Array<T, TIND>;
-      std::string suffix = std::string(Demangle(typeid(T).name())) + "_" + Demangle(typeid(TIND).name());
-      std::replace(suffix.begin(), suffix.end(), ':', '_');
-      std::replace(suffix.begin(), suffix.end(), ' ', '_');
+      std::string suffix = GetPyName<T>() + "_" +
+        GetPyName<TIND>();
       std::string fname = std::string("FlatArray_") + suffix;
       auto flatarray_class = py::class_<TFlat>(m, fname.c_str(),
                                                py::buffer_protocol())
@@ -73,7 +122,7 @@ namespace ngcore
                                if (i < base || i >= self.Size()+base)
                                  throw py::index_error();
                                self[i] = val;
-                               return self[i]; 
+                               return self[i];
                              },
               py::return_value_policy::reference)
 
@@ -85,11 +134,11 @@ namespace ngcore
                   throw py::error_already_set();
                 static constexpr int base = IndexBASE<TIND>();
                 if (start < base || start+(slicelength-1)*step >= self.Size()+base)
-                  throw py::index_error();                  
-                for (size_t i = 0; i < slicelength; i++, start+=step) 
-                  self[start] = val; 
+                  throw py::index_error();
+                for (size_t i = 0; i < slicelength; i++, start+=step)
+                  self[start] = val;
               })
-        
+
         .def("__iter__", [] ( TFlat & self) {
              return py::make_iterator (self.begin(),self.end());
              }, py::keep_alive<0,1>()) // keep array alive while iterator is used
@@ -143,7 +192,7 @@ namespace ngcore
   py::dict NGCORE_API CreateDictFromFlags(const Flags& flags);
 
   // ***************  Archiving functionality  **************
-  
+
     template<typename T>
     Archive& Archive :: Shallow(T& val)
     {
