@@ -11,6 +11,9 @@ extern double CalcTotalBad (const Mesh::T_POINTS & points,
 class MeshOptimize3d
 {
   const MeshingParameters & mp;
+
+  void BuildEdgeList( const Mesh & mesh, const TABLE<ElementIndex, PointIndex::BASE> & elementsonnode, Array<std::tuple<PointIndex, PointIndex>> & edges );
+
 public:
   MeshOptimize3d (const MeshingParameters & amp) : mp(amp) { ; }
 
@@ -23,6 +26,8 @@ public:
   void CombineImproveSequential (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
 
   void SplitImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
+
+  bool SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, const NgBitArray * working_elements, TABLE<ElementIndex,PointIndex::BASE> & elementsonnode, INDEX_3_HASHTABLE<int> & faces, PointIndex pi1, PointIndex pi2, bool check_only=false);
   void SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
 		    const NgBitArray * working_elements = NULL);
   void SwapImproveSurface (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
