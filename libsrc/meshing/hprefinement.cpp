@@ -615,6 +615,7 @@ namespace netgen
   void DoRefinement (Mesh & mesh, NgArray<HPRefElement> & elements,
 		     Refinement * ref, double fac1) 
   {
+    cout << "IN DOREFINEMENT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
     elements.SetAllocSize (5 * elements.Size());
     INDEX_2_HASHTABLE<int> newpts(elements.Size()+1);
     INDEX_3_HASHTABLE<int> newfacepts(elements.Size()+1);
@@ -1303,6 +1304,7 @@ namespace netgen
 
   void HPRefinement (Mesh & mesh, Refinement * ref, int levels, double fac1, bool setorders, bool reflevels)
   {
+    cout << "IN HPRefinement!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
     PrintMessage (1, "HP Refinement called, levels = ", levels);
 
  
@@ -1560,7 +1562,8 @@ namespace netgen
 bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
 		       NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
 			INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int & levels, int & act_ref)
-{ 
+{
+  cout << "IN CheckSingularities!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
   bool sing = 0; 
   if (mesh.GetDimension() == 3)
     {
@@ -1651,8 +1654,8 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	  }
 
 	edgepoint.Or (cornerpoint);
-	(*testout) << "cornerpoint = " << endl << cornerpoint << endl;
-	(*testout) << "edgepoint = " << endl << edgepoint << endl;
+	cout << "cornerpoint = " << endl << cornerpoint << endl;
+	cout << "edgepoint = " << endl << edgepoint << endl;
 
 	facepoint = 0;
 	for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
@@ -1722,14 +1725,14 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	    
 	    if (seg.singedge_left * levels >= act_ref)
 	      {
-		INDEX_2 i2 (mesh.LineSegment(i)[0], 
+		INDEX_2 i2 = INDEX_2::Sort(mesh.LineSegment(i)[0], 
 			    mesh.LineSegment(i)[1]);
 		edges.Set(i2,1); 
 		edgepoint.Set(i2.I1());
 		edgepoint.Set(i2.I2());
-		*testout << " singleft " << endl;  
-		*testout << " mesh.LineSegment(i).domout " << mesh.LineSegment(i).domout << endl;      
-		*testout << " mesh.LineSegment(i).domin " << mesh.LineSegment(i).domin << endl;      
+		cout << " singleft " << endl;  
+		cout << " mesh.LineSegment(i).domout " << mesh.LineSegment(i).domout << endl;      
+		cout << " mesh.LineSegment(i).domin " << mesh.LineSegment(i).domin << endl;      
 		edgepoint_dom.Set (INDEX_2(mesh.LineSegment(i).domin, i2.I1()), 1);
 		edgepoint_dom.Set (INDEX_2(mesh.LineSegment(i).domin, i2.I2()), 1);
 		sing = 1; 
@@ -1738,15 +1741,15 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	    
 	    if (seg.singedge_right * levels >= act_ref)
 	      {
-		INDEX_2 i2 (mesh.LineSegment(i)[1], 
+		INDEX_2 i2 = INDEX_2::Sort(mesh.LineSegment(i)[1], 
 			    mesh.LineSegment(i)[0]);  
 		edges.Set (i2, 1);
 		edgepoint.Set(i2.I1());
 		edgepoint.Set(i2.I2());
 		
-		*testout << " singright " << endl;  
-		*testout << " mesh.LineSegment(i).domout " << mesh.LineSegment(i).domout << endl;      
-		*testout << " mesh.LineSegment(i).domin " << mesh.LineSegment(i).domin << endl;      
+		cout << " singright " << endl;  
+		cout << " mesh.LineSegment(i).domout " << mesh.LineSegment(i).domout << endl;      
+		cout << " mesh.LineSegment(i).domin " << mesh.LineSegment(i).domin << endl;      
 		
 		edgepoint_dom.Set (INDEX_2(mesh.LineSegment(i).domout, i2.I1()), 1);
 		edgepoint_dom.Set (INDEX_2(mesh.LineSegment(i).domout, i2.I2()), 1);
@@ -1794,8 +1797,8 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 
 	edgepoint.Or (cornerpoint);
 
-	(*testout) << "2d sing edges: " << endl << edges << endl;
-	(*testout) << "2d cornerpoints: " << endl << cornerpoint << endl
+	cout << "2d sing edges: " << endl << edges << endl;
+	cout << "2d cornerpoints: " << endl << cornerpoint << endl
 		   << "2d edgepoints: " << endl << edgepoint << endl;
 	
 	facepoint = 0;
@@ -1804,6 +1807,8 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
     if (!sing)
       cout << "PrepareElements no more to do for actual refinement " << act_ref << endl; 
 
+    cout << "End CheckSingularities!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+    
     return(sing); 
 }
 
@@ -1811,6 +1816,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 
   bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, int & act_ref, int & levels)
   {
+    cout << "IN ClassifyHPElements!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
     INDEX_2_HASHTABLE<int> edges(mesh.GetNSeg()+1);
     NgBitArray edgepoint(mesh.GetNP());
     INDEX_2_HASHTABLE<int> edgepoint_dom(mesh.GetNSeg()+1);
@@ -1956,6 +1962,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
       if (misses[i])
 	cout << " in update classification missing case " << i << " occurred " << misses[i] << " times" << endl;
 
+    cout << "end ClassifyHPElements!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
     return(sing); 
   }
 }

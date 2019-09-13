@@ -664,8 +664,14 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 				INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int dim, const FaceDescriptor & fd)
 
 {
+  cout << "IN ClassifyTrig!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
   HPREF_ELEMENT_TYPE type = HP_NONE; 
-  
+  cout << "el.index = " << el.index << endl;
+  cout << "edges = " << edges << endl;
+  cout << "edgepoint_dom = " << edgepoint_dom << endl;
+  cout << "face_edges = " << face_edges << endl;
+  cout << "surf_edges = " << surf_edges << endl;
+  cout << "facepoint = " << facepoint << endl;
   int pnums[3]; 
   int p[3];   
   
@@ -686,9 +692,9 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 	{ 
 	  p[m] = (j+m)%3 +1; // local vertex number
 	  pnums[m] = el.PNum(p[m]); // global vertex number 
-	  // *testout << pnums[m] << " \t "; 
+	  cout << pnums[m] << " \t "; 
 	}
-      // *testout << endl ; 
+      cout << endl ; 
       
       if(dim == 3) 
 	{
@@ -761,11 +767,12 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 	      int ep1=p[eledges[k][0]-1];  
 	      int ep2=p[eledges[k][1]-1];  
 	     
-	      INDEX_2 i2(el.PNum(ep1),el.PNum(ep2));  
+	      INDEX_2 i2 = INDEX_2::Sort(el.PNum(ep1),el.PNum(ep2));
+              cout << "ep1 = " << ep1 << ", ep2 = " << ep2 << endl;
 	     
 	      if(edges.Used(i2)) 
 		{
-		  
+                  
 		  if(edgepoint_dom.Used(INDEX_2(fd.SurfNr(),pnums[ep1-1])) || 
 		     edgepoint_dom.Used(INDEX_2(-1,pnums[ep1-1])) || 
 		     edgepoint_dom.Used(INDEX_2(fd.SurfNr(),pnums[ep2-1])) || 
@@ -783,11 +790,10 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
      
 	 
       for(int k=0;k<3;k++) 
-	if(edgepoint.Test(pnums[k])) //edgepoint, but not member of sing_edge on trig -> cp 
+	if(edgepoint.Test(pnums[k]) && (edgepoint_dom.Used(INDEX_2(fd.SurfNr(),pnums[k])) || edgepoint_dom.Used(INDEX_2(-1,pnums[k])))) //edgepoint, but not member of sing_edge on trig -> cp 
 	  {
 	    INDEX_2 i2a=INDEX_2::Sort(el.PNum(p[k]), el.PNum(p[(k+1)%3])); 
-	    INDEX_2 i2b=INDEX_2::Sort(el.PNum(p[k]), el.PNum(p[(k+2)%3])); 
-	    
+	    INDEX_2 i2b=INDEX_2::Sort(el.PNum(p[k]), el.PNum(p[(k+2)%3]));
 	    if(!edges.Used(i2a) && !edges.Used(i2b)) 
 	      point_sing[p[k]-1] = 3; 	
 	  } 
@@ -796,8 +802,8 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 	if(cornerpoint.Test(el.PNum(p[k]))) 
 	  point_sing[p[k]-1] = 3; 
       
-      *testout << "point_sing = " << point_sing[0] << point_sing[1] << point_sing[2] << endl;
-
+      cout << "point_sing = " << point_sing[0] << point_sing[1] << point_sing[2] << endl;
+      cout << "edge_sing = " << edge_sing[0] << edge_sing[1] << edge_sing[2] << endl;
       if(edge_sing[0] + edge_sing[1] + edge_sing[2] == 0) 
         { 
           int ps = point_sing[0] + point_sing[1] + point_sing[2]; 
@@ -860,7 +866,7 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
       if(type!=HP_NONE) break;
     }
 
-  *testout << "type = " << type << endl;
+  cout << "type = " << type << endl;
     
   for(int k=0;k<3;k++) el[k] = pnums[k]; 
   /*if(type != HP_NONE) 
@@ -871,6 +877,7 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
     cout << " type "  << type << endl; 
     }
   */
+  cout << "End ClassifyTrig!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
       return(type);
 }
 #ifdef HPREF_OLD 
