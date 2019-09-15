@@ -63,7 +63,7 @@ DLL_HEADER void ExportGeom2d(py::module &m)
          py::arg("x"), py::arg("y"), py::arg("maxh") = 1e99, py::arg("hpref")=0, py::arg("name")="")
     .def("Append", FunctionPointer([](SplineGeometry2d &self, py::list segment, int leftdomain, int rightdomain,
                                       optional<variant<int, string>> bc, optional<int> copy, double maxh,
-                                      double hpref)
+                                      double hpref, double hprefleft, double hprefright)
 	  {
             auto segtype = py::cast<std::string>(segment[0]);
             
@@ -86,8 +86,8 @@ DLL_HEADER void ExportGeom2d(py::module &m)
             seg->leftdom = leftdomain;
             seg->rightdom = rightdomain;
             seg->hmax = maxh;
-            seg->hpref_left = hpref;
-            seg->hpref_right = hpref;
+            seg->hpref_left = max(hpref, hprefleft);
+            seg->hpref_right = max(hpref,hprefright);
             seg->reffak = 1;
             seg->copyfrom = -1;
             if (copy.has_value())
@@ -110,7 +110,7 @@ DLL_HEADER void ExportGeom2d(py::module &m)
             return self.GetNSplines()-1;
 	  }), py::arg("point_indices"), py::arg("leftdomain") = 1, py::arg("rightdomain") = py::int_(0),
          py::arg("bc")=nullopt, py::arg("copy")=nullopt, py::arg("maxh")=1e99,
-         py::arg("hpref")=0)
+         py::arg("hpref")=0,py::arg("hprefleft")=0,py::arg("hprefright")=0)
 
     
     .def("AppendSegment", FunctionPointer([](SplineGeometry2d &self, py::list point_indices, int leftdomain, int rightdomain)

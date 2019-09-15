@@ -1560,7 +1560,7 @@ namespace netgen
 bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
 		       NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
 			INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int & levels, int & act_ref)
-{ 
+{
   bool sing = 0; 
   if (mesh.GetDimension() == 3)
     {
@@ -1722,7 +1722,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	    
 	    if (seg.singedge_left * levels >= act_ref)
 	      {
-		INDEX_2 i2 (mesh.LineSegment(i)[0], 
+		INDEX_2 i2 = INDEX_2::Sort(mesh.LineSegment(i)[0], 
 			    mesh.LineSegment(i)[1]);
 		edges.Set(i2,1); 
 		edgepoint.Set(i2.I1());
@@ -1738,7 +1738,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	    
 	    if (seg.singedge_right * levels >= act_ref)
 	      {
-		INDEX_2 i2 (mesh.LineSegment(i)[1], 
+		INDEX_2 i2 = INDEX_2::Sort(mesh.LineSegment(i)[1], 
 			    mesh.LineSegment(i)[0]);  
 		edges.Set (i2, 1);
 		edgepoint.Set(i2.I1());

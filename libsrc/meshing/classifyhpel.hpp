@@ -664,7 +664,7 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 				INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int dim, const FaceDescriptor & fd)
 
 {
-  HPREF_ELEMENT_TYPE type = HP_NONE; 
+  HPREF_ELEMENT_TYPE type = HP_NONE;
   
   int pnums[3]; 
   int p[3];   
@@ -761,11 +761,10 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 	      int ep1=p[eledges[k][0]-1];  
 	      int ep2=p[eledges[k][1]-1];  
 	     
-	      INDEX_2 i2(el.PNum(ep1),el.PNum(ep2));  
+	      INDEX_2 i2 = INDEX_2::Sort(el.PNum(ep1),el.PNum(ep2));
 	     
 	      if(edges.Used(i2)) 
 		{
-		  
 		  if(edgepoint_dom.Used(INDEX_2(fd.SurfNr(),pnums[ep1-1])) || 
 		     edgepoint_dom.Used(INDEX_2(-1,pnums[ep1-1])) || 
 		     edgepoint_dom.Used(INDEX_2(fd.SurfNr(),pnums[ep2-1])) || 
@@ -783,10 +782,10 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
      
 	 
       for(int k=0;k<3;k++) 
-	if(edgepoint.Test(pnums[k])) //edgepoint, but not member of sing_edge on trig -> cp 
+	if(edgepoint.Test(pnums[k]) && (edgepoint_dom.Used(INDEX_2(fd.SurfNr(),pnums[k])) || edgepoint_dom.Used(INDEX_2(-1,pnums[k])))) //edgepoint, but not member of sing_edge on trig -> cp 
 	  {
 	    INDEX_2 i2a=INDEX_2::Sort(el.PNum(p[k]), el.PNum(p[(k+1)%3])); 
-	    INDEX_2 i2b=INDEX_2::Sort(el.PNum(p[k]), el.PNum(p[(k+2)%3])); 
+            INDEX_2 i2b=INDEX_2::Sort(el.PNum(p[k]), el.PNum(p[(k+2)%3]));
 	    
 	    if(!edges.Used(i2a) && !edges.Used(i2b)) 
 	      point_sing[p[k]-1] = 3; 	
@@ -794,7 +793,7 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
       
       for(int k=0;k<3;k++) 
 	if(cornerpoint.Test(el.PNum(p[k]))) 
-	  point_sing[p[k]-1] = 3; 
+	  point_sing[p[k]-1] = 3;
       
       *testout << "point_sing = " << point_sing[0] << point_sing[1] << point_sing[2] << endl;
 
