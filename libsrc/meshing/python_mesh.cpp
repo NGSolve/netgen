@@ -974,6 +974,15 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             *m2 = self;
             return m2;
           })
+    .def ("CalcMinMaxAngle", [](Mesh & self, double badel_limit)
+          {
+            double values[4];
+            self.CalcMinMaxAngle (badel_limit, values);
+            py::dict res;
+            res["trig"] = py::make_tuple( values[0], values[1] );
+            res["tet"] = py::make_tuple( values[2], values[3] );
+            return res;
+          }, py::arg("badelement_limit")=175.0)
     ;
 
   m.def("ImportMesh", [](const string& filename)
