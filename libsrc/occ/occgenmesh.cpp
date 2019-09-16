@@ -1252,12 +1252,12 @@ namespace netgen
 
                 mindist /= (occparam.resthcloseedgefac + VSMALL);
 
-                if (mindist < 1e-3)
+                if (mindist < 1e-3 * bb.Diam())
                   {
                     (*testout) << "extremely small local h: " << mindist
-                               << " --> setting to 1e-3" << endl;
+                               << " --> setting to " << 1e-3 * bb.Diam() << endl;
                     (*testout) << "somewhere near " << line.p0 << " - " << line.p1 << endl;
-                    mindist = 1e-3;
+                    mindist = 1e-3 * bb.Diam();
                   }
 
                 mesh.RestrictLocalHLine(line.p0, line.p1, mindist);
