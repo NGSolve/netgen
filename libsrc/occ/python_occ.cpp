@@ -19,7 +19,7 @@ static string occparameter_description = R"delimiter(
 OCC Specific Meshing Parameters
 -------------------------------
 
-closeedgefac: Optional[float] = 1.
+closeedgefac: Optional[float] = 2.
   Factor for meshing close edges, if None it is disabled.
 
 minedgelen: Optional[float] = 0.001
