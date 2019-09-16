@@ -3257,6 +3257,8 @@ namespace netgen
   void Mesh :: Compress ()
   {
     static Timer t("Mesh::Compress"); RegionTimer reg(t);
+    NgLock lock(mutex);
+    lock.Lock();
     
     NgArray<PointIndex,PointIndex::BASE,PointIndex> op2np(GetNP());
     NgArray<MeshPoint> hpoints;
@@ -3415,6 +3417,7 @@ namespace netgen
 
     //  FindOpenElements();
     timestamp = NextTimeStamp();
+    lock.UnLock();
   }
 
   void Mesh :: OrderElements()
