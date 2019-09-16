@@ -1350,10 +1350,15 @@ namespace netgen
 #endif
           if (ng_geometry)
 	    {
-              mesh = make_shared<Mesh> ();
-              // vsmesh.SetMesh (mesh);
-              SetGlobalMesh (mesh);
-              mesh -> SetGeometry(ng_geometry);
+              if (perfstepsstart == 1)
+                {
+                  mesh = make_shared<Mesh> ();
+                  // vsmesh.SetMesh (mesh);
+                  SetGlobalMesh (mesh);
+                  mesh -> SetGeometry(ng_geometry);
+                }
+              if(!mesh)
+                throw Exception("Need existing global mesh");
               mparam.perfstepsstart = perfstepsstart;
 	      mparam.perfstepsend = perfstepsend;
               int res = ng_geometry -> GenerateMesh (mesh, mparam);
