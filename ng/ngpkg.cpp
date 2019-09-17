@@ -1361,6 +1361,8 @@ namespace netgen
                 throw Exception("Need existing global mesh");
               mparam.perfstepsstart = perfstepsstart;
 	      mparam.perfstepsend = perfstepsend;
+              if(optstring)
+                mparam.optimize3d = *optstring;
               int res = ng_geometry -> GenerateMesh (mesh, mparam);
 
 	      if (res != MESHING3_OK) 
