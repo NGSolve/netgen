@@ -2228,7 +2228,7 @@ proc stloptionsdialog { } {
 }
 
 proc stldoctordialog { } {
-    Ng_STLDoctor 0 0
+    Ng_STLDoctor
     set wd .stldoctor_dlg
 
     if {[winfo exists .stldoctor_dlg] == 1} {
@@ -2642,17 +2642,17 @@ proc stldoctordialog { } {
 
     
     #tixControl $f.gtol -label "load-geometry tolerance factor" -integer false \
-	-variable stldoctor.geom_tol_fact \
-	-options {
+	# -variable stldoctor.geom_tol_fact \
+	# -options {
 	#    entry.width 8
 	#    label.width 30
 	#    label.anchor e
 	#}	
-    ttk::spinbox $f.gtol -from 1 -to 20 -textvariable stldoctor.geom_tol_fact -width 8
-    pack $f.gtol
+    ttk::label $f.gtol_lbl -text "LoadSTL tolerance factor"
+    ttk::spinbox $f.gtol -from 1e-15 -to 0.001 -textvariable stldoctor.geom_tol_fact -width 8
+    pack $f.gtol_lbl $f.gtol
 
     ttk::button $f.adap -text "Apply" -command {
-	.stldoctor_dlg.nb.advanced.gtol invoke
 	Ng_STLDoctor; 
     }
     pack $f.adap -expand yes

@@ -338,6 +338,18 @@ void STLTopology :: Save (const char* filename) const
 
 STLGeometry *  STLTopology ::Load (istream & ist)
 {
+  // Check if the file starts with "solid". If not, the file is binary
+  {
+    char buf[5+1];
+    FIOReadStringE(ist,buf,5);
+    if (strcmp(buf, "solid") != 0)
+    {
+      for (auto i : Range(5))
+        ist.unget();
+      return LoadBinary(ist);
+    }
+  }
+
   STLGeometry * geom = new STLGeometry();
 
   NgArray<STLReadTriangle> readtrigs;

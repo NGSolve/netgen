@@ -893,29 +893,127 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 
 
       
-bool MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
-				    const NgBitArray * working_elements,
-  TABLE<ElementIndex,PointIndex::BASE> & elementsonnode,
-  INDEX_3_HASHTABLE<int> & faces,
-  PointIndex pi1, PointIndex pi2, bool check_only
-                                    )
+  
+
+void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
+				    const NgBitArray * working_elements)
 {
+  static Timer t("MeshOptimize3d::SwapImprove"); RegionTimer reg(t);
+  static Timer tloop("MeshOptimize3d::SwapImprove loop");
+  
   PointIndex pi3(PointIndex::INVALID), pi4(PointIndex::INVALID),
     pi5(PointIndex::INVALID), pi6(PointIndex::INVALID);
-
-  double bad1, bad2, bad3;
+  int cnt = 0;
 
   Element el21(TET), el22(TET), el31(TET), el32(TET), el33(TET);
   Element el1(TET), el2(TET), el3(TET), el4(TET);
   Element el1b(TET), el2b(TET), el3b(TET), el4b(TET);
-  ArrayMem<ElementIndex, 20> hasbothpoints;
+  
+  double bad1, bad2, bad3;
 
-  bool do_swap = false;
+  int np = mesh.GetNP();
+  int ne = mesh.GetNE();
+  
+  // contains at least all elements at node
+  TABLE<ElementIndex,PointIndex::BASE> elementsonnode(np);
+
+  NgArray<ElementIndex> hasbothpoints;
+
+  PrintMessage (3, "SwapImprove ");
+  (*testout) << "\n" << "Start SwapImprove" << endl;
+
+  const char * savetask = multithread.task;
+  multithread.task = "Swap Improve";
+  
+  //  mesh.CalcSurfacesOfNode ();
+    
+  INDEX_3_HASHTABLE<int> faces(mesh.GetNOpenElements()/3 + 2);
+  if (goal == OPT_CONFORM)
+    {
+      for (int i = 1; i <= mesh.GetNOpenElements(); i++)
+	{
+	  const Element2d & hel = mesh.OpenElement(i);
+	  INDEX_3 face(hel[0], hel[1], hel[2]);
+	  face.Sort();
+	  faces.Set (face, 1);
+	}
+    }
+  
+  // Calculate total badness
+  if (goal == OPT_QUALITY)
+    {
+      bad1 = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
+      (*testout) << "Total badness = " << bad1 << endl;
+    }
+  
+  // find elements on node
+  for (ElementIndex ei = 0; ei < ne; ei++)
+    for (PointIndex pi : mesh[ei].PNums())
+      elementsonnode.Add (pi, ei);
+    /*
+    for (int j = 0; j < mesh[ei].GetNP(); j++)
+      elementsonnode.Add (mesh[ei][j], ei);
+    */
+
+
+  // INDEX_2_HASHTABLE<int> edgeused(2 * ne + 5);
+  INDEX_2_CLOSED_HASHTABLE<int> edgeused(12 * ne + 5);
+
+  tloop.Start();
+  for (ElementIndex ei = 0; ei < ne; ei++)
+    {
+      if (multithread.terminate)
+	break;
+      
+      if (mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
+      	continue;
+      
+      multithread.percent = 100.0 * (ei+1) / ne;
+
+      if ((mesh.ElementType(ei)) == FIXEDELEMENT)
+	continue;
+
+      if(working_elements && 
+	 ei < working_elements->Size() &&
+	 !working_elements->Test(ei))
+	continue;
+
+      if (mesh[ei].IsDeleted())
+	continue;
+
+      if ((goal == OPT_LEGAL) && 
+	  mesh.LegalTet (mesh[ei]) &&
+	  CalcBad (mesh.Points(), mesh[ei], 0) < 1e3)
+	continue;
+
+      //      int onlybedges = 1;
+
+      for (int j = 0; j < 6; j++)
+	{
+	  // loop over edges
+
+	  const Element & elemi = mesh[ei];
+	  if (elemi.IsDeleted()) continue;
+
+	  int mattyp = elemi.GetIndex();
+	  
+	  static const int tetedges[6][2] =
+	    { { 0, 1 }, { 0, 2 }, { 0, 3 },
+	      { 1, 2 }, { 1, 3 }, { 2, 3 } };
+
+	  PointIndex pi1 = elemi[tetedges[j][0]];
+	  PointIndex pi2 = elemi[tetedges[j][1]];
+
 	  if (pi2 < pi1) Swap (pi1, pi2);
 	 	  
-	  if (mesh.BoundaryEdge (pi1, pi2)) return false;
+	  if (mesh.BoundaryEdge (pi1, pi2)) continue;
 
 
+	  INDEX_2 i2 (pi1, pi2);
+	  i2.Sort();
+	  if (edgeused.Used(i2)) continue;
+	  edgeused.Set (i2, 1);
+	  
 	  hasbothpoints.SetSize (0);
 	  for (int k = 0; k < elementsonnode[pi1].Size(); k++)
 	    {
@@ -923,7 +1021,7 @@ bool MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
 	      ElementIndex elnr = elementsonnode[pi1][k];
 	      const Element & elem = mesh[elnr];
 	      
-	      if (elem.IsDeleted()) return false;
+	      if (elem.IsDeleted()) continue;
 	      
 	      for (int l = 0; l < elem.GetNP(); l++)
 		{
@@ -943,34 +1041,14 @@ bool MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
 		}
 	    }
 	  
+	  bool puretet = true;
 	  for (ElementIndex ei : hasbothpoints)
-          {
-            if (mesh[ei].GetType () != TET)
-              return false;
-
-            if (mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
-              return false;
-
-
-            if ((mesh.ElementType(ei)) == FIXEDELEMENT)
-              return false;
-
-            if(working_elements &&
-                ei < working_elements->Size() &&
-                !working_elements->Test(ei))
-              return false;
-
-            if (mesh[ei].IsDeleted())
-              return false;
-
-            if ((goal == OPT_LEGAL) &&
-                mesh.LegalTet (mesh[ei]) &&
-                CalcBad (mesh.Points(), mesh[ei], 0) < 1e3)
-              return false;
-          }
+	    if (mesh[ei].GetType () != TET)
+	      puretet = false;
+          
+	  if (!puretet) continue;
 
 	  int nsuround = hasbothpoints.Size();
-          int mattyp = mesh[hasbothpoints[0]].GetIndex();
 
 	  if ( nsuround == 3 )
 	    {
@@ -1026,6 +1104,9 @@ bool MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
 	      el33[2] = pi5;  
 	      el33[3] = pi3;  
 	      el33.SetIndex (mattyp);
+	      
+	      elementsonnode.Add (pi4, hasbothpoints[1]);
+	      elementsonnode.Add (pi3, hasbothpoints[2]);
 	      
 	      bad1 = CalcBad (mesh.Points(), el31, 0) + 
 		CalcBad (mesh.Points(), el32, 0) +
@@ -1096,8 +1177,7 @@ bool MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
 		{
 		  //		  (*mycout) << "3->2 " << flush;
 		  //		  (*testout) << "3->2 conversion" << endl;
-		  do_swap = true;
-                  if(check_only) return do_swap;
+		  cnt++;
 		  
 
 		  /*
@@ -1117,9 +1197,6 @@ bool MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
 		  for (int l = 0; l < 4; l++)
 		    mesh[hasbothpoints[2]][l].Invalidate();
 		  mesh[hasbothpoints[2]].Delete();
-
-                  elementsonnode.Add (pi4, hasbothpoints[1]);
-                  elementsonnode.Add (pi3, hasbothpoints[2]);
 
 		  for (int k = 0; k < 2; k++)
 		    for (int l = 0; l < 4; l++)
@@ -1328,8 +1405,7 @@ bool MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
 	      if (swap2 || swap3)
 		{
 		  // (*mycout) << "4->4 " << flush;
-		  do_swap = true;
-                  if(check_only) return do_swap;
+		  cnt++;
 		  //		  (*testout) << "4->4 conversion" << "\n";
 		  /*
 		    (*testout) << "bad1 = " << bad1 
@@ -1591,8 +1667,7 @@ bool MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
 	      if (bestl != -1)
 		{
 		  // (*mycout) << nsuround << "->" << 2 * (nsuround-2) << " " << flush;
-		  do_swap = true;
-                  if(check_only) return do_swap;
+		  cnt++;
 		  
 		  for (int k = bestl+1; k <= nsuround + bestl - 2; k++)
 		    {
@@ -1642,105 +1717,53 @@ bool MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
 		    }
 		}
 	    }
-          return do_swap;
-}
-
-void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
-				    const NgBitArray * working_elements)
-{
-  static Timer t("MeshOptimize3d::SwapImprove"); RegionTimer reg(t);
-  static Timer tloop("MeshOptimize3d::SwapImprove loop");
-
-  int cnt = 0;
-
-  int np = mesh.GetNP();
-  int ne = mesh.GetNE();
-
-  mesh.BoundaryEdge (1,2); // ensure the boundary-elements table is built
-
-  // contains at least all elements at node
-  TABLE<ElementIndex,PointIndex::BASE> elementsonnode(np);
-
-  NgArray<ElementIndex> hasbothpoints;
-
-  PrintMessage (3, "SwapImprove ");
-  (*testout) << "\n" << "Start SwapImprove" << endl;
-
-  const char * savetask = multithread.task;
-  multithread.task = "Swap Improve";
-
-  INDEX_3_HASHTABLE<int> faces(mesh.GetNOpenElements()/3 + 2);
-  if (goal == OPT_CONFORM)
-    {
-      for (int i = 1; i <= mesh.GetNOpenElements(); i++)
-	{
-	  const Element2d & hel = mesh.OpenElement(i);
-	  INDEX_3 face(hel[0], hel[1], hel[2]);
-	  face.Sort();
-	  faces.Set (face, 1);
 	}
+
+      /*
+	if (onlybedges)
+	{
+	(*testout) << "bad tet: " 
+	<< volelements.Get(i)[0] 
+	<< volelements.Get(i)[1] 
+	<< volelements.Get(i)[2] 
+	<< volelements.Get(i)[3] << "\n";
+
+	if (!mesh.LegalTet (volelements.Get(i)))
+	cerr << "Illegal tet" << "\n";
+	}
+      */
     }
-
-  // Calculate total badness
-  if (goal == OPT_QUALITY)
-    {
-      double bad1 = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
-      (*testout) << "Total badness = " << bad1 << endl;
-    }
-
-  // find elements on node
-  for (ElementIndex ei = 0; ei < ne; ei++)
-    for (PointIndex pi : mesh[ei].PNums())
-      elementsonnode.Add (pi, ei);
-
-  Array<std::tuple<PointIndex,PointIndex>> edges;
-  BuildEdgeList(mesh, elementsonnode, edges);
-
-  Array<int> candidate_edges(edges.Size());
-  std::atomic<int> improvement_counter(0);
-
-  tloop.Start();
-
-  ParallelForRange(Range(edges), [&] (auto myrange)
-  {
-    for(auto i : myrange)
-    {
-      if (multithread.terminate)
-        break;
-
-      auto [pi0, pi1] = edges[i];
-      if(SwapImproveEdge (mesh, goal, working_elements, elementsonnode, faces, pi0, pi1, true))
-        candidate_edges[improvement_counter++] = i;
-    }
-  });
-  // Sequential version:
-  /*
-  for(auto i : edges.Range())
-  {
-    if (multithread.terminate)
-      break;
-
-    auto [pi0, pi1] = edges[i];
-    if(SwapImproveEdge (mesh, goal, working_elements, elementsonnode, faces, pi0, pi1, true))
-      candidate_edges[improvement_counter++] = i;
-  }
-  */
-
-  auto edges_with_improvement = candidate_edges.Part(0, improvement_counter.load());
-  QuickSort(edges_with_improvement);
-
-  for(auto ei : edges_with_improvement)
-  {
-      auto [pi0,pi1] = edges[ei];
-        if(SwapImproveEdge (mesh, goal, working_elements, elementsonnode, faces, pi0, pi1, false))
-          cnt++;
-  }
-
+  //  (*mycout) << endl;
   tloop.Stop();
-
+  /*  
+      cout << "edgeused: ";
+      edgeused.PrintMemInfo(cout);
+  */
   PrintMessage (5, cnt, " swaps performed");
 
+
+
+
+
   mesh.Compress ();
+
+  /*
+  if (goal == OPT_QUALITY)
+    {
+      bad1 = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
+      //      (*testout) << "Total badness = " << bad1 << endl;
+    }
+  */
+
+  /*
+    for (i = 1; i <= GetNE(); i++)
+    if (volelements.Get(i)[0])
+    if (!mesh.LegalTet (volelements.Get(i)))
+    {
+    cout << "detected illegal tet, 2" << endl;
+    (*testout) << "detected illegal tet1: " << i << endl;
+    }
+  */
 
   multithread.task = savetask;
 }

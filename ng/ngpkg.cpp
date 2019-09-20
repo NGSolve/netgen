@@ -405,6 +405,7 @@ namespace netgen
     PrintMessage (2, mesh->GetNP(), " Points, ",
 		  mesh->GetNE(), " Elements.");
 
+    SetGlobalMesh (mesh);
     mesh->SetGlobalH (mparam.maxh);
     mesh->CalcLocalH(mparam.grading);
 
@@ -1372,6 +1373,12 @@ namespace netgen
 		  return 0;
 		}
 	    }
+          else if (mesh)
+            {
+              MeshVolume(mparam, *mesh);
+              OptimizeVolume(mparam, *mesh);
+              return 0;
+            }
           else // no ng_geometry
             {
               multithread.task = savetask;
