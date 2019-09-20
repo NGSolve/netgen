@@ -1373,6 +1373,12 @@ namespace netgen
 		  return 0;
 		}
 	    }
+          else if (mesh)
+            {
+              MeshVolume(mparam, *mesh);
+              OptimizeVolume(mparam, *mesh);
+              return 0;
+            }
           else // no ng_geometry
             {
               multithread.task = savetask;
