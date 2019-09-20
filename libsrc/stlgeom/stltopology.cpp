@@ -711,7 +711,8 @@ void STLTopology :: FindNeighbourTrigs()
 
 
 
-  for (STLTrigId ti = 0; ti < GetNT(); ti++)
+  // for (STLTrigId ti = 0; ti < GetNT(); ti++)
+  for (STLTrigId ti : Range(trias))
     {
       STLTriangle & trig = trias[ti];
       for (int k = 0; k < 3; k++)

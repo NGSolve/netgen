@@ -488,7 +488,7 @@ void STLTriangle :: ProjectInPlain(const Array<Point<3>,STLPointId>& ap,
   pp = pp + (nfact) * nt;
 }
 
-int STLTriangle :: PointInside(const Array<Point<3>,STLPointId> & ap, 
+bool STLTriangle :: PointInside(const Array<Point<3>,STLPointId> & ap, 
 			       const Point<3> & pp) const
 {
   const Point<3> & p1 = ap[PNum(1)];
@@ -560,14 +560,12 @@ double STLTriangle :: GetNearestPoint(const Array<Point<3>,STLPointId>& ap,
     }
 }
 
-int STLTriangle :: HasEdge(int p1, int p2) const
+bool STLTriangle :: HasEdge(STLPointId p1, STLPointId p2) const
 {
-  int i;
-  for (i = 1; i <= 3; i++)
-    {
-      if (p1 == PNum(i) && p2 == PNumMod(i+1)) {return 1;}
-    }
-  return 0;
+  for (int i = 1; i <= 3; i++)
+    if (p1 == PNum(i) && p2 == PNumMod(i+1))
+      return true;
+  return false;
 }
 
 ostream& operator<<(ostream& os, const STLTriangle& t)
@@ -590,7 +588,7 @@ STLTopEdge :: STLTopEdge ()
   status = ED_UNDEFINED;
 }
 
-STLTopEdge :: STLTopEdge (int p1, int p2, int trig1, int trig2)
+STLTopEdge :: STLTopEdge (STLPointId p1, STLPointId p2, int trig1, int trig2)
 { 
   pts[0] = p1; 
   pts[1] = p2; 

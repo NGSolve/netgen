@@ -28,10 +28,11 @@ public:
   constexpr STLPointId (int ai) : i(ai) { ; }
   STLPointId & operator= (const STLPointId & ai) { i = ai.i; return *this; }
   STLPointId & operator= (int ai) { i = ai; return *this; }
-  operator int () const { return i; }
+  constexpr operator int () const { return i; }
   STLPointId operator++ (int) { return i++; }
   STLPointId operator-- (int) { return i--; }
-
+  STLPointId & operator++ () { i++; return *this; }
+  
   void DoArchive(Archive& ar) { ar & i; }
 };
 
@@ -45,9 +46,11 @@ public:
   constexpr STLTrigId (int ai) : i(ai) { ; }
   STLTrigId & operator= (const STLTrigId & ai) { i = ai.i; return *this; }
   STLTrigId & operator= (int ai) { i = ai; return *this; }
-  operator int () const { return i; }
+  constexpr operator int () const { return i; }
   STLTrigId operator++ (int) { return i++; }
   STLTrigId operator-- (int) { return i--; }
+  STLTrigId & operator++ () { i++; return *this; }
+  
 };
 
 
@@ -199,7 +202,7 @@ public:
 		      const Vec<3> & nproj, 
 		      Point<3> & pp, Vec<3> & lam) const;
 
-  int PointInside(const Array<Point<3>,STLPointId>& ap, const Point<3> & pp) const;
+  bool PointInside(const Array<Point<3>,STLPointId>& ap, const Point<3> & pp) const;
 
   //get nearest point on triangle and distance to it
   double GetNearestPoint(const Array<Point<3>,STLPointId>& ap, 
@@ -214,7 +217,7 @@ public:
   int GetFaceNum() {return facenum;}
   void SetFaceNum(int i) {facenum = i;}
 
-  int HasEdge(int p1, int p2) const;
+  bool HasEdge(STLPointId p1, STLPointId p2) const;
 };
 
 
@@ -225,22 +228,22 @@ public:
  */
 class STLTopEdge 
 {
-  int pts[2];  
+  STLPointId pts[2];  
   int trigs[2];  
   double cosangle;
   int status;  // excluded, confirmed, candidate, undefined
 public:
   STLTopEdge ();
-  STLTopEdge (int p1, int p2, int trig1, int trig2);
+  STLTopEdge (STLPointId p1, STLPointId p2, int trig1, int trig2);
 
-  int operator[] (int i) const { return pts[i]; }
-  int & operator[] (int i) { return pts[i]; }
+  STLPointId operator[] (int i) const { return pts[i]; }
+  STLPointId & operator[] (int i) { return pts[i]; }
 
 
-  int PNum(int i) const { return pts[(i-1)]; }
-  int & PNum(int i) { return pts[(i-1)]; }
-  int PNumMod(int i) const { return pts[(i-1)%2]; }
-  int & PNumMod(int i)  { return pts[(i-1)%2]; }
+  STLPointId PNum(int i) const { return pts[(i-1)]; }
+  STLPointId & PNum(int i) { return pts[(i-1)]; }
+  STLPointId PNumMod(int i) const { return pts[(i-1)%2]; }
+  STLPointId & PNumMod(int i)  { return pts[(i-1)%2]; }
 
   int TrigNum(int i) const { return trigs[(i-1)]; }
   int & TrigNum(int i) { return trigs[(i-1)]; }
@@ -275,7 +278,7 @@ protected:
   // mapping of sorted pair of points to topedge
   INDEX_2_HASHTABLE<int> * ht_topedges;
   // mapping of node to trigs
-  TABLE<int> trigsperpoint; 
+  TABLE<int, IndexBASE<STLPointId>()> trigsperpoint; 
   // mapping of node to edges
   TABLE<int> topedgesperpoint; 
   
