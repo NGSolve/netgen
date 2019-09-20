@@ -1116,7 +1116,7 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParame
   }
 }
 
-void STLGeometry :: RestrictHChartDistOneChart(int chartnum, NgArray<int>& acttrigs, 
+void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& acttrigs, 
 					       class Mesh & mesh, double gh, double fact, double minh,
                                                const STLParameters& stlparam)
 {

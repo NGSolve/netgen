@@ -69,10 +69,10 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
   double sinchartangle = sin(chartangle);
   double sinouterchartangle = sin(outerchartangle);
 
-  NgArray<int> outermark(GetNT());     //marks all trigs form actual outer region
-  NgArray<int> outertested(GetNT());   //marks tested trigs for outer region
-  NgArray<int> pointstochart(GetNP()); //point in chart becomes chartnum
-  NgArray<int> innerpointstochart(GetNP()); //point in chart becomes chartnum
+  NgArray<ChartId> outermark(GetNT());     //marks all trigs form actual outer region
+  NgArray<ChartId> outertested(GetNT());   //marks tested trigs for outer region
+  NgArray<ChartId> pointstochart(GetNP()); //point in chart becomes chartnum
+  NgArray<ChartId> innerpointstochart(GetNP()); //point in chart becomes chartnum
   NgArray<int> chartpoints;             //point in chart becomes chartnum
   NgArray<int> innerchartpoints;
   NgArray<Point<3>> innerchartpts;
@@ -86,38 +86,32 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
   //int chartboundarydivisions = 10;
   markedsegs.SetSize(0); //for testing!!!
 
-  NgArray<int> chartpointchecked(GetNP()); //for dirty-chart-trigs
+  NgArray<ChartId> chartpointchecked(GetNP()); //for dirty-chart-trigs
 
-  pointstochart.SetSize(GetNP());
-  innerpointstochart.SetSize(GetNP());
   chartmark.SetSize(GetNT());
 
-  for (int i = 1; i <= GetNP(); i++)
-    {
-      innerpointstochart.Elem(i) = 0;
-      pointstochart.Elem(i) = 0;
-      chartpointchecked.Elem(i) = 0;
-    }
+  innerpointstochart = ChartId::INVALID;
+  pointstochart = ChartId::INVALID;
+  chartpointchecked = ChartId::INVALID;
 
   double eps = 1e-12 * Dist (boundingbox.PMin(), boundingbox.PMax());
 
   int spiralcheckon = stldoctor.spiralcheck;
   if (!spiralcheckon) {PrintWarning("++++++++++++\nspiral deactivated by user!!!!\n+++++++++++++++"); }
 
-  chartmark = 0;
-  outermark = 0;
-  outertested = 0;
+  chartmark = ChartId::INVALID;
+  outermark = ChartId::INVALID;
+  outertested = ChartId::INVALID;
 
   double atlasarea = Area();
   double workedarea = 0;
   double showinc = 100.*5000./(double)GetNT();
   double nextshow = 0;
-  // Point<3> startp;
   int lastunmarked = 1;
 
   PrintMessage(5,"one dot per 5000 triangles: ");
 
-  int markedtrigcnt = 0;
+  size_t markedtrigcnt = 0;
   while (markedtrigcnt < GetNT())
     {
       if (multithread.terminate) { PopStatus(); return; }
@@ -128,11 +122,9 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 
       SetThreadPercent(100.0 * workedarea / atlasarea);
 
-      STLChart * chart = new STLChart(this, stlparam);
-      atlas.Append(chart);
-
-      // *testout << "Chart " << atlas.Size() << endl;
-
+      atlas.Append (make_unique<STLChart> (this, stlparam));
+      STLChart & chart = *atlas.Last();
+      
       //find unmarked trig
       int prelastunmarked = lastunmarked;
 
@@ -149,29 +141,29 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
       innerchartpoints.SetSize(0);
       innerchartpts.SetSize(0);
       chartbound.Clear();
-      chartbound.SetChart(chart);
+      chartbound.SetChart(&chart);
       
       chartbound.BuildSearchTree();  // different !!!
 
-      if (!found) { PrintSysError("Make Atlas, no starttrig found"); return; }
+      if (!found) { throw Exception("Make Atlas, no starttrig found"); }
 
       //find surrounding trigs
       // int starttrig = j;
       int starttrig = lastunmarked;
 
-      Point<3> startp = GetPoint(GetTriangle(starttrig).PNum(1));
+      Point<3> startp = GetPoint(GetTriangle(starttrig)[0]);
 
-      int accepted;
-      int chartnum = GetNOCharts();
+      bool accepted;
+      ChartId chartnum = GetNOCharts();
 	  
       Vec<3> sn = GetTriangle(starttrig).Normal();
-      chart->SetNormal (startp, sn);
+      chart.SetNormal (startp, sn);
       
       // *testout << "first trig " << starttrig << ", n = " << sn << endl;
 
       SetMarker(starttrig, chartnum);
       markedtrigcnt++;
-      chart->AddChartTrig(starttrig);
+      chart.AddChartTrig(starttrig);
       chartbound.AddTriangle(GetTriangle(starttrig));
 
       workedarea += GetTriangle(starttrig).Area(points);
@@ -195,11 +187,11 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 	{   
 	  changed = false;
 	  oldstartic2 = oldstartic;
-	  oldstartic = chart->GetNT();
+	  oldstartic = chart.GetNT();
 	  //	      for (ic = oldstartic2; ic <= chart->GetNT(); ic++)
 	  for (int ic = oldstartic2; ic <= oldstartic; ic++)
 	    {
-	      int i = chart->GetTrig(ic);
+	      int i = chart.GetTrig(ic);
 	      if (GetMarker(i) == chartnum)
 		{
 		  for (int j = 1; j <= NONeighbourTrigs(i); j++)
@@ -215,7 +207,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 			  if ( (n2 * sn) >= coschartangle )
 			    {
                               // *testout << "good angle " << endl;
-			      accepted = 1;
+			      accepted = true;
 			      /*
 				//alter spiralentest, schnell, aber ungenau
 			      for (k = 1; k <= 3; k++)
@@ -261,7 +253,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 				      Vec<3> n3 = GetTriangle(nnt).Normal();
 				      if ( (n3 * sn) >= coschartangle  &&
 					   IsSmoothEdge (nnp1, nnp2) )
-					accepted = 1;
+					accepted = true;
 				    }
 				  if (!accepted) 
                                     break;
@@ -275,7 +267,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 				  changed = true;
 				  markedtrigcnt++;
 				  workedarea += GetTriangle(nt).Area(points);
-				  chart->AddChartTrig(nt);
+				  chart.AddChartTrig(nt);
 
 				  chartbound.AddTriangle(GetTriangle(nt));
 
@@ -320,11 +312,11 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 	{   
 	  changed = false;
 	  oldstartic2 = oldstartic;
-	  oldstartic = chart->GetNT();
+	  oldstartic = chart.GetNT();
 
 	  for (int ic = oldstartic2; ic <= oldstartic; ic++)
 	    {
-	      int i = chart->GetTrig(ic);
+	      int i = chart.GetTrig(ic);
 	      if (outermark.Get(i) != chartnum) continue;
 	      
 	      for (int j = 1; j <= NONeighbourTrigs(i); j++)
@@ -350,7 +342,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 		  //abfragen, ob noch im tolerierten Winkel
 		  if ( (n2 * sn) >= cosouterchartangle )
 		    {
-		      accepted = 1;
+		      accepted = true;
 		      
                       // NgProfiler::StartTimer (timer4);
 		      bool isdirtytrig = false;
@@ -392,7 +384,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 				Vec<3> n3 = GetTriangle(nnt).Normal();
 				if ( (n3 * sn) >= cosouterchartangle  &&
 				     IsSmoothEdge (nnp1, nnp2) )
-				  accepted = 1;
+				  accepted = true;
                                 // NgProfiler::StopTimer (timer4e);                                
 			      }
                             // NgProfiler::StopTimer (timer4b);                            
@@ -411,12 +403,12 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 		      if (accepted)
 			{
                           // NgProfiler::StartTimer (timer5a);
-			  accepted = 0;
+			  accepted = false;
 			  
 			  for (int k = 1; k <= 3; k++)
 			    if (innerpointstochart.Get(ntrig.PNum(k)) == chartnum)
 			      {
-				accepted = 1; 
+				accepted = true; 
 				break;
 			      }
 
@@ -445,7 +437,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 				    double tdist = Dist2(pt, innerchartpts[l]);
 				    if (tdist < 4 * h2)
 				      {
-					accepted = 1; 
+					accepted = true; 
 					break;
 				      }
 				  }
@@ -464,7 +456,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 			  if (GetMarker(nt) != chartnum)
 			    {
 			      chartbound.AddTriangle(GetTriangle(nt));
-			      chart->AddOuterTrig(nt);
+			      chart.AddOuterTrig(nt);
 			      for (int k = 1; k <= 3; k++)
 				{
 				  if (pointstochart.Get(GetTriangle(nt).PNum(k))
@@ -486,26 +478,26 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
       // NgProfiler::StartTimer (timere);      
       // NgProfiler::StartTimer (timere1);      
       //end of while loop for outer chart
-      GetDirtyChartTrigs(chartnum, *chart, outermark, chartpointchecked, dirtycharttrigs);
+      GetDirtyChartTrigs(chartnum, chart, outermark, chartpointchecked, dirtycharttrigs);
       //dirtycharttrigs are local (chart) point numbers!!!!!!!!!!!!!!!!
 
       if (dirtycharttrigs.Size() != 0 && 
-	  (dirtycharttrigs.Size() != chart->GetNChartT() || dirtycharttrigs.Size() != 1))
+	  (dirtycharttrigs.Size() != chart.GetNChartT() || dirtycharttrigs.Size() != 1))
 	{
-	  if (dirtycharttrigs.Size() == chart->GetNChartT() && dirtycharttrigs.Size() != 1)
+	  if (dirtycharttrigs.Size() == chart.GetNChartT() && dirtycharttrigs.Size() != 1)
 	    {
 	      //if all trigs would be eliminated -> leave 1 trig!
 	      dirtycharttrigs.SetSize(dirtycharttrigs.Size() - 1);
 	    }
 	  for (int k = 1; k <= dirtycharttrigs.Size(); k++)
 	    {
-	      int tn = chart->GetChartTrig(dirtycharttrigs.Get(k));
+	      int tn = chart.GetChartTrig(dirtycharttrigs.Get(k));
 	      outermark.Elem(tn) = 0; //not necessary, for later use
 	      SetMarker(tn, 0); 
 	      markedtrigcnt--;
 	      workedarea -= GetTriangle(tn).Area(points);
 	    }
-	  chart->MoveToOuterChart(dirtycharttrigs);
+	  chart.MoveToOuterChart(dirtycharttrigs);
 	  lastunmarked = 1;
 	  lastunmarked = prelastunmarked;
 	}
@@ -537,7 +529,8 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 
   int cnttrias = 0;
   outerchartspertrig.SetSize(GetNT());
-  for (int i = 1; i <= atlas.Size(); i++)
+  // for (int i = 1; i <= atlas.Size(); i++)
+  for (ChartId i : atlas.Range())
     {
       for (int j = 1; j <= GetChart(i).GetNT(); j++)
 	{
@@ -633,22 +626,9 @@ int STLGeometry :: GetMarker(int i) const
   return chartmark.Get(i);
 }
 */
-void STLGeometry :: SetMarker(int nr, int m) 
+void STLGeometry :: SetMarker(int nr, ChartId m) 
 {
   chartmark.Elem(nr) = m;
-}
-int STLGeometry :: GetNOCharts() const
-{
-  return atlas.Size();
-}
-const STLChart& STLGeometry :: GetChart(int nr) const 
-{
-  if (nr > atlas.Size()) 
-    {
-      PrintSysError("GetChart(", nr, ") not possible!!!");
-      nr = 1;
-    }
-  return *(atlas.Get(nr));
 }
 
 int STLGeometry :: AtlasMade() const
@@ -671,7 +651,7 @@ int AddIfNotExists(NgArray<int>& list, int x)
 }
 */
 
-void STLGeometry :: GetInnerChartLimes(NgArray<twoint>& limes, int chartnum)
+void STLGeometry :: GetInnerChartLimes(NgArray<twoint>& limes, ChartId chartnum)
 {
   int j, k;
   
@@ -732,8 +712,8 @@ void STLGeometry :: GetInnerChartLimes(NgArray<twoint>& limes, int chartnum)
 
 
 void STLGeometry :: GetDirtyChartTrigs(int chartnum, STLChart& chart,
-				       const NgArray<int>& outercharttrigs,
-				       NgArray<int>& chartpointchecked,
+				       const NgArray<ChartId>& outercharttrigs,
+				       NgArray<ChartId>& chartpointchecked,
 				       NgArray<int>& dirtytrigs)
 {
   dirtytrigs.SetSize(0);

@@ -23,6 +23,11 @@
 
 #include <meshing.hpp>
 
+#include "stltopology.hpp"
+#include "stltool.hpp"
+#include "stlline.hpp"
+ 
+
 
 namespace netgen
 {
@@ -44,10 +49,6 @@ namespace netgen
   
 
 
-#include "stltopology.hpp"
-#include "stltool.hpp"
-#include "stlline.hpp"
- 
 
 
 
@@ -138,9 +139,9 @@ namespace netgen
     //spiralpoints:
     NgArray<int> spiralpoints;
     //
-    NgArray<STLChart*> atlas;
+    Array<unique_ptr<STLChart>, ChartId> atlas;
     //marks all already charted trigs with chartnumber
-    NgArray<int> chartmark; 
+    NgArray<ChartId> chartmark; 
     //outerchartspertrig, ascending sorted
     TABLE<int> outerchartspertrig;
 
@@ -367,8 +368,8 @@ namespace netgen
     void AddConeAndSpiralEdges(const STLParameters& stlparam);
     void AddFaceEdges(); //each face should have at least one starting edge (outherwise it won't be meshed)
 
-    void GetDirtyChartTrigs(int chartnum, STLChart& chart, const NgArray<int>& outercharttrigs, 
-			    NgArray<int>& chartpointchecked, NgArray<int>& dirtytrigs);
+    void GetDirtyChartTrigs(int chartnum, STLChart& chart, const NgArray<ChartId>& outercharttrigs, 
+			    NgArray<ChartId>& chartpointchecked, NgArray<int>& dirtytrigs);
 
     void ClearSpiralPoints();
     void SetSpiralPoint(int pn) {spiralpoints.Elem(pn) = 1;};
@@ -378,7 +379,7 @@ namespace netgen
 
     // smooth edges: sharp geometric edges not declared as edges
     void BuildSmoothEdges ();
-    int IsSmoothEdge (int pi1, int pi2) const;
+    bool IsSmoothEdge (int pi1, int pi2) const;
 
 
     //make charts with regions of a max. angle
@@ -394,16 +395,16 @@ namespace netgen
  
     //get chart number of a trig or 0 if unmarked
     int GetChartNr(int i) const;
-    int GetMarker(int i) const 
+    ChartId GetMarker(int i) const 
     { return chartmark.Get(i); }
-    void SetMarker(int nr, int m);
-    int GetNOCharts() const;
+    void SetMarker(int nr, ChartId m);
+    int GetNOCharts() const { return atlas.Size(); }
     //get a chart from atlas
-    const STLChart& GetChart(int nr) const;
-    STLChart& GetChart(int nr) {return *(atlas.Get(nr));};
+    const STLChart& GetChart(ChartId nr) const { return *atlas[nr];};
+    STLChart & GetChart(ChartId nr) { return *atlas[nr];};
     int AtlasMade() const;
   
-    void GetInnerChartLimes(NgArray<twoint>& limes, int chartnum);
+    void GetInnerChartLimes(NgArray<twoint>& limes, ChartId chartnum);
 
     //FOR MESHING
     int GetMeshChartNr () { return meshchart; }
@@ -452,7 +453,7 @@ namespace netgen
 
     DLL_HEADER void RestrictLocalH(class Mesh & mesh, double gh, const STLParameters& stlparam);
     void RestrictLocalHCurv(class Mesh & mesh, double gh, const STLParameters& stlparam);
-    void RestrictHChartDistOneChart(int chartnum, NgArray<int>& acttrigs, class Mesh & mesh, 
+    void RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& acttrigs, class Mesh & mesh, 
 				    double gh, double fact, double minh, const STLParameters& stlparam);
 
     friend class MeshingSTLSurface;

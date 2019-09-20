@@ -282,7 +282,7 @@ STLReadTriangle :: STLReadTriangle (const Point<3> * apts,
 
 
 
-STLTriangle :: STLTriangle(const int * apts)
+STLTriangle :: STLTriangle(const STLPointId * apts)
 {
   pts[0] = apts[0];
   pts[1] = apts[1];
@@ -349,11 +349,11 @@ int STLTriangle :: GetNeighbourPointsAndOpposite(const STLTriangle& t, int& p1, 
   return 0;
 }
 
-Vec<3> STLTriangle :: GeomNormal(const NgArray<Point<3> >& ap) const
+Vec<3> STLTriangle :: GeomNormal(const Array<Point<3>,STLPointId>& ap) const
 {
-  const Point<3> & p1 = ap.Get(PNum(1));
-  const Point<3> & p2 = ap.Get(PNum(2));
-  const Point<3> & p3 = ap.Get(PNum(3));
+  const Point<3> & p1 = ap[PNum(1)];
+  const Point<3> & p2 = ap[PNum(2)];
+  const Point<3> & p3 = ap[PNum(3)];
   
   return Cross(p2-p1, p3-p1);
 }
@@ -382,13 +382,13 @@ void STLTriangle :: ChangeOrientation()
 
 
 
-double STLTriangle :: Area(const NgArray<Point<3> >& ap) const
+double STLTriangle :: Area(const Array<Point<3>,STLPointId>& ap) const
 {
-  return 0.5 * Cross(ap.Get(PNum(2))-ap.Get(PNum(1)), 
-		     ap.Get(PNum(3))-ap.Get(PNum(1))).Length();
+  return 0.5 * Cross(ap[PNum(2)]-ap[PNum(1)], 
+		     ap[PNum(3)]-ap[PNum(1)]).Length();
 }
 
-double STLTriangle :: MinHeight(const NgArray<Point<3> >& ap) const
+double STLTriangle :: MinHeight(const Array<Point<3>,STLPointId>& ap) const
 {
   double ml = MaxLength(ap);
   if (ml != 0) {return 2.*Area(ap)/ml;}
@@ -396,19 +396,19 @@ double STLTriangle :: MinHeight(const NgArray<Point<3> >& ap) const
   return 0;
 }
 
-double STLTriangle :: MaxLength(const NgArray<Point<3> >& ap) const
+double STLTriangle :: MaxLength(const Array<Point<3>,STLPointId>& ap) const
 {
-  return max3(Dist(ap.Get(PNum(1)),ap.Get(PNum(2))),
-	      Dist(ap.Get(PNum(2)),ap.Get(PNum(3))),
-	      Dist(ap.Get(PNum(3)),ap.Get(PNum(1))));
+  return max3(Dist(ap[PNum(1)],ap[PNum(2)]),
+	      Dist(ap[PNum(2)],ap[PNum(3)]),
+	      Dist(ap[PNum(3)],ap[PNum(1)]));
 }
 
-void STLTriangle :: ProjectInPlain(const NgArray<Point<3> >& ap, 
+void STLTriangle :: ProjectInPlain(const Array<Point<3>,STLPointId>& ap, 
 				   const Vec<3> & n, Point<3> & pp) const
 {
-  const Point<3> & p1 = ap.Get(PNum(1));
-  const Point<3> & p2 = ap.Get(PNum(2));
-  const Point<3> & p3 = ap.Get(PNum(3));
+  const Point<3> & p1 = ap[PNum(1)];
+  const Point<3> & p2 = ap[PNum(2)];
+  const Point<3> & p3 = ap[PNum(3)];
   
   Vec<3> v1 = p2 - p1;
   Vec<3> v2 = p3 - p1;
@@ -430,13 +430,13 @@ void STLTriangle :: ProjectInPlain(const NgArray<Point<3> >& ap,
 }
 
 
-int STLTriangle :: ProjectInPlain (const NgArray<Point<3> >& ap, 
+int STLTriangle :: ProjectInPlain (const Array<Point<3>,STLPointId>& ap, 
 				   const Vec<3> & nproj, 
 				   Point<3> & pp, Vec<3> & lam) const
 {
-  const Point<3> & p1 = ap.Get(PNum(1));
-  const Point<3> & p2 = ap.Get(PNum(2));
-  const Point<3> & p3 = ap.Get(PNum(3));
+  const Point<3> & p1 = ap[PNum(1)];
+  const Point<3> & p2 = ap[PNum(2)];
+  const Point<3> & p3 = ap[PNum(3)];
   
   Vec<3> v1 = p2-p1;
   Vec<3> v2 = p3-p1;
@@ -468,12 +468,12 @@ int STLTriangle :: ProjectInPlain (const NgArray<Point<3> >& ap,
 
 
 
-void STLTriangle :: ProjectInPlain(const NgArray<Point<3> >& ap, 
+void STLTriangle :: ProjectInPlain(const Array<Point<3>,STLPointId>& ap, 
 				   Point<3> & pp) const
 {
-  const Point<3> & p1 = ap.Get(PNum(1));
-  const Point<3> & p2 = ap.Get(PNum(2));
-  const Point<3> & p3 = ap.Get(PNum(3));
+  const Point<3> & p1 = ap[PNum(1)];
+  const Point<3> & p2 = ap[PNum(2)];
+  const Point<3> & p3 = ap[PNum(3)];
   
   Vec<3> v1 = p2 - p1;
   Vec<3> v2 = p3 - p1;
@@ -488,12 +488,12 @@ void STLTriangle :: ProjectInPlain(const NgArray<Point<3> >& ap,
   pp = pp + (nfact) * nt;
 }
 
-int STLTriangle :: PointInside(const NgArray<Point<3> > & ap, 
+int STLTriangle :: PointInside(const Array<Point<3>,STLPointId> & ap, 
 			       const Point<3> & pp) const
 {
-  const Point<3> & p1 = ap.Get(PNum(1));
-  const Point<3> & p2 = ap.Get(PNum(2));
-  const Point<3> & p3 = ap.Get(PNum(3));
+  const Point<3> & p1 = ap[PNum(1)];
+  const Point<3> & p2 = ap[PNum(2)];
+  const Point<3> & p3 = ap[PNum(3)];
   
   Vec<3> v1 = p2 - p1;
   Vec<3> v2 = p3 - p1;
@@ -532,7 +532,7 @@ int STLTriangle :: PointInside(const NgArray<Point<3> > & ap,
   return 0; 
 }
 
-double STLTriangle :: GetNearestPoint(const NgArray<Point<3> >& ap, 
+double STLTriangle :: GetNearestPoint(const Array<Point<3>,STLPointId>& ap, 
 				      Point<3> & p3d) const
 {
   Point<3> p = p3d;
@@ -548,7 +548,7 @@ double STLTriangle :: GetNearestPoint(const NgArray<Point<3> >& ap,
       for (int j = 1; j <= 3; j++)
 	{
 	  p = p3d;
-	  dist = GetDistFromLine(ap.Get(PNum(j)), ap.Get(PNumMod(j+1)), p);
+	  dist = GetDistFromLine(ap[PNum(j)], ap[PNumMod(j+1)], p);
 	  if (dist < nearest)
 	    {
 	      nearest = dist; 
@@ -690,15 +690,15 @@ void STLChart :: AddOuterTrig(int i)
     {searchtree->Insert (pmin, pmax, i);}
 }
 
-int STLChart :: IsInWholeChart(int nr) const
+bool STLChart :: IsInWholeChart(int nr) const
 {
   for (int i = 1; i <= charttrigs.Size(); i++)
-    if (charttrigs.Get(i) == nr) return 1;
+    if (charttrigs.Get(i) == nr) return true;
 
   for (int i = 1; i <= outertrigs.Size(); i++)
-    if (outertrigs.Get(i) == nr) return 1;
+    if (outertrigs.Get(i) == nr) return true;
 
-  return 0;
+  return false;
 }
 
 void STLChart :: GetTrianglesInBox (const Point3d & pmin,
@@ -1040,8 +1040,8 @@ void STLBoundary ::AddTriangle(const STLTriangle & t)
   // NgProfiler::StopTimer (timer_new);  
 }
 
-int STLBoundary :: TestSeg(const Point<3>& p1, const Point<3> & p2, const Vec<3> & sn, 
-			   double sinchartangle, int divisions, NgArray<Point<3> >& points, double eps)
+bool STLBoundary :: TestSeg(const Point<3>& p1, const Point<3> & p2, const Vec<3> & sn, 
+                            double sinchartangle, int divisions, Array<Point<3>,STLPointId>& points, double eps)
 {
   if (usechartnormal)
     return TestSegChartNV (p1, p2, sn);
@@ -1276,7 +1276,7 @@ void STLBoundary :: DeleteSearchTree()
 }
 
 // checks, whether 2d projection intersects
-int STLBoundary :: TestSegChartNV(const Point3d & p1, const Point3d& p2, 
+bool STLBoundary :: TestSegChartNV(const Point3d & p1, const Point3d& p2, 
 				  const Vec3d& sn)
 {
   // static int timerquick = NgProfiler::CreateTimer ("TestSegChartNV-searchtree");

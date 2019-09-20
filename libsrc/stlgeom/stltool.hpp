@@ -1,7 +1,6 @@
 #ifndef FILE_STLTOOL
 #define FILE_STLTOOL
 
-
 //#include "gprim/gprim.hh"
 
 /**************************************************************************/
@@ -11,7 +10,7 @@
 /* Date:   20. Nov. 99                                                    */
 /**************************************************************************/
 
-
+namespace netgen {
 
 // use one normal vector for whole chart
 extern int usechartnormal;
@@ -40,6 +39,32 @@ typedef NgArray <int> * ArrayINTPTR;
 class STLGeometry;
 class STLParameters;
 
+// typedef int ChartId
+class ChartId
+{
+  int i;
+public:
+  class t_invalid { public: constexpr t_invalid() = default; };
+  static constexpr t_invalid INVALID{};
+  
+  ChartId() { }
+  constexpr ChartId(t_invalid inv) : i(0) { ; }
+  constexpr ChartId(int ai) : i(ai) { } 
+  operator int() const { return i; }
+  ChartId operator++ (int) { ChartId hi(*this); i++; return hi; }
+  ChartId & operator++ () { i++; return *this; }
+};
+}
+
+namespace ngcore
+{
+  template<> 
+  constexpr netgen::ChartId IndexBASE<netgen::ChartId> () { return netgen::ChartId(1); }
+}
+
+
+namespace netgen  {
+  
 class STLChart
 {
 private:
@@ -60,7 +85,7 @@ public:
   void AddChartTrig(int i);
   void AddOuterTrig(int i);
   
-  int IsInWholeChart(int nr) const;
+  bool IsInWholeChart(int nr) const;
 
   int GetChartTrig(int i) const {return charttrigs.Get(i);}
   int GetOuterTrig(int i) const {return outertrigs.Get(i);}
@@ -118,13 +143,13 @@ class STLBoundarySeg
   //  Point<2> p2dmin, p2dmax;
 
   double rad;
-  int i1, i2;
+  STLPointId i1, i2;
   int smoothedge;
 public:
   STLBoundarySeg () { ; }
-  STLBoundarySeg (int ai1, int ai2, const NgArray<Point<3> > & points,
+  STLBoundarySeg (STLPointId ai1, STLPointId ai2, const Array<Point<3>,STLPointId> & points,
 		  const STLChart * chart)
-    : p1(points.Get(ai1)), p2(points.Get(ai2)),
+    : p1(points[ai1]), p2(points[ai2]),
       i1(ai1), i2(ai2)
   {
     center = ::netgen::Center (p1, p2);
@@ -182,11 +207,11 @@ public:
 
   void BuildSearchTree();
   void DeleteSearchTree();
-  int TestSeg(const Point<3> & p1, const Point<3> & p2, const Vec<3> & sn, 
-	      double sinchartangle, int divisions, NgArray<Point<3> >& points,
-	      double eps);
-
-  int TestSegChartNV(const Point3d& p1, const Point3d& p2, const Vec3d& sn);
+  bool TestSeg(const Point<3> & p1, const Point<3> & p2, const Vec<3> & sn, 
+               double sinchartangle, int divisions, Array<Point<3>,STLPointId>& points,
+               double eps);
+  
+  bool TestSegChartNV(const Point3d& p1, const Point3d& p2, const Vec3d& sn);
 };
 
 
@@ -292,6 +317,6 @@ void STLSurfaceOptimization (STLGeometry & geom,
 			     const MeshingParameters & mparam);
 
 
-
+} // namespace netgen
 
 #endif

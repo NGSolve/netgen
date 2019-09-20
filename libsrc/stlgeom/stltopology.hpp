@@ -14,40 +14,57 @@
 */
 
 
+namespace netgen {
+
 class STLGeometry;
 
-#define STLBASE 1
+  // #define STLBASE 1
 
-class STLPointIndex
+class STLPointId
 {
   int i;
 public:
-  STLPointIndex () { ; }
-  STLPointIndex (int ai) : i(ai) { ; }
-  STLPointIndex & operator= (const STLPointIndex & ai) { i = ai.i; return *this; }
-  STLPointIndex & operator= (int ai) { i = ai; return *this; }
+  STLPointId () { ; }
+  constexpr STLPointId (int ai) : i(ai) { ; }
+  STLPointId & operator= (const STLPointId & ai) { i = ai.i; return *this; }
+  STLPointId & operator= (int ai) { i = ai; return *this; }
   operator int () const { return i; }
-  STLPointIndex operator++ (int) { return i++; }
-  STLPointIndex operator-- (int) { return i--; }
+  STLPointId operator++ (int) { return i++; }
+  STLPointId operator-- (int) { return i--; }
+
+  void DoArchive(Archive& ar) { ar & i; }
 };
 
 
 
-class STLTrigIndex
+class STLTrigId
 {
   int i;
 public:
-  STLTrigIndex () { ; }
-  STLTrigIndex (int ai) : i(ai) { ; }
-  STLTrigIndex & operator= (const STLTrigIndex & ai) { i = ai.i; return *this; }
-  STLTrigIndex & operator= (int ai) { i = ai; return *this; }
+  STLTrigId () { ; }
+  constexpr STLTrigId (int ai) : i(ai) { ; }
+  STLTrigId & operator= (const STLTrigId & ai) { i = ai.i; return *this; }
+  STLTrigId & operator= (int ai) { i = ai; return *this; }
   operator int () const { return i; }
-  STLTrigIndex operator++ (int) { return i++; }
-  STLTrigIndex operator-- (int) { return i--; }
+  STLTrigId operator++ (int) { return i++; }
+  STLTrigId operator-- (int) { return i--; }
 };
 
 
+}
 
+
+namespace ngcore
+{
+  template<> 
+  constexpr netgen::STLPointId IndexBASE<netgen::STLPointId> () { return netgen::STLPointId(1); }
+  template<> 
+  constexpr netgen::STLTrigId IndexBASE<netgen::STLTrigId> () { return netgen::STLTrigId(1); }
+}
+
+
+
+namespace netgen {
 
 
 // triangle structure for loading stl files
@@ -73,7 +90,7 @@ class STLTriangle
   // normalized stored normal vector ??
   Vec<3> normal;
   // point numbers of triangle
-  int pts[3];
+  STLPointId pts[3];
   // front-side and back-side domains
   int domains[2];
 
@@ -93,22 +110,23 @@ public:
 
 
 
-  STLTriangle (const int * apts);
+  STLTriangle (const STLPointId * apts);
   STLTriangle () {pts[0]=0;pts[1]=0;pts[2]=0;}
 
   void DoArchive(Archive& ar)
   {
     ar.Do(&topedges[0],3);
     ar.Do(&nbtrigs[0][0], 6);
-    ar.Do(&pts[0],3);
+    // ar.Do(&pts[0],3);
+    ar & pts[0] & pts[1] & pts[2];
     ar.Do(&domains[0],2);
     size_t i = flags.toperror;
     ar & normal & box & center & rad & facenum & i;
     flags.toperror = i;
   }
 
-  int operator[] (int i) const { return pts[i]; }
-  int & operator[] (int i) { return pts[i]; }
+  STLPointId operator[] (int i) const { return pts[i]; }
+  STLPointId & operator[] (int i) { return pts[i]; }
 
   int EdgeNum(int i) const { return topedges[(i-1)]; }
   int & EdgeNum(int i) { return topedges[(i-1)]; }
@@ -123,10 +141,10 @@ public:
 
 
   // obsolete:
-  int PNum(int i) const { return pts[(i-1)]; }
-  int & PNum(int i) { return pts[(i-1)]; }
-  int PNumMod(int i) const { return pts[(i-1)%3]; }
-  int & PNumMod(int i)  { return pts[(i-1)%3]; }
+  STLPointId PNum(int i) const { return pts[(i-1)]; }
+  STLPointId & PNum(int i) { return pts[(i-1)]; }
+  STLPointId PNumMod(int i) const { return pts[(i-1)%3]; }
+  STLPointId & PNumMod(int i)  { return pts[(i-1)%3]; }
 
   int EdgeNumMod(int i) const { return topedges[(i-1)%3]; }
   int & EdgeNumMod(int i)  { return topedges[(i-1)%3]; }
@@ -149,7 +167,7 @@ public:
 
 
   // NON-normalized geometry - normal vector
-  Vec<3> GeomNormal(const NgArray<Point<3> >& ap) const;
+  Vec<3> GeomNormal(const Array<Point<3>,STLPointId>& ap) const;
   
   // Stored normal vector, normalized
   void SetNormal (const Vec<3> & n);
@@ -159,10 +177,10 @@ public:
   void ChangeOrientation(); 
 
   //project with a certain normal vector in plane
-  void ProjectInPlain(const NgArray<Point<3> >& ap, 
+  void ProjectInPlain(const Array<Point<3>, STLPointId>& ap, 
 		      const Vec<3> & n, Point<3> & pp) const;
   //project with the triangle's normal vector in plane
-  void ProjectInPlain(const NgArray<Point<3> > & ap, Point<3> & pp) const;
+  void ProjectInPlain(const Array<Point<3>, STLPointId> & ap, Point<3> & pp) const;
 
 
   /*
@@ -177,20 +195,20 @@ public:
     
     pp(output) = P1 + lam1 v1 + lam2 v2
   */
-  int ProjectInPlain (const NgArray<Point<3> >& ap, 
+  int ProjectInPlain (const Array<Point<3>,STLPointId>& ap, 
 		      const Vec<3> & nproj, 
 		      Point<3> & pp, Vec<3> & lam) const;
 
-  int PointInside(const NgArray<Point<3> >& ap, const Point<3> & pp) const;
+  int PointInside(const Array<Point<3>,STLPointId>& ap, const Point<3> & pp) const;
 
   //get nearest point on triangle and distance to it
-  double GetNearestPoint(const NgArray<Point<3> >& ap, 
+  double GetNearestPoint(const Array<Point<3>,STLPointId>& ap, 
 			 Point<3> & p3d) const;
 
-  double Area(const NgArray<Point<3> >& ap) const;
+  double Area(const Array<Point<3>,STLPointId>& ap) const;
 
-  double MinHeight(const NgArray<Point<3> >& ap) const;
-  double MaxLength(const NgArray<Point<3> >& ap) const; 
+  double MinHeight(const Array<Point<3>,STLPointId>& ap) const;
+  double MaxLength(const Array<Point<3>,STLPointId>& ap) const; 
   //max length of a side of triangle
 
   int GetFaceNum() {return facenum;}
@@ -250,9 +268,9 @@ ostream& operator<<(ostream& os, const STLTriangle& t);
 class STLTopology
 {
 protected:
-  NgArray<STLTriangle> trias;
+  Array<STLTriangle, STLTrigId> trias;
   NgArray<STLTopEdge> topedges;
-  NgArray<Point<3> > points;
+  Array<Point<3>, STLPointId> points;
 
   // mapping of sorted pair of points to topedge
   INDEX_2_HASHTABLE<int> * ht_topedges;
@@ -312,24 +330,24 @@ public:
 
   int GetNP() const { return points.Size(); }
   int AddPoint(const Point<3> & p) { points.Append(p); return points.Size(); }
-  const Point<3> & GetPoint(int nr) const { return points.Get(nr); }
+  const Point<3> & GetPoint(int nr) const { return points[nr]; } // .Get(nr); }
   int GetPointNum (const Point<3> & p);
-  void SetPoint(int nr, const Point<3> & p) { points.Elem(nr) = p; }
-  const NgArray<Point<3> >& GetPoints() const { return points; }
+  void SetPoint(int nr, const Point<3> & p) { points[nr] = p; } // { points.Elem(nr) = p; }
+  auto & GetPoints() const { return points; }
 
-  const Point<3> & operator[] (STLPointIndex i) const { return points[i]; }
-  Point<3> & operator[] (STLPointIndex i) { return points[i]; }
+  const Point<3> & operator[] (STLPointId i) const { return points[i]; }
+  Point<3> & operator[] (STLPointId i) { return points[i]; }
 
 
 
 
   int GetNT() const { return trias.Size(); }
   void AddTriangle(const STLTriangle& t);
-  const STLTriangle & GetTriangle (int nr) const { return trias.Get(nr); }
-  STLTriangle & GetTriangle (int nr) { return trias.Elem(nr); }
+  const STLTriangle & GetTriangle (int nr) const { return trias[nr]; } // .Get(nr); }
+  STLTriangle & GetTriangle (int nr) { return trias[nr]; } // .Elem(nr); }
   
-  const STLTriangle & operator[] (STLTrigIndex i) const { return trias[i]; }
-  STLTriangle & operator[] (STLTrigIndex i) { return trias[i]; }
+  const STLTriangle & operator[] (STLTrigId i) const { return trias[i]; }
+  STLTriangle & operator[] (STLTrigId i) { return trias[i]; }
 
 
   int GetNTE() const { return topedges.Size(); }
@@ -376,5 +394,6 @@ public:
   const Box<3> & GetBoundingBox () const { return boundingbox; }
 };
 
+} // namespace netgen
 
 #endif

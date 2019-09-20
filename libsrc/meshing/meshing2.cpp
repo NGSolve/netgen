@@ -759,6 +759,7 @@ namespace netgen
 	      {
 		for (int i = 1; i <= chartboundpoints.Size(); i++)
 		  {
+                    pindex.Append(-1);
 		    plainpoints.Append (chartboundpoints.Get(i));
 		    locpoints.Append (chartboundpoints3d.Get(i));
 		    legalpoints.Append (0);
@@ -1986,6 +1987,20 @@ namespace netgen
 namespace netgen
 {
   void glrender (int wait)
-  { ; }
+  { ;
+    /*
+    if (multithread.drawing)
+      {
+	//      vssurfacemeshing.Render();
+	// Render ();
+      
+	if (wait || multithread.testmode)
+	  {
+	    multithread.pause = 1;
+	  }
+	while (multithread.pause);
+      }
+    */    
+  }
 }
 #endif

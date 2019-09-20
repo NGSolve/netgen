@@ -581,59 +581,57 @@ int STLLine :: GetRightTrig(int nr) const
   return righttrigs.Get(nr);
 };
 
-double STLLine :: GetSegLen(const NgArray<Point<3> >& ap, int nr) const
+double STLLine :: GetSegLen(const Array<Point<3>,STLPointId>& ap, int nr) const
 {
-  return Dist(ap.Get(PNum(nr)),ap.Get(PNum(nr+1)));
+  return Dist(ap[PNum(nr)],ap[PNum(nr+1)]);
 }
 
-double STLLine :: GetLength(const NgArray<Point<3> >& ap) const
+double STLLine :: GetLength(const Array<Point<3>,STLPointId>& ap) const
 {
   double len = 0;
   for (int i = 2; i <= pts.Size(); i++)
-    {
-      len += (ap.Get(pts.Get(i)) - ap.Get(pts.Get(i-1))).Length();
-    }
+    len += (ap[pts.Get(i)] - ap[pts.Get(i-1)]).Length();
   return len;
 }
 
-void STLLine :: GetBoundingBox (const NgArray<Point<3> > & ap, Box<3> & box) const
+void STLLine :: GetBoundingBox (const Array<Point<3>,STLPointId> & ap, Box<3> & box) const
 {
-  box.Set (ap.Get (pts[0]));
+  box.Set (ap[pts[0]]);
   for (int i = 1; i < pts.Size(); i++)
-    box.Add (ap.Get(pts[i]));
+    box.Add (ap[pts[i]]);
 }
 
 
 
 Point<3> STLLine :: 
-GetPointInDist(const NgArray<Point<3> >& ap, double dist, int& index) const
+GetPointInDist(const Array<Point<3>,STLPointId>& ap, double dist, int& index) const
 {
   if (dist <= 0)
     {
       index = 1;
-      return ap.Get(StartP());
+      return ap[StartP()];
     }
   
   double len = 0;
   int i;
   for (i = 1; i < pts.Size(); i++)
     {
-      double seglen = Dist (ap.Get(pts.Get(i)),
-			    ap.Get(pts.Get(i+1)));
+      double seglen = Dist (ap[pts.Get(i)],
+			    ap[pts.Get(i+1)]);
 
       if (len + seglen > dist)
 	{
 	  index = i;
 	  double relval = (dist - len) / (seglen + 1e-16);
-	  Vec3d v (ap.Get(pts.Get(i)), ap.Get(pts.Get(i+1)));
-	  return ap.Get(pts.Get(i)) + relval * v;
+	  Vec3d v (ap[pts.Get(i)], ap[pts.Get(i+1)]);
+	  return ap[pts.Get(i)] + relval * v;
 	}
 
       len += seglen;
     }
 
   index = pts.Size() - 1;
-  return ap.Get(EndP());
+  return ap[EndP()];
 }
 
 
@@ -644,7 +642,7 @@ double GetH(const Point3d& p, double x)
   return stlgh;//+0.5)*(x+0.5);
 }
 */
-STLLine* STLLine :: Mesh(const NgArray<Point<3> >& ap, 
+STLLine* STLLine :: Mesh(const Array<Point<3>,STLPointId>& ap, 
 			 NgArray<Point3d>& mp, double ghi,
 			 class Mesh& mesh) const
 {
@@ -720,7 +718,7 @@ STLLine* STLLine :: Mesh(const NgArray<Point<3> >& ap,
   int j = 1;
 
 
-  p = ap.Get(StartP());
+  p = ap[StartP()];
   int pn = AddPointIfNotExists(mp, p, 1e-10*diam);
 
   int segn = 1;
@@ -773,7 +771,7 @@ STLLine* STLLine :: Mesh(const NgArray<Point<3> >& ap,
   NgProfiler::StartTimer (timer3);
 
 
-  p = ap.Get(EndP());
+  p = ap[EndP()];
   pn = AddPointIfNotExists(mp, p, 1e-10*diam);
   segn = GetNS();
   line->AddPoint(pn);

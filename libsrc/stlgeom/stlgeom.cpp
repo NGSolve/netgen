@@ -64,7 +64,7 @@ void STLMeshing (STLGeometry & geom,
 
 STLGeometry :: ~STLGeometry()
 {
-  for (auto p : atlas) delete p;
+  // for (auto p : atlas) delete p;
   delete edgedata;
   delete ref;
 }
@@ -1389,7 +1389,7 @@ void STLGeometry :: DestroyDirtyTrigs()
 	    {
 	      for (k = i+1; k <= GetNT(); k++)
 		{
-		  trias.Elem(k-1) = trias.Get(k);
+		  trias[k-1] = trias[k];
 		  // readtrias: not longer permanent, JS
 		  //		  readtrias.Elem(k-1) = readtrias.Get(k); 
 		}
@@ -1495,8 +1495,8 @@ void STLGeometry :: PrintSelectInfo()
   //int p = GetTriangle(trig).PNum(GetNodeOfSelTrig());
   
   PrintMessage(1,"touch triangle ", GetSelectTrig()
-       , ", local node ", GetNodeOfSelTrig()
-       , " (=", GetTriangle(GetSelectTrig()).PNum(GetNodeOfSelTrig()), ")");
+               , ", local node ", GetNodeOfSelTrig()
+               , " (=", int(GetTriangle(GetSelectTrig()).PNum(GetNodeOfSelTrig())), ")");
   if (AtlasMade() && GetSelectTrig() >= 1 && GetSelectTrig() <= GetNT())
     {
       PrintMessage(1,"           chartnum=",GetChartNr(GetSelectTrig()));
@@ -1533,11 +1533,11 @@ void STLGeometry :: ShowSelectedTrigCoords()
   if (st >= 1 && st <= GetNT())
     {
       PrintMessage(1, "coordinates of selected trig ", st, ":");
-      PrintMessage(1, "   p1 = ", GetTriangle(st).PNum(1), " = ", 
+      PrintMessage(1, "   p1 = ", int(GetTriangle(st).PNum(1)), " = ", 
 		   Point3d (GetPoint(GetTriangle(st).PNum(1))));
-      PrintMessage(1, "   p2 = ", GetTriangle(st).PNum(2), " = ", 
+      PrintMessage(1, "   p2 = ", int(GetTriangle(st).PNum(2)), " = ", 
 		   Point3d (GetPoint(GetTriangle(st).PNum(2))));
-      PrintMessage(1, "   p3 = ", GetTriangle(st).PNum(3), " = ", 
+      PrintMessage(1, "   p3 = ", int(GetTriangle(st).PNum(3)), " = ", 
 		   Point3d (GetPoint(GetTriangle(st).PNum(3))));
     }
 }
@@ -3111,10 +3111,10 @@ void STLGeometry :: BuildSmoothEdges ()
 
 
 
-int STLGeometry :: IsSmoothEdge (int pi1, int pi2) const
+bool STLGeometry :: IsSmoothEdge (int pi1, int pi2) const
 {
   if (!smoothedges)
-    return 0;
+    return false;
   INDEX_2 i2(pi1, pi2);
   i2.Sort();
   return smoothedges->Used (i2);
@@ -3138,7 +3138,7 @@ int IsInArray(int n, const NgArray<int>& ia)
 void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
 {
   PrintMessage(5,"have now ", GetNE(), " edges with yellow angle = ", stlparam.yangle, " degree");
-
+  
   PrintFnStart("AddConeAndSpiralEdges");
 
   int i,j,k,n;

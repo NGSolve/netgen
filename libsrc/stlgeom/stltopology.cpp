@@ -515,9 +515,9 @@ void STLTopology :: InitSTLGeometry(const NgArray<STLReadTriangle> & readtrigs)
 	      foundpos = AddPoint(p);
 	      pointtree->Insert (p, foundpos);
 	    }
-          if (Dist(p, points.Get(foundpos)) > 1e-10)
-            cout << "identify close points: " << p << " " << points.Get(foundpos) 
-                 << ", dist = " << Dist(p, points.Get(foundpos))
+          if (Dist(p, points[foundpos]) > 1e-10)
+            cout << "identify close points: " << p << " " << points[foundpos]
+                 << ", dist = " << Dist(p, points[foundpos])
                  << endl;
 	  st[k] = foundpos;
 	}
@@ -711,14 +711,14 @@ void STLTopology :: FindNeighbourTrigs()
 
 
 
-  for (STLTrigIndex ti = 0; ti < GetNT(); ti++)
+  for (STLTrigId ti = 0; ti < GetNT(); ti++)
     {
       STLTriangle & trig = trias[ti];
       for (int k = 0; k < 3; k++)
 	{
-	  STLPointIndex pi = trig[k] - STLBASE;
-	  STLPointIndex pi2 = trig[(k+1)%3] - STLBASE;
-	  STLPointIndex pi3 = trig[(k+2)%3] - STLBASE;
+	  STLPointId pi = trig[k]; //  - STLBASE;
+	  STLPointId pi2 = trig[(k+1)%3]; //  - STLBASE;
+	  STLPointId pi3 = trig[(k+2)%3]; // - STLBASE;
 	  
 	  // vector along edge
 	  Vec<3> ve = points[pi2] - points[pi];
@@ -736,24 +736,24 @@ void STLTopology :: FindNeighbourTrigs()
 
 	  for (int j = 0; j < trigsperpoint[pi].Size(); j++)
 	    {
-	      STLTrigIndex ti2 = trigsperpoint[pi][j] - STLBASE;
+	      STLTrigId ti2 = trigsperpoint[pi][j]; //  - STLBASE;
 	      const STLTriangle & trig2 = trias[ti2];
 
 	      if (ti == ti2) continue;
 	      
 	      bool hasboth = 0;
 	      for (int l = 0; l < 3; l++)
-		if (trig2[l] - STLBASE == pi2)
+		if (trig2[l] /* - STLBASE */ == pi2)
 		  {
 		    hasboth = 1;
 		    break;
 		  }
 	      if (!hasboth) continue;
 
-	      STLPointIndex pi4(0);
+	      STLPointId pi4(0);
 	      for (int l = 0; l < 3; l++)
-		if (trig2[l] - STLBASE != pi && trig2[l] - STLBASE != pi2)
-		  pi4 = trig2[l] - STLBASE;
+		if (trig2[l] /* - STLBASE */ != pi && trig2[l] /* - STLBASE */ != pi2)
+		  pi4 = trig2[l] /* - STLBASE */;
 
 	      Vec<3> vt2 = points[pi4] - points[pi];
 	      
@@ -763,12 +763,12 @@ void STLTopology :: FindNeighbourTrigs()
 	      if (phi < phimin)
 		{
 		  phimin = phi;
-		  trig.NBTrig (0, (k+2)%3) = ti2 + STLBASE;
+		  trig.NBTrig (0, (k+2)%3) = ti2; //  + STLBASE;
 		}
 	      if (phi > phimax)
 		{
 		  phimax = phi;
-		  trig.NBTrig (1, (k+2)%3) = ti2 + STLBASE;
+		  trig.NBTrig (1, (k+2)%3) = ti2; //  + STLBASE;
 		}
 	    }
 	}
