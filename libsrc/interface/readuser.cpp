@@ -666,7 +666,6 @@ namespace netgen
 
         for (auto ti : IntRange(geom->GetNT()))
         {
-          auto & trig = geom->GetTriangle(ti);
           Element2d el(TRIG);
           for (auto i : IntRange(3))
             el[i] = (*geom)[STLTrigIndex(ti)][i];
