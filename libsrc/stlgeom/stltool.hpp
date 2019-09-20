@@ -69,9 +69,9 @@ class STLChart
 {
 private:
   STLGeometry * geometry;
-  NgArray<int> charttrigs; // trigs which only belong to this chart
-  NgArray<int> outertrigs; // trigs which belong to other charts
-  BoxTree<3> * searchtree; // ADT containing outer trigs
+  Array<STLTrigId> charttrigs; // trigs which only belong to this chart
+  Array<STLTrigId> outertrigs; // trigs which belong to other charts
+  BoxTree<3,STLTrigId> * searchtree; // ADT containing outer trigs
 
   NgArray<twoint> olimit; //outer limit of outer chart
   NgArray<twoint> ilimit; //outer limit of inner chart
@@ -82,35 +82,35 @@ public:
   
   STLChart(STLGeometry * ageometry, const STLParameters& astlparam);
   ~STLChart();
-  void AddChartTrig(int i);
-  void AddOuterTrig(int i);
+  void AddChartTrig(STLTrigId i);
+  void AddOuterTrig(STLTrigId i);
   
   bool IsInWholeChart(int nr) const;
 
-  int GetChartTrig(int i) const {return charttrigs.Get(i);}
-  int GetOuterTrig(int i) const {return outertrigs.Get(i);}
+  STLTrigId GetChartTrig1(int i) const {return charttrigs[i-1];}
+  STLTrigId GetOuterTrig1(int i) const {return outertrigs[i-1];}
   //get all trigs:
-  int GetTrig(int i) const
+  STLTrigId GetTrig1(int i) const
     {
-      if (i <= charttrigs.Size()) {return charttrigs.Get(i);}
-      else {return outertrigs.Get(i-charttrigs.Size());}
+      if (i <= charttrigs.Size()) {return charttrigs[i-1];}
+      else {return outertrigs[i-charttrigs.Size()-1];}
     }
   
-  int GetNChartT() const {return charttrigs.Size();}
-  int GetNOuterT() const {return outertrigs.Size();}
-  int GetNT() const {return charttrigs.Size()+outertrigs.Size(); }
+  size_t GetNChartT() const {return charttrigs.Size();}
+  size_t GetNOuterT() const {return outertrigs.Size();}
+  size_t GetNT() const {return charttrigs.Size()+outertrigs.Size(); }
 
   void GetTrianglesInBox (const Point3d & pmin,
 			  const Point3d & pmax,
-			  NgArray<int> & trias) const;
+			  NgArray<STLTrigId> & trias) const;
   void AddOLimit(twoint l) {olimit.Append(l);}
   void AddILimit(twoint l) {ilimit.Append(l);}
 
   void ClearOLimit() {olimit.SetSize(0);}
   void ClearILimit() {ilimit.SetSize(0);}
 
-  int GetNOLimit() const {return olimit.Size();}
-  int GetNILimit() const {return ilimit.Size();}
+  size_t GetNOLimit() const {return olimit.Size();}
+  size_t GetNILimit() const {return ilimit.Size();}
 
   twoint GetOLimit(int i) const {return olimit.Get(i);}
   twoint GetILimit(int i) const {return ilimit.Get(i);}

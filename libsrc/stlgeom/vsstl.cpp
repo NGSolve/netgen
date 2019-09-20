@@ -544,10 +544,10 @@ void VisualSceneSTLMeshing :: DrawScene ()
 		  else
 		    {glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colbrown);}
 		  */
-		  const STLTriangle& st = stlgeometry -> GetTriangle(chart.GetChartTrig(j));
+		  const STLTriangle& st = stlgeometry -> GetTriangle(chart.GetChartTrig1(j));
 
 		  
-		  const Vec3d & n = stlgeometry->GetTriangle(chart.GetChartTrig(j)).Normal();
+		  const Vec3d & n = stlgeometry->GetTriangle(chart.GetChartTrig1(j)).Normal();
 		  glNormal3f (n.X(), n.Y(), n.Z());
 		  /*
 		  const STLReadTriangle& tria = stlgeometry -> GetReadTriangle(chart.GetChartTrig(j));
@@ -567,9 +567,9 @@ void VisualSceneSTLMeshing :: DrawScene ()
 	      for (j = 1; j <= chart.GetNOuterT(); j++)
 		{
 		  
-		  const STLTriangle& st = stlgeometry -> GetTriangle(chart.GetOuterTrig(j));
+		  const STLTriangle& st = stlgeometry -> GetTriangle(chart.GetOuterTrig1(j));
 
-		  const Vec3d & n = stlgeometry->GetTriangle(chart.GetOuterTrig(j)).Normal();
+		  const Vec3d & n = stlgeometry->GetTriangle(chart.GetOuterTrig1(j)).Normal();
 		  glNormal3f (n.X(), n.Y(), n.Z());
 
 

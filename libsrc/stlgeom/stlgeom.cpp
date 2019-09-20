@@ -1499,7 +1499,7 @@ void STLGeometry :: PrintSelectInfo()
                , " (=", int(GetTriangle(GetSelectTrig()).PNum(GetNodeOfSelTrig())), ")");
   if (AtlasMade() && GetSelectTrig() >= 1 && GetSelectTrig() <= GetNT())
     {
-      PrintMessage(1,"           chartnum=",GetChartNr(GetSelectTrig()));
+      PrintMessage(1,"           chartnum=", int(GetChartNr(GetSelectTrig())));
       /*      
       PointBetween(Center(Center(GetPoint(GetTriangle(270).PNum(1)),
 				 GetPoint(GetTriangle(270).PNum(2))),
@@ -1517,7 +1517,7 @@ void STLGeometry :: ShowSelectedTrigChartnum()
   int st = GetSelectTrig();
 
   if (st >= 1 && st <= GetNT() && AtlasMade())
-    PrintMessage(1,"selected trig ", st, " has chartnumber ", GetChartNr(st));
+    PrintMessage(1,"selected trig ", st, " has chartnumber ", int(GetChartNr(st)));
 }
 
 void STLGeometry :: ShowSelectedTrigCoords()
@@ -2689,10 +2689,10 @@ void STLGeometry :: AddFaceEdges()
         double maxlen = -1;
 	for (int j = 1; j <= c.GetNChartT(); j++)
 	  {
-	    const STLTriangle& t1 = GetTriangle(c.GetChartTrig(j));
+	    const STLTriangle& t1 = GetTriangle(c.GetChartTrig1(j));
 	    for (int k = 1; k <= 3; k++)
 	      {
-		int nt = NeighbourTrig(c.GetChartTrig(j),k);
+		int nt = NeighbourTrig(c.GetChartTrig1(j),k);
 		if (GetChartNr(nt) != chartindex.Get(i))
 		  {
 		    t1.GetNeighbourPoints(GetTriangle(nt),ap1,ap2);
@@ -3153,7 +3153,7 @@ void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
       STLChart& chart = GetChart(i);
       for (j = 1; j <= chart.GetNChartT(); j++)
 	{
-	  int t = chart.GetChartTrig(j); 
+	  STLTrigId t = chart.GetChartTrig1(j); 
 	  const STLTriangle& tt = GetTriangle(t);
 
 	  for (k = 1; k <= 3; k++)
@@ -3172,7 +3172,7 @@ void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
 		      AddEdgePP(np2,edgenum);
 		      //changed = 1;
 		      PrintWarning("Found a spiral like structure: chart=", i,
-				   ", trig=", t, ", p1=", np1, ", p2=", np2);
+				   ", trig=", int(t), ", p1=", np1, ", p2=", np2);
 		      cnt++;
 		    }
 		}
@@ -3214,7 +3214,7 @@ void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
       STLChart& chart = GetChart(i);
       for (j = 1; j <= chart.GetNChartT(); j++)
 	{
-	  int t = chart.GetChartTrig(j); 
+	  STLTrigId t = chart.GetChartTrig1(j); 
 	  const STLTriangle& tt = GetTriangle(t);
 
 	  for (k = 1; k <= 3; k++)
@@ -3363,7 +3363,7 @@ void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
       STLChart& chart = GetChart(i);
       for (j = 1; j <= chart.GetNChartT(); j++)
 	{
-	  int t = chart.GetChartTrig(j); 
+	  STLTrigId t = chart.GetChartTrig1(j); 
 	  const STLTriangle& tt = GetTriangle(t);
 
 	  for (k = 1; k <= 3; k++)

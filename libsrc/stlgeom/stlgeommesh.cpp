@@ -462,7 +462,7 @@ void STLGeometry :: ToPlane (const Point<3> & locpoint, int * trigs,
       
       else
 	{
-	  NgArray<int> trigsinbox;
+	  NgArray<STLTrigId> trigsinbox;
 
 	  if (!geomsearchtreeon)
 	    {
@@ -563,7 +563,7 @@ int STLGeometry :: Project(Point<3> & p3d) const
   
   for (j = 1; j <= nt; j++)
     {
-      i = chart.GetTrig(j);
+      i = chart.GetTrig1(j);
 
       const Point<3> & c = GetTriangle(i).center;
       /*
@@ -687,12 +687,12 @@ int STLGeometry :: ProjectNearest(Point<3> & p3d) const
   for (i = 1; i <= chart.GetNT(); i++)
     {
       p = p3d;
-      dist  = GetTriangle(chart.GetTrig(i)).GetNearestPoint(points, p);
+      dist  = GetTriangle(chart.GetTrig1(i)).GetNearestPoint(points, p);
       if (dist < nearest)
 	{
 	  pf = p;
 	  nearest = dist;
-	  ft = chart.GetTrig(i);
+	  ft = chart.GetTrig1(i);
 	}      
     }
   p3d = pf;
@@ -1163,7 +1163,7 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& a
 
   for (int j = 1; j <= chart.GetNChartT(); j++)
     {
-      int t = chart.GetChartTrig(j); 
+      int t = chart.GetChartTrig1(j); 
       tt = GetTriangle(t);
       for (int k = 1; k <= 3; k++)
 	{
@@ -1213,11 +1213,11 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& a
 
   NgProfiler::StartTimer (timer2);	 
   for (int j = 1; j <= chart.GetNT(); j++)
-    acttrigs.Elem(chart.GetTrig(j)) = chartnum;
+    acttrigs.Elem(chart.GetTrig1(j)) = chartnum;
 
   for (int j = 1; j <= chart.GetNOuterT(); j++)
     {
-      int t = chart.GetOuterTrig(j); 
+      int t = chart.GetOuterTrig1(j); 
       tt = GetTriangle(t);
       for (int k = 1; k <= 3; k++)
 	{

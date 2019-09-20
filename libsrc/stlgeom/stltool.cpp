@@ -619,7 +619,7 @@ STLChart :: STLChart(STLGeometry * ageometry, const STLParameters& astlparam)
     {
       Box<3> box = geometry->GetBoundingBox();
       box.Increase (0.2*box.Diam()+1e-12);
-      searchtree = new BoxTree<3> (box);
+      searchtree = new BoxTree<3,STLTrigId> (box);
       /*
       searchtree = new BoxTree<3> (geometry->GetBoundingBox().PMin() - Vec3d(1,1,1),
                                    geometry->GetBoundingBox().PMax() + Vec3d(1,1,1));
@@ -634,7 +634,7 @@ STLChart :: ~STLChart()
   delete searchtree;
 }
 
-void STLChart :: AddChartTrig(int i)
+void STLChart :: AddChartTrig(STLTrigId i)
 {
   // static int timer = NgProfiler::CreateTimer ("STLChart::AddChartTrig");
   // NgProfiler::RegionTimer reg(timer);
@@ -666,7 +666,7 @@ void STLChart :: AddChartTrig(int i)
     }
 }
 
-void STLChart :: AddOuterTrig(int i)
+void STLChart :: AddOuterTrig(STLTrigId i)
 {
   // static int timer = NgProfiler::CreateTimer ("STLChart::AddOuterTrig");
   // NgProfiler::RegionTimer reg(timer);
@@ -690,18 +690,17 @@ void STLChart :: AddOuterTrig(int i)
 
 bool STLChart :: IsInWholeChart(int nr) const
 {
-  for (int i = 1; i <= charttrigs.Size(); i++)
-    if (charttrigs.Get(i) == nr) return true;
-
-  for (int i = 1; i <= outertrigs.Size(); i++)
-    if (outertrigs.Get(i) == nr) return true;
-
-  return false;
+  // for (int i = 1; i <= charttrigs.Size(); i++)
+  // if (charttrigs.Get(i) == nr) return true;
+  // for (int i = 1; i <= outertrigs.Size(); i++)
+  // if (outertrigs.Get(i) == nr) return true;
+  // return false;
+  return charttrigs.Contains(nr) || outertrigs.Contains(nr);
 }
 
 void STLChart :: GetTrianglesInBox (const Point3d & pmin,
 				    const Point3d & pmax,
-				    NgArray<int> & trias) const
+				    NgArray<STLTrigId> & trias) const
 {
   if (geomsearchtreeon) {PrintMessage(5,"geomsearchtreeon is set!!!");}
 
@@ -717,7 +716,7 @@ void STLChart :: GetTrianglesInBox (const Point3d & pmin,
       int nt = GetNT();
       for (int i = 1; i <= nt; i++)
 	{
-	  int trignum = GetTrig(i);
+	  STLTrigId trignum = GetTrig1(i);
 	  const STLTriangle & trig = geometry->GetTriangle(trignum);
           Box<3> box2(geometry->GetPoint (trig.PNum(1)),
                       geometry->GetPoint (trig.PNum(2)),
@@ -735,9 +734,9 @@ void STLChart :: MoveToOuterChart(const NgArray<int>& trigs)
   if (!trigs.Size()) return;
   for (int i = 1; i <= trigs.Size(); i++)
     {
-      if (charttrigs.Get(trigs.Get(i)) != -1) 
-	{AddOuterTrig(charttrigs.Get(trigs.Get(i)));}
-      charttrigs.Elem(trigs.Get(i)) = -1;
+      if (charttrigs[trigs.Get(i)-1] != -1) 
+	AddOuterTrig(charttrigs[trigs.Get(i)-1]);
+      charttrigs[trigs.Get(i)-1] = -1;
     }
   DelChartTrigs(trigs);
 }
@@ -748,15 +747,15 @@ void STLChart :: DelChartTrigs(const NgArray<int>& trigs)
   if (!trigs.Size()) return;
 
   for (int i = 1; i <= trigs.Size(); i++)
-    charttrigs.Elem(trigs.Get(i)) = -1;
+    charttrigs[trigs.Get(i)-1] = -1;
 
   int cnt = 0;
   for (int i = 1; i <= charttrigs.Size(); i++)
     {
-      if (charttrigs.Elem(i) == -1)
+      if (charttrigs[i-1] == -1)
         cnt++;
       if (cnt != 0 && i < charttrigs.Size())
-        charttrigs.Elem(i-cnt+1) = charttrigs.Get(i+1);
+        charttrigs[i-cnt] = charttrigs[i];
     }
   
   int i = charttrigs.Size() - trigs.Size();
@@ -766,8 +765,8 @@ void STLChart :: DelChartTrigs(const NgArray<int>& trigs)
     {
       PrintMessage(7, "Warning: unsecure routine due to first use of searchtrees!!!");
       //bould new searchtree!!!
-      searchtree = new BoxTree<3> (geometry->GetBoundingBox().PMin() - Vec3d(1,1,1),
-                                   geometry->GetBoundingBox().PMax() + Vec3d(1,1,1));
+      searchtree = new BoxTree<3,STLTrigId> (geometry->GetBoundingBox().PMin() - Vec3d(1,1,1),
+                                             geometry->GetBoundingBox().PMax() + Vec3d(1,1,1));
 
       for (int i = 1; i <= charttrigs.Size(); i++)
 	{

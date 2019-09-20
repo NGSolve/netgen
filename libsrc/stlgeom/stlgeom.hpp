@@ -141,7 +141,7 @@ namespace netgen
     //
     Array<unique_ptr<STLChart>, ChartId> atlas;
     //marks all already charted trigs with chartnumber
-    NgArray<ChartId> chartmark; 
+    Array<ChartId, STLTrigId> chartmark; 
     //outerchartspertrig, ascending sorted
     TABLE<int> outerchartspertrig;
 
@@ -368,7 +368,7 @@ namespace netgen
     void AddConeAndSpiralEdges(const STLParameters& stlparam);
     void AddFaceEdges(); //each face should have at least one starting edge (outherwise it won't be meshed)
 
-    void GetDirtyChartTrigs(int chartnum, STLChart& chart, const NgArray<ChartId>& outercharttrigs, 
+    void GetDirtyChartTrigs(int chartnum, STLChart& chart, const Array<ChartId, STLTrigId>& outercharttrigs, 
 			    NgArray<ChartId>& chartpointchecked, NgArray<int>& dirtytrigs);
 
     void ClearSpiralPoints();
@@ -394,11 +394,10 @@ namespace netgen
     int TrigIsInOC(int tn, int ocn) const;
  
     //get chart number of a trig or 0 if unmarked
-    int GetChartNr(int i) const;
-    ChartId GetMarker(int i) const 
-    { return chartmark.Get(i); }
-    void SetMarker(int nr, ChartId m);
-    int GetNOCharts() const { return atlas.Size(); }
+    ChartId GetChartNr(STLTrigId i) const;
+    ChartId GetMarker(STLTrigId i) const  { return chartmark[i]; }
+    void SetMarker(STLTrigId nr, ChartId m);
+    size_t GetNOCharts() const { return atlas.Size(); }
     //get a chart from atlas
     const STLChart& GetChart(ChartId nr) const { return *atlas[nr];};
     STLChart & GetChart(ChartId nr) { return *atlas[nr];};
