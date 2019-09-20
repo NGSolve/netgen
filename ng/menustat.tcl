@@ -231,6 +231,7 @@ loadmeshinifile;
 	    {"Universal format"  {.unv} }
 	    {"Olaf format"  {.emt} }
 	    {"TET format" {.tet} }
+	    {"STL format" {.stl .stlb} }
 	    {"Pro/ENGINEER neutral format" {.fnf} }
 	          }
 	set file [tk_getOpenFile -filetypes $types ]

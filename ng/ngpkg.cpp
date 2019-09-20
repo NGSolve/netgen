@@ -405,6 +405,7 @@ namespace netgen
     PrintMessage (2, mesh->GetNP(), " Points, ",
 		  mesh->GetNE(), " Elements.");
 
+    SetGlobalMesh (mesh);
     mesh->SetGlobalH (mparam.maxh);
     mesh->CalcLocalH(mparam.grading);
 

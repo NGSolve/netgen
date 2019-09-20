@@ -7,6 +7,7 @@
 #include <myadt.hpp>
 #include <linalg.hpp>
 #include <csg.hpp>
+#include <stlgeom.hpp>
 #include <meshing.hpp>
 
 #include "writeuser.hpp"
@@ -648,6 +649,33 @@ namespace netgen
         ReadFNFFormat (mesh, filename);
       }
 
+    if ( ( (strlen (filename) > 4) && strcmp (&filename[strlen (filename)-4], ".stl") == 0 ) ||
+         ( (strlen (filename) > 5) && strcmp (&filename[strlen (filename)-5], ".stlb") == 0 ) )
+      {
+        ifstream ist{string{filename}};
+        auto geom = shared_ptr<STLGeometry>(STLGeometry::Load(ist));
+
+        mesh.SetDimension (3);
+
+        auto & points = geom->GetPoints();
+
+        for (auto & p : points)
+          mesh.AddPoint(MeshPoint(p));
+
+        mesh.AddFaceDescriptor (FaceDescriptor (1, 1, 0, 1));
+
+        for (auto ti : IntRange(geom->GetNT()))
+        {
+          auto & trig = geom->GetTriangle(ti);
+          Element2d el(TRIG);
+          for (auto i : IntRange(3))
+            el[i] = (*geom)[STLTrigIndex(ti)][i];
+
+          el.SetIndex(1);
+
+          mesh.AddSurfaceElement(el);
+        }
+      }
   }
   
 }
