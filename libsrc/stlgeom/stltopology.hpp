@@ -53,6 +53,7 @@ public:
   
 };
 
+  inline void SetInvalid (STLTrigId & id) { id = 0; }
 
 }
 

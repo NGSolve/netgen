@@ -1794,7 +1794,7 @@ namespace netgen
 
 
 
-  
+  /*
   template <int dim, typename T>
   T_ADTree<dim,T> :: T_ADTree (Point<dim> acmin, Point<dim> acmax)
   // : ela(0)
@@ -1805,14 +1805,18 @@ namespace netgen
     root = new T_ADTreeNode<dim,T>;
     root->sep = (cmin[0] + cmax[0]) / 2;
   }
+  */
 
+  /*
   template <int dim, typename T>  
   T_ADTree<dim,T> :: ~T_ADTree ()
   {
     root->DeleteChilds();
     delete root;
   }
+  */
 
+  /*
   template <int dim, typename T>
   void T_ADTree<dim,T> :: Insert (Point<dim> p, T pi)
   {
@@ -1883,7 +1887,9 @@ namespace netgen
 	node = node->father;
       }
   }
+  */
 
+  /*
   template <int dim, typename T>
   void T_ADTree<dim,T> :: DeleteElement (T pi)
   {
@@ -1899,7 +1905,9 @@ namespace netgen
 	node = node->father;
       }
   }
+  */
 
+  /*
   template <int dim, typename T>
   void T_ADTree<dim,T> :: PrintMemInfo (ostream & ost) const
   {
@@ -1908,8 +1916,9 @@ namespace netgen
 	<< Elements() * sizeof(T_ADTreeNode<dim,T>) << endl;
     ost << "maxind = " << ela.Size() << " = " << sizeof(T_ADTreeNode<dim,T>*) * ela.Size() << " Bytes" << endl;
   }
+  */
 
-
+  /*
   template <int dim, typename T>
   class inttn {
   public:
@@ -1948,19 +1957,18 @@ namespace netgen
                 found = false;
             if (found)
               pis.Append (node->pi);            
-            /*
-	    if (node->data[0] > bmax[0] || 
-		node->data[1] > bmax[1] || 
-		node->data[2] > bmax[2] || 
-		node->data[3] < bmin[3] || 
-		node->data[4] < bmin[4] || 
-		node->data[5] < bmin[5])
-	      ;
-	    else
-              {
-                pis.Append (node->pi);
-              }
-            */
+
+            //	if (node->data[0] > bmax[0] || 
+            // node->data[1] > bmax[1] || 
+            // node->data[2] > bmax[2] || 
+            // node->data[3] < bmin[3] || 
+            // node->data[4] < bmin[4] || 
+            // node->data[5] < bmin[5])
+            // ;
+	    // else
+            // {
+            // pis.Append (node->pi);
+            // }
 	  }
 
 	int ndir = (dir+1) % dim;
@@ -1979,7 +1987,8 @@ namespace netgen
 	  }
       }
   }
-
+*/
+  
   template <int dim, typename T>
   void T_ADTree<dim,T> :: PrintRec (ostream & ost, const T_ADTreeNode<dim,T> * node) const
   {
@@ -2346,7 +2355,7 @@ namespace netgen
 
 
 
-
+  /*
   template <int dim, typename T>
   BoxTree<dim,T> :: BoxTree (const Box<dim> & abox)
   {
@@ -2360,7 +2369,9 @@ namespace netgen
       }
     tree = new T_ADTree<2*dim,T> (tpmin, tpmax);
   }
+  */
 
+  /*
   template <int dim, typename T>
   BoxTree<dim,T> :: BoxTree (const Point<dim> & apmin, const Point<dim> & apmax)
   {
@@ -2394,7 +2405,9 @@ namespace netgen
 
     tree->Insert (tp, pi);
   }
+  */
 
+  /*
   template <int dim, typename T>
   void BoxTree<dim,T> ::GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax, 
                                          NgArray<T> & pis) const
@@ -2412,8 +2425,9 @@ namespace netgen
 
     tree->GetIntersecting (tpmin, tpmax, pis);
   }
-
-
+  */
+  
+  /*
   template<> BlockAllocator T_ADTreeNode<4,INDEX> :: ball(sizeof (T_ADTreeNode<4,INDEX>));
   template class T_ADTree<4,INDEX>;
   template class BoxTree<2,INDEX>;
@@ -2426,4 +2440,6 @@ namespace netgen
   template<> BlockAllocator T_ADTreeNode<6,INDEX> :: ball(sizeof (T_ADTreeNode<6,INDEX>));
   template class T_ADTree<6,INDEX>;
   template class BoxTree<3,INDEX>;
+  */
+  
 }

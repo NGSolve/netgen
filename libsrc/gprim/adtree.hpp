@@ -422,6 +422,9 @@ public:
   
   // friend class T_ADTree<DIM>;
 
+  /*
+    // slow without blockallocator !!!!!
+    
   static BlockAllocator ball;
   void * operator new(size_t)
   {
@@ -432,8 +435,11 @@ public:
   {
     ball.Free(p);
   }
+  */
 };
 
+// template <int DIM, typename T>
+// BlockAllocator T_ADTreeNode<DIM,T> :: ball(sizeof (T_ADTreeNode<DIM,T>));
 
 
 
@@ -446,14 +452,174 @@ public:
     // NgArray<T_ADTreeNode<dim>*> ela;
     ClosedHashTable<T, T_ADTreeNode<dim,T>*> ela;
   public:
-    T_ADTree (Point<dim> acmin, Point<dim> acmax);
-    ~T_ADTree ();
+    T_ADTree (Point<dim> acmin, Point<dim> acmax)
+    {
+      cmin = acmin;
+      cmax = acmax;
+      
+      root = new T_ADTreeNode<dim,T>;
+      root->sep = (cmin[0] + cmax[0]) / 2;
+    }
     
-    void Insert (Point<dim> p, T pi);
+    ~T_ADTree ()
+    {
+      root->DeleteChilds();
+      delete root;
+    }
+    
+    void Insert (Point<dim> p, T pi)
+    {
+      T_ADTreeNode<dim,T> *node(NULL);
+      T_ADTreeNode<dim,T> *next;
+      int dir;
+      int lr(0);
+      
+      Point<dim> bmin = cmin;
+      Point<dim> bmax = cmax;
+      
+      next = root;
+      dir = 0;
+      while (next)
+        {
+          node = next;
+          
+          if (IsInvalid(node->pi))
+            {    
+              // memcpy (node->data, p, dim * sizeof(float));
+              node->data = p;
+              node->pi = pi;
+              
+              // if (ela.Size() < pi+1)
+              // ela.SetSize (pi+1);
+              ela[pi] = node;
+              
+	    return;
+            }
+          
+          if (node->sep > p[dir])
+            {
+              next = node->left;
+              bmax(dir) = node->sep;
+              lr = 0;
+            }
+          else
+            {
+              next = node->right;
+              bmin(dir) = node->sep;
+              lr = 1;
+            }
+          
+          dir++;
+          if (dir == dim) dir = 0;
+        }
+      
+      
+      next = new T_ADTreeNode<dim,T>;
+    // memcpy (next->data, p, dim * sizeof(float));
+      next->data = p;
+      next->pi = pi;
+      next->sep = (bmin[dir] + bmax[dir]) / 2;
+      
+      // if (ela.Size() < pi+1)
+      // ela.SetSize (pi+1);
+      ela[pi] = next;
+      
+      if (lr)
+        node->right = next;
+      else
+        node->left = next;
+      next -> father = node;
+
+      while (node)
+        {
+          node->nchilds++;
+          node = node->father;
+        }
+    }
+
+    
+    class inttn {
+    public:
+      int dir;
+      T_ADTreeNode<dim,T> * node;
+    };
+    
     void GetIntersecting (Point<dim> bmin, Point<dim> bmax,
-                          NgArray<T> & pis) const;
+                          NgArray<T> & pis) const
+  {
+    NgArrayMem<inttn,10000> stack(10000);
+    pis.SetSize(0);
+
+    stack[0].node = root;
+    stack[0].dir = 0;
+    int stacks = 0;
+
+    while (stacks >= 0)
+      {
+	T_ADTreeNode<dim,T> * node = stack[stacks].node;
+	int dir = stack[stacks].dir; 
+
+	stacks--;
+	if (!IsInvalid(node->pi)) //  != -1)
+	  {
+            bool found = true;
+            for (int i = 0; i < dim/2; i++)
+              if (node->data[i] > bmax[i])
+                found = false;
+            for (int i = dim/2; i < dim; i++)
+              if (node->data[i] < bmin[i])
+                found = false;
+            if (found)
+              pis.Append (node->pi);            
+            /*
+	    if (node->data[0] > bmax[0] || 
+		node->data[1] > bmax[1] || 
+		node->data[2] > bmax[2] || 
+		node->data[3] < bmin[3] || 
+		node->data[4] < bmin[4] || 
+		node->data[5] < bmin[5])
+	      ;
+	    else
+              {
+                pis.Append (node->pi);
+              }
+            */
+	  }
+
+	int ndir = (dir+1) % dim;
+
+	if (node->left && bmin[dir] <= node->sep)
+	  {
+	    stacks++;
+	    stack[stacks].node = node->left;
+	    stack[stacks].dir = ndir;
+	  }
+	if (node->right && bmax[dir] >= node->sep)
+	  {
+	    stacks++;
+	    stack[stacks].node = node->right;
+	    stack[stacks].dir = ndir;
+	  }
+      }
+  }
     
-    void DeleteElement (T pi);
+      
+    
+    void DeleteElement (T pi)
+    {
+      T_ADTreeNode<dim,T> * node = ela[pi];
+      ela.Delete(pi);
+      
+      SetInvalid(node->pi); //  = -1;
+      
+      node = node->father;
+      while (node)
+        {
+          node->nchilds--;
+          node = node->father;
+        }
+    }
+    
     
     void Print (ostream & ost) const
     { PrintRec (ost, root); }
@@ -466,7 +632,14 @@ public:
     int DepthRec (const T_ADTreeNode<dim,T> * node) const;
     int ElementsRec (const T_ADTreeNode<dim,T> * node) const;
     
-    void PrintMemInfo (ostream & ost) const;
+    void PrintMemInfo (ostream & ost) const
+    {
+      ost << Elements() << " elements a " << sizeof(ADTreeNode6) 
+          << " Bytes = "
+          << Elements() * sizeof(T_ADTreeNode<dim,T>) << endl;
+      ost << "maxind = " << ela.Size() << " = " << sizeof(T_ADTreeNode<dim,T>*) * ela.Size() << " Bytes" << endl;
+    }
+    
   };
   
   
@@ -558,22 +731,82 @@ public:
     T_ADTree<2*dim,T> * tree;
     Point<dim> boxpmin, boxpmax;
   public:
-    BoxTree (const Box<dim> & abox);
-    BoxTree (const Point<dim> & apmin, const Point<dim> & apmax);
-    ~BoxTree ();
-    void Insert (const Point<dim> & bmin, const Point<dim> & bmax, T pi);
+    BoxTree (const Box<dim> & abox)
+    {
+      boxpmin = abox.PMin();
+      boxpmax = abox.PMax();
+      Point<2*dim> tpmin, tpmax;
+      for (int i = 0; i < dim; i++)
+        {
+          tpmin(i) = tpmin(i+dim) = boxpmin(i);
+          tpmax(i) = tpmax(i+dim) = boxpmax(i);
+        }
+      tree = new T_ADTree<2*dim,T> (tpmin, tpmax);
+    }
+    
+    BoxTree (const Point<dim> & apmin, const Point<dim> & apmax)
+    {
+      boxpmin = apmin;
+      boxpmax = apmax;
+      Point<2*dim> tpmin, tpmax;
+      for (int i = 0; i < dim; i++)
+        {
+          tpmin(i) = tpmin(i+dim) = boxpmin(i);
+          tpmax(i) = tpmax(i+dim) = boxpmax(i);
+        }
+      tree = new T_ADTree<2*dim,T> (tpmin, tpmax);
+    }
+      
+    ~BoxTree ()
+    {
+      delete tree;
+    }
+    
+    void Insert (const Point<dim> & bmin, const Point<dim> & bmax, T pi)
+    {
+      Point<2*dim> tp;
+      
+      for (size_t i = 0; i < dim; i++)
+        {
+          tp(i) = bmin(i);
+          tp(i+dim) = bmax(i);
+        }
+      
+      tree->Insert (tp, pi);
+    }
+    
     void Insert (const Box<dim> & box, T pi)
     {
       Insert (box.PMin(), box.PMax(), pi);
     }
+    
     void DeleteElement (T pi) 
-    { tree->DeleteElement(pi); }
+    {
+      tree->DeleteElement(pi);
+    }
+
     void GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax, 
-                          NgArray<T> & pis) const;
+                          NgArray<T> & pis) const
+    {
+      Point<2*dim> tpmin, tpmax;
+      double tol = Tolerance();
+      for (size_t i = 0; i < dim; i++)
+        {
+          tpmin(i) = boxpmin(i);
+          tpmax(i) = pmax(i)+tol;
+        
+          tpmin(i+dim) = pmin(i)-tol;
+          tpmax(i+dim) = boxpmax(i);
+        }
+      
+      tree->GetIntersecting (tpmin, tpmax, pis);
+    }
+    
+      
     double Tolerance() const { return 1e-7 * Dist(boxpmax, boxpmin); } // single precision
     const auto & Tree() const { return *tree; };
     auto & Tree() { return *tree; };
-};
+  };
 
 }
 
