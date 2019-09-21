@@ -1280,8 +1280,6 @@ bool STLBoundary :: TestSegChartNV(const Point3d & p1, const Point3d& p2,
   // static int timerquick = NgProfiler::CreateTimer ("TestSegChartNV-searchtree");
   // static int timer = NgProfiler::CreateTimer ("TestSegChartNV");
 
-  int nseg = NOSegments();
-  
   Point<2> p2d1 = chart->Project2d (p1);
   Point<2> p2d2 = chart->Project2d (p2);
 
@@ -1291,7 +1289,7 @@ bool STLBoundary :: TestSegChartNV(const Point3d & p1, const Point3d& p2,
 
   Line2d l1 (p2d1, p2d2);
 
-  double eps = 1e-3;
+  double eps = 1e-6;
   bool ok = true;
 
   /*
@@ -1303,13 +1301,14 @@ bool STLBoundary :: TestSegChartNV(const Point3d & p1, const Point3d& p2,
   cout << "avg nseg = " << double(totnseg)/cnt << endl;
   */
 
-  if (searchtree)
+  // TODO: fix searchtree update
+  if (false)
     {
       // NgProfiler::RegionTimer reg(timerquick);      
       
       NgArrayMem<INDEX_2,100> pis;
       searchtree -> GetIntersecting (box2d.PMin(), box2d.PMax(), pis);
-      
+
       for (auto i2 : pis)
         {
           // const STLBoundarySeg & seg = GetSegment(j);
@@ -1325,10 +1324,14 @@ bool STLBoundary :: TestSegChartNV(const Point3d & p1, const Point3d& p2,
           double lam1, lam2;
           
           int err = CrossPointBarycentric (l1, l2, lam1, lam2);
-          
-          if (!err && lam1 > eps && lam1 < 1-eps &&
-              lam2 > eps && lam2 < 1-eps)
+          bool in1 = (lam1 > eps) && (lam1 < 1-eps);
+          bool on1 = (lam1 > -eps) && (lam1 < 1 + eps);
+          bool in2 = (lam2 > eps) && (lam2 < 1-eps);
+          bool on2 = (lam2 > -eps) && (lam2 < 1 + eps);
+
+          if(!err && ((on1 && in2) || (on2 && in1)))
             {
+              
               ok = false;
               break;
             }
@@ -1338,10 +1341,8 @@ bool STLBoundary :: TestSegChartNV(const Point3d & p1, const Point3d& p2,
   else
     {      
       // NgProfiler::RegionTimer reg(timer);      
-    for (int j = 1; j <= nseg; j++)
+      for(auto [i2, seg] : boundary_ht)
       {
-        const STLBoundarySeg & seg = GetSegment(j);
-        
         if (seg.IsSmoothEdge()) continue;
         if (!box2d.Intersect (seg.BoundingBox())) continue;
         
@@ -1350,11 +1351,14 @@ bool STLBoundary :: TestSegChartNV(const Point3d & p1, const Point3d& p2,
         
         Line2d l2 (sp1, sp2);
         double lam1, lam2;
-      
+
         int err = CrossPointBarycentric (l1, l2, lam1, lam2);
         
-        if (!err && lam1 > eps && lam1 < 1-eps &&
-	  lam2 > eps && lam2 < 1-eps)
+        bool in1 = (lam1 > eps) && (lam1 < 1-eps);
+        bool on1 = (lam1 > -eps) && (lam1 < 1 + eps);
+        bool in2 = (lam2 > eps) && (lam2 < 1-eps);
+        bool on2 = (lam2 > -eps) && (lam2 < 1 + eps);
+        if(!err && ((on1 && in2) || (on2 && in1)))
           {
             ok = false;
             break;
