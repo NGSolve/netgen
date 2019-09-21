@@ -96,6 +96,10 @@ namespace netgen
   class VisualSceneSurfaceMeshing : public VisualScene
   {
   public:
+    shared_ptr<NgArray<Point3d>> locpointsptr;
+    shared_ptr<NgArray<INDEX_2>> loclinesptr;
+    shared_ptr<NgArray<Point2d>> plainpointsptr;
+    bool clearptr;
     VisualSceneSurfaceMeshing ();
     virtual ~VisualSceneSurfaceMeshing ();
 

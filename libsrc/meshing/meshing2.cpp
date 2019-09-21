@@ -1,9 +1,12 @@
 #include <mystdlib.h>
 #include "meshing.hpp"
+#include <visual.hpp>
 
 namespace netgen
 {
+  extern DLL_HEADER void Render(bool blocking = false);
   static void glrender (int wait);
+  VisualSceneSurfaceMeshing vssurfacemeshing;
 
 
   // global variable for visualization
@@ -15,7 +18,7 @@ namespace netgen
 //   // static int geomtrig;
 //   //static const char * rname;
 //   static int cntelem, trials, nfaces;
-//   static int oldnl;
+   static int oldnl;
 //   static int qualclass;
 
 
@@ -241,14 +244,20 @@ namespace netgen
     bool debugflag;
 
     // double h;
-    
-    NgArray<Point3d> locpoints;
+
+    auto locpointsptr = make_shared<NgArray<Point3d>>();
+    vssurfacemeshing.locpointsptr = locpointsptr;
+    auto& locpoints = *locpointsptr;
     NgArray<int> legalpoints;
-    NgArray<Point2d> plainpoints;
+    auto plainpointsptr = make_shared<NgArray<Point2d>>();
+    auto& plainpoints = *plainpointsptr;
+    vssurfacemeshing.plainpointsptr = plainpointsptr;
     NgArray<int> plainzones;
-    NgArray<INDEX_2> loclines;
+    auto loclinesptr = make_shared<NgArray<INDEX_2>>();
+    auto &loclines = *loclinesptr;
+    vssurfacemeshing.loclinesptr = loclinesptr;
     int cntelem = 0, trials = 0, nfaces = 0;
-    int oldnl = 0;
+    oldnl = 0;
     int qualclass;
 
 
@@ -1579,14 +1588,11 @@ namespace netgen
 
 
 
-
-// #define OPENGL
-#ifdef OPENGLxx
+#ifdef OPENGL
 
 /* *********************** Draw Surface Meshing **************** */
 
 
-#include <visual.hpp>
 #include <stlgeom.hpp>
 
 namespace netgen 
@@ -1594,7 +1600,6 @@ namespace netgen
 
   extern STLGeometry * stlgeometry;
   extern Mesh * mesh;
-  VisualSceneSurfaceMeshing vssurfacemeshing;
 
 
 
@@ -1604,8 +1609,9 @@ namespace netgen
 
     if (multithread.drawing)
       {
-	//      vssurfacemeshing.Render();
-	Render ();
+        // vssurfacemeshing.Render();
+	// Render ();
+        Render();
       
 	if (wait || multithread.testmode)
 	  {
@@ -1630,7 +1636,12 @@ namespace netgen
 
   void VisualSceneSurfaceMeshing :: DrawScene ()
   {
-    int i, j, k;
+    // int i, j, k;
+    if(!locpointsptr)
+      return;
+    auto& locpoints = *locpointsptr;
+    auto& loclines = *loclinesptr;
+    auto& plainpoints = *plainpointsptr;
 
     if (loclines.Size() != changeval)
       {
@@ -1657,7 +1668,7 @@ namespace netgen
   //  SetLight();
 
   glPushMatrix();
-  glMultMatrixf (transformationmat);
+  glMultMatrixd (transformationmat);
 
   glShadeModel (GL_SMOOTH);
   // glDisable (GL_COLOR_MATERIAL);
@@ -1694,7 +1705,7 @@ namespace netgen
     glPolygonOffset (1, -1);
     glLineWidth (3);
 
-    for (i = 1; i <= loclines.Size(); i++)
+    for (int i = 1; i <= loclines.Size(); i++)
       {
 	if (i == 1)
 	  {
@@ -1731,7 +1742,7 @@ namespace netgen
     float mat_colp[] = { 1, 0, 0, 1 };
     glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colp);
     glBegin (GL_POINTS);
-    for (i = 1; i <= locpoints.Size(); i++)
+    for (int i = 1; i <= locpoints.Size(); i++)
       {
 	Point3d p = locpoints.Get(i);
 	glVertex3f (p.X(), p.Y(), p.Z());
@@ -1751,7 +1762,7 @@ namespace netgen
     double scalex = 0.1, scaley = 0.1;
 
     glBegin (GL_LINES);
-    for (i = 1; i <= loclines.Size(); i++)
+    for (int i = 1; i <= loclines.Size(); i++)
       {
 	glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col2d);
 	if (i == 1)
@@ -1776,7 +1787,7 @@ namespace netgen
 
     glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colp);
     glBegin (GL_POINTS);
-    for (i = 1; i <= plainpoints.Size(); i++)
+    for (int i = 1; i <= plainpoints.Size(); i++)
       {
 	Point2d p = plainpoints.Get(i);
 	glVertex3f (scalex * p.X(), scaley * p.Y(), -5);
@@ -1971,7 +1982,7 @@ namespace netgen
 
   void VisualSceneSurfaceMeshing :: BuildScene (int zoomall)
   {
-    int i, j, k;
+    // int i, j, k;
     /*
       center = stlgeometry -> GetBoundingBox().Center();
       rad = stlgeometry -> GetBoundingBox().Diam() / 2;
