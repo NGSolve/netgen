@@ -1609,9 +1609,8 @@ namespace netgen
 
     if (multithread.drawing)
       {
-        // vssurfacemeshing.Render();
-	// Render ();
-        Render();
+        // vssurfacemeshing.DrawScene();
+	Render ();
       
 	if (wait || multithread.testmode)
 	  {
@@ -1648,7 +1647,7 @@ namespace netgen
 	center = Point<3>(0,0,-5);
 	rad = 0.1;
   
-	CalcTransformationMatrices();
+	// CalcTransformationMatrices();
 	changeval = loclines.Size();
       }
 
@@ -1688,7 +1687,7 @@ namespace netgen
 
 
 
-  /*
+  
 
   float mat_col[] = { 0.2, 0.2, 0.8, 1 };
   glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col);
@@ -1751,9 +1750,9 @@ namespace netgen
 
 
     glPopMatrix();
-  */
+  
 
-    float mat_colp[] = { 1, 0, 0, 1 };
+    // float mat_colp[] = { 1, 0, 0, 1 };
 
     float mat_col2d1[] = { 1, 0.5, 0.5, 1 };
     float mat_col2d[] = { 1, 1, 1, 1 };
