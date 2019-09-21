@@ -318,7 +318,7 @@ int STLTriangle :: IsWrongNeighbourFrom(const STLTriangle& t) const
   return 0;      
 }
 
-void STLTriangle :: GetNeighbourPoints(const STLTriangle& t, int& p1, int& p2) const
+void STLTriangle :: GetNeighbourPoints(const STLTriangle& t, STLPointId & p1, STLPointId & p2) const
 {
   for(int i = 1; i <= 3; i++)
     for(int j = 1; j <= 3; j++)
@@ -333,7 +333,8 @@ void STLTriangle :: GetNeighbourPoints(const STLTriangle& t, int& p1, int& p2) c
   PrintSysError("Get neighbourpoints failed!");
 }
 
-int STLTriangle :: GetNeighbourPointsAndOpposite(const STLTriangle& t, int& p1, int& p2, int& po) const
+int STLTriangle :: GetNeighbourPointsAndOpposite(const STLTriangle& t, STLPointId & p1,
+                                                 STLPointId & p2, STLPointId & po) const
 {
   for(int i = 1; i <= 3; i++)
     for(int j = 1; j <= 3; j++)

@@ -713,7 +713,7 @@ void STLGeometry :: RestrictLocalHCurv(class Mesh & mesh, double gh, const STLPa
   //die Meshsize auf ein bestimmtes Mass limitieren
   int i,j;
 
-  int ap1,ap2,p3,p4;
+  STLPointId ap1,ap2,p3,p4;
   Point<3> p1p, p2p, p3p, p4p;
   Vec<3> n, ntn;
   double rzyl, localh;
@@ -817,7 +817,7 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParame
   //die Meshsize auf ein bestimmtes Mass limitieren
   int i,j;
 
-  int ap1,ap2,p3,p4;
+  STLPointId ap1,ap2,p3,p4;
   Point3d p1p, p2p, p3p, p4p;
   Vec3d n, ntn;
   double rzyl, localh;
@@ -1145,7 +1145,7 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& a
 
   int divisions = 10;
 	  
-  int np1, np2;
+  STLPointId np1, np2;
   // Point3d p3p1, p3p2;
   STLTriangle tt;
       

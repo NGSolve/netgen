@@ -119,7 +119,7 @@ namespace netgen
     int undoexternaledges;
     NgArray<twoint> storedexternaledges;
 
-    STLEdgeDataList * edgedata;
+    unique_ptr<STLEdgeDataList> edgedata;
     //  STLEdgeDataList edgedata_store;
     int calcedgedataanglesnew;
 
@@ -375,7 +375,7 @@ namespace netgen
     void SetSpiralPoint(int pn) {spiralpoints.Elem(pn) = 1;};
     int GetSpiralPoint(int pn) const {return spiralpoints.Get(pn);};
 
-    void GetSortedTrianglesAroundPoint(int p, int starttrig, NgArray<int>& trigs);
+    void GetSortedTrianglesAroundPoint(STLPointId p, STLTrigId starttrig, Array<STLTrigId>& trigs);
 
     // smooth edges: sharp geometric edges not declared as edges
     void BuildSmoothEdges ();

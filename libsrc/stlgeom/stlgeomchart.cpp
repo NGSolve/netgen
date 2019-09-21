@@ -199,7 +199,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 		    {
 		      int nt = NeighbourTrig(i,j);
                       // *testout << "check trig " << nt << endl;
-		      int np1, np2;
+		      STLPointId np1, np2;
 		      GetTriangle(i).GetNeighbourPoints(GetTriangle(nt),np1,np2);
 		      if (GetMarker(nt) == 0 && !IsEdge(np1,np2))
 			{
@@ -242,7 +242,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 				  int nnt = NeighbourTrig(nt,k);
 				  if (GetMarker(nnt) != chartnum)
 				    {
-				      int nnp1, nnp2; 
+				      STLPointId nnp1, nnp2; 
 				      GetTriangle(nt).GetNeighbourPoints(GetTriangle(nnt),nnp1,nnp2);
 
 				      accepted = chartbound.TestSeg(GetPoint(nnp1),
@@ -326,7 +326,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 		  if (outermark[nt] == chartnum) continue;
 		  
 		  const STLTriangle & ntrig = GetTriangle(nt);
-		  int np1, np2;
+		  STLPointId np1, np2;
 		  GetTriangle(i).GetNeighbourPoints(GetTriangle(nt),np1,np2);
 		  
 		  if (IsEdge (np1, np2)) continue;
@@ -368,7 +368,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 			    if (outermark[nnt] != chartnum)
 			      {
                                 // NgProfiler::StartTimer (timer4c);
-				int nnp1, nnp2; 
+				STLPointId nnp1, nnp2; 
 				GetTriangle(nt).GetNeighbourPoints(GetTriangle(nnt),nnp1,nnp2);
                                 // NgProfiler::StopTimer (timer4c);
 				
@@ -654,7 +654,7 @@ int AddIfNotExists(NgArray<int>& list, int x)
 
 void STLGeometry :: GetInnerChartLimes(NgArray<twoint>& limes, ChartId chartnum)
 {
-  int np1, np2;
+  STLPointId np1, np2;
   
   limes.SetSize(0);
 
@@ -730,7 +730,7 @@ void STLGeometry :: GetDirtyChartTrigs(int chartnum, STLChart& chart,
 	  STLTrigId nt = NeighbourTrig(t,k); 
 	  if (GetChartNr(nt) != chartnum && outercharttrigs[nt] != chartnum)
 	    {
-              int np1, np2;              
+              STLPointId np1, np2;              
 	      tt.GetNeighbourPoints(GetTriangle(nt),np1,np2);
 	      if (!IsEdge(np1,np2))
 		{
@@ -743,8 +743,8 @@ void STLGeometry :: GetDirtyChartTrigs(int chartnum, STLChart& chart,
     }
   cnt = 0;
 
-  int ap1, ap2, tn1, tn2, l, problem, pn;
-  NgArray<int> trigsaroundp;
+  STLPointId ap1, ap2, pn;
+  Array<STLTrigId> trigsaroundp;
 
   for (int j = chart.GetNChartT(); j >= 1; j--)
     {
@@ -771,31 +771,31 @@ void STLGeometry :: GetDirtyChartTrigs(int chartnum, STLChart& chart,
 	      GetSortedTrianglesAroundPoint(pn,t,trigsaroundp);
 	      trigsaroundp.Append(t); //ring
 	      
-	      problem = 0;
+	      bool problem = false;
 	      //forward:
-	      for (l = 2; l <= trigsaroundp.Size()-1; l++)
+	      for (int l = 2; l <= trigsaroundp.Size()-1; l++)
 		{
-		  tn1 = trigsaroundp.Get(l-1);
-		  tn2 = trigsaroundp.Get(l);
+		  STLTrigId tn1 = trigsaroundp[l-2];
+		  STLTrigId tn2 = trigsaroundp[l-1];
 		  const STLTriangle& t1 = GetTriangle(tn1);
 		  const STLTriangle& t2 = GetTriangle(tn2);
 		  t1.GetNeighbourPoints(t2, ap1, ap2);
 		  if (IsEdge(ap1,ap2)) break;
 		  
-		  if (GetChartNr(tn2) != chartnum && outercharttrigs[tn2] != chartnum) {problem = 1;}
+		  if (GetChartNr(tn2) != chartnum && outercharttrigs[tn2] != chartnum) {problem = true;}
 		}
 
 	      //backwards:
-	      for (l = trigsaroundp.Size()-1; l >= 2; l--)
+	      for (int l = trigsaroundp.Size()-1; l >= 2; l--)
 		{
-		  tn1 = trigsaroundp.Get(l+1);
-		  tn2 = trigsaroundp.Get(l);
+		  STLTrigId tn1 = trigsaroundp[l];
+		  STLTrigId tn2 = trigsaroundp[l-1];
 		  const STLTriangle& t1 = GetTriangle(tn1);
 		  const STLTriangle& t2 = GetTriangle(tn2);
 		  t1.GetNeighbourPoints(t2, ap1, ap2);
 		  if (IsEdge(ap1,ap2)) break;
 		  
-		  if (GetChartNr(tn2) != chartnum && outercharttrigs[tn2] != chartnum) {problem = 1;}
+		  if (GetChartNr(tn2) != chartnum && outercharttrigs[tn2] != chartnum) {problem = true;}
 		}
 	      // if (problem && !IsInArray(j,dirtytrigs))
               if (problem && !dirtytrigs.Contains(j))

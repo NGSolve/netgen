@@ -947,10 +947,10 @@ int STLTopology :: GetRightTrig(int p1, int p2) const
 
 int STLTopology :: NeighbourTrigSorted(int trig, int edgenum) const
 {
-  int i, p1, p2;
-  int psearch = GetTriangle(trig).PNum(edgenum);
+  STLPointId p1, p2;
+  STLPointId psearch = GetTriangle(trig).PNum(edgenum);
 
-  for (i = 1; i <= 3; i++)
+  for (int i = 1; i <= 3; i++)
     {
       GetTriangle(trig).GetNeighbourPoints(GetTriangle(NeighbourTrig(trig,i)),p1,p2);
       if (p1 == psearch) {return NeighbourTrig(trig,i);}

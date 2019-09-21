@@ -164,8 +164,8 @@ public:
   int IsWrongNeighbourFrom(const STLTriangle& t) const;
 
   ///Get the two points of neighbour-Triangles in orientation of this-Triangle
-  void GetNeighbourPoints(const STLTriangle& t, int& p1, int& p2) const;
-  int GetNeighbourPointsAndOpposite(const STLTriangle& t, int& p1, int& p2, int& po) const;
+  void GetNeighbourPoints(const STLTriangle& t, STLPointId & p1, STLPointId & p2) const;
+  int GetNeighbourPointsAndOpposite(const STLTriangle& t, STLPointId & p1, STLPointId & p2, STLPointId & po) const;
 
 
 

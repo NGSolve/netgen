@@ -45,7 +45,7 @@ void STLMeshing (STLGeometry & geom,
   */
 {
   ref = NULL;
-  edgedata = new STLEdgeDataList(*this);
+  edgedata = make_unique<STLEdgeDataList>(*this);
   externaledges.SetSize(0);
   Clear();
   meshchart = 0; // initialize all ?? JS
@@ -65,7 +65,7 @@ void STLMeshing (STLGeometry & geom,
 STLGeometry :: ~STLGeometry()
 {
   // for (auto p : atlas) delete p;
-  delete edgedata;
+  // delete edgedata;
   delete ref;
 }
 
@@ -153,7 +153,7 @@ void STLGeometry :: MarkNonSmoothNormals(const STLParameters& stlparam)
   double dirtyangle = stlparam.yangle/180.*M_PI;
 
   int cnt = 0;
-  int lp1,lp2;
+  STLPointId lp1,lp2;
   for (i = 1; i <= GetNT(); i++)
     {
       for (j = 1; j <= NONeighbourTrigs(i); j++)
@@ -243,7 +243,7 @@ void STLGeometry :: SmoothNormals(const STLParameters& stlparam)
 
 
 	  int nbt = 0;
-	  int fp1,fp2;
+	  STLPointId fp1,fp2;
 	  for (k = 1; k <= NONeighbourTrigs(i); k++)
 	    {
 	      trig.GetNeighbourPoints(GetTriangle(NeighbourTrig(i, k)),fp1,fp2);
@@ -1803,7 +1803,7 @@ double STLGeometry :: CalcTrigBadness(int i)
 {
   int j;
   double maxbadness = 0;
-  int ap1, ap2;
+  STLPointId ap1, ap2;
   for (j = 1; j <= NONeighbourTrigs(i); j++)
     {
       GetTriangle(i).GetNeighbourPoints(GetTriangle(NeighbourTrig(i,j)), ap1, ap2);
@@ -1880,7 +1880,7 @@ void STLGeometry :: MarkRevertedTrigs(const STLParameters& stlparam)
   double revertedangle = stldoctor.smoothangle/180.*M_PI;
 
   int cnt = 0;
-  int ap1, ap2;
+  STLPointId ap1, ap2;
   for (i = 1; i <= GetNT(); i++)
     {
       found = 0;
@@ -1918,7 +1918,7 @@ void STLGeometry :: SmoothDirtyTrigs(const STLParameters& stlparam)
 
   int i,j;
   int changed = 1;
-  int ap1, ap2;
+  STLPointId ap1, ap2;
   
   while (changed)
     {
@@ -2148,59 +2148,59 @@ int STLGeometry :: CheckGeometryOverlapping()
     mutex inters_mutex;
     
     ParallelFor( 1, GetNT()+1, [&] (int first, int next)
-    {
-      NgArray<int> inters;
-      for (int i=first; i<next; i++) {
-	const STLTriangle & tri = GetTriangle(i);
+                 {
+                   NgArray<int> inters;
+                   for (int i=first; i<next; i++) {
+                     const STLTriangle & tri = GetTriangle(i);
 	
-	Point<3> tpmin = tri.box.PMin();
-	Point<3> tpmax = tri.box.PMax();
+                     Point<3> tpmin = tri.box.PMin();
+                     Point<3> tpmax = tri.box.PMax();
 	
-	setree.GetIntersecting (tpmin, tpmax, inters);
+                     setree.GetIntersecting (tpmin, tpmax, inters);
 	
-	for (int j = 1; j <= inters.Size(); j++)
-	  {
-	    const STLTriangle & tri2 = GetTriangle(inters.Get(j));
+                     for (int j = 1; j <= inters.Size(); j++)
+                       {
+                         const STLTriangle & tri2 = GetTriangle(inters.Get(j));
 	    
-	    const Point<3> *trip1[3], *trip2[3];	
-	    Point<3> hptri1[3], hptri2[3];
-	    /*
-	      for (k = 1; k <= 3; k++)
-	      {
-	      trip1[k-1] = &GetPoint (tri.PNum(k));
-	      trip2[k-1] = &GetPoint (tri2.PNum(k));
-	      }
-	    */
+                         const Point<3> *trip1[3], *trip2[3];	
+                         Point<3> hptri1[3], hptri2[3];
+                         /*
+                           for (k = 1; k <= 3; k++)
+                           {
+                           trip1[k-1] = &GetPoint (tri.PNum(k));
+                           trip2[k-1] = &GetPoint (tri2.PNum(k));
+                           }
+                         */
 	    
-	    for (int k = 0; k < 3; k++)
-	      {
-		hptri1[k] = GetPoint (tri[k]);
-		hptri2[k] = GetPoint (tri2[k]);
-		trip1[k] = &hptri1[k];
-		trip2[k] = &hptri2[k];
-	      }
+                         for (int k = 0; k < 3; k++)
+                           {
+                             hptri1[k] = GetPoint (tri[k]);
+                             hptri2[k] = GetPoint (tri2[k]);
+                             trip1[k] = &hptri1[k];
+                             trip2[k] = &hptri2[k];
+                           }
 
-	    if (IntersectTriangleTriangle (&trip1[0], &trip2[0]))
-	      {
-                lock_guard<mutex> guard(inters_mutex);
-		{
-		  oltrigs++;
-		  PrintMessage(5,"Intersecting Triangles: trig ",i," with ",inters.Get(j),"!");
-		  SetMarkedTrig(i, 1);
-		  SetMarkedTrig(inters.Get(j), 1);
-		}
-	      }
-	  }
-      }
-    });
+                         if (IntersectTriangleTriangle (&trip1[0], &trip2[0]))
+                           {
+                             lock_guard<mutex> guard(inters_mutex);
+                             {
+                               oltrigs++;
+                               PrintMessage(5,"Intersecting Triangles: trig ",i," with ",inters.Get(j),"!");
+                               SetMarkedTrig(i, 1);
+                               SetMarkedTrig(inters.Get(j), 1);
+                             }
+                           }
+                       }
+                   }
+                 });
   }
   PrintMessage(3,"Check overlapping geometry ... ", oltrigs, " triangles overlap");
   return oltrigs;
 }
 
 /*
-void STLGeometry :: InitSTLGeometry()
-{
+  void STLGeometry :: InitSTLGeometry()
+  {
   STLTopology::InitSTLGeometry();
 
   int i, j, k;
@@ -2215,88 +2215,88 @@ void STLGeometry :: InitSTLGeometry()
   NgArray<int> normal_cnt; // counts number of added normals in a point
 
   Box3d bb (GetBoundingBox().PMin() + Vec3d (-1,-1,-1),
-	    GetBoundingBox().PMax() + Vec3d (1, 1, 1));
+  GetBoundingBox().PMax() + Vec3d (1, 1, 1));
 
   Point3dTree pointtree (bb.PMin(), 
-			 bb.PMax());
+  bb.PMax());
   NgArray<int> pintersect;
 
   double gtol = GetBoundingBox().CalcDiam()/geometry_tol_fact;
 
   for(i = 1; i <= GetReadNT(); i++)
-    {
-      //if (i%500==499) {(*mycout) << (double)i/(double)GetReadNT()*100. << "%" << endl;}
+  {
+  //if (i%500==499) {(*mycout) << (double)i/(double)GetReadNT()*100. << "%" << endl;}
 
-      STLReadTriangle t = GetReadTriangle(i);
-      STLTriangle st;
-      Vec3d n = t.normal;
+  STLReadTriangle t = GetReadTriangle(i);
+  STLTriangle st;
+  Vec3d n = t.normal;
 
-      for (k = 0; k < 3; k++)
-	{
-	  Point3d p = t.pts[k];
+  for (k = 0; k < 3; k++)
+  {
+  Point3d p = t.pts[k];
 
-	  Point3d pmin = p - Vec3d (gtol, gtol, gtol);
-	  Point3d pmax = p + Vec3d (gtol, gtol, gtol);
+  Point3d pmin = p - Vec3d (gtol, gtol, gtol);
+  Point3d pmax = p + Vec3d (gtol, gtol, gtol);
 	  
-	  pointtree.GetIntersecting (pmin, pmax, pintersect);
+  pointtree.GetIntersecting (pmin, pmax, pintersect);
 	  
-	  if (pintersect.Size() > 1)
-	    (*mycout) << "found too much  " << char(7) << endl;
-	  int foundpos = 0;
-	  if (pintersect.Size())
-	    foundpos = pintersect.Get(1);
+  if (pintersect.Size() > 1)
+  (*mycout) << "found too much  " << char(7) << endl;
+  int foundpos = 0;
+  if (pintersect.Size())
+  foundpos = pintersect.Get(1);
 
-	  if (foundpos) 
-	    {
-	      normal_cnt[foundpos]++;
-	      SetNormal(foundpos,GetNormal(foundpos)+n);
-	      //	      (*testout) << "found p " << p << endl;
-	    }
-	  else
-	    {
-	      foundpos = AddPoint(p);
-	      AddNormal(n);
-	      normal_cnt.Append(1);
+  if (foundpos) 
+  {
+  normal_cnt[foundpos]++;
+  SetNormal(foundpos,GetNormal(foundpos)+n);
+  //	      (*testout) << "found p " << p << endl;
+  }
+  else
+  {
+  foundpos = AddPoint(p);
+  AddNormal(n);
+  normal_cnt.Append(1);
 
-	      pointtree.Insert (p, foundpos);
-	    }
-	  //(*mycout) << "foundpos=" << foundpos << endl;
-	  st.pts[k] = foundpos;
-	}
+  pointtree.Insert (p, foundpos);
+  }
+  //(*mycout) << "foundpos=" << foundpos << endl;
+  st.pts[k] = foundpos;
+  }
 
-      if ( (st.pts[0] == st.pts[1]) || 
-	   (st.pts[0] == st.pts[2]) || 
-	   (st.pts[1] == st.pts[2]) )
-	{
-	  (*mycout) << "ERROR: STL Triangle degenerated" << endl;
-	}
-      else
-	{
-	  // do not add ? js
-	  AddTriangle(st);
-	}
-      //(*mycout) << "TRIG" << i << " = " << st << endl;
+  if ( (st.pts[0] == st.pts[1]) || 
+  (st.pts[0] == st.pts[2]) || 
+  (st.pts[1] == st.pts[2]) )
+  {
+  (*mycout) << "ERROR: STL Triangle degenerated" << endl;
+  }
+  else
+  {
+  // do not add ? js
+  AddTriangle(st);
+  }
+  //(*mycout) << "TRIG" << i << " = " << st << endl;
       
-    } 
+  } 
   //normal the normals
   for (i = 1; i <= GetNP(); i++)
-    {
-      SetNormal(i,1./(double)normal_cnt[i]*GetNormal(i));
-    }
+  {
+  SetNormal(i,1./(double)normal_cnt[i]*GetNormal(i));
+  }
 
   trigsconverted = 1;
 
   vicinity.SetSize(GetNT());
   markedtrigs.SetSize(GetNT());
   for (i = 1; i <= GetNT(); i++)
-    {
-      markedtrigs.Elem(i) = 0;
-      vicinity.Elem(i) = 1;
-    }
+  {
+  markedtrigs.Elem(i) = 0;
+  vicinity.Elem(i) = 1;
+  }
 
   ha_points.SetSize(GetNP());
   for (i = 1; i <= GetNP(); i++)
-    ha_points.Elem(i) = 0;
+  ha_points.Elem(i) = 0;
 
   calcedgedataanglesnew = 0;
   edgedatastored = 0;
@@ -2308,7 +2308,7 @@ void STLGeometry :: InitSTLGeometry()
   ClearLineEndPoints();
 
   (*mycout) << "done" << endl;
-}
+  }
 */
 
 
@@ -2401,13 +2401,13 @@ void STLGeometry :: StoreEdgeData()
 
   // put stlgeom-edgedata to stltopology edgedata 
   /*
-  int i;
-  for (i = 1; i <= GetNTE(); i++)
+    int i;
+    for (i = 1; i <= GetNTE(); i++)
     {
-      const STLTopEdge & topedge = GetTopEdge (i);
-      int ednum = edgedata->GetEdgeNum (topedge.PNum(1),
-				       topedge.PNum(2));
-      topedges.Elem(i).SetStatus (edgedata->Get (ednum).status);
+    const STLTopEdge & topedge = GetTopEdge (i);
+    int ednum = edgedata->GetEdgeNum (topedge.PNum(1),
+    topedge.PNum(2));
+    topedges.Elem(i).SetStatus (edgedata->Get (ednum).status);
     }
   */
 }
@@ -2424,7 +2424,7 @@ void STLGeometry :: CalcEdgeData()
 {
   PushStatus("Calc Edge Data");
 
-  int np1, np2;
+  STLPointId np1, np2;
   
   int ecnt = 0;
   edgedata->SetSize(GetNT()/2*3);
@@ -2678,7 +2678,7 @@ void STLGeometry :: AddFaceEdges()
     }
   
   int changed = 0;
-  int ap1, ap2;
+  STLPointId ap1, ap2;
   for (int i = 1; i <= GetNOFaces(); i++)
     {
       if (!edgecnt.Get(i))
@@ -3008,7 +3008,7 @@ void STLGeometry :: CalcFaceNums()
       markedtrigs1++;
       GetTriangle(starttrig).SetFaceNum(facecnt);
       todolist.Append(starttrig);
-      int ap1, ap2;
+      STLPointId ap1, ap2;
 
       while(todolist.Size())
 	{
@@ -3089,7 +3089,7 @@ void STLGeometry :: BuildSmoothEdges ()
 	  ng2 = GetTriangle(nbt).GeomNormal(points);
 	  ng2 /= (ng2.Length() + 1e-24);
 	  
-	  int pi1, pi2;
+	  STLPointId pi1, pi2;
 	  trig.GetNeighbourPoints(GetTriangle(nbt), pi1, pi2);
 
 	  if (!IsEdge(pi1,pi2)) 
@@ -3141,24 +3141,24 @@ void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
   
   PrintFnStart("AddConeAndSpiralEdges");
 
-  int i,j,k,n;
+  // int i,j,k,n;
   //  int changed = 0;
 
   //check edges, where inner chart and no outer chart come together without an edge
-  int np1, np2, nt;
+  STLPointId np1, np2;
   int cnt = 0;
 
-  for (i = 1; i <= GetNOCharts(); i++)
+  for (ChartId i = 1; i <= GetNOCharts(); i++)
     {
       STLChart& chart = GetChart(i);
-      for (j = 1; j <= chart.GetNChartT(); j++)
+      for (int j = 1; j <= chart.GetNChartT(); j++)
 	{
 	  STLTrigId t = chart.GetChartTrig1(j); 
 	  const STLTriangle& tt = GetTriangle(t);
 
-	  for (k = 1; k <= 3; k++)
+	  for (int k = 1; k <= 3; k++)
 	    {
-	      nt = NeighbourTrig(t,k); 
+	      STLTrigId nt = NeighbourTrig(t,k); 
 	      if (GetChartNr(nt) != i && !TrigIsInOC(nt,i))
 		{	      
 		  tt.GetNeighbourPoints(GetTriangle(nt),np1,np2);
@@ -3171,8 +3171,8 @@ void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
 		      AddEdgePP(np1,edgenum);
 		      AddEdgePP(np2,edgenum);
 		      //changed = 1;
-		      PrintWarning("Found a spiral like structure: chart=", i,
-				   ", trig=", int(t), ", p1=", np1, ", p2=", np2);
+		      PrintWarning("Found a spiral like structure: chart=", int(i),
+				   ", trig=", int(t), ", p1=", int(np1), ", p2=", int(np2));
 		      cnt++;
 		    }
 		}
@@ -3187,17 +3187,14 @@ void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
   cnt = 0;
   int edgecnt = 0;
 
-  NgArray<int> trigsaroundp;
-  NgArray<int> chartpointchecked; //gets number of chart, if in this chart already checked
-  chartpointchecked.SetSize(GetNP());
+  Array<STLTrigId> trigsaroundp;
+  NgArray<int> chartpointchecked(GetNP()); //gets number of chart, if in this chart already checked
+  chartpointchecked = 0;
 
-  for (i = 1; i <= GetNP(); i++)
-    {
-      chartpointchecked.Elem(i) = 0;
-    }
 
   int onoc, notonoc, tpp, pn;
-  int ap1, ap2, tn1, tn2, l, problem;
+  STLPointId ap1, ap2;
+  int tn1, tn2, l, problem;
 
   if (!stldoctor.conecheck) {PrintWarning("++++++++++++ \ncone checking deactivated by user!!!!!\n+++++++++++++++"); return ;}
 
@@ -3205,26 +3202,26 @@ void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
 
   int addedges = 0;
 
-  for (i = 1; i <= GetNOCharts(); i++)
+  for (ChartId i = 1; i <= GetNOCharts(); i++)
     {
       SetThreadPercent((double)i/(double)GetNOCharts()*100.);
       if (multithread.terminate)
 	{PopStatus();return;}
 
       STLChart& chart = GetChart(i);
-      for (j = 1; j <= chart.GetNChartT(); j++)
+      for (int j = 1; j <= chart.GetNChartT(); j++)
 	{
 	  STLTrigId t = chart.GetChartTrig1(j); 
 	  const STLTriangle& tt = GetTriangle(t);
 
-	  for (k = 1; k <= 3; k++)
+	  for (int k = 1; k <= 3; k++)
 	    {
 	      pn = tt.PNum(k);
 	      if (chartpointchecked.Get(pn) == i)
 		{continue;}
 	      
 	      int checkpoint = 0;
-	      for (n = 1; n <= trigsperpoint.EntrySize(pn); n++)
+	      for (int n = 1; n <= trigsperpoint.EntrySize(pn); n++)
 		{
 		  if (trigsperpoint.Get(pn,n) != t && 
 		      GetChartNr(trigsperpoint.Get(pn,n)) != i &&
@@ -3240,10 +3237,10 @@ void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
 		  trigsaroundp.Append(t);
 		      
 		  problem = 0;
-		  for (l = 2; l <= trigsaroundp.Size()-1; l++)
+		  for (int l = 2; l <= trigsaroundp.Size()-1; l++)
 		    {
-		      tn1 = trigsaroundp.Get(l-1);
-		      tn2 = trigsaroundp.Get(l);
+		      tn1 = trigsaroundp[l-2];
+		      tn2 = trigsaroundp[l-1];
 		      const STLTriangle& t1 = GetTriangle(tn1);
 		      const STLTriangle& t2 = GetTriangle(tn2);
 		      t1.GetNeighbourPoints(t2, ap1, ap2);
@@ -3254,10 +3251,10 @@ void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
 
 		  if (problem)
 		    {
-		      for (l = 2; l <= trigsaroundp.Size()-1; l++)
+		      for (int l = 2; l <= trigsaroundp.Size()-1; l++)
 			{
-			  tn1 = trigsaroundp.Get(l-1);
-			  tn2 = trigsaroundp.Get(l);
+			  tn1 = trigsaroundp[l-2];
+			  tn2 = trigsaroundp[l-1];
 			  const STLTriangle& t1 = GetTriangle(tn1);
 			  const STLTriangle& t2 = GetTriangle(tn2);
 			  t1.GetNeighbourPoints(t2, ap1, ap2);
@@ -3287,10 +3284,10 @@ void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
 		    }
 		  //backwards:
 		  problem = 0;
-		  for (l = trigsaroundp.Size()-1; l >= 2; l--)
+		  for (int l = trigsaroundp.Size()-1; l >= 2; l--)
 		    {
-		      tn1 = trigsaroundp.Get(l+1);
-		      tn2 = trigsaroundp.Get(l);
+		      tn1 = trigsaroundp[l];
+		      tn2 = trigsaroundp[l-1];
 		      const STLTriangle& t1 = GetTriangle(tn1);
 		      const STLTriangle& t2 = GetTriangle(tn2);
 		      t1.GetNeighbourPoints(t2, ap1, ap2);
@@ -3299,10 +3296,10 @@ void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
 		      if (GetChartNr(tn2) != i && !TrigIsInOC(tn2,i)) {problem = 1;}
 		    }
 		  if (problem)
-		    for (l = trigsaroundp.Size()-1; l >= 2; l--)
+		    for (int l = trigsaroundp.Size()-1; l >= 2; l--)
 		      {
-			tn1 = trigsaroundp.Get(l+1);
-			tn2 = trigsaroundp.Get(l);
+			tn1 = trigsaroundp[l];
+			tn2 = trigsaroundp[l-1];
 			const STLTriangle& t1 = GetTriangle(tn1);
 			const STLTriangle& t2 = GetTriangle(tn2);
 			t1.GetNeighbourPoints(t2, ap1, ap2);
@@ -3358,22 +3355,22 @@ void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
   //search points where inner chart and outer chart and "no chart" trig come together at edge-point
 
   PrintMessage(7,"search for special chart points");
-  for (i = 1; i <= GetNOCharts(); i++)
+  for (ChartId i = 1; i <= GetNOCharts(); i++)
     {
       STLChart& chart = GetChart(i);
-      for (j = 1; j <= chart.GetNChartT(); j++)
+      for (int j = 1; j <= chart.GetNChartT(); j++)
 	{
 	  STLTrigId t = chart.GetChartTrig1(j); 
 	  const STLTriangle& tt = GetTriangle(t);
 
-	  for (k = 1; k <= 3; k++)
+	  for (int k = 1; k <= 3; k++)
 	    {
 	      pn = tt.PNum(k);
 	      if (GetNEPP(pn) == 2)
 		{
 		  onoc = 0;
 		  notonoc = 0;
-		  for (n = 1; n <= trigsperpoint.EntrySize(pn); n++)
+		  for (int n = 1; n <= trigsperpoint.EntrySize(pn); n++)
 		    {
 		      tpp = trigsperpoint.Get(pn,n);
 		      if (tpp != t && GetChartNr(tpp) != i)
@@ -3390,11 +3387,11 @@ void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
 		      int thereNotOC = 0;
 		      for (l = 2; l <= trigsaroundp.Size(); l++)
 			{
-			  GetTriangle(trigsaroundp.Get(l-1)).
-			    GetNeighbourPoints(GetTriangle(trigsaroundp.Get(l)), ap1, ap2);
+			  GetTriangle(trigsaroundp[l-2]).
+			    GetNeighbourPoints(GetTriangle(trigsaroundp[l-1]), ap1, ap2);
 			  if (IsEdge(ap1,ap2)) {here = (here+1)%2;}
-			  if (!here && TrigIsInOC(trigsaroundp.Get(l),i)) {thereOC = 1;}
-			  if (!here && !TrigIsInOC(trigsaroundp.Get(l),i)) {thereNotOC = 1;}
+			  if (!here && TrigIsInOC(trigsaroundp[l-1],i)) {thereOC = 1;}
+			  if (!here && !TrigIsInOC(trigsaroundp[l-1],i)) {thereNotOC = 1;}
 			}
 		      if (thereOC && thereNotOC)
 			{
@@ -3411,31 +3408,31 @@ void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
 }
 
 //get trigs at a point, started with starttrig, then every left
-void STLGeometry :: GetSortedTrianglesAroundPoint(int p, int starttrig, NgArray<int>& trigs)
+void STLGeometry :: GetSortedTrianglesAroundPoint(STLPointId p, STLTrigId starttrig, Array<STLTrigId>& trigs)
 {
-  int acttrig = starttrig;
+  STLTrigId acttrig = starttrig;
   trigs.SetAllocSize(trigsperpoint.EntrySize(p));
   trigs.SetSize(0);
   trigs.Append(acttrig);
-  int i, j, t, ap1, ap2, locindex1(0), locindex2(0);
-
+  int locindex1(0), locindex2(0);
   //(*mycout) << "trigs around point " << p << endl;
 
   int end = 0;
   while (!end)
     {
       const STLTriangle& at = GetTriangle(acttrig);
-      for (i = 1; i <= trigsperpoint.EntrySize(p); i++)
+      for (int i = 1; i <= trigsperpoint.EntrySize(p); i++)
 	{
-	  t = trigsperpoint.Get(p,i);
+	  STLTrigId t = trigsperpoint.Get(p,i);
 	  const STLTriangle& nt = GetTriangle(t);
 	  if (at.IsNeighbourFrom(nt))
 	    {
+              STLPointId ap1, ap2;
 	      at.GetNeighbourPoints(nt, ap1, ap2);
 	      if (ap2 == p) {Swap(ap1,ap2);}
 	      if (ap1 != p) {PrintSysError("In GetSortedTrianglesAroundPoint!!!");}
 	      
-	      for (j = 1; j <= 3; j++) 
+	      for (int j = 1; j <= 3; j++) 
 		{
 		  if (at.PNum(j) == ap1) {locindex1 = j;};
 		  if (at.PNum(j) == ap2) {locindex2 = j;};
