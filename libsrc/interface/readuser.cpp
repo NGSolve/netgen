@@ -668,7 +668,7 @@ namespace netgen
         {
           Element2d el(TRIG);
           for (auto i : IntRange(3))
-            el[i] = (*geom)[STLTrigIndex(ti)][i];
+            el[i] = int((*geom)[STLTrigId(ti+IndexBASE<netgen::STLTrigId>())][i]);
 
           el.SetIndex(1);
 
