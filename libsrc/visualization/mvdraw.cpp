@@ -758,9 +758,26 @@ namespace netgen
   }
 
 
-
-
-
+  void VisualSceneSurfaceMeshing::MouseMove(int oldx, int oldy,
+                                            int newx, int newy,
+                                            char mode)
+  {
+    double fac = 0.001;
+    if(mode == 'M')
+      {
+        shiftx += fac * (newx - oldx);
+        shifty += fac * (oldy - newy);
+        return;
+      }
+    else if(mode == 'Z')
+      {
+        scalex *= (1 - fac * (newy - oldy));
+        scaley *= (1 - fac * (newy - oldy));
+        return;
+      }
+    
+    VisualScene::MouseMove(oldx, oldy, newx, newy, mode);
+  }
 
 
 #ifdef PARALLELGL

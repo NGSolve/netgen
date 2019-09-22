@@ -1940,7 +1940,7 @@ namespace netgen
 	      vs = &vsmeshdoc;
 	  }
 
-	// if (strcmp (vismode, "surfmeshing") == 0) vs = &vssurfacemeshing;
+	if (strcmp (vismode, "surfmeshing") == 0) vs = &vssurfacemeshing;
 	if (strcmp (vismode, "specpoints") == 0) vs = &vsspecpoints;
         if (strcmp (vismode, "solution") == 0) vs = &netgen::GetVSSolution();
       }
