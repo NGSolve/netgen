@@ -677,23 +677,23 @@ proc meshingoptionsdialog { } {
         ttk::checkbutton $f.cb1.haltlargequal -text "Halt on large quality class" \
             -variable debug.haltlargequalclass  -command { Ng_SetDebugParameters }
         ttk::checkbutton $f.cb1.haltseg -text "Halt on Segment:" \
-            -variable debug.haltsegment  -command "enable_cb %W $f.cb1.segs.ent1 $f.cb1.segs.ent2"
+            -variable debug.haltsegment  -command { Ng_SetDebugParameters }
         ttk::checkbutton $f.cb1.haltnode -text "Halt on Node:" \
-            -variable debug.haltnode  -command "enable_cb %W $f.cb1.segs.ent1 $f.cb1.segs.ent2"
+            -variable debug.haltnode  -command { Ng_SetDebugParameters }
         ttk::frame $f.cb1.fr
         ttk::checkbutton $f.cb1.fr.cb -text "Halt on Face:" \
-            -variable debug.haltface -command "enable_cb %W $f.cb1.fr.ent $f.cb1.fr.ent"
-        ttk::entry $f.cb1.fr.ent -textvariable debug.haltfacenr -width 3 -state disabled
+            -variable debug.haltface -command { Ng_SetDebugParameters }
+        ttk::entry $f.cb1.fr.ent -textvariable debug.haltfacenr -width 3
         
         pack $f.cb1.fr.cb $f.cb1.fr.ent -side left 
 
         ttk::frame $f.cb1.segs
         ttk::label $f.cb1.segs.lab1 -text "P1:"
         ttk::entry $f.cb1.segs.ent1 -width 6 \
-            -textvariable debug.haltsegmentp1  -state disabled
+            -textvariable debug.haltsegmentp1
         ttk::label $f.cb1.segs.lab2 -text "P2:"
         ttk::entry $f.cb1.segs.ent2 -width 6 \
-            -textvariable debug.haltsegmentp2  -state disabled
+            -textvariable debug.haltsegmentp2
 
         pack $f.cb1.segs.lab1 $f.cb1.segs.ent1 $f.cb1.segs.lab2 $f.cb1.segs.ent2 -side left
 
