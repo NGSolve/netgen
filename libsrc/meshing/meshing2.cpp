@@ -6,6 +6,7 @@ namespace netgen
 {
   extern DLL_HEADER void Render(bool blocking = false);
   static void glrender (int wait);
+  DLL_HEADER extern VisualSceneSurfaceMeshing vssurfacemeshing;
   VisualSceneSurfaceMeshing vssurfacemeshing;
 
 
