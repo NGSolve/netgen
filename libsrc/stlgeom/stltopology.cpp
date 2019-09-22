@@ -829,7 +829,7 @@ void STLTopology :: FindNeighbourTrigs()
 	      PrintError("TRIG ",i," has ",NONeighbourTrigs(i)," neighbours!!!!");
 	      for (int kk=1; kk <= NONeighbourTrigs(i); kk++)
 		{
-		  PrintMessage(5,"neighbour-trig",kk," = ",NeighbourTrig(i,kk));
+		  PrintMessage(5,"neighbour-trig",kk," = ",int(NeighbourTrig(i,kk)));
 		}
 	    };
 	}

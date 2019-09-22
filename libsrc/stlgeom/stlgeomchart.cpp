@@ -259,7 +259,33 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 				  if (!accepted) 
                                     break;
 				}
-			      
+
+                              /*
+                              // new check 2019-09-22 
+                              if (accepted)
+                              {
+                                auto & trig = GetTriangle(nt);
+                                Point<3> p0 = GetPoint(trig[0]);
+                                Point<3> p1 = GetPoint(trig[1]);
+                                Point<3> p2 = GetPoint(trig[2]);
+                                Point<3> p01 = Center(p0,p1);
+                                Point<3> p02 = Center(p0,p2);
+                                Point<3> p12 = Center(p1,p2);
+                                Point<3> p012 = Center(p0,p1,p2);
+                                p01 += 1e-5 * (p012-p01);
+                                p02 += 1e-5 * (p012-p02);
+                                p12 += 1e-5 * (p012-p12);
+                                bool test1 = chartbound.TestSegChartNV(p01,p012,sn);
+                                bool test2 = chartbound.TestSegChartNV(p02,p012,sn);
+                                bool test3 = chartbound.TestSegChartNV(p12,p012,sn);
+                                if (!test1 || !test2 || !test3)
+                                  {
+                                    cout << "more stringent" << endl;
+                                    accepted = false;
+                                  }
+                              }
+                              */
+
                               
 			      if (accepted)
 				{
@@ -274,13 +300,13 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 
 				  for (int k = 1; k <= 3; k++)
 				    {
-				      if (innerpointstochart[GetTriangle(nt).PNum(k)]
-					  != chartnum) 
+                                      STLPointId pi = GetTriangle(nt).PNum(k);
+				      if (innerpointstochart[pi] != chartnum) 
 					{
-					  innerpointstochart[GetTriangle(nt).PNum(k)] = chartnum;
-					  pointstochart[GetTriangle(nt).PNum(k)] = chartnum;
-					  chartpoints.Append(GetTriangle(nt).PNum(k));
-					  innerchartpoints.Append(GetTriangle(nt).PNum(k));
+					  innerpointstochart[pi] = chartnum;
+					  pointstochart[pi] = chartnum;
+					  chartpoints.Append(pi);
+					  innerchartpoints.Append(pi);
 					}
 				    }
 				}

@@ -29,9 +29,10 @@ public:
   STLPointId & operator= (const STLPointId & ai) { i = ai.i; return *this; }
   STLPointId & operator= (int ai) { i = ai; return *this; }
   constexpr operator int () const { return i; }
-  STLPointId operator++ (int) { return i++; }
-  STLPointId operator-- (int) { return i--; }
-  STLPointId & operator++ () { i++; return *this; }
+  STLPointId operator++ (int) { return STLPointId(i++); }    
+  STLPointId operator-- (int) { return STLPointId(i--); }
+  STLPointId & operator++ () { ++i; return *this; }
+  STLPointId & operator-- () { --i; return *this; }
   
   void DoArchive(Archive& ar) { ar & i; }
 };
@@ -47,10 +48,13 @@ public:
   STLTrigId & operator= (const STLTrigId & ai) { i = ai.i; return *this; }
   STLTrigId & operator= (int ai) { i = ai; return *this; }
   constexpr operator int () const { return i; }
-  STLTrigId operator++ (int) { return i++; }
-  STLTrigId operator-- (int) { return i--; }
-  STLTrigId & operator++ () { i++; return *this; }
-  
+
+  STLTrigId operator++ (int) { return STLTrigId(i++); }    
+  STLTrigId operator-- (int) { return STLTrigId(i--); }
+  STLTrigId & operator++ () { ++i; return *this; }
+  STLTrigId & operator-- () { --i; return *this; }
+
+  int operator- (STLTrigId i2) const { return i-i2.i; }
 };
 
   inline void SetInvalid (STLTrigId & id) { id = 0; }
@@ -334,9 +338,9 @@ public:
 
   int GetNP() const { return points.Size(); }
   int AddPoint(const Point<3> & p) { points.Append(p); return points.Size(); }
-  const Point<3> & GetPoint(int nr) const { return points[nr]; } // .Get(nr); }
+  const Point<3> & GetPoint(STLPointId nr) const { return points[nr]; } // .Get(nr); }
   int GetPointNum (const Point<3> & p);
-  void SetPoint(int nr, const Point<3> & p) { points[nr] = p; } // { points.Elem(nr) = p; }
+  void SetPoint(STLPointId nr, const Point<3> & p) { points[nr] = p; } // { points.Elem(nr) = p; }
   auto & GetPoints() const { return points; }
 
   const Point<3> & operator[] (STLPointId i) const { return points[i]; }
@@ -347,8 +351,8 @@ public:
 
   int GetNT() const { return trias.Size(); }
   void AddTriangle(const STLTriangle& t);
-  const STLTriangle & GetTriangle (int nr) const { return trias[nr]; } // .Get(nr); }
-  STLTriangle & GetTriangle (int nr) { return trias[nr]; } // .Elem(nr); }
+  const STLTriangle & GetTriangle (STLTrigId nr) const { return trias[nr]; } // .Get(nr); }
+  STLTriangle & GetTriangle (STLTrigId nr) { return trias[nr]; } // .Elem(nr); }
   
   const STLTriangle & operator[] (STLTrigId i) const { return trias[i]; }
   STLTriangle & operator[] (STLTrigId i) { return trias[i]; }
@@ -381,13 +385,13 @@ public:
 
   // Table will be constructed, if topology is not ok
   /// neighbourtrigs for surfacetrigs
-  TABLE<int> neighbourtrigs;
+  TABLE<STLTrigId> neighbourtrigs;
 
   /// get nr-th neighbour Triangle for triangle trig
-  int NONeighbourTrigs(int trig) const { return neighbourtrigs.EntrySize(trig); }
-  int NeighbourTrig(int trig, int nr) const { return neighbourtrigs.Get(trig,nr); }
+  int NONeighbourTrigs(STLTrigId trig) const { return neighbourtrigs.EntrySize(int(trig)); }
+  STLTrigId NeighbourTrig(STLTrigId trig, int nr) const { return neighbourtrigs.Get(int(trig),nr); }
   int NeighbourTrigSorted(int trig, int nr) const;
-  void AddNeighbourTrig(int i, int nt) { neighbourtrigs.Add1(i, nt); }
+  void AddNeighbourTrig(STLTrigId i, STLTrigId nt) { neighbourtrigs.Add1(int(i), nt); }
 
 
 

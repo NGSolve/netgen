@@ -1609,7 +1609,7 @@ void STLGeometry :: NeighbourAnglesOfSelectedTrig()
       PrintMessage(1,"Angle to triangle ", st, ":");
       for (i = 1; i <= NONeighbourTrigs(st); i++)
 	{
-	  PrintMessage(1,"   triangle ", NeighbourTrig(st,i), ": angle = ", 
+	  PrintMessage(1,"   triangle ", int(NeighbourTrig(st,i)), ": angle = ", 
 		       180./M_PI*GetAngle(st, NeighbourTrig(st,i)), "°",
 		       ", calculated = ", 180./M_PI*Angle(GetTriangle(st).GeomNormal(points), 
 							  GetTriangle(NeighbourTrig(st,i)).GeomNormal(points)), "°");

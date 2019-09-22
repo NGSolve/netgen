@@ -541,7 +541,7 @@ int STLGeometry :: Project(Point<3> & p3d) const
 {
   Point<3> p, pf;
 
-  int i, j;
+  int j;
   int fi = 0;
   int cnt = 0;
   int different = 0;
@@ -563,7 +563,7 @@ int STLGeometry :: Project(Point<3> & p3d) const
   
   for (j = 1; j <= nt; j++)
     {
-      i = chart.GetTrig1(j);
+      STLTrigId i = chart.GetTrig1(j);
 
       const Point<3> & c = GetTriangle(i).center;
       /*

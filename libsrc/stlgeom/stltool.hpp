@@ -165,8 +165,8 @@ public:
   int operator== (const STLBoundarySeg & s2) const
     { return i1 == s2.i1 && i2 == s2.i2; }
   void Swap ();
-  int I1() const { return i1; }
-  int I2() const { return i2; }
+  STLPointId I1() const { return i1; }
+  STLPointId I2() const { return i2; }
   const Point<3> & P1() const { return p1; }
   const Point<3> & P2() const { return p2; }
   const Point<2> & P2D1() const { return p2d1; }

@@ -493,7 +493,8 @@ void STLEdgeDataList :: BuildClusterWithEdge(int ep1, int ep2, NgArray<twoint>& 
   int j, i, k;
   int oldend;
   int newend = 1;
-  int pnew, ennew(0);
+  STLPointId pnew;
+  int ennew(0);
 
   int changed = 1;
   while (changed)
