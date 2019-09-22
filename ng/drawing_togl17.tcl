@@ -54,6 +54,18 @@ if {[catch {togl .ndraw -width 400 -height 300  -rgba true -double true -depth t
 	.ndraw render
 	set oldmousex %x; set oldmousey %y;
     }
+    
+    bind .ndraw <Alt-B2-Motion> {
+        Ng_MouseMove $oldmousex $oldmousey %x %y Move2d
+        .ndraw render
+        set oldmousex %x; set oldmousey %y;
+    }
+    
+    bind .ndraw <Alt-B3-Motion> {
+        Ng_MouseMove $oldmousex $oldmousey %x %y Zoom2d
+        .ndraw render
+        set oldmousex %x; set oldmousey %y;
+    }
 }
 
 

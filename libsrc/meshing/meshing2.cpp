@@ -18,7 +18,7 @@ namespace netgen
 //   // static int geomtrig;
 //   //static const char * rname;
 //   static int cntelem, trials, nfaces;
-   static int oldnl;
+//   static int oldnl;
 //   static int qualclass;
 
 
@@ -257,7 +257,8 @@ namespace netgen
     auto &loclines = *loclinesptr;
     vssurfacemeshing.loclinesptr = loclinesptr;
     int cntelem = 0, trials = 0, nfaces = 0;
-    oldnl = 0;
+    int oldnl = 0;
+    vssurfacemeshing.oldnl = oldnl;
     int qualclass;
 
 
@@ -523,6 +524,7 @@ namespace netgen
 	  {
 	    oldnp = locpoints.Size();
 	    oldnl = loclines.Size();
+            vssurfacemeshing.oldnl = oldnl;
 	  
 	    if (debugflag)
 	      (*testout) << "define new transformation" << endl;
@@ -1461,6 +1463,7 @@ namespace netgen
 		  (*testout) << adfront.GetGlobalIndex (pindex.Get(i)) << endl;
 
 		(*testout) << "old number of lines = " << oldnl << endl;
+                vssurfacemeshing.oldnl = oldnl;
 		for (int i = 1; i <= loclines.Size(); i++)
 		  {
 		    (*testout) << "line ";
@@ -1758,8 +1761,6 @@ namespace netgen
     float mat_col2d[] = { 1, 1, 1, 1 };
     glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col2d);
   
-    double scalex = 0.1, scaley = 0.1;
-
     glBegin (GL_LINES);
     for (int i = 1; i <= loclines.Size(); i++)
       {
@@ -1776,8 +1777,8 @@ namespace netgen
 	    Point2d p2 = plainpoints.Get(pi2);
 	  
 	    glBegin (GL_LINES);
-	    glVertex3f (scalex * p1.X(), scaley * p1.Y(), -5);
-	    glVertex3f (scalex * p2.X(), scaley * p2.Y(), -5);
+	    glVertex3f (scalex * p1.X() + shiftx, scaley * p1.Y() + shifty, -5);
+	    glVertex3f (scalex * p2.X() + shiftx, scaley * p2.Y() + shifty, -5);
 	    glEnd();
 	  }
       }
@@ -1789,7 +1790,7 @@ namespace netgen
     for (int i = 1; i <= plainpoints.Size(); i++)
       {
 	Point2d p = plainpoints.Get(i);
-	glVertex3f (scalex * p.X(), scaley * p.Y(), -5);
+	glVertex3f (scalex * p.X() + shiftx, scaley * p.Y() + shifty, -5);
       }
     glEnd();
 
