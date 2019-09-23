@@ -852,25 +852,20 @@ STLBoundary :: STLBoundary (STLGeometry * ageometry)
 
 void STLBoundary :: AddOrDelSegment(const STLBoundarySeg & seg)
 {
-  INDEX_2 op(seg.I1(), seg.I2());
-  if(boundary_ht.Used(op))
-    boundary_ht.Delete(op);
-  else
-    boundary_ht[op] = seg;
-  // bool found = false;
-  // for (int i = 1; i <= boundary.Size(); i++)
-  //   {
-  //     if (found) { boundary.Elem(i-1) = boundary.Get(i); }
-  //     if (boundary.Get(i) == seg) { found = true; }
-  //   }
-  // if (!found) 
-  //   {
-  //     boundary.Append(seg);
-  //   }
-  // else 
-  //   {
-  //     boundary.SetSize(boundary.Size()-1);
-  //   }
+  bool found = false;
+  for (int i = 1; i <= boundary.Size(); i++)
+    {
+      if (found) { boundary.Elem(i-1) = boundary.Get(i); }
+      if (boundary.Get(i) == seg) { found = true; }
+    }
+  if (!found) 
+    {
+      boundary.Append(seg);
+    }
+  else 
+    {
+      boundary.SetSize(boundary.Size()-1);
+    }
 }
 
 void STLBoundary ::AddTriangle(const STLTriangle & t)
@@ -1014,7 +1009,18 @@ void STLBoundary ::AddTriangle(const STLTriangle & t)
     {
       STLBoundarySeg bseg(seg[0], seg[1], geometry->GetPoints(), chart);
       bseg.SetSmoothEdge (geometry->IsSmoothEdge (seg[0],seg[1]));
-      AddOrDelSegment(bseg);
+      
+      INDEX_2 op(seg[1], seg[0]);
+      if (boundary_ht.Used(op))
+        {
+          // cout << "delete " << op << endl;
+          boundary_ht.Delete(op);
+        }
+      else
+        {
+          // cout << "insert " << seg << endl;
+          boundary_ht[seg] = bseg;
+        }
     }
   /*
     // cout << "bounds = " << boundary << endl;
@@ -1100,8 +1106,12 @@ bool STLBoundary :: TestSeg(const Point<3>& p1, const Point<3> & p2, const Vec<3
   Point<3> c = Center (p1, p2);
   double dist1 = Dist (c, p1);
  
-  for (const auto& [index, seg] : boundary_ht)
+  int nseg = NOSegments();
+  for (j = 1; j <= nseg; j++)
     {
+      const STLBoundarySeg & seg = GetSegment(j);
+
+
       if (seg.IsSmoothEdge())
 	continue;
 
