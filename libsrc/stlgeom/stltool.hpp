@@ -187,23 +187,23 @@ class STLBoundary
 private:
   STLGeometry * geometry;
   const STLChart * chart;
-  NgArray<STLBoundarySeg> boundary;
+  // NgArray<STLBoundarySeg> boundary;
   ClosedHashTable<INDEX_2, STLBoundarySeg> boundary_ht;  
   BoxTree<2,INDEX_2> * searchtree = nullptr;
 public:
   STLBoundary(STLGeometry * ageometry);
   ~STLBoundary() { delete searchtree; }
 
-  void Clear() {boundary.SetSize(0); boundary_ht = ClosedHashTable<INDEX_2,STLBoundarySeg>(); }
+  void Clear() { /* boundary.SetSize(0); */ boundary_ht = ClosedHashTable<INDEX_2,STLBoundarySeg>(); }
   void SetChart (const STLChart * achart) { chart = achart; }
   //don't check, if already exists!
-  void AddNewSegment(const STLBoundarySeg & seg) {boundary.Append(seg);};
+  // void AddNewSegment(const STLBoundarySeg & seg) {boundary.Append(seg);};
   //check if segment exists
-  void AddOrDelSegment(const STLBoundarySeg & seg);
+  // void AddOrDelSegment(const STLBoundarySeg & seg);
   //addordelsegment for all 3 triangle segments!
   void AddTriangle(const STLTriangle & t);
-  int NOSegments() {return boundary.Size();};
-  const STLBoundarySeg & GetSegment(int i) {return boundary.Get(i);}
+  int NOSegments() {return boundary_ht.UsedElements();};
+  // const STLBoundarySeg & GetSegment(int i) {return boundary.Get(i);}
 
   void BuildSearchTree();
   void DeleteSearchTree();

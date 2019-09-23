@@ -850,6 +850,7 @@ STLBoundary :: STLBoundary (STLGeometry * ageometry)
 { ; }
 
 
+/*
 void STLBoundary :: AddOrDelSegment(const STLBoundarySeg & seg)
 {
   bool found = false;
@@ -867,6 +868,7 @@ void STLBoundary :: AddOrDelSegment(const STLBoundarySeg & seg)
       boundary.SetSize(boundary.Size()-1);
     }
 }
+*/
 
 void STLBoundary ::AddTriangle(const STLTriangle & t)
 {
@@ -1105,12 +1107,15 @@ bool STLBoundary :: TestSeg(const Point<3>& p1, const Point<3> & p2, const Vec<3
   double maxl = max2(scalp1, scalp2);
   Point<3> c = Center (p1, p2);
   double dist1 = Dist (c, p1);
- 
+
+  /*
   int nseg = NOSegments();
   for (j = 1; j <= nseg; j++)
     {
       const STLBoundarySeg & seg = GetSegment(j);
-
+  */
+  for(auto [i2, seg] : boundary_ht)
+    { 
 
       if (seg.IsSmoothEdge())
 	continue;
