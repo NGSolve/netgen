@@ -183,16 +183,22 @@ namespace netgen
 
   PointIndex Mesh :: AddPoint (const Point3d & p, int layer, POINTTYPE type)
   { 
-    NgLock lock(mutex);
-    lock.Lock();
-
-    timestamp = NextTimeStamp();
 
     // PointIndex pi = points.End();
     PointIndex pi = *points.Range().end();
-    points.Append ( MeshPoint (p, layer, type) ); 
+    if (points.Size() == points.AllocSize())
+      {
+        NgLock lock(mutex);
+        lock.Lock();
+        points.Append ( MeshPoint (p, layer, type) ); 
+        lock.UnLock();
+      }
+    else
+      {
+        points.Append ( MeshPoint (p, layer, type) ); 
+      }
 
-    lock.UnLock();
+    timestamp = NextTimeStamp();
 
     return pi;
   }
@@ -243,11 +249,9 @@ namespace netgen
 
   SurfaceElementIndex Mesh :: AddSurfaceElement (const Element2d & el)
   {     
-    NgLock lock(mutex);
-    lock.Lock();
     timestamp = NextTimeStamp();
 
-    int maxn = el[0];
+    PointIndex maxn = el[0];
     for (int i = 1; i < el.GetNP(); i++)
       if (el[i] > maxn) maxn = el[i];
 
@@ -268,7 +272,17 @@ namespace netgen
 
     
     SurfaceElementIndex si = surfelements.Size();
-    surfelements.Append (el); 
+    if (surfelements.AllocSize() == surfelements.Size())
+      {
+        NgLock lock(mutex);
+        lock.Lock();
+        surfelements.Append (el);
+        lock.UnLock();
+      }
+    else
+      {
+        surfelements.Append (el);        
+      }
 
     if (el.index<=0 || el.index > facedecoding.Size())
       cerr << "has no facedecoding: fd.size = " << facedecoding.Size() << ", ind = " << el.index << endl;
@@ -279,7 +293,6 @@ namespace netgen
     if (SurfaceArea().Valid())
       SurfaceArea().Add (el);
 
-    lock.UnLock();
     return si;
   }
 
