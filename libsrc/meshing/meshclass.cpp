@@ -332,9 +332,6 @@ namespace netgen
 
   ElementIndex Mesh :: AddVolumeElement (const Element & el)
   { 
-    NgLock lock(mutex);
-    lock.Lock();
-
     /*
     int maxn = el[0];
     for (int i = 1; i < el.GetNP(); i++)
@@ -362,7 +359,17 @@ namespace netgen
 
     int ve = volelements.Size();
 
-    volelements.Append (el); 
+    if (volelements.Size() == volelements.AllocSize())
+      {
+        NgLock lock(mutex);
+        lock.Lock();
+        volelements.Append (el);
+        lock.UnLock();
+      }
+    else
+      {
+        volelements.Append (el);
+      }
     volelements.Last().flags.illegal_valid = 0;
 
     // while (volelements.Size() > eltyps.Size())
@@ -370,7 +377,6 @@ namespace netgen
 
     timestamp = NextTimeStamp();
 
-    lock.UnLock();
     return ve;
   }
 
