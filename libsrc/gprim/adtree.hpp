@@ -404,42 +404,22 @@ public:
     nchilds = 0;
   }
   
-  void DeleteChilds ()
+  void DeleteChilds (BlockAllocator & ball)
   {
     if (left)
       {
-	left->DeleteChilds();
-	delete left;
+	left->DeleteChilds(ball);
+        ball.Free(left);
 	left = NULL;
       }
     if (right)
       {
-	right->DeleteChilds();
-	delete right;
+	right->DeleteChilds(ball);
+        ball.Free(right);
 	right = NULL;
       }
   }
-  
-  // friend class T_ADTree<DIM>;
-
-  /*
-    // slow without blockallocator !!!!!
-    
-  static BlockAllocator ball;
-  void * operator new(size_t)
-  {
-    return ball.Alloc();
-  }
-  
-  void operator delete (void * p)
-  {
-    ball.Free(p);
-  }
-  */
 };
-
-// template <int DIM, typename T>
-// BlockAllocator T_ADTreeNode<DIM,T> :: ball(sizeof (T_ADTreeNode<DIM,T>));
 
 
 
@@ -451,20 +431,22 @@ public:
     Point<dim> cmin, cmax;
     // NgArray<T_ADTreeNode<dim>*> ela;
     ClosedHashTable<T, T_ADTreeNode<dim,T>*> ela;
+
+    BlockAllocator ball{sizeof(T_ADTreeNode<dim,T>)};
   public:
     T_ADTree (Point<dim> acmin, Point<dim> acmax)
     {
       cmin = acmin;
       cmax = acmax;
       
-      root = new T_ADTreeNode<dim,T>;
+      root = new (ball.Alloc()) T_ADTreeNode<dim,T>;
       root->sep = (cmin[0] + cmax[0]) / 2;
     }
     
     ~T_ADTree ()
     {
-      root->DeleteChilds();
-      delete root;
+      root->DeleteChilds(ball);
+      ball.Free(root);
     }
     
     void Insert (Point<dim> p, T pi)
@@ -514,8 +496,7 @@ public:
         }
       
       
-      next = new T_ADTreeNode<dim,T>;
-    // memcpy (next->data, p, dim * sizeof(float));
+      next = new (ball.Alloc()) T_ADTreeNode<dim,T>;
       next->data = p;
       next->pi = pi;
       next->sep = (bmin[dir] + bmax[dir]) / 2;
