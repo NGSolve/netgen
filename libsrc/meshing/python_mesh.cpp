@@ -1000,9 +1000,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
  Pro/ENGINEER format (*.fnf)
 )delimiter");
   py::enum_<MESHING_STEP>(m,"MeshingStep")
-    .value("MESHEDGES",MESHCONST_MESHEDGES)
-    .value("MESHSURFACE",MESHCONST_OPTSURFACE)
-    .value("MESHVOLUME",MESHCONST_OPTVOLUME)
+    .value("ANALYSE", MESHCONST_ANALYSE)
+    .value("MESHEDGES", MESHCONST_MESHEDGES)
+    .value("MESHSURFACE", MESHCONST_OPTSURFACE)
+    .value("MESHVOLUME", MESHCONST_OPTVOLUME)
     ;
          
   typedef MeshingParameters MP;
