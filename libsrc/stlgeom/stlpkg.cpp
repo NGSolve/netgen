@@ -395,6 +395,16 @@ namespace netgen
 	  {
 	    stlgeometry->STLDoctorConfirmedToCandidateEdges();
 	  }
+	else if (strcmp (argv[1], "writechart") == 0)
+	  {
+            int st = stlgeometry->GetSelectTrig();
+
+            if (st >= 1 && st <= stlgeometry->GetNT() && stlgeometry->AtlasMade())
+            {
+              auto chartnumber = stlgeometry->GetChartNr(st);
+              stlgeometry->WriteChartToFile(chartnumber, "chart.stlb");
+            }
+	  }
       }
 
     return TCL_OK;

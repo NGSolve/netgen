@@ -944,8 +944,14 @@ proc viewingoptionsdialog { } {
 	    -textvariable stloptions.chartnumberoffset -validate focus -takefocus 0 \
             -validatecommand "my_validate %W 0 1e9 %P 0" \
             -invalidcommand "my_invalid %W"
+
+        ttk::button $f.fn.btn_write_chart -text "Write selected chart to chart.stlb" -command {
+            Ng_STLDoctor writechart
+        }
+
 	grid $f.fn.lab -sticky ne -padx 4
         grid $f.fn.ent -sticky nw -padx 4 -row 1 -column 1
+        grid $f.fn.btn_write_chart -padx 4 -row 2 -column 1
         grid anchor $f.fn center 
         
 	ttk::labelframe $f.advstl -text "Advanced STL options" -relief groove -borderwidth 3

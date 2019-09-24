@@ -460,6 +460,9 @@ namespace netgen
     int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam) override;
     
     virtual const Refinement & GetRefinement () const override;
+
+    // Add additional Point to chart to close the surface and write the resulting stl to a file
+    void WriteChartToFile( ChartId chartnumber, string filename="chart.slb" );
   };
  
 
