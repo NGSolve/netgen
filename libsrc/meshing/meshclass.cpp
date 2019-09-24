@@ -2219,9 +2219,9 @@ namespace netgen
     // int i, j, k;
 
     // new version, general elements
-    // hash index: pnum1-2
-    // hash data : surfnr,  surfel-nr (pos) or segment nr(neg)
-    INDEX_2_HASHTABLE<INDEX_2> faceht(4 * GetNSE()+GetNSeg()+1);   
+    // hash index: pnum1-2, surfnr
+    // hash data : surfel-nr (pos) or segment nr(neg)
+    INDEX_3_HASHTABLE<int> faceht(4 * GetNSE()+GetNSeg()+1);   
 
     PrintMessage (5, "Test Opensegments");
     for (int i = 1; i <= GetNSeg(); i++)
@@ -2230,8 +2230,8 @@ namespace netgen
 
         if (surfnr == 0 || seg.si == surfnr)
           {
-            INDEX_2 key(seg[0], seg[1]);
-            INDEX_2 data(seg.si, -i);
+            INDEX_3 key(seg[0], seg[1], seg.si);
+            int data = -i;
 
             if (faceht.Used (key))
               {
@@ -2244,6 +2244,8 @@ namespace netgen
       }
 
 
+    /*
+      // not possible with surfnr as hash-index
     for (int i = 1; i <= GetNSeg(); i++)
       {
         const Segment & seg = LineSegment (i);
@@ -2258,7 +2260,9 @@ namespace netgen
               }
           }
       }
+    */
 
+    
     // bool buggy = false;
     // ofstream bout("buggy.out");
 
@@ -2271,15 +2275,18 @@ namespace netgen
           {
             for (int j = 1; j <= el.GetNP(); j++)
               {
-                INDEX_2 seg (el.PNumMod(j), el.PNumMod(j+1));
-                INDEX_2 data;
+                INDEX_3 seg (el.PNumMod(j), el.PNumMod(j+1), el.GetIndex());
+                int data;
 
                 if (seg.I1() < PointIndex::BASE || seg.I2() < PointIndex::BASE)
                   cerr << "seg = " << seg << endl;
 
                 if (faceht.Used(seg))
                   {
+                    faceht.Set (seg, 0);
+                    /*
                     data = faceht.Get(seg);
+                    
                     if (data.I1() == el.GetIndex())
                       {
                         data.I1() = 0;
@@ -2290,46 +2297,16 @@ namespace netgen
 			// buggy = true;
                         PrintWarning ("hash table si not fitting for segment: ",
                                        seg.I1(), "-", seg.I2(), " other = ",
-                                       data.I2());
-			// cout << "me: index = " << el.GetIndex() << ", el = " << el << endl;
-
-			/*
-			bout << "has index = " << seg << endl;
-			bout << "hash value = " << faceht.HashValue (seg) << endl;
-
-			if (data.I2() > 0)
-			  {
-			    int io = data.I2();
-			    cout << "other trig: index = " << SurfaceElement(io).GetIndex()
-				 << ", el = " << SurfaceElement(io) << endl;
-			  }
-			else
-			  {
-			    cout << "other seg " << -data.I2() << ", si = " << data.I1() << endl;
-			  }
-
-			
-			bout << "me: index = " << el.GetIndex() << ", el = " << el << endl;
-			if (data.I2() > 0)
-			  {
-			    int io = data.I2();
-			    bout << "other trig: index = " << SurfaceElement(io).GetIndex()
-				 << ", el = " << SurfaceElement(io) << endl;
-			  } 
-			else
-			  {
-			    bout << "other seg " << -data.I2() << ", si = " << data.I1() << endl;
-			  }
-			*/
+                                      data.I2(), ", surfnr = ", surfnr);
                       }
+                    */
                   }
                 else
                   {
                     Swap (seg.I1(), seg.I2());
-                    data.I1() = el.GetIndex();
-                    data.I2() = i;
-
-                    faceht.Set (seg, data);
+                    // data.I1() = el.GetIndex();
+                    // data.I2() = i;
+                    faceht.Set (seg, i);
                   }
               }
           }
@@ -2365,21 +2342,21 @@ namespace netgen
     for (int i = 1; i <= faceht.GetNBags(); i++)
       for (int j = 1; j <= faceht.GetBagSize(i); j++)
         {
-          INDEX_2 i2;
-          INDEX_2 data;
+          INDEX_3 i2;
+          int data;
           faceht.GetData (i, j, i2, data);
-          if (data.I1())  // surfnr
+          if (data)  // surfnr
             {
               Segment seg;
               seg[0] = i2.I1();
               seg[1] = i2.I2();
-              seg.si = data.I1();
+              seg.si = i2.I3();
 
               // find geomdata:
-              if (data.I2() > 0)
+              if (data > 0)
                 {
                   // segment due to triangle
-                  const Element2d & el = SurfaceElement (data.I2());
+                  const Element2d & el = SurfaceElement (data);
                   for (int k = 1; k <= el.GetNP(); k++)
                     {
                       if (seg[0] == el.PNum(k))
@@ -2393,7 +2370,7 @@ namespace netgen
               else
                 {
                   // segment due to line
-                  const Segment & lseg = LineSegment (-data.I2());
+                  const Segment & lseg = LineSegment (-data);
                   seg.geominfo[0] = lseg.geominfo[0];
                   seg.geominfo[1] = lseg.geominfo[1];
 
