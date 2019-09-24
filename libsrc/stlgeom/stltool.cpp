@@ -691,11 +691,6 @@ void STLChart :: AddOuterTrig(STLTrigId i)
 
 bool STLChart :: IsInWholeChart(int nr) const
 {
-  // for (int i = 1; i <= charttrigs.Size(); i++)
-  // if (charttrigs.Get(i) == nr) return true;
-  // for (int i = 1; i <= outertrigs.Size(); i++)
-  // if (outertrigs.Get(i) == nr) return true;
-  // return false;
   return charttrigs.Contains(nr) || outertrigs.Contains(nr);
 }
 
@@ -1014,30 +1009,10 @@ void STLBoundary ::AddTriangle(const STLTriangle & t)
       
       INDEX_2 op(seg[1], seg[0]);
       if (boundary_ht.Used(op))
-        {
-          // cout << "delete " << op << endl;
-          boundary_ht.Delete(op);
-        }
+        boundary_ht.Delete(op);
       else
-        {
-          // cout << "insert " << seg << endl;
-          boundary_ht[seg] = bseg;
-        }
+        boundary_ht[seg] = bseg;
     }
-  /*
-    // cout << "bounds = " << boundary << endl;
-      cout << "bounds:";
-      for (auto & val : boundary)
-        cout << val.I1() << "-" << val.I2() << endl;
-      cout << "ht = " << boundary_ht << endl;
-      if (boundary_ht.UsedElements() != boundary.Size())
-        {
-          cout << "wrong count" << endl;
-          char key;                          
-          cin >> key;
-        }
-  */
-  // NgProfiler::StopTimer (timer_new);  
 }
 
 bool STLBoundary :: TestSeg(const Point<3>& p1, const Point<3> & p2, const Vec<3> & sn, 

@@ -140,11 +140,10 @@ class STLBoundarySeg
   Point<3> p1, p2, center;
   Point<2> p2d1, p2d2;
   Box<2> boundingbox;
-  //  Point<2> p2dmin, p2dmax;
 
   double rad;
   STLPointId i1, i2;
-  int smoothedge;
+  bool smoothedge;
 public:
   STLBoundarySeg () { ; }
   STLBoundarySeg (STLPointId ai1, STLPointId ai2, const Array<Point<3>,STLPointId> & points,
@@ -177,8 +176,8 @@ public:
   const Box<2> & BoundingBox() const { return boundingbox; }
   double Radius () const { return rad; }
 
-  void SetSmoothEdge (int se) { smoothedge = se; }
-  int IsSmoothEdge () const { return smoothedge; }
+  void SetSmoothEdge (bool se) { smoothedge = se; }
+  bool IsSmoothEdge () const { return smoothedge; }
   friend class STLBoundary;
 };
 
