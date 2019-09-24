@@ -1988,7 +1988,8 @@ namespace netgen
       }
   }
 */
-  
+
+  /*
   template <int dim, typename T>
   void T_ADTree<dim,T> :: PrintRec (ostream & ost, const T_ADTreeNode<dim,T> * node) const
   {
@@ -2030,8 +2031,7 @@ namespace netgen
       els += ElementsRec(node->right);
     return els;
   }
-
-
+*/
 
 
   

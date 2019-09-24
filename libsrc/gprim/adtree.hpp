@@ -609,9 +609,45 @@ public:
     int Elements () const
     { return ElementsRec (root); }
     
-    void PrintRec (ostream & ost, const T_ADTreeNode<dim,T> * node) const;
-    int DepthRec (const T_ADTreeNode<dim,T> * node) const;
-    int ElementsRec (const T_ADTreeNode<dim,T> * node) const;
+    void PrintRec (ostream & ost, const T_ADTreeNode<dim,T> * node) const
+    {
+      
+      // if (node->data)     // true anyway
+      {
+	ost << node->pi << ": ";
+	ost << node->nchilds << " childs, ";
+	for (int i = 0; i < dim; i++)
+	  ost << node->data[i] << " ";
+	ost << endl;
+      }
+      if (node->left)
+        PrintRec (ost, node->left);
+      if (node->right)
+        PrintRec (ost, node->right);
+    }
+
+    int DepthRec (const T_ADTreeNode<dim,T> * node) const
+    {
+      int ldepth = 0;
+      int rdepth = 0;
+      
+      if (node->left)
+        ldepth = DepthRec(node->left);
+      if (node->right)
+        rdepth = DepthRec(node->right);
+      return 1 + max2 (ldepth, rdepth);
+    }
+    
+    int ElementsRec (const T_ADTreeNode<dim,T> * node) const
+    {
+      int els = 1;
+      if (node->left)
+        els += ElementsRec(node->left);
+      if (node->right)
+      els += ElementsRec(node->right);
+      return els;
+    }
+    
     
     void PrintMemInfo (ostream & ost) const
     {
