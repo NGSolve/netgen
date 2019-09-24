@@ -3521,6 +3521,75 @@ void STLGeometry :: SmoothGeometry ()
     }
 }
 
+void STLGeometry :: WriteChartToFile( ChartId chartnumber, string filename )
+{
+  PrintMessage(1,"write chart ", int(chartnumber), " to ", filename);
+  Array<int> trignums;
+
+  if (chartnumber >= 1 && chartnumber <= GetNOCharts())
+  {
+    const STLChart& chart = GetChart(chartnumber);
+
+    for (int j = 1; j <= chart.GetNChartT(); j++)
+      trignums.Append(chart.GetChartTrig1(j));
+
+    for (int j = 1; j <= chart.GetNOuterT(); j++)
+      trignums.Append(chart.GetOuterTrig1(j));
+
+    QuickSort(trignums);
+    STLGeometry geo;
+    NgArray<STLReadTriangle> readtrigs;
+    const auto & first_trig = GetTriangle(chart.GetChartTrig1(1));
+    auto normal = first_trig.Normal();
+    Box<3> box{Box<3>::EMPTY_BOX};
+
+    for(auto j : trignums)
+    {
+      const auto& trig = GetTriangle(j);
+      Point<3> pts[3];
+      for(auto k : Range(3))
+      {
+        pts[k] = GetPoint(trig[k]);
+        box.Add(pts[k]);
+      }
+      Vec3d normal = Cross( pts[1]-pts[0], pts[2]-pts[0] );
+      readtrigs.Append(STLReadTriangle(pts, trig.Normal()));
+    }
+    auto dist = box.PMax() - box.PMin();
+    auto extra_point = GetPoint(first_trig[0]) - dist.Length()*normal;
+
+    NgArray<int> acttrigs(GetNT());
+    acttrigs = -1;
+    for (int j = 1; j <= chart.GetNT(); j++)
+      acttrigs.Elem(chart.GetTrig1(j)) = chartnumber;
+
+    for (int j = 1; j <= chart.GetNT(); j++)
+    {
+      auto t = chart.GetTrig1(j);
+      const auto & tt = GetTriangle(t);
+      for (int k = 1; k <= 3; k++)
+      {
+        int nt = NeighbourTrig(t,k);
+        if (acttrigs.Get(nt) != chartnumber)
+        {
+          STLPointId np1, np2;
+          tt.GetNeighbourPoints(GetTriangle(nt),np1,np2);
+
+          Point<3> pts[3];
+          pts[0] = GetPoint(np2);
+          pts[1] = GetPoint(np1);
+          pts[2] = extra_point;
+          Vec3d normal = -Cross( pts[2]-pts[0], pts[1]-pts[0] );
+          readtrigs.Append(STLReadTriangle(pts, normal));
+        }
+      }
+    }
+
+    geo.InitSTLGeometry(readtrigs);
+    geo.Save(filename);
+  }
+}
+
 
 
   class STLGeometryRegister : public GeometryRegister

@@ -394,14 +394,14 @@ namespace netgen
     int TrigIsInOC(int tn, int ocn) const;
  
     //get chart number of a trig or 0 if unmarked
-    ChartId GetChartNr(STLTrigId i) const;
+    DLL_HEADER ChartId GetChartNr(STLTrigId i) const;
     ChartId GetMarker(STLTrigId i) const  { return chartmark[i]; }
     void SetMarker(STLTrigId nr, ChartId m);
     size_t GetNOCharts() const { return atlas.Size(); }
     //get a chart from atlas
     const STLChart& GetChart(ChartId nr) const { return *atlas[nr];};
     STLChart & GetChart(ChartId nr) { return *atlas[nr];};
-    int AtlasMade() const;
+    DLL_HEADER int AtlasMade() const;
   
     void GetInnerChartLimes(NgArray<twoint>& limes, ChartId chartnum);
 
@@ -460,6 +460,9 @@ namespace netgen
     int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam) override;
     
     virtual const Refinement & GetRefinement () const override;
+
+    // Add additional Point to chart to close the surface and write the resulting stl to a file
+    DLL_HEADER void WriteChartToFile( ChartId chartnumber, string filename="chart.slb" );
   };
  
 
