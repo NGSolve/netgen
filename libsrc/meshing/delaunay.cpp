@@ -8,6 +8,7 @@ namespace netgen
   template<int dim, typename T=INDEX>
   class BTree
   {
+  public:
     // Number of entries per leaf
     static constexpr int N = 100;
 
@@ -34,32 +35,60 @@ namespace netgen
 
     struct Node
     {
+      union
+        {
+          Node *children[2];
+          Leaf *leaf;
+        };
       double sep;
-      Node *left, *right;
-      Leaf *leaf;
       int level;
 
-      Node() = default;
+      Node()
+          : children{nullptr,nullptr}
+      { }
+
       ~Node()
       {
-        delete leaf;
-        delete left;
-        delete right;
+        if(children[1])
+          {
+            delete children[0];
+            delete children[1];
+          }
+        else
+            delete leaf;
       }
+
+      Leaf *GetLeaf() const
+        {
+          return children[1] ? nullptr : leaf;
+        }
     };
 
+  private:
     Node root;
     Array<Leaf*, INDEX> leaf_index;
     Point<dim> global_min, global_max;
     double tol;
+    size_t n_leaves;
+    size_t n_nodes;
   public:
 
     BTree (const Point<dim> & pmin, const Point<dim> & pmax)
-        : global_min(pmin), global_max(pmax)
+        : global_min(pmin), global_max(pmax), n_leaves(1), n_nodes(1)
     {
       root.leaf = new Leaf();
       root.level = 0;
       tol = 1e-7 * Dist(pmax, pmin);
+    }
+
+    size_t GetNLeaves()
+    {
+      return n_leaves;
+    }
+
+    size_t GetNNodes()
+    {
+      return n_nodes;
     }
 
     void GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax,
@@ -67,7 +96,6 @@ namespace netgen
     {
       static Array<const Node*> stack(1000);
       static Array<int> dir_stack(1000);
-      static NgArray<T> ref_pis;
 
       pis.SetSize(0);
 
@@ -95,7 +123,7 @@ namespace netgen
           int dir = dir_stack.Last();
           dir_stack.DeleteLast();
 
-          if(Leaf *leaf=node->leaf)
+          if(Leaf *leaf = node->GetLeaf())
             {
               for (auto i : IntRange(leaf->n_elements))
                 {
@@ -117,12 +145,12 @@ namespace netgen
               if(newdir==2*dim) newdir = 0;
               if (tpmin[dir] <= node->sep)
                 {
-                  stack.Append(node->left);
+                  stack.Append(node->children[0]);
                   dir_stack.Append(newdir);
                 }
               if (tpmax[dir] >= node->sep)
                 {
-                  stack.Append(node->right);
+                  stack.Append(node->children[1]);
                   dir_stack.Append(newdir);
                 }
             }
@@ -140,15 +168,15 @@ namespace netgen
         }
 
       Node * node = &root;
-      Leaf * leaf = node->leaf;
+      Leaf * leaf = node->GetLeaf();
 
       // search correct leaf to add point
       while(!leaf)
         {
-          node = p[dir] < node->sep ? node->left : node->right;
+          node = p[dir] < node->sep ? node->children[0] : node->children[1];
           dir++;
           if(dir==2*dim) dir = 0;
-          leaf = node->leaf;
+          leaf = node->GetLeaf();
         }
 
       // add point to leaf
@@ -186,9 +214,8 @@ namespace netgen
           node2->leaf = leaf2;
           node2->level = node->level+1;
 
-          node->left = node1;
-          node->right = node2;
-          node->leaf = nullptr;
+          node->children[0] = node1;
+          node->children[1] = node2;
           node->sep = 0.5 * (leaf->p[order[isplit-1]][dir] + leaf->p[order[isplit]][dir]);
 
           // add new point to one of the new leaves
@@ -198,6 +225,8 @@ namespace netgen
               leaf2->Add( leaf_index, p, pi );
 
           delete leaf;
+          n_leaves++;
+          n_nodes+=2;
         }
     }
 
@@ -891,6 +920,8 @@ namespace netgen
 
     PrintMessage (3, "Points: ", cntp);
     PrintMessage (3, "Elements: ", tempels.Size());
+    PrintMessage (3, "Tree data entries per element: ", 1.0*tettree.N*tettree.GetNLeaves() / tempels.Size());
+    PrintMessage (3, "Tree nodes per element: ", 1.0*tettree.GetNNodes() / tempels.Size());
     //   (*mycout) << cntp << " / " << tempels.Size() << " points/elements" << endl;
 
     /*
