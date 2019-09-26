@@ -19,6 +19,9 @@ int chartdebug = 0;
 
 void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, const STLParameters& stlparam)
 {
+  static Timer t("makeatlas"); RegionTimer reg(t);
+  static Timer tinner("find innner chart");
+  static Timer touter("find outer chart");
   // int timer1 = NgProfiler::CreateTimer ("makeatlas");
   /*
   int timerb = NgProfiler::CreateTimer ("makeatlas - begin");
@@ -183,7 +186,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
       // NgProfiler::StopTimer (timerb);      
       // NgProfiler::StartTimer (timer2);
 
-
+      tinner.Start();
       while (changed)
 	{   
 	  changed = false;
@@ -197,7 +200,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 		{
 		  for (int j = 1; j <= NONeighbourTrigs(i); j++)
 		    {
-		      int nt = NeighbourTrig(i,j);
+		      STLTrigId nt = NeighbourTrig(i,j);
                       // *testout << "check trig " << nt << endl;
 		      STLPointId np1, np2;
 		      GetTriangle(i).GetNeighbourPoints(GetTriangle(nt),np1,np2);
@@ -316,7 +319,8 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 		}
 	    }
 	}
-
+      tinner.Stop();
+      
       innerchartpts.SetSize(innerchartpoints.Size());
       for (size_t i = 0; i < innerchartpoints.Size(); i++)
         innerchartpts[i] = GetPoint(innerchartpoints[i]);
@@ -329,8 +333,8 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 
       //      chartbound.Clear(); 
       // warum, ic-bound auf edge macht Probleme js ???
-
-
+      
+      touter.Start();
       outermark[starttrig] = chartnum;
       //chart->AddOuterTrig(starttrig);
       changed = true;
@@ -500,7 +504,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 		}
 	    }
 	}            
-
+      touter.Stop();
       // NgProfiler::StopTimer (timer3);
       // NgProfiler::StartTimer (timere);      
       // NgProfiler::StartTimer (timere1);      
