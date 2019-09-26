@@ -2,9 +2,259 @@
 #include "meshing.hpp"
 
 
-
 namespace netgen
 {
+
+  template<int dim, typename T=INDEX>
+  class BTree
+  {
+  public:
+    // Number of entries per leaf
+    static constexpr int N = 100;
+
+    struct Node;
+
+    struct Leaf
+    {
+      Point<2*dim> p[N];
+      T index[N];
+      int n_elements;
+
+      Leaf() : n_elements(0) {}
+
+      void Add( Array<Leaf*, INDEX> &leaf_index, const Point<2*dim> &ap, T aindex )
+      {
+        p[n_elements] = ap;
+        index[n_elements] = aindex;
+        n_elements++;
+        if(leaf_index.Size()<=aindex)
+            leaf_index.SetSize(2*aindex);
+        leaf_index[aindex] = this;
+      }
+    };
+
+    struct Node
+    {
+      union
+        {
+          Node *children[2];
+          Leaf *leaf;
+        };
+      double sep;
+      int level;
+
+      Node()
+          : children{nullptr,nullptr}
+      { }
+
+      ~Node()
+      {
+        if(children[1])
+          {
+            delete children[0];
+            delete children[1];
+          }
+        else
+            delete leaf;
+      }
+
+      Leaf *GetLeaf() const
+        {
+          return children[1] ? nullptr : leaf;
+        }
+    };
+
+  private:
+    Node root;
+    Array<Leaf*, INDEX> leaf_index;
+    Point<dim> global_min, global_max;
+    double tol;
+    size_t n_leaves;
+    size_t n_nodes;
+  public:
+
+    BTree (const Point<dim> & pmin, const Point<dim> & pmax)
+        : global_min(pmin), global_max(pmax), n_leaves(1), n_nodes(1)
+    {
+      root.leaf = new Leaf();
+      root.level = 0;
+      tol = 1e-7 * Dist(pmax, pmin);
+    }
+
+    size_t GetNLeaves()
+    {
+      return n_leaves;
+    }
+
+    size_t GetNNodes()
+    {
+      return n_nodes;
+    }
+
+    void GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax,
+                          NgArray<T> & pis) const
+    {
+      static Array<const Node*> stack(1000);
+      static Array<int> dir_stack(1000);
+
+      pis.SetSize(0);
+
+      Point<2*dim> tpmin, tpmax;
+
+      for (size_t i : IntRange(dim))
+        {
+          tpmin(i) = global_min(i);
+          tpmax(i) = pmax(i)+tol;
+        
+          tpmin(i+dim) = pmin(i)-tol;
+          tpmax(i+dim) = global_max(i);
+        }
+
+      stack.SetSize(0);
+      stack.Append(&root);
+      dir_stack.SetSize(0);
+      dir_stack.Append(0);
+
+      while(stack.Size())
+        {
+          const Node *node = stack.Last();
+          stack.DeleteLast();
+
+          int dir = dir_stack.Last();
+          dir_stack.DeleteLast();
+
+          if(Leaf *leaf = node->GetLeaf())
+            {
+              for (auto i : IntRange(leaf->n_elements))
+                {
+                  bool intersect = true;
+                  const auto p = leaf->p[i];
+
+                  for (int d = 0; d < dim; d++)
+                      if (p[d] > tpmax[d])
+                          continue;
+                  for (int d = dim; d < 2*dim; d++)
+                      if (p[d] < tpmin[d])
+                          continue;
+                  pis.Append (leaf->index[i]);            
+                }
+            }
+          else
+            {
+              int newdir = dir+1;
+              if(newdir==2*dim) newdir = 0;
+              if (tpmin[dir] <= node->sep)
+                {
+                  stack.Append(node->children[0]);
+                  dir_stack.Append(newdir);
+                }
+              if (tpmax[dir] >= node->sep)
+                {
+                  stack.Append(node->children[1]);
+                  dir_stack.Append(newdir);
+                }
+            }
+        }
+    }
+
+    void Insert (const Point<dim> & pmin, const Point<dim> & pmax, T pi)
+    {
+      int dir = 0;
+      Point<2*dim> p;
+      for (auto i : IntRange(dim))
+        {
+          p(i) = pmin[i];
+          p(i+dim) = pmax[i];
+        }
+
+      Node * node = &root;
+      Leaf * leaf = node->GetLeaf();
+
+      // search correct leaf to add point
+      while(!leaf)
+        {
+          node = p[dir] < node->sep ? node->children[0] : node->children[1];
+          dir++;
+          if(dir==2*dim) dir = 0;
+          leaf = node->GetLeaf();
+        }
+
+      // add point to leaf
+      if(leaf->n_elements < N)
+          leaf->Add(leaf_index, p,pi);
+      else // assume leaf->n_elements == N
+        {
+          // add two new nodes and one new leaf
+          int n_elements = leaf->n_elements;
+          ArrayMem<double, N> coords(n_elements);
+          ArrayMem<int, N> order(n_elements);
+
+          // separate points in two halves, first sort all coordinates in direction dir
+          for (auto i : IntRange(n_elements))
+            {
+              order[i] = i;
+              coords[i] = leaf->p[i][dir];
+            }
+
+          QuickSortI(coords, order);
+          int isplit = N/2;
+          Leaf *leaf1 = new Leaf();
+          Leaf *leaf2 = new Leaf();
+
+          for (auto i : order.Range(isplit))
+              leaf1->Add(leaf_index, leaf->p[i], leaf->index[i] );
+          for (auto i : order.Range(isplit, N))
+              leaf2->Add(leaf_index, leaf->p[i], leaf->index[i] );
+
+          Node *node1 = new Node();
+          node1->leaf = leaf1;
+          node1->level = node->level+1;
+
+          Node *node2 = new Node();
+          node2->leaf = leaf2;
+          node2->level = node->level+1;
+
+          node->children[0] = node1;
+          node->children[1] = node2;
+          node->sep = 0.5 * (leaf->p[order[isplit-1]][dir] + leaf->p[order[isplit]][dir]);
+
+          // add new point to one of the new leaves
+          if (p[dir] < node->sep)
+              leaf1->Add( leaf_index, p, pi );
+          else
+              leaf2->Add( leaf_index, p, pi );
+
+          delete leaf;
+          n_leaves++;
+          n_nodes+=2;
+        }
+    }
+
+    void DeleteElement (T pi)
+    {
+      Leaf *leaf = leaf_index[pi];
+      auto & n_elements = leaf->n_elements;
+      auto & index = leaf->index;
+      auto & p = leaf->p;
+
+      for (auto i : IntRange(n_elements))
+        {
+          if(index[i] == pi)
+            {
+              n_elements--;
+              if(i!=n_elements)
+                {
+                  index[i] = index[n_elements];
+                  p[i] = p[n_elements];
+                }
+              return;
+            }
+        }
+    }
+  };
+
+  typedef BTree<3> TBoxTree;
+//   typedef BoxTree<3> TBoxTree;
 
   static const int deltetfaces[][3] = 
     { { 1, 2, 3 },
@@ -214,7 +464,7 @@ namespace netgen
   void AddDelaunayPoint (PointIndex newpi, const Point3d & newp, 
 			 NgArray<DelaunayTet> & tempels, 
 			 Mesh & mesh,
-			 BoxTree<3> & tettree, 
+			 TBoxTree & tettree,
 			 MeshNB & meshnb,
 			 NgArray<Point<3> > & centers, NgArray<double> & radi2,
 			 NgArray<int> & connected, NgArray<int> & treesearch, 
@@ -586,7 +836,7 @@ namespace netgen
     pmin2 = pmin2 + 0.1 * (pmin2 - pmax2);
     pmax2 = pmax2 + 0.1 * (pmax2 - pmin2);
 
-    BoxTree<3> tettree(pmin2, pmax2);
+    TBoxTree tettree(pmin2, pmax2);
 
 
     tempels.Append (startel);
@@ -670,6 +920,8 @@ namespace netgen
 
     PrintMessage (3, "Points: ", cntp);
     PrintMessage (3, "Elements: ", tempels.Size());
+    PrintMessage (3, "Tree data entries per element: ", 1.0*tettree.N*tettree.GetNLeaves() / tempels.Size());
+    PrintMessage (3, "Tree nodes per element: ", 1.0*tettree.GetNNodes() / tempels.Size());
     //   (*mycout) << cntp << " / " << tempels.Size() << " points/elements" << endl;
 
     /*
