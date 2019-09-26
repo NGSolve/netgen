@@ -64,15 +64,15 @@ namespace netgen
     (*testout) << "Error !!! " << ch << endl << flush;
   }
 
-  static clock_t starttimea;
+  static double starttimea;
   void ResetTime ()
   {
-    starttimea = clock();
+    starttimea = WallTime();
   }
 
   double GetTime ()
   {
-    return double(clock() - starttimea) / CLOCKS_PER_SEC;
+    return WallTime() - starttimea;
   }
 
 
