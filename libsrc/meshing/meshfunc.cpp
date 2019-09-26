@@ -645,6 +645,7 @@ namespace netgen
     //				  const CSGeometry * geometry)
   {
     static Timer t("OptimizeVolume"); RegionTimer reg(t);
+    RegionTaskManager rtm(mp.parallel_meshing ? mp.nthreads : 0);
     
     int i;
 

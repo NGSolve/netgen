@@ -1224,6 +1224,9 @@ namespace netgen
     printmessage_importance = atoi (Tcl_GetVar (interp, "::options.printmsg", 0));
     printdots = (printmessage_importance >= 4);
 
+    mparam.parallel_meshing = atoi (Tcl_GetVar (interp, "::options.parallel_meshing", 0));
+    mparam.nthreads = atoi (Tcl_GetVar (interp, "::options.nthreads", 0));
+
     //BaseMoveableMem::totalsize = 0;
     // 1048576 * atoi (Tcl_GetVar (interp, "::options.memory", 0));
     if (mesh)

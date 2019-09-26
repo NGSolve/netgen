@@ -133,6 +133,41 @@ namespace ngcore
   NGCORE_API int  EnterTaskManager ();
   NGCORE_API void ExitTaskManager (int num_threads);
 
+  class RegionTaskManager
+  {
+    int nthreads_before;
+    int nthreads;
+    bool started_taskmanager;
+
+  public:
+    RegionTaskManager(int anthreads=TaskManager::GetMaxThreads())
+        : nthreads(anthreads)
+    {
+      if(task_manager || nthreads==0)
+        {
+          // already running, no need to do anything
+          started_taskmanager = false;
+          return;
+        }
+      else
+        {
+          nthreads_before = TaskManager::GetMaxThreads();
+          TaskManager::SetNumThreads(nthreads);
+          nthreads = EnterTaskManager();
+          started_taskmanager = true;
+        }
+    }
+
+    ~RegionTaskManager()
+    {
+      if(started_taskmanager)
+        {
+          ExitTaskManager(nthreads);
+          TaskManager::SetNumThreads(nthreads_before);
+        }
+    }
+  };
+
   NETGEN_INLINE int TasksPerThread (int tpt)
   {
     // return task_manager ? tpt*task_manager->GetNumThreads() : 1;

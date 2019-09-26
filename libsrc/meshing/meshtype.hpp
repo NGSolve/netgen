@@ -1316,6 +1316,9 @@ namespace netgen
     ///
     bool autozrefine = false;
 
+    bool parallel_meshing = true;
+    int nthreads = 4;
+
     Flags geometrySpecificParameters;
     ///
     MeshingParameters ();

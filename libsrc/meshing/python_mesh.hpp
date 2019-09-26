@@ -172,6 +172,10 @@ inline void CreateMPfromKwargs(MeshingParameters& mp, py::kwargs kwargs, bool th
       mp.inverttrigs = py::cast<bool>(kwargs.attr("pop")("inverttrigs"));
     if(kwargs.contains("autozrefine"))
       mp.autozrefine = py::cast<bool>(kwargs.attr("pop")("autozrefine"));
+    if(kwargs.contains("parallel_meshing"))
+      mp.parallel_meshing = py::cast<bool>(kwargs.attr("pop")("parallel_meshing"));
+    if(kwargs.contains("nthreads"))
+      mp.nthreads = py::cast<int>(kwargs.attr("pop")("nthreads"));
     if(kwargs.size())
     {
       if(throw_if_not_all_parsed)
