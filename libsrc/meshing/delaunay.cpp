@@ -132,11 +132,12 @@ namespace netgen
 
                   for (int d = 0; d < dim; d++)
                       if (p[d] > tpmax[d])
-                          continue;
+                          intersect = false;
                   for (int d = dim; d < 2*dim; d++)
                       if (p[d] < tpmin[d])
-                          continue;
-                  pis.Append (leaf->index[i]);            
+                          intersect = false;
+                  if(intersect)
+                      pis.Append (leaf->index[i]);
                 }
             }
           else
