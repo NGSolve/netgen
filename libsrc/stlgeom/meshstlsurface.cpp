@@ -438,8 +438,8 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 
 	  PrintMessage(5,"check overlapping");
 	  // 	  mesh.FindOpenElements(); // would leed to locked points
-	  if(mesh.CheckOverlappingBoundary())
-	    return MESHING3_BADSURFACEMESH;
+	  if(mesh.CheckOverlappingBoundary()) ;
+          // return MESHING3_BADSURFACEMESH;
 
 	  geom.InitMarkedTrigs();
 
@@ -494,7 +494,78 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 	    mesh.RestrictLocalH (refpts.Get(i), refh.Get(i));
 
 	  mesh.RemoveOneLayerSurfaceElements();
+          // Open edge-segments will be refined !
+	      INDEX_2_HASHTABLE<int> openseght (nopen+1);
+	      for (int i = 1; i <= mesh.GetNOpenSegments(); i++)
+		{
+		  const Segment & seg = mesh.GetOpenSegment (i);
+		  INDEX_2 i2(seg[0], seg[1]);
+		  i2.Sort();
+		  openseght.Set (i2, 1);
+		}
+          mesh.FindOpenSegments ();
+          mesh.RemoveOneLayerSurfaceElements();
+          mesh.FindOpenSegments ();
+          int nsegold = mesh.GetNSeg();
+          INDEX_2_HASHTABLE<int> newpht(100);
+          for (int i = 1; i <= nsegold; i++)
+            {
+              Segment seg = mesh.LineSegment(i);
+              INDEX_2 i2(seg[0], seg[1]);
+              i2.Sort();
+              if (openseght.Used (i2))
+                {
+                  // segment will be split
+                  PrintMessage(7,"Split segment ", int(seg[0]), "-", int(seg[1]));
+	      
+                  Segment nseg1, nseg2;
+                  EdgePointGeomInfo newgi;
+		      
+                  const EdgePointGeomInfo & gi1 = seg.epgeominfo[0];
+                  const EdgePointGeomInfo & gi2 = seg.epgeominfo[1];
+		      
+                  newgi.dist = 0.5 * (gi1.dist + gi2.dist);
+                  newgi.edgenr = gi1.edgenr;
 
+                  int hi;
+		      
+                  Point3d newp;
+                  int newpi;
+		      
+                  if (!newpht.Used (i2))
+                    {
+                      newp = geom.GetLine (gi1.edgenr)->
+                        GetPointInDist (geom.GetPoints(), newgi.dist, hi);
+                      newpi = mesh.AddPoint (newp);
+                      newpht.Set (i2, newpi);
+                    }
+                  else
+                    {
+                      newpi = newpht.Get (i2);
+                      newp = mesh.Point (newpi);
+                    }
+
+                  nseg1 = seg;
+                  nseg2 = seg;
+                  nseg1[1] = newpi;
+                  nseg1.epgeominfo[1] = newgi;
+		      
+                  nseg2[0] = newpi;
+                  nseg2.epgeominfo[0] = newgi;
+		      
+                  mesh.LineSegment(i) = nseg1;
+                  mesh.AddSegment (nseg2);
+		      
+                  mesh.RestrictLocalH (Center (mesh.Point(nseg1[0]),
+                                               mesh.Point(nseg1[1])),
+                                       Dist (mesh.Point(nseg1[0]),
+                                             mesh.Point(nseg1[1])));
+                  mesh.RestrictLocalH (Center (mesh.Point(nseg2[0]),
+                                               mesh.Point(nseg2[1])),
+                                       Dist (mesh.Point(nseg2[0]),
+                                             mesh.Point(nseg2[1])));
+                }
+            }
 	  mesh.Compress();
 	  
 	  mesh.FindOpenSegments ();
