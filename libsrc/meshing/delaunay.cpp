@@ -91,9 +91,12 @@ namespace netgen
       return n_nodes;
     }
 
-    void GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax,
-                          NgArray<T> & pis) const
+    template<typename TFunc>
+    void GetFirstIntersecting (const Point<dim> & pmin, const Point<dim> & pmax,
+                          NgArray<T> & pis, TFunc func=[](auto pi){return false;}) const
     {
+      static Timer timer("BTree::GetIntersecting"); RegionTimer rt(timer);
+      static Timer timer1("BTree::GetIntersecting-LinearSearch");
       static Array<const Node*> stack(1000);
       static Array<int> dir_stack(1000);
 
@@ -125,6 +128,7 @@ namespace netgen
 
           if(Leaf *leaf = node->GetLeaf())
             {
+//               RegionTimer rt1(timer1);
               for (auto i : IntRange(leaf->n_elements))
                 {
                   bool intersect = true;
@@ -137,7 +141,10 @@ namespace netgen
                       if (p[d] < tpmin[d])
                           intersect = false;
                   if(intersect)
+                    {
                       pis.Append (leaf->index[i]);
+                      if(func(leaf->index[i])) return;
+                    }
                 }
             }
           else
@@ -158,8 +165,15 @@ namespace netgen
         }
     }
 
+    void GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax,
+                          NgArray<T> & pis) const
+    {
+      GetFirstIntersecting(pmin, pmax, pis, [](auto pi){return false;});
+    }
+
     void Insert (const Point<dim> & pmin, const Point<dim> & pmax, T pi)
     {
+      static Timer timer("BTree::Insert"); RegionTimer rt(timer);
       int dir = 0;
       Point<2*dim> p;
       for (auto i : IntRange(dim))
@@ -233,6 +247,7 @@ namespace netgen
 
     void DeleteElement (T pi)
     {
+      static Timer timer("BTree::DeleteElement"); RegionTimer rt(timer);
       Leaf *leaf = leaf_index[pi];
       auto & n_elements = leaf->n_elements;
       auto & index = leaf->index;
@@ -483,7 +498,15 @@ namespace netgen
     Point<3> pc;
     Point3d tpmin, tpmax;
 
-    tettree.GetIntersecting (newp, newp, treesearch);
+
+
+    // stop search if intersecting point is close enough to center
+    tettree.GetFirstIntersecting (newp, newp, treesearch, [&](const auto pi)
+            {
+                double quot = Dist2 (centers.Get(pi), newp);
+                return (quot < 0.917632 * radi2.Get(pi));
+            } );
+    // tettree.GetIntersecting (newp, newp, treesearch);
 
     double quot,minquot(1e20);
 
