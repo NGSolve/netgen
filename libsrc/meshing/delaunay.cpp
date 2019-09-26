@@ -173,7 +173,7 @@ namespace netgen
 
     void Insert (const Point<dim> & pmin, const Point<dim> & pmax, T pi)
     {
-      static Timer timer("BTree::Insert"); RegionTimer rt(timer);
+      // static Timer timer("BTree::Insert"); RegionTimer rt(timer);
       int dir = 0;
       Point<2*dim> p;
       for (auto i : IntRange(dim))
@@ -247,7 +247,7 @@ namespace netgen
 
     void DeleteElement (T pi)
     {
-      static Timer timer("BTree::DeleteElement"); RegionTimer rt(timer);
+      // static Timer timer("BTree::DeleteElement"); RegionTimer rt(timer);
       Leaf *leaf = leaf_index[pi];
       auto & n_elements = leaf->n_elements;
       auto & index = leaf->index;
@@ -487,11 +487,18 @@ namespace netgen
 			 NgArray<int> & freelist, SphereList & list,
 			 IndexSet & insphere, IndexSet & closesphere)
   {
-    // static Timer t("Meshing3::AddDelaunayPoint"); RegionTimer reg(t);
+    static Timer t("Meshing3::AddDelaunayPoint"); RegionTimer reg(t);
+    static Timer tsearch("addpoint, search");
+    static Timer tinsert("addpoint, insert");
+
+    static Timer t0("addpoint, 0");    
+    static Timer t1("addpoint, 1");    
+    static Timer t2("addpoint, 2");    
+    static Timer t3("addpoint, 3");    
     /*
       find any sphere, such that newp is contained in
     */
-    DelaunayTet el;
+    // DelaunayTet el;
     int cfelind = -1;
 
     const Point<3> * pp[4];
@@ -500,6 +507,7 @@ namespace netgen
 
 
 
+    /*
     // stop search if intersecting point is close enough to center
     tettree.GetFirstIntersecting (newp, newp, treesearch, [&](const auto pi)
             {
@@ -523,7 +531,28 @@ namespace netgen
 	      break;
 	  }
       }
+    */
 
+    tsearch.Start();
+    double minquot{1e20};
+    tettree.GetFirstIntersecting
+      (newp, newp, treesearch, [&](const auto pi)
+       {
+         double quot = Dist2 (centers.Get(pi), newp) / radi2.Get(pi);
+         if (quot < 0.917632)
+           {
+             cfelind = pi;
+             return true;
+           }
+         
+	if((cfelind == -1 || quot < 0.99*minquot) && quot < 1)
+	  {
+	    minquot = quot;
+	    cfelind = pi;
+          }
+        return false;
+       } );
+    tsearch.Stop();
 
     if (cfelind == -1)
       {
@@ -549,6 +578,7 @@ namespace netgen
     int changed = 1;
     int nstarti = 1, starti;
 
+    t0.Start();
     while (changed)
       {
 	changed = 0;
@@ -620,7 +650,7 @@ namespace netgen
 		      Vec<3> v1 = p2-p1;
 		      Vec<3> v2 = p3-p1;
 		      Vec<3> n = Cross (v1, v2);
-		      n /= n.Length();
+                      n /= n.Length();
 
 		      if (n * Vec3d (p1, mesh.Point (tempels.Get(helind)[k])) > 0)
 			n *= -1;
@@ -637,9 +667,12 @@ namespace netgen
 	    }
       } // while (changed)
 
+    t0.Stop();
+    t1.Start();
     // NgArray<Element> newels;
-    NgArray<DelaunayTet> newels;
-
+    static NgArray<DelaunayTet> newels;
+    newels.SetSize(0);
+    
     Element2d face(TRIG);
 
     for (int celind : insphere.GetArray())
@@ -663,7 +696,7 @@ namespace netgen
               Vec<3> v2 = mesh[face[2]] - mesh[face[0]];
 	      Vec<3> n = Cross (v1, v2);
 
-	      n.Normalize();
+              n.Normalize();
 	      if (n * Vec3d(mesh.Point (face[0]), 
 			    mesh.Point (tempels.Get(celind)[k]))
 		  > 0)
@@ -684,6 +717,8 @@ namespace netgen
 	    }
 	}
 
+    t1.Stop();
+    t2.Start();
     meshnb.ResetFaceHT (10*insphere.GetArray().Size()+1);
 
     for (auto celind : insphere.GetArray())
@@ -707,7 +742,8 @@ namespace netgen
 	    fabs (Dist2 (centers.Get (ind), newp) - radi2.Get(ind)) < 1e-8 )
 	  hasclose = true;
       }
-
+    t2.Stop();
+    t3.Start();
     for (int j = 1; j <= newels.Size(); j++)
       {
         const auto & newel = newels.Get(j);
@@ -781,8 +817,11 @@ namespace netgen
 	    tpmax.SetToMax (*pp[k]);
 	  }
 	tpmax = tpmax + 0.01 * (tpmax - tpmin);
+        // tinsert.Start();
 	tettree.Insert (tpmin, tpmax, nelind);
+        // tinsert.Stop();
       }
+    t3.Stop();
   }
 
 
@@ -893,7 +932,9 @@ namespace netgen
 
     // "random" reordering of points  (speeds a factor 3 - 5 !!!)
     NgArray<PointIndex, PointIndex::BASE, PointIndex> mixed(np);
-    int prims[] = { 11, 13, 17, 19, 23, 29, 31, 37 };
+    // int prims[] = { 11, 13, 17, 19, 23, 29, 31, 37 };
+    // int prims[] = { 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97 };
+    int prims[] = { 211, 223, 227, 229, 233, 239, 241, 251, 257, 263 };
     int prim;
   
     {
