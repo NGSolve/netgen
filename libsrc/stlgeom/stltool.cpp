@@ -867,6 +867,7 @@ void STLBoundary :: AddOrDelSegment(const STLBoundarySeg & seg)
 
 void STLBoundary ::AddTriangle(const STLTriangle & t)
 {
+  // static Timer timer("STLBoundary::AddTriangle"); RegionTimer reg(timer);
   // static int timer_old = NgProfiler::CreateTimer ("STLChart::AddTriangle_old");
   // static int timer_new = NgProfiler::CreateTimer ("STLChart::AddTriangle_new");
 
@@ -1009,9 +1010,17 @@ void STLBoundary ::AddTriangle(const STLTriangle & t)
       
       INDEX_2 op(seg[1], seg[0]);
       if (boundary_ht.Used(op))
-        boundary_ht.Delete(op);
+        {
+          boundary_ht.Delete(op);
+          if (searchtree)
+            searchtree->DeleteElement(op);
+        }
       else
-        boundary_ht[seg] = bseg;
+        {
+          boundary_ht[seg] = bseg;
+          if (searchtree)          
+            searchtree->Insert (bseg.BoundingBox(), seg);
+        }
     }
 }
 
@@ -1211,54 +1220,32 @@ bool STLBoundary :: TestSeg(const Point<3>& p1, const Point<3> & p2, const Vec<3
 
 void STLBoundary :: BuildSearchTree()
 {
-  // static int timer = NgProfiler::CreateTimer ("BuildSearchTree");
-  // NgProfiler::RegionTimer reg(timer);
-  
   delete searchtree;
-
-  /*
-  Box<2> box2d(Box<2>::EMPTY_BOX);  
-
-  int nseg = NOSegments();  
-  for (int j = 1; j <= nseg; j++)
-    {
-      const STLBoundarySeg & seg = GetSegment(j);
-      if (seg.IsSmoothEdge()) continue;
-      box2d.Add(seg.BoundingBox().PMin());
-      box2d.Add(seg.BoundingBox().PMax());
-    }
-
-  searchtree = new BoxTree<2> (box2d);
-
-  for (int j = 1; j <= nseg; j++)
-    {
-      const STLBoundarySeg & seg = GetSegment(j);
-      if (seg.IsSmoothEdge()) continue;
-      searchtree -> Insert (seg.BoundingBox(), j);
-    }  
-  */
+  
   Box<2> box2d(Box<2>::EMPTY_BOX);
   Box<3> box3d = geometry->GetBoundingBox();
   for (size_t i = 0; i < 8; i++)
     box2d.Add ( chart->Project2d (box3d.GetPointNr(i)));
-  searchtree = new BoxTree<2,INDEX_2> (box2d);  
+
+  // comment to enable searchtree:
+  // searchtree = new BoxTree<2,INDEX_2> (box2d);
+  searchtree = nullptr;
 }
 
 void STLBoundary :: DeleteSearchTree()
 {
-  // static int timer = NgProfiler::CreateTimer ("DeleteSearchTree");
-  // NgProfiler::RegionTimer reg(timer);
-  
   delete searchtree;
   searchtree = nullptr;
 }
+
 
 // checks, whether 2d projection intersects
 bool STLBoundary :: TestSegChartNV(const Point3d & p1, const Point3d& p2, 
 				  const Vec3d& sn)
 {
-  // static int timerquick = NgProfiler::CreateTimer ("TestSegChartNV-searchtree");
-  // static int timer = NgProfiler::CreateTimer ("TestSegChartNV");
+  //  static int timerquick = NgProfiler::CreateTimer ("TestSegChartNV-searchtree");
+  // static Timer timer("TestSegChartNV");  RegionTimer reg(timer);      
+  
 
   Point<2> p2d1 = chart->Project2d (p1);
   Point<2> p2d2 = chart->Project2d (p2);
@@ -1272,26 +1259,12 @@ bool STLBoundary :: TestSegChartNV(const Point3d & p1, const Point3d& p2,
   double eps = 1e-6;
   bool ok = true;
 
-  /*
-  static long int cnt = 0;
-  static long int totnseg = 0;
-  totnseg += nseg;
-  cnt++;
-  if ( (cnt % 100000) == 0)
-  cout << "avg nseg = " << double(totnseg)/cnt << endl;
-  */
-
-  // TODO: fix searchtree update
-  if (false)
+  if (searchtree)
     {
-      // NgProfiler::RegionTimer reg(timerquick);      
-      
       NgArrayMem<INDEX_2,100> pis;
       searchtree -> GetIntersecting (box2d.PMin(), box2d.PMax(), pis);
-
       for (auto i2 : pis)
         {
-          // const STLBoundarySeg & seg = GetSegment(j);
           const STLBoundarySeg & seg = boundary_ht[i2];
           
           if (seg.IsSmoothEdge()) continue;
@@ -1311,7 +1284,6 @@ bool STLBoundary :: TestSegChartNV(const Point3d & p1, const Point3d& p2,
 
           if(!err && ((on1 && in2) || (on2 && in1)))
             {
-              
               ok = false;
               break;
             }
@@ -1320,7 +1292,6 @@ bool STLBoundary :: TestSegChartNV(const Point3d & p1, const Point3d& p2,
   
   else
     {      
-      // NgProfiler::RegionTimer reg(timer);      
       for(auto [i2, seg] : boundary_ht)
       {
         if (seg.IsSmoothEdge()) continue;

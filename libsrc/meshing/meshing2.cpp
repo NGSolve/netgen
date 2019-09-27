@@ -506,7 +506,7 @@ namespace netgen
 	    cout << "set debugflag" << endl;
 	  }
 	
-	if (debugparam.haltlargequalclass && qualclass > 50)
+	if (debugparam.haltlargequalclass && qualclass == 50)
 	  debugflag = 1;
 
 	// problem recognition !
