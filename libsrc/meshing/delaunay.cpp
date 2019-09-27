@@ -1092,19 +1092,22 @@ namespace netgen
       //  tempmesh.PrintMemInfo(cout);
       // tempmesh.Save ("tempmesh.vol");
 
-      for (int i = 1; i <= 4; i++)
-	{ 
-	  tempmesh.FindOpenElements ();
+      {
+        RegionTaskManager rtm(mp.parallel_meshing ? mp.nthreads : 0);
+        for (int i = 1; i <= 4; i++)
+          {
+            tempmesh.FindOpenElements ();
 
-	  PrintMessage (5, "Num open: ", tempmesh.GetNOpenElements());
-	  tempmesh.CalcSurfacesOfNode ();
+            PrintMessage (5, "Num open: ", tempmesh.GetNOpenElements());
+            tempmesh.CalcSurfacesOfNode ();
 
-	  tempmesh.FreeOpenElementsEnvironment (1);
+            tempmesh.FreeOpenElementsEnvironment (1);
 
-	  MeshOptimize3d meshopt(mp);
-	  // tempmesh.CalcSurfacesOfNode();
-          meshopt.SwapImprove(tempmesh, OPT_CONFORM);
-	}
+            MeshOptimize3d meshopt(mp);
+            // tempmesh.CalcSurfacesOfNode();
+            meshopt.SwapImprove(tempmesh, OPT_CONFORM);
+          }
+      }
     
       MeshQuality3d (tempmesh);
     

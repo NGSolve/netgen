@@ -47,6 +47,9 @@ set options.opterrpow 2
 set options.grading 0.5
 set options.printmsg 2
 
+set options.parallel_meshing 1
+set options.nthreads 4
+
 set debug.slowchecks 0
 set debug.debugoutput 0
 set debug.haltexistingline 0
@@ -427,6 +430,8 @@ proc saveoptions { } {
 	    puts $datei "options.opterrpow  ${options.opterrpow}" 
 	    puts $datei "options.grading  ${options.grading}" 
 	    puts $datei "options.printmsg  ${options.printmsg}" 
+	    puts $datei "options.parallel_meshing  ${options.parallel_meshing}"
+	    puts $datei "options.nthreads  ${options.nthreads}"
 	    puts $datei "geooptions.drawcsg  ${geooptions.drawcsg}" 
 	    puts $datei "geooptions.detail  ${geooptions.detail}" 
 	    puts $datei "geooptions.accuracy  ${geooptions.accuracy}" 

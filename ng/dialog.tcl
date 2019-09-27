@@ -183,7 +183,7 @@ proc meshingoptionsdialog { } {
         ttk::labelframe $f.bts -borderwidth 3 -relief groove -text "Additional meshing options"
         pack $f.bts -fill x -pady 15
 	ttk::frame $f.bts.btnframe
-	ttk::checkbutton $f.bts.btnframe.parthread -text "Parallel meshing thread" \
+	ttk::checkbutton $f.bts.btnframe.parthread -text "Separate meshing thread" \
 	    -variable options.parthread
 	ttk::checkbutton $f.bts.btnframe.second -text "Second order elements" \
 	    -variable options.secondorder
@@ -214,9 +214,21 @@ proc meshingoptionsdialog { } {
 
         #ttk::frame $f.bts.sbox        
         #pack $f.bts.sbox -anchor w -pady 10
-        ttk::label $f.bts.btnframe.l -text "Element order"
-        ttk::spinbox $f.bts.btnframe.elementorder2 -from 1 -to 20 -textvariable options.elementorder -width 2
-        pack $f.bts.btnframe.elementorder2 $f.bts.btnframe.l  -anchor w -side left
+        ttk::frame $f.bts.btnframe.elorder
+        ttk::label $f.bts.btnframe.elorder.l -text "Element order"
+        ttk::spinbox $f.bts.btnframe.elorder.elementorder2 -from 1 -to 20 -textvariable options.elementorder -width 2
+        pack $f.bts.btnframe.elorder -fill x
+        pack $f.bts.btnframe.elorder.elementorder2 $f.bts.btnframe.elorder.l  -anchor w -side left
+
+        ttk::frame $f.bts.btnframe.pm
+        ttk::checkbutton $f.bts.btnframe.pm.parallel_meshing -text "Parallel meshing" \
+            -variable options.parallel_meshing
+        pack $f.bts.btnframe.pm -fill x -pady 5
+        pack $f.bts.btnframe.pm.parallel_meshing  -anchor w
+
+        ttk::label $f.bts.btnframe.pm.lnthreads -text "Number of meshing threads"
+        ttk::spinbox $f.bts.btnframe.pm.nthreads -from 1 -to 128 -textvariable options.nthreads -width 2
+        pack $f.bts.btnframe.pm.nthreads $f.bts.btnframe.pm.lnthreads  -anchor w -side left
         
 
 
