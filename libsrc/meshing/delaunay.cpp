@@ -686,7 +686,8 @@ namespace netgen
               newel[3] = newpi;
 
 	      newels.Append (newel);
-
+              /*
+                 // only checking ??? 
               Vec<3> v1 = mesh[face[1]] - mesh[face[0]];
               Vec<3> v2 = mesh[face[2]] - mesh[face[0]];
 	      Vec<3> n = Cross (v1, v2);
@@ -709,6 +710,7 @@ namespace netgen
 			     << mesh.Point (face[1]) << " "
 			     << mesh.Point (face[2]) << endl;
 		}
+              */
 	    }
 	}
 
@@ -929,7 +931,7 @@ namespace netgen
     NgArray<PointIndex, PointIndex::BASE, PointIndex> mixed(np);
     // int prims[] = { 11, 13, 17, 19, 23, 29, 31, 37 };
     // int prims[] = { 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97 };
-    int prims[] = { 211, 223, 227, 229, 233, 239, 241, 251, 257, 263 };
+    int prims[] = { 211, 223, 227, 229, 233, 239, 241, 251, 257, 263 }; 
     int prim;
   
     {
