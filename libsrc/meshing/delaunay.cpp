@@ -71,7 +71,7 @@ namespace netgen
     BTree (const Point<dim> & pmin, const Point<dim> & pmax)
         : global_min(pmin), global_max(pmax), n_leaves(1), n_nodes(1), ball_nodes(sizeof(Node)), ball_leaves(sizeof(Leaf))
     {
-      root.leaf = (Leaf*) ball_leaves.Alloc();
+      root.leaf = (Leaf*) ball_leaves.Alloc(); new (root.leaf) Leaf();
       root.level = 0;
       tol = 1e-7 * Dist(pmax, pmin);
     }
