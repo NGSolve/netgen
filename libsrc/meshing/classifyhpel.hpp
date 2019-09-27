@@ -781,8 +781,10 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 
      
 	 
-      for(int k=0;k<3;k++) 
-	if(edgepoint.Test(pnums[k]) && (edgepoint_dom.Used(INDEX_2(fd.SurfNr(),pnums[k])) || edgepoint_dom.Used(INDEX_2(-1,pnums[k])))) //edgepoint, but not member of sing_edge on trig -> cp 
+      for (int k=0;k<3;k++) 
+        if (edgepoint.Test(pnums[k]) &&
+            (dim==3 || edgepoint_dom.Used(INDEX_2(fd.SurfNr(),pnums[k])) || edgepoint_dom.Used(INDEX_2(-1,pnums[k]))))
+          //edgepoint, but not member of sing_edge on trig -> cp
 	  {
 	    INDEX_2 i2a=INDEX_2::Sort(el.PNum(p[k]), el.PNum(p[(k+1)%3])); 
             INDEX_2 i2b=INDEX_2::Sort(el.PNum(p[k]), el.PNum(p[(k+2)%3]));
