@@ -88,14 +88,13 @@ namespace netgen
 
     template<typename TFunc>
     void GetFirstIntersecting (const Point<dim> & pmin, const Point<dim> & pmax,
-                          NgArray<T> & pis, TFunc func=[](auto pi){return false;}) const
+                               TFunc func=[](auto pi){return false;}) const
     {
       static Timer timer("BTree::GetIntersecting"); RegionTimer rt(timer);
       static Timer timer1("BTree::GetIntersecting-LinearSearch");
       static Array<const Node*> stack(1000);
       static Array<int> dir_stack(1000);
 
-      pis.SetSize(0);
 
       Point<2*dim> tpmin, tpmax;
 
@@ -136,10 +135,7 @@ namespace netgen
                       if (p[d] < tpmin[d])
                           intersect = false;
                   if(intersect)
-                    {
-                      pis.Append (leaf->index[i]);
-                      if(func(leaf->index[i])) return;
-                    }
+                    if(func(leaf->index[i])) return;
                 }
             }
           else
@@ -163,7 +159,8 @@ namespace netgen
     void GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax,
                           NgArray<T> & pis) const
     {
-      GetFirstIntersecting(pmin, pmax, pis, [](auto pi){return false;});
+      pis.SetSize(0);
+      GetFirstIntersecting(pmin, pmax, [&pis](auto pi) { pis.Append(pi); return false;});
     }
 
     void Insert (const Point<dim> & pmin, const Point<dim> & pmax, T pi)
@@ -502,7 +499,8 @@ namespace netgen
 
     static Timer t0("addpoint, 0");    
     static Timer t1("addpoint, 1");    
-    static Timer t2("addpoint, 2");    
+    static Timer t2a("addpoint, 2a");    
+    static Timer t2b("addpoint, 2b");    
     static Timer t3("addpoint, 3");    
     /*
       find any sphere, such that newp is contained in
@@ -545,7 +543,7 @@ namespace netgen
     tsearch.Start();
     double minquot{1e20};
     tettree.GetFirstIntersecting
-      (newp, newp, treesearch, [&](const auto pi)
+      (newp, newp, [&](const auto pi)
        {
          double rad2 = radi2.Get(pi);
          double d2 = Dist2 (centers.Get(pi), newp); //  / radi2.Get(pi);
@@ -588,7 +586,7 @@ namespace netgen
 
     insphere.Add (cfelind);
       
-    bool changed = 1;
+    bool changed = true;
     int nstarti = 1, starti;
 
     t0.Start();
@@ -613,7 +611,7 @@ namespace netgen
 	    list.IterateList (insphere.GetArray().Get(j),
                               [&](int celind)
                               {
-                                if (tempels.Get(celind)[0] != -1 && 
+                                if (tempels.Get(celind)[0] != PointIndex(PointIndex::INVALID) && 
                                     !insphere.IsIn (celind))
                                   {
                                     changed = true;
@@ -652,9 +650,8 @@ namespace netgen
                       n /= n.Length();
 
 		      double dist = n * (newp-p1);
-                      
-		      if (n * (mesh.Point (tempels.Get(helind)[k])-p1) > 0)
-			dist *= -1;
+                      double scal = n * (mesh.Point (tempels.Get(helind)[k])-p1);
+		      if (scal > 0) dist *= -1;
 
 		      if (dist > -1e-10)  // 1e-10
 			{
@@ -719,7 +716,7 @@ namespace netgen
 	}
 
     t1.Stop();
-    t2.Start();
+    t2a.Start();
     meshnb.ResetFaceHT (10*insphere.GetArray().Size()+1);
 
     for (auto celind : insphere.GetArray())
@@ -734,6 +731,8 @@ namespace netgen
 	freelist.Append (celind);
       }
 
+    t2a.Stop();
+    t2b.Start();
 
     
     bool hasclose = false;
@@ -743,7 +742,7 @@ namespace netgen
 	    fabs (Dist2 (centers.Get (ind), newp) - radi2.Get(ind)) < 1e-8 )
 	  hasclose = true;
       }
-    t2.Stop();
+    t2b.Stop();
     t3.Start();
     /*
     for (int j = 1; j <= newels.Size(); j++)
@@ -796,7 +795,7 @@ namespace netgen
 	      int csameind = closesphere.GetArray().Get(k); 
 	      if (!insphere.IsIn(csameind) &&
 		  fabs (r2 - radi2.Get(csameind)) < 1e-10 && 
-		  Dist (pc, centers.Get(csameind)) < 1e-10)
+		  Dist2 (pc, centers.Get(csameind)) < 1e-20)
 		{
 		  pc = centers.Get(csameind);
 		  r2 = radi2.Get(csameind);
