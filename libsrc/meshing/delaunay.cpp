@@ -440,6 +440,19 @@ namespace netgen
     }
       
     void GetList (int eli, NgArray<int> & linked) const;
+
+    template <typename TFUNC>
+    void IterateList (int eli, TFUNC func)
+    {
+      int pi = eli;
+      do
+        {
+          func(pi);
+          pi = links.Get(pi);
+        }
+      while (pi != eli);
+    }
+    
   };
 
 
@@ -450,6 +463,7 @@ namespace netgen
 
     do
       {
+#ifdef DELAUNAY_DEBUG
 	if (pi <= 0 || pi > links.Size())
 	  {
 	    cerr << "link, error " << endl;
@@ -461,7 +475,7 @@ namespace netgen
 	    cerr << "links have loop" << endl;
 	    exit(1);
 	  }
-
+#endif
 	linked.Append (pi);
 	pi = links.Get(pi);
       }
@@ -533,16 +547,20 @@ namespace netgen
     tettree.GetFirstIntersecting
       (newp, newp, treesearch, [&](const auto pi)
        {
-         double quot = Dist2 (centers.Get(pi), newp) / radi2.Get(pi);
-         if (quot < 0.917632)
+         double rad2 = radi2.Get(pi);
+         double d2 = Dist2 (centers.Get(pi), newp); //  / radi2.Get(pi);
+         if (d2 >= rad2) return false;
+         
+         // if (d2 < 0.917632 * rad2)
+         if (d2 < 0.99 * rad2)
            {
              cfelind = pi;
              return true;
            }
          
-	if((cfelind == -1 || quot < 0.99*minquot) && quot < 1)
+	if (cfelind == -1 || d2 < 0.99*minquot*rad2) 
 	  {
-	    minquot = quot;
+	    minquot = d2/rad2;
 	    cfelind = pi;
           }
         return false;
@@ -570,13 +588,13 @@ namespace netgen
 
     insphere.Add (cfelind);
       
-    int changed = 1;
+    bool changed = 1;
     int nstarti = 1, starti;
 
     t0.Start();
     while (changed)
       {
-	changed = 0;
+	changed = false;
 	starti = nstarti;
 	nstarti = insphere.GetArray().Size()+1;
 
@@ -592,18 +610,16 @@ namespace netgen
 	// add connected spheres to insphere - list
 	for (int j = starti; j < nstarti; j++)
 	  {
-	    list.GetList (insphere.GetArray().Get(j), connected);
-	    for (int k = 0; k < connected.Size(); k++)
-	      {
-		int celind = connected[k];
-
-		if (tempels.Get(celind)[0] != -1 && 
-		    !insphere.IsIn (celind))
-		  {
-		    changed = 1;
-		    insphere.Add (celind);
-		  }
-	      }
+	    list.IterateList (insphere.GetArray().Get(j),
+                              [&](int celind)
+                              {
+                                if (tempels.Get(celind)[0] != -1 && 
+                                    !insphere.IsIn (celind))
+                                  {
+                                    changed = true;
+                                    insphere.Add (celind);
+                                  }
+                              });
 	  }
 	
 	// check neighbour-tets
@@ -615,47 +631,35 @@ namespace netgen
 
 	      if (nbind && !insphere.IsIn (nbind) )
 		{
-		  //changed
-		  //int prec = testout->precision();
-		  //testout->precision(12);
-		  //(*testout) << "val1 " << Dist2 (centers.Get(nbind), newp)
-		  //	     << " val2 " << radi2.Get(nbind) * (1+1e-8)
-		  //	     << " val3 " << radi2.Get(nbind)
-		  //	     << " val1 / val3 " << Dist2 (centers.Get(nbind), newp)/radi2.Get(nbind) << endl;
-		  //testout->precision(prec);
-		  if (Dist2 (centers.Get(nbind), newp) 
-		      < radi2.Get(nbind) * (1+1e-8) )
+                  double d2 = Dist2 (centers.Get(nbind), newp);
+		  if (d2 < radi2.Get(nbind) * (1+1e-8) )
 		    closesphere.Add (nbind);
 		    
-		  if (Dist2 (centers.Get(nbind), newp) 
-		      < radi2.Get(nbind) * (1 + 1e-12))
+		  if (d2 < radi2.Get(nbind) * (1 + 1e-12))
 		    {
 		      // point is in sphere -> remove tet
 		      insphere.Add (nbind);
-		      changed = 1;
+		      changed = true;
 		    }
 		  else
 		    {
 		      INDEX_3 i3 = tempels.Get(helind).GetFace (k);
+		      const Point<3> & p1 = mesh[PointIndex (i3.I1())];
+		      const Point<3> & p2 = mesh[PointIndex (i3.I2())];
+		      const Point<3> & p3 = mesh[PointIndex (i3.I3())];
 
-		      const Point<3> & p1 = mesh.Point ( PointIndex (i3.I1()) );
-		      const Point<3> & p2 = mesh.Point ( PointIndex (i3.I2()) );
-		      const Point<3> & p3 = mesh.Point ( PointIndex (i3.I3()) );
-
-		      Vec<3> v1 = p2-p1;
-		      Vec<3> v2 = p3-p1;
-		      Vec<3> n = Cross (v1, v2);
+		      Vec<3> n = Cross (p2-p1, p3-p1);
                       n /= n.Length();
 
-		      if (n * Vec3d (p1, mesh.Point (tempels.Get(helind)[k])) > 0)
-			n *= -1;
-			
-		      double dist = n * Vec3d (p1, newp);
+		      double dist = n * (newp-p1);
+                      
+		      if (n * (mesh.Point (tempels.Get(helind)[k])-p1) > 0)
+			dist *= -1;
 
 		      if (dist > -1e-10)  // 1e-10
 			{
 			  insphere.Add (nbind);
-			  changed = 1;
+			  changed = true;
 			}
 		    }
 		}
@@ -686,8 +690,8 @@ namespace netgen
               newel[3] = newpi;
 
 	      newels.Append (newel);
-              /*
-                 // only checking ??? 
+
+#ifdef DEBUG_DELAUNAY
               Vec<3> v1 = mesh[face[1]] - mesh[face[0]];
               Vec<3> v2 = mesh[face[2]] - mesh[face[0]];
 	      Vec<3> n = Cross (v1, v2);
@@ -710,7 +714,7 @@ namespace netgen
 			     << mesh.Point (face[1]) << " "
 			     << mesh.Point (face[2]) << endl;
 		}
-              */
+#endif
 	    }
 	}
 
@@ -741,9 +745,13 @@ namespace netgen
       }
     t2.Stop();
     t3.Start();
+    /*
     for (int j = 1; j <= newels.Size(); j++)
       {
         const auto & newel = newels.Get(j);
+    */
+    for (const auto & newel : newels)
+      {
 	int nelind;
 
 	if (!freelist.Size())
@@ -767,6 +775,7 @@ namespace netgen
 
 	if (CalcSphereCenter (&pp[0], pc) )
 	  {
+#ifdef DEBUG_DELAUNAY
 	    PrintSysError ("Delaunay: New tet is flat");
 
 	    (*testout) << "new tet is flat" << endl;
@@ -776,6 +785,8 @@ namespace netgen
 	    for (int k = 0; k < 4; k++)
 	      (*testout) << *pp[k-1] << " ";
 	    (*testout) << endl;
+#endif
+            ;
 	  }
 
 	double r2 = Dist2 (*pp[0], pc);
