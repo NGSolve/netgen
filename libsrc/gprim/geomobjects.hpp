@@ -101,9 +101,8 @@ namespace netgen
     explicit Vec (const Point<D,T> & p)
     { for (int i = 0; i < D; i++) x[i] = p(i); }
 
-    Vec (const Vec & p1, const Vec & p2)
-    { for(int i=0; i<D; i++) x[i] = p2(i)-p1(1); }
-  
+    explicit Vec(const Point<D,T>& p1, const Point<D,T>& p2)
+    { for(int i=0; i<D; i++) x[i] = p2(i)-p1(i); }
 
     template <typename T2>
     Vec & operator= (const Vec<D,T2> & p2)
