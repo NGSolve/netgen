@@ -438,7 +438,8 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 
 	  PrintMessage(5,"check overlapping");
 	  // 	  mesh.FindOpenElements(); // would leed to locked points
-	  if(mesh.CheckOverlappingBoundary()) ;
+          mesh.CheckOverlappingBoundary();
+	  // if(mesh.CheckOverlappingBoundary()) ;
           // return MESHING3_BADSURFACEMESH;
 
 	  geom.InitMarkedTrigs();
@@ -586,6 +587,9 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
       
     }
   while (nopen);
+
+  if(mesh.CheckOverlappingBoundary())
+    return MESHING3_BADSURFACEMESH;
 
   mesh.Compress();
   mesh.CalcSurfacesOfNode();
