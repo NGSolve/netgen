@@ -48,15 +48,7 @@ namespace netgen
       { }
 
       ~Node()
-      {
-        if(children[1])
-          {
-            delete children[0];
-            delete children[1];
-          }
-        else
-            delete leaf;
-      }
+      { }
 
       Leaf *GetLeaf() const
         {
@@ -71,12 +63,15 @@ namespace netgen
     double tol;
     size_t n_leaves;
     size_t n_nodes;
+    BlockAllocator ball_nodes;
+    BlockAllocator ball_leaves;
+
   public:
 
     BTree (const Point<dim> & pmin, const Point<dim> & pmax)
-        : global_min(pmin), global_max(pmax), n_leaves(1), n_nodes(1)
+        : global_min(pmin), global_max(pmax), n_leaves(1), n_nodes(1), ball_nodes(sizeof(Node)), ball_leaves(sizeof(Leaf))
     {
-      root.leaf = new Leaf();
+      root.leaf = (Leaf*) ball_leaves.Alloc();
       root.level = 0;
       tol = 1e-7 * Dist(pmax, pmin);
     }
@@ -213,19 +208,19 @@ namespace netgen
 
           QuickSortI(coords, order);
           int isplit = N/2;
-          Leaf *leaf1 = new Leaf();
-          Leaf *leaf2 = new Leaf();
+          Leaf *leaf1 = (Leaf*) ball_leaves.Alloc(); new (leaf1) Leaf();
+          Leaf *leaf2 = (Leaf*) ball_leaves.Alloc(); new (leaf2) Leaf();
 
           for (auto i : order.Range(isplit))
               leaf1->Add(leaf_index, leaf->p[i], leaf->index[i] );
           for (auto i : order.Range(isplit, N))
               leaf2->Add(leaf_index, leaf->p[i], leaf->index[i] );
 
-          Node *node1 = new Node();
+          Node *node1 = (Node*) ball_nodes.Alloc(); new (node1) Node();
           node1->leaf = leaf1;
           node1->level = node->level+1;
 
-          Node *node2 = new Node();
+          Node *node2 = (Node*) ball_nodes.Alloc(); new (node2) Node();
           node2->leaf = leaf2;
           node2->level = node->level+1;
 
@@ -239,7 +234,7 @@ namespace netgen
           else
               leaf2->Add( leaf_index, p, pi );
 
-          delete leaf;
+          ball_leaves.Free(leaf);
           n_leaves++;
           n_nodes+=2;
         }
