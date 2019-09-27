@@ -3692,6 +3692,30 @@ namespace netgen
 
   bool Mesh :: LegalTrig (const Element2d & el) const
   {
+    // Search for surface trigs with same vertices ( may happen for instance with close surfaces in stl geometies )
+    if(!illegal_trigs)
+      {
+        auto & tab = const_cast<decltype(illegal_trigs)&>(illegal_trigs);
+        tab = make_unique<INDEX_3_CLOSED_HASHTABLE<int>> (3*GetNSE() + 1);
+        for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
+          {
+            const Element2d & sel = surfelements[sei];
+            if (sel.IsDeleted()) continue;
+
+            INDEX_3 i3(sel[0], sel[1], sel[2]);
+            i3.Sort();
+            if(tab->Used(i3) && tab->Get(i3)!=sei)
+                tab -> Set (i3, -1);
+            else
+                tab -> Set (i3, sei);
+          }
+
+      }
+    INDEX_3 i3 (el[0], el[1], el[2]);
+    i3.Sort();
+    if(illegal_trigs->Used(i3) && illegal_trigs->Get(i3)==-1)
+        return false;
+
     return 1;
     if ( /* hp */ 1)  // needed for old, simple hp-refinement
       { 

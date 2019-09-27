@@ -55,6 +55,7 @@ namespace netgen
     unique_ptr<INDEX_2_CLOSED_HASHTABLE<int>> segmentht;
     ///
     unique_ptr<INDEX_3_CLOSED_HASHTABLE<int>> surfelementht;
+    unique_ptr<INDEX_3_CLOSED_HASHTABLE<int>> illegal_trigs;
 
     /// faces of rest-solid
     NgArray<Element2d> openelements;
