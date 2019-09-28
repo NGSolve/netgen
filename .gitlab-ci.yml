@@ -195,6 +195,10 @@ cleanup_ubuntu:
     # remove intermediate and old docker images and containers
     - docker rm -f `docker ps --no-trunc -aq`
     - docker images --no-trunc -aqf "dangling=true" | xargs docker rmi -f || true
+    - docker rmi -f netgen_${CI_PIPELINE_ID}:${UBUNTU_VERSION} || true
+    - docker rmi -f netgen_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION} || true
+    - docker rmi -f netgen_mpi_${CI_PIPELINE_ID}:${UBUNTU_VERSION} || true
+    - docker rmi -f netgen_mpi_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION} || true
   when: always
   allow_failure: true
 
