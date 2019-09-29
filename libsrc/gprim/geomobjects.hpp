@@ -162,8 +162,43 @@ namespace netgen
     Vec<D> GetNormal () const;
   };
 
+  template<int D>
+  inline Vec<D> operator-(const Point<D>& p1, const Point<D>& p2)
+  {
+    Vec<D> result;
+    for(auto i : Range(D))
+      result[i] = p1[i] - p2[i];
+    return result;
+  }
 
+  inline double Cross2(const Vec<2>& v1, const Vec<2>& v2)
+  {
+    return v1[0] * v2[1] - v1[1] * v2[0];
+  }
 
+  // are points clockwise?
+  inline bool CW(const Point<2>& p1, const Point<2>& p2,
+                  const Point<2>& p3)
+  {
+    return Cross2(p2-p1, p3-p2) < 0;
+  }
+
+  // are points counterclockwise?
+  inline bool CCW(const Point<2>& p1, const Point<2>& p2,
+                  const Point<2>& p3)
+  {
+    return Cross2(p2-p1, p3-p2) > 0;
+  }
+
+  // are strictly points counterclockwise?
+  inline bool CCW(const Point<2>& p1, const Point<2>& p2,
+                  const Point<2>& p3, double eps)
+  {
+    auto v1 = p2-p1;
+    auto v2 = p3-p2;
+    return Cross2(v1, v2) > eps*eps*max2(v1.Length2(),
+                                         v2.Length2());
+  }
 
 
   template <int H, int W=H, typename T = double>

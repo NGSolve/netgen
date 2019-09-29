@@ -439,7 +439,7 @@ namespace netgen
   }
 
   void Element2d :: 
-  GetTransformation (int ip, const NgArray<Point2d> & points,
+  GetTransformation (int ip, const NgArray<Point<2>> & points,
                      DenseMatrix & trans) const
   {
     int np = GetNP();
@@ -658,7 +658,7 @@ namespace netgen
 
 
   void Element2d :: 
-  GetPointMatrix (const NgArray<Point2d> & points,
+  GetPointMatrix (const NgArray<Point<2>> & points,
                   DenseMatrix & pmat) const
   {
     int np = GetNP();
@@ -673,9 +673,9 @@ namespace netgen
   
     for (int i = 1; i <= np; i++)
       {
-        const Point2d & p = points.Get(PNum(i));
-        pmat.Elem(1, i) = p.X();
-        pmat.Elem(2, i) = p.Y();
+        const auto& p = points.Get(PNum(i));
+        pmat.Elem(1, i) = p[0];
+        pmat.Elem(2, i) = p[1];
       }
   }
 
@@ -683,7 +683,7 @@ namespace netgen
 
 
 
-  double Element2d :: CalcJacobianBadness (const NgArray<Point2d> & points) const
+  double Element2d :: CalcJacobianBadness (const NgArray<Point<2>> & points) const
   {
     int i, j;
     int nip = GetNIP();
@@ -727,7 +727,7 @@ namespace netgen
     };
 
   double Element2d :: 
-  CalcJacobianBadnessDirDeriv (const NgArray<Point2d> & points,
+  CalcJacobianBadnessDirDeriv (const NgArray<Point<2>> & points,
                                int pi, Vec2d & dir, double & dd) const
   {
     if (typ == QUAD)
