@@ -790,9 +790,13 @@ namespace netgen
 
 	double r2 = Dist2 (*pp[0], pc);
 	if (hasclose)
+          /*
 	  for (int k = 1; k <= closesphere.GetArray().Size(); k++)
 	    {
 	      int csameind = closesphere.GetArray().Get(k); 
+          */
+          for (int csameind : closesphere.GetArray())
+            {
 	      if (!insphere.IsIn(csameind) &&
 		  fabs (r2 - radi2.Get(csameind)) < 1e-10 && 
 		  Dist2 (pc, centers.Get(csameind)) < 1e-20)
