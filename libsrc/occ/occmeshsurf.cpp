@@ -432,33 +432,27 @@ namespace netgen
   }
 
 
-  void Meshing2OCCSurfaces :: DefineTransformation (const Point3d & p1, const Point3d & p2,
+  void Meshing2OCCSurfaces :: DefineTransformation (const Point<3> & p1, const Point<3> & p2,
 						    const PointGeomInfo * geominfo1,
 						    const PointGeomInfo * geominfo2)
   {
     ((OCCSurface&)surface).DefineTangentialPlane (p1, *geominfo1, p2, *geominfo2);
   }
  
-  void Meshing2OCCSurfaces :: TransformToPlain (const Point3d & locpoint, 
+  void Meshing2OCCSurfaces :: TransformToPlain (const Point<3>& locpoint, 
 						const MultiPointGeomInfo & geominfo,
-						Point2d & planepoint, 
+						Point<2> & planepoint, 
 						double h, int & zone)
   {
-    Point<2> hp;
-    surface.ToPlane (locpoint, geominfo.GetPGI(1), hp, h, zone);
-    planepoint.X() = hp(0);
-    planepoint.Y() = hp(1);
+    surface.ToPlane (locpoint, geominfo.GetPGI(1), planepoint, h, zone);
   }
 
-  int Meshing2OCCSurfaces :: TransformFromPlain (Point2d & planepoint,
-						 Point3d & locpoint,
+  int Meshing2OCCSurfaces :: TransformFromPlain (const Point<2> & planepoint,
+						 Point<3> & locpoint,
 						 PointGeomInfo & gi,
 						 double h)
   {
-    Point<3> hp;
-    Point<2> hp2 (planepoint.X(), planepoint.Y());
-    surface.FromPlane (hp2, hp, gi, h);
-    locpoint = hp;
+    surface.FromPlane (planepoint, locpoint, gi, h);
     return 0;
   }
 

@@ -27,40 +27,40 @@ public:
 
 protected:
   ///
-  virtual void DefineTransformation (const Point3d & p1, const Point3d & p2,
-				     const PointGeomInfo * geominfo1,
-				     const PointGeomInfo * geominfo2);
+  void DefineTransformation (const Point<3> & p1, const Point<3> & p2,
+                             const PointGeomInfo * geominfo1,
+                             const PointGeomInfo * geominfo2) override;
   ///
-  virtual void TransformToPlain (const Point3d & locpoint, const MultiPointGeomInfo & geominfo,
-      Point2d & plainpoint, double h, int & zone);
+  void TransformToPlain (const Point<3> & locpoint, const MultiPointGeomInfo & geominfo,
+                         Point<2> & plainpoint, double h, int & zone) override;
   ///
-  virtual int TransformFromPlain (Point2d & plainpoint,
-				  Point3d & locpoint, 
-				  PointGeomInfo & gi,
-				  double h);
+  int TransformFromPlain (const Point<2>& plainpoint,
+                          Point<3> & locpoint, 
+                          PointGeomInfo & gi,
+                          double h) override;
   ///
-  virtual int BelongsToActiveChart (const Point3d & p, 
-				    const PointGeomInfo & gi);
+  int BelongsToActiveChart (const Point3d & p, 
+                            const PointGeomInfo & gi) override;
 
   ///
-  virtual int ComputePointGeomInfo (const Point3d & p, PointGeomInfo & gi);
+  int ComputePointGeomInfo (const Point3d & p, PointGeomInfo & gi) override;
   ///
-  virtual int ChooseChartPointGeomInfo (const MultiPointGeomInfo & mpgi, 
-					 PointGeomInfo & pgi);
+  int ChooseChartPointGeomInfo (const MultiPointGeomInfo & mpgi, 
+                                PointGeomInfo & pgi) override;
 
   ///
-  virtual int IsLineVertexOnChart (const Point3d & p1, const Point3d & p2,
-				   int endpoint, const PointGeomInfo & gi);
+  int IsLineVertexOnChart (const Point3d & p1, const Point3d & p2,
+                           int endpoint, const PointGeomInfo & gi) override;
 
-  virtual void GetChartBoundary (NgArray<Point2d > & points, 
-				 NgArray<Point3d > & poitns3d,
-				 NgArray<INDEX_2> & lines, double h) const;
-
-  ///
-  virtual double CalcLocalH (const Point3d & p, double gh) const;
+  void GetChartBoundary (NgArray<Point2d > & points, 
+                         NgArray<Point3d > & poitns3d,
+                         NgArray<INDEX_2> & lines, double h) const override;
 
   ///
-  virtual double Area () const;
+  double CalcLocalH (const Point3d & p, double gh) const override;
+
+  ///
+  double Area () const override;
 };
 
 

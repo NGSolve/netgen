@@ -884,7 +884,7 @@ MeshingSTLSurface :: MeshingSTLSurface (STLGeometry & ageom,
   ;
 }
 
-void MeshingSTLSurface :: DefineTransformation (const Point3d & p1, const Point3d & p2,
+void MeshingSTLSurface :: DefineTransformation (const Point<3> & p1, const Point<3> & p2,
 						const PointGeomInfo * geominfo,
 						const PointGeomInfo * geominfo2)
 {
@@ -893,8 +893,8 @@ void MeshingSTLSurface :: DefineTransformation (const Point3d & p1, const Point3
   geom.DefineTangentialPlane(p1, p2, transformationtrig);
 }
 
-void MeshingSTLSurface :: TransformToPlain (const Point3d & locpoint, const MultiPointGeomInfo & gi,
-					    Point2d & plainpoint, double h, int & zone)
+void MeshingSTLSurface :: TransformToPlain (const Point<3> & locpoint, const MultiPointGeomInfo & gi,
+					    Point<2> & plainpoint, double h, int & zone)
 {
   int trigs[10000];
 
@@ -910,9 +910,7 @@ void MeshingSTLSurface :: TransformToPlain (const Point3d & locpoint, const Mult
   //  int trig = gi.trignum;
   //   (*testout) << "locpoint = " << locpoint;
 
-  Point<2> hp2d;
-  geom.ToPlane (locpoint, trigs, hp2d, h, zone, 1);
-  plainpoint = hp2d;
+  geom.ToPlane (locpoint, trigs, plainpoint, h, zone, 1);
 
   //  geom.ToPlane (locpoint, NULL, plainpoint, h, zone, 1);
   /*
@@ -1018,8 +1016,8 @@ GetChartBoundary (NgArray<Point2d > & points,
 
 
 
-int MeshingSTLSurface :: TransformFromPlain (Point2d & plainpoint,
-					     Point3d & locpoint, 
+int MeshingSTLSurface :: TransformFromPlain (const Point<2> & plainpoint,
+					     Point<3> & locpoint, 
 					     PointGeomInfo & gi, 
 					     double h)
 {
