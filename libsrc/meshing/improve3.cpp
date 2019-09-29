@@ -3637,13 +3637,35 @@ void MeshOptimize3d :: SwapImprove2Sequential (Mesh & mesh, OPTIMIZEGOAL goal)
 
   bad1 = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
   (*testout) << "Total badness = " << bad1 << endl;
-  //  cout << "tot bad = " << bad1 << endl;
+  cout << "tot bad = " << bad1 << endl;
 
+  /*
   // find elements on node
-
+  TableCreator<ElementIndex, PointIndex> creator(np);
+  for ( ; !creator.Done(); creator++)
+    ngcore::ParallelForRange
+      (ElementIndex(ne), [&] (auto myrange)
+       {
+         for (ElementIndex ei : myrange)
+           for (PointIndex pi : mesh[ei].PNums())
+             creator.Add (pi, ei);
+       });
+       
+  auto __elementsonnode = creator.MoveTable();
+  ngcore::ParallelForRange
+    (__elementsonnode.Range(), [&] (auto myrange)
+     {
+       for (PointIndex pi : myrange)
+         QuickSort(__elementsonnode[pi]);
+     });
+  cout << "new elonnode " << __elementsonnode << endl;
+  */
+  
   for (ElementIndex ei = 0; ei < ne; ei++)
-    for (int j = 0; j < mesh[ei].GetNP(); j++)
-      elementsonnode.Add (mesh[ei][j], ei);
+    for (PointIndex pi : mesh[ei].PNums())
+      elementsonnode.Add (pi, ei);
+  
+  // cout << "old elonnode " << elementsonnode << endl;
 
   for (SurfaceElementIndex sei = 0; sei < nse; sei++)
     for (int j = 0; j < 3; j++)

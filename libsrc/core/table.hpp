@@ -19,10 +19,11 @@ namespace ngcore
 {
 
 
-template <class T>
+  template <class T, class IndexType = size_t>
 class FlatTable
 {
 protected:
+  static constexpr IndexType BASE = IndexBASE<IndexType>();  
   /// number of rows
   size_t size;
   /// pointer to first in row
@@ -40,8 +41,9 @@ public:
   NETGEN_INLINE size_t Size() const { return size; }
 
   /// Access entry
-  NETGEN_INLINE const FlatArray<T> operator[] (size_t i) const
+  NETGEN_INLINE const FlatArray<T> operator[] (IndexType i) const
   {
+    i = i-BASE;
     return FlatArray<T> (index[i+1]-index[i], data+index[i]);
   }
 
@@ -54,22 +56,26 @@ public:
 
   NETGEN_INLINE FlatArray<size_t> IndexArray() const
   {
-    return FlatArray<size_t> (size+1, index);
+    return FlatArray<size_t, IndexType> (size+1, index);
   }
 
   /// takes range starting from position start of end-start elements
   NETGEN_INLINE FlatTable<T> Range (size_t start, size_t end) const
   {
-    return FlatTable<T> (end-start, index+start, data);
+    return FlatTable<T> (end-start, index+start-BASE, data);
   }
 
   /// takes range starting from position start of end-start elements
   NETGEN_INLINE FlatTable<T> Range (T_Range<size_t> range) const
   {
-    return FlatTable<T> (range.Size(), index+range.First(), data);
+    return FlatTable<T> (range.Size(), index+range.First()-BASE, data);
   }
 
-
+  NETGEN_INLINE T_Range<IndexType> Range () const
+  {
+    return T_Range<IndexType> (BASE, size+BASE);
+  }
+  
   class Iterator
   {
     const FlatTable & tab;
@@ -81,8 +87,8 @@ public:
     bool operator!= (const Iterator & it2) { return row != it2.row; }
   };
 
-  Iterator begin() const { return Iterator(*this, 0); }
-  Iterator end() const { return Iterator(*this, size); }
+  Iterator begin() const { return Iterator(*this, BASE); }
+  Iterator end() const { return Iterator(*this, BASE+size); }
 };
 
   NGCORE_API extern size_t * TablePrefixSum32 (FlatArray<unsigned int> entrysize);
@@ -104,21 +110,21 @@ public:
     A table contains size entries of variable size.
     The entry sizes must be known at construction.
 */
-template <class T>
-class Table : public FlatTable<T>
+  template <class T, class IndexType = size_t>
+  class Table : public FlatTable<T, IndexType>
 {
 protected:
 
-  using FlatTable<T>::size;
-  using FlatTable<T>::index;
-  using FlatTable<T>::data;
+  using FlatTable<T,IndexType>::size;
+  using FlatTable<T,IndexType>::index;
+  using FlatTable<T,IndexType>::data;
 
 public:
   ///
-  NETGEN_INLINE Table () : FlatTable<T> (0,nullptr,nullptr) { ; }
+  NETGEN_INLINE Table () : FlatTable<T,IndexType> (0,nullptr,nullptr) { ; }
   /// Construct table of uniform entrysize
   NETGEN_INLINE Table (size_t asize, size_t entrysize)
-    : FlatTable<T>( asize, new size_t[asize+1], new T[asize*entrysize] )
+    : FlatTable<T,IndexType>( asize, new size_t[asize+1], new T[asize*entrysize] )
   {
     for (size_t i : IntRange(size+1))
       index[i] = i*entrysize;
@@ -126,17 +132,17 @@ public:
 
   /// Construct table of variable entrysize
   template <typename TI>
-  NETGEN_INLINE Table (FlatArray<TI> entrysize)
-  : FlatTable<T> (0, nullptr, nullptr)
+  NETGEN_INLINE Table (FlatArray<TI,IndexType> entrysize)
+    : FlatTable<T,IndexType> (0, nullptr, nullptr)
   {
     size  = entrysize.Size();
-    index = TablePrefixSum (entrysize);
+    index = TablePrefixSum (FlatArray<TI> (entrysize.Size(), entrysize.Data()));
     size_t cnt = index[size];
     data = new T[cnt];
   }
 
-  explicit NETGEN_INLINE Table (const Table<T> & tab2)
-    : FlatTable<T>(0, nullptr, nullptr)
+  explicit NETGEN_INLINE Table (const Table & tab2)
+    : FlatTable<T,IndexType>(0, nullptr, nullptr)
   {
     size = tab2.Size();
 
@@ -150,15 +156,15 @@ public:
       data[i] = tab2.data[i];
   }
 
-  NETGEN_INLINE Table (Table<T> && tab2)
-    : FlatTable<T>(0, nullptr, nullptr)
+  NETGEN_INLINE Table (Table && tab2)
+    : FlatTable<T,IndexType>(0, nullptr, nullptr)
   {
     Swap (size, tab2.size);
     Swap (index, tab2.index);
     Swap (data, tab2.data);
   }
 
-  NETGEN_INLINE Table & operator= (Table<T> && tab2)
+  NETGEN_INLINE Table & operator= (Table && tab2)
   {
     Swap (size, tab2.size);
     Swap (index, tab2.index);
@@ -176,20 +182,20 @@ public:
   }
 
   /// Size of table
-  using FlatTable<T>::Size;
+  using FlatTable<T,IndexType>::Size;
 
   /// number of elements in all rows
   NETGEN_INLINE size_t NElements() const { return index[size]; }
 
-  using FlatTable<T>::operator[];
+  using FlatTable<T,IndexType>::operator[];
 };
 
 
 /// Print table
-template <class T>
-inline ostream & operator<< (ostream & s, const Table<T> & table)
+  template <class T, typename IndexType>
+  inline ostream & operator<< (ostream & s, const Table<T,IndexType> & table)
 {
-  for (auto i : Range(table))
+  for (auto i : table.Range())
     {
       s << i << ":";
       for (auto el : table[i])
@@ -203,21 +209,21 @@ inline ostream & operator<< (ostream & s, const Table<T> & table)
 
 
 
-template <class T>
+  template <class T, typename IndexType=size_t>
   class TableCreator
   {
   protected:
     int mode;    // 1 .. cnt, 2 .. cnt entries, 3 .. fill table
     std::atomic<size_t> nd;
-    Array<std::atomic<int>> cnt;
-    Table<T> table;
+    Array<std::atomic<int>,IndexType> cnt;
+    Table<T,IndexType> table;
   public:
     TableCreator()
     { nd = 0; mode = 1; }
     TableCreator (size_t acnt)
     { nd = acnt; SetMode(2); }
 
-    Table<T> MoveTable()
+    Table<T,IndexType> MoveTable()
     {
       return std::move(table);
     }
@@ -232,12 +238,12 @@ template <class T>
       if (mode == 2)
 	{
 	  // cnt.SetSize(nd);  // atomic has no copy
-          cnt = Array<std::atomic<int>> (nd);
+          cnt = Array<std::atomic<int>,IndexType> (nd);
           for (auto & ci : cnt) ci.store (0, std::memory_order_relaxed);
 	}
       if (mode == 3)
 	{
-          table = Table<T> (cnt);
+          table = Table<T,IndexType> (cnt);
           // for (auto & ci : cnt) ci = 0;
           for (auto & ci : cnt) ci.store (0, std::memory_order_relaxed);
           // cnt = 0;
@@ -255,7 +261,7 @@ template <class T>
         }
     }
 
-    void Add (size_t blocknr, const T & data)
+    void Add (IndexType blocknr, const T & data)
     {
       switch (mode)
 	{
@@ -279,7 +285,7 @@ template <class T>
     }
 
 
-    void Add (size_t blocknr, IntRange range)
+    void Add (IndexType blocknr, IntRange range)
     {
       switch (mode)
 	{
@@ -303,7 +309,7 @@ template <class T>
 	}
     }
 
-    void Add (size_t blocknr, const FlatArray<int> & dofs)
+    void Add (IndexType blocknr, const FlatArray<int> & dofs)
     {
       switch (mode)
 	{
