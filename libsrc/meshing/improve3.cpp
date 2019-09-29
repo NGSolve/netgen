@@ -3570,22 +3570,11 @@ bool MeshOptimize3d :: SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementInd
                   el32.flags.illegal_valid = 0;
                   el33.flags.illegal_valid = 0;
 
-                  mesh[eli1] = el31;
-                  mesh[eli2] = el32;
-
-                  ElementIndex neli =
-                    mesh.AddVolumeElement (el33);
-
-                  /*
-                    // do we need this ? 
-                  for (int l = 0; l < 4; l++)
-                  {
-                      elementsonnode.Add (el31[l], eli1);
-                      elementsonnode.Add (el32[l], eli2);
-                      elementsonnode.Add (el33[l], neli);
-                  }
-                  */
-
+                  mesh[eli1].Delete();
+                  mesh[eli2].Delete();
+                  mesh.AddVolumeElement (el31);
+                  mesh.AddVolumeElement (el32);
+                  mesh.AddVolumeElement (el33);
               }
               return do_swap;
           }
@@ -3660,14 +3649,6 @@ void MeshOptimize3d :: SwapImprove2Sequential (Mesh & mesh, OPTIMIZEGOAL goal)
        for (PointIndex pi : myrange)
          QuickSort(elementsonnode[pi]);
      });
-  // cout << "new elonnode " << __elementsonnode << endl;
-
-  /*
-  for (ElementIndex ei = 0; ei < ne; ei++)
-    for (PointIndex pi : mesh[ei].PNums())
-      elementsonnode.Add (pi, ei);
-  */
-  // cout << "old elonnode " << elementsonnode << endl;
 
   for (SurfaceElementIndex sei = 0; sei < nse; sei++)
     for (int j = 0; j < 3; j++)
@@ -3742,7 +3723,6 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
   if (goal == OPT_CONFORM) return;
 
   // contains at least all elements at node
-  // TABLE<ElementIndex, PointIndex::BASE> elementsonnode(np);
   TABLE<SurfaceElementIndex, PointIndex::BASE> belementsonnode(np);
 
   PrintMessage (3, "SwapImprove2 ");
@@ -3772,11 +3752,6 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
          QuickSort(elementsonnode[pi]);
      });
   
-  /*
-  for (ElementIndex ei = 0; ei < ne; ei++)
-    for (int j = 0; j < mesh[ei].GetNP(); j++)
-      elementsonnode.Add (mesh[ei][j], ei);
-  */
   for (SurfaceElementIndex sei = 0; sei < nse; sei++)
     for (int j = 0; j < 3; j++)
       belementsonnode.Add (mesh[sei][j], sei);
