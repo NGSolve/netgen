@@ -39,11 +39,11 @@ void netrule :: SetFreeZoneTransformation (const Vector & devp, int tolclass)
     {
       oldutofreearea_i[tolclass-1] -> Mult (devp, devfree);
 
-      NgArray<Point2d> & fzi = *freezone_i[tolclass-1];
+      auto& fzi = *freezone_i[tolclass-1];
       for (int i = 0; i < fzs; i++)
 	{
-	  transfreezone[i].X() = fzi[i].X() + devfree[2*i];
-	  transfreezone[i].Y() = fzi[i].Y() + devfree[2*i+1];
+	  transfreezone[i][0] = fzi[i][0] + devfree[2*i];
+	  transfreezone[i][1] = fzi[i][1] + devfree[2*i+1];
 	}
     }
   else
@@ -57,24 +57,24 @@ void netrule :: SetFreeZoneTransformation (const Vector & devp, int tolclass)
 
       for (int i = 0; i < fzs; i++)
 	{
-	  transfreezone[i].X() = lam1 * freezone[i].X() + lam2 * freezonelimit[i].X() + devfree[2*i];
-	  transfreezone[i].Y() = lam1 * freezone[i].Y() + lam2 * freezonelimit[i].Y() + devfree[2*i+1];
+	  transfreezone[i][0] = lam1 * freezone[i][0] + lam2 * freezonelimit[i][0] + devfree[2*i];
+	  transfreezone[i][1] = lam1 * freezone[i][1] + lam2 * freezonelimit[i][1] + devfree[2*i+1];
 	}
     }
 
 
   if (fzs > 0)
     {
-      fzmaxx = fzminx = transfreezone[0].X();
-      fzmaxy = fzminy = transfreezone[0].Y();
+      fzmaxx = fzminx = transfreezone[0][0];
+      fzmaxy = fzminy = transfreezone[0][1];
     }
 
   for (int i = 1; i < fzs; i++)
     {
-      if (transfreezone[i].X() > fzmaxx) fzmaxx = transfreezone[i].X();
-      if (transfreezone[i].X() < fzminx) fzminx = transfreezone[i].X();
-      if (transfreezone[i].Y() > fzmaxy) fzmaxy = transfreezone[i].Y();
-      if (transfreezone[i].Y() < fzminy) fzminy = transfreezone[i].Y();
+      if (transfreezone[i][0] > fzmaxx) fzmaxx = transfreezone[i][0];
+      if (transfreezone[i][0] < fzminx) fzminx = transfreezone[i][0];
+      if (transfreezone[i][1] > fzmaxy) fzmaxy = transfreezone[i][1];
+      if (transfreezone[i][1] < fzminy) fzminy = transfreezone[i][1];
     }
 
   for (int i = 0; i < fzs; i++)
@@ -147,8 +147,8 @@ int netrule :: IsLineInFreeZone2 (const Point2d & p1, const Point2d & p2) const
 
       for (int i = 1; i <= transfreezone.Size(); i++)
 	{
-	  bool left  = transfreezone.Get(i).X() * nx + transfreezone.Get(i).Y() * ny + c <  1e-7;
-          bool right = transfreezone.Get(i).X() * nx + transfreezone.Get(i).Y() * ny + c > -1e-7;
+	  bool left  = transfreezone.Get(i)[0] * nx + transfreezone.Get(i)[1] * ny + c <  1e-7;
+          bool right = transfreezone.Get(i)[0] * nx + transfreezone.Get(i)[1] * ny + c > -1e-7;
 	  if (!left) allleft = false;
 	  if (!right) allright = false;
 	}
@@ -187,33 +187,12 @@ float netrule :: CalcPointDist (int pi, const Point2d & p) const
 }
 */
 
-float netrule :: CalcLineError (int li, const Vec2d & v) const
+float netrule :: CalcLineError (int li, const Vec<2> & v) const
 {
-  float dx = v.X() - linevecs.Get(li).X();
-  float dy = v.Y() - linevecs.Get(li).Y();
+  float dx = v[0] - linevecs.Get(li)[0];
+  float dy = v[1] - linevecs.Get(li)[1];
 
   const threefloat * ltf = &linetolerances.Get(li);
   return ltf->f1 * dx * dx + ltf->f2 * dx * dy + ltf->f3 * dy * dy;
 }
-
-
-
-
-/*
-int GetNRules ()
-  {
-  return rules.Size();
-  }
-*/
-
-
-
-
-
-
-
-
-
-
-
-}
+} // namespace netgen

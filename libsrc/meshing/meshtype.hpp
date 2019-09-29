@@ -580,7 +580,7 @@ namespace netgen
     int GetNIP () const;
     void GetIntegrationPoint (int ip, Point2d & p, double & weight) const;
 
-    void GetTransformation (int ip, const NgArray<Point2d> & points,
+    void GetTransformation (int ip, const NgArray<Point<2>> & points,
 			    class DenseMatrix & trans) const;
     void GetTransformation (int ip, class DenseMatrix & pmat,
 			    class DenseMatrix & trans) const;
@@ -595,16 +595,16 @@ namespace netgen
     void GetDShapeNew (const Point<2,T> & p, class MatrixFixWidth<2,T> & dshape) const;
     
     /// matrix 2 * np
-    void GetPointMatrix (const NgArray<Point2d> & points,
+    void GetPointMatrix (const NgArray<Point<2>> & points,
 			 class DenseMatrix & pmat) const; 
 
     void ComputeIntegrationPointData () const;
   
 
-    double CalcJacobianBadness (const NgArray<Point2d> & points) const;
+    double CalcJacobianBadness (const NgArray<Point<2>> & points) const;
     double CalcJacobianBadness (const T_POINTS & points, 
 				const Vec<3> & n) const;
-    double CalcJacobianBadnessDirDeriv (const NgArray<Point2d> & points,
+    double CalcJacobianBadnessDirDeriv (const NgArray<Point<2>> & points,
 					int pi, Vec2d & dir, double & dd) const;
 
 

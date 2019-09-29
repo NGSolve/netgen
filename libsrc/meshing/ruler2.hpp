@@ -23,15 +23,15 @@ private:
   ///
   char * name;
   ///
-  NgArray<Point2d> points;
+  NgArray<Point<2>> points;
   ///
   NgArray<INDEX_2> lines;
   ///
-  NgArray<Point2d> freezone, freezonelimit;
+  NgArray<Point<2>> freezone, freezonelimit;
   ///
-  NgArray<NgArray<Point2d>*> freezone_i;
+  NgArray<NgArray<Point<2>>*> freezone_i;
   ///
-  NgArray<Point2d> transfreezone;
+  NgArray<Point<2>> transfreezone;
 
   ///
   NgArray<int> dellines;
@@ -49,7 +49,7 @@ private:
   MatrixFixWidth<3> freesetinequ;
 
   ///
-  NgArray<Vec2d> linevecs;
+  NgArray<Vec<2>> linevecs;
 
   ///
   int noldp, noldl;
@@ -86,7 +86,7 @@ public:
   int GetLNearness (int li) const { return lnearness.Get(li); }
 
   ///
-  const Point2d & GetPoint (int i) const { return points.Get(i); }
+  const Point<2>& GetPoint (int i) const { return points.Get(i); }
   ///
   const INDEX_2 & GetLine (int i) const { return lines.Get(i); }
   ///
@@ -103,14 +103,14 @@ public:
 
   double CalcPointDist (int pi, const Point2d & p) const
   {
-    double dx = p.X() - points.Get(pi).X();
-    double dy = p.Y() - points.Get(pi).Y();
+    double dx = p.X() - points.Get(pi)[0];
+    double dy = p.Y() - points.Get(pi)[1];
     const threefloat * tfp = &tolerances.Get(pi);
     return tfp->f1 * dx * dx + tfp->f2 * dx * dy + tfp->f3 * dy * dy;
   }
 
   ///
-  float CalcLineError (int li, const Vec2d & v) const;
+  float CalcLineError (int li, const Vec<2>& v) const;
 
   ///
   void SetFreeZoneTransformation (const Vector & u, int tolclass);
@@ -144,7 +144,7 @@ public:
   ///
   int ConvexFreeZone () const;
   ///
-  const NgArray<Point2d> & GetTransFreeZone () { return transfreezone; }
+  const NgArray<Point<2>> & GetTransFreeZone () { return transfreezone; }
 
   ///
   int GetPointNr (int ln, int endp) const { return lines.Get(ln).I(endp); }

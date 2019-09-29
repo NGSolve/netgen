@@ -584,7 +584,7 @@ namespace netgen
     //  meshthis -> ProjectPoint (surfi, pp1);
     //  meshthis -> GetNormalVector (surfi, pp1, n);
 
-    static NgArray<Point2d> pts2d;
+    static NgArray<Point<2>> pts2d;
     pts2d.SetSize(mesh.GetNP());
 
     grad = 0;
@@ -655,7 +655,7 @@ namespace netgen
     //    pp1.Add2 (x.Get(1), t1, x.Get(2), t2);
     pp1 = ld.sp1 + x(0) * ld.t1 + x(1) * ld.t2;
 
-    static NgArray<Point2d> pts2d;
+    static NgArray<Point<2>> pts2d;
     pts2d.SetSize(mesh.GetNP());
 
     deriv = 0;

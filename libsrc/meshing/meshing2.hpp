@@ -135,7 +135,7 @@ protected:
 
 /** Applies 2D rules.
  Tests all 2D rules */
-  int ApplyRules (NgArray<Point2d> & lpoints, 
+  int ApplyRules (NgArray<Point<2>> & lpoints, 
 		  NgArray<int> & legalpoints,
 		  int maxlegalpoint,
 		  NgArray<INDEX_2> & llines,

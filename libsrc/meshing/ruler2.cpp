@@ -5,13 +5,13 @@ namespace netgen
 {
 
 
-  static double CalcElementBadness (const NgArray<Point2d> & points,
+  static double CalcElementBadness (const NgArray<Point<2>> & points,
 				    const Element2d & elem)
   {
     // badness = sqrt(3) /36 * circumference^2 / area - 1 +
     //           h / li + li / h - 2
 
-    Vec2d v12, v13, v23;
+    Vec<2> v12, v13, v23;
     double l12, l13, l23, cir, area;
     static const double c = sqrt(3.0) / 36;
 
@@ -24,7 +24,7 @@ namespace netgen
     l23 = v23.Length();
 
     cir = l12 + l13 + l23;
-    area = 0.5 * (v12.X() * v13.Y() - v12.Y() * v13.X());
+    area = 0.5 * (v12[0] * v13[1] - v12[1] * v13[0]);
     if (area < 1e-6)
       {
 	return 1e8;
@@ -45,7 +45,7 @@ namespace netgen
 
 
 
-  int Meshing2 ::ApplyRules (NgArray<Point2d> & lpoints, 
+  int Meshing2 ::ApplyRules (NgArray<Point<2>> & lpoints, 
 			     NgArray<int> & legalpoints,
 			     int maxlegalpoint,
 			     NgArray<INDEX_2> & llines1,
@@ -69,7 +69,7 @@ namespace netgen
 
     NgArrayMem<int, 20> pmap, pfixed, lmap;
   
-    NgArrayMem<Point2d,100> tempnewpoints;
+    NgArrayMem<Point<2>,100> tempnewpoints;
     NgArrayMem<INDEX_2,100> tempnewlines;
     NgArrayMem<int,100> tempdellines;
     NgArrayMem<Element2d,100> tempelements;
@@ -263,7 +263,7 @@ namespace netgen
 		    ok = 1;
 
 		    INDEX_2 loclin = llines.Get(locli);
-		    Vec2d linevec = lpoints.Get(loclin.I2()) - lpoints.Get(loclin.I1());
+		    auto linevec = lpoints.Get(loclin.I2()) - lpoints.Get(loclin.I1());
 
 		    if (rule->CalcLineError (nlok, linevec) > maxerr)
 		      {

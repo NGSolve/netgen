@@ -246,11 +246,11 @@ namespace netgen
 
     // double h;
 
-    auto locpointsptr = make_shared<NgArray<Point3d>>();
+    auto locpointsptr = make_shared<NgArray<Point<3>>>();
     vssurfacemeshing.locpointsptr = locpointsptr;
     auto& locpoints = *locpointsptr;
     NgArray<int> legalpoints;
-    auto plainpointsptr = make_shared<NgArray<Point2d>>();
+    auto plainpointsptr = make_shared<NgArray<Point<2>>>();
     auto& plainpoints = *plainpointsptr;
     vssurfacemeshing.plainpointsptr = plainpointsptr;
     NgArray<int> plainzones;
@@ -698,7 +698,7 @@ namespace netgen
             
 	    double avy = 0;
 	    for (size_t i = 0; i < plainpoints.Size(); i++)
-	      avy += plainpoints[i].Y();
+	      avy += plainpoints[i][1];
 	    avy *= 1./plainpoints.Size();
 		
 
@@ -715,7 +715,7 @@ namespace netgen
 		  }
 		    
 
-		if (plainpoints[i].Y() < -1e-10*avy) // changed
+		if (plainpoints[i][1] < -1e-10*avy) // changed
 		  {
 		    legalpoints[i] = 0;
 		  }

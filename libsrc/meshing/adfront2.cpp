@@ -274,7 +274,7 @@ namespace netgen
 
 
   int AdFront2 :: GetLocals (int baselineindex,
-			     NgArray<Point3d> & locpoints,
+			     NgArray<Point<3>> & locpoints,
 			     NgArray<MultiPointGeomInfo> & pgeominfo,
 			     NgArray<INDEX_2> & loclines,   // local index
 			     NgArray<INDEX> & pindex,

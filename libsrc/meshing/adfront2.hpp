@@ -216,7 +216,7 @@ public:
 
   ///
   int GetLocals (int baseline, 
-		 NgArray<Point3d> & locpoints,
+		 NgArray<Point<3>> & locpoints,
 		 NgArray<MultiPointGeomInfo> & pgeominfo,
                  NgArray<INDEX_2> & loclines,   // local index
                  NgArray<int> & pindex,
