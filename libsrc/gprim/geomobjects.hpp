@@ -63,6 +63,9 @@ namespace netgen
     T & operator() (int i) { return x[i]; }
     const T & operator() (int i) const { return x[i]; }
 
+    T& operator[] (int i) { return x[i]; }
+    const T& operator[] (int i) const { return x[i]; }
+
     operator const T* () const { return x; }
 
     void DoArchive(Archive& archive)
@@ -119,6 +122,9 @@ namespace netgen
 
     T & operator() (int i) { return x[i]; }
     const T & operator() (int i) const { return x[i]; }
+
+    T& operator[] (int i) { return x[i]; }
+    const T& operator[] (int i) const { return x[i]; }
 
     operator const T* () const { return x; }
 

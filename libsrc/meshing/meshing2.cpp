@@ -122,7 +122,7 @@ namespace netgen
   // static Vec3d ex, ey;
   // static Point3d globp1;
 
-  void Meshing2 :: DefineTransformation (const Point3d & p1, const Point3d & p2,
+  void Meshing2 :: DefineTransformation (const Point<3> & p1, const Point<3> & p2,
 					 const PointGeomInfo * geominfo1,
 					 const PointGeomInfo * geominfo2)
   {
@@ -134,28 +134,28 @@ namespace netgen
     ey.Z() = 0;
   }
 
-  void Meshing2 :: TransformToPlain (const Point3d & locpoint, 
+  void Meshing2 :: TransformToPlain (const Point<3> & locpoint, 
 				     const MultiPointGeomInfo & geominf,
-				     Point2d & plainpoint, double h, int & zone)
+				     Point<2> & plainpoint, double h, int & zone)
   {
     Vec3d p1p (globp1, locpoint);
 
     //    p1p = locpoint - globp1;
     p1p /= h;
-    plainpoint.X() = p1p * ex;
-    plainpoint.Y() = p1p * ey;
+    plainpoint[0] = p1p * ex;
+    plainpoint[1] = p1p * ey;
     zone = 0;
   }
 
-  int Meshing2 :: TransformFromPlain (Point2d & plainpoint,
-				      Point3d & locpoint, 
+  int Meshing2 :: TransformFromPlain (const Point<2> & plainpoint,
+				      Point<3> & locpoint, 
 				      PointGeomInfo & gi, 
 				      double h)
   {
     Vec3d p1p;
     gi.trignum = 1;
 
-    p1p = plainpoint.X() * ex + plainpoint.Y() * ey;
+    p1p = plainpoint[0] * ex + plainpoint[1] * ey;
     p1p *= h;
     locpoint = globp1 + p1p;
     return 0;
@@ -545,8 +545,12 @@ namespace netgen
 
 
 	    for (size_t i = 0; i < locpoints.Size(); i++)
-              TransformToPlain (locpoints[i], mpgeominfo[i],
-                                plainpoints[i], h, plainzones[i]);
+              {
+                Point<2> pp;
+                TransformToPlain (locpoints[i], mpgeominfo[i],
+                                  pp, h, plainzones[i]);
+                plainpoints[i] = pp;
+              }
             
             /*
 	    for (int i = 1; i <= locpoints.Size(); i++)
@@ -841,9 +845,11 @@ namespace netgen
 
 	    for (int i = oldnp+1; i <= plainpoints.Size(); i++)
 	      {
+                Point<3> locp;
 		int err =
-		  TransformFromPlain (plainpoints.Elem(i), locpoints.Elem(i), 
+		  TransformFromPlain (plainpoints.Elem(i), locp, 
 				      upgeominfo.Elem(i), h);
+                locpoints.Elem(i) = locp;
 
 		if (err)
 		  {

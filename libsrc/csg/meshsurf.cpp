@@ -23,33 +23,27 @@ Meshing2Surfaces :: Meshing2Surfaces (const Surface & asurf,
 }
 
 
-void Meshing2Surfaces :: DefineTransformation (const Point3d & p1, const Point3d & p2,
+void Meshing2Surfaces :: DefineTransformation (const Point<3> & p1, const Point<3> & p2,
 					       const PointGeomInfo * geominfo1,
 					       const PointGeomInfo * geominfo2)
 {
   ((Surface&)surface).DefineTangentialPlane (p1, p2);
 }
 
-void Meshing2Surfaces :: TransformToPlain (const Point3d & locpoint, 
+void Meshing2Surfaces :: TransformToPlain (const Point<3> & locpoint, 
 					   const MultiPointGeomInfo & geominfo,
-					   Point2d & planepoint, 
+					   Point<2> & planepoint, 
 					   double h, int & zone)
 {
-  Point<2> hp;
-  surface.ToPlane (locpoint, hp, h, zone);
-  planepoint.X() = hp(0);
-  planepoint.Y() = hp(1);
+  surface.ToPlane (locpoint, planepoint, h, zone);
 }
 
-int Meshing2Surfaces :: TransformFromPlain (Point2d & planepoint,
-					    Point3d & locpoint, 
-					    PointGeomInfo & gi,
-					    double h)
+int Meshing2Surfaces :: TransformFromPlain (const Point<2> & planepoint,
+                                            Point<3> & locpoint, 
+                                            PointGeomInfo & gi,
+                                            double h)
 {
-  Point<3> hp;
-  Point<2> hp2 (planepoint.X(), planepoint.Y());
-  surface.FromPlane (hp2, hp, h);
-  locpoint = hp;
+  surface.FromPlane (planepoint, locpoint, h);
   gi.trignum = 1;
   return 0;
 }
