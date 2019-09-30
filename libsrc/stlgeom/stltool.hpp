@@ -125,6 +125,7 @@ private:
   Vec<3> normal;
   Point<3> pref;
   Vec<3> t1, t2;
+  unique_ptr<BoxTree<2,int>> inner_searchtree;
 public:
   void SetNormal (const Point<3> & apref, const Vec<3> & anormal);
   const Vec<3> & GetNormal () const { return normal; }
@@ -133,6 +134,8 @@ public:
     Vec<3> v = p3d-pref;
     return Point<2> (t1 * v, t2 * v);
   }
+  void BuildInnerSearchTree();
+  STLTrigId ProjectNormal (Point<3> & p) const;
 };
 
 class STLBoundarySeg

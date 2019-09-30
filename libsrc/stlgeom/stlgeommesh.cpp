@@ -544,6 +544,13 @@ int STLGeometry :: Project(Point<3> & p3d) const
 
   const STLChart& chart = GetChart(meshchart);
 
+  STLTrigId trig = chart.ProjectNormal(p3d);
+  return trig;
+  // cout << "new, trig = " << trig << endl;
+
+  // #define MOVEDTOCHART
+#ifdef MOVEDTOCHART
+  
   int nt = chart.GetNT();
 
    QuadraticFunction3d quadfun(p3d, meshtrignv);
@@ -599,10 +606,12 @@ int STLGeometry :: Project(Point<3> & p3d) const
 	}
 
       if (inside)
-	break;
-
+        break;
     }
+#endif
 
+  // cout << "oldtrig = " << fi << endl;
+  
   //  if (cnt == 2) {(*testout) << "WARNING: found 2 triangles to project" << endl;}
   //if (cnt == 3) {(*testout) << "WARNING: found 3 triangles to project" << endl;}
   //if (cnt > 3) {(*testout) << "WARNING: found more than 3 triangles to project" << endl;}

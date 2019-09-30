@@ -153,7 +153,9 @@ public:
   STLPointId & PNum(int i) { return pts[(i-1)]; }
   STLPointId PNumMod(int i) const { return pts[(i-1)%3]; }
   STLPointId & PNumMod(int i)  { return pts[(i-1)%3]; }
+  FlatArray<const STLPointId> PNums() const { return { 3, pts }; }
 
+  
   int EdgeNumMod(int i) const { return topedges[(i-1)%3]; }
   int & EdgeNumMod(int i)  { return topedges[(i-1)%3]; }
 

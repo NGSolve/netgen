@@ -795,6 +795,67 @@ void STLChart :: SetNormal (const Point<3> & apref, const Vec<3> & anormal)
   t2 = Cross (normal, t1);
 }
 
+void STLChart :: BuildInnerSearchTree()
+{
+  Box<2> chart_bbox(Box<2>::EMPTY_BOX);
+  for (STLTrigId trigid : charttrigs)
+    {
+      for (STLPointId pi : (*geometry)[trigid].PNums())
+        {
+          Point<3> p = (*geometry)[pi];
+          Point<2> p2d = Project2d(p);
+          chart_bbox.Add(p2d);
+        }
+    }
+  chart_bbox.Increase (1e-2*chart_bbox.Diam());
+  inner_searchtree = make_unique<BoxTree<2,int>> (chart_bbox);
+  for (STLTrigId trigid : charttrigs)
+    {
+      Box<2> bbox(Box<2>::EMPTY_BOX);      
+      for (STLPointId pi : (*geometry)[trigid].PNums())
+        {
+          Point<3> p = (*geometry)[pi];
+          Point<2> p2d = Project2d(p);
+          bbox.Add(p2d);
+        }
+      inner_searchtree->Insert (bbox, trigid);
+    }
+}
+
+STLTrigId STLChart :: ProjectNormal (Point<3> & p3d) const
+{
+  
+  int nt = GetNT();
+  double lamtol = 1e-6;
+  QuadraticFunction3d quadfun(p3d, GetNormal());
+ 
+  for (int j = 1; j <= nt; j++)
+    {
+      STLTrigId i = GetTrig1(j);
+      auto & trig = geometry->GetTriangle(i);
+      const Point<3> & c = trig.center;
+
+      if (quadfun.Eval(c) > sqr (trig.rad))
+	continue;
+
+      Point<3> p = p3d;
+      Vec<3> lam;
+      int err = trig.ProjectInPlain(geometry->GetPoints(), GetNormal(), p, lam);      
+      bool inside = (err == 0 && lam(0) > -lamtol && 
+                     lam(1) > -lamtol && (1-lam(0)-lam(1)) > -lamtol);
+
+      if (inside)
+        {
+          p3d = p;
+          return i;
+        }
+    }
+
+  return 0;
+}
+
+
+
 /*
 Point<2> STLChart :: Project2d (const Point<3> & p3d) const
 {

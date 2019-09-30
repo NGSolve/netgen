@@ -600,6 +600,10 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
   
   PrintMessage(5,"Make Atlas finished");
 
+  
+  for (auto & chart : atlas)
+    chart->BuildInnerSearchTree();
+
   PopStatus();
 }
 
