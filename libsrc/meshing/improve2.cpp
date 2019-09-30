@@ -430,6 +430,7 @@ namespace netgen
   {
     if (!faceindex)
       {
+        SplitImprove(mesh);
 	PrintMessage (3, "Combine improve");
 
 	for (faceindex = 1; faceindex <= mesh.GetNFD(); faceindex++)
@@ -694,7 +695,11 @@ namespace netgen
 		  if ( (normals[el[l]] * nv) < 0.5)
 		    bad2 += 1e10;
 
-		illegal2 += 1-mesh.LegalTrig(el);
+                Element2d el1 = el;
+                for (auto i : Range(3))
+                    if(el1[i]==pi2)
+                        el1[i] = pi1;
+                illegal2 += 1-mesh.LegalTrig(el1);
 	      }
 	    bad2 /= hasonepi.Size();
 
@@ -789,6 +794,142 @@ namespace netgen
     mesh.SetNextTimeStamp();
   }
 
+  void MeshOptimize2d :: SplitImprove (Mesh & mesh)
+  {
+    if (!faceindex)
+      {
+        PrintMessage (3, "Split improve");
+
+        mesh.CalcSurfacesOfNode(); // TODO: needed?
+        for (faceindex = 1; faceindex <= mesh.GetNFD(); faceindex++)
+          {
+            SplitImprove (mesh);
+
+            if (multithread.terminate)
+                throw NgException ("Meshing stopped");
+          }
+
+        faceindex = 0;
+        mesh.Compress(); // TODO: needed?
+        return;
+      }
+
+    Array<SurfaceElementIndex> elements;
+    mesh.GetSurfaceElementsOfFace (faceindex, elements);
+
+    // return if we have quads in this surface
+    for (auto & ei : elements)
+        if (mesh[ei].GetNP() != 3)
+            return;
+
+    // maps from edges to adjacent trigs
+    INDEX_2_HASHTABLE<tuple<SurfaceElementIndex, SurfaceElementIndex>> els_on_edge(2*elements.Size() + 2);
+
+    // build els_on_edge table
+    for (SurfaceElementIndex sei : elements)
+      {
+        const Element2d & sel = mesh[sei];
+
+        for (int j = 0; j < 3; j++)
+          {
+            PointIndex pi1 = sel.PNumMod(j+2);
+            PointIndex pi2 = sel.PNumMod(j+3);
+
+            if (mesh.IsSegment (pi1, pi2)) continue;
+
+            INDEX_2 ii2 (pi1, pi2);
+            ii2.Sort();
+            if (els_on_edge.Used (ii2))
+              {
+                auto els = els_on_edge.Get(ii2);
+                get<1>(els) = sei;
+                els_on_edge.Set(ii2, els);
+              }
+            else
+              {
+                els_on_edge.Set (ii2, make_tuple(sei, sei));
+              }
+          }
+      }
+
+    // split edges of illegal trigs
+    for (SurfaceElementIndex sei : elements)
+      {
+        Element2d & sel = mesh[sei];
+
+        if (sel.IsDeleted()) continue;
+
+        // TODO: split also bad trigs, nut just illegal ones
+        if (mesh.LegalTrig(sel)) continue;
+
+        for (int j = 0; j < 3; j++)
+          {
+            PointIndex pi1 = sel.PNumMod(j+2);
+            PointIndex pi2 = sel.PNumMod(j+3);
+            PointIndex pi3 = sel.PNumMod(j+1);
+            PointIndex pi4;
+            PointGeomInfo gi1 = sel.GeomInfoPiMod(j+2);
+            PointGeomInfo gi2 = sel.GeomInfoPiMod(j+3);
+            PointGeomInfo gi3 = sel.GeomInfoPiMod(j+1);
+            PointGeomInfo gi4;
+
+            if (mesh.IsSegment (pi1, pi2)) continue;
+
+            // get neighbor element
+            INDEX_2 ii2 (pi1, pi2);
+            ii2.Sort();
+            auto els = els_on_edge.Get(ii2);
+            SurfaceElementIndex other_i = get<0>(els);
+            if(other_i==sei) other_i = get<1>(els);
+            auto & other = mesh[other_i];
+
+            // find opposite point of neighbor element
+            for (int j = 0; j < 3; j++)
+                if(other[j]!=pi1 && other[j]!=pi2)
+                  {
+                    pi4 = other[j];
+                    gi4 = other.GeomInfoPi(j);
+                    break;
+                  }
+
+            // split edge pi1,pi2
+            Point<3> p5;
+            PointIndex pi5;
+            PointGeomInfo gi5;
+
+            mesh.GetGeometry()->GetRefinement().PointBetween  (mesh[pi1], mesh[pi2], 0.5,
+                    faceindex,
+                    gi1, gi2, p5, gi5);
+
+            pi5 = mesh.AddPoint(p5);
+
+            Element2d e1(3);
+            e1.SetIndex(faceindex);
+            e1={ {pi1,gi1}, {pi5,gi5}, {pi3,gi3} };
+            mesh.AddSurfaceElement( e1 );
+
+            Element2d e2(3);
+            e2.SetIndex(faceindex);
+            e2 ={ {pi5,gi5}, {pi2,gi2}, {pi3,gi3} };
+            mesh.AddSurfaceElement( e2 );
+
+            Element2d e3(3);
+            e3.SetIndex(faceindex);
+            e3 ={ {pi1,gi1}, {pi4,gi4}, {pi5,gi5} };
+            mesh.AddSurfaceElement( e3 );
+
+            Element2d e4(3);
+            e4.SetIndex(faceindex);
+            e4 ={ {pi4,gi4}, {pi2,gi2}, {pi5,gi5} };
+            mesh.AddSurfaceElement( e4 );
+
+            sel.Delete();
+            other.Delete();
+          }
+      }
+
+    mesh.SetNextTimeStamp();
+  }
 
   void MeshOptimize2d :: CheckMeshApproximation (Mesh & mesh)
   {

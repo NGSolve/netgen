@@ -24,6 +24,7 @@ public:
 
   void EdgeSwapping (Mesh & mesh, int usemetric);
   void CombineImprove (Mesh & mesh);
+  void SplitImprove (Mesh & mesh);
 
   void GenericImprove (Mesh & mesh);
 

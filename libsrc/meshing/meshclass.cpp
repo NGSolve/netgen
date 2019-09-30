@@ -3849,9 +3849,53 @@ namespace netgen
     return 0;
   }
 
+  int Mesh :: FindIllegalTrigs ()
+  {
+    // Temporary table to store the vertex numbers of all triangles
+    INDEX_3_CLOSED_HASHTABLE<int> temp_tab(3*GetNSE() + 1);
+    size_t cnt = 0;
+    for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
+      {
+        const Element2d & sel = surfelements[sei];
+        if (sel.IsDeleted()) continue;
+
+        INDEX_3 i3(sel[0], sel[1], sel[2]);
+        i3.Sort();
+        if(temp_tab.Used(i3))
+          {
+            temp_tab.Set (i3, -1);
+            cnt++;
+          }
+        else
+          {
+            temp_tab.Set (i3, sei);
+          }
+      }
+
+    illegal_trigs = make_unique<INDEX_3_CLOSED_HASHTABLE<int>> (2*cnt+1);
+    for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
+      {
+        const Element2d & sel = surfelements[sei];
+        if (sel.IsDeleted()) continue;
+
+        INDEX_3 i3(sel[0], sel[1], sel[2]);
+        i3.Sort();
+        if(temp_tab.Get(i3)==-1)
+            illegal_trigs -> Set (i3, 1);
+      }
+    return cnt;
+  }
 
   bool Mesh :: LegalTrig (const Element2d & el) const
   {
+    // Search for surface trigs with same vertices ( may happen for instance with close surfaces in stl geometies )
+    if(!illegal_trigs)
+        throw Exception("In Mesh::LegalTrig() - illegal_trigs table not built");
+    INDEX_3 i3 (el[0], el[1], el[2]);
+    i3.Sort();
+    if(illegal_trigs->Used(i3))
+        return false;
+
     return 1;
     if ( /* hp */ 1)  // needed for old, simple hp-refinement
       { 
