@@ -3849,6 +3849,7 @@ namespace netgen
     return 0;
   }
 
+  // Search for surface trigs with same vertices ( may happen for instance with close surfaces in stl geometies )
   int Mesh :: FindIllegalTrigs ()
   {
     // Temporary table to store the vertex numbers of all triangles
@@ -3888,13 +3889,13 @@ namespace netgen
 
   bool Mesh :: LegalTrig (const Element2d & el) const
   {
-    // Search for surface trigs with same vertices ( may happen for instance with close surfaces in stl geometies )
-    if(!illegal_trigs)
-        throw Exception("In Mesh::LegalTrig() - illegal_trigs table not built");
-    INDEX_3 i3 (el[0], el[1], el[2]);
-    i3.Sort();
-    if(illegal_trigs->Used(i3))
-        return false;
+      if(illegal_trigs)
+      {
+          INDEX_3 i3 (el[0], el[1], el[2]);
+          i3.Sort();
+          if(illegal_trigs->Used(i3))
+              return false;
+      }
 
     return 1;
     if ( /* hp */ 1)  // needed for old, simple hp-refinement
