@@ -8,6 +8,7 @@
 
 #include "stlgeom.hpp"
 #include <vector>
+#include <cctype>
 
 namespace netgen
 {
@@ -340,14 +341,28 @@ STLGeometry *  STLTopology ::Load (istream & ist)
 {
   // Check if the file starts with "solid". If not, the file is binary
   {
-    char buf[5+1];
-    FIOReadStringE(ist,buf,5);
-    if (strcmp(buf, "solid") != 0)
-    {
-      for (auto i : Range(5))
+    // binary header is 80 bytes, so don't load more than that
+    constexpr int buflen = 80;
+    char buf[buflen+1];
+    FIOReadStringE(ist,buf,buflen);
+
+    // ignore whitespaces at start of line
+    int istart;
+    for (istart=0; istart<buflen-5; istart++)
+       if(std::isblank(buf[istart])==0)
+            break;
+
+    for (auto i : Range(buflen))
         ist.unget();
+
+    // does not start with "solid" -> binary file
+    if (strncmp(buf+istart, "solid", 5) != 0)
       return LoadBinary(ist);
-    }
+
+    // Check if there is a non-printable character in first 80 bytes
+    for (auto i : Range(istart, buflen))
+       if(std::isprint(buf[i])==0 && buf[i]!='\n')
+           return LoadBinary(ist);
   }
 
   STLGeometry * geom = new STLGeometry();
@@ -361,6 +376,7 @@ STLGeometry *  STLTopology ::Load (istream & ist)
   int cntface = 0;
   int vertex = 0;
   bool badnormals = false;
+  ist >> buf; // skip first line
   
   while (ist.good())
     {
