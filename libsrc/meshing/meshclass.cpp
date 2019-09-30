@@ -3256,8 +3256,7 @@ namespace netgen
     NgLock lock(mutex);
     lock.Lock();
     
-    NgArray<PointIndex,PointIndex::BASE,PointIndex> op2np(GetNP());
-    NgArray<MeshPoint> hpoints;
+    Array<PointIndex,PointIndex> op2np(GetNP());
     Array<bool, PointIndex> pused(GetNP());
 
     /*
@@ -3299,20 +3298,44 @@ namespace netgen
           segments.DeleteElement(i--);
 
     pused = false;
+    /*
     for (int i = 0; i < volelements.Size(); i++)
       {
         const Element & el = volelements[i];
         for (int j = 0; j < el.GetNP(); j++)
           pused[el[j]] = true;
       }
+    */
+    /*
+    for (const Element & el : volelements)
+      for (PointIndex pi : el.PNums())
+        pused[pi] = true;
+    */
 
+    ParallelForRange
+      (volelements.Range(), [&] (auto myrange)
+       {
+         for (const Element & el : volelements.Range(myrange))
+           for (PointIndex pi : el.PNums())
+             pused[pi] = true;
+       });
+
+    /*
     for (int i = 0; i < surfelements.Size(); i++)
       {
         const Element2d & el = surfelements[i];
         for (int j = 0; j < el.GetNP(); j++)
           pused[el[j]] = true;
       }
-
+    */
+    ParallelForRange
+      (surfelements.Range(), [&] (auto myrange)
+       {
+         for (const Element2d & el : surfelements.Range(myrange))
+           for (PointIndex pi : el.PNums())
+             pused[pi] = true;
+       });
+    
     for (int i = 0; i < segments.Size(); i++)
       {
         const Segment & seg = segments[i];
@@ -3346,40 +3369,59 @@ namespace netgen
     //  pused.Set();
 
     
-    int npi = PointIndex::BASE-1;
-
-    // for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
-    for (PointIndex pi : points.Range())
-      if (pused[pi])
-        {
-          npi++;
-          op2np[pi] = npi;
-          hpoints.Append (points[pi]);
-        }
-      else
-        {
-          op2np[pi].Invalidate(); //  = -1;
-        }
-
-
-    points.SetSize(0);
-    for (int i = 0; i < hpoints.Size(); i++)
-      points.Append (hpoints[i]);
-
+    {
+      Array<MeshPoint> hpoints;
+      int npi = PointIndex::BASE;
+      for (PointIndex pi : points.Range())
+        if (pused[pi])
+          {
+            op2np[pi] = npi;
+            npi++;
+            hpoints.Append (points[pi]);
+          }
+        else
+          {
+            op2np[pi].Invalidate(); 
+          }
+      
+      points.SetSize(0);
+      for (int i = 0; i < hpoints.Size(); i++)
+        points.Append (hpoints[i]);
+    }
+    
+    /*
     for (int i = 1; i <= volelements.Size(); i++)
       {
         Element & el = VolumeElement(i);
         for (int j = 0; j < el.GetNP(); j++)
           el[j] = op2np[el[j]];
       }
+    */
+    ParallelForRange
+      (volelements.Range(), [&] (auto myrange)
+       {
+         for (Element & el : volelements.Range(myrange))
+           for (PointIndex & pi : el.PNums())
+             pi = op2np[pi];
+       });
 
+    /*
     for (int i = 1; i <= surfelements.Size(); i++)
       {
         Element2d & el = SurfaceElement(i);
         for (int j = 0; j < el.GetNP(); j++)
           el[j] = op2np[el[j]];
       }
+    */
+    ParallelForRange
+      (surfelements.Range(), [&] (auto myrange)
+       {
+         for (Element2d & el : surfelements.Range(myrange))
+           for (PointIndex & pi : el.PNums())
+             pi = op2np[pi];
+       });
 
+    
     for (int i = 0; i < segments.Size(); i++)
       {
         Segment & seg = segments[i];
@@ -5565,6 +5607,8 @@ namespace netgen
 
   void Mesh :: RebuildSurfaceElementLists ()
   {
+    static Timer t("Mesh::LinkSurfaceElements"); RegionTimer reg (t);    
+    
     for (int i = 0; i < facedecoding.Size(); i++)
       facedecoding[i].firstelement = -1;
     for (int i = surfelements.Size()-1; i >= 0; i--)

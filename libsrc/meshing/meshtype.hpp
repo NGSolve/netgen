@@ -795,8 +795,8 @@ namespace netgen
     ///
     const PointIndex & operator[] (int i) const { return pnum[i]; }
 
-    auto PNums () const 
-    { return FlatArray<const PointIndex> (np, &pnum[0]); }
+    auto PNums () const { return FlatArray<const PointIndex> (np, &pnum[0]); }
+    auto PNums () { return FlatArray<PointIndex> (np, &pnum[0]); }    
     template <int NP>
     auto PNums() const { return FlatArray<const PointIndex> (NP, &pnum[0]); }
 

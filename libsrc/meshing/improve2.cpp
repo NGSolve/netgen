@@ -41,6 +41,7 @@ namespace netgen
  
   void MeshOptimize2d :: EdgeSwapping (Mesh & mesh, int usemetric)
   {
+    static Timer timer("EdgeSwapping (2D)"); RegionTimer reg(timer);
     if (!faceindex)
       {
 	if (usemetric)
@@ -61,9 +62,6 @@ namespace netgen
 	return;
       }
 
-
-    static int timer = NgProfiler::CreateTimer ("EdgeSwapping 2D");
-    NgProfiler::RegionTimer reg1 (timer);
 
     static int timerstart = NgProfiler::CreateTimer ("EdgeSwapping 2D start");
     NgProfiler::StartTimer (timerstart);
