@@ -808,7 +808,7 @@ void STLChart :: BuildInnerSearchTree()
         }
     }
   chart_bbox.Increase (1e-2*chart_bbox.Diam());
-  inner_searchtree = make_unique<BoxTree<2,int>> (chart_bbox);
+  inner_searchtree = make_unique<BoxTree<2,STLTrigId>> (chart_bbox);
   for (STLTrigId trigid : charttrigs)
     {
       Box<2> bbox(Box<2>::EMPTY_BOX);      
@@ -831,7 +831,7 @@ STLTrigId STLChart :: ProjectNormal (Point<3> & p3d) const
 
   if (inner_searchtree)
     {
-      NgArray<int> trigs;
+      NgArray<STLTrigId> trigs;
       Point<2> p2d = Project2d (p3d);
       inner_searchtree->GetIntersecting(p2d, p2d, trigs);
 

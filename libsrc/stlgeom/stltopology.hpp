@@ -58,6 +58,7 @@ public:
 };
 
   inline void SetInvalid (STLTrigId & id) { id = 0; }
+  inline bool IsInvalid (STLTrigId & id) { return id == 0; }
 
 }
 
