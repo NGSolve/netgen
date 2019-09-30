@@ -361,7 +361,7 @@ STLGeometry *  STLTopology ::Load (istream & ist)
 
     // Check if there is a non-printable character in first 80 bytes
     for (auto i : Range(istart, buflen))
-       if(std::isprint(buf[i])==0 && buf[i]!='\n')
+       if(std::isprint(buf[i])==0 && std::isspace(buf[i])==0)
            return LoadBinary(ist);
   }
 
