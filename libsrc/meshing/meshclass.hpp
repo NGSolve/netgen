@@ -571,6 +571,10 @@ namespace netgen
 
 
     ///
+    // Find trigs with same vertices
+    // return: number of illegal trigs
+    int FindIllegalTrigs ();
+
     bool LegalTrig (const Element2d & el) const;
     /**
        if values non-null, return values in 4-double array:

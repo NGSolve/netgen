@@ -862,6 +862,9 @@ namespace netgen
 
         for (SurfaceElementIndex sei = oldnf; sei < mesh.GetNSE(); sei++)
           mesh[sei].SetIndex (k);
+
+        auto n_illegal_trigs = mesh.FindIllegalTrigs();
+        PrintMessage (3, n_illegal_trigs, " illegal triangles");
       }
 
     //      ofstream problemfile("occmesh.rep");

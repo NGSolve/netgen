@@ -279,6 +279,9 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 	      mesh.FindOpenSegments();
 	      nopen = mesh.GetNOpenSegments();
 
+              auto n_illegal_trigs = mesh.FindIllegalTrigs();
+              PrintMessage (3, n_illegal_trigs, " illegal triangles");
+
 	      if (nopen)
 		{
 		  geom.ClearMarkedSegs();
