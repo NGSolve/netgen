@@ -1751,6 +1751,7 @@ namespace netgen
 
     if (dimension == 3)
       {
+        static Timer t("Mesh::CalcSurfacesOfNode, pointloop"); RegionTimer reg (t);            
         /*
         for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
           points[pi].SetType (INNERPOINT);
@@ -5972,6 +5973,54 @@ namespace netgen
     GetIdentifications().SetMaxPointNr (np + PointIndex::BASE-1);
   }
 
+
+  Table<ElementIndex, PointIndex> Mesh :: CreatePoint2ElementTable() const
+  {
+    TableCreator<ElementIndex, PointIndex> creator(GetNP());
+    for ( ; !creator.Done(); creator++)
+      ngcore::ParallelForRange
+        (Range(volelements), [&] (auto myrange)
+         {
+           for (ElementIndex ei : myrange)
+             for (PointIndex pi : (*this)[ei].PNums())
+               creator.Add (pi, ei);
+         });
+    
+    auto elementsonnode = creator.MoveTable();
+    ngcore::ParallelForRange
+      (elementsonnode.Range(), [&] (auto myrange)
+       {
+         for (PointIndex pi : myrange)
+           QuickSort(elementsonnode[pi]);
+       });
+
+    return move(elementsonnode);
+  }
+
+  Table<SurfaceElementIndex, PointIndex> Mesh :: CreatePoint2SurfaceElementTable() const
+  {
+    TableCreator<SurfaceElementIndex, PointIndex> creator(GetNP());
+    for ( ; !creator.Done(); creator++)
+      ngcore::ParallelForRange
+        (Range(surfelements), [&] (auto myrange)
+         {
+           for (SurfaceElementIndex ei : myrange)
+             for (PointIndex pi : (*this)[ei].PNums())
+               creator.Add (pi, ei);
+         });
+    
+    auto elementsonnode = creator.MoveTable();
+    ngcore::ParallelForRange
+      (elementsonnode.Range(), [&] (auto myrange)
+       {
+         for (PointIndex pi : myrange)
+           QuickSort(elementsonnode[pi]);
+       });
+
+    return move(elementsonnode);
+  }
+
+  
 
   /*
     void Mesh :: BuildConnectedNodes ()

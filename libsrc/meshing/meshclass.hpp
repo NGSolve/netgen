@@ -747,6 +747,8 @@ namespace netgen
 
   
 
+    Table<ElementIndex, PointIndex> CreatePoint2ElementTable() const;
+    Table<SurfaceElementIndex, PointIndex> CreatePoint2SurfaceElementTable() const;
 
     DLL_HEADER bool PureTrigMesh (int faceindex = 0) const;
     DLL_HEADER bool PureTetMesh () const;

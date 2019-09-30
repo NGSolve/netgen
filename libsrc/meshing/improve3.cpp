@@ -3631,25 +3631,8 @@ void MeshOptimize3d :: SwapImprove2Sequential (Mesh & mesh, OPTIMIZEGOAL goal)
   (*testout) << "Total badness = " << bad1 << endl;
   cout << "tot bad = " << bad1 << endl;
 
-  // find elements on node
-  TableCreator<ElementIndex, PointIndex> creator(np);
-  for ( ; !creator.Done(); creator++)
-    ngcore::ParallelForRange
-      (ElementIndex(ne), [&] (auto myrange)
-       {
-         for (ElementIndex ei : myrange)
-           for (PointIndex pi : mesh[ei].PNums())
-             creator.Add (pi, ei);
-       });
-       
-  auto elementsonnode = creator.MoveTable();
-  ngcore::ParallelForRange
-    (elementsonnode.Range(), [&] (auto myrange)
-     {
-       for (PointIndex pi : myrange)
-         QuickSort(elementsonnode[pi]);
-     });
-
+  auto elementsonnode = mesh.CreatePoint2ElementTable();
+  
   for (SurfaceElementIndex sei = 0; sei < nse; sei++)
     for (int j = 0; j < 3; j++)
       belementsonnode.Add (mesh[sei][j], sei);
@@ -3733,24 +3716,7 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 
   // find elements on node
 
-
-  TableCreator<ElementIndex, PointIndex> creator(np);
-  for ( ; !creator.Done(); creator++)
-    ngcore::ParallelForRange
-      (ElementIndex(ne), [&] (auto myrange)
-       {
-         for (ElementIndex ei : myrange)
-           for (PointIndex pi : mesh[ei].PNums())
-             creator.Add (pi, ei);
-       });
-       
-  auto elementsonnode = creator.MoveTable();
-  ngcore::ParallelForRange
-    (elementsonnode.Range(), [&] (auto myrange)
-     {
-       for (PointIndex pi : myrange)
-         QuickSort(elementsonnode[pi]);
-     });
+  auto elementsonnode = mesh.CreatePoint2ElementTable();
   
   for (SurfaceElementIndex sei = 0; sei < nse; sei++)
     for (int j = 0; j < 3; j++)
