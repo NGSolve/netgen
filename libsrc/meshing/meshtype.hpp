@@ -578,19 +578,19 @@ namespace netgen
 
     /// get number of 'integration points'
     int GetNIP () const;
-    void GetIntegrationPoint (int ip, Point2d & p, double & weight) const;
+    void GetIntegrationPoint (int ip, Point<2> & p, double & weight) const;
 
     void GetTransformation (int ip, const NgArray<Point<2>> & points,
 			    class DenseMatrix & trans) const;
     void GetTransformation (int ip, class DenseMatrix & pmat,
 			    class DenseMatrix & trans) const;
 
-    void GetShape (const Point2d & p, class Vector & shape) const;
+    void GetShape (const Point<2> & p, class Vector & shape) const;
     void GetShapeNew (const Point<2> & p, class FlatVector & shape) const;
     template <typename T>
     void GetShapeNew (const Point<2,T> & p, TFlatVector<T> shape) const;    
     /// matrix 2 * np
-    void GetDShape (const Point2d & p, class DenseMatrix & dshape) const;
+    void GetDShape (const Point<2> & p, class DenseMatrix & dshape) const;
     template <typename T>
     void GetDShapeNew (const Point<2,T> & p, class MatrixFixWidth<2,T> & dshape) const;
     
@@ -605,7 +605,7 @@ namespace netgen
     double CalcJacobianBadness (const T_POINTS & points, 
 				const Vec<3> & n) const;
     double CalcJacobianBadnessDirDeriv (const NgArray<Point<2>> & points,
-					int pi, Vec2d & dir, double & dd) const;
+					int pi, Vec<2> & dir, double & dd) const;
 
 
     
@@ -1128,7 +1128,7 @@ namespace netgen
     // Add capability to store surface colours along with 
     // other face data
     /// surface colour (Default: R=0.0 ; G=1.0 ; B=0.0)
-    Vec3d surfcolour;
+    Vec<3> surfcolour;
     
     ///
     static string default_bcname;

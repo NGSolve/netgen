@@ -193,8 +193,8 @@ namespace netgen
   }
 
   void Meshing2 ::
-  GetChartBoundary (NgArray<Point2d> & points, 
-		    NgArray<Point3d> & points3d, 
+  GetChartBoundary (NgArray<Point<2>> & points, 
+		    NgArray<Point<3>> & points3d, 
 		    NgArray<INDEX_2> & lines, double h) const
   {
     points.SetSize (0);
@@ -279,8 +279,8 @@ namespace netgen
 
     StartMesh();
 
-    NgArray<Point2d> chartboundpoints;
-    NgArray<Point3d> chartboundpoints3d;
+    NgArray<Point<2>> chartboundpoints;
+    NgArray<Point<3>> chartboundpoints3d;
     NgArray<INDEX_2> chartboundlines;
 
     // illegal points: points with more then 50 elements per node
@@ -519,7 +519,7 @@ namespace netgen
 	  }
 
 
-	Point2d p12d, p22d;
+	// Point2d p12d, p22d;
 
 	if (found)
 	  {
@@ -571,8 +571,8 @@ namespace netgen
 	      *testout << "2d points: " << endl << plainpoints << endl;
 
 
-	    p12d = plainpoints.Get(1);
-	    p22d = plainpoints.Get(2);
+	    // p12d = plainpoints.Get(1);
+	    // p22d = plainpoints.Get(2);
 
 	    /*
 	    // last idea on friday
@@ -625,15 +625,12 @@ namespace netgen
 			if (!morerisc)
 			  {
 			    // use one end of line
-			    int pini, pouti;
-			    Vec2d v;
+			    int pini = loclines.Get(i).I(innerp);
+			    int pouti = loclines.Get(i).I(3-innerp);
 			  
-			    pini = loclines.Get(i).I(innerp);
-			    pouti = loclines.Get(i).I(3-innerp);
-			  
-			    Point2d pin (plainpoints.Get(pini));
-			    Point2d pout (plainpoints.Get(pouti));
-			    v = pout - pin;
+			    const auto& pin = plainpoints.Get(pini);
+			    const auto& pout = plainpoints.Get(pouti);
+			    auto v = pout - pin;
 			    double len = v.Length();
 			    if (len <= 1e-6)
 			      (*testout) << "WARNING(js): inner-outer: short vector" << endl;
@@ -647,12 +644,12 @@ namespace netgen
 			    v *= -1;  
 			    */
 
-			    Point2d newpout = pin + 1000 * v;
+			    Point<2> newpout = pin + 1000. * v;
 			    newpout = pout;
 
 			  
 			    plainpoints.Append (newpout);
-			    Point3d pout3d = locpoints.Get(pouti);
+			    const auto& pout3d = locpoints.Get(pouti);
 			    locpoints.Append (pout3d);
 
 			    plainzones.Append (0);
@@ -706,7 +703,7 @@ namespace netgen
 	      {
 		if (plainzones[i] < 0)
 		  {
-		    plainpoints[i] = Point2d (1e4, 1e4);
+		    plainpoints[i] = {1e4, 1e4};
 		    legalpoints[i] = 0;
 		  }
 		if (pindex[i] == -1)
@@ -1780,12 +1777,12 @@ namespace netgen
 
 	if (pi1 >= 1 && pi2 >= 1)
 	  {
-	    Point2d p1 = plainpoints.Get(pi1);
-	    Point2d p2 = plainpoints.Get(pi2);
+	    const auto& p1 = plainpoints.Get(pi1);
+	    const auto& p2 = plainpoints.Get(pi2);
 	  
 	    glBegin (GL_LINES);
-	    glVertex3f (scalex * p1.X() + shiftx, scaley * p1.Y() + shifty, -5);
-	    glVertex3f (scalex * p2.X() + shiftx, scaley * p2.Y() + shifty, -5);
+	    glVertex3f (scalex * p1[0] + shiftx, scaley * p1[1] + shifty, -5);
+	    glVertex3f (scalex * p2[0] + shiftx, scaley * p2[1] + shifty, -5);
 	    glEnd();
 	  }
       }
@@ -1796,8 +1793,8 @@ namespace netgen
     glBegin (GL_POINTS);
     for (int i = 1; i <= plainpoints.Size(); i++)
       {
-	Point2d p = plainpoints.Get(i);
-	glVertex3f (scalex * p.X() + shiftx, scaley * p.Y() + shifty, -5);
+	const auto& p = plainpoints.Get(i);
+	glVertex3f (scalex * p[0] + shiftx, scaley * p[1] + shifty, -5);
       }
     glEnd();
 

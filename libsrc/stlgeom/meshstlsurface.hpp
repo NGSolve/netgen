@@ -52,8 +52,8 @@ protected:
   int IsLineVertexOnChart (const Point3d & p1, const Point3d & p2,
                            int endpoint, const PointGeomInfo & gi) override;
 
-  void GetChartBoundary (NgArray<Point2d > & points, 
-                         NgArray<Point3d > & poitns3d,
+  void GetChartBoundary (NgArray<Point<2>> & points, 
+                         NgArray<Point<3>> & poitns3d,
                          NgArray<INDEX_2> & lines, double h) const override;
 
   ///

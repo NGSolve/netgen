@@ -98,13 +98,13 @@ public:
   ///
   const NgArray<int> & GetDelLines() const { return dellines; }
   ///
-  void GetFreeZone (NgArray<Point2d> & afreearea);
+  void GetFreeZone (NgArray<Point<2>> & afreearea);
   ///
 
-  double CalcPointDist (int pi, const Point2d & p) const
+  double CalcPointDist (int pi, const Point<2> & p) const
   {
-    double dx = p.X() - points.Get(pi)[0];
-    double dy = p.Y() - points.Get(pi)[1];
+    double dx = p[0] - points.Get(pi)[0];
+    double dy = p[1] - points.Get(pi)[1];
     const threefloat * tfp = &tolerances.Get(pi);
     return tfp->f1 * dx * dx + tfp->f2 * dx * dy + tfp->f3 * dy * dy;
   }
@@ -116,31 +116,31 @@ public:
   void SetFreeZoneTransformation (const Vector & u, int tolclass);
 
   ///
-  bool IsInFreeZone (const Point2d & p) const
+  bool IsInFreeZone (const Point<2> & p) const
   {
-    if (p.X() < fzminx || p.X() > fzmaxx ||
-	p.Y() < fzminy || p.Y() > fzmaxy) return 0;
+    if (p[0] < fzminx || p[0] > fzmaxx ||
+	p[1] < fzminy || p[1] > fzmaxy) return 0;
 
     for (int i = 0; i < transfreezone.Size(); i++)
       {
-	if (freesetinequ(i, 0) * p.X() + 
-	    freesetinequ(i, 1) * p.Y() +
+	if (freesetinequ(i, 0) * p[0] + 
+	    freesetinequ(i, 1) * p[1] +
 	    freesetinequ(i, 2) > 0) return 0;
       }
     return 1;
   }
 
   ///
-  int IsLineInFreeZone (const Point2d & p1, const Point2d & p2) const
+  int IsLineInFreeZone (const Point<2> & p1, const Point<2> & p2) const
   {
-    if ( (p1.X() > fzmaxx && p2.X() > fzmaxx) ||
-         (p1.X() < fzminx && p2.X() < fzminx) ||
-         (p1.Y() > fzmaxy && p2.Y() > fzmaxy) ||
-         (p1.Y() < fzminy && p2.Y() < fzminy) ) return 0;
+    if ( (p1[0] > fzmaxx && p2[0] > fzmaxx) ||
+         (p1[0] < fzminx && p2[0] < fzminx) ||
+         (p1[1] > fzmaxy && p2[1] > fzmaxy) ||
+         (p1[1] < fzminy && p2[1] < fzminy) ) return 0;
     return IsLineInFreeZone2 (p1, p2);
   }
   ///
-  int IsLineInFreeZone2 (const Point2d & p1, const Point2d & p2) const;
+  int IsLineInFreeZone2 (const Point<2> & p1, const Point<2> & p2) const;
   ///
   int ConvexFreeZone () const;
   ///

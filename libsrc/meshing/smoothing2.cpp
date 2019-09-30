@@ -571,7 +571,7 @@ namespace netgen
     int lpi, gpi;
     Vec<3> n, vgrad;
     Point<3> pp1;
-    Vec2d g1, vdir;
+    Vec<2> g1, vdir;
     double badness, hbad, hderiv;
 
     vgrad = 0;
@@ -603,15 +603,15 @@ namespace netgen
 	    pts2d.Elem(pi) = Point2d (ld.t1 * (mesh.Point(pi) - ld.sp1), 
 				      ld.t2 * (mesh.Point(pi) - ld.sp1)); 
 	  }				    
-	pts2d.Elem(gpi) = Point2d (x(0), x(1));
+	pts2d.Elem(gpi) = { x(0), x(1) };
       
 
 	for (int k = 1; k <= 2; k++)
 	  {
 	    if (k == 1)
-	      vdir = Vec2d (1, 0);
+	      vdir = {1., 0.};
 	    else
-	      vdir = Vec2d (0, 1);
+	      vdir = {0., 1.};
 	  
 	    hbad = bel.
 	      CalcJacobianBadnessDirDeriv (pts2d, lpi, vdir, hderiv);
@@ -643,7 +643,7 @@ namespace netgen
     int j, k, lpi, gpi;
     Vec<3> n, vgrad;
     Point<3> pp1;
-    Vec2d g1, vdir;
+    Vec<2> g1, vdir;
     double badness, hbad, hderiv;
 
     vgrad = 0;
@@ -677,7 +677,7 @@ namespace netgen
 	pts2d.Elem(gpi) = Point2d (x(0), x(1));
       
 
-	vdir = Vec2d (dir(0), dir(1));
+	vdir = { dir(0), dir(1) };
 	  
 	hbad = bel.
 	  CalcJacobianBadnessDirDeriv (pts2d, lpi, vdir, hderiv);
