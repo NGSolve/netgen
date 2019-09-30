@@ -1003,8 +1003,8 @@ IsLineVertexOnChart (const Point3d & p1, const Point3d & p2,
 }
 
 void MeshingSTLSurface :: 
-GetChartBoundary (NgArray<Point2d > & points, 
-		  NgArray<Point3d > & points3d,
+GetChartBoundary (NgArray<Point<2>> & points, 
+		  NgArray<Point<3>> & points3d,
 		  NgArray<INDEX_2> & lines, double h) const
 {
   points.SetSize (0);

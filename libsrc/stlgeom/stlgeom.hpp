@@ -407,8 +407,8 @@ namespace netgen
 
     //FOR MESHING
     int GetMeshChartNr () { return meshchart; }
-    void GetMeshChartBoundary (NgArray<Point2d > & points,
-			       NgArray<Point3d > & points3d,
+    void GetMeshChartBoundary (NgArray<Point<2>> & points,
+			       NgArray<Point<3>> & points3d,
 			       NgArray<INDEX_2> & lines, double h);
 
 

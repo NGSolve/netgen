@@ -79,10 +79,10 @@ void netrule :: SetFreeZoneTransformation (const Vector & devp, int tolclass)
 
   for (int i = 0; i < fzs; i++)
     {
-      Point2d p1 = transfreezone[i];
-      Point2d p2 = transfreezone[(i+1) % fzs];
+      const auto& p1 = transfreezone[i];
+      const auto& p2 = transfreezone[(i+1) % fzs];
 
-      Vec2d vn (p2.Y() - p1.Y(), p1.X() - p2.X());
+      Vec<2> vn = { p2[1] - p1[1], p1[0] - p2[0] };
 
       double len2 = vn.Length2();
 
@@ -96,9 +96,9 @@ void netrule :: SetFreeZoneTransformation (const Vector & devp, int tolclass)
 	{
 	  vn /= sqrt (len2);    // scaling necessary ?
 
-	  freesetinequ(i,0) = vn.X(); 
-	  freesetinequ(i,1) = vn.Y(); 
-	  freesetinequ(i,2) = -(p1.X() * vn.X() + p1.Y() * vn.Y());
+	  freesetinequ(i,0) = vn[0]; 
+	  freesetinequ(i,1) = vn[1]; 
+	  freesetinequ(i,2) = -(p1[0] * vn[0] + p1[1] * vn[1]);
 	}
     }
 }
@@ -110,37 +110,37 @@ int netrule :: IsInFreeZone2 (const Point2d & p) const
   for (int i = 0; i < transfreezone.Size(); i++)
     {
       if (freesetinequ(i, 0) * p.X() + 
-	  freesetinequ(i, 1) * p.Y() +
+	  freesetinequ(i, 1) * p[1] +
 	  freesetinequ(i, 2) > 0) return 0;
     }
   return 1;
 }
 */
 
-int netrule :: IsLineInFreeZone2 (const Point2d & p1, const Point2d & p2) const
+int netrule :: IsLineInFreeZone2 (const Point<2> & p1, const Point<2> & p2) const
 {
-  if ( (p1.X() > fzmaxx && p2.X() > fzmaxx) ||
-       (p1.X() < fzminx && p2.X() < fzminx) ||
-       (p1.Y() > fzmaxy && p2.Y() > fzmaxy) ||
-       (p1.Y() < fzminy && p2.Y() < fzminy) ) return 0;
+  if ( (p1[0] > fzmaxx && p2[0] > fzmaxx) ||
+       (p1[0] < fzminx && p2[0] < fzminx) ||
+       (p1[1] > fzmaxy && p2[1] > fzmaxy) ||
+       (p1[1] < fzminy && p2[1] < fzminy) ) return 0;
 
   for (int i = 1; i <= transfreezone.Size(); i++)
     {
-      if (freesetinequ.Get(i, 1) * p1.X() + freesetinequ.Get(i, 2) * p1.Y() +
+      if (freesetinequ.Get(i, 1) * p1[0] + freesetinequ.Get(i, 2) * p1[1] +
 	  freesetinequ.Get(i, 3) > -1e-8 &&    // -1e-6
-	  freesetinequ.Get(i, 1) * p2.X() + freesetinequ.Get(i, 2) * p2.Y() +
+	  freesetinequ.Get(i, 1) * p2[0] + freesetinequ.Get(i, 2) * p2[1] +
 	  freesetinequ.Get(i, 3) > -1e-8       // -1e-6
 	  ) return 0;
     }
 
-  double nx =  (p2.Y() - p1.Y());
-  double ny = -(p2.X() - p1.X());
+  double nx =  (p2[1] - p1[1]);
+  double ny = -(p2[0] - p1[0]);
   double nl = sqrt (nx * nx + ny * ny);
   if (nl > 1e-8)
     {
       nx /= nl;
       ny /= nl;
-      double c = - (p1.X() * nx + p1.Y() * ny);
+      double c = - (p1[0] * nx + p1[1] * ny);
 
       bool allleft = true;
       bool allright = true;

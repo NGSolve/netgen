@@ -300,8 +300,8 @@ void STLGeometry :: PrepareSurfaceMeshing()
   meshcharttrigs = 0;
 }
 
-void STLGeometry::GetMeshChartBoundary (NgArray<Point2d > & apoints,
-					NgArray<Point3d > & points3d,
+void STLGeometry::GetMeshChartBoundary (NgArray<Point<2>> & apoints,
+					NgArray<Point<3>> & points3d,
 					NgArray<INDEX_2> & alines, double h)
 {
   twoint seg, newseg;
@@ -520,13 +520,8 @@ void STLGeometry :: ToPlane (const Point<3> & locpoint, int * trigs,
 int STLGeometry :: FromPlane (const Point<2> & plainpoint, 
 			      Point<3> & locpoint, double h)
 {
-  Point2d plainpoint2 (plainpoint);
-
-  plainpoint2.X() *= h;
-  plainpoint2.Y() *= h;
-  Vec3d p1p = plainpoint2.X() * ex + plainpoint2.Y() * ey;
+  Vec<3> p1p = h * plainpoint[0] * ex + h * plainpoint[1] * ey;
   locpoint = p1 + p1p;
-
 
   int rv = Project(locpoint);
   if (!rv) {return 1;} //project nicht gegangen

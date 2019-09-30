@@ -126,8 +126,8 @@ protected:
   /*
     get (projected) boundary of current chart
    */
-  virtual void GetChartBoundary (NgArray<Point2d> & points, 
-				 NgArray<Point3d> & points3d,
+  virtual void GetChartBoundary (NgArray<Point<2>> & points, 
+				 NgArray<Point<3>> & points3d,
 				 NgArray<INDEX_2> & lines, double p) const;
 
   virtual double Area () const;

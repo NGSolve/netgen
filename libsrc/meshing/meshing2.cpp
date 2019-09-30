@@ -193,8 +193,8 @@ namespace netgen
   }
 
   void Meshing2 ::
-  GetChartBoundary (NgArray<Point2d> & points, 
-		    NgArray<Point3d> & points3d, 
+  GetChartBoundary (NgArray<Point<2>> & points, 
+		    NgArray<Point<3>> & points3d, 
 		    NgArray<INDEX_2> & lines, double h) const
   {
     points.SetSize (0);
@@ -279,8 +279,8 @@ namespace netgen
 
     StartMesh();
 
-    NgArray<Point2d> chartboundpoints;
-    NgArray<Point3d> chartboundpoints3d;
+    NgArray<Point<2>> chartboundpoints;
+    NgArray<Point<3>> chartboundpoints3d;
     NgArray<INDEX_2> chartboundlines;
 
     // illegal points: points with more then 50 elements per node
@@ -519,7 +519,7 @@ namespace netgen
 	  }
 
 
-	Point2d p12d, p22d;
+	// Point2d p12d, p22d;
 
 	if (found)
 	  {
@@ -571,8 +571,8 @@ namespace netgen
 	      *testout << "2d points: " << endl << plainpoints << endl;
 
 
-	    p12d = plainpoints.Get(1);
-	    p22d = plainpoints.Get(2);
+	    // p12d = plainpoints.Get(1);
+	    // p22d = plainpoints.Get(2);
 
 	    /*
 	    // last idea on friday
