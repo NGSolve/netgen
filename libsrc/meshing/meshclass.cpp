@@ -1591,6 +1591,8 @@ namespace netgen
 
   void Mesh :: BuildBoundaryEdges(void)
   {
+    static Timer t("Mesh::BuildBoundaryEdges"); RegionTimer reg(t);
+    
     // delete boundaryedges;
 
     boundaryedges = make_unique<INDEX_2_CLOSED_HASHTABLE<int>>
@@ -1869,6 +1871,8 @@ namespace netgen
   void Mesh :: FindOpenElements (int dom)
   {
     static Timer t("Mesh::FindOpenElements"); RegionTimer reg (t);
+    static Timer t_table("Mesh::FindOpenElements - build table"); 
+    static Timer t_pointloop("Mesh::FindOpenElements - pointloop"); 
 
     int np = GetNP();
     int ne = GetNE();
@@ -1877,7 +1881,7 @@ namespace netgen
     NgArray<int,PointIndex::BASE> numonpoint(np);
 
     numonpoint = 0;
-
+    t_table.Start();
     for (ElementIndex ei = 0; ei < ne; ei++)
       {
         const Element & el = (*this)[ei];
@@ -1914,12 +1918,12 @@ namespace netgen
                 elsonpoint.Add (el[j], ei);
           }
       }
+    t_table.Stop();
 
 
-    NgArray<char, 1> hasface(GetNFD());
+    NgArray<bool, 1> hasface(GetNFD());
 
-    int i;
-    for (i = 1; i <= GetNFD(); i++)
+    for (int i = 1; i <= GetNFD(); i++)
       {
         int domin = GetFaceDescriptor(i).DomainIn();
         int domout = GetFaceDescriptor(i).DomainOut();
@@ -1988,25 +1992,26 @@ namespace netgen
       }
 
 
-    int ii;
-    PointIndex pi;
-    SurfaceElementIndex sei;
+    // PointIndex pi;
+    // SurfaceElementIndex sei;
     // Element2d hel;
 
     struct tval { int index; PointIndex p4; };
-    INDEX_3_CLOSED_HASHTABLE<tval> faceht(100);
     openelements.SetSize(0);
     
-    // for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+    t_pointloop.Start();
+
+    /*
+    INDEX_3_CLOSED_HASHTABLE<tval> faceht(100);
+    
     for (PointIndex pi : points.Range())
       if (selsonpoint[pi].Size()+elsonpoint[pi].Size())
         {
           faceht.SetSize (2 * selsonpoint[pi].Size() + 4 * elsonpoint[pi].Size());
 
-          NgFlatArray<SurfaceElementIndex> row = selsonpoint[pi];
-          for (ii = 0; ii < row.Size(); ii++)
+          for (SurfaceElementIndex sei : selsonpoint[pi])
             {
-              Element2d hel = SurfaceElement(row[ii]);
+              Element2d hel = SurfaceElement(sei);
               if (hel.GetType() == TRIG6) hel.SetType(TRIG);
               int ind = hel.GetIndex();	  
 
@@ -2017,12 +2022,6 @@ namespace netgen
                   if (hel.PNum(1) == pi)
                     {
                       INDEX_3 i3(hel[0], hel[1], hel[2]);
-                      /*
-                      INDEX_2 i2 (GetFaceDescriptor(ind).DomainIn(), 
-                                  (hel.GetNP() == 3) 
-                                  ? PointIndex (PointIndex::INVALID)
-                                  : hel.PNum(4));
-                       */
                       tval i2;
                       i2.index = GetFaceDescriptor(ind).DomainIn();
                       i2.p4 = (hel.GetNP() == 3)
@@ -2039,27 +2038,19 @@ namespace netgen
                   if (hel.PNum(1) == pi)
                     {
                       INDEX_3 i3(hel[0], hel[1], hel[2]);
-                      /*
-                      INDEX_2 i2 (GetFaceDescriptor(ind).DomainOut(), 
-                                  (hel.GetNP() == 3) 
-                                  ? PointIndex (PointIndex::BASE-1)
-                                  : hel.PNum(4));
-                       */
                       tval i2;
                       i2.index = GetFaceDescriptor(ind).DomainOut();
                       i2.p4 = (hel.GetNP() == 3)
-                      ? PointIndex (PointIndex::INVALID)
-                      : hel.PNum(4);
+                        ? PointIndex (PointIndex::INVALID)
+                        : hel.PNum(4);
                       faceht.Set (i3, i2);
                     }
                 }
             }
 
-
-          NgFlatArray<ElementIndex> rowel = elsonpoint[pi];
-          for (ii = 0; ii < rowel.Size(); ii++)
+          for (ElementIndex ei : elsonpoint[pi])
             {
-              const Element & el = VolumeElement(rowel[ii]);
+              const Element & el = VolumeElement(ei);
 
               if (dom == 0 || el.GetIndex() == dom)
                 {
@@ -2102,23 +2093,19 @@ namespace netgen
                               hel.Invert();
                               hel.NormalizeNumbering();
                               INDEX_3 i3(hel[0], hel[1], hel[2]);
-                              /*
-                              INDEX_2 i2(el.GetIndex(), 
-                                         (hel.GetNP() == 3) 
-                                         ? PointIndex (PointIndex::BASE-1)
-                                         : hel[3]);
-                               */
+                              
                               tval i2;
                               i2.index = el.GetIndex();
                               i2.p4 = (hel.GetNP() == 3)
-                              ? PointIndex (PointIndex::INVALID)
-                              : hel[3];
+                                ? PointIndex (PointIndex::INVALID)
+                                : hel[3];
                               faceht.Set (i3, i2);
                             }
                         }
                     }
                 }
             }
+          
           for (int i = 0; i < faceht.Size(); i++)
             if (faceht.UsedPos (i))
               {
@@ -2128,23 +2115,153 @@ namespace netgen
                 faceht.GetData (i, i3, i2);
                 if (i2.index != PointIndex::BASE-1)
                   {
-                    // Element2d tri;
-                    // tri.SetType ( (i2.I2() == PointIndex::BASE-1) ? TRIG : QUAD);
                     Element2d tri ( (i2.p4 == PointIndex::BASE-1) ? TRIG : QUAD);
                     for (int l = 0; l < 3; l++)
                       tri[l] = i3.I(l+1);
                     tri.PNum(4) = i2.p4;
                     tri.SetIndex (i2.index);
-
-                    //	tri.Invert();
-
                     openelements.Append (tri);
                   }
               }
         }
 
+    */
+
+    size_t numtasks = ngcore::TaskManager::GetNumThreads();
+    Array<Array<Element2d>> thread_openelements(numtasks);
+    ParallelJob
+      ( [&](TaskInfo & ti)
+      {
+        auto myrange = points.Range().Split(ti.task_nr, ti.ntasks);
+        INDEX_3_CLOSED_HASHTABLE<tval> faceht(100);        
+        for (PointIndex pi : myrange)
+          if (selsonpoint[pi].Size()+elsonpoint[pi].Size())
+            {
+              faceht.SetSize (2 * selsonpoint[pi].Size() + 4 * elsonpoint[pi].Size());
+
+              for (SurfaceElementIndex sei : selsonpoint[pi])
+                {
+                  Element2d hel = SurfaceElement(sei);
+                  if (hel.GetType() == TRIG6) hel.SetType(TRIG);
+                  int ind = hel.GetIndex();	  
+
+                  if (GetFaceDescriptor(ind).DomainIn() && 
+                      (dom == 0 || dom == GetFaceDescriptor(ind).DomainIn()) )
+                    {
+                      hel.NormalizeNumbering();
+                      if (hel.PNum(1) == pi)
+                        {
+                          INDEX_3 i3(hel[0], hel[1], hel[2]);
+                          tval i2;
+                          i2.index = GetFaceDescriptor(ind).DomainIn();
+                          i2.p4 = (hel.GetNP() == 3)
+                            ? PointIndex (PointIndex::INVALID)
+                            : hel.PNum(4);
+                          faceht.Set (i3, i2);
+                        }
+                    }
+                  if (GetFaceDescriptor(ind).DomainOut() &&
+                      (dom == 0 || dom == GetFaceDescriptor(ind).DomainOut()) )
+                    {
+                      hel.Invert();
+                      hel.NormalizeNumbering();
+                      if (hel.PNum(1) == pi)
+                        {
+                          INDEX_3 i3(hel[0], hel[1], hel[2]);
+                          tval i2;
+                          i2.index = GetFaceDescriptor(ind).DomainOut();
+                          i2.p4 = (hel.GetNP() == 3)
+                            ? PointIndex (PointIndex::INVALID)
+                            : hel.PNum(4);
+                          faceht.Set (i3, i2);
+                        }
+                    }
+                }
+              
+              for (ElementIndex ei : elsonpoint[pi])
+                {
+                  const Element & el = VolumeElement(ei);
+                  
+                  if (dom == 0 || el.GetIndex() == dom)
+                    {
+                      for (int j = 1; j <= el.GetNFaces(); j++)
+                        {
+                          Element2d hel(TRIG);
+                          el.GetFace (j, hel);
+                          hel.Invert();
+                          hel.NormalizeNumbering();
+                          
+                          if (hel[0] == pi)
+                            {
+                              INDEX_3 i3(hel[0], hel[1], hel[2]);
+                              
+                              if (faceht.Used (i3))
+                                {
+                                  tval i2 = faceht.Get(i3);
+                                  if (i2.index == el.GetIndex())
+                                    {
+                                      i2.index = PointIndex::BASE-1;
+                                      faceht.Set (i3, i2);
+                                    }
+                                  else
+                                    {
+                                      if (i2.index == 0)
+                                        {
+                                          PrintSysError ("more elements on face");
+                                          (*testout)  << "more elements on face!!!" << endl;
+                                          (*testout) << "el = " << el << endl;
+                                          (*testout) << "hel = " << hel << endl;
+                                          (*testout) << "face = " << i3 << endl;
+                                          (*testout) << "points = " << endl;
+                                          for (int jj = 1; jj <= 3; jj++)
+                                            (*testout) << "p = " << Point(i3.I(jj)) << endl;
+                                        }
+                                    }
+                                }
+                              else
+                                {
+                                  hel.Invert();
+                                  hel.NormalizeNumbering();
+                                  INDEX_3 i3(hel[0], hel[1], hel[2]);
+                                  
+                                  tval i2;
+                                  i2.index = el.GetIndex();
+                                  i2.p4 = (hel.GetNP() == 3)
+                                    ? PointIndex (PointIndex::INVALID)
+                                    : hel[3];
+                                  faceht.Set (i3, i2);
+                                }
+                            }
+                        }
+                    }
+                }
+              
+              for (int i = 0; i < faceht.Size(); i++)
+                if (faceht.UsedPos (i))
+                  {
+                    INDEX_3 i3;
+                    tval i2;
+                    faceht.GetData (i, i3, i2);
+                    if (i2.index != PointIndex::BASE-1)
+                      {
+                        Element2d tri ( (i2.p4 == PointIndex::BASE-1) ? TRIG : QUAD);
+                        for (int l = 0; l < 3; l++)
+                          tri[l] = i3.I(l+1);
+                        tri.PNum(4) = i2.p4;
+                        tri.SetIndex (i2.index);
+                        thread_openelements[ti.task_nr].Append (tri);
+                      }
+                  }
+            }});
+
+    for (auto & a : thread_openelements)
+      for (auto & el : a)
+        openelements.Append (el);
+    
+    t_pointloop.Stop();
+    
     int cnt3 = 0;
-    for (i = 0; i < openelements.Size(); i++)
+    for (int i = 0; i < openelements.Size(); i++)
       if (openelements[i].GetNP() == 3)
         cnt3++;
 
