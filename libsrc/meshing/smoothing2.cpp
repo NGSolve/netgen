@@ -1095,6 +1095,8 @@ namespace netgen
 	    }
 	}
       }
+
+    tloop.Stop();
     if (printeddot)
       PrintDot ('\n');
 
