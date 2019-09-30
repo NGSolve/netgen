@@ -90,8 +90,8 @@ namespace netgen
     void GetFirstIntersecting (const Point<dim> & pmin, const Point<dim> & pmax,
                                TFunc func=[](auto pi){return false;}) const
     {
-      static Timer timer("BTree::GetIntersecting"); RegionTimer rt(timer);
-      static Timer timer1("BTree::GetIntersecting-LinearSearch");
+      // static Timer timer("BTree::GetIntersecting"); RegionTimer rt(timer);
+      // static Timer timer1("BTree::GetIntersecting-LinearSearch");
       static Array<const Node*> stack(1000);
       static Array<int> dir_stack(1000);
 
@@ -494,14 +494,9 @@ namespace netgen
 			 IndexSet & insphere, IndexSet & closesphere)
   {
     static Timer t("Meshing3::AddDelaunayPoint"); RegionTimer reg(t);
-    static Timer tsearch("addpoint, search");
-    static Timer tinsert("addpoint, insert");
+    // static Timer tsearch("addpoint, search");
+    // static Timer tinsert("addpoint, insert");
 
-    static Timer t0("addpoint, 0");    
-    static Timer t1("addpoint, 1");    
-    static Timer t2a("addpoint, 2a");    
-    static Timer t2b("addpoint, 2b");    
-    static Timer t3("addpoint, 3");    
     /*
       find any sphere, such that newp is contained in
     */
@@ -540,7 +535,7 @@ namespace netgen
       }
     */
 
-    tsearch.Start();
+    // tsearch.Start();
     double minquot{1e20};
     tettree.GetFirstIntersecting
       (newp, newp, [&](const auto pi)
@@ -563,7 +558,7 @@ namespace netgen
           }
         return false;
        } );
-    tsearch.Stop();
+    // tsearch.Stop();
 
     if (cfelind == -1)
       {
@@ -589,7 +584,6 @@ namespace netgen
     bool changed = true;
     int nstarti = 1, starti;
 
-    t0.Start();
     while (changed)
       {
 	changed = false;
@@ -663,8 +657,6 @@ namespace netgen
 	    }
       } // while (changed)
 
-    t0.Stop();
-    t1.Start();
     // NgArray<Element> newels;
     static NgArray<DelaunayTet> newels;
     newels.SetSize(0);
@@ -715,8 +707,6 @@ namespace netgen
 	    }
 	}
 
-    t1.Stop();
-    t2a.Start();
     meshnb.ResetFaceHT (10*insphere.GetArray().Size()+1);
 
     for (auto celind : insphere.GetArray())
@@ -731,10 +721,6 @@ namespace netgen
 	freelist.Append (celind);
       }
 
-    t2a.Stop();
-    t2b.Start();
-
-    
     bool hasclose = false;
     for (int ind : closesphere.GetArray())
       {
@@ -742,8 +728,7 @@ namespace netgen
 	    fabs (Dist2 (centers.Get (ind), newp) - radi2.Get(ind)) < 1e-8 )
 	  hasclose = true;
       }
-    t2b.Stop();
-    t3.Start();
+
     /*
     for (int j = 1; j <= newels.Size(); j++)
       {
@@ -832,7 +817,6 @@ namespace netgen
 	tettree.Insert (tpmin, tpmax, nelind);
         // tinsert.Stop();
       }
-    t3.Stop();
   }
 
 

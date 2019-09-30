@@ -926,9 +926,6 @@ namespace netgen
     */
 
     static Timer tloop("MeshSmooting 2D - loop");
-    static Timer tloop1("MeshSmooting 2D - loop 1");
-    static Timer tloop2("MeshSmooting 2D - loop 2");
-    static Timer tloop3("MeshSmooting 2D - loop 3");
     tloop.Start();
     for (int hi = 0; hi < icompress.Size(); hi++)
       {
@@ -947,8 +944,6 @@ namespace netgen
 	    
 	    // if (elementsonpoint[pi].Size() == 0) continue;
 	    if (elementsonpoint[hi].Size() == 0) continue;
-
-            tloop1.Start();
             
 	    ld.sp1 = mesh[pi];
 	    
@@ -972,8 +967,6 @@ namespace netgen
             ld.loc_pnts2.SetSize (0);
             ld.loc_pnts3.SetSize (0);
 
-            tloop1.Stop();
-            tloop2.Start();
 	    for (int j = 0; j < elementsonpoint[hi].Size(); j++)
 	      {
 		SurfaceElementIndex sei = elementsonpoint[hi][j];
@@ -998,7 +991,6 @@ namespace netgen
 		  }
 	      }
 
-            tloop2.Stop();
 
 	  GetNormalVector (ld.surfi, ld.sp1, ld.gi1, ld.normal);
 	  ld.t1 = ld.normal.GetNormal ();
@@ -1028,7 +1020,6 @@ namespace netgen
 
           // NgProfiler::StartTimer (timer2);
 
-          tloop3.Start();
 	  if (mixed)
 	    {
 	      BFGS (x, surfminfj, par, 1e-6);
@@ -1037,7 +1028,7 @@ namespace netgen
 	    {
 	      BFGS (x, surfminf, par, 1e-6);
 	    }
-          tloop3.Stop();
+
           // NgProfiler::StopTimer (timer2);
 
 	  Point3d origp = mesh[pi];
