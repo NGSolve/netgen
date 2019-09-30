@@ -1378,6 +1378,8 @@ namespace netgen
 	    }
           else if (mesh)
             {
+              if(perfstepsstart > 1 && perfstepsstart < 5)
+                throw Exception("Need geometry for surface mesh operations!");
               MeshVolume(mparam, *mesh);
               OptimizeVolume(mparam, *mesh);
               return 0;

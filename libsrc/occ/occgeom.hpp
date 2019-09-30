@@ -441,7 +441,9 @@ namespace netgen
   DLL_HEADER extern void OCCSetLocalMeshSize(OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam,
                                              const OCCParameters& occparam);
 
-  DLL_HEADER extern void OCCMeshSurface (OCCGeometry & geom, Mesh & mesh, int perfstepsend, MeshingParameters & mparam);
+  DLL_HEADER extern void OCCMeshSurface (OCCGeometry & geom, Mesh & mesh, MeshingParameters & mparam);
+
+  DLL_HEADER extern void OCCOptimizeSurface (OCCGeometry & geom, Mesh & mesh, MeshingParameters & mparam);
 
   DLL_HEADER extern void OCCFindEdges (OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam);
 }
