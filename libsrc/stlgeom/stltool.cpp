@@ -828,7 +828,36 @@ STLTrigId STLChart :: ProjectNormal (Point<3> & p3d) const
   int nt = GetNT();
   double lamtol = 1e-6;
   QuadraticFunction3d quadfun(p3d, GetNormal());
- 
+
+  if (inner_searchtree)
+    {
+      NgArray<int> trigs;
+      Point<2> p2d = Project2d (p3d);
+      inner_searchtree->GetIntersecting(p2d, p2d, trigs);
+
+      for (STLTrigId i : trigs)
+        {
+          auto & trig = geometry->GetTriangle(i);
+          const Point<3> & c = trig.center;
+          
+          if (quadfun.Eval(c) > sqr (trig.rad))
+            continue;
+          
+          Point<3> p = p3d;
+          Vec<3> lam;
+          int err = trig.ProjectInPlain(geometry->GetPoints(), GetNormal(), p, lam);      
+          bool inside = (err == 0 && lam(0) > -lamtol && 
+                         lam(1) > -lamtol && (1-lam(0)-lam(1)) > -lamtol);
+          
+          if (inside)
+            {
+              p3d = p;
+              return i;
+            }
+        }
+    }
+  
+  
   for (int j = 1; j <= nt; j++)
     {
       STLTrigId i = GetTrig1(j);

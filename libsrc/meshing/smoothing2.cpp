@@ -730,11 +730,11 @@ namespace netgen
       }
 
     static Timer timer("MeshSmoothing 2D");
-    static int timer1 = NgProfiler::CreateTimer ("MeshSmoothing 2D start");
-    static int timer2 = NgProfiler::CreateTimer ("MeshSmoothing 2D - BFGS");
+    // static int timer1 = NgProfiler::CreateTimer ("MeshSmoothing 2D start");
+    // static int timer2 = NgProfiler::CreateTimer ("MeshSmoothing 2D - BFGS");
 
     RegionTimer reg (timer);
-    NgProfiler::StartTimer (timer1);
+    // NgProfiler::StartTimer (timer1);
 
     CheckMeshApproximation (mesh);
 
@@ -918,12 +918,18 @@ namespace netgen
     int cnt = 0;
 
 
-    NgProfiler::StopTimer (timer1);
+    // NgProfiler::StopTimer (timer1);
 
     /*
     for (PointIndex pi = PointIndex::BASE; pi < mesh.GetNP()+PointIndex::BASE; pi++)
       if (mesh[pi].Type() == SURFACEPOINT)
     */
+
+    static Timer tloop("MeshSmooting 2D - loop");
+    static Timer tloop1("MeshSmooting 2D - loop 1");
+    static Timer tloop2("MeshSmooting 2D - loop 2");
+    static Timer tloop3("MeshSmooting 2D - loop 3");
+    tloop.Start();
     for (int hi = 0; hi < icompress.Size(); hi++)
       {
 	PointIndex pi = icompress[hi];
@@ -941,7 +947,9 @@ namespace netgen
 	    
 	    // if (elementsonpoint[pi].Size() == 0) continue;
 	    if (elementsonpoint[hi].Size() == 0) continue;
-	
+
+            tloop1.Start();
+            
 	    ld.sp1 = mesh[pi];
 	    
 	    // Element2d & hel = mesh[elementsonpoint[pi][0]];
@@ -963,7 +971,9 @@ namespace netgen
 	    ld.lochs.SetSize (0);
             ld.loc_pnts2.SetSize (0);
             ld.loc_pnts3.SetSize (0);
-	
+
+            tloop1.Stop();
+            tloop2.Start();
 	    for (int j = 0; j < elementsonpoint[hi].Size(); j++)
 	      {
 		SurfaceElementIndex sei = elementsonpoint[hi][j];
@@ -987,7 +997,9 @@ namespace netgen
 		    ld.lochs.Append (mesh.GetH(pmid));
 		  }
 	      }
-	    
+
+            tloop2.Stop();
+
 	  GetNormalVector (ld.surfi, ld.sp1, ld.gi1, ld.normal);
 	  ld.t1 = ld.normal.GetNormal ();
 	  ld.t2 = Cross (ld.normal, ld.t1);
@@ -1014,8 +1026,9 @@ namespace netgen
 	  x = 0;
 	  par.typx = 0.3*ld.lochs[0];
 
-          NgProfiler::StartTimer (timer2);
+          // NgProfiler::StartTimer (timer2);
 
+          tloop3.Start();
 	  if (mixed)
 	    {
 	      BFGS (x, surfminfj, par, 1e-6);
@@ -1024,8 +1037,8 @@ namespace netgen
 	    {
 	      BFGS (x, surfminf, par, 1e-6);
 	    }
-
-          NgProfiler::StopTimer (timer2);
+          tloop3.Stop();
+          // NgProfiler::StopTimer (timer2);
 
 	  Point3d origp = mesh[pi];
 	  int loci = 1;
