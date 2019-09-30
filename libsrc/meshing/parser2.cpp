@@ -42,7 +42,7 @@ void netrule :: LoadRule (istream & ist)
 {
   char buf[256];
   char ch;
-  Point2d p;
+  Point<2> p;
   INDEX_2 lin;
   int i, j;
   DenseMatrix tempoldutonewu(20, 20), tempoldutofreearea(20, 20),
@@ -85,9 +85,9 @@ void netrule :: LoadRule (istream & ist)
 
 	  while (ch == '(')
 	    {
-	      ist >> p.X();
+	      ist >> p[0];
 	      ist >> ch;    // ','
-	      ist >> p.Y();
+	      ist >> p[1];
 	      ist >> ch;    // ')'
 
 	      points.Append (p);
@@ -188,9 +188,9 @@ void netrule :: LoadRule (istream & ist)
 
 	  while (ch == '(')
 	    {
-	      ist >> p.X();
+	      ist >> p[0];
 	      ist >> ch;    // ','
-	      ist >> p.Y();
+	      ist >> p[1];
 	      ist >> ch;    // ')'
 
 	      points.Append (p);
@@ -249,9 +249,9 @@ void netrule :: LoadRule (istream & ist)
 
 	  while (ch == '(')
 	    {
-	      ist >> p.X();
+	      ist >> p[0];
 	      ist >> ch;    // ','
-	      ist >> p.Y();
+	      ist >> p[1];
 	      ist >> ch;    // ')'
 
 	      freezone.Append (p);
@@ -294,9 +294,9 @@ void netrule :: LoadRule (istream & ist)
 	    {
 	      freepi++;
 
-	      ist >> p.X();
+	      ist >> p[0];
 	      ist >> ch;    // ','
-	      ist >> p.Y();
+	      ist >> p[1];
 	      ist >> ch;    // ')'
 
 	      freezonelimit.Elem(freepi) = p;

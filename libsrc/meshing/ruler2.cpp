@@ -592,9 +592,9 @@ namespace netgen
 			    int oldnp = rule->GetNOldP();
 			    for (int i = oldnp + 1; i <= rule->GetNP(); i++)
 			      {
-				Point2d np = rule->GetPoint(i);
-				np.X() += newu (2 * (i-oldnp) - 2);
-				np.Y() += newu (2 * (i-oldnp) - 1);
+				auto np = rule->GetPoint(i);
+				np[0] += newu (2 * (i-oldnp) - 2);
+				np[1] += newu (2 * (i-oldnp) - 1);
 
                                 lpoints.Append (np);
 				pmap.Elem(i) = lpoints.Size();
