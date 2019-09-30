@@ -601,7 +601,7 @@ namespace netgen
 
 
 
-  void OCCMeshSurface (OCCGeometry & geom, Mesh & mesh, int perfstepsend,
+  void OCCMeshSurface (OCCGeometry & geom, Mesh & mesh,
                        MeshingParameters & mparam)
   {
     static Timer t("OCCMeshSurface"); RegionTimer r(t);
@@ -906,13 +906,16 @@ namespace netgen
         //         problemfile << "OK" << endl << endl;
         //         problemfile.close();
       }
+    
+    for (int i = 0; i < mesh.GetNFD(); i++)
+      mesh.SetBCName (i, mesh.GetFaceDescriptor(i+1).GetBCName());
+    multithread.task = savetask;
+  }
 
-
-
-
-    if (multithread.terminate || perfstepsend < MESHCONST_OPTSURFACE)
-      return;
-
+  void OCCOptimizeSurface(OCCGeometry & geom, Mesh & mesh,
+                       MeshingParameters & mparam)
+  {
+    const char * savetask = multithread.task;
     multithread.task = "Optimizing surface";
 
     static Timer timer_opt2d("Optimization 2D");
@@ -981,9 +984,6 @@ namespace netgen
     timer_opt2d.Stop();
 
     multithread.task = savetask;
-
-    for (int i = 0; i < mesh.GetNFD(); i++)
-      mesh.SetBCName (i, mesh.GetFaceDescriptor(i+1).GetBCName());
   }
 
 
@@ -1368,7 +1368,7 @@ namespace netgen
 
     if (mparam.perfstepsstart <= MESHCONST_MESHSURFACE)
       {
-        OCCMeshSurface (geom, *mesh, mparam.perfstepsend, mparam);
+        OCCMeshSurface (geom, *mesh, mparam);
         if (multithread.terminate) return TCL_OK;
 
 #ifdef LOG_STREAM
@@ -1385,6 +1385,14 @@ namespace netgen
 
         //      MeshQuality2d (*mesh);
         mesh->CalcSurfacesOfNode();
+      }
+
+    if (multithread.terminate || mparam.perfstepsend <= MESHCONST_MESHSURFACE)
+      return TCL_OK;
+
+    if (mparam.perfstepsstart <= MESHCONST_OPTSURFACE)
+      {
+        OCCOptimizeSurface(geom, *mesh, mparam);
       }
 
     if (multithread.terminate || mparam.perfstepsend <= MESHCONST_OPTSURFACE)

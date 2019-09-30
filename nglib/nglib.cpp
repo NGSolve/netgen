@@ -926,7 +926,8 @@ namespace nglib
          perfstepsend = MESHCONST_OPTSURFACE;
       }
 
-      OCCMeshSurface(*occgeom, *me, perfstepsend, mparam);
+      OCCMeshSurface(*occgeom, *me, mparam);
+      OCCOptimizeSurface(*occgeom, *me, mparam);
 
       me->CalcSurfacesOfNode();
       
