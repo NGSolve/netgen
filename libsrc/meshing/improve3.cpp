@@ -3432,7 +3432,7 @@ void MeshOptimize3d :: SwapImproveSurface (Mesh & mesh, OPTIMIZEGOAL goal,
 */
 
 bool MeshOptimize3d :: SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementIndex eli1, int face,
-  TABLE<ElementIndex, PointIndex::BASE> & elementsonnode,
+  Table<ElementIndex, PointIndex> & elementsonnode,
   TABLE<SurfaceElementIndex, PointIndex::BASE> & belementsonnode, bool check_only )
 {
   PointIndex pi1, pi2, pi3, pi4, pi5;
@@ -3490,7 +3490,7 @@ bool MeshOptimize3d :: SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementInd
   if (bface) return false;
 
 
-  NgFlatArray<ElementIndex> row = elementsonnode[pi1];
+  FlatArray<ElementIndex> row = elementsonnode[pi1];
   for (int k = 0; k < row.Size(); k++)
   {
       ElementIndex eli2 = row[k];
@@ -3570,19 +3570,11 @@ bool MeshOptimize3d :: SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementInd
                   el32.flags.illegal_valid = 0;
                   el33.flags.illegal_valid = 0;
 
-                  mesh[eli1] = el31;
-                  mesh[eli2] = el32;
-
-                  ElementIndex neli =
-                    mesh.AddVolumeElement (el33);
-
-                  for (int l = 0; l < 4; l++)
-                  {
-                      elementsonnode.Add (el31[l], eli1);
-                      elementsonnode.Add (el32[l], eli2);
-                      elementsonnode.Add (el33[l], neli);
-                  }
-
+                  mesh[eli1].Delete();
+                  mesh[eli2].Delete();
+                  mesh.AddVolumeElement (el31);
+                  mesh.AddVolumeElement (el32);
+                  mesh.AddVolumeElement (el33);
               }
               return do_swap;
           }
@@ -3613,7 +3605,7 @@ void MeshOptimize3d :: SwapImprove2Sequential (Mesh & mesh, OPTIMIZEGOAL goal)
   if (goal == OPT_CONFORM) return;
 
   // contains at least all elements at node
-  TABLE<ElementIndex, PointIndex::BASE> elementsonnode(np); 
+  // TABLE<ElementIndex, PointIndex::BASE> elementsonnode(np); 
   TABLE<SurfaceElementIndex, PointIndex::BASE> belementsonnode(np);
 
   PrintMessage (3, "SwapImprove2 ");
@@ -3639,7 +3631,6 @@ void MeshOptimize3d :: SwapImprove2Sequential (Mesh & mesh, OPTIMIZEGOAL goal)
   (*testout) << "Total badness = " << bad1 << endl;
   cout << "tot bad = " << bad1 << endl;
 
-  /*
   // find elements on node
   TableCreator<ElementIndex, PointIndex> creator(np);
   for ( ; !creator.Done(); creator++)
@@ -3651,21 +3642,13 @@ void MeshOptimize3d :: SwapImprove2Sequential (Mesh & mesh, OPTIMIZEGOAL goal)
              creator.Add (pi, ei);
        });
        
-  auto __elementsonnode = creator.MoveTable();
+  auto elementsonnode = creator.MoveTable();
   ngcore::ParallelForRange
-    (__elementsonnode.Range(), [&] (auto myrange)
+    (elementsonnode.Range(), [&] (auto myrange)
      {
        for (PointIndex pi : myrange)
-         QuickSort(__elementsonnode[pi]);
+         QuickSort(elementsonnode[pi]);
      });
-  cout << "new elonnode " << __elementsonnode << endl;
-  */
-  
-  for (ElementIndex ei = 0; ei < ne; ei++)
-    for (PointIndex pi : mesh[ei].PNums())
-      elementsonnode.Add (pi, ei);
-  
-  // cout << "old elonnode " << elementsonnode << endl;
 
   for (SurfaceElementIndex sei = 0; sei < nse; sei++)
     for (int j = 0; j < 3; j++)
@@ -3740,7 +3723,6 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
   if (goal == OPT_CONFORM) return;
 
   // contains at least all elements at node
-  TABLE<ElementIndex, PointIndex::BASE> elementsonnode(np);
   TABLE<SurfaceElementIndex, PointIndex::BASE> belementsonnode(np);
 
   PrintMessage (3, "SwapImprove2 ");
@@ -3751,10 +3733,25 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 
   // find elements on node
 
-  for (ElementIndex ei = 0; ei < ne; ei++)
-    for (int j = 0; j < mesh[ei].GetNP(); j++)
-      elementsonnode.Add (mesh[ei][j], ei);
 
+  TableCreator<ElementIndex, PointIndex> creator(np);
+  for ( ; !creator.Done(); creator++)
+    ngcore::ParallelForRange
+      (ElementIndex(ne), [&] (auto myrange)
+       {
+         for (ElementIndex ei : myrange)
+           for (PointIndex pi : mesh[ei].PNums())
+             creator.Add (pi, ei);
+       });
+       
+  auto elementsonnode = creator.MoveTable();
+  ngcore::ParallelForRange
+    (elementsonnode.Range(), [&] (auto myrange)
+     {
+       for (PointIndex pi : myrange)
+         QuickSort(elementsonnode[pi]);
+     });
+  
   for (SurfaceElementIndex sei = 0; sei < nse; sei++)
     for (int j = 0; j < 3; j++)
       belementsonnode.Add (mesh[sei][j], sei);
