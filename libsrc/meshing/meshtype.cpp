@@ -2067,8 +2067,6 @@ namespace netgen
   void Element :: 
   GetDShape (const Point<3> & hp, DenseMatrix & dshape) const
   {
-    Point3d p = hp;
-
     int np = GetNP();
     if (dshape.Height() != 3 || dshape.Width() != np)
       {
@@ -2079,16 +2077,16 @@ namespace netgen
     double eps = 1e-6;
     Vector shaper(np), shapel(np);
 
-    for (int i = 1; i <= 3; i++)
+    for (auto i : Range(3))
       {
-        Point3d pr(p), pl(p);
-        pr.X(i) += eps;
-        pl.X(i) -= eps;
+        Point<3> pr(hp), pl(hp);
+        pr[i] += eps;
+        pl[i] -= eps;
       
         GetShape (pr, shaper);
         GetShape (pl, shapel);
         for (int j = 0; j < np; j++)
-          dshape(i-1, j) = (shaper(j) - shapel(j)) / (2 * eps);
+          dshape(i, j) = (shaper(j) - shapel(j)) / (2 * eps);
       }
   }
 
