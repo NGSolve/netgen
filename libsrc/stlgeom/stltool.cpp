@@ -1095,6 +1095,9 @@ void STLBoundary ::AddTriangle(const STLTriangle & t)
   segs[1] = INDEX_2(t[1], t[2]);
   segs[2] = INDEX_2(t[2], t[0]);
 
+  if(!searchtree)
+      BuildSearchTree();
+
   for (auto seg : segs)
     {
       STLBoundarySeg bseg(seg[0], seg[1], geometry->GetPoints(), chart);
@@ -1312,21 +1315,18 @@ bool STLBoundary :: TestSeg(const Point<3>& p1, const Point<3> & p2, const Vec<3
 
 void STLBoundary :: BuildSearchTree()
 {
-  delete searchtree;
-  
   Box<2> box2d(Box<2>::EMPTY_BOX);
   Box<3> box3d = geometry->GetBoundingBox();
+
   for (size_t i = 0; i < 8; i++)
     box2d.Add ( chart->Project2d (box3d.GetPointNr(i)));
 
-  // comment to enable searchtree:
-  // searchtree = new BoxTree<2,INDEX_2> (box2d);
-  searchtree = nullptr;
+  searchtree = make_unique<BoxTree<2,INDEX_2>> (box2d);
+//   searchtree = nullptr;
 }
 
 void STLBoundary :: DeleteSearchTree()
 {
-  delete searchtree;
   searchtree = nullptr;
 }
 
@@ -1349,68 +1349,49 @@ bool STLBoundary :: TestSegChartNV(const Point3d & p1, const Point3d& p2,
   Line2d l1 (p2d1, p2d2);
 
   double eps = 1e-6;
-  bool ok = true;
+
+  auto hasIntersection = [&] (auto i2) NETGEN_LAMBDA_INLINE
+    {
+      const STLBoundarySeg & seg = boundary_ht[i2];
+
+      if (seg.IsSmoothEdge()) return false;
+      if (!box2d.Intersect (seg.BoundingBox())) return false;
+
+      const Point<2> & sp1 = seg.P2D1();
+      const Point<2> & sp2 = seg.P2D2();
+
+      Line2d l2 (sp1, sp2);
+      double lam1, lam2;
+
+      int err = CrossPointBarycentric (l1, l2, lam1, lam2);
+      bool in1 = (lam1 > eps) && (lam1 < 1-eps);
+      bool on1 = (lam1 > -eps) && (lam1 < 1 + eps);
+      bool in2 = (lam2 > eps) && (lam2 < 1-eps);
+      bool on2 = (lam2 > -eps) && (lam2 < 1 + eps);
+
+      if(!err && ((on1 && in2) || (on2 && in1)))
+          return true;
+      return false;
+    };
 
   if (searchtree)
     {
-      NgArrayMem<INDEX_2,100> pis;
-      searchtree -> GetIntersecting (box2d.PMin(), box2d.PMax(), pis);
-      for (auto i2 : pis)
-        {
-          const STLBoundarySeg & seg = boundary_ht[i2];
-          
-          if (seg.IsSmoothEdge()) continue;
-          if (!box2d.Intersect (seg.BoundingBox())) continue;
-          
-          const Point<2> & sp1 = seg.P2D1();
-          const Point<2> & sp2 = seg.P2D2();
-          
-          Line2d l2 (sp1, sp2);
-          double lam1, lam2;
-          
-          int err = CrossPointBarycentric (l1, l2, lam1, lam2);
-          bool in1 = (lam1 > eps) && (lam1 < 1-eps);
-          bool on1 = (lam1 > -eps) && (lam1 < 1 + eps);
-          bool in2 = (lam2 > eps) && (lam2 < 1-eps);
-          bool on2 = (lam2 > -eps) && (lam2 < 1 + eps);
-
-          if(!err && ((on1 && in2) || (on2 && in1)))
-            {
-              ok = false;
-              break;
-            }
-        }
+      bool has_intersection = false;
+      searchtree -> GetFirstIntersecting (box2d.PMin(), box2d.PMax(),
+              [&] (auto i2) NETGEN_LAMBDA_INLINE
+              {
+                  has_intersection = hasIntersection(i2);
+                  return has_intersection;
+              });
+      return !has_intersection;
     }
-  
   else
-    {      
+    {
       for(auto [i2, seg] : boundary_ht)
-      {
-        if (seg.IsSmoothEdge()) continue;
-        if (!box2d.Intersect (seg.BoundingBox())) continue;
-        
-        const Point<2> & sp1 = seg.P2D1();
-        const Point<2> & sp2 = seg.P2D2();
-        
-        Line2d l2 (sp1, sp2);
-        double lam1, lam2;
-
-        int err = CrossPointBarycentric (l1, l2, lam1, lam2);
-        
-        bool in1 = (lam1 > eps) && (lam1 < 1-eps);
-        bool on1 = (lam1 > -eps) && (lam1 < 1 + eps);
-        bool in2 = (lam2 > eps) && (lam2 < 1-eps);
-        bool on2 = (lam2 > -eps) && (lam2 < 1 + eps);
-        if(!err && ((on1 && in2) || (on2 && in1)))
-          {
-            ok = false;
-            break;
-          }
-      }
-    
+        if(hasIntersection(i2))
+              return false;
+      return true;
     }
-
-  return ok;
 }
 
 

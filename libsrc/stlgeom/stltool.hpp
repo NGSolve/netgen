@@ -191,10 +191,10 @@ private:
   const STLChart * chart;
   // NgArray<STLBoundarySeg> boundary;
   ClosedHashTable<INDEX_2, STLBoundarySeg> boundary_ht;  
-  BoxTree<2,INDEX_2> * searchtree = nullptr;
+  unique_ptr<BoxTree<2,INDEX_2>> searchtree;
 public:
   STLBoundary(STLGeometry * ageometry);
-  ~STLBoundary() { delete searchtree; }
+  ~STLBoundary() {}
 
   void Clear() { /* boundary.SetSize(0); */ boundary_ht = ClosedHashTable<INDEX_2,STLBoundarySeg>(); }
   void SetChart (const STLChart * achart) { chart = achart; }
