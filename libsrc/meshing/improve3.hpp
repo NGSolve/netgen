@@ -12,13 +12,13 @@ class MeshOptimize3d
 {
   const MeshingParameters & mp;
 
-  void BuildEdgeList( const Mesh & mesh, const TABLE<ElementIndex, PointIndex::BASE> & elementsonnode, Array<std::tuple<PointIndex, PointIndex>> & edges );
+  void BuildEdgeList( const Mesh & mesh, const Table<ElementIndex, PointIndex> & elementsonnode, Array<std::tuple<PointIndex, PointIndex>> & edges );
 
 public:
   MeshOptimize3d (const MeshingParameters & amp) : mp(amp) { ; }
 
   double CombineImproveEdge (Mesh & mesh, const MeshingParameters & mp,
-            TABLE<ElementIndex, PointIndex::BASE> & elements_of_point,
+            Table<ElementIndex, PointIndex> & elements_of_point,
             Array<double> & elerrs, PointIndex pi0, PointIndex pi1,
             FlatArray<bool, PointIndex> is_point_removed, bool check_only=false);
 
@@ -27,7 +27,7 @@ public:
 
   void SplitImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
 
-  bool SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, const NgBitArray * working_elements, TABLE<ElementIndex,PointIndex::BASE> & elementsonnode, INDEX_3_HASHTABLE<int> & faces, PointIndex pi1, PointIndex pi2, bool check_only=false);
+  bool SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, const NgBitArray * working_elements, Table<ElementIndex,PointIndex> & elementsonnode, INDEX_3_HASHTABLE<int> & faces, PointIndex pi1, PointIndex pi2, bool check_only=false);
   void SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
 		    const NgBitArray * working_elements = NULL);
   void SwapImproveSequential (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
