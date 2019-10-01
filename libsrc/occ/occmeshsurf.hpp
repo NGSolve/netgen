@@ -137,7 +137,7 @@ protected:
                           PointGeomInfo & gi,
                           double h) override;
   ///
-  double CalcLocalH (const Point3d & p, double gh) const override;
+  double CalcLocalH (const Point<3> & p, double gh) const override;
   
 };
 

@@ -116,7 +116,7 @@ namespace netgen
   }
 
 
-  double Meshing2 :: CalcLocalH (const Point3d & /* p */, double gh) const
+  double Meshing2 :: CalcLocalH (const Point<3> & /* p */, double gh) const
   {
     return gh;
   }

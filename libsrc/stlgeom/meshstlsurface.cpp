@@ -1042,7 +1042,7 @@ BelongsToActiveChart (const Point3d & p,
 
 
 
-double MeshingSTLSurface :: CalcLocalH (const Point3d & p, double gh) const
+double MeshingSTLSurface :: CalcLocalH (const Point<3> & p, double gh) const
 {
   return gh;
 }
