@@ -1095,6 +1095,9 @@ void STLBoundary ::AddTriangle(const STLTriangle & t)
   segs[1] = INDEX_2(t[1], t[2]);
   segs[2] = INDEX_2(t[2], t[0]);
 
+  if(!searchtree)
+      BuildSearchTree();
+
   for (auto seg : segs)
     {
       STLBoundarySeg bseg(seg[0], seg[1], geometry->GetPoints(), chart);
@@ -1312,21 +1315,18 @@ bool STLBoundary :: TestSeg(const Point<3>& p1, const Point<3> & p2, const Vec<3
 
 void STLBoundary :: BuildSearchTree()
 {
-  delete searchtree;
-  
   Box<2> box2d(Box<2>::EMPTY_BOX);
   Box<3> box3d = geometry->GetBoundingBox();
+
   for (size_t i = 0; i < 8; i++)
     box2d.Add ( chart->Project2d (box3d.GetPointNr(i)));
 
-  // comment to enable searchtree:
-  // searchtree = new BoxTree<2,INDEX_2> (box2d);
-  searchtree = nullptr;
+  searchtree = make_unique<BoxTree<2,INDEX_2>> (box2d);
+//   searchtree = nullptr;
 }
 
 void STLBoundary :: DeleteSearchTree()
 {
-  delete searchtree;
   searchtree = nullptr;
 }
 

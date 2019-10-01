@@ -741,97 +741,98 @@ public:
   const ADTree3 & Tree() const { return *tree; };
 };
 
-  template<int dim, typename T=INDEX>
-  class BoxTree
+template<int dim, typename T=INDEX>
+class BoxTree
+{
+public:
+  // Number of entries per leaf
+  static constexpr int N = 100;
+
+  struct Node;
+
+  struct Leaf
   {
-  public:
-    // Number of entries per leaf
-    static constexpr int N = 100;
+    Point<2*dim> p[N];
+    T index[N];
+    int n_elements;
 
-    struct Node;
+    Leaf() : n_elements(0)
+    { }
 
-    struct Leaf
-    {
-      Point<2*dim> p[N];
-      T index[N];
-      int n_elements;
-
-      Leaf() : n_elements(0) {}
-
-      void Add( ClosedHashTable<T, Leaf*> &leaf_index, const Point<2*dim> &ap, T aindex )
+    void Add( ClosedHashTable<T, Leaf*> &leaf_index, const Point<2*dim> &ap, T aindex )
       {
         p[n_elements] = ap;
         index[n_elements] = aindex;
         n_elements++;
         leaf_index[aindex] = this;
       }
-    };
+  };
 
-    struct Node
+  struct Node
+  {
+    union
     {
-      union
-        {
-          Node *children[2];
-          Leaf *leaf;
-        };
-      double sep;
-      int level;
-
-      Node()
-          : children{nullptr,nullptr}
-      { }
-
-      ~Node()
-      { }
-
-      Leaf *GetLeaf() const
-        {
-          return children[1] ? nullptr : leaf;
-        }
+      Node *children[2];
+      Leaf *leaf;
     };
+    double sep;
+    int level;
 
-  private:
-    Node root;
-
-//     Array<Leaf*, INDEX> leaf_index;
-    ClosedHashTable<T, Leaf*> leaf_index;
-
-    Point<dim> global_min, global_max;
-    double tol;
-    size_t n_leaves;
-    size_t n_nodes;
-    BlockAllocator ball_nodes;
-    BlockAllocator ball_leaves;
-
-  public:
-    BoxTree (const Box<dim> & abox)
-        : BoxTree( abox.PMin(), abox.PMax() )
+    Node()
+        : children{nullptr,nullptr}
     { }
 
-    BoxTree (const Point<dim> & pmin, const Point<dim> & pmax)
-        : global_min(pmin), global_max(pmax), n_leaves(1), n_nodes(1), ball_nodes(sizeof(Node)), ball_leaves(sizeof(Leaf))
+    ~Node()
+     { }
+
+    Leaf *GetLeaf() const
+      {
+        return children[1] ? nullptr : leaf;
+      }
+  };
+
+private:
+  Node root;
+
+  ClosedHashTable<T, Leaf*> leaf_index;
+
+  Point<dim> global_min, global_max;
+  double tol;
+  size_t n_leaves;
+  size_t n_nodes;
+  BlockAllocator ball_nodes;
+  BlockAllocator ball_leaves;
+
+public:
+
+  BoxTree (const Point<dim> & pmin, const Point<dim> & pmax)
+      : global_min(pmin), global_max(pmax), n_leaves(1), n_nodes(1), ball_nodes(sizeof(Node)), ball_leaves(sizeof(Leaf))
     {
       root.leaf = (Leaf*) ball_leaves.Alloc(); new (root.leaf) Leaf();
       root.level = 0;
       tol = 1e-7 * Dist(pmax, pmin);
     }
 
-    size_t GetNLeaves()
+  BoxTree (const Box<dim> & box)
+      : BoxTree(box.PMin(), box.PMax())
+    { }
+
+  size_t GetNLeaves()
     {
       return n_leaves;
     }
 
-    size_t GetNNodes()
+  size_t GetNNodes()
     {
       return n_nodes;
     }
 
-    template<typename TFunc>
-    void GetFirstIntersecting (const Point<dim> & pmin, const Point<dim> & pmax,
-                               TFunc func=[](auto pi){return false;}) const
+  template<typename TFunc>
+  void GetFirstIntersecting (const Point<dim> & pmin, const Point<dim> & pmax,
+          TFunc func=[](auto pi){return false;}) const
     {
-      // static Timer timer("BTree::GetIntersecting"); RegionTimer rt(timer);
-      // static Timer timer1("BTree::GetIntersecting-LinearSearch");
+      // static Timer timer("BoxTree::GetIntersecting"); RegionTimer rt(timer);
+      // static Timer timer1("BoxTree::GetIntersecting-LinearSearch");
       ArrayMem<const Node*, 100> stack;
       ArrayMem<int, 100> dir_stack;
 
@@ -842,7 +843,7 @@ public:
         {
           tpmin(i) = global_min(i);
           tpmax(i) = pmax(i)+tol;
-        
+
           tpmin(i+dim) = pmin(i)-tol;
           tpmax(i+dim) = global_max(i);
         }
@@ -862,7 +863,7 @@ public:
 
           if(Leaf *leaf = node->GetLeaf())
             {
-//               RegionTimer rt1(timer1);
+              //               RegionTimer rt1(timer1);
               for (auto i : IntRange(leaf->n_elements))
                 {
                   bool intersect = true;
@@ -875,7 +876,7 @@ public:
                       if (p[d] < tpmin[d])
                           intersect = false;
                   if(intersect)
-                    if(func(leaf->index[i])) return;
+                      if(func(leaf->index[i])) return;
                 }
             }
           else
@@ -896,21 +897,21 @@ public:
         }
     }
 
-    void GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax,
-                          NgArray<T> & pis) const
+  void GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax,
+          NgArray<T> & pis) const
     {
       pis.SetSize(0);
       GetFirstIntersecting(pmin, pmax, [&pis](auto pi) { pis.Append(pi); return false;});
     }
 
-    void Insert (const Box<dim> & box, T pi)
+  void Insert (const Box<dim> & box, T pi)
     {
       Insert (box.PMin(), box.PMax(), pi);
     }
 
-    void Insert (const Point<dim> & pmin, const Point<dim> & pmax, T pi)
+  void Insert (const Point<dim> & pmin, const Point<dim> & pmax, T pi)
     {
-      // static Timer timer("BTree::Insert"); RegionTimer rt(timer);
+      // static Timer timer("BoxTree::Insert"); RegionTimer rt(timer);
       int dir = 0;
       Point<2*dim> p;
       for (auto i : IntRange(dim))
@@ -982,9 +983,9 @@ public:
         }
     }
 
-    void DeleteElement (T pi)
+  void DeleteElement (T pi)
     {
-      // static Timer timer("BTree::DeleteElement"); RegionTimer rt(timer);
+      // static Timer timer("BoxTree::DeleteElement"); RegionTimer rt(timer);
       Leaf *leaf = leaf_index[pi];
       leaf_index.Delete(pi);
       auto & n_elements = leaf->n_elements;
@@ -1005,7 +1006,7 @@ public:
             }
         }
     }
-  };
+};
 
 //   template <int dim, typename T = INDEX>
 //   class BoxTree
@@ -1025,7 +1026,7 @@ public:
 //         }
 //       tree = new T_ADTree<2*dim,T> (tpmin, tpmax);
 //     }
-//     
+//
 //     BoxTree (const Point<dim> & apmin, const Point<dim> & apmax)
 //     {
 //       boxpmin = apmin;
@@ -1038,36 +1039,36 @@ public:
 //         }
 //       tree = new T_ADTree<2*dim,T> (tpmin, tpmax);
 //     }
-//       
+//
 //     ~BoxTree ()
 //     {
 //       delete tree;
 //     }
-//     
+//
 //     void Insert (const Point<dim> & bmin, const Point<dim> & bmax, T pi)
 //     {
 //       Point<2*dim> tp;
-//       
+//
 //       for (size_t i = 0; i < dim; i++)
 //         {
 //           tp(i) = bmin(i);
 //           tp(i+dim) = bmax(i);
 //         }
-//       
+//
 //       tree->Insert (tp, pi);
 //     }
-//     
+//
 //     void Insert (const Box<dim> & box, T pi)
 //     {
 //       Insert (box.PMin(), box.PMax(), pi);
 //     }
-//     
-//     void DeleteElement (T pi) 
+//
+//     void DeleteElement (T pi)
 //     {
 //       tree->DeleteElement(pi);
 //     }
-// 
-//     void GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax, 
+//
+//     void GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax,
 //                           NgArray<T> & pis) const
 //     {
 //       Point<2*dim> tpmin, tpmax;
@@ -1076,15 +1077,15 @@ public:
 //         {
 //           tpmin(i) = boxpmin(i);
 //           tpmax(i) = pmax(i)+tol;
-//         
+//
 //           tpmin(i+dim) = pmin(i)-tol;
 //           tpmax(i+dim) = boxpmax(i);
 //         }
-//       
+//
 //       tree->GetIntersecting (tpmin, tpmax, pis);
 //     }
-//     
-//       
+//
+//
 //     double Tolerance() const { return 1e-7 * Dist(boxpmax, boxpmin); } // single precision
 //     const auto & Tree() const { return *tree; };
 //     auto & Tree() { return *tree; };

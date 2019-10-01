@@ -5,10 +5,6 @@
 namespace netgen
 {
 
-
-//   typedef BTree<3> TBoxTree;
-  typedef BoxTree<3> TBoxTree;
-
   static const int deltetfaces[][3] = 
     { { 1, 2, 3 },
       { 2, 0, 3 },
@@ -231,7 +227,7 @@ namespace netgen
   void AddDelaunayPoint (PointIndex newpi, const Point3d & newp, 
 			 NgArray<DelaunayTet> & tempels, 
 			 Mesh & mesh,
-			 TBoxTree & tettree,
+			 BoxTree<3> & tettree,
 			 MeshNB & meshnb,
 			 NgArray<Point<3> > & centers, NgArray<double> & radi2,
 			 NgArray<int> & connected, NgArray<int> & treesearch, 
@@ -639,7 +635,7 @@ namespace netgen
     pmin2 = pmin2 + 0.1 * (pmin2 - pmax2);
     pmax2 = pmax2 + 0.1 * (pmax2 - pmin2);
 
-    TBoxTree tettree(pmin2, pmax2);
+    BoxTree<3> tettree(pmin2, pmax2);
 
 
     tempels.Append (startel);

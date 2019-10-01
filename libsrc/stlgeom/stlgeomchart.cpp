@@ -146,8 +146,6 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
       chartbound.Clear();
       chartbound.SetChart(&chart);
       
-      chartbound.BuildSearchTree();  // different !!!
-
       if (!found) throw Exception("Make Atlas, no starttrig found"); 
 
       //find surrounding trigs
@@ -324,7 +322,6 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
       innerchartpts.SetSize(innerchartpoints.Size());
       for (size_t i = 0; i < innerchartpoints.Size(); i++)
         innerchartpts[i] = GetPoint(innerchartpoints[i]);
-      // chartbound.BuildSearchTree();  // different !!!
       
       // NgProfiler::StopTimer (timer2);
       // NgProfiler::StartTimer (timer3);
