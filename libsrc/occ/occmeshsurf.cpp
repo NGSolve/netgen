@@ -458,7 +458,7 @@ namespace netgen
 
 
 
-  double Meshing2OCCSurfaces :: CalcLocalH (const Point3d & p, double gh) const
+  double Meshing2OCCSurfaces :: CalcLocalH (const Point<3> & p, double gh) const
   {
     return gh;
   }

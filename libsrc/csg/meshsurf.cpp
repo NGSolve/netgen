@@ -50,7 +50,7 @@ int Meshing2Surfaces :: TransformFromPlain (const Point<2> & planepoint,
 
 
 
-double Meshing2Surfaces :: CalcLocalH (const Point3d & p, double gh) const
+double Meshing2Surfaces :: CalcLocalH (const Point<3> & p, double gh) const
 {
   return surface.LocH (p, 3, 1, mparam, gh);
   /*

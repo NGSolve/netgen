@@ -81,7 +81,7 @@ protected:
   ///
   virtual void EndMesh ();
   ///
-  virtual double CalcLocalH (const Point3d & p, double gh) const;
+  virtual double CalcLocalH (const Point<3> & p, double gh) const;
 
   ///
   virtual void DefineTransformation (const Point<3> & p1, const Point<3> & p2,
