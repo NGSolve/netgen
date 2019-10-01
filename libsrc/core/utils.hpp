@@ -44,7 +44,7 @@ namespace ngcore
 
   // High precision clock counter register
   using TTimePoint = size_t;
-  extern NGCORE_API double ticks_per_second;
+  extern NGCORE_API double seconds_per_tick;
 
   inline TTimePoint GetTimeCounter() noexcept
   {

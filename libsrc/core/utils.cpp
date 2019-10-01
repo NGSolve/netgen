@@ -21,7 +21,7 @@ namespace ngcore
                                                                                       &status); }
 #endif
 
-  double ticks_per_second = [] () noexcept
+  double seconds_per_tick = [] () noexcept
   {
       auto tick_start = GetTimeCounter();
       double tstart = WallTime();
@@ -33,7 +33,7 @@ namespace ngcore
       auto tick_end = GetTimeCounter();
       tend = WallTime();
 
-      return static_cast<double>(tick_end-tick_start)/(tend-tstart);
+      return (tend-tstart)/static_cast<double>(tick_end-tick_start);
   }();
 
   const std::chrono::time_point<TClock> wall_time_start = TClock::now();
