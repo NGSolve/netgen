@@ -741,89 +741,354 @@ public:
   const ADTree3 & Tree() const { return *tree; };
 };
 
-
-  template <int dim, typename T = INDEX>
+  template<int dim, typename T=INDEX>
   class BoxTree
   {
-    T_ADTree<2*dim,T> * tree;
-    Point<dim> boxpmin, boxpmax;
+  public:
+    // Number of entries per leaf
+    static constexpr int N = 100;
+
+    struct Node;
+
+    struct Leaf
+    {
+      Point<2*dim> p[N];
+      T index[N];
+      int n_elements;
+
+      Leaf() : n_elements(0) {}
+
+      void Add( ClosedHashTable<T, Leaf*> &leaf_index, const Point<2*dim> &ap, T aindex )
+      {
+        p[n_elements] = ap;
+        index[n_elements] = aindex;
+        n_elements++;
+        leaf_index[aindex] = this;
+      }
+    };
+
+    struct Node
+    {
+      union
+        {
+          Node *children[2];
+          Leaf *leaf;
+        };
+      double sep;
+      int level;
+
+      Node()
+          : children{nullptr,nullptr}
+      { }
+
+      ~Node()
+      { }
+
+      Leaf *GetLeaf() const
+        {
+          return children[1] ? nullptr : leaf;
+        }
+    };
+
+  private:
+    Node root;
+
+//     Array<Leaf*, INDEX> leaf_index;
+    ClosedHashTable<T, Leaf*> leaf_index;
+
+    Point<dim> global_min, global_max;
+    double tol;
+    size_t n_leaves;
+    size_t n_nodes;
+    BlockAllocator ball_nodes;
+    BlockAllocator ball_leaves;
+
   public:
     BoxTree (const Box<dim> & abox)
+        : BoxTree( abox.PMin(), abox.PMax() )
+    { }
+
+    BoxTree (const Point<dim> & pmin, const Point<dim> & pmax)
+        : global_min(pmin), global_max(pmax), n_leaves(1), n_nodes(1), ball_nodes(sizeof(Node)), ball_leaves(sizeof(Leaf))
     {
-      boxpmin = abox.PMin();
-      boxpmax = abox.PMax();
+      root.leaf = (Leaf*) ball_leaves.Alloc(); new (root.leaf) Leaf();
+      root.level = 0;
+      tol = 1e-7 * Dist(pmax, pmin);
+    }
+
+    size_t GetNLeaves()
+    {
+      return n_leaves;
+    }
+
+    size_t GetNNodes()
+    {
+      return n_nodes;
+    }
+
+    template<typename TFunc>
+    void GetFirstIntersecting (const Point<dim> & pmin, const Point<dim> & pmax,
+                               TFunc func=[](auto pi){return false;}) const
+    {
+      // static Timer timer("BTree::GetIntersecting"); RegionTimer rt(timer);
+      // static Timer timer1("BTree::GetIntersecting-LinearSearch");
+      ArrayMem<const Node*, 100> stack;
+      ArrayMem<int, 100> dir_stack;
+
+
       Point<2*dim> tpmin, tpmax;
-      for (int i = 0; i < dim; i++)
+
+      for (size_t i : IntRange(dim))
         {
-          tpmin(i) = tpmin(i+dim) = boxpmin(i);
-          tpmax(i) = tpmax(i+dim) = boxpmax(i);
+          tpmin(i) = global_min(i);
+          tpmax(i) = pmax(i)+tol;
+        
+          tpmin(i+dim) = pmin(i)-tol;
+          tpmax(i+dim) = global_max(i);
         }
-      tree = new T_ADTree<2*dim,T> (tpmin, tpmax);
-    }
-    
-    BoxTree (const Point<dim> & apmin, const Point<dim> & apmax)
-    {
-      boxpmin = apmin;
-      boxpmax = apmax;
-      Point<2*dim> tpmin, tpmax;
-      for (int i = 0; i < dim; i++)
+
+      stack.SetSize(0);
+      stack.Append(&root);
+      dir_stack.SetSize(0);
+      dir_stack.Append(0);
+
+      while(stack.Size())
         {
-          tpmin(i) = tpmin(i+dim) = boxpmin(i);
-          tpmax(i) = tpmax(i+dim) = boxpmax(i);
+          const Node *node = stack.Last();
+          stack.DeleteLast();
+
+          int dir = dir_stack.Last();
+          dir_stack.DeleteLast();
+
+          if(Leaf *leaf = node->GetLeaf())
+            {
+//               RegionTimer rt1(timer1);
+              for (auto i : IntRange(leaf->n_elements))
+                {
+                  bool intersect = true;
+                  const auto p = leaf->p[i];
+
+                  for (int d = 0; d < dim; d++)
+                      if (p[d] > tpmax[d])
+                          intersect = false;
+                  for (int d = dim; d < 2*dim; d++)
+                      if (p[d] < tpmin[d])
+                          intersect = false;
+                  if(intersect)
+                    if(func(leaf->index[i])) return;
+                }
+            }
+          else
+            {
+              int newdir = dir+1;
+              if(newdir==2*dim) newdir = 0;
+              if (tpmin[dir] <= node->sep)
+                {
+                  stack.Append(node->children[0]);
+                  dir_stack.Append(newdir);
+                }
+              if (tpmax[dir] >= node->sep)
+                {
+                  stack.Append(node->children[1]);
+                  dir_stack.Append(newdir);
+                }
+            }
         }
-      tree = new T_ADTree<2*dim,T> (tpmin, tpmax);
     }
-      
-    ~BoxTree ()
+
+    void GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax,
+                          NgArray<T> & pis) const
     {
-      delete tree;
+      pis.SetSize(0);
+      GetFirstIntersecting(pmin, pmax, [&pis](auto pi) { pis.Append(pi); return false;});
     }
-    
-    void Insert (const Point<dim> & bmin, const Point<dim> & bmax, T pi)
-    {
-      Point<2*dim> tp;
-      
-      for (size_t i = 0; i < dim; i++)
-        {
-          tp(i) = bmin(i);
-          tp(i+dim) = bmax(i);
-        }
-      
-      tree->Insert (tp, pi);
-    }
-    
+
     void Insert (const Box<dim> & box, T pi)
     {
       Insert (box.PMin(), box.PMax(), pi);
     }
-    
-    void DeleteElement (T pi) 
+
+    void Insert (const Point<dim> & pmin, const Point<dim> & pmax, T pi)
     {
-      tree->DeleteElement(pi);
+      // static Timer timer("BTree::Insert"); RegionTimer rt(timer);
+      int dir = 0;
+      Point<2*dim> p;
+      for (auto i : IntRange(dim))
+        {
+          p(i) = pmin[i];
+          p(i+dim) = pmax[i];
+        }
+
+      Node * node = &root;
+      Leaf * leaf = node->GetLeaf();
+
+      // search correct leaf to add point
+      while(!leaf)
+        {
+          node = p[dir] < node->sep ? node->children[0] : node->children[1];
+          dir++;
+          if(dir==2*dim) dir = 0;
+          leaf = node->GetLeaf();
+        }
+
+      // add point to leaf
+      if(leaf->n_elements < N)
+          leaf->Add(leaf_index, p,pi);
+      else // assume leaf->n_elements == N
+        {
+          // add two new nodes and one new leaf
+          int n_elements = leaf->n_elements;
+          ArrayMem<double, N> coords(n_elements);
+          ArrayMem<int, N> order(n_elements);
+
+          // separate points in two halves, first sort all coordinates in direction dir
+          for (auto i : IntRange(n_elements))
+            {
+              order[i] = i;
+              coords[i] = leaf->p[i][dir];
+            }
+
+          QuickSortI(coords, order);
+          int isplit = N/2;
+          Leaf *leaf1 = (Leaf*) ball_leaves.Alloc(); new (leaf1) Leaf();
+          Leaf *leaf2 = (Leaf*) ball_leaves.Alloc(); new (leaf2) Leaf();
+
+          for (auto i : order.Range(isplit))
+              leaf1->Add(leaf_index, leaf->p[i], leaf->index[i] );
+          for (auto i : order.Range(isplit, N))
+              leaf2->Add(leaf_index, leaf->p[i], leaf->index[i] );
+
+          Node *node1 = (Node*) ball_nodes.Alloc(); new (node1) Node();
+          node1->leaf = leaf1;
+          node1->level = node->level+1;
+
+          Node *node2 = (Node*) ball_nodes.Alloc(); new (node2) Node();
+          node2->leaf = leaf2;
+          node2->level = node->level+1;
+
+          node->children[0] = node1;
+          node->children[1] = node2;
+          node->sep = 0.5 * (leaf->p[order[isplit-1]][dir] + leaf->p[order[isplit]][dir]);
+
+          // add new point to one of the new leaves
+          if (p[dir] < node->sep)
+              leaf1->Add( leaf_index, p, pi );
+          else
+              leaf2->Add( leaf_index, p, pi );
+
+          ball_leaves.Free(leaf);
+          n_leaves++;
+          n_nodes+=2;
+        }
     }
 
-    void GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax, 
-                          NgArray<T> & pis) const
+    void DeleteElement (T pi)
     {
-      Point<2*dim> tpmin, tpmax;
-      double tol = Tolerance();
-      for (size_t i = 0; i < dim; i++)
+      // static Timer timer("BTree::DeleteElement"); RegionTimer rt(timer);
+      Leaf *leaf = leaf_index[pi];
+      leaf_index.Delete(pi);
+      auto & n_elements = leaf->n_elements;
+      auto & index = leaf->index;
+      auto & p = leaf->p;
+
+      for (auto i : IntRange(n_elements))
         {
-          tpmin(i) = boxpmin(i);
-          tpmax(i) = pmax(i)+tol;
-        
-          tpmin(i+dim) = pmin(i)-tol;
-          tpmax(i+dim) = boxpmax(i);
+          if(index[i] == pi)
+            {
+              n_elements--;
+              if(i!=n_elements)
+                {
+                  index[i] = index[n_elements];
+                  p[i] = p[n_elements];
+                }
+              return;
+            }
         }
-      
-      tree->GetIntersecting (tpmin, tpmax, pis);
     }
-    
-      
-    double Tolerance() const { return 1e-7 * Dist(boxpmax, boxpmin); } // single precision
-    const auto & Tree() const { return *tree; };
-    auto & Tree() { return *tree; };
   };
+
+//   template <int dim, typename T = INDEX>
+//   class BoxTree
+//   {
+//     T_ADTree<2*dim,T> * tree;
+//     Point<dim> boxpmin, boxpmax;
+//   public:
+//     BoxTree (const Box<dim> & abox)
+//     {
+//       boxpmin = abox.PMin();
+//       boxpmax = abox.PMax();
+//       Point<2*dim> tpmin, tpmax;
+//       for (int i = 0; i < dim; i++)
+//         {
+//           tpmin(i) = tpmin(i+dim) = boxpmin(i);
+//           tpmax(i) = tpmax(i+dim) = boxpmax(i);
+//         }
+//       tree = new T_ADTree<2*dim,T> (tpmin, tpmax);
+//     }
+//     
+//     BoxTree (const Point<dim> & apmin, const Point<dim> & apmax)
+//     {
+//       boxpmin = apmin;
+//       boxpmax = apmax;
+//       Point<2*dim> tpmin, tpmax;
+//       for (int i = 0; i < dim; i++)
+//         {
+//           tpmin(i) = tpmin(i+dim) = boxpmin(i);
+//           tpmax(i) = tpmax(i+dim) = boxpmax(i);
+//         }
+//       tree = new T_ADTree<2*dim,T> (tpmin, tpmax);
+//     }
+//       
+//     ~BoxTree ()
+//     {
+//       delete tree;
+//     }
+//     
+//     void Insert (const Point<dim> & bmin, const Point<dim> & bmax, T pi)
+//     {
+//       Point<2*dim> tp;
+//       
+//       for (size_t i = 0; i < dim; i++)
+//         {
+//           tp(i) = bmin(i);
+//           tp(i+dim) = bmax(i);
+//         }
+//       
+//       tree->Insert (tp, pi);
+//     }
+//     
+//     void Insert (const Box<dim> & box, T pi)
+//     {
+//       Insert (box.PMin(), box.PMax(), pi);
+//     }
+//     
+//     void DeleteElement (T pi) 
+//     {
+//       tree->DeleteElement(pi);
+//     }
+// 
+//     void GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax, 
+//                           NgArray<T> & pis) const
+//     {
+//       Point<2*dim> tpmin, tpmax;
+//       double tol = Tolerance();
+//       for (size_t i = 0; i < dim; i++)
+//         {
+//           tpmin(i) = boxpmin(i);
+//           tpmax(i) = pmax(i)+tol;
+//         
+//           tpmin(i+dim) = pmin(i)-tol;
+//           tpmax(i+dim) = boxpmax(i);
+//         }
+//       
+//       tree->GetIntersecting (tpmin, tpmax, pis);
+//     }
+//     
+//       
+//     double Tolerance() const { return 1e-7 * Dist(boxpmax, boxpmin); } // single precision
+//     const auto & Tree() const { return *tree; };
+//     auto & Tree() { return *tree; };
+//   };
 
 }
 
