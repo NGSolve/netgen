@@ -37,7 +37,7 @@ double CalcBadReplacePoints (const Mesh::T_POINTS & points, const MeshingParamet
 */
 double MeshOptimize3d :: CombineImproveEdge (Mesh & mesh,
                             const MeshingParameters & mp,
-                            TABLE<ElementIndex, PointIndex::BASE> & elements_of_point,
+                            Table<ElementIndex, PointIndex> & elements_of_point,
                             Array<double> & elerrs,
                             PointIndex pi0, PointIndex pi1,
                             FlatArray<bool, PointIndex> is_point_removed,
@@ -58,7 +58,7 @@ double MeshOptimize3d :: CombineImproveEdge (Mesh & mesh,
   for (auto ei : elements_of_point[pi0] )
   {
       Element & elem = mesh[ei];
-      if (elem.IsDeleted()) continue;
+      if (elem.IsDeleted()) return false;
 
       if (elem[0] == pi1 || elem[1] == pi1 || elem[2] == pi1 || elem[3] == pi1)
       {
@@ -75,7 +75,7 @@ double MeshOptimize3d :: CombineImproveEdge (Mesh & mesh,
   for (auto ei : elements_of_point[pi1] )
   {
       Element & elem = mesh[ei];
-      if (elem.IsDeleted()) continue;
+      if (elem.IsDeleted()) return false;
 
       if (elem[0] == pi0 || elem[1] == pi0 || elem[2] == pi0 || elem[3] == pi0)
       {
@@ -142,8 +142,6 @@ double MeshOptimize3d :: CombineImproveEdge (Mesh & mesh,
           Element & elem = mesh[ei];
           if (elem.IsDeleted()) continue;
 
-          if(elements_of_point[pi0].Pos(ei)==-1)
-              elements_of_point.Add (pi0, ei); // todo: only add if not already in there!
           for (int l = 0; l < elem.GetNP(); l++)
               if (elem[l] == pi1)
                   elem[l] = pi0;
@@ -411,7 +409,7 @@ void MeshOptimize3d :: CombineImproveSequential (Mesh & mesh,
   multithread.task = savetask;
 } 
 
-void MeshOptimize3d :: BuildEdgeList( const Mesh & mesh, const TABLE<ElementIndex, PointIndex::BASE> & elementsonnode, Array<std::tuple<PointIndex, PointIndex>> & edges )
+void MeshOptimize3d :: BuildEdgeList( const Mesh & mesh, const Table<ElementIndex, PointIndex> & elementsonnode, Array<std::tuple<PointIndex, PointIndex>> & edges )
 {
   static Timer tbuild_edges("Build edges"); RegionTimer reg(tbuild_edges);
 
@@ -517,15 +515,7 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
       (*testout) << "Total badness = " << totalbad << endl;
     }
 
-  // TODO: Build table in parallel (using TableCreator)
-  tbuild_elements_table.Start();
-  TABLE<ElementIndex, PointIndex::BASE> elementsonnode(np);
-  for (ElementIndex ei = 0; ei < ne; ei++)
-    if (!mesh[ei].IsDeleted())
-      for (int j = 0; j < mesh[ei].GetNP(); j++)
-	elementsonnode.Add (mesh[ei][j], ei);
-
-  tbuild_elements_table.Stop();
+  auto elementsonnode = mesh.CreatePoint2ElementTable();
 
   Array<std::tuple<PointIndex,PointIndex>> edges;
   BuildEdgeList(mesh, elementsonnode, edges);
@@ -1767,7 +1757,7 @@ void MeshOptimize3d :: SwapImproveSequential (Mesh & mesh, OPTIMIZEGOAL goal,
 
 bool MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
         const NgBitArray * working_elements,
-        TABLE<ElementIndex,PointIndex::BASE> & elementsonnode,
+        Table<ElementIndex, PointIndex> & elementsonnode,
         INDEX_3_HASHTABLE<int> & faces,
         PointIndex pi1, PointIndex pi2, bool check_only)
 {
@@ -1788,10 +1778,9 @@ bool MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
 
 
   hasbothpoints.SetSize (0);
-  for (int k = 0; k < elementsonnode[pi1].Size(); k++)
+  for (ElementIndex elnr : elementsonnode[pi1])
     {
       bool has1 = 0, has2 = 0;
-      ElementIndex elnr = elementsonnode[pi1][k];
       const Element & elem = mesh[elnr];
 
       if (elem.IsDeleted()) return false;
@@ -1965,20 +1954,14 @@ bool MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
              << el22 << endl;
              */
 
-          el21.flags.illegal_valid = 0;
-          el22.flags.illegal_valid = 0;
-          mesh[hasbothpoints[0]] = el21;
-          mesh[hasbothpoints[1]] = el22;
-          for (int l = 0; l < 4; l++)
-              mesh[hasbothpoints[2]][l].Invalidate();
+          mesh[hasbothpoints[0]].Delete();
+          mesh[hasbothpoints[1]].Delete();
           mesh[hasbothpoints[2]].Delete();
 
-          elementsonnode.Add (pi4, hasbothpoints[1]);
-          elementsonnode.Add (pi3, hasbothpoints[2]);
-
-          for (int k = 0; k < 2; k++)
-              for (int l = 0; l < 4; l++)
-                  elementsonnode.Add (mesh[hasbothpoints[k]][l], hasbothpoints[k]);
+          el21.flags.illegal_valid = 0;
+          el22.flags.illegal_valid = 0;
+          mesh.AddVolumeElement(el21);
+          mesh.AddVolumeElement(el22);
         }
     }
 
@@ -2156,104 +2139,37 @@ bool MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
 
       if (swap2 || swap3)
         {
-          // (*mycout) << "4->4 " << flush;
           do_swap = true;
           if(check_only) return do_swap;
-          //		  (*testout) << "4->4 conversion" << "\n";
-          /*
-             (*testout) << "bad1 = " << bad1
-             << " bad2 = " << bad2
-             << " bad3 = " << bad3 << "\n";
-
-             (*testout) << "Points: " << pi1 << " " << pi2 << " " << pi3
-             << " " << pi4 << " " << pi5 << " " << pi6 << "\n";
-             (*testout) << "Elements: "
-             << hasbothpoints.Get(1) << "  "
-             << hasbothpoints.Get(2) << "  "
-             << hasbothpoints.Get(3) << "  "
-             << hasbothpoints.Get(4) << "  " << "\n";
-             */
-
-          /*
-             {
-             int i1, j1;
-             for (i1 = 1; i1 <= 4; i1++)
-             {
-             for (j1 = 1; j1 <= 4; j1++)
-             (*testout) << volelements.Get(hasbothpoints.Get(i1)).PNum(j1)
-             << "  ";
-             (*testout) << "\n";
-             }
-             }
-             */
         }
-
 
       if (swap2)
         {
-          //		  (*mycout) << "bad1 = " << bad1 << " bad2 = " << bad2 << "\n";
-
-
-          /*
-             (*testout) << "4->4 swap A, old els = " << endl
-             << mesh[hasbothpoints[0]] << endl
-             << mesh[hasbothpoints[1]] << endl
-             << mesh[hasbothpoints[2]] << endl
-             << mesh[hasbothpoints[3]] << endl
-             << "new els = " << endl
-             << el1 << endl
-             << el2 << endl
-             << el3 << endl
-             << el4 << endl;
-             */
-
-
+          for (auto i : IntRange(4))
+              mesh[hasbothpoints[i]].Delete();
 
           el1.flags.illegal_valid = 0;
           el2.flags.illegal_valid = 0;
           el3.flags.illegal_valid = 0;
           el4.flags.illegal_valid = 0;
-
-          mesh[hasbothpoints[0]] = el1;
-          mesh[hasbothpoints[1]] = el2;
-          mesh[hasbothpoints[2]] = el3;
-          mesh[hasbothpoints[3]] = el4;
-
-          for (int k = 0; k < 4; k++)
-              for (int l = 0; l < 4; l++)
-                  elementsonnode.Add (mesh[hasbothpoints[k]][l], hasbothpoints[k]);
+          mesh.AddVolumeElement (el1);
+          mesh.AddVolumeElement (el2);
+          mesh.AddVolumeElement (el3);
+          mesh.AddVolumeElement (el4);
         }
       else if (swap3)
         {
-          // (*mycout) << "bad1 = " << bad1 << " bad3 = " << bad3 << "\n";
+          for (auto i : IntRange(4))
+              mesh[hasbothpoints[i]].Delete();
+
           el1b.flags.illegal_valid = 0;
           el2b.flags.illegal_valid = 0;
           el3b.flags.illegal_valid = 0;
           el4b.flags.illegal_valid = 0;
-
-
-          /*
-             (*testout) << "4->4 swap A, old els = " << endl
-             << mesh[hasbothpoints[0]] << endl
-             << mesh[hasbothpoints[1]] << endl
-             << mesh[hasbothpoints[2]] << endl
-             << mesh[hasbothpoints[3]] << endl
-             << "new els = " << endl
-             << el1b << endl
-             << el2b << endl
-             << el3b << endl
-             << el4b << endl;
-             */
-
-
-          mesh[hasbothpoints[0]] = el1b;
-          mesh[hasbothpoints[1]] = el2b;
-          mesh[hasbothpoints[2]] = el3b;
-          mesh[hasbothpoints[3]] = el4b;
-
-          for (int k = 0; k < 4; k++)
-              for (int l = 0; l < 4; l++)
-                  elementsonnode.Add (mesh[hasbothpoints[k]][l], hasbothpoints[k]);
+          mesh.AddVolumeElement (el1b);
+          mesh.AddVolumeElement (el2b);
+          mesh.AddVolumeElement (el3b);
+          mesh.AddVolumeElement (el4b);
         }
     }
 
@@ -2439,10 +2355,6 @@ bool MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
                  */
               mesh.AddVolumeElement (hel);
 
-              for (k1 = 0; k1 < 4; k1++)
-                  elementsonnode.Add (hel[k1], mesh.GetNE()-1);
-
-
               hel[2] = suroundpts[k % nsuround];
               hel[1] = suroundpts[(k+1) % nsuround];
               hel[3] = pi1;
@@ -2453,9 +2365,6 @@ bool MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
                  */
 
               mesh.AddVolumeElement (hel);
-
-              for (k1 = 0; k1 < 4; k1++)
-                  elementsonnode.Add (hel[k1], mesh.GetNE()-1);
             }
 
           for (int k = 0; k < nsuround; k++)
@@ -2489,8 +2398,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 
   mesh.BoundaryEdge (1,2); // ensure the boundary-elements table is built
 
-  // contains at least all elements at node
-  TABLE<ElementIndex,PointIndex::BASE> elementsonnode(np);
+  auto elementsonnode = mesh.CreatePoint2ElementTable();
 
   NgArray<ElementIndex> hasbothpoints;
 
@@ -2518,11 +2426,6 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
       double bad1 = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
       (*testout) << "Total badness = " << bad1 << endl;
     }
-
-  // find elements on node
-  for (ElementIndex ei = 0; ei < ne; ei++)
-    for (PointIndex pi : mesh[ei].PNums())
-      elementsonnode.Add (pi, ei);
 
   Array<std::tuple<PointIndex,PointIndex>> edges;
   BuildEdgeList(mesh, elementsonnode, edges);
