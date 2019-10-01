@@ -2,6 +2,7 @@
 add_library(ngcore SHARED
   archive.cpp
   bitarray.cpp
+  exception.cpp
   localheap.cpp
   logging.cpp
   flags.cpp

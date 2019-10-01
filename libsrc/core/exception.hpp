@@ -7,8 +7,12 @@
 
 #include "ngcore_api.hpp"  // for NGCORE_API
 
+
 namespace ngcore
 {
+
+  NGCORE_API std::string GetBackTrace();
+
   // Exception for code that shouldn't be executed
   class NGCORE_API UnreachableCodeException : public std::exception
   {
@@ -57,6 +61,7 @@ namespace ngcore
         std::stringstream str;
         str << where << ": index " << ind << " out of range [" << imin << "," << imax << ")\n";
         Append (str.str());
+        Append (GetBackTrace());
       }
 
     template<typename T>
