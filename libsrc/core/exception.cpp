@@ -13,6 +13,7 @@
 #include <array>
 #include <memory>
 #include <cxxabi.h>
+#include <signal.h>
 
 namespace ngcore
 {
@@ -39,6 +40,8 @@ namespace ngcore
     // then use `add42line` command line tool to map function address + offset to line in source code
     static std::string TranslateBacktrace( std::string s, std::string libname )
     {
+      // example line
+      // 1   libngcore.dylib                     0x000000010ddb298c _ZL21ngcore_signal_handleri + 316
       constexpr char reset_shell[] = "\033[0m";
       constexpr char green[] = "\033[32m";
       constexpr char yellow[] = "\033[33m";
@@ -54,14 +57,8 @@ namespace ngcore
 
       if(!funcname.empty() && !libname.empty())
       {
-        std::array<char, 10240> buffer;
-        int status;
-        size_t size = buffer.size();
-        abi::__cxa_demangle(funcname.c_str(), buffer.data(), &size, &status);
-        out << "in " << yellow << buffer.data() << reset_shell;
-
         std::string nm_command = "nm " + libname + " | grep \"" + funcname + "$\" | cut -f 1 -d ' '";
-        std::output;
+        std::string output;
         auto exit_code = exec(nm_command, output);
         auto fptr = std::strtoul(output.c_str(), 0, 16);
         if(fptr == 0)
@@ -138,6 +135,7 @@ namespace ngcore
 
   std::string GetBackTrace()
   {
+    std::cerr << "Collecting backtrace..." << std::endl;
     std::stringstream result;
     void *bt[1024];
     int bt_size;
@@ -158,6 +156,34 @@ namespace ngcore
   }
 
 } // namespace ngcore
+
+static void ngcore_signal_handler(int sig)
+{
+  switch(sig)
+    {
+      case SIGABRT:
+          std::cerr << "Caught SIGABRT: usually caused by abort() or assert()" << std::endl;
+          break;
+      case SIGILL:
+          std::cerr << "Caught SIGILL: illegal instruction" << std::endl;
+          break;
+      case SIGSEGV:
+          std::cerr << "Caught SIGSEGV: segmentation fault" << std::endl;
+          break;
+    }
+
+  std::cerr << ngcore::GetBackTrace() << std::endl;
+  exit(1);
+}
+
+// register signal handler when library is loaded
+static bool dummy = []()
+{
+    signal(SIGABRT, ngcore_signal_handler);
+    signal(SIGILL, ngcore_signal_handler);
+    signal(SIGSEGV, ngcore_signal_handler);
+    return true;
+}();
 
 #else // __GNUC__
 
