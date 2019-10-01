@@ -599,7 +599,8 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
   int np = mesh.GetNP();
   int ne = mesh.GetNE();
 
-  TABLE<ElementIndex,PointIndex::BASE> elementsonnode(np); 
+  auto elementsonnode = mesh.CreatePoint2ElementTable();
+
   NgArray<ElementIndex> hasbothpoints;
 
   NgBitArray origpoint(np+1), boundp(np+1);  // big enough for 0 and 1-based
@@ -644,10 +645,6 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
       bad1 = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
       (*testout) << "Total badness = " << bad1 << endl;
     }
-
-  for (ElementIndex ei : mesh.VolumeElements().Range())
-    for (PointIndex pi : mesh[ei].PNums())
-      elementsonnode.Add (pi, ei);
 
   mesh.MarkIllegalElements();
   if (goal == OPT_QUALITY || goal == OPT_LEGAL)
