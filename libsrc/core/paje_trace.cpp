@@ -98,7 +98,7 @@ namespace ngcore
           // return time in milliseconds as double
         // return std::chrono::duration<double>(t-start_time).count()*1000.0;
         // return std::chrono::duration<double>(t-start_time).count() / 2.7e3;
-        return 1000.0*static_cast<double>(t-start_time) / ticks_per_second;
+        return 1000.0*static_cast<double>(t-start_time) * seconds_per_tick;
       }
 
       enum PType
@@ -629,7 +629,7 @@ namespace ngcore
 
       std::sort (events.begin(), events.end());
 
-      root.time = 1000.0*static_cast<double>(stop_time-start_time)/ticks_per_second;
+      root.time = 1000.0*static_cast<double>(stop_time-start_time) * seconds_per_tick;
 
       for(auto & event : events)
       {
@@ -658,7 +658,7 @@ namespace ngcore
                 std::cout << "node stack empty!" << std::endl;
                 break;
               }
-              double time = 1000.0*static_cast<double>(event.time-current->start_time)/ticks_per_second;
+              double time = 1000.0*static_cast<double>(event.time-current->start_time) * seconds_per_tick;
               current->time += time;
               current = node_stack.back();
               current->time -= time;

@@ -22,7 +22,7 @@ namespace ngcore
         TimerVal() = default;
 
         double tottime = 0.0;
-        double starttime = 0.0;
+        TTimePoint starttime=0;
         double flops = 0.0;
         double loads = 0.0;
         double stores = 0.0;
@@ -61,13 +61,13 @@ namespace ngcore
     /// start timer of index nr
     static void StartTimer (int nr)
     {
-      timers[nr].starttime = WallTime(); timers[nr].count++;
+      timers[nr].starttime = GetTimeCounter(); timers[nr].count++;
     }
 
     /// stop timer of index nr
     static void StopTimer (int nr)
     {
-      timers[nr].tottime += WallTime()-timers[nr].starttime;
+      timers[nr].tottime += (GetTimeCounter()-timers[nr].starttime)*seconds_per_tick;
     }
 
     static void StartThreadTimer (size_t nr, size_t tid)
