@@ -1,14 +1,17 @@
 #include <mystdlib.h>
 #include "meshing.hpp"
+#ifdef OPENGL
 #include <visual.hpp>
+#endif // OPENGL
 
 namespace netgen
 {
-  extern DLL_HEADER void Render(bool blocking = false);
   static void glrender (int wait);
+#ifdef OPENGL
+  extern DLL_HEADER void Render(bool blocking = false);
   DLL_HEADER extern VisualSceneSurfaceMeshing vssurfacemeshing;
   VisualSceneSurfaceMeshing vssurfacemeshing;
-
+#endif // OPENGL
 
   // global variable for visualization
 //   static NgArray<Point3d> locpoints;
@@ -247,19 +250,23 @@ namespace netgen
     // double h;
 
     auto locpointsptr = make_shared<NgArray<Point<3>>>();
-    vssurfacemeshing.locpointsptr = locpointsptr;
     auto& locpoints = *locpointsptr;
     NgArray<int> legalpoints;
     auto plainpointsptr = make_shared<NgArray<Point<2>>>();
     auto& plainpoints = *plainpointsptr;
-    vssurfacemeshing.plainpointsptr = plainpointsptr;
     NgArray<int> plainzones;
     auto loclinesptr = make_shared<NgArray<INDEX_2>>();
     auto &loclines = *loclinesptr;
-    vssurfacemeshing.loclinesptr = loclinesptr;
     int cntelem = 0, trials = 0, nfaces = 0;
     int oldnl = 0;
+
+#ifdef OPENGL
     vssurfacemeshing.oldnl = oldnl;
+    vssurfacemeshing.loclinesptr = loclinesptr;
+    vssurfacemeshing.locpointsptr = locpointsptr;
+    vssurfacemeshing.plainpointsptr = plainpointsptr;
+#endif // OPENGL
+
     int qualclass;
 
 
@@ -525,7 +532,10 @@ namespace netgen
 	  {
 	    oldnp = locpoints.Size();
 	    oldnl = loclines.Size();
+
+#ifdef OPENGL
             vssurfacemeshing.oldnl = oldnl;
+#endif // OPENGL
 	  
 	    if (debugflag)
 	      (*testout) << "define new transformation" << endl;
@@ -1467,7 +1477,11 @@ namespace netgen
 		  (*testout) << adfront.GetGlobalIndex (pindex.Get(i)) << endl;
 
 		(*testout) << "old number of lines = " << oldnl << endl;
+
+#ifdef OPENGL
                 vssurfacemeshing.oldnl = oldnl;
+#endif // OPENGL
+
 		for (int i = 1; i <= loclines.Size(); i++)
 		  {
 		    (*testout) << "line ";
