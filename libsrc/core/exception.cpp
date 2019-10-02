@@ -108,7 +108,7 @@ namespace ngcore
         int status;
         size_t size = buffer.size();
         abi::__cxa_demangle(funcname.c_str(), buffer.data(), &size, &status);
-        out << "in " << yellow << buffer.data() << reset_shell;
+        out << "in " << yellow << buffer.data() << reset_shell << '\n';
 
         std::string nm_command = "nm " + libname + " | grep " + funcname + " | cut -f 1 -d ' '";
         std::string output;
@@ -117,10 +117,18 @@ namespace ngcore
 
         std::stringstream offset_s;
         offset_s << "0x" << std::hex << fptr+offset - 5;
-        std::string addr2line_command = std::string("addr2line -e ") + libname + " " + offset_s.str();
+        std::string addr2line_command = std::string("addr2line -i -p -e ") + libname + " " + offset_s.str();
         exit_code = exec(addr2line_command, output);
         if(exit_code==0)
-          out << " at " << green << output << reset_shell;
+          {
+            std::stringstream soutput(output);
+            std::string s;
+            while(soutput)
+              {
+                if(getline(soutput, s))
+                    out << "\t   at " << green << s << reset_shell << '\n';
+              }
+          }
         else
           out << '\n';
       }
