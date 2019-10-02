@@ -39,7 +39,7 @@ namespace netgen
 
 
  
-  void MeshOptimize2d :: EdgeSwapping (Mesh & mesh, int usemetric)
+  void MeshOptimize2d :: EdgeSwapping (int usemetric)
   {
     static Timer timer("EdgeSwapping (2D)"); RegionTimer reg(timer);
     if (!faceindex)
@@ -51,7 +51,7 @@ namespace netgen
 
 	for (faceindex = 1; faceindex <= mesh.GetNFD(); faceindex++)
 	  {
-	    EdgeSwapping (mesh, usemetric);
+	    EdgeSwapping (usemetric);
 
 	    if (multithread.terminate)
 	      throw NgException ("Meshing stopped");
@@ -81,7 +81,7 @@ namespace netgen
     for (SurfaceElementIndex sei : seia)
       if (mesh[sei].GetNP() != 3)
 	{
-	  GenericImprove (mesh);
+	  GenericImprove();
 	  return;
 	}
       
@@ -317,14 +317,13 @@ namespace netgen
 		nv1.Normalize();
 		nv2.Normalize();
 	    
-		Vec<3> nvp3, nvp4;
-		SelectSurfaceOfPoint (mesh.Point(pi3), gi3);
-		GetNormalVector (surfnr, mesh.Point(pi3), gi3, nvp3);
+		// SelectSurfaceOfPoint (mesh.Point(pi3), gi3);
+		auto nvp3 = geo.GetNormal(surfnr, mesh.Point(pi3), gi3);
 
 		nvp3.Normalize();
 
-		SelectSurfaceOfPoint (mesh.Point(pi4), gi4);
-		GetNormalVector (surfnr, mesh.Point(pi4), gi4, nvp4);
+		// SelectSurfaceOfPoint (mesh.Point(pi4), gi4);
+		auto nvp4 = geo.GetNormal(surfnr, mesh.Point(pi4), gi4);
 	    
 		nvp4.Normalize();
 	      
@@ -426,16 +425,16 @@ namespace netgen
 
 
  
-  void MeshOptimize2d :: CombineImprove (Mesh & mesh)
+  void MeshOptimize2d :: CombineImprove()
   {
     if (!faceindex)
       {
-        SplitImprove(mesh);
+        SplitImprove();
 	PrintMessage (3, "Combine improve");
 
 	for (faceindex = 1; faceindex <= mesh.GetNFD(); faceindex++)
 	  {
-	    CombineImprove (mesh);
+	    CombineImprove();
 
 	    if (multithread.terminate)
 	      throw NgException ("Meshing stopped");
@@ -530,8 +529,8 @@ namespace netgen
 	    for (int k = 0; k < 3; k++)
 	      if (hel[k] == pi)
 		{
-		  SelectSurfaceOfPoint (mesh[pi], hel.GeomInfoPi(k+1));
-		  GetNormalVector (surfnr, mesh[pi], hel.GeomInfoPi(k+1), normals[pi]);
+		  // SelectSurfaceOfPoint (mesh[pi], hel.GeomInfoPi(k+1));
+		  normals[pi] = geo.GetNormal(surfnr, mesh[pi], hel.GeomInfoPi(k+1));
 		  break;
 		}
 	  }
@@ -624,9 +623,9 @@ namespace netgen
 	    for (int k = 0; k < 3; k++)
 	      if (hel[k] == pi1)
 		{
-		  SelectSurfaceOfPoint (mesh[pi1],
-					hel.GeomInfoPi(k+1));
-		  GetNormalVector (surfnr, mesh[pi1], hel.GeomInfoPi(k+1), nv);
+		  // SelectSurfaceOfPoint (mesh[pi1],
+                  //			hel.GeomInfoPi(k+1));
+		  nv = geo.GetNormal(surfnr, mesh[pi1], hel.GeomInfoPi(k+1));
 		  break;
 		}
 
@@ -794,7 +793,7 @@ namespace netgen
     mesh.SetNextTimeStamp();
   }
 
-  void MeshOptimize2d :: SplitImprove (Mesh & mesh)
+  void MeshOptimize2d :: SplitImprove()
   {
     if (!faceindex)
       {
@@ -803,7 +802,7 @@ namespace netgen
         mesh.CalcSurfacesOfNode(); // TODO: needed?
         for (faceindex = 1; faceindex <= mesh.GetNFD(); faceindex++)
           {
-            SplitImprove (mesh);
+            SplitImprove();
 
             if (multithread.terminate)
                 throw NgException ("Meshing stopped");
@@ -909,9 +908,9 @@ namespace netgen
         PointIndex pi5;
         PointGeomInfo gi5;
 
-        mesh.GetGeometry()->GetRefinement().PointBetween  (mesh[pi1], mesh[pi2], 0.5,
-                                                           faceindex,
-                                                           gi1, gi2, p5, gi5);
+        geo.PointBetween(mesh[pi1], mesh[pi2], 0.5,
+                         faceindex,
+                         gi1, gi2, p5, gi5);
 
         pi5 = mesh.AddPoint(p5);
 

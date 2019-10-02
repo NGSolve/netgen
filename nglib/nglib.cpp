@@ -536,7 +536,7 @@ namespace nglib
       Ng_Mesh * mesh,
       int levels)
    {
-      Refinement2d ref(*(SplineGeometry2d*)geom);
+      Refinement ref(*(SplineGeometry2d*)geom);
       HPRefinement (*(Mesh*)mesh, &ref, levels);
    }
 
@@ -547,7 +547,7 @@ namespace nglib
       Ng_Mesh * mesh,
       int levels, double parameter)
    {
-      Refinement2d ref(*(SplineGeometry2d*)geom);
+      Refinement ref(*(SplineGeometry2d*)geom);
       HPRefinement (*(Mesh*)mesh, &ref, levels, parameter);
    }
 
@@ -1090,7 +1090,7 @@ namespace nglib
    // ------------------ Begin - Second Order Mesh generation functions ----------------
    DLL_HEADER void Ng_Generate_SecondOrder(Ng_Mesh * mesh)
    {
-      Refinement ref;
+     Refinement ref(*((Mesh*) mesh)->GetGeometry());
       ref.MakeSecondOrder(*(Mesh*) mesh);
    }
 
@@ -1139,8 +1139,8 @@ namespace nglib
    // ------------------ Begin - Uniform Mesh Refinement functions ---------------------
    DLL_HEADER void Ng_Uniform_Refinement (Ng_Mesh * mesh)
    {
-      Refinement ref;
-      ref.Refine ( * (Mesh*) mesh );
+     Refinement ref(*((Mesh*)mesh)->GetGeometry());
+     ref.Refine ( * (Mesh*) mesh );
    }
 
 

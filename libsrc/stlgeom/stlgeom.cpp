@@ -66,7 +66,6 @@ STLGeometry :: ~STLGeometry()
 {
   // for (auto p : atlas) delete p;
   // delete edgedata;
-  delete ref;
 }
 
 void STLGeometry :: Save (string filename) const
@@ -101,18 +100,6 @@ int STLGeometry :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mp
   STLParameters stlpar = stlparam;
   return STLMeshingDummy (this, mesh, mparam, stlpar);
 }
-
-
-const Refinement & STLGeometry :: GetRefinement () const
-{
-  delete ref;
-  ref = new RefinementSTLGeometry(*this);
-  // ref -> Set2dOptimizer(new MeshOptimizeSTLSurface(*this)); ??? copied from CSG
-  return *ref;
-
-}
-
-
 
 void STLGeometry :: STLInfo(double* data)
 {

@@ -63,59 +63,5 @@ protected:
   double Area () const override;
 };
 
-
-
-///
-class MeshOptimizeSTLSurface : public MeshOptimize2d
-  {
-  ///
-    STLGeometry & geom;
-
-public:
-    ///
-    MeshOptimizeSTLSurface (STLGeometry & ageom); 
-   
-    ///
-    virtual void SelectSurfaceOfPoint (const Point<3> & p,
-				       const PointGeomInfo & gi);
-    ///
-    virtual void ProjectPoint (INDEX surfind, Point<3> & p) const;
-    ///
-    virtual void ProjectPoint2 (INDEX surfind, INDEX surfind2, Point<3> & p) const;
-    ///
-    virtual int CalcPointGeomInfo(PointGeomInfo& gi, const Point<3> & p3) const;
-    ///
-    virtual void GetNormalVector(INDEX surfind, const Point<3> & p, Vec<3> & n) const;
-};
-
-
-
-
-class RefinementSTLGeometry : public Refinement
-{
-  const STLGeometry & geom;
-
-public:
-  RefinementSTLGeometry (const STLGeometry & ageom);
-  virtual ~RefinementSTLGeometry ();
-  
-  virtual void PointBetween (const Point<3> & p1, const Point<3> & p2, double secpoint,
-			     int surfi, 
-			     const PointGeomInfo & gi1, 
-			     const PointGeomInfo & gi2,
-			     Point<3> & newp, PointGeomInfo & newgi) const override;
-
-  virtual void PointBetween (const Point<3> & p1, const Point<3> & p2, double secpoint,
-			     int surfi1, int surfi2, 
-			     const EdgePointGeomInfo & ap1, 
-			     const EdgePointGeomInfo & ap2,
-			     Point<3> & newp, EdgePointGeomInfo & newgi) const override;
-
-  virtual void ProjectToSurface (Point<3> & p, int surfi) const override;
-  virtual void ProjectToSurface (Point<3> & p, int surfi, PointGeomInfo & gi) const override;
-};
-
-
-
 #endif
 

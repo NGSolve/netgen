@@ -539,7 +539,7 @@ namespace netgen
       
 
   CurvedElements :: CurvedElements (const Mesh & amesh)
-    : mesh (amesh)
+    : mesh(amesh), geo(*mesh.GetGeometry())
   {
     order = 1;
     rational = 0;
@@ -838,8 +838,8 @@ namespace netgen
 		{
 		  Point<3> pm = Center (p1, p2);
 
-		  Vec<3> n1 = ref -> GetNormal (p1, surfnr[e], gi0[e]);
-		  Vec<3> n2 = ref -> GetNormal (p2, surfnr[e], gi1[e]);
+		  Vec<3> n1 = geo.GetNormal (surfnr[e], p1, gi0[e]);
+		  Vec<3> n2 = geo.GetNormal (surfnr[e], p2, gi1[e]);
 
 		  // p3 = pm + alpha1 n1 + alpha2 n2
 		
@@ -876,7 +876,7 @@ namespace netgen
 		      Vec<3> v05 = 0.25 * Vec<3> (p1) + 0.5*w* Vec<3>(p3) + 0.25 * Vec<3> (p2);
 		      v05 /= 1 + (w-1) * 0.5;
 		      Point<3> p05 (v05), pp05(v05);
-		      ref -> ProjectToSurface (pp05, surfnr[e], gi0[e]);
+		      geo.ProjectPointGI(surfnr[e], pp05, gi0[e]);
 		      double d = Dist (pp05, p05);
                     
 		      if (d < dold)
@@ -911,16 +911,16 @@ namespace netgen
 		  if (swap)
 		    {
 		      p = p1 + xi[j] * (p2-p1);
-		      ref -> PointBetween (p1, p2, xi[j], 
-					   surfnr[e], gi0[e], gi1[e],
-					   pp, ppgi);
+		      geo.PointBetween (p1, p2, xi[j], 
+                                        surfnr[e], gi0[e], gi1[e],
+                                        pp, ppgi);
 		    }
 		  else
 		    {
 		      p = p2 + xi[j] * (p1-p2);
-		      ref -> PointBetween (p2, p1, xi[j], 
-					   surfnr[e], gi1[e], gi0[e],
-					   pp, ppgi);
+		      geo.PointBetween (p2, p1, xi[j], 
+                                        surfnr[e], gi1[e], gi0[e],
+                                        pp, ppgi);
 		    }
 		
 		  Vec<3> dist = pp - p;
@@ -1053,10 +1053,10 @@ namespace netgen
 
 	  if (rational)
 	    {
-	      Vec<3> tau1 = ref -> GetTangent (p1, edge_surfnr2[edgenr], edge_surfnr1[edgenr], 
-					       edge_gi0[edgenr]);
-	      Vec<3> tau2 = ref -> GetTangent (p2, edge_surfnr2[edgenr], edge_surfnr1[edgenr], 
-					       edge_gi1[edgenr]);
+	      Vec<3> tau1 = geo.GetTangent(p1, edge_surfnr2[edgenr], edge_surfnr1[edgenr], 
+                                           edge_gi0[edgenr]);
+	      Vec<3> tau2 = geo.GetTangent(p2, edge_surfnr2[edgenr], edge_surfnr1[edgenr], 
+                                           edge_gi1[edgenr]);
 	      // p1 + alpha1 tau1 = p2 + alpha2 tau2;
 
 	      Mat<3,2> mat;
@@ -1082,8 +1082,8 @@ namespace netgen
 		  Vec<3> v05 = 0.25 * Vec<3> (p1) + 0.5*w* Vec<3>(p3) + 0.25 * Vec<3> (p2);
 		  v05 /= 1 + (w-1) * 0.5;
 		  Point<3> p05 (v05), pp05(v05);
-		  ref -> ProjectToEdge (pp05, edge_surfnr1[edgenr], edge_surfnr2[edgenr], 
-					edge_gi0[edgenr]);
+		  geo.ProjectPointEdge(edge_surfnr1[edgenr], edge_surfnr2[edgenr], pp05,
+                                       edge_gi0[edgenr]);
 		  double d = Dist (pp05, p05);
 
 		  if (d < dold)
@@ -1127,15 +1127,15 @@ namespace netgen
 		  if (swap)
 		    {
 		      p = p1 + xi[j] * (p2-p1);
-		      ref -> PointBetween (p1, p2, xi[j], 
-					   edge_surfnr2[edgenr], edge_surfnr1[edgenr], 
-					   edge_gi0[edgenr], edge_gi1[edgenr],
-					   pp, ppgi);
+		      geo.PointBetweenEdge(p1, p2, xi[j], 
+                                           edge_surfnr2[edgenr], edge_surfnr1[edgenr], 
+                                           edge_gi0[edgenr], edge_gi1[edgenr],
+                                           pp, ppgi);
 		    }
 		  else
 		    {
 		      p = p2 + xi[j] * (p1-p2);
-		      ref -> PointBetween (p2, p1, xi[j], 
+		      geo.PointBetweenEdge(p2, p1, xi[j], 
 					   edge_surfnr2[edgenr], edge_surfnr1[edgenr], 
 					   edge_gi1[edgenr], edge_gi0[edgenr],
 					   pp, ppgi);
@@ -1302,10 +1302,10 @@ namespace netgen
                       SurfaceElementIndex sei = top.GetFace2SurfaceElement (f+1)-1;
 		      if (sei != SurfaceElementIndex(-1)) {
 			PointGeomInfo gi = mesh[sei].GeomInfoPi(1);
-			ref -> ProjectToSurface (pp, surfnr[facenr], gi);
+			geo.ProjectPointGI(surfnr[facenr], pp, gi);
 		      }
 		      else
-			{ ref -> ProjectToSurface (pp, surfnr[facenr]); }
+			{ geo.ProjectPoint(surfnr[facenr], pp); }
 		      Vec<3> dist = pp-xa[jj];
 		
 		      CalcTrigShape (order1, lami[fnums[1]]-lami[fnums[0]],

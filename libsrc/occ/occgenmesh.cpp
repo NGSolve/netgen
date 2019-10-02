@@ -941,41 +941,41 @@ namespace netgen
             if (multithread.terminate) return;
 
             {
-              MeshOptimize2dOCCSurfaces meshopt(geom);
+              MeshOptimize2d meshopt(mesh);
               meshopt.SetFaceIndex (k);
               meshopt.SetImproveEdges (0);
               meshopt.SetMetricWeight (mparam.elsizeweight);
               meshopt.SetWriteStatus (0);
-              meshopt.EdgeSwapping (mesh, (i > mparam.optsteps2d/2));
+              meshopt.EdgeSwapping (i > mparam.optsteps2d/2);
             }
 
             if (multithread.terminate) return;
             {
-              MeshOptimize2dOCCSurfaces meshopt(geom);
+              MeshOptimize2d meshopt(mesh);
               meshopt.SetFaceIndex (k);
               meshopt.SetImproveEdges (0);
               meshopt.SetMetricWeight (mparam.elsizeweight);
               meshopt.SetWriteStatus (0);
-              meshopt.ImproveMesh (mesh, mparam);
+              meshopt.ImproveMesh (mparam);
             }
 
             {
-              MeshOptimize2dOCCSurfaces meshopt(geom);
+              MeshOptimize2d meshopt(mesh);
               meshopt.SetFaceIndex (k);
               meshopt.SetImproveEdges (0);
               meshopt.SetMetricWeight (mparam.elsizeweight);
               meshopt.SetWriteStatus (0);
-              meshopt.CombineImprove (mesh);
+              meshopt.CombineImprove ();
             }
 
             if (multithread.terminate) return;
             {
-              MeshOptimize2dOCCSurfaces meshopt(geom);
+              MeshOptimize2d meshopt(mesh);
               meshopt.SetFaceIndex (k);
               meshopt.SetImproveEdges (0);
               meshopt.SetMetricWeight (mparam.elsizeweight);
               meshopt.SetWriteStatus (0);
-              meshopt.ImproveMesh (mesh, mparam);
+              meshopt.ImproveMesh (mparam);
             }
           }
 

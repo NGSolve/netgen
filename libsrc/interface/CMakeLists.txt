@@ -7,7 +7,7 @@ add_library(interface ${NG_LIB_TYPE}
         wuchemnitz.cpp writegmsh2.cpp writeOpenFOAM15x.cpp 
         )
 
-target_link_libraries(interface mesh csg geom2d stl visual)
+target_link_libraries(interface mesh csg geom2d visual)
 
 if(NOT WIN32)
   install( TARGETS interface ${NG_INSTALL_DIR})

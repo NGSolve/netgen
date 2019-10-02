@@ -205,22 +205,20 @@ namespace netgen
 
   class Opti2SurfaceMinFunction : public MinFunction
   {
-    const Mesh & mesh;
     Opti2dLocalData & ld;
+    const NetgenGeometry& geo;
   public:
     Opti2SurfaceMinFunction (const Mesh & amesh,
 			     Opti2dLocalData & ald)
-      : mesh(amesh), ld(ald)
+      : ld(ald), geo(*amesh.GetGeometry())
     { } ;
 
 
     virtual double Func (const Vector & x) const
     {
-      Vec<3> n;
-      
       double badness = 0;
       
-      ld.meshthis -> GetNormalVector (ld.surfi, ld.sp1, ld.gi1, n);
+      auto n = geo.GetNormal(ld.surfi, ld.sp1, ld.gi1);
       Point<3> pp1 = ld.sp1 + x(0) * ld.t1 + x(1) * ld.t2;
       
       for (int j = 0; j < ld.locelements.Size(); j++)
@@ -355,13 +353,13 @@ namespace netgen
     // static int timer = NgProfiler::CreateTimer ("opti2surface - funcgrad");
     // NgProfiler::RegionTimer reg (timer);
 
-    Vec<3> n, vgrad;
+    Vec<3> vgrad;
     Point<3> pp1;
 
     vgrad = 0;
     double badness = 0;
 
-    ld.meshthis -> GetNormalVector (ld.surfi, ld.sp1, ld.gi1, n);
+    auto n = geo.GetNormal(ld.surfi, ld.sp1, ld.gi1);
     pp1 = ld.sp1 + x(0) * ld.t1 + x(1) * ld.t2;
 
     //  meshthis -> ProjectPoint (surfi, pp1);
@@ -410,13 +408,13 @@ namespace netgen
     // static int timer = NgProfiler::CreateTimer ("opti2surface - funcderiv");
     // NgProfiler::RegionTimer reg (timer);
 
-    Vec<3> n, vgrad;
+    Vec<3> vgrad;
     Point<3> pp1;
 
     vgrad = 0;
     double badness = 0;
 
-    ld.meshthis -> GetNormalVector (ld.surfi, ld.sp1, ld.gi1, n);
+    auto n = geo.GetNormal(ld.surfi, ld.sp1, ld.gi1);
     pp1 = ld.sp1 + x(0) * ld.t1 + x(1) * ld.t2;
 
     for (int j = 0; j < ld.locelements.Size(); j++)
@@ -474,11 +472,12 @@ namespace netgen
   {
     const Mesh & mesh;
     Opti2dLocalData & ld;
+    const NetgenGeometry& geo;
 
   public:
     Opti2EdgeMinFunction (const Mesh & amesh,
 			  Opti2dLocalData & ald)
-      : mesh(amesh), ld(ald) { } ;
+      : mesh(amesh), ld(ald), geo(*amesh.GetGeometry()) { } ;
 
     virtual double FuncGrad (const Vector & x, Vector & g) const;
     virtual double Func (const Vector & x) const;
@@ -493,7 +492,7 @@ namespace netgen
   double Opti2EdgeMinFunction :: FuncGrad (const Vector & x, Vector & grad) const
   {
     int j, rot;
-    Vec<3> n1, n2, v1, v2, e1, e2, vgrad;
+    Vec<3> v1, v2, e1, e2, vgrad;
     Point<3> pp1;
     Vec<2> g1;
     double badness, hbadness;
@@ -502,7 +501,7 @@ namespace netgen
     badness = 0;
 
     pp1 = ld.sp1 + x(0) * ld.t1;
-    ld.meshthis -> ProjectPoint2 (ld.surfi, ld.surfi2, pp1);
+    geo.ProjectPointEdge(ld.surfi, ld.surfi2, pp1);
 
     for (j = 0; j < ld.locelements.Size(); j++)
       {
@@ -526,8 +525,8 @@ namespace netgen
         vgrad += g1(0) * e1 + g1(1) * e2;
       }
 
-    ld.meshthis -> GetNormalVector (ld.surfi, pp1, n1);
-    ld.meshthis -> GetNormalVector (ld.surfi2, pp1, n2);
+    auto n1 = geo.GetNormal(ld.surfi, pp1);
+    auto n2 = geo.GetNormal(ld.surfi2, pp1);
 
     v1 = Cross (n1, n2);
     v1.Normalize();
@@ -544,11 +543,12 @@ namespace netgen
   {
     const Mesh & mesh;
     Opti2dLocalData & ld;
+    const NetgenGeometry& geo;
 
   public:
     Opti2SurfaceMinFunctionJacobian (const Mesh & amesh,
 				     Opti2dLocalData & ald)
-      : mesh(amesh), ld(ald)
+      : mesh(amesh), ld(ald), geo(*amesh.GetGeometry())
     { } ;
     virtual double FuncGrad (const Vector & x, Vector & g) const;
     virtual double FuncDeriv (const Vector & x, const Vector & dir, double & deriv) const;
@@ -569,7 +569,7 @@ namespace netgen
     // from 2d:
 
     int lpi, gpi;
-    Vec<3> n, vgrad;
+    Vec<3> vgrad;
     Point<3> pp1;
     Vec<2> g1, vdir;
     double badness, hbad, hderiv;
@@ -577,7 +577,7 @@ namespace netgen
     vgrad = 0;
     badness = 0;
 
-    ld.meshthis -> GetNormalVector (ld.surfi, ld.sp1, ld.gi1, n);
+    auto n = geo.GetNormal(ld.surfi, ld.sp1, ld.gi1);
 
     pp1 = ld.sp1 + x(0) * ld.t1 + x(1) * ld.t2;
 
@@ -641,15 +641,13 @@ namespace netgen
     // from 2d:
 
     int j, k, lpi, gpi;
-    Vec<3> n, vgrad;
+    Vec<3> vgrad;
     Point<3> pp1;
     Vec<2> g1, vdir;
     double badness, hbad, hderiv;
 
     vgrad = 0;
     badness = 0;
-
-    ld.meshthis -> GetNormalVector (ld.surfi, ld.sp1, ld.gi1, n);
 
     // pp1 = sp1;
     //    pp1.Add2 (x.Get(1), t1, x.Get(2), t2);
@@ -690,30 +688,7 @@ namespace netgen
     return badness;
   }
 
-
-
-
-
-
-
-  MeshOptimize2d dummy;
-
-  MeshOptimize2d :: MeshOptimize2d ()
-  {
-    SetFaceIndex (0);
-    SetImproveEdges (0);
-    SetMetricWeight (0);
-    SetWriteStatus (1);
-  }
-
-
-  void MeshOptimize2d :: SelectSurfaceOfPoint (const Point<3> & p,
-					       const PointGeomInfo & gi)
-  {
-    ;
-  }
-
-  void MeshOptimize2d :: ImproveMesh (Mesh & mesh, const MeshingParameters & mp)
+  void MeshOptimize2d :: ImproveMesh (const MeshingParameters & mp)
   {
     if (!faceindex)
       {
@@ -721,7 +696,7 @@ namespace netgen
 
 	for (faceindex = 1; faceindex <= mesh.GetNFD(); faceindex++)
 	  {
-	    ImproveMesh (mesh, mp);
+	    ImproveMesh (mp);
 	    if (multithread.terminate)
 	      throw NgException ("Meshing stopped");
 	  }
@@ -959,7 +934,7 @@ namespace netgen
 		}
 
 	    ld.gi1 = hel.GeomInfoPi(hpi);
-	    SelectSurfaceOfPoint (ld.sp1, ld.gi1);
+	    // SelectSurfaceOfPoint (ld.sp1, ld.gi1);
 	  
 	    ld.locelements.SetSize(0);
 	    ld.locrots.SetSize (0);
@@ -992,7 +967,7 @@ namespace netgen
 	      }
 
 
-	  GetNormalVector (ld.surfi, ld.sp1, ld.gi1, ld.normal);
+          ld.normal = geo.GetNormal(ld.surfi, ld.sp1, ld.gi1);
 	  ld.t1 = ld.normal.GetNormal ();
 	  ld.t2 = Cross (ld.normal, ld.t1);
 	  
@@ -1070,7 +1045,7 @@ namespace netgen
 
 	      PointGeomInfo ngi;
 	      ngi = ld.gi1;
-	      moveisok = ProjectPointGI (ld.surfi, mesh[pi], ngi);
+	      moveisok = geo.ProjectPointGI(ld.surfi, mesh[pi], ngi);
 	      // point lies on same chart in stlsurface
 	    
 	      if (moveisok)
@@ -1093,15 +1068,5 @@ namespace netgen
 
     CheckMeshApproximation (mesh);
     mesh.SetNextTimeStamp();
-  }
-
-  void MeshOptimize2d :: GetNormalVector(INDEX /* surfind */, const Point<3> & p, Vec<3> & nv) const
-  {
-    nv = Vec<3> (0, 0, 1);
-  }
-
-  void MeshOptimize2d :: GetNormalVector(INDEX surfind, const Point<3> & p, PointGeomInfo & gi, Vec<3> & n) const
-  {
-    GetNormalVector (surfind, p, n);
   }
 }

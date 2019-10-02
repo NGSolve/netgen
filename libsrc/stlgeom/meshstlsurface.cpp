@@ -299,15 +299,15 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 		      geom.SetMarkedTrig(seg.geominfo[1].trignum,1);
 		    }
 
-		  MeshOptimizeSTLSurface optmesh(geom);
+		  MeshOptimize2d optmesh(mesh);
 		  optmesh.SetFaceIndex (0);
 		  optmesh.SetImproveEdges (0);
 		  optmesh.SetMetricWeight (0);
 		  
 		  mesh.CalcSurfacesOfNode();
-		  optmesh.EdgeSwapping (mesh, 0);
+		  optmesh.EdgeSwapping(0);
 		  mesh.CalcSurfacesOfNode();
-		  optmesh.ImproveMesh (mesh, mparam);
+		  optmesh.ImproveMesh(mparam);
 		}
 
 	      mesh.Compress();
@@ -827,7 +827,7 @@ void STLSurfaceOptimization (STLGeometry & geom,
 {
   PrintFnStart("optimize STL Surface");
 
-  MeshOptimizeSTLSurface optmesh(geom);
+  MeshOptimize2d optmesh(mesh);
 
   optmesh.SetFaceIndex (0);
   optmesh.SetImproveEdges (0);
@@ -848,22 +848,22 @@ void STLSurfaceOptimization (STLGeometry & geom,
 	  {
 	  case 's': 
 	    {
-	      optmesh.EdgeSwapping (mesh, 0);
+	      optmesh.EdgeSwapping(0);
 	      break;
 	    }
 	  case 'S': 
 	    {
-	      optmesh.EdgeSwapping (mesh, 1);
+	      optmesh.EdgeSwapping(1);
 	      break;
 	    }
 	  case 'm': 
 	    {
-	      optmesh.ImproveMesh(mesh, mparam);
+	      optmesh.ImproveMesh(mparam);
 	      break;
 	    }
 	  case 'c': 
 	    {
-	      optmesh.CombineImprove (mesh);
+	      optmesh.CombineImprove();
 	      break;
 	    }
 	  }
@@ -881,7 +881,7 @@ void STLSurfaceOptimization (STLGeometry & geom,
                       }
                   }
               }
-            optmesh.SplitImprove(mesh);
+            optmesh.SplitImprove();
           }
 	//(*testout) << "optimize, after, step = " << meshparam.optimize2d[j-1] << mesh.Point (3679) << endl;
       }
@@ -1067,18 +1067,6 @@ double MeshingSTLSurface :: Area () const
 {
   return geom.Area();
 }
-
-
-
-
-
-
-MeshOptimizeSTLSurface :: MeshOptimizeSTLSurface (STLGeometry & ageom)
-  : MeshOptimize2d(), geom(ageom)
-{
-  ;
-}
-
 
 void MeshOptimizeSTLSurface :: SelectSurfaceOfPoint (const Point<3> & p,
 						     const PointGeomInfo & gi)

@@ -13,7 +13,6 @@
 
 // #include "../gprim/spline.hpp"
 // #include "../gprim/splinegeometry.hpp"
-#include "geom2dmesh.hpp"
 
 namespace netgen
 {
@@ -151,11 +150,34 @@ namespace netgen
 
     void TestComment ( ifstream & infile ) ;
 
-    void DoArchive(Archive& ar)
+    void DoArchive(Archive& ar) override
     {
       SplineGeometry<2>::DoArchive(ar);
       ar & materials & maxh & quadmeshing & tensormeshing & layer & bcnames & elto0;
     }
+
+    
+    void PointBetween(const Point<3> & p1, const Point<3> & p2, double secpoint,
+                      int surfi, 
+                      const PointGeomInfo & gi1, 
+                      const PointGeomInfo & gi2,
+                      Point<3> & newp, PointGeomInfo & newgi) const override
+    {
+      newp = p1+secpoint*(p2-p1);
+      newgi.trignum = 1;
+    }
+
+    void PointBetweenEdge(const Point<3> & p1, const Point<3> & p2, double secpoint,
+                          int surfi1, int surfi2, 
+                          const EdgePointGeomInfo & ap1, 
+                          const EdgePointGeomInfo & ap2,
+                          Point<3> & newp, EdgePointGeomInfo & newgi) const override;
+
+
+    Vec<3> GetTangent (const Point<3> & p, int surfi1, int surfi2,
+                       const EdgePointGeomInfo & ap1) const override;
+    Vec<3> GetNormal(int surfi1, const Point<3> & p,
+                     const PointGeomInfo & gi) const override;
 
     const SplineSegExt & GetSpline (const int i) const 
     { 
@@ -168,7 +190,7 @@ namespace netgen
     }
 
     
-    DLL_HEADER virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
+    DLL_HEADER int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam) override;
     
     void PartitionBoundary (MeshingParameters & mp, double h, Mesh & mesh2d);
 
@@ -205,9 +227,6 @@ namespace netgen
     int AddBCName (string name);
 
     string * BCNamePtr ( const int bcnr );
-
-    
-    DLL_HEADER virtual Refinement & GetRefinement () const; 
   };
 }
 

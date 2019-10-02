@@ -31,9 +31,57 @@ namespace netgen
     virtual void FindEdges(Mesh& mesh, const MeshingParameters& mparam) {}
     virtual void MeshSurface(Mesh& mesh, const MeshingParameters& mparam) {}
     virtual void OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam);
-    virtual unique_ptr<MeshOptimize2d> GetMeshOptimizer() const
-    { return make_unique<MeshOptimize2d>(); }
+
     virtual void FinalizeMesh(Mesh& mesh) const {}
+
+    virtual void ProjectPoint (int surfind, Point<3> & p) const
+    { }
+    virtual void ProjectPointEdge (int surfind, int surfind2, Point<3> & p) const { }
+  virtual void ProjectPointEdge (int surfind, int surfind2, Point<3> & p, EdgePointGeomInfo& gi) const
+  { ProjectPointEdge(surfind, surfind2, p); }
+
+    virtual bool CalcPointGeomInfo(int surfind, PointGeomInfo& gi, const Point<3> & p3) const {return false;}
+    virtual bool ProjectPointGI (int surfind, Point<3> & p, PointGeomInfo & gi) const
+    {
+      ProjectPoint(surfind, p);
+      return CalcPointGeomInfo(surfind, gi, p);
+    }
+    virtual Vec<3> GetNormal(int surfind, const Point<3> & p) const
+    { return {0.,0.,1.}; }
+    virtual Vec<3> GetNormal(int surfind, const Point<3> & p, const PointGeomInfo & gi) const
+    { return GetNormal(surfind, p); }
+    [[deprecated]]
+    void GetNormal(int surfind, const Point<3> & p, Vec<3> & n) const
+    {
+      n = GetNormal(surfind, p);
+    }
+
+    virtual void PointBetween (const Point<3> & p1,
+                               const Point<3> & p2, double secpoint,
+                               int surfi,
+                               const PointGeomInfo & gi1,
+                               const PointGeomInfo & gi2,
+                               Point<3> & newp,
+                               PointGeomInfo & newgi) const
+    {
+      newp = p1 + secpoint * (p2-p1);
+    }
+
+    virtual void PointBetweenEdge(const Point<3> & p1,
+                                  const Point<3> & p2, double secpoint,
+                                  int surfi1, int surfi2,
+                                  const EdgePointGeomInfo & ap1,
+                                  const EdgePointGeomInfo & ap2,
+                                  Point<3> & newp,
+                                  EdgePointGeomInfo & newgi) const
+    {
+      newp = p1+secpoint*(p2-p1);
+    }
+
+    virtual Vec<3> GetTangent(const Point<3> & p, int surfi1,
+                              int surfi2,
+                              const EdgePointGeomInfo & egi) const
+    { throw Exception("Call GetTangent of " + Demangle(typeid(*this).name())); }
     virtual void Save (string filename) const;
     virtual void SaveToMeshFile (ostream & /* ost */) const { ; }
   };

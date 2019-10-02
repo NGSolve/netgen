@@ -15,14 +15,14 @@ namespace netgen
 	if(surfaceindex[i] >= 0)
 	  {
 	    *dest[i] = *from[i];
-	    ProjectPoint(surfaceindex[i],*dest[i]);
+	    geo.ProjectPoint(surfaceindex[i],*dest[i]);
 	  }
       }
       
 
   }
 
-  void MeshOptimize2d :: ImproveVolumeMesh (Mesh & mesh)
+  void MeshOptimize2d :: ImproveVolumeMesh ()
   {
     
     if (!faceindex)
@@ -31,7 +31,7 @@ namespace netgen
 
 	for (faceindex = 1; faceindex <= mesh.GetNFD(); faceindex++)
 	  {
-	    ImproveVolumeMesh (mesh);
+	    ImproveVolumeMesh ();
 	    if (multithread.terminate)
 	      throw NgException ("Meshing stopped");
 	  }
@@ -229,7 +229,7 @@ namespace netgen
 		//cout << "origp " << origp << " newp " << mesh[pi];
 	    
 		ngi = gi1;
-		moveisok = (ProjectPointGI (surfi, mesh[pi], ngi) != 0);
+		moveisok = (geo.ProjectPointGI(surfi, mesh[pi], ngi) != 0);
 
 		//cout << " projected " << mesh[pi] << endl;
 

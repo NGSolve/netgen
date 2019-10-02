@@ -6,27 +6,29 @@
 ///
 class MeshOptimize2d
 {
-  int faceindex;
-  int improveedges;
-  double metricweight;
-  int writestatus;
-
+  int faceindex = 0;
+  int improveedges = 0;
+  double metricweight = 0.;
+  int writestatus = 1;
+  Mesh& mesh;
+  const NetgenGeometry& geo;
 public:
   ///
-  MeshOptimize2d ();
+  MeshOptimize2d(Mesh& amesh) : mesh(amesh), geo(*mesh.GetGeometry())
+  {}
   virtual ~MeshOptimize2d() { ; }
   ///
-  void ImproveMesh (Mesh & mesh2d, const MeshingParameters & mp);
-  void ImproveMeshJacobian (Mesh & mesh2d, const MeshingParameters & mp);
-  void ImproveVolumeMesh (Mesh & mesh);
+  void ImproveMesh (const MeshingParameters & mp);
+  void ImproveMeshJacobian (const MeshingParameters & mp);
+  void ImproveVolumeMesh ();
   void ProjectBoundaryPoints(NgArray<int> & surfaceindex, 
 			     const NgArray<Point<3>* > & from, NgArray<Point<3>* > & dest);
 
-  void EdgeSwapping (Mesh & mesh, int usemetric);
-  void CombineImprove (Mesh & mesh);
-  void SplitImprove (Mesh & mesh);
+  void EdgeSwapping (int usemetric);
+  void CombineImprove ();
+  void SplitImprove ();
 
-  void GenericImprove (Mesh & mesh);
+  void GenericImprove ();
 
 
   void SetFaceIndex (int fi) { faceindex = fi; }
@@ -35,31 +37,9 @@ public:
   void SetWriteStatus (int ws) { writestatus = ws; }
 
 
-
-  ///
-  virtual void SelectSurfaceOfPoint (const Point<3> & p,
-				     const PointGeomInfo & gi);
-  ///
-  virtual void ProjectPoint (INDEX /* surfind */, Point<3> & /* p */) const { };
-
-  /// project point, use gi as initial value, and compute new gi
-  virtual int ProjectPointGI (INDEX surfind, Point<3> & p, PointGeomInfo & gi) const 
-  { ProjectPoint (surfind, p); return CalcPointGeomInfo (surfind, gi, p); }
-
-  ///
-  virtual void ProjectPoint2 (INDEX /* surfind */, INDEX /* surfind2 */, Point<3> & /* p */) const { };
-
   /// liefert zu einem 3d-Punkt die geominfo (Dreieck) und liefert 1, wenn erfolgreich, 
   /// 0, wenn nicht (Punkt ausserhalb von chart)
-  virtual int CalcPointGeomInfo(PointGeomInfo& gi, const Point<3> & /*p3*/) const
-    { gi.trignum = 1; return 1;};
-
-  virtual int CalcPointGeomInfo(int /* surfind */, PointGeomInfo& gi, const Point<3> & p3) const
-    { return CalcPointGeomInfo (gi, p3); }
-
   ///
-  virtual void GetNormalVector(INDEX surfind, const Point<3>  & p, PointGeomInfo & gi, Vec<3> & n) const;
-  virtual void GetNormalVector(INDEX surfind, const Point<3> & p, Vec<3> & n) const;
 
   void CheckMeshApproximation (Mesh & mesh);
 

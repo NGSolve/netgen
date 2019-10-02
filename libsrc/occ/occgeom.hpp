@@ -273,15 +273,31 @@ namespace netgen
                    const MeshingParameters& mparam) override;
     void MeshSurface(Mesh& mesh,
                      const MeshingParameters& mparam) override;
-    unique_ptr<MeshOptimize2d> GetMeshOptimizer() const override
-    { return make_unique<MeshOptimize2dOCCSurfaces>(*this); }
  
     void FinalizeMesh(Mesh& mesh) const override;
      
     DLL_HEADER void Save (string filename) const override;
      
     void DoArchive(Archive& ar) override;
-     
+
+    void ProjectPoint(int surfind, Point<3> & p) const override;
+    void ProjectPointEdge (int surfind, int surfind2, Point<3> & p) const override;
+    bool ProjectPointGI (int surfind, Point<3> & p, PointGeomInfo & gi) const override;
+    Vec<3> GetNormal(int surfind, const Point<3> & p) const override;
+    Vec<3> GetNormal(int surfind, const Point<3> & p, const PointGeomInfo & gi) const override;
+    bool CalcPointGeomInfo(int surfind, PointGeomInfo& gi, const Point<3> & p3) const override;
+
+    void PointBetweenEdge(const Point<3> & p1, const Point<3> & p2, double secpoint,
+                          int surfi1, int surfi2, 
+                          const EdgePointGeomInfo & ap1, 
+                          const EdgePointGeomInfo & ap2,
+                          Point<3> & newp, EdgePointGeomInfo & newgi) const override;
+    void PointBetween(const Point<3> & p1, const Point<3> & p2, double secpoint,
+                      int surfi, 
+                      const PointGeomInfo & gi1, 
+                      const PointGeomInfo & gi2,
+                      Point<3> & newp, PointGeomInfo & newgi) const override;
+
     DLL_HEADER void BuildFMap();
      
     Box<3> GetBoundingBox() const
@@ -300,9 +316,6 @@ namespace netgen
 
     Point<3> Center() const
     { return center; }
-
-    void Project (int surfi, Point<3> & p) const;
-    bool FastProject (int surfi, Point<3> & ap, double& u, double& v) const;
 
     OCCSurface GetSurface (int surfi)
     {
@@ -429,8 +442,8 @@ namespace netgen
     //      void WriteOCC_STL(char * filename);
 
     // DLL_HEADER virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
-
-    DLL_HEADER const Refinement & GetRefinement () const override;
+  private:
+    bool FastProject (int surfi, Point<3> & ap, double& u, double& v) const;
   };
    
 

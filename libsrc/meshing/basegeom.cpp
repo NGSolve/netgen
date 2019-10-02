@@ -17,7 +17,7 @@ namespace netgen
 
     static Timer timer_opt2d("Optimization 2D");
     RegionTimer reg(timer_opt2d);
-    auto meshopt = GetMeshOptimizer();
+    auto meshopt = MeshOptimize2d(mesh);
     for(auto i : Range(mparam.optsteps2d))
       {
         PrintMessage(2, "Optimization step ", i);
@@ -26,16 +26,16 @@ namespace netgen
             switch(optstep)
               {
               case 's':
-                meshopt->EdgeSwapping(mesh, 0);
+                meshopt.EdgeSwapping(0);
                 break;
               case 'S':
-                meshopt->EdgeSwapping(mesh, 1);
+                meshopt.EdgeSwapping(1);
                 break;
               case 'm': 
-                meshopt->ImproveMesh(mesh, mparam);
+                meshopt.ImproveMesh(mparam);
                 break;
               case 'c': 
-                meshopt->CombineImprove (mesh);
+                meshopt.CombineImprove();
                 break;
               }
           }
@@ -129,7 +129,7 @@ namespace netgen
 
   const Refinement & NetgenGeometry :: GetRefinement () const
   {
-    return *new Refinement;;
+    return *new Refinement(*this);
   }
 
 
