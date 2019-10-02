@@ -30,7 +30,9 @@ namespace netgen
                          const MeshingParameters& mparam) {}
     virtual void FindEdges(Mesh& mesh, const MeshingParameters& mparam) {}
     virtual void MeshSurface(Mesh& mesh, const MeshingParameters& mparam) {}
-    virtual void OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam) {}
+    virtual void OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam);
+    virtual unique_ptr<MeshOptimize2d> GetMeshOptimizer() const
+    { return make_unique<MeshOptimize2d>(); }
     virtual void FinalizeMesh(Mesh& mesh) const {}
     virtual void Save (string filename) const;
     virtual void SaveToMeshFile (ostream & /* ost */) const { ; }

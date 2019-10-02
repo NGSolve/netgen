@@ -92,12 +92,6 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
     OCCMeshSurface(*this, mesh, mparam);
   }
 
-  void OCCGeometry :: OptimizeSurface(Mesh& mesh,
-                                      const MeshingParameters& mparam)
-  {
-    OCCOptimizeSurface(*this, mesh, mparam);
-  }
-
   void OCCGeometry :: FinalizeMesh(Mesh& mesh) const
   {
     for (int i = 0; i < mesh.GetNDomains(); i++)

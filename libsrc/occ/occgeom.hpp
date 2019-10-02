@@ -265,7 +265,7 @@ namespace netgen
     { return Mesh::GEOM_OCC; }
 
     void SetOCCParameters(const OCCParameters& par)
-    { cout << "set occ pars to = " << par.resthcloseedgefac << endl; occparam = par; }
+    { occparam = par; }
 
     void Analyse(Mesh& mesh,
                  const MeshingParameters& mparam) override;
@@ -273,8 +273,9 @@ namespace netgen
                    const MeshingParameters& mparam) override;
     void MeshSurface(Mesh& mesh,
                      const MeshingParameters& mparam) override;
-    void OptimizeSurface(Mesh& mesh,
-                         const MeshingParameters& mparam) override;
+    unique_ptr<MeshOptimize2d> GetMeshOptimizer() const override
+    { return make_unique<MeshOptimize2dOCCSurfaces>(*this); }
+ 
     void FinalizeMesh(Mesh& mesh) const override;
      
     DLL_HEADER void Save (string filename) const override;

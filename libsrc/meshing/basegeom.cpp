@@ -10,6 +10,40 @@ namespace netgen
   GeometryRegister :: ~GeometryRegister()
   { ; }
 
+  void NetgenGeometry :: OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam)
+  {
+    const auto savetask = multithread.task;
+    multithread.task = "Optimizing surface";
+
+    static Timer timer_opt2d("Optimization 2D");
+    RegionTimer reg(timer_opt2d);
+    auto meshopt = GetMeshOptimizer();
+    for(auto i : Range(mparam.optsteps2d))
+      {
+        PrintMessage(2, "Optimization step ", i);
+        for(auto optstep : mparam.optimize2d)
+          {
+            switch(optstep)
+              {
+              case 's':
+                meshopt->EdgeSwapping(mesh, 0);
+                break;
+              case 'S':
+                meshopt->EdgeSwapping(mesh, 1);
+                break;
+              case 'm': 
+                meshopt->ImproveMesh(mesh, mparam);
+                break;
+              case 'c': 
+                meshopt->CombineImprove (mesh);
+                break;
+              }
+          }
+      }
+    mesh.CalcSurfacesOfNode();
+    mesh.Compress();
+    multithread.task = savetask;
+  }
   
   shared_ptr<NetgenGeometry> GeometryRegisterArray :: LoadFromMeshFile (istream & ist) const
   {
