@@ -48,9 +48,9 @@ namespace netgen
 
   double ComputeH (double kappa, const MeshingParameters & mparam)
   {
+    kappa *= mparam.curvaturesafety;
     /*
     double hret;
-    kappa *= mparam.curvaturesafety;
 
     if (mparam.maxh * kappa < 1)
       hret = mparam.maxh;
