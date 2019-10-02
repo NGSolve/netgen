@@ -74,6 +74,36 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
    }
 }
 
+  void OCCGeometry :: Analyse(Mesh& mesh,
+                              const MeshingParameters& mparam)
+  {
+    OCCSetLocalMeshSize(*this, mesh, mparam, occparam);
+  }
+
+  void OCCGeometry :: FindEdges(Mesh& mesh,
+                                const MeshingParameters& mparam)
+  {
+    OCCFindEdges(*this, mesh, mparam);
+  }
+
+  void OCCGeometry :: MeshSurface(Mesh& mesh,
+                                  const MeshingParameters& mparam)
+  {
+    OCCMeshSurface(*this, mesh, mparam);
+  }
+
+  void OCCGeometry :: OptimizeSurface(Mesh& mesh,
+                                      const MeshingParameters& mparam)
+  {
+    OCCOptimizeSurface(*this, mesh, mparam);
+  }
+
+  void OCCGeometry :: FinalizeMesh(Mesh& mesh) const
+  {
+    for (int i = 0; i < mesh.GetNDomains(); i++)
+      if (snames.Size())
+        mesh.SetMaterial (i+1, snames[i]);
+  }
 
    void OCCGeometry :: PrintNrShapes ()
    {
@@ -1703,10 +1733,10 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
   DLL_HEADER extern OCCParameters occparam;
   OCCParameters occparam;
 
-  int OCCGeometry :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
-   {
-     return OCCGenerateMesh (*this, mesh, mparam, occparam);
-   }
+  // int OCCGeometry :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
+  //  {
+  //    return OCCGenerateMesh (*this, mesh, mparam, occparam);
+  //  }
 }
 
 

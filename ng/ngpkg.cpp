@@ -537,6 +537,7 @@ namespace netgen
                 // delete ng_geometry;
 		// ng_geometry = hgeom;
                 ng_geometry = shared_ptr<NetgenGeometry> (hgeom);
+                geometryregister[i]->SetParameters(interp);
 		
 		mesh.reset();
 		return TCL_OK;

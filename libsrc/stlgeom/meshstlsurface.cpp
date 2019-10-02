@@ -867,6 +867,22 @@ void STLSurfaceOptimization (STLGeometry & geom,
 	      break;
 	    }
 	  }
+        while(mesh.CheckOverlappingBoundary())
+          {
+            for(const auto & el : mesh.SurfaceElements())
+              {
+                if(el.BadElement())
+                  {
+                    cout << "Restrict localh at el nr " << el << endl;
+                    for(const auto& p : el.PNums())
+                      {
+                        const auto& pnt = mesh[p];
+                        mesh.RestrictLocalH(pnt, 0.5*mesh.GetH(pnt));
+                      }
+                  }
+              }
+            optmesh.SplitImprove(mesh);
+          }
 	//(*testout) << "optimize, after, step = " << meshparam.optimize2d[j-1] << mesh.Point (3679) << endl;
       }
 

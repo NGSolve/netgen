@@ -53,6 +53,8 @@ namespace netgen
 	atof (Tcl_GetVar (interp, "::stloptions.resthminedgelen", 0));
 	  occparam.resthminedgelenenable = 
 	atoi (Tcl_GetVar (interp, "::stloptions.resthminedgelenenable", 0));
+      if(auto geo = dynamic_pointer_cast<OCCGeometry>(ng_geometry); geo)
+        geo->SetOCCParameters(occparam);
     }
   };
 

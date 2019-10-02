@@ -864,7 +864,7 @@ namespace netgen
     /// 
     friend class Meshing3;
 
-
+    // only for saving the geometry
     enum GEOM_TYPE { NO_GEOM = 0, GEOM_2D = 1, GEOM_CSG = 10, GEOM_STL = 11, GEOM_OCC = 12, GEOM_ACIS = 13 };
     GEOM_TYPE geomtype;
   
