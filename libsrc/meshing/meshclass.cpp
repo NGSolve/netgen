@@ -3688,131 +3688,104 @@ namespace netgen
   {
     static Timer t("Mesh::CheckOverlappingBoundary"); RegionTimer reg(t);
     
-    int i, j, k;
-
     Point3d pmin, pmax;
     GetBox (pmin, pmax);
-    BoxTree<3> setree(pmin, pmax);
-    NgArray<int> inters;
+    BoxTree<3, SurfaceElementIndex> setree(pmin, pmax);
+    // NgArray<SurfaceElementIndex> inters;
 
     bool overlap = 0;
     bool incons_layers = 0;
-    /*
-    for (i = 1; i <= GetNSE(); i++)
-      SurfaceElement(i).badel = 0;
-    */
+
     for (Element2d & el : SurfaceElements())
       el.badel = false;
 
-    for (i = 1; i <= GetNSE(); i++)
+    for (SurfaceElementIndex sei : Range(SurfaceElements()))
       {
-        const Element2d & tri = SurfaceElement(i);
+        const Element2d & tri = SurfaceElement(sei);
 
-        Point3d tpmin (Point(tri[0]));
-        Point3d tpmax (tpmin);
+        Box<3> box(Box<3>::EMPTY_BOX);
+        for (PointIndex pi : tri.PNums())
+          box.Add (Point(pi));
 
-        for (k = 1; k < tri.GetNP(); k++)
-          {
-            tpmin.SetToMin (Point (tri[k]));
-            tpmax.SetToMax (Point (tri[k]));
-          }
-        Vec3d diag(tpmin, tpmax);
-
-        tpmax = tpmax + 0.1 * diag;
-        tpmin = tpmin - 0.1 * diag;
-
-        setree.Insert (tpmin, tpmax, i);
+        box.Increase(1e-3*box.Diam());
+        setree.Insert (box, sei);
       }
 
-    for (i = 1; i <= GetNSE(); i++)
-      {
-        const Element2d & tri = SurfaceElement(i);
+    std::mutex m;
+    // for (SurfaceElementIndex sei : Range(SurfaceElements()))
+    ParallelForRange
+      (Range(SurfaceElements()), [&] (auto myrange)
+       {
+         for (SurfaceElementIndex sei : myrange)
+           {
+             const Element2d & tri = SurfaceElement(sei);
+             
+             Box<3> box(Box<3>::EMPTY_BOX);
+             for (PointIndex pi : tri.PNums())
+               box.Add (Point(pi));
+             
+             setree.GetFirstIntersecting
+               (box.PMin(), box.PMax(),
+                [&] (SurfaceElementIndex sej) 
+                {
+                  const Element2d & tri2 = SurfaceElement(sej);	  
+                  
+                  if ( (*this)[tri[0]].GetLayer() != (*this)[tri2[0]].GetLayer())
+                    return false;
+                  
+                  if ( (*this)[tri[0]].GetLayer() != (*this)[tri[1]].GetLayer() ||
+                       (*this)[tri[0]].GetLayer() != (*this)[tri[2]].GetLayer())
+                    {
+                      incons_layers = 1;
+                      cout << "inconsistent layers in triangle" << endl;
+                    }
+                  
+                  const netgen::Point<3> *trip1[3], *trip2[3];	  
+                  for (int k = 0; k < 3; k++)
+                    {
+                      trip1[k] = &Point (tri[k]);
+                      trip2[k] = &Point (tri2[k]);
+                    }
+                  
+                  if (IntersectTriangleTriangle (&trip1[0], &trip2[0]))
+                    {
+                      overlap = 1;
+                      lock_guard<std::mutex> guard(m);
+                      PrintWarning ("Intersecting elements " 
+                                    ,int(sei), " and ", int(sej));
+                      
+                      (*testout) << "Intersecting: " << endl;
+                      (*testout) << "openelement " << sei << " with open element " << sej << endl;
+                      
+                      cout << "el1 = " << tri << endl;
+                      cout << "el2 = " << tri2 << endl;
+                      cout << "layer1 = " <<  (*this)[tri[0]].GetLayer() << endl;
+                      cout << "layer2 = " <<  (*this)[tri2[0]].GetLayer() << endl;
+                      
+                      for (int k = 1; k <= 3; k++)
+                        (*testout) << tri.PNum(k) << "  ";
+                      (*testout) << endl;
+                      for (int k = 1; k <= 3; k++)
+                        (*testout) << tri2.PNum(k) << "  ";
+                      (*testout) << endl;
+                      
+                      for (int k = 0; k <= 2; k++)
+                        (*testout) << *trip1[k] << "   ";
+                      (*testout) << endl;
+                      for (int k = 0; k <= 2; k++)
+                        (*testout) << *trip2[k] << "   ";
+                      (*testout) << endl;
 
-        Point3d tpmin (Point(tri[0]));
-        Point3d tpmax (tpmin);
-
-        for (k = 1; k < tri.GetNP(); k++)
-          {
-            tpmin.SetToMin (Point (tri[k]));
-            tpmax.SetToMax (Point (tri[k]));
-          }
-
-        setree.GetIntersecting (tpmin, tpmax, inters);
-
-        for (j = 1; j <= inters.Size(); j++)
-          {
-            const Element2d & tri2 = SurfaceElement(inters.Get(j));	  
-
-            if ( (*this)[tri[0]].GetLayer() != (*this)[tri2[0]].GetLayer())
-              continue;
-
-            if ( (*this)[tri[0]].GetLayer() != (*this)[tri[1]].GetLayer() ||
-                 (*this)[tri[0]].GetLayer() != (*this)[tri[2]].GetLayer())
-              {
-                incons_layers = 1;
-                cout << "inconsistent layers in triangle" << endl;
-              }
-
-
-            const netgen::Point<3> *trip1[3], *trip2[3];	  
-            for (k = 1; k <= 3; k++)
-              {
-                trip1[k-1] = &Point (tri.PNum(k));
-                trip2[k-1] = &Point (tri2.PNum(k));
-              }
-
-            if (IntersectTriangleTriangle (&trip1[0], &trip2[0]))
-              {
-                overlap = 1;
-                PrintWarning ("Intersecting elements " 
-                              ,i, " and ", inters.Get(j));
-
-                (*testout) << "Intersecting: " << endl;
-                (*testout) << "openelement " << i << " with open element " << inters.Get(j) << endl;
-
-                cout << "el1 = " << tri << endl;
-                cout << "el2 = " << tri2 << endl;
-                cout << "layer1 = " <<  (*this)[tri[0]].GetLayer() << endl;
-                cout << "layer2 = " <<  (*this)[tri2[0]].GetLayer() << endl;
-
-
-                for (k = 1; k <= 3; k++)
-                  (*testout) << tri.PNum(k) << "  ";
-                (*testout) << endl;
-                for (k = 1; k <= 3; k++)
-                  (*testout) << tri2.PNum(k) << "  ";
-                (*testout) << endl;
-
-                for (k = 0; k <= 2; k++)
-                  (*testout) << *trip1[k] << "   ";
-                (*testout) << endl;
-                for (k = 0; k <= 2; k++)
-                  (*testout) << *trip2[k] << "   ";
-                (*testout) << endl;
-
-                (*testout) << "Face1 = " << GetFaceDescriptor(tri.GetIndex()) << endl;
-                (*testout) << "Face1 = " << GetFaceDescriptor(tri2.GetIndex()) << endl;
-
-                /*
-                  INDEX_3 i3(tri.PNum(1), tri.PNum(2), tri.PNum(3));
-                  i3.Sort();
-                  for (k = 1; k <= GetNSE(); k++)
-                  {
-                  const Element2d & el2 = SurfaceElement(k);
-                  INDEX_3 i3b(el2.PNum(1), el2.PNum(2), el2.PNum(3));
-                  i3b.Sort();
-                  if (i3 == i3b)
-                  {
-                  SurfaceElement(k).badel = 1;
-                  }
-                  }
-                */
-                SurfaceElement(i).badel = 1;
-                SurfaceElement(inters.Get(j)).badel = 1;
-              }
-          }
-      }
-
+                      (*testout) << "Face1 = " << GetFaceDescriptor(tri.GetIndex()) << endl;
+                      (*testout) << "Face1 = " << GetFaceDescriptor(tri2.GetIndex()) << endl;
+                      
+                      SurfaceElement(sei).badel = 1;
+                      SurfaceElement(sej).badel = 1;
+                    }
+                  return false;
+                });
+           }
+       });
     // bug 'fix'
     if (incons_layers) overlap = 0;
 

@@ -270,6 +270,9 @@ namespace netgen
     SurfaceElementIndex & operator+= (int inc) { i+=inc; return *this; }
     void DoArchive (Archive & ar) { ar & i; }
   };
+  
+  inline void SetInvalid (SurfaceElementIndex & id) { id = -1; }
+  inline bool IsInvalid (SurfaceElementIndex & id) { return id == -1; }
 
   inline istream & operator>> (istream & ist, SurfaceElementIndex & pi)
   {
