@@ -1958,6 +1958,8 @@ namespace netgen
 			   const NgArray< NgArray<int,PointIndex::BASE>* > & idmaps,
 			   const string & refinfofile)
   {
+    if (mesh.GetDimension() < 2)
+      throw Exception ("Mesh bisection is available in 2D and 3D");
     // mtets.SetName ("bisection, tets");
     // mprisms.SetName ("bisection, prisms");
     // mtris.SetName ("bisection, trigs");
