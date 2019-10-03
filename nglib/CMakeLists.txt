@@ -13,6 +13,7 @@ if(WIN32)
        )
        if(USE_GUI)
            set(nglib_objects ${nglib_objects}
+	       $<TARGET_OBJECTS:stlvis>
 	       $<TARGET_OBJECTS:geom2dvis>
                $<TARGET_OBJECTS:csgvis>
            )
@@ -21,9 +22,9 @@ endif(WIN32)
 
 add_library(nglib SHARED nglib.cpp ${nglib_objects})
 if(NOT WIN32)
-      target_link_libraries( nglib PUBLIC mesh interface geom2d csg visual)
+      target_link_libraries( nglib PUBLIC mesh interface geom2d csg stl visual)
       if(USE_GUI)
-          target_link_libraries( nglib PUBLIC geom2dvis csgvis )
+          target_link_libraries( nglib PUBLIC stlvis geom2dvis csgvis )
       endif(USE_GUI)
 endif(NOT WIN32)
 
