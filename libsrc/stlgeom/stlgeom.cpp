@@ -44,7 +44,6 @@ void STLMeshing (STLGeometry & geom,
     lineendpoints(), spiralpoints(), selectedmultiedge()
   */
 {
-  ref = NULL;
   edgedata = make_unique<STLEdgeDataList>(*this);
   externaledges.SetSize(0);
   Clear();
@@ -99,6 +98,125 @@ int STLGeometry :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mp
 {
   STLParameters stlpar = stlparam;
   return STLMeshingDummy (this, mesh, mparam, stlpar);
+}
+
+Vec<3> STLGeometry :: GetNormal(INDEX surfind, const Point<3> & p) const
+{
+  return GetChartNormalVector();
+}
+
+bool STLGeometry :: CalcPointGeomInfo(int /*surfind*/, PointGeomInfo& gi, const Point<3> & p3) const
+{
+  Point<3> hp = p3;
+  SelectChartOfTriangle(gi.trignum);
+
+  gi.trignum = Project (hp);
+
+  if (gi.trignum) return true;
+
+  return false;
+}
+
+bool STLGeometry :: ProjectPointGI (int surfind, Point<3> & p, PointGeomInfo & gi) const
+{
+  SelectChartOfTriangle(gi.trignum);
+  gi.trignum = Project (p);
+  if (!gi.trignum)
+    {
+      PrintMessage(7,"project failed");
+
+      gi.trignum = ProjectOnWholeSurface(p);
+      if (!gi.trignum)
+	{
+	  PrintMessage(7, "project on whole surface failed");
+          return false;
+	}
+    }
+  return true;
+}
+
+void STLGeometry :: ProjectPoint (INDEX surfind, Point<3> & p) const
+{
+  if (!Project (p))
+    {
+      PrintMessage(7,"project failed");
+
+      if (!ProjectOnWholeSurface(p))
+	{
+	  PrintMessage(7, "project on whole surface failed");
+	}
+    }
+}
+
+void STLGeometry ::
+PointBetween  (const Point<3> & p1, const Point<3> & p2, double secpoint,
+	       int surfi,
+	       const PointGeomInfo & gi1,
+	       const PointGeomInfo & gi2,
+	       Point<3> & newp, PointGeomInfo & newgi) const
+{
+  newp = p1+secpoint*(p2-p1);
+
+  /*
+  (*testout) << "surf-between: p1 = " << p1 << ", p2 = " << p2
+	     << ", gi = " << gi1 << " - " << gi2 << endl;
+  */
+
+  if (gi1.trignum > 0)
+    {
+      //      ((STLGeometry&)geom).SelectChartOfTriangle (gi1.trignum);
+
+      Point<3> np1 = newp;
+      Point<3> np2 = newp;
+      SelectChartOfTriangle (gi1.trignum);
+      int tn1 = Project (np1);
+
+      SelectChartOfTriangle (gi2.trignum);
+      int tn2 = Project (np2);
+
+      newgi.trignum = tn1; //urspruengliche version
+      newp = np1;          //urspruengliche version
+
+      if (!newgi.trignum)
+	{ newgi.trignum = tn2; newp = np2; }
+      if (!newgi.trignum) newgi.trignum = gi1.trignum;
+    }
+  else
+    {
+      //      (*testout) << "WARNING: PointBetween got geominfo = 0" << endl;
+      newp =  p1+secpoint*(p2-p1);
+      newgi.trignum = 0;
+    }
+}
+
+void STLGeometry ::
+PointBetweenEdge (const Point<3> & p1, const Point<3> & p2, double secpoint,
+	      int surfi1, int surfi2,
+	      const EdgePointGeomInfo & gi1,
+	      const EdgePointGeomInfo & gi2,
+	      Point<3> & newp, EdgePointGeomInfo & newgi) const
+{
+  /*
+  (*testout) << "edge-between: p1 = " << p1 << ", p2 = " << p2
+	     << ", gi1,2 = " << gi1 << ", " << gi2 << endl;
+  */
+  /*
+  newp = Center (p1, p2);
+  ((STLGeometry&)geom).SelectChartOfTriangle (gi1.trignum);
+  newgi.trignum = geom.Project (newp);
+  */
+  int hi;
+  newgi.dist = (1.0-secpoint) * gi1.dist + secpoint*gi2.dist;
+  newgi.edgenr = gi1.edgenr;
+
+  /*
+  (*testout) << "p1 = " << p1 << ", p2 = " << p2 << endl;
+  (*testout) << "refedge: " << gi1.edgenr
+	     << " d1 = " << gi1.dist << ", d2 = " << gi2.dist << endl;
+  */
+  newp = GetLine (gi1.edgenr)->GetPointInDist (GetPoints(), newgi.dist, hi);
+
+  //  (*testout) << "newp = " << newp << endl;
 }
 
 void STLGeometry :: STLInfo(double* data)

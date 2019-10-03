@@ -392,7 +392,7 @@ void STLGeometry :: DefineTangentialPlane (const Point<3> & ap1, const Point<3> 
 }
 
 
-void STLGeometry :: SelectChartOfTriangle (int trignum)
+void STLGeometry :: SelectChartOfTriangle (int trignum) const
 {
   meshchart = GetChartNr(trignum);
   meshtrignv = GetTriangle(trignum).Normal();	

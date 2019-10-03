@@ -366,8 +366,6 @@ namespace netgen
 
     virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam) override;
 
-    virtual const Refinement & GetRefinement () const override;
-
     void AddSplineSurface (shared_ptr<SplineSurface> ss) { spline_surfaces.Append(ss); }
   };
 
