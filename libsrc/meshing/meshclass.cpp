@@ -1661,7 +1661,9 @@ namespace netgen
 
   void Mesh :: CalcSurfacesOfNode ()
   {
-    static Timer t("Mesh::CalcSurfacesOfNode"); RegionTimer reg (t);    
+    static Timer t("Mesh::CalcSurfacesOfNode"); RegionTimer reg (t);
+    static Timer tn2se("Mesh::CalcSurfacesOfNode - surf on node");     
+    static Timer tht("Mesh::CalcSurfacesOfNode - surfelementht"); 
     // surfacesonnode.SetSize (GetNP());
     TABLE<int,PointIndex::BASE> surfacesonnode(GetNP());
 
@@ -1683,6 +1685,7 @@ namespace netgen
       surfelementht = make_unique<INDEX_3_CLOSED_HASHTABLE<int>> (3*GetNSE() + 1);
     segmentht = make_unique<INDEX_2_CLOSED_HASHTABLE<int>> (3*GetNSeg() + 1);
 
+    tn2se.Start();
     if (dimension == 3)
       /*
     for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
@@ -1734,7 +1737,9 @@ namespace netgen
 
       surfelementht -> AllocateElements();
     */
-
+    tn2se.Stop();
+    
+    tht.Start();
     if (dimension==3)
     for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
       {
@@ -1748,7 +1753,8 @@ namespace netgen
         i3.Sort();
         surfelementht -> Set (i3, sei);   // war das wichtig ???    sel.GetIndex());
       }
-
+    tht.Stop();
+    
     // int np = GetNP();
 
     if (dimension == 3)
@@ -1877,11 +1883,39 @@ namespace netgen
     int np = GetNP();
     int ne = GetNE();
     int nse = GetNSE();
-
-    NgArray<int,PointIndex::BASE> numonpoint(np);
-
-    numonpoint = 0;
+    
     t_table.Start();
+
+    TableCreator<ElementIndex, PointIndex> creator(np);
+
+    for ( ; !creator.Done(); creator++)
+      // for (ElementIndex ei : Range(VolumeElements()))
+      ParallelFor
+        (Range(VolumeElements()), [&] (ElementIndex ei)
+         {
+           const Element & el = (*this)[ei];
+           if (dom == 0 || dom == el.GetIndex())
+             {
+               if (el.GetNP() == 4)
+                 {
+                   INDEX_4 i4(el[0], el[1], el[2], el[3]);
+                   i4.Sort();
+                   creator.Add (PointIndex(i4.I1()), ei);
+                   creator.Add (PointIndex(i4.I2()), ei);
+                 }
+               else
+                 {
+                   for (PointIndex pi : el.PNums())
+                     creator.Add(pi, ei);
+                 }
+             }
+         });
+    
+    auto elsonpoint = creator.MoveTable();
+           
+    NgArray<int,PointIndex::BASE> numonpoint(np);
+    /*
+    numonpoint = 0;
     for (ElementIndex ei = 0; ei < ne; ei++)
       {
         const Element & el = (*this)[ei];
@@ -1918,6 +1952,7 @@ namespace netgen
                 elsonpoint.Add (el[j], ei);
           }
       }
+    */
     t_table.Stop();
 
 
