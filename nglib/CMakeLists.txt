@@ -3,6 +3,7 @@ add_definitions(-DNGLIB_EXPORTS)
 if(WIN32)
     set(nglib_objects 
           $<TARGET_OBJECTS:mesh>
+          $<TARGET_OBJECTS:stl>
           $<TARGET_OBJECTS:interface>
           $<TARGET_OBJECTS:geom2d>
           $<TARGET_OBJECTS:csg>
