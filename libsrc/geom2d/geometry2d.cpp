@@ -20,9 +20,9 @@ namespace netgen
       delete [] materials[i];
   }
 
-  void SplineGeometry2d :: PointBetweenEdge(const Point<3> & p1, const Point<3> & p2, double secpoint, 
-                                         int surfi1, int surfi2, 
-                                         const EdgePointGeomInfo & ap1, 
+  void SplineGeometry2d :: PointBetweenEdge(const Point<3> & p1, const Point<3> & p2, double secpoint,
+                                         int surfi1, int surfi2,
+                                         const EdgePointGeomInfo & ap1,
                                          const EdgePointGeomInfo & ap2,
                                          Point<3> & newp, EdgePointGeomInfo & newgi) const
   {
@@ -67,7 +67,7 @@ namespace netgen
         p2d = spline->GetPoint (((1-secpoint)*ap1.dist+secpoint*ap2.dist));
         newdist = (1-secpoint)*ap1.dist+secpoint*ap2.dist;
       }
-  
+
     //  (*testout) << "refine 2d line, ap1.dist, ap2.dist = " << ap1.dist << ", " << ap2.dist << endl;
     //  (*testout) << "p1, p2 = " << p1 << p2 << ", newp = " << p2d << endl;
 

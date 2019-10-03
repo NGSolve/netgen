@@ -3554,7 +3554,7 @@ namespace netgen
 		    EdgePointGeomInfo newepgi;
 		  
 		    geo.PointBetweenEdge(mesh.Point (seg[0]), mesh.Point (seg[1]),
-                                         0.5, seg.surfnr1, seg.surfnr2, 
+                                         0.5, seg.surfnr1, seg.surfnr2,
                                          seg.epgeominfo[0], seg.epgeominfo[1],
                                          mesh.Point (newpi), newepgi);
 		    nseg1.epgeominfo[1] = newepgi;

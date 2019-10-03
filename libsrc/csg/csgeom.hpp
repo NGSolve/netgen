@@ -192,20 +192,20 @@ namespace netgen
     void ProjectPointEdge(INDEX surfind, INDEX surfind2, Point<3> & p) const override;
     Vec<3> GetNormal(int surfind, const Point<3> & p) const override;
     void PointBetween(const Point<3> & p1, const Point<3> & p2,
-                      double secpoint, int surfi, 
-                      const PointGeomInfo & gi1, 
+                      double secpoint, int surfi,
+                      const PointGeomInfo & gi1,
                       const PointGeomInfo & gi2,
                       Point<3> & newp, PointGeomInfo & newgi) const override;
 
     void PointBetweenEdge(const Point<3> & p1, const Point<3> & p2, double secpoint,
-                      int surfi1, int surfi2, 
-                      const EdgePointGeomInfo & ap1, 
+                      int surfi1, int surfi2,
+                      const EdgePointGeomInfo & ap1,
                       const EdgePointGeomInfo & ap2,
                       Point<3> & newp, EdgePointGeomInfo & newgi) const override;
 
     Vec<3> GetTangent (const Point<3> & p, int surfi1, int surfi2,
                        const EdgePointGeomInfo & ap1) const override;
-    
+
     int GetChangeVal() { return changeval; }
     void Change() { changeval++; }
 

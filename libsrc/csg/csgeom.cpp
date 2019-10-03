@@ -97,10 +97,10 @@ namespace netgen
     return hn;
   }
 
-  void CSGeometry :: 
+  void CSGeometry ::
   PointBetween(const Point<3> & p1, const Point<3> & p2, double secpoint,
-               int surfi, 
-               const PointGeomInfo & gi1, 
+               int surfi,
+               const PointGeomInfo & gi1,
                const PointGeomInfo & gi2,
                Point<3> & newp, PointGeomInfo & newgi) const
   {
@@ -116,8 +116,8 @@ namespace netgen
   }
 
   void CSGeometry :: PointBetweenEdge(const Point<3> & p1, const Point<3> & p2, double secpoint,
-               int surfi1, int surfi2, 
-               const EdgePointGeomInfo & ap1, 
+               int surfi1, int surfi2,
+               const EdgePointGeomInfo & ap1,
                const EdgePointGeomInfo & ap2,
                Point<3> & newp, EdgePointGeomInfo & newgi) const
   {
@@ -125,8 +125,8 @@ namespace netgen
     //(*testout) << "hnewp " << hnewp << " s1 " << surfi1 << " s2 " << surfi2 << endl;
     if (surfi1 != -1 && surfi2 != -1 && surfi1 != surfi2)
       {
-        netgen::ProjectToEdge (GetSurface(surfi1), 
-                               GetSurface(surfi2), 
+        netgen::ProjectToEdge (GetSurface(surfi1),
+                               GetSurface(surfi2),
                                hnewp);
         // (*testout) << "Pointbetween, newp = " << hnewp << endl
         // << ", err = " << sqrt (sqr (hnewp(0))+ sqr(hnewp(1)) + sqr (hnewp(2))) - 1 << endl;

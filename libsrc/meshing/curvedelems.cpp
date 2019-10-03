@@ -911,14 +911,14 @@ namespace netgen
 		  if (swap)
 		    {
 		      p = p1 + xi[j] * (p2-p1);
-		      geo.PointBetween (p1, p2, xi[j], 
+		      geo.PointBetween (p1, p2, xi[j],
                                         surfnr[e], gi0[e], gi1[e],
                                         pp, ppgi);
 		    }
 		  else
 		    {
 		      p = p2 + xi[j] * (p1-p2);
-		      geo.PointBetween (p2, p1, xi[j], 
+		      geo.PointBetween (p2, p1, xi[j],
                                         surfnr[e], gi1[e], gi0[e],
                                         pp, ppgi);
 		    }
@@ -1053,9 +1053,9 @@ namespace netgen
 
 	  if (rational)
 	    {
-	      Vec<3> tau1 = geo.GetTangent(p1, edge_surfnr2[edgenr], edge_surfnr1[edgenr], 
+	      Vec<3> tau1 = geo.GetTangent(p1, edge_surfnr2[edgenr], edge_surfnr1[edgenr],
                                            edge_gi0[edgenr]);
-	      Vec<3> tau2 = geo.GetTangent(p2, edge_surfnr2[edgenr], edge_surfnr1[edgenr], 
+	      Vec<3> tau2 = geo.GetTangent(p2, edge_surfnr2[edgenr], edge_surfnr1[edgenr],
                                            edge_gi1[edgenr]);
 	      // p1 + alpha1 tau1 = p2 + alpha2 tau2;
 
@@ -1127,16 +1127,16 @@ namespace netgen
 		  if (swap)
 		    {
 		      p = p1 + xi[j] * (p2-p1);
-		      geo.PointBetweenEdge(p1, p2, xi[j], 
-                                           edge_surfnr2[edgenr], edge_surfnr1[edgenr], 
+		      geo.PointBetweenEdge(p1, p2, xi[j],
+                                           edge_surfnr2[edgenr], edge_surfnr1[edgenr],
                                            edge_gi0[edgenr], edge_gi1[edgenr],
                                            pp, ppgi);
 		    }
 		  else
 		    {
 		      p = p2 + xi[j] * (p1-p2);
-		      geo.PointBetweenEdge(p2, p1, xi[j], 
-					   edge_surfnr2[edgenr], edge_surfnr1[edgenr], 
+		      geo.PointBetweenEdge(p2, p1, xi[j],
+					   edge_surfnr2[edgenr], edge_surfnr1[edgenr],
 					   edge_gi1[edgenr], edge_gi0[edgenr],
 					   pp, ppgi);
 		    }

@@ -31,10 +31,10 @@ namespace netgen
               case 'S':
                 meshopt.EdgeSwapping(1);
                 break;
-              case 'm': 
+              case 'm':
                 meshopt.ImproveMesh(mparam);
                 break;
-              case 'c': 
+              case 'c':
                 meshopt.CombineImprove();
                 break;
               }
@@ -85,17 +85,17 @@ namespace netgen
         MeshSurface(*mesh, mparam);
         mesh->CalcSurfacesOfNode();
       }
-    
+
     if (multithread.terminate || mparam.perfstepsend <= MESHCONST_MESHSURFACE)
       return 0;
-    
+
     if (mparam.perfstepsstart <= MESHCONST_OPTSURFACE)
       OptimizeSurface(*mesh, mparam);
 
     if (multithread.terminate || mparam.perfstepsend <= MESHCONST_OPTSURFACE)
       return 0;
 
-    
+
     if(mparam.perfstepsstart <= MESHCONST_MESHVOLUME)
       {
         multithread.task = "Volume meshing";
@@ -113,19 +113,18 @@ namespace netgen
 
     if (multithread.terminate || mparam.perfstepsend <= MESHCONST_MESHVOLUME)
       return 0;
-    
+
 
     if (mparam.perfstepsstart <= MESHCONST_OPTVOLUME)
       {
 	multithread.task = "Volume optimization";
-	
+
 	OptimizeVolume (mparam, *mesh);
 	if (multithread.terminate) return 0;
       }
     FinalizeMesh(*mesh);
     return 0;
   }
-  
 
   const Refinement & NetgenGeometry :: GetRefinement () const
   {
