@@ -15,12 +15,20 @@ namespace netgen
 
   class DLL_HEADER NetgenGeometry
   {
+    unique_ptr<Refinement> ref;
   public:
+    NetgenGeometry()
+    {
+      ref = make_unique<Refinement>(*this);
+    }
     virtual ~NetgenGeometry () { ; }
 
     virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
 
-    virtual const Refinement & GetRefinement () const;
+    virtual const Refinement & GetRefinement () const
+    {
+      return *ref;
+    }
 
     virtual void DoArchive(Archive&)
   { throw NgException("DoArchive not implemented for " + Demangle(typeid(*this).name())); }

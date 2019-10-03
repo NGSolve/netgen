@@ -126,12 +126,6 @@ namespace netgen
     return 0;
   }
 
-  const Refinement & NetgenGeometry :: GetRefinement () const
-  {
-    return *new Refinement(*this);
-  }
-
-
   void NetgenGeometry :: Save (string filename) const
   {
     throw NgException("Cannot save geometry - no geometry available");
