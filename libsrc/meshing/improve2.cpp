@@ -177,8 +177,8 @@ namespace netgen
     else
       PrintMessage (3, "Edgeswapping, topological");
 
-    static int timerstart = NgProfiler::CreateTimer ("EdgeSwapping 2D start");
-    NgProfiler::StartTimer (timerstart);
+    static Timer timerstart("EdgeSwapping 2D start");
+    timerstart.Start();
 
     Array<SurfaceElementIndex> seia;
     bool mixed = false;
@@ -310,7 +310,7 @@ namespace netgen
     for (SurfaceElementIndex sei : seia)
       swapped[sei] = false;
     
-    NgProfiler::StopTimer (timerstart);
+    timerstart.Stop();
   
 
 
@@ -377,15 +377,15 @@ namespace netgen
       }
 
 
-    static int timer = NgProfiler::CreateTimer ("Combineimprove 2D");
-    NgProfiler::RegionTimer reg (timer);
+    static Timer timer ("Combineimprove 2D");
+    RegionTimer reg (timer);
 
-    static int timerstart = NgProfiler::CreateTimer ("Combineimprove 2D start");
-    NgProfiler::StartTimer  (timerstart);
+    static Timer timerstart ("Combineimprove 2D start");
+    timerstart.Start();
 
 
-    static int timerstart1 = NgProfiler::CreateTimer ("Combineimprove 2D start1");
-    NgProfiler::StartTimer  (timerstart1);
+    static Timer timerstart1 ("Combineimprove 2D start1");
+    timerstart1.Start();
 
     
     Array<SurfaceElementIndex> seia;
@@ -416,7 +416,7 @@ namespace netgen
     Array<bool,PointIndex> fixed(np);
     fixed = false;
 
-    NgProfiler::StopTimer  (timerstart1);
+    timerstart1.Stop();
 
     /*
     for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
@@ -468,7 +468,7 @@ namespace netgen
 	  }
       }
 
-    NgProfiler::StopTimer  (timerstart);
+    timerstart.Stop();
 
     for (int i = 0; i < seia.Size(); i++)
       {
