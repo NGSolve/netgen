@@ -69,7 +69,7 @@ namespace netgen
 
 
   void RestrictHTriangle (gp_Pnt2d & par0, gp_Pnt2d & par1, gp_Pnt2d & par2,
-                          BRepLProp_SLProps * prop, Mesh & mesh, int depth, double h,
+                          BRepLProp_SLProps * prop, BRepLProp_SLProps * prop2, Mesh & mesh, int depth, double h,
                           const MeshingParameters & mparam)
   {
     int ls = -1;
@@ -112,41 +112,41 @@ namespace netgen
       {
         double curvature = 0;
 
-        prop->SetParameters (parmid.X(), parmid.Y());
-        if (!prop->IsCurvatureDefined())
+        prop2->SetParameters (parmid.X(), parmid.Y());
+        if (!prop2->IsCurvatureDefined())
           {
             (*testout) << "curvature not defined!" << endl;
             return;
           }
-        curvature = max(fabs(prop->MinCurvature()),
-                        fabs(prop->MaxCurvature()));
+        curvature = max(fabs(prop2->MinCurvature()),
+                        fabs(prop2->MaxCurvature()));
 
-        prop->SetParameters (par0.X(), par0.Y());
-        if (!prop->IsCurvatureDefined())
+        prop2->SetParameters (par0.X(), par0.Y());
+        if (!prop2->IsCurvatureDefined())
           {
             (*testout) << "curvature not defined!" << endl;
             return;
           }
-        curvature = max(curvature,max(fabs(prop->MinCurvature()),
-                                      fabs(prop->MaxCurvature())));
+        curvature = max(curvature,max(fabs(prop2->MinCurvature()),
+                                      fabs(prop2->MaxCurvature())));
 
-        prop->SetParameters (par1.X(), par1.Y());
-        if (!prop->IsCurvatureDefined())
+        prop2->SetParameters (par1.X(), par1.Y());
+        if (!prop2->IsCurvatureDefined())
           {
             (*testout) << "curvature not defined!" << endl;
             return;
           }
-        curvature = max(curvature,max(fabs(prop->MinCurvature()),
-                                      fabs(prop->MaxCurvature())));
+        curvature = max(curvature,max(fabs(prop2->MinCurvature()),
+                                      fabs(prop2->MaxCurvature())));
 
-        prop->SetParameters (par2.X(), par2.Y());
-        if (!prop->IsCurvatureDefined())
+        prop2->SetParameters (par2.X(), par2.Y());
+        if (!prop2->IsCurvatureDefined())
           {
             (*testout) << "curvature not defined!" << endl;
             return;
           }
-        curvature = max(curvature,max(fabs(prop->MinCurvature()),
-                                      fabs(prop->MaxCurvature())));
+        curvature = max(curvature,max(fabs(prop2->MinCurvature()),
+                                      fabs(prop2->MaxCurvature())));
 
         //(*testout) << "curvature " << curvature << endl;
 
@@ -165,7 +165,7 @@ namespace netgen
           return;
 
 
-        if (h > 30) return;
+        // if (h > 30) return;
       }
 
     if (h < maxside && depth < 10)
@@ -181,20 +181,20 @@ namespace netgen
         if(ls == 0)
           {
             pm.SetX(0.5*(par1.X()+par2.X())); pm.SetY(0.5*(par1.Y()+par2.Y()));
-            RestrictHTriangle(pm, par2, par0, prop, mesh, depth+1, h, mparam);
-            RestrictHTriangle(pm, par0, par1, prop, mesh, depth+1, h, mparam);
+            RestrictHTriangle(pm, par2, par0, prop, prop2, mesh, depth+1, h, mparam);
+            RestrictHTriangle(pm, par0, par1, prop, prop2, mesh, depth+1, h, mparam);
           }
         else if(ls == 1)
           {
             pm.SetX(0.5*(par0.X()+par2.X())); pm.SetY(0.5*(par0.Y()+par2.Y()));
-            RestrictHTriangle(pm, par1, par2, prop, mesh, depth+1, h, mparam);
-            RestrictHTriangle(pm, par0, par1, prop, mesh, depth+1, h, mparam);
+            RestrictHTriangle(pm, par1, par2, prop, prop2, mesh, depth+1, h, mparam);
+            RestrictHTriangle(pm, par0, par1, prop, prop2, mesh, depth+1, h, mparam);
           }
         else if(ls == 2)
           {
             pm.SetX(0.5*(par0.X()+par1.X())); pm.SetY(0.5*(par0.Y()+par1.Y()));
-            RestrictHTriangle(pm, par1, par2, prop, mesh, depth+1, h, mparam);
-            RestrictHTriangle(pm, par2, par0, prop, mesh, depth+1, h, mparam);
+            RestrictHTriangle(pm, par1, par2, prop, prop2, mesh, depth+1, h, mparam);
+            RestrictHTriangle(pm, par2, par0, prop, prop2, mesh, depth+1, h, mparam);
           }
 
       }
@@ -994,6 +994,8 @@ namespace netgen
   void OCCSetLocalMeshSize(OCCGeometry & geom, Mesh & mesh,
                            const MeshingParameters & mparam, const OCCParameters& occparam)
   {
+    static Timer t1("OCCSetLocalMeshSize");
+    RegionTimer regt(t1);
     mesh.SetGlobalH (mparam.maxh);
     mesh.SetMinimalH (mparam.minh);
 
@@ -1029,8 +1031,15 @@ namespace netgen
 
         multithread.task = "Setting local mesh size (elements per edge)";
 
-        // setting elements per edge
+        // Philippose - 23/01/2009
+        // Find all the parent faces of a given edge
+        // and limit the mesh size of the edge based on the
+        // mesh size limit of the face
+        TopTools_IndexedDataMapOfShapeListOfShape edge_face_map;
+        edge_face_map.Clear();
+        TopExp::MapShapesAndAncestors(geom.shape, TopAbs_EDGE, TopAbs_FACE, edge_face_map);
 
+        // setting elements per edge
         for (int i = 1; i <= nedges && !multithread.terminate; i++)
           {
             TopoDS_Edge e = TopoDS::Edge (geom.emap(i));
@@ -1050,14 +1059,6 @@ namespace netgen
             double localh = len/mparam.segmentsperedge;
             double s0, s1;
 
-            // Philippose - 23/01/2009
-            // Find all the parent faces of a given edge
-            // and limit the mesh size of the edge based on the
-            // mesh size limit of the face
-            TopTools_IndexedDataMapOfShapeListOfShape edge_face_map;
-            edge_face_map.Clear();
-
-            TopExp::MapShapesAndAncestors(geom.shape, TopAbs_EDGE, TopAbs_FACE, edge_face_map);
             const TopTools_ListOfShape& parent_faces = edge_face_map.FindFromKey(e);
 
             TopTools_ListIteratorOfListOfShape parent_face_list;
@@ -1140,7 +1141,9 @@ namespace netgen
               }
 
             BRepAdaptor_Surface sf(face, Standard_True);
-            BRepLProp_SLProps prop(sf, 2, 1e-5);
+            // one prop for evaluating and one for derivatives
+            BRepLProp_SLProps prop(sf, 0, 1e-5);
+            BRepLProp_SLProps prop2(sf, 2, 1e-5);
 
             int ntriangles = triangulation -> NbTriangles();
             for (int j = 1; j <= ntriangles; j++)
@@ -1161,7 +1164,7 @@ namespace netgen
                 //maxside = max (maxside, p[1].Distance(p[2]));
                 //cout << "\rFace " << i << " pos11 ntriangles " << ntriangles << " maxside " << maxside << flush;
 
-                RestrictHTriangle (par[0], par[1], par[2], &prop, mesh, 0, 0, mparam);
+                RestrictHTriangle (par[0], par[1], par[2], &prop, &prop2, mesh, 0, 0, mparam);
                 //cout << "\rFace " << i << " pos12 ntriangles " << ntriangles << flush;
               }
           }
