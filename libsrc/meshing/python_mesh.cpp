@@ -983,6 +983,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             res["tet"] = py::make_tuple( values[2], values[3] );
             return res;
           }, py::arg("badelement_limit")=175.0)
+    .def ("CalcTotalBadness", &Mesh::CalcTotalBad)
+    .def ("GetQualityHistogram", &Mesh::GetQualityHistogram)
     ;
 
   m.def("ImportMesh", [](const string& filename)

@@ -3897,6 +3897,44 @@ namespace netgen
     return 1;
   }
 
+  double Mesh :: CalcTotalBad (const MeshingParameters & mp )
+  {
+    static Timer t("CalcTotalBad"); RegionTimer reg(t);
+    static constexpr int n_classes = 20;
+
+    double sum = 0;
+
+    tets_in_qualclass.SetSize(n_classes);
+    tets_in_qualclass = 0;
+
+    ParallelForRange( IntRange(volelements.Size()), [&] (auto myrange)
+       {
+         double local_sum = 0.0;
+         double teterrpow = mp.opterrpow;
+
+         std::array<int,n_classes> classes_local{};
+
+         for (auto i : myrange)
+           {
+             double elbad = pow (max2(CalcBad (points, volelements[i], 0, mp),1e-10), 1/teterrpow);
+
+             int qualclass = int (n_classes / elbad + 1);
+             if (qualclass < 1) qualclass = 1;
+             if (qualclass > n_classes) qualclass = n_classes;
+             classes_local[qualclass-1]++;
+
+             local_sum += elbad;
+           }
+
+         AtomicAdd(sum, local_sum);
+
+         for (auto i : Range(n_classes))
+             AsAtomic(tets_in_qualclass[i]) += classes_local[i];
+    });
+
+    return sum;
+  }
+
 
 
 
