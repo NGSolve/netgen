@@ -73,7 +73,6 @@
 #include "ShapeUpgrade_ShellSewing.hxx"
 #include "ShapeFix_Shape.hxx"
 #include "ShapeFix_Wireframe.hxx"
-#include "BRepMesh.hxx"
 #include "BRepMesh_IncrementalMesh.hxx"
 #include "BRepBndLib.hxx"
 #include "Bnd_Box.hxx"
