@@ -65,6 +65,7 @@ test_win:
   <<: *win
   stage: test
   script:
+    - cd tests\pytest
     - cd %NETGEN_BUILD_DIR%\netgen
     - ctest -C Release -V --output-on-failure
     - cd ..

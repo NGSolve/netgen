@@ -62,6 +62,8 @@ namespace netgen
     /// open segmenets for surface meshing  
     NgArray<Segment> opensegments;
 
+    Array<int> tets_in_qualclass;
+
 
 
     /**
@@ -558,6 +560,10 @@ namespace netgen
        for optimiztion
     */
     void FreeOpenElementsEnvironment (int layers);
+
+
+    DLL_HEADER double CalcTotalBad (const MeshingParameters & mp);
+    FlatArray<int> GetQualityHistogram() { return tets_in_qualclass; }
 
     ///
     bool LegalTet (Element & el) const

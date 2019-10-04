@@ -198,7 +198,7 @@ void MeshOptimize3d :: CombineImproveSequential (Mesh & mesh,
 
   if (goal == OPT_QUALITY)
     {
-      totalbad = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
+      totalbad = mesh.CalcTotalBad (mp);
       (*testout) << "Total badness = " << totalbad << endl;
       PrintMessage (5, "Total badness = ", totalbad);
     }
@@ -395,7 +395,7 @@ void MeshOptimize3d :: CombineImproveSequential (Mesh & mesh,
 
   if (goal == OPT_QUALITY)
     {
-      totalbad = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
+      totalbad = mesh.CalcTotalBad (mp);
       (*testout) << "Total badness = " << totalbad << endl;
 
       int cntill = 0;
@@ -511,7 +511,7 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 
   if (goal == OPT_QUALITY)
     {
-      totalbad = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
+      totalbad = mesh.CalcTotalBad (mp);
       (*testout) << "Total badness = " << totalbad << endl;
     }
 
@@ -565,7 +565,7 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 
   if (goal == OPT_QUALITY)
     {
-      totalbad = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
+      totalbad = mesh.CalcTotalBad (mp);
       (*testout) << "Total badness = " << totalbad << endl;
 
       int cntill = 0;
@@ -642,7 +642,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
   
   if (goal == OPT_QUALITY)
     {
-      bad1 = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
+      bad1 = mesh.CalcTotalBad (mp);
       (*testout) << "Total badness = " << bad1 << endl;
     }
 
@@ -864,7 +864,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 
   if (goal == OPT_QUALITY)
     {
-      bad1 = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
+      bad1 = mesh.CalcTotalBad (mp);
       (*testout) << "Total badness = " << bad1 << endl;
 
       int cntill = 0;
@@ -925,7 +925,7 @@ void MeshOptimize3d :: SwapImproveSequential (Mesh & mesh, OPTIMIZEGOAL goal,
   // Calculate total badness
   if (goal == OPT_QUALITY)
     {
-      bad1 = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
+      bad1 = mesh.CalcTotalBad (mp);
       (*testout) << "Total badness = " << bad1 << endl;
     }
   
@@ -2420,7 +2420,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
   // Calculate total badness
   if (goal == OPT_QUALITY)
     {
-      double bad1 = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
+      double bad1 = mesh.CalcTotalBad (mp);
       (*testout) << "Total badness = " << bad1 << endl;
     }
 
@@ -3527,7 +3527,7 @@ void MeshOptimize3d :: SwapImprove2Sequential (Mesh & mesh, OPTIMIZEGOAL goal)
   
   // Calculate total badness
 
-  bad1 = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
+  bad1 = mesh.CalcTotalBad (mp);
   (*testout) << "Total badness = " << bad1 << endl;
   cout << "tot bad = " << bad1 << endl;
 
@@ -3582,7 +3582,7 @@ void MeshOptimize3d :: SwapImprove2Sequential (Mesh & mesh, OPTIMIZEGOAL goal)
   */
 
 
-  bad1 = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
+  bad1 = mesh.CalcTotalBad (mp);
   (*testout) << "Total badness = " << bad1 << endl;
   (*testout) << "swapimprove2 done" << "\n";
   //  (*mycout) << "Vol = " << CalcVolume (points, volelements) << "\n";
@@ -3611,7 +3611,7 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
   PrintMessage (3, "SwapImprove2 ");
   (*testout) << "\n" << "Start SwapImprove2" << "\n";
 
-  bad1 = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
+  bad1 = mesh.CalcTotalBad (mp);
   (*testout) << "Total badness = " << bad1 << endl;
 
   // find elements on node
@@ -3668,7 +3668,7 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 
   PrintMessage (5, cnt, " swaps performed");
 
-  bad1 = CalcTotalBad (mesh.Points(), mesh.VolumeElements());
+  bad1 = mesh.CalcTotalBad (mp);
   (*testout) << "Total badness = " << bad1 << endl;
   (*testout) << "swapimprove2 done" << "\n";
 }
