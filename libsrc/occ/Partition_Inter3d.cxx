@@ -206,7 +206,7 @@ static void PutInBounds (const TopoDS_Face&          F,
   Handle (Geom_Surface) S   = BRep_Tool::Surface(F,L);
 
   if (S->IsKind(STANDARD_TYPE(Geom_RectangularTrimmedSurface))) {
-    S = (*(Handle_Geom_RectangularTrimmedSurface*)&S)->BasisSurface();
+    S = Handle(Geom_RectangularTrimmedSurface)::DownCast(S)->BasisSurface();
   }
   if (!S->IsUPeriodic() && !S->IsVPeriodic())
     return;
@@ -702,7 +702,7 @@ TopTools_MapOfShape& Partition_Inter3d::TouchedFaces()
 //purpose  : 
 //=======================================================================
 
-Handle_BRepAlgo_AsDes Partition_Inter3d::AsDes() const 
+Handle(BRepAlgo_AsDes) Partition_Inter3d::AsDes() const
 {
   return myAsDes;
 }
@@ -829,7 +829,7 @@ TopoDS_Vertex Partition_Inter3d::ReplaceSameDomainV(const TopoDS_Vertex& V,
 //purpose  : 
 //=======================================================================
 
-Handle_BRepAlgo_AsDes Partition_Inter3d::SectionEdgesAD() const
+Handle(BRepAlgo_AsDes) Partition_Inter3d::SectionEdgesAD() const
 {
   return mySectionEdgesAD;
 }
