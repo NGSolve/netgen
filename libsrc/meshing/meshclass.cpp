@@ -1912,6 +1912,11 @@ namespace netgen
          });
     
     auto elsonpoint = creator.MoveTable();
+
+    ParallelFor (Range(elsonpoint), [&] (auto i)
+         {
+           QuickSort(elsonpoint[i]);
+         });
            
     NgArray<int,PointIndex::BASE> numonpoint(np);
     /*
