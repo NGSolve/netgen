@@ -687,12 +687,24 @@ namespace netgen
         Tcl_SetVar  (interp, "::status_ne", buf, 0);
 	sprintf (buf, "%u", unsigned(mesh->GetNSE()));
         Tcl_SetVar  (interp, "::status_nse", buf, 0);
+
+        auto tets_in_qualclass = mesh->GetQualityHistogram();
+        lstring[0] = 0;
+        for (int i = 0; i < tets_in_qualclass.Size(); i++)
+          {
+            sprintf (buf, " %d", tets_in_qualclass[i]);
+            strcat (lstring, buf);
+          }
+        for (int i = tets_in_qualclass.Size(); i < 20; i++)
+            strcat (lstring, " 0");
+        Tcl_SetVar  (interp, "::status_tetqualclasses", lstring, 0);
       }
     else
       {
         Tcl_SetVar  (interp, "::status_np", "0", 0);
         Tcl_SetVar  (interp, "::status_ne", "0", 0);
         Tcl_SetVar  (interp, "::status_nse", "0", 0);
+        Tcl_SetVar  (interp, "::status_tetqualclasses", "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", 0);
       }
 
     if (multithread.running)
@@ -703,16 +715,6 @@ namespace netgen
     Tcl_SetVar (interp, "::status_task", const_cast<char *>(multithread.task), 0);
     sprintf (buf, "%lf", multithread.percent);
     Tcl_SetVar  (interp, "::status_percent", buf, 0);
-
-    lstring[0] = 0;
-    for (int i = 1; i <= tets_in_qualclass.Size(); i++)
-      {
-	sprintf (buf, " %d", tets_in_qualclass.Get(i));
-	strcat (lstring, buf);
-      }
-    for (int i = tets_in_qualclass.Size()+1; i <= 20; i++)
-      strcat (lstring, " 0");
-    Tcl_SetVar  (interp, "::status_tetqualclasses", lstring, 0);
 
     {
       lock_guard<mutex> guard(tcl_todo_mutex);
