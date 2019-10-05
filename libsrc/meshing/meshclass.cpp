@@ -6563,6 +6563,21 @@ namespace netgen
       return defaultstring;
   }
 
+
+  NgArray<string*> & Mesh :: GetRegionNamesCD (int codim)
+  {
+    switch (codim)
+      {
+      case 0: return materials;
+      case 1: return bcnames;
+      case 2: return cd2names;
+      case 3: return cd3names;
+      default: throw Exception("don't have regions of co-dimension "+ToString(codim));
+      }
+  }
+  
+  
+
   void Mesh :: SetUserData(const char * id, NgArray<int> & data)
   {
     if(userdata_int.Used(id))

@@ -321,35 +321,35 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     ;
 
   py::class_<Element2d>(m, "Element2D")
-    .def(py::init ([](int index, py::list vertices)
+    .def(py::init ([](int index, std::vector<PointIndex> vertices)
                    {
                      Element2d * newel = nullptr;
-                     if (py::len(vertices) == 3)
+                     if (vertices.size() == 3)
                        {
                          newel = new Element2d(TRIG);
                          for (int i = 0; i < 3; i++)
-                           (*newel)[i] = py::extract<PointIndex>(vertices[i])();
+                           (*newel)[i] = vertices[i];
                          newel->SetIndex(index);
                        }
-                     else if (py::len(vertices) == 4)
+                     else if (vertices.size() == 4)
                        {
                          newel = new Element2d(QUAD);
                          for (int i = 0; i < 4; i++)
-                           (*newel)[i] = py::extract<PointIndex>(vertices[i])();
+                           (*newel)[i] = vertices[i];
                          newel->SetIndex(index);
                        }
-                     else if (py::len(vertices) == 6)
+                     else if (vertices.size() == 6)
                        {
                          newel = new Element2d(TRIG6);
                          for(int i = 0; i<6; i++)
-                           (*newel)[i] = py::extract<PointIndex>(vertices[i])();
+                           (*newel)[i] = vertices[i];
                          newel->SetIndex(index);
                        }
-                     else if (py::len(vertices) == 8)
+                     else if (vertices.size() == 8)
                        {
                          newel = new Element2d(QUAD8);
                          for(int i = 0; i<8; i++)
-                           (*newel)[i] = py::extract<PointIndex>(vertices[i])();
+                           (*newel)[i] = vertices[i];
                          newel->SetIndex(index);
                        }
                      else 
@@ -801,6 +801,20 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             return self.Compress ();
           } ,py::call_guard<py::gil_scoped_release>())
           
+    .def ("AddRegion", [] (Mesh & self, string name, int dim) -> int
+         {
+           auto & regionnames = self.GetRegionNamesCD(self.GetDimension()-dim);
+           regionnames.Append (new string(name));
+           int idx = regionnames.Size();
+           if (dim == 2)
+             {
+               FaceDescriptor fd;
+               fd.SetBCName(regionnames.Last());
+               fd.SetBCProperty(idx);
+               self.AddFaceDescriptor(fd);
+             }
+           return idx;
+         }, py::arg("name"), py::arg("dim"))
     
     .def ("SetBCName", &Mesh::SetBCName)
     .def ("GetBCName", FunctionPointer([](Mesh & self, int bc)->string 

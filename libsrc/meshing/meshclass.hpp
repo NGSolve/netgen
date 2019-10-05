@@ -687,6 +687,9 @@ namespace netgen
     string * GetBCNamePtr (int bcnr) const
     { return (bcnr < bcnames.Size() && bcnames[bcnr]) ? bcnames[bcnr] : &default_bc; }
 
+
+    NgArray<string*> & GetRegionNamesCD (int codim);
+    
     ///
     void ClearFaceDescriptors()
     { facedecoding.SetSize(0); }
