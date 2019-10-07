@@ -52,7 +52,7 @@ void CreateSTLParametersFromKwargs(STLParameters& stlparam, py::dict kwargs)
     stlparam.outerchartangle = py::cast<double>(kwargs.attr("pop")("outerchartangle"));
   if(kwargs.contains("usesearchtree"))
     stlparam.usesearchtree = py::cast<int>(kwargs.attr("pop")("usesearchtree"));
-  if(kwargs.contains("resthatlasfac"))
+  if(kwargs.contains("atlasfac"))
   {
     auto val = kwargs.attr("pop")("resthatlasfac");
     if(val.is_none())
@@ -65,9 +65,9 @@ void CreateSTLParametersFromKwargs(STLParameters& stlparam, py::dict kwargs)
   }
   if(kwargs.contains("atlasminh"))
     stlparam.atlasminh = py::cast<double>(kwargs.attr("pop")("atlasminh"));
-  if(kwargs.contains("resthsurfcurvfac"))
+  if(kwargs.contains("surfcurvfac"))
   {
-    auto val = kwargs.attr("pop")("resthsurfcurvfac");
+    auto val = kwargs.attr("pop")("surfcurvfac");
     if(val.is_none())
       stlparam.resthsurfcurvenable = false;
     else
@@ -76,9 +76,9 @@ void CreateSTLParametersFromKwargs(STLParameters& stlparam, py::dict kwargs)
       stlparam.resthsurfcurvfac = py::cast<double>(val);
     }
   }
-  if(kwargs.contains("resthchartdistfac"))
+  if(kwargs.contains("chartdistfac"))
   {
-    auto val = kwargs.attr("pop")("resthchartdistfac");
+    auto val = kwargs.attr("pop")("chartdistfac");
     if(val.is_none())
       stlparam.resthchartdistenable = false;
     else
@@ -87,9 +87,9 @@ void CreateSTLParametersFromKwargs(STLParameters& stlparam, py::dict kwargs)
       stlparam.resthchartdistfac = py::cast<double>(val);
     }
   }
-  if(kwargs.contains("resthcloseedgefac"))
+  if(kwargs.contains("closeedgefac"))
   {
-    auto val = kwargs.attr("pop")("resthcloseedgefac");
+    auto val = kwargs.attr("pop")("closeedgefac");
     if(val.is_none())
       stlparam.resthcloseedgeenable = false;
     else
@@ -98,9 +98,9 @@ void CreateSTLParametersFromKwargs(STLParameters& stlparam, py::dict kwargs)
       stlparam.resthcloseedgefac = py::cast<double>(val);
     }
   }
-  if(kwargs.contains("resthedgeanglefac"))
+  if(kwargs.contains("edgeanglefac"))
   {
-    auto val = kwargs.attr("pop")("resthedgeanglefac");
+    auto val = kwargs.attr("pop")("edgeanglefac");
     if(val.is_none())
       stlparam.resthedgeangleenable = false;
     else
@@ -109,9 +109,9 @@ void CreateSTLParametersFromKwargs(STLParameters& stlparam, py::dict kwargs)
       stlparam.resthedgeanglefac = py::cast<double>(val);
     }
   }
-  if(kwargs.contains("resthsurfmeshcurvfac"))
+  if(kwargs.contains("surfmeshcurvfac"))
   {
-    auto val = kwargs.attr("pop")("resthsurfmeshcurvfac");
+    auto val = kwargs.attr("pop")("surfmeshcurvfac");
     if(val.is_none())
       stlparam.resthsurfmeshcurvenable = false;
     else
@@ -120,9 +120,9 @@ void CreateSTLParametersFromKwargs(STLParameters& stlparam, py::dict kwargs)
       stlparam.resthsurfmeshcurvfac = py::cast<double>(val);
     }
   }
-  if(kwargs.contains("resthlinelengthfac"))
+  if(kwargs.contains("linelengthfac"))
   {
-    auto val = kwargs.attr("pop")("resthlinelengthfac");
+    auto val = kwargs.attr("pop")("linelengthfac");
     if(val.is_none())
       stlparam.resthlinelengthenable = false;
     else
