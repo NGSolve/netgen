@@ -302,6 +302,13 @@ public:
   void Print (ostream & ost) const;
 };
 
+inline ostream & operator<< (ostream & ost, const STLParameters & stlparam)
+  {
+    stlparam.Print (ost);
+    return ost;
+  }
+
+
 
 void STLMeshing (STLGeometry & geom,
 		 Mesh & mesh,
