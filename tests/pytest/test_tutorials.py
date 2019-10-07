@@ -31,9 +31,14 @@ def checkData(mesh, mp, ref):
     assert ref['quality_histogram'] == data['quality_histogram']
     assert ref['total_badness'] == pytest.approx(data['total_badness'], rel=1e-5)
 
-
+# get tutorials
 def getFiles(fileEnding):
     r, d, files = next(os.walk(os.path.join("..","..","tutorials")))
+    return (f for f in files if f.endswith(fileEnding))
+
+# get additional tests
+def getAdditionalFiles(fileEnding):
+    r, d, files = next(os.walk("geofiles"))
     return (f for f in files if f.endswith(fileEnding))
 
 @pytest.fixture
@@ -59,25 +64,30 @@ _geofiles = [f for f in getFiles(".geo")] + [f for f in getFiles(".stl")]
 if has_occ:
     _geofiles += [f for f in getFiles(".step")]
 _geofiles.sort()
+_additional_testfiles = [f for f in getAdditionalFiles(".stl")]
+if has_occ:
+    _additional_testfiles += [f for f in getAdditionalFiles(".step")]
+_additional_testfiles.sort()
 
 def generateMesh(filename, mp):
+    folder = os.path.join("..","..","tutorials") if filename in _geofiles else "geofiles"
     if filename.endswith(".geo"):
-        geo = csg.CSGeometry(os.path.join("..","..","tutorials", filename))
+        geo = csg.CSGeometry(os.path.join(folder, filename))
     elif filename.endswith(".stl"):
-        geo = stl.STLGeometry(os.path.join("..","..","tutorials", filename))
+        geo = stl.STLGeometry(os.path.join(folder, filename))
     elif filename.endswith(".step"):
-        geo = occ.OCCGeometry(os.path.join("..","..","tutorials", filename))
+        geo = occ.OCCGeometry(os.path.join(folder, filename))
     return geo.GenerateMesh(mp)
 
 def isSlowTest(filename):
     return filename in ["cubemcyl.geo", "frame.step", "revolution.geo", "manyholes.geo", "torus.geo",
                         "cubemsphere.geo", "manyholes2.geo", "matrix.geo", "trafo.geo", "ellipticcone.geo",
                         "period.geo", "shaft.geo", "cubeandring.geo", "ellipticcyl.geo",
-                        "ellipsoid.geo", "cone.geo"]
+                        "ellipsoid.geo", "cone.geo", "plane.stl"]
 
 def getParameters():
     res = []
-    for f in _geofiles:
+    for f in _geofiles + _additional_testfiles:
         for i,mp in enumerate(getMeshingparameters(f)):
             if isSlowTest(f):
                 res.append( pytest.param(f, mp, i, marks=pytest.mark.slow ) )
@@ -105,7 +115,7 @@ def generateResultFile():
     import re, time
     data = {}
     with TaskManager():
-        for _file in _geofiles:
+        for _file in _geofiles + _additional_testfiles:
             print("generate "+_file)
             start = time.time()
             mps = getMeshingparameters(_file)
@@ -116,10 +126,11 @@ def generateResultFile():
                 mesh = generateMesh(_file, mp)
                 meshdata.append( getData(mesh, mp) )
             data[_file] = meshdata
+            print("needed", time.time() - start, "seconds")
         
-        print("needed", time.time() - start, "seconds")
     s = json.dumps(data, sort_keys=True, indent=4)
     open("results.json", "w").write(s)
+    print("done")
 
 if __name__ == "__main__":
     generateResultFile()
