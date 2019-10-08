@@ -66,7 +66,7 @@ optimize3d: str = "cmdmustm"
 optsteps3d: int = 3
   Number of 3d optimization steps.
 
-optimize2d: str = "smsmsmSmSmSm"
+optimize2d: str = "smcmSmcmSmcm"
   2d optimization strategy:
     s .. swap, opt 6 lines/node
     S .. swap, optimal elements
