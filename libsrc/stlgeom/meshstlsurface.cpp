@@ -306,7 +306,6 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 		  
 		  mesh.CalcSurfacesOfNode();
 		  optmesh.EdgeSwapping (mesh, 0);
-		  mesh.CalcSurfacesOfNode();
 		  optmesh.ImproveMesh (mesh, mparam);
 		}
 

@@ -187,6 +187,7 @@ namespace netgen
 
     Array<SurfaceElementIndex> seia;
     bool mixed = false;
+
     if(faceindex==0)
       {
         seia.SetSize(mesh.GetNSE());
@@ -213,8 +214,7 @@ namespace netgen
         return GenericImprove(mesh);
       
     Array<Neighbour> neighbors(mesh.GetNSE());
-    INDEX_2_HASHTABLE<trionedge> other(2*seia.Size() + 2);
-
+    auto elements_on_node = mesh.CreatePoint2SurfaceElementTable(faceindex);
 
     Array<bool> swapped(mesh.GetNSE());
     Array<int,PointIndex> pdef(mesh.GetNP());
@@ -254,9 +254,9 @@ namespace netgen
                   POINTTYPE typ = mesh[sel[j]].Type();
                   if (typ == FIXEDPOINT || typ == EDGEPOINT)
                     {
-                      pangle[sel[j]] +=
+                      AtomicAdd(pangle[sel[j]],
                         Angle (mesh[sel[(j+1)%3]] - mesh[sel[j]],
-                               mesh[sel[(j+2)%3]] - mesh[sel[j]]);
+                               mesh[sel[(j+2)%3]] - mesh[sel[j]]));
                     }
                 }
 	  }
@@ -280,14 +280,6 @@ namespace netgen
             }
        });
 
-    /*
-    for (int i = 0; i < seia.Size(); i++)
-      {
-	const Element2d & sel = mesh[seia[i]];
-	for (int j = 0; j < 3; j++)
-	  pdef[sel[j]]++;
-      }
-    */
     ParallelForRange( Range(seia), [&] (auto myrange)
         {
           for (auto i : myrange)
@@ -300,58 +292,41 @@ namespace netgen
                   neighbors[sei].SetNr (j, -1);
                   neighbors[sei].SetOrientation (j, 0);
                 }
+
+              const auto sel = mesh[sei];
+              for (int j = 0; j < 3; j++)
+                {
+                  PointIndex pi1 = sel.PNumMod(j+2);
+                  PointIndex pi2 = sel.PNumMod(j+3);
+
+                  for (auto sei_other : elements_on_node[pi1])
+                    {
+                      if(sei_other==sei) continue;
+                      const auto & other = mesh[sei_other];
+                      int pi1_other = -1;
+                      int pi2_other = -1;
+                      bool common_edge = false;
+                      for (int k = 0; k < 3; k++)
+                        {
+                          if(other[k] == pi1)
+                              pi1_other = k;
+                          if(other[k] == pi2)
+                            {
+                              pi2_other = k;
+                              common_edge = true;
+                            }
+                        }
+
+                      if(common_edge)
+                        {
+                          neighbors[sei].SetNr (j, sei_other);
+                          neighbors[sei].SetOrientation (j, 3-pi1_other-pi2_other);
+                        }
+                    }
+                }
             }
         });
-    
 
-    timer_nb.Start();
-    for (SurfaceElementIndex sei : seia)
-      {
-	const Element2d & sel = mesh[sei];
-        
-	for (int j = 0; j < 3; j++)
-	  {
-	    PointIndex pi1 = sel.PNumMod(j+2);
-	    PointIndex pi2 = sel.PNumMod(j+3);
-	  
-	    //	    double loch = mesh.GetH(mesh[pi1]);
-	    
-	    // INDEX_2 edge(pi1, pi2);
-	    // edge.Sort();
-	  
-	    if (mesh.IsSegment (pi1, pi2))
-	      continue;
-	  
-	    /*
-	      if (segments.Used (edge))
-	      continue;
-	    */
-	    INDEX_2 ii2 (pi1, pi2);
-	    if (other.Used (ii2))
-	      {
-		// INDEX_2 i2s(ii2);
-		// i2s.Sort();
-
-                /*
-		int i2 = other.Get(ii2).tnr;
-		int j2 = other.Get(ii2).sidenr;
-		*/
-                auto othertrig = other.Get(ii2);
-		SurfaceElementIndex i2 = othertrig.tnr;
-		int j2 = othertrig.sidenr;
-                
-		neighbors[sei].SetNr (j, i2);
-		neighbors[sei].SetOrientation (j, j2);
-		neighbors[i2].SetNr (j2, sei);
-		neighbors[i2].SetOrientation (j2, j);
-	      }
-	    else
-	      {
-		other.Set (INDEX_2 (pi2, pi1), trionedge (sei, j));
-	      }
-	  }
-      }
-    timer_nb.Stop();
 
     for (SurfaceElementIndex sei : seia)
       swapped[sei] = false;
