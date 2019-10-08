@@ -37,7 +37,7 @@ public:
 			     const NgArray<Point<3>* > & from, NgArray<Point<3>* > & dest);
 
   bool EdgeSwapping (Mesh & mesh, const int usemetric, Array<Neighbour> &neighbors, Array<bool> &swapped,
-    const SurfaceElementIndex t1, const int edge, const int surfnr, const int t, NgArray<int,PointIndex::BASE> &pdef, const bool check_only=false);
+    const SurfaceElementIndex t1, const int edge, const int t, NgArray<int,PointIndex::BASE> &pdef, const bool check_only=false);
   void EdgeSwapping (Mesh & mesh, int usemetric);
   void CombineImprove (Mesh & mesh);
   void SplitImprove (Mesh & mesh);

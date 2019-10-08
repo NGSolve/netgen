@@ -27,7 +27,6 @@ namespace netgen
     Array<Neighbour> &neighbors,
     Array<bool> &swapped,
     const SurfaceElementIndex t1, const int o1,
-    const int surfnr,
     const int t,
     NgArray<int,PointIndex::BASE> &pdef,
     const bool check_only)
@@ -41,6 +40,8 @@ namespace netgen
     if (t2 == -1) return false;
     if (swapped[t1] || swapped[t2]) return false;
 
+    const int faceindex = mesh[t1].GetIndex();
+    const int surfnr = mesh.GetFaceDescriptor (faceindex).SurfNr();
 
     PointIndex pi1 = mesh[t1].PNumMod(o1+1+1);
     PointIndex pi2 = mesh[t1].PNumMod(o1+1+2);
@@ -174,51 +175,41 @@ namespace netgen
   void MeshOptimize2d :: EdgeSwapping (Mesh & mesh, int usemetric)
   {
     static Timer timer("EdgeSwapping (2D)"); RegionTimer reg(timer);
-    if (!faceindex)
-      {
-	if (usemetric)
-	  PrintMessage (3, "Edgeswapping, metric");
-	else
-	  PrintMessage (3, "Edgeswapping, topological");
-
-	for (faceindex = 1; faceindex <= mesh.GetNFD(); faceindex++)
-	  {
-	    EdgeSwapping (mesh, usemetric);
-
-	    if (multithread.terminate)
-	      throw NgException ("Meshing stopped");
-	  }
-
-	faceindex = 0;
-	mesh.CalcSurfacesOfNode();
-	return;
-      }
-
+    if (usemetric)
+      PrintMessage (3, "Edgeswapping, metric");
+    else
+      PrintMessage (3, "Edgeswapping, topological");
 
     static int timerstart = NgProfiler::CreateTimer ("EdgeSwapping 2D start");
     NgProfiler::StartTimer (timerstart);
 
-
     Array<SurfaceElementIndex> seia;
-    mesh.GetSurfaceElementsOfFace (faceindex, seia);
+    bool mixed = false;
+    if(faceindex==0)
+      {
+        seia.SetSize(mesh.GetNSE());
+        ParallelForRange( Range(seia), [&] (auto myrange)
+            {
+                for (auto i : myrange)
+                  {
+                    SurfaceElementIndex sei(i);
+                    seia[i] = sei;
+                    if (mesh[sei].GetNP() != 3)
+                        mixed = true;
+                  }
+            });
+      }
+    else
+      {
+        mesh.GetSurfaceElementsOfFace (faceindex, seia);
+        for (SurfaceElementIndex sei : seia)
+            if (mesh[sei].GetNP() != 3)
+                mixed = true;
+      }
 
-    /*
-    for (int i = 0; i < seia.Size(); i++)
-      if (mesh[seia[i]].GetNP() != 3)
-	{
-	  GenericImprove (mesh);
-	  return;
-	}
-    */
-    for (SurfaceElementIndex sei : seia)
-      if (mesh[sei].GetNP() != 3)
-	{
-	  GenericImprove (mesh);
-	  return;
-	}
+    if(mixed)
+        return GenericImprove(mesh);
       
-    int surfnr = mesh.GetFaceDescriptor (faceindex).SurfNr();
-
     Array<Neighbour> neighbors(mesh.GetNSE());
     INDEX_2_HASHTABLE<trionedge> other(2*seia.Size() + 2);
 
@@ -399,7 +390,7 @@ namespace netgen
                   throw NgException ("Meshing stopped");
 
                 for (int o1 = 0; o1 < 3; o1++)
-                    if(EdgeSwapping(mesh, usemetric, neighbors, swapped, t1, o1, surfnr, t, pdef, true))
+                    if(EdgeSwapping(mesh, usemetric, neighbors, swapped, t1, o1, t, pdef, true))
                         improvement_candidates[cnt++]= std::make_pair(t1,o1);
               }
           });
@@ -408,11 +399,12 @@ namespace netgen
         QuickSort(elements_with_improvement);
 
         for (auto [t1,o1] : elements_with_improvement)
-            done |= EdgeSwapping(mesh, usemetric, neighbors, swapped, t1, o1, surfnr, t, pdef, false);
+            done |= EdgeSwapping(mesh, usemetric, neighbors, swapped, t1, o1, t, pdef, false);
 	t--;
       }
 
     mesh.SetNextTimeStamp();
+    mesh.CalcSurfacesOfNode();
   }
 
 
