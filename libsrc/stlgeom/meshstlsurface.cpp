@@ -1108,9 +1108,16 @@ int  MeshOptimizeSTLSurface :: CalcPointGeomInfo(PointGeomInfo& gi, const Point<
   
 }
 
+void MeshOptimizeSTLSurface :: GetNormalVector(INDEX surfind, const Point<3>  & p, PointGeomInfo & gi, Vec<3> & n) const
+{
+  geom.SelectChartOfTriangle (gi.trignum);
+  n = geom.GetChartNormalVector();
+}
+
+
 void MeshOptimizeSTLSurface :: GetNormalVector(INDEX surfind, const Point<3> & p, Vec<3> & n) const
 {
-  n = geom.GetChartNormalVector();
+  throw Exception("MeshOptimizeSTLSurface :: GetNormalVector called without PointGeomInfo");
 }
   
 
