@@ -85,7 +85,8 @@ public:
     ///
     virtual int CalcPointGeomInfo(PointGeomInfo& gi, const Point<3> & p3) const;
     ///
-    virtual void GetNormalVector(INDEX surfind, const Point<3> & p, Vec<3> & n) const;
+    void GetNormalVector(INDEX surfind, const Point<3> & p, Vec<3> & n) const override;
+    void GetNormalVector(INDEX surfind, const Point<3>  & p, PointGeomInfo & gi, Vec<3> & n) const override;
 };
 
 
