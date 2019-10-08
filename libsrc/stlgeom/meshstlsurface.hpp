@@ -78,6 +78,8 @@ public:
     ///
     void ProjectPoint (INDEX surfind, Point<3> & p) const override;
     ///
+    int ProjectPointGI (INDEX surfind, Point<3> & p, PointGeomInfo & gi) const override;
+    ///
     void ProjectPoint2 (INDEX surfind, INDEX surfind2, Point<3> & p) const override;
     ///
     int CalcPointGeomInfo(PointGeomInfo& gi, const Point<3> & p3) const override;
