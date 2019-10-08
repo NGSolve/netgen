@@ -707,12 +707,6 @@ namespace netgen
   }
 
 
-  void MeshOptimize2d :: SelectSurfaceOfPoint (const Point<3> & p,
-					       const PointGeomInfo & gi)
-  {
-    ;
-  }
-
   void MeshOptimize2d :: ImproveMesh (Mesh & mesh, const MeshingParameters & mp)
   {
     if (!faceindex)
@@ -959,7 +953,6 @@ namespace netgen
 		}
 
 	    ld.gi1 = hel.GeomInfoPi(hpi);
-	    SelectSurfaceOfPoint (ld.sp1, ld.gi1);
 	  
 	    ld.locelements.SetSize(0);
 	    ld.locrots.SetSize (0);

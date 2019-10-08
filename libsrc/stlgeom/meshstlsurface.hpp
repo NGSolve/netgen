@@ -76,9 +76,6 @@ public:
     MeshOptimizeSTLSurface (STLGeometry & ageom); 
    
     ///
-    void SelectSurfaceOfPoint (const Point<3> & p,
-				       const PointGeomInfo & gi) override;
-    ///
     void ProjectPoint (INDEX surfind, Point<3> & p) const override;
     ///
     void ProjectPoint2 (INDEX surfind, INDEX surfind2, Point<3> & p) const override;

@@ -37,9 +37,6 @@ public:
 
 
   ///
-  virtual void SelectSurfaceOfPoint (const Point<3> & p,
-				     const PointGeomInfo & gi);
-  ///
   virtual void ProjectPoint (INDEX /* surfind */, Point<3> & /* p */) const { };
 
   /// project point, use gi as initial value, and compute new gi

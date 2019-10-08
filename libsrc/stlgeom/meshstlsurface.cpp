@@ -1064,15 +1064,6 @@ MeshOptimizeSTLSurface :: MeshOptimizeSTLSurface (STLGeometry & ageom)
 }
 
 
-void MeshOptimizeSTLSurface :: SelectSurfaceOfPoint (const Point<3> & p,
-						     const PointGeomInfo & gi)
-{
-  //  (*testout) << "sel char: " << gi.trignum << endl;
-  
-  geom.SelectChartOfTriangle (gi.trignum);
-  //  geom.SelectChartOfPoint (p);
-}
-
 
 void MeshOptimizeSTLSurface :: ProjectPoint (INDEX surfind, Point<3> & p) const
 {
