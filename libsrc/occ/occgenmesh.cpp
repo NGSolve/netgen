@@ -796,7 +796,6 @@ namespace netgen
         // Philippose - 15/01/2009
         double maxh = geom.face_maxh[k-1];
         //double maxh = mparam.maxh;
-        // mparam.checkoverlap = 0;
         //      int noldpoints = mesh->GetNP();
         int noldsurfel = mesh.GetNSE();
 
@@ -809,9 +808,13 @@ namespace netgen
 
         MESHING2_RESULT res;
 
+        // TODO: check overlap not correctly working here
+        MeshingParameters mparam_without_overlap = mparam;
+        mparam_without_overlap.checkoverlap = false;
+        
         try {
           static Timer t("GenerateMesh"); RegionTimer reg(t);
-          res = meshing.GenerateMesh (mesh, mparam, maxh, k);
+          res = meshing.GenerateMesh (mesh, mparam_without_overlap, maxh, k);
         }
 
         catch (SingularMatrixException)
