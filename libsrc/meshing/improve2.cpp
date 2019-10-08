@@ -8,6 +8,7 @@ namespace netgen
 {
 
 
+  using ngcore::ParallelForRange;
 
 
 
@@ -28,7 +29,7 @@ namespace netgen
     Array<bool> &swapped,
     const SurfaceElementIndex t1, const int o1,
     const int t,
-    NgArray<int,PointIndex::BASE> &pdef,
+    Array<int,PointIndex> &pdef,
     const bool check_only)
   {
     bool should;
@@ -175,6 +176,7 @@ namespace netgen
   void MeshOptimize2d :: EdgeSwapping (Mesh & mesh, int usemetric)
   {
     static Timer timer("EdgeSwapping (2D)"); RegionTimer reg(timer);
+    static Timer timer_nb("EdgeSwapping-Find neighbors");
     if (usemetric)
       PrintMessage (3, "Edgeswapping, metric");
     else
@@ -215,59 +217,68 @@ namespace netgen
 
 
     Array<bool> swapped(mesh.GetNSE());
-    NgArray<int,PointIndex::BASE> pdef(mesh.GetNP());
-    NgArray<double,PointIndex::BASE> pangle(mesh.GetNP());
+    Array<int,PointIndex> pdef(mesh.GetNP());
+    Array<double,PointIndex> pangle(mesh.GetNP());
 
-
-    // int e;
-    // double d;
-    // Vec3d nv1, nv2;
-
-    // double loch(-1);
     static const double minangle[] = { 0, 1.481, 2.565, 3.627, 4.683, 5.736, 7, 9 };
 
 
-    for (int i = 0; i < seia.Size(); i++)
+    if(faceindex == 0)
       {
-	const Element2d & sel = mesh[seia[i]];
-	for (int j = 0; j < 3; j++)
-	  pangle[sel[j]] = 0.0;
+        ParallelForRange( Range(pangle), [&] (auto myrange)
+            {
+              for (auto i : myrange)
+                  pangle[i] = 0.0;
+            });
       }
-    // pangle = 0;
-
-    for (int i = 0; i < seia.Size(); i++)
+    else
       {
-	const Element2d & sel = mesh[seia[i]];
-	for (int j = 0; j < 3; j++)
-	  {
-	    POINTTYPE typ = mesh[sel[j]].Type();
-	    if (typ == FIXEDPOINT || typ == EDGEPOINT)
-	      {
-		pangle[sel[j]] +=
-		  Angle (mesh[sel[(j+1)%3]] - mesh[sel[j]],
-			 mesh[sel[(j+2)%3]] - mesh[sel[j]]);
-	      }
-	  }
+        ParallelForRange( Range(seia), [&] (auto myrange)
+            {
+              for (auto i : myrange)
+                {
+                  const Element2d & sel = mesh[seia[i]];
+                  for (int j = 0; j < 3; j++)
+                    pangle[sel[j]] = 0.0;
+                }
+            });
       }
 
-    // for (PointIndex pi = PointIndex::BASE; 
-    // pi < mesh.GetNP()+PointIndex::BASE; pi++)
-    
-    // pdef = 0;
-    for (int i = 0; i < seia.Size(); i++)
-      {
-	const Element2d & sel = mesh[seia[i]];
-	for (int j = 0; j < 3; j++)
-	  {
-	    PointIndex pi = sel[j];
-	    if (mesh[pi].Type() == INNERPOINT || mesh[pi].Type() == SURFACEPOINT)
-	      pdef[pi] = -6;
-	    else
-	      for (int j = 0; j < 8; j++)
-		if (pangle[pi] >= minangle[j])
-		  pdef[pi] = -1-j;
+    ParallelForRange( Range(seia), [&] (auto myrange)
+        {
+          for (auto i : myrange)
+            {
+              const Element2d & sel = mesh[seia[i]];
+              for (int j = 0; j < 3; j++)
+                {
+                  POINTTYPE typ = mesh[sel[j]].Type();
+                  if (typ == FIXEDPOINT || typ == EDGEPOINT)
+                    {
+                      pangle[sel[j]] +=
+                        Angle (mesh[sel[(j+1)%3]] - mesh[sel[j]],
+                               mesh[sel[(j+2)%3]] - mesh[sel[j]]);
+                    }
+                }
 	  }
-      }
+       });
+
+    ParallelForRange( Range(seia), [&] (auto myrange)
+        {
+          for (auto i : myrange)
+            {
+              const Element2d & sel = mesh[seia[i]];
+              for (int j = 0; j < 3; j++)
+                {
+                  PointIndex pi = sel[j];
+                  if (mesh[pi].Type() == INNERPOINT || mesh[pi].Type() == SURFACEPOINT)
+                    pdef[pi] = -6;
+                  else
+                    for (int j = 0; j < 8; j++)
+                      if (pangle[pi] >= minangle[j])
+                        pdef[pi] = -1-j;
+                }
+            }
+       });
 
     /*
     for (int i = 0; i < seia.Size(); i++)
@@ -277,41 +288,23 @@ namespace netgen
 	  pdef[sel[j]]++;
       }
     */
-    for (SurfaceElementIndex sei : seia)
-      for (PointIndex pi : mesh[sei].PNums<3>())
-        pdef[pi]++;
-    
-    // for (int i = 0; i < seia.Size(); i++)
-    for (SurfaceElementIndex sei : seia)
-      for (int j = 0; j < 3; j++)
+    ParallelForRange( Range(seia), [&] (auto myrange)
         {
-          neighbors[sei].SetNr (j, -1);
-          neighbors[sei].SetOrientation (j, 0);
-        }
+          for (auto i : myrange)
+            {
+              auto sei = seia[i];
+              for (PointIndex pi : mesh[sei].template PNums<3>())
+                  AsAtomic(pdef[pi])++;
+              for (int j = 0; j < 3; j++)
+                {
+                  neighbors[sei].SetNr (j, -1);
+                  neighbors[sei].SetOrientation (j, 0);
+                }
+            }
+        });
+    
 
-    /*
-      NgArray<Vec3d> normals(mesh.GetNP());
-      for (i = 1; i <= mesh.GetNSE(); i++)
-      {
-      Element2d & hel = mesh.SurfaceElement(i);
-      if (hel.GetIndex() == faceindex)
-      for (k = 1; k <= 3; k++)
-      {
-      int pi = hel.PNum(k);
-      SelectSurfaceOfPoint (mesh.Point(pi), hel.GeomInfoPi(k));
-      int surfi = mesh.GetFaceDescriptor(faceindex).SurfNr();
-      GetNormalVector (surfi, mesh.Point(pi), normals.Elem(pi));
-      normals.Elem(pi) /= normals.Elem(pi).Length();
-      }
-      }
-    */	    
-
-    /*
-    for (int i = 0; i < seia.Size(); i++)
-      {
-	const Element2d & sel = mesh[seia[i]];
-    */
-
+    timer_nb.Start();
     for (SurfaceElementIndex sei : seia)
       {
 	const Element2d & sel = mesh[sei];
@@ -358,6 +351,7 @@ namespace netgen
 	      }
 	  }
       }
+    timer_nb.Stop();
 
     for (SurfaceElementIndex sei : seia)
       swapped[sei] = false;
