@@ -7,20 +7,6 @@
 namespace netgen
 {
 
-  class Neighbour
-  {
-    int nr[3];
-    int orient[3];
-
-  public:
-    Neighbour () { ; } 
-
-    void SetNr (int side, int anr) { nr[side] = anr; }
-    int GetNr (int side) { return nr[side]; }
-
-    void SetOrientation (int side, int aorient) { orient[side] = aorient; }
-    int GetOrientation (int side) { return orient[side]; }
-  };
 
 
 
@@ -37,6 +23,152 @@ namespace netgen
   };
 
 
+  bool MeshOptimize2d :: EdgeSwapping (Mesh & mesh, const int usemetric,
+    Array<Neighbour> &neighbors,
+    Array<bool> &swapped,
+    const SurfaceElementIndex t1, const int o1,
+    const int surfnr,
+    const int t,
+    NgArray<int,PointIndex::BASE> &pdef,
+    const bool check_only)
+  {
+    bool should;
+    bool do_swap = false;
+
+    SurfaceElementIndex t2 = neighbors[t1].GetNr (o1);
+    int o2 = neighbors[t1].GetOrientation (o1);
+
+    if (t2 == -1) return false;
+    if (swapped[t1] || swapped[t2]) return false;
+
+
+    PointIndex pi1 = mesh[t1].PNumMod(o1+1+1);
+    PointIndex pi2 = mesh[t1].PNumMod(o1+1+2);
+    PointIndex pi3 = mesh[t1].PNumMod(o1+1);
+    PointIndex pi4 = mesh[t2].PNumMod(o2+1);
+
+    PointGeomInfo gi1 = mesh[t1].GeomInfoPiMod(o1+1+1);
+    PointGeomInfo gi2 = mesh[t1].GeomInfoPiMod(o1+1+2);
+    PointGeomInfo gi3 = mesh[t1].GeomInfoPiMod(o1+1);
+    PointGeomInfo gi4 = mesh[t2].GeomInfoPiMod(o2+1);
+
+    bool allowswap = true;
+
+    Vec<3> auxvec1 = mesh[pi3]-mesh[pi4];
+    Vec<3> auxvec2 = mesh[pi1]-mesh[pi4];
+
+    allowswap = allowswap && fabs(1.-(auxvec1*auxvec2)/(auxvec1.Length()*auxvec2.Length())) > 1e-4;
+
+    if(!allowswap)
+        return false;
+
+    // normal of new
+    Vec<3> nv1 = Cross (auxvec1, auxvec2);
+
+    auxvec1 = mesh.Point(pi4)-mesh.Point(pi3);
+    auxvec2 = mesh.Point(pi2)-mesh.Point(pi3);
+    allowswap = allowswap && fabs(1.-(auxvec1*auxvec2)/(auxvec1.Length()*auxvec2.Length())) > 1e-4;
+
+
+    if(!allowswap)
+        return false;
+
+    Vec<3> nv2 = Cross (auxvec1, auxvec2);
+
+
+    // normals of original
+    Vec<3> nv3 = Cross (mesh[pi1]-mesh[pi4], mesh[pi2]-mesh[pi4]);
+    Vec<3> nv4 = Cross (mesh[pi2]-mesh[pi3], mesh[pi1]-mesh[pi3]);
+
+    nv3 *= -1;
+    nv4 *= -1;
+    nv3.Normalize();
+    nv4.Normalize();
+
+    nv1.Normalize();
+    nv2.Normalize();
+
+    Vec<3> nvp3, nvp4;
+    GetNormalVector (surfnr, mesh.Point(pi3), gi3, nvp3);
+
+    nvp3.Normalize();
+
+    GetNormalVector (surfnr, mesh.Point(pi4), gi4, nvp4);
+
+    nvp4.Normalize();
+
+
+
+    double critval = cos (M_PI / 6);  // 30 degree
+    allowswap = allowswap &&
+        (nv1 * nvp3 > critval) &&
+        (nv1 * nvp4 > critval) &&
+        (nv2 * nvp3 > critval) &&
+        (nv2 * nvp4 > critval) &&
+        (nvp3 * nv3 > critval) &&
+        (nvp4 * nv4 > critval);
+
+
+    double horder = Dist (mesh[pi1], mesh[pi2]);
+
+    if ( // nv1 * nv2 >= 0 &&
+            nv1.Length() > 1e-3 * horder * horder &&
+            nv2.Length() > 1e-3 * horder * horder &&
+            allowswap )
+      {
+        if (!usemetric)
+          {
+            int e = pdef[pi1] + pdef[pi2] - pdef[pi3] - pdef[pi4];
+            double d =
+                Dist2 (mesh[pi1], mesh[pi2]) -
+                Dist2 (mesh[pi3], mesh[pi4]);
+
+            should = e >= t && (e > 2 || d > 0);
+          }
+        else
+          {
+            double loch = mesh.GetH(mesh[pi1]);
+            should =
+                CalcTriangleBadness (mesh[pi4], mesh[pi3], mesh[pi1], metricweight, loch) +
+                CalcTriangleBadness (mesh[pi3], mesh[pi4], mesh[pi2], metricweight, loch) <
+                CalcTriangleBadness (mesh[pi1], mesh[pi2], mesh[pi3], metricweight, loch) +
+                CalcTriangleBadness (mesh[pi2], mesh[pi1], mesh[pi4], metricweight, loch);
+          }
+
+        if (allowswap)
+          {
+            Element2d sw1 (pi4, pi3, pi1);
+            Element2d sw2 (pi3, pi4, pi2);
+
+            int legal1 =
+                mesh.LegalTrig (mesh[t1]) +
+                mesh.LegalTrig (mesh[t2]);
+            int legal2 =
+                mesh.LegalTrig (sw1) + mesh.LegalTrig (sw2);
+
+            if (legal1 < legal2) should = true;
+            if (legal2 < legal1) should = false;
+          }
+
+        do_swap = should;
+        if (should && !check_only)
+          {
+            // do swapping !
+
+            mesh[t1] = { { pi1, gi1 }, { pi4, gi4 }, { pi3, gi3 } };
+            mesh[t2] = { { pi2, gi2 }, { pi3, gi3 }, { pi4, gi4 } };
+
+            pdef[pi1]--;
+            pdef[pi2]--;
+            pdef[pi3]++;
+            pdef[pi4]++;
+
+            swapped[t1] = true;
+            swapped[t2] = true;
+          }
+      }
+    return do_swap;
+  }
 
  
   void MeshOptimize2d :: EdgeSwapping (Mesh & mesh, int usemetric)
@@ -261,155 +393,7 @@ namespace netgen
 	      throw NgException ("Meshing stopped");
 
 	    for (int o1 = 0; o1 < 3; o1++)
-	      {
-		bool should;
-
-		SurfaceElementIndex t2 = neighbors[t1].GetNr (o1);
-		int o2 = neighbors[t1].GetOrientation (o1);
-
-		if (t2 == -1) continue;
-		if (swapped[t1] || swapped[t2]) continue;
-	      
-
-		PointIndex pi1 = mesh[t1].PNumMod(o1+1+1);
-		PointIndex pi2 = mesh[t1].PNumMod(o1+1+2);
-		PointIndex pi3 = mesh[t1].PNumMod(o1+1);
-		PointIndex pi4 = mesh[t2].PNumMod(o2+1);
-	      
-		PointGeomInfo gi1 = mesh[t1].GeomInfoPiMod(o1+1+1);
-		PointGeomInfo gi2 = mesh[t1].GeomInfoPiMod(o1+1+2);
-		PointGeomInfo gi3 = mesh[t1].GeomInfoPiMod(o1+1);
-		PointGeomInfo gi4 = mesh[t2].GeomInfoPiMod(o2+1);
-	    
-		bool allowswap = true;
-
-		Vec<3> auxvec1 = mesh[pi3]-mesh[pi4];
-		Vec<3> auxvec2 = mesh[pi1]-mesh[pi4];
-
-		allowswap = allowswap && fabs(1.-(auxvec1*auxvec2)/(auxvec1.Length()*auxvec2.Length())) > 1e-4;
-
-		if(!allowswap)
-		  continue;
-
-		// normal of new
-		Vec<3> nv1 = Cross (auxvec1, auxvec2);
-
-		auxvec1 = mesh.Point(pi4)-mesh.Point(pi3);
-		auxvec2 = mesh.Point(pi2)-mesh.Point(pi3);
-		allowswap = allowswap && fabs(1.-(auxvec1*auxvec2)/(auxvec1.Length()*auxvec2.Length())) > 1e-4;
-
-
-		if(!allowswap)
-		  continue;
-
-		Vec<3> nv2 = Cross (auxvec1, auxvec2);
-
-	      
-		// normals of original
-		Vec<3> nv3 = Cross (mesh[pi1]-mesh[pi4], mesh[pi2]-mesh[pi4]);
-		Vec<3> nv4 = Cross (mesh[pi2]-mesh[pi3], mesh[pi1]-mesh[pi3]);
-	      
-		nv3 *= -1;
-		nv4 *= -1;
-		nv3.Normalize();
-		nv4.Normalize();
-
-		nv1.Normalize();
-		nv2.Normalize();
-	    
-		Vec<3> nvp3, nvp4;
-		GetNormalVector (surfnr, mesh.Point(pi3), gi3, nvp3);
-
-		nvp3.Normalize();
-
-		GetNormalVector (surfnr, mesh.Point(pi4), gi4, nvp4);
-	    
-		nvp4.Normalize();
-	      
-	      
-	      
-		double critval = cos (M_PI / 6);  // 30 degree
-		allowswap = allowswap &&
-		  (nv1 * nvp3 > critval) && 
-		  (nv1 * nvp4 > critval) && 
-		  (nv2 * nvp3 > critval) && 
-		  (nv2 * nvp4 > critval) &&
-		  (nvp3 * nv3 > critval) && 
-		  (nvp4 * nv4 > critval);
-	      
-
-		double horder = Dist (mesh[pi1], mesh[pi2]);
-
-		if ( // nv1 * nv2 >= 0 &&
-		    nv1.Length() > 1e-3 * horder * horder &&
-		    nv2.Length() > 1e-3 * horder * horder &&
-		    allowswap )
-		  {
-		    if (!usemetric)
-		      {
-			int e = pdef[pi1] + pdef[pi2] - pdef[pi3] - pdef[pi4];
-			double d = 
-			  Dist2 (mesh[pi1], mesh[pi2]) - 
-			  Dist2 (mesh[pi3], mesh[pi4]);
-		      
-			should = e >= t && (e > 2 || d > 0);
-		      }
-		    else
-		      {
-			double loch = mesh.GetH(mesh[pi1]);
-			should = 
-			  CalcTriangleBadness (mesh[pi4], mesh[pi3], mesh[pi1], metricweight, loch) +
-			  CalcTriangleBadness (mesh[pi3], mesh[pi4], mesh[pi2], metricweight, loch) <
-			  CalcTriangleBadness (mesh[pi1], mesh[pi2], mesh[pi3], metricweight, loch) +
-			  CalcTriangleBadness (mesh[pi2], mesh[pi1], mesh[pi4], metricweight, loch);
-		      }
-		  
-		    if (allowswap)
-		      {
-			Element2d sw1 (pi4, pi3, pi1);
-			Element2d sw2 (pi3, pi4, pi2);
-
-			int legal1 = 
-			  mesh.LegalTrig (mesh[t1]) + 
-			  mesh.LegalTrig (mesh[t2]);
-			int legal2 = 
-			  mesh.LegalTrig (sw1) + mesh.LegalTrig (sw2);
-
-			if (legal1 < legal2) should = true;
-			if (legal2 < legal1) should = false;
-		      }
-		  
-		    if (should)
-		      {
-			// do swapping !
-		      
-			done = true;
-
-                        /*
-                        mesh[t1] = { pi1, pi4, pi3 };
-                        mesh[t2] = { pi2, pi3, pi4 };
-                        
-			mesh[t1].GeomInfoPi(1) = gi1;
-			mesh[t1].GeomInfoPi(2) = gi4;
-			mesh[t1].GeomInfoPi(3) = gi3;
-		      
-			mesh[t2].GeomInfoPi(1) = gi2;
-			mesh[t2].GeomInfoPi(2) = gi3;
-			mesh[t2].GeomInfoPi(3) = gi4;
-                        */
-                        mesh[t1] = { { pi1, gi1 }, { pi4, gi4 }, { pi3, gi3 } };
-                        mesh[t2] = { { pi2, gi2 }, { pi3, gi3 }, { pi4, gi4 } };
-                        
-			pdef[pi1]--;
-			pdef[pi2]--;
-			pdef[pi3]++;
-			pdef[pi4]++;
-		      
-			swapped[t1] = true;
-			swapped[t2] = true;
-		      }
-		  }
-	      }
+                done |= EdgeSwapping(mesh, usemetric, neighbors, swapped, t1, o1, surfnr, t, pdef, false);
 	  }
 	t--;
       }

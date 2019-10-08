@@ -2,6 +2,20 @@
 #define FILE_IMPROVE2
 
 
+class Neighbour
+{
+  int nr[3];
+  int orient[3];
+
+public:
+  Neighbour () { ; }
+
+  void SetNr (int side, int anr) { nr[side] = anr; }
+  int GetNr (int side) { return nr[side]; }
+
+  void SetOrientation (int side, int aorient) { orient[side] = aorient; }
+  int GetOrientation (int side) { return orient[side]; }
+};
 
 ///
 class MeshOptimize2d
@@ -22,6 +36,8 @@ public:
   void ProjectBoundaryPoints(NgArray<int> & surfaceindex, 
 			     const NgArray<Point<3>* > & from, NgArray<Point<3>* > & dest);
 
+  bool EdgeSwapping (Mesh & mesh, const int usemetric, Array<Neighbour> &neighbors, Array<bool> &swapped,
+    const SurfaceElementIndex t1, const int edge, const int surfnr, const int t, NgArray<int,PointIndex::BASE> &pdef, const bool check_only=false);
   void EdgeSwapping (Mesh & mesh, int usemetric);
   void CombineImprove (Mesh & mesh);
   void SplitImprove (Mesh & mesh);
