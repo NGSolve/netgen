@@ -342,7 +342,9 @@ namespace netgen
 				Point<3> & p3d,
 				PointGeomInfo & gi,
 				double h) 
-  { 
+  {
+    static Timer t("FromPlane"); RegionTimer reg(t);
+    
     if (projecttype == PLANESPACE)
       {
 	//      cout << "2d   : " << pplane << endl;
@@ -366,12 +368,75 @@ namespace netgen
 
 
 
-  void OCCSurface :: Project (Point<3> & p, PointGeomInfo & gi)
+  void OCCSurface :: Project (Point<3> & ap, PointGeomInfo & gi)
   {
+    static Timer t("OccSurface::Project"); RegionTimer reg(t);
+
+
+    // try Newton's method ...
+    
+    gp_Pnt p(ap(0), ap(1), ap(2));
+
+    double u = gi.u;
+    double v = gi.v;
+    gp_Pnt x = occface->Value (u,v);
+
+    if (p.SquareDistance(x) <= sqr(PROJECTION_TOLERANCE)) return;
+
+    gp_Vec du, dv;
+    occface->D1(u,v,x,du,dv);
+
+    int count = 0;
+    
+    gp_Pnt xold;
+    gp_Vec n;
+    double det, lambda, mu;
+    
+    do
+      {
+        count++;
+        
+        n = du^dv;
+        
+        det = Det3 (n.X(), du.X(), dv.X(),
+                    n.Y(), du.Y(), dv.Y(),
+                    n.Z(), du.Z(), dv.Z());
+        
+        if (det < 1e-15)
+          break;
+        
+        lambda = Det3 (n.X(), p.X()-x.X(), dv.X(),
+                       n.Y(), p.Y()-x.Y(), dv.Y(),
+                       n.Z(), p.Z()-x.Z(), dv.Z())/det;
+        
+        mu     = Det3 (n.X(), du.X(), p.X()-x.X(),
+                       n.Y(), du.Y(), p.Y()-x.Y(),
+                       n.Z(), du.Z(), p.Z()-x.Z())/det;
+        
+        u += lambda;
+        v += mu;
+        
+        xold = x;
+        occface->D1(u,v,x,du,dv);
+        
+        if (xold.SquareDistance(x) < sqr(PROJECTION_TOLERANCE))
+          {
+            ap = Point<3> (x.X(), x.Y(), x.Z());
+            gi.u = u;
+            gi.v = v;
+            return;
+          }
+      }
+    while (count < 20);
+    
+
+    // Newton did not converge, use OCC projection
+
+    
     //   static int cnt = 0;
     //  if (cnt++ % 1000 == 0) cout << "********************************************** OCCSurfce :: Project, cnt = " << cnt << endl;
   
-    gp_Pnt pnt(p(0), p(1), p(2));
+    gp_Pnt pnt = p;  // (p(0), p(1), p(2));
 
     //(*testout) << "pnt = " << pnt.X() << ", " << pnt.Y() << ", " << pnt.Z() << endl;
 
@@ -406,20 +471,20 @@ namespace netgen
     proj.LowerDistanceParameters (gi.u, gi.v);
     */
 
-    double u,v;
+    // double u,v;
     Handle( ShapeAnalysis_Surface ) su = new ShapeAnalysis_Surface( occface );
-    gp_Pnt2d suval = su->ValueOfUV ( pnt, BRep_Tool::Tolerance( topods_face ) );
+    auto toltool =  BRep_Tool::Tolerance( topods_face );
+
+    gp_Pnt2d suval = su->ValueOfUV ( pnt, toltool);
     suval.Coord( u, v);
     pnt = occface->Value( u, v );
     
     //(*testout) << "pnt(proj) = " << pnt.X() << ", " << pnt.Y() << ", " << pnt.Z() << endl;
     gi.u = u;
     gi.v = v;
-    
-
     gi.trignum = 1;
 
-    p = Point<3> (pnt.X(), pnt.Y(), pnt.Z());
+    ap = Point<3> (pnt.X(), pnt.Y(), pnt.Z());
   } 
 
 

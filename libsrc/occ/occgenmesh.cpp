@@ -647,7 +647,7 @@ namespace netgen
 
         Box<3> bb = geom.GetBoundingBox();
 
-        //      int projecttype = PLANESPACE;
+        int projecttype = PLANESPACE;
         
         static Timer tinit("init");
         tinit.Start();

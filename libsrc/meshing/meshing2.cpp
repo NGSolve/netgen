@@ -853,6 +853,7 @@ namespace netgen
 	    for (int i = oldnp+1; i <= plainpoints.Size(); i++)
 	      {
                 Point<3> locp;
+                upgeominfo.Elem(i) = *blgeominfo1;
 		int err =
 		  TransformFromPlain (plainpoints.Elem(i), locp, 
 				      upgeominfo.Elem(i), h);
