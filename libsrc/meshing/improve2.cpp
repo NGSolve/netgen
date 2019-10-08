@@ -375,26 +375,40 @@ namespace netgen
   
 
 
+    Array<std::pair<SurfaceElementIndex,int>> improvement_candidates(3*seia.Size());
+    atomic<int> cnt(0);
+
     int t = 4;
     bool done = false;
     while (!done && t >= 2)
       {
-	for (int i = 0; i < seia.Size(); i++)
-	  {
-	    SurfaceElementIndex t1 = seia[i];
+        cnt = 0;
+        ParallelForRange( Range(seia), [&] (auto myrange)
+          {
+            for (auto i : myrange)
+              {
+                SurfaceElementIndex t1 = seia[i];
 
-	    if (mesh[t1].IsDeleted())
-	      continue;
+                if (mesh[t1].IsDeleted())
+                  continue;
 
-	    if (mesh[t1].GetIndex() != faceindex)
-	      continue;
+                if (mesh[t1].GetIndex() != faceindex)
+                  continue;
 
-	    if (multithread.terminate)
-	      throw NgException ("Meshing stopped");
+                if (multithread.terminate)
+                  throw NgException ("Meshing stopped");
 
-	    for (int o1 = 0; o1 < 3; o1++)
-                done |= EdgeSwapping(mesh, usemetric, neighbors, swapped, t1, o1, surfnr, t, pdef, false);
-	  }
+                for (int o1 = 0; o1 < 3; o1++)
+                    if(EdgeSwapping(mesh, usemetric, neighbors, swapped, t1, o1, surfnr, t, pdef, true))
+                        improvement_candidates[cnt++]= std::make_pair(t1,o1);
+              }
+          });
+
+        auto elements_with_improvement = improvement_candidates.Range(cnt.load());
+        QuickSort(elements_with_improvement);
+
+        for (auto [t1,o1] : elements_with_improvement)
+            done |= EdgeSwapping(mesh, usemetric, neighbors, swapped, t1, o1, surfnr, t, pdef, false);
 	t--;
       }
 
