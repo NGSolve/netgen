@@ -318,12 +318,10 @@ namespace netgen
 		nv2.Normalize();
 	    
 		Vec<3> nvp3, nvp4;
-		SelectSurfaceOfPoint (mesh.Point(pi3), gi3);
 		GetNormalVector (surfnr, mesh.Point(pi3), gi3, nvp3);
 
 		nvp3.Normalize();
 
-		SelectSurfaceOfPoint (mesh.Point(pi4), gi4);
 		GetNormalVector (surfnr, mesh.Point(pi4), gi4, nvp4);
 	    
 		nvp4.Normalize();
@@ -530,7 +528,6 @@ namespace netgen
 	    for (int k = 0; k < 3; k++)
 	      if (hel[k] == pi)
 		{
-		  SelectSurfaceOfPoint (mesh[pi], hel.GeomInfoPi(k+1));
 		  GetNormalVector (surfnr, mesh[pi], hel.GeomInfoPi(k+1), normals[pi]);
 		  break;
 		}
@@ -624,8 +621,6 @@ namespace netgen
 	    for (int k = 0; k < 3; k++)
 	      if (hel[k] == pi1)
 		{
-		  SelectSurfaceOfPoint (mesh[pi1],
-					hel.GeomInfoPi(k+1));
 		  GetNormalVector (surfnr, mesh[pi1], hel.GeomInfoPi(k+1), nv);
 		  break;
 		}

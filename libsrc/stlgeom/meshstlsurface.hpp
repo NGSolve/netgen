@@ -76,16 +76,16 @@ public:
     MeshOptimizeSTLSurface (STLGeometry & ageom); 
    
     ///
-    virtual void SelectSurfaceOfPoint (const Point<3> & p,
-				       const PointGeomInfo & gi);
+    void ProjectPoint (INDEX surfind, Point<3> & p) const override;
     ///
-    virtual void ProjectPoint (INDEX surfind, Point<3> & p) const;
+    int ProjectPointGI (INDEX surfind, Point<3> & p, PointGeomInfo & gi) const override;
     ///
-    virtual void ProjectPoint2 (INDEX surfind, INDEX surfind2, Point<3> & p) const;
+    void ProjectPoint2 (INDEX surfind, INDEX surfind2, Point<3> & p) const override;
     ///
-    virtual int CalcPointGeomInfo(PointGeomInfo& gi, const Point<3> & p3) const;
+    int CalcPointGeomInfo(PointGeomInfo& gi, const Point<3> & p3) const override;
     ///
-    virtual void GetNormalVector(INDEX surfind, const Point<3> & p, Vec<3> & n) const;
+    void GetNormalVector(INDEX surfind, const Point<3> & p, Vec<3> & n) const override;
+    void GetNormalVector(INDEX surfind, const Point<3>  & p, PointGeomInfo & gi, Vec<3> & n) const override;
 };
 
 

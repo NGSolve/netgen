@@ -397,7 +397,6 @@ namespace netgen
 		double bad1 = 0, bad2 = 0;
 		Vec<3> n;
 
-		SelectSurfaceOfPoint (mesh.Point(pmap.Get(1)), pgi.Get(1));
 		GetNormalVector (surfnr, mesh.Point(pmap.Get(1)), pgi.Elem(1), n);
 		  
 		for (int j = 0; j < rule.oldels.Size(); j++)

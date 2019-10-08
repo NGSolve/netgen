@@ -1064,15 +1064,6 @@ MeshOptimizeSTLSurface :: MeshOptimizeSTLSurface (STLGeometry & ageom)
 }
 
 
-void MeshOptimizeSTLSurface :: SelectSurfaceOfPoint (const Point<3> & p,
-						     const PointGeomInfo & gi)
-{
-  //  (*testout) << "sel char: " << gi.trignum << endl;
-  
-  geom.SelectChartOfTriangle (gi.trignum);
-  //  geom.SelectChartOfPoint (p);
-}
-
 
 void MeshOptimizeSTLSurface :: ProjectPoint (INDEX surfind, Point<3> & p) const
 {
@@ -1087,6 +1078,22 @@ void MeshOptimizeSTLSurface :: ProjectPoint (INDEX surfind, Point<3> & p) const
     }
 
   //  geometry.GetSurface(surfind)->Project (p);
+}
+
+int MeshOptimizeSTLSurface :: ProjectPointGI (INDEX surfind, Point<3> & p, PointGeomInfo & gi) const
+{
+  int meshchart = geom.GetChartNr(gi.trignum);
+  const STLChart& chart = geom.GetChart(meshchart);
+  int trignum = chart.ProjectNormal(p);
+  if(trignum==0)
+    {
+      PrintMessage(7,"project failed");
+      geom.SelectChartOfTriangle (gi.trignum); // needed because ProjectOnWholeSurface uses meshchartnv (the normal vector of selected chart)
+      trignum = geom.ProjectOnWholeSurface(p);
+      if(trignum==0)
+	  PrintMessage(7, "project on whole surface failed");
+    }
+  return trignum;
 }
 
 void MeshOptimizeSTLSurface :: ProjectPoint2 (INDEX surfind, INDEX surfind2, Point<3> & p) const
@@ -1108,9 +1115,15 @@ int  MeshOptimizeSTLSurface :: CalcPointGeomInfo(PointGeomInfo& gi, const Point<
   
 }
 
+void MeshOptimizeSTLSurface :: GetNormalVector(INDEX surfind, const Point<3>  & p, PointGeomInfo & gi, Vec<3> & n) const
+{
+  n = geom.GetTriangle(gi.trignum).Normal();
+}
+
+
 void MeshOptimizeSTLSurface :: GetNormalVector(INDEX surfind, const Point<3> & p, Vec<3> & n) const
 {
-  n = geom.GetChartNormalVector();
+  throw Exception("MeshOptimizeSTLSurface :: GetNormalVector called without PointGeomInfo");
 }
   
 
