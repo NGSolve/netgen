@@ -280,7 +280,7 @@ namespace netgen
             }
        });
 
-    ParallelForRange( Range(seia), [&] (auto myrange)
+    ParallelForRange( Range(seia), [&pdef, &neighbors, &mesh, &seia, &elements_on_node] (auto myrange)
         {
           for (auto i : myrange)
             {
