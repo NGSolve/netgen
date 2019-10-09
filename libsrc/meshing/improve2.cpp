@@ -7,11 +7,6 @@
 namespace netgen
 {
 
-
-  using ngcore::ParallelForRange;
-
-
-
   class trionedge
   {
   public:
@@ -191,15 +186,12 @@ namespace netgen
     if(faceindex==0)
       {
         seia.SetSize(mesh.GetNSE());
-        ParallelForRange( Range(seia), [&] (auto myrange)
+        ParallelFor( Range(seia), [&] (auto i) NETGEN_LAMBDA_INLINE
             {
-                for (auto i : myrange)
-                  {
-                    SurfaceElementIndex sei(i);
-                    seia[i] = sei;
-                    if (mesh[sei].GetNP() != 3)
-                        mixed = true;
-                  }
+              SurfaceElementIndex sei(i);
+              seia[i] = sei;
+              if (mesh[sei].GetNP() != 3)
+                  mixed = true;
             });
       }
     else
@@ -225,103 +217,90 @@ namespace netgen
 
     if(faceindex == 0)
       {
-        ParallelForRange( Range(pangle), [&] (auto myrange)
+        ParallelFor( Range(pangle), [&] (auto i) NETGEN_LAMBDA_INLINE
             {
-              for (auto i : myrange)
-                  pangle[i] = 0.0;
+              pangle[i] = 0.0;
             });
       }
     else
       {
-        ParallelForRange( Range(seia), [&] (auto myrange)
+        ParallelFor( Range(seia), [&] (auto i) NETGEN_LAMBDA_INLINE
             {
-              for (auto i : myrange)
-                {
-                  const Element2d & sel = mesh[seia[i]];
-                  for (int j = 0; j < 3; j++)
-                    pangle[sel[j]] = 0.0;
-                }
+              const Element2d & sel = mesh[seia[i]];
+              for (int j = 0; j < 3; j++)
+                  pangle[sel[j]] = 0.0;
             });
       }
 
-    ParallelForRange( Range(seia), [&] (auto myrange)
+    ParallelFor( Range(seia), [&] (auto i) NETGEN_LAMBDA_INLINE
         {
-          for (auto i : myrange)
+          const Element2d & sel = mesh[seia[i]];
+          for (int j = 0; j < 3; j++)
             {
-              const Element2d & sel = mesh[seia[i]];
-              for (int j = 0; j < 3; j++)
+              POINTTYPE typ = mesh[sel[j]].Type();
+              if (typ == FIXEDPOINT || typ == EDGEPOINT)
                 {
-                  POINTTYPE typ = mesh[sel[j]].Type();
-                  if (typ == FIXEDPOINT || typ == EDGEPOINT)
-                    {
-                      AtomicAdd(pangle[sel[j]],
-                        Angle (mesh[sel[(j+1)%3]] - mesh[sel[j]],
-                               mesh[sel[(j+2)%3]] - mesh[sel[j]]));
-                    }
-                }
-	  }
-       });
-
-    ParallelForRange( Range(seia), [&] (auto myrange)
-        {
-          for (auto i : myrange)
-            {
-              const Element2d & sel = mesh[seia[i]];
-              for (int j = 0; j < 3; j++)
-                {
-                  PointIndex pi = sel[j];
-                  if (mesh[pi].Type() == INNERPOINT || mesh[pi].Type() == SURFACEPOINT)
-                    pdef[pi] = -6;
-                  else
-                    for (int j = 0; j < 8; j++)
-                      if (pangle[pi] >= minangle[j])
-                        pdef[pi] = -1-j;
+                  AtomicAdd(pangle[sel[j]],
+                    Angle (mesh[sel[(j+1)%3]] - mesh[sel[j]],
+                           mesh[sel[(j+2)%3]] - mesh[sel[j]]));
                 }
             }
        });
 
-    ParallelForRange( Range(seia), [&pdef, &neighbors, &mesh, &seia, &elements_on_node] (auto myrange)
+    ParallelFor( Range(seia), [&] (auto i) NETGEN_LAMBDA_INLINE
         {
-          for (auto i : myrange)
+          const Element2d & sel = mesh[seia[i]];
+          for (int j = 0; j < 3; j++)
             {
-              auto sei = seia[i];
-              for (PointIndex pi : mesh[sei].template PNums<3>())
-                  AsAtomic(pdef[pi])++;
-              for (int j = 0; j < 3; j++)
-                {
-                  neighbors[sei].SetNr (j, -1);
-                  neighbors[sei].SetOrientation (j, 0);
-                }
+              PointIndex pi = sel[j];
+              if (mesh[pi].Type() == INNERPOINT || mesh[pi].Type() == SURFACEPOINT)
+                pdef[pi] = -6;
+              else
+                for (int j = 0; j < 8; j++)
+                  if (pangle[pi] >= minangle[j])
+                    pdef[pi] = -1-j;
+            }
+       });
 
-              const auto sel = mesh[sei];
-              for (int j = 0; j < 3; j++)
-                {
-                  PointIndex pi1 = sel.PNumMod(j+2);
-                  PointIndex pi2 = sel.PNumMod(j+3);
+    ParallelFor( Range(seia), [&pdef, &neighbors, &mesh, &seia, &elements_on_node] (auto i) NETGEN_LAMBDA_INLINE
+        {
+          auto sei = seia[i];
+          for (PointIndex pi : mesh[sei].template PNums<3>())
+              AsAtomic(pdef[pi])++;
+          for (int j = 0; j < 3; j++)
+            {
+              neighbors[sei].SetNr (j, -1);
+              neighbors[sei].SetOrientation (j, 0);
+            }
 
-                  for (auto sei_other : elements_on_node[pi1])
+          const auto sel = mesh[sei];
+          for (int j = 0; j < 3; j++)
+            {
+              PointIndex pi1 = sel.PNumMod(j+2);
+              PointIndex pi2 = sel.PNumMod(j+3);
+
+              for (auto sei_other : elements_on_node[pi1])
+                {
+                  if(sei_other==sei) continue;
+                  const auto & other = mesh[sei_other];
+                  int pi1_other = -1;
+                  int pi2_other = -1;
+                  bool common_edge = false;
+                  for (int k = 0; k < 3; k++)
                     {
-                      if(sei_other==sei) continue;
-                      const auto & other = mesh[sei_other];
-                      int pi1_other = -1;
-                      int pi2_other = -1;
-                      bool common_edge = false;
-                      for (int k = 0; k < 3; k++)
+                      if(other[k] == pi1)
+                          pi1_other = k;
+                      if(other[k] == pi2)
                         {
-                          if(other[k] == pi1)
-                              pi1_other = k;
-                          if(other[k] == pi2)
-                            {
-                              pi2_other = k;
-                              common_edge = true;
-                            }
+                          pi2_other = k;
+                          common_edge = true;
                         }
+                    }
 
-                      if(common_edge)
-                        {
-                          neighbors[sei].SetNr (j, sei_other);
-                          neighbors[sei].SetOrientation (j, 3-pi1_other-pi2_other);
-                        }
+                  if(common_edge)
+                    {
+                      neighbors[sei].SetNr (j, sei_other);
+                      neighbors[sei].SetOrientation (j, 3-pi1_other-pi2_other);
                     }
                 }
             }
@@ -343,25 +322,22 @@ namespace netgen
     while (!done && t >= 2)
       {
         cnt = 0;
-        ParallelForRange( Range(seia), [&] (auto myrange)
+        ParallelFor( Range(seia), [&] (auto i) NETGEN_LAMBDA_INLINE
           {
-            for (auto i : myrange)
-              {
-                SurfaceElementIndex t1 = seia[i];
+            SurfaceElementIndex t1 = seia[i];
 
-                if (mesh[t1].IsDeleted())
-                  continue;
+            if (mesh[t1].IsDeleted())
+              return;
 
-                if (mesh[t1].GetIndex() != faceindex)
-                  continue;
+            if (mesh[t1].GetIndex() != faceindex)
+              return;
 
-                if (multithread.terminate)
-                  throw NgException ("Meshing stopped");
+            if (multithread.terminate)
+              throw NgException ("Meshing stopped");
 
-                for (int o1 = 0; o1 < 3; o1++)
-                    if(EdgeSwapping(mesh, usemetric, neighbors, swapped, t1, o1, t, pdef, true))
-                        improvement_candidates[cnt++]= std::make_pair(t1,o1);
-              }
+            for (int o1 = 0; o1 < 3; o1++)
+                if(EdgeSwapping(mesh, usemetric, neighbors, swapped, t1, o1, t, pdef, true))
+                    improvement_candidates[cnt++]= std::make_pair(t1,o1);
           });
 
         auto elements_with_improvement = improvement_candidates.Range(cnt.load());
