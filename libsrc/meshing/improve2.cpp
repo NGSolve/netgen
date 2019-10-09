@@ -349,7 +349,6 @@ namespace netgen
       }
 
     mesh.SetNextTimeStamp();
-    mesh.CalcSurfacesOfNode();
   }
 
 
