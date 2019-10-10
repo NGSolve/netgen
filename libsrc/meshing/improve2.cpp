@@ -7,24 +7,6 @@
 namespace netgen
 {
 
-  class Neighbour
-  {
-    int nr[3];
-    int orient[3];
-
-  public:
-    Neighbour () { ; } 
-
-    void SetNr (int side, int anr) { nr[side] = anr; }
-    int GetNr (int side) { return nr[side]; }
-
-    void SetOrientation (int side, int aorient) { orient[side] = aorient; }
-    int GetOrientation (int side) { return orient[side]; }
-  };
-
-
-
-
   class trionedge
   {
   public:
@@ -37,204 +19,293 @@ namespace netgen
   };
 
 
+  bool MeshOptimize2d :: EdgeSwapping (Mesh & mesh, const int usemetric,
+    Array<Neighbour> &neighbors,
+    Array<bool> &swapped,
+    const SurfaceElementIndex t1, const int o1,
+    const int t,
+    Array<int,PointIndex> &pdef,
+    const bool check_only)
+  {
+    bool should;
+    bool do_swap = false;
+
+    SurfaceElementIndex t2 = neighbors[t1].GetNr (o1);
+    int o2 = neighbors[t1].GetOrientation (o1);
+
+    if (t2 == -1) return false;
+    if (swapped[t1] || swapped[t2]) return false;
+
+    const int faceindex = mesh[t1].GetIndex();
+    const int surfnr = mesh.GetFaceDescriptor (faceindex).SurfNr();
+
+    PointIndex pi1 = mesh[t1].PNumMod(o1+1+1);
+    PointIndex pi2 = mesh[t1].PNumMod(o1+1+2);
+    PointIndex pi3 = mesh[t1].PNumMod(o1+1);
+    PointIndex pi4 = mesh[t2].PNumMod(o2+1);
+
+    PointGeomInfo gi1 = mesh[t1].GeomInfoPiMod(o1+1+1);
+    PointGeomInfo gi2 = mesh[t1].GeomInfoPiMod(o1+1+2);
+    PointGeomInfo gi3 = mesh[t1].GeomInfoPiMod(o1+1);
+    PointGeomInfo gi4 = mesh[t2].GeomInfoPiMod(o2+1);
+
+    bool allowswap = true;
+
+    Vec<3> auxvec1 = mesh[pi3]-mesh[pi4];
+    Vec<3> auxvec2 = mesh[pi1]-mesh[pi4];
+
+    allowswap = allowswap && fabs(1.-(auxvec1*auxvec2)/(auxvec1.Length()*auxvec2.Length())) > 1e-4;
+
+    if(!allowswap)
+        return false;
+
+    // normal of new
+    Vec<3> nv1 = Cross (auxvec1, auxvec2);
+
+    auxvec1 = mesh.Point(pi4)-mesh.Point(pi3);
+    auxvec2 = mesh.Point(pi2)-mesh.Point(pi3);
+    allowswap = allowswap && fabs(1.-(auxvec1*auxvec2)/(auxvec1.Length()*auxvec2.Length())) > 1e-4;
+
+
+    if(!allowswap)
+        return false;
+
+    Vec<3> nv2 = Cross (auxvec1, auxvec2);
+
+
+    // normals of original
+    Vec<3> nv3 = Cross (mesh[pi1]-mesh[pi4], mesh[pi2]-mesh[pi4]);
+    Vec<3> nv4 = Cross (mesh[pi2]-mesh[pi3], mesh[pi1]-mesh[pi3]);
+
+    nv3 *= -1;
+    nv4 *= -1;
+    nv3.Normalize();
+    nv4.Normalize();
+
+    nv1.Normalize();
+    nv2.Normalize();
+
+    Vec<3> nvp3, nvp4;
+    GetNormalVector (surfnr, mesh.Point(pi3), gi3, nvp3);
+
+    nvp3.Normalize();
+
+    GetNormalVector (surfnr, mesh.Point(pi4), gi4, nvp4);
+
+    nvp4.Normalize();
+
+
+
+    double critval = cos (M_PI / 6);  // 30 degree
+    allowswap = allowswap &&
+        (nv1 * nvp3 > critval) &&
+        (nv1 * nvp4 > critval) &&
+        (nv2 * nvp3 > critval) &&
+        (nv2 * nvp4 > critval) &&
+        (nvp3 * nv3 > critval) &&
+        (nvp4 * nv4 > critval);
+
+
+    double horder = Dist (mesh[pi1], mesh[pi2]);
+
+    if ( // nv1 * nv2 >= 0 &&
+            nv1.Length() > 1e-3 * horder * horder &&
+            nv2.Length() > 1e-3 * horder * horder &&
+            allowswap )
+      {
+        if (!usemetric)
+          {
+            int e = pdef[pi1] + pdef[pi2] - pdef[pi3] - pdef[pi4];
+            double d =
+                Dist2 (mesh[pi1], mesh[pi2]) -
+                Dist2 (mesh[pi3], mesh[pi4]);
+
+            should = e >= t && (e > 2 || d > 0);
+          }
+        else
+          {
+            double loch = mesh.GetH(mesh[pi1]);
+            should =
+                CalcTriangleBadness (mesh[pi4], mesh[pi3], mesh[pi1], metricweight, loch) +
+                CalcTriangleBadness (mesh[pi3], mesh[pi4], mesh[pi2], metricweight, loch) <
+                CalcTriangleBadness (mesh[pi1], mesh[pi2], mesh[pi3], metricweight, loch) +
+                CalcTriangleBadness (mesh[pi2], mesh[pi1], mesh[pi4], metricweight, loch);
+          }
+
+        if (allowswap)
+          {
+            Element2d sw1 (pi4, pi3, pi1);
+            Element2d sw2 (pi3, pi4, pi2);
+
+            int legal1 =
+                mesh.LegalTrig (mesh[t1]) +
+                mesh.LegalTrig (mesh[t2]);
+            int legal2 =
+                mesh.LegalTrig (sw1) + mesh.LegalTrig (sw2);
+
+            if (legal1 < legal2) should = true;
+            if (legal2 < legal1) should = false;
+          }
+
+        do_swap = should;
+        if (should && !check_only)
+          {
+            // do swapping !
+
+            mesh[t1] = { { pi1, gi1 }, { pi4, gi4 }, { pi3, gi3 } };
+            mesh[t2] = { { pi2, gi2 }, { pi3, gi3 }, { pi4, gi4 } };
+
+            pdef[pi1]--;
+            pdef[pi2]--;
+            pdef[pi3]++;
+            pdef[pi4]++;
+
+            swapped[t1] = true;
+            swapped[t2] = true;
+          }
+      }
+    return do_swap;
+  }
 
  
   void MeshOptimize2d :: EdgeSwapping (Mesh & mesh, int usemetric)
   {
     static Timer timer("EdgeSwapping (2D)"); RegionTimer reg(timer);
-    if (!faceindex)
-      {
-	if (usemetric)
-	  PrintMessage (3, "Edgeswapping, metric");
-	else
-	  PrintMessage (3, "Edgeswapping, topological");
-
-	for (faceindex = 1; faceindex <= mesh.GetNFD(); faceindex++)
-	  {
-	    EdgeSwapping (mesh, usemetric);
-
-	    if (multithread.terminate)
-	      throw NgException ("Meshing stopped");
-	  }
-
-	faceindex = 0;
-	mesh.CalcSurfacesOfNode();
-	return;
-      }
-
+    static Timer timer_nb("EdgeSwapping-Find neighbors");
+    if (usemetric)
+      PrintMessage (3, "Edgeswapping, metric");
+    else
+      PrintMessage (3, "Edgeswapping, topological");
 
     static int timerstart = NgProfiler::CreateTimer ("EdgeSwapping 2D start");
     NgProfiler::StartTimer (timerstart);
 
-
     Array<SurfaceElementIndex> seia;
-    mesh.GetSurfaceElementsOfFace (faceindex, seia);
+    bool mixed = false;
 
-    /*
-    for (int i = 0; i < seia.Size(); i++)
-      if (mesh[seia[i]].GetNP() != 3)
-	{
-	  GenericImprove (mesh);
-	  return;
-	}
-    */
-    for (SurfaceElementIndex sei : seia)
-      if (mesh[sei].GetNP() != 3)
-	{
-	  GenericImprove (mesh);
-	  return;
-	}
+    if(faceindex==0)
+      {
+        seia.SetSize(mesh.GetNSE());
+        ParallelFor( Range(seia), [&] (auto i) NETGEN_LAMBDA_INLINE
+            {
+              SurfaceElementIndex sei(i);
+              seia[i] = sei;
+              if (mesh[sei].GetNP() != 3)
+                  mixed = true;
+            });
+      }
+    else
+      {
+        mesh.GetSurfaceElementsOfFace (faceindex, seia);
+        for (SurfaceElementIndex sei : seia)
+            if (mesh[sei].GetNP() != 3)
+                mixed = true;
+      }
+
+    if(mixed)
+        return GenericImprove(mesh);
       
-    int surfnr = mesh.GetFaceDescriptor (faceindex).SurfNr();
-
     Array<Neighbour> neighbors(mesh.GetNSE());
-    INDEX_2_HASHTABLE<trionedge> other(2*seia.Size() + 2);
-
+    auto elements_on_node = mesh.CreatePoint2SurfaceElementTable(faceindex);
 
     Array<bool> swapped(mesh.GetNSE());
-    NgArray<int,PointIndex::BASE> pdef(mesh.GetNP());
-    NgArray<double,PointIndex::BASE> pangle(mesh.GetNP());
+    Array<int,PointIndex> pdef(mesh.GetNP());
+    Array<double,PointIndex> pangle(mesh.GetNP());
 
-
-    // int e;
-    // double d;
-    // Vec3d nv1, nv2;
-
-    // double loch(-1);
     static const double minangle[] = { 0, 1.481, 2.565, 3.627, 4.683, 5.736, 7, 9 };
 
 
-    for (int i = 0; i < seia.Size(); i++)
+    if(faceindex == 0)
       {
-	const Element2d & sel = mesh[seia[i]];
-	for (int j = 0; j < 3; j++)
-	  pangle[sel[j]] = 0.0;
+        ParallelFor( Range(pangle), [&] (auto i) NETGEN_LAMBDA_INLINE
+            {
+              pangle[i] = 0.0;
+            });
       }
-    // pangle = 0;
-
-    for (int i = 0; i < seia.Size(); i++)
+    else
       {
-	const Element2d & sel = mesh[seia[i]];
-	for (int j = 0; j < 3; j++)
-	  {
-	    POINTTYPE typ = mesh[sel[j]].Type();
-	    if (typ == FIXEDPOINT || typ == EDGEPOINT)
-	      {
-		pangle[sel[j]] +=
-		  Angle (mesh[sel[(j+1)%3]] - mesh[sel[j]],
-			 mesh[sel[(j+2)%3]] - mesh[sel[j]]);
-	      }
-	  }
+        ParallelFor( Range(seia), [&] (auto i) NETGEN_LAMBDA_INLINE
+            {
+              const Element2d & sel = mesh[seia[i]];
+              for (int j = 0; j < 3; j++)
+                  pangle[sel[j]] = 0.0;
+            });
       }
 
-    // for (PointIndex pi = PointIndex::BASE; 
-    // pi < mesh.GetNP()+PointIndex::BASE; pi++)
-    
-    // pdef = 0;
-    for (int i = 0; i < seia.Size(); i++)
-      {
-	const Element2d & sel = mesh[seia[i]];
-	for (int j = 0; j < 3; j++)
-	  {
-	    PointIndex pi = sel[j];
-	    if (mesh[pi].Type() == INNERPOINT || mesh[pi].Type() == SURFACEPOINT)
-	      pdef[pi] = -6;
-	    else
-	      for (int j = 0; j < 8; j++)
-		if (pangle[pi] >= minangle[j])
-		  pdef[pi] = -1-j;
-	  }
-      }
-
-    /*
-    for (int i = 0; i < seia.Size(); i++)
-      {
-	const Element2d & sel = mesh[seia[i]];
-	for (int j = 0; j < 3; j++)
-	  pdef[sel[j]]++;
-      }
-    */
-    for (SurfaceElementIndex sei : seia)
-      for (PointIndex pi : mesh[sei].PNums<3>())
-        pdef[pi]++;
-    
-    // for (int i = 0; i < seia.Size(); i++)
-    for (SurfaceElementIndex sei : seia)
-      for (int j = 0; j < 3; j++)
+    ParallelFor( Range(seia), [&] (auto i) NETGEN_LAMBDA_INLINE
         {
-          neighbors[sei].SetNr (j, -1);
-          neighbors[sei].SetOrientation (j, 0);
-        }
+          const Element2d & sel = mesh[seia[i]];
+          for (int j = 0; j < 3; j++)
+            {
+              POINTTYPE typ = mesh[sel[j]].Type();
+              if (typ == FIXEDPOINT || typ == EDGEPOINT)
+                {
+                  AtomicAdd(pangle[sel[j]],
+                    Angle (mesh[sel[(j+1)%3]] - mesh[sel[j]],
+                           mesh[sel[(j+2)%3]] - mesh[sel[j]]));
+                }
+            }
+       });
 
-    /*
-      NgArray<Vec3d> normals(mesh.GetNP());
-      for (i = 1; i <= mesh.GetNSE(); i++)
-      {
-      Element2d & hel = mesh.SurfaceElement(i);
-      if (hel.GetIndex() == faceindex)
-      for (k = 1; k <= 3; k++)
-      {
-      int pi = hel.PNum(k);
-      SelectSurfaceOfPoint (mesh.Point(pi), hel.GeomInfoPi(k));
-      int surfi = mesh.GetFaceDescriptor(faceindex).SurfNr();
-      GetNormalVector (surfi, mesh.Point(pi), normals.Elem(pi));
-      normals.Elem(pi) /= normals.Elem(pi).Length();
-      }
-      }
-    */	    
+    ParallelFor( Range(seia), [&] (auto i) NETGEN_LAMBDA_INLINE
+        {
+          const Element2d & sel = mesh[seia[i]];
+          for (int j = 0; j < 3; j++)
+            {
+              PointIndex pi = sel[j];
+              if (mesh[pi].Type() == INNERPOINT || mesh[pi].Type() == SURFACEPOINT)
+                pdef[pi] = -6;
+              else
+                for (int j = 0; j < 8; j++)
+                  if (pangle[pi] >= minangle[j])
+                    pdef[pi] = -1-j;
+            }
+       });
 
-    /*
-    for (int i = 0; i < seia.Size(); i++)
-      {
-	const Element2d & sel = mesh[seia[i]];
-    */
+    ParallelFor( Range(seia), [&pdef, &neighbors, &mesh, &seia, &elements_on_node] (auto i) NETGEN_LAMBDA_INLINE
+        {
+          auto sei = seia[i];
+          for (PointIndex pi : mesh[sei].template PNums<3>())
+              AsAtomic(pdef[pi])++;
+          for (int j = 0; j < 3; j++)
+            {
+              neighbors[sei].SetNr (j, -1);
+              neighbors[sei].SetOrientation (j, 0);
+            }
 
-    for (SurfaceElementIndex sei : seia)
-      {
-	const Element2d & sel = mesh[sei];
-        
-	for (int j = 0; j < 3; j++)
-	  {
-	    PointIndex pi1 = sel.PNumMod(j+2);
-	    PointIndex pi2 = sel.PNumMod(j+3);
-	  
-	    //	    double loch = mesh.GetH(mesh[pi1]);
-	    
-	    // INDEX_2 edge(pi1, pi2);
-	    // edge.Sort();
-	  
-	    if (mesh.IsSegment (pi1, pi2))
-	      continue;
-	  
-	    /*
-	      if (segments.Used (edge))
-	      continue;
-	    */
-	    INDEX_2 ii2 (pi1, pi2);
-	    if (other.Used (ii2))
-	      {
-		// INDEX_2 i2s(ii2);
-		// i2s.Sort();
+          const auto sel = mesh[sei];
+          for (int j = 0; j < 3; j++)
+            {
+              PointIndex pi1 = sel.PNumMod(j+2);
+              PointIndex pi2 = sel.PNumMod(j+3);
 
-                /*
-		int i2 = other.Get(ii2).tnr;
-		int j2 = other.Get(ii2).sidenr;
-		*/
-                auto othertrig = other.Get(ii2);
-		SurfaceElementIndex i2 = othertrig.tnr;
-		int j2 = othertrig.sidenr;
-                
-		neighbors[sei].SetNr (j, i2);
-		neighbors[sei].SetOrientation (j, j2);
-		neighbors[i2].SetNr (j2, sei);
-		neighbors[i2].SetOrientation (j2, j);
-	      }
-	    else
-	      {
-		other.Set (INDEX_2 (pi2, pi1), trionedge (sei, j));
-	      }
-	  }
-      }
+              for (auto sei_other : elements_on_node[pi1])
+                {
+                  if(sei_other==sei) continue;
+                  const auto & other = mesh[sei_other];
+                  int pi1_other = -1;
+                  int pi2_other = -1;
+                  bool common_edge = false;
+                  for (int k = 0; k < 3; k++)
+                    {
+                      if(other[k] == pi1)
+                          pi1_other = k;
+                      if(other[k] == pi2)
+                        {
+                          pi2_other = k;
+                          common_edge = true;
+                        }
+                    }
+
+                  if(common_edge)
+                    {
+                      neighbors[sei].SetNr (j, sei_other);
+                      neighbors[sei].SetOrientation (j, 3-pi1_other-pi2_other);
+                    }
+                }
+            }
+        });
+
 
     for (SurfaceElementIndex sei : seia)
       swapped[sei] = false;
@@ -243,174 +314,37 @@ namespace netgen
   
 
 
+    Array<std::pair<SurfaceElementIndex,int>> improvement_candidates(3*seia.Size());
+    atomic<int> cnt(0);
+
     int t = 4;
     bool done = false;
     while (!done && t >= 2)
       {
-	for (int i = 0; i < seia.Size(); i++)
-	  {
-	    SurfaceElementIndex t1 = seia[i];
+        cnt = 0;
+        ParallelFor( Range(seia), [&] (auto i) NETGEN_LAMBDA_INLINE
+          {
+            SurfaceElementIndex t1 = seia[i];
 
-	    if (mesh[t1].IsDeleted())
-	      continue;
+            if (mesh[t1].IsDeleted())
+              return;
 
-	    if (mesh[t1].GetIndex() != faceindex)
-	      continue;
+            if (mesh[t1].GetIndex() != faceindex)
+              return;
 
-	    if (multithread.terminate)
-	      throw NgException ("Meshing stopped");
+            if (multithread.terminate)
+              throw NgException ("Meshing stopped");
 
-	    for (int o1 = 0; o1 < 3; o1++)
-	      {
-		bool should;
+            for (int o1 = 0; o1 < 3; o1++)
+                if(EdgeSwapping(mesh, usemetric, neighbors, swapped, t1, o1, t, pdef, true))
+                    improvement_candidates[cnt++]= std::make_pair(t1,o1);
+          });
 
-		SurfaceElementIndex t2 = neighbors[t1].GetNr (o1);
-		int o2 = neighbors[t1].GetOrientation (o1);
+        auto elements_with_improvement = improvement_candidates.Range(cnt.load());
+        QuickSort(elements_with_improvement);
 
-		if (t2 == -1) continue;
-		if (swapped[t1] || swapped[t2]) continue;
-	      
-
-		PointIndex pi1 = mesh[t1].PNumMod(o1+1+1);
-		PointIndex pi2 = mesh[t1].PNumMod(o1+1+2);
-		PointIndex pi3 = mesh[t1].PNumMod(o1+1);
-		PointIndex pi4 = mesh[t2].PNumMod(o2+1);
-	      
-		PointGeomInfo gi1 = mesh[t1].GeomInfoPiMod(o1+1+1);
-		PointGeomInfo gi2 = mesh[t1].GeomInfoPiMod(o1+1+2);
-		PointGeomInfo gi3 = mesh[t1].GeomInfoPiMod(o1+1);
-		PointGeomInfo gi4 = mesh[t2].GeomInfoPiMod(o2+1);
-	    
-		bool allowswap = true;
-
-		Vec<3> auxvec1 = mesh[pi3]-mesh[pi4];
-		Vec<3> auxvec2 = mesh[pi1]-mesh[pi4];
-
-		allowswap = allowswap && fabs(1.-(auxvec1*auxvec2)/(auxvec1.Length()*auxvec2.Length())) > 1e-4;
-
-		if(!allowswap)
-		  continue;
-
-		// normal of new
-		Vec<3> nv1 = Cross (auxvec1, auxvec2);
-
-		auxvec1 = mesh.Point(pi4)-mesh.Point(pi3);
-		auxvec2 = mesh.Point(pi2)-mesh.Point(pi3);
-		allowswap = allowswap && fabs(1.-(auxvec1*auxvec2)/(auxvec1.Length()*auxvec2.Length())) > 1e-4;
-
-
-		if(!allowswap)
-		  continue;
-
-		Vec<3> nv2 = Cross (auxvec1, auxvec2);
-
-	      
-		// normals of original
-		Vec<3> nv3 = Cross (mesh[pi1]-mesh[pi4], mesh[pi2]-mesh[pi4]);
-		Vec<3> nv4 = Cross (mesh[pi2]-mesh[pi3], mesh[pi1]-mesh[pi3]);
-	      
-		nv3 *= -1;
-		nv4 *= -1;
-		nv3.Normalize();
-		nv4.Normalize();
-
-		nv1.Normalize();
-		nv2.Normalize();
-	    
-		Vec<3> nvp3, nvp4;
-		GetNormalVector (surfnr, mesh.Point(pi3), gi3, nvp3);
-
-		nvp3.Normalize();
-
-		GetNormalVector (surfnr, mesh.Point(pi4), gi4, nvp4);
-	    
-		nvp4.Normalize();
-	      
-	      
-	      
-		double critval = cos (M_PI / 6);  // 30 degree
-		allowswap = allowswap &&
-		  (nv1 * nvp3 > critval) && 
-		  (nv1 * nvp4 > critval) && 
-		  (nv2 * nvp3 > critval) && 
-		  (nv2 * nvp4 > critval) &&
-		  (nvp3 * nv3 > critval) && 
-		  (nvp4 * nv4 > critval);
-	      
-
-		double horder = Dist (mesh[pi1], mesh[pi2]);
-
-		if ( // nv1 * nv2 >= 0 &&
-		    nv1.Length() > 1e-3 * horder * horder &&
-		    nv2.Length() > 1e-3 * horder * horder &&
-		    allowswap )
-		  {
-		    if (!usemetric)
-		      {
-			int e = pdef[pi1] + pdef[pi2] - pdef[pi3] - pdef[pi4];
-			double d = 
-			  Dist2 (mesh[pi1], mesh[pi2]) - 
-			  Dist2 (mesh[pi3], mesh[pi4]);
-		      
-			should = e >= t && (e > 2 || d > 0);
-		      }
-		    else
-		      {
-			double loch = mesh.GetH(mesh[pi1]);
-			should = 
-			  CalcTriangleBadness (mesh[pi4], mesh[pi3], mesh[pi1], metricweight, loch) +
-			  CalcTriangleBadness (mesh[pi3], mesh[pi4], mesh[pi2], metricweight, loch) <
-			  CalcTriangleBadness (mesh[pi1], mesh[pi2], mesh[pi3], metricweight, loch) +
-			  CalcTriangleBadness (mesh[pi2], mesh[pi1], mesh[pi4], metricweight, loch);
-		      }
-		  
-		    if (allowswap)
-		      {
-			Element2d sw1 (pi4, pi3, pi1);
-			Element2d sw2 (pi3, pi4, pi2);
-
-			int legal1 = 
-			  mesh.LegalTrig (mesh[t1]) + 
-			  mesh.LegalTrig (mesh[t2]);
-			int legal2 = 
-			  mesh.LegalTrig (sw1) + mesh.LegalTrig (sw2);
-
-			if (legal1 < legal2) should = true;
-			if (legal2 < legal1) should = false;
-		      }
-		  
-		    if (should)
-		      {
-			// do swapping !
-		      
-			done = true;
-
-                        /*
-                        mesh[t1] = { pi1, pi4, pi3 };
-                        mesh[t2] = { pi2, pi3, pi4 };
-                        
-			mesh[t1].GeomInfoPi(1) = gi1;
-			mesh[t1].GeomInfoPi(2) = gi4;
-			mesh[t1].GeomInfoPi(3) = gi3;
-		      
-			mesh[t2].GeomInfoPi(1) = gi2;
-			mesh[t2].GeomInfoPi(2) = gi3;
-			mesh[t2].GeomInfoPi(3) = gi4;
-                        */
-                        mesh[t1] = { { pi1, gi1 }, { pi4, gi4 }, { pi3, gi3 } };
-                        mesh[t2] = { { pi2, gi2 }, { pi3, gi3 }, { pi4, gi4 } };
-                        
-			pdef[pi1]--;
-			pdef[pi2]--;
-			pdef[pi3]++;
-			pdef[pi4]++;
-		      
-			swapped[t1] = true;
-			swapped[t2] = true;
-		      }
-		  }
-	      }
-	  }
+        for (auto [t1,o1] : elements_with_improvement)
+            done |= EdgeSwapping(mesh, usemetric, neighbors, swapped, t1, o1, t, pdef, false);
 	t--;
       }
 
