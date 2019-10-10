@@ -1029,8 +1029,11 @@ namespace netgen
 	else
 	  glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, matcol);
 	
+        static Point<3> xa[129];
+        static Vec<3> na[129];
 
-
+        
+        
 	for (int hi = 0; hi < seia.Size(); hi++)
 	  {
 	    SurfaceElementIndex sei = seia[hi];
@@ -1058,8 +1061,6 @@ namespace netgen
                   if (curv.IsHighOrder()) //  && curv.IsSurfaceElementCurved(sei))
 		    {
 		      if (hoplotn > 128) hoplotn = 128;
-		      Point<3> xa[129];
-		      Vec<3> na[129];
 
 		      for (int i = 0; i < hoplotn; i++)
 			{
