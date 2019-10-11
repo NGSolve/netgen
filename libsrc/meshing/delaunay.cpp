@@ -1078,6 +1078,7 @@ namespace netgen
 	  tempmesh.AddVolumeElement (el);
 	}
 
+      tempels.DeleteAll();
 
       MeshQuality3d (tempmesh);
 
@@ -1132,6 +1133,7 @@ namespace netgen
     
       MeshQuality3d (tempmesh);
     
+      tempels.SetSize(tempmesh.GetNE());
       tempels.SetSize(0);
       for (auto & el : tempmesh.VolumeElements())
         tempels.Append (el);
