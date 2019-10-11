@@ -282,8 +282,8 @@ namespace netgen
       }
   };
 
-  // typedef BoxTree<3> DTREE;
-  typedef DelaunayTree<3> DTREE;
+  typedef BoxTree<3> DTREE;
+  // typedef DelaunayTree<3> DTREE;
 
   static const int deltetfaces[][3] = 
     { { 1, 2, 3 },
