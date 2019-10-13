@@ -597,17 +597,14 @@ namespace netgen
 	      }
 	    bad1 /= (hasonepi.Size()+hasbothpi.Size());
 
-	    MeshPoint p1 = mesh[pi1];
-	    MeshPoint p2 = mesh[pi2];
-
-	    MeshPoint pnew = p1;
-	    mesh[pi1] = pnew;
-	    mesh[pi2] = pnew;
-
 	    double bad2 = 0;
 	    for (int k = 0; k < hasonepi.Size(); k++)
 	      {
-		Element2d & el = mesh[hasonepi[k]];
+                Element2d el = mesh[hasonepi[k]];
+                for (auto i : Range(3))
+                    if(el[i]==pi2)
+                        el[i] = pi1;
+
 		double err = 
 		  CalcTriangleBadness (mesh[el[0]], mesh[el[1]], mesh[el[2]],
 				       nv, -1, loch);
@@ -624,17 +621,10 @@ namespace netgen
 		  if ( (normals[el[l]] * nv) < 0.5)
 		    bad2 += 1e10;
 
-                Element2d el1 = el;
-                for (auto i : Range(3))
-                    if(el1[i]==pi2)
-                        el1[i] = pi1;
-                illegal2 += 1-mesh.LegalTrig(el1);
+                illegal2 += 1-mesh.LegalTrig(el);
 	      }
 	    bad2 /= hasonepi.Size();
 
-	    mesh[pi1] = p1;
-	    mesh[pi2] = p2;
-       
 	    if (debugflag)
 	      {
 		(*testout) << "bad1 = " << bad1 << ", bad2 = " << bad2 << endl;
@@ -657,7 +647,6 @@ namespace netgen
                 (*testout) << "loch = " << loch << endl;
                 */
 
-		mesh[pi1] = pnew;
 		PointGeomInfo gi;
 		// bool gi_set(false);
 	      
