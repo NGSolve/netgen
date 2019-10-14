@@ -653,7 +653,7 @@ namespace netgen
                       break;
                     }
               }
-        });
+        }, TasksPerThread(4));
 
     timerstart.Stop();
 
@@ -667,7 +667,7 @@ namespace netgen
         double d_badness = CombineImproveEdge(mesh, elementsonnode, normals, fixed, pi1, pi2, true);
         if(d_badness < 0.0)
             candidate_edges[improvement_counter++] = make_tuple(d_badness, i);
-      });
+      }, TasksPerThread(4));
 
     auto edges_with_improvement = candidate_edges.Part(0, improvement_counter.load());
     QuickSort(edges_with_improvement);
