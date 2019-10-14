@@ -354,7 +354,7 @@ namespace netgen
 
 
 
-  bool CombineImproveEdge( Mesh & mesh,
+  double CombineImproveEdge( Mesh & mesh,
                            const Table<SurfaceElementIndex, PointIndex> & elementsonnode,
                            Array<Vec<3>, PointIndex> & normals,
                            Array<bool, PointIndex> & fixed,
@@ -365,7 +365,7 @@ namespace netgen
     ArrayMem<SurfaceElementIndex, 20> hasonepi, hasbothpi;
 
     if (!pi1.IsValid() || !pi2.IsValid())
-        return false;
+        return 0.0;
 
     bool debugflag = 0;
 
@@ -378,7 +378,7 @@ namespace netgen
     /*
     // save version:
     if (fixed.Get(pi1) || fixed.Get(pi2))
-    return false;
+    return 0.0;
     if (pi2 < pi1) swap (pi1, pi2);
     */
 
@@ -387,7 +387,7 @@ namespace netgen
         Swap (pi1, pi2);
 
     if (fixed[pi2])
-        return false;
+        return 0.0;
 
     double loch = mesh.GetH (mesh[pi1]);
 
@@ -410,7 +410,7 @@ namespace netgen
       }
 
     if(hasbothpi.Size()==0)
-        return false;
+        return 0.0;
 
 
     nv = normals[pi1];
@@ -486,16 +486,17 @@ namespace netgen
         (*testout) << "bad1 = " << bad1 << ", bad2 = " << bad2 << endl;
       }
 
-    bool should = (bad2 < bad1 && bad2 < 1e4);
-    if (bad2 < 1e4)
+    bool should = (illegal2<=illegal1 && bad2 < bad1 && bad2 < 1e4);
+    if(illegal2 < illegal1)
       {
-        if (illegal1 > illegal2) should = true;
-        if (illegal2 > illegal1) should = false;
+        should = true;
+        bad1 += 1e4;
       }
 
+    double d_badness = should * (bad2-bad1);
 
     if(check_only)
-        return should;
+        return d_badness;
 
     if (should)
       {
@@ -562,7 +563,7 @@ namespace netgen
             mesh[sei].Delete();
 
       }
-    return should;
+    return d_badness;
   }
 
   void MeshOptimize2d :: CombineImprove (Mesh & mesh)
@@ -658,9 +659,24 @@ namespace netgen
 
     timerstart.Stop();
 
-    for (auto e : edges)
+    // Find edges with improvement
+    Array<std::tuple<double, int>> candidate_edges(edges.Size());
+    std::atomic<int> improvement_counter(0);
+
+    ParallelFor( Range(edges), [&] (auto i) NETGEN_LAMBDA_INLINE
       {
-        auto [pi1, pi2] = e;
+        auto [pi1, pi2] = edges[i];
+        double d_badness = CombineImproveEdge(mesh, elementsonnode, normals, fixed, pi1, pi2, true);
+        if(d_badness < 0.0)
+            candidate_edges[improvement_counter++] = make_tuple(d_badness, i);
+      });
+
+    auto edges_with_improvement = candidate_edges.Part(0, improvement_counter.load());
+    QuickSort(edges_with_improvement);
+
+    for(auto [d_badness, ei] : edges_with_improvement)
+      {
+        auto [pi1, pi2] = edges[ei];
         CombineImproveEdge(mesh, elementsonnode, normals, fixed, pi1, pi2, false);
       }
 
