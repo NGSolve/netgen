@@ -354,28 +354,225 @@ namespace netgen
 
 
 
-
-
-
- 
-  void MeshOptimize2d :: CombineImprove (Mesh & mesh)
+  double CombineImproveEdge( Mesh & mesh,
+                           const Table<SurfaceElementIndex, PointIndex> & elementsonnode,
+                           Array<Vec<3>, PointIndex> & normals,
+                           Array<bool, PointIndex> & fixed,
+                           PointIndex pi1, PointIndex pi2,
+                           bool check_only = true)
   {
-    if (!faceindex)
+    Vec<3> nv;
+    ArrayMem<SurfaceElementIndex, 20> hasonepi, hasbothpi;
+
+    if (!pi1.IsValid() || !pi2.IsValid())
+        return 0.0;
+
+    bool debugflag = 0;
+
+    if (debugflag)
       {
-        SplitImprove(mesh);
-	PrintMessage (3, "Combine improve");
-
-	for (faceindex = 1; faceindex <= mesh.GetNFD(); faceindex++)
-	  {
-	    CombineImprove (mesh);
-
-	    if (multithread.terminate)
-	      throw NgException ("Meshing stopped");
-	  }
-	faceindex = 0;
-	return;
+        (*testout) << "Combineimprove "
+            << "pi1 = " << pi1 << " pi2 = " << pi2 << endl;
       }
 
+    /*
+    // save version:
+    if (fixed.Get(pi1) || fixed.Get(pi2))
+    return 0.0;
+    if (pi2 < pi1) swap (pi1, pi2);
+    */
+
+    // more general
+    if (fixed[pi2])
+        Swap (pi1, pi2);
+
+    if (fixed[pi2])
+        return 0.0;
+
+    double loch = mesh.GetH (mesh[pi1]);
+
+    for (SurfaceElementIndex sei2 : elementsonnode[pi1])
+      {
+        const Element2d & el2 = mesh[sei2];
+
+        if (el2.IsDeleted()) continue;
+
+        if (el2[0] == pi2 || el2[1] == pi2 || el2[2] == pi2)
+          {
+            hasbothpi.Append (sei2);
+            nv = Cross (Vec3d (mesh[el2[0]], mesh[el2[1]]),
+                    Vec3d (mesh[el2[0]], mesh[el2[2]]));
+          }
+        else
+          {
+            hasonepi.Append (sei2);
+          }
+      }
+
+    if(hasbothpi.Size()==0)
+        return 0.0;
+
+
+    nv = normals[pi1];
+
+
+    for (SurfaceElementIndex sei2 :  elementsonnode[pi2])
+      {
+        const Element2d & el2 = mesh[sei2];
+        if (el2.IsDeleted()) continue;
+        if (!el2.PNums<3>().Contains (pi1))
+            hasonepi.Append (sei2);
+      }
+
+    double bad1 = 0;
+    int illegal1 = 0, illegal2 = 0;
+    /*
+       for (SurfaceElementIndex sei : hasonepi)
+       {
+       const Element2d & el = mesh[sei];
+       bad1 += CalcTriangleBadness (mesh[el[0]], mesh[el[1]], mesh[el[2]],
+       nv, -1, loch);
+       illegal1 += 1-mesh.LegalTrig(el);
+       }
+       */
+    for (const Element2d & el : mesh.SurfaceElements()[hasonepi])
+      {
+        bad1 += CalcTriangleBadness (mesh[el[0]], mesh[el[1]], mesh[el[2]],
+                nv, -1, loch);
+        illegal1 += 1-mesh.LegalTrig(el);
+      }
+
+    for (int k = 0; k < hasbothpi.Size(); k++)
+      {
+        const Element2d & el = mesh[hasbothpi[k]];
+        bad1 += CalcTriangleBadness (mesh[el[0]], mesh[el[1]], mesh[el[2]],
+                nv, -1, loch);
+        illegal1 += 1-mesh.LegalTrig(el);
+      }
+    bad1 /= (hasonepi.Size()+hasbothpi.Size());
+
+    double bad2 = 0;
+    for (int k = 0; k < hasonepi.Size(); k++)
+      {
+        Element2d el = mesh[hasonepi[k]];
+        for (auto i : Range(3))
+            if(el[i]==pi2)
+                el[i] = pi1;
+
+        double err =
+            CalcTriangleBadness (mesh[el[0]], mesh[el[1]], mesh[el[2]],
+                    nv, -1, loch);
+        bad2 += err;
+
+        Vec<3> hnv = Cross (Vec3d (mesh[el[0]],
+                    mesh[el[1]]),
+                Vec3d (mesh[el[0]],
+                    mesh[el[2]]));
+        if (hnv * nv < 0)
+            bad2 += 1e10;
+
+        for (int l = 0; l < 3; l++)
+          {
+            if ( (normals[el[l]] * nv) < 0.5)
+                bad2 += 1e10;
+          }
+
+        illegal2 += 1-mesh.LegalTrig(el);
+      }
+    bad2 /= hasonepi.Size();
+
+    if (debugflag)
+      {
+        (*testout) << "bad1 = " << bad1 << ", bad2 = " << bad2 << endl;
+      }
+
+    bool should = (illegal2<=illegal1 && bad2 < bad1 && bad2 < 1e4);
+    if(illegal2 < illegal1)
+      {
+        should = true;
+        bad1 += 1e4;
+      }
+
+    double d_badness = should * (bad2-bad1);
+
+    if(check_only)
+        return d_badness;
+
+    if (should)
+      {
+        /*
+           (*testout) << "combine !" << endl;
+           (*testout) << "bad1 = " << bad1 << ", bad2 = " << bad2 << endl;
+           (*testout) << "illegal1 = " << illegal1 << ", illegal2 = " << illegal2 << endl;
+           (*testout) << "loch = " << loch << endl;
+           */
+
+        PointGeomInfo gi;
+        // bool gi_set(false);
+
+        /*
+           Element2d *el1p(NULL);
+           int l = 0;
+           while(mesh[elementsonnode[pi1][l]].IsDeleted() && l<elementsonnode[pi1].Size()) l++;
+           if(l<elementsonnode[pi1].Size())
+           el1p = &mesh[elementsonnode[pi1][l]];
+           else
+           cerr << "OOPS!" << endl;
+
+           for (l = 0; l < el1p->GetNP(); l++)
+           if ((*el1p)[l] == pi1)
+           {
+           gi = el1p->GeomInfoPi (l+1);
+        // gi_set = true;
+        }
+        */
+        for (SurfaceElementIndex sei : elementsonnode[pi1])
+          {
+            const Element2d & el1p = mesh[sei];
+            if (el1p.IsDeleted()) continue;
+
+            for (int l = 0; l < el1p.GetNP(); l++)
+                if (el1p[l] == pi1)
+                    // gi = el1p.GeomInfoPi (l+1);
+                    gi = el1p.GeomInfo()[l];
+            break;
+          }
+
+
+        // (*testout) << "Connect point " << pi2 << " to " << pi1 << "\n";
+        // for (int k = 0; k < elementsonnode[pi2].Size(); k++)
+        for (SurfaceElementIndex sei2 : elementsonnode[pi2])
+          {
+            Element2d & el = mesh[sei2];
+            if (el.IsDeleted()) continue;
+            if (el.PNums().Contains(pi1)) continue;
+
+            for (auto l : Range(el.GetNP()))
+              {
+                if (el[l] == pi2)
+                  {
+                    el[l] = pi1;
+                    el.GeomInfo()[l] = gi;
+                  }
+
+                fixed[el[l]] = true;
+              }
+          }
+
+        for (auto sei : hasbothpi)
+            mesh[sei].Delete();
+
+      }
+    return d_badness;
+  }
+
+  void MeshOptimize2d :: CombineImprove (Mesh & mesh)
+  {
+    SplitImprove(mesh);
+    PrintMessage (3, "Combine improve");
+
+    if (multithread.terminate)
+        throw NgException ("Meshing stopped");
 
     static Timer timer ("Combineimprove 2D");
     RegionTimer reg (timer);
@@ -389,334 +586,96 @@ namespace netgen
 
     
     Array<SurfaceElementIndex> seia;
-    mesh.GetSurfaceElementsOfFace (faceindex, seia);
 
+    if(faceindex)
+        mesh.GetSurfaceElementsOfFace (faceindex, seia);
+    else
+      {
+        seia.SetSize(mesh.GetNSE());
+        ParallelFor( IntRange(mesh.GetNSE()), [&seia] (auto i) NETGEN_LAMBDA_INLINE
+                { seia[i] = i; });
+      }
 
-    for (SurfaceElementIndex sei : seia)
-      if (mesh[sei].GetNP() != 3)
-	return;
+    bool mixed = false;
+    ParallelFor( Range(seia), [&] (auto i) NETGEN_LAMBDA_INLINE
+            {
+                if (mesh[seia[i]].GetNP() != 3)
+                    mixed = true;
+            });
 
-
-    int surfnr = 0;
-    if (faceindex)
-      surfnr = mesh.GetFaceDescriptor (faceindex).SurfNr();
-
-
-    Vec<3> nv;
+    if(mixed)
+        return;
 
     int np = mesh.GetNP();
 
-    TABLE<SurfaceElementIndex,PointIndex::BASE> elementsonnode(np); 
-    Array<SurfaceElementIndex> hasonepi, hasbothpi;
+    auto elementsonnode = mesh.CreatePoint2SurfaceElementTable(faceindex);
 
-    for (SurfaceElementIndex sei : seia)
-      for (PointIndex pi : mesh[sei].PNums<3>())
-        elementsonnode.Add (pi, sei);
+    int ntasks = ngcore::TaskManager::GetMaxThreads();
+    Array<std::tuple<PointIndex, PointIndex>> edges;
+
+    BuildEdgeList( mesh, elementsonnode, edges );
 
     Array<bool,PointIndex> fixed(np);
-    fixed = false;
+    ParallelFor( fixed.Range(), [&fixed] (auto i) NETGEN_LAMBDA_INLINE
+            { fixed[i] = false; });
+
+    ParallelFor( edges.Range(), [&] (auto i) NETGEN_LAMBDA_INLINE
+            {
+              auto [pi0, pi1] = edges[i];
+              if (mesh.IsSegment (pi0, pi1))
+                {
+                  fixed[pi0] = true;
+                  fixed[pi1] = true;
+                }
+            });
 
     timerstart1.Stop();
 
-    /*
-    for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
-      {
-	INDEX_2 i2(mesh[si][0], mesh[si][1]);
-	fixed[i2.I1()] = true;
-	fixed[i2.I2()] = true;
-      }
-    */
-
-    for (SurfaceElementIndex sei : seia)
-      {
-	Element2d & sel = mesh[sei];
-	for (int j = 0; j < sel.GetNP(); j++)
-	  {
-	    PointIndex pi1 = sel.PNumMod(j+2);
-	    PointIndex pi2 = sel.PNumMod(j+3);
-	    if (mesh.IsSegment (pi1, pi2))
-	      {	
-		fixed[pi1] = true;
-		fixed[pi2] = true;
-	      }
-	  }
-      }
-
-
-    /*
-    for(int i = 0; i < mesh.LockedPoints().Size(); i++)
-      fixed[mesh.LockedPoints()[i]] = true;
-    */
-    for (PointIndex pi : mesh.LockedPoints())
-      fixed[pi] = true;
+    ParallelFor( mesh.LockedPoints().Range(), [&] (auto i) NETGEN_LAMBDA_INLINE
+            {
+              fixed[mesh.LockedPoints()[i]] = true;
+            });
 
 
     Array<Vec<3>,PointIndex> normals(np);
 
-    // for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End(); pi++)
-    for (PointIndex pi : mesh.Points().Range())
-      {
-	if (elementsonnode[pi].Size())
-	  {
-	    Element2d & hel = mesh[elementsonnode[pi][0]];
-	    for (int k = 0; k < 3; k++)
-	      if (hel[k] == pi)
-		{
-		  GetNormalVector (surfnr, mesh[pi], hel.GeomInfoPi(k+1), normals[pi]);
-		  break;
-		}
-	  }
-      }
+    ParallelFor( mesh.Points().Range(), [&] (auto pi) NETGEN_LAMBDA_INLINE
+        {
+            if (elementsonnode[pi].Size())
+              {
+                Element2d & hel = mesh[elementsonnode[pi][0]];
+                for (int k = 0; k < 3; k++)
+                  if (hel[k] == pi)
+                    {
+                      const int faceindex = hel.GetIndex();
+                      const int surfnr = mesh.GetFaceDescriptor (faceindex).SurfNr();
+                      GetNormalVector (surfnr, mesh[pi], hel.GeomInfoPi(k+1), normals[pi]);
+                      break;
+                    }
+              }
+        }, TasksPerThread(4));
 
     timerstart.Stop();
 
-    for (int i = 0; i < seia.Size(); i++)
+    // Find edges with improvement
+    Array<std::tuple<double, int>> candidate_edges(edges.Size());
+    std::atomic<int> improvement_counter(0);
+
+    ParallelFor( Range(edges), [&] (auto i) NETGEN_LAMBDA_INLINE
       {
-	SurfaceElementIndex sei = seia[i];
-	Element2d & elem = mesh[sei];
+        auto [pi1, pi2] = edges[i];
+        double d_badness = CombineImproveEdge(mesh, elementsonnode, normals, fixed, pi1, pi2, true);
+        if(d_badness < 0.0)
+            candidate_edges[improvement_counter++] = make_tuple(d_badness, i);
+      }, TasksPerThread(4));
 
-	for (int j = 0; j < 3; j++)
-	  {
-            if (elem.IsDeleted()) continue;
-	    PointIndex pi1 = elem[j];
-	    PointIndex pi2 = elem[(j+1) % 3];
+    auto edges_with_improvement = candidate_edges.Part(0, improvement_counter.load());
+    QuickSort(edges_with_improvement);
 
-            /*
-	    if (pi1 < PointIndex::BASE || 
-		pi2 < PointIndex::BASE)
-	      continue;
-            */
-            if (!pi1.IsValid() || !pi2.IsValid())
-	      continue;              
-	    /*
-	      INDEX_2 i2(pi1, pi2);
-	      i2.Sort();
-	      if (segmentht.Used(i2))
-	      continue;
-	    */
-
-	    bool debugflag = 0;
-
-	    if (debugflag)
-	      {
-		(*testout) << "Combineimprove, face = " << faceindex 
-			   << "pi1 = " << pi1 << " pi2 = " << pi2 << endl;
-	      }
-
-	    /*
-	    // save version:
-	    if (fixed.Get(pi1) || fixed.Get(pi2)) 
-	    continue;
-	    if (pi2 < pi1) swap (pi1, pi2);
-	    */
-
-	    // more general 
-	    if (fixed[pi2]) 
-	      Swap (pi1, pi2);
-
-	    if (fixed[pi2])  
-	      continue;
-
-	    double loch = mesh.GetH (mesh[pi1]);
-
-	    // INDEX_2 si2 (pi1, pi2);
-	    // si2.Sort();
-
-	    /*	  
-	      if (edgetested.Used (si2))
-	      continue;
-	      edgetested.Set (si2, 1);
-	    */
-
-	    hasonepi.SetSize(0);
-	    hasbothpi.SetSize(0);
-
-	    // for (int k = 0; k < elementsonnode[pi1].Size(); k++)
-            for (SurfaceElementIndex sei2 : elementsonnode[pi1])
-	      {
-		const Element2d & el2 = mesh[sei2];
-
-		if (el2.IsDeleted()) continue;
-
-		if (el2[0] == pi2 || el2[1] == pi2 || el2[2] == pi2)
-		  {
-		    hasbothpi.Append (sei2);
-		    nv = Cross (Vec3d (mesh[el2[0]], mesh[el2[1]]),
-				Vec3d (mesh[el2[0]], mesh[el2[2]]));
-		  }
-		else
-		  {
-		    hasonepi.Append (sei2);
-		  }
-	      } 
-
-
-	    Element2d & hel = mesh[hasbothpi[0]];
-	    for (int k = 0; k < 3; k++)
-	      if (hel[k] == pi1)
-		{
-		  GetNormalVector (surfnr, mesh[pi1], hel.GeomInfoPi(k+1), nv);
-		  break;
-		}
-
-	    //	  nv = normals.Get(pi1);
-
-
-            for (SurfaceElementIndex sei2 :  elementsonnode[pi2])
-	      {
-		const Element2d & el2 = mesh[sei2];
-		if (el2.IsDeleted()) continue;
-                if (!el2.PNums<3>().Contains (pi1))
-		  hasonepi.Append (sei2);                  
-	      } 
-
-	    double bad1 = 0;
-	    int illegal1 = 0, illegal2 = 0;
-            /*
-            for (SurfaceElementIndex sei : hasonepi)
-              {
-                const Element2d & el = mesh[sei];
-		bad1 += CalcTriangleBadness (mesh[el[0]], mesh[el[1]], mesh[el[2]],
-					     nv, -1, loch);
-		illegal1 += 1-mesh.LegalTrig(el);
-	      }
-            */
-            for (const Element2d & el : mesh.SurfaceElements()[hasonepi])
-              {
-		bad1 += CalcTriangleBadness (mesh[el[0]], mesh[el[1]], mesh[el[2]],
-					     nv, -1, loch);
-		illegal1 += 1-mesh.LegalTrig(el);
-	      }
-
-	    for (int k = 0; k < hasbothpi.Size(); k++)
-	      {
-		const Element2d & el = mesh[hasbothpi[k]];
-		bad1 += CalcTriangleBadness (mesh[el[0]], mesh[el[1]], mesh[el[2]],
-					     nv, -1, loch);
-		illegal1 += 1-mesh.LegalTrig(el);
-	      }
-	    bad1 /= (hasonepi.Size()+hasbothpi.Size());
-
-	    MeshPoint p1 = mesh[pi1];
-	    MeshPoint p2 = mesh[pi2];
-
-	    MeshPoint pnew = p1;
-	    mesh[pi1] = pnew;
-	    mesh[pi2] = pnew;
-
-	    double bad2 = 0;
-	    for (int k = 0; k < hasonepi.Size(); k++)
-	      {
-		Element2d & el = mesh[hasonepi[k]];
-		double err = 
-		  CalcTriangleBadness (mesh[el[0]], mesh[el[1]], mesh[el[2]],
-				       nv, -1, loch);
-		bad2 += err;
-
-		Vec<3> hnv = Cross (Vec3d (mesh[el[0]],
-					   mesh[el[1]]),
-				    Vec3d (mesh[el[0]],
-					   mesh[el[2]]));
-		if (hnv * nv < 0)
-		  bad2 += 1e10;
-              
-		for (int l = 0; l < 3; l++)
-		  if ( (normals[el[l]] * nv) < 0.5)
-		    bad2 += 1e10;
-
-                Element2d el1 = el;
-                for (auto i : Range(3))
-                    if(el1[i]==pi2)
-                        el1[i] = pi1;
-                illegal2 += 1-mesh.LegalTrig(el1);
-	      }
-	    bad2 /= hasonepi.Size();
-
-	    mesh[pi1] = p1;
-	    mesh[pi2] = p2;
-       
-	    if (debugflag)
-	      {
-		(*testout) << "bad1 = " << bad1 << ", bad2 = " << bad2 << endl;
-	      }
-
-	    bool should = (bad2 < bad1 && bad2 < 1e4);
-	    if (bad2 < 1e4)
-	      {
-		if (illegal1 > illegal2) should = true;
-		if (illegal2 > illegal1) should = false;
-	      }
-	  
-
-	    if (should)
-	      {
-                /*
-                (*testout) << "combine !" << endl;
-                (*testout) << "bad1 = " << bad1 << ", bad2 = " << bad2 << endl;
-                (*testout) << "illegal1 = " << illegal1 << ", illegal2 = " << illegal2 << endl;
-                (*testout) << "loch = " << loch << endl;
-                */
-
-		mesh[pi1] = pnew;
-		PointGeomInfo gi;
-		// bool gi_set(false);
-	      
-                /*
-		Element2d *el1p(NULL);
-		int l = 0;
-		while(mesh[elementsonnode[pi1][l]].IsDeleted() && l<elementsonnode[pi1].Size()) l++;
-		if(l<elementsonnode[pi1].Size())
-		  el1p = &mesh[elementsonnode[pi1][l]];
-		else
-		  cerr << "OOPS!" << endl;
-
-		for (l = 0; l < el1p->GetNP(); l++)
-		  if ((*el1p)[l] == pi1)
-		    {
-		      gi = el1p->GeomInfoPi (l+1);
-		      // gi_set = true;
-		    }
-                */
-                for (SurfaceElementIndex sei : elementsonnode[pi1])
-                  {
-                    const Element2d & el1p = mesh[sei];
-                    if (el1p.IsDeleted()) continue;
-                      
-                    for (int l = 0; l < el1p.GetNP(); l++)
-                      if (el1p[l] == pi1)
-                        // gi = el1p.GeomInfoPi (l+1);
-                        gi = el1p.GeomInfo()[l];
-                    break;
-                  }
-
-                
-
-		// (*testout) << "Connect point " << pi2 << " to " << pi1 << "\n";
-		// for (int k = 0; k < elementsonnode[pi2].Size(); k++)
-                for (SurfaceElementIndex sei2 : elementsonnode[pi2])
-		  {
-                    Element2d & el = mesh[sei2];
-		    if (el.IsDeleted()) continue;
-                    if (el.PNums().Contains(pi1)) continue;
-
-		    elementsonnode.Add (pi1, sei2);
-                    
-		    for (auto l : Range(el.GetNP()))
-		      {
-			if (el[l] == pi2)
-			  {
-			    el[l] = pi1;
-			    el.GeomInfo()[l] = gi;
-			  }
-
-			fixed[el[l]] = true;
-		      }
-		  }
-
-                for (auto sei : hasbothpi)
-                  mesh[sei].Delete();
-	      }
-	  }
+    for(auto [d_badness, ei] : edges_with_improvement)
+      {
+        auto [pi1, pi2] = edges[ei];
+        CombineImproveEdge(mesh, elementsonnode, normals, fixed, pi1, pi2, false);
       }
 
     //  mesh.Compress();
