@@ -568,22 +568,11 @@ namespace netgen
 
   void MeshOptimize2d :: CombineImprove (Mesh & mesh)
   {
-    if (!faceindex)
-      {
-        SplitImprove(mesh);
-        PrintMessage (3, "Combine improve");
+    SplitImprove(mesh);
+    PrintMessage (3, "Combine improve");
 
-        for (faceindex = 1; faceindex <= mesh.GetNFD(); faceindex++)
-          {
-            CombineImprove (mesh);
-
-            if (multithread.terminate)
-              throw NgException ("Meshing stopped");
-          }
-        faceindex = 0;
-        return;
-      }
-
+    if (multithread.terminate)
+        throw NgException ("Meshing stopped");
 
     static Timer timer ("Combineimprove 2D");
     RegionTimer reg (timer);
@@ -597,18 +586,25 @@ namespace netgen
 
     
     Array<SurfaceElementIndex> seia;
-    mesh.GetSurfaceElementsOfFace (faceindex, seia);
 
+    if(faceindex)
+        mesh.GetSurfaceElementsOfFace (faceindex, seia);
+    else
+      {
+        seia.SetSize(mesh.GetNSE());
+        ParallelFor( IntRange(mesh.GetNSE()), [&seia] (auto i) NETGEN_LAMBDA_INLINE
+                { seia[i] = i; });
+      }
 
-    for (SurfaceElementIndex sei : seia)
-      if (mesh[sei].GetNP() != 3)
-	return;
+    bool mixed = false;
+    ParallelFor( Range(seia), [&] (auto i) NETGEN_LAMBDA_INLINE
+            {
+                if (mesh[seia[i]].GetNP() != 3)
+                    mixed = true;
+            });
 
-
-    int surfnr = 0;
-    if (faceindex)
-      surfnr = mesh.GetFaceDescriptor (faceindex).SurfNr();
-
+    if(mixed)
+        return;
 
     int np = mesh.GetNP();
 
@@ -651,6 +647,8 @@ namespace netgen
                 for (int k = 0; k < 3; k++)
                   if (hel[k] == pi)
                     {
+                      const int faceindex = hel.GetIndex();
+                      const int surfnr = mesh.GetFaceDescriptor (faceindex).SurfNr();
                       GetNormalVector (surfnr, mesh[pi], hel.GeomInfoPi(k+1), normals[pi]);
                       break;
                     }
