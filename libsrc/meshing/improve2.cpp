@@ -406,15 +406,12 @@ namespace netgen
 
     int np = mesh.GetNP();
 
-    TABLE<SurfaceElementIndex,PointIndex::BASE> elementsonnode(np); 
+    auto elementsonnode = mesh.CreatePoint2SurfaceElementTable(faceindex);
     Array<SurfaceElementIndex> hasonepi, hasbothpi;
 
-    for (SurfaceElementIndex sei : seia)
-      for (PointIndex pi : mesh[sei].PNums<3>())
-        elementsonnode.Add (pi, sei);
-
     Array<bool,PointIndex> fixed(np);
-    fixed = false;
+    ParallelFor( fixed.Range(), [&fixed] (auto i) NETGEN_LAMBDA_INLINE
+            { fixed[i] = false; });
 
     timerstart1.Stop();
 
@@ -688,8 +685,6 @@ namespace netgen
 		    if (el.IsDeleted()) continue;
                     if (el.PNums().Contains(pi1)) continue;
 
-		    elementsonnode.Add (pi1, sei2);
-                    
 		    for (auto l : Range(el.GetNP()))
 		      {
 			if (el[l] == pi2)
