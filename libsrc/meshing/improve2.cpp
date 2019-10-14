@@ -454,16 +454,11 @@ namespace netgen
 
     timerstart.Stop();
 
-    for (int i = 0; i < seia.Size(); i++)
+    for (auto e : edges)
       {
-	SurfaceElementIndex sei = seia[i];
-	Element2d & elem = mesh[sei];
+        auto [pi1, pi2] = e;
 
-	for (int j = 0; j < 3; j++)
 	  {
-            if (elem.IsDeleted()) continue;
-	    PointIndex pi1 = elem[j];
-	    PointIndex pi2 = elem[(j+1) % 3];
 
             /*
 	    if (pi1 < PointIndex::BASE || 
@@ -533,6 +528,9 @@ namespace netgen
 		    hasonepi.Append (sei2);
 		  }
 	      } 
+
+            if(hasbothpi.Size()==0)
+                continue;
 
 
 	    Element2d & hel = mesh[hasbothpi[0]];
