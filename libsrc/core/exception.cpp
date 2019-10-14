@@ -167,6 +167,11 @@ namespace ngcore
 
 static void ngcore_signal_handler(int sig)
 {
+  static bool first_call = true;
+  if(!first_call)
+      exit(1); // avoid endless recursions if signals are caused by this handler
+  first_call = false;
+
   switch(sig)
     {
       case SIGABRT:
