@@ -409,61 +409,48 @@ namespace netgen
     auto elementsonnode = mesh.CreatePoint2SurfaceElementTable(faceindex);
     Array<SurfaceElementIndex> hasonepi, hasbothpi;
 
+    int ntasks = ngcore::TaskManager::GetMaxThreads();
+    Array<std::tuple<PointIndex, PointIndex>> edges;
+
+    BuildEdgeList( mesh, elementsonnode, edges );
+
     Array<bool,PointIndex> fixed(np);
     ParallelFor( fixed.Range(), [&fixed] (auto i) NETGEN_LAMBDA_INLINE
             { fixed[i] = false; });
 
+    ParallelFor( edges.Range(), [&] (auto i) NETGEN_LAMBDA_INLINE
+            {
+              auto [pi0, pi1] = edges[i];
+              if (mesh.IsSegment (pi0, pi1))
+                {
+                  fixed[pi0] = true;
+                  fixed[pi1] = true;
+                }
+            });
+
     timerstart1.Stop();
 
-    /*
-    for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
-      {
-	INDEX_2 i2(mesh[si][0], mesh[si][1]);
-	fixed[i2.I1()] = true;
-	fixed[i2.I2()] = true;
-      }
-    */
-
-    for (SurfaceElementIndex sei : seia)
-      {
-	Element2d & sel = mesh[sei];
-	for (int j = 0; j < sel.GetNP(); j++)
-	  {
-	    PointIndex pi1 = sel.PNumMod(j+2);
-	    PointIndex pi2 = sel.PNumMod(j+3);
-	    if (mesh.IsSegment (pi1, pi2))
-	      {	
-		fixed[pi1] = true;
-		fixed[pi2] = true;
-	      }
-	  }
-      }
-
-
-    /*
-    for(int i = 0; i < mesh.LockedPoints().Size(); i++)
-      fixed[mesh.LockedPoints()[i]] = true;
-    */
-    for (PointIndex pi : mesh.LockedPoints())
-      fixed[pi] = true;
+    ParallelFor( mesh.LockedPoints().Range(), [&] (auto i) NETGEN_LAMBDA_INLINE
+            {
+              fixed[mesh.LockedPoints()[i]] = true;
+            });
 
 
     Array<Vec<3>,PointIndex> normals(np);
 
-    // for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End(); pi++)
-    for (PointIndex pi : mesh.Points().Range())
-      {
-	if (elementsonnode[pi].Size())
-	  {
-	    Element2d & hel = mesh[elementsonnode[pi][0]];
-	    for (int k = 0; k < 3; k++)
-	      if (hel[k] == pi)
-		{
-		  GetNormalVector (surfnr, mesh[pi], hel.GeomInfoPi(k+1), normals[pi]);
-		  break;
-		}
-	  }
-      }
+    ParallelFor( mesh.Points().Range(), [&] (auto pi) NETGEN_LAMBDA_INLINE
+        {
+            if (elementsonnode[pi].Size())
+              {
+                Element2d & hel = mesh[elementsonnode[pi][0]];
+                for (int k = 0; k < 3; k++)
+                  if (hel[k] == pi)
+                    {
+                      GetNormalVector (surfnr, mesh[pi], hel.GeomInfoPi(k+1), normals[pi]);
+                      break;
+                    }
+              }
+        });
 
     timerstart.Stop();
 
