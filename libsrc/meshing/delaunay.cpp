@@ -3,7 +3,7 @@
 
 namespace netgen
 {
-  template<int dim, typename T=INDEX>
+  template<int dim, typename T=INDEX, typename TSCAL=double>
   class DelaunayTree
   {
   public:
@@ -14,7 +14,7 @@ namespace netgen
 
     struct Leaf
     {
-      Point<2*dim, float> p[N];
+      Point<2*dim, TSCAL> p[N];
       T index[N];
       int n_elements;
       int nr;
@@ -208,7 +208,7 @@ namespace netgen
           {
             // add two new nodes and one new leaf
             int n_elements = leaf->n_elements;
-            ArrayMem<float, N> coords(n_elements);
+            ArrayMem<TSCAL, N> coords(n_elements);
             ArrayMem<int, N> order(n_elements);
 
             // separate points in two halves, first sort all coordinates in direction dir
@@ -282,8 +282,8 @@ namespace netgen
       }
   };
 
-  typedef BoxTree<3> DTREE;
-  // typedef DelaunayTree<3> DTREE;
+  // typedef BoxTree<3> DTREE;
+  typedef DelaunayTree<3> DTREE;
 
   static const int deltetfaces[][3] = 
     { { 1, 2, 3 },
