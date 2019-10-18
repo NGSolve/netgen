@@ -15,10 +15,22 @@ namespace ngcore
   // windows does demangling in typeid(T).name()
   NGCORE_API std::string Demangle(const char* typeinfo) { return typeinfo; }
 #else
-  NGCORE_API std::string Demangle(const char* typeinfo) { int status; return abi::__cxa_demangle(typeinfo,
-                                                                                      nullptr,
-                                                                                      nullptr,
-                                                                                      &status); }
+  NGCORE_API std::string Demangle(const char* typeinfo)
+  {
+    int status=0;
+    try
+      {
+        char *s = abi::__cxa_demangle(typeinfo, nullptr, nullptr, &status);
+        std::string result{s};
+        free(s);
+        return result;
+      }
+    catch( const std::exception & e )
+      {
+        GetLogger("utils")->warn("{}:{} cannot demangle {}, status: {}, error:{}", __FILE__, __LINE__, typeinfo, status, e.what());
+      }
+    return typeinfo;
+  }
 #endif
 
   double seconds_per_tick = [] () noexcept

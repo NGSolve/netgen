@@ -21,6 +21,7 @@ namespace netgen
 
   void MeshOptimize2d :: GenericImprove ()
   {
+    static Timer timer("MeshOptimize2d::GenericImprove"); RegionTimer reg(timer);
     if (!faceindex)
       {
 	if (writestatus)

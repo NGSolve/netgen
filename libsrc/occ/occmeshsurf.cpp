@@ -371,6 +371,7 @@ namespace netgen
   void OCCSurface :: Project (Point<3> & ap, PointGeomInfo & gi)
   {
     static Timer t("OccSurface::Project"); RegionTimer reg(t);
+    static Timer t2("OccSurface::Project actural"); 
 
 
     // try Newton's method ...
@@ -475,7 +476,10 @@ namespace netgen
     Handle( ShapeAnalysis_Surface ) su = new ShapeAnalysis_Surface( occface );
     auto toltool =  BRep_Tool::Tolerance( topods_face );
 
-    gp_Pnt2d suval = su->ValueOfUV ( pnt, toltool);
+    // gp_Pnt2d suval = su->ValueOfUV ( pnt, toltool);
+    t2.Start();
+    gp_Pnt2d suval = su->NextValueOfUV (gp_Pnt2d(u,v), pnt, toltool);
+    t2.Stop();
     suval.Coord( u, v);
     pnt = occface->Value( u, v );
     

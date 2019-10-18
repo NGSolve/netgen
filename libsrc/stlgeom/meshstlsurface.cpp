@@ -305,9 +305,8 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 		  optmesh.SetMetricWeight (0);
 		  
 		  mesh.CalcSurfacesOfNode();
-		  optmesh.EdgeSwapping(0);
-		  mesh.CalcSurfacesOfNode();
-		  optmesh.ImproveMesh(mparam);
+		  optmesh.EdgeSwapping (0);
+		  optmesh.ImproveMesh (mparam);
 		}
 
 	      mesh.Compress();

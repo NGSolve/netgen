@@ -12,8 +12,6 @@ class MeshOptimize3d
 {
   const MeshingParameters & mp;
 
-  void BuildEdgeList( const Mesh & mesh, const Table<ElementIndex, PointIndex> & elementsonnode, Array<std::tuple<PointIndex, PointIndex>> & edges );
-
 public:
   MeshOptimize3d (const MeshingParameters & amp) : mp(amp) { ; }
 

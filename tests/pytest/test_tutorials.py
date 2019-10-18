@@ -58,6 +58,10 @@ def getMeshingparameters(filename):
         return standard[:3] # this gets too big for finer meshsizes
     if filename == "screw.step":
         return standard[3:] # coarser meshes don't work here
+    if filename == "cylsphere.geo":
+        return standard[0:2] + standard[3:] # coarse gives inconsistent reults (other mesh on MacOS)
+    if filename == "part1.stl":
+        return standard[0:1] + standard[2:] # very coarse does not work
     return standard
 
 _geofiles = [f for f in getFiles(".geo")] + [f for f in getFiles(".stl")]

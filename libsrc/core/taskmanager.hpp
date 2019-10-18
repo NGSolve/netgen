@@ -15,6 +15,7 @@
 
 #include "array.hpp"
 #include "paje_trace.hpp"
+#include "profiler.hpp"
 
 namespace ngcore
 {
@@ -1059,6 +1060,7 @@ public:
   template <typename Tmask>
   int ComputeColoring( FlatArray<int> colors, size_t ndofs, Tmask const & getDofs)
   {
+    static Timer timer("ComputeColoring - "+Demangle(typeid(Tmask).name())); RegionTimer rt(timer);
     static_assert(sizeof(unsigned int)==4, "Adapt type of mask array");
     auto n = colors.Size();
 
