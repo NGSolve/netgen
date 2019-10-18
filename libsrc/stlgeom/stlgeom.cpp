@@ -124,33 +124,29 @@ bool STLGeometry :: CalcPointGeomInfo(int /*surfind*/, PointGeomInfo& gi, const 
 
 bool STLGeometry :: ProjectPointGI (int surfind, Point<3> & p, PointGeomInfo & gi) const
 {
-  SelectChartOfTriangle(gi.trignum);
-  gi.trignum = Project (p);
-  if (!gi.trignum)
+  static std::mutex mutex_project_whole_surface;
+  int meshchart = GetChartNr(gi.trignum);
+  const STLChart& chart = GetChart(meshchart);
+  int trignum = chart.ProjectNormal(p);
+  if(trignum==0)
     {
+      // non-thread-safe implementation
+      std::lock_guard<std::mutex> guard(mutex_project_whole_surface);
       PrintMessage(7,"project failed");
-
-      gi.trignum = ProjectOnWholeSurface(p);
-      if (!gi.trignum)
-	{
+      SelectChartOfTriangle (gi.trignum); // needed because ProjectOnWholeSurface uses meshchartnv (the normal vector of selected chart)
+      trignum = ProjectOnWholeSurface(p);
+      if(trignum==0)
+        {
 	  PrintMessage(7, "project on whole surface failed");
           return false;
-	}
+        }
     }
   return true;
 }
 
 void STLGeometry :: ProjectPoint (INDEX surfind, Point<3> & p) const
 {
-  if (!Project (p))
-    {
-      PrintMessage(7,"project failed");
-
-      if (!ProjectOnWholeSurface(p))
-	{
-	  PrintMessage(7, "project on whole surface failed");
-	}
-    }
+  throw Exception("ProjectPoint without PointGeomInfo not implemented");
 }
 
 void STLGeometry ::
@@ -173,11 +169,13 @@ PointBetween  (const Point<3> & p1, const Point<3> & p2, double secpoint,
 
       Point<3> np1 = newp;
       Point<3> np2 = newp;
-      SelectChartOfTriangle (gi1.trignum);
-      int tn1 = Project (np1);
+      auto ngi1 = gi1;
+      auto ngi2 = gi2;
+      // SelectChartOfTriangle (gi1.trignum);
+      int tn1 = ProjectPointGI (surfi, np1, ngi1);
 
-      SelectChartOfTriangle (gi2.trignum);
-      int tn2 = Project (np2);
+      // SelectChartOfTriangle (gi2.trignum);
+      int tn2 = ProjectPointGI (surfi, np2, ngi2);
 
       newgi.trignum = tn1; //urspruengliche version
       newp = np1;          //urspruengliche version
