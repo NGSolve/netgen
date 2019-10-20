@@ -827,7 +827,13 @@ namespace ngcore
     return ost;
   }
 
-  
+  template <typename TI>
+  NETGEN_INLINE size_t HashValue (const INT<3,TI> ind)
+  {
+    INT<3,size_t> lind = ind;
+    return 113*lind[0]+59*lind[1]+lind[2];
+  }
+
   template <typename TI>  
   NETGEN_INLINE size_t HashValue (const INT<2,TI> ind)
   {
