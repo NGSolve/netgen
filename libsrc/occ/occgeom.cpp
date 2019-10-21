@@ -1310,6 +1310,10 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
 
   void LoadOCCInto(OCCGeometry* occgeo, const char* filename)
   {
+      static Timer timer_all("LoadOCC"); RegionTimer rtall(timer_all);
+      static Timer timer_readfile("LoadOCC-ReadFile");
+      static Timer timer_transfer("LoadOCC-Transfer");
+      static Timer timer_getnames("LoadOCC-get names");
 
       // Initiate a dummy XCAF Application to handle the STEP XCAF Document
       static Handle_XCAFApp_Application dummy_app = XCAFApp_Application::GetApplication();
@@ -1326,19 +1330,23 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
       }
       dummy_app->NewDocument ("STEP-XCAF",step_doc);
 
+      timer_readfile.Start();
       STEPCAFControl_Reader reader;
 
       // Enable transfer of colours
       reader.SetColorMode(Standard_True);
       reader.SetNameMode(Standard_True);
       Standard_Integer stat = reader.ReadFile((char*)filename);
+      timer_readfile.Stop();
 
+      timer_transfer.Start();
       if(stat != IFSelect_RetDone)
       {
         throw NgException("Couldn't load OCC geometry");
       }
 
       reader.Transfer(step_doc);
+      timer_transfer.Stop();
 
       // Read in the shape(s) and the colours present in the STEP File
       Handle_XCAFDoc_ShapeTool step_shape_contents = XCAFDoc_DocumentTool::ShapeTool(step_doc->Main());
@@ -1376,6 +1384,7 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
       occgeo->snames.Append(name);
       TopExp_Explorer exp0,exp1;
       
+      timer_getnames.Start();
       for (exp0.Init(occgeo->shape, TopAbs_FACE); exp0.More(); exp0.Next())
       {
          TopoDS_Face face = TopoDS::Face(exp0.Current());
@@ -1383,13 +1392,14 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
          if (name == string(""))
              snprintf(name, 50, "bc_%zu", occgeo->fnames.Size());
          occgeo->fnames.Append(name);
-         for (exp1.Init(face, TopAbs_EDGE); exp1.More(); exp1.Next())
-         {
-            TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
-            STEP_GetEntityName(edge,&reader,name);
-            occgeo->enames.Append(name);
-         }
+//          for (exp1.Init(face, TopAbs_EDGE); exp1.More(); exp1.Next())
+//          {
+//             TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
+//             STEP_GetEntityName(edge,&reader,name);
+//             occgeo->enames.Append(name);
+//          }
       }
+      timer_getnames.Stop();
       // Gerhard BEGIN
 //       cout << "Solid Names: "<<endl;
 //       for (int i=0;i<occgeo->snames.Size();i++)
