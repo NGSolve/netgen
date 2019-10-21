@@ -100,11 +100,11 @@ namespace netgen
 	  {
 	    Point<3> pb;
 	    EdgePointGeomInfo ngi;
-            PointBetween (mesh.Point (el[0]),
-                          mesh.Point (el[1]), 0.5,
-			  el.surfnr1, el.surfnr2,
-			  el.epgeominfo[0], el.epgeominfo[1],
-			  pb, ngi);
+            geo.PointBetweenEdge(mesh.Point (el[0]),
+                                 mesh.Point (el[1]), 0.5,
+                                 el.surfnr1, el.surfnr2,
+                                 el.epgeominfo[0], el.epgeominfo[1],
+                                 pb, ngi);
 	  
 	    el[2] = mesh.AddPoint (pb, mesh.Point(el[0]).GetLayer(), 
 				   EDGEPOINT);
@@ -184,12 +184,12 @@ namespace netgen
 	      {
 		Point<3> pb;
 		PointGeomInfo newgi;
-		PointBetween (mesh.Point (pi1),
-			      mesh.Point (pi2), 0.5, 
-			      mesh.GetFaceDescriptor(el.GetIndex ()).SurfNr(),
-			      el.GeomInfoPi (betw[j][0]+1),
-			      el.GeomInfoPi (betw[j][1]+1),
-			      pb, newgi);
+		geo.PointBetween(mesh.Point (pi1),
+                                 mesh.Point (pi2), 0.5, 
+                                 mesh.GetFaceDescriptor(el.GetIndex ()).SurfNr(),
+                                 el.GeomInfoPi (betw[j][0]+1),
+                                 el.GeomInfoPi (betw[j][1]+1),
+                                 pb, newgi);
 
 		newel[onp+j] = mesh.AddPoint (pb, mesh.Point(pi1).GetLayer(), 
 					      SURFACEPOINT);

@@ -3430,11 +3430,11 @@ namespace netgen
 		  PointGeomInfo npgi;
 		
                   if (mesh[newp].Type() != EDGEPOINT)
-                    PointBetween (mesh.Point (oldpi1), mesh.Point (oldpi2),
-                                  0.5, si,
-                                  oldtri.pgeominfo[(oldtri.markededge+1)%3],
-                                  oldtri.pgeominfo[(oldtri.markededge+2)%3],
-                                  mesh.Point (newp), npgi);
+                    geo.PointBetween (mesh.Point (oldpi1), mesh.Point (oldpi2),
+                                      0.5, si,
+                                      oldtri.pgeominfo[(oldtri.markededge+1)%3],
+                                      oldtri.pgeominfo[(oldtri.markededge+2)%3],
+                                      mesh.Point (newp), npgi);
 		
 		  BTBisectTri (oldtri, newp, npgi, newtri1, newtri2);
 		
@@ -3508,28 +3508,16 @@ namespace netgen
 		  PointGeomInfo npgi1, npgi2;
 		
 		  int si = mesh.GetFaceDescriptor (oldquad.surfid).SurfNr();
-		  //		geom->GetSurface(si)->Project (mesh.Point(newp1));
-		  //		geom->GetSurface(si)->Project (mesh.Point(newp2));
-
-//                   (*testout)
-//                   cerr << "project point 1 " << newp1 << " old: " << mesh.Point(newp1);
-                  PointBetween (mesh.Point (edge1.I1()), mesh.Point (edge1.I2()),
-				0.5, si,
-				pgi11,
-				pgi12,
-				mesh.Point (newp1), npgi1);
-// 		  (*testout)
-//                   cerr << " new: " << mesh.Point(newp1) << endl;
-
-		
-//                   cerr << "project point 2 " << newp2 << " old: " << mesh.Point(newp2);
-                  PointBetween (mesh.Point (edge2.I1()), mesh.Point (edge2.I2()),
-				0.5, si,
-				pgi21,
-				pgi22,
-				mesh.Point (newp2), npgi2);
-//                   cerr << " new: " << mesh.Point(newp2) << endl;
-		
+                  geo.PointBetween(mesh.Point (edge1.I1()), mesh.Point (edge1.I2()),
+                                   0.5, si,
+                                   pgi11,
+                                   pgi12,
+                                   mesh.Point (newp1), npgi1);
+                  geo.PointBetween (mesh.Point (edge2.I1()), mesh.Point (edge2.I2()),
+                                    0.5, si,
+                                    pgi21,
+                                    pgi22,
+                                    mesh.Point (newp2), npgi2);
 
 		  BTBisectQuad (oldquad, newp1, npgi1, newp2, npgi2,
 				newquad1, newquad2);
@@ -3565,16 +3553,10 @@ namespace netgen
 		  
 		    EdgePointGeomInfo newepgi;
 		  
- 
-//                     
-//                     cerr << "move edgepoint " << newpi << " from " << mesh.Point(newpi);
-		    PointBetween (mesh.Point (seg[0]), mesh.Point (seg[1]),
-				  0.5, seg.surfnr1, seg.surfnr2, 
-				  seg.epgeominfo[0], seg.epgeominfo[1],
-				  mesh.Point (newpi), newepgi);
-// 		    cerr << " to " << mesh.Point (newpi) << endl;
-
-		    
+		    geo.PointBetweenEdge(mesh.Point (seg[0]), mesh.Point (seg[1]),
+                                         0.5, seg.surfnr1, seg.surfnr2,
+                                         seg.epgeominfo[0], seg.epgeominfo[1],
+                                         mesh.Point (newpi), newepgi);
 		    nseg1.epgeominfo[1] = newepgi;
 		    nseg2.epgeominfo[0] = newepgi;
 		  
@@ -4140,63 +4122,5 @@ namespace netgen
     usemarkedelements = 0;
     refine_hp = 0;
     refine_p = 0;
-  }
-
-
-  Refinement :: Refinement ()
-  {
-    optimizer2d = NULL;
-  }
-
-  Refinement :: ~Refinement ()
-  {
-    ;
-  }
-
-
-  void Refinement :: PointBetween (const Point<3> & p1, const Point<3> & p2, double secpoint,
-				   int surfi, 
-				   const PointGeomInfo & gi1, 
-				   const PointGeomInfo & gi2,
-				   Point<3> & newp, PointGeomInfo & newgi) const
-  {
-    newp = p1+secpoint*(p2-p1);
-  }
-
-  void Refinement :: PointBetween (const Point<3> & p1, const Point<3> & p2, double secpoint,
-				   int surfi1, int surfi2, 
-				   const EdgePointGeomInfo & ap1, 
-				   const EdgePointGeomInfo & ap2,
-				   Point<3> & newp, EdgePointGeomInfo & newgi) const
-  {
-    //cout << "base class edge point between" << endl;
-    newp = p1+secpoint*(p2-p1);
-  }
-
-
-  Vec<3> Refinement :: GetTangent (const Point<3> & p, int surfi1, int surfi2,
-                                   const EdgePointGeomInfo & ap1) const
-  {
-    cerr << "Refinement::GetTangent not overloaded" << endl;
-    return Vec<3> (0,0,0);
-  }
-
-  Vec<3> Refinement :: GetNormal (const Point<3> & p, int surfi1, 
-                                  const PointGeomInfo & gi) const
-  {
-    cerr << "Refinement::GetNormal not overloaded" << endl;
-    return Vec<3> (0,0,0);
-  }
-
-
-  void Refinement :: ProjectToSurface (Point<3> & p, int surfi) const
-  {
-    if (printmessage_importance>0)
-      cerr << "Refinement :: ProjectToSurface    ERROR: no geometry set" << endl;
-  };
-
-  void Refinement :: ProjectToEdge (Point<3> & p, int surfi1, int surfi2, const EdgePointGeomInfo & egi) const
-  {
-    cerr << "Refinement::ProjectToEdge not overloaded" << endl;
   }
 }

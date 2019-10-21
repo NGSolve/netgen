@@ -147,11 +147,11 @@ namespace netgen
 	  {
             pointset[pinew] = true;
 	    Point<3> pnew;
-	    PointBetween (mesh.Point (el[0]),
-			  mesh.Point (el[1]), 0.5,
-			  el.surfnr1, el.surfnr2,
-			  el.epgeominfo[0], el.epgeominfo[1],
-			  pnew, ngi);
+	    geo.PointBetweenEdge(mesh.Point (el[0]),
+                                 mesh.Point (el[1]), 0.5,
+                                 el.surfnr1, el.surfnr2,
+                                 el.epgeominfo[0], el.epgeominfo[1],
+                                 pnew, ngi);
 
 	    // pinew = mesh.AddPoint (pnew);
             mesh.Point(pinew) = pnew;
@@ -216,12 +216,12 @@ namespace netgen
 
 		  Point<3> pb;
 		  PointGeomInfo pgi;
-		  PointBetween (mesh.Point (pi1),
-				mesh.Point (pi2), 0.5,
-				mesh.GetFaceDescriptor(el.GetIndex ()).SurfNr(),
-				el.GeomInfoPi (betw[j][0]),
-				el.GeomInfoPi (betw[j][1]),
-				pb, pgi);
+		  geo.PointBetween(mesh.Point (pi1),
+                                   mesh.Point (pi2), 0.5,
+                                   mesh.GetFaceDescriptor(el.GetIndex ()).SurfNr(),
+                                   el.GeomInfoPi (betw[j][0]),
+                                   el.GeomInfoPi (betw[j][1]),
+                                   pb, pgi);
 
 
 		  pgis.Elem(4+j) = pgi;
@@ -307,12 +307,12 @@ namespace netgen
 		  else
 		    {
 		      Point<3> pb;
-		      PointBetween (mesh.Point (pi1),
-				    mesh.Point (pi2), 0.5,
-				    mesh.GetFaceDescriptor(el.GetIndex ()).SurfNr(),
-				    el.GeomInfoPi (betw[j][0]),
-				    el.GeomInfoPi (betw[j][1]),
-				    pb, pgis.Elem(5+j));
+		      geo.PointBetween(mesh.Point (pi1),
+                                       mesh.Point (pi2), 0.5,
+                                       mesh.GetFaceDescriptor(el.GetIndex ()).SurfNr(),
+                                       el.GeomInfoPi (betw[j][0]),
+                                       el.GeomInfoPi (betw[j][1]),
+                                       pb, pgis.Elem(5+j));
 
 		      pnums.Elem(5+j) = mesh.AddPoint (pb);
 

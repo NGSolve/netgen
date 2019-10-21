@@ -28,7 +28,7 @@ def checkData(mesh, mp, ref):
     assert ref['ne1d'] == data['ne1d']
     assert ref['ne2d'] == data['ne2d']
     assert ref['ne3d'] == data['ne3d']
-    assert ref['quality_histogram'] == data['quality_histogram']
+    assert json.loads(ref['quality_histogram']) == pytest.approx(json.loads(data['quality_histogram']), abs=1, rel=0.4)
     assert ref['total_badness'] == pytest.approx(data['total_badness'], rel=1e-5)
 
 # get tutorials

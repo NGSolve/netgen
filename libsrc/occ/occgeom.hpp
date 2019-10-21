@@ -183,12 +183,33 @@ namespace netgen
     return a00*a11*a22 + a01*a12*a20 + a10*a21*a02 - a20*a11*a02 - a10*a01*a22 - a21*a12*a00;
   }
   
+  class DLL_HEADER OCCParameters
+  {
+  public:
 
+    /// Factor for meshing close edges 
+    double resthcloseedgefac = 2.;
 
+    /// Enable / Disable detection of close edges
+    int resthcloseedgeenable = true;
+
+    /// Minimum edge length to be used for dividing edges to mesh points
+    double resthminedgelen = 0.001;
+
+    /// Enable / Disable use of the minimum edge length (by default use 1e-4)
+    int resthminedgelenenable = true;
+
+    /*!
+      Dump all the OpenCascade specific meshing parameters 
+      to console
+    */
+    void Print (ostream & ost) const;
+  };
 
   class OCCGeometry : public NetgenGeometry
   {
     Point<3> center;
+    OCCParameters occparam;
 
   public:
     TopoDS_Shape shape;
@@ -239,12 +260,44 @@ namespace netgen
       emap.Clear();
       vmap.Clear();
     }
+
+    Mesh::GEOM_TYPE GetGeomType() const override
+    { return Mesh::GEOM_OCC; }
+
+    void SetOCCParameters(const OCCParameters& par)
+    { occparam = par; }
+
+    void Analyse(Mesh& mesh,
+                 const MeshingParameters& mparam) override;
+    void FindEdges(Mesh& mesh,
+                   const MeshingParameters& mparam) override;
+    void MeshSurface(Mesh& mesh,
+                     const MeshingParameters& mparam) override;
+ 
+    void FinalizeMesh(Mesh& mesh) const override;
      
+    DLL_HEADER void Save (string filename) const override;
      
-    DLL_HEADER virtual void Save (string filename) const;
-     
-    void DoArchive(Archive& ar);
-     
+    void DoArchive(Archive& ar) override;
+
+    void ProjectPoint(int surfind, Point<3> & p) const override;
+    void ProjectPointEdge (int surfind, int surfind2, Point<3> & p) const override;
+    bool ProjectPointGI (int surfind, Point<3> & p, PointGeomInfo & gi) const override;
+    Vec<3> GetNormal(int surfind, const Point<3> & p) const override;
+    Vec<3> GetNormal(int surfind, const Point<3> & p, const PointGeomInfo & gi) const override;
+    bool CalcPointGeomInfo(int surfind, PointGeomInfo& gi, const Point<3> & p3) const override;
+
+    void PointBetweenEdge(const Point<3> & p1, const Point<3> & p2, double secpoint,
+                          int surfi1, int surfi2, 
+                          const EdgePointGeomInfo & ap1, 
+                          const EdgePointGeomInfo & ap2,
+                          Point<3> & newp, EdgePointGeomInfo & newgi) const override;
+    void PointBetween(const Point<3> & p1, const Point<3> & p2, double secpoint,
+                      int surfi, 
+                      const PointGeomInfo & gi1, 
+                      const PointGeomInfo & gi2,
+                      Point<3> & newp, PointGeomInfo & newgi) const override;
+
     DLL_HEADER void BuildFMap();
      
     Box<3> GetBoundingBox() const
@@ -263,9 +316,6 @@ namespace netgen
 
     Point<3> Center() const
     { return center; }
-
-    void Project (int surfi, Point<3> & p) const;
-    bool FastProject (int surfi, Point<3> & ap, double& u, double& v) const;
 
     OCCSurface GetSurface (int surfi)
     {
@@ -391,37 +441,9 @@ namespace netgen
 
     //      void WriteOCC_STL(char * filename);
 
-    DLL_HEADER virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
-
-    DLL_HEADER virtual const Refinement & GetRefinement () const;
-  };
-
-
-
-  class DLL_HEADER OCCParameters
-  {
-  public:
-
-    /// Factor for meshing close edges 
-    double resthcloseedgefac = 2.;
-
-
-    /// Enable / Disable detection of close edges
-    int resthcloseedgeenable = true;
-
-
-    /// Minimum edge length to be used for dividing edges to mesh points
-    double resthminedgelen = 0.001;
-
-
-    /// Enable / Disable use of the minimum edge length (by default use 1e-4)
-    int resthminedgelenenable = true;
-
-    /*!
-      Dump all the OpenCascade specific meshing parameters 
-      to console
-    */
-    void Print (ostream & ost) const;
+    // DLL_HEADER virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
+  private:
+    bool FastProject (int surfi, Point<3> & ap, double& u, double& v) const;
   };
    
 
@@ -434,15 +456,12 @@ namespace netgen
   // Philippose - 31.09.2009
   // External access to the mesh generation functions within the OCC
   // subsystem (Not sure if this is the best way to implement this....!!)
-  DLL_HEADER extern int OCCGenerateMesh (OCCGeometry & occgeometry, shared_ptr<Mesh> & mesh,
-                                         MeshingParameters & mparam, const OCCParameters& occparam);
-
-  DLL_HEADER extern void OCCSetLocalMeshSize(OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam,
+  DLL_HEADER extern void OCCSetLocalMeshSize(const OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam,
                                              const OCCParameters& occparam);
 
-  DLL_HEADER extern void OCCMeshSurface (OCCGeometry & geom, Mesh & mesh, MeshingParameters & mparam);
+  DLL_HEADER extern void OCCMeshSurface (OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam);
 
-  DLL_HEADER extern void OCCOptimizeSurface (OCCGeometry & geom, Mesh & mesh, MeshingParameters & mparam);
+  DLL_HEADER extern void OCCOptimizeSurface (OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam);
 
   DLL_HEADER extern void OCCFindEdges (OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam);
 }

@@ -183,11 +183,12 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                              CreateOCCParametersFromKwargs(occparam, kwargs);
                              CreateMPfromKwargs(mp, kwargs);
                            }
+                           geo->SetOCCParameters(occparam);
                            auto mesh = make_shared<Mesh>();
-                           SetGlobalMesh(mesh);
+                           geo->GenerateMesh(mesh, mp);
                            mesh->SetGeometry(geo);
+                           SetGlobalMesh(mesh);
                            ng_geometry = geo;
-                           OCCGenerateMesh(*geo, mesh, mp, occparam);
                            return mesh;
                          }, py::arg("mp") = nullptr,
       py::call_guard<py::gil_scoped_release>(),

@@ -1,5 +1,5 @@
 add_definitions(-DNGLIB_EXPORTS)
-add_library(geom2d ${NG_LIB_TYPE} genmesh2d.cpp geom2dmesh.cpp geometry2d.cpp python_geom2d.cpp )
+add_library(geom2d ${NG_LIB_TYPE} genmesh2d.cpp geometry2d.cpp python_geom2d.cpp )
 if(APPLE)
     set_target_properties( geom2d PROPERTIES SUFFIX ".so")
 endif(APPLE)
@@ -18,7 +18,7 @@ if(USE_GUI)
 endif(USE_GUI)
 
 install(FILES
-  geom2dmesh.hpp geometry2d.hpp spline2d.hpp
+  geometry2d.hpp spline2d.hpp
   vsgeom2d.hpp
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/geom2d COMPONENT netgen_devel
 )

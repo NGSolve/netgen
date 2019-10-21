@@ -602,7 +602,7 @@ namespace netgen
 
 
   void OCCMeshSurface (OCCGeometry & geom, Mesh & mesh,
-                       MeshingParameters & mparam)
+                       const MeshingParameters & mparam)
   {
     static Timer t("OCCMeshSurface"); RegionTimer r(t);
     
@@ -796,7 +796,6 @@ namespace netgen
         // Philippose - 15/01/2009
         double maxh = geom.face_maxh[k-1];
         //double maxh = mparam.maxh;
-        mparam.checkoverlap = 0;
         //      int noldpoints = mesh->GetNP();
         int noldsurfel = mesh.GetNSE();
 
@@ -809,9 +808,13 @@ namespace netgen
 
         MESHING2_RESULT res;
 
+        // TODO: check overlap not correctly working here
+        MeshingParameters mparam_without_overlap = mparam;
+        mparam_without_overlap.checkoverlap = false;
+        
         try {
           static Timer t("GenerateMesh"); RegionTimer reg(t);
-          res = meshing.GenerateMesh (mesh, mparam, maxh, k);
+          res = meshing.GenerateMesh (mesh, mparam_without_overlap, maxh, k);
         }
 
         catch (SingularMatrixException)
@@ -916,7 +919,7 @@ namespace netgen
   }
 
   void OCCOptimizeSurface(OCCGeometry & geom, Mesh & mesh,
-                       MeshingParameters & mparam)
+                          const MeshingParameters & mparam)
   {
     const char * savetask = multithread.task;
     multithread.task = "Optimizing surface";
@@ -941,41 +944,41 @@ namespace netgen
             if (multithread.terminate) return;
 
             {
-              MeshOptimize2dOCCSurfaces meshopt(geom);
+              MeshOptimize2d meshopt(mesh);
               meshopt.SetFaceIndex (k);
               meshopt.SetImproveEdges (0);
               meshopt.SetMetricWeight (mparam.elsizeweight);
               meshopt.SetWriteStatus (0);
-              meshopt.EdgeSwapping (mesh, (i > mparam.optsteps2d/2));
+              meshopt.EdgeSwapping (i > mparam.optsteps2d/2);
             }
 
             if (multithread.terminate) return;
             {
-              MeshOptimize2dOCCSurfaces meshopt(geom);
+              MeshOptimize2d meshopt(mesh);
               meshopt.SetFaceIndex (k);
               meshopt.SetImproveEdges (0);
               meshopt.SetMetricWeight (mparam.elsizeweight);
               meshopt.SetWriteStatus (0);
-              meshopt.ImproveMesh (mesh, mparam);
+              meshopt.ImproveMesh (mparam);
             }
 
             {
-              MeshOptimize2dOCCSurfaces meshopt(geom);
+              MeshOptimize2d meshopt(mesh);
               meshopt.SetFaceIndex (k);
               meshopt.SetImproveEdges (0);
               meshopt.SetMetricWeight (mparam.elsizeweight);
               meshopt.SetWriteStatus (0);
-              meshopt.CombineImprove (mesh);
+              meshopt.CombineImprove ();
             }
 
             if (multithread.terminate) return;
             {
-              MeshOptimize2dOCCSurfaces meshopt(geom);
+              MeshOptimize2d meshopt(mesh);
               meshopt.SetFaceIndex (k);
               meshopt.SetImproveEdges (0);
               meshopt.SetMetricWeight (mparam.elsizeweight);
               meshopt.SetWriteStatus (0);
-              meshopt.ImproveMesh (mesh, mparam);
+              meshopt.ImproveMesh (mparam);
             }
           }
 
@@ -991,7 +994,7 @@ namespace netgen
 
 
 
-  void OCCSetLocalMeshSize(OCCGeometry & geom, Mesh & mesh,
+  void OCCSetLocalMeshSize(const OCCGeometry & geom, Mesh & mesh,
                            const MeshingParameters & mparam, const OCCParameters& occparam)
   {
     static Timer t1("OCCSetLocalMeshSize");
@@ -1278,197 +1281,6 @@ namespace netgen
       }
 
     mesh.LoadLocalMeshSize (mparam.meshsizefilename);
-  }
-
-
-
-  int OCCGenerateMesh (OCCGeometry & geom, shared_ptr<Mesh> & mesh, MeshingParameters & mparam,
-                       const OCCParameters& occparam)
-  {
-    multithread.percent = 0;
-
-    if (mparam.perfstepsstart <= MESHCONST_ANALYSE)
-      {
-        if(mesh.get() == nullptr)
-          mesh = make_shared<Mesh>();
-        mesh->geomtype = Mesh::GEOM_OCC;
-         
-        OCCSetLocalMeshSize(geom,*mesh, mparam, occparam);
-      }
-
-    if (multithread.terminate || mparam.perfstepsend <= MESHCONST_ANALYSE)
-      return TCL_OK;
-
-    if (mparam.perfstepsstart <= MESHCONST_MESHEDGES)
-      {
-        OCCFindEdges (geom, *mesh, mparam);
-
-        /*
-          cout << "Removing redundant points" << endl;
-
-          int i, j;
-          int np = mesh->GetNP();
-          NgArray<int> equalto;
-
-          equalto.SetSize (np);
-          equalto = 0;
-
-          for (i = 1; i <= np; i++)
-          {
-          for (j = i+1; j <= np; j++)
-          {
-          if (!equalto[j-1] && (Dist2 (mesh->Point(i), mesh->Point(j)) < 1e-12))
-          equalto[j-1] = i;
-          }
-          }
-
-          for (i = 1; i <= np; i++)
-          if (equalto[i-1])
-          {
-          cout << "Point " << i << " is equal to Point " << equalto[i-1] << endl;
-          for (j = 1; j <= mesh->GetNSeg(); j++)
-          {
-          Segment & seg = mesh->LineSegment(j);
-          if (seg[0] == i) seg[0] = equalto[i-1];
-          if (seg[1] == i) seg[1] = equalto[i-1];
-          }
-          }
-
-          cout << "Removing degenerated segments" << endl;
-          for (j = 1; j <= mesh->GetNSeg(); j++)
-          {
-          Segment & seg = mesh->LineSegment(j);
-          if (seg[0] == seg[1])
-          {
-          mesh->DeleteSegment(j);
-          cout << "Deleting Segment " << j << endl;
-          }
-          }
-
-          mesh->Compress();
-        */
-
-        /*
-          for (int i = 1; i <= geom.fmap.Extent(); i++)
-          {
-          Handle(Geom_Surface) hf1 =
-          BRep_Tool::Surface(TopoDS::Face(geom.fmap(i)));
-          for (int j = i+1; j <= geom.fmap.Extent(); j++)
-          {
-          Handle(Geom_Surface) hf2 =
-          BRep_Tool::Surface(TopoDS::Face(geom.fmap(j)));
-          if (hf1 == hf2) cout << "face " << i << " and face " << j << " lie on same surface" << endl;
-          }
-          }
-        */
-
-#ifdef LOG_STREAM
-        (*logout) << "Edges meshed" << endl
-                  << "time = " << GetTime() << " sec" << endl
-                  << "points: " << mesh->GetNP() << endl;
-#endif
-      }
-
-    if (multithread.terminate || mparam.perfstepsend <= MESHCONST_MESHEDGES)
-      return TCL_OK;
-
-    if (mparam.perfstepsstart <= MESHCONST_MESHSURFACE)
-      {
-        OCCMeshSurface (geom, *mesh, mparam);
-        if (multithread.terminate) return TCL_OK;
-
-#ifdef LOG_STREAM
-        (*logout) << "Surfaces meshed" << endl
-                  << "time = " << GetTime() << " sec" << endl
-                  << "points: " << mesh->GetNP() << endl;
-#endif
-
-#ifdef STAT_STREAM
-        (*statout) << mesh->GetNSeg() << " & "
-                   << mesh->GetNSE() << " & - &"
-                   << GetTime() << " & " << endl;
-#endif
-
-        //      MeshQuality2d (*mesh);
-        mesh->CalcSurfacesOfNode();
-      }
-
-    if (multithread.terminate || mparam.perfstepsend <= MESHCONST_MESHSURFACE)
-      return TCL_OK;
-
-    if (mparam.perfstepsstart <= MESHCONST_OPTSURFACE)
-      {
-        OCCOptimizeSurface(geom, *mesh, mparam);
-      }
-
-    if (multithread.terminate || mparam.perfstepsend <= MESHCONST_OPTSURFACE)
-      return TCL_OK;
-
-    if (mparam.perfstepsstart <= MESHCONST_MESHVOLUME)
-      {
-        multithread.task = "Volume meshing";
-
-        MESHING3_RESULT res = MeshVolume (mparam, *mesh);
-
-        if (res != MESHING3_OK) return TCL_ERROR;
-        if (multithread.terminate) return TCL_OK;
-
-        RemoveIllegalElements (*mesh);
-        if (multithread.terminate) return TCL_OK;
-
-        MeshQuality3d (*mesh);
-
-#ifdef STAT_STREAM
-        (*statout) << GetTime() << " & ";
-#endif
-
-#ifdef LOG_STREAM
-        (*logout) << "Volume meshed" << endl
-                  << "time = " << GetTime() << " sec" << endl
-                  << "points: " << mesh->GetNP() << endl;
-#endif
-      }
-
-    if (multithread.terminate || mparam.perfstepsend <= MESHCONST_MESHVOLUME)
-      return TCL_OK;
-
-    if (mparam.perfstepsstart <= MESHCONST_OPTVOLUME)
-      {
-        multithread.task = "Volume optimization";
-
-        OptimizeVolume (mparam, *mesh);
-        if (multithread.terminate) return TCL_OK;
-
-#ifdef STAT_STREAM
-        (*statout) << GetTime() << " & "
-                   << mesh->GetNE() << " & "
-                   << mesh->GetNP() << " " << '\\' << '\\' << " \\" << "hline" << endl;
-#endif
-
-#ifdef LOG_STREAM
-        (*logout) << "Volume optimized" << endl
-                  << "time = " << GetTime() << " sec" << endl
-                  << "points: " << mesh->GetNP() << endl;
-#endif
-
-        // cout << "Optimization complete" << endl;
-
-      }
-
-    /*
-    (*testout) << "NP: " << mesh->GetNP() << endl;
-    for (int i = 1; i <= mesh->GetNP(); i++)
-      (*testout) << mesh->Point(i) << endl;
-
-    (*testout) << endl << "NSegments: " << mesh->GetNSeg() << endl;
-    for (int i = 1; i <= mesh->GetNSeg(); i++)
-      (*testout) << mesh->LineSegment(i) << endl;
-    */
-    
-    for (int i = 0; i < mesh->GetNDomains(); i++)
-      if (geom.snames.Size())
-        mesh->SetMaterial (i+1, geom.snames[i]);
-    return TCL_OK;
   }
 }
 

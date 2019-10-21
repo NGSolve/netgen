@@ -7,7 +7,6 @@ if(WIN32)
           $<TARGET_OBJECTS:interface>
           $<TARGET_OBJECTS:geom2d>
           $<TARGET_OBJECTS:csg>
-          $<TARGET_OBJECTS:stl>
 
           $<TARGET_OBJECTS:visual>
           $<TARGET_OBJECTS:occ>
@@ -23,7 +22,7 @@ endif(WIN32)
 
 add_library(nglib SHARED nglib.cpp ${nglib_objects})
 if(NOT WIN32)
-      target_link_libraries( nglib PUBLIC mesh stl interface geom2d csg stl visual)
+      target_link_libraries( nglib PUBLIC mesh interface geom2d csg stl visual)
       if(USE_GUI)
           target_link_libraries( nglib PUBLIC stlvis geom2dvis csgvis )
       endif(USE_GUI)

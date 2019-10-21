@@ -1234,7 +1234,7 @@ namespace netgen
        // P .. plot, pause
        // c .. combine
        **/
-    string optimize2d = "smsmsmSmSmSm";
+    string optimize2d = "smcmSmcmSmcm";
     /// number of 2d optimization steps
     int optsteps2d = 3;
     /// power of error (to approximate max err optimization)

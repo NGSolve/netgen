@@ -299,14 +299,14 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 		      geom.SetMarkedTrig(seg.geominfo[1].trignum,1);
 		    }
 
-		  MeshOptimizeSTLSurface optmesh(geom);
+		  MeshOptimize2d optmesh(mesh);
 		  optmesh.SetFaceIndex (0);
 		  optmesh.SetImproveEdges (0);
 		  optmesh.SetMetricWeight (0);
 		  
 		  mesh.CalcSurfacesOfNode();
-		  optmesh.EdgeSwapping (mesh, 0);
-		  optmesh.ImproveMesh (mesh, mparam);
+		  optmesh.EdgeSwapping (0);
+		  optmesh.ImproveMesh (mparam);
 		}
 
 	      mesh.Compress();
@@ -826,7 +826,7 @@ void STLSurfaceOptimization (STLGeometry & geom,
 {
   PrintFnStart("optimize STL Surface");
 
-  MeshOptimizeSTLSurface optmesh(geom);
+  MeshOptimize2d optmesh(mesh);
 
   optmesh.SetFaceIndex (0);
   optmesh.SetImproveEdges (0);
@@ -847,25 +847,41 @@ void STLSurfaceOptimization (STLGeometry & geom,
 	  {
 	  case 's': 
 	    {
-	      optmesh.EdgeSwapping (mesh, 0);
+	      optmesh.EdgeSwapping(0);
 	      break;
 	    }
 	  case 'S': 
 	    {
-	      optmesh.EdgeSwapping (mesh, 1);
+	      optmesh.EdgeSwapping(1);
 	      break;
 	    }
 	  case 'm': 
 	    {
-	      optmesh.ImproveMesh(mesh, mparam);
+	      optmesh.ImproveMesh(mparam);
 	      break;
 	    }
 	  case 'c': 
 	    {
-	      optmesh.CombineImprove (mesh);
+	      optmesh.CombineImprove();
 	      break;
 	    }
 	  }
+        // while(mesh.CheckOverlappingBoundary())
+        //   {
+        //     for(const auto & el : mesh.SurfaceElements())
+        //       {
+        //         if(el.BadElement())
+        //           {
+        //             cout << "Restrict localh at el nr " << el << endl;
+        //             for(const auto& p : el.PNums())
+        //               {
+        //                 const auto& pnt = mesh[p];
+        //                 mesh.RestrictLocalH(pnt, 0.5*mesh.GetH(pnt));
+        //               }
+        //           }
+        //       }
+        //     optmesh.SplitImprove();
+        //   }
 	//(*testout) << "optimize, after, step = " << meshparam.optimize2d[j-1] << mesh.Point (3679) << endl;
       }
 
@@ -1051,208 +1067,4 @@ double MeshingSTLSurface :: Area () const
   return geom.Area();
 }
 
-
-
-
-
-
-MeshOptimizeSTLSurface :: MeshOptimizeSTLSurface (STLGeometry & ageom)
-  : MeshOptimize2d(), geom(ageom)
-{
-  ;
-}
-
-
-
-void MeshOptimizeSTLSurface :: ProjectPoint (INDEX surfind, Point<3> & p) const
-{
-  if (!geom.Project (p))
-    {
-      PrintMessage(7,"project failed");
-      
-      if (!geom.ProjectOnWholeSurface(p)) 
-	{
-	  PrintMessage(7, "project on whole surface failed");
-	}
-    }
-
-  //  geometry.GetSurface(surfind)->Project (p);
-}
-
-int MeshOptimizeSTLSurface :: ProjectPointGI (INDEX surfind, Point<3> & p, PointGeomInfo & gi) const
-{
-  int meshchart = geom.GetChartNr(gi.trignum);
-  const STLChart& chart = geom.GetChart(meshchart);
-  int trignum = chart.ProjectNormal(p);
-  if(trignum==0)
-    {
-      PrintMessage(7,"project failed");
-      geom.SelectChartOfTriangle (gi.trignum); // needed because ProjectOnWholeSurface uses meshchartnv (the normal vector of selected chart)
-      trignum = geom.ProjectOnWholeSurface(p);
-      if(trignum==0)
-	  PrintMessage(7, "project on whole surface failed");
-    }
-  return trignum;
-}
-
-void MeshOptimizeSTLSurface :: ProjectPoint2 (INDEX surfind, INDEX surfind2, Point<3> & p) const
-{
-  /*
-  ProjectToEdge ( geometry.GetSurface(surfind), 
-		  geometry.GetSurface(surfind2), p);
-  */
-}
-
-int  MeshOptimizeSTLSurface :: CalcPointGeomInfo(PointGeomInfo& gi, const Point<3> & p3) const
-{
-  Point<3> hp = p3;
-  gi.trignum = geom.Project (hp);
-
-  if (gi.trignum) return 1;
-
-  return 0;
-  
-}
-
-void MeshOptimizeSTLSurface :: GetNormalVector(INDEX surfind, const Point<3>  & p, PointGeomInfo & gi, Vec<3> & n) const
-{
-  n = geom.GetTriangle(gi.trignum).Normal();
-}
-
-
-void MeshOptimizeSTLSurface :: GetNormalVector(INDEX surfind, const Point<3> & p, Vec<3> & n) const
-{
-  throw Exception("MeshOptimizeSTLSurface :: GetNormalVector called without PointGeomInfo");
-}
-  
-
-
-
-
-
-
-
-
-
-RefinementSTLGeometry :: RefinementSTLGeometry (const STLGeometry & ageom)
-  : Refinement(), geom(ageom)
-{
-  ;
-}
-
-RefinementSTLGeometry :: ~RefinementSTLGeometry ()
-{
-  ;
-}
-  
-void RefinementSTLGeometry :: 
-PointBetween  (const Point<3> & p1, const Point<3> & p2, double secpoint,
-	       int surfi, 
-	       const PointGeomInfo & gi1, 
-	       const PointGeomInfo & gi2,
-	       Point<3> & newp, PointGeomInfo & newgi) const
-{
-  newp = p1+secpoint*(p2-p1);
-
-  /*
-  (*testout) << "surf-between: p1 = " << p1 << ", p2 = " << p2
-	     << ", gi = " << gi1 << " - " << gi2 << endl;
-  */
-
-  if (gi1.trignum > 0)
-    {
-      //      ((STLGeometry&)geom).SelectChartOfTriangle (gi1.trignum);
-
-      Point<3> np1 = newp;
-      Point<3> np2 = newp;
-      ((STLGeometry&)geom).SelectChartOfTriangle (gi1.trignum);
-      int tn1 = geom.Project (np1);
-
-      ((STLGeometry&)geom).SelectChartOfTriangle (gi2.trignum);
-      int tn2 = geom.Project (np2);
-
-      newgi.trignum = tn1; //urspruengliche version
-      newp = np1;          //urspruengliche version
-
-      if (!newgi.trignum) 
-	{ newgi.trignum = tn2; newp = np2; }
-      if (!newgi.trignum) newgi.trignum = gi1.trignum;
-
-      /*    
-      if (tn1 != 0 && tn2 != 0 && ((STLGeometry&)geom).GetAngle(tn1,tn2) < M_PI*0.05)	{
-	  newgi.trignum = tn1;
-	  newp = np1;
-	}
-      else
-	{
-	  newp = ((STLGeometry&)geom).PointBetween(p1, gi1.trignum, p2, gi2.trignum);
-	  tn1 = ((STLGeometry&)geom).Project(newp);
-	  newgi.trignum = tn1;
-
-	  if (!tn1) 
-	    {
-	      newp = Center (p1, p2);
-	      newgi.trignum = 0;
-	      
-	    }
-	}
-      */
-    }
-  else
-    {
-      //      (*testout) << "WARNING: PointBetween got geominfo = 0" << endl;
-      newp =  p1+secpoint*(p2-p1);
-      newgi.trignum = 0;
-    }
-     
-  //  (*testout) << "newp = " << newp << ", ngi = " << newgi << endl;
-}
-
-void RefinementSTLGeometry ::
-PointBetween (const Point<3> & p1, const Point<3> & p2, double secpoint,
-	      int surfi1, int surfi2, 
-	      const EdgePointGeomInfo & gi1, 
-	      const EdgePointGeomInfo & gi2,
-	      Point<3> & newp, EdgePointGeomInfo & newgi) const
-{
-  /*
-  (*testout) << "edge-between: p1 = " << p1 << ", p2 = " << p2
-	     << ", gi1,2 = " << gi1 << ", " << gi2 << endl;
-  */
-  /*
-  newp = Center (p1, p2);
-  ((STLGeometry&)geom).SelectChartOfTriangle (gi1.trignum);
-  newgi.trignum = geom.Project (newp);
-  */
-  int hi;
-  newgi.dist = (1.0-secpoint) * gi1.dist + secpoint*gi2.dist;
-  newgi.edgenr = gi1.edgenr;
-
-  /*
-  (*testout) << "p1 = " << p1 << ", p2 = " << p2 << endl;
-  (*testout) << "refedge: " << gi1.edgenr
-	     << " d1 = " << gi1.dist << ", d2 = " << gi2.dist << endl;
-  */
-  newp = geom.GetLine (gi1.edgenr)->GetPointInDist (geom.GetPoints(), newgi.dist, hi);
-
-  //  (*testout) << "newp = " << newp << endl;
-}
-
-
-void RefinementSTLGeometry :: ProjectToSurface (Point<3> & p, int surfi) const
-{
-  cout << "RefinementSTLGeometry :: ProjectToSurface not implemented!" << endl;
-};
-
-
-void RefinementSTLGeometry :: ProjectToSurface (Point<3> & p, int surfi,
-						PointGeomInfo & gi) const
-{
-  ((STLGeometry&)geom).SelectChartOfTriangle (gi.trignum);
-  gi.trignum = geom.Project (p);
-  //  if (!gi.trignum) 
-  //    cout << "projectSTL failed" << endl;
-};
-
- 
 }
