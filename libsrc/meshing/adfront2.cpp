@@ -281,7 +281,7 @@ namespace netgen
 			     NgArray<INDEX> & lindex,
 			     double xh)
   {
-    // static Timer timer("adfront2::GetLocals"); RegionTimer reg (timer);
+    static Timer timer("adfront2::GetLocals"); RegionTimer reg (timer);
     
     int pstind;
     Point<3>  midp, p0;
@@ -300,10 +300,11 @@ namespace netgen
 				    p0 + Vec3d(xh, xh, xh),
 				    nearlines);
 
-    // pointsearchtree.GetIntersecting (p0 - Vec3d(xh, xh, xh),
-    //                                  p0 + Vec3d(xh, xh, xh),
-    //                                  nearpoints);
-    
+    // only cone points, other points are from linesearchtree
+    cpointsearchtree.GetIntersecting (p0 - Vec3d(xh, xh, xh),
+                                      p0 + Vec3d(xh, xh, xh),
+                                      nearpoints);
+
     for (int ii = 0; ii < nearlines.Size(); ii++)
       {
 	int i = nearlines[ii];
