@@ -300,9 +300,9 @@ namespace netgen
 				    p0 + Vec3d(xh, xh, xh),
 				    nearlines);
 
-    pointsearchtree.GetIntersecting (p0 - Vec3d(xh, xh, xh),
-                                     p0 + Vec3d(xh, xh, xh),
-                                     nearpoints);
+    // pointsearchtree.GetIntersecting (p0 - Vec3d(xh, xh, xh),
+    //                                  p0 + Vec3d(xh, xh, xh),
+    //                                  nearpoints);
     
     for (int ii = 0; ii < nearlines.Size(); ii++)
       {
