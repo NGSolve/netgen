@@ -79,6 +79,12 @@ namespace netgen
     p = hp;
   }
 
+  bool CSGeometry :: ProjectPointGI(int surfind, Point<3> & p, PointGeomInfo & gi) const
+  {
+    GetSurface(surfind)->Project (p);
+    return true;
+  }
+
   void CSGeometry :: ProjectPointEdge(int surfind, INDEX surfind2,
                                                 Point<3> & p) const
   {

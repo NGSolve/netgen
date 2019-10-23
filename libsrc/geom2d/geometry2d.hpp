@@ -156,6 +156,12 @@ namespace netgen
       ar & materials & maxh & quadmeshing & tensormeshing & layer & bcnames & elto0;
     }
 
+    bool ProjectPointGI (int surfind, Point<3> & p, PointGeomInfo & gi) const override
+    {
+      p(2) = 0.0;
+      return true;
+    }
+
     void PointBetween(const Point<3> & p1, const Point<3> & p2, double secpoint,
                       int surfi,
                       const PointGeomInfo & gi1,
