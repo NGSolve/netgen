@@ -14,13 +14,23 @@ except ImportError:
 
 SetMessageImportance(0)
 
+def round(x, digits=11):
+    try:
+        return float(("{:."+str(digits)+"g}").format(x))
+    except: #list
+        return [float(("{:."+str(digits)+"g}").format(y)) for y in x]
+
+
 def getData(mesh, mp):
     out = {}
     out['ne1d'] = len(mesh.Elements1D())
     out['ne2d'] = len(mesh.Elements2D())
     out['ne3d'] = len(mesh.Elements3D())
     # round badness to avoid fluctuations in last digits
-    out["total_badness"] = float("{:.11g}".format(mesh.CalcTotalBadness(mp)))
+    out["total_badness"] = round(mesh.CalcTotalBadness(mp))
+    angles = mesh.CalcMinMaxAngle()
+    out["angles_trig"] = round(angles["trig"], 5)
+    out["angles_tet"] = round(angles["tet"], 5)
     out["quality_histogram"] = str(list(mesh.GetQualityHistogram()))
     return out
 
@@ -31,6 +41,8 @@ def checkData(mesh, mp, ref):
     assert ref['ne3d'] == data['ne3d']
     assert json.loads(ref['quality_histogram']) == pytest.approx(json.loads(data['quality_histogram']), abs=1, rel=0.4)
     assert ref['total_badness'] == pytest.approx(data['total_badness'], rel=1e-5)
+    assert ref['angles_trig'] == pytest.approx(data['angles_trig'], rel=1e-5)
+    assert ref['angles_tet'] == pytest.approx(data['angles_tet'], rel=1e-5)
 
 # get tutorials
 def getFiles(fileEnding):
