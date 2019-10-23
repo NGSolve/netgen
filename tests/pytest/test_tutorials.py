@@ -3,6 +3,7 @@ import os, pytest
 from netgen.meshing import meshsize, MeshingParameters, SetMessageImportance
 import netgen.csg as csg
 import netgen.stl as stl
+import netgen.geom2d as geom2d
 from pyngcore import TaskManager
 import json
 try:
@@ -34,12 +35,12 @@ def checkData(mesh, mp, ref):
 # get tutorials
 def getFiles(fileEnding):
     r, d, files = next(os.walk(os.path.join("..","..","tutorials")))
-    return (f for f in files if f.endswith(fileEnding))
+    return [f for f in files if f.endswith(fileEnding)]
 
 # get additional tests
 def getAdditionalFiles(fileEnding):
     r, d, files = next(os.walk("geofiles"))
-    return (f for f in files if f.endswith(fileEnding))
+    return [f for f in files if f.endswith(fileEnding)]
 
 @pytest.fixture
 def refdata():
@@ -64,13 +65,13 @@ def getMeshingparameters(filename):
         return standard[0:1] + standard[2:] # very coarse does not work
     return standard
 
-_geofiles = [f for f in getFiles(".geo")] + [f for f in getFiles(".stl")]
+_geofiles =  getFiles(".in2d") + getFiles(".geo") + getFiles(".stl")
 if has_occ:
-    _geofiles += [f for f in getFiles(".step")]
+    _geofiles += getFiles(".step")
 _geofiles.sort()
-_additional_testfiles = [f for f in getAdditionalFiles(".stl")]
+_additional_testfiles = getAdditionalFiles(".stl")
 if has_occ:
-    _additional_testfiles += [f for f in getAdditionalFiles(".step")]
+    _additional_testfiles += getAdditionalFiles(".step")
 _additional_testfiles.sort()
 
 def generateMesh(filename, mp):
@@ -81,6 +82,8 @@ def generateMesh(filename, mp):
         geo = stl.STLGeometry(os.path.join(folder, filename))
     elif filename.endswith(".step"):
         geo = occ.OCCGeometry(os.path.join(folder, filename))
+    elif filename.endswith(".in2d"):
+        geo = geom2d.SplineGeometry(os.path.join(folder, filename))
     return geo.GenerateMesh(mp)
 
 def isSlowTest(filename):

@@ -51,9 +51,9 @@ namespace netgen
     virtual bool CalcPointGeomInfo(int surfind, PointGeomInfo& gi, const Point<3> & p3) const {return false;}
     virtual bool ProjectPointGI (int surfind, Point<3> & p, PointGeomInfo & gi) const
     {
-      ProjectPoint(surfind, p);
-      return CalcPointGeomInfo(surfind, gi, p);
+      throw Exception("ProjectPointGI not overloaded in class" + Demangle(typeid(*this).name()));
     }
+
     virtual Vec<3> GetNormal(int surfind, const Point<3> & p) const
     { return {0.,0.,1.}; }
     virtual Vec<3> GetNormal(int surfind, const Point<3> & p, const PointGeomInfo & gi) const

@@ -969,7 +969,7 @@ namespace netgen
 
           // NgProfiler::StopTimer (timer2);
 
-	  Point3d origp = mesh[pi];
+	  auto origp = mesh[pi];
 	  int loci = 1;
 	  double fact = 1;
 	  int moveisok = 0;
@@ -1021,7 +1021,7 @@ namespace netgen
 		}
 	      else
 		{
-		  mesh[pi] = Point<3> (origp);
+		  mesh[pi] = origp;
 		}
 	    
 	    }
