@@ -6,6 +6,14 @@
 
 namespace netgen
 {
+  ostream& operator << (ostream& ost, const MultiPointGeomInfo& mpgi)
+  {
+    for(auto i : Range(mpgi.GetNPGI()))
+      {
+        ost << "gi[" << i << "] = " << mpgi.GetPGI(i+1) << endl;
+      }
+    return ost;
+  }
   static void glrender (int wait);
 #ifdef OPENGL
   extern DLL_HEADER void Render(bool blocking = false);
