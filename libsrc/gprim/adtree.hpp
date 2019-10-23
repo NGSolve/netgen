@@ -904,6 +904,14 @@ public:
       GetFirstIntersecting(pmin, pmax, [&pis](auto pi) { pis.Append(pi); return false;});
     }
 
+  void GetIntersecting(const Point<dim> & pmin,
+                       const Point<dim> & pmax,
+                       Array<T> & pis) const
+    {
+      pis.SetSize0();
+      GetFirstIntersecting(pmin, pmax, [&pis](auto pi) { pis.Append(pi); return false;});
+    }
+
   void Insert (const Box<dim> & box, T pi)
     {
       Insert (box.PMin(), box.PMax(), pi);
