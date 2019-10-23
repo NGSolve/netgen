@@ -632,6 +632,7 @@ namespace nglib
          }
          */
          geo->AddEdges(readedges);
+	 readedges.SetSize(0);
       }
 
       if (geo->GetStatus() == STLTopology::STL_GOOD || geo->GetStatus() == STLTopology::STL_WARNING) return NG_OK;
