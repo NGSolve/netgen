@@ -10,6 +10,23 @@ namespace netgen
   GeometryRegister :: ~GeometryRegister()
   { ; }
 
+  void NetgenGeometry :: Analyse(Mesh& mesh,
+                                 const MeshingParameters& mparam)
+  {
+    static Timer t1("SetLocalMeshsize"); RegionTimer regt(t1);
+    mesh.SetGlobalH(mparam.maxh);
+    mesh.SetMinimalH(mparam.minh);
+
+    mesh.SetLocalH(bounding_box.PMin(), bounding_box.PMax(),
+                   mparam.grading);
+
+    if(mparam.uselocalh)
+      {
+        // TODO set local h
+      }
+    mesh.LoadLocalMeshSize(mparam.meshsizefilename);
+  }
+
   void NetgenGeometry :: OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam)
   {
     const auto savetask = multithread.task;
