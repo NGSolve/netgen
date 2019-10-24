@@ -21,9 +21,7 @@ namespace netgen
                    mparam.grading);
 
     if(mparam.uselocalh)
-      {
-        // TODO set local h
-      }
+      RestrictLocalMeshsize(mesh, mparam);
     mesh.LoadLocalMeshSize(mparam.meshsizefilename);
   }
 

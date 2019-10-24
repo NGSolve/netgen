@@ -38,6 +38,8 @@ namespace netgen
     virtual Mesh::GEOM_TYPE GetGeomType() const { return Mesh::NO_GEOM; }
     virtual void Analyse(Mesh& mesh,
                          const MeshingParameters& mparam);
+    virtual void RestrictLocalMeshsize(Mesh& mesh,
+                                       const MeshingParameters& mparam) const {}
     virtual void FindEdges(Mesh& mesh, const MeshingParameters& mparam) {}
     virtual void MeshSurface(Mesh& mesh, const MeshingParameters& mparam) {}
     virtual void OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam);
