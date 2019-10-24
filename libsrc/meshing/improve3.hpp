@@ -25,7 +25,7 @@ public:
 
   void SplitImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
 
-  bool SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, const NgBitArray * working_elements, Table<ElementIndex,PointIndex> & elementsonnode, INDEX_3_HASHTABLE<int> & faces, PointIndex pi1, PointIndex pi2, bool check_only=false);
+  double SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, const NgBitArray * working_elements, Table<ElementIndex,PointIndex> & elementsonnode, INDEX_3_HASHTABLE<int> & faces, PointIndex pi1, PointIndex pi2, bool check_only=false);
   void SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
 		    const NgBitArray * working_elements = NULL);
   void SwapImproveSequential (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
