@@ -3280,7 +3280,7 @@ void MeshOptimize3d :: SwapImproveSurface (Mesh & mesh, OPTIMIZEGOAL goal,
   2 -> 3 conversion
 */
 
-bool MeshOptimize3d :: SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementIndex eli1, int face,
+double MeshOptimize3d :: SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementIndex eli1, int face,
   Table<ElementIndex, PointIndex> & elementsonnode,
   TABLE<SurfaceElementIndex, PointIndex::BASE> & belementsonnode, bool check_only )
 {
@@ -3288,9 +3288,10 @@ bool MeshOptimize3d :: SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementInd
   Element el21(TET), el22(TET), el31(TET), el32(TET), el33(TET);
   int j = face;
   double bad1, bad2;
+  double d_badness = 0.0;
 
   Element & elem = mesh[eli1];
-  if (elem.IsDeleted()) return false;
+  if (elem.IsDeleted()) return 0.0;
 
   int mattyp = elem.GetIndex();
 
@@ -3336,7 +3337,7 @@ bool MeshOptimize3d :: SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementInd
       }
   }
 
-  if (bface) return false;
+  if (bface) return 0.0;
 
 
   FlatArray<ElementIndex> row = elementsonnode[pi1];
@@ -3406,14 +3407,16 @@ bool MeshOptimize3d :: SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementInd
                   bad2 += 1e4;
 
 
-              bool do_swap = (bad2 < bad1);
+              d_badness = bad2 - bad1;
 
               if ( ((bad2 < 1e6) || (bad2 < 10 * bad1)) &&
                   mesh.BoundaryEdge (pi4, pi5))
-                  do_swap = 1;
+                  d_badness = -1e4;
 
+              if(check_only)
+                  return d_badness;
 
-              if (!check_only && do_swap)
+              if (d_badness<0.0)
               {
                   el31.flags.illegal_valid = 0;
                   el32.flags.illegal_valid = 0;
@@ -3425,12 +3428,11 @@ bool MeshOptimize3d :: SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementInd
                   mesh.AddVolumeElement (el32);
                   mesh.AddVolumeElement (el33);
               }
-              return do_swap;
+              return d_badness;
           }
       }
   }
-
-  return false;
+  return d_badness;
 }
 
 /*
@@ -3573,8 +3575,8 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 
   int num_threads = ngcore::TaskManager::GetNumThreads();
 
-  Array<std::tuple<ElementIndex, int>> faces_with_improvement;
-  Array<Array<std::tuple<ElementIndex, int>>> faces_with_improvement_threadlocal(num_threads);
+  Array<std::tuple<double, ElementIndex, int>> faces_with_improvement;
+  Array<Array<std::tuple<double, ElementIndex, int>>> faces_with_improvement_threadlocal(num_threads);
 
   ParallelForRange( Range(ne), [&]( auto myrange )
       {
@@ -3601,8 +3603,9 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 
             for (int j = 0; j < 4; j++)
               {
-                if(SwapImprove2( mesh, goal, eli1, j, elementsonnode, belementsonnode, true))
-                  my_faces_with_improvement.Append( std::make_tuple(eli1, j) );
+                double d_badness = SwapImprove2( mesh, goal, eli1, j, elementsonnode, belementsonnode, true);
+                if(d_badness<0.0)
+                    my_faces_with_improvement.Append( std::make_tuple(d_badness, eli1, j) );
               }
           }
       });
@@ -3612,8 +3615,9 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 
   QuickSort(faces_with_improvement);
 
-  for (auto [eli,j] : faces_with_improvement)
-    cnt += SwapImprove2( mesh, goal, eli, j, elementsonnode, belementsonnode, false);
+  for (auto [dummy, eli,j] : faces_with_improvement)
+      if(SwapImprove2( mesh, goal, eli, j, elementsonnode, belementsonnode, false) < 0.0)
+          cnt++;
 
   PrintMessage (5, cnt, " swaps performed");
 
