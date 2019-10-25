@@ -24,6 +24,9 @@ public:
   void CombineImproveSequential (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
 
   void SplitImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
+  void SplitImproveSequential (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
+  double SplitImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, Table<ElementIndex,PointIndex> & elementsonnode, Array<double> &elerrs, NgArray<INDEX_3> &locfaces, double badmax, PointIndex pi1, PointIndex pi2, PointIndex ptmp, bool check_only=false);
+  
 
   double SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, const NgBitArray * working_elements, Table<ElementIndex,PointIndex> & elementsonnode, INDEX_3_HASHTABLE<int> & faces, PointIndex pi1, PointIndex pi2, bool check_only=false);
   void SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
