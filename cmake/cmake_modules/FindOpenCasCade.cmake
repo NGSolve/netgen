@@ -74,11 +74,16 @@ set(OCC_LIBRARY_NAMES
     TKSTL
     TKTopAlgo
     TKV3d
+    TKVCAF
     TKXCAF
     TKXDEIGES
     TKXDESTEP
     TKXSBase
 )
+
+if(OCC_LINK_FREETYPE)
+    set(OCC_LIBRARY_NAMES ${OCC_LIBRARY_NAMES} freetype)
+endif(OCC_LINK_FREETYPE)
 
 foreach( libname ${OCC_LIBRARY_NAMES} )
     find_library( ${libname} ${libname} ${OCC_LIBRARY_DIR} )
