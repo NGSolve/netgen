@@ -74,7 +74,6 @@ set(OCC_LIBRARY_NAMES
     TKSTL
     TKTopAlgo
     TKV3d
-    TKVCAF
     TKXCAF
     TKXDEIGES
     TKXDESTEP
@@ -84,6 +83,10 @@ set(OCC_LIBRARY_NAMES
 if(OCC_LINK_FREETYPE)
     set(OCC_LIBRARY_NAMES ${OCC_LIBRARY_NAMES} freetype)
 endif(OCC_LINK_FREETYPE)
+
+if(OCC_VERSION_STRING VERSION_GREATER_EQUAL "7.3.0")
+    set(OCC_LIBRARY_NAMES ${OCC_LIBRARY_NAMES} TKVCAF)
+endif()
 
 foreach( libname ${OCC_LIBRARY_NAMES} )
     find_library( ${libname} ${libname} ${OCC_LIBRARY_DIR} )
