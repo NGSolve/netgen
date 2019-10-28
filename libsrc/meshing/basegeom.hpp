@@ -12,10 +12,24 @@ struct Tcl_Interp;
 
 namespace netgen
 {
+  class GeometryVertex
+  {
+  public:
+    virtual ~GeometryVertex() {}
+    virtual Point<3> GetPoint() const = 0;
+    virtual size_t GetHash() const = 0;
+  };
+
   class GeometryEdge
   {
   public:
     virtual ~GeometryEdge() {}
+    virtual const GeometryVertex& GetStartVertex() const = 0;
+    virtual const GeometryVertex& GetEndVertex() const = 0;
+    virtual double GetLength() const = 0;
+    virtual Point<3> GetPoint(double t) const = 0;
+    virtual bool OrientedLikeGlobal() const = 0;
+    virtual size_t GetHash() const = 0;
   };
 
   class GeometryFace
@@ -23,10 +37,14 @@ namespace netgen
   public:
     virtual ~GeometryFace() {}
     virtual size_t GetNBoundaries() const = 0;
-    virtual Array<GeometryEdge> GetBoundary(size_t index) const = 0;
+    virtual Array<unique_ptr<GeometryEdge>> GetBoundary(size_t index) const = 0;
+    virtual string GetName() const { return "default"; }
     // Project point using geo info. Fast if point is close to
     // parametrization in geo info.
     virtual bool ProjectPointGI(Point<3>& p, PointGeomInfo& gi) const =0;
+    virtual void CalcEdgePointGI(const GeometryEdge& edge,
+                                 double t,
+                                 EdgePointGeomInfo& egi) const = 0;
     virtual Box<3> GetBoundingBox() const = 0;
   };
 
@@ -34,6 +52,8 @@ namespace netgen
   {
     unique_ptr<Refinement> ref;
   protected:
+    Array<unique_ptr<GeometryVertex>> vertices;
+    Array<unique_ptr<GeometryEdge>> edges;
     Array<unique_ptr<GeometryFace>> faces;
     Box<3> bounding_box;
   public:
@@ -112,6 +132,14 @@ namespace netgen
                               int surfi2,
                               const EdgePointGeomInfo & egi) const
     { throw Exception("Call GetTangent of " + Demangle(typeid(*this).name())); }
+
+    virtual size_t GetEdgeIndex(const GeometryEdge& edge) const
+    {
+      for(auto i : Range(edges))
+        if(edge.GetHash() == edges[i]->GetHash())
+          return i;
+      throw Exception("Couldn't find edge index");
+    }
     virtual void Save (string filename) const;
     virtual void SaveToMeshFile (ostream & /* ost */) const { ; }
   };
