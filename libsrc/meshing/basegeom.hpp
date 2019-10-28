@@ -12,11 +12,29 @@ struct Tcl_Interp;
 
 namespace netgen
 {
+  class GeometryEdge
+  {
+  public:
+    virtual ~GeometryEdge() {}
+  };
+
+  class GeometryFace
+  {
+  public:
+    virtual ~GeometryFace() {}
+    virtual size_t GetNBoundaries() const = 0;
+    virtual Array<GeometryEdge> GetBoundary(size_t index) const = 0;
+    // Project point using geo info. Fast if point is close to
+    // parametrization in geo info.
+    virtual bool ProjectPointGI(Point<3>& p, PointGeomInfo& gi) const =0;
+    virtual Box<3> GetBoundingBox() const = 0;
+  };
 
   class DLL_HEADER NetgenGeometry
   {
     unique_ptr<Refinement> ref;
   protected:
+    Array<unique_ptr<GeometryFace>> faces;
     Box<3> bounding_box;
   public:
     NetgenGeometry()
@@ -37,12 +55,12 @@ namespace netgen
 
     virtual Mesh::GEOM_TYPE GetGeomType() const { return Mesh::NO_GEOM; }
     virtual void Analyse(Mesh& mesh,
-                         const MeshingParameters& mparam);
+                         const MeshingParameters& mparam) const;
     virtual void RestrictLocalMeshsize(Mesh& mesh,
                                        const MeshingParameters& mparam) const {}
-    virtual void FindEdges(Mesh& mesh, const MeshingParameters& mparam) {}
-    virtual void MeshSurface(Mesh& mesh, const MeshingParameters& mparam) {}
-    virtual void OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam);
+    virtual void FindEdges(Mesh& mesh, const MeshingParameters& mparam) const;
+    virtual void MeshSurface(Mesh& mesh, const MeshingParameters& mparam) const;
+    virtual void OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam) const;
 
     virtual void FinalizeMesh(Mesh& mesh) const {}
 

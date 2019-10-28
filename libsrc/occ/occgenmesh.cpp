@@ -306,7 +306,7 @@ namespace netgen
 
 
 
-  void OCCFindEdges (OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam)
+  void OCCFindEdges (const OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam)
   {
     static Timer t("OCCFindEdges"); RegionTimer r(t);
     static Timer tsearch("OCCFindEdges - search point");
@@ -601,7 +601,7 @@ namespace netgen
 
 
 
-  void OCCMeshSurface (OCCGeometry & geom, Mesh & mesh,
+  void OCCMeshSurface (const OCCGeometry & geom, Mesh & mesh,
                        const MeshingParameters & mparam)
   {
     static Timer t("OCCMeshSurface"); RegionTimer r(t);

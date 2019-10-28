@@ -11,7 +11,7 @@ namespace netgen
   { ; }
 
   void NetgenGeometry :: Analyse(Mesh& mesh,
-                                 const MeshingParameters& mparam)
+                                 const MeshingParameters& mparam) const
   {
     static Timer t1("SetLocalMeshsize"); RegionTimer regt(t1);
     mesh.SetGlobalH(mparam.maxh);
@@ -25,7 +25,74 @@ namespace netgen
     mesh.LoadLocalMeshSize(mparam.meshsizefilename);
   }
 
-  void NetgenGeometry :: OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam)
+  void NetgenGeometry :: FindEdges(Mesh& mesh,
+                                   const MeshingParameters& mparam) const
+  {
+  }
+
+  void NetgenGeometry :: MeshSurface(Mesh& mesh,
+                                     const MeshingParameters& mparam) const
+  {
+    static Timer t1("Surface Meshing"); RegionTimer regt(t1);
+
+    Array<int, PointIndex> glob2loc(mesh.GetNP());
+    for(auto k : Range(faces))
+      {
+        const auto& face = *faces[k];
+        auto bb = face.GetBoundingBox();
+        bb.Increase(bb.Diam()/10);
+        Meshing2 meshing(*this, mparam, bb);
+        glob2loc = 0;
+        int cntp = 0;
+
+        for(auto& seg : mesh.LineSegments())
+          {
+            if(seg.si == k+1)
+              {
+                for(auto j : Range(2))
+                  {
+                    auto pi = seg[j];
+                    if(glob2loc[pi] == 0)
+                      {
+                        meshing.AddPoint(mesh[pi], pi);
+                        cntp++;
+                        glob2loc[pi] = cntp;
+                      }
+                  }
+              }
+          }
+        for(auto & seg : mesh.LineSegments())
+          {
+            if(seg.si == k+1)
+              {
+                PointGeomInfo gi0, gi1;
+                gi0.trignum = gi1.trignum = k+1;
+                gi0.u = seg.epgeominfo[0].u;
+                gi0.v = seg.epgeominfo[0].v;
+                gi1.u = seg.epgeominfo[1].u;
+                gi1.v = seg.epgeominfo[1].v;
+                meshing.AddBoundaryElement(glob2loc[seg[0]],
+                                           glob2loc[seg[1]],
+                                           gi0, gi1);
+              }
+          }
+
+        // TODO Set max area 2* area of face
+
+        auto noldsurfels = mesh.GetNSE();
+
+
+        static Timer t("GenerateMesh"); RegionTimer reg(t);
+        MESHING2_RESULT res = meshing.GenerateMesh(mesh, mparam, mparam.maxh, k+1);
+
+        for(auto i : Range(noldsurfels, mesh.GetNSE()))
+          {
+            mesh.SurfaceElements()[i].SetIndex(k+1);
+          }
+      }
+  }
+
+  void NetgenGeometry :: OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam) const
   {
     const auto savetask = multithread.task;
     multithread.task = "Optimizing surface";
