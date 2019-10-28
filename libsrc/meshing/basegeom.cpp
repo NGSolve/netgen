@@ -10,6 +10,81 @@ namespace netgen
   GeometryRegister :: ~GeometryRegister()
   { ; }
 
+  void GeometryFace :: RestrictHTrig(Mesh& mesh,
+                                     const PointGeomInfo& gi0,
+                                     const PointGeomInfo& gi1,
+                                     const PointGeomInfo& gi2,
+                                     const MeshingParameters& mparam,
+                                     int depth, double h) const
+  {
+    auto p0 = GetPoint(gi0);
+    auto p1 = GetPoint(gi1);
+    auto p2 = GetPoint(gi2);
+    auto longest = (p0-p1).Length();
+    int cutedge = 2;
+    if(auto len = (p0-p2).Length(); len > longest)
+      {
+        longest = len;
+        cutedge = 1;
+      }
+    if(auto len = (p1-p2).Length(); len > longest)
+      {
+        longest = len;
+        cutedge = 0;
+      }
+    PointGeomInfo gi_mid;
+    gi_mid.u = (gi0.u + gi1.u + gi2.u)/3;
+    gi_mid.v = (gi0.v + gi1.v + gi2.v)/3;
+
+    if(depth % 3 == 0)
+      {
+        double curvature = 0.;
+        curvature = max2(max2(curvature, GetCurvature(gi_mid)),
+                         max3(GetCurvature(gi0), GetCurvature(gi1),
+                              GetCurvature(gi2)));
+        if(curvature < 1e-3)
+          return;
+        double kappa = curvature * mparam.curvaturesafety;
+        h = mparam.maxh * kappa < 1 ? mparam.maxh : 1./kappa;
+        if(h < 1e-4 * longest)
+          return;
+      }
+
+    if(h < longest && depth < 10)
+      {
+        if(cutedge == 0)
+          {
+            PointGeomInfo gi_m;
+            gi_m.u = 0.5 * (gi1.u + gi2.u);
+            gi_m.v = 0.5 * (gi1.v + gi2.v);
+            RestrictHTrig(mesh, gi_m, gi2, gi0, mparam, depth+1, h);
+            RestrictHTrig(mesh, gi_m, gi0, gi1, mparam, depth+1, h);
+          }
+        else if(cutedge == 1)
+          {
+            PointGeomInfo gi_m;
+            gi_m.u = 0.5 * (gi0.u + gi2.u);
+            gi_m.v = 0.5 * (gi0.v + gi2.v);
+            RestrictHTrig(mesh, gi_m, gi1, gi2, mparam, depth+1, h);
+            RestrictHTrig(mesh, gi_m, gi0, gi1, mparam, depth+1, h);
+          }
+        else if(cutedge == 2)
+          {
+            PointGeomInfo gi_m;
+            gi_m.u = 0.5 * (gi0.u + gi1.u);
+            gi_m.v = 0.5 * (gi0.v + gi1.v);
+            RestrictHTrig(mesh, gi_m, gi1, gi2, mparam, depth+1, h);
+            RestrictHTrig(mesh, gi_m, gi2, gi0, mparam, depth+1, h);
+          }
+      }
+    else
+      {
+        auto pmid = GetPoint(gi_mid);
+        for(const auto& p : {p0, p1, p2, pmid})
+          mesh.RestrictLocalH(p, h);
+      }
+  }
+
   void NetgenGeometry :: Analyse(Mesh& mesh,
                                  const MeshingParameters& mparam) const
   {
@@ -21,7 +96,41 @@ namespace netgen
                    mparam.grading);
 
     if(mparam.uselocalh)
-      RestrictLocalMeshsize(mesh, mparam);
+      {
+        double eps = 1e-12 * bounding_box.Diam();
+
+        // restrict meshsize on edges
+        for(const auto & edge : edges)
+          {
+            auto length = edge->GetLength();
+            // skip very short edges
+            if(length < eps)
+              continue;
+            static constexpr int npts = 20;
+            // restrict mesh size based on edge length
+            for(auto i : Range(npts+1))
+              mesh.RestrictLocalH(edge->GetPoint(double(i)/npts), length/mparam.segmentsperedge);
+
+            // restrict mesh size based on edge curvature
+            double t = 0.;
+            auto p_old = edge->GetPoint(t);
+            while(t < 1.-eps)
+              {
+                t += edge->CalcStep(t, 1./mparam.curvaturesafety);
+                if(t < 1.)
+                  {
+                    auto p = edge->GetPoint(t);
+                    auto dist = (p-p_old).Length();
+                    mesh.RestrictLocalH(p, dist);
+                    p_old = p;
+                  }
+              }
+          }
+
+        // restrict meshsize on faces
+        for(const auto& face : faces)
+          face->RestrictH(mesh, mparam);
+      }
     mesh.LoadLocalMeshSize(mparam.meshsizefilename);
   }
 
