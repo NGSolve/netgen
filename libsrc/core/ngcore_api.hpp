@@ -74,6 +74,22 @@ inline void operator delete[]( void* ptr, std::align_val_t al ) noexcept
     delete[] (char*)ptr;
 }
 
+inline void operator delete  ( void* ptr, std::size_t sz, std::align_val_t al ) noexcept
+{
+  if (int(al) > __STDCPP_DEFAULT_NEW_ALIGNMENT__)
+     _mm_free(ptr);
+  else
+    delete (char*)ptr;
+}
+
+inline void operator delete[]( void* ptr, std::size_t sz, std::align_val_t al ) noexcept
+{
+  if (int(al) > __STDCPP_DEFAULT_NEW_ALIGNMENT__)
+     _mm_free(ptr);
+  else
+    delete[] (char*)ptr;
+}
+
 #endif // __MAC_OS_X_VERSION_MIN_REQUIRED
 #endif // __MAC_OS_X_VERSION_MIN_REQUIRED < 101300
 

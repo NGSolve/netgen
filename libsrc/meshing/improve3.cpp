@@ -527,6 +527,246 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 
 
 
+double MeshOptimize3d :: SplitImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, Table<ElementIndex,PointIndex> & elementsonnode, Array<double> &elerrs, NgArray<INDEX_3> &locfaces, double badmax, PointIndex pi1, PointIndex pi2, PointIndex ptmp, bool check_only)
+{
+  double d_badness = 0.0;
+  int cnt = 0;
+
+  ArrayMem<ElementIndex, 20> hasbothpoints;
+
+  if (mesh.BoundaryEdge (pi1, pi2)) return 0.0;
+
+  for (ElementIndex ei : elementsonnode[pi1])
+    {
+      Element & el = mesh[ei];
+
+      if(el.IsDeleted()) return 0.0;
+      if (mesh[ei].GetType() != TET) return 0.0;
+
+      bool has1 = el.PNums().Contains(pi1);
+      bool has2 = el.PNums().Contains(pi2);
+
+      if (has1 && has2)
+          if (!hasbothpoints.Contains (ei))
+              hasbothpoints.Append (ei);
+    }
+
+  if(mp.only3D_domain_nr)
+      for(auto ei : hasbothpoints)
+          if(mp.only3D_domain_nr != mesh[ei].GetIndex())
+              return 0.0;
+
+
+  double bad1 = 0.0;
+  for (ElementIndex ei : hasbothpoints)
+      bad1 += CalcBad (mesh.Points(), mesh[ei], 0);
+
+  bool puretet = 1;
+  for (ElementIndex ei : hasbothpoints)
+      if (mesh[ei].GetType() != TET)
+          puretet = 0;
+  if (!puretet) return 0.0;
+
+  Point3d p1 = mesh[pi1];
+  Point3d p2 = mesh[pi2];
+
+  locfaces.SetSize(0);
+  for (ElementIndex ei : hasbothpoints)
+    {
+      const Element & el = mesh[ei];
+
+      for (int l = 0; l < 4; l++)
+          if (el[l] == pi1 || el[l] == pi2)
+            {
+              INDEX_3 i3;
+              Element2d face(TRIG);
+              el.GetFace (l+1, face);
+              for (int kk = 1; kk <= 3; kk++)
+                  i3.I(kk) = face.PNum(kk);
+              locfaces.Append (i3);
+            }
+    }
+
+  PointFunction1 pf (mesh.Points(), locfaces, mp, -1);
+  OptiParameters par;
+  par.maxit_linsearch = 50;
+  par.maxit_bfgs = 20;
+
+  Point3d pnew = Center (p1, p2);
+  Vector px(3);
+  px(0) = pnew.X();
+  px(1) = pnew.Y();
+  px(2) = pnew.Z();
+
+  if (bad1 > 0.1 * badmax)
+      BFGS (px, pf, par);
+
+  double bad2 = pf.Func (px);
+
+  pnew.X() = px(0);
+  pnew.Y() = px(1);
+  pnew.Z() = px(2);
+
+  mesh[ptmp] = Point<3>(pnew);
+
+  for (int k = 0; k < hasbothpoints.Size(); k++)
+    {
+      Element & oldel = mesh[hasbothpoints[k]];
+      Element newel1 = oldel;
+      Element newel2 = oldel;
+
+      oldel.flags.illegal_valid = 0;
+      newel1.flags.illegal_valid = 0;
+      newel2.flags.illegal_valid = 0;
+
+      for (int l = 0; l < 4; l++)
+        {
+          if (newel1[l] == pi2) newel1[l] = ptmp;
+          if (newel2[l] == pi1) newel2[l] = ptmp;
+        }
+
+      if (!mesh.LegalTet (oldel)) bad1 += 1e6;
+      if (!mesh.LegalTet (newel1)) bad2 += 1e6;
+      if (!mesh.LegalTet (newel2)) bad2 += 1e6;
+    }
+
+  d_badness = bad2-bad1;
+  if(check_only)
+      return d_badness;
+
+  if (d_badness<0.0)
+    {
+      cnt++;
+
+      PointIndex pinew = mesh.AddPoint (pnew);
+
+      for (ElementIndex ei : hasbothpoints)
+        {
+          Element & oldel = mesh[ei];
+          Element newel1 = oldel;
+          Element newel2 = oldel;
+
+          oldel.flags.illegal_valid = 0;
+          oldel.Delete();
+
+          newel1.flags.illegal_valid = 0;
+          newel2.flags.illegal_valid = 0;
+
+          for (int l = 0; l < 4; l++)
+            {
+              if (newel1[l] == pi2) newel1[l] = pinew;
+              if (newel2[l] == pi1) newel2[l] = pinew;
+            }
+
+          mesh.AddVolumeElement (newel1);
+          mesh.AddVolumeElement (newel2);
+        }
+    }
+  return d_badness;
+}
+
+void MeshOptimize3d :: SplitImprove (Mesh & mesh,
+				     OPTIMIZEGOAL goal)
+{
+  static Timer t("MeshOptimize3d::SplitImprove"); RegionTimer reg(t);
+  static Timer topt("Optimize");
+  static Timer tsearch("Search");
+
+  // return SplitImproveSequential(mesh, goal);
+
+  int np = mesh.GetNP();
+  int ne = mesh.GetNE();
+  double bad = 0.0;
+  double badmax = 0.0;
+
+  auto elementsonnode = mesh.CreatePoint2ElementTable();
+
+  Array<double> elerrs(ne);
+
+  const char * savetask = multithread.task;
+  multithread.task = "Split Improve";
+
+  PrintMessage (3, "SplitImprove");
+  (*testout)  << "start SplitImprove" << "\n";
+
+  ParallelFor( mesh.VolumeElements().Range(), [&] (ElementIndex ei) NETGEN_LAMBDA_INLINE
+    {
+      if(mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
+          return;
+
+      elerrs[ei] = CalcBad (mesh.Points(), mesh[ei], 0);
+      bad += elerrs[ei];
+      AtomicMax(badmax, elerrs[ei]);
+    });
+
+  if (goal == OPT_QUALITY)
+    {
+      bad = mesh.CalcTotalBad (mp);
+      (*testout) << "Total badness = " << bad << endl;
+    }
+
+  Array<std::tuple<PointIndex,PointIndex>> edges;
+  BuildEdgeList(mesh, elementsonnode, edges);
+
+  // Find edges with improvement
+  Array<std::tuple<double, int>> candidate_edges(edges.Size());
+  std::atomic<int> improvement_counter(0);
+  auto ptmp = mesh.AddPoint( {0,0,0} );
+
+  tsearch.Start();
+  ParallelForRange(Range(edges), [&] (auto myrange)
+  {
+    NgArray<INDEX_3> locfaces;
+
+    for(auto i : myrange)
+    {
+      auto [p0,p1] = edges[i];
+      double d_badness = SplitImproveEdge (mesh, goal, elementsonnode, elerrs, locfaces, badmax, p0, p1, ptmp, true);
+      if(d_badness<0.0)
+      {
+        int index = improvement_counter++;
+        candidate_edges[index] = make_tuple(d_badness, i);
+      }
+    }
+  }, ngcore::TasksPerThread(4));
+  tsearch.Stop();
+
+  auto edges_with_improvement = candidate_edges.Part(0, improvement_counter.load());
+
+  QuickSort(edges_with_improvement);
+  PrintMessage(5, edges.Size(), " edges");
+  PrintMessage(5, edges_with_improvement.Size(), " edges with improvement");
+
+  // Apply actual optimizations
+  topt.Start();
+  int cnt = 0;
+  NgArray<INDEX_3> locfaces;
+  for(auto [d_badness, ei] : edges_with_improvement)
+  {
+      auto [p0,p1] = edges[ei];
+      if (SplitImproveEdge (mesh, goal, elementsonnode, elerrs, locfaces, badmax, p0, p1, ptmp, false) < 0.0)
+        cnt++;
+  }
+  topt.Stop();
+  mesh.Compress();
+  PrintMessage (5, cnt, " splits performed");
+  (*testout) << "Splitt - Improve done" << "\n";
+
+  if (goal == OPT_QUALITY)
+    {
+      bad = mesh.CalcTotalBad (mp);
+      (*testout) << "Total badness = " << bad << endl;
+
+      int cntill = 0;
+      ne = mesh.GetNE();
+      for (ElementIndex ei = 0; ei < ne; ei++)
+        if (!mesh.LegalTet (mesh[ei]))
+          cntill++;
+      //      cout << cntill << " illegal tets" << endl;
+    }
+
+  multithread.task = savetask;
+}
 
 
 /*
@@ -534,7 +774,7 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
   If mesh quality is improved by inserting a node into an inner edge,
   the edge is split into two parts.
 */
-void MeshOptimize3d :: SplitImprove (Mesh & mesh,
+void MeshOptimize3d :: SplitImproveSequential (Mesh & mesh,
 				     OPTIMIZEGOAL goal)
 {
   static Timer t("MeshOptimize3d::SplitImprove"); RegionTimer reg(t);

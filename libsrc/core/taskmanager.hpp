@@ -72,11 +72,11 @@ namespace ngcore
 
 
 
-#ifndef __clang__      
+    // #ifndef __clang__      
     static thread_local int thread_id;
-#else
-    static __thread int thread_id;
-#endif
+    // #else
+    // static __thread int thread_id;
+    // #endif
     
     NGCORE_API static bool use_paje_trace;
   public:

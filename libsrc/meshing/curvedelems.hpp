@@ -17,7 +17,6 @@ class Refinement;
 class CurvedElements
 {
   const Mesh & mesh;
-  const NetgenGeometry& geo;
 
   NgArray<int> edgeorder;
   NgArray<int> faceorder;

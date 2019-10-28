@@ -539,7 +539,7 @@ namespace netgen
       
 
   CurvedElements :: CurvedElements (const Mesh & amesh)
-    : mesh(amesh), geo(*mesh.GetGeometry())
+    : mesh(amesh)
   {
     order = 1;
     rational = 0;
@@ -555,6 +555,7 @@ namespace netgen
   void CurvedElements :: BuildCurvedElements(const Refinement * ref, int aorder,
                                              bool arational)
   {
+    auto & geo = *mesh.GetGeometry();
 
     ishighorder = 0;
     order = 1;

@@ -56,6 +56,9 @@ build_win:
         -G Ninja
         -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%
         -DUSE_OCC=ON
+        -DOCC_LIBRARY=C:/install_opencascade_7.4.0_static/win64/vc14/lib/TKernel.lib
+        -DOCC_INCLUDE_DIR=C:/install_opencascade_7.4.0_static/inc
+        -DOCC_LINK_FREETYPE=ON
         -DUSE_CCACHE=ON
         -DENABLE_UNIT_TESTS=ON
         -DCMAKE_BUILD_TYPE=Release
@@ -239,6 +242,10 @@ build_mac:
         -DENABLE_UNIT_TESTS=ON
         -DCMAKE_OSX_DEPLOYMENT_TARGET=10.12
         -DCMAKE_OSX_SYSROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+        -DUSE_OCC=ON
+        -DOCC_LIBRARY=/usr/local/opt/opencascade-7.4.0/lib/libTKernel.a
+        -DOCC_INCLUDE_DIR=/usr/local/opt/opencascade-7.4.0/include/opencascade
+        -DOCC_LINK_FREETYPE=ON
     - make -j5 install
 
 test_mac:
