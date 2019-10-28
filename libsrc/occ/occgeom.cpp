@@ -75,19 +75,19 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
 }
 
   void OCCGeometry :: Analyse(Mesh& mesh,
-                              const MeshingParameters& mparam)
+                              const MeshingParameters& mparam) const
   {
     OCCSetLocalMeshSize(*this, mesh, mparam, occparam);
   }
 
   void OCCGeometry :: FindEdges(Mesh& mesh,
-                                const MeshingParameters& mparam)
+                                const MeshingParameters& mparam) const
   {
     OCCFindEdges(*this, mesh, mparam);
   }
 
   void OCCGeometry :: MeshSurface(Mesh& mesh,
-                                  const MeshingParameters& mparam)
+                                  const MeshingParameters& mparam) const
   {
     OCCMeshSurface(*this, mesh, mparam);
   }

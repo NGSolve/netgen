@@ -224,7 +224,7 @@ namespace netgen
     Handle_XCAFDoc_ColorTool face_colours;
      
     mutable int changed;
-    NgArray<int> facemeshstatus;
+    mutable NgArray<int> facemeshstatus;
 
     // Philippose - 15/01/2009
     // Maximum mesh size for a given face
@@ -268,11 +268,11 @@ namespace netgen
     { occparam = par; }
 
     void Analyse(Mesh& mesh,
-                 const MeshingParameters& mparam) override;
+                 const MeshingParameters& mparam) const override;
     void FindEdges(Mesh& mesh,
-                   const MeshingParameters& mparam) override;
+                   const MeshingParameters& mparam) const override;
     void MeshSurface(Mesh& mesh,
-                     const MeshingParameters& mparam) override;
+                     const MeshingParameters& mparam) const override;
  
     void FinalizeMesh(Mesh& mesh) const override;
      
@@ -459,11 +459,11 @@ namespace netgen
   DLL_HEADER extern void OCCSetLocalMeshSize(const OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam,
                                              const OCCParameters& occparam);
 
-  DLL_HEADER extern void OCCMeshSurface (OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam);
+  DLL_HEADER extern void OCCMeshSurface (const OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam);
 
   DLL_HEADER extern void OCCOptimizeSurface (OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam);
 
-  DLL_HEADER extern void OCCFindEdges (OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam);
+  DLL_HEADER extern void OCCFindEdges (const OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam);
 }
 
 #endif

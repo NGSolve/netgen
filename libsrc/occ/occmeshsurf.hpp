@@ -113,7 +113,8 @@ class Meshing2OCCSurfaces : public Meshing2
 
 public:
   ///
-  Meshing2OCCSurfaces (const TopoDS_Shape & asurf, const Box<3> & aboundingbox,
+  Meshing2OCCSurfaces (const NetgenGeometry& geo,
+                       const TopoDS_Shape & asurf, const Box<3> & aboundingbox,
                        int aprojecttype, const MeshingParameters & mparam);
 
   ///

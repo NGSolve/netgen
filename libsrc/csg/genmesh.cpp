@@ -422,7 +422,7 @@ namespace netgen
 	  geom.GetSurface((mesh.GetFaceDescriptor(k).SurfNr()));
 
 
-	Meshing2Surfaces meshing(*surf, mparam, geom.BoundingBox());
+	Meshing2Surfaces meshing(geom, *surf, mparam, geom.BoundingBox());
 	meshing.SetStartTime (starttime);
 
         double eps = 1e-8 * geom.MaxSize();

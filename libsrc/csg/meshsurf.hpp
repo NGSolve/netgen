@@ -16,7 +16,9 @@ namespace netgen
     ///
     //  Meshing2Surfaces (const Surface & asurf);
     ///
-    Meshing2Surfaces (const Surface & asurf, const MeshingParameters & mp, 
+    Meshing2Surfaces (const CSGeometry& geo,
+                      const Surface & asurf,
+                      const MeshingParameters & mp,
 		      const Box<3> & aboundingbox);
 
   protected:
