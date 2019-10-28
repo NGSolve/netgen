@@ -28,6 +28,8 @@ namespace netgen
     virtual const GeometryVertex& GetEndVertex() const = 0;
     virtual double GetLength() const = 0;
     virtual Point<3> GetPoint(double t) const = 0;
+    // Calculate parameter step respecting edges sag value
+    virtual double CalcStep(double t, double sag) const = 0;
     virtual bool OrientedLikeGlobal() const = 0;
     virtual size_t GetHash() const = 0;
   };
@@ -42,10 +44,24 @@ namespace netgen
     // Project point using geo info. Fast if point is close to
     // parametrization in geo info.
     virtual bool ProjectPointGI(Point<3>& p, PointGeomInfo& gi) const =0;
+    virtual Point<3> GetPoint(const PointGeomInfo& gi) const = 0;
     virtual void CalcEdgePointGI(const GeometryEdge& edge,
                                  double t,
                                  EdgePointGeomInfo& egi) const = 0;
     virtual Box<3> GetBoundingBox() const = 0;
+
+    // Get curvature in point from local coordinates in PointGeomInfo
+    virtual double GetCurvature(const PointGeomInfo& gi) const = 0;
+
+    virtual void RestrictH(Mesh& mesh, const MeshingParameters& mparam) const = 0;
+
+  protected:
+    void RestrictHTrig(Mesh& mesh,
+                       const PointGeomInfo& gi0,
+                       const PointGeomInfo& gi1,
+                       const PointGeomInfo& gi2,
+                       const MeshingParameters& mparam,
+                       int depth = 0, double h = 0.) const;
   };
 
   class DLL_HEADER NetgenGeometry
@@ -76,8 +92,6 @@ namespace netgen
     virtual Mesh::GEOM_TYPE GetGeomType() const { return Mesh::NO_GEOM; }
     virtual void Analyse(Mesh& mesh,
                          const MeshingParameters& mparam) const;
-    virtual void RestrictLocalMeshsize(Mesh& mesh,
-                                       const MeshingParameters& mparam) const {}
     virtual void FindEdges(Mesh& mesh, const MeshingParameters& mparam) const;
     virtual void MeshSurface(Mesh& mesh, const MeshingParameters& mparam) const;
     virtual void OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam) const;
