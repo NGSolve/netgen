@@ -8,7 +8,7 @@ from pyngcore import TaskManager
 import json
 try:
     import netgen.occ as occ
-    has_occ = True
+    has_occ = occ.occ_version >= "7.4.0"
 except ImportError:
     has_occ = False
 

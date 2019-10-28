@@ -7,6 +7,7 @@
 
 #include <meshing.hpp>
 #include <occgeom.hpp>
+#include <Standard_Version.hxx>
 
 using namespace netgen;
 
@@ -57,6 +58,7 @@ void CreateOCCParametersFromKwargs(OCCParameters& occparam, py::dict kwargs)
 
 DLL_HEADER void ExportNgOCC(py::module &m) 
 {
+  m.attr("occ_version") = OCC_VERSION_COMPLETE;
   py::class_<OCCGeometry, shared_ptr<OCCGeometry>, NetgenGeometry> (m, "OCCGeometry", R"raw_string(Use LoadOCCGeometry to load the geometry from a *.step file.)raw_string")
     .def(py::init<>())
     .def(py::init([] (const string& filename)
