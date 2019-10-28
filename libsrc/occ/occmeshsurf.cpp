@@ -492,10 +492,12 @@ namespace netgen
   } 
 
 
-  Meshing2OCCSurfaces :: Meshing2OCCSurfaces (const TopoDS_Shape & asurf,
+  Meshing2OCCSurfaces :: Meshing2OCCSurfaces (const NetgenGeometry& geo,
+                                              const TopoDS_Shape & asurf,
 					      const Box<3> & abb, int aprojecttype,
                                               const MeshingParameters & mparam)
-    : Meshing2(mparam, Box<3>(abb.PMin(), abb.PMax())), surface(TopoDS::Face(asurf), aprojecttype)
+    : Meshing2(geo, mparam, Box<3>(abb.PMin(), abb.PMax())),
+      surface(TopoDS::Face(asurf), aprojecttype)
   {
     ;
   }

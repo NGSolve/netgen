@@ -41,12 +41,16 @@ class Meshing2
   ///
   double maxarea;
 
-  Vec3d ex, ey;
-  Point3d globp1;
+  Vec3d ex, ey, ez;
+  Point<3> p1, p2;
+
+  const NetgenGeometry& geo;
 
 public:
   ///
-  DLL_HEADER Meshing2 (const MeshingParameters & mp, const Box<3> & aboundingbox);
+  DLL_HEADER Meshing2 (const NetgenGeometry& geo,
+                       const MeshingParameters & mp,
+                       const Box<3> & aboundingbox);
 
   ///
   DLL_HEADER virtual ~Meshing2 ();

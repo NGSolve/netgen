@@ -14,13 +14,14 @@ Meshing2Surfaces :: Meshing2Surfaces (const Surface & asurface)
   ;
 }
   */
-Meshing2Surfaces :: Meshing2Surfaces (const Surface & asurf,
-				      const MeshingParameters & mp,
-				      const Box<3> & abb)
-  : Meshing2(mp, abb), surface(asurf), mparam (mp)
-{
-  ;
-}
+  Meshing2Surfaces :: Meshing2Surfaces (const CSGeometry& geo,
+                                        const Surface & asurf,
+                                        const MeshingParameters & mp,
+                                        const Box<3> & abb)
+    : Meshing2(geo, mp, abb), surface(asurf), mparam (mp)
+  {
+    ;
+  }
 
 
 void Meshing2Surfaces :: DefineTransformation (const Point<3> & p1, const Point<3> & p2,

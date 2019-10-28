@@ -651,7 +651,7 @@ namespace netgen
         
         static Timer tinit("init");
         tinit.Start();
-        Meshing2OCCSurfaces meshing(TopoDS::Face(geom.fmap(k)), bb, projecttype, mparam);
+        Meshing2OCCSurfaces meshing(geom, TopoDS::Face(geom.fmap(k)), bb, projecttype, mparam);
         tinit.Stop();
 
 

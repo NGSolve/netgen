@@ -897,7 +897,7 @@ void STLSurfaceOptimization (STLGeometry & geom,
 
 MeshingSTLSurface :: MeshingSTLSurface (STLGeometry & ageom,
 					const MeshingParameters & mp)
-  : Meshing2(mp, ageom.GetBoundingBox()), geom(ageom)
+  : Meshing2(ageom, mp, ageom.GetBoundingBox()), geom(ageom)
 {
   ;
 }
