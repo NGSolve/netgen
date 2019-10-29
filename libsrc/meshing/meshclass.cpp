@@ -1,7 +1,11 @@
 #include <mystdlib.h>
 #include <atomic>
 #include "meshing.hpp"
+
+#ifdef NG_PYTHON
+// must be included to instantiate Archive::Shallow(NetgenGeometry&)
 #include <core/python_ngcore.hpp>
+#endif
 
 namespace netgen
 {
