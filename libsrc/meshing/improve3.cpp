@@ -556,10 +556,27 @@ double MeshOptimize3d :: SplitImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, Table
           if(mp.only3D_domain_nr != mesh[ei].GetIndex())
               return 0.0;
 
+  if (goal == OPT_LEGAL)
+    {
+      bool all_tets_legal = true;
+      for(auto ei : hasbothpoints)
+          if( !mesh.LegalTet (mesh[ei]) || elerrs[ei] > 1e3)
+              all_tets_legal = false;
+      if(all_tets_legal)
+          return 0.0;
+    }
 
   double bad1 = 0.0;
+  double bad1_max = 0.0;
   for (ElementIndex ei : hasbothpoints)
-      bad1 += CalcBad (mesh.Points(), mesh[ei], 0);
+    {
+      double bad = elerrs[ei];
+      bad1 += bad;
+      bad1_max = max(bad1_max, bad);
+    }
+
+  if(bad1_max < 100.0)
+      return 0.0;
 
   bool puretet = 1;
   for (ElementIndex ei : hasbothpoints)
@@ -598,14 +615,25 @@ double MeshOptimize3d :: SplitImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, Table
   px(1) = pnew.Y();
   px(2) = pnew.Z();
 
-  if (bad1 > 0.1 * badmax)
-      BFGS (px, pf, par);
+  if (bad1_max > 0.1 * badmax)
+    {
+      int pok = pf.Func (px) < 1e10;
+      if (!pok)
+          pok = FindInnerPoint (mesh.Points(), locfaces, pnew);
+
+      if(pok)
+        {
+          px(0) = pnew.X();
+          px(1) = pnew.Y();
+          px(2) = pnew.Z();
+          BFGS (px, pf, par);
+          pnew.X() = px(0);
+          pnew.Y() = px(1);
+          pnew.Z() = px(2);
+        }
+    }
 
   double bad2 = pf.Func (px);
-
-  pnew.X() = px(0);
-  pnew.Y() = px(1);
-  pnew.Z() = px(2);
 
   mesh[ptmp] = Point<3>(pnew);
 
@@ -688,6 +716,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 
   PrintMessage (3, "SplitImprove");
   (*testout)  << "start SplitImprove" << "\n";
+  mesh.BoundaryEdge (1,2); // ensure the boundary-elements table is built
 
   ParallelFor( mesh.VolumeElements().Range(), [&] (ElementIndex ei) NETGEN_LAMBDA_INLINE
     {
@@ -749,7 +778,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
   }
   topt.Stop();
   mesh.Compress();
-  PrintMessage (5, cnt, " splits performed");
+  PrintMessage (1, cnt, " splits performed");
   (*testout) << "Splitt - Improve done" << "\n";
 
   if (goal == OPT_QUALITY)
