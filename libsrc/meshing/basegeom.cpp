@@ -10,6 +10,14 @@ namespace netgen
   GeometryRegister :: ~GeometryRegister()
   { ; }
 
+  Array<Point<3>> GeometryEdge :: GetEquidistantPointArray(size_t npoints) const
+  {
+    Array<Point<3>> pts(npoints);
+    for(auto i : Range(npoints))
+      pts[i] = GetPoint(double(i)/(npoints-1));
+    return pts;
+  }
+
   void GeometryFace :: RestrictHTrig(Mesh& mesh,
                                      const PointGeomInfo& gi0,
                                      const PointGeomInfo& gi1,
@@ -39,9 +47,9 @@ namespace netgen
     if(depth % 3 == 0)
       {
         double curvature = 0.;
-        curvature = max2(max2(curvature, GetCurvature(gi_mid)),
-                         max3(GetCurvature(gi0), GetCurvature(gi1),
-                              GetCurvature(gi2)));
+        curvature = max({curvature, GetCurvature(gi_mid),
+                         GetCurvature(gi0), GetCurvature(gi1),
+                         GetCurvature(gi2)});
         if(curvature < 1e-3)
           return;
         double kappa = curvature * mparam.curvaturesafety;
@@ -138,6 +146,8 @@ namespace netgen
                                    const MeshingParameters& mparam) const
   {
     static Timer t1("MeshEdges"); RegionTimer regt(t1);
+    static Timer tdivide("Divide Edges");
+    static Timer tdivedgesections("Divide edge sections");
 
     // create face descriptors and set bc names
     mesh.SetNBCNames(faces.Size());
@@ -178,26 +188,21 @@ namespace netgen
                 // ignore collapsed edges
                 if(startp == endp && edge->GetLength() < 1e-10 * bounding_box.Diam())
                   continue;
-
-
                 Array<MeshPoint> mps;
                 Array<double> params;
                 // -------------------- DivideEdge -----------------
-                static constexpr int divide_edge_sections = 1000;
+                static constexpr size_t divide_edge_sections = 1000;
+                tdivide.Start();
                 double hvalue[divide_edge_sections+1];
                 hvalue[0] = 0;
 
-                Point<3> oldpnt;
-                auto pnt = edge->GetPoint(0.);
-
                 // calc local h for edge
-                for(auto i : Range(divide_edge_sections))
-                  {
-                    oldpnt = pnt;
-                    pnt = edge->GetPoint(double(i+1)/divide_edge_sections);
-                    hvalue[i+1] = hvalue[i] + 1./mesh.GetH(pnt) * (pnt-oldpnt).Length();
-                  }
+                tdivedgesections.Start();
+                auto edgepts = edge->GetEquidistantPointArray(divide_edge_sections+1);
+                for(auto i : Range(edgepts.Size()-1))
+                  hvalue[i+1] = hvalue[i] + 1./mesh.GetH(edgepts[i+1]) * (edgepts[i+1]-edgepts[i]).Length();
                 int nsubedges = max2(1, int(floor(hvalue[divide_edge_sections]+0.5)));
+                tdivedgesections.Stop();
                 mps.SetSize(nsubedges-1);
                 params.SetSize(nsubedges+1);
 
@@ -207,9 +212,8 @@ namespace netgen
                   {
                     if (hvalue[i1]/hvalue[divide_edge_sections]*nsubedges >= i)
                       {
-                        params[i] = (i1/double(divide_edge_sections));
-                        pnt = edge->GetPoint(params[i]);
-                        mps[i-1] = MeshPoint(pnt);
+                        params[i] = (double(i1)/divide_edge_sections);
+                        mps[i-1] = MeshPoint(edge->GetPoint(params[i]));
                         i++;
                       }
                     i1++;
@@ -233,8 +237,8 @@ namespace netgen
                     params.SetSize (nsubedges);
                     params[nsubedges] = 1.;
                   }
+                tdivide.Stop();
                 // ----------- Add Points to mesh and create segments -----
-
                 Array<PointIndex> pnums(mps.Size() + 2);
                 pnums[0] = startp;
                 pnums[mps.Size()+1] = endp;

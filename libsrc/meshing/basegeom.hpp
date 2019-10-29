@@ -32,6 +32,7 @@ namespace netgen
     virtual double CalcStep(double t, double sag) const = 0;
     virtual bool OrientedLikeGlobal() const = 0;
     virtual size_t GetHash() const = 0;
+    virtual Array<Point<3>> GetEquidistantPointArray(size_t npoints) const;
   };
 
   class GeometryFace
