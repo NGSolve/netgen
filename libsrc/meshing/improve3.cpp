@@ -778,7 +778,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
   }
   topt.Stop();
   mesh.Compress();
-  PrintMessage (1, cnt, " splits performed");
+  PrintMessage (5, cnt, " splits performed");
   (*testout) << "Splitt - Improve done" << "\n";
 
   if (goal == OPT_QUALITY)
