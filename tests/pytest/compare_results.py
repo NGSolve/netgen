@@ -82,7 +82,7 @@ for i,d in enumerate(['badness','#edges','#trigs','#tets']):
     ax = plt.subplot(2,5,6+i)
     plt.title('difference '+d+' (in %)')
 #     plt.violinplot([(y-x)/x for x,y in zip(data[d],data2[d])], showmedians=True)
-    plt.boxplot([(y-x)/x for x,y in zip(data[d],data2[d])])
+    plt.boxplot([100.0*(y-x)/x for x,y in zip(data[d],data2[d])])
     plt.hlines(0.0, 0.5,1.5, linestyle='dotted')
 
 

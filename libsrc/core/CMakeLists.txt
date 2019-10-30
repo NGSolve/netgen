@@ -32,6 +32,7 @@ if(WIN32)
 endif(WIN32)
 
 target_compile_definitions(ngcore PUBLIC $<$<CONFIG:DEBUG>:NETGEN_ENABLE_CHECK_RANGE>)
+target_include_directories(ngcore INTERFACE $<INSTALL_INTERFACE:${NG_INSTALL_DIR_INCLUDE}> $<INSTALL_INTERFACE:${NG_INSTALL_DIR_INCLUDE}/include>)
 
 if(CHECK_RANGE)
   target_compile_definitions(ngcore PUBLIC NETGEN_ENABLE_CHECK_RANGE)
