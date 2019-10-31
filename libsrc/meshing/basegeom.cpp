@@ -10,14 +10,6 @@ namespace netgen
   GeometryRegister :: ~GeometryRegister()
   { ; }
 
-  Array<Point<3>> GeometryEdge :: GetEquidistantPointArray(size_t npoints) const
-  {
-    Array<Point<3>> pts(npoints);
-    for(auto i : Range(npoints))
-      pts[i] = GetPoint(double(i)/(npoints-1));
-    return pts;
-  }
-
   void GeometryFace :: RestrictHTrig(Mesh& mesh,
                                      const PointGeomInfo& gi0,
                                      const PointGeomInfo& gi1,
@@ -148,6 +140,8 @@ namespace netgen
     static Timer t1("MeshEdges"); RegionTimer regt(t1);
     static Timer tdivide("Divide Edges");
     static Timer tdivedgesections("Divide edge sections");
+    const char* savetask = multithread.task;
+    multithread.task = "Mesh Edges";
 
     // create face descriptors and set bc names
     mesh.SetNBCNames(faces.Size());
@@ -196,11 +190,15 @@ namespace netgen
                 double hvalue[divide_edge_sections+1];
                 hvalue[0] = 0;
 
+                Point<3> old_pt = edge->GetPoint(0.);
                 // calc local h for edge
                 tdivedgesections.Start();
-                auto edgepts = edge->GetEquidistantPointArray(divide_edge_sections+1);
-                for(auto i : Range(edgepts.Size()-1))
-                  hvalue[i+1] = hvalue[i] + 1./mesh.GetH(edgepts[i+1]) * (edgepts[i+1]-edgepts[i]).Length();
+                for(auto i : Range(divide_edge_sections))
+                  {
+                    auto pt = edge->GetPoint(double(i+1)/divide_edge_sections);
+                    hvalue[i+1] = hvalue[i] + 1./mesh.GetH(pt) * (pt-old_pt).Length();
+                    old_pt = pt;
+                  }
                 int nsubedges = max2(1, int(floor(hvalue[divide_edge_sections]+0.5)));
                 tdivedgesections.Stop();
                 mps.SetSize(nsubedges-1);
@@ -235,7 +233,7 @@ namespace netgen
                     cout << "CORRECTED" << endl;
                     mps.SetSize (nsubedges-2);
                     params.SetSize (nsubedges);
-                    params[nsubedges] = 1.;
+                    params[nsubedges-1] = 1.;
                   }
                 tdivide.Stop();
                 // ----------- Add Points to mesh and create segments -----
@@ -292,6 +290,8 @@ namespace netgen
               }
           }
       }
+    mesh.CalcSurfacesOfNode();
+    multithread.task = savetask;
   }
 
   void NetgenGeometry :: MeshSurface(Mesh& mesh,
