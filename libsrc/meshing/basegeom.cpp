@@ -95,6 +95,9 @@ namespace netgen
     mesh.SetLocalH(bounding_box.PMin(), bounding_box.PMax(),
                    mparam.grading);
 
+    // only set meshsize for edges longer than this
+    double mincurvelength = 1e-3 * bounding_box.Diam();
+
     if(mparam.uselocalh)
       {
         double eps = 1e-12 * bounding_box.Diam();
@@ -108,7 +111,7 @@ namespace netgen
             const auto & edge = edges[i];
             auto length = edge->GetLength();
             // skip very short edges
-            if(length < eps)
+            if(length < mincurvelength)
               continue;
             static constexpr int npts = 20;
             // restrict mesh size based on edge length

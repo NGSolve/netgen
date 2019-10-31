@@ -280,7 +280,7 @@ namespace netgen
      
     void DoArchive(Archive& ar) override;
 
-    void ProjectPoint(int surfind, Point<3> & p) const override;
+    PointGeomInfo ProjectPoint(int surfind, Point<3> & p) const override;
     void ProjectPointEdge (int surfind, int surfind2, Point<3> & p) const override;
     bool ProjectPointGI (int surfind, Point<3> & p, PointGeomInfo & gi) const override;
     Vec<3> GetNormal(int surfind, const Point<3> & p) const override;

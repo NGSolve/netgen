@@ -72,11 +72,12 @@ namespace netgen
     Clean();
   }
 
-  void CSGeometry :: ProjectPoint(int surfind, Point<3> & p) const
+  PointGeomInfo CSGeometry :: ProjectPoint(int surfind, Point<3> & p) const
   {
     Point<3> hp = p;
     GetSurface(surfind)->Project (hp);
     p = hp;
+    return PointGeomInfo();
   }
 
   bool CSGeometry :: ProjectPointGI(int surfind, Point<3> & p, PointGeomInfo & gi) const

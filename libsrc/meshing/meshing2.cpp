@@ -176,7 +176,7 @@ namespace netgen
   {
     locpoint = p1 + (h*plainpoint(0)) * ex + (h* plainpoint(1)) * ey;
     if (!geo.ProjectPointGI(gi.trignum, locpoint, gi))
-      geo.ProjectPoint(gi.trignum, locpoint);
+      gi = geo.ProjectPoint(gi.trignum, locpoint);
     return 0;
   }
 

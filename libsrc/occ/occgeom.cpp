@@ -1034,7 +1034,7 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
       SetCenter();
    }
 
-   void OCCGeometry :: ProjectPoint(int surfi, Point<3> & p) const
+   PointGeomInfo OCCGeometry :: ProjectPoint(int surfi, Point<3> & p) const
    {
       static int cnt = 0;
       if (++cnt % 1000 == 0) cout << "Project cnt = " << cnt << endl;
@@ -1048,9 +1048,12 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
       suval.Coord( u, v);
       pnt = thesurf->Value( u, v );
 
-
+      PointGeomInfo gi;
+      gi.trignum = surfi;
+      gi.u = u;
+      gi.v = v;
       p = Point<3> (pnt.X(), pnt.Y(), pnt.Z());
-
+      return gi;
    }
 
   bool OCCGeometry :: ProjectPointGI(int surfind, Point<3>& p, PointGeomInfo& gi) const

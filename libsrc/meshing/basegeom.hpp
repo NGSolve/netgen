@@ -50,7 +50,7 @@ namespace netgen
     virtual size_t GetNBoundaries() const = 0;
     virtual Array<unique_ptr<GeometryEdge>> GetBoundary(size_t index) const = 0;
     virtual string GetName() const { return "default"; }
-    virtual void Project(Point<3>& p) const = 0;
+    virtual PointGeomInfo Project(Point<3>& p) const = 0;
     // Project point using geo info. Fast if point is close to
     // parametrization in geo info.
     virtual bool ProjectPointGI(Point<3>& p, PointGeomInfo& gi) const =0;
@@ -124,9 +124,9 @@ namespace netgen
 
     virtual void FinalizeMesh(Mesh& mesh) const {}
 
-    virtual void ProjectPoint (int surfind, Point<3> & p) const
+    virtual PointGeomInfo ProjectPoint (int surfind, Point<3> & p) const
     {
-      faces[surfind-1]->Project(p);
+      return faces[surfind-1]->Project(p);
     }
 
     virtual void ProjectPointEdge (int surfind, int surfind2, Point<3> & p) const
