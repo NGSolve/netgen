@@ -98,10 +98,14 @@ namespace netgen
     if(mparam.uselocalh)
       {
         double eps = 1e-12 * bounding_box.Diam();
+        const char* savetask = multithread.task;
+        multithread.task = "Analyse Edges";
 
         // restrict meshsize on edges
-        for(const auto & edge : edges)
+        for(auto i : Range(edges))
           {
+            multithread.percent = 100. * i/edges.Size();
+            const auto & edge = edges[i];
             auto length = edge->GetLength();
             // skip very short edges
             if(length < eps)
@@ -127,9 +131,15 @@ namespace netgen
               }
           }
 
+        multithread.task = "Analyse Faces";
         // restrict meshsize on faces
-        for(const auto& face : faces)
-          face->RestrictH(mesh, mparam);
+        for(auto i : Range(faces))
+          {
+            multithread.percent = 100. * i/faces.Size();
+            const auto& face = faces[i];
+            face->RestrictH(mesh, mparam);
+          }
+        multithread.task = savetask;
       }
     mesh.LoadLocalMeshSize(mparam.meshsizefilename);
   }
