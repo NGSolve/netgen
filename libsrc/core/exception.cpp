@@ -14,6 +14,7 @@
 #include <memory>
 #include <cxxabi.h>
 #include <signal.h>
+#include <vector>
 
 namespace ngcore
 {
@@ -104,11 +105,11 @@ namespace ngcore
 
       if(!funcname.empty())
       {
-        std::array<char, 256> buffer;
+        std::vector<char> buffer(10240);
         int status;
         size_t size = buffer.size();
-        abi::__cxa_demangle(funcname.c_str(), buffer.data(), &size, &status);
-        out << "in " << yellow << buffer.data() << reset_shell << '\n';
+        abi::__cxa_demangle(funcname.c_str(), &buffer[0], &size, &status);
+        out << "in " << yellow << &buffer[0] << reset_shell << '\n';
 
         std::string nm_command = "nm " + libname + " | grep " + funcname + " | cut -f 1 -d ' '";
         std::string output;
@@ -145,12 +146,12 @@ namespace ngcore
   {
     std::cerr << "Collecting backtrace..." << std::endl;
     std::stringstream result;
-    void *bt[1024];
+    void *bt[100];
     int bt_size;
     char **bt_syms;
     int i;
 
-    bt_size = backtrace(bt, 1024);
+    bt_size = backtrace(bt, 100);
     bt_syms = backtrace_symbols(bt, bt_size);
     Dl_info info;
     for (i = 1; i < bt_size-1; i++)
