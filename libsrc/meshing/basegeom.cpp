@@ -171,6 +171,7 @@ namespace netgen
             auto boundary = face.GetBoundary(facebndnr);
             for(auto enr : Range(boundary))
               {
+                multithread.percent = 100. * ((double(enr)/boundary.Size() + facebndnr)/face.GetNBoundaries() + facenr)/faces.Size();
                 const auto& oriented_edge = *boundary[enr];
                 auto edgenr = GetEdgeIndex(oriented_edge);
                 const auto& edge = edges[edgenr];
@@ -298,10 +299,13 @@ namespace netgen
                                      const MeshingParameters& mparam) const
   {
     static Timer t1("Surface Meshing"); RegionTimer regt(t1);
+    const char* savetask = multithread.task;
+    multithread.task = "Mesh Surface";
 
     Array<int, PointIndex> glob2loc(mesh.GetNP());
     for(auto k : Range(faces))
       {
+        multithread.percent = 100. * k/faces.Size();
         const auto& face = *faces[k];
         auto bb = face.GetBoundingBox();
         bb.Increase(bb.Diam()/10);
@@ -354,6 +358,7 @@ namespace netgen
             mesh.SurfaceElements()[i].SetIndex(k+1);
           }
       }
+    multithread.task = savetask;
   }
 
   void NetgenGeometry :: OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam) const
@@ -366,9 +371,11 @@ namespace netgen
     auto meshopt = MeshOptimize2d(mesh);
     for(auto i : Range(mparam.optsteps2d))
       {
-        PrintMessage(2, "Optimization step ", i);
+        PrintMessage(3, "Optimization step ", i);
+        int innerstep = 0;
         for(auto optstep : mparam.optimize2d)
           {
+            multithread.percent = 100. * (double(innerstep++)/mparam.optimize2d.size() + i)/mparam.optsteps2d;
             switch(optstep)
               {
               case 's':
