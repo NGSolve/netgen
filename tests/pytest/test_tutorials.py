@@ -41,8 +41,8 @@ def checkData(mesh, mp, ref):
     assert ref['ne3d'] == data['ne3d']
     assert json.loads(ref['quality_histogram']) == pytest.approx(json.loads(data['quality_histogram']), abs=1, rel=0.4)
     assert ref['total_badness'] == pytest.approx(data['total_badness'], rel=1e-5)
-    assert ref['angles_trig'] == pytest.approx(data['angles_trig'], rel=1e-5)
-    assert ref['angles_tet'] == pytest.approx(data['angles_tet'], rel=1e-5)
+    assert ref['angles_trig'] == pytest.approx(data['angles_trig'], rel=1e-4)
+    assert ref['angles_tet'] == pytest.approx(data['angles_tet'], rel=1e-4)
 
 # get tutorials
 def getFiles(fileEnding):
