@@ -32,7 +32,7 @@ namespace netgen
     virtual double CalcStep(double t, double sag) const = 0;
     virtual bool OrientedLikeGlobal() const = 0;
     virtual size_t GetHash() const = 0;
-    virtual void ProjectPoint(Point<3>& p, EdgePointGeomInfo& gi) const = 0;
+    virtual void ProjectPoint(Point<3>& p, EdgePointGeomInfo* gi) const = 0;
     virtual void PointBetween(const Point<3>& p1,
                               const Point<3>& p2,
                               double secpoint,
@@ -65,14 +65,8 @@ namespace netgen
     virtual double GetCurvature(const PointGeomInfo& gi) const = 0;
 
     virtual void RestrictH(Mesh& mesh, const MeshingParameters& mparam) const = 0;
-    virtual Vec<3> GetNormal(const Point<3>& p) const
-    {
-      return {0.,0.,1.};
-    }
-    virtual Vec<3> GetNormal(const Point<3>& p, const PointGeomInfo& gi) const
-    {
-      return GetNormal(p);
-    }
+    virtual Vec<3> GetNormal(const Point<3>& p, const PointGeomInfo* gi = nullptr) const = 0;
+
     virtual void PointBetween(const Point<3>& p1,
                               const Point<3>& p2,
                               double secpoint,
@@ -129,13 +123,9 @@ namespace netgen
       return faces[surfind-1]->Project(p);
     }
 
-    virtual void ProjectPointEdge (int surfind, int surfind2, Point<3> & p) const
-    {
-      throw Exception("In ProjectPointEdge of basegeometry");
-    }
-  virtual void ProjectPointEdge (int surfind, int surfind2, Point<3> & p, EdgePointGeomInfo& gi) const
+  virtual void ProjectPointEdge (int surfind, int surfind2, Point<3> & p, EdgePointGeomInfo* gi = nullptr) const
   {
-    edges[gi.edgenr]->ProjectPoint(p, gi);
+    edges[gi->edgenr]->ProjectPoint(p, gi);
   }
 
     virtual bool CalcPointGeomInfo(int surfind, PointGeomInfo& gi, const Point<3> & p3) const
@@ -147,15 +137,8 @@ namespace netgen
       return faces[surfind-1]->ProjectPointGI(p, gi);
     }
 
-    virtual Vec<3> GetNormal(int surfind, const Point<3> & p) const
-    { return faces[surfind-1]->GetNormal(p); }
-    virtual Vec<3> GetNormal(int surfind, const Point<3> & p, const PointGeomInfo & gi) const
+    virtual Vec<3> GetNormal(int surfind, const Point<3> & p, const PointGeomInfo* gi = nullptr) const
     { return faces[surfind-1]->GetNormal(p, gi); }
-    [[deprecated]]
-    void GetNormal(int surfind, const Point<3> & p, Vec<3> & n) const
-    {
-      n = GetNormal(surfind, p);
-    }
 
     virtual void PointBetween (const Point<3> & p1,
                                const Point<3> & p2, double secpoint,

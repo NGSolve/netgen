@@ -190,8 +190,10 @@ namespace netgen
 
     PointGeomInfo ProjectPoint(INDEX surfind, Point<3> & p) const override;
     bool ProjectPointGI (int surfind, Point<3> & p, PointGeomInfo & gi) const override;
-    void ProjectPointEdge(INDEX surfind, INDEX surfind2, Point<3> & p) const override;
-    Vec<3> GetNormal(int surfind, const Point<3> & p) const override;
+    void ProjectPointEdge(INDEX surfind, INDEX surfind2, Point<3> & p,
+                          EdgePointGeomInfo* gi = nullptr) const override;
+    Vec<3> GetNormal(int surfind, const Point<3> & p, const PointGeomInfo* gi = nullptr) const override;
+
     void PointBetween(const Point<3> & p1, const Point<3> & p2,
                       double secpoint, int surfi,
                       const PointGeomInfo & gi1,

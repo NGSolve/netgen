@@ -86,7 +86,7 @@ namespace netgen
   }
 
   Vec<3> SplineGeometry2d :: GetNormal(int surfi1, const Point<3> & p,
-                                       const PointGeomInfo & gi) const
+                                       const PointGeomInfo* gi) const
   {
     return Vec<3> (0,0,1);
   }

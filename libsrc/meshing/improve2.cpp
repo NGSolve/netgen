@@ -85,11 +85,11 @@ namespace netgen
     nv1.Normalize();
     nv2.Normalize();
 
-    auto nvp3 = geo.GetNormal (surfnr, mesh.Point(pi3), gi3);
+    auto nvp3 = geo.GetNormal (surfnr, mesh.Point(pi3), &gi3);
 
     nvp3.Normalize();
 
-    auto nvp4 = geo.GetNormal (surfnr, mesh.Point(pi4), gi4);
+    auto nvp4 = geo.GetNormal (surfnr, mesh.Point(pi4), &gi4);
 
     nvp4.Normalize();
 
@@ -648,7 +648,7 @@ namespace netgen
                     {
                       const int faceindex = hel.GetIndex();
                       const int surfnr = mesh.GetFaceDescriptor (faceindex).SurfNr();
-                      normals[pi] = geo.GetNormal (surfnr, mesh[pi], hel.GeomInfoPi(k+1));
+                      normals[pi] = geo.GetNormal (surfnr, mesh[pi], &hel.GeomInfoPi(k+1));
                       break;
                     }
               }

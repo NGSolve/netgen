@@ -182,7 +182,7 @@ namespace netgen
     Vec<3> GetTangent (const Point<3> & p, int surfi1, int surfi2,
                        const EdgePointGeomInfo & ap1) const override;
     Vec<3> GetNormal(int surfi1, const Point<3> & p,
-                     const PointGeomInfo & gi) const override;
+                     const PointGeomInfo* gi) const override;
 
     const SplineSegExt & GetSpline (const int i) const 
     { 

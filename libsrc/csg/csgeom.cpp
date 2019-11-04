@@ -87,7 +87,7 @@ namespace netgen
   }
 
   void CSGeometry :: ProjectPointEdge(int surfind, INDEX surfind2,
-                                                Point<3> & p) const
+                                      Point<3> & p, EdgePointGeomInfo* /*unused*/) const
   {
     Point<3> hp = p;
     ProjectToEdge (GetSurface(surfind),
@@ -96,7 +96,8 @@ namespace netgen
   }
 
 
-  Vec<3> CSGeometry :: GetNormal(int surfind, const Point<3> & p) const
+  Vec<3> CSGeometry :: GetNormal(int surfind, const Point<3> & p,
+                                 const PointGeomInfo* /*unused*/) const
   {
     Vec<3> hn;
     GetSurface(surfind)->CalcGradient(p, hn);

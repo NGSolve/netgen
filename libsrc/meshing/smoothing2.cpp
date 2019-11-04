@@ -218,7 +218,7 @@ namespace netgen
     {
       double badness = 0;
       
-      auto n = geo.GetNormal(ld.surfi, ld.sp1, ld.gi1);
+      auto n = geo.GetNormal(ld.surfi, ld.sp1, &ld.gi1);
       Point<3> pp1 = ld.sp1 + x(0) * ld.t1 + x(1) * ld.t2;
       
       for (int j = 0; j < ld.locelements.Size(); j++)
@@ -359,7 +359,7 @@ namespace netgen
     vgrad = 0;
     double badness = 0;
 
-    auto n = geo.GetNormal(ld.surfi, ld.sp1, ld.gi1);
+    auto n = geo.GetNormal(ld.surfi, ld.sp1, &ld.gi1);
     pp1 = ld.sp1 + x(0) * ld.t1 + x(1) * ld.t2;
 
     //  meshthis -> ProjectPoint (surfi, pp1);
@@ -414,7 +414,7 @@ namespace netgen
     vgrad = 0;
     double badness = 0;
 
-    auto n = geo.GetNormal(ld.surfi, ld.sp1, ld.gi1);
+    auto n = geo.GetNormal(ld.surfi, ld.sp1, &ld.gi1);
     pp1 = ld.sp1 + x(0) * ld.t1 + x(1) * ld.t2;
 
     for (int j = 0; j < ld.locelements.Size(); j++)
@@ -577,7 +577,7 @@ namespace netgen
     vgrad = 0;
     badness = 0;
 
-    auto n = geo.GetNormal(ld.surfi, ld.sp1, ld.gi1);
+    // auto n = geo.GetNormal(ld.surfi, ld.sp1, &ld.gi1);
 
     pp1 = ld.sp1 + x(0) * ld.t1 + x(1) * ld.t2;
 
@@ -933,7 +933,7 @@ namespace netgen
 	      }
 
 
-          ld.normal = geo.GetNormal(ld.surfi, ld.sp1, ld.gi1);
+          ld.normal = geo.GetNormal(ld.surfi, ld.sp1, &ld.gi1);
 	  ld.t1 = ld.normal.GetNormal ();
 	  ld.t2 = Cross (ld.normal, ld.t1);
 	  

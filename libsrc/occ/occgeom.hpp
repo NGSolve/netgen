@@ -281,10 +281,10 @@ namespace netgen
     void DoArchive(Archive& ar) override;
 
     PointGeomInfo ProjectPoint(int surfind, Point<3> & p) const override;
-    void ProjectPointEdge (int surfind, int surfind2, Point<3> & p) const override;
+    void ProjectPointEdge (int surfind, int surfind2, Point<3> & p,
+                           EdgePointGeomInfo* gi = nullptr) const override;
     bool ProjectPointGI (int surfind, Point<3> & p, PointGeomInfo & gi) const override;
-    Vec<3> GetNormal(int surfind, const Point<3> & p) const override;
-    Vec<3> GetNormal(int surfind, const Point<3> & p, const PointGeomInfo & gi) const override;
+    Vec<3> GetNormal(int surfind, const Point<3> & p, const PointGeomInfo* gi) const override;
     bool CalcPointGeomInfo(int surfind, PointGeomInfo& gi, const Point<3> & p3) const override;
 
     void PointBetweenEdge(const Point<3> & p1, const Point<3> & p2, double secpoint,
