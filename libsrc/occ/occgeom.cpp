@@ -1034,7 +1034,7 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
       SetCenter();
    }
 
-   void OCCGeometry :: ProjectPoint(int surfi, Point<3> & p) const
+   PointGeomInfo OCCGeometry :: ProjectPoint(int surfi, Point<3> & p) const
    {
       static int cnt = 0;
       if (++cnt % 1000 == 0) cout << "Project cnt = " << cnt << endl;
@@ -1048,9 +1048,12 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
       suval.Coord( u, v);
       pnt = thesurf->Value( u, v );
 
-
+      PointGeomInfo gi;
+      gi.trignum = surfi;
+      gi.u = u;
+      gi.v = v;
       p = Point<3> (pnt.X(), pnt.Y(), pnt.Z());
-
+      return gi;
    }
 
   bool OCCGeometry :: ProjectPointGI(int surfind, Point<3>& p, PointGeomInfo& gi) const
@@ -1069,7 +1072,7 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
   }
 
   void OCCGeometry :: ProjectPointEdge(int surfind, INDEX surfind2,
-						   Point<3> & p) const
+                                       Point<3> & p, EdgePointGeomInfo* gi) const
   {
     TopExp_Explorer exp0, exp1;
     bool done = false;
@@ -1151,26 +1154,25 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
       return true;
    }
 
-  Vec<3> OCCGeometry :: GetNormal(int surfind, const Point<3> & p, const PointGeomInfo & geominfo) const
+  Vec<3> OCCGeometry :: GetNormal(int surfind, const Point<3> & p, const PointGeomInfo* geominfo) const
   {
-    gp_Pnt pnt;
-    gp_Vec du, dv;
+    if(geominfo)
+      {
+        gp_Pnt pnt;
+        gp_Vec du, dv;
 
-    Handle(Geom_Surface) occface;
-    occface = BRep_Tool::Surface(TopoDS::Face(fmap(surfind)));
+        Handle(Geom_Surface) occface;
+        occface = BRep_Tool::Surface(TopoDS::Face(fmap(surfind)));
 
-    occface->D1(geominfo.u,geominfo.v,pnt,du,dv);
+        occface->D1(geominfo->u,geominfo->v,pnt,du,dv);
 
-    auto n = Cross (Vec<3>(du.X(), du.Y(), du.Z()),
-	       Vec<3>(dv.X(), dv.Y(), dv.Z()));
-    n.Normalize();
+        auto n = Cross (Vec<3>(du.X(), du.Y(), du.Z()),
+                        Vec<3>(dv.X(), dv.Y(), dv.Z()));
+        n.Normalize();
 
-    if (fmap(surfind).Orientation() == TopAbs_REVERSED) n *= -1;
-    return n;
-  }
-
-  Vec<3> OCCGeometry :: GetNormal(int surfind, const Point<3> & p) const
-  {
+        if (fmap(surfind).Orientation() == TopAbs_REVERSED) n *= -1;
+        return n;
+      }
     Standard_Real u,v;
 
     gp_Pnt pnt(p(0), p(1), p(2));

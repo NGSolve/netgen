@@ -1164,7 +1164,7 @@ void Mesh :: ImproveMesh (const CSG eometry & geometry, OPTIMIZEGOAL goal)
     }
 
   const char * savetask = multithread.task;
-  multithread.task = "Smooth Mesh";
+  multithread.task = "Optimize Volume: Smooth Mesh";
 
 
   TABLE<INDEX> surfelementsonpoint(points.Size());
@@ -1398,7 +1398,7 @@ void Mesh :: ImproveMeshSequential (const MeshingParameters & mp, OPTIMIZEGOAL g
 
 
   const char * savetask = multithread.task;
-  multithread.task = "Smooth Mesh";
+  multithread.task = "Optimize Volume: Smooth Mesh";
 
   for (PointIndex pi : points.Range())
     if ( (*this)[pi].Type() == INNERPOINT )
@@ -1524,7 +1524,7 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
     }
 
   const char * savetask = multithread.task;
-  multithread.task = "Smooth Mesh";
+  multithread.task = "Optimize Volume: Smooth Mesh";
 
   topt.Start();
   int counter = 0;
@@ -1659,7 +1659,7 @@ void Mesh :: ImproveMeshJacobian (const MeshingParameters & mp,
 
 
   const char * savetask = multithread.task;
-  multithread.task = "Smooth Mesh Jacobian";
+  multithread.task = "Optimize Volume: Smooth Mesh Jacobian";
   
   // for (PointIndex pi = points.Begin(); i < points.End(); pi++)
   for (PointIndex pi : points.Range())
@@ -1815,7 +1815,7 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
 
 
   const char * savetask = multithread.task;
-  multithread.task = "Smooth Mesh Jacobian";
+  multithread.task = "Optimize Volume: Smooth Mesh Jacobian";
   
   // for (PointIndex pi = points.Begin(); pi <= points.End(); pi++)
   for (PointIndex pi : points.Range())

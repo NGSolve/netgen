@@ -142,8 +142,8 @@ namespace netgen
   {
     p1 = ap1;
     p2 = ap2;
-    auto n1 = geo.GetNormal(gi1->trignum, p1, *gi1);
-    auto n2 = geo.GetNormal(gi2->trignum, p2, *gi2);
+    auto n1 = geo.GetNormal(gi1->trignum, p1, gi1);
+    auto n2 = geo.GetNormal(gi2->trignum, p2, gi2);
 
     ez = 0.5 * (n1+n2);
     ez.Normalize();
@@ -158,7 +158,7 @@ namespace netgen
 				     Point<2> & plainpoint, double h, int & zone)
   {
     auto& gi = geominfo.GetPGI(1);
-    auto n = geo.GetNormal(gi.trignum, locpoint, gi);
+    auto n = geo.GetNormal(gi.trignum, locpoint, &gi);
     auto p1p = locpoint - p1;
     plainpoint(0) = (p1p * ex) / h;
     plainpoint(1) = (p1p * ey) / h;
@@ -176,7 +176,7 @@ namespace netgen
   {
     locpoint = p1 + (h*plainpoint(0)) * ex + (h* plainpoint(1)) * ey;
     if (!geo.ProjectPointGI(gi.trignum, locpoint, gi))
-      geo.ProjectPoint(gi.trignum, locpoint);
+      gi = geo.ProjectPoint(gi.trignum, locpoint);
     return 0;
   }
 

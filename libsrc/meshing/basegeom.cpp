@@ -10,14 +10,6 @@ namespace netgen
   GeometryRegister :: ~GeometryRegister()
   { ; }
 
-  Array<Point<3>> GeometryEdge :: GetEquidistantPointArray(size_t npoints) const
-  {
-    Array<Point<3>> pts(npoints);
-    for(auto i : Range(npoints))
-      pts[i] = GetPoint(double(i)/(npoints-1));
-    return pts;
-  }
-
   void GeometryFace :: RestrictHTrig(Mesh& mesh,
                                      const PointGeomInfo& gi0,
                                      const PointGeomInfo& gi1,
@@ -103,16 +95,23 @@ namespace netgen
     mesh.SetLocalH(bounding_box.PMin(), bounding_box.PMax(),
                    mparam.grading);
 
+    // only set meshsize for edges longer than this
+    double mincurvelength = 1e-3 * bounding_box.Diam();
+
     if(mparam.uselocalh)
       {
         double eps = 1e-12 * bounding_box.Diam();
+        const char* savetask = multithread.task;
+        multithread.task = "Analyse Edges";
 
         // restrict meshsize on edges
-        for(const auto & edge : edges)
+        for(auto i : Range(edges))
           {
+            multithread.percent = 100. * i/edges.Size();
+            const auto & edge = edges[i];
             auto length = edge->GetLength();
             // skip very short edges
-            if(length < eps)
+            if(length < mincurvelength)
               continue;
             static constexpr int npts = 20;
             // restrict mesh size based on edge length
@@ -135,9 +134,15 @@ namespace netgen
               }
           }
 
+        multithread.task = "Analyse Faces";
         // restrict meshsize on faces
-        for(const auto& face : faces)
-          face->RestrictH(mesh, mparam);
+        for(auto i : Range(faces))
+          {
+            multithread.percent = 100. * i/faces.Size();
+            const auto& face = faces[i];
+            face->RestrictH(mesh, mparam);
+          }
+        multithread.task = savetask;
       }
     mesh.LoadLocalMeshSize(mparam.meshsizefilename);
   }
@@ -148,6 +153,8 @@ namespace netgen
     static Timer t1("MeshEdges"); RegionTimer regt(t1);
     static Timer tdivide("Divide Edges");
     static Timer tdivedgesections("Divide edge sections");
+    const char* savetask = multithread.task;
+    multithread.task = "Mesh Edges";
 
     // create face descriptors and set bc names
     mesh.SetNBCNames(faces.Size());
@@ -177,6 +184,7 @@ namespace netgen
             auto boundary = face.GetBoundary(facebndnr);
             for(auto enr : Range(boundary))
               {
+                multithread.percent = 100. * ((double(enr)/boundary.Size() + facebndnr)/face.GetNBoundaries() + facenr)/faces.Size();
                 const auto& oriented_edge = *boundary[enr];
                 auto edgenr = GetEdgeIndex(oriented_edge);
                 const auto& edge = edges[edgenr];
@@ -196,11 +204,15 @@ namespace netgen
                 double hvalue[divide_edge_sections+1];
                 hvalue[0] = 0;
 
+                Point<3> old_pt = edge->GetPoint(0.);
                 // calc local h for edge
                 tdivedgesections.Start();
-                auto edgepts = edge->GetEquidistantPointArray(divide_edge_sections+1);
-                for(auto i : Range(edgepts.Size()-1))
-                  hvalue[i+1] = hvalue[i] + 1./mesh.GetH(edgepts[i+1]) * (edgepts[i+1]-edgepts[i]).Length();
+                for(auto i : Range(divide_edge_sections))
+                  {
+                    auto pt = edge->GetPoint(double(i+1)/divide_edge_sections);
+                    hvalue[i+1] = hvalue[i] + 1./mesh.GetH(pt) * (pt-old_pt).Length();
+                    old_pt = pt;
+                  }
                 int nsubedges = max2(1, int(floor(hvalue[divide_edge_sections]+0.5)));
                 tdivedgesections.Stop();
                 mps.SetSize(nsubedges-1);
@@ -235,7 +247,7 @@ namespace netgen
                     cout << "CORRECTED" << endl;
                     mps.SetSize (nsubedges-2);
                     params.SetSize (nsubedges);
-                    params[nsubedges] = 1.;
+                    params[nsubedges-1] = 1.;
                   }
                 tdivide.Stop();
                 // ----------- Add Points to mesh and create segments -----
@@ -292,16 +304,21 @@ namespace netgen
               }
           }
       }
+    mesh.CalcSurfacesOfNode();
+    multithread.task = savetask;
   }
 
   void NetgenGeometry :: MeshSurface(Mesh& mesh,
                                      const MeshingParameters& mparam) const
   {
     static Timer t1("Surface Meshing"); RegionTimer regt(t1);
+    const char* savetask = multithread.task;
+    multithread.task = "Mesh Surface";
 
     Array<int, PointIndex> glob2loc(mesh.GetNP());
     for(auto k : Range(faces))
       {
+        multithread.percent = 100. * k/faces.Size();
         const auto& face = *faces[k];
         auto bb = face.GetBoundingBox();
         bb.Increase(bb.Diam()/10);
@@ -354,6 +371,7 @@ namespace netgen
             mesh.SurfaceElements()[i].SetIndex(k+1);
           }
       }
+    multithread.task = savetask;
   }
 
   void NetgenGeometry :: OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam) const
@@ -366,9 +384,11 @@ namespace netgen
     auto meshopt = MeshOptimize2d(mesh);
     for(auto i : Range(mparam.optsteps2d))
       {
-        PrintMessage(2, "Optimization step ", i);
+        PrintMessage(3, "Optimization step ", i);
+        int innerstep = 0;
         for(auto optstep : mparam.optimize2d)
           {
+            multithread.percent = 100. * (double(innerstep++)/mparam.optimize2d.size() + i)/mparam.optsteps2d;
             switch(optstep)
               {
               case 's':

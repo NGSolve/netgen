@@ -839,8 +839,8 @@ namespace netgen
 		{
 		  Point<3> pm = Center (p1, p2);
 
-		  Vec<3> n1 = geo.GetNormal (surfnr[e], p1, gi0[e]);
-		  Vec<3> n2 = geo.GetNormal (surfnr[e], p2, gi1[e]);
+		  Vec<3> n1 = geo.GetNormal (surfnr[e], p1, &gi0[e]);
+		  Vec<3> n2 = geo.GetNormal (surfnr[e], p2, &gi1[e]);
 
 		  // p3 = pm + alpha1 n1 + alpha2 n2
 		
@@ -1084,7 +1084,7 @@ namespace netgen
 		  v05 /= 1 + (w-1) * 0.5;
 		  Point<3> p05 (v05), pp05(v05);
 		  geo.ProjectPointEdge(edge_surfnr1[edgenr], edge_surfnr2[edgenr], pp05,
-                                       edge_gi0[edgenr]);
+                                       &edge_gi0[edgenr]);
 		  double d = Dist (pp05, p05);
 
 		  if (d < dold)

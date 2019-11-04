@@ -183,7 +183,7 @@ void MeshOptimize3d :: CombineImproveSequential (Mesh & mesh,
 
   //  mesh.CalcSurfacesOfNode ();
   const char * savetask = multithread.task;
-  multithread.task = "Combine Improve";
+  multithread.task = "Optimize Volume: Combine Improve";
 
 
   double totalbad = 0;
@@ -435,7 +435,7 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 
   //  mesh.CalcSurfacesOfNode ();
   const char * savetask = multithread.task;
-  multithread.task = "Combine Improve";
+  multithread.task = "Optimize Volume: Combine Improve";
 
 
   tbad.Start();
@@ -712,7 +712,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
   Array<double> elerrs(ne);
 
   const char * savetask = multithread.task;
-  multithread.task = "Split Improve";
+  multithread.task = "Optimize Volume: Split Improve";
 
   PrintMessage (3, "SplitImprove");
   (*testout)  << "start SplitImprove" << "\n";
@@ -826,7 +826,7 @@ void MeshOptimize3d :: SplitImproveSequential (Mesh & mesh,
   illegaltet.Clear();
 
   const char * savetask = multithread.task;
-  multithread.task = "Split Improve";
+  multithread.task = "Optimize Volume: Split Improve";
 
   PrintMessage (3, "SplitImprove");
   (*testout)  << "start SplitImprove" << "\n";
@@ -1121,7 +1121,7 @@ void MeshOptimize3d :: SwapImproveSequential (Mesh & mesh, OPTIMIZEGOAL goal,
   (*testout) << "\n" << "Start SwapImprove" << endl;
 
   const char * savetask = multithread.task;
-  multithread.task = "Swap Improve";
+  multithread.task = "Optimize Volume: Swap Improve";
   
   //  mesh.CalcSurfacesOfNode ();
     
@@ -2617,7 +2617,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
   (*testout) << "\n" << "Start SwapImprove" << endl;
 
   const char * savetask = multithread.task;
-  multithread.task = "Swap Improve";
+  multithread.task = "Optimize Volume: Swap Improve";
 
   INDEX_3_HASHTABLE<int> faces(mesh.GetNOpenElements()/3 + 2);
   if (goal == OPT_CONFORM)

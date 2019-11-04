@@ -397,7 +397,7 @@ namespace netgen
 		// calc metric badness
 		double bad1 = 0, bad2 = 0;
 		// SelectSurfaceOfPoint (mesh.Point(pmap.Get(1)), pgi.Get(1));
-		auto n = geo.GetNormal(surfnr, mesh.Point(pmap.Get(1)), pgi.Elem(1));
+		auto n = geo.GetNormal(surfnr, mesh.Point(pmap.Get(1)), &pgi.Elem(1));
 		  
 		for (int j = 0; j < rule.oldels.Size(); j++)
 		  bad1 += mesh[elmap[j]].CalcJacobianBadness (mesh.Points(), n);
