@@ -1283,6 +1283,10 @@ namespace netgen
 
     mparam.parallel_meshing = atoi (Tcl_GetVar (interp, "::options.parallel_meshing", 0));
     mparam.nthreads = atoi (Tcl_GetVar (interp, "::options.nthreads", 0));
+    if(atoi(Tcl_GetVar (interp, "::stloptions.resthcloseedgeenable", 0)))
+      mparam.closeedgefac = atof(Tcl_GetVar (interp, "::stloptions.resthcloseedgefac", 0));
+    else
+      mparam.closeedgefac = {};
 
     //BaseMoveableMem::totalsize = 0;
     // 1048576 * atoi (Tcl_GetVar (interp, "::options.memory", 0));

@@ -856,8 +856,8 @@ namespace nglib
 
       mp->Transfer_Parameters();
       
-      occparam.resthcloseedgeenable = mp->closeedgeenable;
-      occparam.resthcloseedgefac = mp->closeedgefact;
+      if(mp->closeedgeenable)
+        mparam.closeedgefac = mp->closeedgefact;
 
       // Delete the mesh structures in order to start with a clean 
       // slate

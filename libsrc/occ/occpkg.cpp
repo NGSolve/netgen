@@ -45,11 +45,7 @@ namespace netgen
 
     virtual void SetParameters (Tcl_Interp * interp) 
     {
-      occparam.resthcloseedgefac =
-	atof (Tcl_GetVar (interp, "::stloptions.resthcloseedgefac", 0));
-      occparam.resthcloseedgeenable =
-	atoi (Tcl_GetVar (interp, "::stloptions.resthcloseedgeenable", 0));
-	  occparam.resthminedgelen = 
+      occparam.resthminedgelen = 
 	atof (Tcl_GetVar (interp, "::stloptions.resthminedgelen", 0));
 	  occparam.resthminedgelenenable = 
 	atoi (Tcl_GetVar (interp, "::stloptions.resthminedgelenenable", 0));

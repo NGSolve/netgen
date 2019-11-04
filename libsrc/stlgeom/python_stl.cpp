@@ -87,17 +87,6 @@ void CreateSTLParametersFromKwargs(STLParameters& stlparam, py::dict kwargs)
       stlparam.resthchartdistfac = py::cast<double>(val);
     }
   }
-  if(kwargs.contains("closeedgefac"))
-  {
-    auto val = kwargs.attr("pop")("closeedgefac");
-    if(val.is_none())
-      stlparam.resthcloseedgeenable = false;
-    else
-    {
-      stlparam.resthcloseedgeenable = true;
-      stlparam.resthcloseedgefac = py::cast<double>(val);
-    }
-  }
   if(kwargs.contains("edgeanglefac"))
   {
     auto val = kwargs.attr("pop")("edgeanglefac");

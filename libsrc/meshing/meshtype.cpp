@@ -2801,7 +2801,9 @@ namespace netgen
         << " elementorder = " <<  elementorder << endl
         << " quad = " <<  quad << endl
         << " inverttets = " <<  inverttets << endl
-        << " inverttrigs = " <<  inverttrigs << endl;
+        << " inverttrigs = " <<  inverttrigs << endl
+        << "closeedge enabled = " << closeedgefac.has_value() << endl
+        << "closeedgefac = " << (closeedgefac.has_value() ? closeedgefac.value() : 0.) << endl;
   }
 
   /*

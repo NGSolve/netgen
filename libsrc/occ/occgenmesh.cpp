@@ -1174,7 +1174,7 @@ namespace netgen
 
         // setting close edges
 
-        if (occparam.resthcloseedgeenable)
+        if (mparam.closeedgefac.has_value())
           {
             multithread.task = "Setting local mesh size (close edges)";
 
@@ -1259,7 +1259,7 @@ namespace netgen
                     mindist = min (mindist, line.Dist(lines[num]));
                   }
 
-                mindist /= (occparam.resthcloseedgefac + VSMALL);
+                mindist /= (mparam.closeedgefac.value() + VSMALL);
 
                 if (mindist < 1e-3 * bb.Diam())
                   {

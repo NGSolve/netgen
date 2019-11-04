@@ -85,6 +85,23 @@ namespace netgen
       }
   }
 
+  struct Line
+  {
+    Point<3> p0, p1;
+    inline double Length() const { return (p1-p0).Length(); }
+    inline double Dist(const Line& other) const
+    {
+      Vec<3> n = p1-p0;
+      Vec<3> q = other.p1-other.p0;
+      double nq = n*q;
+      Point<3> p = p0 + 0.5*n;
+      double lambda = (p-other.p0)*n / (nq + 1e-10);
+      if (lambda >= 0 && lambda <= 1)
+        return (p-other.p0-lambda*q).Length();
+      return 1e99;
+    }
+  };
+
   void NetgenGeometry :: Analyse(Mesh& mesh,
                                  const MeshingParameters& mparam) const
   {
@@ -100,7 +117,7 @@ namespace netgen
 
     if(mparam.uselocalh)
       {
-        double eps = 1e-12 * bounding_box.Diam();
+        double eps = 1e-10 * bounding_box.Diam();
         const char* savetask = multithread.task;
         multithread.task = "Analyse Edges";
 
@@ -142,8 +159,84 @@ namespace netgen
             const auto& face = faces[i];
             face->RestrictH(mesh, mparam);
           }
+
+        if(mparam.closeedgefac.has_value())
+          {
+            multithread.task = "Analyse close edges";
+            constexpr int sections = 100;
+            Array<Line> lines;
+            lines.SetAllocSize(sections*edges.Size());
+            BoxTree<3> searchtree(bounding_box.PMin(),
+                                  bounding_box.PMax());
+            for(const auto& edge : edges)
+              {
+                if(edge->GetLength() < eps)
+                  continue;
+                double t = 0.;
+                auto p_old = edge->GetPoint(t);
+                auto t_old = edge->GetTangent(t);
+                t_old.Normalize();
+                for(auto i : IntRange(1, sections+1))
+                  {
+                    t = double(i)/sections;
+                    auto p_new = edge->GetPoint(t);
+                    auto t_new = edge->GetTangent(t);
+                    t_new.Normalize();
+                    auto cosalpha = fabs(t_old * t_new);
+                    if((i == sections) || (cosalpha < cos(10./180 * M_PI)))
+                      {
+                        auto index = lines.Append({p_old, p_new});
+                        searchtree.Insert(p_old, p_new, index);
+                        p_old = p_new;
+                        t_old = t_new;
+                      }
+                  }
+              }
+            Array<int> linenums;
+            for(auto i : Range(lines))
+              {
+                const auto& line = lines[i];
+                if(line.Length() < eps) continue;
+                multithread.percent = 100.*i/lines.Size();
+                Box<3> box;
+                box.Set(line.p0);
+                box.Add(line.p1);
+                // box.Increase(max2(mesh.GetH(line.p0), mesh.GetH(line.p1)));
+                box.Increase(line.Length());
+                double mindist = 1e99;
+                linenums.SetSize0();
+                searchtree.GetIntersecting(box.PMin(), box.PMax(),
+                                           linenums);
+                for(auto num : linenums)
+                  {
+                    if(i == num) continue;
+                    const auto & other = lines[num];
+                    if((line.p0 - other.p0).Length2() < eps ||
+                       (line.p0 - other.p1).Length2() < eps ||
+                       (line.p1 - other.p0).Length2() < eps ||
+                       (line.p1 - other.p1).Length2() < eps)
+                      continue;
+                    mindist = min2(mindist, line.Dist(other));
+                  }
+                if(mindist == 1e99) continue;
+                mindist /= mparam.closeedgefac.value() + 1e-10;
+                if(mindist < 1e-3 * bounding_box.Diam())
+                  {
+                    (*testout) << "extremely small local h: " << mindist
+                               << " --> setting to " << 1e-3 * bounding_box.Diam() << endl;
+                    (*testout) << "somewhere near " << line.p0 << " - " << line.p1 << endl
+;
+                    mindist = 1e-3 * bounding_box.Diam();
+                  }
+                mesh.RestrictLocalHLine(line.p0, line.p1, mindist);
+              }
+          }
         multithread.task = savetask;
       }
+
+    for(const auto& mspnt : mparam.meshsize_points)
+      mesh.RestrictLocalH(mspnt.pnt, mspnt.h);
+
     mesh.LoadLocalMeshSize(mparam.meshsizefilename);
   }
 

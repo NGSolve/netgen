@@ -40,7 +40,7 @@ namespace netgen
                               const EdgePointGeomInfo& gi2,
                               Point<3>& newp,
                               EdgePointGeomInfo& newgi) const = 0;
-    virtual Vec<3> GetTangent(const Point<3>& p) const = 0;
+    virtual Vec<3> GetTangent(double t) const = 0;
   };
 
   class GeometryFace
@@ -177,7 +177,7 @@ namespace netgen
                               int surfi2,
                               const EdgePointGeomInfo & egi) const
     {
-      return edges[egi.edgenr]->GetTangent(p);
+      throw Exception("Base geometry get tangent called");
     }
 
     virtual size_t GetEdgeIndex(const GeometryEdge& edge) const

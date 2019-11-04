@@ -31,17 +31,6 @@ minedgelen: Optional[float] = 0.001
 
 void CreateOCCParametersFromKwargs(OCCParameters& occparam, py::dict kwargs)
 {
-  if(kwargs.contains("closeedgefac"))
-    {
-      auto val = kwargs.attr("pop")("closeedgefac");
-      if(val.is_none())
-        occparam.resthcloseedgeenable = false;
-      else
-        {
-          occparam.resthcloseedgefac = py::cast<double>(val);
-          occparam.resthcloseedgeenable = true;
-        }
-    }
   if(kwargs.contains("minedgelen"))
     {
       auto val = kwargs.attr("pop")("minedgelen");
