@@ -1897,8 +1897,6 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
   void OCCParameters :: Print(ostream & ost) const
    {
       ost << "OCC Parameters:" << endl
-         << "close edges: " << resthcloseedgeenable
-         << ", fac = " << resthcloseedgefac << endl
 		 << "minimum edge length: " << resthminedgelenenable
 		 << ", min len = " << resthminedgelen << endl;
    }

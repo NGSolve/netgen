@@ -465,7 +465,7 @@ namespace netgen
     int LineEndPointsSet() const {return lineendpoints.Size() == GetNP();}
     void ClearLineEndPoints();
 
-    DLL_HEADER void RestrictLocalH(class Mesh & mesh, double gh, const STLParameters& stlparam);
+    DLL_HEADER void RestrictLocalH(class Mesh & mesh, double gh, const STLParameters& stlparam, const MeshingParameters& mparam);
     void RestrictLocalHCurv(class Mesh & mesh, double gh, const STLParameters& stlparam);
     void RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& acttrigs, class Mesh & mesh, 
 				    double gh, double fact, double minh, const STLParameters& stlparam);

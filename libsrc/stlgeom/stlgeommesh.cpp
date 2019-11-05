@@ -814,7 +814,7 @@ void STLGeometry :: RestrictLocalHCurv(class Mesh & mesh, double gh, const STLPa
 
 }
   //restrict local h due to near edges and due to outer chart distance
-void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParameters& stlparam)
+void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParameters& stlparam, const MeshingParameters& mparam)
 {
   
   //bei jedem Dreieck alle Nachbardreiecke vergleichen, und, fallskein Kante dazwischen,
@@ -921,12 +921,12 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParame
       PopStatus();
     }
 
-  if (stlparam.resthcloseedgeenable)
+  if (mparam.closeedgefac.has_value())
     {
       PushStatusF("Restrict H due to close edges");
       //geht nicht für spiralen!!!!!!!!!!!!!!!!!!
       
-      double disttohfact = sqr(10.0 / stlparam.resthcloseedgefac);
+      double disttohfact = sqr(10.0 / *mparam.closeedgefac);
       int k,l;
       double h1, h2, dist;
       int rc = 0;

@@ -22,7 +22,7 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
   // mark edge points:
   //int ngp = geom.GetNP();
 
-  geom.RestrictLocalH(mesh, h, stlparam);
+  geom.RestrictLocalH(mesh, h, stlparam, mparam);
   
   PushStatusF("Mesh Lines");
 

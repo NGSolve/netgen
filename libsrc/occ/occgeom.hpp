@@ -187,11 +187,11 @@ namespace netgen
   {
   public:
 
-    /// Factor for meshing close edges 
-    double resthcloseedgefac = 2.;
+    /// Factor for meshing close edges, moved to meshingparameters
+    // double resthcloseedgefac = 2.;
 
     /// Enable / Disable detection of close edges
-    int resthcloseedgeenable = true;
+    // int resthcloseedgeenable = true;
 
     /// Minimum edge length to be used for dividing edges to mesh points
     double resthminedgelen = 0.001;
