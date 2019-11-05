@@ -926,7 +926,7 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParame
       PushStatusF("Restrict H due to close edges");
       //geht nicht für spiralen!!!!!!!!!!!!!!!!!!
       
-      double disttohfact = sqr(10.0 / mparam.closeedgefac.value());
+      double disttohfact = sqr(10.0 / *mparam.closeedgefac);
       int k,l;
       double h1, h2, dist;
       int rc = 0;

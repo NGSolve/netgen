@@ -1260,7 +1260,7 @@ namespace netgen
     /// file for meshsize
     string meshsizefilename = "";
     /// restrict h based on close edges
-    optional<double> closeedgefac = {};
+    optional<double> closeedgefac = nullopt;
     /// start surfacemeshing from everywhere in surface
     bool startinsurface = false;
     /// check overlapping surfaces (debug)

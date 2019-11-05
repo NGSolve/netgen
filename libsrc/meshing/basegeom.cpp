@@ -219,7 +219,7 @@ namespace netgen
                     mindist = min2(mindist, line.Dist(other));
                   }
                 if(mindist == 1e99) continue;
-                mindist /= mparam.closeedgefac.value() + 1e-10;
+                mindist /= *mparam.closeedgefac + 1e-10;
                 if(mindist < 1e-3 * bounding_box.Diam())
                   {
                     (*testout) << "extremely small local h: " << mindist

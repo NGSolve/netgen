@@ -1259,7 +1259,7 @@ namespace netgen
                     mindist = min (mindist, line.Dist(lines[num]));
                   }
 
-                mindist /= (mparam.closeedgefac.value() + VSMALL);
+                mindist /= (*mparam.closeedgefac + VSMALL);
 
                 if (mindist < 1e-3 * bb.Diam())
                   {
