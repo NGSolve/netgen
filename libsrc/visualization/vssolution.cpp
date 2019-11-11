@@ -29,6 +29,11 @@ namespace netgen
     // vssolution.AddUserVisualizationObject (vis);
     GetVSSolution().AddUserVisualizationObject (vis);
   }
+  void DeleteUserVisualizationObject (UserVisualizationObject * vis)
+  {
+    // vssolution.AddUserVisualizationObject (vis);
+    GetVSSolution().DeleteUserVisualizationObject (vis);
+  }
 
 
   VisualSceneSolution :: SolData :: SolData ()

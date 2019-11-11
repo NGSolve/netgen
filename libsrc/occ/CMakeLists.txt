@@ -12,6 +12,11 @@ target_link_libraries(occ PUBLIC ngcore)
 
 if(NOT WIN32)
     target_link_libraries( occ PRIVATE ${OCC_LIBRARIES} ${PYTHON_LIBRARIES})
+    if(USE_OCC AND APPLE)
+        # Link AppKit in case OCE was built as static libraries
+        find_library(AppKit AppKit)
+        target_link_libraries( occ PRIVATE ${AppKit} )
+    endif(USE_OCC AND APPLE)
     install( TARGETS occ ${NG_INSTALL_DIR})
     if (USE_GUI)
         target_link_libraries( occvis PUBLIC occ )

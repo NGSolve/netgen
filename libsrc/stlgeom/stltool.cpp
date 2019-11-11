@@ -1462,8 +1462,8 @@ STLParameters ::   STLParameters()
   resthchartdistenable = 1;
   resthlinelengthfac = 0.5;
   resthlinelengthenable = 1;
-  resthcloseedgefac = 1;
-  resthcloseedgeenable = 1;
+  // resthcloseedgefac = 1;
+  // resthcloseedgeenable = 1;
   resthedgeanglefac = 1;
   resthedgeangleenable = 0;
   resthsurfmeshcurvfac = 1;
@@ -1488,8 +1488,8 @@ void STLParameters :: Print (ostream & ost) const
       << ", fac = " << resthchartdistfac << endl
       << "line length: " << resthlinelengthenable
       << ", fac = " << resthlinelengthfac << endl
-      << "close edges: " << resthcloseedgeenable
-      << ", fac = " << resthcloseedgefac << endl
+      // << "close edges: " << resthcloseedgeenable
+      // << ", fac = " << resthcloseedgefac << endl
       << "edge angle: " << resthedgeangleenable
       << ", fac = " << resthedgeanglefac << endl;
 }

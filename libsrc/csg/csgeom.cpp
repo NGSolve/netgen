@@ -72,6 +72,92 @@ namespace netgen
     Clean();
   }
 
+  PointGeomInfo CSGeometry :: ProjectPoint(int surfind, Point<3> & p) const
+  {
+    Point<3> hp = p;
+    GetSurface(surfind)->Project (hp);
+    p = hp;
+    return PointGeomInfo();
+  }
+
+  bool CSGeometry :: ProjectPointGI(int surfind, Point<3> & p, PointGeomInfo & gi) const
+  {
+    GetSurface(surfind)->Project (p);
+    return true;
+  }
+
+  void CSGeometry :: ProjectPointEdge(int surfind, INDEX surfind2,
+                                      Point<3> & p, EdgePointGeomInfo* /*unused*/) const
+  {
+    Point<3> hp = p;
+    ProjectToEdge (GetSurface(surfind),
+                   GetSurface(surfind2), hp);
+    p = hp;
+  }
+
+
+  Vec<3> CSGeometry :: GetNormal(int surfind, const Point<3> & p,
+                                 const PointGeomInfo* /*unused*/) const
+  {
+    Vec<3> hn;
+    GetSurface(surfind)->CalcGradient(p, hn);
+    hn.Normalize();
+    return hn;
+  }
+
+  void CSGeometry ::
+  PointBetween(const Point<3> & p1, const Point<3> & p2, double secpoint,
+               int surfi,
+               const PointGeomInfo & gi1,
+               const PointGeomInfo & gi2,
+               Point<3> & newp, PointGeomInfo & newgi) const
+  {
+    Point<3> hnewp;
+    hnewp = p1+secpoint*(p2-p1);
+    if (surfi != -1)
+      {
+        GetSurface (surfi) -> Project (hnewp);
+        newgi.trignum = 1;
+      }
+
+    newp = hnewp;
+  }
+
+  void CSGeometry :: PointBetweenEdge(const Point<3> & p1, const Point<3> & p2, double secpoint,
+               int surfi1, int surfi2,
+               const EdgePointGeomInfo & ap1,
+               const EdgePointGeomInfo & ap2,
+               Point<3> & newp, EdgePointGeomInfo & newgi) const
+  {
+    Point<3> hnewp = p1+secpoint*(p2-p1);
+    //(*testout) << "hnewp " << hnewp << " s1 " << surfi1 << " s2 " << surfi2 << endl;
+    if (surfi1 != -1 && surfi2 != -1 && surfi1 != surfi2)
+      {
+        netgen::ProjectToEdge (GetSurface(surfi1),
+                               GetSurface(surfi2),
+                               hnewp);
+        // (*testout) << "Pointbetween, newp = " << hnewp << endl
+        // << ", err = " << sqrt (sqr (hnewp(0))+ sqr(hnewp(1)) + sqr (hnewp(2))) - 1 << endl;
+        newgi.edgenr = 1;
+        //(*testout) << "hnewp (a1) " << hnewp << endl;
+      }
+    else if (surfi1 != -1)
+      {
+        GetSurface (surfi1) -> Project (hnewp);
+        //(*testout) << "hnewp (a2) " << hnewp << endl;
+      }
+
+    newp = hnewp;
+  };
+
+  Vec<3> CSGeometry :: GetTangent(const Point<3> & p, int surfi1, int surfi2,
+                                  const EdgePointGeomInfo & ap1) const
+  {
+    Vec<3> n1 = GetSurface (surfi1)->GetNormalVector (p);
+    Vec<3> n2 = GetSurface (surfi2)->GetNormalVector (p);
+    Vec<3> tau = Cross (n1, n2).Normalize();
+    return tau;
+  }
 
   void CSGeometry :: Clean ()
   {
@@ -137,15 +223,6 @@ namespace netgen
     return CSGGenerateMesh (*this, mesh, mparam);
   }
   
-  const Refinement & CSGeometry :: GetRefinement () const
-  {
-    // cout << "get CSGeometry - Refinement" << endl;
-    // should become class variables
-    RefinementSurfaces * ref = new RefinementSurfaces(*this);
-    ref -> Set2dOptimizer(new MeshOptimize2dSurfaces(*this));
-    return *ref;
-  }
-
   class WritePrimitivesIt : public SolidIterator
   {
     ostream & ost;

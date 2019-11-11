@@ -118,10 +118,10 @@ inline int FindInnerPoint (POINTArray & points,
     {
       // const Element2d & el = faces[i];
       // (*testout) << "el[" << i << "] = " << el << endl;
-      for (int j = 1; j <= 3; j++)
+      for (int j : Range(3))
 	{
-	  double hi = Dist (points[faces[i].PNumMod(j)],
-			    points[faces[i].PNumMod(j+1)]);
+	  double hi = Dist (points[faces[i][j%3]],
+			    points[faces[i][(j+1)%3]]);
 	  if (hi > hmax) hmax = hi;
 	}
     }

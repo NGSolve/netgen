@@ -66,7 +66,7 @@ optimize3d: str = "cmdmustm"
 optsteps3d: int = 3
   Number of 3d optimization steps.
 
-optimize2d: str = "smsmsmSmSmSm"
+optimize2d: str = "smcmSmcmSmcm"
   2d optimization strategy:
     s .. swap, opt 6 lines/node
     S .. swap, optimal elements
@@ -176,6 +176,8 @@ inline void CreateMPfromKwargs(MeshingParameters& mp, py::kwargs kwargs, bool th
       mp.parallel_meshing = py::cast<bool>(kwargs.attr("pop")("parallel_meshing"));
     if(kwargs.contains("nthreads"))
       mp.nthreads = py::cast<int>(kwargs.attr("pop")("nthreads"));
+    if(kwargs.contains("closeedgefac"))
+      mp.closeedgefac = py::cast<optional<double>>(kwargs.attr("pop")("closeedgefac"));
     if(kwargs.size())
     {
       if(throw_if_not_all_parsed)

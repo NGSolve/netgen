@@ -148,7 +148,7 @@ namespace netgen
 
     //for meshing and project:
     NgArray<int> meshcharttrigs; //per trig: 1=belong to chart, 0 not
-    int meshchart;
+    mutable int meshchart;
 
     NgArray<int> ha_points;  // help array, np long, filled with 0 
 
@@ -159,12 +159,10 @@ namespace netgen
 
 
     //transformation:
-    Vec<3> meshtrignv;
+    mutable Vec<3> meshtrignv;
     Vec<3> ex, ey, ez;
     Point<3> p1;
 
-    mutable class RefinementSTLGeometry * ref; 
-    
   public:
     int edgesfound;
     int surfacemeshed;
@@ -193,6 +191,23 @@ namespace netgen
     void Clear();
 
     virtual void Save (string filename) const override;
+
+    bool CalcPointGeomInfo(int surfind, PointGeomInfo& gi, const Point<3> & p3) const override;
+    PointGeomInfo ProjectPoint(INDEX surfind, Point<3> & p) const override;
+    bool ProjectPointGI (int surfind, Point<3> & p, PointGeomInfo & gi) const override;
+    Vec<3> GetNormal(int surfind, const Point<3> & p, const PointGeomInfo* gi = nullptr) const override;
+    void PointBetween(const Point<3> & p1, const Point<3> & p2,
+                      double secpoint, int surfi,
+                      const PointGeomInfo & gi1,
+                      const PointGeomInfo & gi2,
+                      Point<3> & newp, PointGeomInfo & newgi) const override;
+
+    void PointBetweenEdge(const Point<3> & p1, const Point<3> & p2, double secpoint,
+                          int surfi1, int surfi2,
+                          const EdgePointGeomInfo & ap1,
+                          const EdgePointGeomInfo & ap2,
+                          Point<3> & newp, EdgePointGeomInfo & newgi) const override;
+
 
 
 	DLL_HEADER void STLInfo(double* data);
@@ -419,7 +434,7 @@ namespace netgen
     //
     void DefineTangentialPlane(const Point<3> & ap1, const Point<3> & ap2, int trig);
     //
-    void SelectChartOfTriangle (int trignum);
+    void SelectChartOfTriangle (int trignum) const;
     //
     void SelectChartOfPoint (const Point<3> & p);
     //
@@ -450,7 +465,7 @@ namespace netgen
     int LineEndPointsSet() const {return lineendpoints.Size() == GetNP();}
     void ClearLineEndPoints();
 
-    DLL_HEADER void RestrictLocalH(class Mesh & mesh, double gh, const STLParameters& stlparam);
+    DLL_HEADER void RestrictLocalH(class Mesh & mesh, double gh, const STLParameters& stlparam, const MeshingParameters& mparam);
     void RestrictLocalHCurv(class Mesh & mesh, double gh, const STLParameters& stlparam);
     void RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& acttrigs, class Mesh & mesh, 
 				    double gh, double fact, double minh, const STLParameters& stlparam);
@@ -459,8 +474,6 @@ namespace netgen
 
     int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam) override;
     
-    virtual const Refinement & GetRefinement () const override;
-
     // Add additional Point to chart to close the surface and write the resulting stl to a file
     DLL_HEADER void WriteChartToFile( ChartId chartnumber, string filename="chart.slb" );
   };

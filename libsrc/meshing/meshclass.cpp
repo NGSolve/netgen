@@ -1,7 +1,11 @@
 #include <mystdlib.h>
 #include <atomic>
 #include "meshing.hpp"
+
+#ifdef NG_PYTHON
+// must be included to instantiate Archive::Shallow(NetgenGeometry&)
 #include <core/python_ngcore.hpp>
+#endif
 
 namespace netgen
 {
@@ -1661,7 +1665,9 @@ namespace netgen
 
   void Mesh :: CalcSurfacesOfNode ()
   {
-    static Timer t("Mesh::CalcSurfacesOfNode"); RegionTimer reg (t);    
+    static Timer t("Mesh::CalcSurfacesOfNode"); RegionTimer reg (t);
+    static Timer tn2se("Mesh::CalcSurfacesOfNode - surf on node");     
+    static Timer tht("Mesh::CalcSurfacesOfNode - surfelementht"); 
     // surfacesonnode.SetSize (GetNP());
     TABLE<int,PointIndex::BASE> surfacesonnode(GetNP());
 
@@ -1683,6 +1689,7 @@ namespace netgen
       surfelementht = make_unique<INDEX_3_CLOSED_HASHTABLE<int>> (3*GetNSE() + 1);
     segmentht = make_unique<INDEX_2_CLOSED_HASHTABLE<int>> (3*GetNSeg() + 1);
 
+    tn2se.Start();
     if (dimension == 3)
       /*
     for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
@@ -1734,7 +1741,9 @@ namespace netgen
 
       surfelementht -> AllocateElements();
     */
-
+    tn2se.Stop();
+    
+    tht.Start();
     if (dimension==3)
     for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
       {
@@ -1748,7 +1757,8 @@ namespace netgen
         i3.Sort();
         surfelementht -> Set (i3, sei);   // war das wichtig ???    sel.GetIndex());
       }
-
+    tht.Stop();
+    
     // int np = GetNP();
 
     if (dimension == 3)
@@ -1877,11 +1887,44 @@ namespace netgen
     int np = GetNP();
     int ne = GetNE();
     int nse = GetNSE();
-
-    NgArray<int,PointIndex::BASE> numonpoint(np);
-
-    numonpoint = 0;
+    
     t_table.Start();
+
+    TableCreator<ElementIndex, PointIndex> creator(np);
+
+    for ( ; !creator.Done(); creator++)
+      // for (ElementIndex ei : Range(VolumeElements()))
+      ParallelFor
+        (Range(VolumeElements()), [&] (ElementIndex ei)
+         {
+           const Element & el = (*this)[ei];
+           if (dom == 0 || dom == el.GetIndex())
+             {
+               if (el.GetNP() == 4)
+                 {
+                   INDEX_4 i4(el[0], el[1], el[2], el[3]);
+                   i4.Sort();
+                   creator.Add (PointIndex(i4.I1()), ei);
+                   creator.Add (PointIndex(i4.I2()), ei);
+                 }
+               else
+                 {
+                   for (PointIndex pi : el.PNums())
+                     creator.Add(pi, ei);
+                 }
+             }
+         });
+    
+    auto elsonpoint = creator.MoveTable();
+
+    ParallelFor (Range(elsonpoint), [&] (auto i)
+         {
+           QuickSort(elsonpoint[i]);
+         });
+           
+    NgArray<int,PointIndex::BASE> numonpoint(np);
+    /*
+    numonpoint = 0;
     for (ElementIndex ei = 0; ei < ne; ei++)
       {
         const Element & el = (*this)[ei];
@@ -1918,6 +1961,7 @@ namespace netgen
                 elsonpoint.Add (el[j], ei);
           }
       }
+    */
     t_table.Stop();
 
 
@@ -3688,131 +3732,104 @@ namespace netgen
   {
     static Timer t("Mesh::CheckOverlappingBoundary"); RegionTimer reg(t);
     
-    int i, j, k;
-
     Point3d pmin, pmax;
     GetBox (pmin, pmax);
-    BoxTree<3> setree(pmin, pmax);
-    NgArray<int> inters;
+    BoxTree<3, SurfaceElementIndex> setree(pmin, pmax);
+    // NgArray<SurfaceElementIndex> inters;
 
     bool overlap = 0;
     bool incons_layers = 0;
-    /*
-    for (i = 1; i <= GetNSE(); i++)
-      SurfaceElement(i).badel = 0;
-    */
+
     for (Element2d & el : SurfaceElements())
       el.badel = false;
 
-    for (i = 1; i <= GetNSE(); i++)
+    for (SurfaceElementIndex sei : Range(SurfaceElements()))
       {
-        const Element2d & tri = SurfaceElement(i);
+        const Element2d & tri = SurfaceElement(sei);
 
-        Point3d tpmin (Point(tri[0]));
-        Point3d tpmax (tpmin);
+        Box<3> box(Box<3>::EMPTY_BOX);
+        for (PointIndex pi : tri.PNums())
+          box.Add (Point(pi));
 
-        for (k = 1; k < tri.GetNP(); k++)
-          {
-            tpmin.SetToMin (Point (tri[k]));
-            tpmax.SetToMax (Point (tri[k]));
-          }
-        Vec3d diag(tpmin, tpmax);
-
-        tpmax = tpmax + 0.1 * diag;
-        tpmin = tpmin - 0.1 * diag;
-
-        setree.Insert (tpmin, tpmax, i);
+        box.Increase(1e-3*box.Diam());
+        setree.Insert (box, sei);
       }
 
-    for (i = 1; i <= GetNSE(); i++)
-      {
-        const Element2d & tri = SurfaceElement(i);
+    std::mutex m;
+    // for (SurfaceElementIndex sei : Range(SurfaceElements()))
+    ParallelForRange
+      (Range(SurfaceElements()), [&] (auto myrange)
+       {
+         for (SurfaceElementIndex sei : myrange)
+           {
+             const Element2d & tri = SurfaceElement(sei);
+             
+             Box<3> box(Box<3>::EMPTY_BOX);
+             for (PointIndex pi : tri.PNums())
+               box.Add (Point(pi));
+             
+             setree.GetFirstIntersecting
+               (box.PMin(), box.PMax(),
+                [&] (SurfaceElementIndex sej) 
+                {
+                  const Element2d & tri2 = SurfaceElement(sej);	  
+                  
+                  if ( (*this)[tri[0]].GetLayer() != (*this)[tri2[0]].GetLayer())
+                    return false;
+                  
+                  if ( (*this)[tri[0]].GetLayer() != (*this)[tri[1]].GetLayer() ||
+                       (*this)[tri[0]].GetLayer() != (*this)[tri[2]].GetLayer())
+                    {
+                      incons_layers = 1;
+                      cout << "inconsistent layers in triangle" << endl;
+                    }
+                  
+                  const netgen::Point<3> *trip1[3], *trip2[3];	  
+                  for (int k = 0; k < 3; k++)
+                    {
+                      trip1[k] = &Point (tri[k]);
+                      trip2[k] = &Point (tri2[k]);
+                    }
+                  
+                  if (IntersectTriangleTriangle (&trip1[0], &trip2[0]))
+                    {
+                      overlap = 1;
+                      lock_guard<std::mutex> guard(m);
+                      PrintWarning ("Intersecting elements " 
+                                    ,int(sei), " and ", int(sej));
+                      
+                      (*testout) << "Intersecting: " << endl;
+                      (*testout) << "openelement " << sei << " with open element " << sej << endl;
+                      
+                      cout << "el1 = " << tri << endl;
+                      cout << "el2 = " << tri2 << endl;
+                      cout << "layer1 = " <<  (*this)[tri[0]].GetLayer() << endl;
+                      cout << "layer2 = " <<  (*this)[tri2[0]].GetLayer() << endl;
+                      
+                      for (int k = 1; k <= 3; k++)
+                        (*testout) << tri.PNum(k) << "  ";
+                      (*testout) << endl;
+                      for (int k = 1; k <= 3; k++)
+                        (*testout) << tri2.PNum(k) << "  ";
+                      (*testout) << endl;
+                      
+                      for (int k = 0; k <= 2; k++)
+                        (*testout) << *trip1[k] << "   ";
+                      (*testout) << endl;
+                      for (int k = 0; k <= 2; k++)
+                        (*testout) << *trip2[k] << "   ";
+                      (*testout) << endl;
 
-        Point3d tpmin (Point(tri[0]));
-        Point3d tpmax (tpmin);
-
-        for (k = 1; k < tri.GetNP(); k++)
-          {
-            tpmin.SetToMin (Point (tri[k]));
-            tpmax.SetToMax (Point (tri[k]));
-          }
-
-        setree.GetIntersecting (tpmin, tpmax, inters);
-
-        for (j = 1; j <= inters.Size(); j++)
-          {
-            const Element2d & tri2 = SurfaceElement(inters.Get(j));	  
-
-            if ( (*this)[tri[0]].GetLayer() != (*this)[tri2[0]].GetLayer())
-              continue;
-
-            if ( (*this)[tri[0]].GetLayer() != (*this)[tri[1]].GetLayer() ||
-                 (*this)[tri[0]].GetLayer() != (*this)[tri[2]].GetLayer())
-              {
-                incons_layers = 1;
-                cout << "inconsistent layers in triangle" << endl;
-              }
-
-
-            const netgen::Point<3> *trip1[3], *trip2[3];	  
-            for (k = 1; k <= 3; k++)
-              {
-                trip1[k-1] = &Point (tri.PNum(k));
-                trip2[k-1] = &Point (tri2.PNum(k));
-              }
-
-            if (IntersectTriangleTriangle (&trip1[0], &trip2[0]))
-              {
-                overlap = 1;
-                PrintWarning ("Intersecting elements " 
-                              ,i, " and ", inters.Get(j));
-
-                (*testout) << "Intersecting: " << endl;
-                (*testout) << "openelement " << i << " with open element " << inters.Get(j) << endl;
-
-                cout << "el1 = " << tri << endl;
-                cout << "el2 = " << tri2 << endl;
-                cout << "layer1 = " <<  (*this)[tri[0]].GetLayer() << endl;
-                cout << "layer2 = " <<  (*this)[tri2[0]].GetLayer() << endl;
-
-
-                for (k = 1; k <= 3; k++)
-                  (*testout) << tri.PNum(k) << "  ";
-                (*testout) << endl;
-                for (k = 1; k <= 3; k++)
-                  (*testout) << tri2.PNum(k) << "  ";
-                (*testout) << endl;
-
-                for (k = 0; k <= 2; k++)
-                  (*testout) << *trip1[k] << "   ";
-                (*testout) << endl;
-                for (k = 0; k <= 2; k++)
-                  (*testout) << *trip2[k] << "   ";
-                (*testout) << endl;
-
-                (*testout) << "Face1 = " << GetFaceDescriptor(tri.GetIndex()) << endl;
-                (*testout) << "Face1 = " << GetFaceDescriptor(tri2.GetIndex()) << endl;
-
-                /*
-                  INDEX_3 i3(tri.PNum(1), tri.PNum(2), tri.PNum(3));
-                  i3.Sort();
-                  for (k = 1; k <= GetNSE(); k++)
-                  {
-                  const Element2d & el2 = SurfaceElement(k);
-                  INDEX_3 i3b(el2.PNum(1), el2.PNum(2), el2.PNum(3));
-                  i3b.Sort();
-                  if (i3 == i3b)
-                  {
-                  SurfaceElement(k).badel = 1;
-                  }
-                  }
-                */
-                SurfaceElement(i).badel = 1;
-                SurfaceElement(inters.Get(j)).badel = 1;
-              }
-          }
-      }
-
+                      (*testout) << "Face1 = " << GetFaceDescriptor(tri.GetIndex()) << endl;
+                      (*testout) << "Face1 = " << GetFaceDescriptor(tri2.GetIndex()) << endl;
+                      
+                      SurfaceElement(sei).badel = 1;
+                      SurfaceElement(sej).badel = 1;
+                    }
+                  return false;
+                });
+           }
+       });
     // bug 'fix'
     if (incons_layers) overlap = 0;
 
@@ -3922,6 +3939,44 @@ namespace netgen
           return 0;
       }
     return 1;
+  }
+
+  double Mesh :: CalcTotalBad (const MeshingParameters & mp )
+  {
+    static Timer t("CalcTotalBad"); RegionTimer reg(t);
+    static constexpr int n_classes = 20;
+
+    double sum = 0;
+
+    tets_in_qualclass.SetSize(n_classes);
+    tets_in_qualclass = 0;
+
+    ParallelForRange( IntRange(volelements.Size()), [&] (auto myrange)
+       {
+         double local_sum = 0.0;
+         double teterrpow = mp.opterrpow;
+
+         std::array<int,n_classes> classes_local{};
+
+         for (auto i : myrange)
+           {
+             double elbad = pow (max2(CalcBad (points, volelements[i], 0, mp),1e-10), 1/teterrpow);
+
+             int qualclass = int (n_classes / elbad + 1);
+             if (qualclass < 1) qualclass = 1;
+             if (qualclass > n_classes) qualclass = n_classes;
+             classes_local[qualclass-1]++;
+
+             local_sum += elbad;
+           }
+
+         AtomicAdd(sum, local_sum);
+
+         for (auto i : Range(n_classes))
+             AsAtomic(tets_in_qualclass[i]) += classes_local[i];
+    });
+
+    return sum;
   }
 
 
@@ -6154,22 +6209,41 @@ namespace netgen
        {
          for (PointIndex pi : myrange)
            QuickSort(elementsonnode[pi]);
-       });
+       }, ngcore::TasksPerThread(4));
 
     return move(elementsonnode);
   }
 
-  Table<SurfaceElementIndex, PointIndex> Mesh :: CreatePoint2SurfaceElementTable() const
+  Table<SurfaceElementIndex, PointIndex> Mesh :: CreatePoint2SurfaceElementTable( int faceindex ) const
   {
+    static Timer timer("Mesh::CreatePoint2SurfaceElementTable"); RegionTimer rt(timer);
+
     TableCreator<SurfaceElementIndex, PointIndex> creator(GetNP());
-    for ( ; !creator.Done(); creator++)
-      ngcore::ParallelForRange
-        (Range(surfelements), [&] (auto myrange)
-         {
-           for (SurfaceElementIndex ei : myrange)
-             for (PointIndex pi : (*this)[ei].PNums())
-               creator.Add (pi, ei);
-         });
+
+    if(faceindex==0)
+      {
+        for ( ; !creator.Done(); creator++)
+          ngcore::ParallelForRange
+            (Range(surfelements), [&] (auto myrange)
+             {
+               for (SurfaceElementIndex ei : myrange)
+                 for (PointIndex pi : (*this)[ei].PNums())
+                   creator.Add (pi, ei);
+             }, ngcore::TasksPerThread(4));
+      }
+    else
+      {
+        Array<SurfaceElementIndex> face_els;
+        GetSurfaceElementsOfFace(faceindex, face_els);
+        for ( ; !creator.Done(); creator++)
+          ngcore::ParallelForRange
+            (Range(face_els), [&] (auto myrange)
+             {
+               for (auto i : myrange)
+                 for (PointIndex pi : (*this)[face_els[i]].PNums())
+                   creator.Add (pi, face_els[i]);
+             }, ngcore::TasksPerThread(4));
+      }
     
     auto elementsonnode = creator.MoveTable();
     ngcore::ParallelForRange
@@ -6511,6 +6585,21 @@ namespace netgen
     else
       return defaultstring;
   }
+
+
+  NgArray<string*> & Mesh :: GetRegionNamesCD (int codim)
+  {
+    switch (codim)
+      {
+      case 0: return materials;
+      case 1: return bcnames;
+      case 2: return cd2names;
+      case 3: return cd3names;
+      default: throw Exception("don't have regions of co-dimension "+ToString(codim));
+      }
+  }
+  
+  
 
   void Mesh :: SetUserData(const char * id, NgArray<int> & data)
   {

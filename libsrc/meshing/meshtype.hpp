@@ -270,6 +270,9 @@ namespace netgen
     SurfaceElementIndex & operator+= (int inc) { i+=inc; return *this; }
     void DoArchive (Archive & ar) { ar & i; }
   };
+  
+  inline void SetInvalid (SurfaceElementIndex & id) { id = -1; }
+  inline bool IsInvalid (SurfaceElementIndex & id) { return id == -1; }
 
   inline istream & operator>> (istream & ist, SurfaceElementIndex & pi)
   {
@@ -1231,7 +1234,7 @@ namespace netgen
        // P .. plot, pause
        // c .. combine
        **/
-    string optimize2d = "smsmsmSmSmSm";
+    string optimize2d = "smcmSmcmSmcm";
     /// number of 2d optimization steps
     int optsteps2d = 3;
     /// power of error (to approximate max err optimization)
@@ -1256,6 +1259,8 @@ namespace netgen
     double minh = 0.0;
     /// file for meshsize
     string meshsizefilename = "";
+    /// restrict h based on close edges
+    optional<double> closeedgefac = nullopt;
     /// start surfacemeshing from everywhere in surface
     bool startinsurface = false;
     /// check overlapping surfaces (debug)

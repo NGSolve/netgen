@@ -282,8 +282,8 @@ public:
   double resthchartdistfac = 1.2;
   bool resthchartdistenable = true;
 
-  double resthcloseedgefac = 1.;
-  bool resthcloseedgeenable = true;
+  // double resthcloseedgefac = 1.;
+  // bool resthcloseedgeenable = true;
   
   double resthedgeanglefac = 1.;
   bool resthedgeangleenable = false;
@@ -301,6 +301,13 @@ public:
   ///
   void Print (ostream & ost) const;
 };
+
+inline ostream & operator<< (ostream & ost, const STLParameters & stlparam)
+  {
+    stlparam.Print (ost);
+    return ost;
+  }
+
 
 
 void STLMeshing (STLGeometry & geom,

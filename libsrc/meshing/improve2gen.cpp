@@ -19,15 +19,16 @@ namespace netgen
   };
 
 
-  void MeshOptimize2d :: GenericImprove (Mesh & mesh)
+  void MeshOptimize2d :: GenericImprove ()
   {
+    static Timer timer("MeshOptimize2d::GenericImprove"); RegionTimer reg(timer);
     if (!faceindex)
       {
 	if (writestatus)
 	  PrintMessage (3, "Generic Improve");
 
 	for (faceindex = 1; faceindex <= mesh.GetNFD(); faceindex++)
-	  GenericImprove (mesh);
+	  GenericImprove ();
       
 	faceindex = 0;
       }
@@ -395,10 +396,8 @@ namespace netgen
 
 		// calc metric badness
 		double bad1 = 0, bad2 = 0;
-		Vec<3> n;
-
-		SelectSurfaceOfPoint (mesh.Point(pmap.Get(1)), pgi.Get(1));
-		GetNormalVector (surfnr, mesh.Point(pmap.Get(1)), pgi.Elem(1), n);
+		// SelectSurfaceOfPoint (mesh.Point(pmap.Get(1)), pgi.Get(1));
+		auto n = geo.GetNormal(surfnr, mesh.Point(pmap.Get(1)), &pgi.Elem(1));
 		  
 		for (int j = 0; j < rule.oldels.Size(); j++)
 		  bad1 += mesh[elmap[j]].CalcJacobianBadness (mesh.Points(), n);

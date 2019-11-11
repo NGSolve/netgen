@@ -6,6 +6,14 @@
 
 namespace netgen
 {
+  ostream& operator << (ostream& ost, const MultiPointGeomInfo& mpgi)
+  {
+    for(auto i : Range(mpgi.GetNPGI()))
+      {
+        ost << "gi[" << i << "] = " << mpgi.GetPGI(i+1) << endl;
+      }
+    return ost;
+  }
   static void glrender (int wait);
 #ifdef OPENGL
   extern DLL_HEADER void Render(bool blocking = false);
@@ -30,8 +38,10 @@ namespace netgen
   static Array<unique_ptr<netrule>> global_quad_rules;
 
   
-  Meshing2 :: Meshing2 (const MeshingParameters & mp, const Box<3> & aboundingbox)
-    : adfront(aboundingbox), boundingbox(aboundingbox)
+  Meshing2 :: Meshing2 (const NetgenGeometry& ageo,
+                        const MeshingParameters & mp,
+                        const Box<3> & aboundingbox)
+    : geo(ageo), adfront(aboundingbox), boundingbox(aboundingbox)
   {
     static Timer t("Mesing2::Meshing2"); RegionTimer r(t);
 
@@ -125,29 +135,38 @@ namespace netgen
   // static Vec3d ex, ey;
   // static Point3d globp1;
 
-  void Meshing2 :: DefineTransformation (const Point<3> & p1, const Point<3> & p2,
-					 const PointGeomInfo * geominfo1,
-					 const PointGeomInfo * geominfo2)
+  void Meshing2 :: DefineTransformation (const Point<3> & ap1,
+                                         const Point<3> & ap2,
+					 const PointGeomInfo * gi1,
+					 const PointGeomInfo * gi2)
   {
-    globp1 = p1;
-    ex = p2 - p1;
-    ex /= ex.Length();
-    ey.X() = -ex.Y();
-    ey.Y() =  ex.X();
-    ey.Z() = 0;
+    p1 = ap1;
+    p2 = ap2;
+    auto n1 = geo.GetNormal(gi1->trignum, p1, gi1);
+    auto n2 = geo.GetNormal(gi2->trignum, p2, gi2);
+
+    ez = 0.5 * (n1+n2);
+    ez.Normalize();
+    ex = (p2-p1).Normalize();
+    ez -= (ez*ex)*ex;
+    ez.Normalize();
+    ey = Cross(ez, ex);
   }
 
   void Meshing2 :: TransformToPlain (const Point<3> & locpoint, 
-				     const MultiPointGeomInfo & geominf,
+				     const MultiPointGeomInfo & geominfo,
 				     Point<2> & plainpoint, double h, int & zone)
   {
-    Vec3d p1p (globp1, locpoint);
+    auto& gi = geominfo.GetPGI(1);
+    auto n = geo.GetNormal(gi.trignum, locpoint, &gi);
+    auto p1p = locpoint - p1;
+    plainpoint(0) = (p1p * ex) / h;
+    plainpoint(1) = (p1p * ey) / h;
 
-    //    p1p = locpoint - globp1;
-    p1p /= h;
-    plainpoint[0] = p1p * ex;
-    plainpoint[1] = p1p * ey;
-    zone = 0;
+    if(n*ez < 0)
+      zone = -1;
+    else
+      zone = 0;
   }
 
   int Meshing2 :: TransformFromPlain (const Point<2> & plainpoint,
@@ -155,12 +174,9 @@ namespace netgen
 				      PointGeomInfo & gi, 
 				      double h)
   {
-    Vec3d p1p;
-    gi.trignum = 1;
-
-    p1p = plainpoint[0] * ex + plainpoint[1] * ey;
-    p1p *= h;
-    locpoint = globp1 + p1p;
+    locpoint = p1 + (h*plainpoint(0)) * ex + (h* plainpoint(1)) * ey;
+    if (!geo.ProjectPointGI(gi.trignum, locpoint, gi))
+      gi = geo.ProjectPoint(gi.trignum, locpoint);
     return 0;
   }
 
@@ -853,6 +869,7 @@ namespace netgen
 	    for (int i = oldnp+1; i <= plainpoints.Size(); i++)
 	      {
                 Point<3> locp;
+                upgeominfo.Elem(i) = *blgeominfo1;
 		int err =
 		  TransformFromPlain (plainpoints.Elem(i), locp, 
 				      upgeominfo.Elem(i), h);

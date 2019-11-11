@@ -281,7 +281,7 @@ namespace netgen
 			     NgArray<INDEX> & lindex,
 			     double xh)
   {
-    // static Timer timer("adfront2::GetLocals"); RegionTimer reg (timer);
+    static Timer timer("adfront2::GetLocals"); RegionTimer reg (timer);
     
     int pstind;
     Point<3>  midp, p0;
@@ -292,7 +292,7 @@ namespace netgen
     loclines.Append(lines[baselineindex].L());
     lindex.Append(baselineindex);  
 
-    NgArrayMem<int, 1000> nearlines(0);
+    ArrayMem<int, 1000> nearlines(0);
     NgArrayMem<int, 1000> nearpoints(0);
 
     // dominating costs !!
@@ -300,13 +300,14 @@ namespace netgen
 				    p0 + Vec3d(xh, xh, xh),
 				    nearlines);
 
-    pointsearchtree.GetIntersecting (p0 - Vec3d(xh, xh, xh),
+    // only special points that are not in adfront,
+    // other points are from linesearchtree
+    cpointsearchtree.GetIntersecting(p0 - Vec3d(xh, xh, xh),
                                      p0 + Vec3d(xh, xh, xh),
                                      nearpoints);
-    
-    for (int ii = 0; ii < nearlines.Size(); ii++)
+
+    for(auto i : nearlines)
       {
-	int i = nearlines[ii];
 	if (lines[i].Valid() && i != baselineindex) 
 	  {
             loclines.Append(lines[i].L());
@@ -317,38 +318,37 @@ namespace netgen
     // static NgArray<int> invpindex;
     invpindex.SetSize (points.Size()); 
     // invpindex = -1;
-    for (int i = 0; i < nearpoints.Size(); i++)
-      invpindex[nearpoints[i]] = -1;
+    for(auto pi : nearpoints)
+      invpindex[pi] = -1;
 
-    for (int i = 0; i < loclines.Size(); i++)
+    for(const auto& li : loclines)
       {
-	invpindex[loclines[i].I1()] = 0;
-	invpindex[loclines[i].I2()] = 0;
+	invpindex[li.I1()] = 0;
+	invpindex[li.I2()] = 0;
       }
 
 
-    for (int i = 0; i < loclines.Size(); i++)
+    for(auto& line : loclines)
       {
-	for (int j = 0; j < 2; j++)
-	  {
-	    int pi = loclines[i][j];
+        for(auto i : Range(2))
+          {
+            auto& pi = line[i];
 	    if (invpindex[pi] == 0)
 	      {
 		pindex.Append (pi);
 		invpindex[pi] = pindex.Size();
                 locpoints.Append (points[pi].P());
-		loclines[i][j] = locpoints.Size();
+		pi = locpoints.Size();
 	      }
 	    else
-	      loclines[i][j] = invpindex[pi];
+	      pi = invpindex[pi];
 	  }
       }
 
 
     // double xh2 = xh*xh;
-    for (int ii = 0; ii < nearpoints.Size(); ii++)
+    for(auto i : nearpoints)
       {
-        int i = nearpoints[ii];
 	if (points[i].Valid() && 
 	    points[i].OnSurface() &&
 	    // Dist2 (points.Get(i).P(), p0) <= xh2 &&

@@ -1131,7 +1131,7 @@ proc timer2 { } {
 	}
 
     }
-    after 10 { timer2 }
+    after 40 { timer2 }
 }
 # after 1000 { timer2 }
 timer2

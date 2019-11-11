@@ -62,6 +62,8 @@ namespace netgen
     /// open segmenets for surface meshing  
     NgArray<Segment> opensegments;
 
+    Array<int> tets_in_qualclass;
+
 
 
     /**
@@ -559,6 +561,10 @@ namespace netgen
     */
     void FreeOpenElementsEnvironment (int layers);
 
+
+    DLL_HEADER double CalcTotalBad (const MeshingParameters & mp);
+    FlatArray<int> GetQualityHistogram() { return tets_in_qualclass; }
+
     ///
     bool LegalTet (Element & el) const
     {
@@ -681,6 +687,9 @@ namespace netgen
     string * GetBCNamePtr (int bcnr) const
     { return (bcnr < bcnames.Size() && bcnames[bcnr]) ? bcnames[bcnr] : &default_bc; }
 
+
+    NgArray<string*> & GetRegionNamesCD (int codim);
+    
     ///
     void ClearFaceDescriptors()
     { facedecoding.SetSize(0); }
@@ -753,7 +762,7 @@ namespace netgen
   
 
     Table<ElementIndex, PointIndex> CreatePoint2ElementTable() const;
-    Table<SurfaceElementIndex, PointIndex> CreatePoint2SurfaceElementTable() const;
+    Table<SurfaceElementIndex, PointIndex> CreatePoint2SurfaceElementTable( int faceindex=0 ) const;
 
     DLL_HEADER bool PureTrigMesh (int faceindex = 0) const;
     DLL_HEADER bool PureTetMesh () const;
@@ -855,7 +864,7 @@ namespace netgen
     /// 
     friend class Meshing3;
 
-
+    // only for saving the geometry
     enum GEOM_TYPE { NO_GEOM = 0, GEOM_2D = 1, GEOM_CSG = 10, GEOM_STL = 11, GEOM_OCC = 12, GEOM_ACIS = 13 };
     GEOM_TYPE geomtype;
   

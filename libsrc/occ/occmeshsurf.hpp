@@ -113,7 +113,8 @@ class Meshing2OCCSurfaces : public Meshing2
 
 public:
   ///
-  Meshing2OCCSurfaces (const TopoDS_Shape & asurf, const Box<3> & aboundingbox,
+  Meshing2OCCSurfaces (const NetgenGeometry& geo,
+                       const TopoDS_Shape & asurf, const Box<3> & aboundingbox,
                        int aprojecttype, const MeshingParameters & mparam);
 
   ///
@@ -141,63 +142,7 @@ protected:
   
 };
 
-
-
-///
-class MeshOptimize2dOCCSurfaces : public MeshOptimize2d
-  {
-  ///
-  const OCCGeometry & geometry;
-
-public:
-    ///
-    MeshOptimize2dOCCSurfaces (const OCCGeometry & ageometry); 
-   
-    ///
-    virtual void ProjectPoint (INDEX surfind, Point<3> & p) const;
-    ///
-    virtual void ProjectPoint2 (INDEX surfind, INDEX surfind2, Point<3> & p) const;
-    ///
-    virtual int ProjectPointGI (INDEX surfind, Point<3> & p, PointGeomInfo & gi) const;
-    ///
-    virtual void GetNormalVector(INDEX surfind, const Point<3> & p, Vec<3> & n) const;
-    ///
-    virtual void GetNormalVector(INDEX surfind, const Point<3> & p, PointGeomInfo & gi, Vec<3> & n) const;
-    
-    virtual int CalcPointGeomInfo(int surfind, PointGeomInfo& gi, const Point<3> & p3) const;
-};
-
-
-
 class OCCGeometry;
-
-
-class DLL_HEADER OCCRefinementSurfaces : public Refinement
-{
-  const OCCGeometry & geometry;
-
-public:
-  OCCRefinementSurfaces (const OCCGeometry & ageometry);
-  virtual ~OCCRefinementSurfaces ();
-  
-  virtual void PointBetween (const Point<3> & p1, const Point<3> & p2, double secpoint,
-			     int surfi, 
-			     const PointGeomInfo & gi1, 
-			     const PointGeomInfo & gi2,
-			     Point<3> & newp, PointGeomInfo & newgi) const override;
-
-  virtual void PointBetween (const Point<3> & p1, const Point<3> & p2, double secpoint,
-			     int surfi1, int surfi2, 
-			     const EdgePointGeomInfo & ap1, 
-			     const EdgePointGeomInfo & ap2,
-			     Point<3> & newp, EdgePointGeomInfo & newgi) const override;
-
-  virtual void ProjectToSurface (Point<3> & p, int surfi) const override;
-
-  virtual void ProjectToSurface (Point<3> & p, int surfi, PointGeomInfo & gi) const override;
-};
-
-
 
 #endif
 

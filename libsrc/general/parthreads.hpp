@@ -96,12 +96,6 @@ void ParallelFor( int first, int next, const TFunc & f )
 
 
   
-  template<typename T>
-  inline atomic<T> & AsAtomic (T & d)
-  {
-    return reinterpret_cast<atomic<T>&> (d);
-  }
-
   typedef void (*TaskManager)(std::function<void(int,int)>);
   typedef void (*Tracer)(string, bool);  // false .. start, true .. stop
 

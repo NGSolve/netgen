@@ -38,11 +38,11 @@ DLL_HEADER extern void ZRefinement (Mesh &, const class NetgenGeometry *,
 
 class DLL_HEADER Refinement
 {
-  MeshOptimize2d * optimizer2d;
+ const NetgenGeometry& geo;
 
 public:
-  Refinement ();
-  virtual ~Refinement ();
+ Refinement (const NetgenGeometry& ageo) : geo(ageo) {}
+ virtual ~Refinement () {}
   
   void Refine (Mesh & mesh) const;
   void Refine (Mesh & mesh);
@@ -51,48 +51,9 @@ public:
   void MakeSecondOrder (Mesh & mesh) const;
   void MakeSecondOrder (Mesh & mesh);
 
-  virtual void PointBetween (const Point<3> & p1, const Point<3> & p2, double secpoint, 
-			     int surfi, 
-			     const PointGeomInfo & gi1, 
-			     const PointGeomInfo & gi2,
-			     Point<3> & newp, PointGeomInfo & newgi) const;
-
-  virtual void PointBetween (const Point<3> & p1, const Point<3> & p2, double secpoint,
-			     int surfi1, int surfi2, 
-			     const EdgePointGeomInfo & ap1, 
-			     const EdgePointGeomInfo & ap2,
-			     Point<3> & newp, EdgePointGeomInfo & newgi) const;
-
-  virtual Vec<3> GetTangent (const Point<3> & p, int surfi1, int surfi2,
-                             const EdgePointGeomInfo & egi) const;
-
-  virtual Vec<3> GetNormal (const Point<3> & p, int surfi1, 
-                            const PointGeomInfo & gi) const;
-
-
-  virtual void ProjectToSurface (Point<3> & p, int surfi) const;
-
-  virtual void ProjectToSurface (Point<3> & p, int surfi, PointGeomInfo & /* gi */) const
-  {
-    ProjectToSurface (p, surfi);
-  }
-
-  virtual void ProjectToEdge (Point<3> & p, int surfi1, int surfi2, const EdgePointGeomInfo & egi) const;
-
-
   void ValidateSecondOrder (Mesh & mesh);
   void ValidateRefinedMesh (Mesh & mesh, 
 			    NgArray<INDEX_2> & parents);
-
-  MeshOptimize2d * Get2dOptimizer(void) const
-  {
-    return optimizer2d;
-  }
-  void Set2dOptimizer(MeshOptimize2d * opti)
-  {
-    optimizer2d = opti;
-  }
-
   
   virtual void LocalizeEdgePoints(Mesh & /* mesh */) const {;}
 };

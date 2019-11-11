@@ -565,7 +565,7 @@ namespace netgen
 
         mp.quad = hquad || geometry.GetDomainQuadMeshing (domnr);
 
-	Meshing2 meshing (mp, Box<3> (pmin, pmax));
+	Meshing2 meshing (geometry, mp, Box<3> (pmin, pmax));
 
 	NgArray<int, PointIndex::BASE> compress(bnp);
 	compress = -1;

@@ -42,12 +42,11 @@ namespace netgen
 
 #define _INCLUDE_MORE
 
+#include "findip.hpp"
+#include "findip2.hpp"
 
 #include "meshing3.hpp"
 #include "improve3.hpp"
-
-#include "findip.hpp"
-#include "findip2.hpp"
 
 #include "curvedelems.hpp"
 #include "clusters.hpp"

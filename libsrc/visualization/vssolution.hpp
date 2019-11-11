@@ -233,7 +233,12 @@ public:
   {
     user_vis.Append (vis);
   }
-  
+  void DeleteUserVisualizationObject (UserVisualizationObject * vis)
+  {
+    int pos = user_vis.Pos(vis);
+    if (pos >= 0)
+      user_vis.Delete(pos);
+  }
 
 private:
   void GetClippingPlaneTrigs (NgArray<ClipPlaneTrig> & trigs, NgArray<ClipPlanePoint> & pts);

@@ -276,8 +276,8 @@ namespace netgen
 
     double oldlamedge,oldlamface;
 
-    MeshOptimize2d * optimizer2d = refinement.Get2dOptimizer();
-    if(!optimizer2d)
+    auto geo = mesh.GetGeometry();
+    if(!geo)
       {
 	cerr << "No 2D Optimizer!" << endl;
 	return;
@@ -382,8 +382,15 @@ namespace netgen
 	    for (int i = 1; i <= np; i++)
 	      *can.Elem(i) = mesh.Point(i);
 	    
-	    if(optimizer2d)
-	      optimizer2d->ProjectBoundaryPoints(surfaceindex,can,should);
+	    if(geo)
+              for(int i=0; i<surfaceindex.Size(); i++)
+                {
+                  if(surfaceindex[i] >= 0)
+                    {
+                      *should[i] = *can[i];
+                      geo->ProjectPoint(surfaceindex[i],*should[i]);
+                    }
+                }
 	  }
 
 

@@ -537,6 +537,7 @@ namespace netgen
                 // delete ng_geometry;
 		// ng_geometry = hgeom;
                 ng_geometry = shared_ptr<NetgenGeometry> (hgeom);
+                geometryregister[i]->SetParameters(interp);
 		
 		mesh.reset();
 		return TCL_OK;
@@ -679,40 +680,96 @@ namespace netgen
 		     int argc, tcl_const char *argv[])
   {
     char buf[20], lstring[200];
+    static int prev_np = -1;
+    static int prev_ne = -1;
+    static int prev_nse = -1;
+    
     if (mesh)
       {
-	sprintf (buf, "%u", unsigned(mesh->GetNP()));
-        Tcl_SetVar  (interp, "::status_np", buf, 0);
-	sprintf (buf, "%u", unsigned(mesh->GetNE()));
-        Tcl_SetVar  (interp, "::status_ne", buf, 0);
-	sprintf (buf, "%u", unsigned(mesh->GetNSE()));
-        Tcl_SetVar  (interp, "::status_nse", buf, 0);
+        if (prev_np != mesh->GetNP())
+          {
+            sprintf (buf, "%u", unsigned(mesh->GetNP()));
+            Tcl_SetVar  (interp, "::status_np", buf, 0);
+            prev_np = mesh->GetNP();
+          }
+
+        if (prev_ne != mesh->GetNE())
+          {
+            sprintf (buf, "%u", unsigned(mesh->GetNE()));
+            Tcl_SetVar  (interp, "::status_ne", buf, 0);
+            prev_ne = mesh->GetNE();
+          }
+
+        if (prev_nse != mesh->GetNSE())
+          {
+            sprintf (buf, "%u", unsigned(mesh->GetNSE()));
+            Tcl_SetVar  (interp, "::status_nse", buf, 0);
+            prev_nse = mesh->GetNSE();
+          }
+        
+        auto tets_in_qualclass = mesh->GetQualityHistogram();
+        lstring[0] = 0;
+        for (int i = 0; i < tets_in_qualclass.Size(); i++)
+          {
+            sprintf (buf, " %d", tets_in_qualclass[i]);
+            strcat (lstring, buf);
+          }
+        for (int i = tets_in_qualclass.Size(); i < 20; i++)
+            strcat (lstring, " 0");
+        Tcl_SetVar  (interp, "::status_tetqualclasses", lstring, 0);
       }
     else
       {
-        Tcl_SetVar  (interp, "::status_np", "0", 0);
-        Tcl_SetVar  (interp, "::status_ne", "0", 0);
-        Tcl_SetVar  (interp, "::status_nse", "0", 0);
+        if (prev_np != 0)
+          {
+            Tcl_SetVar  (interp, "::status_np", "0", 0);
+            prev_np = 0;
+          }
+
+        if (prev_ne != 0)
+          {
+            Tcl_SetVar  (interp, "::status_ne", "0", 0);
+            prev_ne = 0;
+          }
+
+        if (prev_nse != 0)
+          {
+            Tcl_SetVar  (interp, "::status_nse", "0", 0);
+            prev_nse = 0;
+          }
+        Tcl_SetVar  (interp, "::status_tetqualclasses", "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", 0);
       }
 
+    static string prev_working;
+    string working = multithread.running ? "working" : "       ";
+    if (working != prev_working)
+      {
+        Tcl_SetVar (interp, "::status_working", working.c_str(), 0);
+        prev_working = working;
+      }
+
+    /*
     if (multithread.running)
       Tcl_SetVar (interp, "::status_working", "working", 0);
     else
       Tcl_SetVar (interp, "::status_working", "       ", 0);
-
-    Tcl_SetVar (interp, "::status_task", const_cast<char *>(multithread.task), 0);
-    sprintf (buf, "%lf", multithread.percent);
-    Tcl_SetVar  (interp, "::status_percent", buf, 0);
-
-    lstring[0] = 0;
-    for (int i = 1; i <= tets_in_qualclass.Size(); i++)
+    */
+    
+    static string prev_task;
+    if (prev_task != string(multithread.task))
       {
-	sprintf (buf, " %d", tets_in_qualclass.Get(i));
-	strcat (lstring, buf);
+        prev_task = multithread.task;
+        Tcl_SetVar (interp, "::status_task", prev_task.c_str(), 0);
       }
-    for (int i = tets_in_qualclass.Size()+1; i <= 20; i++)
-      strcat (lstring, " 0");
-    Tcl_SetVar  (interp, "::status_tetqualclasses", lstring, 0);
+
+    static double prev_percent = -1;
+    if (prev_percent != multithread.percent)
+      {
+        prev_percent = multithread.percent;
+        sprintf (buf, "%lf", prev_percent);
+        Tcl_SetVar  (interp, "::status_percent", buf, 0);
+      }
+        
 
     {
       lock_guard<mutex> guard(tcl_todo_mutex);
@@ -1226,6 +1283,10 @@ namespace netgen
 
     mparam.parallel_meshing = atoi (Tcl_GetVar (interp, "::options.parallel_meshing", 0));
     mparam.nthreads = atoi (Tcl_GetVar (interp, "::options.nthreads", 0));
+    if(atoi(Tcl_GetVar (interp, "::stloptions.resthcloseedgeenable", 0)))
+      mparam.closeedgefac = atof(Tcl_GetVar (interp, "::stloptions.resthcloseedgefac", 0));
+    else
+      mparam.closeedgefac = {};
 
     //BaseMoveableMem::totalsize = 0;
     // 1048576 * atoi (Tcl_GetVar (interp, "::options.memory", 0));
