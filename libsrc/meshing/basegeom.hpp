@@ -39,7 +39,12 @@ namespace netgen
                               const EdgePointGeomInfo& gi1,
                               const EdgePointGeomInfo& gi2,
                               Point<3>& newp,
-                              EdgePointGeomInfo& newgi) const = 0;
+                              EdgePointGeomInfo& newgi) const
+    {
+      newp = p1 + secpoint * (p2-p1);
+      newgi = gi1;
+      ProjectPoint(newp, &newgi);
+    }
     virtual Vec<3> GetTangent(double t) const = 0;
   };
 
@@ -54,7 +59,12 @@ namespace netgen
     // Project point using geo info. Fast if point is close to
     // parametrization in geo info.
     virtual bool ProjectPointGI(Point<3>& p, PointGeomInfo& gi) const =0;
-    virtual bool CalcPointGeomInfo(const Point<3>& p, PointGeomInfo& gi) const = 0;
+    virtual bool CalcPointGeomInfo(const Point<3>& p, PointGeomInfo& gi) const
+    {
+      auto pnew = p;
+      gi = Project(pnew);
+      return (p-pnew).Length() < 1e-10 * GetBoundingBox().Diam() ;
+    }
     virtual Point<3> GetPoint(const PointGeomInfo& gi) const = 0;
     virtual void CalcEdgePointGI(const GeometryEdge& edge,
                                  double t,
@@ -73,7 +83,15 @@ namespace netgen
                               const PointGeomInfo& gi1,
                               const PointGeomInfo& gi2,
                               Point<3>& newp,
-                              PointGeomInfo& newgi) const = 0;
+                              PointGeomInfo& newgi) const
+    {
+      newp = p1 + secpoint * (p2-p1);
+      newgi.trignum = gi1.trignum;
+      newgi.u = 0.5 * (gi1.u + gi1.u);
+      newgi.v = 0.5 * (gi1.v + gi2.v);
+      if(!ProjectPointGI(newp, newgi))
+        newgi = Project(newp);
+    }
 
   protected:
     void RestrictHTrig(Mesh& mesh,
