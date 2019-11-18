@@ -13,7 +13,15 @@ def pytest_configure(config):
 
 
 def pytest_collection_modifyitems(config, items):
-    if not (('RUN_SLOW_TESTS' in os.environ and os.environ['RUN_SLOW_TESTS']) or config.getoption("--runslow")):
+    import platform
+
+    run_slow_tests = config.getoption("--runslow")
+
+    # gitlab-ci: run slow tests only on Linux
+    if platform.system()=='Linux' and 'RUN_SLOW_TESTS' in os.environ and os.environ['RUN_SLOW_TESTS']:
+        run_slow_tests = True
+
+    if not run_slow_tests:
         skip_slow = pytest.mark.skip(reason="need --runslow option to run")
         for item in items:
             if "slow" in item.keywords:
