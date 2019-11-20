@@ -21,6 +21,7 @@
 #include "XSControl_WorkSession.hxx"
 #include "XSControl_TransferReader.hxx"
 #include "StepRepr_RepresentationItem.hxx"
+#include "StepBasic_ProductDefinitionRelationship.hxx"
 
 #ifndef _Standard_Version_HeaderFile
 #include <Standard_Version.hxx>
@@ -37,42 +38,38 @@
 
 namespace netgen
 {
-void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * aReader, char * acName)
-{
-   const Handle(XSControl_WorkSession)& theSession = aReader->Reader().WS();
-   const Handle(XSControl_TransferReader)& aTransferReader =
-      theSession->TransferReader();
+  string STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * aReader)
+  {
+    const Handle(XSControl_WorkSession)& theSession = aReader->Reader().WS();
+    const Handle(XSControl_TransferReader)& aTransferReader =
+        theSession->TransferReader();
 
-   Handle(Standard_Transient) anEntity =
-      aTransferReader->EntityFromShapeResult(theShape, 1);
+    Handle(Standard_Transient) anEntity =
+        aTransferReader->EntityFromShapeResult(theShape, 1);
 
-   if (anEntity.IsNull()) {
-      // as just mapped
-      anEntity = aTransferReader->EntityFromShapeResult (theShape,-1);
-   }
+    if (anEntity.IsNull()) // as just mapped
+        anEntity = aTransferReader->EntityFromShapeResult (theShape,-1);
 
-   if (anEntity.IsNull()) {
-      // as anything
-      anEntity = aTransferReader->EntityFromShapeResult (theShape,4);
-   }
+    if (anEntity.IsNull()) // as anything
+        anEntity = aTransferReader->EntityFromShapeResult (theShape,4);
 
-   if (anEntity.IsNull()) {
-      cout<<"Warning: XSInterVertex_STEPReader::ReadAttributes()\nentity not found"<<endl;
-      strcpy(acName, "none");
-   }
-   else
-   {
-      Handle(StepRepr_RepresentationItem) aReprItem;
-      aReprItem =
-         Handle(StepRepr_RepresentationItem)::DownCast(anEntity);
-
-      if (aReprItem.IsNull()) {
-         cout<<"Error: STEPReader::ReadAttributes():\nStepRepr_RepresentationItem Is NULL"<<endl;
+    if (anEntity.IsNull())
+      {
+        cout<<"Warning: cannot get entity from shape" <<endl;
+        return "none";
       }
-      else
-         strcpy(acName, aReprItem->Name()->ToCString());
-   }
-}
+
+    auto aReprItem = Handle(StepRepr_RepresentationItem)::DownCast(anEntity);
+    if(!aReprItem.IsNull())
+        return aReprItem->Name()->ToCString();;
+
+    auto bReprItem = Handle(StepBasic_ProductDefinitionRelationship)::DownCast(anEntity);
+    if (!bReprItem.IsNull())
+        return bReprItem->Description()->ToCString();
+
+    cout<<"Warning: unknown entity type " << anEntity->DynamicType() << endl;
+    return "none";
+  }
 
   void OCCGeometry :: Analyse(Mesh& mesh,
                               const MeshingParameters& mparam) const
@@ -1380,24 +1377,29 @@ void STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * a
 
       occgeo->CalcBoundingBox();
       PrintContents (occgeo);
-      char * name = new char[50];
-      //string name;
-      STEP_GetEntityName(occgeo->shape,&reader,name);
-      occgeo->snames.Append(name);
+      string name;
       TopExp_Explorer exp0,exp1;
       
       timer_getnames.Start();
+      for (exp0.Init(occgeo->shape, TopAbs_SOLID); exp0.More(); exp0.Next())
+      {
+         TopoDS_Solid solid = TopoDS::Solid(exp0.Current());
+         name = STEP_GetEntityName(solid,&reader);
+         if (name == "")
+             name = string("domain_") + ToString(occgeo->snames.Size());
+         occgeo->snames.Append(name);
+      }
       for (exp0.Init(occgeo->shape, TopAbs_FACE); exp0.More(); exp0.Next())
       {
          TopoDS_Face face = TopoDS::Face(exp0.Current());
-         STEP_GetEntityName(face,&reader,name);
-         if (name == string(""))
-             snprintf(name, 50, "bc_%zu", occgeo->fnames.Size());
+         name = STEP_GetEntityName(face,&reader);
+         if (name == "")
+             name = string("bc_") + ToString(occgeo->fnames.Size());
          occgeo->fnames.Append(name);
 //          for (exp1.Init(face, TopAbs_EDGE); exp1.More(); exp1.Next())
 //          {
 //             TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
-//             STEP_GetEntityName(edge,&reader,name);
+//             name = STEP_GetEntityName(edge,&reader);
 //             occgeo->enames.Append(name);
 //          }
       }
