@@ -144,6 +144,8 @@ namespace ngcore
 
   std::string GetBackTrace()
   {
+    if(!getenv("NG_BACKTRACE"))
+        return "";
     std::cerr << "Collecting backtrace..." << std::endl;
     std::stringstream result;
     void *bt[100];
