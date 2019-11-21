@@ -39,7 +39,7 @@ namespace ngcore
         auto vdl = py::cast<py::list>(value);
         if (py::len(vdl) > 0)
           {
-            if(py::isinstance<double>(vdl[0]))
+            if(py::isinstance<py::float_>(vdl[0]) || py::isinstance<py::int_>(vdl[0]))
               flags.SetFlag(s, makeCArray<double>(vdl));
             if(py::isinstance<py::str>(vdl[0]))
               flags.SetFlag(s, makeCArray<string>(vdl));
