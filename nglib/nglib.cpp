@@ -648,6 +648,7 @@ namespace nglib
    {
       STLGeometry* stlgeometry = (STLGeometry*)geom;
       Mesh* me = (Mesh*)mesh;
+      me->SetGeometry( shared_ptr<NetgenGeometry>(stlgeometry, &NOOP_Deleter) );
 
       // Philippose - 27/07/2009
       // Do not locally re-define "mparam" here... "mparam" is a global 
@@ -693,6 +694,7 @@ namespace nglib
    {
       STLGeometry* stlgeometry = (STLGeometry*)geom;
       Mesh* me = (Mesh*)mesh;
+      me->SetGeometry( shared_ptr<NetgenGeometry>(stlgeometry, &NOOP_Deleter) );
 
       // Philippose - 27/07/2009
       // Do not locally re-define "mparam" here... "mparam" is a global 
@@ -851,6 +853,7 @@ namespace nglib
    {
       OCCGeometry * occgeom = (OCCGeometry*)geom;
       Mesh * me = (Mesh*)mesh;
+      me->SetGeometry( shared_ptr<NetgenGeometry>(occgeom, &NOOP_Deleter) );
 
       me->geomtype = Mesh::GEOM_OCC;
 
@@ -878,6 +881,7 @@ namespace nglib
    {
       OCCGeometry * occgeom = (OCCGeometry*)geom;
       Mesh * me = (Mesh*)mesh;
+      me->SetGeometry( shared_ptr<NetgenGeometry>(occgeom, &NOOP_Deleter) );
 
       mp->Transfer_Parameters();
 
@@ -905,6 +909,7 @@ namespace nglib
 
       OCCGeometry * occgeom = (OCCGeometry*)geom;
       Mesh * me = (Mesh*)mesh;
+      me->SetGeometry( shared_ptr<NetgenGeometry>(occgeom, &NOOP_Deleter) );
 
       // Set the internal meshing parameters structure from the nglib meshing 
       // parameters structure
