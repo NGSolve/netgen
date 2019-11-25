@@ -31,8 +31,8 @@ namespace ngcore
     Exception() = default;
     Exception(const Exception&) = default;
     Exception(Exception&&) = default;
-    Exception(const std::string& s) : m_what(s) {}
-    Exception(const char* s) : m_what(s) {}
+    Exception(const std::string& s); //  : m_what(s) {}
+    Exception(const char* s); //  : m_what(s) {}
     ~Exception() override = default;
 
     Exception& operator =(const Exception&) = default;
@@ -49,7 +49,10 @@ namespace ngcore
     /// implement virtual function of std::exception
     const char* what() const noexcept override { return m_what.c_str(); }
   };
-
+  
+  NGCORE_API void ThrowException(const std::string & s);
+  NGCORE_API void ThrowException(const char * s);
+  
   // Out of Range exception
   class NGCORE_API RangeException : public Exception
   {

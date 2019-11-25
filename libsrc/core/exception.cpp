@@ -18,6 +18,26 @@
 
 namespace ngcore
 {
+
+
+  Exception :: Exception(const std::string& s)
+    : m_what(s) {}
+  
+  Exception :: Exception(const char* s)
+    : m_what(s) {}
+
+
+  void ThrowException(const std::string & s)
+  {
+    throw Exception (s);
+  }
+  
+  void ThrowException(const char * s)
+  {
+    throw Exception (s);
+  }
+  
+  
   namespace detail
   {
     static int exec(std::string cmd, std::string & out) {
