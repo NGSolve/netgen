@@ -8,10 +8,10 @@ if(USE_GUI)
         add_library(occvis ${NG_LIB_TYPE} vsocc.cpp)
 endif(USE_GUI)
 
-target_link_libraries(occ PUBLIC ngcore)
+target_link_libraries(occ PUBLIC ngcore PRIVATE netgen_python)
 
 if(NOT WIN32)
-    target_link_libraries( occ PRIVATE ${OCC_LIBRARIES} ${PYTHON_LIBRARIES})
+    target_link_libraries( occ PRIVATE ${OCC_LIBRARIES} )
     if(USE_OCC AND APPLE)
         # Link AppKit in case OCE was built as static libraries
         find_library(AppKit AppKit)

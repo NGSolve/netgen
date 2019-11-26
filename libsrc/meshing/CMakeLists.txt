@@ -23,7 +23,7 @@ endif(APPLE)
 
 target_link_libraries( mesh PUBLIC ngcore PRIVATE gprim la gen )
 
-target_link_libraries( mesh PRIVATE netgen_metis ${ZLIB_LIBRARIES} ${PYTHON_LIBRARIES} )
+target_link_libraries( mesh PRIVATE netgen_metis netgen_python ${ZLIB_LIBRARIES} )
 if(NOT WIN32)
   install( TARGETS mesh ${NG_INSTALL_DIR})
 endif(NOT WIN32)

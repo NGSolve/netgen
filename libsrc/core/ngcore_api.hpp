@@ -2,6 +2,36 @@
 #define NETGEN_CORE_NGCORE_API_HPP
 
 #ifdef WIN32
+
+// This function or variable may be unsafe. Consider using _ftime64_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+#pragma warning(disable:4244)
+#pragma warning(disable:4996)
+
+// multiple inheritance via dominance
+#pragma warning(disable:4250)
+
+// needs to have dll-interface to be used by clients of class
+#pragma warning(disable:4251)
+
+// size_t to int conversion:
+#pragma warning(disable:4267)
+
+// non dll-interface class 'std::exception' used as base for dll-interface class
+#pragma warning(disable:4275)
+
+// C++ exception specification ignored except to indicate a function is not __declspec(nothrow)
+#pragma warning(disable:4290)
+
+// no suitable definition provided for explicit template instantiation request
+#pragma warning(disable:4661)
+
+// bool-int conversion
+#pragma warning(disable:4800)
+
+#endif // WIN32
+
+
+#ifdef WIN32
         #define NGCORE_API_EXPORT __declspec(dllexport)
         #define NGCORE_API_IMPORT __declspec(dllimport)
 #else
