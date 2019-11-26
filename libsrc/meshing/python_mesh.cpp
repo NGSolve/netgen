@@ -492,14 +492,20 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   [](FaceDescriptor & self) -> string { return self.GetBCName(); },
                   [](FaceDescriptor & self, string name) { self.SetBCName(new string(name)); } // memleak
                   )
-    .def("SetSurfaceColor", [](FaceDescriptor & self, py::list color )
-          {
-            Vec3d c;
-            c.X() = py::extract<double>(color[0])();
-            c.Y() = py::extract<double>(color[1])();
-            c.Z() = py::extract<double>(color[2])();
-            self.SetSurfColour(c);
-          })
+    .def_property("color",
+                  [](FaceDescriptor & self)
+                      {
+                        auto c = self.SurfColour();
+                        return py::make_tuple( c.X(), c.Y(), c.Z() );
+                      },
+                  [](FaceDescriptor & self, py::tuple color)
+                      {
+                        Vec3d c;
+                        c.X() = py::extract<double>(color[0])();
+                        c.Y() = py::extract<double>(color[1])();
+                        c.Z() = py::extract<double>(color[2])();
+                        self.SetSurfColour(c);
+                      })
     ;
 
   
