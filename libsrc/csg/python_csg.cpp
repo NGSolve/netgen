@@ -707,7 +707,9 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
              mesh->SetGeometry(geo);
 	     ng_geometry = geo;
              geo->FindIdenticSurfaces(1e-8 * geo->MaxSize());
-             geo->GenerateMesh (mesh, mp);
+             auto result = geo->GenerateMesh (mesh, mp);
+             if(result != 0)
+               throw Exception("Meshing failed!");
              return mesh;
            }, py::arg("mp") = nullptr,
        meshingparameter_description.c_str(),
