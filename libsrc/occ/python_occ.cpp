@@ -177,7 +177,9 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                            geo->SetOCCParameters(occparam);
                            auto mesh = make_shared<Mesh>();
                            mesh->SetGeometry(geo);
-                           geo->GenerateMesh(mesh, mp);
+                           auto result = geo->GenerateMesh(mesh, mp);
+                           if(result != 0)
+                             throw Exception("Meshing failed!");
                            SetGlobalMesh(mesh);
                            ng_geometry = geo;
                            return mesh;

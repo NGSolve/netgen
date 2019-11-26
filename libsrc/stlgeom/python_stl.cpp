@@ -205,7 +205,10 @@ DLL_HEADER void ExportSTL(py::module & m)
                            mesh->SetGeometry(geo);
                            ng_geometry = geo;
                            SetGlobalMesh(mesh);
-                           STLMeshingDummy(geo.get(), mesh, mp, stlparam);
+                           auto result = STLMeshingDummy(geo.get(), mesh, mp, stlparam);
+                           if(result != 0)
+                             throw Exception("Meshing failed!");
+
                            return mesh;
                          }, py::arg("mp") = nullptr,
       py::call_guard<py::gil_scoped_release>(),
