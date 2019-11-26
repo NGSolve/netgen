@@ -151,6 +151,7 @@ set_vars( NETGEN_CMAKE_ARGS
   DEBUG_LOG
   CHECK_RANGE
   BUILD_STUB_FILES
+  BUILD_FOR_CONDA
   )
 
 # propagate all variables set on the command line using cmake -DFOO=BAR

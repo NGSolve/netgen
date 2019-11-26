@@ -20,6 +20,7 @@ endif()
 
 if(USE_PYTHON)
   target_sources(ngcore PRIVATE python_ngcore.cpp)
+  target_compile_definitions(ngcore PUBLIC NETGEN_PYTHON NG_PYTHON)
 endif(USE_PYTHON)
 
 target_compile_definitions(ngcore PRIVATE NGCORE_EXPORTS)
@@ -52,12 +53,7 @@ endif(USE_SPDLOG)
 
 install(TARGETS ngcore DESTINATION ${NG_INSTALL_DIR} COMPONENT netgen)
 
-if(USE_PYTHON)
-  target_compile_definitions(ngcore PUBLIC NETGEN_PYTHON)
-  target_include_directories(ngcore PRIVATE ${PYTHON_INCLUDE_DIRS})
-  target_link_libraries(ngcore PRIVATE ${PYTHON_LIBRARIES})
-endif(USE_PYTHON)
-target_link_libraries(ngcore PUBLIC netgen_mpi PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(ngcore PUBLIC netgen_mpi PRIVATE netgen_python ${CMAKE_THREAD_LIBS_INIT})
 
 install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp logging.hpp
   exception.hpp symboltable.hpp paje_trace.hpp utils.hpp profiler.hpp mpi_wrapper.hpp
@@ -71,7 +67,7 @@ endif(ENABLE_CPP_CORE_GUIDELINES_CHECK)
 
 if(USE_PYTHON)
   pybind11_add_module(pyngcore SHARED python_ngcore_export.cpp)
-  target_link_libraries(pyngcore PUBLIC ngcore ${PYTHON_LIBRARIES})
+  target_link_libraries(pyngcore PUBLIC ngcore netgen_python)
   set_target_properties(pyngcore PROPERTIES INSTALL_RPATH "${NG_RPATH_TOKEN}/${NETGEN_PYTHON_RPATH}")
   install(TARGETS pyngcore DESTINATION ${NG_INSTALL_DIR_PYTHON} COMPONENT netgen)
 endif(USE_PYTHON)

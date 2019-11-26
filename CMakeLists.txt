@@ -29,6 +29,7 @@ option( USE_SPDLOG "Enable spd log logging" OFF)
 option( DEBUG_LOG "Enable more debug output (may increase computation time) - only works with USE_SPDLOG=ON" OFF)
 option( CHECK_RANGE "Check array range access, automatically enabled if built in debug mode" OFF)
 option( BUILD_STUB_FILES "Build stub files for better autocompletion" ON)
+option( BUILD_FOR_CONDA "Link python libraries only to executables" OFF)
 
 option( USE_SUPERBUILD       "use ccache" ON)
 
@@ -227,7 +228,7 @@ if(WIN32)
     add_definitions(-DMSVC_EXPRESS -D_CRT_SECURE_NO_WARNINGS -DHAVE_STRUCT_TIMESPEC)
     # build convenience (aka object) libraries in windows)
     set(NG_LIB_TYPE OBJECT)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /wd4244 /wd4800")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
 else(WIN32)
     # build shared libraries
     set(NG_LIB_TYPE SHARED)
@@ -270,9 +271,14 @@ if (USE_GUI)
 endif (USE_GUI)
 
 #######################################################################
+if(WIN32)
+    add_library(netgen_python INTERFACE IMPORTED)
+else()
+    add_library(netgen_python INTERFACE)
+endif()
+
 if (USE_PYTHON)
     add_subdirectory(external_dependencies/pybind11)
-    add_definitions(-DNG_PYTHON)
     find_path(PYBIND_INCLUDE_DIR pybind11/pybind11.h HINTS ${PYTHON_INCLUDE_DIR})
     if( PYBIND_INCLUDE_DIR )
         message(STATUS "Found Pybind11: ${PYBIND_INCLUDE_DIR}")
@@ -280,8 +286,11 @@ if (USE_PYTHON)
         message(FATAL_ERROR "Could NOT find pybind11!")
     endif( PYBIND_INCLUDE_DIR )
 
-    include_directories(${PYBIND_INCLUDE_DIR})
-    include_directories(${PYTHON_INCLUDE_DIRS})
+    target_include_directories(netgen_python INTERFACE ${PYBIND_INCLUDE_DIR} ${PYTHON_INCLUDE_DIRS})
+    if(NOT ${BUILD_FOR_CONDA})
+        # Don't link python libraries in conda environments
+        target_link_libraries(netgen_python INTERFACE ${PYTHON_LIBRARIES})
+    endif()
 
     if(NG_INSTALL_PYBIND)
       install(DIRECTORY ${PYBIND_INCLUDE_DIR}/pybind11 DESTINATION ${NG_INSTALL_DIR_INCLUDE} COMPONENT netgen_devel)
