@@ -120,6 +120,11 @@ namespace netgen
       return *this;
     }
 
+    bool operator== (const Vec<D,T> &a)
+    {
+      return x[0]==a.x[0] && x[1]==a.x[1] && x[2]==a.x[2];
+    }
+
     T & operator() (int i) { return x[i]; }
     const T & operator() (int i) const { return x[i]; }
 

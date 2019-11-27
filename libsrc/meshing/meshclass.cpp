@@ -818,11 +818,11 @@ namespace netgen
           outfile.width(8);
           outfile << GetFaceDescriptor(i).SurfNr()+1 << " ";
           outfile.width(12);
-          outfile << GetFaceDescriptor(i).SurfColour().X() << " ";
+          outfile << GetFaceDescriptor(i).SurfColour()[0] << " ";
           outfile.width(12);
-          outfile << GetFaceDescriptor(i).SurfColour().Y() << " ";
+          outfile << GetFaceDescriptor(i).SurfColour()[1] << " ";
           outfile.width(12);
-          outfile << GetFaceDescriptor(i).SurfColour().Z();
+          outfile << GetFaceDescriptor(i).SurfColour()[2];
           outfile << endl;
        }
     }

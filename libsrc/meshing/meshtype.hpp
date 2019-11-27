@@ -1163,7 +1163,7 @@ namespace netgen
 
     // Philippose - 06/07/2009
     // Get Surface colour
-    Vec3d SurfColour () const { return surfcolour; }
+    Vec<3> SurfColour () const { return surfcolour; }
     DLL_HEADER const string & GetBCName () const { return *bcname; }
     // string * BCNamePtr () { return bcname; }
     // const string * BCNamePtr () const  { return bcname; }
@@ -1174,7 +1174,7 @@ namespace netgen
     void SetBCName (string * bcn); //  { bcname = bcn; }
     // Philippose - 06/07/2009
     // Set the surface colour
-    void SetSurfColour (Vec3d colour) { surfcolour = colour; }
+    void SetSurfColour (Vec<3> colour) { surfcolour = colour; }
 
     void SetDomainInSingular (double v) { domin_singular = v; }
     void SetDomainOutSingular (double v) { domout_singular = v; }

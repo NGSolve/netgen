@@ -416,11 +416,11 @@ namespace netgen
         if(!(geom.face_colours.IsNull())
            && (geom.face_colours->GetColor(face,XCAFDoc_ColorSurf,face_colour)))
           {
-            mesh.GetFaceDescriptor(facenr).SetSurfColour(Vec3d(face_colour.Red(),face_colour.Green(),face_colour.Blue()));
+            mesh.GetFaceDescriptor(facenr).SetSurfColour({face_colour.Red(),face_colour.Green(),face_colour.Blue()});
           }
         else
           {
-            mesh.GetFaceDescriptor(facenr).SetSurfColour(Vec3d(0.0,1.0,0.0));
+            mesh.GetFaceDescriptor(facenr).SetSurfColour({0.0,1.0,0.0});
           }
 
         if(geom.fnames.Size()>=facenr) 
