@@ -28,6 +28,9 @@
 // bool-int conversion
 #pragma warning(disable:4800)
 
+// '__declspec(dllexport)' and 'extern' are incompatible on an explicit instantiation
+#pragma warning(disable:4910)
+
 #endif // WIN32
 
 
