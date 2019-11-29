@@ -31,8 +31,8 @@ namespace ngcore
     Exception() = default;
     Exception(const Exception&) = default;
     Exception(Exception&&) = default;
-    Exception(const std::string& s); //  : m_what(s) {}
-    Exception(const char* s); //  : m_what(s) {}
+    NGCORE_API Exception(const std::string& s); //  : m_what(s) {}
+    NGCORE_API Exception(const char* s); //  : m_what(s) {}
     ~Exception() override = default;
 
     Exception& operator =(const Exception&) = default;
