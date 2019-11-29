@@ -88,6 +88,7 @@ namespace netgen
 
   Mesh & Mesh :: operator= (const Mesh & mesh2)
   {
+    geometry = mesh2.geometry;
     dimension = mesh2.dimension;
     points = mesh2.points;
     segments = mesh2.segments;
