@@ -18,18 +18,12 @@
 
 */
 
-#ifdef WIN32
-   #if NGINTERFACE_EXPORTS || NGLIB_EXPORTS || nglib_EXPORTS
-      #define DLL_HEADER   __declspec(dllexport)
-   #else
-      #define DLL_HEADER   __declspec(dllimport)
-   #endif
-#else
-   #if __GNUC__ >= 4
-      #define DLL_HEADER __attribute__ ((visibility ("default")))
-   #else
-      #define DLL_HEADER
-   #endif
+#ifndef DLL_HEADER
+  #if NGINTERFACE_EXPORTS || NGLIB_EXPORTS || nglib_EXPORTS
+    #define DLL_HEADER NGCORE_API_EXPORT
+  #else
+    #define DLL_HEADER NGCORE_API_IMPORT
+  #endif
 #endif
 
 
