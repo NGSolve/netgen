@@ -247,6 +247,7 @@ namespace netgen
                             PointIndex & selpoint2, int & locpi);
 
 
+  DLL_HEADER std::vector<unsigned char> Snapshot( int w, int h );
 }
 
 

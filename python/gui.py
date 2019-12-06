@@ -24,3 +24,16 @@ if not netgen.libngpy._meshing._netgen_executable_started:
         StartGUI()
     except:
         pass
+
+def Snapshot(w,h, filename=None):
+    import ngsolve
+    ngsolve.Redraw(blocking=True)
+    import numpy
+    image = netgen.libngpy.Snapshot(w, h)
+    image = numpy.array(image, dtype=numpy.uint8).reshape(h, w, 3)
+    image = image[::-1,:,:]
+    if filename:
+        import PIL.Image
+        im = PIL.Image.fromarray(image)
+        im.save(filename)
+    return image
