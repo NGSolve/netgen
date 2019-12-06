@@ -23,6 +23,7 @@
 
 // Philippose - 14.02.2009
 // Modifications for creating a DLL in Windows
+#ifndef DLL_HEADER
 #ifdef WIN32
    #ifdef NGLIB_EXPORTS || nglib_EXPORTS
       #define DLL_HEADER   __declspec(dllexport)
@@ -30,9 +31,9 @@
       #define DLL_HEADER   __declspec(dllimport)
    #endif
 #else
-   #define DLL_HEADER 
+  #define DLL_HEADER __attribute__((visibility("default")))
 #endif
-
+#endif
 
 
 // ** Constants used within Netgen *********************
