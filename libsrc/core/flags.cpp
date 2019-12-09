@@ -343,9 +343,9 @@ namespace ngcore
     for (int i = 0; i < defflags.Size(); i++)
       ost << defflags.GetName(i) << endl;
     for (int i = 0; i < strlistflags.Size(); i++)
-      ost << strlistflags.GetName(i) << " = " << strlistflags[i] << endl;
+      ost << strlistflags.GetName(i) << " = " << *strlistflags[i] << endl;
     for (int i = 0; i < numlistflags.Size(); i++)
-      ost << numlistflags.GetName(i) << " = " << numlistflags[i] << endl;
+      ost << numlistflags.GetName(i) << " = " << *numlistflags[i] << endl;
     for (int i = 0; i < flaglistflags.Size(); i++)
       ost << flaglistflags.GetName(i) << " = " << flaglistflags[i] << endl;
   }
