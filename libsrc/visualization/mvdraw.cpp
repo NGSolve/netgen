@@ -827,7 +827,6 @@ namespace netgen
     std::vector<unsigned char> buffer(w*h*3);
     glPixelStorei(GL_UNPACK_ALIGNMENT,1);
     glPixelStorei(GL_PACK_ALIGNMENT,1);
-    glNamedFramebufferReadBuffer( fb, GL_COLOR_ATTACHMENT0 );
     glReadPixels (0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, &buffer[0]);
 
     glDeleteRenderbuffers(1, &depthrenderbuffer);

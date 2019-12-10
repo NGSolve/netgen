@@ -6,7 +6,8 @@
 
 #  if defined(TOGL_AGL) || defined(TOGL_AGL_CLASSIC) || defined(TOGL_NSOPENGL)
 #define GL_SILENCE_DEPRECATION
-#    include <OpenGL/gl.h>
+#define GL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED
+#    include <OpenGL/gl3.h>
 #    include <OpenGL/glu.h>
 #  else
 #    include <GL/gl.h>
