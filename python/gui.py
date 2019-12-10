@@ -26,8 +26,7 @@ if not netgen.libngpy._meshing._netgen_executable_started:
         pass
 
 def Snapshot(w,h, filename=None):
-    import ngsolve
-    ngsolve.Redraw(blocking=True)
+    netgen.Redraw(blocking=True)
     import numpy
     image = netgen.libngpy.Snapshot(w, h)
     image = numpy.array(image, dtype=numpy.uint8).reshape(h, w, 3)
