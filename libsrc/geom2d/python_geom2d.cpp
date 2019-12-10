@@ -367,6 +367,7 @@ DLL_HEADER void ExportGeom2d(py::module &m)
          ([] (shared_ptr<SplineGeometry2d> self)
           {
              ng_geometry = self;
+             py::module::import("netgen").attr("Redraw")();
           })
          )
     
