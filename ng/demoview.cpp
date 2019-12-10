@@ -20,7 +20,6 @@
 #include <visual.hpp>
 
 namespace netgen {  
-  extern VisualScene *visual_scene;
 #include "demoview.hpp"
 
 
