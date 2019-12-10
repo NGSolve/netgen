@@ -25,6 +25,8 @@ namespace netgen
   DLL_HEADER Point3d VisualScene :: center;
   DLL_HEADER double VisualScene :: rad;
   DLL_HEADER GLdouble VisualScene :: backcolor;
+  DLL_HEADER VisualScene visual_scene_cross;
+  DLL_HEADER VisualScene *visual_scene = &visual_scene_cross;
 
   /*
 #if TOGL_MAJOR_VERSION!=2
@@ -820,7 +822,7 @@ namespace netgen
     glViewport(0,0,w,h);
 
     glPushMatrix();
-    GetVSSolution().DrawScene();
+    visual_scene->DrawScene();
     glFinish();
     glPopMatrix();
 

@@ -20,7 +20,7 @@
 #include <visual.hpp>
 
 namespace netgen {  
-  extern VisualScene *vs;
+  extern VisualScene *visual_scene;
 #include "demoview.hpp"
 
 
@@ -422,7 +422,7 @@ namespace netgen {
     */
 
 
-    vs -> LookAt ( Point<3>(  campos.Evaluate (time)), 
+    visual_scene -> LookAt ( Point<3>(  campos.Evaluate (time)),
 		   Point<3>(campoint.Evaluate (time)),
 		   Point<3>(   camup.Evaluate (time)) );
 
