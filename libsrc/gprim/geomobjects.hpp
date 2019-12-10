@@ -179,6 +179,15 @@ namespace netgen
     return result;
   }
 
+  template<int D>
+  inline Vec<D> operator*(const Vec<D>& v, double d)
+  {
+    Vec<D> result;
+    for(auto i : Range(D))
+      result[i] = d*v[i];
+    return result;
+  }
+
   inline double Cross2(const Vec<2>& v1, const Vec<2>& v2)
   {
     return v1[0] * v2[1] - v1[1] * v2[0];

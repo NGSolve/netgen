@@ -122,18 +122,21 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("__getitem__", [](Point<2>& self, int index) { return self[index]; })
     ;
 
-  m.def ("Pnt", FunctionPointer
-           ([](double x, double y, double z) { return global_trafo(Point<3>(x,y,z)); }));
-  m.def ("Pnt", FunctionPointer
-           ([](double x, double y) { return Point<2>(x,y); }));
-
-  /*
-    // duplicated functions ????
-  m.def ("Pnt", FunctionPointer
-           ([](double x, double y, double z) { return Point<3>(x,y,z); }));
-  m.def ("Pnt", FunctionPointer
-           ([](double x, double y) { return Point<2>(x,y); }));
-  */
+  m.def("Pnt", [](double x, double y, double z)
+               { return global_trafo(Point<3>(x,y,z)); });
+  m.def("Pnt", [](double x, double y) { return Point<2>(x,y); });
+  m.def("Pnt", [](py::array_t<double> np_array)
+               {
+                 int dim = np_array.size();
+                 if(!(dim == 2 || dim == 3))
+                   throw Exception("Invalid dimension of input array!");
+                 if(dim == 2)
+                   return py::cast(Point<2>(np_array.at(0),
+                                            np_array.at(1)));
+                 return py::cast(global_trafo(Point<3>(np_array.at(0),
+                                                       np_array.at(1),
+                                                       np_array.at(2))));
+               });
 
   py::class_<Vec<2>> (m, "Vec2d")
     .def(py::init<double,double>())
@@ -143,6 +146,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def(py::self-py::self)
     .def(-py::self)
     .def(double()*py::self)
+    .def(py::self*double())
     .def("Norm", &Vec<2>::Length)
     .def("__getitem__", [](Vec<2>& vec, int index) { return vec[index]; })
     .def("__len__", [](Vec<2>& /*unused*/) { return 2; })
@@ -156,6 +160,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def(py::self-py::self)
     .def(-py::self)
     .def(double()*py::self)
+    .def(py::self*double())
     .def("Norm", &Vec<3>::Length)
     .def("__getitem__", [](Vec<3>& vec, int index) { return vec[index]; })
     .def("__len__", [](Vec<3>& /*unused*/) { return 3; })
@@ -163,6 +168,19 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   m.def ("Vec", FunctionPointer
            ([] (double x, double y, double z) { return global_trafo(Vec<3>(x,y,z)); }));
+  m.def("Vec", [](py::array_t<double> np_array)
+               {
+                 int dim = np_array.size();
+                 if(!(dim == 2 || dim == 3))
+                   throw Exception("Invalid dimension of input array!");
+                 if(dim == 2)
+                   return py::cast(Vec<2>(np_array.at(0),
+                                          np_array.at(1)));
+                 return py::cast(global_trafo(Vec<3>(np_array.at(0),
+                                                     np_array.at(1),
+                                                     np_array.at(2))));
+               });
+
   m.def ("Vec", FunctionPointer
            ([] (double x, double y) { return Vec<2>(x,y); }));
 
