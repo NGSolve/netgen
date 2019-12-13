@@ -33,6 +33,11 @@ namespace ngcore
                                    std::make_unique<std::map<std::string, detail::ClassArchiveInfo>>();
     (*type_register)[classname] = info;
   }
+  void Archive :: RemoveArchiveRegister(const std::string& classname)
+  {
+    if(IsRegistered(classname))
+        type_register->erase(classname);
+  }
   bool Archive :: IsRegistered(const std::string& classname)
   {
     if(type_register == nullptr) type_register =
