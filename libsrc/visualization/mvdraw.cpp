@@ -783,7 +783,12 @@ namespace netgen
 
   std::vector<unsigned char> Snapshot( int w, int h )
   {
-    glMatrixMode(GL_PROJECTION);
+    // save current settings
+    GLint viewport[4];
+    glGetIntegerv (GL_VIEWPORT, viewport);
+
+    glMatrixMode (GL_PROJECTION);
+    glPushMatrix();
     glLoadIdentity();
 
     double pnear = 0.1;
@@ -791,50 +796,48 @@ namespace netgen
 
     gluPerspective(20.0f, double(w) / h, pnear, pfar);
 
-    glMatrixMode(GL_MODELVIEW);
+    glMatrixMode (GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glViewport(0,0,w,h);
 
     GLuint fb = 0;
     glGenFramebuffers(1, &fb);
     glBindFramebuffer(GL_FRAMEBUFFER, fb);
 
-    GLuint tex;
-    glGenTextures(1, &tex);
+    // create, reserve and attach color and depth renderbuffer
+    GLuint rbs[2];
+    glGenRenderbuffers(2, rbs);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbs[0]);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, w, h);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rbs[0]);
 
-    glBindTexture(GL_TEXTURE_2D, tex);
-
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, w, h, 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-    GLuint depthrenderbuffer;
-    glGenRenderbuffers(1, &depthrenderbuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbs[1]);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, w, h);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthrenderbuffer);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbs[1]);
 
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, tex, 0);
-
+    // check if framebuffer status is complete
     if(int fbstatus; (fbstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE)
         cerr << "no frame buffer " << fbstatus << endl;
 
-    glBindFramebuffer(GL_FRAMEBUFFER, fb);
-    glViewport(0,0,w,h);
-
-    glPushMatrix();
     visual_scene->DrawScene();
     glFinish();
-    glPopMatrix();
 
     std::vector<unsigned char> buffer(w*h*3);
     glPixelStorei(GL_UNPACK_ALIGNMENT,1);
     glPixelStorei(GL_PACK_ALIGNMENT,1);
     glReadPixels (0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, &buffer[0]);
 
-    glDeleteRenderbuffers(1, &depthrenderbuffer);
-    glDeleteTextures(1, &tex);
+    glDeleteRenderbuffers(2, rbs);
     glDeleteFramebuffers(1, &fb);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    // restore previous settings
+    glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+    glMatrixMode (GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode (GL_MODELVIEW);
+    glPopMatrix();
     return buffer;
   }
 

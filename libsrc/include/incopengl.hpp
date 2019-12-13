@@ -47,12 +47,10 @@ extern void (*glBindFramebuffer) (GLenum target, GLuint framebuffer);
 extern void (*glBindRenderbuffer) (GLenum target, GLuint renderbuffer);
 extern void (*glDeleteFramebuffers) (GLsizei n, const GLuint *framebuffers);
 extern void (*glDeleteRenderbuffers) (GLsizei n, const GLuint *renderbuffers);
-extern void (*glFramebufferTexture) (GLenum target, GLenum attachment, GLuint texture, GLint level);
 extern void (*glGenFramebuffers) (GLsizei n, GLuint *framebuffers);
 extern void (*glGenRenderbuffers) (GLsizei n, GLuint *renderbuffers);
 extern void (*glRenderbufferStorage) (GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
 extern void (*glFramebufferRenderbuffer) (GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
-extern void (*glNamedFramebufferReadBuffer) ( GLuint framebuffer, GLenum mode);
 #endif
 DLL_HEADER void LoadOpenGLFunctionPointers();
 #endif // INCOPENGL_HPP___
