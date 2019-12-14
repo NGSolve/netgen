@@ -124,8 +124,18 @@ namespace ngcore
     // once and put them together correctly afterwards. Therefore all objects that may live in
     // Python should be archived using this Shallow function. If Shallow is called from C++ code
     // it archives the object normally.
+#ifdef NETGEN_PYTHON
     template<typename T>
     Archive& Shallow(T& val); // implemented in python_ngcore.hpp
+#else // NETGEN_PYTHON
+    template<typename T>
+    Archive& Shallow(T& val)
+    {
+      static_assert(detail::is_any_pointer<T>, "ShallowArchive must be given pointer type!");
+        *this & val;
+      return *this;
+    }
+#endif // NETGEN_PYTHON
 
 #ifdef NETGEN_PYTHON
     virtual void ShallowOutPython(const pybind11::object& /*unused*/)
@@ -572,6 +582,7 @@ namespace ngcore
     // Set ClassArchiveInfo for Demangled typeid, this is done by creating an instance of
     // RegisterClassForArchive<type, bases...>
     static void SetArchiveRegister(const std::string& classname, const detail::ClassArchiveInfo& info);
+    static void RemoveArchiveRegister(const std::string& classname);
     static bool IsRegistered(const std::string& classname);
 
     // Helper class for up-/downcasting
@@ -637,6 +648,10 @@ namespace ngcore
       info.downcaster = [/*this*/](const std::type_info& ti, void* p) -> void*
                         { return typeid(T) == ti ? p : Archive::Caster<T, Bases...>::tryDowncast(ti, p); };
       Archive::SetArchiveRegister(std::string(Demangle(typeid(T).name())),info);
+    }
+    ~RegisterClassForArchive()
+    {
+      Archive::RemoveArchiveRegister(std::string(Demangle(typeid(T).name())));
     }
 
 
