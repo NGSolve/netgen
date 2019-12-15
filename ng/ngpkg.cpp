@@ -103,7 +103,6 @@ namespace netgen
 
   // visualization scenes, pointer vs selects which one is drawn:
 
-  static VisualScene vscross;
   DLL_HEADER extern VisualSceneSurfaceMeshing vssurfacemeshing;
   DLL_HEADER extern VisualSceneMeshDoctor vsmeshdoc;
 
@@ -111,7 +110,8 @@ namespace netgen
 
 
 
-  VisualScene *vs = &vscross;
+  DLL_HEADER extern VisualScene *visual_scene;
+  DLL_HEADER extern VisualScene visual_scene_cross;
 
 
 
@@ -1973,7 +1973,8 @@ namespace netgen
   {
     const char * vismode = vispar.selectvisual;
     // Tcl_GetVar (interp, "selectvisual", 0);
-    vs = &vscross;
+    VisualScene *& vs = visual_scene;
+    vs = &visual_scene_cross;
     if (GetVisualizationScenes().Used(vismode))
       {
 	vs = GetVisualizationScenes()[vismode];
@@ -2049,7 +2050,7 @@ namespace netgen
     glMatrixMode(GL_MODELVIEW);
 
     SetVisualScene (Togl_Interp(togl));
-    vs->DrawScene();
+    visual_scene->DrawScene();
     Set_OpenGLText_Callback (&MyOpenGLText_GUI);
     return TCL_OK;
   }
@@ -2069,7 +2070,7 @@ namespace netgen
     glPushMatrix();
 
     glLoadIdentity();
-    vs->DrawScene();
+    visual_scene->DrawScene();
     Togl_SwapBuffers(togl);
 
     glPopMatrix();
@@ -2290,7 +2291,7 @@ namespace netgen
     newy = atoi (argv[4]);
 
     SetVisualScene(interp);
-    vs->MouseMove (oldx, oldy, newx, newy, argv[5][0]);
+    visual_scene->MouseMove (oldx, oldy, newx, newy, argv[5][0]);
 
     return TCL_OK;
   }
@@ -2304,7 +2305,7 @@ namespace netgen
     int py = Togl_PixelScale(togl)*atoi (argv[2]);
 
     SetVisualScene(interp);
-    vs->MouseDblClick (px, py);
+    visual_scene->MouseDblClick (px, py);
 
     return TCL_OK;
   }
@@ -2315,7 +2316,7 @@ namespace netgen
 		  int argc, tcl_const char *argv[])
   {
     SetVisualScene(interp);
-    vs->BuildScene (1);
+    visual_scene->BuildScene (1);
 
     return TCL_OK;
   }
@@ -2326,7 +2327,7 @@ namespace netgen
 		 int argc, tcl_const char *argv[])
   {
     SetVisualScene(interp);
-    vs->BuildScene (2);
+    visual_scene->BuildScene (2);
 
     return TCL_OK;
   }
@@ -2337,7 +2338,7 @@ namespace netgen
 			   int argc, tcl_const char *argv[])
   {
     SetVisualScene(interp);
-    vs->StandardRotation (argv[1]);
+    visual_scene->StandardRotation (argv[1]);
 
     return TCL_OK;
   }
@@ -2356,7 +2357,7 @@ namespace netgen
 	vec.Append(Vec3d(atof(argv[i+1]),atof(argv[i+2]),atof(argv[i+3])));
       }
 
-    vs->ArbitraryRotation (alpha,vec);
+    visual_scene->ArbitraryRotation (alpha,vec);
 
     return TCL_OK;
   }

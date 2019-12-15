@@ -4890,6 +4890,17 @@ void (*glDeleteBuffers) (GLsizei a, const GLuint *b);
 void (*glGenBuffers) (GLsizei a, GLuint *b);
 void (*glBufferData) (GLenum a, GLsizeiptr b, const GLvoid *c, GLenum d);
 void (*glBufferSubData) (GLenum a, GLintptr b, GLsizeiptr c, const GLvoid *d);
+
+GLenum (*glCheckFramebufferStatus) (GLenum target);
+void (*glBindFramebuffer) (GLenum target, GLuint framebuffer);
+void (*glBindRenderbuffer) (GLenum target, GLuint renderbuffer);
+void (*glDeleteFramebuffers) (GLsizei n, const GLuint *framebuffers);
+void (*glDeleteRenderbuffers) (GLsizei n, const GLuint *renderbuffers);
+void (*glGenFramebuffers) (GLsizei n, GLuint *framebuffers);
+void (*glGenRenderbuffers) (GLsizei n, GLuint *renderbuffers);
+void (*glRenderbufferStorage) (GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
+void (*glFramebufferRenderbuffer) (GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
+
 DLL_HEADER void LoadOpenGLFunctionPointers() {
 #ifdef USE_BUFFERS
   glBindBuffer = (decltype(glBindBuffer)) wglGetProcAddress("glBindBuffer");
@@ -4899,6 +4910,16 @@ DLL_HEADER void LoadOpenGLFunctionPointers() {
   glGenBuffers = (decltype(glGenBuffers)) wglGetProcAddress("glGenBuffers");
   if(!glBindBuffer) throw std::runtime_error("Could not load OpenGL functions!");
 #endif
+
+  glCheckFramebufferStatus = (decltype(glCheckFramebufferStatus )) wglGetProcAddress("glCheckFramebufferStatus");
+  glBindFramebuffer = (decltype(glBindFramebuffer )) wglGetProcAddress("glBindFramebuffer");
+  glBindRenderbuffer = (decltype(glBindRenderbuffer )) wglGetProcAddress("glBindRenderbuffer");
+  glDeleteFramebuffers = (decltype(glDeleteFramebuffers )) wglGetProcAddress("glDeleteFramebuffers");
+  glDeleteRenderbuffers = (decltype(glDeleteRenderbuffers )) wglGetProcAddress("glDeleteRenderbuffers");
+  glGenFramebuffers = (decltype(glGenFramebuffers )) wglGetProcAddress("glGenFramebuffers");
+  glGenRenderbuffers = (decltype(glGenRenderbuffers )) wglGetProcAddress("glGenRenderbuffers");
+  glRenderbufferStorage = (decltype(glRenderbufferStorage )) wglGetProcAddress("glRenderbufferStorage");
+  glFramebufferRenderbuffer = (decltype(glFramebufferRenderbuffer )) wglGetProcAddress("glFramebufferRenderbuffer");
 }
 #else  // WIN32
 DLL_HEADER void LoadOpenGLFunctionPointers() { }

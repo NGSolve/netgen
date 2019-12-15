@@ -20,6 +20,10 @@ void DLL_HEADER ExportSTLVis(py::module &m);
 #ifdef OCCGEOMETRY
 void DLL_HEADER ExportNgOCC(py::module &m);
 #endif // OCCGEOMETRY
+namespace netgen
+{
+  std::vector<unsigned char> DLL_HEADER Snapshot( int w, int h );
+}
 
 PYBIND11_MODULE(libngpy, ngpy)
 {
@@ -43,6 +47,7 @@ PYBIND11_MODULE(libngpy, ngpy)
     ExportCSGVis(csgvis);
     py::module stlvis = ngpy.def_submodule("stlvis", "pybind stlvis module");
     ExportSTLVis(stlvis);
+    ngpy.def("Snapshot", netgen::Snapshot);
 #endif // OPENGL
 }
 

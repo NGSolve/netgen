@@ -25,6 +25,8 @@ namespace netgen
   DLL_HEADER Point3d VisualScene :: center;
   DLL_HEADER double VisualScene :: rad;
   DLL_HEADER GLdouble VisualScene :: backcolor;
+  DLL_HEADER VisualScene visual_scene_cross;
+  DLL_HEADER VisualScene *visual_scene = &visual_scene_cross;
 
   /*
 #if TOGL_MAJOR_VERSION!=2
@@ -777,6 +779,66 @@ namespace netgen
       }
     
     VisualScene::MouseMove(oldx, oldy, newx, newy, mode);
+  }
+
+  std::vector<unsigned char> Snapshot( int w, int h )
+  {
+    // save current settings
+    GLint viewport[4];
+    glGetIntegerv (GL_VIEWPORT, viewport);
+
+    glMatrixMode (GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+
+    double pnear = 0.1;
+    double pfar = 10;
+
+    gluPerspective(20.0f, double(w) / h, pnear, pfar);
+
+    glMatrixMode (GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glViewport(0,0,w,h);
+
+    GLuint fb = 0;
+    glGenFramebuffers(1, &fb);
+    glBindFramebuffer(GL_FRAMEBUFFER, fb);
+
+    // create, reserve and attach color and depth renderbuffer
+    GLuint rbs[2];
+    glGenRenderbuffers(2, rbs);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbs[0]);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, w, h);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rbs[0]);
+
+    glBindRenderbuffer(GL_RENDERBUFFER, rbs[1]);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, w, h);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbs[1]);
+
+    // check if framebuffer status is complete
+    if(int fbstatus; (fbstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE)
+        cerr << "no frame buffer " << fbstatus << endl;
+
+    visual_scene->DrawScene();
+    glFinish();
+
+    std::vector<unsigned char> buffer(w*h*3);
+    glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+    glPixelStorei(GL_PACK_ALIGNMENT,1);
+    glReadPixels (0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, &buffer[0]);
+
+    glDeleteRenderbuffers(2, rbs);
+    glDeleteFramebuffers(1, &fb);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // restore previous settings
+    glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+    glMatrixMode (GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode (GL_MODELVIEW);
+    glPopMatrix();
+    return buffer;
   }
 
 

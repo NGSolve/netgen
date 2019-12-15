@@ -83,6 +83,8 @@ namespace netgen
 
   DLL_HEADER extern void MyOpenGLText (const char * text);
   DLL_HEADER extern void Set_OpenGLText_Callback ( void (*fun) (const char * text) );
+  DLL_HEADER extern VisualScene visual_scene_cross;
+  DLL_HEADER extern VisualScene *visual_scene;
 
 
 
@@ -247,6 +249,7 @@ namespace netgen
                             PointIndex & selpoint2, int & locpi);
 
 
+  DLL_HEADER std::vector<unsigned char> Snapshot( int w, int h );
 }
 
 

@@ -3536,6 +3536,7 @@ namespace netgen
 
 #ifdef NG_PYTHON
 #include <../general/ngpython.hpp>
+#include "../include/nginterface.h"
 
 DLL_HEADER void ExportMeshVis(py::module &m)
 {
@@ -3577,6 +3578,32 @@ DLL_HEADER void ExportMeshVis(py::module &m)
       ([] () {
        return vsmesh.GetMesh();
        }));
+  m.def ("_Redraw",
+      ([](bool blocking, double fr)
+        {
+          static auto last_time = std::chrono::system_clock::now()-std::chrono::seconds(10);
+          auto now = std::chrono::system_clock::now();
+          double elapsed = std::chrono::duration<double>(now-last_time).count();
+          if (elapsed * fr > 1)
+            {
+              Ng_Redraw(blocking);
+              last_time = std::chrono::system_clock::now();
+              return true;
+            }
+          return false;
+        }),
+      py::arg("blocking")=false, py::arg("fr") = 25, R"raw_string(
+Redraw all
+
+Parameters:
+
+blocking : bool
+  input blocking
+
+fr : double
+  input framerate
+
+)raw_string");
 }
 // BOOST_PYTHON_MODULE(libvisual)
 // {
