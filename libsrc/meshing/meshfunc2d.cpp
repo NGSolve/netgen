@@ -61,6 +61,7 @@ namespace netgen
 	      cerr << "Optimization code " << optstr[j-1] << " not defined" << endl;
 	    }  
 	}
+    mesh.Compress(); // better: compress in individual steps, if necessary
     if (secondorder)
       {
         mesh.GetGeometry()->GetRefinement().MakeSecondOrder(mesh);
