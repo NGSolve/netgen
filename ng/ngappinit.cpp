@@ -17,7 +17,6 @@ namespace netgen
 }
 #endif
 
-
 #include "../libsrc/interface/writeuser.hpp"
 
 namespace netgen
