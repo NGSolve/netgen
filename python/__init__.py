@@ -13,12 +13,12 @@ del os
 from . import libngpy
 
 def Redraw(*args, **kwargs):
-    if libngpy.meshvis._Redraw(*args, **kwargs):
-        try:
+    try:
+        if libngpy.meshvis._Redraw(*args, **kwargs):
             import netgen
             import tkinter
             cnt = 0
             while(netgen.gui.win.tk.dooneevent(tkinter._tkinter.DONT_WAIT) and cnt < 100):
                 cnt += 1
-        except:
-            pass
+    except:
+        pass
