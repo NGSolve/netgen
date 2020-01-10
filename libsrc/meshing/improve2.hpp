@@ -26,13 +26,28 @@ void BuildEdgeList( const Mesh & mesh, const Table<TINDEX, PointIndex> & element
             const auto & elem = mesh[ei];
             if (elem.IsDeleted()) continue;
 
-            for (int j = 0; j < 6; j++)
+            static_assert(is_same_v<TINDEX, ElementIndex>||is_same_v<TINDEX,SurfaceElementIndex>, "Invalid type for TINDEX");
+            if constexpr(is_same_v<TINDEX, SurfaceElementIndex>)
             {
-                PointIndex pi0 = elem[tetedges[j][0]];
-                PointIndex pi1 = elem[tetedges[j][1]];
-                if (pi1 < pi0) Swap(pi0, pi1);
-                if(pi0==pi)
-                    local_edges.Append(std::make_tuple(pi0, pi1));
+                for (int j = 0; j < 3; j++)
+                {
+                    PointIndex pi0 = elem[j];
+                    PointIndex pi1 = elem[(j+1)%3];
+                    if (pi1 < pi0) Swap(pi0, pi1);
+                    if(pi0==pi)
+                        local_edges.Append(std::make_tuple(pi0, pi1));
+                }
+            }
+            else if constexpr(is_same_v<TINDEX, ElementIndex>)
+            {
+                for (int j = 0; j < 6; j++)
+                {
+                    PointIndex pi0 = elem[tetedges[j][0]];
+                    PointIndex pi1 = elem[tetedges[j][1]];
+                    if (pi1 < pi0) Swap(pi0, pi1);
+                    if(pi0==pi)
+                        local_edges.Append(std::make_tuple(pi0, pi1));
+                }
             }
         }
         QuickSort(local_edges);
