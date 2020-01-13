@@ -500,9 +500,6 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
             NgArray<int> si1, si2;
             s1->GetSolid()->GetSurfaceIndices (si1);
             s2->GetSolid()->GetSurfaceIndices (si2);
-            cout << "surface ids1 = " << si1 << endl;
-            cout << "surface ids2 = " << si2 << endl;
-
             Flags flags;
 
             try
