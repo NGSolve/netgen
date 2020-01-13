@@ -161,7 +161,7 @@ public:
 private:
 
   template <typename T>
-  void CalcSegmentTransformation (T xi, SegmentIndex segnr,
+  void CalcSegmentTransformation (const T & xi, SegmentIndex segnr,
 				  Point<3,T> * x = NULL, Vec<3,T> * dxdxi = NULL, bool * curved = NULL);
 
   void CalcSurfaceTransformation (Point<2> xi, SurfaceElementIndex elnr,

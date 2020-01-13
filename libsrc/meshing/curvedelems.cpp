@@ -1432,7 +1432,7 @@ namespace netgen
   
   template <typename T>
   void CurvedElements :: 
-  CalcSegmentTransformation (T xi, SegmentIndex elnr,
+  CalcSegmentTransformation (const T & xi, SegmentIndex elnr,
 			     Point<3,T> * x, Vec<3,T> * dxdxi, bool * curved)
   {
     if (mesh.coarsemesh)
@@ -4033,7 +4033,7 @@ namespace netgen
 					  SIMD<double> * dxdxi, size_t sdxdxi);
 
   template void CurvedElements :: 
-  CalcSegmentTransformation<double> (double xi, SegmentIndex elnr,
+  CalcSegmentTransformation<double> (const double & xi, SegmentIndex elnr,
                                      Point<3,double> * x, Vec<3,double> * dxdxi, bool * curved);
 
 
