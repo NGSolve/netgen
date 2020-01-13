@@ -485,6 +485,29 @@ namespace netgen
 		      layer,
 		      mesh);
 	  }
+
+
+        {
+          // named edge ?
+          // cout << "check edge name, size = " << geometry.named_edges.size() << endl;
+          // for (auto pair : geometry.named_edges)
+          // cout << "key = " << get<0> (pair.first) << "-" << get<1> (pair.first) << ", val = " << pair.second << endl;
+          
+          Surface * sp1 = const_cast<Surface*> (geometry.GetSurface(s1));
+          Surface * sp2 = const_cast<Surface*> (geometry.GetSurface(s2));
+          // cout << "sp1 = " << sp1 << ", sp2 = " << sp2 << endl;
+
+          auto ptr = geometry.named_edges.find(tuple(sp1, sp2));
+          if (ptr != geometry.named_edges.end())
+            for (int i = 0; i < refedges.Size(); i++)
+              mesh.SetCD2Name(refedges[i].edgenr, ptr->second);
+          
+          ptr = geometry.named_edges.find(tuple(sp2, sp1));
+          if (ptr != geometry.named_edges.end())
+            for (int i = 0; i < refedges.Size(); i++)
+              mesh.SetCD2Name(refedges[i].edgenr, ptr->second);
+        }
+        
 	for(int i=0; i<refedges.Size(); i++)
 	  {
 	    auto splinesurface = dynamic_cast<const SplineSurface*>(geometry.GetSurface(refedges[i].surfnr1));

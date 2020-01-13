@@ -569,7 +569,16 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
          py::arg("solid1"), py::arg("solid2"),
          py::arg("trafo")=Transformation<3>(Vec<3>(0,0,0))
          )
-
+    .def("NameEdge", [] (CSGeometry & self, shared_ptr<SPSolid> s1, shared_ptr<SPSolid> s2, string name)
+         {
+           Array<Surface*> surfs1, surfs2;
+           s1->GetSolid()->ForEachSurface( [&surfs1] (Surface * s, bool inv) { surfs1.Append(s); });
+           s2->GetSolid()->ForEachSurface( [&surfs2] (Surface * s, bool inv) { surfs2.Append(s); });
+           for (auto s1 : surfs1)
+             for (auto s2 : surfs2)
+               self.named_edges[tuple(s1,s2)] = name;
+         })
+         
     .def("AddPoint", [] (CSGeometry & self, Point<3> p, int index) -> CSGeometry&
          {
            self.AddUserPoint(CSGeometry::UserPoint(p, index));

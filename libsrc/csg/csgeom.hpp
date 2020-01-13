@@ -367,6 +367,11 @@ namespace netgen
 
     NgArray<BCModification> bcmodifications;
 
+
+    map<tuple<Surface*,Surface*>, string> named_edges;
+      
+
+    
     virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam) override;
 
     void AddSplineSurface (shared_ptr<SplineSurface> ss) { spline_surfaces.Append(ss); }
