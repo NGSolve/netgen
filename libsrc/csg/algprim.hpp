@@ -339,23 +339,26 @@ namespace netgen
     // default constructor for archive
     Ellipsoid() {}
 
-    virtual void DoArchive(Archive& ar)
+    void DoArchive(Archive& ar) override
     {
       QuadraticSurface::DoArchive(ar);
       ar & a & v1 & v2 & v3 & rmin;
     }
     ///
-    virtual INSOLID_TYPE BoxInSolid (const BoxSphere<3> & box) const;
+    INSOLID_TYPE BoxInSolid (const BoxSphere<3> & box) const override;
     ///
-    virtual double HesseNorm () const;
+    double HesseNorm () const override;
     ///
-    virtual double MaxCurvature () const;
+    double MaxCurvature () const override;
     ///
-    virtual Point<3> GetSurfacePoint () const;
+    Point<3> GetSurfacePoint () const override;
 
-    virtual void GetTriangleApproximation (TriangleApproximation & tas, 
+    void GetTriangleApproximation (TriangleApproximation & tas,
 					   const Box<3> & bbox, 
-					   double facets) const;
+					   double facets) const override;
+
+    void GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const override;
+    void SetPrimitiveData (NgArray<double> & coeffs) override;
 
   private:
     void CalcData();

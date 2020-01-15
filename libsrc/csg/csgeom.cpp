@@ -562,6 +562,15 @@ namespace netgen
 	    delete_them.Append(cone);
 	  }
 
+	else if(classname == "ellipsoid")
+	  {
+	    Ellipsoid * ellipsoid = new Ellipsoid(dummypoint,dummyvec,dummyvec,dummyvec);
+	    ellipsoid->SetPrimitiveData(coeffs);
+
+	    AddSurface(ellipsoid);
+	    delete_them.Append(ellipsoid);
+	  }
+
        else if(classname == "ellipticcone")
          {
 	    EllipticCone * ellipticcone = new EllipticCone(dummypoint,dummyvec,dummyvec,dummydouble,dummydouble);
