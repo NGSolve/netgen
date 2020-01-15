@@ -579,9 +579,12 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
                self.named_edges[tuple(s1,s2)] = name;
          })
          
-    .def("AddPoint", [] (CSGeometry & self, Point<3> p, int index) -> CSGeometry&
+    .def("AddPoint", [] (CSGeometry & self, Point<3> p, variant<int,string> index) -> CSGeometry&
          {
-           self.AddUserPoint(CSGeometry::UserPoint(p, index));
+           if (auto pint = std::get_if<int> (&index))
+             self.AddUserPoint(CSGeometry::UserPoint(p, *pint));
+           if (auto pstr = std::get_if<string> (&index))
+             self.AddUserPoint(CSGeometry::UserPoint(p, *pstr));
            return self;
          })
     

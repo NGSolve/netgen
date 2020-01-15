@@ -32,7 +32,11 @@ namespace netgen
 	auto pnum = mesh.AddPoint(up);
 	mesh.Points().Last().Singularity (geom.GetUserPointRefFactor(i));
 	mesh.AddLockedPoint (PointIndex (i+1));
-        mesh.pointelements.Append (Element0d(pnum, up.GetIndex()));
+        int index = up.GetIndex();
+        if (index == -1)
+          index = mesh.AddCD3Name (up.GetName())+1;
+        // cout << "adding 0d element, pnum = " << pnum << ", material index = " << index << endl;
+        mesh.pointelements.Append (Element0d(pnum, index));
       }
 
     SpecialPointCalculation spc;

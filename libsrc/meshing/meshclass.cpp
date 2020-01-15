@@ -6570,7 +6570,16 @@ namespace netgen
     else
       cd3names[cd3nr] = nullptr;
   }
-
+  
+  int Mesh :: AddCD3Name (const string & aname)
+  {
+    for (int i = 0; i < cd3names.Size(); i++)
+      if (*cd3names[i] == aname)
+        return i;
+    cd3names.Append (new string(aname));
+    return cd3names.Size()-1;
+  }
+  
   string Mesh :: cd3_default_name = "default";
   const string & Mesh :: GetCD3Name (int cd3nr) const
   {

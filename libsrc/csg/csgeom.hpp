@@ -127,13 +127,16 @@ namespace netgen
     class UserPoint : public Point<3>
     {
       int index;
+      string name;
     public:
       UserPoint() = default;
       UserPoint (Point<3> p, int _index) : Point<3>(p), index(_index) { ; }
+      UserPoint (Point<3> p, const string & _name) : Point<3>(p), name(_name), index(-1) { ; } 
       int GetIndex() const { return index; }
+      const string & GetName() const { return name; } 
       void DoArchive(Archive& archive)
       {
-        archive & index;
+        archive & index & name;
         Point<3>::DoArchive(archive);
       }
     };

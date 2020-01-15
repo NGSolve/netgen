@@ -673,6 +673,7 @@ namespace netgen
 
     DLL_HEADER void SetNCD3Names (int ncd3n);
     DLL_HEADER void SetCD3Name (int cd3nr, const string & abcname);
+    DLL_HEADER int AddCD3Name (const string & aname);
 
     DLL_HEADER const string & GetCD3Name (int cd3nr ) const;
     DLL_HEADER static string cd3_default_name;
