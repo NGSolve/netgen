@@ -642,6 +642,32 @@ namespace netgen
     cz = v(2);
   }
 
+  void Ellipsoid :: GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const
+  {
+    classname = "ellipsoid";
+    coeffs.SetSize (12);
+    for(auto i : Range(3))
+      {
+        coeffs[i] = a(i);
+        coeffs[3+i] = v1(i);
+        coeffs[6+i] = v2(i);
+        coeffs[9+i] = v3(i);
+      }
+  }
+
+  void Ellipsoid :: SetPrimitiveData (NgArray<double> & coeffs)
+  {
+    for(auto i : Range(3))
+      {
+        a(i) = coeffs[i];
+        v1(i) = coeffs[3+i];
+        v2(i) = coeffs[6+i];
+        v3(i) = coeffs[9+i];
+      }
+
+    CalcData();
+  }
+
 
   INSOLID_TYPE Ellipsoid :: BoxInSolid (const BoxSphere<3> & box) const
   {
