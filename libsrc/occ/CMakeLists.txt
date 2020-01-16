@@ -6,6 +6,7 @@ add_library(occ ${NG_LIB_TYPE}
         )
 if(USE_GUI)
         add_library(occvis ${NG_LIB_TYPE} vsocc.cpp)
+        target_link_libraries(occvis PUBLIC ngcore)
 endif(USE_GUI)
 
 target_link_libraries(occ PUBLIC ngcore PRIVATE netgen_python)

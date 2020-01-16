@@ -215,13 +215,9 @@ endmacro()
 
 set(CMAKE_CXX_STANDARD 17)
 if(WIN32)
-    get_WIN32_WINNT(ver)
-    add_definitions(-D_WIN32_WINNT=${ver} -DWNT -DWNT_WINDOW -DNOMINMAX)
     set(CMAKE_MFC_FLAG 0)
-    add_definitions(-DMSVC_EXPRESS -D_CRT_SECURE_NO_WARNINGS -DHAVE_STRUCT_TIMESPEC)
     # build convenience (aka object) libraries in windows)
     set(NG_LIB_TYPE OBJECT)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
 else(WIN32)
     # build shared libraries
     set(NG_LIB_TYPE SHARED)
