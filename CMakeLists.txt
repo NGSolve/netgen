@@ -9,9 +9,7 @@ else(WIN32)
   cmake_minimum_required(VERSION 3.8)
 endif(WIN32)
 
-if(NOT WIN32)
-    option( USE_NATIVE_ARCH  "build which -march=native" ON)
-endif(NOT WIN32)
+option( USE_NATIVE_ARCH  "build for native cpu architecture" ON)
 
 option( USE_GUI     "don't build netgen with GUI" ON )
 option( USE_PYTHON  "build with python interface" ON )
@@ -93,11 +91,6 @@ if(USE_CCACHE)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_FOUND})
   endif(CCACHE_FOUND)
 endif(USE_CCACHE)
-
-#######################################################################
-if(USE_NATIVE_ARCH)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
-endif(USE_NATIVE_ARCH)
 
 #######################################################################
 if(INTEL_MIC)
@@ -222,13 +215,9 @@ endmacro()
 
 set(CMAKE_CXX_STANDARD 17)
 if(WIN32)
-    get_WIN32_WINNT(ver)
-    add_definitions(-D_WIN32_WINNT=${ver} -DWNT -DWNT_WINDOW -DNOMINMAX)
     set(CMAKE_MFC_FLAG 0)
-    add_definitions(-DMSVC_EXPRESS -D_CRT_SECURE_NO_WARNINGS -DHAVE_STRUCT_TIMESPEC)
     # build convenience (aka object) libraries in windows)
     set(NG_LIB_TYPE OBJECT)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
 else(WIN32)
     # build shared libraries
     set(NG_LIB_TYPE SHARED)
@@ -410,6 +399,59 @@ if (USE_PYTHON)
   add_subdirectory(python)
 endif (USE_PYTHON)
 add_subdirectory(tests)
+
+#######################################################################
+if(USE_NATIVE_ARCH)
+    if(WIN32)
+        include(CheckCXXSourceRuns)
+        check_cxx_source_runs("
+                #include <immintrin.h>
+                int main()
+                {
+                    __m256d a{1.,2.,3.,4.};
+                    __m256d b{2.,0.,3.,5.};
+                    __m256d c = _mm256_mul_pd(a,b);
+                    return 0;
+                } " NG_HAVE_AVX)
+        check_cxx_source_runs("
+                #include <immintrin.h>
+                int main()
+                {
+                    __m256i a{1,2,3,4};
+                    __m256i b{2,0,3,5};
+                    __m256i c = _mm256_cmpgt_epi64 (a,b);
+                    return 0;
+                } " NG_HAVE_AVX2)
+        check_cxx_source_runs("
+                #include <immintrin.h>
+                int main()
+                {
+                    __m512d a{1.,2.,3.,4.};
+                    __m512d b{5.,6.,7.,8.};
+                    __m512d c = _mm512_mul_pd(a,b);
+                    return 0;
+                } " NG_HAVE_AVX512)
+
+        if(NG_HAVE_AVX512)
+            target_compile_options(ngcore PUBLIC "/arch:AVX512")
+            message(STATUS "Build for AVX512 CPU")
+        elseif(NG_HAVE_AVX2)
+            target_compile_options(ngcore PUBLIC "/arch:AVX2")
+            message(STATUS "Build for AVX2 CPU")
+        elseif(NG_HAVE_AVX)
+            target_compile_options(ngcore PUBLIC "/arch:AVX")
+            message(STATUS "Build for AVX CPU")
+        else()
+            message(STATUS "Build for generic CPU")
+        endif()
+    else()
+        target_compile_options(ngcore PUBLIC "-march=native")
+    endif(WIN32)
+    if(APPLE)
+        # work-around for bug in Xcode 11.3: https://forums.developer.apple.com/thread/121887
+        target_compile_options(ngcore PUBLIC "-fno-stack-check")
+    endif(APPLE)
+endif(USE_NATIVE_ARCH)
 
 
 #######################################################################
