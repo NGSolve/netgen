@@ -447,6 +447,10 @@ if(USE_NATIVE_ARCH)
     else()
         target_compile_options(ngcore PUBLIC "-march=native")
     endif(WIN32)
+    if(APPLE)
+        # work-around for bug in Xcode 11.3: https://forums.developer.apple.com/thread/121887
+        target_compile_options(ngcore PUBLIC "-fno-stack-check")
+    endif(APPLE)
 endif(USE_NATIVE_ARCH)
 
 
