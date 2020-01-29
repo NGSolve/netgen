@@ -3152,7 +3152,7 @@ namespace netgen
     GLfloat pz;
     // cout << "x, y = " << px << ", " << hy << endl;
     glReadPixels (px, hy, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &pz);
-    cout << "pz = " << pz << endl;    
+    // cout << "pz = " << pz << endl;    
     gluUnProject(px, hy, pz, transformationmat, projection, viewport,
                  &result[0], &result[1], &result[2]);
 
