@@ -1407,7 +1407,8 @@ namespace netgen
 		    el.SetIndex(hpel.index);
 		    if(setorders)
 		      el.SetOrder(act_ref+1,act_ref+1,0); 
-                    el.SetCurved(true);
+                    if((*mesh.coarsemesh)[SurfaceElementIndex{hpel.coarse_elnr}].IsCurved())
+                        el.SetCurved(true);
 		    mesh.AddSurfaceElement(el);
 		    break; 
 		  } 
@@ -1423,7 +1424,8 @@ namespace netgen
 		    el.hp_elnr = i; 
 		    if(setorders)
 		      el.SetOrder(act_ref+1,act_ref+1,act_ref+1);
-                    el.SetCurved(true);
+                    if((*mesh.coarsemesh)[ElementIndex{hpel.coarse_elnr}].IsCurved())
+                        el.SetCurved(true);
 		    mesh.AddVolumeElement(el); 
 		    break;
 		  } 
