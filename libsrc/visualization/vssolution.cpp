@@ -1651,7 +1651,7 @@ namespace netgen
             // NgProfiler::StopTimer(timer1c);
             
 #else
-	    bool curved = curv.IsSurfaceElementCurved(sei);
+	    bool curved = (*mesh)[sei].IsCurved();
 
             for (int iy = 0, ii = 0; iy <= n; iy++)
               for (int ix = 0; ix <= n-iy; ix++, ii++)
