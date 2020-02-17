@@ -8,9 +8,9 @@ using namespace std;
 
 int main (int argc, char ** argv)
 {
-  if (argc != 3)
+  if (argc != 4)
     {
-      cout << "use:  makerlsfile  infile outfile" << endl;
+      cout << "use:  makerlsfile  infile outfile rulename" << endl;
       exit(1);
     }
   
@@ -28,8 +28,10 @@ int main (int argc, char ** argv)
 
   ifstream inf (argv[1]);
   ofstream outf (argv[2]);
+  string rulename = argv[3];
 
-  outf << "const char * ngscript[] = {" << endl;
+  outf << "namespace netgen" << endl << '{' << endl;
+  outf << "const char * " << rulename << "[] = {" << endl;
   while (inf.good())
     {
       i = 0;
@@ -61,5 +63,6 @@ int main (int argc, char ** argv)
       outf << "\"" << line << "\\n\",\\" << endl;
     }
   outf << "0};" << endl;
+  outf << '}' << endl;
   return 0;
 }
