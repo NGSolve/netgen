@@ -3,55 +3,6 @@ namespace netgen
 const char * pyramidrules2[] = {
 "tolfak 0.5\n",\
 "\n",\
-"rule \"Large pyramid on quad\"\n",\
-"\n",\
-"quality 1\n",\
-"\n",\
-"mappoints\n",\
-"(0, 0, 0);\n",\
-"(1, 0, 0);\n",\
-"(1, 1, 0);\n",\
-"(0, 1, 0);\n",\
-"\n",\
-"mapfaces\n",\
-"(1, 2, 3, 4) del;\n",\
-"\n",\
-"newpoints\n",\
-"(0.5, 0.5, -3)\n",\
-"	{ 0.25 X1, 0.25 X2, 0.25 X3, 0.25 X4 }\n",\
-"	{ 0.25 Y1, 0.25 Y2, 0.25 Y3, 0.25 Y4 } { };\n",\
-"\n",\
-"newfaces\n",\
-"(1, 2, 5);\n",\
-"(2, 3, 5);\n",\
-"(3, 4, 5);\n",\
-"(4, 1, 5);\n",\
-"\n",\
-"elements\n",\
-"(1, 2, 3, 4, 5);\n",\
-"\n",\
-"freezone2\n",\
-"{ 1 P1 };\n",\
-"{ 1 P2 };\n",\
-"{ 1 P3 };\n",\
-"{ 1 P4 };\n",\
-"{ 1.4 P5, -0.1 P1, -0.1 P2, -0.1 P3, -0.1 P4 };\n",\
-"\n",\
-"freezonelimit\n",\
-"{ 1 P1 };\n",\
-"{ 1 P2 };\n",\
-"{ 1 P3 };\n",\
-"{ 1 P4 };\n",\
-"{ 1 P5 };\n",\
-"\n",\
-"freeset\n",\
-"1 2 3 5;\n",\
-"\n",\
-"freeset\n",\
-"1 3 4 5;\n",\
-"\n",\
-"endrule\n",\
-"\n",\
 "rule \"Pyramid on quad\"\n",\
 "\n",\
 "quality 100\n",\
@@ -156,7 +107,7 @@ const char * pyramidrules2[] = {
 "\n",\
 "rule \"connect pyramid\"\n",\
 "\n",\
-"quality 1\n",\
+"quality 100\n",\
 "\n",\
 "mappoints\n",\
 "(0, 0, 0);\n",\

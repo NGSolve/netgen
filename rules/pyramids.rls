@@ -2,7 +2,7 @@ tolfak 0.5
 
 rule "Pyramid on quad"
 
-quality 100
+quality 10
 
 mappoints
 (0, 0, 0);
