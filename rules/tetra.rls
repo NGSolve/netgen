@@ -139,7 +139,7 @@ endrule
 
 rule "Tetrahedron Vis a Vis Point (1)"
 
-quality 1
+quality 100
 
 mappoints
 (0, 0, 0);
