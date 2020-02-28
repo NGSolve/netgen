@@ -22,7 +22,8 @@
 #include "XSControl_TransferReader.hxx"
 #include "StepRepr_RepresentationItem.hxx"
 #include "StepBasic_ProductDefinitionRelationship.hxx"
-
+#include "Transfer_TransientProcess.hxx"
+#include "TransferBRep.hxx"
 #ifndef _Standard_Version_HeaderFile
 #include <Standard_Version.hxx>
 #endif
@@ -1379,45 +1380,89 @@ namespace netgen
       PrintContents (occgeo);
       string name;
       TopExp_Explorer exp0,exp1;
+
+      
+      
+      std::map<Handle(TopoDS_TShape), string> shape_names;
+      {
+        static Timer t("file shape_names"); RegionTimer r(t);
+        // code inspired from 
+        // https://www.opencascade.com/content/reading-step-entity-id-slow
+        const Handle(XSControl_WorkSession) workSession = reader.Reader().WS();
+        const Handle(Interface_InterfaceModel) model = workSession->Model();
+        const Handle(XSControl_TransferReader) transferReader = workSession->TransferReader();
+        Handle(Transfer_TransientProcess) transProc = transferReader->TransientProcess();
+
+        Standard_Integer nb = model->NbEntities();
+        for (Standard_Integer i = 1; i < nb; i++)
+          {
+            Handle(Standard_Transient) entity = model->Value(i);
+            
+            // if (!entity->DynamicType()->SubType("StepShape_OpenShell")) continue;
+            
+            Handle(StepRepr_RepresentationItem) SRRI =
+              Handle(StepRepr_RepresentationItem)::DownCast(entity);
+            
+            if (SRRI.IsNull()) {
+              // cout << "no StepRepr_RepresentationItem found in " << entity->DynamicType()->Name();
+              continue;
+            }
+            Handle(TCollection_HAsciiString) hName = SRRI->Name();
+            string shapeName = hName->ToCString();
+            
+            // cout << "STEP " << i << " " << entity->DynamicType()->Name() << ", shapename = " << shapeName;
+            Handle(Transfer_Binder) binder;
+            if (!transProc->IsBound(SRRI)) {
+              // cout << "found unbound entity " << shapeName;
+              continue;
+            }
+            binder = transProc->Find(SRRI);
+            TopoDS_Shape shape = TransferBRep::ShapeResult(binder);
+            // if (!shape.IsNull())
+            shape_names[shape.TShape()] = shapeName;
+            /*
+            if (!shape.IsNull())
+              cout << " shapetype = " << shape.ShapeType() << endl;
+            else
+              cout << "is-Null" << endl;
+            */
+          }
+        // for (auto pair : shape_names)
+        // cout << "name = " << pair.second << endl;
+      }
+      
       
       timer_getnames.Start();
       for (exp0.Init(occgeo->shape, TopAbs_SOLID); exp0.More(); exp0.Next())
       {
          TopoDS_Solid solid = TopoDS::Solid(exp0.Current());
-         name = STEP_GetEntityName(solid,&reader);
+         // name = STEP_GetEntityName(solid,&reader);
+         // cout << "solidname = " << name << ", mapname = " << shape_names[solid.TShape()] << endl;         
+         name = shape_names[solid.TShape()];
          if (name == "")
-             name = string("domain_") + ToString(occgeo->snames.Size());
+           name = string("domain_") + ToString(occgeo->snames.Size());
          occgeo->snames.Append(name);
       }
+
       for (exp0.Init(occgeo->shape, TopAbs_FACE); exp0.More(); exp0.Next())
       {
          TopoDS_Face face = TopoDS::Face(exp0.Current());
-         name = STEP_GetEntityName(face,&reader);
+         // name = STEP_GetEntityName(face,&reader);
+         // cout << "getname = " << name << ", mapname = " << shape_names[face.TShape()] << endl;
+         name = shape_names[face.TShape()];
          if (name == "")
-             name = string("bc_") + ToString(occgeo->fnames.Size());
+           name = string("bc_") + ToString(occgeo->fnames.Size());
          occgeo->fnames.Append(name);
-//          for (exp1.Init(face, TopAbs_EDGE); exp1.More(); exp1.Next())
-//          {
-//             TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
-//             name = STEP_GetEntityName(edge,&reader);
-//             occgeo->enames.Append(name);
-//          }
+         for (exp1.Init(face, TopAbs_EDGE); exp1.More(); exp1.Next())
+           {
+             TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
+             // name = STEP_GetEntityName(edge,&reader);
+             // cout << "getname = " << name << ", mapname = " << shape_names[edge.TShape()] << endl;
+             name = shape_names[edge.TShape()];
+             occgeo->enames.Append(name);
+           }
       }
-      timer_getnames.Stop();
-      // Gerhard BEGIN
-//       cout << "Solid Names: "<<endl;
-//       for (int i=0;i<occgeo->snames.Size();i++)
-//         cout << occgeo->snames[i] << endl;
-//       cout << " " <<endl;
-//       cout << "Face Names: "<<endl;
-//       for (int i=0;i<occgeo->fnames.Size();i++)
-//         cout << occgeo->fnames[i] << endl;
-//       cout << " " <<endl;
-//       cout << "Edge Names: "<<endl;
-//       for (int i=0;i<occgeo->enames.Size();i++)
-//         cout << occgeo->enames[i] << endl;
-//       cout << " " <<endl;
-      // Gerhard END
+      timer_getnames.Stop();      
   }
 
    // Philippose - 23/02/2009
