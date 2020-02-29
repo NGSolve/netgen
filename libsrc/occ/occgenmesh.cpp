@@ -515,6 +515,9 @@ namespace netgen
                     if (!exists)
                       pnums[i] = mesh.AddPoint (mp[i-1]);
                   }
+                if(geom.enames.Size() && geom.enames[curr-1] != "")
+                  mesh.SetCD2Name(geomedgenr, geom.enames[curr-1]);
+                
                 (*testout) << "NP = " << mesh.GetNP() << endl;
                 //(*testout) << pnums[pnums.Size()-1] << endl;
 
