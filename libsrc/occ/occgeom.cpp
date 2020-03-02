@@ -17,6 +17,7 @@
 #include "ShapeFix_FixSmallFace.hxx"
 #include "Partition_Spliter.hxx"
 #include "BRepAlgoAPI_Fuse.hxx"
+#include "Interface_InterfaceModel.hxx"
 
 #include "XSControl_WorkSession.hxx"
 #include "XSControl_TransferReader.hxx"
