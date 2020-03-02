@@ -22,7 +22,7 @@ if(USE_GUI)
         ../libsrc/occ/occpkg.cpp ../libsrc/occ/vsocc.cpp
     )
 
-    add_executable(netgen ngappinit.cpp onetcl.cpp)
+    add_executable(netgen ngappinit.cpp)
 
     target_link_libraries( gui PUBLIC nglib )
     target_link_libraries( gui PRIVATE ${LIBTOGL} ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} )
