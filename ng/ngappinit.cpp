@@ -206,7 +206,7 @@ int main(int argc, char ** argv)
             cout << "using internal Tcl-script" << endl;
       
           // connect to one string 
-          extern const char * ngscript[];
+          DLL_HEADER const char * ngscript[];
           const char ** hcp = ngscript;
           int len = 0;
           while (*hcp)
