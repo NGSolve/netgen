@@ -26,39 +26,13 @@ private:
   mutex block_allocator_mutex;
 public:
   ///
-  BlockAllocator (unsigned asize, unsigned ablocks = 100);
+  DLL_HEADER BlockAllocator (unsigned asize, unsigned ablocks = 100);
   ///
-  ~BlockAllocator ();
+  DLL_HEADER ~BlockAllocator ();
   ///
-
-  void * Alloc ();
-  /*
-  {
-    if (!freelist)
-      Alloc2();
-
-    void * p = freelist;
-    // freelist = *(void**)freelist;
-    freelist = *static_cast<void**> (freelist);
-
-    return p;
-  }
-  */
-
-
+  DLL_HEADER void * Alloc ();
   ///
-  void Free (void * p);
-  /*
-  {
-    if (!bablocks.Size()) return;
-    *(void**)p = freelist;
-    freelist = p;
-  }
-  */
-
-
-private:
-  //  void Alloc2 ();
+  DLL_HEADER void Free (void * p);
 };
 
 }
