@@ -1134,6 +1134,10 @@ namespace netgen
     mesh->BuildCurvedElements(order);
   }
 
+  int Ngx_Mesh :: GetCurveOrder ()
+  {
+    return mesh->GetCurvedElements().GetOrder();
+  }
 
   template <>
   DLL_HEADER void Ngx_Mesh :: SetRefinementFlag<2> (size_t elnr, bool flag)
