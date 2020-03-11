@@ -69,6 +69,29 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
                                              }
                                          }, py::arg("inds"), py::arg("value"), "Clear/Set bit at given positions")
 
+    .def("__setitem__", [] (BitArray & self, py::slice inds, BitArray & ba)
+                                         {
+                                           size_t start, step, stop, n;
+                                           if (!inds.compute(self.Size(), &start, &stop, &step, &n))
+                                             throw py::error_already_set();
+
+                                           if (start == 0 && n == self.Size() && step == 1)
+                                             {
+                                               self = ba;
+                                             }
+                                           else
+                                             {
+                                               for (size_t i = 0; i < n; i++, start += step)
+                                                 {
+                                                   bool b = ba.Test(i);
+                                                   if (b)
+                                                     self.SetBit(start);
+                                                   else
+                                                     self.Clear(start);
+                                                 }
+                                             }
+                                         }, py::arg("inds"), py::arg("ba"), "copy BitArray")
+
     .def("__setitem__", [](BitArray & self,  IntRange range, bool b)
       {
         if (b)
