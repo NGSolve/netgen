@@ -233,6 +233,7 @@ loadmeshinifile;
 	    {"TET format" {.tet} }
 	    {"STL format" {.stl .stlb} }
 	    {"Pro/ENGINEER neutral format" {.fnf} }
+	    {"CFD General Notation System" {.cgns} }
 	          }
 	set file [tk_getOpenFile -filetypes $types ]
 	if {$file != ""} {

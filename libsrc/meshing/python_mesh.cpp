@@ -1069,6 +1069,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                                    }));
 
 
+  m.def("ReadCGNSFile", &ReadCGNSFile, py::arg("filename"), py::arg("base")=1, "Read mesh and solution vectors from CGNS file");
 }
 
 PYBIND11_MODULE(libmesh, m) {

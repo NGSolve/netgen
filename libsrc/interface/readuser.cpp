@@ -649,6 +649,13 @@ namespace netgen
         ReadFNFFormat (mesh, filename);
       }
 
+    // .cgns file - CFD General Notation System
+    if ( (strlen (filename) > 5) &&
+         strcmp (&filename[strlen (filename)-5], ".cgns") == 0 )
+      {
+        ReadCGNSMesh (mesh, filename);
+      }
+
     if ( ( (strlen (filename) > 4) && strcmp (&filename[strlen (filename)-4], ".stl") == 0 ) ||
          ( (strlen (filename) > 5) && strcmp (&filename[strlen (filename)-5], ".stlb") == 0 ) )
       {
