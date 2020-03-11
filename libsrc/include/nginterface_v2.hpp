@@ -343,6 +343,7 @@ namespace netgen
       void SetRefinementFlag (size_t elnr, bool flag);
     
     void Curve (int order);
+    int GetCurveOrder ();
 
     void Refine (NG_REFINEMENT_TYPE reftype,
                  void (*taskmanager)(function<void(int,int)>) = &DummyTaskManager2,
