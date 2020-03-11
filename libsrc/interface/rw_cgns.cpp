@@ -291,7 +291,11 @@ namespace netgen::cg
                   cg_ElementDataSize(fn, base, zone, section, &nv);
 
                   Array<cgsize_t> vertices(nv);
+#if CGNS_VERSION < 3400
+                  cg_elements_read(fn, base, zone, section, &vertices[0], nullptr);
+#else
                   cg_poly_elements_read(fn, base, zone, section, &vertices[0], nullptr, nullptr);
+#endif
 
                   size_t vi = 0;
                   while(vi<nv)
