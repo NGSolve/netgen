@@ -20,6 +20,7 @@ if(WIN32)
   set (OCC_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/occ_win64.zip" CACHE STRING INTERNAL)
   set (TCLTK_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/tcltk_win64.zip" CACHE STRING INTERNAL)
   set (ZLIB_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/zlib_win64.zip" CACHE STRING INTERNAL)
+  set (CGNS_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/cgns_win64.zip" CACHE STRING INTERNAL)
 endif(WIN32)
 
 if(UNIX)
@@ -85,6 +86,10 @@ include(cmake/external_projects/zlib.cmake)
 if(USE_GUI)
   include(cmake/external_projects/tcltk.cmake)
 endif(USE_GUI)
+
+if(USE_CGNS)
+  include(cmake/external_projects/cgns.cmake)
+endif(USE_CGNS)
 
 #######################################################################
 if(USE_MPI)

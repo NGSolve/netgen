@@ -30,7 +30,7 @@ namespace netgen::cg
           case PENTA_15:
               return 3;
           default:
-              throw Exception("Read CGNS: unknown element type " + string(ElementTypeName[type]));
+              throw Exception("Read CGNS: unknown element type " + string(cg_ElementTypeName(type)));
         }
     }
 
@@ -68,7 +68,7 @@ namespace netgen::cg
               map = map_quad8;
               break;
           default:
-              throw Exception("Read CGNS: unknown element type " + string(ElementTypeName[type]));
+              throw Exception("Read CGNS: unknown element type " + string(cg_ElementTypeName(type)));
         }
 
       int np;
@@ -106,7 +106,7 @@ namespace netgen::cg
           case HEXA_20:
           case PENTA_15:
           default:
-              throw Exception("Read CGNS: unknown element type " + string(ElementTypeName[type]));
+              throw Exception("Read CGNS: unknown element type " + string(cg_ElementTypeName(type)));
         }
 
       Element el(np);
@@ -130,7 +130,7 @@ namespace netgen::cg
           case EdgeCenter:
               return 1;
           default:
-              throw Exception("Read CGNS: unknown grid location " + string(GridLocationName[location]));
+              throw Exception("Read CGNS: unknown grid location " + string(cg_GridLocationName(location)));
         }
     }
 
@@ -222,7 +222,7 @@ namespace netgen::cg
                           case KFaceCenter:
                           case EdgeCenter:
                           default:
-                              throw Exception("Read CGNS: unknown grid location " + string(GridLocationName[sol.location]));
+                              throw Exception("Read CGNS: unknown grid location " + string(cg_GridLocationName(sol.location)));
                         }
                     }
 
