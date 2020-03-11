@@ -15,12 +15,12 @@ macro(set_vars VAR_OUT)
   endforeach()
 endmacro()
 #######################################################################
-if(WIN32)
-  set (DEPS_DOWNLOAD_URL "https://github.com/NGSolve/ngsolve_dependencies/releases/download/v1.0.0" CACHE STRING INTERNAL)
-  set (OCC_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/occ_win64.zip" CACHE STRING INTERNAL)
-  set (TCLTK_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/tcltk_win64.zip" CACHE STRING INTERNAL)
-  set (ZLIB_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/zlib_win64.zip" CACHE STRING INTERNAL)
-endif(WIN32)
+set (DEPS_DOWNLOAD_URL "https://github.com/NGSolve/ngsolve_dependencies/releases/download/v1.0.0" CACHE STRING INTERNAL)
+set (OCC_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/occ_win64.zip" CACHE STRING INTERNAL)
+set (TCLTK_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/tcltk_win64.zip" CACHE STRING INTERNAL)
+set (ZLIB_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/zlib_win64.zip" CACHE STRING INTERNAL)
+set (CGNS_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/cgns_win64.zip" CACHE STRING INTERNAL)
+set (CGNS_DOWNLOAD_URL_MAC "${DEPS_DOWNLOAD_URL}/cgns_mac.zip" CACHE STRING INTERNAL)
 
 if(UNIX)
   message("Checking for write permissions in install directory...")
@@ -86,6 +86,10 @@ if(USE_GUI)
   include(cmake/external_projects/tcltk.cmake)
 endif(USE_GUI)
 
+if(USE_CGNS)
+  include(cmake/external_projects/cgns.cmake)
+endif(USE_CGNS)
+
 #######################################################################
 if(USE_MPI)
   if(UNIX)
@@ -128,6 +132,7 @@ set_vars( NETGEN_CMAKE_ARGS
   USE_OCC
   USE_MPEG
   USE_JPEG
+  USE_CGNS
   USE_INTERNAL_TCL
   INSTALL_PROFILES
   INTEL_MIC
