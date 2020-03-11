@@ -396,10 +396,10 @@ if(USE_CGNS)
     target_compile_definitions(netgen_cgns INTERFACE NG_CGNS)
     target_include_directories(netgen_cgns INTERFACE ${CGNS_INCLUDE_DIR})
     target_link_libraries(netgen_cgns INTERFACE ${CGNS_LIBRARY})
-    if(NOT WIN32) # hdf5 is statically linked into cgns in Windows binaries
+    if(NOT WIN32 AND NOT APPLE) # hdf5 is statically linked into cgns in Windows amd MacOS binaries
         find_library(HDF5_LIBRARY NAMES hdf5 hdf5_serial)
         target_link_libraries(netgen_cgns INTERFACE ${HDF5_LIBRARY})
-    endif(NOT WIN32)
+    endif(NOT WIN32 AND NOT APPLE)
 endif(USE_CGNS)
 
 add_subdirectory(libsrc)
