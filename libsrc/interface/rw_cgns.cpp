@@ -281,11 +281,8 @@ namespace netgen::cg
 
               if(type==MIXED)
                 {
-                  bc++;
-                  material++;
-                  mesh.AddFaceDescriptor(FaceDescriptor(bc, 1, 0, 1));
-                  mesh.SetBCName(bc-1, ngname);
-                  mesh.SetMaterial(material, ngname);
+                  bool have_2d_elements = false;
+                  bool have_3d_elements = false;
 
                   cgsize_t nv;
                   cg_ElementDataSize(fn, base, zone, section, &nv);
@@ -312,6 +309,13 @@ namespace netgen::cg
 
                       if(dim==2)
                         {
+                          if(!have_2d_elements)
+                          {
+                            bc++;
+                            have_2d_elements = true;
+                            mesh.AddFaceDescriptor(FaceDescriptor(bc, 1, 0, 1));
+                            mesh.SetBCName(bc-1, ngname);
+                          }
                           auto el = ReadCGNSElement2D(type, vertices.Range(vi, vertices.Size()), first_vertex);
                           el.SetIndex(bc);
                           mesh.AddSurfaceElement(el);
@@ -320,6 +324,13 @@ namespace netgen::cg
 
                       if(dim==3)
                         {
+                          if(!have_3d_elements)
+                          {
+                            material++;
+                            have_3d_elements = true;
+                            mesh.SetMaterial(material, ngname);
+                          }
+
                           auto el = ReadCGNSElement3D(type, vertices.Range(vi, vertices.Size()), first_vertex);
                           el.SetIndex(material);
                           mesh.AddVolumeElement(el);
