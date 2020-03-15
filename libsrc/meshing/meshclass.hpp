@@ -710,6 +710,10 @@ namespace netgen
     FaceDescriptor & GetFaceDescriptor (int i) 
     { return facedecoding.Elem(i); }
 
+    int IdentifyPeriodicBoundaries(const string& s1,
+                                   const string& s2,
+                                   const Transformation<3>& mapping);
+
     // #ifdef NONE
     //   /*
     //     Identify points pi1 and pi2, due to

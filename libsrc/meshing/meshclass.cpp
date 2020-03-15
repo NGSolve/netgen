@@ -1,5 +1,6 @@
 #include <mystdlib.h>
 #include <atomic>
+#include <set>
 #include "meshing.hpp"
 
 #ifdef NG_PYTHON
@@ -6112,7 +6113,48 @@ namespace netgen
   //   }
   // #endif
 
+  int Mesh::IdentifyPeriodicBoundaries(const string &s1,
+                                       const string &s2,
+                                       const Transformation<3> &mapping)
+  {
+    auto nr = ident->GetMaxNr() + 1;
+    double lami[4];
+    GetElementOfPoint({0,0,0}, lami, true);
+    set<int> identified_points;
+    Point3d pmin, pmax;
+    GetBox(pmin, pmax);
+    auto eps = 1e-10 * (pmax-pmin).Length();
+    for(const auto& se : surfelements)
+      {
+        if(GetBCName(se.index-1) != s1)
+          continue;
 
+        for(const auto& pi : se.PNums())
+          {
+            // cout << "pi = " << pi << endl;
+            if(identified_points.find(pi) != identified_points.end())
+              continue;
+            auto pt = (*this)[pi];
+            auto mapped_pt = mapping(pt);
+            auto other_nr = GetElementOfPoint(mapped_pt, lami);
+            int index = -1;
+            auto other_el = VolumeElement(other_nr);
+            for(auto i : Range(4))
+              if((mapped_pt - (*this)[other_el.PNums()[i]]).Length() < eps)
+                {
+                  index = i;
+                  break;
+                }
+            if(index == -1)
+              throw Exception("Did not find mapped point, are you sure your mesh is periodic?");
+            auto other_pi = other_el.PNums()[index];
+            identified_points.insert(pi);
+            ident->Add(pi, other_pi, nr);
+            // cout << "other pi = " << other_pi << endl;
+          }
+      }
+    return nr;
+  }
 
   void Mesh :: InitPointCurve(double red, double green, double blue) const
   {
