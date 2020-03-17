@@ -6118,12 +6118,12 @@ namespace netgen
                                        const Transformation<3> &mapping)
   {
     auto nr = ident->GetMaxNr() + 1;
+    ident->SetType(nr, Identifications::PERIODIC);
     double lami[4];
-    GetElementOfPoint({0,0,0}, lami, true);
     set<int> identified_points;
     Point3d pmin, pmax;
     GetBox(pmin, pmax);
-    auto eps = 1e-10 * (pmax-pmin).Length();
+    auto eps = 1e-8 * (pmax-pmin).Length();
     for(const auto& se : surfelements)
       {
         if(GetBCName(se.index-1) != s1)
@@ -6131,12 +6131,11 @@ namespace netgen
 
         for(const auto& pi : se.PNums())
           {
-            // cout << "pi = " << pi << endl;
             if(identified_points.find(pi) != identified_points.end())
               continue;
             auto pt = (*this)[pi];
             auto mapped_pt = mapping(pt);
-            auto other_nr = GetElementOfPoint(mapped_pt, lami);
+            auto other_nr = GetElementOfPoint(mapped_pt, lami, true);
             int index = -1;
             auto other_el = VolumeElement(other_nr);
             for(auto i : Range(4))
@@ -6150,7 +6149,6 @@ namespace netgen
             auto other_pi = other_el.PNums()[index];
             identified_points.insert(pi);
             ident->Add(pi, other_pi, nr);
-            // cout << "other pi = " << other_pi << endl;
           }
       }
     return nr;
