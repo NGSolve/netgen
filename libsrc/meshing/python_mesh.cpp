@@ -855,6 +855,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
            py::arg("pid2"),
            py::arg("identnr"),
            py::arg("type"))
+    .def("IdentifyPeriodicBoundaries", &Mesh::IdentifyPeriodicBoundaries)
+    .def("GetNrIdentifications", [](Mesh& self)
+                                 {
+                                   return self.GetIdentifications().GetMaxNr();
+                                 })
     .def ("CalcLocalH", &Mesh::CalcLocalH)
     .def ("SetMaxHDomain", [] (Mesh& self, py::list maxhlist)
           {
