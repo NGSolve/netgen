@@ -8,6 +8,8 @@
 
 namespace netgen::cg
 {
+  typedef ngcore::ClosedHashTable<ngcore::INT<3,size_t>, size_t> PointTable;
+
   int getDim(ElementType_t type)
     {
       switch(type)
@@ -34,18 +36,18 @@ namespace netgen::cg
         }
     }
 
-  Segment ReadCGNSElement1D( ElementType_t type, FlatArray<cgsize_t> verts, int vert_offset=0 )
+  Segment ReadCGNSElement1D( ElementType_t type, FlatArray<cgsize_t> verts )
     {
       int np;
       cg_npe(type, &np);
 
       Segment s;
       for (auto i : Range(np))
-          s[i] = vert_offset+verts[i];
+          s[i] = verts[i];
       return s;
     }
 
-  Element2d ReadCGNSElement2D( ElementType_t type, FlatArray<cgsize_t> verts, int vert_offset=0 )
+  Element2d ReadCGNSElement2D( ElementType_t type, FlatArray<cgsize_t> verts )
     {
       static constexpr int map_tri3[]  = {0,2,1};
       static constexpr int map_tri6[]  = {0,2,1,3,5,4}; // untested
@@ -76,11 +78,11 @@ namespace netgen::cg
 
       Element2d el(np);
       for (auto i : Range(np))
-          el[i] = vert_offset+verts[map[i]];
+          el[i] = verts[map[i]];
       return el;
     }
 
-  Element ReadCGNSElement3D( ElementType_t type, FlatArray<cgsize_t> verts, int vert_offset=0 )
+  Element ReadCGNSElement3D( ElementType_t type, FlatArray<cgsize_t> verts )
     {
       static constexpr int map_tet4[]   = {0,2,1,3};
       static constexpr int map_prism6[] = {0,2,1,3,5,4};
@@ -111,7 +113,7 @@ namespace netgen::cg
 
       Element el(np);
       for (auto i : Range(np))
-          el[i] = vert_offset+verts[map[i]];
+          el[i] = verts[map[i]];
       return el;
     }
 
@@ -174,7 +176,7 @@ namespace netgen::cg
     {
       ZoneType_t zone_type;
       int fn, base, zone;
-      int nv, ne, first_vertex, first_mat, first_bc;
+      int nv, ne, first_mat, first_bc;
       Array<int> materials;
       Array<int> boundaries;
       string name;
@@ -238,23 +240,38 @@ namespace netgen::cg
             }
         }
 
-      void ReadMesh( Mesh & mesh )
+      void ReadMesh( Mesh & mesh, PointTable & point_table )
         {
           static Timer tall("CGNS::ReadMesh-Zone"); RegionTimer rtall(tall);
           static Timer tsection("CGNS::ReadMesh-Section");
-          first_vertex = mesh.GetNP();
           first_mat = mesh.GetRegionNamesCD(0).Size();
           first_bc = mesh.GetRegionNamesCD(1).Size();
           ne = 0;
 
-          Array<float> x(nv), y(nv), z(nv);
+          Array<double> x(nv), y(nv), z(nv);
           cgsize_t imin=1;
-          cg_coord_read(fn,base,zone, "CoordinateX", RealSingle, &imin, &nv, &x[0]);
-          cg_coord_read(fn,base,zone, "CoordinateY", RealSingle, &imin, &nv, &y[0]);
-          cg_coord_read(fn,base,zone, "CoordinateZ", RealSingle, &imin, &nv, &z[0]);
+          cg_coord_read(fn,base,zone, "CoordinateX", RealDouble, &imin, &nv, &x[0]);
+          cg_coord_read(fn,base,zone, "CoordinateY", RealDouble, &imin, &nv, &y[0]);
+          cg_coord_read(fn,base,zone, "CoordinateZ", RealDouble, &imin, &nv, &z[0]);
+
+          Array<cgsize_t> point_map(nv);
 
           for(auto i : Range(nv))
-              mesh.AddPoint( {x[i], y[i], z[i]} );
+          {
+            ngcore::INT<3,size_t> hash = {*reinterpret_cast<size_t*>(&x[i]), *reinterpret_cast<size_t*>(&y[i]), *reinterpret_cast<size_t*>(&z[i])};
+            size_t pi_ng;
+            size_t pos;
+            // check if this point is new
+            if( point_table.PositionCreate (hash, pos) )
+            {
+              pi_ng = mesh.AddPoint( {x[i], y[i], z[i]} );
+              point_table.SetData(pos, pi_ng);
+            }
+            else
+              point_table.GetData(pos, pi_ng);
+
+            point_map[i] = pi_ng;
+          }
 
           int nsections;
           cg_nsections(fn, base, zone, &nsections);
@@ -264,15 +281,17 @@ namespace netgen::cg
           for (auto section : Range(1,nsections+1))
             {
               RegionTimer rtsection(tsection);
-              char name[100];
+              char sec_name[100];
               ElementType_t type;
               cgsize_t start, end;
               int nbndry, parent_flag;
 
-              cg_section_read(fn, base, zone, section, name,  &type, &start, &end, &nbndry, &parent_flag);
-              PrintMessage(4, "Read section ", section, " with name ", name, " and element type ", cg_ElementTypeName(type));
+              cg_section_read(fn, base, zone, section, sec_name,  &type, &start, &end, &nbndry, &parent_flag);
+              PrintMessage(4, "Read section ", section, " with name ", sec_name, " and element type ", cg_ElementTypeName(type));
+              if(name == "Coil" && string(sec_name) == "Top")
+                continue;
 
-              string ngname{name};
+              string ngname{sec_name};
 
               for (char & c : ngname)
                   if(c==' ')
@@ -300,9 +319,15 @@ namespace netgen::cg
                       auto type = static_cast<ElementType_t>(vertices[vi++]);
                       int dim = getDim(type);
 
+                      int np;
+                      cg_npe(type, &np);
+
+                      for (auto & v : vertices.Range(vi, vi+np))
+                        v = point_map[v-1];
+
                       if(dim==1)
                         {
-                          auto el = ReadCGNSElement1D(type, vertices.Range(vi, vertices.Size()), first_vertex);
+                          auto el = ReadCGNSElement1D(type, vertices.Range(vi, vertices.Size()));
                           mesh.AddSegment(el);
                           vi += el.GetNP();
                         }
@@ -316,7 +341,7 @@ namespace netgen::cg
                             mesh.AddFaceDescriptor(FaceDescriptor(bc, 1, 0, 1));
                             mesh.SetBCName(bc-1, ngname);
                           }
-                          auto el = ReadCGNSElement2D(type, vertices.Range(vi, vertices.Size()), first_vertex);
+                          auto el = ReadCGNSElement2D(type, vertices.Range(vi, vertices.Size()));
                           el.SetIndex(bc);
                           mesh.AddSurfaceElement(el);
                           vi += el.GetNP();
@@ -331,7 +356,7 @@ namespace netgen::cg
                             mesh.SetMaterial(material, ngname);
                           }
 
-                          auto el = ReadCGNSElement3D(type, vertices.Range(vi, vertices.Size()), first_vertex);
+                          auto el = ReadCGNSElement3D(type, vertices.Range(vi, vertices.Size()));
                           el.SetIndex(material);
                           mesh.AddVolumeElement(el);
                           vi += el.GetNP();
@@ -350,13 +375,15 @@ namespace netgen::cg
 
                   Array<cgsize_t> vertices(nv);
                   cg_elements_read(fn, base, zone, section, &vertices[0], nullptr);
+                  for (auto & v : vertices)
+                    v = point_map[v-1];
                   int ne_section = nv/np;
 
                   if(dim==1)
                     {
                       for(auto i : Range(ne_section))
                         {
-                          auto el = ReadCGNSElement1D(type, vertices.Range(np*i, np*(i+1)), first_vertex);
+                          auto el = ReadCGNSElement1D(type, vertices.Range(np*i, np*(i+1)));
                           mesh.AddSegment(el);
                         }
                     }
@@ -367,7 +394,7 @@ namespace netgen::cg
                       mesh.AddFaceDescriptor(FaceDescriptor(bc, 1, 0, 1));
                       for(auto i : Range(ne_section))
                         {
-                          auto el = ReadCGNSElement2D(type, vertices.Range(np*i, np*(i+1)), first_vertex);
+                          auto el = ReadCGNSElement2D(type, vertices.Range(np*i, np*(i+1)));
                           el.SetIndex(bc);
                           mesh.AddSurfaceElement(el);
                         }
@@ -379,7 +406,7 @@ namespace netgen::cg
                       material++;
                       for(auto i : Range(ne_section))
                         {
-                          auto el = ReadCGNSElement3D(type, vertices.Range(np*i, np*(i+1)), first_vertex);
+                          auto el = ReadCGNSElement3D(type, vertices.Range(np*i, np*(i+1)));
                           el.SetIndex(material);
                           mesh.AddVolumeElement(el);
                         }
@@ -407,6 +434,17 @@ namespace netgen
       int bc = 0;
       int material = 0;
 
+      int n_vertices = 0;
+      for (auto zi : Range(1, nzones+1))
+      {
+        int size[3];
+        char name[100];
+        cg_zone_read(fn,base,zi, name, size);
+        n_vertices += size[0];
+      }
+
+      cg::PointTable points(2*n_vertices);
+
       for (auto zi : Range(1, nzones+1))
         {
           ZoneType_t zone_type;
@@ -417,7 +455,7 @@ namespace netgen
               continue;
             }
           cg::Zone zone(fn, base, zi);
-          zone.ReadMesh( mesh );
+          zone.ReadMesh( mesh, points );
         }
     }
 
@@ -444,6 +482,17 @@ namespace netgen
       std::vector<Array<double>> values;
       std::vector<int> locations;
 
+      int n_vertices = 0;
+      for (auto zi : Range(1, nzones+1))
+      {
+        int size[3];
+        char name[100];
+        cg_zone_read(fn,base,zi, name, size);
+        n_vertices += size[0];
+      }
+
+      cg::PointTable points(2*n_vertices);
+
       for (auto zi : Range(1, nzones+1))
         {
           ZoneType_t zone_type;
@@ -454,7 +503,7 @@ namespace netgen
               continue;
             }
           cg::Zone zone(fn, base, zi);
-          zone.ReadMesh( *mesh );
+          zone.ReadMesh( *mesh, points );
           zone.ReadSolutions( names, values, locations );
         }
 
