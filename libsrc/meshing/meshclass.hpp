@@ -712,7 +712,8 @@ namespace netgen
 
     int IdentifyPeriodicBoundaries(const string& s1,
                                    const string& s2,
-                                   const Transformation<3>& mapping);
+                                   const Transformation<3>& mapping,
+                                   double pointTolerance);
 
     // #ifdef NONE
     //   /*
