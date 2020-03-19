@@ -78,7 +78,7 @@ namespace netgen::cg
 
       Element2d el(np);
       for (auto i : Range(np))
-          el[i] = verts[map[i]];
+          el[i] = verts[i];
       return el;
     }
 
