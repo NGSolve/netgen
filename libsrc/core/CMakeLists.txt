@@ -51,6 +51,12 @@ if(USE_SPDLOG)
   endif(DEBUG_LOG)
 endif(USE_SPDLOG)
 
+if(USE_NUMA)
+    find_library(NUMA_LIBRARY libnuma.so)
+    target_compile_definitions(ngcore PUBLIC USE_NUMA)
+    target_link_libraries(ngcore PRIVATE ${NUMA_LIBRARY})
+endif(USE_NUMA)
+
 install(TARGETS ngcore DESTINATION ${NG_INSTALL_DIR} COMPONENT netgen)
 
 target_link_libraries(ngcore PUBLIC netgen_mpi PRIVATE netgen_python ${CMAKE_THREAD_LIBS_INIT})

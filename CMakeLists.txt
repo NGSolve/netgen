@@ -18,6 +18,7 @@ option( USE_OCC     "(not supported) compile with OpenCascade geometry kernel" O
 option( USE_JPEG    "enable snapshots using library libjpeg" OFF )
 option( USE_MPEG    "enable video recording with FFmpeg, uses libavcodec" OFF )
 option( USE_CGNS    "enable CGNS file read/write support" OFF )
+option( USE_NUMA         "compile with NUMA-aware code")
 option( INTEL_MIC        "cross compile for intel xeon phi")
 option( INSTALL_PROFILES "install environment variable settings to /etc/profile.d" OFF )
 option( USE_CCACHE       "use ccache")

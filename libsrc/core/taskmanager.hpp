@@ -17,6 +17,12 @@
 #include "paje_trace.hpp"
 #include "profiler.hpp"
 
+#ifdef USE_NUMA
+#include <numa.h>
+#include <sched.h>
+#endif
+
+
 namespace ngcore
 {
   using std::atomic;
