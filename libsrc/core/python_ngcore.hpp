@@ -142,6 +142,10 @@ namespace ngcore
              return py::make_iterator (self.begin(),self.end());
              }, py::keep_alive<0,1>()) // keep array alive while iterator is used
 
+        .def("__str__", [](TFlat& self)
+                        {
+                          return ToString(self);
+                        })
       ;
 
       if constexpr (detail::HasPyFormat<T>::value)
