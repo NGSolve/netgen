@@ -600,8 +600,8 @@ namespace ngcore
   FlatArray<T> View (FlatArray<T> fa) { return fa; }
 
   /// print array
-  template <class T>
-  inline ostream & operator<< (ostream & s, const FlatArray<T> & a)
+  template <class T, class TIND>
+  inline ostream & operator<< (ostream & s, const FlatArray<T, TIND> & a)
   {
     for (auto i : a.Range())
       s << i << ": " << a[i] << "\n";
