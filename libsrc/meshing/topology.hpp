@@ -166,7 +166,7 @@ public:
   { return vert2element[vnr]; }
 
   void GetVertexSurfaceElements( int vnr, NgArray<SurfaceElementIndex>& elements ) const;
-  NgFlatArray<SurfaceElementIndex> GetVertexSurfaceElements (int vnr) const
+  NgFlatArray<SurfaceElementIndex> GetVertexSurfaceElements(PointIndex vnr) const
   { return vert2surfelement[vnr]; }
 
   NgFlatArray<SegmentIndex> GetVertexSegments (int vnr) const

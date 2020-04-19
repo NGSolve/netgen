@@ -1,5 +1,7 @@
 #ifdef NG_PYTHON
 
+#include <regex>
+
 #include <../general/ngpython.hpp>
 #include <core/python_ngcore.hpp>
 #include "python_mesh.hpp"
@@ -885,12 +887,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
           meshingparameter_description.c_str(),
           py::call_guard<py::gil_scoped_release>())
 
-    .def ("OptimizeVolumeMesh", [](Mesh & self)
+    .def ("OptimizeVolumeMesh", [](Mesh & self, MeshingParameters* pars)
           {
             MeshingParameters mp;
-            mp.optsteps3d = 5;
+            if(pars) mp = *pars;
+            else mp.optsteps3d = 5;
             OptimizeVolume (mp, self);
-          },py::call_guard<py::gil_scoped_release>())
+          }, py::arg("mp"), py::call_guard<py::gil_scoped_release>())
 
     .def ("OptimizeMesh2d", [](Mesh & self)
           {
@@ -929,63 +932,87 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     
     .def ("BuildSearchTree", &Mesh::BuildElementSearchTree,py::call_guard<py::gil_scoped_release>())
 
-    .def ("BoundaryLayer", FunctionPointer 
-          ([](Mesh & self, int bc, py::list thicknesses, int volnr, py::list materials)
+    .def ("BoundaryLayer", [](Mesh & self, variant<string, int> boundary,
+                              variant<double, py::list> thickness,
+                              variant<string, py::list> material,
+                              variant<string, int> domain, bool outside,
+                              bool grow_edges)
            {
-             int n = py::len(thicknesses);
              BoundaryLayerParameters blp;
-
-             for (int i = 1; i <= self.GetNFD(); i++)
-               if (self.GetFaceDescriptor(i).BCProperty() == bc)
-                   blp.surfid.Append (i);
-
-             cout << "add layer at surfaces: " << blp.surfid << endl;
-
-             blp.prismlayers = n;
-             blp.growthfactor = 1.0;
-
-             // find max domain nr
-             int maxind = 0;
-             for (ElementIndex ei = 0; ei < self.GetNE(); ei++)
-               maxind = max (maxind, self[ei].GetIndex());
-             cout << "maxind = " << maxind << endl;
-             for ( int i=0; i<n; i++ )
+             if(int* bc = std::get_if<int>(&boundary); bc)
                {
-                 blp.heights.Append( py::extract<double>(thicknesses[i])()) ;
-                 blp.new_matnrs.Append( maxind+1+i );
-                 self.SetMaterial (maxind+1+i, py::extract<string>(materials[i])().c_str());
+                 for (int i = 1; i <= self.GetNFD(); i++)
+                   if(self.GetFaceDescriptor(i).BCProperty() == *bc)
+                     blp.surfid.Append (i);
                }
-             blp.bulk_matnr = volnr;
+             else
+               {
+                 regex pattern(std::get<string>(boundary));
+                 for(int i = 1; i<=self.GetNFD(); i++)
+                   if(regex_match(self.GetFaceDescriptor(i).GetBCName(), pattern))
+                     blp.surfid.Append(i);
+               }
+
+             if(double* pthickness = get_if<double>(&thickness); pthickness)
+               {
+                 blp.heights.Append(*pthickness);
+               }
+             else
+               {
+                 auto thicknesses = get<py::list>(thickness);
+                 for(auto val : thicknesses)
+                   blp.heights.Append(val.cast<double>());
+               }
+
+             auto prismlayers = blp.heights.Size();
+             auto first_new_mat = self.GetNDomains() + 1;
+             for(auto i : Range(prismlayers))
+               blp.new_matnrs.Append(first_new_mat + i);
+             if(string* pmaterial = get_if<string>(&material); pmaterial)
+               {
+                 for(auto i : Range(prismlayers))
+                   self.SetMaterial(first_new_mat + i, *pmaterial);
+               }
+             else
+               {
+                 auto materials = get<py::list>(material);
+                 if(py::len(materials) != prismlayers)
+                   throw Exception("Length of thicknesses and materials must be same!");
+                 for(auto i : Range(prismlayers))
+                   self.SetMaterial(first_new_mat + i, materials[i].cast<string>());
+               }
+
+             blp.outside = outside;
+             blp.grow_edges = grow_edges;
+
              GenerateBoundaryLayer (self, blp);
-           }
-           ))
+           }, py::arg("boundary"), py::arg("thickness"), py::arg("material"),
+          py::arg("domain") = 1, py::arg("outside") = false,
+          py::arg("grow_edges") = false, R"delimiter(
+Add boundary layer to mesh.
 
-    .def ("BoundaryLayer", FunctionPointer
-          ([](Mesh & self, int bc, double thickness, int volnr, string material)
-           {
-             BoundaryLayerParameters blp;
+Parameters
+----------
 
-             for (int i = 1; i <= self.GetNFD(); i++)
-               if (self.GetFaceDescriptor(i).BCProperty() == bc)
-                   blp.surfid.Append (i);
+boundary : string or int
+  Boundary name or number.
 
-             cout << "add layer at surfaces: " << blp.surfid << endl;
+thickness : float or List[float]
+  Thickness of boundary layer(s).
 
-             blp.prismlayers = 1;
-             blp.hfirst = thickness;
-             blp.growthfactor = 1.0;
+material : str or List[str]
+  Material name of boundary layer(s).
 
-             // find max domain nr
-             int maxind = 0;
-             for (ElementIndex ei = 0; ei < self.GetNE(); ei++)
-               maxind = max (maxind, self[ei].GetIndex());
-             cout << "maxind = " << maxind << endl;
-             self.SetMaterial (maxind+1, material.c_str());
-             blp.new_matnr = maxind+1;
-             blp.bulk_matnr = volnr;
-             GenerateBoundaryLayer (self, blp);
-           }
-           ))
+domain : string or int
+  Add layer into domain specified by name or number.
+
+outside : bool = False
+  If true add the layer on the outside
+
+grow_edges : bool = False
+  Grow boundary layer over edges.
+
+)delimiter")
 
     .def ("EnableTable", [] (Mesh & self, string name, bool set)
           {

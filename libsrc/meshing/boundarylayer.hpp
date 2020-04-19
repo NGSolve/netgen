@@ -12,18 +12,15 @@ class BoundaryLayerParameters
 {
 public:
   // parameters by Philippose ..
-  NgArray<int> surfid;
-  NgArray<double> heights;
-  NgArray<double> new_matnrs;
-  int prismlayers = 1;
-  int bulk_matnr = 1;
-  int new_matnr = 1;
-  double hfirst = 0.01;
-  double growthfactor = 1;
-  bool optimize = true;
+  Array<int> surfid;
+  Array<double> heights;
+  Array<size_t> new_matnrs;
+  bool outside = false; // set the boundary layer on the outside
+  bool grow_edges = false;
 };
 
-DLL_HEADER extern void GenerateBoundaryLayer (Mesh & mesh, BoundaryLayerParameters & blp);
+DLL_HEADER void GenerateBoundaryLayer (Mesh & mesh,
+                                       const BoundaryLayerParameters & blp);
 
 
 #endif
