@@ -1255,6 +1255,9 @@ namespace netgen
 	*testout << "Refsegments, before delete: " << endl << refedges << endl;
 	*testout << "inv: " << endl << refedgesinv << endl;
       }
+
+    if(refedges.Size() == 0)
+      throw Exception("No edges found, something wrong.");
     
     NgBitArray todelete(refedges.Size());
     todelete.Clear();
