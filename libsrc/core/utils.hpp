@@ -24,7 +24,7 @@ namespace ngcore
   NGCORE_API std::string Demangle(const char* typeinfo);
 
   template<typename T>
-  NGCORE_API std::string GetName(const T& obj)
+  std::string GetName(const T& obj)
   { return Demangle(typeid(obj).name()); }
 
 #if defined(__GNUC__)
