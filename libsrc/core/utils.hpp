@@ -23,6 +23,10 @@ namespace ngcore
   
   NGCORE_API std::string Demangle(const char* typeinfo);
 
+  template<typename T>
+  NGCORE_API std::string GetName(const T& obj)
+  { return Demangle(typeid(obj).name()); }
+
 #if defined(__GNUC__)
   inline bool likely (bool x) { return bool(__builtin_expect(long(x), 1L)); }
   inline bool unlikely (bool x) { return bool(__builtin_expect(long(x), 0L)); }
