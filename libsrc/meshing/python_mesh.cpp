@@ -939,7 +939,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                               bool grow_edges)
            {
              BoundaryLayerParameters blp;
-             if(int* bc = std::get_if<int>(&boundary); bc)
+             if(int* bc = get_if<int>(&boundary); bc)
                {
                  for (int i = 1; i <= self.GetNFD(); i++)
                    if(self.GetFaceDescriptor(i).BCProperty() == *bc)
@@ -947,7 +947,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                }
              else
                {
-                 regex pattern(std::get<string>(boundary));
+                 regex pattern(*get_if<string>(&boundary));
                  for(int i = 1; i<=self.GetNFD(); i++)
                    if(regex_match(self.GetFaceDescriptor(i).GetBCName(), pattern))
                      blp.surfid.Append(i);
@@ -959,7 +959,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                }
              else
                {
-                 auto thicknesses = get<py::list>(thickness);
+                 auto thicknesses = *get_if<py::list>(&thickness);
                  for(auto val : thicknesses)
                    blp.heights.Append(val.cast<double>());
                }
@@ -975,7 +975,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                }
              else
                {
-                 auto materials = get<py::list>(material);
+                 auto materials = *get_if<py::list>(&material);
                  if(py::len(materials) != prismlayers)
                    throw Exception("Length of thicknesses and materials must be same!");
                  for(auto i : Range(prismlayers))
