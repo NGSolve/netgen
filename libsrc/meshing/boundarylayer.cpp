@@ -132,16 +132,6 @@ namespace netgen
 */
    void GenerateBoundaryLayer (Mesh & mesh, const BoundaryLayerParameters & blp)
    {
-      // Angle between a surface element and a growth-vector below which
-      // a prism is project onto that surface as a quad
-      // (in degrees)
-      double angleThreshold = 5.0;
-
-      // Monitor and print out the number of prism and quad elements
-      // added to the mesh
-      int numprisms = 0;
-      int numquads = 0;
-
       PrintMessage(1, "Generating boundary layer...");
       PrintMessage(3, "Old NP: ", mesh.GetNP());
       PrintMessage(3, "Old NSE: ",mesh.GetNSE());
@@ -205,7 +195,7 @@ namespace netgen
           // Growth vectors for the prismatic layer based on
           // the effective surface normal at a given point
           Array<Vec<3>, PointIndex> growthvectors(np);
-          Array<Array<Vec<3>>, PointIndex> all_growthvectors(np);
+          growthvectors = 0.;
 
           // Bit array to identify all the points belonging
           // to the surface of interest
@@ -221,19 +211,26 @@ namespace netgen
           for(const auto& sel : mesh.SurfaceElements())
             if (blp.surfid.Contains(sel.GetIndex()))
               {
-                auto normal = GetSurfaceNormal(mesh,sel);
+                auto n2 = GetSurfaceNormal(mesh,sel);
                 if(!blp.outside)
-                  normal *= -1;
-                for(int j : Range(sel.PNums()))
+                  n2 *= -1;
+                for(auto pi : sel.PNums())
                   {
                     // Set the bitarray to indicate that the
                     // point is part of the required set
-                    bndnodes.SetBit(sel[j]);
+                    bndnodes.SetBit(pi);
 
                     // Add the surface normal to the already existent one
                     // (This gives the effective normal direction at corners
                     //  and curved areas)
-                    all_growthvectors[sel[j]].Append(normal);
+
+                    auto& n1 = growthvectors[pi];
+                    if(n1.Length() == 0) { n1 = n2; continue; }
+                    auto n1n2 = n1 * n2;
+                    auto n1n1 = n1 * n1;
+                    auto n2n2 = n2 * n2;
+                    if(n2n2 - n1n2*n1n2/n1n1 == 0) { n1 = n2; continue; }
+                    n1 += (n2n2 - n1n2)/(n2n2 - n1n2*n1n2/n1n1) * (n2 - n1n2/n1n1 * n1);
                   }
               }
 
@@ -253,25 +250,9 @@ namespace netgen
           for (PointIndex pi = 1; pi <= np; pi++)
             {
               if (bndnodes.Test(pi))
-                {
-                  mapto[pi] = mesh.AddPoint(mesh[pi]);
-                  growthvectors[pi] = all_growthvectors[pi][0];
-                  for(int i = 1; i < all_growthvectors[pi].Size(); i++)
-                    {
-                      auto& veci = all_growthvectors[pi][i];
-                      for(auto j : Range(i))
-                        {
-                          auto& vecj = all_growthvectors[pi][j];
-                          veci -= 1./(vecj.Length()+1e-10) * (veci * vecj) * vecj;
-                        }
-                      growthvectors[pi] += veci;
-                    }
-                }
+                mapto[pi] = mesh.AddPoint(mesh[pi]);
               else
-                {
-                  mapto[pi].Invalidate();
-                  growthvectors[pi] = {0,0,0};
-                }
+                mapto[pi].Invalidate();
             }
 
           // Add quad surface elements at edges for surfaces which
@@ -336,102 +317,55 @@ namespace netgen
                                 auto surfelem_vect = GetSurfaceNormal(mesh, commsel);
                                 if(blp.outside)
                                   surfelem_vect *= -1;
+                                Element2d sel(QUAD);
+                                if(blp.outside)
+                                  Swap(seg_p1, seg_p2);
+                                sel[0] = seg_p1;
+                                sel[1] = seg_p2;
+                                sel[2] = mapto[seg_p2];
+                                sel[3] = mapto[seg_p1];
+                                auto domains = make_tuple(commsel.GetIndex(), blp.new_matnrs[layer-1], mesh.GetFaceDescriptor(commsel.GetIndex()).DomainOut());
 
-                                double surfangle = Angle(growthvectors[segpair_p1],surfelem_vect);
-
-                                if((surfangle < (90 + angleThreshold) * 3.141592 / 180.0)
-                                   && (surfangle > (90 - angleThreshold) * 3.141592 / 180.0))
+                                if(domains_to_surf_index.find(domains) == domains_to_surf_index.end())
                                   {
-                                    // Since the surface is lower than the threshold, change the effective
-                                    // prism growth vector to match with the surface vector, so that
-                                    // the Quad which is created lies on the original surface
-                                    //growthvectors.Elem(segpair_p1) = surfelem_vect;
-
-                                    // Add a quad element to account for the prism volume
-                                    // element which is going to be added
-                                    Element2d sel(QUAD);
-                                    if(blp.outside)
-                                      Swap(seg_p1, seg_p2);
-                                    sel[0] = seg_p1;
-                                    sel[1] = seg_p2;
-                                    sel[2] = mapto[seg_p2];
-                                    sel[3] = mapto[seg_p1];
-                                    auto domains = make_tuple(commsel.GetIndex(), blp.new_matnrs[layer-1], mesh.GetFaceDescriptor(commsel.GetIndex()).DomainOut());
-
-                                    if(domains_to_surf_index.find(domains) == domains_to_surf_index.end())
-                                      {
-                                        domains_to_surf_index[domains] = ++max_surface_index;
-                                        domains_to_surf_index[make_tuple(max_surface_index, get<1>(domains), get<2>(domains))] = max_surface_index;
-                                        FaceDescriptor fd(max_surface_index-1,
-                                                          get<1>(domains),
-                                                          get<2>(domains),
-                                                          -1);
-                                        fd.SetBCProperty(max_surface_index);
-                                        mesh.AddFaceDescriptor(fd);
-                                        mesh.SetBCName(max_surface_index-1,
-                                                       mesh.GetBCName(get<0>(domains)-1));
-                                      }
-                                    auto new_index = domains_to_surf_index[domains];
-                                    sel.SetIndex(new_index);
-                                    mesh.AddSurfaceElement(sel);
-                                    numquads++;
-
-                                    // Add segments
-                                    Segment seg_1, seg_2;
-                                    seg_1[0] = mapto[seg_p1];
-                                    seg_1[1] = seg_p1;
-                                    seg_2[0] = seg_p2;
-                                    seg_2[1] = mapto[seg_p2];
-                                    auto points = make_tuple(seg_p1, mapto[seg_p1]);
-                                    if(pi_to_edgenr.find(points) == pi_to_edgenr.end())
-                                      pi_to_edgenr[points] = ++max_edge_nr;
-                                    seg_1.edgenr = pi_to_edgenr[points];
-                                    seg_1[2] = PointIndex::INVALID;
-                                    seg_1.si = new_index;
-                                    mesh.AddSegment(seg_1);
-
-                                    points = make_tuple(seg_p2, mapto[seg_p2]);
-                                    if(pi_to_edgenr.find(points) == pi_to_edgenr.end())
-                                      pi_to_edgenr[points] = ++max_edge_nr;
-
-                                    seg_2[2] = PointIndex::INVALID;
-                                    seg_2.edgenr = pi_to_edgenr[points];
-                                    seg_2.si = new_index;
-                                    mesh.AddSegment(seg_2);
-                                    mesh[sej].si = new_index;
+                                    domains_to_surf_index[domains] = ++max_surface_index;
+                                    domains_to_surf_index[make_tuple(max_surface_index, get<1>(domains), get<2>(domains))] = max_surface_index;
+                                    FaceDescriptor fd(max_surface_index-1,
+                                                      get<1>(domains),
+                                                      get<2>(domains),
+                                                      -1);
+                                    fd.SetBCProperty(max_surface_index);
+                                    mesh.AddFaceDescriptor(fd);
+                                    mesh.SetBCName(max_surface_index-1,
+                                                   mesh.GetBCName(get<0>(domains)-1));
                                   }
-                                else
-                                  {
-                                    for(auto pnt1_ei : pnt1_elems)
-                                      {
-                                        auto& pnt_sel = mesh[pnt1_ei];
-                                        if(pnt_sel.GetIndex() == mesh[sej].si)
-                                          {
-                                            for(auto& pi : pnt_sel.PNums())
-                                              {
-                                                if(pi == segpair_p1)
-                                                  pi = mapto[seg_p1];
-                                                else if(pi == segpair_p2)
-                                                  pi = mapto[seg_p2];
-                                              }
-                                          }
-                                      }
+                                auto new_index = domains_to_surf_index[domains];
+                                sel.SetIndex(new_index);
+                                mesh.AddSurfaceElement(sel);
 
-                                    for(auto sk : pnt2_elems)
-                                      {
-                                        auto& pnt_sel = mesh[sk];
-                                        if(pnt_sel.GetIndex() == mesh[sej].si)
-                                          {
-                                            for(auto& p : pnt_sel.PNums())
-                                              {
-                                                if(p == segpair_p1)
-                                                  p = mapto[seg_p1];
-                                                else if (p == segpair_p2)
-                                                  p = mapto[seg_p2];
-                                              }
-                                          }
-                                      }
-                                  }
+                                // Add segments
+                                Segment seg_1, seg_2;
+                                seg_1[0] = mapto[seg_p1];
+                                seg_1[1] = seg_p1;
+                                seg_2[0] = seg_p2;
+                                seg_2[1] = mapto[seg_p2];
+                                auto points = make_tuple(seg_p1, mapto[seg_p1]);
+                                if(pi_to_edgenr.find(points) == pi_to_edgenr.end())
+                                  pi_to_edgenr[points] = ++max_edge_nr;
+                                seg_1.edgenr = pi_to_edgenr[points];
+                                seg_1[2] = PointIndex::INVALID;
+                                seg_1.si = new_index;
+                                mesh.AddSegment(seg_1);
+
+                                points = make_tuple(seg_p2, mapto[seg_p2]);
+                                if(pi_to_edgenr.find(points) == pi_to_edgenr.end())
+                                  pi_to_edgenr[points] = ++max_edge_nr;
+
+                                seg_2[2] = PointIndex::INVALID;
+                                seg_2.edgenr = pi_to_edgenr[points];
+                                seg_2.si = new_index;
+                                mesh.AddSegment(seg_2);
+                                mesh[sej].si = new_index;
                               }
 
                             // in last layer insert new segments
@@ -680,8 +614,6 @@ namespace netgen
         }
 
       PrintMessage(3, "New NP: ", mesh.GetNP());
-      PrintMessage(3, "Num of Quads: ", numquads);
-      PrintMessage(3, "Num of Prisms: ", numprisms);
       PrintMessage(1, "Boundary Layer Generation....Done!");
    }
 }
