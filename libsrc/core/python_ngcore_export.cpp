@@ -30,6 +30,7 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
                       if (a[i]) ba->SetBit(i);
                     return ba;
                   } ), py::arg("vec"))
+    .def(NGSPickle<BitArray>())
     .def("__str__", &ToString<BitArray>)
     .def("__len__", &BitArray::Size)
     .def("__getitem__", [] (BitArray & self, int i)
