@@ -125,7 +125,7 @@ namespace ngcore
       }
     else
       {
-        int size;
+        size_t size;
         archive & size;
         ba.SetSize (size);
         ba.Clear();
