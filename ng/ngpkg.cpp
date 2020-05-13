@@ -1155,7 +1155,7 @@ namespace netgen
      
      // Use an array to support creation of boundary 
      // layers for multiple surfaces in the future...
-     NgArray<int> surfid;
+     Array<int> surfid;
      int surfinp = 0;
      int prismlayers = 1;
      double hfirst = 0.01;
@@ -1172,8 +1172,8 @@ namespace netgen
      cout << "Number of surfaces entered = " << surfid.Size() << endl; 
      cout << "Selected surfaces are:" << endl;
      
-     for(int i = 1; i <= surfid.Size(); i++)
-       cout << "Surface " << i << ": " << surfid.Elem(i) << endl;
+     for(auto i : Range(surfid))
+       cout << "Surface " << i << ": " << surfid[i] << endl;
      
      cout << endl << "Enter number of prism layers: ";
      cin >> prismlayers;
@@ -1189,9 +1189,14 @@ namespace netgen
      
      BoundaryLayerParameters blp;
      blp.surfid = surfid;
-     blp.prismlayers = prismlayers;
-     blp.hfirst = blp.hfirst;
-     blp.growthfactor = growthfactor;
+     for(auto i : Range(prismlayers))
+       {
+         auto layer = i+1;
+         if(growthfactor == 1)
+           blp.heights.Append(layer * hfirst);
+         else
+           blp.heights.Append(hfirst * (pow(growthfactor, (layer+1))-1)/(growthfactor-1));
+       }
      GenerateBoundaryLayer (*mesh, blp);
      return TCL_OK;
   }

@@ -103,32 +103,21 @@ namespace netgen
    function, in order to calculate the effective direction 
    in which the prismatic layer should grow
 */
-   void GetSurfaceNormal(Mesh & mesh, const Element2d & el, int Vertex, Vec3d & SurfaceNormal)
+  inline Vec<3> GetSurfaceNormal(Mesh & mesh, const Element2d & el)
    {
-      int Vertex_A;
-      int Vertex_B;
-
-      Vertex_A = Vertex + 1;
-      if(Vertex_A > el.GetNP()) Vertex_A = 1;
-
-      Vertex_B = Vertex - 1;
-      if(Vertex_B <= 0) Vertex_B = el.GetNP();
-
-      Vec3d Vect_A,Vect_B;
-      
-      Vect_A = mesh[el.PNum(Vertex_A)] - mesh[el.PNum(Vertex)];
-      Vect_B = mesh[el.PNum(Vertex_B)] - mesh[el.PNum(Vertex)];
-
-      SurfaceNormal = Cross(Vect_A,Vect_B);
-      SurfaceNormal.Normalize();
+     auto v0 = mesh[el[0]];
+     auto v1 = mesh[el[1]];
+     auto v2 = mesh[el[2]];
+     Vec<3> vec1 = v1-v0;
+     Vec<3> vec2 = v2-v0;
+     Vec<3> normal = Cross(vec1, vec2);
+     normal.Normalize();
+     return normal;
    }
-
-
-
-
 
 /*
     Philippose Rajan - 11 June 2009
+    modified by Christopher Lackner Apr 2020
     
     Added an initial experimental function for 
     generating prismatic boundary layers on 
@@ -141,507 +130,490 @@ namespace netgen
     Currently, the layer height is calculated using:
     height = h_first_layer * (growth_factor^(num_layers - 1))
 */
-   void GenerateBoundaryLayer (Mesh & mesh, BoundaryLayerParameters & blp)
+   void GenerateBoundaryLayer (Mesh & mesh, const BoundaryLayerParameters & blp)
    {
-      ofstream dbg("BndLayerDebug.log");
+      PrintMessage(1, "Generating boundary layer...");
+      PrintMessage(3, "Old NP: ", mesh.GetNP());
+      PrintMessage(3, "Old NSE: ",mesh.GetNSE());
 
-      // Angle between a surface element and a growth-vector below which 
-      // a prism is project onto that surface as a quad
-      // (in degrees)
-      double angleThreshold = 5.0;
+      map<tuple<int, int, int>, int> domains_to_surf_index;
+      map<tuple<PointIndex, PointIndex>, int> pi_to_edgenr;
 
+      map<int, int> last_layer_surface_index_map;
+      int max_surface_index = mesh.GetNFD();
 
-      NgArray<int> surfid (blp.surfid);
-      int prismlayers = blp.prismlayers;
-      double hfirst = blp.hfirst;
-      double growthfactor = blp.growthfactor;
-      NgArray<double> heights (blp.heights);
+      int max_edge_nr = -1;
+      for(const auto& seg : mesh.LineSegments())
+        if(seg.edgenr > max_edge_nr)
+          max_edge_nr = seg.edgenr;
 
-      bool grow_edges = false; // grow layer at edges
-      
-
-      // Monitor and print out the number of prism and quad elements 
-      // added to the mesh
-      int numprisms = 0;
-      int numquads = 0;
-      
-
-      cout << "Old NP: " << mesh.GetNP() << endl;
-      cout << "Old NSE: " << mesh.GetNSE() << endl;
-      
-      for(int layer = prismlayers; layer >= 1; layer--)
+      for(int layer = blp.heights.Size(); layer >= 1; layer--)
         {
-          cout << "Generating layer: " << layer << endl;
-          
-          const MeshTopology& meshtopo = mesh.GetTopology();
-          const_cast<MeshTopology &> (meshtopo).SetBuildEdges(true);
-          const_cast<MeshTopology &> (meshtopo).SetBuildFaces(true);
-          const_cast<MeshTopology &> (meshtopo).Update();
+          PrintMessage(3, "Generating layer: ", layer);
 
-          double layerht = hfirst;
-          
-          if(heights.Size()>0)
+          auto map_surface_index = [&](auto si)
             {
-              layerht = heights[layer-1];
-            }
-          else
-            {
-              if(growthfactor == 1)
+              if(last_layer_surface_index_map.find(si) == last_layer_surface_index_map.end())
                 {
-                  layerht = layer * hfirst;
+                  last_layer_surface_index_map[si] = ++max_surface_index;
+                  auto& old_fd = mesh.GetFaceDescriptor(si);
+                  int domout = blp.outside ? old_fd.DomainOut() : blp.new_matnrs[layer-1];
+                  int domin = blp.outside ? blp.new_matnrs[layer-1] : old_fd.DomainIn();
+                  FaceDescriptor fd(max_surface_index-1,
+                                    domin, domout, -1);
+                  fd.SetBCProperty(max_surface_index);
+                  mesh.AddFaceDescriptor(fd);
+                  return max_surface_index;
                 }
+              return last_layer_surface_index_map[si];
+            };
+
+          mesh.UpdateTopology();
+          auto& meshtopo = mesh.GetTopology();
+
+          auto layerht = blp.heights[layer-1];
+
+          PrintMessage(5, "Layer Height = ", layerht);
+
+          // Need to store the old number of points and
+          // surface elements because there are new points and
+          // surface elements being added during the process
+          int np = mesh.GetNP();
+          int nse = mesh.GetNSE();
+          int ne = mesh.GetNE();
+
+          // Safety measure to ensure no issues with mesh
+          // consistency
+          int nseg = mesh.GetNSeg();
+
+          // Indicate which points need to be remapped
+          BitArray bndnodes(np+1);  // big enough for 1-based array
+
+          // Map of the old points to the new points
+          Array<PointIndex, PointIndex> mapto(np);
+
+          // Growth vectors for the prismatic layer based on
+          // the effective surface normal at a given point
+          Array<Vec<3>, PointIndex> growthvectors(np);
+          growthvectors = 0.;
+
+          // Bit array to identify all the points belonging
+          // to the surface of interest
+          bndnodes.Clear();
+
+          // Run through all the surface elements and mark the points
+          // belonging to those where a boundary layer has to be created.
+          // In addition, also calculate the effective surface normal
+          // vectors at each of those points to determine the mesh motion
+          // direction
+          PrintMessage(3, "Marking points for remapping...");
+
+          for(const auto& sel : mesh.SurfaceElements())
+            if (blp.surfid.Contains(sel.GetIndex()))
+              {
+                auto n2 = GetSurfaceNormal(mesh,sel);
+                if(!blp.outside)
+                  n2 *= -1;
+                for(auto pi : sel.PNums())
+                  {
+                    // Set the bitarray to indicate that the
+                    // point is part of the required set
+                    bndnodes.SetBit(pi);
+
+                    // Add the surface normal to the already existent one
+                    // (This gives the effective normal direction at corners
+                    //  and curved areas)
+
+                    auto& n1 = growthvectors[pi];
+                    if(n1.Length() == 0) { n1 = n2; continue; }
+                    auto n1n2 = n1 * n2;
+                    auto n1n1 = n1 * n1;
+                    auto n2n2 = n2 * n2;
+                    if(n2n2 - n1n2*n1n2/n1n1 == 0) { n1 = n2; continue; }
+                    n1 += (n2n2 - n1n2)/(n2n2 - n1n2*n1n2/n1n1) * (n2 - n1n2/n1n1 * n1);
+                  }
+              }
+
+          if (!blp.grow_edges)
+            for(const auto& sel : mesh.LineSegments())
+              {
+                bndnodes.Clear(sel[0]);
+                bndnodes.Clear(sel[1]);
+              }
+
+          // Add additional points into the mesh structure in order to
+          // clone the surface elements.
+          // Also invert the growth vectors so that they point inwards,
+          // and normalize them
+          PrintMessage(3, "Cloning points and calculating growth vectors...");
+
+          for (PointIndex pi = 1; pi <= np; pi++)
+            {
+              if (bndnodes.Test(pi))
+                mapto[pi] = mesh.AddPoint(mesh[pi]);
               else
-                {
-                  layerht = hfirst*(pow(growthfactor,(layer+1)) - 1)/(growthfactor - 1);
-                }
+                mapto[pi].Invalidate();
             }
-          
-         cout << "Layer Height = " << layerht << endl;
-         
-         // Need to store the old number of points and 
-         // surface elements because there are new points and 
-         // surface elements being added during the process
-         int np = mesh.GetNP();
-         int nse = mesh.GetNSE();
-         int ne = mesh.GetNE();
 
-         // Safety measure to ensure no issues with mesh 
-         // consistency
-         int nseg = mesh.GetNSeg();
+          // Add quad surface elements at edges for surfaces which
+          // don't have boundary layers
 
-         // Indicate which points need to be remapped
-         NgBitArray bndnodes(np+1);  // big enough for 1-based array
+          // Bit array to keep track of segments already processed
+          BitArray segsel(nseg);
 
-         // Map of the old points to the new points
-         NgArray<PointIndex, PointIndex::BASE> mapto(np);
+          // Set them all to "1" to initially activate all segments
+          segsel.Set();
 
-         // Growth vectors for the prismatic layer based on 
-         // the effective surface normal at a given point
-         NgArray<Vec3d, PointIndex::BASE> growthvectors(np);
+          PrintMessage(3, "Adding 2D Quad elements on required surfaces...");
 
-         // Bit array to identify all the points belonging 
-         // to the surface of interest
-         bndnodes.Clear();
-
-         // Run through all the surface elements and mark the points 
-         // belonging to those where a boundary layer has to be created.
-         // In addition, also calculate the effective surface normal 
-         // vectors at each of those points to determine the mesh motion 
-         // direction
-         cout << "Marking points for remapping...." << endl;
-         
-         for (SurfaceElementIndex si = 0; si < nse; si++)
-           if (surfid.Contains(mesh[si].GetIndex()))
-             {
-               const Element2d & sel = mesh[si];
-               for(int j = 0; j < sel.GetNP(); j++)
-                 {
-                   // Set the bitarray to indicate that the 
-                   // point is part of the required set
-                   bndnodes.Set(sel[j]);
-                   Vec3d surfacenormal;
-                   
-                   // Calculate the surface normal at the current point 
-                   // with respect to the current surface element
-                   GetSurfaceNormal(mesh,sel,j+1,surfacenormal);
-                   
-                   // Add the surface normal to the already existent one 
-                   // (This gives the effective normal direction at corners 
-                   //  and curved areas)
-                   growthvectors[sel[j]] += surfacenormal;
-                 }
-             }
-
-         if (!grow_edges)
-           for (SegmentIndex sei = 0; sei <= nseg; sei++)
-             {
-               bndnodes.Clear (mesh[sei][0]);
-               bndnodes.Clear (mesh[sei][1]);
-             }
-
-         // Add additional points into the mesh structure in order to 
-         // clone the surface elements.
-         // Also invert the growth vectors so that they point inwards, 
-         // and normalize them
-         cout << "Cloning points and calculating growth vectors...." << endl;
-
-         for (PointIndex pi = 1; pi <= np; pi++)
-           {
-             if (bndnodes.Test(pi))
-               {
-                 mapto[pi] = mesh.AddPoint (mesh[pi]);
-                 
-                 growthvectors[pi].Normalize();
-                 growthvectors[pi] *= -1.0;
-               }
-             else
-               {
-                 mapto[pi] = 0;
-                 growthvectors[pi] = Vec3d(0,0,0);
-               }
-         }
-
-
-         // Add quad surface elements at edges for surfaces which 
-         // don't have boundary layers
-
-         // Bit array to keep track of segments already processed
-         NgBitArray segsel(nseg);
-
-         // Set them all to "1" to initially activate all segments
-         segsel.Set();
-
-         cout << "Adding 2D Quad elements on required surfaces...." << endl;
-
-         if (grow_edges)
-         for (SegmentIndex sei = 0; sei <= nseg; sei++)
-           {
-             PointIndex seg_p1 = mesh[sei][0];
-             PointIndex seg_p2 = mesh[sei][1];
-             
-             // Only go in if the segment is still active, and if both its 
-             // surface index is part of the "hit-list"
-             if(segsel.Test(sei) && surfid.Contains(mesh[sei].si))
-               {
-                 // clear the bit to indicate that this segment has been processed
-                 segsel.Clear(sei);
-                 
-                 // Find matching segment pair on other surface
-                 for (SegmentIndex sej = 0; sej < nseg; sej++)
-                   {
-                     PointIndex segpair_p1 = mesh[sej][1];
-                     PointIndex segpair_p2 = mesh[sej][0];
-                     
-                     // Find the segment pair on the neighbouring surface element
-                     // Identified by: seg1[0] = seg_pair[1] and seg1[1] = seg_pair[0]
-                     if(segsel.Test(sej) && ((segpair_p1 == seg_p1) && (segpair_p2 == seg_p2)))
-                       {
-                         // clear bit to indicate that processing of this segment is done
-                         segsel.Clear(sej);
-                         
-                         // Only worry about those surfaces which are not in the 
-                         // boundary layer list
-                         if(!surfid.Contains(mesh[sej].si))
-                           {
-                             SurfaceElementIndex pnt_commelem = 0;
-                             NgArray<SurfaceElementIndex> pnt1_elems;
-                             NgArray<SurfaceElementIndex> pnt2_elems;
-                             
-                            
-                             meshtopo.GetVertexSurfaceElements(segpair_p1,pnt1_elems);
-                             meshtopo.GetVertexSurfaceElements(segpair_p2,pnt2_elems);
-
-                             for(int k = 0; k < pnt1_elems.Size(); k++)
-                               {
-                                 const Element2d & pnt1_sel = mesh.SurfaceElement(pnt1_elems[k]);
-                                 for(int l = 0; l < pnt2_elems.Size(); l++)
-                                   {
-                                     const Element2d & pnt2_sel = mesh.SurfaceElement(pnt2_elems[l]);
-                                     if((pnt1_sel.GetIndex() == mesh[sej].si) 
-                                        && (pnt2_sel.GetIndex() == mesh[sej].si)
-                                        && (pnt1_elems[k] == pnt2_elems[l]))
-                                       {
-                                         pnt_commelem = pnt1_elems[k];
-                                       }
-                                   }
-                               }
-
-                             /*
-                               int pnum_commelem = 0;
-                               for(int k = 1; k <= mesh.SurfaceElement(pnt_commelem).GetNP(); k++)
-                               {
-                               if((mesh.SurfaceElement(pnt_commelem).PNum(k) != segpair_p1)
-                               && (mesh.SurfaceElement(pnt_commelem).PNum(k) != segpair_p2))
-                               {
-                               pnum_commelem = mesh.SurfaceElement(pnt_commelem).PNum(k);
-                               }
-                               }
-                             */
-                             
-                             Vec3d surfelem_vect, surfelem_vect1;
-                        
-                             const Element2d & commsel = mesh.SurfaceElement(pnt_commelem);
-                             
-                             dbg << "NP= " << commsel.GetNP() << " : ";
-                             
-                             for(int k = 1; k <= commsel.GetNP(); k++)
-                               {
-                                 GetSurfaceNormal(mesh,commsel,k,surfelem_vect1);
-                                 surfelem_vect += surfelem_vect1;
-                               }
-                             
-                             surfelem_vect.Normalize();
-                             
-                             double surfangle = Angle(growthvectors.Elem(segpair_p1),surfelem_vect);
-                             
-                             dbg << "V1= " << surfelem_vect1 
-                                 << " : V2= " << surfelem_vect1
-                                 << " : V= " << surfelem_vect
-                                 << " : GV= " << growthvectors.Elem(segpair_p1)
-                                 << " : Angle= " << surfangle * 180 / 3.141592;
-                             
-                             
-                             // remap the segments to the new points
-                             mesh[sei][0] = mapto[seg_p1];
-                             mesh[sei][1] = mapto[seg_p2];
-                             mesh[sej][1] = mapto[seg_p1];
-                             mesh[sej][0] = mapto[seg_p2];
-                             
-                             if((surfangle < (90 + angleThreshold) * 3.141592 / 180.0)
-                                && (surfangle > (90 - angleThreshold) * 3.141592 / 180.0))
-                               {
-                                 dbg << " : quad\n";
-                                 // Since the surface is lower than the threshold, change the effective 
-                                 // prism growth vector to match with the surface vector, so that 
-                                 // the Quad which is created lies on the original surface
-                                 //growthvectors.Elem(segpair_p1) = surfelem_vect;
-                                 
-                                 // Add a quad element to account for the prism volume
-                                 // element which is going to be added 
-                                 Element2d sel(QUAD);
-                                 sel.PNum(4) = mapto[seg_p1];
-                                 sel.PNum(3) = mapto[seg_p2];
-                                 sel.PNum(2) = segpair_p2;
-                                 sel.PNum(1) = segpair_p1;
-                                 sel.SetIndex(mesh[sej].si);
-                                 mesh.AddSurfaceElement(sel);
-                                 numquads++;
-                               }
-                             else
-                               {
-                                 dbg << "\n";
-                                 for (int k = 0; k < pnt1_elems.Size(); k++)
-                                   {
-                                     Element2d & pnt_sel = mesh.SurfaceElement(pnt1_elems[k]);
-                                     if(pnt_sel.GetIndex() == mesh[sej].si)
-                                       {
-                                         for(int l = 0; l < pnt_sel.GetNP(); l++)
-                                           {
-                                             if(pnt_sel[l] == segpair_p1)
-                                               pnt_sel[l] = mapto[seg_p1];
-                                             else if (pnt_sel[l] == segpair_p2)
-                                               pnt_sel[l] = mapto[seg_p2];
-                                           }
-                                       }
-                                   }
-                                 
-                                 for (int k = 0; k < pnt2_elems.Size(); k++)
-                                   {
-                                     Element2d & pnt_sel = mesh.SurfaceElement(pnt2_elems[k]);
-                                     if(pnt_sel.GetIndex() == mesh[sej].si)
-                                       {
-                                         for(int l = 0; l < pnt_sel.GetNP(); l++)
-                                           {
-                                             if(pnt_sel[l] == segpair_p1)
-                                               pnt_sel[l] = mapto.Get(seg_p1);
-                                             else if (pnt_sel[l] == segpair_p2)
-                                               pnt_sel[l] = mapto.Get(seg_p2);
-                                           }
-                                       }
-                                   }
-                               }
-                             // }
-                           }
-                         else
-                           {
-                             // If the code comes here, it indicates that we are at 
-                             // a line segment pair which is at the intersection 
-                             // of two surfaces, both of which have to grow boundary 
-                             // layers.... here too, remapping the segments to the 
-                             // new points is required
-                             mesh[sei][0] = mapto.Get(seg_p1);
-                             mesh[sei][1] = mapto.Get(seg_p2);
-                             mesh[sej][1] = mapto.Get(seg_p1);
-                             mesh[sej][0] = mapto.Get(seg_p2);
-                           }
-                       }
-                   }
-               }
-           }
-         
-         // Add prismatic cells at the boundaries
-         cout << "Generating prism boundary layer volume elements...." << endl;
-
-         for (SurfaceElementIndex si = 0; si < nse; si++)
-           {
-             Element2d & sel = mesh.SurfaceElement(si);
-             if(surfid.Contains(sel.GetIndex()))
-               {
-                 /*
-                 Element el(PRISM);
-                 for (int j = 0; j < sel.GetNP(); j++)
-                   {
-                     // Check (Doublecheck) if the corresponding point has a 
-                     // copy available for remapping
-                     if (mapto.Get(sel[j]))
-                       {
-                         // Define the points of the newly added Prism cell
-                         el[j+3] = mapto[sel[j]];
-                         el[j] = sel[j];
-                       }
-                     else
-                       {
-                         el[j+3] = sel[j];
-                         el[j] = sel[j];
-                       }
-                   }
-                 
-                 el.SetIndex(1);
-                 el.Invert();
-                 mesh.AddVolumeElement(el);
-                 numprisms++;
-                 */
-                 // cout << "add element: " << endl;
-                 int classify = 0;
-                 for (int j = 0; j < 3; j++)
-                   if (mapto[sel[j]])
-                     classify += (1 << j);
-
-                 // cout << "classify = " << classify << endl;
-
-                 ELEMENT_TYPE types[] = { PRISM, TET, TET, PYRAMID, 
-                                          TET, PYRAMID, PYRAMID, PRISM };
-                 int nums[] = { sel[0], sel[1], sel[2], mapto[sel[0]], mapto[sel[1]], mapto[sel[2]] };
-                 int vertices[][6] = 
-                   { 
-                     { 0, 1, 2, 0, 1, 2 },   // should not occur
-                     { 0, 2, 1, 3, 0, 0 },
-                     { 0, 2, 1, 4, 0, 0 },
-                     { 0, 1, 4, 3, 2, 0 },
-
-                     { 0, 2, 1, 5, 0, 0 },
-                     { 2, 0, 3, 5, 1, 0 }, 
-                     { 1, 2, 5, 4, 0, 0 },
-                     { 0, 2, 1, 3, 5, 4 }
-                   };
-
-                 Element el(types[classify]);
-                 for (int i = 0; i < 6; i++)
-                   el[i] = nums[vertices[classify][i]];
-                   if(blp.new_matnrs.Size() > 0)
-                      el.SetIndex(blp.new_matnrs[layer-1]);
-                   else
-                      el.SetIndex(blp.new_matnr);
-                 // cout << "el = " << el << endl;
-                 if (classify != 0)
-                   mesh.AddVolumeElement(el);
-               }
-           }
-         
-         // Finally switch the point indices of the surface elements 
-         // to the newly added ones
-         cout << "Transferring boundary layer surface elements to new vertex references...." << endl;
-         
-         for (int i = 1; i <= nse; i++)
-           {
-             Element2d & sel = mesh.SurfaceElement(i);
-             if(surfid.Contains(sel.GetIndex()))
+          if(blp.grow_edges)
+            for(SegmentIndex sei = 0; sei < nseg; sei++)
               {
-                for (int j = 1; j <= sel.GetNP(); j++)
+                PointIndex seg_p1 = mesh[sei][0];
+                PointIndex seg_p2 = mesh[sei][1];
+
+                // Only go in if the segment is still active, and if both its
+                // surface index is part of the "hit-list"
+                if(segsel.Test(sei))
                   {
-                    // Check (Doublecheck) if the corresponding point has a 
-                    // copy available for remapping
-                    if (mapto.Get(sel.PNum(j)))
-                      {
-                        // Map the surface elements to the new points
-                        sel.PNum(j) = mapto.Get(sel.PNum(j));
-                      }
-                  }
-              }
-           }
-         for (int i = 1; i <= ne; i++)
-           {
-             Element & el = mesh.VolumeElement(i);
-             if(el.GetIndex() != blp.bulk_matnr)
-              {
-                for (int j = 1; j <= el.GetNP(); j++)
+                    if(blp.surfid.Contains(mesh[sei].si))
                   {
-                    // Check (Doublecheck) if the corresponding point has a 
-                    // copy available for remapping
-                    if (mapto.Get(el.PNum(j)))
+                    // clear the bit to indicate that this segment has been processed
+                    segsel.Clear(sei);
+
+                    // Find matching segment pair on other surface
+                    for(SegmentIndex sej = 0; sej < nseg; sej++)
                       {
-                        // Map the surface elements to the new points
-                        el.PNum(j) = mapto.Get(el.PNum(j));
-                      }
-                  }
-              }
-           }
+                        PointIndex segpair_p1 = mesh[sej][1];
+                        PointIndex segpair_p2 = mesh[sej][0];
 
-
-
-         
-         // Lock all the prism points so that the rest of the mesh can be 
-         // optimised without invalidating the entire mesh
-         // for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End(); pi++)
-         for (PointIndex pi : mesh.Points().Range())
-           {
-             if(bndnodes.Test(pi)) mesh.AddLockedPoint(pi);
-           }
-
-         // Now, actually pull back the old surface points to create 
-         // the actual boundary layers
-         cout << "Moving and optimising boundary layer points...." << endl;
-         
-         for (int i = 1; i <= np; i++)
-           {
-            NgArray<ElementIndex> vertelems;
-
-            if(bndnodes.Test(i))
-              {
-                MeshPoint pointtomove;
-                
-                pointtomove = mesh.Point(i);
-                
-                if(layer == prismlayers)
-                  {
-                    mesh.Point(i).SetPoint(pointtomove + layerht * growthvectors.Elem(i));
-                    
-                    meshtopo.GetVertexElements(i,vertelems);
-                    
-                    for(int j = 1; j <= vertelems.Size(); j++)
-                      {
-                        // double sfact = 0.9;
-                        Element volel = mesh.VolumeElement(vertelems.Elem(j));
-                        if(((volel.GetType() == TET) || (volel.GetType() == TET10)) && (!volel.IsDeleted()))
+                        // Find the segment pair on the neighbouring surface element
+                        // Identified by: seg1[0] = seg_pair[1] and seg1[1] = seg_pair[0]
+                        if(segsel.Test(sej) && ((segpair_p1 == seg_p1) && (segpair_p2 == seg_p2)))
                           {
-                            //while((volel.Volume(mesh.Points()) <= 0.0) && (sfact >= 0.0))
-                            //{
-                            //   mesh.Point(i).SetPoint(pointtomove + (sfact * layerht * growthvectors.Elem(i)));
-                            //   mesh.ImproveMesh();
-                            
-                            //   // Try to move the point back by one step but 
-                            //   // if the volume drops to below zero, double back
-                            //   mesh.Point(i).SetPoint(pointtomove + ((sfact + 0.1) * layerht * growthvectors.Elem(i)));
-                            //   if(volel.Volume(mesh.Points()) <= 0.0)
-                            //   {
-                            //      mesh.Point(i).SetPoint(pointtomove + (sfact * layerht * growthvectors.Elem(i)));
-                            //   }
-                            //   sfact -= 0.1;
-                            //}
-                            volel.Delete();
+                            // clear bit to indicate that processing of this segment is done
+                            segsel.Clear(sej);
+
+                            // Only worry about those surfaces which are not in the
+                            // boundary layer list
+                            if(!blp.surfid.Contains(mesh[sej].si))
+                              {
+                                SurfaceElementIndex pnt_commelem;
+                                SetInvalid(pnt_commelem);
+
+                                auto pnt1_elems = meshtopo.GetVertexSurfaceElements(segpair_p1);
+                                auto pnt2_elems = meshtopo.GetVertexSurfaceElements(segpair_p2);
+
+                                for(auto pnt1_sei : pnt1_elems)
+                                  if(mesh[pnt1_sei].GetIndex() == mesh[sej].si)
+                                    for(auto pnt2_sei : pnt2_elems)
+                                      if(pnt1_sei == pnt2_sei)
+                                        pnt_commelem = pnt1_sei;
+
+                                if(IsInvalid(pnt_commelem))
+                                  throw Exception("Couldn't find element on other side for " + ToString(segpair_p1) + " to " + ToString(segpair_p2));
+
+                                const auto& commsel = mesh[pnt_commelem];
+                                auto surfelem_vect = GetSurfaceNormal(mesh, commsel);
+                                if(blp.outside)
+                                  surfelem_vect *= -1;
+                                Element2d sel(QUAD);
+                                if(blp.outside)
+                                  Swap(seg_p1, seg_p2);
+                                sel[0] = seg_p1;
+                                sel[1] = seg_p2;
+                                sel[2] = mapto[seg_p2];
+                                sel[3] = mapto[seg_p1];
+                                auto domains = make_tuple(commsel.GetIndex(), blp.new_matnrs[layer-1], mesh.GetFaceDescriptor(commsel.GetIndex()).DomainOut());
+
+                                if(domains_to_surf_index.find(domains) == domains_to_surf_index.end())
+                                  {
+                                    domains_to_surf_index[domains] = ++max_surface_index;
+                                    domains_to_surf_index[make_tuple(max_surface_index, get<1>(domains), get<2>(domains))] = max_surface_index;
+                                    FaceDescriptor fd(max_surface_index-1,
+                                                      get<1>(domains),
+                                                      get<2>(domains),
+                                                      -1);
+                                    fd.SetBCProperty(max_surface_index);
+                                    mesh.AddFaceDescriptor(fd);
+                                    mesh.SetBCName(max_surface_index-1,
+                                                   mesh.GetBCName(get<0>(domains)-1));
+                                  }
+                                auto new_index = domains_to_surf_index[domains];
+                                sel.SetIndex(new_index);
+                                mesh.AddSurfaceElement(sel);
+
+                                // Add segments
+                                Segment seg_1, seg_2;
+                                seg_1[0] = mapto[seg_p1];
+                                seg_1[1] = seg_p1;
+                                seg_2[0] = seg_p2;
+                                seg_2[1] = mapto[seg_p2];
+                                auto points = make_tuple(seg_p1, mapto[seg_p1]);
+                                if(pi_to_edgenr.find(points) == pi_to_edgenr.end())
+                                  pi_to_edgenr[points] = ++max_edge_nr;
+                                seg_1.edgenr = pi_to_edgenr[points];
+                                seg_1[2] = PointIndex::INVALID;
+                                seg_1.si = new_index;
+                                mesh.AddSegment(seg_1);
+
+                                points = make_tuple(seg_p2, mapto[seg_p2]);
+                                if(pi_to_edgenr.find(points) == pi_to_edgenr.end())
+                                  pi_to_edgenr[points] = ++max_edge_nr;
+
+                                seg_2[2] = PointIndex::INVALID;
+                                seg_2.edgenr = pi_to_edgenr[points];
+                                seg_2.si = new_index;
+                                mesh.AddSegment(seg_2);
+                                mesh[sej].si = new_index;
+                              }
+
+                            // in last layer insert new segments
+                            if(layer == blp.heights.Size())
+                              {
+                                Segment s1 = mesh[sei];
+                                Segment s2 = mesh[sej];
+                                s1.edgenr = ++max_edge_nr;
+                                s2.edgenr = max_edge_nr;
+                                bool create_it = true;
+                                if(blp.surfid.Contains(mesh[sej].si))
+                                  {
+                                    if(last_layer_surface_index_map.find(s1.si) != last_layer_surface_index_map.end() &&
+                                       last_layer_surface_index_map.find(s2.si) != last_layer_surface_index_map.end())
+                                      // edge already mapped
+                                      create_it = false;
+                                    s2.si = map_surface_index(s2.si);
+                                  }
+                                else
+                                  {
+                                    s2.si = domains_to_surf_index[make_tuple(s2.si,
+                                                                             blp.new_matnrs[layer-1], mesh.GetFaceDescriptor(s2.si).DomainOut())];
+                                  }
+                                s1.si = map_surface_index(s1.si);
+                                if(create_it)
+                                  {
+                                    mesh.AddSegment(s1);
+                                    mesh.AddSegment(s2);
+                                  }
+                              }
+
+                            // remap the segments to the new points
+                            mesh[sei][0] = mapto[mesh[sei][0]];
+                            mesh[sei][1] = mapto[mesh[sei][1]];
+                            mesh[sej][1] = mapto[mesh[sej][1]];
+                            mesh[sej][0] = mapto[mesh[sej][0]];
+
                           }
                       }
-		  }
+                  }
                 else
                   {
-                    mesh.Point(i).SetPoint(pointtomove + layerht * growthvectors.Elem(i));
+                    // check if it doesn't contain the other edge as well
+                    // and if it doesn't contain both mark them as done and
+                    // if necessary map them
+                    for(SegmentIndex sej = 0; sej<nseg; sej++)
+                      {
+                        if(mesh[sej][0] == mesh[sei][1] &&
+                           mesh[sej][1] == mesh[sei][0])
+                          {
+                            if(!blp.surfid.Contains(mesh[sej].si))
+                              {
+                                segsel.Clear(sei);
+                                segsel.Clear(sej);
+                                PointIndex mapped_point = PointIndex::INVALID;
+                                auto p1 = mesh[sei][0];
+                                auto p2 = mesh[sei][1];
+                                if(mapto[p1].IsValid())
+                                  mapped_point = p1;
+                                else if(mapto[p2].IsValid())
+                                  mapped_point = p2;
+                                else
+                                  continue;
+                                auto other_point = mapped_point == p1 ? p2 : p1;
+                                if(growthvectors[mapped_point] * (mesh[other_point] - mesh[mapped_point]) < 0)
+                                  {
+                                    if(mapto[mesh[sei][0]].IsValid())
+                                      mesh[sei][0] = mapto[mesh[sei][0]];
+                                    if(mapto[mesh[sei][1]].IsValid())
+                                      mesh[sei][1] = mapto[mesh[sei][1]];
+                                    if(mapto[mesh[sej][0]].IsValid())
+                                      mesh[sej][0] = mapto[mesh[sej][0]];
+                                    if(mapto[mesh[sej][1]].IsValid())
+                                      mesh[sej][1] = mapto[mesh[sej][1]];
+                                  }
+                              }
+                            else
+                              continue;
+                          }
+                      }
+                  }
                   }
               }
-           }
-	 mesh.Compress();
-      }
-      
-      // Optimise the tet part of the volume mesh after all the modifications 
-      // to the system are completed
-      //OptimizeVolume(mparam,mesh);
 
-      cout << "New NP: " << mesh.GetNP() << endl;
-      cout << "Num of Quads: " << numquads << endl;
-      cout << "Num of Prisms: " << numprisms << endl;
-      cout << "Boundary Layer Generation....Done!" << endl;
+          // add surface elements between layer and old domain
+          if(layer == blp.heights.Size())
+            {
+              for(SurfaceElementIndex si = 0; si < nse; si++)
+                {
+                  if(blp.surfid.Contains(mesh[si].GetIndex()))
+                    {
+                      const auto& sel = mesh[si];
+                      Element2d newel = sel;
+                      newel.SetIndex(map_surface_index(sel.GetIndex()));
+                      mesh.AddSurfaceElement(newel);
+                    }
+                }
+            }
 
-      dbg.close();
+          // Add prismatic cells at the boundaries
+          PrintMessage(3, "Generating prism boundary layer volume elements...");
+
+          for (SurfaceElementIndex si = 0; si < nse; si++)
+            {
+              const auto& sel = mesh[si];
+              if(blp.surfid.Contains(sel.GetIndex()))
+                {
+                  int classify = 0;
+                  for(auto j : Range(sel.PNums()))
+                    if (mapto[sel[j]].IsValid())
+                      classify += (1 << j);
+
+                  if(classify == 0)
+                    continue;
+
+                  Element el;
+
+                  if(sel.GetType() == TRIG)
+                    {
+                      ELEMENT_TYPE types[] = { PRISM, TET, TET, PYRAMID,
+                                               TET, PYRAMID, PYRAMID, PRISM };
+                      int nums[] = { sel[0], sel[1], sel[2], mapto[sel[0]], mapto[sel[1]], mapto[sel[2]] };
+                      int vertices[][6] =
+                        {
+                         { 0, 1, 2, 0, 1, 2 },   // should not occur
+                         { 0, 2, 1, 3, 0, 0 },
+                         { 0, 2, 1, 4, 0, 0 },
+                         { 0, 1, 4, 3, 2, 0 },
+
+                         { 0, 2, 1, 5, 0, 0 },
+                         { 2, 0, 3, 5, 1, 0 },
+                         { 1, 2, 5, 4, 0, 0 },
+                         { 0, 2, 1, 3, 5, 4 }
+                        };
+                      if(blp.outside)
+                        {
+                          if(classify != 7)
+                            throw Exception("Outside with non prisms not yet implemented");
+                          for(auto i : Range(6))
+                            vertices[7][i] = i;
+                        }
+
+                      el = Element(types[classify]);
+                      for(auto i : Range(el.PNums()))
+                        el.PNums()[i] = nums[vertices[classify][i]];
+                    }
+                  else // sel.GetType() == QUAD
+                    {
+                      int nums[] = { sel[0], sel[1], sel[2], sel[3],
+                                     mapto[sel[0]], mapto[sel[1]],
+                                     mapto[sel[2]], mapto[sel[3]] };
+                      if(classify == 15)
+                        {
+                          int vertices[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+                          if(!blp.outside)
+                            {
+                              Swap(vertices[1], vertices[3]);
+                              Swap(vertices[5], vertices[7]);
+                            }
+                          el = Element(HEX);
+                          for(auto i : Range(el.PNums()))
+                            el.PNums()[i] = nums[vertices[i]];
+                        }
+                      else
+                        {
+                          throw Exception("This type of quad layer not yet implemented!");
+                        }
+                    }
+                  el.SetIndex(blp.new_matnrs[layer-1]);
+                  mesh.AddVolumeElement(el);
+                }
+            }
+
+          // Finally switch the point indices of the surface elements
+          // to the newly added ones
+          PrintMessage(3, "Transferring boundary layer surface elements to new vertex references...");
+
+          for(SurfaceElementIndex sei : Range(nse))
+            {
+              auto& sel = mesh[sei];
+              bool to_move = blp.surfid.Contains(sel.GetIndex());
+              if(blp.domains.Size())
+                {
+                  if(blp.outside)
+                    to_move |= blp.domains[mesh.GetFaceDescriptor(sel.GetIndex()).DomainIn()];
+                  else
+                    to_move |= !blp.domains[mesh.GetFaceDescriptor(sel.GetIndex()).DomainIn()];
+                }
+
+              if(to_move)
+                {
+                  for(auto& pnum : sel.PNums())
+                    // Check (Doublecheck) if the corresponding point has a
+                    // copy available for remapping
+                    if(mapto[pnum].IsValid())
+                      // Map the surface elements to the new points
+                      pnum = mapto[pnum];
+                }
+            }
+
+          for(ElementIndex ei : Range(ne))
+            {
+              auto& el = mesh[ei];
+              bool to_move = blp.outside ? blp.domains[el.GetIndex()] : !blp.domains[el.GetIndex()];
+              if(blp.domains.Size() == 0 || to_move)
+                for(auto& pnum : el.PNums())
+                  // Check (Doublecheck) if the corresponding point has a
+                  // copy available for remapping
+                  if(mapto[pnum].IsValid())
+                    // Map the volume elements to the new points
+                    pnum = mapto[pnum];
+            }
+
+          // Lock all the prism points so that the rest of the mesh can be
+          // optimised without invalidating the entire mesh
+          // for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End(); pi++)
+          for (PointIndex pi = 1; pi <= np; pi++)
+            if(bndnodes.Test(pi)) mesh.AddLockedPoint(pi);
+
+          // Now, actually pull back the old surface points to create
+          // the actual boundary layers
+          PrintMessage(3, "Moving and optimising boundary layer points...");
+
+          for (PointIndex i = 1; i <= np; i++)
+            {
+              if(bndnodes.Test(i))
+                {
+                  MeshPoint pointtomove;
+                  pointtomove = mesh.Point(i);
+                  mesh.Point(i).SetPoint(pointtomove + layerht * growthvectors[i]);
+                }
+            }
+          mesh.Compress();
+        }
+
+      for(int i=1; i <= mesh.GetNFD(); i++)
+        {
+          auto& fd = mesh.GetFaceDescriptor(i);
+          if(blp.surfid.Contains(fd.BCProperty()))
+            {
+              if(blp.outside)
+                fd.SetDomainOut(blp.new_matnrs[blp.new_matnrs.Size()-1]);
+              else
+                fd.SetDomainIn(blp.new_matnrs[blp.new_matnrs.Size()-1]);
+            }
+        }
+
+      PrintMessage(3, "New NP: ", mesh.GetNP());
+      PrintMessage(1, "Boundary Layer Generation....Done!");
    }
-
 }
-
