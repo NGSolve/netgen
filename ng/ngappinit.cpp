@@ -82,7 +82,7 @@ int main(int argc, char ** argv)
 
   if ( netgen::id == 0 )
     {
-      cout << "NETGEN-" << PACKAGE_VERSION << endl;
+      cout << "NETGEN-" << netgen::netgen_version << endl;
       
       cout << "Developed by Joachim Schoeberl at" << endl
 	   << "2010-xxxx Vienna University of Technology" << endl

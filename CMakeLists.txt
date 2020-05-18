@@ -78,12 +78,8 @@ else()
   endif()
 endif()
 
-set(NETGEN_VERSION_MAJOR 6)
-set(NETGEN_VERSION_MINOR 2)
-string(TIMESTAMP NETGEN_VERSION_PATCH "%y%U%w" )
-set(NETGEN_VERSION "${NETGEN_VERSION_MAJOR}.${NETGEN_VERSION_MINOR}-dev")
-set(PACKAGE_VERSION "${NETGEN_VERSION_MAJOR}.${NETGEN_VERSION_MINOR}-${NETGEN_VERSION_PATCH}")
-set(CPACK_PACKAGE_VERSION "${PACKAGE_VERSION}")
+include (${CMAKE_CURRENT_LIST_DIR}/cmake/generate_version_file.cmake)
+set(CPACK_PACKAGE_VERSION "${NETGEN_VERSION}")
 
 
 #######################################################################
@@ -326,6 +322,12 @@ if (USE_MPEG)
     include_directories(${FFMPEG_INCLUDE_DIR})
 endif (USE_MPEG)
 
+#######################################################################
+add_custom_target(ng_generate_version_file
+  ${CMAKE_COMMAND}
+    -DBDIR=${CMAKE_CURRENT_BINARY_DIR}
+    -P ${CMAKE_CURRENT_LIST_DIR}/cmake/generate_version_file.cmake
+    )
 #######################################################################
 if(INSTALL_PROFILES)
     file(WRITE  ${CMAKE_CURRENT_BINARY_DIR}/netgen.sh "#!/bin/sh\n")

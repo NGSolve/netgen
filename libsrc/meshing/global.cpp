@@ -1,5 +1,6 @@
 #include <mystdlib.h>
 #include "meshing.hpp"
+#include <netgen_version.hpp>
 
 
 namespace netgen
@@ -20,6 +21,8 @@ namespace netgen
   // ostream * testout = &cout;
 
   // NetgenOutStream * testout = new NetgenOutStream;
+
+  const string netgen_version = NETGEN_VERSION;
 
   ostream * mycout = &cout;
   ostream * myerr = &cerr;

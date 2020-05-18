@@ -71,6 +71,8 @@ if(ENABLE_CPP_CORE_GUIDELINES_CHECK)
   set_target_properties(ngcore PROPERTIES CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
 endif(ENABLE_CPP_CORE_GUIDELINES_CHECK)
 
+add_dependencies(ngcore ng_generate_version_file)
+
 if(USE_PYTHON)
   pybind11_add_module(pyngcore SHARED python_ngcore_export.cpp)
   target_link_libraries(pyngcore PUBLIC ngcore netgen_python)
