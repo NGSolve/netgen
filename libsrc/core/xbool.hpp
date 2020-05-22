@@ -30,7 +30,15 @@ namespace ngcore
     bool IsTrue () const { return state == 2; }
     bool IsMaybe () const { return state == 1; }
     bool IsFalse () const { return state == 0; }
+    friend ostream & operator<< (ostream & ost, xbool xb);
   };
+
+
+  static char output[] = "0?1";
+  inline ostream & operator<< (ostream & ost, xbool xb)
+  {
+    return ost << output[xb.state];
+  }
   
 } // namespace ngcore
 
