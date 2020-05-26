@@ -141,6 +141,7 @@ namespace netgen
   class DLL_HEADER UserVisualizationObject
   {
   public:
+    virtual ~UserVisualizationObject() { ; } 
     virtual void Draw () = 0;
   };
 
