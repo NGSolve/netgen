@@ -365,6 +365,7 @@ namespace netgen
           {
             TopoDS_Face face = TopoDS::Face(exp1.Current());
             int facenr = geom.fmap.FindIndex(face);
+            if(facenr < 1) continue;
 
             if (face2solid[0][facenr-1] == 0)
               face2solid[0][facenr-1] = solidnr;
@@ -382,8 +383,7 @@ namespace netgen
 
 
     int facenr = 0;
-    int edgenr = 0;
-
+    int edgenr = mesh.GetNSeg();
 
     (*testout) << "faces = " << geom.fmap.Extent() << endl;
     int curr = 0;
@@ -448,6 +448,8 @@ namespace netgen
                     //(*testout) << "ignoring degenerated edge" << endl;
                     continue;
                   }
+
+                if(geom.emap.FindIndex(edge) < 1) continue;
 
                 if (geom.vmap.FindIndex(TopExp::FirstVertex (edge)) ==
                     geom.vmap.FindIndex(TopExp::LastVertex (edge)))
