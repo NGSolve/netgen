@@ -15,36 +15,10 @@ namespace netgen
 #include "writeuser.hpp"
 
 
-
-
-void WriteAbaqusFormat (const Mesh & mesh,
-                        const string & filename)
-
-{
-
-    cout << "\nWrite Abaqus Volume Mesh" << endl;
-
-    ofstream outfile (filename.c_str());
-
-    outfile << "*Heading" << endl;
-    outfile << " " << filename << endl;
-
-    outfile.precision(8);
-
-    outfile << "*Node" << endl;
-
-    int np = mesh.GetNP();
-    int ne = mesh.GetNE();
+void WriteAbaqusVolumeElements(const Mesh & mesh, 
+                               ofstream &outfile) {
     int i, j, k;
-
-    for (i = 1; i <= np; i++)
-    {
-        outfile << i << ", ";
-        outfile << mesh.Point(i)(0) << ", ";
-        outfile << mesh.Point(i)(1) << ", ";
-        outfile << mesh.Point(i)(2) << "\n";
-    }
-
+    int ne = mesh.GetNE();
     int elemcnt = 0; //element counter
     int finished = 0;
     int indcnt = 1; //index counter
@@ -118,6 +92,142 @@ void WriteAbaqusFormat (const Mesh & mesh,
         if (elemcnt == ne) {finished = 1; cout << "all elements found by Index!" << endl;}
         if (actcnt == 0) {finished = 1;}
     }
+}
+
+void WriteAbaqusSurfaceElements(const Mesh & mesh, 
+                                ofstream& outfile) {
+    int i, j, k;
+    int ne = mesh.GetNSE();
+    int elemcnt = 0; //element counter
+    int finished = 0;
+    int indcnt = 1; //index counter
+
+    while (!finished)
+    {
+        int actcnt = 0;
+        const Element2d & el1 = mesh.SurfaceElement(1);
+        int non = el1.GetNP();
+        if (non == 3)
+        {
+            outfile << "*Element, type=S3, ELSET=PART" << indcnt << endl;
+        } 
+        else if (non == 6)
+        {
+            outfile << "*Element, type=S6, ELSET=PART" << indcnt << endl;
+        } 
+        else
+        {
+            cout << "unsupported Element type!!!" << endl;	  
+        }
+
+        for (i = 1; i <= ne; i++)
+        {
+            const Element2d & el = mesh.SurfaceElement(i);
+
+            if (el.GetIndex() == indcnt)
+            {
+                actcnt++;
+                if (el.GetNP() != non) 
+                {
+                    cout << "different element-types in a subdomain are not possible!!!" << endl;
+                    continue;
+                }
+
+                elemcnt++;
+                outfile << elemcnt << ", ";
+                if (non == 3)
+                {
+                    outfile << el.PNum(1) << ", ";
+                    outfile << el.PNum(2) << ", ";
+                    outfile << el.PNum(3) << "\n";
+                }
+                else if (non == 10)
+                {
+                    outfile << el.PNum(1) << ", ";
+                    outfile << el.PNum(2) << ", ";
+                    outfile << el.PNum(3) << ", ";
+                    outfile << el.PNum(4) << ", ";
+                    outfile << el.PNum(5) << ", ";
+                    outfile << el.PNum(6) << "\n";
+                }
+                else
+                {
+                    cout << "unsupported Element type!!!" << endl;
+                    for (j = 1; j <= el.GetNP(); j++)
+                    {
+                        outfile << el.PNum(j);
+                        if (j != el.GetNP()) outfile << ", ";
+                    }
+                    outfile << "\n";
+                }
+            }
+        }	  
+        indcnt++;
+        if (elemcnt == ne) {finished = 1; cout << "all elements found by Index!" << endl;}
+        if (actcnt == 0) {finished = 1;}
+    }
+}
+
+
+void WriteAbaqusFormat (const Mesh & mesh,
+                        const string & filename, 
+                        bool forcesurface, 
+                        bool forcevolume)
+
+{
+
+    int nve = mesh.GetNE();
+    int nse = mesh.GetNSE();
+
+    bool writevolume = forcevolume || nve>0;
+    bool writesurface = forcesurface || (nve == 0 && nse>0);
+
+    if ( writevolume && writesurface)
+    {
+        cout << "\nWrite Abaqus Volume and Surface Mesh" << endl;
+    } 
+    else if ( writevolume ) 
+    {
+        cout << "\nWrite Abaqus Volume Mesh" << endl;
+    }
+    else if ( writesurface ) 
+    {
+        cout << "\nWrite Abaqus Surface Mesh" << endl;
+    }
+    else
+    {
+        cout << "\nWrite Abaqus Mesh Nodes" << endl;
+    }
+
+    ofstream outfile (filename.c_str());
+
+    outfile << "*Heading" << endl;
+    outfile << " " << filename << endl;
+
+    outfile.precision(8);
+
+    outfile << "*Node" << endl;
+
+    int np = mesh.GetNP();
+    int i, j, k;
+
+    for (i = 1; i <= np; i++)
+    {
+        outfile << i << ", ";
+        outfile << mesh.Point(i)(0) << ", ";
+        outfile << mesh.Point(i)(1) << ", ";
+        outfile << mesh.Point(i)(2) << "\n";
+    }
+
+    if ( forcevolume || nve>0 ) 
+    {
+        WriteAbaqusVolumeElements(mesh, outfile);
+    }
+    if ( forcesurface || (nse>0 && nve == 0) )
+    {
+        WriteAbaqusSurfaceElements(mesh, outfile);
+    }
+
 
     if (mesh.GetIdentifications().GetMaxNr())
     {

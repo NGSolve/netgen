@@ -108,7 +108,9 @@ void WriteTecPlotFormat (const Mesh & mesh,
 
 extern
 void WriteAbaqusFormat (const Mesh & mesh,
-                        const string & filename);
+                        const string & filename,
+                        bool forcesurface,
+                        bool forcevolume);
 
 extern
 void WriteFluentFormat (const Mesh & mesh,
