@@ -51,6 +51,7 @@ if (USE_PYTHON)
         message(FATAL_ERROR "Could NOT find pybind11!")
     endif( PYBIND_INCLUDE_DIR )
     find_package(PythonInterp 3 REQUIRED)
+    message("-- Found Python: ${PYTHON_EXECUTABLE} version ${PYTHON_VERSION_STRING}")
     find_package(PythonLibs 3 REQUIRED)
 
     set_vars(NETGEN_CMAKE_ARGS

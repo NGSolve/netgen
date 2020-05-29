@@ -14,16 +14,16 @@ namespace netgen
 {
 
 
-  STLTopology :: STLTopology()
-  : trias(), topedges(), points(), ht_topedges(NULL), 
+STLTopology :: STLTopology()
+    : trias(), topedges(), points(), ht_topedges(NULL), 
     trigsperpoint(), neighbourtrigs()
-{
-  ;
-}
+    {
+        ;
+    }
 
 STLTopology :: ~STLTopology()
 {
-  ;
+    ;
 }
 
 
@@ -31,158 +31,158 @@ STLTopology :: ~STLTopology()
 
 STLGeometry *  STLTopology :: LoadBinary (istream & ist)
 {
-  STLGeometry * geom = new STLGeometry();
-  NgArray<STLReadTriangle> readtrigs;
+    STLGeometry * geom = new STLGeometry();
+    NgArray<STLReadTriangle> readtrigs;
 
-  PrintMessage(1,"Read STL binary file");
-  
-  if (sizeof(int) != 4 || sizeof(float) != 4) 
+    PrintMessage(1,"Read STL binary file");
+
+    if (sizeof(int) != 4 || sizeof(float) != 4) 
     {
-      PrintWarning("for stl-binary compatibility only use 32 bit compilation!!!");
+        PrintWarning("for stl-binary compatibility only use 32 bit compilation!!!");
     }
 
-  //specific settings for stl-binary format
-  const int namelen = 80; //length of name of header in file
-  const int nospaces = 2; //number of spaces after a triangle
+    //specific settings for stl-binary format
+    const int namelen = 80; //length of name of header in file
+    const int nospaces = 2; //number of spaces after a triangle
 
-  //read header: name
-  char buf[namelen+1];
-  FIOReadStringE(ist,buf,namelen);
-  PrintMessage(5,"header = ",buf);
+    //read header: name
+    char buf[namelen+1];
+    FIOReadStringE(ist,buf,namelen);
+    PrintMessage(5,"header = ",buf);
 
-  //Read Number of facets
-  int nofacets;
-  FIOReadInt(ist,nofacets);
-  PrintMessage(5,"NO facets = ",nofacets);
+    //Read Number of facets
+    int nofacets;
+    FIOReadInt(ist,nofacets);
+    PrintMessage(5,"NO facets = ",nofacets);
 
-  Point<3> pts[3];
-  Vec<3> normal;
+    Point<3> pts[3];
+    Vec<3> normal;
 
-  char spaces[nospaces+1];
+    char spaces[nospaces+1];
 
-  for (int cntface = 0; cntface < nofacets; cntface++)
+    for (int cntface = 0; cntface < nofacets; cntface++)
     {
-      if (cntface % 10000 == 0)
-	// { PrintDot(); } 
-	PrintMessageCR (3, cntface, " triangles loaded\r");
+        if (cntface % 10000 == 0)
+            // { PrintDot(); } 
+            PrintMessageCR (3, cntface, " triangles loaded\r");
 
-      float f;
-      FIOReadFloat(ist,f); normal(0) = f;
-      FIOReadFloat(ist,f); normal(1) = f;
-      FIOReadFloat(ist,f); normal(2) = f;
-      
-      for (int j = 0; j < 3; j++)
-	{
-	  FIOReadFloat(ist,f); pts[j](0) = f;
-	  FIOReadFloat(ist,f); pts[j](1) = f;
-	  FIOReadFloat(ist,f); pts[j](2) = f;	  
-	} 
+        float f;
+        FIOReadFloat(ist,f); normal(0) = f;
+        FIOReadFloat(ist,f); normal(1) = f;
+        FIOReadFloat(ist,f); normal(2) = f;
 
-      readtrigs.Append (STLReadTriangle (pts, normal));
-      FIOReadString(ist,spaces,nospaces);
+        for (int j = 0; j < 3; j++)
+        {
+            FIOReadFloat(ist,f); pts[j](0) = f;
+            FIOReadFloat(ist,f); pts[j](1) = f;
+            FIOReadFloat(ist,f); pts[j](2) = f;	  
+        } 
+
+        readtrigs.Append (STLReadTriangle (pts, normal));
+        FIOReadString(ist,spaces,nospaces);
     }	    
-  PrintMessage (3, nofacets, " triangles loaded\r");  
+    PrintMessage (3, nofacets, " triangles loaded\r");  
 
-  geom->InitSTLGeometry(readtrigs);
+    geom->InitSTLGeometry(readtrigs);
 
-  return geom;
+    return geom;
 }
 
 
 void STLTopology :: SaveBinary (const char* filename, const char* aname) const
 {
-  ofstream ost(filename);
-  PrintFnStart("Write STL binary file '",filename,"'");
+    ofstream ost(filename);
+    PrintFnStart("Write STL binary file '",filename,"'");
 
-  if (sizeof(int) != 4 || sizeof(float) != 4) 
+    if (sizeof(int) != 4 || sizeof(float) != 4) 
     {PrintWarning("for stl-binary compatibility only use 32 bit compilation!!!");}
 
-  //specific settings for stl-binary format
-  const int namelen = 80; //length of name of header in file
-  const int nospaces = 2; //number of spaces after a triangle
+    //specific settings for stl-binary format
+    const int namelen = 80; //length of name of header in file
+    const int nospaces = 2; //number of spaces after a triangle
 
-  //write header: aname
-  int i, j;
-  char buf[namelen+1];
-  int strend = 0;
-  for(i = 0; i <= namelen; i++) 
+    //write header: aname
+    int i, j;
+    char buf[namelen+1];
+    int strend = 0;
+    for(i = 0; i <= namelen; i++) 
     {
-      if (aname[i] == 0) {strend = 1;}
-      if (!strend) {buf[i] = aname[i];}
-      else {buf[i] = 0;}
+        if (aname[i] == 0) {strend = 1;}
+        if (!strend) {buf[i] = aname[i];}
+        else {buf[i] = 0;}
     }
 
-  FIOWriteString(ost,buf,namelen);
-  PrintMessage(5,"header = ",buf);
+    FIOWriteString(ost,buf,namelen);
+    PrintMessage(5,"header = ",buf);
 
-  //RWrite Number of facets
-  int nofacets = GetNT();
-  FIOWriteInt(ost,nofacets);
-  PrintMessage(5,"NO facets = ", nofacets);
+    //RWrite Number of facets
+    int nofacets = GetNT();
+    FIOWriteInt(ost,nofacets);
+    PrintMessage(5,"NO facets = ", nofacets);
 
-  float f;
-  char spaces[nospaces+1];
-  for (i = 0; i < nospaces; i++) {spaces[i] = ' ';}
-  spaces[nospaces] = 0;
+    float f;
+    char spaces[nospaces+1];
+    for (i = 0; i < nospaces; i++) {spaces[i] = ' ';}
+    spaces[nospaces] = 0;
 
-  for (i = 1; i <= GetNT(); i++)
+    for (i = 1; i <= GetNT(); i++)
     {
-      const STLTriangle & t = GetTriangle(i);
+        const STLTriangle & t = GetTriangle(i);
 
-      const Vec<3> & n = t.Normal();
-      f = n(0); FIOWriteFloat(ost,f);
-      f = n(1); FIOWriteFloat(ost,f);
-      f = n(2); FIOWriteFloat(ost,f);
+        const Vec<3> & n = t.Normal();
+        f = n(0); FIOWriteFloat(ost,f);
+        f = n(1); FIOWriteFloat(ost,f);
+        f = n(2); FIOWriteFloat(ost,f);
 
-      for (j = 1; j <= 3; j++)
-	{
-	  const Point3d p = GetPoint(t.PNum(j));
-	  
-	  f = p.X(); FIOWriteFloat(ost,f);
-	  f = p.Y(); FIOWriteFloat(ost,f);
-	  f = p.Z(); FIOWriteFloat(ost,f);
-	}
-      FIOWriteString(ost,spaces,nospaces);
+        for (j = 1; j <= 3; j++)
+        {
+            const Point3d p = GetPoint(t.PNum(j));
+
+            f = p.X(); FIOWriteFloat(ost,f);
+            f = p.Y(); FIOWriteFloat(ost,f);
+            f = p.Z(); FIOWriteFloat(ost,f);
+        }
+        FIOWriteString(ost,spaces,nospaces);
     }
-  PrintMessage(5,"done");
+    PrintMessage(5,"done");
 }
 
 
 void STLTopology :: SaveSTLE (const char* filename) const
 {
-  ofstream outf (filename);
-  int i, j;
-  
-  outf << GetNT() << endl;
-  for (i = 1; i <= GetNT(); i++)
+    ofstream outf (filename);
+    int i, j;
+
+    outf << GetNT() << endl;
+    for (i = 1; i <= GetNT(); i++)
     {
-      const STLTriangle & t = GetTriangle(i);
-      for (j = 1; j <= 3; j++)
-	{
-	  const Point3d p = GetPoint(t.PNum(j));
-	  outf << p.X() << " " << p.Y() << " " << p.Z() << endl;
-	}
+        const STLTriangle & t = GetTriangle(i);
+        for (j = 1; j <= 3; j++)
+        {
+            const Point3d p = GetPoint(t.PNum(j));
+            outf << p.X() << " " << p.Y() << " " << p.Z() << endl;
+        }
     }
 
 
-  int ned = 0;
-  for (i = 1; i <= GetNTE(); i++)
+    int ned = 0;
+    for (i = 1; i <= GetNTE(); i++)
     {
-      if (GetTopEdge (i).GetStatus() == ED_CONFIRMED)
-	ned++;
+        if (GetTopEdge (i).GetStatus() == ED_CONFIRMED)
+            ned++;
     }
-  
-  outf << ned << endl;
 
-  for (i = 1; i <= GetNTE(); i++)
+    outf << ned << endl;
+
+    for (i = 1; i <= GetNTE(); i++)
     {
-      const STLTopEdge & edge = GetTopEdge (i);
-      if (edge.GetStatus() == ED_CONFIRMED)
-	for (j = 1; j <= 2; j++)
-	  {
-	    const Point3d p = GetPoint(edge.PNum(j));
-	    outf << p.X() << " " << p.Y() << " " << p.Z() << endl;
-	  }
+        const STLTopEdge & edge = GetTopEdge (i);
+        if (edge.GetStatus() == ED_CONFIRMED)
+            for (j = 1; j <= 2; j++)
+            {
+                const Point3d p = GetPoint(edge.PNum(j));
+                outf << p.X() << " " << p.Y() << " " << p.Z() << endl;
+            }
     }      
 }
 
@@ -190,274 +190,274 @@ void STLTopology :: SaveSTLE (const char* filename) const
 
 STLGeometry *  STLTopology :: LoadNaomi (istream & ist)
 {
-  int i;
-  STLGeometry * geom = new STLGeometry();
-  NgArray<STLReadTriangle> readtrigs;
+    int i;
+    STLGeometry * geom = new STLGeometry();
+    NgArray<STLReadTriangle> readtrigs;
 
-  PrintFnStart("read NAOMI file format");
-  
-  char buf[100];
-  Vec<3> normal;
+    PrintFnStart("read NAOMI file format");
 
-  //int cntface = 0;
-  //int cntvertex = 0;
-  double px, py, pz;
-    
+    char buf[100];
+    Vec<3> normal;
 
-  int noface, novertex;
-  NgArray<Point<3> > readpoints;
+    //int cntface = 0;
+    //int cntvertex = 0;
+    double px, py, pz;
 
-  ist >> buf;
-  if (strcmp (buf, "NODES") == 0)
+
+    int noface, novertex;
+    NgArray<Point<3> > readpoints;
+
+    ist >> buf;
+    if (strcmp (buf, "NODES") == 0)
     {
-      ist >> novertex;
-      PrintMessage(5,"nuber of vertices = ", novertex);
-      for (i = 0; i < novertex; i++)
-	{
-	  ist >> px;
-	  ist >> py;
-	  ist >> pz;
-	  readpoints.Append(Point<3> (px,py,pz));
-	}
+        ist >> novertex;
+        PrintMessage(5,"nuber of vertices = ", novertex);
+        for (i = 0; i < novertex; i++)
+        {
+            ist >> px;
+            ist >> py;
+            ist >> pz;
+            readpoints.Append(Point<3> (px,py,pz));
+        }
     }
-  else
+    else
     {
-      PrintFileError("no node information");
-    }
-
-
-  ist >> buf;
-  if (strcmp (buf, "2D_EDGES") == 0)
-    {
-      ist >> noface;
-      PrintMessage(5,"number of faces=",noface);
-      int dummy, p1, p2, p3;
-      Point<3> pts[3];
-
-      for (i = 0; i < noface; i++)
-	{
-	  ist >> dummy; //2
-	  ist >> dummy; //1
-	  ist >> p1;
-	  ist >> p2;
-	  ist >> p3;
-	  ist >> dummy; //0
-
-	  pts[0] = readpoints.Get(p1);
-	  pts[1] = readpoints.Get(p2);
-	  pts[2] = readpoints.Get(p3);
-	  
-	  normal = Cross (pts[1]-pts[0], pts[2]-pts[0]) . Normalize();
-
-	  readtrigs.Append (STLReadTriangle (pts, normal));
-
-	}
-      PrintMessage(5,"read ", readtrigs.Size(), " triangles");
-    }
-  else
-    {
-      PrintMessage(5,"read='",buf,"'\n");
-      PrintFileError("ERROR: no Triangle information");
+        PrintFileError("no node information");
     }
 
-  geom->InitSTLGeometry(readtrigs);
 
-  return geom;
+    ist >> buf;
+    if (strcmp (buf, "2D_EDGES") == 0)
+    {
+        ist >> noface;
+        PrintMessage(5,"number of faces=",noface);
+        int dummy, p1, p2, p3;
+        Point<3> pts[3];
+
+        for (i = 0; i < noface; i++)
+        {
+            ist >> dummy; //2
+            ist >> dummy; //1
+            ist >> p1;
+            ist >> p2;
+            ist >> p3;
+            ist >> dummy; //0
+
+            pts[0] = readpoints.Get(p1);
+            pts[1] = readpoints.Get(p2);
+            pts[2] = readpoints.Get(p3);
+
+            normal = Cross (pts[1]-pts[0], pts[2]-pts[0]) . Normalize();
+
+            readtrigs.Append (STLReadTriangle (pts, normal));
+
+        }
+        PrintMessage(5,"read ", readtrigs.Size(), " triangles");
+    }
+    else
+    {
+        PrintMessage(5,"read='",buf,"'\n");
+        PrintFileError("ERROR: no Triangle information");
+    }
+
+    geom->InitSTLGeometry(readtrigs);
+
+    return geom;
 }
 
 void STLTopology :: Save (const char* filename) const
 { 
-  PrintFnStart("Write stl-file '",filename, "'");
+    PrintFnStart("Write stl-file '",filename, "'");
 
-  ofstream fout(filename);
-  fout << "solid\n";
+    ofstream fout(filename);
+    fout << "solid\n";
 
-  char buf1[50];
-  char buf2[50];
-  char buf3[50];
+    char buf1[50];
+    char buf2[50];
+    char buf3[50];
 
-  int i, j;
-  for (i = 1; i <= GetNT(); i++)
+    int i, j;
+    for (i = 1; i <= GetNT(); i++)
     {
-      const STLTriangle & t = GetTriangle(i);
+        const STLTriangle & t = GetTriangle(i);
 
-      fout << "facet normal ";
-      const Vec3d& n = GetTriangle(i).Normal();
+        fout << "facet normal ";
+        const Vec3d& n = GetTriangle(i).Normal();
 
-      sprintf(buf1,"%1.9g",n.X());
-      sprintf(buf2,"%1.9g",n.Y());
-      sprintf(buf3,"%1.9g",n.Z());
+        sprintf(buf1,"%1.9g",n.X());
+        sprintf(buf2,"%1.9g",n.Y());
+        sprintf(buf3,"%1.9g",n.Z());
 
-      fout << buf1 << " " << buf2 << " " << buf3 << "\n";
-      fout << "outer loop\n";
+        fout << buf1 << " " << buf2 << " " << buf3 << "\n";
+        fout << "outer loop\n";
 
-      for (j = 1; j <= 3; j++)
-	{
-	  const Point3d p = GetPoint(t.PNum(j));
-	  
-	  sprintf(buf1,"%1.9g",p.X());
-	  sprintf(buf2,"%1.9g",p.Y());
-	  sprintf(buf3,"%1.9g",p.Z());
+        for (j = 1; j <= 3; j++)
+        {
+            const Point3d p = GetPoint(t.PNum(j));
 
-	  fout << "vertex " << buf1 << " " << buf2 << " " << buf3 << "\n";
-	}
+            sprintf(buf1,"%1.9g",p.X());
+            sprintf(buf2,"%1.9g",p.Y());
+            sprintf(buf3,"%1.9g",p.Z());
 
-      fout << "endloop\n";
-      fout << "endfacet\n"; 
+            fout << "vertex " << buf1 << " " << buf2 << " " << buf3 << "\n";
+        }
+
+        fout << "endloop\n";
+        fout << "endfacet\n"; 
     }
-  fout << "endsolid\n";
+    fout << "endsolid\n";
 
-  
-  // write also NETGEN surface mesh:
-  ofstream fout2("geom.surf");
-  fout2 << "surfacemesh" << endl;
-  fout2 << GetNP() << endl;
-  for (i = 1; i <= GetNP(); i++)
+
+    // write also NETGEN surface mesh:
+    ofstream fout2("geom.surf");
+    fout2 << "surfacemesh" << endl;
+    fout2 << GetNP() << endl;
+    for (i = 1; i <= GetNP(); i++)
     {
-      for (j = 0; j < 3; j++)
-	{
-	  fout2.width(8);
-	  fout2 << GetPoint(i)(j);
-	}
+        for (j = 0; j < 3; j++)
+        {
+            fout2.width(8);
+            fout2 << GetPoint(i)(j);
+        }
 
-      fout2 << endl;
+        fout2 << endl;
     }
 
-  fout2 << GetNT() << endl;
-  for (i = 1; i <= GetNT(); i++)
+    fout2 << GetNT() << endl;
+    for (i = 1; i <= GetNT(); i++)
     {
-      const STLTriangle & t = GetTriangle(i);  
-      for (j = 1; j <= 3; j++)
-	{
-	  fout2.width(8);
-	  fout2 << t.PNum(j);
-	}
-      fout2 << endl;
+        const STLTriangle & t = GetTriangle(i);  
+        for (j = 1; j <= 3; j++)
+        {
+            fout2.width(8);
+            fout2 << t.PNum(j);
+        }
+        fout2 << endl;
     }
 }
 
 
 STLGeometry *  STLTopology ::Load (istream & ist)
 {
-  // Check if the file starts with "solid". If not, the file is binary
-  {
-    // binary header is 80 bytes, so don't load more than that
-    constexpr int buflen = 80;
-    char buf[buflen+1];
-    FIOReadStringE(ist,buf,buflen);
-
-    // ignore whitespaces at start of line
-    int istart;
-    for (istart=0; istart<buflen-5; istart++)
-       if(std::isblank(buf[istart])==0)
-            break;
-
-    for (auto i : Range(buflen))
-        ist.unget();
-
-    // does not start with "solid" -> binary file
-    if (strncmp(buf+istart, "solid", 5) != 0)
-      return LoadBinary(ist);
-
-    // Check if there is a non-printable character in first 80 bytes
-    for (auto i : Range(istart, buflen))
-       if(std::isprint(buf[i])==0 && std::isspace(buf[i])==0)
-           return LoadBinary(ist);
-  }
-
-  STLGeometry * geom = new STLGeometry();
-
-  NgArray<STLReadTriangle> readtrigs;
-
-  char buf[100];
-  Point<3> pts[3];
-  Vec<3> normal;
-
-  int cntface = 0;
-  int vertex = 0;
-  bool badnormals = false;
-  ist >> buf; // skip first line
-  
-  while (ist.good())
+    // Check if the file starts with "solid". If not, the file is binary
     {
-      ist >> buf;
+        // binary header is 80 bytes, so don't load more than that
+        constexpr int buflen = 80;
+        char buf[buflen+1];
+        FIOReadStringE(ist,buf,buflen);
 
-      int n = strlen (buf);
-      for (int i = 0; i < n; i++)
-	buf[i] = tolower (buf[i]);
+        // ignore whitespaces at start of line
+        int istart;
+        for (istart=0; istart<buflen-5; istart++)
+            if(std::isblank(buf[istart])==0)
+                break;
 
-      if (strcmp (buf, "facet") == 0)
-	{
-	  cntface++;
-	}
+        for (auto i : Range(buflen))
+            ist.unget();
 
-      if (strcmp (buf, "normal") == 0)
-	{
-	  ist >> normal(0)
-	      >> normal(1)
-	      >> normal(2);
-	  normal.Normalize();
-	}
+        // does not start with "solid" -> binary file
+        if (strncmp(buf+istart, "solid", 5) != 0)
+            return LoadBinary(ist);
 
-      if (strcmp (buf, "vertex") == 0)
-	{
-	  ist >> pts[vertex](0)
-	      >> pts[vertex](1)
-	      >> pts[vertex](2);
+        // Check if there is a non-printable character in first 80 bytes
+        for (auto i : Range(istart, buflen))
+            if(std::isprint(buf[i])==0 && std::isspace(buf[i])==0)
+                return LoadBinary(ist);
+    }
 
-	  vertex++;
+    STLGeometry * geom = new STLGeometry();
 
-	  if (vertex == 3)
-	    {
-	      if (normal.Length() <= 1e-5)
+    NgArray<STLReadTriangle> readtrigs;
 
-		{
-		  normal = Cross (pts[1]-pts[0], pts[2]-pts[0]);
-		  normal.Normalize();
-		}
+    char buf[100];
+    Point<3> pts[3];
+    Vec<3> normal;
 
-	      else
+    int cntface = 0;
+    int vertex = 0;
+    bool badnormals = false;
+    ist >> buf; // skip first line
 
-		{
-		  Vec<3> hnormal = Cross (pts[1]-pts[0], pts[2]-pts[0]);
-		  hnormal.Normalize();
+    while (ist.good())
+    {
+        ist >> buf;
 
-		  if (normal * hnormal < 0.5)
-		    badnormals = true;
-		}
+        int n = strlen (buf);
+        for (int i = 0; i < n; i++)
+            buf[i] = tolower (buf[i]);
 
-	      vertex = 0;
+        if (strcmp (buf, "facet") == 0)
+        {
+            cntface++;
+        }
 
-	      if ( (Dist2 (pts[0], pts[1]) > 1e-16) &&
-		   (Dist2 (pts[0], pts[2]) > 1e-16) &&
-		   (Dist2 (pts[1], pts[2]) > 1e-16) )
-		
-		{
-                  readtrigs.Append (STLReadTriangle (pts, normal));
+        if (strcmp (buf, "normal") == 0)
+        {
+            ist >> normal(0)
+                >> normal(1)
+                >> normal(2);
+            normal.Normalize();
+        }
 
-		  if (readtrigs.Size() % 100000 == 0)
-		    PrintMessageCR (3, readtrigs.Size(), " triangles loaded\r");
-		}
-              else
+        if (strcmp (buf, "vertex") == 0)
+        {
+            ist >> pts[vertex](0)
+                >> pts[vertex](1)
+                >> pts[vertex](2);
+
+            vertex++;
+
+            if (vertex == 3)
+            {
+                if (normal.Length() <= 1e-5)
+
                 {
-                  cout << "Skipping flat triangle " 
-                       << "l1 = " << Dist(pts[0], pts[1])
-                       << ", l2 = " << Dist(pts[0], pts[2])
-                       << ", l3 = " << Dist(pts[2], pts[1]) << endl;
+                    normal = Cross (pts[1]-pts[0], pts[2]-pts[0]);
+                    normal.Normalize();
                 }
 
-	    }
-	}
-    }
-  PrintMessage (3, readtrigs.Size(), " triangles loaded");
+                else
 
-  if (badnormals) 
+                {
+                    Vec<3> hnormal = Cross (pts[1]-pts[0], pts[2]-pts[0]);
+                    hnormal.Normalize();
+
+                    if (normal * hnormal < 0.5)
+                        badnormals = true;
+                }
+
+                vertex = 0;
+
+                if ( (Dist2 (pts[0], pts[1]) > 1e-16) &&
+                    (Dist2 (pts[0], pts[2]) > 1e-16) &&
+                    (Dist2 (pts[1], pts[2]) > 1e-16) )
+
+                {
+                    readtrigs.Append (STLReadTriangle (pts, normal));
+
+                    if (readtrigs.Size() % 100000 == 0)
+                        PrintMessageCR (3, readtrigs.Size(), " triangles loaded\r");
+                }
+                else
+                {
+                    cout << "Skipping flat triangle " 
+                        << "l1 = " << Dist(pts[0], pts[1])
+                        << ", l2 = " << Dist(pts[0], pts[2])
+                        << ", l3 = " << Dist(pts[2], pts[1]) << endl;
+                }
+
+            }
+        }
+    }
+    PrintMessage (3, readtrigs.Size(), " triangles loaded");
+
+    if (badnormals) 
     {
-      PrintWarning("File has normal vectors which differ extremely from geometry->correct with stldoctor!!!");
+        PrintWarning("File has normal vectors which differ extremely from geometry->correct with stldoctor!!!");
     }
 
-  geom->InitSTLGeometry(readtrigs);
-  return geom;
+    geom->InitSTLGeometry(readtrigs);
+    return geom;
 }
 
 
@@ -474,84 +474,84 @@ STLGeometry *  STLTopology ::Load (istream & ist)
 
 void STLTopology :: InitSTLGeometry(const NgArray<STLReadTriangle> & readtrigs)
 {
-  // const double geometry_tol_fact = 1E6; 
-  // distances lower than max_box_size/tol are ignored
+    // const double geometry_tol_fact = 1E6; 
+    // distances lower than max_box_size/tol are ignored
 
-  trias.SetSize(0);
-  points.SetSize(0);
+    trias.SetSize(0);
+    points.SetSize(0);
 
-  PrintMessage(3,"number of triangles = ", readtrigs.Size());
+    PrintMessage(3,"number of triangles = ", readtrigs.Size());
 
-  if (!readtrigs.Size()) return;
-  
+    if (!readtrigs.Size()) return;
 
-  boundingbox.Set (readtrigs[0][0]);
-  for (int i = 0; i < readtrigs.Size(); i++)
-    for (int k = 0; k < 3; k++)
-      boundingbox.Add (readtrigs[i][k]);
-  
-  PrintMessage(5,"boundingbox: ", Point3d(boundingbox.PMin()), " - ", 
-	       Point3d(boundingbox.PMax()));
 
-  Box<3> bb = boundingbox;
-  bb.Increase (1);
+    boundingbox.Set (readtrigs[0][0]);
+    for (int i = 0; i < readtrigs.Size(); i++)
+        for (int k = 0; k < 3; k++)
+            boundingbox.Add (readtrigs[i][k]);
 
-  pointtree = new Point3dTree (bb.PMin(), bb.PMax());
+    PrintMessage(5,"boundingbox: ", Point3d(boundingbox.PMin()), " - ", 
+                 Point3d(boundingbox.PMax()));
 
-  NgArray<int> pintersect;
+    Box<3> bb = boundingbox;
+    bb.Increase (1);
 
-  pointtol = boundingbox.Diam() * stldoctor.geom_tol_fact;
-  PrintMessage(5,"point tolerance = ", pointtol);
-  PrintMessageCR(5,"identify points ...");  
+    pointtree = new Point3dTree (bb.PMin(), bb.PMax());
 
-  for(int i = 0; i < readtrigs.Size(); i++)
+    NgArray<int> pintersect;
+
+    pointtol = boundingbox.Diam() * stldoctor.geom_tol_fact;
+    PrintMessage(5,"point tolerance = ", pointtol);
+    PrintMessageCR(5,"identify points ...");  
+
+    for(int i = 0; i < readtrigs.Size(); i++)
     {
-      const STLReadTriangle & t = readtrigs[i];
+        const STLReadTriangle & t = readtrigs[i];
 
-      STLTriangle st;
-      st.SetNormal (t.Normal());
+        STLTriangle st;
+        st.SetNormal (t.Normal());
 
-      for (int k = 0; k < 3; k++)
-	{
-	  Point<3> p = t[k];
+        for (int k = 0; k < 3; k++)
+        {
+            Point<3> p = t[k];
 
-	  Point<3> pmin = p - Vec<3> (pointtol, pointtol, pointtol);
-	  Point<3> pmax = p + Vec<3> (pointtol, pointtol, pointtol);
-	  
-	  pointtree->GetIntersecting (pmin, pmax, pintersect);
-	  
-	  if (pintersect.Size() > 1)
-            PrintError("too many close points");
-	  int foundpos = -1;
-	  if (pintersect.Size())
-	    foundpos = pintersect[0];
-	  
-	  if (foundpos == -1)
-	    {
-	      foundpos = AddPoint(p);
-	      pointtree->Insert (p, foundpos);
-	    }
-          if (Dist(p, points[foundpos]) > 1e-10)
-            cout << "identify close points: " << p << " " << points[foundpos]
-                 << ", dist = " << Dist(p, points[foundpos])
-                 << endl;
-	  st[k] = foundpos;
-	}
+            Point<3> pmin = p - Vec<3> (pointtol, pointtol, pointtol);
+            Point<3> pmax = p + Vec<3> (pointtol, pointtol, pointtol);
 
-      if ( (st[0] == st[1]) ||
-	   (st[0] == st[2]) || 
-	   (st[1] == st[2]) )
-	{
-	  PrintError("STL Triangle degenerated");
-	}
-      else
-	{
-	  AddTriangle(st);
-	}
-      
+            pointtree->GetIntersecting (pmin, pmax, pintersect);
+
+            if (pintersect.Size() > 1)
+                PrintError("too many close points");
+            int foundpos = -1;
+            if (pintersect.Size())
+                foundpos = pintersect[0];
+
+            if (foundpos == -1)
+            {
+                foundpos = AddPoint(p);
+                pointtree->Insert (p, foundpos);
+            }
+            if (Dist(p, points[foundpos]) > 1e-10)
+                cout << "identify close points: " << p << " " << points[foundpos]
+                    << ", dist = " << Dist(p, points[foundpos])
+                    << endl;
+            st[k] = foundpos;
+        }
+
+        if ( (st[0] == st[1]) ||
+            (st[0] == st[2]) || 
+            (st[1] == st[2]) )
+        {
+            PrintError("STL Triangle degenerated");
+        }
+        else
+        {
+            AddTriangle(st);
+        }
+
     } 
-  PrintMessage(5,"identify points ... done");  
-  FindNeighbourTrigs();
+    PrintMessage(5,"identify points ... done");  
+    FindNeighbourTrigs();
 }
 
 
@@ -559,316 +559,316 @@ void STLTopology :: InitSTLGeometry(const NgArray<STLReadTriangle> & readtrigs)
 
 int STLTopology :: GetPointNum (const Point<3> & p)
 {
-  Point<3> pmin = p - Vec<3> (pointtol, pointtol, pointtol);
-  Point<3> pmax = p + Vec<3> (pointtol, pointtol, pointtol);
-  
-  NgArray<int> pintersect;
+    Point<3> pmin = p - Vec<3> (pointtol, pointtol, pointtol);
+    Point<3> pmax = p + Vec<3> (pointtol, pointtol, pointtol);
 
-  pointtree->GetIntersecting (pmin, pmax, pintersect);
-  if (pintersect.Size() == 1)
-    return pintersect[0];
-  else 
-    return 0;
+    NgArray<int> pintersect;
+
+    pointtree->GetIntersecting (pmin, pmax, pintersect);
+    if (pintersect.Size() == 1)
+        return pintersect[0];
+    else 
+        return 0;
 }
 
 
 
 void STLTopology :: FindNeighbourTrigs()
 {
-  //  if (topedges.Size()) return;
+    //  if (topedges.Size()) return;
 
-  PushStatusF("Find Neighbour Triangles");
+    PushStatusF("Find Neighbour Triangles");
 
-  PrintMessage(5,"build topology ...");
+    PrintMessage(5,"build topology ...");
 
-  // build up topology tables
+    // build up topology tables
 
-  int nt = GetNT();
+    int nt = GetNT();
 
-  INDEX_2_HASHTABLE<int> * oldedges = ht_topedges;
-  ht_topedges = new INDEX_2_HASHTABLE<int> (GetNP()+1);
-  topedges.SetSize(0);
-  
-  for (int i = 1; i <= nt; i++)
+    INDEX_2_HASHTABLE<int> * oldedges = ht_topedges;
+    ht_topedges = new INDEX_2_HASHTABLE<int> (GetNP()+1);
+    topedges.SetSize(0);
+
+    for (int i = 1; i <= nt; i++)
     {
-      STLTriangle & trig = GetTriangle(i);
+        STLTriangle & trig = GetTriangle(i);
 
 
-      for (int j = 1; j <= 3; j++)
-	{
-	  int pi1 = trig.PNumMod (j+1);
-	  int pi2 = trig.PNumMod (j+2);
-	  
-	  INDEX_2 i2(pi1, pi2);
-	  i2.Sort();
+        for (int j = 1; j <= 3; j++)
+        {
+            int pi1 = trig.PNumMod (j+1);
+            int pi2 = trig.PNumMod (j+2);
 
-	  int enr;
-	  int othertn;
+            INDEX_2 i2(pi1, pi2);
+            i2.Sort();
 
-	  if (ht_topedges->Used(i2))
-	    {
-	      enr = ht_topedges->Get(i2);
-	      topedges.Elem(enr).TrigNum(2) = i;
+            int enr;
+            int othertn;
 
-	      othertn = topedges.Get(enr).TrigNum(1);
-	      STLTriangle & othertrig = GetTriangle(othertn);
+            if (ht_topedges->Used(i2))
+            {
+                enr = ht_topedges->Get(i2);
+                topedges.Elem(enr).TrigNum(2) = i;
 
-	      trig.NBTrigNum(j) = othertn;
-	      trig.EdgeNum(j) = enr;
-	      for (int k = 1; k <= 3; k++)
-		if (othertrig.EdgeNum(k) == enr)
-		  othertrig.NBTrigNum(k) = i;
-	    }
-	  else
-	    {
-	      topedges.Append (STLTopEdge (pi1, pi2, i, 0));
-              enr = topedges.Size();
-	      ht_topedges->Set (i2, enr);
-	      trig.EdgeNum(j) = enr;
-	    }
-	}
-    }
+                othertn = topedges.Get(enr).TrigNum(1);
+                STLTriangle & othertrig = GetTriangle(othertn);
 
-  
-  PrintMessage(5,"topology built, checking");
-
-  topology_ok = 1;
-  int ne = GetNTE();
-
-  for (int i = 1; i <= nt; i++)
-    GetTriangle(i).flags.toperror = 0;
-
-  for (int i = 1; i <= nt; i++)
-    for (int j = 1; j <= 3; j++)
-      {
-	const STLTopEdge & edge = GetTopEdge (GetTriangle(i).EdgeNum(j));
-	if (edge.TrigNum(1) != i && edge.TrigNum(2) != i)
-	  {
-	    topology_ok = 0;
-	    GetTriangle(i).flags.toperror = 1;
-	  }
-      }
-
-  for (int i = 1; i <= ne; i++)
-    {
-      const STLTopEdge & edge = GetTopEdge (i);
-      if (!edge.TrigNum(2))
-	{
-	  topology_ok = 0;
-	  GetTriangle(edge.TrigNum(1)).flags.toperror = 1;
-	}
-    }
- 
-  if (topology_ok)
-    {
-      orientation_ok = 1;
-      for (int i = 1; i <= nt; i++)
-	{
-	  const STLTriangle & t = GetTriangle (i);
-	  for (int j = 1; j <= 3; j++)
-	    {
-	      const STLTriangle & nbt = GetTriangle (t.NBTrigNum(j));
-	      if (!t.IsNeighbourFrom (nbt))
-		orientation_ok = 0;
-	    }
-	}
-    }
-  else
-    orientation_ok = 0;
-  
-
-
-  status = STL_GOOD;
-  statustext = "";
-  if (!topology_ok || !orientation_ok)
-    {
-      status = STL_ERROR;
-      if (!topology_ok)
-	statustext = "Topology not ok";
-      else
-	statustext = "Orientation not ok";
+                trig.NBTrigNum(j) = othertn;
+                trig.EdgeNum(j) = enr;
+                for (int k = 1; k <= 3; k++)
+                    if (othertrig.EdgeNum(k) == enr)
+                        othertrig.NBTrigNum(k) = i;
+            }
+            else
+            {
+                topedges.Append (STLTopEdge (pi1, pi2, i, 0));
+                enr = topedges.Size();
+                ht_topedges->Set (i2, enr);
+                trig.EdgeNum(j) = enr;
+            }
+        }
     }
 
 
-  PrintMessage(3,"topology_ok = ",topology_ok);
-  PrintMessage(3,"orientation_ok = ",orientation_ok);
-  PrintMessage(3,"topology found");
+    PrintMessage(5,"topology built, checking");
 
-  // generate point -> trig table
+    topology_ok = 1;
+    int ne = GetNTE();
 
-  trigsperpoint.SetSize(GetNP());
-  for (int i = 1; i <= GetNT(); i++)
-    for (int j = 1; j <= 3; j++)
-      trigsperpoint.Add1(GetTriangle(i).PNum(j),i);
+    for (int i = 1; i <= nt; i++)
+        GetTriangle(i).flags.toperror = 0;
 
+    for (int i = 1; i <= nt; i++)
+        for (int j = 1; j <= 3; j++)
+        {
+            const STLTopEdge & edge = GetTopEdge (GetTriangle(i).EdgeNum(j));
+            if (edge.TrigNum(1) != i && edge.TrigNum(2) != i)
+            {
+                topology_ok = 0;
+                GetTriangle(i).flags.toperror = 1;
+            }
+        }
 
-  //check trigs per point:
-  /*
-  for (i = 1; i <= GetNP(); i++)
+    for (int i = 1; i <= ne; i++)
     {
-      if (trigsperpoint.EntrySize(i) < 3)
-	{
-	  (*testout) << "ERROR: Point " << i << " has " << trigsperpoint.EntrySize(i) << " triangles!!!" << endl;
-	}
+        const STLTopEdge & edge = GetTopEdge (i);
+        if (!edge.TrigNum(2))
+        {
+            topology_ok = 0;
+            GetTriangle(edge.TrigNum(1)).flags.toperror = 1;
+        }
     }
-  */
-  topedgesperpoint.SetSize (GetNP());
-  for (int i = 1; i <= ne; i++)
-    for (int j = 1; j <= 2; j++)
-      topedgesperpoint.Add1 (GetTopEdge (i).PNum(j), i);
 
-  PrintMessage(5,"point -> trig table generated");
-
-
-
-  // transfer edge data:
-  // .. to be done
-  delete oldedges;
-
-
-
-  // for (STLTrigId ti = 0; ti < GetNT(); ti++)
-  for (STLTrigId ti : Range(trias))
+    if (topology_ok)
     {
-      STLTriangle & trig = trias[ti];
-      for (int k = 0; k < 3; k++)
-	{
-	  STLPointId pi = trig[k]; //  - STLBASE;
-	  STLPointId pi2 = trig[(k+1)%3]; //  - STLBASE;
-	  STLPointId pi3 = trig[(k+2)%3]; // - STLBASE;
-	  
-	  // vector along edge
-	  Vec<3> ve = points[pi2] - points[pi];
-	  ve.Normalize();
+        orientation_ok = 1;
+        for (int i = 1; i <= nt; i++)
+        {
+            const STLTriangle & t = GetTriangle (i);
+            for (int j = 1; j <= 3; j++)
+            {
+                const STLTriangle & nbt = GetTriangle (t.NBTrigNum(j));
+                if (!t.IsNeighbourFrom (nbt))
+                    orientation_ok = 0;
+            }
+        }
+    }
+    else
+        orientation_ok = 0;
 
-	  // vector along third point
-	  Vec<3> vt = points[pi3] - points[pi];
-	  vt -= (vt * ve) * ve;
-	  vt.Normalize();
 
-	  Vec<3> vn = trig.GeomNormal (points);
-	  vn.Normalize();
 
-	  double phimin = 10, phimax = -1; // out of (0, 2 pi)
-
-	  for (int j = 0; j < trigsperpoint[pi].Size(); j++)
-	    {
-	      STLTrigId ti2 = trigsperpoint[pi][j]; //  - STLBASE;
-	      const STLTriangle & trig2 = trias[ti2];
-
-	      if (ti == ti2) continue;
-	      
-	      bool hasboth = 0;
-	      for (int l = 0; l < 3; l++)
-		if (trig2[l] /* - STLBASE */ == pi2)
-		  {
-		    hasboth = 1;
-		    break;
-		  }
-	      if (!hasboth) continue;
-
-	      STLPointId pi4(0);
-	      for (int l = 0; l < 3; l++)
-		if (trig2[l] /* - STLBASE */ != pi && trig2[l] /* - STLBASE */ != pi2)
-		  pi4 = trig2[l] /* - STLBASE */;
-
-	      Vec<3> vt2 = points[pi4] - points[pi];
-	      
-	      double phi = atan2 (vt2 * vn, vt2 * vt);
-	      if (phi < 0) phi += 2 * M_PI;
-	      
-	      if (phi < phimin)
-		{
-		  phimin = phi;
-		  trig.NBTrig (0, (k+2)%3) = ti2; //  + STLBASE;
-		}
-	      if (phi > phimax)
-		{
-		  phimax = phi;
-		  trig.NBTrig (1, (k+2)%3) = ti2; //  + STLBASE;
-		}
-	    }
-	}
+    status = STL_GOOD;
+    statustext = "";
+    if (!topology_ok || !orientation_ok)
+    {
+        status = STL_ERROR;
+        if (!topology_ok)
+            statustext = "Topology not ok";
+        else
+            statustext = "Orientation not ok";
     }
 
 
+    PrintMessage(3,"topology_ok = ",topology_ok);
+    PrintMessage(3,"orientation_ok = ",orientation_ok);
+    PrintMessage(3,"topology found");
+
+    // generate point -> trig table
+
+    trigsperpoint.SetSize(GetNP());
+    for (int i = 1; i <= GetNT(); i++)
+        for (int j = 1; j <= 3; j++)
+            trigsperpoint.Add1(GetTriangle(i).PNum(j),i);
 
 
-  if (status == STL_GOOD)
+    //check trigs per point:
+    /*
+       for (i = 1; i <= GetNP(); i++)
+       {
+       if (trigsperpoint.EntrySize(i) < 3)
+       {
+       (*testout) << "ERROR: Point " << i << " has " << trigsperpoint.EntrySize(i) << " triangles!!!" << endl;
+       }
+       }
+       */
+    topedgesperpoint.SetSize (GetNP());
+    for (int i = 1; i <= ne; i++)
+        for (int j = 1; j <= 2; j++)
+            topedgesperpoint.Add1 (GetTopEdge (i).PNum(j), i);
+
+    PrintMessage(5,"point -> trig table generated");
+
+
+
+    // transfer edge data:
+    // .. to be done
+    delete oldedges;
+
+
+
+    // for (STLTrigId ti = 0; ti < GetNT(); ti++)
+    for (STLTrigId ti : Range(trias))
     {
-      // for compatibility:
-      neighbourtrigs.SetSize(GetNT());
-      for (int i = 1; i <= GetNT(); i++)
-	for (int k = 1; k <= 3; k++)
-	  AddNeighbourTrig (i, GetTriangle(i).NBTrigNum(k));
+        STLTriangle & trig = trias[ti];
+        for (int k = 0; k < 3; k++)
+        {
+            STLPointId pi = trig[k]; //  - STLBASE;
+            STLPointId pi2 = trig[(k+1)%3]; //  - STLBASE;
+            STLPointId pi3 = trig[(k+2)%3]; // - STLBASE;
+
+            // vector along edge
+            Vec<3> ve = points[pi2] - points[pi];
+            ve.Normalize();
+
+            // vector along third point
+            Vec<3> vt = points[pi3] - points[pi];
+            vt -= (vt * ve) * ve;
+            vt.Normalize();
+
+            Vec<3> vn = trig.GeomNormal (points);
+            vn.Normalize();
+
+            double phimin = 10, phimax = -1; // out of (0, 2 pi)
+
+            for (int j = 0; j < trigsperpoint[pi].Size(); j++)
+            {
+                STLTrigId ti2 = trigsperpoint[pi][j]; //  - STLBASE;
+                const STLTriangle & trig2 = trias[ti2];
+
+                if (ti == ti2) continue;
+
+                bool hasboth = 0;
+                for (int l = 0; l < 3; l++)
+                    if (trig2[l] /* - STLBASE */ == pi2)
+                    {
+                        hasboth = 1;
+                        break;
+                    }
+                if (!hasboth) continue;
+
+                STLPointId pi4(0);
+                for (int l = 0; l < 3; l++)
+                    if (trig2[l] /* - STLBASE */ != pi && trig2[l] /* - STLBASE */ != pi2)
+                        pi4 = trig2[l] /* - STLBASE */;
+
+                Vec<3> vt2 = points[pi4] - points[pi];
+
+                double phi = atan2 (vt2 * vn, vt2 * vt);
+                if (phi < 0) phi += 2 * M_PI;
+
+                if (phi < phimin)
+                {
+                    phimin = phi;
+                    trig.NBTrig (0, (k+2)%3) = ti2; //  + STLBASE;
+                }
+                if (phi > phimax)
+                {
+                    phimax = phi;
+                    trig.NBTrig (1, (k+2)%3) = ti2; //  + STLBASE;
+                }
+            }
+        }
     }
-  else
+
+
+
+
+    if (status == STL_GOOD)
     {
-      // assemble neighbourtrigs (should be done only for illegal topology):
-      
-      neighbourtrigs.SetSize(GetNT());
+        // for compatibility:
+        neighbourtrigs.SetSize(GetNT());
+        for (int i = 1; i <= GetNT(); i++)
+            for (int k = 1; k <= 3; k++)
+                AddNeighbourTrig (i, GetTriangle(i).NBTrigNum(k));
+    }
+    else
+    {
+        // assemble neighbourtrigs (should be done only for illegal topology):
 
-      int tr, found;
-      int wrongneighbourfound = 0;
-      for (int i = 1; i <= GetNT(); i++)
-	{
-	  SetThreadPercent((double)i/(double)GetNT()*100.);
-	  if (multithread.terminate)
-	    {
-	      PopStatus();
-	      return;
-	    }
-	  
-	  for (int k = 1; k <= 3; k++)
-	    {
-	      for (int j = 1; j <= trigsperpoint.EntrySize(GetTriangle(i).PNum(k)); j++)
-		{
-		  tr = trigsperpoint.Get(GetTriangle(i).PNum(k),j);
-		  if (i != tr && (GetTriangle(i).IsNeighbourFrom(GetTriangle(tr))
-				  || GetTriangle(i).IsWrongNeighbourFrom(GetTriangle(tr))))
-		    {
-		      if (GetTriangle(i).IsWrongNeighbourFrom(GetTriangle(tr)))
-			{
-			  /*(*testout) << "ERROR: triangle " << i << " has a wrong neighbour triangle!!!" << endl;*/
-			  wrongneighbourfound ++;
-			}
-		      
-		      found = 0;
-		      for (int ii = 1; ii <= NONeighbourTrigs(i); ii++) 
-			{if (NeighbourTrig(i,ii) == tr) {found = 1;break;};}
-		      if (! found) {AddNeighbourTrig(i,tr);}
-		    }
-		}
-	    }
-	  if (NONeighbourTrigs(i) != 3) 
-	    {
-	      PrintError("TRIG ",i," has ",NONeighbourTrigs(i)," neighbours!!!!");
-	      for (int kk=1; kk <= NONeighbourTrigs(i); kk++)
-		{
-		  PrintMessage(5,"neighbour-trig",kk," = ",int(NeighbourTrig(i,kk)));
-		}
-	    };
-	}
-      if (wrongneighbourfound)
-	{
-	  PrintError("++++++++++++++++++++\n");
-	  PrintError(wrongneighbourfound, " wrong oriented neighbourtriangles found!");
-	  PrintError("try to correct it (with stldoctor)!");
-	  PrintError("++++++++++++++++++++\n");
-	  
-	  status = STL_ERROR;
-	  statustext = "STL Mesh not consistent";
+        neighbourtrigs.SetSize(GetNT());
 
-	  multithread.terminate = 1;
+        int tr, found;
+        int wrongneighbourfound = 0;
+        for (int i = 1; i <= GetNT(); i++)
+        {
+            SetThreadPercent((double)i/(double)GetNT()*100.);
+            if (multithread.terminate)
+            {
+                PopStatus();
+                return;
+            }
+
+            for (int k = 1; k <= 3; k++)
+            {
+                for (int j = 1; j <= trigsperpoint.EntrySize(GetTriangle(i).PNum(k)); j++)
+                {
+                    tr = trigsperpoint.Get(GetTriangle(i).PNum(k),j);
+                    if (i != tr && (GetTriangle(i).IsNeighbourFrom(GetTriangle(tr))
+                                    || GetTriangle(i).IsWrongNeighbourFrom(GetTriangle(tr))))
+                    {
+                        if (GetTriangle(i).IsWrongNeighbourFrom(GetTriangle(tr)))
+                        {
+                            /*(*testout) << "ERROR: triangle " << i << " has a wrong neighbour triangle!!!" << endl;*/
+                            wrongneighbourfound ++;
+                        }
+
+                        found = 0;
+                        for (int ii = 1; ii <= NONeighbourTrigs(i); ii++) 
+                        {if (NeighbourTrig(i,ii) == tr) {found = 1;break;};}
+                        if (! found) {AddNeighbourTrig(i,tr);}
+                    }
+                }
+            }
+            if (NONeighbourTrigs(i) != 3) 
+            {
+                PrintError("TRIG ",i," has ",NONeighbourTrigs(i)," neighbours!!!!");
+                for (int kk=1; kk <= NONeighbourTrigs(i); kk++)
+                {
+                    PrintMessage(5,"neighbour-trig",kk," = ",int(NeighbourTrig(i,kk)));
+                }
+            };
+        }
+        if (wrongneighbourfound)
+        {
+            PrintError("++++++++++++++++++++\n");
+            PrintError(wrongneighbourfound, " wrong oriented neighbourtriangles found!");
+            PrintError("try to correct it (with stldoctor)!");
+            PrintError("++++++++++++++++++++\n");
+
+            status = STL_ERROR;
+            statustext = "STL Mesh not consistent";
+
+            multithread.terminate = 1;
 #ifdef STAT_STREAM
-	  (*statout) << "non-conform stl geometry \\hline" << endl;
+            (*statout) << "non-conform stl geometry \\hline" << endl;
 #endif
-	}
+        }
     }
 
-  TopologyChanged();
+    TopologyChanged();
 
-  PopStatus();
+    PopStatus();
 }
 
 
@@ -878,32 +878,32 @@ void STLTopology :: FindNeighbourTrigs()
 
 
 void STLTopology :: GetTrianglesInBox (/* 
-					  const Point<3> & pmin,
-					  const Point<3> & pmax,
-				       */
-				       const Box<3> & box,
-				       NgArray<int> & btrias) const
+                                          const Point<3> & pmin,
+                                          const Point<3> & pmax,
+                                          */
+    const Box<3> & box,
+    NgArray<int> & btrias) const
 {
-  if (searchtree)
+    if (searchtree)
 
-    searchtree -> GetIntersecting (box.PMin(), box.PMax(), btrias);
-  
-  else
+        searchtree -> GetIntersecting (box.PMin(), box.PMax(), btrias);
+
+    else
     {    
-      int i;
-      Box<3> box1 = box;
-      box1.Increase (1e-4);
+        int i;
+        Box<3> box1 = box;
+        box1.Increase (1e-4);
 
-      btrias.SetSize(0);
-   
-      int nt = GetNT();
-      for (i = 1; i <= nt; i++)
-	{
-	  if (box1.Intersect (GetTriangle(i).box))
-	    {
-	      btrias.Append (i);
-	    }
-	}    
+        btrias.SetSize(0);
+
+        int nt = GetNT();
+        for (i = 1; i <= nt; i++)
+        {
+            if (box1.Intersect (GetTriangle(i).box))
+            {
+                btrias.Append (i);
+            }
+        }    
     }
 }
 
@@ -911,32 +911,32 @@ void STLTopology :: GetTrianglesInBox (/*
 
 void STLTopology :: AddTriangle(const STLTriangle& t)
 {
-  trias.Append(t);
-  
-  const Point<3> & p1 = GetPoint (t.PNum(1));
-  const Point<3> & p2 = GetPoint (t.PNum(2));
-  const Point<3> & p3 = GetPoint (t.PNum(3));
+    trias.Append(t);
 
-  Box<3> box;
-  box.Set (p1);
-  box.Add (p2);
-  box.Add (p3);
-  /*
-  //  Point<3> pmin(p1), pmax(p1);
-  pmin.SetToMin (p2);
-  pmin.SetToMin (p3);
-  pmax.SetToMax (p2);
-  pmax.SetToMax (p3);
-  */
+    const Point<3> & p1 = GetPoint (t.PNum(1));
+    const Point<3> & p2 = GetPoint (t.PNum(2));
+    const Point<3> & p3 = GetPoint (t.PNum(3));
 
-  trias.Last().box = box; 
-  trias.Last().center = Center (p1, p2, p3);
-  double r1 = Dist (p1, trias.Last().center);
-  double r2 = Dist (p2, trias.Last().center);
-  double r3 = Dist (p3, trias.Last().center);
-  trias.Last().rad = max2 (max2 (r1, r2), r3);
+    Box<3> box;
+    box.Set (p1);
+    box.Add (p2);
+    box.Add (p3);
+    /*
+    //  Point<3> pmin(p1), pmax(p1);
+    pmin.SetToMin (p2);
+    pmin.SetToMin (p3);
+    pmax.SetToMax (p2);
+    pmax.SetToMax (p3);
+    */
 
-  if (geomsearchtreeon)
+    trias.Last().box = box; 
+    trias.Last().center = Center (p1, p2, p3);
+    double r1 = Dist (p1, trias.Last().center);
+    double r2 = Dist (p2, trias.Last().center);
+    double r3 = Dist (p3, trias.Last().center);
+    trias.Last().rad = max2 (max2 (r1, r2), r3);
+
+    if (geomsearchtreeon)
     {searchtree->Insert (box.PMin(), box.PMax(), trias.Size());}
 }
 
@@ -945,35 +945,35 @@ void STLTopology :: AddTriangle(const STLTriangle& t)
 
 int STLTopology :: GetLeftTrig(int p1, int p2) const
 {
-  int i;
-  for (i = 1; i <= trigsperpoint.EntrySize(p1); i++)
+    int i;
+    for (i = 1; i <= trigsperpoint.EntrySize(p1); i++)
     {
-      if (GetTriangle(trigsperpoint.Get(p1,i)).HasEdge(p1,p2)) {return trigsperpoint.Get(p1,i);}
+        if (GetTriangle(trigsperpoint.Get(p1,i)).HasEdge(p1,p2)) {return trigsperpoint.Get(p1,i);}
     }
-  PrintSysError("ERROR in GetLeftTrig !!!");
+    PrintSysError("ERROR in GetLeftTrig !!!");
 
-  return 0;
+    return 0;
 }
 
 int STLTopology :: GetRightTrig(int p1, int p2) const
 {
-  return GetLeftTrig(p2,p1);
+    return GetLeftTrig(p2,p1);
 }
 
 
 int STLTopology :: NeighbourTrigSorted(int trig, int edgenum) const
 {
-  STLPointId p1, p2;
-  STLPointId psearch = GetTriangle(trig).PNum(edgenum);
+    STLPointId p1, p2;
+    STLPointId psearch = GetTriangle(trig).PNum(edgenum);
 
-  for (int i = 1; i <= 3; i++)
+    for (int i = 1; i <= 3; i++)
     {
-      GetTriangle(trig).GetNeighbourPoints(GetTriangle(NeighbourTrig(trig,i)),p1,p2);
-      if (p1 == psearch) {return NeighbourTrig(trig,i);}
+        GetTriangle(trig).GetNeighbourPoints(GetTriangle(NeighbourTrig(trig,i)),p1,p2);
+        if (p1 == psearch) {return NeighbourTrig(trig,i);}
     }
 
-  PrintSysError("ERROR in NeighbourTrigSorted");
-  return 0;
+    PrintSysError("ERROR in NeighbourTrigSorted");
+    return 0;
 }
 
 
@@ -983,13 +983,13 @@ int STLTopology :: NeighbourTrigSorted(int trig, int edgenum) const
 
 int STLTopology :: GetTopEdgeNum (int pi1, int pi2) const
 {
-  if (!ht_topedges) return 0;
+    if (!ht_topedges) return 0;
 
-  INDEX_2 i2(pi1, pi2);
-  i2.Sort();
+    INDEX_2 i2(pi1, pi2);
+    i2.Sort();
 
-  if (!ht_topedges->Used(i2)) return 0;
-  return ht_topedges->Get(i2);
+    if (!ht_topedges->Used(i2)) return 0;
+    return ht_topedges->Get(i2);
 }
 
 
@@ -997,14 +997,14 @@ int STLTopology :: GetTopEdgeNum (int pi1, int pi2) const
 
 void STLTopology :: InvertTrig (int trig)
 {
-  if (trig >= 1 && trig <= GetNT())
+    if (trig >= 1 && trig <= GetNT())
     {
-      GetTriangle(trig).ChangeOrientation();
-      FindNeighbourTrigs();
+        GetTriangle(trig).ChangeOrientation();
+        FindNeighbourTrigs();
     }
-  else
+    else
     {
-      PrintUserError("no triangle selected!");
+        PrintUserError("no triangle selected!");
     }
 }
 
@@ -1013,14 +1013,14 @@ void STLTopology :: InvertTrig (int trig)
 
 void STLTopology :: DeleteTrig (int trig)
 {
-  if (trig >= 1 && trig <= GetNT())
+    if (trig >= 1 && trig <= GetNT())
     {
-      trias.DeleteElement(trig);
-      FindNeighbourTrigs();
+        trias.DeleteElement(trig);
+        FindNeighbourTrigs();
     }
-  else
+    else
     {
-      PrintUserError("no triangle selected!");
+        PrintUserError("no triangle selected!");
     }
 }
 
@@ -1028,78 +1028,78 @@ void STLTopology :: DeleteTrig (int trig)
 
 void STLTopology :: OrientAfterTrig (int trig)
 {
-  int starttrig = trig;
+    int starttrig = trig;
 
-  if (starttrig >= 1 && starttrig <= GetNT())
+    if (starttrig >= 1 && starttrig <= GetNT())
     {
 
-      NgArray <int> oriented;
-      oriented.SetSize(GetNT());
-      int i;
-      for (i = 1; i <= oriented.Size(); i++)
-	{
-	  oriented.Elem(i) = 0;
-	}
- 
-      oriented.Elem(starttrig) = 1;
-  
-      int k;
-      
-      NgArray <int> list1;
-      list1.SetSize(0);
-      NgArray <int> list2;
-      list2.SetSize(0);
-      list1.Append(starttrig);
+        NgArray <int> oriented;
+        oriented.SetSize(GetNT());
+        int i;
+        for (i = 1; i <= oriented.Size(); i++)
+        {
+            oriented.Elem(i) = 0;
+        }
 
-      int cnt = 1;
-      int end = 0;
-      int nt;
-      while (!end)
-	{
-	  end = 1;
-	  for (i = 1; i <= list1.Size(); i++)
-	    {
-	      const STLTriangle& tt = GetTriangle(list1.Get(i));
-	      for (k = 1; k <= 3; k++)
-		{
-		  nt = tt.NBTrigNum (k); // NeighbourTrig(list1.Get(i),k);
-		  if (oriented.Get(nt) == 0)
-		    {
-		      if (tt.IsWrongNeighbourFrom(GetTriangle(nt)))
-			{
-			  GetTriangle(nt).ChangeOrientation();
-			}
-		      oriented.Elem(nt) = 1;
-		      list2.Append(nt);
-		      cnt++;
-		      end = 0;
-		    }
-		}
-	    }
-	  list1.SetSize(0);
-	  for (i = 1; i <= list2.Size(); i++)
-	    {
-	      list1.Append(list2.Get(i));
-	    }
-	  list2.SetSize(0);
-	}
+        oriented.Elem(starttrig) = 1;
 
-      PrintMessage(5,"NO corrected triangles = ",cnt);
-      if (cnt == GetNT()) 
-	{
-	  PrintMessage(5,"ALL triangles oriented in same way!");
-	}
-      else
-	{
-	  PrintWarning("NOT ALL triangles oriented in same way!");
-	}
+        int k;
 
-      //      topedges.SetSize(0);
-      FindNeighbourTrigs();
+        NgArray <int> list1;
+        list1.SetSize(0);
+        NgArray <int> list2;
+        list2.SetSize(0);
+        list1.Append(starttrig);
+
+        int cnt = 1;
+        int end = 0;
+        int nt;
+        while (!end)
+        {
+            end = 1;
+            for (i = 1; i <= list1.Size(); i++)
+            {
+                const STLTriangle& tt = GetTriangle(list1.Get(i));
+                for (k = 1; k <= 3; k++)
+                {
+                    nt = tt.NBTrigNum (k); // NeighbourTrig(list1.Get(i),k);
+                    if (oriented.Get(nt) == 0)
+                    {
+                        if (tt.IsWrongNeighbourFrom(GetTriangle(nt)))
+                        {
+                            GetTriangle(nt).ChangeOrientation();
+                        }
+                        oriented.Elem(nt) = 1;
+                        list2.Append(nt);
+                        cnt++;
+                        end = 0;
+                    }
+                }
+            }
+            list1.SetSize(0);
+            for (i = 1; i <= list2.Size(); i++)
+            {
+                list1.Append(list2.Get(i));
+            }
+            list2.SetSize(0);
+        }
+
+        PrintMessage(5,"NO corrected triangles = ",cnt);
+        if (cnt == GetNT()) 
+        {
+            PrintMessage(5,"ALL triangles oriented in same way!");
+        }
+        else
+        {
+            PrintWarning("NOT ALL triangles oriented in same way!");
+        }
+
+        //      topedges.SetSize(0);
+        FindNeighbourTrigs();
     }
-  else
+    else
     {
-      PrintUserError("no triangle selected!");
+        PrintUserError("no triangle selected!");
     }
 }
 
