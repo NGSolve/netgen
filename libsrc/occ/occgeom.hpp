@@ -78,7 +78,7 @@
 #include "Bnd_Box.hxx"
 #include "ShapeAnalysis.hxx"
 #include "ShapeBuild_ReShape.hxx"
-
+#include "BOPAlgo_Builder.hxx"
 
 // Philippose - 29/01/2009
 // OpenCascade XDE Support
@@ -343,6 +343,7 @@ namespace netgen
     void MakeSolid();
 
     void HealGeometry();
+    void GlueGeometry();
 
     // Philippose - 15/01/2009
     // Sets the maximum mesh size for a given face
