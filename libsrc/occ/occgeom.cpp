@@ -236,6 +236,7 @@ namespace netgen
     // Perform the operation
     aBuilder.Perform();
     // Check for the errors
+#if OCC_VERSION_HEX >= 0x070000
     if (aBuilder.HasErrors())
       {
         cout << "builder has errors" << endl;
@@ -247,6 +248,7 @@ namespace netgen
         // treatment of the warnings
         ;
       }
+#endif
     // result of the operation
     shape = aBuilder.Shape();
     BuildFMap();
