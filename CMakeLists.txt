@@ -191,7 +191,6 @@ check_include_files (dlfcn.h HAVE_DLFCN_H)
 if(HAVE_DLFCN_H)
   add_definitions(-DHAVE_DLFCN_H)
 endif()
-add_definitions(-DNETGEN_VERSION="${NETGEN_VERSION}")
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR})
 
