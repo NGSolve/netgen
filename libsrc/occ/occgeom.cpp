@@ -236,7 +236,7 @@ namespace netgen
     // Perform the operation
     aBuilder.Perform();
     // Check for the errors
-#if OCC_VERSION_HEX >= 0x070000
+#if OCC_VERSION_HEX >= 0x070200
     if (aBuilder.HasErrors())
       {
         cout << "builder has errors" << endl;
