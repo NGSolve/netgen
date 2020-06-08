@@ -133,7 +133,7 @@ namespace netgen
     NgArray<char*> materials;
     NgArray<double> maxh;
     NgArray<bool> quadmeshing;
-    NgArray<bool> tensormeshing;
+    Array<bool> tensormeshing;
     NgArray<int> layer;
     NgArray<string*> bcnames;
     double elto0 = 1.0;
@@ -216,8 +216,19 @@ namespace netgen
     }
     bool GetDomainTensorMeshing ( int domnr ) 
     { 
-      if ( tensormeshing.Size() ) return tensormeshing[domnr-1]; 
+      if ( tensormeshing.Size()>=domnr ) return tensormeshing[domnr-1];
       else return false;
+    }
+    void SetDomainTensorMeshing ( int domnr, bool tm )
+    {
+      if ( tensormeshing.Size()<domnr )
+      {
+        auto oldsize = tensormeshing.Size();
+        tensormeshing.SetSize(domnr);
+        for(auto i : IntRange(oldsize, domnr-1))
+          tensormeshing[i] = false;
+      }
+      tensormeshing[domnr-1] = tm;
     }
     int GetDomainLayer ( int domnr ) 
     { 

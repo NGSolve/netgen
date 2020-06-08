@@ -392,6 +392,7 @@ DLL_HEADER void ExportGeom2d(py::module &m)
                 }, py::arg("mp") = nullptr,
       py::call_guard<py::gil_scoped_release>(),
       meshingparameter_description.c_str())
+    .def("_SetDomainTensorMeshing", &SplineGeometry2d::SetDomainTensorMeshing)
     ;
   
 }
