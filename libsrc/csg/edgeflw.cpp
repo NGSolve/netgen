@@ -1085,23 +1085,33 @@ namespace netgen
 	    //int k;
 	    double eps = 1e-8*size;
 
-	    NgArray<bool> pre_ok(2);
+            ArrayMem<bool,2> pre_ok(2);
+            bool flip = false;
 
  	    do
  	      {
  		eps *= 0.5;
- 		pre_ok[0] = (locsol -> VectorIn2 (hp, m, n, eps) == IS_OUTSIDE &&
-			     locsol -> VectorIn2 (hp, m, -1. * n, eps) == IS_INSIDE);
- 		pre_ok[1] = (locsol -> VectorIn2 (hp, -1.*m, n, eps) == IS_OUTSIDE &&
-			     locsol -> VectorIn2 (hp, -1.*m, -1. * n, eps) == IS_INSIDE);
+                auto in00 = locsol -> VectorIn2 (hp, m, n, eps);
+                auto in01 = locsol -> VectorIn2 (hp, m, -1. * n, eps);
+                pre_ok[0] = in00 == IS_OUTSIDE && in01 == IS_INSIDE;
+
+                if(in00 == IS_INSIDE && in01 == IS_OUTSIDE)
+                  pre_ok[0] = flip = true;
+
+                auto in10 = locsol -> VectorIn2 (hp, -1.*m, n, eps);
+                auto in11 = locsol -> VectorIn2 (hp, -1.*m, -1. * n, eps);
+                pre_ok[1] = (in10 == IS_OUTSIDE && in11 == IS_INSIDE);
+
+                if(in10 == IS_INSIDE && in11 == IS_OUTSIDE)
+                  pre_ok[1] = flip = true;
 		
 		if (debug)
 		  {
 		    *testout << "eps = " << eps << endl;
-		    *testout << "in,1 = " << locsol -> VectorIn2 (hp, m, n, eps) << endl;
-		    *testout << "in,1 = " << locsol -> VectorIn2 (hp, m, -1. * n, eps) << endl;
-		    *testout << "in,1 = " << locsol -> VectorIn2 (hp, -1.*m, n, eps) << endl;
-		    *testout << "in,1 = " << locsol -> VectorIn2 (hp, -1.*m, -1. * n, eps) << endl;
+                    *testout << "in,1 = " << in00 << endl;
+                    *testout << "in,1 = " << in01 << endl;
+                    *testout << "in,1 = " << in10 << endl;
+                    *testout << "in,1 = " << in11 << endl;
 		  }
  	      }
  	    while(pre_ok[0] && pre_ok[1] && eps > 1e-16*size);
@@ -1197,7 +1207,10 @@ namespace netgen
 		  
 		    if (!surf)
 		      {
-			if (sameasref)
+                        bool inside = sameasref;
+                        if(flip)
+                          inside = !inside;
+                        if (inside)
 			  refedges.Elem(hi).domin = i;
 			else 
 			  refedges.Elem(hi).domout = i;
