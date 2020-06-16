@@ -163,6 +163,8 @@ namespace netgen
                                     domin, domout, -1);
                   fd.SetBCProperty(max_surface_index);
                   mesh.AddFaceDescriptor(fd);
+                  mesh.SetBCName(max_surface_index-1,
+                                 "mapped_" + old_fd.GetBCName());
                   return max_surface_index;
                 }
               return last_layer_surface_index_map[si];
