@@ -6541,7 +6541,7 @@ namespace netgen
       return defaultstring;
 
     if (bcnr < 0 || bcnr >= bcnames.Size())
-      throw NgException ("illegal bc-number");
+      throw RangeException("Illegal bc number ", bcnr, 0, bcnames.Size());
 
     if ( bcnames[bcnr] )
       return *bcnames[bcnr];
