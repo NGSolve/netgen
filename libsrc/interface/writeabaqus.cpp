@@ -158,25 +158,25 @@ void WriteAbaqusFormat (const Mesh & mesh,
 
       cout << "masternode = " << masternode << " = "
 	   << mesh.Point(masternode) << endl;
-      NgArray<int> slaves(3);
+      NgArray<int> minions(3);
       for (i = 1; i <= 3; i++)
 	{
 	  mesh.GetIdentifications().GetPairs (i, pairs);
 	  for (j = 1; j <= pairs.Size(); j++)
 	    {
 	      if (pairs.Get(j).I1() == masternode)
-		slaves.Elem(i) = pairs.Get(j).I2();
+		minions.Elem(i) = pairs.Get(j).I2();
 	    }
-	  cout << "slave(" << i << ") = " << slaves.Get(i)
-	       << " = " << mesh.Point(slaves.Get(i)) << endl;
+	  cout << "minion(" << i << ") = " << minions.Get(i)
+	       << " = " << mesh.Point(minions.Get(i)) << endl;
 	}
 	  
 	  
       outfile << "**\n"
 	      << "*NSET,NSET=CTENODS\n"
-	      << slaves.Get(1) << ", " 
-	      << slaves.Get(2) << ", " 
-	      << slaves.Get(3) << endl;
+	      << minions.Get(1) << ", " 
+	      << minions.Get(2) << ", " 
+	      << minions.Get(3) << endl;
 
 	  
       outfile << "**\n"
@@ -190,7 +190,7 @@ void WriteAbaqusFormat (const Mesh & mesh,
 	      << "*BOUNDARY, OP=NEW\n";
       for (j = 1; j <= 3; j++)
 	{
-	  Vec3d v(mesh.Point(masternode), mesh.Point(slaves.Get(j)));
+	  Vec3d v(mesh.Point(masternode), mesh.Point(minions.Get(j)));
 	  double vlen = v.Length();
 	  int dir = 0;
 	  if (fabs (v.X()) > 0.9 * vlen) dir = 2;
@@ -198,7 +198,7 @@ void WriteAbaqusFormat (const Mesh & mesh,
 	  if (fabs (v.Z()) > 0.9 * vlen) dir = 1;
 	  if (!dir)
 	    cout << "ERROR: Problem with rigid body constraints" << endl;
-	  outfile << slaves.Get(j) << ", " << dir << ",,    0.\n";
+	  outfile << minions.Get(j) << ", " << dir << ",,    0.\n";
 	}
 
       outfile << "**\n"
@@ -223,7 +223,7 @@ void WriteAbaqusFormat (const Mesh & mesh,
 		    mpc << "4" << "\n";
 		    mpc << pairs.Get(j).I2() << "," << k << ", -1.0, ";
 		    mpc << pairs.Get(j).I1() << "," << k << ", 1.0, ";
-		    mpc << slaves.Get(i) << "," << k << ", 1.0, ";
+		    mpc << minions.Get(i) << "," << k << ", 1.0, ";
 		    mpc << masternode << "," << k << ", -1.0 \n";
 		  }
 	      }

@@ -1284,7 +1284,7 @@ namespace ngcore
 
   /// bubble sort array
   template <class T, class S>
-  inline void BubbleSort (FlatArray<T> data, FlatArray<S> slave)
+  inline void BubbleSort (FlatArray<T> data, FlatArray<S> index)
   {
     for (size_t i = 0; i < data.Size(); i++)
       for (size_t j = i+1; j < data.Size(); j++)
@@ -1294,9 +1294,9 @@ namespace ngcore
 	    data[i] = data[j];
 	    data[j] = hv;
 
-	    S hvs = slave[i];
-	    slave[i] = slave[j];
-	    slave[j] = hvs;
+	    S hvs = index[i];
+	    index[i] = index[j];
+	    index[j] = hvs;
 	  }
   }
 
