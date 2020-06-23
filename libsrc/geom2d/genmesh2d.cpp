@@ -550,6 +550,10 @@ namespace netgen
 
                 mesh -> AddSurfaceElement (el);
               }
+          char* material;
+          geometry.GetMaterial(domnr, material);
+          if(material)
+            mesh->SetMaterial(domnr, material);
         }
 
 
