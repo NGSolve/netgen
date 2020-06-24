@@ -130,6 +130,7 @@ namespace netgen
                Point<3> & newp, EdgePointGeomInfo & newgi) const
   {
     Point<3> hnewp = p1+secpoint*(p2-p1);
+
     //(*testout) << "hnewp " << hnewp << " s1 " << surfi1 << " s2 " << surfi2 << endl;
     if (surfi1 != -1 && surfi2 != -1 && surfi1 != surfi2)
       {

@@ -949,8 +949,22 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                {
                  regex pattern(*get_if<string>(&boundary));
                  for(int i = 1; i<=self.GetNFD(); i++)
-                   if(regex_match(self.GetFaceDescriptor(i).GetBCName(), pattern))
-                     blp.surfid.Append(i);
+                   {
+                     auto& fd = self.GetFaceDescriptor(i);
+                     if(regex_match(fd.GetBCName(), pattern))
+                       {
+                         auto dom_pattern = get_if<string>(&domain);
+                         // only add if adjacent to domain
+                         if(dom_pattern)
+                           {
+                             regex pattern(*dom_pattern);
+                             if(regex_match(self.GetMaterial(fd.DomainIn()), pattern) || (fd.DomainOut() > 0 ? regex_match(self.GetMaterial(fd.DomainOut()), pattern) : false))
+                               blp.surfid.Append(i);
+                           }
+                         else
+                           blp.surfid.Append(i);
+                       }
+                     }
                }
 
              if(double* pthickness = get_if<double>(&thickness); pthickness)
