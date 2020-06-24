@@ -748,21 +748,19 @@ namespace netgen
 
 	      for (int i2 = 0; i2 < edgenrs.Size(); i2++)
 		{
-		  // PointIndex pi1 = el[edges[i2][0]];
-		  // PointIndex pi2 = el[edges[i2][1]];
-
-		  // bool swap = pi1 > pi2;
-		
-		  // Point<3> p1 = mesh[pi1];
-		  // Point<3> p2 = mesh[pi2];
-		
-		  // int order1 = edgeorder[edgenrs[i2]];
-		  // int ndof = max (0, order1-1);
-
-		  surfnr[edgenrs[i2]] = mesh.GetFaceDescriptor(el.GetIndex()).SurfNr();
-		  gi0[edgenrs[i2]] = el.GeomInfoPi(edges[i2][0]+1);
-		  gi1[edgenrs[i2]] = el.GeomInfoPi(edges[i2][1]+1);
-		}
+		  auto enr = edgenrs[i2];
+                  surfnr[enr] = mesh.GetFaceDescriptor(el.GetIndex()).SurfNr();
+                  if (el[edges[i2][0]] < el[edges[i2][1]])
+                    {
+                      gi0[enr] = el.GeomInfoPi(edges[i2][0]+1);
+                      gi1[enr] = el.GeomInfoPi(edges[i2][1]+1);
+                    }
+                  else
+                    {
+                      gi1[enr] = el.GeomInfoPi(edges[i2][0]+1);
+                      gi0[enr] = el.GeomInfoPi(edges[i2][1]+1);
+                    }
+                }
 	    }
 
 
@@ -1303,6 +1301,8 @@ namespace netgen
                       SurfaceElementIndex sei = top.GetFace2SurfaceElement (f+1)-1;
 		      if (sei != SurfaceElementIndex(-1)) {
 			PointGeomInfo gi = mesh[sei].GeomInfoPi(1);
+                        gi.u = 1.0/3.0*(mesh[sei].GeomInfoPi(1).u+mesh[sei].GeomInfoPi(2).u+mesh[sei].GeomInfoPi(3).u);
+                        gi.v = 1.0/3.0*(mesh[sei].GeomInfoPi(1).v+mesh[sei].GeomInfoPi(2).v+mesh[sei].GeomInfoPi(3).v);
 			geo.ProjectPointGI(surfnr[facenr], pp, gi);
 		      }
 		      else

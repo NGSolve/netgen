@@ -1146,6 +1146,45 @@ grow_edges : bool = False
 
 
   m.def("ReadCGNSFile", &ReadCGNSFile, py::arg("filename"), py::arg("base")=1, "Read mesh and solution vectors from CGNS file");
+
+    py::class_<SurfaceGeometry, NetgenGeometry, shared_ptr<SurfaceGeometry>> (m, "SurfaceGeometry")
+    .def(py::init<>())
+    .def(py::init([](py::object pyfunc)
+                  {
+                    std::function<Vec<3> (Point<2>)> func = [pyfunc](Point<2> p)
+                                                    {
+                                                      py::gil_scoped_acquire aq;
+                                                      py::tuple pyres = py::extract<py::tuple>(pyfunc(p[0],p[1],0.0)) ();
+                                                      return Vec<3>(py::extract<double>(pyres[0])(),py::extract<double>(pyres[1])(),py::extract<double>(pyres[2])());
+                                                    };
+                    auto geo = make_shared<SurfaceGeometry>(func);
+                    return geo;
+                  }), py::arg("mapping"))
+    .def(NGSPickle<SurfaceGeometry>())
+    .def("GenerateMesh", [](shared_ptr<SurfaceGeometry> geo,
+                            bool quads, int nx, int ny, bool flip_triangles, py::list py_bbbpts, py::list py_bbbnames)
+           {
+             if (py::len(py_bbbpts) != py::len(py_bbbnames))
+               throw Exception("In SurfaceGeometry::GenerateMesh bbbpts and bbbnames do not have same lengths.");
+             Array<Point<3>> bbbpts(py::len(py_bbbpts));
+             Array<string> bbbname(py::len(py_bbbpts));
+             for(int i = 0; i<py::len(py_bbbpts);i++)
+		 {
+                   py::tuple pnt = py::extract<py::tuple>(py_bbbpts[i])();
+                   bbbpts[i] = Point<3>(py::extract<double>(pnt[0])(),py::extract<double>(pnt[1])(),py::extract<double>(pnt[2])());
+                   bbbname[i] = py::extract<string>(py_bbbnames[i])();
+                 }
+             auto mesh = make_shared<Mesh>();
+             SetGlobalMesh (mesh);
+             mesh->SetGeometry(geo);
+	     ng_geometry = geo;
+             auto result = geo->GenerateMesh (mesh, quads, nx, ny, flip_triangles, bbbpts, bbbname);
+             if(result != 0)
+               throw Exception("SurfaceGeometry: Meshing failed!");
+             return mesh;
+           }, py::arg("quads")=true, py::arg("nx")=10, py::arg("ny")=10, py::arg("flip_triangles")=false, py::arg("bbbpts")=py::list(), py::arg("bbbnames")=py::list())
+      ;
+    ;
 }
 
 PYBIND11_MODULE(libmesh, m) {
