@@ -527,11 +527,16 @@ namespace netgen
 
 
           for (PointIndex pix = nextpi[c1], ix = 0; pix != c2; pix = nextpi[pix], ix++)
+          {
+            Point<3> px = (*mesh)[pix];
             for (PointIndex piy = nextpi[c2], iy = 0; piy != c3; piy = nextpi[piy], iy++)
               {
-                Point<3> p = (*mesh)[pix] + ( (*mesh)[piy] - (*mesh)[c2] );
-                pts[(nex+1)*(iy+1) + ix+1] = mesh -> AddPoint (p , 1, FIXEDPOINT);
+                double lam = Dist((*mesh)[piy],(*mesh)[c2]) / Dist((*mesh)[c3],(*mesh)[c2]);
+                auto pix1 = pts[(nex+1)*ney+ix+1];
+                auto pnew = px + lam*((*mesh)[pix1]-px);
+                pts[(nex+1)*(iy+1) + ix+1] = mesh -> AddPoint (pnew, 1, FIXEDPOINT);
               }
+          }
 
           for (int i = 0; i < ney; i++)
             for (int j = 0; j < nex; j++)
@@ -545,6 +550,10 @@ namespace netgen
 
                 mesh -> AddSurfaceElement (el);
               }
+          char* material;
+          geometry.GetMaterial(domnr, material);
+          if(material)
+            mesh->SetMaterial(domnr, material);
         }
 
 

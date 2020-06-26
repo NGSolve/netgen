@@ -159,10 +159,13 @@ namespace netgen
                   auto& old_fd = mesh.GetFaceDescriptor(si);
                   int domout = blp.outside ? old_fd.DomainOut() : blp.new_matnrs[layer-1];
                   int domin = blp.outside ? blp.new_matnrs[layer-1] : old_fd.DomainIn();
-                  FaceDescriptor fd(max_surface_index-1,
+                  // -1 surf nr is so that curving does not do anything
+                  FaceDescriptor fd(-1,
                                     domin, domout, -1);
                   fd.SetBCProperty(max_surface_index);
                   mesh.AddFaceDescriptor(fd);
+                  mesh.SetBCName(max_surface_index-1,
+                                 "mapped_" + old_fd.GetBCName());
                   return max_surface_index;
                 }
               return last_layer_surface_index_map[si];
@@ -269,55 +272,53 @@ namespace netgen
           if(blp.grow_edges)
             for(SegmentIndex sei = 0; sei < nseg; sei++)
               {
-                PointIndex seg_p1 = mesh[sei][0];
-                PointIndex seg_p2 = mesh[sei][1];
+                auto& segi = mesh[sei];
 
                 // Only go in if the segment is still active, and if both its
                 // surface index is part of the "hit-list"
                 if(segsel.Test(sei))
                   {
-                    if(blp.surfid.Contains(mesh[sei].si))
-                  {
-                    // clear the bit to indicate that this segment has been processed
-                    segsel.Clear(sei);
-
-                    // Find matching segment pair on other surface
-                    for(SegmentIndex sej = 0; sej < nseg; sej++)
+                    if(blp.surfid.Contains(segi.si))
                       {
-                        PointIndex segpair_p1 = mesh[sej][1];
-                        PointIndex segpair_p2 = mesh[sej][0];
+                        // clear the bit to indicate that this segment has been processed
+                        segsel.Clear(sei);
 
-                        // Find the segment pair on the neighbouring surface element
-                        // Identified by: seg1[0] = seg_pair[1] and seg1[1] = seg_pair[0]
-                        if(segsel.Test(sej) && ((segpair_p1 == seg_p1) && (segpair_p2 == seg_p2)))
+                        // Find matching segment pair on other surface
+                        for(SegmentIndex sej = 0; sej < nseg; sej++)
                           {
-                            // clear bit to indicate that processing of this segment is done
-                            segsel.Clear(sej);
+                            auto& segj = mesh[sej];
+                            // Find the segment pair on the neighbouring surface element
+                            // Identified by: seg1[0] = seg_pair[1] and seg1[1] = seg_pair[0]
+                            if(segsel.Test(sej) && ((segi[0] == segj[1]) && (segi[1] == segj[0])))
+                              {
+                                // clear bit to indicate that processing of this segment is done
+                                segsel.Clear(sej);
 
-                            // Only worry about those surfaces which are not in the
-                            // boundary layer list
-                            if(!blp.surfid.Contains(mesh[sej].si))
+                                // if segj is not in surfel list we nned to add quads
+                            if(!blp.surfid.Contains(segj.si))
                               {
                                 SurfaceElementIndex pnt_commelem;
                                 SetInvalid(pnt_commelem);
 
-                                auto pnt1_elems = meshtopo.GetVertexSurfaceElements(segpair_p1);
-                                auto pnt2_elems = meshtopo.GetVertexSurfaceElements(segpair_p2);
+                                auto pnt1_elems = meshtopo.GetVertexSurfaceElements(segj[0]);
+                                auto pnt2_elems = meshtopo.GetVertexSurfaceElements(segj[1]);
 
                                 for(auto pnt1_sei : pnt1_elems)
-                                  if(mesh[pnt1_sei].GetIndex() == mesh[sej].si)
+                                  if(mesh[pnt1_sei].GetIndex() == segj.si)
                                     for(auto pnt2_sei : pnt2_elems)
                                       if(pnt1_sei == pnt2_sei)
                                         pnt_commelem = pnt1_sei;
 
                                 if(IsInvalid(pnt_commelem))
-                                  throw Exception("Couldn't find element on other side for " + ToString(segpair_p1) + " to " + ToString(segpair_p2));
+                                  throw Exception("Couldn't find element on other side for " + ToString(segj[0]) + " to " + ToString(segj[1]));
 
                                 const auto& commsel = mesh[pnt_commelem];
                                 auto surfelem_vect = GetSurfaceNormal(mesh, commsel);
                                 if(blp.outside)
                                   surfelem_vect *= -1;
                                 Element2d sel(QUAD);
+                                auto seg_p1 = segi[0];
+                                auto seg_p2 = segi[1];
                                 if(blp.outside)
                                   Swap(seg_p1, seg_p2);
                                 sel[0] = seg_p1;
@@ -330,7 +331,7 @@ namespace netgen
                                   {
                                     domains_to_surf_index[domains] = ++max_surface_index;
                                     domains_to_surf_index[make_tuple(max_surface_index, get<1>(domains), get<2>(domains))] = max_surface_index;
-                                    FaceDescriptor fd(max_surface_index-1,
+                                    FaceDescriptor fd(-1,
                                                       get<1>(domains),
                                                       get<2>(domains),
                                                       -1);
@@ -365,46 +366,37 @@ namespace netgen
                                 seg_2.edgenr = pi_to_edgenr[points];
                                 seg_2.si = new_index;
                                 mesh.AddSegment(seg_2);
-                                mesh[sej].si = new_index;
                               }
 
                             // in last layer insert new segments
                             if(layer == blp.heights.Size())
                               {
-                                Segment s1 = mesh[sei];
-                                Segment s2 = mesh[sej];
+                                Segment s1 = segi;
+                                Segment s2 = segj;
                                 s1.edgenr = ++max_edge_nr;
                                 s2.edgenr = max_edge_nr;
-                                bool create_it = true;
-                                if(blp.surfid.Contains(mesh[sej].si))
-                                  {
-                                    if(last_layer_surface_index_map.find(s1.si) != last_layer_surface_index_map.end() &&
-                                       last_layer_surface_index_map.find(s2.si) != last_layer_surface_index_map.end())
-                                      // edge already mapped
-                                      create_it = false;
-                                    s2.si = map_surface_index(s2.si);
-                                  }
+                                if(blp.surfid.Contains(segj.si))
+                                  s2.si = map_surface_index(segj.si);
                                 else
                                   {
-                                    s2.si = domains_to_surf_index[make_tuple(s2.si,
-                                                                             blp.new_matnrs[layer-1], mesh.GetFaceDescriptor(s2.si).DomainOut())];
+                                    auto side_surf = domains_to_surf_index[make_tuple(s2.si, blp.new_matnrs[layer-1], mesh.GetFaceDescriptor(s2.si).DomainOut())];
+                                    if(blp.outside)
+                                      s2.si = side_surf;
+                                    else
+                                      segj.si = side_surf;
                                   }
                                 s1.si = map_surface_index(s1.si);
-                                if(create_it)
-                                  {
-                                    mesh.AddSegment(s1);
-                                    mesh.AddSegment(s2);
-                                  }
+                                s1.surfnr1 = s1.surfnr2 = s2.surfnr1 = s2.surfnr2 = -1;
+                                mesh.AddSegment(s1);
+                                mesh.AddSegment(s2);
                               }
-
-                            // remap the segments to the new points
-                            mesh[sei][0] = mapto[mesh[sei][0]];
-                            mesh[sei][1] = mapto[mesh[sei][1]];
-                            mesh[sej][1] = mapto[mesh[sej][1]];
-                            mesh[sej][0] = mapto[mesh[sej][0]];
-
+                            // segi[0] = mapto[segi[0]] not working somehow?
+                            mesh[sei][0] = mapto[segi[0]];
+                            mesh[sei][1] = mapto[segi[1]];
+                            mesh[sej][0] = mapto[segj[0]];
+                            mesh[sej][1] = mapto[segj[1]];
+                              }
                           }
-                      }
                   }
                 else
                   {
@@ -455,9 +447,9 @@ namespace netgen
             {
               for(SurfaceElementIndex si = 0; si < nse; si++)
                 {
-                  if(blp.surfid.Contains(mesh[si].GetIndex()))
+                  const auto& sel = mesh[si];
+                  if(blp.surfid.Contains(sel.GetIndex()))
                     {
-                      const auto& sel = mesh[si];
                       Element2d newel = sel;
                       newel.SetIndex(map_surface_index(sel.GetIndex()));
                       mesh.AddSurfaceElement(newel);
@@ -546,36 +538,28 @@ namespace netgen
           for(SurfaceElementIndex sei : Range(nse))
             {
               auto& sel = mesh[sei];
-              bool to_move = blp.surfid.Contains(sel.GetIndex());
-              if(blp.domains.Size())
+              if(!blp.surfid.Contains(sel.GetIndex()))
                 {
-                  if(blp.outside)
-                    to_move |= blp.domains[mesh.GetFaceDescriptor(sel.GetIndex()).DomainIn()];
-                  else
-                    to_move |= !blp.domains[mesh.GetFaceDescriptor(sel.GetIndex()).DomainIn()];
+                  const auto& fd = mesh.GetFaceDescriptor(sel.GetIndex());
+                  if(blp.outside &&
+                     (!blp.domains[fd.DomainIn()] && !blp.domains[fd.DomainOut()]))
+                    continue;
+                  if(!blp.outside &&
+                     (blp.domains[fd.DomainIn()] || blp.domains[fd.DomainOut()]))
+                    continue;
                 }
-
-              if(to_move)
-                {
-                  for(auto& pnum : sel.PNums())
-                    // Check (Doublecheck) if the corresponding point has a
-                    // copy available for remapping
-                    if(mapto[pnum].IsValid())
-                      // Map the surface elements to the new points
-                      pnum = mapto[pnum];
-                }
+              for(auto& pnum : sel.PNums())
+                if(mapto[pnum].IsValid())
+                  pnum = mapto[pnum];
             }
 
           for(ElementIndex ei : Range(ne))
             {
               auto& el = mesh[ei];
-              bool to_move = blp.outside ? blp.domains[el.GetIndex()] : !blp.domains[el.GetIndex()];
-              if(blp.domains.Size() == 0 || to_move)
+              // only move the elements on the correct side
+              if(blp.outside ? blp.domains[el.GetIndex()] : !blp.domains[el.GetIndex()])
                 for(auto& pnum : el.PNums())
-                  // Check (Doublecheck) if the corresponding point has a
-                  // copy available for remapping
                   if(mapto[pnum].IsValid())
-                    // Map the volume elements to the new points
                     pnum = mapto[pnum];
             }
 

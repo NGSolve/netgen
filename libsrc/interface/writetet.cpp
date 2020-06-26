@@ -427,7 +427,7 @@ namespace netgen
 	    << numedges << " " 
 	    << numnodes << endl << endl;
 
-    outfile << "// NodeID, X, Y, Z, Type (0=Reg 1=PMaster 2=PSlave 3=CPMaster 4=CPSlave), "<< uidpid <<":\n" \
+    outfile << "// NodeID, X, Y, Z, Type (0=Reg 1=PMaster 2=PMinion 3=CPMaster 4=CPMinion), "<< uidpid <<":\n" \
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
        
 
@@ -515,7 +515,7 @@ namespace netgen
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" \
 	    << n2 << "\n"			       \
 	    << "\n" \
-	    << "// MasterNodeID, SlaveNodeID, TranslCode (1=dS1 2=dS2 3=dS1+dS2):\n" \
+	    << "// MasterNodeID, MinionNodeID, TranslCode (1=dS1 2=dS2 3=dS1+dS2):\n" \
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
     for(int i=0; i<id_groups.Size(); i++)
       {
@@ -538,7 +538,7 @@ namespace netgen
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" \
 	    << n4 << "\n"				      \
 	    << "\n" \
-	    << "// MasterNodeID, 3-SlaveNodeID's, 3-TranslCodes (1=dS1 2=dS2 3=dS1+dS2):\n" \
+	    << "// MasterNodeID, 3-MinionNodeID's, 3-TranslCodes (1=dS1 2=dS2 3=dS1+dS2):\n" \
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
 
 
@@ -565,7 +565,7 @@ namespace netgen
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" \
 	    << n8 << "\n"				     \
 	    << "\n" \
-	    << "// MasterNodeID, 7-SlaveNodeID's, TranslCodes:\n" \
+	    << "// MasterNodeID, 7-MinionNodeID's, TranslCodes:\n" \
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
     for(int i=0; i<id_groups.Size(); i++)
       {
@@ -586,7 +586,7 @@ namespace netgen
     
 
 
-    outfile << "// EdgeID, NodeID0, NodeID1, Type (0=Reg 1=PMaster 2=PSlave 3=CPMaster 4=CPSlave), "<<uidpid<<":\n" \
+    outfile << "// EdgeID, NodeID0, NodeID1, Type (0=Reg 1=PMaster 2=PMinion 3=CPMaster 4=CPMinion), "<<uidpid<<":\n" \
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
 
     
@@ -760,7 +760,7 @@ namespace netgen
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"\
 	    << n2 << "\n"			      \
 	    << "\n"\
-	    << "// MasterEdgeID, SlaveEdgeID, TranslCode (1=dS1 2=dS2 3=dS1+dS2):\n"\
+	    << "// MasterEdgeID, MinionEdgeID, TranslCode (1=dS1 2=dS2 3=dS1+dS2):\n"\
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
     for(int i=0; i<id_groups.Size(); i++)
       {
@@ -782,7 +782,7 @@ namespace netgen
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"\
 	    << n4 << "\n"				     \
 	    << "\n"\
-	    << "// MasterEdgeID, 3 SlaveEdgeID's, 3 TranslCode (1=dS1 2=dS2 3=dS1+dS2):\n"\
+	    << "// MasterEdgeID, 3 MinionEdgeID's, 3 TranslCode (1=dS1 2=dS2 3=dS1+dS2):\n"\
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
     for(int i=0; i<id_groups.Size(); i++)
       {
@@ -801,7 +801,7 @@ namespace netgen
     outfile << endl;
 
 
-    outfile << "// FaceID, EdgeID0, EdgeID1, EdgeID2, FaceType (0=Reg 1=PMaster 2=PSlave), "<<uidpid<<":\n" \
+    outfile << "// FaceID, EdgeID0, EdgeID1, EdgeID2, FaceType (0=Reg 1=PMaster 2=PMinion), "<<uidpid<<":\n" \
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
 
     
@@ -921,7 +921,7 @@ namespace netgen
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"\
 	    << n2 << "\n"			      \
 	    << "\n"\
-	    << "// MasterFaceID, SlaveFaceID, TranslCode (1=dS1 2=dS2):\n"\
+	    << "// MasterFaceID, MinionFaceID, TranslCode (1=dS1 2=dS2):\n"\
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
     for(int i=0; i<id_groups.Size(); i++)
       {

@@ -35,8 +35,6 @@ option( USE_SUPERBUILD       "use ccache" ON)
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_modules")
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 if(APPLE)
   set(INSTALL_DIR_DEFAULT /Applications/Netgen.app)
 else(APPLE)
@@ -77,6 +75,8 @@ else()
     set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR_DEFAULT}" CACHE PATH "Install directory" FORCE)
   endif()
 endif()
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include (${CMAKE_CURRENT_LIST_DIR}/cmake/generate_version_file.cmake)
 set(CPACK_PACKAGE_VERSION "${NETGEN_VERSION}")
@@ -191,7 +191,6 @@ check_include_files (dlfcn.h HAVE_DLFCN_H)
 if(HAVE_DLFCN_H)
   add_definitions(-DHAVE_DLFCN_H)
 endif()
-add_definitions(-DNETGEN_VERSION="${NETGEN_VERSION}")
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR})
 

@@ -798,7 +798,7 @@ namespace netgen
 
 
 
-  // slaves receive the mesh from the master
+  // workers receive the mesh from the master
   void Mesh :: ReceiveParallelMesh ( )
   {
     int timer = NgProfiler::CreateTimer ("ReceiveParallelMesh");
@@ -1058,7 +1058,7 @@ namespace netgen
 
   
   
-  // distribute the mesh to the slave processors
+  // distribute the mesh to the worker processors
   // call it only for the master !
   void Mesh :: Distribute ()
   {
@@ -1358,7 +1358,7 @@ namespace netgen
 
 
 
-  // distribute the mesh to the slave processors
+  // distribute the mesh to the worker processors
   // call it only for the master !
   void Mesh :: Distribute (NgArray<int> & volume_weights , NgArray<int>  & surface_weights, NgArray<int>  & segment_weights)
   {

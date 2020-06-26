@@ -154,7 +154,7 @@ namespace netgen
             break;
 
           case 7:
-            // NodeID, X, Y, Z, Type (0=Reg 1=PMaster 2=PSlave 3=CPMaster 4=CPSlave), PID:
+            // NodeID, X, Y, Z, Type (0=Reg 1=PMaster 2=PMinion 3=CPMaster 4=CPMinion), PID:
             {
               cout << "read nodes" << endl;
               for(int i=0; i<nnodes; i++)
@@ -175,7 +175,7 @@ namespace netgen
             break;
 
           case 9:
-            // MasterNodeID, SlaveNodeID, TranslCode (1=dS1 2=dS2 3=dS1+dS2)
+            // MasterNodeID, MinionNodeID, TranslCode (1=dS1 2=dS2 3=dS1+dS2)
             for(int i=0; i<nperiodicmasternodes; i++)
               {
                 for(int j=0; j<2; j++)
@@ -191,7 +191,7 @@ namespace netgen
             break;
 
           case 11:
-            // MasterNodeID, 3-SlaveNodeID's, 3-TranslCodes (1=dS1 2=dS2 3=dS1+dS2)
+            // MasterNodeID, 3-MinionNodeID's, 3-TranslCodes (1=dS1 2=dS2 3=dS1+dS2)
             for(int i=0; i<ncornerperiodicmasternodes; i++)
               {
                 for(int j=0; j<4; j++)
@@ -208,7 +208,7 @@ namespace netgen
             break;
 
           case 13:
-            //MasterNodeID, 7-SlaveNodeID's, TranslCodes
+            //MasterNodeID, 7-MinionNodeID's, TranslCodes
             for(int i=0; i<ncubicperiodicmasternodes; i++)
               {
                 for(int j=0; j<8; j++)
@@ -220,7 +220,7 @@ namespace netgen
             break;
 
           case 14:
-            // EdgeID, NodeID0, NodeID1, Type (0=Reg 1=PMaster 2=PSlave 3=CPMaster 4=CPSlave), PID
+            // EdgeID, NodeID0, NodeID1, Type (0=Reg 1=PMaster 2=PMinion 3=CPMaster 4=CPMinion), PID
             cout << "read edges" << endl;
             // nullstarted = false;
             segmentdata.SetSize(nedges);
@@ -243,7 +243,7 @@ namespace netgen
             break;
 
           case 16:
-            // MasterEdgeID, SlaveEdgeID, TranslCode (1=dS1 2=dS2 3=dS1+dS2)
+            // MasterEdgeID, MinionEdgeID, TranslCode (1=dS1 2=dS2 3=dS1+dS2)
             for(int i=0; i<nperiodicmasteredges; i++)
               in >> dummyint >> dummyint >> dummyint;
             break;
@@ -254,7 +254,7 @@ namespace netgen
             break;
 
           case 18:
-            // MasterEdgeID, 3 SlaveEdgeID's, 3 TranslCode (1=dS1 2=dS2 3=dS1+dS2)
+            // MasterEdgeID, 3 MinionEdgeID's, 3 TranslCode (1=dS1 2=dS2 3=dS1+dS2)
             for(int i=0; i<ncornerperiodicmasteredges; i++)
               {
                 in >> dummyint;
@@ -266,7 +266,7 @@ namespace netgen
             break;
 
           case 19:
-            // FaceID, EdgeID0, EdgeID1, EdgeID2, FaceType (0=Reg 1=PMaster 2=PSlave), PID
+            // FaceID, EdgeID0, EdgeID1, EdgeID2, FaceType (0=Reg 1=PMaster 2=PMinion), PID
             {
               //Segment seg;
               int segnum_ng[3];
@@ -343,7 +343,7 @@ namespace netgen
             break;
 
           case 21:
-            // MasterFaceID, SlaveFaceID, TranslCode (1=dS1 2=dS2)
+            // MasterFaceID, MinionFaceID, TranslCode (1=dS1 2=dS2)
             {
               Vec<3> randomvec(-1.32834,3.82399,0.5429151);
               int maxtransl = -1;

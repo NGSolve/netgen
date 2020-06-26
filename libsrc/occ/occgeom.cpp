@@ -169,7 +169,90 @@ namespace netgen
 
    }
 
+  void OCCGeometry :: GlueGeometry()
+  {
+    PrintMessage(1, "OCC Glue Geometry");
+    /*
+      // 
+    BRep_Builder builder;
+    TopoDS_Shape my_fuse;
+    int cnt = 0;
+    for (TopExp_Explorer exp_solid(shape, TopAbs_SOLID); exp_solid.More(); exp_solid.Next())
+      {
+        cout << "cnt = " << cnt << endl;
+	if (cnt == 0)
+	  my_fuse = exp_solid.Current();
+	else
+          // my_fuse = BRepAlgoAPI_Fuse (my_fuse, exp_solid.Current());
+          my_fuse = QANewModTopOpe_Glue::QANewModTopOpe_Glue(my_fuse, exp_solid.Current());
+	cnt++;
+      }
+    cout << "remove" << endl;
+    // for (int i = 1; i <= somap.Size(); i++)
+    // builder.Remove (shape, somap(i));
+    cout << "now add" << endl;
+    // builder.Add (shape, my_fuse);
+    shape = my_fuse;
+    cout << "build fmap" << endl;
+    BuildFMap();
+    */
 
+
+    // from 
+    // https://www.opencascade.com/doc/occt-7.4.0/overview/html/occt_user_guides__boolean_operations.html
+    BOPAlgo_Builder aBuilder;
+
+    // Setting arguments
+    TopTools_ListOfShape aLSObjects; 
+    for (TopExp_Explorer exp_solid(shape, TopAbs_SOLID); exp_solid.More(); exp_solid.Next())
+      aLSObjects.Append (exp_solid.Current());
+    aBuilder.SetArguments(aLSObjects);
+
+    // Setting options for GF
+    // Set parallel processing mode (default is false)
+    // Standard_Boolean bRunParallel = Standard_True;
+    // aBuilder.SetRunParallel(bRunParallel);
+    
+    // Set Fuzzy value (default is Precision::Confusion())
+    // Standard_Real aFuzzyValue = 1.e-5;
+    // aBuilder.SetFuzzyValue(aFuzzyValue);
+    
+    // Set safe processing mode (default is false)
+    // Standard_Boolean bSafeMode = Standard_True;
+    // aBuilder.SetNonDestructive(bSafeMode);
+    
+    // Set Gluing mode for coinciding arguments (default is off)
+    // BOPAlgo_GlueEnum aGlue = BOPAlgo_GlueShift;
+    // aBuilder.SetGlue(aGlue);
+    
+    // Disabling/Enabling the check for inverted solids (default is true)
+    // Standard Boolean bCheckInverted = Standard_False;
+    // aBuilder.SetCheckInverted(bCheckInverted);
+    
+    // Set OBB usage (default is false)
+    // Standard_Boolean bUseOBB = Standard_True;
+    // aBuilder.SetUseOBB(buseobb);
+    
+    // Perform the operation
+    aBuilder.Perform();
+    // Check for the errors
+#if OCC_VERSION_HEX >= 0x070200
+    if (aBuilder.HasErrors())
+      {
+        cout << "builder has errors" << endl;
+        return;
+      }
+    // Check for the warnings
+    if (aBuilder.HasWarnings())
+      {
+        // treatment of the warnings
+        ;
+      }
+#endif
+    // result of the operation
+    shape = aBuilder.Shape();
+    BuildFMap();
+  }
 
    void OCCGeometry :: HealGeometry ()
    {

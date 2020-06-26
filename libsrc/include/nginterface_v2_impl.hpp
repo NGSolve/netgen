@@ -111,7 +111,13 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
   ret.faces.num = 0;
   ret.faces.ptr = NULL;
 
-  if (mesh->GetDimension() == 2)
+  if (mesh->GetDimension() == 3)
+    {
+      ret.facets.num = 0;
+      ret.facets.base = 0;
+      ret.facets.ptr = nullptr;
+    }
+  else if (mesh->GetDimension() == 2)
     {
       ret.facets.num = 1;
       ret.facets.base = 0;

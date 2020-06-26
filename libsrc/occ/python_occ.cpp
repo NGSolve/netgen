@@ -66,6 +66,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                   }), py::arg("filename"),
         "Load OCC geometry from step, brep or iges file")
     .def(NGSPickle<OCCGeometry>())
+    .def("Glue", &OCCGeometry::GlueGeometry)
     .def("Heal",[](OCCGeometry & self, double tolerance, bool fixsmalledges, bool fixspotstripfaces, bool sewfaces, bool makesolids, bool splitpartitions)
          {
            self.tolerance = tolerance;
