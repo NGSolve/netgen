@@ -141,7 +141,7 @@ void WriteAbaqusSurfaceElements(const Mesh & mesh,
                     outfile << el.PNum(2) << ", ";
                     outfile << el.PNum(3) << "\n";
                 }
-                else if (non == 10)
+                else if (non == 6)
                 {
                     outfile << el.PNum(1) << ", ";
                     outfile << el.PNum(2) << ", ";

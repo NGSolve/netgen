@@ -636,9 +636,12 @@ void STLTopology :: FindNeighbourTrigs()
     int ne = GetNTE();
 
     for (int i = 1; i <= nt; i++)
+    {
         GetTriangle(i).flags.toperror = 0;
+    }
 
     for (int i = 1; i <= nt; i++)
+    {
         for (int j = 1; j <= 3; j++)
         {
             const STLTopEdge & edge = GetTopEdge (GetTriangle(i).EdgeNum(j));
@@ -648,6 +651,7 @@ void STLTopology :: FindNeighbourTrigs()
                 GetTriangle(i).flags.toperror = 1;
             }
         }
+    }
 
     for (int i = 1; i <= ne; i++)
     {
@@ -668,13 +672,17 @@ void STLTopology :: FindNeighbourTrigs()
             for (int j = 1; j <= 3; j++)
             {
                 const STLTriangle & nbt = GetTriangle (t.NBTrigNum(j));
-                if (!t.IsNeighbourFrom (nbt))
+                if (!t.IsNeighbourFrom (nbt)) 
+                {
                     orientation_ok = 0;
+                }
             }
         }
     }
     else
+    {
         orientation_ok = 0;
+    }
 
 
 
@@ -835,7 +843,13 @@ void STLTopology :: FindNeighbourTrigs()
 
                         found = 0;
                         for (int ii = 1; ii <= NONeighbourTrigs(i); ii++) 
-                        {if (NeighbourTrig(i,ii) == tr) {found = 1;break;};}
+                        {
+                            if (NeighbourTrig(i,ii) == tr) 
+                            {
+                                found = 1;
+                                break;
+                            }
+                        }
                         if (! found) {AddNeighbourTrig(i,tr);}
                     }
                 }
