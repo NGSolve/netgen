@@ -1670,6 +1670,23 @@ namespace netgen
       return occgeo;
    }
 
+   OCCGeometry *FromOCC (const TopoDS_Shape& s)
+   {
+      OCCGeometry * occgeo;
+      occgeo = new OCCGeometry;
+
+      occgeo->shape = s;
+
+      occgeo->face_colours = Handle_XCAFDoc_ColorTool();
+      occgeo->face_colours.Nullify();
+      occgeo->changed = 1;
+      occgeo->BuildFMap();
+
+      occgeo->CalcBoundingBox();
+      PrintContents (occgeo);
+
+      return occgeo;
+   }
 
   void OCCGeometry :: Save (string sfilename) const
   {

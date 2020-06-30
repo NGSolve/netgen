@@ -65,6 +65,13 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                     return geo;
                   }), py::arg("filename"),
         "Load OCC geometry from step, brep or iges file")
+    .def(py::init([] ( const TopoDS_Shape* s)
+                  {
+                    shared_ptr<OCCGeometry> geo;
+                    geo.reset(FromOCC(*s));
+                    return geo;
+                  }), py::arg("shape"),
+        "Load OCC geometry from an existing TopoDS_Shape object")
     .def(NGSPickle<OCCGeometry>())
     .def("Glue", &OCCGeometry::GlueGeometry)
     .def("Heal",[](OCCGeometry & self, double tolerance, bool fixsmalledges, bool fixspotstripfaces, bool sewfaces, bool makesolids, bool splitpartitions)

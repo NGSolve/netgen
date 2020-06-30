@@ -452,6 +452,8 @@ namespace netgen
   DLL_HEADER OCCGeometry * LoadOCC_IGES (const char * filename);
   DLL_HEADER OCCGeometry * LoadOCC_STEP (const char * filename);
   DLL_HEADER OCCGeometry * LoadOCC_BREP (const char * filename);
+  DLL_HEADER OCCGeometry * FromOCC (const TopoDS_Shape& s);
+
 
   // Philippose - 31.09.2009
   // External access to the mesh generation functions within the OCC
