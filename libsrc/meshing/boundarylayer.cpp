@@ -237,12 +237,42 @@ namespace netgen
                   }
               }
 
-          if (!blp.grow_edges)
-            for(const auto& sel : mesh.LineSegments())
+          // project growthvector on surface for inner angles
+          for(const auto& sel : mesh.SurfaceElements())
+            if(!blp.surfid.Contains(sel.GetIndex()))
               {
-                bndnodes.Clear(sel[0]);
-                bndnodes.Clear(sel[1]);
+                auto n = GetSurfaceNormal(mesh, sel);
+                for(auto pi : sel.PNums())
+                  {
+                    if(growthvectors[pi].Length2() == 0.)
+                      continue;
+                    auto& g = growthvectors[pi];
+                    auto gn = g * n;
+                    auto gg = g * g;
+                    auto nn = n * n;
+                    auto l2 = -2*gn/(gn*gn/gg + nn);
+                    auto l1 = l2 * gn/gg;
+                    auto new_g = g + 0.5 * (l1 * g + l2 * n);
+                    if(new_g * g > 0)
+                      g = new_g;
+                  }
               }
+
+          if (!blp.grow_edges)
+            {
+              for(const auto& sel : mesh.LineSegments())
+                {
+                  int count = 0;
+                  for(const auto& sel2 : mesh.LineSegments())
+                    if(((sel[0] == sel2[0] && sel[1] == sel2[1]) || (sel[0] == sel2[1] && sel[1] == sel2[0])) && blp.surfid.Contains(sel2.si))
+                      count++;
+                  if(count == 1)
+                    {
+                      bndnodes.Clear(sel[0]);
+                      bndnodes.Clear(sel[1]);
+                    }
+                }
+            }
 
           // Add additional points into the mesh structure in order to
           // clone the surface elements.
@@ -266,18 +296,44 @@ namespace netgen
 
           // Set them all to "1" to initially activate all segments
           segsel.Set();
+          Array<Array<SegmentIndex>> segmap(nseg);
+
+          // remove double segments (if multiple surfaces come together
+          // in one edge. If one of them is mapped, keep that one and
+          // map the others to it.
+          for(SegmentIndex sei = 0; sei < nseg; sei++)
+            {
+              if(!segsel.Test(sei)) continue;
+              const auto& segi = mesh[sei];
+              for(SegmentIndex sej = 0; sej < nseg; sej++)
+                {
+                  if(sej == sei || !segsel.Test(sej)) continue;
+                  const auto& segj = mesh[sej];
+                  if(segi[0] == segj[0] && segi[1] == segj[1])
+                    {
+                      SegmentIndex main, other;
+                      if(blp.surfid.Contains(segi.si))
+                        { main = sei; other = sej; }
+                      else { main = sej; other = sei; }
+                      segsel.Clear(other);
+                      for(auto& s : segmap[other])
+                        segmap[main].Append(s);
+                      segmap[other].SetSize(0);
+                      segmap[main].Append(other);
+                    }
+                }
+            }
 
           PrintMessage(3, "Adding 2D Quad elements on required surfaces...");
 
           if(blp.grow_edges)
             for(SegmentIndex sei = 0; sei < nseg; sei++)
               {
-                auto& segi = mesh[sei];
-
                 // Only go in if the segment is still active, and if both its
                 // surface index is part of the "hit-list"
                 if(segsel.Test(sei))
                   {
+                    auto& segi = mesh[sei];
                     if(blp.surfid.Contains(segi.si))
                       {
                         // clear the bit to indicate that this segment has been processed
@@ -368,6 +424,16 @@ namespace netgen
                                 mesh.AddSegment(seg_2);
                               }
 
+                            // in first layer insert new segments adjacent to
+                            // new face
+                            if(layer == 1 && !blp.surfid.Contains(segj.si))
+                              {
+                                Segment s3 = segj;
+                                s3.si = map_surface_index(segj.si)-1;
+                                s3[0] = mapto[s3[0]];
+                                s3[1] = mapto[s3[1]];
+                                mesh.AddSegment(s3);
+                              }
                             // in last layer insert new segments
                             if(layer == blp.heights.Size())
                               {
@@ -509,22 +575,41 @@ namespace netgen
                       int nums[] = { sel[0], sel[1], sel[2], sel[3],
                                      mapto[sel[0]], mapto[sel[1]],
                                      mapto[sel[2]], mapto[sel[3]] };
-                      if(classify == 15)
+                      ArrayMem<int, 8> vertices;
+                      switch(classify)
                         {
-                          int vertices[8] = { 0, 1, 2, 3, 4, 5, 6, 7 };
-                          if(!blp.outside)
-                            {
-                              Swap(vertices[1], vertices[3]);
-                              Swap(vertices[5], vertices[7]);
-                            }
-                          el = Element(HEX);
-                          for(auto i : Range(el.PNums()))
-                            el.PNums()[i] = nums[vertices[i]];
+                        case 6:
+                          {
+                            if(blp.outside)
+                              throw Exception("Type 6 quad outside layer is not yet implemented!");
+                            el = Element(PRISM);
+                            vertices = {0, 1, 5, 3, 2, 6};
+                            break;
+                          }
+                        case 9:
+                          {
+                            if(blp.outside)
+                              throw Exception("Type 9 quad outside layer is not yet implemented!");
+                            el = Element(PRISM);
+                            vertices = { 1, 4, 0, 2, 7, 3 };
+                            break;
+                          }
+                        case 15:
+                          {
+                            vertices = { 0, 1, 2, 3, 4, 5, 6, 7 };
+                            if(!blp.outside)
+                              {
+                                Swap(vertices[1], vertices[3]);
+                                Swap(vertices[5], vertices[7]);
+                              }
+                            el = Element(HEX);
+                            break;
+                          }
+                        default:
+                          throw Exception("Type " + ToString(classify) + " for quad layer not yet implemented!");
                         }
-                      else
-                        {
-                          throw Exception("This type of quad layer not yet implemented!");
-                        }
+                      for(auto i : Range(el.PNums()))
+                        el.PNums()[i] = nums[vertices[i]];
                     }
                   el.SetIndex(blp.new_matnrs[layer-1]);
                   mesh.AddVolumeElement(el);
