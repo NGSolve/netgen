@@ -235,7 +235,7 @@ namespace netgen::cg
                   cg_field_read(fn, base, zone, sol.solution, sol.field_names[fi].c_str(), RealDouble, &imin, &size, &values[0]);
                   sol_names.push_back(sol.field_names[fi]);
                   sol_values.emplace_back(std::move(values));
-                  sol_locations.push_back(sol.location);
+                  sol_locations.push_back(getNodeType(sol.location));
                 }
             }
         }
