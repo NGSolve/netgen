@@ -247,14 +247,13 @@ namespace netgen
                     if(growthvectors[pi].Length2() == 0.)
                       continue;
                     auto& g = growthvectors[pi];
-                    auto gn = g * n;
+                    auto ng = n * g;
                     auto gg = g * g;
                     auto nn = n * n;
-                    auto l2 = -2*gn/(gn*gn/gg + nn);
-                    auto l1 = l2 * gn/gg;
-                    auto new_g = g + 0.5 * (l1 * g + l2 * n);
-                    if(new_g * g > 0)
-                      g = new_g;
+                    if(fabs(ng*ng-nn*gg) < 1e-12 || fabs(ng) < 1e-12) continue;
+                    auto a = -ng*ng/(ng*ng-nn * gg);
+                    auto b = ng*gg/(ng*ng-nn*gg);
+                    g += a*g + b*n;
                   }
               }
 
@@ -296,11 +295,11 @@ namespace netgen
 
           // Set them all to "1" to initially activate all segments
           segsel.Set();
-          Array<Array<SegmentIndex>> segmap(nseg);
 
-          // remove double segments (if multiple surfaces come together
+          // remove double segments (if more than 2 surfaces come together
           // in one edge. If one of them is mapped, keep that one and
           // map the others to it.
+          Array<Array<SegmentIndex>> segmap(nseg);
           for(SegmentIndex sei = 0; sei < nseg; sei++)
             {
               if(!segsel.Test(sei)) continue;
@@ -320,6 +319,7 @@ namespace netgen
                         segmap[main].Append(s);
                       segmap[other].SetSize(0);
                       segmap[main].Append(other);
+                      if(other == sei) sej = nseg;
                     }
                 }
             }
@@ -333,7 +333,9 @@ namespace netgen
                 // surface index is part of the "hit-list"
                 if(segsel.Test(sei))
                   {
-                    auto& segi = mesh[sei];
+                    // copy here since we will add segments and this would
+                    // invalidate a reference!
+                    auto segi = mesh[sei];
                     if(blp.surfid.Contains(segi.si))
                       {
                         // clear the bit to indicate that this segment has been processed
@@ -342,7 +344,9 @@ namespace netgen
                         // Find matching segment pair on other surface
                         for(SegmentIndex sej = 0; sej < nseg; sej++)
                           {
-                            auto& segj = mesh[sej];
+                            // copy here since we will add segments and this would
+                            // invalidate a reference!
+                            auto segj = mesh[sej];
                             // Find the segment pair on the neighbouring surface element
                             // Identified by: seg1[0] = seg_pair[1] and seg1[1] = seg_pair[0]
                             if(segsel.Test(sej) && ((segi[0] == segj[1]) && (segi[1] == segj[0])))
@@ -456,7 +460,9 @@ namespace netgen
                                 mesh.AddSegment(s1);
                                 mesh.AddSegment(s2);
                               }
-                            // segi[0] = mapto[segi[0]] not working somehow?
+                            // do not use segi (not even with reference, since
+                            // mesh.AddSegment will resize segment array and
+                            // invalidate reference), this is why we copy it!!!
                             mesh[sei][0] = mapto[segi[0]];
                             mesh[sei][1] = mapto[segi[1]];
                             mesh[sej][0] = mapto[segj[0]];
