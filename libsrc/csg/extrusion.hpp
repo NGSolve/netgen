@@ -94,6 +94,9 @@ namespace netgen
 			     int & after,
 			     bool & intersecting ) const;
 
+
+    bool PointInFace (const Point<3> & p, const double eps) const;
+    
     INSOLID_TYPE VecInFace ( const Point<3> & p,
 			     const Vec<3> & v,
 			     const double eps ) const;
@@ -146,6 +149,10 @@ namespace netgen
     INSOLID_TYPE PointInSolid (const Point<3> & p,
 			       double eps,
 			       NgArray<int> * const facenums) const;
+
+    virtual void GetTangentialSurfaceIndices (const Point<3> & p, 
+					      NgArray<int> & surfind, double eps) const;
+
     virtual INSOLID_TYPE VecInSolid (const Point<3> & p,
 				     const Vec<3> & v,
 				     double eps) const;

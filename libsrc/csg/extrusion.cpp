@@ -415,6 +415,14 @@ namespace netgen
   }
 
 
+  bool ExtrusionFace :: PointInFace (const Point<3> & p, const double eps) const
+  {
+    Point<3> hp = p;
+    Project(hp);
+    return Dist2(p,hp) < sqr(eps);
+  }
+  
+
   void ExtrusionFace :: LineIntersections ( const Point<3> & p,
 					    const Vec<3> & v,
 					    const double eps,
@@ -737,6 +745,16 @@ namespace netgen
     return PointInSolid(p,eps,NULL);    
   }
 
+  void Extrusion :: GetTangentialSurfaceIndices (const Point<3> & p, 
+                                                 NgArray<int> & surfind, double eps) const
+  {
+    for (int j = 0; j < faces.Size(); j++)
+      if (faces[j] -> PointInFace(p, eps))
+        if (!surfind.Contains (GetSurfaceId(j)))
+          surfind.Append (GetSurfaceId(j));
+  }
+
+  
   INSOLID_TYPE Extrusion :: VecInSolid (const Point<3> & p,
 					const Vec<3> & v,
 					double eps) const
