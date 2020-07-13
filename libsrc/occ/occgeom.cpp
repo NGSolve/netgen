@@ -40,6 +40,14 @@
 
 namespace netgen
 {
+  OCCGeometry::OCCGeometry(const TopoDS_Shape& _shape)
+  {
+    shape = _shape;
+    changed = true;
+    BuildFMap();
+    CalcBoundingBox();
+  }
+
   string STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * aReader)
   {
     const Handle(XSControl_WorkSession)& theSession = aReader->Reader().WS();
