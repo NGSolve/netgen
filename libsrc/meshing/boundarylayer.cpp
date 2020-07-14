@@ -373,9 +373,6 @@ namespace netgen
                                   throw Exception("Couldn't find element on other side for " + ToString(segj[0]) + " to " + ToString(segj[1]));
 
                                 const auto& commsel = mesh[pnt_commelem];
-                                auto surfelem_vect = GetSurfaceNormal(mesh, commsel);
-                                if(blp.outside)
-                                  surfelem_vect *= -1;
                                 Element2d sel(QUAD);
                                 auto seg_p1 = segi[0];
                                 auto seg_p2 = segi[1];
@@ -428,38 +425,78 @@ namespace netgen
                                 mesh.AddSegment(seg_2);
                               }
 
-                            // in first layer insert new segments adjacent to
-                            // new face
-                            if(layer == 1 && !blp.surfid.Contains(segj.si))
-                              {
-                                Segment s3 = segj;
-                                s3.si = map_surface_index(segj.si)-1;
-                                s3[0] = mapto[s3[0]];
-                                s3[1] = mapto[s3[1]];
-                                mesh.AddSegment(s3);
-                              }
                             // in last layer insert new segments
                             if(layer == blp.heights.Size())
                               {
+                                max_edge_nr++;
+                                if(!blp.surfid.Contains(segj.si))
+                                  {
+                                    Segment s3 = segj;
+                                    s3.si = map_surface_index(segj.si)-1;
+                                    Swap(s3[0], s3[1]);
+                                    if(blp.outside)
+                                      {
+                                        s3[0] = mapto[s3[0]];
+                                        s3[1] = mapto[s3[1]];
+                                      }
+                                    else
+                                      s3.edgenr = max_edge_nr;
+                                    mesh.AddSegment(s3);
+                                  }
                                 Segment s1 = segi;
                                 Segment s2 = segj;
-                                s1.edgenr = ++max_edge_nr;
+                                s1.edgenr = max_edge_nr;
                                 s2.edgenr = max_edge_nr;
+                                auto side_surf = domains_to_surf_index[make_tuple(s2.si, blp.new_matnrs[layer-1], mesh.GetFaceDescriptor(s2.si).DomainOut())];
                                 if(blp.surfid.Contains(segj.si))
                                   s2.si = map_surface_index(segj.si);
                                 else
                                   {
-                                    auto side_surf = domains_to_surf_index[make_tuple(s2.si, blp.new_matnrs[layer-1], mesh.GetFaceDescriptor(s2.si).DomainOut())];
                                     if(blp.outside)
-                                      s2.si = side_surf;
+                                      {
+                                        s2.si = side_surf;
+                                      }
                                     else
-                                      segj.si = side_surf;
+                                      mesh[sej].si = side_surf;
                                   }
                                 s1.si = map_surface_index(s1.si);
                                 s1.surfnr1 = s1.surfnr2 = s2.surfnr1 = s2.surfnr2 = -1;
                                 mesh.AddSegment(s1);
                                 mesh.AddSegment(s2);
                               }
+
+                            segmap.SetSize(mesh.LineSegments().Size());
+                            for(auto sei2 : segmap[sei])
+                              {
+                                auto& s = mesh[sei2];
+                                if(blp.outside && layer == blp.heights.Size())
+                                  {
+                                    if(blp.surfid.Contains(s.si))
+                                      s.si = map_surface_index(s.si);
+                                    s.edgenr = max_edge_nr;
+                                  }
+                                else
+                                  {
+                                    s[0] = mapto[s[0]];
+                                    s[1] = mapto[s[1]];
+                                  }
+                              }
+                            for(auto sej2 : segmap[sej])
+                              {
+                                auto& s = mesh[sej2];
+                                if(blp.outside && layer == blp.heights.Size())
+                                  {
+                                    if(blp.surfid.Contains(s.si))
+                                      s.si = map_surface_index(s.si);
+                                    s.edgenr = max_edge_nr;
+                                  }
+                                else
+                                  {
+                                    s[0] = mapto[s[0]];
+                                    s[1] = mapto[s[1]];
+                                  }
+                              }
+
                             // do not use segi (not even with reference, since
                             // mesh.AddSegment will resize segment array and
                             // invalidate reference), this is why we copy it!!!
@@ -477,6 +514,8 @@ namespace netgen
                     // if necessary map them
                     for(SegmentIndex sej = 0; sej<nseg; sej++)
                       {
+                        if(segsel.Test(sej))
+                          {
                         if(mesh[sej][0] == mesh[sei][1] &&
                            mesh[sej][1] == mesh[sei][0])
                           {
@@ -506,8 +545,7 @@ namespace netgen
                                       mesh[sej][1] = mapto[mesh[sej][1]];
                                   }
                               }
-                            else
-                              continue;
+                          }
                           }
                       }
                   }
