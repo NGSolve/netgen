@@ -176,9 +176,11 @@ namespace netgen::cg
     {
       ZoneType_t zone_type;
       int fn, base, zone;
-      int nv, ne, first_mat, first_bc;
-      Array<int> materials;
-      Array<int> boundaries;
+      int first_index_1d, first_index_2d, first_index_3d;
+      int nv=0, ne_1d=0, ne_2d=0, ne_3d=0;
+
+      Array<string> names_1d, names_2d, names_3d;
+
       string name;
       cgsize_t size[3];
 
@@ -200,7 +202,7 @@ namespace netgen::cg
               solutions[si] = Solution{fn, base, zone, si+1};
         }
 
-      void ReadSolutions( std::vector<string> & sol_names, std::vector<Array<double>> & sol_values, std::vector<int> & sol_locations )
+      void ReadSolutions( int meshdim, std::vector<string> & sol_names, std::vector<Array<double>> & sol_values, std::vector<int> & sol_locations )
         {
           static Timer tall("CGNS::ReadSolutions"); RegionTimer rtall(tall);
           for (auto & sol : solutions)
@@ -208,6 +210,7 @@ namespace netgen::cg
               for (auto fi : Range(sol.field_names.Size()))
                 {
                   cgsize_t size = sol.n_points;
+                  size=0; // TODO: check if sol.point_type is a list or range, and handle appropriately
                   if(size==0)
                     {
                       switch(sol.location)
@@ -216,7 +219,7 @@ namespace netgen::cg
                               size = nv;
                               break;
                           case CellCenter:
-                              size = ne;
+                              size = (meshdim == 3 ? ne_3d : ne_2d);
                               break;
                           case FaceCenter:
                           case IFaceCenter:
@@ -228,7 +231,6 @@ namespace netgen::cg
                         }
                     }
 
-                  size = size==0 ? nv : size;
                   auto values = Array<double>(size);
 
                   cgsize_t imin = 1UL;
@@ -244,9 +246,9 @@ namespace netgen::cg
         {
           static Timer tall("CGNS::ReadMesh-Zone"); RegionTimer rtall(tall);
           static Timer tsection("CGNS::ReadMesh-Section");
-          first_mat = mesh.GetRegionNamesCD(0).Size();
-          first_bc = mesh.GetRegionNamesCD(1).Size();
-          ne = 0;
+          first_index_1d = mesh.GetRegionNamesCD(2).Size();
+          first_index_2d = mesh.GetRegionNamesCD(1).Size();
+          first_index_3d = mesh.GetRegionNamesCD(0).Size();
 
           Array<double> x(nv), y(nv), z(nv);
           cgsize_t imin=1;
@@ -276,8 +278,10 @@ namespace netgen::cg
           int nsections;
           cg_nsections(fn, base, zone, &nsections);
 
-          int bc = first_bc;
-          int material = first_mat;
+          int index_1d = first_index_1d;
+          int index_2d = first_index_2d;
+          int index_3d = first_index_3d;
+
           for (auto section : Range(1,nsections+1))
             {
               RegionTimer rtsection(tsection);
@@ -288,8 +292,6 @@ namespace netgen::cg
 
               cg_section_read(fn, base, zone, section, sec_name,  &type, &start, &end, &nbndry, &parent_flag);
               PrintMessage(4, "Read section ", section, " with name ", sec_name, " and element type ", cg_ElementTypeName(type));
-              if(name == "Coil" && string(sec_name) == "Top")
-                continue;
 
               string ngname{sec_name};
 
@@ -300,6 +302,7 @@ namespace netgen::cg
 
               if(type==MIXED)
                 {
+                  bool have_1d_elements = false;
                   bool have_2d_elements = false;
                   bool have_3d_elements = false;
 
@@ -327,40 +330,50 @@ namespace netgen::cg
 
                       if(dim==1)
                         {
+                          if(!have_1d_elements)
+                          {
+                            index_1d++;
+                            have_1d_elements = true;
+                            mesh.AddEdgeDescriptor(EdgeDescriptor{});
+                            names_1d.Append(ngname);
+                          }
                           auto el = ReadCGNSElement1D(type, vertices.Range(vi, vertices.Size()));
+                          el.si = index_1d;
                           mesh.AddSegment(el);
                           vi += el.GetNP();
+                          ne_1d++;
                         }
 
                       if(dim==2)
                         {
                           if(!have_2d_elements)
                           {
-                            bc++;
+                            index_2d++;
                             have_2d_elements = true;
-                            mesh.AddFaceDescriptor(FaceDescriptor(bc, 1, 0, 1));
-                            mesh.SetBCName(bc-1, ngname);
+                            mesh.AddFaceDescriptor(FaceDescriptor(index_2d, 1, 0, 1));
+                            names_2d.Append(ngname);
                           }
                           auto el = ReadCGNSElement2D(type, vertices.Range(vi, vertices.Size()));
-                          el.SetIndex(bc);
+                          el.SetIndex(index_2d);
                           mesh.AddSurfaceElement(el);
                           vi += el.GetNP();
+                          ne_2d++;
                         }
 
                       if(dim==3)
                         {
                           if(!have_3d_elements)
                           {
-                            material++;
+                            index_3d++;
                             have_3d_elements = true;
-                            mesh.SetMaterial(material, ngname);
+                            names_3d.Append(ngname);
                           }
 
                           auto el = ReadCGNSElement3D(type, vertices.Range(vi, vertices.Size()));
-                          el.SetIndex(material);
+                          el.SetIndex(index_3d);
                           mesh.AddVolumeElement(el);
                           vi += el.GetNP();
-                          ne++;
+                          ne_3d++;
                         }
                     }
                 }
@@ -381,48 +394,78 @@ namespace netgen::cg
 
                   if(dim==1)
                     {
+                      index_1d++;
+                      mesh.AddEdgeDescriptor(EdgeDescriptor{});
+                      names_1d.Append(ngname);
                       for(auto i : Range(ne_section))
                         {
                           auto el = ReadCGNSElement1D(type, vertices.Range(np*i, np*(i+1)));
+                          el.si = index_1d;
                           mesh.AddSegment(el);
                         }
+                      ne_1d += ne_section;
                     }
 
                   if(dim==2)
                     {
-                      bc++;
-                      mesh.AddFaceDescriptor(FaceDescriptor(bc, 1, 0, 1));
+                      index_2d++;
+                      mesh.AddFaceDescriptor(FaceDescriptor(index_2d, 1, 0, 1));
+                      names_2d.Append(ngname);
                       for(auto i : Range(ne_section))
                         {
                           auto el = ReadCGNSElement2D(type, vertices.Range(np*i, np*(i+1)));
-                          el.SetIndex(bc);
+                          el.SetIndex(index_2d);
                           mesh.AddSurfaceElement(el);
                         }
-                      mesh.SetBCName(bc-1, ngname);
+                      ne_2d += ne_section;
                     }
 
                   if(dim==3)
                     {
-                      material++;
+                      index_3d++;
+                      names_3d.Append(ngname);
                       for(auto i : Range(ne_section))
                         {
                           auto el = ReadCGNSElement3D(type, vertices.Range(np*i, np*(i+1)));
-                          el.SetIndex(material);
+                          el.SetIndex(index_3d);
                           mesh.AddVolumeElement(el);
                         }
-                      mesh.SetMaterial(material, ngname);
-                      ne += ne_section;
+                      ne_3d += ne_section;
                     }
                 }
             }
+        }
+
+      void SetNames( Mesh & mesh )
+        {
+          if(mesh.GetDimension() == 2)
+          {
+            for (auto i : Range(names_1d.Size()))
+              mesh.SetBCName(first_index_1d + i, names_1d[i]);
+
+            for (auto i : Range(names_2d.Size()))
+              mesh.SetMaterial(first_index_2d + i +1, names_2d[i]);
+          }
+          else
+          {
+            for (auto i : Range(names_1d.Size()))
+              mesh.SetCD2Name(first_index_1d + i +1, names_1d[i]);
+
+            for (auto i : Range(names_2d.Size()))
+              mesh.SetBCName(first_index_2d + i, names_2d[i]);
+
+            for (auto i : Range(names_3d.Size()))
+              mesh.SetMaterial(first_index_3d + i +1, names_3d[i]);
+          }
         }
     };
 }
 
 namespace netgen
 {
-  void ReadCGNSMesh (Mesh & mesh, const string & filename)
+  int ReadCGNSMesh (Mesh & mesh, const string & filename, Array<unique_ptr<cg::Zone>> & zones)
     {
+      mesh.SetDimension(3);
       static Timer tall("CGNS::ReadMesh"); RegionTimer rtall(tall);
       int fn;
       cg_open(filename.c_str(),CG_MODE_READ,&fn);
@@ -430,9 +473,6 @@ namespace netgen
       int base = 1;
       int nzones;
       cg_nzones(fn, base, &nzones);
-
-      int bc = 0;
-      int material = 0;
 
       int n_vertices = 0;
       for (auto zi : Range(1, nzones+1))
@@ -454,58 +494,41 @@ namespace netgen
               PrintMessage(2, "skipping zone with type ", cg_ZoneTypeName(zone_type) );
               continue;
             }
-          cg::Zone zone(fn, base, zi);
-          zone.ReadMesh( mesh, points );
+          auto zone = make_unique<cg::Zone>(fn, base, zi);
+          zone->ReadMesh( mesh, points );
+          zones.Append(std::move(zone));
         }
+
+      if(mesh.GetNE() == 0)
+        mesh.SetDimension(2);
+
+      for (auto & zone : zones)
+        zone->SetNames(mesh);
+      return fn;
+    }
+
+  void ReadCGNSMesh (Mesh & mesh, const string & filename)
+    {
+      Array<unique_ptr<cg::Zone>> zones;
+      int fn = ReadCGNSMesh(mesh, filename, zones);
+      cg_close(fn);
     }
 
   // Reads mesh and solutions of .csns file
   tuple<shared_ptr<Mesh>, vector<string>, vector<Array<double>>, vector<int>> ReadCGNSFile(string filename, int base)
     {
       static Timer tall("CGNS::ReadFile"); RegionTimer rtall(tall);
-      int fn;
-      cg_open(filename.c_str(),CG_MODE_READ,&fn);
-
-      int nbases;
-      cg_nbases(fn, &nbases);
-
-      int nzones;
-      cg_nzones(fn, base, &nzones);
 
       auto mesh = make_shared<Mesh>();
-
-      int bc = 0;
-      int material = 0;
-
+      Array<unique_ptr<cg::Zone>> zones;
+      int fn = ReadCGNSMesh(*mesh, filename, zones);
 
       std::vector<string> names;
       std::vector<Array<double>> values;
       std::vector<int> locations;
 
-      int n_vertices = 0;
-      for (auto zi : Range(1, nzones+1))
-      {
-        int size[3];
-        char name[100];
-        cg_zone_read(fn,base,zi, name, size);
-        n_vertices += size[0];
-      }
-
-      cg::PointTable points(2*n_vertices);
-
-      for (auto zi : Range(1, nzones+1))
-        {
-          ZoneType_t zone_type;
-          cg_zone_type(fn, base, zi, &zone_type);
-          if(zone_type != Unstructured )
-            {
-              clog << "skipping zone with type " << cg_ZoneTypeName(zone_type) << endl;
-              continue;
-            }
-          cg::Zone zone(fn, base, zi);
-          zone.ReadMesh( *mesh, points );
-          zone.ReadSolutions( names, values, locations );
-        }
+      for (auto & zone : zones)
+        zone->ReadSolutions( mesh->GetDimension(), names, values, locations );
 
       cg_close(fn);
       return std::make_tuple(mesh, names, values, locations);
