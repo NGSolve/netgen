@@ -217,9 +217,12 @@ static void ngcore_signal_handler(int sig)
 // register signal handler when library is loaded
 static bool dummy = []()
 {
-    signal(SIGABRT, ngcore_signal_handler);
-    signal(SIGILL, ngcore_signal_handler);
-    signal(SIGSEGV, ngcore_signal_handler);
+    if(getenv("NG_BACKTRACE"))
+    {
+      signal(SIGABRT, ngcore_signal_handler);
+      signal(SIGILL, ngcore_signal_handler);
+      signal(SIGSEGV, ngcore_signal_handler);
+    }
     return true;
 }();
 
