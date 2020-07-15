@@ -2015,6 +2015,8 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
         }
     }
 
+  bool have_bad_element = false;
+
   for (ElementIndex ei : hasbothpoints)
     {
       if (mesh[ei].GetType () != TET)
@@ -2037,9 +2039,12 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
 
       if ((goal == OPT_LEGAL) &&
               mesh.LegalTet (mesh[ei]) &&
-              CalcBad (mesh.Points(), mesh[ei], 0) < 1e3)
-          return 0.0;
+              CalcBad (mesh.Points(), mesh[ei], 0) >= 1e3)
+          have_bad_element = true;
     }
+
+  if ((goal == OPT_LEGAL) && !have_bad_element)
+    return 0.0;
 
   int nsuround = hasbothpoints.Size();
   int mattyp = mesh[hasbothpoints[0]].GetIndex();
