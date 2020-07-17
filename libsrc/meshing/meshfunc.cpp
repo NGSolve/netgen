@@ -683,7 +683,7 @@ namespace netgen
 	    switch (mp.optimize3d[j])
 	      {
 	      case 'c': optmesh.CombineImprove(mesh3d, OPT_REST); break;
-	      case 'd': optmesh.SplitImprove(mesh3d); break;
+	      case 'd': optmesh.SplitImprove(mesh3d); optmesh.SplitImprove2(mesh3d, OPT_QUALITY); break;
 	      case 's': optmesh.SwapImprove(mesh3d); break;
                 // case 'u': optmesh.SwapImproveSurface(mesh3d); break;
 	      case 't': optmesh.SwapImprove2(mesh3d); break;

@@ -3902,6 +3902,225 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
   (*testout) << "swapimprove2 done" << "\n";
 }
 
+// Split two opposite edges of very flat tet and let all 4 new segments have one common vertex
+// Imagine a square with 2 diagonals -> new point where diagonals cross, remove the flat tet
+void MeshOptimize3d :: SplitImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
+{
+  double bad1 = mesh.CalcTotalBad (mp);
+  cout << "Total badness before splitimprove2= " << bad1 << endl;
+//   cout << "SplitImprove2" << endl;
+  int ne = mesh.GetNE();
+  auto elements_of_point = mesh.CreatePoint2ElementTable();
+
+  Array<double> el_badness (ne);
+
+  ParallelForRange(Range(ne), [&] (auto myrange)
+  {
+    for (ElementIndex ei : myrange)
+    {
+      if(mp.only3D_domain_nr && mp.only3D_domain_nr != mesh[ei].GetIndex())
+	continue;
+      el_badness[ei] = CalcBad (mesh.Points(), mesh[ei], 0);
+    }
+  });
+
+  mesh.BoundaryEdge (1,2); // ensure the boundary-elements table is built
+
+//   cout << "badness : " << endl << el_badness << endl;
+
+  // TODO: Parallelization
+  for (ElementIndex ei : Range(ne) )
+  {
+    auto & el = mesh[ei];
+    if(el.GetNP() != 4)
+      continue;
+
+    // Optimize only bad elements
+//     if(el_badness[ei] < 10000)
+//       continue;
+
+//     cout << "element " << ei << '\t' << '\t' << el[0] << ',' << el[1] << ',' << el[2] << ',' << el[3] << endl;
+
+    // search for very flat tets, with two disjoint edges nearly crossing, like a rectangle with diagonals
+    static constexpr int tetedges[6][2] =
+    { { 0, 1 }, { 0, 2 }, { 0, 3 },
+      { 1, 2 }, { 1, 3 }, { 2, 3 } };
+
+    int minedge = -1;
+    double mindist = 1e99;
+
+    for (int i : Range(3))
+    {
+      auto pi0 = el[tetedges[i][0]];
+      auto pi1 = el[tetedges[i][1]];
+      auto pi2 = el[tetedges[5-i][0]];
+      auto pi3 = el[tetedges[5-i][1]];
+
+// 
+//       Point3d p0 = mesh[pi0];
+//       Point3d p1 = mesh[pi1];
+//       Point3d p2 = mesh[pi2];
+//       Point3d p3 = mesh[pi3];
+
+      double dist = MinDistLL2(mesh[pi0], mesh[pi1], mesh[pi2], mesh[pi3]);
+      if(dist<mindist)
+      {
+        mindist = dist;
+        minedge = i;
+      }
+    }
+
+    if(minedge==-1)
+      continue;
+
+    auto pi0 = el[tetedges[minedge][0]];
+    auto pi1 = el[tetedges[minedge][1]];
+    auto pi2 = el[tetedges[5-minedge][0]];
+    auto pi3 = el[tetedges[5-minedge][1]];
+//     cout << "\tpoints " << '\t' << pi0 << ',' << pi1 << ',' << pi2 << ',' << pi3 << endl;
+
+    // we cannot split edges on the boundary
+    if(mesh.BoundaryEdge (pi0,pi1) || mesh.BoundaryEdge(pi2, pi3))
+    {
+//       cout << "skip element " << ei << " (boundaryedge), " << el_badness[ei] << ',' << mindist << ',' << minedge << endl;
+      continue;
+    }
+
+    ArrayMem<ElementIndex, 50> has_one_point0;
+    ArrayMem<ElementIndex, 50> has_one_point1;
+    ArrayMem<ElementIndex, 50> has_both_points0;
+    ArrayMem<ElementIndex, 50> has_both_points1;
+
+    Point3d p[4] = { mesh[el[0]], mesh[el[1]], mesh[el[2]], mesh[el[3]] };
+    auto center = Center(p[0], p[1], p[2], p[3]);
+    PointIndex pinew = mesh.AddPoint (center);
+    MeshPoint pnew = mesh[pinew];
+//     cout << "check el " << ei << endl;
+
+    bool valid = true;
+    // find all tets with edge (pi0,pi1) or (pi2,pi3)
+    for (auto ei0 : elements_of_point[pi0] )
+    {
+      Element & elem = mesh[ei0];
+      if (elem.IsDeleted()) valid = false;
+      if (ei0 == ei) continue;
+      if(mesh[ei0].GetNP()!=4)
+        valid = false;
+
+      if (elem[0] == pi1 || elem[1] == pi1 || elem[2] == pi1 || elem[3] == pi1)
+      {
+        if(!has_both_points0.Contains(ei0))
+          has_both_points0.Append (ei0);
+      }
+      else
+      {
+        if(!has_one_point0.Contains(ei0))
+          has_one_point0.Append (ei0);
+      }
+    }
+    for (auto ei1 : elements_of_point[pi2] )
+    {
+//       cout << ei1 << ',';
+      Element & elem = mesh[ei1];
+      if (elem.IsDeleted()) valid = false;
+      if (ei1 == ei) continue;
+      if(mesh[ei1].GetNP()!=4)
+        valid = false;
+
+      if (elem[0] == pi3 || elem[1] == pi3 || elem[2] == pi3 || elem[3] == pi3)
+      {
+        if(mesh[ei1].GetNP()!=4)
+          valid = false;
+        if(!has_both_points1.Contains(ei1))
+          has_both_points1.Append (ei1);
+      }
+      else
+      {
+        if(!has_one_point1.Contains(ei1))
+          has_one_point1.Append (ei1);
+      }
+    }
+    if(!valid) continue;
+//     cout << endl;
+// 
+//     cout << "both0 " << endl << has_both_points0 << endl;
+//     cout << "both1 " << endl << has_both_points0 << endl;
+    double badness_before = el_badness[ei];
+
+    double badness_after = 0.0;
+    PointIndex dummy{-1};
+    for (auto ei0 : has_both_points0)
+    {
+      badness_before += el_badness[ei0];
+      badness_after += CalcBadReplacePoints (mesh.Points(), mp, mesh[ei0], 0, pi1, dummy, pnew);
+      badness_after += CalcBadReplacePoints (mesh.Points(), mp, mesh[ei0], 0, pi0, dummy, pnew);
+    }
+    for (auto ei1 : has_both_points1)
+    {
+      badness_before += el_badness[ei1];
+      badness_after += CalcBadReplacePoints (mesh.Points(), mp, mesh[ei1], 0, pi3, dummy, pnew);
+      badness_after += CalcBadReplacePoints (mesh.Points(), mp, mesh[ei1], 0, pi2, dummy, pnew);
+    }
+    if(badness_after<badness_before)
+    {
+      el.flags.illegal_valid = 0;
+      el.Delete();
+//       cout << "badness " << badness_after << " better than " << badness_before << endl;
+//       cout << "delete element " << ei << ':' << pi0 << ',' << pi1 << ',' << pi2 << ',' << pi3 << ',' << pinew << endl;
+//       cout << "Improve element " << ei << '\t' << badness_before << '\t' << badness_after << '\t' << pi0 << ',' << pi1 << ',' << pi2 << ',' << pi3 << endl;
+      for (auto ei1 : has_both_points0)
+      {
+        auto & oldel = mesh[ei1];
+        Element newel1 = oldel;
+        Element newel2 = oldel;
+        oldel.flags.illegal_valid = 0;
+        oldel.Delete();
+        newel1.flags.illegal_valid = 0;
+        newel2.flags.illegal_valid = 0;
+        for (int i : Range(4))
+        {
+          if(newel1[i] == pi0) newel1[i] = pinew;
+          if(newel2[i] == pi1) newel2[i] = pinew;
+        }
+        if (!mesh.LegalTet (newel1)) cout << "newel1 illegal tet" << endl;
+        mesh.AddVolumeElement (newel1);
+        if (!mesh.LegalTet (newel2)) cout << "newel2 illegal tet" << endl;
+        mesh.AddVolumeElement (newel2);
+//         cout << "del element " << ei1 << ':' << oldel[0] << ',' << oldel[1] << ',' << oldel[2] << ',' << oldel[3] << endl;
+//         cout << "add element " << newel1[0] << ',' << newel1[1] << ',' << newel1[2] << ',' << newel1[3] << endl;
+//         cout << "add element " << newel2[0] << ',' << newel2[1] << ',' << newel2[2] << ',' << newel2[3] << endl;
+      }
+      for (auto ei1 : has_both_points1)
+      {
+        auto & oldel = mesh[ei1];
+        Element newel1 = oldel;
+        Element newel2 = oldel;
+        oldel.flags.illegal_valid = 0;
+        oldel.Delete();
+        newel1.flags.illegal_valid = 0;
+        newel2.flags.illegal_valid = 0;
+        for (int i : Range(4))
+        {
+          if(newel1[i] == pi2) newel1[i] = pinew;
+          if(newel2[i] == pi3) newel2[i] = pinew;
+        }
+//         cout << "del element " << ei1 << ':' << oldel[0] << ',' << oldel[1] << ',' << oldel[2] << ',' << oldel[3] << endl;
+//         cout << "add element " << newel1[0] << ',' << newel1[1] << ',' << newel1[2] << ',' << newel1[3] << endl;
+//         cout << "add element " << newel2[0] << ',' << newel2[1] << ',' << newel2[2] << ',' << newel2[3] << endl;
+        if (!mesh.LegalTet (newel1)) cout << "newel1 illegal tet" << endl;
+        mesh.AddVolumeElement (newel1);
+        if (!mesh.LegalTet (newel2)) cout << "newel2 illegal tet" << endl;
+        mesh.AddVolumeElement (newel2);
+      }
+    }
+  }
+  MeshTopology mt(mesh);
+  mt.Update();
+  mesh.Compress();
+  bad1 = mesh.CalcTotalBad (mp);
+  cout << "Total badness after splitimprove2= " << bad1 << endl;
+}
+
 
 /*
   void Mesh :: SwapImprove2 (OPTIMIZEGOAL goal)
