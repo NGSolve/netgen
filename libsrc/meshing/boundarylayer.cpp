@@ -238,24 +238,24 @@ namespace netgen
               }
 
           // project growthvector on surface for inner angles
-          for(const auto& sel : mesh.SurfaceElements())
-            if(!blp.surfid.Contains(sel.GetIndex()))
-              {
-                auto n = GetSurfaceNormal(mesh, sel);
-                for(auto pi : sel.PNums())
-                  {
-                    if(growthvectors[pi].Length2() == 0.)
-                      continue;
-                    auto& g = growthvectors[pi];
-                    auto ng = n * g;
-                    auto gg = g * g;
-                    auto nn = n * n;
-                    if(fabs(ng*ng-nn*gg) < 1e-12 || fabs(ng) < 1e-12) continue;
-                    auto a = -ng*ng/(ng*ng-nn * gg);
-                    auto b = ng*gg/(ng*ng-nn*gg);
-                    g += a*g + b*n;
-                  }
-              }
+          // for(const auto& sel : mesh.SurfaceElements())
+          //   if(!blp.surfid.Contains(sel.GetIndex()))
+          //     {
+          //       auto n = GetSurfaceNormal(mesh, sel);
+          //       for(auto pi : sel.PNums())
+          //         {
+          //           if(growthvectors[pi].Length2() == 0.)
+          //             continue;
+          //           auto& g = growthvectors[pi];
+          //           auto ng = n * g;
+          //           auto gg = g * g;
+          //           auto nn = n * n;
+          //           if(fabs(ng*ng-nn*gg) < 1e-12 || fabs(ng) < 1e-12) continue;
+          //           auto a = -ng*ng/(ng*ng-nn * gg);
+          //           auto b = ng*gg/(ng*ng-nn*gg);
+          //           g += a*g + b*n;
+          //         }
+          //     }
 
           if (!blp.grow_edges)
             {
