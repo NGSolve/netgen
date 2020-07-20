@@ -3920,12 +3920,7 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
     {
       if(mp.only3D_domain_nr && mp.only3D_domain_nr != mesh[ei].GetIndex())
 	continue;
-//       el_badness[ei] = CalcBad (mesh.Points(), mesh[ei], 0);
-      const auto & el = mesh[ei];
-      if(el.GetNP()==4)
-        el_badness[ei] = CalcTetBadness (mesh[el[0]], mesh[el[1]], mesh[el[2]], mesh[el[3]], 0, mp);
-      else
-        el_badness[ei] = 0.0;
+      el_badness[ei] = CalcBad (mesh.Points(), mesh[ei], 0);
     }
   });
 
@@ -3953,6 +3948,7 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 
     int minedge = -1;
     double mindist = 1e99;
+    double minlam0, minlam1;
 
     for (int i : Range(3))
     {
@@ -3967,11 +3963,14 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 //       Point3d p2 = mesh[pi2];
 //       Point3d p3 = mesh[pi3];
 
-      double dist = MinDistLL2(mesh[pi0], mesh[pi1], mesh[pi2], mesh[pi3]);
+      double lam0, lam1;
+      double dist = MinDistLL2(mesh[pi0], mesh[pi1], mesh[pi2], mesh[pi3], lam0, lam1 );
       if(dist<mindist)
       {
         mindist = dist;
         minedge = i;
+        minlam0 = lam0;
+        minlam1 = lam1;
       }
     }
 
@@ -3995,7 +3994,7 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
     ArrayMem<ElementIndex, 50> has_both_points1;
 
     Point3d p[4] = { mesh[el[0]], mesh[el[1]], mesh[el[2]], mesh[el[3]] };
-    auto center = Center(p[0], p[1], p[2], p[3]);
+    auto center = Center(p[0]+minlam0*(p[1]-p[0]), p[2]+minlam1*(p[3]-p[2]));
     MeshPoint pnew;
 
     pnew(0) = center.X();
@@ -4074,13 +4073,8 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
           if(newel1[i] == pi0) newel1[i] = pinew;
           if(newel2[i] == pi1) newel2[i] = pinew;
         }
-        if (!mesh.LegalTet (newel1)) cout << "newel1 illegal tet" << endl;
         mesh.AddVolumeElement (newel1);
-        if (!mesh.LegalTet (newel2)) cout << "newel2 illegal tet" << endl;
         mesh.AddVolumeElement (newel2);
-//         cout << "del element " << ei1 << ':' << oldel[0] << ',' << oldel[1] << ',' << oldel[2] << ',' << oldel[3] << endl;
-//         cout << "add element " << newel1[0] << ',' << newel1[1] << ',' << newel1[2] << ',' << newel1[3] << endl;
-//         cout << "add element " << newel2[0] << ',' << newel2[1] << ',' << newel2[2] << ',' << newel2[3] << endl;
       }
       for (auto ei1 : has_both_points1)
       {
@@ -4096,18 +4090,11 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
           if(newel1[i] == pi2) newel1[i] = pinew;
           if(newel2[i] == pi3) newel2[i] = pinew;
         }
-//         cout << "del element " << ei1 << ':' << oldel[0] << ',' << oldel[1] << ',' << oldel[2] << ',' << oldel[3] << endl;
-//         cout << "add element " << newel1[0] << ',' << newel1[1] << ',' << newel1[2] << ',' << newel1[3] << endl;
-//         cout << "add element " << newel2[0] << ',' << newel2[1] << ',' << newel2[2] << ',' << newel2[3] << endl;
-        if (!mesh.LegalTet (newel1)) cout << "newel1 illegal tet" << endl;
         mesh.AddVolumeElement (newel1);
-        if (!mesh.LegalTet (newel2)) cout << "newel2 illegal tet" << endl;
         mesh.AddVolumeElement (newel2);
       }
     }
   }
-  MeshTopology mt(mesh);
-  mt.Update();
   mesh.Compress();
   bad1 = mesh.CalcTotalBad (mp);
   cout << "Total badness after splitimprove2= " << bad1 << endl;

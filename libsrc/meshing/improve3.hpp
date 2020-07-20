@@ -50,6 +50,14 @@ public:
     return 0;
   }
 
+  double 
+  CalcBadPow (const Mesh::T_POINTS & points, const Element & elem, double h)
+  {
+    if (elem.GetType() == TET)
+      return pow (max2(CalcTetBadness (points[elem[0]], points[elem[1]],  
+			     points[elem[2]], points[elem[3]], h, mp), 1e-10) , 1.0/mp.opterrpow);
+    return 0;
+  }
 
   double CalcTotalBad (const Mesh::T_POINTS & points, 
 		       const Array<Element> & elements)

@@ -1035,6 +1035,39 @@ double MinDistLP2 (const Point3d & lp1, const Point3d & lp2, const Point3d & p)
 }
 
 
+double MinDistLP2 (const Point3d & lp1, const Point3d & lp2, const Point3d & p, double & lam)
+{
+  Vec3d v(lp1, lp2);
+  Vec3d vlp(lp1, p);
+
+  // dist(lam) = \| vlp \|^2 - 2 lam (v1p, v) + lam^2 \| v \|^2
+
+  // lam = (v * vlp) / (v * v);
+  // if (lam < 0) lam = 0;
+  // if (lam > 1) lam = 1;
+
+  double num = v*vlp;
+  double den = v*v;
+
+  if (num <= 0) 
+  {
+    lam = 0.0;
+    return Dist2 (lp1, p);
+  }
+
+  if (num >= den) 
+  {
+    lam = 1.0;
+    return Dist2 (lp2, p);
+  }
+  
+  lam = num/den;
+  if (den > 0)
+      return vlp.Length2() - num * num /den;
+  else
+    return vlp.Length2();
+}
+
 
 double MinDistTP2 (const Point3d & tp1, const Point3d & tp2, 
 		   const Point3d & tp3, const Point3d & p)
@@ -1102,7 +1135,7 @@ double MinDistTP2 (const Point3d & tp1, const Point3d & tp2,
 
 // 0 checks !!!
 double MinDistLL2 (const Point3d & l1p1, const Point3d & l1p2,
-		  const Point3d & l2p1, const Point3d & l2p2)
+		  const Point3d & l2p1, const Point3d & l2p2, double & lam1, double & lam2 )
 {
   // dist(lam1,lam2) = \| l2p1+lam2v2 - (l1p1+lam1 v1) \|
   // min !
@@ -1112,7 +1145,7 @@ double MinDistLL2 (const Point3d & l1p1, const Point3d & l1p2,
   Vec3d v2 (l2p1, l2p2);
 
   double a11, a12, a22, rs1, rs2;
-  double lam1, lam2, det;
+  double det;
 
   a11 = v1*v1;
   a12 = -(v1*v2);
@@ -1138,14 +1171,27 @@ double MinDistLL2 (const Point3d & l1p1, const Point3d & l1p2,
     }
 
   double minv, hv;
-  minv = MinDistLP2 (l1p1, l1p2, l2p1);
-  hv =  MinDistLP2 (l1p1, l1p2, l2p2);
-  if (hv < minv) minv = hv;
+  minv = MinDistLP2 (l1p1, l1p2, l2p1, lam1);
+  lam2 = 0.;
+  hv =  MinDistLP2 (l1p1, l1p2, l2p2, lam1);
+  if (hv < minv)
+  {
+    lam2 = 1.;
+    minv = hv;
+  }
 
-  hv =  MinDistLP2 (l2p1, l2p2, l1p1);
-  if (hv < minv) minv = hv;
-  hv =  MinDistLP2 (l2p1, l2p2, l1p2);
-  if (hv < minv) minv = hv;
+  hv =  MinDistLP2 (l2p1, l2p2, l1p1, lam2);
+  if (hv < minv)
+  {
+    lam1 = 0.;
+    minv = hv;
+  }
+  hv =  MinDistLP2 (l2p1, l2p2, l1p2, lam2);
+  if (hv < minv)
+  {
+    lam1 = 1.;
+    minv = hv;
+  }
 
   return minv;
 }

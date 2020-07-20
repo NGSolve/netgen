@@ -3620,8 +3620,6 @@ namespace netgen
     //  FindOpenElements();
     timestamp = NextTimeStamp();
     lock.UnLock();
-    FindOpenElements();
-    CheckVolumeMesh ();
   }
 
   void Mesh :: OrderElements()
