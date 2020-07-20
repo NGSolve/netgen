@@ -3920,7 +3920,12 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
     {
       if(mp.only3D_domain_nr && mp.only3D_domain_nr != mesh[ei].GetIndex())
 	continue;
-      el_badness[ei] = CalcBad (mesh.Points(), mesh[ei], 0);
+//       el_badness[ei] = CalcBad (mesh.Points(), mesh[ei], 0);
+      const auto & el = mesh[ei];
+      if(el.GetNP()==4)
+        el_badness[ei] = CalcTetBadness (mesh[el[0]], mesh[el[1]], mesh[el[2]], mesh[el[3]], 0, mp);
+      else
+        el_badness[ei] = 0.0;
     }
   });
 
@@ -3986,15 +3991,16 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
       continue;
     }
 
-    ArrayMem<ElementIndex, 50> has_one_point0;
-    ArrayMem<ElementIndex, 50> has_one_point1;
     ArrayMem<ElementIndex, 50> has_both_points0;
     ArrayMem<ElementIndex, 50> has_both_points1;
 
     Point3d p[4] = { mesh[el[0]], mesh[el[1]], mesh[el[2]], mesh[el[3]] };
     auto center = Center(p[0], p[1], p[2], p[3]);
-    PointIndex pinew = mesh.AddPoint (center);
-    MeshPoint pnew = mesh[pinew];
+    MeshPoint pnew;
+
+    pnew(0) = center.X();
+    pnew(1) = center.Y();
+    pnew(2) = center.Z();
 //     cout << "check el " << ei << endl;
 
     bool valid = true;
@@ -4008,16 +4014,10 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
         valid = false;
 
       if (elem[0] == pi1 || elem[1] == pi1 || elem[2] == pi1 || elem[3] == pi1)
-      {
         if(!has_both_points0.Contains(ei0))
           has_both_points0.Append (ei0);
-      }
-      else
-      {
-        if(!has_one_point0.Contains(ei0))
-          has_one_point0.Append (ei0);
-      }
     }
+
     for (auto ei1 : elements_of_point[pi2] )
     {
 //       cout << ei1 << ',';
@@ -4028,17 +4028,8 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
         valid = false;
 
       if (elem[0] == pi3 || elem[1] == pi3 || elem[2] == pi3 || elem[3] == pi3)
-      {
-        if(mesh[ei1].GetNP()!=4)
-          valid = false;
         if(!has_both_points1.Contains(ei1))
           has_both_points1.Append (ei1);
-      }
-      else
-      {
-        if(!has_one_point1.Contains(ei1))
-          has_one_point1.Append (ei1);
-      }
     }
     if(!valid) continue;
 //     cout << endl;
@@ -4063,6 +4054,7 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
     }
     if(badness_after<badness_before)
     {
+      PointIndex pinew = mesh.AddPoint (center);
       el.flags.illegal_valid = 0;
       el.Delete();
 //       cout << "badness " << badness_after << " better than " << badness_before << endl;
