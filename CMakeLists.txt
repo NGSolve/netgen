@@ -79,7 +79,6 @@ endif()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include (${CMAKE_CURRENT_LIST_DIR}/cmake/generate_version_file.cmake)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/netgen_version.hpp DESTINATION ${NG_INSTALL_DIR_INCLUDE}/include COMPONENT netgen_devel)
 set(CPACK_PACKAGE_VERSION "${NETGEN_VERSION}")
 
 
@@ -404,6 +403,8 @@ if(USE_CGNS)
         target_link_libraries(netgen_cgns INTERFACE ${HDF5_LIBRARY})
     endif(NOT WIN32 AND NOT APPLE)
 endif(USE_CGNS)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/netgen_version.hpp DESTINATION ${NG_INSTALL_DIR_INCLUDE}/include COMPONENT netgen_devel)
 
 add_subdirectory(libsrc)
 add_subdirectory(ng)
