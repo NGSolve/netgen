@@ -4000,8 +4000,8 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
       continue;
 
     // Optimize only bad elements
-//     if(el_badness[ei] < 100)
-//       continue;
+    if(el_badness[ei] < 100)
+      continue;
 
     // search for very flat tets, with two disjoint edges nearly crossing, like a rectangle with diagonals
     static constexpr int tetedges[6][2] =
