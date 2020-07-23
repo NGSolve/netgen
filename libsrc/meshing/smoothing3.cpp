@@ -339,9 +339,9 @@ namespace netgen
   {
     static Timer tim("PointFunction - build elementsonpoint table"); RegionTimer reg(tim);
     for (int i = 0; i < elements.Size(); i++)
-      if (elements[i].NP() == 4)
-        for (int j = 0; j < elements[i].NP(); j++)
-          elementsonpoint.Add (elements[i][j], i);  
+      if (!elements[i].IsDeleted())
+        for (int j = 0; j < elements[i].GetNP(); j++)
+          elementsonpoint.Add (elements[i][j], i);
   }
 
   void PointFunction :: SetPointIndex (PointIndex aactpind)
@@ -362,8 +362,7 @@ namespace netgen
     for (int j = 0; j < elementsonpoint[actpind].Size(); j++)
       {
         const Element & el = elements[elementsonpoint[actpind][j]];
-	badness += CalcTetBadness (points[el[0]], points[el[1]], 
-				   points[el[2]], points[el[3]], -1, mp);
+        badness += CalcBad(points, el, -1, mp);
       }
   
     points[actpind] = Point<3> (hp); 
@@ -391,6 +390,19 @@ namespace netgen
 
               vgrad += vgradi;
 	    }
+        if(el.GetType()==PYRAMID)
+        {
+          f += CalcTetBadnessGrad (points[el[0]],
+              points[el[1]],
+              points[el[2]],
+              points[el[4]], -1, 4, vgradi, mp);
+          vgrad += vgradi;
+          f += CalcTetBadnessGrad (points[el[2]],
+              points[el[3]],
+              points[el[0]],
+              points[el[4]], -1, 4, vgradi, mp);
+          vgrad += vgradi;
+        }
       }
 
     points[actpind] = Point<3> (hp); 
@@ -423,6 +435,20 @@ namespace netgen
 
 	      vgrad += vgradi;
 	    }
+
+        if(el.GetType()==PYRAMID)
+        {
+          f += CalcTetBadnessGrad (points[el[0]],
+              points[el[1]],
+              points[el[2]],
+              points[el[4]], -1, 4, vgradi, mp);
+          vgrad += vgradi;
+          f += CalcTetBadnessGrad (points[el[2]],
+              points[el[3]],
+              points[el[0]],
+              points[el[4]], -1, 4, vgradi, mp);
+          vgrad += vgradi;
+        }
       }
 
     points[actpind] = Point<3> (hp); 
