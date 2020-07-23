@@ -36,7 +36,17 @@ endif()
 set(NETGEN_VERSION_LONG ${NETGEN_VERSION_SHORT}-${NETGEN_VERSION_TWEAK}-${NETGEN_VERSION_HASH})
 
 set(version_file ${BDIR}/netgen_version.hpp)
-set(new_version_file_string "#define NETGEN_VERSION \"${NETGEN_VERSION}\"\n")
+set(new_version_file_string "\
+#ifndef NETGEN_VERSION_HPP_INCLUDED
+#define NETGEN_VERSION_HPP_INCLUDED
+#define NETGEN_VERSION \"${NETGEN_VERSION}\"
+#define NETGEN_VERSION_MAJOR ${NETGEN_VERSION_MAJOR}
+#define NETGEN_VERSION_MINOR ${NETGEN_VERSION_MINOR}
+#define NETGEN_VERSION_PATCH ${NETGEN_VERSION_PATCH}
+#define NETGEN_VERSION_TWEAK ${NETGEN_VERSION_TWEAK}
+#define NETGEN_VERSION_HASH \"${NETGEN_VERSION_HASH}\"
+#endif // NETGEN_VERSION_HPP_INCLUDED
+")
 if(EXISTS ${version_file})
   file(READ ${version_file} old_version_file_string )
   if(${old_version_file_string} STREQUAL ${new_version_file_string})

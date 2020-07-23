@@ -79,6 +79,7 @@ endif()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include (${CMAKE_CURRENT_LIST_DIR}/cmake/generate_version_file.cmake)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/netgen_version.hpp DESTINATION ${NG_INSTALL_DIR_INCLUDE}/include COMPONENT netgen_devel)
 set(CPACK_PACKAGE_VERSION "${NETGEN_VERSION}")
 
 
