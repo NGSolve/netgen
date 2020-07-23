@@ -30,9 +30,6 @@ namespace pybind11
 
 namespace ngcore
 {
-  // Libraries using this archive can store their version here to implement backwards compatibility
-  NGCORE_API const VersionInfo& GetLibraryVersion(const std::string& library);
-  NGCORE_API void SetLibraryVersion(const std::string& library, const VersionInfo& version);
 
   class NGCORE_API Archive;
 
@@ -569,9 +566,6 @@ namespace ngcore
     }
 
     virtual void FlushBuffer() {}
-
-  protected:
-    static std::map<std::string, VersionInfo>& GetLibraryVersions();
 
   private:
     template<typename T, typename ... Bases>

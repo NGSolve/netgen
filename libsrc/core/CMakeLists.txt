@@ -11,6 +11,7 @@ add_library(ngcore SHARED
   table.cpp
   taskmanager.cpp
   utils.cpp
+  version.cpp
   )
 
 # Pybind11 2.3 Issue https://github.com/pybind/pybind11/issues/1604
