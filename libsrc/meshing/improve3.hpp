@@ -1,6 +1,19 @@
 #ifndef FILE_IMPROVE3
 #define FILE_IMPROVE3
 
+inline double
+CalcBad (const Mesh::T_POINTS & points, const Element & elem, double h, const MeshingParameters & mp)
+{
+  if (elem.GetType() == TET)
+    return CalcTetBadness (points[elem[0]], points[elem[1]],
+			   points[elem[2]], points[elem[3]], h, mp);
+  if (elem.GetType() == PYRAMID)
+    return CalcTetBadness (points[elem[0]], points[elem[1]],
+			   points[elem[2]], points[elem[4]], h, mp)
+         + CalcTetBadness (points[elem[2]], points[elem[3]],
+			   points[elem[0]], points[elem[4]], h, mp);
+  return 0;
+}
 
 extern double CalcTotalBad (const Mesh::T_POINTS & points, 
 			    const Array<Element> & elements,
@@ -44,19 +57,7 @@ public:
   double 
   CalcBad (const Mesh::T_POINTS & points, const Element & elem, double h)
   {
-    if (elem.GetType() == TET)
-      return CalcTetBadness (points[elem[0]], points[elem[1]],  
-			     points[elem[2]], points[elem[3]], h, mp);  
-    return 0;
-  }
-
-  double 
-  CalcBadPow (const Mesh::T_POINTS & points, const Element & elem, double h)
-  {
-    if (elem.GetType() == TET)
-      return pow (max2(CalcTetBadness (points[elem[0]], points[elem[1]],  
-			     points[elem[2]], points[elem[3]], h, mp), 1e-10) , 1.0/mp.opterrpow);
-    return 0;
+    return ::netgen::CalcBad(points, elem, h, mp);
   }
 
   double CalcTotalBad (const Mesh::T_POINTS & points, 
@@ -66,16 +67,6 @@ public:
   }
 
 };
-
-
-inline double 
-CalcBad (const Mesh::T_POINTS & points, const Element & elem, double h, const MeshingParameters & mp)
-{
-  if (elem.GetType() == TET)
-    return CalcTetBadness (points[elem[0]], points[elem[1]],  
-			   points[elem[2]], points[elem[3]], h, mp);  
-  return 0;
-}
 
 
 

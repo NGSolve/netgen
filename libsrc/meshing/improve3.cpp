@@ -16,17 +16,84 @@ namespace netgen
 
 
 // Calc badness of new element where pi1 and pi2 are replaced by pnew
-double CalcBadReplacePoints (const Mesh::T_POINTS & points, const MeshingParameters & mp, const Element & elem, double h, PointIndex &pi1, PointIndex &pi2, MeshPoint &pnew)
+static double CalcBadReplacePoints (const Mesh::T_POINTS & points, const MeshingParameters & mp, const Element & elem, double h, PointIndex &pi1, PointIndex &pi2, MeshPoint &pnew)
   {
-    if (elem.GetType() != TET) return 0;
+    if (elem.GetType() != TET && elem.GetType() != PYRAMID)
+      return 0;
 
-    MeshPoint* p[] = {&points[elem[0]], &points[elem[1]], &points[elem[2]], &points[elem[3]]};
+    MeshPoint p[5];
 
-    for (auto i : Range(4))
-        if(elem[i]==pi1 || elem[i]==pi2) p[i] = &pnew;
+    for (auto i : Range(elem.GetNP()))
+    {
+      auto pi = elem[i];
+      if(pi==pi1 || pi==pi2)
+        p[i] = pnew;
+      else
+        p[i] = points[pi];
+    }
 
-    return CalcTetBadness (*p[0], *p[1], *p[2], *p[3], h, mp);
+    if (elem.GetType() == TET)
+      return CalcTetBadness (p[0], p[1], p[2], p[3], h, mp);
+    if (elem.GetType() == PYRAMID)
+      return CalcTetBadness (p[0], p[1], p[2], p[4], h, mp)
+           + CalcTetBadness (p[2], p[3], p[0], p[4], h, mp);
+    return 0;
   }
+
+static ArrayMem<Element, 3> SplitElement (Element old, PointIndex pi0, PointIndex pi1, PointIndex pinew)
+{
+  ArrayMem<Element, 3> new_elements;
+  // split element by cutting edge pi0,pi1 at pinew
+  auto np = old.GetNP();
+  old.flags.illegal_valid = 0;
+  if(np == 4)
+  {
+    // Split tet into two tets
+    Element newel0 = old;
+    Element newel1 = old;
+    for (int i : Range(4))
+    {
+      if(newel0[i] == pi0) newel0[i] = pinew;
+      if(newel1[i] == pi1) newel1[i] = pinew;
+    }
+    new_elements.Append(newel0);
+    new_elements.Append(newel1);
+  }
+  else if (np == 5)
+  {
+    // split pyramid into pyramid and two tets
+    Element new_pyramid = old;
+    new_pyramid[4] = pinew;
+    new_elements.Append(new_pyramid);
+
+    auto pibase = (pi0==old[4]) ? pi1 : pi0;
+    auto pitop = (pi0==old[4]) ? pi0 : pi1;
+
+    Element new_tet0 = old;
+    Element new_tet1 = old;
+    new_tet0.SetType(TET);
+    new_tet1.SetType(TET);
+
+    size_t pibase_index=0;
+    for(auto i : Range(4))
+      if(old[i]==pibase)
+        pibase_index = i;
+
+    new_tet0[0] = old[(pibase_index+1)%4];
+    new_tet0[1] = old[(pibase_index+2)%4];
+    new_tet0[2] = pinew;
+    new_tet0[3] = pitop;
+    new_elements.Append(new_tet0);
+
+    new_tet1[0] = old[(pibase_index+2)%4];
+    new_tet1[1] = old[(pibase_index+3)%4];
+    new_tet1[2] = pinew;
+    new_tet1[3] = pitop;
+    new_elements.Append(new_tet1);
+  }
+
+  return new_elements;
+};
 
 /*
   Combine two points to one.
@@ -59,6 +126,7 @@ double MeshOptimize3d :: CombineImproveEdge (Mesh & mesh,
   {
       Element & elem = mesh[ei];
       if (elem.IsDeleted()) return false;
+      if(elem.GetType() != TET) return false; // TODO: implement case where pi0 or pi1 is top of a pyramid
 
       if (elem[0] == pi1 || elem[1] == pi1 || elem[2] == pi1 || elem[3] == pi1)
       {
@@ -3907,8 +3975,6 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 void MeshOptimize3d :: SplitImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 {
   double bad1 = mesh.CalcTotalBad (mp);
-  cout << "Total badness before splitimprove2= " << bad1 << endl;
-//   cout << "SplitImprove2" << endl;
   int ne = mesh.GetNE();
   auto elements_of_point = mesh.CreatePoint2ElementTable();
 
@@ -3926,20 +3992,16 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 
   mesh.BoundaryEdge (1,2); // ensure the boundary-elements table is built
 
-//   cout << "badness : " << endl << el_badness << endl;
-
   // TODO: Parallelization
   for (ElementIndex ei : Range(ne) )
   {
     auto & el = mesh[ei];
-    if(el.GetNP() != 4)
+    if(el.GetType() != TET)
       continue;
 
     // Optimize only bad elements
-//     if(el_badness[ei] < 10000)
+//     if(el_badness[ei] < 100)
 //       continue;
-
-//     cout << "element " << ei << '\t' << '\t' << el[0] << ',' << el[1] << ',' << el[2] << ',' << el[3] << endl;
 
     // search for very flat tets, with two disjoint edges nearly crossing, like a rectangle with diagonals
     static constexpr int tetedges[6][2] =
@@ -3956,12 +4018,6 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
       auto pi1 = el[tetedges[i][1]];
       auto pi2 = el[tetedges[5-i][0]];
       auto pi3 = el[tetedges[5-i][1]];
-
-// 
-//       Point3d p0 = mesh[pi0];
-//       Point3d p1 = mesh[pi1];
-//       Point3d p2 = mesh[pi2];
-//       Point3d p3 = mesh[pi3];
 
       double lam0, lam1;
       double dist = MinDistLL2(mesh[pi0], mesh[pi1], mesh[pi2], mesh[pi3], lam0, lam1 );
@@ -3981,14 +4037,10 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
     auto pi1 = el[tetedges[minedge][1]];
     auto pi2 = el[tetedges[5-minedge][0]];
     auto pi3 = el[tetedges[5-minedge][1]];
-//     cout << "\tpoints " << '\t' << pi0 << ',' << pi1 << ',' << pi2 << ',' << pi3 << endl;
 
     // we cannot split edges on the boundary
     if(mesh.BoundaryEdge (pi0,pi1) || mesh.BoundaryEdge(pi2, pi3))
-    {
-//       cout << "skip element " << ei << " (boundaryedge), " << el_badness[ei] << ',' << mindist << ',' << minedge << endl;
       continue;
-    }
 
     ArrayMem<ElementIndex, 50> has_both_points0;
     ArrayMem<ElementIndex, 50> has_both_points1;
@@ -4000,7 +4052,6 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
     pnew(0) = center.X();
     pnew(1) = center.Y();
     pnew(2) = center.Z();
-//     cout << "check el " << ei << endl;
 
     bool valid = true;
     // find all tets with edge (pi0,pi1) or (pi2,pi3)
@@ -4009,95 +4060,66 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
       Element & elem = mesh[ei0];
       if (elem.IsDeleted()) valid = false;
       if (ei0 == ei) continue;
-      if(mesh[ei0].GetNP()!=4)
-        valid = false;
 
-      if (elem[0] == pi1 || elem[1] == pi1 || elem[2] == pi1 || elem[3] == pi1)
+      if (elem[0] == pi1 || elem[1] == pi1 || elem[2] == pi1 || elem[3] == pi1 || (elem.GetNP()==5 && elem[4]==pi1) )
         if(!has_both_points0.Contains(ei0))
           has_both_points0.Append (ei0);
     }
 
     for (auto ei1 : elements_of_point[pi2] )
     {
-//       cout << ei1 << ',';
       Element & elem = mesh[ei1];
       if (elem.IsDeleted()) valid = false;
       if (ei1 == ei) continue;
-      if(mesh[ei1].GetNP()!=4)
-        valid = false;
 
-      if (elem[0] == pi3 || elem[1] == pi3 || elem[2] == pi3 || elem[3] == pi3)
+      if (elem[0] == pi3 || elem[1] == pi3 || elem[2] == pi3 || elem[3] == pi3 || (elem.GetNP()==5 && elem[4]==pi3))
         if(!has_both_points1.Contains(ei1))
           has_both_points1.Append (ei1);
     }
     if(!valid) continue;
-//     cout << endl;
-// 
-//     cout << "both0 " << endl << has_both_points0 << endl;
-//     cout << "both1 " << endl << has_both_points0 << endl;
     double badness_before = el_badness[ei];
 
     double badness_after = 0.0;
     PointIndex dummy{-1};
+
+    PointIndex pinew = mesh.AddPoint (center);
     for (auto ei0 : has_both_points0)
     {
       badness_before += el_badness[ei0];
-      badness_after += CalcBadReplacePoints (mesh.Points(), mp, mesh[ei0], 0, pi1, dummy, pnew);
-      badness_after += CalcBadReplacePoints (mesh.Points(), mp, mesh[ei0], 0, pi0, dummy, pnew);
+      auto new_els = SplitElement(mesh[ei0], pi0, pi1, pinew);
+      for(const auto & el : new_els)
+        badness_after += CalcBad (mesh.Points(), el, 0);
     }
     for (auto ei1 : has_both_points1)
     {
       badness_before += el_badness[ei1];
-      badness_after += CalcBadReplacePoints (mesh.Points(), mp, mesh[ei1], 0, pi3, dummy, pnew);
-      badness_after += CalcBadReplacePoints (mesh.Points(), mp, mesh[ei1], 0, pi2, dummy, pnew);
+      auto new_els = SplitElement(mesh[ei1], pi2, pi3, pinew);
+      for(const auto & el : new_els)
+        badness_after += CalcBad (mesh.Points(), el, 0);
     }
     if(badness_after<badness_before)
     {
-      PointIndex pinew = mesh.AddPoint (center);
       el.flags.illegal_valid = 0;
       el.Delete();
-//       cout << "badness " << badness_after << " better than " << badness_before << endl;
-//       cout << "delete element " << ei << ':' << pi0 << ',' << pi1 << ',' << pi2 << ',' << pi3 << ',' << pinew << endl;
-//       cout << "Improve element " << ei << '\t' << badness_before << '\t' << badness_after << '\t' << pi0 << ',' << pi1 << ',' << pi2 << ',' << pi3 << endl;
+
       for (auto ei1 : has_both_points0)
       {
-        auto & oldel = mesh[ei1];
-        Element newel1 = oldel;
-        Element newel2 = oldel;
-        oldel.flags.illegal_valid = 0;
-        oldel.Delete();
-        newel1.flags.illegal_valid = 0;
-        newel2.flags.illegal_valid = 0;
-        for (int i : Range(4))
-        {
-          if(newel1[i] == pi0) newel1[i] = pinew;
-          if(newel2[i] == pi1) newel2[i] = pinew;
-        }
-        mesh.AddVolumeElement (newel1);
-        mesh.AddVolumeElement (newel2);
+        auto new_els = SplitElement(mesh[ei1], pi0, pi1, pinew);
+        for(const auto & el : new_els)
+          mesh.AddVolumeElement(el);
+        mesh[ei1].Delete();
       }
       for (auto ei1 : has_both_points1)
       {
-        auto & oldel = mesh[ei1];
-        Element newel1 = oldel;
-        Element newel2 = oldel;
-        oldel.flags.illegal_valid = 0;
-        oldel.Delete();
-        newel1.flags.illegal_valid = 0;
-        newel2.flags.illegal_valid = 0;
-        for (int i : Range(4))
-        {
-          if(newel1[i] == pi2) newel1[i] = pinew;
-          if(newel2[i] == pi3) newel2[i] = pinew;
-        }
-        mesh.AddVolumeElement (newel1);
-        mesh.AddVolumeElement (newel2);
+        auto new_els = SplitElement(mesh[ei1], pi2, pi3, pinew);
+        for(const auto & el : new_els)
+          mesh.AddVolumeElement(el);
+        mesh[ei1].Delete();
       }
     }
   }
   mesh.Compress();
   bad1 = mesh.CalcTotalBad (mp);
-  cout << "Total badness after splitimprove2= " << bad1 << endl;
 }
 
 
