@@ -1217,12 +1217,13 @@ namespace netgen
        // s .. swap faces
        // c .. combine elements
        // d .. divide elements
+       // D .. divide and join opposite edges, remove element
        // p .. plot, no pause
        // P .. plot, Pause
        // h .. Histogramm, no pause
        // H .. Histogramm, pause
        */
-    string optimize3d = "cmdmustm";
+    string optimize3d = "cmdDmustm";
     /// number of 3d optimization steps
     int optsteps3d = 3;
     /**
