@@ -80,6 +80,10 @@ namespace ngcore
       return mayor_ == other.mayor_ && minor_ == other.minor_ && release == other.release
         && patch == other.patch;
     }
+    bool operator !=(const VersionInfo& other) const
+    {
+      return !(*this==other);
+    }
     bool operator >(const VersionInfo& other) const { return other < (*this); }
     bool operator <=(const VersionInfo& other) const { return !((*this) > other); }
     bool operator >=(const VersionInfo& other) const { return !((*this) < other); }
@@ -89,6 +93,10 @@ namespace ngcore
   {
     return ost << version.to_string();
   }
+
+  NGCORE_API const VersionInfo& GetLibraryVersion(const std::string& library);
+  NGCORE_API const std::map<std::string, VersionInfo>& GetLibraryVersions();
+  NGCORE_API void SetLibraryVersion(const std::string& library, const VersionInfo& version);
 } // namespace ngcore
 
 #endif // NETGEN_CORE_VERSION_HPP

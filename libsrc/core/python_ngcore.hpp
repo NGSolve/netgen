@@ -230,7 +230,6 @@ namespace ngcore
     using ARCHIVE::stream;
     using ARCHIVE::version_map;
     using ARCHIVE::logger;
-    using ARCHIVE::GetLibraryVersions;
   public:
     PyArchive(const pybind11::object& alst = pybind11::none()) :
       ARCHIVE(std::make_shared<std::stringstream>()),
@@ -275,10 +274,11 @@ namespace ngcore
 
     pybind11::list WriteOut()
     {
+      auto version_runtime = GetLibraryVersions();
       FlushBuffer();
       lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
       stream = std::make_shared<std::stringstream>();
-      *this & GetLibraryVersions();
+      *this & version_runtime;
       FlushBuffer();
       lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
       stream = std::make_shared<std::stringstream>();
