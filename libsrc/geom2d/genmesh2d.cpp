@@ -458,9 +458,6 @@ namespace netgen
     for ( int sindex = 0; sindex < maxsegmentindex; sindex++ )
       mesh->SetBCName ( sindex, geometry.GetBCName( sindex+1 ) );
 
-    for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
-      (*mesh)[si].SetBCName ( (*mesh).GetBCNamePtr( (*mesh)[si].si-1 ) );
-  
     mesh->CalcLocalH(mp.grading);
 
     int bnp = mesh->GetNP(); // boundary points

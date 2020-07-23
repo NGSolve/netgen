@@ -1031,7 +1031,6 @@ namespace netgen
     // #endif
 
   private:
-    string* bcname;
     bool is_curved;
 
   public:
@@ -1047,24 +1046,6 @@ namespace netgen
 
   
     int hp_elnr;
-
-    void SetBCName ( string * abcname )
-    {
-      bcname = abcname;
-    }
-
-    string * BCNamePtr () 
-    { return bcname; }
-
-    const string * BCNamePtr () const 
-    { return bcname; }
-
-    const string & GetBCName () const
-    {
-      static string defaultstring = "default";
-      if (! bcname ) return defaultstring;
-      return *bcname;
-    }
 
     int GetNP() const
     {
