@@ -1,5 +1,6 @@
 
 #include "archive.hpp"
+#include <netgen_version.hpp>
 
 #ifndef WIN32
 #include <cxxabi.h>
@@ -44,4 +45,10 @@ namespace ngcore
                                    std::make_unique<std::map<std::string, detail::ClassArchiveInfo>>();
     return type_register->count(classname) != 0;
   }
+
+
+  static bool dummy = [](){
+    SetLibraryVersion("netgen", NETGEN_VERSION);
+    return true;
+  }();
 } // namespace ngcore

@@ -560,7 +560,7 @@ char * Ng_GetSurfaceElementBCName (int ei)
   if ( mesh->GetDimension() == 3 )
     return const_cast<char *>(mesh->GetFaceDescriptor(mesh->SurfaceElement(ei).GetIndex()).GetBCName().c_str());
   else
-    return const_cast<char *>(mesh->LineSegment(ei).GetBCName().c_str());
+    return const_cast<char *>(mesh->GetBCName(mesh->LineSegment(ei).si).c_str());
 }
 
 
