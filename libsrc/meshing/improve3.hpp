@@ -39,7 +39,9 @@ public:
   void SplitImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
   void SplitImproveSequential (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
   double SplitImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, Table<ElementIndex,PointIndex> & elementsonnode, Array<double> &elerrs, NgArray<INDEX_3> &locfaces, double badmax, PointIndex pi1, PointIndex pi2, PointIndex ptmp, bool check_only=false);
-  void SplitImprove2 (Mesh & mesh, OPTIMIZEGOAL goal);
+
+  void SplitImprove2 (Mesh & mesh);
+  double SplitImprove2Element (Mesh & mesh, ElementIndex ei, const Table<ElementIndex, PointIndex> & elements_of_point, const Array<double> & elerrs, bool check_only);
   
 
   double SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, const NgBitArray * working_elements, Table<ElementIndex,PointIndex> & elementsonnode, INDEX_3_HASHTABLE<int> & faces, PointIndex pi1, PointIndex pi2, bool check_only=false);
