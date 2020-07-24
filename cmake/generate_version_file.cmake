@@ -4,7 +4,7 @@ endif()
 
 find_package(Git REQUIRED)
 
-if(GIT_FOUND AND EXISTS ${CMAKE_CURRENT_LIST_DIR}/../.git)
+if(GIT_FOUND AND IS_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../.git)
   execute_process(COMMAND git describe --tags --match "v[0-9]*" --long --dirty WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR} OUTPUT_VARIABLE git_version_string)
 else()
   # for source package files (generated for ubuntu builds on launchpad) read the version from version.txt
