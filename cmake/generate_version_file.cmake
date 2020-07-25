@@ -3,16 +3,20 @@ if(NOT BDIR)
 endif()
 
 find_package(Git REQUIRED)
+execute_process(COMMAND git describe --tags --match "v[0-9]*" --long --dirty WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR} OUTPUT_VARIABLE git_version_string RESULT_VARIABLE status ERROR_QUIET)
 
-if(GIT_FOUND AND IS_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/../.git)
-  execute_process(COMMAND git describe --tags --match "v[0-9]*" --long --dirty WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR} OUTPUT_VARIABLE git_version_string)
-else()
-  # for source package files (generated for ubuntu builds on launchpad) read the version from version.txt
+if(status AND NOT status EQUAL 0)
   if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/../version.txt)
-    file(READ ${CMAKE_CURRENT_LIST_DIR}/../version.txt git_version_string )
+    # for source package files (generated for ubuntu builds on launchpad) read the version from version.txt
+    if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/../version.txt)
+      file(READ ${CMAKE_CURRENT_LIST_DIR}/../version.txt git_version_string )
+    else()
+      get_filename_component(git_version_string ${CMAKE_CURRENT_LIST_DIR}/.. NAME)
+      string(REGEX REPLACE "^netgen(.*)" "\\1" git_version_string "${git_version_string}")
+    endif()
   else()
-    get_filename_component(git_version_string ${CMAKE_CURRENT_LIST_DIR}/.. NAME)
-    string(REGEX REPLACE "^netgen(.*)" "\\1" git_version_string "${git_version_string}")
+    MESSAGE(WARNING "Could not determine git-version from source code - assuming 6.2.0.0")
+    set(git_version_string "v6.2.0.0")
   endif()
 endif()
 
