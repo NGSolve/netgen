@@ -16,28 +16,16 @@ namespace netgen
 
 
 // Calc badness of new element where pi1 and pi2 are replaced by pnew
-static double CalcBadReplacePoints (const Mesh::T_POINTS & points, const MeshingParameters & mp, const Element & elem, double h, PointIndex &pi1, PointIndex &pi2, MeshPoint &pnew)
+double CalcBadReplacePoints (const Mesh::T_POINTS & points, const MeshingParameters & mp, const Element & elem, double h, PointIndex &pi1, PointIndex &pi2, MeshPoint &pnew)
   {
-    if (elem.GetType() != TET && elem.GetType() != PYRAMID)
-      return 0;
+    if (elem.GetType() != TET) return 0;
 
-    MeshPoint p[5];
+    MeshPoint* p[] = {&points[elem[0]], &points[elem[1]], &points[elem[2]], &points[elem[3]]};
 
-    for (auto i : Range(elem.GetNP()))
-    {
-      auto pi = elem[i];
-      if(pi==pi1 || pi==pi2)
-        p[i] = pnew;
-      else
-        p[i] = points[pi];
-    }
+    for (auto i : Range(4))
+        if(elem[i]==pi1 || elem[i]==pi2) p[i] = &pnew;
 
-    if (elem.GetType() == TET)
-      return CalcTetBadness (p[0], p[1], p[2], p[3], h, mp);
-    if (elem.GetType() == PYRAMID)
-      return CalcTetBadness (p[0], p[1], p[2], p[4], h, mp)
-           + CalcTetBadness (p[2], p[3], p[0], p[4], h, mp);
-    return 0;
+    return CalcTetBadness (*p[0], *p[1], *p[2], *p[3], h, mp);
   }
 
 static ArrayMem<Element, 3> SplitElement (Element old, PointIndex pi0, PointIndex pi1, PointIndex pinew)
@@ -4107,11 +4095,15 @@ double MeshOptimize3d :: SplitImprove2Element (Mesh & mesh,
 
   for (auto ei0 : has_both_points0)
   {
+    if(mesh[ei0].GetType()!=TET)
+      return false;
     badness_before += el_badness[ei0];
     badness_after += SplitElementBadness (mesh.Points(), mp, mesh[ei0], pi0, pi1, pnew);
   }
   for (auto ei1 : has_both_points1)
   {
+    if(mesh[ei1].GetType()!=TET)
+      return false;
     badness_before += el_badness[ei1];
     badness_after += SplitElementBadness (mesh.Points(), mp, mesh[ei1], pi2, pi3, pnew);
   }
