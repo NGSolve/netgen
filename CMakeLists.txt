@@ -404,6 +404,8 @@ if(USE_CGNS)
     endif(NOT WIN32 AND NOT APPLE)
 endif(USE_CGNS)
 
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/netgen_version.hpp DESTINATION ${NG_INSTALL_DIR_INCLUDE}/include COMPONENT netgen_devel)
+
 add_subdirectory(libsrc)
 add_subdirectory(ng)
 add_subdirectory(tutorials)

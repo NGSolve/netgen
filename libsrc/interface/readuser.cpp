@@ -313,7 +313,6 @@ namespace netgen
                             ednr = mesh.AddEdgeDescriptor(ed);
                             mesh.SetCD2Name(bcpr, name);
                             auto nr = mesh.AddSegment(tmp_segments[get<0>(element_map[index])-1]);
-                            mesh[nr].SetBCName(mesh.GetCD2NamePtr(mesh.GetNCD2Names()));
                             mesh[nr].edgenr = ednr+1;
                           }
                           else if(dim == 2)
@@ -321,7 +320,6 @@ namespace netgen
                             Segment & seg = mesh.LineSegment(get<0>(element_map[index]));
 			    seg.si = bccounter + 1;
 			    mesh.SetBCName(bccounter, name);
-                            seg.SetBCName(mesh.GetBCNamePtr(bccounter));
 		            bccounter++;
                           }
                           break;
@@ -353,13 +351,11 @@ namespace netgen
                             {
                               auto nr = mesh.AddSegment(tmp_segments[get<0>(element_map[index])-1]);
                               mesh[nr].edgenr = ednr+1;
-                              mesh[nr].SetBCName(mesh.GetCD2NamePtr(mesh.GetNCD2Names()));
                             }
 			    else if(dim == 2)
 			    {
 	 			    Segment & seg = mesh.LineSegment(get<0>(element_map[index]));
 			            seg.si = bccounter;
-                            	    seg.SetBCName(mesh.GetBCNamePtr(bccounter-1));
 			    }
                             break;
                           default:
@@ -388,7 +384,6 @@ namespace netgen
 			if(seg.si == -1){
 			  seg.si = bccounter + 1;
 			  if(bccounter_tmp == bccounter) mesh.SetBCName(bccounter, "default"); // could be more efficient
-			  seg.SetBCName(mesh.GetBCNamePtr(bccounter));
 			  bccounter_tmp++;
 			}
 		}

@@ -5,6 +5,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
 #include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 
 #include "array.hpp"
 #include "archive.hpp"
@@ -229,7 +230,6 @@ namespace ngcore
     using ARCHIVE::stream;
     using ARCHIVE::version_map;
     using ARCHIVE::logger;
-    using ARCHIVE::GetLibraryVersions;
   public:
     PyArchive(const pybind11::object& alst = pybind11::none()) :
       ARCHIVE(std::make_shared<std::stringstream>()),
@@ -274,10 +274,11 @@ namespace ngcore
 
     pybind11::list WriteOut()
     {
+      auto version_runtime = GetLibraryVersions();
       FlushBuffer();
       lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
       stream = std::make_shared<std::stringstream>();
-      *this & GetLibraryVersions();
+      *this & version_runtime;
       FlushBuffer();
       lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
       stream = std::make_shared<std::stringstream>();
