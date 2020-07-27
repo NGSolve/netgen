@@ -28,6 +28,106 @@ double CalcBadReplacePoints (const Mesh::T_POINTS & points, const MeshingParamet
     return CalcTetBadness (*p[0], *p[1], *p[2], *p[3], h, mp);
   }
 
+static ArrayMem<Element, 3> SplitElement (Element old, PointIndex pi0, PointIndex pi1, PointIndex pinew)
+{
+  ArrayMem<Element, 3> new_elements;
+  // split element by cutting edge pi0,pi1 at pinew
+  auto np = old.GetNP();
+  old.flags.illegal_valid = 0;
+  if(np == 4)
+  {
+    // Split tet into two tets
+    Element newel0 = old;
+    Element newel1 = old;
+    for (int i : Range(4))
+    {
+      if(newel0[i] == pi0) newel0[i] = pinew;
+      if(newel1[i] == pi1) newel1[i] = pinew;
+    }
+    new_elements.Append(newel0);
+    new_elements.Append(newel1);
+  }
+  else if (np == 5)
+  {
+    // split pyramid into pyramid and two tets
+    Element new_pyramid = old;
+    new_pyramid[4] = pinew;
+    new_elements.Append(new_pyramid);
+
+    auto pibase = (pi0==old[4]) ? pi1 : pi0;
+    auto pitop = (pi0==old[4]) ? pi0 : pi1;
+
+    Element new_tet0 = old;
+    Element new_tet1 = old;
+    new_tet0.SetType(TET);
+    new_tet1.SetType(TET);
+
+    size_t pibase_index=0;
+    for(auto i : Range(4))
+      if(old[i]==pibase)
+        pibase_index = i;
+
+    new_tet0[0] = old[(pibase_index+1)%4];
+    new_tet0[1] = old[(pibase_index+2)%4];
+    new_tet0[2] = pinew;
+    new_tet0[3] = pitop;
+    new_elements.Append(new_tet0);
+
+    new_tet1[0] = old[(pibase_index+2)%4];
+    new_tet1[1] = old[(pibase_index+3)%4];
+    new_tet1[2] = pinew;
+    new_tet1[3] = pitop;
+    new_elements.Append(new_tet1);
+  }
+
+  return new_elements;
+};
+
+static double SplitElementBadness (const Mesh::T_POINTS & points, const MeshingParameters & mp, Element old, PointIndex pi0, PointIndex pi1, MeshPoint & pnew)
+{
+  double badness = 0;
+  auto np = old.GetNP();
+  PointIndex dummy{-1};
+  if(np == 4)
+  {
+    // Split tet into two tets
+    badness += CalcBadReplacePoints ( points, mp, old, 0, pi0, dummy, pnew );
+    badness += CalcBadReplacePoints ( points, mp, old, 0, pi1, dummy, pnew );
+  }
+  else if (np == 5)
+  {
+    // split pyramid into pyramid and two tets
+    auto pibase = (pi0==old[4]) ? pi1 : pi0;
+    auto pitop = (pi0==old[4]) ? pi0 : pi1;
+
+    badness += CalcBadReplacePoints ( points, mp, old, 0, pitop, dummy, pnew );
+
+    Element tet = old;
+    tet.SetType(TET);
+
+    size_t pibase_index=0;
+    for(auto i : Range(4))
+      if(old[i]==pibase)
+        pibase_index = i;
+
+    MeshPoint p[4];
+    p[0] = points[old[(pibase_index+1)%4]];
+    p[1] = points[old[(pibase_index+2)%4]];
+    p[2] = pnew;
+    p[3] = points[pitop];
+    badness += CalcTetBadness (p[0], p[1], p[2], p[3], 0, mp);
+
+    p[0] = points[old[(pibase_index+2)%4]];
+    p[1] = points[old[(pibase_index+3)%4]];
+    p[2] = pnew;
+    p[3] = points[pitop];
+    badness += CalcTetBadness (p[0], p[1], p[2], p[3], 0, mp);
+  }
+
+  return badness;
+};
+
+
 /*
   Combine two points to one.
   Set new point into the center, if both are
@@ -59,6 +159,7 @@ double MeshOptimize3d :: CombineImproveEdge (Mesh & mesh,
   {
       Element & elem = mesh[ei];
       if (elem.IsDeleted()) return false;
+      if(elem.GetType() != TET) return false; // TODO: implement case where pi0 or pi1 is top of a pyramid
 
       if (elem[0] == pi1 || elem[1] == pi1 || elem[2] == pi1 || elem[3] == pi1)
       {
@@ -3900,6 +4001,207 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
   bad1 = mesh.CalcTotalBad (mp);
   (*testout) << "Total badness = " << bad1 << endl;
   (*testout) << "swapimprove2 done" << "\n";
+}
+
+double MeshOptimize3d :: SplitImprove2Element (Mesh & mesh,
+                            ElementIndex ei,
+                            const Table<ElementIndex, PointIndex> & elements_of_point,
+                            const Array<double> & el_badness,
+                            bool check_only)
+{
+  auto & el = mesh[ei];
+  if(el.GetType() != TET)
+    return false;
+
+  // Optimize only bad elements
+  if(el_badness[ei] < 100)
+    return false;
+
+  // search for very flat tets, with two disjoint edges nearly crossing, like a rectangle with diagonals
+  static constexpr int tetedges[6][2] =
+  { { 0, 1 }, { 0, 2 }, { 0, 3 },
+    { 1, 2 }, { 1, 3 }, { 2, 3 } };
+
+  int minedge = -1;
+  double mindist = 1e99;
+  double minlam0, minlam1;
+
+  for (int i : Range(3))
+  {
+    auto pi0 = el[tetedges[i][0]];
+    auto pi1 = el[tetedges[i][1]];
+    auto pi2 = el[tetedges[5-i][0]];
+    auto pi3 = el[tetedges[5-i][1]];
+
+    double lam0, lam1;
+    double dist = MinDistLL2(mesh[pi0], mesh[pi1], mesh[pi2], mesh[pi3], lam0, lam1 );
+    if(dist<mindist)
+    {
+      mindist = dist;
+      minedge = i;
+      minlam0 = lam0;
+      minlam1 = lam1;
+    }
+  }
+
+  if(minedge==-1)
+    return false;
+
+  auto pi0 = el[tetedges[minedge][0]];
+  auto pi1 = el[tetedges[minedge][1]];
+  auto pi2 = el[tetedges[5-minedge][0]];
+  auto pi3 = el[tetedges[5-minedge][1]];
+
+  // we cannot split edges on the boundary
+  if(mesh.BoundaryEdge (pi0,pi1) || mesh.BoundaryEdge(pi2, pi3))
+    return false;
+
+  ArrayMem<ElementIndex, 50> has_both_points0;
+  ArrayMem<ElementIndex, 50> has_both_points1;
+
+  Point3d p[4] = { mesh[el[0]], mesh[el[1]], mesh[el[2]], mesh[el[3]] };
+  auto center = Center(p[0]+minlam0*(p[1]-p[0]), p[2]+minlam1*(p[3]-p[2]));
+  MeshPoint pnew;
+
+  pnew(0) = center.X();
+  pnew(1) = center.Y();
+  pnew(2) = center.Z();
+
+  // find all tets with edge (pi0,pi1) or (pi2,pi3)
+  for (auto ei0 : elements_of_point[pi0] )
+  {
+    Element & elem = mesh[ei0];
+    if (elem.IsDeleted()) return false;
+    if (ei0 == ei) continue;
+
+    if (elem[0] == pi1 || elem[1] == pi1 || elem[2] == pi1 || elem[3] == pi1 || (elem.GetNP()==5 && elem[4]==pi1) )
+      if(!has_both_points0.Contains(ei0))
+        has_both_points0.Append (ei0);
+  }
+
+  for (auto ei1 : elements_of_point[pi2] )
+  {
+    Element & elem = mesh[ei1];
+    if (elem.IsDeleted()) return false;
+    if (ei1 == ei) continue;
+
+    if (elem[0] == pi3 || elem[1] == pi3 || elem[2] == pi3 || elem[3] == pi3 || (elem.GetNP()==5 && elem[4]==pi3))
+      if(!has_both_points1.Contains(ei1))
+        has_both_points1.Append (ei1);
+  }
+
+  double badness_before = el_badness[ei];
+  double badness_after = 0.0;
+
+  for (auto ei0 : has_both_points0)
+  {
+    if(mesh[ei0].GetType()!=TET)
+      return false;
+    badness_before += el_badness[ei0];
+    badness_after += SplitElementBadness (mesh.Points(), mp, mesh[ei0], pi0, pi1, pnew);
+  }
+  for (auto ei1 : has_both_points1)
+  {
+    if(mesh[ei1].GetType()!=TET)
+      return false;
+    badness_before += el_badness[ei1];
+    badness_after += SplitElementBadness (mesh.Points(), mp, mesh[ei1], pi2, pi3, pnew);
+  }
+
+  if(check_only)
+    return badness_after-badness_before;
+
+  if(badness_after<badness_before)
+  {
+    PointIndex pinew = mesh.AddPoint (center);
+    el.flags.illegal_valid = 0;
+    el.Delete();
+
+    for (auto ei1 : has_both_points0)
+    {
+      auto new_els = SplitElement(mesh[ei1], pi0, pi1, pinew);
+      for(const auto & el : new_els)
+        mesh.AddVolumeElement(el);
+      mesh[ei1].Delete();
+    }
+    for (auto ei1 : has_both_points1)
+    {
+      auto new_els = SplitElement(mesh[ei1], pi2, pi3, pinew);
+      for(const auto & el : new_els)
+        mesh.AddVolumeElement(el);
+      mesh[ei1].Delete();
+    }
+  }
+  return badness_after-badness_before;
+}
+
+// Split two opposite edges of very flat tet and let all 4 new segments have one common vertex
+// Imagine a square with 2 diagonals -> new point where diagonals cross, remove the flat tet
+void MeshOptimize3d :: SplitImprove2 (Mesh & mesh)
+{
+  static Timer t("MeshOptimize3d::SplitImprove2"); RegionTimer reg(t);
+  static Timer tsearch("Search");
+  static Timer topt("Optimize");
+
+  int ne = mesh.GetNE();
+  auto elements_of_point = mesh.CreatePoint2ElementTable();
+  int ntasks = 4*ngcore::TaskManager::GetNumThreads();
+
+  const char * savetask = multithread.task;
+  multithread.task = "Optimize Volume: Split Improve 2";
+
+  Array<double> el_badness (ne);
+
+  ParallelForRange(Range(ne), [&] (auto myrange)
+  {
+    for (ElementIndex ei : myrange)
+    {
+      if(mp.only3D_domain_nr && mp.only3D_domain_nr != mesh[ei].GetIndex())
+        continue;
+      el_badness[ei] = CalcBad (mesh.Points(), mesh[ei], 0);
+    }
+  });
+
+  mesh.BoundaryEdge (1,2); // ensure the boundary-elements table is built
+
+  Array<std::tuple<double, ElementIndex>> split_candidates(ne);
+  std::atomic<int> improvement_counter(0);
+
+  tsearch.Start();
+  ParallelForRange(Range(ne), [&] (auto myrange)
+  {
+    for(ElementIndex ei : myrange)
+    {
+      if(mp.only3D_domain_nr && mp.only3D_domain_nr != mesh[ei].GetIndex())
+        continue;
+      double d_badness = SplitImprove2Element(mesh, ei, elements_of_point, el_badness, true);
+      if(d_badness<0.0)
+      {
+        int index = improvement_counter++;
+        split_candidates[index] = make_tuple(d_badness, ei);
+      }
+    }
+  }, ntasks);
+  tsearch.Stop();
+
+  auto elements_with_improvement = split_candidates.Part(0, improvement_counter.load());
+  QuickSort(elements_with_improvement);
+
+  size_t cnt = 0;
+  topt.Start();
+  for(auto [d_badness, ei] : elements_with_improvement)
+  {
+    if( SplitImprove2Element(mesh, ei, elements_of_point, el_badness, false) < 0.0)
+      cnt++;
+  }
+  topt.Stop();
+
+  PrintMessage (5, cnt, " elements split");
+  (*testout) << "SplitImprove2 done" << "\n";
+
+  if(cnt>0)
+    mesh.Compress();
+  multithread.task = savetask;
 }
 
 

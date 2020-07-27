@@ -91,6 +91,9 @@ extern double MinDistTP2 (const Point3d & tp1, const Point3d & tp2,
 extern double MinDistLL2 (const Point3d & l1p1, const Point3d & l1p2,
 			  const Point3d & l2p1, const Point3d & l2p2);
 
+extern double MinDistLL2 (const Point3d & l1p1, const Point3d & l1p2,
+		  const Point3d & l2p1, const Point3d & l2p2, double & lam1, double & lam2 );
+
 }
 
 #endif
