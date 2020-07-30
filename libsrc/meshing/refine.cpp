@@ -13,7 +13,8 @@ namespace netgen
 
   void Refinement :: Refine (Mesh & mesh)
   {
-    PrintMessage (3, "Refine mesh");
+    if (mesh.GetCommunicator().Rank()==0)
+      PrintMessage (3, "Refine mesh");
 
     mesh.SetNextMajorTimeStamp();
     
