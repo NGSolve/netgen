@@ -460,24 +460,6 @@ namespace netgen
     MyMPI_ExchangeTable (send_edges, recv_edges, MPI_TAG_MESH+9, MPI_LocalComm);
     // cout << "UpdateCoarseGrid - edges mpi-exchange done" << endl;
 
-    /*
-    for (int dest = 1; dest < ntasks; dest++)
-      {
-	auto ex2loc = dest2vert[dest-1];
-	NgFlatArray<int> recvarray = recv_edges[dest-1];
-        for (int ii = 0; ii < recvarray.Size(); ii+=2)
-	  for (int edge : dest2edge[dest-1])
-	    {
-	      topology.GetEdgeVertices (edge, v1, v2);
-	      INDEX_2 re(ex2loc[recvarray[ii]], 
-			 ex2loc[recvarray[ii+1]]);
-	      INDEX_2 es(v1, v2);
-	      if (es == re)
-		SetDistantEdgeNum(dest, edge);
-	    }
-      }
-    */
-
     for (int dest = 1; dest < ntasks; dest++)
       {
 	auto ex2loc = dest2vert[dest-1];
@@ -503,8 +485,6 @@ namespace netgen
 
 
     NgProfiler::StopTimer (timere);
-
-    // MPI_Barrier (MPI_LocalComm);
 
     // cout << "UpdateCoarseGrid - faces" << endl;
     if (mesh.GetDimension() == 3)
@@ -543,13 +523,6 @@ namespace netgen
 	for (int dest = 1; dest < ntasks; dest++)
 	  if (dest != id)
 	    {
-	      /*
-	      loc2exchange = -1;
-	      int cnt = 0;
-	      for (PointIndex pi : mesh.Points().Range())
-		if (IsExchangeVert(dest, pi))
-		  loc2exchange[pi] = cnt++;
-	      */
 	      if (dest2vert[dest-1].Size() == 0) continue;
 
 	      loc2exchange = -1;
@@ -575,29 +548,6 @@ namespace netgen
 	TABLE<int> recv_faces(ntasks-1);
 	MyMPI_ExchangeTable (send_faces, recv_faces, MPI_TAG_MESH+9, MPI_LocalComm);
 	// cout << "UpdateCoarseGrid - faces mpi-exchange done" << endl;
-
-	/*
-	for (int dest = 1; dest < ntasks; dest++)
-	  if (dest != id)
-	    {
-	      loc2exchange = -1;
-	      int cnt = 0;
-	      for (PointIndex pi : dest2vert[dest-1])
-		loc2exchange[pi] = cnt++;
-	      
-	      NgFlatArray<int> recvarray = recv_faces[dest-1];
-	      for (int ii = 0; ii < recvarray.Size(); ii+=3)
-		for (int face : dest2face[dest-1])
-		  {
-		    topology.GetFaceVertices (face, verts);
-		    INDEX_3 re(recvarray[ii], recvarray[ii+1], recvarray[ii+2]);
-		    INDEX_3 es(loc2exchange[verts[0]], loc2exchange[verts[1]], loc2exchange[verts[2]]);
-		    if (es == re)
-		      SetDistantFaceNum(dest, face);
-		  }
-	    }
-	*/
-
 	
 	for (int dest = 1; dest < ntasks; dest++)
 	  {
@@ -621,77 +571,6 @@ namespace netgen
 		  SetDistantFaceNum(dest, vert2face.Get(re));
 	      }
 	  }
-	
-
-
-
-	
-
-	/*
-	  NgArray<int,1> glob2loc;
-
-	int maxface = 0;
-	for (int face = 1; face <= nfa; face++)
-	  maxface = max (maxface, GetGlobalFaceNum (face));
-	
-	// glob2loc.SetSize (nfaglob);
-	glob2loc.SetSize (maxface);
-	glob2loc = -1;
-	
-	for (int loc = 1; loc <= nfa; loc++)
-	  glob2loc[GetGlobalFaceNum(loc)] = loc;
-	
-	cnt_send = 0;
-	NgArray<int> verts;
-	for (int face = 1; face <= nfa; face++)
-	  {
-	    topology.GetFaceVertices (face, verts);
-	    for (int dest = 1; dest < ntasks; dest++)
-	      if (IsExchangeVert (dest, verts[0]) && 
-		  IsExchangeVert (dest, verts[1]) &&
-		  IsExchangeVert (dest, verts[2]))
-		{
-		  cnt_send[dest-1]+=2;
-		}
-	  }
-	
-	TABLE<int> send_faces(cnt_send);
-	for (int face = 1; face <= nfa; face++)
-	  {
-	    topology.GetFaceVertices (face, verts);
-	    for (int dest = 1; dest < ntasks; dest++)
-	      {
-		if (IsExchangeVert (dest, verts[0]) && 
-		    IsExchangeVert (dest, verts[1]) &&
-		    IsExchangeVert (dest, verts[2]))
-		  {
-		    send_faces.Add (dest-1, GetGlobalFaceNum(face));
-		    send_faces.Add (dest-1, face);
-		  }
-	      }
-	  }
-	TABLE<int> recv_faces(ntasks-1);
-	MyMPI_ExchangeTable (send_faces, recv_faces, MPI_TAG_MESH+8, MPI_LocalComm);
-	
-	for (int sender = 1; sender < ntasks; sender ++)
-	  if (id != sender)
-	    {
-	      NgFlatArray<int> recvarray = recv_faces[sender-1];
-	      
-	      for (int ii = 0; ii < recvarray.Size(); )
-		{ 
-		  int globf = recvarray[ii++];
-		  int distf = recvarray[ii++];
-		  
-		  if (globf <= maxface)
-		    {
-		      int locf = glob2loc[globf];
-		      if (locf != -1)
-			SetDistantFaceNum (sender, locf);
-		    }
-		}
-	    } 
-	*/	
 	
 	NgProfiler::StopTimer (timerf);
       }

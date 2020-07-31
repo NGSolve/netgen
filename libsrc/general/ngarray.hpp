@@ -205,6 +205,12 @@ namespace netgen
     {
       return ( Pos(elem) >= 0 );
     }
+
+    operator FlatArray<T> () const
+    {
+      static_assert (BASE==0);
+      return FlatArray<T>(size, data);
+    }
   };
 
 

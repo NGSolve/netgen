@@ -25,13 +25,19 @@ namespace metis {
 using namespace metis;
 #endif
 
+namespace ngcore {
+  template <> struct MPI_typetrait<netgen::PointIndex> {
+    static MPI_Datatype MPIType () { return MPI_INT; } };  
+}
+
 namespace netgen
 {
 
+  /*
   template <>
   inline MPI_Datatype MyGetMPIType<PointIndex> ( )
   { return MPI_INT; }
-
+  */
 
   void Mesh :: SendRecvMesh ()
   {

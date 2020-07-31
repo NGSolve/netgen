@@ -227,6 +227,14 @@ namespace ngcore
       MPI_Bcast (&s[0], len, MPI_CHAR, root, comm);
     }
 
+    template <typename T>
+    void AllToAll (FlatArray<T> send, FlatArray<T> recv) const
+    {
+      MPI_Alltoall (send.Data(), 1, GetMPIType<T>(), 
+                    recv.Data(), 1, GetMPIType<T>(), comm);
+    }
+    
+    
     NgMPI_Comm SubCommunicator (FlatArray<int> procs) const
     {
       MPI_Comm subcomm;

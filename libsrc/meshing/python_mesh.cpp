@@ -69,23 +69,6 @@ namespace netgen
   extern bool netgen_executable_started;
   extern shared_ptr<NetgenGeometry> ng_geometry;
   extern void Optimize2d (Mesh & mesh, MeshingParameters & mp);
-
-#ifdef PARALLEL
-  /** we need allreduce in python-wrapped communicators **/
-  template <typename T>
-  inline T MyMPI_AllReduceNG (T d, const MPI_Op & op /* = MPI_SUM */, MPI_Comm comm)
-  {
-    T global_d;
-    MPI_Allreduce ( &d, &global_d, 1, MyGetMPIType<T>(), op, comm);
-    return global_d;
-  }
-#else
-  // enum { MPI_SUM = 0, MPI_MIN = 1, MPI_MAX = 2 };
-  // typedef int MPI_Op;
-  template <typename T>
-  inline T MyMPI_AllReduceNG (T d, const MPI_Op & op /* = MPI_SUM */, MPI_Comm comm)
-  { return d; }
-#endif
 }
 
 
@@ -140,15 +123,15 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 #else
     .def("WTime", [](NgMPI_Comm  & c) { return -1.0; })
 #endif
-    .def("Sum", [](NgMPI_Comm  & c, double x) { return MyMPI_AllReduceNG(x, MPI_SUM, c); })
-    .def("Min", [](NgMPI_Comm  & c, double x) { return MyMPI_AllReduceNG(x, MPI_MIN, c); })
-    .def("Max", [](NgMPI_Comm  & c, double x) { return MyMPI_AllReduceNG(x, MPI_MAX, c); })
-    .def("Sum", [](NgMPI_Comm  & c, int x) { return MyMPI_AllReduceNG(x, MPI_SUM, c); })
-    .def("Min", [](NgMPI_Comm  & c, int x) { return MyMPI_AllReduceNG(x, MPI_MIN, c); })
-    .def("Max", [](NgMPI_Comm  & c, int x) { return MyMPI_AllReduceNG(x, MPI_MAX, c); })
-    .def("Sum", [](NgMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_SUM, c); })
-    .def("Min", [](NgMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_MIN, c); })
-    .def("Max", [](NgMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_MAX, c); })
+    .def("Sum", [](NgMPI_Comm  & c, double x) { return c.AllReduce(x, MPI_SUM); })
+    .def("Min", [](NgMPI_Comm  & c, double x) { return c.AllReduce(x, MPI_MIN); })
+    .def("Max", [](NgMPI_Comm  & c, double x) { return c.AllReduce(x, MPI_MAX); })
+    .def("Sum", [](NgMPI_Comm  & c, int x) { return c.AllReduce(x, MPI_SUM); })
+    .def("Min", [](NgMPI_Comm  & c, int x) { return c.AllReduce(x, MPI_MIN); })
+    .def("Max", [](NgMPI_Comm  & c, int x) { return c.AllReduce(x, MPI_MAX); })
+    .def("Sum", [](NgMPI_Comm  & c, size_t x) { return c.AllReduce(x, MPI_SUM); })
+    .def("Min", [](NgMPI_Comm  & c, size_t x) { return c.AllReduce(x, MPI_MIN); })
+    .def("Max", [](NgMPI_Comm  & c, size_t x) { return c.AllReduce(x, MPI_MAX); })
     .def("SubComm", [](NgMPI_Comm & c, std::vector<int> proc_list) {
         Array<int> procs(proc_list.size());
         for (int i = 0; i < procs.Size(); i++)

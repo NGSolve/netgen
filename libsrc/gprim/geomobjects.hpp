@@ -478,7 +478,7 @@ namespace netgen
   };
 
 
-#ifdef PARALLEL
+#ifdef PARALLEL_OLD
   template <> 
   inline MPI_Datatype MyGetMPIType<Vec<3, double> > ()
   {
