@@ -89,6 +89,11 @@ namespace ngcore
           MPI_Comm_free(&comm);
     }
 
+    bool ValidCommunicator() const
+    {
+      return valid_comm;
+    }
+    
     NgMPI_Comm & operator= (const NgMPI_Comm & c)
     {
       if (refcount)

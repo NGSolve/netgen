@@ -61,8 +61,12 @@ namespace netgen
     SetGlobalMesh (mesh);
   }
 
-  NgMPI_Comm Ngx_Mesh :: GetCommunicator() const
-  { return Valid() ? mesh->GetCommunicator() : NgMPI_Comm{}; }
+  const NgMPI_Comm & Ngx_Mesh :: GetCommunicator() const
+  {
+    // return Valid() ? mesh->GetCommunicator() : NgMPI_Comm{};
+    if (!Valid()) throw Exception("Ngx_mesh::GetCommunicator: don't have a valid mesh");
+    return mesh->GetCommunicator();
+  }
 
   void Ngx_Mesh :: SaveMesh (ostream & ost) const
   {
@@ -1297,6 +1301,9 @@ void Ngx_Mesh::SetSurfaceElementOrders (int enr, int ox, int oy)
   std::tuple<int,int*>  Ngx_Mesh :: GetDistantProcs (int nodetype, int locnum) const
   {
 #ifdef PARALLEL
+    if (mesh->GetCommunicator().Size() == 1)
+      return std::tuple<int,int*>(0,nullptr);
+    
     switch (nodetype)
       {
       case 0:
