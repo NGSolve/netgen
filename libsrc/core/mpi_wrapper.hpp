@@ -289,6 +289,7 @@ namespace ngcore
 
     size_t Rank() const { return 0; }
     size_t Size() const { return 1; }
+    bool ValidCommunicator() const { return false; }
     void Barrier() const { ; } 
     operator MPI_Comm() const { return MPI_Comm(); }
 
