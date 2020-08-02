@@ -76,14 +76,14 @@ namespace netgen
 
   void Mesh :: SendMesh () const   
   {
-    NgArray<MPI_Request> sendrequests;
+    Array<MPI_Request> sendrequests;
 
     NgMPI_Comm comm = GetCommunicator();
     int id = comm.Rank();
     int ntasks = comm.Size();
 
     int dim = GetDimension();
-    MyMPI_Bcast(dim, comm);
+    comm.Bcast(dim);
 
     
     // If the topology is not already updated, we do not need to
@@ -97,32 +97,36 @@ namespace netgen
     
     PrintMessage ( 3, "Sending nr of elements");
     
-    NgArray<int> num_els_on_proc(ntasks);
+    Array<int> num_els_on_proc(ntasks);
     num_els_on_proc = 0;
     for (ElementIndex ei = 0; ei < GetNE(); ei++)
-      // num_els_on_proc[(*this)[ei].GetPartition()]++;
       num_els_on_proc[vol_partition[ei]]++;
 
-    MPI_Scatter (&num_els_on_proc[0], 1, MPI_INT,
-		 MPI_IN_PLACE, -1, MPI_INT, 0, comm);
+    comm.ScatterRoot (num_els_on_proc);
 
-    TABLE<ElementIndex> els_of_proc (num_els_on_proc);
+    Table<ElementIndex> els_of_proc (num_els_on_proc);
+    num_els_on_proc = 0;
     for (ElementIndex ei = 0; ei < GetNE(); ei++)
-      // els_of_proc.Add ( (*this)[ei].GetPartition(), ei);
-      els_of_proc.Add (vol_partition[ei], ei);
-
+      {
+        auto nr = vol_partition[ei];
+        els_of_proc[nr][num_els_on_proc[nr]++] = ei;
+      }
+    
     PrintMessage ( 3, "Building vertex/proc mapping");
 
-    NgArray<int> num_sels_on_proc(ntasks);
+    Array<int> num_sels_on_proc(ntasks);
     num_sels_on_proc = 0;
     for (SurfaceElementIndex ei = 0; ei < GetNSE(); ei++)
-      // num_sels_on_proc[(*this)[ei].GetPartition()]++;
       num_sels_on_proc[surf_partition[ei]]++;
 
-    TABLE<SurfaceElementIndex> sels_of_proc (num_sels_on_proc);
+    Table<SurfaceElementIndex> sels_of_proc (num_sels_on_proc);
+    num_sels_on_proc = 0;
     for (SurfaceElementIndex ei = 0; ei < GetNSE(); ei++)
-      // sels_of_proc.Add ( (*this)[ei].GetPartition(), ei);
-      sels_of_proc.Add (surf_partition[ei], ei);
+      {
+        auto nr = surf_partition[ei];
+        sels_of_proc[nr][num_sels_on_proc[nr]++] = ei;
+      }
+    
 
     NgArray<int> num_segs_on_proc(ntasks);
     num_segs_on_proc = 0;
@@ -229,20 +233,31 @@ namespace netgen
       vert_flag = -1;
       for (int dest = 1; dest < ntasks; dest++)
 	{
-	  NgFlatArray<ElementIndex> els = els_of_proc[dest];
+          /*
+	  FlatArray<ElementIndex> els = els_of_proc[dest];
 	  for (int hi = 0; hi < els.Size(); hi++)
 	    {
 	      const Element & el = (*this) [ els[hi] ];
 	      for (int i = 0; i < el.GetNP(); i++)
 		f(el[i], dest);
 	    }
-	  NgFlatArray<SurfaceElementIndex> sels = sels_of_proc[dest];
+          */
+          for (auto & ei : els_of_proc[dest])
+            for (auto pnum : (*this)[ei].PNums())
+              f(pnum, dest);
+          /*
+	  FlatArray<SurfaceElementIndex> sels = sels_of_proc[dest];
 	  for (int hi = 0; hi < sels.Size(); hi++)
 	    {
 	      const Element2d & el = (*this) [ sels[hi] ];
 	      for (int i = 0; i < el.GetNP(); i++)
 		f(el[i], dest);
 	    }
+          */
+          for (auto & ei : sels_of_proc[dest])
+            for (auto pnum : (*this)[ei].PNums())
+              f(pnum, dest);
+
 	  NgFlatArray<SegmentIndex> segs = segs_of_proc[dest];
 	  for (int hi = 0; hi < segs.Size(); hi++)
 	    {
@@ -325,9 +340,6 @@ namespace netgen
 	sendrequests.Append (request);
       }
 
-    NgArray<int> num_distpnums(ntasks);
-    num_distpnums = 0;
-
 
     /**
        Next, we send the identifications themselfs.
@@ -385,21 +397,24 @@ namespace netgen
 	      }
 	  }
       }
-    NgArray<MPI_Request> req_per;
+    Array<MPI_Request> req_per;
     for(int dest = 1; dest < ntasks; dest++)
       req_per.Append(MyMPI_ISend(pp_data[dest], dest, MPI_TAG_MESH+1, comm));
-    MPI_Waitall(req_per.Size(), &req_per[0], MPI_STATUS_IGNORE);
+    MyMPI_WaitAll(req_per);
 
     PrintMessage ( 3, "Sending Vertices - distprocs");
+
+    Array<int> num_distpnums(ntasks);
+    num_distpnums = 0;
     
     for (int vert = 1; vert <= GetNP(); vert++)
       {
-	NgFlatArray<int> procs = procs_of_vert[vert];
-	for (int j = 0; j < procs.Size(); j++)
-	  num_distpnums[procs[j]] += 3 * (procs.Size()-1);
+	FlatArray<int> procs = procs_of_vert[vert];
+	for (auto p : procs)
+	  num_distpnums[p] += 3 * (procs.Size()-1);
       }
 
-    TABLE<int> distpnums (num_distpnums);
+    DynamicTable<int> distpnums (num_distpnums);
 
     for (int vert = 1; vert <= GetNP(); vert++)
       {
@@ -415,13 +430,13 @@ namespace netgen
       }
     
     for ( int dest = 1; dest < ntasks; dest ++ )
-      sendrequests.Append (MyMPI_ISend (distpnums[dest], dest, MPI_TAG_MESH+1, comm));
+      sendrequests.Append (comm.ISend (distpnums[dest], dest, MPI_TAG_MESH+1));
 
 
 
     PrintMessage ( 3, "Sending elements" );
 
-    NgArray<int> elarraysize (ntasks);
+    Array<int> elarraysize (ntasks);
     elarraysize = 0;
     for ( int ei = 1; ei <= GetNE(); ei++)
       {
@@ -431,7 +446,7 @@ namespace netgen
 	elarraysize[dest] += 3 + el.GetNP();
       }
 
-    TABLE<int> elementarrays(elarraysize);
+    DynamicTable<int> elementarrays(elarraysize);
 
     for (int ei = 1; ei <= GetNE(); ei++)
       {
@@ -447,12 +462,13 @@ namespace netgen
       }
 
     for (int dest = 1; dest < ntasks; dest ++ )
-      sendrequests.Append (MyMPI_ISend (elementarrays[dest], dest, MPI_TAG_MESH+2, comm));
+      // sendrequests.Append (MyMPI_ISend (elementarrays[dest], dest, MPI_TAG_MESH+2, comm));
+      sendrequests.Append (comm.ISend (elementarrays[dest], dest, MPI_TAG_MESH+2));
 
 
     PrintMessage ( 3, "Sending Face Descriptors" );
 
-    NgArray<double> fddata (6 * GetNFD());
+    Array<double> fddata (6 * GetNFD());
     for (int fdi = 1; fdi <= GetNFD(); fdi++)
       {
 	fddata[6*fdi-6] = GetFaceDescriptor(fdi).SurfNr();
@@ -464,8 +480,8 @@ namespace netgen
 	
       }
     for (int dest = 1; dest < ntasks; dest++)
-      sendrequests.Append (MyMPI_ISend (fddata, dest, MPI_TAG_MESH+3, comm));
-
+      sendrequests.Append (comm.ISend (fddata, dest, MPI_TAG_MESH+3));
+    
     /** Surface Elements **/
 
     PrintMessage ( 3, "Sending Surface elements" );
@@ -527,14 +543,14 @@ namespace netgen
 	    }
 	}      
     };
-    NgArray <int> nlocsel(ntasks), bufsize(ntasks);
+    Array <int> nlocsel(ntasks), bufsize(ntasks);
     nlocsel = 0;
     bufsize = 1;
     iterate_sels([&](SurfaceElementIndex sei, const Element2d & sel, int dest){
 	nlocsel[dest]++;
 	bufsize[dest] += 4 + 2*sel.GetNP();
       });
-    TABLE<int> selbuf(bufsize);
+    DynamicTable<int> selbuf(bufsize);
     for (int dest = 1; dest < ntasks; dest++ )
       selbuf.Add (dest, nlocsel[dest]);
     iterate_sels([&](SurfaceElementIndex sei, const auto & sel, int dest) {
@@ -550,7 +566,7 @@ namespace netgen
       });
     // distribute sel data
     for (int dest = 1; dest < ntasks; dest++)
-      sendrequests.Append (MyMPI_ISend(selbuf[dest], dest, MPI_TAG_MESH+4, comm));
+      sendrequests.Append (comm.ISend(selbuf[dest], dest, MPI_TAG_MESH+4));
     
 
     /** Segments **/
@@ -682,7 +698,7 @@ namespace netgen
 		    nloc_seg[dest]++;
 		    bufsize[dest] += 14;
 		  });
-    TABLE<double> segm_buf(bufsize);
+    DynamicTable<double> segm_buf(bufsize);
     iterate_segs2([&](auto segi, const auto & seg, int dest)
 		  {
 		    segm_buf.Add (dest, segi);
@@ -702,11 +718,11 @@ namespace netgen
 		  });
     // distrubute segment data
     for (int dest = 1; dest < ntasks; dest++)
-      sendrequests.Append (MyMPI_ISend(segm_buf[dest], dest, MPI_TAG_MESH+5, comm));
+      sendrequests.Append (comm.ISend(segm_buf[dest], dest, MPI_TAG_MESH+5));
 
     PrintMessage ( 3, "now wait ...");
 
-    MPI_Waitall (sendrequests.Size(), &sendrequests[0], MPI_STATUS_IGNORE);
+    MyMPI_WaitAll (sendrequests);
 
     // clean up MPI-datatypes we allocated earlier
     for (auto t : point_types)
@@ -752,9 +768,9 @@ namespace netgen
 
     PrintMessage ( 3, "wait for names");
 
-    MPI_Waitall (sendrequests.Size(), &sendrequests[0], MPI_STATUS_IGNORE);
+    MyMPI_WaitAll (sendrequests);
     
-    MPI_Barrier(comm);
+    comm.Barrier();
 
     PrintMessage( 3, "Clean up local memory");
 
@@ -818,22 +834,19 @@ namespace netgen
     int ntasks = comm.Size();
     
     int dim;
-    MyMPI_Bcast(dim, comm);
+    comm.Bcast(dim);
     SetDimension(dim);
     
     // Receive number of local elements
     int nelloc;
-    MPI_Scatter (NULL, 0, MPI_INT,
-		 &nelloc, 1, MPI_INT, 0, comm);
+    comm.Scatter (nelloc);
     paralleltop -> SetNE (nelloc);
     
-    // string st;
-
     // receive vertices
     NgProfiler::StartTimer (timer_pts);
 
-    NgArray<int> verts;
-    MyMPI_Recv (verts, 0, MPI_TAG_MESH+1, comm);
+    Array<int> verts;
+    comm.Recv (verts, 0, MPI_TAG_MESH+1);
 
     int numvert = verts.Size();
     paralleltop -> SetNV (numvert);
@@ -855,16 +868,13 @@ namespace netgen
     MPI_Status status;
     MPI_Recv( points.Data(), numvert, mptype, 0, MPI_TAG_MESH+1, comm, &status);
 
-    NgArray<int> pp_data;
-    MyMPI_Recv(pp_data, 0, MPI_TAG_MESH+1, comm);
+    Array<int> pp_data;
+    comm.Recv(pp_data, 0, MPI_TAG_MESH+1);
 
     int maxidentnr = pp_data[0];
     auto & idents = GetIdentifications();
     for (int idnr = 1; idnr < maxidentnr+1; idnr++)
-      {
-	
-    	idents.SetType(idnr, (Identifications::ID_TYPE)pp_data[idnr]);
-      }
+      idents.SetType(idnr, (Identifications::ID_TYPE)pp_data[idnr]);
 
     int offset = 2*maxidentnr+1;
     for(int idnr = 1; idnr < maxidentnr+1; idnr++)
@@ -879,8 +889,8 @@ namespace netgen
 	}
       }
     
-    NgArray<int> dist_pnums;
-    MyMPI_Recv (dist_pnums, 0, MPI_TAG_MESH+1, comm);
+    Array<int> dist_pnums;
+    comm.Recv (dist_pnums, 0, MPI_TAG_MESH+1);
     
     for (int hi = 0; hi < dist_pnums.Size(); hi += 3)
       paralleltop ->
@@ -890,8 +900,8 @@ namespace netgen
     *testout << "got " << numvert << " vertices" << endl;
 
     {
-      NgArray<int> elarray;
-      MyMPI_Recv (elarray, 0, MPI_TAG_MESH+2, comm);
+      Array<int> elarray;
+      comm.Recv (elarray, 0, MPI_TAG_MESH+2);
       
       NgProfiler::RegionTimer reg(timer_els);
 
@@ -911,8 +921,8 @@ namespace netgen
     }
 
     {
-      NgArray<double> fddata;
-      MyMPI_Recv (fddata, 0, MPI_TAG_MESH+3, comm);
+      Array<double> fddata;
+      comm.Recv (fddata, 0, MPI_TAG_MESH+3);
       for (int i = 0; i < fddata.Size(); i += 6)
 	{
 	  int faceind = AddFaceDescriptor 
@@ -925,9 +935,9 @@ namespace netgen
 
     {
       NgProfiler::RegionTimer reg(timer_sels);
-      NgArray<int> selbuf;
+      Array<int> selbuf;
 
-      MyMPI_Recv ( selbuf, 0, MPI_TAG_MESH+4, comm);
+      comm.Recv ( selbuf, 0, MPI_TAG_MESH+4);
       
       int ii = 0;
       int sel = 0;
@@ -1032,7 +1042,7 @@ namespace netgen
     write_names(cd2names);
     write_names(cd3names);
     
-    MPI_Barrier(comm);
+    comm.Barrier();
 
     int timerloc = NgProfiler::CreateTimer ("Update local mesh");
     int timerloc2 = NgProfiler::CreateTimer ("CalcSurfacesOfNode");

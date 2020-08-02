@@ -238,6 +238,24 @@ namespace ngcore
       MPI_Alltoall (send.Data(), 1, GetMPIType<T>(), 
                     recv.Data(), 1, GetMPIType<T>(), comm);
     }
+
+
+    template <typename T>
+    void ScatterRoot (FlatArray<T> send) const
+    {
+      if (size == 1) return;
+      MPI_Scatter (send.Data(), 1, GetMPIType<T>(),
+                   MPI_IN_PLACE, -1, GetMPIType<T>(), 0, comm);
+    }
+    
+    template <typename T>
+    void Scatter (T & recv) const
+    {
+      if (size == 1) return;      
+      MPI_Scatter (NULL, 0, GetMPIType<T>(),
+                   &recv, 1, GetMPIType<T>(), 0, comm);
+    }
+
     
     
     NgMPI_Comm SubCommunicator (FlatArray<int> procs) const

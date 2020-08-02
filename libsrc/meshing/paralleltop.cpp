@@ -25,11 +25,7 @@ namespace netgen
   {
     *testout << "ParallelMeshTopology::Reset" << endl;
 
-    NgMPI_Comm comm = mesh.GetCommunicator();
-    int id = comm.Rank();
-    int ntasks = comm.Size();
-    
-    if ( ntasks == 1 ) return;
+    if ( mesh.GetCommunicator().Size() == 1 ) return;
 
     int ned = mesh.GetTopology().GetNEdges();
     int nfa = mesh.GetTopology().GetNFaces();
@@ -162,10 +158,10 @@ namespace netgen
 	    sendarray.Append (topology.GetSurfaceElementFace (el));
 	  }
 
-	NgArray<MPI_Request> sendrequests;
+	Array<MPI_Request> sendrequests;
 	for (int dest = 1; dest < ntasks; dest++)
 	  sendrequests.Append (MyMPI_ISend (*sendarrays[dest], dest, MPI_TAG_MESH+10, comm));
-	MPI_Waitall (sendrequests.Size(), &sendrequests[0], MPI_STATUS_IGNORE);
+	MyMPI_WaitAll (sendrequests);
 
 	for (int dest = 1; dest < ntasks; dest++)
 	  delete sendarrays[dest];
