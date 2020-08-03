@@ -171,7 +171,7 @@ namespace ngcore
     }
 
     template<typename T, typename T2 = decltype(GetMPIType<T>())>
-    MPI_Request ISend (const FlatArray<T> & s, int dest, int tag) const
+    MPI_Request ISend (FlatArray<T> s, int dest, int tag) const
     {
       MPI_Request request;
       MPI_Isend (s.Data(), s.Size(), GetMPIType<T>(), dest, tag, comm, &request);
@@ -187,7 +187,7 @@ namespace ngcore
     }
     
     template<typename T, typename T2 = decltype(GetMPIType<T>())>
-    MPI_Request IRecv (const FlatArray<T> & s, int src, int tag) const
+    MPI_Request IRecv (FlatArray<T> s, int src, int tag) const
     { 
       MPI_Request request;
       MPI_Irecv (s.Data(), s.Size(), GetMPIType<T>(), src, tag, comm, &request);
@@ -330,13 +330,13 @@ namespace ngcore
     MPI_Request ISend (T & val, int dest, int tag) const { return 0; } 
     
     template<typename T>
-    MPI_Request ISend (const FlatArray<T> & s, int dest, int tag) const { return 0; }
+    MPI_Request ISend (FlatArray<T> s, int dest, int tag) const { return 0; }
 
     template<typename T>
     MPI_Request IRecv (T & val, int dest, int tag) const { return 0; } 
     
     template<typename T>
-    MPI_Request IRecv (const FlatArray<T> & s, int src, int tag) const { return 0; }
+    MPI_Request IRecv (FlatArray<T> s, int src, int tag) const { return 0; }
 
     template <typename T>
     T Reduce (T d, const MPI_Op & op, int root = 0) const { return d; }

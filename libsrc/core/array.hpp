@@ -450,6 +450,10 @@ namespace ngcore
       : size(asize), data (lh.Alloc<T> (asize))
     { ; }
 
+    template <int N>
+    NETGEN_INLINE FlatArray(T (&ar)[N])
+      : size(N), data(ar) { }
+    
     /// the size
     NETGEN_INLINE size_t Size() const { return size; }
 
