@@ -49,19 +49,19 @@ namespace netgen::cg
 
   Element2d ReadCGNSElement2D( ElementType_t type, FlatArray<cgsize_t> verts )
     {
-      static constexpr int map_tri3[]  = {0,2,1};
+//       static constexpr int map_tri3[]  = {0,2,1};
       static constexpr int map_tri6[]  = {0,2,1,3,5,4}; // untested
-      static constexpr int map_quad4[] = {0,3,2,1};
+//       static constexpr int map_quad4[] = {0,3,2,1};
       static constexpr int map_quad8[] = {0,3,2,1,4,7,6,5}; // untested
 
       const int * map = nullptr;
       switch(type)
         {
           case TRI_3:
-              map = map_tri3;
+//               map = map_tri3;
               break;
           case QUAD_4:
-              map = map_quad4;
+//               map = map_quad4;
               break;
           case TRI_6:
               map = map_tri6;
@@ -117,6 +117,145 @@ namespace netgen::cg
       return el;
     }
 
+  void WriteCGNSElement( const Segment & el, Array<cgsize_t> & verts )
+    {
+      verts.Append(BAR_2);
+      verts.Append(el[0]);
+      verts.Append(el[1]);
+    }
+
+  void WriteCGNSElement( const Element2d & el, Array<cgsize_t> & verts )
+    {
+      static constexpr int map_tri6[]  = {0,2,1,3,5,4}; // untested
+      static constexpr int map_quad8[] = {0,3,2,1,4,7,6,5}; // untested
+
+      ElementType_t type;
+
+      const int * map = nullptr;
+      switch(el.GetType())
+        {
+          case TRIG:
+              type = TRI_3;
+              break;
+          case QUAD:
+              type = QUAD_4;
+              break;
+          case TRIG6:
+              type = TRI_6;
+              map = map_tri6;
+              break;
+          case QUAD8:
+              type = QUAD_8;
+              map = map_quad8;
+              break;
+              // TODO: Second order elements
+          default:
+              throw Exception("Write CGNS: unknown element type " + ToString(el.GetType()));
+        }
+
+      verts.Append(type);
+
+      for (auto i : Range(el.GetNP()))
+          verts.Append(el[i]);
+    }
+
+  void WriteCGNSElement( const Element & el, Array<cgsize_t> & verts )
+    {
+      static constexpr int map_tet4[]   = {0,2,1,3};
+      static constexpr int map_prism6[] = {0,2,1,3,5,4};
+      static constexpr int map_pyra5[]  = {0,3,2,1,4};
+      static constexpr int map_hexa8[]  = {0,3,2,1,4,7,6,5};
+
+      ElementType_t type;
+
+      const int * map = nullptr;
+      switch(el.GetType())
+        {
+          case TET:
+              map = map_tet4;
+              type = TETRA_4;
+              break;
+          case PYRAMID:
+              type = PYRA_5;
+              map = map_pyra5;
+              break;
+          case PRISM:
+              type = PENTA_6;
+              map = map_prism6;
+              break;
+          case HEX:
+              type = HEXA_8;
+              map = map_hexa8;
+              break;
+              // TODO: Second order elements
+          default:
+              throw Exception("Write CGNS: unknown element type " + ToString(el.GetType()));
+        }
+
+      verts.Append(type);
+
+      for (auto i : Range(el.GetNP()))
+          verts.Append(el[map[i]]);
+    }
+
+  int WriteCGNSRegion( const Mesh & mesh, int dim, int index, int fn, int base, int zone, int ne_before )
+  {
+    int meshdim = mesh.GetDimension();
+    int codim = meshdim-dim;
+
+    if(codim < 0 || codim > 2)
+      return 0;
+
+    // make sure that each material/boundary name is unique
+    string prefix[] = { "dom_", "bnd_", "bbnd_" };
+    string name = prefix[meshdim-dim] + ToString(index) + "_";
+
+    if(codim==0) name += mesh.GetMaterial(index+1);
+    if(codim==1) name += *mesh.GetBCNamePtr(index);
+    if(codim==2) name += mesh.GetCD2Name(index);
+
+    int ne = 0;
+    Array<int> data;
+
+    if(dim==3)
+      for(const auto el : mesh.VolumeElements())
+        if(el.GetIndex()==index)
+        {
+          ne++;
+          WriteCGNSElement(el, data);
+        }
+
+    if(dim==2)
+      for(const auto el : mesh.SurfaceElements())
+        if(el.GetIndex()==index)
+        {
+          ne++;
+          WriteCGNSElement(el, data);
+        }
+
+    if(dim==1)
+      for(const auto el : mesh.LineSegments())
+        if(el.si==index)
+        {
+          ne++;
+          WriteCGNSElement(el, data);
+        }
+
+    if(ne==0)
+      return 0;
+
+    int section;
+    int start = 1;
+    int end = ne;
+#if CGNS_VERSION < 3400
+    cg_section_write(fn,base,zone, name.c_str(), MIXED, ne_before+1, ne_before+ne, 0, &data[0], &section);
+#else
+    cg_poly_section_write(fn,base,zone, name.c_str(), MIXED, ne_before+1, ne_before+ne, 0, &data[0], nullptr, &section);
+#endif
+
+    return ne;
+  }
+
   // maps cgns node type to ngsolve node type
   // enum NODE_TYPE { NT_VERTEX = 0, NT_EDGE = 1, NT_FACE = 2, NT_CELL = 3, NT_ELEMENT = 4, NT_FACET = 5 };
   int getNodeType( GridLocation_t location )
@@ -135,6 +274,23 @@ namespace netgen::cg
               throw Exception("Read CGNS: unknown grid location " + string(cg_GridLocationName(location)));
         }
     }
+
+  GridLocation_t getCGNodeType( int node_type )
+  {
+    switch(node_type)
+    {
+      case 0:
+        return Vertex;
+      case 1:
+        return EdgeCenter;
+      case 2:
+        return FaceCenter;
+      case 3:
+        return CellCenter;
+      default:
+        throw Exception("Write CGNS: unknown node type " + ToString(node_type));
+    }
+  }
 
 
   struct Solution
@@ -533,6 +689,90 @@ namespace netgen
       cg_close(fn);
       return std::make_tuple(mesh, names, values, locations);
     }
+
+  void WriteCGNSMesh (const Mesh & mesh, int fn, int & base, int & zone)
+    {
+      int dim = mesh.GetDimension();
+      cg_base_write(fn, "mesh", dim, dim, &base);
+
+      int nv = static_cast<int>(mesh.GetNV());
+      int ne = mesh.GetNE();
+
+      Array<double> x, y, z;
+      for(auto & p : mesh.Points())
+      {
+        x.Append(p[0]);
+        y.Append(p[1]);
+        z.Append(p[2]);
+      }
+
+      cgsize_t isize[3] = { nv, ne, 0 };
+      cg_zone_write(fn,base, "mesh", isize, Unstructured, &zone);
+
+      int coord;
+      cg_coord_write(fn,base,zone, RealDouble, "CoordinateX", &x[0], &coord);
+      cg_coord_write(fn,base,zone, RealDouble, "CoordinateY", &y[0], &coord);
+      cg_coord_write(fn,base,zone, RealDouble, "CoordinateZ", &z[0], &coord);
+
+      int imax3 = 0;
+      for(const auto & el : mesh.VolumeElements())
+        imax3 = max(imax3, el.GetIndex());
+
+      int imax2 = 0;
+      for(const auto & el : mesh.SurfaceElements())
+        imax2 = max(imax2, el.GetIndex());
+
+      int imax1 = 0;
+      for(const auto & el : mesh.LineSegments())
+        imax1 = max(imax1, el.si);
+
+      int ne_written = 0;
+      int meshdim = mesh.GetDimension();
+
+      for(const auto i : IntRange(imax3))
+        ne_written += cg::WriteCGNSRegion(mesh, 3, i+1, fn, base, zone, ne_written);
+
+      for(const auto i : IntRange(imax2))
+        ne_written += cg::WriteCGNSRegion(mesh, 2, i+1, fn, base, zone, ne_written);
+
+      for(const auto i : IntRange(imax1))
+        ne_written += cg::WriteCGNSRegion(mesh, 1, i+1, fn, base, zone, ne_written);
+
+    }
+
+  void WriteCGNSMesh (const Mesh & mesh, const string & filename)
+    {
+      static Timer tall("CGNS::WriteMesh"); RegionTimer rtall(tall);
+      int fn, base, zone;
+      cg_open(filename.c_str(),CG_MODE_WRITE,&fn);
+
+      WriteCGNSMesh(mesh, fn, base, zone);
+
+      cg_close(fn);
+    }
+
+
+  void WriteCGNSFile(shared_ptr<Mesh> mesh, string filename, vector<string> fields, vector<Array<double>> values, vector<int> locations)
+  {
+      static Timer tall("CGNS::WriteFile"); RegionTimer rtall(tall);
+      int fn, base, zone;
+      cg_open(filename.c_str(),CG_MODE_WRITE,&fn);
+
+      WriteCGNSMesh(*mesh, fn, base, zone);
+
+      for(auto i : IntRange(fields.size()))
+      {
+        int section, field;
+        string name = "solution_" + ToString(i);
+
+
+        cg_sol_write(fn, base, zone, name.c_str(), cg::getCGNodeType(locations[i]), &section);
+        cg_field_write(fn, base, zone, section, RealDouble, fields[i].c_str(), &values[i][0], &field);
+      }
+
+      cg_close(fn);
+  }
+
 }
 
 #else // NG_CGNS
@@ -548,6 +788,17 @@ namespace netgen
     {
       throw Exception("Netgen was built without CGNS support");
     }
+
+  void WriteCGNSMesh (const Mesh & mesh, const string & filename)
+    {
+      PrintMessage(1, "Could not write CGNS mesh: Netgen was built without CGNS support");
+    }
+
+  void WriteCGNSFile(shared_ptr<Mesh> mesh, string filename, vector<string> fields, vector<Array<double>> values, vector<int> locations)
+    {
+      throw Exception("Netgen was built without CGNS support");
+    }
+
 }
 
 #endif // NG_CGNS

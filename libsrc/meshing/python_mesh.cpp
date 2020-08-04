@@ -1192,6 +1192,13 @@ grow_edges : bool = False
 
 
   m.def("ReadCGNSFile", &ReadCGNSFile, py::arg("filename"), py::arg("base")=1, "Read mesh and solution vectors from CGNS file");
+  m.def("WriteCGNSFile", &WriteCGNSFile, py::arg("mesh"), py::arg("filename"), py::arg("names"), py::arg("values"), py::arg("locations"),
+      R"(Write mesh and solution vectors to CGNS file, possible values for locations:
+      Vertex     = 0
+      EdgeCenter = 1
+      FaceCenter = 2
+      CellCenter = 3
+      )");
 
     py::class_<SurfaceGeometry, NetgenGeometry, shared_ptr<SurfaceGeometry>> (m, "SurfaceGeometry")
     .def(py::init<>())
