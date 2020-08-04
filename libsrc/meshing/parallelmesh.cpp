@@ -733,14 +733,14 @@ namespace netgen
     sendrequests.SetSize(3*ntasks);
     /** Send bc/mat/cd*-names **/
     // nr of names
-    int nnames[4] = {0,0,0,0};
+    ArrayMem<int,4> nnames{0,0,0,0};
     nnames[0] = materials.Size();
     nnames[1] = bcnames.Size();
     nnames[2] = GetNCD2Names();
     nnames[3] = GetNCD3Names();
     int tot_nn = nnames[0] + nnames[1] + nnames[2] + nnames[3];
     for( int k = 1; k < ntasks; k++)
-      sendrequests[k] = comm.ISend(FlatArray(nnames), k, MPI_TAG_MESH+6);
+      sendrequests[k] = comm.ISend(nnames, k, MPI_TAG_MESH+6);
       // (void) MPI_Isend(nnames, 4, MPI_INT, k, MPI_TAG_MESH+6, comm, &sendrequests[k]);
     auto iterate_names = [&](auto func) {
       for (int k = 0; k < nnames[0]; k++) func(materials[k]);
@@ -1013,9 +1013,9 @@ namespace netgen
     }
 
     /** Recv bc-names **/
-    int nnames[4] = {0,0,0,0};
+    ArrayMem<int,4> nnames{0,0,0,0};
     // MPI_Recv(nnames, 4, MPI_INT, 0, MPI_TAG_MESH+6, comm, MPI_STATUS_IGNORE);
-    comm.Recv(FlatArray(nnames), 0, MPI_TAG_MESH+6);
+    comm.Recv(nnames, 0, MPI_TAG_MESH+6);
     // cout << "nnames = " << FlatArray(nnames) << endl;
     materials.SetSize(nnames[0]);
     bcnames.SetSize(nnames[1]);
