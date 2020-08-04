@@ -22,7 +22,7 @@ namespace netgen
   { 
     static MPI_Datatype type = MPI_DATATYPE_NULL;
     static MPI_Datatype htype = MPI_DATATYPE_NULL;
-    if (!type)
+    if (type == MPI_DATATYPE_NULL)
       {
 	MeshPoint hp;
 	int blocklen[] = { 3, 1, 1 };
