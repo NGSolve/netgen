@@ -8,6 +8,7 @@
 
 #include "array.hpp"
 #include "exception.hpp"
+#include "profiler.hpp"
 
 namespace ngcore
 {
@@ -122,6 +123,7 @@ namespace ngcore
     int Rank() const { return rank; }
     int Size() const { return size; }
     void Barrier() const {
+      static Timer t("MPI - Barrier"); RegionTimer reg(t);
       if (size > 1) MPI_Barrier (comm);
     }
     
@@ -200,6 +202,7 @@ namespace ngcore
     template <typename T, typename T2 = decltype(GetMPIType<T>())> 
     T Reduce (T d, const MPI_Op & op, int root = 0) const
     {
+      static Timer t("MPI - Reduce"); RegionTimer reg(t);          
       if (size == 1) return d;
       
       T global_d;
@@ -210,6 +213,7 @@ namespace ngcore
     template <typename T, typename T2 = decltype(GetMPIType<T>())> 
     T AllReduce (T d, const MPI_Op & op) const
     {
+      static Timer t("MPI - AllReduce"); RegionTimer reg(t);
       if (size == 1) return d;
       
       T global_d;
@@ -272,6 +276,7 @@ namespace ngcore
 
   NETGEN_INLINE void MyMPI_WaitAll (FlatArray<MPI_Request> requests)
   {
+    static Timer t("MPI - WaitAll"); RegionTimer reg(t);    
     if (!requests.Size()) return;
     MPI_Waitall (requests.Size(), requests.Data(), MPI_STATUSES_IGNORE);
   }
