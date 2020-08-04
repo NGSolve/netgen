@@ -134,6 +134,10 @@ namespace ngcore
     void Send (T & val, int dest, int tag) const {
       MPI_Send (&val, 1, GetMPIType<T>(), dest, tag, comm);
     }
+
+    void Send (const std::string & s, int dest, int tag) const {
+      MPI_Send( const_cast<char*> (&s[0]), s.length(), MPI_CHAR, dest, tag, comm);
+    }
     
     template<typename T, typename T2 = decltype(GetMPIType<T>())>
     void Send(FlatArray<T> s, int dest, int tag) const {
@@ -144,6 +148,17 @@ namespace ngcore
     void Recv (T & val, int src, int tag) const {
       MPI_Recv (&val, 1, GetMPIType<T>(), src, tag, comm, MPI_STATUS_IGNORE);
     }
+
+    void Recv (std::string & s, int src, int tag) const {    
+      MPI_Status status;
+      int len;
+      MPI_Probe (src, tag, comm, &status);
+      MPI_Get_count (&status, MPI_CHAR, &len);
+      // s.assign (len, ' ');
+      s.resize (len);
+      MPI_Recv( &s[0], len, MPI_CHAR, src, tag, comm, MPI_STATUS_IGNORE);
+    }
+    
 
     template <typename T, typename T2 = decltype(GetMPIType<T>())>
     void Recv (FlatArray <T> s, int src, int tag) const {

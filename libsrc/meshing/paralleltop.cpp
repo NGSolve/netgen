@@ -122,7 +122,7 @@ namespace netgen
     *testout << "ParallelMeshTopology :: UpdateCoarseGridGlobal" << endl;
 
     const MeshTopology & topology = mesh.GetTopology();
-    MPI_Comm comm = mesh.GetCommunicator();
+    auto comm = mesh.GetCommunicator();
     
     if ( id == 0 )
       {
@@ -160,7 +160,8 @@ namespace netgen
 
 	Array<MPI_Request> sendrequests;
 	for (int dest = 1; dest < ntasks; dest++)
-	  sendrequests.Append (MyMPI_ISend (*sendarrays[dest], dest, MPI_TAG_MESH+10, comm));
+	  // sendrequests.Append (MyMPI_ISend (*sendarrays[dest], dest, MPI_TAG_MESH+10, comm));
+          sendrequests.Append (comm.ISend (FlatArray<int>(*sendarrays[dest]), dest, MPI_TAG_MESH+10));
 	MyMPI_WaitAll (sendrequests);
 
 	for (int dest = 1; dest < ntasks; dest++)

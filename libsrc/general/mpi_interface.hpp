@@ -59,11 +59,13 @@ namespace netgen
     MPI_Recv( &i, 1, MPI_INT, src, tag, comm, &status);
   }
 
+  [[deprecated("mympi_send string, use comm.Send instead")]]              
   inline void MyMPI_Send (const string & s, int dest, int tag, MPI_Comm comm)
   {
     MPI_Send( const_cast<char*> (s.c_str()), s.length(), MPI_CHAR, dest, tag, comm);
   }
 
+  [[deprecated("mympi_revc string, use comm.Recv instead")]]              
   inline void MyMPI_Recv (string & s, int src, int tag, MPI_Comm comm)
   {
     MPI_Status status;
@@ -76,14 +78,15 @@ namespace netgen
 
  
 
-
   template <class T, int BASE>
+  [[deprecated("mympi_send ngflatarray, use comm.send instead")]]              
   inline void MyMPI_Send (NgFlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm)
   {
     MPI_Send( &s.First(), s.Size(), GetMPIType<T>(), dest, tag, comm);
   }
 
   template <class T, int BASE>
+  [[deprecated("mympi_recv ngflatarray, use comm.Recv instead")]]                
   inline void MyMPI_Recv ( NgFlatArray<T, BASE> s, int src, int tag, MPI_Comm comm)
   {
     MPI_Status status;
@@ -136,6 +139,7 @@ namespace netgen
   */
 
   template <class T, int BASE>
+  [[deprecated("mympi_isend ngflatarray, use comm.send instead")]]                
   inline MPI_Request MyMPI_ISend (NgFlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm)
   {
     MPI_Request request;
@@ -143,8 +147,8 @@ namespace netgen
     return request;
   }
 
-
   template <class T, int BASE>
+  [[deprecated("mympi_irecv ngflatarray, use comm.recv instead")]]                
   inline MPI_Request MyMPI_IRecv (NgFlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm)
   {
     MPI_Request request;
@@ -243,12 +247,14 @@ namespace netgen
   }
 
   template <class T, class T2>
+  [[deprecated("mympi_allgather deprecated, use comm.allgather")]]                    
   inline void MyMPI_Allgather (const T & send, NgFlatArray<T2> recv, MPI_Comm comm)
   {
     MPI_Allgather( const_cast<T*> (&send), 1, GetMPIType<T>(), &recv[0], 1, GetMPIType<T2>(), comm);
   }
 
   template <class T, class T2>
+  [[deprecated("mympi_alltoall deprecated, use comm.alltoall")]]                  
   inline void MyMPI_Alltoall (NgFlatArray<T> send, NgFlatArray<T2> recv, MPI_Comm comm)
   {
     MPI_Alltoall( &send[0], 1, GetMPIType<T>(), &recv[0], 1, GetMPIType<T2>(), comm);

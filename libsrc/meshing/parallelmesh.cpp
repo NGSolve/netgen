@@ -321,7 +321,8 @@ namespace netgen
     for (int dest = 1; dest < ntasks; dest++)
       {
 	NgFlatArray<PointIndex> verts = verts_of_proc[dest];
-	sendrequests.Append (MyMPI_ISend (verts, dest, MPI_TAG_MESH+1, comm));
+	// sendrequests.Append (MyMPI_ISend (verts, dest, MPI_TAG_MESH+1, comm));
+        sendrequests.Append (comm.ISend (FlatArray<PointIndex>(verts), dest, MPI_TAG_MESH+1));
 
 	MPI_Datatype mptype = MeshPoint::MyGetMPIType();
 
@@ -399,7 +400,8 @@ namespace netgen
       }
     Array<MPI_Request> req_per;
     for(int dest = 1; dest < ntasks; dest++)
-      req_per.Append(MyMPI_ISend(pp_data[dest], dest, MPI_TAG_MESH+1, comm));
+      // req_per.Append(MyMPI_ISend(pp_data[dest], dest, MPI_TAG_MESH+1, comm));
+      req_per.Append(comm.ISend(FlatArray<int>(pp_data[dest]), dest, MPI_TAG_MESH+1));
     MyMPI_WaitAll(req_per);
 
     PrintMessage ( 3, "Sending Vertices - distprocs");
