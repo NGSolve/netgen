@@ -20,8 +20,8 @@ namespace netgen
 #ifdef PARALLEL
   MPI_Datatype MeshPoint :: MyGetMPIType ( )
   { 
-    static MPI_Datatype type = NULL;
-    static MPI_Datatype htype = NULL;
+    static MPI_Datatype type = MPI_DATATYPE_NULL;
+    static MPI_Datatype htype = MPI_DATATYPE_NULL;
     if (!type)
       {
 	MeshPoint hp;
