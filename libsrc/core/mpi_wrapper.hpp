@@ -314,9 +314,10 @@ namespace ngcore
   static MPI_Comm MPI_COMM_WORLD = 12345, MPI_COMM_NULL = 10000;
 
   typedef int MPI_Op;
+  typedef int MPI_Datatype;  
   typedef int MPI_Request;
   
-  enum { MPI_SUM = 0, MPI_MIN = 1, MPI_MAX = 2 };
+  enum { MPI_SUM = 0, MPI_MIN = 1, MPI_MAX = 2, MPI_LOR = 4711 };
   
   class NgMPI_Comm
   {
