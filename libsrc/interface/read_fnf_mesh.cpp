@@ -208,7 +208,9 @@ namespace netgen
                         sbuf >> nr >> prop >> ch;
                         if (prop == "DEF")
                           {
-                            ;
+                            string name;
+                            sbuf >> name;
+                            mesh.SetMaterial(nr, name);
                           }
                         else
                           {
