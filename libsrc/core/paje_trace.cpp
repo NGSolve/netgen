@@ -21,7 +21,7 @@ namespace ngcore
 
   // If true, produce variable counting active threads
   // increases trace by a factor of two
-  bool PajeTrace::trace_thread_counter = true;
+  bool PajeTrace::trace_thread_counter = false;
   bool PajeTrace::trace_threads = true;
 
   PajeTrace :: PajeTrace(int anthreads, std::string aname)
@@ -31,7 +31,7 @@ namespace ngcore
     tracefile_name = std::move(aname);
 
     int bytes_per_event=33;
-    max_num_events_per_thread = std::min( static_cast<size_t>(std::numeric_limits<int>::max()), max_tracefile_size/bytes_per_event/(2*nthreads+1)*10/7);
+    max_num_events_per_thread = std::min( static_cast<size_t>(std::numeric_limits<int>::max()), max_tracefile_size/bytes_per_event/(nthreads+1+trace_thread_counter*nthreads)*10/7);
     if(max_num_events_per_thread>0)
     {
       logger->info( "Tracefile size = {}MB", max_tracefile_size/1024/1024);
@@ -404,11 +404,14 @@ namespace ngcore
       const int state_type_task = paje.DefineStateType( container_type_thread, "Task" );
       const int state_type_timer = paje.DefineStateType( container_type_timer, "Timer state" );
 
-      const int variable_type_active_threads = paje.DefineVariableType( container_type_jobs, "Active threads" );
+      int variable_type_active_threads = 0;
+      if(trace_thread_counter)
+          paje.DefineVariableType( container_type_jobs, "Active threads" );
 
       const int container_task_manager = paje.CreateContainer( container_type_task_manager, 0, "The task manager" );
       const int container_jobs = paje.CreateContainer( container_type_jobs, container_task_manager, "Jobs" );
-      paje.SetVariable( 0, variable_type_active_threads, container_jobs, 0.0 );
+      if(trace_thread_counter)
+          paje.SetVariable( 0, variable_type_active_threads, container_jobs, 0.0 );
 
       int num_nodes = 1; //task_manager ? task_manager->GetNumNodes() : 1;
       std::vector <int> thread_aliases;
