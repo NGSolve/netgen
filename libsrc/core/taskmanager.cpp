@@ -166,8 +166,11 @@ namespace ngcore
 
   TaskManager :: ~TaskManager ()
   {
-    delete trace;
-    trace = nullptr;
+    if (use_paje_trace)
+      {
+        delete trace;
+        trace = nullptr;
+      }
     num_threads = 1;
   }
 
@@ -335,7 +338,7 @@ namespace ngcore
       }
     
     
-    if (use_paje_trace)
+    if (trace)
         trace->StartJob(jobnr, afunc.target_type());
 
     func = &afunc;
@@ -406,7 +409,7 @@ namespace ngcore
     if (ex)
       throw Exception (*ex);
 
-    if (use_paje_trace)
+    if (trace)
         trace->StopJob();
   }
     

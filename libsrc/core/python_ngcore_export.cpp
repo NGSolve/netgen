@@ -246,4 +246,25 @@ threads : int
     .def("__timing__", &TaskManager::Timing)
     ;
 
+  py::class_<PajeTrace>(m, "PajeTrace")
+    .def(py::init( [] (string filename, size_t size_mb, bool threads, bool thread_counter)
+          {
+              PajeTrace::SetMaxTracefileSize(size_mb*1014*1024);
+              PajeTrace::SetTraceThreads(threads);
+              PajeTrace::SetTraceThreadCounter(thread_counter);
+              trace = new PajeTrace(TaskManager::GetMaxThreads(), filename);
+              return trace;
+          }), py::arg("filename")="ng.trace", py::arg("size")=1000,
+              py::arg("threads")=true, py::arg("thread_counter")=false,
+              "size in Megabytes"
+        )
+    .def("__enter__", [](PajeTrace & self) { })
+    .def("__exit__", [](PajeTrace & self, py::args) { self.StopTracing(); })
+    .def("__del__", [](PajeTrace & self) { trace = nullptr; })
+    .def("SetTraceThreads", &PajeTrace::SetTraceThreads)
+    .def("SetTraceThreadCounter", &PajeTrace::SetTraceThreadCounter)
+    .def("SetMaxTracefileSize", &PajeTrace::SetMaxTracefileSize)
+    ;
+
+
 }
