@@ -12,6 +12,8 @@
 
 extern const char *header;
 
+constexpr int MPI_PAJE_WRITER = 1;
+
 namespace ngcore
 {
   // Produce no traces by default
@@ -78,7 +80,7 @@ namespace ngcore
             link.time -= start_time;
 
     NgMPI_Comm comm(MPI_COMM_WORLD);
-    if(comm.Rank() == 0)
+    if(comm.Size()==1 || comm.Rank() == MPI_PAJE_WRITER)
       Write(tracefile_name);
     else
       SendData();
@@ -427,14 +429,13 @@ namespace ngcore
 
       std::map<std::string, int> host_map;
 
-      host_map[hostname] = container_nodes.size();
-      container_nodes.emplace_back( paje.CreateContainer( container_type_node, container_task_manager, hostname) );
-      thread_aliases.emplace_back( paje.CreateContainer( container_type_thread, container_nodes[host_map[hostname]], "Rank 0" ) );
-
       std::string name;
-      for(auto i : IntRange(1, nranks))
+      for(auto i : IntRange(0, nranks))
         {
-          comm.Recv(name, i, 0);
+          if(i!=MPI_PAJE_WRITER)
+              comm.Recv(name, i, 0);
+          else
+              name = hostname;
           if(host_map.count(name)==0)
             {
               host_map[name] = container_nodes.size();
@@ -492,8 +493,11 @@ namespace ngcore
           timer_names[id] = NgProfiler::GetName(id);
 
 #ifdef PARALLEL
-      for(auto src : IntRange(1, nranks))
+      for(auto src : IntRange(0, nranks))
         {
+          if(src==MPI_PAJE_WRITER)
+              continue;
+
           size_t n_timers;
           comm.Recv (n_timers, src, 0);
 
@@ -579,9 +583,9 @@ namespace ngcore
       for(auto & event : timer_events)
         {
           if(event.is_start)
-            paje.PushState( event.time, state_type_timer, thread_aliases[0], timer_aliases[event.timer_id] );
+            paje.PushState( event.time, state_type_timer, thread_aliases[MPI_PAJE_WRITER], timer_aliases[event.timer_id] );
           else
-            paje.PopState( event.time, state_type_timer, thread_aliases[0] );
+            paje.PopState( event.time, state_type_timer, thread_aliases[MPI_PAJE_WRITER] );
         }
 
       // Timer events
@@ -590,8 +594,11 @@ namespace ngcore
       Array<bool> is_start;
       Array<int> thread_id;
 
-      for(auto src : IntRange(1, nranks))
+      for(auto src : IntRange(0, nranks))
         {
+          if(src==MPI_PAJE_WRITER)
+              continue;
+
           comm.Recv (timer_id, src, 0);
           comm.Recv (time, src, 0);
           comm.Recv (is_start, src, 0);
@@ -691,7 +698,7 @@ namespace ngcore
           hostname = ahostname.data();
         }
 
-      comm.Send(hostname, 0, 0);
+      comm.Send(hostname, MPI_PAJE_WRITER, 0);
 
       // Timer names
       std::set<int> timer_ids;
@@ -706,11 +713,11 @@ namespace ngcore
       for(auto id : timer_ids)
           timer_names[id] = NgProfiler::GetName(id-NgProfiler::SIZE*rank);
       size_t size = timer_ids.size();
-      comm.Send(size, 0, 0);
+      comm.Send(size, MPI_PAJE_WRITER, 0);
       for(auto id : timer_ids)
         {
-          comm.Send(id, 0, 0);
-          comm.Send(timer_names[id], 0, 0);
+          comm.Send(id, MPI_PAJE_WRITER, 0);
+          comm.Send(timer_names[id], MPI_PAJE_WRITER, 0);
         }
 
 
@@ -728,10 +735,10 @@ namespace ngcore
           thread_id.Append(event.thread_id);
         }
 
-      comm.Send (timer_id, 0, 0);
-      comm.Send (time, 0, 0);
-      comm.Send (is_start, 0, 0);
-      comm.Send (thread_id, 0, 0);
+      comm.Send (timer_id, MPI_PAJE_WRITER, 0);
+      comm.Send (time, MPI_PAJE_WRITER, 0);
+      comm.Send (is_start, MPI_PAJE_WRITER, 0);
+      comm.Send (thread_id, MPI_PAJE_WRITER, 0);
 #endif // PARALLEL
     }
 
