@@ -159,22 +159,8 @@ namespace ngcore
       active_workers = 0;
 
       static int cnt = 0;
-      char buf[100];
       if (use_paje_trace)
-        {
-#ifdef PARALLEL
-          int is_init = -1;
-          MPI_Initialized(&is_init);
-          if (is_init)
-            sprintf(buf, "ng%d_rank%d.trace", cnt++, NgMPI_Comm(MPI_COMM_WORLD).Rank());
-          else
-#endif
-            sprintf(buf, "ng%d.trace", cnt++);
-        }
-      else
-        buf[0] = 0;
-      //sprintf(buf, "");
-      trace = new PajeTrace(num_threads, buf);
+          trace = new PajeTrace(num_threads, "ng" + ToString(cnt++) + ".trace");
     }
 
 
@@ -349,7 +335,8 @@ namespace ngcore
       }
     
     
-    trace->StartJob(jobnr, afunc.target_type());
+    if (use_paje_trace)
+        trace->StartJob(jobnr, afunc.target_type());
 
     func = &afunc;
 
@@ -419,7 +406,8 @@ namespace ngcore
     if (ex)
       throw Exception (*ex);
 
-    trace->StopJob();
+    if (use_paje_trace)
+        trace->StopJob();
   }
     
   void TaskManager :: Loop(int thd)

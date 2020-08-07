@@ -185,6 +185,8 @@ namespace ngcore
 
       void Write( const std::string & filename );
 
+      void SendData(); // MPI parallel data reduction
+
     };
 } // namespace ngcore
 
