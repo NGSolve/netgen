@@ -6420,6 +6420,7 @@ namespace netgen
   void Mesh :: UpdateTopology (TaskManager tm,
                                Tracer tracer)
   {
+    static Timer t("Update Topology"); RegionTimer reg(t);
     topology.Update(tm, tracer);
     (*tracer)("call update clusters", false);
     clusters->Update(tm, tracer);

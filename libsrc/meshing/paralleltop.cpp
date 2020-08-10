@@ -207,6 +207,7 @@ namespace netgen
 
   void ParallelMeshTopology :: UpdateCoarseGrid ()
   {
+    static Timer t("ParallelTopology::UpdateCoarseGrid"); RegionTimer r(t);
     // cout << "UpdateCoarseGrid" << endl;
     // if (is_updated) return;
 

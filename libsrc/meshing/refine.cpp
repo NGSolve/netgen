@@ -15,7 +15,9 @@ namespace netgen
   {
     if (mesh.GetCommunicator().Rank()==0)
       PrintMessage (3, "Refine mesh");
+    Timer t("Refine mesh"); RegionTimer reg(t);
 
+    
     mesh.SetNextMajorTimeStamp();
     
     if (ntasks > 1 && id == 0)
