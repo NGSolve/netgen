@@ -99,6 +99,16 @@ namespace netgen
   }
 
   template<int D>
+  SplineSeg3<D> :: SplineSeg3 (const GeomPoint<D> & ap1,
+			       const GeomPoint<D> & ap2,
+			       const GeomPoint<D> & ap3,
+                               double aweight)
+    : p1(ap1), p2(ap2), p3(ap3), weight(aweight)
+  {
+    proj_latest_t = 0.5;
+  }
+
+  template<int D>
   Point<D> SplineSeg3<D> :: GetPoint (double t) const
   {
     double b1, b2, b3;

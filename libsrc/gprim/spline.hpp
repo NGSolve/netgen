@@ -185,6 +185,10 @@ namespace netgen
     SplineSeg3 (const GeomPoint<D> & ap1, 
 		const GeomPoint<D> & ap2, 
 		const GeomPoint<D> & ap3);
+    SplineSeg3 (const GeomPoint<D> & ap1,
+		const GeomPoint<D> & ap2,
+		const GeomPoint<D> & ap3,
+                double aweight);
     // default constructor for archive
     SplineSeg3() {}
     ///
