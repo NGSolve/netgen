@@ -81,7 +81,7 @@ public:
   bool HasFaces () const
   { return buildfaces; }
 
-  void Update(TaskManager tm = &DummyTaskManager, Tracer tracer = &DummyTracer);
+  void Update(NgTaskManager tm = &DummyTaskManager, NgTracer tracer = &DummyTracer);
   bool NeedsUpdate() const;
 
 

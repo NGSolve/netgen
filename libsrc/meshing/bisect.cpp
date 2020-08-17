@@ -1681,7 +1681,7 @@ namespace netgen
 
   int MarkHangingTets (T_MTETS & mtets, 
 		       const INDEX_2_CLOSED_HASHTABLE<PointIndex> & cutedges,
-                       TaskManager tm)                       
+                       NgTaskManager tm)                       
   {
     static int timer = NgProfiler::CreateTimer ("MarkHangingTets");    
     NgProfiler::RegionTimer reg (timer);    
@@ -1759,7 +1759,7 @@ namespace netgen
 
   bool MarkHangingTris (T_MTRIS & mtris, 
                         const INDEX_2_CLOSED_HASHTABLE<PointIndex> & cutedges,
-                        TaskManager tm)
+                        NgTaskManager tm)
   {
     bool hanging = false;
     // for (int i = 1; i <= mtris.Size(); i++)

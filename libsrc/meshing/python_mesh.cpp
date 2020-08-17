@@ -11,6 +11,15 @@
 // #include <csg.hpp>
 // #include <geometry2d.hpp>
 #include <../interface/writeuser.hpp>
+#include <../include/nginterface.h>
+
+
+class ClearSolutionClass
+{
+public:
+  ClearSolutionClass() { } 
+  ~ClearSolutionClass() { Ng_ClearSolutionData(); }
+};
 
 
 #ifdef NG_MPI4PY
@@ -1238,6 +1247,10 @@ grow_edges : bool = False
            }, py::arg("quads")=true, py::arg("nx")=10, py::arg("ny")=10, py::arg("flip_triangles")=false, py::arg("bbbpts")=py::list(), py::arg("bbbnames")=py::list())
       ;
     ;
+
+    py::class_<ClearSolutionClass> (m, "ClearSolutionClass")
+      .def(py::init<>())
+      ;
 }
 
 PYBIND11_MODULE(libmesh, m) {

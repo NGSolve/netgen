@@ -3,7 +3,8 @@
 
 namespace netgen
 {
-
+  using ngcore::ParallelForRange;
+  
   
   template <class T>
   void QuickSortRec (NgFlatArray<T> data,
@@ -332,10 +333,10 @@ namespace netgen
   }
   
   
-  void MeshTopology :: Update (TaskManager tm, Tracer tracer)
+  void MeshTopology :: Update (NgTaskManager tm_unused, NgTracer tracer)
   {
-    static int timer = NgProfiler::CreateTimer ("topology");
-    NgProfiler::RegionTimer reg (timer);
+    static Timer timer("Topology::Update");
+    RegionTimer reg (timer);
 
 #ifdef PARALLEL
     // ParallelMeshTopology & paralleltop = mesh.GetParallelTopology();
@@ -382,10 +383,9 @@ namespace netgen
       }
     */
     ParallelForRange
-      (tm, ne,
-       [&] (size_t begin, size_t end)
+      (ne, [&] (IntRange r) 
        {
-         for (ElementIndex ei = begin; ei < end; ei++)
+         for (ElementIndex ei : r) 
            {
              const Element & el = (*mesh)[ei];
              for (int j = 0; j < el.GetNV(); j++)
@@ -426,10 +426,10 @@ namespace netgen
       }
     */
     ParallelForRange
-      (tm, nse,
-       [&] (size_t begin, size_t end)
+      (nse,
+       [&] (IntRange r)
        {
-         for (SurfaceElementIndex ei = begin; ei < end; ei++)
+         for (SurfaceElementIndex ei : r)
            {
              const Element2d & el = (*mesh)[ei];
              for (int j = 0; j < el.GetNV(); j++)
@@ -553,9 +553,11 @@ namespace netgen
         cnt = 0;
 
         ParallelForRange
-          (tm, mesh->GetNV(), // Points().Size(),
-           [&] (size_t begin, size_t end)
+          (mesh->GetNV(), // Points().Size(),
+           [&] (IntRange r)
            {
+             auto begin = r.First();
+             auto end = r.Next();
              INDEX_CLOSED_HASHTABLE<int> v2eht(2*max_edge_on_vertex+10); 
              for (PointIndex v = begin+PointIndex::BASE;
                   v < end+PointIndex::BASE; v++)
@@ -607,9 +609,11 @@ namespace netgen
 	// for (PointIndex v = PointIndex::BASE; v < nv+PointIndex::BASE; v++)
 
         ParallelForRange
-          (tm, mesh->GetNV(), // Points().Size(),
-           [&] (size_t begin, size_t end)
+          (mesh->GetNV(), // Points().Size(),
+           [&] (IntRange r)
            {
+             auto begin = r.First();
+             auto end = r.Next();
              INDEX_CLOSED_HASHTABLE<int> v2eht(2*max_edge_on_vertex+10);
              NgArray<int> vertex2;
              for (PointIndex v = begin+PointIndex::BASE;
@@ -731,9 +735,11 @@ namespace netgen
         // for (auto v : mesh.Points().Range())
         // NgProfiler::StartTimer (timer2b1);
         ParallelForRange
-          (tm, mesh->GetNV(), // Points().Size(),
-            [&] (size_t begin, size_t end)
+          (mesh->GetNV(), // Points().Size(),
+           [&] (IntRange r)
             {
+              auto begin = r.First();
+              auto end = r.Next();
               INDEX_3_CLOSED_HASHTABLE<int> vert2face(2*max_face_on_vertex+10); 
               for (PointIndex v = begin+PointIndex::BASE;
                    v < end+PointIndex::BASE; v++)
@@ -779,9 +785,11 @@ namespace netgen
         // for (auto v : mesh.Points().Range())
 
         ParallelForRange
-          (tm, mesh->GetNV(), // Points().Size(),
-            [&] (size_t begin, size_t end)
+          (mesh->GetNV(), // Points().Size(),
+           [&] (IntRange r)
             {
+              auto begin = r.First();
+              auto end = r.Next();
               INDEX_3_CLOSED_HASHTABLE<int> vert2face(2*max_face_on_vertex+10); 
               for (PointIndex v = begin+PointIndex::BASE;
                    v < end+PointIndex::BASE; v++)
@@ -1164,11 +1172,11 @@ namespace netgen
 	  }
         */
         ParallelForRange
-          (tm, ne,
-            [&] (size_t begin, size_t end)
+          (ne,
+           [&] (IntRange r)
             {
               NgArray<int> hfaces;              
-              for (ElementIndex ei = begin; ei < end; ei++)
+              for (ElementIndex ei : r)
                 {
                   GetElementFaces (ei+1, hfaces);
                   for (auto f : hfaces)

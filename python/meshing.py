@@ -59,3 +59,6 @@ class _MeshsizeObject:
                                   optsteps3d=5)
 
 meshsize = _MeshsizeObject()
+
+
+clearsol = ClearSolutionClass()

@@ -1157,7 +1157,7 @@ namespace netgen
   
   void Ngx_Mesh :: Refine (NG_REFINEMENT_TYPE reftype,
                            void (*task_manager)(function<void(int,int)>),
-                           Tracer tracer)
+                           NgTracer tracer)
   {
     NgLock meshlock (mesh->MajorMutex(), 1);
     
