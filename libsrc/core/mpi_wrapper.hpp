@@ -275,6 +275,18 @@ namespace ngcore
                    &recv, 1, GetMPIType<T>(), 0, comm);
     }
 
+    template <typename T>
+    void AllGather (T val, FlatArray<T> recv) const
+    {
+      if (size == 1)
+        {
+          recv[0] = val;
+          return;
+        }
+      MPI_Allgather (&val, 1, GetMPIType<T>(),
+                     recv.Data(), 1, GetMPIType<T>(), 
+                     comm);
+    }
     
     
     NgMPI_Comm SubCommunicator (FlatArray<int> procs) const
