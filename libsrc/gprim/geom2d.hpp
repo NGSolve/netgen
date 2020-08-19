@@ -609,40 +609,6 @@ namespace netgen
 #endif
 
 
-
-  class Polygon2d
-  {
-  protected:
-    NgArray<Point2d> points;
-  
-  public:
-    Polygon2d ();
-    ~Polygon2d ();
-  
-    void AddPoint (const Point2d & p);
-    int GetNP() const { return points.Size(); }
-    void GetPoint (int i, Point2d & p) const
-    { p = points.Get(i); }
-    void GetLine (int i, Point2d & p1, Point2d & p2) const
-    { p1 = points.Get(i); p2 = points.Get(i%points.Size()+1); }
-
-    double Area () const { return fabs (HArea()); }
-    int CW () const { return HArea() > 0; }
-    int CCW () const { return HArea() < 0; }
-  
-    int IsOn (const Point2d & p) const;
-    int IsIn (const Point2d & p) const;
-
-    int IsConvex () const;
-
-    int IsStarPoint (const Point2d & p) const;
-    Point2d Center() const;
-    Point2d EqualAreaPoint () const;
-  private:
-    double HArea () const;
-  };
-
-
   /** Cheap approximation to atan2.
       A monotone function of atan2(x,y) is computed.
   */

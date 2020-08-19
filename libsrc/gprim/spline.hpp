@@ -196,6 +196,10 @@ namespace netgen
     {
       ar & p1 & p2 & p3 & weight & proj_latest_t;
     }
+    ///
+    double GetWeight () const { return weight; }
+    void SetWeight (double w) { weight = w; }
+    ///
     virtual Point<D> GetPoint (double t) const;
     ///
     virtual Vec<D> GetTangent (const double t) const;
