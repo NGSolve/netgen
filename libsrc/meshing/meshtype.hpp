@@ -177,6 +177,7 @@ namespace netgen
     PointIndex operator-- (int) { PointIndex hi(*this); i--; return hi; }
     PointIndex & operator++ () { i++; return *this; }
     PointIndex operator-- () { i--; return *this; }
+    PointIndex operator+= (int add) { i += add; return *this; }
     void Invalidate() { i = PointIndex::BASE-1; }
     bool IsValid() const { return i != PointIndex::BASE-1; }
 #ifdef BASE0

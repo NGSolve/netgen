@@ -1289,13 +1289,107 @@ namespace netgen
         if (comm.Rank() == 0)
           archive & dimension;
 
-        // merge points
+        auto rank = comm.Rank();
+        
         auto & partop = GetParallelTopology();
+        
+        // global enumration of points:
+        // not used now, but will be needed for refined meshes
+        // GridFunciton pickling is not compatible, now
+        // should go to paralleltopology
+        
+        Array<PointIndex, PointIndex> global_pnums(points.Size());
+        global_pnums = -1;
+        int num_master_points = 0;
+        for (PointIndex pi : Range(points))
+          {
+            auto distprocs = partop.GetDistantPNums(pi-PointIndex::BASE);
+            // check sorted:
+            for (int j = 0; j+1 < distprocs.Size(); j++)
+              if (distprocs[j+1] < distprocs[j]) cout << "wrong sort" << endl;
+            if (distprocs.Size() == 0 || distprocs[0] > comm.Rank())
+              global_pnums[pi] = PointIndex::BASE+num_master_points++;
+          }
+        Array<int> first_master_point(comm.Size());
+        GetCommunicator().AllGather (num_master_points, first_master_point);
+        
+        size_t num_glob_points = 0;
+        for (int i = 0; i < comm.Size(); i++)
+          {
+            int cur = first_master_point[i];
+            first_master_point[i] = num_glob_points;
+            num_glob_points += cur;
+          }
+    
+        for (PointIndex pi : Range(points))
+          if (global_pnums[pi] != -1)
+            global_pnums[pi] += first_master_point[comm.Rank()];
+    
+        // ScatterDofData (global_nums); 
+
+        Array<int> nsend(comm.Size()), nrecv(comm.Size());
+        nsend = 0;
+        nrecv = 0;
+
+        /** Count send/recv size **/
+        for (PointIndex pi : Range(points))
+          {
+            auto dps = partop.GetDistantPNums(pi-PointIndex::BASE);            
+            if (!dps.Size()) continue;
+            if (rank < dps[0])
+              for(auto p:dps)
+                nsend[p]++;
+            else
+              nrecv[dps[0]]++;
+          }
+        
+        Table<PointIndex> send_data(nsend);
+        Table<PointIndex> recv_data(nrecv);
+
+        /** Fill send_data **/
+        nsend = 0;
+        for (PointIndex pi : Range(points))        
+          {
+            auto dps = partop.GetDistantPNums(pi-PointIndex::BASE);
+            if (dps.Size() && rank < dps[0])
+              for(auto p : dps)
+                send_data[p][nsend[p]++] = global_pnums[pi];
+          }
+
+        Array<MPI_Request> requests;
+        for (int i = 0; i < comm.Size(); i++)
+          {
+            if (nsend[i])
+              requests.Append (comm.ISend (send_data[i], i, 200));
+            if (nrecv[i])
+              requests.Append (comm.IRecv (recv_data[i], i, 200));
+          }
+
+        MyMPI_WaitAll (requests);
+        
+        Array<int> cnt(comm.Size());
+        cnt = 0;
+
+        for (PointIndex pi : Range(points))
+          {
+            auto distprocs = partop.GetDistantPNums(pi-PointIndex::BASE);
+            if (distprocs.Size() > 0 && distprocs[0] < comm.Rank())
+              {
+                int master = comm.Size();
+                for (int j = 0; j < distprocs.Size(); j++)
+                  master = min (master, distprocs[j]);
+                global_pnums[pi] = recv_data[master][cnt[master]++];
+              }
+          }
+        
+        
+        // merge points
         Array<int, PointIndex> globnum(points.Size());
         int maxglob = 0;
         for (auto pi : Range(points))
           {
             globnum[pi] = partop.GetGlobalPNum(pi);
+            // globnum[pi] = global_pnums[pi];
             maxglob = max(globnum[pi], maxglob);
           }
         
