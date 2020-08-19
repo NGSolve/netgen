@@ -6,6 +6,7 @@
 
 #include <meshing.hpp>
 #include <geometry2d.hpp>
+#include <csg2d.hpp>
 
 using namespace netgen;
 
@@ -265,6 +266,7 @@ DLL_HEADER void ExportGeom2d(py::module &m)
                  {
                    double len = self.splines[i]->Length();
                    int n = floor(len/(0.05*min(xdist,ydist)));
+                   n = max(3, n);
                    lst.push_back(self.splines[i]->StartPI());
                    for (int j = 1; j < n; j++){
                      lst.push_back(self.splines[i]->GetPoint(j*1./n));
@@ -395,6 +397,36 @@ DLL_HEADER void ExportGeom2d(py::module &m)
     .def("_SetDomainTensorMeshing", &SplineGeometry2d::SetDomainTensorMeshing)
     ;
   
+  py::class_<Solid2d>(m, "Solid2d")
+    .def(py::init<>())
+    .def(py::init<std::string>())
+    .def_readwrite("name", &Solid2d::name)
+    .def("__mul__", [](Solid2d & self, Solid2d & other) { return self*other; })
+    .def("__add__", [](Solid2d & self, Solid2d & other) { return self+other; })
+    .def("__sub__", [](Solid2d & self, Solid2d & other) { return self-other; })
+    .def("Append", &Solid2d::Append)
+    .def("SetBC", &Solid2d::SetBC)
+    ;
+  
+  py::class_<Polygon2d>(m, "Polygon2d")
+    .def(py::init<>())
+    .def("SetBC", &Polygon2d::SetBC)
+    .def("Append", [](Polygon2d & self, double x, double y)
+        {
+        self.Append({x,y});
+        })
+    ;
+
+
+  m.def("Rectangle", &Rectangle);
+  m.def("Circle", &Circle);
+
+  py::class_<CSG2d>(m, "CSG2d")
+    .def(py::init<>())
+    .def("GenerateSplineGeometry", &CSG2d::GenerateSplineGeometry)
+    .def("Add", &CSG2d::Add)
+    ;
+
 }
 
 PYBIND11_MODULE(libgeom2d, m) {

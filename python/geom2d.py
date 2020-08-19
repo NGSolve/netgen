@@ -1,4 +1,4 @@
-from .libngpy._geom2d import SplineGeometry
+from .libngpy._geom2d import SplineGeometry, Solid2d, Polygon2d, CSG2d, Rectangle, Circle
 from .meshing import meshsize
 
 unit_square = SplineGeometry()
