@@ -574,7 +574,7 @@ class CSG2d
 };
 
 Solid2d Circle(double x, double y, double r, string name="", string bc="");
-Solid2d Rectangle(double x0, double x1, double y0, double y1, string name="", string bc="");
+Solid2d Rectangle(double x0, double x1, double y0, double y1, string name, string bc);
 
 Solid2d AddIntersectionPoints ( Solid2d s1, Solid2d s2 );
 Solid2d ClipSolids ( Solid2d s1, Solid2d s2, bool intersect=true );

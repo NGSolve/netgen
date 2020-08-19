@@ -418,8 +418,11 @@ DLL_HEADER void ExportGeom2d(py::module &m)
     ;
 
 
-  m.def("Rectangle", &Rectangle);
-  m.def("Circle", &Circle);
+  m.def("Rectangle", [](double x0, double x1, double y0, double y1, string bc, string mat)
+		  { return Rectangle(x0,x1,y0,y1,bc,mat); },
+		  py::arg("x0"), py::arg("x1"), py::arg("y0"), py::arg("y1"), py::arg("bc")="", py::arg("mat")=""
+       );
+  m.def("Circle", Circle, py::arg("x"), py::arg("y"), py::arg("r"), py::arg("bc")="", py::arg("mat")="");
 
   py::class_<CSG2d>(m, "CSG2d")
     .def(py::init<>())
