@@ -228,8 +228,8 @@ namespace netgen
   {
     int i;
   public:
-    ElementIndex () { ; }
-    ElementIndex (int ai) : i(ai) { ; }
+    ElementIndex () = default;
+    constexpr ElementIndex (int ai) : i(ai) { ; }
     ElementIndex & operator= (const ElementIndex & ai) { i = ai.i; return *this; }
     ElementIndex & operator= (int ai) { i = ai; return *this; }
     operator int () const { return i; }
@@ -288,8 +288,8 @@ namespace netgen
   {
     int i;
   public:
-    SegmentIndex () { ; }
-    SegmentIndex (int ai) : i(ai) { ; }
+    SegmentIndex () = default;
+    constexpr SegmentIndex (int ai) : i(ai) { ; }
     SegmentIndex & operator= (const SegmentIndex & ai) 
     { i = ai.i; return *this; }
     SegmentIndex & operator= (int ai) { i = ai; return *this; }
@@ -393,7 +393,7 @@ namespace netgen
     ///
     ELEMENT_TYPE typ;
     /// number of points
-    unsigned int np:4;
+    int8_t np;
     bool badel:1;
     bool refflag:1;  // marked for refinement
     bool strongrefflag:1;
@@ -417,7 +417,7 @@ namespace netgen
 
   public:
     ///
-    Element2d () = default;
+    Element2d ();
     Element2d (const Element2d &) = default;
     Element2d (Element2d &&) = default;
     Element2d & operator= (const Element2d &) = default;
@@ -547,6 +547,11 @@ namespace netgen
       for (size_t i = 0; i < np; i++)
         ar & pnum[i];
     }
+
+#ifdef PARALLEL
+    static MPI_Datatype MyGetMPIType();
+#endif
+    
 
     void SetIndex (int si) { index = si; }
     ///
@@ -699,7 +704,7 @@ namespace netgen
     ///
     ELEMENT_TYPE typ;
     /// number of points (4..tet, 5..pyramid, 6..prism, 8..hex, 10..quad tet, 12..quad prism)
-    int np:6;
+    int8_t np;
     ///
     class flagstruct { 
     public:
@@ -826,6 +831,10 @@ namespace netgen
       for (size_t i = 0; i < np; i++)
         ar & pnum[i];
     }
+    
+#ifdef PARALLEL
+    static MPI_Datatype MyGetMPIType();
+#endif
 
     ///
     void SetIndex (int si) { index = si; }
@@ -1074,6 +1083,10 @@ namespace netgen
     */
     
     void DoArchive (Archive & ar);
+#ifdef PARALLEL
+    static MPI_Datatype MyGetMPIType();
+#endif
+    
   };
 
   ostream & operator<<(ostream  & s, const Segment & seg);
@@ -1547,6 +1560,33 @@ namespace netgen
 }
 
 
+#ifdef PARALLEL
+namespace ngcore
+{
+  template <> struct MPI_typetrait<netgen::PointIndex> {
+    static MPI_Datatype MPIType ()  { return MPI_INT; }
+  };
+
+  template <> struct MPI_typetrait<netgen::ELEMENT_TYPE> {
+    static MPI_Datatype MPIType ()  { return MPI_CHAR; }
+  };
+
+  template <> struct MPI_typetrait<netgen::MeshPoint> {
+    static MPI_Datatype MPIType ()  { return netgen::MeshPoint::MyGetMPIType(); }
+  };
+
+  template <> struct MPI_typetrait<netgen::Element> {
+    static MPI_Datatype MPIType ()  { return netgen::Element::MyGetMPIType(); }
+  };
+  template <> struct MPI_typetrait<netgen::Element2d> {
+    static MPI_Datatype MPIType ()  { return netgen::Element2d::MyGetMPIType(); }
+  };
+  template <> struct MPI_typetrait<netgen::Segment> {
+    static MPI_Datatype MPIType ()  { return netgen::Segment::MyGetMPIType(); }
+  };
+
+}
+#endif
 
 
 #endif

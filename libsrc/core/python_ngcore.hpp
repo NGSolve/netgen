@@ -17,7 +17,8 @@ namespace py = pybind11;
 namespace ngcore
 {
   NGCORE_API extern bool ngcore_have_numpy;
-
+  NGCORE_API extern bool parallel_pickling;
+  
   // Python class name type traits
   template <typename T>
   struct PyNameTraits {
@@ -297,26 +298,14 @@ namespace ngcore
     return pybind11::pickle([](T* self)
                       {
                         PyArchive<T_ARCHIVE_OUT> ar;
+                        ar.SetParallel(parallel_pickling);
                         ar & self;
-                        static Timer t("ngspickle 2");
-                        t.Start();
                         auto output = pybind11::make_tuple(ar.WriteOut());
-                        t.Stop();
-                        /*
-                        GetLogger("Archive")->trace("Pickling output for object of type {} = {}",
-                                                    Demangle(typeid(T).name()),
-                                                    std::string(pybind11::str(output)));
-                        */
                         return output;
                       },
                       [](const pybind11::tuple & state)
                       {
                         T* val = nullptr;
-                        /*
-                        GetLogger("Archive")->trace("State for unpickling of object of type {} = {}",
-                                                    Demangle(typeid(T).name()),
-                                                    std::string(pybind11::str(state[0])));
-                        */
                         PyArchive<T_ARCHIVE_IN> ar(state[0]);
                         ar & val;
                         return val;

@@ -26,6 +26,9 @@ namespace ngcore
   template <> struct MPI_typetrait<char> {
     static MPI_Datatype MPIType () { return MPI_CHAR; } };  
 
+  template <> struct MPI_typetrait<signed char> {
+    static MPI_Datatype MPIType () { return MPI_CHAR; } };  
+  
   template <> struct MPI_typetrait<unsigned char> {
     static MPI_Datatype MPIType () { return MPI_CHAR; } };  
 
@@ -44,6 +47,10 @@ namespace ngcore
     return MPI_typetrait<T>::MPIType();
   }
   
+  template <class T>
+  inline MPI_Datatype GetMPIType (T &) {
+    return GetMPIType<T>();
+  }
 
   class NgMPI_Comm
   {
@@ -139,8 +146,8 @@ namespace ngcore
       MPI_Send( const_cast<char*> (&s[0]), s.length(), MPI_CHAR, dest, tag, comm);
     }
     
-    template<typename T, typename T2 = decltype(GetMPIType<T>())>
-    void Send(FlatArray<T> s, int dest, int tag) const {
+    template<typename T, typename TI, typename T2 = decltype(GetMPIType<T>())>
+    void Send(FlatArray<T,TI> s, int dest, int tag) const {
       MPI_Send (s.Data(), s.Size(), GetMPIType<T>(), dest, tag, comm);
     }
     
@@ -160,13 +167,13 @@ namespace ngcore
     }
     
 
-    template <typename T, typename T2 = decltype(GetMPIType<T>())>
-    void Recv (FlatArray <T> s, int src, int tag) const {
+    template <typename T, typename TI, typename T2 = decltype(GetMPIType<T>())>
+    void Recv (FlatArray <T,TI> s, int src, int tag) const {
       MPI_Recv (s.Data(), s.Size(), GetMPIType<T> (), src, tag, comm, MPI_STATUS_IGNORE);
     }
     
-    template <typename T, typename T2 = decltype(GetMPIType<T>())>
-    void Recv (Array <T> & s, int src, int tag) const
+    template <typename T, typename TI, typename T2 = decltype(GetMPIType<T>())>
+    void Recv (Array <T,TI> & s, int src, int tag) const
     {
       MPI_Status status;
       int len;

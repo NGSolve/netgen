@@ -858,7 +858,7 @@ namespace ngcore
       size++;
     }
     
-    NETGEN_INLINE Array<T> & operator += (const T & el)
+    NETGEN_INLINE Array & operator += (const T & el)
     {
       Append (el);
       return *this;

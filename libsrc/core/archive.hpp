@@ -567,6 +567,10 @@ namespace ngcore
 
     virtual void FlushBuffer() {}
 
+    bool parallel = false;
+    bool IsParallel() const { return parallel; }
+    void SetParallel (bool _parallel) { parallel = _parallel; }
+    
   private:
     template<typename T, typename ... Bases>
     friend class RegisterClassForArchive;

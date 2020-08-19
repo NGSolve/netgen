@@ -1251,6 +1251,7 @@ grow_edges : bool = False
     py::class_<ClearSolutionClass> (m, "ClearSolutionClass")
       .def(py::init<>())
       ;
+    m.def("SetParallelPickling", [](bool par) { parallel_pickling = par; });
 }
 
 PYBIND11_MODULE(libmesh, m) {

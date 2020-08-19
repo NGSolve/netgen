@@ -1281,13 +1281,132 @@ namespace netgen
   void Mesh :: DoArchive (Archive & archive)
   {
     static Timer t("Mesh::Archive"); RegionTimer r(t);
-    static Timer tvol("Mesh::Archive vol elements");
+
+#ifdef PARALLEL
+    auto comm = GetCommunicator();
+    if (archive.IsParallel() && comm.Size() > 1)
+      { // parallel pickling supported only for output archives
+        if (comm.Rank() == 0)
+          archive & dimension;
+
+        // merge points
+        auto & partop = GetParallelTopology();
+        Array<int, PointIndex> globnum(points.Size());
+        int maxglob = 0;
+        for (auto pi : Range(points))
+          {
+            globnum[pi] = partop.GetGlobalPNum(pi);
+            maxglob = max(globnum[pi], maxglob);
+          }
+        
+        maxglob = comm.AllReduce (maxglob, MPI_MAX);
+        int numglob = maxglob+1-PointIndex::BASE;
+        if (comm.Rank() > 0)
+          {
+            comm.Send (globnum, 0, 200);
+            comm.Send (points, 0, 200);
+          }
+        else
+          {
+            Array<int, PointIndex> globnumi;
+            Array<MeshPoint, PointIndex> pointsi;
+            Array<MeshPoint, PointIndex> globpoints(numglob);
+            for (int j = 1; j < comm.Size(); j++)
+              {
+                comm.Recv (globnumi, j, 200);
+                comm.Recv (pointsi, j, 200);
+                for (auto i : Range(globnumi))
+                  globpoints[globnumi[i]] = pointsi[i];
+              }
+            archive & globpoints;
+          }
+
+        
+        // sending surface elements
+        auto copy_el2d  (surfelements);
+        for (auto & el : copy_el2d)
+          for (auto & pi : el.PNums())
+            pi = globnum[pi];
+
+        if (comm.Rank() > 0)
+          comm.Send(copy_el2d, 0, 200);
+        else
+          {
+            Array<Element2d, SurfaceElementIndex> el2di;
+            for (int j = 1; j < comm.Size(); j++)
+              {
+                comm.Recv(el2di, j, 200);
+                for (auto & el : el2di)
+                  copy_el2d += el;
+              }
+            archive & copy_el2d;
+          }
+
+
+        // sending volume elements
+        auto copy_el3d  (volelements);
+        for (auto & el : copy_el3d)
+          for (auto & pi : el.PNums())
+            pi = globnum[pi];
+
+        if (comm.Rank() > 0)
+          comm.Send(copy_el3d, 0, 200);
+        else
+          {
+            Array<Element, ElementIndex> el3di;
+            for (int j = 1; j < comm.Size(); j++)
+              {
+                comm.Recv(el3di, j, 200);
+                for (auto & el : el3di)
+                  copy_el3d += el;
+              }
+            archive & copy_el3d;
+          }
+
+
+        // sending 1D elements
+        auto copy_el1d  (segments);
+        for (auto & el : copy_el1d)
+          for (auto & pi : el.pnums)
+            if (pi != PointIndex(PointIndex::INVALID))
+              pi = globnum[pi];
+
+        if (comm.Rank() > 0)
+          comm.Send(copy_el1d, 0, 200);
+        else
+          {
+            Array<Segment, SegmentIndex> el1di;
+            for (int j = 1; j < comm.Size(); j++)
+              {
+                comm.Recv(el1di, j, 200);
+                for (auto & el : el1di)
+                  copy_el1d += el;
+              }
+            archive & copy_el1d;
+          }
+
+        if (comm.Rank() == 0)
+          {
+            archive & facedecoding;
+            archive & materials & bcnames & cd2names & cd3names;
+            auto mynv = numglob;
+            archive & mynv;   // numvertices;
+            archive & *ident;
+            
+            archive.Shallow(geometry);
+            archive & *curvedelems;
+          }
+        
+        if (comm.Rank() == 0)
+          return;
+      }
+#endif
+    
+    
     archive & dimension;
     archive & points;
     archive & surfelements;
-    tvol.Start();
     archive & volelements;
-    tvol.Stop();
     archive & segments;
     archive & facedecoding;
     archive & materials & bcnames & cd2names & cd3names;
