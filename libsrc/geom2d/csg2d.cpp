@@ -1417,7 +1417,7 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
 
   // Add geometry points to SplineGeometry
 
-  netgen::Box<2> box;
+  netgen::Box<2> box(netgen::Box<2>::EMPTY_BOX);
   for(auto & s : solids)
     for(auto & poly : s.polys)
       for(auto v : poly.Vertices(ALL))
