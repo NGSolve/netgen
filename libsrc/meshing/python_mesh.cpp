@@ -163,12 +163,18 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   
   py::class_<Point<2>> (m, "Point2d")
     .def(py::init<double,double>())
+    .def(py::init( [] (std::pair<double,double> xy)
+            {
+                return Point<2>{xy.first, xy.second};
+            }))
     .def ("__str__", &ToString<Point<2>>)
     .def(py::self-py::self)
     .def(py::self+Vec<2>())
     .def(py::self-Vec<2>())
     .def("__getitem__", [](Point<2>& self, int index) { return self[index]; })
     ;
+
+  py::implicitly_convertible<py::tuple, Point<2>>();
 
   py::class_<Point<3>> (m, "Point3d")
     .def(py::init<double,double,double>())
