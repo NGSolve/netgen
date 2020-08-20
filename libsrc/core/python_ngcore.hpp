@@ -14,6 +14,56 @@
 #include "profiler.hpp"
 namespace py = pybind11;
 
+////////////////////////////////////////////////////////////////////////////////
+// automatic conversion of python list to Array<>
+NAMESPACE_BEGIN(PYBIND11_NAMESPACE)
+NAMESPACE_BEGIN(detail)
+
+template <typename Type, typename Value> struct ngcore_list_caster {
+    using value_conv = make_caster<Value>;
+
+    bool load(handle src, bool convert) {
+        if (!isinstance<sequence>(src) || isinstance<str>(src))
+            return false;
+        auto s = reinterpret_borrow<sequence>(src);
+        value.SetSize(s.size());
+        value.SetSize0();
+        for (auto it : s) {
+            value_conv conv;
+            if (!conv.load(it, convert))
+                return false;
+            value.Append(cast_op<Value &&>(std::move(conv)));
+        }
+        return true;
+    }
+
+public:
+    template <typename T>
+    static handle cast(T &&src, return_value_policy policy, handle parent) {
+        if (!std::is_lvalue_reference<T>::value)
+            policy = return_value_policy_override<Value>::policy(policy);
+        list l(src.Size());
+        size_t index = 0;
+        for (auto &&value : src) {
+            auto value_ = reinterpret_steal<object>(value_conv::cast(forward_like<T>(value), policy, parent));
+            if (!value_)
+                return handle();
+            PyList_SET_ITEM(l.ptr(), (ssize_t) index++, value_.release().ptr()); // steals a reference
+        }
+        return l.release();
+    }
+
+    PYBIND11_TYPE_CASTER(Type, _("Array[") + value_conv::name + _("]"));
+};
+
+template <typename Type> struct type_caster<ngcore::Array<Type>>
+ : ngcore_list_caster<ngcore::Array<Type>, Type> { };
+
+
+NAMESPACE_END(detail)
+NAMESPACE_END(PYBIND11_NAMESPACE)
+////////////////////////////////////////////////////////////////////////////////
+
 namespace ngcore
 {
   NGCORE_API extern bool ngcore_have_numpy;
