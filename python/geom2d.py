@@ -1,4 +1,4 @@
-from .libngpy._geom2d import SplineGeometry, Solid2d, CSG2d, Rectangle, Circle
+from .libngpy._geom2d import SplineGeometry, Solid2d, CSG2d, Rectangle, Circle, EdgeInfo
 from .meshing import meshsize
 
 unit_square = SplineGeometry()
@@ -137,4 +137,10 @@ SplineGeometry.AddSegment = lambda *args, **kwargs : SplineGeometry.Append(*args
 SplineGeometry.AddPoint = lambda *args, **kwargs : SplineGeometry.AppendPoint(*args, **kwargs)
 SplineGeometry.CreatePML = CreatePML
 
-
+bc = lambda s : EdgeInfo(bc=s)
+maxh = lambda h : EdgeInfo(maxh=h)
+def cp(p_or_px, py_or_none = None):
+    if py_or_none is None:
+        return EdgeInfo(control_point=p)
+    else:
+        return EdgeInfo(control_point=(p_or_px,py_or_none))

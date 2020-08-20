@@ -1,6 +1,8 @@
 #ifndef NETGEN_CSG2D_HPP_INCLUDED
 #define NETGEN_CSG2D_HPP_INCLUDED
 
+#include <variant>
+
 #include "geometry2d.hpp"
 
 namespace netgen
@@ -58,6 +60,34 @@ enum IteratorType
   ALL
 };
 
+inline constexpr const double MAXH_DEFAULT{1e99};
+inline const string BC_DEFAULT{""};
+inline const string MAT_DEFAULT{""};
+
+struct EdgeInfo
+{
+  optional<Point<2>> control_point = nullopt; // for spline segments
+  double maxh = MAXH_DEFAULT;
+  string bc = BC_DEFAULT;
+
+  EdgeInfo() = default;
+  EdgeInfo(Point<2> p) : control_point(p) {}
+  EdgeInfo(double h) : maxh(h) {}
+  EdgeInfo(string s) : bc(s) {}
+  EdgeInfo(optional<Point<2>> p, double h, string s)
+      : control_point(p), maxh(h), bc(s)
+    {}
+
+  void Assign( EdgeInfo other )
+    {
+      if(other.control_point != nullopt)
+          control_point = other.control_point;
+      if(other.bc != BC_DEFAULT)
+          bc = other.bc;
+      if(other.maxh != MAXH_DEFAULT)
+          maxh = other.maxh;
+    }
+};
 
 using Spline = SplineSeg3<2>;
 
@@ -80,6 +110,7 @@ struct Vertex : Point<2>
 
   // In case the edge this - next is curved, store the spline information here
   optional<Spline> spline = nullopt;
+  EdgeInfo info;
 
   Vertex * Insert(Point<2> p, double lam = -1.0);
 
@@ -538,6 +569,7 @@ struct Solid2d
 
   Solid2d() = default;
   Solid2d(string name_) : name(name_) {}
+  Solid2d(const Array<std::variant<Point<2>, EdgeInfo>> & points, string name_);
 
   Solid2d operator+(Solid2d & other);
   Solid2d operator*(Solid2d & other);

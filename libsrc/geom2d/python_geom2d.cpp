@@ -399,7 +399,7 @@ DLL_HEADER void ExportGeom2d(py::module &m)
   
   py::class_<Solid2d>(m, "Solid2d")
     .def(py::init<>())
-    .def(py::init<std::string>())
+    .def(py::init<Array<std::variant<Point<2>, EdgeInfo>>, std::string>(), py::arg("points"), py::arg("mat")=MAT_DEFAULT)
     .def_readwrite("name", &Solid2d::name)
     .def("__mul__", [](Solid2d & self, Solid2d & other) { return self*other; })
     .def("__add__", [](Solid2d & self, Solid2d & other) { return self+other; })
@@ -421,6 +421,13 @@ DLL_HEADER void ExportGeom2d(py::module &m)
     .def("Add", &CSG2d::Add)
     ;
 
+  py::class_<EdgeInfo>(m, "EdgeInfo")
+    .def(py::init<>())
+    .def(py::init<const Point<2>&>(), py::arg("control_point"))
+    .def(py::init<double>(), py::arg("maxh"))
+    .def(py::init<string>(), py::arg("bc"))
+    .def(py::init<optional<Point<2>>, double, string>(), py::arg("control_point")=nullopt, py::arg("maxh")=MAXH_DEFAULT, py::arg("bc")=BC_DEFAULT)
+    ;
 }
 
 PYBIND11_MODULE(libgeom2d, m) {

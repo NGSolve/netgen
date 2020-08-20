@@ -1322,6 +1322,34 @@ Solid2d ClipSolids ( Solid2d s1, Solid2d s2, bool intersect)
   return res;
 }
 
+Solid2d :: Solid2d(const Array<std::variant<Point<2>, EdgeInfo>> & points, string name_)
+    : name(name_)
+{
+  Loop l;
+  for (auto & v : points)
+    {
+      if(std::holds_alternative<Point<2>>(v))
+        {
+          l.Append(std::get<0>(v), true);
+        }
+      if(std::holds_alternative<EdgeInfo>(v))
+        {
+          l.first->prev->info.Assign( std::get<1>(v) );
+        }
+    }
+
+  for(auto v : l.Vertices(ALL))
+    {
+      v->bc = v->info.bc;
+      if(v->info.control_point)
+        {
+          v->spline = Spline(*v, *v->info.control_point, *v->next);
+        }
+    }
+
+  polys.Append(l);
+}
+
 Solid2d Solid2d :: operator+(Solid2d & other)
 {
   if(polys.Size()==0)
