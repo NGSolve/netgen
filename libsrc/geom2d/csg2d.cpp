@@ -628,9 +628,9 @@ void ComputeIntersections(Solid2d & sp, Solid2d & sq)
   auto & PP = sp.polys;
   auto & QQ = sq.polys;
 
-  for (Polygon2d& P : PP)
+  for (Loop& P : PP)
     for (Edge edgeP : P.Edges(SOURCE))
-      for (Polygon2d& Q : QQ)
+      for (Loop& Q : QQ)
         for (Edge edgeQ : Q.Edges(SOURCE))
         {
           double alpha = 0.0;
@@ -688,10 +688,10 @@ void ComputeIntersections(Solid2d & sp, Solid2d & sq)
     } while(!curr->is_source);
   };
 
-  for (Polygon2d& P : PP)
+  for (Loop& P : PP)
     for (Vertex* v : P.Vertices(SOURCE))
       split_spline_at_vertex(v);
-  for (Polygon2d& Q : QQ)
+  for (Loop& Q : QQ)
     for (Vertex* v : Q.Vertices(SOURCE))
       split_spline_at_vertex(v);
 }
@@ -770,7 +770,7 @@ void LabelIntersections(Solid2d & sp, Solid2d & sq, Solid2d & sr, bool UNION)
   auto & RR = sr.polys;
 
   // 1) initial classification
-  for (Polygon2d& P : PP)
+  for (Loop& P : PP)
     for (Vertex* I : P.Vertices(INTERSECTION))
     {
 
@@ -818,7 +818,7 @@ void LabelIntersections(Solid2d & sp, Solid2d & sq, Solid2d & sr, bool UNION)
     }
 
   // 2) classify intersection chains
-  for (Polygon2d& P : PP)
+  for (Loop& P : PP)
     for (Vertex* I : P.Vertices(INTERSECTION))
     {
 
@@ -862,19 +862,19 @@ void LabelIntersections(Solid2d & sp, Solid2d & sq, Solid2d & sr, bool UNION)
 
   // 3) copy labels from P to Q
   // loop over intersection vertices of P
-  for (Polygon2d& P : PP)
+  for (Loop& P : PP)
     for (Vertex* I : P.Vertices(INTERSECTION))
       I->neighbour->label = I->label;
 
   // 3.5) check for special cases
 
-  set<Polygon2d*> noIntersection[2];
-  set<Polygon2d*> identical[2];
+  set<Loop*> noIntersection[2];
+  set<Loop*> identical[2];
 
   for (int i=0; i<2; ++i)
   {
-    Array<Polygon2d>* P_or_Q = &PP;      // if i=0, then do it for P w.r.t. Q
-    Array<Polygon2d>* Q_or_P = &QQ;
+    Array<Loop>* P_or_Q = &PP;      // if i=0, then do it for P w.r.t. Q
+    Array<Loop>* Q_or_P = &QQ;
 
     if (i==1) {                         // if i=1, then do it for Q w.r.t. P
       P_or_Q = &QQ;
@@ -882,7 +882,7 @@ void LabelIntersections(Solid2d & sp, Solid2d & sq, Solid2d & sr, bool UNION)
     }
 
     // loop over all components of P (or Q)
-    for (Polygon2d& P : *P_or_Q)
+    for (Loop& P : *P_or_Q)
       if (P.noCrossingVertex(UNION))
       {
         // P_ has no crossing vertex (but may have bounces or delayed bounces, except for UNION),
@@ -899,7 +899,7 @@ void LabelIntersections(Solid2d & sp, Solid2d & sq, Solid2d & sr, bool UNION)
           // is P inside Q_or_P?
           bool isInside = false;
           auto p = P.getNonIntersectionPoint();
-          for (Polygon2d& Q : *Q_or_P)
+          for (Loop& Q : *Q_or_P)
             if ( Q.IsInside(p) )
               isInside = !isInside;
           if (isInside ^ UNION)
@@ -909,20 +909,20 @@ void LabelIntersections(Solid2d & sp, Solid2d & sq, Solid2d & sr, bool UNION)
   }
 
   // handle components of P that are identical to some component of Q
-  for (Polygon2d* P : identical[0])
+  for (Loop* P : identical[0])
   {
     // is P a hole?
     bool P_isHole = false;
-    for (Polygon2d& P_ : PP)
+    for (Loop& P_ : PP)
       if ( ( P_.first.get() != P->first.get() ) && (P_.IsInside(*P->first)) )
         P_isHole = !P_isHole;
 
-    for (Polygon2d* Q : identical[1])
+    for (Loop* Q : identical[1])
       for (Vertex* V : Q->Vertices(ALL))
         if (V == P->first->neighbour) {  // found Q that matches P
           // is Q a hole?
           bool Q_isHole = false;
-          for (Polygon2d& Q_ : QQ)
+          for (Loop& Q_ : QQ)
             if ( ( Q_.first.get() != Q->first.get() ) && (Q_.IsInside(*Q->first)) )
               Q_isHole = !Q_isHole;
 
@@ -940,8 +940,8 @@ next_P: ;
 
   for (int i=0; i<2; ++i)
   {
-    Array<Polygon2d>* P_or_Q = &PP;      // if i=0, then do it for P w.r.t. Q
-    Array<Polygon2d>* Q_or_P = &QQ;
+    Array<Loop>* P_or_Q = &PP;      // if i=0, then do it for P w.r.t. Q
+    Array<Loop>* Q_or_P = &QQ;
 
     if (i==1) {                         // if i=1, then do it for Q w.r.t. P
       P_or_Q = &QQ;
@@ -949,7 +949,7 @@ next_P: ;
     }
 
     // loop over all components of P (or Q)
-    for (Polygon2d& P : *P_or_Q)
+    for (Loop& P : *P_or_Q)
     {
 
       // ignore P if it does not intersect with Q_or_P (detected in step 3.5 above)
@@ -962,7 +962,7 @@ next_P: ;
       // check if it is inside or outside Q (or P)
       // and set ENTRY/EXIT status accordingly
       EntryExitLabel status = ENTRY;
-      for (Polygon2d& Q : *Q_or_P)
+      for (Loop& Q : *Q_or_P)
         if (Q.IsInside(*V))
           ToggleLabel(status);
 
@@ -1122,11 +1122,11 @@ void CreateResult(Solid2d & sp, Solid2d & sr, bool UNION)
   //       so that they cannot serve as start vertex of another component
   //
 
-  for (Polygon2d& P : PP)
+  for (Loop& P : PP)
   {
     for (Vertex* I : P.Vertices(CROSSING_INTERSECTION))
     {
-      Polygon2d R;                         // result polygon component
+      Loop R;                         // result polygon component
 
       Vertex* V = I;                      // start traversal at I
       V->is_intersection = false;            // mark visited vertices
@@ -1179,7 +1179,7 @@ void CreateResult(Solid2d & sp, Solid2d & sr, bool UNION)
 void CleanUpResult(Solid2d & sr)
 {
   auto & RR = sr.polys;
-  for (Polygon2d& R : RR)
+  for (Loop& R : RR)
   {
     while ( (R.first.get() != NULL) && (fabs(Area(*R.first->prev,*R.first,*R.first->next)) < EPSILON) )
       R.Remove(R.first.get());
@@ -1211,9 +1211,9 @@ void RemoveDuplicates(Solid2d & sr)
   }
 }
 
-Polygon2d RectanglePoly(double x0, double x1, double y0, double y1, string bc)
+Loop RectanglePoly(double x0, double x1, double y0, double y1, string bc)
 {
-  Polygon2d r;
+  Loop r;
   r.Append( {x0, y0} );
   r.Append( {x1, y0} );
   r.Append( {x1, y1} );
@@ -1235,7 +1235,7 @@ Solid2d Circle(double x, double y, double r, string name, string bc)
 {
   Solid2d s;
   s.name = name;
-  Polygon2d poly;
+  Loop poly;
 
   Point<2> ps[] =
   {

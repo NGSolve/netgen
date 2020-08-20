@@ -408,15 +408,6 @@ DLL_HEADER void ExportGeom2d(py::module &m)
     .def("SetBC", &Solid2d::SetBC)
     ;
   
-  py::class_<Polygon2d>(m, "Polygon2d")
-    .def(py::init<>())
-    .def("SetBC", &Polygon2d::SetBC)
-    .def("Append", [](Polygon2d & self, double x, double y)
-        {
-        self.Append({x,y});
-        })
-    ;
-
 
   m.def("Rectangle", [](double x0, double x1, double y0, double y1, string bc, string mat)
 		  { return Rectangle(x0,x1,y0,y1,bc,mat); },

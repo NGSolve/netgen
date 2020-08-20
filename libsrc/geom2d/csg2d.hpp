@@ -356,20 +356,20 @@ inline int CalcSide( const Point<2> & p0, const Point<2> & p1, const Point<2> & 
   return 0;
 }
 
-struct Polygon2d
+struct Loop
 {
   unique_ptr<Vertex> first = nullptr;
 
-  Polygon2d() = default;
+  Loop() = default;
 
-  Polygon2d(const Polygon2d & p)
+  Loop(const Loop & p)
     : first(nullptr)
   {
     for(auto v : p.Vertices(ALL))
       AppendVertex(*v);
   }
 
-  Polygon2d & operator=(const Polygon2d & p)
+  Loop & operator=(const Loop & p)
   {
     first = nullptr;
     if(p.first)
@@ -532,7 +532,7 @@ struct Polygon2d
 
 struct Solid2d
 {
-  Array<Polygon2d> polys;
+  Array<Loop> polys;
 
   string name = "";
 
@@ -543,7 +543,7 @@ struct Solid2d
   Solid2d operator*(Solid2d & other);
   Solid2d operator-(Solid2d other);
 
-  void Append( const Polygon2d & poly )
+  void Append( const Loop & poly )
   {
     polys.Append(poly);
   }
