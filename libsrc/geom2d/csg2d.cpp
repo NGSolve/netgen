@@ -719,7 +719,7 @@ RelativePositionType oracle(bool prev, Vertex* P1, Vertex* P2, Vertex* P3)
   {
     Q = P2->neighbour->next;
     q = *Q;
-    if(P2->spline)
+    if(P2->neighbour->spline)
       q = P2->neighbour->spline->TangentPoint();
   }
 
