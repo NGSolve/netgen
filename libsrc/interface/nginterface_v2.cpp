@@ -1298,7 +1298,11 @@ void Ngx_Mesh::SetSurfaceElementOrders (int enr, int ox, int oy)
 
 size_t Ngx_Mesh :: GetGlobalVertexNum (int locnum) const
 {
+#ifdef PARALLEL  
   return mesh->GetParallelTopology().GetGlobalPNum (locnum+1)-1;
+#else
+  return locnum;
+#endif
 }
 
   
