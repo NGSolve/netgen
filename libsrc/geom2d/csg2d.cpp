@@ -1328,14 +1328,10 @@ Solid2d :: Solid2d(const Array<std::variant<Point<2>, EdgeInfo>> & points, strin
   Loop l;
   for (auto & v : points)
     {
-      if(std::holds_alternative<Point<2>>(v))
-        {
-          l.Append(std::get<0>(v), true);
-        }
-      if(std::holds_alternative<EdgeInfo>(v))
-        {
-          l.first->prev->info.Assign( std::get<1>(v) );
-        }
+      if(auto point = std::get_if<Point<2>>(&v))
+          l.Append(*point, true);
+      if(auto edge_info = std::get_if<EdgeInfo>(&v))
+          l.first->prev->info.Assign( *edge_info );
     }
 
   for(auto v : l.Vertices(ALL))
