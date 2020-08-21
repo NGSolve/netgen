@@ -1296,36 +1296,31 @@ void Ngx_Mesh::SetSurfaceElementOrders (int enr, int ox, int oy)
 
   
 
+size_t Ngx_Mesh :: GetGlobalVertexNum (int locnum) const
+{
+  return mesh->GetParallelTopology().GetGlobalPNum (locnum+1)-1;
+}
 
   
-  std::tuple<int,int*>  Ngx_Mesh :: GetDistantProcs (int nodetype, int locnum) const
+FlatArray<int>  Ngx_Mesh :: GetDistantProcs (int nodetype, int locnum) const
   {
 #ifdef PARALLEL
     if (mesh->GetCommunicator().Size() == 1)
-      return std::tuple<int,int*>(0,nullptr);
+      return FlatArray<int>(0,nullptr);
     
     switch (nodetype)
       {
       case 0:
-	{
-	  NgFlatArray<int> dn = mesh->GetParallelTopology().GetDistantPNums(locnum);
-	  return std::tuple<int,int*>(dn.Size(), &dn[0]);
-	}
+        return mesh->GetParallelTopology().GetDistantPNums(locnum);
       case 1:
-	{
-	  NgFlatArray<int> dn = mesh->GetParallelTopology().GetDistantEdgeNums(locnum);
-	  return std::tuple<int,int*>(dn.Size(), &dn[0]);
-	}
+        return mesh->GetParallelTopology().GetDistantEdgeNums(locnum);
       case 2:
-	{
-	  NgFlatArray<int> dn = mesh->GetParallelTopology().GetDistantFaceNums(locnum);
-	  return std::tuple<int,int*>(dn.Size(), &dn[0]);
-	}
+        return mesh->GetParallelTopology().GetDistantFaceNums(locnum);
       default:
-	return std::tuple<int,int*>(0,nullptr);
+	return FlatArray<int>(0, nullptr);
       }
 #else
-    return std::tuple<int,int*>(0,nullptr);
+    return FlatArray<int>(0,nullptr);
 #endif
   }
 }

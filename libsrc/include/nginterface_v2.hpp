@@ -368,8 +368,9 @@ namespace netgen
     
 
     // for MPI-parallel
-    std::tuple<int,int*> GetDistantProcs (int nodetype, int locnum) const;
-
+    FlatArray<int> GetDistantProcs (int nodetype, int locnum) const;
+    size_t GetGlobalVertexNum (int locnum) const;
+                               
     shared_ptr<Mesh> GetMesh () const { return mesh; } 
     shared_ptr<Mesh> SelectMesh () const;
     inline auto GetTimeStamp() const;

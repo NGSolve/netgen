@@ -905,6 +905,7 @@ void Ng_GetSurfaceElementNeighbouringDomains(const int selnr, int & in, int & ou
 
 // gibt anzahl an distant pnums zurueck
 // * pnums entspricht ARRAY<int[2] >
+[[deprecated("Use GetDistantNodeNums(locnum) -> FlatArray instead!")]]                    
 int NgPar_GetDistantNodeNums ( int nodetype, int locnum, int * distnums )
 {
   int size = NgPar_GetNDistantNodeNums (nodetype, locnum);
@@ -931,6 +932,7 @@ int NgPar_GetDistantNodeNums ( int nodetype, int locnum, int * distnums )
   return size;
 }
 
+[[deprecated("Use GetDistantNodeNums(locnum) -> FlatArray instead!")]]                    
 int NgPar_GetNDistantNodeNums ( int nodetype, int locnum )
 {
   locnum++;
@@ -944,6 +946,7 @@ int NgPar_GetNDistantNodeNums ( int nodetype, int locnum )
   return -1;
 }
 
+[[deprecated("Use GetDistantNodeNums(locnum) -> FlatArray instead!")]]                    
 int NgPar_GetGlobalNodeNum (int nodetype, int locnum)
 {
   locnum++;

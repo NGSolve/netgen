@@ -732,6 +732,7 @@ namespace netgen
     for (auto t : point_types)
       { MPI_Type_free(&t); }
 
+    
     PrintMessage ( 3, "Sending names");
 
     sendrequests.SetSize(3*ntasks);
@@ -814,6 +815,9 @@ namespace netgen
     self.BuildElementSearchTree();
     
     // const_cast<Mesh&>(*this).DeleteMesh();
+
+    // paralleltop -> SetNV (0);
+    // paralleltop->EnumeratePointsGlobally();
     
     PrintMessage( 3, "send mesh complete");
   }
@@ -1016,6 +1020,7 @@ namespace netgen
 	}
     }
 
+
     /** Recv bc-names **/
     ArrayMem<int,4> nnames{0,0,0,0};
     // MPI_Recv(nnames, 4, MPI_INT, 0, MPI_TAG_MESH+6, comm, MPI_STATUS_IGNORE);
@@ -1073,7 +1078,7 @@ namespace netgen
     clusters -> Update();
 
     // paralleltop -> UpdateCoarseGrid();
-    
+    // paralleltop->EnumeratePointsGlobally();
     SetNextMajorTimeStamp();
   }
   

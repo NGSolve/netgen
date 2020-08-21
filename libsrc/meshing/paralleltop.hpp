@@ -42,60 +42,80 @@ namespace netgen
     void SetNSE (int anse);
     void SetNSegm (int anseg);
 
-
     void SetLoc2Glob_Vert   (int locnum, int globnum) { glob_vert[locnum-1] = globnum; }
+    [[deprecated("Try to avoid global enumration!")]]                
     void SetLoc2Glob_Edge   (int locnum, int globnum) { glob_edge[locnum-1] = globnum; }
+    [[deprecated("Try to avoid global enumration!")]]                
     void SetLoc2Glob_Face   (int locnum, int globnum) { glob_face[locnum-1] = globnum; }
+    [[deprecated("Try to avoid global enumration!")]]                
     void SetLoc2Glob_VolEl  (int locnum, int globnum) { glob_el[locnum-1] = globnum; }
+    [[deprecated("Try to avoid global enumration!")]]                
     void SetLoc2Glob_SurfEl (int locnum, int globnum) { glob_surfel[locnum-1] = globnum; }
+    [[deprecated("Try to avoid global enumration!")]]                
     void SetLoc2Glob_Segm   (int locnum, int globnum) { glob_segm[locnum-1] = globnum; }
 
     int GetGlobalPNum    (int locnum) const { return glob_vert[locnum-1]; }
+    [[deprecated("Try to avoid global enumration!")]]                
     int GetGlobalEdgeNum (int locnum) const { return glob_edge[locnum-1]; }
+    [[deprecated("Try to avoid global enumration!")]]                
     int GetGlobalFaceNum (int locnum) const { return glob_face[locnum-1]; }
+    [[deprecated("Try to avoid global enumration!")]]                
     int GetGlobalElNum   (int locnum) const { return glob_el[locnum-1]; }
+    [[deprecated("Try to avoid global enumration!")]]                
     int GetGlobalSElNum  (int locnum) const { return glob_surfel[locnum-1]; }
 
 
+    void EnumeratePointsGlobally ();
+    
     void SetDistantFaceNum (int dest, int locnum);
     void SetDistantPNum    (int dest, int locnum);
     void SetDistantEdgeNum (int dest, int locnum);
 
-    int GetNDistantPNums (int locpnum) const { return loc2distvert[locpnum-1].Size(); } 
-    int GetNDistantFaceNums (int locfacenum) const { return loc2distface[locfacenum-1].Size(); } 
+    [[deprecated("Use GetDistantPNums(locnum).Size() instead!")]]            
+    int GetNDistantPNums (int locpnum) const { return loc2distvert[locpnum-1].Size(); }
+
+    [[deprecated("Use GetDistantFaceNums(locnum).Size() instead!")]]                
+    int GetNDistantFaceNums (int locfacenum) const { return loc2distface[locfacenum-1].Size(); }
+
+    [[deprecated("Use GetDistantEdgeNums(locnum).Size() instead!")]]                    
     int GetNDistantEdgeNums ( int locedgenum) const { return loc2distedge[locedgenum-1].Size(); }
-    
+
+    [[deprecated("Use GetDistantPNums(locnum) -> FlatArray instead!")]]                
     void GetDistantPNums (int locpnum, int * distpnums ) const
     {
       for (int i = 0; i < loc2distvert[locpnum-1].Size(); i++ )
 	distpnums[i] = loc2distvert[locpnum-1][i];
     } 
-    
+
+    [[deprecated("Use GetDistantFaceNums(locnum) -> FlatArray instead!")]]                    
     void GetDistantFaceNums (int locfacenum, int * distfacenums ) const
     {
       for ( int i = 0; i < loc2distface[locfacenum-1].Size(); i++ )
 	distfacenums[i] = loc2distface[locfacenum-1][i];
     } 
 
+    [[deprecated("Use GetDistantFaceNums(locnum) -> FlatArray instead!")]]                        
     void GetDistantFaceNums (int locfacenum, NgArray<int> & distfacenums ) const
     {
       distfacenums = loc2distface[locfacenum-1];
     }
-    
+
+    [[deprecated("Use GetDistantEdgeNums(locnum) -> FlatArray instead!")]]                            
     void GetDistantEdgeNums (int locedgenum, int * distedgenums ) const
     {
       for (int i = 0; i < loc2distedge[locedgenum-1].Size(); i++ )
 	distedgenums[i] = loc2distedge[locedgenum-1][i];
     } 
 
+    [[deprecated("Use GetDistantEdgeNums(locnum) -> FlatArray instead!")]]                                
     void GetDistantEdgeNums (int locedgenum, NgArray<int> & distedgenums ) const
     {
       distedgenums = loc2distedge[locedgenum-1];
     } 
 
-    NgFlatArray<int> GetDistantPNums (int locnum) const { return loc2distvert[locnum]; }
-    NgFlatArray<int> GetDistantFaceNums (int locnum) const { return loc2distface[locnum]; }
-    NgFlatArray<int> GetDistantEdgeNums (int locnum) const { return loc2distedge[locnum]; }
+    FlatArray<int> GetDistantPNums (int locnum) const { return loc2distvert[locnum]; }
+    FlatArray<int> GetDistantFaceNums (int locnum) const { return loc2distface[locnum]; }
+    FlatArray<int> GetDistantEdgeNums (int locnum) const { return loc2distedge[locnum]; }
 
     bool IsExchangeVert (int dest, int vnum) const
     {

@@ -55,6 +55,107 @@ namespace netgen
   }
 
 
+  void ParallelMeshTopology :: EnumeratePointsGlobally ()
+  {
+    auto nv = loc2distvert.Size();
+    auto comm = mesh.GetCommunicator();
+    auto rank = comm.Rank();
+
+    // if (rank == 0)
+    // nv = 0;
+    glob_vert.SetSize (nv);
+    glob_vert = -1;
+    int num_master_points = 0;
+    
+    for (auto i : Range(nv))
+      {
+        auto dps = GetDistantPNums(i);
+        // check sorted:
+        for (int j = 0; j+1 < dps.Size(); j++)
+          if (dps[j+1] < dps[j]) cout << "wrong sort" << endl;
+        
+        if (dps.Size() == 0 || dps[0] > comm.Rank())
+          glob_vert[i] = num_master_points++;
+      }
+    
+    Array<int> first_master_point(comm.Size());
+    comm.AllGather (num_master_points, first_master_point);
+        
+    size_t num_glob_points = 0;
+    for (int i = 0; i < comm.Size(); i++)
+      {
+        int cur = first_master_point[i];
+        first_master_point[i] = num_glob_points;
+        num_glob_points += cur;
+      }
+    
+    for (auto i : Range(nv))
+      if (glob_vert[i] != -1)
+        glob_vert[i] += first_master_point[comm.Rank()];
+    
+    // ScatterDofData (global_nums); 
+    
+    Array<int> nsend(comm.Size()), nrecv(comm.Size());
+    nsend = 0;
+    nrecv = 0;
+
+        /** Count send/recv size **/
+    for (auto i : Range(nv))
+      {
+        auto dps = GetDistantPNums(i);
+        if (!dps.Size()) continue;
+        if (rank < dps[0])
+          for(auto p:dps)
+            nsend[p]++;
+        else
+          nrecv[dps[0]]++;
+      }
+    
+    Table<PointIndex> send_data(nsend);
+    Table<PointIndex> recv_data(nrecv);
+    
+    /** Fill send_data **/
+    nsend = 0;
+    for (auto i : Range(nv))
+      {
+        auto dps = GetDistantPNums(i);
+        if (dps.Size() && rank < dps[0])
+          for(auto p : dps)
+            send_data[p][nsend[p]++] = glob_vert[i];
+      }
+    
+    Array<MPI_Request> requests;
+    for (int i = 0; i < comm.Size(); i++)
+      {
+        if (nsend[i])
+          requests.Append (comm.ISend (send_data[i], i, 200));
+        if (nrecv[i])
+          requests.Append (comm.IRecv (recv_data[i], i, 200));
+      }
+    
+    MyMPI_WaitAll (requests);
+    
+    Array<int> cnt(comm.Size());
+    cnt = 0;
+    
+    for (auto i : Range(nv))
+      {
+        auto dps = GetDistantPNums(i);
+        if (dps.Size() > 0 && dps[0] < comm.Rank())
+          {
+            int master = comm.Size();
+            for (int j = 0; j < dps.Size(); j++)
+              master = min (master, dps[j]);
+            glob_vert[i] = recv_data[master][cnt[master]++];
+          }
+      }
+
+    if (PointIndex::BASE==1)
+      for (auto & i : glob_vert)
+        i++;
+  }
+  
+
   void ParallelMeshTopology :: SetDistantFaceNum (int dest, int locnum)
   {
     for ( int i = 0; i < loc2distface[locnum-1].Size(); i+=1 )
@@ -242,8 +343,13 @@ namespace netgen
     MPI_Group_excl (MPI_GROUP_comm, 1, process_ranks, &MPI_LocalGroup);
     MPI_Comm_create (comm, MPI_LocalGroup, &MPI_LocalComm);
 
-    if (id == 0) return;
-
+    if (id == 0)
+      {
+        // SetNV(0);
+        // EnumeratePointsGlobally();
+        return;
+      }
+    
     const MeshTopology & topology = mesh.GetTopology();
 
     NgArray<int> cnt_send(ntasks-1);
@@ -573,7 +679,7 @@ namespace netgen
 	NgProfiler::StopTimer (timerf);
       }
     // cout << "UpdateCoarseGrid - done" << endl;
-    
+    // EnumeratePointsGlobally();
     is_updated = true;
 
     MPI_Group_free(&MPI_LocalGroup);
