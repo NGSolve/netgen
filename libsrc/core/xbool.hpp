@@ -30,6 +30,8 @@ namespace ngcore
     bool IsTrue () const { return state == 2; }
     bool IsMaybe () const { return state == 1; }
     bool IsFalse () const { return state == 0; }
+    bool IsMaybeTrue() const { return state >= 1; } 
+    bool IsMaybeFalse() const { return state <= 1; } 
     friend ostream & operator<< (ostream & ost, xbool xb);
   };
 
