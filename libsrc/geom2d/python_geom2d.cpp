@@ -399,21 +399,30 @@ DLL_HEADER void ExportGeom2d(py::module &m)
   
   py::class_<Solid2d>(m, "Solid2d")
     .def(py::init<>())
-    .def(py::init<Array<std::variant<Point<2>, EdgeInfo>>, std::string>(), py::arg("points"), py::arg("mat")=MAT_DEFAULT)
+    .def(py::init<Array<std::variant<Point<2>, EdgeInfo>>, std::string, std::string>(), py::arg("points"), py::arg("mat")=MAT_DEFAULT, py::arg("bc")=BC_DEFAULT)
     .def_readwrite("name", &Solid2d::name)
     .def("__mul__", [](Solid2d & self, Solid2d & other) { return self*other; })
     .def("__add__", [](Solid2d & self, Solid2d & other) { return self+other; })
     .def("__sub__", [](Solid2d & self, Solid2d & other) { return self-other; })
-    .def("Append", &Solid2d::Append)
-    .def("SetBC", &Solid2d::SetBC)
+    .def("Copy", [](Solid2d & self) -> Solid2d { return self; })
+    .def("Move", &Solid2d::Move)
+    .def("Scale", &Solid2d::Scale)
+    .def("Rotate", [](Solid2d & self, optional<double> rad, optional<double> deg, Point<2> center )
+        {
+          if(rad)
+            self.RotateRad(*rad, center);
+          if(deg)
+            self.RotateDeg(*deg, center);
+          return self;
+        }, py::arg("rad")=nullopt, py::arg("deg")=nullopt, py::arg("center")=Point<2>{0,0})
     ;
   
 
-  m.def("Rectangle", [](double x0, double x1, double y0, double y1, string bc, string mat)
-		  { return Rectangle(x0,x1,y0,y1,bc,mat); },
-		  py::arg("x0"), py::arg("x1"), py::arg("y0"), py::arg("y1"), py::arg("bc")="", py::arg("mat")=""
+  m.def("Rectangle", [](Point<2> pmin, Point<2> pmax, string bc, string mat)
+		  { return Rectangle(pmin, pmax, bc,mat); },
+		  py::arg("pmin"), py::arg("pmax"), py::arg("bc")=BC_DEFAULT, py::arg("mat")=MAT_DEFAULT
        );
-  m.def("Circle", Circle, py::arg("x"), py::arg("y"), py::arg("r"), py::arg("bc")="", py::arg("mat")="");
+  m.def("Circle", Circle, py::arg("center"), py::arg("radius"), py::arg("bc")=BC_DEFAULT, py::arg("mat")=MAT_DEFAULT);
 
   py::class_<CSG2d>(m, "CSG2d")
     .def(py::init<>())

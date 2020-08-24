@@ -15,6 +15,22 @@ namespace netgen
 
 constexpr static double EPSILON=0.000000001;
 
+void ComputeWeight( Spline & s, Point<2> p )
+{
+  Point<2> a = s.StartPI();
+  Point<2> b = s.TangentPoint();
+  Point<2> c = s.EndPI();
+
+  double A = (p[1]-a[1])*(b[0]-p[0]) - (p[0]-a[0])*(b[1]-p[1]);
+  double B = (p[1]-c[1])*(b[0]-p[0]) - (p[0]-c[0])*(b[1]-p[1]);
+  double det = sqrt(-A*B);
+  double tt = (B-det)/(A+det);
+  auto v = b-p;
+  int dim = fabs(v[0]) > fabs(v[1]) ? 0 : 1;
+  double weight = fabs(tt*(p[dim]-a[dim])/v[dim] + 1.0/tt*(p[dim]-c[dim])/v[dim]);
+  s.SetWeight(weight);
+}
+
 void ToggleLabel(EntryExitLabel& status)
 {
   if (status == ENTRY)
@@ -61,14 +77,7 @@ Spline Split( const Spline & s, double t0, double t1 )
 
   // compute weight of new spline such that p lies on it
   Point<2> p = s.GetPoint(0.5*(t0+t1));
-  double A = (p[1]-a[1])*(b[0]-p[0]) - (p[0]-a[0])*(b[1]-p[1]);
-  double B = (p[1]-c[1])*(b[0]-p[0]) - (p[0]-c[0])*(b[1]-p[1]);
-  double det = sqrt(-A*B);
-  double tt = (B-det)/(A+det);
-  auto v = b-p;
-  int dim = fabs(v[0]) > fabs(v[1]) ? 0 : 1;
-  double weight = fabs(tt*(p[dim]-a[dim])/v[dim] + 1.0/tt*(p[dim]-c[dim])/v[dim]);
-  res.SetWeight(weight);
+  ComputeWeight(res, p);
   return res;
 }
 
@@ -1222,45 +1231,35 @@ Loop RectanglePoly(double x0, double x1, double y0, double y1, string bc)
   return r;
 }
 
-Solid2d Rectangle(double x0, double x1, double y0, double y1, string name, string bc)
+Solid2d Rectangle(Point<2> p0, Point<2> p1, string name, string bc)
 {
-  Solid2d s;
-  s.name = name;
-  s.polys.Append(RectanglePoly(x0,x1,y0,y1, bc));
-  s.SetBC(bc);
-  return s;
+  using P = Point<2>;
+  return { {p0, P{p1[0],p0[1]}, p1, P{p0[0],p1[1]}}, name, bc };
 }
 
-Solid2d Circle(double x, double y, double r, string name, string bc)
+Solid2d Circle(Point<2> center, double r, string name, string bc)
 {
-  Solid2d s;
-  s.name = name;
-  Loop poly;
+  double x = center[0];
+  double y = center[1];
+  using P = Point<2>;
 
-  Point<2> ps[] =
+  Point<2> p[] =
   {
     {x+r, y+0},
-    {x+r, y+r},
     {x+0, y+r},
-    {x-r, y+r},
     {x-r, y+0},
-    {x-r, y-r},
     {x+0, y-r},
-    {x+r, y-r}
   };
 
-  for (auto i : IntRange(4))
+  EdgeInfo cp[] =
   {
-    int i0 = 2*i;
-    int i1 = (i0+1)%8;
-    int i2 = (i0+2)%8;
-    auto & v0 = poly.Append( ps[i0] );
-    v0.spline = { ps[i0], ps[i1], ps[i2] };
-  }
+    P{x+r, y+r},
+    P{x-r, y+r},
+    P{x-r, y-r},
+    P{x+r, y-r}
+  };
 
-  s.polys.Append(poly);
-  s.SetBC(bc);
-  return s;
+  return Solid2d( { p[0], cp[0], p[1], cp[1], p[2], cp[2], p[3], cp[3] }, name, bc );
 }
 
 Solid2d AddIntersectionPoints ( Solid2d s1, Solid2d s2 )
@@ -1322,7 +1321,7 @@ Solid2d ClipSolids ( Solid2d s1, Solid2d s2, bool intersect)
   return res;
 }
 
-Solid2d :: Solid2d(const Array<std::variant<Point<2>, EdgeInfo>> & points, string name_)
+Solid2d :: Solid2d(const Array<std::variant<Point<2>, EdgeInfo>> & points, string name_, string bc)
     : name(name_)
 {
   Loop l;
@@ -1336,6 +1335,9 @@ Solid2d :: Solid2d(const Array<std::variant<Point<2>, EdgeInfo>> & points, strin
 
   for(auto v : l.Vertices(ALL))
     {
+      if(v->info.bc==BC_DEFAULT)
+          v->info.bc = bc;
+
       v->bc = v->info.bc;
       if(v->info.control_point)
         {
@@ -1346,7 +1348,7 @@ Solid2d :: Solid2d(const Array<std::variant<Point<2>, EdgeInfo>> & points, strin
   polys.Append(l);
 }
 
-Solid2d Solid2d :: operator+(Solid2d & other)
+Solid2d Solid2d :: operator+(const Solid2d & other) const
 {
   if(polys.Size()==0)
     return other;
@@ -1356,16 +1358,17 @@ Solid2d Solid2d :: operator+(Solid2d & other)
   return res;
 }
 
-Solid2d Solid2d :: operator*(Solid2d & other)
+Solid2d Solid2d :: operator*(const Solid2d & other) const
 {
   auto res = ClipSolids(*this, other, true);
   res.name = name;
   return res;
 }
 
-Solid2d Solid2d :: operator-(Solid2d other)
+Solid2d Solid2d :: operator-(const Solid2d & other_) const
 {
   // TODO: Check dimensions of solids with bounding box
+  Solid2d other = other_;
   other.Append(RectanglePoly(-1e8, 1e8, -1e8, 1e8, "JUST_FOR_CLIPPING"));
   auto res = ClipSolids(*this, other);
 
@@ -1378,6 +1381,54 @@ Solid2d Solid2d :: operator-(Solid2d other)
   res.name = name;
   return res;
 }
+
+Solid2d Solid2d :: operator+=(const Solid2d & other)
+{
+  *this = *this + other;
+  return *this;
+}
+
+Solid2d Solid2d :: operator*=(const Solid2d & other)
+{
+  *this = *this * other;
+  return *this;
+}
+
+Solid2d Solid2d :: operator-=(const Solid2d & other)
+{
+  *this = *this - other;
+  return *this;
+}
+
+Solid2d & Solid2d :: Move( Vec<2> v )
+{
+  return Transform( [v](Point<2> p) -> Point<2> { return p+v; } );
+}
+
+Solid2d & Solid2d :: Scale( double sx, double sy )
+{
+  if(sy==0.0)
+      sy=sx;
+  return Transform( [sx,sy](Point<2> p) -> Point<2> { return{p[0]*sx, p[1]*sy}; } );
+}
+
+Solid2d & Solid2d :: RotateRad( double ang, Point<2> center )
+{
+  double sina = sin(ang);
+  double cosa = cos(ang);
+  Vec<2> c = { center[0], center[1] };
+  return Transform( [c, sina, cosa](Point<2> p) -> Point<2>
+      {
+          p -= c;
+          double x = p[0];
+          double y = p[1];
+          p[0] = cosa*x+sina*y;
+          p[1] = -sina*x+cosa*y;
+          p += c;
+          return p;
+      } );
+}
+
 
 bool Solid2d :: IsInside( Point<2> r ) const
 {
@@ -1405,7 +1456,6 @@ bool Solid2d :: IsRightInside( const Vertex & p0 )
   auto q = p0 + 0.5*v + 1e-6*n;
   return IsInside(q);
 }
-
 
 shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
 {
@@ -1519,20 +1569,24 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
         auto li = s.IsLeftInside(p0);
         auto ri = s.IsRightInside(p0);
 
+        auto & ls = seg_map[{pi0,pi1,pi2}];
+        ls.p0 = pi0;
+        ls.p1 = pi1;
+        ls.p2 = pi2;
+        ls.weight = weight;
+
+        if(bcmap.count(p0.bc)==0)
+          bcmap[p0.bc] = bcmap.size()+1;
+
+        if(ls.bc==0 || p0.bc != BC_DEFAULT)
+            ls.bc = bcmap[p0.bc];
+
         if(li!=ri)
         {
-          auto & ls = seg_map[{pi0,pi1,pi2}];
-          ls.p0 = pi0;
-          ls.p1 = pi1;
-          ls.p2 = pi2;
-          ls.weight = weight;
           if(s.IsLeftInside(p0) == flip)
             ls.left = dom;
           else
             ls.right = dom;
-          if(bcmap.count(p0.bc)==0)
-            bcmap[p0.bc] = bcmap.size()+1;
-          ls.bc = bcmap[p0.bc];
         }
       }
     }
@@ -1570,4 +1624,13 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
   }
   return geo;
 }
+
+shared_ptr<netgen::Mesh> CSG2d :: GenerateMesh(MeshingParameters & mp)
+{
+  auto geo = GenerateSplineGeometry();
+  auto mesh = make_shared<netgen::Mesh>();
+  geo->GenerateMesh(mesh, mp);
+  return mesh;
+}
+
 }

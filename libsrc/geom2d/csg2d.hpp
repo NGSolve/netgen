@@ -11,12 +11,15 @@ namespace netgen
 using namespace ngcore;
 using netgen::Point;
 using netgen::Vec;
+using Spline = SplineSeg3<2>;
 
 inline double Area(const Point<2>& P, const Point<2>& Q, const Point<2>& R)
 {
   return (Q[0]-P[0]) * (R[1]-P[1]) - (Q[1]-P[1]) * (R[0]-P[0]);
 }
 
+// compute weight of spline such that p lies on it
+void ComputeWeight( Spline & s, Point<2> p );
 
 enum IntersectionType
 {                 // types of intersection (detected in the first phase)
@@ -88,8 +91,6 @@ struct EdgeInfo
           maxh = other.maxh;
     }
 };
-
-using Spline = SplineSeg3<2>;
 
 struct Vertex : Point<2>
 {
@@ -565,15 +566,20 @@ struct Solid2d
 {
   Array<Loop> polys;
 
-  string name = "";
+  string name = MAT_DEFAULT;
 
   Solid2d() = default;
   Solid2d(string name_) : name(name_) {}
-  Solid2d(const Array<std::variant<Point<2>, EdgeInfo>> & points, string name_);
+  Solid2d(const Array<std::variant<Point<2>, EdgeInfo>> & points, string name_=MAT_DEFAULT, string bc_=BC_DEFAULT);
 
-  Solid2d operator+(Solid2d & other);
-  Solid2d operator*(Solid2d & other);
-  Solid2d operator-(Solid2d other);
+  Solid2d operator+(const Solid2d & other) const;
+  Solid2d operator*(const Solid2d & other) const;
+  Solid2d operator-(const Solid2d & other) const;
+
+  Solid2d& operator=(const Solid2d & other) = default;
+  Solid2d operator+=(const Solid2d & other);
+  Solid2d operator*=(const Solid2d & other);
+  Solid2d operator-=(const Solid2d & other);
 
   void Append( const Loop & poly )
   {
@@ -584,13 +590,35 @@ struct Solid2d
   bool IsLeftInside( const Vertex & p0 );
   bool IsRightInside( const Vertex & p0 );
 
-  void SetBC(string bc)
-  {
-    for(auto & p : polys)
-      for(auto v : p.Vertices(ALL))
-        v->bc = bc;
-  }
+  template<typename TFunc>
+  Solid2d & Transform( const TFunc & func )
+    {
+      for(auto & poly : polys)
+          for(auto v : poly.Vertices(ALL))
+            {
+              auto p = func(*v);
+              (*v)[0] = p[0];
+              (*v)[1] = p[1];
+              if(v->spline)
+                {
+                  auto &s = *v->spline;
+                  auto pmid = func(s.GetPoint(0.5));
+                  s = Spline(func(s.StartPI()), func(s.TangentPoint()), func(s.EndPI()));
+                  ComputeWeight(s, pmid);
+                }
+            }
+      return *this;
+    }
+
+  Solid2d & Move( Vec<2> v );
+  Solid2d & Scale( double sx, double sy=0.0 );
+  Solid2d & RotateRad( double ang, Point<2> center = {0,0} );
+  Solid2d & RotateDeg( double ang, Point<2> center = {0,0} )
+    {
+      return RotateRad( ang/180.*M_PI );
+    }
 };
+
 
 class CSG2d
 {
@@ -603,10 +631,11 @@ class CSG2d
     }
 
     shared_ptr<netgen::SplineGeometry2d> GenerateSplineGeometry();
+    shared_ptr<netgen::Mesh> GenerateMesh(MeshingParameters & mp);
 };
 
-Solid2d Circle(double x, double y, double r, string name="", string bc="");
-Solid2d Rectangle(double x0, double x1, double y0, double y1, string name, string bc);
+Solid2d Circle( Point<2> center, double r, string name="", string bc="");
+Solid2d Rectangle( Point<2> p0, Point<2> p1, string mat=MAT_DEFAULT, string bc=BC_DEFAULT );
 
 Solid2d AddIntersectionPoints ( Solid2d s1, Solid2d s2 );
 Solid2d ClipSolids ( Solid2d s1, Solid2d s2, bool intersect=true );
