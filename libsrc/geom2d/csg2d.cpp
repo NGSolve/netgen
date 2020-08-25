@@ -1538,7 +1538,7 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
   for(auto & s : solids)
   {
     dom++;
-    geo->SetMaterial(dom, s.name);
+    bool is_solid_degenerated = true; // Don't create new domain for degenerated solids
     for(auto & poly : s.polys)
     {
       for(auto v : poly.Vertices(ALL))
@@ -1588,9 +1588,15 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
             ls.left = dom;
           else
             ls.right = dom;
+
+          is_solid_degenerated = false;
         }
       }
     }
+    if(!is_solid_degenerated)
+      geo->SetMaterial(dom, s.name);
+    else
+      dom--; // degenerated solid, use same domain index again
   }
 
   for(auto & [name, bc] : bcmap)
