@@ -122,6 +122,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   {
                     return NgMPI_Comm(comm);
                   }))
+    .def_property_readonly ("mpi4py", [] (NgMPI_Comm comm) { return mpi4py_comm(comm); })
 #endif // NG_MPI4PY
     .def_property_readonly ("rank", &NgMPI_Comm::Rank)
     .def_property_readonly ("size", &NgMPI_Comm::Size)
