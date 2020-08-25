@@ -98,7 +98,8 @@ Vertex * Vertex :: Insert(Point<2> p, double lam)
     current = current->next;
 
   auto pre = current->prev;
-  vnew->bc = pre->bc;
+  if(lam > -1.0)
+    vnew->info = pre->info;
 
   pre->next = vnew.get();
   vnew->prev = pre;
@@ -1148,7 +1149,7 @@ void CreateResult(Solid2d & sp, Solid2d & sr, bool UNION)
           auto & vnew = R.AppendVertex(*V);
           if ((status == EXIT) ^ UNION)
           {
-            vnew.bc = V->bc;
+            vnew.info = V->info;
             if(V->spline)
               vnew.spline = *V->spline;
             else
@@ -1166,7 +1167,7 @@ void CreateResult(Solid2d & sp, Solid2d & sr, bool UNION)
             }
             else
               vnew.spline = nullopt;
-            vnew.bc = V->bc;
+            vnew.info = V->info;
             V->is_intersection = false;        // mark visited vertices
           }
           if(V == I)
@@ -1338,11 +1339,8 @@ Solid2d :: Solid2d(const Array<std::variant<Point<2>, EdgeInfo>> & points, strin
       if(v->info.bc==BC_DEFAULT)
           v->info.bc = bc;
 
-      v->bc = v->info.bc;
       if(v->info.control_point)
-        {
           v->spline = Spline(*v, *v->info.control_point, *v->next);
-        }
     }
 
   polys.Append(l);
@@ -1472,6 +1470,7 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
     int bc;
     int p2;
     double weight;
+    double maxh = 1e99;
   };
 
   auto geo = std::make_shared<netgen::SplineGeometry2d>();
@@ -1575,11 +1574,13 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
         ls.p2 = pi2;
         ls.weight = weight;
 
-        if(bcmap.count(p0.bc)==0)
-          bcmap[p0.bc] = bcmap.size()+1;
+        if(bcmap.count(p0.info.bc)==0)
+          bcmap[p0.info.bc] = bcmap.size()+1;
 
-        if(ls.bc==0 || p0.bc != BC_DEFAULT)
-            ls.bc = bcmap[p0.bc];
+        if(ls.bc==0 || p0.info.bc != BC_DEFAULT)
+            ls.bc = bcmap[p0.info.bc];
+
+        ls.maxh = min(ls.maxh, p0.info.maxh);
 
         if(li!=ri)
         {
@@ -1619,7 +1620,7 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
     seg->bc = ls.bc;
     seg->reffak = 1;
     seg->copyfrom = -1;
-    seg->hmax = 1e99;
+    seg->hmax = ls.maxh;
     geo->AppendSegment(seg);
   }
   return geo;

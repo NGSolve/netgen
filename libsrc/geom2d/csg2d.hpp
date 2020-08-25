@@ -88,7 +88,7 @@ struct EdgeInfo
       if(other.bc != BC_DEFAULT)
           bc = other.bc;
       if(other.maxh != MAXH_DEFAULT)
-          maxh = other.maxh;
+          maxh = min(maxh, other.maxh);
     }
 };
 
@@ -106,8 +106,6 @@ struct Vertex : Point<2>
 
   IntersectionLabel label = NONE;    // type of intersection vertex
   EntryExitLabel enex = NEITHER;        // entry/exit "flag"
-
-  string bc = "";
 
   // In case the edge this - next is curved, store the spline information here
   optional<Spline> spline = nullopt;
@@ -413,7 +411,7 @@ struct Loop
   Vertex & AppendVertex(const Vertex & v)
   {
     auto & vnew = Append( static_cast<Point<2>>(v), true );
-    vnew.bc = v.bc;
+    vnew.info = v.info;
     if(v.spline)
       vnew.spline = *v.spline;
     return vnew;
@@ -545,7 +543,7 @@ struct Loop
   void SetBC(string bc)
   {
     for(auto v : Vertices(ALL))
-      v->bc = bc;
+      v->info.bc = bc;
   }
 
   size_t Size() const
@@ -617,6 +615,28 @@ struct Solid2d
     {
       return RotateRad( ang/180.*M_PI );
     }
+
+  Solid2d & BC(string bc)
+  {
+    for(auto & p : polys)
+      for(auto v : p.Vertices(ALL))
+        v->info.bc = bc;
+    return *this;
+  }
+
+  Solid2d & Maxh(double maxh)
+  {
+    for(auto & p : polys)
+      for(auto v : p.Vertices(ALL))
+        v->info.maxh = maxh;
+    return *this;
+  }
+
+  Solid2d & Mat(string mat)
+  {
+    name = mat;
+    return *this;
+  }
 };
 
 
