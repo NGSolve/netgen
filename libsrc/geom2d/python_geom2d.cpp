@@ -373,9 +373,8 @@ DLL_HEADER void ExportGeom2d(py::module &m)
           })
          )
     
-    // If we change to c++17 this can become optional<MeshingParameters>
     .def("GenerateMesh", [](shared_ptr<SplineGeometry2d> self,
-                            MeshingParameters* pars, py::kwargs kwargs)
+                            optional<MeshingParameters> pars, py::kwargs kwargs)
 		{
                   MeshingParameters mp;
                   if(pars) mp = *pars;
@@ -391,7 +390,7 @@ DLL_HEADER void ExportGeom2d(py::module &m)
                   if(result != 0)
                     throw Exception("Meshing failed!");
 		  return mesh;
-                }, py::arg("mp") = nullptr,
+                }, py::arg("mp") = nullopt,
       py::call_guard<py::gil_scoped_release>(),
       meshingparameter_description.c_str())
     .def("_SetDomainTensorMeshing", &SplineGeometry2d::SetDomainTensorMeshing)
@@ -423,19 +422,40 @@ DLL_HEADER void ExportGeom2d(py::module &m)
             self.RotateDeg(*deg, center);
           return self;
         }, py::arg("rad")=nullopt, py::arg("deg")=nullopt, py::arg("center")=Point<2>{0,0})
+
     ;
   
 
-  m.def("Rectangle", [](Point<2> pmin, Point<2> pmax, string bc, string mat)
-		  { return Rectangle(pmin, pmax, bc,mat); },
-		  py::arg("pmin"), py::arg("pmax"), py::arg("bc")=BC_DEFAULT, py::arg("mat")=MAT_DEFAULT
+  m.def("Rectangle", [](Point<2> pmin, Point<2> pmax, string mat, string bc)
+		  { return Rectangle(pmin, pmax, mat, bc); },
+		  py::arg("pmin"), py::arg("pmax"), py::arg("mat")=MAT_DEFAULT, py::arg("bc")=BC_DEFAULT
        );
-  m.def("Circle", Circle, py::arg("center"), py::arg("radius"), py::arg("bc")=BC_DEFAULT, py::arg("mat")=MAT_DEFAULT);
+  m.def("Circle", Circle, py::arg("center"), py::arg("radius"), py::arg("mat")=MAT_DEFAULT, py::arg("bc")=BC_DEFAULT);
 
   py::class_<CSG2d>(m, "CSG2d")
     .def(py::init<>())
     .def("GenerateSplineGeometry", &CSG2d::GenerateSplineGeometry)
     .def("Add", &CSG2d::Add)
+    .def("GenerateMesh", [](CSG2d & self, optional<MeshingParameters> pars, py::kwargs kwargs)
+		{
+                  MeshingParameters mp;
+                  if(pars) mp = *pars;
+                  {
+                    py::gil_scoped_acquire aq;
+                    CreateMPfromKwargs(mp, kwargs);
+                  }
+		  auto mesh = make_shared<Mesh>();
+                  auto geo = self.GenerateSplineGeometry();
+                  mesh->SetGeometry(geo);
+                  SetGlobalMesh (mesh);
+                  ng_geometry = geo;
+		  auto result = geo->GenerateMesh(mesh, mp);
+                  if(result != 0)
+                    throw Exception("Meshing failed!");
+		  return mesh;
+                }, py::arg("mp") = nullopt,
+      py::call_guard<py::gil_scoped_release>(),
+      meshingparameter_description.c_str())
     ;
 
   py::class_<EdgeInfo>(m, "EdgeInfo")
