@@ -1301,8 +1301,8 @@ namespace netgen
         
         
         // merge points
-        Array<int, PointIndex> globnum(points.Size());
-        int maxglob = 0;
+        Array<PointIndex, PointIndex> globnum(points.Size());
+        PointIndex maxglob = -1;
         for (auto pi : Range(points))
           {
             globnum[pi] = partop.GetGlobalPNum(pi);
@@ -1319,7 +1319,7 @@ namespace netgen
           }
         else
           {
-            Array<int, PointIndex> globnumi;
+            Array<PointIndex, PointIndex> globnumi;
             Array<MeshPoint, PointIndex> pointsi;
             Array<MeshPoint, PointIndex> globpoints(numglob);
             for (int j = 1; j < comm.Size(); j++)

@@ -738,6 +738,17 @@ namespace netgen
     PrintMessage (5, "have 3d elements");
     mesh.ComputeNVertices();
     mesh.RebuildSurfaceElementLists();
+
+
+#ifdef PARALLEL
+    if (mesh.GetCommunicator().Size() > 1)
+      {
+        mesh.GetParallelTopology().IdentifyVerticesAfterRefinement();
+        mesh.GetCommunicator().Barrier();
+        mesh.GetParallelTopology().EnumeratePointsGlobally();
+      }
+#endif
+
     PrintMessage (5, "mesh updates complete");
     return;
 
