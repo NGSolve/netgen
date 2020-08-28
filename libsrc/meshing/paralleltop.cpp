@@ -4,6 +4,29 @@
 #include <meshing.hpp>
 #include "paralleltop.hpp"
 
+namespace ngcore
+{
+  
+  template <typename T, typename TI>
+  auto Max (FlatArray<T,TI> array) -> T
+  {
+    T max = std::numeric_limits<T>::min();
+    for (auto & v : array)
+      if (v > max) max = v;
+    return max;
+  }
+  /*
+  template <typename T, typename TI, typename TB>
+  auto Max (FlatArray<T,TI> array, TB initial) -> T
+  {
+    T max = initial;
+    for (auto & v : array)
+      if (v > max) max = v;
+    return max;
+  }
+  */
+}
+
 
 namespace netgen
 {
@@ -57,17 +80,27 @@ namespace netgen
 
   void ParallelMeshTopology :: EnumeratePointsGlobally ()
   {
-    auto nv = loc2distvert.Size();
     auto comm = mesh.GetCommunicator();
     auto rank = comm.Rank();
 
-    // if (rank == 0)
-    // nv = 0;
-    glob_vert.SetSize (nv);
-    glob_vert = -1;
-    int num_master_points = 0;
+    size_t oldnv = glob_vert.Size();
+    size_t nv = loc2distvert.Size();
+    *testout << "enumerate globally, loc2distvert.size = " << loc2distvert.Size()
+             << ", glob_vert.size = " << glob_vert.Size() << endl;
+
+    // *testout << "old glob_vert = " << endl << glob_vert << endl;
     
-    for (auto i : Range(nv))
+    if (rank == 0)
+      nv = 0;
+
+    IntRange newvr(oldnv, nv); // new vertex range
+    
+    glob_vert.SetSize (nv);
+    glob_vert.Range(newvr) = -1;
+
+    int num_master_points = 0;
+
+    for (auto i : newvr)
       {
         auto dps = GetDistantPNums(i);
         // check sorted:
@@ -77,11 +110,16 @@ namespace netgen
         if (dps.Size() == 0 || dps[0] > comm.Rank())
           glob_vert[i] = num_master_points++;
       }
-    
+
+    *testout << "nummaster = " << num_master_points << endl;
+
     Array<int> first_master_point(comm.Size());
     comm.AllGather (num_master_points, first_master_point);
-        
-    size_t num_glob_points = 0;
+    auto max_oldv = comm.AllReduce (Max (glob_vert.Range(0, oldnv)), MPI_MAX);
+    if (comm.AllReduce (oldnv, MPI_SUM) == 0)
+      max_oldv = PointIndex::BASE-1;
+    
+    size_t num_glob_points = max_oldv+1; // PointIndex::BASE;
     for (int i = 0; i < comm.Size(); i++)
       {
         int cur = first_master_point[i];
@@ -89,7 +127,7 @@ namespace netgen
         num_glob_points += cur;
       }
     
-    for (auto i : Range(nv))
+    for (auto i : newvr)
       if (glob_vert[i] != -1)
         glob_vert[i] += first_master_point[comm.Rank()];
     
@@ -100,7 +138,7 @@ namespace netgen
     nrecv = 0;
 
         /** Count send/recv size **/
-    for (auto i : Range(nv))
+    for (auto i : newvr)
       {
         auto dps = GetDistantPNums(i);
         if (!dps.Size()) continue;
@@ -116,7 +154,7 @@ namespace netgen
     
     /** Fill send_data **/
     nsend = 0;
-    for (auto i : Range(nv))
+    for (auto i : newvr)
       {
         auto dps = GetDistantPNums(i);
         if (dps.Size() && rank < dps[0])
@@ -138,7 +176,7 @@ namespace netgen
     Array<int> cnt(comm.Size());
     cnt = 0;
     
-    for (auto i : Range(nv))
+    for (auto i : newvr)
       {
         auto dps = GetDistantPNums(i);
         if (dps.Size() > 0 && dps[0] < comm.Rank())
@@ -146,13 +184,98 @@ namespace netgen
             int master = comm.Size();
             for (int j = 0; j < dps.Size(); j++)
               master = min (master, dps[j]);
+            if (master != dps[0])
+              cout << "master not the first one !" << endl;
             glob_vert[i] = recv_data[master][cnt[master]++];
           }
       }
 
+    /*
     if (PointIndex::BASE==1)
       for (auto & i : glob_vert)
         i++;
+    */
+    
+    /*
+    cout << "check ordering: " << endl;
+    for (int i = 0; i < glob_vert.Size()-1; i++)
+      if (glob_vert[i] > glob_vert[i+1])
+        cout << "wrong ordering" << endl;
+    */
+    
+    // reorder following global ordering:
+    Array<int> index0(glob_vert.Size());
+    for (int pi : Range(index0))
+      index0[pi] = pi;
+    QuickSortI (FlatArray<int> (glob_vert), index0);
+
+    comm.Barrier();
+    for (int i = 0; i+1 < glob_vert.Size(); i++)
+      if (glob_vert[index0[i]] > glob_vert[index0[i+1]])
+        cout << "wrong ordering" << endl;
+    comm.Barrier();
+
+    if (rank != 0)
+      {
+        Array<PointIndex, PointIndex> index(index0.Size());
+        for (int i = 0; i < index0.Size(); i++)
+          index[i+PointIndex::BASE] = index0[i]+PointIndex::BASE;
+        Array<PointIndex, PointIndex> inv_index(index0.Size());
+        for (int i = 0; i < index0.Size(); i++)
+          inv_index[index0[i]+PointIndex::BASE] = i+PointIndex::BASE;
+        
+        for (auto & el : mesh.VolumeElements())
+          for (PointIndex & pi : el.PNums())
+            pi = inv_index[pi];
+        for (auto & el : mesh.SurfaceElements())
+          for (PointIndex & pi : el.PNums())
+            pi = inv_index[pi];
+        for (auto & el : mesh.LineSegments())
+          for (PointIndex & pi : el.PNums())
+            pi = inv_index[pi];
+        
+        // auto hpoints (mesh.Points());
+        Array<MeshPoint, PointIndex> hpoints { mesh.Points() };
+        for (PointIndex pi : Range(mesh.Points()))
+          mesh.Points()[inv_index[pi]] = hpoints[pi];
+
+        if (mesh.mlbetweennodes.Size() == mesh.Points().Size())
+          {
+            cout << "take care of multigrid table" << endl;
+            NgArray<PointIndices<2>,PointIndex::BASE> hml { mesh.mlbetweennodes };
+            for (PointIndex pi : Range(mesh.Points()))
+              mesh.mlbetweennodes[inv_index[pi]] = hml[pi];
+          }
+
+
+        
+        // *testout << "index0 = " << endl << index0 << endl;
+        // *testout << "loc2distvertold = " << endl;
+        // for (auto i : Range(index0))
+        // *testout << "l " << i << " globi "<< glob_vert[i]  << " dist = " << loc2distvert[i] << endl;
+        DynamicTable<int> oldtable(loc2distvert.Size());
+        for (size_t i = 0; i < loc2distvert.Size(); i++)
+          for (auto val : loc2distvert[i])
+            oldtable.Add (i, val);
+        loc2distvert = DynamicTable<int> (oldtable.Size());
+        for (size_t i = 0; i < oldtable.Size(); i++)
+          for (auto val : oldtable[index0[i]])
+            loc2distvert.Add (i, val);
+
+        Array<int> hglob_vert(glob_vert);
+        for (int i = 0; i < index0.Size(); i++)
+          glob_vert[i] = hglob_vert[index0[i]];
+
+        // *testout << "loc2distvertnew = " << endl;
+        // for (auto i : Range(index0))
+        // *testout << "l " << i << " globi "<< glob_vert[i]  << " dist = " << loc2distvert[i] << endl;
+      }
+
+    for (int i = 0; i+1 < glob_vert.Size(); i++)
+      if (glob_vert[i] > glob_vert[i+1])
+        cout << "wrong ordering of globvert" << endl;
+        
+    // *testout << "new glob_vert = " << glob_vert << endl;
   }
   
 
@@ -181,11 +304,26 @@ namespace netgen
     loc2distedge.Add (locnum-1, dest);
   }
 
-  void ParallelMeshTopology :: SetNV (int anv)
+  void ParallelMeshTopology :: SetNV_Loc2Glob (int anv)
   {
     glob_vert.SetSize(anv);
     glob_vert = -1;
-    loc2distvert.ChangeSize (anv);
+  }
+  
+  void ParallelMeshTopology :: SetNV (int anv)
+  {
+    // glob_vert.SetSize(anv);
+    // glob_vert = -1;
+    // loc2distvert.ChangeSize (anv);
+
+    DynamicTable<int> oldtable(loc2distvert.Size());    
+    for (size_t i = 0; i < loc2distvert.Size(); i++)
+      for (auto val : loc2distvert[i])
+        oldtable.Add (i, val);
+    loc2distvert = DynamicTable<int> (anv);
+    for (size_t i = 0; i < min(anv, oldtable.Size()); i++)
+      for (auto val : oldtable[i])
+        loc2distvert.Add (i, val);
   }
 
   void ParallelMeshTopology :: SetNE ( int ane )
@@ -303,7 +441,233 @@ namespace netgen
     is_updated = true;
   }
 
+  void ParallelMeshTopology :: IdentifyVerticesAfterRefinement()
+  {
+    static Timer t("ParallelTopology::UpdateCoarseGrid"); RegionTimer r(t);
+    // cout << "UpdateCoarseGrid" << endl;
+    // if (is_updated) return;
 
+    NgMPI_Comm comm = mesh.GetCommunicator();
+    int id = comm.Rank();
+    int ntasks = comm.Size();
+
+    if (ntasks == 1) return;
+    
+    Reset();
+    static int timer = NgProfiler::CreateTimer ("UpdateCoarseGrid");
+    NgProfiler::RegionTimer reg(timer);
+
+
+    (*testout) << "UPDATE COARSE GRID PARALLEL TOPOLOGY " << endl;
+    if (id == 0)
+      PrintMessage (1, "update parallel topology");
+
+
+    // UpdateCoarseGridGlobal();
+
+
+    
+    // MPI_Barrier (MPI_COMM_WORLD);
+
+    MPI_Group MPI_GROUP_comm;
+    MPI_Group MPI_LocalGroup;
+    MPI_Comm MPI_LocalComm1;
+
+    int process_ranks[] = { 0 };
+    MPI_Comm_group (comm, &MPI_GROUP_comm);
+    MPI_Group_excl (MPI_GROUP_comm, 1, process_ranks, &MPI_LocalGroup);
+    MPI_Comm_create (comm, MPI_LocalGroup, &MPI_LocalComm1);
+
+    if (id == 0)
+      {
+        // SetNV(0);
+        // EnumeratePointsGlobally();
+        return;
+      }
+    
+    NgMPI_Comm MPI_LocalComm(MPI_LocalComm1);
+
+    
+    const MeshTopology & topology = mesh.GetTopology();
+
+    NgArray<int> cnt_send(ntasks-1);
+
+
+    
+
+    // update new vertices after mesh-refinement
+    if (mesh.mlbetweennodes.Size() > 0)
+      {
+        // *testout << "have to identify new vertices, nv = " << mesh.GetNV() << endl;
+        
+	// cout << "UpdateCoarseGrid - vertices" << endl;
+        int newnv = mesh.mlbetweennodes.Size();
+        
+        //         loc2distvert.ChangeSize(mesh.mlbetweennodes.Size());
+        DynamicTable<int> oldtable(loc2distvert.Size());
+        for (size_t i = 0; i < loc2distvert.Size(); i++)
+          for (auto val : loc2distvert[i])
+            oldtable.Add (i, val);
+        loc2distvert = DynamicTable<int> (mesh.mlbetweennodes.Size());
+        for (size_t i = 0; i < min(loc2distvert.Size(), oldtable.Size()); i++)
+          for (auto val : oldtable[i])
+            loc2distvert.Add (i, val);
+
+        *testout << "extended loc2distver = " << endl << loc2distvert << endl;
+        
+	/*
+        for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
+          {
+            PointIndex v1 = mesh.mlbetweennodes[pi][0];
+            PointIndex v2 = mesh.mlbetweennodes[pi][1];
+            if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
+              for (int dest = 1; dest < ntasks; dest++)
+                if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
+                  SetDistantPNum(dest, pi);
+          }
+	*/
+
+	bool changed = true;
+	while (changed)
+	  {
+	    changed = false;
+
+	    // build exchange vertices
+	    cnt_send = 0;
+	    for (PointIndex pi : mesh.Points().Range())
+	      for (int dist : GetDistantPNums(pi-PointIndex::BASE))
+		cnt_send[dist-1]++;
+	    TABLE<int> dest2vert(cnt_send);    
+	    for (PointIndex pi : mesh.Points().Range())
+	      for (int dist : GetDistantPNums(pi-PointIndex::BASE))
+		dest2vert.Add (dist-1, pi);
+            
+	    for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
+	      {
+		PointIndex v1 = mesh.mlbetweennodes[pi][0];
+		PointIndex v2 = mesh.mlbetweennodes[pi][1];
+		if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
+		  // for (int dest = 1; dest < ntasks; dest++)
+		  for (int dest : GetDistantPNums(v1-PointIndex::BASE))
+		    if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
+		      cnt_send[dest-1]++;
+	      }
+	    
+	    TABLE<int> dest2pair(cnt_send);
+	    // for (int dest = 1; dest < ntasks; dest++)
+	      for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
+		{
+		  PointIndex v1 = mesh.mlbetweennodes[pi][0];
+		  PointIndex v2 = mesh.mlbetweennodes[pi][1];
+		  if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
+		    for (int dest : GetDistantPNums(v1-PointIndex::BASE))
+		      if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
+			dest2pair.Add (dest-1, pi);
+		}
+
+	    cnt_send = 0;
+	    int v1, v2;
+	    for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
+	      {
+		PointIndex v1 = mesh.mlbetweennodes[pi][0];
+		PointIndex v2 = mesh.mlbetweennodes[pi][1];
+		if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
+		  for (int dest : GetDistantPNums(v1-PointIndex::BASE))
+		    if (IsExchangeVert(dest, v2))
+		      cnt_send[dest-1]+=2;
+	      }
+	    
+	    TABLE<int> send_verts(cnt_send);
+	    
+	    NgArray<int, PointIndex::BASE> loc2exchange(mesh.GetNV());
+	    for (int dest = 1; dest < ntasks; dest++)
+	      if (dest != id)
+		{
+		  loc2exchange = -1;
+		  int cnt = 0;
+		  /*
+		  for (PointIndex pi : mesh.Points().Range())
+		    if (IsExchangeVert(dest, pi))
+		      loc2exchange[pi] = cnt++;
+		  */
+		  for (PointIndex pi : dest2vert[dest-1])
+		    loc2exchange[pi] = cnt++;
+		  
+		  // for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
+		  for (PointIndex pi : dest2pair[dest-1])
+		    {
+		      PointIndex v1 = mesh.mlbetweennodes[pi][0];
+		      PointIndex v2 = mesh.mlbetweennodes[pi][1];
+		      if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
+			if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
+			  {
+			    send_verts.Add (dest-1, loc2exchange[v1]);
+			    send_verts.Add (dest-1, loc2exchange[v2]);
+			  }
+		    }
+		}
+
+	    TABLE<int> recv_verts(ntasks-1);
+	    MyMPI_ExchangeTable (send_verts, recv_verts, MPI_TAG_MESH+9, MPI_LocalComm);
+            
+	    for (int dest = 1; dest < ntasks; dest++)
+	      if (dest != id)
+		{
+		  loc2exchange = -1;
+		  int cnt = 0;
+		  /*
+		  for (PointIndex pi : mesh.Points().Range())
+		    if (IsExchangeVert(dest, pi))
+		      loc2exchange[pi] = cnt++;
+		  */
+		  for (PointIndex pi : dest2vert[dest-1])
+		    loc2exchange[pi] = cnt++;
+		  
+		  NgFlatArray<int> recvarray = recv_verts[dest-1];
+		  for (int ii = 0; ii < recvarray.Size(); ii+=2)
+		    for (PointIndex pi : dest2pair[dest-1])
+		      // for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
+		      {
+			PointIndex v1 = mesh.mlbetweennodes[pi][0];
+			PointIndex v2 = mesh.mlbetweennodes[pi][1];
+			if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
+			  {
+			    INDEX_2 re(recvarray[ii], recvarray[ii+1]);
+			    INDEX_2 es(loc2exchange[v1], loc2exchange[v2]);
+			    if (es == re && !IsExchangeVert(dest, pi))
+			      {
+				SetDistantPNum(dest, pi);
+				changed = true;
+			      }
+			  }
+		      }
+		}
+	  }
+      }
+
+    NgArray<int> sendarray, recvarray;
+    // cout << "UpdateCoarseGrid - edges" << endl;
+
+    // static int timerv = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex vertices");
+    static int timere = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex edges");
+    static int timerf = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex faces");
+
+    
+    NgProfiler::StartTimer (timere);
+
+    // build exchange vertices
+    cnt_send = 0;
+    for (PointIndex pi : mesh.Points().Range())
+      for (int dist : GetDistantPNums(pi-PointIndex::BASE))
+	cnt_send[dist-1]++;
+    TABLE<int> dest2vert(cnt_send);    
+    for (PointIndex pi : mesh.Points().Range())
+      for (int dist : GetDistantPNums(pi-PointIndex::BASE))
+	dest2vert.Add (dist-1, pi);
+    
+    MPI_Group_free(&MPI_LocalGroup);
+    // MPI_Comm_free(&MPI_LocalComm);
+  }
 
 
   void ParallelMeshTopology :: UpdateCoarseGrid ()
@@ -354,13 +718,25 @@ namespace netgen
 
     NgArray<int> cnt_send(ntasks-1);
 
-
+#ifdef NONE
     // update new vertices after mesh-refinement
     if (mesh.mlbetweennodes.Size() > 0)
       {
 	// cout << "UpdateCoarseGrid - vertices" << endl;
         int newnv = mesh.mlbetweennodes.Size();
-        loc2distvert.ChangeSize(mesh.mlbetweennodes.Size());
+        
+        //         loc2distvert.ChangeSize(mesh.mlbetweennodes.Size());
+        DynamicTable<int> oldtable(loc2distvert.Size());
+        for (size_t i = 0; i < loc2distvert.Size(); i++)
+          for (auto val : loc2distvert[i])
+            oldtable.Add (i, val);
+        loc2distvert = DynamicTable<int> (mesh.mlbetweennodes.Size());
+        for (size_t i = 0; i < min(loc2distvert.Size(), oldtable.Size()); i++)
+          for (auto val : oldtable[i])
+            loc2distvert.Add (i, val);
+
+
+        
 	/*
         for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
           {
@@ -491,7 +867,9 @@ namespace netgen
 		}
 	  }
       }
+#endif
 
+    
     NgArray<int> sendarray, recvarray;
     // cout << "UpdateCoarseGrid - edges" << endl;
 

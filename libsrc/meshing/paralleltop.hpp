@@ -14,10 +14,12 @@ namespace netgen
        each row of the table corresponds to one vertex
        each row contains a list of pairs (procnr, dist_vnum)
     */
+    
+    DynamicTable<int> loc2distvert;
+    TABLE<int> loc2distedge, loc2distface;
 
-    TABLE<int> loc2distvert, loc2distedge, loc2distface;
-
-    NgArray<int> glob_vert, glob_edge, glob_face;
+    Array<int> glob_vert;
+    NgArray<int> glob_edge, glob_face;
     NgArray<int> glob_el, glob_surfel, glob_segm;
 
     bool is_updated;
@@ -32,12 +34,14 @@ namespace netgen
 
     void UpdateCoarseGrid();
     void UpdateCoarseGridGlobal();
+    void IdentifyVerticesAfterRefinement();
     // bool DoCoarseUpdate() const { return !coarseupdate; }
 
 
 
     /// set number of local vertices, reset sizes of loc2dist_vert, isexchangevert...
     void SetNV (int anv);
+    void SetNV_Loc2Glob (int anv);
     void SetNE (int ane);
     void SetNSE (int anse);
     void SetNSegm (int anseg);
@@ -117,6 +121,7 @@ namespace netgen
     FlatArray<int> GetDistantFaceNums (int locnum) const { return loc2distface[locnum]; }
     FlatArray<int> GetDistantEdgeNums (int locnum) const { return loc2distedge[locnum]; }
 
+    [[deprecated("Use GetDistantPNums(..).Contains instead!")]]                
     bool IsExchangeVert (int dest, int vnum) const
     {
       return loc2distvert[vnum-1].Contains (dest);

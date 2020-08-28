@@ -57,6 +57,7 @@ namespace netgen
     if (id == 0)
       {
 	paralleltop -> SetNV (GetNV());
+	paralleltop -> SetNV_Loc2Glob (GetNV());
 	paralleltop -> SetNE (GetNE());
 	paralleltop -> SetNSegm (GetNSeg());
 	paralleltop -> SetNSE (GetNSE());
@@ -732,7 +733,9 @@ namespace netgen
     for (auto t : point_types)
       { MPI_Type_free(&t); }
 
-    
+    paralleltop -> SetNV_Loc2Glob (0);
+    paralleltop -> SetNV (0);
+    paralleltop -> EnumeratePointsGlobally();
     PrintMessage ( 3, "Sending names");
 
     sendrequests.SetSize(3*ntasks);
@@ -859,6 +862,7 @@ namespace netgen
 
     int numvert = verts.Size();
     paralleltop -> SetNV (numvert);
+    paralleltop -> SetNV_Loc2Glob (numvert);
     
     // INDEX_CLOSED_HASHTABLE<int> glob2loc_vert_ht (3*numvert+1);
     INDEX_HASHTABLE<int> glob2loc_vert_ht (3*numvert+1);
@@ -1020,7 +1024,8 @@ namespace netgen
 	}
     }
 
-
+    paralleltop -> SetNV_Loc2Glob (0);
+    paralleltop -> EnumeratePointsGlobally();
     /** Recv bc-names **/
     ArrayMem<int,4> nnames{0,0,0,0};
     // MPI_Recv(nnames, 4, MPI_INT, 0, MPI_TAG_MESH+6, comm, MPI_STATUS_IGNORE);
