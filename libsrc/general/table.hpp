@@ -114,11 +114,22 @@ public:
   /// Creates table of size size
   inline TABLE (int size) : BASE_TABLE (size) { ; }
 
+  TABLE (TABLE && tab2)
+    : BASE_TABLE(move(tab2))
+  { }
+  
   /// Creates fixed maximal element size table
   inline TABLE (const NgFlatArray<int,BASE> & entrysizes)
     : BASE_TABLE (NgFlatArray<int> (entrysizes.Size(), const_cast<int*>(&entrysizes[BASE])), 
 		  sizeof(T))
   { ; }
+
+  TABLE & operator= (TABLE && tab2)
+  {
+    BASE_TABLE::operator=(move(tab2));
+    return *this;
+  }
+
   
   /// Changes Size of table to size, deletes data
   inline void SetSize (int size)

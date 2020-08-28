@@ -405,6 +405,13 @@ public:
     /// Creates table with a priori fixed entry sizes.
     DynamicTable (const Array<int> & entrysizes)
       : BaseDynamicTable (entrysizes, sizeof(T)) { ; }
+    
+    DynamicTable & operator= (DynamicTable && tab2)
+    {
+      Swap (data, tab2.data);
+      Swap (oneblock, tab2.oneblock);
+      return *this;
+    }
 
     /// Inserts element acont into row i. Does not test if already used.
     void Add (int i, const T & acont)

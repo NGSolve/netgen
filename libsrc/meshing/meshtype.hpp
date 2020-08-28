@@ -1062,6 +1062,10 @@ namespace netgen
       return pnums[2].IsValid() ? 3 : 2;
     }
 
+    auto PNums() const { return FlatArray<const PointIndex> (GetNP(), &pnums[0]); }
+    auto PNums() { return FlatArray<PointIndex> (GetNP(), &pnums[0]); }
+    
+    
     ELEMENT_TYPE GetType() const
     {
       return pnums[2].IsValid() ? SEGMENT3 : SEGMENT;
