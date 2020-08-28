@@ -220,10 +220,22 @@ namespace netgen
     PointIndices (PointIndex i1, PointIndex i2) : INDEX_2(i1,i2) { ; } 
     PointIndex operator[] (int i) const { return PointIndex(INDEX_2::operator[](i)); }
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_2::operator[](i)); }
-    static PointIndices Sort(PointIndex i1, PointIndex i2) { return INDEX_2::Sort(i1, i2); } 
+    static PointIndices Sort(PointIndex i1, PointIndex i2) { return INDEX_2::Sort(i1, i2); }
+    template <size_t J>
+    PointIndex get() const { return PointIndex(INDEX_2::operator[](J)); }    
   };
-  
+}
 
+namespace std
+{
+  // structured binding support
+  template <auto N>
+  struct tuple_size<netgen::PointIndices<N>> : std::integral_constant<std::size_t, N> {};
+  template<size_t N, auto M> struct tuple_element<N,netgen::PointIndices<M>> { using type = netgen::PointIndex; };
+}
+
+namespace netgen
+{
 
   class ElementIndex
   {

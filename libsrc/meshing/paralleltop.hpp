@@ -117,17 +117,18 @@ namespace netgen
       distedgenums = loc2distedge[locedgenum-1];
     } 
 
+    [[deprecated("Use GetDistantProcs(..)!")]]                    
     FlatArray<int> GetDistantPNums (int locnum) const { return loc2distvert[locnum]; }
     FlatArray<int> GetDistantFaceNums (int locnum) const { return loc2distface[locnum]; }
     FlatArray<int> GetDistantEdgeNums (int locnum) const { return loc2distedge[locnum]; }
 
-    [[deprecated("Use GetDistantPNums(..).Contains instead!")]]                
+    FlatArray<int> GetDistantProcs (PointIndex pi) const { return loc2distvert[pi-PointIndex::BASE]; }
+    [[deprecated("Use GetDistantProcs(..).Contains instead!")]]                
     bool IsExchangeVert (int dest, int vnum) const
     {
       return loc2distvert[vnum-1].Contains (dest);
     }
   };
- 
 
 }
 

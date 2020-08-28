@@ -15,6 +15,7 @@ namespace ngcore
       if (v > max) max = v;
     return max;
   }
+  
   /*
   template <typename T, typename TI, typename TB>
   auto Max (FlatArray<T,TI> array, TB initial) -> T
@@ -546,11 +547,18 @@ namespace netgen
 	      {
 		PointIndex v1 = mesh.mlbetweennodes[pi][0];
 		PointIndex v2 = mesh.mlbetweennodes[pi][1];
+                /*
 		if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
-		  // for (int dest = 1; dest < ntasks; dest++)
 		  for (int dest : GetDistantPNums(v1-PointIndex::BASE))
 		    if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
 		      cnt_send[dest-1]++;
+                */
+                auto procs1 = GetDistantProcs(v1);
+                auto procs2 = GetDistantProcs(v2);
+		if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
+		  for (int p : procs1)
+		    if (procs2.Contains(p))
+		      cnt_send[p-1]++;
 	      }
 	    
 	    TABLE<int> dest2pair(cnt_send);
@@ -559,22 +567,39 @@ namespace netgen
 		{
 		  PointIndex v1 = mesh.mlbetweennodes[pi][0];
 		  PointIndex v2 = mesh.mlbetweennodes[pi][1];
+                  auto procs1 = GetDistantProcs(v1);
+                  auto procs2 = GetDistantProcs(v2);
+                  /*
 		  if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
 		    for (int dest : GetDistantPNums(v1-PointIndex::BASE))
 		      if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
 			dest2pair.Add (dest-1, pi);
+                  */
+		  if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
+		    for (int p : procs1)
+		      if (procs2.Contains(p))
+			dest2pair.Add (p-1, pi);
 		}
 
 	    cnt_send = 0;
 	    int v1, v2;
 	    for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
 	      {
-		PointIndex v1 = mesh.mlbetweennodes[pi][0];
-		PointIndex v2 = mesh.mlbetweennodes[pi][1];
+		// PointIndex v1 = mesh.mlbetweennodes[pi][0];
+		// PointIndex v2 = mesh.mlbetweennodes[pi][1];
+                auto [v1,v2] = mesh.mlbetweennodes[pi];
+                auto procs1 = GetDistantProcs(v1);
+                auto procs2 = GetDistantProcs(v2);
+                /*
 		if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
 		  for (int dest : GetDistantPNums(v1-PointIndex::BASE))
 		    if (IsExchangeVert(dest, v2))
 		      cnt_send[dest-1]+=2;
+                */
+                if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
+		  for (int p : procs1)
+		    if (procs2.Contains(p))
+		      cnt_send[p-1]+=2;
 	      }
 	    
 	    TABLE<int> send_verts(cnt_send);
@@ -598,8 +623,11 @@ namespace netgen
 		    {
 		      PointIndex v1 = mesh.mlbetweennodes[pi][0];
 		      PointIndex v2 = mesh.mlbetweennodes[pi][1];
+                      auto procs1 = GetDistantProcs(v1);
+                      auto procs2 = GetDistantProcs(v2);
 		      if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
-			if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
+			// if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
+                        if (procs1.Contains(dest) && procs2.Contains(dest))
 			  {
 			    send_verts.Add (dest-1, loc2exchange[v1]);
 			    send_verts.Add (dest-1, loc2exchange[v2]);
@@ -634,7 +662,8 @@ namespace netgen
 			  {
 			    INDEX_2 re(recvarray[ii], recvarray[ii+1]);
 			    INDEX_2 es(loc2exchange[v1], loc2exchange[v2]);
-			    if (es == re && !IsExchangeVert(dest, pi))
+			    // if (es == re && !IsExchangeVert(dest, pi))
+                            if (es == re && !GetDistantProcs(pi).Contains(dest))
 			      {
 				SetDistantPNum(dest, pi);
 				changed = true;
@@ -870,7 +899,7 @@ namespace netgen
 #endif
 
     
-    NgArray<int> sendarray, recvarray;
+    // NgArray<int> sendarray, recvarray;
     // cout << "UpdateCoarseGrid - edges" << endl;
 
     // static int timerv = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex vertices");
@@ -900,9 +929,15 @@ namespace netgen
     for (int edge = 1; edge <= ned; edge++)
       {
 	topology.GetEdgeVertices (edge, v1, v2);
+        /*
 	for (int dest = 1; dest < ntasks; dest++)
-	  if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
+	  // if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
+          if (GetDistantProcs(v1).Contains(dest) && GetDistantProcs(v2).Contains(dest))
 	    cnt_send[dest-1]+=1;
+        */
+        for (auto p : GetDistantProcs(v1))
+          if (GetDistantProcs(v2).Contains(p))
+	    cnt_send[p-1]+=1;
       }
     
     TABLE<int> dest2edge(cnt_send);
@@ -913,7 +948,8 @@ namespace netgen
       {
 	topology.GetEdgeVertices (edge, v1, v2);
 	for (int dest = 1; dest < ntasks; dest++)
-	  if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
+	  // if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
+          if (GetDistantProcs(v1).Contains(dest) && GetDistantProcs(v2).Contains(dest))
 	    dest2edge.Add (dest-1, edge);
       }
 
@@ -929,7 +965,8 @@ namespace netgen
 	for (int edge : dest2edge[dest-1])
           {
             topology.GetEdgeVertices (edge, v1, v2);
-            if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
+            // if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
+            if (GetDistantProcs(v1).Contains(dest) && GetDistantProcs(v2).Contains(dest))            
               {
                 send_edges.Add (dest-1, loc2exchange[v1]);
                 send_edges.Add (dest-1, loc2exchange[v2]);
@@ -981,9 +1018,14 @@ namespace netgen
 	    topology.GetFaceVertices (face, verts);
 	    for (int dest = 1; dest < ntasks; dest++)
 	      if (dest != id)
+                /*
 		if (IsExchangeVert (dest, verts[0]) && 
 		    IsExchangeVert (dest, verts[1]) &&
 		    IsExchangeVert (dest, verts[2]))
+                */
+                if (GetDistantProcs (verts[0]).Contains(dest) &&
+                    GetDistantProcs (verts[1]).Contains(dest) &&
+                    GetDistantProcs (verts[2]).Contains(dest))
 		  cnt_send[dest-1]++;
 	  }
 	
@@ -993,9 +1035,14 @@ namespace netgen
 	    topology.GetFaceVertices (face, verts);
 	    for (int dest = 1; dest < ntasks; dest++)
 	      if (dest != id)
+                /*
 		if (IsExchangeVert (dest, verts[0]) && 
 		    IsExchangeVert (dest, verts[1]) &&
 		    IsExchangeVert (dest, verts[2]))
+                */
+                if (GetDistantProcs (verts[0]).Contains(dest) && 
+                    GetDistantProcs (verts[1]).Contains(dest) &&
+                    GetDistantProcs (verts[2]).Contains(dest))
 		  dest2face.Add(dest-1, face);
 	  }
 
@@ -1015,9 +1062,14 @@ namespace netgen
 	      for (int face : dest2face[dest-1])
 		{
 		  topology.GetFaceVertices (face, verts);
+                  /*
 		  if (IsExchangeVert (dest, verts[0]) && 
 		      IsExchangeVert (dest, verts[1]) &&
 		      IsExchangeVert (dest, verts[2]))
+                  */
+                  if (GetDistantProcs (verts[0]).Contains(dest) &&
+                      GetDistantProcs (verts[1]).Contains(dest) &&
+                      GetDistantProcs (verts[2]).Contains(dest))
 		    {
 		      send_faces.Add (dest-1, loc2exchange[verts[0]]);
 		      send_faces.Add (dest-1, loc2exchange[verts[1]]);
