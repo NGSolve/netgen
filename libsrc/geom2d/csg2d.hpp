@@ -575,9 +575,9 @@ struct Solid2d
   Solid2d operator-(const Solid2d & other) const;
 
   Solid2d& operator=(const Solid2d & other) = default;
-  Solid2d operator+=(const Solid2d & other);
-  Solid2d operator*=(const Solid2d & other);
-  Solid2d operator-=(const Solid2d & other);
+  Solid2d& operator+=(const Solid2d & other);
+  Solid2d& operator*=(const Solid2d & other);
+  Solid2d& operator-=(const Solid2d & other);
 
   void Append( const Loop & poly )
   {

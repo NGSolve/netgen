@@ -1380,19 +1380,19 @@ Solid2d Solid2d :: operator-(const Solid2d & other_) const
   return res;
 }
 
-Solid2d Solid2d :: operator+=(const Solid2d & other)
+Solid2d & Solid2d :: operator+=(const Solid2d & other)
 {
   *this = *this + other;
   return *this;
 }
 
-Solid2d Solid2d :: operator*=(const Solid2d & other)
+Solid2d & Solid2d :: operator*=(const Solid2d & other)
 {
   *this = *this * other;
   return *this;
 }
 
-Solid2d Solid2d :: operator-=(const Solid2d & other)
+Solid2d & Solid2d :: operator-=(const Solid2d & other)
 {
   *this = *this - other;
   return *this;
