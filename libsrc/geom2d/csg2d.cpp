@@ -24,7 +24,7 @@ void ComputeWeight( Spline & s, Point<2> p )
   double A = (p[1]-a[1])*(b[0]-p[0]) - (p[0]-a[0])*(b[1]-p[1]);
   double B = (p[1]-c[1])*(b[0]-p[0]) - (p[0]-c[0])*(b[1]-p[1]);
   double det = sqrt(-A*B);
-  double tt = (B-det)/(A+det);
+  double tt = fabs(A+det)<EPSILON ? 1 : (B-det)/(A+det);
   auto v = b-p;
   int dim = fabs(v[0]) > fabs(v[1]) ? 0 : 1;
   double weight = fabs(tt*(p[dim]-a[dim])/v[dim] + 1.0/tt*(p[dim]-c[dim])/v[dim]);
@@ -1485,12 +1485,12 @@ bool Solid2d :: IsLeftInside( const Vertex & p0 )
   {
     auto s = *p0.spline;
     auto v = s.GetTangent(0.5);
-    auto n = Vec<2>{v[1], -v[0]};
+    auto n = Vec<2>{-v[1], v[0]};
     auto q = s.GetPoint(0.5) + 1e-6*n;
     return IsInside(q);
   }
   auto v = p1-p0;
-  auto n = Vec<2>{v[1], -v[0]};
+  auto n = Vec<2>{-v[1], v[0]};
   auto q = p0 + 0.5*v + 1e-6*n;
   
   return IsInside(q);
@@ -1503,13 +1503,13 @@ bool Solid2d :: IsRightInside( const Vertex & p0 )
   {
     auto s = *p0.spline;
     auto v = s.GetTangent(0.5);
-    auto n = Vec<2>{-v[1], v[0]};
+    auto n = Vec<2>{v[1], -v[0]};
     auto q = s.GetPoint(0.5) + 1e-6*n;
     return IsInside(q);
   }
 
   auto v = p1-p0;
-  auto n = Vec<2>{-v[1], v[0]};
+  auto n = Vec<2>{v[1], -v[0]};
   auto q = p0 + 0.5*v + 1e-6*n;
   return IsInside(q);
 }
@@ -1643,7 +1643,7 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
 
         if(li!=ri)
         {
-          if(s.IsLeftInside(p0) == flip)
+          if(s.IsLeftInside(p0) != flip)
             ls.left = dom;
           else
             ls.right = dom;
