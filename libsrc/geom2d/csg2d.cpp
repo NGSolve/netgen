@@ -1322,6 +1322,42 @@ Solid2d ClipSolids ( Solid2d s1, Solid2d s2, bool intersect)
   return res;
 }
 
+bool Loop :: IsInside( Point<2> r ) const
+{
+  int w = 0;
+  for(auto e : Edges(ALL))
+  {
+    int w_simple = CalcSide(*e.v0, *e.v1, r);
+    if(!e.v0->spline)
+      w += w_simple;
+    else
+    {
+      auto s = *e.v0->spline;
+      auto s0 = s.StartPI();
+      auto s1 = s.TangentPoint();
+      auto s2 = s.EndPI();
+      if(!IsInsideTrig( {s0, s1, s2} , r ))
+        w += w_simple;
+      else
+      {
+        // r close to spline, need exact test
+        // idea: compute weight, such that r lies on spline
+        // weight increases -> same side of spline as control point, simple test gives correct result 
+        // weight decreases -> opposite side of spline as control point, adding control point to test polygon gives correct result
+        double old_weight = s.GetWeight();
+        ComputeWeight( s, r );
+        double new_weight = s.GetWeight();
+
+        if(new_weight >= old_weight)
+          w += w_simple;
+        else
+          w += CalcSide(s0, s1, r) + CalcSide(s1, s2, r); 
+      }
+    }
+  }
+  return ( (w % 2) != 0 );
+}
+
 Solid2d :: Solid2d(const Array<std::variant<Point<2>, EdgeInfo>> & points, string name_, string bc)
     : name(name_)
 {
@@ -1370,12 +1406,6 @@ Solid2d Solid2d :: operator-(const Solid2d & other_) const
   other.Append(RectanglePoly(-1e8, 1e8, -1e8, 1e8, "JUST_FOR_CLIPPING"));
   auto res = ClipSolids(*this, other);
 
-  for (auto i : Range(other.polys))
-  {
-    auto & first = *other.polys[i].first;
-    if(first[0] == -1e8)
-      other.polys.DeleteElement(i);
-  }
   res.name = name;
   return res;
 }
@@ -1432,23 +1462,40 @@ bool Solid2d :: IsInside( Point<2> r ) const
 {
   int w = 0;
   for(auto & poly : polys)
-    for(auto v : poly.Vertices(ALL))
-      w += CalcSide(*v, *v->next, r);
+    w += poly.IsInside(r);
   return ( (w % 2) != 0 );
 }
 
 bool Solid2d :: IsLeftInside( const Vertex & p0 )
 {
   auto & p1 = *p0.next;
+  if(p0.spline)
+  {
+    auto s = *p0.spline;
+    auto v = s.GetTangent(0.5);
+    auto n = Vec<2>{v[1], -v[0]};
+    auto q = s.GetPoint(0.5) + 1e-6*n;
+    return IsInside(q);
+  }
   auto v = p1-p0;
   auto n = Vec<2>{v[1], -v[0]};
   auto q = p0 + 0.5*v + 1e-6*n;
+  
   return IsInside(q);
 }
 
 bool Solid2d :: IsRightInside( const Vertex & p0 )
 {
   auto & p1 = *p0.next;
+  if(p0.spline)
+  {
+    auto s = *p0.spline;
+    auto v = s.GetTangent(0.5);
+    auto n = Vec<2>{-v[1], v[0]};
+    auto q = s.GetPoint(0.5) + 1e-6*n;
+    return IsInside(q);
+  }
+
   auto v = p1-p0;
   auto n = Vec<2>{-v[1], v[0]};
   auto q = p0 + 0.5*v + 1e-6*n;
