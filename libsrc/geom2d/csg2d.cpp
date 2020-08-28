@@ -332,26 +332,38 @@ bool IsOverlapping( Spline p, Spline s, double & alpha, double & beta, Intersect
 
   double lam0 = -1e3*EPSILON;
   double lam1 = -1e3*EPSILON;
+  double lam2 = -1e3*EPSILON;
+  double lam3 = -1e3*EPSILON;
   alpha=-1e8;
   beta=-1e8;
+  double alpha_mid=-1e8;
+  double beta_mid=-1e8;
 
   // Check if s.p0 lies on p and vice versa, also check if tangents are in same direction (TODO: TEST)
   // If so, assume overlapping splines
   // TODO: Better checks! False positives could happen here!
   IntersectSplineSegment1( p, s.StartPI(), p_mid, lam0, alpha );
   IntersectSplineSegment1( s, p.StartPI(), s_mid, lam1, beta );
+
+  // Also check if midpoints lie on other spline
+  IntersectSplineSegment1( p, s.GetPoint(0.5), p_mid, lam2, alpha_mid );
+  IntersectSplineSegment1( s, p.GetPoint(0.5), s_mid, lam3, beta_mid );
+
   auto tang0 = s.GetTangent(0.);
   auto tang1 = p.GetTangent(alpha);
   double err = tang0*tang1;
   err*=err;
   err *= 1.0/(tang0.Length2()*tang1.Length2());
 
-  if(fabs(lam0) < 1e3*EPSILON && fabs(lam1) < 1e3*EPSILON /*&& err < EPSILON*/)
-  {
-    type = ClassifyOverlappingIntersection( alpha, beta );
-    return true;
-  }
-  return false;
+  double constexpr eps = 1e3*EPSILON;
+  if(fabs(lam0)>eps) return false;
+  if(fabs(lam1)>eps) return false;
+  if(fabs(lam2)>eps) return false;
+  if(fabs(lam3)>eps) return false;
+  if(fabs(1.0-err)>eps) return false;
+
+  type = ClassifyOverlappingIntersection( alpha, beta );
+  return true;
 }
 
 bool IsInsideTrig( const array<Point<2>,3> & t, Point<2> r )
