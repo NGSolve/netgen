@@ -645,10 +645,10 @@ namespace netgen
     if (ntasks > 1 && working)
       {
 	for (int e = 0; e < edgeorder.Size(); e++)
-          for (int proc : partop.GetDistantEdgeNums(e))
+          for (int proc : partop.GetDistantEdgeProcs(e))
             send_orders.Add (proc, edgeorder[e]);              
 	for (int f = 0; f < faceorder.Size(); f++)
-          for (int proc : partop.GetDistantFaceNums(f))
+          for (int proc : partop.GetDistantFaceProcs(f))
             send_orders.Add (proc, faceorder[f]);                          
       }
 
@@ -660,10 +660,10 @@ namespace netgen
 	NgArray<int> cnt(ntasks);
 	cnt = 0;
 	for (int e = 0; e < edgeorder.Size(); e++)
-          for (auto proc : partop.GetDistantEdgeNums(e))
+          for (auto proc : partop.GetDistantEdgeProcs(e))
             edgeorder[e] = max(edgeorder[e], recv_orders[proc][cnt[proc]++]);              
 	for (int f = 0; f < faceorder.Size(); f++)
-          for (auto proc : partop.GetDistantFaceNums(f))
+          for (auto proc : partop.GetDistantFaceProcs(f))
             faceorder[f] = max(faceorder[f], recv_orders[proc][cnt[proc]++]);              
       }
 #endif
@@ -751,7 +751,7 @@ namespace netgen
 	    TABLE<double> senddata(ntasks), recvdata(ntasks);
 	    if (working)
 	      for (int e = 0; e < nedges; e++)
-                for (int proc : partop.GetDistantEdgeNums(e))
+                for (int proc : partop.GetDistantEdgeProcs(e))
                   {
                     senddata.Add (proc, surfnr[e]);
                     if (surfnr[e] != -1)
@@ -771,7 +771,7 @@ namespace netgen
 	    cnt = 0;
 	    if (working)
 	      for (int e = 0; e < nedges; e++)
-                for (int proc : partop.GetDistantEdgeNums(e))
+                for (int proc : partop.GetDistantEdgeProcs(e))
                   {
                     int surfnr1 = recvdata[proc][cnt[proc]++];
                     if (surfnr1 != -1)
@@ -946,7 +946,7 @@ namespace netgen
 	TABLE<double> senddata(ntasks), recvdata(ntasks);
 	if (working)
 	  for (int e = 0; e < nedges; e++)
-            for (int proc : partop.GetDistantEdgeNums(e))
+            for (int proc : partop.GetDistantEdgeProcs(e))
               {
                 senddata.Add (proc, use_edge[e]);
                 if (use_edge[e])
@@ -972,7 +972,7 @@ namespace netgen
 	cnt = 0;
 	if (working)
 	  for (int e = 0; e < edge_surfnr1.Size(); e++)
-            for (int proc : partop.GetDistantEdgeNums(e))
+            for (int proc : partop.GetDistantEdgeProcs(e))
               {
                 int get_edge = int(recvdata[proc][cnt[proc]++]);
                 if (get_edge)
@@ -1148,7 +1148,7 @@ namespace netgen
     if (ntasks > 1 && working)
       {
 	for (int f = 0; f < nfaces; f++)
-          for (int proc : partop.GetDistantFaceNums(f))
+          for (int proc : partop.GetDistantFaceProcs(f))
             send_surfnr.Add (proc, surfnr[f]);              
       }
 
@@ -1160,7 +1160,7 @@ namespace netgen
 	NgArray<int> cnt(ntasks);
 	cnt = 0;
 	for (int f = 0; f < nfaces; f++)
-          for (int proc : partop.GetDistantFaceNums(f))
+          for (int proc : partop.GetDistantFaceProcs(f))
             surfnr[f] = max(surfnr[f], recv_surfnr[proc][cnt[proc]++]);              
       }
 #endif

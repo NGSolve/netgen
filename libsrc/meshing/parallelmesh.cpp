@@ -278,7 +278,8 @@ namespace netgen
 	      vert_flag[vertex] = dest;
 	      num_verts_on_proc[dest]++;
 	      num_procs_on_vert[vertex]++;
-	      GetParallelTopology().SetDistantPNum (dest, vertex); 
+	      // GetParallelTopology().SetDistantPNum (dest, vertex);
+              GetParallelTopology().AddDistantProc (PointIndex(vertex), dest); 
 	    }
 	};
 	countit(vertex, dest);
@@ -870,7 +871,8 @@ namespace netgen
     for (int vert = 0; vert < numvert; vert++)
       {
 	int globvert = verts[vert] + IndexBASE<T_POINTS::index_type>();
-	paralleltop->SetLoc2Glob_Vert ( vert+1, globvert  );
+        // paralleltop->SetLoc2Glob_Vert ( vert+1, globvert  );
+        paralleltop->L2G (PointIndex(vert+PointIndex::BASE)) = globvert;
 	glob2loc_vert_ht.Set (globvert, vert+1);
       }
     
@@ -902,16 +904,18 @@ namespace netgen
 	}
       }
     
-    Array<int> dist_pnums;
+    Array<int> dist_pnums; 
     comm.Recv (dist_pnums, 0, MPI_TAG_MESH+1);
     
     for (int hi = 0; hi < dist_pnums.Size(); hi += 3)
       paralleltop ->
-	SetDistantPNum (dist_pnums[hi+1], dist_pnums[hi]); // , dist_pnums[hi+2]);
+	// SetDistantPNum (dist_pnums[hi+1], dist_pnums[hi]); // , dist_pnums[hi+2]);
+        AddDistantProc (PointIndex(dist_pnums[hi]), dist_pnums[hi+1]);
     
     NgProfiler::StopTimer (timer_pts);
     *testout << "got " << numvert << " vertices" << endl;
 
+    
     {
       Array<int> elarray;
       comm.Recv (elarray, 0, MPI_TAG_MESH+2);

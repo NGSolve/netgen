@@ -16,9 +16,11 @@ namespace netgen
     */
     
     DynamicTable<int> loc2distvert;
-    TABLE<int> loc2distedge, loc2distface;
+    DynamicTable<int> loc2distedge, loc2distface;
 
     Array<int> glob_vert;
+
+    // will get rid of them
     NgArray<int> glob_edge, glob_face;
     NgArray<int> glob_el, glob_surfel, glob_segm;
 
@@ -35,8 +37,20 @@ namespace netgen
     void UpdateCoarseGrid();
     void UpdateCoarseGridGlobal();
     void IdentifyVerticesAfterRefinement();
-    // bool DoCoarseUpdate() const { return !coarseupdate; }
+    void EnumeratePointsGlobally ();
+        
+    void AddDistantProc    (PointIndex pi, int proc) { loc2distvert.AddUnique (pi-PointIndex::BASE, proc); }
+    void AddDistantFaceProc (int edge, int proc) { loc2distface.AddUnique (edge, proc); }
+    void AddDistantEdgeProc (int face, int proc) { loc2distedge.AddUnique (face, proc); }
+    
+    FlatArray<int> GetDistantProcs (PointIndex pi) const { return loc2distvert[pi-PointIndex::BASE]; }
+    FlatArray<int> GetDistantFaceProcs (int locnum) const { return loc2distface[locnum]; }
+    FlatArray<int> GetDistantEdgeProcs (int locnum) const { return loc2distedge[locnum]; }
 
+
+    
+    auto & L2G (PointIndex pi) { return glob_vert[pi-PointIndex::BASE]; } 
+    auto L2G (PointIndex pi) const { return glob_vert[pi-PointIndex::BASE]; } 
 
 
     /// set number of local vertices, reset sizes of loc2dist_vert, isexchangevert...
@@ -46,6 +60,21 @@ namespace netgen
     void SetNSE (int anse);
     void SetNSegm (int anseg);
 
+    [[deprecated("Use AddDistantFaceProc instead!")]]                
+    void SetDistantFaceNum (int dest, int locnum) { loc2distface.AddUnique (locnum-1, dest); }
+    [[deprecated("Use AddDistantProc instead!")]]                
+    void SetDistantPNum    (int dest, int locnum) { loc2distvert.AddUnique (locnum-1, dest); }
+    [[deprecated("Use AddDistantEdgeProc instead!")]]                
+    void SetDistantEdgeNum (int dest, int locnum) { loc2distedge.AddUnique (locnum-1, dest); }
+
+    [[deprecated("Use GetDistantFaceProcx instead!")]]                    
+    FlatArray<int> GetDistantFaceNums (int locnum) const { return loc2distface[locnum]; }
+    [[deprecated("Use GetDistantEdgeProcx instead!")]]
+    FlatArray<int> GetDistantEdgeNums (int locnum) const { return loc2distedge[locnum]; }
+
+
+    
+    [[deprecated("Use L2G(pi) instead!")]]                
     void SetLoc2Glob_Vert   (int locnum, int globnum) { glob_vert[locnum-1] = globnum; }
     [[deprecated("Try to avoid global enumration!")]]                
     void SetLoc2Glob_Edge   (int locnum, int globnum) { glob_edge[locnum-1] = globnum; }
@@ -68,12 +97,7 @@ namespace netgen
     [[deprecated("Try to avoid global enumration!")]]                
     int GetGlobalSElNum  (int locnum) const { return glob_surfel[locnum-1]; }
 
-
-    void EnumeratePointsGlobally ();
     
-    void SetDistantFaceNum (int dest, int locnum);
-    void SetDistantPNum    (int dest, int locnum);
-    void SetDistantEdgeNum (int dest, int locnum);
 
     [[deprecated("Use GetDistantPNums(locnum).Size() instead!")]]            
     int GetNDistantPNums (int locpnum) const { return loc2distvert[locpnum-1].Size(); }
@@ -101,7 +125,11 @@ namespace netgen
     [[deprecated("Use GetDistantFaceNums(locnum) -> FlatArray instead!")]]                        
     void GetDistantFaceNums (int locfacenum, NgArray<int> & distfacenums ) const
     {
-      distfacenums = loc2distface[locfacenum-1];
+      // distfacenums = loc2distface[locfacenum-1];
+      auto loc = loc2distface[locfacenum-1];
+      distfacenums.SetSize (loc.Size());
+      for (int i = 0; i < loc.Size(); i++)
+        distfacenums[i] = loc[i];
     }
 
     [[deprecated("Use GetDistantEdgeNums(locnum) -> FlatArray instead!")]]                            
@@ -114,17 +142,16 @@ namespace netgen
     [[deprecated("Use GetDistantEdgeNums(locnum) -> FlatArray instead!")]]                                
     void GetDistantEdgeNums (int locedgenum, NgArray<int> & distedgenums ) const
     {
-      distedgenums = loc2distedge[locedgenum-1];
+      // distedgenums = loc2distedge[locedgenum-1];
+      auto loc = loc2distedge[locedgenum-1];
+      distedgenums.SetSize (loc.Size());
+      for (int i = 0; i < loc.Size(); i++)
+        distedgenums[i] = loc[i];
     } 
 
     [[deprecated("Use GetDistantProcs(..)!")]]                    
     FlatArray<int> GetDistantPNums (int locnum) const { return loc2distvert[locnum]; }
-    FlatArray<int> GetDistantFaceNums (int locnum) const { return loc2distface[locnum]; }
-    FlatArray<int> GetDistantEdgeNums (int locnum) const { return loc2distedge[locnum]; }
 
-    FlatArray<int> GetDistantProcs (PointIndex pi) const { return loc2distvert[pi-PointIndex::BASE]; }
-    auto & L2G (PointIndex pi) { return glob_vert[pi-PointIndex::BASE]; } 
-    auto L2G (PointIndex pi) const { return glob_vert[pi-PointIndex::BASE]; } 
 
     
     [[deprecated("Use GetDistantProcs(..).Contains instead!")]]                

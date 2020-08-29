@@ -211,12 +211,18 @@ namespace netgen
         // *testout << "l " << i << " globi "<< glob_vert[i]  << " dist = " << loc2distvert[i] << endl;
       }
 
+    /*
     for (size_t i = 0; i+1 < glob_vert.Size(); i++)
       if (glob_vert[i] > glob_vert[i+1])
         cout << "wrong ordering of globvert" << endl;
+    */
+    if (glob_vert.Size() > 1)
+      for (auto i : Range(glob_vert).Modify(0,-1))
+        if (glob_vert[i] > glob_vert[i+1])
+          cout << "wrong ordering of globvert" << endl;
   }
   
-
+  /*
   void ParallelMeshTopology :: SetDistantFaceNum (int dest, int locnum)
   {
     for ( int i = 0; i < loc2distface[locnum-1].Size(); i+=1 )
@@ -241,7 +247,8 @@ namespace netgen
 	return;
     loc2distedge.Add (locnum-1, dest);
   }
-
+  */
+  
   void ParallelMeshTopology :: SetNV_Loc2Glob (int anv)
   {
     glob_vert.SetSize(anv);
@@ -379,6 +386,7 @@ namespace netgen
     is_updated = true;
   }
 
+  
   void ParallelMeshTopology :: IdentifyVerticesAfterRefinement()
   {
     static Timer t("ParallelTopology::UpdateCoarseGrid"); RegionTimer r(t);
@@ -511,7 +519,8 @@ namespace netgen
 			    // if (es == re && !IsExchangeVert(dest, pi))
                             if (es == re && !GetDistantProcs(pi).Contains(dest))
 			      {
-				SetDistantPNum(dest, pi);
+				// SetDistantPNum(dest, pi);
+                                AddDistantProc (pi, dest);
 				changed = true;
 			      }
 			  }
@@ -694,7 +703,8 @@ namespace netgen
 	    INDEX_2 re(ex2loc[recvarray[ii]], 
 		       ex2loc[recvarray[ii+1]]);
 	    if (vert2edge.Used(re))
-	      SetDistantEdgeNum(dest, vert2edge.Get(re));
+	      // SetDistantEdgeNum(dest, vert2edge.Get(re));
+              AddDistantEdgeProc(vert2edge.Get(re)-1, dest);
 	  }
       }
 
@@ -799,7 +809,7 @@ namespace netgen
 			   ex2loc[recvarray[ii+1]],
 			   ex2loc[recvarray[ii+2]]);
 		if (vert2face.Used(re))
-		  SetDistantFaceNum(dest, vert2face.Get(re));
+		  AddDistantFaceProc(vert2face.Get(re)-1, dest);
 	      }
 	  }
 	
