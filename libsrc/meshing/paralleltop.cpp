@@ -4,30 +4,6 @@
 #include <meshing.hpp>
 #include "paralleltop.hpp"
 
-namespace ngcore
-{
-  
-  template <typename T, typename TI>
-  auto Max (FlatArray<T,TI> array) -> T
-  {
-    T max = std::numeric_limits<T>::min();
-    for (auto & v : array)
-      if (v > max) max = v;
-    return max;
-  }
-  
-  /*
-  template <typename T, typename TI, typename TB>
-  auto Max (FlatArray<T,TI> array, TB initial) -> T
-  {
-    T max = initial;
-    for (auto & v : array)
-      if (v > max) max = v;
-    return max;
-  }
-  */
-}
-
 
 namespace netgen
 {
@@ -98,7 +74,8 @@ namespace netgen
                          PointIndex(nv+PointIndex::BASE));
     
     glob_vert.SetSize (nv);
-    glob_vert.Range(oldnv, nv) = -1;
+    for (auto pi : new_pir)
+      L2G(pi) = -1;
 
     int num_master_points = 0;
 
@@ -139,17 +116,16 @@ namespace netgen
     nsend = 0;
     nrecv = 0;
 
-        /** Count send/recv size **/
+    /** Count send/recv size **/
     for (auto pi : new_pir)
-      {
-        auto dps = GetDistantProcs(pi);
-        if (!dps.Size()) continue;
-        if (rank < dps[0])
-          for (auto p : dps)
-            nsend[p]++;
-        else
-          nrecv[dps[0]]++;
-      }
+      if (auto dps = GetDistantProcs(pi); dps.Size())
+        {
+          if (rank < dps[0])
+            for (auto p : dps)
+              nsend[p]++;
+          else
+            nrecv[dps[0]]++;
+        }
     
     Table<PointIndex> send_data(nsend);
     Table<PointIndex> recv_data(nrecv);
@@ -176,34 +152,10 @@ namespace netgen
     Array<int> cnt(comm.Size());
     cnt = 0;
 
-    /*
-    for (auto pi : new_pir)
-      {
-        auto dps = GetDistantProcs(pi);
-        if (dps.Size() > 0 && dps[0] < comm.Rank())
-          {
-            int master = dps[0];
-            L2G(pi) = recv_data[master][cnt[master]++];
-          }
-      }
-    */
     for (auto pi : new_pir)
       if (auto dps = GetDistantProcs(pi); dps.Size())
         if (int master = dps[0]; master < comm.Rank())
           L2G(pi) = recv_data[master][cnt[master]++];
-    
-    /*
-    if (PointIndex::BASE==1)
-      for (auto & i : glob_vert)
-        i++;
-    */
-    
-    /*
-    cout << "check ordering: " << endl;
-    for (int i = 0; i < glob_vert.Size()-1; i++)
-      if (glob_vert[i] > glob_vert[i+1])
-        cout << "wrong ordering" << endl;
-    */
     
     // reorder following global ordering:
     Array<int> index0(glob_vert.Size());
@@ -211,15 +163,8 @@ namespace netgen
       index0[pi] = pi;
     QuickSortI (glob_vert, index0);
 
-    for (size_t i = 0; i+1 < glob_vert.Size(); i++)
-      if (glob_vert[index0[i]] > glob_vert[index0[i+1]])
-        cout << "wrong ordering" << endl;
-
     if (rank != 0)
       {
-        Array<PointIndex, PointIndex> index(index0.Size());
-        for (int i = 0; i < index0.Size(); i++)
-          index[i+PointIndex::BASE] = index0[i]+PointIndex::BASE;
         Array<PointIndex, PointIndex> inv_index(index0.Size());
         for (int i = 0; i < index0.Size(); i++)
           inv_index[index0[i]+PointIndex::BASE] = i+PointIndex::BASE;
@@ -241,22 +186,17 @@ namespace netgen
 
         if (mesh.mlbetweennodes.Size() == mesh.Points().Size())
           {
-            cout << "take care of multigrid table" << endl;
             NgArray<PointIndices<2>,PointIndex::BASE> hml { mesh.mlbetweennodes };
             for (PointIndex pi : Range(mesh.Points()))
               mesh.mlbetweennodes[inv_index[pi]] = hml[pi];
           }
 
-
-        
         // *testout << "index0 = " << endl << index0 << endl;
         // *testout << "loc2distvertold = " << endl;
         // for (auto i : Range(index0))
         // *testout << "l " << i << " globi "<< glob_vert[i]  << " dist = " << loc2distvert[i] << endl;
-        DynamicTable<int> oldtable(loc2distvert.Size());
-        for (size_t i = 0; i < loc2distvert.Size(); i++)
-          for (auto val : loc2distvert[i])
-            oldtable.Add (i, val);
+
+        DynamicTable<int> oldtable = std::move(loc2distvert);        
         loc2distvert = DynamicTable<int> (oldtable.Size());
         for (size_t i = 0; i < oldtable.Size(); i++)
           for (auto val : oldtable[index0[i]])
@@ -274,8 +214,6 @@ namespace netgen
     for (size_t i = 0; i+1 < glob_vert.Size(); i++)
       if (glob_vert[i] > glob_vert[i+1])
         cout << "wrong ordering of globvert" << endl;
-        
-    // *testout << "new glob_vert = " << glob_vert << endl;
   }
   
 
@@ -321,7 +259,7 @@ namespace netgen
       for (auto val : loc2distvert[i])
         oldtable.Add (i, val);
     loc2distvert = DynamicTable<int> (anv);
-    for (size_t i = 0; i < min(anv, oldtable.Size()); i++)
+    for (size_t i = 0; i < min(size_t(anv), oldtable.Size()); i++)
       for (auto val : oldtable[i])
         loc2distvert.Add (i, val);
   }
@@ -493,8 +431,6 @@ namespace netgen
     NgArray<int> cnt_send(ntasks-1);
 
 
-    
-
     // update new vertices after mesh-refinement
     if (mesh.mlbetweennodes.Size() > 0)
       {
@@ -503,7 +439,8 @@ namespace netgen
 	// cout << "UpdateCoarseGrid - vertices" << endl;
         int newnv = mesh.mlbetweennodes.Size();
         
-        //         loc2distvert.ChangeSize(mesh.mlbetweennodes.Size());
+        loc2distvert.ChangeSize(mesh.mlbetweennodes.Size());
+        /*
         DynamicTable<int> oldtable(loc2distvert.Size());
         for (size_t i = 0; i < loc2distvert.Size(); i++)
           for (auto val : loc2distvert[i])
@@ -512,9 +449,7 @@ namespace netgen
         for (size_t i = 0; i < min(loc2distvert.Size(), oldtable.Size()); i++)
           for (auto val : oldtable[i])
             loc2distvert.Add (i, val);
-
-        *testout << "extended loc2distver = " << endl << loc2distvert << endl;
-        
+        */
 	/*
         for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
           {
@@ -552,12 +487,14 @@ namespace netgen
 		    if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
 		      cnt_send[dest-1]++;
                 */
-                auto procs1 = GetDistantProcs(v1);
-                auto procs2 = GetDistantProcs(v2);
-		if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
-		  for (int p : procs1)
-		    if (procs2.Contains(p))
-		      cnt_send[p-1]++;
+		if (v1.IsValid())
+                  {
+                    auto procs1 = GetDistantProcs(v1);
+                    auto procs2 = GetDistantProcs(v2);
+                    for (int p : procs1)
+                      if (procs2.Contains(p))
+                        cnt_send[p-1]++;
+                  }
 	      }
 	    
 	    TABLE<int> dest2pair(cnt_send);
@@ -566,40 +503,34 @@ namespace netgen
 		{
 		  PointIndex v1 = mesh.mlbetweennodes[pi][0];
 		  PointIndex v2 = mesh.mlbetweennodes[pi][1];
-                  auto procs1 = GetDistantProcs(v1);
-                  auto procs2 = GetDistantProcs(v2);
+
                   /*
 		  if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
 		    for (int dest : GetDistantPNums(v1-PointIndex::BASE))
 		      if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
 			dest2pair.Add (dest-1, pi);
                   */
-		  if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
-		    for (int p : procs1)
-		      if (procs2.Contains(p))
-			dest2pair.Add (p-1, pi);
-		}
+		  if (v1.IsValid())
+                    {
+                      auto procs1 = GetDistantProcs(v1);
+                      auto procs2 = GetDistantProcs(v2);
+                      for (int p : procs1)
+                        if (procs2.Contains(p))
+                          dest2pair.Add (p-1, pi);
+                    }
+                }
 
 	    cnt_send = 0;
-	    int v1, v2;
-	    for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
-	      {
-		// PointIndex v1 = mesh.mlbetweennodes[pi][0];
-		// PointIndex v2 = mesh.mlbetweennodes[pi][1];
-                auto [v1,v2] = mesh.mlbetweennodes[pi];
-                auto procs1 = GetDistantProcs(v1);
-                auto procs2 = GetDistantProcs(v2);
-                /*
-		if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
-		  for (int dest : GetDistantPNums(v1-PointIndex::BASE))
-		    if (IsExchangeVert(dest, v2))
-		      cnt_send[dest-1]+=2;
-                */
-                if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
-		  for (int p : procs1)
-		    if (procs2.Contains(p))
-		      cnt_send[p-1]+=2;
-	      }
+	    for (PointIndex pi : mesh.mlbetweennodes.Range())
+              if (auto [v1,v2] = mesh.mlbetweennodes[pi]; v1.IsValid())
+                {
+                  auto procs1 = GetDistantProcs(v1);
+                  auto procs2 = GetDistantProcs(v2);
+                  
+                  for (int p : procs1)
+                    if (procs2.Contains(p))
+                      cnt_send[p-1]+=2;
+                }
 	    
 	    TABLE<int> send_verts(cnt_send);
 	    
@@ -622,15 +553,18 @@ namespace netgen
 		    {
 		      PointIndex v1 = mesh.mlbetweennodes[pi][0];
 		      PointIndex v2 = mesh.mlbetweennodes[pi][1];
-                      auto procs1 = GetDistantProcs(v1);
-                      auto procs2 = GetDistantProcs(v2);
-		      if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
-			// if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
-                        if (procs1.Contains(dest) && procs2.Contains(dest))
-			  {
-			    send_verts.Add (dest-1, loc2exchange[v1]);
-			    send_verts.Add (dest-1, loc2exchange[v2]);
-			  }
+
+		      if (v1.IsValid())
+                        {
+                          auto procs1 = GetDistantProcs(v1);
+                          auto procs2 = GetDistantProcs(v2);
+
+                          if (procs1.Contains(dest) && procs2.Contains(dest))
+                            {
+                              send_verts.Add (dest-1, loc2exchange[v1]);
+                              send_verts.Add (dest-1, loc2exchange[v2]);
+                            }
+                        }
 		    }
 		}
 
@@ -657,7 +591,7 @@ namespace netgen
 		      {
 			PointIndex v1 = mesh.mlbetweennodes[pi][0];
 			PointIndex v2 = mesh.mlbetweennodes[pi][1];
-			if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
+			if (v1.IsValid())
 			  {
 			    INDEX_2 re(recvarray[ii], recvarray[ii+1]);
 			    INDEX_2 es(loc2exchange[v1], loc2exchange[v2]);
