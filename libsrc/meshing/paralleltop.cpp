@@ -572,7 +572,7 @@ namespace netgen
     // UpdateCoarseGridGlobal();
 
 
-    
+    /*
     // MPI_Barrier (MPI_COMM_WORLD);
 
     MPI_Group MPI_GROUP_comm;
@@ -590,10 +590,11 @@ namespace netgen
         // EnumeratePointsGlobally();
         return;
       }
+    */
     
     const MeshTopology & topology = mesh.GetTopology();
 
-    NgArray<int> cnt_send(ntasks-1);
+    NgArray<int> cnt_send(ntasks);
 
     // NgArray<int> sendarray, recvarray;
     // cout << "UpdateCoarseGrid - edges" << endl;
@@ -613,11 +614,11 @@ namespace netgen
     cnt_send = 0;
     for (PointIndex pi : mesh.Points().Range())
       for (int dist : GetDistantProcs(pi))
-	cnt_send[dist-1]++;
+	cnt_send[dist]++;
     TABLE<int> dest2vert(cnt_send);    
     for (PointIndex pi : mesh.Points().Range())
       for (int dist : GetDistantProcs(pi))
-	dest2vert.Add (dist-1, pi);
+	dest2vert.Add (dist, pi);
 
     // exchange edges
     cnt_send = 0;
@@ -633,7 +634,7 @@ namespace netgen
         */
         for (auto p : GetDistantProcs(v1))
           if (GetDistantProcs(v2).Contains(p))
-	    cnt_send[p-1]+=1;
+	    cnt_send[p]+=1;
       }
     
     TABLE<int> dest2edge(cnt_send);
@@ -643,51 +644,51 @@ namespace netgen
     for (int edge = 1; edge <= ned; edge++)
       {
 	topology.GetEdgeVertices (edge, v1, v2);
-	for (int dest = 1; dest < ntasks; dest++)
+	for (int dest = 0; dest < ntasks; dest++)
 	  // if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
           if (GetDistantProcs(v1).Contains(dest) && GetDistantProcs(v2).Contains(dest))
-	    dest2edge.Add (dest-1, edge);
+	    dest2edge.Add (dest, edge);
       }
 
 
     NgArray<int, PointIndex::BASE> loc2exchange(mesh.GetNV());
-    for (int dest = 1; dest < ntasks; dest++)
+    for (int dest = 0; dest < ntasks; dest++)
       {
         loc2exchange = -1;
         int cnt = 0;
-        for (PointIndex pi : dest2vert[dest-1])
+        for (PointIndex pi : dest2vert[dest])
 	  loc2exchange[pi] = cnt++;
 
-	for (int edge : dest2edge[dest-1])
+	for (int edge : dest2edge[dest])
           {
             topology.GetEdgeVertices (edge, v1, v2);
             // if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
             if (GetDistantProcs(v1).Contains(dest) && GetDistantProcs(v2).Contains(dest))            
               {
-                send_edges.Add (dest-1, loc2exchange[v1]);
-                send_edges.Add (dest-1, loc2exchange[v2]);
+                send_edges.Add (dest, loc2exchange[v1]);
+                send_edges.Add (dest, loc2exchange[v2]);
               }
           }
       }
 
     // cout << "UpdateCoarseGrid - edges mpi-exchange" << endl;
-    TABLE<int> recv_edges(ntasks-1);
-    MyMPI_ExchangeTable (send_edges, recv_edges, MPI_TAG_MESH+9, MPI_LocalComm);
+    TABLE<int> recv_edges(ntasks);
+    MyMPI_ExchangeTable (send_edges, recv_edges, MPI_TAG_MESH+9, comm);
     // cout << "UpdateCoarseGrid - edges mpi-exchange done" << endl;
 
-    for (int dest = 1; dest < ntasks; dest++)
+    for (int dest = 0; dest < ntasks; dest++)
       {
-	auto ex2loc = dest2vert[dest-1];
+	auto ex2loc = dest2vert[dest];
 	if (ex2loc.Size() == 0) continue;
 
-	INDEX_2_CLOSED_HASHTABLE<int> vert2edge(2*dest2edge[dest-1].Size()+10); 
-	for (int edge : dest2edge[dest-1])
+	INDEX_2_CLOSED_HASHTABLE<int> vert2edge(2*dest2edge[dest].Size()+10); 
+	for (int edge : dest2edge[dest])
 	  {
 	    topology.GetEdgeVertices (edge, v1, v2);
 	    vert2edge.Set(INDEX_2(v1,v2), edge);
 	  }
 
-	NgFlatArray<int> recvarray = recv_edges[dest-1];
+	NgFlatArray<int> recvarray = recv_edges[dest];
         for (int ii = 0; ii < recvarray.Size(); ii+=2)
 	  {
 	    INDEX_2 re(ex2loc[recvarray[ii]], 
@@ -712,7 +713,7 @@ namespace netgen
 	for (int face = 1; face <= nfa; face++)
 	  {
 	    topology.GetFaceVertices (face, verts);
-	    for (int dest = 1; dest < ntasks; dest++)
+	    for (int dest = 0; dest < ntasks; dest++)
 	      if (dest != id)
                 /*
 		if (IsExchangeVert (dest, verts[0]) && 
@@ -722,14 +723,14 @@ namespace netgen
                 if (GetDistantProcs (verts[0]).Contains(dest) &&
                     GetDistantProcs (verts[1]).Contains(dest) &&
                     GetDistantProcs (verts[2]).Contains(dest))
-		  cnt_send[dest-1]++;
+		  cnt_send[dest]++;
 	  }
 	
 	TABLE<int> dest2face(cnt_send);
 	for (int face = 1; face <= nfa; face++)
 	  {
 	    topology.GetFaceVertices (face, verts);
-	    for (int dest = 1; dest < ntasks; dest++)
+	    for (int dest = 0; dest < ntasks; dest++)
 	      if (dest != id)
                 /*
 		if (IsExchangeVert (dest, verts[0]) && 
@@ -739,23 +740,23 @@ namespace netgen
                 if (GetDistantProcs (verts[0]).Contains(dest) && 
                     GetDistantProcs (verts[1]).Contains(dest) &&
                     GetDistantProcs (verts[2]).Contains(dest))
-		  dest2face.Add(dest-1, face);
+		  dest2face.Add(dest, face);
 	  }
 
 	for (int & c : cnt_send) c*=3;
 	TABLE<int> send_faces(cnt_send);
 	NgArray<int, PointIndex::BASE> loc2exchange(mesh.GetNV());
-	for (int dest = 1; dest < ntasks; dest++)
+	for (int dest = 0; dest < ntasks; dest++)
 	  if (dest != id)
 	    {
-	      if (dest2vert[dest-1].Size() == 0) continue;
+	      if (dest2vert[dest].Size() == 0) continue;
 
 	      loc2exchange = -1;
 	      int cnt = 0;
-	      for (PointIndex pi : dest2vert[dest-1])
+	      for (PointIndex pi : dest2vert[dest])
 		loc2exchange[pi] = cnt++;
 	      
-	      for (int face : dest2face[dest-1])
+	      for (int face : dest2face[dest])
 		{
 		  topology.GetFaceVertices (face, verts);
                   /*
@@ -767,31 +768,31 @@ namespace netgen
                       GetDistantProcs (verts[1]).Contains(dest) &&
                       GetDistantProcs (verts[2]).Contains(dest))
 		    {
-		      send_faces.Add (dest-1, loc2exchange[verts[0]]);
-		      send_faces.Add (dest-1, loc2exchange[verts[1]]);
-		      send_faces.Add (dest-1, loc2exchange[verts[2]]);
+		      send_faces.Add (dest, loc2exchange[verts[0]]);
+		      send_faces.Add (dest, loc2exchange[verts[1]]);
+		      send_faces.Add (dest, loc2exchange[verts[2]]);
 		    }
 		}
 	    }
 	
 	// cout << "UpdateCoarseGrid - faces mpi-exchange" << endl;
-	TABLE<int> recv_faces(ntasks-1);
-	MyMPI_ExchangeTable (send_faces, recv_faces, MPI_TAG_MESH+9, MPI_LocalComm);
+	TABLE<int> recv_faces(ntasks);
+	MyMPI_ExchangeTable (send_faces, recv_faces, MPI_TAG_MESH+9, comm);
 	// cout << "UpdateCoarseGrid - faces mpi-exchange done" << endl;
 	
-	for (int dest = 1; dest < ntasks; dest++)
+	for (int dest = 0; dest < ntasks; dest++)
 	  {
-	    auto ex2loc = dest2vert[dest-1];
+	    auto ex2loc = dest2vert[dest];
 	    if (ex2loc.Size() == 0) continue;
 	    
-	    INDEX_3_CLOSED_HASHTABLE<int> vert2face(2*dest2face[dest-1].Size()+10); 
-	    for (int face : dest2face[dest-1])
+	    INDEX_3_CLOSED_HASHTABLE<int> vert2face(2*dest2face[dest].Size()+10); 
+	    for (int face : dest2face[dest])
 	      {
 		topology.GetFaceVertices (face, verts);
 		vert2face.Set(INDEX_3(verts[0], verts[1], verts[2]), face);
 	      }
 	    
-	    NgFlatArray<int> recvarray = recv_faces[dest-1];
+	    NgFlatArray<int> recvarray = recv_faces[dest];
 	    for (int ii = 0; ii < recvarray.Size(); ii+=3)
 	      {
 		INDEX_3 re(ex2loc[recvarray[ii]], 
@@ -808,8 +809,8 @@ namespace netgen
     // EnumeratePointsGlobally();
     is_updated = true;
 
-    MPI_Group_free(&MPI_LocalGroup);
-    MPI_Comm_free(&MPI_LocalComm);
+    // MPI_Group_free(&MPI_LocalGroup);
+    // MPI_Comm_free(&MPI_LocalComm);
   }
 }
 
