@@ -382,8 +382,6 @@ namespace netgen
   void ParallelMeshTopology :: IdentifyVerticesAfterRefinement()
   {
     static Timer t("ParallelTopology::UpdateCoarseGrid"); RegionTimer r(t);
-    // cout << "UpdateCoarseGrid" << endl;
-    // if (is_updated) return;
 
     NgMPI_Comm comm = mesh.GetCommunicator();
     int id = comm.Rank();
@@ -399,68 +397,19 @@ namespace netgen
     (*testout) << "UPDATE COARSE GRID PARALLEL TOPOLOGY " << endl;
     if (id == 0)
       PrintMessage (1, "update parallel topology");
-
-
-    // UpdateCoarseGridGlobal();
-
-
     
-    // MPI_Barrier (MPI_COMM_WORLD);
-
-    MPI_Group MPI_GROUP_comm;
-    MPI_Group MPI_LocalGroup;
-    MPI_Comm MPI_LocalComm1;
-
-    int process_ranks[] = { 0 };
-    MPI_Comm_group (comm, &MPI_GROUP_comm);
-    MPI_Group_excl (MPI_GROUP_comm, 1, process_ranks, &MPI_LocalGroup);
-    MPI_Comm_create (comm, MPI_LocalGroup, &MPI_LocalComm1);
-
-    if (id == 0)
-      {
-        // SetNV(0);
-        // EnumeratePointsGlobally();
-        return;
-      }
-    
-    NgMPI_Comm MPI_LocalComm(MPI_LocalComm1);
-
     
     const MeshTopology & topology = mesh.GetTopology();
 
-    NgArray<int> cnt_send(ntasks-1);
+    NgArray<int> cnt_send(ntasks);
 
-
+    int maxsize = comm.AllReduce (mesh.mlbetweennodes.Size(), MPI_MAX);
     // update new vertices after mesh-refinement
-    if (mesh.mlbetweennodes.Size() > 0)
+    if (maxsize > 0)
       {
-        // *testout << "have to identify new vertices, nv = " << mesh.GetNV() << endl;
-        
-	// cout << "UpdateCoarseGrid - vertices" << endl;
         int newnv = mesh.mlbetweennodes.Size();
         
         loc2distvert.ChangeSize(mesh.mlbetweennodes.Size());
-        /*
-        DynamicTable<int> oldtable(loc2distvert.Size());
-        for (size_t i = 0; i < loc2distvert.Size(); i++)
-          for (auto val : loc2distvert[i])
-            oldtable.Add (i, val);
-        loc2distvert = DynamicTable<int> (mesh.mlbetweennodes.Size());
-        for (size_t i = 0; i < min(loc2distvert.Size(), oldtable.Size()); i++)
-          for (auto val : oldtable[i])
-            loc2distvert.Add (i, val);
-        */
-	/*
-        for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
-          {
-            PointIndex v1 = mesh.mlbetweennodes[pi][0];
-            PointIndex v2 = mesh.mlbetweennodes[pi][1];
-            if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
-              for (int dest = 1; dest < ntasks; dest++)
-                if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
-                  SetDistantPNum(dest, pi);
-          }
-	*/
 
 	bool changed = true;
 	while (changed)
@@ -471,53 +420,32 @@ namespace netgen
 	    cnt_send = 0;
 	    for (PointIndex pi : mesh.Points().Range())
 	      for (int dist : GetDistantProcs(pi))
-		cnt_send[dist-1]++;
+		cnt_send[dist]++;
 	    TABLE<int> dest2vert(cnt_send);    
 	    for (PointIndex pi : mesh.Points().Range())
 	      for (int dist : GetDistantProcs(pi))
-		dest2vert.Add (dist-1, pi);
+		dest2vert.Add (dist, pi);
             
 	    for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
-	      {
-		PointIndex v1 = mesh.mlbetweennodes[pi][0];
-		PointIndex v2 = mesh.mlbetweennodes[pi][1];
-                /*
-		if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
-		  for (int dest : GetDistantPNums(v1-PointIndex::BASE))
-		    if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
-		      cnt_send[dest-1]++;
-                */
-		if (v1.IsValid())
-                  {
-                    auto procs1 = GetDistantProcs(v1);
-                    auto procs2 = GetDistantProcs(v2);
-                    for (int p : procs1)
-                      if (procs2.Contains(p))
-                        cnt_send[p-1]++;
-                  }
-	      }
-	    
-	    TABLE<int> dest2pair(cnt_send);
-	    // for (int dest = 1; dest < ntasks; dest++)
-	      for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
-		{
-		  PointIndex v1 = mesh.mlbetweennodes[pi][0];
-		  PointIndex v2 = mesh.mlbetweennodes[pi][1];
+              if (auto [v1,v2] = mesh.mlbetweennodes[pi]; v1.IsValid())              
+                {
+                  auto procs1 = GetDistantProcs(v1);
+                  auto procs2 = GetDistantProcs(v2);
+                  for (int p : procs1)
+                    if (procs2.Contains(p))
+                      cnt_send[p]++;
+                }
 
-                  /*
-		  if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
-		    for (int dest : GetDistantPNums(v1-PointIndex::BASE))
-		      if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
-			dest2pair.Add (dest-1, pi);
-                  */
-		  if (v1.IsValid())
-                    {
-                      auto procs1 = GetDistantProcs(v1);
-                      auto procs2 = GetDistantProcs(v2);
-                      for (int p : procs1)
-                        if (procs2.Contains(p))
-                          dest2pair.Add (p-1, pi);
-                    }
+	    TABLE<int> dest2pair(cnt_send);
+            
+            for (PointIndex pi : mesh.mlbetweennodes.Range())
+              if (auto [v1,v2] = mesh.mlbetweennodes[pi]; v1.IsValid())
+                {
+                  auto procs1 = GetDistantProcs(v1);
+                  auto procs2 = GetDistantProcs(v2);
+                  for (int p : procs1)
+                    if (procs2.Contains(p))
+                      dest2pair.Add (p, pi);
                 }
 
 	    cnt_send = 0;
@@ -529,65 +457,50 @@ namespace netgen
                   
                   for (int p : procs1)
                     if (procs2.Contains(p))
-                      cnt_send[p-1]+=2;
+                      cnt_send[p]+=2;
                 }
 	    
 	    TABLE<int> send_verts(cnt_send);
-	    
+
 	    NgArray<int, PointIndex::BASE> loc2exchange(mesh.GetNV());
-	    for (int dest = 1; dest < ntasks; dest++)
+
+	    for (int dest = 0; dest < ntasks; dest++)
 	      if (dest != id)
 		{
 		  loc2exchange = -1;
 		  int cnt = 0;
-		  /*
-		  for (PointIndex pi : mesh.Points().Range())
-		    if (IsExchangeVert(dest, pi))
-		      loc2exchange[pi] = cnt++;
-		  */
-		  for (PointIndex pi : dest2vert[dest-1])
+		  for (PointIndex pi : dest2vert[dest])
 		    loc2exchange[pi] = cnt++;
 		  
-		  // for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
-		  for (PointIndex pi : dest2pair[dest-1])
-		    {
-		      PointIndex v1 = mesh.mlbetweennodes[pi][0];
-		      PointIndex v2 = mesh.mlbetweennodes[pi][1];
-
-		      if (v1.IsValid())
-                        {
-                          auto procs1 = GetDistantProcs(v1);
-                          auto procs2 = GetDistantProcs(v2);
-
-                          if (procs1.Contains(dest) && procs2.Contains(dest))
-                            {
-                              send_verts.Add (dest-1, loc2exchange[v1]);
-                              send_verts.Add (dest-1, loc2exchange[v2]);
-                            }
-                        }
-		    }
+		  for (PointIndex pi : dest2pair[dest])
+                    if (auto [v1,v2] = mesh.mlbetweennodes[pi]; v1.IsValid())                    
+                      {
+                        auto procs1 = GetDistantProcs(v1);
+                        auto procs2 = GetDistantProcs(v2);
+                        
+                        if (procs1.Contains(dest) && procs2.Contains(dest))
+                          {
+                            send_verts.Add (dest, loc2exchange[v1]);
+                            send_verts.Add (dest, loc2exchange[v2]);
+                          }
+                      }
 		}
 
-	    TABLE<int> recv_verts(ntasks-1);
-	    MyMPI_ExchangeTable (send_verts, recv_verts, MPI_TAG_MESH+9, MPI_LocalComm);
-            
-	    for (int dest = 1; dest < ntasks; dest++)
+	    TABLE<int> recv_verts(ntasks);
+	    MyMPI_ExchangeTable (send_verts, recv_verts, MPI_TAG_MESH+9, comm);
+
+	    for (int dest = 0; dest < ntasks; dest++)
 	      if (dest != id)
 		{
 		  loc2exchange = -1;
 		  int cnt = 0;
-		  /*
-		  for (PointIndex pi : mesh.Points().Range())
-		    if (IsExchangeVert(dest, pi))
-		      loc2exchange[pi] = cnt++;
-		  */
-		  for (PointIndex pi : dest2vert[dest-1])
+
+		  for (PointIndex pi : dest2vert[dest])
 		    loc2exchange[pi] = cnt++;
 		  
-		  NgFlatArray<int> recvarray = recv_verts[dest-1];
+		  NgFlatArray<int> recvarray = recv_verts[dest];
 		  for (int ii = 0; ii < recvarray.Size(); ii+=2)
-		    for (PointIndex pi : dest2pair[dest-1])
-		      // for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
+		    for (PointIndex pi : dest2pair[dest])
 		      {
 			PointIndex v1 = mesh.mlbetweennodes[pi][0];
 			PointIndex v2 = mesh.mlbetweennodes[pi][1];
@@ -604,6 +517,8 @@ namespace netgen
 			  }
 		      }
 		}
+
+            changed = comm.AllReduce (changed, MPI_LOR);
 	  }
       }
 
@@ -621,13 +536,13 @@ namespace netgen
     cnt_send = 0;
     for (PointIndex pi : mesh.Points().Range())
       for (int dist : GetDistantProcs(pi))
-	cnt_send[dist-1]++;
+	cnt_send[dist]++;
     TABLE<int> dest2vert(cnt_send);    
     for (PointIndex pi : mesh.Points().Range())
       for (int dist : GetDistantProcs(pi))
-	dest2vert.Add (dist-1, pi);
+	dest2vert.Add (dist, pi);
     
-    MPI_Group_free(&MPI_LocalGroup);
+    // MPI_Group_free(&MPI_LocalGroup);
     // MPI_Comm_free(&MPI_LocalComm);
   }
 
@@ -680,158 +595,6 @@ namespace netgen
 
     NgArray<int> cnt_send(ntasks-1);
 
-#ifdef NONE
-    // update new vertices after mesh-refinement
-    if (mesh.mlbetweennodes.Size() > 0)
-      {
-	// cout << "UpdateCoarseGrid - vertices" << endl;
-        int newnv = mesh.mlbetweennodes.Size();
-        
-        //         loc2distvert.ChangeSize(mesh.mlbetweennodes.Size());
-        DynamicTable<int> oldtable(loc2distvert.Size());
-        for (size_t i = 0; i < loc2distvert.Size(); i++)
-          for (auto val : loc2distvert[i])
-            oldtable.Add (i, val);
-        loc2distvert = DynamicTable<int> (mesh.mlbetweennodes.Size());
-        for (size_t i = 0; i < min(loc2distvert.Size(), oldtable.Size()); i++)
-          for (auto val : oldtable[i])
-            loc2distvert.Add (i, val);
-
-
-        
-	/*
-        for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
-          {
-            PointIndex v1 = mesh.mlbetweennodes[pi][0];
-            PointIndex v2 = mesh.mlbetweennodes[pi][1];
-            if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
-              for (int dest = 1; dest < ntasks; dest++)
-                if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
-                  SetDistantPNum(dest, pi);
-          }
-	*/
-
-	bool changed = true;
-	while (changed)
-	  {
-	    changed = false;
-
-	    // build exchange vertices
-	    cnt_send = 0;
-	    for (PointIndex pi : mesh.Points().Range())
-	      for (int dist : GetDistantPNums(pi-PointIndex::BASE))
-		cnt_send[dist-1]++;
-	    TABLE<int> dest2vert(cnt_send);    
-	    for (PointIndex pi : mesh.Points().Range())
-	      for (int dist : GetDistantPNums(pi-PointIndex::BASE))
-		dest2vert.Add (dist-1, pi);
-
-	    
-	    for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
-	      {
-		PointIndex v1 = mesh.mlbetweennodes[pi][0];
-		PointIndex v2 = mesh.mlbetweennodes[pi][1];
-		if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
-		  // for (int dest = 1; dest < ntasks; dest++)
-		  for (int dest : GetDistantPNums(v1-PointIndex::BASE))
-		    if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
-		      cnt_send[dest-1]++;
-	      }
-	    
-	    TABLE<int> dest2pair(cnt_send);
-	    // for (int dest = 1; dest < ntasks; dest++)
-	      for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
-		{
-		  PointIndex v1 = mesh.mlbetweennodes[pi][0];
-		  PointIndex v2 = mesh.mlbetweennodes[pi][1];
-		  if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
-		    for (int dest : GetDistantPNums(v1-PointIndex::BASE))
-		      if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
-			dest2pair.Add (dest-1, pi);
-		}
-
-	    cnt_send = 0;
-	    int v1, v2;
-	    for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
-	      {
-		PointIndex v1 = mesh.mlbetweennodes[pi][0];
-		PointIndex v2 = mesh.mlbetweennodes[pi][1];
-		if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
-		  for (int dest : GetDistantPNums(v1-PointIndex::BASE))
-		    if (IsExchangeVert(dest, v2))
-		      cnt_send[dest-1]+=2;
-	      }
-	    
-	    TABLE<int> send_verts(cnt_send);
-	    
-	    NgArray<int, PointIndex::BASE> loc2exchange(mesh.GetNV());
-	    for (int dest = 1; dest < ntasks; dest++)
-	      if (dest != id)
-		{
-		  loc2exchange = -1;
-		  int cnt = 0;
-		  /*
-		  for (PointIndex pi : mesh.Points().Range())
-		    if (IsExchangeVert(dest, pi))
-		      loc2exchange[pi] = cnt++;
-		  */
-		  for (PointIndex pi : dest2vert[dest-1])
-		    loc2exchange[pi] = cnt++;
-		  
-		  // for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
-		  for (PointIndex pi : dest2pair[dest-1])
-		    {
-		      PointIndex v1 = mesh.mlbetweennodes[pi][0];
-		      PointIndex v2 = mesh.mlbetweennodes[pi][1];
-		      if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
-			if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
-			  {
-			    send_verts.Add (dest-1, loc2exchange[v1]);
-			    send_verts.Add (dest-1, loc2exchange[v2]);
-			  }
-		    }
-		}
-	    
-	    TABLE<int> recv_verts(ntasks-1);
-	    MyMPI_ExchangeTable (send_verts, recv_verts, MPI_TAG_MESH+9, MPI_LocalComm);
-	    
-	    for (int dest = 1; dest < ntasks; dest++)
-	      if (dest != id)
-		{
-		  loc2exchange = -1;
-		  int cnt = 0;
-		  /*
-		  for (PointIndex pi : mesh.Points().Range())
-		    if (IsExchangeVert(dest, pi))
-		      loc2exchange[pi] = cnt++;
-		  */
-		  for (PointIndex pi : dest2vert[dest-1])
-		    loc2exchange[pi] = cnt++;
-		  
-		  NgFlatArray<int> recvarray = recv_verts[dest-1];
-		  for (int ii = 0; ii < recvarray.Size(); ii+=2)
-		    for (PointIndex pi : dest2pair[dest-1])
-		      // for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
-		      {
-			PointIndex v1 = mesh.mlbetweennodes[pi][0];
-			PointIndex v2 = mesh.mlbetweennodes[pi][1];
-			if (mesh.mlbetweennodes[pi][0] != PointIndex::BASE-1)
-			  {
-			    INDEX_2 re(recvarray[ii], recvarray[ii+1]);
-			    INDEX_2 es(loc2exchange[v1], loc2exchange[v2]);
-			    if (es == re && !IsExchangeVert(dest, pi))
-			      {
-				SetDistantPNum(dest, pi);
-				changed = true;
-			      }
-			  }
-		      }
-		}
-	  }
-      }
-#endif
-
-    
     // NgArray<int> sendarray, recvarray;
     // cout << "UpdateCoarseGrid - edges" << endl;
 
