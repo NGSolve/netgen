@@ -599,6 +599,22 @@ namespace ngcore
   template <typename T>
   FlatArray<T> View (FlatArray<T> fa) { return fa; }
 
+  template <typename T, typename TI>
+  auto Max (FlatArray<T,TI> array, T max = std::numeric_limits<T>::min()) -> T
+  {
+    for (auto & v : array)
+      if (v > max) max = v;
+    return max;
+  }
+
+  template <typename T, typename TI>
+  auto Min (FlatArray<T,TI> array, T min = std::numeric_limits<T>::max()) -> T
+  {
+    for (auto & v : array)
+      if (v < min) min = v;
+    return min;
+  }
+  
   /// print array
   template <class T, class TIND>
   inline ostream & operator<< (ostream & s, const FlatArray<T, TIND> & a)

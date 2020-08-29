@@ -370,7 +370,7 @@ namespace ngcore
     };
 
     Array<linestruct, IndexType> data;
-    T * oneblock;
+    T * oneblock = nullptr;
   
   public:
     /// Creates table of size size
@@ -398,13 +398,19 @@ namespace ngcore
       oneblock = new T[cnt];
       
       cnt = 0;
-      for (auto i : Range(data))
+      for (auto i : data.Range())
         {
           data[i].maxsize = entrysizes[i];
           data[i].size = 0;
           data[i].col = &oneblock[cnt];
           cnt += entrysizes[i];
         }
+    }
+
+    DynamicTable (DynamicTable && tab2)
+    {
+      Swap (data, tab2.data);
+      Swap (oneblock, tab2.oneblock);
     }
 
     ~DynamicTable ()
@@ -437,7 +443,32 @@ namespace ngcore
           d.col = nullptr;
         }
     }      
-  
+
+    void ChangeSize (size_t size)
+    {
+      if (oneblock)
+        throw Exception ("cannot change size of oneblock dynamic table");
+      
+      size_t oldsize = data.Size();
+      if (size == oldsize) 
+        return;
+      
+      if (size < oldsize)
+        for (int i = size; i < oldsize; i++)
+          delete [] data[i+BASE].col;
+      
+      data.SetSize(size);
+
+      for (int i = oldsize; i < size; i++)
+        {
+          data[i+BASE].maxsize = 0;
+          data[i+BASE].size = 0;
+          data[i+BASE].col = nullptr;
+        }    
+    }
+    
+
+    
     ///
     void IncSize (IndexType i)
     {
@@ -528,7 +559,12 @@ namespace ngcore
     {
       return data.Size();
     }
-  
+
+    auto Range () const
+    {
+      return data.Range();
+    }
+
     /// Returns size of the i-th row.
     int EntrySize (IndexType i) const
     {
@@ -564,7 +600,7 @@ namespace ngcore
   template <class T>
   inline ostream & operator<< (ostream & s, const DynamicTable<T> & table)
   {
-    for (int i = 0; i < table.Size(); i++)
+    for (auto i : Range(table))
       {
         s << i << ":";
         for (int j = 0; j < table[i].Size(); j++)
