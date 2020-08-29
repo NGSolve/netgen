@@ -391,7 +391,7 @@ namespace ngcore
       : data(entrysizes.Size())
     {
       size_t cnt = 0;
-      size_t n = entrysizes.Size();
+      // size_t n = entrysizes.Size();
       
       for (auto es : entrysizes)
         cnt += es;
@@ -478,7 +478,11 @@ namespace ngcore
     
       if (line.size == line.maxsize)
         {
-          T * p = new T[(2*line.maxsize+5)];
+          T * p;
+          if constexpr (std::is_default_constructible<T>::value)
+            p = new T[(2*line.maxsize+5)];
+          else
+            p = reinterpret_cast<T*>(new char[(2*line.maxsize+5)*sizeof(T)]);
           for (size_t i = 0; i < line.maxsize; i++)
             p[i] = std::move(line.col[i]);
           // memcpy (p, line.col, line.maxsize * sizeof(T));
