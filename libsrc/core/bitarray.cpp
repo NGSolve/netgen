@@ -83,6 +83,18 @@ namespace ngcore
     return *this;
   }
 
+  bool BitArray :: operator==(const BitArray& other) const
+  {
+    if(size != other.Size())
+      return false;
+    for(auto i : Range(size/CHAR_BIT))
+      if(data[i] != other.data[i])
+        return false;
+    for(auto i : Range(size%CHAR_BIT))
+      if(Test(i + size * (size/CHAR_BIT)) != other.Test(i + size * (size/CHAR_BIT)))
+        return false;
+    return true;
+  }
 
   BitArray & BitArray :: operator= (const BitArray & ba2)
   {
@@ -115,29 +127,39 @@ namespace ngcore
     return cnt;
   }
 
-  Archive & operator & (Archive & archive, BitArray & ba)
+  void BitArray :: DoArchive(Archive& archive)
   {
-    if (archive.Output())
+    if(archive.GetVersion("netgen") >= "v6.2.2007-62")
       {
-        archive << ba.Size();
-        for (size_t i = 0; i < ba.Size(); i++)
-          archive << ba[i];
+        archive.NeedsVersion("netgen", "v6.2.2007-62");
+        auto size = Size();
+        archive & size;
+        if(archive.Input())
+          SetSize(size);
+        archive.Do(data, size/CHAR_BIT+1);
       }
     else
       {
-        size_t size;
-        archive & size;
-        ba.SetSize (size);
-        ba.Clear();
-        for (size_t i = 0; i < size; i++)
+        if (archive.Output())
           {
-            bool b;
-            archive & b;
-            if (b) ba.SetBit(i);
+            throw Exception("should not get here");
+            archive << Size();
+            for (size_t i = 0; i < Size(); i++)
+              archive << (*this)[i];
+          }
+        else
+          {
+            size_t size;
+            archive & size;
+            SetSize (size);
+            Clear();
+            for (size_t i = 0; i < size; i++)
+              {
+                bool b;
+                archive & b;
+                if (b) SetBit(i);
+              }
           }
       }
-    return archive;
   }
-
-
-}
+} // namespace ngcore

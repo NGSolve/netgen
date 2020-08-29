@@ -910,6 +910,54 @@ namespace ngcore
     }
   };
 
+  // HashArchive =================================================================
+  // This class enables to easily create hashes for archivable objects by xoring
+  // threw its data
+
+  class NGCORE_API HashArchive : public Archive
+  {
+    size_t hash_value;
+    char* h;
+    int offset;
+  public:
+    HashArchive() : Archive(true)
+      { h = (char*)&hash_value; }
+
+    using Archive::operator&;
+    Archive & operator & (double & d) override { return ApplyHash(d); }
+    Archive & operator & (int & i) override { return ApplyHash(i); }
+    Archive & operator & (short & i) override { return ApplyHash(i); }
+    Archive & operator & (long & i) override { return ApplyHash(i); }
+    Archive & operator & (size_t & i) override { return ApplyHash(i); }
+    Archive & operator & (unsigned char & i) override { return ApplyHash(i); }
+    Archive & operator & (bool & b) override { return ApplyHash(b); }
+    Archive & operator & (std::string & str) override
+    { for(auto c : str) ApplyHash(c);  return *this; }
+    Archive & operator & (char *& str) override
+    { char* s = str; while(*s != '\0') ApplyHash(*(s++)); return *this; }
+
+    // HashArchive can be used in const context
+    template<typename T>
+      Archive & operator& (const T& val) const
+    { return (*this) & const_cast<T&>(val); }
+
+    size_t GetHash() const { return hash_value; }
+
+  private:
+    template<typename T>
+      Archive& ApplyHash(T val)
+    {
+      auto n = sizeof(T);
+      char* pval = (char*)&val;
+      for(int i = 0; i < n; i++)
+        {
+          h[offset++] ^= pval[i];
+          offset %= 8;
+        }
+      return *this;
+    }
+  };
+
 } // namespace ngcore
 
 #endif // NETGEN_CORE_ARCHIVE_HPP

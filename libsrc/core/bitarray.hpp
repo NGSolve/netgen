@@ -131,6 +131,7 @@ public:
     return Test(i);
   }
 
+  NGCORE_API bool operator==(const BitArray& other) const;
 
   /// invert all bits
   NGCORE_API BitArray & Invert ();
@@ -145,6 +146,9 @@ public:
   NGCORE_API BitArray & operator= (const BitArray & ba2);
 
   NGCORE_API size_t NumSet () const;
+
+  NGCORE_API void DoArchive(Archive& archive);
+
 private:
   ///
   unsigned char Mask (size_t i) const
@@ -190,10 +194,7 @@ private:
     return res;
   }
 
-
   NGCORE_API std::ostream & operator<<(std::ostream & s, const BitArray & ba);
-
-  NGCORE_API Archive & operator & (Archive & archive, BitArray & ba);
 
 } // namespace ngcore
 
