@@ -20,76 +20,76 @@ namespace ngcore
 
 
   template <class T, class IndexType = size_t>
-class FlatTable
-{
-protected:
-  static constexpr IndexType BASE = IndexBASE<IndexType>();  
-  /// number of rows
-  size_t size;
-  /// pointer to first in row
-  size_t * index;
-  /// array of data
-  T * data;
-
-public:
-  FlatTable() = delete;
-
-  NETGEN_INLINE FlatTable(size_t as, size_t * aindex, T * adata)
-    : size(as), index(aindex), data(adata) { ; }
-
-  /// Size of table
-  NETGEN_INLINE size_t Size() const { return size; }
-
-  /// Access entry
-  NETGEN_INLINE const FlatArray<T> operator[] (IndexType i) const
+  class FlatTable
   {
-    i = i-BASE;
-    return FlatArray<T> (index[i+1]-index[i], data+index[i]);
-  }
+  protected:
+    static constexpr IndexType BASE = IndexBASE<IndexType>();  
+    /// number of rows
+    size_t size;
+    /// pointer to first in row
+    size_t * index;
+    /// array of data
+    T * data;
 
-  NETGEN_INLINE T * Data() const { return data; }
-
-  NETGEN_INLINE FlatArray<T> AsArray() const
-  {
-    return FlatArray<T> (index[size]-index[0], data+index[0]);
-  }
-
-  NETGEN_INLINE FlatArray<size_t> IndexArray() const
-  {
-    return FlatArray<size_t, IndexType> (size+1, index);
-  }
-
-  /// takes range starting from position start of end-start elements
-  NETGEN_INLINE FlatTable<T> Range (size_t start, size_t end) const
-  {
-    return FlatTable<T> (end-start, index+start-BASE, data);
-  }
-
-  /// takes range starting from position start of end-start elements
-  NETGEN_INLINE FlatTable<T> Range (T_Range<size_t> range) const
-  {
-    return FlatTable<T> (range.Size(), index+range.First()-BASE, data);
-  }
-
-  NETGEN_INLINE T_Range<IndexType> Range () const
-  {
-    return T_Range<IndexType> (BASE, size+BASE);
-  }
-  
-  class Iterator
-  {
-    const FlatTable & tab;
-    size_t row;
   public:
-    Iterator (const FlatTable & _tab, size_t _row) : tab(_tab), row(_row) { ; }
-    Iterator & operator++ () { ++row; return *this; }
-    FlatArray<T> operator* () const { return tab[row]; }
-    bool operator!= (const Iterator & it2) { return row != it2.row; }
-  };
+    FlatTable() = delete;
 
-  Iterator begin() const { return Iterator(*this, BASE); }
-  Iterator end() const { return Iterator(*this, BASE+size); }
-};
+    NETGEN_INLINE FlatTable(size_t as, size_t * aindex, T * adata)
+      : size(as), index(aindex), data(adata) { ; }
+
+    /// Size of table
+    NETGEN_INLINE size_t Size() const { return size; }
+
+    /// Access entry
+    NETGEN_INLINE const FlatArray<T> operator[] (IndexType i) const
+    {
+      i = i-BASE;
+      return FlatArray<T> (index[i+1]-index[i], data+index[i]);
+    }
+
+    NETGEN_INLINE T * Data() const { return data; }
+
+    NETGEN_INLINE FlatArray<T> AsArray() const
+    {
+      return FlatArray<T> (index[size]-index[0], data+index[0]);
+    }
+
+    NETGEN_INLINE FlatArray<size_t> IndexArray() const
+    {
+      return FlatArray<size_t, IndexType> (size+1, index);
+    }
+
+    /// takes range starting from position start of end-start elements
+    NETGEN_INLINE FlatTable<T> Range (size_t start, size_t end) const
+    {
+      return FlatTable<T> (end-start, index+start-BASE, data);
+    }
+
+    /// takes range starting from position start of end-start elements
+    NETGEN_INLINE FlatTable<T> Range (T_Range<size_t> range) const
+    {
+      return FlatTable<T> (range.Size(), index+range.First()-BASE, data);
+    }
+
+    NETGEN_INLINE T_Range<IndexType> Range () const
+    {
+      return T_Range<IndexType> (BASE, size+BASE);
+    }
+  
+    class Iterator
+    {
+      const FlatTable & tab;
+      size_t row;
+    public:
+      Iterator (const FlatTable & _tab, size_t _row) : tab(_tab), row(_row) { ; }
+      Iterator & operator++ () { ++row; return *this; }
+      FlatArray<T> operator* () const { return tab[row]; }
+      bool operator!= (const Iterator & it2) { return row != it2.row; }
+    };
+
+    Iterator begin() const { return Iterator(*this, BASE); }
+    Iterator end() const { return Iterator(*this, BASE+size); }
+  };
 
   NGCORE_API extern size_t * TablePrefixSum32 (FlatArray<unsigned int> entrysize);
   NGCORE_API extern size_t * TablePrefixSum64 (FlatArray<size_t> entrysize);
@@ -105,106 +105,106 @@ public:
   { return TablePrefixSum64 (entrysize); }
 
 
-/**
-    A compact Table container.
-    A table contains size entries of variable size.
-    The entry sizes must be known at construction.
-*/
+  /**
+     A compact Table container.
+     A table contains size entries of variable size.
+     The entry sizes must be known at construction.
+  */
   template <class T, class IndexType = size_t>
   class Table : public FlatTable<T, IndexType>
-{
-protected:
-
-  using FlatTable<T,IndexType>::size;
-  using FlatTable<T,IndexType>::index;
-  using FlatTable<T,IndexType>::data;
-
-public:
-  ///
-  NETGEN_INLINE Table () : FlatTable<T,IndexType> (0,nullptr,nullptr) { ; }
-  /// Construct table of uniform entrysize
-  NETGEN_INLINE Table (size_t asize, size_t entrysize)
-    : FlatTable<T,IndexType>( asize, new size_t[asize+1], new T[asize*entrysize] )
   {
-    for (size_t i : IntRange(size+1))
-      index[i] = i*entrysize;
-  }
+  protected:
 
-  /// Construct table of variable entrysize
-  template <typename TI>
-  NETGEN_INLINE Table (FlatArray<TI,IndexType> entrysize)
-    : FlatTable<T,IndexType> (0, nullptr, nullptr)
-  {
-    size  = entrysize.Size();
-    index = TablePrefixSum (FlatArray<TI> (entrysize.Size(), entrysize.Data()));
-    size_t cnt = index[size];
-    data = new T[cnt];
-  }
+    using FlatTable<T,IndexType>::size;
+    using FlatTable<T,IndexType>::index;
+    using FlatTable<T,IndexType>::data;
 
-  explicit NETGEN_INLINE Table (const Table & tab2)
-    : FlatTable<T,IndexType>(0, nullptr, nullptr)
-  {
-    size = tab2.Size();
+  public:
+    ///
+    NETGEN_INLINE Table () : FlatTable<T,IndexType> (0,nullptr,nullptr) { ; }
+    /// Construct table of uniform entrysize
+    NETGEN_INLINE Table (size_t asize, size_t entrysize)
+      : FlatTable<T,IndexType>( asize, new size_t[asize+1], new T[asize*entrysize] )
+    {
+      for (size_t i : IntRange(size+1))
+        index[i] = i*entrysize;
+    }
 
-    index = new size_t[size+1];
-    for (size_t i = 0; i <= size; i++)
-      index[i] = tab2.index[i];
+    /// Construct table of variable entrysize
+    template <typename TI>
+    NETGEN_INLINE Table (FlatArray<TI,IndexType> entrysize)
+      : FlatTable<T,IndexType> (0, nullptr, nullptr)
+    {
+      size  = entrysize.Size();
+      index = TablePrefixSum (FlatArray<TI> (entrysize.Size(), entrysize.Data()));
+      size_t cnt = index[size];
+      data = new T[cnt];
+    }
 
-    size_t cnt = index[size];
-    data = new T[cnt];
-    for (size_t i = 0; i < cnt; i++)
-      data[i] = tab2.data[i];
-  }
+    explicit NETGEN_INLINE Table (const Table & tab2)
+      : FlatTable<T,IndexType>(0, nullptr, nullptr)
+    {
+      size = tab2.Size();
 
-  NETGEN_INLINE Table (Table && tab2)
-    : FlatTable<T,IndexType>(0, nullptr, nullptr)
-  {
-    Swap (size, tab2.size);
-    Swap (index, tab2.index);
-    Swap (data, tab2.data);
-  }
+      index = new size_t[size+1];
+      for (size_t i = 0; i <= size; i++)
+        index[i] = tab2.index[i];
 
-  NETGEN_INLINE Table & operator= (Table && tab2)
-  {
-    Swap (size, tab2.size);
-    Swap (index, tab2.index);
-    Swap (data, tab2.data);
-    return *this;
-  }
+      size_t cnt = index[size];
+      data = new T[cnt];
+      for (size_t i = 0; i < cnt; i++)
+        data[i] = tab2.data[i];
+    }
 
+    NETGEN_INLINE Table (Table && tab2)
+      : FlatTable<T,IndexType>(0, nullptr, nullptr)
+    {
+      Swap (size, tab2.size);
+      Swap (index, tab2.index);
+      Swap (data, tab2.data);
+    }
 
-
-  /// Delete data
-  NETGEN_INLINE ~Table ()
-  {
-    delete [] data;
-    delete [] index;
-  }
-
-  /// Size of table
-  using FlatTable<T,IndexType>::Size;
-
-  /// number of elements in all rows
-  NETGEN_INLINE size_t NElements() const { return index[size]; }
-
-  using FlatTable<T,IndexType>::operator[];
-};
+    NETGEN_INLINE Table & operator= (Table && tab2)
+    {
+      Swap (size, tab2.size);
+      Swap (index, tab2.index);
+      Swap (data, tab2.data);
+      return *this;
+    }
 
 
-/// Print table
+
+    /// Delete data
+    NETGEN_INLINE ~Table ()
+    {
+      delete [] data;
+      delete [] index;
+    }
+
+    /// Size of table
+    using FlatTable<T,IndexType>::Size;
+
+    /// number of elements in all rows
+    NETGEN_INLINE size_t NElements() const { return index[size]; }
+
+    using FlatTable<T,IndexType>::operator[];
+  };
+
+
+  /// Print table
   template <class T, typename IndexType>
   inline ostream & operator<< (ostream & s, const Table<T,IndexType> & table)
-{
-  for (auto i : table.Range())
-    {
-      s << i << ":";
-      for (auto el : table[i])
-	s << " " << el;
-      s << "\n";
-    }
-  s << std::flush;
-  return s;
-}
+  {
+    for (auto i : table.Range())
+      {
+        s << i << ":";
+        for (auto el : table[i])
+          s << " " << el;
+        s << "\n";
+      }
+    s << std::flush;
+    return s;
+  }
 
 
 
@@ -349,32 +349,32 @@ public:
   };
 
 
-/// Base class to generic DynamicTable.
-template <class IndexType = size_t>
-  class BaseDynamicTable
+
+  /**
+     A dynamic table class.
+
+     A DynamicTable contains entries of variable size. Entry sizes can
+     be increased dynamically.
+  */
+  template <class T, class IndexType = size_t>
+  class DynamicTable 
   {
   protected:
-    static constexpr IndexType BASE = IndexBASE<IndexType>();  
-    
-    ///
+    static constexpr IndexType BASE = IndexBASE<IndexType>();
+
     struct linestruct
     {
-      ///
       int size;
-      ///
       int maxsize;
-      ///
-      void * col;
+      T * col;
     };
 
-    ///
     Array<linestruct, IndexType> data;
-    ///
-    char * oneblock;
-
+    T * oneblock;
+  
   public:
-    ///
-    BaseDynamicTable (int size)
+    /// Creates table of size size
+    DynamicTable (int size = 0)
       : data(size)
     {
       for (auto & d : data)
@@ -385,112 +385,36 @@ template <class IndexType = size_t>
         }
       oneblock = nullptr;
     }
-    
-    ///
-    BaseDynamicTable (const Array<int, IndexType> & entrysizes, int elemsize)
+
+    /// Creates table with a priori fixed entry sizes.
+    DynamicTable (const Array<int, IndexType> & entrysizes)
       : data(entrysizes.Size())
     {
-      int cnt = 0;
-      int n = entrysizes.Size();
+      size_t cnt = 0;
+      size_t n = entrysizes.Size();
       
       for (auto es : entrysizes)
         cnt += es;
-      oneblock = new char[elemsize * cnt];
+      oneblock = new T[cnt];
       
       cnt = 0;
       for (auto i : Range(data))
         {
           data[i].maxsize = entrysizes[i];
           data[i].size = 0;
-          data[i].col = &oneblock[elemsize * cnt];
+          data[i].col = &oneblock[cnt];
           cnt += entrysizes[i];
         }
     }
-    ///
-    ~BaseDynamicTable ()
+
+    ~DynamicTable ()
     {
       if (oneblock)
         delete [] oneblock;
       else
         for (auto & d : data)
-          delete [] static_cast<char*> (d.col);
+          delete [] d.col;
     }
-
-    /// Changes Size of table to size, deletes data
-    void SetSize (int size)
-    {
-      for (auto & d : data)
-        delete [] static_cast<char*> (d.col);
-      
-      data.SetSize(size);
-      for (auto & d : data)
-        {
-          d.maxsize = 0;
-          d.size = 0;
-          d.col = NULL;
-        }
-    }      
-      
-    ///
-    void IncSize (IndexType i, int elsize)
-    {
-      NETGEN_CHECK_RANGE(i,BASE,data.Size()+BASE);
-      
-      linestruct & line = data[i];
-      
-      if (line.size == line.maxsize)
-        {
-          void * p = new char [(2*line.maxsize+5) * elsize];
-          
-          memcpy (p, line.col, line.maxsize * elsize);
-          delete [] static_cast<char*> (line.col);
-          line.col = p;
-          line.maxsize = 2*line.maxsize+5;
-        }
-      
-      line.size++;
-    }
-
-    void DecSize (IndexType i)
-    {
-      NETGEN_CHECK_RANGE(i,BASE,data.Size()+BASE);
-      /*
-      if (i < 0 || i >= data.Size())
-        {
-          std::cerr << "BaseDynamicTable::Dec: Out of range" << std::endl;
-          return;
-      }
-      */
-      linestruct & line = data[i];
-
-      if (line.size == 0)
-        throw Exception ("BaseDynamicTable::Dec: EntrySize < 0");
-      
-      line.size--;
-    }
-  };
-
-
-
-  /**
-      A dynamic table class.
-
-      A DynamicTable contains entries of variable size. Entry sizes can
-      be increased dynamically.
-  */
-template <class T, class IndexType = size_t>
-class DynamicTable : public BaseDynamicTable<IndexType>
-  {
-    using BaseDynamicTable<IndexType>::data;
-    using BaseDynamicTable<IndexType>::oneblock;
-  public:
-    /// Creates table of size size
-    DynamicTable (int size = 0)
-      : BaseDynamicTable<IndexType> (size) { }
-
-    /// Creates table with a priori fixed entry sizes.
-    DynamicTable (const Array<int, IndexType> & entrysizes)
-      : BaseDynamicTable<IndexType> (entrysizes, sizeof(T)) { }
     
     DynamicTable & operator= (DynamicTable && tab2)
     {
@@ -498,79 +422,142 @@ class DynamicTable : public BaseDynamicTable<IndexType>
       Swap (oneblock, tab2.oneblock);
       return *this;
     }
+
+    /// Changes Size of table to size, deletes data
+    void SetSize (int size)
+    {
+      for (auto & d : data)
+        delete [] d.col;
     
+      data.SetSize(size);
+      for (auto & d : data)
+        {
+          d.maxsize = 0;
+          d.size = 0;
+          d.col = nullptr;
+        }
+    }      
+  
+    ///
+    void IncSize (IndexType i)
+    {
+      NETGEN_CHECK_RANGE(i,BASE,data.Size()+BASE);
+    
+      linestruct & line = data[i];
+    
+      if (line.size == line.maxsize)
+        {
+          T * p = new T[(2*line.maxsize+5)];
+          for (size_t i = 0; i < line.maxsize; i++)
+            p[i] = std::move(line.col[i]);
+          // memcpy (p, line.col, line.maxsize * sizeof(T));
+          delete [] line.col;
+          line.col = p;
+          line.maxsize = 2*line.maxsize+5;
+        }
+    
+      line.size++;
+    }
+  
+    void DecSize (IndexType i)
+    {
+      NETGEN_CHECK_RANGE(i,BASE,data.Size()+BASE);
+      linestruct & line = data[i];
+    
+#ifdef NETGEN_ENABLE_CHECK_RANGE
+      if (line.size == 0)
+        throw Exception ("BaseDynamicTable::Dec: EntrySize < 0");
+#endif
+    
+      line.size--;
+    }
+  
+  
     /// Inserts element acont into row i. Does not test if already used.
     void Add (IndexType i, const T & acont)
     {
       if (data[i].size == data[i].maxsize)
-        this->IncSize (i, sizeof (T));
+        this->IncSize (i);
       else
         data[i].size++;
-      static_cast<T*> (data[i].col) [data[i].size-1] = acont;
+      data[i].col[data[i].size-1] = acont;
     }
-
+  
     /// Inserts element acont into row i, iff not yet exists.
     void AddUnique (IndexType i, const T & cont)
     {
       int es = EntrySize (i);
-      int * line = const_cast<int*> (GetLine (i));
+      T * line = data[i].col;
       for (int j = 0; j < es; j++)
         if (line[j] == cont)
           return;
       Add (i, cont);
     }
-
+  
 
     /// Inserts element acont into row i. Does not test if already used.
     void AddEmpty (IndexType i)
     {
-      IncSize (i, sizeof (T));
+      IncSize (i);
     }
-
+  
     /** Set the nr-th element in the i-th row to acont.
         Does not check for overflow. */
     void Set (IndexType i, int nr, const T & acont)
-    { static_cast<T*> (data[i].col)[nr] = acont; }
+    {
+      data[i].col[nr] = acont;
+    }
 
 
     /** Returns the nr-th element in the i-th row.
-      Does not check for overflow. */
+        Does not check for overflow. */
     const T & Get (IndexType i, int nr) const
-    { return static_cast<T*> (data[i].col)[nr]; }
-
-
+    {
+      return data[i].col[nr];
+    }
+  
+  
     /** Returns pointer to the first element in row i. */
     const T * GetLine (IndexType i) const
-    { return static_cast<T*> (data[i].col); }
-
-
+    {
+      return data[i].col;
+    }
+  
     /// Returns size of the table.
-    int Size () const
-    { return data.Size(); }
-
+    size_t Size () const
+    {
+      return data.Size();
+    }
+  
     /// Returns size of the i-th row.
     int EntrySize (IndexType i) const
-    { return data[i].size; }
+    {
+      return data[i].size;
+    }
 
     ///
     void DecEntrySize (IndexType i)
-    { DecSize(i); }
-
+    {
+      DecSize(i);
+    }
+  
     /// Access entry i
     FlatArray<T> operator[] (IndexType i)
-    { return FlatArray<T> (data[i].size, static_cast<T*> (data[i].col)); }
-
+    {
+      return FlatArray<T> (data[i].size, data[i].col);
+    }
+  
     /*
-    typedef const FlatArray<T> ConstFlatArray;
-    /// Access entry i
-    ConstFlatArray operator[] (int i) const
-    { return FlatArray<T> (data[i].size, static_cast<T*> (data[i].col)); }
+      typedef const FlatArray<T> ConstFlatArray;
+      /// Access entry i
+      ConstFlatArray operator[] (int i) const
+      { return FlatArray<T> (data[i].size, static_cast<T*> (data[i].col)); }
     */
     FlatArray<T> operator[] (IndexType i) const
-    { return FlatArray<T> (data[i].size, static_cast<T*> (data[i].col)); }
+    {
+      return FlatArray<T> (data[i].size, data[i].col);
+    }
   };
-
-
 
 
   /// Print table
