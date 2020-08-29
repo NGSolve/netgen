@@ -936,6 +936,11 @@ namespace ngcore
     Archive & operator & (char *& str) override
     { char* s = str; while(*s != '\0') ApplyHash(*(s++)); return *this; }
 
+    // HashArchive can be used in const context
+    template<typename T>
+      Archive & operator& (const T& val) const
+    { return (*this) & const_cast<T&>(val); }
+
     size_t GetHash() const { return hash_value; }
 
   private:

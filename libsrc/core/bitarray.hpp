@@ -131,7 +131,7 @@ public:
     return Test(i);
   }
 
-  bool operator==(const BitArray& other) const;
+  NGCORE_API bool operator==(const BitArray& other) const;
 
   /// invert all bits
   NGCORE_API BitArray & Invert ();
@@ -147,7 +147,7 @@ public:
 
   NGCORE_API size_t NumSet () const;
 
-  void DoArchive(Archive& archive);
+  NGCORE_API void DoArchive(Archive& archive);
 
 private:
   ///
