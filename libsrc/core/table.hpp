@@ -349,11 +349,13 @@ public:
   };
 
 
-  /// Base class to generic DynamicTable.
+/// Base class to generic DynamicTable.
+template <class IndexType = size_t>
   class BaseDynamicTable
   {
   protected:
-
+    static constexpr IndexType BASE = IndexBASE<IndexType>();  
+    
     ///
     struct linestruct
     {
@@ -366,24 +368,106 @@ public:
     };
 
     ///
-    Array<linestruct> data;
+    Array<linestruct, IndexType> data;
     ///
     char * oneblock;
 
   public:
     ///
-    NGCORE_API BaseDynamicTable (int size);
+    BaseDynamicTable (int size)
+      : data(size)
+    {
+      for (auto & d : data)
+        {
+          d.maxsize = 0;
+          d.size = 0;
+          d.col = nullptr;
+        }
+      oneblock = nullptr;
+    }
+    
     ///
-    NGCORE_API BaseDynamicTable (const Array<int> & entrysizes, int elemsize);
+    BaseDynamicTable (const Array<int, IndexType> & entrysizes, int elemsize)
+      : data(entrysizes.Size())
+    {
+      int cnt = 0;
+      int n = entrysizes.Size();
+      
+      for (auto es : entrysizes)
+        cnt += es;
+      oneblock = new char[elemsize * cnt];
+      
+      cnt = 0;
+      for (auto i : Range(data))
+        {
+          data[i].maxsize = entrysizes[i];
+          data[i].size = 0;
+          data[i].col = &oneblock[elemsize * cnt];
+          cnt += entrysizes[i];
+        }
+    }
     ///
-    NGCORE_API ~BaseDynamicTable ();
+    ~BaseDynamicTable ()
+    {
+      if (oneblock)
+        delete [] oneblock;
+      else
+        for (auto & d : data)
+          delete [] static_cast<char*> (d.col);
+    }
 
     /// Changes Size of table to size, deletes data
-    NGCORE_API void SetSize (int size);
+    void SetSize (int size)
+    {
+      for (auto & d : data)
+        delete [] static_cast<char*> (d.col);
+      
+      data.SetSize(size);
+      for (auto & d : data)
+        {
+          d.maxsize = 0;
+          d.size = 0;
+          d.col = NULL;
+        }
+    }      
+      
     ///
-    NGCORE_API void IncSize (int i, int elsize);
+    void IncSize (IndexType i, int elsize)
+    {
+      NETGEN_CHECK_RANGE(i,BASE,data.Size()+BASE);
+      
+      linestruct & line = data[i];
+      
+      if (line.size == line.maxsize)
+        {
+          void * p = new char [(2*line.maxsize+5) * elsize];
+          
+          memcpy (p, line.col, line.maxsize * elsize);
+          delete [] static_cast<char*> (line.col);
+          line.col = p;
+          line.maxsize = 2*line.maxsize+5;
+        }
+      
+      line.size++;
+    }
 
-    NGCORE_API void DecSize (int i);
+    void DecSize (IndexType i)
+    {
+      NETGEN_CHECK_RANGE(i,BASE,data.Size()+BASE);
+      /*
+      if (i < 0 || i >= data.Size())
+        {
+          std::cerr << "BaseDynamicTable::Dec: Out of range" << std::endl;
+          return;
+      }
+      */
+      linestruct & line = data[i];
+
+      if (line.size == 0)
+        throw Exception ("BaseDynamicTable::Dec: EntrySize < 0");
+      
+      line.size--;
+    }
   };
 
 
@@ -394,17 +478,19 @@ public:
       A DynamicTable contains entries of variable size. Entry sizes can
       be increased dynamically.
   */
-  template <class T>
-  class DynamicTable : public BaseDynamicTable
+template <class T, class IndexType = size_t>
+class DynamicTable : public BaseDynamicTable<IndexType>
   {
+    using BaseDynamicTable<IndexType>::data;
+    using BaseDynamicTable<IndexType>::oneblock;
   public:
     /// Creates table of size size
     DynamicTable (int size = 0)
-      : BaseDynamicTable (size) { ; }
+      : BaseDynamicTable<IndexType> (size) { }
 
     /// Creates table with a priori fixed entry sizes.
-    DynamicTable (const Array<int> & entrysizes)
-      : BaseDynamicTable (entrysizes, sizeof(T)) { ; }
+    DynamicTable (const Array<int, IndexType> & entrysizes)
+      : BaseDynamicTable<IndexType> (entrysizes, sizeof(T)) { }
     
     DynamicTable & operator= (DynamicTable && tab2)
     {
@@ -412,19 +498,19 @@ public:
       Swap (oneblock, tab2.oneblock);
       return *this;
     }
-
+    
     /// Inserts element acont into row i. Does not test if already used.
-    void Add (int i, const T & acont)
+    void Add (IndexType i, const T & acont)
     {
       if (data[i].size == data[i].maxsize)
-        IncSize (i, sizeof (T));
+        this->IncSize (i, sizeof (T));
       else
         data[i].size++;
       static_cast<T*> (data[i].col) [data[i].size-1] = acont;
     }
 
     /// Inserts element acont into row i, iff not yet exists.
-    void AddUnique (int i, const T & cont)
+    void AddUnique (IndexType i, const T & cont)
     {
       int es = EntrySize (i);
       int * line = const_cast<int*> (GetLine (i));
@@ -436,25 +522,25 @@ public:
 
 
     /// Inserts element acont into row i. Does not test if already used.
-    void AddEmpty (int i)
+    void AddEmpty (IndexType i)
     {
       IncSize (i, sizeof (T));
     }
 
     /** Set the nr-th element in the i-th row to acont.
         Does not check for overflow. */
-    void Set (int i, int nr, const T & acont)
+    void Set (IndexType i, int nr, const T & acont)
     { static_cast<T*> (data[i].col)[nr] = acont; }
 
 
     /** Returns the nr-th element in the i-th row.
       Does not check for overflow. */
-    const T & Get (int i, int nr) const
+    const T & Get (IndexType i, int nr) const
     { return static_cast<T*> (data[i].col)[nr]; }
 
 
     /** Returns pointer to the first element in row i. */
-    const T * GetLine (int i) const
+    const T * GetLine (IndexType i) const
     { return static_cast<T*> (data[i].col); }
 
 
@@ -463,15 +549,15 @@ public:
     { return data.Size(); }
 
     /// Returns size of the i-th row.
-    int EntrySize (int i) const
+    int EntrySize (IndexType i) const
     { return data[i].size; }
 
     ///
-    void DecEntrySize (int i)
+    void DecEntrySize (IndexType i)
     { DecSize(i); }
 
     /// Access entry i
-    FlatArray<T> operator[] (int i)
+    FlatArray<T> operator[] (IndexType i)
     { return FlatArray<T> (data[i].size, static_cast<T*> (data[i].col)); }
 
     /*
@@ -480,7 +566,7 @@ public:
     ConstFlatArray operator[] (int i) const
     { return FlatArray<T> (data[i].size, static_cast<T*> (data[i].col)); }
     */
-    FlatArray<T> operator[] (int i) const
+    FlatArray<T> operator[] (IndexType i) const
     { return FlatArray<T> (data[i].size, static_cast<T*> (data[i].col)); }
   };
 

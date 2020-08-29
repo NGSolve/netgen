@@ -51,8 +51,8 @@ namespace netgen
 
     if ( mesh.GetCommunicator().Size() == 1 ) return;
 
-    int ned = mesh.GetTopology().GetNEdges();
-    int nfa = mesh.GetTopology().GetNFaces();
+    size_t ned = mesh.GetTopology().GetNEdges();
+    size_t nfa = mesh.GetTopology().GetNFaces();
 
     if (glob_edge.Size() != ned)
       {
@@ -89,29 +89,30 @@ namespace netgen
     *testout << "enumerate globally, loc2distvert.size = " << loc2distvert.Size()
              << ", glob_vert.size = " << glob_vert.Size() << endl;
 
-    // *testout << "old glob_vert = " << endl << glob_vert << endl;
     
     if (rank == 0)
       nv = 0;
 
-    IntRange newvr(oldnv, nv); // new vertex range
+    // IntRange newvr(oldnv, nv); // new vertex range
+    auto new_pir = Range(PointIndex(oldnv+PointIndex::BASE),
+                         PointIndex(nv+PointIndex::BASE));
     
     glob_vert.SetSize (nv);
-    glob_vert.Range(newvr) = -1;
+    glob_vert.Range(oldnv, nv) = -1;
 
     int num_master_points = 0;
 
-    for (auto i : newvr)
+    for (auto pi : new_pir)
       {
-        auto dps = GetDistantPNums(i);
+        auto dps = GetDistantProcs(pi);
         // check sorted:
         for (int j = 0; j+1 < dps.Size(); j++)
           if (dps[j+1] < dps[j]) cout << "wrong sort" << endl;
         
         if (dps.Size() == 0 || dps[0] > comm.Rank())
-          glob_vert[i] = num_master_points++;
+          L2G(pi) = num_master_points++;
       }
-
+    
     *testout << "nummaster = " << num_master_points << endl;
 
     Array<int> first_master_point(comm.Size());
@@ -120,7 +121,7 @@ namespace netgen
     if (comm.AllReduce (oldnv, MPI_SUM) == 0)
       max_oldv = PointIndex::BASE-1;
     
-    size_t num_glob_points = max_oldv+1; // PointIndex::BASE;
+    size_t num_glob_points = max_oldv+1;
     for (int i = 0; i < comm.Size(); i++)
       {
         int cur = first_master_point[i];
@@ -128,9 +129,9 @@ namespace netgen
         num_glob_points += cur;
       }
     
-    for (auto i : newvr)
-      if (glob_vert[i] != -1)
-        glob_vert[i] += first_master_point[comm.Rank()];
+    for (auto pi : new_pir)
+      if (L2G(pi) != -1)
+        L2G(pi) += first_master_point[comm.Rank()];
     
     // ScatterDofData (global_nums); 
     
@@ -139,12 +140,12 @@ namespace netgen
     nrecv = 0;
 
         /** Count send/recv size **/
-    for (auto i : newvr)
+    for (auto pi : new_pir)
       {
-        auto dps = GetDistantPNums(i);
+        auto dps = GetDistantProcs(pi);
         if (!dps.Size()) continue;
         if (rank < dps[0])
-          for(auto p:dps)
+          for (auto p : dps)
             nsend[p]++;
         else
           nrecv[dps[0]]++;
@@ -155,14 +156,12 @@ namespace netgen
     
     /** Fill send_data **/
     nsend = 0;
-    for (auto i : newvr)
-      {
-        auto dps = GetDistantPNums(i);
-        if (dps.Size() && rank < dps[0])
-          for(auto p : dps)
-            send_data[p][nsend[p]++] = glob_vert[i];
-      }
-    
+    for (auto pi : new_pir)
+      if (auto dps = GetDistantProcs(pi); dps.Size())
+        if (rank < dps[0])
+          for (auto p : dps)
+            send_data[p][nsend[p]++] = L2G(pi);
+
     Array<MPI_Request> requests;
     for (int i = 0; i < comm.Size(); i++)
       {
@@ -176,21 +175,23 @@ namespace netgen
     
     Array<int> cnt(comm.Size());
     cnt = 0;
-    
-    for (auto i : newvr)
+
+    /*
+    for (auto pi : new_pir)
       {
-        auto dps = GetDistantPNums(i);
+        auto dps = GetDistantProcs(pi);
         if (dps.Size() > 0 && dps[0] < comm.Rank())
           {
-            int master = comm.Size();
-            for (int j = 0; j < dps.Size(); j++)
-              master = min (master, dps[j]);
-            if (master != dps[0])
-              cout << "master not the first one !" << endl;
-            glob_vert[i] = recv_data[master][cnt[master]++];
+            int master = dps[0];
+            L2G(pi) = recv_data[master][cnt[master]++];
           }
       }
-
+    */
+    for (auto pi : new_pir)
+      if (auto dps = GetDistantProcs(pi); dps.Size())
+        if (int master = dps[0]; master < comm.Rank())
+          L2G(pi) = recv_data[master][cnt[master]++];
+    
     /*
     if (PointIndex::BASE==1)
       for (auto & i : glob_vert)
@@ -208,13 +209,11 @@ namespace netgen
     Array<int> index0(glob_vert.Size());
     for (int pi : Range(index0))
       index0[pi] = pi;
-    QuickSortI (FlatArray<int> (glob_vert), index0);
+    QuickSortI (glob_vert, index0);
 
-    comm.Barrier();
-    for (int i = 0; i+1 < glob_vert.Size(); i++)
+    for (size_t i = 0; i+1 < glob_vert.Size(); i++)
       if (glob_vert[index0[i]] > glob_vert[index0[i+1]])
         cout << "wrong ordering" << endl;
-    comm.Barrier();
 
     if (rank != 0)
       {
@@ -272,7 +271,7 @@ namespace netgen
         // *testout << "l " << i << " globi "<< glob_vert[i]  << " dist = " << loc2distvert[i] << endl;
       }
 
-    for (int i = 0; i+1 < glob_vert.Size(); i++)
+    for (size_t i = 0; i+1 < glob_vert.Size(); i++)
       if (glob_vert[i] > glob_vert[i+1])
         cout << "wrong ordering of globvert" << endl;
         
@@ -536,11 +535,11 @@ namespace netgen
 	    // build exchange vertices
 	    cnt_send = 0;
 	    for (PointIndex pi : mesh.Points().Range())
-	      for (int dist : GetDistantPNums(pi-PointIndex::BASE))
+	      for (int dist : GetDistantProcs(pi))
 		cnt_send[dist-1]++;
 	    TABLE<int> dest2vert(cnt_send);    
 	    for (PointIndex pi : mesh.Points().Range())
-	      for (int dist : GetDistantPNums(pi-PointIndex::BASE))
+	      for (int dist : GetDistantProcs(pi))
 		dest2vert.Add (dist-1, pi);
             
 	    for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
@@ -687,11 +686,11 @@ namespace netgen
     // build exchange vertices
     cnt_send = 0;
     for (PointIndex pi : mesh.Points().Range())
-      for (int dist : GetDistantPNums(pi-PointIndex::BASE))
+      for (int dist : GetDistantProcs(pi))
 	cnt_send[dist-1]++;
     TABLE<int> dest2vert(cnt_send);    
     for (PointIndex pi : mesh.Points().Range())
-      for (int dist : GetDistantPNums(pi-PointIndex::BASE))
+      for (int dist : GetDistantProcs(pi))
 	dest2vert.Add (dist-1, pi);
     
     MPI_Group_free(&MPI_LocalGroup);
@@ -916,11 +915,11 @@ namespace netgen
     // build exchange vertices
     cnt_send = 0;
     for (PointIndex pi : mesh.Points().Range())
-      for (int dist : GetDistantPNums(pi-PointIndex::BASE))
+      for (int dist : GetDistantProcs(pi))
 	cnt_send[dist-1]++;
     TABLE<int> dest2vert(cnt_send);    
     for (PointIndex pi : mesh.Points().Range())
-      for (int dist : GetDistantPNums(pi-PointIndex::BASE))
+      for (int dist : GetDistantProcs(pi))
 	dest2vert.Add (dist-1, pi);
 
     // exchange edges

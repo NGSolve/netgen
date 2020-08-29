@@ -123,6 +123,10 @@ namespace netgen
     FlatArray<int> GetDistantEdgeNums (int locnum) const { return loc2distedge[locnum]; }
 
     FlatArray<int> GetDistantProcs (PointIndex pi) const { return loc2distvert[pi-PointIndex::BASE]; }
+    auto & L2G (PointIndex pi) { return glob_vert[pi-PointIndex::BASE]; } 
+    auto L2G (PointIndex pi) const { return glob_vert[pi-PointIndex::BASE]; } 
+
+    
     [[deprecated("Use GetDistantProcs(..).Contains instead!")]]                
     bool IsExchangeVert (int dest, int vnum) const
     {

@@ -54,7 +54,7 @@ namespace ngcore
   NGCORE_API size_t * TablePrefixSum64 (FlatArray<size_t> entrysize)
   { return TablePrefixSum2 (entrysize); }
 
-
+  /*
   BaseDynamicTable :: BaseDynamicTable (int size)
     : data(size)
   {
@@ -88,7 +88,6 @@ namespace ngcore
       }
   }
 
-
   BaseDynamicTable :: ~BaseDynamicTable ()
   {
     if (oneblock)
@@ -112,7 +111,7 @@ namespace ngcore
       }
   }
 
-  void BaseDynamicTable :: IncSize (int i, int elsize)
+  void BaseDynamicTable :: IncSize (IndexType i, int elsize)
   {
     if (i < 0 || i >= data.Size())
       {
@@ -135,7 +134,7 @@ namespace ngcore
     line.size++;
   }
 
-  void BaseDynamicTable :: DecSize (int i)
+  void BaseDynamicTable :: DecSize (IndexType i)
   {
     if (i < 0 || i >= data.Size())
       {
@@ -153,6 +152,7 @@ namespace ngcore
 
     line.size--;
   }
+  */
 
   void FilteredTableCreator::Add (size_t blocknr, int data)
   {
