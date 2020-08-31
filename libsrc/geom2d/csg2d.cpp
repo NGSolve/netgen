@@ -24,7 +24,7 @@ void ComputeWeight( Spline & s, Point<2> p )
   double A = (p[1]-a[1])*(b[0]-p[0]) - (p[0]-a[0])*(b[1]-p[1]);
   double B = (p[1]-c[1])*(b[0]-p[0]) - (p[0]-c[0])*(b[1]-p[1]);
   double det = sqrt(-A*B);
-  double tt = (B-det)/(A+det);
+  double tt = fabs(A+det)<EPSILON ? 1 : (B-det)/(A+det);
   auto v = b-p;
   int dim = fabs(v[0]) > fabs(v[1]) ? 0 : 1;
   double weight = fabs(tt*(p[dim]-a[dim])/v[dim] + 1.0/tt*(p[dim]-c[dim])/v[dim]);
@@ -268,7 +268,7 @@ IntersectionType IntersectSplineSegment( const Spline & s, const Point<2> & r0, 
   return ClassifyNonOverlappingIntersection(alpha, beta);
 }
 
-IntersectionType IntersectSplineSegment1( const Spline & s, const Point<2> & r0, const Point<2> & r1, double& alpha, double& beta )
+IntersectionType IntersectSplineSegment1( const Spline & s, const Point<2> & r0, const Point<2> & r1, double& alpha, double& beta, bool first=false)
 {
   Point<2> p0 = s.StartPI();
   Point<2> p1 = s.TangentPoint();
@@ -310,11 +310,14 @@ IntersectionType IntersectSplineSegment1( const Spline & s, const Point<2> & r0,
   }
 
   int choice = 0;
-  if(vtype[0]==NO_INTERSECTION && vtype[1]!=NO_INTERSECTION)
-    choice = 1;
+  if(!first)
+  {
+    if(vtype[0]==NO_INTERSECTION && vtype[1]!=NO_INTERSECTION)
+      choice = 1;
 
-  if(valpha[0] < alpha+EPSILON)
-    choice = 1;
+    if(valpha[0] < alpha+EPSILON)
+      choice = 1;
+  }
 
   if(valpha[choice] < alpha+EPSILON)
     return NO_INTERSECTION;
@@ -332,26 +335,38 @@ bool IsOverlapping( Spline p, Spline s, double & alpha, double & beta, Intersect
 
   double lam0 = -1e3*EPSILON;
   double lam1 = -1e3*EPSILON;
+  double lam2 = -1e3*EPSILON;
+  double lam3 = -1e3*EPSILON;
   alpha=-1e8;
   beta=-1e8;
+  double alpha_mid=-1e8;
+  double beta_mid=-1e8;
 
   // Check if s.p0 lies on p and vice versa, also check if tangents are in same direction (TODO: TEST)
   // If so, assume overlapping splines
   // TODO: Better checks! False positives could happen here!
-  IntersectSplineSegment1( p, s.StartPI(), p_mid, lam0, alpha );
-  IntersectSplineSegment1( s, p.StartPI(), s_mid, lam1, beta );
+  IntersectSplineSegment1( p, s.StartPI(), p_mid, lam0, alpha, true );
+  IntersectSplineSegment1( s, p.StartPI(), s_mid, lam1, beta, true );
+
+  // Also check if midpoints lie on other spline
+  IntersectSplineSegment1( p, s.GetPoint(0.5), p_mid, lam2, alpha_mid, true );
+  IntersectSplineSegment1( s, p.GetPoint(0.5), s_mid, lam3, beta_mid, true );
+
   auto tang0 = s.GetTangent(0.);
   auto tang1 = p.GetTangent(alpha);
   double err = tang0*tang1;
   err*=err;
   err *= 1.0/(tang0.Length2()*tang1.Length2());
 
-  if(fabs(lam0) < 1e3*EPSILON && fabs(lam1) < 1e3*EPSILON /*&& err < EPSILON*/)
-  {
-    type = ClassifyOverlappingIntersection( alpha, beta );
-    return true;
-  }
-  return false;
+  double constexpr eps = 1e3*EPSILON;
+  if(fabs(lam0)>eps) return false;
+  if(fabs(lam1)>eps) return false;
+  if(fabs(lam2)>eps) return false;
+  if(fabs(lam3)>eps) return false;
+  if(fabs(1.0-err)>eps) return false;
+
+  type = ClassifyOverlappingIntersection( alpha, beta );
+  return true;
 }
 
 bool IsInsideTrig( const array<Point<2>,3> & t, Point<2> r )
@@ -1322,6 +1337,42 @@ Solid2d ClipSolids ( Solid2d s1, Solid2d s2, bool intersect)
   return res;
 }
 
+bool Loop :: IsInside( Point<2> r ) const
+{
+  int w = 0;
+  for(auto e : Edges(ALL))
+  {
+    int w_simple = CalcSide(*e.v0, *e.v1, r);
+    if(!e.v0->spline)
+      w += w_simple;
+    else
+    {
+      auto s = *e.v0->spline;
+      auto s0 = s.StartPI();
+      auto s1 = s.TangentPoint();
+      auto s2 = s.EndPI();
+      if(!IsInsideTrig( {s0, s1, s2} , r ))
+        w += w_simple;
+      else
+      {
+        // r close to spline, need exact test
+        // idea: compute weight, such that r lies on spline
+        // weight increases -> same side of spline as control point, simple test gives correct result 
+        // weight decreases -> opposite side of spline as control point, adding control point to test polygon gives correct result
+        double old_weight = s.GetWeight();
+        ComputeWeight( s, r );
+        double new_weight = s.GetWeight();
+
+        if(new_weight >= old_weight)
+          w += w_simple;
+        else
+          w += CalcSide(s0, s1, r) + CalcSide(s1, s2, r); 
+      }
+    }
+  }
+  return ( (w % 2) != 0 );
+}
+
 Solid2d :: Solid2d(const Array<std::variant<Point<2>, EdgeInfo>> & points, string name_, string bc)
     : name(name_)
 {
@@ -1370,29 +1421,23 @@ Solid2d Solid2d :: operator-(const Solid2d & other_) const
   other.Append(RectanglePoly(-1e8, 1e8, -1e8, 1e8, "JUST_FOR_CLIPPING"));
   auto res = ClipSolids(*this, other);
 
-  for (auto i : Range(other.polys))
-  {
-    auto & first = *other.polys[i].first;
-    if(first[0] == -1e8)
-      other.polys.DeleteElement(i);
-  }
   res.name = name;
   return res;
 }
 
-Solid2d Solid2d :: operator+=(const Solid2d & other)
+Solid2d & Solid2d :: operator+=(const Solid2d & other)
 {
   *this = *this + other;
   return *this;
 }
 
-Solid2d Solid2d :: operator*=(const Solid2d & other)
+Solid2d & Solid2d :: operator*=(const Solid2d & other)
 {
   *this = *this * other;
   return *this;
 }
 
-Solid2d Solid2d :: operator-=(const Solid2d & other)
+Solid2d & Solid2d :: operator-=(const Solid2d & other)
 {
   *this = *this - other;
   return *this;
@@ -1432,25 +1477,42 @@ bool Solid2d :: IsInside( Point<2> r ) const
 {
   int w = 0;
   for(auto & poly : polys)
-    for(auto v : poly.Vertices(ALL))
-      w += CalcSide(*v, *v->next, r);
+    w += poly.IsInside(r);
   return ( (w % 2) != 0 );
 }
 
 bool Solid2d :: IsLeftInside( const Vertex & p0 )
 {
   auto & p1 = *p0.next;
+  if(p0.spline)
+  {
+    auto s = *p0.spline;
+    auto v = s.GetTangent(0.5);
+    auto n = Vec<2>{-v[1], v[0]};
+    auto q = s.GetPoint(0.5) + 1e-6*n;
+    return IsInside(q);
+  }
   auto v = p1-p0;
-  auto n = Vec<2>{v[1], -v[0]};
+  auto n = Vec<2>{-v[1], v[0]};
   auto q = p0 + 0.5*v + 1e-6*n;
+  
   return IsInside(q);
 }
 
 bool Solid2d :: IsRightInside( const Vertex & p0 )
 {
   auto & p1 = *p0.next;
+  if(p0.spline)
+  {
+    auto s = *p0.spline;
+    auto v = s.GetTangent(0.5);
+    auto n = Vec<2>{v[1], -v[0]};
+    auto q = s.GetPoint(0.5) + 1e-6*n;
+    return IsInside(q);
+  }
+
   auto v = p1-p0;
-  auto n = Vec<2>{-v[1], v[0]};
+  auto n = Vec<2>{v[1], -v[0]};
   auto q = p0 + 0.5*v + 1e-6*n;
   return IsInside(q);
 }
@@ -1584,7 +1646,7 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
 
         if(li!=ri)
         {
-          if(s.IsLeftInside(p0) == flip)
+          if(s.IsLeftInside(p0) != flip)
             ls.left = dom;
           else
             ls.right = dom;

@@ -447,13 +447,7 @@ struct Loop
       v->prev->pnext = std::move(v->pnext);
   }
 
-  bool IsInside( Point<2> r ) const
-  {
-    int w = 0;
-    for(auto e : Edges(ALL))
-      w += CalcSide(*e.v0, *e.v1, r);
-    return ( (w % 2) != 0 );
-  }
+  bool IsInside( Point<2> r ) const;
 
   EdgeIterator Edges(IteratorType iterType) const
   {
@@ -575,9 +569,9 @@ struct Solid2d
   Solid2d operator-(const Solid2d & other) const;
 
   Solid2d& operator=(const Solid2d & other) = default;
-  Solid2d operator+=(const Solid2d & other);
-  Solid2d operator*=(const Solid2d & other);
-  Solid2d operator-=(const Solid2d & other);
+  Solid2d& operator+=(const Solid2d & other);
+  Solid2d& operator*=(const Solid2d & other);
+  Solid2d& operator-=(const Solid2d & other);
 
   void Append( const Loop & poly )
   {
