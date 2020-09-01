@@ -615,7 +615,10 @@ namespace netgen::cg
               mesh.SetCD2Name(first_index_1d + i +1, names_1d[i]);
 
             for (auto i : Range(names_2d.Size()))
+            {
               mesh.SetBCName(first_index_2d + i, names_2d[i]);
+              mesh.GetFaceDescriptor(first_index_2d + i +1).SetDomainIn(first_index_3d+1);
+            }
 
             for (auto i : Range(names_3d.Size()))
               mesh.SetMaterial(first_index_3d + i +1, names_3d[i]);
@@ -667,6 +670,31 @@ namespace netgen
 
       for (auto & zone : zones)
         zone->SetNames(mesh);
+
+      mesh.UpdateTopology();
+      const auto & topo = mesh.GetTopology();
+
+      for (auto sei : Range(mesh.SurfaceElements()))
+      {
+        int ei0, ei1;
+	topo.GetSurface2VolumeElement (sei, ei0, ei1);
+        auto si = mesh.SurfaceElement(sei).GetIndex();
+        auto & fd = mesh.GetFaceDescriptor(si);
+
+        if(ei0>0)
+        {
+          int i0 = mesh.VolumeElement(ei0).GetIndex();
+          if(fd.DomainIn()!=i0)
+            fd.SetDomainOut(i0);
+        }
+
+        if(ei1>0)
+        {
+          int i1 = mesh.VolumeElement(ei1).GetIndex();
+          if(fd.DomainIn()!=i1)
+            fd.SetDomainOut(i1);
+        }
+      }
       return fn;
     }
 
