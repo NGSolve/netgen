@@ -923,6 +923,7 @@ namespace netgen
       NgArray<int> & segment_weights){ }
 #endif
 
+    shared_ptr<Mesh> Mirror( netgen::Point<3> p, Vec<3> n );
 
   };
 

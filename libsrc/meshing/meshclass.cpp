@@ -6860,4 +6860,90 @@ namespace netgen
     if (surfelementht)
       surfelementht->PrintMemInfo (cout);
   }
+
+  shared_ptr<Mesh> Mesh :: Mirror ( netgen::Point<3> p_plane, Vec<3> n_plane )
+  {
+    Mesh & m = *this;
+    auto nm_ = make_shared<Mesh>();
+    Mesh & nm = *nm_;
+    nm = m;
+
+    Point3d pmin, pmax;
+    GetBox(pmin, pmax);
+    auto v = pmax-pmin;
+    double eps = v.Length()*1e-8;
+
+    auto onPlane = [&] (const MeshPoint & p) -> bool
+    {
+      auto v = p_plane-p;
+      auto l = v.Length();
+      if(l<eps) return true;
+
+      auto ret = fabs(v*n_plane)/l;
+      return fabs(v*n_plane) < eps;
+    };
+
+    auto mirror = [&] (PointIndex pi) -> PointIndex
+    {
+      auto & p = m[pi];
+
+      auto v = p_plane-p;
+      auto l = v.Length();
+      if(l<eps)
+        return pi;
+
+      if(fabs(v*n_plane)/l < eps)
+        return pi;
+
+      auto new_point = p + 2*(v*n_plane)*n_plane;
+      return nm.AddPoint( new_point, p.GetLayer(), p.Type() );
+    };
+
+    Array<PointIndex, PointIndex> point_map;
+    point_map.SetSize(GetNP());
+    point_map = -1;
+
+    for(auto pi : Range(points))
+      point_map[pi] = mirror(pi);
+
+    for(auto & el : VolumeElements())
+    {
+      auto nel = el;
+      for(auto i : Range(el.GetNP()))
+        nel[i] = point_map[el[i]];
+      nm.AddVolumeElement(nel);
+    }
+
+    for (auto ei : Range(SurfaceElements()))
+    {
+      auto & el = m[ei];
+      auto nel = el;
+      for(auto i : Range(el.GetNP()))
+        nel[i] = point_map[el[i]];
+
+      if(!(nel==el))
+        nm.AddSurfaceElement(nel);
+    }
+
+    for (auto ei : Range(LineSegments()))
+    {
+      auto & el = LineSegments()[ei];
+      auto nel = el;
+      bool is_same = true;
+
+      for(auto i : Range(el.GetNP()))
+      {
+        auto pi = el[i];
+        nel[i] = point_map[pi];
+        if(point_map[pi]!=pi)
+          is_same = false;
+      }
+
+      if(!is_same)
+        nm.AddSegment(nel);
+    }
+
+    return nm_;
+  }
+
 }

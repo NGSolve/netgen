@@ -1150,6 +1150,7 @@ grow_edges : bool = False
           })
     .def ("CalcTotalBadness", &Mesh::CalcTotalBad)
     .def ("GetQualityHistogram", &Mesh::GetQualityHistogram)
+    .def("Mirror", &Mesh::Mirror);
     ;
 
   m.def("ImportMesh", [](const string& filename)
