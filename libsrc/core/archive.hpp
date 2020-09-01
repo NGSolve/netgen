@@ -918,7 +918,7 @@ namespace ngcore
   {
     size_t hash_value;
     char* h;
-    int offset;
+    int offset = 0;
   public:
     HashArchive() : Archive(true)
       { h = (char*)&hash_value; }
