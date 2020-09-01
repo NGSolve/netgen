@@ -590,6 +590,13 @@ namespace netgen::cg
                     }
                 }
             }
+
+          mesh.GetRegionNamesCD(2).SetSize(index_1d);
+          mesh.GetRegionNamesCD(1).SetSize(index_2d);
+          mesh.GetRegionNamesCD(0).SetSize(index_3d);
+          mesh.GetRegionNamesCD(2) = nullptr;
+          mesh.GetRegionNamesCD(1) = nullptr;
+          mesh.GetRegionNamesCD(0) = nullptr;
         }
 
       void SetNames( Mesh & mesh )
