@@ -6261,22 +6261,31 @@ namespace netgen
             auto mapped_pt = mapping(pt);
             auto other_nr = GetElementOfPoint(mapped_pt, lami, true);
             int index = -1;
-            auto other_el = VolumeElement(other_nr);
-            for(auto i : Range(other_el.PNums().Size()))
-              if((mapped_pt - (*this)[other_el.PNums()[i]]).Length() < pointTolerance)
-                {
-                  index = i;
-                  break;
-                }
-            if(index == -1)
+            if(other_nr != 0)
+              {
+                auto other_el = VolumeElement(other_nr);
+                for(auto i : Range(other_el.PNums().Size()))
+                  if((mapped_pt - (*this)[other_el.PNums()[i]]).Length() < pointTolerance)
+                    {
+                      index = i;
+                      break;
+                    }
+                if(index == -1)
+                  {
+                    cout << "point coordinates = " << pt << endl;
+                    cout << "mapped coordinates = " << mapped_pt << endl;
+                    throw Exception("Did not find mapped point with nr " + ToString(pi) + ", are you sure your mesh is periodic?");
+                  }
+                auto other_pi = other_el.PNums()[index];
+                identified_points.insert(pi);
+                ident->Add(pi, other_pi, nr);
+              }
+            else
               {
                 cout << "point coordinates = " << pt << endl;
                 cout << "mapped coordinates = " << mapped_pt << endl;
-                throw Exception("Did not find mapped point with nr " + ToString(pi) + ", are you sure your mesh is periodic?");
+                throw Exception("Mapped point with nr " + ToString(pi) + " is outside of mesh, are you sure your mesh is periodic?");
               }
-            auto other_pi = other_el.PNums()[index];
-            identified_points.insert(pi);
-            ident->Add(pi, other_pi, nr);
           }
       }
     return nr;
