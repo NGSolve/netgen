@@ -1278,11 +1278,11 @@ Solid2d Circle(Point<2> center, double r, string name, string bc)
   return Solid2d( { p[0], cp[0], p[1], cp[1], p[2], cp[2], p[3], cp[3] }, name, bc );
 }
 
-Solid2d AddIntersectionPoints ( Solid2d s1, Solid2d s2 )
+void AddIntersectionPoints ( Solid2d & s1, Solid2d & s2 )
 {
   ComputeIntersections(s1, s2);
   RemoveDuplicates(s1);
-  return s1;
+  RemoveDuplicates(s2);
 }
 
 Solid2d ClipSolids ( Solid2d s1, Solid2d s2, bool intersect)
@@ -1517,6 +1517,16 @@ bool Solid2d :: IsRightInside( const Vertex & p0 )
   return IsInside(q);
 }
 
+netgen::Box<2> Solid2d :: GetBoundingBox()
+{
+  netgen::Box<2> box(netgen::Box<2>::EMPTY_BOX);
+  for(auto & poly : polys)
+      for(auto v : poly.Vertices(ALL))
+          box.Add(*v);
+
+  return box;
+}
+
 shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
 {
   static Timer t_intersections("CSG2d - AddIntersections()");
@@ -1541,22 +1551,36 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
   Array<int> points;
 
   // Cut each solid with each other one to add all possible intersection points and have conforming edges from both domains
-  // TODO: OPTIMIZE!!!
-  // Idea: Find edges with just one neighbor (either leftdomain or rightdomain unset after the marking below) -> just cut those edges with each other
   t_intersections.Start();
-  for(auto & s1 : solids)
-    for(auto & s2 : solids)
-      if(&s1!=&s2)
-        s1 = AddIntersectionPoints(s1,s2);
+
+  // First build bounding boxes for each solid to skip non-overlapping pairs
+  netgen::Box<2> box(netgen::Box<2>::EMPTY_BOX);
+  for(auto i : Range(solids))
+    {
+      auto sbox = solids[i].GetBoundingBox();
+      box.Add(sbox.PMin());
+      box.Add(sbox.PMax());
+    }
+
+  netgen::BoxTree <2, int> solid_tree(box);
+
+  for(auto i : Range(solids))
+      solid_tree.Insert(solids[i].GetBoundingBox(), i);
+
+  for(auto i1 : Range(solids))
+    {
+      auto sbox = solids[i1].GetBoundingBox();
+      solid_tree.GetFirstIntersecting(sbox.PMin(), sbox.PMax(), [&] (int i2)
+        {
+          if(i1<i2)
+            AddIntersectionPoints(solids[i1], solids[i2]);
+          return false;
+        });
+    }
+
   t_intersections.Stop();
 
   // Add geometry points to SplineGeometry
-
-  netgen::Box<2> box(netgen::Box<2>::EMPTY_BOX);
-  for(auto & s : solids)
-    for(auto & poly : s.polys)
-      for(auto v : poly.Vertices(ALL))
-        box.Add(*v);
 
   netgen::BoxTree <2, int> ptree(box);
 

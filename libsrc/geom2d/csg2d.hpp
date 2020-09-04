@@ -631,6 +631,8 @@ struct Solid2d
     name = mat;
     return *this;
   }
+
+  netgen::Box<2> GetBoundingBox();
 };
 
 
@@ -651,7 +653,7 @@ class CSG2d
 Solid2d Circle( Point<2> center, double r, string name="", string bc="");
 Solid2d Rectangle( Point<2> p0, Point<2> p1, string mat=MAT_DEFAULT, string bc=BC_DEFAULT );
 
-Solid2d AddIntersectionPoints ( Solid2d s1, Solid2d s2 );
+void AddIntersectionPoints ( Solid2d & s1, Solid2d & s2 );
 Solid2d ClipSolids ( Solid2d s1, Solid2d s2, bool intersect=true );
 
 }
