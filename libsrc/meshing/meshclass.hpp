@@ -797,7 +797,7 @@ namespace netgen
       double area;
     public:
       CSurfaceArea (const Mesh & amesh) 
-	: mesh(amesh), valid(false) { ; }
+	: mesh(amesh), valid(false), area(0.) { ; }
 
       void Add (const Element2d & sel)
       {
