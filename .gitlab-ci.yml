@@ -15,8 +15,8 @@ push_github_sourceforge:
     - git remote update
     - git checkout master
     - git pull origin master
-    - git push sourceforge master
-    - git push github master
+    - git push sourceforge master --tags
+    - git push github master --tags
   only:
     - master
 
