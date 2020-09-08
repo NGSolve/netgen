@@ -940,11 +940,16 @@ namespace ngcore
     /// array copy
     NETGEN_INLINE Array & operator= (const Array & a2)
     {
-      SetSize0 ();
-      SetSize (a2.Size());
-      for (size_t i = 0; i < size; i++)
-        data[i] = a2.data[i];
-      return *this;
+      if constexpr (std::is_assignable<T,T>::value)
+        {
+          SetSize0 ();
+          SetSize (a2.Size());
+          for (size_t i = 0; i < size; i++)
+            data[i] = a2.data[i];
+          return *this;
+        }
+      else
+        throw Exception(std::string("cannot copy Array of type ") + typeid(T).name());
     }
 
     /// steal array 
