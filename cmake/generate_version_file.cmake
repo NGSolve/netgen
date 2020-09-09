@@ -61,3 +61,32 @@ else()
     file(WRITE ${BDIR}/netgen_version.hpp ${new_version_file_string})
 endif()
 
+file(GENERATE OUTPUT netgen_config.hpp CONTENT
+"\
+#ifndef NETGEN_CONFIG_HPP_INCLUDED___
+#define NETGEN_CONFIG_HPP_INCLUDED___
+
+#define NETGEN_USE_NATIVE_ARCH          $<BOOL:${USE_NATIVE_ARCH}>
+#define NETGEN_USE_GUI                  $<BOOL:${USE_GUI}>
+#define NETGEN_USE_PYTHON               $<BOOL:${USE_PYTHON}>
+#define NETGEN_USE_MPI                  $<BOOL:${USE_MPI}}>
+#define NETGEN_USE_MPI4PY               $<BOOL:${USE_MPI4PY}>
+#define NETGEN_USE_OCC                  $<BOOL:${USE_OCC}}>
+#define NETGEN_USE_JPEG                 $<BOOL:${USE_JPEG}}>
+#define NETGEN_USE_MPEG                 $<BOOL:${USE_MPEG}}>
+#define NETGEN_USE_CGNS                 $<BOOL:${USE_CGNS}}>
+#define NETGEN_USE_NUMA                 $<BOOL:${USE_NUMA}}>
+#define NETGEN_INTEL_MIC                $<BOOL:${USE_INTEL_MIC}}>
+#define NETGEN_INSTALL_PROFILES         $<BOOL:${INSTALL_PROFILES}>
+#define NETGEN_USE_CCACHE               $<BOOL:${USE_CCACHE}}>
+#define NETGEN_USE_INTERNAL_TCL         $<BOOL:${USE_INTERNAL_TCL}>
+#define NETGEN_ENABLE_UNIT_TESTS        $<BOOL:${ENABLE_UNIT_TESTS}>
+#define NETGEN_ENABLE_CPP_CORE_GUIDELINES_CHECK $<BOOL:${ENABLE_CPP_CORE_GUIDELINES_CHECK}>
+#define NETGEN_USE_SPDLOG               $<BOOL:${USE_SPDLOG}>
+#define NETGEN_DEBUG_LOG                $<BOOL:${DEBUG_LOG}>
+#define NETGEN_CHECK_RANGE              $<BOOL:${CHECK_RANGE}>
+#define NETGEN_BUILD_STUB_FILES         $<BOOL:${BUILD_STUB_FILES}>
+#define NETGEN_BUILD_FOR_CONDA          $<BOOL:${BUILD_FOR_CONDA}>
+
+#endif // NETGEN_CONFIG_HPP_INCLUDED___
+")
