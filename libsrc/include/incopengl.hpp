@@ -2,6 +2,7 @@
 #define INCOPENGL_HPP___
 #define GL_GLEXT_PROTOTYPES
 
+#include <mystdlib.h>
 #include <mydefs.hpp>
 
 #  if defined(TOGL_AGL) || defined(TOGL_AGL_CLASSIC) || defined(TOGL_NSOPENGL)
