@@ -24,12 +24,12 @@ namespace netgen
   extern VisualSceneMesh vsmesh;
 
 
-  void AddUserVisualizationObject (UserVisualizationObject * vis)
+  DLL_HEADER void AddUserVisualizationObject (UserVisualizationObject * vis)
   {
     // vssolution.AddUserVisualizationObject (vis);
     GetVSSolution().AddUserVisualizationObject (vis);
   }
-  void DeleteUserVisualizationObject (UserVisualizationObject * vis)
+  DLL_HEADER void DeleteUserVisualizationObject (UserVisualizationObject * vis)
   {
     // vssolution.AddUserVisualizationObject (vis);
     GetVSSolution().DeleteUserVisualizationObject (vis);
