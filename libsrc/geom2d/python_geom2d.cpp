@@ -9,6 +9,7 @@
 #include <csg2d.hpp>
 
 using namespace netgen;
+using namespace pybind11::literals;
 
 namespace netgen
 {
@@ -426,9 +427,18 @@ DLL_HEADER void ExportGeom2d(py::module &m)
     ;
   
 
-  m.def("Rectangle", [](Point<2> pmin, Point<2> pmax, string mat, string bc)
-		  { return Rectangle(pmin, pmax, mat, bc); },
-		  py::arg("pmin"), py::arg("pmax"), py::arg("mat")=MAT_DEFAULT, py::arg("bc")=BC_DEFAULT
+  m.def("Rectangle", [](Point<2> p0, Point<2> p1, string mat, string bc, optional<string> bottom, optional<string> right, optional<string> top, optional<string> left) -> Solid2d
+		  {
+                      using P = Point<2>;
+                      return { {
+                              p0,             bottom ? *bottom : bc,
+                              P{p1[0],p0[1]}, right  ? *right  : bc,
+                              p1,             top    ? *top    : bc,
+                              P{p0[0],p1[1]}, left   ? *left   : bc,
+                             }, mat};
+                  },
+		  "pmin"_a, "pmax"_a, "mat"_a=MAT_DEFAULT, "bc"_a=BC_DEFAULT,
+                  "bottom"_a=nullopt, "right"_a=nullopt, "top"_a=nullopt, "left"_a=nullopt
        );
   m.def("Circle", Circle, py::arg("center"), py::arg("radius"), py::arg("mat")=MAT_DEFAULT, py::arg("bc")=BC_DEFAULT);
 
