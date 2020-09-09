@@ -940,7 +940,7 @@ namespace ngcore
     /// array copy
     NETGEN_INLINE Array & operator= (const Array & a2)
     {
-      if constexpr (std::is_assignable<T,T>::value)
+      if constexpr (std::is_copy_assignable<T>::value)
         {
           SetSize0 ();
           SetSize (a2.Size());
@@ -952,6 +952,7 @@ namespace ngcore
         throw Exception(std::string("cannot copy Array of type ") + typeid(T).name());
     }
 
+    
     /// steal array 
     NETGEN_INLINE Array & operator= (Array && a2)
     {
