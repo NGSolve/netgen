@@ -91,7 +91,7 @@ namespace ngcore
       if(data[i] != other.data[i])
         return false;
     for(auto i : Range(size%CHAR_BIT))
-      if(Test(i + size * (size/CHAR_BIT)) != other.Test(i + size * (size/CHAR_BIT)))
+      if(Test(i + CHAR_BIT * (size/CHAR_BIT)) != other.Test(i + CHAR_BIT * (size/CHAR_BIT)))
         return false;
     return true;
   }
