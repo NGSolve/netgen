@@ -215,6 +215,20 @@ namespace netgen
       if ( quadmeshing.Size() ) return quadmeshing[domnr-1]; 
       else return false;
     }
+    void SetDomainQuadMeshing ( int domnr, bool quad_meshing )
+    {
+      auto oldsize = quadmeshing.Size();
+
+      if ( oldsize<domnr )
+        {
+          quadmeshing.SetSize(domnr);
+          for(auto dom : IntRange(oldsize, domnr-1))
+              quadmeshing[dom] = false;
+        }
+
+      quadmeshing[domnr-1] = quad_meshing;
+    }
+
     bool GetDomainTensorMeshing ( int domnr ) 
     { 
       if ( tensormeshing.Size()>=domnr ) return tensormeshing[domnr-1];
