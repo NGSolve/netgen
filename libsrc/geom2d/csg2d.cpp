@@ -1547,7 +1547,7 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
 
   auto geo = std::make_shared<netgen::SplineGeometry2d>();
   std::map<std::tuple<int,int,int>, Seg> seg_map;
-  std::map<string, int> bcmap;
+  Array<string> bcnames;
   Array<int> points;
 
   // Cut each solid with each other one to add all possible intersection points and have conforming edges from both domains
@@ -1621,6 +1621,7 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
 
   // Generate segments from polygon edges and find left/right domain of each segment
   int dom = 0;
+  int bc = 1;
   for(auto & s : solids)
   {
     dom++;
@@ -1660,11 +1661,11 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
         ls.p2 = pi2;
         ls.weight = weight;
 
-        if(bcmap.count(p0.info.bc)==0)
-          bcmap[p0.info.bc] = bcmap.size()+1;
-
         if(ls.bc==0 || p0.info.bc != BC_DEFAULT)
-            ls.bc = bcmap[p0.info.bc];
+        {
+            ls.bc = bc++;
+            bcnames.Append(p0.info.bc);
+        }
 
         ls.maxh = min(ls.maxh, p0.info.maxh);
 
@@ -1685,10 +1686,8 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
       dom--; // degenerated solid, use same domain index again
   }
 
-  for(auto & [name, bc] : bcmap)
-  {
-    geo->SetBCName(bc, name);
-  }
+  for(auto bc : Range(bcnames))
+    geo->SetBCName(bc+1, bcnames[bc]);
 
   for(auto const &m : seg_map)
   {
