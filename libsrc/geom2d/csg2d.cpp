@@ -345,12 +345,35 @@ bool IsOverlapping( Spline p, Spline s, double & alpha, double & beta, Intersect
   // Check if s.p0 lies on p and vice versa, also check if tangents are in same direction (TODO: TEST)
   // If so, assume overlapping splines
   // TODO: Better checks! False positives could happen here!
-  IntersectSplineSegment1( p, s.StartPI(), p_mid, lam0, alpha, true );
-  IntersectSplineSegment1( s, p.StartPI(), s_mid, lam1, beta, true );
+  if(Dist(s.StartPI(), p.StartPI())<EPSILON)
+    {
+      lam0 = 0.0;
+      alpha = 0.0;
+    }
+  else if(Dist(s.StartPI(), p.EndPI())<EPSILON)
+    {
+      lam0 = 0.0;
+      alpha = 1.0;
+    }
+  else
+      IntersectSplineSegment1( p, s.StartPI(), p_mid, lam0, alpha, true );
+
+  if(Dist(p.StartPI(), s.StartPI())<EPSILON)
+    {
+      lam1 = 0.0;
+      beta = 0.0;
+    }
+  else if(Dist(p.StartPI(), s.EndPI())<EPSILON)
+    {
+      lam1 = 0.0;
+      beta = 1.0;
+    }
+  else
+      IntersectSplineSegment1( s, p.StartPI(), s_mid, lam1, beta, true );
 
   // Also check if midpoints lie on other spline
-  IntersectSplineSegment1( p, s.GetPoint(0.5), p_mid, lam2, alpha_mid, true );
-  IntersectSplineSegment1( s, p.GetPoint(0.5), s_mid, lam3, beta_mid, true );
+  IntersectSplineSegment1( p, s.GetPoint(0.4), p_mid, lam2, alpha_mid, true );
+  IntersectSplineSegment1( s, p.GetPoint(0.4), s_mid, lam3, beta_mid, true );
 
   auto tang0 = s.GetTangent(0.);
   auto tang1 = p.GetTangent(alpha);
