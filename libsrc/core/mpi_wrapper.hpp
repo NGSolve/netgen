@@ -67,6 +67,17 @@ namespace ngcore
     NgMPI_Comm (MPI_Comm _comm, bool owns = false)
       : comm(_comm), valid_comm(true)
     {
+      int flag;
+      MPI_Initialized (&flag);
+      if (!flag)
+        {
+          valid_comm = false;
+          refcount = nullptr;
+          rank = 0;
+          size = 1;
+          return;
+        }
+
       if (!owns)
         refcount = nullptr;
       else
