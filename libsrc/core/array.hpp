@@ -268,7 +268,7 @@ namespace ngcore
     NETGEN_INLINE T & First() { return first; }
     NETGEN_INLINE T & Next() { return next; }
     NETGEN_INLINE auto Size() const { return next-first; }
-    NETGEN_INLINE T operator[] (T i) const { return first+i; }
+    NETGEN_INLINE T operator[] (size_t i) const { return first+i; }
     NETGEN_INLINE bool Contains (T i) const { return ((i >= first) && (i < next)); }
     NETGEN_INLINE T_Range Modify(int inc_beg, int inc_end) const
     { return T_Range(first+inc_beg, next+inc_end); }
