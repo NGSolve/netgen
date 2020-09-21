@@ -1028,7 +1028,7 @@ namespace netgen
 	}
     }
 
-    paralleltop -> SetNV_Loc2Glob (0);
+    // paralleltop -> SetNV_Loc2Glob (0);
     paralleltop -> EnumeratePointsGlobally();
     /** Recv bc-names **/
     ArrayMem<int,4> nnames{0,0,0,0};
