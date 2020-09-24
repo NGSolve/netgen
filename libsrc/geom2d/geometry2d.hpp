@@ -204,8 +204,8 @@ namespace netgen
 
 
     size_t GetNDomains() const { return materials.Size(); }
-    void GetMaterial (int  domnr, char* & material );
-    void SetMaterial (int  domnr, const string & material);
+    DLL_HEADER void GetMaterial (int  domnr, char* & material );
+    DLL_HEADER void SetMaterial (int  domnr, const string & material);
 
     double GetDomainMaxh ( const int domnr );
     void SetDomainMaxh ( const int domnr, double maxh );

@@ -200,9 +200,9 @@ namespace netgen
     double GetWeight () const { return weight; }
     void SetWeight (double w) { weight = w; }
     ///
-    virtual Point<D> GetPoint (double t) const;
+    DLL_HEADER virtual Point<D> GetPoint (double t) const;
     ///
-    virtual Vec<D> GetTangent (const double t) const;
+    DLL_HEADER virtual Vec<D> GetTangent (const double t) const;
 
   
     DLL_HEADER virtual void GetDerivatives (const double t, 
@@ -210,12 +210,12 @@ namespace netgen
 				 Vec<D> & first,
 				 Vec<D> & second) const;
     ///
-    virtual const GeomPoint<D> & StartPI () const { return p1; };
+    DLL_HEADER virtual const GeomPoint<D> & StartPI () const { return p1; };
     ///
-    virtual const GeomPoint<D> & EndPI () const { return p3; }
+    DLL_HEADER virtual const GeomPoint<D> & EndPI () const { return p3; }
     ///
-    virtual void GetCoeff (Vector & coeffs) const;
-    virtual void GetCoeff (Vector & coeffs, Point<D> p0) const;
+    DLL_HEADER virtual void GetCoeff (Vector & coeffs) const;
+    DLL_HEADER virtual void GetCoeff (Vector & coeffs, Point<D> p0) const;
     
     virtual string GetType(void) const {return "spline3";}
 
