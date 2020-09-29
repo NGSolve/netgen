@@ -1013,6 +1013,17 @@ namespace nglib
 
       check_overlap = 1;
       check_overlapping_boundary = 1;
+
+      parthreadenable = 0;
+      nthreads = 4;
+
+      surfcurvfact = 2;
+      chartdistfact = 1.2;
+      edgeanglefact = 1;
+      surfmeshcurvfact = 1;
+      linelengthfact = 0.5;
+
+      stlgeom_tol_fact = 1E-6;
    }
 
 
@@ -1054,6 +1065,17 @@ namespace nglib
 
       check_overlap = 1;
       check_overlapping_boundary = 1;
+
+      parthreadenable = 0;
+      nthreads = 4;
+
+      surfcurvfact = 2;
+      chartdistfact = 1.2;
+      edgeanglefact = 1;
+      surfmeshcurvfact = 1;
+      linelengthfact = 0.5;
+
+      stlgeom_tol_fact = 1E-6;
    }
 
 
@@ -1086,6 +1108,17 @@ namespace nglib
 
       mparam.checkoverlap = check_overlap;
       mparam.checkoverlappingboundary = check_overlapping_boundary;
+
+      mparam.parthread = parthreadenable;
+      mparam.nthreads = nthreads;
+
+      stlparam.resthsurfcurvfac = surfcurvfact;
+      stlparam.resthchartdistfac = chartdistfact;
+      stlparam.resthedgeanglefac = edgeanglefact;
+      stlparam.resthsurfmeshcurvfac = surfmeshcurvfact;
+      stlparam.resthlinelengthfac = linelengthfact;
+
+      stldoctor.geom_tol_fact = stlgeom_tol_fact;
    }
    // ------------------ End - Meshing Parameters related functions --------------------
 

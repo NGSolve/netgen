@@ -130,6 +130,20 @@ public:
    int check_overlap;                  //!< Check for overlapping surfaces during Surface meshing
    int check_overlapping_boundary;     //!< Check for overlapping surface elements before volume meshing
 
+   // Nikhil - 29/09/2020
+   // Added a couple more parameters into the meshing parameters list
+   // from Netgen into Nglib
+   int parthreadenable;                 //!< Enable / Disable parallel threads
+   int nthreads;                        //!< Set number of threads to use
+
+   double surfcurvfact;                 //!< Set STL - surface curvature
+   double chartdistfact;                //!< Set STL - chart distance
+   double edgeanglefact;                //!< Set STL - edge angle
+   double surfmeshcurvfact;             //!< Set STL - surface mesh curv
+   double linelengthfact;               //!< Set STL - line length
+
+   double stlgeom_tol_fact;             //!< Set the point tolerance in STL files
+
 
    /*!
       Default constructor for the Mesh Parameters class
@@ -155,6 +169,8 @@ public:
       - #invert_trigs:0 
       - #check_overlap: 1
       - #check_overlapping_boundary: 1
+      - #parthreadenable: 0
+      - #nthreads: 4
    */
    DLL_HEADER Ng_Meshing_Parameters();
 
