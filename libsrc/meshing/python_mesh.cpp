@@ -179,12 +179,19 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   py::class_<Point<3>> (m, "Point3d")
     .def(py::init<double,double,double>())
+    .def(py::init([](py::tuple p)
+    {
+      return Point<3> { p[0].cast<double>(), p[1].cast<double>(),
+        p[2].cast<double>() };
+    }))
     .def ("__str__", &ToString<Point<3>>)
     .def(py::self-py::self)
     .def(py::self+Vec<3>())
     .def(py::self-Vec<3>())
     .def("__getitem__", [](Point<2>& self, int index) { return self[index]; })
     ;
+
+  py::implicitly_convertible<py::tuple, Point<3>>();
 
   m.def("Pnt", [](double x, double y, double z)
                { return global_trafo(Point<3>(x,y,z)); });
@@ -218,6 +225,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   py::class_<Vec<3>> (m, "Vec3d")
     .def(py::init<double,double,double>())
+    .def(py::init([](py::tuple v)
+    {
+      return Vec<3> { v[0].cast<double>(), v[1].cast<double>(),
+        v[2].cast<double>() };
+    }))
     .def ("__str__", &ToString<Vec<3>>)
     .def(py::self==py::self)
     .def(py::self+py::self)
@@ -229,6 +241,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("__getitem__", [](Vec<3>& vec, int index) { return vec[index]; })
     .def("__len__", [](Vec<3>& /*unused*/) { return 3; })
     ;
+
+  py::implicitly_convertible<py::tuple, Vec<3>>();
 
   m.def ("Vec", FunctionPointer
            ([] (double x, double y, double z) { return global_trafo(Vec<3>(x,y,z)); }));
