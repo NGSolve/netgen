@@ -171,6 +171,12 @@ public:
       - #check_overlapping_boundary: 1
       - #parthreadenable: 0
       - #nthreads: 4
+      - #surfcurvfact: 2
+      - #chartdistfact: 1.2
+      - #edgeanglefact: 1
+      - #surfmeshcurvfact: 1
+      - #linelengthfact: 0.5
+      - #stlgeom_tol_fact: 1E-6
    */
    DLL_HEADER Ng_Meshing_Parameters();
 
