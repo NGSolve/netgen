@@ -34,6 +34,8 @@ option( BUILD_FOR_CONDA "Link python libraries only to executables" OFF)
 
 option( USE_SUPERBUILD       "use ccache" ON)
 
+set(NG_COMPILE_FLAGS "" CACHE STRING "Additional compile flags")
+
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_modules")
 
 if(APPLE)

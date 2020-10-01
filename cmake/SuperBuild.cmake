@@ -145,6 +145,7 @@ set_vars( NETGEN_CMAKE_ARGS
   CHECK_RANGE
   BUILD_STUB_FILES
   BUILD_FOR_CONDA
+  NG_COMPILE_FLAGS
   )
 
 # propagate all variables set on the command line using cmake -DFOO=BAR
