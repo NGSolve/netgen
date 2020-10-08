@@ -148,7 +148,8 @@ public:
   NGCORE_API size_t NumSet () const;
 
   NGCORE_API void DoArchive(Archive& archive);
-
+  
+  NGCORE_API auto * Data() const { return data; }
 private:
   ///
   unsigned char Mask (size_t i) const
