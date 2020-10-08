@@ -16,6 +16,19 @@ constexpr int MPI_PAJE_WRITER = 1;
 
 namespace ngcore
 {
+  static std::string GetTimerName( int id )
+  {
+#ifndef PARALLEL
+    return NgProfiler::GetName(id);
+#else // PARALLEL
+    if(id<NgProfiler::SIZE)
+      return NgProfiler::GetName(id);
+
+    NgMPI_Comm comm(MPI_COMM_WORLD);
+    return NgProfiler::GetName(id-NgProfiler::SIZE*comm.Rank());
+#endif // PARALLEL
+  }
+
   // Produce no traces by default
   size_t PajeTrace::max_tracefile_size = 0;
 
@@ -51,9 +64,11 @@ namespace ngcore
     timer_events.reserve(reserve_size);
 
     // sync start time when running in parallel
+#ifdef PARALLEL
     NgMPI_Comm comm(MPI_COMM_WORLD);
     for(auto i : Range(5))
         comm.Barrier();
+#endif // PARALLEL
 
     start_time = GetTimeCounter();
     tracing_enabled = true;
@@ -80,10 +95,22 @@ namespace ngcore
             link.time -= start_time;
 
     NgMPI_Comm comm(MPI_COMM_WORLD);
-    if(comm.Size()==1 || comm.Rank() == MPI_PAJE_WRITER)
+
+    if(comm.Size()==1)
+    {
       Write(tracefile_name);
+    }
     else
-      SendData();
+    {
+      // make sure the timer id is unique across all ranks
+      for(auto & event : timer_events)
+        event.timer_id += NgProfiler::SIZE*comm.Rank();
+
+      if(comm.Rank() == MPI_PAJE_WRITER)
+        Write(tracefile_name);
+      else
+        SendData();
+    }
   }
 
 
@@ -497,7 +524,7 @@ namespace ngcore
                   timer_ids.insert(t.id);
 
       for(auto id : timer_ids)
-          timer_names[id] = NgProfiler::GetName(id);
+          timer_names[id] = GetTimerName(id);
 
 #ifdef PARALLEL
       if(nranks>1)
@@ -718,13 +745,10 @@ namespace ngcore
       std::map<int,std::string> timer_names;
 
       for(auto & event : timer_events)
-        {
-          event.timer_id += NgProfiler::SIZE*rank;
           timer_ids.insert(event.timer_id);
-        }
 
       for(auto id : timer_ids)
-          timer_names[id] = NgProfiler::GetName(id-NgProfiler::SIZE*rank);
+          timer_names[id] = GetTimerName(id);
       size_t size = timer_ids.size();
       comm.Send(size, MPI_PAJE_WRITER, 0);
       for(auto id : timer_ids)
@@ -844,7 +868,7 @@ namespace ngcore
 
               if(need_init)
               {
-                  current->name = is_timer_event ? NgProfiler::GetName(id) : job_names[id];
+                  current->name = is_timer_event ? GetTimerName(id) : job_names[id];
                   current->time = 0.0;
                   current->id = id;
               }
