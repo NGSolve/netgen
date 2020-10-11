@@ -948,6 +948,67 @@ namespace netgen
 
     return VecInSolid(p,v1+0.01*v2,eps);
   }
+
+  void Revolution ::
+  GetTangentialVecSurfaceIndices2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
+                                   NgArray<int> & surfind, double eps) const
+  {
+    *testout << "tangentialvecsurfind2, p = " << p << endl;
+    for (int i = 0; i < faces.Size(); i++)
+      if (faces[i]->PointInFace (p, eps))
+        {
+          *testout << "check face " << i << endl;
+          Point<2> p2d;
+          Vec<2> v12d;
+          faces[i]->CalcProj(p,p2d,v1,v12d);
+          *testout << "v12d = " << v12d << endl;
+          auto & spline = faces[i]->GetSpline();
+          if (Dist2 (spline.StartPI(), p2d) < sqr(eps))
+            {
+              *testout << "start pi" << endl;
+              Vec<2> tang = spline.GetTangent(0);
+              double ip = tang*v12d;
+              *testout << "ip = " << ip << endl;
+              if (ip > eps)
+                surfind.Append(GetSurfaceId(i));
+              else if (ip > -eps)
+                {
+                  Vec<2> v22d;
+                  faces[i]->CalcProj(p,p2d,v2,v22d);
+                  double ip2 = tang*v22d;
+                  *testout << "ip2 = " << ip2 << endl;
+                  if (ip2 > -eps)
+                    surfind.Append(GetSurfaceId(i));                    
+                }
+            }
+          else if (Dist2 (faces[i]->GetSpline().EndPI(), p2d) < sqr(eps))
+            {
+              *testout << "end pi" << endl;
+              
+              Vec<2> tang = spline.GetTangent(1);
+              double ip = tang*v12d;
+              *testout << "ip = " << ip << endl;
+              if (ip < -eps)
+                surfind.Append(GetSurfaceId(i));
+              else if (ip < eps)
+                {
+                  Vec<2> v22d;
+                  faces[i]->CalcProj(p,p2d,v2,v22d);
+                  double ip2 = tang*v22d;
+                  *testout << "ip2 = " << ip2 << endl;                  
+                  if (ip2 < eps)
+                    surfind.Append(GetSurfaceId(i));                    
+                }
+            }
+          else
+            {
+              *testout << "inner point" << endl;
+              surfind.Append(GetSurfaceId(i));
+            }
+        }
+  }
+
+
   
   int Revolution :: GetNSurfaces() const
   {

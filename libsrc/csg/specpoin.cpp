@@ -1908,8 +1908,11 @@ namespace netgen
 		    }
 
 
-		  if (Abs2 (t) < 1e-8)
-		    continue;
+		  if (Abs2 (t) < 1e-16)
+                    {
+                      cerr << "normal vectors degenerated" << endl;
+                      continue;
+                    }
 
 #ifdef DEVELOP
 		  *testout << "           tangential vector " << t << endl;
@@ -1950,10 +1953,15 @@ namespace netgen
 		      rhs(0) = -t * (hessej * t);
 		      rhs(1) = -t * (hessek * t);
 
-		      CalcInverse (mat, inv);
-		      t2 = inv * rhs;
+                      CalcInverse (mat, inv);
+                      t2 = inv * rhs;
+                      // t2 = StableSolve (mat, rhs);
+#ifdef DEVELOP
+                      *testout << "t = " << t << ", t2 = " << t2 << endl;
+#endif
 
-		      
+
+                      
 		      /*
 		      ageometry.GetIndependentSurfaceIndices 
 			(locsol, p, t, surfind2);
@@ -2010,7 +2018,9 @@ namespace netgen
 
 			  // locsol2 -> TangentialSolid2 (p, m1, locsol3, surfind3, 1e-9*geomsize);
 			  locsol -> TangentialEdgeSolid (p, t, t2, m1, locsol3, surfind3, ideps*geomsize);
-
+#ifdef DEVELOP
+                          (*testout) << "m1 = " << m1 << ", surfind3 = " << surfind3 << endl;
+#endif
 			  //ageometry.GetIndependentSurfaceIndices (surfind3);
 
 			  if (surfind3.Contains(surfind2[l]))
@@ -2019,6 +2029,9 @@ namespace netgen
 			  
 			  // locsol2 -> TangentialSolid2 (p, m2, locsol3, surfind3, 1e-9*geomsize);
 			  locsol -> TangentialEdgeSolid (p, t, t2, m2, locsol3, surfind3, ideps*geomsize); 
+#ifdef DEVELOP
+                          (*testout) << "m2 = " << m2 << ", surfind3 = " << surfind3 << endl;
+#endif
 
 			  // ageometry.GetIndependentSurfaceIndices (surfind3);
 

@@ -158,7 +158,10 @@ namespace netgen
 				      const Vec<3> & v2,
 				      double eps) const;
 
-  
+    virtual void GetTangentialVecSurfaceIndices2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
+						  NgArray<int> & surfind, double eps) const;
+
+    
     virtual int GetNSurfaces() const;
     virtual Surface & GetSurface (int i = 0);
     virtual const Surface & GetSurface (int i = 0) const;
