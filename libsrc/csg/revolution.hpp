@@ -67,7 +67,10 @@ namespace netgen
     virtual double MaxCurvature () const;
     //virtual double MaxCurvatureLoc (const Point<3> & /* c */ , 
     //				  double /* rad */) const;
-
+    
+    Point<3> P0() const { return p0; }
+    Vec<3> Axis() const { return v_axis; }
+    
     virtual void Project (Point<3> & p) const;
 
     virtual Point<3> GetSurfacePoint () const;

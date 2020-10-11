@@ -463,8 +463,35 @@ namespace netgen
 	    
 	    return;
 	  }
-      }
 
+        if (numprim == 2 &&
+            (typeid(*geometry->GetSurface(locsurf[0])) == typeid(RevolutionFace&)) &&
+            (typeid(*geometry->GetSurface(locsurf[1])) == typeid(RevolutionFace&)))
+          {
+            NgArray<Point<3>> pts;
+            bool check = 
+              ComputeExtremalPoints (static_cast<const RevolutionFace*> (geometry->GetSurface(locsurf[0])),
+                                     static_cast<const RevolutionFace*> (geometry->GetSurface(locsurf[1])),
+                                     pts);
+            if (check)
+              {
+                // int cnt_inbox = 0;
+                for (auto p : pts)
+                  if (box.IsIn(p))
+                    {
+                      AddPoint (p, layer);
+                      // cnt_inbox++;
+                    }
+                return;
+                /*
+                  if (cnt_inbox == 0)
+                  return;
+                */
+              }
+          }
+        
+      } // end if (numprim <= check_crosspoint)
+    
 
     
     possiblecrossp = (numprim >= 3) && calccp;
@@ -608,9 +635,9 @@ namespace netgen
 		    decision = 0;
 		}
 	    }
-
-	// (*testout) << "l = " << level << " dec/sureexp = " << decision << sureexp << endl;
-
+#ifdef DEVELOP
+        (*testout) << "edgepnt decision = " << decision << " sure = " << sureexp << endl;
+#endif
 	if (decision && sureexp)
 	  {
 	    for (int k1 = 0; k1 < locsurf.Size() - 1; k1++)
@@ -890,9 +917,18 @@ namespace netgen
 	f1->CalcGradient (p, g1);
 	f2->CalcGradient (p, g2);
 
-	if ( sqr (g1 * g2) > (1 - 1e-10) * Abs2 (g1) * Abs2 (g2))
-	  return 1;
+	// if ( sqr (g1 * g2) > (1 - 1e-10) * Abs2 (g1) * Abs2 (g2))
+        // return 1;
+        if ( Abs2 (Cross(g1,g2)) < 1e-10 * Abs2 (g1) * Abs2 (g2))  // same, but stable
+          {
+            if (Abs2(vrs) < 1e-12*sqr(size))  // degenerate only if on both surfaces
+              return 1;
+            else
+              return 0;
+          }
 
+
+        
 	for (int j = 0; j < 3; j++)
 	  {
 	    mat(0,j) = g1(j);
@@ -1534,7 +1570,61 @@ namespace netgen
   }
 
 
+  bool SpecialPointCalculation :: 
+  ComputeExtremalPoints (const RevolutionFace * rev1, 
+			 const RevolutionFace * rev2, 
+			 NgArray<Point<3> > & pts)
+  {
+    // if (rev1 -> P0() != rev2 -> P0()) return false; // missing ????
+    if (Dist2 (rev1 -> P0(), rev2 -> P0()) > 1e-20*sqr(size)) return false;
+    // if (rev1 -> Axis() != rev2 -> Axis()) return false;
+    if ( (rev1 -> Axis()-rev2 -> Axis()).Length2() > 1e-16) return false;
 
+    Point<2> p1s = rev1->GetSpline().StartPI();
+    Point<2> p1e = rev1->GetSpline().EndPI();
+    Point<2> p2s = rev2->GetSpline().StartPI();
+    Point<2> p2e = rev2->GetSpline().EndPI();
+
+    Point<2> p2d;
+    if (Dist2(p1s,p2e) < 1e-20*sqr(size))
+      p2d = p1s;
+    else if (Dist2(p1e, p2s) < 1e-20*sqr(size))
+      p2d = p1e;
+    else
+      return false;
+    *testout << "Norm axis = " << rev1->Axis().Length() << endl;
+    Point<3> center = rev1->P0() + p2d(0)*rev1->Axis();
+    Vec<3> n = rev1->Axis();
+    // extremal points of circle, center, normal axis, radius p2d(1)
+    // Lagrange:
+    // L(x, lam1, lam2) = x_i + lam1 * (x-c)*v + lam2 * ( |x-c|^2 - r^2 )
+    for (double i = 0; i < 3; i++)
+      {
+        double lam1 = -n(i) / n.Length2();
+        Vec<3> ei(0,0,0); ei(i) = 1;
+        // double lam2 = 1/(2*p2d(1)) * sqrt(1 - sqr(n(i))/n.Length2());
+        double fac = 1-sqr(n(i))/n.Length2();
+        // if (fabs(lam2) > 1e-10)
+        if (fac > 1e-10)
+          {
+            double lam2 = 1/(2*p2d(1)) * sqrt(fac);
+            Point<3> x = center - 1.0/(2*lam2) * (ei + lam1*n);
+            pts.Append (x);
+            x = center + 1.0/(2*lam2) * (ei + lam1*n);
+            pts.Append (x);
+
+            /*
+            // check:
+            Point<2> p2d;
+            rev1 -> CalcProj (x, p2d);
+            *testout << "special solution, p2d = " << p2d << endl;
+            rev2 -> CalcProj (x, p2d);
+            *testout << "special solution, p2d = " << p2d << endl;
+            */
+          }
+      }
+    return true;
+  }
 
 
 

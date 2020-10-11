@@ -670,6 +670,23 @@ namespace netgen
 	surfaceactive.Append(1);
 	surfaceids.Append(0);
       }
+
+    // checking
+    if (type == 2)
+      {
+        auto t0 = spline_in.GetSpline(0).GetTangent(0);
+        cout << "tstart (must be vertically): " << t0 << endl;
+
+        auto tn = spline_in.GetSpline(nsplines-1).GetTangent(1);
+        cout << "tend (must be vertically): " << tn << endl;
+
+        for (int i = 0; i < nsplines-1; i++)
+          {
+            auto ta = spline_in.GetSpline(i).GetTangent(1);
+            auto tb = spline_in.GetSpline(i+1).GetTangent(0);
+            cout << "sin (must not be 0) = " << abs(ta(0)*tb(1)-ta(1)*tb(0)) / (Abs(ta)*Abs(tb)); 
+          }
+      }
   }
   
   Revolution::~Revolution()
@@ -764,8 +781,9 @@ namespace netgen
     int intersections_before(0), intersections_after(0);
     double randomx = 7.42357;
     double randomy = 1.814756;
-    randomx *= 1./sqrt(randomx*randomx+randomy*randomy);
-    randomy *= 1./sqrt(randomx*randomx+randomy*randomy);
+    double randomlen = sqrt(randomx*randomx+randomy*randomy);
+    randomx *= 1./randomlen;
+    randomy *= 1./randomlen;
     
 
     const double a = randomy;
