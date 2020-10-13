@@ -301,5 +301,14 @@ namespace ngcore
 
 } // namespace ngcore
 
+// Helper macro to easily add multiple timers in a function for profiling
+// Usage: NETGEN_TIMER_FROM_HERE("my_timer_name")
+// Effect: define static Timer and RegionTimer with given name and line number
+#define NETGEN_TOKEN_CONCAT(x, y) x ## y
+#define NETGEN_TOKEN_CONCAT2(x, y) NETGEN_TOKEN_CONCAT(x, y)
+#define NETGEN_TIMER_FROM_HERE(name) \
+  static Timer NETGEN_TOKEN_CONCAT2(timer_, __LINE__)( string(name)+"_"+ToString(__LINE__)); \
+  RegionTimer NETGEN_TOKEN_CONCAT2(rt_,__LINE__)(NETGEN_TOKEN_CONCAT2(timer_,__LINE__));
+
 
 #endif // NETGEN_CORE_PROFILER_HPP
