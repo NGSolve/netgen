@@ -785,7 +785,11 @@ namespace ngcore
   {
       int id = 0;
       std::map<int, TreeNode> children;
+      double chart_size = 0.0; // time without children (the chart lib accumulates children sizes again)
       double time = 0.0;
+      double min_time = 1e99;
+      double max_time = 0.0;
+      size_t calls = 0;
       std::string name;
       TTimePoint start_time = 0;
   };
@@ -793,7 +797,13 @@ namespace ngcore
   void PrintNode (const TreeNode &n, int &level, std::ofstream & f);
   void PrintNode (const TreeNode &n, int &level, std::ofstream & f)
   {
-      f << "{ name: \"" + n.name + "\", size: " + ToString(n.time);
+      f << "{ name: \"" + n.name + "\"";
+      f << ", calls: " << n.calls;
+      f << ", size: " << n.chart_size;
+      f << ", time: " << n.time;
+      f << ", min: " << n.min_time;
+      f << ", max: " << n.max_time;
+      f << ", avg: " << n.time/n.calls;
       int size = n.children.size();
       if(size>0)
       {
@@ -815,7 +825,6 @@ namespace ngcore
       std::vector<TimerEvent> events;
 
       TreeNode root;
-      root.time=0;
       root.name="all";
       TreeNode *current = &root;
 
@@ -853,6 +862,9 @@ namespace ngcore
       std::sort (events.begin(), events.end());
 
       root.time = 1000.0*static_cast<double>(stop_time) * seconds_per_tick;
+      root.calls = 1;
+      root.min_time = root.time;
+      root.max_time = root.time;
 
       for(auto & event : events)
       {
@@ -883,11 +895,18 @@ namespace ngcore
               }
               double time = 1000.0*static_cast<double>(event.time-current->start_time) * seconds_per_tick;
               current->time += time;
+              current->chart_size += time;
+              current->min_time = std::min(current->min_time, time);
+              current->max_time = std::max(current->max_time, time);
+              current->calls++;
+
               current = node_stack.back();
-              current->time -= time;
+              current->chart_size -= time;
               node_stack.pop_back();
           }
       }
+
+      root.chart_size = 0.0;
 
       int level = 0;
       std::ofstream f(tracefile_name+".html");
@@ -910,11 +929,26 @@ namespace ngcore
 
     const color = d3.scaleOrdinal(d3.schemePaired);
 
+    let getTime = (t) =>
+    {
+       if(t>=1000)  return (t/1000).toPrecision(4) + '  s';
+       if(t>=0.1)   return t.toPrecision(4) + ' ms';
+       if(t>=1e-4)  return (t*1e3).toPrecision(4) + ' us';
+
+       return (t/1e6).toPrecision(4) + ' ns';
+    };
+
     Sunburst()
       .data(data)
       .size('size')
       .color(d => color(d.name))
-      .tooltipContent((d, node) => `Time: <i>${node.value.toPrecision(6)}ms</i>`)
+      .tooltipContent((d, node) => {
+        return `Time: <i>${getTime(d.time)}</i> <br>`
+             + `calls: <i>${d.calls}</i> <br>`
+             + `min: <i>${getTime(d.min)}</i> <br>`
+             + `max: <i>${getTime(d.max)}</i> <br>`
+             + `avg: <i>${getTime(d.avg)}</i>`
+      })
       (document.getElementById('chart'));
   </script>
 </body>
