@@ -1436,7 +1436,7 @@ proc viewingoptionsdialog { } {
 	#pack $f.f1 -pady 5 -anchor center
 	ttk::label $f.center.lab1 -text "SpecPoint Veclen"
 	ttk::entry $f.center.ent1 -width 5 -textvariable viewoptions.specpointvlen -validate focus \
-            -validatecommand "my_validate %W 0 1e9 %P 1" \
+            -validatecommand "my_validate %W 0 1e9 %P 4" \
             -invalidcommand "my_invalid %W"
 	grid $f.center.ent1 $f.center.lab1 -sticky nw -padx 4
 	
