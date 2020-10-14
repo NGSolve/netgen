@@ -942,6 +942,7 @@ namespace ngcore
       .data(data)
       .size('size')
       .color(d => color(d.name))
+      .tooltipTitle((d, node) => { return node.parent ? node.parent.data.name + " &rarr; " + d.name : d.name; })
       .tooltipContent((d, node) => {
         return `Time: <i>${getTime(d.time)}</i> <br>`
              + `calls: <i>${d.calls}</i> <br>`
@@ -950,6 +951,12 @@ namespace ngcore
              + `avg: <i>${getTime(d.avg)}</i>`
       })
       (document.getElementById('chart'));
+
+      // Line breaks in tooltip
+      var all = document.getElementsByClassName('sunbirst-tooltip');
+      for (var i = 0; i < all.length; i++) {
+          all[i].white_space = "";
+      }
   </script>
 </body>
 )CODE_" << std::endl;
