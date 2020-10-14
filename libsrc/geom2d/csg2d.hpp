@@ -95,6 +95,12 @@ struct EdgeInfo
 struct Vertex : Point<2>
 {
   Vertex (Point<2> p) : Point<2>(p) {}
+  Vertex (const Vertex & v) : Point<2>(v)
+  {
+    spline = v.spline;
+    info = v.info;
+    is_source = true;
+  }
 
   Vertex * prev = nullptr;
   Vertex * next = nullptr;
@@ -399,13 +405,47 @@ struct Loop
       AppendVertex(*v);
   }
 
+  Loop(Loop && p) = default;
+
+  Loop & operator=(Loop && p) = default;
+
   Loop & operator=(const Loop & p)
   {
+    // static Timer t("Loop::operator="); RegionTimer rt(t);
     first = nullptr;
     if(p.first)
-      for(const auto v : p.Vertices(ALL))
-        AppendVertex(*v);
+    {
+      size_t n = p.Size();
+      Array<unique_ptr<Vertex>> new_verts(n);
+      {
+        size_t i = 0;
+        for(const auto v : p.Vertices(ALL))
+          new_verts[i++] = make_unique<Vertex>(*v);
+      }
+
+      for(auto i : IntRange(n-1))
+      {
+        Vertex * v  = new_verts[i].get();
+        Vertex * vn = new_verts[i+1].get();
+        v->next = vn;
+        vn->prev = v;
+      }
+      Vertex * vfirst = new_verts[0].get();
+      Vertex * vlast = new_verts[n-1].get();
+      vfirst->prev = vlast;
+      vlast->next = vfirst;
+
+      for(auto i : IntRange(1,n))
+        new_verts[n-1-i]->pnext = std::move(new_verts[n-i]);
+
+      first = std::move(new_verts[0]);
+    }
     return *this;
+  }
+
+  void Clear()
+  {
+    first = nullptr;
   }
 
   Vertex & AppendVertex(const Vertex & v)
@@ -448,6 +488,8 @@ struct Loop
   }
 
   bool IsInside( Point<2> r ) const;
+  bool IsLeftInside( const Vertex & p0 );
+  bool IsRightInside( const Vertex & p0 );
 
   EdgeIterator Edges(IteratorType iterType) const
   {
@@ -551,6 +593,8 @@ struct Loop
 
     return cnt;
   }
+
+  netgen::Box<2> GetBoundingBox() const;
 };
 
 
@@ -563,12 +607,15 @@ struct Solid2d
   Solid2d() = default;
   Solid2d(string name_) : name(name_) {}
   DLL_HEADER Solid2d(const Array<std::variant<Point<2>, EdgeInfo>> & points, string name_=MAT_DEFAULT, string bc_=BC_DEFAULT);
+  Solid2d(Solid2d && other) = default;
+  Solid2d(const Solid2d & other) = default;
 
   DLL_HEADER Solid2d operator+(const Solid2d & other) const;
   DLL_HEADER Solid2d operator*(const Solid2d & other) const;
   DLL_HEADER Solid2d operator-(const Solid2d & other) const;
 
-  DLL_HEADER Solid2d& operator=(const Solid2d & other) = default;
+  Solid2d& operator=(Solid2d && other) = default;
+  Solid2d& operator=(const Solid2d & other) = default;
   DLL_HEADER Solid2d& operator+=(const Solid2d & other);
   DLL_HEADER Solid2d& operator*=(const Solid2d & other);
   DLL_HEADER Solid2d& operator-=(const Solid2d & other);
@@ -632,7 +679,7 @@ struct Solid2d
     return *this;
   }
 
-  netgen::Box<2> GetBoundingBox();
+  netgen::Box<2> GetBoundingBox() const;
 };
 
 
@@ -654,7 +701,12 @@ DLL_HEADER Solid2d Circle( Point<2> center, double r, string name="", string bc=
 DLL_HEADER Solid2d Rectangle( Point<2> p0, Point<2> p1, string mat=MAT_DEFAULT, string bc=BC_DEFAULT );
 
 DLL_HEADER void AddIntersectionPoints ( Solid2d & s1, Solid2d & s2 );
-DLL_HEADER Solid2d ClipSolids ( Solid2d s1, Solid2d s2, bool intersect=true );
+DLL_HEADER Solid2d ClipSolids ( const Solid2d & s1, const Solid2d & s2, char op);
+DLL_HEADER Solid2d ClipSolids ( const Solid2d & s1, Solid2d && s2, char op);
+DLL_HEADER Solid2d ClipSolids ( Solid2d && s1, const Solid2d & s2, char op);
+DLL_HEADER Solid2d ClipSolids ( Solid2d && s1, Solid2d && s2, char op);
+
+DLL_HEADER IntersectionType intersect(const Point<2> P1, const Point<2> P2, const Point<2> Q1, const Point<2> Q2, double& alpha, double& beta);
 
 }
 #endif // NETGEN_CSG2D_HPP_INCLUDED

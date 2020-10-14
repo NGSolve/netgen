@@ -673,6 +673,7 @@ void AddIntersectionPoint(Edge edgeP, Edge edgeQ, IntersectionType i, double alp
 
 void ComputeIntersections(Solid2d & sp, Solid2d & sq)
 {
+  static Timer tall("ComputeIntersections"); RegionTimer rtall(tall);
   auto & PP = sp.polys;
   auto & QQ = sq.polys;
 
@@ -1246,6 +1247,7 @@ void CleanUpResult(Solid2d & sr)
 
 void RemoveDuplicates(Solid2d & sr)
 {
+  static Timer tall("RemoveDuplicates"); RegionTimer rtall(tall);
   for(auto & poly : sr.polys)
   {
     if(poly.first==nullptr) continue;
@@ -1308,12 +1310,142 @@ void AddIntersectionPoints ( Solid2d & s1, Solid2d & s2 )
   RemoveDuplicates(s2);
 }
 
-Solid2d ClipSolids ( Solid2d s1, Solid2d s2, bool intersect)
+Solid2d ClipSolids ( const Solid2d & s1, const Solid2d & s2, char op)
 {
+  return ClipSolids(Solid2d{s1}, Solid2d{s2}, op);
+}
+
+Solid2d ClipSolids ( const Solid2d & s1, Solid2d && s2, char op)
+{
+  return ClipSolids(Solid2d{s1}, std::move(s2), op);
+}
+
+Solid2d ClipSolids ( Solid2d && s1, const Solid2d & s2, char op)
+{
+  return ClipSolids(std::move(s1), Solid2d{s2}, op);
+}
+
+Solid2d ClipSolids ( Solid2d && s1, Solid2d && s2, char op)
+{
+  static Timer tall("ClipSolids"); RegionTimer rtall(tall);
+  static Timer t0("copy");
+  static Timer t02("tree");
+  static Timer t03("search intersections");
+  static Timer t01("prepare");
   static Timer t1("intersection");
   static Timer t2("label");
   static Timer t3("cut");
   static Timer t4("cleanup");
+  static Timer t6("trivial union");
+
+  bool intersect = (op=='*' || op=='-');
+
+  Solid2d res;
+  res.name = s1.name;
+
+  t0.Start();
+  // Try to quickly handle parts of both solids that cannot intersect with the other one
+  int n1 = s1.polys.Size();
+  int n2 = s2.polys.Size();
+  Array<Loop> res_polys(n1+n2);
+  res_polys.SetSize(0);
+
+  t02.Start();
+  netgen::Box<2> s1_box(netgen::Box<2>::EMPTY_BOX);
+  netgen::BoxTree <2, int> tree1(s1.GetBoundingBox());
+
+  for(auto li : IntRange(n1))
+  {
+    auto box = s1.polys[li].GetBoundingBox();
+    s1_box.Add(box.PMin());
+    s1_box.Add(box.PMax());
+    tree1.Insert(box, li);
+  }
+
+  netgen::Box<2> s2_box(netgen::Box<2>::EMPTY_BOX);
+  netgen::BoxTree <2, int> tree2(s2.GetBoundingBox());
+
+  for(auto li : IntRange(n2))
+  {
+    auto box = s2.polys[li].GetBoundingBox();
+    s2_box.Add(box.PMin());
+    s2_box.Add(box.PMax());
+    tree2.Insert(box, li);
+  }
+  t02.Stop();
+
+  t03.Start();
+
+  for(auto li : IntRange(n1))
+  {
+    bool have_intersections = false;
+    auto & poly = s1.polys[li];
+    auto box = poly.GetBoundingBox();
+    tree2.GetFirstIntersecting(box.PMin(), box.PMax(), [&] (int li2)
+        {
+          return have_intersections = true;
+        });
+    if(!have_intersections)
+    {
+      if(op=='+' || op=='-')
+        res_polys.Append(std::move(poly));
+      else
+        poly.Clear();
+    }
+  }
+  t03.Stop();
+
+  for(auto li: IntRange(n1))
+    while(s1.polys.Size()>li && s1.polys[li].Size()==0)
+      s1.polys.DeleteElement(li);
+
+  t03.Start();
+  for(auto li : IntRange(n2))
+  {
+    bool have_intersections = false;
+    auto & poly = s2.polys[li];
+    auto box = poly.GetBoundingBox();
+    tree1.GetFirstIntersecting(box.PMin(), box.PMax(), [&] (int li2)
+        {
+          return have_intersections = true;
+        });
+    if(!have_intersections)
+    {
+      if(op=='+')
+        res_polys.Append(std::move(poly));
+      else
+        poly.Clear();
+    }
+  }
+  t03.Stop();
+
+  for(auto li: IntRange(n2))
+    while(s2.polys.Size()>li && s2.polys[li].Size()==0)
+      s2.polys.DeleteElement(li);
+
+  t0.Stop();
+
+  if(s1.polys.Size()==0 || s2.polys.Size()==0)
+  {
+    res.polys = std::move(res_polys);
+    return res;
+  }
+  RegionTracer rt_(0, tall, s1.polys.Size()*10000 + s2.polys.Size());
+
+  t01.Start();
+
+  if(op=='-')
+  {
+    // take complement of s2 by adding loop around everything
+    auto box = s1_box;
+    box.Add(s2_box.PMin());
+    box.Add(s2_box.PMax());
+    box.Increase(2);
+    auto pmin = box.PMin();
+    auto pmax = box.PMax();
+    s2.Append(RectanglePoly(pmin[0], pmax[0], pmin[1], pmax[1], "JUST_FOR_CLIPPING"));
+  }
+
 
   for(auto & poly : s1.polys)
     for(auto v : poly.Vertices(ALL))
@@ -1337,8 +1469,7 @@ Solid2d ClipSolids ( Solid2d s1, Solid2d s2, bool intersect)
       v->enex = NEITHER;
     }
 
-  Solid2d res;
-  res.name = s1.name;
+  t01.Stop();
 
   t1.Start();
   ComputeIntersections(s1, s2);
@@ -1357,7 +1488,9 @@ Solid2d ClipSolids ( Solid2d s1, Solid2d s2, bool intersect)
   RemoveDuplicates(res);
   t4.Stop();
 
-  return res;
+  res.polys.Append(std::move(res_polys));
+
+  return std::move(res);
 }
 
 bool Loop :: IsInside( Point<2> r ) const
@@ -1396,6 +1529,16 @@ bool Loop :: IsInside( Point<2> r ) const
   return ( (w % 2) != 0 );
 }
 
+netgen::Box<2> Loop :: GetBoundingBox() const
+{
+  // static Timer tall("Loop::GetBoundingBox"); RegionTimer rtall(tall);
+  netgen::Box<2> box(netgen::Box<2>::EMPTY_BOX);
+  for(auto v : Vertices(ALL))
+    box.Add(*v);
+  return box;
+}
+
+
 Solid2d :: Solid2d(const Array<std::variant<Point<2>, EdgeInfo>> & points, string name_, string bc)
     : name(name_)
 {
@@ -1422,47 +1565,38 @@ Solid2d :: Solid2d(const Array<std::variant<Point<2>, EdgeInfo>> & points, strin
 
 Solid2d Solid2d :: operator+(const Solid2d & other) const
 {
-  if(polys.Size()==0)
-    return other;
-
-  auto res = ClipSolids(*this, other, false);
-  res.name = name;
-  return res;
+  static Timer t("Solid2d::operator+"); RegionTimer rt(t);
+  return ClipSolids(*this, other, '+');
 }
 
 Solid2d Solid2d :: operator*(const Solid2d & other) const
 {
-  auto res = ClipSolids(*this, other, true);
-  res.name = name;
-  return res;
+  static Timer t("Solid2d::operator*"); RegionTimer rt(t);
+  return ClipSolids(*this, other, '*');
 }
 
-Solid2d Solid2d :: operator-(const Solid2d & other_) const
+Solid2d Solid2d :: operator-(const Solid2d & other) const
 {
-  // TODO: Check dimensions of solids with bounding box
-  Solid2d other = other_;
-  other.Append(RectanglePoly(-1e8, 1e8, -1e8, 1e8, "JUST_FOR_CLIPPING"));
-  auto res = ClipSolids(*this, other);
-
-  res.name = name;
-  return res;
+  static Timer t("Solid2d::operator-"); RegionTimer rt(t);
+  return ClipSolids(*this, other, '-');
 }
 
 Solid2d & Solid2d :: operator+=(const Solid2d & other)
 {
-  *this = *this + other;
+  static Timer t("Solid2d::operator+="); RegionTimer rt(t);
+  *this = ClipSolids(std::move(*this), other, '+');
   return *this;
 }
 
 Solid2d & Solid2d :: operator*=(const Solid2d & other)
 {
-  *this = *this * other;
+  *this = ClipSolids(std::move(*this), other, '*');
   return *this;
 }
 
 Solid2d & Solid2d :: operator-=(const Solid2d & other)
 {
-  *this = *this - other;
+  *this = ClipSolids(std::move(*this), other, '-');
   return *this;
 }
 
@@ -1504,6 +1638,42 @@ bool Solid2d :: IsInside( Point<2> r ) const
   return ( (w % 2) != 0 );
 }
 
+bool Loop :: IsLeftInside( const Vertex & p0 )
+{
+  auto & p1 = *p0.next;
+  if(p0.spline)
+  {
+    auto s = *p0.spline;
+    auto v = s.GetTangent(0.5);
+    auto n = Vec<2>{-v[1], v[0]};
+    auto q = s.GetPoint(0.5) + 1e-6*n;
+    return IsInside(q);
+  }
+  auto v = p1-p0;
+  auto n = Vec<2>{-v[1], v[0]};
+  auto q = p0 + 0.5*v + 1e-6*n;
+  
+  return IsInside(q);
+}
+
+bool Loop :: IsRightInside( const Vertex & p0 )
+{
+  auto & p1 = *p0.next;
+  if(p0.spline)
+  {
+    auto s = *p0.spline;
+    auto v = s.GetTangent(0.5);
+    auto n = Vec<2>{v[1], -v[0]};
+    auto q = s.GetPoint(0.5) + 1e-6*n;
+    return IsInside(q);
+  }
+
+  auto v = p1-p0;
+  auto n = Vec<2>{v[1], -v[0]};
+  auto q = p0 + 0.5*v + 1e-6*n;
+  return IsInside(q);
+}
+
 bool Solid2d :: IsLeftInside( const Vertex & p0 )
 {
   auto & p1 = *p0.next;
@@ -1540,20 +1710,27 @@ bool Solid2d :: IsRightInside( const Vertex & p0 )
   return IsInside(q);
 }
 
-netgen::Box<2> Solid2d :: GetBoundingBox()
+netgen::Box<2> Solid2d :: GetBoundingBox() const
 {
+  static Timer tall("Solid2d::GetBoundingBox"); RegionTimer rtall(tall);
   netgen::Box<2> box(netgen::Box<2>::EMPTY_BOX);
   for(auto & poly : polys)
-      for(auto v : poly.Vertices(ALL))
-          box.Add(*v);
+  {
+    auto pbox = poly.GetBoundingBox();
+    box.Add(pbox.PMin());
+    box.Add(pbox.PMax());
+  }
 
   return box;
 }
 
 shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
 {
-  static Timer t_intersections("CSG2d - AddIntersections()");
   static Timer tall("CSG2d - GenerateSplineGeometry()");
+  static Timer t_points("add points");
+  static Timer t_segments_map("build segments map");
+  static Timer t_segments("add segments");
+  static Timer t_intersections("add intersections");
   RegionTimer rt(tall);
 
   struct Seg
@@ -1618,6 +1795,7 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
     return res;
   };
 
+  t_points.Start();
   auto insertPoint = [&](Point<2> p )
   {
     int pi = getPoint(p);
@@ -1640,9 +1818,11 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
         if(v->spline)
           insertPoint(v->spline->TangentPoint());
       }
+  t_points.Stop();
 
 
   // Generate segments from polygon edges and find left/right domain of each segment
+  t_segments_map.Start();
   int dom = 0;
   int bc = 1;
   for(auto & s : solids)
@@ -1651,6 +1831,10 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
     bool is_solid_degenerated = true; // Don't create new domain for degenerated solids
     for(auto & poly : s.polys)
     {
+      bool first = true;
+      bool is_poly_left_inside = false;
+      bool is_poly_right_inside = false;
+
       for(auto v : poly.Vertices(ALL))
       {
         auto & p0 = *v;
@@ -1675,8 +1859,15 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
           Swap(pi1,pi0);
         }
 
-        auto li = s.IsLeftInside(p0);
-        auto ri = s.IsRightInside(p0);
+        if(first)
+        {
+          is_poly_left_inside = s.IsLeftInside(p0);
+          is_poly_right_inside = s.IsRightInside(p0);
+          first = true;
+        }
+
+        auto li = is_poly_left_inside; // == poly.IsLeftInside(p0);
+        auto ri = is_poly_right_inside; // == poly.IsRightInside(p0);
 
         auto & ls = seg_map[{pi0,pi1,pi2}];
         ls.p0 = pi0;
@@ -1694,7 +1885,7 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
 
         if(li!=ri)
         {
-          if(s.IsLeftInside(p0) != flip)
+          if(li != flip)
             ls.left = dom;
           else
             ls.right = dom;
@@ -1708,10 +1899,12 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
     else
       dom--; // degenerated solid, use same domain index again
   }
+  t_segments_map.Stop();
 
   for(auto bc : Range(bcnames))
     geo->SetBCName(bc+1, bcnames[bc]);
 
+  t_segments.Start();
   for(auto const &m : seg_map)
   {
     auto ls = m.second;
@@ -1737,6 +1930,7 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
     seg->hmax = ls.maxh;
     geo->AppendSegment(seg);
   }
+  t_segments.Stop();
   return geo;
 }
 
