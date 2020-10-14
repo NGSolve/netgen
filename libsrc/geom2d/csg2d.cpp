@@ -670,49 +670,55 @@ void AddIntersectionPoint(Edge edgeP, Edge edgeQ, IntersectionType i, double alp
   }
 }
 
-void ComputeIntersections(Loop & l1, Loop & l2)
+void ComputeIntersections(Solid2d & s1, Solid2d & s2)
 {
+  static Timer tall("ComputeIntersections"); RegionTimer rtall(tall);
+  static Timer t_tree("build search trees");
   static Timer t_intersect("find intersections");
   static Timer t_split("split splines");
+  auto & PP = s1.polys;
+  auto & QQ = s2.polys;
 
   t_intersect.Start();
-  for (Edge edgeP : l1.Edges(SOURCE))
-    for (Edge edgeQ : l2.Edges(SOURCE))
-    {
-      double alpha = 0.0;
-      double beta = 0.0;
-      IntersectionType i = intersect(edgeP, edgeQ, alpha, beta);
-      AddIntersectionPoint(edgeP, edgeQ, i, alpha, beta);
-      if(i==X_INTERSECTION && (edgeP.v0->spline || edgeQ.v0->spline))
-      {
-        double alpha1 = alpha+1e2*EPSILON;
-        double beta1 = 0.0; //beta+1e2*EPSILON;
-
-        // search for possible second intersection
-        i = intersect(edgeP, edgeQ, alpha1, beta1);
-        // cout << "second intersection " << i << ',' << alpha1 << ',' << beta1 << ',' << alpha1-alpha << ',' << beta1-beta << endl;
-        if(i!=NO_INTERSECTION && alpha+EPSILON<alpha1)
+  for (Loop& P : PP)
+    for (Edge edgeP : P.Edges(SOURCE))
+      for (Loop& Q : QQ)
+        for (Edge edgeQ : Q.Edges(SOURCE))
         {
-          // Add midpoint of two intersection points to avoid false overlap detection of splines
-          // TODO: Check if this is really necessary
-          auto alpha_mid = 0.5*(alpha+alpha1);
-          auto beta_mid = 0.5*(beta+beta1);
-          Point<2> MP;
-          if(edgeP.v0->spline)
+          double alpha = 0.0;
+          double beta = 0.0;
+          IntersectionType i = intersect(edgeP, edgeQ, alpha, beta);
+          AddIntersectionPoint(edgeP, edgeQ, i, alpha, beta);
+          if(i==X_INTERSECTION && (edgeP.v0->spline || edgeQ.v0->spline))
           {
-            MP = edgeP.v0->spline->GetPoint(alpha_mid);
-            edgeP.v0->Insert(MP, alpha_mid);
+            double alpha1 = alpha+1e2*EPSILON;
+            double beta1 = 0.0; //beta+1e2*EPSILON;
+
+            // search for possible second intersection
+            i = intersect(edgeP, edgeQ, alpha1, beta1);
+            // cout << "second intersection " << i << ',' << alpha1 << ',' << beta1 << ',' << alpha1-alpha << ',' << beta1-beta << endl;
+            if(i!=NO_INTERSECTION && alpha+EPSILON<alpha1)
+            {
+              // Add midpoint of two intersection points to avoid false overlap detection of splines
+              // TODO: Check if this is really necessary
+              auto alpha_mid = 0.5*(alpha+alpha1);
+              auto beta_mid = 0.5*(beta+beta1);
+              Point<2> MP;
+              if(edgeP.v0->spline)
+              {
+                MP = edgeP.v0->spline->GetPoint(alpha_mid);
+                edgeP.v0->Insert(MP, alpha_mid);
+              }
+              else
+                MP = edgeQ.v0->spline->GetPoint(beta_mid);
+
+              if(edgeQ.v0->spline)
+                edgeQ.v0->Insert(MP, beta_mid);
+
+              AddIntersectionPoint(edgeP, edgeQ, i, alpha1, beta1);
+            }
           }
-          else
-            MP = edgeQ.v0->spline->GetPoint(beta_mid);
-
-          if(edgeQ.v0->spline)
-            edgeQ.v0->Insert(MP, beta_mid);
-
-          AddIntersectionPoint(edgeP, edgeQ, i, alpha1, beta1);
         }
-      }
-    }
   t_intersect.Stop();
 
   RegionTimer rt_split(t_split);
@@ -737,19 +743,12 @@ void ComputeIntersections(Loop & l1, Loop & l2)
     } while(!curr->is_source);
   };
 
-  for (Vertex* v : l1.Vertices(SOURCE))
-    split_spline_at_vertex(v);
-  for (Vertex* v : l2.Vertices(SOURCE))
-    split_spline_at_vertex(v);
-}
-
-void ComputeIntersections(Solid2d & s1, Solid2d & s2)
-{
-  static Timer tall("ComputeIntersections"); RegionTimer rtall(tall);
-
-  for (Loop& l1 : s1.polys)
-    for (Loop& l2 : s2.polys)
-      ComputeIntersections(l1, l2);
+  for (Loop& P : PP)
+    for (Vertex* v : P.Vertices(SOURCE))
+      split_spline_at_vertex(v);
+  for (Loop& Q : QQ)
+    for (Vertex* v : Q.Vertices(SOURCE))
+      split_spline_at_vertex(v);
 }
 
 enum RelativePositionType
@@ -1252,25 +1251,20 @@ void CleanUpResult(Solid2d & sr)
       RR.RemoveElement(i);
 }
 
-void RemoveDuplicates(Loop & poly)
-{
-  if(poly.first==nullptr)
-    return;
-
-  Vertex * last = poly.first->prev;
-  for(auto v : poly.Vertices(ALL))
-  {
-    if(Dist2(*v, *last)<EPSILON*EPSILON)
-      poly.Remove(last);
-    last = v;
-  }
-}
-
 void RemoveDuplicates(Solid2d & sr)
 {
   static Timer tall("RemoveDuplicates"); RegionTimer rtall(tall);
   for(auto & poly : sr.polys)
-    RemoveDuplicates(poly);
+  {
+    if(poly.first==nullptr) continue;
+    Vertex * last = poly.first->prev;
+    for(auto v : poly.Vertices(ALL))
+    {
+      if(Dist2(*v, *last)<EPSILON*EPSILON)
+        poly.Remove(last);
+      last = v;
+    }
+  }
 }
 
 Loop RectanglePoly(double x0, double x1, double y0, double y1, string bc)
@@ -1321,14 +1315,6 @@ void AddIntersectionPoints ( Solid2d & s1, Solid2d & s2 )
   RemoveDuplicates(s1);
   RemoveDuplicates(s2);
 }
-
-void AddIntersectionPoints ( Loop & l1, Loop & l2 )
-{
-  ComputeIntersections(l1, l2);
-  RemoveDuplicates(l1);
-  RemoveDuplicates(l2);
-}
-
 
 Solid2d ClipSolids ( const Solid2d & s1, const Solid2d & s2, char op)
 {
@@ -1739,7 +1725,6 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
   static Timer t_is_inside("is inside check");
   static Timer t_segments("add segments");
   static Timer t_intersections("add intersections");
-  static Timer t_segtree("seg trees");
   RegionTimer rt(tall);
 
   struct Seg
@@ -1771,27 +1756,18 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
       box.Add(sbox.PMax());
     }
 
-  netgen::BoxTree <2> solid_tree(box);
-  Array<INT<2>> loop_list;
+  netgen::BoxTree <2, int> solid_tree(box);
 
   for(auto i : Range(solids))
-    for(auto li : Range(solids[i].polys))
-    {
-      solid_tree.Insert(solids[i].polys[li].GetBoundingBox(), loop_list.Size());
-      loop_list.Append(INT<2>(i, li));
-    }
+      solid_tree.Insert(solids[i].GetBoundingBox(), i);
 
   for(auto i1 : Range(solids))
-    for(auto li1 : Range(solids[i1].polys))
     {
-      auto & poly1 = solids[i1].polys[li1];
-      auto box = poly1.GetBoundingBox();
-      solid_tree.GetFirstIntersecting(box.PMin(), box.PMax(), [&] (int ii)
+      auto sbox = solids[i1].GetBoundingBox();
+      solid_tree.GetFirstIntersecting(sbox.PMin(), sbox.PMax(), [&] (int i2)
         {
-          auto i2 = loop_list[ii][0];
-          auto li2 = loop_list[ii][1];
           if(i1<i2)
-            AddIntersectionPoints(poly1, solids[i2].polys[li2]);
+            AddIntersectionPoints(solids[i1], solids[i2]);
           return false;
         });
     }
