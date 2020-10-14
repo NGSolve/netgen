@@ -384,8 +384,16 @@ namespace netgen
     bool IsIn (const Point<D> & p) const
     {
       for (int i = 0; i < D; i++)
-	if (p(i) < pmin(i) || p(i) > pmax(i)) return 0;
-      return 1;
+	if (p(i) < pmin(i) || p(i) > pmax(i)) return false;
+      return true;
+    }
+
+    // is point in eps-increased box
+    bool IsIn (const Point<D> & p, double eps) const
+    {
+      for (int i = 0; i < D; i++)
+	if (p(i) < pmin(i)-eps || p(i) > pmax(i)+eps) return false;
+      return true;
     }
 
 

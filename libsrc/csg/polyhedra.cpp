@@ -100,64 +100,45 @@ INSOLID_TYPE Polyhedra :: BoxInSolid (const BoxSphere<3> & box) const
 }
 
 
+  // check how many faces a ray starting in p intersects
 INSOLID_TYPE Polyhedra :: PointInSolid (const Point<3> & p,
 					double eps) const
 {
-  //(*testout) << "PointInSolid p " << p << " eps " << eps << endl;
-  //(*testout) << "bbox " << poly_bbox << endl;
+  if (!poly_bbox.IsIn (p, eps))
+    return IS_OUTSIDE;
 
-  if((p(0) > poly_bbox.PMax()(0) + eps) || (p(0) < poly_bbox.PMin()(0) - eps) ||
-     (p(1) > poly_bbox.PMax()(1) + eps) || (p(1) < poly_bbox.PMin()(1) - eps) ||
-     (p(2) > poly_bbox.PMax()(2) + eps) || (p(2) < poly_bbox.PMin()(2) - eps))
-    {
-      //(*testout) << "returning IS_OUTSIDE" << endl;
-      return IS_OUTSIDE;
-    }
-
-  Vec<3> n, v1, v2;
-
-  // random (?) numbers:
-  n(0) = -0.424621;
-  n(1) = 0.15432;
-  n(2) = 0.89212238;
+  // random (?) direction:
+  Vec<3> n(-0.424621, 0.1543, 0.89212238);
 
   int cnt = 0;
-
-  for (int i = 0; i < faces.Size(); i++)
+  for (auto & face : faces)
     {
-      const Point<3> & p1 = points[faces[i].pnums[0]];
-      
-      Vec<3> v0 = p - p1;
+      Vec<3> v0 = p - points[face.pnums[0]];
 
-      double lam3 = faces[i].nn * v0;
+      double lam3 = face.nn * v0;
 
-      if(fabs(lam3) < eps)
+      if (fabs(lam3) < eps)    // point is in plance of face
 	{
-	  double lam1 = (faces[i].w1 * v0);
-	  double lam2 = (faces[i].w2 * v0);
+	  double lam1 = face.w1 * v0;
+	  double lam2 = face.w2 * v0;
 	  if (lam1 >= -eps_base1 && lam2 >= -eps_base1 && lam1+lam2 <= 1+eps_base1)
-	    {
-	      //(*testout) << "returning DOES_INTERSECT" << endl;
-	      return DOES_INTERSECT;
-	    }
+            return DOES_INTERSECT;
 	}
       else
 	{
-	  lam3 = -(faces[i].n * v0) / (faces[i].n * n);
+	  double lam3 = -(face.n * v0) / (face.n * n);
 
-	  if (lam3 < 0) continue;
+	  if (lam3 < 0) continue;    // ray goes not in direction of face
 
 	  Vec<3> rs = v0 + lam3 * n;
 	  
-	  double lam1 = (faces[i].w1 * rs);
-	  double lam2 = (faces[i].w2 * rs);
+	  double lam1 = face.w1 * rs;
+	  double lam2 = face.w2 * rs;
 	  if (lam1 >= 0 && lam2 >= 0 && lam1+lam2 <= 1)
 	    cnt++;
 	}
-
     }
 
-  //(*testout) << " cnt = " << cnt%2 << endl;
   return (cnt % 2) ? IS_INSIDE : IS_OUTSIDE;
 }
 
@@ -169,15 +150,16 @@ void Polyhedra :: GetTangentialSurfaceIndices (const Point<3> & p,
 {
   for (int i = 0; i < faces.Size(); i++)
     {
-      const Point<3> & p1 = points[faces[i].pnums[0]];
+      auto & face = faces[i];
+      const Point<3> & p1 = points[face.pnums[0]];
       
       Vec<3> v0 = p - p1;
-      double lam3 = -(faces[i].nn * v0); // n->nn
+      double lam3 = -(face.nn * v0); // n->nn
 
       if (fabs (lam3) > eps) continue;
 
-      double lam1 = (faces[i].w1 * v0);
-      double lam2 = (faces[i].w2 * v0);
+      double lam1 = (face.w1 * v0);
+      double lam2 = (face.w2 * v0);
 
       if (lam1 >= -eps_base1 && lam2 >= -eps_base1 && lam1+lam2 <= 1+eps_base1)
 	if (!surfind.Contains (GetSurfaceId(i)))
@@ -186,8 +168,8 @@ void Polyhedra :: GetTangentialSurfaceIndices (const Point<3> & p,
 
 }
 
-
-
+#define OLDVECINSOLD
+#ifdef OLDVECINSOLD
 INSOLID_TYPE Polyhedra :: VecInSolid (const Point<3> & p,
 				      const Vec<3> & v,
 				      double eps) const
@@ -250,17 +232,104 @@ INSOLID_TYPE Polyhedra :: VecInSolid (const Point<3> & p,
 	}
     }
   
-  Point<3> p2 = p + (1e-2*mindist) * vn;
+  Point<3> p2 = p + (1e-4*mindist) * vn;
   res = PointInSolid (p2, eps);
 
   //  (*testout) << "mindist " << mindist << " res " << res << endl;
 
   return res;
-  
- 
 }
 
+#else
 
+
+  // check how many faces a ray starting in p+alpha*v intersects
+INSOLID_TYPE Polyhedra :: VecInSolid (const Point<3> & p,
+				      const Vec<3> & v,
+				      double eps) const
+{
+  if (!poly_bbox.IsIn (p, eps))
+    return IS_OUTSIDE;
+
+  // random (?) direction:
+  Vec<3> n(-0.424621, 0.1543, 0.89212238);
+
+  int cnt = 0;
+  for (auto & face : faces)
+    {
+      Vec<3> v0 = p - points[face.pnums[0]];
+
+      double lamn = face.nn * v0;
+
+      if (fabs(lamn) < eps)    // point is in plance of face
+	{
+	  double lam1 = face.w1 * v0;
+	  double lam2 = face.w2 * v0;
+          double lam3 = 1-lam1-lam2;
+
+	  if (lam1 >= -eps_base1 && lam2 >= -eps_base1 && lam3 >= -eps_base1)
+            {  // point is close to trianlge, perturbe by alpha*v 
+              double dlamn = face.nn*v;
+              double dlam1 = face.w1 * v;
+              double dlam2 = face.w2 * v;
+              double dlam3 = 1-dlam1-dlam2;
+
+              if (fabs(dlamn) < 1e-8) // vec also in plane
+                {
+                  bool in1 = lam1 > eps_base1 || dlam1 > -eps_base1;
+                  bool in2 = lam2 > eps_base1 || dlam2 > -eps_base1;
+                  bool in3 = lam3 > eps_base1 || dlam3 > -eps_base1;
+                  if (in1 && in2 && in3)
+                    return DOES_INTERSECT;
+                }
+              else // vec out of plane
+                {
+                  double dlamn = -(face.n * v) / (face.n * n);
+                  if (dlamn < 0) continue;    // ray goes not in direction of face
+
+                  Vec<3> drs = v0 + lamn * n;
+                  
+                  double dlam1 = dlamn * face.w1 * v;
+                  double dlam2 = dlamn * face.w2 * v;
+                  double dlam3 = 1-dlam1-dlam2;
+                  
+                  bool in1 = lam1 > eps_base1 || dlam1 > -eps_base1;
+                  bool in2 = lam2 > eps_base1 || dlam2 > -eps_base1;
+                  bool in3 = lam3 > eps_base1 || dlam3 > -eps_base1;
+                  
+                  if (in1 && in2 && in3)
+                    cnt++;
+                }
+            }
+	}
+      else
+	{
+	  double lamn = -(face.n * v0) / (face.n * n);
+
+	  if (lamn < 0) continue;    // ray goes not in direction of face
+
+	  Vec<3> rs = v0 + lamn * n;
+	  
+	  double lam1 = face.w1 * rs;
+	  double lam2 = face.w2 * rs;
+          double lam3 = 1-lam1-lam2;
+	  if (lam1 >= 0 && lam2 >= 0 && lam3 >= 0)
+	    cnt++;
+	}
+    }
+
+  return (cnt % 2) ? IS_INSIDE : IS_OUTSIDE;
+}
+
+#endif
+
+
+
+
+
+
+
+  
 /*
 INSOLID_TYPE Polyhedra :: VecInSolid2 (const Point<3> & p,
 				       const Vec<3> & v1,
