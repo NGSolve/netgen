@@ -670,13 +670,16 @@ void AddIntersectionPoint(Edge edgeP, Edge edgeQ, IntersectionType i, double alp
   }
 }
 
-
-void ComputeIntersections(Solid2d & sp, Solid2d & sq)
+void ComputeIntersections(Solid2d & s1, Solid2d & s2)
 {
   static Timer tall("ComputeIntersections"); RegionTimer rtall(tall);
-  auto & PP = sp.polys;
-  auto & QQ = sq.polys;
+  static Timer t_tree("build search trees");
+  static Timer t_intersect("find intersections");
+  static Timer t_split("split splines");
+  auto & PP = s1.polys;
+  auto & QQ = s2.polys;
 
+  t_intersect.Start();
   for (Loop& P : PP)
     for (Edge edgeP : P.Edges(SOURCE))
       for (Loop& Q : QQ)
@@ -716,6 +719,9 @@ void ComputeIntersections(Solid2d & sp, Solid2d & sq)
             }
           }
         }
+  t_intersect.Stop();
+
+  RegionTimer rt_split(t_split);
 
   // Split splines at new vertices
   auto split_spline_at_vertex = [](Vertex *v)
@@ -1351,25 +1357,21 @@ Solid2d ClipSolids ( Solid2d && s1, Solid2d && s2, char op)
   res_polys.SetSize(0);
 
   t02.Start();
-  netgen::Box<2> s1_box(netgen::Box<2>::EMPTY_BOX);
-  netgen::BoxTree <2, int> tree1(s1.GetBoundingBox());
+  auto s1_box = s1.GetBoundingBox();
+  netgen::BoxTree <2, int> tree1(s1_box);
 
   for(auto li : IntRange(n1))
   {
     auto box = s1.polys[li].GetBoundingBox();
-    s1_box.Add(box.PMin());
-    s1_box.Add(box.PMax());
     tree1.Insert(box, li);
   }
 
-  netgen::Box<2> s2_box(netgen::Box<2>::EMPTY_BOX);
+  auto s2_box = s2.GetBoundingBox();
   netgen::BoxTree <2, int> tree2(s2.GetBoundingBox());
 
   for(auto li : IntRange(n2))
   {
     auto box = s2.polys[li].GetBoundingBox();
-    s2_box.Add(box.PMin());
-    s2_box.Add(box.PMax());
     tree2.Insert(box, li);
   }
   t02.Stop();
@@ -1527,15 +1529,6 @@ bool Loop :: IsInside( Point<2> r ) const
     }
   }
   return ( (w % 2) != 0 );
-}
-
-netgen::Box<2> Loop :: GetBoundingBox() const
-{
-  // static Timer tall("Loop::GetBoundingBox"); RegionTimer rtall(tall);
-  netgen::Box<2> box(netgen::Box<2>::EMPTY_BOX);
-  for(auto v : Vertices(ALL))
-    box.Add(*v);
-  return box;
 }
 
 
@@ -1729,6 +1722,7 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
   static Timer tall("CSG2d - GenerateSplineGeometry()");
   static Timer t_points("add points");
   static Timer t_segments_map("build segments map");
+  static Timer t_is_inside("is inside check");
   static Timer t_segments("add segments");
   static Timer t_intersections("add intersections");
   RegionTimer rt(tall);
@@ -1861,6 +1855,7 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
 
         if(first)
         {
+          RegionTimer rt_inside(t_is_inside);
           is_poly_left_inside = s.IsLeftInside(p0);
           is_poly_right_inside = s.IsRightInside(p0);
           first = true;

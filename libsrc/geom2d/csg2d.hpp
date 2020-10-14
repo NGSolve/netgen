@@ -12,6 +12,7 @@ using namespace ngcore;
 using netgen::Point;
 using netgen::Vec;
 using Spline = SplineSeg3<2>;
+using netgen::Box;
 
 inline double Area(const Point<2>& P, const Point<2>& Q, const Point<2>& R)
 {
@@ -395,6 +396,7 @@ inline int CalcSide( const Point<2> & p0, const Point<2> & p1, const Point<2> & 
 struct Loop
 {
   unique_ptr<Vertex> first = nullptr;
+  unique_ptr<Box<2>> bbox = nullptr;
 
   Loop() = default;
 
@@ -440,6 +442,7 @@ struct Loop
 
       first = std::move(new_verts[0]);
     }
+    bbox = nullptr;
     return *this;
   }
 
@@ -454,6 +457,8 @@ struct Loop
     vnew.info = v.info;
     if(v.spline)
       vnew.spline = *v.spline;
+    if(bbox)
+      bbox->Add(v);
     return vnew;
   }
 
@@ -474,6 +479,8 @@ struct Loop
 
     vnew->is_source = source;
     //     cout << "size after " << Size() << endl;
+    if(bbox)
+      bbox->Add(p);
     return *vnew;
   }
 
@@ -485,6 +492,7 @@ struct Loop
       first = std::move(v->pnext);
     else
       v->prev->pnext = std::move(v->pnext);
+    bbox.reset();
   }
 
   bool IsInside( Point<2> r ) const;
@@ -594,7 +602,17 @@ struct Loop
     return cnt;
   }
 
-  netgen::Box<2> GetBoundingBox() const;
+  const Box<2> & GetBoundingBox()
+  {
+    if(bbox==nullptr)
+    {
+      static Timer tall("Loop::GetBoundingBox"); RegionTimer rt(tall);
+      bbox = make_unique<Box<2>>(Box<2>::EMPTY_BOX);
+      for(auto v : Vertices(ALL))
+        bbox->Add(*v);
+    }
+    return *bbox;
+  }
 };
 
 
@@ -679,7 +697,7 @@ struct Solid2d
     return *this;
   }
 
-  netgen::Box<2> GetBoundingBox() const;
+  Box<2> GetBoundingBox() const;
 };
 
 
