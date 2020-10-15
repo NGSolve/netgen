@@ -54,10 +54,18 @@ namespace netgen
     virtual INSOLID_TYPE BoxInSolid (const BoxSphere<3> & box) const;
     virtual INSOLID_TYPE PointInSolid (const Point<3> & p,
 				       double eps) const;
+    virtual INSOLID_TYPE VecInSolidNew (const Point<3> & p,
+                                        const Vec<3> & v,
+                                        double eps, bool printing = false) const;
+    virtual INSOLID_TYPE VecInSolidOld (const Point<3> & p,
+				     const Vec<3> & v,
+				     double eps) const;
     virtual INSOLID_TYPE VecInSolid (const Point<3> & p,
 				     const Vec<3> & v,
 				     double eps) const;
 
+
+    
     // checks if lim s->0 lim t->0  p + t(v1 + s v2) in solid
     virtual INSOLID_TYPE VecInSolid2 (const Point<3> & p,
 				      const Vec<3> & v1,
