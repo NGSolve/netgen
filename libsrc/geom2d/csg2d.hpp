@@ -609,7 +609,11 @@ struct Loop
       static Timer tall("Loop::GetBoundingBox"); RegionTimer rt(tall);
       bbox = make_unique<Box<2>>(Box<2>::EMPTY_BOX);
       for(auto v : Vertices(ALL))
+      {
         bbox->Add(*v);
+        if(v->spline)
+          bbox->Add(v->spline->TangentPoint());
+      }
     }
     return *bbox;
   }

@@ -670,58 +670,35 @@ void AddIntersectionPoint(Edge edgeP, Edge edgeQ, IntersectionType i, double alp
   }
 }
 
-void ComputeIntersections(Loop & l1, Loop & l2)
+void RemoveDuplicates(Loop & poly)
 {
-  static Timer t_intersect("find intersections");
-  static Timer t_split("split splines");
+  if(poly.first==nullptr)
+    return;
 
-  t_intersect.Start();
-  for (Edge edgeP : l1.Edges(SOURCE))
-    for (Edge edgeQ : l2.Edges(SOURCE))
-    {
-      double alpha = 0.0;
-      double beta = 0.0;
-      IntersectionType i = intersect(edgeP, edgeQ, alpha, beta);
-      AddIntersectionPoint(edgeP, edgeQ, i, alpha, beta);
-      if(i==X_INTERSECTION && (edgeP.v0->spline || edgeQ.v0->spline))
-      {
-        double alpha1 = alpha+1e2*EPSILON;
-        double beta1 = 0.0; //beta+1e2*EPSILON;
+  Vertex * last = poly.first->prev;
+  for(auto v : poly.Vertices(ALL))
+  {
+    if(Dist2(*v, *last)<EPSILON*EPSILON)
+      poly.Remove(last);
+    last = v;
+  }
+}
 
-        // search for possible second intersection
-        i = intersect(edgeP, edgeQ, alpha1, beta1);
-        // cout << "second intersection " << i << ',' << alpha1 << ',' << beta1 << ',' << alpha1-alpha << ',' << beta1-beta << endl;
-        if(i!=NO_INTERSECTION && alpha+EPSILON<alpha1)
-        {
-          // Add midpoint of two intersection points to avoid false overlap detection of splines
-          // TODO: Check if this is really necessary
-          auto alpha_mid = 0.5*(alpha+alpha1);
-          auto beta_mid = 0.5*(beta+beta1);
-          Point<2> MP;
-          if(edgeP.v0->spline)
-          {
-            MP = edgeP.v0->spline->GetPoint(alpha_mid);
-            edgeP.v0->Insert(MP, alpha_mid);
-          }
-          else
-            MP = edgeQ.v0->spline->GetPoint(beta_mid);
+void RemoveDuplicates(Solid2d & sr)
+{
+  static Timer tall("RemoveDuplicates"); RegionTimer rtall(tall);
+  for(auto & poly : sr.polys)
+    RemoveDuplicates(poly);
+}
 
-          if(edgeQ.v0->spline)
-            edgeQ.v0->Insert(MP, beta_mid);
 
-          AddIntersectionPoint(edgeP, edgeQ, i, alpha1, beta1);
-        }
-      }
-    }
-  t_intersect.Stop();
-
-  RegionTimer rt_split(t_split);
-
+void SplitSplines( Loop & l)
+{
   // Split splines at new vertices
-  auto split_spline_at_vertex = [](Vertex *v)
+  for (Vertex* v : l.Vertices(SOURCE))
   {
     if(!v->spline)
-      return;
+      continue;
     Spline ori{*v->spline};
     Vertex * curr = v;
     do
@@ -732,15 +709,69 @@ void ComputeIntersections(Loop & l1, Loop & l2)
         double t0 = curr->is_source ? 0.0 : curr->lam;
         double t1 = next->is_source ? 1.0 : next->lam;
         curr->spline = Split(ori, t0, t1);
+        curr->lam = -1;
+        curr->is_source = true;
       }
       curr = next;
     } while(!curr->is_source);
   };
+  RemoveDuplicates(l);
+}
 
-  for (Vertex* v : l1.Vertices(SOURCE))
-    split_spline_at_vertex(v);
-  for (Vertex* v : l2.Vertices(SOURCE))
-    split_spline_at_vertex(v);
+void ComputeIntersections(Edge edgeP , Loop & l2)
+{
+  for (Edge edgeQ : l2.Edges(SOURCE))
+  {
+    double alpha = 0.0;
+    double beta = 0.0;
+    IntersectionType i = intersect(edgeP, edgeQ, alpha, beta);
+    AddIntersectionPoint(edgeP, edgeQ, i, alpha, beta);
+    if(i==X_INTERSECTION && (edgeP.v0->spline || edgeQ.v0->spline))
+    {
+      double alpha1 = alpha+1e2*EPSILON;
+      double beta1 = 0.0; //beta+1e2*EPSILON;
+
+      // search for possible second intersection
+      i = intersect(edgeP, edgeQ, alpha1, beta1);
+      // cout << "second intersection " << i << ',' << alpha1 << ',' << beta1 << ',' << alpha1-alpha << ',' << beta1-beta << endl;
+      if(i!=NO_INTERSECTION && alpha+EPSILON<alpha1)
+      {
+        // Add midpoint of two intersection points to avoid false overlap detection of splines
+        // TODO: Check if this is really necessary
+        auto alpha_mid = 0.5*(alpha+alpha1);
+        auto beta_mid = 0.5*(beta+beta1);
+        Point<2> MP;
+        if(edgeP.v0->spline)
+        {
+          MP = edgeP.v0->spline->GetPoint(alpha_mid);
+          edgeP.v0->Insert(MP, alpha_mid);
+        }
+        else
+          MP = edgeQ.v0->spline->GetPoint(beta_mid);
+
+        if(edgeQ.v0->spline)
+          edgeQ.v0->Insert(MP, beta_mid);
+
+        AddIntersectionPoint(edgeP, edgeQ, i, alpha1, beta1);
+      }
+    }
+  }
+}
+
+void ComputeIntersections(Loop & l1, Loop & l2)
+{
+  static Timer t_intersect("find intersections");
+  static Timer t_split("split splines");
+
+  t_intersect.Start();
+  for (Edge edgeP : l1.Edges(SOURCE))
+    ComputeIntersections(edgeP, l2);
+  t_intersect.Stop();
+
+  RegionTimer rt_split(t_split);
+
+  SplitSplines(l1);
+  SplitSplines(l2);
 }
 
 void ComputeIntersections(Solid2d & s1, Solid2d & s2)
@@ -748,8 +779,15 @@ void ComputeIntersections(Solid2d & s1, Solid2d & s2)
   static Timer tall("ComputeIntersections"); RegionTimer rtall(tall);
 
   for (Loop& l1 : s1.polys)
-    for (Loop& l2 : s2.polys)
-      ComputeIntersections(l1, l2);
+    for (Edge edgeP : l1.Edges(SOURCE))
+      for (Loop& l2 : s2.polys)
+        ComputeIntersections(edgeP, l2);
+
+  for (Loop& l1 : s1.polys)
+    SplitSplines(l1);
+
+  for (Loop& l2 : s2.polys)
+    SplitSplines(l2);
 }
 
 enum RelativePositionType
@@ -1109,13 +1147,30 @@ next_P: ;
     if (split[1].find(I_Q) != split[1].end())
     {
       // compute areas to compare local orientation
-      double sP = Area( *I_P->prev, *I_P, *I_P->next);
-      double sQ = Area( *I_Q->prev, *I_Q, *I_Q->next);
+      Point<2> p_prev = *I_P->prev;
+      if(I_P->prev->spline)
+        p_prev = I_P->prev->spline->TangentPoint();
+
+      Point<2> p_next = *I_P->next;
+      if(I_P->spline)
+        p_next = I_P->spline->TangentPoint();
+
+      Point<2> q_prev = *I_Q->prev;
+      if(I_Q->prev->spline)
+        q_prev = I_Q->prev->spline->TangentPoint();
+
+      Point<2> q_next = *I_Q->next;
+      if(I_Q->spline)
+        q_next = I_Q->spline->TangentPoint();
+
+
+      double sP = Area( p_prev, *I_P, p_next );
+      double sQ = Area( q_prev, *I_Q, q_next );
 
       // add duplicate vertices to P and Q
-      auto V_P = I_P->Insert(*I_P);
+      auto V_P = I_P->Insert(*I_P, I_P->lam);
       V_P->spline = I_P->spline;
-      auto V_Q = I_Q->Insert(*I_Q);
+      auto V_Q = I_Q->Insert(*I_Q, I_Q->lam);
       V_Q->spline = I_Q->spline;
 
       // link vertices correctly
@@ -1250,27 +1305,6 @@ void CleanUpResult(Solid2d & sr)
   for (int i = RR.Size()-1; i>=0; i--)
     if(RR[i].Size()==0)
       RR.RemoveElement(i);
-}
-
-void RemoveDuplicates(Loop & poly)
-{
-  if(poly.first==nullptr)
-    return;
-
-  Vertex * last = poly.first->prev;
-  for(auto v : poly.Vertices(ALL))
-  {
-    if(Dist2(*v, *last)<EPSILON*EPSILON)
-      poly.Remove(last);
-    last = v;
-  }
-}
-
-void RemoveDuplicates(Solid2d & sr)
-{
-  static Timer tall("RemoveDuplicates"); RegionTimer rtall(tall);
-  for(auto & poly : sr.polys)
-    RemoveDuplicates(poly);
 }
 
 Loop RectanglePoly(double x0, double x1, double y0, double y1, string bc)
@@ -1446,7 +1480,6 @@ Solid2d ClipSolids ( Solid2d && s1, Solid2d && s2, char op)
     res.polys = std::move(res_polys);
     return res;
   }
-  RegionTracer rt_(0, tall, s1.polys.Size()*10000 + s2.polys.Size());
 
   t01.Start();
 
@@ -1795,6 +1828,7 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
           return false;
         });
     }
+
 
   t_intersections.Stop();
 
