@@ -12,6 +12,7 @@
 
 namespace netgen
 {
+using ngcore::INT;
 
 constexpr static double EPSILON=0.000000001;
 
