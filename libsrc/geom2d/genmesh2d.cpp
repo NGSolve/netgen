@@ -18,29 +18,44 @@ namespace netgen
   {
     double fperel, oldf, f;
 
-    int n = 10000;
-    
-    NgArray<Point<2> > xi(n);
-    NgArray<double> hi(n);
-    
-    for (int i = 0; i < n; i++)
+    int n = 1;
+    NgArray<Point<2> > xi;
+    NgArray<double> hi;
+
+    // do one extra step
+    int not_fine_enough = 2;
+
+    while(not_fine_enough && n < 10000)
+    {
+      not_fine_enough--;
+      n*=4;
+
+      xi.SetSize(n);
+      hi.SetSize(n);
+
+      for (int i = 0; i < n; i++)
       {
-	xi[i] = spline.GetPoint ( (i+0.5) / n );
-	hi[i] = mesh.GetH (Point<3> (xi[i](0), xi[i](1), 0));
+        xi[i] = spline.GetPoint ( (i+0.5) / n );
+        hi[i] = mesh.GetH (Point<3> (xi[i](0), xi[i](1), 0));
       }
 
-    // limit slope
-    double gradh = min(1/elto0,mp.grading);
-    for (int i = 0; i < n-1; i++)
+      // limit slope
+      double gradh = min(1/elto0,mp.grading);
+      for (int i = 0; i < n-1; i++)
       {
-	double hnext = hi[i] + gradh * (xi[i+1]-xi[i]).Length();
-	hi[i+1] = min(hi[i+1], hnext);
+        double hnext = hi[i] + gradh * (xi[i+1]-xi[i]).Length();
+        if(hnext > 2*hi[i])
+          not_fine_enough = 2;
+        hi[i+1] = min(hi[i+1], hnext);
       } 
-    for (int i = n-1; i > 1; i--)
+      for (int i = n-1; i > 1; i--)
       {
-	double hnext = hi[i] + gradh * (xi[i-1]-xi[i]).Length();
-	hi[i-1] = min(hi[i-1], hnext);
+        double hnext = hi[i] + gradh * (xi[i-1]-xi[i]).Length();
+        if(hnext > 2*hi[i])
+          not_fine_enough = 2;
+        hi[i-1] = min(hi[i-1], hnext);
       }
+    }
 
     points.SetSize (0);
 
@@ -226,6 +241,10 @@ namespace netgen
 	double len = spline.Length();
 	mesh2d.RestrictLocalHLine (Point<3>(p1(0),p1(1),0), 
 				   Point<3>(p2(0),p2(1),0), len/mp.segmentsperedge);
+
+        // skip curvature restrictions for straight lines
+        if(spline.MaxCurvature()==0)
+          continue;
 
 	double hcurve = min (spline.hmax, h/spline.reffak);
 	double hl = GetDomainMaxh (spline.leftdom);
