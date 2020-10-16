@@ -114,7 +114,7 @@ namespace netgen
 
 
     /// compute localization in point p
-    void TangentialSolid (const Point<3> & p, Solid *& tansol, NgArray<int> & surfids, double eps) const;
+    unique_ptr<Solid> TangentialSolid (const Point<3> & p, NgArray<int> & surfids, double eps) const;
 
     /// compute localization in point p tangential to vector t
     void TangentialSolid2 (const Point<3> & p, const Vec<3> & t,

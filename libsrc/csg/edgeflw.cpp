@@ -970,7 +970,7 @@ namespace netgen
   
     for (int i = 0; i < geometry.GetNTopLevelObjects(); i++)
       {
-	Solid * locsol;
+	// Solid * locsol;
 
 	if (geometry.GetTopLevelObject(i)->GetLayer() != layer) 
 	  continue;
@@ -978,7 +978,8 @@ namespace netgen
 	const Solid * sol = geometry.GetTopLevelObject(i)->GetSolid();
 	const Surface * surf = geometry.GetTopLevelObject(i)->GetSurface();
 
-	sol -> TangentialSolid (hp, locsol, locsurfind, size*ideps);
+	// sol -> TangentialSolid (hp, locsol, locsurfind, size*ideps);
+        auto locsol = sol -> TangentialSolid (hp, locsurfind, size*ideps);
 
 	//*testout << "hp = " << hp << endl;
 	//(*testout) << "locsol: " << endl;
@@ -995,7 +996,8 @@ namespace netgen
 	ReducePrimitiveIterator rpi(boxp);
 	UnReducePrimitiveIterator urpi;
       
-	((Solid*)locsol) -> IterateSolid (rpi);
+	// ((Solid*)locsol) -> IterateSolid (rpi);
+        locsol -> IterateSolid (rpi);
 
 	locsol -> CalcSurfaceInverse ();
       
@@ -1020,7 +1022,8 @@ namespace netgen
 		}
 	  }
 
-	((Solid*)locsol) -> IterateSolid (urpi);
+	// ((Solid*)locsol) -> IterateSolid (urpi);
+        locsol -> IterateSolid (urpi);
 
       
 	if (debug)
@@ -1259,7 +1262,7 @@ namespace netgen
 		m *= -1;
 	      } 
 	  }
-	delete locsol;          
+	// delete locsol;          
       }
 
    
@@ -1780,7 +1783,7 @@ namespace netgen
     int nsurf = geometry.GetNSurf();
     int layer = 0;
 
-    Solid * tansol;
+    // Solid * tansol;
     NgArray<int> tansurfind;
 
     double size = geometry.MaxSize();
@@ -1838,7 +1841,8 @@ namespace netgen
 		  continue;
 		  
 		const Solid * sol = geometry.GetTopLevelObject(j)->GetSolid();
-		sol -> TangentialSolid (p1, tansol, tansurfind, ideps*size);
+		// sol -> TangentialSolid (p1, tansol, tansurfind, ideps*size);
+                auto tansol = sol -> TangentialSolid (p1, tansurfind, ideps*size);
 		layer = geometry.GetTopLevelObject(j)->GetLayer();
 
 		
@@ -1868,7 +1872,7 @@ namespace netgen
 			//        seg.invs1 = surfaces[i] -> Inverse();
 			//        seg.invs2 = ! (surfaces[i] -> Inverse());
 		      }
-		    delete tansol;
+		    // delete tansol;
 		  }
 	      }
 

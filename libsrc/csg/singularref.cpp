@@ -168,7 +168,7 @@ void SingularPoint :: FindPoints (class Mesh & mesh)
 	  for (int k = 1; k <= 3; k++)
 	    {
 	      const Solid * solk(NULL);
-	      Solid *tansol;
+	      // Solid *tansol;
 	      switch (k)
 		{
 		case 1:  solk = sol1; break;
@@ -176,7 +176,7 @@ void SingularPoint :: FindPoints (class Mesh & mesh)
 		case 3:  solk = sol3; break;
 		}
 
-	      solk -> TangentialSolid (p, tansol, surfk, 1e-3);
+	      auto tansol = solk -> TangentialSolid (p, surfk, 1e-3);
 	      (*testout) << "Tansol = " << *tansol << endl;
 
 	      if (!tansol) continue;
@@ -195,7 +195,7 @@ void SingularPoint :: FindPoints (class Mesh & mesh)
 		if (!surf.Contains (surfk[i]))
 		  surf.Append (surfk[i]);
 	      
-	      delete tansol;
+	      // delete tansol;
 	    }
 
 	  if (surf.Size() < 3) continue;

@@ -289,8 +289,8 @@ namespace netgen
 		      for (int j = 0; j < pts.Size(); j++)
 			if (Dist (pts[j], box.Center()) < box.Diam()/2)
 			  {
-			    Solid * tansol;
-			    sol -> TangentialSolid (pts[j], tansol, surfids, 1e-9*size);
+			    // Solid * tansol;
+			    auto tansol = sol -> TangentialSolid (pts[j], surfids, 1e-9*size);
 
 			    if(!tansol)
 			      continue;
@@ -314,7 +314,7 @@ namespace netgen
 				if (AddPoint (pts[j], layer))
 				  (*testout) << "cross point found, 1: " << pts[j] << endl;
 			      }  
-			    delete tansol;
+			    // delete tansol;
 			  }
 		    }
 
@@ -333,8 +333,8 @@ namespace netgen
 			for (int j = 0; j < pts.Size(); j++)
 			  if (Dist (pts[j], box.Center()) < box.Diam()/2)
 			    {
-			      Solid * tansol;
-			      sol -> TangentialSolid (pts[j], tansol, surfids, 1e-9*size);
+			      // Solid * tansol;
+			      auto tansol = sol -> TangentialSolid (pts[j], surfids, 1e-9*size);
 
 			      if(!tansol)
 				continue;
@@ -358,7 +358,7 @@ namespace netgen
 				  if (AddPoint (pts[j], layer))
 				    (*testout) << "cross point found, 2: " << pts[j] << endl;
 				}  
-			      delete tansol;
+			      // delete tansol;
 			    }
 		      }
 
@@ -372,15 +372,15 @@ namespace netgen
 		      for (int j = 0; j < pts.Size(); j++)
 			if (Dist (pts[j], box.Center()) < box.Diam()/2)
 			  {
-			    Solid * tansol;
-			    sol -> TangentialSolid (pts[j], tansol, surfids, 1e-9*size);
+			    // Solid * tansol;
+			    auto tansol = sol -> TangentialSolid (pts[j], surfids, 1e-9*size);
 			    if (tansol)
 			      // sol -> IsIn (pts[j], 1e-6*size) && !sol->IsStrictIn (pts[j], 1e-6*size) )
 			      {
 				if (AddPoint (pts[j], layer))
 				  (*testout) << "extremal point found, 1: " << pts[j] << endl;
 			      }  
-			    delete tansol;
+			    // delete tansol;
 			  }
 		    }
 	      }
@@ -409,8 +409,8 @@ namespace netgen
 		    for (int j = 0; j < pts.Size(); j++)
 		      if (Dist (pts[j], box.Center()) < box.Diam()/2)
 			{
-			  Solid * tansol;
-			  sol -> TangentialSolid (pts[j], tansol, surfids, 1e-9*size);
+			  // Solid * tansol;
+			  auto tansol = sol -> TangentialSolid (pts[j], surfids, 1e-9*size);
 			  
 			  if(!tansol)
 			    continue;
@@ -434,7 +434,7 @@ namespace netgen
 			      if (AddPoint (pts[j], layer))
 				(*testout) << "cross point found, 1: " << pts[j] << endl;
 			    }  
-			  delete tansol;
+			  // delete tansol;
 			}
 		  }
 	    
@@ -449,15 +449,15 @@ namespace netgen
 		  for (int j = 0; j < pts.Size(); j++)
 		    if (Dist (pts[j], box.Center()) < box.Diam()/2)
 		      {
-			Solid * tansol;
-			sol -> TangentialSolid (pts[j], tansol, surfids, 1e-9*size);
+			// Solid * tansol;
+			auto tansol = sol -> TangentialSolid (pts[j], surfids, 1e-9*size);
 			if (tansol)
 			  // sol -> IsIn (pts[j], 1e-6*size) && !sol->IsStrictIn (pts[j], 1e-6*size) )
 			  {
 			    if (AddPoint (pts[j], layer))
 			      (*testout) << "extremal point found, spheres: " << pts[j] << endl;
 			  }  
-			delete tansol;
+			// delete tansol;
 		      }
 		}
 	    
@@ -1829,8 +1829,8 @@ namespace netgen
 	      continue;
 	    
 
-	    Solid * locsol;
-	    sol -> TangentialSolid (p, locsol, surfind, ideps*geomsize);
+	    // Solid * locsol;
+	    auto locsol = sol -> TangentialSolid (p, surfind, ideps*geomsize);
 
 
 	    rep_surfind.SetSize (surfind.Size());
@@ -2158,7 +2158,7 @@ namespace netgen
 		  
 		}
 
-	    delete locsol;
+	    // delete locsol;
 	  }
       }
 

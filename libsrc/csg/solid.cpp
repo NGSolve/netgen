@@ -638,13 +638,15 @@ namespace netgen
   }
 
 
-  void Solid :: TangentialSolid (const Point<3> & p, Solid *& tansol, NgArray<int> & surfids, double eps) const
+  unique_ptr<Solid> Solid :: TangentialSolid (const Point<3> & p, NgArray<int> & surfids, double eps) const
   {
     int in, strin;
+    Solid * tansol = nullptr;
     RecTangentialSolid (p, tansol, surfids, in, strin, eps);
     surfids.SetSize (0);
     if (tansol)
       tansol -> GetTangentialSurfaceIndices (p, surfids, eps);
+    return unique_ptr<Solid> (tansol);
   }
 
 
