@@ -354,6 +354,35 @@ When r =1, the truncated elliptic cone becomes an elliptic cylinder.
 When r tends to zero, the truncated elliptic cone tends to a full elliptic cone.
 However, when r = 0, the top part becomes a point(tip) and meshing fails!
 )raw_string");
+
+  m.def("Polyhedron", [](py::list points, py::list faces)
+  {
+    auto poly = new Polyhedra();
+    for(auto p : points)
+      poly->AddPoint(py::cast<Point<3>>(p));
+    int fnr = 0;
+    for(auto face : faces)
+      {
+        auto lface = py::cast<py::list>(face);
+        if(py::len(lface) == 3)
+          poly->AddFace(py::cast<int>(lface[0]),
+                        py::cast<int>(lface[1]),
+                        py::cast<int>(lface[2]),
+                        fnr++);
+        else if(py::len(lface) == 4)
+          {
+            poly->AddFace(py::cast<int>(lface[0]),
+                          py::cast<int>(lface[1]),
+                          py::cast<int>(lface[2]),
+                          fnr);
+            poly->AddFace(py::cast<int>(lface[0]),
+                          py::cast<int>(lface[2]),
+                          py::cast<int>(lface[3]),
+                          fnr++);
+          }
+      }
+    return make_shared<SPSolid>(new Solid(poly));
+  });
   
   m.def ("Or", FunctionPointer([](shared_ptr<SPSolid> s1, shared_ptr<SPSolid> s2)
                                  {
