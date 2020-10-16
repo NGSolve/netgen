@@ -281,7 +281,7 @@ namespace netgen
                       *testout << "tang in plane" << endl;
                     double dlam1 = face.w1 * v;
                     double dlam2 = face.w2 * v;
-                    double dlam3 = 1-dlam1-dlam2;
+                    double dlam3 = -dlam1-dlam2;
                     if (printing)
                       *testout << "dlam = " << dlam1 << " " << dlam2 << " " << dlam3 << endl;
                     bool in1 = lam1 > eps_base1 || dlam1 > -eps_base1;
