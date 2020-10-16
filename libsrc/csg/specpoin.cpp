@@ -1967,8 +1967,8 @@ namespace netgen
 			(locsol, p, t, surfind2);
 		      */
 
-		      Solid * locsol2;
-		      locsol -> TangentialSolid3 (p, t, t2, locsol2, surfind2, ideps*geomsize); 
+		      // Solid * locsol2;
+		      auto locsol2 = locsol -> TangentialSolid3 (p, t, t2, surfind2, ideps*geomsize); 
 		      if (!locsol2) continue;
 		      
 		      // locsol2 -> GetTangentialSurfaceIndices3 (p, t, t2, surfind2, 1e-9*geomsize);
@@ -2014,10 +2014,10 @@ namespace netgen
 			  Vec<3> m2 = -m1;
 			  bool isface1 = 0, isface2 = 0;
 			  
-			  Solid * locsol3;
+			  // Solid * locsol3;
 
 			  // locsol2 -> TangentialSolid2 (p, m1, locsol3, surfind3, 1e-9*geomsize);
-			  locsol -> TangentialEdgeSolid (p, t, t2, m1, locsol3, surfind3, ideps*geomsize);
+			  auto locsol3 = locsol -> TangentialEdgeSolid (p, t, t2, m1, surfind3, ideps*geomsize);
 #ifdef DEVELOP
                           (*testout) << "m1 = " << m1 << ", surfind3 = " << surfind3 << endl;
 #endif
@@ -2025,10 +2025,10 @@ namespace netgen
 
 			  if (surfind3.Contains(surfind2[l]))
 			    isface1 = 1;
-			  delete locsol3;
+			  // delete locsol3;
 			  
 			  // locsol2 -> TangentialSolid2 (p, m2, locsol3, surfind3, 1e-9*geomsize);
-			  locsol -> TangentialEdgeSolid (p, t, t2, m2, locsol3, surfind3, ideps*geomsize); 
+			  locsol3 = locsol -> TangentialEdgeSolid (p, t, t2, m2, surfind3, ideps*geomsize); 
 #ifdef DEVELOP
                           (*testout) << "m2 = " << m2 << ", surfind3 = " << surfind3 << endl;
 #endif
@@ -2038,7 +2038,7 @@ namespace netgen
 			  
 			  if (surfind3.Contains(surfind2[l]))
 			    isface2 = 1;
-			  delete locsol3;
+			  // delete locsol3;
 
 			  if (isface1 != isface2)
 			    cnt_tang_faces++;
@@ -2051,7 +2051,7 @@ namespace netgen
 		      if (cnt_tang_faces < 1)
 			ok = false;
 
-		      delete locsol2;
+		      // delete locsol2;
 		      if (!ok) continue;
 		    }
 

@@ -1163,10 +1163,10 @@ namespace netgen
 		m2 = fac * grad;
 		// (*testout) << "hp = " << hp << ", m = " << m << ", m2 = " << m2 << endl;
 
-		Solid * locsol2;
-		locsol -> TangentialSolid3 (hp, m, m2, locsol2, locsurfind2, ideps*size);
+		// Solid * locsol2;
+		auto locsol2 = locsol -> TangentialSolid3 (hp, m, m2, locsurfind2, ideps*size);
 		if (!locsol2) ok = 0;
-		delete locsol2;
+		// delete locsol2;
 
 
 		if (ok)
