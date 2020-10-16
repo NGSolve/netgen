@@ -16,7 +16,6 @@ def test_2_polyhedra():
 
     geo.Add(first)
     geo.Add(second)
-    Draw(geo)
     mesh = geo.GenerateMesh()
     return mesh
 
