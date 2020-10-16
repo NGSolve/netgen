@@ -392,10 +392,16 @@ namespace netgen
 			 shared_ptr<Mesh> & mesh, 
 			 MeshingParameters & mp)
   {
+    static Timer tall("MeshFromSpline2D"); RegionTimer rtall(tall);
+    static Timer t_h("SetH");
+    static Timer t_tensor("tensor domain meshing");
+    static Timer t_part_boundary("PartitionBoundary");
+    static Timer t_hpref("mark hpref points");
     PrintMessage (1, "Generate Mesh from spline geometry");
 
     Box<2> bbox = geometry.GetBoundingBox ();
 
+    t_h.Start();
     if (bbox.Diam() < mp.maxh) 
       mp.maxh = bbox.Diam();
 
@@ -412,11 +418,14 @@ namespace netgen
 
     
 
+    t_part_boundary.Start();
     geometry.PartitionBoundary (mp, mp.maxh, *mesh);
+    t_part_boundary.Stop();
     
     PrintMessage (3, "Boundary mesh done, np = ", mesh->GetNP());
 
 
+    t_hpref.Start();
     // marks mesh points for hp-refinement
     for (int i = 0; i < geometry.GetNP(); i++)
       if (geometry.GetPoint(i).hpref)
@@ -434,6 +443,7 @@ namespace netgen
 	      }
 	  (*mesh)[mpi].Singularity(geometry.GetPoint(i).hpref);
 	}
+    t_hpref.Stop();
 
 
     int maxdomnr = 0;
@@ -459,6 +469,7 @@ namespace netgen
       mesh->SetBCName ( sindex, geometry.GetBCName( sindex+1 ) );
 
     mesh->CalcLocalH(mp.grading);
+    t_h.Stop();
 
     int bnp = mesh->GetNP(); // boundary points
     auto BndPntRange = mesh->Points().Range();
@@ -469,6 +480,7 @@ namespace netgen
     for (int domnr = 1; domnr <= maxdomnr; domnr++)
       if (geometry.GetDomainTensorMeshing (domnr))
         { // tensor product mesh
+          RegionTimer rt(t_tensor);
           
           NgArray<PointIndex, PointIndex::BASE> nextpi(bnp);
           NgArray<int, PointIndex::BASE> si1(bnp), si2(bnp);
@@ -556,8 +568,10 @@ namespace netgen
 
 
 
+    static Timer t_domain("Mesh domain");
     for (int domnr = 1; domnr <= maxdomnr; domnr++)
       {
+        RegionTimer rt(t_domain);
         if (geometry.GetDomainTensorMeshing (domnr)) continue;
         
         double h = mp.maxh;
@@ -573,16 +587,26 @@ namespace netgen
 
 	Meshing2 meshing (geometry, mp, Box<3> (pmin, pmax));
 
-	NgArray<int, PointIndex::BASE> compress(bnp);
+	NgArray<int, PointIndex::BASE> compress(mesh->GetNP());
 	compress = -1;
 	int cnt = 0;
-        for (PointIndex pi : BndPntRange)
-	  if ( (*mesh)[pi].GetLayer() == geometry.GetDomainLayer(domnr))
-	    {
-	      meshing.AddPoint ((*mesh)[pi], pi);
-	      cnt++;
-	      compress[pi] = cnt;
-	    }
+
+        for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
+        {
+          const auto & s = (*mesh)[si];
+          if ( s.domin==domnr || s.domout==domnr )
+          {
+            for (auto pi : {s[0], s[1]})
+            {
+              if(compress[pi]==-1)
+              {
+                meshing.AddPoint((*mesh)[pi], pi);
+                cnt++;
+                compress[pi] = cnt;
+              }
+            }
+          }
+        }
 
 	PointGeomInfo gi;
 	gi.trignum = 1;
@@ -600,12 +624,15 @@ namespace netgen
 	      }
 	  }
 
-        // not complete, use at own risk ...
-        // meshing.Delaunay(*mesh, domnr, mp);
-        mp.checkoverlap = 0;
-        auto res = meshing.GenerateMesh (*mesh, mp, h, domnr);
-        if (res != 0)
-          throw NgException("meshing failed");
+        if(mp.delaunay2d && cnt>100)
+          meshing.Delaunay(*mesh, domnr, mp);
+        else
+        {
+          // mp.checkoverlap = 0;
+          auto res = meshing.GenerateMesh (*mesh, mp, h, domnr);
+          if (res != 0)
+            throw NgException("meshing failed");
+        }
         
 	for (SurfaceElementIndex sei = oldnf; sei < mesh->GetNSE(); sei++)
 	  (*mesh)[sei].SetIndex (domnr);
