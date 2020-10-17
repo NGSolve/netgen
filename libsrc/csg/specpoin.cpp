@@ -2076,16 +2076,43 @@ namespace netgen
 			    continue;
 			  
 			  Vec<3> s = Cross (normalvecs[m], t);
+
 			  Vec<3> t2a = t + 0.01 *s;
 			  Vec<3> t2b = t - 0.01 *s;
-			  
-			  bool isface =
+
+			  bool isfaceold =
 			    (locsol->VectorIn (p, t2a, 1e-6*geomsize) &&
 			     !locsol->VectorStrictIn (p, t2a, 1e-6*geomsize))
 			    ||
 			    (locsol->VectorIn (p, t2b, 1e-6*geomsize) &&
 			     !locsol->VectorStrictIn (p, t2b, 1e-6*geomsize));
-			  
+
+                          bool isfacenew =
+                            (locsol->VectorIn2 (p, t, s, 1e-6*geomsize) && !locsol->VectorStrictIn2 (p, t, s, 1e-6*geomsize)) || 
+                            (locsol->VectorIn2 (p, t, -s, 1e-6*geomsize) && !locsol->VectorStrictIn2 (p, t, -s, 1e-6*geomsize));
+
+                          bool isface = isfacenew;
+                          
+                          if (isfaceold != isfacenew)
+                            {
+                              *testout << "different, p = " << p << ", t = " << t << ", s = " << s << endl;
+                              *testout << "tlo = " << si << endl;
+                              *testout << "isface, old = " << isface << ", isfacenew = " << isfacenew << endl;
+                              
+                              *testout << "t2a = " << t2a << endl;
+                              *testout << "vecin(p,t2a) = " << locsol->VectorIn (p, t2a, 1e-6*geomsize) << endl;
+                              *testout << "vecstrictin(p,t2a) = " << locsol->VectorStrictIn (p, t2a, 1e-6*geomsize) << endl;
+                              *testout << "vectorin2 = " << locsol->VectorIn2 (p, t, s, 1e-6*geomsize)  << endl;
+                              *testout << "vectorstrictin2 = " << locsol->VectorStrictIn2 (p, t, s, 1e-6*geomsize)  << endl;
+                              
+                              *testout << "t2b = " << t2b << endl;
+                              *testout << "vecin(p,t2b) = " << locsol->VectorIn (p, t2b, 1e-6*geomsize) << endl;
+                              *testout << "vecstrictin(p,t2b) = " << locsol->VectorStrictIn (p, t2b, 1e-6*geomsize) << endl;
+                              *testout << "vectorin2- = " << locsol->VectorIn2 (p, t, -s, 1e-6*geomsize)  << endl;
+                              *testout << "vectorstrictin2- = " << locsol->VectorStrictIn2 (p, t, -s, 1e-6*geomsize)  << endl;
+                            }
+                          
+                          
 			  /*
 			  bool isface =
 			    (locsol->VectorIn (p, t2a) &&
@@ -2095,10 +2122,8 @@ namespace netgen
 			     !locsol->VectorStrictIn (p, t2b));
 			  */
 
-			  if (isface)
-			    {
-			      cnts++;
-			    }
+                          if (isface)
+                            cnts++;
 			}
 		      if (cnts < 2) isedge = 0;
 		    }

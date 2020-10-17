@@ -540,7 +540,7 @@ namespace netgen
             double lam3 = 1-lam1-lam2;
 
             if (lam1 >= -eps_base1 && lam2 >= -eps_base1 && lam3 >= -eps_base1)
-              {  // point is close to trianlge, perturbe by alpha*v 
+              {  // point is close to trianlge, perturbe by alpha*v
                 double dlamn = face.nn*v;
 
                 if (fabs(dlamn) < 1e-8) // vec also in plane

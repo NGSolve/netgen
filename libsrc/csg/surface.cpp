@@ -428,10 +428,19 @@ VecInSolid2 (const Point<3> & p,
     return IS_OUTSIDE;
 
   double hv2 = v2 * hv;
+  if (hv2 <= -eps)
+    return IS_INSIDE;
+  if (hv2 >= eps)
+    return IS_OUTSIDE;
+  return DOES_INTERSECT;
+  
+  /*
+  double hv2 = v2 * hv;
   if (hv2 <= 0)
     return IS_INSIDE;
   else
     return IS_OUTSIDE;
+  */
 }
   
 

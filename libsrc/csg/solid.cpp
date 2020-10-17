@@ -285,6 +285,7 @@ namespace netgen
   }
 
 
+  /*
   bool Solid::VectorIn2 (const Point<3> & p, const Vec<3> & v1, 
 			const Vec<3> & v2, double eps) const
   {
@@ -317,10 +318,51 @@ namespace netgen
       }
     return 0;  
   }
+  */
 
 
+  bool Solid::VectorIn2 (const Point<3> & p, const Vec<3> & v1, 
+                         const Vec<3> & v2, double eps) const
+  {
+    switch (op)
+      {
+      case TERM: case TERM_REF:
+        {
+          auto res = prim->VecInSolid2 (p, v1, v2, eps);
+          return res != IS_OUTSIDE;
+        }
+      case SECTION:
+	return s1->VectorIn2 (p, v1, v2, eps) && s2->VectorIn2 (p, v1, v2, eps);
+      case UNION:
+	return s1->VectorIn2 (p, v1, v2, eps) || s2->VectorIn2 (p, v1, v2, eps);
+      case SUB:
+	return !s1->VectorStrictIn2 (p, v1, v2, eps);
+      case ROOT:
+	return s1->VectorIn2 (p, v1, v2, eps);
+      }
+    // return 0;  
+  }
 
-
+  bool Solid :: VectorStrictIn2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
+                                 double eps) const
+  {
+    switch (op)
+      {
+      case TERM: case TERM_REF:
+        {
+          auto res = prim->VecInSolid2 (p, v1, v2, eps);
+          return (res == IS_INSIDE);
+        }
+      case SECTION:
+	return s1->VectorStrictIn2 (p, v1, v2, eps) && s2->VectorStrictIn2 (p, v1, v2, eps);
+      case UNION:
+	return s1->VectorStrictIn2 (p, v1, v2, eps) || s2->VectorStrictIn2 (p, v1, v2, eps);
+      case SUB:
+	return !s1->VectorIn2 (p, v1, v2, eps);
+      case ROOT:
+	return s1->VectorStrictIn2 (p, v1, v2, eps);
+      }
+  }
 
 
   void Solid :: Print (ostream & str) const

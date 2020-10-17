@@ -109,9 +109,12 @@ namespace netgen
   
     bool VectorIn2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
 		    double eps) const;
+    /*
     bool VectorIn2Rec (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
 		       double eps) const;
-
+    */
+    bool VectorStrictIn2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
+                          double eps) const;
 
     /// compute localization in point p
     unique_ptr<Solid> TangentialSolid (const Point<3> & p, NgArray<int> & surfids, double eps) const;
