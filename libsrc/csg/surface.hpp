@@ -213,8 +213,6 @@ namespace netgen
     INSOLID_TYPE;
 
 
-
-
   class DummySurface : public Surface
   {
     virtual double CalcFunctionValue (const Point<3> & /* point */) const

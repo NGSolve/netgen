@@ -6,21 +6,6 @@
 
 namespace netgen
 {
-  //using namespace netgen;
-
-
-  /*
-  SolidIterator :: SolidIterator ()
-  {
-    ;
-  }
-
-  SolidIterator :: ~SolidIterator ()
-  {
-    ;
-  }
-  */
-
 
 
   // int Solid :: cntnames = 0;
@@ -201,31 +186,11 @@ namespace netgen
       case TERM: case TERM_REF:
         return prim->PointInSolid (p, eps);
       case SECTION:
-        {
-          auto res1 = s1->PointInSolid (p, eps);
-          auto res2 = s2->PointInSolid (p, eps);
-          if (res1 == IS_INSIDE && res2 == IS_INSIDE) return IS_INSIDE;
-          if (res1 == IS_OUTSIDE || res2 == IS_OUTSIDE) return IS_OUTSIDE;
-          return DOES_INTERSECT;
-        }
+        return Intersection (s1->PointInSolid (p, eps), s2->PointInSolid (p, eps));
       case UNION:
-        {
-          auto res1 = s1->PointInSolid (p, eps);
-          auto res2 = s2->PointInSolid (p, eps);
-          if (res1 == IS_INSIDE || res2 == IS_INSIDE) return IS_INSIDE;
-          if (res1 == IS_OUTSIDE && res2 == IS_OUTSIDE) return IS_OUTSIDE;
-          return DOES_INTERSECT;
-        }
+        return Union (s1->PointInSolid (p, eps), s2->PointInSolid (p, eps));          
       case SUB:
-        {
-          auto res1 = s1->PointInSolid (p, eps);
-          switch (res1)
-            {
-            case IS_INSIDE: return IS_OUTSIDE;
-            case IS_OUTSIDE: return IS_INSIDE;
-            default: return DOES_INTERSECT;
-          }
-        }
+        return Complement (s1->PointInSolid (p, eps));
       case ROOT:
 	return s1->PointInSolid (p, eps);
       }
@@ -240,31 +205,11 @@ namespace netgen
       case TERM: case TERM_REF:
         return prim->VecInSolid (p, v, eps);
       case SECTION:
-        {
-          auto res1 = s1->VecInSolid (p, v, eps);
-          auto res2 = s2->VecInSolid (p, v, eps);
-          if (res1 == IS_INSIDE && res2 == IS_INSIDE) return IS_INSIDE;
-          if (res1 == IS_OUTSIDE || res2 == IS_OUTSIDE) return IS_OUTSIDE;
-          return DOES_INTERSECT;
-        }
+        return Intersection (s1->VecInSolid (p, v, eps), s2->VecInSolid (p, v, eps));        
       case UNION:
-        {
-          auto res1 = s1->VecInSolid (p, v, eps);
-          auto res2 = s2->VecInSolid (p, v, eps);
-          if (res1 == IS_INSIDE || res2 == IS_INSIDE) return IS_INSIDE;
-          if (res1 == IS_OUTSIDE && res2 == IS_OUTSIDE) return IS_OUTSIDE;
-          return DOES_INTERSECT;
-        }
+        return Union (s1->VecInSolid (p, v, eps), s2->VecInSolid (p, v, eps));                
       case SUB:
-        {
-          auto res1 = s1->VecInSolid (p, v, eps);
-          switch (res1)
-            {
-            case IS_INSIDE: return IS_OUTSIDE;
-            case IS_OUTSIDE: return IS_INSIDE;
-            default: return DOES_INTERSECT;
-          }
-        }
+        return Complement (s1->VecInSolid (p, v, eps));
       case ROOT:
 	return s1->VecInSolid (p, v, eps);
       }
@@ -280,31 +225,11 @@ namespace netgen
       case TERM: case TERM_REF:
         return prim->VecInSolid2 (p, v1, v2, eps);
       case SECTION:
-        {
-          auto res1 = s1->VecInSolid2 (p, v1, v2, eps);
-          auto res2 = s2->VecInSolid2 (p, v1, v2, eps);
-          if (res1 == IS_INSIDE && res2 == IS_INSIDE) return IS_INSIDE;
-          if (res1 == IS_OUTSIDE || res2 == IS_OUTSIDE) return IS_OUTSIDE;
-          return DOES_INTERSECT;
-        }
+        return Intersection (s1->VecInSolid2 (p, v1, v2, eps), s2->VecInSolid2 (p, v1, v2, eps));
       case UNION:
-        {
-          auto res1 = s1->VecInSolid2 (p, v1, v2, eps);
-          auto res2 = s2->VecInSolid2 (p, v1, v2, eps);
-          if (res1 == IS_INSIDE || res2 == IS_INSIDE) return IS_INSIDE;
-          if (res1 == IS_OUTSIDE && res2 == IS_OUTSIDE) return IS_OUTSIDE;
-          return DOES_INTERSECT;
-        }
+        return Union (s1->VecInSolid2 (p, v1, v2, eps), s2->VecInSolid2 (p, v1, v2, eps));          
       case SUB:
-        {
-          auto res1 = s1->VecInSolid2 (p, v1, v2, eps);
-          switch (res1)
-            {
-            case IS_INSIDE: return IS_OUTSIDE;
-            case IS_OUTSIDE: return IS_INSIDE;
-            default: return DOES_INTERSECT;
-          }
-        }
+        return Complement (s1->VecInSolid2 (p, v1, v2, eps));
       case ROOT:
 	return s1->VecInSolid2 (p, v1, v2, eps);
       }
@@ -315,6 +240,8 @@ namespace netgen
 
   bool Solid :: IsIn (const Point<3> & p, double eps) const
   {
+    return PointInSolid (p,eps) != IS_OUTSIDE;
+      /*
     switch (op)
       {
       case TERM: case TERM_REF:
@@ -332,10 +259,13 @@ namespace netgen
 	return s1->IsIn (p, eps);
       }
     return 0;
+      */
   }
 
   bool Solid :: IsStrictIn (const Point<3> & p, double eps) const
   {
+    return PointInSolid (p,eps) == IS_INSIDE;
+    /*
     switch (op)
       {
       case TERM: case TERM_REF:
@@ -353,11 +283,14 @@ namespace netgen
 	return s1->IsStrictIn (p, eps);
       }
     return 0;
+    */
   }
 
   bool Solid :: VectorIn (const Point<3> & p, const Vec<3> & v, 
 			 double eps) const
   {
+    return VecInSolid (p,v,eps) != IS_OUTSIDE;
+    /*
     Vec<3> hv;
     switch (op)
       {
@@ -376,11 +309,14 @@ namespace netgen
 	return s1->VectorIn(p, v, eps);
       }
     return 0;
+    */
   }
 
   bool Solid :: VectorStrictIn (const Point<3> & p, const Vec<3> & v,
 			       double eps) const
   {
+    return VecInSolid (p,v,eps) == IS_INSIDE;
+    /*
     Vec<3> hv;
     switch (op)
       {
@@ -401,6 +337,7 @@ namespace netgen
 	return s1->VectorStrictIn(p, v, eps);
       }
     return 0;
+    */
   }
 
 
@@ -443,6 +380,8 @@ namespace netgen
   bool Solid::VectorIn2 (const Point<3> & p, const Vec<3> & v1, 
                          const Vec<3> & v2, double eps) const
   {
+    return VecInSolid2 (p,v1,v2,eps) != IS_OUTSIDE;
+    /*
     switch (op)
       {
       case TERM: case TERM_REF:
@@ -460,11 +399,14 @@ namespace netgen
 	return s1->VectorIn2 (p, v1, v2, eps);
       }
     // return 0;  
+    */
   }
 
   bool Solid :: VectorStrictIn2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
                                  double eps) const
   {
+    return VecInSolid2 (p,v1,v2,eps) == IS_INSIDE;
+    /*
     switch (op)
       {
       case TERM: case TERM_REF:
@@ -481,6 +423,7 @@ namespace netgen
       case ROOT:
 	return s1->VectorStrictIn2 (p, v1, v2, eps);
       }
+    */
   }
 
 

@@ -33,6 +33,26 @@ namespace netgen
   };
 
 
+  inline INSOLID_TYPE Intersection (INSOLID_TYPE ina, INSOLID_TYPE inb)
+  {
+    if (ina == IS_INSIDE && inb == IS_INSIDE) return IS_INSIDE;
+    if (ina == IS_OUTSIDE || inb == IS_OUTSIDE) return IS_OUTSIDE;
+    return DOES_INTERSECT;
+  }
+  
+  inline INSOLID_TYPE Union (INSOLID_TYPE ina, INSOLID_TYPE inb)
+  {
+    if (ina == IS_INSIDE || inb == IS_INSIDE) return IS_INSIDE;
+    if (ina == IS_OUTSIDE && inb == IS_OUTSIDE) return IS_OUTSIDE;
+    return DOES_INTERSECT;
+  }
+
+  inline INSOLID_TYPE Complement (INSOLID_TYPE in)
+  {
+    if (in == IS_INSIDE) return IS_OUTSIDE;
+    if (in == IS_OUTSIDE) return IS_INSIDE;
+    return DOES_INTERSECT;
+  }
 
   class Solid
   {

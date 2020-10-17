@@ -2148,7 +2148,7 @@ namespace netgen
 
     for (int i = 0; i < specpoints.Size(); i++)
       if (specpoints[i].unconditional)
-	uncond.Set (specpoint2point[i]);
+	uncond.SetBit (specpoint2point[i]);
   
     for (int i = 0; i < specpoints.Size(); i++)
       specpoints[i].unconditional = uncond.Test (specpoint2point[i]);
