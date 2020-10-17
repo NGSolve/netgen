@@ -193,6 +193,125 @@ namespace netgen
 
 
 
+  INSOLID_TYPE Solid ::
+  PointInSolid (const Point<3> & p, double eps) const
+  {
+    switch (op)
+      {
+      case TERM: case TERM_REF:
+        return prim->PointInSolid (p, eps);
+      case SECTION:
+        {
+          auto res1 = s1->PointInSolid (p, eps);
+          auto res2 = s2->PointInSolid (p, eps);
+          if (res1 == IS_INSIDE && res2 == IS_INSIDE) return IS_INSIDE;
+          if (res1 == IS_OUTSIDE || res2 == IS_OUTSIDE) return IS_OUTSIDE;
+          return DOES_INTERSECT;
+        }
+      case UNION:
+        {
+          auto res1 = s1->PointInSolid (p, eps);
+          auto res2 = s2->PointInSolid (p, eps);
+          if (res1 == IS_INSIDE || res2 == IS_INSIDE) return IS_INSIDE;
+          if (res1 == IS_OUTSIDE && res2 == IS_OUTSIDE) return IS_OUTSIDE;
+          return DOES_INTERSECT;
+        }
+      case SUB:
+        {
+          auto res1 = s1->PointInSolid (p, eps);
+          switch (res1)
+            {
+            case IS_INSIDE: return IS_OUTSIDE;
+            case IS_OUTSIDE: return IS_INSIDE;
+            default: return DOES_INTERSECT;
+          }
+        }
+      case ROOT:
+	return s1->PointInSolid (p, eps);
+      }
+  }
+
+  
+  INSOLID_TYPE Solid ::
+  VecInSolid (const Point<3> & p, const Vec<3> & v, double eps) const
+  {
+    switch (op)
+      {
+      case TERM: case TERM_REF:
+        return prim->VecInSolid (p, v, eps);
+      case SECTION:
+        {
+          auto res1 = s1->VecInSolid (p, v, eps);
+          auto res2 = s2->VecInSolid (p, v, eps);
+          if (res1 == IS_INSIDE && res2 == IS_INSIDE) return IS_INSIDE;
+          if (res1 == IS_OUTSIDE || res2 == IS_OUTSIDE) return IS_OUTSIDE;
+          return DOES_INTERSECT;
+        }
+      case UNION:
+        {
+          auto res1 = s1->VecInSolid (p, v, eps);
+          auto res2 = s2->VecInSolid (p, v, eps);
+          if (res1 == IS_INSIDE || res2 == IS_INSIDE) return IS_INSIDE;
+          if (res1 == IS_OUTSIDE && res2 == IS_OUTSIDE) return IS_OUTSIDE;
+          return DOES_INTERSECT;
+        }
+      case SUB:
+        {
+          auto res1 = s1->VecInSolid (p, v, eps);
+          switch (res1)
+            {
+            case IS_INSIDE: return IS_OUTSIDE;
+            case IS_OUTSIDE: return IS_INSIDE;
+            default: return DOES_INTERSECT;
+          }
+        }
+      case ROOT:
+	return s1->VecInSolid (p, v, eps);
+      }
+  }
+  
+  // checks if lim s->0 lim t->0  p + t(v1 + s v2) in solid
+  INSOLID_TYPE Solid ::
+  VecInSolid2 (const Point<3> & p, const Vec<3> & v1,
+               const Vec<3> & v2, double eps) const
+  {
+    switch (op)
+      {
+      case TERM: case TERM_REF:
+        return prim->VecInSolid2 (p, v1, v2, eps);
+      case SECTION:
+        {
+          auto res1 = s1->VecInSolid2 (p, v1, v2, eps);
+          auto res2 = s2->VecInSolid2 (p, v1, v2, eps);
+          if (res1 == IS_INSIDE && res2 == IS_INSIDE) return IS_INSIDE;
+          if (res1 == IS_OUTSIDE || res2 == IS_OUTSIDE) return IS_OUTSIDE;
+          return DOES_INTERSECT;
+        }
+      case UNION:
+        {
+          auto res1 = s1->VecInSolid2 (p, v1, v2, eps);
+          auto res2 = s2->VecInSolid2 (p, v1, v2, eps);
+          if (res1 == IS_INSIDE || res2 == IS_INSIDE) return IS_INSIDE;
+          if (res1 == IS_OUTSIDE && res2 == IS_OUTSIDE) return IS_OUTSIDE;
+          return DOES_INTERSECT;
+        }
+      case SUB:
+        {
+          auto res1 = s1->VecInSolid2 (p, v1, v2, eps);
+          switch (res1)
+            {
+            case IS_INSIDE: return IS_OUTSIDE;
+            case IS_OUTSIDE: return IS_INSIDE;
+            default: return DOES_INTERSECT;
+          }
+        }
+      case ROOT:
+	return s1->VecInSolid2 (p, v1, v2, eps);
+      }
+  }
+
+  
+
 
   bool Solid :: IsIn (const Point<3> & p, double eps) const
   {

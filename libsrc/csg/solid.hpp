@@ -102,6 +102,14 @@ namespace netgen
 
     // geometric tests
 
+    INSOLID_TYPE PointInSolid (const Point<3> & p, double eps) const;
+    INSOLID_TYPE VecInSolid (const Point<3> & p, const Vec<3> & v, double eps) const;
+
+    // checks if lim s->0 lim t->0  p + t(v1 + s v2) in solid
+    INSOLID_TYPE VecInSolid2 (const Point<3> & p, const Vec<3> & v1,
+                              const Vec<3> & v2, double eps) const;
+
+    
     bool IsIn (const Point<3> & p, double eps = 1e-6) const;
     bool IsStrictIn (const Point<3> & p, double eps = 1e-6) const;
     bool VectorIn (const Point<3> & p, const Vec<3> & v, double eps = 1e-6) const;
