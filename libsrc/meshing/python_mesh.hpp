@@ -48,6 +48,9 @@ filldist: float = 0.1
 delaunay: bool = True
   Use delaunay meshing.
 
+delaunay2d : bool = True
+  Use delaunay meshing for 2d geometries.
+
 Optimization Parameters
 -----------------------
 
@@ -109,6 +112,8 @@ inline void CreateMPfromKwargs(MeshingParameters& mp, py::kwargs kwargs, bool th
       mp.grading = py::cast<double>(kwargs.attr("pop")("grading"));
     if(kwargs.contains("delaunay"))
       mp.delaunay = py::cast<bool>(kwargs.attr("pop")("delaunay"));
+    if(kwargs.contains("delaunay2d"))
+      mp.delaunay2d = py::cast<bool>(kwargs.attr("pop")("delaunay2d"));
     if(kwargs.contains("maxh"))
       mp.maxh = py::cast<double>(kwargs.attr("pop")("maxh"));
     if(kwargs.contains("minh"))

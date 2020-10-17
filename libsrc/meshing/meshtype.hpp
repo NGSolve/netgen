@@ -1263,8 +1263,10 @@ namespace netgen
     bool uselocalh = true;
     /// grading for local h
     double grading = 0.3;
-    /// use delaunay meshing
+    /// use delaunay for 3d meshing
     bool delaunay = true;
+    /// use delaunay for 2d meshing
+    bool delaunay2d = false;
     /// maximal mesh size
     double maxh = 1e10;
     /// minimal mesh size
