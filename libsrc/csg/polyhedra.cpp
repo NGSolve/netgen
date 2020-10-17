@@ -355,7 +355,7 @@ namespace netgen
                                         const Vec<3> & v,
                                         double eps) const
   {
-    return VecInSolidOld (p, v, eps);
+    return VecInSolidNew (p, v, eps);
     /*
     auto oldval = VecInSolidOld (p, v, eps);
     auto newval = VecInSolidNew (p, v, eps);
@@ -441,7 +441,8 @@ namespace netgen
     */
 
 
-
+  // #define OLDVECINSOLID2
+#ifdef OLDVECINSOLID2
     INSOLID_TYPE Polyhedra :: VecInSolid2 (const Point<3> & p,
                                            const Vec<3> & v1,
                                            const Vec<3> & v2,
@@ -509,6 +510,162 @@ namespace netgen
     }
 
 
+
+#else
+
+
+  // check how many faces a ray starting in p+alpha*v+alpha^2/2 v2 intersects:
+  // if p + alpha v is in plane, use v2
+  INSOLID_TYPE Polyhedra :: VecInSolid2 (const Point<3> & p,
+                                         const Vec<3> & v,
+                                         const Vec<3> & v2,
+                                         double eps) const
+  {
+    if (!poly_bbox.IsIn (p, eps))
+      return IS_OUTSIDE;
+
+    // random (?) direction:
+    Vec<3> n(-0.424621, 0.1543, 0.89212238);
+
+    int cnt = 0;
+    for (auto & face : faces)
+      {
+        Vec<3> v0 = p - points[face.pnums[0]];
+        double lamn = face.nn * v0;
+
+        if (fabs(lamn) < eps)    // point is in plane of face
+          {
+            double lam1 = face.w1 * v0;
+            double lam2 = face.w2 * v0;
+            double lam3 = 1-lam1-lam2;
+
+            if (lam1 >= -eps_base1 && lam2 >= -eps_base1 && lam3 >= -eps_base1)
+              {  // point is close to trianlge, perturbe by alpha*v 
+                double dlamn = face.nn*v;
+
+                if (fabs(dlamn) < 1e-8) // vec also in plane
+                  {
+                    double dlam1 = face.w1 * v;
+                    double dlam2 = face.w2 * v;
+                    double dlam3 = -dlam1-dlam2;
+
+                    bool in1 = lam1 > eps_base1 || dlam1 > -eps_base1;
+                    bool in2 = lam2 > eps_base1 || dlam2 > -eps_base1;
+                    bool in3 = lam3 > eps_base1 || dlam3 > -eps_base1;
+
+                    // and the same thing for v2
+                    if (in1 && in2 && in3)
+                      {  
+                        double ddlamn = face.nn*v2;
+                        
+                        if (fabs(ddlamn) < 1e-8) // vec2 also in plane
+                          {
+                            double ddlam1 = face.w1 * v2;
+                            double ddlam2 = face.w2 * v2;
+                            double ddlam3 = -ddlam1-ddlam2;
+                            
+                            bool ddin1 = lam1 > eps_base1 || dlam1 > eps_base1 || ddlam1 > -eps_base1;
+                            bool ddin2 = lam2 > eps_base1 || dlam2 > eps_base1 || ddlam2 > -eps_base1;
+                            bool ddin3 = lam3 > eps_base1 || dlam3 > eps_base1 || ddlam3 > -eps_base1;
+                            if (ddin1 && ddin2 && ddin3)
+                              return DOES_INTERSECT;
+                          }
+                        else // vec2 out of plane
+                          {
+                            double ddlamn = -(face.n * v2) / (face.n * n);
+                            if (ddlamn < 0) continue;    // ray goes not in direction of face
+                            
+                            Vec<3> drs = v; //  + dlamn * n;   but dlamn==0
+                            Vec<3> ddrs = v2 + ddlamn * n;
+                            
+                            double dlam1 = face.w1 * drs;
+                            double dlam2 = face.w2 * drs;
+                            double dlam3 = -dlam1-dlam2;
+                            
+                            double ddlam1 = face.w1 * ddrs;
+                            double ddlam2 = face.w2 * ddrs;
+                            double ddlam3 = -ddlam1-ddlam2;
+                            
+                            bool ddin1 = lam1 > eps_base1 || dlam1 > eps_base1 || ddlam1 > -eps_base1;
+                            bool ddin2 = lam2 > eps_base1 || dlam2 > eps_base1 || ddlam2 > -eps_base1;
+                            bool ddin3 = lam3 > eps_base1 || dlam3 > eps_base1 || ddlam3 > -eps_base1;
+                            
+                            if (ddin1 && ddin2 && ddin3)
+                              cnt++;
+                          }
+                      } 
+                  }
+                else // vec out of plane
+                  {
+                    double dlamn = -(face.n * v) / (face.n * n);
+                    if (dlamn < 0) continue;    // ray goes not in direction of face
+
+                    Vec<3> drs = v + dlamn * n;
+                    
+                    double dlam1 = face.w1 * drs;
+                    double dlam2 = face.w2 * drs;
+                    double dlam3 = -dlam1-dlam2;
+                  
+                    bool in1 = lam1 > eps_base1 || dlam1 > -eps_base1;
+                    bool in2 = lam2 > eps_base1 || dlam2 > -eps_base1;
+                    bool in3 = lam3 > eps_base1 || dlam3 > -eps_base1;
+
+                    if (in1 && in2 && in3)
+                      cnt++;
+
+                  }
+              }
+          }
+        else
+          {
+            double lamn = -(face.n * v0) / (face.n * n);
+
+            if (lamn < 0) continue;    // ray goes not in direction of face
+
+            Vec<3> rs = v0 + lamn * n;
+	  
+            double lam1 = face.w1 * rs;
+            double lam2 = face.w2 * rs;
+            double lam3 = 1-lam1-lam2;
+            if (lam1 >= 0 && lam2 >= 0 && lam3 >= 0)
+              cnt++;
+          }
+      }
+
+    return (cnt % 2) ? IS_INSIDE : IS_OUTSIDE;
+  }
+#endif
+
+
+
+
+
+  
+
+  INSOLID_TYPE Polyhedra :: VecInSolid3 (const Point<3> & p,
+                                         const Vec<3> & v1,
+                                         const Vec<3> & v2,
+                                         double eps) const 
+  {
+    return VecInSolid2 (p, v1, v2, eps);
+  }
+  
+  INSOLID_TYPE Polyhedra :: VecInSolid4 (const Point<3> & p,
+                                         const Vec<3> & v,
+                                         const Vec<3> & v2,
+                                         const Vec<3> & m,
+                                         double eps) const
+  {
+    auto res = VecInSolid2 (p, v, v2, eps);
+    
+    if (res == DOES_INTERSECT)   // following edge second order, let m decide
+      return VecInSolid2 (p, v, m, eps);
+    
+    return res;
+  }
+
+
+  
 
   void Polyhedra :: GetTangentialVecSurfaceIndices2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
                                                      NgArray<int> & surfind, double eps) const
