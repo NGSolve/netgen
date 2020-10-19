@@ -399,7 +399,7 @@ DLL_HEADER void ExportGeom2d(py::module &m)
   
   py::class_<Solid2d>(m, "Solid2d")
     .def(py::init<>())
-    .def(py::init<Array<std::variant<Point<2>, EdgeInfo>>, std::string, std::string>(), py::arg("points"), py::arg("mat")=MAT_DEFAULT, py::arg("bc")=BC_DEFAULT)
+    .def(py::init<Array<std::variant<Point<2>, EdgeInfo, PointInfo>>, std::string, std::string>(), py::arg("points"), py::arg("mat")=MAT_DEFAULT, py::arg("bc")=BC_DEFAULT)
 
     .def(py::self+py::self)
     .def(py::self-py::self)
@@ -431,10 +431,10 @@ DLL_HEADER void ExportGeom2d(py::module &m)
 		  {
                       using P = Point<2>;
                       return { {
-                              p0,             bottom ? *bottom : bc,
-                              P{p1[0],p0[1]}, right  ? *right  : bc,
-                              p1,             top    ? *top    : bc,
-                              P{p0[0],p1[1]}, left   ? *left   : bc,
+                              p0,    EdgeInfo{bottom ? *bottom : bc},
+                              P{p1[0],p0[1]}, EdgeInfo {right  ? *right  : bc},
+                              p1,             EdgeInfo {top    ? *top    : bc},
+                              P{p0[0],p1[1]}, EdgeInfo {left   ? *left   : bc},
                              }, mat};
                   },
 		  "pmin"_a, "pmax"_a, "mat"_a=MAT_DEFAULT, "bc"_a=BC_DEFAULT,
@@ -474,6 +474,12 @@ DLL_HEADER void ExportGeom2d(py::module &m)
     .def(py::init<double>(), py::arg("maxh"))
     .def(py::init<string>(), py::arg("bc"))
     .def(py::init<optional<Point<2>>, double, string>(), py::arg("control_point")=nullopt, py::arg("maxh")=MAXH_DEFAULT, py::arg("bc")=BC_DEFAULT)
+    ;
+  py::class_<PointInfo>(m, "PointInfo")
+    .def(py::init<>())
+    .def(py::init<double>(), "maxh"_a)
+    .def(py::init<string>(), "name"_a)
+    .def(py::init<double, string>(), "maxh"_a, "name"_a)
     ;
 }
 

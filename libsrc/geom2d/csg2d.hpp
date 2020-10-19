@@ -65,6 +65,7 @@ enum IteratorType
 };
 
 inline constexpr const double MAXH_DEFAULT{1e99};
+inline const string POINT_NAME_DEFAULT{""};
 inline const string BC_DEFAULT{""};
 inline const string MAT_DEFAULT{""};
 
@@ -93,6 +94,24 @@ struct EdgeInfo
     }
 };
 
+struct PointInfo
+{
+  double maxh = MAXH_DEFAULT;
+  string name = POINT_NAME_DEFAULT;
+  PointInfo() = default;
+  PointInfo(const PointInfo& other) = default;
+  PointInfo(double amaxh) : maxh(amaxh) {}
+  PointInfo(string aname) : name(aname) {}
+  PointInfo(double amaxh, string aname) : maxh(amaxh), name(aname) {}
+
+  void Assign(const PointInfo& other)
+  {
+    maxh = min(maxh, other.maxh);
+    if(other.name != POINT_NAME_DEFAULT)
+      name = other.name;
+  }
+};
+
 struct Vertex : Point<2>
 {
   Vertex (Point<2> p) : Point<2>(p) {}
@@ -100,6 +119,7 @@ struct Vertex : Point<2>
   {
     spline = v.spline;
     info = v.info;
+    pinfo = v.pinfo;
     is_source = true;
   }
 
@@ -117,6 +137,7 @@ struct Vertex : Point<2>
   // In case the edge this - next is curved, store the spline information here
   optional<Spline> spline = nullopt;
   EdgeInfo info;
+  PointInfo pinfo;
 
   DLL_HEADER Vertex * Insert(Point<2> p, double lam = -1.0);
 
@@ -455,6 +476,7 @@ struct Loop
   {
     auto & vnew = Append( static_cast<Point<2>>(v), true );
     vnew.info = v.info;
+    vnew.pinfo = v.pinfo;
     if(v.spline)
       vnew.spline = *v.spline;
     if(bbox)
@@ -628,7 +650,7 @@ struct Solid2d
 
   Solid2d() = default;
   Solid2d(string name_) : name(name_) {}
-  DLL_HEADER Solid2d(const Array<std::variant<Point<2>, EdgeInfo>> & points, string name_=MAT_DEFAULT, string bc_=BC_DEFAULT);
+  DLL_HEADER Solid2d(const Array<std::variant<Point<2>, EdgeInfo, PointInfo>> & points, string name_=MAT_DEFAULT, string bc_=BC_DEFAULT);
   Solid2d(Solid2d && other) = default;
   Solid2d(const Solid2d & other) = default;
 
