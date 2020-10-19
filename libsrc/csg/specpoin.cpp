@@ -432,7 +432,7 @@ namespace netgen
 
         
         auto rev0 = dynamic_cast<const RevolutionFace*> (geometry->GetSurface(locsurf[0]));
-        auto rev1 = dynamic_cast<const RevolutionFace*> (geometry->GetSurface(locsurf[1]));
+        auto rev1 = locsurf.Size() > 1 ? dynamic_cast<const RevolutionFace*> (geometry->GetSurface(locsurf[1])) : nullptr;
         if (numprim == 2 && rev0 && rev1)
           {
             NgArray<Point<3>> pts;
