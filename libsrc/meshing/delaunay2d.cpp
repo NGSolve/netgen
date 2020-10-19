@@ -217,7 +217,7 @@ namespace netgen
 
     if(definitive_overlapping_trig==-1)
     {
-      cout << "Error in tree - didnt find overlap, check all trigs again" << endl;
+      PrintMessage (5, "Warning in delaunay tree - didn't find overlapping circle, check all trigs again");
       for(auto i_trig : trigs.Range())
       {
         const auto trig = trigs[i_trig];
