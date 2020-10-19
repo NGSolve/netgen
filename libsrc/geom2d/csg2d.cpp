@@ -1254,6 +1254,7 @@ void CreateResult(Solid2d & sp, Solid2d & sr, bool UNION)
           if ((status == EXIT) ^ UNION)
           {
             vnew.info = V->info;
+            vnew.pinfo = V->pinfo;
             if(V->spline)
               vnew.spline = *V->spline;
             else
@@ -1272,6 +1273,7 @@ void CreateResult(Solid2d & sp, Solid2d & sr, bool UNION)
             else
               vnew.spline = nullopt;
             vnew.info = V->info;
+            vnew.pinfo = V->pinfo;
             V->is_intersection = false;        // mark visited vertices
           }
           if(V == I)
@@ -1593,7 +1595,7 @@ Solid2d :: Solid2d(const Array<std::variant<Point<2>, EdgeInfo, PointInfo>> & po
       if(auto edge_info = std::get_if<EdgeInfo>(&v))
           l.first->prev->info.Assign( *edge_info );
       if(auto point_info = std::get_if<PointInfo>(&v))
-          l.first->pinfo.Assign(*point_info);
+          l.first->prev->pinfo.Assign(*point_info);
     }
 
   for(auto v : l.Vertices(ALL))
