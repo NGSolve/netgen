@@ -1171,8 +1171,10 @@ next_P: ;
       // add duplicate vertices to P and Q
       auto V_P = I_P->Insert(*I_P, I_P->lam);
       V_P->spline = I_P->spline;
+      V_P->pinfo = I_P->pinfo;
       auto V_Q = I_Q->Insert(*I_Q, I_Q->lam);
       V_Q->spline = I_Q->spline;
+      V_Q->pinfo = I_Q->pinfo;
 
       // link vertices correctly
       if (sP*sQ > 0) {                  // same local orientation
@@ -1580,7 +1582,7 @@ bool Loop :: IsInside( Point<2> r ) const
 }
 
 
-Solid2d :: Solid2d(const Array<std::variant<Point<2>, EdgeInfo>> & points, string name_, string bc)
+Solid2d :: Solid2d(const Array<std::variant<Point<2>, EdgeInfo, PointInfo>> & points, string name_, string bc)
     : name(name_)
 {
   Loop l;
@@ -1590,6 +1592,8 @@ Solid2d :: Solid2d(const Array<std::variant<Point<2>, EdgeInfo>> & points, strin
           l.Append(*point, true);
       if(auto edge_info = std::get_if<EdgeInfo>(&v))
           l.first->prev->info.Assign( *edge_info );
+      if(auto point_info = std::get_if<PointInfo>(&v))
+          l.first->pinfo.Assign(*point_info);
     }
 
   for(auto v : l.Vertices(ALL))
@@ -1849,17 +1853,20 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
   };
 
   t_points.Start();
-  auto insertPoint = [&](Point<2> p )
+  auto insertPoint = [&](const Vertex& p )
   {
     int pi = getPoint(p);
     if(pi==-1)
     {
       // not found -> insert to tree
       netgen::GeomPoint<2> gp(p);
-      gp.name = "default";
       geo->geompoints.Append(gp);
+      pi = geo->geompoints.Size()-1;
       ptree.Insert(p,p,geo->geompoints.Size()-1);
     }
+    geo->geompoints[pi].hmax = min2(geo->geompoints[pi].hmax, p.pinfo.maxh);
+    if(p.pinfo.name != POINT_NAME_DEFAULT)
+      geo->geompoints[pi].name = p.pinfo.name;
   };
 
   for(auto & s : solids)
