@@ -1856,7 +1856,7 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
     {
       // not found -> insert to tree
       netgen::GeomPoint<2> gp(p);
-      gp.name = "";
+      gp.name = "default";
       geo->geompoints.Append(gp);
       ptree.Insert(p,p,geo->geompoints.Size()-1);
     }
