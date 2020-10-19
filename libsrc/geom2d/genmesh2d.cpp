@@ -242,23 +242,28 @@ namespace netgen
 	mesh2d.RestrictLocalHLine (Point<3>(p1(0),p1(1),0), 
 				   Point<3>(p2(0),p2(1),0), len/mp.segmentsperedge);
 
-        // skip curvature restrictions for straight lines
-        if(spline.MaxCurvature()==0)
-          continue;
-
 	double hcurve = min (spline.hmax, h/spline.reffak);
 	double hl = GetDomainMaxh (spline.leftdom);
 	if (hl > 0) hcurve = min2 (hcurve, hl);
 	double hr = GetDomainMaxh (spline.rightdom);
 	if (hr > 0) hcurve = min2 (hcurve, hr);
 
-	int np = 1000;
-	for (double t = 0.5/np; t < 1; t += 1.0/np)
-	  {
-	    Point<2> x = spline.GetPoint(t);
-	    double hc = 1.0/mp.curvaturesafety / (1e-99+spline.CalcCurvature (t));
-	    mesh2d.RestrictLocalH (Point<3> (x(0), x(1), 0), min2(hc, hcurve));
-	  }
+        // skip curvature restrictions for straight lines
+        if(spline.MaxCurvature()==0)
+        {
+          mesh2d.RestrictLocalHLine (Point<3>(p1(0),p1(1),0), 
+                                     Point<3>(p2(0),p2(1),0), hcurve);
+        }
+        else
+        {
+          int np = 1000;
+          for (double t = 0.5/np; t < 1; t += 1.0/np)
+            {
+              Point<2> x = spline.GetPoint(t);
+              double hc = 1.0/mp.curvaturesafety / (1e-99+spline.CalcCurvature (t));
+              mesh2d.RestrictLocalH (Point<3> (x(0), x(1), 0), min2(hc, hcurve));
+            }
+        }
       }
     
     for (auto mspnt : mp.meshsize_points)
