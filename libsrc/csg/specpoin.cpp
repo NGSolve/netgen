@@ -1870,7 +1870,7 @@ namespace netgen
 
 		  if (Abs2 (t) < 1e-16)
                     {
-                      cerr << "normal vectors degenerated" << endl;
+                      // cerr << "normal vectors degenerated" << endl;
                       continue;
                     }
 
