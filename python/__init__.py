@@ -5,7 +5,10 @@ _netgen_bin_dir=os.path.realpath(os.path.join(os.path.dirname(__file__),'..','@N
 _netgen_lib_dir=os.path.realpath(os.path.join(os.path.dirname(__file__),'..','@NETGEN_PYTHON_RPATH@'))
 
 if sys.platform.startswith('win'):
-    os.environ['PATH'] += ';'+os.path.realpath(os.path.join(os.path.dirname(__file__),'../../../bin'))
+    if sys.version >= '3.8':
+        os.add_dll_directory(_netgen_bin_dir)
+    else:
+        os.environ['PATH'] += ';'+_netgen_bin_dir
 
 del sys
 del os
