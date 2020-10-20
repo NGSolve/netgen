@@ -430,27 +430,22 @@ namespace netgen
 	    return;
 	  }
 
-        
-        auto rev0 = dynamic_cast<const RevolutionFace*> (geometry->GetSurface(locsurf[0]));
-        auto rev1 = locsurf.Size() > 1 ? dynamic_cast<const RevolutionFace*> (geometry->GetSurface(locsurf[1])) : nullptr;
-        if (numprim == 2 && rev0 && rev1)
+
+        if (numprim == 2)
           {
-            NgArray<Point<3>> pts;
-            bool check = ComputeExtremalPoints (rev0, rev1, pts);
-            if (check)
+            auto rev0 = dynamic_cast<const RevolutionFace*> (geometry->GetSurface(locsurf[0]));
+            auto rev1 = dynamic_cast<const RevolutionFace*> (geometry->GetSurface(locsurf[1]));
+            if (rev0 && rev1)
               {
-                // int cnt_inbox = 0;
-                for (auto p : pts)
-                  if (box.IsIn(p))
-                    {
-                      AddPoint (p, layer);
-                      // cnt_inbox++;
-                    }
-                return;
-                /*
-                  if (cnt_inbox == 0)
-                  return;
-                */
+                NgArray<Point<3>> pts;
+                bool check = ComputeExtremalPoints (rev0, rev1, pts);
+                if (check)
+                  {
+                    for (auto p : pts)
+                      if (box.IsIn(p))
+                        AddPoint (p, layer);
+                    return;
+                  }
               }
           }
       } // end if (numprim <= check_crosspoint)
