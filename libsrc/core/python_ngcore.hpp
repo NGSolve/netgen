@@ -16,8 +16,8 @@ namespace py = pybind11;
 
 ////////////////////////////////////////////////////////////////////////////////
 // automatic conversion of python list to Array<>
-PYBIND11_NAMESPACE_BEGIN(PYBIND11_NAMESPACE)
-PYBIND11_NAMESPACE_BEGIN(detail)
+namespace pybind11 {
+namespace detail {
 
 template <typename Type, typename Value> struct ngcore_list_caster {
     using value_conv = make_caster<Value>;
@@ -60,8 +60,8 @@ template <typename Type> struct type_caster<ngcore::Array<Type>>
  : ngcore_list_caster<ngcore::Array<Type>, Type> { };
 
 
-PYBIND11_NAMESPACE_END(detail)
-PYBIND11_NAMESPACE_END(PYBIND11_NAMESPACE)
+} // namespace detail
+} // namespace pybind11
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace ngcore
