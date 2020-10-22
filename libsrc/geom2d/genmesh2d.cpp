@@ -477,6 +477,15 @@ namespace netgen
 	if ( (*mesh)[si].domout > maxdomnr) maxdomnr = (*mesh)[si].domout;
       }
 
+    TableCreator<const Segment*> dom2seg_creator(maxdomnr+1);
+    for ( ; !dom2seg_creator.Done(); dom2seg_creator++)
+      for (const Segment & seg : mesh->LineSegments())
+        {
+          dom2seg_creator.Add (seg.domin, &seg);
+          dom2seg_creator.Add (seg.domout, &seg);
+        }
+    auto dom2seg = dom2seg_creator.MoveTable();
+    
     mesh->ClearFaceDescriptors();
     for (int i = 1; i <= maxdomnr; i++)
       mesh->AddFaceDescriptor (FaceDescriptor (i, 0, 0, i));
@@ -593,6 +602,7 @@ namespace netgen
 
 
     static Timer t_domain("Mesh domain");
+    static Timer t_points("Mesh domain - find points");
     for (int domnr = 1; domnr <= maxdomnr; domnr++)
       {
         RegionTimer rt(t_domain);
@@ -615,6 +625,8 @@ namespace netgen
 	compress = -1;
 	int cnt = 0;
 
+        t_points.Start();
+        /*
         for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
         {
           const auto & s = (*mesh)[si];
@@ -631,9 +643,21 @@ namespace netgen
             }
           }
         }
+        */
+        for (const Segment * seg : dom2seg[domnr])
+          if (seg->domin==domnr || seg->domout==domnr )
+            for (auto pi : {(*seg)[0], (*seg)[1]})
+              if (compress[pi]==-1)
+                {
+                  meshing.AddPoint((*mesh)[pi], pi);
+                  cnt++;
+                  compress[pi] = cnt;
+                }
+
 
 	PointGeomInfo gi;
 	gi.trignum = 1;
+        /*
 	for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
 	  {
 	    if ( (*mesh)[si].domin == domnr)
@@ -647,6 +671,21 @@ namespace netgen
                                             compress[(*mesh)[si][0]], gi, gi);
 	      }
 	  }
+        */
+
+	for (const Segment * seg : dom2seg[domnr])
+	  {
+	    if (seg->domin == domnr)
+              meshing.AddBoundaryElement (compress[(*seg)[0]], 
+                                          compress[(*seg)[1]], gi, gi);
+            
+	    if (seg->domout == domnr)
+              meshing.AddBoundaryElement (compress[(*seg)[1]],
+                                          compress[(*seg)[0]], gi, gi);
+	  }
+
+        
+        t_points.Stop();
 
         if(mp.delaunay2d && cnt>100)
           meshing.Delaunay(*mesh, domnr, mp);
