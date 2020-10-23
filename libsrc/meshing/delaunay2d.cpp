@@ -66,6 +66,8 @@ namespace netgen
     Point<2> Center() const { return c; }
     double Radius2() const { return rad2; }
     Box<2> BoundingBox() const { return Box<2> (c-Vec<2>(r,r), c+Vec<2>(r,r)); }
+
+    mutable PointIndex visited_pi = -1;
   };
 
   class DelaunayMesh
@@ -132,13 +134,16 @@ namespace netgen
           Swap(p0,p1);
 
         INT<2> hash = {p0,p1};
-        auto i2 = edge_to_trig.Get({p0,p1});
-
+        // auto i2 = edge_to_trig.Get({p0,p1});
+        auto pos = edge_to_trig.Position(hash);
+        auto i2 = edge_to_trig.GetData(pos);
+          
         if(i2[0]==eli)
           i2[0] = i2[1];
         i2[1] = -1;
 
-        edge_to_trig[hash] = i2;
+        // edge_to_trig[hash] = i2;
+        edge_to_trig.SetData (pos, i2);
       }
     }
 
@@ -187,6 +192,7 @@ namespace netgen
 
     void AddPoint( PointIndex pi_new )
     {
+      static Timer t("AddPoint"); RegionTimer reg(t);
       Point<2> newp = P2(mesh[pi_new]);
       intersecting.SetSize(0);
       edges.SetSize(0);
@@ -236,38 +242,45 @@ namespace netgen
       }
     }
 
-    BitArray trig_visited(trigs.Size());
-    trig_visited.Clear();
+    // static Timer tvis("trig visited");
+    // tvis.Start();
+    // BitArray trig_visited(trigs.Size());
+    // trig_visited.Clear();
     if(definitive_overlapping_trig==-1)
       throw Exception("point not in any circle "+ ToString(pi_new));
-
+    // tvis.Stop();
+    // static Timer t2("addpoint - rest"); RegionTimer r2(t2);
     Array<int> trigs_to_visit;
     trigs_to_visit.Append(definitive_overlapping_trig);
     intersecting.Append(definitive_overlapping_trig);
-    trig_visited.SetBit(definitive_overlapping_trig);
-
+    // trig_visited.SetBit(definitive_overlapping_trig);
+    trigs[definitive_overlapping_trig].visited_pi = pi_new;
+    
     while(trigs_to_visit.Size())
     {
       int ti = trigs_to_visit.Last();
       trigs_to_visit.DeleteLast();
 
-      trig_visited.SetBit(ti);
+      // trig_visited.SetBit(ti);
 
       auto & trig = trigs[ti];
-
+      trig.visited_pi = pi_new;
+      
       for(auto ei : Range(3))
       {
         auto nb = GetNeighbour(ti, ei);
         if(nb==-1)
           continue;
-        if(trig_visited.Test(nb))
-          continue;
+        // if(trig_visited.Test(nb))
+        // continue;
 
         const auto & trig_nb = trigs[nb];
+        if (trig_nb.visited_pi == pi_new)
+          continue;
 
-
-        trig_visited.SetBit(nb);
-
+        // trig_visited.SetBit(nb);
+        trig_nb.visited_pi = pi_new;
+        
         bool is_intersecting = Dist2(newp, trig_nb.Center()) < trig_nb.Radius2()*(1+1e-12);
 
         if(!is_intersecting)

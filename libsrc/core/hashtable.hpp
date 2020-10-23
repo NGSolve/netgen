@@ -727,6 +727,11 @@ namespace ngcore
       acont = cont[pos];
     }
 
+    T GetData (size_t pos) const
+    {
+      return cont[pos];
+    }
+
     std::pair<T_HASH,T> GetBoth (size_t pos) const
     {
       return std::pair<T_HASH,T> (hash[pos], cont[pos]);
