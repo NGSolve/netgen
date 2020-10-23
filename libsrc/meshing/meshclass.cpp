@@ -3903,7 +3903,7 @@ namespace netgen
                        (*this)[tri[0]].GetLayer() != (*this)[tri[2]].GetLayer())
                     {
                       incons_layers = 1;
-                      cout << "inconsistent layers in triangle" << endl;
+                      // cout << "inconsistent layers in triangle" << endl;
                     }
                   
                   const netgen::Point<3> *trip1[3], *trip2[3];	  
@@ -3917,16 +3917,19 @@ namespace netgen
                     {
                       overlap = 1;
                       lock_guard<std::mutex> guard(m);
-                      PrintWarning ("Intersecting elements " 
-                                    ,int(sei), " and ", int(sej));
+                      if(!incons_layers)
+                        {
+                          PrintWarning ("Intersecting elements "
+                                        ,int(sei), " and ", int(sej));
                       
-                      (*testout) << "Intersecting: " << endl;
-                      (*testout) << "openelement " << sei << " with open element " << sej << endl;
+                          (*testout) << "Intersecting: " << endl;
+                          (*testout) << "openelement " << sei << " with open element " << sej << endl;
                       
-                      cout << "el1 = " << tri << endl;
-                      cout << "el2 = " << tri2 << endl;
-                      cout << "layer1 = " <<  (*this)[tri[0]].GetLayer() << endl;
-                      cout << "layer2 = " <<  (*this)[tri2[0]].GetLayer() << endl;
+                          cout << "el1 = " << tri << endl;
+                          cout << "el2 = " << tri2 << endl;
+                          cout << "layer1 = " <<  (*this)[tri[0]].GetLayer() << endl;
+                          cout << "layer2 = " <<  (*this)[tri2[0]].GetLayer() << endl;
+                        }
                       
                       for (int k = 1; k <= 3; k++)
                         (*testout) << tri.PNum(k) << "  ";
