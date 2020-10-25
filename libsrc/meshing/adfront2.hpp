@@ -262,7 +262,7 @@ public:
   bool Inside (const Point<2> & p) const;
 
   bool SameSide (const Point<2> & lp1, const Point<2> & lp2, 
-                 const NgArray<int> * /* testfaces */ = NULL) const;
+                 const FlatArray<int> * /* testfaces */ = NULL) const;
   /*
   {
     return Inside (lp1) == Inside (lp2);

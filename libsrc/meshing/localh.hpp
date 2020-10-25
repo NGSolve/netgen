@@ -30,10 +30,16 @@ namespace netgen
 
     struct 
     {
+      /*
       unsigned int cutboundary:1;
       unsigned int isinner:1;
       unsigned int oldcell:1;
       unsigned int pinner:1;
+      */
+      bool cutboundary;
+      bool isinner;
+      bool oldcell;
+      bool pinner;
     } flags;
 
     ///
@@ -158,8 +164,8 @@ namespace netgen
     ///
     void FindInnerBoxesRec2 (GradingBox * box,
 			     class AdFront2 * adfront,
-			     NgArray<Box<3> > & faceboxes,
-			     NgArray<int> & finds, int nfinbox);
+			     FlatArray<Box<2>> faceboxes,
+			     FlatArray<int> finds); // , int nfinbox);
 
 
 

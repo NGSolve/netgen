@@ -569,84 +569,72 @@ namespace netgen
 
 
     int nf = adfront->GetNFL();
-    NgArray<int> faceinds(nf);
-    NgArray<Box<3> > faceboxes(nf);
+    Array<int> faceinds(nf);
+    Array<Box<2>> faceboxes(nf);
 
     for (int i = 0; i < nf; i++)
       {
 	faceinds[i] = i;
-	// adfront->GetFaceBoundingBox(i, faceboxes.Elem(i));
-
 	const FrontLine & line = adfront->GetLine(i);
-	faceboxes[i].Set (adfront->GetPoint (line.L().I1()));
-	faceboxes[i].Add (adfront->GetPoint (line.L().I2()));
+        Point<3> p1 = adfront->GetPoint (line.L().I1());
+        Point<3> p2 = adfront->GetPoint (line.L().I2());
+        
+	faceboxes[i].Set (Point<2> (p1(0), p1(1)));
+	faceboxes[i].Add (Point<2> (p2(0), p2(1)));
       }
   
     for (int i = 0; i < 8; i++)
-      FindInnerBoxesRec2 (root->childs[i], adfront, faceboxes, faceinds, nf);
+      FindInnerBoxesRec2 (root->childs[i], adfront, faceboxes, faceinds); // , nf);
   }
 
 
   void LocalH :: 
   FindInnerBoxesRec2 (GradingBox * box,
 		      class AdFront2 * adfront, 
-		      NgArray<Box<3> > & faceboxes,
-		      NgArray<int> & faceinds, int nfinbox)
+		      FlatArray<Box<2>> faceboxes,
+		      FlatArray<int> faceinds) // , int nfinbox)
   {
     if (!box) return;
+
+    GradingBox * father = box -> father;    
     
-    GradingBox * father = box -> father;
-  
-    Point3d c(box->xmid[0], box->xmid[1], 0); // box->xmid[2]);
-    Vec3d v(box->h2, box->h2, box->h2);
-    Box3d boxc(c-v, c+v);
-
-    Point3d fc(father->xmid[0], father->xmid[1], 0); // father->xmid[2]);
-    Vec3d fv(father->h2, father->h2, father->h2);
-    Box3d fboxc(fc-fv, fc+fv);
-    Box3d boxcfc(c,fc);
-
-    NgArrayMem<int, 100> faceused;
-    NgArrayMem<int, 100> faceused2;
-    NgArrayMem<int, 100> facenotused;
-
-    for (int j = 0; j < nfinbox; j++)
-      {
-	//      adfront->GetFaceBoundingBox (faceinds.Get(j), facebox);
-	const Box3d & facebox = faceboxes[faceinds[j]];
-  
-	if (boxc.Intersect (facebox))
-	  faceused.Append(faceinds[j]);
-	else
-	  facenotused.Append(faceinds[j]);
-
-	if (boxcfc.Intersect (facebox))
-	  faceused2.Append (faceinds[j]);
-      }
-  
-    for (int j = 0; j < faceused.Size(); j++)
-      faceinds[j] = faceused[j];
-    for (int j = 0; j < facenotused.Size(); j++)
-      faceinds[j+faceused.Size()] = facenotused[j];
-  
     if (!father->flags.cutboundary)
       {
 	box->flags.isinner = father->flags.isinner;
 	box->flags.pinner = father->flags.pinner;
       }
     else
-      {
-	Point3d cf(father->xmid[0], father->xmid[1], father->xmid[2]);
-      
+      {        
 	if (father->flags.isinner)
           {
             box->flags.pinner = 1;
           }
 	else
 	  {
-	    Point<2> c2d (c.X(), c.Y());
-	    Point<2> cf2d (cf.X(), cf.Y());
-            bool sameside = adfront->SameSide (c2d, cf2d, &faceused2);
+            Point<2> c(box->xmid[0], box->xmid[1]); 
+            Point<2> fc(father->xmid[0], father->xmid[1]); 
+            Box<2> boxcfc(c,fc);
+
+            // reorder: put faces cutting boxcfc first:
+            int iused = 0;
+            int inotused = faceinds.Size()-1;
+            while (iused <= inotused)
+              {
+                while ( (iused <= inotused) && boxcfc.Intersect (faceboxes[faceinds[iused]]))
+                  iused++;
+                while ( (iused <= inotused) && !boxcfc.Intersect (faceboxes[faceinds[inotused]]))
+                  inotused--;
+                if (iused < inotused)
+                  {
+                    Swap (faceinds[iused], faceinds[inotused]);
+                    iused++;
+                    inotused--;
+                  }
+              }
+
+            // bool sameside = adfront->SameSide (c2d, cf2d, &faceused2);
+            auto sub = faceinds.Range(0, iused);
+            bool sameside = adfront->SameSide (c, fc, &sub);
             if (sameside)
 	      box->flags.pinner = father->flags.pinner;
 	    else
@@ -659,11 +647,34 @@ namespace netgen
 	  box->flags.isinner = box->flags.pinner;
       }
 
-    // cout << "faceused: " << faceused.Size() << ", " << faceused2.Size() << ", " << facenotused.Size() << endl;
 
-    int nf = faceused.Size();
+    
+    int iused = 0;
+    if (faceinds.Size())
+      {
+        Point<2> c(box->xmid[0], box->xmid[1]); // box->xmid[2]);
+        Vec<2> v(box->h2, box->h2);
+        Box<2> boxc(c-v, c+v);
+        
+        // reorder again: put faces cutting boxc first:    
+        int inotused = faceinds.Size()-1;
+        while (iused <= inotused)
+          {
+            while ( (iused <= inotused) && boxc.Intersect (faceboxes[faceinds[iused]]))
+              iused++;
+            while ( (iused <= inotused) && !boxc.Intersect (faceboxes[faceinds[inotused]]))
+              inotused--;
+            if (iused < inotused)
+              {
+                Swap (faceinds[iused], faceinds[inotused]);
+                iused++;
+                inotused--;
+              }
+          }
+      }
+    
     for (int i = 0; i < 8; i++)
-      FindInnerBoxesRec2 (box->childs[i], adfront, faceboxes, faceinds, nf);
+      FindInnerBoxesRec2 (box->childs[i], adfront, faceboxes, faceinds.Range(0,iused));
   }
 
 

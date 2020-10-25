@@ -89,11 +89,17 @@ namespace netgen
         Swap(p0,p1);
 
       INT<2> hash = {p0,p1};
+      /*
       if(!edge_to_trig.Used(hash))
         return -1;
 
       auto i2 = edge_to_trig.Get({p0,p1});
 
+      return i2[0] == eli ? i2[1] : i2[0];
+      */
+      auto pos = edge_to_trig.Position(hash);
+      if (pos == -1) return -1;
+      auto i2 = edge_to_trig.GetData(pos);
       return i2[0] == eli ? i2[1] : i2[0];
     }
 
@@ -105,6 +111,22 @@ namespace netgen
         Swap(p0,p1);
 
       INT<2> hash = {p0,p1};
+      auto pos = edge_to_trig.Position(hash);
+      if (pos == -1)
+        edge_to_trig[hash] = {eli, -1};
+      else
+        {
+          auto i2 = edge_to_trig.GetData(pos);
+          if(i2[0]==-1)
+            i2[0] = eli;
+          else
+            {
+              if(i2[1]==-1)
+                i2[1] = eli;
+            }
+          edge_to_trig.SetData (pos, i2);
+        }
+      /*
       if(!edge_to_trig.Used(hash))
         edge_to_trig[hash] = {eli, -1};
       else
@@ -122,6 +144,7 @@ namespace netgen
 
         edge_to_trig[hash] = i2;
       }
+      */
     }
 
     void UnsetNeighbours( int eli )
@@ -477,18 +500,31 @@ namespace netgen
         *testout << "npoints = " << endl << npoints << endl;
       }
 
-    for (int i = 1; i <= npoints.Size(); i++)
+
+    int prims[] = { 211, 223, 227, 229, 233, 239, 241, 251, 257, 263 }; 
+    int prim;
+  
+    {
+      int i = 0;
+      while (npoints.Size() % prims[i] == 0) i++;
+      prim = prims[i];
+    }
+
+    
+    for (int i = 0; i < npoints.Size(); i++)
       {
-	if (meshbox.IsIn (npoints.Get(i)))
+        size_t hi = (size_t(prim) * size_t(i)) % npoints.Size();
+        
+	if (meshbox.IsIn (npoints[hi]))
 	  {
-	    PointIndex gpnum = mesh.AddPoint (npoints.Get(i));
-	    adfront.AddPoint (npoints.Get(i), gpnum);
+	    PointIndex gpnum = mesh.AddPoint (npoints[hi]);
+	    adfront.AddPoint (npoints[hi], gpnum);
 	    
 	    if (debugparam.slowchecks)
 	      {
-		(*testout) << npoints.Get(i) << endl;
+		(*testout) << npoints[hi] << endl;
 
-		Point<2> p2d (npoints.Get(i)(0), npoints.Get(i)(1));
+		Point<2> p2d (npoints[hi](0), npoints[hi](1));
 		if (!adfront.Inside(p2d))
 		  {
 		    cout << "add outside point" << endl;
