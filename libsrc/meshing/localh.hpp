@@ -121,11 +121,14 @@ namespace netgen
     void ClearFlags ()
     { ClearFlagsRec(root); }
 
+    void ClearRootFlags ();
+
     /// widen refinement zone
     void WidenRefinement ();
 
     /// get points in inner elements
-    void GetInnerPoints (NgArray<Point<3> > & points);
+    void GetInnerPoints (NgArray<Point<3> > & points) const;
+    void GetInnerPointsRec (const GradingBox * box, NgArray<Point<3> > & points) const;
 
     /// get points in outer closure
     void GetOuterPoints (NgArray<Point<3> > & points);

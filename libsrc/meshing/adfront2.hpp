@@ -206,7 +206,7 @@ public:
 
   const FrontLine & GetLine (int nr) { return lines[nr]; }
   const FrontPoint2 & GetPoint (int nr) { return points[nr]; }
-
+  const auto & GetLines () const { return lines; }
 
   ///
   int SelectBaseLine (Point<3> & p1, Point<3> & p2, 

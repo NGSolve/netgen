@@ -454,8 +454,14 @@ namespace netgen
     bool changed;
     do 
       {
-	mesh.LocalHFunction().ClearFlags();
-	
+        static Timer tcf("clear flags");
+        tcf.Start();
+        // mesh.LocalHFunction().ClearFlags();
+        mesh.LocalHFunction().ClearRootFlags();
+	tcf.Stop();
+        
+        static Timer tcut("tcut");
+        tcut.Start();
 	for (int i = 0; i < adfront.GetNFL(); i++)
 	  {
 	    const FrontLine & line = adfront.GetLine(i);
@@ -469,7 +475,7 @@ namespace netgen
 	    
 	    mesh.LocalHFunction().CutBoundary (bbox); 
 	  }
-	
+	tcut.Stop();
 
 	mesh.LocalHFunction().FindInnerBoxes (&adfront, NULL);
 	
@@ -506,11 +512,11 @@ namespace netgen
   
     {
       int i = 0;
-      while (npoints.Size() % prims[i] == 0) i++;
+      if (npoints.Size())
+        while (npoints.Size() % prims[i] == 0) i++;
       prim = prims[i];
     }
 
-    
     for (int i = 0; i < npoints.Size(); i++)
       {
         size_t hi = (size_t(prim) * size_t(i)) % npoints.Size();
@@ -570,7 +576,8 @@ namespace netgen
       // outer points : smooth mesh-grading
     npoints.SetSize(0);
     loch2.GetOuterPoints (npoints);
-    
+
+    /*
     for (int i = 1; i <= npoints.Size(); i++)
       {
 	if (meshbox.IsIn (npoints.Get(i)))
@@ -579,7 +586,14 @@ namespace netgen
 	    adfront.AddPoint (npoints.Get(i), gpnum);
 	  }
       }  
+    */
 
+    for (const Point<3> p : npoints)
+      if (meshbox.IsIn(p))
+        {
+          PointIndex gpnum = mesh.AddPoint (p);
+          adfront.AddPoint (p, gpnum);
+        }
     timer4.Stop();
   }
 
@@ -589,6 +603,9 @@ namespace netgen
   void Meshing2 :: Delaunay (Mesh & mesh, int domainnr, const MeshingParameters & mp)
   {
     static Timer timer("Meshing2::Delaunay");
+    static Timer t1("Meshing2::Delaunay1");
+    static Timer t2("Meshing2::Delaunay2");
+    static Timer t3("Meshing2::Delaunay3");
     static Timer timer_addpoints("add points");
     RegionTimer reg (timer);
 
@@ -600,6 +617,7 @@ namespace netgen
 
     auto last_point_blockfill = mesh.Points().Range().Next();
 
+    t1.Start();
     // Bounding box for starting trig in delaunay
     Box<2> bbox (Box<2>::EMPTY_BOX);
 
@@ -615,10 +633,14 @@ namespace netgen
 
     for (int i = 0; i < mesh.LockedPoints().Size(); i++)
       bbox.Add (P2(mesh.Point (mesh.LockedPoints()[i])));
+    t1.Stop();
 
+    t2.Start();
     Array<PointIndex> old_points;
     BitArray add_point(mesh.Points().Size()+1);
+    Array<PointIndex> addpoints;
     add_point.Clear();
+    /*
     for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
     {
       const auto & s = mesh[si];
@@ -628,7 +650,28 @@ namespace netgen
         add_point.SetBit(s[1]);
       }
     }
+    */
+    /*
+    for (int i = 0; i < adfront.GetNFL(); i++)
+      {
+	const FrontLine & line = adfront.GetLine(i);
+        for (int j = 0; j < 2; j++)
+          add_point.SetBit (adfront.GetGlobalIndex (line.L()[j]))adfront.GetGlobalIndex (line.L()[j]));
+      }
+    */
+    for (const auto & line : adfront.GetLines())
+      for (int j = 0; j < 2; j++)
+        {
+          PointIndex pnum = adfront.GetGlobalIndex (line.L()[j]);
+          if (!add_point.Test(pnum))
+            addpoints.Append(pnum);
+          add_point.SetBit (pnum);
+        }
+      
+    
+    t2.Stop();
 
+    t3.Start();
     Mesh tempmesh;
     tempmesh.AddFaceDescriptor (FaceDescriptor (1, 1, 0, 0));
     tempmesh.AddFaceDescriptor (FaceDescriptor (2, 1, 0, 0));
@@ -637,8 +680,11 @@ namespace netgen
     Array<PointIndex, PointIndex> compress;
     Array<PointIndex, PointIndex> icompress(mesh.Points().Size());
 
+    /*
     for(auto pi : mesh.Points().Range())
       if(add_point.Test(pi))
+    */
+    for (PointIndex pi : addpoints)
       {
         icompress[pi] = tempmesh.AddPoint(mesh[pi]);
         compress.Append(pi);
@@ -649,7 +695,7 @@ namespace netgen
         icompress[pi] = tempmesh.AddPoint(mesh[pi]);
         compress.Append(pi);
       }
-
+    t3.Stop();
     // DelaunayMesh adds surrounding trig (don't add the last 3 points to delaunay AGAIN!
     auto tempmesh_points = tempmesh.Points().Range();
 
@@ -676,7 +722,10 @@ namespace netgen
 
     timer_addpoints.Stop();
 
+    static Timer taddseg("addseg");
+    taddseg.Start();
 
+    /*
     for (auto seg : mesh.LineSegments())
     {
       if ( seg.domin == domainnr || seg.domout == domainnr )
@@ -690,7 +739,19 @@ namespace netgen
         tempmesh.AddSegment(seg);
       }
     }
-
+    */
+    for (const auto & line : adfront.GetLines())
+      {
+        Segment seg;
+        for (int j = 0; j < 2; j++)
+          seg[j] = icompress [adfront.GetGlobalIndex (line.L()[j])];
+        seg.domin = domainnr;
+        seg.domout = 0;
+        tempmesh.AddSegment(seg);
+      }
+           
+    taddseg.Stop();
+    
     for (auto & trig : dmesh.GetElements())
     {
       if (trig[0] < 0) continue;
@@ -883,7 +944,7 @@ namespace netgen
       }
     }
 
-   mesh.Compress();
+    // mesh.Compress();  // don't compress whole mesh after every sub-domain
   }
 
 }

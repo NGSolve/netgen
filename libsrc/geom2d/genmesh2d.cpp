@@ -687,7 +687,7 @@ namespace netgen
         
         t_points.Stop();
 
-        if(mp.delaunay2d && cnt>100)
+        if(mp.delaunay2d && cnt>1)
           meshing.Delaunay(*mesh, domnr, mp);
         else
         {
@@ -706,6 +706,8 @@ namespace netgen
 	if (material)
           mesh->SetMaterial (domnr, material);
       }
+
+    mesh->Compress();
 
     mp.quad = hquad;
 

@@ -381,7 +381,12 @@ namespace netgen
           return;
       }
 
-    box->flags.cutboundary = 1;
+    if (!box->flags.cutboundary)
+      for (int i = 0; i < 8; i++)
+        if (box->childs[i])
+          box->childs[i]->flags.cutboundary = false;
+    
+    box->flags.cutboundary = true;
     for (int i = 0; i < 8; i++)
       if (box->childs[i])
 	CutBoundaryRec (pmin, pmax, box->childs[i]);
@@ -547,13 +552,19 @@ namespace netgen
   void LocalH :: FindInnerBoxes (AdFront2 * adfront,
 				 int (*testinner)(const Point<2> & p1))
   {
-    static int timer = NgProfiler::CreateTimer ("LocalH::FindInnerBoxes 2d");
-    NgProfiler::RegionTimer reg (timer);
+    static Timer t("LocalH::FindInnerBoxes 2d"); RegionTimer reg (t);
+    static Timer trec("LocalH::FindInnerBoxes 2d - rec");
+    static Timer tinit("LocalH::FindInnerBoxes 2d - init");     
 
+    /*
+    tinit.Start();
     for (int i = 0; i < boxes.Size(); i++)
       boxes[i] -> flags.isinner = 0;
-
+    tinit.Stop();
+    */
+    
     root->flags.isinner = 0;
+    root->flags.cutboundary = true;
 
     Point<2> rpmid(root->xmid[0], root->xmid[1]);   // , root->xmid[2]);
     Vec<2> rv(root->h2, root->h2);
@@ -582,7 +593,8 @@ namespace netgen
 	faceboxes[i].Set (Point<2> (p1(0), p1(1)));
 	faceboxes[i].Add (Point<2> (p2(0), p2(1)));
       }
-  
+
+    RegionTimer regrc(trec);
     for (int i = 0; i < 8; i++)
       FindInnerBoxesRec2 (root->childs[i], adfront, faceboxes, faceinds); // , nf);
   }
@@ -602,11 +614,13 @@ namespace netgen
       {
 	box->flags.isinner = father->flags.isinner;
 	box->flags.pinner = father->flags.pinner;
+        box->flags.cutboundary = false;
       }
     else
       {        
 	if (father->flags.isinner)
           {
+            cout << "how is this possible ???" << endl;
             box->flags.pinner = 1;
           }
 	else
@@ -672,9 +686,11 @@ namespace netgen
               }
           }
       }
-    
-    for (int i = 0; i < 8; i++)
-      FindInnerBoxesRec2 (box->childs[i], adfront, faceboxes, faceinds.Range(0,iused));
+
+
+    if (box->flags.isinner || box->flags.cutboundary)
+      for (int i = 0; i < 8; i++)
+        FindInnerBoxesRec2 (box->childs[i], adfront, faceboxes, faceinds.Range(0,iused));
   }
 
 
@@ -720,6 +736,13 @@ namespace netgen
 	ClearFlagsRec (box->childs[i]);
   }
 
+  void LocalH :: ClearRootFlags ()
+  {
+    root->flags.cutboundary = false;
+    root->flags.isinner = false;
+  }
+
+  
   void LocalH :: ClearFlagsRec (GradingBox * box)
   {
     box->flags.cutboundary = 0;
@@ -746,13 +769,17 @@ namespace netgen
       }
   }
 
-  void LocalH :: GetInnerPoints (NgArray<Point<3> > & points)
+  void LocalH :: GetInnerPoints (NgArray<Point<3> > & points) const
   {
+    static Timer t("GetInnerPoints"); RegionTimer reg(t);
     if (dimension == 2)
       {
+        GetInnerPointsRec (root, points);
+        /*
         for (int i = 0; i < boxes.Size(); i++)
           if (boxes[i] -> flags.isinner && boxes[i] -> HasChilds())
             points.Append ( boxes[i] -> PMid() );
+        */
       }
     else
       {
@@ -763,7 +790,18 @@ namespace netgen
           
   }
 
+  void LocalH :: GetInnerPointsRec (const GradingBox * box, NgArray<Point<3> > & points) const
+  {
+    if (box -> flags.isinner && box -> HasChilds())
+      points.Append ( box -> PMid() );
 
+    if (box->flags.isinner || box->flags.cutboundary)
+      for (int i = 0; i < 8; i++)
+        if (box->childs[i])
+          GetInnerPointsRec (box->childs[i], points);
+  }
+
+  
   void LocalH :: GetOuterPoints (NgArray<Point<3> > & points)
   {
     for (int i = 0; i < boxes.Size(); i++)
