@@ -337,6 +337,25 @@ namespace ngcore
         return;
       }
     
+    if (antasks == 1)
+      {
+        if (trace)
+          trace->StartJob(jobnr, afunc.target_type());
+        jobnr++;
+        if (startup_function) (*startup_function)();
+        TaskInfo ti;
+        ti.task_nr = 0;
+        ti.ntasks = 1;
+        ti.thread_nr = 0; ti.nthreads = 1;
+        {
+          RegionTracer t(ti.thread_nr, jobnr, RegionTracer::ID_JOB, ti.task_nr);
+          afunc(ti);
+        }
+        if (cleanup_function) (*cleanup_function)();
+        if (trace)
+          trace->StopJob();
+        return;
+      }
     
     if (trace)
         trace->StartJob(jobnr, afunc.target_type());

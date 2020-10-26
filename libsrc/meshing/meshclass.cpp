@@ -6410,7 +6410,9 @@ namespace netgen
                for (SurfaceElementIndex ei : myrange)
                  for (PointIndex pi : (*this)[ei].PNums())
                    creator.Add (pi, ei);
-             }, ngcore::TasksPerThread(4));
+             },
+             // ngcore::TasksPerThread(4));
+             (surfelements.Size()>100) ? ngcore::TasksPerThread(4) : 1);
       }
     else
       {
@@ -6432,7 +6434,8 @@ namespace netgen
        {
          for (PointIndex pi : myrange)
            QuickSort(elementsonnode[pi]);
-       });
+       },
+       (surfelements.Size()>100) ? ngcore::TasksPerThread(1) : 1);
 
     return move(elementsonnode);
   }

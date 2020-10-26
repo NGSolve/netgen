@@ -45,8 +45,10 @@ namespace netgen
       Point<2> p1 = P2(mesh[pnums[0]]);
       Point<2> p2 = P2(mesh[pnums[1]]);
       Point<2> p3 = P2(mesh[pnums[2]]);
+
       Vec<2> v1 = p2-p1;
       Vec<2> v2 = p3-p1;
+      /*
       Mat<2,2> mat, inv;
       mat(0,0) = v1*v1;
       mat(0,1) = v1*v2;
@@ -60,7 +62,22 @@ namespace netgen
       
       c = p1 + sol(0) * v1 + sol(1) * v2;
       rad2 = Dist2(c, p1);
-      r = sqrt(rad2); 
+      r = sqrt(rad2);
+      */
+
+      // without normal equation ...
+      Mat<2,2> mat, inv;
+      mat(0,0) = v1(0); mat(0,1) = v1(1);
+      mat(1,0) = v2(0); mat(1,1) = v2(1);
+      CalcInverse (mat, inv);
+      Vec<2> rhs, sol;
+      rhs(0) = 0.5 * v1*v1;
+      rhs(1) = 0.5 * v2*v2;
+      sol = inv * rhs;
+      c = p1 + sol;
+
+      rad2 = Dist2(c, p1);
+      r = sqrt(rad2);
     }
 
     Point<2> Center() const { return c; }
@@ -246,6 +263,7 @@ namespace netgen
 
     if(definitive_overlapping_trig==-1)
     {
+      static Timer t("slow check"); RegionTimer reg(t);
       PrintMessage (5, "Warning in delaunay tree - didn't find overlapping circle, check all trigs again");
       for(auto i_trig : trigs.Range())
       {
@@ -257,7 +275,8 @@ namespace netgen
         double rad2 = trig.Radius2();
         double d2 = Dist2 (trig.Center(), newp);
 
-        if (d2 < 0.999 * rad2)
+        // if (d2 < 0.999 * rad2)
+        if (d2 < (1-1e-10)*rad2)
         {
           definitive_overlapping_trig = i_trig;
           break;

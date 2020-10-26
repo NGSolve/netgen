@@ -18,6 +18,19 @@ namespace ngcore
     size_t size  = entrysize.Size();
     size_t * index = new size_t[size+1];
 
+    if (entrysize.Size() < 100)
+      {
+        size_t mysum = 0;
+        for (size_t i = 0; i < entrysize.Size(); i++)
+          {
+            index[i] = mysum;
+            mysum += entrysize[i];
+          }
+        index[entrysize.Size()] = mysum;
+        return index;
+      }
+
+    
     Array<size_t> partial_sums(TaskManager::GetNumThreads()+1);
     partial_sums[0] = 0;
     ParallelJob
