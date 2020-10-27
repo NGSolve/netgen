@@ -677,7 +677,7 @@ namespace netgen
       for (auto sei : Range(mesh.SurfaceElements()))
       {
         int ei0, ei1;
-	topo.GetSurface2VolumeElement (sei, ei0, ei1);
+        topo.GetSurface2VolumeElement (sei+1, ei0, ei1);
         auto si = mesh.SurfaceElement(sei).GetIndex();
         auto & fd = mesh.GetFaceDescriptor(si);
 
