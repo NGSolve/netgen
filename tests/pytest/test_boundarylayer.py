@@ -2,11 +2,15 @@
 import pytest
 from netgen.csg import *
 
-def GetNSurfaceElements(mesh, boundaries):
+def GetNSurfaceElements(mesh, boundaries, adjacent_domain=None):
     nse_in_layer = 0
     for el in mesh.Elements2D():
         if mesh.GetBCName(el.index-1) in boundaries:
-            nse_in_layer += 1
+            if adjacent_domain is None:
+                nse_in_layer += 1
+            else:
+                if (mesh.FaceDescriptor(el.index).domin > 0 and mesh.GetMaterial(mesh.FaceDescriptor(el.index).domin) == adjacent_domain) or (mesh.FaceDescriptor(el.index).domout > 0 and mesh.GetMaterial(mesh.FaceDescriptor(el.index).domout) == adjacent_domain):
+                    nse_in_layer += 1
     return nse_in_layer
 
 @pytest.mark.parametrize("outside", [True, False])
@@ -29,7 +33,7 @@ def test_boundarylayer(outside, capfd):
         assert not "elements are not matching" in capture.out
 
 @pytest.mark.parametrize("outside", [True, False])
-@pytest.mark.parametrize("version", [1]) # version 2 not working yet
+@pytest.mark.parametrize("version", [1, 2]) # version 2 not working yet
 def test_boundarylayer2(outside, version, capfd):
     geo = CSGeometry()
     top = Plane(Pnt(0,0,0.5), Vec(0,0,1))
@@ -48,7 +52,7 @@ def test_boundarylayer2(outside, version, capfd):
 
     geo.CloseSurfaces(top, bot, [])
     mesh = geo.GenerateMesh()
-    should_ne = mesh.ne + 2 * GetNSurfaceElements(mesh, ["default"])
+    should_ne = mesh.ne + 2 * GetNSurfaceElements(mesh, ["default"], "part")
     layersize = 0.05
     mesh.BoundaryLayer("default", [0.5 * layersize, layersize], "layer", domains="part", outside=outside, grow_edges=True)
     assert mesh.ne == should_ne
