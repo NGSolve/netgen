@@ -1082,8 +1082,12 @@ namespace netgen
 			   MarkedQuad & mq)
   {
     for (int i = 0; i < 4; i++)
-      mq.pnums[i] = el[i];
-    Swap (mq.pnums[2], mq.pnums[3]);  
+      {
+        mq.pnums[i] = el[i];
+        mq.pgeominfo[i] = el.GeomInfoPi (i+1);
+      }
+    Swap (mq.pnums[2], mq.pnums[3]);
+    Swap (mq.pgeominfo[2], mq.pgeominfo[3]);
 
     mq.marked = 0;
     mq.markededge = 0;
