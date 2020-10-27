@@ -677,6 +677,18 @@ namespace netgen
 	outfile << endl << endl;
       }
 
+    int cntcd3names = 0;
+    for (int ii = 0; ii<cd3names.Size(); ii++)
+      if(cd3names[ii]) cntcd3names++;
+
+    if(cntcd3names)
+      {
+	outfile << "\n\ncd3names" << endl << cd3names.Size() << endl;
+	for (i=0; i<cd3names.Size(); i++)
+	  outfile << i+1 << "\t" << GetCD3Name(i) << endl;
+	outfile << endl << endl;
+      }
+
     /*
       if ( GetDimension() == 2 )
       {
@@ -1152,6 +1164,23 @@ namespace netgen
 	    if (GetDimension() == 2)
 	      {
 		throw NgException("co dim 2 elements not implemented for dimension 2");
+	      }
+	  }
+
+        if ( strcmp (str, "cd3names" ) == 0)
+	  {
+	    infile >> n;
+	    NgArray<int,0> cd3nrs(n);
+	    SetNCD3Names(n);
+	    for( i=1; i<=n; i++)
+	      {
+		string nextcd3name;
+		infile >> cd3nrs[i-1] >> nextcd3name;
+		cd3names[cd3nrs[i-1]-1] = new string(nextcd3name);
+	      }
+	    if (GetDimension() < 3)
+	      {
+		throw NgException("co dim 3 elements not implemented for dimension < 3");
 	      }
 	  }
 
