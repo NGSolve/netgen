@@ -133,8 +133,16 @@ public:
    // Nikhil - 29/09/2020
    // Added a couple more parameters into the meshing parameters list
    // from Netgen into Nglib
-   int parthreadenable;                 //!< Enable / Disable parallel threads
+   int parallel_meshing;                //!< Enable / Disable parallel meshing
    int nthreads;                        //!< Set number of threads to use
+   
+   double opterrpow;
+   int delaunayenable;                  //!< Enable / Disable delaunay
+   int blockfillenable;                 //!< Enable / Disable block fill
+   double blockfilldist;                //!< Enable / Disable block fill distance
+   int maxoutersteps;                   //!< Set max number of outer steps
+   int only3D_domain_nr;                
+   int try_hexes;                       //!< Enable / Disable hex-meshing
 
    double surfcurvfact;                 //!< Set STL - surface curvature
    double chartdistfact;                //!< Set STL - chart distance
@@ -169,7 +177,7 @@ public:
       - #invert_trigs:0 
       - #check_overlap: 1
       - #check_overlapping_boundary: 1
-      - #parthreadenable: 0
+      - #parallel_meshing: 1
       - #nthreads: 4
       - #surfcurvfact: 2
       - #chartdistfact: 1.2

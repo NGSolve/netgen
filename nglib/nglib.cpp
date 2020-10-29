@@ -1014,8 +1014,16 @@ namespace nglib
       check_overlap = 1;
       check_overlapping_boundary = 1;
 
-      parthreadenable = 0;
+      parallel_meshing = 1;
       nthreads = 4;
+      
+      opterrpow = 2;
+      delaunayenable = 1;
+      blockfillenable = 1;
+      blockfilldist = 0.1;
+      maxoutersteps = 10;
+      only3D_domain_nr = 0;
+      try_hexes = 0;
 
       surfcurvfact = 2;
       chartdistfact = 1.2;
@@ -1066,8 +1074,16 @@ namespace nglib
       check_overlap = 1;
       check_overlapping_boundary = 1;
 
-      parthreadenable = 0;
+      parallel_meshing = 1;
       nthreads = 4;
+      
+      opterrpow = 2;
+      delaunayenable = 1;
+      blockfillenable = 1;
+      blockfilldist = 0.1;
+      maxoutersteps = 10;
+      only3D_domain_nr = 0;
+      try_hexes = 0;
 
       surfcurvfact = 2;
       chartdistfact = 1.2;
@@ -1100,6 +1116,7 @@ namespace nglib
         mparam.meshsizefilename = meshsize_filename;
       else
         mparam.meshsizefilename = "";
+        
       mparam.optsteps2d = optsteps_2d;
       mparam.optsteps3d = optsteps_3d;
 
@@ -1109,8 +1126,16 @@ namespace nglib
       mparam.checkoverlap = check_overlap;
       mparam.checkoverlappingboundary = check_overlapping_boundary;
 
-      mparam.parthread = parthreadenable;
+      mparam.parallel_meshing = parallel_meshing;
       mparam.nthreads = nthreads;
+      
+      mparam.opterrpow = opterrpow;
+      mparam.delaunay = delaunayenable;
+      mparam.blockfill = blockfillenable;
+      mparam.filldist = blockfilldist;
+      mparam.maxoutersteps = maxoutersteps;
+      mparam.only3D_domain_nr = only3D_domain_nr;
+      mparam.try_hexes = try_hexes;
 
       stlparam.resthsurfcurvfac = surfcurvfact;
       stlparam.resthchartdistfac = chartdistfact;
