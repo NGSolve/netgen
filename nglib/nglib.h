@@ -185,7 +185,7 @@ public:
       - #blockfilldist = 0.1
       - maxoutersteps = 10
       - only3D_domain_nr = 0
-      - try_hexes = 1
+      - try_hexes = 0
       - #surfcurvfact: 2
       - #chartdistfact: 1.2
       - #edgeanglefact: 1
