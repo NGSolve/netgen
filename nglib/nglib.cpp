@@ -1116,7 +1116,7 @@ namespace nglib
         mparam.meshsizefilename = meshsize_filename;
       else
         mparam.meshsizefilename = "";
-        
+
       mparam.optsteps2d = optsteps_2d;
       mparam.optsteps3d = optsteps_3d;
 
@@ -1144,6 +1144,9 @@ namespace nglib
       stlparam.resthlinelengthfac = linelengthfact;
 
       stldoctor.geom_tol_fact = stlgeom_tol_fact;
+
+      if(closeedgeenable)
+         mparam.closeedgefac = closeedgefact;
    }
    // ------------------ End - Meshing Parameters related functions --------------------
 

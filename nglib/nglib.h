@@ -136,12 +136,12 @@ public:
    int parallel_meshing;                //!< Enable / Disable parallel meshing
    int nthreads;                        //!< Set number of threads to use
    
-   double opterrpow;
+   double opterrpow;                    //!< Set power of error (to approximate max err optimization)
    int delaunayenable;                  //!< Enable / Disable delaunay
    int blockfillenable;                 //!< Enable / Disable block fill
    double blockfilldist;                //!< Enable / Disable block fill distance
    int maxoutersteps;                   //!< Set max number of outer steps
-   int only3D_domain_nr;                
+   int only3D_domain_nr;                //!< Select domain to perform volume meshing ignoring others. (0 => ignore none)
    int try_hexes;                       //!< Enable / Disable hex-meshing
 
    double surfcurvfact;                 //!< Set STL - surface curvature
@@ -179,6 +179,13 @@ public:
       - #check_overlapping_boundary: 1
       - #parallel_meshing: 1
       - #nthreads: 4
+      - #opterrpow: 2
+      - #delaunayenable: 1
+      - #blockfillenable = 1
+      - #blockfilldist = 0.1
+      - maxoutersteps = 10
+      - only3D_domain_nr = 0
+      - try_hexes = 1
       - #surfcurvfact: 2
       - #chartdistfact: 1.2
       - #edgeanglefact: 1
