@@ -602,7 +602,20 @@ namespace netgen
         outfile << (*this)[pi](1)/scale << "  ";
         outfile.width(22);
         outfile << (*this)[pi](2)/scale << "\n";
-      }      
+      }
+
+    outfile << "\n" << "\n";
+    outfile << "#          pnum             index" << "\n";
+    outfile << "pointelements" << "\n";
+    outfile << pointelements.Size() << "\n";
+
+    for (i = 0; i < pointelements.Size(); i++)
+      {
+        outfile.width(8);
+        outfile << pointelements[i].pnum << "  ";
+        outfile.width(8);
+        outfile << pointelements[i].index << "\n";
+      }
 
     if (ident -> GetMaxNr() > 0)
       {
@@ -674,6 +687,18 @@ namespace netgen
 	outfile << "\n\ncd2names" << endl << cd2names.Size() << endl;
 	for (i=0; i<cd2names.Size(); i++)
 	  outfile << i+1 << "\t" << GetCD2Name(i) << endl;
+	outfile << endl << endl;
+      }
+
+    int cntcd3names = 0;
+    for (int ii = 0; ii<cd3names.Size(); ii++)
+      if(cd3names[ii]) cntcd3names++;
+
+    if(cntcd3names)
+      {
+	outfile << "\n\ncd3names" << endl << cd3names.Size() << endl;
+	for (i=0; i<cd3names.Size(); i++)
+	  outfile << i+1 << "\t" << GetCD3Name(i) << endl;
 	outfile << endl << endl;
       }
 
@@ -1071,6 +1096,19 @@ namespace netgen
 	    PrintMessage (3, n, " points done");
           }
 
+        if (strcmp (str, "pointelements") == 0)
+          {
+            infile >> n;
+            PrintMessage (3, n, " pointelements");
+            for (i = 1; i <= n; i++)
+              {
+                Element0d el;
+                infile >> el.pnum >> el.index;
+                pointelements.Append (el);
+              }
+	    PrintMessage (3, n, " pointelements done");
+          }
+
         if (strcmp (str, "identifications") == 0)
           {
             infile >> n;
@@ -1152,6 +1190,23 @@ namespace netgen
 	    if (GetDimension() == 2)
 	      {
 		throw NgException("co dim 2 elements not implemented for dimension 2");
+	      }
+	  }
+
+        if ( strcmp (str, "cd3names" ) == 0)
+	  {
+	    infile >> n;
+	    NgArray<int,0> cd3nrs(n);
+	    SetNCD3Names(n);
+	    for( i=1; i<=n; i++)
+	      {
+		string nextcd3name;
+		infile >> cd3nrs[i-1] >> nextcd3name;
+		cd3names[cd3nrs[i-1]-1] = new string(nextcd3name);
+	      }
+	    if (GetDimension() < 3)
+	      {
+		throw NgException("co dim 3 elements not implemented for dimension < 3");
 	      }
 	  }
 
