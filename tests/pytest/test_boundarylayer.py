@@ -79,4 +79,18 @@ def test_wrong_orientation(outside):
     mesh = ngs.Mesh(mesh)
     assert ngs.Integrate(1, mesh) == pytest.approx(1.2**3 if outside else 1)
 
+def test_splitted_surface():
+    geo = CSGeometry()
 
+    brick = OrthoBrick((0,0,0), (1,1,1))
+    slots = OrthoBrick((0.2,0,-1), (0.4, 1, 2)) + OrthoBrick((0.6, 0,-1), (0.8, 1,2))
+    geo.Add((brick-slots).mat("block"))
+    geo.Add((brick*slots).mat("slot"))
+
+    mesh = geo.GenerateMesh()
+    mesh.BoundaryLayer(".*", [0.001, 0.002], "block", "block", outside=False,
+                       grow_edges=True)
+    ngs = pytest.importorskip("ngsolve")
+    mesh = ngs.Mesh(mesh)
+    assert ngs.Integrate(1, mesh) == pytest.approx(1)
+    assert ngs.Integrate(1, mesh.Materials("slot")) == pytest.approx(0.4)
