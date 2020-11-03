@@ -5919,6 +5919,12 @@ namespace netgen
                 SurfaceElement(els_of_face[i]).next = facedecoding[ind-1].firstelement;
                 facedecoding[ind-1].firstelement = els_of_face[i];
               }
+
+            // map the segments
+            for(auto& seg : segments)
+              if(!usedp.Test(seg[0]) || !usedp.Test(seg[1]))
+                if(seg.si == fdi)
+                  seg.si = nface;
           }
 
         fdi++;
