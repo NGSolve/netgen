@@ -18,6 +18,7 @@ public:
   BitArray domains;
   bool outside = false; // set the boundary layer on the outside
   bool grow_edges = false;
+  Array<size_t> project_boundaries;
 };
 
 DLL_HEADER void GenerateBoundaryLayer (Mesh & mesh,

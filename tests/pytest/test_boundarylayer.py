@@ -54,6 +54,29 @@ def test_boundarylayer2(outside, version, capfd):
     mesh = geo.GenerateMesh()
     should_ne = mesh.ne + 2 * GetNSurfaceElements(mesh, ["default"], "part")
     layersize = 0.05
-    mesh.BoundaryLayer("default", [0.5 * layersize, layersize], "layer", domains="part", outside=outside, grow_edges=True)
+    mesh.BoundaryLayer("default", [0.5 * layersize, layersize], "part", domains="part", outside=outside, grow_edges=True)
     assert mesh.ne == should_ne
     assert not "elements are not matching" in capfd.readouterr().out
+    import netgen.gui
+    ngs = pytest.importorskip("ngsolve")
+    ngs.Draw(ngs.Mesh(mesh))
+    mesh = ngs.Mesh(mesh)
+    assert ngs.Integrate(1, mesh.Materials("part")) == pytest.approx(0.5*2.05*2.05 if outside else 0.4*2*2)
+    assert ngs.Integrate(1, mesh) == pytest.approx(3**3)
+
+
+@pytest.mark.parametrize("outside", [True, False])
+def test_wrong_orientation(outside):
+    geo = CSGeometry()
+    brick = OrthoBrick((-1,0,0),(1,1,1)) - Plane((0,0,0), (1,0,0))
+    geo.Add(brick.mat("air"))
+
+    mesh = geo.GenerateMesh()
+
+    mesh.BoundaryLayer(".*", 0.1, "air", domains="air", outside=outside,
+                       grow_edges=True)
+    ngs = pytest.importorskip("ngsolve")
+    mesh = ngs.Mesh(mesh)
+    assert ngs.Integrate(1, mesh) == pytest.approx(1.2**3 if outside else 1)
+
+

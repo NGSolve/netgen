@@ -215,6 +215,11 @@ namespace netgen
             if (blp.surfid.Contains(sel.GetIndex()))
               {
                 auto n2 = GetSurfaceNormal(mesh,sel);
+                auto& fd = mesh.GetFaceDescriptor(sel.GetIndex());
+                auto domin = fd.DomainIn();
+                auto domout = fd.DomainOut();
+                if(blp.domains.Test(domout) && !blp.domains.Test(domin))
+                  n2 *= -1;
                 if(!blp.outside)
                   n2 *= -1;
                 for(auto pi : sel.PNums())
@@ -238,24 +243,37 @@ namespace netgen
               }
 
           // project growthvector on surface for inner angles
-          // for(const auto& sel : mesh.SurfaceElements())
-          //   if(!blp.surfid.Contains(sel.GetIndex()))
-          //     {
-          //       auto n = GetSurfaceNormal(mesh, sel);
-          //       for(auto pi : sel.PNums())
-          //         {
-          //           if(growthvectors[pi].Length2() == 0.)
-          //             continue;
-          //           auto& g = growthvectors[pi];
-          //           auto ng = n * g;
-          //           auto gg = g * g;
-          //           auto nn = n * n;
-          //           if(fabs(ng*ng-nn*gg) < 1e-12 || fabs(ng) < 1e-12) continue;
-          //           auto a = -ng*ng/(ng*ng-nn * gg);
-          //           auto b = ng*gg/(ng*ng-nn*gg);
-          //           g += a*g + b*n;
-          //         }
-          //     }
+          for(const auto& sel : mesh.SurfaceElements())
+            // if(!blp.surfid.Contains(sel.GetIndex()))
+            //   {
+            if(blp.project_boundaries.Contains(sel.GetIndex()))
+              {
+                auto n = GetSurfaceNormal(mesh, sel);
+                for(auto i : Range(sel.PNums()))
+                  {
+                    auto pi = sel.PNums()[i];
+                    if(growthvectors[pi].Length2() == 0.)
+                      continue;
+                    auto next = sel.PNums()[(i+1)%sel.GetNV()];
+                    auto prev = sel.PNums()[i == 0 ? sel.GetNV()-1 : i-1];
+                    auto v1 = (mesh[next] - mesh[pi]).Normalize();
+                    auto v2 = (mesh[prev] - mesh[pi]).Normalize();
+                    auto v3 = growthvectors[pi];
+                    v3.Normalize();
+                    // only project if sel goes in boundarylayer direction
+                    if((v1 * v3 < 1e-12) || (v2 * v3 < 1e-12))
+                      continue;
+
+                    auto& g = growthvectors[pi];
+                    auto ng = n * g;
+                    auto gg = g * g;
+                    auto nn = n * n;
+                    if(fabs(ng*ng-nn*gg) < 1e-12 || fabs(ng) < 1e-12) continue;
+                    auto a = -ng*ng/(ng*ng-nn * gg);
+                    auto b = ng*gg/(ng*ng-nn*gg);
+                    g += a*g + b*n;
+                  }
+              }
 
           if (!blp.grow_edges)
             {
