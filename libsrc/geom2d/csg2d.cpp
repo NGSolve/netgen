@@ -1565,6 +1565,39 @@ Solid2d ClipSolids ( Solid2d && s1, Solid2d && s2, char op)
   return std::move(res);
 }
 
+Vertex* Loop :: getNonIntersectionVertex()
+  {
+    for (Vertex* v : Vertices(ALL))
+      if (!v->is_intersection)
+        return(v);
+
+    // no non-intersection vertex found -> generate and return temporary vertex
+    for (Vertex* v : Vertices(ALL))
+      // make sure that edge from V to V->next is not collinear with other polygon
+      if ( (v->next->neighbour != v->neighbour->prev) && (v->next->neighbour != v->neighbour->next) )
+      {
+        // add edge midpoint as temporary vertex
+        if(v->spline)
+        {
+          auto p = v->spline->GetPoint(0.5);
+          auto s = *v->spline;
+          v->spline = Split(s, 0, 0.5);
+          auto vnew = v->Insert(p);
+          vnew->info = v->info;
+          vnew->spline = Split(s, 0.5, 1.0);
+          return vnew;
+        }
+        else
+        {
+          auto p = Center(*v, *v->next);
+          auto vnew = v->Insert(p);
+          vnew->info = v->info;
+          return vnew;
+        }
+      }
+    return(NULL);
+  }
+
 bool Loop :: IsInside( Point<2> r ) const
 {
   int w = 0;
