@@ -1292,20 +1292,38 @@ void CreateResult(Solid2d & sp, Solid2d & sr, bool UNION)
   }
 }
 
+// Check if vertex v is not necessary (i.e. is on the line v->prev, v->next and has same info as v->prev and no pinfo
+bool canRemoveVertex( Vertex * v )
+{
+  return false;
+  if(v->spline)
+    return false;
+  if(v->pinfo.name != POINT_NAME_DEFAULT)
+    return false;
+  if(v->pinfo.maxh != MAXH_DEFAULT)
+    return false;
+
+  if(v->info.bc != v->prev->info.bc || v->info.maxh != v->prev->info.maxh )
+    return false;
+
+  if(fabs(Area(*v->prev,*v,*v->next)) >= EPSILON)
+    return false;
+
+  return true;
+}
+
 void CleanUpResult(Solid2d & sr)
 {
   auto & RR = sr.polys;
   for (Loop& R : RR)
   {
-    while ( (R.first.get() != NULL) && (fabs(Area(*R.first->prev,*R.first,*R.first->next)) < EPSILON) )
+    while ( (R.first.get() != NULL) && canRemoveVertex(R.first.get())) 
       R.Remove(R.first.get());
 
     if (R.first.get() != NULL)
       for (Vertex* V : R.Vertices(ALL))
-        if (!V->spline && !V->prev->spline && fabs(Area(*V->prev,*V,*V->next)) < EPSILON)
-        {
+        if (canRemoveVertex(V))
           R.Remove(V);
-        }
   }
   for (int i = RR.Size()-1; i>=0; i--)
     if(RR[i].Size()==0)
