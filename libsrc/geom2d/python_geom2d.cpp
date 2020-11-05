@@ -414,16 +414,9 @@ DLL_HEADER void ExportGeom2d(py::module &m)
 
     .def("Copy", [](Solid2d & self) -> Solid2d { return self; })
     .def("Move", &Solid2d::Move)
-    .def("Scale", &Solid2d::Scale)
-    .def("Rotate", [](Solid2d & self, optional<double> rad, optional<double> deg, Point<2> center )
-        {
-          if(rad)
-            self.RotateRad(*rad, center);
-          if(deg)
-            self.RotateDeg(*deg, center);
-          return self;
-        }, py::arg("rad")=nullopt, py::arg("deg")=nullopt, py::arg("center")=Point<2>{0,0})
-
+    .def("Scale", static_cast<Solid2d& (Solid2d::*)(double)>(&Solid2d::Scale))
+    .def("Scale", static_cast<Solid2d& (Solid2d::*)(Vec<2>)>(&Solid2d::Scale))
+    .def("Rotate", &Solid2d::RotateDeg, py::arg("angle"), py::arg("center")=Point<2>{0,0})
     ;
   
 

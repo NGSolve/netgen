@@ -1703,11 +1703,14 @@ Solid2d & Solid2d :: Move( Vec<2> v )
   return Transform( [v](Point<2> p) -> Point<2> { return p+v; } );
 }
 
-Solid2d & Solid2d :: Scale( double sx, double sy )
+Solid2d & Solid2d :: Scale( double s )
 {
-  if(sy==0.0)
-      sy=sx;
-  return Transform( [sx,sy](Point<2> p) -> Point<2> { return{p[0]*sx, p[1]*sy}; } );
+  return Transform( [s](Point<2> p) -> Point<2> { return{p[0]*s, p[1]*s}; } );
+}
+
+Solid2d & Solid2d :: Scale( Vec<2> s )
+{
+  return Transform( [s](Point<2> p) -> Point<2> { return{p[0]*s[0], p[1]*s[1]}; } );
 }
 
 Solid2d & Solid2d :: RotateRad( double ang, Point<2> center )
@@ -1720,8 +1723,8 @@ Solid2d & Solid2d :: RotateRad( double ang, Point<2> center )
           p -= c;
           double x = p[0];
           double y = p[1];
-          p[0] = cosa*x+sina*y;
-          p[1] = -sina*x+cosa*y;
+          p[0] = cosa*x-sina*y;
+          p[1] = sina*x+cosa*y;
           p += c;
           return p;
       } );

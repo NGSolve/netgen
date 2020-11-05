@@ -678,11 +678,12 @@ struct Solid2d
     }
 
   Solid2d & Move( Vec<2> v );
-  Solid2d & Scale( double sx, double sy=0.0 );
+  Solid2d & Scale( double s );
+  Solid2d & Scale( Vec<2> s );
   Solid2d & RotateRad( double ang, Point<2> center = {0,0} );
   Solid2d & RotateDeg( double ang, Point<2> center = {0,0} )
     {
-      return RotateRad( ang/180.*M_PI );
+      return RotateRad( ang/180.*M_PI, center );
     }
 
   Solid2d & BC(string bc)

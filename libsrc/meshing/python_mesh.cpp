@@ -211,6 +211,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   py::class_<Vec<2>> (m, "Vec2d")
     .def(py::init<double,double>())
+    .def(py::init( [] (std::pair<double,double> xy)
+            {
+                return Vec<2>{xy.first, xy.second};
+            }))
     .def ("__str__", &ToString<Vec<3>>)
     .def(py::self==py::self)
     .def(py::self+py::self)
@@ -222,6 +226,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("__getitem__", [](Vec<2>& vec, int index) { return vec[index]; })
     .def("__len__", [](Vec<2>& /*unused*/) { return 2; })
     ;
+
+  py::implicitly_convertible<py::tuple, Vec<2>>();
 
   py::class_<Vec<3>> (m, "Vec3d")
     .def(py::init<double,double,double>())
