@@ -1252,27 +1252,45 @@ grow_edges : bool = False
                   }), py::arg("mapping"))
     .def(NGSPickle<SurfaceGeometry>())
     .def("GenerateMesh", [](shared_ptr<SurfaceGeometry> geo,
-                            bool quads, int nx, int ny, bool flip_triangles, py::list py_bbbpts, py::list py_bbbnames)
+                            bool quads, int nx, int ny, bool flip_triangles, py::list py_bbbpts, py::list py_bbbnames, py::list py_hppts, py::list py_hpbnd)
            {
              if (py::len(py_bbbpts) != py::len(py_bbbnames))
                throw Exception("In SurfaceGeometry::GenerateMesh bbbpts and bbbnames do not have same lengths.");
              Array<Point<3>> bbbpts(py::len(py_bbbpts));
              Array<string> bbbname(py::len(py_bbbpts));
+             Array<Point<3>> hppts(py::len(py_hppts));
+             Array<float> hpptsfac(py::len(py_hppts));
+             Array<string> hpbnd(py::len(py_hpbnd));
+             Array<float> hpbndfac(py::len(py_hpbnd));
              for(int i = 0; i<py::len(py_bbbpts);i++)
 		 {
                    py::tuple pnt = py::extract<py::tuple>(py_bbbpts[i])();
                    bbbpts[i] = Point<3>(py::extract<double>(pnt[0])(),py::extract<double>(pnt[1])(),py::extract<double>(pnt[2])());
                    bbbname[i] = py::extract<string>(py_bbbnames[i])();
                  }
+             for(int i = 0; i<py::len(py_hppts);i++)
+		 {
+                   py::tuple pnt = py::extract<py::tuple>(py_hppts[i])();
+                   hppts[i] = Point<3>(py::extract<double>(pnt[0])(),py::extract<double>(pnt[1])(),py::extract<double>(pnt[2])());
+                   //hpptsfac[i] = py::len(pnt) > 3 ? py::extract<double>(pnt[3])() : 0.0;
+                   hpptsfac[i] = py::extract<double>(pnt[3])();
+                 }
+
+             for(int i = 0; i<py::len(py_hpbnd);i++)
+		 {
+                   py::tuple bnd = py::extract<py::tuple>(py_hpbnd[i])();
+                   hpbnd[i] = py::extract<string>(bnd[0])();
+                   hpbndfac[i] = py::extract<double>(bnd[1])();
+                 }
              auto mesh = make_shared<Mesh>();
              SetGlobalMesh (mesh);
              mesh->SetGeometry(geo);
 	     ng_geometry = geo;
-             auto result = geo->GenerateMesh (mesh, quads, nx, ny, flip_triangles, bbbpts, bbbname);
+             auto result = geo->GenerateMesh (mesh, quads, nx, ny, flip_triangles, bbbpts, bbbname, hppts, hpptsfac, hpbnd, hpbndfac);
              if(result != 0)
                throw Exception("SurfaceGeometry: Meshing failed!");
              return mesh;
-           }, py::arg("quads")=true, py::arg("nx")=10, py::arg("ny")=10, py::arg("flip_triangles")=false, py::arg("bbbpts")=py::list(), py::arg("bbbnames")=py::list())
+           }, py::arg("quads")=true, py::arg("nx")=10, py::arg("ny")=10, py::arg("flip_triangles")=false, py::arg("bbbpts")=py::list(), py::arg("bbbnames")=py::list(), py::arg("hppts")=py::list(), py::arg("hpbnd")=py::list())
       ;
     ;
 
