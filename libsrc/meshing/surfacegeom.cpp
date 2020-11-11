@@ -45,10 +45,10 @@ namespace netgen
     prr = p[1]+2*eps;
     pll = p[1]-2*eps;
 
-    dr = GetTangentVectors(u, pr);
-    dl = GetTangentVectors(u, pl);
-    drr = GetTangentVectors(u, prr);
-    dll = GetTangentVectors(u, pll);
+    GetTangentVectors(u, pr, dr);
+    GetTangentVectors(u, pl, dl);
+    GetTangentVectors(u, prr, drr);
+    GetTangentVectors(u, pll, dll);
     
     f_vv = (1.0/(12.0*eps)) * (8.0*dr[1]-8.0*dl[1]-drr[1]+dll[1]);
   }
@@ -74,11 +74,31 @@ namespace netgen
     return tang;
   }
 
+  void SurfaceGeometry :: GetTangentVectors(double u, double v, Array<Vec<3>>& tang) const
+  {
+    
+    Point<2> pru  = Point<2>(u+eps,v);
+    Point<2> plu  = Point<2>(u-eps,v);
+    Point<2> prru = Point<2>(u+2*eps,v);
+    Point<2> pllu = Point<2>(u-2*eps,v);
+    
+    Point<2> prv  = Point<2>(u,v+eps);
+    Point<2> plv  = Point<2>(u,v-eps);
+    Point<2> prrv = Point<2>(u,v+2*eps);
+    Point<2> pllv = Point<2>(u,v-2*eps);
+
+    
+    tang[0] = 1/(12.0*eps)*( 8.0*func(pru) - 8.0*func(plu) - func(prru) + func(pllu) );
+    tang[1] = 1/(12.0*eps)*( 8.0*func(prv) - 8.0*func(plv) - func(prrv) + func(pllv) );
+  }
+
+  
   Vec<3> SurfaceGeometry :: GetNormal(int surfind, const Point<3> & p, const PointGeomInfo* gi) const
   {
     Array<Vec<3>> tang = GetTangentVectors(gi->u, gi->v);
     auto normal = Cross(tang[0], tang[1]);
-    return Cross(tang[0], tang[1]);
+    normal.Normalize();
+    return normal;
   }
 
 
@@ -97,14 +117,13 @@ namespace netgen
     
   bool  SurfaceGeometry :: ProjectPointGI (int surfind, Point<3> & p, PointGeomInfo & gi) const
   {
-    Array<Vec<3>> tangs;
+    Array<Vec<3>> tangs(2);
     Vec<3> diff, f_uu, f_vv, f_uv;
     Vec<2> r, dx;
-    double norm_r, det, energy=0.0, new_energy=0.0, alpha=2.0,u=0.0,v=0.0;
+    double norm_r, det, energy=0.0, new_energy=0.0, alpha=2.0,u=0.0,v=0.0,maxerr=1e-16;
     Mat<2,2> mat, inv;
-    int num=0, maxit=20;
-    double damping=0.2;
-
+    int num=0, maxit=25;
+    double damping=0.5;
 
     //Solve minimization problem
     //   argmin_(u,v) 0.5*\| f(u,v)-p\|^2
@@ -115,7 +134,7 @@ namespace netgen
     do
       {
         num++;
-        tangs = GetTangentVectors(gi.u, gi.v);
+        GetTangentVectors(gi.u, gi.v,tangs);
         diff = func(Point<2>(gi.u, gi.v)) - Vec<3>(p);
         energy = diff.Length2();
         r = Vec<2>( diff*tangs[0], diff*tangs[1] );
@@ -146,12 +165,13 @@ namespace netgen
         while (alpha > 1e-10 && new_energy > energy+1e-14);
         if (alpha <= 1e-10)
           throw Exception("In SurfaceGeometry::ProjectPointGI: Linesearch min alpha reached!");
+
         gi.u = u;
         gi.v = v;
         
 
       }
-    while ( norm_r > 1e-12 && num < maxit);
+    while ( norm_r > maxerr && num < maxit);
 
     //Stay in reference domain [0,1]^2
     if (gi.u < 0 || gi.u > 1 || gi.v < 0 || gi.v > 1)
@@ -179,19 +199,13 @@ namespace netgen
 
   void  SurfaceGeometry :: PointBetweenEdge(const Point<3> & p1, const Point<3> & p2, double secpoint, int surfi1, int surfi2, const EdgePointGeomInfo & ap1, const EdgePointGeomInfo & ap2, Point<3> & newp, EdgePointGeomInfo & newgi) const
   {
-    newp = p1+secpoint*(p2-p1);
-
-    PointGeomInfo pgi;
-    pgi.u = ap1.u+secpoint*(ap2.u-ap1.u);
-    pgi.v = ap1.v+secpoint*(ap2.v-ap1.v);
-
-    ProjectPointGI(surfi1, newp, pgi);
-
-    newgi.u = pgi.u;
-    newgi.v = pgi.v;
+    newgi.u = ap1.u+secpoint*(ap2.u-ap1.u);
+    newgi.v = ap1.v+secpoint*(ap2.v-ap1.v);
     newgi.edgenr = ap1.edgenr;
     newgi.body = -1;
     newgi.dist = -1.0;
+
+    newp = Point<3>(func(Point<2>(newgi.u, newgi.v)));
   }
   
   void SurfaceGeometry :: PointBetween(const Point<3> & p1, const Point<3> & p2, double secpoint,
@@ -200,16 +214,16 @@ namespace netgen
                                        const PointGeomInfo & gi2,
                                        Point<3> & newp, PointGeomInfo & newgi) const
   {
-    newp = p1+secpoint*(p2-p1);
-    
     newgi.u = gi1.u+secpoint*(gi2.u-gi1.u);
     newgi.v = gi1.v+secpoint*(gi2.v-gi1.v);  
     newgi.trignum = -1;
 
-    ProjectPointGI(surfi, newp, newgi);
+    newp = Point<3>(func(Point<2>(newgi.u, newgi.v)));
+    //newp = p1+secpoint*(p2-p1);
+    //ProjectPointGI(surfi, newp, newgi);
   }
 
-  int SurfaceGeometry :: GenerateMesh(shared_ptr<Mesh> & mesh, bool quads, int nx, int ny, bool flip_triangles, const Array<Point<3>>& bbbpts, const Array<string>& bbbnames)
+  int SurfaceGeometry :: GenerateMesh(shared_ptr<Mesh> & mesh, bool quads, int nx, int ny, bool flip_triangles, const Array<Point<3>>& bbbpts, const Array<string>& bbbnames, const Array<Point<3>>& hppoints, const Array<float>& hpptsfac, const Array<string>& hpbnd, const Array<float>& hpbndfac)
   {
     mesh->SetDimension(3);
 
@@ -240,6 +254,16 @@ namespace netgen
                   found[k] = true;
                   indbbbpts[k] = pids[pids.Size()-1];
                 }
+            }
+
+          for (int k = 0; k < hppoints.Size(); k++)
+            {
+              auto diff = pnt - hppoints[k];
+              if(diff.Length2() < 1e-14)
+                {
+                  (*mesh)[pids[pids.Size()-1]].Singularity(hpptsfac[k]);
+                }
+              
             }
         }
 
@@ -318,8 +342,19 @@ namespace netgen
     Segment seg;
     seg.si = 1;
     seg.edgenr = 1;
-    seg.epgeominfo[0].edgenr = 1;
-    seg.epgeominfo[1].edgenr = 1;
+    seg.epgeominfo[0].edgenr = 0;
+    seg.epgeominfo[1].edgenr = 0;
+    //for hp refinement
+    seg.singedge_left = 0;
+    seg.singedge_right = 0;
+    for (size_t i=0; i < hpbnd.Size(); i++)
+      {
+        if (hpbnd[i] == "bottom")
+          {
+            seg.singedge_left = hpbndfac[i];
+            seg.singedge_right = hpbndfac[i];
+          }
+      }
     // needed for codim2 in 3d
     seg.edgenr = 1;
     for(int i=0; i < nx; i++)
@@ -341,6 +376,18 @@ namespace netgen
 
     seg.si = 2;
     seg.edgenr = 2;
+    seg.singedge_left = 0;
+    seg.singedge_right = 0;
+
+    for (size_t i=0; i < hpbnd.Size(); i++)
+      {
+        if (hpbnd[i] == "right")
+          {
+            seg.singedge_left = hpbndfac[i];
+            seg.singedge_right = hpbndfac[i];
+          }
+      }
+
     for(int i=0; i<ny; i++)
       {
         seg[0] = pids[i*(nx+1)+nx];
@@ -360,6 +407,18 @@ namespace netgen
 
     seg.si = 3;
     seg.edgenr = 3;
+    seg.singedge_left = 0;
+    seg.singedge_right = 0;
+
+    for (size_t i=0; i < hpbnd.Size(); i++)
+      {
+        if (hpbnd[i] == "top")
+          {
+            seg.singedge_left = hpbndfac[i];
+            seg.singedge_right = hpbndfac[i];
+          }
+      }
+
     for(int i=0; i<nx; i++)
       {
         seg[0] = pids[ny*(nx+1)+i+1];
@@ -379,6 +438,18 @@ namespace netgen
 
     seg.si = 4;
     seg.edgenr = 4;
+    seg.singedge_left = 0;
+    seg.singedge_right = 0;
+    for (size_t i=0; i < hpbnd.Size(); i++)
+      {
+        if (hpbnd[i] == "left")
+          {
+            seg.singedge_left = hpbndfac[i];
+            seg.singedge_right = hpbndfac[i];
+          }
+      }
+
+
     for(int i=0; i<ny; i++)
       {
         seg[0] = pids[(i+1)*(nx+1)];

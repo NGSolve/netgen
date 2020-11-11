@@ -36,6 +36,9 @@ namespace netgen
 
     Array<Vec<3>> GetTangentVectors(double u, double v) const;
 
+    void GetTangentVectors(double u, double v, Array<Vec<3>>& tang) const;
+
+
     virtual Vec<3> GetNormal(int surfind, const Point<3> & p, const PointGeomInfo* gi) const override;
 
     virtual PointGeomInfo ProjectPoint(int surfind, Point<3> & p) const override;
@@ -59,7 +62,7 @@ namespace netgen
                       const PointGeomInfo & gi2,
                       Point<3> & newp, PointGeomInfo & newgi) const override;
 
-    int GenerateMesh(shared_ptr<Mesh> & mesh, bool quads, int nx, int ny, bool flip_triangles, const Array<Point<3>>& bbbpts, const Array<string>& bbbnames);
+    int GenerateMesh(shared_ptr<Mesh> & mesh, bool quads, int nx, int ny, bool flip_triangles, const Array<Point<3>>& bbbpts, const Array<string>& bbbnames, const Array<Point<3>>& hppoints, const Array<float>& hpptsfac, const Array<string>& hpbnd, const Array<float>& hpbndfac);
 
   };
   

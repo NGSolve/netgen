@@ -5,7 +5,7 @@ from pytest import approx
 
 def test_two_circles():
     c1 = Circle(center=(0,0), radius=1)
-    c2 = c1.Rotate(deg=45)
+    c2 = c1.Rotate(45)
     s = c1*c2
     geo = CSG2d()
     geo.Add(s)

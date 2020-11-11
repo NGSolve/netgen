@@ -29,10 +29,10 @@ enum IntersectionType
   T_INTERSECTION_Q,
   T_INTERSECTION_P,
   V_INTERSECTION,
-  X_OVERLAP,
-  T_OVERLAP_Q,
-  T_OVERLAP_P,
-  V_OVERLAP
+  X_OVERLAP,      // Q0 -- P1 -- Q1 -- P0   (different direction)
+  T_OVERLAP_Q,    // same direction or P inside Q
+  T_OVERLAP_P,    // same direction or Q inside P
+  V_OVERLAP       // one common point
 };
 
 enum IntersectionLabel
@@ -588,23 +588,7 @@ struct Loop
   //
   // return and insert a non-intersection vertex
   //
-  Vertex* getNonIntersectionVertex()
-  {
-    for (Vertex* v : Vertices(ALL))
-      if (!v->is_intersection)
-        return(v);
-
-    // no non-intersection vertex found -> generate and return temporary vertex
-    for (Vertex* v : Vertices(ALL))
-      // make sure that edge from V to V->next is not collinear with other polygon
-      if ( (v->next->neighbour != v->neighbour->prev) && (v->next->neighbour != v->neighbour->next) )
-      {
-        // add edge midpoint as temporary vertex
-        auto p = Center(*v, *v->next);
-        return v->Insert(p);
-      }
-    return(NULL);
-  }
+  Vertex* getNonIntersectionVertex();
 
   void SetBC(string bc)
   {
@@ -694,11 +678,12 @@ struct Solid2d
     }
 
   Solid2d & Move( Vec<2> v );
-  Solid2d & Scale( double sx, double sy=0.0 );
+  Solid2d & Scale( double s );
+  Solid2d & Scale( Vec<2> s );
   Solid2d & RotateRad( double ang, Point<2> center = {0,0} );
   Solid2d & RotateDeg( double ang, Point<2> center = {0,0} )
     {
-      return RotateRad( ang/180.*M_PI );
+      return RotateRad( ang/180.*M_PI, center );
     }
 
   Solid2d & BC(string bc)
