@@ -54,6 +54,35 @@ def test_trig_and_circle():
     ngs.Draw(mesh)
 
 
+def test_circle_plus_rect():
+    circle = Circle( center=(0,0), radius=1 )
+    rect = Rectangle( pmin=(-0.5,0.0), pmax=(0.5,0.5) )
+
+    geo = CSG2d()
+    geo.Add(circle+rect)
+    m = geo.GenerateMesh(maxh=0.2)
+
+
+    ngs = pytest.importorskip("ngsolve")
+    mesh = ngs.Mesh(m)
+    mesh.Curve(5)
+    assert ngs.Integrate(1.0, mesh) == approx(math.pi)
+
+def test_circle_plus_rect1():
+    circle = Circle( center=(0,0), radius=1 )
+    rect = Rectangle( pmin=(-0.5,-0.5), pmax=(0.5,0.5) )
+
+    geo = CSG2d()
+    geo.Add(circle+rect)
+    m = geo.GenerateMesh(maxh=0.2)
+
+
+    ngs = pytest.importorskip("ngsolve")
+    mesh = ngs.Mesh(m)
+    mesh.Curve(5)
+    assert ngs.Integrate(1.0, mesh) == approx(math.pi)
+
+
 if __name__ == "__main__":
     test_two_circles()
     test_two_edge()
