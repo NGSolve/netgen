@@ -402,6 +402,12 @@ bool IsInsideTrig( const array<Point<2>,3> & t, Point<2> r )
   return ( (w % 2) != 0 );
 }
 
+bool IsCloseToTrig( const array<Point<2>,3> & t, Point<2> r, double eps=1e-4 )
+{
+  r += eps * (Center(t[0], t[1], t[2])-r); // move point a bit to center of trig
+  return IsInsideTrig( t, r );
+}
+
 
 IntersectionType IntersectTrig( Point<2> p0, Point<2> p1, const array<Point<2>,3> & trig)
 {
@@ -1612,7 +1618,7 @@ bool Loop :: IsInside( Point<2> r ) const
       auto s0 = s.StartPI();
       auto s1 = s.TangentPoint();
       auto s2 = s.EndPI();
-      if(!IsInsideTrig( {s0, s1, s2} , r ))
+      if(!IsCloseToTrig( {s0, s1, s2} , r ))
         w += w_simple;
       else
       {
