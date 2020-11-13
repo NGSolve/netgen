@@ -250,13 +250,20 @@ IntersectionType IntersectSplineSegment( const Spline & s, const Point<2> & r0, 
   double det =  b_*b_ - 4*a_*c_;
   if(det<0.0)
     return NO_INTERSECTION;
-  double sqrt_det =  sqrt(det);
-  double t1 = 1.0/(2*a_) * (-b_ + sqrt_det);
-  double t2 = 1.0/(2*a_) * (-b_ - sqrt_det);
 
-  double t = min(t1,t2);
-  if(t<alpha)
-    t = max(t1,t2);
+  double t;
+
+  if(fabs(a_)>EPSILON)
+  {
+    double sqrt_det =  sqrt(det);
+    double t1 = 1.0/(2*a_) * (-b_ + sqrt_det);
+    double t2 = 1.0/(2*a_) * (-b_ - sqrt_det);
+    t = min(t1, t2);
+    if(t<alpha)
+      t = max(t1,t2);
+  }
+  else // degenerate quadratic equation
+    t = -c_/b_;
 
   if(t+EPSILON<alpha)
     return NO_INTERSECTION;
@@ -288,10 +295,17 @@ IntersectionType IntersectSplineSegment1( const Spline & s, const Point<2> & r0,
   double det =  b_*b_ - 4*a_*c_;
   if(det<0.0)
     return NO_INTERSECTION;
+
   double sqrt_det =  sqrt(det);
   double vbeta[2];
-  vbeta[0] = 1.0/(2*a_) * (-b_ + sqrt_det);
-  vbeta[1] = 1.0/(2*a_) * (-b_ - sqrt_det);
+
+  if(fabs(a_)>EPSILON)
+  {
+    vbeta[0] = 1.0/(2*a_) * (-b_ + sqrt_det);
+    vbeta[1] = 1.0/(2*a_) * (-b_ - sqrt_det);
+  }
+  else // degenrate quadratic equation
+    vbeta[0] = vbeta[1] = -c_/b_;
 
   int dim = fabs(vr[0]) > fabs(vr[1]) ? 0 : 1;
   double valpha[2];
