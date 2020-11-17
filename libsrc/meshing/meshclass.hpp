@@ -38,7 +38,7 @@ namespace netgen
     NgMPI_Comm comm;
     
     /// line-segments at edges
-    Array<Segment> segments;
+    Array<Segment, SegmentIndex> segments;
     /// surface elements, 2d-inner elements
     Array<Element2d, SurfaceElementIndex> surfelements;
     /// volume elements

@@ -306,12 +306,16 @@ namespace netgen
     SegmentIndex & operator= (const SegmentIndex & ai) 
     { i = ai.i; return *this; }
     SegmentIndex & operator= (int ai) { i = ai; return *this; }
-    operator int () const { return i; }
+    constexpr operator int () const { return i; }
     SegmentIndex& operator++ () { ++i; return *this; }
     SegmentIndex& operator-- () { --i; return *this; }
     SegmentIndex operator++ (int) { return i++; }
     SegmentIndex operator-- (int) { return i--; }
   };
+
+  inline void SetInvalid (SegmentIndex & id) { id = -1; }
+  inline bool IsInvalid (SegmentIndex & id) { return id == -1; }
+
 
   inline istream & operator>> (istream & ist, SegmentIndex & pi)
   {
