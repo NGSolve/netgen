@@ -316,7 +316,6 @@ namespace ngcore
     NGCORE_API static std::map< int, std::vector<int> > tree;
 
     int id;
-    std::vector<std::function<void()>> tracks;
 
     public:
 
@@ -345,7 +344,6 @@ namespace ngcore
       int child_id = GetId(name);
       tree[id].push_back(child_id);
       obj.SetMemoryTracing(child_id);
-      tracks.push_back( [&obj] () { obj.SetMemoryTracing(0); } );
     }
 
     template<typename T>
@@ -356,21 +354,9 @@ namespace ngcore
       tree[id].push_back(child_id);
     }
 
-    void StopTracking()
-    {
-      for(auto & f : tracks)
-        f();
-      tracks.clear();
-    }
-
     static std::string GetName(int id)
     {
       return names[id];
-    }
-
-    ~MemoryTracer()
-    {
-      StopTracking();
     }
   };
 

@@ -446,13 +446,12 @@ namespace ngcore
       const int container_jobs = paje.CreateContainer( container_type_jobs, container_task_manager, "Jobs" );
 
       int variable_type_memory = 0;
+      const int container_memory = paje.CreateContainer( container_type_memory, container_task_manager, "Memory" );
       if(mem_tracing_enabled)
       {
         variable_type_memory = paje.DefineVariableType( container_type_task_manager, "Memory [MB]" );
-        paje.SetVariable( 0, variable_type_memory, container_type_memory, 0.0 );
+        paje.SetVariable( 0, variable_type_memory, container_memory, 0.0 );
       }
-
-      const int container_memory = paje.CreateContainer( container_type_memory, container_task_manager, "Memory" );
 
 
       int num_nodes = 1; //task_manager ? task_manager->GetNumNodes() : 1;
@@ -526,10 +525,11 @@ namespace ngcore
 
       for(const auto & m : memory_events)
       {
+        double size = 1.0*m.size/(1024*1024);
         if(m.is_alloc)
-          paje.AddVariable( m.time, variable_type_memory, container_memory, 1.0*m.size / (1024*1024));
+          paje.AddVariable( m.time, variable_type_memory, container_memory, size);
         else
-          paje.SubVariable( m.time, variable_type_memory, container_memory, 1.0*m.size / (1024*1024));
+          paje.SubVariable( m.time, variable_type_memory, container_memory, size);
       }
 
       std::set<int> timer_ids;
