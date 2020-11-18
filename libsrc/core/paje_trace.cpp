@@ -36,6 +36,7 @@ namespace ngcore
   // increases trace by a factor of two
   bool PajeTrace::trace_thread_counter = false;
   bool PajeTrace::trace_threads = true;
+  bool PajeTrace::mem_tracing_enabled = true;
 
   PajeTrace :: PajeTrace(int anthreads, std::string aname)
   {
@@ -62,6 +63,7 @@ namespace ngcore
 
     jobs.reserve(reserve_size);
     timer_events.reserve(reserve_size);
+    memory_events.reserve(1024*1024);
 
     // sync start time when running in parallel
 #ifdef PARALLEL
@@ -72,6 +74,7 @@ namespace ngcore
 
     start_time = GetTimeCounter();
     tracing_enabled = true;
+    mem_tracing_enabled = true;
   }
 
   PajeTrace :: ~PajeTrace()
@@ -93,6 +96,9 @@ namespace ngcore
     for(auto & llink : links)
         for(auto & link : llink)
             link.time -= start_time;
+
+    for(auto & m : memory_events)
+      m.time -= start_time;
 
     NgMPI_Comm comm(MPI_COMM_WORLD);
 
@@ -426,6 +432,7 @@ namespace ngcore
       const int container_type_thread = paje.DefineContainerType( container_type_task_manager, "Thread");
       const int container_type_timer = container_type_thread; //paje.DefineContainerType( container_type_task_manager, "Timers");
       const int container_type_jobs = paje.DefineContainerType( container_type_task_manager, "Jobs");
+      const int container_type_memory = paje.DefineContainerType( container_type_task_manager, "Memory usage");
 
       const int state_type_job = paje.DefineStateType( container_type_jobs, "Job" );
       const int state_type_task = paje.DefineStateType( container_type_thread, "Task" );
@@ -433,12 +440,20 @@ namespace ngcore
 
       int variable_type_active_threads = 0;
       if(trace_thread_counter)
-          paje.DefineVariableType( container_type_jobs, "Active threads" );
+          variable_type_active_threads = paje.DefineVariableType( container_type_jobs, "Active threads" );
 
       const int container_task_manager = paje.CreateContainer( container_type_task_manager, 0, "The task manager" );
       const int container_jobs = paje.CreateContainer( container_type_jobs, container_task_manager, "Jobs" );
-      if(trace_thread_counter)
-          paje.SetVariable( 0, variable_type_active_threads, container_jobs, 0.0 );
+
+      int variable_type_memory = 0;
+      if(mem_tracing_enabled)
+      {
+        variable_type_memory = paje.DefineVariableType( container_type_task_manager, "Memory [MB]" );
+        paje.SetVariable( 0, variable_type_memory, container_type_memory, 0.0 );
+      }
+
+      const int container_memory = paje.CreateContainer( container_type_memory, container_task_manager, "Memory" );
+
 
       int num_nodes = 1; //task_manager ? task_manager->GetNumNodes() : 1;
       std::vector <int> thread_aliases;
@@ -508,6 +523,14 @@ namespace ngcore
           paje.PushState( j.start_time, state_type_job, container_jobs, job_map[j.type] );
           paje.PopState( j.stop_time, state_type_job, container_jobs );
         }
+
+      for(const auto & m : memory_events)
+      {
+        if(m.is_alloc)
+          paje.AddVariable( m.time, variable_type_memory, container_memory, 1.0*m.size / (1024*1024));
+        else
+          paje.SubVariable( m.time, variable_type_memory, container_memory, 1.0*m.size / (1024*1024));
+      }
 
       std::set<int> timer_ids;
       std::map<int,int> timer_aliases;

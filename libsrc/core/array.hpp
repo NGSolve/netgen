@@ -11,6 +11,7 @@
 #include "archive.hpp"
 #include "exception.hpp"
 #include "localheap.hpp"
+#include "profiler.hpp"
 #include "utils.hpp"
 
 namespace ngcore
@@ -654,6 +655,8 @@ namespace ngcore
     /// that's the data we have to delete, nullptr for not owning the memory
     T * mem_to_delete;
 
+    int mem_tracing_id = 0;
+
     using FlatArray<T,IndexType>::size;
     using FlatArray<T,IndexType>::data;
     using FlatArray<T,IndexType>::BASE;
@@ -1038,6 +1041,18 @@ namespace ngcore
       ngcore::Swap (data, b.data);
       ngcore::Swap (allocsize, b.allocsize);
       ngcore::Swap (mem_to_delete, b.mem_to_delete);
+      ngcore::Swap (mem_tracing_id, b.mem_tracing_id);
+    }
+
+    NETGEN_INLINE void SetMemoryTracing (int mem_id)
+    {
+      if(!mem_tracing_id && mem_id)
+        TraceMemoryAlloc(mem_id, sizeof(T)*allocsize);
+
+      if(mem_tracing_id && !mem_id)
+        TraceMemoryFree(mem_tracing_id, sizeof(T)*allocsize);
+
+      mem_tracing_id = mem_id;
     }
 
   private:
@@ -1053,6 +1068,8 @@ namespace ngcore
   {
     size_t nsize = 2 * allocsize;
     if (nsize < minsize) nsize = minsize;
+
+      TraceMemoryAlloc(mem_tracing_id, sizeof(T)*nsize );
     
     T * hdata = data;
     data = new T[nsize];
@@ -1069,6 +1086,7 @@ namespace ngcore
           for (size_t i = 0; i < mins; i++) data[i] = std::move(hdata[i]);
 #endif
         delete [] mem_to_delete;
+        TraceMemoryFree( mem_tracing_id, sizeof(T)*allocsize );
       }
 
     mem_to_delete = data;

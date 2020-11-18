@@ -3,6 +3,7 @@
 
 #include <array>
 #include <chrono>
+#include <functional>
 #include <string>
 
 #include "logging.hpp"
@@ -297,6 +298,92 @@ namespace ngcore
       }
 
       return tres;
+  }
+
+
+  class MemoryTracer
+  {
+    NGCORE_API static std::vector<std::string> names;
+    static int GetId(std::string name)
+    {
+      int id = names.size();
+      names.push_back(name);
+      if(id==10*NgProfiler::SIZE)
+        std::cerr << "Allocated " << id << " MemoryTracer objects" << std::endl;
+      return id;
+    }
+
+    NGCORE_API static std::map< int, std::vector<int> > tree;
+
+    int id;
+    std::vector<std::function<void()>> tracks;
+
+    public:
+
+    MemoryTracer( std::string name )
+    {
+      id = GetId(name);
+    }
+
+    template <typename... TRest>
+    MemoryTracer( std::string name, TRest & ... rest )
+    {
+      id = GetId(name);
+      Track(rest...);
+    }
+
+    template <typename T1, typename... TRest>
+    void Track( T1 & obj, std::string name, TRest & ... rest )
+    {
+      Track(obj, name);
+      Track(rest...);
+    }
+
+    template<typename T>
+    void Track( T & obj, std::string name )
+    {
+      int child_id = GetId(name);
+      tree[id].push_back(child_id);
+      obj.SetMemoryTracing(child_id);
+      tracks.push_back( [&obj] () { obj.SetMemoryTracing(0); } );
+    }
+
+    template<typename T>
+    void Track( T & obj )
+    {
+      auto & mt = obj.GetMemoryTracer();
+      int child_id = mt.id;
+      tree[id].push_back(child_id);
+    }
+
+    void StopTracking()
+    {
+      for(auto & f : tracks)
+        f();
+      tracks.clear();
+    }
+
+    static std::string GetName(int id)
+    {
+      return names[id];
+    }
+
+    ~MemoryTracer()
+    {
+      StopTracking();
+    }
+  };
+
+  NETGEN_INLINE void TraceMemoryAlloc( int mem_id, size_t size )
+  {
+    if(mem_id && trace)
+      trace->AllocMemory(mem_id, size);
+  }
+
+  NETGEN_INLINE void TraceMemoryFree( int mem_id, size_t size )
+  {
+    if(mem_id && trace)
+      trace->FreeMemory(mem_id, size);
   }
 
 } // namespace ngcore

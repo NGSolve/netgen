@@ -23,6 +23,7 @@ namespace ngcore
       NGCORE_API static size_t max_tracefile_size;
       NGCORE_API static bool trace_thread_counter;
       NGCORE_API static bool trace_threads;
+      NGCORE_API static bool mem_tracing_enabled;
 
       bool tracing_enabled;
       TTimePoint start_time;
@@ -34,6 +35,11 @@ namespace ngcore
       // Approximate number of events to trace. Tracing will
       // be stopped if any thread reaches this number of events
       unsigned int max_num_events_per_thread;
+
+      static void SetTraceMemory( bool trace_memory )
+        {
+          mem_tracing_enabled = trace_memory;
+        }
 
       static void SetTraceThreads( bool atrace_threads )
         {
@@ -96,10 +102,21 @@ namespace ngcore
           bool operator < (const ThreadLink & other) const { return time < other.time; }
         };
 
+      struct MemoryEvent
+        {
+          TTimePoint time;
+          size_t size;
+          int region_id;
+          bool is_alloc;
+
+          bool operator < (const MemoryEvent & other) const { return time < other.time; }
+        };
+
       std::vector<std::vector<Task> > tasks;
       std::vector<Job> jobs;
       std::vector<TimerEvent> timer_events;
       std::vector<std::vector<ThreadLink> > links;
+      std::vector<MemoryEvent> memory_events;
 
     public:
       NGCORE_API void StopTracing();
@@ -128,6 +145,27 @@ namespace ngcore
             StopTracing();
           timer_events.push_back(TimerEvent{timer_id, GetTimeCounter(), false});
         }
+
+      void AllocMemory(int id, size_t size)
+        {
+          if(!mem_tracing_enabled) return;
+          memory_events.push_back(MemoryEvent{GetTimeCounter(), size, id, true});
+        }
+
+      void FreeMemory(int id, size_t size)
+        {
+          if(!mem_tracing_enabled) return;
+          memory_events.push_back(MemoryEvent{GetTimeCounter(), size, id, false});
+        }
+
+      void ChangeMemory(int id, long long size)
+        {
+          if(size>0)
+            AllocMemory(id, size);
+          if(size<0)
+            FreeMemory(id, -size);
+        }
+
 
       NETGEN_INLINE int StartTask(int thread_id, int id, int id_type = Task::ID_NONE, int additional_value = -1)
         {

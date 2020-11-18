@@ -113,5 +113,7 @@ namespace ngcore
 
   NgProfiler prof; // NOLINT
 
+  std::vector<std::string> MemoryTracer::names{"root"};
+  std::map< int, std::vector<int> > MemoryTracer::tree;
 
 } // namespace ngcore
