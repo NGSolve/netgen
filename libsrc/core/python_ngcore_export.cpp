@@ -263,9 +263,10 @@ threads : int
     .def("__enter__", [](PajeTrace & self) { })
     .def("__exit__", [](PajeTrace & self, py::args) { self.StopTracing(); })
     .def("__del__", [](PajeTrace & self) { trace = nullptr; })
-    .def("SetTraceThreads", &PajeTrace::SetTraceThreads)
-    .def("SetTraceThreadCounter", &PajeTrace::SetTraceThreadCounter)
-    .def("SetMaxTracefileSize", &PajeTrace::SetMaxTracefileSize)
+    .def_static("SetTraceThreads", &PajeTrace::SetTraceThreads)
+    .def_static("SetTraceThreadCounter", &PajeTrace::SetTraceThreadCounter)
+    .def_static("SetMaxTracefileSize", &PajeTrace::SetMaxTracefileSize)
+    .def_static("WriteMemoryChart", [](string filename){ if(trace) trace->WriteMemoryChart(filename); }, py::arg("filename")="memory" )
     ;
 
 

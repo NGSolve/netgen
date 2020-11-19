@@ -742,7 +742,8 @@ namespace ngcore
                 }
             }
         }
-      WriteSunburstHTML();
+      WriteTimingChart();
+      WriteMemoryChart("");
       paje.WriteEvents();
     }
 
@@ -929,8 +930,10 @@ namespace ngcore
 
   }
 
-  void WriteMemorySunburstHTML( std::vector<PajeTrace::MemoryEvent> & events, std::string filename )
+  void PajeTrace::WriteMemoryChart( std::string fname )
   {
+    if(fname=="")
+      fname = tracefile_name + "_memory";
     size_t mem_allocated = 0;
     size_t max_mem_allocated = 0;
     size_t imax_mem_allocated = 0;
@@ -944,9 +947,9 @@ namespace ngcore
     mem_allocated_id = 0;
 
     // Find point with maximum memory allocation, check for missing allocs/frees
-    for(auto i : IntRange(events.size()))
+    for(auto i : IntRange(memory_events.size()))
     {
-      const auto & ev = events[i];
+      const auto & ev = memory_events[i];
 
       if(ev.is_alloc)
       {
@@ -974,7 +977,7 @@ namespace ngcore
     mem_allocated_id = 0;
     for(auto i : IntRange(imax_mem_allocated+1))
     {
-      const auto & ev = events[i];
+      const auto & ev = memory_events[i];
 
       if(ev.is_alloc)
         mem_allocated_id[ev.id] += ev.size;
@@ -1047,11 +1050,11 @@ namespace ngcore
         nodes[parents[i]]->size += nodes[i]->size;
     }
 
-    WriteSunburstHTML( root, filename, false );
+    WriteSunburstHTML( root, fname, false );
 
   }
 
-  void PajeTrace::WriteSunburstHTML( )
+  void PajeTrace::WriteTimingChart( )
   {
       std::vector<TimerEvent> events;
 
@@ -1140,7 +1143,6 @@ namespace ngcore
       root.chart_size = 0.0;
 
       ngcore::WriteSunburstHTML( root, tracefile_name, true );
-      WriteMemorySunburstHTML( memory_events, tracefile_name+"_memory" );
   }
 
 } // namespace ngcore

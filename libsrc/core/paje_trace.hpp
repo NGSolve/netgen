@@ -30,7 +30,8 @@ namespace ngcore
       int nthreads;
 
     public:
-      void WriteSunburstHTML();
+      NGCORE_API void WriteTimingChart();
+      NGCORE_API void WriteMemoryChart( std::string fname );
 
       // Approximate number of events to trace. Tracing will
       // be stopped if any thread reaches this number of events
