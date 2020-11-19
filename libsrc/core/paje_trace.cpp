@@ -931,15 +931,16 @@ namespace ngcore
 
   void WriteMemorySunburstHTML( std::vector<PajeTrace::MemoryEvent> & events, std::string filename )
   {
-    size_t mem_allocated;
-    size_t max_mem_allocated;
-    size_t imax_mem_allocated;
+    size_t mem_allocated = 0;
+    size_t max_mem_allocated = 0;
+    size_t imax_mem_allocated = 0;
 
     const auto & names = MemoryTracer::GetNames();
     const auto & tree = MemoryTracer::GetTree();
-    auto N = names.size();
+    size_t N = names.size();
 
-    Array<size_t> mem_allocated_id(N);
+    Array<size_t> mem_allocated_id;
+    mem_allocated_id.SetSize(N);
     mem_allocated_id = 0;
 
     // Find point with maximum memory allocation, check for missing allocs/frees
@@ -984,11 +985,16 @@ namespace ngcore
     TreeNode root;
     root.name="all";
 
-    Array<TreeNode*> nodes(N);
+    Array<TreeNode*> nodes;
+    nodes.SetSize(N);
     nodes = nullptr;
+    Array<size_t> sorting; // topological sorting (parents before children)
+    sorting.SetAllocSize(N);
+    ArrayMem<size_t, 100> stack;
 
     // find root nodes in memory tracer tree, i.e. they have no parents
-    Array<int> parents(N);
+    Array<int> parents;
+    parents.SetSize(N);
     parents = -1;
     for( const auto & [iparent, children] : tree )
       for (auto child_id : children)
@@ -999,10 +1005,29 @@ namespace ngcore
       }
 
     for(auto i : IntRange(1, N))
+      if(parents[i]==-1)
+      {
+        sorting.Append(i);
+        if(tree.count(i))
+          stack.Append(i);
+      }
+
+    while(stack.Size())
     {
-      TreeNode * parent = &root;
-      if(parents[i]!=-1)
-        parent = nodes[parents[i]];
+      auto current = stack.Last();
+      stack.DeleteLast();
+
+      for(const auto child : tree.at(current))
+      {
+        sorting.Append(child);
+        if(tree.count(child))
+          stack.Append(child);
+      }
+    }
+
+    for(auto i : sorting)
+    {
+      TreeNode * parent = (parents[i]==-1) ? &root : nodes[parents[i]];
 
       auto & node = parent->children[i];
       nodes[i] = &node;
@@ -1012,11 +1037,15 @@ namespace ngcore
       node.name = names[i];
     }
 
-    for(auto i : IntRange(1, N))
-      if(parents[N-i]==-1)
-        root.size += nodes[N-i]->size;
+    for(auto i_ : Range(sorting))
+    {
+      // reverse topological order to accumulate total memory usage of all children
+      auto i = sorting[sorting.Size()-1-i_];
+      if(parents[i]==-1)
+        root.size += nodes[i]->size;
       else
-        nodes[parents[N-i]]->size += nodes[N-i]->size;
+        nodes[parents[i]]->size += nodes[i]->size;
+    }
 
     WriteSunburstHTML( root, filename, false );
 
