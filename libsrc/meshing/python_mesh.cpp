@@ -839,6 +839,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("FaceDescriptor", static_cast<FaceDescriptor&(Mesh::*)(int)> (&Mesh::GetFaceDescriptor),
          py::return_value_policy::reference)
     .def("GetNFaceDescriptors", &Mesh::GetNFD)
+    .def("GetNDomains", &Mesh::GetNDomains)
 
     .def("GetVolumeNeighboursOfSurfaceElement", [](Mesh & self, size_t sel)
                                                 {
@@ -1016,9 +1017,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
     .def ("BoundaryLayer", [](Mesh & self, variant<string, int> boundary,
                               variant<double, py::list> thickness,
-                              variant<string, py::list> material,
+                              string material,
                               variant<string, int> domain, bool outside,
-                              bool grow_edges)
+                              optional<string> project_boundaries)
            {
              BoundaryLayerParameters blp;
              if(int* bc = get_if<int>(&boundary); bc)
@@ -1040,13 +1041,22 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                          if(dom_pattern)
                            {
                              regex pattern(*dom_pattern);
-                             if(regex_match(self.GetMaterial(fd.DomainIn()), pattern) || (fd.DomainOut() > 0 ? regex_match(self.GetMaterial(fd.DomainOut()), pattern) : false))
+                             if((fd.DomainIn() > 0 && regex_match(self.GetMaterial(fd.DomainIn()), pattern)) || (fd.DomainOut() > 0 && regex_match(self.GetMaterial(fd.DomainOut()), pattern)))
                                blp.surfid.Append(i);
                            }
                          else
                            blp.surfid.Append(i);
                        }
                      }
+               }
+             blp.new_mat = material;
+
+             if(project_boundaries.has_value())
+               {
+                 regex pattern(*project_boundaries);
+                 for(int i = 1; i<=self.GetNFD(); i++)
+                   if(regex_match(self.GetFaceDescriptor(i).GetBCName(), pattern))
+                     blp.project_boundaries.Append(i);
                }
 
              if(double* pthickness = get_if<double>(&thickness); pthickness)
@@ -1060,34 +1070,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                    blp.heights.Append(val.cast<double>());
                }
 
-             auto prismlayers = blp.heights.Size();
-             auto first_new_mat = self.GetNDomains() + 1;
-             auto max_dom_nr = first_new_mat;
-             if(string* pmaterial = get_if<string>(&material); pmaterial)
-               {
-                 self.SetMaterial(first_new_mat, *pmaterial);
-                 for(auto i : Range(prismlayers))
-                   blp.new_matnrs.Append(first_new_mat);
-               }
-             else
-               {
-                 auto materials = *get_if<py::list>(&material);
-                 if(py::len(materials) != prismlayers)
-                   throw Exception("Length of thicknesses and materials must be same!");
-                 for(auto i : Range(prismlayers))
-                   {
-                     self.SetMaterial(first_new_mat+i, materials[i].cast<string>());
-                     blp.new_matnrs.Append(first_new_mat + i);
-                   }
-                 max_dom_nr += prismlayers-1;
-               }
-
-             blp.domains.SetSize(max_dom_nr + 1); // one based
+             int nr_domains = self.GetNDomains();
+             blp.domains.SetSize(nr_domains + 1); // one based
              blp.domains.Clear();
              if(string* pdomain = get_if<string>(&domain); pdomain)
                {
                  regex pattern(*pdomain);
-                 for(auto i : Range(1, first_new_mat))
+                 for(auto i : Range(1, nr_domains+1))
                    if(regex_match(self.GetMaterial(i), pattern))
                      blp.domains.SetBit(i);
                }
@@ -1096,19 +1085,15 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                  auto idomain = *get_if<int>(&domain);
                  blp.domains.SetBit(idomain);
                }
-             // bits for new domains must be set
-             if(!outside)
-               for(auto i : Range(first_new_mat, max_dom_nr+1))
-                 blp.domains.SetBit(i);
 
              blp.outside = outside;
-             blp.grow_edges = grow_edges;
+             blp.grow_edges = true;
 
              GenerateBoundaryLayer (self, blp);
              self.UpdateTopology();
            }, py::arg("boundary"), py::arg("thickness"), py::arg("material"),
           py::arg("domains") = ".*", py::arg("outside") = false,
-          py::arg("grow_edges") = false,
+          py::arg("project_boundaries")=nullopt,
           R"delimiter(
 Add boundary layer to mesh.
 
@@ -1132,6 +1117,11 @@ outside : bool = False
 
 grow_edges : bool = False
   Grow boundary layer over edges.
+
+project_boundaries : Optional[str] = None
+  Project boundarylayer to these boundaries if they meet them. Set
+  to boundaries that meet boundarylayer at a non-orthogonal edge and
+  layer-ending should be projected to that boundary.
 
 )delimiter")
 
