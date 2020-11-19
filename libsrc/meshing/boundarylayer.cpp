@@ -133,7 +133,8 @@ namespace netgen
     // create new FaceDescriptors
     for(auto i : Range(1, fd_old+1))
       {
-        auto& fd = mesh.GetFaceDescriptor(i);
+        const auto& fd = mesh.GetFaceDescriptor(i);
+        string name = fd.GetBCName();
         if(blp.surfid.Contains(i))
           {
             if(auto isIn = domains.Test(fd.DomainIn()); isIn != domains.Test(fd.DomainOut()))
@@ -146,7 +147,7 @@ namespace netgen
                 new_fd.SetBCProperty(new_si);
                 mesh.AddFaceDescriptor(new_fd);
                 si_map[i] = new_si;
-                mesh.SetBCName(new_si-1, "mapped_" + fd.GetBCName());
+                mesh.SetBCName(new_si-1, "mapped_" + name);
               }
           }
       }
