@@ -410,7 +410,8 @@ namespace netgen
 
     for(SurfaceElementIndex si = 0; si < nse; si++)
       {
-        auto& sel = mesh[si];
+        // copy because surfaceels array will be resized!
+        auto sel = mesh[si];
         if(si_map[sel.GetIndex()] != -1)
           {
             Array<PointIndex> points(sel.PNums());
@@ -436,7 +437,7 @@ namespace netgen
             mesh.AddSurfaceElement(newel);
           }
         if(move_boundaries.Test(sel.GetIndex()))
-          for(auto& p : sel.PNums())
+          for(auto& p : mesh[si].PNums())
             if(mapto[p].Size())
               p = mapto[p].Last();
       }
