@@ -482,7 +482,8 @@ namespace netgen
       for (const Segment & seg : mesh->LineSegments())
         {
           dom2seg_creator.Add (seg.domin, &seg);
-          dom2seg_creator.Add (seg.domout, &seg);
+          if (seg.domin != seg.domout)
+            dom2seg_creator.Add (seg.domout, &seg);
         }
     auto dom2seg = dom2seg_creator.MoveTable();
     
