@@ -433,6 +433,28 @@ namespace ngcore
       trace->ChangeMemory(mem_id, size);
   }
 
+  NETGEN_INLINE void TraceMemorySwap( int mem_id, size_t size, int mem_id2, size_t size2 )
+  {
+    if(!trace || (mem_id==0 && mem_id2==0))
+      return;
+    if(mem_id == 0)
+      return trace->ChangeMemory(mem_id2, size-size2);
+    if(mem_id2 == 0)
+      return trace->ChangeMemory(mem_id, size2-size);
+
+    // first decrease memory, otherwise have artificial/wrong high peak memory usage
+    if(size<size2)
+    {
+      trace->ChangeMemory(mem_id2, size-size2);
+      trace->ChangeMemory(mem_id, size2-size);
+    }
+    else
+    {
+      trace->ChangeMemory(mem_id, size2-size);
+      trace->ChangeMemory(mem_id2, size-size2);
+    }
+  }
+
 } // namespace ngcore
 
 // Helper macro to easily add multiple timers in a function for profiling

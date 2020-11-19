@@ -701,7 +701,7 @@ namespace ngcore
 
     NETGEN_INLINE Array (Array && a2) 
     {
-      TraceMemoryChange(mem_tracing_id, sizeof(T)*(a2.allocsize-allocsize));
+      TraceMemorySwap(mem_tracing_id, sizeof(T)*allocsize, a2.mem_tracing_id, sizeof(T)*a2.allocsize);
 
       size = a2.size; 
       data = a2.data;
@@ -969,7 +969,7 @@ namespace ngcore
     /// steal array 
     NETGEN_INLINE Array & operator= (Array && a2)
     {
-      TraceMemoryChange(mem_tracing_id, sizeof(T)*(a2.allocsize-allocsize));
+      TraceMemorySwap(mem_tracing_id, sizeof(T)*allocsize, a2.mem_tracing_id, sizeof(T)*a2.allocsize);
 
       ngcore::Swap (size, a2.size);
       ngcore::Swap (data, a2.data);
@@ -1044,13 +1044,12 @@ namespace ngcore
     
     NETGEN_INLINE void Swap (Array & b)
     {
-      TraceMemoryChange(mem_tracing_id, sizeof(T)*(b.allocsize-allocsize));
+      TraceMemorySwap(mem_tracing_id, sizeof(T)*allocsize, b.mem_tracing_id, sizeof(T)*b.allocsize);
 
       ngcore::Swap (size, b.size);
       ngcore::Swap (data, b.data);
       ngcore::Swap (allocsize, b.allocsize);
       ngcore::Swap (mem_to_delete, b.mem_to_delete);
-      ngcore::Swap (mem_tracing_id, b.mem_tracing_id);
     }
 
     NETGEN_INLINE void SetMemoryTracing (int mem_id)
