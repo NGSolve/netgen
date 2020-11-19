@@ -300,10 +300,48 @@ namespace ngcore
       return tres;
   }
 
+  class MemoryTracer;
+
+  namespace detail
+  {
+    //Type trait to check if a class implements a 'const MemoryTracer& GetMemoryTracer()' function
+    template<typename T>
+    struct has_GetMemoryTracer
+    {
+    private:
+      template<typename T2>
+      static constexpr auto check(T2*) ->
+        typename std::is_same<decltype(std::declval<T2>().GetMemoryTracer()),const MemoryTracer &>::type;
+      template<typename>
+      static constexpr std::false_type check(...);
+      using type = decltype(check<T>(nullptr)); // NOLINT
+    public:
+      static constexpr bool value = type::value;
+    };
+
+    //Type trait to check if a class implements a 'void SetMemoryTacing(int)' function
+    template<typename T>
+    struct has_SetMemoryTracing
+    {
+    private:
+      template<typename T2>
+      static constexpr auto check(T2*) ->
+        typename std::is_same<decltype(std::declval<T2>().SetMemoryTracing(0)),void>::type;
+      template<typename>
+      static constexpr std::false_type check(...);
+      using type = decltype(check<T>(nullptr)); // NOLINT
+    public:
+      static constexpr bool value = type::value;
+    };
+
+
+  } // namespace detail
 
   class MemoryTracer
   {
     NGCORE_API static std::vector<std::string> names;
+    NGCORE_API static std::map< int, std::vector<int> > tree;
+
     static int GetId(std::string name)
     {
       int id = names.size();
@@ -313,7 +351,6 @@ namespace ngcore
       return id;
     }
 
-    NGCORE_API static std::map< int, std::vector<int> > tree;
 
     int id;
 
@@ -332,32 +369,50 @@ namespace ngcore
     }
 
     template <typename T1, typename... TRest>
-    void Track( T1 & obj, std::string name, TRest & ... rest )
+    void Track( T1 & obj, std::string name, TRest & ... rest ) const
     {
       Track(obj, name);
       Track(rest...);
     }
 
     template<typename T>
-    void Track( T & obj, std::string name )
+    void Track( T & obj, std::string name ) const
     {
-      int child_id = GetId(name);
-      tree[id].push_back(child_id);
-      obj.SetMemoryTracing(child_id);
-    }
-
-    template<typename T>
-    void Track( T & obj )
-    {
-      auto & mt = obj.GetMemoryTracer();
-      int child_id = mt.id;
-      tree[id].push_back(child_id);
+      if constexpr(detail::has_SetMemoryTracing<T>::value)
+      {
+        int child_id = GetId(name);
+        tree[id].push_back(child_id);
+        obj.SetMemoryTracing(child_id);
+      }
+      if constexpr(detail::has_GetMemoryTracer<T>::value)
+      {
+        auto & mt = obj.GetMemoryTracer();
+        int child_id = mt.id;
+        if(name!="")
+          names[mt.id] = name;
+        tree[id].push_back(child_id);
+      }
     }
 
     static std::string GetName(int id)
     {
       return names[id];
     }
+
+    std::string GetName() const
+    {
+      return names[id];
+    }
+
+    void SetName(std::string name) const
+    {
+      names[id] = name;
+    }
+
+
+    static const std::vector<std::string> & GetNames() { return names; }
+    static const std::map<int, std::vector<int>> & GetTree() { return tree; }
+
   };
 
   NETGEN_INLINE void TraceMemoryAlloc( int mem_id, size_t size )
@@ -370,6 +425,12 @@ namespace ngcore
   {
     if(mem_id && trace)
       trace->FreeMemory(mem_id, size);
+  }
+
+  NETGEN_INLINE void TraceMemoryChange( int mem_id, long long size )
+  {
+    if(mem_id && trace)
+      trace->ChangeMemory(mem_id, size);
   }
 
 } // namespace ngcore

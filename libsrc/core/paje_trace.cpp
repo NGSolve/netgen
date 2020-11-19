@@ -243,7 +243,8 @@ namespace ngcore
 
       PajeFile( const std::string & filename)
         {
-          ctrace_stream = fopen (filename.c_str(),"w"); // NOLINT
+          std::string fname = filename + ".trace";
+          ctrace_stream = fopen (fname.c_str(),"w"); // NOLINT
           fprintf(ctrace_stream, "%s", header ); // NOLINT
           alias_counter = 0;
         }
@@ -809,24 +810,25 @@ namespace ngcore
       int id = 0;
       std::map<int, TreeNode> children;
       double chart_size = 0.0; // time without children (the chart lib accumulates children sizes again)
-      double time = 0.0;
-      double min_time = 1e99;
-      double max_time = 0.0;
-      size_t calls = 0;
+      double size = 0.0;
+      double min_size = 1e99;
+      double max_size = 0.0;
       std::string name;
+
+      size_t calls = 0;
       TTimePoint start_time = 0;
   };
 
-  void PrintNode (const TreeNode &n, int &level, std::ofstream & f);
-  void PrintNode (const TreeNode &n, int &level, std::ofstream & f)
+  void PrintNode (const TreeNode &n, std::ofstream & f)
   {
       f << "{ name: \"" + n.name + "\"";
       f << ", calls: " << n.calls;
       f << ", size: " << n.chart_size;
-      f << ", time: " << n.time;
-      f << ", min: " << n.min_time;
-      f << ", max: " << n.max_time;
-      f << ", avg: " << n.time/n.calls;
+      f << ", value: " << n.size;
+      f << ", min: " << n.min_size;
+      f << ", max: " << n.max_size;
+      if(n.calls)
+        f << ", avg: " << n.size/n.calls;
       int size = n.children.size();
       if(size>0)
       {
@@ -834,13 +836,190 @@ namespace ngcore
           f << ", children: [";
           for(auto & c : n.children)
           {
-              PrintNode(c.second, level, f);
+              PrintNode(c.second, f);
               if(++i<size)
                   f << " , ";
           }
           f << ']';
       }
       f << '}';
+  }
+
+  void WriteSunburstHTML( TreeNode & root, std::string filename, bool time_or_memory )
+  {
+    std::ofstream f(filename+".html");
+    f.precision(4);
+    f << R"CODE_(
+<head>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="https://unpkg.com/sunburst-chart"></script>
+
+  <style>body { margin: 0 }</style>
+)CODE_";
+    if(!time_or_memory)
+      f << "<title>Maximum Memory Consumption</title>\n";
+    f << R"CODE_(
+</head>
+<body>
+  <div id="chart"></div>
+
+  <script>
+    const data = 
+)CODE_";
+      PrintNode(root, f);
+      f << ";\n\n";
+      if(time_or_memory)
+        f << "const chart_type = 'time';\n";
+      else
+        f << "const chart_type = 'memory';\n";
+      f << R"CODE_(
+    const color = d3.scaleOrdinal(d3.schemePaired);
+
+    let getTime = (t) =>
+    {
+       if(t>=1000)  return (t/1000).toPrecision(4) + '  s';
+       if(t>=0.1)   return t.toPrecision(4) + ' ms';
+       if(t>=1e-4)  return (t*1e3).toPrecision(4) + ' us';
+
+       return (t/1e6).toPrecision(4) + ' ns';
+    };
+
+    const KB_ = 1024;
+    const MB_ = KB_*1024;
+    const GB_ = MB_*1024;
+    let getMemory = (m) =>
+    {
+       if(m>=GB_)  return (m/GB_).toPrecision(4) + ' GB';
+       if(m>=MB_)  return (m/MB_).toPrecision(4) + ' MB';
+       if(m>=KB_)  return (m/KB_).toPrecision(4) + ' KB';
+       return m.toPrecision(4) + ' B';
+    };
+
+    Sunburst()
+      .data(data)
+      .size('size')
+      .color(d => color(d.name))
+      .tooltipTitle((d, node) => { return node.parent ? node.parent.data.name + " &rarr; " + d.name : d.name; })
+      .tooltipContent((d, node) => {
+        if(chart_type=="memory")
+        {
+          return `Total Memory: <i>${getMemory(d.value)}</i> <br>`
+               + `Memory: <i>${getMemory(d.size)}</i>`
+        }
+        else
+        {
+          return `Time: <i>${getTime(d.value)}</i> <br>`
+               + `calls: <i>${d.calls}</i> <br>`
+               + `min: <i>${getTime(d.min)}</i> <br>`
+               + `max: <i>${getTime(d.max)}</i> <br>`
+               + `avg: <i>${getTime(d.avg)}</i>`
+        }
+      })
+      (document.getElementById('chart'));
+
+      // Line breaks in tooltip
+      var all = document.getElementsByClassName('sunbirst-tooltip');
+      for (var i = 0; i < all.length; i++) {
+          all[i].white_space = "";
+      }
+  </script>
+</body>
+)CODE_" << std::endl;
+
+
+  }
+
+  void WriteMemorySunburstHTML( std::vector<PajeTrace::MemoryEvent> & events, std::string filename )
+  {
+    size_t mem_allocated;
+    size_t max_mem_allocated;
+    size_t imax_mem_allocated;
+
+    const auto & names = MemoryTracer::GetNames();
+    const auto & tree = MemoryTracer::GetTree();
+    auto N = names.size();
+
+    Array<size_t> mem_allocated_id(N);
+    mem_allocated_id = 0;
+
+    // Find point with maximum memory allocation, check for missing allocs/frees
+    for(auto i : IntRange(events.size()))
+    {
+      const auto & ev = events[i];
+
+      if(ev.is_alloc)
+      {
+        mem_allocated += ev.size;
+        mem_allocated_id[ev.id] += ev.size;
+        if(mem_allocated > max_mem_allocated)
+        {
+          imax_mem_allocated = i;
+          max_mem_allocated = mem_allocated;
+        }
+      }
+      else
+      {
+        if(ev.size > mem_allocated)
+          std::cerr << "Error in memory tracer: have total allocated memory < 0" << std::endl;
+        if(ev.size > mem_allocated_id[ev.id])
+          std::cerr << "Error in memory tracer: have allocated memory < 0 in tracer " << names[ev.id] << std::endl;
+
+        mem_allocated -= ev.size;
+        mem_allocated_id[ev.id] -= ev.size;
+      }
+    }
+
+    // reconstruct again the memory consumption after event imax_mem_allocated
+    mem_allocated_id = 0;
+    for(auto i : IntRange(imax_mem_allocated+1))
+    {
+      const auto & ev = events[i];
+
+      if(ev.is_alloc)
+        mem_allocated_id[ev.id] += ev.size;
+      else
+        mem_allocated_id[ev.id] -= ev.size;
+    }
+
+    TreeNode root;
+    root.name="all";
+
+    Array<TreeNode*> nodes(N);
+    nodes = nullptr;
+
+    // find root nodes in memory tracer tree, i.e. they have no parents
+    Array<int> parents(N);
+    parents = -1;
+    for( const auto & [iparent, children] : tree )
+      for (auto child_id : children)
+      {
+        if(parents[child_id] != -1)
+          std::cerr << "Error in memory tracer: multiple parents found for " << names[child_id] << std::endl;
+        parents[child_id] = iparent;
+      }
+
+    for(auto i : IntRange(1, N))
+    {
+      TreeNode * parent = &root;
+      if(parents[i]!=-1)
+        parent = nodes[parents[i]];
+
+      auto & node = parent->children[i];
+      nodes[i] = &node;
+      node.id = i;
+      node.chart_size = mem_allocated_id[i];
+      node.size = mem_allocated_id[i];
+      node.name = names[i];
+    }
+
+    for(auto i : IntRange(1, N))
+      if(parents[N-i]==-1)
+        root.size += nodes[N-i]->size;
+      else
+        nodes[parents[N-i]]->size += nodes[N-i]->size;
+
+    WriteSunburstHTML( root, filename, false );
+
   }
 
   void PajeTrace::WriteSunburstHTML( )
@@ -884,10 +1063,10 @@ namespace ngcore
 
       std::sort (events.begin(), events.end());
 
-      root.time = 1000.0*static_cast<double>(stop_time) * seconds_per_tick;
+      root.size = 1000.0*static_cast<double>(stop_time) * seconds_per_tick;
       root.calls = 1;
-      root.min_time = root.time;
-      root.max_time = root.time;
+      root.min_size = root.size;
+      root.max_size = root.size;
 
       for(auto & event : events)
       {
@@ -904,7 +1083,7 @@ namespace ngcore
               if(need_init)
               {
                   current->name = is_timer_event ? GetTimerName(id) : job_names[id];
-                  current->time = 0.0;
+                  current->size = 0.0;
                   current->id = id;
               }
 
@@ -916,73 +1095,23 @@ namespace ngcore
                 std::cout << "node stack empty!" << std::endl;
                 break;
               }
-              double time = 1000.0*static_cast<double>(event.time-current->start_time) * seconds_per_tick;
-              current->time += time;
-              current->chart_size += time;
-              current->min_time = std::min(current->min_time, time);
-              current->max_time = std::max(current->max_time, time);
+              double size = 1000.0*static_cast<double>(event.time-current->start_time) * seconds_per_tick;
+              current->size += size;
+              current->chart_size += size;
+              current->min_size = std::min(current->min_size, size);
+              current->max_size = std::max(current->max_size, size);
               current->calls++;
 
               current = node_stack.back();
-              current->chart_size -= time;
+              current->chart_size -= size;
               node_stack.pop_back();
           }
       }
 
       root.chart_size = 0.0;
 
-      int level = 0;
-      std::ofstream f(tracefile_name+".html");
-      f.precision(4);
-      f << R"CODE_(
-<head>
-  <script src="https://d3js.org/d3.v5.min.js"></script>
-  <script src="https://unpkg.com/sunburst-chart"></script>
-
-  <style>body { margin: 0 }</style>
-</head>
-<body>
-  <div id="chart"></div>
-
-  <script>
-    const data = 
-)CODE_";
-      PrintNode(root, level, f);
-      f << R"CODE_( ;
-
-    const color = d3.scaleOrdinal(d3.schemePaired);
-
-    let getTime = (t) =>
-    {
-       if(t>=1000)  return (t/1000).toPrecision(4) + '  s';
-       if(t>=0.1)   return t.toPrecision(4) + ' ms';
-       if(t>=1e-4)  return (t*1e3).toPrecision(4) + ' us';
-
-       return (t/1e6).toPrecision(4) + ' ns';
-    };
-
-    Sunburst()
-      .data(data)
-      .size('size')
-      .color(d => color(d.name))
-      .tooltipTitle((d, node) => { return node.parent ? node.parent.data.name + " &rarr; " + d.name : d.name; })
-      .tooltipContent((d, node) => {
-        return `Time: <i>${getTime(d.time)}</i> <br>`
-             + `calls: <i>${d.calls}</i> <br>`
-             + `min: <i>${getTime(d.min)}</i> <br>`
-             + `max: <i>${getTime(d.max)}</i> <br>`
-             + `avg: <i>${getTime(d.avg)}</i>`
-      })
-      (document.getElementById('chart'));
-
-      // Line breaks in tooltip
-      var all = document.getElementsByClassName('sunbirst-tooltip');
-      for (var i = 0; i < all.length; i++) {
-          all[i].white_space = "";
-      }
-  </script>
-</body>
-)CODE_" << std::endl;
+      ngcore::WriteSunburstHTML( root, tracefile_name, true );
+      WriteMemorySunburstHTML( memory_events, tracefile_name+"_memory" );
   }
 
 } // namespace ngcore

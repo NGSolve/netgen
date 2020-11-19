@@ -106,7 +106,7 @@ namespace ngcore
         {
           TTimePoint time;
           size_t size;
-          int region_id;
+          int id;
           bool is_alloc;
 
           bool operator < (const MemoryEvent & other) const { return time < other.time; }
