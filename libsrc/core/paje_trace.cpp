@@ -967,12 +967,19 @@ namespace ngcore
       else
       {
         if(ev.size > mem_allocated)
-          std::cerr << "Error in memory tracer: have total allocated memory < 0" << std::endl;
+          {
+            std::cerr << "Error in memory tracer: have total allocated memory < 0" << std::endl;
+            mem_allocated = 0;
+          }
+        else
+          mem_allocated -= ev.size;
         if(ev.size > mem_allocated_id[ev.id])
-          std::cerr << "Error in memory tracer: have allocated memory < 0 in tracer " << names[ev.id] << std::endl;
-
-        mem_allocated -= ev.size;
-        mem_allocated_id[ev.id] -= ev.size;
+          {
+            std::cerr << "Error in memory tracer: have allocated memory < 0 in tracer " << names[ev.id] << std::endl;
+            mem_allocated_id[ev.id] = 0;
+          }
+        else
+          mem_allocated_id[ev.id] -= ev.size;
       }
     }
 
@@ -985,7 +992,12 @@ namespace ngcore
       if(ev.is_alloc)
         mem_allocated_id[ev.id] += ev.size;
       else
-        mem_allocated_id[ev.id] -= ev.size;
+        {
+          if(ev.size > mem_allocated_id[ev.id])
+            mem_allocated_id[ev.id] = 0;
+          else
+            mem_allocated_id[ev.id] -= ev.size;
+        }
     }
 
     TreeNode root;
