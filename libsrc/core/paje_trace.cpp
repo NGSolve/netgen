@@ -743,7 +743,9 @@ namespace ngcore
             }
         }
       WriteTimingChart();
+#ifdef NETGEN_TRACE_MEMORY
       WriteMemoryChart("");
+#endif // NETGEN_TRACE_MEMORY
       paje.WriteEvents();
     }
 
@@ -930,6 +932,7 @@ namespace ngcore
 
   }
 
+#ifdef NETGEN_TRACE_MEMORY
   void PajeTrace::WriteMemoryChart( std::string fname )
   {
     if(fname=="")
@@ -1053,6 +1056,7 @@ namespace ngcore
     WriteSunburstHTML( root, fname, false );
 
   }
+#endif // NETGEN_TRACE_MEMORY
 
   void PajeTrace::WriteTimingChart( )
   {

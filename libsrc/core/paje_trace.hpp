@@ -31,7 +31,9 @@ namespace ngcore
 
     public:
       NGCORE_API void WriteTimingChart();
+#ifdef NETGEN_TRACE_MEMORY
       NGCORE_API void WriteMemoryChart( std::string fname );
+#endif // NETGEN_TRACE_MEMORY
 
       // Approximate number of events to trace. Tracing will
       // be stopped if any thread reaches this number of events

@@ -304,45 +304,29 @@ namespace ngcore
 
   namespace detail
   {
-    //Type trait to check if a class implements a 'const MemoryTracer& GetMemoryTracer()' function
-    template<typename T>
-    struct has_GetMemoryTracer
-    {
-    private:
-      template<typename T2>
-      static constexpr auto check(T2*) ->
-        typename std::is_same<decltype(std::declval<T2>().GetMemoryTracer()),const MemoryTracer &>::type;
-      template<typename>
-      static constexpr std::false_type check(...);
-      using type = decltype(check<T>(nullptr)); // NOLINT
-    public:
-      static constexpr bool value = type::value;
-    };
-
     //Type trait to check if a class implements a 'void SetMemoryTacing(int)' function
     template<typename T>
-    struct has_SetMemoryTracing
+    struct has_StartMemoryTracing
     {
     private:
       template<typename T2>
       static constexpr auto check(T2*) ->
-        typename std::is_same<decltype(std::declval<T2>().SetMemoryTracing(0)),void>::type;
+        typename std::is_same<decltype(std::declval<T2>().StartMemoryTracing()),void>::type;
       template<typename>
       static constexpr std::false_type check(...);
       using type = decltype(check<T>(nullptr)); // NOLINT
     public:
       static constexpr bool value = type::value;
     };
-
-
   } // namespace detail
 
   class MemoryTracer
   {
+    #ifdef NETGEN_TRACE_MEMORY
     NGCORE_API static std::vector<std::string> names;
     NGCORE_API static std::map< int, std::vector<int> > tree;
 
-    static int GetId(std::string name)
+    static int CreateId(const std::string& name)
     {
       int id = names.size();
       names.push_back(name);
@@ -350,48 +334,73 @@ namespace ngcore
         std::cerr << "Allocated " << id << " MemoryTracer objects" << std::endl;
       return id;
     }
-
-
     int id;
 
     public:
 
     MemoryTracer( std::string name )
     {
-      id = GetId(name);
+      id = CreateId(name);
     }
+
+    // not tracing
+    MemoryTracer() : id(0) {}
 
     template <typename... TRest>
     MemoryTracer( std::string name, TRest & ... rest )
     {
-      id = GetId(name);
+      id = CreateId(name);
       Track(rest...);
     }
 
+    NETGEN_INLINE void Alloc(size_t size) const
+    {
+      if(id && trace)
+        trace->AllocMemory(id, size);
+    }
+
+    void Free(size_t size) const
+    {
+      if(id && trace)
+        trace->FreeMemory(id, size);
+    }
+
+    void Swap(size_t mysize, MemoryTracer& other, size_t other_size) const
+    {
+      if(!trace || (id == 0 && other.id == 0))
+        return;
+      if(id == 0)
+        return trace->ChangeMemory(other.id, mysize - other_size);
+      if(other.id == 0)
+        return trace->ChangeMemory(id, other_size - mysize);
+
+      // first decrease memory, otherwise have artificial/wrong high peak memory usage
+      if(mysize<other_size)
+        {
+          trace->ChangeMemory(other.id, mysize-other_size);
+          trace->ChangeMemory(id, other_size-mysize);
+        }
+      else
+        {
+          trace->ChangeMemory(id, other_size-mysize);
+          trace->ChangeMemory(other.id, mysize-other_size);
+        }
+    }
+
+    int GetId() const { return id; }
+
     template <typename T1, typename... TRest>
-    void Track( T1 & obj, std::string name, TRest & ... rest ) const
+    void Track( T1 & obj, const std::string& name, TRest & ... rest ) const
     {
       Track(obj, name);
       Track(rest...);
     }
 
     template<typename T>
-    void Track( T & obj, std::string name ) const
+    void Track( T & obj, const std::string& name ) const
     {
-      if constexpr(detail::has_SetMemoryTracing<T>::value)
-      {
-        int child_id = GetId(name);
-        tree[id].push_back(child_id);
-        obj.SetMemoryTracing(child_id);
-      }
-      if constexpr(detail::has_GetMemoryTracer<T>::value)
-      {
-        auto & mt = obj.GetMemoryTracer();
-        int child_id = mt.id;
-        if(name!="")
-          names[mt.id] = name;
-        tree[id].push_back(child_id);
-      }
+      obj.GetMemoryTracer().Activate(obj, name);
+      tree[id].push_back(obj.GetMemoryTracer().GetId());
     }
 
     static std::string GetName(int id)
@@ -404,7 +413,20 @@ namespace ngcore
       return names[id];
     }
 
-    void SetName(std::string name) const
+    template<typename T>
+    void Activate(T& me, const std::string& name) const
+    {
+      if(!id)
+        {
+          const_cast<MemoryTracer*>(this)->id = CreateId(name);
+          if constexpr(detail::has_StartMemoryTracing<T>::value)
+            me.StartMemoryTracing();
+        }
+      else
+        SetName(name);
+    }
+
+    void SetName(const std::string& name) const
     {
       names[id] = name;
     }
@@ -412,49 +434,26 @@ namespace ngcore
 
     static const std::vector<std::string> & GetNames() { return names; }
     static const std::map<int, std::vector<int>> & GetTree() { return tree; }
+#else // NETGEN_TRACE_MEMORY
+  public:
+    MemoryTracer() {}
+    MemoryTracer( std::string name ) {}
+    template <typename... TRest>
+    MemoryTracer( std::string name, TRest & ... ) {}
 
+    void Alloc(size_t size) const {}
+    void Free(size_t size) const {}
+    void Swap(...) const {}
+    int GetId() const { return 0; }
+
+    template <typename... TRest>
+    void Track(TRest&...) const {}
+
+    static std::string GetName(int id) { return ""; }
+    std::string GetName() const { return ""; }
+    void SetName(std::string name) const {}
+#endif // NETGEN_TRACE_MEMORY
   };
-
-  NETGEN_INLINE void TraceMemoryAlloc( int mem_id, size_t size )
-  {
-    if(mem_id && trace)
-      trace->AllocMemory(mem_id, size);
-  }
-
-  NETGEN_INLINE void TraceMemoryFree( int mem_id, size_t size )
-  {
-    if(mem_id && trace)
-      trace->FreeMemory(mem_id, size);
-  }
-
-  NETGEN_INLINE void TraceMemoryChange( int mem_id, long long size )
-  {
-    if(mem_id && trace)
-      trace->ChangeMemory(mem_id, size);
-  }
-
-  NETGEN_INLINE void TraceMemorySwap( int mem_id, size_t size, int mem_id2, size_t size2 )
-  {
-    if(!trace || (mem_id==0 && mem_id2==0))
-      return;
-    if(mem_id == 0)
-      return trace->ChangeMemory(mem_id2, size-size2);
-    if(mem_id2 == 0)
-      return trace->ChangeMemory(mem_id, size2-size);
-
-    // first decrease memory, otherwise have artificial/wrong high peak memory usage
-    if(size<size2)
-    {
-      trace->ChangeMemory(mem_id2, size-size2);
-      trace->ChangeMemory(mem_id, size2-size);
-    }
-    else
-    {
-      trace->ChangeMemory(mem_id, size2-size);
-      trace->ChangeMemory(mem_id2, size-size2);
-    }
-  }
-
 } // namespace ngcore
 
 // Helper macro to easily add multiple timers in a function for profiling

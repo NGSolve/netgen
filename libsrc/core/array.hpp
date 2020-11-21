@@ -655,7 +655,6 @@ namespace ngcore
     /// that's the data we have to delete, nullptr for not owning the memory
     T * mem_to_delete;
 
-    int mem_tracing_id = 0;
 
     using FlatArray<T,IndexType>::size;
     using FlatArray<T,IndexType>::data;
@@ -701,7 +700,7 @@ namespace ngcore
 
     NETGEN_INLINE Array (Array && a2) 
     {
-      TraceMemorySwap(mem_tracing_id, sizeof(T)*allocsize, a2.mem_tracing_id, sizeof(T)*a2.allocsize);
+      mt.Swap(sizeof(T) * allocsize, a2.mt, sizeof(T) * a2.allocsize);
 
       size = a2.size; 
       data = a2.data;
@@ -774,7 +773,7 @@ namespace ngcore
     NETGEN_INLINE ~Array()
     {
       delete [] mem_to_delete;
-      TraceMemoryFree(mem_tracing_id, sizeof(T)*allocsize);
+      mt.Free(sizeof(T)*allocsize);
     }
 
     // Only provide this function if T is archivable
@@ -829,7 +828,7 @@ namespace ngcore
     NETGEN_INLINE const Array & Assign (size_t asize, LocalHeap & lh)
     {
       delete [] mem_to_delete;
-      TraceMemoryFree(mem_tracing_id, sizeof(T)*allocsize);
+      mt.Free(sizeof(T)*allocsize);
       size = allocsize = asize;
       data = lh.Alloc<T> (asize);
       mem_to_delete = nullptr;
@@ -937,7 +936,7 @@ namespace ngcore
     NETGEN_INLINE void DeleteAll ()
     {
       delete [] mem_to_delete;
-      TraceMemoryFree(mem_tracing_id, sizeof(T)*allocsize);
+      mt.Free(sizeof(T)*allocsize);
       mem_to_delete = NULL;
       data = 0;
       size = allocsize = 0;
@@ -969,7 +968,7 @@ namespace ngcore
     /// steal array 
     NETGEN_INLINE Array & operator= (Array && a2)
     {
-      TraceMemorySwap(mem_tracing_id, sizeof(T)*allocsize, a2.mem_tracing_id, sizeof(T)*a2.allocsize);
+      mt.Swap(sizeof(T)*allocsize, a2.mt, sizeof(T)*a2.allocsize);
 
       ngcore::Swap (size, a2.size);
       ngcore::Swap (data, a2.data);
@@ -1044,7 +1043,7 @@ namespace ngcore
     
     NETGEN_INLINE void Swap (Array & b)
     {
-      TraceMemorySwap(mem_tracing_id, sizeof(T)*allocsize, b.mem_tracing_id, sizeof(T)*b.allocsize);
+      mt.Swap(sizeof(T) * allocsize, b.mt, sizeof(T) * b.allocsize);
 
       ngcore::Swap (size, b.size);
       ngcore::Swap (data, b.data);
@@ -1052,21 +1051,18 @@ namespace ngcore
       ngcore::Swap (mem_to_delete, b.mem_to_delete);
     }
 
-    NETGEN_INLINE void SetMemoryTracing (int mem_id)
+    NETGEN_INLINE void StartMemoryTracing () const
     {
-      if(!mem_tracing_id && mem_id)
-        TraceMemoryAlloc(mem_id, sizeof(T)*allocsize);
-
-      if(mem_tracing_id && !mem_id)
-        TraceMemoryFree(mem_tracing_id, sizeof(T)*allocsize);
-
-      mem_tracing_id = mem_id;
+      mt.Alloc(sizeof(T) * allocsize);
     }
+
+    const MemoryTracer& GetMemoryTracer() const { return mt; }
 
   private:
 
     /// resize array, at least to size minsize. copy contents
     NETGEN_INLINE void ReSize (size_t minsize);
+    MemoryTracer mt;
   };
 
   
@@ -1079,7 +1075,7 @@ namespace ngcore
     
     T * hdata = data;
     data = new T[nsize];
-    TraceMemoryAlloc(mem_tracing_id, sizeof(T)*nsize );
+    mt.Alloc(sizeof(T) * nsize);
 
     if (hdata)
       {
@@ -1093,7 +1089,7 @@ namespace ngcore
           for (size_t i = 0; i < mins; i++) data[i] = std::move(hdata[i]);
 #endif
         delete [] mem_to_delete;
-        TraceMemoryFree( mem_tracing_id, sizeof(T)*allocsize );
+        mt.Free(sizeof(T) * allocsize);
       }
 
     mem_to_delete = data;

@@ -266,7 +266,9 @@ threads : int
     .def_static("SetTraceThreads", &PajeTrace::SetTraceThreads)
     .def_static("SetTraceThreadCounter", &PajeTrace::SetTraceThreadCounter)
     .def_static("SetMaxTracefileSize", &PajeTrace::SetMaxTracefileSize)
+#ifdef NETGEN_TRACE_MEMORY
     .def_static("WriteMemoryChart", [](string filename){ if(trace) trace->WriteMemoryChart(filename); }, py::arg("filename")="memory" )
+#endif // NETGEN_TRACE_MEMORY
     ;
 
 
