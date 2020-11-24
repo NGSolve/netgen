@@ -28,6 +28,7 @@ namespace ngcore
       bool tracing_enabled;
       TTimePoint start_time;
       int nthreads;
+      size_t n_memory_events_at_start;
 
     public:
       NGCORE_API void WriteTimingChart();
@@ -119,7 +120,7 @@ namespace ngcore
       std::vector<Job> jobs;
       std::vector<TimerEvent> timer_events;
       std::vector<std::vector<ThreadLink> > links;
-      std::vector<MemoryEvent> memory_events;
+      NGCORE_API static std::vector<MemoryEvent> memory_events;
 
     public:
       NGCORE_API void StopTracing();

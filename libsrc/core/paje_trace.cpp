@@ -29,6 +29,8 @@ namespace ngcore
 #endif // PARALLEL
   }
 
+  std::vector<PajeTrace::MemoryEvent> PajeTrace::memory_events;
+
   // Produce no traces by default
   size_t PajeTrace::max_tracefile_size = 0;
 
@@ -75,6 +77,7 @@ namespace ngcore
     start_time = GetTimeCounter();
     tracing_enabled = true;
     mem_tracing_enabled = true;
+    n_memory_events_at_start = memory_events.size();
   }
 
   PajeTrace :: ~PajeTrace()
@@ -97,8 +100,8 @@ namespace ngcore
         for(auto & link : llink)
             link.time -= start_time;
 
-    for(auto & m : memory_events)
-      m.time -= start_time;
+    for(auto i : IntRange(n_memory_events_at_start, memory_events.size()))
+      memory_events[i].time -= start_time;
 
     NgMPI_Comm comm(MPI_COMM_WORLD);
 
@@ -451,7 +454,6 @@ namespace ngcore
       if(mem_tracing_enabled)
       {
         variable_type_memory = paje.DefineVariableType( container_type_task_manager, "Memory [MB]" );
-        paje.SetVariable( 0, variable_type_memory, container_memory, 0.0 );
       }
 
 
@@ -524,8 +526,23 @@ namespace ngcore
           paje.PopState( j.stop_time, state_type_job, container_jobs );
         }
 
-      for(const auto & m : memory_events)
+      size_t memory_at_start = 0;
+
+      for(const auto & i : IntRange(0, n_memory_events_at_start))
       {
+        if(memory_events[i].is_alloc)
+            memory_at_start += memory_events[i].size;
+        else
+            memory_at_start -= memory_events[i].size;
+      }
+
+      paje.SetVariable( 0, variable_type_memory, container_memory, 1.0*memory_at_start/(1024*1024));
+
+      for(const auto & i : IntRange(n_memory_events_at_start, memory_events.size()))
+      {
+        auto & m = memory_events[i];
+        if(m.size==0)
+            continue;
         double size = 1.0*m.size/(1024*1024);
         if(m.is_alloc)
           paje.AddVariable( m.time, variable_type_memory, container_memory, size);
@@ -958,7 +975,7 @@ namespace ngcore
       {
         mem_allocated += ev.size;
         mem_allocated_id[ev.id] += ev.size;
-        if(mem_allocated > max_mem_allocated)
+        if(mem_allocated > max_mem_allocated && i>=n_memory_events_at_start)
         {
           imax_mem_allocated = i;
           max_mem_allocated = mem_allocated;
@@ -1006,6 +1023,7 @@ namespace ngcore
     Array<TreeNode*> nodes;
     nodes.SetSize(N);
     nodes = nullptr;
+    nodes[0] = &root;
     Array<Array<int>> children(N);
 
     Array<size_t> sorting; // topological sorting (parents before children)
@@ -1033,7 +1051,10 @@ namespace ngcore
 
     for(auto i : sorting)
     {
-      TreeNode * parent = (parents[i]==-1) ? &root : nodes[parents[i]];
+      if(i==0)
+          continue;
+
+      TreeNode * parent = nodes[parents[i]];
 
       auto & node = parent->children[i];
       nodes[i] = &node;
