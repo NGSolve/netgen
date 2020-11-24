@@ -196,6 +196,7 @@ if(HAVE_DLFCN_H)
 endif()
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR})
+include_directories(BEFORE /usr/aarch64-linux-gnu/include)
 
 #######################################################################
 # platform specific definitions and flags
@@ -214,6 +215,8 @@ macro(get_dll_from_lib dll_path lib_path)
 endmacro()
 
 set(CMAKE_CXX_STANDARD 17)
+set(CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_EXTENSIONS OFF)
 if(WIN32)
     set(CMAKE_MFC_FLAG 0)
     # build convenience (aka object) libraries in windows)
@@ -230,7 +233,7 @@ endif(APPLE)
 if(NOT ZLIB_INCLUDE_DIRS)
   find_package(ZLIB REQUIRED)
 endif(NOT ZLIB_INCLUDE_DIRS)
-include_directories(${ZLIB_INCLUDE_DIRS})
+# include_directories(${ZLIB_INCLUDE_DIRS})
 
 #######################################################################
 if (USE_GUI)

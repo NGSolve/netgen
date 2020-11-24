@@ -25,7 +25,7 @@ g.Add(inner)
 g.Add(outer)
 geo = g.GenerateSplineGeometry()
 
-m = geo.GenerateMesh(maxh=0.1)
+m = geo.GenerateMesh(maxh=0.1, delaunay2d=True)
 
 try:
     from ngsolve import Draw, Mesh

@@ -8,11 +8,13 @@
 #include <sstream>
 #include <string>
 
+/*
 #ifdef WIN32
 #include <intrin.h>   // for __rdtsc()  CPU time step counter
 #else
 #include <x86intrin.h>   // for __rdtsc()  CPU time step counter
 #endif // WIN32
+*/
 
 #include "ngcore_api.hpp"       // for NGCORE_API
 
@@ -52,7 +54,9 @@ namespace ngcore
 
   inline TTimePoint GetTimeCounter() noexcept
   {
-      return TTimePoint(__rdtsc());
+    // return TTimePoint(__rdtsc());
+      // return TTimePoint(__builtin_readcyclecounter());
+      return TTimePoint(0);
   }
 
   template <class T>
@@ -161,7 +165,7 @@ namespace ngcore
       while (!m.compare_exchange_weak(should, true))
         {
           should = false;
-          _mm_pause();
+          // _mm_pause();
         }
     }
     void unlock()
