@@ -4,13 +4,11 @@ else()
   add_definitions(-DINTERNAL_TCL_DEFAULT=0)
 endif()
 
-set(netgen_sources ngappinit.cpp onetcl.cpp)
 if(WIN32)
-    # add icon to netgen executable
-    enable_language(RC)
-    set(netgen_sources ${netgen_sources} ../windows/netgen.rc)
-    # Don't use ccache here due to incompatibility with the resource compiler
-    set_directory_properties(PROPERTIES RULE_LAUNCH_COMPILE "")
+  # add icon and version info to netgen executable
+  enable_language(RC)
+  # Don't use ccache here due to incompatibility with the resource compiler
+  set_directory_properties(PROPERTIES RULE_LAUNCH_COMPILE "")
 endif(WIN32)
 
 if(USE_GUI)
@@ -23,6 +21,9 @@ if(USE_GUI)
     )
 
     add_executable(netgen ngappinit.cpp)
+    if(WIN32)
+      target_sources(netgen PRIVATE ../windows/netgen.rc)
+    endif(WIN32)
 
     target_link_libraries( gui PUBLIC nglib )
     target_link_libraries( gui PRIVATE ${LIBTOGL} ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} )

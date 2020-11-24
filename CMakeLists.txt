@@ -418,12 +418,12 @@ endif(USE_CGNS)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/netgen_version.hpp ${CMAKE_CURRENT_BINARY_DIR}/netgen_config.hpp DESTINATION ${NG_INSTALL_DIR_INCLUDE}/include COMPONENT netgen_devel)
 
+add_subdirectory(windows)
 add_subdirectory(libsrc)
 add_subdirectory(ng)
 add_subdirectory(tutorials)
 add_subdirectory(py_tutorials)
 add_subdirectory(doc)
-add_subdirectory(windows)
 add_subdirectory(nglib)
 if (USE_PYTHON)
   add_subdirectory(python)
