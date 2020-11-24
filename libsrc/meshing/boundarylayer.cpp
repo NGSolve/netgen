@@ -546,9 +546,9 @@ namespace netgen
                     for(auto& p : nel.PNums())
                       {
                         if(p == moved[0])
-                          p = p2;
-                        if(p == fixed[0])
                           p = p1;
+                        else if(p == fixed[0])
+                          p = p2;
                       }
                     p1 = p2;
                     mesh.AddVolumeElement(nel);
