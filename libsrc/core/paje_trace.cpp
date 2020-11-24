@@ -942,7 +942,7 @@ namespace ngcore
     size_t imax_mem_allocated = 0;
 
     const auto & names = MemoryTracer::GetNames();
-    const auto & tree = MemoryTracer::GetTree();
+    const auto & parents = MemoryTracer::GetParents();
     size_t N = names.size();
 
     Array<size_t> mem_allocated_id;
@@ -1006,39 +1006,27 @@ namespace ngcore
     Array<TreeNode*> nodes;
     nodes.SetSize(N);
     nodes = nullptr;
+    Array<Array<int>> children(N);
+
     Array<size_t> sorting; // topological sorting (parents before children)
     sorting.SetAllocSize(N);
-    ArrayMem<size_t, 100> stack;
-
-    // find root nodes in memory tracer tree, i.e. they have no parents
-    Array<int> parents;
-    parents.SetSize(N);
-    parents = -1;
-    for( const auto & [iparent, children] : tree )
-      for (auto child_id : children)
-      {
-        if(parents[child_id] != -1)
-          std::cerr << "Error in memory tracer: multiple parents found for " << names[child_id] << std::endl;
-        parents[child_id] = iparent;
-      }
 
     for(auto i : IntRange(1, N))
-      if(parents[i]==-1)
-      {
-        sorting.Append(i);
-        if(tree.count(i))
-          stack.Append(i);
-      }
+        children[parents[i]].Append(i);
+
+    ArrayMem<size_t, 100> stack;
+    sorting.Append(0);
+    stack.Append(0);
 
     while(stack.Size())
     {
       auto current = stack.Last();
       stack.DeleteLast();
 
-      for(const auto child : tree.at(current))
+      for(const auto child : children[current])
       {
         sorting.Append(child);
-        if(tree.count(child))
+        if(children[child].Size())
           stack.Append(child);
       }
     }

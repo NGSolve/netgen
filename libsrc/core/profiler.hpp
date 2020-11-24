@@ -324,12 +324,13 @@ namespace ngcore
   {
     #ifdef NETGEN_TRACE_MEMORY
     NGCORE_API static std::vector<std::string> names;
-    NGCORE_API static std::map< int, std::vector<int> > tree;
+    NGCORE_API static std::vector<int> parents;
 
     static int CreateId(const std::string& name)
     {
       int id = names.size();
       names.push_back(name);
+      parents.push_back(0);
       if(id==10*NgProfiler::SIZE)
         std::cerr << "Allocated " << id << " MemoryTracer objects" << std::endl;
       return id;
@@ -400,7 +401,7 @@ namespace ngcore
     void Track( T & obj, const std::string& name ) const
     {
       obj.GetMemoryTracer().Activate(obj, name);
-      tree[id].push_back(obj.GetMemoryTracer().GetId());
+      parents[obj.GetMemoryTracer().GetId()] = id;
     }
 
     static std::string GetName(int id)
@@ -433,7 +434,7 @@ namespace ngcore
 
 
     static const std::vector<std::string> & GetNames() { return names; }
-    static const std::map<int, std::vector<int>> & GetTree() { return tree; }
+    static const std::vector<int> & GetParents() { return parents; }
 #else // NETGEN_TRACE_MEMORY
   public:
     MemoryTracer() {}
