@@ -55,7 +55,7 @@ BEGIN
             VALUE "FileDescription", "Netgen Meshing Software"
             VALUE "FileVersion", "@NETGEN_VERSION@"
             VALUE "InternalName", "Netgen"
-            VALUE "LegalCopyright", "GNU Public License (GPL)"
+            VALUE "LegalCopyright", "GNU Lesser General Public License (LGPL)"
             VALUE "OriginalFilename", "Netgen.exe"
             VALUE "ProductName", "Netgen"
             VALUE "ProductVersion", "@NETGEN_VERSION@"
