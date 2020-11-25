@@ -916,7 +916,7 @@ namespace ngcore
 
   class NGCORE_API HashArchive : public Archive
   {
-    size_t hash_value;
+    size_t hash_value = 0;
     char* h;
     int offset = 0;
   public:
