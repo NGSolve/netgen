@@ -1068,10 +1068,9 @@ namespace ngcore
     {
       // reverse topological order to accumulate total memory usage of all children
       auto i = sorting[sorting.Size()-1-i_];
-      if(parents[i]==-1)
-        root.size += nodes[i]->size;
-      else
-        nodes[parents[i]]->size += nodes[i]->size;
+      if(i==0)
+          continue;
+      nodes[parents[i]]->size += nodes[i]->size;
     }
 
     WriteSunburstHTML( root, fname, false );
