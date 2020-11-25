@@ -36,10 +36,15 @@ namespace ngcore
   void BitArray :: SetSize (size_t asize)
   {
     if (size == asize) return;
-    if (owns_data) delete [] data;
+    if (owns_data)
+      {
+        delete [] data;
+        mt.Free(Addr(size)+1);
+      }
 
     size = asize;
     data = new unsigned char [Addr (size)+1];
+    mt.Alloc(Addr(size)+1);
   }
 
   BitArray & BitArray :: Set () throw()

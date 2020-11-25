@@ -90,6 +90,9 @@ namespace netgen
 
   void GenerateBoundaryLayer(Mesh& mesh, const BoundaryLayerParameters& blp)
   {
+    static Timer timer("Create Boundarylayers");
+    RegionTimer regt(timer);
+
     int max_edge_nr = -1;
     for(const auto& seg : mesh.LineSegments())
       if(seg.edgenr > max_edge_nr)

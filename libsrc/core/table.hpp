@@ -159,6 +159,7 @@ namespace ngcore
     NETGEN_INLINE Table (Table && tab2)
       : FlatTable<T,IndexType>(0, nullptr, nullptr)
     {
+      tab2.mt.Free(tab2.GetMemUsage());
       Swap (size, tab2.size);
       Swap (index, tab2.index);
       Swap (data, tab2.data);
@@ -166,6 +167,7 @@ namespace ngcore
 
     NETGEN_INLINE Table & operator= (Table && tab2)
     {
+      mt.Swap(GetMemUsage(), tab2.mt, tab2.GetMemUsage());
       Swap (size, tab2.size);
       Swap (index, tab2.index);
       Swap (data, tab2.data);
@@ -177,6 +179,7 @@ namespace ngcore
     /// Delete data
     NETGEN_INLINE ~Table ()
     {
+      mt.Free(GetMemUsage());
       delete [] data;
       delete [] index;
     }
@@ -188,6 +191,16 @@ namespace ngcore
     NETGEN_INLINE size_t NElements() const { return index[size]; }
 
     using FlatTable<T,IndexType>::operator[];
+
+    NETGEN_INLINE void StartMemoryTracing (int mem_id)
+    {
+      mt.Alloc(GetMemUsage());
+    }
+    const MemoryTracer& GetMemoryTracer() const { return mt; }
+
+  private:
+    size_t GetMemUsage() const { return size == 0 ? 0 : sizeof(T)*index[size] + sizeof(IndexType) * size+1; }
+    MemoryTracer mt;
   };
 
 

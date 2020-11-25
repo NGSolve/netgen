@@ -33,6 +33,7 @@ option( BUILD_STUB_FILES "Build stub files for better autocompletion" ON)
 option( BUILD_FOR_CONDA "Link python libraries only to executables" OFF)
 
 option( USE_SUPERBUILD       "use ccache" ON)
+option( TRACE_MEMORY     "Enable memory tracing" OFF)
 
 set(NG_COMPILE_FLAGS "" CACHE STRING "Additional compile flags")
 

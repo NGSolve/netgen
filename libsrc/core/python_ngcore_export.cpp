@@ -247,23 +247,28 @@ threads : int
     ;
 
   py::class_<PajeTrace>(m, "PajeTrace")
-    .def(py::init( [] (string filename, size_t size_mb, bool threads, bool thread_counter)
+    .def(py::init( [] (string filename, size_t size_mb, bool threads, bool thread_counter, bool memory)
           {
               PajeTrace::SetMaxTracefileSize(size_mb*1014*1024);
               PajeTrace::SetTraceThreads(threads);
+              PajeTrace::SetTraceMemory(memory);
               PajeTrace::SetTraceThreadCounter(thread_counter);
               trace = new PajeTrace(TaskManager::GetMaxThreads(), filename);
               return trace;
           }), py::arg("filename")="ng.trace", py::arg("size")=1000,
               py::arg("threads")=true, py::arg("thread_counter")=false,
+              py::arg("memory")=true,
               "size in Megabytes"
         )
     .def("__enter__", [](PajeTrace & self) { })
     .def("__exit__", [](PajeTrace & self, py::args) { self.StopTracing(); })
     .def("__del__", [](PajeTrace & self) { trace = nullptr; })
-    .def("SetTraceThreads", &PajeTrace::SetTraceThreads)
-    .def("SetTraceThreadCounter", &PajeTrace::SetTraceThreadCounter)
-    .def("SetMaxTracefileSize", &PajeTrace::SetMaxTracefileSize)
+    .def_static("SetTraceThreads", &PajeTrace::SetTraceThreads)
+    .def_static("SetTraceThreadCounter", &PajeTrace::SetTraceThreadCounter)
+    .def_static("SetMaxTracefileSize", &PajeTrace::SetMaxTracefileSize)
+#ifdef NETGEN_TRACE_MEMORY
+    .def_static("WriteMemoryChart", [](string filename){ if(trace) trace->WriteMemoryChart(filename); }, py::arg("filename")="memory" )
+#endif // NETGEN_TRACE_MEMORY
     ;
 
 
