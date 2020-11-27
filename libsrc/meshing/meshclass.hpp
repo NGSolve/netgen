@@ -172,6 +172,7 @@ namespace netgen
 				      const int element) const;
 
   public:
+    Signal<> updateSignal;
 
     // store coarse mesh before hp-refinement
     unique_ptr<NgArray<HPRefElement>> hpelements;

@@ -6642,6 +6642,7 @@ namespace netgen
         paralleltop->UpdateCoarseGrid();
       }
 #endif
+    updateSignal.Emit();
   }
 
   void Mesh :: BuildCurvedElements  (const Refinement * ref, int aorder, bool arational)
