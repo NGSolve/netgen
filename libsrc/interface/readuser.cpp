@@ -42,12 +42,11 @@ namespace netgen
           {
             Point3d p;
             in >> p.X() >> p.Y() >> p.Z();
-	    p.Z() *= 10;
             mesh.AddPoint (p);
           }
 
         mesh.ClearFaceDescriptors();
-        mesh.AddFaceDescriptor (FaceDescriptor(0,1,0,0));
+        mesh.AddFaceDescriptor (FaceDescriptor(1,1,0,0));
       
         in >> nbe;
         //      int invert = globflags.GetDefineFlag ("invertsurfacemesh");
