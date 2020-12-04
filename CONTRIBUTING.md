@@ -5,7 +5,7 @@
 
 If you have a problem using Netgen/NGSolve consider asking a question in our [forum](https://ngsolve.org/forum).
 
-If you found a bug create an issue in the [Github Issue Tracker](https://github.com/NGSolve/netgen/issues). Please be as specific as possible, issues with a reproducible minimal script will get more attention than unspecific one liners :)
+If you found a bug create an issue in the [Github Issue Tracker](https://github.com/NGSolve/netgen/issues). Please be as specific as possible, issues with a reproducible minimal failing example will get more attention than unspecific one liners :)
 
 ## Contributing patches
 
