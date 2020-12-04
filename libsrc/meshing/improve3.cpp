@@ -3716,6 +3716,18 @@ double MeshOptimize3d :: SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementI
 
 
   FlatArray<ElementIndex> row = elementsonnode[pi1];
+  for(auto ei : row)
+      if (mesh[ei].IsDeleted()) return 0.0;
+
+  for(auto ei : elementsonnode[pi2])
+      if (mesh[ei].IsDeleted()) return 0.0;
+
+  for(auto ei : elementsonnode[pi3])
+      if (mesh[ei].IsDeleted()) return 0.0;
+
+  for(auto ei : elementsonnode[pi4])
+      if (mesh[ei].IsDeleted()) return 0.0;
+
   for (int k = 0; k < row.Size(); k++)
   {
       ElementIndex eli2 = row[k];
@@ -3723,7 +3735,6 @@ double MeshOptimize3d :: SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementI
       if ( eli1 != eli2 )
       {
           Element & elem2 = mesh[eli2];
-          if (elem2.IsDeleted()) continue;
           if (elem2.GetType() != TET)
               continue;
 
@@ -3992,8 +4003,12 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
   QuickSort(faces_with_improvement);
 
   for (auto [dummy, eli,j] : faces_with_improvement)
+    {
+      if(mesh[eli].IsDeleted())
+          continue;
       if(SwapImprove2( mesh, goal, eli, j, elementsonnode, belementsonnode, false) < 0.0)
           cnt++;
+    }
 
   PrintMessage (5, cnt, " swaps performed");
 

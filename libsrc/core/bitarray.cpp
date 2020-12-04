@@ -36,10 +36,15 @@ namespace ngcore
   void BitArray :: SetSize (size_t asize)
   {
     if (size == asize) return;
-    if (owns_data) delete [] data;
+    if (owns_data)
+      {
+        delete [] data;
+        mt.Free(Addr(size)+1);
+      }
 
     size = asize;
     data = new unsigned char [Addr (size)+1];
+    mt.Alloc(Addr(size)+1);
   }
 
   BitArray & BitArray :: Set () throw()
@@ -136,7 +141,20 @@ namespace ngcore
         archive & size;
         if(archive.Input())
           SetSize(size);
-        archive.Do(data, size/CHAR_BIT+1);
+        if(archive.GetVersion("netgen") < "v6.2.2009-20")
+          archive.Do(data, size/CHAR_BIT+1);
+        else
+          {
+            archive.NeedsVersion("netgen", "v6.2.2009-20");
+            archive.Do(data, size/CHAR_BIT);
+            for(size_t i = 0; i < size%CHAR_BIT; i++)
+              {
+                size_t index =  CHAR_BIT * (size/CHAR_BIT) + i;
+                bool b = Test(index);
+                archive & b;
+                b ? SetBit(index) : Clear(index);
+              }
+          }
       }
     else
       {

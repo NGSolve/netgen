@@ -29,6 +29,8 @@ namespace ngcore
 #endif // PARALLEL
   }
 
+  std::vector<PajeTrace::MemoryEvent> PajeTrace::memory_events;
+
   // Produce no traces by default
   size_t PajeTrace::max_tracefile_size = 0;
 
@@ -36,6 +38,7 @@ namespace ngcore
   // increases trace by a factor of two
   bool PajeTrace::trace_thread_counter = false;
   bool PajeTrace::trace_threads = true;
+  bool PajeTrace::mem_tracing_enabled = true;
 
   PajeTrace :: PajeTrace(int anthreads, std::string aname)
   {
@@ -62,6 +65,7 @@ namespace ngcore
 
     jobs.reserve(reserve_size);
     timer_events.reserve(reserve_size);
+    memory_events.reserve(1024*1024);
 
     // sync start time when running in parallel
 #ifdef PARALLEL
@@ -72,6 +76,8 @@ namespace ngcore
 
     start_time = GetTimeCounter();
     tracing_enabled = true;
+    mem_tracing_enabled = true;
+    n_memory_events_at_start = memory_events.size();
   }
 
   PajeTrace :: ~PajeTrace()
@@ -93,6 +99,9 @@ namespace ngcore
     for(auto & llink : links)
         for(auto & link : llink)
             link.time -= start_time;
+
+    for(auto i : IntRange(n_memory_events_at_start, memory_events.size()))
+      memory_events[i].time -= start_time;
 
     NgMPI_Comm comm(MPI_COMM_WORLD);
 
@@ -237,7 +246,8 @@ namespace ngcore
 
       PajeFile( const std::string & filename)
         {
-          ctrace_stream = fopen (filename.c_str(),"w"); // NOLINT
+          std::string fname = filename + ".trace";
+          ctrace_stream = fopen (fname.c_str(),"w"); // NOLINT
           fprintf(ctrace_stream, "%s", header ); // NOLINT
           alias_counter = 0;
         }
@@ -426,6 +436,7 @@ namespace ngcore
       const int container_type_thread = paje.DefineContainerType( container_type_task_manager, "Thread");
       const int container_type_timer = container_type_thread; //paje.DefineContainerType( container_type_task_manager, "Timers");
       const int container_type_jobs = paje.DefineContainerType( container_type_task_manager, "Jobs");
+      const int container_type_memory = paje.DefineContainerType( container_type_task_manager, "Memory usage");
 
       const int state_type_job = paje.DefineStateType( container_type_jobs, "Job" );
       const int state_type_task = paje.DefineStateType( container_type_thread, "Task" );
@@ -433,12 +444,18 @@ namespace ngcore
 
       int variable_type_active_threads = 0;
       if(trace_thread_counter)
-          paje.DefineVariableType( container_type_jobs, "Active threads" );
+          variable_type_active_threads = paje.DefineVariableType( container_type_jobs, "Active threads" );
 
       const int container_task_manager = paje.CreateContainer( container_type_task_manager, 0, "The task manager" );
       const int container_jobs = paje.CreateContainer( container_type_jobs, container_task_manager, "Jobs" );
-      if(trace_thread_counter)
-          paje.SetVariable( 0, variable_type_active_threads, container_jobs, 0.0 );
+
+      int variable_type_memory = 0;
+      const int container_memory = paje.CreateContainer( container_type_memory, container_task_manager, "Memory" );
+      if(mem_tracing_enabled)
+      {
+        variable_type_memory = paje.DefineVariableType( container_type_task_manager, "Memory [MB]" );
+      }
+
 
       int num_nodes = 1; //task_manager ? task_manager->GetNumNodes() : 1;
       std::vector <int> thread_aliases;
@@ -508,6 +525,30 @@ namespace ngcore
           paje.PushState( j.start_time, state_type_job, container_jobs, job_map[j.type] );
           paje.PopState( j.stop_time, state_type_job, container_jobs );
         }
+
+      size_t memory_at_start = 0;
+
+      for(const auto & i : IntRange(0, n_memory_events_at_start))
+      {
+        if(memory_events[i].is_alloc)
+            memory_at_start += memory_events[i].size;
+        else
+            memory_at_start -= memory_events[i].size;
+      }
+
+      paje.SetVariable( 0, variable_type_memory, container_memory, 1.0*memory_at_start/(1024*1024));
+
+      for(const auto & i : IntRange(n_memory_events_at_start, memory_events.size()))
+      {
+        auto & m = memory_events[i];
+        if(m.size==0)
+            continue;
+        double size = 1.0*m.size/(1024*1024);
+        if(m.is_alloc)
+          paje.AddVariable( m.time, variable_type_memory, container_memory, size);
+        else
+          paje.SubVariable( m.time, variable_type_memory, container_memory, size);
+      }
 
       std::set<int> timer_ids;
       std::map<int,int> timer_aliases;
@@ -718,7 +759,10 @@ namespace ngcore
                 }
             }
         }
-      WriteSunburstHTML();
+      WriteTimingChart();
+#ifdef NETGEN_TRACE_MEMORY
+      WriteMemoryChart("");
+#endif // NETGEN_TRACE_MEMORY
       paje.WriteEvents();
     }
 
@@ -786,24 +830,25 @@ namespace ngcore
       int id = 0;
       std::map<int, TreeNode> children;
       double chart_size = 0.0; // time without children (the chart lib accumulates children sizes again)
-      double time = 0.0;
-      double min_time = 1e99;
-      double max_time = 0.0;
-      size_t calls = 0;
+      double size = 0.0;
+      double min_size = 1e99;
+      double max_size = 0.0;
       std::string name;
+
+      size_t calls = 0;
       TTimePoint start_time = 0;
   };
 
-  void PrintNode (const TreeNode &n, int &level, std::ofstream & f);
-  void PrintNode (const TreeNode &n, int &level, std::ofstream & f)
+  void PrintNode (const TreeNode &n, std::ofstream & f)
   {
       f << "{ name: \"" + n.name + "\"";
       f << ", calls: " << n.calls;
       f << ", size: " << n.chart_size;
-      f << ", time: " << n.time;
-      f << ", min: " << n.min_time;
-      f << ", max: " << n.max_time;
-      f << ", avg: " << n.time/n.calls;
+      f << ", value: " << n.size;
+      f << ", min: " << n.min_size;
+      f << ", max: " << n.max_size;
+      if(n.calls)
+        f << ", avg: " << n.size/n.calls;
       int size = n.children.size();
       if(size>0)
       {
@@ -811,7 +856,7 @@ namespace ngcore
           f << ", children: [";
           for(auto & c : n.children)
           {
-              PrintNode(c.second, level, f);
+              PrintNode(c.second, f);
               if(++i<size)
                   f << " , ";
           }
@@ -820,7 +865,220 @@ namespace ngcore
       f << '}';
   }
 
-  void PajeTrace::WriteSunburstHTML( )
+  void WriteSunburstHTML( TreeNode & root, std::string filename, bool time_or_memory )
+  {
+    std::ofstream f(filename+".html");
+    f.precision(4);
+    f << R"CODE_(
+<head>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="https://unpkg.com/sunburst-chart"></script>
+
+  <style>body { margin: 0 }</style>
+)CODE_";
+    if(!time_or_memory)
+      f << "<title>Maximum Memory Consumption</title>\n";
+    f << R"CODE_(
+</head>
+<body>
+  <div id="chart"></div>
+
+  <script>
+    const data = 
+)CODE_";
+      PrintNode(root, f);
+      f << ";\n\n";
+      if(time_or_memory)
+        f << "const chart_type = 'time';\n";
+      else
+        f << "const chart_type = 'memory';\n";
+      f << R"CODE_(
+    const color = d3.scaleOrdinal(d3.schemePaired);
+
+    let getTime = (t) =>
+    {
+       if(t>=1000)  return (t/1000).toPrecision(4) + '  s';
+       if(t>=0.1)   return t.toPrecision(4) + ' ms';
+       if(t>=1e-4)  return (t*1e3).toPrecision(4) + ' us';
+
+       return (t/1e6).toPrecision(4) + ' ns';
+    };
+
+    const KB_ = 1024;
+    const MB_ = KB_*1024;
+    const GB_ = MB_*1024;
+    let getMemory = (m) =>
+    {
+       if(m>=GB_)  return (m/GB_).toPrecision(4) + ' GB';
+       if(m>=MB_)  return (m/MB_).toPrecision(4) + ' MB';
+       if(m>=KB_)  return (m/KB_).toPrecision(4) + ' KB';
+       return m.toPrecision(4) + ' B';
+    };
+
+    Sunburst()
+      .data(data)
+      .size('size')
+      .color(d => color(d.name))
+      .tooltipTitle((d, node) => { return node.parent ? node.parent.data.name + " &rarr; " + d.name : d.name; })
+      .tooltipContent((d, node) => {
+        if(chart_type=="memory")
+        {
+          return `Total Memory: <i>${getMemory(d.value)}</i> <br>`
+               + `Memory: <i>${getMemory(d.size)}</i>`
+        }
+        else
+        {
+          return `Time: <i>${getTime(d.value)}</i> <br>`
+               + `calls: <i>${d.calls}</i> <br>`
+               + `min: <i>${getTime(d.min)}</i> <br>`
+               + `max: <i>${getTime(d.max)}</i> <br>`
+               + `avg: <i>${getTime(d.avg)}</i>`
+        }
+      })
+      (document.getElementById('chart'));
+
+      // Line breaks in tooltip
+      var all = document.getElementsByClassName('sunbirst-tooltip');
+      for (var i = 0; i < all.length; i++) {
+          all[i].white_space = "";
+      }
+  </script>
+</body>
+)CODE_" << std::endl;
+
+
+  }
+
+#ifdef NETGEN_TRACE_MEMORY
+  void PajeTrace::WriteMemoryChart( std::string fname )
+  {
+    if(fname=="")
+      fname = tracefile_name + "_memory";
+    size_t mem_allocated = 0;
+    size_t max_mem_allocated = 0;
+    size_t imax_mem_allocated = 0;
+
+    const auto & names = MemoryTracer::GetNames();
+    const auto & parents = MemoryTracer::GetParents();
+    size_t N = names.size();
+
+    Array<size_t> mem_allocated_id;
+    mem_allocated_id.SetSize(N);
+    mem_allocated_id = 0;
+
+    // Find point with maximum memory allocation, check for missing allocs/frees
+    for(auto i : IntRange(memory_events.size()))
+    {
+      const auto & ev = memory_events[i];
+
+      if(ev.is_alloc)
+      {
+        mem_allocated += ev.size;
+        mem_allocated_id[ev.id] += ev.size;
+        if(mem_allocated > max_mem_allocated && i>=n_memory_events_at_start)
+        {
+          imax_mem_allocated = i;
+          max_mem_allocated = mem_allocated;
+        }
+      }
+      else
+      {
+        if(ev.size > mem_allocated)
+          {
+            std::cerr << "Error in memory tracer: have total allocated memory < 0" << std::endl;
+            mem_allocated = 0;
+          }
+        else
+          mem_allocated -= ev.size;
+        if(ev.size > mem_allocated_id[ev.id])
+          {
+            std::cerr << "Error in memory tracer: have allocated memory < 0 in tracer " << names[ev.id] << std::endl;
+            mem_allocated_id[ev.id] = 0;
+          }
+        else
+          mem_allocated_id[ev.id] -= ev.size;
+      }
+    }
+
+    // reconstruct again the memory consumption after event imax_mem_allocated
+    mem_allocated_id = 0;
+    for(auto i : IntRange(imax_mem_allocated+1))
+    {
+      const auto & ev = memory_events[i];
+
+      if(ev.is_alloc)
+        mem_allocated_id[ev.id] += ev.size;
+      else
+        {
+          if(ev.size > mem_allocated_id[ev.id])
+            mem_allocated_id[ev.id] = 0;
+          else
+            mem_allocated_id[ev.id] -= ev.size;
+        }
+    }
+
+    TreeNode root;
+    root.name="all";
+
+    Array<TreeNode*> nodes;
+    nodes.SetSize(N);
+    nodes = nullptr;
+    nodes[0] = &root;
+    Array<Array<int>> children(N);
+
+    Array<size_t> sorting; // topological sorting (parents before children)
+    sorting.SetAllocSize(N);
+
+    for(auto i : IntRange(1, N))
+        children[parents[i]].Append(i);
+
+    ArrayMem<size_t, 100> stack;
+    sorting.Append(0);
+    stack.Append(0);
+
+    while(stack.Size())
+    {
+      auto current = stack.Last();
+      stack.DeleteLast();
+
+      for(const auto child : children[current])
+      {
+        sorting.Append(child);
+        if(children[child].Size())
+          stack.Append(child);
+      }
+    }
+
+    for(auto i : sorting)
+    {
+      if(i==0)
+          continue;
+
+      TreeNode * parent = nodes[parents[i]];
+
+      auto & node = parent->children[i];
+      nodes[i] = &node;
+      node.id = i;
+      node.chart_size = mem_allocated_id[i];
+      node.size = mem_allocated_id[i];
+      node.name = names[i];
+    }
+
+    for(auto i_ : Range(sorting))
+    {
+      // reverse topological order to accumulate total memory usage of all children
+      auto i = sorting[sorting.Size()-1-i_];
+      if(i==0)
+          continue;
+      nodes[parents[i]]->size += nodes[i]->size;
+    }
+
+    WriteSunburstHTML( root, fname, false );
+
+  }
+#endif // NETGEN_TRACE_MEMORY
+
+  void PajeTrace::WriteTimingChart( )
   {
       std::vector<TimerEvent> events;
 
@@ -861,10 +1119,10 @@ namespace ngcore
 
       std::sort (events.begin(), events.end());
 
-      root.time = 1000.0*static_cast<double>(stop_time) * seconds_per_tick;
+      root.size = 1000.0*static_cast<double>(stop_time) * seconds_per_tick;
       root.calls = 1;
-      root.min_time = root.time;
-      root.max_time = root.time;
+      root.min_size = root.size;
+      root.max_size = root.size;
 
       for(auto & event : events)
       {
@@ -881,7 +1139,7 @@ namespace ngcore
               if(need_init)
               {
                   current->name = is_timer_event ? GetTimerName(id) : job_names[id];
-                  current->time = 0.0;
+                  current->size = 0.0;
                   current->id = id;
               }
 
@@ -893,73 +1151,22 @@ namespace ngcore
                 std::cout << "node stack empty!" << std::endl;
                 break;
               }
-              double time = 1000.0*static_cast<double>(event.time-current->start_time) * seconds_per_tick;
-              current->time += time;
-              current->chart_size += time;
-              current->min_time = std::min(current->min_time, time);
-              current->max_time = std::max(current->max_time, time);
+              double size = 1000.0*static_cast<double>(event.time-current->start_time) * seconds_per_tick;
+              current->size += size;
+              current->chart_size += size;
+              current->min_size = std::min(current->min_size, size);
+              current->max_size = std::max(current->max_size, size);
               current->calls++;
 
               current = node_stack.back();
-              current->chart_size -= time;
+              current->chart_size -= size;
               node_stack.pop_back();
           }
       }
 
       root.chart_size = 0.0;
 
-      int level = 0;
-      std::ofstream f(tracefile_name+".html");
-      f.precision(4);
-      f << R"CODE_(
-<head>
-  <script src="https://d3js.org/d3.v5.min.js"></script>
-  <script src="https://unpkg.com/sunburst-chart"></script>
-
-  <style>body { margin: 0 }</style>
-</head>
-<body>
-  <div id="chart"></div>
-
-  <script>
-    const data = 
-)CODE_";
-      PrintNode(root, level, f);
-      f << R"CODE_( ;
-
-    const color = d3.scaleOrdinal(d3.schemePaired);
-
-    let getTime = (t) =>
-    {
-       if(t>=1000)  return (t/1000).toPrecision(4) + '  s';
-       if(t>=0.1)   return t.toPrecision(4) + ' ms';
-       if(t>=1e-4)  return (t*1e3).toPrecision(4) + ' us';
-
-       return (t/1e6).toPrecision(4) + ' ns';
-    };
-
-    Sunburst()
-      .data(data)
-      .size('size')
-      .color(d => color(d.name))
-      .tooltipTitle((d, node) => { return node.parent ? node.parent.data.name + " &rarr; " + d.name : d.name; })
-      .tooltipContent((d, node) => {
-        return `Time: <i>${getTime(d.time)}</i> <br>`
-             + `calls: <i>${d.calls}</i> <br>`
-             + `min: <i>${getTime(d.min)}</i> <br>`
-             + `max: <i>${getTime(d.max)}</i> <br>`
-             + `avg: <i>${getTime(d.avg)}</i>`
-      })
-      (document.getElementById('chart'));
-
-      // Line breaks in tooltip
-      var all = document.getElementsByClassName('sunbirst-tooltip');
-      for (var i = 0; i < all.length; i++) {
-          all[i].white_space = "";
-      }
-  </script>
-</body>
-)CODE_" << std::endl;
+      ngcore::WriteSunburstHTML( root, tracefile_name, true );
   }
 
 } // namespace ngcore

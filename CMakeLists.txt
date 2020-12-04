@@ -33,6 +33,7 @@ option( BUILD_STUB_FILES "Build stub files for better autocompletion" ON)
 option( BUILD_FOR_CONDA "Link python libraries only to executables" OFF)
 
 option( USE_SUPERBUILD       "use ccache" ON)
+option( TRACE_MEMORY     "Enable memory tracing" OFF)
 
 set(NG_COMPILE_FLAGS "" CACHE STRING "Additional compile flags")
 
@@ -420,12 +421,12 @@ endif(USE_CGNS)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/netgen_version.hpp ${CMAKE_CURRENT_BINARY_DIR}/netgen_config.hpp DESTINATION ${NG_INSTALL_DIR_INCLUDE}/include COMPONENT netgen_devel)
 
+add_subdirectory(windows)
 add_subdirectory(libsrc)
 add_subdirectory(ng)
 add_subdirectory(tutorials)
 add_subdirectory(py_tutorials)
 add_subdirectory(doc)
-add_subdirectory(windows)
 add_subdirectory(nglib)
 if (USE_PYTHON)
   add_subdirectory(python)

@@ -160,7 +160,7 @@ namespace ngcore
 
       static int cnt = 0;
       if (use_paje_trace)
-          trace = new PajeTrace(num_threads, "ng" + ToString(cnt++) + ".trace");
+          trace = new PajeTrace(num_threads, "ng" + ToString(cnt++));
     }
 
 

@@ -92,3 +92,18 @@ def test_splitted_surface():
     mesh = ngs.Mesh(mesh)
     assert ngs.Integrate(1, mesh) == pytest.approx(1)
     assert ngs.Integrate(1, mesh.Materials("slot")) == pytest.approx(0.4)
+
+@pytest.mark.parametrize("outside", [True, False])
+def test_pyramids(outside):
+    geo = CSGeometry()
+    box = OrthoBrick((0,0,0), (1,1,1))
+    plate = OrthoBrick((0.3,0.3,0.4),(0.7,0.7,1)) * Plane((0,0,0.6), (0,0,1)).bc("top")
+    geo.Add((box-plate).mat("air"))
+    geo.Add(plate.mat("plate"))
+    mesh = geo.GenerateMesh()
+    mesh.BoundaryLayer("top", [0.01], "layer", "plate", outside=outside)
+    ngs = pytest.importorskip("ngsolve")
+    mesh = ngs.Mesh(mesh)
+    assert ngs.Integrate(1, mesh.Materials("plate")) == pytest.approx(0.032 if outside else 0.0304)
+    assert ngs.Integrate(1, mesh.Materials("layer")) == pytest.approx(0.0016)
+    assert ngs.Integrate(1, mesh.Materials("air")) == pytest.approx(0.9664 if outside else 0.968)

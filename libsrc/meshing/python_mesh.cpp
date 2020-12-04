@@ -1136,8 +1136,8 @@ project_boundaries : Optional[str] = None
     
     .def ("Scale", [](Mesh & self, double factor)
           {
-            for(auto i = 0; i<self.GetNP();i++)
-              self.Point(i).Scale(factor);
+            for(auto & pnt : self.Points())
+	      pnt.Scale(factor);
           })
     .def ("Copy", [](Mesh & self)
           {

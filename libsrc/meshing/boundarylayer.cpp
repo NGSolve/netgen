@@ -90,6 +90,9 @@ namespace netgen
 
   void GenerateBoundaryLayer(Mesh& mesh, const BoundaryLayerParameters& blp)
   {
+    static Timer timer("Create Boundarylayers");
+    RegionTimer regt(timer);
+
     int max_edge_nr = -1;
     for(const auto& seg : mesh.LineSegments())
       if(seg.edgenr > max_edge_nr)
@@ -408,6 +411,10 @@ namespace netgen
           }
       }
 
+    BitArray fixed_points(np+1);
+    fixed_points.Clear();
+    BitArray moveboundarypoint(np+1);
+    moveboundarypoint.Clear();
     for(SurfaceElementIndex si = 0; si < nse; si++)
       {
         // copy because surfaceels array will be resized!
@@ -436,10 +443,29 @@ namespace netgen
             newel.SetIndex(si_map[sel.GetIndex()]);
             mesh.AddSurfaceElement(newel);
           }
+        else
+          {
+            bool has_moved = false;
+            for(auto p : sel.PNums())
+              if(mapto[p].Size())
+                has_moved = true;
+            if(has_moved)
+              for(auto p : sel.PNums())
+                {
+                  if(!mapto[p].Size())
+                    {
+                      fixed_points.SetBit(p);
+                      if(move_boundaries.Test(sel.GetIndex()))
+                        moveboundarypoint.SetBit(p);
+                    }
+                }
+          }
         if(move_boundaries.Test(sel.GetIndex()))
-          for(auto& p : mesh[si].PNums())
-            if(mapto[p].Size())
-              p = mapto[p].Last();
+          {
+            for(auto& p : mesh[si].PNums())
+              if(mapto[p].Size())
+                p = mapto[p].Last();
+          }
       }
 
     for(SegmentIndex sei = 0; sei < nseg; sei++)
@@ -453,12 +479,84 @@ namespace netgen
 
     for(ElementIndex ei = 0; ei < ne; ei++)
       {
-        auto& el = mesh[ei];
-        if(!domains[el.GetIndex()])
+        auto el = mesh[ei];
+        ArrayMem<PointIndex,4> fixed;
+        ArrayMem<PointIndex,4> moved;
+        bool moved_bnd = false;
+        for(const auto& p : el.PNums())
           {
-            for(auto& p : el.PNums())
+            if(fixed_points.Test(p))
+              fixed.Append(p);
+            if(mapto[p].Size())
+              moved.Append(p);
+            if(moveboundarypoint.Test(p))
+              moved_bnd = true;
+          }
+
+        bool do_move, do_insert;
+        if(domains.Test(el.GetIndex()))
+          {
+            do_move = fixed.Size() && moved_bnd;
+            do_insert = do_move;
+          }
+        else
+          {
+            do_move = !fixed.Size() || moved_bnd;
+            do_insert = !do_move;
+          }
+
+        if(do_move)
+          {
+            for(auto& p : mesh[ei].PNums())
               if(mapto[p].Size())
                 p = mapto[p].Last();
+          }
+        if(do_insert)
+          {
+            if(el.GetType() != TET)
+              throw Exception("Boundarylayer only implemented for tets outside yet!");
+            if(moved.Size() == 2)
+              {
+                if(fixed.Size() == 2)
+                  throw Exception("This should not be possible!");
+                PointIndex p1 = moved[0];
+                PointIndex p2 = moved[1];
+                for(auto i : Range(blp.heights))
+                  {
+                    PointIndex p3 = mapto[moved[1]][i];
+                    PointIndex p4 = mapto[moved[0]][i];
+                    Element nel(PYRAMID);
+                    nel[0] = p1;
+                    nel[1] = p2;
+                    nel[2] = p3;
+                    nel[3] = p4;
+                    nel[4] = el[0] + el[1] + el[2] + el[3] - fixed[0] - moved[0] - moved[1];
+                    if(Cross(mesh[p2]-mesh[p1], mesh[p4]-mesh[p1]) * (mesh[nel[4]]-mesh[nel[1]]) > 0)
+                      Swap(nel[1], nel[3]);
+                    nel.SetIndex(el.GetIndex());
+                    mesh.AddVolumeElement(nel);
+                    p1 = p4;
+                    p2 = p3;
+                  }
+              }
+            if(moved.Size() == 1 && fixed.Size() == 1)
+              {
+                PointIndex p1 = moved[0];
+                for(auto i : Range(blp.heights))
+                  {
+                    Element nel = el;
+                    PointIndex p2 = mapto[moved[0]][i];
+                    for(auto& p : nel.PNums())
+                      {
+                        if(p == moved[0])
+                          p = p1;
+                        else if(p == fixed[0])
+                          p = p2;
+                      }
+                    p1 = p2;
+                    mesh.AddVolumeElement(nel);
+                  }
+              }
           }
       }
 
