@@ -7,6 +7,7 @@
 #include <ostream>
 #include <sstream>
 #include <string>
+#include <mach/mach_time.h>
 
 /*
 #ifdef WIN32
@@ -54,9 +55,11 @@ namespace ngcore
 
   inline TTimePoint GetTimeCounter() noexcept
   {
+    return mach_absolute_time();
+    // return __builtin_readcyclecounter();
     // return TTimePoint(__rdtsc());
       // return TTimePoint(__builtin_readcyclecounter());
-      return TTimePoint(0);
+      // return TTimePoint(0);
   }
 
   template <class T>
