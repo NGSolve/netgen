@@ -8,19 +8,19 @@
 #include <sstream>
 #include <string>
 
+#include "ngcore_api.hpp"       // for NGCORE_API and CPU arch macros
+
 #if defined(__APPLE__) && defined(NETGEN_ARCH_ARM)
 #include <mach/mach_time.h>
 #endif
 
-/*
+#ifdef NETGEN_ARCH_AMD64
 #ifdef WIN32
 #include <intrin.h>   // for __rdtsc()  CPU time step counter
 #else
 #include <x86intrin.h>   // for __rdtsc()  CPU time step counter
 #endif // WIN32
-*/
-
-#include "ngcore_api.hpp"       // for NGCORE_API
+#endif // NETGEN_ARCH_AMD64
 
 namespace ngcore
 {
@@ -176,7 +176,9 @@ namespace ngcore
       while (!m.compare_exchange_weak(should, true))
         {
           should = false;
-          // _mm_pause();
+#ifdef NETGEN_ARCH_AMD64
+          _mm_pause();
+#endif // NETGEN_ARCH_AMD64
         }
     }
     void unlock()
