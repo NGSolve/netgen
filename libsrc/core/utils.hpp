@@ -7,7 +7,10 @@
 #include <ostream>
 #include <sstream>
 #include <string>
+
+#if defined(__APPLE__) && defined(NETGEN_ARCH_ARM)
 #include <mach/mach_time.h>
+#endif
 
 /*
 #ifdef WIN32
@@ -55,11 +58,16 @@ namespace ngcore
 
   inline TTimePoint GetTimeCounter() noexcept
   {
+#if defined(__APPLE__) && defined(NETGEN_ARCH_ARM)
     return mach_absolute_time();
-    // return __builtin_readcyclecounter();
-    // return TTimePoint(__rdtsc());
-      // return TTimePoint(__builtin_readcyclecounter());
-      // return TTimePoint(0);
+#elif defined(NETGEN_ARCH_AMD64)
+    return __rdtsc();
+#elif defined(NETGEN_ARCH_ARM)
+    return __builtin_readcyclecounter();
+#else
+#warning "Unsupported CPU architecture"
+    return 0;
+#endif
   }
 
   template <class T>

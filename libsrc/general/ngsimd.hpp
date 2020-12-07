@@ -6,7 +6,6 @@
 /* Date:   25. Mar. 16                                                    */
 /**************************************************************************/
 
-// #include <immintrin.h>
 #include <tuple>
 #include <ostream>
 #include <stdexcept>
@@ -14,6 +13,10 @@
 #include <type_traits>
 
 #include <core/utils.hpp>
+
+#ifdef NETGEN_ARCH_AMD64
+#include <immintrin.h>
+#endif // NETGEN_ARCH_AMD64
 
 #ifdef WIN32
 #ifndef AVX_OPERATORS_DEFINED
@@ -50,23 +53,12 @@ NG_INLINE __m256d operator/= (__m256d &a, __m256d b) { return a = a/b; }
 
 namespace ngsimd
 {
-  // MSVC does not define SSE. It's always present on 64bit cpus
-#if (defined(_M_AMD64) || defined(_M_X64) || defined(__AVX__))
-#ifndef __SSE__
-#define __SSE__
-#endif
-#ifndef __SSE2__
-#define __SSE2__
-#endif
-#endif
-
-  
   constexpr int GetDefaultSIMDSize() {
 #if defined __AVX512F__
     return 8;
 #elif defined __AVX__
     return 4;
-#elif defined __SSE__
+#elif defined NETGEN_ARCH_AMD64
     return 2;
 #else
     return 1;
@@ -74,12 +66,15 @@ namespace ngsimd
   }
 
 #if defined __AVX512F__
+    #define NETGEN_HAVE_SIMD
     typedef __m512 tAVX;
     typedef __m512d tAVXd;
 #elif defined __AVX__
+    #define NETGEN_HAVE_SIMD
     typedef __m256 tAVX;
     typedef __m256d tAVXd;
-#elif defined __SSE__
+#elif defined NETGEN_ARCH_AMD64
+    #define NETGEN_HAVE_SIMD
     typedef __m128 tAVX;
     typedef __m128d tAVXd;
 #endif
@@ -256,7 +251,7 @@ using std::fabs;
 /////////////////////////////////////////////////////////////////////////////
 // SSE - Simd width 2
 /////////////////////////////////////////////////////////////////////////////
-#ifdef __SSE__
+#ifdef NETGEN_ARCH_AMD64
   template<>
   class alignas(16) SIMD<double,2>
   {
@@ -349,7 +344,7 @@ using std::fabs;
     return SIMD<double,4>(hsum);
   }
   */
-#endif // __SSE__
+#endif // NETGEN_ARCH_AMD64
 
   
 

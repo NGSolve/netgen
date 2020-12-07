@@ -67,6 +67,14 @@
   #endif
 #endif
 
+#if defined(__amd64__) || defined(_M_AMD64)
+#define NETGEN_ARCH_AMD64
+#endif
+
+#if defined(__arm__) || defined(_M_ARM)
+#define NETGEN_ARCH_ARM
+#endif
+
 #ifdef __MAC_OS_X_VERSION_MIN_REQUIRED
 #if __MAC_OS_X_VERSION_MIN_REQUIRED < 101400
 // The c++ standard library on MacOS 10.13 and earlier has no aligned new operator,

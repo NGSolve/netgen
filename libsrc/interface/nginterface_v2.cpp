@@ -779,8 +779,7 @@ namespace netgen
 
 
 
-#ifdef __SSE__
-#include <immintrin.h>
+#ifdef NETGEN_HAVE_SIMD
   
   template<> DLL_HEADER void Ngx_Mesh :: 
   MultiElementTransformation<1,1> (int elnr, int npts,

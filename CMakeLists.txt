@@ -197,7 +197,6 @@ if(HAVE_DLFCN_H)
 endif()
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR})
-include_directories(BEFORE /usr/aarch64-linux-gnu/include)
 
 #######################################################################
 # platform specific definitions and flags
