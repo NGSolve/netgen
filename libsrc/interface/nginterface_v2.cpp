@@ -1003,7 +1003,7 @@ namespace netgen
   }
 
   
-#endif
+#endif // NETGEN_HAVE_SIMD
   
 
 

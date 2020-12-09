@@ -101,7 +101,7 @@ namespace netgen
       return res;
     }
 
-#ifdef __SSE__
+#ifdef NETGEN_HAVE_SIMD
     virtual bool GetMultiSurfValue (size_t selnr, size_t facetnr, size_t npts,
                                     const ngsimd::tAVXd * xref, 
                                     const ngsimd::tAVXd * x, 
@@ -111,7 +111,7 @@ namespace netgen
       cerr << "GetMultiSurfVaue not overloaded for SIMD<double>" << endl;
       return false;
     }
-#endif
+#endif // NETGEN_HAVE_SIMD
     
     virtual bool GetSegmentValue (int segnr, double xref, double * values)
     { return false; }
