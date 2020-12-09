@@ -10,7 +10,7 @@
 
 #include "ngcore_api.hpp"       // for NGCORE_API and CPU arch macros
 
-#if defined(__APPLE__) && defined(NETGEN_ARCH_ARM)
+#if defined(__APPLE__) && defined(NETGEN_ARCH_ARM64)
 #include <mach/mach_time.h>
 #endif
 
@@ -58,11 +58,11 @@ namespace ngcore
 
   inline TTimePoint GetTimeCounter() noexcept
   {
-#if defined(__APPLE__) && defined(NETGEN_ARCH_ARM)
+#if defined(__APPLE__) && defined(NETGEN_ARCH_ARM64)
     return mach_absolute_time();
 #elif defined(NETGEN_ARCH_AMD64)
     return __rdtsc();
-#elif defined(NETGEN_ARCH_ARM)
+#elif defined(NETGEN_ARCH_ARM64)
     return __builtin_readcyclecounter();
 #else
 #warning "Unsupported CPU architecture"

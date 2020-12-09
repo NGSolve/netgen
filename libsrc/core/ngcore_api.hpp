@@ -72,7 +72,7 @@
 #endif
 
 #if defined(__arm64__) || defined(_M_ARM64)
-#define NETGEN_ARCH_ARM
+#define NETGEN_ARCH_ARM64
 #endif
 
 #ifdef __MAC_OS_X_VERSION_MIN_REQUIRED
