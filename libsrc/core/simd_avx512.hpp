@@ -214,9 +214,9 @@ namespace ngcore
   NETGEN_INLINE SIMD<double,4> HSum (SIMD<double,8> v1, SIMD<double,8> v2, SIMD<double,8> v3, SIMD<double,8> v4)
   {
     SIMD<double> lo,hi;
-    tie(lo,hi) = Unpack(v1, v2);
+    std::tie(lo,hi) = Unpack(v1, v2);
     SIMD<double> sum01 = lo+hi;
-    tie(lo,hi) = Unpack(v3, v4);
+    std::tie(lo,hi) = Unpack(v3, v4);
     SIMD<double> sum23 = lo+hi;
     // sum01  b a b a b a b a
     // sum23  d c d c d c d c

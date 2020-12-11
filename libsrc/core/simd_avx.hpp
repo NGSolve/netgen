@@ -73,6 +73,9 @@ namespace ngcore
 
     SIMD (int64_t val) { data = _mm256_set1_epi64x(val); }
     SIMD (int64_t v0, int64_t v1, int64_t v2, int64_t v3) { data = _mm256_set_epi64x(v3,v2,v1,v0); }
+    SIMD (std::array<int64_t,4> a)
+      : data{_mm256_set_epi64x(a[3],a[2],a[1],a[0])}
+    {}
     // SIMD (SIMD<double,2> v0, SIMD<double,2> v1) : SIMD(v0[0], v0[1], v1[0], v1[1]) { ; }
     SIMD (__m256i _data) { data = _data; }
 
@@ -123,6 +126,9 @@ namespace ngcore
     SIMD (double const * p) { data = _mm256_loadu_pd(p); }
     SIMD (double const * p, SIMD<mask64,4> mask) { data = _mm256_maskload_pd(p, mask.Data()); }
     SIMD (__m256d _data) { data = _data; }
+    SIMD (std::array<double,4> a)
+      : data{_mm256_set_pd(a[3],a[2],a[1],a[0])}
+    {}
 
     void Store (double * p) { _mm256_storeu_pd(p, data); }
     void Store (double * p, SIMD<mask64,4> mask) { _mm256_maskstore_pd(p, mask.Data(), data); }

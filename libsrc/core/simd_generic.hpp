@@ -15,7 +15,6 @@
 
 namespace ngcore
 {
-  using namespace ngcore;
 
   constexpr int GetDefaultSIMDSize() {
 #if defined __AVX512F__
@@ -33,6 +32,23 @@ namespace ngcore
   template <typename T, int N=GetDefaultSIMDSize()> class SIMD;
 
   class mask64;
+
+  ////////////////////////////////////////////////////////////////////////////
+  namespace detail {
+    template <typename T, size_t N, size_t... I>
+    auto array_range_impl(std::array<T, N> const& arr,
+                   size_t first,
+                   std::index_sequence<I...>)
+    -> std::array<T, sizeof...(I)> {
+        return {arr[first + I]...};
+    }
+
+    template <size_t S, typename T, size_t N>
+    auto array_range(std::array<T, N> const& arr, size_t first) {
+      return array_range_impl(arr, first, std::make_index_sequence<S>{});
+    }
+  
+  } // namespace detail
 
   ////////////////////////////////////////////////////////////////////////////
   // mask
@@ -89,10 +105,19 @@ namespace ngcore
     SIMD (const SIMD &) = default;
     SIMD & operator= (const SIMD &) = default;
     SIMD (int64_t val) { data = val; }
+    SIMD (std::array<int64_t, 1> arr)
+        : data{arr[0]}
+    {}
 
     int64_t operator[] (int i) const { return ((int64_t*)(&data))[i]; }
     auto Data() const { return data; }
     static SIMD FirstInt(int64_t n0=0) { return {n0}; }
+    template <int I>
+    int64_t Get()
+    {
+      static_assert(I==0);
+      return data;
+    }
   };
 
   template<int N>
@@ -113,6 +138,20 @@ namespace ngcore
 
     SIMD (int64_t val) : lo{val}, high{val} { ; }
     SIMD (SIMD<int64_t,N1> lo_, SIMD<int64_t,N2> high_) : lo(lo_), high(high_) { ; }
+
+    SIMD( std::array<int64_t, N> arr )
+        : lo(detail::array_range<N1>(arr, 0)),
+          high(detail::array_range<N2>(arr, N1))
+      {}
+
+    template<typename ...T>
+    SIMD(const T... vals)
+    : lo(detail::array_range<N1>(std::array<int64_t, N>{vals...}, 0)),
+      high(detail::array_range<N2>(std::array<int64_t, N>{vals...}, N1))
+      {
+        static_assert(sizeof...(vals)==N, "wrong number of arguments");
+      }
+
 
     template<typename T, typename std::enable_if<std::is_convertible<T, std::function<int64_t(int)>>::value, int>::type = 0>
       SIMD (const T & func)
@@ -137,6 +176,13 @@ namespace ngcore
     static SIMD FirstInt() { return { 0, 1, 2, 3 }; }
     */
     static SIMD FirstInt(int64_t n0=0) { return {SIMD<int64_t,N1>::FirstInt(n0), SIMD<int64_t,N2>::FirstInt(n0+N1)}; }
+    template <int I>
+    int64_t Get()
+    {
+      static_assert(I>=0 && I<N, "Index out of range");
+      if constexpr(I<N1) return lo.template Get<I>();
+      else               return high.template Get<I-N1>();
+    }
   };
 
 
@@ -158,6 +204,9 @@ namespace ngcore
     SIMD (size_t val) { data = val; }
     SIMD (double const * p) { data = *p; }
     SIMD (double const * p, SIMD<mask64,1> mask) { data = mask.Data() ? *p : 0.0; }
+    SIMD (std::array<double, 1> arr)
+        : data{arr[0]}
+    {}
 
     template <typename T, typename std::enable_if<std::is_convertible<T,std::function<double(int)>>::value,int>::type = 0>
     SIMD (const T & func)
@@ -177,7 +226,14 @@ namespace ngcore
 
     double operator[] (int i) const { return ((double*)(&data))[i]; }
     double Data() const { return data; }
+    template <int I>
+    double Get()
+    {
+      static_assert(I==0);
+      return data;
+    }
   };
+
 
   template<int N>
   class  SIMD<double, N>
@@ -193,22 +249,6 @@ namespace ngcore
     SIMD () {}
     SIMD (const SIMD &) = default;
     SIMD (SIMD<double,N1> lo_, SIMD<double,N2> hi_) : lo(lo_), high(hi_) { ; }
-
-    template<typename=std::enable_if<N==4>>
-    SIMD (double v0, double v1, double v2, double v3)
-      {
-        if constexpr(N1==1)
-          {
-            lo = v0;
-            high = {v1,v2,v3};
-          }
-        if constexpr(N1==2)
-          {
-            lo = {v0,v1};
-            high = {v2,v3};
-
-          }
-      }
 
     template <typename T, typename std::enable_if<std::is_convertible<T,std::function<double(int)>>::value,int>::type = 0>
     SIMD (const T & func)
@@ -240,6 +280,23 @@ namespace ngcore
     SIMD (double const * p, SIMD<mask64,N> mask)
         : lo{p, mask.Lo()}, high{p+N1, mask.Hi()}
       { }
+    SIMD (double * p) : lo{p}, high{p+N1} { ; }
+    SIMD (double * p, SIMD<mask64,N> mask)
+        : lo{p, mask.Lo()}, high{p+N1, mask.Hi()}
+      { }
+
+    SIMD( std::array<double, N> arr )
+        : lo(detail::array_range<N1>(arr, 0)),
+          high(detail::array_range<N2>(arr, N1))
+      {}
+
+    template<typename ...T>
+    SIMD(const T... vals)
+    : lo(detail::array_range<N1>(std::array<double, N>{vals...}, 0)),
+      high(detail::array_range<N2>(std::array<double, N>{vals...}, N1))
+      {
+        static_assert(sizeof...(vals)==N, "wrong number of arguments");
+      }
 
     void Store (double * p) { lo.Store(p); high.Store(p+N1); }
     void Store (double * p, SIMD<mask64,N> mask)
@@ -261,6 +318,13 @@ namespace ngcore
     operator std::tuple<double&,double&,double&,double&> ()
     { return std::tuple<double&,double&,double&,double&>((*this)[0], (*this)[1], (*this)[2], (*this)[3]); }
 
+    template <int I>
+    double Get()
+    {
+      static_assert(I>=0 && I<N, "Index out of range");
+      if constexpr(I<N1) return lo.template Get<I>();
+      else               return high.template Get<I-N1>();
+    }
   };
 
 
@@ -582,9 +646,8 @@ namespace ngcore
       }
   }
 
-
-
 }
+
 
 namespace std
 {

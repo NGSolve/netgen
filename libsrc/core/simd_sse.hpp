@@ -48,6 +48,9 @@ namespace ngcore
     SIMD () {}
     SIMD (const SIMD &) = default;
     SIMD (int64_t v0, int64_t v1) { data = _mm_set_epi64x(v1,v0); }
+    SIMD (std::array<int64_t, 2> arr)
+        : data{_mm_set_epi64x(arr[1],arr[0])}
+    {}
 
     SIMD & operator= (const SIMD &) = default;
 
@@ -83,6 +86,9 @@ NETGEN_INLINE SIMD<int64_t,2> operator- (SIMD<int64_t,2> a, SIMD<int64_t,2> b) {
     SIMD () {}
     SIMD (const SIMD &) = default;
     SIMD (double v0, double v1) { data = _mm_set_pd(v1,v0); }
+    SIMD (std::array<double, 2> arr)
+        : data{_mm_set_pd(arr[1], arr[0])}
+    {}
 
     SIMD & operator= (const SIMD &) = default;
 
