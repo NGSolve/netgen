@@ -338,7 +338,7 @@ namespace ngcore
   template <typename T, int N>
   NETGEN_INLINE SIMD<T,N> operator- (SIMD<T,N> a, SIMD<T,N> b) {
       if constexpr(N==1) return a.Data()-b.Data();
-      else               return { a.Lo()-b.Lo(), a.Hi()+b.Hi() };
+      else               return { a.Lo()-b.Lo(), a.Hi()-b.Hi() };
   }
   template <typename T, int N>
   NETGEN_INLINE SIMD<T,N> operator- (SIMD<T,N> a) {
@@ -349,13 +349,13 @@ namespace ngcore
   template <typename T, int N>
   NETGEN_INLINE SIMD<T,N> operator* (SIMD<T,N> a, SIMD<T,N> b) {
       if constexpr(N==1) return a.Data()*b.Data();
-      else               return { a.Lo()*b.Lo(), a.Hi()+b.Hi() };
+      else               return { a.Lo()*b.Lo(), a.Hi()*b.Hi() };
   }
 
   template <typename T, int N>
   NETGEN_INLINE SIMD<T,N> operator/ (SIMD<T,N> a, SIMD<T,N> b) {
       if constexpr(N==1) return a.Data()/b.Data();
-      else               return { a.Lo()/b.Lo(), a.Hi()+b.Hi() };
+      else               return { a.Lo()/b.Lo(), a.Hi()/b.Hi() };
   }
 
   template <typename T, int N>
