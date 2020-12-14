@@ -172,7 +172,7 @@ namespace ngcore
   NETGEN_INLINE SIMD<double,4> sqrt (SIMD<double,4> a) { return _mm256_sqrt_pd(a.Data()); }
   NETGEN_INLINE SIMD<double,4> floor (SIMD<double,4> a) { return _mm256_floor_pd(a.Data()); }
   NETGEN_INLINE SIMD<double,4> ceil (SIMD<double,4> a) { return _mm256_ceil_pd(a.Data()); }
-  NETGEN_INLINE SIMD<double,4> fabs (SIMD<double,4> a) { return _mm256_max_pd(a.Data(), -a.Data()); }
+  NETGEN_INLINE SIMD<double,4> fabs (SIMD<double,4> a) { return _mm256_max_pd(a.Data(), (-a).Data()); }
 
   NETGEN_INLINE SIMD<mask64,4> operator<= (SIMD<double,4> a , SIMD<double,4> b)
   { return _mm256_cmp_pd (a.Data(), b.Data(), _CMP_LE_OQ); }
