@@ -16,6 +16,7 @@ Surface :: Surface ()
   strcpy (name, "noname");
   bcprop = -1;
   bcname = "default";
+  inverse = false;
 }
 
 Surface :: ~Surface()
