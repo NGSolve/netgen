@@ -11,7 +11,7 @@ target_sources(gen INTERFACE
 install(FILES
   ngarray.hpp autodiff.hpp autoptr.hpp ngbitarray.hpp
   dynamicmem.hpp hashtabl.hpp mpi_interface.hpp myadt.hpp
-  ngsimd.hpp mystring.hpp netgenout.hpp ngpython.hpp
+  mystring.hpp netgenout.hpp ngpython.hpp
   optmem.hpp parthreads.hpp seti.hpp sort.hpp
   spbita2d.hpp stack.hpp table.hpp template.hpp
   gzstream.h

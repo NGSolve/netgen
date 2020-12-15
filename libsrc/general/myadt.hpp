@@ -47,7 +47,5 @@ namespace netgen
 #include "netgenout.hpp"
 #include "gzstream.h"
 
-#include "ngsimd.hpp"
-
 
 #endif

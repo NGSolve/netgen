@@ -6,15 +6,6 @@ namespace netgen
 {
 
   using namespace std;
-  /*
-#if defined __AVX512F__
-  typedef __m512 tAVX;
-  typedef __m512d tAVXd;
-#elif defined __AVX__
-  typedef __m256 tAVX;
-  typedef __m256d tAVXd; 
-#endif
-  */
   
   class SolutionData
   {
@@ -101,17 +92,15 @@ namespace netgen
       return res;
     }
 
-#ifdef __SSE__
     virtual bool GetMultiSurfValue (size_t selnr, size_t facetnr, size_t npts,
-                                    const ngsimd::tAVXd * xref, 
-                                    const ngsimd::tAVXd * x, 
-                                    const ngsimd::tAVXd * dxdxref, 
-                                    ngsimd::tAVXd * values)
+                                    const SIMD<double> * xref,
+                                    const SIMD<double> * x,
+                                    const SIMD<double> * dxdxref,
+                                    SIMD<double> * values)
     {
       cerr << "GetMultiSurfVaue not overloaded for SIMD<double>" << endl;
       return false;
     }
-#endif
     
     virtual bool GetSegmentValue (int segnr, double xref, double * values)
     { return false; }
