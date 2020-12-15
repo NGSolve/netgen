@@ -61,7 +61,7 @@ namespace ngcore
   }
 
   template<>
-  class SIMD<int64_t,4>
+  class alignas(32) SIMD<int64_t,4>
   {
     __m256i data;
 
@@ -99,7 +99,7 @@ namespace ngcore
 #endif // __AVX2__
 
   template<>
-  class SIMD<double,4>
+  class alignas(32) SIMD<double,4>
   {
     __m256d data;
 

@@ -624,9 +624,6 @@ namespace ngcore
     return ngcore::SIMD<double,N>([a](int i)->double { return cosh(a[i]); } );
   }
 
-  template <typename T>
-  class AlignedAlloc { ; };
-
   template<int N, typename T>
   using MultiSIMD = SIMD<T, N*GetDefaultSIMDSize()>;
 

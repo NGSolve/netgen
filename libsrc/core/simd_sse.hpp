@@ -39,7 +39,7 @@ namespace ngcore
 
 
   template<>
-  class SIMD<int64_t,2>
+  class alignas(16) SIMD<int64_t,2>
   {
     __m128i data;
 
@@ -77,7 +77,7 @@ NETGEN_INLINE SIMD<int64_t,2> operator- (SIMD<int64_t,2> a, SIMD<int64_t,2> b) {
 
 
   template<>
-  class alignas(16) SIMD<double,2> : public AlignedAlloc<SIMD<double,2>>
+  class alignas(16) SIMD<double,2>
   {
     __m128d data;
 
