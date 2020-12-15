@@ -76,7 +76,7 @@ namespace ngcore
     SIMD<mask64,N2> hi;
   public:
 
-    SIMD (int i) : lo(i), hi(i-N1) { ; }
+    SIMD (size_t i) : lo(i), hi(i>N1 ? i-N1 : 0) { ; }
     SIMD (SIMD<mask64,N1> lo_, SIMD<mask64,N2> hi_) : lo(lo_), hi(hi_) { ; }
     SIMD<mask64,N1> Lo() const { return lo; }
     SIMD<mask64,N2> Hi() const { return hi; }
@@ -663,6 +663,11 @@ namespace ngcore
     if constexpr(N==1)
       {
         return std::make_tuple(SIMD<double,N>{a.Data()}, SIMD<double,N>{b.Data()} );
+      }
+    else if constexpr(N==2)
+      {
+        return std::make_tuple(SIMD<double,N>{ a.Lo(), b.Lo() },
+            SIMD<double,N>{ a.Hi(), b.Hi() });
       }
     else
       {
