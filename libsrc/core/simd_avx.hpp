@@ -76,7 +76,9 @@ namespace ngcore
     SIMD (std::array<int64_t,4> a)
       : data{_mm256_set_epi64x(a[3],a[2],a[1],a[0])}
     {}
-    // SIMD (SIMD<double,2> v0, SIMD<double,2> v1) : SIMD(v0[0], v0[1], v1[0], v1[1]) { ; }
+    SIMD (SIMD<int64_t,2> v0, SIMD<int64_t,2> v1)
+        : data(_mm256_set_m128i(v0.Data(),v1.Data()))
+      {}
     SIMD (__m256i _data) { data = _data; }
 
     NETGEN_INLINE auto operator[] (int i) const { return ((int64_t*)(&data))[i]; }
@@ -94,18 +96,7 @@ namespace ngcore
 #ifdef __AVX2__
   NETGEN_INLINE SIMD<int64_t,4> operator+ (SIMD<int64_t,4> a, SIMD<int64_t,4> b) { return _mm256_add_epi64(a.Data(),b.Data()); }
   NETGEN_INLINE SIMD<int64_t,4> operator- (SIMD<int64_t,4> a, SIMD<int64_t,4> b) { return _mm256_sub_epi64(a.Data(),b.Data()); }
-#else
-  NETGEN_INLINE SIMD<int64_t,4> operator+ (SIMD<int64_t,4> a, SIMD<int64_t,4> b) {
-      auto lo_sum = _mm256_extractf128_si256(a.Data(), 0) + _mm256_extractf128_si256(b.Data(), 0);
-      auto hi_sum = _mm256_extractf128_si256(a.Data(), 1) + _mm256_extractf128_si256(b.Data(), 1);
-      return _mm256_set_m128i(hi_sum,lo_sum);
-  }
-  NETGEN_INLINE SIMD<int64_t,4> operator- (SIMD<int64_t,4> a, SIMD<int64_t,4> b) {
-      auto lo_sub = _mm256_extractf128_si256(a.Data(), 0) - _mm256_extractf128_si256(b.Data(), 0);
-      auto hi_sub = _mm256_extractf128_si256(a.Data(), 1) - _mm256_extractf128_si256(b.Data(), 1);
-      return _mm256_set_m128i(hi_sub,lo_sub);
-  }
-#endif
+#endif // __AVX2__
 
   template<>
   class SIMD<double,4>
