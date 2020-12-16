@@ -21,10 +21,10 @@ namespace ngcore
     return 8;
 #elif defined __AVX__
     return 4;
-#elif (defined(_M_AMD64) || defined(_M_X64) || defined(__SSE__))
+#elif defined NETGEN_ARCH_AMD64
     return 2;
 #else
-    return 1;
+    return 2;
 #endif
   }
 
@@ -58,7 +58,7 @@ namespace ngcore
   {
     int64_t mask;
   public:
-    SIMD (size_t i)
+    SIMD (int64_t i)
       : mask(i > 0 ? -1 : 0) { ; }
     bool Data() const { return mask; }
     static constexpr int Size() { return 1; }
@@ -67,7 +67,7 @@ namespace ngcore
 
 
   template <int N>
-  class SIMD<mask64,N>
+  class alignas(GetDefaultSIMDSize()*sizeof(int64_t)) SIMD<mask64,N>
   {
     static constexpr int N1 = std::min(GetDefaultSIMDSize(), N/2);
     static constexpr int N2 = N-N1;
@@ -76,7 +76,7 @@ namespace ngcore
     SIMD<mask64,N2> hi;
   public:
 
-    SIMD (int i) : lo(i), hi(i-N1) { ; }
+    SIMD (int64_t i) : lo(i), hi(i-N1 ) { ; }
     SIMD (SIMD<mask64,N1> lo_, SIMD<mask64,N2> hi_) : lo(lo_), hi(hi_) { ; }
     SIMD<mask64,N1> Lo() const { return lo; }
     SIMD<mask64,N2> Hi() const { return hi; }
@@ -104,8 +104,10 @@ namespace ngcore
     SIMD () {}
     SIMD (const SIMD &) = default;
     SIMD & operator= (const SIMD &) = default;
-    SIMD (int64_t val) { data = val; }
-    SIMD (std::array<int64_t, 1> arr)
+    SIMD (int val) : data{val} {}
+    SIMD (int64_t val) : data{val} {}
+    SIMD (size_t val) : data(val) {}
+    explicit SIMD (std::array<int64_t, 1> arr)
         : data{arr[0]}
     {}
 
@@ -121,7 +123,7 @@ namespace ngcore
   };
 
   template<int N>
-  class SIMD<int64_t,N>
+  class alignas(GetDefaultSIMDSize()*sizeof(int64_t)) SIMD<int64_t,N>
   {
     static constexpr int N1 = std::min(GetDefaultSIMDSize(), N/2);
     static constexpr int N2 = N-N1;
@@ -136,16 +138,18 @@ namespace ngcore
     SIMD (const SIMD &) = default;
     SIMD & operator= (const SIMD &) = default;
 
+    SIMD (int val) : lo{val}, high{val} { ; }
     SIMD (int64_t val) : lo{val}, high{val} { ; }
+    SIMD (size_t val) : lo{val}, high{val} { ; }
     SIMD (SIMD<int64_t,N1> lo_, SIMD<int64_t,N2> high_) : lo(lo_), high(high_) { ; }
 
-    SIMD( std::array<int64_t, N> arr )
+    explicit SIMD( std::array<int64_t, N> arr )
         : lo(detail::array_range<N1>(arr, 0)),
           high(detail::array_range<N2>(arr, N1))
       {}
 
     template<typename ...T>
-    SIMD(const T... vals)
+    explicit SIMD(const T... vals)
     : lo(detail::array_range<N1>(std::array<int64_t, N>{vals...}, 0)),
       high(detail::array_range<N2>(std::array<int64_t, N>{vals...}, N1))
       {
@@ -204,7 +208,7 @@ namespace ngcore
     SIMD (size_t val) { data = val; }
     SIMD (double const * p) { data = *p; }
     SIMD (double const * p, SIMD<mask64,1> mask) { data = mask.Data() ? *p : 0.0; }
-    SIMD (std::array<double, 1> arr)
+    explicit SIMD (std::array<double, 1> arr)
         : data{arr[0]}
     {}
 
@@ -236,7 +240,7 @@ namespace ngcore
 
 
   template<int N>
-  class  SIMD<double, N>
+  class alignas(GetDefaultSIMDSize()*sizeof(double)) SIMD<double, N>
   {
     static constexpr int N1 = std::min(GetDefaultSIMDSize(), N/2);
     static constexpr int N2 = N-N1;
@@ -253,19 +257,17 @@ namespace ngcore
     template <typename T, typename std::enable_if<std::is_convertible<T,std::function<double(int)>>::value,int>::type = 0>
     SIMD (const T & func)
     {
-      for(auto i : IntRange(N1))
-          lo[i] = func(i);
-      for(auto i : IntRange(N2))
-          high[i] = func(N1+i);
+      double  *p = (double*)this;
+      for(auto i : IntRange(N))
+          p[i] = func(i);
     }
 
     template <typename T, typename std::enable_if<std::is_convertible<T,std::function<double(int)>>::value,int>::type = 0>
     SIMD & operator= (const T & func)
     {
-      for(auto i : IntRange(N1))
-          lo[i] = func(i);
-      for(auto i : IntRange(N2))
-          high[i] = func(N1+i);
+      double  *p = (double*)this;
+      for(auto i : IntRange(N))
+          p[i] = func(i);
       return *this;
     }
 
@@ -285,13 +287,13 @@ namespace ngcore
         : lo{p, mask.Lo()}, high{p+N1, mask.Hi()}
       { }
 
-    SIMD( std::array<double, N> arr )
+    explicit SIMD( std::array<double, N> arr )
         : lo(detail::array_range<N1>(arr, 0)),
           high(detail::array_range<N2>(arr, N1))
       {}
 
     template<typename ...T>
-    SIMD(const T... vals)
+    explicit SIMD(const T... vals)
     : lo(detail::array_range<N1>(std::array<double, N>{vals...}, 0)),
       high(detail::array_range<N2>(std::array<double, N>{vals...}, N1))
       {
@@ -312,7 +314,10 @@ namespace ngcore
 
     template<typename=std::enable_if<N==2>>
     operator std::tuple<double&,double&> ()
-    { return std::tuple<double&,double&>((*this)[0], (*this)[1]); }
+    { 
+	double *p = (double*)this;
+	return std::tuple<double&,double&>(p[0], p[1]); 
+    }
 
     template<typename=std::enable_if<N==4>>
     operator std::tuple<double&,double&,double&,double&> ()
@@ -325,6 +330,7 @@ namespace ngcore
       if constexpr(I<N1) return lo.template Get<I>();
       else               return high.template Get<I-N1>();
     }
+    auto Data() const { return *this; }
   };
 
 
@@ -359,42 +365,42 @@ namespace ngcore
   }
 
   template <typename T, int N>
-  NETGEN_INLINE SIMD<mask64,N> operator< (SIMD<T,N> & a, SIMD<T,N> b)
+  NETGEN_INLINE SIMD<mask64,N> operator< (SIMD<T,N> a, SIMD<T,N> b)
     {
       if constexpr(N==1) return a.Data() < b.Data();
       else               return { a.Lo()<b.Lo(), a.Hi()<b.Hi() };
     }
 
   template <typename T, int N>
-  NETGEN_INLINE SIMD<mask64,N> operator<= (SIMD<T,N> & a, SIMD<T,N> b)
+  NETGEN_INLINE SIMD<mask64,N> operator<= (SIMD<T,N> a, SIMD<T,N> b)
     {
       if constexpr(N==1) return a.Data() <= b.Data();
       else               return { a.Lo()<=b.Lo(), a.Hi()<=b.Hi() };
     }
 
   template <typename T, int N>
-  NETGEN_INLINE SIMD<mask64,N> operator> (SIMD<T,N> & a, SIMD<T,N> b)
+  NETGEN_INLINE SIMD<mask64,N> operator> (SIMD<T,N> a, SIMD<T,N> b)
     {
       if constexpr(N==1) return a.Data() > b.Data();
       else               return { a.Lo()>b.Lo(), a.Hi()>b.Hi() };
     }
 
   template <typename T, int N>
-  NETGEN_INLINE SIMD<mask64,N> operator>= (SIMD<T,N> & a, SIMD<T,N> b)
+  NETGEN_INLINE SIMD<mask64,N> operator>= (SIMD<T,N> a, SIMD<T,N> b)
     {
       if constexpr(N==1) return a.Data() >= b.Data();
       else               return { a.Lo()>=b.Lo(), a.Hi()>=b.Hi() };
     }
 
   template <typename T, int N>
-  NETGEN_INLINE SIMD<mask64,N> operator== (SIMD<T,N> & a, SIMD<T,N> b)
+  NETGEN_INLINE SIMD<mask64,N> operator== (SIMD<T,N> a, SIMD<T,N> b)
     {
       if constexpr(N==1) return a.Data() == b.Data();
       else               return { a.Lo()==b.Lo(), a.Hi()==b.Hi() };
     }
 
   template <typename T, int N>
-  NETGEN_INLINE SIMD<mask64,N> operator!= (SIMD<T,N> & a, SIMD<T,N> b)
+  NETGEN_INLINE SIMD<mask64,N> operator!= (SIMD<T,N> a, SIMD<T,N> b)
     {
       if constexpr(N==1) return a.Data() != b.Data();
       else               return { a.Lo()!=b.Lo(), a.Hi()!=b.Hi() };
@@ -547,6 +553,30 @@ namespace ngcore
     return ost;
   }
 
+  using std::sqrt;
+  template <int N>
+  NETGEN_INLINE ngcore::SIMD<double,N> sqrt (ngcore::SIMD<double,N> a) {
+    return ngcore::SIMD<double>([a](int i)->double { return sqrt(a[i]); } );
+  }
+
+  using std::fabs;
+  template <int N>
+  NETGEN_INLINE ngcore::SIMD<double,N> fabs (ngcore::SIMD<double,N> a) {
+    return ngcore::SIMD<double>([a](int i)->double { return fabs(a[i]); } );
+  }
+
+  using std::floor;
+  template <int N>
+  NETGEN_INLINE ngcore::SIMD<double,N> floor (ngcore::SIMD<double,N> a) {
+    return ngcore::SIMD<double>([a](int i)->double { return floor(a[i]); } );
+  }
+
+  using std::ceil;
+  template <int N>
+  NETGEN_INLINE ngcore::SIMD<double,N> ceil (ngcore::SIMD<double,N> a) {
+    return ngcore::SIMD<double>([a](int i)->double { return ceil(a[i]); } );
+  }
+
   using std::exp;
   template <int N>
   NETGEN_INLINE ngcore::SIMD<double,N> exp (ngcore::SIMD<double,N> a) {
@@ -633,6 +663,11 @@ namespace ngcore
     if constexpr(N==1)
       {
         return std::make_tuple(SIMD<double,N>{a.Data()}, SIMD<double,N>{b.Data()} );
+      }
+    else if constexpr(N==2)
+      {
+        return std::make_tuple(SIMD<double,N>{ a.Lo(), b.Lo() },
+            SIMD<double,N>{ a.Hi(), b.Hi() });
       }
     else
       {

@@ -201,14 +201,14 @@ namespace ngcore
       ;
   }
 
-  static size_t calibrate_init_tsc = __rdtsc();
+  static size_t calibrate_init_tsc = GetTimeCounter();
   typedef std::chrono::system_clock TClock;
   static TClock::time_point calibrate_init_clock = TClock::now();
   
   void TaskManager :: StopWorkers()
   {
     done = true;
-    double delta_tsc = __rdtsc()-calibrate_init_tsc;
+    double delta_tsc = GetTimeCounter()-calibrate_init_tsc;
     double delta_sec = std::chrono::duration<double>(TClock::now()-calibrate_init_clock).count();
     double frequ = (delta_sec != 0) ? delta_tsc/delta_sec : 2.7e9;
     
@@ -421,7 +421,11 @@ namespace ngcore
       if (workers_on_node[j])
         {
           while (complete[j] != jobnr)
+          {
+#ifdef NETGEN_ARCH_AMD64
             _mm_pause();
+#endif // NETGEN_ARCH_AMD64
+          }
         }
 
     func = nullptr;

@@ -11,7 +11,7 @@
 
 #include "simd_generic.hpp"
 
-#if (defined(_M_AMD64) || defined(_M_X64) || defined(__SSE__))
+#ifdef NETGEN_ARCH_AMD64
 #ifndef __SSE__
 #define __SSE__
 #endif
@@ -28,12 +28,19 @@
 
 namespace ngcore
 {
+#ifdef NETGEN_ARCH_AMD64
   NETGEN_INLINE auto HSum (SIMD<double,2> v1, SIMD<double,2> v2, SIMD<double,2> v3, SIMD<double,2> v4)
   {
     SIMD<double,2> hsum1 = my_mm_hadd_pd (v1.Data(), v2.Data());
     SIMD<double,2> hsum2 = my_mm_hadd_pd (v3.Data(), v4.Data());
     return SIMD<double,4> (hsum1, hsum2);
   }
+
+  NETGEN_INLINE auto GetMaskFromBits( unsigned int i )
+  {
+    return SIMD<mask64>::GetMaskFromBits(i);
+  }
+#endif
 
 
   NETGEN_INLINE void SIMDTranspose (SIMD<double,4> a1, SIMD<double,4> a2, SIMD <double,4> a3, SIMD<double,4> a4,
@@ -58,11 +65,6 @@ namespace ngcore
   NETGEN_INLINE auto HSum (SIMD<double,N> s1, SIMD<double,N> s2, SIMD<double,N> s3, SIMD<double,N> s4 )
   {
     return SIMD<double,4>(HSum(s1), HSum(s2), HSum(s3), HSum(s4));
-  }
-
-  NETGEN_INLINE auto GetMaskFromBits( unsigned int i )
-  {
-    return SIMD<mask64>::GetMaskFromBits(i);
   }
 }
 
