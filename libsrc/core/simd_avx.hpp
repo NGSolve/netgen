@@ -11,6 +11,15 @@
 
 namespace ngcore
 {
+
+#if defined(__GNUC__) && (__GNUC__ == 7)
+  // GCC7 does not have intrinsic _mm256_set_m128i, see
+  // https://stackoverflow.com/questions/32630458/setting-m256i-to-the-value-of-two-m128i-values
+  NETGEN_INLINE auto _mm256_set_m128i(__m128i v0, __m128i v1) {
+      return _mm256_insertf128_si256(_mm256_castsi128_si256(v1), (v0), 1);
+  }
+#endif // defined(__GNUC__) && (__GNUC__ == 7)
+
 #if defined(__AVX2__)
   NETGEN_INLINE __m256i my_mm256_cmpgt_epi64 (__m256i a, __m256i b)
   {
