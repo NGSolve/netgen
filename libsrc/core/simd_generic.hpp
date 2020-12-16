@@ -58,7 +58,7 @@ namespace ngcore
   {
     int64_t mask;
   public:
-    SIMD (size_t i)
+    SIMD (int64_t i)
       : mask(i > 0 ? -1 : 0) { ; }
     bool Data() const { return mask; }
     static constexpr int Size() { return 1; }
@@ -76,7 +76,7 @@ namespace ngcore
     SIMD<mask64,N2> hi;
   public:
 
-    SIMD (size_t i) : lo(i), hi(i>N1 ? i-N1 : 0) { ; }
+    SIMD (int64_t i) : lo(i), hi(i-N1 ) { ; }
     SIMD (SIMD<mask64,N1> lo_, SIMD<mask64,N2> hi_) : lo(lo_), hi(hi_) { ; }
     SIMD<mask64,N1> Lo() const { return lo; }
     SIMD<mask64,N2> Hi() const { return hi; }

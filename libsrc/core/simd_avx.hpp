@@ -33,7 +33,7 @@ namespace ngcore
   {
     __m256i mask;
   public:
-    SIMD (size_t i)
+    SIMD (int64_t i)
       : mask(my_mm256_cmpgt_epi64(_mm256_set1_epi64x(i),
                                   _mm256_set_epi64x(3, 2, 1, 0)))
     { ; }
