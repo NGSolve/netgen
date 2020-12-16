@@ -67,7 +67,7 @@ namespace ngcore
 
 
   template <int N>
-  class SIMD<mask64,N>
+  class alignas(GetDefaultSIMDSize()*sizeof(int64_t)) SIMD<mask64,N>
   {
     static constexpr int N1 = std::min(GetDefaultSIMDSize(), N/2);
     static constexpr int N2 = N-N1;
@@ -123,7 +123,7 @@ namespace ngcore
   };
 
   template<int N>
-  class SIMD<int64_t,N>
+  class alignas(GetDefaultSIMDSize()*sizeof(int64_t)) SIMD<int64_t,N>
   {
     static constexpr int N1 = std::min(GetDefaultSIMDSize(), N/2);
     static constexpr int N2 = N-N1;
@@ -240,7 +240,7 @@ namespace ngcore
 
 
   template<int N>
-  class  SIMD<double, N>
+  class alignas(GetDefaultSIMDSize()*sizeof(double)) SIMD<double, N>
   {
     static constexpr int N1 = std::min(GetDefaultSIMDSize(), N/2);
     static constexpr int N2 = N-N1;
