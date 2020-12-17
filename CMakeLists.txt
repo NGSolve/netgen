@@ -474,6 +474,8 @@ if(USE_NATIVE_ARCH)
         else()
             message(STATUS "Build for generic CPU")
         endif()
+    elseif(APPLE AND CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
+	# no flag necessary/available on Apple M1
     else()
         target_compile_options(ngcore PUBLIC "-march=native")
     endif(WIN32)
