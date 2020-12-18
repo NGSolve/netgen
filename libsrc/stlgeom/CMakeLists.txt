@@ -8,11 +8,11 @@ if(NOT WIN32)
     install( TARGETS stl ${NG_INSTALL_DIR})
 endif(NOT WIN32)
 
-target_link_libraries( stl PUBLIC ngcore PRIVATE netgen_python )
+target_link_libraries( stl PUBLIC ngcore PRIVATE "$<BUILD_INTERFACE:netgen_python>" )
 
 if(USE_GUI)
     add_library(stlvis ${NG_LIB_TYPE} vsstl.cpp)
-    target_link_libraries(stlvis PRIVATE netgen_python PUBLIC ngcore)
+    target_link_libraries(stlvis PRIVATE "$<BUILD_INTERFACE:netgen_python>" PUBLIC ngcore)
     if(NOT WIN32)
         target_link_libraries( stlvis PUBLIC stl )
         install( TARGETS stlvis ${NG_INSTALL_DIR})

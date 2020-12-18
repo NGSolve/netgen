@@ -9,7 +9,7 @@ if(USE_GUI)
         target_link_libraries(occvis PUBLIC ngcore)
 endif(USE_GUI)
 
-target_link_libraries(occ PUBLIC ngcore PRIVATE netgen_python)
+target_link_libraries(occ PUBLIC ngcore PRIVATE "$<BUILD_INTERFACE:netgen_python>")
 
 if(NOT WIN32)
     target_link_libraries( occ PRIVATE ${OCC_LIBRARIES} )

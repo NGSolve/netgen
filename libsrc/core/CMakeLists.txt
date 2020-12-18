@@ -67,7 +67,7 @@ endif(USE_NUMA)
 
 install(TARGETS ngcore DESTINATION ${NG_INSTALL_DIR} COMPONENT netgen)
 
-target_link_libraries(ngcore PUBLIC netgen_mpi PRIVATE netgen_python ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(ngcore PUBLIC netgen_mpi PRIVATE "$<BUILD_INTERFACE:netgen_python>" ${CMAKE_THREAD_LIBS_INIT})
 
 install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp logging.hpp
   exception.hpp symboltable.hpp paje_trace.hpp utils.hpp profiler.hpp mpi_wrapper.hpp
