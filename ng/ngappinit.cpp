@@ -11,10 +11,6 @@
 #include <mpi.h>
 
 extern void ParallelRun();
-namespace netgen
-{
-  MPI_Comm mesh_comm;
-}
 #endif
 
 #include "../libsrc/interface/writeuser.hpp"

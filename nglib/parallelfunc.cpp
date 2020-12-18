@@ -33,12 +33,6 @@ namespace netgen {
 using namespace netgen;
 using netgen::RegisterUserFormats;
 
-namespace netgen
-{
-  // int id, ntasks;
-  MPI_Comm mesh_comm;
-}
-
 
 void ParallelRun()
 {   
