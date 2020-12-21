@@ -318,6 +318,10 @@ GetIdentifiedPoint (class Mesh & mesh,  int pi)
 
 void PeriodicIdentification :: IdentifyPoints (class Mesh & mesh)
 {
+  Point3d p1, p2;
+  mesh.GetBox(p1, p2);
+  auto eps = 1e-6 * (p2-p1).Length();
+
   for (int i = 1; i <= mesh.GetNP(); i++)
     {
       Point<3> p = mesh.Point(i);
@@ -327,7 +331,7 @@ void PeriodicIdentification :: IdentifyPoints (class Mesh & mesh)
           pp = trafo(pp);
 	  s2->Project (pp);
 	  for (int j = 1; j <= mesh.GetNP(); j++)
-	    if (Dist2(mesh.Point(j), pp) < 1e-6)
+	    if (Dist2(mesh.Point(j), pp) < eps)
 	      {
 		mesh.GetIdentifications().Add (i, j, nr);
 		/*
