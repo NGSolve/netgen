@@ -174,6 +174,42 @@ namespace ngcore
   NETGEN_INLINE SIMD<double,4> ceil (SIMD<double,4> a) { return _mm256_ceil_pd(a.Data()); }
   NETGEN_INLINE SIMD<double,4> fabs (SIMD<double,4> a) { return _mm256_max_pd(a.Data(), (-a).Data()); }
 
+
+#ifdef __FMA__
+  NETGEN_INLINE SIMD<double,4> FMA (SIMD<double,4> a, SIMD<double,4> b, SIMD<double,4> c)
+  {
+    return _mm256_fmadd_pd (a.Data(), b.Data(), c.Data());
+  }
+  NETGEN_INLINE SIMD<double,4> FMA (const double & a, SIMD<double,4> b, SIMD<double,4> c)
+  {
+    return _mm256_fmadd_pd (_mm256_set1_pd(a), b.Data(), c.Data());
+  }
+#endif
+
+#if defined(__FMA__) && !defined(__AVX512F__)
+  // make sure to use the update-version of fma
+  // important in matrix kernels using 12 sum-registers, 3 a-values and updated b-value
+  // avx512 has enough registers, and gcc seems to use only the first 16 z-regs
+  NETGEN_INLINE void FMAasm (SIMD<double,4> a, SIMD<double,4> b, SIMD<double,4> & sum)
+  {
+    asm ("vfmadd231pd %[a], %[b], %[sum]"
+         : [sum] "+x" (sum.Data())
+         : [a] "x" (a.Data()), [b] "x" (b.Data())
+         );
+  }
+
+  NETGEN_INLINE void FNMAasm (SIMD<double,4> a, SIMD<double,4> b, SIMD<double,4> & sum)
+  {
+    asm ("vfnmadd231pd %[a], %[b], %[sum]"
+         : [sum] "+x" (sum.Data())
+         : [a] "x" (a.Data()), [b] "x" (b.Data())
+         );
+  }
+#endif
+  
+
+
+  
   NETGEN_INLINE SIMD<mask64,4> operator<= (SIMD<double,4> a , SIMD<double,4> b)
   { return _mm256_cmp_pd (a.Data(), b.Data(), _CMP_LE_OQ); }
   NETGEN_INLINE SIMD<mask64,4> operator< (SIMD<double,4> a , SIMD<double,4> b)

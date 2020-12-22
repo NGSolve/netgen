@@ -527,6 +527,14 @@ namespace ngcore
     sum = FMA(a,b,sum);
   }
 
+  // update form of fms
+  template <int N>
+  void FNMAasm (SIMD<double,N> a, SIMD<double,N> b, SIMD<double,N> & sum)
+  {
+    sum -= a*b;
+  }
+
+  
   template <int i, typename T, int N>
   T get(SIMD<T,N> a) { return a[i]; }
 
