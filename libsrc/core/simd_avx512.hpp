@@ -234,6 +234,16 @@ namespace ngcore
   {
     return _mm512_fmadd_pd (_mm512_set1_pd(a), b.Data(), c.Data());
   }
+
+  NETGEN_INLINE SIMD<double,8> FNMA (SIMD<double,8> a, SIMD<double,8> b, SIMD<double,8> c)
+  {
+    return _mm512_fnmadd_pd (a.Data(), b.Data(), c.Data());
+  }
+  NETGEN_INLINE SIMD<double,8> FNMA (const double & a, SIMD<double,8> b, SIMD<double,8> c)
+  {
+    return _mm512_fnmadd_pd (_mm512_set1_pd(a), b.Data(), c.Data());
+  }
+
 }
 
 #endif // NETGEN_CORE_SIMD_AVX512_HPP

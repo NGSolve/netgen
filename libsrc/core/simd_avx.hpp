@@ -184,6 +184,14 @@ namespace ngcore
   {
     return _mm256_fmadd_pd (_mm256_set1_pd(a), b.Data(), c.Data());
   }
+  NETGEN_INLINE SIMD<double,4> FNMA (SIMD<double,4> a, SIMD<double,4> b, SIMD<double,4> c)
+  {
+    return _mm256_fnmadd_pd (a.Data(), b.Data(), c.Data());
+  }
+  NETGEN_INLINE SIMD<double,4> FNMA (const double & a, SIMD<double,4> b, SIMD<double,4> c)
+  {
+    return _mm256_fnmadd_pd (_mm256_set1_pd(a), b.Data(), c.Data());
+  }
 #endif
 
 #if defined(__FMA__) && !defined(__AVX512F__)

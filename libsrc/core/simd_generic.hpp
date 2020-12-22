@@ -513,11 +513,17 @@ namespace ngcore
 
     }
 
-  template <typename T1, typename T2, typename T3>
   // a*b+c
+  template <typename T1, typename T2, typename T3>
   NETGEN_INLINE auto FMA(T1 a, T2 b, T3 c)
   {
-    return a*b+c;
+    return c+a*b;
+  }
+
+  template <typename T1, typename T2, typename T3>
+  NETGEN_INLINE auto FNMA(T1 a, T2 b, T3 c)
+  {
+    return c-a*b;
   }
 
   // update form of fma
@@ -531,7 +537,8 @@ namespace ngcore
   template <int N>
   void FNMAasm (SIMD<double,N> a, SIMD<double,N> b, SIMD<double,N> & sum)
   {
-    sum -= a*b;
+    // sum -= a*b;
+    sum = FNMA(a,b,sum);
   }
 
   
