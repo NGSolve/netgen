@@ -209,6 +209,8 @@ namespace netgen
     void BuildBadelList();
     void BuildIdentifiedList();
     void BuildDomainSurfList();
+
+    bool Unproject (int px, int py, Point<3> &p);
   };
 
   DLL_HEADER extern VisualSceneMesh vsmesh;

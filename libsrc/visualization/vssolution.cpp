@@ -4754,9 +4754,32 @@ namespace netgen
 
   void VisualSceneSolution :: MouseDblClick (int px, int py)
   {
-    vsmesh.SetClippingPlane();
-    // vsmesh.BuildFilledList();
-    vsmesh.MouseDblClick(px,py);
+    Point<3> p;
+    bool found_point = vsmesh.Unproject(px, py, p);
+    if(!found_point)
+        return;
+
+
+    if(selelement>0) // found a surface element (possibliy behind clipping plane), check if drawn point really is in this element
+      {
+        double lami[3];
+        lami[0] = lami[1] = lami[2] = 0.0;
+        // Check if unprojected Point is close to surface element (eps of 1e-3 due to z-Buffer accuracy)
+        if(GetMesh()->PointContainedIn2DElement(p, lami, selelement, false) && fabs(lami[2])<1e-3)
+          {
+            double val;
+            GetSurfValue(soldata[scalfunction], selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], scalcomp, val);
+            cout << "surface function value: " << val << endl;
+          }
+        // otherwise assume that the unprojected point is on the clipping plane -> find 3d element containing it
+        else if(auto el3d = GetMesh()->GetElementOfPoint( p, lami ))
+          {
+            double val;
+            GetValue(soldata[scalfunction], el3d-1, lami[0],  lami[1], lami[2], scalcomp, val);
+            cout << "clipping plane value: " << val << endl;
+          }
+
+      }
   }
 
 
