@@ -150,6 +150,7 @@ IntersectionType ClassifyNonOverlappingIntersection( double alpha, double beta )
   if (alpha_is_0 && beta_is_0)
     return (V_INTERSECTION);
 
+  cout << alpha << ',' << beta << ',' << alpha_is_0 << ',' << beta_is_0 << endl;
   return NO_INTERSECTION;
 }
 
@@ -273,6 +274,7 @@ IntersectionType IntersectSplineSegment( const Spline & s, const Point<2> & r0, 
   int dim = fabs(vr[0]) > fabs(vr[1]) ? 0 : 1;
   beta = 1.0/vr[dim] * (s.GetPoint(t)[dim] - r0[dim]);
 
+  cout << "intersect splinesegment  " << alpha << ',' << beta << ',' << ClassifyNonOverlappingIntersection(alpha, beta) << endl;
   return ClassifyNonOverlappingIntersection(alpha, beta);
 }
 
@@ -339,6 +341,7 @@ IntersectionType IntersectSplineSegment1( const Spline & s, const Point<2> & r0,
 
   alpha = valpha[choice];
   beta = vbeta[choice];
+  cout << "intersect splinesegment1 " << alpha << ',' << beta << ',' << vtype[choice] << endl;
   return vtype[choice];
 }
 
@@ -718,6 +721,7 @@ void AddIntersectionPoint(Edge edgeP, Edge edgeQ, IntersectionType i, double alp
       I_P = edgeP.v0->Insert(I, alpha);
       I_Q = edgeQ.v0->Insert(I, beta);
       I_P->Link(I_Q);
+      cout << "Add X Intersection " << *I_P << alpha << ',' << beta << endl;
       break;
 
     case X_OVERLAP:
@@ -726,23 +730,28 @@ void AddIntersectionPoint(Edge edgeP, Edge edgeQ, IntersectionType i, double alp
 
       I_P = edgeP.v0->Insert(*Q1, alpha);
       I_P->Link( Q1);
+      cout << "Add X Overlap " << *I_P << alpha << ',' << beta << endl;
       break;
 
     case T_INTERSECTION_Q:
     case T_OVERLAP_Q:
       I_Q = edgeQ.v0->Insert(*P1, beta);
       P1->Link( I_Q);
+      cout << "Add T int/overlap Q " << *P1 << alpha << ',' << beta << endl;
       break;
 
     case T_INTERSECTION_P:
     case T_OVERLAP_P:
       I_P = edgeP.v0->Insert(*Q1, alpha);
       I_P->Link( Q1);
+      cout << "Add T int/overlap P " << *I_P << alpha << ',' << beta << endl;
       break;
 
     case V_INTERSECTION:
     case V_OVERLAP:
       P1->Link(Q1);
+      cout << "Add V int/overlap " << *P1 << alpha << ',' << beta << endl;
+      cout << *P1 << *P1->next  << *Q1 << *Q1->next << endl;
       break;
     default:
       break;
@@ -812,7 +821,7 @@ void ComputeIntersections(Edge edgeP , Loop & l2)
 
       // search for possible second intersection
       i = intersect(edgeP, edgeQ, alpha1, beta1);
-      // cout << "second intersection " << i << ',' << alpha1 << ',' << beta1 << ',' << alpha1-alpha << ',' << beta1-beta << endl;
+      cout << "second intersection " << i << ',' << alpha1 << ',' << beta1 << ',' << alpha1-alpha << ',' << beta1-beta << endl;
       if(i!=NO_INTERSECTION && alpha+EPSILON<alpha1)
       {
         // Add midpoint of two intersection points to avoid false overlap detection of splines
@@ -929,6 +938,9 @@ RelativePositionType oracle(bool prev, Vertex* P1, Vertex* P2, Vertex* P3)
   // check relative position of Q with respect to chain (P1,P2,P3)
   s3 = Area( p1, p2, p3);
 
+  cout << "Points for oracle " << q << p1 << p2 << p3 << endl;
+  cout << "areas " << s1 << ',' << s2 << ',' << s3 << endl;
+
   if (s3 > 0)
   {
     // chain makes a left turn
@@ -1004,6 +1016,7 @@ void LabelIntersections(Solid2d & sp, Solid2d & sq, Solid2d & sr, bool UNION)
       if ( ( (Q_m_type == IS_P_m) && (Q_p_type == LEFT) ) ||
           ( (Q_p_type == IS_P_m) && (Q_m_type == LEFT) ) )
         I->label = ON_RIGHT;
+      cout << "label " << *I << " = " << I->label << endl;
     }
 
   // 2) classify intersection chains
@@ -1015,6 +1028,7 @@ void LabelIntersections(Solid2d & sp, Solid2d & sq, Solid2d & sr, bool UNION)
       if (I->label == LEFT_ON ||
           I->label == RIGHT_ON)
       {
+        cout << "intersection chain " << *I << endl;
 
         // remember status of the first chain vertex and vertex itself
         RelativePositionType x;
