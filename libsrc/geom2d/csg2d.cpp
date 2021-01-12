@@ -422,6 +422,64 @@ bool IsCloseToTrig( const array<Point<2>,3> & t, Point<2> r, double eps=1e-4 )
   return IsInsideTrig( t, r );
 }
 
+bool IsLeft( const Spline & s, Point<2> p )
+{
+  Point<2> a = s.StartPI();
+  Point<2> b = s.TangentPoint();
+  Point<2> c = s.EndPI();
+
+  // simple check by approximating spline with segment
+  bool is_left = Area(p, a, c) > 0.0;
+
+  // not close to spline -> simple check valid
+  if(!IsCloseToTrig( {a, b, c} , p ))
+      return is_left;
+
+  // p is control point -> simple check valid
+  auto bp = p-b;
+  if(bp.Length2() < EPSILON)
+      return is_left;
+
+  double sab = Area(p, a, b);
+  double sbc = Area(p, b, c);
+  if(fabs(sab)<EPSILON)
+      return is_left;
+  if(fabs(sbc)<EPSILON)
+      return is_left;
+
+  // r close to spline, need exact test
+  // idea: compute weight, such that r lies on spline
+  // weight increases -> same side of spline as control point, simple test gives correct result 
+  // weight decreases -> opposite side of spline as control point, adding control point to test polygon gives correct result
+  double old_weight = s.GetWeight();
+  auto s_tmp = s;
+  ComputeWeight( s_tmp, p );
+  double new_weight = s_tmp.GetWeight();
+
+  if(new_weight>old_weight)
+      return is_left;
+
+  double sabc = Area(a, b, c);
+
+  if (sabc > 0)
+  {
+    // chain makes a left turn
+    if (sab > 0 && sbc > 0)
+      return true;
+    else
+      return false;
+  }
+  else
+  {
+    // chain makes a right turn (or is straight)
+    if (sab < 0 && sbc < 0)
+      return false;
+    else
+      return true;
+  }
+}
+
+
 
 IntersectionType IntersectTrig( Point<2> p0, Point<2> p1, const array<Point<2>,3> & trig)
 {
@@ -850,15 +908,26 @@ RelativePositionType oracle(bool prev, Vertex* P1, Vertex* P2, Vertex* P3)
   Point<2> p2 = *P2;
   Point<2> p3 = *P3;
 
+  double s1, s2, s3;
+
   if(P1->spline)
-    p1 = P1->spline->TangentPoint();
+    {
+      s1 = IsLeft(*P1->spline, q) ? 1 : -1;
+      p1 = P1->spline->TangentPoint();
+    }
+  else
+      s1 = Area(  q, p1, p2);
+
   if(P2->spline)
-    p3 = P2->spline->TangentPoint();
+    {
+      s2 = IsLeft(*P2->spline, q) ? 1 : -1;
+      p2 = P2->spline->TangentPoint();
+    }
+  else
+      s2 = Area(  q, p2, p3);
 
   // check relative position of Q with respect to chain (P1,P2,P3)
-  double s1 = Area(  q, p1, p2);
-  double s2 = Area(  q, p2, p3);
-  double s3 = Area( p1, p2, p3);
+  s3 = Area( p1, p2, p3);
 
   if (s3 > 0)
   {
@@ -878,6 +947,14 @@ RelativePositionType oracle(bool prev, Vertex* P1, Vertex* P2, Vertex* P3)
   }
 }
 
+RelativePositionType oracle(bool prev, Vertex* P2)
+{
+  Vertex* P1 = P2->prev;
+  Vertex* P3 = P2->next;
+
+  return oracle(prev, P1, P2, P3);
+}
+
 void LabelIntersections(Solid2d & sp, Solid2d & sq, Solid2d & sr, bool UNION)
 {
   auto & PP = sp.polys;
@@ -890,12 +967,9 @@ void LabelIntersections(Solid2d & sp, Solid2d & sq, Solid2d & sr, bool UNION)
     {
 
       // determine local configuration at this intersection vertex
-      Vertex* P_m = I->prev;
-      Vertex* P_p = I->next;
-
       // check positions of Q- and Q+ relative to (P-, I, P+)
-      RelativePositionType Q_m_type = oracle(true,  P_m, I, P_p);
-      RelativePositionType Q_p_type = oracle(false, P_m, I, P_p);
+      RelativePositionType Q_m_type = oracle(true,  I);
+      RelativePositionType Q_p_type = oracle(false, I);
 
       // check non-overlapping cases
       if ((Q_m_type == LEFT  && Q_p_type == RIGHT) ||
