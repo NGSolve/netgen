@@ -4762,7 +4762,13 @@ namespace netgen
     auto mesh = GetMesh();
     auto dim = mesh->GetDimension();
 
-    auto printScalValue = [](SolData & sol, int comp, double value)
+    auto formatComplex = [](double real, double imag)
+    {
+      return ToString(real) + (imag < 0 ? "" : "+") + ToString(imag) + "j";
+    };
+
+    auto printScalValue = [&formatComplex]
+      (SolData & sol, int comp, double value, double imag=0., bool iscomplex=false)
       {
         if(sol.components>1)
           {
@@ -4773,7 +4779,7 @@ namespace netgen
           }
         else
             cout << sol.name;
-        cout << " = " << value << endl;
+        cout << " = " << (iscomplex ? formatComplex(value, imag) : ToString(value)) << endl;
       };
 
     if(selelement>0) // found a drawn point (clipping plane or surface element)
@@ -4798,15 +4804,37 @@ namespace netgen
               {
                 auto & sol = *soldata[scalfunction];
                 double val;
-                GetSurfValue(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], scalcomp, val);
-                printScalValue(sol, scalcomp, val);
+                double imag = 0;
+                int rcomponent = scalcomp;
+                int comp = scalcomp;
+                if(sol.iscomplex && rcomponent != 0)
+                  {
+                    rcomponent = 2 * ((rcomponent-1)/2) + 1;
+                    GetSurfValue(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], rcomponent+1, imag);
+                    comp = (scalcomp-1)/2 + 1;
+                  }
+                GetSurfValue(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], rcomponent, val);
+                printScalValue(sol, comp, val, imag, sol.iscomplex && comp > 0);
               }
             if(have_surf_vec_func)
               {
                 auto & sol = *soldata[vecfunction];
                 ArrayMem<double, 10> values(sol.components);
                 GetSurfValues(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], &values[0]);
-                cout << sol.name << " = " << values;
+                if(sol.iscomplex)
+                  {
+                    cout << sol.name << " = ( " << formatComplex(values[0], values[1]);
+                    for(int i = 2; i < values.Size(); i+=2)
+                      cout << ", " << formatComplex(values[i], values[i+1]);
+                    cout << " )" << endl;
+                  }
+                else
+                  {
+                    cout << sol.name << " = ( " << values[0];
+                    for(int i = 1; i < values.Size(); i++)
+                      cout << ", " << values[i];
+                    cout << " )" << endl;
+                  }
               }
           }
 
@@ -4821,15 +4849,38 @@ namespace netgen
               {
                 auto & sol = *soldata[scalfunction];
                 double val;
-                GetValue(&sol, el3d-1,  lami[0], lami[1], lami[2], scalcomp, val);
-                printScalValue(sol, scalcomp, val);
+                double imag = 0;
+                int rcomponent = scalcomp;
+                int comp = scalcomp;
+                if(sol.iscomplex && rcomponent != 0)
+                  {
+                    rcomponent = 2 * ((rcomponent-1)/2) + 1;
+                    GetValue(&sol, el3d-1,  lami[0], lami[1], lami[2], rcomponent+1,
+                             imag);
+                    comp = (scalcomp-1)/2 + 1;
+                  }
+                GetValue(&sol, el3d-1,  lami[0], lami[1], lami[2], rcomponent, val);
+                printScalValue(sol, comp, val, imag, sol.iscomplex && comp > 0);
               }
             if(have_vol_vec_func)
               {
                 auto & sol = *soldata[vecfunction];
                 ArrayMem<double, 10> values(sol.components);
                 GetValues(&sol, el3d-1,  lami[0], lami[1], lami[2], &values[0]);
-                cout << sol.name << " = " << values;
+                if(sol.iscomplex)
+                  {
+                    cout << sol.name << " = ( " << formatComplex(values[0], values[1]);
+                    for(int i = 2; i < values.Size(); i+=2)
+                      cout << ", " << formatComplex(values[i], values[i+1]);
+                    cout << " )" << endl;
+                  }
+                else
+                  {
+                    cout << sol.name << " = ( " << values[0];
+                    for(int i = 1; i < values.Size(); i++)
+                      cout << ", " << values[i];
+                    cout << " )" << endl;
+                  }
               }
           }
 
