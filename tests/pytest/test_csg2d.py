@@ -2,6 +2,7 @@ from netgen.geom2d import *
 import pytest
 import math
 from pytest import approx
+from pytest_check import check
 
 
 def check_area(geo, area):
@@ -14,7 +15,7 @@ def check_area(geo, area):
     ngs = pytest.importorskip("ngsolve")
     mesh = ngs.Mesh(m)
     mesh.Curve(5)
-    assert ngs.Integrate(1.0, mesh) == approx(area)
+    with check: assert ngs.Integrate(1.0, mesh) == approx(area)
 
 def test_two_circles():
     c1 = Circle(center=(0,0), radius=1)
