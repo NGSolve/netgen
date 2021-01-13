@@ -4754,11 +4754,6 @@ namespace netgen
 
   void VisualSceneSolution :: MouseDblClick (int px, int py)
   {
-    Point<3> p;
-    bool found_point = vsmesh.Unproject(px, py, p);
-    if(!found_point)
-        return;
-
     auto mesh = GetMesh();
     auto dim = mesh->GetDimension();
 
@@ -4782,108 +4777,142 @@ namespace netgen
         cout << " = " << (iscomplex ? formatComplex(value, imag) : ToString(value)) << endl;
       };
 
-    if(selelement>0) // found a drawn point (clipping plane or surface element)
+    auto printVecValue = [&formatComplex]
+      (SolData & sol, FlatArray<double> values)
       {
-        double lami[3] = {0.0, 0.0, 0.0};
-        // Check if unprojected Point is close to surface element (eps of 1e-3 due to z-Buffer accuracy)
-        bool found_2del = false;
-        if(mesh->PointContainedIn2DElement(p, lami, selelement, false && fabs(lami[2])<1e-3))
+        if(sol.iscomplex)
           {
-            // Found it, use coordinates of point projected to surface element
-            mesh->GetCurvedElements().CalcSurfaceTransformation({1.0-lami[0]-lami[1], lami[0]}, selelement-1, p);
-            found_2del = true;
+            cout << sol.name << " = ( " << formatComplex(values[0], values[1]);
+            for(int i = 2; i < values.Size(); i+=2)
+              cout << ", " << formatComplex(values[i], values[i+1]);
+            cout << " )" << endl;
           }
-        cout << "Selected point " << p << " " << endl;
-        bool have_surf_scal_func = scalfunction!=-1 && soldata[scalfunction]->draw_surface && found_2del;
-        bool have_surf_vec_func = vecfunction!=-1 && soldata[vecfunction]->draw_surface && found_2del;
-        if(have_surf_scal_func || have_surf_vec_func)
+        else
           {
-            cout << "Surface values:" << endl;
-
-            if(have_surf_scal_func)
-              {
-                auto & sol = *soldata[scalfunction];
-                double val;
-                double imag = 0;
-                int rcomponent = scalcomp;
-                int comp = scalcomp;
-                if(sol.iscomplex && rcomponent != 0)
-                  {
-                    rcomponent = 2 * ((rcomponent-1)/2) + 1;
-                    GetSurfValue(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], rcomponent+1, imag);
-                    comp = (scalcomp-1)/2 + 1;
-                  }
-                GetSurfValue(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], rcomponent, val);
-                printScalValue(sol, comp, val, imag, sol.iscomplex && comp > 0);
-              }
-            if(have_surf_vec_func)
-              {
-                auto & sol = *soldata[vecfunction];
-                ArrayMem<double, 10> values(sol.components);
-                GetSurfValues(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], &values[0]);
-                if(sol.iscomplex)
-                  {
-                    cout << sol.name << " = ( " << formatComplex(values[0], values[1]);
-                    for(int i = 2; i < values.Size(); i+=2)
-                      cout << ", " << formatComplex(values[i], values[i+1]);
-                    cout << " )" << endl;
-                  }
-                else
-                  {
-                    cout << sol.name << " = ( " << values[0];
-                    for(int i = 1; i < values.Size(); i++)
-                      cout << ", " << values[i];
-                    cout << " )" << endl;
-                  }
-              }
+            cout << sol.name << " = ( " << values[0];
+            for(int i = 1; i < values.Size(); i++)
+              cout << ", " << values[i];
+            cout << " )" << endl;
           }
+      };
 
-        bool have_vol_scal_func = scalfunction!=-1 && soldata[scalfunction]->draw_volume && !have_surf_scal_func;
-        bool have_vol_vec_func = vecfunction!=-1 && soldata[vecfunction]->draw_volume && !have_surf_vec_func;
-        // otherwise assume that the unprojected point is on the clipping plane -> find 3d element containing it
-        if(dim==3 && (have_vol_scal_func || have_vol_vec_func))
-          if(auto el3d = mesh->GetElementOfPoint( p, lami ))
+    // Check if clipping plane is drawn at current mouse cursor position
+    if(dim==3 && clipsolution && vispar.clipping.enable)
+      {
+        GLint viewport[4];
+        GLdouble projection[16];
+        glGetDoublev(GL_PROJECTION_MATRIX, &projection[0]); 
+
+        glGetIntegerv(GL_VIEWPORT, &viewport[0]);
+
+        int hy = viewport[3]-py;
+
+        // manually intersect the view vector with the clipping plane (also working if clipping vectors are shown)
+        Point<3> p_clipping_plane;
+        gluUnProject(px, hy, 1.0, transformationmat, projection, viewport,
+            &p_clipping_plane[0], &p_clipping_plane[1], &p_clipping_plane[2]);
+
+        Point<3> eye;
+        gluUnProject( (viewport[2]-viewport[0])/2 , (viewport[3]-viewport[1])/2,
+            0.0, transformationmat, projection, viewport, &eye[0], &eye[1], &eye[2]);
+
+        Vec<3> n{vispar.clipping.normal};
+        n.Normalize();
+        Vec<3> view = p_clipping_plane-eye;
+
+        // check if we look at the clipping plane from the right direction
+        if(n*view > 1e-8)
           {
-            cout << "Volume values:" << endl;
-            if(have_vol_scal_func)
+            double lam = vispar.clipping.dist - Vec<3>{eye}*n;
+            lam /= n*view;
+            p_clipping_plane = eye + lam*view;
+
+            double lami[3];
+            if(auto el3d = mesh->GetElementOfPoint( p_clipping_plane, lami ))
               {
-                auto & sol = *soldata[scalfunction];
-                double val;
-                double imag = 0;
-                int rcomponent = scalcomp;
-                int comp = scalcomp;
-                if(sol.iscomplex && rcomponent != 0)
+                cout << endl << "Selected point " << p_clipping_plane << " on clipping plane" << endl;
+
+                bool have_scal_func = scalfunction!=-1 && soldata[scalfunction]->draw_volume;
+                bool have_vec_func = vecfunction!=-1 && soldata[vecfunction]->draw_volume;
+
+                if(have_scal_func)
                   {
-                    rcomponent = 2 * ((rcomponent-1)/2) + 1;
-                    GetValue(&sol, el3d-1,  lami[0], lami[1], lami[2], rcomponent+1,
-                             imag);
-                    comp = (scalcomp-1)/2 + 1;
+                    auto & sol = *soldata[scalfunction];
+                    double val;
+                    double imag = 0;
+                    int rcomponent = scalcomp;
+                    int comp = scalcomp;
+                    if(sol.iscomplex && rcomponent != 0)
+                      {
+                        rcomponent = 2 * ((rcomponent-1)/2) + 1;
+                        GetValue(&sol, el3d-1,  lami[0], lami[1], lami[2], rcomponent+1,
+                            imag);
+                        comp = (scalcomp-1)/2 + 1;
+                      }
+                    GetValue(&sol, el3d-1,  lami[0], lami[1], lami[2], rcomponent, val);
+                    printScalValue(sol, comp, val, imag, sol.iscomplex && comp > 0);
                   }
-                GetValue(&sol, el3d-1,  lami[0], lami[1], lami[2], rcomponent, val);
-                printScalValue(sol, comp, val, imag, sol.iscomplex && comp > 0);
-              }
-            if(have_vol_vec_func)
-              {
-                auto & sol = *soldata[vecfunction];
-                ArrayMem<double, 10> values(sol.components);
-                GetValues(&sol, el3d-1,  lami[0], lami[1], lami[2], &values[0]);
-                if(sol.iscomplex)
+                if(vecfunction!=-1 && soldata[vecfunction]->draw_volume)
                   {
-                    cout << sol.name << " = ( " << formatComplex(values[0], values[1]);
-                    for(int i = 2; i < values.Size(); i+=2)
-                      cout << ", " << formatComplex(values[i], values[i+1]);
-                    cout << " )" << endl;
+                    auto & sol = *soldata[vecfunction];
+                    ArrayMem<double, 10> values(sol.components);
+                    GetValues(&sol, el3d-1,  lami[0], lami[1], lami[2], &values[0]);
+                    printVecValue(sol, values);
                   }
-                else
-                  {
-                    cout << sol.name << " = ( " << values[0];
-                    for(int i = 1; i < values.Size(); i++)
-                      cout << ", " << values[i];
-                    cout << " )" << endl;
-                  }
+                return;
               }
           }
+      }
 
+    // no point on clipping plane found -> continue searching for surface element
+
+    Point<3> p;
+    bool found_point = vsmesh.Unproject(px, py, p);
+    if(!found_point)
+        return;
+
+    if(selelement==0)
+        return;
+
+    double lami[3] = {0.0, 0.0, 0.0};
+    // Check if unprojected Point is close to surface element (eps of 1e-3 due to z-Buffer accuracy)
+    bool found_2del = false;
+    if(mesh->PointContainedIn2DElement(p, lami, selelement, false && fabs(lami[2])<1e-3))
+      {
+        // Found it, use coordinates of point projected to surface element
+        mesh->GetCurvedElements().CalcSurfaceTransformation({1.0-lami[0]-lami[1], lami[0]}, selelement-1, p);
+        found_2del = true;
+      }
+    cout << endl << "Selected point " << p << " on surface" << endl;
+
+    if(!found_2del)
+        return;
+
+    bool have_scal_func = scalfunction!=-1 && soldata[scalfunction]->draw_surface;
+    bool have_vec_func = vecfunction!=-1 && soldata[vecfunction]->draw_surface;
+
+    if(have_scal_func)
+      {
+        auto & sol = *soldata[scalfunction];
+        double val;
+        double imag = 0;
+        int rcomponent = scalcomp;
+        int comp = scalcomp;
+        if(sol.iscomplex && rcomponent != 0)
+          {
+            rcomponent = 2 * ((rcomponent-1)/2) + 1;
+            GetSurfValue(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], rcomponent+1, imag);
+            comp = (scalcomp-1)/2 + 1;
+          }
+        GetSurfValue(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], rcomponent, val);
+        printScalValue(sol, comp, val, imag, sol.iscomplex && comp > 0);
+      }
+    if(have_vec_func)
+      {
+        auto & sol = *soldata[vecfunction];
+        ArrayMem<double, 10> values(sol.components);
+        GetSurfValues(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], &values[0]);
+        printVecValue(sol, values);
       }
   }
 
