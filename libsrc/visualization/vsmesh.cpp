@@ -3156,10 +3156,14 @@ namespace netgen
 	lock = NULL;
       }
 
-    if(pz>=1.0)
-        return false;
     // cout << "x, y = " << px << ", " << hy << endl;
     glReadPixels (px, hy, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &pz);
+
+    if(pz>=1.0)
+        return false;
+    if(pz<=0.0)
+        return false;
+
     // cout << "pz = " << pz << endl;    
     gluUnProject(px, hy, pz, transformationmat, projection, viewport,
                  &result[0], &result[1], &result[2]);

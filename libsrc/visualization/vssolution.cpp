@@ -4759,24 +4759,78 @@ namespace netgen
     if(!found_point)
         return;
 
+    auto mesh = GetMesh();
+    auto dim = mesh->GetDimension();
 
-    if(selelement>0) // found a surface element (possibliy behind clipping plane), check if drawn point really is in this element
+    auto printScalValue = [](SolData & sol, int comp, double value)
       {
-        double lami[3];
-        lami[0] = lami[1] = lami[2] = 0.0;
-        // Check if unprojected Point is close to surface element (eps of 1e-3 due to z-Buffer accuracy)
-        if(GetMesh()->PointContainedIn2DElement(p, lami, selelement, false) && fabs(lami[2])<1e-3)
+        if(sol.components>1)
           {
-            double val;
-            GetSurfValue(soldata[scalfunction], selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], scalcomp, val);
-            cout << "surface function value: " << val << endl;
+            if(comp==0)
+                cout << "func(" << sol.name << ")";
+            else
+                cout << sol.name << "["+ToString(comp)+"]";
           }
-        // otherwise assume that the unprojected point is on the clipping plane -> find 3d element containing it
-        else if(auto el3d = GetMesh()->GetElementOfPoint( p, lami ))
+        else
+            cout << sol.name;
+        cout << " = " << value << endl;
+      };
+
+    if(selelement>0) // found a drawn point (clipping plane or surface element)
+      {
+        double lami[3] = {0.0, 0.0, 0.0};
+        // Check if unprojected Point is close to surface element (eps of 1e-3 due to z-Buffer accuracy)
+        bool found_2del = false;
+        if(mesh->PointContainedIn2DElement(p, lami, selelement, false && fabs(lami[2])<1e-3))
           {
-            double val;
-            GetValue(soldata[scalfunction], el3d-1, lami[0],  lami[1], lami[2], scalcomp, val);
-            cout << "clipping plane value: " << val << endl;
+            // Found it, use coordinates of point projected to surface element
+            mesh->GetCurvedElements().CalcSurfaceTransformation({1.0-lami[0]-lami[1], lami[0]}, selelement-1, p);
+            found_2del = true;
+          }
+        cout << "Selected point " << p << " " << endl;
+        bool have_surf_scal_func = scalfunction!=-1 && soldata[scalfunction]->draw_surface && found_2del;
+        bool have_surf_vec_func = vecfunction!=-1 && soldata[vecfunction]->draw_surface && found_2del;
+        if(have_surf_scal_func || have_surf_vec_func)
+          {
+            cout << "Surface values:" << endl;
+
+            if(have_surf_scal_func)
+              {
+                auto & sol = *soldata[scalfunction];
+                double val;
+                GetSurfValue(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], scalcomp, val);
+                printScalValue(sol, scalcomp, val);
+              }
+            if(have_surf_vec_func)
+              {
+                auto & sol = *soldata[vecfunction];
+                ArrayMem<double, 10> values(sol.components);
+                GetSurfValues(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], &values[0]);
+                cout << sol.name << " = " << values;
+              }
+          }
+
+        bool have_vol_scal_func = scalfunction!=-1 && soldata[scalfunction]->draw_volume && !have_surf_scal_func;
+        bool have_vol_vec_func = vecfunction!=-1 && soldata[vecfunction]->draw_volume && !have_surf_vec_func;
+        // otherwise assume that the unprojected point is on the clipping plane -> find 3d element containing it
+        if(dim==3 && (have_vol_scal_func || have_vol_vec_func))
+          if(auto el3d = mesh->GetElementOfPoint( p, lami ))
+          {
+            cout << "Volume values:" << endl;
+            if(have_vol_scal_func)
+              {
+                auto & sol = *soldata[scalfunction];
+                double val;
+                GetValue(&sol, el3d-1,  lami[0], lami[1], lami[2], scalcomp, val);
+                printScalValue(sol, scalcomp, val);
+              }
+            if(have_vol_vec_func)
+              {
+                auto & sol = *soldata[vecfunction];
+                ArrayMem<double, 10> values(sol.components);
+                GetValues(&sol, el3d-1,  lami[0], lami[1], lami[2], &values[0]);
+                cout << sol.name << " = " << values;
+              }
           }
 
       }
