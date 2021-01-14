@@ -11,7 +11,7 @@ def check_area(geo, area):
         g.Add(geo)
         geo = g
 
-    m = geo.GenerateMesh()
+    m = geo.GenerateMesh(maxh=0.2)
     ngs = pytest.importorskip("ngsolve")
     mesh = ngs.Mesh(m)
     mesh.Curve(5)
@@ -106,6 +106,7 @@ def test_circle_and_rect():
     check_area(c+r, 3/4*pi+1)
     check_area(r*c, 1/4*pi)
     check_area(r+c, 3/4*pi+1)
+    check_area(r-c, 1-1/4*pi)
 
 
 if __name__ == "__main__":
