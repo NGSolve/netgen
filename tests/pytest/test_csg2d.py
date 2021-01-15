@@ -2,6 +2,20 @@ from netgen.geom2d import *
 import pytest
 import math
 from pytest import approx
+from pytest_check import check
+
+
+def check_area(geo, area):
+    if isinstance(geo, Solid2d):
+        g = CSG2d()
+        g.Add(geo)
+        geo = g
+
+    m = geo.GenerateMesh(maxh=0.2)
+    ngs = pytest.importorskip("ngsolve")
+    mesh = ngs.Mesh(m)
+    mesh.Curve(5)
+    with check: assert ngs.Integrate(1.0, mesh) == approx(area)
 
 def test_two_circles():
     c1 = Circle(center=(0,0), radius=1)
@@ -81,6 +95,18 @@ def test_circle_plus_rect1():
     mesh = ngs.Mesh(m)
     mesh.Curve(5)
     assert ngs.Integrate(1.0, mesh) == approx(math.pi)
+
+def test_circle_and_rect():
+    c = Circle(center=(0,0),radius=1)
+    r = Rectangle((0,0),(1,1))
+
+    pi = math.pi
+    check_area(c-r, 3/4*pi)
+    check_area(c*r, 1/4*pi)
+    check_area(c+r, 3/4*pi+1)
+    check_area(r*c, 1/4*pi)
+    check_area(r+c, 3/4*pi+1)
+    check_area(r-c, 1-1/4*pi)
 
 
 if __name__ == "__main__":
