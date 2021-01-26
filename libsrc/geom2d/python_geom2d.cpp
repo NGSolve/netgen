@@ -67,24 +67,45 @@ DLL_HEADER void ExportGeom2d(py::module &m)
                                       optional<variant<int, string>> bc, optional<int> copy, double maxh,
                                       double hpref, double hprefleft, double hprefright)
 	  {
-            auto segtype = py::cast<std::string>(segment[0]);
-            
             SplineSegExt * seg;
-            if (segtype == "line")
+            if(py::isinstance<py::str>(segment[0]))
               {
-                LineSeg<2> * l = new LineSeg<2>(self.GetPoint(py::cast<int>(segment[1])),
-                                                self.GetPoint(py::cast<int>(segment[2])));
-                seg = new SplineSegExt(*l);
-              }
-            else if (segtype == "spline3")
-              {
-                SplineSeg3<2> * seg3 = new SplineSeg3<2>(self.GetPoint(py::cast<int>(segment[1])),
-                                                         self.GetPoint(py::cast<int>(segment[2])),
-                                                         self.GetPoint(py::cast<int>(segment[3])));
-                seg = new SplineSegExt(*seg3);
+                auto segtype = py::cast<std::string>(segment[0]);
+            
+                if (segtype == "line")
+                  {
+                    LineSeg<2> * l = new LineSeg<2>(self.GetPoint(py::cast<int>(segment[1])),
+                                                    self.GetPoint(py::cast<int>(segment[2])));
+                    seg = new SplineSegExt(*l);
+                  }
+                else if (segtype == "spline3")
+                  {
+                    SplineSeg3<2> * seg3 = new SplineSeg3<2>(self.GetPoint(py::cast<int>(segment[1])),
+                                                             self.GetPoint(py::cast<int>(segment[2])),
+                                                             self.GetPoint(py::cast<int>(segment[3])));
+                    seg = new SplineSegExt(*seg3);
+                  }
+                else
+                  throw Exception("Appended segment is not a line or a spline3");
               }
             else
-                throw Exception("Appended segment is not a line or a spline3");
+              {
+                if(py::len(segment) == 2)
+                  {
+                    auto l = new LineSeg<2>(self.GetPoint(py::cast<int>(segment[0])),
+                                            self.GetPoint(py::cast<int>(segment[1])));
+                    seg = new SplineSegExt(*l);
+                  }
+                else if(py::len(segment) == 3)
+                  {
+                    SplineSeg3<2> * seg3 = new SplineSeg3<2>(self.GetPoint(py::cast<int>(segment[0])),
+                                                             self.GetPoint(py::cast<int>(segment[1])),
+                                                             self.GetPoint(py::cast<int>(segment[2])));
+                    seg = new SplineSegExt(*seg3);
+                  }
+                else
+                  throw Exception("Appended segment must either have 2 or 3 points");
+              }
             seg->leftdom = leftdomain;
             seg->rightdom = rightdomain;
             seg->hmax = maxh;
