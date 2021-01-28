@@ -1197,13 +1197,25 @@ project_boundaries : Optional[str] = None
                     return mp;
                   }), py::arg("mp")=nullptr, meshingparameter_description.c_str())
     .def("__str__", &ToString<MP>)
-    .def("RestrictH", FunctionPointer
-         ([](MP & mp, double x, double y, double z, double h)
+    .def("RestrictH", [](MP & mp, double x, double y, double z, double h)
           {
-            mp.meshsize_points.Append ( MeshingParameters::MeshSizePoint (Point<3> (x,y,z), h));
-          }),
-         py::arg("x"), py::arg("y"), py::arg("z"), py::arg("h")
+            mp.meshsize_points.Append ( MeshingParameters::MeshSizePoint(Point<3> (x,y,z), h));
+          }, py::arg("x"), py::arg("y"), py::arg("z"), py::arg("h")
          )
+    .def("RestrictH", [](MP & mp, const Point<3>& p, double h)
+    {
+      mp.meshsize_points.Append ({p, h});
+    }, py::arg("p"), py::arg("h"))
+    .def("RestrictHLine", [](MP& mp, const Point<3>& p1, const Point<3>& p2,
+                             double maxh)
+    {
+      int steps = int(Dist(p1, p2) / maxh) + 2;
+      auto v = p2 - p1;
+      for (int i = 0; i <= steps; i++)
+        {
+          mp.meshsize_points.Append({p1 + double(i)/steps * v, maxh});
+        }
+    }, py::arg("p1"), py::arg("p2"), py::arg("maxh"))
     ;
 
   m.def("SetTestoutFile", FunctionPointer ([] (const string & filename)
