@@ -73,7 +73,7 @@ install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp 
   exception.hpp symboltable.hpp paje_trace.hpp utils.hpp profiler.hpp mpi_wrapper.hpp
   array.hpp taskmanager.hpp concurrentqueue.h localheap.hpp python_ngcore.hpp flags.hpp
   xbool.hpp signal.hpp bitarray.hpp table.hpp hashtable.hpp ranges.hpp
-  simd.hpp simd_avx.hpp simd_avx512.hpp simd_generic.hpp simd_sse.hpp
+  simd.hpp simd_avx.hpp simd_avx512.hpp simd_generic.hpp simd_sse.hpp simd_arm64.hpp
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/core COMPONENT netgen_devel)
 
 if(ENABLE_CPP_CORE_GUIDELINES_CHECK)
