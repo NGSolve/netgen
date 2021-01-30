@@ -1,5 +1,3 @@
-#ifdef NOTYETWORKING
-
 #include "arm_neon.h"
 
 namespace ngcore
@@ -42,8 +40,11 @@ namespace ngcore
     SIMD (double v0, double v1) { data[0] = v0; data[1] = v1; }
     
     SIMD (std::array<double, 2> arr)
-        : data{(arr[0], arr[1])}
-    {}
+    // : data{(arr[0], arr[1])}
+    {
+      data[0] = arr[0];
+      data[1] = arr[1];
+    }
     
     SIMD & operator= (const SIMD &) = default;
 
@@ -143,4 +144,3 @@ namespace ngcore
   
 }
 
-#endif
