@@ -1261,8 +1261,10 @@ namespace netgen
                       SurfaceElementIndex sei = top.GetFace2SurfaceElement (f+1)-1;
 		      if (sei != SurfaceElementIndex(-1)) {
 			PointGeomInfo gi = mesh[sei].GeomInfoPi(1);
-                        gi.u = 1.0/3.0*(mesh[sei].GeomInfoPi(1).u+mesh[sei].GeomInfoPi(2).u+mesh[sei].GeomInfoPi(3).u);
-                        gi.v = 1.0/3.0*(mesh[sei].GeomInfoPi(1).v+mesh[sei].GeomInfoPi(2).v+mesh[sei].GeomInfoPi(3).v);
+                        // use improved initial guess
+                        gi.u = (lami[fnums[0]]*mesh[sei].GeomInfoPi(1).u+lami[fnums[1]]*mesh[sei].GeomInfoPi(2).u+lami[fnums[2]]*mesh[sei].GeomInfoPi(3).u);
+                        gi.v = (lami[fnums[0]]*mesh[sei].GeomInfoPi(1).v+lami[fnums[1]]*mesh[sei].GeomInfoPi(2).v+lami[fnums[2]]*mesh[sei].GeomInfoPi(3).v);
+
 			geo.ProjectPointGI(surfnr[facenr], pp, gi);
 		      }
 		      else
