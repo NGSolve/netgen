@@ -271,7 +271,6 @@ namespace netgen
 
     // add point elements
     for (auto & point : geompoints)
-      if (point.name.length())
         {
           Point<3> newp(point(0), point(1), 0);
           PointIndex npi = mesh2d.AddPoint (newp, 1, FIXEDPOINT);
