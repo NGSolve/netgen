@@ -889,6 +889,30 @@ namespace netgen
 
 
 
+  // Reads mandatory integer and optional string token from input stream
+  // used for parsing bcnames, cd2names etc.
+  void ReadNumberAndName( istream & infile, int & i, string & s )
+  {
+    string line;
+    std::istringstream iline;
+
+    bool empty_line = true;
+
+    while(empty_line && infile)
+      {
+        std::getline(infile, line);
+        iline = std::istringstream{line};
+        iline >> i;
+
+        if(iline)
+            empty_line = false;
+
+        iline >> s;
+      }
+
+    if(!infile)
+        throw Exception("Reached end of file while parsing");
+  }
 
   void Mesh :: Load (istream & infile)
   {
@@ -1137,11 +1161,11 @@ namespace netgen
         if (strcmp (str, "materials") == 0)
           {
             infile >> n;
-            for (i = 1; i <= n; i++)
+            for ( auto i : Range(n) )
               {
                 int nr;
                 string mat;
-                infile >> nr >> mat;
+                ReadNumberAndName( infile, nr, mat );
                 SetMaterial (nr, mat.c_str());
               }
           }
@@ -1149,13 +1173,13 @@ namespace netgen
         if ( strcmp (str, "bcnames" ) == 0 )
           {
             infile >> n;
-            NgArray<int,0> bcnrs(n);
+            Array<int> bcnrs(n);
             SetNBCNames(n);
-            for ( i = 1; i <= n; i++ )
+            for ( auto i : Range(n) )
               {
                 string nextbcname;
-                infile >> bcnrs[i-1] >> nextbcname;
-                bcnames[bcnrs[i-1]-1] = new string(nextbcname);
+                ReadNumberAndName( infile, bcnrs[i], nextbcname );
+                bcnames[bcnrs[i]-1] = new string(nextbcname);
               }
 
             if ( GetDimension() == 3 )
@@ -1179,14 +1203,14 @@ namespace netgen
 	if ( strcmp (str, "cd2names" ) == 0)
 	  {
 	    infile >> n;
-	    NgArray<int,0> cd2nrs(n);
+	    Array<int> cd2nrs(n);
 	    SetNCD2Names(n);
-	    for( i=1; i<=n; i++)
-	      {
-		string nextcd2name;
-		infile >> cd2nrs[i-1] >> nextcd2name;
-		cd2names[cd2nrs[i-1]-1] = new string(nextcd2name);
-	      }
+            for ( auto i : Range(n) )
+              {
+                string nextcd2name;
+                ReadNumberAndName( infile, cd2nrs[i], nextcd2name );
+                cd2names[cd2nrs[i]-1] = new string(nextcd2name);
+              }
 	    if (GetDimension() == 2)
 	      {
 		throw NgException("co dim 2 elements not implemented for dimension 2");
@@ -1196,11 +1220,12 @@ namespace netgen
         if ( strcmp (str, "cd3names" ) == 0)
 	  {
 	    infile >> n;
-	    NgArray<int,0> cd3nrs(n);
+	    Array<int> cd3nrs(n);
 	    SetNCD3Names(n);
-	    for( i=1; i<=n; i++)
+	    for( auto i : Range(n) )
 	      {
 		string nextcd3name;
+                ReadNumberAndName( infile, cd3nrs[i], nextcd3name );
 		infile >> cd3nrs[i-1] >> nextcd3name;
 		cd3names[cd3nrs[i-1]-1] = new string(nextcd3name);
 	      }
