@@ -789,6 +789,7 @@ namespace netgen
     self.surfelements = Array<Element2d>(0);
     self.volelements = Array<Element>(0);
     self.segments = Array<Segment>(0);
+    self.pointelements = Array<Element0d>(0);
     self.lockedpoints = Array<PointIndex>(0);
     auto cleanup_ptr = [](auto & ptr) {
       if (ptr != nullptr) {
