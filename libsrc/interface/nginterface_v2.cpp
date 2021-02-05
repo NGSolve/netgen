@@ -861,7 +861,14 @@ namespace netgen
 				   SIMD<double> * x, size_t sx,
 				   SIMD<double> * dxdxi, size_t sdxdxi) const
   {
-    cout << "MultiElementtransformation<0,2> simd not implemented" << endl;
+    //cout << "MultiElementtransformation<0,2> simd not implemented" << endl;
+
+    PointIndex pi = mesh->pointelements[elnr].pnum;
+    Point<3> xg = mesh->Point(pi);
+    if (x)
+      for (int j = 0; j < npts; j++)
+	for (int i = 0; i < 2; i++)
+	  x[j*sx+i] = xg(i);
   }
   
   template<> DLL_HEADER void Ngx_Mesh :: 
@@ -870,7 +877,13 @@ namespace netgen
                                    SIMD<double> * x, size_t sx,
                                    SIMD<double> * dxdxi, size_t sdxdxi) const
   {
-    cout << "multi-eltrafo simd called, 0,1,simd" << endl;
+    //cout << "multi-eltrafo simd called, 0,1,simd" << endl;
+    PointIndex pi = mesh->pointelements[elnr].pnum;
+    Point<3> xg = mesh->Point(pi);
+    if (x)
+      for (int j = 0; j < npts; j++)
+	for (int i = 0; i < 1; i++)
+	  x[j*sx+i] = xg(i);
   }
 
   template<> DLL_HEADER void Ngx_Mesh :: 
