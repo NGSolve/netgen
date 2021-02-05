@@ -513,50 +513,82 @@ namespace netgen
           }
         if(do_insert)
           {
-            if(el.GetType() != TET)
-              throw Exception("Boundarylayer only implemented for tets outside yet!");
-            if(moved.Size() == 2)
+            if(el.GetType() == TET)
               {
-                if(fixed.Size() == 2)
-                  throw Exception("This should not be possible!");
-                PointIndex p1 = moved[0];
-                PointIndex p2 = moved[1];
-                for(auto i : Range(blp.heights))
+                if(moved.Size() == 2)
                   {
-                    PointIndex p3 = mapto[moved[1]][i];
-                    PointIndex p4 = mapto[moved[0]][i];
-                    Element nel(PYRAMID);
-                    nel[0] = p1;
-                    nel[1] = p2;
-                    nel[2] = p3;
-                    nel[3] = p4;
-                    nel[4] = el[0] + el[1] + el[2] + el[3] - fixed[0] - moved[0] - moved[1];
-                    if(Cross(mesh[p2]-mesh[p1], mesh[p4]-mesh[p1]) * (mesh[nel[4]]-mesh[nel[1]]) > 0)
-                      Swap(nel[1], nel[3]);
-                    nel.SetIndex(el.GetIndex());
-                    mesh.AddVolumeElement(nel);
-                    p1 = p4;
-                    p2 = p3;
-                  }
-              }
-            if(moved.Size() == 1 && fixed.Size() == 1)
-              {
-                PointIndex p1 = moved[0];
-                for(auto i : Range(blp.heights))
-                  {
-                    Element nel = el;
-                    PointIndex p2 = mapto[moved[0]][i];
-                    for(auto& p : nel.PNums())
+                    if(fixed.Size() == 2)
+                      throw Exception("This should not be possible!");
+                    PointIndex p1 = moved[0];
+                    PointIndex p2 = moved[1];
+                    for(auto i : Range(blp.heights))
                       {
-                        if(p == moved[0])
-                          p = p1;
-                        else if(p == fixed[0])
-                          p = p2;
+                        PointIndex p3 = mapto[moved[1]][i];
+                        PointIndex p4 = mapto[moved[0]][i];
+                        Element nel(PYRAMID);
+                        nel[0] = p1;
+                        nel[1] = p2;
+                        nel[2] = p3;
+                        nel[3] = p4;
+                        nel[4] = el[0] + el[1] + el[2] + el[3] - fixed[0] - moved[0] - moved[1];
+                        if(Cross(mesh[p2]-mesh[p1], mesh[p4]-mesh[p1]) * (mesh[nel[4]]-mesh[nel[1]]) > 0)
+                          Swap(nel[1], nel[3]);
+                        nel.SetIndex(el.GetIndex());
+                        mesh.AddVolumeElement(nel);
+                        p1 = p4;
+                        p2 = p3;
                       }
-                    p1 = p2;
-                    mesh.AddVolumeElement(nel);
+                  }
+                if(moved.Size() == 1 && fixed.Size() == 1)
+                  {
+                    PointIndex p1 = moved[0];
+                    for(auto i : Range(blp.heights))
+                      {
+                        Element nel = el;
+                        PointIndex p2 = mapto[moved[0]][i];
+                        for(auto& p : nel.PNums())
+                          {
+                            if(p == moved[0])
+                              p = p1;
+                            else if(p == fixed[0])
+                              p = p2;
+                          }
+                        p1 = p2;
+                        mesh.AddVolumeElement(nel);
+                      }
                   }
               }
+            else if(el.GetType() == PYRAMID)
+              {
+                if(moved.Size() == 2)
+                  {
+                    if(fixed.Size() != 2)
+                      throw Exception("This case is not implemented yet! Fixed size = " + ToString(fixed.Size()));
+                    PointIndex p1 = moved[0];
+                    PointIndex p2 = moved[1];
+                    for(auto i : Range(blp.heights))
+                      {
+                        PointIndex p3 = mapto[moved[1]][i];
+                        PointIndex p4 = mapto[moved[0]][i];
+                        Element nel(PYRAMID);
+                        nel[0] = p1;
+                        nel[1] = p2;
+                        nel[2] = p3;
+                        nel[3] = p4;
+                        nel[4] = el[0] + el[1] + el[2] + el[3] + el[4] - fixed[0] - fixed[1] - moved[0] - moved[1];
+                        if(Cross(mesh[p2] - mesh[p1], mesh[p4]-mesh[p1]) * (mesh[nel[4]]-mesh[nel[1]]) > 0)
+                          Swap(nel[1], nel[3]);
+                        nel.SetIndex(el.GetIndex());
+                        mesh.AddVolumeElement(nel);
+                        p1 = p4;
+                        p2 = p3;
+                      }
+                  }
+                else if(moved.Size() == 1)
+                  throw Exception("This case is not implemented yet!");
+              }
+            else
+              throw Exception("Boundarylayer only implemented for tets and pyramids outside yet!");
           }
       }
 
