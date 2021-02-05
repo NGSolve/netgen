@@ -1211,9 +1211,9 @@ namespace netgen
                 ReadNumberAndName( infile, cd2nrs[i], nextcd2name );
                 cd2names[cd2nrs[i]-1] = new string(nextcd2name);
               }
-	    if (GetDimension() == 2)
+	    if (GetDimension() < 2)
 	      {
-		throw NgException("co dim 2 elements not implemented for dimension 2");
+		throw NgException("co dim 2 elements not implemented for dimension < 2");
 	      }
 	  }
 
