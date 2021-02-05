@@ -69,7 +69,7 @@ namespace netgen
     /**
        Representation of local mesh-size h
     */
-    unique_ptr<LocalH> lochfunc;
+    shared_ptr<LocalH> lochfunc;
     ///
     double hglob;
     ///
@@ -465,6 +465,10 @@ namespace netgen
     bool HasLocalHFunction () { return lochfunc != nullptr; }
     ///
     LocalH & LocalHFunction () { return * lochfunc; }
+
+    shared_ptr<LocalH> GetLocalH() const { return lochfunc; }
+    void SetLocalH(shared_ptr<LocalH> loch) { lochfunc = loch; }
+
     ///
     bool LocalHFunctionGenerated(void) const { return (lochfunc != NULL); }
 
