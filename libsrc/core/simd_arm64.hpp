@@ -21,7 +21,10 @@ namespace ngcore
     static constexpr int Size() { return 2; }
     // static NETGEN_INLINE SIMD<mask64, 2> GetMaskFromBits (unsigned int i);
     int64_t operator[] (int i) const { return mask[i]; }
-        
+
+    template <int I>
+    int64_t Get() const { return mask[I]; }
+    
     auto Lo() const { return mask[0]; }
     auto Hi() const { return mask[1]; }
   };
@@ -84,9 +87,13 @@ namespace ngcore
     
     // NETGEN_INLINE double operator[] (int i) const { return ((double*)(&data))[i]; }
     NETGEN_INLINE double operator[] (int i) const { return data[i]; }
+    NETGEN_INLINE double & operator[] (int i)  { return ((double*)&data)[i]; }
+
+    template <int I>
+    double Get() const { return data[I]; }
+    
     NETGEN_INLINE auto Data() const { return data; }
     NETGEN_INLINE auto & Data() { return data; }
-
 
     operator std::tuple<double&,double&> ()
     {
@@ -94,21 +101,23 @@ namespace ngcore
       return std::tuple<double&,double&>(pdata[0], pdata[1]);
     }
     
-    double Lo() const { return data[0]; }
-    double Hi() const { return data[1]; }
-    // __ai float64x1_t vget_high_f64(float64x2_t __p0) {
+    double Lo() const { return Get<0>(); } // data[0]; }
+    double Hi() const { return Get<1>(); } // data[1]; }
+    // double Hi() const { return vget_high_f64(data)[0]; }
   };
 
 
 
   NETGEN_INLINE double HSum (SIMD<double,2> sd)
   {
-    return sd[0]+sd[1];
+    return sd.Lo()+sd.Hi();  // sd[0]+sd[1];
   }
 
   NETGEN_INLINE SIMD<double,2> HSum (SIMD<double,2> a, SIMD<double,2> b)
   {
-    return SIMD<double,2> (a[0]+a[1], b[0]+b[1]);
+    // return SIMD<double,2> (a[0]+a[1], b[0]+b[1]);
+    return vpaddq_f64(a.Data(), b.Data());
+    
   }
 
   // a*b+c
