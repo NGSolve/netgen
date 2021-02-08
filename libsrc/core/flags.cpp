@@ -51,6 +51,10 @@ namespace ngcore
 	auto lflags = flags.GetFlagsFlag (i, name);
 	SetFlag (name, lflags);
       }
+    for(auto i : Range(flags.anyflags.Size()))
+      {
+        SetFlag(flags.anyflags.GetName(i), flags.anyflags[i]);
+      }
   }
   
   Flags :: Flags (Flags && flags)
@@ -178,7 +182,11 @@ namespace ngcore
     return *this;
   }
 
-
+  Flags & Flags :: SetFlag (const string & name, const std::any & val)
+  {
+    anyflags.Set(name, val);
+    return *this;
+  }
 
   string Flags :: GetStringFlag (const string & name, const char * def) const
   {
@@ -279,6 +287,14 @@ namespace ngcore
       }
   }
 
+  const std::any& Flags:: GetAnyFlag(const std::string& name) const
+  {
+    if(anyflags.Used(name))
+      return anyflags[name];
+    static std::any empty;
+    return empty;
+  }
+
   bool Flags :: StringFlagDefined (const string & name) const
   {
     return strflags.Used (name);
@@ -302,6 +318,11 @@ namespace ngcore
   bool Flags :: NumListFlagDefined (const string & name) const
   {
     return numlistflags.Used (name);
+  }
+
+  bool Flags :: AnyFlagDefined (const string& name) const
+  {
+    return anyflags.Used(name);
   }
 
   void Flags :: SaveFlags (ostream & str) const
