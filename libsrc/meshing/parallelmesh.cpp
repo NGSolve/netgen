@@ -133,6 +133,33 @@ namespace ngcore
     }
   }; // MPI_typetrait<SelPackage>
 
+
+  class PointElPackage
+  {
+  public:
+    netgen::PointIndex pnum;
+    int index;
+    PointElPackage () { pnum = -1; index = -1; }
+    PointElPackage (const netgen::Element0d & el)
+    { pnum = el.pnum; index = el.index; }
+  }; // class PointElPackage
+
+  template<> struct MPI_typetrait<PointElPackage> {
+    static MPI_Datatype MPIType () {
+      static MPI_Datatype MPI_T = 0;
+      if (!MPI_T)
+	{
+	  int block_len[2] = { 1, 1 };
+	  MPI_Aint displs[3] = { 0, sizeof(netgen::PointIndex) };
+	  MPI_Datatype types[2] = { GetMPIType<netgen::PointIndex>(), MPI_INT };
+	  MPI_Type_create_struct(2, block_len, displs, types, &MPI_T);
+	  MPI_Type_commit(&MPI_T);
+	}
+      return MPI_T;
+    }
+  }; // MPI_typetrait<Element0d>
+
+
 } // namespace ngcore
 
 namespace netgen
@@ -181,7 +208,6 @@ namespace netgen
 
   void Mesh :: SendMesh () const   
   {
-    Array<MPI_Request> sendrequests;
 
     NgMPI_Comm comm = GetCommunicator();
     int id = comm.Rank();
@@ -190,6 +216,8 @@ namespace netgen
     int dim = GetDimension();
     comm.Bcast(dim);
 
+    Array<MPI_Request> sendrequests(8*(ntasks-1));
+    sendrequests.SetSize0();
     
     // If the topology is not already updated, we do not need to
     // build edges/faces.
@@ -818,6 +846,27 @@ namespace netgen
     for (int dest = 1; dest < ntasks; dest++)
       sendrequests.Append (comm.ISend(segm_buf[dest], dest, MPI_TAG_MESH+5));
 
+    /** Point-Elements **/
+    PrintMessage ( 3, "Point-Elements ...");
+
+    auto iterate_zdes = [&](auto f) {
+      for (auto k : Range(pointelements)) {
+	auto & el = pointelements[k];
+	PointElPackage pack(el);
+	auto dests = procs_of_vert[el.pnum];
+	for (auto dest : dests)
+	  { f(pack, dest); }
+      }
+    };
+
+    bufsize = 0;
+    iterate_zdes([&](const auto & pack, auto dest) { bufsize[dest]++; });
+    DynamicTable<PointElPackage> zde_buf(bufsize); // zero dim elements
+    iterate_zdes([&](const auto & pack, auto dest) { zde_buf.Add(dest, pack); });
+
+    for (int dest = 1; dest < ntasks; dest++)
+      { sendrequests.Append (comm.ISend(zde_buf[dest], dest, MPI_TAG_MESH+6)); }
+
     PrintMessage ( 3, "now wait ...");
 
     MyMPI_WaitAll (sendrequests);
@@ -841,7 +890,7 @@ namespace netgen
     nnames[3] = GetNCD3Names();
     int tot_nn = nnames[0] + nnames[1] + nnames[2] + nnames[3];
     for( int k = 1; k < ntasks; k++)
-      sendrequests[k] = comm.ISend(nnames, k, MPI_TAG_MESH+6);
+      sendrequests[k] = comm.ISend(nnames, k, MPI_TAG_MESH+7);
       // (void) MPI_Isend(nnames, 4, MPI_INT, k, MPI_TAG_MESH+6, comm, &sendrequests[k]);
     auto iterate_names = [&](auto func) {
       for (int k = 0; k < nnames[0]; k++) func(materials[k]);
@@ -854,7 +903,7 @@ namespace netgen
     tot_nn = 0;
     iterate_names([&](auto ptr) { name_sizes[tot_nn++] = (ptr==NULL) ? 0 : ptr->size(); });
     for( int k = 1; k < ntasks; k++)
-      (void) MPI_Isend(&name_sizes[0], tot_nn, MPI_INT, k, MPI_TAG_MESH+6, comm, &sendrequests[ntasks+k]);
+      (void) MPI_Isend(&name_sizes[0], tot_nn, MPI_INT, k, MPI_TAG_MESH+7, comm, &sendrequests[ntasks+k]);
     // names
     int strs = 0;
     iterate_names([&](auto ptr) { strs += (ptr==NULL) ? 0 : ptr->size(); });
@@ -866,7 +915,7 @@ namespace netgen
 	for (int j=0; j < name.size(); j++) compiled_names[strs++] = name[j];
       });
     for( int k = 1; k < ntasks; k++)
-      (void) MPI_Isend(&(compiled_names[0]), strs, MPI_CHAR, k, MPI_TAG_MESH+6, comm, &sendrequests[2*ntasks+k]);
+      (void) MPI_Isend(&(compiled_names[0]), strs, MPI_CHAR, k, MPI_TAG_MESH+7, comm, &sendrequests[2*ntasks+k]);
 
     PrintMessage ( 3, "wait for names");
 
@@ -1109,8 +1158,18 @@ namespace netgen
 	      AddSegment (seg);
 	      segi++;
 	    }
-	  
 	}
+    }
+
+    { /** 0d-Elements **/
+      Array<PointElPackage> zdes;
+      comm.Recv ( zdes, 0, MPI_TAG_MESH+6);
+      pointelements.SetSize(zdes.Size());
+      for (auto k : Range(pointelements)) {
+	auto & el = pointelements[k];
+	el.pnum = glob2loc_vert_ht.Get(zdes[k].pnum);
+	el.index = zdes[k].index;
+      }
     }
 
     // paralleltop -> SetNV_Loc2Glob (0);
@@ -1118,7 +1177,7 @@ namespace netgen
     /** Recv bc-names **/
     ArrayMem<int,4> nnames{0,0,0,0};
     // MPI_Recv(nnames, 4, MPI_INT, 0, MPI_TAG_MESH+6, comm, MPI_STATUS_IGNORE);
-    comm.Recv(nnames, 0, MPI_TAG_MESH+6);
+    comm.Recv(nnames, 0, MPI_TAG_MESH+7);
     // cout << "nnames = " << FlatArray(nnames) << endl;
     materials.SetSize(nnames[0]);
     bcnames.SetSize(nnames[1]);
@@ -1127,12 +1186,12 @@ namespace netgen
 
     int tot_nn = nnames[0] + nnames[1] + nnames[2] + nnames[3];
     NgArray<int> name_sizes(tot_nn);
-    MPI_Recv(&name_sizes[0], tot_nn, MPI_INT, 0, MPI_TAG_MESH+6, comm, MPI_STATUS_IGNORE);
+    MPI_Recv(&name_sizes[0], tot_nn, MPI_INT, 0, MPI_TAG_MESH+7, comm, MPI_STATUS_IGNORE);
     int tot_size = 0;
     for (int k = 0; k < tot_nn; k++) tot_size += name_sizes[k];
     
     NgArray<char> compiled_names(tot_size);
-    MPI_Recv(&(compiled_names[0]), tot_size, MPI_CHAR, 0, MPI_TAG_MESH+6, comm, MPI_STATUS_IGNORE);
+    MPI_Recv(&(compiled_names[0]), tot_size, MPI_CHAR, 0, MPI_TAG_MESH+7, comm, MPI_STATUS_IGNORE);
 
     tot_nn = tot_size = 0;
     auto write_names = [&] (auto & array) {
