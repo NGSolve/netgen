@@ -355,6 +355,10 @@ namespace netgen
     int GetParentElement (int ei) const;
     int GetParentSElement (int ei) const;
 
+    bool HasParentEdges() const;
+    tuple<int, std::array<int,3>> GetParentEdges (int enr) const;
+    tuple<int, std::array<int,4>> GetParentFaces (int fnr) const;
+    
     int GetNIdentifications() const;
     int GetIdentificationType(int idnr) const;
     Ng_Buffer<int[2]> GetPeriodicVertices(int idnr) const;

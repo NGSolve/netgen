@@ -1131,8 +1131,13 @@ project_boundaries : Optional[str] = None
           {
             if (name == "edges")
               const_cast<MeshTopology&>(self.GetTopology()).SetBuildEdges(set);
-            if (name == "faces")
+            else if (name == "faces")
               const_cast<MeshTopology&>(self.GetTopology()).SetBuildFaces(set);
+            else if (name == "parentedges")
+              const_cast<MeshTopology&>(self.GetTopology()).SetBuildHierarchy(set);
+	    else
+	      throw Exception ("noting known about table "+name +"\n"
+			       "knwon are 'edges', 'faces', 'parentedges'");
           },
           py::arg("name"), py::arg("set")=true)
     

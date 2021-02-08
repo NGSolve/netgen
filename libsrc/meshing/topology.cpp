@@ -677,6 +677,215 @@ namespace netgen
                                 });
                }
            } );
+
+
+	if (build_hierarchy)
+	  {
+	    static Timer t("build_hierarchy"); RegionTimer reg(t);
+	    cnt = 0;
+	    for (size_t i = 0; i < edge2vert.Size(); i++)
+	      cnt[edge2vert[i][0]]++;
+	    TABLE<int,PointIndex::BASE> vert2edge (cnt);
+	    for (size_t i = 0; i < edge2vert.Size(); i++)
+	      vert2edge.AddSave (edge2vert[i][0], i);
+	    
+	    // build edge hierarchy:
+	    parent_edges.SetSize (ned);
+	    parent_edges = { -1, { -1, -1, -1 } };
+	    /*
+	    cout << "mlbetween = " << mesh->mlbetweennodes.Size() << endl;
+	    cout << "mlbetween = " << endl << mesh->mlbetweennodes << endl;
+	    cout << "v2e = " << endl << vert2edge << endl;
+	    cout << "e2v = " << endl << edge2vert << endl;
+	    cout << "ned = " << ned << endl;
+	    */
+	    for (size_t i = 0; i < ned; i++)
+	      {
+		// cout << " ref edge " << i << "/" << ned << endl;
+		/*
+		int pa1[2], pa2[2];
+		ma->GetParentNodes (i2[0], pa1);
+		ma->GetParentNodes (i2[1], pa2);
+		*/
+		auto i2 = edge2vert[i];
+
+		if (i2[0] > mesh->mlbetweennodes.Size()+PointIndex::BASE ||
+		    i2[1] > mesh->mlbetweennodes.Size()+PointIndex::BASE)
+		  continue;
+		
+		// cout << "i2 = " << i2 << endl;
+		auto pa1 = mesh->mlbetweennodes[i2[0]];
+		auto pa2 = mesh->mlbetweennodes[i2[1]];
+
+		// cout << "pa1 = " << pa1 << endl;
+		// cout << "pa2 = " << pa2 << endl;
+		//if (pa1[0] == -1 && pa2[0] == -1)
+		// continue;
+
+		// both vertices are on coarsest mesh
+		if (!pa1[0].IsValid() && !pa2[0].IsValid())
+		  continue;
+		
+		
+		int issplitedge = 0;
+		if (pa1[0] == i2[1] || pa1[1] == i2[1])
+		  issplitedge = 1;
+		if (pa2[0] == i2[0] || pa2[1] == i2[0])
+		  issplitedge = 2;
+		
+		if (issplitedge)
+		  {
+		    // cout << "split edge " << endl;
+		    // edge is obtained by splitting one edge into two parts:
+		    INT<2> paedge;
+		    if (issplitedge == 1)
+		      paedge = INT<2> (pa1[0], pa1[1]);
+		    else
+		      paedge = INT<2> (pa2[0], pa2[1]);
+		    
+		    if (paedge[0] > paedge[1]) 
+		      Swap (paedge[0], paedge[1]);
+
+		    for (int ednr : vert2edge[paedge[0]])
+		      if (auto ic2 = edge2vert[ednr]; ic2[1] == paedge[1])
+			{
+			  // cout << "matching: " << ednr << endl;
+			  int orient = (paedge[0] == i2[0] || paedge[1] == i2[1]) ? 1 : 0;
+			  parent_edges[i] = { orient, { ednr, -1, -1 } };			  
+			}
+		  }
+		else
+		  {
+		    // edge is splitting edge in middle of triangle:
+		    for (int j = 1; j <= 2; j++)
+		      {
+			INT<2> paedge1, paedge2;
+			if (j == 1)
+			  {
+			    paedge1 = INT<2> (pa1[0], i2[1]);
+			    paedge2 = INT<2> (pa1[1], i2[1]);
+			  }
+			else
+			  {
+			    paedge1 = INT<2> (pa2[0], i2[0]);
+			    paedge2 = INT<2> (pa2[1], i2[0]);
+			  }
+			if (paedge1[0] > paedge1[1]) 
+			  Swap (paedge1[0], paedge1[1]);
+			if (paedge2[0] > paedge2[1]) 
+			  Swap (paedge2[0], paedge2[1]);
+			
+			// cout << "paedge1 = " << paedge1 << ", paedge2 = " << paedge2 << endl;
+			// if first vertex number is -1, then don't try to find entry in node2edge hash table
+			if ( paedge1[0] == PointIndex::BASE-1 || paedge2[0] == PointIndex::BASE-1 )
+			  continue;
+
+			int paedgenr1=-1, paedgenr2=-1, orient1 = 0, orient2 = 0;
+			for (int ednr : vert2edge[paedge1[0]])
+			  if (auto ic2 = edge2vert[ednr]; ic2[1] == paedge1[1])
+			    {
+			      paedgenr1 = ednr;
+			      // cout << "ednr = " << ednr << ", i2 = " << i2 << endl;
+			      orient1 = (paedge1[0] == i2[0] || paedge1[1] == i2[1]) ? 1 : 0;
+			      // cout << "orient1 = " << orient1 << endl;
+			    }
+			for (int ednr : vert2edge[paedge2[0]])
+			  if (auto ic2 = edge2vert[ednr]; ic2[1] == paedge2[1])
+			    {
+			      paedgenr2 = ednr;
+			      // cout << "ednr = " << ednr << ", i2 = " << i2 << endl;			      
+			      orient2 = (paedge2[0] == i2[0] || paedge2[1] == i2[1]) ? 1 : 0;
+			      // cout << "orient2 = " << orient2 << endl;			      
+			    }
+			if (paedgenr1 != -1 && paedgenr2 != -1)
+			  parent_edges[i] = { orient1+2*orient2, { paedgenr1, paedgenr2, -1 } };
+		      }
+
+
+		    // TODO: quad edges
+		    /*
+		    if (parentedges[i][0] == -1)
+		      {
+			// quad split
+			if (pa1[0] != pa2[0] && 
+			    pa1[0] != pa2[1] && 
+			    pa1[1] != pa2[0] && 
+			    pa1[1] != pa2[1])
+			  for (int j = 1; j <= 2; j++)
+			    {
+			      INT<2> paedge1, paedge2;
+			      if (j == 1)
+				{
+				  paedge1 = INT<2> (pa1[0], pa2[0]);
+				  paedge2 = INT<2> (pa1[1], pa2[1]);
+				}
+			      else
+				{
+				  paedge1 = INT<2> (pa1[0], pa2[1]);
+				  paedge2 = INT<2> (pa1[1], pa2[0]);
+				}
+			      
+			      int paedgenr1 = 0, paedgenr2 = 0;
+			      int orient1 = 1, orient2 = 1;
+			      
+			      if (paedge1[0] > paedge1[1]) 
+				{
+				  Swap (paedge1[0], paedge1[1]);
+				  orient1 = 0;
+				}
+			      if (paedge2[0] > paedge2[1]) 
+				{
+				  Swap (paedge2[0], paedge2[1]);
+				  orient2 = 0;
+				}
+			      
+			      if ( paedge1[0] == -1 || paedge2[0] == -1 )
+				continue;
+			      
+			      if (node2edge.Used (paedge1) && node2edge.Used (paedge2))
+				{
+				  paedgenr1 = node2edge.Get (paedge1);
+				  paedgenr2 = node2edge.Get (paedge2);
+				  parentedges[i][0] = 2 * paedgenr1 + orient1;	      
+				  parentedges[i][1] = 2 * paedgenr2 + orient2;	      
+				}
+			    }
+		      }
+		    
+		    if (parentedges[i][0] == -1)
+		      {
+			// triangle split into quad+trig (from anisotropic pyramids)
+			for (int j = 0; j < 2; j++)
+			  for (int k = 0; k < 2; k++)
+			    {
+			      INT<2> paedge (pa1[1-j], pa2[1-k]);
+			      int orientpa = 1;
+			      if (paedge[0] > paedge[1]) 
+				{
+				  Swap (paedge[0], paedge[1]);
+				  orientpa = 0;
+				}	
+			      if (pa1[j] == pa2[k] && node2edge.Used(paedge))
+				{
+				  int paedgenr = node2edge.Get (paedge);
+				  parentedges[i][0] = 2 * paedgenr + orientpa;
+				}
+			    }
+			
+		      }
+		    */
+
+		  }
+	    
+	      }
+
+
+	    for (int i : Range(parent_edges))
+	      {
+		auto [info, nrs] = parent_edges[i];
+		// cout << "edge " << i << " has " << info << ", nrs = " << nrs[0] << " " << nrs[1] << endl;
+	      }
+	  }
       }
     
 

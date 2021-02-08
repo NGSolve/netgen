@@ -336,6 +336,20 @@ NGX_INLINE void Ngx_Mesh :: GetParentNodes (int ni, int * parents) const
     parents[0] = parents[1] = -1;
 }
 
+inline bool Ngx_Mesh :: HasParentEdges() const
+{
+  return mesh->GetTopology().HasParentEdges();
+}
+
+inline tuple<int, std::array<int,3>> Ngx_Mesh :: GetParentEdges (int enr) const
+{
+  return mesh->GetTopology().GetParentEdges(enr);
+}
+
+inline tuple<int, std::array<int,4>> Ngx_Mesh :: GetParentFaces (int fnr) const
+{
+  return mesh->GetTopology().GetParentFaces(fnr);
+}
 
 
 inline auto Ngx_Mesh :: GetTimeStamp() const { return mesh->GetTimeStamp(); }

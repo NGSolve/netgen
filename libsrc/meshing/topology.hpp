@@ -27,6 +27,7 @@ struct T_FACE
   int fnr;    // 0-based
 };
 
+  /*
   template <typename T, int S>
   struct FixArray
   {
@@ -34,13 +35,17 @@ struct T_FACE
     T & operator[] (size_t i) { return vals[i]; }
     T operator[] (size_t i) const { return vals[i]; }
   };
-  
+  */
+
+  template <typename T, int S>
+  using FixArray = std::array<T,S>;
 
 class MeshTopology
 {
   const Mesh * mesh;
   bool buildedges;
   bool buildfaces;
+  bool build_hierarchy = false; // may be changed to default = false
 
   NgArray<INDEX_2> edge2vert;
   NgArray<INDEX_4> face2vert;
@@ -75,11 +80,14 @@ public:
   { buildedges = be; }
   void SetBuildFaces (bool bf)
   { buildfaces = bf; }
+  void SetBuildHierarchy (bool bh) { build_hierarchy = bh; }
 
   bool HasEdges () const
   { return buildedges; }
   bool HasFaces () const
   { return buildfaces; }
+  bool HasParentEdges () const
+  { return build_hierarchy; }
 
   void Update(NgTaskManager tm = &DummyTaskManager, NgTracer tracer = &DummyTracer);
   bool NeedsUpdate() const;
@@ -178,6 +186,17 @@ public:
   int GetVerticesEdge ( int v1, int v2) const;
   void GetSegmentVolumeElements ( int segnr, NgArray<ElementIndex> & els ) const;
   void GetSegmentSurfaceElements ( int segnr, NgArray<SurfaceElementIndex> & els ) const;
+
+
+private:
+  Array<tuple<int, std::array<int,3>>> parent_edges; 
+  void BuildParentEdges ();
+
+  Array<tuple<int, std::array<int,4>>> parent_faces;
+  void BuildParentFaces ();
+public:
+  auto GetParentEdges (int enr) const { return parent_edges[enr]; }
+  auto GetParentFaces (int fnr) const { return parent_faces[fnr]; }
 };
 
 

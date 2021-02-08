@@ -779,8 +779,8 @@ namespace netgen
     DLL_HEADER bool PureTetMesh () const;
 
 
-    const MeshTopology & GetTopology () const
-    { return topology; }
+    const MeshTopology & GetTopology () const { return topology; }
+    MeshTopology & GetTopology () { return topology; }
 
     DLL_HEADER void UpdateTopology (NgTaskManager tm = &DummyTaskManager,
                                     NgTracer tracer = &DummyTracer);
