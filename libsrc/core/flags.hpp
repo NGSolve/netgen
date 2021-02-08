@@ -11,6 +11,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <any>
 
 #include "array.hpp"
 #include "symboltable.hpp"
@@ -38,6 +39,8 @@ namespace ngcore
     SymbolTable<std::shared_ptr<Array<double>>> numlistflags;
     /// flags list flags
     SymbolTable<Flags> flaglistflags;
+    /// any object can be stored as a flag
+    SymbolTable<std::any> anyflags;
   public:
     /// no flags
     Flags ();
@@ -94,6 +97,8 @@ namespace ngcore
     Flags &  SetFlag (const std::string & name, const Array<std::string> & val);
     /// Sets double array flag
     Flags &  SetFlag (const std::string & name, const Array<double> & val);
+    /// Sets any flag
+    Flags &  SetFlag(const std::string& name, const std::any& val);
 
 
     Flags SetFlag (const char * name, bool b = true) &&;
@@ -135,6 +140,7 @@ namespace ngcore
     const Array<double> & GetNumListFlag (const std::string & name) const;
     /// Returns flag list flag, empty flag if not exist
     const Flags & GetFlagsFlag (const std::string & name) const;
+    const std::any& GetAnyFlag (const std::string& name) const;
 
 
     /// Test, if string flag is defined
@@ -147,6 +153,7 @@ namespace ngcore
     bool StringListFlagDefined (const std::string & name) const;
     /// Test, if num list flag is defined
     bool NumListFlagDefined (const std::string & name) const;
+    bool AnyFlagDefined (const std::string& name) const;
 
     /// number of string flags
     int GetNStringFlags () const { return strflags.Size(); }
