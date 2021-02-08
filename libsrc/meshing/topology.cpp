@@ -4,7 +4,7 @@
 namespace netgen
 {
   using ngcore::ParallelForRange;
-  
+  using ngcore::INT;
   
   template <class T>
   void QuickSortRec (NgFlatArray<T> data,
