@@ -707,15 +707,15 @@ namespace netgen
 		ma->GetParentNodes (i2[0], pa1);
 		ma->GetParentNodes (i2[1], pa2);
 		*/
-		auto i2 = edge2vert[i];
+		auto i2 = edge2vert[i];  // 2 vertices of edge
 
 		if (i2[0] > mesh->mlbetweennodes.Size()+PointIndex::BASE ||
 		    i2[1] > mesh->mlbetweennodes.Size()+PointIndex::BASE)
 		  continue;
 		
 		// cout << "i2 = " << i2 << endl;
-		auto pa1 = mesh->mlbetweennodes[i2[0]];
-		auto pa2 = mesh->mlbetweennodes[i2[1]];
+		auto pa1 = mesh->mlbetweennodes[i2[0]]; // two parent vertices of v0
+		auto pa2 = mesh->mlbetweennodes[i2[1]]; // two parent vertices of v1
 
 		// cout << "pa1 = " << pa1 << endl;
 		// cout << "pa2 = " << pa2 << endl;
@@ -759,28 +759,35 @@ namespace netgen
 		    // edge is splitting edge in middle of triangle:
 		    for (int j = 1; j <= 2; j++)
 		      {
-			INT<2> paedge1, paedge2;
+			INT<2> paedge1, paedge2, paedge3;
+                        int orient_inner = 0;
 			if (j == 1)
 			  {
 			    paedge1 = INT<2> (pa1[0], i2[1]);
 			    paedge2 = INT<2> (pa1[1], i2[1]);
+                            paedge3 = INT<2> (pa1[0], pa1[1]);
+                            orient_inner = 0;
 			  }
 			else
 			  {
 			    paedge1 = INT<2> (pa2[0], i2[0]);
 			    paedge2 = INT<2> (pa2[1], i2[0]);
+                            paedge3 = INT<2> (pa2[0], pa2[1]);
+                            orient_inner = 1;
 			  }
 			if (paedge1[0] > paedge1[1]) 
 			  Swap (paedge1[0], paedge1[1]);
 			if (paedge2[0] > paedge2[1]) 
 			  Swap (paedge2[0], paedge2[1]);
+			if (paedge3[0] > paedge3[1]) 
+			  Swap (paedge3[0], paedge3[1]);
 			
 			// cout << "paedge1 = " << paedge1 << ", paedge2 = " << paedge2 << endl;
 			// if first vertex number is -1, then don't try to find entry in node2edge hash table
 			if ( paedge1[0] == PointIndex::BASE-1 || paedge2[0] == PointIndex::BASE-1 )
 			  continue;
 
-			int paedgenr1=-1, paedgenr2=-1, orient1 = 0, orient2 = 0;
+			int paedgenr1=-1, paedgenr2=-1, paedgenr3=-1, orient1 = 0, orient2 = 0;
 			for (int ednr : vert2edge[paedge1[0]])
 			  if (auto ic2 = edge2vert[ednr]; ic2[1] == paedge1[1])
 			    {
@@ -797,8 +804,16 @@ namespace netgen
 			      orient2 = (paedge2[0] == i2[0] || paedge2[1] == i2[1]) ? 1 : 0;
 			      // cout << "orient2 = " << orient2 << endl;			      
 			    }
+                        
+			for (int ednr : vert2edge[paedge3[0]])
+			  if (auto ic2 = edge2vert[ednr]; ic2[1] == paedge3[1])
+			    {
+			      paedgenr3 = ednr;
+			      // cout << "ednr = " << ednr << ", i2 = " << i2 << endl;			      
+			    }
+                        
 			if (paedgenr1 != -1 && paedgenr2 != -1)
-			  parent_edges[i] = { orient1+2*orient2, { paedgenr1, paedgenr2, -1 } };
+			  parent_edges[i] = { orient1+2*orient2+4*orient_inner, { paedgenr1, paedgenr2, paedgenr3 } };
 		      }
 
 
