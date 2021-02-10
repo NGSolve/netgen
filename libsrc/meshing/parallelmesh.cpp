@@ -32,9 +32,111 @@ namespace ngcore {
 }
 */
 
-namespace netgen
+namespace ngcore
 {
 
+  /** An MPI-Package for a Surface element **/
+  class SurfPointPackage
+  {
+  public:
+    int num;     // point numebr
+    int trignum; // STL geo info
+    double u, v; // OCC geo info
+    SurfPointPackage () { ; }
+    SurfPointPackage & operator = (const SurfPointPackage & other) {
+      num = other.num;
+      trignum = other.trignum;
+      u = other.u;
+      v = other.v;
+      return *this;
+    }
+  }; // class SurfPointPackage
+
+  template<> struct MPI_typetrait<SurfPointPackage> {
+    static MPI_Datatype MPIType () {
+      static MPI_Datatype MPI_T = 0;
+      if (!MPI_T)
+	{
+	  int block_len[2] = { 2, 2 };
+	  MPI_Aint displs[3] = { 0, 2*sizeof(int) };
+	  MPI_Datatype types[2] = { MPI_INT, MPI_DOUBLE };
+	  MPI_Type_create_struct(2, block_len, displs, types, &MPI_T);
+	  MPI_Type_commit(&MPI_T);
+	}
+      return MPI_T;
+    }
+  }; // struct MPI_typetrait<SurfPointPackage>
+
+
+  class SelPackage
+  {
+  public:
+    int sei;
+    int index;
+    int np;
+    /** we send too much here, especially in 2d! **/
+    SurfPointPackage points[ELEMENT2D_MAXPOINTS];
+    SelPackage () { ; }
+    SelPackage (const netgen::Mesh & mesh, netgen::SurfaceElementIndex _sei)
+    {
+      const netgen::Element2d & el = mesh[_sei];
+      sei = _sei;
+      index = el.GetIndex();
+      np = el.GetNP();
+      for (int k : Range(1, np+1)) {
+	auto & pnt = points[k-1];;
+	pnt.num = el.PNum(k);
+	pnt.trignum = el.GeomInfoPi(k).trignum;
+	pnt.u = el.GeomInfoPi(k).u;
+	pnt.v = el.GeomInfoPi(k).v;
+      }
+      /** otherwise, we use uninitialized values **/
+      for (int k : Range(np, ELEMENT2D_MAXPOINTS)) {
+	points[k].num = -1;
+	points[k].trignum = -1;
+	points[k].u = -1;
+	points[k].v = -1;
+      }
+    }
+    void Unpack (netgen::Element2d & el) const {
+      	el.SetIndex(index);
+	for (int k : Range(1, np + 1)) {
+	  auto & pnt = points[k-1];
+	  el.PNum(k) = pnt.num;
+	  el.GeomInfoPi(k).trignum = pnt.trignum;
+	  el.GeomInfoPi(k).u = pnt.u;
+	  el.GeomInfoPi(k).v = pnt.v;
+	}
+    }
+    SelPackage & operator = (const SelPackage & other) {
+      sei = other.sei;
+      index = other.index;
+      np = other.np;
+      for (int k : Range(ELEMENT2D_MAXPOINTS))
+	{ points[k] = other.points[k]; }
+      return *this;
+    }
+  }; // class SelPackage
+
+  template<> struct MPI_typetrait<SelPackage> {
+    static MPI_Datatype MPIType () {
+      static MPI_Datatype MPI_T = 0;
+      if (!MPI_T)
+	{
+	  int block_len[2] = { 3, ELEMENT2D_MAXPOINTS };
+	  MPI_Aint displs[3] = { 0, 3*sizeof(int) };
+	  MPI_Datatype types[2] = { MPI_INT, GetMPIType<SurfPointPackage>() };
+	  MPI_Type_create_struct(2, block_len, displs, types, &MPI_T);
+	  MPI_Type_commit(&MPI_T);
+	}
+      return MPI_T;
+    }
+  }; // MPI_typetrait<SelPackage>
+
+} // namespace ngcore
+
+namespace netgen
+{
   /*
   template <>
   inline MPI_Datatype MyGetMPIType<PointIndex> ( )
@@ -551,24 +653,14 @@ namespace netgen
     };
     Array <int> nlocsel(ntasks), bufsize(ntasks);
     nlocsel = 0;
-    bufsize = 1;
+    bufsize = 0;
     iterate_sels([&](SurfaceElementIndex sei, const Element2d & sel, int dest){
 	nlocsel[dest]++;
-	bufsize[dest] += 4 + 2*sel.GetNP();
+	bufsize[dest]++;
       });
-    DynamicTable<int> selbuf(bufsize);
-    for (int dest = 1; dest < ntasks; dest++ )
-      selbuf.Add (dest, nlocsel[dest]);
+    DynamicTable<SelPackage> selbuf(bufsize);
     iterate_sels([&](SurfaceElementIndex sei, const auto & sel, int dest) {
-	selbuf.Add (dest, sei);
-	selbuf.Add (dest, sel.GetIndex());
-	// selbuf.Add (dest, 0);
-	selbuf.Add (dest, sel.GetNP());
-	for ( int ii = 1; ii <= sel.GetNP(); ii++)
-	  {
-	    selbuf.Add (dest, sel.PNum(ii));
-	    selbuf.Add (dest, sel.GeomInfoPi(ii).trignum);
-	  }
+	selbuf.Add (dest, SelPackage(*this, sei));
       });
     // distribute sel data
     for (int dest = 1; dest < ntasks; dest++)
@@ -953,33 +1045,25 @@ namespace netgen
 
     {
       NgProfiler::RegionTimer reg(timer_sels);
-      Array<int> selbuf;
+      Array<SelPackage> selbuf;
 
       comm.Recv ( selbuf, 0, MPI_TAG_MESH+4);
       
-      int ii = 0;
-      int sel = 0;
-
-      int nlocsel = selbuf[ii++];
+      int nlocsel = selbuf.Size();
       paralleltop -> SetNSE ( nlocsel );
       
-      while (ii < selbuf.Size()-1)
-	{
-	  int globsel = selbuf[ii++];
-	  int faceind = selbuf[ii++];
-	  //bool isghost = selbuf[ii++];
-	  int nep = selbuf[ii++];
-	  Element2d tri(nep);
-	  tri.SetIndex(faceind);
-	  for(int j = 1; j <= nep; j++)
-	    {
-	      tri.PNum(j) = glob2loc_vert_ht.Get (selbuf[ii++]);
-	      tri.GeomInfoPi(j).trignum = selbuf[ii++];
-	    }
-	  paralleltop->SetLoc2Glob_SurfEl ( sel+1, globsel );
-	  AddSurfaceElement (tri);
-	  sel ++;
-	}
+      int sel = 0;
+      for (auto k : Range(selbuf)) {
+	auto & pack = selbuf[k];
+	Element2d el(pack.np);
+	pack.Unpack(el);
+	/** map global point numbers to local ones **/
+	for (int k : Range(1, 1+el.GetNP()))
+	  { el.PNum(k) = glob2loc_vert_ht.Get(el.PNum(k)); }
+	paralleltop->SetLoc2Glob_SurfEl (sel+1, pack.sei);
+	AddSurfaceElement (el);
+	sel++;
+      }
     }
     
 
