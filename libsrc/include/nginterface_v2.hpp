@@ -345,6 +345,8 @@ namespace netgen
     void Curve (int order);
     int GetCurveOrder ();
 
+    void EnableTable (string name, bool set);
+
     void Refine (NG_REFINEMENT_TYPE reftype,
                  void (*taskmanager)(function<void(int,int)>) = &DummyTaskManager2,
                  void (*tracer)(string, bool) = &DummyTracer2);

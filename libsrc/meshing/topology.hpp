@@ -45,7 +45,8 @@ class MeshTopology
   const Mesh * mesh;
   bool buildedges;
   bool buildfaces;
-  bool build_hierarchy = false; // may be changed to default = false
+  bool build_parent_edges = false; // may be changed to default = false
+  bool build_parent_faces = false; // may be changed to default = false
 
   NgArray<INDEX_2> edge2vert;
   NgArray<INDEX_4> face2vert;
@@ -80,14 +81,14 @@ public:
   { buildedges = be; }
   void SetBuildFaces (bool bf)
   { buildfaces = bf; }
-  void SetBuildHierarchy (bool bh) { build_hierarchy = bh; }
+  void SetBuildParentEdges (bool bh) { build_parent_edges = bh; }
+  void SetBuildParentFaces (bool bh) { build_parent_faces = bh; }
 
-  bool HasEdges () const
-  { return buildedges; }
-  bool HasFaces () const
-  { return buildfaces; }
-  bool HasParentEdges () const
-  { return build_hierarchy; }
+  void EnableTable (string name, bool set);
+
+  bool HasEdges () const  { return buildedges; }
+  bool HasFaces () const  { return buildfaces; }
+  bool HasParentEdges () const { return build_parent_edges; }
 
   void Update(NgTaskManager tm = &DummyTaskManager, NgTracer tracer = &DummyTracer);
   bool NeedsUpdate() const;

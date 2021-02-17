@@ -1137,6 +1137,13 @@ namespace netgen
     return mesh->GetCurvedElements().GetOrder();
   }
 
+  void Ngx_Mesh :: EnableTable (string name, bool set)
+  {
+    mesh->GetTopology().EnableTable (name, set);
+  }
+
+
+  
   template <>
   DLL_HEADER void Ngx_Mesh :: SetRefinementFlag<2> (size_t elnr, bool flag)
   {
