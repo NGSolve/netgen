@@ -174,6 +174,13 @@ namespace ngcore
     {
       return MakeTupleFromInt<N>()(*this);
     }
+
+    bool Contains (T val)
+    {
+      for (int j = 0; j < N; j++)
+        if (i[j] == val) return true;
+      return false;
+    }
   };
 
   /// sort 2 integers

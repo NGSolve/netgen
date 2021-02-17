@@ -696,8 +696,8 @@ namespace netgen
 	      {
 		auto verts = edge2vert[i];  // 2 vertices of edge
 
-		if (verts[0] > mesh->mlbetweennodes.Size()+PointIndex::BASE ||
-		    verts[1] > mesh->mlbetweennodes.Size()+PointIndex::BASE)
+		if (verts[0] >= mesh->mlbetweennodes.Size()+PointIndex::BASE ||
+		    verts[1] >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
 		  continue;
                 
 		auto pa0 = mesh->mlbetweennodes[verts[0]]; // two parent vertices of v0
@@ -1436,6 +1436,61 @@ namespace netgen
 	      cout << cnt_err << " elements are not matching !!!" << endl;
 	  }
         // NgProfiler::StopTimer (timer2c);
+
+
+        if (build_hierarchy)
+          {
+            // tets only
+
+            ngcore::ClosedHashTable<INT<3>, int> v2f(nv);
+            for (auto i : Range(face2vert))
+              {
+                auto face = face2vert[i];
+                INT<3> f3(face[0], face[1], face[2]);
+                f3.Sort();
+                v2f[f3] = i;
+              }
+
+            cout << "v2f:" << endl << v2f << endl;
+
+            parent_faces.SetSize (nfa);
+            parent_faces = { -1, { -1, -1, -1, -1 } };
+
+            for (auto i : Range(nfa))
+              {
+                INT<3,PointIndex> f3(face2vert[i][0], face2vert[i][1], face2vert[i][2]);
+                PointIndex vmax = Max(f3);
+                if (vmax >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
+                  continue;
+                
+                auto parents = mesh->mlbetweennodes[vmax];
+
+                // is face part of one parent face (boundary-face) ?
+                for (int j = 0; j < 2; j++)
+                  {
+                    if (f3.Contains(parents[j]))
+                      {
+                        PointIndex v0 = parents[j];
+                        PointIndex v1 = parents[1-j];
+                        
+                        // the third one, on the tip
+                        PointIndex v2 = f3[0]+f3[1]+f3[2] - v0 - v1;
+                        
+                        int classnr = 0;
+                        if (v0 > v1) { Swap (v0, v1); classnr += 1; }
+                        if (v1 > v2) { Swap (v1, v2); classnr += 2; }
+                        if (v0 > v1) { Swap (v0, v1); classnr += 4; }
+                        
+                        INT<3> parentverts(v0, v1, v2);
+                        int pafacenr = v2f[parentverts];
+                        cout << "parent-face = " << pafacenr << endl;
+                        parent_faces[i] = { classnr, { pafacenr, -1, -1, -1 } };
+                      }
+                  }
+              }
+                   
+          }
+        
       }
     
 
