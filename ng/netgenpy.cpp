@@ -2,27 +2,21 @@
 
 #include <iostream>
 #include <../general/ngpython.hpp>
+#include <core/ngcore_api.hpp>
 
-#ifdef WIN32
-#define DLL_HEADER __declspec(dllimport)
-#else
-#define DLL_HEADER
-#endif
-
-
-void DLL_HEADER ExportNetgenMeshing(py::module &m);
-void DLL_HEADER ExportMeshVis(py::module &m);
-void DLL_HEADER ExportCSG(py::module &m);
-void DLL_HEADER ExportCSGVis(py::module &m);
-void DLL_HEADER ExportGeom2d(py::module &m);
-void DLL_HEADER ExportSTL(py::module &m);
-void DLL_HEADER ExportSTLVis(py::module &m);
+void NGCORE_API_IMPORT ExportNetgenMeshing(py::module &m);
+void NGCORE_API_IMPORT ExportMeshVis(py::module &m);
+void NGCORE_API_IMPORT ExportCSG(py::module &m);
+void NGCORE_API_IMPORT ExportCSGVis(py::module &m);
+void NGCORE_API_IMPORT ExportGeom2d(py::module &m);
+void NGCORE_API_IMPORT ExportSTL(py::module &m);
+void NGCORE_API_IMPORT ExportSTLVis(py::module &m);
 #ifdef OCCGEOMETRY
-void DLL_HEADER ExportNgOCC(py::module &m);
+void NGCORE_API_IMPORT ExportNgOCC(py::module &m);
 #endif // OCCGEOMETRY
 namespace netgen
 {
-  std::vector<unsigned char> DLL_HEADER Snapshot( int w, int h );
+  std::vector<unsigned char> NGCORE_API_IMPORT Snapshot( int w, int h );
 }
 
 PYBIND11_MODULE(libngpy, ngpy)

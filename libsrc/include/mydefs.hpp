@@ -11,22 +11,15 @@
   defines for graphics, testmodes, ...
 */
 
+#include <core/ngcore.hpp>
 #define PACKAGE_VERSION "6.2-dev"
 
 // #define DEBUG
 
-#ifdef WIN32
-   #if NGINTERFACE_EXPORTS || NGLIB_EXPORTS || nglib_EXPORTS
-      #define DLL_HEADER   __declspec(dllexport)
-   #else
-      #define DLL_HEADER   __declspec(dllimport)
-   #endif
+#if defined(NGINTERFACE_EXPORTS) || ( defined(WIN32) && (defined(NGLIB_EXPORTS) || defined(nglib_EXPORTS)) )
+   #define DLL_HEADER   NGCORE_API_EXPORT
 #else
-   #if __GNUC__ >= 4
-      #define DLL_HEADER __attribute__ ((visibility ("default")))
-   #else
-      #define DLL_HEADER
-   #endif
+   #define DLL_HEADER   NGCORE_API_IMPORT
 #endif
 
 

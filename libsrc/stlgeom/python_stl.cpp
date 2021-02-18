@@ -6,10 +6,6 @@
 #include <stlgeom.hpp>
 #include "../meshing/python_mesh.hpp"
 
-#ifdef WIN32
-   #define DLL_HEADER   __declspec(dllexport)
-#endif
-
 using namespace netgen;
 namespace netgen
 {
@@ -125,7 +121,7 @@ void CreateSTLParametersFromKwargs(STLParameters& stlparam, py::dict kwargs)
 }
 
 
-DLL_HEADER void ExportSTL(py::module & m)
+NGCORE_API_EXPORT void ExportSTL(py::module & m)
 {
   py::class_<STLGeometry,shared_ptr<STLGeometry>, NetgenGeometry> (m,"STLGeometry")
     .def(py::init<>())
