@@ -20,12 +20,12 @@ namespace ngcore
 
   public:
     xbool (bool b) : state(b ? 2 : 0) { ; }
-    xbool (TMAYBE x) : state(1) { ; }
+    xbool (TMAYBE /* x */) : state(1) { ; }
     xbool () = default;
     xbool (const xbool &) = default;
     
     xbool & operator= (bool b) { state = b ? 2 : 0; return *this; }
-    xbool & operator= (TMAYBE x) { state = 1; return *this; }
+    xbool & operator= (TMAYBE /* x */) { state = 1; return *this; }
     
     bool IsTrue () const { return state == 2; }
     bool IsMaybe () const { return state == 1; }

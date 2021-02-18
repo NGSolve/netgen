@@ -1068,11 +1068,11 @@ public:
   {
     static Timer timer("ComputeColoring - "+Demangle(typeid(Tmask).name())); RegionTimer rt(timer);
     static_assert(sizeof(unsigned int)==4, "Adapt type of mask array");
-    auto n = colors.Size();
+    size_t n = colors.Size();
 
     Array<unsigned int> mask(ndofs);
 
-    int colored_blocks = 0;
+    size_t colored_blocks = 0;
 
     // We are coloring with 32 colors at once and use each bit to mask conflicts
     unsigned int check = 0;

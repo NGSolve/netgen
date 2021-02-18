@@ -198,9 +198,9 @@ public:
       return reinterpret_cast<T*> (oldp);
     }
 
-    virtual void Delete(void* p) {}
+  virtual void Delete(void* /* p */) {}
 
-    virtual void ArrayDelete(void* p) {}
+  virtual void ArrayDelete(void* /* p */) {}
   private: 
     ///
 #ifndef __CUDA_ARCH__
@@ -211,7 +211,7 @@ public:
 
   public:
     /// free memory (dummy function)
-    NETGEN_INLINE void Free (void * data) throw () 
+  NETGEN_INLINE void Free (void * /* data */) throw () 
     {
       ;
     }

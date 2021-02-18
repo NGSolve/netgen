@@ -438,21 +438,21 @@ namespace ngcore
 #else // NETGEN_TRACE_MEMORY
   public:
     MemoryTracer() {}
-    MemoryTracer( std::string name ) {}
+    MemoryTracer( std::string /* name */ ) {}
     template <typename... TRest>
-    MemoryTracer( std::string name, TRest & ... ) {}
+    MemoryTracer( std::string /* name */, TRest & ... ) {}
 
-    void Alloc(size_t size) const {}
-    void Free(size_t size) const {}
+    void Alloc(size_t /* size */) const {}
+    void Free(size_t /* size */) const {}
     void Swap(...) const {}
     int GetId() const { return 0; }
 
     template <typename... TRest>
     void Track(TRest&...) const {}
 
-    static std::string GetName(int id) { return ""; }
+    static std::string GetName(int /* id */) { return ""; }
     std::string GetName() const { return ""; }
-    void SetName(std::string name) const {}
+    void SetName(std::string /* name */) const {}
 #endif // NETGEN_TRACE_MEMORY
   };
 } // namespace ngcore

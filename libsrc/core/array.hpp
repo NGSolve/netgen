@@ -40,7 +40,7 @@ namespace ngcore
   };
 
   template <typename ... ARGS>
-  ostream & operator<< (ostream & ost, Tuple<ARGS...> tup)
+  ostream & operator<< (ostream & ost, Tuple<ARGS...> /* tup */)
   {
     return ost;
   }
@@ -1227,7 +1227,7 @@ namespace ngcore
 
 
   template <typename ... ARGS>
-  size_t ArraySize (Tuple<ARGS...> tup)  
+  size_t ArraySize (Tuple<ARGS...> /* tup */)  
   { return 0;}
   
   template <typename ... ARGS>
@@ -1240,7 +1240,7 @@ namespace ngcore
 
   
   template <typename T, typename ... ARGS>
-  void StoreToArray (FlatArray<T> a, Tuple<ARGS...> tup) { ; }
+  void StoreToArray (FlatArray<T> /* a */, Tuple<ARGS...> /* tup */) { ; }
   
   template <typename T, typename ... ARGS>
   void StoreToArray (FlatArray<T> a, Tuple<int,ARGS...> tup)

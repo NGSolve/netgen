@@ -192,7 +192,7 @@ namespace ngcore
 
     using FlatTable<T,IndexType>::operator[];
 
-    NETGEN_INLINE void StartMemoryTracing (int mem_id)
+    NETGEN_INLINE void StartMemoryTracing (int /* mem_id */)
     {
       mt.Alloc(GetMemUsage());
     }

@@ -947,9 +947,9 @@ namespace ngcore
     template<typename T>
       Archive& ApplyHash(T val)
     {
-      auto n = sizeof(T);
+      size_t n = sizeof(T);
       char* pval = (char*)&val;
-      for(int i = 0; i < n; i++)
+      for(size_t i = 0; i < n; i++)
         {
           h[offset++] ^= pval[i];
           offset %= 8;
