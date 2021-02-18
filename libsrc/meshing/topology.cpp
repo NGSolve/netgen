@@ -879,12 +879,13 @@ namespace netgen
 	    
 	      }
 
-
+            /*
 	    for (int i : Range(parent_edges))
 	      {
 		auto [info, nrs] = parent_edges[i];
-		// cout << "edge " << i << " has " << info << ", nrs = " << nrs[0] << " " << nrs[1] << endl;
+                cout << "edge " << i << " has " << info << ", nrs = " << nrs[0] << " " << nrs[1] << endl;
 	      }
+            */
 	  }
       }
     
@@ -1559,7 +1560,7 @@ namespace netgen
                         if (k==2){// vb is the largest vert: 6 cases
                           // by default v0 < v1, v2 < v3
                           if (v1 < v2) classnr = 0;
-                          else if (v1 < v3 and v0 < v2) classnr = 1;
+                          else if (v1 < v3 && v0 < v2) classnr = 1;
                           else if (v0 < v2) classnr = 2;
                           else if (v1 < v3) classnr = 3;
                           else if (v0 < v3) classnr = 4;
