@@ -1472,6 +1472,20 @@ namespace netgen
               }
 
             cout << "v2f:" << endl << v2f << endl;
+           
+            // build edge2vert hashtable
+            cout << "e2v = " << edge2vert << endl;
+            
+            ngcore::ClosedHashTable<INT<2>, int> v2e(nv);
+            for (auto i : Range(edge2vert))
+              {
+                auto edge = edge2vert[i];
+                INT<3> e2(edge[0], edge[1]);
+                e2.Sort();
+                v2e[e2] = i;
+              }
+
+            cout << "v2e:" << endl << v2e << endl;
 
             parent_faces.SetSize (nfa);
             parent_faces = { -1, { -1, -1, -1, -1 } };
@@ -1484,12 +1498,13 @@ namespace netgen
 
                 for (int k = 0; k < 3; k++)
                   {
-                    PointIndex v3 = f3[k];
+                    PointIndex vb = f3[k]; // assume vb as the new bisect vert
                     
-                    if (v3 >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
+                    if (vb >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
                       continue;
-                    auto parents = mesh->mlbetweennodes[v3];
-
+                    auto parents = mesh->mlbetweennodes[vb];
+                    
+                    bool issplit=false;
                     // is face part of one parent face (boundary-face) ?
                     for (int j = 0; j < 2; j++)
                       {
@@ -1499,14 +1514,14 @@ namespace netgen
                             PointIndex v1 = parents[1-j];
                             
                             // the third one, on the tip
-                            PointIndex v2 = f3[0]+f3[1]+f3[2] - v0 - v3;
+                            PointIndex v2 = f3[0]+f3[1]+f3[2] - v0 - vb;
 
                             INT<3> parentverts(v0, v1, v2);
                             parentverts.Sort();
 
                             
                             int classnr = 0;
-                            if (v2 > v3) { Swap (v2, v3); classnr += 1; }                            
+                            if (v2 > vb) { Swap (v2, vb); classnr += 1; }                            
                             if (v0 > v1) { Swap (v0, v1); classnr += 2; }
                             if (v1 > v2) { Swap (v1, v2); classnr += 4; }
                             if (v0 > v1) { Swap (v0, v1); classnr += 8; }
@@ -1517,8 +1532,81 @@ namespace netgen
                                 cout << "parent-face = " << pafacenr << endl;
                                 parent_faces[i] = { classnr, { pafacenr, -1, -1, -1 } };
                               }
+                            issplit=true;
+                            break;
                           }
+                        }
+                    // is face a new face (bisect-face) ?
+                    if (!issplit){
+                      PointIndex v0 = parents[0];
+                      PointIndex v1 = parents[1];
+                      PointIndex v2 = f3[(k+1)%3];
+                      PointIndex v3 = f3[(k+2)%3];
+                      INT<3> parentedge1(v0, v2);
+                      parentedge1.Sort();
+                      INT<3> parentedge2(v0, v3);
+                      parentedge2.Sort();
+                      INT<3> parentedge3(v1, v2);
+                      parentedge3.Sort();
+                      INT<3> parentedge4(v1, v3);
+                      parentedge4.Sort();
+                      // if edges [v0,v2], [v0, v3], [v1,v2], [v1,v3] exists
+                      // then vb is the bisecting edge
+                      if (v2e.Used(parentedge1) && v2e.Used(parentedge2) 
+                          && v2e.Used(parentedge3) && v2e.Used(parentedge4) 
+                         ){
+                        int classnr;
+                        if (k==2){// vb is the largest vert: 6 cases
+                          // by default v0 < v1, v2 < v3
+                          if (v1 < v2) classnr = 0;
+                          else if (v1 < v3 and v0 < v2) classnr = 1;
+                          else if (v0 < v2) classnr = 2;
+                          else if (v1 < v3) classnr = 3;
+                          else if (v0 < v3) classnr = 4;
+                          else classnr = 5;
+                        }else if (k==1){// vb is the second largest vert: 3 cases
+                          // by default v0 < v1, v3 < v2
+                          if (v1 < v3) classnr = 6;
+                          else if (v0 < v3) classnr = 7;
+                          else classnr = 8;
+                        }else {// vb is the third largest vert: 1 case
+                          // by default v0 < v1 < vb <  v2 < v3
+                          classnr=9;
+                        }
+                        INT<3> parentverts1(v0, v2, v3);
+                        parentverts1.Sort();
+                        INT<3> parentverts2(v1, v2, v3);
+                        parentverts2.Sort();
+                        INT<3> parentverts3(v0, v1, v2);
+                        parentverts3.Sort();
+                        INT<3> parentverts4(v0, v1, v3);
+                        parentverts4.Sort();
+                        int pafacenr1=-1, pafacenr2=-1, pafacenr3=-1, pafacenr4=-1;
+                        if (v2f.Used(parentverts1))
+                        {
+                          pafacenr1 = v2f[parentverts1];
+                          cout << "parent-face1 = " << pafacenr1<< endl ;
+                        }
+                        if (v2f.Used(parentverts2))
+                        {
+                          pafacenr2 = v2f[parentverts2];
+                          cout << "parent-face2 = " << pafacenr2<< endl  ;
+                        }
+                        if (v2f.Used(parentverts3))
+                        {
+                          pafacenr3 = v2f[parentverts3];
+                          cout << "parent-face3 = " << pafacenr3<< endl  ;
+                        }
+                        if (v2f.Used(parentverts4))
+                        {
+                          pafacenr4 = v2f[parentverts4];
+                          cout << "parent-face4 = " << pafacenr4<< endl  ;
+                        }
+                        parent_faces[i] = { classnr, { pafacenr1, pafacenr2, pafacenr3,
+                          pafacenr4} };
+                        break;
                       }
+                    }
                   }
               }
           }
