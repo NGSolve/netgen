@@ -1571,15 +1571,14 @@ namespace netgen
 
                 // find a vertex, such that one of its parent is a trig vertex
 
+                bool issplit = false;
                 for (int k = 0; k < 3; k++)
                   {
                     PointIndex vb = f3[k]; // assume vb as the new bisect vert
-                    
                     if (vb >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
                       continue;
                     auto parents = mesh->mlbetweennodes[vb];
                     
-                    bool issplit=false;
                     // is face part of one parent face (boundary-face) ?
                     for (int j = 0; j < 2; j++)
                       {
@@ -1594,7 +1593,6 @@ namespace netgen
                             INT<3> parentverts(v0, v1, v2);
                             parentverts.Sort();
 
-                            
                             int classnr = 0;
                             if (v2 > vb) { Swap (v2, vb); classnr += 1; }                            
                             if (v0 > v1) { Swap (v0, v1); classnr += 2; }
@@ -1615,8 +1613,16 @@ namespace netgen
                             break;
                           }
                         }
-                    // is face a new face (bisect-face) ?
-                    if (!issplit){
+                  }
+                // is face a new face (bisect-face) ?
+                if (!issplit)
+                  for (int k = 0; k < 3; k++)
+                    {
+                      PointIndex vb = f3[k]; // assume vb as the new bisect vert
+                      if (vb >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
+                        continue;
+                      auto parents = mesh->mlbetweennodes[vb];
+
                       PointIndex v0 = parents[0];
                       PointIndex v1 = parents[1];
                       PointIndex v2 = f3[(k+1)%3];
@@ -1691,7 +1697,6 @@ namespace netgen
                         break;
                       }
                     }
-                  }
               }
           }
       }
