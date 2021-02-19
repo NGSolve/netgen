@@ -890,7 +890,18 @@ namespace netgen
       }
     
 
+    // edge hashtable:: needed for getting parent faces	
+    ngcore::ClosedHashTable<INT<2>, int> v2e(nv);
+    if (build_parent_faces)
+      for (auto i : Range(edge2vert))
+        {
+          auto edge = edge2vert[i];
+          INT<2> e2(edge[0], edge[1]);
+          e2.Sort();
+          v2e[e2] = i;
+        }
 
+    
     // generate faces
     if (buildfaces) 
       {
@@ -908,7 +919,7 @@ namespace netgen
 
 	faces.SetSize(ne);
 	surffaces.SetSize(nse);
-	
+  
 
 	cnt = 0;
 	for (int i = 0; i < face2vert.Size(); i++)
@@ -942,10 +953,16 @@ namespace netgen
                             PointIndex v0 = pa[k]; // also in face
                             PointIndex v1 = pa[1-k];
                             PointIndex v2 = f3[0]+f3[1]+f3[2] - v - v0;
-                            INT<3> cf3 = { v0, v1, v2 };
-                            cf3.Sort();
-                            // cout << "intermediate: " << cf3 << " of " << f3 << endl;
-                            intermediate_faces.Append (cf3);
+                            // if there is an edge connecting v1 and v2, accept
+                            // the new face
+                            INT<2> parentedge(v1, v2);
+                            parentedge.Sort();
+                            if (v2e.Used(parentedge)){ 
+                              INT<3> cf3 = { v0, v1, v2 };
+                              cf3.Sort();
+                              // cout << "intermediate: " << cf3 << " of " << f3 << endl;
+                              intermediate_faces.Append (cf3);
+                            }
                           }
                     }
                 }
@@ -1548,20 +1565,6 @@ namespace netgen
 
             // cout << "v2f:" << endl << v2f << endl;
            
-            // build edge2vert hashtable
-            // cout << "e2v = " << edge2vert << endl;
-            
-            ngcore::ClosedHashTable<INT<2>, int> v2e(nv);
-            for (auto i : Range(edge2vert))
-              {
-                auto edge = edge2vert[i];
-                INT<3> e2(edge[0], edge[1]);
-                e2.Sort();
-                v2e[e2] = i;
-              }
-
-            // cout << "v2e:" << endl << v2e << endl;
-
             parent_faces.SetSize (nfa);
             parent_faces = { -1, { -1, -1, -1, -1 } };
 
@@ -1604,28 +1607,34 @@ namespace netgen
                             
                             // the third one, on the tip
                             PointIndex v2 = f3[0]+f3[1]+f3[2] - v0 - vb;
+                            
+                            // if there is an edge connecting v1 and v2, accept
+                            // the new face
+                            INT<2> parentedge(v1, v2);
+                            parentedge.Sort();
+                            if (v2e.Used(parentedge)){ 
+                              INT<3> parentverts(v0, v1, v2);
+                              parentverts.Sort();
 
-                            INT<3> parentverts(v0, v1, v2);
-                            parentverts.Sort();
+                              int classnr = 0;
+                              if (v2 > vb) { Swap (v2, vb); classnr += 1; }                            
+                              if (v0 > v1) { Swap (v0, v1); classnr += 2; }
+                              if (v1 > v2) { Swap (v1, v2); classnr += 4; }
+                              if (v0 > v1) { Swap (v0, v1); classnr += 8; }
 
-                            int classnr = 0;
-                            if (v2 > vb) { Swap (v2, vb); classnr += 1; }                            
-                            if (v0 > v1) { Swap (v0, v1); classnr += 2; }
-                            if (v1 > v2) { Swap (v1, v2); classnr += 4; }
-                            if (v0 > v1) { Swap (v0, v1); classnr += 8; }
-
-                            if (v2f.Used(parentverts))
+                              if (v2f.Used(parentverts))
                               {
                                 int pafacenr = v2f[parentverts];
                                 // cout << "parent-face = " << pafacenr << endl;
                                 parent_faces[i] = { classnr, { pafacenr, -1, -1, -1 } };
                               }
-                            else
+                              else
                               {
                                 cout << "missing parent face: " << parentverts << endl;
                               }
-                            issplit=true;
-                            break;
+                              issplit=true;
+                              break;
+                            }
                           }
                         }
                   }
