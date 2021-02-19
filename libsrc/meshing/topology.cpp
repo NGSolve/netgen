@@ -917,7 +917,48 @@ namespace netgen
 	for (int i = 0; i < face2vert.Size(); i++)
 	  vert2oldface.AddSave (face2vert[i][0], i);
 
+        // find all potential intermediate faces
+        Array<INT<3>> intermediate_faces;
+        if (build_parent_faces)
+          {
+            for (ElementIndex ei = 0; ei < ne; ei++)
+              for (int i = 0; i < 4; i++)
+                {
+                  Element2d face;
+                  // cout << "element: " << (*mesh)[ei].PNums() << endl;
+                  (*mesh)[ei].GetFace(i+1, face);
+                  // cout << "face " << face.PNums() << endl;
+                  INT<3,PointIndex> f3 = { face[0], face[1], face[2] };
+                  for (int j = 0; j < 3; j++)
+                    {
+                      PointIndex v = f3[j];
+                      if (v >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
+                        continue;
 
+                      auto pa = mesh->mlbetweennodes[v];
+                      for (int k = 0; k < 2; k++)
+                        if (f3.Contains(pa[k]))
+                          {
+                            PointIndex v0 = pa[k]; // also in face
+                            PointIndex v1 = pa[1-k];
+                            PointIndex v2 = f3[0]+f3[1]+f3[2] - v - v0;
+                            INT<3> cf3 = { v0, v1, v2 };
+                            cf3.Sort();
+                            // cout << "intermediate: " << cf3 << " of " << f3 << endl;
+                            intermediate_faces.Append (cf3);
+                          }
+                    }
+                }
+          }
+	cnt = 0;
+	for (int i = 0; i < intermediate_faces.Size(); i++)
+	  cnt[intermediate_faces[i][0]]++;
+	TABLE<int,PointIndex::BASE> vert2intermediate(cnt);
+	for (int i = 0; i < intermediate_faces.Size(); i++)
+	  vert2intermediate.AddSave (intermediate_faces[i][0], i);
+        // cout << "vert2intermediate = " << endl << vert2intermediate << endl;
+
+        
 	for (int elnr = 0; elnr < ne; elnr++)
 	  for (int j = 0; j < 6; j++)
 	    faces[elnr][j].fnr = -1;
@@ -936,7 +977,7 @@ namespace netgen
         // NgProfiler::StopTimer (timer2a);
         // NgProfiler::StartTimer (timer2b);
 
-        INDEX_3_CLOSED_HASHTABLE<int> vert2face(2*max_face_on_vertex+10);         
+        // INDEX_3_CLOSED_HASHTABLE<int> vert2face(2*max_face_on_vertex+10);         
 
 	int oldnfa = face2vert.Size();
 
@@ -965,6 +1006,20 @@ namespace netgen
                       vert2face.Set (face, 33);  // something
                     }
                   int cnti = 0;
+
+                  for (int j = 0; j < vert2intermediate[v].Size(); j++)
+                    {
+                      int fnr = vert2intermediate[v][j];
+                      INDEX_3 face (intermediate_faces[fnr][0],
+                                    intermediate_faces[fnr][1],
+                                    intermediate_faces[fnr][2]);
+                      face.Sort();
+                      if (!vert2face.Used(face))
+                        {
+                          cnti++;
+                          vert2face.Set (face, 33); // something
+                        }
+                    }
                   LoopOverFaces (*mesh, *this, v,
                                  [&] (INDEX_4 i4, int elnr, int j, bool volume, int facedir)
                                  {
@@ -1015,6 +1070,25 @@ namespace netgen
                                     face2vert[fnr].I2(),
                                     face2vert[fnr].I3());
                       vert2face.Set (face, fnr);
+                    }
+                  
+                  for (int j = 0; j < vert2intermediate[v].Size(); j++)
+                    {
+                      int fnr = vert2intermediate[v][j];
+                      INDEX_3 face (intermediate_faces[fnr][0],
+                                    intermediate_faces[fnr][1],
+                                    intermediate_faces[fnr][2]);
+                      face.Sort();
+                      if (!vert2face.Used(face))
+                        {
+                          INDEX_4 i4(face.I1(), face.I2(), face.I3(), 0);
+                          face2vert[nfa] = i4;
+                          vert2face.Set (face, nfa);
+                          nfa++;
+                          // cout << "adding face " << i4 << endl;
+                          // cnti++;
+                          // vert2face.Set (face, 33); // something
+                        }
                     }
                   
                   LoopOverFaces (*mesh, *this, v,
@@ -1461,7 +1535,7 @@ namespace netgen
           {
             // tets only
             cout << "build face hierarchy:" << endl;
-            cout << "f2v = " << face2vert << endl;
+            // cout << "f2v = " << face2vert << endl;
             
             ngcore::ClosedHashTable<INT<3>, int> v2f(nv);
             for (auto i : Range(face2vert))
@@ -1472,10 +1546,10 @@ namespace netgen
                 v2f[f3] = i;
               }
 
-            cout << "v2f:" << endl << v2f << endl;
+            // cout << "v2f:" << endl << v2f << endl;
            
             // build edge2vert hashtable
-            cout << "e2v = " << edge2vert << endl;
+            // cout << "e2v = " << edge2vert << endl;
             
             ngcore::ClosedHashTable<INT<2>, int> v2e(nv);
             for (auto i : Range(edge2vert))
@@ -1486,7 +1560,7 @@ namespace netgen
                 v2e[e2] = i;
               }
 
-            cout << "v2e:" << endl << v2e << endl;
+            // cout << "v2e:" << endl << v2e << endl;
 
             parent_faces.SetSize (nfa);
             parent_faces = { -1, { -1, -1, -1, -1 } };
@@ -1530,8 +1604,12 @@ namespace netgen
                             if (v2f.Used(parentverts))
                               {
                                 int pafacenr = v2f[parentverts];
-                                cout << "parent-face = " << pafacenr << endl;
+                                // cout << "parent-face = " << pafacenr << endl;
                                 parent_faces[i] = { classnr, { pafacenr, -1, -1, -1 } };
+                              }
+                            else
+                              {
+                                cout << "missing parent face: " << parentverts << endl;
                               }
                             issplit=true;
                             break;
@@ -1586,25 +1664,30 @@ namespace netgen
                         if (v2f.Used(parentverts1))
                         {
                           pafacenr1 = v2f[parentverts1];
-                          cout << "parent-face1 = " << pafacenr1<< endl ;
+                          // cout << "parent-face1 = " << pafacenr1<< endl ;
                         }
                         if (v2f.Used(parentverts2))
                         {
                           pafacenr2 = v2f[parentverts2];
-                          cout << "parent-face2 = " << pafacenr2<< endl  ;
+                          // cout << "parent-face2 = " << pafacenr2<< endl  ;
                         }
                         if (v2f.Used(parentverts3))
                         {
                           pafacenr3 = v2f[parentverts3];
-                          cout << "parent-face3 = " << pafacenr3<< endl  ;
+                          // cout << "parent-face3 = " << pafacenr3<< endl  ;
                         }
                         if (v2f.Used(parentverts4))
                         {
                           pafacenr4 = v2f[parentverts4];
-                          cout << "parent-face4 = " << pafacenr4<< endl  ;
+                          // cout << "parent-face4 = " << pafacenr4<< endl  ;
                         }
-                        parent_faces[i] = { classnr, { pafacenr1, pafacenr2, pafacenr3,
-                          pafacenr4} };
+
+                        if (k == 0 || k == 2)
+                          parent_faces[i] = { classnr, { pafacenr2, pafacenr1,
+                                                         pafacenr4, pafacenr3} };
+                        else
+                          parent_faces[i] = { classnr, { pafacenr2, pafacenr1,
+                                                         pafacenr3, pafacenr4} };
                         break;
                       }
                     }
