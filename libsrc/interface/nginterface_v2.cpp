@@ -1156,7 +1156,7 @@ namespace netgen
     mesh->VolumeElement(elnr+1).SetRefinementFlag(flag);    
   }
   
-  void Ngx_Mesh :: Refine (NG_REFINEMENT_TYPE reftype,
+  void Ngx_Mesh :: Refine (NG_REFINEMENT_TYPE reftype, bool onlyonce,
                            void (*task_manager)(function<void(int,int)>),
                            NgTracer tracer)
   {
@@ -1166,6 +1166,7 @@ namespace netgen
     biopt.usemarkedelements = 1;
     biopt.refine_p = 0;
     biopt.refine_hp = 0;
+    biopt.onlyonce = onlyonce;
     if (reftype == NG_REFINE_P)
       biopt.refine_p = 1;
     if (reftype == NG_REFINE_HP)

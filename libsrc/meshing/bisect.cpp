@@ -3019,7 +3019,7 @@ namespace netgen
 		      {
 			cnttet++;
 			mtets.Elem(cnttet).marked =
-			  3 * mesh.VolumeElement(i).TestRefinementFlag();
+			  (opt.onlyonce ? 3 : 1) * mesh.VolumeElement(i).TestRefinementFlag();
 			if (mtets.Elem(cnttet).marked)
 			  cntm++;
 		      }
@@ -3038,7 +3038,7 @@ namespace netgen
 	      for (int i = 1; i <= mtets.Size(); i++)
 		{
 		  mtets.Elem(i).marked =
-		    3 * mesh.VolumeElement(i).TestRefinementFlag();
+		    (opt.onlyonce ? 1 : 3) * mesh.VolumeElement(i).TestRefinementFlag();
 		  if (mtets.Elem(i).marked)
 		    cntm++;
 		}
@@ -3068,7 +3068,7 @@ namespace netgen
 		  {
 		    cnttrig++;
 		    mtris.Elem(cnttrig).marked =
-		      mesh.SurfaceElement(i).TestRefinementFlag() ? 2 : 0;
+		      mesh.SurfaceElement(i).TestRefinementFlag() ? (opt.onlyonce ? 1 : 2) : 0;
 		    // mtris.Elem(cnttrig).marked = 0;
 		    if (mtris.Elem(cnttrig).marked)
 		      cntm++;
