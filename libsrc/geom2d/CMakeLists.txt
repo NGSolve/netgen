@@ -1,4 +1,4 @@
-add_definitions(-DNGLIB_EXPORTS)
+add_definitions(-DNGINTERFACE_EXPORTS)
 add_library(geom2d ${NG_LIB_TYPE} csg2d.cpp genmesh2d.cpp geometry2d.cpp python_geom2d.cpp )
 if(APPLE)
     set_target_properties( geom2d PROPERTIES SUFFIX ".so")

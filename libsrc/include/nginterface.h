@@ -11,21 +11,12 @@
 /* Date:   20. Nov. 99                                                    */
 /**************************************************************************/
 
-#include <core/ngcore.hpp>
+#include "mydefs.hpp"
 
 /*
   Application program interface to Netgen
 
 */
-
-#ifndef DLL_HEADER
-  #if NGINTERFACE_EXPORTS || NGLIB_EXPORTS || nglib_EXPORTS
-    #define DLL_HEADER NGCORE_API_EXPORT
-  #else
-    #define DLL_HEADER NGCORE_API_IMPORT
-  #endif
-#endif
-
 
 // max number of nodes per element
 #define NG_ELEMENT_MAXPOINTS 20

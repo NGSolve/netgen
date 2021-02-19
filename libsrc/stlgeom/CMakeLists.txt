@@ -1,3 +1,4 @@
+add_definitions(-DNGINTERFACE_EXPORTS)
 add_library(stl ${NG_LIB_TYPE} 
         meshstlsurface.cpp stlgeom.cpp stlgeomchart.cpp 
         stlgeommesh.cpp stlline.cpp stltool.cpp stltopology.cpp python_stl.cpp

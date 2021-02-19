@@ -17,7 +17,7 @@ namespace netgen
 }
 
 
-DLL_HEADER void ExportGeom2d(py::module &m) 
+NGCORE_API_EXPORT void ExportGeom2d(py::module &m) 
 {
   py::class_<SplineSegExt, shared_ptr<SplineSegExt>>
     (m, "Spline", "Spline of a SplineGeometry object")

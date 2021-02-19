@@ -8,7 +8,7 @@
 /* Date:   May  09                                                        */
 /**************************************************************************/
 
-#include <core/ngcore.hpp>
+#include "mydefs.hpp"
 
 /*
   C++ interface to Netgen
