@@ -1569,8 +1569,23 @@ namespace netgen
               {
                 INT<3,PointIndex> f3(face2vert[i][0], face2vert[i][1], face2vert[i][2]);
 
-                // find a vertex, such that one of its parent is a trig vertex
 
+                // face on coarses level ?
+                bool all_vert_coarse = true;
+                for (int k = 0; k < 3; k++)
+                  {
+                    PointIndex vb = f3[k]; 
+                    if (vb >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
+                      continue;
+                    auto parents = mesh->mlbetweennodes[vb];
+                    if (parents[0] >= PointIndex::BASE)
+                      all_vert_coarse = false;
+                  }
+                if (all_vert_coarse) continue;
+
+                
+                
+                // find a vertex, such that one of its parent is a trig vertex
                 bool issplit = false;
                 for (int k = 0; k < 3; k++)
                   {
@@ -1614,6 +1629,8 @@ namespace netgen
                           }
                         }
                   }
+
+                /*
                 // is face a new face (bisect-face) ?
                 if (!issplit)
                   for (int k = 0; k < 3; k++)
@@ -1697,6 +1714,87 @@ namespace netgen
                         break;
                       }
                     }
+                */
+
+                // is face a new face (bisect-face) ?
+                if (!issplit)
+                  for (int k = 0; k < 3; k++)
+                    {
+                      PointIndex vb = f3[k]; // assume vb as the new bisect vert
+                      if (vb >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
+                        continue;
+                      auto parents = mesh->mlbetweennodes[vb];
+
+                      PointIndex v0 = parents[0];
+                      PointIndex v1 = parents[1];
+                      PointIndex v2 = f3[(k+1)%3];
+                      PointIndex v3 = f3[(k+2)%3];
+                      INT<2> parentedge1(v0, v2);
+                      parentedge1.Sort();
+                      INT<2> parentedge2(v0, v3);
+                      parentedge2.Sort();
+                      INT<2> parentedge3(v1, v2);
+                      parentedge3.Sort();
+                      INT<2> parentedge4(v1, v3);
+                      parentedge4.Sort();
+
+                      // if edges [v0,v2], [v0, v3], [v1,v2], [v1,v3] exists
+                      // then vb is the bisecting edge
+                      if (v2e.Used(parentedge1) && v2e.Used(parentedge2) 
+                          && v2e.Used(parentedge3) && v2e.Used(parentedge4))
+                        {
+                          int verts[5] = { v0, v1, v2, v3, vb };
+                          /*
+                          cout << "verts5: ";
+                          for (int j = 0; j < 5; j++)
+                            cout << verts[j] << " ";
+                          */
+                          // classify permutation of verts
+                          int classnr = 0;
+                          for (int j = 0; j < 4; j++)
+                            {
+                              int maxk = 0;
+                              for (int k = 0; k < 5-j; k++)
+                                if (verts[k] > verts[maxk]) maxk = k;
+                              // compress
+                              for (int k = maxk; k < 4-j; k++)
+                                verts[k] = verts[k+1];
+                              classnr = maxk + (5-j) * classnr;
+                            }
+                          // cout << "classnr = " << classnr << endl;
+
+                          INT<3> parentverts1(v1, v2, v3);
+                          parentverts1.Sort();
+                          INT<3> parentverts2(v0, v2, v3);
+                          parentverts2.Sort();
+                          INT<3> parentverts3(v0, v1, v3);
+                          parentverts3.Sort();
+                          INT<3> parentverts4(v0, v1, v2);
+                          parentverts4.Sort();
+                          
+                          if (!v2f.Used(parentverts1) || !v2f.Used(parentverts2) ||
+                              !v2f.Used(parentverts3) || !v2f.Used(parentverts4))
+                            {
+                              cout << "all edges are used, but not faces ????" << endl;
+                              continue;
+                            }
+                                        
+                          int pafacenr1 = v2f[parentverts1];
+                          int pafacenr2 = v2f[parentverts2];
+                          int pafacenr3 = v2f[parentverts3];
+                          int pafacenr4 = v2f[parentverts4];
+
+                          
+                          parent_faces[i] = { classnr, { pafacenr1, pafacenr2,
+                                                         pafacenr3, pafacenr4} };
+                          
+                          break;
+                        }
+                    }
+
+                auto [info, nrs] = parent_faces[i];
+                if (nrs[0] == -1)
+                  cout << "************************** unhandled parent-face case **********************" << endl;
               }
           }
       }
