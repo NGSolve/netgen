@@ -1551,7 +1551,9 @@ namespace netgen
         if (build_parent_faces)
           {
             // tets only
-            cout << "build face hierarchy:" << endl;
+            if (id == 0)
+              PrintMessage (5, "build face hierarchy");
+
             // cout << "f2v = " << face2vert << endl;
             
             ngcore::ClosedHashTable<INT<3>, int> v2f(nv);
