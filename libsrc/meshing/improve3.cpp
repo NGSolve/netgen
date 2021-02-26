@@ -521,7 +521,7 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 
   // return CombineImproveSequential(mesh, goal);
 
-  mesh.BoundaryEdge (1,2); // ensure the boundary-elements table is built
+  mesh.BuildBoundaryEdges(false);
   
   int np = mesh.GetNP();
   int ne = mesh.GetNE();
@@ -817,7 +817,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 
   PrintMessage (3, "SplitImprove");
   (*testout)  << "start SplitImprove" << "\n";
-  mesh.BoundaryEdge (1,2); // ensure the boundary-elements table is built
+  mesh.BuildBoundaryEdges(false);
 
   ParallelFor( mesh.VolumeElements().Range(), [&] (ElementIndex ei) NETGEN_LAMBDA_INLINE
     {
@@ -2713,7 +2713,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
   int np = mesh.GetNP();
   int ne = mesh.GetNE();
 
-  mesh.BoundaryEdge (1,2); // ensure the boundary-elements table is built
+  mesh.BuildBoundaryEdges(false);
 
   auto elementsonnode = mesh.CreatePoint2ElementTable();
 
@@ -3932,7 +3932,7 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 
   // return SwapImprove2Sequential(mesh, goal);
 
-  mesh.BoundaryEdge (1,2); // ensure the boundary-elements table is built
+  mesh.BuildBoundaryEdges(false);
 
   int cnt = 0;
   double bad1, bad2;
@@ -4177,7 +4177,7 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh)
     }
   });
 
-  mesh.BoundaryEdge (1,2); // ensure the boundary-elements table is built
+  mesh.BuildBoundaryEdges(false);
 
   Array<std::tuple<double, ElementIndex>> split_candidates(ne);
   std::atomic<int> improvement_counter(0);

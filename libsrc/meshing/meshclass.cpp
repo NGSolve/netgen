@@ -1794,12 +1794,12 @@ namespace netgen
     volelements.SetAllocSize(nel);
   }
 
-
-  void Mesh :: BuildBoundaryEdges(void)
+  void Mesh :: BuildBoundaryEdges(bool rebuild)
   {
     static Timer t("Mesh::BuildBoundaryEdges"); RegionTimer reg(t);
     
-    // delete boundaryedges;
+    if(!rebuild && boundaryedges)
+      return;
 
     boundaryedges = make_unique<INDEX_2_CLOSED_HASHTABLE<int>>
       (3 * (GetNSE() + GetNOpenElements()) + GetNSeg() + 1);

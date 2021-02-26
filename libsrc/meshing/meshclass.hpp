@@ -156,10 +156,10 @@ namespace netgen
     
     shared_ptr<NetgenGeometry> geometry;
 
-  private:
-    void BuildBoundaryEdges(void);
 
   public:
+    void BuildBoundaryEdges(bool rebuild=true);
+
     bool PointContainedIn2DElement(const Point3d & p,
 				   double lami[3],
 				   const int element,
