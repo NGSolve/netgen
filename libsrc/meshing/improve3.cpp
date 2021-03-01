@@ -14,6 +14,8 @@
 namespace netgen
 {
 
+static constexpr int IMPROVEMENT_CONFORMING_EDGE = -1e6;
+
 static inline bool NotTooBad(double bad1, double bad2)
 {
   return (bad2 <= bad1) ||
@@ -2443,21 +2445,22 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
 
       bool swap2, swap3;
 
-      if (goal != OPT_CONFORM)
+      if (goal == OPT_CONFORM)
+        {
+          swap2 = mesh.BoundaryEdge (pi3, pi5) && NotTooBad(bad1, bad2);
+          swap3 = mesh.BoundaryEdge (pi4, pi6) && NotTooBad(bad1, bad3);
+
+          if(swap2 || swap3)
+            d_badness = IMPROVEMENT_CONFORMING_EDGE;
+        }
+
+      if (goal != OPT_CONFORM || (!swap2 && !swap3))
         {
           swap2 = (bad2 < bad1) && (bad2 < bad3);
           swap3 = !swap2 && (bad3 < bad1);
-        }
-      else
-        {
-          if (mesh.BoundaryEdge (pi3, pi5)) bad2 /= 1e6;
-          if (mesh.BoundaryEdge (pi4, pi6)) bad3 /= 1e6;
-
-          swap2 = (bad2 < bad1) && (bad2 < bad3);
-          swap3 = !swap2 && (bad3 < bad1);
+          d_badness = swap2 ? bad2-bad1 : bad3-bad1;
         }
 
-      d_badness = swap2 ? bad2-bad1 : bad3-bad1;
       if(check_only)
           return d_badness;
 
