@@ -194,6 +194,7 @@ namespace netgen
       case ROOT:
 	return s1->PointInSolid (p, eps);
       }
+      throw Exception("PointInSolid: invalid op");
   }
 
   
@@ -213,6 +214,7 @@ namespace netgen
       case ROOT:
 	return s1->VecInSolid (p, v, eps);
       }
+      throw Exception("VecInSolid: invalid op");
   }
   
   // checks if lim s->0 lim t->0  p + t(v1 + s v2) in solid
@@ -233,6 +235,7 @@ namespace netgen
       case ROOT:
 	return s1->VecInSolid2 (p, v1, v2, eps);
       }
+      throw Exception("VecInSolid2: invalid op");
   }
 
   
