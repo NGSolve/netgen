@@ -14,6 +14,12 @@
 namespace netgen
 {
 
+static inline bool NotTooBad(double bad1, double bad2)
+{
+  return (bad2 <= bad1) ||
+         (bad2 <= 100 * bad1 && bad2 <= 1e18) ||
+         (bad2 <= 1e8);
+}
 
 // Calc badness of new element where pi1 and pi2 are replaced by pnew
 double CalcBadReplacePoints (const Mesh::T_POINTS & points, const MeshingParameters & mp, const Element & elem, double h, PointIndex &pi1, PointIndex &pi2, MeshPoint &pnew)
@@ -1920,12 +1926,8 @@ void MeshOptimize3d :: SwapImproveSequential (Mesh & mesh, OPTIMIZEGOAL goal,
 		  
 		  
 		  if (goal == OPT_CONFORM)
-		       // (bad2 <= 100 * bad1 || bad2 <= 1e6))
 		    {
-		      bool nottoobad =
-			(bad2 <= bad1) ||
-			(bad2 <= 100 * bad1 && bad2 <= 1e18) ||
-			(bad2 <= 1e8);
+		      bool nottoobad = NotTooBad(bad1, bad2);
 		      
 		      for (int k = l+1; k <= nsuround + l - 2; k++)
 			{
@@ -2606,12 +2608,8 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
 
 
           if (goal == OPT_CONFORM)
-              // (bad2 <= 100 * bad1 || bad2 <= 1e6))
             {
-              bool nottoobad =
-                  (bad2 <= bad1) ||
-                  (bad2 <= 100 * bad1 && bad2 <= 1e18) ||
-                  (bad2 <= 1e8);
+              bool nottoobad = NotTooBad(bad1, bad2);
 
               for (int k = l+1; k <= nsuround + l - 2; k++)
                 {
