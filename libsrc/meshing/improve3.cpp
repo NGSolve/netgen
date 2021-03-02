@@ -14,6 +14,14 @@
 namespace netgen
 {
 
+static constexpr int IMPROVEMENT_CONFORMING_EDGE = -1e6;
+
+static inline bool NotTooBad(double bad1, double bad2)
+{
+  return (bad2 <= bad1) ||
+         (bad2 <= 100 * bad1 && bad2 <= 1e18) ||
+         (bad2 <= 1e8);
+}
 
 // Calc badness of new element where pi1 and pi2 are replaced by pnew
 double CalcBadReplacePoints (const Mesh::T_POINTS & points, const MeshingParameters & mp, const Element & elem, double h, PointIndex &pi1, PointIndex &pi2, MeshPoint &pnew)
@@ -1920,12 +1928,8 @@ void MeshOptimize3d :: SwapImproveSequential (Mesh & mesh, OPTIMIZEGOAL goal,
 		  
 		  
 		  if (goal == OPT_CONFORM)
-		       // (bad2 <= 100 * bad1 || bad2 <= 1e6))
 		    {
-		      bool nottoobad =
-			(bad2 <= bad1) ||
-			(bad2 <= 100 * bad1 && bad2 <= 1e18) ||
-			(bad2 <= 1e8);
+		      bool nottoobad = NotTooBad(bad1, bad2);
 		      
 		      for (int k = l+1; k <= nsuround + l - 2; k++)
 			{
@@ -2441,21 +2445,22 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
 
       bool swap2, swap3;
 
-      if (goal != OPT_CONFORM)
+      if (goal == OPT_CONFORM)
+        {
+          swap2 = mesh.BoundaryEdge (pi3, pi5) && NotTooBad(bad1, bad2);
+          swap3 = mesh.BoundaryEdge (pi4, pi6) && NotTooBad(bad1, bad3);
+
+          if(swap2 || swap3)
+            d_badness = IMPROVEMENT_CONFORMING_EDGE;
+        }
+
+      if (goal != OPT_CONFORM || (!swap2 && !swap3))
         {
           swap2 = (bad2 < bad1) && (bad2 < bad3);
           swap3 = !swap2 && (bad3 < bad1);
-        }
-      else
-        {
-          if (mesh.BoundaryEdge (pi3, pi5)) bad2 /= 1e6;
-          if (mesh.BoundaryEdge (pi4, pi6)) bad3 /= 1e6;
-
-          swap2 = (bad2 < bad1) && (bad2 < bad3);
-          swap3 = !swap2 && (bad3 < bad1);
+          d_badness = swap2 ? bad2-bad1 : bad3-bad1;
         }
 
-      d_badness = swap2 ? bad2-bad1 : bad3-bad1;
       if(check_only)
           return d_badness;
 
@@ -2606,12 +2611,8 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
 
 
           if (goal == OPT_CONFORM)
-              // (bad2 <= 100 * bad1 || bad2 <= 1e6))
             {
-              bool nottoobad =
-                  (bad2 <= bad1) ||
-                  (bad2 <= 100 * bad1 && bad2 <= 1e18) ||
-                  (bad2 <= 1e8);
+              bool nottoobad = NotTooBad(bad1, bad2);
 
               for (int k = l+1; k <= nsuround + l - 2; k++)
                 {
