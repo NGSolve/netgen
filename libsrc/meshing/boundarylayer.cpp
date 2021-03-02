@@ -515,28 +515,52 @@ namespace netgen
           {
             if(el.GetType() == TET)
               {
-                if(moved.Size() == 2)
+                if(moved.Size() == 3) // inner corner
                   {
-                    if(fixed.Size() == 2)
-                      throw Exception("This should not be possible!");
                     PointIndex p1 = moved[0];
                     PointIndex p2 = moved[1];
+                    PointIndex p3 = moved[2];
+                    auto v1 = mesh[p1];
+                    auto n = Cross(mesh[p2]-v1, mesh[p3]-v1);
+                    auto d = mesh[mapto[p1][0]] - v1;
+                    if(n*d > 0)
+                      Swap(p2,p3);
+                    PointIndex p4 = p1;
+                    PointIndex p5 = p2;
+                    PointIndex p6 = p3;
                     for(auto i : Range(blp.heights))
                       {
-                        PointIndex p3 = mapto[moved[1]][i];
-                        PointIndex p4 = mapto[moved[0]][i];
-                        Element nel(PYRAMID);
-                        nel[0] = p1;
-                        nel[1] = p2;
-                        nel[2] = p3;
-                        nel[3] = p4;
-                        nel[4] = el[0] + el[1] + el[2] + el[3] - fixed[0] - moved[0] - moved[1];
-                        if(Cross(mesh[p2]-mesh[p1], mesh[p4]-mesh[p1]) * (mesh[nel[4]]-mesh[nel[1]]) > 0)
-                          Swap(nel[1], nel[3]);
+                        Element nel(PRISM);
+                        nel[0] = p4; nel[1] = p5; nel[2] = p6;
+                        p4 = mapto[p1][i]; p5 = mapto[p2][i]; p6 = mapto[p3][i];
+                        nel[3] = p4; nel[4] = p5; nel[5] = p6;
                         nel.SetIndex(el.GetIndex());
                         mesh.AddVolumeElement(nel);
-                        p1 = p4;
-                        p2 = p3;
+                      }
+                  }
+                if(moved.Size() == 2)
+                  {
+                    if(fixed.Size() == 1)
+                      {
+                        PointIndex p1 = moved[0];
+                        PointIndex p2 = moved[1];
+                        for(auto i : Range(blp.heights))
+                          {
+                            PointIndex p3 = mapto[moved[1]][i];
+                            PointIndex p4 = mapto[moved[0]][i];
+                            Element nel(PYRAMID);
+                            nel[0] = p1;
+                            nel[1] = p2;
+                            nel[2] = p3;
+                            nel[3] = p4;
+                            nel[4] = el[0] + el[1] + el[2] + el[3] - fixed[0] - moved[0] - moved[1];
+                            if(Cross(mesh[p2]-mesh[p1], mesh[p4]-mesh[p1]) * (mesh[nel[4]]-mesh[nel[1]]) > 0)
+                              Swap(nel[1], nel[3]);
+                            nel.SetIndex(el.GetIndex());
+                            mesh.AddVolumeElement(nel);
+                            p1 = p4;
+                            p2 = p3;
+                          }
                       }
                   }
                 if(moved.Size() == 1 && fixed.Size() == 1)

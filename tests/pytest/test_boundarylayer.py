@@ -66,7 +66,7 @@ def test_boundarylayer2(outside, version, capfd):
 
 
 @pytest.mark.parametrize("outside", [True, False])
-def test_wrong_orientation(outside):
+def test_wrong_orientation(outside, capfd):
     geo = CSGeometry()
     brick = OrthoBrick((-1,0,0),(1,1,1)) - Plane((0,0,0), (1,0,0))
     geo.Add(brick.mat("air"))
@@ -107,3 +107,54 @@ def test_pyramids(outside):
     assert ngs.Integrate(1, mesh.Materials("plate")) == pytest.approx(0.032 if outside else 0.0304)
     assert ngs.Integrate(1, mesh.Materials("layer")) == pytest.approx(0.0016)
     assert ngs.Integrate(1, mesh.Materials("air")) == pytest.approx(0.9664 if outside else 0.968)
+
+@pytest.mark.parametrize("outside", [True, False])
+def test_with_inner_corner(outside, capfd):
+    geo = CSGeometry()
+
+    core_thickness = 0.1
+    limb_distance = 0.5
+    core_height = 0.5
+    coil_r1 = 0.08
+    coil_r2 = 0.16
+    coil_h = 0.2
+    domain_size = 1.2
+    domain_size_y = 0.7
+
+    def CreateCoil(x):
+        outer = Cylinder((x, 0, -1), (x, 0, 1), coil_r2)
+        inner = Cylinder((x, 0, -1), (x, 0, 1), coil_r1)
+        top = Plane((0,0,coil_h/2), (0,0,1))
+        bot = Plane((0,0,-coil_h/2), (0,0,-1))
+        return ((outer - inner) * top * bot, (outer, inner, top, bot))
+
+    core_front = Plane((0,-core_thickness/2, 0), (0,-1,0)).bc("core_front")
+    core_back = Plane((0,core_thickness/2, 0), (0,1,0)).bc("core_front")
+    core_limb1 = OrthoBrick((-limb_distance/2-core_thickness/2, -core_thickness, -core_height/2),(-limb_distance/2+core_thickness/2, core_thickness, core_height/2))
+    core_limb2 = OrthoBrick((limb_distance/2-core_thickness/2, -core_thickness, -core_height/2),(limb_distance/2+core_thickness/2, core_thickness, core_height/2))
+    core_top = OrthoBrick((-limb_distance/2-core_thickness/2, -core_thickness, core_height/2-core_thickness/2),(limb_distance/2+core_thickness/2, core_thickness, core_height/2+core_thickness/2))
+    core_bot = OrthoBrick((-limb_distance/2-core_thickness/2, -core_thickness, -core_height/2-core_thickness/2),(limb_distance/2+core_thickness/2, core_thickness, -core_height/2+core_thickness/2))
+
+    core = (core_limb1 + core_limb2 + core_top + core_bot).bc("core_rest")
+    core = core * core_front * core_back
+    core.maxh(core_thickness * 0.4)
+
+    coil1, (outer1, inner1, top1, bot1) = CreateCoil(-limb_distance/2)
+    coil1.mat("coil_1")
+    coil2, (outer2, inner2, top2, bot2) = CreateCoil(limb_distance/2)
+    coil2.mat("coil_2")
+
+    oil = OrthoBrick((-domain_size/2, -domain_size_y/2, -domain_size/2), (domain_size/2, domain_size_y/2, domain_size/2)).bc("tank") - core # - coil1 - coil2
+
+    geo.Add(core.mat("core"), col=(0.4,0.4,0.4))
+    geo.Add(coil1, col=(0.72, 0.45, 0.2))
+    geo.Add(coil2, col=(0.72, 0.45, 0.2))
+    geo.Add(oil.mat("oil"), transparent=True)
+    mesh = geo.GenerateMesh()
+    mesh.BoundaryLayer("core_front", [0.001, 0.002], "core", "core", outside=outside)
+    ngs = pytest.importorskip("ngsolve")
+    mesh = ngs.Mesh(mesh)
+    capture = capfd.readouterr()
+    assert not "elements are not matching" in capture.out
+    assert ngs.Integrate(1, mesh.Materials("core")) == pytest.approx(0.0212 if outside else 0.02)
+    assert ngs.Integrate(1, mesh.Materials("oil")) == pytest.approx(0.9868 if outside else 0.988)
