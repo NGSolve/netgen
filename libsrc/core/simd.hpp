@@ -26,7 +26,7 @@
 #include "simd_avx512.hpp"
 #endif
 
-#ifdef __arm64__
+#ifdef __aarch64__
 #include "simd_arm64.hpp"
 #endif
 

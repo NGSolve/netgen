@@ -71,7 +71,11 @@
 #define NETGEN_ARCH_AMD64
 #endif
 
-#if defined(__arm64__) || defined(_M_ARM64)
+#if defined(__aarch64__) || defined(_M_ARM64)
+#define NETGEN_ARCH_ARM64
+#endif
+
+#if defined(__arm__) || defined(_M_ARM)
 #define NETGEN_ARCH_ARM
 #endif
 
