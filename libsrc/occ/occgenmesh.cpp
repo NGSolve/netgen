@@ -244,9 +244,6 @@ namespace netgen
     hvalue[0] = 0;
     pnt = c->Value(s0);
 
-    double olddist = 0;
-    double dist = 0;
-
     int tmpVal = (int)(DIVIDEEDGESECTIONS);
 
     for (int i = 1; i <= tmpVal; i++)
@@ -259,9 +256,6 @@ namespace netgen
 
         //(*testout) << "mesh.GetH(Point3d(pnt.X(), pnt.Y(), pnt.Z())) " << mesh.GetH(Point3d(pnt.X(), pnt.Y(), pnt.Z()))
         //	   <<  " pnt.Distance(oldpnt) " << pnt.Distance(oldpnt) << endl;
-
-        olddist = dist;
-        dist = pnt.Distance(oldpnt);
       }
 
     //  nsubedges = int(ceil(hvalue[DIVIDEEDGESECTIONS]));
