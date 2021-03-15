@@ -83,7 +83,7 @@ double Det (const Mat<3,3> & m)
 
 void EigenValues (const Mat<3,3> & m, Vec<3> & ev)
 {
-  const double pi = 3.141592;
+  const double pi = M_PI;
   double a, b, c, d;
   double p, q;
   double arg;
