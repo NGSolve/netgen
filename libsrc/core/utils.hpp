@@ -10,7 +10,7 @@
 
 #include "ngcore_api.hpp"       // for NGCORE_API and CPU arch macros
 
-#if defined(__APPLE__) && defined(NETGEN_ARCH_ARM)
+#if defined(__APPLE__) && defined(NETGEN_ARCH_ARM64)
 #include <mach/mach_time.h>
 #endif
 
@@ -58,12 +58,15 @@ namespace ngcore
 
   inline TTimePoint GetTimeCounter() noexcept
   {
-#if defined(__APPLE__) && defined(NETGEN_ARCH_ARM)
+#if defined(__APPLE__) && defined(NETGEN_ARCH_ARM64)
     return mach_absolute_time();
 #elif defined(NETGEN_ARCH_AMD64)
     return __rdtsc();
-#elif defined(NETGEN_ARCH_ARM)
-    return __builtin_readcyclecounter();
+#elif defined(NETGEN_ARCH_ARM64) && defined(__GNUC__)
+    // __GNUC__ is also defined by CLANG. Use inline asm to read Generic Timer
+    unsigned long long tics;
+    __asm __volatile("mrs %0, CNTVCT_EL0" : "=&r" (tics));
+    return tics;
 #else
 #warning "Unsupported CPU architecture"
     return 0;
