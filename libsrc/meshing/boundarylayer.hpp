@@ -24,5 +24,6 @@ public:
 DLL_HEADER void GenerateBoundaryLayer (Mesh & mesh,
                                        const BoundaryLayerParameters & blp);
 
+DLL_HEADER void GenerateBoundaryLayer2 (Mesh & mesh, int domain, const Array<int> & boundaries, const Array<double> & thicknesses);
 
 #endif

@@ -1,5 +1,8 @@
 #include <mystdlib.h>
 #include "meshing.hpp"
+#include "meshing2.hpp"
+#include "global.hpp"
+#include "../geom2d/csg2d.hpp"
 
 namespace netgen
 {
@@ -625,4 +628,586 @@ namespace netgen
             mesh.GetFaceDescriptor(i).SetDomainIn(new_mat_nr);
         }
   }
+
+  void AddDirection( Vec<3> & a, Vec<3> b )
+  {
+     if(a.Length2()==0.)
+     {
+        a = b;
+        return;
+     }
+
+     if(b.Length2()==0.)
+        return;
+
+     auto ab = a * b;
+     if(fabs(ab)>1-1e-8)
+        return;
+
+     Mat<2> m;
+     m(0,0) = a[0];
+     m(0,1) = a[1];
+     m(1,0) = b[0];
+     m(1,1) = b[1];
+     Vec<2> lam;
+     Vec<2> rhs;
+     rhs[0] = a[0]-b[0];
+     rhs[1] = a[1]-b[1];
+
+     const auto Dot = [](Vec<3> a, Vec<3> b)
+     { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]; };
+
+     rhs[0] = Dot(a,a);
+     rhs[1] = Dot(b,b);
+
+     m.Solve(rhs, lam);
+     a[0] = lam[0];
+     a[1] = lam[1];
+     a[2] = 0.0;
+     return;
+  }
+
+  static void Generate2dMesh( Mesh & mesh, int domain )
+  {
+     Box<3> box{Box<3>::EMPTY_BOX};
+     for(const auto & seg : mesh.LineSegments())
+        if (seg.si == domain)
+           for (auto pi : {seg[0], seg[1]})
+              box.Add(mesh[pi]);
+
+     MeshingParameters mp;
+     Meshing2 meshing (*mesh.GetGeometry(), mp, box);
+
+     Array<PointIndex, PointIndex> compress(mesh.GetNP());
+     compress = PointIndex::INVALID;
+
+     PointIndex cnt = PointIndex::BASE;
+     for(const auto & seg : mesh.LineSegments())
+        if (seg.si == domain)
+           for (auto pi : {seg[0], seg[1]})
+              if (compress[pi]==PointIndex{PointIndex::INVALID})
+              {
+                 meshing.AddPoint(mesh[pi], pi);
+                 compress[pi] = cnt++;
+              }
+
+     PointGeomInfo gi;
+     gi.trignum = domain;
+     for(const auto & seg : mesh.LineSegments())
+        if (seg.si == domain)
+           meshing.AddBoundaryElement (compress[seg[0]], compress[seg[1]], gi, gi);
+
+     auto oldnf = mesh.GetNSE();
+     auto res = meshing.GenerateMesh (mesh, mp, mp.maxh, domain);
+     for (SurfaceElementIndex sei : Range(oldnf, mesh.GetNSE()))
+        mesh[sei].SetIndex (domain);
+
+     int hsteps = mp.optsteps2d;
+
+     const char * optstr = mp.optimize2d.c_str();
+     MeshOptimize2d meshopt(mesh);
+     meshopt.SetFaceIndex(domain);
+     meshopt.SetMetricWeight (mp.elsizeweight);
+     for (size_t j = 1; j <= strlen(optstr); j++)
+     {
+        switch (optstr[j-1])
+        {
+           case 's':
+              {  // topological swap
+                 meshopt.EdgeSwapping (0);
+                 break;
+              }
+           case 'S':
+              {  // metric swap
+                 meshopt.EdgeSwapping (1);
+                 break;
+              }
+           case 'm':
+              {
+                 meshopt.ImproveMesh(mp);
+                 break;
+              }
+           case 'c':
+              {
+                 meshopt.CombineImprove();
+                 break;
+              }
+           default:
+              cerr << "Optimization code " << optstr[j-1] << " not defined" << endl;
+        }
+     }
+
+     mesh.Compress();
+     mesh.OrderElements();
+     mesh.SetNextMajorTimeStamp();
+
+  }
+
+  void GenerateBoundaryLayer2 (Mesh & mesh, int domain, const Array<int> & boundaries, const Array<double> & thicknesses)
+  {
+     int np = mesh.GetNP();
+     int nseg = mesh.GetNSeg();
+     int ne = mesh.GetNSE();
+     mesh.UpdateTopology();
+
+     double total_thickness = 0.0;
+     for(auto thickness : thicknesses)
+        total_thickness += thickness;
+
+     Array<Array<PointIndex>, PointIndex> mapto(np);
+
+     // Bit array to keep track of segments already processed
+     BitArray segs_done(nseg);
+     segs_done.Clear();
+
+     // map for all segments with same points
+     // points to pair of SegmentIndex, int
+     // int is type of other segment, either:
+     // TODO: recognize "end points" of boundary layer and implement closure properly
+     Array<Array<pair<SegmentIndex, int>>, SegmentIndex> segmap(mesh.GetNSeg());
+
+     // moved segments
+     Array<SegmentIndex> moved_segs;
+
+     Array<Vec<3>, PointIndex> growthvectors(np);
+     growthvectors = 0.;
+
+     auto & meshtopo = mesh.GetTopology();
+
+     Array<SurfaceElementIndex, SegmentIndex> seg2surfel(mesh.GetNSeg());
+     seg2surfel = -1;
+     NgArray<SurfaceElementIndex> temp_els;
+     for(auto si : Range(mesh.LineSegments()))
+     {
+        meshtopo.GetSegmentSurfaceElements ( si+1, temp_els );
+        // NgArray<int> surfeledges;
+        // meshtopo.GetSurfaceElementEdges(si+1, surfeledges);
+        for(auto seli : temp_els)
+           if(mesh[seli].GetIndex() == mesh[si].si)
+              seg2surfel[si] = seli;
+     }
+
+     Array<SegmentIndex> segments;
+
+    // surface index map
+    Array<int> si_map(mesh.GetNFD()+1);
+    si_map = -1;
+
+    int fd_old = mesh.GetNFD();
+
+    int max_edge_nr = -1;
+    int max_domain = -1;
+
+    for(const auto& seg : mesh.LineSegments())
+    {
+      if(seg.epgeominfo[0].edgenr > max_edge_nr)
+        max_edge_nr = seg.epgeominfo[0].edgenr;
+      if(seg.si > max_domain)
+         max_domain = seg.si;
+    }
+
+    BitArray active_boundaries(max_edge_nr+1);
+    BitArray active_segments(nseg);
+    active_boundaries.Clear();
+    active_segments.Clear();
+
+    if(boundaries.Size() == 0)
+       active_boundaries.Set();
+    else
+       for(auto edgenr : boundaries)
+          active_boundaries.SetBit(edgenr);
+
+    for(auto segi : Range(mesh.LineSegments()))
+    {
+       const auto seg = mesh[segi];
+       if(active_boundaries.Test(seg.epgeominfo[0].edgenr) && seg.si==domain)
+          active_segments.SetBit(segi);
+    }
+
+    for(auto segi : Range(mesh.LineSegments()))
+    {
+        const auto& seg = mesh[segi];
+        auto si = seg.si;
+
+        if(si_map[si]!=-1)
+           continue;
+
+        if(!active_segments.Test(segi))
+           continue;
+
+        int new_si = mesh.GetNFD()+1;
+        FaceDescriptor new_fd(-1, 0, 0, -1);
+        new_fd.SetBCProperty(new_si);
+        mesh.AddFaceDescriptor(new_fd);
+        si_map[si] = new_si;
+        mesh.SetBCName(new_si-1, "mapped_" + mesh.GetBCName(si-1));
+    }
+
+    for(auto si : Range(mesh.LineSegments()))
+      {
+        if(segs_done[si]) continue;
+        segs_done.SetBit(si);
+        const auto& segi = mesh[si];
+        if(si_map[segi.si] == -1) continue;
+        if(!active_boundaries.Test(segi.epgeominfo[0].edgenr))
+           continue;
+        segmap[si].Append(make_pair(si, 0));
+        moved_segs.Append(si);
+        for(auto sj : Range(mesh.LineSegments()))
+          {
+            if(segs_done.Test(sj)) continue;
+            const auto& segj = mesh[sj];
+            if((segi[0] == segj[0] && segi[1] == segj[1]) ||
+               (segi[0] == segj[1] && segi[1] == segj[0]))
+              {
+                segs_done.SetBit(sj);
+                int type = 0;
+                segmap[si].Append(make_pair(sj, type));
+              }
+          }
+      }
+
+     // calculate growth vectors (average normal vectors of adjacent segments at each point)
+     for (auto si : moved_segs)
+     {
+       auto & seg = mesh[si];
+
+       meshtopo.GetSegmentSurfaceElements ( si+1, temp_els );
+       ArrayMem<int, 10> seg_domains;
+
+       temp_els.SetSize(0);
+       if(seg2surfel[si]!=-1)
+          temp_els.Append(seg2surfel[si]);
+
+       int n_temp_els = temp_els.Size();
+       if(n_temp_els==0)
+          continue;
+
+       int dom0 = mesh[temp_els[0]].GetIndex();
+       int dom1 = n_temp_els==2 ? mesh[temp_els[1]].GetIndex() : 0;
+
+       bool in_dom0 = dom0 == domain;
+       bool in_dom1 = dom1 == domain;
+
+       if(!in_dom0 && !in_dom1)
+          continue;
+
+       int side = in_dom0 ? 0 : 1;
+
+       auto & sel = mesh[ temp_els[side] ];
+
+       int domain = sel.GetIndex();
+       Vec<3> pcenter = 0.0;
+       for(auto i : IntRange(sel.GetNP()))
+       {
+          for(auto d : IntRange(3))
+             pcenter[d] += mesh[sel[i]][d];
+       }
+       pcenter = 1.0/sel.GetNP() * pcenter;
+
+       auto n = mesh[seg[1]] - mesh[seg[0]];
+       n = {-n[1], n[0], 0};
+       n.Normalize();
+
+       Vec<3> p0{mesh[seg[0]]};
+       Vec<3> p1{mesh[seg[0]]};
+
+
+       auto v = pcenter -0.5*(p0+p1);
+
+       const auto Dot = [](Vec<3> a, Vec<3> b)
+       { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]; };
+       if(Dot(n, v)<0)
+          n = -1*n;
+
+       AddDirection(growthvectors[seg[0]], n);
+       AddDirection(growthvectors[seg[1]], n);
+     }
+
+     // reduce growthvectors where necessary to avoid overlaps/slim regions
+     const auto getSegmentBox = [&] (SegmentIndex segi)
+     {
+        PointIndex pi0=mesh[segi][0], pi1=mesh[segi][1];
+        Box<3> box( mesh[pi0], mesh[pi1] );
+        box.Add( mesh[pi0]+growthvectors[pi0] );
+        box.Add( mesh[pi1]+growthvectors[pi1] );
+        return box;
+     };
+
+     Array<double, PointIndex> growth(np);
+     growth = 1.0;
+
+     const auto Dot = [](auto a, auto b)
+     { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]; };
+
+     const auto restrictGrowthVectors = [&] (SegmentIndex segi0, SegmentIndex segi1)
+     {
+        if(!active_segments.Test(segi0))
+           return;
+
+        const auto & seg0 = mesh[segi0];
+        const auto & seg1 = mesh[segi1];
+
+        if(seg0.si != seg1.si)
+           return;
+
+        if(segi0 == segi1)
+           return;
+
+        if(seg0[0]==seg1[0] || seg0[0]==seg1[1] || seg0[1]==seg1[0] || seg0[1] == seg1[1])
+           return;
+
+        auto n = mesh[seg0[0]] - mesh[seg0[1]];
+        n = {-n[1], n[0], 0};
+        n.Normalize();
+        if(Dot(n, growthvectors[seg0[0]])<0) n = -n;
+        if(Dot(n, growthvectors[seg0[1]])<0) n = -n;
+
+        auto n1 = mesh[seg1[0]] - mesh[seg1[1]];
+        n1 = {-n1[1], n1[0], 0};
+        n1.Normalize();
+        if(Dot(n1, growthvectors[seg1[0]])<0) n1 = -n;
+        if(Dot(n1, growthvectors[seg1[1]])<0) n1 = -n;
+
+        // check if angle between normal vectors is less than 180 degrees (cant overlap for opposing directions)
+//         if(n[0]*n1[1]-n[1]*n1[0]<0.0)
+//            return;
+
+        auto p10 = mesh[seg1[0]];
+        auto p11 = mesh[seg1[1]];
+
+        for ( auto pi : {seg0[0], seg0[1]} )
+        {
+           if(growthvectors[pi] == 0.0)
+              continue;
+
+           PointIndex pi1 = seg0[0] + seg0[1] - pi;
+           auto p1 = mesh[pi1];
+           auto p = mesh[pi];
+
+           Point<3> points[] = { p10, p11, p10+total_thickness*growthvectors[seg1[0]], p11+total_thickness*growthvectors[seg1[1]], p1+total_thickness*growthvectors[pi1] };
+
+           Vec<3> gn{ growthvectors[pi][1], -growthvectors[pi][0], 0.0 };
+           if(Dot(gn, p1-p) < 0)
+              gn = -gn;
+
+           double d0 = Dot(gn, p);
+           double d1 = Dot(gn, p1);
+           if(d0>d1)
+              Swap(d0,d1);
+
+           bool all_left=true, all_right=true;
+
+           for (auto i: Range(4))
+           {
+              auto p_other = points[i];
+              auto dot = Dot(gn,p_other);
+              if(dot>d0) all_left = false;
+              if(dot<d1) all_right = false;
+           }
+
+           if(all_left || all_right)
+              return;
+
+           //for ( auto pi : {seg0[0], seg0[1]} )
+           {
+              double safety = 1.3;
+              double t = safety*total_thickness;
+              if(growthvectors[pi] == 0.0)
+                 continue;
+
+              Point<3> points[] = { p10, p10+t*growthvectors[seg1[0]], p11, p11+t*growthvectors[seg1[1]] };
+              auto p0 = mesh[pi];
+              auto p1 = p0 + t*growthvectors[pi];
+              auto P2 = [](Point<3> p) { return Point<2>{p[0], p[1]}; };
+              ArrayMem<pair<double, double>, 4> intersections;
+
+              double alpha, beta;
+
+              if(X_INTERSECTION == intersect( P2(p0), P2(p1), P2(points[0]), P2(points[2]), alpha, beta ))
+                 intersections.Append({alpha, 0.0});
+
+              if(X_INTERSECTION == intersect( P2(p0), P2(p1), P2(points[1]), P2(points[3]), alpha, beta ))
+                 intersections.Append({alpha, 1.0});
+
+              if(X_INTERSECTION == intersect( P2(p0), P2(p1), P2(points[0]), P2(points[1]), alpha, beta ))
+                 intersections.Append({alpha, beta});
+
+              if(X_INTERSECTION == intersect( P2(p0), P2(p1), P2(points[2]), P2(points[3]), alpha, beta ))
+                 intersections.Append({alpha, beta});
+
+              QuickSort(intersections);
+              for(auto [alpha,beta] : intersections)
+              {
+                 if(!active_segments.Test(segi1))
+                    growth[pi] = min(growth[pi], alpha);
+                 else
+                 {
+                    double mean = 0.5*(alpha+beta);
+                    growth[pi] = min(growth[pi], mean);
+                    growth[seg1[0]] = min(growth[seg1[0]], mean);
+                    growth[seg1[1]] = min(growth[seg1[1]], mean);
+                 }
+              }
+           }
+        }
+     };
+
+     Box<3> box(Box<3>::EMPTY_BOX);
+     for (auto segi : Range(mesh.LineSegments()))
+     {
+        auto segbox = getSegmentBox( segi );
+        box.Add(segbox.PMin());
+        box.Add(segbox.PMax());
+     }
+     BoxTree<3> segtree(box);
+
+     for (auto segi : Range(mesh.LineSegments()))
+     {
+        auto p2 = [](Point<3> p) { return Point<2>{p[0], p[1]}; };
+
+        auto seg = mesh[segi];
+        double alpha,beta;
+        intersect( p2(mesh[seg[0]]), p2(mesh[seg[0]]+total_thickness*growthvectors[seg[0]]), p2(mesh[seg[1]]), p2(mesh[seg[1]]+total_thickness*growthvectors[seg[1]]), alpha, beta );
+
+        if(beta>0 && alpha>0 && alpha<1.1)
+           growth[seg[0]] = min(growth[seg[0]], 0.8*alpha);
+        if(alpha>0 && beta>0 && beta<1.1)
+           growth[seg[1]] = min(growth[seg[1]], 0.8*beta);
+
+        for (auto segj : Range(mesh.LineSegments()))
+           if(segi!=segj)
+              restrictGrowthVectors(segi, segj);
+     }
+
+     for( auto pi : Range(growthvectors))
+        growthvectors[pi] *= growth[pi];
+
+
+     // insert new points
+     for(PointIndex pi : Range(mesh.Points()))
+        if(growthvectors[pi].Length2()!=0)
+        {
+
+           auto & pnew = mapto[pi];
+           auto dist = 0.0;
+           for(auto t : thicknesses)
+           {
+              dist+=t;
+              pnew.Append( mesh.AddPoint( mesh[pi] + dist*growthvectors[pi] ) );
+              mesh[pnew.Last()].SetType(FIXEDPOINT);
+           }
+        }
+
+     map<pair<PointIndex, PointIndex>, int> seg2edge;
+
+     // insert new elements ( and move old ones )
+     for(auto si : moved_segs)
+     {
+        auto seg = mesh[si];
+
+        bool swap = false;
+        auto & pm0 = mapto[seg[0]];
+        auto & pm1 = mapto[seg[1]];
+
+        auto newindex = si_map[seg.si];
+
+        {
+           Segment s = seg;
+           s[0] = pm0.Last();
+           s[1] = pm1.Last();
+           s[2] = PointIndex::INVALID;
+           auto pair = s[0] < s[1] ? make_pair(s[0], s[1]) : make_pair(s[1], s[0]);
+           if(seg2edge.find(pair) == seg2edge.end())
+              seg2edge[pair] = ++max_edge_nr;
+           s.edgenr = seg2edge[pair];
+           s.si = seg.si;
+           mesh.AddSegment(s);
+
+           Swap(s[0], s[1]);
+           s.si =  newindex;
+           mesh.AddSegment(s);
+        }
+
+        for ( auto i : Range(thicknesses))
+        {
+           PointIndex pi0, pi1, pi2, pi3;
+
+           if(i==0)
+           {
+              pi0 = seg[0];
+              pi1 = seg[1];
+           }
+           else
+           {
+              pi0 = pm0[i-1];
+              pi1 = pm1[i-1];
+           }
+
+           pi2 = pm1[i];
+           pi3 = pm0[i];
+
+           if(i==0)
+           {
+              auto p0 = mesh[pi0];
+              auto p1 = mesh[pi1];
+              auto q0 = mesh[pi2];
+              auto q1 = mesh[pi3];
+
+              Vec<2> n = {-p1[1]+p0[1], p1[0]-p0[0]};
+              Vec<2> v = { q0[0]-p0[0], q0[1]-p0[1]};
+              if(n[0]*v[0]+n[1]*v[1]<0)
+                 swap = true;
+           }
+
+           Element2d newel;
+           newel.SetType(QUAD);
+           newel[0] = pi0;
+           newel[1] = pi1;
+           newel[2] = pi2;
+           newel[3] = pi3;
+           newel.SetIndex(si_map[seg.si]);
+
+//            if(swap)
+//            {
+//               Swap(newel[0], newel[1]);
+//               Swap(newel[2], newel[3]);
+//            }
+
+           mesh.AddSurfaceElement(newel);
+
+        }
+        // segment now adjacent to new 2d-domain!
+        mesh[si].si = si_map[seg.si];
+     }
+
+     for(auto pi : Range(mapto))
+     {
+        if(mapto[pi].Size() == 0)
+           continue;
+        auto pnew = mapto[pi].Last();
+        NgArray<SurfaceElementIndex> old_els;
+        meshtopo.GetVertexSurfaceElements( pi, old_els);
+        for(auto old_sei : old_els)
+        {
+           if(mesh[old_sei].GetIndex() == domain)
+           {
+              auto & old_el = mesh[old_sei];
+              for(auto i : IntRange(old_el.GetNP()))
+                 if(old_el[i]==pi)
+                    old_el[i] = pnew;
+           }
+        }
+     }
+
+     for(auto & sel : mesh.SurfaceElements())
+        if(sel.GetIndex() == domain)
+           sel.Delete();
+
+     mesh.Compress();
+     mesh.CalcSurfacesOfNode();
+
+     Generate2dMesh(mesh, domain);
+   }
+
 }
