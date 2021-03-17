@@ -5712,6 +5712,26 @@ namespace netgen
             if(faces[i] == 0)
               continue;
 
+            auto & el = VolumeElement(velement);
+
+            if (el.GetType() == TET)
+            {
+              double lam4[4] = { vlam[0], vlam[1], vlam[2], 1.0-vlam[0]-vlam[1]-vlam[2] };
+              double face_lam = lam4[i];
+              if(face_lam < 1e-5)
+              {
+                // found volume point very close to a face -> use barycentric coordinates directly
+                lami[2] = 0.0;
+                auto sel = SurfaceElement(faces[i]);
+
+                for(auto j : Range(1,3))
+                  for(auto k : Range(4))
+                    if(sel[j] == el[k])
+                      lami[j-1] = lam4[k]/(1.0-face_lam);
+                return faces[i];
+              }
+            }
+
             if(indices && indices->Size() != 0)
               {
                 if(indices->Contains(SurfaceElement(faces[i]).GetIndex()) &&
