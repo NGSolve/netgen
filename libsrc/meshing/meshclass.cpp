@@ -4851,6 +4851,11 @@ namespace netgen
                       for (auto pi : volelements[ei].PNums())
                         box.Add (points[pi]);
 
+                      auto & el = volelements[ei];
+                      if(el.IsCurved())
+                        box.Increase(1.2*box.Diam());
+
+
                       elementsearchtree -> Insert (box, ei+1);
                     }
                 }
