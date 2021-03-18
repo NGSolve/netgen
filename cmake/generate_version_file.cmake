@@ -10,6 +10,7 @@ if(status AND NOT status EQUAL 0)
     # for source package files (generated for ubuntu builds on launchpad) read the version from version.txt
     if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/../version.txt)
       file(READ ${CMAKE_CURRENT_LIST_DIR}/../version.txt git_version_string )
+      string(STRIP "${git_version_string}" git_version_string)
     else()
       get_filename_component(git_version_string ${CMAKE_CURRENT_LIST_DIR}/.. NAME)
       string(REGEX REPLACE "^netgen(.*)" "\\1" git_version_string "${git_version_string}")
