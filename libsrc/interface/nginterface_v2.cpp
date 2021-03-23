@@ -1035,6 +1035,14 @@ namespace netgen
       case 2:
         {
           Point<3> p(hp[0], hp[1],0);
+          try
+            {
+              auto ind = mesh->GetSurfaceElementOfPoint(p, lami, nullptr,
+                                                        build_searchtree);
+              return ind - 1;
+            }
+          catch(NgException e) // quads not implemented curved yet
+            {
           for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
             {
               auto & seg = (*mesh)[si];
@@ -1057,6 +1065,7 @@ namespace netgen
                   lami[0] = 1-lam;
                   return si;
                 }
+            }
             }
         }
         break;
