@@ -271,6 +271,7 @@ namespace netgen
 
     // add point elements
     for (auto & point : geompoints)
+      if (point.name.length())
         {
           Point<3> newp(point(0), point(1), 0);
           PointIndex npi = mesh2d.AddPoint (newp, 1, FIXEDPOINT);
@@ -301,6 +302,11 @@ namespace netgen
 	      {
 		npi = mesh2d.AddPoint (newp, layer);
 		searchtree.Insert (newp, npi);
+                mesh2d.AddLockedPoint(npi);
+                Element0d el(npi, npi);
+                el.name = "";
+                mesh2d.SetCD2Name(npi, "");
+                mesh2d.pointelements.Append (el);
 	      }
           }
     }
