@@ -5268,7 +5268,7 @@ namespace netgen
             //(*testout) << "col1 " << col1 << " col2 " << col2 << " col3 " << col3 << " rhs " << rhs << endl;
             //(*testout) << "sol " << sol << endl;
 
-            if (SurfaceElement(element).GetType() ==TRIG6)
+            if (SurfaceElement(element).GetType() ==TRIG6 || curvedelems->IsSurfaceElementCurved(element-1))
               {
                 netgen::Point<2> lam(1./3,1./3);
                 Vec<3> rhs;
@@ -5679,6 +5679,47 @@ namespace netgen
   {
     if (dimension == 2)
       {
+        double vlam[3];
+        int velement = GetElementOfPoint(p, vlam, NULL, build_searchtree, allowindex);
+        if(velement == 0)
+          return 0;
+
+        vlam[2] = 1.-vlam[0] - vlam[1];
+        NgArray<int> edges;
+        topology.GetSurfaceElementEdges(velement, edges);
+        Array<SegmentIndex> segs(edges.Size());
+        for(auto i : Range(edges))
+          segs[i] = topology.GetSegmentOfEdge(edges[i]);
+
+        for(auto i : Range(segs))
+          {
+            if(IsInvalid(segs[i]))
+              continue;
+            auto& el = SurfaceElement(velement);
+            if(el.GetType() == TRIG)
+              {
+                double seg_lam;
+                double lam;
+                auto seg = LineSegment(segs[i]);
+                    for(auto k : Range(3))
+                      {
+                        if(seg[0] == el[k])
+                          lam = vlam[k];
+                        if(seg[1] == el[k])
+                          seg_lam = vlam[k];
+                      }
+                if(1.- seg_lam - lam < 1e-5)
+                  {
+                    // found point close to segment -> use barycentric coordinates directly
+                    lami[0] = lam;
+                    return int(segs[i])+1;
+                  }
+              }
+            else
+              throw NgException("Quad not implemented yet!");
+          }
+
+        return 0;
         throw NgException("GetSurfaceElementOfPoint not yet implemented for 2D meshes");
       }
     else

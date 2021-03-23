@@ -63,6 +63,7 @@ class MeshTopology
   NgArray<T_FACE> surffaces;
   NgArray<INDEX_2> surf2volelement;
   NgArray<int> face2surfel;
+  Array<SegmentIndex> edge2segment;
   TABLE<ElementIndex,PointIndex::BASE> vert2element;
   TABLE<SurfaceElementIndex,PointIndex::BASE> vert2surfelement;
   TABLE<SegmentIndex,PointIndex::BASE> vert2segment;
@@ -169,6 +170,8 @@ public:
   }
 
   int GetFace2SurfaceElement (int fnr) const { return face2surfel[fnr-1]; }
+
+  SegmentIndex GetSegmentOfEdge(int edgenr) const { return edge2segment[edgenr-1]; }
   
   void GetVertexElements (int vnr, NgArray<ElementIndex> & elements) const;
   NgFlatArray<ElementIndex> GetVertexElements (int vnr) const

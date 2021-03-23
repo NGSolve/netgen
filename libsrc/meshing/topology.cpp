@@ -620,7 +620,8 @@ namespace netgen
             ned += hv;
           }
         edge2vert.SetSize(ned);
-
+        edge2segment.SetSize(ned);
+        edge2segment = -1;
 
         // INDEX_CLOSED_HASHTABLE<int> v2eht(2*max_edge_on_vertex+10);
 	// NgArray<int> vertex2;
@@ -689,6 +690,7 @@ namespace netgen
                                       break;
                                     case 1:
                                       segedges[elnr].nr = edgenum;
+                                      edge2segment[edgenum] = elnr;
                                       // segedges[elnr].orient = edgedir;
                                       break;
                                     }
