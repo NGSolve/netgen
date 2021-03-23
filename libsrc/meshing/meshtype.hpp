@@ -406,7 +406,7 @@ namespace netgen
     PointGeomInfo geominfo[ELEMENT2D_MAXPOINTS];
 
     /// surface nr
-    short int index;
+    int index;
     ///
     ELEMENT_TYPE typ;
     /// number of points
@@ -738,7 +738,7 @@ namespace netgen
     };
 
     /// sub-domain index
-    short int index;
+    int index;
     /// order for hp-FEM
     unsigned int orderx:6;
     unsigned int ordery:6;
