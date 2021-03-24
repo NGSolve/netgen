@@ -2216,6 +2216,8 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
     seg->reffak = 1;
     seg->copyfrom = -1;
     seg->hmax = ls.maxh;
+    seg->hpref_left = 0.;
+    seg->hpref_right = 0.;
     geo->AppendSegment(seg);
   }
   t_segments.Stop();
