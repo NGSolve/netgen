@@ -804,8 +804,8 @@ void ComputeIntersections(Edge edgeP , Loop & l2)
 {
   for (Edge edgeQ : l2.Edges(SOURCE))
   {
-    double alpha = -1;
-    double beta = -1;
+    double alpha = -EPSILON;
+    double beta = -EPSILON;
     IntersectionType i = intersect(edgeP, edgeQ, alpha, beta);
     AddIntersectionPoint(edgeP, edgeQ, i, alpha, beta);
     if(i==X_INTERSECTION && (edgeP.v0->spline || edgeQ.v0->spline))
