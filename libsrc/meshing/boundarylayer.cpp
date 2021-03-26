@@ -760,12 +760,6 @@ namespace netgen
      BitArray segs_done(nseg);
      segs_done.Clear();
 
-     // map for all segments with same points
-     // points to pair of SegmentIndex, int
-     // int is type of other segment, either:
-     // TODO: recognize "end points" of boundary layer and implement closure properly
-     Array<Array<pair<SegmentIndex, int>>, SegmentIndex> segmap(mesh.GetNSeg());
-
      // moved segments
      Array<SegmentIndex> moved_segs;
 
@@ -851,20 +845,7 @@ namespace netgen
         if(si_map[segi.si] == -1) continue;
         if(!active_boundaries.Test(segi.epgeominfo[0].edgenr))
            continue;
-        segmap[si].Append(make_pair(si, 0));
         moved_segs.Append(si);
-        for(auto sj : Range(mesh.LineSegments()))
-          {
-            if(segs_done.Test(sj)) continue;
-            const auto& segj = mesh[sj];
-            if((segi[0] == segj[0] && segi[1] == segj[1]) ||
-               (segi[0] == segj[1] && segi[1] == segj[0]))
-              {
-                segs_done.SetBit(sj);
-                int type = 0;
-                segmap[si].Append(make_pair(sj, type));
-              }
-          }
       }
 
      // calculate growth vectors (average normal vectors of adjacent segments at each point)
@@ -924,6 +905,127 @@ namespace netgen
        AddDirection(growthvectors[seg[1]], n);
      }
 
+     //////////////////////////////////////////////////////////////////////////
+     // average growthvectors along straight lines to avoid overlaps in corners
+     BitArray points_done(np+1);
+     points_done.Clear();
+
+     for(auto si : moved_segs)
+     {
+        auto current_seg = mesh[si];
+        auto current_si = si;
+
+        auto first = current_seg[0];
+        auto current = -1;
+        auto next =  current_seg[1];
+
+        if(points_done.Test(first))
+           continue;
+
+        Array<PointIndex> chain;
+        chain.Append(first);
+
+        // first find closed loops of segments
+        while(next != current && next != first)
+        {
+           current = next;
+           points_done.SetBit(current);
+           chain.Append(current);
+           for(auto sj : meshtopo.GetVertexSegments( current ))
+           {
+              if(!active_segments.Test(sj))
+                 continue;
+
+              if(sj!=current_si)
+              {
+                 current_si = sj;
+                 current_seg = mesh[sj];
+
+                 next = current_seg[0] + current_seg[1] - current;
+                 break;
+              }
+           }
+        }
+
+        auto ifirst = 0;
+        auto n = chain.Size();
+
+        // angle of adjacent segments at points a[i-1], a[i], a[i+1]
+        auto getAngle = [&mesh, &growthvectors] (FlatArray<PointIndex> a, size_t i)
+        {
+           auto n = a.Size();
+           auto v0 = growthvectors[a[(i+n-1)%n]];
+           auto v1 = growthvectors[a[i]];
+           auto v2 = growthvectors[a[(i+1)%n]];
+
+           auto p0 = mesh[a[(i+n-1)%n]];
+           auto p1 = mesh[a[i]];
+           auto p2 = mesh[a[(i+1)%n]];
+
+           v0 = p1-p0;
+           v1 = p2-p1;
+
+           auto angle = abs(atan2(v1[0], v1[1]) - atan2(v0[0], v0[1]));
+           if(angle>M_PI)
+              angle = 2*M_PI-angle;
+
+           return angle;
+        };
+
+        // find first corner point
+        while(getAngle(chain, ifirst) < 1e-5 )
+           ifirst = (ifirst+1)%n;
+
+        // Copy points of closed loop in correct order, starting with a corner
+        Array<PointIndex> pis(n+1);
+        pis.Range(0, n-ifirst) = chain.Range(ifirst, n);
+        pis.Range(n-ifirst, n) = chain.Range(0, n-ifirst);
+        pis[n] = pis[0];
+
+        Array<double> lengths(n);
+
+        for(auto i : Range(n))
+           lengths[i] = (mesh[pis[(i+1)%n]] - mesh[pis[i]]).Length();
+
+        auto averageGrowthVectors = [&] (size_t first, size_t last)
+        {
+           if(first+1 >= last)
+              return;
+
+           double total_len = 0.0;
+           for(auto l : lengths.Range(first, last))
+              total_len += l;
+
+           double len = lengths[first];
+           auto v0 = growthvectors[pis[first]];
+           auto v1 = growthvectors[pis[last]];
+
+           for(auto i : Range(first+1, last))
+           {
+              auto pi = pis[i];
+              growthvectors[pi] = (len/total_len)*v1 + (1.0-len/total_len)*v0;
+              len += lengths[i];
+           }
+        };
+
+        auto icurrent = 0;
+
+        while(icurrent<n)
+        {
+           auto ilast = icurrent+1;
+
+           while(getAngle(pis, ilast) < 1e-5 && ilast < n)
+              ilast++;
+
+           // found straight line -> average growth vectors between end points
+           if(icurrent!=ilast)
+              averageGrowthVectors(icurrent, ilast);
+
+           icurrent = ilast;
+        }
+     }
+
+     //////////////////////////////////////////////////////////////////////
      // reduce growthvectors where necessary to avoid overlaps/slim regions
      const auto getSegmentBox = [&] (SegmentIndex segi)
      {
@@ -968,10 +1070,6 @@ namespace netgen
         n1.Normalize();
         if(Dot(n1, growthvectors[seg1[0]])<0) n1 = -n;
         if(Dot(n1, growthvectors[seg1[1]])<0) n1 = -n;
-
-        // check if angle between normal vectors is less than 180 degrees (cant overlap for opposing directions)
-//         if(n[0]*n1[1]-n[1]*n1[0]<0.0)
-//            return;
 
         auto p10 = mesh[seg1[0]];
         auto p11 = mesh[seg1[1]];
