@@ -212,6 +212,20 @@ namespace ngcore
   template <typename  T>
   constexpr T IndexBASE () { return T(0); }
 
+
+  class IndexFromEnd
+  {
+    ptrdiff_t i;
+  public:
+    constexpr IndexFromEnd (ptrdiff_t ai) : i(ai) { }
+    IndexFromEnd operator+ (ptrdiff_t inc) const { return i+inc; }
+    IndexFromEnd operator- (ptrdiff_t dec) const { return i-dec; }
+    // operator ptrdiff_t () const { return i; }
+    ptrdiff_t Value() const { return i; }
+  };
+
+  constexpr IndexFromEnd END(0);
+  
   
   template <class T, class IndexType = size_t> class FlatArray;
 
@@ -560,6 +574,12 @@ namespace ngcore
       return FlatArray<T> (end-start, data+start);
     }
 
+    /// takes range starting from position start of end-start elements
+    NETGEN_INLINE FlatArray<T> Range (size_t start, IndexFromEnd indend) const
+    {
+      return this->Range(start, size_t(Size()+indend.Value()));
+    }
+    
     /// takes range starting from position start of end-start elements
     NETGEN_INLINE FlatArray<T> Range (T_Range<size_t> range) const
     {
