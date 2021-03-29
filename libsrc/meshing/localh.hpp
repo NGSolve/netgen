@@ -44,9 +44,13 @@ namespace netgen
 
     ///
     GradingBox (const double * ax1, const double * ax2);
+    /// default constructor for Archive
+    GradingBox() = default;
     ///
     void DeleteChilds();
     ///
+
+    void DoArchive(Archive& ar);
 
     Point<3> PMid() const { return Point<3> (xmid[0], xmid[1], xmid[2]); }
     double H2() const { return h2; }
@@ -78,7 +82,7 @@ namespace netgen
     ///
     double grading;
     ///
-    NgArray<GradingBox*> boxes;
+    Array<GradingBox*> boxes;
     ///
     Box<3> boundingbox;
     /// octree or quadtree
@@ -89,10 +93,14 @@ namespace netgen
     ///
     LocalH (const Box<3> & box, double grading, int adimension = 3)
       : LocalH (box.PMin(), box.PMax(), grading, adimension) { ; }
-    ///
+    /// Default ctor for archive
+    LocalH() = default;
+
     ~LocalH();
     ///
     void Delete();
+    ///
+    void DoArchive(Archive& ar);
     ///
     void SetGrading (double agrading) { grading = agrading; }
     ///

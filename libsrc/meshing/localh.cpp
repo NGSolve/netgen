@@ -23,6 +23,13 @@ namespace netgen
     hopt = 2 * h2;
   }
 
+  void GradingBox :: DoArchive(Archive& ar)
+  {
+    ar & xmid[0] & xmid[1] & xmid[2] & h2 & father & hopt &
+      flags.cutboundary & flags.isinner & flags.oldcell & flags.pinner;
+    for(auto i : Range(8))
+      ar & childs[i];
+  }
 
   BlockAllocator GradingBox :: ball(sizeof (GradingBox));
 
@@ -91,6 +98,11 @@ namespace netgen
   void LocalH :: Delete ()
   {
     root->DeleteChilds();
+  }
+
+  void LocalH :: DoArchive(Archive& ar)
+  {
+    ar & root & grading & boxes & boundingbox & dimension;
   }
 
   void LocalH :: SetH (Point<3> p, double h)

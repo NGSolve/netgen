@@ -153,6 +153,7 @@ namespace ngcore
     virtual void NeedsVersion(const std::string& /*unused*/, const std::string& /*unused*/) {}
 
     // Pure virtual functions that have to be implemented by In-/OutArchive
+    virtual Archive & operator & (float & d) = 0;
     virtual Archive & operator & (double & d) = 0;
     virtual Archive & operator & (int & i) = 0;
     virtual Archive & operator & (long & i) = 0;
@@ -678,6 +679,8 @@ namespace ngcore
     BinaryOutArchive& operator=(BinaryOutArchive&&) = delete;
 
     using Archive::operator&;
+    Archive & operator & (float & f) override
+    { return Write(f); }
     Archive & operator & (double & d) override
     { return Write(d); }
     Archive & operator & (int & i) override
@@ -749,6 +752,8 @@ namespace ngcore
       : BinaryInArchive(std::make_shared<std::ifstream>(filename)) { ; }
 
     using Archive::operator&;
+    Archive & operator & (float & f) override
+    { Read(f); return *this; }
     Archive & operator & (double & d) override
     { Read(d); return *this; }
     Archive & operator & (int & i) override
@@ -813,6 +818,8 @@ namespace ngcore
       TextOutArchive(std::make_shared<std::ofstream>(filename)) { }
 
     using Archive::operator&;
+    Archive & operator & (float & f) override
+    { *stream << f << '\n'; return *this; }
     Archive & operator & (double & d) override
     { *stream << d << '\n'; return *this; }
     Archive & operator & (int & i) override
@@ -864,6 +871,8 @@ namespace ngcore
       : TextInArchive(std::make_shared<std::ifstream>(filename)) {}
 
     using Archive::operator&;
+    Archive & operator & (float & f) override
+    { *stream >> f; return *this; }
     Archive & operator & (double & d) override
     { *stream >> d; return *this; }
     Archive & operator & (int & i) override
@@ -924,6 +933,7 @@ namespace ngcore
       { h = (char*)&hash_value; }
 
     using Archive::operator&;
+    Archive & operator & (float & f) override { return ApplyHash(f); }
     Archive & operator & (double & d) override { return ApplyHash(d); }
     Archive & operator & (int & i) override { return ApplyHash(i); }
     Archive & operator & (short & i) override { return ApplyHash(i); }
