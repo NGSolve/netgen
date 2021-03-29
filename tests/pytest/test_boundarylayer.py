@@ -33,7 +33,7 @@ def test_boundarylayer(outside, capfd):
         assert not "elements are not matching" in capture.out
 
 @pytest.mark.parametrize("outside", [True, False])
-@pytest.mark.parametrize("version", [1, 2])
+@pytest.mark.parametrize("version", [1, 2]) # version 2 not working yet
 def test_boundarylayer2(outside, version, capfd):
     geo = CSGeometry()
     top = Plane(Pnt(0,0,0.5), Vec(0,0,1))

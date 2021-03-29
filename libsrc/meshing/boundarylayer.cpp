@@ -414,14 +414,14 @@ namespace netgen
           }
       }
 
-    // 1 if moved away from point, 2 if moved towards point
-    Array<Array<tuple<PointIndex, bool>>> fixed_points(np+1);
+    BitArray fixed_points(np+1);
+    fixed_points.Clear();
+    BitArray moveboundarypoint(np+1);
+    moveboundarypoint.Clear();
     for(SurfaceElementIndex si = 0; si < nse; si++)
       {
         // copy because surfaceels array will be resized!
         auto sel = mesh[si];
-        // force move this sel
-        bool move_sel = false;
         if(si_map[sel.GetIndex()] != -1)
           {
             Array<PointIndex> points(sel.PNums());
@@ -448,69 +448,22 @@ namespace netgen
           }
         else
           {
-            ArrayMem<tuple<PointIndex, Vec<3>>, 4> moved_direction;
+            bool has_moved = false;
             for(auto p : sel.PNums())
               if(mapto[p].Size())
-                {
-                  Vec<3> dir = growthvectors[p];
-                  moved_direction.Append({ p, dir.Normalize() });
-                }
-            const auto& fd = mesh.GetFaceDescriptor(sel.GetIndex());
-            bool in_inside = blp.domains.Test(fd.DomainIn());
-            bool sel_between_in_and_out = in_inside != blp.domains.Test(fd.DomainOut());
-            if(moved_direction.Size() && sel_between_in_and_out)
+                has_moved = true;
+            if(has_moved)
               for(auto p : sel.PNums())
                 {
                   if(!mapto[p].Size())
                     {
-                      tuple<PointIndex, double> max = { PointIndex::INVALID, 0 };
-                      for(auto& [po, dir] : moved_direction)
-                        {
-                          Vec<3> mydir = mesh[p] - mesh[po];
-                          mydir.Normalize();
-                          double ang = mydir * dir;
-                          if(fabs(ang) >= fabs(get<1>(max)))
-                            max = { po, ang };
-                        }
-                      fixed_points[p].Append({ get<0>(max), get<1>(max) > 0 });
+                      fixed_points.SetBit(p);
+                      if(move_boundaries.Test(sel.GetIndex()))
+                        moveboundarypoint.SetBit(p);
                     }
                 }
-            // if only one point is moved and moved into sel
-            // then sel needs to be divided
-            if(!sel_between_in_and_out && !in_inside && moved_direction.Size() == 1)
-              {
-                for(const auto& p : sel.PNums())
-                  {
-                    if(!mapto[p].Size())
-                      {
-                        const auto& [po, dir] = moved_direction[0];
-                        Vec<3> mydir = mesh[p] - mesh[po];
-                        mydir.Normalize();
-                        if(mydir * dir > 1 - 1e-6)
-                          {
-                            PointIndex p1 = po;
-                            for(auto i : Range(blp.heights))
-                              {
-                                PointIndex p2 = mapto[po][i];
-                                Element2d newel = sel;
-                                for(auto& pi : newel.PNums())
-                                  {
-                                    if(pi == po)
-                                      pi = p1;
-                                    if(pi == p)
-                                      pi = p2;
-                                  }
-                                p1 = p2;
-                                newel.SetIndex(sel.GetIndex());
-                                mesh.AddSurfaceElement(newel);
-                                move_sel = true;
-                              }
-                          }
-                      }
-                  }
-              }
           }
-        if(move_sel || move_boundaries.Test(sel.GetIndex()))
+        if(move_boundaries.Test(sel.GetIndex()))
           {
             for(auto& p : mesh[si].PNums())
               if(mapto[p].Size())
@@ -531,65 +484,28 @@ namespace netgen
       {
         auto el = mesh[ei];
         ArrayMem<PointIndex,4> fixed;
-        ArrayMem<PointIndex,4> fixed_other;
         ArrayMem<PointIndex,4> moved;
         bool moved_bnd = false;
         for(const auto& p : el.PNums())
           {
-            if(domains.Test(el.GetIndex()))
-              {
-                if(fixed_points[p].Size())
-                  {
-                    bool found = false;
-                    bool found_other = false;
-                    for(const auto& tup : fixed_points[p])
-                      if(get<1>(tup))
-                        {
-                          found_other = true;
-                          if(el.PNums().Contains(get<0>(tup)))
-                            found = true;
-                        }
-                    if(found_other)
-                      fixed_other.Append(p);
-                    if(found)
-                      fixed.Append(p);
-                  }
-              }
-            if(!domains.Test(el.GetIndex()))
-              {
-                if(fixed_points[p].Size())
-                  {
-                    bool found = false;
-                    bool found_other = false;
-                    for(const auto& tup : fixed_points[p])
-                      {
-                        if(!get<1>(tup))
-                          {
-                            found_other = true;
-                            if(el.PNums().Contains(get<0>(tup)))
-                              found = true;
-                          }
-                      }
-                    if(found)
-                      fixed.Append(p);
-                    if(found_other)
-                      fixed_other.Append(p);
-                  }
-              }
+            if(fixed_points.Test(p))
+              fixed.Append(p);
             if(mapto[p].Size())
               moved.Append(p);
+            if(moveboundarypoint.Test(p))
+              moved_bnd = true;
           }
 
         bool do_move, do_insert;
         if(domains.Test(el.GetIndex()))
           {
-            do_move = fixed.Size() && moved.Size();
+            do_move = fixed.Size() && moved_bnd;
             do_insert = do_move;
           }
         else
           {
-            do_move = !fixed.Size() && moved.Size();
-            do_insert = !do_move && moved.Size();
+            do_move = !fixed.Size() || moved_bnd;
+            do_insert = !do_move;
           }
 
         if(do_move)
@@ -660,9 +576,9 @@ namespace netgen
                         for(auto& p : nel.PNums())
                           {
                             if(p == moved[0])
-                              p = domains.Test(el.GetIndex()) ? p1 : p2;
+                              p = p1;
                             else if(p == fixed[0])
-                              p = domains.Test(el.GetIndex()) ? p2 : p1;
+                              p = p2;
                           }
                         p1 = p2;
                         mesh.AddVolumeElement(nel);
@@ -697,64 +613,6 @@ namespace netgen
                   }
                 else if(moved.Size() == 1)
                   throw Exception("This case is not implemented yet!");
-              }
-            else if(el.GetType() == PRISM)
-              {
-                if(moved.Size() == 2)
-                  {
-                    auto pnums = el.PNums();
-                    bool cut_vertical = (moved[0] == pnums[0] && moved[1] == pnums[3]) || (moved[0] == pnums[1] && moved[1] == pnums[4]) || (moved[0] == pnums[2] && moved[1] == pnums[5]);
-                    if(cut_vertical)
-                      {
-                        if(fixed.Size() != 2)
-                          {
-                            cout << "in domain = " << domains.Test(el.GetIndex()) << endl;
-                            cout << "moved = " << moved << endl;
-                            cout << "fixed = " << fixed << endl;
-                            cout << "pnums = " << el.PNums() << endl;
-                            throw Exception("Cut prism vert only implemented for fixed size == 2!");
-                          }
-                        auto bot_trig = pnums.Range(3);
-                        if(bot_trig.Contains(moved[1]))
-                          Swap(moved[0], moved[1]);
-                        if(bot_trig.Contains(fixed[1]))
-                          Swap(fixed[0], fixed[1]);
-
-                        PointIndex tip_bot = pnums[0] + pnums[1] + pnums[2] - moved[0] - fixed[0];
-                        PointIndex tip_top = pnums[3] + pnums[4] + pnums[5] - moved[1] - fixed[1];
-                        int index_moved = bot_trig.Pos(moved[0]);
-                        int index_tip = bot_trig.Pos(tip_bot);
-                        int index_fixed = 3 - index_moved - index_tip;
-                        PointIndex p1_bot = moved[0];
-                        PointIndex p1_top = moved[1];
-                        for(auto i : Range(blp.heights))
-                          {
-                            PointIndex p2_bot = mapto[moved[0]][i];
-                            PointIndex p2_top = mapto[moved[1]][i];
-                            Element nel(PRISM);
-                            nel[index_moved] = p1_bot;
-                            nel[index_tip] = tip_bot;
-                            nel[index_fixed] = p2_bot;
-                            nel[3+index_moved] = p1_top;
-                            nel[3+index_tip] = tip_top;
-                            nel[3+index_fixed] = p2_top;
-                            nel.SetIndex(el.GetIndex());
-                            mesh.AddVolumeElement(nel);
-                            p1_bot = p2_bot;
-                            p1_top = p2_top;
-                          }
-                      }
-                    else
-                      throw Exception("Boundarylayer horizontally threw PRISM not implemented yet!");
-                  }
-                else
-                  {
-                    cout << "in domain = " << domains.Test(el.GetIndex()) << endl;
-                    cout << "moved = " << moved << endl;
-                    cout << "fixed = " << fixed << endl;
-                    cout << "pnums = " << el.PNums() << endl;
-                    throw Exception("Prism with moved points != 2 not implemented yet!");
-                  }
               }
             else
               throw Exception("Boundarylayer only implemented for tets and pyramids outside yet!");
