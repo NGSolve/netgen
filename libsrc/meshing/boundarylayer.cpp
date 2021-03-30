@@ -743,8 +743,10 @@ namespace netgen
 
   }
 
-  void GenerateBoundaryLayer2 (Mesh & mesh, int domain, const Array<int> & boundaries, const Array<double> & thicknesses)
+  int GenerateBoundaryLayer2 (Mesh & mesh, int domain, const Array<double> & thicknesses, bool should_make_new_domain, const Array<int> & boundaries)
   {
+     SegmentIndex first_new_seg = mesh.LineSegments().Range().Next();
+
      int np = mesh.GetNP();
      int nseg = mesh.GetNSeg();
      int ne = mesh.GetNSE();
@@ -800,6 +802,8 @@ namespace netgen
          max_domain = seg.si;
     }
 
+    int new_domain = max_domain+1;
+
     BitArray active_boundaries(max_edge_nr+1);
     BitArray active_segments(nseg);
     active_boundaries.Clear();
@@ -829,12 +833,12 @@ namespace netgen
         if(!active_segments.Test(segi))
            continue;
 
-        int new_si = mesh.GetNFD()+1;
-        FaceDescriptor new_fd(-1, 0, 0, -1);
-        new_fd.SetBCProperty(new_si);
-        mesh.AddFaceDescriptor(new_fd);
-        si_map[si] = new_si;
-        mesh.SetBCName(new_si-1, "mapped_" + mesh.GetBCName(si-1));
+        FaceDescriptor new_fd(0, 0, 0, -1);
+        new_fd.SetBCProperty(new_domain);
+        int new_fd_index = mesh.AddFaceDescriptor(new_fd);
+        si_map[si] = new_domain;
+        if(should_make_new_domain)
+           mesh.SetBCName(new_domain-1, "mapped_" + mesh.GetBCName(si-1));
     }
 
     for(auto si : Range(mesh.LineSegments()))
@@ -1210,22 +1214,22 @@ namespace netgen
 
         auto newindex = si_map[seg.si];
 
-        {
-           Segment s = seg;
-           s[0] = pm0.Last();
-           s[1] = pm1.Last();
-           s[2] = PointIndex::INVALID;
-           auto pair = s[0] < s[1] ? make_pair(s[0], s[1]) : make_pair(s[1], s[0]);
-           if(seg2edge.find(pair) == seg2edge.end())
-              seg2edge[pair] = ++max_edge_nr;
-           s.edgenr = seg2edge[pair];
-           s.si = seg.si;
-           mesh.AddSegment(s);
+        Segment s = seg;
+        s.geominfo[0] = {};
+        s.geominfo[1] = {};
+        s[0] = pm0.Last();
+        s[1] = pm1.Last();
+        s[2] = PointIndex::INVALID;
+        auto pair = s[0] < s[1] ? make_pair(s[0], s[1]) : make_pair(s[1], s[0]);
+        if(seg2edge.find(pair) == seg2edge.end())
+           seg2edge[pair] = ++max_edge_nr;
+        s.edgenr = seg2edge[pair];
+        s.si = seg.si;
+        mesh.AddSegment(s);
 
-           Swap(s[0], s[1]);
-           s.si =  newindex;
-           mesh.AddSegment(s);
-        }
+        Swap(s[0], s[1]);
+        s.si =  newindex;
+        mesh.AddSegment(s);
 
         for ( auto i : Range(thicknesses))
         {
@@ -1265,6 +1269,7 @@ namespace netgen
            newel[2] = pi2;
            newel[3] = pi3;
            newel.SetIndex(si_map[seg.si]);
+           newel.GeomInfo() = PointGeomInfo{};
 
 //            if(swap)
 //            {
@@ -1306,6 +1311,30 @@ namespace netgen
      mesh.CalcSurfacesOfNode();
 
      Generate2dMesh(mesh, domain);
+
+     // even without new domain, we need temporarily a new domain to mesh the remaining area, without confusing the meshes with quads -> add segments temporarily and reset domain number and segments afterwards
+     if(!should_make_new_domain)
+     {
+        // map new domain back to old one
+        for(auto & sel : mesh.SurfaceElements())
+           if(sel.GetIndex()==new_domain)
+              sel.SetIndex(domain);
+
+        // remove (temporary) inner segments
+        for(auto segi : Range(first_new_seg, mesh.LineSegments().Range().Next()))
+        {
+           mesh[segi][0].Invalidate();
+           mesh[segi][1].Invalidate();
+        }
+
+        for(auto segi : moved_segs)
+           mesh[segi].si = domain;
+
+        mesh.Compress();
+        mesh.CalcSurfacesOfNode();
+     }
+
+     return new_domain;
    }
 
 }
