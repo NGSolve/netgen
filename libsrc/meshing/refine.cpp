@@ -34,6 +34,9 @@ namespace netgen
         mesh.mlbetweennodes = INDEX_2(PointIndex::BASE-1,PointIndex::BASE-1);
       }
 
+    if (mesh.level_nv.Size() == 0)
+      mesh.level_nv.Append (mesh.GetNV());
+    
     
     INDEX_2_HASHTABLE<PointIndex> between(mesh.GetNP() + 5);
 
@@ -739,6 +742,7 @@ namespace netgen
     mesh.ComputeNVertices();
     mesh.RebuildSurfaceElementLists();
 
+    mesh.level_nv.Append (mesh.GetNV());
 
 #ifdef PARALLEL
     if (mesh.GetCommunicator().Size() > 1)
@@ -748,7 +752,7 @@ namespace netgen
         mesh.GetParallelTopology().EnumeratePointsGlobally();
       }
 #endif
-
+      
     PrintMessage (5, "mesh updates complete");
     return;
 

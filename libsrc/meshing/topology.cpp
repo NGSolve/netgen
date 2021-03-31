@@ -699,196 +699,268 @@ namespace netgen
            } );
 
 
-	if (build_parent_edges)
-	  {
-	    static Timer t("build_hierarchy"); RegionTimer reg(t);
-	    cnt = 0;
-            for (auto verts : edge2vert) cnt[verts[0]]++;
-	    TABLE<int,PointIndex::BASE> vert2edge (cnt);
-            for (auto i : edge2vert.Range())
-	      vert2edge.AddSave (edge2vert[i][0], i);
-            
-	    // build edge hierarchy:
-	    parent_edges.SetSize (ned);
-	    parent_edges = { -1, { -1, -1, -1 } };
+        if (build_parent_edges)
+        {
+          static Timer t("build_hierarchy"); RegionTimer reg(t);
+          cnt = 0;
+          for (auto verts : edge2vert) cnt[verts[0]]++;
+          TABLE<int,PointIndex::BASE> vert2edge (cnt);
+          for (auto i : edge2vert.Range())
+            vert2edge.AddSave (edge2vert[i][0], i);
 
-	    for (size_t i = 0; i < ned; i++)
-	      {
-		auto verts = edge2vert[i];  // 2 vertices of edge
+          // build edge hierarchy:
+          parent_edges.SetSize (ned);
+          parent_edges = { -1, { -1, -1, -1 } };
 
-		if (verts[0] >= mesh->mlbetweennodes.Size()+PointIndex::BASE ||
-		    verts[1] >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
-		  continue;
-                
-		auto pa0 = mesh->mlbetweennodes[verts[0]]; // two parent vertices of v0
-		auto pa1 = mesh->mlbetweennodes[verts[1]]; // two parent vertices of v1
+          for (size_t i = 0; i < ned; i++)
+          {
+            auto verts = edge2vert[i];  // 2 vertices of edge
 
-		// both vertices are on coarsest mesh
-		if (!pa0[0].IsValid() && !pa1[0].IsValid())
-		  continue;
-		
-		int issplitedge = 0;
-		if (pa0[0] == verts[1] || pa0[1] == verts[1])
-		  issplitedge = 1;
-		if (pa1[0] == verts[0] || pa1[1] == verts[0])
-		  issplitedge = 2;
-		
-		if (issplitedge)
-		  {
-		    // cout << "split edge " << endl;
-		    // edge is obtained by splitting one edge into two parts:
-                    auto paedge = issplitedge == 1 ? pa0 : pa1;
-                    
-		    if (paedge[0] > paedge[1]) 
-		      Swap (paedge[0], paedge[1]);
-                   
-		    for (int ednr : vert2edge[paedge[0]])
-		      if (auto cverts = edge2vert[ednr]; cverts[1] == paedge[1])
-			{
-			  int orient = (paedge[0] == verts[0] || paedge[1] == verts[1]) ? 1 : 0;
-			  parent_edges[i] = { orient, { ednr, -1, -1 } };			  
-			}
-		  }
-		else
-		  {
-		    // edge is splitting edge in middle of triangle:
-		    for (int j = 1; j <= 2; j++)
-		      {
-			INT<2> paedge1, paedge2, paedge3;
-                        int orient_inner = 0;
-			if (j == 1)
-			  {
-			    paedge1 = INT<2> (pa0[0], verts[1]);
-			    paedge2 = INT<2> (pa0[1], verts[1]);
-                            paedge3 = INT<2> (pa0[0], pa0[1]);
-                            orient_inner = 0;
-			  }
-			else
-			  {
-			    paedge1 = INT<2> (pa1[0], verts[0]);
-			    paedge2 = INT<2> (pa1[1], verts[0]);
-                            paedge3 = INT<2> (pa1[0], pa1[1]);
-                            orient_inner = 1;
-			  }
-			if (paedge1[0] > paedge1[1]) 
-			  Swap (paedge1[0], paedge1[1]);
-			if (paedge2[0] > paedge2[1]) 
-			  Swap (paedge2[0], paedge2[1]);
-			if (paedge3[0] > paedge3[1]) 
-			  Swap (paedge3[0], paedge3[1]);
-			
-			// if first vertex number is -1, then don't try to find entry in node2edge hash table
-			if ( paedge1[0] == PointIndex::BASE-1 || paedge2[0] == PointIndex::BASE-1 )
-			  continue;
+            if (verts[0] >= mesh->mlbetweennodes.Size()+PointIndex::BASE ||
+                verts[1] >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
+              continue;
 
-			int paedgenr1=-1, paedgenr2=-1, paedgenr3=-1, orient1 = 0, orient2 = 0;
-			for (int ednr : vert2edge[paedge1[0]])
-			  if (auto cverts = edge2vert[ednr]; cverts[1] == paedge1[1])
-			    {
-			      paedgenr1 = ednr;
-			      orient1 = (paedge1[0] == verts[0] || paedge1[1] == verts[1]) ? 1 : 0;
-			    }
-			for (int ednr : vert2edge[paedge2[0]])
-			  if (auto cverts = edge2vert[ednr]; cverts[1] == paedge2[1])
-			    {
-			      paedgenr2 = ednr;
-			      orient2 = (paedge2[0] == verts[0] || paedge2[1] == verts[1]) ? 1 : 0;
-			    }
-                        
-			for (int ednr : vert2edge[paedge3[0]])
-			  if (auto cverts = edge2vert[ednr]; cverts[1] == paedge3[1])
-                            paedgenr3 = ednr;
-                        
-			if (paedgenr1 != -1 && paedgenr2 != -1)
-			  parent_edges[i] = { orient1+2*orient2+4*orient_inner, { paedgenr1, paedgenr2, paedgenr3 } };
-		      }
+            auto pa0 = mesh->mlbetweennodes[verts[0]]; // two parent vertices of v0
+            auto pa1 = mesh->mlbetweennodes[verts[1]]; // two parent vertices of v1
+
+            // both vertices are on coarsest mesh
+            if (!pa0[0].IsValid() && !pa1[0].IsValid())
+              continue;
+
+            int issplitedge = 0;
+            if (pa0[0] == verts[1] || pa0[1] == verts[1])
+              issplitedge = 1;
+            if (pa1[0] == verts[0] || pa1[1] == verts[0])
+              issplitedge = 2;
+
+            if (issplitedge)
+            {
+              // cout << "split edge " << endl;
+              // edge is obtained by splitting one edge into two parts:
+              auto paedge = issplitedge == 1 ? pa0 : pa1;
+
+              if (paedge[0] > paedge[1]) 
+                Swap (paedge[0], paedge[1]);
+
+              for (int ednr : vert2edge[paedge[0]])
+                if (auto cverts = edge2vert[ednr]; cverts[1] == paedge[1])
+                {
+                  int orient = (paedge[0] == verts[0] || paedge[1] == verts[1]) ? 1 : 0;
+                  parent_edges[i] = { orient, { ednr, -1, -1 } };			  
+                }
+            }
+            else
+            {
+              bool bisect_edge = false;
+              // edge is splitting edge in middle of triangle:
+              for (int j = 1; j <= 2; j++)
+              {
+                INT<2> paedge1, paedge2, paedge3;
+                int orient_inner = 0;
+                if (j == 1)
+                {
+                  paedge1 = INT<2> (pa0[0], verts[1]);
+                  paedge2 = INT<2> (pa0[1], verts[1]);
+                  paedge3 = INT<2> (pa0[0], pa0[1]);
+                  orient_inner = 0;
+                }
+                else
+                {
+                  paedge1 = INT<2> (pa1[0], verts[0]);
+                  paedge2 = INT<2> (pa1[1], verts[0]);
+                  paedge3 = INT<2> (pa1[0], pa1[1]);
+                  orient_inner = 1;
+                }
+                if (paedge1[0] > paedge1[1]) 
+                  Swap (paedge1[0], paedge1[1]);
+                if (paedge2[0] > paedge2[1]) 
+                  Swap (paedge2[0], paedge2[1]);
+                if (paedge3[0] > paedge3[1]) 
+                  Swap (paedge3[0], paedge3[1]);
+
+                // if first vertex number is -1, then don't try to find entry in node2edge hash table
+                if ( paedge1[0] == PointIndex::BASE-1 || paedge2[0] == PointIndex::BASE-1 )
+                  continue;
+
+                int paedgenr1=-1, paedgenr2=-1, paedgenr3=-1, orient1 = 0, orient2 = 0;
+                for (int ednr : vert2edge[paedge1[0]])
+                  if (auto cverts = edge2vert[ednr]; cverts[1] == paedge1[1])
+                  {
+                    paedgenr1 = ednr;
+                    orient1 = (paedge1[0] == verts[0] || paedge1[1] == verts[1]) ? 1 : 0;
+                  }
+                for (int ednr : vert2edge[paedge2[0]])
+                  if (auto cverts = edge2vert[ednr]; cverts[1] == paedge2[1])
+                  {
+                    paedgenr2 = ednr;
+                    orient2 = (paedge2[0] == verts[0] || paedge2[1] == verts[1]) ? 1 : 0;
+                  }
+
+                for (int ednr : vert2edge[paedge3[0]])
+                  if (auto cverts = edge2vert[ednr]; cverts[1] == paedge3[1])
+                    paedgenr3 = ednr;
+
+                if (paedgenr1 != -1 && paedgenr2 != -1){
+                  bisect_edge = true;
+                  parent_edges[i] = { orient1+2*orient2+4*orient_inner, { paedgenr1, paedgenr2, paedgenr3 } };
+                }
+              }
+
+              if (!bisect_edge) // not a bisect edge (then a red edge)
+              {
+                INT<2> paedge1, paedge2, paedge3;
+                int orient1 = 0, orient2 = 0, orient3=0;
+                int orient_inner = 0;
+                paedge1 = INT<2> (pa0[0], pa0[1]);
+                paedge2 = INT<2> (pa1[0], pa1[1]);
+                // find common vertex and the thrid pa edge
+                if (pa0[0]==pa1[0]){// 00
+                  //orient1 = 0; 
+                  orient2 = 1; 
+                  if (pa0[1]<pa1[1]){
+                    orient3 = 1;
+                    paedge3 = INT<2> (pa0[1], pa1[1]);
+                  }else{
+                    //orient3 = 0;
+                    paedge3 = INT<2> (pa1[1], pa0[1]);
+                  }
+                }
+                else if (pa0[0]==pa1[1]){//01
+                  //orient1 = 0; 
+                  //orient2 = 0; 
+                  if (pa0[1]<pa1[0]){
+                    orient3 = 1;
+                    paedge3 = INT<2> (pa0[1], pa1[0]);
+                  }else{
+                    //orient3 = 0;
+                    paedge3 = INT<2> (pa1[0], pa0[1]);
+                  }
+                }
+                else if (pa0[1]==pa1[0]){//10
+                  orient1 = 1; 
+                  orient2 = 1; 
+                  if (pa0[0]<pa1[1]){
+                    orient3 = 1;
+                    paedge3 = INT<2> (pa0[0], pa1[1]);
+                  }else{
+                    //orient3 = 0;
+                    paedge3 = INT<2> (pa1[1], pa0[0]);
+                  }
+                }
+                else if (pa0[1]==pa1[1]){//11
+                  orient1 = 1; 
+                  //orient2 = 0; 
+                  if (pa0[0]<pa1[0]){
+                    orient3 = 1;
+                    paedge3 = INT<2> (pa0[0], pa1[0]);
+                  }else{
+                    //orient3 = 0;
+                    paedge3 = INT<2> (pa1[0], pa0[0]);
+                  }
+                }
+
+                int paedgenr1=-1, paedgenr2=-1, paedgenr3=-1;
+                for (int ednr : vert2edge[paedge1[0]])
+                  if (auto cverts = edge2vert[ednr]; cverts[1] == paedge1[1])
+                    paedgenr1 = ednr;
+                for (int ednr : vert2edge[paedge2[0]])
+                  if (auto cverts = edge2vert[ednr]; cverts[1] == paedge2[1])
+                    paedgenr2 = ednr;
+
+                for (int ednr : vert2edge[paedge3[0]])
+                  if (auto cverts = edge2vert[ednr]; cverts[1] == paedge3[1])
+                    paedgenr3 = ednr;
+
+                parent_edges[i] = { 8+orient1+2*orient2+4*orient3, { paedgenr1, paedgenr2, paedgenr3 } };
+
+                //cout <<8+orient1+2*orient2+4*orient3  <<":"<<paedgenr1 <<", "<< paedgenr2 << ", "<< paedgenr3 << endl;
+              }
 
 
-		    // TODO: quad edges
-		    /*
-		    if (parentedges[i][0] == -1)
-		      {
-			// quad split
-			if (pa1[0] != pa2[0] && 
-			    pa1[0] != pa2[1] && 
-			    pa1[1] != pa2[0] && 
-			    pa1[1] != pa2[1])
-			  for (int j = 1; j <= 2; j++)
-			    {
-			      INT<2> paedge1, paedge2;
-			      if (j == 1)
-				{
-				  paedge1 = INT<2> (pa1[0], pa2[0]);
-				  paedge2 = INT<2> (pa1[1], pa2[1]);
-				}
-			      else
-				{
-				  paedge1 = INT<2> (pa1[0], pa2[1]);
-				  paedge2 = INT<2> (pa1[1], pa2[0]);
-				}
-			      
-			      int paedgenr1 = 0, paedgenr2 = 0;
-			      int orient1 = 1, orient2 = 1;
-			      
-			      if (paedge1[0] > paedge1[1]) 
-				{
-				  Swap (paedge1[0], paedge1[1]);
-				  orient1 = 0;
-				}
-			      if (paedge2[0] > paedge2[1]) 
-				{
-				  Swap (paedge2[0], paedge2[1]);
-				  orient2 = 0;
-				}
-			      
-			      if ( paedge1[0] == -1 || paedge2[0] == -1 )
-				continue;
-			      
-			      if (node2edge.Used (paedge1) && node2edge.Used (paedge2))
-				{
-				  paedgenr1 = node2edge.Get (paedge1);
-				  paedgenr2 = node2edge.Get (paedge2);
-				  parentedges[i][0] = 2 * paedgenr1 + orient1;	      
-				  parentedges[i][1] = 2 * paedgenr2 + orient2;	      
-				}
-			    }
-		      }
-		    
-		    if (parentedges[i][0] == -1)
-		      {
-			// triangle split into quad+trig (from anisotropic pyramids)
-			for (int j = 0; j < 2; j++)
-			  for (int k = 0; k < 2; k++)
-			    {
-			      INT<2> paedge (pa1[1-j], pa2[1-k]);
-			      int orientpa = 1;
-			      if (paedge[0] > paedge[1]) 
-				{
-				  Swap (paedge[0], paedge[1]);
-				  orientpa = 0;
-				}	
-			      if (pa1[j] == pa2[k] && node2edge.Used(paedge))
-				{
-				  int paedgenr = node2edge.Get (paedge);
-				  parentedges[i][0] = 2 * paedgenr + orientpa;
-				}
-			    }
-			
-		      }
-		    */
+              // TODO: quad edges
+              /*
+                 if (parentedges[i][0] == -1)
+                 {
+              // quad split
+              if (pa1[0] != pa2[0] && 
+              pa1[0] != pa2[1] && 
+              pa1[1] != pa2[0] && 
+              pa1[1] != pa2[1])
+              for (int j = 1; j <= 2; j++)
+              {
+              INT<2> paedge1, paedge2;
+              if (j == 1)
+              {
+              paedge1 = INT<2> (pa1[0], pa2[0]);
+              paedge2 = INT<2> (pa1[1], pa2[1]);
+              }
+              else
+              {
+              paedge1 = INT<2> (pa1[0], pa2[1]);
+              paedge2 = INT<2> (pa1[1], pa2[0]);
+              }
 
-		  }
-	    
-	      }
+              int paedgenr1 = 0, paedgenr2 = 0;
+              int orient1 = 1, orient2 = 1;
 
-            /*
-	    for (int i : Range(parent_edges))
-	      {
-		auto [info, nrs] = parent_edges[i];
-                cout << "edge " << i << " has " << info << ", nrs = " << nrs[0] << " " << nrs[1] << endl;
-	      }
-            */
-	  }
+              if (paedge1[0] > paedge1[1]) 
+              {
+              Swap (paedge1[0], paedge1[1]);
+              orient1 = 0;
+              }
+              if (paedge2[0] > paedge2[1]) 
+              {
+              Swap (paedge2[0], paedge2[1]);
+              orient2 = 0;
+              }
+
+              if ( paedge1[0] == -1 || paedge2[0] == -1 )
+              continue;
+
+              if (node2edge.Used (paedge1) && node2edge.Used (paedge2))
+              {
+              paedgenr1 = node2edge.Get (paedge1);
+              paedgenr2 = node2edge.Get (paedge2);
+              parentedges[i][0] = 2 * paedgenr1 + orient1;	      
+              parentedges[i][1] = 2 * paedgenr2 + orient2;	      
+              }
+              }
+              }
+
+              if (parentedges[i][0] == -1)
+              {
+              // triangle split into quad+trig (from anisotropic pyramids)
+              for (int j = 0; j < 2; j++)
+              for (int k = 0; k < 2; k++)
+              {
+              INT<2> paedge (pa1[1-j], pa2[1-k]);
+              int orientpa = 1;
+              if (paedge[0] > paedge[1]) 
+              {
+              Swap (paedge[0], paedge[1]);
+              orientpa = 0;
+              }	
+              if (pa1[j] == pa2[k] && node2edge.Used(paedge))
+              {
+              int paedgenr = node2edge.Get (paedge);
+              parentedges[i][0] = 2 * paedgenr + orientpa;
+              }
+              }
+
+              }
+              */
+            }
+
+          }
+
+          /*
+             for (int i : Range(parent_edges))
+             {
+             auto [info, nrs] = parent_edges[i];
+             cout << "edge " << i << " has " << info << ", nrs = " << nrs[0] << " " << nrs[1] << endl;
+             }
+             */
+        }
       }
     
 
