@@ -688,7 +688,11 @@ namespace ngcore
     Archive & operator & (short & i) override
     { return Write(i); }
     Archive & operator & (long & i) override
-    { return Write(i); }
+    {
+      // for platform independence
+      int64_t tmp = i;
+      return Write(tmp);
+    }
     Archive & operator & (size_t & i) override
     { return Write(i); }
     Archive & operator & (unsigned char & i) override
@@ -726,14 +730,13 @@ namespace ngcore
     template <typename T>
     Archive & Write (T x)
     {
+      static_assert(sizeof(T) < BUFFERSIZE, "Cannot write large types with this function!");
       if (unlikely(ptr > BUFFERSIZE-sizeof(T)))
         {
           stream->write(&buffer[0], ptr);
-          *reinterpret_cast<T*>(&buffer[0]) = x; // NOLINT
-          ptr = sizeof(T);
-          return *this;
+          ptr = 0;
         }
-      *reinterpret_cast<T*>(&buffer[ptr]) = x; // NOLINT
+      memcpy(&buffer[ptr], &x, sizeof(T));
       ptr += sizeof(T);
       return *this;
     }
@@ -761,7 +764,12 @@ namespace ngcore
     Archive & operator & (short & i) override
     { Read(i); return *this; }
     Archive & operator & (long & i) override
-    { Read(i); return *this; }
+    {
+      int64_t tmp;
+      Read(tmp);
+      i = tmp;
+      return *this;
+    }
     Archive & operator & (size_t & i) override
     { Read(i); return *this; }
     Archive & operator & (unsigned char & i) override
