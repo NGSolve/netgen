@@ -792,8 +792,9 @@ namespace ngcore
     /// if responsible, deletes memory
     NETGEN_INLINE ~Array()
     {
+      if(mem_to_delete)
+        mt.Free(sizeof(T)*allocsize);
       delete [] mem_to_delete;
-      mt.Free(sizeof(T)*allocsize);
     }
 
     // Only provide this function if T is archivable
@@ -847,8 +848,9 @@ namespace ngcore
     /// assigns memory from local heap
     NETGEN_INLINE const Array & Assign (size_t asize, LocalHeap & lh)
     {
+      if(mem_to_delete)
+        mt.Free(sizeof(T)*allocsize);
       delete [] mem_to_delete;
-      mt.Free(sizeof(T)*allocsize);
       size = allocsize = asize;
       data = lh.Alloc<T> (asize);
       mem_to_delete = nullptr;
@@ -955,8 +957,9 @@ namespace ngcore
     /// Deallocate memory
     NETGEN_INLINE void DeleteAll ()
     {
+      if(mem_to_delete)
+        mt.Free(sizeof(T)*allocsize);
       delete [] mem_to_delete;
-      mt.Free(sizeof(T)*allocsize);
       mem_to_delete = NULL;
       data = 0;
       size = allocsize = 0;
@@ -1108,8 +1111,9 @@ namespace ngcore
         else
           for (size_t i = 0; i < mins; i++) data[i] = std::move(hdata[i]);
 #endif
+        if(mem_to_delete)
+          mt.Free(sizeof(T) * allocsize);
         delete [] mem_to_delete;
-        mt.Free(sizeof(T) * allocsize);
       }
 
     mem_to_delete = data;
