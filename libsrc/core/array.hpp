@@ -1196,6 +1196,14 @@ namespace ngcore
         data[cnt++] = val;
     }
   
+    template <typename T2>
+    ArrayMem (const BaseArrayObject<T2> & a2)
+      : ArrayMem (a2.Size())
+    {
+      for (size_t i : ngcore::Range(size))
+        data[i] = a2[i];
+    }
+
     
     ArrayMem & operator= (const T & val)
     {
