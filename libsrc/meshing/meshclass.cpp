@@ -5303,6 +5303,14 @@ namespace netgen
                 
                 sol.X() = lam(0);
                 sol.Y() = lam(1);
+
+                if (SurfaceElement(element).GetType() !=TRIG6 )
+                  {
+                    sol.Z() = sol.X();
+                    sol.X() = sol.Y();
+                    sol.Y() = 1.0 - sol.Z() - sol.X();
+                  }
+
               }
             if (sol.X() >= -eps && sol.Y() >= -eps && 
                 sol.X() + sol.Y() <= 1+eps)
