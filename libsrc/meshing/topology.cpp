@@ -1878,8 +1878,46 @@ namespace netgen
                     }
 
                 auto [info, nrs] = parent_faces[i];
-                if (nrs[0] == -1)
-                  cout << "************************** unhandled parent-face case **********************" << endl;
+                if (nrs[0] == -1){
+                  // hacking for tet red refinements
+                  PointIndex v0 = f3[0];
+                  auto pa0 = mesh->mlbetweennodes[v0];
+                  auto pa1 = mesh->mlbetweennodes[f3[1]];
+                  auto pa2 = mesh->mlbetweennodes[f3[2]];
+                  // v0 is a coarse vertex ==> f3 is a boundary face
+                  if (v0==pa1[0] || v0==pa1[1]){
+                    if (pa1[0]==v0){// type 0: bottom left corner
+                      INT<3> parentverts(v0, pa1[1], pa2[1]);
+                      int pafacenr = v2f[parentverts];
+                      parent_faces[i] = { 16, { pafacenr, -1, -1, -1} };
+                      //cout << "f "<<i<<":pf "<< pafacenr<< "A" <<endl;
+                    }else if (pa2[0]==v0) {// type 1: bottom right corner
+                      INT<3> parentverts(pa1[0], v0, pa2[1]);
+                      int pafacenr = v2f[parentverts];
+                      parent_faces[i] = { 17, { pafacenr, -1, -1, -1} };
+                      //cout << "f "<<i<<":pf "<< pafacenr<< "B" <<endl;
+                    }else if (pa1[1]==v0){// type 2: top left corner
+                      INT<3> parentverts(pa1[0], pa2[0], v0);
+                      int pafacenr = v2f[parentverts];
+                      parent_faces[i] = { 18, { pafacenr, -1, -1, -1} };
+                      //cout << "f "<<i<<":pf "<< pafacenr<< "C" <<endl;
+                    }else{
+                      cout << "************************** unhandled parent-face case **********************" << endl;
+                    }
+                  }
+                  else{// all vertices are on fine level [fff]
+                    // Here we only work with boundary fff face
+                    if (pa0[0]==pa1[0] && pa0[1]==pa2[0] && pa1[1]==pa2[1]){//type 3 bdry face
+                      INT<3> parentverts(pa0[0], pa0[1], pa1[1]);
+                      int pafacenr = v2f[parentverts];
+                      parent_faces[i] = { 19, { pafacenr, -1, -1, -1} };
+                      //cout << "f "<<i<<":pf "<< pafacenr<< "D" <<endl;
+                    }else{// this is an interior face FIXME 
+                      parent_faces[i] = { 20, { -1, -1, -1, -1} };
+                      //cout << "face "<< i << ":"<< f3 <<" is an int face"<< endl;
+                    }
+                  }
+                }
               }
           }
       }
