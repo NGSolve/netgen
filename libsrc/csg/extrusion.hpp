@@ -121,8 +121,8 @@ namespace netgen
   class Extrusion : public Primitive
   {
   private:
-    const SplineGeometry<3>* path;
-    const SplineGeometry<2>* profile; // closed, clockwise oriented curve
+    shared_ptr<SplineGeometry<3>> path;
+    shared_ptr<SplineGeometry<2>> profile; // closed, clockwise oriented curve
 
     Vec<3> z_direction;
 
@@ -131,8 +131,8 @@ namespace netgen
     mutable int latestfacenum;
 
   public:
-    Extrusion(const SplineGeometry<3> & path_in,
-	      const SplineGeometry<2> & profile_in,
+    Extrusion(shared_ptr<SplineGeometry<3>> path_in,
+	      shared_ptr<SplineGeometry<2>> profile_in,
 	      const Vec<3> & z_dir);
     // default constructor for archive
     Extrusion() {}

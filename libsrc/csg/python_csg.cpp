@@ -170,7 +170,8 @@ namespace netgen
 
 DLL_HEADER void ExportCSG(py::module &m)
 {
-  py::class_<SplineGeometry<2>> (m, "SplineCurve2d")
+  py::class_<SplineGeometry<2>, shared_ptr<SplineGeometry<2>>>
+    (m, "SplineCurve2d")
     .def(py::init<>())
     .def ("AddPoint", FunctionPointer
           ([] (SplineGeometry<2> & self, double x, double y)
@@ -329,8 +330,8 @@ DLL_HEADER void ExportCSG(py::module &m)
                                            Solid * sol = new Solid(rev);
                                            return make_shared<SPSolid> (sol);
                                          }));
-  m.def ("Extrusion", FunctionPointer([](const SplineGeometry<3> & path,
-					 const SplineGeometry<2> & profile,
+  m.def ("Extrusion", FunctionPointer([](shared_ptr<SplineGeometry<3>> path,
+					 shared_ptr<SplineGeometry<2>> profile,
 					 Vec<3> n)
                                          {
                                            Extrusion * extr = new Extrusion (path,profile,n);
