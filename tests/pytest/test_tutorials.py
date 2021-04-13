@@ -63,8 +63,6 @@ def getMeshingparameters(filename):
     standard = [MeshingParameters()] + [MeshingParameters(ms)  for ms in (meshsize.very_coarse, meshsize.coarse, meshsize.moderate, meshsize.fine, meshsize.very_fine)]
     if filename == "shell.geo":
         return [] # do not test this example cause it needs so long...
-    if filename == "extrusion.geo":
-        return [] # this segfaults right now
     if filename == "manyholes2.geo":
         return [standard[1]] # this gets too big for finer meshsizes
     if filename in ("manyholes.geo", "frame.step"):
@@ -142,7 +140,11 @@ def generateResultFile():
                 continue
             meshdata = []
             for mp in mps:
-                mesh = generateMesh(_file, mp)
+                try:
+                    mesh = generateMesh(_file, mp)
+                except Exception as e:
+                    print("Meshingparameters: ", mp)
+                    raise e
                 meshdata.append( getData(mesh, mp) )
             data[_file] = meshdata
             print("needed", time.time() - start, "seconds")

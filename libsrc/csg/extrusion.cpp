@@ -856,7 +856,7 @@ namespace netgen
       return retval;
 
     if(latestfacenum >= 0)
-      return faces[latestfacenum]->VecInFace(p,v2,0);
+      return faces[latestfacenum]->VecInFace(p,v2,eps);
     else
       return VecInSolid(p,v2,eps);
   }
