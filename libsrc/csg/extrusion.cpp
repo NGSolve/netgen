@@ -41,6 +41,16 @@ namespace netgen
 	    loc_z_dir[i] = glob_z_direction;
 	  }
       }
+
+    for(auto i : Range(path->GetSplines()))
+      {
+        const auto& sp = path->GetSpline(i);
+        auto t1 = sp.GetTangent(0.);
+        t1.Normalize();
+        auto t2 = sp.GetTangent(1.);
+        t2.Normalize();
+        angles.Append(acos(t1 * t2));
+      }
     
     profile->GetCoeff(profile_spline_coeff);
     latest_point3d = -1.111e30;
@@ -656,7 +666,26 @@ namespace netgen
     dez /= lenz;
     dez -= (dez * ez) * ez;
   }
-  
+
+  void ExtrusionFace :: DefineTangentialPlane(const Point<3>& ap1,
+                                              const Point<3>& ap2)
+  {
+    Surface::DefineTangentialPlane(ap1, ap2);
+    tangential_plane_seg = latest_seg;
+  }
+
+  void ExtrusionFace :: ToPlane(const Point<3>& p3d, Point<2>& p2d,
+                                double h, int& zone) const
+  {
+    Surface::ToPlane(p3d, p2d, h, zone);
+    double angle = 0;
+    for(int i = latest_seg; i < tangential_plane_seg; i++)
+      angle += angles[i];
+    for(int i = tangential_plane_seg; i < latest_seg; i++)
+      angle -= angles[i];
+    if(fabs(angle) > 3.14/2.)
+      zone = -1;
+  }
 
   Extrusion :: Extrusion(shared_ptr<SplineGeometry<3>> path_in,
 			 shared_ptr<SplineGeometry<2>> profile_in,
