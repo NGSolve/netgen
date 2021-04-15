@@ -12,8 +12,10 @@ namespace netgen
     const SplineSeg<2> * profile;
     const SplineGeometry<3> * path;
     Vec<3> glob_z_direction;
+    Array<double> angles;
 
     bool deletable;
+    int tangential_plane_seg;
   
     NgArray< const SplineSeg3<3> * > spline3_path;
     NgArray< const LineSeg<3> * > line_path;
@@ -114,6 +116,11 @@ namespace netgen
 				    Vec<3> & ex, Vec<3> & ey, Vec<3> & ez,
 				    Vec<3> & dex, Vec<3> & dey, Vec<3> & dez) const;
 
+    void DefineTangentialPlane(const Point<3>& ap1,
+                               const Point<3>& ap2) override;
+    void ToPlane(const Point<3>& p3d, Point<2>& p2d,
+                 double h, int& zone) const override;
+
   };
 
 
@@ -121,8 +128,8 @@ namespace netgen
   class Extrusion : public Primitive
   {
   private:
-    const SplineGeometry<3>* path;
-    const SplineGeometry<2>* profile; // closed, clockwise oriented curve
+    shared_ptr<SplineGeometry<3>> path;
+    shared_ptr<SplineGeometry<2>> profile; // closed, clockwise oriented curve
 
     Vec<3> z_direction;
 
@@ -131,8 +138,8 @@ namespace netgen
     mutable int latestfacenum;
 
   public:
-    Extrusion(const SplineGeometry<3> & path_in,
-	      const SplineGeometry<2> & profile_in,
+    Extrusion(shared_ptr<SplineGeometry<3>> path_in,
+	      shared_ptr<SplineGeometry<2>> profile_in,
 	      const Vec<3> & z_dir);
     // default constructor for archive
     Extrusion() {}

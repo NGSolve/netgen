@@ -115,9 +115,9 @@ namespace netgen
     SymbolTable<Solid*> solids;
 
     /// all 2d splinecurves
-    SymbolTable< SplineGeometry<2>* > splinecurves2d;
+    SymbolTable<shared_ptr<SplineGeometry<2>>> splinecurves2d;
     /// all 3d splinecurves
-    SymbolTable< SplineGeometry<3>* > splinecurves3d;
+    SymbolTable<shared_ptr<SplineGeometry<3>>> splinecurves3d;
 
     /// all top level objects: solids and surfaces
     NgArray<TopLevelObject*> toplevelobjects;
@@ -232,10 +232,10 @@ namespace netgen
     const SymbolTable<Solid*> & GetSolids () const { return solids; }
 
 
-    void SetSplineCurve (const char * name, SplineGeometry<2> * spl);
-    void SetSplineCurve (const char * name, SplineGeometry<3> * spl);
-    const SplineGeometry<2> * GetSplineCurve2d (const string & name) const;
-    const SplineGeometry<3> * GetSplineCurve3d (const string & name) const;
+    void SetSplineCurve (const char * name, shared_ptr<SplineGeometry<2>> spl);
+    void SetSplineCurve (const char * name, shared_ptr<SplineGeometry<3>> spl);
+    shared_ptr<SplineGeometry<2>> GetSplineCurve2d (const string & name) const;
+    shared_ptr<SplineGeometry<3>> GetSplineCurve3d (const string & name) const;
 
     void DoArchive(Archive& archive) override;
     
