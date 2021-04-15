@@ -42,6 +42,7 @@ namespace netgen
 	  }
       }
 
+    double cum_angle = 0.;
     for(auto i : Range(path->GetSplines()))
       {
         const auto& sp = path->GetSpline(i);
@@ -49,7 +50,8 @@ namespace netgen
         t1.Normalize();
         auto t2 = sp.GetTangent(1.);
         t2.Normalize();
-        angles.Append(acos(t1 * t2));
+        cum_angle += acos(t1 * t2);
+        angles.Append(cum_angle);
       }
     
     profile->GetCoeff(profile_spline_coeff);
@@ -678,11 +680,7 @@ namespace netgen
                                 double h, int& zone) const
   {
     Surface::ToPlane(p3d, p2d, h, zone);
-    double angle = 0;
-    for(int i = latest_seg; i < tangential_plane_seg; i++)
-      angle += angles[i];
-    for(int i = tangential_plane_seg; i < latest_seg; i++)
-      angle -= angles[i];
+    double angle = angles[tangential_plane_seg] - angles[latest_seg];
     if(fabs(angle) > 3.14/2.)
       zone = -1;
   }
