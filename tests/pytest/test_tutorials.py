@@ -67,6 +67,8 @@ def getMeshingparameters(filename):
         return [standard[1]] # this gets too big for finer meshsizes
     if filename in ("manyholes.geo", "frame.step"):
         return standard[:3] # this gets too big for finer meshsizes
+    if filename == "extrusion.geo":
+        return standard[:-1]
     if filename == "screw.step":
         return standard[3:] # coarser meshes don't work here
     if filename == "cylsphere.geo":
