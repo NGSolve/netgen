@@ -13,7 +13,15 @@ namespace ngcore
 
 #ifdef WIN32
   // windows does demangling in typeid(T).name()
-  NGCORE_API std::string Demangle(const char* typeinfo) { return typeinfo; }
+  NGCORE_API std::string Demangle(const char* typeinfo) {
+      std::string name = typeinfo;
+      // remove "class " and "struct " at beginning of type names to be consistent with demangled names of gcc/clang
+      if(name.find("class ") == 0)
+          name.erase(0,6);
+      if(name.find("struct ") == 0)
+          name.erase(0,7);
+      return name;
+  }
 #else
   NGCORE_API std::string Demangle(const char* typeinfo)
   {
