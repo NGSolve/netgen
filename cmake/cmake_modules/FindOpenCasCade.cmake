@@ -25,9 +25,9 @@ else(WIN32)
     )
 endif(WIN32)
 
-if(OCC_LIBRARY)
+if(OCC_LIBRARY AND NOT OCC_LIBRARY_DIR)
     get_filename_component(OCC_LIBRARY_DIR ${OCC_LIBRARY} PATH)
-endif(OCC_LIBRARY)
+endif(OCC_LIBRARY AND NOT OCC_LIBRARY_DIR)
 
 if(OCC_INCLUDE_DIR)
     file(STRINGS ${OCC_INCLUDE_DIR}/Standard_Version.hxx OCC_MAJOR
@@ -89,7 +89,7 @@ if(OCC_VERSION_STRING VERSION_GREATER_EQUAL "7.3.0")
 endif()
 
 foreach( libname ${OCC_LIBRARY_NAMES} )
-    find_library( ${libname} ${libname} ${OCC_LIBRARY_DIR} )
+    find_library( ${libname} ${libname} ${OCC_LIBRARY_DIR} NO_DEFAULT_PATH)
     set(OCC_LIBRARIES ${OCC_LIBRARIES} ${${libname}})
 endforeach()
 

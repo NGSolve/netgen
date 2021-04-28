@@ -30,9 +30,6 @@ namespace pybind11
 
 namespace ngcore
 {
-  // Libraries using this archive can store their version here to implement backwards compatibility
-  NGCORE_API const VersionInfo& GetLibraryVersion(const std::string& library);
-  NGCORE_API void SetLibraryVersion(const std::string& library, const VersionInfo& version);
 
   class NGCORE_API Archive;
 
@@ -156,6 +153,7 @@ namespace ngcore
     virtual void NeedsVersion(const std::string& /*unused*/, const std::string& /*unused*/) {}
 
     // Pure virtual functions that have to be implemented by In-/OutArchive
+    virtual Archive & operator & (float & d) = 0;
     virtual Archive & operator & (double & d) = 0;
     virtual Archive & operator & (int & i) = 0;
     virtual Archive & operator & (long & i) = 0;
@@ -570,9 +568,10 @@ namespace ngcore
 
     virtual void FlushBuffer() {}
 
-  protected:
-    static std::map<std::string, VersionInfo>& GetLibraryVersions();
-
+    bool parallel = false;
+    bool IsParallel() const { return parallel; }
+    void SetParallel (bool _parallel) { parallel = _parallel; }
+    
   private:
     template<typename T, typename ... Bases>
     friend class RegisterClassForArchive;
@@ -680,6 +679,8 @@ namespace ngcore
     BinaryOutArchive& operator=(BinaryOutArchive&&) = delete;
 
     using Archive::operator&;
+    Archive & operator & (float & f) override
+    { return Write(f); }
     Archive & operator & (double & d) override
     { return Write(d); }
     Archive & operator & (int & i) override
@@ -687,7 +688,11 @@ namespace ngcore
     Archive & operator & (short & i) override
     { return Write(i); }
     Archive & operator & (long & i) override
-    { return Write(i); }
+    {
+      // for platform independence
+      int64_t tmp = i;
+      return Write(tmp);
+    }
     Archive & operator & (size_t & i) override
     { return Write(i); }
     Archive & operator & (unsigned char & i) override
@@ -725,14 +730,13 @@ namespace ngcore
     template <typename T>
     Archive & Write (T x)
     {
+      static_assert(sizeof(T) < BUFFERSIZE, "Cannot write large types with this function!");
       if (unlikely(ptr > BUFFERSIZE-sizeof(T)))
         {
           stream->write(&buffer[0], ptr);
-          *reinterpret_cast<T*>(&buffer[0]) = x; // NOLINT
-          ptr = sizeof(T);
-          return *this;
+          ptr = 0;
         }
-      *reinterpret_cast<T*>(&buffer[ptr]) = x; // NOLINT
+      memcpy(&buffer[ptr], &x, sizeof(T));
       ptr += sizeof(T);
       return *this;
     }
@@ -751,6 +755,8 @@ namespace ngcore
       : BinaryInArchive(std::make_shared<std::ifstream>(filename)) { ; }
 
     using Archive::operator&;
+    Archive & operator & (float & f) override
+    { Read(f); return *this; }
     Archive & operator & (double & d) override
     { Read(d); return *this; }
     Archive & operator & (int & i) override
@@ -758,7 +764,12 @@ namespace ngcore
     Archive & operator & (short & i) override
     { Read(i); return *this; }
     Archive & operator & (long & i) override
-    { Read(i); return *this; }
+    {
+      int64_t tmp;
+      Read(tmp);
+      i = tmp;
+      return *this;
+    }
     Archive & operator & (size_t & i) override
     { Read(i); return *this; }
     Archive & operator & (unsigned char & i) override
@@ -815,6 +826,8 @@ namespace ngcore
       TextOutArchive(std::make_shared<std::ofstream>(filename)) { }
 
     using Archive::operator&;
+    Archive & operator & (float & f) override
+    { *stream << f << '\n'; return *this; }
     Archive & operator & (double & d) override
     { *stream << d << '\n'; return *this; }
     Archive & operator & (int & i) override
@@ -866,6 +879,8 @@ namespace ngcore
       : TextInArchive(std::make_shared<std::ifstream>(filename)) {}
 
     using Archive::operator&;
+    Archive & operator & (float & f) override
+    { *stream >> f; return *this; }
     Archive & operator & (double & d) override
     { *stream >> d; return *this; }
     Archive & operator & (int & i) override
@@ -908,6 +923,55 @@ namespace ngcore
           stream->get(&str[0], len+1, '\0'); // NOLINT
         }
       str[len] = '\0'; // NOLINT
+      return *this;
+    }
+  };
+
+  // HashArchive =================================================================
+  // This class enables to easily create hashes for archivable objects by xoring
+  // threw its data
+
+  class NGCORE_API HashArchive : public Archive
+  {
+    size_t hash_value = 0;
+    char* h;
+    int offset = 0;
+  public:
+    HashArchive() : Archive(true)
+      { h = (char*)&hash_value; }
+
+    using Archive::operator&;
+    Archive & operator & (float & f) override { return ApplyHash(f); }
+    Archive & operator & (double & d) override { return ApplyHash(d); }
+    Archive & operator & (int & i) override { return ApplyHash(i); }
+    Archive & operator & (short & i) override { return ApplyHash(i); }
+    Archive & operator & (long & i) override { return ApplyHash(i); }
+    Archive & operator & (size_t & i) override { return ApplyHash(i); }
+    Archive & operator & (unsigned char & i) override { return ApplyHash(i); }
+    Archive & operator & (bool & b) override { return ApplyHash(b); }
+    Archive & operator & (std::string & str) override
+    { for(auto c : str) ApplyHash(c);  return *this; }
+    Archive & operator & (char *& str) override
+    { char* s = str; while(*s != '\0') ApplyHash(*(s++)); return *this; }
+
+    // HashArchive can be used in const context
+    template<typename T>
+      Archive & operator& (const T& val) const
+    { return (*this) & const_cast<T&>(val); }
+
+    size_t GetHash() const { return hash_value; }
+
+  private:
+    template<typename T>
+      Archive& ApplyHash(T val)
+    {
+      size_t n = sizeof(T);
+      char* pval = (char*)&val;
+      for(size_t i = 0; i < n; i++)
+        {
+          h[offset++] ^= pval[i];
+          offset %= 8;
+        }
       return *this;
     }
   };

@@ -17,12 +17,14 @@
 #include "ShapeFix_FixSmallFace.hxx"
 #include "Partition_Spliter.hxx"
 #include "BRepAlgoAPI_Fuse.hxx"
+#include "Interface_InterfaceModel.hxx"
 
 #include "XSControl_WorkSession.hxx"
 #include "XSControl_TransferReader.hxx"
 #include "StepRepr_RepresentationItem.hxx"
 #include "StepBasic_ProductDefinitionRelationship.hxx"
-
+#include "Transfer_TransientProcess.hxx"
+#include "TransferBRep.hxx"
 #ifndef _Standard_Version_HeaderFile
 #include <Standard_Version.hxx>
 #endif
@@ -38,6 +40,14 @@
 
 namespace netgen
 {
+  OCCGeometry::OCCGeometry(const TopoDS_Shape& _shape)
+  {
+    shape = _shape;
+    changed = true;
+    BuildFMap();
+    CalcBoundingBox();
+  }
+
   string STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * aReader)
   {
     const Handle(XSControl_WorkSession)& theSession = aReader->Reader().WS();
@@ -167,7 +177,90 @@ namespace netgen
 
    }
 
+  void OCCGeometry :: GlueGeometry()
+  {
+    PrintMessage(1, "OCC Glue Geometry");
+    /*
+      // 
+    BRep_Builder builder;
+    TopoDS_Shape my_fuse;
+    int cnt = 0;
+    for (TopExp_Explorer exp_solid(shape, TopAbs_SOLID); exp_solid.More(); exp_solid.Next())
+      {
+        cout << "cnt = " << cnt << endl;
+	if (cnt == 0)
+	  my_fuse = exp_solid.Current();
+	else
+          // my_fuse = BRepAlgoAPI_Fuse (my_fuse, exp_solid.Current());
+          my_fuse = QANewModTopOpe_Glue::QANewModTopOpe_Glue(my_fuse, exp_solid.Current());
+	cnt++;
+      }
+    cout << "remove" << endl;
+    // for (int i = 1; i <= somap.Size(); i++)
+    // builder.Remove (shape, somap(i));
+    cout << "now add" << endl;
+    // builder.Add (shape, my_fuse);
+    shape = my_fuse;
+    cout << "build fmap" << endl;
+    BuildFMap();
+    */
 
+
+    // from 
+    // https://www.opencascade.com/doc/occt-7.4.0/overview/html/occt_user_guides__boolean_operations.html
+    BOPAlgo_Builder aBuilder;
+
+    // Setting arguments
+    TopTools_ListOfShape aLSObjects; 
+    for (TopExp_Explorer exp_solid(shape, TopAbs_SOLID); exp_solid.More(); exp_solid.Next())
+      aLSObjects.Append (exp_solid.Current());
+    aBuilder.SetArguments(aLSObjects);
+
+    // Setting options for GF
+    // Set parallel processing mode (default is false)
+    // Standard_Boolean bRunParallel = Standard_True;
+    // aBuilder.SetRunParallel(bRunParallel);
+    
+    // Set Fuzzy value (default is Precision::Confusion())
+    // Standard_Real aFuzzyValue = 1.e-5;
+    // aBuilder.SetFuzzyValue(aFuzzyValue);
+    
+    // Set safe processing mode (default is false)
+    // Standard_Boolean bSafeMode = Standard_True;
+    // aBuilder.SetNonDestructive(bSafeMode);
+    
+    // Set Gluing mode for coinciding arguments (default is off)
+    // BOPAlgo_GlueEnum aGlue = BOPAlgo_GlueShift;
+    // aBuilder.SetGlue(aGlue);
+    
+    // Disabling/Enabling the check for inverted solids (default is true)
+    // Standard Boolean bCheckInverted = Standard_False;
+    // aBuilder.SetCheckInverted(bCheckInverted);
+    
+    // Set OBB usage (default is false)
+    // Standard_Boolean bUseOBB = Standard_True;
+    // aBuilder.SetUseOBB(buseobb);
+    
+    // Perform the operation
+    aBuilder.Perform();
+    // Check for the errors
+#if OCC_VERSION_HEX >= 0x070200
+    if (aBuilder.HasErrors())
+      {
+        cout << "builder has errors" << endl;
+        return;
+      }
+    // Check for the warnings
+    if (aBuilder.HasWarnings())
+      {
+        // treatment of the warnings
+        ;
+      }
+#endif
+    // result of the operation
+    shape = aBuilder.Shape();
+    BuildFMap();
+  }
 
    void OCCGeometry :: HealGeometry ()
    {
@@ -189,7 +282,7 @@ namespace netgen
       double surfacecont = 0;
       
       {
-         Handle_ShapeBuild_ReShape rebuild = new ShapeBuild_ReShape;
+         Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
          rebuild->Apply(shape);
          for (exp1.Init (shape, TopAbs_EDGE); exp1.More(); exp1.Next())
          {
@@ -220,7 +313,7 @@ namespace netgen
          cout << endl << "- repairing faces" << endl;
 
          Handle(ShapeFix_Face) sff;
-         Handle_ShapeBuild_ReShape rebuild = new ShapeBuild_ReShape;
+         Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
          rebuild->Apply(shape);
 
 
@@ -277,7 +370,7 @@ namespace netgen
 
 
       {
-         Handle_ShapeBuild_ReShape rebuild = new ShapeBuild_ReShape;
+         Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
          rebuild->Apply(shape);
          for (exp1.Init (shape, TopAbs_EDGE); exp1.More(); exp1.Next())
          {
@@ -294,7 +387,7 @@ namespace netgen
          cout << endl << "- fixing small edges" << endl;
 
          Handle(ShapeFix_Wire) sfw;
-         Handle_ShapeBuild_ReShape rebuild = new ShapeBuild_ReShape;
+         Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
          rebuild->Apply(shape);
 
 
@@ -361,7 +454,7 @@ namespace netgen
 
          {
             BuildFMap();
-            Handle_ShapeBuild_ReShape rebuild = new ShapeBuild_ReShape;
+            Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
             rebuild->Apply(shape);
 
             for (exp1.Init (shape, TopAbs_EDGE); exp1.More(); exp1.Next())
@@ -389,7 +482,7 @@ namespace netgen
 
 
          {
-            Handle_ShapeBuild_ReShape rebuild = new ShapeBuild_ReShape;
+            Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
             rebuild->Apply(shape);
             for (exp1.Init (shape, TopAbs_EDGE); exp1.More(); exp1.Next())
             {
@@ -515,7 +608,7 @@ namespace netgen
 
 
       {
-         Handle_ShapeBuild_ReShape rebuild = new ShapeBuild_ReShape;
+         Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
          rebuild->Apply(shape);
          for (exp1.Init (shape, TopAbs_EDGE); exp1.More(); exp1.Next())
          {
@@ -560,7 +653,7 @@ namespace netgen
                   TopoDS_Solid solid = TopoDS::Solid(exp0.Current());
                   TopoDS_Solid newsolid = solid;
                   BRepLib::OrientClosedSolid (newsolid);
-                  Handle_ShapeBuild_ReShape rebuild = new ShapeBuild_ReShape;
+                  Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
                   //		  rebuild->Apply(shape);
                   rebuild->Replace(solid, newsolid);
                   TopoDS_Shape newshape = rebuild->Apply(shape, TopAbs_COMPSOLID);//, 1);
@@ -983,7 +1076,7 @@ namespace netgen
             TopoDS_Solid solid = TopoDS::Solid(exp0.Current());
             TopoDS_Solid newsolid = solid;
             BRepLib::OrientClosedSolid (newsolid);
-            Handle_ShapeBuild_ReShape rebuild = new ShapeBuild_ReShape;
+            Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
             rebuild->Replace(solid, newsolid);
 
             TopoDS_Shape newshape = rebuild->Apply(shape, TopAbs_SHAPE, 1);
@@ -1315,10 +1408,10 @@ namespace netgen
       static Timer timer_getnames("LoadOCC-get names");
 
       // Initiate a dummy XCAF Application to handle the STEP XCAF Document
-      static Handle_XCAFApp_Application dummy_app = XCAFApp_Application::GetApplication();
+      static Handle(XCAFApp_Application) dummy_app = XCAFApp_Application::GetApplication();
 
       // Create an XCAF Document to contain the STEP file itself
-      Handle_TDocStd_Document step_doc;
+      Handle(TDocStd_Document) step_doc;
 
       // Check if a STEP File is already open under this handle, if so, close it to prevent
       // Segmentation Faults when trying to create a new document
@@ -1348,8 +1441,8 @@ namespace netgen
       timer_transfer.Stop();
 
       // Read in the shape(s) and the colours present in the STEP File
-      Handle_XCAFDoc_ShapeTool step_shape_contents = XCAFDoc_DocumentTool::ShapeTool(step_doc->Main());
-      Handle_XCAFDoc_ColorTool step_colour_contents = XCAFDoc_DocumentTool::ColorTool(step_doc->Main());
+      Handle(XCAFDoc_ShapeTool) step_shape_contents = XCAFDoc_DocumentTool::ShapeTool(step_doc->Main());
+      Handle(XCAFDoc_ColorTool) step_colour_contents = XCAFDoc_DocumentTool::ColorTool(step_doc->Main());
 
       TDF_LabelSequence step_shapes;
       step_shape_contents->GetShapes(step_shapes);
@@ -1379,45 +1472,89 @@ namespace netgen
       PrintContents (occgeo);
       string name;
       TopExp_Explorer exp0,exp1;
+
+      
+      
+      std::map<Handle(TopoDS_TShape), string> shape_names;
+      {
+        static Timer t("file shape_names"); RegionTimer r(t);
+        // code inspired from 
+        // https://www.opencascade.com/content/reading-step-entity-id-slow
+        const Handle(XSControl_WorkSession) workSession = reader.Reader().WS();
+        const Handle(Interface_InterfaceModel) model = workSession->Model();
+        const Handle(XSControl_TransferReader) transferReader = workSession->TransferReader();
+        Handle(Transfer_TransientProcess) transProc = transferReader->TransientProcess();
+
+        Standard_Integer nb = model->NbEntities();
+        for (Standard_Integer i = 1; i < nb; i++)
+          {
+            Handle(Standard_Transient) entity = model->Value(i);
+            
+            // if (!entity->DynamicType()->SubType("StepShape_OpenShell")) continue;
+            
+            Handle(StepRepr_RepresentationItem) SRRI =
+              Handle(StepRepr_RepresentationItem)::DownCast(entity);
+            
+            if (SRRI.IsNull()) {
+              // cout << "no StepRepr_RepresentationItem found in " << entity->DynamicType()->Name();
+              continue;
+            }
+            Handle(TCollection_HAsciiString) hName = SRRI->Name();
+            string shapeName = hName->ToCString();
+            
+            // cout << "STEP " << i << " " << entity->DynamicType()->Name() << ", shapename = " << shapeName;
+            Handle(Transfer_Binder) binder;
+            if (!transProc->IsBound(SRRI)) {
+              // cout << "found unbound entity " << shapeName;
+              continue;
+            }
+            binder = transProc->Find(SRRI);
+            TopoDS_Shape shape = TransferBRep::ShapeResult(binder);
+            // if (!shape.IsNull())
+            shape_names[shape.TShape()] = shapeName;
+            /*
+            if (!shape.IsNull())
+              cout << " shapetype = " << shape.ShapeType() << endl;
+            else
+              cout << "is-Null" << endl;
+            */
+          }
+        // for (auto pair : shape_names)
+        // cout << "name = " << pair.second << endl;
+      }
+      
       
       timer_getnames.Start();
       for (exp0.Init(occgeo->shape, TopAbs_SOLID); exp0.More(); exp0.Next())
       {
          TopoDS_Solid solid = TopoDS::Solid(exp0.Current());
-         name = STEP_GetEntityName(solid,&reader);
+         // name = STEP_GetEntityName(solid,&reader);
+         // cout << "solidname = " << name << ", mapname = " << shape_names[solid.TShape()] << endl;         
+         name = shape_names[solid.TShape()];
          if (name == "")
-             name = string("domain_") + ToString(occgeo->snames.Size());
+           name = string("domain_") + ToString(occgeo->snames.Size());
          occgeo->snames.Append(name);
       }
+
       for (exp0.Init(occgeo->shape, TopAbs_FACE); exp0.More(); exp0.Next())
       {
          TopoDS_Face face = TopoDS::Face(exp0.Current());
-         name = STEP_GetEntityName(face,&reader);
+         // name = STEP_GetEntityName(face,&reader);
+         // cout << "getname = " << name << ", mapname = " << shape_names[face.TShape()] << endl;
+         name = shape_names[face.TShape()];
          if (name == "")
-             name = string("bc_") + ToString(occgeo->fnames.Size());
+           name = string("bc_") + ToString(occgeo->fnames.Size());
          occgeo->fnames.Append(name);
-//          for (exp1.Init(face, TopAbs_EDGE); exp1.More(); exp1.Next())
-//          {
-//             TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
-//             name = STEP_GetEntityName(edge,&reader);
-//             occgeo->enames.Append(name);
-//          }
+         for (exp1.Init(face, TopAbs_EDGE); exp1.More(); exp1.Next())
+           {
+             TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
+             // name = STEP_GetEntityName(edge,&reader);
+             // cout << "getname = " << name << ", mapname = " << shape_names[edge.TShape()] << endl;
+             name = shape_names[edge.TShape()];
+             occgeo->enames.Append(name);
+           }
       }
-      timer_getnames.Stop();
-      // Gerhard BEGIN
-//       cout << "Solid Names: "<<endl;
-//       for (int i=0;i<occgeo->snames.Size();i++)
-//         cout << occgeo->snames[i] << endl;
-//       cout << " " <<endl;
-//       cout << "Face Names: "<<endl;
-//       for (int i=0;i<occgeo->fnames.Size();i++)
-//         cout << occgeo->fnames[i] << endl;
-//       cout << " " <<endl;
-//       cout << "Edge Names: "<<endl;
-//       for (int i=0;i<occgeo->enames.Size();i++)
-//         cout << occgeo->enames[i] << endl;
-//       cout << " " <<endl;
-      // Gerhard END
+      timer_getnames.Stop();      
   }
 
    // Philippose - 23/02/2009
@@ -1430,10 +1567,10 @@ namespace netgen
       OCCGeometry *occgeo;
       occgeo = new OCCGeometry;
       // Initiate a dummy XCAF Application to handle the IGES XCAF Document
-      static Handle_XCAFApp_Application dummy_app = XCAFApp_Application::GetApplication();
+      static Handle(XCAFApp_Application) dummy_app = XCAFApp_Application::GetApplication();
 
       // Create an XCAF Document to contain the IGES file itself
-      Handle_TDocStd_Document iges_doc;
+      Handle(TDocStd_Document) iges_doc;
 
       // Check if a IGES File is already open under this handle, if so, close it to prevent
       // Segmentation Faults when trying to create a new document
@@ -1459,8 +1596,8 @@ namespace netgen
       reader.Transfer(iges_doc);
 
       // Read in the shape(s) and the colours present in the IGES File
-      Handle_XCAFDoc_ShapeTool iges_shape_contents = XCAFDoc_DocumentTool::ShapeTool(iges_doc->Main());
-      Handle_XCAFDoc_ColorTool iges_colour_contents = XCAFDoc_DocumentTool::ColorTool(iges_doc->Main());
+      Handle(XCAFDoc_ShapeTool) iges_shape_contents = XCAFDoc_DocumentTool::ShapeTool(iges_doc->Main());
+      Handle(XCAFDoc_ColorTool) iges_colour_contents = XCAFDoc_DocumentTool::ColorTool(iges_doc->Main());
 
       TDF_LabelSequence iges_shapes;
       iges_shape_contents->GetShapes(iges_shapes);
@@ -1530,7 +1667,7 @@ namespace netgen
       // Fixed a bug in the OpenCascade XDE Colour handling when 
       // opening BREP Files, since BREP Files have no colour data.
       // Hence, the face_colours Handle needs to be created as a NULL handle.
-      occgeo->face_colours = Handle_XCAFDoc_ColorTool();
+      occgeo->face_colours = Handle(XCAFDoc_ColorTool)();
       occgeo->face_colours.Nullify();
       occgeo->changed = 1;
       occgeo->BuildFMap();

@@ -170,7 +170,8 @@ namespace netgen
 
 DLL_HEADER void ExportCSG(py::module &m)
 {
-  py::class_<SplineGeometry<2>> (m, "SplineCurve2d")
+  py::class_<SplineGeometry<2>, shared_ptr<SplineGeometry<2>>>
+    (m, "SplineCurve2d")
     .def(py::init<>())
     .def ("AddPoint", FunctionPointer
           ([] (SplineGeometry<2> & self, double x, double y)
@@ -329,14 +330,31 @@ DLL_HEADER void ExportCSG(py::module &m)
                                            Solid * sol = new Solid(rev);
                                            return make_shared<SPSolid> (sol);
                                          }));
-  m.def ("Extrusion", FunctionPointer([](const SplineGeometry<3> & path,
-					 const SplineGeometry<2> & profile,
-					 Vec<3> n)
-                                         {
-                                           Extrusion * extr = new Extrusion (path,profile,n);
-                                           Solid * sol = new Solid(extr);
-                                           return make_shared<SPSolid> (sol);
-                                         }));
+  m.def ("Extrusion", [](shared_ptr<SplineGeometry<3>> path,
+                         shared_ptr<SplineGeometry<2>> profile,
+                         Vec<3> d)
+  {
+    Extrusion * extr = new Extrusion (path,profile,d);
+    Solid * sol = new Solid(extr);
+    return make_shared<SPSolid> (sol);
+  }, py::arg("path"), py::arg("profile"), py::arg("d"),
+     R"delimiter(A body of extrusion is defined by its profile
+(which has to be a closed, clockwiseoriented 2D curve),
+ by a path (a 3D curve) and a vector d. It is constructed
+ as follows: Take a point p on the path and denote the
+ (unit-)tangent of the path in this point by t. If we cut
+ the body by the plane given by p and t as normal vector,
+ the cut is the profile. The profile is oriented by the
+ (local) y-direction `y:=d−(d·t)t` and the (local) x-direction
+ `x:=t \times y`.
+The following points have to be noticed:
+ * If the path is not closed, then also the body is NOT closed.
+   In this case e.g. planes or orthobricks have to be used to
+   construct a closed body.
+ * The path has to be smooth, i.e. the tangents at the end- resp.
+   start-point of two consecutive spline or line patches have to
+   have the same directions.
+)delimiter");
   m.def("EllipticCone", [](const Point<3>& a, const Vec<3>& v, const Vec<3>& w,
                             double h, double r)
         {
@@ -354,6 +372,35 @@ When r =1, the truncated elliptic cone becomes an elliptic cylinder.
 When r tends to zero, the truncated elliptic cone tends to a full elliptic cone.
 However, when r = 0, the top part becomes a point(tip) and meshing fails!
 )raw_string");
+
+  m.def("Polyhedron", [](py::list points, py::list faces)
+  {
+    auto poly = new Polyhedra();
+    for(auto p : points)
+      poly->AddPoint(py::cast<Point<3>>(p));
+    int fnr = 0;
+    for(auto face : faces)
+      {
+        auto lface = py::cast<py::list>(face);
+        if(py::len(lface) == 3)
+          poly->AddFace(py::cast<int>(lface[0]),
+                        py::cast<int>(lface[1]),
+                        py::cast<int>(lface[2]),
+                        fnr++);
+        else if(py::len(lface) == 4)
+          {
+            poly->AddFace(py::cast<int>(lface[0]),
+                          py::cast<int>(lface[1]),
+                          py::cast<int>(lface[2]),
+                          fnr);
+            poly->AddFace(py::cast<int>(lface[0]),
+                          py::cast<int>(lface[2]),
+                          py::cast<int>(lface[3]),
+                          fnr++);
+          }
+      }
+    return make_shared<SPSolid>(new Solid(poly));
+  });
   
   m.def ("Or", FunctionPointer([](shared_ptr<SPSolid> s1, shared_ptr<SPSolid> s2)
                                  {

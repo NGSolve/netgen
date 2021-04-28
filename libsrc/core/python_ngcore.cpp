@@ -8,6 +8,8 @@ using std::string;
 namespace ngcore
 {
   bool ngcore_have_numpy = false;
+  bool parallel_pickling = true;
+  
   void SetFlag(Flags &flags, string s, py::object value) 
   {
     if (py::isinstance<py::dict>(value))

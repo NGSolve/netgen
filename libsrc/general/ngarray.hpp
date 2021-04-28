@@ -205,6 +205,12 @@ namespace netgen
     {
       return ( Pos(elem) >= 0 );
     }
+
+    operator FlatArray<T> () const
+    {
+      static_assert (BASE==0);
+      return FlatArray<T>(size, data);
+    }
   };
 
 
@@ -730,7 +736,7 @@ namespace netgen
 
   /// bubble sort array
   template <class T, class S>
-  inline void BubbleSort (NgFlatArray<T> & data, NgFlatArray<S> & slave)
+  inline void BubbleSort (NgFlatArray<T> & data, NgFlatArray<S> & index)
   {
     for (int i = 0; i < data.Size(); i++)
       for (int j = i+1; j < data.Size(); j++)
@@ -740,16 +746,16 @@ namespace netgen
 	    data[i] = data[j];
 	    data[j] = hv;
 	    
-	    S hvs = slave[i];
-	    slave[i] = slave[j];
-	    slave[j] = hvs;
+	    S hvs = index[i];
+	    index[i] = index[j];
+	    index[j] = hvs;
 	  }
   }
 
 
   template <class T, class S>
   void QuickSortRec (NgFlatArray<T> & data,
-		     NgFlatArray<S> & slave,
+		     NgFlatArray<S> & index,
 		     int left, int right)
   {
     int i = left;
@@ -764,20 +770,20 @@ namespace netgen
 	if (i <= j)
 	  {
             ngcore::Swap (data[i], data[j]);
-            ngcore::Swap (slave[i], slave[j]);
+            ngcore::Swap (index[i], index[j]);
 	    i++; j--;
 	  }
       }
     while (i <= j);
-    if (left < j) QuickSortRec (data, slave, left, j);
-    if (i < right) QuickSortRec (data, slave, i, right);
+    if (left < j) QuickSortRec (data, index, left, j);
+    if (i < right) QuickSortRec (data, index, i, right);
   }
 
   template <class T, class S>
-  void QuickSort (NgFlatArray<T> & data, NgFlatArray<S> & slave)
+  void QuickSort (NgFlatArray<T> & data, NgFlatArray<S> & index)
   {
     if (data.Size() > 1)
-      QuickSortRec (data, slave, 0, data.Size()-1);
+      QuickSortRec (data, index, 0, data.Size()-1);
   }
 
 

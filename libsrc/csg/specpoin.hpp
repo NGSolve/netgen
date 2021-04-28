@@ -167,6 +167,9 @@ namespace netgen
 				const Sphere * sphere2, 
 				NgArray<Point<3> > & pts);
 
+    bool ComputeExtremalPoints (const RevolutionFace * rev1, 
+				const RevolutionFace * rev2, 
+				NgArray<Point<3> > & pts);
 
     void ComputeCrossPoints (const Plane * plane1, 
 			     const Plane * plane2, 

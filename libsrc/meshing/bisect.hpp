@@ -12,8 +12,9 @@ public:
   int usemarkedelements;
   bool refine_hp;
   bool refine_p;
-  TaskManager task_manager = &DummyTaskManager;
-  Tracer tracer = &DummyTracer;
+  bool onlyonce = false;
+  NgTaskManager task_manager = &DummyTaskManager;
+  NgTracer tracer = &DummyTracer;
   DLL_HEADER BisectionOptions ();
 };
 

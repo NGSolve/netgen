@@ -38,7 +38,7 @@ namespace netgen
     NgMPI_Comm comm;
     
     /// line-segments at edges
-    Array<Segment> segments;
+    Array<Segment, SegmentIndex> segments;
     /// surface elements, 2d-inner elements
     Array<Element2d, SurfaceElementIndex> surfelements;
     /// volume elements
@@ -69,7 +69,7 @@ namespace netgen
     /**
        Representation of local mesh-size h
     */
-    unique_ptr<LocalH> lochfunc;
+    shared_ptr<LocalH> lochfunc;
     ///
     double hglob;
     ///
@@ -156,10 +156,10 @@ namespace netgen
     
     shared_ptr<NetgenGeometry> geometry;
 
-  private:
-    void BuildBoundaryEdges(void);
 
   public:
+    void BuildBoundaryEdges(bool rebuild=true);
+
     bool PointContainedIn2DElement(const Point3d & p,
 				   double lami[3],
 				   const int element,
@@ -172,6 +172,7 @@ namespace netgen
 				      const int element) const;
 
   public:
+    Signal<> updateSignal;
 
     // store coarse mesh before hp-refinement
     unique_ptr<NgArray<HPRefElement>> hpelements;
@@ -464,6 +465,10 @@ namespace netgen
     bool HasLocalHFunction () { return lochfunc != nullptr; }
     ///
     LocalH & LocalHFunction () { return * lochfunc; }
+
+    shared_ptr<LocalH> GetLocalH() const { return lochfunc; }
+    void SetLocalH(shared_ptr<LocalH> loch) { lochfunc = loch; }
+
     ///
     bool LocalHFunctionGenerated(void) const { return (lochfunc != NULL); }
 
@@ -640,7 +645,7 @@ namespace netgen
     int AddEdgeDescriptor(const EdgeDescriptor & fd)
     { edgedecoding.Append(fd); return edgedecoding.Size() - 1; }
 
-    auto GetCommunicator() const { return this->comm; }
+    auto & GetCommunicator() const { return this->comm; }
     void SetCommunicator(NgMPI_Comm acomm);
     
     ///
@@ -710,6 +715,11 @@ namespace netgen
     FaceDescriptor & GetFaceDescriptor (int i) 
     { return facedecoding.Elem(i); }
 
+    int IdentifyPeriodicBoundaries(const string& s1,
+                                   const string& s2,
+                                   const Transformation<3>& mapping,
+                                   double pointTolerance);
+
     // #ifdef NONE
     //   /*
     //     Identify points pi1 and pi2, due to
@@ -769,11 +779,11 @@ namespace netgen
     DLL_HEADER bool PureTetMesh () const;
 
 
-    const MeshTopology & GetTopology () const
-    { return topology; }
+    const MeshTopology & GetTopology () const { return topology; }
+    MeshTopology & GetTopology () { return topology; }
 
-    DLL_HEADER void UpdateTopology (TaskManager tm = &DummyTaskManager,
-                                    Tracer tracer = &DummyTracer);
+    DLL_HEADER void UpdateTopology (NgTaskManager tm = &DummyTaskManager,
+                                    NgTracer tracer = &DummyTracer);
   
     class CurvedElements & GetCurvedElements () const
     { return *curvedelems; }
@@ -792,7 +802,7 @@ namespace netgen
       double area;
     public:
       CSurfaceArea (const Mesh & amesh) 
-	: mesh(amesh), valid(false) { ; }
+	: mesh(amesh), valid(false), area(0.) { ; }
 
       void Add (const Element2d & sel)
       {
@@ -918,7 +928,17 @@ namespace netgen
       NgArray<int> & segment_weights){ }
 #endif
 
+    shared_ptr<Mesh> Mirror( netgen::Point<3> p, Vec<3> n );
 
+    private:
+    MemoryTracer mem_tracer = {"Mesh",
+      points, "points",
+      segments, "segments",
+      surfelements, "surfelements",
+      volelements, "volelements"
+    };
+    public:
+    const MemoryTracer & GetMemoryTracer() { return mem_tracer; }
   };
 
   inline ostream& operator<<(ostream& ost, const Mesh& mesh)

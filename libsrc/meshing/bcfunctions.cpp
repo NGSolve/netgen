@@ -322,7 +322,7 @@ namespace netgen
       colours_sorted.SetSize(all_colours.Size()+1);
       faces_sorted = 0;
       
-      // Slave NgArray to identify the colours the faces were assigned to, 
+      // Index NgArray to identify the colours the faces were assigned to, 
       // after the bubble sort routine to sort the automatic boundary 
       // identifiers according to the number of surface mesh elements 
       // of a given colour

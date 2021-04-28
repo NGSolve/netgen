@@ -50,6 +50,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
   m.attr("occ_version") = OCC_VERSION_COMPLETE;
   py::class_<OCCGeometry, shared_ptr<OCCGeometry>, NetgenGeometry> (m, "OCCGeometry", R"raw_string(Use LoadOCCGeometry to load the geometry from a *.step file.)raw_string")
     .def(py::init<>())
+    .def(py::init<const TopoDS_Shape&>(), py::arg("shape"),
+         "Create Netgen OCCGeometry from existing TopoDS_Shape")
     .def(py::init([] (const string& filename)
                   {
                     shared_ptr<OCCGeometry> geo;
@@ -66,6 +68,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                   }), py::arg("filename"),
         "Load OCC geometry from step, brep or iges file")
     .def(NGSPickle<OCCGeometry>())
+    .def("Glue", &OCCGeometry::GlueGeometry)
     .def("Heal",[](OCCGeometry & self, double tolerance, bool fixsmalledges, bool fixspotstripfaces, bool sewfaces, bool makesolids, bool splitpartitions)
          {
            self.tolerance = tolerance;

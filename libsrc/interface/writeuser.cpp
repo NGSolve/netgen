@@ -43,6 +43,7 @@ namespace netgen
 	  "OpenFOAM 1.5+ Compressed", "*",
       "JCMwave Format", ".jcm",
       "TET Format", ".tet",
+      "CGNS Format", ".cgns",
       //      { "Chemnitz Format" },
       0
     };
@@ -143,6 +144,9 @@ bool WriteUserFormat (const string & format,
   else if (format == "TET Format")
     WriteTETFormat( mesh, filename);//, "High Frequency" );
 #endif
+
+  else if (format == "CGNS Format")
+    WriteCGNSMesh( mesh, filename);
 
   else
     {

@@ -8,13 +8,19 @@
 #include <sstream>
 #include <string>
 
+#include "ngcore_api.hpp"       // for NGCORE_API and CPU arch macros
+
+#if defined(__APPLE__) && defined(NETGEN_ARCH_ARM64)
+#include <mach/mach_time.h>
+#endif
+
+#ifdef NETGEN_ARCH_AMD64
 #ifdef WIN32
 #include <intrin.h>   // for __rdtsc()  CPU time step counter
 #else
 #include <x86intrin.h>   // for __rdtsc()  CPU time step counter
 #endif // WIN32
-
-#include "ngcore_api.hpp"       // for NGCORE_API
+#endif // NETGEN_ARCH_AMD64
 
 namespace ngcore
 {
@@ -22,6 +28,10 @@ namespace ngcore
   extern NGCORE_API int id, ntasks;
   
   NGCORE_API std::string Demangle(const char* typeinfo);
+
+  template<typename T>
+  std::string GetName(const T& obj)
+  { return Demangle(typeid(obj).name()); }
 
 #if defined(__GNUC__)
   inline bool likely (bool x) { return bool(__builtin_expect(long(x), 1L)); }
@@ -48,7 +58,19 @@ namespace ngcore
 
   inline TTimePoint GetTimeCounter() noexcept
   {
-      return TTimePoint(__rdtsc());
+#if defined(__APPLE__) && defined(NETGEN_ARCH_ARM64)
+    return mach_absolute_time();
+#elif defined(NETGEN_ARCH_AMD64)
+    return __rdtsc();
+#elif defined(NETGEN_ARCH_ARM64) && defined(__GNUC__)
+    // __GNUC__ is also defined by CLANG. Use inline asm to read Generic Timer
+    unsigned long long tics;
+    __asm __volatile("mrs %0, CNTVCT_EL0" : "=&r" (tics));
+    return tics;
+#else
+#warning "Unsupported CPU architecture"
+    return 0;
+#endif
   }
 
   template <class T>
@@ -157,7 +179,9 @@ namespace ngcore
       while (!m.compare_exchange_weak(should, true))
         {
           should = false;
+#ifdef NETGEN_ARCH_AMD64
           _mm_pause();
+#endif // NETGEN_ARCH_AMD64
         }
     }
     void unlock()

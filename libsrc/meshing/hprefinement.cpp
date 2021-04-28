@@ -626,7 +626,7 @@ namespace netgen
     // prepare new points  
     
     fac1 = max(0.001,min(0.33,fac1));
-    cout << " in HP-REFINEMENT with fac1 " << fac1 << endl; 
+    PrintMessage(3, " in HP-REFINEMENT with fac1 ", fac1); 
     *testout << " in HP-REFINEMENT with fac1 " << fac1 <<  endl; 
    
 
@@ -1283,7 +1283,7 @@ namespace netgen
         // cout << nwrong << " wrong prisms, " << nright << " right prisms" << endl;
       }
 
-    cout << nwrong << " wrong prisms, " << nright << " right prisms" << endl;
+    PrintMessage(3, nwrong, " wrong prisms, ",  nright, " right prisms");
 
 
     NgArray<MeshPoint, 1> hpts(mesh.GetNP());
@@ -1338,7 +1338,7 @@ namespace netgen
     sing = true; // iterate at least once
     while(sing) 
       {
-	cout << " Start new hp-refinement: step " <<  act_ref  << endl; 
+	PrintMessage(3, " Start new hp-refinement: step ", act_ref);
 		
 	DoRefinement (mesh, hpelements, ref, fac1); 
 	DoRefineDummies (mesh, hpelements, ref);
@@ -1435,16 +1435,16 @@ namespace netgen
 				 int(Get_HPRef_Struct (hpel.type) -> geom));
 		}
 	  }
-	cout << " Start with Update Topology " << endl; 
+	PrintMessage(5, " Start with Update Topology ");
 	mesh.UpdateTopology();
-	cout << " Mesh Update Topology done " << endl; 
+	PrintMessage(5, " Mesh Update Topology done ");
 
 	act_ref++; 
 	
 	sing = ClassifyHPElements(mesh,hpelements, act_ref, levels); 
       }
 
-    cout << " HP-Refinement done with " << --act_ref << " refinement steps." << endl; 
+    PrintMessage(3, " HP-Refinement done with ", --act_ref, " refinement steps.");
 
     if(act_ref>=1)
       { 
@@ -1813,7 +1813,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
       }
 
     if (!sing)
-      cout << "PrepareElements no more to do for actual refinement " << act_ref << endl; 
+      PrintMessage(3, "PrepareElements no more to do for actual refinement ", act_ref);
 
     return(sing); 
 }
@@ -1960,8 +1960,8 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
       }
     
     
-    cout << "undefined elements update classification: " << cnt_undef << endl;
-    cout << "non-implemented in update classification: " << cnt_nonimplement << endl;
+    PrintMessage(3, "undefined elements update classification: ", cnt_undef);
+    PrintMessage(3, "non-implemented in update classification: ", cnt_nonimplement);
 
     for (int i = 0; i < misses.Size(); i++)
       if (misses[i])

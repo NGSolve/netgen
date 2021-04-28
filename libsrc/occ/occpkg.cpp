@@ -519,7 +519,8 @@ namespace netgen
 		stringstream str;
 		occgeometry->GetTopologyTree (str);
 
-		char* cstr = (char*)str.str().c_str();
+                auto txt = str.str();
+		char* cstr = (char*) txt.c_str();
 
 		(*testout) << cstr << endl;
 

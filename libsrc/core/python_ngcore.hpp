@@ -5,17 +5,70 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
 #include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 
 #include "array.hpp"
 #include "archive.hpp"
 #include "flags.hpp"
 #include "ngcore_api.hpp"
+#include "profiler.hpp"
 namespace py = pybind11;
+
+////////////////////////////////////////////////////////////////////////////////
+// automatic conversion of python list to Array<>
+namespace pybind11 {
+namespace detail {
+
+template <typename Type, typename Value> struct ngcore_list_caster {
+    using value_conv = make_caster<Value>;
+
+    bool load(handle src, bool convert) {
+        if (!isinstance<sequence>(src) || isinstance<str>(src))
+            return false;
+        auto s = reinterpret_borrow<sequence>(src);
+        value.SetSize(s.size());
+        value.SetSize0();
+        for (auto it : s) {
+            value_conv conv;
+            if (!conv.load(it, convert))
+                return false;
+            value.Append(cast_op<Value &&>(std::move(conv)));
+        }
+        return true;
+    }
+
+public:
+    template <typename T>
+    static handle cast(T &&src, return_value_policy policy, handle parent) {
+        if (!std::is_lvalue_reference<T>::value)
+            policy = return_value_policy_override<Value>::policy(policy);
+        list l(src.Size());
+        size_t index = 0;
+        for (auto &&value : src) {
+            auto value_ = reinterpret_steal<object>(value_conv::cast(forward_like<T>(value), policy, parent));
+            if (!value_)
+                return handle();
+            PyList_SET_ITEM(l.ptr(), (ssize_t) index++, value_.release().ptr()); // steals a reference
+        }
+        return l.release();
+    }
+
+    PYBIND11_TYPE_CASTER(Type, _("Array[") + value_conv::name + _("]"));
+};
+
+template <typename Type> struct type_caster<ngcore::Array<Type>>
+ : ngcore_list_caster<ngcore::Array<Type>, Type> { };
+
+
+} // namespace detail
+} // namespace pybind11
+////////////////////////////////////////////////////////////////////////////////
 
 namespace ngcore
 {
   NGCORE_API extern bool ngcore_have_numpy;
-
+  NGCORE_API extern bool parallel_pickling;
+  
   // Python class name type traits
   template <typename T>
   struct PyNameTraits {
@@ -142,6 +195,10 @@ namespace ngcore
              return py::make_iterator (self.begin(),self.end());
              }, py::keep_alive<0,1>()) // keep array alive while iterator is used
 
+        .def("__str__", [](TFlat& self)
+                        {
+                          return ToString(self);
+                        })
       ;
 
       if constexpr (detail::HasPyFormat<T>::value)
@@ -225,7 +282,6 @@ namespace ngcore
     using ARCHIVE::stream;
     using ARCHIVE::version_map;
     using ARCHIVE::logger;
-    using ARCHIVE::GetLibraryVersions;
   public:
     PyArchive(const pybind11::object& alst = pybind11::none()) :
       ARCHIVE(std::make_shared<std::stringstream>()),
@@ -270,10 +326,11 @@ namespace ngcore
 
     pybind11::list WriteOut()
     {
+      auto version_runtime = GetLibraryVersions();
       FlushBuffer();
       lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
       stream = std::make_shared<std::stringstream>();
-      *this & GetLibraryVersions();
+      *this & version_runtime;
       FlushBuffer();
       lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
       stream = std::make_shared<std::stringstream>();
@@ -291,19 +348,14 @@ namespace ngcore
     return pybind11::pickle([](T* self)
                       {
                         PyArchive<T_ARCHIVE_OUT> ar;
+                        ar.SetParallel(parallel_pickling);
                         ar & self;
                         auto output = pybind11::make_tuple(ar.WriteOut());
-                        GetLogger("Archive")->trace("Pickling output for object of type {} = {}",
-                                                    Demangle(typeid(T).name()),
-                                                    std::string(pybind11::str(output)));
                         return output;
                       },
                       [](const pybind11::tuple & state)
                       {
                         T* val = nullptr;
-                        GetLogger("Archive")->trace("State for unpickling of object of type {} = {}",
-                                                    Demangle(typeid(T).name()),
-                                                    std::string(pybind11::str(state[0])));
                         PyArchive<T_ARCHIVE_IN> ar(state[0]);
                         ar & val;
                         return val;

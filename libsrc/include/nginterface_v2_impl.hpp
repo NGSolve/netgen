@@ -111,7 +111,13 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
   ret.faces.num = 0;
   ret.faces.ptr = NULL;
 
-  if (mesh->GetDimension() == 2)
+  if (mesh->GetDimension() == 3)
+    {
+      ret.facets.num = 0;
+      ret.facets.base = 0;
+      ret.facets.ptr = nullptr;
+    }
+  else if (mesh->GetDimension() == 2)
     {
       ret.facets.num = 1;
       ret.facets.base = 0;
@@ -330,6 +336,20 @@ NGX_INLINE void Ngx_Mesh :: GetParentNodes (int ni, int * parents) const
     parents[0] = parents[1] = -1;
 }
 
+inline bool Ngx_Mesh :: HasParentEdges() const
+{
+  return mesh->GetTopology().HasParentEdges();
+}
+
+inline tuple<int, std::array<int,3>> Ngx_Mesh :: GetParentEdges (int enr) const
+{
+  return mesh->GetTopology().GetParentEdges(enr);
+}
+
+inline tuple<int, std::array<int,4>> Ngx_Mesh :: GetParentFaces (int fnr) const
+{
+  return mesh->GetTopology().GetParentFaces(fnr);
+}
 
 
 inline auto Ngx_Mesh :: GetTimeStamp() const { return mesh->GetTimeStamp(); }

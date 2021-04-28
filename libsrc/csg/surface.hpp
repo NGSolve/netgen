@@ -213,8 +213,6 @@ namespace netgen
     INSOLID_TYPE;
 
 
-
-
   class DummySurface : public Surface
   {
     virtual double CalcFunctionValue (const Point<3> & /* point */) const
@@ -293,9 +291,13 @@ namespace netgen
 				      const Vec<3> & m,
 				      double eps) const;
 
+    // for a point p in the surface, into which (closed) surfaces does v point into ? 
     virtual void GetTangentialVecSurfaceIndices (const Point<3> & p, const Vec<3> & v,
 						 NgArray<int> & surfind, double eps) const;
 
+    // a point p in the surface, and v a tangential vector
+    // for arbitrary small, but positive t consider q := Project(p+t*v)
+    // into which (closed) surfaces does v2 point into, when starting from q ?     
     virtual void GetTangentialVecSurfaceIndices2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
 						  NgArray<int> & surfind, double eps) const;
 

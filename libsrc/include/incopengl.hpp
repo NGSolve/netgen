@@ -2,9 +2,10 @@
 #define INCOPENGL_HPP___
 #define GL_GLEXT_PROTOTYPES
 
+#include <mystdlib.h>
 #include <mydefs.hpp>
 
-#  if defined(TOGL_AGL) || defined(TOGL_AGL_CLASSIC) || defined(TOGL_NSOPENGL)
+#  ifdef __APPLE__
 #define GL_SILENCE_DEPRECATION
 #define GL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED
 #    include <OpenGL/gl3.h>

@@ -560,21 +560,13 @@ namespace netgen
     ishighorder = 0;
     order = 1;
 
-    // MPI_Comm curve_comm;
-    const auto & curve_comm = mesh.GetCommunicator();
+    auto comm = mesh.GetCommunicator();
 #ifdef PARALLEL
     enum { MPI_TAG_CURVE = MPI_TAG_MESH+20 };
-
     const ParallelMeshTopology & partop = mesh.GetParallelTopology ();
-    // MPI_Comm_dup (mesh.GetCommunicator(), &curve_comm);      
-    NgArray<int> procs;
-#else
-    // curve_comm = mesh.GetCommunicator();
 #endif
-    int id = curve_comm.Rank();
-    int ntasks = curve_comm.Size();
-
-    bool working = (ntasks == 1) || (id > 0);
+    int ntasks = comm.Size();
+    bool working = (ntasks == 1) || (comm.Rank() > 0);
 
     if (working)
       order = aorder;
@@ -653,38 +645,26 @@ namespace netgen
     if (ntasks > 1 && working)
       {
 	for (int e = 0; e < edgeorder.Size(); e++)
-	  {
-	    partop.GetDistantEdgeNums (e+1, procs);
-	    for (int j = 0; j < procs.Size(); j++)
-	      send_orders.Add (procs[j], edgeorder[e]);
-	  }
+          for (int proc : partop.GetDistantEdgeProcs(e))
+            send_orders.Add (proc, edgeorder[e]);              
 	for (int f = 0; f < faceorder.Size(); f++)
-	  {
-	    partop.GetDistantFaceNums (f+1, procs);
-	    for (int j = 0; j < procs.Size(); j++)
-	      send_orders.Add (procs[j], faceorder[f]);
-	  }
+          for (int proc : partop.GetDistantFaceProcs(f))
+            send_orders.Add (proc, faceorder[f]);                          
       }
 
     if (ntasks > 1)
-      MyMPI_ExchangeTable (send_orders, recv_orders, MPI_TAG_CURVE, curve_comm);
+      MyMPI_ExchangeTable (send_orders, recv_orders, MPI_TAG_CURVE, comm);
 
     if (ntasks > 1 && working)
       {
 	NgArray<int> cnt(ntasks);
 	cnt = 0;
 	for (int e = 0; e < edgeorder.Size(); e++)
-	  {
-	    partop.GetDistantEdgeNums (e+1, procs);
-	    for (int j = 0; j < procs.Size(); j++)
-	      edgeorder[e] = max(edgeorder[e], recv_orders[procs[j]][cnt[procs[j]]++]);
-	  }
+          for (auto proc : partop.GetDistantEdgeProcs(e))
+            edgeorder[e] = max(edgeorder[e], recv_orders[proc][cnt[proc]++]);              
 	for (int f = 0; f < faceorder.Size(); f++)
-	  {
-	    partop.GetDistantFaceNums (f+1, procs);
-	    for (int j = 0; j < procs.Size(); j++)
-	      faceorder[f] = max(faceorder[f], recv_orders[procs[j]][cnt[procs[j]]++]);
-	  }
+          for (auto proc : partop.GetDistantFaceProcs(f))
+            faceorder[f] = max(faceorder[f], recv_orders[proc][cnt[proc]++]);              
       }
 #endif
 
@@ -748,21 +728,19 @@ namespace netgen
 
 	      for (int i2 = 0; i2 < edgenrs.Size(); i2++)
 		{
-		  // PointIndex pi1 = el[edges[i2][0]];
-		  // PointIndex pi2 = el[edges[i2][1]];
-
-		  // bool swap = pi1 > pi2;
-		
-		  // Point<3> p1 = mesh[pi1];
-		  // Point<3> p2 = mesh[pi2];
-		
-		  // int order1 = edgeorder[edgenrs[i2]];
-		  // int ndof = max (0, order1-1);
-
-		  surfnr[edgenrs[i2]] = mesh.GetFaceDescriptor(el.GetIndex()).SurfNr();
-		  gi0[edgenrs[i2]] = el.GeomInfoPi(edges[i2][0]+1);
-		  gi1[edgenrs[i2]] = el.GeomInfoPi(edges[i2][1]+1);
-		}
+		  auto enr = edgenrs[i2];
+                  surfnr[enr] = mesh.GetFaceDescriptor(el.GetIndex()).SurfNr();
+                  if (el[edges[i2][0]] < el[edges[i2][1]])
+                    {
+                      gi0[enr] = el.GeomInfoPi(edges[i2][0]+1);
+                      gi1[enr] = el.GeomInfoPi(edges[i2][1]+1);
+                    }
+                  else
+                    {
+                      gi1[enr] = el.GeomInfoPi(edges[i2][0]+1);
+                      gi0[enr] = el.GeomInfoPi(edges[i2][1]+1);
+                    }
+                }
 	    }
 
 
@@ -773,48 +751,40 @@ namespace netgen
 	    TABLE<double> senddata(ntasks), recvdata(ntasks);
 	    if (working)
 	      for (int e = 0; e < nedges; e++)
-		{
-		  partop.GetDistantEdgeNums (e+1, procs);
-		  for (int j = 0; j < procs.Size(); j++)
-		    {
-		      senddata.Add (procs[j], surfnr[e]);
-		      if (surfnr[e] != -1)
-			{
-			  senddata.Add (procs[j], gi0[e].trignum);
-			  senddata.Add (procs[j], gi0[e].u);
-			  senddata.Add (procs[j], gi0[e].v);
-			  senddata.Add (procs[j], gi1[e].trignum);
-			  senddata.Add (procs[j], gi1[e].u);
-			  senddata.Add (procs[j], gi1[e].v);
-			}
-		    }
-		}
+                for (int proc : partop.GetDistantEdgeProcs(e))
+                  {
+                    senddata.Add (proc, surfnr[e]);
+                    if (surfnr[e] != -1)
+                      {
+                        senddata.Add (proc, gi0[e].trignum);
+                        senddata.Add (proc, gi0[e].u);
+                        senddata.Add (proc, gi0[e].v);
+                        senddata.Add (proc, gi1[e].trignum);
+                        senddata.Add (proc, gi1[e].u);
+                        senddata.Add (proc, gi1[e].v);
+                      }
+                  }
 	    
-	    MyMPI_ExchangeTable (senddata, recvdata, MPI_TAG_CURVE, curve_comm);
-	    
+	    MyMPI_ExchangeTable (senddata, recvdata, MPI_TAG_CURVE, comm);
 
 	    NgArray<int> cnt(ntasks);
 	    cnt = 0;
 	    if (working)
 	      for (int e = 0; e < nedges; e++)
-		{
-		  partop.GetDistantEdgeNums (e+1, procs);
-		  for (int j = 0; j < procs.Size(); j++)
-		    {
-		      int surfnr1 = recvdata[procs[j]][cnt[procs[j]]++];
-		      if (surfnr1 != -1)
-			{
-			  surfnr[e] = surfnr1; 
-			  gi0[e].trignum = int (recvdata[procs[j]][cnt[procs[j]]++]);
-			  gi0[e].u = recvdata[procs[j]][cnt[procs[j]]++];
-			  gi0[e].v = recvdata[procs[j]][cnt[procs[j]]++];
-			  gi1[e].trignum = int (recvdata[procs[j]][cnt[procs[j]]++]);
-			  gi1[e].u = recvdata[procs[j]][cnt[procs[j]]++];
-			  gi1[e].v = recvdata[procs[j]][cnt[procs[j]]++];
-			}
-		    }
-		}
-	    
+                for (int proc : partop.GetDistantEdgeProcs(e))
+                  {
+                    int surfnr1 = recvdata[proc][cnt[proc]++];
+                    if (surfnr1 != -1)
+                      {
+                        surfnr[e] = surfnr1; 
+                        gi0[e].trignum = int (recvdata[proc][cnt[proc]++]);
+                        gi0[e].u = recvdata[proc][cnt[proc]++];
+                        gi0[e].v = recvdata[proc][cnt[proc]++];
+                        gi1[e].trignum = int (recvdata[proc][cnt[proc]++]);
+                        gi1[e].u = recvdata[proc][cnt[proc]++];
+                        gi1[e].v = recvdata[proc][cnt[proc]++];
+                      }
+                  }
 	  }
 #endif    
 
@@ -976,59 +946,53 @@ namespace netgen
 	TABLE<double> senddata(ntasks), recvdata(ntasks);
 	if (working)
 	  for (int e = 0; e < nedges; e++)
-	    {
-	      partop.GetDistantEdgeNums (e+1, procs);
-	      for (int j = 0; j < procs.Size(); j++)
-		{
-		  senddata.Add (procs[j], use_edge[e]);
-		  if (use_edge[e])
-		    {
-		      senddata.Add (procs[j], edge_surfnr1[e]);
-		      senddata.Add (procs[j], edge_surfnr2[e]);
-		      senddata.Add (procs[j], edge_gi0[e].edgenr);
-		      senddata.Add (procs[j], edge_gi0[e].body);
-		      senddata.Add (procs[j], edge_gi0[e].dist);
-		      senddata.Add (procs[j], edge_gi0[e].u);
-		      senddata.Add (procs[j], edge_gi0[e].v);
-		      senddata.Add (procs[j], edge_gi1[e].edgenr);
-		      senddata.Add (procs[j], edge_gi1[e].body);
-		      senddata.Add (procs[j], edge_gi1[e].dist);
-		      senddata.Add (procs[j], edge_gi1[e].u);
-		      senddata.Add (procs[j], edge_gi1[e].v);
-		      senddata.Add (procs[j], swap_edge[e]);
-		    }
-		}
-	    }
-	MyMPI_ExchangeTable (senddata, recvdata, MPI_TAG_CURVE, curve_comm);
+            for (int proc : partop.GetDistantEdgeProcs(e))
+              {
+                senddata.Add (proc, use_edge[e]);
+                if (use_edge[e])
+                  {
+                    senddata.Add (proc, edge_surfnr1[e]);
+                    senddata.Add (proc, edge_surfnr2[e]);
+                    senddata.Add (proc, edge_gi0[e].edgenr);
+                    senddata.Add (proc, edge_gi0[e].body);
+                    senddata.Add (proc, edge_gi0[e].dist);
+                    senddata.Add (proc, edge_gi0[e].u);
+                    senddata.Add (proc, edge_gi0[e].v);
+                    senddata.Add (proc, edge_gi1[e].edgenr);
+                    senddata.Add (proc, edge_gi1[e].body);
+                    senddata.Add (proc, edge_gi1[e].dist);
+                    senddata.Add (proc, edge_gi1[e].u);
+                    senddata.Add (proc, edge_gi1[e].v);
+                    senddata.Add (proc, swap_edge[e]);
+                  }
+              }
+
+	MyMPI_ExchangeTable (senddata, recvdata, MPI_TAG_CURVE, comm);
 	NgArray<int> cnt(ntasks);
 	cnt = 0;
 	if (working)
 	  for (int e = 0; e < edge_surfnr1.Size(); e++)
-	    {
-	      partop.GetDistantEdgeNums (e+1, procs);
-	      for (int j = 0; j < procs.Size(); j++)
-		{
-		  int get_edge = int(recvdata[procs[j]][cnt[procs[j]]++]);
-		  if (get_edge)
-		    {
-		      use_edge[e] = 1;
-		      edge_surfnr1[e] = int (recvdata[procs[j]][cnt[procs[j]]++]);
-		      edge_surfnr2[e] = int (recvdata[procs[j]][cnt[procs[j]]++]);
-		      edge_gi0[e].edgenr = int (recvdata[procs[j]][cnt[procs[j]]++]);
-		      edge_gi0[e].body = int (recvdata[procs[j]][cnt[procs[j]]++]);
-		      edge_gi0[e].dist = recvdata[procs[j]][cnt[procs[j]]++];
-		      edge_gi0[e].u = recvdata[procs[j]][cnt[procs[j]]++];
-		      edge_gi0[e].v = recvdata[procs[j]][cnt[procs[j]]++];
-		      edge_gi1[e].edgenr = int (recvdata[procs[j]][cnt[procs[j]]++]);
-		      edge_gi1[e].body = int (recvdata[procs[j]][cnt[procs[j]]++]);
-		      edge_gi1[e].dist = recvdata[procs[j]][cnt[procs[j]]++];
-		      edge_gi1[e].u = recvdata[procs[j]][cnt[procs[j]]++];
-		      edge_gi1[e].v = recvdata[procs[j]][cnt[procs[j]]++];
-		      swap_edge[e] = recvdata[procs[j]][cnt[procs[j]]++];
-		    }
-		}
-	    }
-
+            for (int proc : partop.GetDistantEdgeProcs(e))
+              {
+                int get_edge = int(recvdata[proc][cnt[proc]++]);
+                if (get_edge)
+                  {
+                    use_edge[e] = 1;
+                    edge_surfnr1[e] = int (recvdata[proc][cnt[proc]++]);
+                    edge_surfnr2[e] = int (recvdata[proc][cnt[proc]++]);
+                    edge_gi0[e].edgenr = int (recvdata[proc][cnt[proc]++]);
+                    edge_gi0[e].body = int (recvdata[proc][cnt[proc]++]);
+                    edge_gi0[e].dist = recvdata[proc][cnt[proc]++];
+                    edge_gi0[e].u = recvdata[proc][cnt[proc]++];
+                    edge_gi0[e].v = recvdata[proc][cnt[proc]++];
+                    edge_gi1[e].edgenr = int (recvdata[proc][cnt[proc]++]);
+                    edge_gi1[e].body = int (recvdata[proc][cnt[proc]++]);
+                    edge_gi1[e].dist = recvdata[proc][cnt[proc]++];
+                    edge_gi1[e].u = recvdata[proc][cnt[proc]++];
+                    edge_gi1[e].v = recvdata[proc][cnt[proc]++];
+                    swap_edge[e] = recvdata[proc][cnt[proc]++];
+                  }
+              }
       }
 #endif    
 
@@ -1184,26 +1148,20 @@ namespace netgen
     if (ntasks > 1 && working)
       {
 	for (int f = 0; f < nfaces; f++)
-	  {
-	    partop.GetDistantFaceNums (f+1, procs);
-	    for (int j = 0; j < procs.Size(); j++)
-	      send_surfnr.Add (procs[j], surfnr[f]);
-	  }
+          for (int proc : partop.GetDistantFaceProcs(f))
+            send_surfnr.Add (proc, surfnr[f]);              
       }
 
     if (ntasks > 1)
-      MyMPI_ExchangeTable (send_surfnr, recv_surfnr, MPI_TAG_CURVE, curve_comm);
+      MyMPI_ExchangeTable (send_surfnr, recv_surfnr, MPI_TAG_CURVE, comm);
 
     if (ntasks > 1 && working)
       {
 	NgArray<int> cnt(ntasks);
 	cnt = 0;
 	for (int f = 0; f < nfaces; f++)
-	  {
-	    partop.GetDistantFaceNums (f+1, procs);
-	    for (int j = 0; j < procs.Size(); j++)
-	      surfnr[f] = max(surfnr[f], recv_surfnr[procs[j]][cnt[procs[j]]++]);
-	  }
+          for (int proc : partop.GetDistantFaceProcs(f))
+            surfnr[f] = max(surfnr[f], recv_surfnr[proc][cnt[proc]++]);              
       }
 #endif
 
@@ -1303,6 +1261,10 @@ namespace netgen
                       SurfaceElementIndex sei = top.GetFace2SurfaceElement (f+1)-1;
 		      if (sei != SurfaceElementIndex(-1)) {
 			PointGeomInfo gi = mesh[sei].GeomInfoPi(1);
+                        // use improved initial guess
+                        gi.u = (lami[fnums[0]]*mesh[sei].GeomInfoPi(1).u+lami[fnums[1]]*mesh[sei].GeomInfoPi(2).u+lami[fnums[2]]*mesh[sei].GeomInfoPi(3).u);
+                        gi.v = (lami[fnums[0]]*mesh[sei].GeomInfoPi(1).v+lami[fnums[1]]*mesh[sei].GeomInfoPi(2).v+lami[fnums[2]]*mesh[sei].GeomInfoPi(3).v);
+
 			geo.ProjectPointGI(surfnr[facenr], pp, gi);
 		      }
 		      else
@@ -1386,8 +1348,7 @@ namespace netgen
 
 
 #ifdef PARALLEL
-    curve_comm.Barrier();
-    // MPI_Comm_free (&curve_comm);      
+    comm.Barrier();
 #endif
   }
 

@@ -26,7 +26,7 @@ namespace netgen
           - Use colour index 0 (zero) for all faces with no colour defined
           - Calculate the number of faces of the surface mesh for each colour
           - Sort the number of surface elements in ascending order, with the 
-            colour indices as a slave
+            colour indices as a index
           - Use the indices of the sorted array as the BC property number
 
           Example: If there are 3 colours, present in the mesh and the number 

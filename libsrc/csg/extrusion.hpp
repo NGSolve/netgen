@@ -12,8 +12,10 @@ namespace netgen
     const SplineSeg<2> * profile;
     const SplineGeometry<3> * path;
     Vec<3> glob_z_direction;
+    Array<double> angles;
 
     bool deletable;
+    int tangential_plane_seg;
   
     NgArray< const SplineSeg3<3> * > spline3_path;
     NgArray< const LineSeg<3> * > line_path;
@@ -54,7 +56,7 @@ namespace netgen
 
     ~ExtrusionFace();
 
-    virtual void DoArchive(Archive& ar)
+    void DoArchive(Archive& ar) override
     {
       Surface::DoArchive(ar);
       ar & profile & path & glob_z_direction & deletable & spline3_path & line_path &
@@ -62,25 +64,25 @@ namespace netgen
         profile_spline_coeff & latest_seg & latest_t & latest_point2d & latest_point3d;
     }
   
-    virtual int IsIdentic (const Surface & s2, int & inv, double eps) const; 
+    int IsIdentic (const Surface & s2, int & inv, double eps) const override;
   
-    virtual double CalcFunctionValue (const Point<3> & point) const;
-    virtual void CalcGradient (const Point<3> & point, Vec<3> & grad) const;
-    virtual void CalcHesse (const Point<3> & point, Mat<3> & hesse) const;
-    virtual double HesseNorm () const;
+    double CalcFunctionValue (const Point<3> & point) const override;
+    void CalcGradient (const Point<3> & point, Vec<3> & grad) const override;
+    void CalcHesse (const Point<3> & point, Mat<3> & hesse) const override;
+    double HesseNorm () const override;
 
-    virtual double MaxCurvature () const;
+    double MaxCurvature () const override;
     //virtual double MaxCurvatureLoc (const Point<3> & /* c */ , 
     //				  double /* rad */) const;
 
-    virtual void Project (Point<3> & p) const;
+    void Project (Point<3> & p) const override;
 
-    virtual Point<3> GetSurfacePoint () const;
-    virtual void Print (ostream & str) const;
+    Point<3> GetSurfacePoint () const override;
+    void Print (ostream & str) const override;
   
-    virtual void GetTriangleApproximation (TriangleApproximation & tas, 
+    void GetTriangleApproximation (TriangleApproximation & tas, 
 					   const Box<3> & boundingbox, 
-					   double facets) const;
+					   double facets) const override;
 
     const SplineGeometry<3> & GetPath(void) const {return *path;}
     const SplineSeg<2> & GetProfile(void) const {return *profile;}
@@ -94,6 +96,9 @@ namespace netgen
 			     int & after,
 			     bool & intersecting ) const;
 
+
+    bool PointInFace (const Point<3> & p, const double eps) const;
+    
     INSOLID_TYPE VecInFace ( const Point<3> & p,
 			     const Vec<3> & v,
 			     const double eps ) const;
@@ -111,6 +116,11 @@ namespace netgen
 				    Vec<3> & ex, Vec<3> & ey, Vec<3> & ez,
 				    Vec<3> & dex, Vec<3> & dey, Vec<3> & dez) const;
 
+    void DefineTangentialPlane(const Point<3>& ap1,
+                               const Point<3>& ap2) override;
+    void ToPlane(const Point<3>& p3d, Point<2>& p2d,
+                 double h, int& zone) const override;
+
   };
 
 
@@ -118,8 +128,8 @@ namespace netgen
   class Extrusion : public Primitive
   {
   private:
-    const SplineGeometry<3>* path;
-    const SplineGeometry<2>* profile; // closed, clockwise oriented curve
+    shared_ptr<SplineGeometry<3>> path;
+    shared_ptr<SplineGeometry<2>> profile; // closed, clockwise oriented curve
 
     Vec<3> z_direction;
 
@@ -128,43 +138,46 @@ namespace netgen
     mutable int latestfacenum;
 
   public:
-    Extrusion(const SplineGeometry<3> & path_in,
-	      const SplineGeometry<2> & profile_in,
+    Extrusion(shared_ptr<SplineGeometry<3>> path_in,
+	      shared_ptr<SplineGeometry<2>> profile_in,
 	      const Vec<3> & z_dir);
     // default constructor for archive
     Extrusion() {}
     ~Extrusion();
 
-    virtual void DoArchive(Archive& ar)
+    void DoArchive(Archive& ar) override
     {
       Primitive::DoArchive(ar);
       ar & path & profile & z_direction & faces & latestfacenum;
     }
-    virtual INSOLID_TYPE BoxInSolid (const BoxSphere<3> & box) const;
-    virtual INSOLID_TYPE PointInSolid (const Point<3> & p,
-				       double eps) const;
+    INSOLID_TYPE BoxInSolid (const BoxSphere<3> & box) const override;
+    INSOLID_TYPE PointInSolid (const Point<3> & p,
+                               double eps) const override;
     INSOLID_TYPE PointInSolid (const Point<3> & p,
 			       double eps,
 			       NgArray<int> * const facenums) const;
-    virtual INSOLID_TYPE VecInSolid (const Point<3> & p,
-				     const Vec<3> & v,
-				     double eps) const;
+
+    void GetTangentialSurfaceIndices (const Point<3> & p, 
+                                      NgArray<int> & surfind, double eps) const override;
+
+    INSOLID_TYPE VecInSolid (const Point<3> & p,
+                             const Vec<3> & v,
+                             double eps) const override;
 
     // checks if lim s->0 lim t->0  p + t(v1 + s v2) in solid
-    virtual INSOLID_TYPE VecInSolid2 (const Point<3> & p,
-				      const Vec<3> & v1,
-				      const Vec<3> & v2,
-				      double eps) const;
+    INSOLID_TYPE VecInSolid2 (const Point<3> & p,
+                              const Vec<3> & v1,
+                              const Vec<3> & v2,
+                              double eps) const override;
 
   
-    virtual int GetNSurfaces() const;
-    virtual Surface & GetSurface (int i = 0);
-    virtual const Surface & GetSurface (int i = 0) const;
+    int GetNSurfaces() const override;
+    Surface & GetSurface (int i = 0) override;
+    const Surface & GetSurface (int i = 0) const override;
 
 
-    virtual void Reduce (const BoxSphere<3> & box);
-    virtual void UnReduce ();
-
+    void Reduce (const BoxSphere<3> & box) override;
+    void UnReduce () override;
   };
 
 }

@@ -206,7 +206,7 @@ public:
 
   const FrontLine & GetLine (int nr) { return lines[nr]; }
   const FrontPoint2 & GetPoint (int nr) { return points[nr]; }
-
+  const auto & GetLines () const { return lines; }
 
   ///
   int SelectBaseLine (Point<3> & p1, Point<3> & p2, 
@@ -262,7 +262,7 @@ public:
   bool Inside (const Point<2> & p) const;
 
   bool SameSide (const Point<2> & lp1, const Point<2> & lp2, 
-                 const NgArray<int> * /* testfaces */ = NULL) const;
+                 const FlatArray<int> * /* testfaces */ = NULL) const;
   /*
   {
     return Inside (lp1) == Inside (lp2);

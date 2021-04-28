@@ -11,7 +11,10 @@ add_library(ngcore SHARED
   table.cpp
   taskmanager.cpp
   utils.cpp
+  version.cpp
   )
+
+target_compile_options(ngcore PUBLIC "${NG_COMPILE_FLAGS}")
 
 # Pybind11 2.3 Issue https://github.com/pybind/pybind11/issues/1604
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
@@ -39,6 +42,11 @@ if(CHECK_RANGE OR CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL
   target_compile_definitions(ngcore PUBLIC NETGEN_ENABLE_CHECK_RANGE)
 endif(CHECK_RANGE OR CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "DEBUG")
 
+if(TRACE_MEMORY OR CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "DEBUG")
+  target_compile_definitions(ngcore PUBLIC NETGEN_TRACE_MEMORY)
+endif(TRACE_MEMORY OR CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "DEBUG")
+
+
 if(USE_SPDLOG)
   include_directories(${SPDLOG_INCLUDE_DIR})
   install(DIRECTORY ${SPDLOG_INCLUDE_DIR}
@@ -51,19 +59,28 @@ if(USE_SPDLOG)
   endif(DEBUG_LOG)
 endif(USE_SPDLOG)
 
+if(USE_NUMA)
+    find_library(NUMA_LIBRARY libnuma.so)
+    target_compile_definitions(ngcore PUBLIC USE_NUMA)
+    target_link_libraries(ngcore PRIVATE ${NUMA_LIBRARY})
+endif(USE_NUMA)
+
 install(TARGETS ngcore DESTINATION ${NG_INSTALL_DIR} COMPONENT netgen)
 
-target_link_libraries(ngcore PUBLIC netgen_mpi PRIVATE netgen_python ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(ngcore PUBLIC netgen_mpi PRIVATE "$<BUILD_INTERFACE:netgen_python>" ${CMAKE_THREAD_LIBS_INIT})
 
 install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp logging.hpp
   exception.hpp symboltable.hpp paje_trace.hpp utils.hpp profiler.hpp mpi_wrapper.hpp
   array.hpp taskmanager.hpp concurrentqueue.h localheap.hpp python_ngcore.hpp flags.hpp
-  xbool.hpp signal.hpp bitarray.hpp table.hpp hashtable.hpp
+  xbool.hpp signal.hpp bitarray.hpp table.hpp hashtable.hpp ranges.hpp
+  simd.hpp simd_avx.hpp simd_avx512.hpp simd_generic.hpp simd_sse.hpp simd_arm64.hpp
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/core COMPONENT netgen_devel)
 
 if(ENABLE_CPP_CORE_GUIDELINES_CHECK)
   set_target_properties(ngcore PROPERTIES CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
 endif(ENABLE_CPP_CORE_GUIDELINES_CHECK)
+
+add_dependencies(ngcore ng_generate_version_file)
 
 if(USE_PYTHON)
   pybind11_add_module(pyngcore SHARED python_ngcore_export.cpp)

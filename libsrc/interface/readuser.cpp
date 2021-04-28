@@ -42,12 +42,11 @@ namespace netgen
           {
             Point3d p;
             in >> p.X() >> p.Y() >> p.Z();
-	    p.Z() *= 10;
             mesh.AddPoint (p);
           }
 
         mesh.ClearFaceDescriptors();
-        mesh.AddFaceDescriptor (FaceDescriptor(0,1,0,0));
+        mesh.AddFaceDescriptor (FaceDescriptor(1,1,0,0));
       
         in >> nbe;
         //      int invert = globflags.GetDefineFlag ("invertsurfacemesh");
@@ -313,7 +312,6 @@ namespace netgen
                             ednr = mesh.AddEdgeDescriptor(ed);
                             mesh.SetCD2Name(bcpr, name);
                             auto nr = mesh.AddSegment(tmp_segments[get<0>(element_map[index])-1]);
-                            mesh[nr].SetBCName(mesh.GetCD2NamePtr(mesh.GetNCD2Names()));
                             mesh[nr].edgenr = ednr+1;
                           }
                           else if(dim == 2)
@@ -321,7 +319,6 @@ namespace netgen
                             Segment & seg = mesh.LineSegment(get<0>(element_map[index]));
 			    seg.si = bccounter + 1;
 			    mesh.SetBCName(bccounter, name);
-                            seg.SetBCName(mesh.GetBCNamePtr(bccounter));
 		            bccounter++;
                           }
                           break;
@@ -353,13 +350,11 @@ namespace netgen
                             {
                               auto nr = mesh.AddSegment(tmp_segments[get<0>(element_map[index])-1]);
                               mesh[nr].edgenr = ednr+1;
-                              mesh[nr].SetBCName(mesh.GetCD2NamePtr(mesh.GetNCD2Names()));
                             }
 			    else if(dim == 2)
 			    {
 	 			    Segment & seg = mesh.LineSegment(get<0>(element_map[index]));
 			            seg.si = bccounter;
-                            	    seg.SetBCName(mesh.GetBCNamePtr(bccounter-1));
 			    }
                             break;
                           default:
@@ -388,7 +383,6 @@ namespace netgen
 			if(seg.si == -1){
 			  seg.si = bccounter + 1;
 			  if(bccounter_tmp == bccounter) mesh.SetBCName(bccounter, "default"); // could be more efficient
-			  seg.SetBCName(mesh.GetBCNamePtr(bccounter));
 			  bccounter_tmp++;
 			}
 		}
@@ -647,6 +641,13 @@ namespace netgen
          strcmp (&filename[strlen (filename)-4], ".fnf") == 0 )
       {
         ReadFNFFormat (mesh, filename);
+      }
+
+    // .cgns file - CFD General Notation System
+    if ( (strlen (filename) > 5) &&
+         strcmp (&filename[strlen (filename)-5], ".cgns") == 0 )
+      {
+        ReadCGNSMesh (mesh, filename);
       }
 
     if ( ( (strlen (filename) > 4) && strcmp (&filename[strlen (filename)-4], ".stl") == 0 ) ||

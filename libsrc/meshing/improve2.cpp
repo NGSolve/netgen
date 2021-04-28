@@ -190,7 +190,12 @@ namespace netgen
               SurfaceElementIndex sei(i);
               seia[i] = sei;
               if (mesh[sei].GetNP() != 3)
-                  mixed = true;
+              {
+                  const auto & sel = mesh[sei];
+                  for(auto i : Range(sel.GetNP()))
+                    if(mesh[sel[i]].Type() == INNERPOINT)
+                      mixed = true;
+              }
             });
       }
     else

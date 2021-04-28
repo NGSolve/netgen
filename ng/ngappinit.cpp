@@ -11,10 +11,6 @@
 #include <mpi.h>
 
 extern void ParallelRun();
-namespace netgen
-{
-  MPI_Comm mesh_comm;
-}
 #endif
 
 #include "../libsrc/interface/writeuser.hpp"
@@ -82,7 +78,7 @@ int main(int argc, char ** argv)
 
   if ( netgen::id == 0 )
     {
-      cout << "NETGEN-" << PACKAGE_VERSION << endl;
+      cout << "NETGEN-" << netgen::netgen_version << endl;
       
       cout << "Developed by Joachim Schoeberl at" << endl
 	   << "2010-xxxx Vienna University of Technology" << endl
@@ -206,7 +202,7 @@ int main(int argc, char ** argv)
             cout << "using internal Tcl-script" << endl;
       
           // connect to one string 
-          extern const char * ngscript[];
+          DLL_HEADER extern const char * ngscript[];
           const char ** hcp = ngscript;
           int len = 0;
           while (*hcp)

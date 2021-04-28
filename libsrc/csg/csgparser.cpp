@@ -511,8 +511,8 @@ namespace netgen
 		  break;
 		}
 	      
-	      Primitive * nprim = new Extrusion(*(geom->GetSplineCurve3d(epath)),
-						*(geom->GetSplineCurve2d(profile)),
+	      Primitive * nprim = new Extrusion(geom->GetSplineCurve3d(epath),
+						geom->GetSplineCurve2d(profile),
 						z_dir);
 	      geom->AddSurfaces (nprim);
 	      return new Solid(nprim);
@@ -1186,7 +1186,7 @@ namespace netgen
 		ParseChar (scan, '=');
 		ParseChar (scan, '(');
 		
-		SplineGeometry<2> * newspline = new SplineGeometry<2>;
+		auto newspline = make_shared<SplineGeometry<2>>();
 		// newspline->CSGLoad(scan);
 		LoadSpline (*newspline, scan);
 
@@ -1212,7 +1212,7 @@ namespace netgen
 		ParseChar (scan, '=');
 		ParseChar (scan, '(');
 		
-		SplineGeometry<3> * newspline = new SplineGeometry<3>;
+		auto newspline = make_shared<SplineGeometry<3>>();
 		// newspline->CSGLoad(scan);
 		LoadSpline (*newspline, scan);
 

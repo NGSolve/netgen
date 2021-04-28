@@ -33,6 +33,26 @@ namespace netgen
   };
 
 
+  inline INSOLID_TYPE Intersection (INSOLID_TYPE ina, INSOLID_TYPE inb)
+  {
+    if (ina == IS_INSIDE && inb == IS_INSIDE) return IS_INSIDE;
+    if (ina == IS_OUTSIDE || inb == IS_OUTSIDE) return IS_OUTSIDE;
+    return DOES_INTERSECT;
+  }
+  
+  inline INSOLID_TYPE Union (INSOLID_TYPE ina, INSOLID_TYPE inb)
+  {
+    if (ina == IS_INSIDE || inb == IS_INSIDE) return IS_INSIDE;
+    if (ina == IS_OUTSIDE && inb == IS_OUTSIDE) return IS_OUTSIDE;
+    return DOES_INTERSECT;
+  }
+
+  inline INSOLID_TYPE Complement (INSOLID_TYPE in)
+  {
+    if (in == IS_INSIDE) return IS_OUTSIDE;
+    if (in == IS_OUTSIDE) return IS_INSIDE;
+    return DOES_INTERSECT;
+  }
 
   class Solid
   {
@@ -102,6 +122,14 @@ namespace netgen
 
     // geometric tests
 
+    INSOLID_TYPE PointInSolid (const Point<3> & p, double eps) const;
+    INSOLID_TYPE VecInSolid (const Point<3> & p, const Vec<3> & v, double eps) const;
+
+    // checks if lim s->0 lim t->0  p + t(v1 + s v2) in solid
+    INSOLID_TYPE VecInSolid2 (const Point<3> & p, const Vec<3> & v1,
+                              const Vec<3> & v2, double eps) const;
+
+    
     bool IsIn (const Point<3> & p, double eps = 1e-6) const;
     bool IsStrictIn (const Point<3> & p, double eps = 1e-6) const;
     bool VectorIn (const Point<3> & p, const Vec<3> & v, double eps = 1e-6) const;
@@ -109,21 +137,24 @@ namespace netgen
   
     bool VectorIn2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
 		    double eps) const;
+    /*
     bool VectorIn2Rec (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
 		       double eps) const;
-
+    */
+    bool VectorStrictIn2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
+                          double eps) const;
 
     /// compute localization in point p
-    void TangentialSolid (const Point<3> & p, Solid *& tansol, NgArray<int> & surfids, double eps) const;
+    unique_ptr<Solid> TangentialSolid (const Point<3> & p, NgArray<int> & surfids, double eps) const;
 
     /// compute localization in point p tangential to vector t
-    void TangentialSolid2 (const Point<3> & p, const Vec<3> & t,
-			   Solid *& tansol, NgArray<int> & surfids, double eps) const;
+    unique_ptr<Solid> TangentialSolid2 (const Point<3> & p, const Vec<3> & t,
+                                        NgArray<int> & surfids, double eps) const;
 
     /** compute localization in point p, with second order approximation to edge
 	p + s t + s*s/2 t2 **/
-    void TangentialSolid3 (const Point<3> & p, const Vec<3> & t, const Vec<3> & t2, 
-			   Solid *& tansol, NgArray<int> & surfids, double eps) const;
+    unique_ptr<Solid> TangentialSolid3 (const Point<3> & p, const Vec<3> & t, const Vec<3> & t2, 
+                                        NgArray<int> & surfids, double eps) const;
 
 
 
@@ -133,9 +164,9 @@ namespace netgen
 	p + s t + s*s/2 t2 + r m
 	with first order
     **/
-    void TangentialEdgeSolid (const Point<3> & p, const Vec<3> & t, const Vec<3> & t2, 
-			      const Vec<3> & m, 
-			      Solid *& tansol, NgArray<int> & surfids, double eps) const;
+    unique_ptr<Solid> TangentialEdgeSolid (const Point<3> & p, const Vec<3> & t, const Vec<3> & t2, 
+                                           const Vec<3> & m, 
+                                           NgArray<int> & surfids, double eps) const;
 
 
     void CalcOnePrimitiveSpecialPoints (const Box<3> & box, NgArray<Point<3> > & pts) const;
@@ -180,24 +211,24 @@ namespace netgen
 			int & in, int & strin) const;
     ///
     void RecTangentialSolid (const Point<3> & p, Solid *& tansol, NgArray<int> & surfids, 
-			     int & in, int & strin, double eps) const;
+                             bool & in, bool & strin, double eps) const;
 
     void RecTangentialSolid2 (const Point<3> & p, const Vec<3> & vec, 
 			      Solid *& tansol, NgArray<int> & surfids, 
-			      int & in, int & strin, double eps) const;
+			      bool & in, bool & strin, double eps) const;
     ///
     void RecTangentialSolid3 (const Point<3> & p, const Vec<3> & vec,const Vec<3> & vec2, 
 			      Solid *& tansol, NgArray<int> & surfids, 
-			      int & in, int & strin, double eps) const;
+			      bool & in, bool & strin, double eps) const;
     ///
     void RecTangentialEdgeSolid (const Point<3> & p, const Vec<3> & t, const Vec<3> & t2, 
 				 const Vec<3> & m, 
 				 Solid *& tansol, NgArray<int> & surfids, 
-				 int & in, int & strin, double eps) const;
+				 bool & in, bool & strin, double eps) const;
 
     ///
     void RecEdge (const Point<3> & p, const Vec<3> & v,
-		  int & in, int & strin, int & faces, double eps) const;
+		  bool & in, bool & strin, int & faces, double eps) const;
     ///
     void CalcSurfaceInverseRec (int inv);
     ///

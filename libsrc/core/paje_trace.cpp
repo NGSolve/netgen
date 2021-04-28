@@ -8,28 +8,46 @@
 #include "archive.hpp"           // for Demangle
 #include "paje_trace.hpp"
 #include "profiler.hpp"
+#include "mpi_wrapper.hpp"
 
 extern const char *header;
 
+constexpr int MPI_PAJE_WRITER = 1;
+
 namespace ngcore
 {
+  static std::string GetTimerName( int id )
+  {
+#ifndef PARALLEL
+    return NgProfiler::GetName(id);
+#else // PARALLEL
+    if(id<NgProfiler::SIZE)
+      return NgProfiler::GetName(id);
+
+    NgMPI_Comm comm(MPI_COMM_WORLD);
+    return NgProfiler::GetName(id-NgProfiler::SIZE*comm.Rank());
+#endif // PARALLEL
+  }
+
+  std::vector<PajeTrace::MemoryEvent> PajeTrace::memory_events;
+
   // Produce no traces by default
   size_t PajeTrace::max_tracefile_size = 0;
 
   // If true, produce variable counting active threads
   // increases trace by a factor of two
-  bool PajeTrace::trace_thread_counter = true;
+  bool PajeTrace::trace_thread_counter = false;
   bool PajeTrace::trace_threads = true;
+  bool PajeTrace::mem_tracing_enabled = true;
 
   PajeTrace :: PajeTrace(int anthreads, std::string aname)
   {
-    start_time = GetTimeCounter();
 
     nthreads = anthreads;
     tracefile_name = std::move(aname);
 
     int bytes_per_event=33;
-    max_num_events_per_thread = std::min( static_cast<size_t>(std::numeric_limits<int>::max()), max_tracefile_size/bytes_per_event/(2*nthreads+1)*10/7);
+    max_num_events_per_thread = std::min( static_cast<size_t>(std::numeric_limits<int>::max()), max_tracefile_size/bytes_per_event/(nthreads+1+trace_thread_counter*nthreads)*10/7);
     if(max_num_events_per_thread>0)
     {
       logger->info( "Tracefile size = {}MB", max_tracefile_size/1024/1024);
@@ -47,14 +65,61 @@ namespace ngcore
 
     jobs.reserve(reserve_size);
     timer_events.reserve(reserve_size);
+    memory_events.reserve(1024*1024);
 
+    // sync start time when running in parallel
+#ifdef PARALLEL
+    NgMPI_Comm comm(MPI_COMM_WORLD);
+    for(auto i : Range(5))
+        comm.Barrier();
+#endif // PARALLEL
+
+    start_time = GetTimeCounter();
     tracing_enabled = true;
+    mem_tracing_enabled = true;
+    n_memory_events_at_start = memory_events.size();
   }
 
   PajeTrace :: ~PajeTrace()
   {
-    if(!tracefile_name.empty())
+    for(auto & ltask : tasks)
+        for(auto & task : ltask)
+          {
+            task.start_time -= start_time;
+            task.stop_time -= start_time;
+          }
+    for(auto & job : jobs)
+      {
+        job.start_time -= start_time;
+        job.stop_time -= start_time;
+      }
+    for(auto & event : timer_events)
+        event.time -= start_time;
+
+    for(auto & llink : links)
+        for(auto & link : llink)
+            link.time -= start_time;
+
+    for(auto i : IntRange(n_memory_events_at_start, memory_events.size()))
+      memory_events[i].time -= start_time;
+
+    NgMPI_Comm comm(MPI_COMM_WORLD);
+
+    if(comm.Size()==1)
+    {
       Write(tracefile_name);
+    }
+    else
+    {
+      // make sure the timer id is unique across all ranks
+      for(auto & event : timer_events)
+        event.timer_id += NgProfiler::SIZE*comm.Rank();
+
+      if(comm.Rank() == MPI_PAJE_WRITER)
+        Write(tracefile_name);
+      else
+        SendData();
+    }
   }
 
 
@@ -90,7 +155,6 @@ namespace ngcore
       int alias_counter;
 
       FILE * ctrace_stream;
-      TTimePoint start_time;
       std::shared_ptr<Logger> logger = GetLogger("PajeTrace");
 
 
@@ -98,7 +162,7 @@ namespace ngcore
           // return time in milliseconds as double
         // return std::chrono::duration<double>(t-start_time).count()*1000.0;
         // return std::chrono::duration<double>(t-start_time).count() / 2.7e3;
-        return 1000.0*static_cast<double>(t-start_time) * seconds_per_tick;
+        return 1000.0*static_cast<double>(t) * seconds_per_tick;
       }
 
       enum PType
@@ -180,10 +244,10 @@ namespace ngcore
       void operator=(const PajeFile &) = delete;
       void operator=(PajeFile &&) = delete;
 
-      PajeFile( const std::string & filename, TTimePoint astart_time )
+      PajeFile( const std::string & filename)
         {
-          start_time = astart_time;
-          ctrace_stream = fopen (filename.c_str(),"w"); // NOLINT
+          std::string fname = filename + ".trace";
+          ctrace_stream = fopen (fname.c_str(),"w"); // NOLINT
           fprintf(ctrace_stream, "%s", header ); // NOLINT
           alias_counter = 0;
         }
@@ -365,39 +429,85 @@ namespace ngcore
             logger->warn("Tracing stopped during computation due to tracefile size limit of {} megabytes.", max_tracefile_size/1024/1024);
         }
 
-      PajeFile paje(filename, start_time);
+      PajeFile paje(filename);
 
       const int container_type_task_manager = paje.DefineContainerType( 0, "Task Manager" );
       const int container_type_node = paje.DefineContainerType( container_type_task_manager, "Node");
       const int container_type_thread = paje.DefineContainerType( container_type_task_manager, "Thread");
       const int container_type_timer = container_type_thread; //paje.DefineContainerType( container_type_task_manager, "Timers");
       const int container_type_jobs = paje.DefineContainerType( container_type_task_manager, "Jobs");
+      const int container_type_memory = paje.DefineContainerType( container_type_task_manager, "Memory usage");
 
       const int state_type_job = paje.DefineStateType( container_type_jobs, "Job" );
       const int state_type_task = paje.DefineStateType( container_type_thread, "Task" );
       const int state_type_timer = paje.DefineStateType( container_type_timer, "Timer state" );
 
-      const int variable_type_active_threads = paje.DefineVariableType( container_type_jobs, "Active threads" );
+      int variable_type_active_threads = 0;
+      if(trace_thread_counter)
+          variable_type_active_threads = paje.DefineVariableType( container_type_jobs, "Active threads" );
 
       const int container_task_manager = paje.CreateContainer( container_type_task_manager, 0, "The task manager" );
       const int container_jobs = paje.CreateContainer( container_type_jobs, container_task_manager, "Jobs" );
-      paje.SetVariable( start_time, variable_type_active_threads, container_jobs, 0.0 );
 
-      const int num_nodes = 1; //task_manager ? task_manager->GetNumNodes() : 1;
+      int variable_type_memory = 0;
+      const int container_memory = paje.CreateContainer( container_type_memory, container_task_manager, "Memory" );
+      if(mem_tracing_enabled)
+      {
+        variable_type_memory = paje.DefineVariableType( container_type_task_manager, "Memory [MB]" );
+      }
 
+
+      int num_nodes = 1; //task_manager ? task_manager->GetNumNodes() : 1;
+      std::vector <int> thread_aliases;
       std::vector<int> container_nodes;
-      container_nodes.reserve(num_nodes);
-      for(int i=0; i<num_nodes; i++)
+
+#ifdef PARALLEL
+      // Hostnames
+      NgMPI_Comm comm(MPI_COMM_WORLD);
+      auto rank = comm.Rank();
+      auto nranks = comm.Size();
+      if(nranks>1)
+      {
+        nthreads = nranks;
+        thread_aliases.reserve(nthreads);
+
+        std::array<char, MPI_MAX_PROCESSOR_NAME+1> ahostname;
+        int len;
+        MPI_Get_processor_name(ahostname.data(), &len);
+        std::string hostname = ahostname.data();
+
+        std::map<std::string, int> host_map;
+
+        std::string name;
+        for(auto i : IntRange(0, nranks))
+        {
+          if(i!=MPI_PAJE_WRITER)
+            comm.Recv(name, i, 0);
+          else
+            name = hostname;
+          if(host_map.count(name)==0)
+          {
+            host_map[name] = container_nodes.size();
+            container_nodes.emplace_back( paje.CreateContainer( container_type_node, container_task_manager, name) );
+          }
+          thread_aliases.emplace_back( paje.CreateContainer( container_type_thread, container_nodes[host_map[name]], "Rank " + ToString(i) ) );
+        }
+      }
+      else
+#endif // PARALLEL
+      {
+        container_nodes.reserve(num_nodes);
+        for(int i=0; i<num_nodes; i++)
           container_nodes.emplace_back( paje.CreateContainer( container_type_node, container_task_manager, "Node " + ToString(i)) );
 
-      std::vector <int> thread_aliases;
-      thread_aliases.reserve(nthreads);
-      if(trace_threads)
-        for (int i=0; i<nthreads; i++)
+        thread_aliases.reserve(nthreads);
+        if(trace_threads)
+          for (int i=0; i<nthreads; i++)
           {
             auto name = "Thread " + ToString(i);
             thread_aliases.emplace_back( paje.CreateContainer( container_type_thread, container_nodes[i*num_nodes/nthreads], name ) );
           }
+      }
 
       std::map<const std::type_info *, int> job_map;
       std::map<const std::type_info *, int> job_task_map;
@@ -416,20 +526,73 @@ namespace ngcore
           paje.PopState( j.stop_time, state_type_job, container_jobs );
         }
 
+      size_t memory_at_start = 0;
+
+      for(const auto & i : IntRange(0, n_memory_events_at_start))
+      {
+        if(memory_events[i].is_alloc)
+            memory_at_start += memory_events[i].size;
+        else
+            memory_at_start -= memory_events[i].size;
+      }
+
+      paje.SetVariable( 0, variable_type_memory, container_memory, 1.0*memory_at_start/(1024*1024));
+
+      for(const auto & i : IntRange(n_memory_events_at_start, memory_events.size()))
+      {
+        auto & m = memory_events[i];
+        if(m.size==0)
+            continue;
+        double size = 1.0*m.size/(1024*1024);
+        if(m.is_alloc)
+          paje.AddVariable( m.time, variable_type_memory, container_memory, size);
+        else
+          paje.SubVariable( m.time, variable_type_memory, container_memory, size);
+      }
+
       std::set<int> timer_ids;
       std::map<int,int> timer_aliases;
+      std::map<int,std::string> timer_names;
 
       for(auto & event : timer_events)
-        timer_ids.insert(event.timer_id);
+          timer_ids.insert(event.timer_id);
 
 
+      // Timer names
       for(auto & vtasks : tasks)
-        for (Task & t : vtasks)
-          if(t.id_type==Task::ID_TIMER)
-            timer_ids.insert(t.id);
+          for (Task & t : vtasks)
+              if(t.id_type==Task::ID_TIMER)
+                  timer_ids.insert(t.id);
 
       for(auto id : timer_ids)
-        timer_aliases[id] = paje.DefineEntityValue( state_type_timer, NgProfiler::GetName(id), -1 );
+          timer_names[id] = GetTimerName(id);
+
+#ifdef PARALLEL
+      if(nranks>1)
+      {
+        for(auto src : IntRange(0, nranks))
+        {
+          if(src==MPI_PAJE_WRITER)
+            continue;
+
+          size_t n_timers;
+          comm.Recv (n_timers, src, 0);
+
+          int id;
+          std::string name;
+          for(auto i : IntRange(n_timers))
+          {
+            comm.Recv (id, src, 0);
+            comm.Recv (name, src, 0);
+            timer_ids.insert(id);
+            timer_names[id] = name;
+          }
+        }
+      }
+#endif // PARALLEL
+
+      for(auto id : timer_ids)
+          timer_aliases[id] = paje.DefineEntityValue( state_type_timer, timer_names[id], -1 );
 
       int timerdepth = 0;
       int maxdepth = 0;
@@ -494,6 +657,50 @@ namespace ngcore
           }
         }
 
+#ifdef PARALLEL
+      if(nranks>1)
+      {
+        for(auto & event : timer_events)
+        {
+          if(event.is_start)
+            paje.PushState( event.time, state_type_timer, thread_aliases[MPI_PAJE_WRITER], timer_aliases[event.timer_id] );
+          else
+            paje.PopState( event.time, state_type_timer, thread_aliases[MPI_PAJE_WRITER] );
+        }
+
+        // Timer events
+        Array<int> timer_id;
+        Array<TTimePoint> time;
+        Array<bool> is_start;
+        Array<int> thread_id;
+
+        for(auto src : IntRange(0, nranks))
+        {
+          if(src==MPI_PAJE_WRITER)
+            continue;
+
+          comm.Recv (timer_id, src, 0);
+          comm.Recv (time, src, 0);
+          comm.Recv (is_start, src, 0);
+          comm.Recv (thread_id, src, 0);
+
+          for(auto i : Range(timer_id.Size()))
+          {
+            TimerEvent event;
+            event.timer_id = timer_id[i];
+            event.time = time[i];
+            event.is_start = is_start[i];
+            event.thread_id = thread_id[i];
+
+            if(event.is_start)
+              paje.PushState( event.time, state_type_timer, thread_aliases[src], timer_aliases[event.timer_id] );
+            else
+              paje.PopState( event.time, state_type_timer, thread_aliases[src] );
+          }
+        }
+      }
+#endif // PARALLEL
+
       // Merge link event
       int nlinks = 0;
       for( auto & l : links)
@@ -552,8 +759,68 @@ namespace ngcore
                 }
             }
         }
-      WriteSunburstHTML();
+      WriteTimingChart();
+#ifdef NETGEN_TRACE_MEMORY
+      WriteMemoryChart("");
+#endif // NETGEN_TRACE_MEMORY
       paje.WriteEvents();
+    }
+
+  void PajeTrace::SendData( )
+    {
+#ifdef PARALLEL
+      // Hostname
+      NgMPI_Comm comm(MPI_COMM_WORLD);
+      auto rank = comm.Rank();
+      auto nranks = comm.Size();
+
+      std::string hostname;
+        {
+          std::array<char, MPI_MAX_PROCESSOR_NAME+1> ahostname;
+          int len;
+          MPI_Get_processor_name(ahostname.data(), &len);
+          hostname = ahostname.data();
+        }
+
+      comm.Send(hostname, MPI_PAJE_WRITER, 0);
+
+      // Timer names
+      std::set<int> timer_ids;
+      std::map<int,std::string> timer_names;
+
+      for(auto & event : timer_events)
+          timer_ids.insert(event.timer_id);
+
+      for(auto id : timer_ids)
+          timer_names[id] = GetTimerName(id);
+      size_t size = timer_ids.size();
+      comm.Send(size, MPI_PAJE_WRITER, 0);
+      for(auto id : timer_ids)
+        {
+          comm.Send(id, MPI_PAJE_WRITER, 0);
+          comm.Send(timer_names[id], MPI_PAJE_WRITER, 0);
+        }
+
+
+      // Timer events
+      Array<int> timer_id;
+      Array<TTimePoint> time;
+      Array<bool> is_start;
+      Array<int> thread_id;
+
+      for(auto & event : timer_events)
+        {
+          timer_id.Append(event.timer_id);
+          time.Append(event.time);
+          is_start.Append(event.is_start);
+          thread_id.Append(event.thread_id);
+        }
+
+      comm.Send (timer_id, MPI_PAJE_WRITER, 0);
+      comm.Send (time, MPI_PAJE_WRITER, 0);
+      comm.Send (is_start, MPI_PAJE_WRITER, 0);
+      comm.Send (thread_id, MPI_PAJE_WRITER, 0);
+#endif // PARALLEL
     }
 
   ///////////////////////////////////////////////////////////////////
@@ -562,15 +829,26 @@ namespace ngcore
   {
       int id = 0;
       std::map<int, TreeNode> children;
-      double time = 0.0;
+      double chart_size = 0.0; // time without children (the chart lib accumulates children sizes again)
+      double size = 0.0;
+      double min_size = 1e99;
+      double max_size = 0.0;
       std::string name;
+
+      size_t calls = 0;
       TTimePoint start_time = 0;
   };
 
-  void PrintNode (const TreeNode &n, int &level, std::ofstream & f);
-  void PrintNode (const TreeNode &n, int &level, std::ofstream & f)
+  void PrintNode (const TreeNode &n, std::ofstream & f)
   {
-      f << "{ name: \"" + n.name + "\", size: " + ToString(n.time);
+      f << "{ name: \"" + n.name + "\"";
+      f << ", calls: " << n.calls;
+      f << ", size: " << n.chart_size;
+      f << ", value: " << n.size;
+      f << ", min: " << n.min_size;
+      f << ", max: " << n.max_size;
+      if(n.calls)
+        f << ", avg: " << n.size/n.calls;
       int size = n.children.size();
       if(size>0)
       {
@@ -578,7 +856,7 @@ namespace ngcore
           f << ", children: [";
           for(auto & c : n.children)
           {
-              PrintNode(c.second, level, f);
+              PrintNode(c.second, f);
               if(++i<size)
                   f << " , ";
           }
@@ -587,12 +865,224 @@ namespace ngcore
       f << '}';
   }
 
-  void PajeTrace::WriteSunburstHTML( )
+  void WriteSunburstHTML( TreeNode & root, std::string filename, bool time_or_memory )
+  {
+    std::ofstream f(filename+".html");
+    f.precision(4);
+    f << R"CODE_(
+<head>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="https://unpkg.com/sunburst-chart"></script>
+
+  <style>body { margin: 0 }</style>
+)CODE_";
+    if(!time_or_memory)
+      f << "<title>Maximum Memory Consumption</title>\n";
+    f << R"CODE_(
+</head>
+<body>
+  <div id="chart"></div>
+
+  <script>
+    const data = 
+)CODE_";
+      PrintNode(root, f);
+      f << ";\n\n";
+      if(time_or_memory)
+        f << "const chart_type = 'time';\n";
+      else
+        f << "const chart_type = 'memory';\n";
+      f << R"CODE_(
+    const color = d3.scaleOrdinal(d3.schemePaired);
+
+    let getTime = (t) =>
+    {
+       if(t>=1000)  return (t/1000).toPrecision(4) + '  s';
+       if(t>=0.1)   return t.toPrecision(4) + ' ms';
+       if(t>=1e-4)  return (t*1e3).toPrecision(4) + ' us';
+
+       return (t/1e6).toPrecision(4) + ' ns';
+    };
+
+    const KB_ = 1024;
+    const MB_ = KB_*1024;
+    const GB_ = MB_*1024;
+    let getMemory = (m) =>
+    {
+       if(m>=GB_)  return (m/GB_).toPrecision(4) + ' GB';
+       if(m>=MB_)  return (m/MB_).toPrecision(4) + ' MB';
+       if(m>=KB_)  return (m/KB_).toPrecision(4) + ' KB';
+       return m.toPrecision(4) + ' B';
+    };
+
+    Sunburst()
+      .data(data)
+      .size('size')
+      .color(d => color(d.name))
+      .tooltipTitle((d, node) => { return node.parent ? node.parent.data.name + " &rarr; " + d.name : d.name; })
+      .tooltipContent((d, node) => {
+        if(chart_type=="memory")
+        {
+          return `Total Memory: <i>${getMemory(d.value)}</i> <br>`
+               + `Memory: <i>${getMemory(d.size)}</i>`
+        }
+        else
+        {
+          return `Time: <i>${getTime(d.value)}</i> <br>`
+               + `calls: <i>${d.calls}</i> <br>`
+               + `min: <i>${getTime(d.min)}</i> <br>`
+               + `max: <i>${getTime(d.max)}</i> <br>`
+               + `avg: <i>${getTime(d.avg)}</i>`
+        }
+      })
+      (document.getElementById('chart'));
+
+      // Line breaks in tooltip
+      var all = document.getElementsByClassName('sunbirst-tooltip');
+      for (var i = 0; i < all.length; i++) {
+          all[i].white_space = "";
+      }
+  </script>
+</body>
+)CODE_" << std::endl;
+
+
+  }
+
+#ifdef NETGEN_TRACE_MEMORY
+  void PajeTrace::WriteMemoryChart( std::string fname )
+  {
+    if(fname=="")
+      fname = tracefile_name + "_memory";
+    size_t mem_allocated = 0;
+    size_t max_mem_allocated = 0;
+    size_t imax_mem_allocated = 0;
+
+    const auto & names = MemoryTracer::GetNames();
+    const auto & parents = MemoryTracer::GetParents();
+    size_t N = names.size();
+
+    Array<size_t> mem_allocated_id;
+    mem_allocated_id.SetSize(N);
+    mem_allocated_id = 0;
+
+    // Find point with maximum memory allocation, check for missing allocs/frees
+    for(auto i : IntRange(memory_events.size()))
+    {
+      const auto & ev = memory_events[i];
+
+      if(ev.is_alloc)
+      {
+        mem_allocated += ev.size;
+        mem_allocated_id[ev.id] += ev.size;
+        if(mem_allocated > max_mem_allocated && i>=n_memory_events_at_start)
+        {
+          imax_mem_allocated = i;
+          max_mem_allocated = mem_allocated;
+        }
+      }
+      else
+      {
+        if(ev.size > mem_allocated)
+          {
+            std::cerr << "Error in memory tracer: have total allocated memory < 0" << std::endl;
+            mem_allocated = 0;
+          }
+        else
+          mem_allocated -= ev.size;
+        if(ev.size > mem_allocated_id[ev.id])
+          {
+            std::cerr << "Error in memory tracer: have allocated memory < 0 in tracer " << names[ev.id] << std::endl;
+            mem_allocated_id[ev.id] = 0;
+          }
+        else
+          mem_allocated_id[ev.id] -= ev.size;
+      }
+    }
+
+    // reconstruct again the memory consumption after event imax_mem_allocated
+    mem_allocated_id = 0;
+    for(auto i : IntRange(imax_mem_allocated+1))
+    {
+      const auto & ev = memory_events[i];
+
+      if(ev.is_alloc)
+        mem_allocated_id[ev.id] += ev.size;
+      else
+        {
+          if(ev.size > mem_allocated_id[ev.id])
+            mem_allocated_id[ev.id] = 0;
+          else
+            mem_allocated_id[ev.id] -= ev.size;
+        }
+    }
+
+    TreeNode root;
+    root.name="all";
+
+    Array<TreeNode*> nodes;
+    nodes.SetSize(N);
+    nodes = nullptr;
+    nodes[0] = &root;
+    Array<Array<int>> children(N);
+
+    Array<size_t> sorting; // topological sorting (parents before children)
+    sorting.SetAllocSize(N);
+
+    for(auto i : IntRange(1, N))
+        children[parents[i]].Append(i);
+
+    ArrayMem<size_t, 100> stack;
+    sorting.Append(0);
+    stack.Append(0);
+
+    while(stack.Size())
+    {
+      auto current = stack.Last();
+      stack.DeleteLast();
+
+      for(const auto child : children[current])
+      {
+        sorting.Append(child);
+        if(children[child].Size())
+          stack.Append(child);
+      }
+    }
+
+    for(auto i : sorting)
+    {
+      if(i==0)
+          continue;
+
+      TreeNode * parent = nodes[parents[i]];
+
+      auto & node = parent->children[i];
+      nodes[i] = &node;
+      node.id = i;
+      node.chart_size = mem_allocated_id[i];
+      node.size = mem_allocated_id[i];
+      node.name = names[i];
+    }
+
+    for(auto i_ : Range(sorting))
+    {
+      // reverse topological order to accumulate total memory usage of all children
+      auto i = sorting[sorting.Size()-1-i_];
+      if(i==0)
+          continue;
+      nodes[parents[i]]->size += nodes[i]->size;
+    }
+
+    WriteSunburstHTML( root, fname, false );
+
+  }
+#endif // NETGEN_TRACE_MEMORY
+
+  void PajeTrace::WriteTimingChart( )
   {
       std::vector<TimerEvent> events;
 
       TreeNode root;
-      root.time=0;
       root.name="all";
       TreeNode *current = &root;
 
@@ -629,7 +1119,10 @@ namespace ngcore
 
       std::sort (events.begin(), events.end());
 
-      root.time = 1000.0*static_cast<double>(stop_time-start_time) * seconds_per_tick;
+      root.size = 1000.0*static_cast<double>(stop_time) * seconds_per_tick;
+      root.calls = 1;
+      root.min_size = root.size;
+      root.max_size = root.size;
 
       for(auto & event : events)
       {
@@ -645,8 +1138,8 @@ namespace ngcore
 
               if(need_init)
               {
-                  current->name = is_timer_event ? NgProfiler::GetName(id) : job_names[id];
-                  current->time = 0.0;
+                  current->name = is_timer_event ? GetTimerName(id) : job_names[id];
+                  current->size = 0.0;
                   current->id = id;
               }
 
@@ -658,44 +1151,22 @@ namespace ngcore
                 std::cout << "node stack empty!" << std::endl;
                 break;
               }
-              double time = 1000.0*static_cast<double>(event.time-current->start_time) * seconds_per_tick;
-              current->time += time;
+              double size = 1000.0*static_cast<double>(event.time-current->start_time) * seconds_per_tick;
+              current->size += size;
+              current->chart_size += size;
+              current->min_size = std::min(current->min_size, size);
+              current->max_size = std::max(current->max_size, size);
+              current->calls++;
+
               current = node_stack.back();
-              current->time -= time;
+              current->chart_size -= size;
               node_stack.pop_back();
           }
       }
 
-      int level = 0;
-      std::ofstream f(tracefile_name+".html");
-      f.precision(4);
-      f << R"CODE_(
-<head>
-  <script src="https://d3js.org/d3.v5.min.js"></script>
-  <script src="https://unpkg.com/sunburst-chart"></script>
+      root.chart_size = 0.0;
 
-  <style>body { margin: 0 }</style>
-</head>
-<body>
-  <div id="chart"></div>
-
-  <script>
-    const data = 
-)CODE_";
-      PrintNode(root, level, f);
-      f << R"CODE_( ;
-
-    const color = d3.scaleOrdinal(d3.schemePaired);
-
-    Sunburst()
-      .data(data)
-      .size('size')
-      .color(d => color(d.name))
-      .tooltipContent((d, node) => `Time: <i>${node.value.toPrecision(6)}ms</i>`)
-      (document.getElementById('chart'));
-  </script>
-</body>
-)CODE_" << std::endl;
+      ngcore::WriteSunburstHTML( root, tracefile_name, true );
   }
 
 } // namespace ngcore

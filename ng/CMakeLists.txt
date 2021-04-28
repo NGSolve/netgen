@@ -4,13 +4,11 @@ else()
   add_definitions(-DINTERNAL_TCL_DEFAULT=0)
 endif()
 
-set(netgen_sources ngappinit.cpp onetcl.cpp)
 if(WIN32)
-    # add icon to netgen executable
-    enable_language(RC)
-    set(netgen_sources ${netgen_sources} ../windows/netgen.rc)
-    # Don't use ccache here due to incompatibility with the resource compiler
-    set_directory_properties(PROPERTIES RULE_LAUNCH_COMPILE "")
+  # add icon and version info to netgen executable
+  enable_language(RC)
+  # Don't use ccache here due to incompatibility with the resource compiler
+  set_directory_properties(PROPERTIES RULE_LAUNCH_COMPILE "")
 endif(WIN32)
 
 if(USE_GUI)
@@ -22,7 +20,10 @@ if(USE_GUI)
         ../libsrc/occ/occpkg.cpp ../libsrc/occ/vsocc.cpp
     )
 
-    add_executable(netgen ngappinit.cpp onetcl.cpp)
+    add_executable(netgen ngappinit.cpp)
+    if(WIN32)
+      target_sources(netgen PRIVATE ../windows/netgen.rc)
+    endif(WIN32)
 
     target_link_libraries( gui PUBLIC nglib )
     target_link_libraries( gui PRIVATE ${LIBTOGL} ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} )
@@ -46,7 +47,7 @@ if(USE_GUI)
     if(WIN32)
         set_target_properties( gui PROPERTIES OUTPUT_NAME libgui )
     endif(WIN32)
-    target_link_libraries( gui PRIVATE netgen_python )
+    target_link_libraries( gui PRIVATE "$<BUILD_INTERFACE:netgen_python>" )
 
 endif(USE_GUI)
 
@@ -60,7 +61,7 @@ if(USE_PYTHON)
     endif()
 
     add_library(ngpy SHARED netgenpy.cpp)
-    target_link_libraries( ngpy PUBLIC nglib PRIVATE netgen_python )
+    target_link_libraries( ngpy PUBLIC nglib PRIVATE "$<BUILD_INTERFACE:netgen_python>" )
     if(APPLE)
         set_target_properties( ngpy PROPERTIES SUFFIX ".so")
     elseif(WIN32)

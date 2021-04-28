@@ -14,9 +14,12 @@ option( USE_NATIVE_ARCH  "build for native cpu architecture" ON)
 option( USE_GUI     "don't build netgen with GUI" ON )
 option( USE_PYTHON  "build with python interface" ON )
 option( USE_MPI     "enable mpi parallelization" OFF )
+option( USE_MPI4PY  "enable mpi4py interface" ON )
 option( USE_OCC     "(not supported) compile with OpenCascade geometry kernel" OFF)
 option( USE_JPEG    "enable snapshots using library libjpeg" OFF )
 option( USE_MPEG    "enable video recording with FFmpeg, uses libavcodec" OFF )
+option( USE_CGNS    "enable CGNS file read/write support" OFF )
+option( USE_NUMA         "compile with NUMA-aware code")
 option( INTEL_MIC        "cross compile for intel xeon phi")
 option( INSTALL_PROFILES "install environment variable settings to /etc/profile.d" OFF )
 option( USE_CCACHE       "use ccache")
@@ -30,10 +33,11 @@ option( BUILD_STUB_FILES "Build stub files for better autocompletion" ON)
 option( BUILD_FOR_CONDA "Link python libraries only to executables" OFF)
 
 option( USE_SUPERBUILD       "use ccache" ON)
+option( TRACE_MEMORY     "Enable memory tracing" OFF)
+
+set(NG_COMPILE_FLAGS "" CACHE STRING "Additional compile flags")
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_modules")
-
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(APPLE)
   set(INSTALL_DIR_DEFAULT /Applications/Netgen.app)
@@ -50,14 +54,14 @@ if(INSTALL_DIR)
   set(INSTALL_DIR_DEFAULT ${INSTALL_DIR})
 endif(INSTALL_DIR)
 
-if(UNIX)
+if(UNIX AND USE_SUPERBUILD)
   message("Checking for write permissions in install directory...")
   execute_process(COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX})
   execute_process(COMMAND test -w ${CMAKE_INSTALL_PREFIX} RESULT_VARIABLE res)
   if(res)
     message(WARNING "No write access at install directory, please set correct permissions")
   endif()
-endif(UNIX)
+endif(UNIX AND USE_SUPERBUILD)
 
 if (USE_SUPERBUILD)
   project (SUPERBUILD)
@@ -76,12 +80,10 @@ else()
   endif()
 endif()
 
-set(NETGEN_VERSION_MAJOR 6)
-set(NETGEN_VERSION_MINOR 2)
-string(TIMESTAMP NETGEN_VERSION_PATCH "%y%U%w" )
-set(NETGEN_VERSION "${NETGEN_VERSION_MAJOR}.${NETGEN_VERSION_MINOR}-dev")
-set(PACKAGE_VERSION "${NETGEN_VERSION_MAJOR}.${NETGEN_VERSION_MINOR}-${NETGEN_VERSION_PATCH}")
-set(CPACK_PACKAGE_VERSION "${PACKAGE_VERSION}")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+include (${CMAKE_CURRENT_LIST_DIR}/cmake/generate_version_file.cmake)
+set(CPACK_PACKAGE_VERSION "${NETGEN_VERSION}")
 
 
 #######################################################################
@@ -193,7 +195,6 @@ check_include_files (dlfcn.h HAVE_DLFCN_H)
 if(HAVE_DLFCN_H)
   add_definitions(-DHAVE_DLFCN_H)
 endif()
-add_definitions(-DNETGEN_VERSION="${NETGEN_VERSION}")
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -300,6 +301,14 @@ if (USE_MPI)
     target_include_directories(netgen_metis INTERFACE ${METIS_INCLUDE_DIR})
     target_link_libraries(netgen_metis INTERFACE ${METIS_LIBRARY} )
     target_compile_definitions(netgen_metis INTERFACE METIS )
+
+    if(USE_MPI4PY AND USE_PYTHON)
+      execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import mpi4py;print(mpi4py.get_include())" OUTPUT_VARIABLE mpi4py_path OUTPUT_STRIP_TRAILING_WHITESPACE)
+      find_path(MPI4PY_INCLUDE_DIR mpi4py.h HINTS ${mpi4py_path}/mpi4py NO_DEFAULT_PATH REQUIRED)
+      target_include_directories(netgen_metis INTERFACE ${MPI4PY_INCLUDE_DIR})
+      target_compile_definitions(netgen_metis INTERFACE NG_MPI4PY )
+      message(STATUS "Found mpi4py: ${MPI4PY_INCLUDE_DIR}")
+    endif(USE_MPI4PY AND USE_PYTHON)
 endif (USE_MPI)
 install(TARGETS netgen_mpi netgen_metis ${NG_INSTALL_DIR})
 
@@ -324,6 +333,12 @@ if (USE_MPEG)
     include_directories(${FFMPEG_INCLUDE_DIR})
 endif (USE_MPEG)
 
+#######################################################################
+add_custom_target(ng_generate_version_file
+  ${CMAKE_COMMAND}
+    -DBDIR=${CMAKE_CURRENT_BINARY_DIR}
+    -P ${CMAKE_CURRENT_LIST_DIR}/cmake/generate_version_file.cmake
+    )
 #######################################################################
 if(INSTALL_PROFILES)
     file(WRITE  ${CMAKE_CURRENT_BINARY_DIR}/netgen.sh "#!/bin/sh\n")
@@ -388,12 +403,27 @@ if(ENABLE_CPP_CORE_GUIDELINES_CHECK)
   endif()
 endif(ENABLE_CPP_CORE_GUIDELINES_CHECK)
 
+add_library(netgen_cgns INTERFACE)
+if(USE_CGNS)
+    find_library( CGNS_LIBRARY NAMES cgns cgnsdll )
+    find_path( CGNS_INCLUDE_DIR cgnslib.h )
+    target_compile_definitions(netgen_cgns INTERFACE NG_CGNS)
+    target_include_directories(netgen_cgns INTERFACE ${CGNS_INCLUDE_DIR})
+    target_link_libraries(netgen_cgns INTERFACE ${CGNS_LIBRARY})
+    if(NOT WIN32 AND NOT APPLE) # hdf5 is statically linked into cgns in Windows amd MacOS binaries
+        find_library(HDF5_LIBRARY NAMES hdf5 hdf5_serial)
+        target_link_libraries(netgen_cgns INTERFACE ${HDF5_LIBRARY})
+    endif(NOT WIN32 AND NOT APPLE)
+endif(USE_CGNS)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/netgen_version.hpp ${CMAKE_CURRENT_BINARY_DIR}/netgen_config.hpp DESTINATION ${NG_INSTALL_DIR_INCLUDE}/include COMPONENT netgen_devel)
+
+add_subdirectory(windows)
 add_subdirectory(libsrc)
 add_subdirectory(ng)
 add_subdirectory(tutorials)
 add_subdirectory(py_tutorials)
 add_subdirectory(doc)
-add_subdirectory(windows)
 add_subdirectory(nglib)
 if (USE_PYTHON)
   add_subdirectory(python)
@@ -444,6 +474,8 @@ if(USE_NATIVE_ARCH)
         else()
             message(STATUS "Build for generic CPU")
         endif()
+    elseif(APPLE AND CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
+	# no flag necessary/available on Apple M1
     else()
         target_compile_options(ngcore PUBLIC "-march=native")
     endif(WIN32)

@@ -67,7 +67,10 @@ namespace netgen
     virtual double MaxCurvature () const;
     //virtual double MaxCurvatureLoc (const Point<3> & /* c */ , 
     //				  double /* rad */) const;
-
+    
+    Point<3> P0() const { return p0; }
+    Vec<3> Axis() const { return v_axis; }
+    
     virtual void Project (Point<3> & p) const;
 
     virtual Point<3> GetSurfacePoint () const;
@@ -155,7 +158,10 @@ namespace netgen
 				      const Vec<3> & v2,
 				      double eps) const;
 
-  
+    virtual void GetTangentialVecSurfaceIndices2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
+						  NgArray<int> & surfind, double eps) const;
+
+    
     virtual int GetNSurfaces() const;
     virtual Surface & GetSurface (int i = 0);
     virtual const Surface & GetSurface (int i = 0) const;

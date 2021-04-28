@@ -75,7 +75,7 @@ extern double MinDistLP2 (const Point2d & lp1, const Point2d & lp2, const Point2
 extern double MinDistLP2 (const Point3d & lp1, const Point3d & lp2, const Point3d & p);
 
 /// Minimal distance of point p to the triangle segment [tp1,tp2,pt3]
-extern double MinDistTP2 (const Point3d & tp1, const Point3d & tp2, 
+DLL_HEADER double MinDistTP2 (const Point3d & tp1, const Point3d & tp2, 
 			  const Point3d & tp3, const Point3d & p);
 
   inline double MinDistTP2 (const Point<2> & tp1, const Point<2> & tp2, 
@@ -90,6 +90,9 @@ extern double MinDistTP2 (const Point3d & tp1, const Point3d & tp2,
 /// Minimal distance of the 2 lines [l1p1,l1p2] and [l2p1,l2p2]
 extern double MinDistLL2 (const Point3d & l1p1, const Point3d & l1p2,
 			  const Point3d & l2p1, const Point3d & l2p2);
+
+extern double MinDistLL2 (const Point3d & l1p1, const Point3d & l1p2,
+		  const Point3d & l2p1, const Point3d & l2p2, double & lam1, double & lam2 );
 
 }
 

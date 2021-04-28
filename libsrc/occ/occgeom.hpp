@@ -31,38 +31,16 @@
 #include "Poly_Triangle.hxx"
 #include "GProp_GProps.hxx"
 #include "BRepGProp.hxx"
-#include "Geom_Surface.hxx"
-#include "TopExp.hxx"
 #include "gp_Pnt.hxx"
 #include "TopoDS.hxx"
 #include "TopoDS_Solid.hxx"
 #include "TopExp_Explorer.hxx"
 #include "TopTools_ListIteratorOfListOfShape.hxx"
-#include "BRep_Tool.hxx"
-#include "Geom_Curve.hxx"
-#include "Geom2d_Curve.hxx"
-#include "Geom_Surface.hxx"
-#include "GeomAPI_ProjectPointOnSurf.hxx"
-#include "GeomAPI_ProjectPointOnCurve.hxx"
 #include "TopoDS_Wire.hxx"
 #include "BRepTools_WireExplorer.hxx"
-#include "BRepTools.hxx"
 #include "TopTools_IndexedMapOfShape.hxx"
-#include "TopExp.hxx"
-#include "BRepBuilderAPI_MakeVertex.hxx"
-#include "BRepBuilderAPI_MakeShell.hxx"
-#include "BRepBuilderAPI_MakeSolid.hxx"
-#include "BRepOffsetAPI_Sewing.hxx"
 #include "BRepLProp_CLProps.hxx"
-#include "BRepLProp_SLProps.hxx"
-#include "BRepAdaptor_Surface.hxx"
 #include "BRepAdaptor_Curve.hxx"
-#include "Poly_Triangulation.hxx"
-#include "Poly_Array1OfTriangle.hxx"
-#include "TColgp_Array1OfPnt2d.hxx"
-#include "Poly_Triangle.hxx"
-#include "GProp_GProps.hxx"
-#include "BRepGProp.hxx"
 #include "TopoDS_Shape.hxx"
 #include "TopoDS_Face.hxx"
 #include "IGESToBRep_Reader.hxx"
@@ -78,7 +56,7 @@
 #include "Bnd_Box.hxx"
 #include "ShapeAnalysis.hxx"
 #include "ShapeBuild_ReShape.hxx"
-
+#include "BOPAlgo_Builder.hxx"
 
 // Philippose - 29/01/2009
 // OpenCascade XDE Support
@@ -206,7 +184,7 @@ namespace netgen
     void Print (ostream & ost) const;
   };
 
-  class OCCGeometry : public NetgenGeometry
+  class DLL_HEADER OCCGeometry : public NetgenGeometry
   {
     Point<3> center;
     OCCParameters occparam;
@@ -216,12 +194,12 @@ namespace netgen
     TopTools_IndexedMapOfShape fmap, emap, vmap, somap, shmap, wmap;
     NgArray<bool> fsingular, esingular, vsingular;
     Box<3> boundingbox;
-    NgArray<string> fnames, /*enames,*/ snames;
+    NgArray<string> fnames, enames, snames;
     // Philippose - 29/01/2009
     // OpenCascade XDE Support
     // XCAF Handle to make the face colours available to the rest of
     // the system
-    Handle_XCAFDoc_ColorTool face_colours;
+    Handle(XCAFDoc_ColorTool) face_colours;
      
     mutable int changed;
     mutable NgArray<int> facemeshstatus;
@@ -261,6 +239,8 @@ namespace netgen
       vmap.Clear();
     }
 
+    OCCGeometry(const TopoDS_Shape& _shape);
+
     Mesh::GEOM_TYPE GetGeomType() const override
     { return Mesh::GEOM_OCC; }
 
@@ -276,7 +256,7 @@ namespace netgen
  
     void FinalizeMesh(Mesh& mesh) const override;
      
-    DLL_HEADER void Save (string filename) const override;
+    void Save (string filename) const override;
      
     void DoArchive(Archive& ar) override;
 
@@ -298,7 +278,7 @@ namespace netgen
                       const PointGeomInfo & gi2,
                       Point<3> & newp, PointGeomInfo & newgi) const override;
 
-    DLL_HEADER void BuildFMap();
+    void BuildFMap();
      
     Box<3> GetBoundingBox() const
     { return boundingbox; }
@@ -323,8 +303,8 @@ namespace netgen
       return OCCSurface (TopoDS::Face(fmap(surfi)), PLANESPACE);
     }
 
-    DLL_HEADER void CalcBoundingBox ();
-    DLL_HEADER void BuildVisualizationMesh (double deflection);
+    void CalcBoundingBox ();
+    void BuildVisualizationMesh (double deflection);
     
     void RecursiveTopologyTree (const TopoDS_Shape & sh,
                                 stringstream & str,
@@ -332,17 +312,18 @@ namespace netgen
                                 bool free,
                                 const char * lname);
 
-    DLL_HEADER void GetTopologyTree (stringstream & str);
+    void GetTopologyTree (stringstream & str);
 
-    DLL_HEADER void PrintNrShapes ();
+    void PrintNrShapes ();
 
-    DLL_HEADER void CheckIrregularEntities (stringstream & str);
+    void CheckIrregularEntities (stringstream & str);
 
-    DLL_HEADER void SewFaces();
+    void SewFaces();
 
-    DLL_HEADER void MakeSolid();
+    void MakeSolid();
 
-    DLL_HEADER void HealGeometry();
+    void HealGeometry();
+    void GlueGeometry();
 
     // Philippose - 15/01/2009
     // Sets the maximum mesh size for a given face
@@ -435,13 +416,12 @@ namespace netgen
         vvispar[i-1].Lowlight();
     }
 
-    DLL_HEADER void GetUnmeshedFaceInfo (stringstream & str);
-    DLL_HEADER void GetNotDrawableFaces (stringstream & str);
-    DLL_HEADER bool ErrorInSurfaceMeshing ();
+    void GetUnmeshedFaceInfo (stringstream & str);
+    void GetNotDrawableFaces (stringstream & str);
+    bool ErrorInSurfaceMeshing ();
 
     //      void WriteOCC_STL(char * filename);
 
-    // DLL_HEADER virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
   private:
     bool FastProject (int surfi, Point<3> & ap, double& u, double& v) const;
   };

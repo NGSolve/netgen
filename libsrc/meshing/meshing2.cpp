@@ -675,7 +675,7 @@ namespace netgen
 
 			  
 			    plainpoints.Append (newpout);
-			    const auto& pout3d = locpoints.Get(pouti);
+			    auto pout3d = locpoints.Get(pouti);
 			    locpoints.Append (pout3d);
 
 			    plainzones.Append (0);

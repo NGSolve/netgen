@@ -13,8 +13,11 @@ namespace netgen
 
   void Refinement :: Refine (Mesh & mesh)
   {
-    PrintMessage (3, "Refine mesh");
+    if (mesh.GetCommunicator().Rank()==0)
+      PrintMessage (3, "Refine mesh");
+    Timer t("Refine mesh"); RegionTimer reg(t);
 
+    
     mesh.SetNextMajorTimeStamp();
     
     if (ntasks > 1 && id == 0)
@@ -31,6 +34,9 @@ namespace netgen
         mesh.mlbetweennodes = INDEX_2(PointIndex::BASE-1,PointIndex::BASE-1);
       }
 
+    if (mesh.level_nv.Size() == 0)
+      mesh.level_nv.Append (mesh.GetNV());
+    
     
     INDEX_2_HASHTABLE<PointIndex> between(mesh.GetNP() + 5);
 
@@ -71,6 +77,32 @@ namespace netgen
                 }
               break;
             }
+	  case QUAD:
+	    {
+              static int betw[5][3] =
+		{ { 0, 1, 4 },
+		  { 1, 2, 5 },
+		  { 2, 3, 6 },
+		  { 0, 3, 7 },
+		  { 0, 2, 8 } };   // one diagonal of the quad. should change later to mid-point of edge mid-points
+              for (int j = 0; j < 5; j++)
+                {
+                  auto i2 = PointIndices<2>::Sort(el[betw[j][0]],el[betw[j][1]]);
+                  if (j == 4)
+                    {
+                      auto i2a = PointIndices<2>::Sort(el[0], el[2]);
+                      auto i2b = PointIndices<2>::Sort(el[1], el[3]);
+                      i2 = i2a[0] < i2b[0] ? i2a : i2b;
+                    }
+                  if (!between.Used(i2))
+                    {
+                      between.Set (i2, 0);
+                      parents.Append(i2);
+                    }
+                }
+              break;
+            }
+            
           default:
             throw NgException ("currently refinement for quad-elements is not supported");
           }
@@ -119,7 +151,7 @@ namespace netgen
         between.Set (parents[i], mesh.GetNV()+i+PointIndex::BASE);
         mesh.mlbetweennodes[mesh.GetNV()+i+PointIndex::BASE] = parents[i];
       }
-    
+
     mesh.SetNP(mesh.GetNV() + parents.Size());
     NgArray<bool, PointIndex::BASE> pointset(mesh.GetNP());
     pointset = false;
@@ -275,70 +307,76 @@ namespace netgen
 	  case QUAD6:
 	  case QUAD8:
 	    {
-	      NgArrayMem<PointIndex,9> pnums(9);
-	      NgArrayMem<PointGeomInfo,9> pgis(9);
+	      PointIndex pnums[9];
+              PointGeomInfo pgis[9];
 
 	      static int betw[5][3] =
-		{ { 1, 2, 5 },
+		{ { 0, 1, 4 },
+		  { 1, 2, 5 },
 		  { 2, 3, 6 },
-		  { 3, 4, 7 },
-		  { 1, 4, 8 },
-		  { 5, 7, 9 } };
-
-	      for (int j = 1; j <= 4; j++)
+		  { 0, 3, 7 },
+		  { 0, 2, 8 } };
+              
+	      for (int j = 0; j < 4; j++)
 		{
-		  pnums.Elem(j) = el.PNum(j);
-		  pgis.Elem(j) = el.GeomInfoPi(j);
+		  pnums[j] = el[j];
+		  pgis[j] = el.GeomInfoPi(j+1);
 		}
 
 	      for (int j = 0; j < 5; j++)
 		{
-		  int pi1 = pnums.Elem(betw[j][0]);
-		  int pi2 = pnums.Elem(betw[j][1]);
+		  int pi1 = pnums[betw[j][0]];
+		  int pi2 = pnums[betw[j][1]];
 
 		  INDEX_2 i2 (pi1, pi2);
 		  i2.Sort();
+                  
+                  if (j == 4)
+                    {
+                      auto i2a = PointIndices<2>::Sort(el[0], el[2]);
+                      auto i2b = PointIndices<2>::Sort(el[1], el[3]);
+                      i2 = i2a[0] < i2b[0] ? i2a : i2b;
+                    }
 
-		  if (between.Used(i2))
-		    {
-		      pnums.Elem(5+j) = between.Get(i2);
-		      pgis.Elem(5+j) = surfgi.Get(pnums.Elem(4+j));
-		    }
-		  else
-		    {
-		      Point<3> pb;
-		      geo.PointBetween(mesh.Point (pi1),
-                                       mesh.Point (pi2), 0.5,
-                                       mesh.GetFaceDescriptor(el.GetIndex ()).SurfNr(),
-                                       el.GeomInfoPi (betw[j][0]),
-                                       el.GeomInfoPi (betw[j][1]),
-                                       pb, pgis.Elem(5+j));
+                  Point<3> pb;
+		  PointGeomInfo pgi;                  
+                  geo.PointBetween(mesh.Point (pi1), mesh.Point (pi2), 0.5,
+                                   mesh.GetFaceDescriptor(el.GetIndex ()).SurfNr(),
+                                   el.GeomInfoPi (betw[j][0]+1 ),
+                                   el.GeomInfoPi (betw[j][1]+1 ),
+                                   pb, pgi); 
 
-		      pnums.Elem(5+j) = mesh.AddPoint (pb);
+		  pgis[4+j] = pgi;
+                  PointIndex pinew = between.Get(i2); 
+                  pnums[4+j] = pinew; 
 
-		      between.Set (i2, pnums.Get(5+j));
-		      
-		      if (surfgi.Size() < pnums.Elem(5+j))
-			surfgi.SetSize (pnums.Elem(5+j));
-		      surfgi.Elem(pnums.Elem(5+j)) = pgis.Elem(5+j);
-		    }
-		}
+                  if (!pointset[pinew])
+                    {
+                      pointset[pinew] = true;
+                      mesh.Point(pinew) = pb;                      
+                    }
+                  
+                  if (surfgi.Size() < pnums[4+j])
+                    surfgi.SetSize (pnums[4+j]);
+                  surfgi.Elem(pnums[4+j]) = pgis[4+j];
+                }
 
 	      static int reftab[4][4] =
 		{
-		  { 1, 5, 9, 8 },
-		  { 5, 2, 6, 9 },
-		  { 8, 9, 7, 4 },
-		  { 9, 6, 3, 7 } };
+		  { 0, 4, 8, 7 },
+		  { 4, 1, 5, 8 },
+		  { 7, 8, 6, 3 },
+		  { 8, 5, 2, 6 } };
 
+              
 	      int ind = el.GetIndex();
 	      for (int j = 0; j < 4; j++)
 		{
 		  Element2d nel(QUAD);
-		  for (int k = 1; k <= 4; k++)
+		  for (int k = 0; k < 4; k++)
 		    {
-		      nel.PNum(k) = pnums.Get(reftab[j][k-1]);
-		      nel.GeomInfoPi(k) = pgis.Get(reftab[j][k-1]);
+		      nel[k] = pnums[reftab[j][k]];
+		      nel.GeomInfoPi(k+1) = pgis[reftab[j][k]];
 		    }
 		  nel.SetIndex(ind);
 
@@ -735,6 +773,18 @@ namespace netgen
     PrintMessage (5, "have 3d elements");
     mesh.ComputeNVertices();
     mesh.RebuildSurfaceElementLists();
+
+    mesh.level_nv.Append (mesh.GetNV());
+
+#ifdef PARALLEL
+    if (mesh.GetCommunicator().Size() > 1)
+      {
+        mesh.GetParallelTopology().IdentifyVerticesAfterRefinement();
+        mesh.GetCommunicator().Barrier();
+        mesh.GetParallelTopology().EnumeratePointsGlobally();
+      }
+#endif
+      
     PrintMessage (5, "mesh updates complete");
     return;
 

@@ -503,7 +503,7 @@ namespace netgen
   }
 
   bool AdFront2 :: SameSide (const Point<2> & lp1, const Point<2> & lp2, 
-                             const NgArray<int> * testfaces) const
+                             const FlatArray<int> * testfaces) const
   {
     int cnt = 0;
 

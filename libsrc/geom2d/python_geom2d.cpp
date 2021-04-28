@@ -6,8 +6,10 @@
 
 #include <meshing.hpp>
 #include <geometry2d.hpp>
+#include <csg2d.hpp>
 
 using namespace netgen;
+using namespace pybind11::literals;
 
 namespace netgen
 {
@@ -15,7 +17,7 @@ namespace netgen
 }
 
 
-DLL_HEADER void ExportGeom2d(py::module &m) 
+NGCORE_API_EXPORT void ExportGeom2d(py::module &m) 
 {
   py::class_<SplineSegExt, shared_ptr<SplineSegExt>>
     (m, "Spline", "Spline of a SplineGeometry object")
@@ -65,24 +67,45 @@ DLL_HEADER void ExportGeom2d(py::module &m)
                                       optional<variant<int, string>> bc, optional<int> copy, double maxh,
                                       double hpref, double hprefleft, double hprefright)
 	  {
-            auto segtype = py::cast<std::string>(segment[0]);
-            
             SplineSegExt * seg;
-            if (segtype == "line")
+            if(py::isinstance<py::str>(segment[0]))
               {
-                LineSeg<2> * l = new LineSeg<2>(self.GetPoint(py::cast<int>(segment[1])),
-                                                self.GetPoint(py::cast<int>(segment[2])));
-                seg = new SplineSegExt(*l);
-              }
-            else if (segtype == "spline3")
-              {
-                SplineSeg3<2> * seg3 = new SplineSeg3<2>(self.GetPoint(py::cast<int>(segment[1])),
-                                                         self.GetPoint(py::cast<int>(segment[2])),
-                                                         self.GetPoint(py::cast<int>(segment[3])));
-                seg = new SplineSegExt(*seg3);
+                auto segtype = py::cast<std::string>(segment[0]);
+            
+                if (segtype == "line")
+                  {
+                    LineSeg<2> * l = new LineSeg<2>(self.GetPoint(py::cast<int>(segment[1])),
+                                                    self.GetPoint(py::cast<int>(segment[2])));
+                    seg = new SplineSegExt(*l);
+                  }
+                else if (segtype == "spline3")
+                  {
+                    SplineSeg3<2> * seg3 = new SplineSeg3<2>(self.GetPoint(py::cast<int>(segment[1])),
+                                                             self.GetPoint(py::cast<int>(segment[2])),
+                                                             self.GetPoint(py::cast<int>(segment[3])));
+                    seg = new SplineSegExt(*seg3);
+                  }
+                else
+                  throw Exception("Appended segment is not a line or a spline3");
               }
             else
-                throw Exception("Appended segment is not a line or a spline3");
+              {
+                if(py::len(segment) == 2)
+                  {
+                    auto l = new LineSeg<2>(self.GetPoint(py::cast<int>(segment[0])),
+                                            self.GetPoint(py::cast<int>(segment[1])));
+                    seg = new SplineSegExt(*l);
+                  }
+                else if(py::len(segment) == 3)
+                  {
+                    SplineSeg3<2> * seg3 = new SplineSeg3<2>(self.GetPoint(py::cast<int>(segment[0])),
+                                                             self.GetPoint(py::cast<int>(segment[1])),
+                                                             self.GetPoint(py::cast<int>(segment[2])));
+                    seg = new SplineSegExt(*seg3);
+                  }
+                else
+                  throw Exception("Appended segment must either have 2 or 3 points");
+              }
             seg->leftdom = leftdomain;
             seg->rightdom = rightdomain;
             seg->hmax = maxh;
@@ -265,6 +288,7 @@ DLL_HEADER void ExportGeom2d(py::module &m)
                  {
                    double len = self.splines[i]->Length();
                    int n = floor(len/(0.05*min(xdist,ydist)));
+                   n = max(3, n);
                    lst.push_back(self.splines[i]->StartPI());
                    for (int j = 1; j < n; j++){
                      lst.push_back(self.splines[i]->GetPoint(j*1./n));
@@ -371,9 +395,8 @@ DLL_HEADER void ExportGeom2d(py::module &m)
           })
          )
     
-    // If we change to c++17 this can become optional<MeshingParameters>
     .def("GenerateMesh", [](shared_ptr<SplineGeometry2d> self,
-                            MeshingParameters* pars, py::kwargs kwargs)
+                            optional<MeshingParameters> pars, py::kwargs kwargs)
 		{
                   MeshingParameters mp;
                   if(pars) mp = *pars;
@@ -389,11 +412,89 @@ DLL_HEADER void ExportGeom2d(py::module &m)
                   if(result != 0)
                     throw Exception("Meshing failed!");
 		  return mesh;
-                }, py::arg("mp") = nullptr,
+                }, py::arg("mp") = nullopt,
+      py::call_guard<py::gil_scoped_release>(),
+      meshingparameter_description.c_str())
+    .def("_SetDomainTensorMeshing", &SplineGeometry2d::SetDomainTensorMeshing)
+    ;
+  
+  py::class_<Solid2d>(m, "Solid2d")
+    .def(py::init<>())
+    .def(py::init<Array<std::variant<Point<2>, EdgeInfo, PointInfo>>, std::string, std::string>(), py::arg("points"), py::arg("mat")=MAT_DEFAULT, py::arg("bc")=BC_DEFAULT)
+
+    .def(py::self+py::self)
+    .def(py::self-py::self)
+    .def(py::self*py::self)
+    .def(py::self+=py::self)
+    .def(py::self-=py::self)
+    .def(py::self*=py::self)
+
+    .def("Mat", &Solid2d::Mat)
+    .def("BC", &Solid2d::BC)
+    .def("Maxh", &Solid2d::Maxh)
+
+    .def("Copy", [](Solid2d & self) -> Solid2d { return self; })
+    .def("Move", &Solid2d::Move)
+    .def("Scale", static_cast<Solid2d& (Solid2d::*)(double)>(&Solid2d::Scale))
+    .def("Scale", static_cast<Solid2d& (Solid2d::*)(Vec<2>)>(&Solid2d::Scale))
+    .def("Rotate", &Solid2d::RotateDeg, py::arg("angle"), py::arg("center")=Point<2>{0,0})
+    ;
+  
+
+  m.def("Rectangle", [](Point<2> p0, Point<2> p1, string mat, string bc, optional<string> bottom, optional<string> right, optional<string> top, optional<string> left) -> Solid2d
+		  {
+                      using P = Point<2>;
+                      return { {
+                              p0,    EdgeInfo{bottom ? *bottom : bc},
+                              P{p1[0],p0[1]}, EdgeInfo {right  ? *right  : bc},
+                              p1,             EdgeInfo {top    ? *top    : bc},
+                              P{p0[0],p1[1]}, EdgeInfo {left   ? *left   : bc},
+                             }, mat};
+                  },
+		  "pmin"_a, "pmax"_a, "mat"_a=MAT_DEFAULT, "bc"_a=BC_DEFAULT,
+                  "bottom"_a=nullopt, "right"_a=nullopt, "top"_a=nullopt, "left"_a=nullopt
+       );
+  m.def("Circle", Circle, py::arg("center"), py::arg("radius"), py::arg("mat")=MAT_DEFAULT, py::arg("bc")=BC_DEFAULT);
+
+  py::class_<CSG2d>(m, "CSG2d")
+    .def(py::init<>())
+    .def("GenerateSplineGeometry", &CSG2d::GenerateSplineGeometry)
+    .def("Add", &CSG2d::Add)
+    .def("GenerateMesh", [](CSG2d & self, optional<MeshingParameters> pars, py::kwargs kwargs)
+		{
+                  MeshingParameters mp;
+                  if(pars) mp = *pars;
+                  {
+                    py::gil_scoped_acquire aq;
+                    CreateMPfromKwargs(mp, kwargs);
+                  }
+		  auto mesh = make_shared<Mesh>();
+                  auto geo = self.GenerateSplineGeometry();
+                  mesh->SetGeometry(geo);
+                  SetGlobalMesh (mesh);
+                  ng_geometry = geo;
+		  auto result = geo->GenerateMesh(mesh, mp);
+                  if(result != 0)
+                    throw Exception("Meshing failed!");
+		  return mesh;
+                }, py::arg("mp") = nullopt,
       py::call_guard<py::gil_scoped_release>(),
       meshingparameter_description.c_str())
     ;
-  
+
+  py::class_<EdgeInfo>(m, "EdgeInfo")
+    .def(py::init<>())
+    .def(py::init<const Point<2>&>(), py::arg("control_point"))
+    .def(py::init<double>(), py::arg("maxh"))
+    .def(py::init<string>(), py::arg("bc"))
+    .def(py::init<optional<Point<2>>, double, string>(), py::arg("control_point")=nullopt, py::arg("maxh")=MAXH_DEFAULT, py::arg("bc")=BC_DEFAULT)
+    ;
+  py::class_<PointInfo>(m, "PointInfo")
+    .def(py::init<>())
+    .def(py::init<double>(), "maxh"_a)
+    .def(py::init<string>(), "name"_a)
+    .def(py::init<double, string>(), "maxh"_a, "name"_a)
+    ;
 }
 
 PYBIND11_MODULE(libgeom2d, m) {

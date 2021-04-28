@@ -19,7 +19,8 @@ for f in fnames:
 
 # write a cpp file containing the result of ng.tcl
 onetclcpp = open("onetcl.cpp",'w')
-onetclcpp.write('const char * ngscript[] = {""'+'\n');
+onetclcpp.write('#include <mydefs.hpp>\n');
+onetclcpp.write('DLL_HEADER const char * ngscript[] = {""'+'\n');
 
 # make sure to remove comments (and if lines with comments end with '\' also the next line(s) )
 skip_next = False # flag to indicate that the next line should be removed

@@ -130,6 +130,7 @@ namespace netgen
                Point<3> & newp, EdgePointGeomInfo & newgi) const
   {
     Point<3> hnewp = p1+secpoint*(p2-p1);
+
     //(*testout) << "hnewp " << hnewp << " s1 " << surfi1 << " s2 " << surfi2 << endl;
     if (surfi1 != -1 && surfi2 != -1 && surfi1 != surfi2)
       {
@@ -175,9 +176,8 @@ namespace netgen
     
     solids.DeleteAll ();
 
-    for (int i = 0; i < splinecurves2d.Size(); i++)
-      delete splinecurves2d[i];
     splinecurves2d.DeleteAll();
+    splinecurves3d.DeleteAll();
     
     /*
     for (int i = 0; i < surfaces.Size(); i++)
@@ -711,24 +711,24 @@ namespace netgen
 
 
 
-  void CSGeometry :: SetSplineCurve (const char * name, SplineGeometry<2> * spl)
+  void CSGeometry :: SetSplineCurve (const char * name, shared_ptr<SplineGeometry<2>> spl)
   {
     splinecurves2d.Set(name,spl);
   }
-  void CSGeometry :: SetSplineCurve (const char * name, SplineGeometry<3> * spl)
+  void CSGeometry :: SetSplineCurve (const char * name, shared_ptr<SplineGeometry<3>> spl)
   {
     splinecurves3d.Set(name,spl);
   }
 
 
-  const SplineGeometry<2> * CSGeometry :: GetSplineCurve2d (const string & name) const
+  shared_ptr<SplineGeometry<2>> CSGeometry :: GetSplineCurve2d (const string & name) const
   {
     if (splinecurves2d.Used(name))
       return splinecurves2d[name];
     else
       return NULL;
   }
-  const SplineGeometry<3> * CSGeometry :: GetSplineCurve3d (const string & name) const
+  shared_ptr<SplineGeometry<3>> CSGeometry :: GetSplineCurve3d (const string & name) const
   {
     if (splinecurves3d.Used(name))
       return splinecurves3d[name];

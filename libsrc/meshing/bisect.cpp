@@ -1082,8 +1082,12 @@ namespace netgen
 			   MarkedQuad & mq)
   {
     for (int i = 0; i < 4; i++)
-      mq.pnums[i] = el[i];
-    Swap (mq.pnums[2], mq.pnums[3]);  
+      {
+        mq.pnums[i] = el[i];
+        mq.pgeominfo[i] = el.GeomInfoPi (i+1);
+      }
+    Swap (mq.pnums[2], mq.pnums[3]);
+    Swap (mq.pgeominfo[2], mq.pgeominfo[3]);
 
     mq.marked = 0;
     mq.markededge = 0;
@@ -1681,7 +1685,7 @@ namespace netgen
 
   int MarkHangingTets (T_MTETS & mtets, 
 		       const INDEX_2_CLOSED_HASHTABLE<PointIndex> & cutedges,
-                       TaskManager tm)                       
+                       NgTaskManager tm)                       
   {
     static int timer = NgProfiler::CreateTimer ("MarkHangingTets");    
     NgProfiler::RegionTimer reg (timer);    
@@ -1759,7 +1763,7 @@ namespace netgen
 
   bool MarkHangingTris (T_MTRIS & mtris, 
                         const INDEX_2_CLOSED_HASHTABLE<PointIndex> & cutedges,
-                        TaskManager tm)
+                        NgTaskManager tm)
   {
     bool hanging = false;
     // for (int i = 1; i <= mtris.Size(); i++)
@@ -3015,7 +3019,7 @@ namespace netgen
 		      {
 			cnttet++;
 			mtets.Elem(cnttet).marked =
-			  3 * mesh.VolumeElement(i).TestRefinementFlag();
+			  (opt.onlyonce ? 3 : 1) * mesh.VolumeElement(i).TestRefinementFlag();
 			if (mtets.Elem(cnttet).marked)
 			  cntm++;
 		      }
@@ -3034,7 +3038,7 @@ namespace netgen
 	      for (int i = 1; i <= mtets.Size(); i++)
 		{
 		  mtets.Elem(i).marked =
-		    3 * mesh.VolumeElement(i).TestRefinementFlag();
+		    (opt.onlyonce ? 1 : 3) * mesh.VolumeElement(i).TestRefinementFlag();
 		  if (mtets.Elem(i).marked)
 		    cntm++;
 		}
@@ -3064,7 +3068,7 @@ namespace netgen
 		  {
 		    cnttrig++;
 		    mtris.Elem(cnttrig).marked =
-		      mesh.SurfaceElement(i).TestRefinementFlag() ? 2 : 0;
+		      mesh.SurfaceElement(i).TestRefinementFlag() ? (opt.onlyonce ? 1 : 2) : 0;
 		    // mtris.Elem(cnttrig).marked = 0;
 		    if (mtris.Elem(cnttrig).marked)
 		      cntm++;

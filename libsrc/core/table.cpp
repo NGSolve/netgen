@@ -18,6 +18,19 @@ namespace ngcore
     size_t size  = entrysize.Size();
     size_t * index = new size_t[size+1];
 
+    if (entrysize.Size() < 100)
+      {
+        size_t mysum = 0;
+        for (size_t i = 0; i < entrysize.Size(); i++)
+          {
+            index[i] = mysum;
+            mysum += entrysize[i];
+          }
+        index[entrysize.Size()] = mysum;
+        return index;
+      }
+
+    
     Array<size_t> partial_sums(TaskManager::GetNumThreads()+1);
     partial_sums[0] = 0;
     ParallelJob
@@ -54,7 +67,7 @@ namespace ngcore
   NGCORE_API size_t * TablePrefixSum64 (FlatArray<size_t> entrysize)
   { return TablePrefixSum2 (entrysize); }
 
-
+  /*
   BaseDynamicTable :: BaseDynamicTable (int size)
     : data(size)
   {
@@ -88,7 +101,6 @@ namespace ngcore
       }
   }
 
-
   BaseDynamicTable :: ~BaseDynamicTable ()
   {
     if (oneblock)
@@ -112,7 +124,7 @@ namespace ngcore
       }
   }
 
-  void BaseDynamicTable :: IncSize (int i, int elsize)
+  void BaseDynamicTable :: IncSize (IndexType i, int elsize)
   {
     if (i < 0 || i >= data.Size())
       {
@@ -135,7 +147,7 @@ namespace ngcore
     line.size++;
   }
 
-  void BaseDynamicTable :: DecSize (int i)
+  void BaseDynamicTable :: DecSize (IndexType i)
   {
     if (i < 0 || i >= data.Size())
       {
@@ -153,6 +165,7 @@ namespace ngcore
 
     line.size--;
   }
+  */
 
   void FilteredTableCreator::Add (size_t blocknr, int data)
   {

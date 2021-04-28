@@ -3128,9 +3128,7 @@ namespace netgen
 
 
 
-
-
-  void VisualSceneMesh :: MouseDblClick (int px, int py)
+  bool VisualSceneMesh :: Unproject (int px, int py, Point<3> &p)
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
@@ -3150,20 +3148,63 @@ namespace netgen
     int hy = viewport[3]-py;
 
     GLfloat pz;
+
+    if(lock)
+      {
+	lock->UnLock();
+	delete lock;
+	lock = NULL;
+      }
+
     // cout << "x, y = " << px << ", " << hy << endl;
     glReadPixels (px, hy, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &pz);
+
+    if(pz>=1.0)
+        return false;
+    if(pz<=0.0)
+        return false;
+
     // cout << "pz = " << pz << endl;    
     gluUnProject(px, hy, pz, transformationmat, projection, viewport,
                  &result[0], &result[1], &result[2]);
 
-    if (pz < 1.0)
-      cout << "point : " << result[0] << ", " << result[1] << ", " << result[2] << endl;
-    
+    p = Point<3>{result[0], result[1], result[2]};
+    return true;
+  }
 
-    if (user_me_handler && pz < 1.0)
+
+  void VisualSceneMesh :: MouseDblClick (int px, int py)
+  {
+    Point<3> p;
+    bool found_point = Unproject(px, py, p);
+
+    if(selelement!=-1)
       {
-	if (selelement != -1)
-	  user_me_handler -> DblClick (selelement-1, result[0], result[1], result[2]);
+        const Element2d & sel = GetMesh()->SurfaceElement(selelement);
+
+	cout << "select element " << selelement
+	     << " on face " << sel.GetIndex() << endl;
+	cout << "Nodes: ";
+	for (int i = 1; i <= sel.GetNP(); i++)
+	  cout << sel.PNum(i) << " ";
+	cout << endl;
+
+	cout << "selected point " << selpoint
+	     << ", pos = " << GetMesh()->Point (selpoint)
+	     << endl;
+
+        cout << "seledge = " << seledge << endl;
+
+      }
+
+    if(found_point)
+      {
+        cout << "point : " << p << endl;
+        if (user_me_handler)
+          {
+            if (selelement != -1)
+              user_me_handler -> DblClick (selelement-1, p[0], p[1], p[2]);
+          }
       }
 
     selecttimestamp = NextTimeStamp();
@@ -3401,6 +3442,7 @@ namespace netgen
 
     if (vispar.clipping.enable)
       {
+        glEnable(GL_CLIP_PLANE0);
 	Vec<3> n(clipplane[0], clipplane[1], clipplane[2]);
 	double len = Abs(n);
 	double mu = -clipplane[3] / (len*len);
@@ -3473,23 +3515,12 @@ namespace netgen
       {
 	const Element2d & sel = mesh->SurfaceElement(minname);
 
-
-	cout << "select element " << minname
-	     << " on face " << sel.GetIndex() << endl;
-	cout << "Nodes: ";
-	for (i = 1; i <= sel.GetNP(); i++)
-	  cout << sel.PNum(i) << " ";
-	cout << endl;
-
 	selelement = minname;
 	selface = mesh->SurfaceElement(minname).GetIndex();
 
 	locpi = (locpi % sel.GetNP()) + 1;
 	selpoint2 = selpoint;
 	selpoint = sel.PNum(locpi);
-	cout << "selected point " << selpoint
-	     << ", pos = " << mesh->Point (selpoint)
-	     << endl;
 
 	for (i = 1; i <= mesh->GetNSeg(); i++)
 	  {
@@ -3498,7 +3529,6 @@ namespace netgen
 		 (seg[1] == selpoint && seg[0] == selpoint2) )
 	      {
 		seledge = seg.edgenr;
-		cout << "seledge = " << seledge << endl;
 	      }
 	  }
       }

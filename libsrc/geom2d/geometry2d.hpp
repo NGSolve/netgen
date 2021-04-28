@@ -9,6 +9,7 @@
 
 #include <myadt.hpp>
 #include <gprim.hpp>
+#include <meshing.hpp>
 
 
 // #include "../gprim/spline.hpp"
@@ -133,7 +134,7 @@ namespace netgen
     NgArray<char*> materials;
     NgArray<double> maxh;
     NgArray<bool> quadmeshing;
-    NgArray<bool> tensormeshing;
+    Array<bool> tensormeshing;
     NgArray<int> layer;
     NgArray<string*> bcnames;
     double elto0 = 1.0;
@@ -203,8 +204,8 @@ namespace netgen
 
 
     size_t GetNDomains() const { return materials.Size(); }
-    void GetMaterial (int  domnr, char* & material );
-    void SetMaterial (int  domnr, const string & material);
+    DLL_HEADER void GetMaterial (int  domnr, char* & material );
+    DLL_HEADER void SetMaterial (int  domnr, const string & material);
 
     double GetDomainMaxh ( const int domnr );
     void SetDomainMaxh ( const int domnr, double maxh );
@@ -214,10 +215,35 @@ namespace netgen
       if ( quadmeshing.Size() ) return quadmeshing[domnr-1]; 
       else return false;
     }
+    void SetDomainQuadMeshing ( int domnr, bool quad_meshing )
+    {
+      auto oldsize = quadmeshing.Size();
+
+      if ( oldsize<domnr )
+        {
+          quadmeshing.SetSize(domnr);
+          for(auto dom : IntRange(oldsize, domnr-1))
+              quadmeshing[dom] = false;
+        }
+
+      quadmeshing[domnr-1] = quad_meshing;
+    }
+
     bool GetDomainTensorMeshing ( int domnr ) 
     { 
-      if ( tensormeshing.Size() ) return tensormeshing[domnr-1]; 
+      if ( tensormeshing.Size()>=domnr ) return tensormeshing[domnr-1];
       else return false;
+    }
+    void SetDomainTensorMeshing ( int domnr, bool tm )
+    {
+      if ( tensormeshing.Size()<domnr )
+      {
+        auto oldsize = tensormeshing.Size();
+        tensormeshing.SetSize(domnr);
+        for(auto i : IntRange(oldsize, domnr-1))
+          tensormeshing[i] = false;
+      }
+      tensormeshing[domnr-1] = tm;
     }
     int GetDomainLayer ( int domnr ) 
     { 

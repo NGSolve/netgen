@@ -41,6 +41,18 @@ namespace netgen
 	    loc_z_dir[i] = glob_z_direction;
 	  }
       }
+
+    double cum_angle = 0.;
+    for(auto i : Range(path->GetSplines()))
+      {
+        const auto& sp = path->GetSpline(i);
+        auto t1 = sp.GetTangent(0.);
+        t1.Normalize();
+        auto t2 = sp.GetTangent(1.);
+        t2.Normalize();
+        cum_angle += acos(t1 * t2);
+        angles.Append(cum_angle);
+      }
     
     profile->GetCoeff(profile_spline_coeff);
     latest_point3d = -1.111e30;
@@ -415,6 +427,14 @@ namespace netgen
   }
 
 
+  bool ExtrusionFace :: PointInFace (const Point<3> & p, const double eps) const
+  {
+    Point<3> hp = p;
+    Project(hp);
+    return Dist2(p,hp) < sqr(eps);
+  }
+  
+
   void ExtrusionFace :: LineIntersections ( const Point<3> & p,
 					    const Vec<3> & v,
 					    const double eps,
@@ -648,20 +668,35 @@ namespace netgen
     dez /= lenz;
     dez -= (dez * ez) * ez;
   }
-  
 
-  Extrusion :: Extrusion(const SplineGeometry<3> & path_in,
-			 const SplineGeometry<2> & profile_in,
+  void ExtrusionFace :: DefineTangentialPlane(const Point<3>& ap1,
+                                              const Point<3>& ap2)
+  {
+    Surface::DefineTangentialPlane(ap1, ap2);
+    tangential_plane_seg = latest_seg;
+  }
+
+  void ExtrusionFace :: ToPlane(const Point<3>& p3d, Point<2>& p2d,
+                                double h, int& zone) const
+  {
+    Surface::ToPlane(p3d, p2d, h, zone);
+    double angle = angles[tangential_plane_seg] - angles[latest_seg];
+    if(fabs(angle) > 3.14/2.)
+      zone = -1;
+  }
+
+  Extrusion :: Extrusion(shared_ptr<SplineGeometry<3>> path_in,
+			 shared_ptr<SplineGeometry<2>> profile_in,
 			 const Vec<3> & z_dir) :
-    path(&path_in), profile(&profile_in), z_direction(z_dir)
+    path(path_in), profile(profile_in), z_direction(z_dir)
   {
     surfaceactive.SetSize(0);
     surfaceids.SetSize(0);
 
     for(int j=0; j<profile->GetNSplines(); j++)
       {
-	ExtrusionFace * face = new ExtrusionFace(&((*profile).GetSpline(j)),
-						 path,
+	ExtrusionFace * face = new ExtrusionFace(&(profile->GetSpline(j)),
+						 path.get(),
 						 z_direction);
 	faces.Append(face);
 	surfaceactive.Append(true);
@@ -737,6 +772,16 @@ namespace netgen
     return PointInSolid(p,eps,NULL);    
   }
 
+  void Extrusion :: GetTangentialSurfaceIndices (const Point<3> & p, 
+                                                 NgArray<int> & surfind, double eps) const
+  {
+    for (int j = 0; j < faces.Size(); j++)
+      if (faces[j] -> PointInFace(p, eps))
+        if (!surfind.Contains (GetSurfaceId(j)))
+          surfind.Append (GetSurfaceId(j));
+  }
+
+  
   INSOLID_TYPE Extrusion :: VecInSolid (const Point<3> & p,
 					const Vec<3> & v,
 					double eps) const
@@ -838,7 +883,7 @@ namespace netgen
       return retval;
 
     if(latestfacenum >= 0)
-      return faces[latestfacenum]->VecInFace(p,v2,0);
+      return faces[latestfacenum]->VecInFace(p,v2,eps);
     else
       return VecInSolid(p,v2,eps);
   }

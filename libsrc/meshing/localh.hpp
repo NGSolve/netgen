@@ -30,17 +30,27 @@ namespace netgen
 
     struct 
     {
+      /*
       unsigned int cutboundary:1;
       unsigned int isinner:1;
       unsigned int oldcell:1;
       unsigned int pinner:1;
+      */
+      bool cutboundary;
+      bool isinner;
+      bool oldcell;
+      bool pinner;
     } flags;
 
     ///
     GradingBox (const double * ax1, const double * ax2);
+    /// default constructor for Archive
+    GradingBox() = default;
     ///
     void DeleteChilds();
     ///
+
+    void DoArchive(Archive& ar);
 
     Point<3> PMid() const { return Point<3> (xmid[0], xmid[1], xmid[2]); }
     double H2() const { return h2; }
@@ -72,7 +82,7 @@ namespace netgen
     ///
     double grading;
     ///
-    NgArray<GradingBox*> boxes;
+    Array<GradingBox*> boxes;
     ///
     Box<3> boundingbox;
     /// octree or quadtree
@@ -83,10 +93,14 @@ namespace netgen
     ///
     LocalH (const Box<3> & box, double grading, int adimension = 3)
       : LocalH (box.PMin(), box.PMax(), grading, adimension) { ; }
-    ///
+    /// Default ctor for archive
+    LocalH() = default;
+
     ~LocalH();
     ///
     void Delete();
+    ///
+    void DoArchive(Archive& ar);
     ///
     void SetGrading (double agrading) { grading = agrading; }
     ///
@@ -115,11 +129,14 @@ namespace netgen
     void ClearFlags ()
     { ClearFlagsRec(root); }
 
+    void ClearRootFlags ();
+
     /// widen refinement zone
     void WidenRefinement ();
 
     /// get points in inner elements
-    void GetInnerPoints (NgArray<Point<3> > & points);
+    void GetInnerPoints (NgArray<Point<3> > & points) const;
+    void GetInnerPointsRec (const GradingBox * box, NgArray<Point<3> > & points) const;
 
     /// get points in outer closure
     void GetOuterPoints (NgArray<Point<3> > & points);
@@ -158,8 +175,8 @@ namespace netgen
     ///
     void FindInnerBoxesRec2 (GradingBox * box,
 			     class AdFront2 * adfront,
-			     NgArray<Box<3> > & faceboxes,
-			     NgArray<int> & finds, int nfinbox);
+			     FlatArray<Box<2>> faceboxes,
+			     FlatArray<int> finds); // , int nfinbox);
 
 
 

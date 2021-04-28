@@ -1,5 +1,7 @@
 #ifdef NG_PYTHON
 
+#include <regex>
+
 #include <../general/ngpython.hpp>
 #include <core/python_ngcore.hpp>
 #include "python_mesh.hpp"
@@ -9,6 +11,62 @@
 // #include <csg.hpp>
 // #include <geometry2d.hpp>
 #include <../interface/writeuser.hpp>
+#include <../include/nginterface.h>
+
+
+class ClearSolutionClass
+{
+public:
+  ClearSolutionClass() { } 
+  ~ClearSolutionClass() { Ng_ClearSolutionData(); }
+};
+
+
+#ifdef NG_MPI4PY
+#include <mpi4py.h>
+
+struct mpi4py_comm {
+  mpi4py_comm() = default;
+  mpi4py_comm(MPI_Comm value) : value(value) {}
+  operator MPI_Comm () { return value; }
+
+  MPI_Comm value;
+};
+
+namespace pybind11 { namespace detail {
+  template <> struct type_caster<mpi4py_comm> {
+    public:
+    PYBIND11_TYPE_CASTER(mpi4py_comm, _("mpi4py_comm"));
+
+      // Python -> C++
+      bool load(handle src, bool) {
+        PyObject *py_src = src.ptr();
+        // Check that we have been passed an mpi4py communicator
+        if (PyObject_TypeCheck(py_src, &PyMPIComm_Type)) {
+          // Convert to regular MPI communicator
+          value.value = *PyMPIComm_Get(py_src);
+        } else {
+          return false;
+        }
+
+        return !PyErr_Occurred();
+      }
+
+      // C++ -> Python
+      static handle cast(mpi4py_comm src,
+                         return_value_policy /* policy */,
+                         handle /* parent */)
+      {
+        // Create an mpi4py handle
+        return PyMPIComm_New(src.value);
+      }
+  };
+}} // namespace pybind11::detail
+
+#endif // NG_MPI4PY
+
+
+
 
 
 using namespace netgen;
@@ -20,23 +78,6 @@ namespace netgen
   extern bool netgen_executable_started;
   extern shared_ptr<NetgenGeometry> ng_geometry;
   extern void Optimize2d (Mesh & mesh, MeshingParameters & mp);
-
-#ifdef PARALLEL
-  /** we need allreduce in python-wrapped communicators **/
-  template <typename T>
-  inline T MyMPI_AllReduceNG (T d, const MPI_Op & op /* = MPI_SUM */, MPI_Comm comm)
-  {
-    T global_d;
-    MPI_Allreduce ( &d, &global_d, 1, MyGetMPIType<T>(), op, comm);
-    return global_d;
-  }
-#else
-  // enum { MPI_SUM = 0, MPI_MIN = 1, MPI_MAX = 2 };
-  // typedef int MPI_Op;
-  template <typename T>
-  inline T MyMPI_AllReduceNG (T d, const MPI_Op & op /* = MPI_SUM */, MPI_Comm comm)
-  { return d; }
-#endif
 }
 
 
@@ -48,8 +89,15 @@ void TranslateException (const NgException & ex)
 
 static Transformation<3> global_trafo(Vec<3> (0,0,0));
 
+
+
+
+
 DLL_HEADER void ExportNetgenMeshing(py::module &m) 
 {
+#ifdef NG_MPI4PY
+  import_mpi4py();
+#endif // NG_MPI4PY
   py::register_exception<NgException>(m, "NgException");
   m.attr("_netgen_executable_started") = py::cast(netgen::netgen_executable_started);
   string script;
@@ -69,6 +117,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   m.def("_SetThreadPercentage", [](double percent) { SetThreadPercent(percent); });
 
   py::class_<NgMPI_Comm> (m, "MPI_Comm")
+#ifdef NG_MPI4PY
+    .def(py::init([] (mpi4py_comm comm)
+                  {
+                    return NgMPI_Comm(comm);
+                  }))
+    .def_property_readonly ("mpi4py", [] (NgMPI_Comm comm) { return mpi4py_comm(comm); })
+#endif // NG_MPI4PY
     .def_property_readonly ("rank", &NgMPI_Comm::Rank)
     .def_property_readonly ("size", &NgMPI_Comm::Size)
     .def("Barrier", &NgMPI_Comm::Barrier)
@@ -78,15 +133,15 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 #else
     .def("WTime", [](NgMPI_Comm  & c) { return -1.0; })
 #endif
-    .def("Sum", [](NgMPI_Comm  & c, double x) { return MyMPI_AllReduceNG(x, MPI_SUM, c); })
-    .def("Min", [](NgMPI_Comm  & c, double x) { return MyMPI_AllReduceNG(x, MPI_MIN, c); })
-    .def("Max", [](NgMPI_Comm  & c, double x) { return MyMPI_AllReduceNG(x, MPI_MAX, c); })
-    .def("Sum", [](NgMPI_Comm  & c, int x) { return MyMPI_AllReduceNG(x, MPI_SUM, c); })
-    .def("Min", [](NgMPI_Comm  & c, int x) { return MyMPI_AllReduceNG(x, MPI_MIN, c); })
-    .def("Max", [](NgMPI_Comm  & c, int x) { return MyMPI_AllReduceNG(x, MPI_MAX, c); })
-    .def("Sum", [](NgMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_SUM, c); })
-    .def("Min", [](NgMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_MIN, c); })
-    .def("Max", [](NgMPI_Comm  & c, size_t x) { return MyMPI_AllReduceNG(x, MPI_MAX, c); })
+    .def("Sum", [](NgMPI_Comm  & c, double x) { return c.AllReduce(x, MPI_SUM); })
+    .def("Min", [](NgMPI_Comm  & c, double x) { return c.AllReduce(x, MPI_MIN); })
+    .def("Max", [](NgMPI_Comm  & c, double x) { return c.AllReduce(x, MPI_MAX); })
+    .def("Sum", [](NgMPI_Comm  & c, int x) { return c.AllReduce(x, MPI_SUM); })
+    .def("Min", [](NgMPI_Comm  & c, int x) { return c.AllReduce(x, MPI_MIN); })
+    .def("Max", [](NgMPI_Comm  & c, int x) { return c.AllReduce(x, MPI_MAX); })
+    .def("Sum", [](NgMPI_Comm  & c, size_t x) { return c.AllReduce(x, MPI_SUM); })
+    .def("Min", [](NgMPI_Comm  & c, size_t x) { return c.AllReduce(x, MPI_MIN); })
+    .def("Max", [](NgMPI_Comm  & c, size_t x) { return c.AllReduce(x, MPI_MAX); })
     .def("SubComm", [](NgMPI_Comm & c, std::vector<int> proc_list) {
         Array<int> procs(proc_list.size());
         for (int i = 0; i < procs.Size(); i++)
@@ -98,6 +153,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   ;
 
 
+#ifdef NG_MPI4PY
+  py::implicitly_convertible<mpi4py_comm, NgMPI_Comm>();
+#endif // NG_MPI4PY
 
   
   py::class_<NGDummyArgument>(m, "NGDummyArgument")
@@ -106,6 +164,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   
   py::class_<Point<2>> (m, "Point2d")
     .def(py::init<double,double>())
+    .def(py::init( [] (std::pair<double,double> xy)
+            {
+                return Point<2>{xy.first, xy.second};
+            }))
     .def ("__str__", &ToString<Point<2>>)
     .def(py::self-py::self)
     .def(py::self+Vec<2>())
@@ -113,14 +175,23 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("__getitem__", [](Point<2>& self, int index) { return self[index]; })
     ;
 
+  py::implicitly_convertible<py::tuple, Point<2>>();
+
   py::class_<Point<3>> (m, "Point3d")
     .def(py::init<double,double,double>())
+    .def(py::init([](py::tuple p)
+    {
+      return Point<3> { p[0].cast<double>(), p[1].cast<double>(),
+        p[2].cast<double>() };
+    }))
     .def ("__str__", &ToString<Point<3>>)
     .def(py::self-py::self)
     .def(py::self+Vec<3>())
     .def(py::self-Vec<3>())
     .def("__getitem__", [](Point<2>& self, int index) { return self[index]; })
     ;
+
+  py::implicitly_convertible<py::tuple, Point<3>>();
 
   m.def("Pnt", [](double x, double y, double z)
                { return global_trafo(Point<3>(x,y,z)); });
@@ -140,6 +211,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   py::class_<Vec<2>> (m, "Vec2d")
     .def(py::init<double,double>())
+    .def(py::init( [] (std::pair<double,double> xy)
+            {
+                return Vec<2>{xy.first, xy.second};
+            }))
     .def ("__str__", &ToString<Vec<3>>)
     .def(py::self==py::self)
     .def(py::self+py::self)
@@ -152,8 +227,15 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("__len__", [](Vec<2>& /*unused*/) { return 2; })
     ;
 
+  py::implicitly_convertible<py::tuple, Vec<2>>();
+
   py::class_<Vec<3>> (m, "Vec3d")
     .def(py::init<double,double,double>())
+    .def(py::init([](py::tuple v)
+    {
+      return Vec<3> { v[0].cast<double>(), v[1].cast<double>(),
+        v[2].cast<double>() };
+    }))
     .def ("__str__", &ToString<Vec<3>>)
     .def(py::self==py::self)
     .def(py::self+py::self)
@@ -165,6 +247,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("__getitem__", [](Vec<3>& vec, int index) { return vec[index]; })
     .def("__len__", [](Vec<3>& /*unused*/) { return 3; })
     ;
+
+  py::implicitly_convertible<py::tuple, Vec<3>>();
 
   m.def ("Vec", FunctionPointer
            ([] (double x, double y, double z) { return global_trafo(Vec<3>(x,y,z)); }));
@@ -519,7 +603,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   ExportArray<Element,size_t>(m);
   ExportArray<Element2d,SurfaceElementIndex>(m);
-  ExportArray<Segment,size_t>(m);
+  ExportArray<Segment,SegmentIndex>(m);
   ExportArray<Element0d>(m);
   ExportArray<MeshPoint,PointIndex>(m);
   ExportArray<FaceDescriptor>(m);
@@ -739,7 +823,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          py::return_value_policy::reference)
 
     .def("Elements1D", 
-         static_cast<Array<Segment>&(Mesh::*)()> (&Mesh::LineSegments),
+         static_cast<Array<Segment, SegmentIndex>&(Mesh::*)()> (&Mesh::LineSegments),
          py::return_value_policy::reference)
 
     .def("Elements0D", FunctionPointer([] (Mesh & self) -> Array<Element0d>&
@@ -755,6 +839,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("FaceDescriptor", static_cast<FaceDescriptor&(Mesh::*)(int)> (&Mesh::GetFaceDescriptor),
          py::return_value_policy::reference)
     .def("GetNFaceDescriptors", &Mesh::GetNFD)
+    .def("GetNDomains", &Mesh::GetNDomains)
 
     .def("GetVolumeNeighboursOfSurfaceElement", [](Mesh & self, size_t sel)
                                                 {
@@ -855,6 +940,12 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
            py::arg("pid2"),
            py::arg("identnr"),
            py::arg("type"))
+    .def("IdentifyPeriodicBoundaries", &Mesh::IdentifyPeriodicBoundaries,
+         py::arg("face1"), py::arg("face2"), py::arg("mapping"), py::arg("point_tolerance") = -1.)
+    .def("GetNrIdentifications", [](Mesh& self)
+                                 {
+                                   return self.GetIdentifications().GetMaxNr();
+                                 })
     .def ("CalcLocalH", &Mesh::CalcLocalH)
     .def ("SetMaxHDomain", [] (Mesh& self, py::list maxhlist)
           {
@@ -879,18 +970,21 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
           meshingparameter_description.c_str(),
           py::call_guard<py::gil_scoped_release>())
 
-    .def ("OptimizeVolumeMesh", [](Mesh & self)
+    .def ("OptimizeVolumeMesh", [](Mesh & self, MeshingParameters* pars)
           {
             MeshingParameters mp;
-            mp.optsteps3d = 5;
+            if(pars) mp = *pars;
+            else mp.optsteps3d = 5;
             OptimizeVolume (mp, self);
-          },py::call_guard<py::gil_scoped_release>())
+          }, py::arg("mp"), py::call_guard<py::gil_scoped_release>())
 
     .def ("OptimizeMesh2d", [](Mesh & self)
           {
             self.CalcLocalH(0.5);
             MeshingParameters mp;
             mp.optsteps2d = 5;
+            if(!self.GetGeometry())
+              throw Exception("Cannot optimize surface mesh without geometry!");
             Optimize2d (self, mp);
           },py::call_guard<py::gil_scoped_release>())
     
@@ -923,77 +1017,139 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     
     .def ("BuildSearchTree", &Mesh::BuildElementSearchTree,py::call_guard<py::gil_scoped_release>())
 
-    .def ("BoundaryLayer", FunctionPointer 
-          ([](Mesh & self, int bc, py::list thicknesses, int volnr, py::list materials)
+    .def ("BoundaryLayer", [](Mesh & self, variant<string, int> boundary,
+                              variant<double, py::list> thickness,
+                              string material,
+                              variant<string, int> domain, bool outside,
+                              optional<string> project_boundaries)
            {
-             int n = py::len(thicknesses);
              BoundaryLayerParameters blp;
-
-             for (int i = 1; i <= self.GetNFD(); i++)
-               if (self.GetFaceDescriptor(i).BCProperty() == bc)
-                   blp.surfid.Append (i);
-
-             cout << "add layer at surfaces: " << blp.surfid << endl;
-
-             blp.prismlayers = n;
-             blp.growthfactor = 1.0;
-
-             // find max domain nr
-             int maxind = 0;
-             for (ElementIndex ei = 0; ei < self.GetNE(); ei++)
-               maxind = max (maxind, self[ei].GetIndex());
-             cout << "maxind = " << maxind << endl;
-             for ( int i=0; i<n; i++ )
+             if(int* bc = get_if<int>(&boundary); bc)
                {
-                 blp.heights.Append( py::extract<double>(thicknesses[i])()) ;
-                 blp.new_matnrs.Append( maxind+1+i );
-                 self.SetMaterial (maxind+1+i, py::extract<string>(materials[i])().c_str());
+                 for (int i = 1; i <= self.GetNFD(); i++)
+                   if(self.GetFaceDescriptor(i).BCProperty() == *bc)
+                     blp.surfid.Append (i);
                }
-             blp.bulk_matnr = volnr;
+             else
+               {
+                 regex pattern(*get_if<string>(&boundary));
+                 for(int i = 1; i<=self.GetNFD(); i++)
+                   {
+                     auto& fd = self.GetFaceDescriptor(i);
+                     if(regex_match(fd.GetBCName(), pattern))
+                       {
+                         auto dom_pattern = get_if<string>(&domain);
+                         // only add if adjacent to domain
+                         if(dom_pattern)
+                           {
+                             regex pattern(*dom_pattern);
+                             if((fd.DomainIn() > 0 && regex_match(self.GetMaterial(fd.DomainIn()), pattern)) || (fd.DomainOut() > 0 && regex_match(self.GetMaterial(fd.DomainOut()), pattern)))
+                               blp.surfid.Append(i);
+                           }
+                         else
+                           blp.surfid.Append(i);
+                       }
+                     }
+               }
+             blp.new_mat = material;
+
+             if(project_boundaries.has_value())
+               {
+                 regex pattern(*project_boundaries);
+                 for(int i = 1; i<=self.GetNFD(); i++)
+                   if(regex_match(self.GetFaceDescriptor(i).GetBCName(), pattern))
+                     blp.project_boundaries.Append(i);
+               }
+
+             if(double* pthickness = get_if<double>(&thickness); pthickness)
+               {
+                 blp.heights.Append(*pthickness);
+               }
+             else
+               {
+                 auto thicknesses = *get_if<py::list>(&thickness);
+                 for(auto val : thicknesses)
+                   blp.heights.Append(val.cast<double>());
+               }
+
+             int nr_domains = self.GetNDomains();
+             blp.domains.SetSize(nr_domains + 1); // one based
+             blp.domains.Clear();
+             if(string* pdomain = get_if<string>(&domain); pdomain)
+               {
+                 regex pattern(*pdomain);
+                 for(auto i : Range(1, nr_domains+1))
+                   if(regex_match(self.GetMaterial(i), pattern))
+                     blp.domains.SetBit(i);
+               }
+             else
+               {
+                 auto idomain = *get_if<int>(&domain);
+                 blp.domains.SetBit(idomain);
+               }
+
+             blp.outside = outside;
+             blp.grow_edges = true;
+
              GenerateBoundaryLayer (self, blp);
-           }
-           ))
+             self.UpdateTopology();
+           }, py::arg("boundary"), py::arg("thickness"), py::arg("material"),
+          py::arg("domains") = ".*", py::arg("outside") = false,
+          py::arg("project_boundaries")=nullopt,
+          R"delimiter(
+Add boundary layer to mesh.
 
-    .def ("BoundaryLayer", FunctionPointer
-          ([](Mesh & self, int bc, double thickness, int volnr, string material)
-           {
-             BoundaryLayerParameters blp;
+Parameters
+----------
 
-             for (int i = 1; i <= self.GetNFD(); i++)
-               if (self.GetFaceDescriptor(i).BCProperty() == bc)
-                   blp.surfid.Append (i);
+boundary : string or int
+  Boundary name or number.
 
-             cout << "add layer at surfaces: " << blp.surfid << endl;
+thickness : float or List[float]
+  Thickness of boundary layer(s).
 
-             blp.prismlayers = 1;
-             blp.hfirst = thickness;
-             blp.growthfactor = 1.0;
+material : str or List[str]
+  Material name of boundary layer(s).
 
-             // find max domain nr
-             int maxind = 0;
-             for (ElementIndex ei = 0; ei < self.GetNE(); ei++)
-               maxind = max (maxind, self[ei].GetIndex());
-             cout << "maxind = " << maxind << endl;
-             self.SetMaterial (maxind+1, material.c_str());
-             blp.new_matnr = maxind+1;
-             blp.bulk_matnr = volnr;
-             GenerateBoundaryLayer (self, blp);
-           }
-           ))
+domain : str or int
+  Regexp for domain boundarylayer is going into.
+
+outside : bool = False
+  If true add the layer on the outside
+
+grow_edges : bool = False
+  Grow boundary layer over edges.
+
+project_boundaries : Optional[str] = None
+  Project boundarylayer to these boundaries if they meet them. Set
+  to boundaries that meet boundarylayer at a non-orthogonal edge and
+  layer-ending should be projected to that boundary.
+
+)delimiter")
 
     .def ("EnableTable", [] (Mesh & self, string name, bool set)
           {
+            const_cast<MeshTopology&>(self.GetTopology()).EnableTable(name, set);
+            /*
             if (name == "edges")
               const_cast<MeshTopology&>(self.GetTopology()).SetBuildEdges(set);
-            if (name == "faces")
+            else if (name == "faces")
               const_cast<MeshTopology&>(self.GetTopology()).SetBuildFaces(set);
+            else if (name == "parentedges")
+              const_cast<MeshTopology&>(self.GetTopology()).SetBuildParentEdges(set);
+            else if (name == "parentfaces")
+              const_cast<MeshTopology&>(self.GetTopology()).SetBuildParentFaces(set);
+	    else
+	      throw Exception ("noting known about table "+name +"\n"
+			       "knwon are 'edges', 'faces', 'parentedges', 'parentfaces'");
+            */
           },
           py::arg("name"), py::arg("set")=true)
     
     .def ("Scale", [](Mesh & self, double factor)
           {
-            for(auto i = 0; i<self.GetNP();i++)
-              self.Point(i).Scale(factor);
+            for(auto & pnt : self.Points())
+	      pnt.Scale(factor);
           })
     .def ("Copy", [](Mesh & self)
           {
@@ -1010,8 +1166,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             res["tet"] = py::make_tuple( values[2], values[3] );
             return res;
           }, py::arg("badelement_limit")=175.0)
+    .def ("Update", [](Mesh & self)
+          {
+            self.SetNextTimeStamp();
+          })
     .def ("CalcTotalBadness", &Mesh::CalcTotalBad)
     .def ("GetQualityHistogram", &Mesh::GetQualityHistogram)
+    .def("Mirror", &Mesh::Mirror);
     ;
 
   m.def("ImportMesh", [](const string& filename)
@@ -1046,13 +1207,25 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                     return mp;
                   }), py::arg("mp")=nullptr, meshingparameter_description.c_str())
     .def("__str__", &ToString<MP>)
-    .def("RestrictH", FunctionPointer
-         ([](MP & mp, double x, double y, double z, double h)
+    .def("RestrictH", [](MP & mp, double x, double y, double z, double h)
           {
-            mp.meshsize_points.Append ( MeshingParameters::MeshSizePoint (Point<3> (x,y,z), h));
-          }),
-         py::arg("x"), py::arg("y"), py::arg("z"), py::arg("h")
+            mp.meshsize_points.Append ( MeshingParameters::MeshSizePoint(Point<3> (x,y,z), h));
+          }, py::arg("x"), py::arg("y"), py::arg("z"), py::arg("h")
          )
+    .def("RestrictH", [](MP & mp, const Point<3>& p, double h)
+    {
+      mp.meshsize_points.Append ({p, h});
+    }, py::arg("p"), py::arg("h"))
+    .def("RestrictHLine", [](MP& mp, const Point<3>& p1, const Point<3>& p2,
+                             double maxh)
+    {
+      int steps = int(Dist(p1, p2) / maxh) + 2;
+      auto v = p2 - p1;
+      for (int i = 0; i <= steps; i++)
+        {
+          mp.meshsize_points.Append({p1 + double(i)/steps * v, maxh});
+        }
+    }, py::arg("p1"), py::arg("p2"), py::arg("maxh"))
     ;
 
   m.def("SetTestoutFile", FunctionPointer ([] (const string & filename)
@@ -1069,6 +1242,76 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                                    }));
 
 
+  m.def("ReadCGNSFile", &ReadCGNSFile, py::arg("filename"), py::arg("base")=1, "Read mesh and solution vectors from CGNS file");
+  m.def("WriteCGNSFile", &WriteCGNSFile, py::arg("mesh"), py::arg("filename"), py::arg("names"), py::arg("values"), py::arg("locations"),
+      R"(Write mesh and solution vectors to CGNS file, possible values for locations:
+      Vertex     = 0
+      EdgeCenter = 1
+      FaceCenter = 2
+      CellCenter = 3
+      )");
+
+    py::class_<SurfaceGeometry, NetgenGeometry, shared_ptr<SurfaceGeometry>> (m, "SurfaceGeometry")
+    .def(py::init<>())
+    .def(py::init([](py::object pyfunc)
+                  {
+                    std::function<Vec<3> (Point<2>)> func = [pyfunc](Point<2> p)
+                                                    {
+                                                      py::gil_scoped_acquire aq;
+                                                      py::tuple pyres = py::extract<py::tuple>(pyfunc(p[0],p[1],0.0)) ();
+                                                      return Vec<3>(py::extract<double>(pyres[0])(),py::extract<double>(pyres[1])(),py::extract<double>(pyres[2])());
+                                                    };
+                    auto geo = make_shared<SurfaceGeometry>(func);
+                    return geo;
+                  }), py::arg("mapping"))
+    .def(NGSPickle<SurfaceGeometry>())
+    .def("GenerateMesh", [](shared_ptr<SurfaceGeometry> geo,
+                            bool quads, int nx, int ny, bool flip_triangles, py::list py_bbbpts, py::list py_bbbnames, py::list py_hppts, py::list py_hpbnd)
+           {
+             if (py::len(py_bbbpts) != py::len(py_bbbnames))
+               throw Exception("In SurfaceGeometry::GenerateMesh bbbpts and bbbnames do not have same lengths.");
+             Array<Point<3>> bbbpts(py::len(py_bbbpts));
+             Array<string> bbbname(py::len(py_bbbpts));
+             Array<Point<3>> hppts(py::len(py_hppts));
+             Array<float> hpptsfac(py::len(py_hppts));
+             Array<string> hpbnd(py::len(py_hpbnd));
+             Array<float> hpbndfac(py::len(py_hpbnd));
+             for(int i = 0; i<py::len(py_bbbpts);i++)
+		 {
+                   py::tuple pnt = py::extract<py::tuple>(py_bbbpts[i])();
+                   bbbpts[i] = Point<3>(py::extract<double>(pnt[0])(),py::extract<double>(pnt[1])(),py::extract<double>(pnt[2])());
+                   bbbname[i] = py::extract<string>(py_bbbnames[i])();
+                 }
+             for(int i = 0; i<py::len(py_hppts);i++)
+		 {
+                   py::tuple pnt = py::extract<py::tuple>(py_hppts[i])();
+                   hppts[i] = Point<3>(py::extract<double>(pnt[0])(),py::extract<double>(pnt[1])(),py::extract<double>(pnt[2])());
+                   //hpptsfac[i] = py::len(pnt) > 3 ? py::extract<double>(pnt[3])() : 0.0;
+                   hpptsfac[i] = py::extract<double>(pnt[3])();
+                 }
+
+             for(int i = 0; i<py::len(py_hpbnd);i++)
+		 {
+                   py::tuple bnd = py::extract<py::tuple>(py_hpbnd[i])();
+                   hpbnd[i] = py::extract<string>(bnd[0])();
+                   hpbndfac[i] = py::extract<double>(bnd[1])();
+                 }
+             auto mesh = make_shared<Mesh>();
+             SetGlobalMesh (mesh);
+             mesh->SetGeometry(geo);
+	     ng_geometry = geo;
+             auto result = geo->GenerateMesh (mesh, quads, nx, ny, flip_triangles, bbbpts, bbbname, hppts, hpptsfac, hpbnd, hpbndfac);
+             if(result != 0)
+               throw Exception("SurfaceGeometry: Meshing failed!");
+             return mesh;
+           }, py::arg("quads")=true, py::arg("nx")=10, py::arg("ny")=10, py::arg("flip_triangles")=false, py::arg("bbbpts")=py::list(), py::arg("bbbnames")=py::list(), py::arg("hppts")=py::list(), py::arg("hpbnd")=py::list())
+      ;
+    ;
+
+    py::class_<ClearSolutionClass> (m, "ClearSolutionClass")
+      .def(py::init<>())
+      ;
+    m.def("SetParallelPickling", [](bool par) { parallel_pickling = par; });
 }
 
 PYBIND11_MODULE(libmesh, m) {

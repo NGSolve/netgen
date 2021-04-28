@@ -20,9 +20,9 @@ namespace netgen
 #ifdef PARALLEL
   MPI_Datatype MeshPoint :: MyGetMPIType ( )
   { 
-    static MPI_Datatype type = NULL;
-    static MPI_Datatype htype = NULL;
-    if (!type)
+    static MPI_Datatype type = MPI_DATATYPE_NULL;
+    static MPI_Datatype htype = MPI_DATATYPE_NULL;
+    if (type == MPI_DATATYPE_NULL)
       {
 	MeshPoint hp;
 	int blocklen[] = { 3, 1, 1 };
@@ -30,14 +30,14 @@ namespace netgen
 			     (char*)&hp.layer - (char*)&hp,
 			     (char*)&hp.singular - (char*)&hp };
 	MPI_Datatype types[] = { MPI_DOUBLE, MPI_INT, MPI_DOUBLE };
-	*testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
-	*testout << "sizeof = " << sizeof (MeshPoint) << endl;
+	// *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
+	// *testout << "sizeof = " << sizeof (MeshPoint) << endl;
 	MPI_Type_create_struct (3, blocklen, displ, types, &htype);
 	MPI_Type_commit ( &htype );
 	MPI_Aint lb, ext;
 	MPI_Type_get_extent (htype, &lb, &ext);
-	*testout << "lb = " << lb << endl;
-	*testout << "ext = " << ext << endl;
+	// *testout << "lb = " << lb << endl;
+	// *testout << "ext = " << ext << endl;
 	ext = sizeof (MeshPoint);
 	MPI_Type_create_resized (htype, lb, ext, &type);
 	MPI_Type_commit ( &type );
@@ -45,6 +45,102 @@ namespace netgen
       }
     return type;
   }
+
+
+  MPI_Datatype Element2d :: MyGetMPIType ( )
+  { 
+    static MPI_Datatype type = MPI_DATATYPE_NULL;
+    static MPI_Datatype htype = MPI_DATATYPE_NULL;
+    if (type == MPI_DATATYPE_NULL)
+      {
+	Element2d hel;
+	int blocklen[] = { ELEMENT2D_MAXPOINTS, 1, 1, 1 };
+	MPI_Aint displ[] =
+          { (char*)&hel.pnum[0] - (char*)&hel,
+            (char*)&hel.index - (char*)&hel,
+            (char*)&hel.typ - (char*)&hel,
+            (char*)&hel.np - (char*)&hel
+          };
+	MPI_Datatype types[] = { GetMPIType<PointIndex>(), GetMPIType(hel.index),
+                                 GetMPIType(hel.typ), GetMPIType(hel.np) };
+	// *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
+	// *testout << "sizeof = " << sizeof (MeshPoint) << endl;
+	MPI_Type_create_struct (4, blocklen, displ, types, &htype);
+	MPI_Type_commit ( &htype );
+	MPI_Aint lb, ext;
+	MPI_Type_get_extent (htype, &lb, &ext);
+	// *testout << "lb = " << lb << endl;
+	// *testout << "ext = " << ext << endl;
+	ext = sizeof (Element2d);
+	MPI_Type_create_resized (htype, lb, ext, &type);
+	MPI_Type_commit ( &type );
+      }
+    return type;
+  }
+
+  MPI_Datatype Element :: MyGetMPIType ( )
+  {
+    static MPI_Datatype type = MPI_DATATYPE_NULL;
+    static MPI_Datatype htype = MPI_DATATYPE_NULL;
+    if (type == MPI_DATATYPE_NULL)
+      {
+	Element hel;
+	int blocklen[] = { ELEMENT_MAXPOINTS, 1, 1, 1 };
+	MPI_Aint displ[] =
+          { (char*)&hel.pnum[0] - (char*)&hel,
+            (char*)&hel.index - (char*)&hel,
+            (char*)&hel.typ - (char*)&hel,
+            (char*)&hel.np - (char*)&hel
+          };
+	MPI_Datatype types[] = { GetMPIType<PointIndex>(), GetMPIType(hel.index),
+                                 GetMPIType(hel.typ), GetMPIType(hel.np) };
+	// *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
+	// *testout << "sizeof = " << sizeof (MeshPoint) << endl;
+	MPI_Type_create_struct (4, blocklen, displ, types, &htype);
+	MPI_Type_commit ( &htype );
+	MPI_Aint lb, ext;
+	MPI_Type_get_extent (htype, &lb, &ext);
+	// *testout << "lb = " << lb << endl;
+	// *testout << "ext = " << ext << endl;
+	ext = sizeof (Element);
+	MPI_Type_create_resized (htype, lb, ext, &type);
+	MPI_Type_commit ( &type );
+      }
+    return type;
+  }
+
+  MPI_Datatype Segment :: MyGetMPIType ( )
+  {
+    static MPI_Datatype type = MPI_DATATYPE_NULL;
+    static MPI_Datatype htype = MPI_DATATYPE_NULL;
+    if (type == MPI_DATATYPE_NULL)
+      {
+	Segment hel;
+	int blocklen[] = { 3, 1, 1, 1 };
+	MPI_Aint displ[] =
+          { (char*)&hel.pnums[0] - (char*)&hel,
+            (char*)&hel.edgenr - (char*)&hel,
+            (char*)&hel.cd2i - (char*)&hel,
+            (char*)&hel.si - (char*)&hel
+          };
+	MPI_Datatype types[] = {
+          GetMPIType<PointIndex>(), GetMPIType(hel.edgenr), GetMPIType(hel.cd2i), GetMPIType(hel.si)
+        };
+	// *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
+	// *testout << "sizeof = " << sizeof (MeshPoint) << endl;
+	MPI_Type_create_struct (4, blocklen, displ, types, &htype);
+	MPI_Type_commit ( &htype );
+	MPI_Aint lb, ext;
+	MPI_Type_get_extent (htype, &lb, &ext);
+	// *testout << "lb = " << lb << endl;
+	// *testout << "ext = " << ext << endl;
+	ext = sizeof (Segment);
+	MPI_Type_create_resized (htype, lb, ext, &type);
+	MPI_Type_commit ( &type );
+      }
+    return type;
+  }
+
 #endif
 
 
@@ -80,8 +176,6 @@ namespace netgen
       epgeominfo[1].edgenr = 1;
       epgeominfo[1].dist = 0;
     */
-
-    bcname = nullptr;
   }    
 
   Segment::Segment (const Segment & other)
@@ -109,7 +203,6 @@ namespace netgen
     geominfo[1] = other.geominfo[1];
     epgeominfo[0] = other.epgeominfo[0];
     epgeominfo[1] = other.epgeominfo[1];
-    bcname = other.bcname;
   }
 
   Segment& Segment::operator=(const Segment & other)
@@ -135,7 +228,6 @@ namespace netgen
 	pnums[2] = other.pnums[2];
 	meshdocval = other.meshdocval;
 	hp_elnr = other.hp_elnr;
-	bcname = other.bcname;
         is_curved = other.is_curved;
       }
     
@@ -144,11 +236,12 @@ namespace netgen
   
   void Segment :: DoArchive (Archive & ar)
   {
+    string * bcname_dummy = nullptr;
     ar & pnums[0] & pnums[1] & pnums[2]
       & edgenr & singedge_left & singedge_right
       & si & cd2i & domin & domout & tlosurf
       & surfnr1 & surfnr2
-      & bcname
+      & bcname_dummy // keep this for backward compatiblity
       & epgeominfo[0].edgenr & epgeominfo[1].edgenr;
   }
 
@@ -161,7 +254,8 @@ namespace netgen
       << " si = " << seg.si << ", edgenr = " << seg.edgenr;
     return s;
   }
-  /*
+
+  // needed, e.g. for MPI communication
   Element2d :: Element2d ()
   {
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
@@ -180,7 +274,7 @@ namespace netgen
     strongrefflag = false;
     is_curved = false;
   } 
-  */
+
   Element2d :: Element2d (int anp)
   { 
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)

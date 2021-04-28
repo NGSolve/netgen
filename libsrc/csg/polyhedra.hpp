@@ -48,46 +48,63 @@ namespace netgen
 
   public:
     Polyhedra ();
-    virtual ~Polyhedra ();
+    virtual ~Polyhedra () override;
     static Primitive * CreateDefault ();
 
-    virtual INSOLID_TYPE BoxInSolid (const BoxSphere<3> & box) const;
+    virtual INSOLID_TYPE BoxInSolid (const BoxSphere<3> & box) const override;
     virtual INSOLID_TYPE PointInSolid (const Point<3> & p,
-				       double eps) const;
-    virtual INSOLID_TYPE VecInSolid (const Point<3> & p,
+				       double eps) const override;
+    virtual INSOLID_TYPE VecInSolidNew (const Point<3> & p,
+                                        const Vec<3> & v,
+                                        double eps, bool printing = false) const;
+    virtual INSOLID_TYPE VecInSolidOld (const Point<3> & p,
 				     const Vec<3> & v,
 				     double eps) const;
+    
+    virtual INSOLID_TYPE VecInSolid (const Point<3> & p,
+				     const Vec<3> & v,
+				     double eps) const override;
 
-    // checks if lim s->0 lim t->0  p + t(v1 + s v2) in solid
     virtual INSOLID_TYPE VecInSolid2 (const Point<3> & p,
 				      const Vec<3> & v1,
 				      const Vec<3> & v2,
-				      double eps) const;
+				      double eps) const override;
+    
+    virtual INSOLID_TYPE VecInSolid3 (const Point<3> & p,
+				      const Vec<3> & v1,
+				      const Vec<3> & v2,
+				      double eps) const override;
 
+    virtual INSOLID_TYPE VecInSolid4 (const Point<3> & p,
+				      const Vec<3> & v,
+				      const Vec<3> & v2,
+				      const Vec<3> & m,
+				      double eps) const override;
+    
     virtual void GetTangentialSurfaceIndices (const Point<3> & p, 
-					      NgArray<int> & surfind, double eps) const;
+					      NgArray<int> & surfind, double eps) const override;
 
 
     virtual void GetTangentialVecSurfaceIndices2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
-						  NgArray<int> & surfind, double eps) const;
+						  NgArray<int> & surfind, double eps) const override;
 
-    virtual void CalcSpecialPoints (NgArray<Point<3> > & pts) const;
+    virtual void CalcSpecialPoints (NgArray<Point<3> > & pts) const override;
     virtual void AnalyzeSpecialPoint (const Point<3> & pt, 
-				      NgArray<Point<3> > & specpts) const;
-    virtual Vec<3> SpecialPointTangentialVector (const Point<3> & p, int s1, int s2) const;
+				      NgArray<Point<3> > & specpts) const override;
+    virtual Vec<3> SpecialPointTangentialVector (const Point<3> & p, int s1, int s2) const override;
 
-    virtual int GetNSurfaces() const 
+    virtual int GetNSurfaces() const override
     { return planes.Size(); }
-    virtual Surface & GetSurface (int i) 
+    virtual Surface & GetSurface (int i) override
     { return *planes[i]; }
-    virtual const Surface & GetSurface (int i) const
+    virtual const Surface & GetSurface (int i) const override
     { return *planes[i]; }
 
-    virtual void GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const;
-    virtual void SetPrimitiveData (NgArray<double> & coeffs);
+    virtual void GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const override;
+    virtual void SetPrimitiveData (NgArray<double> & coeffs) override;
 
-    virtual void Reduce (const BoxSphere<3> & box);
-    virtual void UnReduce ();
+    virtual void Reduce (const BoxSphere<3> & box) override;
+    virtual void UnReduce () override;
 
     int AddPoint (const Point<3> & p);
     int AddFace (int pi1, int pi2, int pi3, int inputnum);

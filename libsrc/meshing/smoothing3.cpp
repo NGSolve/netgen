@@ -1460,6 +1460,7 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
   static Timer trange("range");
 
   // return ImproveMeshSequential(mp, goal);
+  BuildBoundaryEdges(false);
 
   (*testout) << "Improve Mesh" << "\n";
   PrintMessage (3, "ImproveMesh");

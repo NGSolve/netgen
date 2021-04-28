@@ -159,29 +159,18 @@ namespace ngcore
       active_workers = 0;
 
       static int cnt = 0;
-      char buf[100];
       if (use_paje_trace)
-        {
-#ifdef PARALLEL
-          int is_init = -1;
-          MPI_Initialized(&is_init);
-          if (is_init)
-            sprintf(buf, "ng%d_rank%d.trace", cnt++, NgMPI_Comm(MPI_COMM_WORLD).Rank());
-          else
-#endif
-            sprintf(buf, "ng%d.trace", cnt++);
-        }
-      else
-        buf[0] = 0;
-      //sprintf(buf, "");
-      trace = new PajeTrace(num_threads, buf);
+          trace = new PajeTrace(num_threads, "ng" + ToString(cnt++));
     }
 
 
   TaskManager :: ~TaskManager ()
   {
-    delete trace;
-    trace = nullptr;
+    if (use_paje_trace)
+      {
+        delete trace;
+        trace = nullptr;
+      }
     num_threads = 1;
   }
 
@@ -212,14 +201,14 @@ namespace ngcore
       ;
   }
 
-  static size_t calibrate_init_tsc = __rdtsc();
+  static size_t calibrate_init_tsc = GetTimeCounter();
   typedef std::chrono::system_clock TClock;
   static TClock::time_point calibrate_init_clock = TClock::now();
   
   void TaskManager :: StopWorkers()
   {
     done = true;
-    double delta_tsc = __rdtsc()-calibrate_init_tsc;
+    double delta_tsc = GetTimeCounter()-calibrate_init_tsc;
     double delta_sec = std::chrono::duration<double>(TClock::now()-calibrate_init_clock).count();
     double frequ = (delta_sec != 0) ? delta_tsc/delta_sec : 2.7e9;
     
@@ -348,8 +337,28 @@ namespace ngcore
         return;
       }
     
+    if (antasks == 1)
+      {
+        if (trace)
+          trace->StartJob(jobnr, afunc.target_type());
+        jobnr++;
+        if (startup_function) (*startup_function)();
+        TaskInfo ti;
+        ti.task_nr = 0;
+        ti.ntasks = 1;
+        ti.thread_nr = 0; ti.nthreads = 1;
+        {
+          RegionTracer t(ti.thread_nr, jobnr, RegionTracer::ID_JOB, ti.task_nr);
+          afunc(ti);
+        }
+        if (cleanup_function) (*cleanup_function)();
+        if (trace)
+          trace->StopJob();
+        return;
+      }
     
-    trace->StartJob(jobnr, afunc.target_type());
+    if (trace)
+        trace->StartJob(jobnr, afunc.target_type());
 
     func = &afunc;
 
@@ -412,14 +421,19 @@ namespace ngcore
       if (workers_on_node[j])
         {
           while (complete[j] != jobnr)
+          {
+#ifdef NETGEN_ARCH_AMD64
             _mm_pause();
+#endif // NETGEN_ARCH_AMD64
+          }
         }
 
     func = nullptr;
     if (ex)
       throw Exception (*ex);
 
-    trace->StopJob();
+    if (trace)
+        trace->StopJob();
   }
     
   void TaskManager :: Loop(int thd)

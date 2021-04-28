@@ -286,36 +286,30 @@ namespace netgen
 					  dynamic_cast<const Plane*> (geometry->GetSurface(locsurf[k3])),
 					  pts);
 
-		      for (int j = 0; j < pts.Size(); j++)
-			if (Dist (pts[j], box.Center()) < box.Diam()/2)
+                      for (auto pnt : pts)
+                        if (Dist (pnt, box.Center()) < box.Diam()/2)                        
 			  {
-			    Solid * tansol;
-			    sol -> TangentialSolid (pts[j], tansol, surfids, 1e-9*size);
-
-			    if(!tansol)
-			      continue;
-
-			    bool ok1 = false, ok2 = false, ok3 = false;
-			    int rep1 = geometry->GetSurfaceClassRepresentant(locsurf[k1]);
-			    int rep2 = geometry->GetSurfaceClassRepresentant(locsurf[k2]);
-			    int rep3 = geometry->GetSurfaceClassRepresentant(locsurf[k3]);
-			    for(int jj=0; jj<surfids.Size(); jj++)
-			      {
-				int actrep = geometry->GetSurfaceClassRepresentant(surfids[jj]);
-				if(actrep == rep1) ok1 = true;
-				if(actrep == rep2) ok2 = true;
-				if(actrep == rep3) ok3 = true;				  
-			      }
-
-			    
-			    if (tansol && ok1 && ok2 && ok3)
-			    // if (sol -> IsIn (pts[j], 1e-6*size) && !sol->IsStrictIn (pts[j], 1e-6*size))
-			      {
-				if (AddPoint (pts[j], layer))
-				  (*testout) << "cross point found, 1: " << pts[j] << endl;
-			      }  
-			    delete tansol;
-			  }
+			    auto tansol = sol -> TangentialSolid (pnt, surfids, 1e-9*size);
+                            if (tansol)
+                              {
+                                bool ok1 = false, ok2 = false, ok3 = false;
+                                int rep1 = geometry->GetSurfaceClassRepresentant(locsurf[k1]);
+                                int rep2 = geometry->GetSurfaceClassRepresentant(locsurf[k2]);
+                                int rep3 = geometry->GetSurfaceClassRepresentant(locsurf[k3]);
+                                
+                                for (auto surfid : surfids)
+                                  {
+                                    int actrep = geometry->GetSurfaceClassRepresentant(surfid);
+                                    if (actrep == rep1) ok1 = true;
+                                    if (actrep == rep2) ok2 = true;
+                                    if (actrep == rep3) ok3 = true;				  
+                                  }
+                                
+                                if (ok1 && ok2 && ok3)
+                                  if (AddPoint (pnt, layer))
+                                    (*testout) << "cross point found, 1: " << pnt << endl;
+                              }
+                          }
 		    }
 
 
@@ -330,38 +324,29 @@ namespace netgen
 					    qsurf, pts);
 			//(*testout) << "checking pot. crosspoints: " << pts << endl;
 
-			for (int j = 0; j < pts.Size(); j++)
-			  if (Dist (pts[j], box.Center()) < box.Diam()/2)
+                        for (auto pnt : pts)
+                          if (Dist (pnt, box.Center()) < box.Diam()/2)
 			    {
-			      Solid * tansol;
-			      sol -> TangentialSolid (pts[j], tansol, surfids, 1e-9*size);
-
-			      if(!tansol)
-				continue;
-			      			      
-			      bool ok1 = false, ok2 = false, ok3 = true;//false;
-			      int rep1 = geometry->GetSurfaceClassRepresentant(locsurf[k1]);
-			      int rep2 = geometry->GetSurfaceClassRepresentant(locsurf[k2]);
-			      //int rep3 = geometry->GetSurfaceClassRepresentant(quadi);
-			      for(int jj=0; jj<surfids.Size(); jj++)
-				{
-				  int actrep = geometry->GetSurfaceClassRepresentant(surfids[jj]);
-				  if(actrep == rep1) ok1 = true;
-				  if(actrep == rep2) ok2 = true;
-				  //if(actrep == rep3) ok3 = true;				  
-				}
-
-
-			      if (tansol && ok1 && ok2 && ok3)
-				//if (sol -> IsIn (pts[j], 1e-6*size) && !sol->IsStrictIn (pts[j], 1e-6*size) )
-				{
-				  if (AddPoint (pts[j], layer))
-				    (*testout) << "cross point found, 2: " << pts[j] << endl;
-				}  
-			      delete tansol;
+			      auto tansol = sol -> TangentialSolid (pnt, surfids, 1e-9*size);
+                              if (tansol)
+                                {
+                                  bool ok1 = false, ok2 = false, ok3 = true;//false;
+                                  int rep1 = geometry->GetSurfaceClassRepresentant(locsurf[k1]);
+                                  int rep2 = geometry->GetSurfaceClassRepresentant(locsurf[k2]);
+                                  
+                                  for (auto surfid : surfids)
+                                    {
+                                      int actrep = geometry->GetSurfaceClassRepresentant(surfid);
+                                      if (actrep == rep1) ok1 = true;
+                                      if (actrep == rep2) ok2 = true;
+                                    }
+                                  
+                                  if (ok1 && ok2 && ok3)
+                                    if (AddPoint (pnt, layer))
+                                      (*testout) << "cross point found, 2: " << pnt << endl;
+                                }
 			    }
 		      }
-
 
 		for (int k1 = 0; k1 < numprim; k1++)
 		  if (k1 != quadi)
@@ -372,15 +357,10 @@ namespace netgen
 		      for (int j = 0; j < pts.Size(); j++)
 			if (Dist (pts[j], box.Center()) < box.Diam()/2)
 			  {
-			    Solid * tansol;
-			    sol -> TangentialSolid (pts[j], tansol, surfids, 1e-9*size);
+			    auto tansol = sol -> TangentialSolid (pts[j], surfids, 1e-9*size);
 			    if (tansol)
-			      // sol -> IsIn (pts[j], 1e-6*size) && !sol->IsStrictIn (pts[j], 1e-6*size) )
-			      {
-				if (AddPoint (pts[j], layer))
-				  (*testout) << "extremal point found, 1: " << pts[j] << endl;
-			      }  
-			    delete tansol;
+                              if (AddPoint (pts[j], layer))
+                                (*testout) << "extremal point found, 1: " << pts[j] << endl;
 			  }
 		    }
 	      }
@@ -395,8 +375,6 @@ namespace netgen
 	    NgArray<Point<3> > pts;
 	    NgArray<int> surfids;
 
-
-	    
 	    for (int k1 = 0; k1 < numprim; k1++)
 	      for (int k2 = 0; k2 < k1; k2++)
 		for (int k3 = 0; k3 < k2; k3++)
@@ -409,16 +387,14 @@ namespace netgen
 		    for (int j = 0; j < pts.Size(); j++)
 		      if (Dist (pts[j], box.Center()) < box.Diam()/2)
 			{
-			  Solid * tansol;
-			  sol -> TangentialSolid (pts[j], tansol, surfids, 1e-9*size);
-			  
-			  if(!tansol)
-			    continue;
+			  auto tansol = sol -> TangentialSolid (pts[j], surfids, 1e-9*size);
+			  if (!tansol) continue;
 			  
 			  bool ok1 = false, ok2 = false, ok3 = false;
 			  int rep1 = geometry->GetSurfaceClassRepresentant(locsurf[k1]);
 			  int rep2 = geometry->GetSurfaceClassRepresentant(locsurf[k2]);
 			  int rep3 = geometry->GetSurfaceClassRepresentant(locsurf[k3]);
+                          
 			  for(int jj=0; jj<surfids.Size(); jj++)
 			    {
 			      int actrep = geometry->GetSurfaceClassRepresentant(surfids[jj]);
@@ -427,14 +403,9 @@ namespace netgen
 			      if(actrep == rep3) ok3 = true;				  
 			    }
 			  
-			  
-			  if (tansol && ok1 && ok2 && ok3)
-			    // if (sol -> IsIn (pts[j], 1e-6*size) && !sol->IsStrictIn (pts[j], 1e-6*size))
-			    {
-			      if (AddPoint (pts[j], layer))
-				(*testout) << "cross point found, 1: " << pts[j] << endl;
-			    }  
-			  delete tansol;
+			  if (ok1 && ok2 && ok3)
+                            if (AddPoint (pts[j], layer))
+                              (*testout) << "cross point found, 1: " << pts[j] << endl;
 			}
 		  }
 	    
@@ -449,22 +420,36 @@ namespace netgen
 		  for (int j = 0; j < pts.Size(); j++)
 		    if (Dist (pts[j], box.Center()) < box.Diam()/2)
 		      {
-			Solid * tansol;
-			sol -> TangentialSolid (pts[j], tansol, surfids, 1e-9*size);
+			auto tansol = sol -> TangentialSolid (pts[j], surfids, 1e-9*size);
 			if (tansol)
-			  // sol -> IsIn (pts[j], 1e-6*size) && !sol->IsStrictIn (pts[j], 1e-6*size) )
-			  {
-			    if (AddPoint (pts[j], layer))
-			      (*testout) << "extremal point found, spheres: " << pts[j] << endl;
-			  }  
-			delete tansol;
+                          if (AddPoint (pts[j], layer))
+                            (*testout) << "extremal point found, spheres: " << pts[j] << endl;
 		      }
 		}
 	    
 	    return;
 	  }
-      }
 
+
+        if (numprim == 2)
+          {
+            auto rev0 = dynamic_cast<const RevolutionFace*> (geometry->GetSurface(locsurf[0]));
+            auto rev1 = dynamic_cast<const RevolutionFace*> (geometry->GetSurface(locsurf[1]));
+            if (rev0 && rev1)
+              {
+                NgArray<Point<3>> pts;
+                bool check = ComputeExtremalPoints (rev0, rev1, pts);
+                if (check)
+                  {
+                    for (auto p : pts)
+                      if (box.IsIn(p))
+                        AddPoint (p, layer);
+                    return;
+                  }
+              }
+          }
+      } // end if (numprim <= check_crosspoint)
+    
 
     
     possiblecrossp = (numprim >= 3) && calccp;
@@ -493,7 +478,6 @@ namespace netgen
 #ifdef DEVELOP
 		(*testout) << "k1,2,3 = " << k1 << "," << k2 << "," << k3 << ", nc = " << nc << ", deg = " << deg << endl;
 #endif
-
 
 		if (!nc && !deg) decision = 0;
 		if (nc) surecrossp = 1;
@@ -608,9 +592,9 @@ namespace netgen
 		    decision = 0;
 		}
 	    }
-
-	// (*testout) << "l = " << level << " dec/sureexp = " << decision << sureexp << endl;
-
+#ifdef DEVELOP
+        (*testout) << "edgepnt decision = " << decision << " sure = " << sureexp << endl;
+#endif
 	if (decision && sureexp)
 	  {
 	    for (int k1 = 0; k1 < locsurf.Size() - 1; k1++)
@@ -890,9 +874,18 @@ namespace netgen
 	f1->CalcGradient (p, g1);
 	f2->CalcGradient (p, g2);
 
-	if ( sqr (g1 * g2) > (1 - 1e-10) * Abs2 (g1) * Abs2 (g2))
-	  return 1;
+	// if ( sqr (g1 * g2) > (1 - 1e-10) * Abs2 (g1) * Abs2 (g2))
+        // return 1;
+        if ( Abs2 (Cross(g1,g2)) < 1e-10 * Abs2 (g1) * Abs2 (g2))  // same, but stable
+          {
+            if (Abs2(vrs) < 1e-12*sqr(size))  // degenerate only if on both surfaces
+              return 1;
+            else
+              return 0;
+          }
 
+
+        
 	for (int j = 0; j < 3; j++)
 	  {
 	    mat(0,j) = g1(j);
@@ -1534,7 +1527,61 @@ namespace netgen
   }
 
 
+  bool SpecialPointCalculation :: 
+  ComputeExtremalPoints (const RevolutionFace * rev1, 
+			 const RevolutionFace * rev2, 
+			 NgArray<Point<3> > & pts)
+  {
+    // if (rev1 -> P0() != rev2 -> P0()) return false; // missing ????
+    if (Dist2 (rev1 -> P0(), rev2 -> P0()) > 1e-20*sqr(size)) return false;
+    // if (rev1 -> Axis() != rev2 -> Axis()) return false;
+    if ( (rev1 -> Axis()-rev2 -> Axis()).Length2() > 1e-16) return false;
 
+    Point<2> p1s = rev1->GetSpline().StartPI();
+    Point<2> p1e = rev1->GetSpline().EndPI();
+    Point<2> p2s = rev2->GetSpline().StartPI();
+    Point<2> p2e = rev2->GetSpline().EndPI();
+
+    Point<2> p2d;
+    if (Dist2(p1s,p2e) < 1e-20*sqr(size))
+      p2d = p1s;
+    else if (Dist2(p1e, p2s) < 1e-20*sqr(size))
+      p2d = p1e;
+    else
+      return false;
+    *testout << "Norm axis = " << rev1->Axis().Length() << endl;
+    Point<3> center = rev1->P0() + p2d(0)*rev1->Axis();
+    Vec<3> n = rev1->Axis();
+    // extremal points of circle, center, normal axis, radius p2d(1)
+    // Lagrange:
+    // L(x, lam1, lam2) = x_i + lam1 * (x-c)*v + lam2 * ( |x-c|^2 - r^2 )
+    for (double i = 0; i < 3; i++)
+      {
+        double lam1 = -n(i) / n.Length2();
+        Vec<3> ei(0,0,0); ei(i) = 1;
+        // double lam2 = 1/(2*p2d(1)) * sqrt(1 - sqr(n(i))/n.Length2());
+        double fac = 1-sqr(n(i))/n.Length2();
+        // if (fabs(lam2) > 1e-10)
+        if (fac > 1e-10)
+          {
+            double lam2 = 1/(2*p2d(1)) * sqrt(fac);
+            Point<3> x = center - 1.0/(2*lam2) * (ei + lam1*n);
+            pts.Append (x);
+            x = center + 1.0/(2*lam2) * (ei + lam1*n);
+            pts.Append (x);
+
+            /*
+            // check:
+            Point<2> p2d;
+            rev1 -> CalcProj (x, p2d);
+            *testout << "special solution, p2d = " << p2d << endl;
+            rev2 -> CalcProj (x, p2d);
+            *testout << "special solution, p2d = " << p2d << endl;
+            */
+          }
+      }
+    return true;
+  }
 
 
 
@@ -1739,9 +1786,7 @@ namespace netgen
 	      continue;
 	    
 
-	    Solid * locsol;
-	    sol -> TangentialSolid (p, locsol, surfind, ideps*geomsize);
-
+	    auto locsol = sol -> TangentialSolid (p, surfind, ideps*geomsize);
 
 	    rep_surfind.SetSize (surfind.Size());
 	    int num_indep_surfs = 0;
@@ -1769,10 +1814,10 @@ namespace netgen
 	    if (surf)
 	      {
 		// locsol -> GetSurfaceIndices (surfind);
-		bool hassurf = 0;
+		bool hassurf = false;
 		for (int m = 0; m < surfind.Size(); m++)
 		  if (ageometry.GetSurface(surfind[m]) == surf)
-		    hassurf = 1;
+		    hassurf = true;
 
 		if (!hassurf)
 		  continue;
@@ -1818,8 +1863,11 @@ namespace netgen
 		    }
 
 
-		  if (Abs2 (t) < 1e-8)
-		    continue;
+		  if (Abs2 (t) < 1e-16)
+                    {
+                      // cerr << "normal vectors degenerated" << endl;
+                      continue;
+                    }
 
 #ifdef DEVELOP
 		  *testout << "           tangential vector " << t << endl;
@@ -1860,17 +1908,17 @@ namespace netgen
 		      rhs(0) = -t * (hessej * t);
 		      rhs(1) = -t * (hessek * t);
 
-		      CalcInverse (mat, inv);
-		      t2 = inv * rhs;
-
-		      
+                      CalcInverse (mat, inv);
+                      t2 = inv * rhs;
+#ifdef DEVELOP
+                      *testout << "t = " << t << ", t2 = " << t2 << endl;
+#endif
 		      /*
 		      ageometry.GetIndependentSurfaceIndices 
 			(locsol, p, t, surfind2);
 		      */
 
-		      Solid * locsol2;
-		      locsol -> TangentialSolid3 (p, t, t2, locsol2, surfind2, ideps*geomsize); 
+		      auto locsol2 = locsol -> TangentialSolid3 (p, t, t2, surfind2, ideps*geomsize); 
 		      if (!locsol2) continue;
 		      
 		      // locsol2 -> GetTangentialSurfaceIndices3 (p, t, t2, surfind2, 1e-9*geomsize);
@@ -1911,31 +1959,31 @@ namespace netgen
 			  Vec<3> nv =
 			    ageometry.GetSurface(surfind2[l]) -> GetNormalVector(p);
 
-			 
 			  Vec<3> m1 = Cross (t, nv);
 			  Vec<3> m2 = -m1;
 			  bool isface1 = 0, isface2 = 0;
 			  
-			  Solid * locsol3;
-
 			  // locsol2 -> TangentialSolid2 (p, m1, locsol3, surfind3, 1e-9*geomsize);
-			  locsol -> TangentialEdgeSolid (p, t, t2, m1, locsol3, surfind3, ideps*geomsize);
-
+			  auto locsol3 = locsol -> TangentialEdgeSolid (p, t, t2, m1, surfind3, ideps*geomsize);
+#ifdef DEVELOP
+                          (*testout) << "m1 = " << m1 << ", surfind3 = " << surfind3 << endl;
+#endif
 			  //ageometry.GetIndependentSurfaceIndices (surfind3);
 
 			  if (surfind3.Contains(surfind2[l]))
 			    isface1 = 1;
-			  delete locsol3;
 			  
 			  // locsol2 -> TangentialSolid2 (p, m2, locsol3, surfind3, 1e-9*geomsize);
-			  locsol -> TangentialEdgeSolid (p, t, t2, m2, locsol3, surfind3, ideps*geomsize); 
+			  locsol3 = locsol -> TangentialEdgeSolid (p, t, t2, m2, surfind3, ideps*geomsize); 
+#ifdef DEVELOP
+                          (*testout) << "m2 = " << m2 << ", surfind3 = " << surfind3 << endl;
+#endif
 
 			  // ageometry.GetIndependentSurfaceIndices (surfind3);
 
 			  
 			  if (surfind3.Contains(surfind2[l]))
 			    isface2 = 1;
-			  delete locsol3;
 
 			  if (isface1 != isface2)
 			    cnt_tang_faces++;
@@ -1948,7 +1996,6 @@ namespace netgen
 		      if (cnt_tang_faces < 1)
 			ok = false;
 
-		      delete locsol2;
 		      if (!ok) continue;
 		    }
 
@@ -1973,16 +2020,47 @@ namespace netgen
 			    continue;
 			  
 			  Vec<3> s = Cross (normalvecs[m], t);
+
 			  Vec<3> t2a = t + 0.01 *s;
 			  Vec<3> t2b = t - 0.01 *s;
-			  
-			  bool isface =
+
+			  bool isfaceold =
 			    (locsol->VectorIn (p, t2a, 1e-6*geomsize) &&
 			     !locsol->VectorStrictIn (p, t2a, 1e-6*geomsize))
 			    ||
 			    (locsol->VectorIn (p, t2b, 1e-6*geomsize) &&
 			     !locsol->VectorStrictIn (p, t2b, 1e-6*geomsize));
-			  
+
+                          bool isfacenew =
+                            locsol -> VecInSolid2(p, t, s, 1e-6*geomsize) == DOES_INTERSECT ||
+                            locsol -> VecInSolid2(p, t, -s, 1e-6*geomsize) == DOES_INTERSECT;
+                            /*
+                            (locsol->VectorIn2 (p, t, s, 1e-6*geomsize) && !locsol->VectorStrictIn2 (p, t, s, 1e-6*geomsize)) || 
+                            (locsol->VectorIn2 (p, t, -s, 1e-6*geomsize) && !locsol->VectorStrictIn2 (p, t, -s, 1e-6*geomsize));
+                            */
+
+                          bool isface = isfacenew;
+                          
+                          if (isfaceold != isfacenew)
+                            {
+                              *testout << "different, p = " << p << ", t = " << t << ", s = " << s << endl;
+                              *testout << "tlo = " << si << endl;
+                              *testout << "isface, old = " << isface << ", isfacenew = " << isfacenew << endl;
+                              
+                              *testout << "t2a = " << t2a << endl;
+                              *testout << "vecin(p,t2a) = " << locsol->VectorIn (p, t2a, 1e-6*geomsize) << endl;
+                              *testout << "vecstrictin(p,t2a) = " << locsol->VectorStrictIn (p, t2a, 1e-6*geomsize) << endl;
+                              *testout << "vectorin2 = " << locsol->VectorIn2 (p, t, s, 1e-6*geomsize)  << endl;
+                              *testout << "vectorstrictin2 = " << locsol->VectorStrictIn2 (p, t, s, 1e-6*geomsize)  << endl;
+                              
+                              *testout << "t2b = " << t2b << endl;
+                              *testout << "vecin(p,t2b) = " << locsol->VectorIn (p, t2b, 1e-6*geomsize) << endl;
+                              *testout << "vecstrictin(p,t2b) = " << locsol->VectorStrictIn (p, t2b, 1e-6*geomsize) << endl;
+                              *testout << "vectorin2- = " << locsol->VectorIn2 (p, t, -s, 1e-6*geomsize)  << endl;
+                              *testout << "vectorstrictin2- = " << locsol->VectorStrictIn2 (p, t, -s, 1e-6*geomsize)  << endl;
+                            }
+                          
+                          
 			  /*
 			  bool isface =
 			    (locsol->VectorIn (p, t2a) &&
@@ -1992,10 +2070,8 @@ namespace netgen
 			     !locsol->VectorStrictIn (p, t2b));
 			  */
 
-			  if (isface)
-			    {
-			      cnts++;
-			    }
+                          if (isface)
+                            cnts++;
 			}
 		      if (cnts < 2) isedge = 0;
 		    }
@@ -2054,54 +2130,22 @@ namespace netgen
 		    }
 		  
 		}
-
-	    delete locsol;
 	  }
       }
 
-    /*
-    NgBitArray testuncond (specpoints.Size());
-    testuncond.Clear();
-    for(int i = 0; i<specpoints.Size(); i++)
-      {
-	if(testuncond.Test(i))
-	  continue;
-	
-	NgArray<int> same;
-	same.Append(i);
-	
-	for(int j = i+1; j<specpoints.Size(); j++)
-	  {
-	    if(Dist(specpoints[i].p,specpoints[j].p) < 1e-20)
-	      {
-		same.Append(j);
-		testuncond.Set(j);
-	      }
-	  }
-	
-	if(same.Size() < 3)
-	  for(int j=0; j<same.Size(); j++)
-	    {
-	      (*testout) << "setting " << specpoints[same[j]].p << "; " << specpoints[same[j]].v << "; " 
-			 <<specpoints[same[j]].unconditional << " to conditional" << endl;
-	      specpoints[same[j]].unconditional=0;
-	    }
-      }
-    */
 
-
+    
     // if special point is unconditional on some solid,
     // it must be unconditional everywhere:
 
-    NgBitArray uncond (apoints.Size());
+    BitArray uncond (apoints.Size());
     uncond.Clear();
 
     for (int i = 0; i < specpoints.Size(); i++)
       if (specpoints[i].unconditional)
-	uncond.Set (specpoint2point[i]);
+	uncond.SetBit (specpoint2point[i]);
   
     for (int i = 0; i < specpoints.Size(); i++)
-      specpoints[i].unconditional = 
-	uncond.Test (specpoint2point[i]) ? 1 : 0;
+      specpoints[i].unconditional = uncond.Test (specpoint2point[i]);
   }
 }

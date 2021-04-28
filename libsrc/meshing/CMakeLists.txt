@@ -12,7 +12,7 @@ add_library(mesh ${NG_LIB_TYPE}
         smoothing2.cpp smoothing3.cpp specials.cpp tetrarls.cpp		    
         topology.cpp triarls.cpp validate.cpp bcfunctions.cpp   
         parallelmesh.cpp  paralleltop.cpp  paralleltop.hpp basegeom.cpp     
-        python_mesh.cpp hexarls.cpp
+        python_mesh.cpp hexarls.cpp surfacegeom.cpp
         ../../ng/onetcl.cpp
         ${mesh_object_libs}
         )
@@ -23,7 +23,7 @@ endif(APPLE)
 
 target_link_libraries( mesh PUBLIC ngcore PRIVATE gprim la gen )
 
-target_link_libraries( mesh PRIVATE netgen_metis netgen_python ${ZLIB_LIBRARIES} )
+target_link_libraries( mesh PRIVATE netgen_metis "$<BUILD_INTERFACE:netgen_python>" ${ZLIB_LIBRARIES} )
 if(NOT WIN32)
   install( TARGETS mesh ${NG_INSTALL_DIR})
 endif(NOT WIN32)
@@ -37,6 +37,6 @@ install(FILES
   localh.hpp meshclass.hpp meshfunc.hpp meshing2.hpp meshing3.hpp
   meshing.hpp meshtool.hpp meshtype.hpp msghandler.hpp paralleltop.hpp
   ruler2.hpp ruler3.hpp specials.hpp topology.hpp validate.hpp
-  python_mesh.hpp
+  python_mesh.hpp surfacegeom.hpp
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/meshing COMPONENT netgen_devel
 )

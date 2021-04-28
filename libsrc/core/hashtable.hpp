@@ -174,6 +174,13 @@ namespace ngcore
     {
       return MakeTupleFromInt<N>()(*this);
     }
+
+    bool Contains (T val)
+    {
+      for (int j = 0; j < N; j++)
+        if (i[j] == val) return true;
+      return false;
+    }
   };
 
   /// sort 2 integers
@@ -725,6 +732,11 @@ namespace ngcore
     void GetData (size_t pos, T & acont) const
     {
       acont = cont[pos];
+    }
+
+    T GetData (size_t pos) const
+    {
+      return cont[pos];
     }
 
     std::pair<T_HASH,T> GetBoth (size_t pos) const

@@ -177,6 +177,7 @@ namespace netgen
     PointIndex operator-- (int) { PointIndex hi(*this); i--; return hi; }
     PointIndex & operator++ () { i++; return *this; }
     PointIndex operator-- () { i--; return *this; }
+    PointIndex operator+= (int add) { i += add; return *this; }
     void Invalidate() { i = PointIndex::BASE-1; }
     bool IsValid() const { return i != PointIndex::BASE-1; }
 #ifdef BASE0
@@ -219,17 +220,29 @@ namespace netgen
     PointIndices (PointIndex i1, PointIndex i2) : INDEX_2(i1,i2) { ; } 
     PointIndex operator[] (int i) const { return PointIndex(INDEX_2::operator[](i)); }
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_2::operator[](i)); }
-    static PointIndices Sort(PointIndex i1, PointIndex i2) { return INDEX_2::Sort(i1, i2); } 
+    static PointIndices Sort(PointIndex i1, PointIndex i2) { return INDEX_2::Sort(i1, i2); }
+    template <size_t J>
+    PointIndex get() const { return PointIndex(INDEX_2::operator[](J)); }    
   };
-  
+}
 
+namespace std
+{
+  // structured binding support
+  template <auto N>
+  struct tuple_size<netgen::PointIndices<N>> : std::integral_constant<std::size_t, N> {};
+  template<size_t N, auto M> struct tuple_element<N,netgen::PointIndices<M>> { using type = netgen::PointIndex; };
+}
+
+namespace netgen
+{
 
   class ElementIndex
   {
     int i;
   public:
-    ElementIndex () { ; }
-    ElementIndex (int ai) : i(ai) { ; }
+    ElementIndex () = default;
+    constexpr ElementIndex (int ai) : i(ai) { ; }
     ElementIndex & operator= (const ElementIndex & ai) { i = ai.i; return *this; }
     ElementIndex & operator= (int ai) { i = ai; return *this; }
     operator int () const { return i; }
@@ -288,17 +301,21 @@ namespace netgen
   {
     int i;
   public:
-    SegmentIndex () { ; }
-    SegmentIndex (int ai) : i(ai) { ; }
+    SegmentIndex () = default;
+    constexpr SegmentIndex (int ai) : i(ai) { ; }
     SegmentIndex & operator= (const SegmentIndex & ai) 
     { i = ai.i; return *this; }
     SegmentIndex & operator= (int ai) { i = ai; return *this; }
-    operator int () const { return i; }
+    constexpr operator int () const { return i; }
     SegmentIndex& operator++ () { ++i; return *this; }
     SegmentIndex& operator-- () { --i; return *this; }
     SegmentIndex operator++ (int) { return i++; }
     SegmentIndex operator-- (int) { return i--; }
   };
+
+  inline void SetInvalid (SegmentIndex & id) { id = -1; }
+  inline bool IsInvalid (SegmentIndex & id) { return id == -1; }
+
 
   inline istream & operator>> (istream & ist, SegmentIndex & pi)
   {
@@ -389,11 +406,11 @@ namespace netgen
     PointGeomInfo geominfo[ELEMENT2D_MAXPOINTS];
 
     /// surface nr
-    short int index;
+    int index;
     ///
     ELEMENT_TYPE typ;
     /// number of points
-    unsigned int np:4;
+    int8_t np;
     bool badel:1;
     bool refflag:1;  // marked for refinement
     bool strongrefflag:1;
@@ -417,7 +434,7 @@ namespace netgen
 
   public:
     ///
-    Element2d () = default;
+    Element2d ();
     Element2d (const Element2d &) = default;
     Element2d (Element2d &&) = default;
     Element2d & operator= (const Element2d &) = default;
@@ -547,6 +564,11 @@ namespace netgen
       for (size_t i = 0; i < np; i++)
         ar & pnum[i];
     }
+
+#ifdef PARALLEL
+    static MPI_Datatype MyGetMPIType();
+#endif
+    
 
     void SetIndex (int si) { index = si; }
     ///
@@ -699,7 +721,7 @@ namespace netgen
     ///
     ELEMENT_TYPE typ;
     /// number of points (4..tet, 5..pyramid, 6..prism, 8..hex, 10..quad tet, 12..quad prism)
-    int np:6;
+    int8_t np;
     ///
     class flagstruct { 
     public:
@@ -716,7 +738,7 @@ namespace netgen
     };
 
     /// sub-domain index
-    short int index;
+    int index;
     /// order for hp-FEM
     unsigned int orderx:6;
     unsigned int ordery:6;
@@ -826,6 +848,10 @@ namespace netgen
       for (size_t i = 0; i < np; i++)
         ar & pnum[i];
     }
+    
+#ifdef PARALLEL
+    static MPI_Datatype MyGetMPIType();
+#endif
 
     ///
     void SetIndex (int si) { index = si; }
@@ -1031,7 +1057,6 @@ namespace netgen
     // #endif
 
   private:
-    string* bcname;
     bool is_curved;
 
   public:
@@ -1048,29 +1073,15 @@ namespace netgen
   
     int hp_elnr;
 
-    void SetBCName ( string * abcname )
-    {
-      bcname = abcname;
-    }
-
-    string * BCNamePtr () 
-    { return bcname; }
-
-    const string * BCNamePtr () const 
-    { return bcname; }
-
-    const string & GetBCName () const
-    {
-      static string defaultstring = "default";
-      if (! bcname ) return defaultstring;
-      return *bcname;
-    }
-
     int GetNP() const
     {
       return pnums[2].IsValid() ? 3 : 2;
     }
 
+    auto PNums() const { return FlatArray<const PointIndex> (GetNP(), &pnums[0]); }
+    auto PNums() { return FlatArray<PointIndex> (GetNP(), &pnums[0]); }
+    
+    
     ELEMENT_TYPE GetType() const
     {
       return pnums[2].IsValid() ? SEGMENT3 : SEGMENT;
@@ -1093,6 +1104,10 @@ namespace netgen
     */
     
     void DoArchive (Archive & ar);
+#ifdef PARALLEL
+    static MPI_Datatype MyGetMPIType();
+#endif
+    
   };
 
   ostream & operator<<(ostream  & s, const Segment & seg);
@@ -1217,12 +1232,13 @@ namespace netgen
        // s .. swap faces
        // c .. combine elements
        // d .. divide elements
+       // D .. divide and join opposite edges, remove element
        // p .. plot, no pause
        // P .. plot, Pause
        // h .. Histogramm, no pause
        // H .. Histogramm, pause
        */
-    string optimize3d = "cmdmustm";
+    string optimize3d = "cmdDmustm";
     /// number of 3d optimization steps
     int optsteps3d = 3;
     /**
@@ -1251,8 +1267,10 @@ namespace netgen
     bool uselocalh = true;
     /// grading for local h
     double grading = 0.3;
-    /// use delaunay meshing
+    /// use delaunay for 3d meshing
     bool delaunay = true;
+    /// use delaunay for 2d meshing
+    bool delaunay2d = false;
     /// maximal mesh size
     double maxh = 1e10;
     /// minimal mesh size
@@ -1565,6 +1583,33 @@ namespace netgen
 }
 
 
+#ifdef PARALLEL
+namespace ngcore
+{
+  template <> struct MPI_typetrait<netgen::PointIndex> {
+    static MPI_Datatype MPIType ()  { return MPI_INT; }
+  };
+
+  template <> struct MPI_typetrait<netgen::ELEMENT_TYPE> {
+    static MPI_Datatype MPIType ()  { return MPI_CHAR; }
+  };
+
+  template <> struct MPI_typetrait<netgen::MeshPoint> {
+    static MPI_Datatype MPIType ()  { return netgen::MeshPoint::MyGetMPIType(); }
+  };
+
+  template <> struct MPI_typetrait<netgen::Element> {
+    static MPI_Datatype MPIType ()  { return netgen::Element::MyGetMPIType(); }
+  };
+  template <> struct MPI_typetrait<netgen::Element2d> {
+    static MPI_Datatype MPIType ()  { return netgen::Element2d::MyGetMPIType(); }
+  };
+  template <> struct MPI_typetrait<netgen::Segment> {
+    static MPI_Datatype MPIType ()  { return netgen::Segment::MyGetMPIType(); }
+  };
+
+}
+#endif
 
 
 #endif

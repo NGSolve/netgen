@@ -8,7 +8,7 @@
 /* Date:   May  09                                                        */
 /**************************************************************************/
 
-#include <core/ngcore.hpp>
+#include "mydefs.hpp"
 
 /*
   C++ interface to Netgen
@@ -276,7 +276,7 @@ namespace netgen
     void UpdateTopology ();
     void DoArchive (Archive & archive);
 
-    NgMPI_Comm GetCommunicator() const;
+    const NgMPI_Comm & GetCommunicator() const;
     
     virtual ~Ngx_Mesh();
 
@@ -343,8 +343,11 @@ namespace netgen
       void SetRefinementFlag (size_t elnr, bool flag);
     
     void Curve (int order);
+    int GetCurveOrder ();
 
-    void Refine (NG_REFINEMENT_TYPE reftype,
+    void EnableTable (string name, bool set);
+
+    void Refine (NG_REFINEMENT_TYPE reftype, bool onlyonce,
                  void (*taskmanager)(function<void(int,int)>) = &DummyTaskManager2,
                  void (*tracer)(string, bool) = &DummyTracer2);
 
@@ -354,6 +357,10 @@ namespace netgen
     int GetParentElement (int ei) const;
     int GetParentSElement (int ei) const;
 
+    bool HasParentEdges() const;
+    tuple<int, std::array<int,3>> GetParentEdges (int enr) const;
+    tuple<int, std::array<int,4>> GetParentFaces (int fnr) const;
+    
     int GetNIdentifications() const;
     int GetIdentificationType(int idnr) const;
     Ng_Buffer<int[2]> GetPeriodicVertices(int idnr) const;
@@ -367,8 +374,9 @@ namespace netgen
     
 
     // for MPI-parallel
-    std::tuple<int,int*> GetDistantProcs (int nodetype, int locnum) const;
-
+    FlatArray<int> GetDistantProcs (int nodetype, int locnum) const;
+    size_t GetGlobalVertexNum (int locnum) const;
+                               
     shared_ptr<Mesh> GetMesh () const { return mesh; } 
     shared_ptr<Mesh> SelectMesh () const;
     inline auto GetTimeStamp() const;

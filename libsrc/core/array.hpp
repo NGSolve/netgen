@@ -11,6 +11,7 @@
 #include "archive.hpp"
 #include "exception.hpp"
 #include "localheap.hpp"
+#include "profiler.hpp"
 #include "utils.hpp"
 
 namespace ngcore
@@ -39,7 +40,7 @@ namespace ngcore
   };
 
   template <typename ... ARGS>
-  ostream & operator<< (ostream & ost, Tuple<ARGS...> tup)
+  ostream & operator<< (ostream & ost, Tuple<ARGS...> /* tup */)
   {
     return ost;
   }
@@ -211,6 +212,20 @@ namespace ngcore
   template <typename  T>
   constexpr T IndexBASE () { return T(0); }
 
+
+  class IndexFromEnd
+  {
+    ptrdiff_t i;
+  public:
+    constexpr IndexFromEnd (ptrdiff_t ai) : i(ai) { }
+    IndexFromEnd operator+ (ptrdiff_t inc) const { return i+inc; }
+    IndexFromEnd operator- (ptrdiff_t dec) const { return i-dec; }
+    // operator ptrdiff_t () const { return i; }
+    ptrdiff_t Value() const { return i; }
+  };
+
+  constexpr IndexFromEnd END(0);
+  
   
   template <class T, class IndexType = size_t> class FlatArray;
 
@@ -268,7 +283,7 @@ namespace ngcore
     NETGEN_INLINE T & First() { return first; }
     NETGEN_INLINE T & Next() { return next; }
     NETGEN_INLINE auto Size() const { return next-first; }
-    NETGEN_INLINE T operator[] (T i) const { return first+i; }
+    NETGEN_INLINE T operator[] (size_t i) const { return first+i; }
     NETGEN_INLINE bool Contains (T i) const { return ((i >= first) && (i < next)); }
     NETGEN_INLINE T_Range Modify(int inc_beg, int inc_end) const
     { return T_Range(first+inc_beg, next+inc_end); }
@@ -560,6 +575,12 @@ namespace ngcore
     }
 
     /// takes range starting from position start of end-start elements
+    NETGEN_INLINE FlatArray<T> Range (size_t start, IndexFromEnd indend) const
+    {
+      return this->Range(start, size_t(Size()+indend.Value()));
+    }
+    
+    /// takes range starting from position start of end-start elements
     NETGEN_INLINE FlatArray<T> Range (T_Range<size_t> range) const
     {
       return FlatArray<T> (range.Size(), data+range.First());
@@ -599,9 +620,25 @@ namespace ngcore
   template <typename T>
   FlatArray<T> View (FlatArray<T> fa) { return fa; }
 
+  template <typename T, typename TI>
+  auto Max (FlatArray<T,TI> array, T max = std::numeric_limits<T>::min()) -> T
+  {
+    for (auto & v : array)
+      if (v > max) max = v;
+    return max;
+  }
+
+  template <typename T, typename TI>
+  auto Min (FlatArray<T,TI> array, T min = std::numeric_limits<T>::max()) -> T
+  {
+    for (auto & v : array)
+      if (v < min) min = v;
+    return min;
+  }
+  
   /// print array
-  template <class T>
-  inline ostream & operator<< (ostream & s, const FlatArray<T> & a)
+  template <class T, class TIND>
+  inline ostream & operator<< (ostream & s, const FlatArray<T, TIND> & a)
   {
     for (auto i : a.Range())
       s << i << ": " << a[i] << "\n";
@@ -637,6 +674,7 @@ namespace ngcore
     size_t allocsize;
     /// that's the data we have to delete, nullptr for not owning the memory
     T * mem_to_delete;
+
 
     using FlatArray<T,IndexType>::size;
     using FlatArray<T,IndexType>::data;
@@ -682,6 +720,8 @@ namespace ngcore
 
     NETGEN_INLINE Array (Array && a2) 
     {
+      mt.Swap(sizeof(T) * allocsize, a2.mt, sizeof(T) * a2.allocsize);
+
       size = a2.size; 
       data = a2.data;
       allocsize = a2.allocsize;
@@ -696,10 +736,15 @@ namespace ngcore
     NETGEN_INLINE explicit Array (const Array & a2)
       : FlatArray<T,IndexType> (a2.Size(), a2.Size() ? new T[a2.Size()] : nullptr)
     {
-      allocsize = size;
-      mem_to_delete = data;
-      for (size_t i = 0; i < size; i++)
-        data[i] = a2.data[i];
+      if constexpr (std::is_copy_assignable<T>::value)
+        {
+          allocsize = size;
+          mem_to_delete = data;
+          for (size_t i = 0; i < size; i++)
+            data[i] = a2.data[i];
+        }
+      else
+        throw Exception(std::string("cannot copy-construct Array of type ") + typeid(T).name());        
     }
 
     
@@ -747,6 +792,8 @@ namespace ngcore
     /// if responsible, deletes memory
     NETGEN_INLINE ~Array()
     {
+      if(mem_to_delete)
+        mt.Free(sizeof(T)*allocsize);
       delete [] mem_to_delete;
     }
 
@@ -801,6 +848,8 @@ namespace ngcore
     /// assigns memory from local heap
     NETGEN_INLINE const Array & Assign (size_t asize, LocalHeap & lh)
     {
+      if(mem_to_delete)
+        mt.Free(sizeof(T)*allocsize);
       delete [] mem_to_delete;
       size = allocsize = asize;
       data = lh.Alloc<T> (asize);
@@ -858,7 +907,7 @@ namespace ngcore
       size++;
     }
     
-    NETGEN_INLINE Array<T> & operator += (const T & el)
+    NETGEN_INLINE Array & operator += (const T & el)
     {
       Append (el);
       return *this;
@@ -908,6 +957,8 @@ namespace ngcore
     /// Deallocate memory
     NETGEN_INLINE void DeleteAll ()
     {
+      if(mem_to_delete)
+        mt.Free(sizeof(T)*allocsize);
       delete [] mem_to_delete;
       mem_to_delete = NULL;
       data = 0;
@@ -924,16 +975,24 @@ namespace ngcore
     /// array copy
     NETGEN_INLINE Array & operator= (const Array & a2)
     {
-      SetSize0 ();
-      SetSize (a2.Size());
-      for (size_t i = 0; i < size; i++)
-        data[i] = a2.data[i];
-      return *this;
+      if constexpr (std::is_copy_assignable<T>::value)
+        {
+          SetSize0 ();
+          SetSize (a2.Size());
+          for (size_t i = 0; i < size; i++)
+            data[i] = a2.data[i];
+          return *this;
+        }
+      else
+        throw Exception(std::string("cannot copy Array of type ") + typeid(T).name());
     }
 
+    
     /// steal array 
     NETGEN_INLINE Array & operator= (Array && a2)
     {
+      mt.Swap(sizeof(T)*allocsize, a2.mt, sizeof(T)*a2.allocsize);
+
       ngcore::Swap (size, a2.size);
       ngcore::Swap (data, a2.data);
       ngcore::Swap (allocsize, a2.allocsize);
@@ -1007,16 +1066,26 @@ namespace ngcore
     
     NETGEN_INLINE void Swap (Array & b)
     {
+      mt.Swap(sizeof(T) * allocsize, b.mt, sizeof(T) * b.allocsize);
+
       ngcore::Swap (size, b.size);
       ngcore::Swap (data, b.data);
       ngcore::Swap (allocsize, b.allocsize);
       ngcore::Swap (mem_to_delete, b.mem_to_delete);
     }
 
+    NETGEN_INLINE void StartMemoryTracing () const
+    {
+      mt.Alloc(sizeof(T) * allocsize);
+    }
+
+    const MemoryTracer& GetMemoryTracer() const { return mt; }
+
   private:
 
     /// resize array, at least to size minsize. copy contents
     NETGEN_INLINE void ReSize (size_t minsize);
+    MemoryTracer mt;
   };
 
   
@@ -1029,6 +1098,7 @@ namespace ngcore
     
     T * hdata = data;
     data = new T[nsize];
+    mt.Alloc(sizeof(T) * nsize);
 
     if (hdata)
       {
@@ -1041,6 +1111,8 @@ namespace ngcore
         else
           for (size_t i = 0; i < mins; i++) data[i] = std::move(hdata[i]);
 #endif
+        if(mem_to_delete)
+          mt.Free(sizeof(T) * allocsize);
         delete [] mem_to_delete;
       }
 
@@ -1124,6 +1196,14 @@ namespace ngcore
         data[cnt++] = val;
     }
   
+    template <typename T2>
+    ArrayMem (const BaseArrayObject<T2> & a2)
+      : ArrayMem (a2.Size())
+    {
+      for (size_t i : ngcore::Range(size))
+        data[i] = a2[i];
+    }
+
     
     ArrayMem & operator= (const T & val)
     {
@@ -1179,7 +1259,7 @@ namespace ngcore
 
 
   template <typename ... ARGS>
-  size_t ArraySize (Tuple<ARGS...> tup)  
+  size_t ArraySize (Tuple<ARGS...> /* tup */)  
   { return 0;}
   
   template <typename ... ARGS>
@@ -1192,7 +1272,7 @@ namespace ngcore
 
   
   template <typename T, typename ... ARGS>
-  void StoreToArray (FlatArray<T> a, Tuple<ARGS...> tup) { ; }
+  void StoreToArray (FlatArray<T> /* a */, Tuple<ARGS...> /* tup */) { ; }
   
   template <typename T, typename ... ARGS>
   void StoreToArray (FlatArray<T> a, Tuple<int,ARGS...> tup)
@@ -1284,7 +1364,7 @@ namespace ngcore
 
   /// bubble sort array
   template <class T, class S>
-  inline void BubbleSort (FlatArray<T> data, FlatArray<S> slave)
+  inline void BubbleSort (FlatArray<T> data, FlatArray<S> index)
   {
     for (size_t i = 0; i < data.Size(); i++)
       for (size_t j = i+1; j < data.Size(); j++)
@@ -1294,9 +1374,9 @@ namespace ngcore
 	    data[i] = data[j];
 	    data[j] = hv;
 
-	    S hvs = slave[i];
-	    slave[i] = slave[j];
-	    slave[j] = hvs;
+	    S hvs = index[i];
+	    index[i] = index[j];
+	    index[j] = hvs;
 	  }
   }
 

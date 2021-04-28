@@ -244,9 +244,6 @@ namespace netgen
     hvalue[0] = 0;
     pnt = c->Value(s0);
 
-    double olddist = 0;
-    double dist = 0;
-
     int tmpVal = (int)(DIVIDEEDGESECTIONS);
 
     for (int i = 1; i <= tmpVal; i++)
@@ -259,9 +256,6 @@ namespace netgen
 
         //(*testout) << "mesh.GetH(Point3d(pnt.X(), pnt.Y(), pnt.Z())) " << mesh.GetH(Point3d(pnt.X(), pnt.Y(), pnt.Z()))
         //	   <<  " pnt.Distance(oldpnt) " << pnt.Distance(oldpnt) << endl;
-
-        olddist = dist;
-        dist = pnt.Distance(oldpnt);
       }
 
     //  nsubedges = int(ceil(hvalue[DIVIDEEDGESECTIONS]));
@@ -365,6 +359,7 @@ namespace netgen
           {
             TopoDS_Face face = TopoDS::Face(exp1.Current());
             int facenr = geom.fmap.FindIndex(face);
+            if(facenr < 1) continue;
 
             if (face2solid[0][facenr-1] == 0)
               face2solid[0][facenr-1] = solidnr;
@@ -382,8 +377,7 @@ namespace netgen
 
 
     int facenr = 0;
-    int edgenr = 0;
-
+    int edgenr = mesh.GetNSeg();
 
     (*testout) << "faces = " << geom.fmap.Extent() << endl;
     int curr = 0;
@@ -448,6 +442,8 @@ namespace netgen
                     //(*testout) << "ignoring degenerated edge" << endl;
                     continue;
                   }
+
+                if(geom.emap.FindIndex(edge) < 1) continue;
 
                 if (geom.vmap.FindIndex(TopExp::FirstVertex (edge)) ==
                     geom.vmap.FindIndex(TopExp::LastVertex (edge)))
@@ -515,6 +511,9 @@ namespace netgen
                     if (!exists)
                       pnums[i] = mesh.AddPoint (mp[i-1]);
                   }
+                if(geom.enames.Size() && geom.enames[curr-1] != "")
+                  mesh.SetCD2Name(geomedgenr, geom.enames[curr-1]);
+                
                 (*testout) << "NP = " << mesh.GetNP() << endl;
                 //(*testout) << pnums[pnums.Size()-1] << endl;
 

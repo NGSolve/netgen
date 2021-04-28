@@ -150,6 +150,20 @@ extern void ReadFNFFormat (Mesh & mesh,
 
 
 
+extern void DLL_HEADER ReadCGNSMesh (Mesh & mesh,
+                           const string & filename);
+
+extern void DLL_HEADER WriteCGNSMesh (const Mesh & mesh,
+                           const string & filename);
+
+// read/write mesh and solutions from CGNS file
+extern tuple<shared_ptr<Mesh>, vector<string>, vector<Array<double>>, vector<int>>
+DLL_HEADER ReadCGNSFile(string filename, int base);
+
+extern void DLL_HEADER WriteCGNSFile(shared_ptr<Mesh> mesh,string filename, vector<string> fields,
+                                vector<Array<double>> values, vector<int> locations);
+
+
 void WriteDolfinFormat (const Mesh & mesh,
                         const string & filename);
 
