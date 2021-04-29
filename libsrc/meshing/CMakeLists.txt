@@ -1,3 +1,18 @@
+# generate .cpp files containing the string of the .rls meshing rule files
+add_executable(makerls ${CMAKE_CURRENT_SOURCE_DIR}/../../rules/makerlsfile.cpp)
+
+set(rules hexrules prismrules2 pyramidrules pyramidrules2 quadrules tetrules triarules)
+
+foreach(rule ${rules})
+    list(APPEND rules_sources rule_${rule}.cpp)
+
+    add_custom_command(OUTPUT rule_${rule}.cpp
+      COMMAND makerls ${CMAKE_CURRENT_SOURCE_DIR}/../../rules/${rule}.rls rule_${rule}.cpp ${rule}
+      DEPENDS makerls
+    )
+endforeach()
+
+
 add_definitions(-DNGINTERFACE_EXPORTS)
 add_library(mesh ${NG_LIB_TYPE}
         adfront2.cpp adfront3.cpp bisect.cpp boundarylayer.cpp 
@@ -6,14 +21,14 @@ add_library(mesh ${NG_LIB_TYPE}
         improve2gen.cpp improve3.cpp localh.cpp meshclass.cpp		    
         meshfunc.cpp meshfunc2d.cpp meshing2.cpp meshing3.cpp		    
         meshtool.cpp meshtype.cpp msghandler.cpp netrule2.cpp		    
-        netrule3.cpp parser2.cpp parser3.cpp prism2rls.cpp		    
-        pyramid2rls.cpp pyramidrls.cpp quadrls.cpp refine.cpp		    
+        netrule3.cpp parser2.cpp parser3.cpp refine.cpp		    
         ruler2.cpp ruler3.cpp secondorder.cpp smoothing2.5.cpp		    
-        smoothing2.cpp smoothing3.cpp specials.cpp tetrarls.cpp		    
-        topology.cpp triarls.cpp validate.cpp bcfunctions.cpp   
+        smoothing2.cpp smoothing3.cpp specials.cpp
+        topology.cpp validate.cpp bcfunctions.cpp   
         parallelmesh.cpp  paralleltop.cpp  paralleltop.hpp basegeom.cpp     
-        python_mesh.cpp hexarls.cpp surfacegeom.cpp
+        python_mesh.cpp surfacegeom.cpp
         ../../ng/onetcl.cpp
+        ${rules_sources}
         ${mesh_object_libs}
         )
 

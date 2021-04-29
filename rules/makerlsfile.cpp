@@ -59,7 +59,7 @@ int main (int argc, char ** argv)
 	  inf.get(ch);
 	}
       line[i] = 0;
-      cout << line << endl;
+      // cout << line << endl;
       outf << "\"" << line << "\\n\",\\" << endl;
     }
   outf << "0};" << endl;
