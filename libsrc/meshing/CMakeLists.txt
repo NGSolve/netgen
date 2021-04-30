@@ -5,10 +5,11 @@ set(rules hexrules prismrules2 pyramidrules pyramidrules2 quadrules tetrules tri
 
 foreach(rule ${rules})
     list(APPEND rules_sources rule_${rule}.cpp)
+    set(rule_file ${CMAKE_CURRENT_SOURCE_DIR}/../../rules/${rule}.rls)
 
     add_custom_command(OUTPUT rule_${rule}.cpp
-      COMMAND makerls ${CMAKE_CURRENT_SOURCE_DIR}/../../rules/${rule}.rls rule_${rule}.cpp ${rule}
-      DEPENDS makerls
+      COMMAND makerls ${rule_file} rule_${rule}.cpp ${rule}
+      DEPENDS makerls ${rule_file}
     )
 endforeach()
 
