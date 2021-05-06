@@ -71,8 +71,8 @@ namespace netgen
                        "knwon are 'edges', 'faces', 'parentedges', 'parentfaces'");
   }
 
-  bool MeshTopology :: static_buildedges = false; 
-  bool MeshTopology :: static_buildfaces = false; 
+  bool MeshTopology :: static_buildedges = true; 
+  bool MeshTopology :: static_buildfaces = true; 
   
   void MeshTopology :: EnableTableStatic (string name, bool set)
   {
