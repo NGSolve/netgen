@@ -1127,22 +1127,14 @@ project_boundaries : Optional[str] = None
 
 )delimiter")
 
+    .def_static ("EnableTableClass", [] (string name, bool set)
+          {
+            MeshTopology::EnableTableStatic(name, set);
+          },
+          py::arg("name"), py::arg("set")=true)
     .def ("EnableTable", [] (Mesh & self, string name, bool set)
           {
             const_cast<MeshTopology&>(self.GetTopology()).EnableTable(name, set);
-            /*
-            if (name == "edges")
-              const_cast<MeshTopology&>(self.GetTopology()).SetBuildEdges(set);
-            else if (name == "faces")
-              const_cast<MeshTopology&>(self.GetTopology()).SetBuildFaces(set);
-            else if (name == "parentedges")
-              const_cast<MeshTopology&>(self.GetTopology()).SetBuildParentEdges(set);
-            else if (name == "parentfaces")
-              const_cast<MeshTopology&>(self.GetTopology()).SetBuildParentFaces(set);
-	    else
-	      throw Exception ("noting known about table "+name +"\n"
-			       "knwon are 'edges', 'faces', 'parentedges', 'parentfaces'");
-            */
           },
           py::arg("name"), py::arg("set")=true)
     

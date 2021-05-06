@@ -41,12 +41,12 @@ namespace netgen
 
 
 
-
+  
   MeshTopology ::  MeshTopology (const Mesh & amesh)
     : mesh(&amesh)
   {
-    buildedges = true;
-    buildfaces = true;
+    buildedges = static_buildedges;
+    buildfaces = static_buildfaces;
     timestamp = -1;
   }
 
@@ -71,6 +71,19 @@ namespace netgen
                        "knwon are 'edges', 'faces', 'parentedges', 'parentfaces'");
   }
 
+  bool MeshTopology :: static_buildedges = false; 
+  bool MeshTopology :: static_buildfaces = false; 
+  
+  void MeshTopology :: EnableTableStatic (string name, bool set)
+  {
+    if (name == "edges")
+      static_buildedges = set;
+    else if (name == "faces")
+      static_buildfaces = set;      
+    else
+      throw Exception ("noting known about table "+name +"\n"
+                       "knwon are 'edges', 'faces'");
+  }
 
   
   template <typename FUNC>

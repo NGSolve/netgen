@@ -47,6 +47,7 @@ class MeshTopology
   bool buildfaces;
   bool build_parent_edges = false; // may be changed to default = false
   bool build_parent_faces = false; // may be changed to default = false
+  static bool static_buildedges, static_buildfaces;
 
   NgArray<INDEX_2> edge2vert;
   NgArray<INDEX_4> face2vert;
@@ -86,6 +87,7 @@ public:
   void SetBuildParentFaces (bool bh) { build_parent_faces = bh; }
 
   void EnableTable (string name, bool set);
+  static void EnableTableStatic (string name, bool set);
 
   bool HasEdges () const  { return buildedges; }
   bool HasFaces () const  { return buildfaces; }
