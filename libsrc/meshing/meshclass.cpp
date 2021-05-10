@@ -6534,70 +6534,36 @@ namespace netgen
 
   Table<ElementIndex, PointIndex> Mesh :: CreatePoint2ElementTable() const
   {
-    TableCreator<ElementIndex, PointIndex> creator(GetNP());
-    for ( ; !creator.Done(); creator++)
-      ngcore::ParallelForRange
-        (Range(volelements), [&] (auto myrange)
-         {
-           for (ElementIndex ei : myrange)
+    return ngcore::CreateSortedTable<ElementIndex, PointIndex>( volelements.Range(),
+           [&](auto & table, ElementIndex ei)
+           {
              for (PointIndex pi : (*this)[ei].PNums())
-               creator.Add (pi, ei);
-         });
-    
-    auto elementsonnode = creator.MoveTable();
-    ngcore::ParallelForRange
-      (elementsonnode.Range(), [&] (auto myrange)
-       {
-         for (PointIndex pi : myrange)
-           QuickSort(elementsonnode[pi]);
-       }, ngcore::TasksPerThread(4));
-
-    return move(elementsonnode);
+               table.Add (pi, ei);
+           }, GetNP());
   }
 
   Table<SurfaceElementIndex, PointIndex> Mesh :: CreatePoint2SurfaceElementTable( int faceindex ) const
   {
     static Timer timer("Mesh::CreatePoint2SurfaceElementTable"); RegionTimer rt(timer);
 
-    TableCreator<SurfaceElementIndex, PointIndex> creator(GetNP());
-
     if(faceindex==0)
       {
-        for ( ; !creator.Done(); creator++)
-          ngcore::ParallelForRange
-            (Range(surfelements), [&] (auto myrange)
-             {
-               for (SurfaceElementIndex ei : myrange)
+        return ngcore::CreateSortedTable<SurfaceElementIndex, PointIndex>( surfelements.Range(),
+               [&](auto & table, SurfaceElementIndex ei)
+               {
                  for (PointIndex pi : (*this)[ei].PNums())
-                   creator.Add (pi, ei);
-             },
-             // ngcore::TasksPerThread(4));
-             (surfelements.Size()>100) ? ngcore::TasksPerThread(4) : 1);
+                   table.Add (pi, ei);
+               }, GetNP());
       }
-    else
-      {
-        Array<SurfaceElementIndex> face_els;
-        GetSurfaceElementsOfFace(faceindex, face_els);
-        for ( ; !creator.Done(); creator++)
-          ngcore::ParallelForRange
-            (Range(face_els), [&] (auto myrange)
-             {
-               for (auto i : myrange)
-                 for (PointIndex pi : (*this)[face_els[i]].PNums())
-                   creator.Add (pi, face_els[i]);
-             }, ngcore::TasksPerThread(4));
-      }
-    
-    auto elementsonnode = creator.MoveTable();
-    ngcore::ParallelForRange
-      (elementsonnode.Range(), [&] (auto myrange)
-       {
-         for (PointIndex pi : myrange)
-           QuickSort(elementsonnode[pi]);
-       },
-       (surfelements.Size()>100) ? ngcore::TasksPerThread(1) : 1);
 
-    return move(elementsonnode);
+    Array<SurfaceElementIndex> face_els;
+    GetSurfaceElementsOfFace(faceindex, face_els);
+    return ngcore::CreateSortedTable<SurfaceElementIndex, PointIndex>( face_els.Range(),
+           [&](auto & table, size_t i)
+           {
+             for (PointIndex pi : (*this)[face_els[i]].PNums())
+               table.Add (pi, face_els[i]);
+           }, GetNP());
   }
 
   

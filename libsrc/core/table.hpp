@@ -9,6 +9,7 @@
 
 #include <atomic>
 #include <iostream>
+#include <optional>
 
 #include "array.hpp"
 #include "bitarray.hpp"
@@ -346,6 +347,45 @@ namespace ngcore
 	}
     }
   };
+
+  template <typename TEntry, typename TIndex, typename TRange, typename TFunc>
+  Table<TEntry, TIndex> CreateTable( const TRange & range, const TFunc & func, std::optional< size_t > cnt )
+  {
+      std::unique_ptr<TableCreator<TEntry, TIndex>> pcreator;
+
+      if(cnt)
+          pcreator = std::make_unique<TableCreator<TEntry, TIndex>>(*cnt);
+      else
+          pcreator = std::make_unique<TableCreator<TEntry, TIndex>>();
+
+      auto & creator = *pcreator;
+
+      for ( ; !creator.Done(); creator++)
+        ParallelForRange
+          (range, [&] (auto myrange)
+           {
+             for (auto i : myrange)
+               func(creator, i);
+           }, TasksPerThread(4)
+          );
+
+    return creator.MoveTable();
+  }
+
+  template <typename TEntry, typename TIndex, typename TRange, typename TFunc>
+  Table<TEntry, TIndex> CreateSortedTable( const TRange & range, const TFunc & func, std::optional< size_t > cnt )
+  {
+    Table<TEntry, TIndex> table = CreateTable<TEntry, TIndex>(range, func, cnt);
+    ParallelForRange
+      (table.Range(), [&] (auto myrange)
+       {
+         for (auto i : myrange)
+           QuickSort(table[i]);
+       }, TasksPerThread(4)
+      );
+
+    return table;
+  }
 
   class NGCORE_API FilteredTableCreator : public TableCreator<int>
   {
