@@ -256,18 +256,18 @@ template <> NGX_INLINE DLL_HEADER const Ng_Node<0> Ngx_Mesh :: GetNode<0> (int v
     {
     case 3:
       {
-        NgFlatArray<ElementIndex> ia = mesh->GetTopology().GetVertexElements(vnr);
+        auto ia = mesh->GetTopology().GetVertexElements(vnr);
         node.elements.ne = ia.Size();
         node.elements.ptr = (int*)&ia[0];
         
-        NgFlatArray<SurfaceElementIndex> bia = mesh->GetTopology().GetVertexSurfaceElements(vnr);
+        auto bia = mesh->GetTopology().GetVertexSurfaceElements(vnr);
         node.bnd_elements.ne = bia.Size();
         node.bnd_elements.ptr = (int*)&bia[0];
         break;
       }
     case 2:
       {
-        NgFlatArray<SurfaceElementIndex> ia = mesh->GetTopology().GetVertexSurfaceElements(vnr);
+        auto ia = mesh->GetTopology().GetVertexSurfaceElements(vnr);
         node.elements.ne = ia.Size();
         node.elements.ptr = (int*)&ia[0];
         

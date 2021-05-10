@@ -628,7 +628,7 @@ namespace netgen
     bool has_ided_sels = false;
     if(GetNE() && has_periodic) //we can only have identified surf-els if we have vol-els (right?)
       {
-	NgArray<SurfaceElementIndex, 0> os1, os2;
+	Array<SurfaceElementIndex> os1, os2;
 	for(SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
 	  {
 	    if(ided_sel[sei]!=-1) continue;
@@ -647,7 +647,7 @@ namespace netgen
 		  os2.Append(GetTopology().GetVertexSurfaceElements(ided2[l]));
 		for (int m = 0; m<os1.Size(); m++) {
 		  if(!os2.Contains(os1[m])) {
-		    os1.Delete(m);
+		    os1.DeleteElement(m);
 		    m--;
 		  }
 		}

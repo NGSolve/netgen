@@ -1289,9 +1289,7 @@ namespace netgen
         if(mapto[pi].Size() == 0)
            continue;
         auto pnew = mapto[pi].Last();
-        NgArray<SurfaceElementIndex> old_els;
-        meshtopo.GetVertexSurfaceElements( pi, old_els);
-        for(auto old_sei : old_els)
+        for(auto old_sei : meshtopo.GetVertexSurfaceElements( pi ))
         {
            if(mesh[old_sei].GetIndex() == domain)
            {
