@@ -1641,13 +1641,13 @@ void Ng_GetVertexElements (int vnr, int * els)
     {
     case 3:
       {
-        NgFlatArray<ElementIndex> ia = mesh->GetTopology().GetVertexElements(vnr);
+        auto ia = mesh->GetTopology().GetVertexElements(vnr);
         for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
         break;
       }
     case 2:
       {
-        NgFlatArray<SurfaceElementIndex> ia = mesh->GetTopology().GetVertexSurfaceElements(vnr);
+        auto ia = mesh->GetTopology().GetVertexSurfaceElements(vnr);
         for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
         break;
       }
@@ -1933,7 +1933,7 @@ int Ng_IsRunning()
 int Ng_GetVertex_Elements( int vnr, int* elems )
 {
   const MeshTopology& topology = mesh->GetTopology();
-  NgArrayMem<ElementIndex,4> indexArray;
+  ArrayMem<ElementIndex,4> indexArray;
   topology.GetVertexElements( vnr, indexArray );
   
   for( int i=0; i<indexArray.Size(); i++ )
@@ -1950,7 +1950,7 @@ int Ng_GetVertex_SurfaceElements( int vnr, int* elems )
     case 3:
       {
         const MeshTopology& topology = mesh->GetTopology();
-        NgArrayMem<SurfaceElementIndex,4> indexArray;
+        ArrayMem<SurfaceElementIndex,4> indexArray;
         topology.GetVertexSurfaceElements( vnr, indexArray );
         
         for( int i=0; i<indexArray.Size(); i++ )
@@ -1982,7 +1982,7 @@ int Ng_GetVertex_SurfaceElements( int vnr, int* elems )
 int Ng_GetVertex_NElements( int vnr )
 {
   const MeshTopology& topology = mesh->GetTopology();
-  NgArrayMem<ElementIndex,4> indexArray;
+  ArrayMem<ElementIndex,4> indexArray;
   topology.GetVertexElements( vnr, indexArray );
   
   return indexArray.Size();
@@ -1996,7 +1996,7 @@ int Ng_GetVertex_NSurfaceElements( int vnr )
     case 3:
       {
         const MeshTopology& topology = mesh->GetTopology();
-        NgArrayMem<SurfaceElementIndex,4> indexArray;
+        ArrayMem<SurfaceElementIndex,4> indexArray;
         topology.GetVertexSurfaceElements( vnr, indexArray );
         return indexArray.Size();
       }

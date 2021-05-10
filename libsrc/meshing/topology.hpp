@@ -65,8 +65,8 @@ class MeshTopology
   NgArray<INDEX_2> surf2volelement;
   NgArray<int> face2surfel;
   Array<SegmentIndex> edge2segment;
-  TABLE<ElementIndex,PointIndex::BASE> vert2element;
-  TABLE<SurfaceElementIndex,PointIndex::BASE> vert2surfelement;
+  Table<ElementIndex, PointIndex> vert2element;
+  Table<SurfaceElementIndex, PointIndex> vert2surfelement;
   TABLE<SegmentIndex,PointIndex::BASE> vert2segment;
   TABLE<int,PointIndex::BASE> vert2pointelement;
   int timestamp;
@@ -175,12 +175,12 @@ public:
 
   SegmentIndex GetSegmentOfEdge(int edgenr) const { return edge2segment[edgenr-1]; }
   
-  void GetVertexElements (int vnr, NgArray<ElementIndex> & elements) const;
-  NgFlatArray<ElementIndex> GetVertexElements (int vnr) const
+  void GetVertexElements (int vnr, Array<ElementIndex> & elements) const;
+  FlatArray<ElementIndex> GetVertexElements (int vnr) const
   { return vert2element[vnr]; }
 
-  void GetVertexSurfaceElements( int vnr, NgArray<SurfaceElementIndex>& elements ) const;
-  NgFlatArray<SurfaceElementIndex> GetVertexSurfaceElements(PointIndex vnr) const
+  void GetVertexSurfaceElements( int vnr, Array<SurfaceElementIndex>& elements ) const;
+  FlatArray<SurfaceElementIndex> GetVertexSurfaceElements(PointIndex vnr) const
   { return vert2surfelement[vnr]; }
 
   NgFlatArray<SegmentIndex> GetVertexSegments (int vnr) const

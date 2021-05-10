@@ -404,94 +404,9 @@ namespace netgen
       vertex to surface element
       vertex to segment 
     */
-    cnt = 0;
-    /*
-    for (ElementIndex ei = 0; ei < ne; ei++)
-      {
-	const Element & el = (*mesh)[ei];
-	for (int j = 0; j < el.GetNV(); j++)
-	  cnt[el[j]]++;
-      }
-    */
-    ParallelForRange
-      (ne, [&] (IntRange r) 
-       {
-         for (ElementIndex ei : r) 
-           {
-             const Element & el = (*mesh)[ei];
-             for (int j = 0; j < el.GetNV(); j++)
-               AsAtomic(cnt[el[j]])++;
-           }
-       });
-    
-    vert2element = TABLE<ElementIndex,PointIndex::BASE> (cnt);
-    for (ElementIndex ei = 0; ei < ne; ei++)
-      {
-	const Element & el = (*mesh)[ei];
-	for (int j = 0; j < el.GetNV(); j++)
-	  vert2element.AddSave (el[j], ei);
-      }
-    
-    /*
-    ParallelForRange
-      (tm, ne,
-       [&] (size_t begin, size_t end)
-       {
-         for (ElementIndex ei = begin; ei < end; ei++)
-           {
-             const Element & el = (*mesh)[ei];
-             for (int j = 0; j < el.GetNV(); j++)
-               vert2element.ParallelAdd (el[j], ei);
-           }
-       });
-       requires sorting !!!!
-    */
-    
-    cnt = 0;
-    /*
-    for (SurfaceElementIndex sei = 0; sei < nse; sei++)
-      {
-	const Element2d & el = (*mesh)[sei];
-	for (int j = 0; j < el.GetNV(); j++)
-	  cnt[el[j]]++;
-      }
-    */
-    ParallelForRange
-      (nse,
-       [&] (IntRange r)
-       {
-         for (SurfaceElementIndex ei : r)
-           {
-             const Element2d & el = (*mesh)[ei];
-             for (int j = 0; j < el.GetNV(); j++)
-               AsAtomic(cnt[el[j]])++;
-           }
-       });
 
-    
-
-    vert2surfelement = TABLE<SurfaceElementIndex,PointIndex::BASE> (cnt);
-
-    for (SurfaceElementIndex sei = 0; sei < nse; sei++)
-      {
-	const Element2d & el = (*mesh)[sei];
-	for (int j = 0; j < el.GetNV(); j++)
-	  vert2surfelement.AddSave (el[j], sei);
-      }
-    /*
-    ParallelForRange
-      (tm, nse,
-       [&] (size_t begin, size_t end)
-       {
-         for (SurfaceElementIndex sei = begin; sei < end; sei++)
-           {
-             const Element2d & el = (*mesh)[sei];
-             for (int j = 0; j < el.GetNV(); j++)
-               vert2surfelement.ParallelAdd (el[j], sei);
-           }
-       });
-       requires sorting !!!
-    */
+    vert2element = mesh->CreatePoint2ElementTable();
+    vert2surfelement = mesh->CreatePoint2SurfaceElementTable(0);
 
     cnt = 0;
     for (SegmentIndex si = 0; si < nseg; si++)
@@ -1606,7 +1521,7 @@ namespace netgen
                             (*testout) << (*mesh)[(PointIndex)face2vert[i].I(j+1)] << " ";
 			(*testout) << endl;
 
-			NgFlatArray<ElementIndex> vertels = GetVertexElements (face2vert[i].I(1));
+			FlatArray<ElementIndex> vertels = GetVertexElements (face2vert[i].I(1));
 			for (int k = 0; k < vertels.Size(); k++)
 			  {
 			    int elfaces[10], orient[10];
@@ -2522,7 +2437,7 @@ namespace netgen
   
 
     //  GetVertexElements (pi[0], els);
-    NgFlatArray<ElementIndex> els = GetVertexElements (pi[0]);
+    FlatArray<ElementIndex> els = GetVertexElements (pi[0]);
 
     // find one element having all vertices of the face
     for (int i = 0; i < els.Size(); i++)
@@ -2614,15 +2529,10 @@ namespace netgen
   */
 
 
-  void MeshTopology :: GetVertexElements (int vnr, NgArray<ElementIndex> & elements) const
+  void MeshTopology :: GetVertexElements (int vnr, Array<ElementIndex> & elements) const
   {
     if (vert2element.Size())
-      {
-	int ne = vert2element.EntrySize(vnr);
-	elements.SetSize(ne);
-	for (int i = 1; i <= ne; i++)
-	  elements.Elem(i) = vert2element.Get(vnr, i);
-      }
+      elements = vert2element[vnr];
   }
 
   /*
@@ -2649,22 +2559,16 @@ namespace netgen
   */
 
   void MeshTopology :: GetVertexSurfaceElements( int vnr, 
-						 NgArray<SurfaceElementIndex> & elements ) const
+						 Array<SurfaceElementIndex> & elements ) const
   {
     if (vert2surfelement.Size())
-      {
-	int i;
-	int ne = vert2surfelement.EntrySize(vnr);
-	elements.SetSize(ne);
-	for (i = 1; i <= ne; i++)
-	  elements.Elem(i) = vert2surfelement.Get(vnr, i);
-      }
+      elements = vert2surfelement[vnr];
   }
 
 
   int MeshTopology :: GetVerticesEdge ( int v1, int v2 ) const
   {
-    NgArray<ElementIndex> elements_v1;
+    Array<ElementIndex> elements_v1;
     NgArray<int> elementedges;
     GetVertexElements ( v1, elements_v1);
     int edv1, edv2;
@@ -2690,14 +2594,13 @@ namespace netgen
   {
     int v1, v2;
     GetEdgeVertices ( GetSegmentEdge (segnr), v1, v2 );
-    NgArray<ElementIndex> volels1, volels2;
-    GetVertexElements ( v1, volels1 );
-    GetVertexElements ( v2, volels2 );
+    auto volels1 = GetVertexElements ( v1 );
+    auto volels2 = GetVertexElements ( v2 );
     volels.SetSize(0);
 
-    for ( int eli1=1; eli1 <= volels1.Size(); eli1++)
-      if ( volels2.Contains( volels1.Elem(eli1) ) )
-	volels.Append ( volels1.Elem(eli1) );
+    for ( auto volel1 : volels1 )
+      if ( volels2.Contains( volel1 ) )
+	volels.Append ( volel1 );
   }
 
   void MeshTopology :: 
@@ -2705,14 +2608,13 @@ namespace netgen
   {
     int v1, v2;
     GetEdgeVertices ( GetSegmentEdge (segnr), v1, v2 );
-    NgArray<SurfaceElementIndex> els1, els2;
-    GetVertexSurfaceElements ( v1, els1 );
-    GetVertexSurfaceElements ( v2, els2 );
+    auto els1 = GetVertexSurfaceElements ( v1 );
+    auto els2 = GetVertexSurfaceElements ( v2 );
     els.SetSize(0);
 
-    for ( int eli1=1; eli1 <= els1.Size(); eli1++)
-      if ( els2.Contains( els1.Elem(eli1) ) )
-	els.Append ( els1.Elem(eli1) );
+    for ( auto el1 : els1 )
+      if ( els2.Contains( el1 ) )
+	els.Append ( el1 );
   }
 
 
