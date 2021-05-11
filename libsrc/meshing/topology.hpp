@@ -67,8 +67,8 @@ class MeshTopology
   Array<SegmentIndex> edge2segment;
   Table<ElementIndex, PointIndex> vert2element;
   Table<SurfaceElementIndex, PointIndex> vert2surfelement;
-  TABLE<SegmentIndex,PointIndex::BASE> vert2segment;
-  TABLE<int,PointIndex::BASE> vert2pointelement;
+  Table<SegmentIndex,PointIndex> vert2segment;
+  Table<int,PointIndex> vert2pointelement;
   int timestamp;
 public:
   int GetNSurfedges() const {return surfedges.Size();}
@@ -183,10 +183,10 @@ public:
   FlatArray<SurfaceElementIndex> GetVertexSurfaceElements(PointIndex vnr) const
   { return vert2surfelement[vnr]; }
 
-  NgFlatArray<SegmentIndex> GetVertexSegments (int vnr) const
+  FlatArray<SegmentIndex> GetVertexSegments (int vnr) const
   { return vert2segment[vnr]; }
 
-  NgFlatArray<int> GetVertexPointElements (int vnr) const
+  FlatArray<int> GetVertexPointElements (int vnr) const
   { return vert2pointelement[vnr]; }
   
   int GetVerticesEdge ( int v1, int v2) const;

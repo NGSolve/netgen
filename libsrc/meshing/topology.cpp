@@ -408,36 +408,22 @@ namespace netgen
     vert2element = mesh->CreatePoint2ElementTable();
     vert2surfelement = mesh->CreatePoint2SurfaceElementTable(0);
 
-    cnt = 0;
-    for (SegmentIndex si = 0; si < nseg; si++)
-      {
-	const Segment & seg = mesh->LineSegment(si);
-	cnt[seg[0]]++;
-	cnt[seg[1]]++;
-      }
- 
-    vert2segment = TABLE<SegmentIndex,PointIndex::BASE> (cnt);
-    for (SegmentIndex si = 0; si < nseg; si++)
-      {
-	const Segment & seg = mesh->LineSegment(si);
-	vert2segment.AddSave (seg[0], si);
-	vert2segment.AddSave (seg[1], si);
-      }
+    vert2segment = ngcore::CreateSortedTable<SegmentIndex, PointIndex>( mesh->LineSegments().Range(),
+           [&](auto & table, SegmentIndex segi)
+           {
+             const Segment & seg = (*mesh)[segi];
+             table.Add (seg[0], segi);
+             table.Add (seg[1], segi);
+           }, np);
+
+    vert2pointelement = ngcore::CreateSortedTable<int, PointIndex>( mesh->pointelements.Range(),
+           [&](auto & table, int pei)
+           {
+             const Element0d & pointel = mesh->pointelements[pei];
+             table.Add(pointel.pnum, pei);
+           }, np);
 
 
-    cnt = 0;
-    for (int pei = 0; pei < mesh->pointelements.Size(); pei++)
-      {
-	const Element0d & pointel = mesh->pointelements[pei];
-	cnt[pointel.pnum]++;
-      }
- 
-    vert2pointelement = TABLE<int,PointIndex::BASE> (cnt);
-    for (int pei = 0; pei < mesh->pointelements.Size(); pei++)
-      {
-	const Element0d & pointel = mesh->pointelements[pei];
-	vert2pointelement.AddSave (pointel.pnum, pei);
-      }
     (*tracer) ("Topology::Update setup tables", true);
 
     
