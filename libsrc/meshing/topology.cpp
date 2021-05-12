@@ -5,6 +5,7 @@ namespace netgen
 {
   using ngcore::ParallelForRange;
   using ngcore::INT;
+  using ngcore::TasksPerThread;
   
   template <class T>
   void QuickSortRec (NgFlatArray<T> data,
@@ -521,7 +522,7 @@ namespace netgen
                                 });
                  cnt[v] = cnti;
                }
-           } );
+           }, TasksPerThread(4) );
 
         // accumulate number of edges
         int ned = edge2vert.Size();
@@ -610,7 +611,7 @@ namespace netgen
                                     }
                                 });
                }
-           } );
+           }, TasksPerThread(4) );
 
 
         if (build_parent_edges)
@@ -1037,7 +1038,7 @@ namespace netgen
                                  });
                   cnt[v] = cnti;
                 }
-            } );
+            }, TasksPerThread(4) );
         // NgProfiler::StopTimer (timer2b1);
         
         // accumulate number of faces
@@ -1142,7 +1143,7 @@ namespace netgen
                                      }
                                  });
                 }
-            });
+            }, TasksPerThread(4) );
         
           /*
           int oldnfa = face2vert.Size();
@@ -1471,7 +1472,7 @@ namespace netgen
                   for (auto f : hfaces)
                     AsAtomic(face_els[f-1])++;
                 }
-            });        
+            }, TasksPerThread(4));
 	for (int i = 1; i <= nse; i++)
 	  face_surfels[GetSurfaceElementFace (i)-1]++;
         (*tracer) ("Topology::Update count face_els", true);
