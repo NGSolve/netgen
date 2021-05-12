@@ -75,7 +75,7 @@ namespace netgen
 	x1[i] = (1 + val * (i+1)) * pmin(i) - val * (i+1) * pmax(i);
 	x2[i] = 1.1 * pmax(i) - 0.1 * pmin(i);
       }
-    for (int i = dimension; i < 3; i++)
+    for (int i = 0; i < dimension; i++)
       x1[i] = x2[i] = 0;
 
     hmax = x2[0] - x1[0];
