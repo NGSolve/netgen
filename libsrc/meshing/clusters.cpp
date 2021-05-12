@@ -16,7 +16,7 @@ namespace netgen
     ;
   }
 
-  void AnisotropicClusters ::  Update(NgTaskManager tm, NgTracer tracer)
+  void AnisotropicClusters ::  Update()
   {
     static Timer timer("clusters");
     // static int timer1 = NgProfiler::CreateTimer ("clusters1");
@@ -81,13 +81,14 @@ namespace netgen
 	  cluster_reps.Elem(nnums[j]) = nnums[j];
       }
     */
-    ParallelForRange
-      (tm, ne,
-       [&] (size_t begin, size_t end)
+    ngcore::ParallelForRange
+      (mesh.VolumeElements().Range(),
+       [&] (auto myrange)
        {
          NgArray<int> nnums, ednums, fanums;
-         for (int i = begin+1; i <= end; i++)
+         for (int i_ : myrange)
            {
+             int i = i_+1;
              const Element & el = mesh.VolumeElement(i);
              ELEMENT_TYPE typ = el.GetType();
              
@@ -110,7 +111,7 @@ namespace netgen
              for (int j = 0; j < nnums.Size(); j++)
                cluster_reps.Elem(nnums[j]) = nnums[j];
            }
-       });
+       }, ngcore::TasksPerThread(4));
     
     // NgProfiler::StopTimer(timer1);
     // NgProfiler::StartTimer(timer2);      
@@ -137,13 +138,14 @@ namespace netgen
 	  cluster_reps.Elem(nnums[j]) = nnums[j];
       }
     */
-    ParallelForRange
-      (tm, nse,
-       [&] (size_t begin, size_t end)
+    ngcore::ParallelForRange
+      (mesh.SurfaceElements().Range(),
+       [&] (auto myrange)
        {
          NgArrayMem<int,9> nnums, ednums;
-         for (int i = begin+1; i <= end; i++)
+         for (int i_ : myrange)
            {
+             int i = i_+1;
              const Element2d & el = mesh.SurfaceElement(i);
              ELEMENT_TYPE typ = el.GetType();
              
@@ -163,7 +165,7 @@ namespace netgen
              for (int j = 0; j < nnums.Size(); j++)
                cluster_reps.Elem(nnums[j]) = nnums[j];
            }
-       });
+       }, ngcore::TasksPerThread(4));
 
     
     // NgProfiler::StopTimer(timer2);
