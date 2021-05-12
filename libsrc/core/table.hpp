@@ -351,6 +351,8 @@ namespace ngcore
   template <typename TEntry, typename TIndex, typename TRange, typename TFunc>
   Table<TEntry, TIndex> CreateTable( const TRange & range, const TFunc & func, std::optional< size_t > cnt )
   {
+      static Timer timer("CreateTable");
+      RegionTimer rt(timer);
       std::unique_ptr<TableCreator<TEntry, TIndex>> pcreator;
 
       if(cnt)
@@ -375,6 +377,8 @@ namespace ngcore
   template <typename TEntry, typename TIndex, typename TRange, typename TFunc>
   Table<TEntry, TIndex> CreateSortedTable( const TRange & range, const TFunc & func, std::optional< size_t > cnt )
   {
+    static Timer timer("CreateSortedTable");
+    RegionTimer rt(timer);
     Table<TEntry, TIndex> table = CreateTable<TEntry, TIndex>(range, func, cnt);
     ParallelForRange
       (table.Range(), [&] (auto myrange)

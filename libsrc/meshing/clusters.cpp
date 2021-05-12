@@ -18,11 +18,11 @@ namespace netgen
 
   void AnisotropicClusters ::  Update(NgTaskManager tm, NgTracer tracer)
   {
-    static int timer = NgProfiler::CreateTimer ("clusters");
+    static Timer timer("clusters");
     // static int timer1 = NgProfiler::CreateTimer ("clusters1");
     // static int timer2 = NgProfiler::CreateTimer ("clusters2");
     // static int timer3 = NgProfiler::CreateTimer ("clusters3");
-    NgProfiler::RegionTimer reg (timer);
+    RegionTimer reg (timer);
 
     const MeshTopology & top = mesh.GetTopology();
 
@@ -215,7 +215,8 @@ namespace netgen
 
     do
       {
-        (*tracer) ("update cluster, identify", false);
+        static Timer t("update cluster, identify");
+        RegionTimer rtr(t);
 	cnt++;
 	changed = 0;
       
@@ -338,7 +339,6 @@ namespace netgen
 	      }
 	    */
 	  }
-        (*tracer) ("update cluster, identify", true);        
       }
     while (changed);
     // NgProfiler::StopTimer(timer3);

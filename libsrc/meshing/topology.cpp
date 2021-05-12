@@ -368,6 +368,7 @@ namespace netgen
   void MeshTopology :: Update (NgTaskManager tm_unused, NgTracer tracer)
   {
     static Timer timer("Topology::Update");
+    static Timer timer_tables("Build vertex to element table");
     RegionTimer reg (timer);
 
 #ifdef PARALLEL
@@ -406,6 +407,7 @@ namespace netgen
       vertex to segment 
     */
 
+    timer_tables.Start();
     vert2element = mesh->CreatePoint2ElementTable();
     vert2surfelement = mesh->CreatePoint2SurfaceElementTable(0);
 
@@ -423,6 +425,7 @@ namespace netgen
              const Element0d & pointel = mesh->pointelements[pei];
              table.Add(pointel.pnum, pei);
            }, np);
+    timer_tables.Stop();
 
 
     (*tracer) ("Topology::Update setup tables", true);
@@ -430,8 +433,8 @@ namespace netgen
     
     if (buildedges)
       {
-	static int timer1 = NgProfiler::CreateTimer ("topology::buildedges");
-	NgProfiler::RegionTimer reg1 (timer1);
+        static Timer timer1("topology::buildedges");
+        RegionTimer reg1(timer1);
 	
 	if (id == 0)
 	  PrintMessage (5, "Update edges ");
@@ -894,12 +897,12 @@ namespace netgen
     // generate faces
     if (buildfaces) 
       {
-	static int timer2 = NgProfiler::CreateTimer ("topology::buildfaces");
+	static Timer timer2("topology::buildfaces");
 	// static int timer2a = NgProfiler::CreateTimer ("topology::buildfacesa");
 	// static int timer2b = NgProfiler::CreateTimer ("topology::buildfacesb");
         // static int timer2b1 = NgProfiler::CreateTimer ("topology::buildfacesb1");
 	// static int timer2c = NgProfiler::CreateTimer ("topology::buildfacesc");
-	NgProfiler::RegionTimer reg2 (timer2);
+	RegionTimer reg2 (timer2);
 
 	if (id == 0)
 	  PrintMessage (5, "Update faces ");

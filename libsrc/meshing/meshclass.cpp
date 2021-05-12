@@ -916,6 +916,7 @@ namespace netgen
 
   void Mesh :: Load (istream & infile)
   {
+    static Timer timer("Mesh::Load"); RegionTimer rt(timer);
     if (! (infile.good()) )
       {
         cout << "cannot load mesh" << endl;
@@ -956,6 +957,7 @@ namespace netgen
 
         if (strcmp (str, "surfaceelements") == 0 || strcmp (str, "surfaceelementsgi")==0 || strcmp (str, "surfaceelementsuv") == 0)
           {
+            static Timer t1("read surface elements"); RegionTimer rt1(t1);
             infile >> n;
             PrintMessage (3, n, " surface elements");
 
@@ -1020,6 +1022,7 @@ namespace netgen
 
         if (strcmp (str, "volumeelements") == 0)
           {
+            static Timer t1("read volume elements"); RegionTimer rt1(t1);
             infile >> n;
             PrintMessage (3, n, " volume elements");
             for (i = 1; i <= n; i++)
@@ -1045,6 +1048,7 @@ namespace netgen
 
         if (strcmp (str, "edgesegments") == 0)
           {
+            static Timer t1("read edge segments"); RegionTimer rt1(t1);
             infile >> n;
             for (i = 1; i <= n; i++)
               {
@@ -1059,6 +1063,7 @@ namespace netgen
 
         if (strcmp (str, "edgesegmentsgi") == 0)
           {
+            static Timer t1("read edge segmentsgi"); RegionTimer rt1(t1);
             infile >> n;
             for (i = 1; i <= n; i++)
               {
@@ -1073,6 +1078,7 @@ namespace netgen
 
         if (strcmp (str, "edgesegmentsgi2") == 0)
           {
+            static Timer t1("read edge segmentsgi2"); RegionTimer rt1(t1);
             int a; 
             infile >> a;
             n=a; 
@@ -1106,6 +1112,7 @@ namespace netgen
 
         if (strcmp (str, "points") == 0)
           {
+            static Timer t1("read points"); RegionTimer rt1(t1);
             infile >> n;
             PrintMessage (3, n, " points");
             for (i = 1; i <= n; i++)
@@ -1122,6 +1129,7 @@ namespace netgen
 
         if (strcmp (str, "pointelements") == 0)
           {
+            static Timer t1("read point elements"); RegionTimer rt1(t1);
             infile >> n;
             PrintMessage (3, n, " pointelements");
             for (i = 1; i <= n; i++)
