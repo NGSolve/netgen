@@ -453,7 +453,6 @@ namespace netgen
                 nv, -1, loch);
         illegal1 += 1-mesh.LegalTrig(el);
       }
-    bad1 /= (hasonepi.Size()+hasbothpi.Size());
 
     double bad2 = 0;
     for (int k = 0; k < hasonepi.Size(); k++)
@@ -483,7 +482,6 @@ namespace netgen
 
         illegal2 += 1-mesh.LegalTrig(el);
       }
-    bad2 /= hasonepi.Size();
 
     if (debugflag)
       {
