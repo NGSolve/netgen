@@ -27,7 +27,7 @@ public:
   AnisotropicClusters (const Mesh & amesh);
   ~AnisotropicClusters();
 
-  void Update(NgTaskManager tm = &DummyTaskManager, NgTracer trace = &DummyTracer);
+  void Update();
 
   int GetVertexRepresentant (int vnr) const
   { return cluster_reps.Get(vnr); }

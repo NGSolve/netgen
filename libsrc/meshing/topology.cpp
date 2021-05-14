@@ -5,6 +5,7 @@ namespace netgen
 {
   using ngcore::ParallelForRange;
   using ngcore::INT;
+  using ngcore::TasksPerThread;
   
   template <class T>
   void QuickSortRec (NgFlatArray<T> data,
@@ -367,6 +368,7 @@ namespace netgen
   void MeshTopology :: Update (NgTaskManager tm_unused, NgTracer tracer)
   {
     static Timer timer("Topology::Update");
+    static Timer timer_tables("Build vertex to element table");
     RegionTimer reg (timer);
 
 #ifdef PARALLEL
@@ -405,46 +407,34 @@ namespace netgen
       vertex to segment 
     */
 
+    timer_tables.Start();
     vert2element = mesh->CreatePoint2ElementTable();
     vert2surfelement = mesh->CreatePoint2SurfaceElementTable(0);
 
-    cnt = 0;
-    for (SegmentIndex si = 0; si < nseg; si++)
-      {
-	const Segment & seg = mesh->LineSegment(si);
-	cnt[seg[0]]++;
-	cnt[seg[1]]++;
-      }
- 
-    vert2segment = TABLE<SegmentIndex,PointIndex::BASE> (cnt);
-    for (SegmentIndex si = 0; si < nseg; si++)
-      {
-	const Segment & seg = mesh->LineSegment(si);
-	vert2segment.AddSave (seg[0], si);
-	vert2segment.AddSave (seg[1], si);
-      }
+    vert2segment = ngcore::CreateSortedTable<SegmentIndex, PointIndex>( mesh->LineSegments().Range(),
+           [&](auto & table, SegmentIndex segi)
+           {
+             const Segment & seg = (*mesh)[segi];
+             table.Add (seg[0], segi);
+             table.Add (seg[1], segi);
+           }, np);
+
+    vert2pointelement = ngcore::CreateSortedTable<int, PointIndex>( mesh->pointelements.Range(),
+           [&](auto & table, int pei)
+           {
+             const Element0d & pointel = mesh->pointelements[pei];
+             table.Add(pointel.pnum, pei);
+           }, np);
+    timer_tables.Stop();
 
 
-    cnt = 0;
-    for (int pei = 0; pei < mesh->pointelements.Size(); pei++)
-      {
-	const Element0d & pointel = mesh->pointelements[pei];
-	cnt[pointel.pnum]++;
-      }
- 
-    vert2pointelement = TABLE<int,PointIndex::BASE> (cnt);
-    for (int pei = 0; pei < mesh->pointelements.Size(); pei++)
-      {
-	const Element0d & pointel = mesh->pointelements[pei];
-	vert2pointelement.AddSave (pointel.pnum, pei);
-      }
     (*tracer) ("Topology::Update setup tables", true);
 
     
     if (buildedges)
       {
-	static int timer1 = NgProfiler::CreateTimer ("topology::buildedges");
-	NgProfiler::RegionTimer reg1 (timer1);
+        static Timer timer1("topology::buildedges");
+        RegionTimer reg1(timer1);
 	
 	if (id == 0)
 	  PrintMessage (5, "Update edges ");
@@ -535,7 +525,7 @@ namespace netgen
                                 });
                  cnt[v] = cnti;
                }
-           } );
+           }, TasksPerThread(4) );
 
         // accumulate number of edges
         int ned = edge2vert.Size();
@@ -624,7 +614,7 @@ namespace netgen
                                     }
                                 });
                }
-           } );
+           }, TasksPerThread(4) );
 
 
         if (build_parent_edges)
@@ -907,12 +897,12 @@ namespace netgen
     // generate faces
     if (buildfaces) 
       {
-	static int timer2 = NgProfiler::CreateTimer ("topology::buildfaces");
+	static Timer timer2("topology::buildfaces");
 	// static int timer2a = NgProfiler::CreateTimer ("topology::buildfacesa");
 	// static int timer2b = NgProfiler::CreateTimer ("topology::buildfacesb");
         // static int timer2b1 = NgProfiler::CreateTimer ("topology::buildfacesb1");
 	// static int timer2c = NgProfiler::CreateTimer ("topology::buildfacesc");
-	NgProfiler::RegionTimer reg2 (timer2);
+	RegionTimer reg2 (timer2);
 
 	if (id == 0)
 	  PrintMessage (5, "Update faces ");
@@ -1051,7 +1041,7 @@ namespace netgen
                                  });
                   cnt[v] = cnti;
                 }
-            } );
+            }, TasksPerThread(4) );
         // NgProfiler::StopTimer (timer2b1);
         
         // accumulate number of faces
@@ -1156,7 +1146,7 @@ namespace netgen
                                      }
                                  });
                 }
-            });
+            }, TasksPerThread(4) );
         
           /*
           int oldnfa = face2vert.Size();
@@ -1485,7 +1475,7 @@ namespace netgen
                   for (auto f : hfaces)
                     AsAtomic(face_els[f-1])++;
                 }
-            });        
+            }, TasksPerThread(4));
 	for (int i = 1; i <= nse; i++)
 	  face_surfels[GetSurfaceElementFace (i)-1]++;
         (*tracer) ("Topology::Update count face_els", true);

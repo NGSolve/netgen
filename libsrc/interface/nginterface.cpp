@@ -1653,7 +1653,7 @@ void Ng_GetVertexElements (int vnr, int * els)
       }
     case 1:
       {
-        NgFlatArray<SegmentIndex> ia = mesh->GetTopology().GetVertexSegments(vnr);
+        auto ia = mesh->GetTopology().GetVertexSegments(vnr);
         for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
         break;
         /*
