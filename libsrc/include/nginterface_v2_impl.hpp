@@ -258,33 +258,33 @@ template <> NGX_INLINE DLL_HEADER const Ng_Node<0> Ngx_Mesh :: GetNode<0> (int v
       {
         auto ia = mesh->GetTopology().GetVertexElements(vnr);
         node.elements.ne = ia.Size();
-        node.elements.ptr = (int*)&ia[0];
+        node.elements.ptr = (int*)ia.Data();
         
         auto bia = mesh->GetTopology().GetVertexSurfaceElements(vnr);
         node.bnd_elements.ne = bia.Size();
-        node.bnd_elements.ptr = (int*)&bia[0];
+        node.bnd_elements.ptr = (int*)bia.Data();
         break;
       }
     case 2:
       {
         auto ia = mesh->GetTopology().GetVertexSurfaceElements(vnr);
         node.elements.ne = ia.Size();
-        node.elements.ptr = (int*)&ia[0];
+        node.elements.ptr = (int*)ia.Data();
         
         auto bia = mesh->GetTopology().GetVertexSegments(vnr);
         node.bnd_elements.ne = bia.Size();
-        node.bnd_elements.ptr = (int*)&bia[0];
+        node.bnd_elements.ptr = (int*)bia.Data();
         break;
       }
     case 1:
       {
         auto ia = mesh->GetTopology().GetVertexSegments(vnr);
         node.elements.ne = ia.Size();
-        node.elements.ptr = (int*)&ia[0];
+        node.elements.ptr = (int*)ia.Data();
         
         auto bia = mesh->GetTopology().GetVertexPointElements(vnr);
         node.bnd_elements.ne = bia.Size();
-        node.bnd_elements.ptr = (int*)&bia[0];
+        node.bnd_elements.ptr = (int*)bia.Data();
         break;
       }
     default:
