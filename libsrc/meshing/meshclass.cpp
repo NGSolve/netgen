@@ -413,6 +413,13 @@ namespace netgen
 
   void Mesh :: Save (const string & filename) const
   {
+    if (filename.find(".vol.bin") != string::npos)
+    {
+        BinaryOutArchive in(filename);
+        in & const_cast<Mesh&>(*this);
+        return;
+    }
+
     ostream * outfile;
     if (filename.find(".vol.gz")!=string::npos)
       outfile = new ogzstream(filename.c_str());
@@ -872,6 +879,14 @@ namespace netgen
   void Mesh :: Load (const string & filename)
   {
     cout << "filename = " << filename << endl;
+
+    if (filename.find(".vol.bin") != string::npos)
+    {
+        BinaryInArchive in(filename);
+        in & (*this);
+        return;
+    }
+
     istream * infile = NULL;
 
     if (filename.find(".vol.gz") != string::npos)

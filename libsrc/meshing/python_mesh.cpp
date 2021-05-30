@@ -685,29 +685,33 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 		return;
 	      }
 
-	    istream * infile;
+	    istream * infile = nullptr;
 	    NgArray<char> buf; // for distributing geometry!
 	    int strs;
 
 	    if( id == 0) {
-
-	      if (filename.substr (filename.length()-3, 3) == ".gz")
+	      if (filename.substr (filename.length()-8, 8) == ".vol.bin")
+                mesh -> Load(filename);
+              else if (filename.substr (filename.length()-3, 3) == ".gz")
 		infile = new igzstream (filename.c_str());
 	      else
 		infile = new ifstream (filename.c_str());
-	      mesh -> Load(*infile);
 
-	      // make string from rest of file (for geometry info!)
-	      // (this might be empty, in which case we take the global ng_geometry)
-	      stringstream geom_part;
-	      geom_part << infile->rdbuf();
-	      string geom_part_string = geom_part.str();
-	      strs = geom_part_string.size();
-	      // buf = new char[strs];
-	      buf.SetSize(strs);
-	      memcpy(&buf[0], geom_part_string.c_str(), strs*sizeof(char));
+              if(infile)
+                {
+                  mesh -> Load(*infile);
+                  // make string from rest of file (for geometry info!)
+                  // (this might be empty, in which case we take the global ng_geometry)
+                  stringstream geom_part;
+                  geom_part << infile->rdbuf();
+                  string geom_part_string = geom_part.str();
+                  strs = geom_part_string.size();
+                  // buf = new char[strs];
+                  buf.SetSize(strs);
+                  memcpy(&buf[0], geom_part_string.c_str(), strs*sizeof(char));
+                  delete infile;
+                }
 
-	      delete infile;
 
 	      if (ntasks > 1)
 		{
