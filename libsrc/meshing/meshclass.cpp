@@ -2100,38 +2100,28 @@ namespace netgen
     
     t_table.Start();
 
-    TableCreator<ElementIndex, PointIndex> creator(np);
+    auto elsonpoint = ngcore::CreateSortedTable<ElementIndex, PointIndex>( volelements.Range(),
+           [&](auto & table, ElementIndex ei)
+           {
+             const Element & el = (*this)[ei];
+             if (dom == 0 || dom == el.GetIndex())
+               {
+                 if (el.GetNP() == 4)
+                   {
+                     INDEX_4 i4(el[0], el[1], el[2], el[3]);
+                     i4.Sort();
+                     table.Add (PointIndex(i4.I1()), ei);
+                     table.Add (PointIndex(i4.I2()), ei);
+                   }
+                 else
+                   {
+                     for (PointIndex pi : el.PNums())
+                       table.Add(pi, ei);
+                   }
+               }
+           }, GetNP());
 
-    for ( ; !creator.Done(); creator++)
-      // for (ElementIndex ei : Range(VolumeElements()))
-      ParallelFor
-        (Range(VolumeElements()), [&] (ElementIndex ei)
-         {
-           const Element & el = (*this)[ei];
-           if (dom == 0 || dom == el.GetIndex())
-             {
-               if (el.GetNP() == 4)
-                 {
-                   INDEX_4 i4(el[0], el[1], el[2], el[3]);
-                   i4.Sort();
-                   creator.Add (PointIndex(i4.I1()), ei);
-                   creator.Add (PointIndex(i4.I2()), ei);
-                 }
-               else
-                 {
-                   for (PointIndex pi : el.PNums())
-                     creator.Add(pi, ei);
-                 }
-             }
-         });
-    
-    auto elsonpoint = creator.MoveTable();
 
-    ParallelFor (Range(elsonpoint), [&] (auto i)
-         {
-           QuickSort(elsonpoint[i]);
-         });
-           
     NgArray<int,PointIndex::BASE> numonpoint(np);
     /*
     numonpoint = 0;
