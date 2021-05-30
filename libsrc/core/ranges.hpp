@@ -32,7 +32,7 @@ namespace ngcore
     FUNC f;
   public:
     FilterIterator(FUNC af, Iterator aiter, Iterator aend)
-      :  f(af), iter(aiter), end(aend)
+      :  iter(aiter), end(aend), f(af)
     {
       while(iter!=end && !f(*iter))
         ++iter;
