@@ -2371,7 +2371,7 @@ namespace netgen
 
     */
 
-    size_t numtasks = ngcore::TaskManager::GetNumThreads();
+    size_t numtasks = 4*ngcore::TaskManager::GetNumThreads();
     Array<Array<Element2d>> thread_openelements(numtasks);
     ParallelJob
       ( [&](TaskInfo & ti)
@@ -2496,7 +2496,7 @@ namespace netgen
                         thread_openelements[ti.task_nr].Append (tri);
                       }
                   }
-            }});
+            }}, numtasks);
 
     for (auto & a : thread_openelements)
       for (auto & el : a)
