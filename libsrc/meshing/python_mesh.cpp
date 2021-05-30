@@ -1292,7 +1292,7 @@ project_boundaries : Optional[str] = None
              SetGlobalMesh (mesh);
              mesh->SetGeometry(geo);
 	     ng_geometry = geo;
-             auto result = geo->GenerateMesh (mesh, quads, nx, ny, flip_triangles, bbbpts, bbbname, hppts, hpptsfac, hpbnd, hpbndfac);
+             auto result = geo->GenerateStructuredMesh (mesh, quads, nx, ny, flip_triangles, bbbpts, bbbname, hppts, hpptsfac, hpbnd, hpbndfac);
              if(result != 0)
                throw Exception("SurfaceGeometry: Meshing failed!");
              return mesh;

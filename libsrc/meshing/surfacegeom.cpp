@@ -223,7 +223,7 @@ namespace netgen
     //ProjectPointGI(surfi, newp, newgi);
   }
 
-  int SurfaceGeometry :: GenerateMesh(shared_ptr<Mesh> & mesh, bool quads, int nx, int ny, bool flip_triangles, const Array<Point<3>>& bbbpts, const Array<string>& bbbnames, const Array<Point<3>>& hppoints, const Array<float>& hpptsfac, const Array<string>& hpbnd, const Array<float>& hpbndfac)
+  int SurfaceGeometry :: GenerateStructuredMesh(shared_ptr<Mesh> & mesh, bool quads, int nx, int ny, bool flip_triangles, const Array<Point<3>>& bbbpts, const Array<string>& bbbnames, const Array<Point<3>>& hppoints, const Array<float>& hpptsfac, const Array<string>& hpbnd, const Array<float>& hpbndfac)
   {
     mesh->SetDimension(3);
 
