@@ -1414,15 +1414,17 @@ namespace netgen
       }
     */
 
+    int lowest_undefined_el = 1;
     while (1)
       {
 	int inside;
 	bool done = 1;
 
 	int i;
-	for (i = 1; i <= ne; i++)
+	for (i = lowest_undefined_el; i <= ne; i++)
 	  if (!inner.Test(i) && !outer.Test(i))
 	    {
+              lowest_undefined_el = i+1;
 	      done = 0;
 	      break;
 	    }
