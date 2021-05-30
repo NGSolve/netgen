@@ -19,6 +19,8 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
   ExportArray<size_t>(m);
   ExportArray<double>(m);
 
+  ExportTable<int>(m);
+  
   py::class_<BitArray, shared_ptr<BitArray>> (m, "BitArray")
     .def(py::init([] (size_t n) { return make_shared<BitArray>(n); }),py::arg("n"))
     .def(py::init([] (const BitArray& a) { return make_shared<BitArray>(a); } ), py::arg("ba"))

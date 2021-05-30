@@ -8,6 +8,7 @@
 #include <pybind11/stl.h>
 
 #include "array.hpp"
+#include "table.hpp"
 #include "archive.hpp"
 #include "flags.hpp"
 #include "ngcore_api.hpp"
@@ -59,6 +60,23 @@ public:
 template <typename Type> struct type_caster<ngcore::Array<Type>>
  : ngcore_list_caster<ngcore::Array<Type>, Type> { };
 
+
+  /*
+  template <typename Type> struct type_caster<std::shared_ptr<ngcore::Table<Type>>>
+  {
+    template <typename T>
+    static handle cast(T &&src, return_value_policy policy, handle parent)
+    {
+      std::cout << "handle called with type src = " << typeid(src).name() << std::endl;
+
+      return handle(); // what so ever
+    }
+    
+    PYBIND11_TYPE_CASTER(Type, _("Table[") + make_caster<Type>::name + _("]"));
+  };
+  */
+  
+  
 
 } // namespace detail
 } // namespace pybind11
@@ -240,6 +258,14 @@ namespace ngcore
       ;
     }
 
+  template <typename T>
+  void ExportTable (py::module &m)
+  {
+    py::class_<ngcore::Table<T>, std::shared_ptr<ngcore::Table<T>>> (m, ("Table+"+GetPyName<T>()).c_str())
+      ;
+  }
+
+  
   void NGCORE_API SetFlag(Flags &flags, std::string s, py::object value);
   // Parse python kwargs to flags
   Flags NGCORE_API CreateFlagsFromKwArgs(const py::kwargs& kwargs, py::object pyclass = py::none(),
