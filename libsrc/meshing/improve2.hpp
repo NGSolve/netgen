@@ -10,7 +10,7 @@ void BuildEdgeList( const Mesh & mesh, const Table<TINDEX, PointIndex> & element
     { { 0, 1 }, { 0, 2 }, { 0, 3 },
         { 1, 2 }, { 1, 3 }, { 2, 3 } };
 
-  int ntasks = 2*ngcore::TaskManager::GetMaxThreads();
+  int ntasks = 4*ngcore::TaskManager::GetMaxThreads();
   Array<Array<std::tuple<PointIndex,PointIndex>>> task_edges(ntasks);
 
   ParallelFor(IntRange(ntasks), [&] (int ti)
