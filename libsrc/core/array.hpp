@@ -613,8 +613,10 @@ namespace ngcore
       return Pos(elem) != ILLEGAL_POSITION;
     }
     
-    auto begin() const { return ArrayIterator<T,IndexType> (*this, BASE); }
-    auto end() const { return ArrayIterator<T,IndexType> (*this, size+BASE); }
+    //auto begin() const { return ArrayIterator<T,IndexType> (*this, BASE); }
+    // auto end() const { return ArrayIterator<T,IndexType> (*this, size+BASE); }
+    auto begin() const { return data; }
+    auto end() const { return data+Size(); }
   };
 
   template <typename T>
