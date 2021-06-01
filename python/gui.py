@@ -19,11 +19,9 @@ def StartGUI():
         pass
     
 if not netgen.libngpy._meshing._netgen_executable_started:
-    # catch exception for building html docu on server without display
-    try:  
+    import os
+    if not "NETGEN_DOCUMENTATION_RST_FORMAT" in os.environ:
         StartGUI()
-    except:
-        pass
 
 def Snapshot(w,h, filename=None):
     netgen.Redraw(blocking=True)
