@@ -261,7 +261,41 @@ namespace ngcore
   template <typename T>
   void ExportTable (py::module &m)
   {
-    py::class_<ngcore::Table<T>, std::shared_ptr<ngcore::Table<T>>> (m, ("Table+"+GetPyName<T>()).c_str())
+    py::class_<ngcore::Table<T>, std::shared_ptr<ngcore::Table<T>>> (m, ("Table_"+GetPyName<T>()).c_str())
+      .def(py::init([] (py::list blocks)
+                    {
+                       size_t size = py::len(blocks);
+                       Array<int> cnt(size);
+                       size_t i = 0;
+                       for (auto block : blocks)
+                         cnt[i++] = py::len(block);
+                       
+                       i = 0;
+                       Table<T> blocktable(cnt);
+                       for (auto block : blocks)
+                         {
+                           auto row = blocktable[i++];
+                           size_t j = 0;
+                           for (auto val : block)
+                             row[j++] = val.cast<T>();
+                         }
+                       // cout << "blocktable = " << *blocktable << endl;
+                       return blocktable;
+                      
+                    }), py::arg("blocks"), "a list of lists")
+
+      .def ("__len__", [] (Table<T> &self ) { return self.Size(); } )
+      .def ("__getitem__",
+            [](Table<T> & self, size_t i) -> FlatArray<T>
+            {
+              if (i >= self.Size())
+                throw py::index_error();
+              return self[i]; 
+            })
+      .def("__str__", [](Table<T> & self)
+           {
+             return ToString(self);
+           })
       ;
   }
 
