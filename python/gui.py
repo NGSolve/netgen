@@ -21,7 +21,10 @@ def StartGUI():
 if not netgen.libngpy._meshing._netgen_executable_started:
     import os
     if not "NETGEN_DOCUMENTATION_RST_FORMAT" in os.environ:
-        StartGUI()
+        try:
+            StartGUI()
+        except:
+            pass
 
 def Snapshot(w,h, filename=None):
     netgen.Redraw(blocking=True)
