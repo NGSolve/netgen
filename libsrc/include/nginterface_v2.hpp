@@ -358,8 +358,8 @@ namespace netgen
     int GetParentSElement (int ei) const;
 
     bool HasParentEdges() const;
-    tuple<int, std::array<int,3>> GetParentEdges (int enr) const;
-    tuple<int, std::array<int,4>> GetParentFaces (int fnr) const;
+    std::tuple<int, std::array<int,3>> GetParentEdges (int enr) const;
+    std::tuple<int, std::array<int,4>> GetParentFaces (int fnr) const;
     
     int GetNIdentifications() const;
     int GetIdentificationType(int idnr) const;

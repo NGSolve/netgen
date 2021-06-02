@@ -242,7 +242,7 @@ namespace netgen
     using NgFlatArray<T,BASE,TIND>::data;
 
     /// physical size of array
-    size_t allocsize;
+    size_t allocsize = 0;
     /// memory is responsibility of container
     bool ownmem;
 

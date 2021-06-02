@@ -2768,7 +2768,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
         candidate_edges[index] = make_tuple(d_badness, i);
       }
     }
-  });
+  }, TasksPerThread (4));
 
   auto edges_with_improvement = candidate_edges.Part(0, improvement_counter.load());
   QuickSort(edges_with_improvement);

@@ -864,6 +864,8 @@ namespace netgen
 
 
     // remove degenerated
+    static Timer tdegenerated("Delaunay - remove degenerated");
+    tdegenerated.Start();
 
     NgBitArray badnode(mesh.GetNP());
     badnode.Clear();
@@ -914,6 +916,10 @@ namespace netgen
 
   
     PrintMessage (3, ndeg, " degenerated elements removed");
+    tdegenerated.Stop();
+
+    static Timer topenel("Delaunay - find openel");
+    topenel.Start();
 
     // find surface triangles which are no face of any tet
 
@@ -1073,6 +1079,10 @@ namespace netgen
       }
 
 
+    topenel.Stop();
+
+    static Timer trem_intersect("Delaunay - remove intersecting");
+    trem_intersect.Start();
 
 
     // find intersecting:
@@ -1190,6 +1200,10 @@ namespace netgen
       }
   
 
+    trem_intersect.Stop();
+
+    static Timer trem_outer("Delaunay - remove outer");
+    trem_outer.Start();
 
 
     PrintMessage (3, "Remove outer");
@@ -1400,15 +1414,17 @@ namespace netgen
       }
     */
 
+    int lowest_undefined_el = 1;
     while (1)
       {
 	int inside;
 	bool done = 1;
 
 	int i;
-	for (i = 1; i <= ne; i++)
+	for (i = lowest_undefined_el; i <= ne; i++)
 	  if (!inner.Test(i) && !outer.Test(i))
 	    {
+              lowest_undefined_el = i+1;
 	      done = 0;
 	      break;
 	    }
@@ -1642,6 +1658,8 @@ namespace netgen
       }
 
     PrintMessage (5, "outer removed");
+
+    trem_outer.Stop();
 
     mesh.FindOpenElements(domainnr);
 

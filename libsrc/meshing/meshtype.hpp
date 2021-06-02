@@ -446,7 +446,7 @@ namespace netgen
         pnum[cnt++] = val;
       return *this;
     }
-    Element2d & operator= (initializer_list<tuple<PointIndex,PointGeomInfo>> list)
+    Element2d & operator= (initializer_list<std::tuple<PointIndex,PointGeomInfo>> list)
     {
       size_t cnt = 0;
       for (auto val : list)

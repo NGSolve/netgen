@@ -195,10 +195,10 @@ public:
 
 
 private:
-  Array<tuple<int, std::array<int,3>>> parent_edges; 
+  Array<std::tuple<int, std::array<int,3>>> parent_edges;
   void BuildParentEdges ();
 
-  Array<tuple<int, std::array<int,4>>> parent_faces;
+  Array<std::tuple<int, std::array<int,4>>> parent_faces;
   void BuildParentFaces ();
 public:
   auto GetParentEdges (int enr) const { return parent_edges[enr]; }
