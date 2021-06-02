@@ -436,9 +436,9 @@ namespace ngcore
   protected:
     static constexpr IndexType BASE = IndexBASE<IndexType>();
     /// the size
-    size_t size;
+    size_t size = 0;
     /// the data
-    T * __restrict data;
+    T * __restrict data = nullptr;
   public:
     typedef T value_type;
     typedef IndexType index_type;
