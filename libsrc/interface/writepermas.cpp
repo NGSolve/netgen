@@ -99,8 +99,8 @@ namespace netgen
                     outfile << i 
                             << " " << el.PNum(1) 
                             << " " << el.PNum(2) 
-                            << " " << el.PNum(3) 
-                            << " " << el.PNum(4) << endl;
+                            << " " << el.PNum(4) 
+                            << " " << el.PNum(3) << endl;
                 }
             }
             else
