@@ -772,7 +772,7 @@ namespace netgen
 
   
 
-    Table<ElementIndex, PointIndex> CreatePoint2ElementTable() const;
+    Table<ElementIndex, PointIndex> CreatePoint2ElementTable(std::optional<BitArray> points = std::nullopt) const;
     Table<SurfaceElementIndex, PointIndex> CreatePoint2SurfaceElementTable( int faceindex=0 ) const;
 
     DLL_HEADER bool PureTrigMesh (int faceindex = 0) const;

@@ -166,6 +166,10 @@ else()
   set(NETGEN_BUILD_COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/netgen --config ${CMAKE_BUILD_TYPE})
 endif()
 
+if(DEFINED ENV{CI} AND WIN32)
+    set(log_output LOG_BUILD ON LOG_MERGED_STDOUTERR ON LOG_OUTPUT_ON_FAILURE ON)
+endif()
+
 ExternalProject_Add (netgen
   DEPENDS ${NETGEN_DEPENDENCIES}
   SOURCE_DIR ${PROJECT_SOURCE_DIR}
@@ -174,6 +178,7 @@ ExternalProject_Add (netgen
   BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/netgen
   BUILD_COMMAND ${NETGEN_BUILD_COMMAND}
   STEP_TARGETS build
+  ${log_output}
 )
 
 # Check if the git submodules (i.e. pybind11) are up to date
