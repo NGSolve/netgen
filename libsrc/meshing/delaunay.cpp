@@ -795,17 +795,16 @@ namespace netgen
   }
 
   // Remove flat tets containing two adjacent surface trigs
-  NgArray<int> DelaunayRemoveTwoTriaTets( const Mesh & mesh, NgArray<DelaunayTet> & tempels )
+  void DelaunayRemoveTwoTriaTets( const Mesh & mesh, NgArray<DelaunayTet> & tempels, NgArray<int> & openels )
   {
-    static Timer topenel("Delaunay - find openel");
-    topenel.Start();
+    static Timer topenel("Delaunay - find openel"); RegionTimer rt(topenel);
 
     auto np = mesh.GetNP();
 
     // find surface triangles which are no face of any tet
 
     INDEX_3_HASHTABLE<int> openeltab(mesh.GetNOpenElements()+3);
-    NgArray<int> openels;
+    openels.SetSize(0);
     for (int i = 1; i <= mesh.GetNOpenElements(); i++)
       {
 	const Element2d & tri = mesh.OpenElement(i);
@@ -835,9 +834,6 @@ namespace netgen
 	  if (fnr)
 	    openels.Append (fnr);
 	}
-
-
-
 
 
     // find open triangle with close edge (from halfening of surface squares)
@@ -931,16 +927,11 @@ namespace netgen
 	    badnode.Test(el[3]) )
 	  tempels.DeleteElement(i);
       }
-
-
-    topenel.Stop();
-
-    return openels;
   }
 
   void DelaunayRemoveIntersecting( const Mesh & mesh, NgArray<DelaunayTet> & tempels, NgArray<int> & openels, Point3d pmin, Point3d pmax )
   {
-    static Timer trem_intersect("Delaunay - remove intersecting"); RegionTimert(trem_intersect);
+    static Timer trem_intersect("Delaunay - remove intersecting"); RegionTimer rt(trem_intersect);
 
     // find intersecting:
     PrintMessage (3, "Remove intersecting");
@@ -1633,7 +1624,9 @@ namespace netgen
 
 
     DelaunayRemoveDegenerated(mesh.Points(), tempels);
-    auto openels = DelaunayRemoveTwoTriaTets(mesh, tempels);
+
+    NgArray<int> openels;
+    DelaunayRemoveTwoTriaTets(mesh, tempels, openels);
     DelaunayRemoveIntersecting(mesh, tempels, openels, pmin, pmax);
     DelaunayRemoveOuter(mesh, tempels, adfront);
 
