@@ -796,119 +796,149 @@ namespace netgen
     static Timer topenel("Delaunay - find openel"); RegionTimer rt(topenel);
 
     // find surface triangles which are no face of any tet
+    BitArray bnd_points( mesh.GetNP() + PointIndex::BASE );
+    bnd_points.Clear();
 
-    INDEX_3_HASHTABLE<int> openeltab(mesh.GetNOpenElements()+3);
+    for (int i = 1; i <= mesh.GetNOpenElements(); i++)
+      {
+        const Element2d & tri = mesh.OpenElement(i);
+        bnd_points.SetBit(tri[0]);
+        bnd_points.SetBit(tri[1]);
+        bnd_points.SetBit(tri[2]);
+      }
+
+    auto ne = tempels.Size();
+    Array<int> tets_with_3_bnd_points(ne);
+    atomic<int> cnt = 0;
+
+    // table of tets with >= 2 boundary points, store in extra array tets with >=3 boundary points
+    auto p2el = ngcore::CreateSortedTable<int, PointIndex>( ne,
+               [&](auto & table, int ei)
+               {
+                 const auto & el = tempels[ei];
+                 int num_bnd_points = 0;
+
+                 for( auto i : Range(4) )
+                   if(bnd_points[el[i]])
+                     num_bnd_points++;
+
+                 if(num_bnd_points>1)
+                   {
+                     table.Add (el[0], ei);
+                     table.Add (el[1], ei);
+                     table.Add (el[2], ei);
+                     table.Add (el[3], ei);
+                   }
+
+                 // table creator is running this code 2 times, only store tets on last run
+                 if(table.GetMode()==3 && num_bnd_points>2)
+                   tets_with_3_bnd_points[cnt++] = ei;
+               }, mesh.GetNP());
+
+    tets_with_3_bnd_points.SetSize(cnt);
+
+    static Timer t1("Build face table"); t1.Start();
+    ngcore::ClosedHashTable< ngcore::INT<3>, int > face_table( 4*cnt + 3 );
+    for(auto ei : tets_with_3_bnd_points)
+        for(auto j : Range(4))
+        {
+            auto i3_ = tempels[ei].GetFace (j);
+            ngcore::INT<3> i3 = {i3_[0], i3_[1], i3_[2]};
+            if(bnd_points[i3[0]] && bnd_points[i3[1]] && bnd_points[i3[2]])
+            {
+                i3.Sort();
+                face_table.Set( i3, true );
+            }
+        }
+    t1.Stop();
+
+    static Timer t2("check faces"); t2.Start();
+
     openels.SetSize(0);
     for (int i = 1; i <= mesh.GetNOpenElements(); i++)
       {
 	const Element2d & tri = mesh.OpenElement(i);
-	INDEX_3 i3(tri[0], tri[1], tri[2]);
+        ngcore::INT<3> i3(tri[0], tri[1], tri[2]);
 	i3.Sort();
-	openeltab.Set (i3, i);
+        if(!face_table.Used(i3))
+            openels.Append(i);
       }
 
-    for (int i = 1; i <= tempels.Size(); i++)
+    t2.Stop();
+
+    auto p2sel = ngcore::CreateSortedTable<int, PointIndex>( Range(openels.Size()),
+           [&](auto & table, int i)
+           {
+             auto openel_i = openels[i];
+             const Element2d & tri = mesh.OpenElement(openel_i);
+             table.Add(tri[0], openel_i);
+             table.Add(tri[1], openel_i);
+             table.Add(tri[2], openel_i);
+           }, mesh.GetNP());
+
+    for (auto i : openels)
       {
-	for (int j = 0; j < 4; j++)
-	  {
-	    INDEX_3 i3 = tempels.Get(i).GetFace (j);
-	    i3.Sort();
-	    if (openeltab.Used(i3))
-	      openeltab.Set (i3, 0);
-	  }
-      }
-  
-    // and store them in openels
-    for (int i = 1; i <= openeltab.GetNBags(); i++)
-      for (int j = 1; j <= openeltab.GetBagSize(i); j++)
-	{
-	  INDEX_3 i3;
-	  int fnr;
-	  openeltab.GetData (i, j, i3, fnr);
-	  if (fnr)
-	    openels.Append (fnr);
-	}
+	const Element2d & tri = mesh.OpenElement(i);
 
+        for( auto edge : Range(3) )
+        {
+            auto pi0 = tri[edge];
+            auto pi1 = tri[(edge+1)%3];
+            if(pi0>pi1)
+                Swap(pi0, pi1);
 
-    // find open triangle with close edge (from halfening of surface squares)
-  
-    INDEX_2_HASHTABLE<INDEX_2> twotrias(mesh.GetNOpenElements()+5); 
-    //  for (i = 1; i <= mesh.GetNOpenElements(); i++)
-    for (int ii = 1; ii <= openels.Size(); ii++)
-      {
-	int i = openels.Get(ii);
-	const Element2d & el = mesh.OpenElement(i);
-	for (int j = 1; j <= 3; j++)
-	  {
-	    INDEX_2 hi2 (el.PNumMod (j), el.PNumMod(j+1));
-	    hi2.Sort();
-	    if (twotrias.Used(hi2))
-	      {
-		INDEX_2 hi3;
-		hi3 = twotrias.Get (hi2);
-		hi3.I2() = el.PNumMod (j+2);
-		twotrias.Set (hi2, hi3);
-	      }
-	    else
-	      {
-		INDEX_2 hi3(el.PNumMod (j+2), 0);
-		twotrias.Set (hi2, hi3);
-	      }
-	  }
-      }
+            // find other trig with edge pi0, pi1
+            int i_other = -1;
+            for(auto ii : p2sel[pi0])
+            {
+                if(ii==i)
+                    continue;
+                auto & tri_other = mesh.OpenElement(ii);
+                if(tri_other[0]==pi1 || tri_other[1]==pi1 || tri_other[2]==pi1)
+                {
+                    i_other = ii;
+                    break;
+                }
+            }
 
-    INDEX_2_HASHTABLE<int> tetedges(tempels.Size() + 5);
-    for (int i = 1; i <= tempels.Size(); i++)
-      {
-	const DelaunayTet & el = tempels.Get(i);
-	INDEX_2 i2;
-	for (int j = 1; j <= 6; j++)
-	  {
-	    switch (j)
-	      {
-	      case 1: i2.I1()=el[0]; i2.I2()=el[1]; break;
-	      case 2: i2.I1()=el[0]; i2.I2()=el[2]; break;
-	      case 3: i2.I1()=el[0]; i2.I2()=el[3]; break;
-	      case 4: i2.I1()=el[1]; i2.I2()=el[2]; break;
-	      case 5: i2.I1()=el[1]; i2.I2()=el[3]; break;
-	      case 6: i2.I1()=el[2]; i2.I2()=el[3]; break;
-		  default: i2.I1()=i2.I2()=0; break;
-	      }
-	    i2.Sort();
-	    tetedges.Set (i2, 1);
-	  }
-      }
-    //  cout << "tetedges:";
-    //  tetedges.PrintMemInfo (cout);
+            if(i_other>i)
+            {
+                auto & tri_other = mesh.OpenElement(i_other);
+                PointIndex pi2 = tri[(edge+2)%3];
+                PointIndex pi3 = tri_other[0]+tri_other[1]+tri_other[2] - pi0 - pi1;
+                if(pi2>pi3)
+                    Swap(pi2, pi3);
 
-    for (INDEX_2_HASHTABLE<INDEX_2>::Iterator it = twotrias.Begin();
-	 it != twotrias.End(); it++)
-      {
-	INDEX_2 hi2, hi3;
-	twotrias.GetData (it, hi2, hi3);
-	hi3.Sort();
-	if (tetedges.Used (hi3))
-	  {
-	    const Point3d & p1 = mesh.Point ( PointIndex (hi2.I1()));
-	    const Point3d & p2 = mesh.Point ( PointIndex (hi2.I2()));
-	    const Point3d & p3 = mesh.Point ( PointIndex (hi3.I1()));
-	    const Point3d & p4 = mesh.Point ( PointIndex (hi3.I2()));
-	    Vec3d v1(p1, p2);
-	    Vec3d v2(p1, p3);
-	    Vec3d v3(p1, p4);
-	    Vec3d n = Cross (v1, v2);
-	    double vol = n * v3;
-	    
-	    double h = v1.Length() + v2.Length() + v3.Length();
-	    if (fabs (vol) < 1e-4 * (h * h * h))   // old: 1e-12
-	      {
-		badnode.Set(hi3.I1());	
-		badnode.Set(hi3.I2());	
-	      }
-	  }
+                // search for tet with edge pi2-pi3
+                for(auto ei : p2el[pi2])
+                {
+                    auto & el = tempels[ei];
+
+                    if(el[0]==pi3 || el[1]==pi3 || el[2]==pi3 || el[3]==pi3)
+                    {
+                        const Point3d & p1 = mesh[pi0];
+                        const Point3d & p2 = mesh[pi1];
+                        const Point3d & p3 = mesh[pi2];
+                        const Point3d & p4 = mesh[pi3];
+                        Vec3d v1(p1, p2);
+                        Vec3d v2(p1, p3);
+                        Vec3d v3(p1, p4);
+                        Vec3d n = Cross (v1, v2);
+                        double vol = n * v3;
+
+                        double h = v1.Length() + v2.Length() + v3.Length();
+                        if (fabs (vol) < 1e-4 * (h * h * h))   // old: 1e-12
+                        {
+                            badnode.Set(pi2);
+                            badnode.Set(pi3);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
       }
 
-    auto ne = tempels.Size();
     for (int i = ne; i >= 1; i--)
       {
 	const DelaunayTet & el = tempels.Get(i);
