@@ -737,9 +737,12 @@ namespace netgen
   }
 
 
-  void DelaunayRemoveDegenerated( const Mesh::T_POINTS & points, NgArray<DelaunayTet> & tempels, NgBitArray & badnode, int np )
+  void DelaunayRemoveDegenerated( const Mesh::T_POINTS & points, NgArray<DelaunayTet> & tempels, int np )
   {
     static Timer tdegenerated("Delaunay - remove degenerated"); RegionTimer rt(tdegenerated);
+
+    NgBitArray badnode(points.Size());
+    badnode.Clear();
 
     int ndeg = 0;
     for (int i = 1; i <= tempels.Size(); i++)
@@ -791,7 +794,7 @@ namespace netgen
   }
 
   // Remove flat tets containing two adjacent surface trigs
-  void DelaunayRemoveTwoTriaTets( const Mesh & mesh, NgArray<DelaunayTet> & tempels, NgArray<int> & openels, NgBitArray & badnode, int np )
+  void DelaunayRemoveTwoTriaTets( const Mesh & mesh, NgArray<DelaunayTet> & tempels, NgArray<int> & openels )
   {
     static Timer topenel("Delaunay - find openel"); RegionTimer rt(topenel);
 
@@ -876,76 +879,82 @@ namespace netgen
              table.Add(tri[2], openel_i);
            }, mesh.GetNP());
 
-    for (auto i : openels)
-      {
-	const Element2d & tri = mesh.OpenElement(i);
+    ngcore::BitArray badnode(mesh.GetNP()+PointIndex::BASE);
+    badnode.Clear();
 
-        for( auto edge : Range(3) )
-        {
-            auto pi0 = tri[edge];
-            auto pi1 = tri[(edge+1)%3];
-            if(pi0>pi1)
-                Swap(pi0, pi1);
+    ngcore::ParallelForRange(openels.Size(), [&] (auto myrange) {
+        for (auto i_ : myrange)
+          {
+            auto i = openels[i_];
+            const Element2d & tri = mesh.OpenElement(i);
 
-            // find other trig with edge pi0, pi1
-            int i_other = -1;
-            for(auto ii : p2sel[pi0])
+            for( auto edge : Range(3) )
             {
-                if(ii==i)
-                    continue;
-                auto & tri_other = mesh.OpenElement(ii);
-                if(tri_other[0]==pi1 || tri_other[1]==pi1 || tri_other[2]==pi1)
+                auto pi0 = tri[edge];
+                auto pi1 = tri[(edge+1)%3];
+                if(pi0>pi1)
+                    Swap(pi0, pi1);
+
+                // find other trig with edge pi0, pi1
+                int i_other = -1;
+                for(auto ii : p2sel[pi0])
                 {
-                    i_other = ii;
-                    break;
-                }
-            }
-
-            if(i_other>i)
-            {
-                auto & tri_other = mesh.OpenElement(i_other);
-                PointIndex pi2 = tri[(edge+2)%3];
-                PointIndex pi3 = tri_other[0]+tri_other[1]+tri_other[2] - pi0 - pi1;
-                if(pi2>pi3)
-                    Swap(pi2, pi3);
-
-                // search for tet with edge pi2-pi3
-                for(auto ei : p2el[pi2])
-                {
-                    auto & el = tempels[ei];
-
-                    if(el[0]==pi3 || el[1]==pi3 || el[2]==pi3 || el[3]==pi3)
+                    if(ii==i)
+                        continue;
+                    auto & tri_other = mesh.OpenElement(ii);
+                    if(tri_other[0]==pi1 || tri_other[1]==pi1 || tri_other[2]==pi1)
                     {
-                        const Point3d & p1 = mesh[pi0];
-                        const Point3d & p2 = mesh[pi1];
-                        const Point3d & p3 = mesh[pi2];
-                        const Point3d & p4 = mesh[pi3];
-                        Vec3d v1(p1, p2);
-                        Vec3d v2(p1, p3);
-                        Vec3d v3(p1, p4);
-                        Vec3d n = Cross (v1, v2);
-                        double vol = n * v3;
-
-                        double h = v1.Length() + v2.Length() + v3.Length();
-                        if (fabs (vol) < 1e-4 * (h * h * h))   // old: 1e-12
-                        {
-                            badnode.Set(pi2);
-                            badnode.Set(pi3);
-                        }
+                        i_other = ii;
                         break;
                     }
                 }
+
+                if(i_other>i)
+                {
+                    auto & tri_other = mesh.OpenElement(i_other);
+                    PointIndex pi2 = tri[(edge+2)%3];
+                    PointIndex pi3 = tri_other[0]+tri_other[1]+tri_other[2] - pi0 - pi1;
+                    if(pi2>pi3)
+                        Swap(pi2, pi3);
+
+                    // search for tet with edge pi2-pi3
+                    for(auto ei : p2el[pi2])
+                    {
+                        auto & el = tempels[ei];
+
+                        if(el[0]==pi3 || el[1]==pi3 || el[2]==pi3 || el[3]==pi3)
+                        {
+                            const Point3d & p1 = mesh[pi0];
+                            const Point3d & p2 = mesh[pi1];
+                            const Point3d & p3 = mesh[pi2];
+                            const Point3d & p4 = mesh[pi3];
+                            Vec3d v1(p1, p2);
+                            Vec3d v2(p1, p3);
+                            Vec3d v3(p1, p4);
+                            Vec3d n = Cross (v1, v2);
+                            double vol = n * v3;
+
+                            double h = v1.Length() + v2.Length() + v3.Length();
+                            if (fabs (vol) < 1e-4 * (h * h * h))   // old: 1e-12
+                            {
+                                badnode.SetBitAtomic(pi2);
+                                badnode.SetBitAtomic(pi3);
+                            }
+                            break;
+                        }
+                    }
+                }
             }
-        }
-      }
+          }
+    });
 
     for (int i = ne; i >= 1; i--)
       {
 	const DelaunayTet & el = tempels.Get(i);
-	if (badnode.Test(el[0]) ||
-	    badnode.Test(el[1]) ||
-	    badnode.Test(el[2]) ||
-	    badnode.Test(el[3]) )
+	if (badnode[el[0]] ||
+	    badnode[el[1]] ||
+	    badnode[el[2]] ||
+	    badnode[el[3]] )
 	  tempels.DeleteElement(i);
       }
   }
@@ -1643,13 +1652,10 @@ namespace netgen
         tempels.Append (el);
     }
 
-    NgBitArray badnode(mesh.GetNP());
-    badnode.Clear();
-
-    DelaunayRemoveDegenerated(mesh.Points(), tempels, badnode, np);
+    DelaunayRemoveDegenerated(mesh.Points(), tempels, np);
 
     NgArray<int> openels;
-    DelaunayRemoveTwoTriaTets(mesh, tempels, openels, badnode, np);
+    DelaunayRemoveTwoTriaTets(mesh, tempels, openels);
     DelaunayRemoveIntersecting(mesh, tempels, openels, pmin, pmax);
     DelaunayRemoveOuter(mesh, tempels, adfront);
 
