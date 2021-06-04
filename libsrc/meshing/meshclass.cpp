@@ -6545,14 +6545,34 @@ namespace netgen
   }
 
 
-  Table<ElementIndex, PointIndex> Mesh :: CreatePoint2ElementTable() const
+  Table<ElementIndex, PointIndex> Mesh :: CreatePoint2ElementTable(std::optional<BitArray> points) const
   {
-    return ngcore::CreateSortedTable<ElementIndex, PointIndex>( volelements.Range(),
-           [&](auto & table, ElementIndex ei)
-           {
-             for (PointIndex pi : (*this)[ei].PNums())
-               table.Add (pi, ei);
-           }, GetNP());
+    if(points)
+      {
+        const auto & free_points = *points;
+        return ngcore::CreateSortedTable<ElementIndex, PointIndex>( volelements.Range(),
+               [&](auto & table, ElementIndex ei)
+               {
+                 const auto & el = (*this)[ei];
+                 if(el.IsDeleted())
+                     return;
+
+                 for (PointIndex pi : el.PNums())
+                   if(free_points[pi])
+                     table.Add (pi, ei);
+               }, GetNP());
+      }
+    else
+        return ngcore::CreateSortedTable<ElementIndex, PointIndex>( volelements.Range(),
+               [&](auto & table, ElementIndex ei)
+               {
+                 const auto & el = (*this)[ei];
+                 if(el.IsDeleted())
+                     return;
+
+                 for (PointIndex pi : el.PNums())
+                   table.Add (pi, ei);
+               }, GetNP());
   }
 
   Table<SurfaceElementIndex, PointIndex> Mesh :: CreatePoint2SurfaceElementTable( int faceindex ) const
