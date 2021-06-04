@@ -737,14 +737,10 @@ namespace netgen
   }
 
 
-  void DelaunayRemoveDegenerated( const Mesh::T_POINTS & points, NgArray<DelaunayTet> & tempels )
+  void DelaunayRemoveDegenerated( const Mesh::T_POINTS & points, NgArray<DelaunayTet> & tempels, NgBitArray & badnode, int np )
   {
     static Timer tdegenerated("Delaunay - remove degenerated"); RegionTimer rt(tdegenerated);
 
-    auto np = points.Size();
-
-    NgBitArray badnode(np);
-    badnode.Clear();
     int ndeg = 0;
     for (int i = 1; i <= tempels.Size(); i++)
       {
@@ -795,11 +791,9 @@ namespace netgen
   }
 
   // Remove flat tets containing two adjacent surface trigs
-  void DelaunayRemoveTwoTriaTets( const Mesh & mesh, NgArray<DelaunayTet> & tempels, NgArray<int> & openels )
+  void DelaunayRemoveTwoTriaTets( const Mesh & mesh, NgArray<DelaunayTet> & tempels, NgArray<int> & openels, NgBitArray & badnode, int np )
   {
     static Timer topenel("Delaunay - find openel"); RegionTimer rt(topenel);
-
-    auto np = mesh.GetNP();
 
     // find surface triangles which are no face of any tet
 
@@ -886,9 +880,6 @@ namespace netgen
       }
     //  cout << "tetedges:";
     //  tetedges.PrintMemInfo (cout);
-
-    NgBitArray badnode(np);
-    badnode.Clear();
 
     for (INDEX_2_HASHTABLE<INDEX_2>::Iterator it = twotrias.Begin();
 	 it != twotrias.End(); it++)
@@ -1622,11 +1613,13 @@ namespace netgen
         tempels.Append (el);
     }
 
+    NgBitArray badnode(mesh.GetNP());
+    badnode.Clear();
 
-    DelaunayRemoveDegenerated(mesh.Points(), tempels);
+    DelaunayRemoveDegenerated(mesh.Points(), tempels, badnode, np);
 
     NgArray<int> openels;
-    DelaunayRemoveTwoTriaTets(mesh, tempels, openels);
+    DelaunayRemoveTwoTriaTets(mesh, tempels, openels, badnode, np);
     DelaunayRemoveIntersecting(mesh, tempels, openels, pmin, pmax);
     DelaunayRemoveOuter(mesh, tempels, adfront);
 
