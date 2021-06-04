@@ -737,137 +737,13 @@ namespace netgen
   }
 
 
-
-
-
-
-  void Meshing3 :: Delaunay (Mesh & mesh, int domainnr, const MeshingParameters & mp)
+  void DelaunayRemoveDegenerated( const Mesh::T_POINTS & points, NgArray<DelaunayTet> & tempels )
   {
-    static Timer t("Meshing3::Delaunay"); RegionTimer reg(t);
-    
-    int np, ne;
+    static Timer tdegenerated("Delaunay - remove degenerated"); RegionTimer rt(tdegenerated);
 
-    PrintMessage (1, "Delaunay meshing");
-    PrintMessage (3, "number of points: ", mesh.GetNP());
-    PushStatus ("Delaunay meshing");
+    auto np = points.Size();
 
-
-    NgArray<DelaunayTet> tempels;
-    Point3d pmin, pmax;
-
-    DelaunayTet startel;
-
-    int oldnp = mesh.GetNP();
-    if (mp.blockfill)
-      {
-	BlockFillLocalH (mesh, mp);
-	PrintMessage (3, "number of points: ", mesh.GetNP());
-      }
-
-    np = mesh.GetNP();
-
-    Delaunay1 (mesh, mp, adfront, tempels, oldnp, startel, pmin, pmax);
-
-    {
-      // improve delaunay - mesh by swapping !!!!
-
-      Mesh tempmesh;
-      tempmesh.GetMemoryTracer().SetName("delaunay-tempmesh");
-
-      for (auto & meshpoint : mesh.Points())
-        tempmesh.AddPoint (meshpoint);
-      
-      for (auto & tempel : tempels)
-	{   
-	  Element el(4);
-	  for (int j = 0; j < 4; j++)
-            el[j] = tempel[j];
-
-	  el.SetIndex (1);
-
-	  const Point<3> & lp1 = mesh.Point (el[0]);
-	  const Point<3> & lp2 = mesh.Point (el[1]);
-	  const Point<3> & lp3 = mesh.Point (el[2]);
-	  const Point<3> & lp4 = mesh.Point (el[3]);
-	  Vec<3> v1 = lp2-lp1;
-	  Vec<3> v2 = lp3-lp1;
-	  Vec<3> v3 = lp4-lp1;
-
-	  Vec<3> n = Cross (v1, v2);
-	  double vol = n * v3;
-	  if (vol > 0) swap (el[2], el[3]);
-
-	  tempmesh.AddVolumeElement (el);
-	}
-
-      tempels.DeleteAll();
-
-      MeshQuality3d (tempmesh);
-
-      tempmesh.AddFaceDescriptor (FaceDescriptor (1, 1, 0, 0));
-      tempmesh.AddFaceDescriptor (FaceDescriptor (2, 1, 0, 0));
-
-
-    
-      for (int i = 1; i <= mesh.GetNOpenElements(); i++)
-	{
-	  Element2d sel = mesh.OpenElement(i);
-	  sel.SetIndex(1);
-	  tempmesh.AddSurfaceElement (sel);
-	  swap (sel[1], sel[2]);
-	  tempmesh.AddSurfaceElement (sel);
-	}
-
-
-      for (int i = 1; i <= 4; i++)
-	{
-	  Element2d self(TRIG);
-	  self.SetIndex (1);
-	  startel.GetFace (i-1, self);
-	  tempmesh.AddSurfaceElement (self);
-	}
-
-      
-      //  for (i = mesh.GetNP() - 3; i <= mesh.GetNP(); i++)
-      //    tempmesh.AddLockedPoint (i);
-      for (auto pi : tempmesh.Points().Range())
-        tempmesh.AddLockedPoint (pi);
-      
-      //  tempmesh.PrintMemInfo(cout);
-      // tempmesh.Save ("tempmesh.vol");
-
-      {
-        RegionTaskManager rtm(mp.parallel_meshing ? mp.nthreads : 0);
-        for (int i = 1; i <= 4; i++)
-          {
-            tempmesh.FindOpenElements ();
-
-            PrintMessage (5, "Num open: ", tempmesh.GetNOpenElements());
-            tempmesh.CalcSurfacesOfNode ();
-
-            tempmesh.FreeOpenElementsEnvironment (1);
-
-            MeshOptimize3d meshopt(mp);
-            // tempmesh.CalcSurfacesOfNode();
-            meshopt.SwapImprove(tempmesh, OPT_CONFORM);
-          }
-      }
-    
-      MeshQuality3d (tempmesh);
-    
-      tempels.SetSize(tempmesh.GetNE());
-      tempels.SetSize(0);
-      for (auto & el : tempmesh.VolumeElements())
-        tempels.Append (el);
-    }
-
-
-
-    // remove degenerated
-    static Timer tdegenerated("Delaunay - remove degenerated");
-    tdegenerated.Start();
-
-    NgBitArray badnode(mesh.GetNP());
+    NgBitArray badnode(np);
     badnode.Clear();
     int ndeg = 0;
     for (int i = 1; i <= tempels.Size(); i++)
@@ -876,10 +752,10 @@ namespace netgen
 	for (int j = 0; j < 4; j++)
 	  el[j] = tempels.Elem(i)[j];
 	//      Element & el = tempels.Elem(i);
-	const Point3d & lp1 = mesh.Point (el[0]);
-	const Point3d & lp2 = mesh.Point (el[1]);
-	const Point3d & lp3 = mesh.Point (el[2]);
-	const Point3d & lp4 = mesh.Point (el[3]);
+	const Point3d & lp1 = points[el[0]];
+	const Point3d & lp2 = points[el[1]];
+	const Point3d & lp3 = points[el[2]];
+	const Point3d & lp4 = points[el[3]];
 	Vec3d v1(lp1, lp2);
 	Vec3d v2(lp1, lp3);
 	Vec3d v3(lp1, lp4);
@@ -903,7 +779,7 @@ namespace netgen
 	  Swap (el[2], el[3]);
       }
 
-    ne = tempels.Size();
+    auto ne = tempels.Size();
     for (int i = ne; i >= 1; i--)
       {
 	const DelaunayTet & el = tempels.Get(i);
@@ -916,10 +792,15 @@ namespace netgen
 
   
     PrintMessage (3, ndeg, " degenerated elements removed");
-    tdegenerated.Stop();
+  }
 
+  // Remove flat tets containing two adjacent surface trigs
+  NgArray<int> DelaunayRemoveTwoTriaTets( const Mesh & mesh, NgArray<DelaunayTet> & tempels )
+  {
     static Timer topenel("Delaunay - find openel");
     topenel.Start();
+
+    auto np = mesh.GetNP();
 
     // find surface triangles which are no face of any tet
 
@@ -1010,6 +891,8 @@ namespace netgen
     //  cout << "tetedges:";
     //  tetedges.PrintMemInfo (cout);
 
+    NgBitArray badnode(np);
+    badnode.Clear();
 
     for (INDEX_2_HASHTABLE<INDEX_2>::Iterator it = twotrias.Begin();
 	 it != twotrias.End(); it++)
@@ -1038,36 +921,7 @@ namespace netgen
 	  }
       }
 
-    /*
-    for (i = 1; i <= twotrias.GetNBags(); i++)
-      for (j = 1; j <= twotrias.GetBagSize (i); j++)
-	{
-	  INDEX_2 hi2, hi3;
-	  twotrias.GetData (i, j, hi2, hi3);
-	  hi3.Sort();
-	  if (tetedges.Used (hi3))
-	    {
-	      const Point3d & p1 = mesh.Point (hi2.I1());
-	      const Point3d & p2 = mesh.Point (hi2.I2());
-	      const Point3d & p3 = mesh.Point (hi3.I1());
-	      const Point3d & p4 = mesh.Point (hi3.I2());
-	      Vec3d v1(p1, p2);
-	      Vec3d v2(p1, p3);
-	      Vec3d v3(p1, p4);
-	      Vec3d n = Cross (v1, v2);
-	      double vol = n * v3;
-	    
-	      double h = v1.Length() + v2.Length() + v3.Length();
-	      if (fabs (vol) < 1e-4 * (h * h * h))   // old: 1e-12
-		{
-		  badnode.Set(hi3.I1());	
-		  badnode.Set(hi3.I2());	
-		}
-	    }
-	}
-    */
-
-    ne = tempels.Size();
+    auto ne = tempels.Size();
     for (int i = ne; i >= 1; i--)
       {
 	const DelaunayTet & el = tempels.Get(i);
@@ -1081,9 +935,12 @@ namespace netgen
 
     topenel.Stop();
 
-    static Timer trem_intersect("Delaunay - remove intersecting");
-    trem_intersect.Start();
+    return openels;
+  }
 
+  void DelaunayRemoveIntersecting( const Mesh & mesh, NgArray<DelaunayTet> & tempels, NgArray<int> & openels, Point3d pmin, Point3d pmax )
+  {
+    static Timer trem_intersect("Delaunay - remove intersecting"); RegionTimert(trem_intersect);
 
     // find intersecting:
     PrintMessage (3, "Remove intersecting");
@@ -1198,12 +1055,11 @@ namespace netgen
 	      }
 	  }
       }
-  
+  }
 
-    trem_intersect.Stop();
-
-    static Timer trem_outer("Delaunay - remove outer");
-    trem_outer.Start();
+  void DelaunayRemoveOuter( const Mesh & mesh, NgArray<DelaunayTet> & tempels, AdFront3 * adfront )
+  {
+    static Timer trem_outer("Delaunay - remove outer"); RegionTimer rt(trem_outer);
 
 
     PrintMessage (3, "Remove outer");
@@ -1393,7 +1249,7 @@ namespace netgen
     PrintMessage (5, "tables filled");
  
 
-    ne = tempels.Size();
+    auto ne = tempels.Size();
     NgBitArray inner(ne), outer(ne);
     inner.Clear();
     outer.Clear();
@@ -1649,6 +1505,138 @@ namespace netgen
 
     // mesh.points.SetSize(mesh.points.Size()-4);
 
+    PrintMessage (5, "outer removed");
+
+  }
+
+
+
+  void Meshing3 :: Delaunay (Mesh & mesh, int domainnr, const MeshingParameters & mp)
+  {
+    static Timer t("Meshing3::Delaunay"); RegionTimer reg(t);
+    
+    int np, ne;
+
+    PrintMessage (1, "Delaunay meshing");
+    PrintMessage (3, "number of points: ", mesh.GetNP());
+    PushStatus ("Delaunay meshing");
+
+
+    NgArray<DelaunayTet> tempels;
+    Point3d pmin, pmax;
+
+    DelaunayTet startel;
+
+    int oldnp = mesh.GetNP();
+    if (mp.blockfill)
+      {
+	BlockFillLocalH (mesh, mp);
+	PrintMessage (3, "number of points: ", mesh.GetNP());
+      }
+
+    np = mesh.GetNP();
+
+    Delaunay1 (mesh, mp, adfront, tempels, oldnp, startel, pmin, pmax);
+
+    {
+      // improve delaunay - mesh by swapping !!!!
+
+      Mesh tempmesh;
+      tempmesh.GetMemoryTracer().SetName("delaunay-tempmesh");
+
+      for (auto & meshpoint : mesh.Points())
+        tempmesh.AddPoint (meshpoint);
+      
+      for (auto & tempel : tempels)
+	{   
+	  Element el(4);
+	  for (int j = 0; j < 4; j++)
+            el[j] = tempel[j];
+
+	  el.SetIndex (1);
+
+	  const Point<3> & lp1 = mesh.Point (el[0]);
+	  const Point<3> & lp2 = mesh.Point (el[1]);
+	  const Point<3> & lp3 = mesh.Point (el[2]);
+	  const Point<3> & lp4 = mesh.Point (el[3]);
+	  Vec<3> v1 = lp2-lp1;
+	  Vec<3> v2 = lp3-lp1;
+	  Vec<3> v3 = lp4-lp1;
+
+	  Vec<3> n = Cross (v1, v2);
+	  double vol = n * v3;
+	  if (vol > 0) swap (el[2], el[3]);
+
+	  tempmesh.AddVolumeElement (el);
+	}
+
+      tempels.DeleteAll();
+
+      MeshQuality3d (tempmesh);
+
+      tempmesh.AddFaceDescriptor (FaceDescriptor (1, 1, 0, 0));
+      tempmesh.AddFaceDescriptor (FaceDescriptor (2, 1, 0, 0));
+
+
+    
+      for (int i = 1; i <= mesh.GetNOpenElements(); i++)
+	{
+	  Element2d sel = mesh.OpenElement(i);
+	  sel.SetIndex(1);
+	  tempmesh.AddSurfaceElement (sel);
+	  swap (sel[1], sel[2]);
+	  tempmesh.AddSurfaceElement (sel);
+	}
+
+
+      for (int i = 1; i <= 4; i++)
+	{
+	  Element2d self(TRIG);
+	  self.SetIndex (1);
+	  startel.GetFace (i-1, self);
+	  tempmesh.AddSurfaceElement (self);
+	}
+
+      
+      //  for (i = mesh.GetNP() - 3; i <= mesh.GetNP(); i++)
+      //    tempmesh.AddLockedPoint (i);
+      for (auto pi : tempmesh.Points().Range())
+        tempmesh.AddLockedPoint (pi);
+      
+      //  tempmesh.PrintMemInfo(cout);
+      // tempmesh.Save ("tempmesh.vol");
+
+      {
+        MeshOptimize3d meshopt(mp);
+        tempmesh.Compress();
+        tempmesh.FindOpenElements ();
+        RegionTaskManager rtm(mp.parallel_meshing ? mp.nthreads : 0);
+        for (auto i : Range(10))
+          {
+            PrintMessage (5, "Num open: ", tempmesh.GetNOpenElements());
+
+            if(i%5==0)
+                tempmesh.FreeOpenElementsEnvironment (1);
+
+            meshopt.SwapImprove(tempmesh, OPT_CONFORM);
+          }
+        tempmesh.Compress();
+      }
+    
+      MeshQuality3d (tempmesh);
+    
+      tempels.SetSize(tempmesh.GetNE());
+      tempels.SetSize(0);
+      for (auto & el : tempmesh.VolumeElements())
+        tempels.Append (el);
+    }
+
+
+    DelaunayRemoveDegenerated(mesh.Points(), tempels);
+    auto openels = DelaunayRemoveTwoTriaTets(mesh, tempels);
+    DelaunayRemoveIntersecting(mesh, tempels, openels, pmin, pmax);
+    DelaunayRemoveOuter(mesh, tempels, adfront);
+
     for (int i = 0; i < tempels.Size(); i++)
       {
 	Element el(4);
@@ -1656,10 +1644,6 @@ namespace netgen
 	  el[j] = tempels[i][j];
 	mesh.AddVolumeElement (el);
       }
-
-    PrintMessage (5, "outer removed");
-
-    trem_outer.Stop();
 
     mesh.FindOpenElements(domainnr);
 
