@@ -787,6 +787,7 @@ void AdFront3 :: SetStartFront (int /* baseelnp */)
 
 bool AdFront3 :: Inside (const Point<3> & p) const
 {
+  static Timer timer("AdFront3::Inside"); RegionTimer rt(timer);
   int cnt;
   Vec3d n, v1, v2;
   DenseMatrix a(3), ainv(3);
