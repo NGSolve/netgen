@@ -838,13 +838,22 @@ namespace netgen
 
     void DoArchive (Archive & ar)
     {
-      short _np, _typ;
-      bool _curved;
-      if (ar.Output())
-        { _np = np; _typ = typ; _curved = is_curved; }
-      ar & _np & _typ & index & _curved;
+      short _np = np;
+      short _typ = typ;
+      bool _curved = is_curved;
+      auto _index = index;
+
+      ar & _np & _typ & _index & _curved;
+
       if (ar.Input())
-        { np = _np; typ = ELEMENT_TYPE(_typ); is_curved = _curved; }
+        {
+          new (&this) Element(_np);
+          np = _np;
+          typ = ELEMENT_TYPE(_typ);
+          index = _index;
+          is_curved = _curved;
+        }
+
       for (size_t i = 0; i < np; i++)
         ar & pnum[i];
     }
