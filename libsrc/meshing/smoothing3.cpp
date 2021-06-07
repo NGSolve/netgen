@@ -304,7 +304,7 @@ namespace netgen
   public:
     Mesh::T_POINTS & points;
     const Array<Element> & elements;
-    TABLE<int,PointIndex::BASE> &elementsonpoint;
+    Table<int, PointIndex> &elementsonpoint;
     bool own_elementsonpoint;
     const MeshingParameters & mp;
     PointIndex actpind;
@@ -319,7 +319,7 @@ namespace netgen
     virtual void SetPointIndex (PointIndex aactpind);
     void SetLocalH (double ah) { h = ah; }
     double GetLocalH () const { return h; }
-    const TABLE<int,PointIndex::BASE> & GetPointToElementTable() { return elementsonpoint; };
+    const Table<int, PointIndex> & GetPointToElementTable() { return elementsonpoint; };
     virtual double PointFunctionValue (const Point<3> & pp) const;
     virtual double PointFunctionValueGrad (const Point<3> & pp, Vec<3> & grad) const;
     virtual double PointFunctionValueDeriv (const Point<3> & pp, const Vec<3> & dir, double & deriv) const;
@@ -335,13 +335,20 @@ namespace netgen
   PointFunction :: PointFunction (Mesh::T_POINTS & apoints, 
 				  const Array<Element> & aelements,
 				  const MeshingParameters & amp)
-    : points(apoints), elements(aelements), elementsonpoint(* new TABLE<int,PointIndex::BASE>(apoints.Size())), own_elementsonpoint(true), mp(amp)
+    : points(apoints), elements(aelements), elementsonpoint(* new Table<int,PointIndex>()), own_elementsonpoint(true), mp(amp)
   {
     static Timer tim("PointFunction - build elementsonpoint table"); RegionTimer reg(tim);
-    for (int i = 0; i < elements.Size(); i++)
-      if (elements[i].NP() == 4)
-        for (int j = 0; j < elements[i].NP(); j++)
-          elementsonpoint.Add (elements[i][j], i);  
+    elementsonpoint = std::move(ngcore::CreateSortedTable<int, PointIndex>( elements.Range(),
+               [&](auto & table, ElementIndex ei)
+               {
+                 const auto & el = elements[ei];
+
+                 if(el.NP()!=4)
+                     return;
+
+                 for (PointIndex pi : el.PNums())
+                     table.Add (pi, ei);
+               }, points.Size()));
   }
 
   void PointFunction :: SetPointIndex (PointIndex aactpind)
@@ -359,9 +366,9 @@ namespace netgen
     hp = points[actpind];
     points[actpind] = Point<3> (pp);
 
-    for (int j = 0; j < elementsonpoint[actpind].Size(); j++)
+    for (auto ei : elementsonpoint[actpind])
       {
-        const Element & el = elements[elementsonpoint[actpind][j]];
+        const Element & el = elements[ei];
 	badness += CalcTetBadness (points[el[0]], points[el[1]], 
 				   points[el[2]], points[el[3]], -1, mp);
       }
@@ -379,9 +386,9 @@ namespace netgen
     Vec<3> vgradi, vgrad(0,0,0);
     points[actpind] = Point<3> (pp);
 
-    for (int j = 0; j < elementsonpoint[actpind].Size(); j++)
+    for (auto ei : elementsonpoint[actpind])
       {
-        const Element & el = elements[elementsonpoint[actpind][j]];
+        const Element & el = elements[ei];
 	for (int k = 0; k < 4; k++)
 	  if (el[k] == actpind)
 	    {
@@ -409,9 +416,9 @@ namespace netgen
     points[actpind] = pp;
     double f = 0;
 
-    for (int j = 0; j < elementsonpoint[actpind].Size(); j++)
+    for (auto ei : elementsonpoint[actpind])
       {
-        const Element & el = elements[elementsonpoint[actpind][j]];
+        const Element & el = elements[ei];
 
 	for (int k = 1; k <= 4; k++)
 	  if (el.PNum(k) == actpind)
@@ -435,10 +442,9 @@ namespace netgen
     // try point movement 
     NgArray<Element2d> faces;
   
-    for (int j = 0; j < elementsonpoint[actpind].Size(); j++)
+    for (auto ei : elementsonpoint[actpind])
       {
-	const Element & el = 
-	  elements[elementsonpoint[actpind][j]];
+        const Element & el = elements[ei];
       
 	for (int k = 1; k <= 4; k++)
 	  if (el.PNum(k) == actpind)
@@ -1013,11 +1019,8 @@ double JacobianPointFunction :: Func (const Vector & v) const
     points[actpind] -= (v(0)*nv(0)+v(1)*nv(1)+v(2)*nv(2)) * nv;
 
 
-  for (j = 1; j <= elementsonpoint.EntrySize(actpind); j++)
-    {
-      int eli = elementsonpoint.Get(actpind, j);
-      badness += elements[eli-1].CalcJacobianBadness (points);
-    }
+  for (auto eli : elementsonpoint[actpind])
+      badness += elements[eli].CalcJacobianBadness (points);
   
   points[actpind] = hp; 
 
@@ -1046,10 +1049,9 @@ FuncGrad (const Vector & x, Vector & g) const
   g.SetSize(3);
   g = 0;
 
-  for (j = 1; j <= elementsonpoint.EntrySize(actpind); j++)
+  for (auto ei : elementsonpoint[actpind])
     {
-      int eli = elementsonpoint.Get(actpind, j);
-      const Element & el = elements[eli-1];
+      const Element & el = elements[ei];
 
       lpi = 0;
       for (k = 1; k <= el.GetNP(); k++)
@@ -1057,7 +1059,7 @@ FuncGrad (const Vector & x, Vector & g) const
 	  lpi = k;
       if (!lpi) cerr << "loc point not found" << endl;
 
-      badness += elements[eli-1].
+      badness += elements[ei].
 	CalcJacobianBadnessGradient (points, lpi, hderiv);
 
       for(k=0; k<3; k++)
@@ -1119,10 +1121,9 @@ FuncDeriv (const Vector & x, const Vector & dir, double & deriv) const
       vdir -= scal*nv;
     }
 
-  for (j = 1; j <= elementsonpoint.EntrySize(actpind); j++)
+  for (auto ei : elementsonpoint[actpind])
     {
-      int eli = elementsonpoint.Get(actpind, j);
-      const Element & el = elements[eli-1];
+      const Element & el = elements[ei];
 
       lpi = 0;
       for (k = 1; k <= el.GetNP(); k++)
@@ -1130,7 +1131,7 @@ FuncDeriv (const Vector & x, const Vector & dir, double & deriv) const
 	  lpi = k;
       if (!lpi) cerr << "loc point not found" << endl;
 
-      badness += elements[eli-1].
+      badness += elements[ei].
 	CalcJacobianBadnessDirDeriv (points, lpi, vdir, hderiv);
       deriv += hderiv;
     }
