@@ -917,9 +917,6 @@ namespace netgen
     /// loads a mesh sent from master processor
     void ReceiveParallelMesh ();
 
-    NgArray<int> vol_partition;
-    NgArray<int> surf_partition;
-    NgArray<int> seg_partition;
     
 #else
     void ParallelMetis (int /* nproc */) {}
@@ -928,6 +925,10 @@ namespace netgen
     void Distribute (NgArray<int> & volume_weights, NgArray<int> & surface_weights, 
       NgArray<int> & segment_weights){ }
 #endif
+
+    NgArray<int> vol_partition;
+    NgArray<int> surf_partition;
+    NgArray<int> seg_partition;
 
     shared_ptr<Mesh> Mirror( netgen::Point<3> p, Vec<3> n );
 
