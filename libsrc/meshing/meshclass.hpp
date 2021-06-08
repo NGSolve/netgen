@@ -922,6 +922,7 @@ namespace netgen
     NgArray<int> seg_partition;
     
 #else
+    void ParallelMetis (int /* nproc */) {}
     void Distribute () {}
     void SendRecvMesh () {}
     void Distribute (NgArray<int> & volume_weights, NgArray<int> & surface_weights, 
