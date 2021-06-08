@@ -48,6 +48,8 @@ namespace netgen
     isfirst(first), islast(last), spline(&spline_in), p0(p), v_axis(vec),  id(id_in)
   {    
     deletable = false;
+    maxh = spline_in.GetMaxh();
+    bcname = spline_in.GetBCName();
     Init();
   }
 
