@@ -114,14 +114,15 @@ namespace netgen
     int type;
   
 
-    NgArray<RevolutionFace*> faces;
+    Array<RevolutionFace*> faces;
+    shared_ptr<SplineGeometry<2>> splinegeo;
 
     mutable int intersecting_face;
 
   public:
     Revolution(const Point<3> & p0_in,
 	       const Point<3> & p1_in,
-	       const SplineGeometry<2> & spline_in);
+	       shared_ptr<SplineGeometry<2>> spline_in);
     // default constructor for archive
     Revolution() {}
 

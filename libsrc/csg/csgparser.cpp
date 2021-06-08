@@ -479,7 +479,7 @@ namespace netgen
 		}
 
 	      Primitive * nprim = new Revolution(p0,p1,
-						 *(geom->GetSplineCurve2d(spline)));
+						 geom->GetSplineCurve2d(spline));
 
 	      geom->AddSurfaces (nprim);
 	      return new Solid(nprim);

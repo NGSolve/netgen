@@ -323,13 +323,13 @@ DLL_HEADER void ExportCSG(py::module &m)
                                            Solid * sol = new Solid (torus);
                                            return make_shared<SPSolid> (sol);
                                          }));
-  m.def ("Revolution", FunctionPointer([](Point<3> p1, Point<3> p2,
-                                            const SplineGeometry<2> & spline)
-                                         {
-                                           Revolution * rev = new Revolution (p1, p2, spline);
-                                           Solid * sol = new Solid(rev);
-                                           return make_shared<SPSolid> (sol);
-                                         }));
+  m.def ("Revolution", [](Point<3> p1, Point<3> p2,
+                          shared_ptr<SplineGeometry<2>> spline)
+  {
+    Revolution * rev = new Revolution (p1, p2, spline);
+    Solid * sol = new Solid(rev);
+    return make_shared<SPSolid> (sol);
+  });
   m.def ("Extrusion", [](shared_ptr<SplineGeometry<3>> path,
                          shared_ptr<SplineGeometry<2>> profile,
                          Vec<3> d)

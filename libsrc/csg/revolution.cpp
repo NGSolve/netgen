@@ -640,10 +640,10 @@ namespace netgen
 
   Revolution :: Revolution(const Point<3> & p0_in,
 			   const Point<3> & p1_in,
-			   const SplineGeometry<2> & spline_in) :
-    p0(p0_in), p1(p1_in)
+			   shared_ptr<SplineGeometry<2>> spline_in) :
+    p0(p0_in), p1(p1_in), splinegeo(spline_in)
   {
-    auto nsplines = spline_in.GetNSplines();
+    auto nsplines = spline_in->GetNSplines();
     surfaceactive.SetSize(0);
     surfaceids.SetSize(0);
 
@@ -651,39 +651,39 @@ namespace netgen
 
     v_axis.Normalize();
 
-    if(spline_in.GetSpline(0).StartPI()(1) <= 0. &&
-       spline_in.GetSpline(nsplines-1).EndPI()(1) <= 0.)
+    if(spline_in->GetSpline(0).StartPI()(1) <= 0. &&
+       spline_in->GetSpline(nsplines-1).EndPI()(1) <= 0.)
       type = 2;
-    else if (Dist(spline_in.GetSpline(0).StartPI(),
-		  spline_in.GetSpline(nsplines-1).EndPI()) < 1e-7)
+    else if (Dist(spline_in->GetSpline(0).StartPI(),
+		  spline_in->GetSpline(nsplines-1).EndPI()) < 1e-7)
       type = 1;
     else
       cerr << "Surface of revolution cannot be constructed" << endl;
 
-    for(int i=0; i<spline_in.GetNSplines(); i++)
+    for(int i=0; i<spline_in->GetNSplines(); i++)
       {
-	RevolutionFace * face = new RevolutionFace(spline_in.GetSpline(i),
-						   p0,v_axis,
-						   type==2 && i==0,
-						   type==2 && i==spline_in.GetNSplines()-1);
-	faces.Append(face);
-	surfaceactive.Append(1);
+	faces.Append(new RevolutionFace
+                     (spline_in->GetSpline(i),
+                      p0,v_axis,
+                      type==2 && i==0,
+                      type==2 && i==spline_in->GetNSplines()-1));
+        surfaceactive.Append(1);
 	surfaceids.Append(0);
       }
 
     // checking
     if (type == 2)
       {
-        auto t0 = spline_in.GetSpline(0).GetTangent(0);
+        auto t0 = spline_in->GetSpline(0).GetTangent(0);
         cout << "tstart (must be vertically): " << t0 << endl;
 
-        auto tn = spline_in.GetSpline(nsplines-1).GetTangent(1);
+        auto tn = spline_in->GetSpline(nsplines-1).GetTangent(1);
         cout << "tend (must be vertically): " << tn << endl;
 
         for (int i = 0; i < nsplines-1; i++)
           {
-            auto ta = spline_in.GetSpline(i).GetTangent(1);
-            auto tb = spline_in.GetSpline(i+1).GetTangent(0);
+            auto ta = spline_in->GetSpline(i).GetTangent(1);
+            auto tb = spline_in->GetSpline(i+1).GetTangent(0);
             cout << "sin (must not be 0) = " << abs(ta(0)*tb(1)-ta(1)*tb(0)) / (Abs(ta)*Abs(tb)); 
           }
       }
