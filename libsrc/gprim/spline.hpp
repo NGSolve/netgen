@@ -50,8 +50,11 @@ namespace netgen
   template < int D >
   class SplineSeg
   {
+    double maxh;
+    string bcname;
   public:
-    SplineSeg () { ; }
+    SplineSeg (double amaxh = 1e99, string abcname = "default")
+      : maxh(amaxh), bcname(abcname) { ; }
     ///
     virtual ~SplineSeg() { ; }
     /// calculates length of curve
@@ -116,6 +119,8 @@ namespace netgen
     virtual void GetRawData (NgArray<double> & data) const
     { cerr << "GetRawData not implemented for spline base-class" << endl;}
 
+    double GetMaxh() const { return maxh; }
+    string GetBCName() const { return bcname; }
   };
 
 
@@ -127,7 +132,8 @@ namespace netgen
     GeomPoint<D> p1, p2;
   public:
     ///
-    LineSeg (const GeomPoint<D> & ap1, const GeomPoint<D> & ap2);
+    LineSeg (const GeomPoint<D> & ap1, const GeomPoint<D> & ap2,
+             double maxh=1e99, string bcname="default");
     ///
     // default constructor for archive
     LineSeg() {}
@@ -184,11 +190,15 @@ namespace netgen
     ///
     SplineSeg3 (const GeomPoint<D> & ap1, 
 		const GeomPoint<D> & ap2, 
-		const GeomPoint<D> & ap3);
+		const GeomPoint<D> & ap3,
+                string bcname="default",
+                double maxh=1e99);
     SplineSeg3 (const GeomPoint<D> & ap1,
 		const GeomPoint<D> & ap2,
 		const GeomPoint<D> & ap3,
-                double aweight);
+                double aweight,
+                string bcname="default",
+                double maxh=1e99);
     // default constructor for archive
     SplineSeg3() {}
     ///
@@ -384,8 +394,9 @@ namespace netgen
 
   template<int D>
   LineSeg<D> :: LineSeg (const GeomPoint<D> & ap1, 
-			 const GeomPoint<D> & ap2)
-    : p1(ap1), p2(ap2)
+			 const GeomPoint<D> & ap2,
+                         double maxh, string bcname)
+    : SplineSeg<D>(maxh, bcname), p1(ap1), p2(ap2)
   {
     ;
   }

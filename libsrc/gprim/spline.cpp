@@ -89,8 +89,10 @@ namespace netgen
   template<int D>
   SplineSeg3<D> :: SplineSeg3 (const GeomPoint<D> & ap1, 
 			       const GeomPoint<D> & ap2,
-			       const GeomPoint<D> & ap3)
-    : p1(ap1), p2(ap2), p3(ap3)
+			       const GeomPoint<D> & ap3,
+                               string bcname,
+                               double maxh)
+    : SplineSeg<D>(maxh, bcname), p1(ap1), p2(ap2), p3(ap3)
   {
     weight = Dist (p1, p3) / sqrt (0.5 * (Dist2 (p1, p2) + Dist2 (p2, p3)));
     // weight = sqrt(2);
@@ -102,8 +104,10 @@ namespace netgen
   SplineSeg3<D> :: SplineSeg3 (const GeomPoint<D> & ap1,
 			       const GeomPoint<D> & ap2,
 			       const GeomPoint<D> & ap3,
-                               double aweight)
-    : p1(ap1), p2(ap2), p3(ap3), weight(aweight)
+                               double aweight,
+                               string bcname,
+                               double maxh)
+    : SplineSeg<D>(maxh, bcname), p1(ap1), p2(ap2), p3(ap3)
   {
     proj_latest_t = 0.5;
   }

@@ -7,6 +7,7 @@
 
 
 using namespace netgen;
+using namespace pybind11::literals;
 
 namespace netgen
 {
@@ -179,16 +180,16 @@ DLL_HEADER void ExportCSG(py::module &m)
              self.geompoints.Append (GeomPoint<2> (Point<2> (x,y)));
              return self.geompoints.Size()-1;
            }))
-    .def ("AddSegment", FunctionPointer
-          ([] (SplineGeometry<2> & self, int i1, int i2)
-           {
-             self.splines.Append (new LineSeg<2> (self.geompoints[i1], self.geompoints[i2]));
-           }))
-    .def ("AddSegment", FunctionPointer
-          ([] (SplineGeometry<2> & self, int i1, int i2, int i3)
-           {
-             self.splines.Append (new SplineSeg3<2> (self.geompoints[i1], self.geompoints[i2], self.geompoints[i3]));
-           }))
+    .def ("AddSegment", [] (SplineGeometry<2> & self, int i1, int i2,
+                            string bcname, double maxh)
+    {
+      self.splines.Append (new LineSeg<2> (self.geompoints[i1], self.geompoints[i2], maxh, bcname));
+    }, "p1"_a, "p2"_a, "bcname"_a="default", "maxh"_a=1e99)
+    .def ("AddSegment", [] (SplineGeometry<2> & self, int i1, int i2,
+                            int i3, string bcname, double maxh)
+    {
+      self.splines.Append (new SplineSeg3<2> (self.geompoints[i1], self.geompoints[i2], self.geompoints[i3], bcname, maxh));
+    }, "p1"_a, "p2"_a, "p3"_a, "bcname"_a="default", "maxh"_a=1e99)
     ;
 
   py::class_<SplineGeometry<3>,shared_ptr<SplineGeometry<3>>> (m,"SplineCurve3d")
