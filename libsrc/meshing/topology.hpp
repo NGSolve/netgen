@@ -43,6 +43,7 @@ struct T_FACE
 class MeshTopology
 {
   const Mesh * mesh;
+  bool buildvertex2element = true;
   bool buildedges;
   bool buildfaces;
   bool build_parent_edges = false; // may be changed to default = false
@@ -78,11 +79,10 @@ public:
   MeshTopology (const Mesh & amesh);
   ~MeshTopology ();
   MeshTopology & operator= (MeshTopology && top) = default;
-  
-  void SetBuildEdges (bool be)
-  { buildedges = be; }
-  void SetBuildFaces (bool bf)
-  { buildfaces = bf; }
+
+  void SetBuildVertex2Element (bool bv2e) { buildvertex2element = bv2e; }  
+  void SetBuildEdges (bool be) { buildedges = be; }
+  void SetBuildFaces (bool bf) { buildfaces = bf; }
   void SetBuildParentEdges (bool bh) { build_parent_edges = bh; }
   void SetBuildParentFaces (bool bh) { build_parent_faces = bh; }
 

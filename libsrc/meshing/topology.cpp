@@ -407,25 +407,28 @@ namespace netgen
       vertex to segment 
     */
 
-    timer_tables.Start();
-    vert2element = mesh->CreatePoint2ElementTable();
-    vert2surfelement = mesh->CreatePoint2SurfaceElementTable(0);
+    if (buildvertex2element)
+      {
+        timer_tables.Start();
+        vert2element = mesh->CreatePoint2ElementTable();
+        vert2surfelement = mesh->CreatePoint2SurfaceElementTable(0);
 
-    vert2segment = ngcore::CreateSortedTable<SegmentIndex, PointIndex>( mesh->LineSegments().Range(),
-           [&](auto & table, SegmentIndex segi)
-           {
-             const Segment & seg = (*mesh)[segi];
-             table.Add (seg[0], segi);
-             table.Add (seg[1], segi);
-           }, np);
-
-    vert2pointelement = ngcore::CreateSortedTable<int, PointIndex>( mesh->pointelements.Range(),
-           [&](auto & table, int pei)
-           {
-             const Element0d & pointel = mesh->pointelements[pei];
-             table.Add(pointel.pnum, pei);
-           }, np);
-    timer_tables.Stop();
+        vert2segment = ngcore::CreateSortedTable<SegmentIndex, PointIndex>( mesh->LineSegments().Range(),
+                                                                            [&](auto & table, SegmentIndex segi)
+                                                                            {
+                                                                              const Segment & seg = (*mesh)[segi];
+                                                                              table.Add (seg[0], segi);
+                                                                              table.Add (seg[1], segi);
+                                                                            }, np);
+        
+        vert2pointelement = ngcore::CreateSortedTable<int, PointIndex>( mesh->pointelements.Range(),
+                                                                        [&](auto & table, int pei)
+                                                                        {
+                                                                          const Element0d & pointel = mesh->pointelements[pei];
+                                                                          table.Add(pointel.pnum, pei);
+                                                                        }, np);
+        timer_tables.Stop();
+      }
 
 
     (*tracer) ("Topology::Update setup tables", true);

@@ -208,7 +208,13 @@ namespace netgen
 
   void Mesh :: SendMesh () const   
   {
-
+    static Timer tsend("SendMesh"); RegionTimer reg(tsend);
+    static Timer tbuildvertex("SendMesh::BuildVertex");
+    static Timer tbuildvertexa("SendMesh::BuildVertex a");
+    static Timer tbuildvertexb("SendMesh::BuildVertex b");
+    static Timer tbuilddistpnums("SendMesh::Build_distpnums");
+    static Timer tbuildelementtable("SendMesh::Build_elementtable");
+    
     NgMPI_Comm comm = GetCommunicator();
     int id = comm.Rank();
     int ntasks = comm.Size();
@@ -223,6 +229,7 @@ namespace netgen
     // build edges/faces.
     auto & top = const_cast<MeshTopology&>(GetTopology());
     if(top.NeedsUpdate()) {
+      top.SetBuildVertex2Element(false);
       top.SetBuildEdges(false);
       top.SetBuildFaces(false);
       top.Update();
@@ -357,6 +364,7 @@ namespace netgen
     }
 
     /** Now we build the vertex-data to send to the workers. **/
+    tbuildvertex.Start();
     NgArray<int, PointIndex::BASE> vert_flag (GetNV());
     NgArray<int, PointIndex::BASE> num_procs_on_vert (GetNV());
     NgArray<int> num_verts_on_proc (ntasks);
@@ -401,6 +409,7 @@ namespace netgen
 	}
     };
     /** count vertices per proc and procs per vertex **/
+    tbuildvertexa.Start();    
     iterate_vertices([&](auto vertex, auto dest){
 	auto countit = [&] (auto vertex, auto dest) {
 	  if (vert_flag[vertex] < dest)
@@ -409,14 +418,23 @@ namespace netgen
 	      num_verts_on_proc[dest]++;
 	      num_procs_on_vert[vertex]++;
 	      // GetParallelTopology().SetDistantPNum (dest, vertex);
-              GetParallelTopology().AddDistantProc (PointIndex(vertex), dest); 
+              // GetParallelTopology().AddDistantProc (PointIndex(vertex), dest); 
 	    }
 	};
 	countit(vertex, dest);
+        /*
 	auto pers = per_verts_trans[vertex];
 	for(int j = 0; j < pers.Size(); j++)
 	  countit(pers[j], dest);
+        */
+        for (auto v : per_verts_trans[vertex])
+	  countit(v, dest);
       });
+    tbuildvertexa.Stop();    
+
+    
+    tbuildvertexb.Start();    
+    
     TABLE<PointIndex> verts_of_proc (num_verts_on_proc);
     TABLE<int, PointIndex::BASE> procs_of_vert (num_procs_on_vert);
     TABLE<int, PointIndex::BASE> loc_num_of_vert (num_procs_on_vert);
@@ -430,10 +448,16 @@ namespace netgen
 	    }
 	};
 	addit(vertex, dest);
+        /*
 	auto pers = per_verts_trans[vertex];
 	for(int j = 0; j < pers.Size(); j++)
 	  addit(pers[j], dest);
+        */
+        for (auto v : per_verts_trans[vertex])
+	  addit(v, dest);
+        
       });
+    tbuildvertexb.Stop();        
     /** 
 	local vertex numbers on distant procs 
 	(I think this was only used for debugging??) 
@@ -449,6 +473,7 @@ namespace netgen
 	    loc_num_of_vert.Add (vert, verts_of_proc[dest].Size());
 	  }
       }
+    tbuildvertex.Stop();    
     PrintMessage ( 3, "Sending Vertices - vertices");
 
     Array<MPI_Datatype> point_types(ntasks-1);
@@ -540,6 +565,7 @@ namespace netgen
 
     PrintMessage ( 3, "Sending Vertices - distprocs");
 
+    tbuilddistpnums.Start();
     Array<int> num_distpnums(ntasks);
     num_distpnums = 0;
     
@@ -564,7 +590,9 @@ namespace netgen
 		distpnums.Add (procs[j], loc_num_of_vert[vert][k]);
 	      }
       }
-    
+
+    tbuilddistpnums.Stop();
+        
     for ( int dest = 1; dest < ntasks; dest ++ )
       sendrequests.Append (comm.ISend (distpnums[dest], dest, MPI_TAG_MESH+1));
 
@@ -572,6 +600,7 @@ namespace netgen
 
     PrintMessage ( 3, "Sending elements" );
 
+    tbuildelementtable.Start();
     Array<int> elarraysize (ntasks);
     elarraysize = 0;
     for ( int ei = 1; ei <= GetNE(); ei++)
@@ -596,7 +625,8 @@ namespace netgen
 	for (int i = 0; i < el.GetNP(); i++)
 	  elementarrays.Add (dest, el[i]);
       }
-
+    tbuildelementtable.Stop();
+    
     for (int dest = 1; dest < ntasks; dest ++ )
       // sendrequests.Append (MyMPI_ISend (elementarrays[dest], dest, MPI_TAG_MESH+2, comm));
       sendrequests.Append (comm.ISend (elementarrays[dest], dest, MPI_TAG_MESH+2));
@@ -978,11 +1008,11 @@ namespace netgen
   // workers receive the mesh from the master
   void Mesh :: ReceiveParallelMesh ( )
   {
-    int timer = NgProfiler::CreateTimer ("ReceiveParallelMesh");
-    int timer_pts = NgProfiler::CreateTimer ("Receive points");
-    int timer_els = NgProfiler::CreateTimer ("Receive elements");
-    int timer_sels = NgProfiler::CreateTimer ("Receive surface elements");
-    NgProfiler::RegionTimer reg(timer);
+    Timer timer("ReceiveParallelMesh");
+    Timer timer_pts("Receive points");
+    Timer timer_els("Receive elements");
+    Timer timer_sels("Receive surface elements");
+    RegionTimer reg(timer);
 
     NgMPI_Comm comm = GetCommunicator();
     int id = comm.Rank();
@@ -998,7 +1028,7 @@ namespace netgen
     paralleltop -> SetNE (nelloc);
     
     // receive vertices
-    NgProfiler::StartTimer (timer_pts);
+    timer_pts.Start();
 
     Array<int> verts;
     comm.Recv (verts, 0, MPI_TAG_MESH+1);
@@ -1054,15 +1084,15 @@ namespace netgen
 	// SetDistantPNum (dist_pnums[hi+1], dist_pnums[hi]); // , dist_pnums[hi+2]);
         AddDistantProc (PointIndex(dist_pnums[hi]), dist_pnums[hi+1]);
     
-    NgProfiler::StopTimer (timer_pts);
+    timer_pts.Stop();
     *testout << "got " << numvert << " vertices" << endl;
 
     
     {
+      RegionTimer reg(timer_els);
+
       Array<int> elarray;
       comm.Recv (elarray, 0, MPI_TAG_MESH+2);
-      
-      NgProfiler::RegionTimer reg(timer_els);
 
       for (int ind = 0, elnum = 1; ind < elarray.Size(); elnum++)
 	{
@@ -1093,7 +1123,7 @@ namespace netgen
     }
 
     {
-      NgProfiler::RegionTimer reg(timer_sels);
+      RegionTimer reg(timer_sels);
       Array<SelPackage> selbuf;
 
       comm.Recv ( selbuf, 0, MPI_TAG_MESH+4);

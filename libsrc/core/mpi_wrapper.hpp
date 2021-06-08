@@ -257,6 +257,7 @@ namespace ngcore
     template <typename T, typename T2 = decltype(GetMPIType<T>())> 
     void Bcast (T & s, int root = 0) const {
       if (size == 1) return ;
+      static Timer t("MPI - Bcast"); RegionTimer reg(t);
       MPI_Bcast (&s, 1, GetMPIType<T>(), root, comm);
     }
     
