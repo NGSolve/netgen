@@ -2047,6 +2047,7 @@ namespace netgen
   //  {
   //    return OCCGenerateMesh (*this, mesh, mparam, occparam);
   //  }
+  static RegisterClassForArchive<OCCGeometry, NetgenGeometry> regnggeo;
 }
 
 
