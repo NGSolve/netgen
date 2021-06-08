@@ -107,7 +107,7 @@ namespace netgen
                                double aweight,
                                string bcname,
                                double maxh)
-    : SplineSeg<D>(maxh, bcname), p1(ap1), p2(ap2), p3(ap3)
+    : SplineSeg<D>(maxh, bcname), p1(ap1), p2(ap2), p3(ap3), weight(aweight)
   {
     proj_latest_t = 0.5;
   }
