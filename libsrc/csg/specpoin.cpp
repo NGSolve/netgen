@@ -2090,7 +2090,7 @@ namespace netgen
 		      
 		      for (int m = 0; m < locsearch.Size(); m++)
 			{
-			  if (Dist2 (specpoints[locsearch[m]].p, apoints[i]) < 1e-10*geomsize
+			  if (Dist2 (specpoints[locsearch[m]].p, apoints[i]) < sqr(1e-8*geomsize)
 			      && Abs2(specpoints[locsearch[m]].v - t) < 1e-8)
 			    {
 			      spi = locsearch[m];
