@@ -1250,7 +1250,9 @@ namespace netgen
     if (id != 0 || ntasks == 1 ) return;
 
 #ifdef METIS
-    ParallelMetis ();
+    if (vol_partition.Size() < GetNE() || surf_partition.Size() < GetNSE() ||
+        seg_partition.Size() < GetNSeg())
+      ParallelMetis (comm.Size());
 #else
     for (ElementIndex ei = 0; ei < GetNE(); ei++)
       (*this)[ei].SetPartition(ntasks * ei/GetNE() + 1);
@@ -1269,7 +1271,7 @@ namespace netgen
   
 
 #ifdef METIS5
-  void Mesh :: ParallelMetis ( )  
+  void Mesh :: ParallelMetis (int nproc)  
   {
     PrintMessage (3, "call metis 5 ...");
 
@@ -1304,7 +1306,7 @@ namespace netgen
     eptr.Append (eind.Size());
     NgArray<idx_t> epart(ne), npart(nn);
 
-    idxtype nparts = GetCommunicator().Size()-1;
+    idxtype nparts = nproc-1; // GetCommunicator().Size()-1;
 
     vol_partition.SetSize(GetNE());
     surf_partition.SetSize(GetNSE());
@@ -1329,9 +1331,14 @@ namespace netgen
         idxtype edgecut;
         
         idxtype ncommon = 3;
+        PrintMessage (3, "metis start");
+
+        static Timer tm("metis library");
+        tm.Start();
         METIS_PartMeshDual (&ne, &nn, &eptr[0], &eind[0], NULL, NULL, &ncommon, &nparts,
                             NULL, NULL,
                             &edgecut, &epart[0], &npart[0]);
+        tm.Stop();
         
         /*
           METIS_PartMeshNodal (&ne, &nn, &eptr[0], &eind[0], NULL, NULL, &nparts,

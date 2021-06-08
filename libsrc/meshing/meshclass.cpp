@@ -1528,6 +1528,16 @@ namespace netgen
 
     archive & *ident;
 
+    // cout << "archive, ngsversion = " << archive.GetVersion("netgen") << endl;
+    if(archive.GetVersion("netgen") >= "v6.2.2103-1")
+      {
+        // cout << "do the partition" << endl;
+        archive.NeedsVersion("netgen", "v6.2.2103-1");
+        archive & vol_partition & surf_partition & seg_partition;
+      }
+    // else
+    // cout << "no partition" << endl;
+    
     archive.Shallow(geometry);
     archive & *curvedelems;
     

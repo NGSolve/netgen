@@ -900,7 +900,7 @@ namespace netgen
     //   void FindExchangeFaces ();
 
     /// use metis to decompose master mesh 
-    void ParallelMetis (); //  NgArray<int> & neloc );
+    void ParallelMetis (int nproc); //  NgArray<int> & neloc );
     void ParallelMetis (NgArray<int> & volume_weights, NgArray<int> & surface_weights, 
 			NgArray<int> & segment_weights); 
 

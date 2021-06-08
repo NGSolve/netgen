@@ -2383,7 +2383,7 @@ namespace netgen
     int nparts = atoi (argv[1]);
     ntasks = nparts+1;
     cout << "calling metis ... " << flush;
-    mesh->ParallelMetis();
+    mesh->ParallelMetis(ntasks);
     cout << "done" << endl;
     ntasks = 1;
 
