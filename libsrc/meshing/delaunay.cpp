@@ -233,7 +233,7 @@ namespace netgen
 			 NgArray<Point<3> > & centers, NgArray<double> & radi2,
 			 NgArray<int> & connected, NgArray<int> & treesearch, 
 			 NgArray<int> & freelist, SphereList & list,
-			 IndexSet & insphere, IndexSet & closesphere)
+			 IndexSet & insphere, IndexSet & closesphere, Array<DelaunayTet> & newels)
   {
     static Timer t("Meshing3::AddDelaunayPoint");// RegionTimer reg(t);
     // static Timer tsearch("addpoint, search");
@@ -399,8 +399,6 @@ namespace netgen
 	    }
       } // while (changed)
 
-    // NgArray<Element> newels;
-    static NgArray<DelaunayTet> newels;
     newels.SetSize(0);
     
     Element2d face(TRIG);
@@ -684,6 +682,7 @@ namespace netgen
     for (PointIndex pi : mesh.Points().Range().Modify(0, -4))
       mixed[pi] = PointIndex ( (prim * pi) % np + PointIndex::BASE );
 
+    Array<DelaunayTet> newels;
     // for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End()-4; pi++)
     for (PointIndex pi : mesh.Points().Range().Modify(0, -4))      
       {
@@ -710,7 +709,7 @@ namespace netgen
       
 	AddDelaunayPoint (newpi, newp, tempels, mesh,
 			  tettree, meshnb, centers, radi2, 
-			  connected, treesearch, freelist, list, insphere, closesphere);
+			  connected, treesearch, freelist, list, insphere, closesphere, newels);
 
       }
     

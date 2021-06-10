@@ -11,7 +11,7 @@
 #include "archive.hpp"
 #include "exception.hpp"
 #include "localheap.hpp"
-#include "profiler.hpp"
+#include "memtracer.hpp"
 #include "utils.hpp"
 
 namespace ngcore

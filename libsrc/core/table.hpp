@@ -13,8 +13,10 @@
 
 #include "array.hpp"
 #include "bitarray.hpp"
-#include "taskmanager.hpp"
+#include "memtracer.hpp"
 #include "ngcore_api.hpp"
+#include "profiler.hpp"
+#include "taskmanager.hpp"
 
 namespace ngcore
 {
@@ -671,6 +673,69 @@ namespace ngcore
     s << std::flush;
     return s;
   }
+
+
+  //   Helper function to calculate coloring of a set of indices for parallel processing of independent elements/points/etc.
+  //   Assigns a color to each of colors.Size() elements, such that two elements with the same color don't share a common 'dof',
+  //   the mapping from element to dofs is provided by the function getDofs(int) -> iterable<int>
+  //
+  //   Returns the number of used colors
+  template <typename Tmask>
+  int ComputeColoring( FlatArray<int> colors, size_t ndofs, Tmask const & getDofs)
+  {
+    static Timer timer("ComputeColoring - "+Demangle(typeid(Tmask).name())); RegionTimer rt(timer);
+    static_assert(sizeof(unsigned int)==4, "Adapt type of mask array");
+    size_t n = colors.Size();
+
+    Array<unsigned int> mask(ndofs);
+
+    size_t colored_blocks = 0;
+
+    // We are coloring with 32 colors at once and use each bit to mask conflicts
+    unsigned int check = 0;
+    unsigned int checkbit = 0;
+
+    int current_color = 0;
+    colors = -1;
+    int maxcolor = 0;
+
+    while(colored_blocks<n)
+    {
+        mask = 0;
+        for (auto i : Range(n) )
+        {
+            if(colors[i]>-1) continue;
+            check = 0;
+            const auto & dofs = getDofs(i);
+
+            // Check if adjacent dofs are already marked by current color
+            for (auto dof : dofs)
+                check|=mask[dof];
+
+            // Did we find a free color?
+            if(check != 0xFFFFFFFF)
+            {
+                checkbit = 1;
+                int color = current_color;
+                // find the actual color, which is free (out of 32)
+                while (check & checkbit)
+                {
+                    color++;
+                    checkbit *= 2;
+                }
+                colors[i] = color;
+                maxcolor = color > maxcolor ? color : maxcolor;
+                colored_blocks++;
+                // mask all adjacent dofs with the found color
+                for (auto dof : dofs)
+                    mask[dof] |= checkbit;
+            }
+        }
+        current_color+=32;
+    }
+    return maxcolor+1;
+  }
+
 
   typedef DynamicTable<int> IntTable;
 

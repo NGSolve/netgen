@@ -20,9 +20,9 @@ namespace netgen
     /// half edgelength
     float h2;
     ///
-    GradingBox * childs[8];
+    GradingBox * childs[8] = {nullptr};
     ///
-    GradingBox * father;
+    GradingBox * father = nullptr;
     ///
     double hopt;
     ///

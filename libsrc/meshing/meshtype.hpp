@@ -49,7 +49,7 @@ namespace netgen
 #define ELEMENT2D_MAXPOINTS 8
 
 
-  enum POINTTYPE { FIXEDPOINT = 1, EDGEPOINT = 2, SURFACEPOINT = 3, INNERPOINT = 4 };
+  enum POINTTYPE : unsigned char { FIXEDPOINT = 1, EDGEPOINT = 2, SURFACEPOINT = 3, INNERPOINT = 4 };
   enum ELEMENTTYPE { FREEELEMENT, FIXEDELEMENT };
   enum OPTIMIZEGOAL { OPT_QUALITY, OPT_CONFORM, OPT_REST, OPT_WORSTCASE, OPT_LEGAL };
 
@@ -336,8 +336,8 @@ namespace netgen
   */
   class MeshPoint : public Point<3>
   {
-    int layer;
     double singular; // singular factor for hp-refinement
+    int layer;
     POINTTYPE type;
 
 

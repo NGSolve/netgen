@@ -11,10 +11,6 @@ namespace netgen
     for (int i = 0; i < 3; i++)
       xmid[i] = 0.5 * (ax1[i] + ax2[i]);
 
-    for (int i = 0; i < 8; i++)
-      childs[i] = NULL;
-    father = NULL;
-
     flags.cutboundary = 0;
     flags.isinner = 0;
     flags.oldcell = 0;
