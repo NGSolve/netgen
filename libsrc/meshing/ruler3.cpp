@@ -685,7 +685,7 @@ int Meshing3 :: ApplyRules
 
 		      for (int i = 1; i <= lfaces.Size() && ok; i++)
 			{
-			  static NgArray<int> lpi(4);
+			  NgArrayMem<int, 10> lpi(4);
 
 			  if (!fused.Get(i))
 			    { 
