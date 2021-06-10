@@ -1483,17 +1483,13 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
 
   tcoloring.Start();
   int ncolors = ngcore::ComputeColoring( colors, ne, getDofs );
-  TableCreator<int> creator(ncolors);
-  for ( ; !creator.Done(); creator++)
-  {
-      ParallelForRange( Range(colors), [&](auto myrange)
+  auto color_table = CreateTable<PointIndex, int>( points.Size(),
+         [&] ( auto & table, int i )
           {
-            for(auto i : myrange)
-              creator.Add(colors[i], i);
-          });
-  }
+            PointIndex pi = i+static_cast<int>(PointIndex::BASE);
+            table.Add(colors[i], pi);
+          }, ncolors);
 
-  auto color_table = creator.MoveTable();
   tcoloring.Stop();
 
   if (goal == OPT_QUALITY)
@@ -1530,12 +1526,12 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
 
   topt.Start();
   int counter = 0;
-  for (int color : Range(color_table.Size()))
+  for (auto icolor : Range(ncolors))
   {
       if (multithread.terminate)
           throw NgException ("Meshing stopped");
 
-      ParallelForRange( Range(color_table[color].Size()), [&](auto myrange)
+      ParallelForRange( color_table[icolor].Range(), [&](auto myrange)
       {
         RegionTracer reg(ngcore::TaskManager::GetThreadId(), trange, myrange.Size());
         Vector x(3);
@@ -1550,7 +1546,7 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
 
         for (auto i : myrange)
         {
-          PointIndex pi(color_table[color][i]+PointIndex::BASE);
+          PointIndex pi = color_table[icolor][i];
           if ( (*this)[pi].Type() == INNERPOINT )
           {
             counter++;
