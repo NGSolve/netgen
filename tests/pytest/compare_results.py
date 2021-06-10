@@ -12,8 +12,10 @@ def readData(a, files):
     ne1d=[]
     ne2d=[]
     ne3d=[]
+    file=[]
     for f in files:
         for t in a[f]:
+            file.append(f)
             if t['ne1d']>0:
                 ne1d.append(t['ne1d'])
             if t['ne2d']>0:
@@ -37,6 +39,7 @@ def readData(a, files):
             "#edges" : ne1d,
             "#trigs" : ne2d,
             "#tets" : ne3d,
+            "file" : file,
             }
 
 import matplotlib.pyplot as plt
@@ -60,6 +63,15 @@ s2 = json.loads(s2)
 filenames = [f for f in s if f in s2]
 data = readData(s, filenames)
 data2 = readData(s2, filenames)
+
+assert(len(data) == len(data2))
+
+for bad1,bad2, f1, f2 in zip(data['badness'], data2['badness'], data['file'], data2['file']):
+    assert f1==f2
+    if bad2>0 and bad2>1.1*bad1:
+        print(f"file {f1} got worse:  {bad1} -> {bad2}")
+    if bad2>0 and bad2<0.9*bad1:
+        print(f"file {f1} got better: {bad1} -> {bad2}")
 
 n = len(data)+1
 fig,ax = plt.subplots(figsize=(10,7))
