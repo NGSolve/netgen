@@ -1459,6 +1459,7 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
   static Timer tcalcbadmax("Calc badmax");
   static Timer topt("optimize");
   static Timer trange("range");
+  static Timer tloch("loch");
 
   // return ImproveMeshSequential(mp, goal);
   BuildBoundaryEdges(false);
@@ -1502,12 +1503,16 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
 
   (*testout) << setprecision(8);
 
-  NgArray<double, PointIndex::BASE> pointh (points.Size());
+  Array<double, PointIndex> pointh (points.Size());
 
   if(lochfunc)
     {
-      for (PointIndex pi : points.Range())
-	pointh[pi] = GetH(points[pi]);
+      RegionTimer rt(tloch);
+      ParallelForRange(points.Range(), [&] (auto myrange)
+         {
+           for(auto pi : myrange)
+             pointh[pi] = GetH(points[pi]);
+         });
     }
   else
     {
