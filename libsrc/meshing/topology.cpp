@@ -4,6 +4,7 @@
 namespace netgen
 {
   using ngcore::ParallelForRange;
+  using ngcore::ParallelFor;
   using ngcore::INT;
   using ngcore::TasksPerThread;
   
@@ -446,13 +447,27 @@ namespace netgen
 	surfedges.SetSize(nse); 
 	segedges.SetSize(nseg);
 
+        /*
 	for (int i = 0; i < ne; i++)
 	  for (int j = 0; j < 12; j++)
 	    edges[i][j].nr = -1;
 	for (int i = 0; i < nse; i++)
 	  for (int j = 0; j < 4; j++)
 	    surfedges[i][j].nr = -1;
+        */
+        ParallelFor (ne, [this](auto i)
+                     {
+                       for (auto & e : edges[i])
+                         e.nr = -1;
+                     });
+	ParallelFor (nse, [this](auto i)
+                     {
+                       for (auto & e : surfedges[i])
+                         e.nr = -1;
+                     });
 
+
+        
 	// keep existing edges
 	cnt = 0;
 	for (int i = 0; i < edge2vert.Size(); i++)
@@ -1429,19 +1444,21 @@ namespace netgen
 	    surf2volelement.Elem(i)[1] = 0;
 	  }
         (*tracer) ("Topology::Update build surf2vol", false);        
-	for (int i = 1; i <= ne; i++)
-	  for (int j = 0; j < 6; j++)
-	    {
-	      // int fnum = (faces.Get(i)[j]+7) / 8;
-              int fnum = faces.Get(i)[j].fnr+1;
-	      if (fnum > 0 && face2surfel.Elem(fnum))
-		{
-		  int sel = face2surfel.Elem(fnum);
-		  surf2volelement.Elem(sel)[1] = 
-		    surf2volelement.Elem(sel)[0];
-		  surf2volelement.Elem(sel)[0] = i;
-		}
-	    }
+	// for (int i = 0; i < ne; i++)
+        ParallelFor (ne, [this](auto i)
+                     {
+                       for (int j = 0; j < 6; j++)
+                         {
+                           // int fnum = (faces.Get(i)[j]+7) / 8;
+                           int fnum = faces[i][j].fnr+1;
+                           if (fnum > 0 && face2surfel.Elem(fnum))
+                             {
+                               int sel = face2surfel.Elem(fnum);
+                               surf2volelement.Elem(sel)[1] = 
+                                 surf2volelement.Elem(sel)[0];
+                               surf2volelement.Elem(sel)[0] = i+1;
+                             }
+                         }});
         (*tracer) ("Topology::Update build surf2vol", true);        
 
 	face2vert.SetAllocSize (face2vert.Size());
