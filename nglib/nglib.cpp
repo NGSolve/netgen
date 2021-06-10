@@ -1008,6 +1008,25 @@ namespace nglib
 
       check_overlap = 1;
       check_overlapping_boundary = 1;
+
+      parallel_meshing = 1;
+      nthreads = 4;
+      
+      opterrpow = 2;
+      delaunayenable = 1;
+      blockfillenable = 1;
+      blockfilldist = 0.1;
+      maxoutersteps = 10;
+      only3D_domain_nr = 0;
+      try_hexes = 0;
+
+      surfcurvfact = 2;
+      chartdistfact = 1.2;
+      edgeanglefact = 1;
+      surfmeshcurvfact = 1;
+      linelengthfact = 0.5;
+
+      stlgeom_tol_fact = 1E-6;
    }
 
 
@@ -1049,6 +1068,25 @@ namespace nglib
 
       check_overlap = 1;
       check_overlapping_boundary = 1;
+
+      parallel_meshing = 1;
+      nthreads = 4;
+      
+      opterrpow = 2;
+      delaunayenable = 1;
+      blockfillenable = 1;
+      blockfilldist = 0.1;
+      maxoutersteps = 10;
+      only3D_domain_nr = 0;
+      try_hexes = 0;
+
+      surfcurvfact = 2;
+      chartdistfact = 1.2;
+      edgeanglefact = 1;
+      surfmeshcurvfact = 1;
+      linelengthfact = 0.5;
+
+      stlgeom_tol_fact = 1E-6;
    }
 
 
@@ -1073,6 +1111,7 @@ namespace nglib
         mparam.meshsizefilename = meshsize_filename;
       else
         mparam.meshsizefilename = "";
+
       mparam.optsteps2d = optsteps_2d;
       mparam.optsteps3d = optsteps_3d;
 
@@ -1081,6 +1120,28 @@ namespace nglib
 
       mparam.checkoverlap = check_overlap;
       mparam.checkoverlappingboundary = check_overlapping_boundary;
+
+      mparam.parallel_meshing = parallel_meshing;
+      mparam.nthreads = nthreads;
+      
+      mparam.opterrpow = opterrpow;
+      mparam.delaunay = delaunayenable;
+      mparam.blockfill = blockfillenable;
+      mparam.filldist = blockfilldist;
+      mparam.maxoutersteps = maxoutersteps;
+      mparam.only3D_domain_nr = only3D_domain_nr;
+      mparam.try_hexes = try_hexes;
+
+      stlparam.resthsurfcurvfac = surfcurvfact;
+      stlparam.resthchartdistfac = chartdistfact;
+      stlparam.resthedgeanglefac = edgeanglefact;
+      stlparam.resthsurfmeshcurvfac = surfmeshcurvfact;
+      stlparam.resthlinelengthfac = linelengthfact;
+
+      stldoctor.geom_tol_fact = stlgeom_tol_fact;
+
+      if(closeedgeenable)
+         mparam.closeedgefac = closeedgefact;
    }
    // ------------------ End - Meshing Parameters related functions --------------------
 
