@@ -2245,7 +2245,7 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
           bad2 += 1e4;
 
 
-      if (goal == OPT_CONFORM && bad2 < 1e4)
+      if (goal == OPT_CONFORM && NotTooBad(bad1, bad2))
         {
           INDEX_3 face(pi3, pi4, pi5);
           face.Sort();
@@ -2253,8 +2253,7 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
             {
               // (*testout) << "3->2 swap, could improve conformity, bad1 = " << bad1
               //				 << ", bad2 = " << bad2 << endl;
-              if (bad2 < 1e4)
-                  bad1 = 2 * bad2;
+                bad2 = bad1 + IMPROVEMENT_CONFORMING_EDGE;
             }
         }
 
@@ -2649,6 +2648,9 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
           bestl = confedge;
       if (confface != -1)
           bestl = confface;
+
+      if(confface != -1 || confedge != -1)
+          badopt = bad1 + IMPROVEMENT_CONFORMING_EDGE;
 
       if (bestl != -1)
         {
