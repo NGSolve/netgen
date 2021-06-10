@@ -1476,7 +1476,7 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
   const auto & getDofs = [&] (int i)
   {
       i += PointIndex::BASE;
-      return FlatArray<int>(elementsonpoint[i].Size(), &elementsonpoint[i][0]);
+      return FlatArray<int>(elementsonpoint[i].Size(), elementsonpoint[i].Data());
   };
 
   Array<int> colors(points.Size());
