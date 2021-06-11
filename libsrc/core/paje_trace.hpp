@@ -79,8 +79,8 @@ namespace ngcore
 
           int additional_value;
 
-          TTimePoint start_time;
-          TTimePoint stop_time;
+          TTimePoint time;
+          bool is_start;
 
           static constexpr int ID_NONE = -1;
           static constexpr int ID_JOB = 1;
@@ -178,22 +178,15 @@ namespace ngcore
 	  if(unlikely(tasks[thread_id].size() == max_num_events_per_thread))
             StopTracing();
           int task_num = tasks[thread_id].size();
-          tasks[thread_id].push_back( Task{thread_id, id, id_type, additional_value, GetTimeCounter()} );
+          tasks[thread_id].push_back( Task{thread_id, id, id_type, additional_value, GetTimeCounter(), true} );
           return task_num;
         }
 
-      void StopTask(int thread_id, int task_num)
+      void StopTask(int thread_id, int id, int id_type = Task::ID_NONE)
         {
           if(!trace_threads && !trace_thread_counter) return;
-          if(task_num>=0)
-            tasks[thread_id][task_num].stop_time = GetTimeCounter();
+          tasks[thread_id].push_back( Task{thread_id, id, id_type, 0, GetTimeCounter(), false} );
         }
-
-      void SetTask(int thread_id, int task_num, int additional_value) {
-          if(!trace_threads && !trace_thread_counter) return;
-          if(task_num>=0)
-            tasks[thread_id][task_num].additional_value = additional_value;
-      }
 
       void StartJob(int job_id, const std::type_info & type)
         {

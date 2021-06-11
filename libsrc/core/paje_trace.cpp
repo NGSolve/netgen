@@ -85,8 +85,7 @@ namespace ngcore
     for(auto & ltask : tasks)
         for(auto & task : ltask)
           {
-            task.start_time -= start_time;
-            task.stop_time -= start_time;
+            task.time -= start_time;
           }
     for(auto & job : jobs)
       {
@@ -635,23 +634,31 @@ namespace ngcore
                   value_id = job_task_map[jobs[t.id-1].type];
                   if(trace_thread_counter)
                     {
-                      paje.AddVariable( t.start_time, variable_type_active_threads, container_jobs, 1.0 );
-                      paje.SubVariable( t.stop_time, variable_type_active_threads, container_jobs, 1.0 );
+                      if(t.is_start)
+                        paje.AddVariable( t.time, variable_type_active_threads, container_jobs, 1.0 );
+                      else
+                        paje.SubVariable( t.time, variable_type_active_threads, container_jobs, 1.0 );
                     }
                   if(trace_threads)
                     {
-                      paje.PushState( t.start_time, state_type_task, thread_aliases[t.thread_id], value_id, t.additional_value, true );
-                      paje.PopState( t.stop_time, state_type_task, thread_aliases[t.thread_id] );
+                      if(t.is_start)
+                        paje.PushState( t.time, state_type_task, thread_aliases[t.thread_id], value_id, t.additional_value, true );
+                      else
+                        paje.PopState( t.time, state_type_task, thread_aliases[t.thread_id] );
                     }
                   break;
                 case Task::ID_TIMER:
                   value_id = timer_aliases[t.id];
-                  paje.PushState( t.start_time, state_type_timer, thread_aliases[t.thread_id], value_id, t.additional_value, true );
-                  paje.PopState( t.stop_time, state_type_timer, thread_aliases[t.thread_id] );
+                  if(t.is_start)
+                    paje.PushState( t.time, state_type_timer, thread_aliases[t.thread_id], value_id, t.additional_value, true );
+                  else
+                    paje.PopState( t.time, state_type_timer, thread_aliases[t.thread_id] );
                   break;
                 default:
-                  paje.PushState( t.start_time, state_type_task, thread_aliases[t.thread_id], value_id, t.additional_value, false );
-                  paje.PopState( t.stop_time, state_type_task, thread_aliases[t.thread_id] );
+                  if(t.is_start)
+                    paje.PushState( t.time, state_type_task, thread_aliases[t.thread_id], value_id, t.additional_value, false );
+                  else
+                    paje.PopState( t.time, state_type_task, thread_aliases[t.thread_id] );
                   break;
                 }
           }

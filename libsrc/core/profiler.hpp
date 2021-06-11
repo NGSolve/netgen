@@ -148,38 +148,95 @@ namespace ngcore
   };
 
 
+  struct TNoTracing{ static constexpr bool do_tracing=false; };
+  struct TTracing{ static constexpr bool do_tracing=true; };
 
-  class NGCORE_API Timer
+  struct TNoTiming{ static constexpr bool do_timing=false; };
+  struct TTiming{ static constexpr bool do_timing=true; };
+
+  namespace detail {
+
+      template<typename T>
+      constexpr bool is_tracing_type_v = std::is_same_v<T, TNoTracing> || std::is_same_v<T, TTracing>;
+
+      template<typename T>
+      constexpr bool is_timing_type_v = std::is_same_v<T, TNoTiming> || std::is_same_v<T, TTiming>;
+  }
+
+  static TNoTracing NoTracing;
+  static TNoTiming NoTiming;
+
+  template<typename TTracing=TTracing, typename TTiming=TTiming>
+  class Timer
   {
     int timernr;
-    int priority;
-  public:
-    Timer (const std::string & name, int apriority = 1)
-      : priority(apriority)
+    int Init( const std::string & name )
     {
-      timernr = NgProfiler::CreateTimer (name);
+      return NgProfiler::CreateTimer (name);
     }
+  public:
+    static constexpr bool do_tracing = TTracing::do_tracing;
+    static constexpr bool do_timing = TTiming::do_timing;
+
+    Timer (const std::string & name) : timernr(Init(name)) { }
+
+    template<std::enable_if_t< detail::is_tracing_type_v<TTracing>, bool> = false>
+    Timer( const std::string & name, TTracing ) : timernr(Init(name)) { }
+
+    template<std::enable_if_t< detail::is_timing_type_v<TTiming>, bool> = false>
+    Timer( const std::string & name, TTiming ) : timernr(Init(name)) { }
+
+    Timer( const std::string & name, TTracing, TTiming ) : timernr(Init(name)) { }
+
     void SetName (const std::string & name)
     {
       NgProfiler::SetName (timernr, name);
     }
-    void Start ()
+    void Start () const
     {
-      if (priority <= 2)
-	NgProfiler::StartTimer (timernr);
-      if (priority <= 1)
-        if(trace) trace->StartTimer(timernr);
+      Start(TaskManager::GetThreadId());
     }
-    void Stop ()
+    void Stop () const
     {
-      if (priority <= 2)
-	NgProfiler::StopTimer (timernr);
-      if (priority <= 1)
-        if(trace) trace->StopTimer(timernr);
+      Stop(TaskManager::GetThreadId());
+    }
+    void Start (int tid) const
+    {
+        if(tid==0)
+        {
+          if constexpr(do_timing)
+            NgProfiler::StartTimer (timernr);
+          if constexpr(do_tracing)
+            if(trace) trace->StartTimer(timernr);
+        }
+        else
+        {
+          if constexpr(do_timing)
+            NgProfiler::StartThreadTimer(timernr, tid);
+          if constexpr(do_tracing)
+            if(trace) trace->StartTask (tid, timernr, PajeTrace::Task::ID_TIMER);
+        }
+    }
+    void Stop (int tid) const
+    {
+        if(tid==0)
+        {
+            if constexpr(do_timing)
+                NgProfiler::StopTimer (timernr);
+            if constexpr(do_tracing)
+                if(trace) trace->StopTimer(timernr);
+        }
+        else
+        {
+          if constexpr(do_timing)
+            NgProfiler::StopThreadTimer(timernr, tid);
+          if constexpr(do_tracing)
+            if(trace) trace->StopTask (tid, timernr, PajeTrace::Task::ID_TIMER);
+        }
     }
     void AddFlops (double aflops)
     {
-      if (priority <= 2)
+      if constexpr(do_timing)
 	NgProfiler::AddFlops (timernr, aflops);
     }
 
@@ -196,14 +253,21 @@ namespace ngcore
      Timer object.
        Start / stop timer at constructor / destructor.
   */
+  template<typename TTimer>
   class RegionTimer
   {
-    Timer & timer;
+    const TTimer & timer;
+    int tid;
   public:
     /// start timer
-    RegionTimer (Timer & atimer) : timer(atimer) { timer.Start(); }
+    RegionTimer (const TTimer & atimer) : timer(atimer)
+    {
+      tid = TaskManager::GetThreadId();
+      timer.Start(tid);
+    }
+
     /// stop timer
-    ~RegionTimer () { timer.Stop(); }
+    ~RegionTimer () { timer.Stop(tid); }
 
     RegionTimer() = delete;
     RegionTimer(const RegionTimer &) = delete;
@@ -212,29 +276,11 @@ namespace ngcore
     void operator=(RegionTimer &&) = delete;
   };
 
-  class ThreadRegionTimer
-  {
-    size_t nr;
-    size_t tid;
-  public:
-    /// start timer
-    ThreadRegionTimer (size_t _nr, size_t _tid) : nr(_nr), tid(_tid)
-    { NgProfiler::StartThreadTimer(nr, tid); }
-    /// stop timer
-    ~ThreadRegionTimer ()
-    { NgProfiler::StopThreadTimer(nr, tid); }
-
-    ThreadRegionTimer() = delete;
-    ThreadRegionTimer(ThreadRegionTimer &&) = delete;
-    ThreadRegionTimer(const ThreadRegionTimer &) = delete;
-    void operator=(const ThreadRegionTimer &) = delete;
-    void operator=(ThreadRegionTimer &&) = delete;
-  };
-
   class RegionTracer
     {
       int nr;
       int thread_id;
+      int type;
     public:
       static constexpr int ID_JOB = PajeTrace::Task::ID_JOB;
       static constexpr int ID_NONE = PajeTrace::Task::ID_NONE;
@@ -251,28 +297,26 @@ namespace ngcore
         : thread_id(athread_id)
         {
 	  if (trace)
-          nr = trace->StartTask (athread_id, region_id, id_type, additional_value);
+          trace->StartTask (athread_id, region_id, id_type, additional_value);
+          type = id_type;
+          nr = region_id;
         }
       /// start trace with timer
-      RegionTracer (int athread_id, Timer & timer, int additional_value = -1 )
+      template<typename TTimer>
+      RegionTracer (int athread_id, TTimer & timer, int additional_value = -1 )
         : thread_id(athread_id)
         {
+          nr = timer;
+          type = ID_TIMER;
 	  if (trace)
-          nr = trace->StartTask (athread_id, static_cast<int>(timer), ID_TIMER, additional_value);
+            trace->StartTask (athread_id, nr, type, additional_value);
         }
-
-      /// set user defined value
-      void SetValue( int additional_value )
-      {
-	  if (trace)
-        trace->SetTask( thread_id, nr, additional_value );
-      }
 
       /// stop trace
       ~RegionTracer ()
         {
 	  if (trace)
-          trace->StopTask (thread_id, nr);
+            trace->StopTask (thread_id, nr, type);
         }
     };
 
