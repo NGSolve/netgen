@@ -78,12 +78,11 @@ namespace ngcore
 
 
 
-    // #ifndef __clang__      
+#ifdef WIN32 // no exported thread_local in dlls on Windows
     static thread_local int thread_id;
-    // #else
-    // static __thread int thread_id;
-    // #endif
-    
+#else
+    NGCORE_API static thread_local int thread_id;
+#endif
     NGCORE_API static bool use_paje_trace;
   public:
     
@@ -102,11 +101,15 @@ namespace ngcore
     void ResumeWorkers() { sleep = false; }
 
     NGCORE_API static void SetNumThreads(int amax_threads);
-    NGCORE_API static int GetMaxThreads() { return max_threads; }
+    static int GetMaxThreads() { return max_threads; }
     // static int GetNumThreads() { return task_manager ? task_manager->num_threads : 1; }
-    NGCORE_API static int GetNumThreads() { return num_threads; }
+    static int GetNumThreads() { return num_threads; }
+#ifdef WIN32
     NGCORE_API static int GetThreadId();
-    NGCORE_API int GetNumNodes() const { return num_nodes; }
+#else
+    static int GetThreadId() { return thread_id; }
+#endif
+    int GetNumNodes() const { return num_nodes; }
 
     static void SetPajeTrace (bool use)  { use_paje_trace = use; }
     

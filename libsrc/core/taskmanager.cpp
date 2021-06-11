@@ -35,11 +35,7 @@ namespace ngcore
   int TaskManager :: num_threads = 1;
 
   
-  // #ifndef __clang__      
   thread_local int TaskManager :: thread_id = 0;
-  // #else
-  // __thread int TaskManager :: thread_id;
-  // #endif
   
   const function<void(TaskInfo&)> * TaskManager::func;
   const function<void()> * TaskManager::startup_function = nullptr;
@@ -174,10 +170,12 @@ namespace ngcore
     num_threads = 1;
   }
 
+#ifdef WIN32
   int TaskManager :: GetThreadId()
   {
     return thread_id;
   }
+#endif
   
   void TaskManager :: StartWorkers()
   {
