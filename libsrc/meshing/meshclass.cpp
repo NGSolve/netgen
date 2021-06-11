@@ -440,6 +440,7 @@ namespace netgen
 
   void Mesh :: Save (ostream & outfile) const
   {
+    static Timer timer("Mesh::Save"); RegionTimer rt(timer);
     int i, j;
 
     double scale = 1;  // globflags.GetNumFlag ("scale", 1);
@@ -2916,6 +2917,7 @@ namespace netgen
 
   void Mesh :: FreeOpenElementsEnvironment (int layers)
   {
+    static Timer timer("FreeOpenElementsEnvironment"); RegionTimer rt(timer);
     int i, j, k;
     PointIndex pi;
     const int large = 9999;
