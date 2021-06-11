@@ -91,6 +91,45 @@ namespace netgen
     delete root;
   }
 
+  unique_ptr<LocalH> LocalH :: Copy ()
+  {
+    static Timer t("LocalH::Copy"); RegionTimer rt(t);
+    auto lh = make_unique<LocalH>(boundingbox, grading, dimension);
+    std::map<GradingBox*, GradingBox*> mapping;
+    lh->boxes.SetSize(boxes.Size());
+
+    for(auto i : boxes.Range())
+    {
+      lh->boxes[i] = new GradingBox();
+      auto & bnew = *lh->boxes[i];
+      auto & b = *boxes[i];
+      bnew.xmid[0] = b.xmid[0];
+      bnew.xmid[1] = b.xmid[1];
+      bnew.xmid[2] = b.xmid[2];
+      bnew.h2 = b.h2;
+      bnew.hopt = b.hopt;
+      bnew.flags = b.flags;
+      mapping[&b] = &bnew;
+    }
+
+    for(auto i : boxes.Range())
+    {
+      auto & bnew = *lh->boxes[i];
+      auto & b = *boxes[i];
+      for(auto k : Range(8))
+      {
+        if(b.childs[k])
+          bnew.childs[k] = mapping[b.childs[k]];
+      }
+
+      if(b.father)
+        bnew.father = mapping[b.father];
+    }
+
+    lh->root = mapping[root];
+    return lh;
+  }
+
   void LocalH :: Delete ()
   {
     root->DeleteChilds();

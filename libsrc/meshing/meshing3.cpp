@@ -1144,10 +1144,13 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
 
   if (mp.maxh < maxh) maxh = mp.maxh;
 
+  auto loch_ptr = mesh.LocalHFunction().Copy();
+  auto & loch = *loch_ptr;
+
   bool changed;
   do 
     {
-      mesh.LocalHFunction().ClearFlags();
+      loch.ClearFlags();
 
       for (int i = 1; i <= adfront->GetNF(); i++)
 	{
@@ -1161,21 +1164,21 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
 	  double filld = filldist * bbox.Diam();
 	  bbox.Increase (filld);
       
-      	  mesh.LocalHFunction().CutBoundary (bbox); // .PMin(), bbox.PMax());
+      	  loch.CutBoundary (bbox); // .PMin(), bbox.PMax());
 	}
 
       //      locadfront = adfront;
-      mesh.LocalHFunction().FindInnerBoxes (adfront, NULL);
+      loch.FindInnerBoxes (adfront, NULL);
 
       npoints.SetSize(0);
-      mesh.LocalHFunction().GetInnerPoints (npoints);
+      loch.GetInnerPoints (npoints);
 
       changed = false;
       for (int i = 1; i <= npoints.Size(); i++)
 	{
-	  if (mesh.LocalHFunction().GetH(npoints.Get(i)) > 1.5 * maxh)
+	  if (loch.GetH(npoints.Get(i)) > 1.5 * maxh)
 	    {
-	      mesh.LocalHFunction().SetH (npoints.Get(i), maxh);
+	      loch.SetH (npoints.Get(i), maxh);
 	      changed = true;
 	    }
 	}
