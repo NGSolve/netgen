@@ -1627,20 +1627,20 @@ namespace netgen
       // tempmesh.Save ("tempmesh.vol");
 
       {
+        MeshOptimize3d meshopt(mp);
+        tempmesh.Compress();
+        tempmesh.FindOpenElements ();
         RegionTaskManager rtm(mp.parallel_meshing ? mp.nthreads : 0);
-        for (int i = 1; i <= 4; i++)
+        for (auto i : Range(10))
           {
-            tempmesh.FindOpenElements ();
-
             PrintMessage (5, "Num open: ", tempmesh.GetNOpenElements());
-            tempmesh.CalcSurfacesOfNode ();
 
-            tempmesh.FreeOpenElementsEnvironment (1);
+            if(i%5==0)
+                tempmesh.FreeOpenElementsEnvironment (1);
 
-            MeshOptimize3d meshopt(mp);
-            // tempmesh.CalcSurfacesOfNode();
             meshopt.SwapImprove(tempmesh, OPT_CONFORM);
           }
+        tempmesh.Compress();
       }
     
       MeshQuality3d (tempmesh);

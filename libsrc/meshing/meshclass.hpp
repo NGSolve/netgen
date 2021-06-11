@@ -486,6 +486,8 @@ namespace netgen
     { return openelements.Get(i); }
 
     auto & OpenElements() const { return openelements; }
+
+    auto & OpenElements() { return openelements; }
     
     /// are also quads open elements
     bool HasOpenQuads () const;
@@ -508,6 +510,11 @@ namespace netgen
       INDEX_2 i2 (pi1, pi2);
       i2.Sort();
       return boundaryedges->Used (i2);
+    }
+
+    void DeleteBoundaryEdges ()
+    {
+        boundaryedges = nullptr;
     }
 
     bool IsSegment (PointIndex pi1, PointIndex pi2) const
