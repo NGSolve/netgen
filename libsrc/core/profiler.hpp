@@ -148,15 +148,25 @@ namespace ngcore
   };
 
 
+  struct TNoTracing{ static constexpr bool do_tracing=false; };
+  struct TTracing{ static constexpr bool do_tracing=true; };
+
+  struct TNoTiming{ static constexpr bool do_timing=false; };
+  struct TTiming{ static constexpr bool do_timing=true; };
+
   namespace detail {
-      struct NoTracing_t{};
-      struct NoTiming_t{};
+
+      template<typename T>
+      constexpr bool is_tracing_type_v = std::is_same_v<T, TNoTracing> || std::is_same_v<T, TTracing>;
+
+      template<typename T>
+      constexpr bool is_timing_type_v = std::is_same_v<T, TNoTiming> || std::is_same_v<T, TTiming>;
   }
 
-  static detail::NoTracing_t NoTracing;
-  static detail::NoTiming_t NoTiming;
+  static TNoTracing NoTracing;
+  static TNoTiming NoTiming;
 
-  template<bool DO_TRACING=true, bool DO_TIMING=true>
+  template<typename TTracing=TTracing, typename TTiming=TTiming>
   class Timer
   {
     int timernr;
@@ -165,74 +175,68 @@ namespace ngcore
       return NgProfiler::CreateTimer (name);
     }
   public:
-    Timer (const std::string & name) : timernr(Init(name))
-    { }
+    static constexpr bool do_tracing = TTracing::do_tracing;
+    static constexpr bool do_timing = TTiming::do_timing;
 
-    template<typename= std::enable_if<!DO_TRACING>>
-    Timer( const std::string & name, detail::NoTracing_t ) : timernr(Init(name))
-    { }
+    Timer (const std::string & name) : timernr(Init(name)) { }
 
-    template<typename= std::enable_if<!DO_TIMING>>
-    Timer( const std::string & name, detail::NoTiming_t ) : timernr(Init(name))
-    { }
+    template<std::enable_if_t< detail::is_tracing_type_v<TTracing>, bool> = false>
+    Timer( const std::string & name, TTracing ) : timernr(Init(name)) { }
 
-    template<typename= std::enable_if<!DO_TRACING&&!DO_TIMING>>
-    Timer( const std::string & name, detail::NoTracing_t, detail::NoTiming_t ) : timernr(Init(name))
-    { }
+    template<std::enable_if_t< detail::is_timing_type_v<TTiming>, bool> = false>
+    Timer( const std::string & name, TTiming ) : timernr(Init(name)) { }
 
-    template<typename= std::enable_if<!DO_TRACING&&!DO_TIMING>>
-    Timer( const std::string & name, detail::NoTiming_t, detail::NoTracing_t ) : timernr(Init(name))
-    { }
+    Timer( const std::string & name, TTracing, TTiming ) : timernr(Init(name)) { }
 
     void SetName (const std::string & name)
     {
       NgProfiler::SetName (timernr, name);
     }
-    void Start ()
+    void Start () const
     {
       Start(TaskManager::GetThreadId());
     }
-    void Stop ()
+    void Stop () const
     {
       Stop(TaskManager::GetThreadId());
     }
-    void Start (int tid)
+    void Start (int tid) const
     {
         if(tid==0)
         {
-          if constexpr(DO_TIMING)
+          if constexpr(do_timing)
             NgProfiler::StartTimer (timernr);
-          if constexpr(DO_TRACING)
+          if constexpr(do_tracing)
             if(trace) trace->StartTimer(timernr);
         }
         else
         {
-          if constexpr(DO_TIMING)
+          if constexpr(do_timing)
             NgProfiler::StartThreadTimer(timernr, tid);
-          if constexpr(DO_TRACING)
-              trace->StartTask (tid, timernr, PajeTrace::Task::ID_TIMER);
+          if constexpr(do_tracing)
+            if(trace) trace->StartTask (tid, timernr, PajeTrace::Task::ID_TIMER);
         }
     }
-    void Stop (int tid)
+    void Stop (int tid) const
     {
         if(tid==0)
         {
-            if constexpr(DO_TIMING)
+            if constexpr(do_timing)
                 NgProfiler::StopTimer (timernr);
-            if constexpr(DO_TRACING)
+            if constexpr(do_tracing)
                 if(trace) trace->StopTimer(timernr);
         }
         else
         {
-          if constexpr(DO_TIMING)
+          if constexpr(do_timing)
             NgProfiler::StopThreadTimer(timernr, tid);
-          if constexpr(DO_TRACING)
-              trace->StopTask (tid, timernr, PajeTrace::Task::ID_TIMER);
+          if constexpr(do_tracing)
+            if(trace) trace->StopTask (tid, timernr, PajeTrace::Task::ID_TIMER);
         }
     }
     void AddFlops (double aflops)
     {
-      if constexpr(DO_TIMING)
+      if constexpr(do_timing)
 	NgProfiler::AddFlops (timernr, aflops);
     }
 
@@ -249,14 +253,14 @@ namespace ngcore
      Timer object.
        Start / stop timer at constructor / destructor.
   */
-  template<bool DO_TRACING, bool DO_TIMING>
+  template<typename TTimer>
   class RegionTimer
   {
-    Timer<DO_TRACING, DO_TIMING> & timer;
+    const TTimer & timer;
     int tid;
   public:
     /// start timer
-    RegionTimer (Timer<DO_TRACING, DO_TIMING> & atimer) : timer(atimer)
+    RegionTimer (const TTimer & atimer) : timer(atimer)
     {
       tid = TaskManager::GetThreadId();
       timer.Start(tid);
@@ -270,25 +274,6 @@ namespace ngcore
     RegionTimer(RegionTimer &&) = delete;
     void operator=(const RegionTimer &) = delete;
     void operator=(RegionTimer &&) = delete;
-  };
-
-  class ThreadRegionTimer
-  {
-    size_t nr;
-    size_t tid;
-  public:
-    /// start timer
-    ThreadRegionTimer (size_t _nr, size_t _tid) : nr(_nr), tid(_tid)
-    { NgProfiler::StartThreadTimer(nr, tid); }
-    /// stop timer
-    ~ThreadRegionTimer ()
-    { NgProfiler::StopThreadTimer(nr, tid); }
-
-    ThreadRegionTimer() = delete;
-    ThreadRegionTimer(ThreadRegionTimer &&) = delete;
-    ThreadRegionTimer(const ThreadRegionTimer &) = delete;
-    void operator=(const ThreadRegionTimer &) = delete;
-    void operator=(ThreadRegionTimer &&) = delete;
   };
 
   class RegionTracer
@@ -317,8 +302,8 @@ namespace ngcore
           nr = region_id;
         }
       /// start trace with timer
-      template<bool DO_TRACING, bool DO_TIMING>
-      RegionTracer (int athread_id, Timer<DO_TRACING, DO_TIMING> & timer, int additional_value = -1 )
+      template<typename TTimer>
+      RegionTracer (int athread_id, TTimer & timer, int additional_value = -1 )
         : thread_id(athread_id)
         {
           nr = timer;
