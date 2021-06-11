@@ -2139,6 +2139,8 @@ namespace netgen
            [&](auto & table, ElementIndex ei)
            {
              const Element & el = (*this)[ei];
+             if(el.IsDeleted())
+               return;
              if (dom == 0 || dom == el.GetIndex())
                {
                  if (el.GetNP() == 4)
@@ -6574,6 +6576,8 @@ namespace netgen
                [&](auto & table, ElementIndex ei)
                {
                  const auto & el = (*this)[ei];
+                 if(el.IsDeleted())
+                     return;
 
                  for (PointIndex pi : el.PNums())
                    if(free_points[pi])
@@ -6585,6 +6589,8 @@ namespace netgen
                [&](auto & table, ElementIndex ei)
                {
                  const auto & el = (*this)[ei];
+                 if(el.IsDeleted())
+                     return;
 
                  for (PointIndex pi : el.PNums())
                    table.Add (pi, ei);
