@@ -384,6 +384,8 @@ namespace netgen
         volelements.Append (el);
       }
     volelements.Last().flags.illegal_valid = 0;
+    volelements.Last().flags.fixed = 0;
+    volelements.Last().flags.deleted = 0;
 
     // while (volelements.Size() > eltyps.Size())
     // eltyps.Append (FREEELEMENT);
@@ -405,6 +407,8 @@ namespace netgen
 
     volelements[ei]  = el;
     volelements[ei].flags.illegal_valid = 0;
+    volelements[ei].flags.fixed = 0;
+    volelements[ei].flags.deleted = 0;
   }
 
 
