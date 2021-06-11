@@ -499,7 +499,7 @@ void Partition_Inter3d::Inter3D(const TopoDS_Face& F1,
 
     const TopoDS_Face& F = (ancRank == 1) ? F2 : F1;
 
-    // add se to face but dont add twice
+    // add se to face but don't add twice
     TopTools_ListIteratorOfListOfShape itE( myAsDes->Descendant( F ));
     if (myAsDes->HasDescendant( F )) {
       for ( ; itE.More(); itE.Next())

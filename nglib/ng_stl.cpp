@@ -113,10 +113,10 @@ int main (int argc, char ** argv)
    Ng_SaveMesh(mesh,"test.vol");
 
 
-   // refinement without geomety adaption:
+   // refinement without geometry adaption:
    // Ng_Uniform_Refinement (mesh);
 
-   // refinement with geomety adaption:   
+   // refinement with geometry adaption:   
    Ng_STL_Uniform_Refinement (stl_geom, mesh);
 
    cout << "elements after refinement: " << Ng_GetNE(mesh) << endl;
