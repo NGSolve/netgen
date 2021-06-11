@@ -149,13 +149,12 @@ namespace ngcore
 
 
 
-  class NGCORE_API Timer
+  template<bool DO_TRACING=true, bool DO_TIMING=true>
+  class Timer
   {
     int timernr;
-    int priority;
   public:
-    Timer (const std::string & name, int apriority = 1)
-      : priority(apriority)
+    Timer (const std::string & name)
     {
       timernr = NgProfiler::CreateTimer (name);
     }
@@ -165,21 +164,49 @@ namespace ngcore
     }
     void Start ()
     {
-      if (priority <= 2)
-	NgProfiler::StartTimer (timernr);
-      if (priority <= 1)
-        if(trace) trace->StartTimer(timernr);
+      Start(TaskManager::GetThreadId());
     }
     void Stop ()
     {
-      if (priority <= 2)
-	NgProfiler::StopTimer (timernr);
-      if (priority <= 1)
-        if(trace) trace->StopTimer(timernr);
+      Stop(TaskManager::GetThreadId());
+    }
+    void Start (int tid)
+    {
+        if(tid==0)
+        {
+          if constexpr(DO_TIMING)
+            NgProfiler::StartTimer (timernr);
+          if constexpr(DO_TRACING)
+            if(trace) trace->StartTimer(timernr);
+        }
+        else
+        {
+          if constexpr(DO_TIMING)
+            NgProfiler::StartThreadTimer(timernr, tid);
+          if constexpr(DO_TRACING)
+              trace->StartTask (tid, timernr, PajeTrace::Task::ID_TIMER);
+        }
+    }
+    void Stop (int tid)
+    {
+        if(tid==0)
+        {
+            if constexpr(DO_TIMING)
+                NgProfiler::StopTimer (timernr);
+            if constexpr(DO_TRACING)
+                if(trace) trace->StopTimer(timernr);
+        }
+        else
+        {
+          if constexpr(DO_TIMING)
+            NgProfiler::StopThreadTimer(timernr, tid);
+          if constexpr(DO_TRACING)
+              trace->StopTask (tid, timernr, PajeTrace::Task::ID_TIMER);
+        }
     }
     void AddFlops (double aflops)
     {
-      if (priority <= 2)
+      if constexpr(DO_TIMING)
 	NgProfiler::AddFlops (timernr, aflops);
     }
 
@@ -196,14 +223,21 @@ namespace ngcore
      Timer object.
        Start / stop timer at constructor / destructor.
   */
+  template<bool DO_TRACING, bool DO_TIMING>
   class RegionTimer
   {
-    Timer & timer;
+    Timer<DO_TRACING, DO_TIMING> & timer;
+    int tid;
   public:
     /// start timer
-    RegionTimer (Timer & atimer) : timer(atimer) { timer.Start(); }
+    RegionTimer (Timer<DO_TRACING, DO_TIMING> & atimer) : timer(atimer)
+    {
+      tid = TaskManager::GetThreadId();
+      timer.Start(tid);
+    }
+
     /// stop timer
-    ~RegionTimer () { timer.Stop(); }
+    ~RegionTimer () { timer.Stop(tid); }
 
     RegionTimer() = delete;
     RegionTimer(const RegionTimer &) = delete;
@@ -235,6 +269,7 @@ namespace ngcore
     {
       int nr;
       int thread_id;
+      int type;
     public:
       static constexpr int ID_JOB = PajeTrace::Task::ID_JOB;
       static constexpr int ID_NONE = PajeTrace::Task::ID_NONE;
@@ -251,28 +286,26 @@ namespace ngcore
         : thread_id(athread_id)
         {
 	  if (trace)
-          nr = trace->StartTask (athread_id, region_id, id_type, additional_value);
+          trace->StartTask (athread_id, region_id, id_type, additional_value);
+          type = id_type;
+          nr = region_id;
         }
       /// start trace with timer
-      RegionTracer (int athread_id, Timer & timer, int additional_value = -1 )
+      template<bool DO_TRACING, bool DO_TIMING>
+      RegionTracer (int athread_id, Timer<DO_TRACING, DO_TIMING> & timer, int additional_value = -1 )
         : thread_id(athread_id)
         {
+          nr = timer;
+          type = ID_TIMER;
 	  if (trace)
-          nr = trace->StartTask (athread_id, static_cast<int>(timer), ID_TIMER, additional_value);
+            trace->StartTask (athread_id, nr, type, additional_value);
         }
-
-      /// set user defined value
-      void SetValue( int additional_value )
-      {
-	  if (trace)
-        trace->SetTask( thread_id, nr, additional_value );
-      }
 
       /// stop trace
       ~RegionTracer ()
         {
 	  if (trace)
-          trace->StopTask (thread_id, nr);
+            trace->StopTask (thread_id, nr, type);
         }
     };
 
