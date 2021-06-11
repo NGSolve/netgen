@@ -148,16 +148,42 @@ namespace ngcore
   };
 
 
+  namespace detail {
+      struct NoTracing_t{};
+      struct NoTiming_t{};
+  }
+
+  static detail::NoTracing_t NoTracing;
+  static detail::NoTiming_t NoTiming;
 
   template<bool DO_TRACING=true, bool DO_TIMING=true>
   class Timer
   {
     int timernr;
-  public:
-    Timer (const std::string & name)
+    int Init( const std::string & name )
     {
-      timernr = NgProfiler::CreateTimer (name);
+      return NgProfiler::CreateTimer (name);
     }
+  public:
+    Timer (const std::string & name) : timernr(Init(name))
+    { }
+
+    template<typename= std::enable_if<!DO_TRACING>>
+    Timer( const std::string & name, detail::NoTracing_t ) : timernr(Init(name))
+    { }
+
+    template<typename= std::enable_if<!DO_TIMING>>
+    Timer( const std::string & name, detail::NoTiming_t ) : timernr(Init(name))
+    { }
+
+    template<typename= std::enable_if<!DO_TRACING&&!DO_TIMING>>
+    Timer( const std::string & name, detail::NoTracing_t, detail::NoTiming_t ) : timernr(Init(name))
+    { }
+
+    template<typename= std::enable_if<!DO_TRACING&&!DO_TIMING>>
+    Timer( const std::string & name, detail::NoTiming_t, detail::NoTracing_t ) : timernr(Init(name))
+    { }
+
     void SetName (const std::string & name)
     {
       NgProfiler::SetName (timernr, name);
