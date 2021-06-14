@@ -10,7 +10,7 @@ namespace netgen
   extern const char * pyramidrules2[];
   extern const char * hexrules[];
 
-  void MeshDomain(Mesh & mesh3d, const MeshingParameters & c_mp, int k)
+  void MeshDomain(Mesh & mesh3d, const MeshingParameters & c_mp, int k, const Identifications & identifications)
   {
     MeshingParameters mp = c_mp; // copy mp to change them here
     NgArray<INDEX_2> connectednodes;
@@ -103,10 +103,10 @@ namespace netgen
            for (int i = 1; i <= connectednodes.Size(); i++)
              meshing.AddConnectedPair (connectednodes.Get(i));
            */
-           for (int nr = 1; nr <= mesh3d.GetIdentifications().GetMaxNr(); nr++)
-             if (mesh3d.GetIdentifications().GetType(nr) != Identifications::PERIODIC)
+           for (int nr = 1; nr <= identifications.GetMaxNr(); nr++)
+             if (identifications.GetType(nr) != Identifications::PERIODIC)
                {
-                 mesh3d.GetIdentifications().GetPairs (nr, connectednodes);
+                 identifications.GetPairs (nr, connectednodes);
                  for (auto pair : connectednodes)
                    meshing.AddConnectedPair (pair);
                }
@@ -327,9 +327,9 @@ namespace netgen
      ParallelFor(Range(1, mesh3d.GetNDomains()+1), [&](int k)
              {
              if(k==1)
-             MeshDomain(mesh3d, mp, k);
+             MeshDomain(mesh3d, mp, k, mesh3d.GetIdentifications());
              else
-             MeshDomain(meshes[k-2], mp, k);
+             MeshDomain(meshes[k-2], mp, k, mesh3d.GetIdentifications());
              });
      MergeMeshes(mesh3d, meshes, first_new_pi);
 
