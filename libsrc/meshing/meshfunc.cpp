@@ -278,6 +278,7 @@ namespace netgen
 
   void MergeMeshes( Mesh & mesh, FlatArray<Mesh> meshes, PointIndex first_new_pi )
   {
+     // todo: optimize: count elements, alloc all memory, copy vol elements in parallel
      static Timer t("MergeMeshes"); RegionTimer rt(t);
      for(auto & m : meshes)
      {
@@ -314,31 +315,23 @@ namespace netgen
            throw NgException ("Stop meshing since boundary mesh is overlapping");
 
 
-     if(task_manager)
+     Array<Mesh> meshes(mesh3d.GetNDomains()-1);
+     auto first_new_pi = mesh3d.Points().Range().Next();
+
+     for(auto & m : meshes)
      {
-       Array<Mesh> meshes(mesh3d.GetNDomains()-1);
-       auto first_new_pi = mesh3d.Points().Range().Next();
-    
-       for(auto & m : meshes)
-       {
-           m = mesh3d;
-           m.SetLocalH(mesh3d.GetLocalH());
-       }
-
-       ParallelFor(Range(1, mesh3d.GetNDomains()+1), [&](int k) 
-           {
-             if(k==1)
-               MeshDomain(mesh3d, mp, k);
-             else
-               MeshDomain(meshes[k-2], mp, k);
-           });
-       MergeMeshes(mesh3d, meshes, first_new_pi);
+         m = mesh3d;
+         m.SetLocalH(mesh3d.GetLocalH());
      }
-     else
-       for (int k = 1; k <= mesh3d.GetNDomains(); k++)
-         MeshDomain(mesh3d, mp, k);
 
-
+     ParallelFor(Range(1, mesh3d.GetNDomains()+1), [&](int k)
+             {
+             if(k==1)
+             MeshDomain(mesh3d, mp, k);
+             else
+             MeshDomain(meshes[k-2], mp, k);
+             });
+     MergeMeshes(mesh3d, meshes, first_new_pi);
 
      MeshQuality3d (mesh3d);
 
