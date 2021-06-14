@@ -188,6 +188,8 @@ namespace ngcore
 
     Timer( const std::string & name, TTracing, TTiming ) : timernr(Init(name)) { }
 
+    [[deprecated ("Use Timer(name, NoTracing/NoTiming) instead")]] Timer( const std::string & name, int ) : timernr(Init(name)) {}
+
     void SetName (const std::string & name)
     {
       NgProfiler::SetName (timernr, name);
@@ -274,6 +276,25 @@ namespace ngcore
     RegionTimer(RegionTimer &&) = delete;
     void operator=(const RegionTimer &) = delete;
     void operator=(RegionTimer &&) = delete;
+  };
+
+  class [[deprecated("Use RegionTimer instead (now thread safe)")]] ThreadRegionTimer
+  {
+    size_t nr;
+    size_t tid;
+  public:
+    /// start timer
+    ThreadRegionTimer (size_t _nr, size_t _tid) : nr(_nr), tid(_tid)
+    { NgProfiler::StartThreadTimer(nr, tid); }
+    /// stop timer
+    ~ThreadRegionTimer ()
+    { NgProfiler::StopThreadTimer(nr, tid); }
+
+    ThreadRegionTimer() = delete;
+    ThreadRegionTimer(ThreadRegionTimer &&) = delete;
+    ThreadRegionTimer(const ThreadRegionTimer &) = delete;
+    void operator=(const ThreadRegionTimer &) = delete;
+    void operator=(ThreadRegionTimer &&) = delete;
   };
 
   class RegionTracer
