@@ -836,18 +836,7 @@ namespace netgen
     ///
     const PointIndex & PNumMod (int i) const { return pnum[(i-1) % np]; }
 
-    void DoArchive (Archive & ar)
-    {
-      short _np, _typ;
-      bool _curved;
-      if (ar.Output())
-        { _np = np; _typ = typ; _curved = is_curved; }
-      ar & _np & _typ & index & _curved;
-      if (ar.Input())
-        { np = _np; typ = ELEMENT_TYPE(_typ); is_curved = _curved; }
-      for (size_t i = 0; i < np; i++)
-        ar & pnum[i];
-    }
+    void DoArchive (Archive & ar);
     
 #ifdef PARALLEL
     static MPI_Datatype MyGetMPIType();

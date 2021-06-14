@@ -1124,6 +1124,26 @@ namespace netgen
     is_curved = typ != TET; // false;
   }
 
+  void Element :: DoArchive (Archive & ar)
+  {
+    short _np, _typ;
+    bool _curved;
+    if (ar.Output())
+      { _np = np; _typ = typ; _curved = is_curved; }
+    ar & _np;
+
+    // placement new to init flags
+    if (ar.Input())
+        new (this) Element(_np);
+
+    ar & _typ & index & _curved;
+    typ = ELEMENT_TYPE(_typ);
+    is_curved = _curved;
+
+    for (size_t i = 0; i < np; i++)
+      ar & pnum[i];
+  }
+
   void Element :: SetOrder (const int aorder) 
   { 
     orderx = aorder; 
