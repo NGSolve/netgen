@@ -315,6 +315,9 @@ namespace netgen
            throw NgException ("Stop meshing since boundary mesh is overlapping");
 
 
+     if(mesh3d.GetNDomains()==0)
+         return MESHING3_OK;
+
      Array<Mesh> meshes(mesh3d.GetNDomains()-1);
      auto first_new_pi = mesh3d.Points().Range().Next();
 
