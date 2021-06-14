@@ -1506,6 +1506,12 @@ namespace netgen
             auto mynv = numglob;
             archive & mynv;   // numvertices;
             archive & *ident;
+
+            if(archive.GetVersion("netgen") >= "v6.2.2103-1")
+              {
+                archive.NeedsVersion("netgen", "v6.2.2103-1");
+                archive & vol_partition & surf_partition & seg_partition;
+              }
             
             archive.Shallow(geometry);
             archive & *curvedelems;
