@@ -444,8 +444,8 @@ namespace netgen
   void LocalH :: FindInnerBoxes (AdFront3 * adfront,
 				 int (*testinner)(const Point3d & p1))
   {
-    static int timer = NgProfiler::CreateTimer ("LocalH::FindInnerBoxes");
-    NgProfiler::RegionTimer reg (timer);
+    static Timer timer("LocalH::FindInnerBoxes");
+    RegionTimer reg (timer);
 
 
     int nf = adfront->GetNF();
@@ -851,6 +851,7 @@ namespace netgen
   
   void LocalH :: GetOuterPoints (NgArray<Point<3> > & points)
   {
+    static Timer t("LocalH::GetOuterPoints"); RegionTimer rt(t);
     for (int i = 0; i < boxes.Size(); i++)
       if (!boxes[i]->flags.isinner && !boxes[i]->flags.cutboundary)
 	points.Append ( boxes[i] -> PMid());
