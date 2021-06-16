@@ -227,6 +227,26 @@ namespace netgen
    }
   }
 
+  void PrepareForBlockFillLocalH(MeshingData & md)
+  {
+    static Timer t("PrepareForBlockFillLocalH"); RegionTimer rt(t);
+    md.meshing = make_unique<Meshing3>(nullptr);
+
+    auto & mesh = md.mesh;
+
+    mesh.CalcSurfacesOfNode();
+    mesh.FindOpenElements(md.domain);
+
+    for (PointIndex pi : mesh.Points().Range())
+       md.meshing->AddPoint (mesh[pi], pi);
+
+    for (int i = 1; i <= mesh.GetNOpenElements(); i++)
+       md.meshing->AddBoundaryElement (mesh.OpenElement(i));
+
+    if (mesh.HasLocalHFunction())
+        md.meshing->PrepareBlockFillLocalH(mesh, md.mp);
+  }
+
 
   void MeshDomain( MeshingData & md)
   {
@@ -237,15 +257,7 @@ namespace netgen
     if(mp.only3D_domain_nr && mp.only3D_domain_nr != domain)
         return;
 
-    mesh.CalcSurfacesOfNode();
-    mesh.FindOpenElements(domain);
 
-    md.meshing = make_unique<Meshing3>(nullptr);
-    for (PointIndex pi : mesh.Points().Range())
-       md.meshing->AddPoint (mesh[pi], pi);
-
-    for (int i = 1; i <= mesh.GetNOpenElements(); i++)
-       md.meshing->AddBoundaryElement (mesh.OpenElement(i));
 
 
    if (mp.delaunay && mesh.GetNOpenElements())
@@ -261,9 +273,18 @@ namespace netgen
          mesh.GetNE(), " elements");
    }
 
-   // mesh.Save("before_findopenels.vol");
-   // mesh.CalcSurfacesOfNode();
-   // mesh.FindOpenElements(domain);
+   Box<3> domain_bbox( Box<3>::EMPTY_BOX ); 
+   
+   for (auto & sel : mesh.SurfaceElements())
+     {
+       if (sel.IsDeleted() ) continue;
+
+       for (auto pi : sel.PNums())
+         domain_bbox.Add (mesh[pi]);
+     }
+   domain_bbox.Increase (0.01 * domain_bbox.Diam());
+
+   mesh.FindOpenElements(domain);
 
    int cntsteps = 0;
    int meshed;
@@ -273,7 +294,7 @@ namespace netgen
          if (multithread.terminate)
            break;
          
-         mesh.FindOpenElements();
+         mesh.FindOpenElements(domain);
          PrintMessage (5, mesh.GetNOpenElements(), " open faces");
          GetOpenElements( mesh, domain )->Save("open_"+ToString(cntsteps)+".vol");
          cntsteps++;
@@ -289,15 +310,14 @@ namespace netgen
          Array<PointIndex, PointIndex> glob2loc(mesh.GetNP());
          glob2loc = PointIndex::INVALID;
 
+         for (PointIndex pi : mesh.Points().Range())
+           if (domain_bbox.IsIn (mesh[pi]))
+               glob2loc[pi] = meshing.AddPoint (mesh[pi], pi);
+
          for (auto sel : mesh.OpenElements() )
          {
            for(auto & pi : sel.PNums())
-             {
-               if(!glob2loc[pi].IsValid())
-                 glob2loc[pi] = meshing.AddPoint (mesh[pi], pi);
-
                pi = glob2loc[pi];
-             }
            meshing.AddBoundaryElement (sel);
          }
 
@@ -312,7 +332,7 @@ namespace netgen
          
 
          mesh.CalcSurfacesOfNode();
-         mesh.FindOpenElements();
+         mesh.FindOpenElements(domain);
 
          // teterrpow = 2;
          if (mesh.GetNOpenElements() != 0)
@@ -358,7 +378,7 @@ namespace netgen
      {
         PrintMessage (3, "Check subdomain ", domain, " / ", mesh.GetNDomains());
 
-        mesh.FindOpenElements();
+        mesh.FindOpenElements(domain);
 
         bool res = (mesh.CheckConsistentBoundary() != 0);
         if (res)
@@ -710,14 +730,12 @@ namespace netgen
          CloseOpenQuads( md[i] );
        });
 
+     for(auto & md_ : md)
+         PrepareForBlockFillLocalH(md_);
+
      ParallelFor( md.Range(), [&](int i)
        {
-         // try {
-           MeshDomain(md[i]);
-           // }
-         // catch( const NgException & e ) {
-         //   md[i].mesh.Save("error_"+ToString(i)+".vol");
-         // }
+         MeshDomain(md[i]);
        });
 
      MergeMeshes(mesh3d, md);

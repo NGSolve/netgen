@@ -28,6 +28,7 @@ class Meshing3
   NgArray<char*> problems;
   /// tolerance criterion
   double tolfak;
+  NgArray<Point<3> > npoints;
 public:
   /// 
   Meshing3 (const string & rulefilename); 
@@ -63,6 +64,7 @@ public:
   ///
   void BlockFill (Mesh & mesh, double gh);
   ///
+  void PrepareBlockFillLocalH (Mesh & mesh, const MeshingParameters & mp);
   void BlockFillLocalH (Mesh & mesh, const MeshingParameters & mp);
 
   /// uses points of adfront, and puts new elements into mesh
