@@ -721,7 +721,9 @@ namespace netgen
      if(mesh3d.GetNDomains()==0)
          return MESHING3_OK;
 
-     if (!mesh3d.HasLocalHFunction()) mesh3d.CalcLocalH(mp.grading);
+     // localh function is built for each domain separately in blockfill ( more efficient )
+     if (!mesh3d.HasLocalHFunction() && !mp.blockfill)
+         mesh3d.CalcLocalH(mp.grading);
 
      auto md = DivideMesh(mesh3d, mp);
 

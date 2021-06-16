@@ -1182,7 +1182,12 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
 				  const MeshingParameters & mp)
 {
   static Timer t("Mesing3::BlockFillLocalH"); RegionTimer reg(t);
-  // PrepareBlockFillLocalH(mesh, mp);
+
+  if (!mesh.HasLocalHFunction())
+  {
+    mesh.CalcLocalH(mp.grading);
+    PrepareBlockFillLocalH(mesh, mp);
+  }
   
   double filldist = mp.filldist;
   
