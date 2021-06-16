@@ -1,5 +1,6 @@
 #include <mystdlib.h>
 #include "meshing.hpp"
+#include "debugging.hpp"
 
 namespace netgen
 {
@@ -9,6 +10,366 @@ namespace netgen
   extern const char * pyramidrules[];
   extern const char * pyramidrules2[];
   extern const char * hexrules[];
+
+  struct MeshingData
+  {
+      int domain;
+
+      // mesh for one domain (contains all adjacent surface elments)
+      Mesh mesh;
+
+      // maps from lokal (domain) mesh to global mesh
+      Array<PointIndex, PointIndex> pmap;
+
+      // todo: store (mapped) identifications
+      Array<INDEX_2> connected_pairs;
+
+      MeshingParameters mp;
+
+      unique_ptr<Meshing3> meshing;
+  };
+
+  // extract surface meshes belonging to individual domains
+  Array<MeshingData> DivideMesh(const Mesh & mesh, const MeshingParameters & mp)
+  {
+      static Timer timer("DivideMesh"); RegionTimer rt(timer);
+
+      Array<MeshingData> ret;
+      auto num_domains = mesh.GetNDomains();
+      ret.SetSize(num_domains);
+
+      Array<Array<PointIndex, PointIndex>> ipmap;
+      ipmap.SetSize(num_domains);
+      auto dim = mesh.GetDimension();
+      auto num_points = mesh.GetNP();
+      auto num_facedescriptors = mesh.GetNFD();
+
+      auto & identifications = mesh.GetIdentifications();
+
+      for(auto i : Range(ret))
+      {
+          auto & md = ret[i];
+          md.domain = i+1;
+
+          if(mp.only3D_domain_nr && mp.only3D_domain_nr !=md.domain)
+              continue;
+
+          md.mp = mp;
+          md.mp.maxh = min2 (mp.maxh, mesh.MaxHDomain(md.domain));
+
+          auto & m = ret[i].mesh;
+
+          m.SetLocalH(mesh.GetLocalH());
+
+          ipmap[i].SetSize(num_points);
+          ipmap[i] = PointIndex::INVALID;
+          m.SetDimension( mesh.GetDimension() );
+
+          for(auto i : Range(1, num_facedescriptors+1))
+              m.AddFaceDescriptor( mesh.GetFaceDescriptor(i) );
+      }
+
+      // mark used points for each domain, add surface elements (with wrong point numbers) to domain mesh
+      for(const auto & sel : mesh.SurfaceElements())
+      {
+        const auto & fd = mesh.GetFaceDescriptor(sel.GetIndex());
+        int dom_in  = fd.DomainIn();
+        int dom_out = fd.DomainOut();
+
+        for( auto dom : {dom_in, dom_out} )
+        {
+            if(dom==0)
+              continue;
+
+            if(mp.only3D_domain_nr && mp.only3D_domain_nr != dom)
+                continue;
+
+            auto & sels = ret[dom-1].mesh.SurfaceElements();
+            for(auto pi : sel.PNums())
+                ipmap[dom-1][pi] = 1;
+            sels.Append(sel);
+        }
+      }
+
+      // add used points to domain mesh, build point mapping
+      for(auto i : Range(ret))
+      {
+          if(mp.only3D_domain_nr && mp.only3D_domain_nr != ret[i].domain)
+              continue;
+
+          auto & m = ret[i].mesh;
+          auto & pmap = ret[i].pmap;
+
+          for(auto pi : Range(ipmap[i]))
+            if(ipmap[i][pi])
+            {
+              auto pi_new = m.AddPoint( mesh[pi] );
+              ipmap[i][pi] = pi_new;
+              pmap.Append( pi );
+            }
+      }
+
+      NgArray<INDEX_2> connectednodes;
+      for(auto i : Range(ret))
+      {
+          auto & imap = ipmap[i];
+          if(mp.only3D_domain_nr && mp.only3D_domain_nr != ret[i].domain)
+              continue;
+
+          auto & m = ret[i].mesh;
+          for (auto & sel : m.SurfaceElements())
+            for(auto & pi : sel.PNums())
+              pi = imap[pi];
+
+           for (int nr = 1; nr <= identifications.GetMaxNr(); nr++)
+             if (identifications.GetType(nr) != Identifications::PERIODIC)
+               {
+                 identifications.GetPairs (nr, connectednodes);
+                 for (auto pair : connectednodes)
+                 {
+                     auto pi0 = pair[0];
+                     auto pi1 = pair[1];
+                     if(imap[pi0].IsValid() && imap[pi1].IsValid())
+                         ret[i].connected_pairs.Append({imap[pi0], imap[pi1]});
+                 }
+               }
+           // ret[i].mesh.Save("surface_"+ToString(i)+".vol");
+      }
+      return ret;
+  }
+
+  void CloseOpenQuads( MeshingData & md)
+  {
+    auto & mesh = md.mesh;
+    auto domain = md.domain;
+    MeshingParameters & mp = md.mp;
+
+    if(mp.only3D_domain_nr && mp.only3D_domain_nr != domain)
+        return;
+     
+    int oldne;
+    if (multithread.terminate)
+      return;
+    
+    mesh.CalcSurfacesOfNode();
+    mesh.FindOpenElements();
+    
+    if (!mesh.GetNOpenElements())
+      return;
+
+    for (int qstep = 0; qstep <= 3; qstep++)
+     {
+       if (qstep == 0 && !mp.try_hexes) continue;
+       
+       if (mesh.HasOpenQuads())
+         {
+           string rulefile = ngdir;
+           
+           const char ** rulep = NULL;
+           switch (qstep)
+             {
+             case 0:
+               rulep = hexrules;
+               break;
+             case 1:
+               rulep = prismrules2;
+               break;
+             case 2: // connect pyramid to triangle
+               rulep = pyramidrules2;
+               break;
+             case 3: // connect to vis-a-vis point
+               rulep = pyramidrules;
+               break;
+             }
+           
+           Meshing3 meshing(rulep); 
+           
+           MeshingParameters mpquad = mp;
+           
+           mpquad.giveuptol = 15;
+           mpquad.baseelnp = 4;
+           mpquad.starshapeclass = 1000;
+           mpquad.check_impossible = qstep == 1;   // for prisms only (air domain in trafo)
+           
+           
+           for (PointIndex pi : mesh.Points().Range())
+             meshing.AddPoint (mesh[pi], pi);
+
+           for (auto pair : md.connected_pairs)
+               meshing.AddConnectedPair (pair);
+           
+           for (int i = 1; i <= mesh.GetNOpenElements(); i++)
+             {
+               Element2d hel = mesh.OpenElement(i);
+               meshing.AddBoundaryElement (hel);
+             }
+           
+           oldne = mesh.GetNE();
+           
+           meshing.GenerateMesh (mesh, mpquad);
+           
+           for (int i = oldne + 1; i <= mesh.GetNE(); i++)
+             mesh.VolumeElement(i).SetIndex (domain);
+           
+           (*testout) 
+             << "mesh has " << mesh.GetNE() << " prism/pyramid elements" << endl;
+           
+           mesh.FindOpenElements();
+         }
+     }
+   
+
+   if (mesh.HasOpenQuads())
+   {
+      PrintSysError ("mesh has still open quads");
+      throw NgException ("Stop meshing since too many attempts");
+      // return MESHING3_GIVEUP;
+   }
+  }
+
+
+  void MeshDomain( MeshingData & md)
+  {
+    auto & mesh = md.mesh;
+    auto domain = md.domain;
+    MeshingParameters & mp = md.mp;
+
+    if(mp.only3D_domain_nr && mp.only3D_domain_nr != domain)
+        return;
+
+    mesh.CalcSurfacesOfNode();
+    mesh.FindOpenElements(domain);
+
+    md.meshing = make_unique<Meshing3>(nullptr);
+    for (PointIndex pi : mesh.Points().Range())
+       md.meshing->AddPoint (mesh[pi], pi);
+
+    for (int i = 1; i <= mesh.GetNOpenElements(); i++)
+       md.meshing->AddBoundaryElement (mesh.OpenElement(i));
+
+
+   if (mp.delaunay && mesh.GetNOpenElements())
+   {
+      int oldne = mesh.GetNE();
+
+      md.meshing->Delaunay (mesh, domain, mp);
+
+      for (int i = oldne + 1; i <= mesh.GetNE(); i++)
+         mesh.VolumeElement(i).SetIndex (domain);
+
+      PrintMessage (3, mesh.GetNP(), " points, ",
+         mesh.GetNE(), " elements");
+   }
+
+   // mesh.Save("before_findopenels.vol");
+   // mesh.CalcSurfacesOfNode();
+   // mesh.FindOpenElements(domain);
+
+   int cntsteps = 0;
+   int meshed;
+   if (mesh.GetNOpenElements())
+     do
+       {
+         if (multithread.terminate)
+           break;
+         
+         mesh.FindOpenElements();
+         PrintMessage (5, mesh.GetNOpenElements(), " open faces");
+         GetOpenElements( mesh, domain )->Save("open_"+ToString(cntsteps)+".vol");
+         cntsteps++;
+
+
+         if (cntsteps > mp.maxoutersteps) 
+            throw NgException ("Stop meshing since too many attempts");
+
+         PrintMessage (1, "start tetmeshing");
+
+         Meshing3 meshing(tetrules);
+
+         Array<PointIndex, PointIndex> glob2loc(mesh.GetNP());
+         glob2loc = PointIndex::INVALID;
+
+         for (auto sel : mesh.OpenElements() )
+         {
+           for(auto & pi : sel.PNums())
+             {
+               if(!glob2loc[pi].IsValid())
+                 glob2loc[pi] = meshing.AddPoint (mesh[pi], pi);
+
+               pi = glob2loc[pi];
+             }
+           meshing.AddBoundaryElement (sel);
+         }
+
+         int oldne = mesh.GetNE();
+
+         mp.giveuptol = 15 + 10 * cntsteps; 
+         mp.sloppy = 5;
+         meshing.GenerateMesh (mesh, mp);
+         
+         for (ElementIndex ei = oldne; ei < mesh.GetNE(); ei++)
+            mesh[ei].SetIndex (domain);
+         
+
+         mesh.CalcSurfacesOfNode();
+         mesh.FindOpenElements();
+
+         // teterrpow = 2;
+         if (mesh.GetNOpenElements() != 0)
+         {
+            meshed = 0;
+            PrintMessage (5, mesh.GetNOpenElements(), " open faces found");
+
+            MeshOptimize3d optmesh(mp);
+
+            const char * optstr = "mcmstmcmstmcmstmcm";
+            for (size_t j = 1; j <= strlen(optstr); j++)
+            {
+               mesh.CalcSurfacesOfNode();
+               mesh.FreeOpenElementsEnvironment(2);
+               mesh.CalcSurfacesOfNode();
+
+               switch (optstr[j-1])
+               {
+               case 'c': optmesh.CombineImprove(mesh, OPT_REST); break;
+               case 'd': optmesh.SplitImprove(mesh, OPT_REST); break;
+               case 's': optmesh.SwapImprove(mesh, OPT_REST); break;
+               case 't': optmesh.SwapImprove2(mesh, OPT_REST); break;
+               case 'm': mesh.ImproveMesh(mp, OPT_REST); break;
+               }	  
+
+            }
+
+            mesh.FindOpenElements();	      
+            PrintMessage (3, "Call remove problem");
+            // mesh.Save("before_remove.vol");
+            RemoveProblem (mesh, domain);
+            // mesh.Save("after_remove.vol");
+            mesh.FindOpenElements();
+         }
+         else
+           {
+            meshed = 1;
+            PrintMessage (1, "Success !");
+           }
+       }
+     while (!meshed);
+   
+     {
+        PrintMessage (3, "Check subdomain ", domain, " / ", mesh.GetNDomains());
+
+        mesh.FindOpenElements();
+
+        bool res = (mesh.CheckConsistentBoundary() != 0);
+        if (res)
+        {
+           // mesh.Save("output.vol");
+           PrintError ("Surface mesh not consistent");
+           throw NgException ("Stop meshing since surface mesh not consistent");
+        }
+     }
+   // OptimizeVolume( md.mp, mesh );
+  }
 
   void MeshDomain(Mesh & mesh3d, const MeshingParameters & c_mp, int k, const Identifications & identifications)
   {
@@ -103,13 +464,13 @@ namespace netgen
            for (int i = 1; i <= connectednodes.Size(); i++)
              meshing.AddConnectedPair (connectednodes.Get(i));
            */
-           for (int nr = 1; nr <= identifications.GetMaxNr(); nr++)
-             if (identifications.GetType(nr) != Identifications::PERIODIC)
-               {
-                 identifications.GetPairs (nr, connectednodes);
-                 for (auto pair : connectednodes)
-                   meshing.AddConnectedPair (pair);
-               }
+           // for (int nr = 1; nr <= identifications.GetMaxNr(); nr++)
+           //   if (identifications.GetType(nr) != Identifications::PERIODIC)
+           //     {
+           //       identifications.GetPairs (nr, connectednodes);
+           //       for (auto pair : connectednodes)
+           //         meshing.AddConnectedPair (pair);
+           //     }
            
            for (int i = 1; i <= mesh3d.GetNOpenElements(); i++)
              {
@@ -276,6 +637,32 @@ namespace netgen
      }
   }
 
+  void MergeMeshes( Mesh & mesh, Array<MeshingData> & md )
+  {
+     // todo: optimize: count elements, alloc all memory, copy vol elements in parallel
+     static Timer t("MergeMeshes"); RegionTimer rt(t);
+     for(auto & m_ : md)
+     {
+         auto first_new_pi = m_.pmap.Range().Next();
+         auto & m = m_.mesh;
+         Array<PointIndex, PointIndex> pmap(m.Points().Size());
+         for(auto pi : Range(PointIndex(PointIndex::BASE), first_new_pi))
+             pmap[pi] = m_.pmap[pi];
+
+         for (auto pi : Range(first_new_pi, m.Points().Range().Next()))
+             pmap[pi] = mesh.AddPoint(m[pi]);
+
+
+         for ( auto el : m.VolumeElements() )
+         {
+             for (auto i : Range(el.GetNP()))
+                 el[i] = pmap[el[i]];
+             el.SetIndex(m_.domain);
+             mesh.AddVolumeElement(el);
+         }
+     }
+  }
+
   void MergeMeshes( Mesh & mesh, FlatArray<Mesh> meshes, PointIndex first_new_pi )
   {
      // todo: optimize: count elements, alloc all memory, copy vol elements in parallel
@@ -304,6 +691,48 @@ namespace netgen
   {
     static Timer t("MeshVolume"); RegionTimer reg(t);
 
+     mesh3d.Compress();
+
+     if (mp.checkoverlappingboundary)
+        if (mesh3d.CheckOverlappingBoundary())
+           throw NgException ("Stop meshing since boundary mesh is overlapping");
+
+
+     if(mesh3d.GetNDomains()==0)
+         return MESHING3_OK;
+
+     if (!mesh3d.HasLocalHFunction()) mesh3d.CalcLocalH(mp.grading);
+
+     auto md = DivideMesh(mesh3d, mp);
+
+     ParallelFor( md.Range(), [&](int i)
+       {
+         CloseOpenQuads( md[i] );
+       });
+
+     ParallelFor( md.Range(), [&](int i)
+       {
+         // try {
+           MeshDomain(md[i]);
+           // }
+         // catch( const NgException & e ) {
+         //   md[i].mesh.Save("error_"+ToString(i)+".vol");
+         // }
+       });
+
+     MergeMeshes(mesh3d, md);
+
+     MeshQuality3d (mesh3d);
+
+     return MESHING3_OK;
+  }  
+
+
+  // extern double teterrpow; 
+  MESHING3_RESULT MeshVolume_ori (const MeshingParameters & mp, Mesh& mesh3d)
+  {
+    static Timer t("MeshVolume"); RegionTimer reg(t);
+
      if (!mesh3d.HasLocalHFunction()) mesh3d.CalcLocalH(mp.grading);
 
      mesh3d.Compress();
@@ -328,12 +757,12 @@ namespace netgen
      }
 
      ParallelFor(Range(1, mesh3d.GetNDomains()+1), [&](int k)
-             {
-             if(k==1)
+        {
+          if(k==1)
              MeshDomain(mesh3d, mp, k, mesh3d.GetIdentifications());
-             else
+          else
              MeshDomain(meshes[k-2], mp, k, mesh3d.GetIdentifications());
-             });
+        });
      MergeMeshes(mesh3d, meshes, first_new_pi);
 
      MeshQuality3d (mesh3d);
