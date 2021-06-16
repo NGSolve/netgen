@@ -180,7 +180,6 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   // static int meshing3_timer_d = NgProfiler::CreateTimer ("Meshing3::GenerateMesh d");
   // NgProfiler::RegionTimer reg (meshing3_timer);
 
-  cout << "start tet meshing with " << adfront->GetNP() << " points and " << adfront->GetNF() << " faces " << endl;
 
   NgArray<Point3d, PointIndex::BASE> locpoints;      // local points
   NgArray<MiniElement2d> locfaces;                   // local faces

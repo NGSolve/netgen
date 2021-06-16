@@ -152,7 +152,7 @@ namespace netgen
       return;
     
     mesh.CalcSurfacesOfNode();
-    mesh.FindOpenElements();
+    mesh.FindOpenElements(domain);
     
     if (!mesh.GetNOpenElements())
       return;
@@ -214,7 +214,7 @@ namespace netgen
            (*testout) 
              << "mesh has " << mesh.GetNE() << " prism/pyramid elements" << endl;
            
-           mesh.FindOpenElements();
+           mesh.FindOpenElements(domain);
          }
      }
    
