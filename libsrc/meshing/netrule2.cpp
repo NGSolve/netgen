@@ -6,8 +6,8 @@ namespace netgen
 
 netrule :: netrule ()
 {
-  name = new char[1];
-  name[0] = char(0);
+  // name = new char[1];
+  // name[0] = char(0);
   quality = 0;
 }
 
