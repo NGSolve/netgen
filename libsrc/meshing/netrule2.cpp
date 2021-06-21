@@ -13,11 +13,13 @@ netrule :: netrule ()
 
 netrule ::  ~netrule()
 {
-  delete [] name;
+  // delete [] name;
+  /*
   for(int i = 0; i < oldutofreearea_i.Size(); i++)
     delete oldutofreearea_i[i];
   for(int i = 0; i < freezone_i.Size(); i++)
     delete freezone_i[i];
+  */
 }
 
 
@@ -37,9 +39,9 @@ void netrule :: SetFreeZoneTransformation (const Vector & devp, int tolclass)
 
   if (tolclass <= oldutofreearea_i.Size())
     {
-      oldutofreearea_i[tolclass-1] -> Mult (devp, devfree);
+      oldutofreearea_i[tolclass-1].Mult (devp, devfree);
 
-      auto& fzi = *freezone_i[tolclass-1];
+      auto& fzi = freezone_i[tolclass-1];
       for (int i = 0; i < fzs; i++)
 	{
 	  transfreezone[i][0] = fzi[i][0] + devfree[2*i];

@@ -517,7 +517,7 @@ namespace netgen
 	  }
 
 	if (multithread.terminate) return;
-      
+        
 	for (SurfaceElementIndex sei = oldnf; sei < mesh.GetNSE(); sei++)
 	  mesh[sei].SetIndex (k);
 

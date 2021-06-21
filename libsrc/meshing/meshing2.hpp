@@ -31,7 +31,7 @@ class Meshing2
   /// the current advancing front
   AdFront2 adfront;
   /// rules for mesh generation
-  NgArray<netrule*> rules;
+  Array<unique_ptr<netrule>> rules;
   /// statistics
   NgArray<int> ruleused, canuse, foundmap;
   /// 
