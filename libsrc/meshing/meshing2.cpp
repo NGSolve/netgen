@@ -53,15 +53,21 @@ namespace netgen
       if (!globalrules.Size())
         {
           LoadRules (NULL, mp.quad);
-          for (auto * rule : rules)
-            globalrules.Append (unique_ptr<netrule>(rule));
+          for (auto & rule : rules)
+            globalrules.Append (make_unique<netrule>(*rule));
+          rules.SetSize(0);
         }
+      /*
       else
         {
           for (auto i : globalrules.Range())
             rules.Append (globalrules[i].get());
         }
+      */
     }
+    for (auto i : globalrules.Range())
+      rules.Append (make_unique<netrule>(*globalrules[i]));
+
     // LoadRules ("rules/quad.rls");
     // LoadRules ("rules/triangle.rls");
 
@@ -458,7 +464,7 @@ namespace netgen
 	      {
 		(*testout) << foundmap.Get(i) << "/" 
 			   << canuse.Get(i) << "/"
-			   << ruleused.Get(i) << " map/can/use rule " << rules.Get(i)->Name() << "\n";
+			   << ruleused.Get(i) << " map/can/use rule " << rules[i-1]->Name() << "\n";
 	      }
 	    (*testout) << "\n";
 	  }
@@ -1475,7 +1481,7 @@ namespace netgen
 	    if ( debugparam.haltsuccess || debugflag )
 	      {
 		// adfront.PrintOpenSegments (*testout);
-		cout << "success of rule" << rules.Get(rulenr)->Name() << endl;
+		cout << "success of rule" << rules[rulenr-1]->Name() << endl;
 		multithread.drawing = 1;
 		multithread.testmode = 1;
 		multithread.pause = 1;
@@ -1491,7 +1497,7 @@ namespace netgen
 		  }
 		*/
 
-		(*testout) << "success of rule" << rules.Get(rulenr)->Name() << endl;
+		(*testout) << "success of rule" << rules[rulenr-1]->Name() << endl;
 		(*testout) << "trials = " << trials << endl;
 
 		(*testout) << "locpoints " << endl;

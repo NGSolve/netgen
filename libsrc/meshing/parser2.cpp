@@ -60,10 +60,13 @@ void netrule :: LoadRule (istream & ist)
   ist.get (buf, sizeof(buf), '"');
   ist.get (ch);
 
-  // if(name != NULL) 
+  // if(name != NULL)
+  /*
   delete [] name;
   name = new char[strlen (buf) + 1];
   strcpy (name, buf);
+  */
+  name = string(buf);
   //(*testout) << "name " << name << endl;
   //  (*mycout) << "Rule " << name << " found." << endl;
 
@@ -474,14 +477,14 @@ void netrule :: LoadRule (istream & ist)
     {
       double lam1 = 1.0/(i+1);
 
-      oldutofreearea_i[i] = new DenseMatrix (oldutofreearea.Height(), oldutofreearea.Width());
-      DenseMatrix & mati = *oldutofreearea_i[i];
+      oldutofreearea_i[i] = move(DenseMatrix (oldutofreearea.Height(), oldutofreearea.Width()));
+      DenseMatrix & mati = oldutofreearea_i[i];
       for (j = 0; j < oldutofreearea.Height(); j++)
 	for (int k = 0; k < oldutofreearea.Width(); k++)
 	  mati(j,k) = lam1 * oldutofreearea(j,k) + (1 - lam1) * oldutofreearealimit(j,k);
 
-      freezone_i[i] = new NgArray<Point<2>> (freezone.Size());
-      auto& fzi = *freezone_i[i];
+      freezone_i[i] = NgArray<Point<2>> (freezone.Size());
+      auto& fzi = freezone_i[i];
       for (int j = 0; j < freezone.Size(); j++)
 	fzi[j] = freezonelimit[j] + lam1 * (freezone[j] - freezonelimit[j]);
     }
@@ -589,12 +592,12 @@ void Meshing2 :: LoadRules (const char * filename, bool quad)
       if (strcmp (buf, "rule") == 0)
 	{
 	  //(*testout) << "found rule" << endl;
-	  netrule * rule = new netrule;
+	  auto rule = make_unique<netrule>();
 	  //(*testout) << "fr1" << endl;
 	  rule -> LoadRule(*ist);
 	  //(*testout) << "fr2" << endl;
 	  
-	  rules.Append (rule);
+	  rules.Append (move(rule));
 	}
       //(*testout) << "loop" << endl;
     }
