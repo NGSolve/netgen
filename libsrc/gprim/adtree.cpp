@@ -400,23 +400,23 @@ namespace netgen
 				   const float * bmax,
 				   NgArray<int> & pis) const
   {
-    static NgArray<ADTreeNode3*> stack(1000);
-    static NgArray<int> stackdir(1000);
+    ArrayMem<ADTreeNode3*, 1000> stack(1000);
+    ArrayMem<int, 1000> stackdir(1000);
     ADTreeNode3 * node;
     int dir, stacks;
 
-    stack.SetSize (1000);
-    stackdir.SetSize(1000);
+    // stack.SetSize (1000);
+    // stackdir.SetSize(1000);
     pis.SetSize(0);
 
-    stack.Elem(1) = root;
-    stackdir.Elem(1) = 0;
-    stacks = 1;
+    stack[0] = root;
+    stackdir[0] = 0;
+    stacks = 0;
 
-    while (stacks)
+    while (stacks >= 0)
       {
-	node = stack.Get(stacks);
-	dir = stackdir.Get(stacks); 
+	node = stack[stacks];
+	dir = stackdir[stacks]; 
 	stacks--;
 
 	if (node->pi != -1)
@@ -436,14 +436,14 @@ namespace netgen
 	if (node->left && bmin[dir] <= node->sep)
 	  {
 	    stacks++;
-	    stack.Elem(stacks) = node->left;
-	    stackdir.Elem(stacks) = ndir;
+	    stack[stacks] = node->left;
+	    stackdir[stacks] = ndir;
 	  }
 	if (node->right && bmax[dir] >= node->sep)
 	  {
 	    stacks++;
-	    stack.Elem(stacks) = node->right;
-	    stackdir.Elem(stacks) = ndir;
+	    stack[stacks] = node->right;
+	    stackdir[stacks] = ndir;
 	  }
       }
   }

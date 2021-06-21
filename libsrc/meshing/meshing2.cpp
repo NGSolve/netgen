@@ -46,17 +46,22 @@ namespace netgen
     static Timer t("Mesing2::Meshing2"); RegionTimer r(t);
 
     auto & globalrules = mp.quad ? global_quad_rules : global_trig_rules;
-    if (!globalrules.Size())
-      {
-        LoadRules (NULL, mp.quad);
-        for (auto * rule : rules)
-          globalrules.Append (unique_ptr<netrule>(rule));
-      }
-    else
-      {
-        for (auto i : globalrules.Range())
-          rules.Append (globalrules[i].get());
-      }
+
+    {
+      static mutex mut;
+      lock_guard<mutex> guard(mut);
+      if (!globalrules.Size())
+        {
+          LoadRules (NULL, mp.quad);
+          for (auto * rule : rules)
+            globalrules.Append (unique_ptr<netrule>(rule));
+        }
+      else
+        {
+          for (auto i : globalrules.Range())
+            rules.Append (globalrules[i].get());
+        }
+    }
     // LoadRules ("rules/quad.rls");
     // LoadRules ("rules/triangle.rls");
 
