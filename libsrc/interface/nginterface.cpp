@@ -150,7 +150,7 @@ void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
     mesh->SetCommunicator(comm);
     
     string fn(filename);
-    if (fn.substr (fn.length()-8, 8) == ".vol.bin")
+    if (fn.length() > 8 && fn.substr (fn.length()-8, 8) == ".vol.bin")
       {
         mesh -> Load(fn);
         SetGlobalMesh (mesh);        
