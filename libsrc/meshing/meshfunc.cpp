@@ -18,10 +18,9 @@ namespace netgen
       // mesh for one domain (contains all adjacent surface elments)
       unique_ptr<Mesh> mesh;
 
-      // maps from lokal (domain) mesh to global mesh
+      // maps from local (domain) mesh to global mesh
       Array<PointIndex, PointIndex> pmap;
 
-      // todo: store (mapped) identifications
       Array<INDEX_2> connected_pairs;
 
       MeshingParameters mp;
@@ -30,13 +29,25 @@ namespace netgen
   };
 
   // extract surface meshes belonging to individual domains
-  Array<MeshingData> DivideMesh(const Mesh & mesh, const MeshingParameters & mp)
+  Array<MeshingData> DivideMesh(Mesh & mesh, const MeshingParameters & mp)
   {
       static Timer timer("DivideMesh"); RegionTimer rt(timer);
 
       Array<MeshingData> ret;
       auto num_domains = mesh.GetNDomains();
+
       ret.SetSize(num_domains);
+      if(num_domains==1 || mp.only3D_domain_nr)
+      {
+          // no need to divide mesh, just fill in meshing data
+          ret[0].domain = 1;
+          if(mp.only3D_domain_nr)
+              ret[0].domain = mp.only3D_domain_nr;
+
+          ret[0].mesh.reset(&mesh); // careful, this unique_ptr must not delete &mesh! (it will be released in MergeMeshes after meshing)
+          ret[0].mp = mp;
+          return ret;
+      }
 
       Array<Array<PointIndex, PointIndex>> ipmap;
       ipmap.SetSize(num_domains);
@@ -50,9 +61,6 @@ namespace netgen
       {
           auto & md = ret[i];
           md.domain = i+1;
-
-          if(mp.only3D_domain_nr && mp.only3D_domain_nr !=md.domain)
-              continue;
 
           md.mp = mp;
           md.mp.maxh = min2 (mp.maxh, mesh.MaxHDomain(md.domain));
@@ -82,9 +90,6 @@ namespace netgen
             if(dom==0)
               continue;
 
-            if(mp.only3D_domain_nr && mp.only3D_domain_nr != dom)
-                continue;
-
             auto & sels = ret[dom-1].mesh->SurfaceElements();
             for(auto pi : sel.PNums())
                 ipmap[dom-1][pi] = 1;
@@ -95,9 +100,6 @@ namespace netgen
       // add used points to domain mesh, build point mapping
       for(auto i : Range(ret))
       {
-          if(mp.only3D_domain_nr && mp.only3D_domain_nr != ret[i].domain)
-              continue;
-
           auto & m = *ret[i].mesh;
           auto & pmap = ret[i].pmap;
 
@@ -114,10 +116,8 @@ namespace netgen
       for(auto i : Range(ret))
       {
           auto & imap = ipmap[i];
-          if(mp.only3D_domain_nr && mp.only3D_domain_nr != ret[i].domain)
-              continue;
-
           auto & m = *ret[i].mesh;
+
           for (auto & sel : m.SurfaceElements())
             for(auto & pi : sel.PNums())
               pi = imap[pi];
@@ -134,7 +134,6 @@ namespace netgen
                          ret[i].connected_pairs.Append({imap[pi0], imap[pi1]});
                  }
                }
-           // ret[i].mesh.Save("surface_"+ToString(i)+".vol");
       }
       return ret;
   }
@@ -145,9 +144,6 @@ namespace netgen
     auto domain = md.domain;
     MeshingParameters & mp = md.mp;
 
-    if(mp.only3D_domain_nr && mp.only3D_domain_nr != domain)
-        return;
-     
     int oldne;
     if (multithread.terminate)
       return;
@@ -254,12 +250,6 @@ namespace netgen
     auto & mesh = *md.mesh;
     auto domain = md.domain;
     MeshingParameters & mp = md.mp;
-
-    if(mp.only3D_domain_nr && mp.only3D_domain_nr != domain)
-        return;
-
-
-
 
    if (mp.delaunay && mesh.GetNOpenElements())
    {
@@ -662,6 +652,16 @@ namespace netgen
   {
      // todo: optimize: count elements, alloc all memory, copy vol elements in parallel
      static Timer t("MergeMeshes"); RegionTimer rt(t);
+     if(md.Size()==1)
+     {
+         // assume that mesh was never divided, no need to do anything
+         if(&mesh != md[0].mesh.get())
+             throw Exception("Illegal Mesh pointer in MeshingData");
+
+         md[0].mesh.release();
+         return;
+     }
+
      for(auto & m_ : md)
      {
          auto first_new_pi = m_.pmap.Range().Next();
