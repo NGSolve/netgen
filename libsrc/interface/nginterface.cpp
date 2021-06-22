@@ -146,28 +146,38 @@ void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
 
   if( id == 0) {
 
-    string fn(filename);
-    if (fn.substr (fn.length()-3, 3) == ".gz")
-      infile = new igzstream (filename);
-    else
-      infile = new ifstream (filename);
     mesh.reset (new Mesh());
     mesh->SetCommunicator(comm);
-    mesh -> Load(*infile);
-    SetGlobalMesh (mesh);
+    
+    string fn(filename);
+    if (fn.substr (fn.length()-8, 8) == ".vol.bin")
+      {
+        mesh -> Load(fn);
+        SetGlobalMesh (mesh);        
+      }
+    else
+      {
+        if (fn.substr (fn.length()-3, 3) == ".gz")
+          infile = new igzstream (filename);
+        else
+          infile = new ifstream (filename);
+        mesh -> Load(*infile);
+        SetGlobalMesh (mesh);
+        
+        // make string from rest of file (for geometry info!)
+        // (this might be empty, in which case we take the global ng_geometry)
+        stringstream geom_part;
+        geom_part << infile->rdbuf();
+        string geom_part_string = geom_part.str();
+        strs = geom_part_string.size();
+        // buf = new char[strs];
+        buf.SetSize(strs);
+        memcpy(&buf[0], geom_part_string.c_str(), strs*sizeof(char));
+        
+        delete infile;
+      }
 
-    // make string from rest of file (for geometry info!)
-    // (this might be empty, in which case we take the global ng_geometry)
-    stringstream geom_part;
-    geom_part << infile->rdbuf();
-    string geom_part_string = geom_part.str();
-    strs = geom_part_string.size();
-    // buf = new char[strs];
-    buf.SetSize(strs);
-    memcpy(&buf[0], geom_part_string.c_str(), strs*sizeof(char));
-
-    delete infile;
-
+    
     if (ntasks > 1)
       {
 

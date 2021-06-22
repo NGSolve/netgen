@@ -212,7 +212,7 @@ private:
   void CalcElementShapes (ElementInfo & info, Point<3,T> xi, TFlatVector<T> shapes) const;
   void GetCoefficients (ElementInfo & info, Vec<3> * coefs) const;
   template <typename T>  
-  void CalcElementDShapes (ElementInfo & info, const Point<3,T> xi, MatrixFixWidth<3,T> dshapes) const;
+  void CalcElementDShapes (ElementInfo & info, const Point<3,T> xi, MatrixFixWidth<3,T> & dshapes) const;
 
   template <typename T>
   bool EvaluateMapping (ElementInfo & info, const Point<3,T> xi, Point<3,T> & x, Mat<3,3,T> & jac) const;  
@@ -233,7 +233,7 @@ private:
   template <int DIM_SPACE>
   void GetCoefficients (SurfaceElementInfo & elinfo, NgArray<Vec<DIM_SPACE> > & coefs) const;
   template <typename T>
-  void CalcElementDShapes (SurfaceElementInfo & elinfo, const Point<2,T> xi, MatrixFixWidth<2,T> dshapes) const;
+  void CalcElementDShapes (SurfaceElementInfo & elinfo, const Point<2,T> xi, MatrixFixWidth<2,T> & dshapes) const;
 
   template <int DIM_SPACE, typename T>
   bool EvaluateMapping (SurfaceElementInfo & info, const Point<2,T> xi, Point<DIM_SPACE,T> & x, Mat<DIM_SPACE,2,T> & jac) const;  

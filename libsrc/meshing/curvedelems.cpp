@@ -1936,7 +1936,7 @@ namespace netgen
 
   template <typename T>
   void CurvedElements :: 
-  CalcElementDShapes (SurfaceElementInfo & info, const Point<2,T> xi, MatrixFixWidth<2,T> dshapes) const
+  CalcElementDShapes (SurfaceElementInfo & info, const Point<2,T> xi, MatrixFixWidth<2,T> & dshapes) const
   {
     const Element2d & el = mesh[info.elnr];
     ELEMENT_TYPE type = el.GetType();
@@ -2981,7 +2981,7 @@ namespace netgen
 
   template <typename T>
   void CurvedElements :: 
-  CalcElementDShapes (ElementInfo & info, const Point<3,T> xi, MatrixFixWidth<3,T> dshapes) const
+  CalcElementDShapes (ElementInfo & info, const Point<3,T> xi, MatrixFixWidth<3,T> & dshapes) const
   {
     // static int timer = NgProfiler::CreateTimer ("calcelementdshapes");
     

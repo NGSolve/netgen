@@ -21,7 +21,7 @@
 
 namespace netgen
 {
-  NgArray<Box<3> > boxes;
+  NgArray<Box<3> > boxes; // for visualizaton
 
 
   void ProjectToEdge (const Surface * f1, const Surface * f2, Point<3> & hp);
@@ -64,7 +64,7 @@ namespace netgen
   }
 
 
-  static NgArray<int> numprim_hist;
+  // static NgArray<int> numprim_hist;
 
   SpecialPointCalculation :: SpecialPointCalculation ()
   {
@@ -75,8 +75,8 @@ namespace netgen
   CalcSpecialPoints (const CSGeometry & ageometry, 
 		     NgArray<MeshPoint> & apoints)
   {
-    static int timer = NgProfiler::CreateTimer ("CSG: find special points");
-    NgProfiler::RegionTimer reg (timer);
+    // static int timer = NgProfiler::CreateTimer ("CSG: find special points");
+    // NgProfiler::RegionTimer reg (timer);
 
 
     geometry = &ageometry;
@@ -100,8 +100,8 @@ namespace netgen
     box.CalcDiamCenter();
     PrintMessage (3, "main-solids: ", geometry->GetNTopLevelObjects());
 
-    numprim_hist.SetSize (geometry->GetNSurf()+1);
-    numprim_hist = 0;
+    // numprim_hist.SetSize (geometry->GetNSurf()+1);
+    // numprim_hist = 0;
 
     for (int i = 0; i < geometry->GetNTopLevelObjects(); i++)
       {
@@ -161,10 +161,12 @@ namespace netgen
 
     PrintMessage (3, "Found points ", apoints.Size());
 
+    /*
     for (int i = 0; i < boxesinlevel.Size(); i++)
       (*testout) << "level " << i << " has " 
 		 << boxesinlevel[i] << " boxes" << endl;
     (*testout) << "numprim_histogramm = " << endl << numprim_hist << endl;
+    */
   }
   
 
@@ -184,8 +186,8 @@ namespace netgen
 
     if (multithread.terminate)
       {
-	*testout << "boxes = " << boxes << endl;
-	*testout << "boxesinlevel = " << boxesinlevel << endl;
+	// *testout << "boxes = " << boxes << endl;
+	// *testout << "boxesinlevel = " << boxesinlevel << endl;
 	throw NgException ("Meshing stopped");
       }
 
@@ -215,12 +217,13 @@ namespace netgen
 
     // static int cntbox = 0;
     // cntbox++;
-
+    /*
     if (level <= boxesinlevel.Size())
       boxesinlevel.Elem(level)++;
     else
       boxesinlevel.Append (1);
-
+    */
+    
     /*
       numprim = sol -> NumPrimitives();
       sol -> GetSurfaceIndices (locsurf);
@@ -233,7 +236,7 @@ namespace netgen
     (*testout) << "numprim = " << numprim << endl;
 #endif
 
-    numprim_hist[numprim]++;
+    // numprim_hist[numprim]++;
 
     Point<3> p = box.Center();
 

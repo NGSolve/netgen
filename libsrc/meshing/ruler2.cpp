@@ -209,7 +209,7 @@ namespace netgen
     for (int ri = 1; ri <= rules.Size(); ri++)
       {
 	// NgProfiler::RegionTimer reg(timers[ri-1]);
-	netrule * rule = rules.Get(ri);
+	netrule * rule = rules[ri-1].get();
 
 #ifdef LOCDEBUG
 	if (loctestmode)

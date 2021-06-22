@@ -28,6 +28,7 @@ namespace netgen
 
   BlockAllocator :: ~BlockAllocator ()
   {
+    lock_guard<mutex> guard(block_allocator_mutex);     
     // cout << "****************** delete BlockAllocator " << endl;
     for (int i = 0; i < bablocks.Size(); i++)
       delete [] bablocks[i];

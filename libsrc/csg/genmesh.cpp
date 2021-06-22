@@ -10,15 +10,19 @@
 
 namespace netgen
 {
-  NgArray<SpecialPoint> specpoints;
-  static NgArray<MeshPoint> spoints;
 
+  NgArray<SpecialPoint> global_specpoints;  // for visualization
+  //static NgArray<MeshPoint> spoints;
+  
 #define TCL_OK 0
 #define TCL_ERROR 1
 
 
 
-  static void FindPoints (CSGeometry & geom, Mesh & mesh)
+  static void FindPoints (CSGeometry & geom,
+                          NgArray<SpecialPoint> &  specpoints,
+                          NgArray<MeshPoint> & spoints,
+                          Mesh & mesh)
   {
     PrintMessage (1, "Start Findpoints");
 
@@ -48,7 +52,13 @@ namespace netgen
     
     PrintMessage (2, "Analyze spec points");
     spc.AnalyzeSpecialPoints (geom, spoints, specpoints);
-  
+
+    {
+      static mutex mut;
+      lock_guard<mutex> guard(mut);
+      global_specpoints = specpoints;
+    }
+    
     PrintMessage (5, "done");
 
     (*testout) << specpoints.Size() << " special points:" << endl;
@@ -67,7 +77,10 @@ namespace netgen
 
 
 
-  static void FindEdges (CSGeometry & geom, Mesh & mesh, MeshingParameters & mparam,
+  static void FindEdges (CSGeometry & geom, Mesh & mesh,
+                         NgArray<SpecialPoint> &  specpoints,
+                         NgArray<MeshPoint> & spoints,
+                         MeshingParameters & mparam,
                          const bool setmeshsize = false)
   {
     EdgeCalculation ec (geom, specpoints, mparam);
@@ -504,7 +517,7 @@ namespace netgen
 	  }
 
 	if (multithread.terminate) return;
-      
+        
 	for (SurfaceElementIndex sei = oldnf; sei < mesh.GetNSE(); sei++)
 	  mesh[sei].SetIndex (k);
 
@@ -669,6 +682,10 @@ namespace netgen
   int CSGGenerateMesh (CSGeometry & geom, 
 		       shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
   {
+    NgArray<SpecialPoint> specpoints;
+    NgArray<MeshPoint> spoints;
+
+    
     if (mesh && mesh->GetNSE() &&
 	!geom.GetNSolids())
       {
@@ -705,7 +722,7 @@ namespace netgen
 	  }
 
 	spoints.SetSize(0);
-	FindPoints (geom, *mesh);
+	FindPoints (geom, specpoints, spoints, *mesh);
       
 	PrintMessage (5, "find points done");
 
@@ -723,7 +740,7 @@ namespace netgen
 
     if (mparam.perfstepsstart <= MESHCONST_MESHEDGES)
       {
-	FindEdges (geom, *mesh, mparam, true);
+	FindEdges (geom, *mesh, specpoints, spoints, mparam, true);
 	if (multithread.terminate) return TCL_OK;
 #ifdef LOG_STREAM      
 	(*logout) << "Edges meshed" << endl
@@ -740,16 +757,16 @@ namespace netgen
 	    mesh->CalcLocalH(mparam.grading);
 	    mesh->DeleteMesh();
 	    
-	    FindPoints (geom, *mesh);
+	    FindPoints (geom, specpoints, spoints, *mesh);
 	    if (multithread.terminate) return TCL_OK;
-	    FindEdges (geom, *mesh, mparam, true);
+	    FindEdges (geom, *mesh, specpoints, spoints, mparam, true);
 	    if (multithread.terminate) return TCL_OK;
 	    
 	    mesh->DeleteMesh();
 	  
-	    FindPoints (geom, *mesh);
+	    FindPoints (geom, specpoints, spoints, *mesh);
 	    if (multithread.terminate) return TCL_OK;
-	    FindEdges (geom, *mesh, mparam);
+	    FindEdges (geom, *mesh, specpoints, spoints, mparam);
 	    if (multithread.terminate) return TCL_OK;
 	  }
       }

@@ -21,7 +21,7 @@ private:
   ///
   int quality;
   ///
-  char * name;
+  string name;
   ///
   NgArray<Point<2>> points;
   ///
@@ -29,7 +29,7 @@ private:
   ///
   NgArray<Point<2>> freezone, freezonelimit;
   ///
-  NgArray<NgArray<Point<2>>*> freezone_i;
+  NgArray<NgArray<Point<2>>> freezone_i;
   ///
   NgArray<Point<2>> transfreezone;
 
@@ -44,7 +44,7 @@ private:
   ///
   DenseMatrix oldutonewu, oldutofreearea, oldutofreearealimit;
   ///
-  NgArray<DenseMatrix*> oldutofreearea_i;
+  NgArray<DenseMatrix> oldutofreearea_i;
   ///
   MatrixFixWidth<3> freesetinequ;
 
@@ -154,7 +154,7 @@ public:
   ///
   const DenseMatrix & GetOldUToFreeArea () const { return oldutofreearea; }
   ///
-  const char * Name () const { return name; }
+  const string & Name () const { return name; }
 
   ///
   void LoadRule (istream & ist);
