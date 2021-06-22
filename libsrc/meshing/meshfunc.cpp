@@ -97,6 +97,11 @@ namespace netgen
         }
       }
 
+      // mark locked/fixed points for each domain TODO: domain bounding box to add only relevant points?
+      for(auto pi : mesh.LockedPoints())
+        for(auto i : Range(ret))
+          ipmap[i][pi] = 1;
+
       // add used points to domain mesh, build point mapping
       for(auto i : Range(ret))
       {
