@@ -16,7 +16,7 @@ namespace netgen
       int domain;
 
       // mesh for one domain (contains all adjacent surface elments)
-      Mesh mesh;
+      unique_ptr<Mesh> mesh;
 
       // maps from lokal (domain) mesh to global mesh
       Array<PointIndex, PointIndex> pmap;
@@ -57,7 +57,8 @@ namespace netgen
           md.mp = mp;
           md.mp.maxh = min2 (mp.maxh, mesh.MaxHDomain(md.domain));
 
-          auto & m = ret[i].mesh;
+          ret[i].mesh = make_unique<Mesh>();
+          auto & m = *ret[i].mesh;
 
           m.SetLocalH(mesh.GetLocalH());
 
@@ -84,7 +85,7 @@ namespace netgen
             if(mp.only3D_domain_nr && mp.only3D_domain_nr != dom)
                 continue;
 
-            auto & sels = ret[dom-1].mesh.SurfaceElements();
+            auto & sels = ret[dom-1].mesh->SurfaceElements();
             for(auto pi : sel.PNums())
                 ipmap[dom-1][pi] = 1;
             sels.Append(sel);
@@ -97,7 +98,7 @@ namespace netgen
           if(mp.only3D_domain_nr && mp.only3D_domain_nr != ret[i].domain)
               continue;
 
-          auto & m = ret[i].mesh;
+          auto & m = *ret[i].mesh;
           auto & pmap = ret[i].pmap;
 
           for(auto pi : Range(ipmap[i]))
@@ -116,7 +117,7 @@ namespace netgen
           if(mp.only3D_domain_nr && mp.only3D_domain_nr != ret[i].domain)
               continue;
 
-          auto & m = ret[i].mesh;
+          auto & m = *ret[i].mesh;
           for (auto & sel : m.SurfaceElements())
             for(auto & pi : sel.PNums())
               pi = imap[pi];
@@ -140,7 +141,7 @@ namespace netgen
 
   void CloseOpenQuads( MeshingData & md)
   {
-    auto & mesh = md.mesh;
+    auto & mesh = *md.mesh;
     auto domain = md.domain;
     MeshingParameters & mp = md.mp;
 
@@ -232,7 +233,7 @@ namespace netgen
     static Timer t("PrepareForBlockFillLocalH"); RegionTimer rt(t);
     md.meshing = make_unique<Meshing3>(nullptr);
 
-    auto & mesh = md.mesh;
+    auto & mesh = *md.mesh;
 
     mesh.CalcSurfacesOfNode();
     mesh.FindOpenElements(md.domain);
@@ -250,7 +251,7 @@ namespace netgen
 
   void MeshDomain( MeshingData & md)
   {
-    auto & mesh = md.mesh;
+    auto & mesh = *md.mesh;
     auto domain = md.domain;
     MeshingParameters & mp = md.mp;
 
@@ -664,7 +665,7 @@ namespace netgen
      for(auto & m_ : md)
      {
          auto first_new_pi = m_.pmap.Range().Next();
-         auto & m = m_.mesh;
+         auto & m = *m_.mesh;
          Array<PointIndex, PointIndex> pmap(m.Points().Size());
          for(auto pi : Range(PointIndex(PointIndex::BASE), first_new_pi))
              pmap[pi] = m_.pmap[pi];
