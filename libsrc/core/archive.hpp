@@ -153,6 +153,7 @@ namespace ngcore
     virtual void NeedsVersion(const std::string& /*unused*/, const std::string& /*unused*/) {}
 
     // Pure virtual functions that have to be implemented by In-/OutArchive
+    virtual Archive & operator & (std::byte & d) = 0;    
     virtual Archive & operator & (float & d) = 0;
     virtual Archive & operator & (double & d) = 0;
     virtual Archive & operator & (int & i) = 0;
@@ -274,6 +275,9 @@ namespace ngcore
     template <typename T, typename = std::enable_if_t<is_archivable<T>>>
     Archive & Do (T * data, size_t n)
     { for (size_t j = 0; j < n; j++) { (*this) & data[j]; }; return *this; }; // NOLINT
+
+    virtual Archive & Do (std::byte * d, size_t n)
+    { for (size_t j = 0; j < n; j++) { (*this) & d[j]; }; return *this; }; // NOLINT
 
     virtual Archive & Do (double * d, size_t n)
     { for (size_t j = 0; j < n; j++) { (*this) & d[j]; }; return *this; }; // NOLINT
@@ -679,6 +683,8 @@ namespace ngcore
     BinaryOutArchive& operator=(BinaryOutArchive&&) = delete;
 
     using Archive::operator&;
+    Archive & operator & (std::byte & d) override
+    { return Write(d); }
     Archive & operator & (float & f) override
     { return Write(f); }
     Archive & operator & (double & d) override
@@ -755,6 +761,8 @@ namespace ngcore
       : BinaryInArchive(std::make_shared<std::ifstream>(filename)) { ; }
 
     using Archive::operator&;
+    Archive & operator & (std::byte & d) override
+    { Read(d); return *this; }
     Archive & operator & (float & f) override
     { Read(f); return *this; }
     Archive & operator & (double & d) override
@@ -826,6 +834,8 @@ namespace ngcore
       TextOutArchive(std::make_shared<std::ofstream>(filename)) { }
 
     using Archive::operator&;
+    Archive & operator & (std::byte & d) override
+    { *stream << std::hex << int(d) << ' '; return *this; }
     Archive & operator & (float & f) override
     { *stream << f << '\n'; return *this; }
     Archive & operator & (double & d) override
@@ -879,6 +889,8 @@ namespace ngcore
       : TextInArchive(std::make_shared<std::ifstream>(filename)) {}
 
     using Archive::operator&;
+    Archive & operator & (std::byte & d) override
+    { int tmp; *stream >> std::hex >> tmp; d = std::byte(tmp); return *this; }
     Archive & operator & (float & f) override
     { *stream >> f; return *this; }
     Archive & operator & (double & d) override

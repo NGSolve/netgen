@@ -377,7 +377,9 @@ namespace netgen
 
     void DoArchive (Archive & ar)
     {
-      ar & x[0] & x[1] & x[2] & layer & singular;
+      // ar & x[0] & x[1] & x[2] & layer & singular;
+      ar.Do(&x[0], 3);
+      ar & layer & singular;
       ar & (unsigned char&)(type);
     }
   };
@@ -845,8 +847,12 @@ namespace netgen
       ar & _np & _typ & index & _curved;
       if (ar.Input())
         { np = _np; typ = ELEMENT_TYPE(_typ); is_curved = _curved; }
+      /*
       for (size_t i = 0; i < np; i++)
         ar & pnum[i];
+      */
+      static_assert(sizeof(int) == sizeof (PointIndex));
+      ar.Do( (int*)&pnum[0], np);
     }
     
 #ifdef PARALLEL
