@@ -953,6 +953,7 @@ namespace ngcore
       { h = (char*)&hash_value; }
 
     using Archive::operator&;
+    Archive & operator & (std::byte & d) override { return ApplyHash(d); }    
     Archive & operator & (float & f) override { return ApplyHash(f); }
     Archive & operator & (double & d) override { return ApplyHash(d); }
     Archive & operator & (int & i) override { return ApplyHash(i); }
