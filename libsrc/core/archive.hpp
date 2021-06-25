@@ -10,6 +10,7 @@
 #include <memory>               // for shared_ptr
 #include <string>               // for string
 #include <type_traits>          // for declval, enable_if_t, false_type, is_co...
+#include <cstddef>              // for std::byte
 #include <typeinfo>             // for type_info
 #include <utility>              // for move, swap, pair
 #include <vector>               // for vector
