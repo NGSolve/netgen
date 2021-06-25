@@ -43,12 +43,12 @@ struct T_FACE
 class MeshTopology
 {
   const Mesh * mesh;
-  bool buildvertex2element = true;
+  bool buildvertex2element;
   bool buildedges;
   bool buildfaces;
   bool build_parent_edges = false; // may be changed to default = false
   bool build_parent_faces = false; // may be changed to default = false
-  static bool static_buildedges, static_buildfaces;
+  static bool static_buildedges, static_buildfaces, static_buildvertex2element;
 
   NgArray<INDEX_2> edge2vert;
   NgArray<INDEX_4> face2vert;

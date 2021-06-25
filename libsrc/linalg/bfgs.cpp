@@ -331,7 +331,7 @@ double BFGS (
 	{
 	  if (LDLtUpdate (l, d, 1 / a1, y) != 0)
 	    {
-              cerr << "BFGS update error1" << endl;
+              // cerr << "BFGS update error1" << endl;
 	      (*testout) << "BFGS update error1" << endl;
 	      (*testout) << "l " << endl << l << endl
 			 << "d " << d << endl;
@@ -341,7 +341,7 @@ double BFGS (
 
 	  if (LDLtUpdate (l, d, -1 / a2, bs) != 0)
 	    {
-              cerr << "BFGS update error2" << endl;
+              // cerr << "BFGS update error2" << endl;
 	      (*testout) << "BFGS update error2" << endl;
 	      (*testout) << "l " << endl << l << endl
 			 << "d " << d << endl;

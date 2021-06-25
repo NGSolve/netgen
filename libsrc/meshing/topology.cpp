@@ -49,6 +49,7 @@ namespace netgen
   {
     buildedges = static_buildedges;
     buildfaces = static_buildfaces;
+    buildvertex2element = static_buildvertex2element;
     timestamp = -1;
   }
 
@@ -75,6 +76,7 @@ namespace netgen
 
   bool MeshTopology :: static_buildedges = true; 
   bool MeshTopology :: static_buildfaces = true; 
+  bool MeshTopology :: static_buildvertex2element = true; 
   
   void MeshTopology :: EnableTableStatic (string name, bool set)
   {
@@ -82,9 +84,11 @@ namespace netgen
       static_buildedges = set;
     else if (name == "faces")
       static_buildfaces = set;      
+    else if (name == "vertex2element")
+      static_buildvertex2element = set;      
     else
       throw Exception ("noting known about table "+name +"\n"
-                       "knwon are 'edges', 'faces'");
+                       "knwon are 'edges', 'faces', 'vertex2element'");
   }
 
   

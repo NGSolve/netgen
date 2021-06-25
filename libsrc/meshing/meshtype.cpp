@@ -1140,8 +1140,8 @@ namespace netgen
     typ = ELEMENT_TYPE(_typ);
     is_curved = _curved;
 
-    for (size_t i = 0; i < np; i++)
-      ar & pnum[i];
+    static_assert(sizeof(int) == sizeof (PointIndex));
+    ar.Do( (int*)&pnum[0], np);
   }
 
   void Element :: SetOrder (const int aorder) 
