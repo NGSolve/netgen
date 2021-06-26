@@ -840,6 +840,7 @@ namespace netgen
 
     void DoArchive (Archive & ar)
     {
+      /*
       short _np, _typ;
       bool _curved;
       if (ar.Output())
@@ -847,10 +848,24 @@ namespace netgen
       ar & _np & _typ & index & _curved;
       if (ar.Input())
         { np = _np; typ = ELEMENT_TYPE(_typ); is_curved = _curved; }
-      /*
-      for (size_t i = 0; i < np; i++)
-        ar & pnum[i];
       */
+
+      if (ar.Output())
+        {
+          short _np, _typ;
+          bool _curved;
+          _np = np; _typ = typ; _curved = is_curved;
+          ar & _np & _typ & index & _curved;
+        }
+      else
+        {
+          alignas (4) std::byte tmp[9];
+          ar.Do (&tmp[0], 9);
+          np = *(short*)(void*)&tmp[0];
+          typ = ELEMENT_TYPE(*(short*)(void*)&tmp[2]);
+          index = *(int*)(void*)&tmp[4];
+          is_curved = *(bool*)(void*)&tmp[8];
+        }
       static_assert(sizeof(int) == sizeof (PointIndex));
       ar.Do( (int*)&pnum[0], np);
     }

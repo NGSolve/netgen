@@ -207,7 +207,7 @@ namespace ngcore
       Do(&v[0], size);
       return (*this);
     }
-
+ 
     // archive implementation for enums
     template<typename T>
     auto operator & (T& val) -> std::enable_if_t<std::is_enum<T>::value, Archive&>
@@ -809,6 +809,8 @@ namespace ngcore
       return *this;
     }
 
+    Archive & Do (std::byte * d, size_t n) override
+    { stream->read(reinterpret_cast<char*>(d), n*sizeof(std::byte)); return *this; } // NOLINT
     Archive & Do (double * d, size_t n) override
     { stream->read(reinterpret_cast<char*>(d), n*sizeof(double)); return *this; } // NOLINT
     Archive & Do (int * i, size_t n) override
