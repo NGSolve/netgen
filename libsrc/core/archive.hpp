@@ -308,6 +308,59 @@ namespace ngcore
       val.DoArchive(*this); return *this;
     }
 
+    // pack elements to binary
+    template <typename ... Types>
+      Archive & DoPacked (Types & ... args)
+    {
+      if (true) // (isbinary)
+        {
+          if (is_output)
+            {
+              std::byte mem[TotSize(args...)];
+              CopyToBin (&mem[0], args...);
+              Do(&mem[0], sizeof(mem));
+            }
+          else
+            {
+              std::byte mem[TotSize(args...)];
+              Do(&mem[0], sizeof(mem));
+              CopyFromBin (&mem[0], args...);
+            }
+        }
+      // else
+      // cout << "DoPacked of non-binary called --> individual pickling" << endl;
+      return *this;
+    }
+    
+    template <typename T, typename ... Trest>
+      constexpr size_t TotSize (T & first, Trest & ...rest) const
+    {
+      return sizeof(first) + TotSize(rest...);
+    }
+    constexpr size_t TotSize () const { return 0; }
+    
+    
+    template <typename T, typename ... Trest>
+      constexpr void CopyToBin (std::byte * ptr, T & first, Trest & ...rest) const
+    {
+      memcpy (ptr, &first, sizeof(first));
+      CopyToBin(ptr+sizeof(first), rest...);
+    }
+    constexpr void CopyToBin (std::byte * ptr) const { }
+    
+    template <typename T, typename ... Trest>
+      constexpr void CopyFromBin (std::byte * ptr, T & first, Trest & ...rest) const
+    {
+      memcpy (&first, ptr, sizeof(first));
+      CopyFromBin(ptr+sizeof(first), rest...);
+    }
+    constexpr void CopyFromBin (std::byte * ptr) const { }
+
+
+      
+
+      
+
     // Archive shared_ptrs =================================================
     template <typename T>
     Archive& operator & (std::shared_ptr<T>& ptr)
@@ -706,6 +759,7 @@ namespace ngcore
     { return Write(i); }
     Archive & operator & (bool & b) override
     { return Write(b); }
+
     Archive & operator & (std::string & str) override
     {
       int len = str.length();
@@ -732,6 +786,11 @@ namespace ngcore
           ptr = 0;
         }
     }
+    Archive & Do (std::byte * d, size_t n) override
+    {
+      FlushBuffer();
+      stream->write(reinterpret_cast<char*>(d), n*sizeof(std::byte)); return *this;
+    } 
 
   private:
     template <typename T>
