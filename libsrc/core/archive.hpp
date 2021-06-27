@@ -333,11 +333,11 @@ namespace ngcore
     }
     
     template <typename T, typename ... Trest>
-      constexpr size_t TotSize (T & first, Trest & ...rest) const
+      static constexpr size_t TotSize (T & first, Trest & ...rest)
     {
       return sizeof(first) + TotSize(rest...);
     }
-    constexpr size_t TotSize () const { return 0; }
+    static constexpr size_t TotSize () { return 0; }
     
     
     template <typename T, typename ... Trest>
