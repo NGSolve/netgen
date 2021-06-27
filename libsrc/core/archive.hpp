@@ -94,6 +94,17 @@ namespace ngcore
   template<typename T>
   constexpr bool is_archivable = detail::is_Archivable_struct<T>::value;
 
+  
+  template <typename T, typename ... Trest>
+  constexpr size_t TotSize () 
+  {
+    if constexpr (sizeof...(Trest) == 0)
+                   return sizeof(T);
+    else
+      return sizeof(T) + TotSize<Trest...> ();
+  }
+  
+  
   // Base Archive class
   class NGCORE_API Archive
   {
@@ -308,22 +319,25 @@ namespace ngcore
       val.DoArchive(*this); return *this;
     }
 
+
+
+    
     // pack elements to binary
     template <typename ... Types>
       Archive & DoPacked (Types & ... args)
     {
       if (true) // (isbinary)
         {
+          constexpr size_t totsize = TotSize<Types...>(); // (args...);
+          std::byte mem[totsize];
           if (is_output)
             {
-              std::byte mem[TotSize(args...)];
               CopyToBin (&mem[0], args...);
-              Do(&mem[0], sizeof(mem));
+              Do(&mem[0], totsize);
             }
           else
             {
-              std::byte mem[TotSize(args...)];
-              Do(&mem[0], sizeof(mem));
+              Do(&mem[0], totsize);
               CopyFromBin (&mem[0], args...);
             }
         }
@@ -331,13 +345,6 @@ namespace ngcore
       // cout << "DoPacked of non-binary called --> individual pickling" << endl;
       return *this;
     }
-    
-    template <typename T, typename ... Trest>
-      static constexpr size_t TotSize (T & first, Trest & ...rest)
-    {
-      return sizeof(first) + TotSize(rest...);
-    }
-    static constexpr size_t TotSize () { return 0; }
     
     
     template <typename T, typename ... Trest>
