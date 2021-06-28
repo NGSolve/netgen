@@ -15,7 +15,6 @@ def readData(a, files):
     file=[]
     for f in files:
         for t in a[f]:
-            file.append(f)
             if t['ne1d']>0:
                 ne1d.append(t['ne1d'])
             if t['ne2d']>0:
@@ -24,6 +23,7 @@ def readData(a, files):
                 ne3d.append(t['ne3d'])
             if t['total_badness']>0.0:
                 bad.append(t['total_badness'])
+                file.append(f)
                 if 'angles_tet' in t:
                     amin.append(t['angles_tet'][0])
                     amax.append(t['angles_tet'][1])
