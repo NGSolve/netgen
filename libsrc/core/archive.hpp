@@ -10,6 +10,7 @@
 #include <memory>               // for shared_ptr
 #include <string>               // for string
 #include <type_traits>          // for declval, enable_if_t, false_type, is_co...
+#include <cstddef>              // for std::byte
 #include <typeinfo>             // for type_info
 #include <utility>              // for move, swap, pair
 #include <vector>               // for vector
@@ -93,6 +94,17 @@ namespace ngcore
   template<typename T>
   constexpr bool is_archivable = detail::is_Archivable_struct<T>::value;
 
+  
+  template <typename T, typename ... Trest>
+  constexpr size_t TotSize () 
+  {
+    if constexpr (sizeof...(Trest) == 0)
+                   return sizeof(T);
+    else
+      return sizeof(T) + TotSize<Trest...> ();
+  }
+  
+  
   // Base Archive class
   class NGCORE_API Archive
   {
@@ -206,7 +218,7 @@ namespace ngcore
       Do(&v[0], size);
       return (*this);
     }
-
+ 
     // archive implementation for enums
     template<typename T>
     auto operator & (T& val) -> std::enable_if_t<std::is_enum<T>::value, Archive&>
@@ -306,6 +318,55 @@ namespace ngcore
     {
       val.DoArchive(*this); return *this;
     }
+
+
+
+    
+    // pack elements to binary
+    template <typename ... Types>
+      Archive & DoPacked (Types & ... args)
+    {
+      if (true) // (isbinary)
+        {
+          constexpr size_t totsize = TotSize<Types...>(); // (args...);
+          std::byte mem[totsize];
+          if (is_output)
+            {
+              CopyToBin (&mem[0], args...);
+              Do(&mem[0], totsize);
+            }
+          else
+            {
+              Do(&mem[0], totsize);
+              CopyFromBin (&mem[0], args...);
+            }
+        }
+      // else
+      // cout << "DoPacked of non-binary called --> individual pickling" << endl;
+      return *this;
+    }
+    
+    
+    template <typename T, typename ... Trest>
+      constexpr void CopyToBin (std::byte * ptr, T & first, Trest & ...rest) const
+    {
+      memcpy (ptr, &first, sizeof(first));
+      CopyToBin(ptr+sizeof(first), rest...);
+    }
+    constexpr void CopyToBin (std::byte * ptr) const { }
+    
+    template <typename T, typename ... Trest>
+      constexpr void CopyFromBin (std::byte * ptr, T & first, Trest & ...rest) const
+    {
+      memcpy (&first, ptr, sizeof(first));
+      CopyFromBin(ptr+sizeof(first), rest...);
+    }
+    constexpr void CopyFromBin (std::byte * ptr) const { }
+
+
+      
+
+      
 
     // Archive shared_ptrs =================================================
     template <typename T>
@@ -705,6 +766,7 @@ namespace ngcore
     { return Write(i); }
     Archive & operator & (bool & b) override
     { return Write(b); }
+
     Archive & operator & (std::string & str) override
     {
       int len = str.length();
@@ -731,6 +793,11 @@ namespace ngcore
           ptr = 0;
         }
     }
+    Archive & Do (std::byte * d, size_t n) override
+    {
+      FlushBuffer();
+      stream->write(reinterpret_cast<char*>(d), n*sizeof(std::byte)); return *this;
+    } 
 
   private:
     template <typename T>
@@ -808,6 +875,8 @@ namespace ngcore
       return *this;
     }
 
+    Archive & Do (std::byte * d, size_t n) override
+    { stream->read(reinterpret_cast<char*>(d), n*sizeof(std::byte)); return *this; } // NOLINT
     Archive & Do (double * d, size_t n) override
     { stream->read(reinterpret_cast<char*>(d), n*sizeof(double)); return *this; } // NOLINT
     Archive & Do (int * i, size_t n) override

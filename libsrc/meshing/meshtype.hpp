@@ -378,9 +378,10 @@ namespace netgen
     void DoArchive (Archive & ar)
     {
       // ar & x[0] & x[1] & x[2] & layer & singular;
-      ar.Do(&x[0], 3);
-      ar & layer & singular;
-      ar & (unsigned char&)(type);
+      // ar.Do(&x[0], 3);
+      // ar & layer & singular;
+      // ar & (unsigned char&)(type);
+      ar.DoPacked (x[0], x[1], x[2], layer, singular, (unsigned char&)(type));
     }
   };
 
@@ -558,13 +559,18 @@ namespace netgen
       if (ar.Output())
         { _np = np; _typ = typ; _curved = is_curved;
           _vis = visible; _deleted = deleted; }
-      ar & _np & _typ & index & _curved & _vis & _deleted;
+      // ar & _np & _typ & index & _curved & _vis & _deleted;
+      ar.DoPacked (_np, _typ, index, _curved, _vis, _deleted);
       // ar & next; don't need 
       if (ar.Input())
         { np = _np; typ = ELEMENT_TYPE(_typ); is_curved = _curved;
           visible = _vis; deleted = _deleted; }
+      /*
       for (size_t i = 0; i < np; i++)
         ar & pnum[i];
+      */
+      static_assert(sizeof(int) == sizeof (PointIndex));
+      ar.Do( (int*)&pnum[0], np);
     }
 
 #ifdef PARALLEL
@@ -838,7 +844,35 @@ namespace netgen
     ///
     const PointIndex & PNumMod (int i) const { return pnum[(i-1) % np]; }
 
-    void DoArchive (Archive & ar);
+    void DoArchive (Archive & ar)
+    {
+      short _np, _typ;
+      bool _curved;
+      if (ar.Output())
+        { _np = np; _typ = typ; _curved = is_curved; }
+      // ar & _np & _typ & index & _curved;
+      ar.DoPacked (_np, _typ, index, _curved);                
+
+      if (ar.Input())
+        {
+          np = _np;
+          typ = ELEMENT_TYPE(_typ);
+          is_curved = _curved;
+          flags.marked = 1;
+          flags.badel = 0;
+          flags.reverse = 0;
+          flags.illegal = 0;
+          flags.illegal_valid = 0;
+          flags.badness_valid = 0;
+          flags.refflag = 1;
+          flags.strongrefflag = false;
+          flags.deleted = 0;
+          flags.fixed = 0;
+        }
+
+      static_assert(sizeof(int) == sizeof (PointIndex));
+      ar.Do( (int*)&pnum[0], np);
+    }
     
 #ifdef PARALLEL
     static MPI_Datatype MyGetMPIType();
