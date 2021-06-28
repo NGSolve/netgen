@@ -2725,7 +2725,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
         for (ElementIndex eli : myrange)
           {
             const auto & el = mesh[eli];
-            if(el.flags.fixed || el.IsDeleted())
+            if(el.flags.fixed)
               continue;
 
             for (auto pi : el.PNums())
@@ -2828,8 +2828,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 
       mesh.DeleteBoundaryEdges();
   }
-  else
-      mesh.Compress ();
+  mesh.Compress ();
 
   multithread.task = savetask;
 }

@@ -2140,8 +2140,6 @@ namespace netgen
            [&](auto & table, ElementIndex ei)
            {
              const Element & el = (*this)[ei];
-             if(el.IsDeleted())
-               return;
              if (dom == 0 || dom == el.GetIndex())
                {
                  if (el.GetNP() == 4)
