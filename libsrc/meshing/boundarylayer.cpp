@@ -627,6 +627,8 @@ namespace netgen
           else
             mesh.GetFaceDescriptor(i).SetDomainIn(new_mat_nr);
         }
+    mesh.GetTopology().ClearEdges();
+    mesh.UpdateTopology();
   }
 
   void AddDirection( Vec<3> & a, Vec<3> b )

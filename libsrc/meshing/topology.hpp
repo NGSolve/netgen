@@ -193,6 +193,8 @@ public:
   void GetSegmentVolumeElements ( int segnr, NgArray<ElementIndex> & els ) const;
   void GetSegmentSurfaceElements ( int segnr, NgArray<SurfaceElementIndex> & els ) const;
 
+  // Call this before Update() to discard old edges
+  void ClearEdges() { edge2vert.SetSize(0); }
 
 private:
   Array<std::tuple<int, std::array<int,3>>> parent_edges;
