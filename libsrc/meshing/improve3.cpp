@@ -2717,24 +2717,8 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
   int ne = mesh.GetNE();
 
   mesh.BuildBoundaryEdges(false);
-  BitArray free_points(mesh.GetNP()+PointIndex::BASE);
-  free_points.Clear();
 
-  ParallelForRange(mesh.VolumeElements().Range(), [&] (auto myrange)
-      {
-        for (ElementIndex eli : myrange)
-          {
-            const auto & el = mesh[eli];
-            if(el.flags.fixed)
-              continue;
-
-            for (auto pi : el.PNums())
-              if(!free_points[pi])
-                  free_points.SetBitAtomic(pi);
-          }
-      });
-
-  auto elementsonnode = mesh.CreatePoint2ElementTable(free_points);
+  auto elementsonnode = mesh.CreatePoint2ElementTable();
 
   NgArray<ElementIndex> hasbothpoints;
 
@@ -2752,7 +2736,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 	  const Element2d & hel = mesh.OpenElement(i);
 	  INDEX_3 face(hel[0], hel[1], hel[2]);
 	  face.Sort();
-	  faces.Set (face, i);
+	  faces.Set (face, 1);
 	}
     }
 
@@ -2770,8 +2754,6 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
   std::atomic<int> improvement_counter(0);
 
   tloop.Start();
-
-  auto num_elements_before = mesh.VolumeElements().Range().Next();
 
   ParallelForRange(Range(edges), [&] (auto myrange)
   {
@@ -2804,30 +2786,6 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 
   PrintMessage (5, cnt, " swaps performed");
 
-  if(goal == OPT_CONFORM)
-  {
-      // Remove open elements that were closed by new tets
-      auto & open_els = mesh.OpenElements();
-
-      for (auto & el : mesh.VolumeElements().Range( num_elements_before, mesh.VolumeElements().Range().Next() ))
-      {
-          for (auto i : Range(1,5))
-          {
-              Element2d sel;
-              el.GetFace(i, sel);
-              INDEX_3 face(sel[0], sel[1], sel[2]);
-              face.Sort();
-              if(faces.Used(face))
-                  open_els[faces.Get(face)-1].Delete();
-          }
-      }
-
-      for(int i=open_els.Size()-1; i>=0; i--)
-          if(open_els[i].IsDeleted())
-              open_els.Delete(i);
-
-      mesh.DeleteBoundaryEdges();
-  }
   mesh.Compress ();
 
   multithread.task = savetask;

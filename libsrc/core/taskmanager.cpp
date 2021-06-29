@@ -235,14 +235,13 @@ namespace ngcore
     const function<void(TaskInfo&)> * func;
     int mynr;
     int total;
-    int producing_thread;
     atomic<int> * endcnt;
 
     TNestedTask () { ; }
     TNestedTask (const function<void(TaskInfo&)> & _func,
                  int _mynr, int _total,
-                 atomic<int> & _endcnt, int prod_tid)
-      : func(&_func), mynr(_mynr), total(_total), endcnt(&_endcnt), producing_thread(prod_tid)
+                 atomic<int> & _endcnt)
+      : func(&_func), mynr(_mynr), total(_total), endcnt(&_endcnt)
     {
       ;
     }
@@ -261,14 +260,12 @@ namespace ngcore
     TPToken ptoken(taskqueue); 
 
     int num = endcnt;
-    auto tid = TaskManager::GetThreadId();
     for (int i = 0; i < num; i++)
-      taskqueue.enqueue (ptoken, { afunc, i, num, endcnt, tid });
+      taskqueue.enqueue (ptoken, { afunc, i, num, endcnt });
   }
 
   bool TaskManager :: ProcessTask()
   {
-    static Timer t("process task");
     TNestedTask task;
     TCToken ctoken(taskqueue); 
     
@@ -285,14 +282,8 @@ namespace ngcore
           cout << "process nested, nr = " << ti.task_nr << "/" << ti.ntasks << endl;
         }
         */
-        if(trace && task.producing_thread != ti.thread_nr)
-            trace->StartTask (ti.thread_nr, t, PajeTrace::Task::ID_TIMER, task.producing_thread);
-
         (*task.func)(ti);
         --*task.endcnt;
-
-        if(trace && task.producing_thread != ti.thread_nr)
-            trace->StopTask (ti.thread_nr, t);
         return true;
       }
     return false;

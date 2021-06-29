@@ -384,8 +384,6 @@ namespace netgen
         volelements.Append (el);
       }
     volelements.Last().flags.illegal_valid = 0;
-    volelements.Last().flags.fixed = 0;
-    volelements.Last().flags.deleted = 0;
 
     // while (volelements.Size() > eltyps.Size())
     // eltyps.Append (FREEELEMENT);
@@ -407,8 +405,6 @@ namespace netgen
 
     volelements[ei]  = el;
     volelements[ei].flags.illegal_valid = 0;
-    volelements[ei].flags.fixed = 0;
-    volelements[ei].flags.deleted = 0;
   }
 
 
@@ -440,7 +436,6 @@ namespace netgen
 
   void Mesh :: Save (ostream & outfile) const
   {
-    static Timer timer("Mesh::Save"); RegionTimer rt(timer);
     int i, j;
 
     double scale = 1;  // globflags.GetNumFlag ("scale", 1);
@@ -2915,7 +2910,6 @@ namespace netgen
 
   void Mesh :: FreeOpenElementsEnvironment (int layers)
   {
-    static Timer timer("FreeOpenElementsEnvironment"); RegionTimer rt(timer);
     int i, j, k;
     PointIndex pi;
     const int large = 9999;
@@ -6576,8 +6570,6 @@ namespace netgen
                [&](auto & table, ElementIndex ei)
                {
                  const auto & el = (*this)[ei];
-                 if(el.IsDeleted())
-                     return;
 
                  for (PointIndex pi : el.PNums())
                    if(free_points[pi])
@@ -6589,8 +6581,6 @@ namespace netgen
                [&](auto & table, ElementIndex ei)
                {
                  const auto & el = (*this)[ei];
-                 if(el.IsDeleted())
-                     return;
 
                  for (PointIndex pi : el.PNums())
                    table.Add (pi, ei);

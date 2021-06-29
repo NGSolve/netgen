@@ -1,41 +1,14 @@
 #ifndef FILE_IMPROVE2
 #define FILE_IMPROVE2
 
-inline void AppendEdges( const Element2d & elem, PointIndex pi, Array<std::tuple<PointIndex,PointIndex>> & edges )
-{
-  for (int j = 0; j < 3; j++)
-  {
-      PointIndex pi0 = elem[j];
-      PointIndex pi1 = elem[(j+1)%3];
-      if (pi1 < pi0) Swap(pi0, pi1);
-      if(pi0==pi)
-          edges.Append(std::make_tuple(pi0, pi1));
-  }
-}
-
-inline void AppendEdges( const Element & elem, PointIndex pi, Array<std::tuple<PointIndex,PointIndex>> & edges )
-{
-  static constexpr int tetedges[6][2] =
-  { { 0, 1 }, { 0, 2 }, { 0, 3 },
-      { 1, 2 }, { 1, 3 }, { 2, 3 } };
-
-  if(elem.flags.fixed)
-      return;
-  for (int j = 0; j < 6; j++)
-  {
-      PointIndex pi0 = elem[tetedges[j][0]];
-      PointIndex pi1 = elem[tetedges[j][1]];
-      if (pi1 < pi0) Swap(pi0, pi1);
-      if(pi0==pi)
-          edges.Append(std::make_tuple(pi0, pi1));
-  }
-}
-
 template<typename TINDEX>
 void BuildEdgeList( const Mesh & mesh, const Table<TINDEX, PointIndex> & elementsonnode, Array<std::tuple<PointIndex, PointIndex>> & edges )
 {
-  static_assert(is_same_v<TINDEX, ElementIndex>||is_same_v<TINDEX,SurfaceElementIndex>, "Invalid type for TINDEX");
   static Timer tbuild_edges("Build edges"); RegionTimer reg(tbuild_edges);
+
+  static constexpr int tetedges[6][2] =
+    { { 0, 1 }, { 0, 2 }, { 0, 3 },
+        { 1, 2 }, { 1, 3 }, { 2, 3 } };
 
   int ntasks = 4*ngcore::TaskManager::GetMaxThreads();
   Array<Array<std::tuple<PointIndex,PointIndex>>> task_edges(ntasks);
@@ -53,7 +26,29 @@ void BuildEdgeList( const Mesh & mesh, const Table<TINDEX, PointIndex> & element
             const auto & elem = mesh[ei];
             if (elem.IsDeleted()) continue;
 
-            AppendEdges(elem, pi, local_edges);
+            static_assert(is_same_v<TINDEX, ElementIndex>||is_same_v<TINDEX,SurfaceElementIndex>, "Invalid type for TINDEX");
+            if constexpr(is_same_v<TINDEX, SurfaceElementIndex>)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    PointIndex pi0 = elem[j];
+                    PointIndex pi1 = elem[(j+1)%3];
+                    if (pi1 < pi0) Swap(pi0, pi1);
+                    if(pi0==pi)
+                        local_edges.Append(std::make_tuple(pi0, pi1));
+                }
+            }
+            else if constexpr(is_same_v<TINDEX, ElementIndex>)
+            {
+                for (int j = 0; j < 6; j++)
+                {
+                    PointIndex pi0 = elem[tetedges[j][0]];
+                    PointIndex pi1 = elem[tetedges[j][1]];
+                    if (pi1 < pi0) Swap(pi0, pi1);
+                    if(pi0==pi)
+                        local_edges.Append(std::make_tuple(pi0, pi1));
+                }
+            }
         }
         QuickSort(local_edges);
 
