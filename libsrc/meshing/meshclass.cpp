@@ -4881,8 +4881,8 @@ namespace netgen
                         box.Add (points[pi]);
 
                       auto & el = volelements[ei];
-                      if(el.IsCurved())
-                        box.Increase(1.2*box.Diam());
+                      if(el.IsCurved() && curvedelems->IsElementCurved(ei))
+                        box.Scale(1.2);
 
 
                       elementsearchtree -> Insert (box, ei+1);

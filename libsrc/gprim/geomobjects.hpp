@@ -406,6 +406,13 @@ namespace netgen
 	}
     }
 
+    void Scale (double factor)
+    {
+      auto center = Center();
+      pmin = center + factor*(pmin-center);
+      pmax = center + factor*(pmax-center);
+    }
+
     void DoArchive(Archive& archive)
     { archive & pmin & pmax; }
   };
