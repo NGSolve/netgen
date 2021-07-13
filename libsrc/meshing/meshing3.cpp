@@ -1109,6 +1109,7 @@ void Meshing3 :: PrepareBlockFillLocalH (Mesh & mesh,
   adfront -> CreateTrees();
 
   double maxh = 0;
+  Box<3> bounding_box(Box<3>::EMPTY_BOX);
 
   for (int i = 1; i <= adfront->GetNF(); i++)
     {
@@ -1117,6 +1118,7 @@ void Meshing3 :: PrepareBlockFillLocalH (Mesh & mesh,
 	{
 	  const Point3d & p1 = adfront->GetPoint (el.PNumMod(j));
 	  const Point3d & p2 = adfront->GetPoint (el.PNumMod(j+1));
+          bounding_box.Add(p1);
 
 	  double hi = Dist (p1, p2);
 	  if (hi > maxh) maxh = hi;
@@ -1126,9 +1128,9 @@ void Meshing3 :: PrepareBlockFillLocalH (Mesh & mesh,
 
   if (mp.maxh < maxh) maxh = mp.maxh;
 
-  // auto loch_ptr = mesh.LocalHFunction().Copy();
-  // auto & loch = *loch_ptr;
-  auto & loch = mesh.LocalHFunction();
+  auto loch_ptr = mesh.LocalHFunction().Copy(bounding_box);
+  auto & loch = *loch_ptr;
+  // auto & loch = mesh.LocalHFunction();
 
   bool changed;
   static Timer t1("loop1");

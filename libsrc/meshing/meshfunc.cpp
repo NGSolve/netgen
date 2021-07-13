@@ -68,7 +68,7 @@ namespace netgen
           ret[i].mesh = make_unique<Mesh>();
           auto & m = *ret[i].mesh;
 
-          m.SetLocalH(mesh.GetLocalH());
+          // m.SetLocalH(mesh.GetLocalH()->Copy());
 
           ipmap[i].SetSize(num_points);
           ipmap[i] = PointIndex::INVALID;

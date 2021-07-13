@@ -99,6 +99,7 @@ namespace netgen
     ~LocalH();
     ///
     unique_ptr<LocalH> Copy();
+    unique_ptr<LocalH> Copy( const Box<3> & bbox ) { return CopyRec(bbox, root); }
     ///
     void Delete();
     ///
@@ -190,6 +191,8 @@ namespace netgen
   
     ///
     void ConvexifyRec (GradingBox * box);
+
+    unique_ptr<LocalH> CopyRec( const Box<3> & bbox, GradingBox * current );
 
     friend ostream & operator<< (ostream & ost, const LocalH & loch);
   };
