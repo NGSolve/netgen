@@ -260,32 +260,22 @@ namespace netgen
    }
   }
 
-  void PrepareForBlockFillLocalH(MeshingData & md)
-  {
-    static Timer t("PrepareForBlockFillLocalH"); RegionTimer rt(t);
-    md.meshing = make_unique<Meshing3>(nullptr);
-
-    auto & mesh = *md.mesh;
-
-    mesh.CalcSurfacesOfNode();
-    mesh.FindOpenElements(md.domain);
-
-    for (PointIndex pi : mesh.Points().Range())
-       md.meshing->AddPoint (mesh[pi], pi);
-
-    for (int i = 1; i <= mesh.GetNOpenElements(); i++)
-       md.meshing->AddBoundaryElement (mesh.OpenElement(i));
-
-    if (mesh.HasLocalHFunction())
-        md.meshing->PrepareBlockFillLocalH(mesh, md.mp);
-  }
-
 
   void MeshDomain( MeshingData & md)
   {
     auto & mesh = *md.mesh;
     auto domain = md.domain;
     MeshingParameters & mp = md.mp;
+
+    mesh.CalcSurfacesOfNode();
+    mesh.FindOpenElements(md.domain);
+
+    md.meshing = make_unique<Meshing3>(nullptr);
+    for (PointIndex pi : mesh.Points().Range())
+       md.meshing->AddPoint (mesh[pi], pi);
+
+    for (int i = 1; i <= mesh.GetNOpenElements(); i++)
+       md.meshing->AddBoundaryElement (mesh.OpenElement(i));
 
    if (mp.delaunay && mesh.GetNOpenElements())
    {
@@ -767,13 +757,6 @@ namespace netgen
      ParallelFor( md.Range(), [&](int i)
        {
          CloseOpenQuads( md[i] );
-       });
-
-     for(auto & md_ : md)
-         PrepareForBlockFillLocalH(md_);
-
-     ParallelFor( md.Range(), [&](int i)
-       {
          MeshDomain(md[i]);
        });
 
