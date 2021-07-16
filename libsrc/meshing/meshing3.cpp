@@ -1189,6 +1189,7 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
 	}
     }
   while (changed);
+  t1.Stop();
 
   if (debugparam.slowchecks)
     (*testout) << "Blockfill with points: " << endl;

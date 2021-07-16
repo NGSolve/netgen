@@ -99,7 +99,7 @@ namespace netgen
     ~LocalH();
     ///
     unique_ptr<LocalH> Copy();
-    unique_ptr<LocalH> Copy( const Box<3> & bbox ) { return CopyRec(bbox, root); }
+    unique_ptr<LocalH> Copy( const Box<3> & bbox );
     ///
     void Delete();
     ///

@@ -130,7 +130,7 @@ namespace netgen
     return lh;
   }
 
-  unique_ptr<LocalH> LocalH :: CopyRec ( const Box<3> & bbox, GradingBox *current )
+  unique_ptr<LocalH> LocalH :: Copy( const Box<3> & bbox )
   {
     static Timer t("LocalH::Copy with bounding box"); RegionTimer rt(t);
     auto lh = make_unique<LocalH>(boundingbox, grading, dimension);
