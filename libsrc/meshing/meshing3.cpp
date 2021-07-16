@@ -1128,7 +1128,7 @@ void Meshing3 :: PrepareBlockFillLocalH (Mesh & mesh,
 
   if (mp.maxh < maxh) maxh = mp.maxh;
 
-  auto loch_ptr = mesh.LocalHFunction().Copy(bounding_box);
+  auto loch_ptr = mesh.LocalHFunction().Copy(); //bounding_box);
   auto & loch = *loch_ptr;
   // auto & loch = mesh.LocalHFunction();
 

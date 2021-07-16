@@ -36,9 +36,9 @@ namespace netgen
       Array<MeshingData> ret;
       auto num_domains = mesh.GetNDomains();
 
-      ret.SetSize(num_domains);
       if(num_domains==1 || mp.only3D_domain_nr)
       {
+          ret.SetSize(1);
           // no need to divide mesh, just fill in meshing data
           ret[0].domain = 1;
           if(mp.only3D_domain_nr)
@@ -48,14 +48,13 @@ namespace netgen
           ret[0].mp = mp;
           return ret;
       }
+      ret.SetSize(num_domains);
 
       Array<Array<PointIndex, PointIndex>> ipmap;
       ipmap.SetSize(num_domains);
       auto dim = mesh.GetDimension();
       auto num_points = mesh.GetNP();
       auto num_facedescriptors = mesh.GetNFD();
-
-      auto & identifications = mesh.GetIdentifications();
 
       for(auto i : Range(ret))
       {
@@ -68,7 +67,7 @@ namespace netgen
           ret[i].mesh = make_unique<Mesh>();
           auto & m = *ret[i].mesh;
 
-          // m.SetLocalH(mesh.GetLocalH()->Copy());
+          m.SetLocalH(mesh.GetLocalH());
 
           ipmap[i].SetSize(num_points);
           ipmap[i] = PointIndex::INVALID;
@@ -118,6 +117,22 @@ namespace netgen
             }
       }
 
+      // add segmetns
+      for(auto i : Range(ret))
+      {
+          auto & imap = ipmap[i];
+          auto & m = *ret[i].mesh;
+          for(auto seg : mesh.LineSegments())
+            if(imap[seg[0]].IsValid() && imap[seg[1]].IsValid())
+              {
+                  seg[0] = imap[seg[0]];
+                  seg[1] = imap[seg[1]];
+                  m.AddSegment(seg);
+              }
+      }
+
+      auto & identifications = mesh.GetIdentifications();
+
       for(auto i : Range(ret))
       {
           auto & m = *ret[i].mesh;
@@ -136,38 +151,18 @@ namespace netgen
 
               for(auto pair : pairs)
               {
-                  auto pi0 = pair[0];
-                  auto pi1 = pair[1];
-                  if(imap[pi0].IsValid() && imap[pi1].IsValid())
-                      m_ident.Add(n, imap[pi0], imap[pi1]);
-              }
-          }
-          m.Save("part_"+ToString(i)+".vol.gz");
-      }
+                  auto pi0 = imap[pair[0]];
+                  auto pi1 = imap[pair[1]];
+                  if(!pi0.IsValid() || !pi1.IsValid())
+                      continue;
 
-      // NgArray<INDEX_2> connectednodes;
-      // for(auto i : Range(ret))
-      // {
-      //     auto & imap = ipmap[i];
-      //     auto & m = *ret[i].mesh;
-      //
-      //     for (auto & sel : m.SurfaceElements())
-      //       for(auto & pi : sel.PNums())
-      //         pi = imap[pi];
-      //
-      //      for (int nr = 1; nr <= identifications.GetMaxNr(); nr++)
-      //        if (identifications.GetType(nr) != Identifications::PERIODIC)
-      //          {
-      //            identifications.GetPairs (nr, connectednodes);
-      //            for (auto pair : connectednodes)
-      //            {
-      //                auto pi0 = pair[0];
-      //                auto pi1 = pair[1];
-      //                if(imap[pi0].IsValid() && imap[pi1].IsValid())
-      //                    ret[i].connected_pairs.Append({imap[pi0], imap[pi1]});
-      //            }
-      //          }
-      // }
+                  if(pi1<pi0)
+                      Swap(pi0,pi1);
+                  m_ident.Add(pi0, pi1, n);
+              }
+              m_ident.SetType( n, identifications.GetType(n) );
+          }
+      }
       return ret;
   }
 
