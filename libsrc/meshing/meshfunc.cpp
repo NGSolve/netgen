@@ -21,7 +21,7 @@ namespace netgen
       // maps from local (domain) mesh to global mesh
       Array<PointIndex, PointIndex> pmap;
 
-      Array<INDEX_2> connected_pairs;
+      // Array<INDEX_2> connected_pairs;
 
       MeshingParameters mp;
 
@@ -73,6 +73,7 @@ namespace netgen
           ipmap[i].SetSize(num_points);
           ipmap[i] = PointIndex::INVALID;
           m.SetDimension( mesh.GetDimension() );
+          m.SetGeometry( mesh.GetGeometry() );
 
           for(auto i : Range(1, num_facedescriptors+1))
               m.AddFaceDescriptor( mesh.GetFaceDescriptor(i) );
@@ -117,29 +118,56 @@ namespace netgen
             }
       }
 
-      NgArray<INDEX_2> connectednodes;
       for(auto i : Range(ret))
       {
-          auto & imap = ipmap[i];
           auto & m = *ret[i].mesh;
+          auto & imap = ipmap[i];
+          auto nmax = identifications.GetMaxNr ();
+          auto & m_ident = m.GetIdentifications();
 
           for (auto & sel : m.SurfaceElements())
             for(auto & pi : sel.PNums())
               pi = imap[pi];
 
-           for (int nr = 1; nr <= identifications.GetMaxNr(); nr++)
-             if (identifications.GetType(nr) != Identifications::PERIODIC)
-               {
-                 identifications.GetPairs (nr, connectednodes);
-                 for (auto pair : connectednodes)
-                 {
-                     auto pi0 = pair[0];
-                     auto pi1 = pair[1];
-                     if(imap[pi0].IsValid() && imap[pi1].IsValid())
-                         ret[i].connected_pairs.Append({imap[pi0], imap[pi1]});
-                 }
-               }
+          for(auto n : Range(1,nmax+1))
+          {
+              NgArray<INDEX_2> pairs;
+              identifications.GetPairs(n, pairs);
+
+              for(auto pair : pairs)
+              {
+                  auto pi0 = pair[0];
+                  auto pi1 = pair[1];
+                  if(imap[pi0].IsValid() && imap[pi1].IsValid())
+                      m_ident.Add(n, imap[pi0], imap[pi1]);
+              }
+          }
+          m.Save("part_"+ToString(i)+".vol.gz");
       }
+
+      // NgArray<INDEX_2> connectednodes;
+      // for(auto i : Range(ret))
+      // {
+      //     auto & imap = ipmap[i];
+      //     auto & m = *ret[i].mesh;
+      //
+      //     for (auto & sel : m.SurfaceElements())
+      //       for(auto & pi : sel.PNums())
+      //         pi = imap[pi];
+      //
+      //      for (int nr = 1; nr <= identifications.GetMaxNr(); nr++)
+      //        if (identifications.GetType(nr) != Identifications::PERIODIC)
+      //          {
+      //            identifications.GetPairs (nr, connectednodes);
+      //            for (auto pair : connectednodes)
+      //            {
+      //                auto pi0 = pair[0];
+      //                auto pi1 = pair[1];
+      //                if(imap[pi0].IsValid() && imap[pi1].IsValid())
+      //                    ret[i].connected_pairs.Append({imap[pi0], imap[pi1]});
+      //            }
+      //          }
+      // }
       return ret;
   }
 
@@ -197,8 +225,16 @@ namespace netgen
            for (PointIndex pi : mesh.Points().Range())
              meshing.AddPoint (mesh[pi], pi);
 
-           for (auto pair : md.connected_pairs)
-               meshing.AddConnectedPair (pair);
+           NgArray<INDEX_2> connectednodes;
+           for (int nr = 1; nr <= mesh.GetIdentifications().GetMaxNr(); nr++)
+             if (mesh.GetIdentifications().GetType(nr) != Identifications::PERIODIC)
+               {
+                 mesh.GetIdentifications().GetPairs (nr, connectednodes);
+                 for (auto pair : connectednodes)
+                   meshing.AddConnectedPair (pair);
+               }
+           // for (auto pair : md.connected_pairs)
+           //     meshing.AddConnectedPair (pair);
            
            for (int i = 1; i <= mesh.GetNOpenElements(); i++)
              {
