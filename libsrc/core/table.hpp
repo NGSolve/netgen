@@ -171,7 +171,19 @@ namespace ngcore
     void DoArchive(Archive& ar)
     {
       ar & size;
+      if(size == 0)
+        return;
+      if(ar.Input())
+        {
+          index = new IndexType[size+1];
+          mt.Alloc(sizeof(IndexType) * (size+1));
+        }
       ar.Do(index, size+1);
+      if(ar.Input())
+        {
+          data = new T[index[size]];
+          mt.Alloc(sizeof(T) * index[size]);
+        }
       ar.Do(data, index[size]);
     }
 
