@@ -168,6 +168,13 @@ namespace ngcore
       Swap (data, tab2.data);
     }
 
+    void DoArchive(Archive& ar)
+    {
+      ar & size;
+      ar.Do(index, size+1);
+      ar.Do(data, index[size]);
+    }
+
     NETGEN_INLINE Table & operator= (Table && tab2)
     {
       mt.Swap(GetMemUsage(), tab2.mt, tab2.GetMemUsage());
