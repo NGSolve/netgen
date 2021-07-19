@@ -98,6 +98,8 @@ namespace netgen
 
     ~LocalH();
     ///
+    unique_ptr<LocalH> Copy();
+    ///
     void Delete();
     ///
     void DoArchive(Archive& ar);

@@ -134,6 +134,7 @@ void ResetStatus()
 
 void PushStatus(const MyStr& s)
 {
+  return;
   msgstatus_stack.Append(new MyStr (s));  
   SetStatMsg(s);
   threadpercent_stack.Append(0);
@@ -141,6 +142,7 @@ void PushStatus(const MyStr& s)
 
 void PushStatusF(const MyStr& s)
 {
+  return;
   msgstatus_stack.Append(new MyStr (s));
   SetStatMsg(s);
   threadpercent_stack.Append(0);
@@ -149,6 +151,7 @@ void PushStatusF(const MyStr& s)
 
 void PopStatus()
 {
+  return;
   if (msgstatus_stack.Size())
     {
       if (msgstatus_stack.Size() > 1)

@@ -852,13 +852,24 @@ namespace netgen
         { _np = np; _typ = typ; _curved = is_curved; }
       // ar & _np & _typ & index & _curved;
       ar.DoPacked (_np, _typ, index, _curved);                
-      if (ar.Input())
-        { np = _np; typ = ELEMENT_TYPE(_typ); is_curved = _curved; }
 
-      /*
-      for (size_t i = 0; i < np; i++)
-        ar & pnum[i];
-      */
+      if (ar.Input())
+        {
+          np = _np;
+          typ = ELEMENT_TYPE(_typ);
+          is_curved = _curved;
+          flags.marked = 1;
+          flags.badel = 0;
+          flags.reverse = 0;
+          flags.illegal = 0;
+          flags.illegal_valid = 0;
+          flags.badness_valid = 0;
+          flags.refflag = 1;
+          flags.strongrefflag = false;
+          flags.deleted = 0;
+          flags.fixed = 0;
+        }
+
       static_assert(sizeof(int) == sizeof (PointIndex));
       ar.Do( (int*)&pnum[0], np);
     }
