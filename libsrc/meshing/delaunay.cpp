@@ -1545,7 +1545,7 @@ namespace netgen
 
     PrintMessage (1, "Delaunay meshing");
     PrintMessage (3, "number of points: ", mesh.GetNP());
-    PushStatus ("Delaunay meshing");
+    // PushStatus ("Delaunay meshing");
 
 
     NgArray<DelaunayTet> tempels;
@@ -1675,6 +1675,6 @@ namespace netgen
     mesh.FindOpenElements(domainnr);
 
     mesh.Compress();
-    PopStatus ();
+    // PopStatus ();
   }
 }

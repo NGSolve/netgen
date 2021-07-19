@@ -1094,10 +1094,11 @@ static int TestSameSide (const Point3d & p1, const Point3d & p2)
 */
 
 
-void Meshing3 :: PrepareBlockFillLocalH (Mesh & mesh, 
+
+void Meshing3 :: BlockFillLocalH (Mesh & mesh, 
 				  const MeshingParameters & mp)
 {
-  static Timer t("Mesing3::PrepareBlockFillLocalH"); RegionTimer reg(t);
+  static Timer t("Mesing3::BlockFillLocalH"); RegionTimer reg(t);
   
   double filldist = mp.filldist;
   
@@ -1106,8 +1107,11 @@ void Meshing3 :: PrepareBlockFillLocalH (Mesh & mesh,
   PrintMessage (3, "blockfill local h");
 
 
+  NgArray<Point<3> > npoints;
+  
   adfront -> CreateTrees();
 
+  Box<3> bbox ( Box<3>::EMPTY_BOX );
   double maxh = 0;
 
   for (int i = 1; i <= adfront->GetNF(); i++)
@@ -1120,15 +1124,28 @@ void Meshing3 :: PrepareBlockFillLocalH (Mesh & mesh,
 
 	  double hi = Dist (p1, p2);
 	  if (hi > maxh) maxh = hi;
+
+	  bbox.Add (p1);
 	}
     }
 
 
+  Point3d mpmin = bbox.PMin();
+  Point3d mpmax = bbox.PMax();
+  Point3d mpc = Center (mpmin, mpmax);
+  double d = max3(mpmax.X()-mpmin.X(), 
+		  mpmax.Y()-mpmin.Y(), 
+		  mpmax.Z()-mpmin.Z()) / 2;
+  mpmin = mpc - Vec3d (d, d, d);
+  mpmax = mpc + Vec3d (d, d, d);
+  Box3d meshbox (mpmin, mpmax);
+
+  LocalH loch2 (mpmin, mpmax, 1);
+
   if (mp.maxh < maxh) maxh = mp.maxh;
 
-  // auto loch_ptr = mesh.LocalHFunction().Copy();
-  // auto & loch = *loch_ptr;
-  auto & loch = mesh.LocalHFunction();
+  auto loch_ptr = mesh.LocalHFunction().Copy(bbox);
+  auto & loch = *loch_ptr;
 
   bool changed;
   static Timer t1("loop1");
@@ -1173,60 +1190,6 @@ void Meshing3 :: PrepareBlockFillLocalH (Mesh & mesh,
     }
   while (changed);
   t1.Stop();
-
-
-
-}
-
-void Meshing3 :: BlockFillLocalH (Mesh & mesh, 
-				  const MeshingParameters & mp)
-{
-  static Timer t("Mesing3::BlockFillLocalH"); RegionTimer reg(t);
-
-  if (!mesh.HasLocalHFunction())
-  {
-    mesh.CalcLocalH(mp.grading);
-    PrepareBlockFillLocalH(mesh, mp);
-  }
-  
-  double filldist = mp.filldist;
-  
-  // (*testout) << "blockfill local h" << endl;
-  // (*testout) << "rel filldist = " << filldist << endl;
-  PrintMessage (3, "blockfill local h");
-
-  Box<3> bbox ( Box<3>::EMPTY_BOX );
-  double maxh = 0;
-
-  for (int i = 1; i <= adfront->GetNF(); i++)
-    {
-      const MiniElement2d & el = adfront->GetFace(i);
-      for (int j = 1; j <= 3; j++)
-	{
-	  const Point3d & p1 = adfront->GetPoint (el.PNumMod(j));
-	  const Point3d & p2 = adfront->GetPoint (el.PNumMod(j+1));
-
-	  double hi = Dist (p1, p2);
-	  if (hi > maxh) maxh = hi;
-
-	  bbox.Add (p1);
-	}
-    }
-
-
-  Point3d mpmin = bbox.PMin();
-  Point3d mpmax = bbox.PMax();
-  Point3d mpc = Center (mpmin, mpmax);
-  double d = max3(mpmax.X()-mpmin.X(), 
-		  mpmax.Y()-mpmin.Y(), 
-		  mpmax.Z()-mpmin.Z()) / 2;
-  mpmin = mpc - Vec3d (d, d, d);
-  mpmax = mpc + Vec3d (d, d, d);
-  Box3d meshbox (mpmin, mpmax);
-
-  LocalH loch2 (mpmin, mpmax, 1);
-
-  if (mp.maxh < maxh) maxh = mp.maxh;
 
   if (debugparam.slowchecks)
     (*testout) << "Blockfill with points: " << endl;
