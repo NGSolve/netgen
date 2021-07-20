@@ -1144,11 +1144,18 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
 
   if (mp.maxh < maxh) maxh = mp.maxh;
 
+  auto loch_ptr = mesh.LocalHFunction().Copy(bbox);
+  auto & loch = *loch_ptr;
+
   bool changed;
+  static Timer t1("loop1");
+  t1.Start();
   do 
     {
-      mesh.LocalHFunction().ClearFlags();
+      loch.ClearFlags();
 
+      static Timer tbox("adfront-bbox");
+      tbox.Start();
       for (int i = 1; i <= adfront->GetNF(); i++)
 	{
 	  const MiniElement2d & el = adfront->GetFace(i);
@@ -1161,26 +1168,28 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
 	  double filld = filldist * bbox.Diam();
 	  bbox.Increase (filld);
       
-      	  mesh.LocalHFunction().CutBoundary (bbox); // .PMin(), bbox.PMax());
+      	  loch.CutBoundary (bbox); // .PMin(), bbox.PMax());
 	}
+      tbox.Stop();
 
       //      locadfront = adfront;
-      mesh.LocalHFunction().FindInnerBoxes (adfront, NULL);
+      loch.FindInnerBoxes (adfront, NULL);
 
       npoints.SetSize(0);
-      mesh.LocalHFunction().GetInnerPoints (npoints);
+      loch.GetInnerPoints (npoints);
 
       changed = false;
       for (int i = 1; i <= npoints.Size(); i++)
 	{
-	  if (mesh.LocalHFunction().GetH(npoints.Get(i)) > 1.5 * maxh)
+	  if (loch.GetH(npoints.Get(i)) > 1.5 * maxh)
 	    {
-	      mesh.LocalHFunction().SetH (npoints.Get(i), maxh);
+	      loch.SetH (npoints.Get(i), maxh);
 	      changed = true;
 	    }
 	}
     }
   while (changed);
+  t1.Stop();
 
   if (debugparam.slowchecks)
     (*testout) << "Blockfill with points: " << endl;
@@ -1208,6 +1217,8 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
 
   // find outer points
   
+  static Timer tloch2("build loch2");
+  tloch2.Start();
   loch2.ClearFlags();
 
   for (int i = 1; i <= adfront->GetNF(); i++)
@@ -1245,6 +1256,7 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
       // loch2.CutBoundary (pmin, pmax);
       loch2.CutBoundary (Box<3> (pmin, pmax)); // pmin, pmax);
     }
+  tloch2.Stop();
 
   // locadfront = adfront;
   loch2.FindInnerBoxes (adfront, NULL);

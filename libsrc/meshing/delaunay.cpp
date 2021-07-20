@@ -235,9 +235,11 @@ namespace netgen
 			 NgArray<int> & freelist, SphereList & list,
 			 IndexSet & insphere, IndexSet & closesphere, Array<DelaunayTet> & newels)
   {
-    static Timer t("Meshing3::AddDelaunayPoint");// RegionTimer reg(t);
-    // static Timer tsearch("addpoint, search");
-    // static Timer tinsert("addpoint, insert");
+    static Timer t("Meshing3::AddDelaunayPoint", NoTracing, NoTiming); RegionTimer reg(t);
+    static Timer tsearch("addpoint, search", NoTracing, NoTiming);
+    static Timer tfind("addpoint, find all tets", NoTracing, NoTiming);
+    static Timer tnewtets("addpoint, build new tets", NoTracing, NoTiming);
+    static Timer tinsert("addpoint, insert", NoTracing, NoTiming);
 
     /*
       find any sphere, such that newp is contained in
@@ -277,7 +279,7 @@ namespace netgen
       }
     */
 
-    // tsearch.Start();
+    tsearch.Start();
     double minquot{1e20};
     tettree.GetFirstIntersecting
       (newp, newp, [&](const auto pi)
@@ -300,7 +302,7 @@ namespace netgen
           }
         return false;
        } );
-    // tsearch.Stop();
+    tsearch.Stop();
 
     if (cfelind == -1)
       {
@@ -308,6 +310,7 @@ namespace netgen
 	return;
       }
 	
+    tfind.Start();
     /*
       insphere:     point is in sphere -> delete element
       closesphere:  point is close to sphere -> considered for same center
@@ -399,6 +402,8 @@ namespace netgen
 	    }
       } // while (changed)
 
+    tfind.Stop();
+    tnewtets.Start();
     newels.SetSize(0);
     
     Element2d face(TRIG);
@@ -553,10 +558,11 @@ namespace netgen
 	    tpmax.SetToMax (*pp[k]);
 	  }
 	tpmax = tpmax + 0.01 * (tpmax - tpmin);
-        // tinsert.Start();
+        tinsert.Start();
 	tettree.Insert (tpmin, tpmax, nelind);
-        // tinsert.Stop();
+        tinsert.Stop();
       }
+      tnewtets.Stop();
   }
 
 
@@ -1539,7 +1545,7 @@ namespace netgen
 
     PrintMessage (1, "Delaunay meshing");
     PrintMessage (3, "number of points: ", mesh.GetNP());
-    PushStatus ("Delaunay meshing");
+    // PushStatus ("Delaunay meshing");
 
 
     NgArray<DelaunayTet> tempels;
@@ -1627,20 +1633,20 @@ namespace netgen
       // tempmesh.Save ("tempmesh.vol");
 
       {
+        MeshOptimize3d meshopt(mp);
+        tempmesh.Compress();
+        tempmesh.FindOpenElements ();
         RegionTaskManager rtm(mp.parallel_meshing ? mp.nthreads : 0);
-        for (int i = 1; i <= 4; i++)
+        for (auto i : Range(10))
           {
-            tempmesh.FindOpenElements ();
-
             PrintMessage (5, "Num open: ", tempmesh.GetNOpenElements());
-            tempmesh.CalcSurfacesOfNode ();
 
-            tempmesh.FreeOpenElementsEnvironment (1);
+            if(i%5==0)
+                tempmesh.FreeOpenElementsEnvironment (1);
 
-            MeshOptimize3d meshopt(mp);
-            // tempmesh.CalcSurfacesOfNode();
             meshopt.SwapImprove(tempmesh, OPT_CONFORM);
           }
+        tempmesh.Compress();
       }
     
       MeshQuality3d (tempmesh);
@@ -1669,6 +1675,6 @@ namespace netgen
     mesh.FindOpenElements(domainnr);
 
     mesh.Compress();
-    PopStatus ();
+    // PopStatus ();
   }
 }

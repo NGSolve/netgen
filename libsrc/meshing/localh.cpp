@@ -91,6 +91,93 @@ namespace netgen
     delete root;
   }
 
+  unique_ptr<LocalH> LocalH :: Copy ()
+  {
+    static Timer t("LocalH::Copy"); RegionTimer rt(t);
+    auto lh = make_unique<LocalH>(boundingbox, grading, dimension);
+    std::map<GradingBox*, GradingBox*> mapping;
+    lh->boxes.SetSize(boxes.Size());
+
+    for(auto i : boxes.Range())
+    {
+      lh->boxes[i] = new GradingBox();
+      auto & bnew = *lh->boxes[i];
+      auto & b = *boxes[i];
+      bnew.xmid[0] = b.xmid[0];
+      bnew.xmid[1] = b.xmid[1];
+      bnew.xmid[2] = b.xmid[2];
+      bnew.h2 = b.h2;
+      bnew.hopt = b.hopt;
+      bnew.flags = b.flags;
+      mapping[&b] = &bnew;
+    }
+
+    for(auto i : boxes.Range())
+    {
+      auto & bnew = *lh->boxes[i];
+      auto & b = *boxes[i];
+      for(auto k : Range(8))
+      {
+        if(b.childs[k])
+          bnew.childs[k] = mapping[b.childs[k]];
+      }
+
+      if(b.father)
+        bnew.father = mapping[b.father];
+    }
+
+    lh->root = mapping[root];
+    return lh;
+  }
+
+  unique_ptr<LocalH> LocalH :: Copy( const Box<3> & bbox )
+  {
+    static Timer t("LocalH::Copy with bounding box"); RegionTimer rt(t);
+    auto lh = make_unique<LocalH>(boundingbox, grading, dimension);
+    std::map<GradingBox*, GradingBox*> mapping;
+    lh->boxes.SetAllocSize(boxes.Size());
+
+    for(auto i : boxes.Range())
+    {
+      auto & b = *boxes[i];
+      auto h = b.H2();
+      Vec<3> vh = {h,h,h};
+      Box<3> box( b.PMid() - vh, b.PMid() + vh);
+      if(!box.Intersect(bbox))
+          continue;
+      lh->boxes.Append(new GradingBox());
+      auto & bnew = *lh->boxes.Last();
+      bnew.xmid[0] = b.xmid[0];
+      bnew.xmid[1] = b.xmid[1];
+      bnew.xmid[2] = b.xmid[2];
+      bnew.h2 = b.h2;
+      bnew.hopt = b.hopt;
+      bnew.flags = b.flags;
+      mapping[&b] = &bnew;
+    }
+
+    for(auto i : boxes.Range())
+    {
+      auto & b = *boxes[i];
+      if(mapping.count(&b)==0)
+          continue;
+
+      auto & bnew = *mapping[&b];
+      for(auto k : Range(8))
+      {
+        if(b.childs[k] && mapping.count(b.childs[k]))
+          bnew.childs[k] = mapping[b.childs[k]];
+      }
+
+      if(b.father && mapping.count(b.father))
+        bnew.father = mapping[b.father];
+    }
+
+    lh->root = mapping[root];
+    return lh;
+
+  }
+
   void LocalH :: Delete ()
   {
     root->DeleteChilds();
@@ -405,8 +492,8 @@ namespace netgen
   void LocalH :: FindInnerBoxes (AdFront3 * adfront,
 				 int (*testinner)(const Point3d & p1))
   {
-    static int timer = NgProfiler::CreateTimer ("LocalH::FindInnerBoxes");
-    NgProfiler::RegionTimer reg (timer);
+    static Timer timer("LocalH::FindInnerBoxes");
+    RegionTimer reg (timer);
 
 
     int nf = adfront->GetNF();
@@ -812,6 +899,7 @@ namespace netgen
   
   void LocalH :: GetOuterPoints (NgArray<Point<3> > & points)
   {
+    static Timer t("LocalH::GetOuterPoints"); RegionTimer rt(t);
     for (int i = 0; i < boxes.Size(); i++)
       if (!boxes[i]->flags.isinner && !boxes[i]->flags.cutboundary)
 	points.Append ( boxes[i] -> PMid());
