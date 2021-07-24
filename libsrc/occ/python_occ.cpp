@@ -224,6 +224,27 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     .value("SHAPE", TopAbs_SHAPE)
     .export_values()
     ;
+
+  py::class_<gp_Pnt>(m, "gp_Pnt")
+    .def(py::init([] (py::tuple pnt)
+                  {
+                    return gp_Pnt(py::cast<double>(pnt[0]),
+                                  py::cast<double>(pnt[1]),
+                                  py::cast<double>(pnt[2]));
+                  }))
+    ;
+
+  py::class_<gp_Dir>(m, "gp_Dir")
+    .def(py::init([] (py::tuple dir)
+                  {
+                    return gp_Dir(py::cast<double>(dir[0]),
+                                  py::cast<double>(dir[1]),
+                                  py::cast<double>(dir[2]));
+                  }))
+    ;
+  py::implicitly_convertible<py::tuple, gp_Pnt>();
+  py::implicitly_convertible<py::tuple, gp_Dir>();
+  
   
   py::class_<TopoDS_Shape> (m, "TopoDS_Shape")
     .def("__str__", [] (const TopoDS_Shape & shape)
@@ -246,7 +267,19 @@ DLL_HEADER void ExportNgOCC(py::module &m)
          {
            // https://dev.opencascade.org/doc/occt-7.3.0/overview/html/occt_user_guides__boolean_operations.html#occt_algorithms_10a
 
+           
+           /*
+             choose boolean operation:
+             https://uma.ensta-paris.fr/soft/XLiFE++/?module=doc&action=source&set=release&file=OpenCascade_8cpp_source.html
+             BRepAlgoAPI_BooleanOperation bop;
+             bop.SetArguments(args); bop.SetTools(tools);
+             bop.SetOperation(BOPAlgo_FUSE);
+           */
+
+           
+
            BOPAlgo_MakerVolume aMV;
+           // aMV.SetOperation(BOPAlgo_CUT);
            // BOPAlgo_Section aMV;  // only vertices + edges 
            // BOPAlgo_Builder aMV;
            // BRepAlgoAPI_Cut aMV;
@@ -256,7 +289,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
            // aBuilder.SetArguments(aLSObjects);
            aMV.SetArguments(aLSObjects);
            // aMV.SetIntersect(true);
-           aMV.Perform();
+           aMV.Perform();     // howto perform BOPAlgo_CUT  ???
            // aMV.Build();
            return aMV.Shape();
 
@@ -275,23 +308,17 @@ DLL_HEADER void ExportNgOCC(py::module &m)
          });
   ;
 
-  m.def("Sphere", [] (py::tuple c, double r)
-        {
-          gp_Pnt cc { py::cast<double> (c[0]), py::cast<double>(c[1]), py::cast<double>(c[2]) };
-          return BRepPrimAPI_MakeSphere (cc, r).Shape();
-        });
-  m.def("Cylinder", [] (py::tuple pnt, py::tuple dir, double r, double h)
-        {
-          gp_Pnt cpnt { py::cast<double> (pnt[0]), py::cast<double>(pnt[1]), py::cast<double>(pnt[2]) };
-          gp_Dir cdir { py::cast<double> (dir[0]), py::cast<double>(dir[1]), py::cast<double>(dir[2]) };
-          return BRepPrimAPI_MakeCylinder (gp_Ax2(cpnt, cdir), r, h).Shape();
-        });
-  m.def("Box", [] (py::tuple p1, py::tuple p2)
-        {
-          gp_Pnt cp1 { py::cast<double> (p1[0]), py::cast<double>(p1[1]), py::cast<double>(p1[2]) };
-          gp_Pnt cp2 { py::cast<double> (p2[0]), py::cast<double>(p2[1]), py::cast<double>(p2[2]) };
-          return BRepPrimAPI_MakeBox (cp1, cp2).Shape();
-        });
+  m.def("Sphere", [] (gp_Pnt cc, double r) {
+      return BRepPrimAPI_MakeSphere (cc, r).Shape();
+    });
+  
+  m.def("Cylinder", [] (gp_Pnt cpnt, gp_Dir cdir, double r, double h) {
+      return BRepPrimAPI_MakeCylinder (gp_Ax2(cpnt, cdir), r, h).Shape();
+    });
+  
+  m.def("Box", [] (gp_Pnt cp1, gp_Pnt cp2) {
+      return BRepPrimAPI_MakeBox (cp1, cp2).Shape();
+    });
   
   m.def("LoadOCCGeometry",[] (const string & filename)
            {
