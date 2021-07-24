@@ -9,14 +9,13 @@
 #include <occgeom.hpp>
 #include <Standard_Version.hxx>
 #include <gp_Ax2.hxx>
+
 #include <BRepPrimAPI_MakeSphere.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
-#include <BOPAlgo_MakerVolume.hxx>
-#include <BOPAlgo_Section.hxx>
 #include <BRepAlgoAPI_Cut.hxx>
-#include <BRepAlgoAPI_Section.hxx>
-
+#include <BRepAlgoAPI_Common.hxx>
+#include <BRepAlgoAPI_Fuse.hxx>
 
 
 using namespace netgen;
@@ -253,8 +252,10 @@ DLL_HEADER void ExportNgOCC(py::module &m)
            shape.DumpJson(str);
            return str.str();
          })
+    
     .def("ShapeType", [] (const TopoDS_Shape & shape)
          { return shape.ShapeType(); })
+    
     .def("SubShapes", [] (const TopoDS_Shape & shape, TopAbs_ShapeEnum & type)
          {
            py::list sub;
@@ -263,50 +264,20 @@ DLL_HEADER void ExportNgOCC(py::module &m)
              sub.append(e.Current());
            return sub;
          })
-    .def("__mul__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2)
-         {
-           // https://dev.opencascade.org/doc/occt-7.3.0/overview/html/occt_user_guides__boolean_operations.html#occt_algorithms_10a
+    
+    .def("__add__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
+        return BRepAlgoAPI_Fuse(shape1, shape2).Shape();
+      })
+    
+    .def("__mul__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
+        return BRepAlgoAPI_Common(shape1, shape2).Shape();
+      })
+    
+    .def("__sub__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
+        return BRepAlgoAPI_Cut(shape1, shape2).Shape();
+      })
+    ;
 
-           
-           /*
-             choose boolean operation:
-             https://uma.ensta-paris.fr/soft/XLiFE++/?module=doc&action=source&set=release&file=OpenCascade_8cpp_source.html
-             BRepAlgoAPI_BooleanOperation bop;
-             bop.SetArguments(args); bop.SetTools(tools);
-             bop.SetOperation(BOPAlgo_FUSE);
-           */
-
-           
-
-           BOPAlgo_MakerVolume aMV;
-           // aMV.SetOperation(BOPAlgo_CUT);
-           // BOPAlgo_Section aMV;  // only vertices + edges 
-           // BOPAlgo_Builder aMV;
-           // BRepAlgoAPI_Cut aMV;
-           TopTools_ListOfShape aLSObjects;
-           aLSObjects.Append (shape1);
-           aLSObjects.Append (shape2);
-           // aBuilder.SetArguments(aLSObjects);
-           aMV.SetArguments(aLSObjects);
-           // aMV.SetIntersect(true);
-           aMV.Perform();     // howto perform BOPAlgo_CUT  ???
-           // aMV.Build();
-           return aMV.Shape();
-
-           /*
-              // ?????
-           // auto cut = BRepAlgoAPI_Cut (shape1, shape2);
-           auto cut = BRepAlgoAPI_Section (shape1, shape2);
-           TopTools_ListOfShape aLSObjects;
-           aLSObjects.Append (cut);
-
-           BOPAlgo_MakerVolume aMV;
-           aMV.SetArguments(aLSObjects);
-           aMV.Perform();
-           return aMV.Shape();
-           */
-         });
-  ;
 
   m.def("Sphere", [] (gp_Pnt cc, double r) {
       return BRepPrimAPI_MakeSphere (cc, r).Shape();
