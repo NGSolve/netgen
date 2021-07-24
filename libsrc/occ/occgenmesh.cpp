@@ -41,10 +41,6 @@ namespace netgen
       return 1e99;
   }
 
-  inline Point<3> occ2ng (const gp_Pnt & p)
-  {
-    return Point<3> (p.X(), p.Y(), p.Z());
-  }
 
   double ComputeH (double kappa, const MeshingParameters & mparam)
   {

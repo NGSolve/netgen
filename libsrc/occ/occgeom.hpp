@@ -104,6 +104,17 @@ namespace netgen
 #define OCCGEOMETRYVISUALIZATIONHALFCHANGE 2  // Redraw
 
 
+  inline Point<3> occ2ng (const gp_Pnt & p)
+  {
+    return Point<3> (p.X(), p.Y(), p.Z());
+  }
+
+  inline gp_Pnt ng2occ (const Point<3> & p)
+  {
+    return gp_Pnt(p(0), p(1), p(2));
+  }
+
+  
 
   class EntityVisualizationCode
   {

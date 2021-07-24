@@ -8,6 +8,9 @@
 #include <meshing.hpp>
 #include <occgeom.hpp>
 #include <Standard_Version.hxx>
+#include <BRepPrimAPI_MakeSphere.hxx>
+#include <BOPAlgo_MakerVolume.hxx>
+#include <BOPAlgo_Section.hxx>
 
 using namespace netgen;
 
@@ -50,7 +53,21 @@ DLL_HEADER void ExportNgOCC(py::module &m)
   m.attr("occ_version") = OCC_VERSION_COMPLETE;
   py::class_<OCCGeometry, shared_ptr<OCCGeometry>, NetgenGeometry> (m, "OCCGeometry", R"raw_string(Use LoadOCCGeometry to load the geometry from a *.step file.)raw_string")
     .def(py::init<>())
+    /*
     .def(py::init<const TopoDS_Shape&>(), py::arg("shape"),
+         "Create Netgen OCCGeometry from existing TopoDS_Shape")
+    */
+    .def(py::init([] (const TopoDS_Shape& shape)
+                  {
+                    auto geo = make_shared<OCCGeometry> (shape);
+                    ng_geometry = geo;
+                    
+                    geo->BuildFMap();
+                    geo->CalcBoundingBox();
+                    // PrintContents (geo);
+                    cout << "bounding box = " << geo->GetBoundingBox() << endl;
+                    return geo;
+                  }), py::arg("shape"),
          "Create Netgen OCCGeometry from existing TopoDS_Shape")
     .def(py::init([] (const string& filename)
                   {
@@ -191,6 +208,54 @@ DLL_HEADER void ExportNgOCC(py::module &m)
          (meshingparameter_description + occparameter_description).c_str())
     ;
 
+  py::enum_<TopAbs_ShapeEnum>(m, "TopAbs_ShapeEnum", "Enumeration of all supported TopoDS_Shapes")
+    .value("COMPOUND", TopAbs_COMPOUND)   .value("COMPSOLID", TopAbs_COMPSOLID)
+    .value("SOLID", TopAbs_SOLID)       .value("SHELL", TopAbs_SHELL)
+    .value("FACE", TopAbs_FACE)         .value("WIRE", TopAbs_WIRE)
+    .value("EDGE", TopAbs_EDGE) .value("VERTEX", TopAbs_VERTEX)
+    .value("SHAPE", TopAbs_SHAPE)
+    .export_values()
+    ;
+  
+  py::class_<TopoDS_Shape> (m, "TopoDS_Shape")
+    .def("__str__", [] (const TopoDS_Shape & shape)
+         {
+           stringstream str;
+           shape.DumpJson(str);
+           return str.str();
+         })
+    .def("ShapeType", [] (const TopoDS_Shape & shape)
+         { return shape.ShapeType(); })
+    .def("SubShapes", [] (const TopoDS_Shape & shape, TopAbs_ShapeEnum & type)
+         {
+           py::list sub;
+           TopExp_Explorer e;
+           for (e.Init(shape, type); e.More(); e.Next())
+             sub.append(e.Current());
+           return sub;
+         })
+    .def("__mul__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2)
+         {
+           // https://dev.opencascade.org/doc/occt-7.3.0/overview/html/occt_user_guides__boolean_operations.html#occt_algorithms_10a
+           BOPAlgo_MakerVolume aMV;
+           // BOPAlgo_Section aMV;
+           // BOPAlgo_Builder aBuilder;
+           TopTools_ListOfShape aLSObjects;
+           aLSObjects.Append (shape1);
+           aLSObjects.Append (shape2);
+           // aBuilder.SetArguments(aLSObjects);
+           aMV.SetArguments(aLSObjects);
+           aMV.Perform();
+           return aMV.Shape();
+         });
+  ;
+
+  m.def("Sphere", [] (py::tuple c, double r)
+        {
+          gp_Pnt cc { py::cast<double> (c[0]), py::cast<double>(c[1]), py::cast<double>(c[2]) };
+          return BRepPrimAPI_MakeSphere (cc, r).Shape();
+        });
+  
   m.def("LoadOCCGeometry",[] (const string & filename)
            {
              cout << "WARNING: LoadOCCGeometry is deprecated! Just use the OCCGeometry(filename) constructor. It is able to read brep and iges files as well!" << endl;
