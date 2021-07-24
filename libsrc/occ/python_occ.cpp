@@ -8,9 +8,15 @@
 #include <meshing.hpp>
 #include <occgeom.hpp>
 #include <Standard_Version.hxx>
+#include <gp_Ax2.hxx>
 #include <BRepPrimAPI_MakeSphere.hxx>
+#include <BRepPrimAPI_MakeCylinder.hxx>
+#include <BRepPrimAPI_MakeBox.hxx>
 #include <BOPAlgo_MakerVolume.hxx>
 #include <BOPAlgo_Section.hxx>
+#include <BRepAlgoAPI_Cut.hxx>
+
+
 
 using namespace netgen;
 
@@ -206,6 +212,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                          }, py::arg("mp") = nullptr,
       py::call_guard<py::gil_scoped_release>(),
          (meshingparameter_description + occparameter_description).c_str())
+    .def_property_readonly("shape", [](const OCCGeometry & self) { return self.GetShape(); })
     ;
 
   py::enum_<TopAbs_ShapeEnum>(m, "TopAbs_ShapeEnum", "Enumeration of all supported TopoDS_Shapes")
@@ -238,14 +245,17 @@ DLL_HEADER void ExportNgOCC(py::module &m)
          {
            // https://dev.opencascade.org/doc/occt-7.3.0/overview/html/occt_user_guides__boolean_operations.html#occt_algorithms_10a
            BOPAlgo_MakerVolume aMV;
-           // BOPAlgo_Section aMV;
-           // BOPAlgo_Builder aBuilder;
+           // BOPAlgo_Section aMV;  // only vertices + edges 
+           // BOPAlgo_Builder aMV;
+           // BRepAlgoAPI_Cut aMV;
            TopTools_ListOfShape aLSObjects;
            aLSObjects.Append (shape1);
            aLSObjects.Append (shape2);
            // aBuilder.SetArguments(aLSObjects);
            aMV.SetArguments(aLSObjects);
+           // aMV.SetIntersect(true);
            aMV.Perform();
+           // aMV.Build();
            return aMV.Shape();
          });
   ;
@@ -254,6 +264,18 @@ DLL_HEADER void ExportNgOCC(py::module &m)
         {
           gp_Pnt cc { py::cast<double> (c[0]), py::cast<double>(c[1]), py::cast<double>(c[2]) };
           return BRepPrimAPI_MakeSphere (cc, r).Shape();
+        });
+  m.def("Cylinder", [] (py::tuple pnt, py::tuple dir, double r, double h)
+        {
+          gp_Pnt cpnt { py::cast<double> (pnt[0]), py::cast<double>(pnt[1]), py::cast<double>(pnt[2]) };
+          gp_Dir cdir { py::cast<double> (dir[0]), py::cast<double>(dir[1]), py::cast<double>(dir[2]) };
+          return BRepPrimAPI_MakeCylinder (gp_Ax2(cpnt, cdir), r, h).Shape();
+        });
+  m.def("Box", [] (py::tuple p1, py::tuple p2)
+        {
+          gp_Pnt cp1 { py::cast<double> (p1[0]), py::cast<double>(p1[1]), py::cast<double>(p1[2]) };
+          gp_Pnt cp2 { py::cast<double> (p2[0]), py::cast<double>(p2[1]), py::cast<double>(p2[2]) };
+          return BRepPrimAPI_MakeBox (cp1, cp2).Shape();
         });
   
   m.def("LoadOCCGeometry",[] (const string & filename)

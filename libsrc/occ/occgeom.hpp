@@ -290,7 +290,8 @@ namespace netgen
                       Point<3> & newp, PointGeomInfo & newgi) const override;
 
     void BuildFMap();
-     
+
+    auto GetShape() const { return shape; }
     Box<3> GetBoundingBox() const
     { return boundingbox; }
 
