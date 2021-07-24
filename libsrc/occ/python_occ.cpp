@@ -70,11 +70,33 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                     
                     geo->BuildFMap();
                     geo->CalcBoundingBox();
-                    // PrintContents (geo);
-                    cout << "bounding box = " << geo->GetBoundingBox() << endl;
                     return geo;
                   }), py::arg("shape"),
          "Create Netgen OCCGeometry from existing TopoDS_Shape")
+    
+    .def(py::init([] (const std::vector<TopoDS_Shape> shapes)
+                  {
+                    BOPAlgo_Builder aBuilder;
+                    
+                    // Setting arguments
+                    TopTools_ListOfShape aLSObjects;
+                    /*
+                    for (TopExp_Explorer exp_solid(shape, TopAbs_SOLID); exp_solid.More(); exp_solid.Next())
+                      aLSObjects.Append (exp_solid.Current());
+                    */
+                    for (auto & s : shapes)
+                      aLSObjects.Append (s);
+                    aBuilder.SetArguments(aLSObjects);
+                    aBuilder.Perform();
+    
+                    auto geo = make_shared<OCCGeometry> (aBuilder.Shape());
+                    ng_geometry = geo;
+                    geo->BuildFMap();
+                    geo->CalcBoundingBox();
+                    return geo;
+                  }), py::arg("shape"),
+         "Create Netgen OCCGeometry from existing TopoDS_Shape")
+    
     .def(py::init([] (const string& filename)
                   {
                     shared_ptr<OCCGeometry> geo;
