@@ -15,6 +15,7 @@
 #include <BOPAlgo_MakerVolume.hxx>
 #include <BOPAlgo_Section.hxx>
 #include <BRepAlgoAPI_Cut.hxx>
+#include <BRepAlgoAPI_Section.hxx>
 
 
 
@@ -244,6 +245,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     .def("__mul__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2)
          {
            // https://dev.opencascade.org/doc/occt-7.3.0/overview/html/occt_user_guides__boolean_operations.html#occt_algorithms_10a
+
            BOPAlgo_MakerVolume aMV;
            // BOPAlgo_Section aMV;  // only vertices + edges 
            // BOPAlgo_Builder aMV;
@@ -257,6 +259,19 @@ DLL_HEADER void ExportNgOCC(py::module &m)
            aMV.Perform();
            // aMV.Build();
            return aMV.Shape();
+
+           /*
+              // ?????
+           // auto cut = BRepAlgoAPI_Cut (shape1, shape2);
+           auto cut = BRepAlgoAPI_Section (shape1, shape2);
+           TopTools_ListOfShape aLSObjects;
+           aLSObjects.Append (cut);
+
+           BOPAlgo_MakerVolume aMV;
+           aMV.SetArguments(aLSObjects);
+           aMV.Perform();
+           return aMV.Shape();
+           */
          });
   ;
 

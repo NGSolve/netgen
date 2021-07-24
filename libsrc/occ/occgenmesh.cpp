@@ -643,7 +643,7 @@ namespace netgen
         Box<3> bb = geom.GetBoundingBox();
 
         // int projecttype = PLANESPACE;
-        int projecttype = PARAMETERSPACE;
+        // int projecttype = PARAMETERSPACE;
         
         static Timer tinit("init");
         tinit.Start();
@@ -840,7 +840,8 @@ namespace netgen
                 cout << "retry Surface " << k << endl;
 
                 k--;
-                projecttype*=-1;
+                // projecttype*=-1;
+                projecttype = PLANESPACE;
                 notrys++;
                 continue;
               }
