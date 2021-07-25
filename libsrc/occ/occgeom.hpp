@@ -201,6 +201,8 @@ namespace netgen
     OCCParameters occparam;
 
   public:
+    static std::map<Handle(TopoDS_TShape), string> global_shape_names;
+    
     TopoDS_Shape shape;
     TopTools_IndexedMapOfShape fmap, emap, vmap, somap, shmap, wmap;
     NgArray<bool> fsingular, esingular, vsingular;

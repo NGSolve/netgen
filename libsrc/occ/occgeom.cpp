@@ -40,12 +40,45 @@
 
 namespace netgen
 {
+
+  std::map<Handle(TopoDS_TShape), string> OCCGeometry::global_shape_names;
+
+  
   OCCGeometry::OCCGeometry(const TopoDS_Shape& _shape)
   {
     shape = _shape;
     changed = true;
     BuildFMap();
     CalcBoundingBox();
+
+    TopExp_Explorer e;    
+    for (e.Init(shape, TopAbs_SOLID); e.More(); e.Next())
+      {
+         TopoDS_Solid solid = TopoDS::Solid(e.Current());
+         string name = global_shape_names[solid.TShape()];
+         if (name == "")
+           name = string("domain_") + ToString(snames.Size());
+         snames.Append(name);
+      }
+    
+    for (e.Init(shape, TopAbs_FACE); e.More(); e.Next())
+      {
+         TopoDS_Face face = TopoDS::Face(e.Current());
+         string name = global_shape_names[face.TShape()];
+         if (name == "")
+           name = string("bc_") + ToString(fnames.Size());
+         fnames.Append(name);
+         /*
+         for (exp1.Init(face, TopAbs_EDGE); exp1.More(); exp1.Next())
+           {
+             TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
+             // name = STEP_GetEntityName(edge,&reader);
+             // cout << "getname = " << name << ", mapname = " << shape_names[edge.TShape()] << endl;
+             name = shape_names[edge.TShape()];
+             occgeo->enames.Append(name);
+           }
+         */
+      }
   }
 
   string STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * aReader)

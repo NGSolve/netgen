@@ -16,7 +16,9 @@
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Common.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
-
+#include <XCAFDoc_VisMaterialTool.hxx>
+#include <TDF_Attribute.hxx>
+#include <Standard_GUID.hxx>
 
 using namespace netgen;
 
@@ -286,13 +288,49 @@ DLL_HEADER void ExportNgOCC(py::module &m)
              sub.append(e.Current());
            return sub;
          })
+
+    .def("bc", [](const TopoDS_Shape & shape, const string & name)
+         {
+           TopExp_Explorer e;
+           for (e.Init(shape, TopAbs_FACE); e.More(); e.Next())
+             OCCGeometry::global_shape_names[e.Current().TShape()] = name;
+           return shape;
+         })
     
     .def("__add__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
         return BRepAlgoAPI_Fuse(shape1, shape2).Shape();
       })
     
     .def("__mul__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
-        return BRepAlgoAPI_Common(shape1, shape2).Shape();
+        // return BRepAlgoAPI_Common(shape1, shape2).Shape();
+        
+        BRepAlgoAPI_Common builder(shape1, shape2);
+        Handle(BRepTools_History) history = builder.History ();
+
+        /*
+          // work in progress ...
+        TopTools_ListOfShape modlist = history->Modified(shape1);
+        for (auto s : modlist)
+          cout << "modified from list el: " << s.ShapeType() << endl;
+        */
+        
+        for (TopExp_Explorer e(shape1, TopAbs_FACE); e.More(); e.Next())
+          {
+            const string & name = OCCGeometry::global_shape_names[e.Current().TShape()];
+            TopTools_ListOfShape modlist = history->Modified(e.Current());
+            for (auto s : modlist)
+              OCCGeometry::global_shape_names[s.TShape()] = name;
+          }
+        
+        for (TopExp_Explorer e(shape2, TopAbs_FACE); e.More(); e.Next())
+          {
+            const string & name = OCCGeometry::global_shape_names[e.Current().TShape()];
+            TopTools_ListOfShape modlist = history->Modified(e.Current());
+            for (auto s : modlist)
+              OCCGeometry::global_shape_names[s.TShape()] = name;
+          }        
+        
+        return builder.Shape();
       })
     
     .def("__sub__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
@@ -322,6 +360,65 @@ DLL_HEADER void ExportNgOCC(py::module &m)
              ng_geometry = shared_ptr<OCCGeometry>(instance, NOOP_Deleter);
              return ng_geometry;
            },py::call_guard<py::gil_scoped_release>());
+
+
+  m.def("TestXCAF", [] (TopoDS_Shape shape) {
+
+      /*static*/ Handle(XCAFApp_Application) app = XCAFApp_Application::GetApplication();
+      cout << endl << endl << endl;
+      cout << "app = " << *reinterpret_cast<void**>(&app) << endl;
+      Handle(TDocStd_Document) doc;
+      cout << "nbdocs = " << app->NbDocuments() << endl;
+      if(app->NbDocuments() > 0)
+      {
+         app->GetDocument(1,doc);
+         // app->Close(doc);
+      }
+      else
+        app->NewDocument ("STEP-XCAF",doc);
+      Handle(XCAFDoc_ShapeTool) shape_tool = XCAFDoc_DocumentTool::ShapeTool(doc->Main());
+      Handle(XCAFDoc_MaterialTool) material_tool = XCAFDoc_DocumentTool::MaterialTool(doc->Main());
+      Handle(XCAFDoc_VisMaterialTool) vismaterial_tool = XCAFDoc_DocumentTool::VisMaterialTool(doc->Main());
+
+      cout << "handle(shape) = " << *(void**)(void*)(&(shape.TShape())) << endl;
+      
+      TDF_LabelSequence doc_shapes;
+      shape_tool->GetShapes(doc_shapes);
+      cout << "shape tool nbentities: " << doc_shapes.Size() << endl;
+      TDF_Label label = shape_tool -> FindShape(shape);
+      cout << "shape label = " << endl << label << endl;
+      if (label.IsNull()) return;
+      cout << "nbattr = " << label.NbAttributes() << endl;
+                                                     
+                                                     
+      if (!label.IsNull())
+        {
+          Handle(TDF_Attribute) attribute;
+          cout << "create guid" << endl;
+          // Standard_GUID guid("c4ef4200-568f-11d1-8940-080009dc3333");
+          Standard_GUID guid("2a96b608-ec8b-11d0-bee7-080009dc3333");      
+          cout << "have guid" << endl;
+          cout << "find attrib " << label.FindAttribute(guid, attribute) << endl;
+          cout << "attrib = " << attribute << endl;
+          cout << "tag = " << label.Tag() << endl;
+          cout << "father.tag = " << label.Father().Tag() << endl;
+          cout << "Data = " << label.Data() << endl;
+          
+          cout << "nbchild = " << label.NbChildren() << endl;
+          for (auto i : Range(label.NbChildren()))
+            {
+              TDF_Label child = label.FindChild(i+1);
+              cout << "child[" << i << "] = " << child << endl;
+              cout << "find attrib " << child.FindAttribute(guid, attribute) << endl;
+              cout << "attrib = " << attribute << endl;
+            }
+          
+          // cout << "findshape = " << shape_tool -> FindShape(shape) << endl;
+          cout << "IsMaterial = " << material_tool->IsMaterial(label) << endl;
+          cout << "IsVisMaterial = " << vismaterial_tool->IsMaterial(label) << endl;
+        }
+    }, py::arg("shape")=TopoDS_Shape());
+        
 }
 
 PYBIND11_MODULE(libNgOCC, m) {
