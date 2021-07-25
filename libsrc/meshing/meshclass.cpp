@@ -4863,7 +4863,21 @@ namespace netgen
                       Box<3> box (Box<3>::EMPTY_BOX);
                       for (auto pi : surfelements[sei].PNums())
                         box.Add (points[pi]);
-                      
+
+                      auto & el = surfelements[sei];
+                      if(el.IsCurved() && curvedelems->IsSurfaceElementCurved(sei))
+                        {
+                          netgen::Point<2>  lami [4] = {netgen::Point<2>(0.5,0), netgen::Point<2>(0,0.5), netgen::Point<2>(0.5,0.5), netgen::Point<2>(1./3,1./3)};
+                          for (auto lam : lami)
+                            {
+                              netgen::Point<3> x;
+                              Mat<3,2> Jac;
+                          
+                              curvedelems->CalcSurfaceTransformation(lam,sei,x,Jac);
+                              box.Add (x);
+                            }
+                          box.Scale(1.2);
+                        }
                       elementsearchtree -> Insert (box, sei+1);
                     }
                 }
