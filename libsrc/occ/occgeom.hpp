@@ -11,6 +11,7 @@
 
 #include <meshing.hpp>
 
+#include <Standard_Version.hxx>
 #include "BRep_Tool.hxx"
 #include "Geom_Curve.hxx"
 #include "Geom2d_Curve.hxx"
@@ -86,6 +87,13 @@
 
 #include "StlAPI_Writer.hxx"
 #include "STEPControl_StepModelType.hxx"
+
+#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
+#define OCC_HAVE_HISTORY
+#endif
+
+
+
 
 namespace netgen
 {

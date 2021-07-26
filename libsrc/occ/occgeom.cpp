@@ -289,7 +289,8 @@ namespace netgen
         ;
       }
 #endif
-    
+
+#ifdef OCC_HAVE_HISTORY    
     Handle(BRepTools_History) history = aBuilder.History ();
     
     for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
@@ -298,7 +299,7 @@ namespace netgen
         for (auto mods : history->Modified(e.Current()))
           OCCGeometry::global_shape_names[mods.TShape()] = name;
       }
-    
+#endif // OCC_HAVE_HISTORY    
     
     // result of the operation
     shape = aBuilder.Shape();

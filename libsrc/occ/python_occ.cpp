@@ -7,9 +7,8 @@
 
 #include <meshing.hpp>
 #include <occgeom.hpp>
-#include <Standard_Version.hxx>
-#include <gp_Ax2.hxx>
 
+#include <gp_Ax2.hxx>
 #include <BRepPrimAPI_MakeSphere.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
@@ -19,10 +18,6 @@
 // #include <XCAFDoc_VisMaterialTool.hxx>
 #include <TDF_Attribute.hxx>
 #include <Standard_GUID.hxx>
-
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
-#define OCC_HAVE_HISTORY
-#endif
 
 #if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
 #define OCC_HAVE_DUMP_JSON
@@ -86,7 +81,6 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     
     .def(py::init([] (const std::vector<TopoDS_Shape> shapes)
                   {
-                    cout << "start gluing" << endl;
                     BOPAlgo_Builder builder;
                     for (auto & s : shapes)
                       builder.AddArgument(s);                    
@@ -386,7 +380,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
               builder.AddArgument(e.Current());
 
           builder.Perform();
-          
+
+#ifdef OCC_HAVE_HISTORY          
           Handle(BRepTools_History) history = builder.History ();
 
           for (auto & s : shapes)
@@ -397,7 +392,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                 for (auto mods : modlist)
                   OCCGeometry::global_shape_names[mods.TShape()] = name;
               }
-
+#endif // OCC_HAVE_HISTORY
+          
           return builder.Shape();
         });
 
@@ -415,6 +411,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
           if (builder.HasWarnings())
             builder.DumpWarnings(cout);
 
+#ifdef OCC_HAVE_HISTORY
           Handle(BRepTools_History) history = builder.History ();
 
           for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
@@ -423,7 +420,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
               for (auto mods : history->Modified(e.Current()))
                 OCCGeometry::global_shape_names[mods.TShape()] = name;
             }
-
+#endif // OCC_HAVE_HISTORY
+          
           return builder.Shape();
         });
 
