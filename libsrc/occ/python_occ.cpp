@@ -16,7 +16,7 @@
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Common.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
-#include <XCAFDoc_VisMaterialTool.hxx>
+// #include <XCAFDoc_VisMaterialTool.hxx>
 #include <TDF_Attribute.hxx>
 #include <Standard_GUID.hxx>
 
@@ -70,31 +70,36 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                     auto geo = make_shared<OCCGeometry> (shape);
                     ng_geometry = geo;
                     
-                    geo->BuildFMap();
-                    geo->CalcBoundingBox();
+                    // geo->BuildFMap();
+                    // geo->CalcBoundingBox();
                     return geo;
                   }), py::arg("shape"),
          "Create Netgen OCCGeometry from existing TopoDS_Shape")
     
     .def(py::init([] (const std::vector<TopoDS_Shape> shapes)
                   {
-                    BOPAlgo_Builder aBuilder;
-                    
-                    // Setting arguments
-                    TopTools_ListOfShape aLSObjects;
-                    /*
-                    for (TopExp_Explorer exp_solid(shape, TopAbs_SOLID); exp_solid.More(); exp_solid.Next())
-                      aLSObjects.Append (exp_solid.Current());
-                    */
+                    cout << "start gluing" << endl;
+                    BOPAlgo_Builder builder;
                     for (auto & s : shapes)
-                      aLSObjects.Append (s);
-                    aBuilder.SetArguments(aLSObjects);
-                    aBuilder.Perform();
-    
-                    auto geo = make_shared<OCCGeometry> (aBuilder.Shape());
+                      builder.AddArgument(s);                    
+                    builder.Perform();
+                    cout << "glued together" << endl;
+                    
+                    Handle(BRepTools_History) history = builder.History ();
+                    
+                    for (auto & s : shapes)
+                      for (TopExp_Explorer e(s, TopAbs_SOLID); e.More(); e.Next())
+                        {
+                          auto name = OCCGeometry::global_shape_names[e.Current().TShape()];
+                          TopTools_ListOfShape modlist = history->Modified(e.Current());
+                          for (auto mods : modlist)
+                            OCCGeometry::global_shape_names[mods.TShape()] = name;
+                        }
+
+                    auto geo = make_shared<OCCGeometry> (builder.Shape());
                     ng_geometry = geo;
-                    geo->BuildFMap();
-                    geo->CalcBoundingBox();
+                    // geo->BuildFMap();
+                    // geo->CalcBoundingBox();
                     return geo;
                   }), py::arg("shape"),
          "Create Netgen OCCGeometry from existing TopoDS_Shape")
@@ -291,8 +296,14 @@ DLL_HEADER void ExportNgOCC(py::module &m)
 
     .def("bc", [](const TopoDS_Shape & shape, const string & name)
          {
-           TopExp_Explorer e;
-           for (e.Init(shape, TopAbs_FACE); e.More(); e.Next())
+           for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
+             OCCGeometry::global_shape_names[e.Current().TShape()] = name;
+           return shape;
+         })
+
+    .def("mat", [](const TopoDS_Shape & shape, const string & name)
+         {
+           for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
              OCCGeometry::global_shape_names[e.Current().TShape()] = name;
            return shape;
          })
@@ -378,7 +389,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
         app->NewDocument ("STEP-XCAF",doc);
       Handle(XCAFDoc_ShapeTool) shape_tool = XCAFDoc_DocumentTool::ShapeTool(doc->Main());
       Handle(XCAFDoc_MaterialTool) material_tool = XCAFDoc_DocumentTool::MaterialTool(doc->Main());
-      Handle(XCAFDoc_VisMaterialTool) vismaterial_tool = XCAFDoc_DocumentTool::VisMaterialTool(doc->Main());
+      // Handle(XCAFDoc_VisMaterialTool) vismaterial_tool = XCAFDoc_DocumentTool::VisMaterialTool(doc->Main());
 
       cout << "handle(shape) = " << *(void**)(void*)(&(shape.TShape())) << endl;
       
@@ -415,7 +426,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
           
           // cout << "findshape = " << shape_tool -> FindShape(shape) << endl;
           cout << "IsMaterial = " << material_tool->IsMaterial(label) << endl;
-          cout << "IsVisMaterial = " << vismaterial_tool->IsMaterial(label) << endl;
+          // cout << "IsVisMaterial = " << vismaterial_tool->IsMaterial(label) << endl;
         }
     }, py::arg("shape")=TopoDS_Shape());
         

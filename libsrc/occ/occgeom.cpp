@@ -1555,6 +1555,9 @@ namespace netgen
         // for (auto pair : shape_names)
         // cout << "name = " << pair.second << endl;
       }
+
+      for (auto [s,n] : shape_names)
+        OCCGeometry::global_shape_names[s] = n;
       
       
       timer_getnames.Start();
