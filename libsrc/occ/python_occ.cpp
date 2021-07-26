@@ -341,16 +341,18 @@ DLL_HEADER void ExportNgOCC(py::module &m)
         for (TopExp_Explorer e(shape1, TopAbs_FACE); e.More(); e.Next())
           {
             const string & name = OCCGeometry::global_shape_names[e.Current().TShape()];
-            TopTools_ListOfShape modlist = history->Modified(e.Current());
-            for (auto s : modlist)
+            // TopTools_ListOfShape modlist = history->Modified(e.Current());
+            // for (auto s : modlist)
+            for (auto s : history->Modified(e.Current()))
               OCCGeometry::global_shape_names[s.TShape()] = name;
           }
         
         for (TopExp_Explorer e(shape2, TopAbs_FACE); e.More(); e.Next())
           {
             const string & name = OCCGeometry::global_shape_names[e.Current().TShape()];
-            TopTools_ListOfShape modlist = history->Modified(e.Current());
-            for (auto s : modlist)
+            // TopTools_ListOfShape modlist = history->Modified(e.Current());
+            // for (auto s : modlist)
+            for (auto s : history->Modified(e.Current()))            
               OCCGeometry::global_shape_names[s.TShape()] = name;
           }        
 #endif // OCC_HAVE_HISTORY
@@ -375,16 +377,66 @@ DLL_HEADER void ExportNgOCC(py::module &m)
   m.def("Box", [] (gp_Pnt cp1, gp_Pnt cp2) {
       return BRepPrimAPI_MakeBox (cp1, cp2).Shape();
     });
+
+  m.def("Glue", [] (const std::vector<TopoDS_Shape> shapes) -> TopoDS_Shape
+        {
+          BOPAlgo_Builder builder;
+          for (auto & s : shapes)
+            for (TopExp_Explorer e(s, TopAbs_SOLID); e.More(); e.Next())            
+              builder.AddArgument(e.Current());
+
+          builder.Perform();
+          
+          Handle(BRepTools_History) history = builder.History ();
+
+          for (auto & s : shapes)
+            for (TopExp_Explorer e(s, TopAbs_SOLID); e.More(); e.Next())
+              {
+                auto name = OCCGeometry::global_shape_names[e.Current().TShape()];
+                TopTools_ListOfShape modlist = history->Modified(e.Current());
+                for (auto mods : modlist)
+                  OCCGeometry::global_shape_names[mods.TShape()] = name;
+              }
+
+          return builder.Shape();
+        });
+
+  m.def("Glue", [] (TopoDS_Shape shape) -> TopoDS_Shape
+        {
+          BOPAlgo_Builder builder;
+          
+          for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
+            builder.AddArgument(e.Current());
+          
+          builder.Perform();
+          
+          if (builder.HasErrors())
+            builder.DumpErrors(cout);
+          if (builder.HasWarnings())
+            builder.DumpWarnings(cout);
+
+          Handle(BRepTools_History) history = builder.History ();
+
+          for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
+            {
+              auto name = OCCGeometry::global_shape_names[e.Current().TShape()];
+              for (auto mods : history->Modified(e.Current()))
+                OCCGeometry::global_shape_names[mods.TShape()] = name;
+            }
+
+          return builder.Shape();
+        });
+
   
   m.def("LoadOCCGeometry",[] (const string & filename)
-           {
-             cout << "WARNING: LoadOCCGeometry is deprecated! Just use the OCCGeometry(filename) constructor. It is able to read brep and iges files as well!" << endl;
-             ifstream ist(filename);
-             OCCGeometry * instance = new OCCGeometry();
-             instance = LoadOCC_STEP(filename.c_str());
-             ng_geometry = shared_ptr<OCCGeometry>(instance, NOOP_Deleter);
-             return ng_geometry;
-           },py::call_guard<py::gil_scoped_release>());
+        {
+          cout << "WARNING: LoadOCCGeometry is deprecated! Just use the OCCGeometry(filename) constructor. It is able to read brep and iges files as well!" << endl;
+          ifstream ist(filename);
+          OCCGeometry * instance = new OCCGeometry();
+          instance = LoadOCC_STEP(filename.c_str());
+          ng_geometry = shared_ptr<OCCGeometry>(instance, NOOP_Deleter);
+          return ng_geometry;
+        },py::call_guard<py::gil_scoped_release>());
 
 
   m.def("TestXCAF", [] (TopoDS_Shape shape) {

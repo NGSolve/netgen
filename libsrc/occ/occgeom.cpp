@@ -51,7 +51,7 @@ namespace netgen
     BuildFMap();
     CalcBoundingBox();
 
-    TopExp_Explorer e;    
+    TopExp_Explorer e, exp1;    
     for (e.Init(shape, TopAbs_SOLID); e.More(); e.Next())
       {
          TopoDS_Solid solid = TopoDS::Solid(e.Current());
@@ -68,16 +68,15 @@ namespace netgen
          if (name == "")
            name = string("bc_") + ToString(fnames.Size());
          fnames.Append(name);
-         /*
+
          for (exp1.Init(face, TopAbs_EDGE); exp1.More(); exp1.Next())
            {
              TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
              // name = STEP_GetEntityName(edge,&reader);
              // cout << "getname = " << name << ", mapname = " << shape_names[edge.TShape()] << endl;
-             name = shape_names[edge.TShape()];
-             occgeo->enames.Append(name);
+             name = global_shape_names[edge.TShape()];
+             enames.Append(name);
            }
-         */
       }
   }
 
@@ -290,6 +289,17 @@ namespace netgen
         ;
       }
 #endif
+    
+    Handle(BRepTools_History) history = aBuilder.History ();
+    
+    for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
+      {
+        auto name = OCCGeometry::global_shape_names[e.Current().TShape()];
+        for (auto mods : history->Modified(e.Current()))
+          OCCGeometry::global_shape_names[mods.TShape()] = name;
+      }
+    
+    
     // result of the operation
     shape = aBuilder.Shape();
     BuildFMap();
