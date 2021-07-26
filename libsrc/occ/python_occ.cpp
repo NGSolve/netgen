@@ -20,6 +20,14 @@
 #include <TDF_Attribute.hxx>
 #include <Standard_GUID.hxx>
 
+#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=2
+#define OCC_HAVE_HISTORY
+#endif
+
+#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
+#define OCC_HAVE_DUMP_JSON
+#endif
+
 using namespace netgen;
 
 namespace netgen
@@ -85,6 +93,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                     builder.Perform();
                     cout << "glued together" << endl;
                     
+#ifdef OCC_HAVE_HISTORY
                     Handle(BRepTools_History) history = builder.History ();
                     
                     for (auto & s : shapes)
@@ -95,6 +104,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                           for (auto mods : modlist)
                             OCCGeometry::global_shape_names[mods.TShape()] = name;
                         }
+#endif // OCC_HAVE_HISTORY
 
                     auto geo = make_shared<OCCGeometry> (builder.Shape());
                     ng_geometry = geo;
@@ -278,7 +288,9 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     .def("__str__", [] (const TopoDS_Shape & shape)
          {
            stringstream str;
+#ifdef OCC_HAVE_DUMP_JSON
            shape.DumpJson(str);
+#endif // OCC_HAVE_DUMP_JSON
            return str.str();
          })
     
@@ -316,6 +328,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
         // return BRepAlgoAPI_Common(shape1, shape2).Shape();
         
         BRepAlgoAPI_Common builder(shape1, shape2);
+#ifdef OCC_HAVE_HISTORY
         Handle(BRepTools_History) history = builder.History ();
 
         /*
@@ -340,6 +353,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
             for (auto s : modlist)
               OCCGeometry::global_shape_names[s.TShape()] = name;
           }        
+#endif // OCC_HAVE_HISTORY
         
         return builder.Shape();
       })
