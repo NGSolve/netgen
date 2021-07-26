@@ -20,7 +20,7 @@
 #include <TDF_Attribute.hxx>
 #include <Standard_GUID.hxx>
 
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=2
+#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
 #define OCC_HAVE_HISTORY
 #endif
 
