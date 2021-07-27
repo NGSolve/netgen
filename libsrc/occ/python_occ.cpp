@@ -313,6 +313,18 @@ DLL_HEADER void ExportNgOCC(py::module &m)
              OCCGeometry::global_shape_names[e.Current().TShape()] = name;
            return shape;
          })
+
+    .def_property("col", [](const TopoDS_Shape & self) {
+        auto it = OCCGeometry::global_shape_cols.find(self.TShape());
+        Vec<3> col(0.2, 0.2, 0.2);
+        if (it != OCCGeometry::global_shape_cols.end())
+          col = it->second;
+        return std::vector<double> ( { col(0), col(1), col(2) } );
+      }, [](const TopoDS_Shape & self, std::vector<double> c) {
+        Vec<3> col(c[0], c[1], c[2]);
+        OCCGeometry::global_shape_cols[self.TShape()] = col;    
+      })
+    
     
     .def("__add__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
         return BRepAlgoAPI_Fuse(shape1, shape2).Shape();
@@ -355,7 +367,38 @@ DLL_HEADER void ExportNgOCC(py::module &m)
       })
     
     .def("__sub__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
-        return BRepAlgoAPI_Cut(shape1, shape2).Shape();
+        // return BRepAlgoAPI_Cut(shape1, shape2).Shape();
+        
+        BRepAlgoAPI_Cut builder(shape1, shape2);
+#ifdef OCC_HAVE_HISTORY        
+        Handle(BRepTools_History) history = builder.History ();
+
+        for (auto s : { shape1, shape2 })
+          for (TopExp_Explorer e(s, TopAbs_FACE); e.More(); e.Next())
+            {
+              const string & name = OCCGeometry::global_shape_names[e.Current().TShape()];
+              for (auto s : history->Modified(e.Current()))            
+                OCCGeometry::global_shape_names[s.TShape()] = name;
+                
+              auto it = OCCGeometry::global_shape_cols.find(e.Current().TShape());
+              if (it != OCCGeometry::global_shape_cols.end())
+                for (auto s : history->Modified(e.Current()))
+                  OCCGeometry::global_shape_cols[s.TShape()] = it->second;
+            }
+
+        /*
+        for (TopExp_Explorer e(shape2, TopAbs_FACE); e.More(); e.Next())
+          {
+            auto it = OCCGeometry::global_shape_cols[e.Current().TShape()];
+            if (it != OCCGeometry::global_shape_cols.end())
+              for (auto s : history->Modified(e.Current()))
+                OCCGeometry::global_shape_cols[s.TShape()] = it->second;
+          }        
+        */
+#endif // OCC_HAVE_HISTORY
+
+        
+        return builder.Shape();        
       })
     ;
 
@@ -376,8 +419,12 @@ DLL_HEADER void ExportNgOCC(py::module &m)
         {
           BOPAlgo_Builder builder;
           for (auto & s : shapes)
-            for (TopExp_Explorer e(s, TopAbs_SOLID); e.More(); e.Next())            
-              builder.AddArgument(e.Current());
+            {
+              for (TopExp_Explorer e(s, TopAbs_SOLID); e.More(); e.Next())            
+                builder.AddArgument(e.Current());
+              if (s.ShapeType() == TopAbs_FACE)
+                builder.AddArgument(s);
+            }
 
           builder.Perform();
 
@@ -388,8 +435,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
             for (TopExp_Explorer e(s, TopAbs_SOLID); e.More(); e.Next())
               {
                 auto name = OCCGeometry::global_shape_names[e.Current().TShape()];
-                TopTools_ListOfShape modlist = history->Modified(e.Current());
-                for (auto mods : modlist)
+                for (auto mods : history->Modified(e.Current()))
                   OCCGeometry::global_shape_names[mods.TShape()] = name;
               }
 #endif // OCC_HAVE_HISTORY

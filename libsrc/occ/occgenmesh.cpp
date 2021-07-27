@@ -410,7 +410,14 @@ namespace netgen
           }
         else
           {
-            mesh.GetFaceDescriptor(facenr).SetSurfColour({0.0,1.0,0.0});
+            auto it = OCCGeometry::global_shape_cols.find(face.TShape());
+            if (it != OCCGeometry::global_shape_cols.end())
+              {
+                Vec<3> col = it->second;
+                mesh.GetFaceDescriptor(facenr).SetSurfColour(col);                
+              }
+            else
+              mesh.GetFaceDescriptor(facenr).SetSurfColour({0.0,1.0,0.0});
           }
 
         if(geom.fnames.Size()>=facenr) 
