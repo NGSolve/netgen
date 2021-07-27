@@ -8,16 +8,30 @@
 #include <meshing.hpp>
 #include <occgeom.hpp>
 
+#include <gp_Ax1.hxx>
 #include <gp_Ax2.hxx>
+#include <gp_Trsf.hxx>
 #include <BRepPrimAPI_MakeSphere.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
+#include <BRepPrimAPI_MakePrism.hxx>
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Common.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
 // #include <XCAFDoc_VisMaterialTool.hxx>
 #include <TDF_Attribute.hxx>
 #include <Standard_GUID.hxx>
+#include <Geom_TrimmedCurve.hxx>
+#include <GC_MakeSegment.hxx>
+#include <GC_MakeArcOfCircle.hxx>
+#include <BRepBuilderAPI_MakeEdge.hxx>
+#include <BRepBuilderAPI_MakeWire.hxx>
+#include <BRepBuilderAPI_Transform.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRepFilletAPI_MakeFillet.hxx>
+#include <BRepGProp.hxx>
+#include <BRepOffsetAPI_MakeThickSolid.hxx>
+
 
 #if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
 #define OCC_HAVE_DUMP_JSON
@@ -264,6 +278,23 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                                   py::cast<double>(pnt[1]),
                                   py::cast<double>(pnt[2]));
                   }))
+    .def(py::init([] (double x, double y, double z) {
+          return gp_Pnt(x, y, z);
+        }))
+    .def_property("x", [](gp_Pnt&p) { return p.X(); }, [](gp_Pnt&p,double x) { p.SetX(x); })
+    .def_property("y", [](gp_Pnt&p) { return p.Y(); }, [](gp_Pnt&p,double y) { p.SetY(y); })
+    .def_property("z", [](gp_Pnt&p) { return p.Z(); }, [](gp_Pnt&p,double z) { p.SetZ(z); })    
+    ;
+  py::class_<gp_Vec>(m, "gp_Vec")
+    .def(py::init([] (py::tuple vec)
+                  {
+                    return gp_Vec(py::cast<double>(vec[0]),
+                                  py::cast<double>(vec[1]),
+                                  py::cast<double>(vec[2]));
+                  }))
+    .def(py::init([] (double x, double y, double z) {
+          return gp_Vec(x, y, z);
+        }))
     ;
 
   py::class_<gp_Dir>(m, "gp_Dir")
@@ -274,7 +305,29 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                                   py::cast<double>(dir[2]));
                   }))
     ;
+
+  py::class_<gp_Ax1>(m, "gp_Ax1")
+    .def(py::init([](gp_Pnt p, gp_Dir d) {
+          return gp_Ax1(p,d);
+        }))
+    ;
+  py::class_<gp_Ax2>(m, "gp_Ax2")
+    .def(py::init([](gp_Pnt p, gp_Dir d) {
+          return gp_Ax2(p,d);
+        }))
+    ;
+
+  py::class_<gp_Trsf>(m, "gp_Trsf")
+    .def(py::init<>())    
+    .def("SetMirror", [] (gp_Trsf & trafo, const gp_Ax1 & ax) { trafo.SetMirror(ax); })
+    .def("__call__", [] (gp_Trsf & trafo, const TopoDS_Shape & shape) {
+        return BRepBuilderAPI_Transform(shape, trafo).Shape();
+      })
+    ;
+
+  
   py::implicitly_convertible<py::tuple, gp_Pnt>();
+  py::implicitly_convertible<py::tuple, gp_Vec>();
   py::implicitly_convertible<py::tuple, gp_Dir>();
   
   
@@ -298,6 +351,21 @@ DLL_HEADER void ExportNgOCC(py::module &m)
            for (e.Init(shape, type); e.More(); e.Next())
              sub.append(e.Current());
            return sub;
+         })
+
+    .def("Properties", [] (const TopoDS_Shape & shape)
+         {
+           GProp_GProps props;
+           switch (shape.ShapeType())
+             {
+             case TopAbs_FACE:
+               BRepGProp::SurfaceProperties (shape, props); break;
+             default:
+               throw Exception("Properties implemented only for FACE");
+             }
+           double mass = props.Mass();
+           gp_Pnt center = props.CentreOfMass();
+           return tuple( py::cast(mass), py::cast(center) );
          })
 
     .def("bc", [](const TopoDS_Shape & shape, const string & name)
@@ -410,11 +478,19 @@ DLL_HEADER void ExportNgOCC(py::module &m)
   m.def("Cylinder", [] (gp_Pnt cpnt, gp_Dir cdir, double r, double h) {
       return BRepPrimAPI_MakeCylinder (gp_Ax2(cpnt, cdir), r, h).Shape();
     });
+  m.def("Cylinder", [] (gp_Ax2 ax, double r, double h) {
+      return BRepPrimAPI_MakeCylinder (ax, r, h).Shape();
+    });
   
   m.def("Box", [] (gp_Pnt cp1, gp_Pnt cp2) {
       return BRepPrimAPI_MakeBox (cp1, cp2).Shape();
     });
 
+  m.def("Prism", [] (const TopoDS_Shape & face, gp_Vec vec) {
+      return BRepPrimAPI_MakePrism (face, vec).Shape();
+    });
+        
+  
   m.def("Glue", [] (const std::vector<TopoDS_Shape> shapes) -> TopoDS_Shape
         {
           BOPAlgo_Builder builder;
@@ -471,6 +547,61 @@ DLL_HEADER void ExportNgOCC(py::module &m)
           return builder.Shape();
         });
 
+
+  py::class_<Handle(Geom_TrimmedCurve)> (m, "Geom_TrimmedCurve")
+    ;
+  
+  m.def("Segment", [](gp_Pnt p1, gp_Pnt p2) { // ->Handle(Geom_TrimmedCurve) {
+      Handle(Geom_TrimmedCurve) curve = GC_MakeSegment(p1, p2);
+      // return curve;
+      return BRepBuilderAPI_MakeEdge(curve).Shape();
+    });
+  m.def("ArcOfCircle", [](gp_Pnt p1, gp_Pnt p2, gp_Pnt p3) { // ->Handle(Geom_TrimmedCurve) {
+      Handle(Geom_TrimmedCurve) curve = GC_MakeArcOfCircle(p1, p2, p3);
+      return BRepBuilderAPI_MakeEdge(curve).Shape();      
+    });
+
+
+  m.def("Wire", [](std::vector<TopoDS_Shape> edges) -> TopoDS_Shape {
+      BRepBuilderAPI_MakeWire builder;
+      for (auto s : edges)
+        {
+          switch (s.ShapeType())
+            {
+            case TopAbs_EDGE:
+              builder.Add(TopoDS::Edge(s)); break;
+            case TopAbs_WIRE:
+              builder.Add(TopoDS::Wire(s)); break;
+            default:
+              throw Exception("can make wire only from edges and wires");
+            }
+        }
+      return builder.Wire();
+    });
+
+  m.def("Face", [](TopoDS_Shape wire) {
+      return BRepBuilderAPI_MakeFace(TopoDS::Wire(wire)).Shape();
+    });
+
+
+  m.def("MakeFillet", [](TopoDS_Shape shape, std::vector<TopoDS_Shape> edges, double r) {
+      BRepFilletAPI_MakeFillet mkFillet(shape);
+      for (auto e : edges)
+        mkFillet.Add (r, TopoDS::Edge(e));
+      return mkFillet.Shape();
+    });
+  
+  m.def("MakeThickSolid", [](TopoDS_Shape body, std::vector<TopoDS_Shape> facestoremove,
+                             double offset, double tol) {
+
+          TopTools_ListOfShape faces;
+          for (auto f : facestoremove)
+            faces.Append(f);
+          
+          BRepOffsetAPI_MakeThickSolid maker;
+          maker.MakeThickSolidByJoin(body, faces, offset, tol);
+          return maker.Shape();
+        });
   
   m.def("LoadOCCGeometry",[] (const string & filename)
         {
