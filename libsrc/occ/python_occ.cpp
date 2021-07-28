@@ -365,7 +365,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
              case TopAbs_FACE:
                BRepGProp::SurfaceProperties (shape, props); break;
              default:
-               throw Exception("Properties implemented only for FACE");
+               BRepGProp::LinearProperties(shape, props);
+               // throw Exception("Properties implemented only for FACE");
              }
            double mass = props.Mass();
            gp_Pnt center = props.CentreOfMass();
@@ -385,6 +386,12 @@ DLL_HEADER void ExportNgOCC(py::module &m)
              OCCGeometry::global_shape_names[e.Current().TShape()] = name;
            return shape;
          })
+    
+    .def_property("name", [](const TopoDS_Shape & self) {
+        return OCCGeometry::global_shape_names[self.TShape()];
+      }, [](const TopoDS_Shape & self, string name) {
+        OCCGeometry::global_shape_names[self.TShape()] = name;    
+      })
 
     .def_property("col", [](const TopoDS_Shape & self) {
         auto it = OCCGeometry::global_shape_cols.find(self.TShape());

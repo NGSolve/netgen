@@ -373,7 +373,7 @@ namespace netgen
 
 
     int facenr = 0;
-    int edgenr = mesh.GetNSeg();
+    // int edgenr = mesh.GetNSeg();
 
     (*testout) << "faces = " << geom.fmap.Extent() << endl;
     int curr = 0;
@@ -468,7 +468,6 @@ namespace netgen
                 cof = BRep_Tool::CurveOnSurface (edge, face, s0, s1);
 
                 int geomedgenr = geom.emap.FindIndex(edge);
-
                 NgArray <MeshPoint> mp;
                 NgArray <double> params;
 
@@ -522,12 +521,13 @@ namespace netgen
 
                 for (size_t i = 1; i <= mp.Size()+1; i++)
                   {
-                    edgenr++;
+                    // edgenr++;
                     Segment seg;
 
                     seg[0] = pnums[i-1];
                     seg[1] = pnums[i];
-                    seg.edgenr = edgenr;
+                    // seg.edgenr = edgenr;
+                    seg.edgenr = geomedgenr;
                     seg.si = facenr;
                     seg.epgeominfo[0].dist = params[i-1];
                     seg.epgeominfo[1].dist = params[i];
