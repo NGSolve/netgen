@@ -23,6 +23,7 @@
 #include <Standard_GUID.hxx>
 #include <Geom_TrimmedCurve.hxx>
 #include <GC_MakeSegment.hxx>
+#include <GC_MakeCircle.hxx>
 #include <GC_MakeArcOfCircle.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
@@ -319,7 +320,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
 
   py::class_<gp_Trsf>(m, "gp_Trsf")
     .def(py::init<>())    
-    .def("SetMirror", [] (gp_Trsf & trafo, const gp_Ax1 & ax) { trafo.SetMirror(ax); })
+    .def("SetMirror", [] (gp_Trsf & trafo, const gp_Ax1 & ax) { trafo.SetMirror(ax); return trafo; })
+    .def_static("Mirror", [] (const gp_Ax1 & ax) { gp_Trsf trafo; trafo.SetMirror(ax); return trafo; })
     .def("__call__", [] (gp_Trsf & trafo, const TopoDS_Shape & shape) {
         return BRepBuilderAPI_Transform(shape, trafo).Shape();
       })
@@ -343,6 +345,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     
     .def("ShapeType", [] (const TopoDS_Shape & shape)
          { return shape.ShapeType(); })
+    .def_property_readonly("type", [](const TopoDS_Shape & shape)
+                           { return shape.ShapeType(); })    
     
     .def("SubShapes", [] (const TopoDS_Shape & shape, TopAbs_ShapeEnum & type)
          {
@@ -411,24 +415,14 @@ DLL_HEADER void ExportNgOCC(py::module &m)
         for (auto s : modlist)
           cout << "modified from list el: " << s.ShapeType() << endl;
         */
-        
-        for (TopExp_Explorer e(shape1, TopAbs_FACE); e.More(); e.Next())
-          {
-            const string & name = OCCGeometry::global_shape_names[e.Current().TShape()];
-            // TopTools_ListOfShape modlist = history->Modified(e.Current());
-            // for (auto s : modlist)
-            for (auto s : history->Modified(e.Current()))
-              OCCGeometry::global_shape_names[s.TShape()] = name;
-          }
-        
-        for (TopExp_Explorer e(shape2, TopAbs_FACE); e.More(); e.Next())
-          {
-            const string & name = OCCGeometry::global_shape_names[e.Current().TShape()];
-            // TopTools_ListOfShape modlist = history->Modified(e.Current());
-            // for (auto s : modlist)
-            for (auto s : history->Modified(e.Current()))            
-              OCCGeometry::global_shape_names[s.TShape()] = name;
-          }        
+
+        for (auto & s : { shape1, shape2 })
+          for (TopExp_Explorer e(s, TopAbs_FACE); e.More(); e.Next())
+            {
+              const string & name = OCCGeometry::global_shape_names[e.Current().TShape()];
+              for (auto smod : history->Modified(e.Current()))            
+                OCCGeometry::global_shape_names[smod.TShape()] = name;
+            }        
 #endif // OCC_HAVE_HISTORY
         
         return builder.Shape();
@@ -470,20 +464,25 @@ DLL_HEADER void ExportNgOCC(py::module &m)
       })
     ;
 
+  
+  py::class_<TopoDS_Edge, TopoDS_Shape> (m, "TopoDS_Edge");
+  py::class_<TopoDS_Wire, TopoDS_Shape> (m, "TopoDS_Wire");
+  py::class_<TopoDS_Face, TopoDS_Shape> (m, "TopoDS_Face");
+  py::class_<TopoDS_Solid, TopoDS_Shape> (m, "TopoDS_Solid");
 
   m.def("Sphere", [] (gp_Pnt cc, double r) {
-      return BRepPrimAPI_MakeSphere (cc, r).Shape();
+      return BRepPrimAPI_MakeSphere (cc, r).Solid();
     });
   
   m.def("Cylinder", [] (gp_Pnt cpnt, gp_Dir cdir, double r, double h) {
-      return BRepPrimAPI_MakeCylinder (gp_Ax2(cpnt, cdir), r, h).Shape();
+      return BRepPrimAPI_MakeCylinder (gp_Ax2(cpnt, cdir), r, h).Solid();
     });
   m.def("Cylinder", [] (gp_Ax2 ax, double r, double h) {
-      return BRepPrimAPI_MakeCylinder (ax, r, h).Shape();
+      return BRepPrimAPI_MakeCylinder (ax, r, h).Solid();
     });
   
   m.def("Box", [] (gp_Pnt cp1, gp_Pnt cp2) {
-      return BRepPrimAPI_MakeBox (cp1, cp2).Shape();
+      return BRepPrimAPI_MakeBox (cp1, cp2).Solid();
     });
 
   m.def("Prism", [] (const TopoDS_Shape & face, gp_Vec vec) {
@@ -551,36 +550,37 @@ DLL_HEADER void ExportNgOCC(py::module &m)
   py::class_<Handle(Geom_TrimmedCurve)> (m, "Geom_TrimmedCurve")
     ;
   
-  m.def("Segment", [](gp_Pnt p1, gp_Pnt p2) { // ->Handle(Geom_TrimmedCurve) {
+  m.def("Segment", [](gp_Pnt p1, gp_Pnt p2) { 
       Handle(Geom_TrimmedCurve) curve = GC_MakeSegment(p1, p2);
-      // return curve;
-      return BRepBuilderAPI_MakeEdge(curve).Shape();
+      return BRepBuilderAPI_MakeEdge(curve).Edge();
     });
-  m.def("ArcOfCircle", [](gp_Pnt p1, gp_Pnt p2, gp_Pnt p3) { // ->Handle(Geom_TrimmedCurve) {
+  m.def("Circle", [](gp_Pnt c, gp_Dir n, double r) {
+	Handle(Geom_Circle) curve = GC_MakeCircle (c, n, r);
+        return BRepBuilderAPI_MakeEdge(curve).Edge();
+    });
+  m.def("ArcOfCircle", [](gp_Pnt p1, gp_Pnt p2, gp_Pnt p3) { 
       Handle(Geom_TrimmedCurve) curve = GC_MakeArcOfCircle(p1, p2, p3);
-      return BRepBuilderAPI_MakeEdge(curve).Shape();      
+      return BRepBuilderAPI_MakeEdge(curve).Edge();
     });
 
 
-  m.def("Wire", [](std::vector<TopoDS_Shape> edges) -> TopoDS_Shape {
+  m.def("Wire", [](std::vector<TopoDS_Shape> edges) {
       BRepBuilderAPI_MakeWire builder;
       for (auto s : edges)
-        {
-          switch (s.ShapeType())
-            {
-            case TopAbs_EDGE:
-              builder.Add(TopoDS::Edge(s)); break;
-            case TopAbs_WIRE:
-              builder.Add(TopoDS::Wire(s)); break;
-            default:
-              throw Exception("can make wire only from edges and wires");
-            }
-        }
+        switch (s.ShapeType())
+          {
+          case TopAbs_EDGE:
+            builder.Add(TopoDS::Edge(s)); break;
+          case TopAbs_WIRE:
+            builder.Add(TopoDS::Wire(s)); break;
+          default:
+            throw Exception("can make wire only from edges and wires");
+          }
       return builder.Wire();
     });
 
-  m.def("Face", [](TopoDS_Shape wire) {
-      return BRepBuilderAPI_MakeFace(TopoDS::Wire(wire)).Shape();
+  m.def("Face", [](TopoDS_Wire wire) {
+      return BRepBuilderAPI_MakeFace(wire).Face();
     });
 
 
