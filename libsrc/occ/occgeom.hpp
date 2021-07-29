@@ -203,14 +203,29 @@ namespace netgen
     void Print (ostream & ost) const;
   };
 
+
+  class ShapeProperties
+  {
+  public:
+    optional<string> name;
+    optional<Vec<3>> col;
+    void Merge(const ShapeProperties & prop2)
+    {
+      if (prop2.name) name = prop2.name;
+      if (prop2.col) col = prop2.col;      
+    }
+  };
+  
   class DLL_HEADER OCCGeometry : public NetgenGeometry
   {
     Point<3> center;
     OCCParameters occparam;
 
   public:
+    static std::map<Handle(TopoDS_TShape), ShapeProperties> global_shape_properties;
+    
     static std::map<Handle(TopoDS_TShape), string> global_shape_names;
-    static std::map<Handle(TopoDS_TShape), Vec<3>> global_shape_cols;
+    // static std::map<Handle(TopoDS_TShape), Vec<3>> global_shape_cols;
     
     TopoDS_Shape shape;
     TopTools_IndexedMapOfShape fmap, emap, vmap, somap, shmap, wmap;

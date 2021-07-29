@@ -376,32 +376,39 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     .def("bc", [](const TopoDS_Shape & shape, const string & name)
          {
            for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
-             OCCGeometry::global_shape_names[e.Current().TShape()] = name;
+             {
+               OCCGeometry::global_shape_names[e.Current().TShape()] = name;
+               OCCGeometry::global_shape_properties[e.Current().TShape()].name = name;
+             }
            return shape;
          })
 
     .def("mat", [](const TopoDS_Shape & shape, const string & name)
          {
            for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
-             OCCGeometry::global_shape_names[e.Current().TShape()] = name;
+             {
+               OCCGeometry::global_shape_names[e.Current().TShape()] = name;
+               OCCGeometry::global_shape_properties[e.Current().TShape()].name = name;
+             }
            return shape;
          })
     
     .def_property("name", [](const TopoDS_Shape & self) {
         return OCCGeometry::global_shape_names[self.TShape()];
       }, [](const TopoDS_Shape & self, string name) {
-        OCCGeometry::global_shape_names[self.TShape()] = name;    
+        OCCGeometry::global_shape_names[self.TShape()] = name;
+        OCCGeometry::global_shape_properties[self.TShape()].name = name;            
       })
 
     .def_property("col", [](const TopoDS_Shape & self) {
-        auto it = OCCGeometry::global_shape_cols.find(self.TShape());
+        auto it = OCCGeometry::global_shape_properties.find(self.TShape());
         Vec<3> col(0.2, 0.2, 0.2);
-        if (it != OCCGeometry::global_shape_cols.end())
-          col = it->second;
+        if (it != OCCGeometry::global_shape_properties.end() && it->second.col)
+          col = it->second.col.value();
         return std::vector<double> ( { col(0), col(1), col(2) } );
       }, [](const TopoDS_Shape & self, std::vector<double> c) {
         Vec<3> col(c[0], c[1], c[2]);
-        OCCGeometry::global_shape_cols[self.TShape()] = col;    
+        OCCGeometry::global_shape_properties[self.TShape()].col = col;    
       })
     
     
@@ -429,6 +436,10 @@ DLL_HEADER void ExportNgOCC(py::module &m)
               const string & name = OCCGeometry::global_shape_names[e.Current().TShape()];
               for (auto smod : history->Modified(e.Current()))            
                 OCCGeometry::global_shape_names[smod.TShape()] = name;
+
+              auto & prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+              for (auto smod : history->Modified(e.Current()))            
+                OCCGeometry::global_shape_properties[smod.TShape()].Merge(prop);
             }        
 #endif // OCC_HAVE_HISTORY
         
@@ -448,11 +459,17 @@ DLL_HEADER void ExportNgOCC(py::module &m)
               const string & name = OCCGeometry::global_shape_names[e.Current().TShape()];
               for (auto s : history->Modified(e.Current()))            
                 OCCGeometry::global_shape_names[s.TShape()] = name;
-                
+
+              /*
               auto it = OCCGeometry::global_shape_cols.find(e.Current().TShape());
               if (it != OCCGeometry::global_shape_cols.end())
                 for (auto s : history->Modified(e.Current()))
                   OCCGeometry::global_shape_cols[s.TShape()] = it->second;
+              */
+              auto propit = OCCGeometry::global_shape_properties.find(e.Current().TShape());
+              if (propit != OCCGeometry::global_shape_properties.end())
+                for (auto s : history->Modified(e.Current()))
+                  OCCGeometry::global_shape_properties[s.TShape()].Merge(propit->second);
             }
 
         /*
