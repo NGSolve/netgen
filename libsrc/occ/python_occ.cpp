@@ -404,7 +404,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
         auto it = OCCGeometry::global_shape_properties.find(self.TShape());
         Vec<3> col(0.2, 0.2, 0.2);
         if (it != OCCGeometry::global_shape_properties.end() && it->second.col)
-          col = it->second.col.value();
+          col = *it->second.col; // .value();
         return std::vector<double> ( { col(0), col(1), col(2) } );
       }, [](const TopoDS_Shape & self, std::vector<double> c) {
         Vec<3> col(c[0], c[1], c[2]);
