@@ -107,12 +107,12 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                     
                     for (auto & s : shapes)
                       for (TopExp_Explorer e(s, TopAbs_SOLID); e.More(); e.Next())
-                        {
-                          auto name = OCCGeometry::global_shape_names[e.Current().TShape()];
-                          TopTools_ListOfShape modlist = history->Modified(e.Current());
-                          for (auto mods : modlist)
-                            OCCGeometry::global_shape_names[mods.TShape()] = name;
-                        }
+                        if (auto name = OCCGeometry::global_shape_properties[e.Current().TShape()].name)
+                          {
+                            TopTools_ListOfShape modlist = history->Modified(e.Current());
+                            for (auto mods : modlist)
+                              OCCGeometry::global_shape_properties[mods.TShape()].name = *name;
+                          }
 #endif // OCC_HAVE_HISTORY
 
                     auto geo = make_shared<OCCGeometry> (builder.Shape());
@@ -376,27 +376,23 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     .def("bc", [](const TopoDS_Shape & shape, const string & name)
          {
            for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
-             {
-               OCCGeometry::global_shape_names[e.Current().TShape()] = name;
-               OCCGeometry::global_shape_properties[e.Current().TShape()].name = name;
-             }
+             OCCGeometry::global_shape_properties[e.Current().TShape()].name = name;
            return shape;
          })
 
     .def("mat", [](const TopoDS_Shape & shape, const string & name)
          {
            for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
-             {
-               OCCGeometry::global_shape_names[e.Current().TShape()] = name;
-               OCCGeometry::global_shape_properties[e.Current().TShape()].name = name;
-             }
+             OCCGeometry::global_shape_properties[e.Current().TShape()].name = name;
            return shape;
          })
     
     .def_property("name", [](const TopoDS_Shape & self) {
-        return OCCGeometry::global_shape_names[self.TShape()];
+        if (auto name = OCCGeometry::global_shape_properties[self.TShape()].name)
+          return *name;
+        else
+          return string();
       }, [](const TopoDS_Shape & self, string name) {
-        OCCGeometry::global_shape_names[self.TShape()] = name;
         OCCGeometry::global_shape_properties[self.TShape()].name = name;            
       })
 
@@ -433,10 +429,6 @@ DLL_HEADER void ExportNgOCC(py::module &m)
         for (auto & s : { shape1, shape2 })
           for (TopExp_Explorer e(s, TopAbs_FACE); e.More(); e.Next())
             {
-              const string & name = OCCGeometry::global_shape_names[e.Current().TShape()];
-              for (auto smod : history->Modified(e.Current()))            
-                OCCGeometry::global_shape_names[smod.TShape()] = name;
-
               auto & prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
               for (auto smod : history->Modified(e.Current()))            
                 OCCGeometry::global_shape_properties[smod.TShape()].Merge(prop);
@@ -456,10 +448,11 @@ DLL_HEADER void ExportNgOCC(py::module &m)
         for (auto s : { shape1, shape2 })
           for (TopExp_Explorer e(s, TopAbs_FACE); e.More(); e.Next())
             {
+              /*
               const string & name = OCCGeometry::global_shape_names[e.Current().TShape()];
               for (auto s : history->Modified(e.Current()))            
                 OCCGeometry::global_shape_names[s.TShape()] = name;
-
+              */
               /*
               auto it = OCCGeometry::global_shape_cols.find(e.Current().TShape());
               if (it != OCCGeometry::global_shape_cols.end())
@@ -533,10 +526,17 @@ DLL_HEADER void ExportNgOCC(py::module &m)
           for (auto & s : shapes)
             for (TopExp_Explorer e(s, TopAbs_SOLID); e.More(); e.Next())
               {
+                auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+                for (auto mods : history->Modified(e.Current()))
+                  OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+              }
+              /*
+              {
                 auto name = OCCGeometry::global_shape_names[e.Current().TShape()];
                 for (auto mods : history->Modified(e.Current()))
                   OCCGeometry::global_shape_names[mods.TShape()] = name;
               }
+              */
 #endif // OCC_HAVE_HISTORY
           
           return builder.Shape();
@@ -561,9 +561,9 @@ DLL_HEADER void ExportNgOCC(py::module &m)
 
           for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
             {
-              auto name = OCCGeometry::global_shape_names[e.Current().TShape()];
+              auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
               for (auto mods : history->Modified(e.Current()))
-                OCCGeometry::global_shape_names[mods.TShape()] = name;
+                OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
             }
 #endif // OCC_HAVE_HISTORY
           

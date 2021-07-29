@@ -224,7 +224,7 @@ namespace netgen
   public:
     static std::map<Handle(TopoDS_TShape), ShapeProperties> global_shape_properties;
     
-    static std::map<Handle(TopoDS_TShape), string> global_shape_names;
+    // static std::map<Handle(TopoDS_TShape), string> global_shape_names;
     // static std::map<Handle(TopoDS_TShape), Vec<3>> global_shape_cols;
     
     TopoDS_Shape shape;

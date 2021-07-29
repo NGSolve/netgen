@@ -41,7 +41,7 @@
 namespace netgen
 {
 
-  std::map<Handle(TopoDS_TShape), string> OCCGeometry::global_shape_names;
+  // std::map<Handle(TopoDS_TShape), string> OCCGeometry::global_shape_names;
   // std::map<Handle(TopoDS_TShape), Vec<3>> OCCGeometry::global_shape_cols;
   std::map<Handle(TopoDS_TShape), ShapeProperties> OCCGeometry::global_shape_properties;
   
@@ -56,27 +56,45 @@ namespace netgen
     for (e.Init(shape, TopAbs_SOLID); e.More(); e.Next())
       {
          TopoDS_Solid solid = TopoDS::Solid(e.Current());
+         /*
          string name = global_shape_names[solid.TShape()];
          if (name == "")
            name = string("domain_") + ToString(snames.Size());
-         snames.Append(name);
+           snames.Append(name);
+         */
+         if (auto name = global_shape_properties[solid.TShape()].name)
+           snames.Append(*name);
+         else
+           snames.Append(string("domain_") + ToString(snames.Size()));          
       }
     
     for (e.Init(shape, TopAbs_FACE); e.More(); e.Next())
       {
          TopoDS_Face face = TopoDS::Face(e.Current());
+         /*
          string name = global_shape_names[face.TShape()];
          if (name == "")
            name = string("bc_") + ToString(fnames.Size());
          fnames.Append(name);
+         */
+         if (auto name = global_shape_properties[face.TShape()].name)
+           fnames.Append(*name);
+         else
+           fnames.Append(string("bc_") + ToString(fnames.Size()));          
 
          for (exp1.Init(face, TopAbs_EDGE); exp1.More(); exp1.Next())
            {
              TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
              // name = STEP_GetEntityName(edge,&reader);
              // cout << "getname = " << name << ", mapname = " << shape_names[edge.TShape()] << endl;
+             /*
              name = global_shape_names[edge.TShape()];
              enames.Append(name);
+             */
+             if (auto name = global_shape_properties[edge.TShape()].name)
+               enames.Append(*name);
+             else
+               enames.Append("noname-edge");
            }
       }
   }
@@ -296,9 +314,9 @@ namespace netgen
     
     for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
       {
-        auto name = OCCGeometry::global_shape_names[e.Current().TShape()];
-        for (auto mods : history->Modified(e.Current()))
-          OCCGeometry::global_shape_names[mods.TShape()] = name;
+        if (auto name = OCCGeometry::global_shape_properties[e.Current().TShape()].name)
+          for (auto mods : history->Modified(e.Current()))
+            OCCGeometry::global_shape_properties[mods.TShape()].name = *name;
       }
 #endif // OCC_HAVE_HISTORY    
     
@@ -1569,7 +1587,7 @@ namespace netgen
       }
 
       for (auto [s,n] : shape_names)
-        OCCGeometry::global_shape_names[s] = n;
+        OCCGeometry::global_shape_properties[s].name = n;
       
       
       timer_getnames.Start();
