@@ -78,6 +78,7 @@ set(OCC_LIBRARY_NAMES
     TKXDEIGES
     TKXDESTEP
     TKXSBase
+    TKFillet
 )
 
 if(OCC_LINK_FREETYPE)
