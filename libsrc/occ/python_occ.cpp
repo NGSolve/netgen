@@ -77,6 +77,9 @@ void CreateOCCParametersFromKwargs(OCCParameters& occparam, py::dict kwargs)
 DLL_HEADER void ExportNgOCC(py::module &m) 
 {
   m.attr("occ_version") = OCC_VERSION_COMPLETE;
+  // not working, since occ - exceptions don't derive from std::exception
+  // py::register_exception<Standard_Failure>(m, "OCC-Exception"); 
+  
   py::class_<OCCGeometry, shared_ptr<OCCGeometry>, NetgenGeometry> (m, "OCCGeometry", R"raw_string(Use LoadOCCGeometry to load the geometry from a *.step file.)raw_string")
     .def(py::init<>())
     /*
@@ -479,6 +482,51 @@ DLL_HEADER void ExportNgOCC(py::module &m)
         
         return builder.Shape();        
       })
+
+    .def("Triangulation", [](const TopoDS_Shape & shape)
+         {
+           // extracted from vsocc.cpp
+           
+           Array< std::array<Point<3>,3> > triangles;
+           TopoDS_Face face;
+           try
+             {
+               face = TopoDS::Face(shape);
+             }
+           catch (Standard_Failure & e)
+             {
+               e.Print (cout);
+               throw NgException ("Triangulation: shape is not a face");
+             }
+
+           BRepTools::Clean (shape);
+           double deflection = 0.01;
+           BRepMesh_IncrementalMesh (shape, deflection, true);
+           
+           Handle(Geom_Surface) surf = BRep_Tool::Surface (face);
+
+           TopLoc_Location loc;
+           Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation (face, loc);
+
+           if (!triangulation.IsNull())
+             {
+               int ntriangles = triangulation -> NbTriangles();
+               for (int j = 1; j <= ntriangles; j++)
+                 {
+                   cout << "triangle " << j << "/" << ntriangles << endl;
+                   Poly_Triangle triangle = (triangulation -> Triangles())(j);
+                   std::array<Point<3>,3> pts;
+                   for (int k = 0; k < 3; k++)
+                     pts[k] = occ2ng( (triangulation -> Nodes())(triangle(k+1)).Transformed(loc) );
+
+                   triangles.Append ( pts );
+                   for (auto p : pts) cout << p << "  ";
+                   cout << endl;
+                 }
+             }
+
+           return triangles;
+         })
     ;
 
   
