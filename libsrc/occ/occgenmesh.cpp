@@ -18,7 +18,7 @@ namespace netgen
 #define VSMALL 1e-10
 
 
-  DLL_HEADER bool merge_solids = 1;
+  DLL_HEADER bool merge_solids = false;
 
 
   // can you please explain what you intend to compute here (JS) !!!
@@ -317,9 +317,9 @@ namespace netgen
     for (int i = 1; i <= nvertices; i++)
       {
         gp_Pnt pnt = BRep_Tool::Pnt (TopoDS::Vertex(geom.vmap(i)));
-        MeshPoint mp( Point<3>(pnt.X(), pnt.Y(), pnt.Z()) );
+        MeshPoint mp(occ2ng(pnt));
 
-        bool exists = 0;
+        bool exists = false;
         if (merge_solids)
           for (PointIndex pi : mesh.Points().Range())
             if (Dist2 (mesh[pi], Point<3>(mp)) < eps*eps)
@@ -496,7 +496,7 @@ namespace netgen
 
                 for (size_t i = 1; i <= mp.Size(); i++)
                   {
-                    bool exists = 0;
+                    bool exists = false;
                     tsearch.Start();
 
                     // for (PointIndex j = first_ep; j < mesh.Points().End(); j++)

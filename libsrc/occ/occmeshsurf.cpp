@@ -19,34 +19,18 @@ namespace netgen
 				      const PointGeomInfo & geominfo,
 				      Vec<3> & n) const
   {
-    gp_Pnt pnt;
-    gp_Vec du, dv;
+    GeomLProp_SLProps lprop(occface,geominfo.u,geominfo.v,1,1e-8);
 
-    /*
-      double gu = geominfo.u;
-      double gv = geominfo.v;
-
-      if (fabs (gu) < 1e-3) gu = 0;
-      if (fabs (gv) < 1e-3) gv = 0;
-
-      occface->D1(gu,gv,pnt,du,dv);
-    */
-
-    /*
-      occface->D1(geominfo.u,geominfo.v,pnt,du,dv);
-
-      n = Cross (Vec<3>(du.X(), du.Y(), du.Z()),
-      Vec<3>(dv.X(), dv.Y(), dv.Z()));
-      n.Normalize();
-    */
-
-
-
-    GeomLProp_SLProps lprop(occface,geominfo.u,geominfo.v,1,1e-5);
-    double setu=geominfo.u,setv=geominfo.v;
-
-    if(lprop.D1U().Magnitude() < 1e-5 || lprop.D1V().Magnitude() < 1e-5)
+    if (lprop.IsNormalDefined())
       {
+        n = occ2ng(lprop.Normal());
+      }
+    else
+      {
+        gp_Pnt pnt;
+        gp_Vec du, dv;
+
+        double setu=geominfo.u,setv=geominfo.v;
 	double ustep = 0.01*(umax-umin);
 	double vstep = 0.01*(vmax-vmin);
 
@@ -57,9 +41,12 @@ namespace netgen
 	if(setu < umax)
 	  {
 	    lprop.SetParameters(setu,setv);
+            /*
 	    n(0)+=lprop.Normal().X();
 	    n(1)+=lprop.Normal().Y();
 	    n(2)+=lprop.Normal().Z();
+            */
+            n += occ2ng(lprop.Normal());
 	  }
 	setu = geominfo.u;
 	while(setu > umin && (lprop.D1U().Magnitude() < 1e-5 || lprop.D1V().Magnitude() < 1e-5))
@@ -67,9 +54,12 @@ namespace netgen
 	if(setu > umin)
 	  {
 	    lprop.SetParameters(setu,setv);
+            /*
 	    n(0)+=lprop.Normal().X();
 	    n(1)+=lprop.Normal().Y();
 	    n(2)+=lprop.Normal().Z();
+            */
+            n += occ2ng(lprop.Normal());            
 	  }
 	setu = geominfo.u;
 
@@ -78,9 +68,12 @@ namespace netgen
 	if(setv < vmax)
 	  {
 	    lprop.SetParameters(setu,setv);
+            /*
 	    n(0)+=lprop.Normal().X();
 	    n(1)+=lprop.Normal().Y();
 	    n(2)+=lprop.Normal().Z();
+            */
+            n += occ2ng(lprop.Normal());
 	  }
 	setv = geominfo.v;
 	while(setv > vmin && (lprop.D1U().Magnitude() < 1e-5 || lprop.D1V().Magnitude() < 1e-5))
@@ -88,19 +81,16 @@ namespace netgen
 	if(setv > vmin)
 	  {
 	    lprop.SetParameters(setu,setv);
+            /*
 	    n(0)+=lprop.Normal().X();
 	    n(1)+=lprop.Normal().Y();
 	    n(2)+=lprop.Normal().Z();
+            */
+            n += occ2ng(lprop.Normal());            
 	  }
 	setv = geominfo.v;
 
 	n.Normalize();
-      }
-    else
-      {
-	n(0)=lprop.Normal().X();
-	n(1)=lprop.Normal().Y();
-	n(2)=lprop.Normal().Z();
       }
 
     if(glob_testout)
@@ -112,7 +102,7 @@ namespace netgen
 
 
 
-    if (orient == TopAbs_REVERSED) n = -1*n;
+    if (orient == TopAbs_REVERSED) n = -n;
     //  (*testout) << "GetNormalVector" << endl;
   }
 
@@ -361,8 +351,7 @@ namespace netgen
 	gi.u = pspnew(0);
 	gi.v = pspnew(1);
 	gi.trignum = 1;
-	gp_Pnt val = occface->Value (gi.u, gi.v);
-	p3d = Point<3> (val.X(), val.Y(), val.Z());
+        p3d = occ2ng(occface->Value (gi.u, gi.v));
       };
   }
 
@@ -376,7 +365,7 @@ namespace netgen
 
     // try Newton's method ...
     
-    gp_Pnt p(ap(0), ap(1), ap(2));
+    gp_Pnt p = ng2occ(ap);
 
     double u = gi.u;
     double v = gi.v;
@@ -488,7 +477,7 @@ namespace netgen
     gi.v = v;
     gi.trignum = 1;
 
-    ap = Point<3> (pnt.X(), pnt.Y(), pnt.Z());
+    ap = occ2ng(pnt); // Point<3> (pnt.X(), pnt.Y(), pnt.Z());
   } 
 
 

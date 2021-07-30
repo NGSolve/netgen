@@ -117,6 +117,11 @@ namespace netgen
     return Point<3> (p.X(), p.Y(), p.Z());
   }
 
+  inline Vec<3> occ2ng (const gp_Vec & v)
+  {
+    return Vec<3> (v.X(), v.Y(), v.Z());
+  }
+
   inline gp_Pnt ng2occ (const Point<3> & p)
   {
     return gp_Pnt(p(0), p(1), p(2));
