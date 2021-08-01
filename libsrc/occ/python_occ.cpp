@@ -10,6 +10,7 @@
 
 #include <gp_Ax1.hxx>
 #include <gp_Ax2.hxx>
+#include <gp_Ax2d.hxx>
 #include <gp_Trsf.hxx>
 #include <BRepPrimAPI_MakeSphere.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
@@ -30,9 +31,16 @@
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepFilletAPI_MakeFillet.hxx>
+#include <BRepOffsetAPI_ThruSections.hxx>
+
 #include <BRepGProp.hxx>
 #include <BRepOffsetAPI_MakeThickSolid.hxx>
+#include <BRepLib.hxx>
 
+#include <Geom2d_Curve.hxx>
+#include <Geom2d_Ellipse.hxx>
+#include <Geom2d_TrimmedCurve.hxx>
+#include <GCE2d_MakeSegment.hxx>
 
 #if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
 #define OCC_HAVE_DUMP_JSON
@@ -321,6 +329,48 @@ DLL_HEADER void ExportNgOCC(py::module &m)
         }))
     ;
 
+
+
+  py::class_<gp_Pnt2d>(m, "gp_Pnt2d")
+    .def(py::init([] (py::tuple pnt)
+                  {
+                    return gp_Pnt2d(py::cast<double>(pnt[0]),
+                                    py::cast<double>(pnt[1]));
+                  }))
+    .def(py::init([] (double x, double y) {
+          return gp_Pnt2d(x, y);
+        }))
+    ;
+  py::class_<gp_Vec2d>(m, "gp_Vec2d")
+    .def(py::init([] (py::tuple vec)
+                  {
+                    return gp_Vec2d(py::cast<double>(vec[0]),
+                                    py::cast<double>(vec[1]));
+                  }))
+    .def(py::init([] (double x, double y) {
+          return gp_Vec2d(x, y);
+        }))
+    ;
+
+  py::class_<gp_Dir2d>(m, "gp_Dir2d")
+    .def(py::init([] (py::tuple dir)
+                  {
+                    return gp_Dir2d(py::cast<double>(dir[0]),
+                                    py::cast<double>(dir[1]));
+                  }))
+    .def(py::init([] (double x, double y) {
+          return gp_Dir2d(x, y);
+        }))
+    ;
+
+  py::class_<gp_Ax2d>(m, "gp_Ax2d")
+    .def(py::init([](gp_Pnt2d p, gp_Dir2d d) {
+          return gp_Ax2d(p,d);
+        }))
+    ;
+
+
+  
   py::class_<gp_Trsf>(m, "gp_Trsf")
     .def(py::init<>())    
     .def("SetMirror", [] (gp_Trsf & trafo, const gp_Ax1 & ax) { trafo.SetMirror(ax); return trafo; })
@@ -356,7 +406,15 @@ DLL_HEADER void ExportNgOCC(py::module &m)
            py::list sub;
            TopExp_Explorer e;
            for (e.Init(shape, type); e.More(); e.Next())
-             sub.append(e.Current());
+             {
+               switch (type)
+                 {
+                 case TopAbs_FACE:
+                   sub.append(TopoDS::Face(e.Current())); break;
+                 default:
+                   sub.append(e.Current());
+                 }
+             }
            return sub;
          })
 
@@ -483,11 +541,22 @@ DLL_HEADER void ExportNgOCC(py::module &m)
         return builder.Shape();        
       })
 
+    .def("Find", [](const TopoDS_Shape & shape, gp_Pnt p)
+         {
+           // find sub-shape contianing point
+           // BRepClass_FaceClassifier::Perform  (p);
+         })
+
+    .def("MakeTriangulation", [](const TopoDS_Shape & shape)
+         {
+           BRepTools::Clean (shape);
+           double deflection = 0.01;
+           BRepMesh_IncrementalMesh (shape, deflection, true);
+         })
+    
     .def("Triangulation", [](const TopoDS_Shape & shape)
          {
            // extracted from vsocc.cpp
-           
-           Array< std::array<Point<3>,3> > triangles;
            TopoDS_Face face;
            try
              {
@@ -499,42 +568,67 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                throw NgException ("Triangulation: shape is not a face");
              }
 
+           /*
            BRepTools::Clean (shape);
            double deflection = 0.01;
            BRepMesh_IncrementalMesh (shape, deflection, true);
-           
+           */
+
            Handle(Geom_Surface) surf = BRep_Tool::Surface (face);
 
            TopLoc_Location loc;
            Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation (face, loc);
-
-           if (!triangulation.IsNull())
+           
+           if (triangulation.IsNull())
              {
-               int ntriangles = triangulation -> NbTriangles();
-               for (int j = 1; j <= ntriangles; j++)
-                 {
-                   cout << "triangle " << j << "/" << ntriangles << endl;
-                   Poly_Triangle triangle = (triangulation -> Triangles())(j);
-                   std::array<Point<3>,3> pts;
-                   for (int k = 0; k < 3; k++)
-                     pts[k] = occ2ng( (triangulation -> Nodes())(triangle(k+1)).Transformed(loc) );
-
-                   triangles.Append ( pts );
-                   for (auto p : pts) cout << p << "  ";
-                   cout << endl;
-                 }
+               BRepTools::Clean (shape);
+               double deflection = 0.01;
+               BRepMesh_IncrementalMesh (shape, deflection, true);
+               triangulation = BRep_Tool::Triangulation (face, loc);               
              }
+           // throw Exception("Don't have a triangulation, call 'MakeTriangulation' first");
 
+           int ntriangles = triangulation -> NbTriangles();
+           Array< std::array<Point<3>,3> > triangles;
+           for (int j = 1; j <= ntriangles; j++)
+             {
+               Poly_Triangle triangle = (triangulation -> Triangles())(j);
+               std::array<Point<3>,3> pts;
+               for (int k = 0; k < 3; k++)
+                 pts[k] = occ2ng( (triangulation -> Nodes())(triangle(k+1)).Transformed(loc) );
+               
+               triangles.Append ( pts );
+             }
+           
+           // return MoveToNumpyArray(triangles);
            return triangles;
          })
     ;
-
   
   py::class_<TopoDS_Edge, TopoDS_Shape> (m, "TopoDS_Edge");
   py::class_<TopoDS_Wire, TopoDS_Shape> (m, "TopoDS_Wire");
-  py::class_<TopoDS_Face, TopoDS_Shape> (m, "TopoDS_Face");
+  py::class_<TopoDS_Face, TopoDS_Shape> (m, "TopoDS_Face")
+    /*
+    .def("surf", [] (TopoDS_Face face) -> Handle(Geom_Surface)
+         {
+           Handle(Geom_Surface) surf = BRep_Tool::Surface (face);
+           return surf;
+         })
+    */
+    ;
   py::class_<TopoDS_Solid, TopoDS_Shape> (m, "TopoDS_Solid");
 
+  py::class_<Handle(Geom2d_Curve)> (m, "Geom2d_Curve")
+    .def("Trim", [](Handle(Geom2d_Curve) curve, double u1, double u2) -> Handle(Geom2d_Curve)
+         {
+           return new Geom2d_TrimmedCurve (curve, u1, u2);
+         })
+    .def("Value", [](Handle(Geom2d_Curve) curve, double s) {
+        return curve->Value(s);
+      })
+    ;
+
+  
   m.def("Sphere", [] (gp_Pnt cc, double r) {
       return BRepPrimAPI_MakeSphere (cc, r).Solid();
     });
@@ -553,7 +647,20 @@ DLL_HEADER void ExportNgOCC(py::module &m)
   m.def("Prism", [] (const TopoDS_Shape & face, gp_Vec vec) {
       return BRepPrimAPI_MakePrism (face, vec).Shape();
     });
-        
+
+  // Handle(Geom2d_Ellipse) anEllipse1 = new Geom2d_Ellipse(anAx2d, aMajor, aMinor);
+  m.def("Ellipse", [] (const gp_Ax2d & ax, double major, double minor) -> Handle(Geom2d_Curve)
+        {
+          return new Geom2d_Ellipse(ax, major, minor);
+        });
+  
+  m.def("Segment", [](gp_Pnt2d p1, gp_Pnt2d p2) -> Handle(Geom2d_Curve) { 
+      Handle(Geom2d_TrimmedCurve) curve = GCE2d_MakeSegment(p1, p2);
+      return curve;
+      // return BRepBuilderAPI_MakeEdge(curve).Edge();
+      // return GCE2d_MakeSegment(p1, p2);      
+    });
+  
   
   m.def("Glue", [] (const std::vector<TopoDS_Shape> shapes) -> TopoDS_Shape
         {
@@ -619,8 +726,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
         });
 
 
-  py::class_<Handle(Geom_TrimmedCurve)> (m, "Geom_TrimmedCurve")
-    ;
+  // py::class_<Handle(Geom_TrimmedCurve)> (m, "Geom_TrimmedCurve")
+  // ;
   
   m.def("Segment", [](gp_Pnt p1, gp_Pnt p2) { 
       Handle(Geom_TrimmedCurve) curve = GC_MakeSegment(p1, p2);
@@ -636,6 +743,12 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     });
 
 
+  m.def("Edge", [](Handle(Geom2d_Curve) curve2d, TopoDS_Face face) {
+      auto edge = BRepBuilderAPI_MakeEdge(curve2d, BRep_Tool::Surface (face)).Edge();
+      BRepLib::BuildCurves3d(edge);
+      return edge;
+    });
+  
   m.def("Wire", [](std::vector<TopoDS_Shape> edges) {
       BRepBuilderAPI_MakeWire builder;
       for (auto s : edges)
@@ -673,6 +786,15 @@ DLL_HEADER void ExportNgOCC(py::module &m)
           BRepOffsetAPI_MakeThickSolid maker;
           maker.MakeThickSolidByJoin(body, faces, offset, tol);
           return maker.Shape();
+        });
+
+  m.def("ThruSections", [](std::vector<TopoDS_Shape> wires)
+        {
+          BRepOffsetAPI_ThruSections aTool(Standard_True);
+          for (auto shape : wires)
+            aTool.AddWire(TopoDS::Wire(shape));
+          aTool.CheckCompatibility(Standard_False);
+          return aTool.Shape();
         });
   
   m.def("LoadOCCGeometry",[] (const string & filename)
