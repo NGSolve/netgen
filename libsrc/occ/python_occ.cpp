@@ -375,6 +375,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     .def(py::init<>())    
     .def("SetMirror", [] (gp_Trsf & trafo, const gp_Ax1 & ax) { trafo.SetMirror(ax); return trafo; })
     .def_static("Mirror", [] (const gp_Ax1 & ax) { gp_Trsf trafo; trafo.SetMirror(ax); return trafo; })
+    .def_static("Rotation", [] (const gp_Ax1 & ax, double ang) { gp_Trsf trafo; trafo.SetRotation(ax, ang); return trafo; })
     .def("__call__", [] (gp_Trsf & trafo, const TopoDS_Shape & shape) {
         return BRepBuilderAPI_Transform(shape, trafo).Shape();
       })
