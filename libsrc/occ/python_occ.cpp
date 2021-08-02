@@ -286,6 +286,9 @@ DLL_HEADER void ExportNgOCC(py::module &m)
   py::class_<gp_Pnt>(m, "gp_Pnt")
     .def(py::init([] (py::tuple pnt)
                   {
+                    if (py::len(pnt) != 3)
+                      throw Exception("need 3-tuple to create gp_Pnt");
+                    
                     return gp_Pnt(py::cast<double>(pnt[0]),
                                   py::cast<double>(pnt[1]),
                                   py::cast<double>(pnt[2]));
@@ -334,6 +337,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
   py::class_<gp_Pnt2d>(m, "gp_Pnt2d")
     .def(py::init([] (py::tuple pnt)
                   {
+                    if (py::len(pnt) != 2)
+                      throw Exception("need 2-tuple to create gp_Pnt2d");
                     return gp_Pnt2d(py::cast<double>(pnt[0]),
                                     py::cast<double>(pnt[1]));
                   }))
@@ -344,6 +349,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
   py::class_<gp_Vec2d>(m, "gp_Vec2d")
     .def(py::init([] (py::tuple vec)
                   {
+                    if (py::len(vec) != 2)
+                      throw Exception("need 2-tuple to create gp_Vec2d");                    
                     return gp_Vec2d(py::cast<double>(vec[0]),
                                     py::cast<double>(vec[1]));
                   }))
@@ -355,6 +362,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
   py::class_<gp_Dir2d>(m, "gp_Dir2d")
     .def(py::init([] (py::tuple dir)
                   {
+                    if (py::len(dir) != 2)
+                      throw Exception("need 2-tuple to create gp_Dir2d");                    
                     return gp_Dir2d(py::cast<double>(dir[0]),
                                     py::cast<double>(dir[1]));
                   }))
@@ -381,11 +390,12 @@ DLL_HEADER void ExportNgOCC(py::module &m)
       })
     ;
 
-  
   py::implicitly_convertible<py::tuple, gp_Pnt>();
   py::implicitly_convertible<py::tuple, gp_Vec>();
   py::implicitly_convertible<py::tuple, gp_Dir>();
-  
+  py::implicitly_convertible<py::tuple, gp_Pnt2d>();  
+  py::implicitly_convertible<py::tuple, gp_Vec2d>();  
+  py::implicitly_convertible<py::tuple, gp_Dir2d>();  
   
   py::class_<TopoDS_Shape> (m, "TopoDS_Shape")
     .def("__str__", [] (const TopoDS_Shape & shape)
