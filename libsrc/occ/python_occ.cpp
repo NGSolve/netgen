@@ -16,6 +16,7 @@
 #include <BRepPrimAPI_MakeCylinder.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
+#include <BRepOffsetAPI_MakePipe.hxx>
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Common.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
@@ -658,6 +659,10 @@ DLL_HEADER void ExportNgOCC(py::module &m)
   m.def("Prism", [] (const TopoDS_Shape & face, gp_Vec vec) {
       return BRepPrimAPI_MakePrism (face, vec).Shape();
     });
+
+  m.def("Pipe", [] (const TopoDS_Wire & spine, const TopoDS_Shape & profile) {
+      return BRepOffsetAPI_MakePipe (spine, profile).Shape();
+    }, py::arg("spine"), py::arg("profile"));
 
   // Handle(Geom2d_Ellipse) anEllipse1 = new Geom2d_Ellipse(anAx2d, aMajor, aMinor);
   m.def("Ellipse", [] (const gp_Ax2d & ax, double major, double minor) -> Handle(Geom2d_Curve)
