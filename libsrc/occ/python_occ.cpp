@@ -299,7 +299,12 @@ DLL_HEADER void ExportNgOCC(py::module &m)
         }))
     .def_property("x", [](gp_Pnt&p) { return p.X(); }, [](gp_Pnt&p,double x) { p.SetX(x); })
     .def_property("y", [](gp_Pnt&p) { return p.Y(); }, [](gp_Pnt&p,double y) { p.SetY(y); })
-    .def_property("z", [](gp_Pnt&p) { return p.Z(); }, [](gp_Pnt&p,double z) { p.SetZ(z); })    
+    .def_property("z", [](gp_Pnt&p) { return p.Z(); }, [](gp_Pnt&p,double z) { p.SetZ(z); })
+    .def("__str__", [] (const gp_Pnt & p) {
+        stringstream str;
+        str << "(" << p.X() << ", " << p.Y() << ", " << p.Z() << ")";
+        return str.str();
+      })
     ;
   py::class_<gp_Vec>(m, "gp_Vec")
     .def(py::init([] (py::tuple vec)
@@ -311,6 +316,11 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     .def(py::init([] (double x, double y, double z) {
           return gp_Vec(x, y, z);
         }))
+    .def("__str__", [] (const gp_Pnt & p) {
+        stringstream str;
+        str << "(" << p.X() << ", " << p.Y() << ", " << p.Z() << ")";
+        return str.str();
+      })
     ;
 
   py::class_<gp_Dir>(m, "gp_Dir")
@@ -320,6 +330,11 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                                   py::cast<double>(dir[1]),
                                   py::cast<double>(dir[2]));
                   }))
+     .def("__str__", [] (const gp_Pnt & p) {
+        stringstream str;
+        str << "(" << p.X() << ", " << p.Y() << ", " << p.Z() << ")";
+        return str.str();
+       })
     ;
 
   py::class_<gp_Ax1>(m, "gp_Ax1")
@@ -331,8 +346,18 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     .def(py::init([](gp_Pnt p, gp_Dir d) {
           return gp_Ax2(p,d);
         }))
+    .def(py::init([](const gp_Ax3 & ax3) {
+          return gp_Ax2(ax3.Ax2());
+        }))
     ;
 
+  py::class_<gp_Ax3>(m, "gp_Ax3")
+    .def(py::init([](gp_Pnt p, gp_Dir N, gp_Dir Vx) {
+          return gp_Ax3(p,N, Vx);
+        }), py::arg("p"), py::arg("n"), py::arg("x"))
+    .def(py::init<gp_Ax2>())
+    .def_property("p", [](gp_Ax3 & ax) { return ax.Location(); }, [](gp_Ax3&ax, gp_Pnt p) { ax.SetLocation(p); })
+    ;
 
 
   py::class_<gp_Pnt2d>(m, "gp_Pnt2d")
@@ -386,6 +411,10 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     .def("SetMirror", [] (gp_Trsf & trafo, const gp_Ax1 & ax) { trafo.SetMirror(ax); return trafo; })
     .def_static("Mirror", [] (const gp_Ax1 & ax) { gp_Trsf trafo; trafo.SetMirror(ax); return trafo; })
     .def_static("Rotation", [] (const gp_Ax1 & ax, double ang) { gp_Trsf trafo; trafo.SetRotation(ax, ang); return trafo; })
+    .def_static("Transformation", [] (const gp_Ax3 & ax) { gp_Trsf trafo; trafo.SetTransformation(ax); return trafo; })
+    .def_static("Transformation", [] (const gp_Ax3 & from, const gp_Ax3 to)
+                { gp_Trsf trafo; trafo.SetTransformation(from, to); return trafo; })
+    .def(py::self * py::self)
     .def("__call__", [] (gp_Trsf & trafo, const TopoDS_Shape & shape) {
         return BRepBuilderAPI_Transform(shape, trafo).Shape();
       })
@@ -396,7 +425,12 @@ DLL_HEADER void ExportNgOCC(py::module &m)
   py::implicitly_convertible<py::tuple, gp_Dir>();
   py::implicitly_convertible<py::tuple, gp_Pnt2d>();  
   py::implicitly_convertible<py::tuple, gp_Vec2d>();  
-  py::implicitly_convertible<py::tuple, gp_Dir2d>();  
+  py::implicitly_convertible<py::tuple, gp_Dir2d>();
+
+
+  py::implicitly_convertible<gp_Ax3, gp_Ax2>();
+
+  
   
   py::class_<TopoDS_Shape> (m, "TopoDS_Shape")
     .def("__str__", [] (const TopoDS_Shape & shape)
@@ -647,10 +681,10 @@ DLL_HEADER void ExportNgOCC(py::module &m)
   
   m.def("Cylinder", [] (gp_Pnt cpnt, gp_Dir cdir, double r, double h) {
       return BRepPrimAPI_MakeCylinder (gp_Ax2(cpnt, cdir), r, h).Solid();
-    });
+    }, py::arg("p"), py::arg("d"), py::arg("r"), py::arg("h"));
   m.def("Cylinder", [] (gp_Ax2 ax, double r, double h) {
       return BRepPrimAPI_MakeCylinder (ax, r, h).Solid();
-    });
+    }, py::arg("axis"), py::arg("r"), py::arg("h"));
   
   m.def("Box", [] (gp_Pnt cp1, gp_Pnt cp2) {
       return BRepPrimAPI_MakeBox (cp1, cp2).Solid();
@@ -753,10 +787,16 @@ DLL_HEADER void ExportNgOCC(py::module &m)
 	Handle(Geom_Circle) curve = GC_MakeCircle (c, n, r);
         return BRepBuilderAPI_MakeEdge(curve).Edge();
     });
+
   m.def("ArcOfCircle", [](gp_Pnt p1, gp_Pnt p2, gp_Pnt p3) { 
       Handle(Geom_TrimmedCurve) curve = GC_MakeArcOfCircle(p1, p2, p3);
       return BRepBuilderAPI_MakeEdge(curve).Edge();
-    });
+    }, py::arg("p1"), py::arg("p2"), py::arg("p3"));
+  
+  m.def("ArcOfCircle", [](gp_Pnt p1, gp_Vec v, gp_Pnt p2) { 
+      Handle(Geom_TrimmedCurve) curve = GC_MakeArcOfCircle(p1, v, p2);
+      return BRepBuilderAPI_MakeEdge(curve).Edge();
+    }, py::arg("p1"), py::arg("v"), py::arg("p2"));
 
 
   m.def("Edge", [](Handle(Geom2d_Curve) curve2d, TopoDS_Face face) {
@@ -782,7 +822,10 @@ DLL_HEADER void ExportNgOCC(py::module &m)
 
   m.def("Face", [](TopoDS_Wire wire) {
       return BRepBuilderAPI_MakeFace(wire).Face();
-    });
+    }, py::arg("w"));
+  m.def("Face", [](const TopoDS_Face & face, const TopoDS_Wire & wire) {
+      return BRepBuilderAPI_MakeFace(face, wire).Face();
+    }, py::arg("f"), py::arg("w"));
 
 
   m.def("MakeFillet", [](TopoDS_Shape shape, std::vector<TopoDS_Shape> edges, double r) {
