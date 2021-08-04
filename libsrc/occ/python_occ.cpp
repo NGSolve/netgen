@@ -305,7 +305,11 @@ DLL_HEADER void ExportNgOCC(py::module &m)
         str << "(" << p.X() << ", " << p.Y() << ", " << p.Z() << ")";
         return str.str();
       })
+    // .def(py::self - py::self)
+    .def("__sub__", [](gp_Pnt p1, gp_Pnt p2) { return gp_Vec(p1.X()-p2.X(), p1.Y()-p2.Y(), p1.Z()-p2.Z()); })
+    .def("__add__", [](gp_Pnt p, gp_Vec v) { return gp_Pnt(p.X()+v.X(), p.Y()+v.Y(), p.Z()+v.Z()); })
     ;
+  
   py::class_<gp_Vec>(m, "gp_Vec")
     .def(py::init([] (py::tuple vec)
                   {
@@ -316,11 +320,16 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     .def(py::init([] (double x, double y, double z) {
           return gp_Vec(x, y, z);
         }))
+    .def_property("x", [](gp_Pnt&p) { return p.X(); }, [](gp_Pnt&p,double x) { p.SetX(x); })
+    .def_property("y", [](gp_Pnt&p) { return p.Y(); }, [](gp_Pnt&p,double y) { p.SetY(y); })
+    .def_property("z", [](gp_Pnt&p) { return p.Z(); }, [](gp_Pnt&p,double z) { p.SetZ(z); })
     .def("__str__", [] (const gp_Pnt & p) {
         stringstream str;
         str << "(" << p.X() << ", " << p.Y() << ", " << p.Z() << ")";
         return str.str();
       })
+    .def("__add__", [](gp_Vec v1, gp_Vec v2) { return gp_Vec(v1.X()+v2.X(), v1.Y()+v2.Y(), v1.Z()+v2.Z()); })
+    .def("__rmul__", [](gp_Vec v, double s) { return gp_Vec(s*v.X(), s*v.Y(), s*v.Z()); })
     ;
 
   py::class_<gp_Dir>(m, "gp_Dir")
@@ -330,13 +339,17 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                                   py::cast<double>(dir[1]),
                                   py::cast<double>(dir[2]));
                   }))
-     .def("__str__", [] (const gp_Pnt & p) {
+    .def(py::init([] (double x, double y, double z) {
+          return gp_Dir(x, y, z);
+        }))
+    .def(py::init<gp_Vec>())
+    .def("__str__", [] (const gp_Pnt & p) {
         stringstream str;
         str << "(" << p.X() << ", " << p.Y() << ", " << p.Z() << ")";
         return str.str();
-       })
+      })
     ;
-
+  
   py::class_<gp_Ax1>(m, "gp_Ax1")
     .def(py::init([](gp_Pnt p, gp_Dir d) {
           return gp_Ax1(p,d);
@@ -409,9 +422,12 @@ DLL_HEADER void ExportNgOCC(py::module &m)
   py::class_<gp_Trsf>(m, "gp_Trsf")
     .def(py::init<>())    
     .def("SetMirror", [] (gp_Trsf & trafo, const gp_Ax1 & ax) { trafo.SetMirror(ax); return trafo; })
-    .def_static("Translation", [] (const gp_Vec & v) { gp_Trsf trafo; trafo.SetTranslation(v); return trafo; })    
+    .def_static("Translation", [] (const gp_Vec & v) { gp_Trsf trafo; trafo.SetTranslation(v); return trafo; })
+    .def_static("Scale", [] (const gp_Pnt & p, double s) { gp_Trsf trafo; trafo.SetScale(p,s); return trafo; })    
     .def_static("Mirror", [] (const gp_Ax1 & ax) { gp_Trsf trafo; trafo.SetMirror(ax); return trafo; })
     .def_static("Rotation", [] (const gp_Ax1 & ax, double ang) { gp_Trsf trafo; trafo.SetRotation(ax, ang); return trafo; })
+    .def_static("Rotation", [] (const gp_Pnt & p, const gp_Dir & d, double ang)
+                { gp_Trsf trafo; trafo.SetRotation(gp_Ax1(p,d), ang); return trafo; })    
     .def_static("Transformation", [] (const gp_Ax3 & ax) { gp_Trsf trafo; trafo.SetTransformation(ax); return trafo; })
     .def_static("Transformation", [] (const gp_Ax3 & from, const gp_Ax3 to)
                 { gp_Trsf trafo; trafo.SetTransformation(from, to); return trafo; })
@@ -424,12 +440,18 @@ DLL_HEADER void ExportNgOCC(py::module &m)
   py::implicitly_convertible<py::tuple, gp_Pnt>();
   py::implicitly_convertible<py::tuple, gp_Vec>();
   py::implicitly_convertible<py::tuple, gp_Dir>();
+  py::implicitly_convertible<gp_Vec, gp_Dir>();  
   py::implicitly_convertible<py::tuple, gp_Pnt2d>();  
   py::implicitly_convertible<py::tuple, gp_Vec2d>();  
   py::implicitly_convertible<py::tuple, gp_Dir2d>();
 
 
   py::implicitly_convertible<gp_Ax3, gp_Ax2>();
+
+  static gp_Vec ex(1,0,0), ey(0,1,0), ez(0,0,1);
+  m.attr("X") = py::cast(&ex);
+  m.attr("Y") = py::cast(&ey);
+  m.attr("Z") = py::cast(&ez);
 
   
   
