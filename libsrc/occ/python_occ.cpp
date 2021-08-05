@@ -870,7 +870,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     });
   
   m.def("Circle", [](gp_Pnt2d p1, double r) -> Handle(Geom2d_Curve) {
-      return GCE2d_MakeCircle(p1, r).Value();
+      Handle(Geom2d_Circle) curve = GCE2d_MakeCircle(p1, r);
+      return curve;
       // gp_Ax2d ax; ax.SetLocation(p1);
       // return new Geom2d_Circle(ax, r);
     });
