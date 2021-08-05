@@ -84,6 +84,30 @@ void CreateOCCParametersFromKwargs(OCCParameters& occparam, py::dict kwargs)
 }
 
 
+py::object CastShape(const TopoDS_Shape & s)
+{
+  switch (s.ShapeType())
+    {
+    case TopAbs_VERTEX:
+      return py::cast(TopoDS::Vertex(s));
+    case TopAbs_FACE:
+      return py::cast(TopoDS::Face(s));      
+    case TopAbs_EDGE:
+      return py::cast(TopoDS::Edge(s));      
+    case TopAbs_WIRE:
+      return py::cast(TopoDS::Wire(s));      
+
+    case TopAbs_COMPOUND:
+    case TopAbs_COMPSOLID:
+    case TopAbs_SOLID:
+    case TopAbs_SHELL:
+    case TopAbs_SHAPE:
+      return py::cast(s);
+    }
+};
+
+
+
 DLL_HEADER void ExportNgOCC(py::module &m) 
 {
   m.attr("occ_version") = OCC_VERSION_COMPLETE;
@@ -321,15 +345,16 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     .def(py::init([] (double x, double y, double z) {
           return gp_Vec(x, y, z);
         }))
-    .def_property("x", [](gp_Pnt&p) { return p.X(); }, [](gp_Pnt&p,double x) { p.SetX(x); })
-    .def_property("y", [](gp_Pnt&p) { return p.Y(); }, [](gp_Pnt&p,double y) { p.SetY(y); })
-    .def_property("z", [](gp_Pnt&p) { return p.Z(); }, [](gp_Pnt&p,double z) { p.SetZ(z); })
-    .def("__str__", [] (const gp_Pnt & p) {
+    .def_property("x", [](gp_Vec&p) { return p.X(); }, [](gp_Vec&p,double x) { p.SetX(x); })
+    .def_property("y", [](gp_Vec&p) { return p.Y(); }, [](gp_Vec&p,double y) { p.SetY(y); })
+    .def_property("z", [](gp_Vec&p) { return p.Z(); }, [](gp_Vec&p,double z) { p.SetZ(z); })
+    .def("__str__", [] (const gp_Vec & p) {
         stringstream str;
         str << "(" << p.X() << ", " << p.Y() << ", " << p.Z() << ")";
         return str.str();
       })
     .def("__add__", [](gp_Vec v1, gp_Vec v2) { return gp_Vec(v1.X()+v2.X(), v1.Y()+v2.Y(), v1.Z()+v2.Z()); })
+    .def("__sub__", [](gp_Vec v1, gp_Vec v2) { return gp_Vec(v1.X()-v2.X(), v1.Y()-v2.Y(), v1.Z()-v2.Z()); })
     .def("__rmul__", [](gp_Vec v, double s) { return gp_Vec(s*v.X(), s*v.Y(), s*v.Z()); })
     .def("__neg__", [](gp_Vec v) { return gp_Vec(-v.X(), -v.Y(), -v.Z()); })    
     ;
@@ -345,7 +370,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
           return gp_Dir(x, y, z);
         }))
     .def(py::init<gp_Vec>())
-    .def("__str__", [] (const gp_Pnt & p) {
+    .def("__str__", [] (const gp_Dir & p) {
         stringstream str;
         str << "(" << p.X() << ", " << p.Y() << ", " << p.Z() << ")";
         return str.str();
@@ -670,6 +695,9 @@ DLL_HEADER void ExportNgOCC(py::module &m)
         return builder.Shape();        
       })
 
+    .def("Reversed", [](const TopoDS_Shape & shape) {
+        return CastShape(shape.Reversed()); })
+
     .def("Find", [](const TopoDS_Shape & shape, gp_Pnt p)
          {
            // find sub-shape contianing point
@@ -752,7 +780,31 @@ DLL_HEADER void ExportNgOCC(py::module &m)
          })
     ;
   
-  py::class_<TopoDS_Edge, TopoDS_Shape> (m, "TopoDS_Edge");
+  py::class_<TopoDS_Vertex, TopoDS_Shape> (m, "TopoDS_Vertex")
+    .def(py::init([] (const TopoDS_Shape & shape) {
+          return TopoDS::Vertex(shape);
+        }))
+    .def_property_readonly("p", [] (const TopoDS_Vertex & v) -> gp_Pnt {
+        return BRep_Tool::Pnt (v); })
+    ;
+  
+  py::class_<TopoDS_Edge, TopoDS_Shape> (m, "TopoDS_Edge")
+    .def(py::init([] (const TopoDS_Shape & shape) {
+          return TopoDS::Edge(shape);
+        }))
+    .def_property_readonly("start",
+                           [](const TopoDS_Edge & e) {
+                           double s0, s1;
+                           auto curve = BRep_Tool::Curve(e, s0, s1);
+                           return curve->Value(s0);
+                           })
+    .def_property_readonly("end",
+                           [](const TopoDS_Edge & e) {
+                           double s0, s1;
+                           auto curve = BRep_Tool::Curve(e, s0, s1);
+                           return curve->Value(s1);
+                           })
+    ;
   py::class_<TopoDS_Wire, TopoDS_Shape> (m, "TopoDS_Wire");
   py::class_<TopoDS_Face, TopoDS_Shape> (m, "TopoDS_Face")
     .def(py::init([] (const TopoDS_Shape & shape) {
@@ -768,14 +820,30 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     ;
   py::class_<TopoDS_Solid, TopoDS_Shape> (m, "TopoDS_Solid");
 
+  
+  
   py::implicitly_convertible<TopoDS_Shape, TopoDS_Face>();
-
+  
+  class ListOfShapesIterator 
+  {
+    TopoDS_Shape * ptr;
+  public:
+    ListOfShapesIterator (TopoDS_Shape * aptr) : ptr(aptr) { }
+    ListOfShapesIterator operator++ () { return ListOfShapesIterator(++ptr); }
+    auto operator*() const { return CastShape(*ptr); }
+    bool operator!=(ListOfShapesIterator it2) const { return ptr != it2.ptr; }
+    bool operator==(ListOfShapesIterator it2) const { return ptr == it2.ptr; }
+    
+  };
   
   py::class_<ListOfShapes> (m, "ListOfShapes")
-    .def("__iter__", [](const ListOfShapes &s) { return py::make_iterator(s.begin(), s.end()); },
-         py::keep_alive<0, 1>() /* Essential: keep object alive while iterator exists */)
+    .def("__iter__", [](ListOfShapes &s) {
+        return py::make_iterator(ListOfShapesIterator(&*s.begin()),
+                                 ListOfShapesIterator(&*s.end()));
+      },
+      py::keep_alive<0, 1>() /* Essential: keep object alive while iterator exists */)
     .def("__getitem__", [](const ListOfShapes & list, size_t i) {
-        return list[i]; })
+        return CastShape(list[i]); })
     .def("__add__", [](const ListOfShapes & l1, const ListOfShapes & l2) {
         ListOfShapes l = l1;
         for (auto s : l2) l.push_back(s);
@@ -794,14 +862,20 @@ DLL_HEADER void ExportNgOCC(py::module &m)
            for (auto shape : shapes)
              {
                GProp_GProps props;
+               gp_Pnt center;
+               
                switch (shape.ShapeType())
                  {
+                 case TopAbs_VERTEX:
+                   center = BRep_Tool::Pnt (TopoDS::Vertex(shape)); break;
                  case TopAbs_FACE:
-                   BRepGProp::SurfaceProperties (shape, props); break;
+                   BRepGProp::SurfaceProperties (shape, props);
+                   center = props.CentreOfMass();
+                   break;
                  default:
                    BRepGProp::LinearProperties(shape, props);
+                   center = props.CentreOfMass();
                  }
-               gp_Pnt center = props.CentreOfMass();
                
                double val = center.X()*dir.X() + center.Y()*dir.Y() + center.Z() * dir.Z();
                if (val > maxval)
@@ -810,7 +884,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                    maxshape = shape;
                  }
              }
-           return maxshape;
+           return CastShape(maxshape);
          })
     
     ;
@@ -1004,18 +1078,20 @@ DLL_HEADER void ExportNgOCC(py::module &m)
       return BRepBuilderAPI_MakeFace(wire).Face();
     }, py::arg("w"));
   m.def("Face", [](const TopoDS_Face & face, const TopoDS_Wire & wire) {
-      return BRepBuilderAPI_MakeFace(face, wire).Face();
+      // return BRepBuilderAPI_MakeFace(face, wire).Face();
+      return BRepBuilderAPI_MakeFace(BRep_Tool::Surface (face), wire).Face();
     }, py::arg("f"), py::arg("w"));
-  /*
-     not yet working .... ?
   m.def("Face", [](const TopoDS_Face & face, std::vector<TopoDS_Wire> wires) {
       // return BRepBuilderAPI_MakeFace(face, wire).Face();
       cout << "build from list of wires" << endl;
-      BRepBuilderAPI_MakeFace builder(face);
+      auto surf = BRep_Tool::Surface (face);
+      BRepBuilderAPI_MakeFace builder(surf, 1e-8);
       for (auto w : wires)
         builder.Add(w);
       return builder.Face();
     }, py::arg("f"), py::arg("w"));
+  /*
+     not yet working .... ?
   m.def("Face", [](std::vector<TopoDS_Wire> wires) {
       cout << "face from wires" << endl;
       BRepBuilderAPI_MakeFace builder;
