@@ -24,6 +24,7 @@
 #include <TDF_Attribute.hxx>
 #include <Standard_GUID.hxx>
 #include <Geom_TrimmedCurve.hxx>
+#include <Geom_Plane.hxx>
 #include <GC_MakeSegment.hxx>
 #include <GC_MakeCircle.hxx>
 #include <GC_MakeArcOfCircle.hxx>
@@ -72,6 +73,111 @@ py::object CastShape(const TopoDS_Shape & s)
       return py::cast(s);
     }
 };
+
+
+class WorkPlane : public enable_shared_from_this<WorkPlane>
+{
+  gp_Ax3 axis;
+  gp_Ax2d localpos;
+  gp_Pnt2d startpnt;
+  Handle(Geom_Surface) surf;
+  // Geom_Plane surf;
+
+  BRepBuilderAPI_MakeWire wire_builder;
+  std::vector<TopoDS_Wire> wires;
+  
+public:
+  
+  WorkPlane (const gp_Ax3 & _axis, const gp_Ax2d _localpos = gp_Ax2d())
+    : axis(_axis), localpos(_localpos) // , surf(_axis) 
+  {
+    // surf = GC_MakePlane (gp_Ax1(axis.Location(), axis.Direction()));
+    surf = new Geom_Plane(axis);
+  }
+  
+
+  auto MoveTo (double h, double v)
+  {
+    startpnt = gp_Pnt2d(h,v);
+    localpos.SetLocation(startpnt);
+    return shared_from_this();
+  }
+
+  auto Direction (double h, double v)
+  {
+    localpos.SetDirection(gp_Dir2d(h,v));
+    return shared_from_this();
+  }
+  
+  auto LineTo (double h, double v)
+  {
+    gp_Pnt2d old2d = localpos.Location();
+    gp_Pnt oldp = axis.Location() . Translated(old2d.X() * axis.XDirection() + old2d.Y() * axis.YDirection());
+
+    // localpos.Translate (gp_Vec2d(h,v));
+    localpos.SetLocation (gp_Pnt2d(h,v));
+    gp_Pnt2d new2d = localpos.Location();
+    gp_Pnt newp = axis.Location() . Translated(new2d.X() * axis.XDirection() + new2d.Y() * axis.YDirection());
+
+    cout << "lineto, newp = " << occ2ng(newp) << endl;
+    gp_Pnt pfromsurf;
+    surf->D0(new2d.X(), new2d.Y(), pfromsurf);
+    cout << "p from plane = " << occ2ng(pfromsurf) << endl;
+
+    
+    Handle(Geom_TrimmedCurve) curve = GC_MakeSegment(oldp, newp);
+    auto edge = BRepBuilderAPI_MakeEdge(curve).Edge();
+    wire_builder.Add(edge);
+    return shared_from_this();    
+  }
+
+  auto Line(double h, double v)
+  {
+    gp_Pnt2d oldp = localpos.Location();
+    oldp.Translate(gp_Vec2d(h,v));
+    return LineTo (oldp.X(), oldp.Y());
+  }
+  
+  auto Line(double len)
+  {
+    gp_Dir2d dir = localpos.Direction();
+    cout << "dir = " << dir.X() << ", " << dir.Y() << endl;
+    gp_Pnt2d oldp = localpos.Location();
+    oldp.Translate(len*dir);
+    return LineTo (oldp.X(), oldp.Y());
+  }
+
+  auto Rotate (double angle)
+  {
+    localpos.Rotate(localpos.Location(), angle*M_PI/180);
+    return shared_from_this();        
+  }
+  
+  auto Close ()
+  {
+    LineTo (startpnt.X(), startpnt.Y());
+    wires.push_back (wire_builder.Wire());
+    wire_builder = BRepBuilderAPI_MakeWire();
+  }
+
+  TopoDS_Wire Last()
+  {
+    return wires.back();
+  }
+
+  TopoDS_Face Face()
+  {
+         // crashes ????
+    BRepBuilderAPI_MakeFace builder(surf, 1e-8);
+    for (auto w : wires)
+      builder.Add(w);
+    return builder.Face();
+    
+    // only one wire, for now:
+    // return BRepBuilderAPI_MakeFace(wires.back()).Face();
+  }
+};
+
 
 
 DLL_HEADER void ExportNgOCCShapes(py::module &m) 
@@ -296,6 +402,18 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("Reversed", [](const TopoDS_Shape & shape) {
         return CastShape(shape.Reversed()); })
 
+    .def("Extrude", [](const TopoDS_Shape & shape, double h) {
+        for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
+          {
+            Handle(Geom_Surface) surf = BRep_Tool::Surface (TopoDS::Face(e.Current()));
+            gp_Vec du, dv;
+            gp_Pnt p;
+            surf->D1 (0,0,p,du,dv);
+            return BRepPrimAPI_MakePrism (shape, du^dv).Shape();
+          }
+        throw Exception("no face found for extrusion");
+      })
+    
     .def("Find", [](const TopoDS_Shape & shape, gp_Pnt p)
          {
            // find sub-shape contianing point
@@ -408,16 +526,34 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def(py::init([] (const TopoDS_Shape & shape) {
           return TopoDS::Face(shape);
         }))
-    /*
-    .def("surf", [] (TopoDS_Face face) -> Handle(Geom_Surface)
+    .def_property_readonly("surf", [] (TopoDS_Face face) -> Handle(Geom_Surface)
          {
            Handle(Geom_Surface) surf = BRep_Tool::Surface (face);
            return surf;
          })
-    */
+    .def("WorkPlane",[] (const TopoDS_Face & face) {
+        Handle(Geom_Surface) surf = BRep_Tool::Surface (face);
+        gp_Vec du, dv;
+        gp_Pnt p;
+        surf->D1 (0,0,p,du,dv);
+        auto ax = gp_Ax3(p, du^dv, du);
+        return make_shared<WorkPlane> (ax);
+      })
     ;
   py::class_<TopoDS_Solid, TopoDS_Shape> (m, "TopoDS_Solid");
 
+
+  
+  py::class_<Handle(Geom_Surface)> (m, "Geom_Surface")
+    .def("Value", [] (const Handle(Geom_Surface) & surf, double u, double v) {
+        return surf->Value(u, v); })
+    .def("D1", [] (const Handle(Geom_Surface) & surf, double u, double v) {
+        gp_Vec du, dv;
+        gp_Pnt p;
+        surf->D1 (u,v,p,du,dv);
+        return tuple(p,du,dv);
+      })
+    ;
   
   
   py::implicitly_convertible<TopoDS_Shape, TopoDS_Face>();
@@ -755,6 +891,20 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           return aTool.Shape();
         });
 
+
+
+  py::class_<WorkPlane, shared_ptr<WorkPlane>> (m, "WorkPlane")
+    .def(py::init<gp_Ax3, gp_Ax2d>(), py::arg("axis"), py::arg("pos")=gp_Ax2d())
+    .def("MoveTo", &WorkPlane::MoveTo)
+    .def("Direction", &WorkPlane::Direction)    
+    .def("LineTo", &WorkPlane::LineTo)
+    .def("Rotate", &WorkPlane::Rotate)
+    .def("Line", [](WorkPlane&wp,double l) { return wp.Line(l); })
+    .def("Line", [](WorkPlane&wp,double h,double v) { return wp.Line(h,v); })
+    .def("Close", &WorkPlane::Close)
+    .def("Last", &WorkPlane::Last)
+    .def("Face", &WorkPlane::Face)
+    ;
 
 
   

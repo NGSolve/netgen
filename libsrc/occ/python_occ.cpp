@@ -92,109 +92,6 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m);
 DLL_HEADER void ExportNgOCCShapes(py::module &m);
 
 
-class WorkPlane : public enable_shared_from_this<WorkPlane>
-{
-  gp_Ax3 axis;
-  gp_Ax2d localpos;
-  gp_Pnt2d startpnt;
-  Handle(Geom_Surface) surf;
-  // Geom_Plane surf;
-
-  BRepBuilderAPI_MakeWire wire_builder;
-  std::vector<TopoDS_Wire> wires;
-  
-public:
-  
-  WorkPlane (const gp_Ax3 & _axis, const gp_Ax2d _localpos = gp_Ax2d())
-    : axis(_axis), localpos(_localpos) // , surf(_axis) 
-  {
-    // surf = GC_MakePlane (gp_Ax1(axis.Location(), axis.Direction()));
-    surf = new Geom_Plane(axis);
-  }
-  
-
-  auto MoveTo (double h, double v)
-  {
-    startpnt = gp_Pnt2d(h,v);
-    localpos.SetLocation(startpnt);
-    return shared_from_this();
-  }
-
-  auto Direction (double h, double v)
-  {
-    localpos.SetDirection(gp_Dir2d(h,v));
-    return shared_from_this();
-  }
-  
-  auto LineTo (double h, double v)
-  {
-    gp_Pnt2d old2d = localpos.Location();
-    gp_Pnt oldp = axis.Location() . Translated(old2d.X() * axis.XDirection() + old2d.Y() * axis.YDirection());
-
-    // localpos.Translate (gp_Vec2d(h,v));
-    localpos.SetLocation (gp_Pnt2d(h,v));
-    gp_Pnt2d new2d = localpos.Location();
-    gp_Pnt newp = axis.Location() . Translated(new2d.X() * axis.XDirection() + new2d.Y() * axis.YDirection());
-
-    cout << "lineto, newp = " << occ2ng(newp) << endl;
-    gp_Pnt pfromsurf;
-    surf->D0(new2d.X(), new2d.Y(), pfromsurf);
-    cout << "p from plane = " << occ2ng(pfromsurf) << endl;
-
-    
-    Handle(Geom_TrimmedCurve) curve = GC_MakeSegment(oldp, newp);
-    auto edge = BRepBuilderAPI_MakeEdge(curve).Edge();
-    wire_builder.Add(edge);
-    return shared_from_this();    
-  }
-
-  auto Line(double h, double v)
-  {
-    gp_Pnt2d oldp = localpos.Location();
-    oldp.Translate(gp_Vec2d(h,v));
-    return LineTo (oldp.X(), oldp.Y());
-  }
-  
-  auto Line(double len)
-  {
-    gp_Dir2d dir = localpos.Direction();
-    cout << "dir = " << dir.X() << ", " << dir.Y() << endl;
-    gp_Pnt2d oldp = localpos.Location();
-    oldp.Translate(len*dir);
-    return LineTo (oldp.X(), oldp.Y());
-  }
-
-  auto Rotate (double angle)
-  {
-    localpos.Rotate(localpos.Location(), angle*M_PI/180);
-    return shared_from_this();        
-  }
-  
-  auto Close ()
-  {
-    LineTo (startpnt.X(), startpnt.Y());
-    wires.push_back (wire_builder.Wire());
-    wire_builder = BRepBuilderAPI_MakeWire();
-  }
-
-  TopoDS_Wire Last()
-  {
-    return wires.back();
-  }
-
-  TopoDS_Face Face()
-  {
-         // crashes ????
-    BRepBuilderAPI_MakeFace builder(surf, 1e-8);
-    for (auto w : wires)
-      builder.Add(w);
-    return builder.Face();
-    
-    // only one wire, for now:
-    // return BRepBuilderAPI_MakeFace(wires.back()).Face();
-  }
-};
-
 
 DLL_HEADER void ExportNgOCC(py::module &m) 
 {
@@ -202,20 +99,6 @@ DLL_HEADER void ExportNgOCC(py::module &m)
 
   ExportNgOCCBasic(m);
   ExportNgOCCShapes(m);
-
-  py::class_<WorkPlane, shared_ptr<WorkPlane>> (m, "WorkPlane")
-    .def(py::init<gp_Ax3, gp_Ax2d>(), py::arg("axis"), py::arg("pos")=gp_Ax2d())
-    .def("MoveTo", &WorkPlane::MoveTo)
-    .def("Direction", &WorkPlane::Direction)    
-    .def("LineTo", &WorkPlane::LineTo)
-    .def("Rotate", &WorkPlane::Rotate)
-    .def("Line", [](WorkPlane&wp,double l) { return wp.Line(l); })
-    .def("Line", [](WorkPlane&wp,double h,double v) { return wp.Line(h,v); })
-    .def("Close", &WorkPlane::Close)
-    .def("Last", &WorkPlane::Last)
-    .def("Face", &WorkPlane::Face)
-    ;
-
 
   
   // not working, since occ - exceptions don't derive from std::exception

@@ -104,7 +104,8 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
     .def("__add__", [](gp_Vec v1, gp_Vec v2) { return v1+v2; }) // return gp_Vec(v1.X()+v2.X(), v1.Y()+v2.Y(), v1.Z()+v2.Z()); })
     .def("__sub__", [](gp_Vec v1, gp_Vec v2) { return v1-v2; }) // gp_Vec(v1.X()-v2.X(), v1.Y()-v2.Y(), v1.Z()-v2.Z()); })
     .def("__rmul__", [](gp_Vec v, double s) { return s*v; }) // gp_Vec(s*v.X(), s*v.Y(), s*v.Z()); })
-    .def("__neg__", [](gp_Vec v) { return -v; }) // gp_Vec(-v.X(), -v.Y(), -v.Z()); })    
+    .def("__neg__", [](gp_Vec v) { return -v; }) // gp_Vec(-v.X(), -v.Y(), -v.Z()); })
+    .def("__xor__", [](gp_Vec v1, gp_Vec v2) { return v1^v2; }) 
     ;
 
   py::class_<gp_Dir>(m, "gp_Dir")
