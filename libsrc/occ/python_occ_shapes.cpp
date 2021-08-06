@@ -34,6 +34,7 @@
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepFilletAPI_MakeFillet.hxx>
 #include <BRepOffsetAPI_ThruSections.hxx>
+#include <BRepOffsetAPI_MakeOffset.hxx>
 
 #include <BRepGProp.hxx>
 #include <BRepOffsetAPI_MakeThickSolid.hxx>
@@ -152,14 +153,52 @@ public:
     localpos.Rotate(localpos.Location(), angle*M_PI/180);
     return shared_from_this();        
   }
+
+  auto Rectangle (double l, double w)
+  {
+    Line (l);
+    Rotate (90);
+    Line(w);
+    Rotate (90);
+    Line (l);
+    Rotate (90);
+    Line(w);
+    Rotate (90);
+    wires.push_back (wire_builder.Wire());
+    wire_builder = BRepBuilderAPI_MakeWire();
+    return shared_from_this();            
+  }
   
   auto Close ()
   {
     LineTo (startpnt.X(), startpnt.Y());
     wires.push_back (wire_builder.Wire());
     wire_builder = BRepBuilderAPI_MakeWire();
+    return shared_from_this();            
   }
-
+  
+  auto Reverse()
+  {
+    wires.back().Reverse();
+    return shared_from_this();                
+  }
+  
+  auto Offset(double d)
+  {
+    TopoDS_Wire wire = wires.back();
+    wires.pop_back();
+    BRepOffsetAPI_MakeOffset builder;
+    builder.AddWire(wire);
+    cout << "call builder" << endl;
+    builder.Perform(d);
+    cout << "perform is back" << endl;
+    auto shape = builder.Shape();
+    cout << "builder is back" << endl;
+    cout << "Offset got shape type " << shape.ShapeType() << endl;
+    wires.push_back (TopoDS::Wire(shape.Reversed()));
+    return shared_from_this();
+  }
+  
   TopoDS_Wire Last()
   {
     return wires.back();
@@ -409,7 +448,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             gp_Vec du, dv;
             gp_Pnt p;
             surf->D1 (0,0,p,du,dv);
-            return BRepPrimAPI_MakePrism (shape, du^dv).Shape();
+            return BRepPrimAPI_MakePrism (shape, h*du^dv).Shape();
           }
         throw Exception("no face found for extrusion");
       })
@@ -901,6 +940,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("Rotate", &WorkPlane::Rotate)
     .def("Line", [](WorkPlane&wp,double l) { return wp.Line(l); })
     .def("Line", [](WorkPlane&wp,double h,double v) { return wp.Line(h,v); })
+    .def("Rectangle", &WorkPlane::Rectangle)
+    .def("Offset", &WorkPlane::Offset)
+    .def("Reverse", &WorkPlane::Reverse)
     .def("Close", &WorkPlane::Close)
     .def("Last", &WorkPlane::Last)
     .def("Face", &WorkPlane::Face)
