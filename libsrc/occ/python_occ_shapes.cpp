@@ -14,6 +14,7 @@
 #include <gp_Trsf.hxx>
 #include <BRepPrimAPI_MakeSphere.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
+#include <BRepPrimAPI_MakeRevol.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
 #include <BRepOffsetAPI_MakePipe.hxx>
@@ -81,6 +82,7 @@ class WorkPlane : public enable_shared_from_this<WorkPlane>
   gp_Ax3 axis;
   gp_Ax2d localpos;
   gp_Pnt2d startpnt;
+  gp_Dir2d oldDir;
   Handle(Geom_Surface) surf;
   // Geom_Plane surf;
 
@@ -100,6 +102,7 @@ public:
   auto MoveTo (double h, double v)
   {
     startpnt = gp_Pnt2d(h,v);
+    oldDir = gp_Dir2d(1,0);
     localpos.SetLocation(startpnt);
     return shared_from_this();
   }
@@ -148,8 +151,79 @@ public:
     return LineTo (oldp.X(), oldp.Y());
   }
 
+  auto ArcTo (double h, double v, const gp_Vec tangv, char arcDir)
+  {
+    gp_Dir2d dir = localpos.Direction();
+    gp_Pnt2d old2d = localpos.Location();
+    gp_Pnt oldp = axis.Location() . Translated(old2d.X() * axis.XDirection() + old2d.Y() * axis.YDirection());
+
+    localpos.SetLocation (gp_Pnt2d(h,v));
+    gp_Pnt2d new2d = localpos.Location();
+    gp_Pnt newp = axis.Location() . Translated(new2d.X() * axis.XDirection() + new2d.Y() * axis.YDirection());
+
+    cout << "arcto, newp = " << occ2ng(newp) << endl;
+    cout << "tangv = " << occ2ng(tangv) << endl;
+    gp_Pnt pfromsurf;
+    surf->D0(new2d.X(), new2d.Y(), pfromsurf);
+    cout << "p from plane = " << occ2ng(pfromsurf) << endl;
+
+
+    Handle(Geom_TrimmedCurve) curve;
+    if(arcDir)
+        curve = GC_MakeArcOfCircle(newp, tangv, oldp);
+    else
+        //curve = GC_MakeArcOfCircle(oldp, tangv, newp);
+        curve = GC_MakeArcOfCircle(newp, tangv, oldp);
+
+    auto edge = BRepBuilderAPI_MakeEdge(curve).Edge();
+    wire_builder.Add(edge);
+    return shared_from_this();
+  }
+
+  auto Arc(double radius, unsigned short arcDir)
+  {
+      //char arcDir;
+    gp_Dir2d dir = localpos.Direction();
+    //compute center point of arc
+    gp_Dir2d oldDirn;
+    if(oldDir.Angle(dir)>=0)
+        oldDirn = gp_Dir2d(-oldDir.Y(),oldDir.X());
+    else
+        oldDirn = gp_Dir2d(oldDir.Y(),-oldDir.X());
+
+    cout << "dir = " << dir.X() << ", " << dir.Y() << endl;
+
+    gp_Pnt2d oldp = localpos.Location();
+
+    cout << "oldp = " << oldp.X() << ", " << oldp.Y() << endl;
+    oldp.Translate(radius*oldDirn);
+    cout << "oldp = " << oldp.X() << ", " << oldp.Y() << endl;
+
+    cout << "angle = " << oldDir.Angle(dir) << endl;
+    cout << "olddirn = " << oldDirn.X() << ", " << oldDirn.Y() << endl;
+    oldDirn.Rotate(oldDir.Angle(dir)-M_PI);
+    cout << "olddirn = " << oldDirn.X() << ", " << oldDirn.Y() << endl;
+    oldp.Translate(radius*oldDirn);
+    cout << "oldp = " << oldp.X() << ", " << oldp.Y() << endl;
+
+    //compute tangent vector in P1
+    //TODO: tangv is not in the correct plane. surf.D1?
+    gp_Vec tangv;
+    if(arcDir)
+        //tangv = gp_Vec(-oldDir.Y(), axis.Location().Z(), oldDir.X());
+        tangv = gp_Vec(-oldDir.X(), axis.Direction().Z(), -oldDir.Y());
+    else
+        //tangv = gp_Vec(oldDir.Y(), axis.Location().Z(), -oldDir.X());
+        tangv = gp_Vec(oldDir.X(), axis.Direction().Z(), oldDir.Y());
+
+    //add arc
+    return ArcTo (oldp.X(), oldp.Y(), tangv, arcDir);
+  }
+
+
   auto Rotate (double angle)
   {
+    oldDir = localpos.Direction();
     localpos.Rotate(localpos.Location(), angle*M_PI/180);
     return shared_from_this();        
   }
@@ -452,6 +526,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           }
         throw Exception("no face found for extrusion");
       })
+
+      .def("Revolve", [](const TopoDS_Shape & shape, const gp_Ax1 &A, const double D) {
+        for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
+          {
+            return BRepPrimAPI_MakeRevol (shape, A, D*M_PI/180).Shape();
+          }
+        throw Exception("no face found for revolve");
+      })
     
     .def("Find", [](const TopoDS_Shape & shape, gp_Pnt p)
          {
@@ -723,6 +805,11 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       return BRepPrimAPI_MakePrism (face, vec).Shape();
     });
 
+  m.def("Revolve", [] (const TopoDS_Shape & face,const gp_Ax1 &A, const double D) {
+      //comvert angle from deg to rad
+      return BRepPrimAPI_MakeRevol (face, A, D*M_PI/180).Shape();
+    });
+
   m.def("Pipe", [] (const TopoDS_Wire & spine, const TopoDS_Shape & profile) {
       return BRepOffsetAPI_MakePipe (spine, profile).Shape();
     }, py::arg("spine"), py::arg("profile"));
@@ -937,6 +1024,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("MoveTo", &WorkPlane::MoveTo)
     .def("Direction", &WorkPlane::Direction)    
     .def("LineTo", &WorkPlane::LineTo)
+    .def("ArcTo", &WorkPlane::ArcTo)
+    .def("Arc", &WorkPlane::Arc)
     .def("Rotate", &WorkPlane::Rotate)
     .def("Line", [](WorkPlane&wp,double l) { return wp.Line(l); })
     .def("Line", [](WorkPlane&wp,double h,double v) { return wp.Line(h,v); })
