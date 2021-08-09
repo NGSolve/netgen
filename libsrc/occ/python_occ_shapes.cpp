@@ -45,6 +45,7 @@
 #include <Geom2d_TrimmedCurve.hxx>
 #include <GCE2d_MakeSegment.hxx>
 #include <GCE2d_MakeCircle.hxx>
+#include <ShapeUpgrade_UnifySameDomain.hxx>
 
 #if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
 #define OCC_HAVE_DUMP_JSON
@@ -367,7 +368,13 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                   { return shape.Located(loc); })
 
     .def("__add__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
-        return BRepAlgoAPI_Fuse(shape1, shape2).Shape();
+        auto fused = BRepAlgoAPI_Fuse(shape1, shape2).Shape();
+
+        // make one face when fusing in 2D
+        // from https://gitlab.onelab.info/gmsh/gmsh/-/issues/627
+        ShapeUpgrade_UnifySameDomain unify(fused, true, true, true);
+        unify.Build();
+        return unify.Shape();
       })
     
     .def("__mul__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
