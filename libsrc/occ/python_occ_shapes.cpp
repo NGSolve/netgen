@@ -151,8 +151,17 @@ public:
     return LineTo (oldp.X(), oldp.Y());
   }
 
-  auto ArcTo (double h, double v, const gp_Vec tangv, char arcDir)
+  auto Rotate (double angle)
   {
+    oldDir = localpos.Direction();
+    localpos.Rotate(localpos.Location(), angle*M_PI/180);
+    return shared_from_this();
+  }
+
+  auto ArcTo (double h, double v, const gp_Vec tangv, double angle)
+  {
+    double newAngle = fmod(angle,360)<180?fmod(angle,360):(-360+fmod(angle,360));
+
     gp_Dir2d dir = localpos.Direction();
     gp_Pnt2d old2d = localpos.Location();
     gp_Pnt oldp = axis.Location() . Translated(old2d.X() * axis.XDirection() + old2d.Y() * axis.YDirection());
@@ -167,65 +176,45 @@ public:
     surf->D0(new2d.X(), new2d.Y(), pfromsurf);
     cout << "p from plane = " << occ2ng(pfromsurf) << endl;
 
-
-    Handle(Geom_TrimmedCurve) curve;
-    if(arcDir)
-        curve = GC_MakeArcOfCircle(newp, tangv, oldp);
-    else
-        //curve = GC_MakeArcOfCircle(oldp, tangv, newp);
-        curve = GC_MakeArcOfCircle(newp, tangv, oldp);
+    //TODO: use GCE2d_MakeArcOfCircle
+    Handle(Geom_TrimmedCurve) curve = GC_MakeArcOfCircle(oldp, tangv, newp);
 
     auto edge = BRepBuilderAPI_MakeEdge(curve).Edge();
     wire_builder.Add(edge);
+
+    Rotate(newAngle);
     return shared_from_this();
   }
 
-  auto Arc(double radius, unsigned short arcDir)
+  auto Arc(double radius, double angle)
   {
-      //char arcDir;
-    gp_Dir2d dir = localpos.Direction();
-    //compute center point of arc
-    gp_Dir2d oldDirn;
-    if(oldDir.Angle(dir)>=0)
-        oldDirn = gp_Dir2d(-oldDir.Y(),oldDir.X());
-    else
-        oldDirn = gp_Dir2d(oldDir.Y(),-oldDir.X());
+    double newAngle = fmod(angle,360)<180?fmod(angle,360):(-360+fmod(angle,360));
+    newAngle = newAngle*M_PI/180;
 
-    cout << "dir = " << dir.X() << ", " << dir.Y() << endl;
+    gp_Dir2d dir = localpos.Direction();
+    gp_Dir2d dirn;
+    //compute center point of arc
+    if(newAngle>=0)
+        dirn = gp_Dir2d(-dir.Y(),dir.X());
+    else
+        dirn = gp_Dir2d(dir.Y(),-dir.X());
 
     gp_Pnt2d oldp = localpos.Location();
 
-    cout << "oldp = " << oldp.X() << ", " << oldp.Y() << endl;
-    oldp.Translate(radius*oldDirn);
-    cout << "oldp = " << oldp.X() << ", " << oldp.Y() << endl;
+    oldp.Translate(radius*dirn);
 
-    cout << "angle = " << oldDir.Angle(dir) << endl;
-    cout << "olddirn = " << oldDirn.X() << ", " << oldDirn.Y() << endl;
-    oldDirn.Rotate(oldDir.Angle(dir)-M_PI);
-    cout << "olddirn = " << oldDirn.X() << ", " << oldDirn.Y() << endl;
-    oldp.Translate(radius*oldDirn);
-    cout << "oldp = " << oldp.X() << ", " << oldp.Y() << endl;
+    dirn.Rotate(newAngle-M_PI);
+    oldp.Translate(radius*dirn);
 
     //compute tangent vector in P1
-    //TODO: tangv is not in the correct plane. surf.D1?
-    gp_Vec tangv;
-    if(arcDir)
-        //tangv = gp_Vec(-oldDir.Y(), axis.Location().Z(), oldDir.X());
-        tangv = gp_Vec(-oldDir.X(), axis.Direction().Z(), -oldDir.Y());
-    else
-        //tangv = gp_Vec(oldDir.Y(), axis.Location().Z(), -oldDir.X());
-        tangv = gp_Vec(oldDir.X(), axis.Direction().Z(), oldDir.Y());
+    gp_Pnt tangvEndp = axis.Location() . Translated(dir.X() * axis.XDirection() + dir.Y() * axis.YDirection());
+    gp_Vec tangv = gp_Vec(axis.Location(),tangvEndp);
+
+    //cout << "dir = " << occ2ng(dir) << endl;
+    cout << "tangv = " << occ2ng(tangv) << endl;
 
     //add arc
-    return ArcTo (oldp.X(), oldp.Y(), tangv, arcDir);
-  }
-
-
-  auto Rotate (double angle)
-  {
-    oldDir = localpos.Direction();
-    localpos.Rotate(localpos.Location(), angle*M_PI/180);
-    return shared_from_this();        
+    return ArcTo (oldp.X(), oldp.Y(), tangv, newAngle*180/M_PI);
   }
 
   auto Rectangle (double l, double w)
