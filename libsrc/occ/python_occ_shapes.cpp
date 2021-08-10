@@ -25,6 +25,8 @@
 #include <Standard_GUID.hxx>
 #include <Geom_TrimmedCurve.hxx>
 #include <Geom_Plane.hxx>
+#include <Geom_BSplineCurve.hxx>
+#include <Geom_BezierCurve.hxx>
 #include <GC_MakeSegment.hxx>
 #include <GC_MakeCircle.hxx>
 #include <GC_MakeArcOfCircle.hxx>
@@ -566,6 +568,22 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                            auto curve = BRep_Tool::Curve(e, s0, s1);
                            return curve->Value(s1);
                            })
+    .def_property_readonly("start_tangent",
+                           [](const TopoDS_Edge & e) {
+                           double s0, s1;
+                           auto curve = BRep_Tool::Curve(e, s0, s1);
+                           gp_Pnt p; gp_Vec v;
+                           curve->D1(s0, p, v);
+                           return v;
+                           })
+    .def_property_readonly("end_tangent",
+                           [](const TopoDS_Edge & e) {
+                           double s0, s1;
+                           auto curve = BRep_Tool::Curve(e, s0, s1);
+                           gp_Pnt p; gp_Vec v;
+                           curve->D1(s1, p, v);
+                           return v;
+                           })
     ;
   py::class_<TopoDS_Wire, TopoDS_Shape> (m, "TopoDS_Wire");
   py::class_<TopoDS_Face, TopoDS_Shape> (m, "TopoDS_Face")
@@ -841,6 +859,55 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     }, py::arg("p1"), py::arg("v"), py::arg("p2"));
 
 
+  m.def("BSplineCurve", [](std::vector<gp_Pnt> vpoles, int degree) {
+      // not yet working ????
+      TColgp_Array1OfPnt poles(0, vpoles.size()-1);
+      TColStd_Array1OfReal knots(0, vpoles.size()+degree);
+      TColStd_Array1OfInteger mult(0, vpoles.size()+degree);
+      int cnt = 0;
+      try
+        {
+          for (int i = 0; i < vpoles.size(); i++)
+            {
+              poles.SetValue(i, vpoles[i]);
+              knots.SetValue(i, i);
+              mult.SetValue(i,1);
+            }
+          for (int i = vpoles.size(); i < vpoles.size()+degree+1; i++)
+            {
+              knots.SetValue(i, i);
+              mult.SetValue(i, 1);
+            }
+
+          Handle(Geom_Curve) curve = new Geom_BSplineCurve(poles, knots, mult, degree);
+          return BRepBuilderAPI_MakeEdge(curve).Edge();
+        }
+      catch (Standard_Failure & e)
+        {
+          stringstream errstr;
+          e.Print(errstr);
+          throw NgException("cannot create spline: "+errstr.str());
+        }
+    });
+  
+  m.def("BezierCurve", [](std::vector<gp_Pnt> vpoles) {
+      TColgp_Array1OfPnt poles(0, vpoles.size()-1);
+      try
+        {
+          for (int i = 0; i < vpoles.size(); i++)
+            poles.SetValue(i, vpoles[i]);
+
+          Handle(Geom_Curve) curve = new Geom_BezierCurve(poles);
+          return BRepBuilderAPI_MakeEdge(curve).Edge();
+        }
+      catch (Standard_Failure & e)
+        {
+          stringstream errstr;
+          e.Print(errstr);
+          throw NgException("cannot create Bezier-spline: "+errstr.str());
+        }
+    });
+  
   m.def("Edge", [](Handle(Geom2d_Curve) curve2d, TopoDS_Face face) {
       auto edge = BRepBuilderAPI_MakeEdge(curve2d, BRep_Tool::Surface (face)).Edge();
       BRepLib::BuildCurves3d(edge);
@@ -849,32 +916,25 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
   
   m.def("Wire", [](std::vector<TopoDS_Shape> edges) {
       BRepBuilderAPI_MakeWire builder;
-      for (auto s : edges)
-        switch (s.ShapeType())
-          {
-          case TopAbs_EDGE:
-            try
-              {
-              builder.Add(TopoDS::Edge(s)); break;
-              }
-            catch (Standard_Failure & e)
-              {
-                e.Print(cout);
-                throw NgException("cannot add to wire");
-              }
-          case TopAbs_WIRE:
-            builder.Add(TopoDS::Wire(s)); break;
-          default:
-            throw Exception("can make wire only from edges and wires");
-          }
       try
         {
+          for (auto s : edges)
+            switch (s.ShapeType())
+              {
+              case TopAbs_EDGE:
+                builder.Add(TopoDS::Edge(s)); break;
+              case TopAbs_WIRE:
+                builder.Add(TopoDS::Wire(s)); break;
+              default:
+                throw Exception("can make wire only from edges and wires");
+              }
           return builder.Wire();
         }
       catch (Standard_Failure & e)
         {
-          e.Print(cout);
-          throw NgException("error in wire builder");
+          stringstream errstr;
+          e.Print(errstr);
+          throw NgException("error in wire builder: "+errstr.str());
         }
     });
 
