@@ -371,12 +371,12 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 
     .def("__add__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
         auto fused = BRepAlgoAPI_Fuse(shape1, shape2).Shape();
-
+        return fused;
         // make one face when fusing in 2D
         // from https://gitlab.onelab.info/gmsh/gmsh/-/issues/627
-        ShapeUpgrade_UnifySameDomain unify(fused, true, true, true);
-        unify.Build();
-        return unify.Shape();
+        // ShapeUpgrade_UnifySameDomain unify(fused, true, true, true);
+        // unify.Build();
+        // return unify.Shape();
       })
     
     .def("__mul__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
