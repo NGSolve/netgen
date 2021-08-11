@@ -48,6 +48,7 @@
 #include <GCE2d_MakeSegment.hxx>
 #include <GCE2d_MakeCircle.hxx>
 #include <ShapeUpgrade_UnifySameDomain.hxx>
+#include <GeomLProp_SLProps.hxx>
 
 #if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
 #define OCC_HAVE_DUMP_JSON
@@ -616,6 +617,13 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         gp_Pnt p;
         surf->D1 (u,v,p,du,dv);
         return tuple(p,du,dv);
+      })
+    
+    .def("Normal", [] (const Handle(Geom_Surface) & surf, double u, double v) {
+        GeomLProp_SLProps lprop(surf,u,v,1,1e-8);
+        if (lprop.IsNormalDefined())
+          return lprop.Normal();
+        throw Exception("normal not defined");
       })
     ;
   
