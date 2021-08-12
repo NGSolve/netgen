@@ -56,6 +56,35 @@
 
 using namespace netgen;
 
+void ExtractFaceData( const TopoDS_Face & face, int index, std::vector<double> * p, Box<3> & box )
+{
+    Handle(Geom_Surface) surf = BRep_Tool::Surface (face);
+
+    TopLoc_Location loc;
+    Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation (face, loc);
+
+    bool flip = TopAbs_REVERSED == face.Orientation();
+
+    int ntriangles = triangulation -> NbTriangles();
+    for (int j = 1; j <= ntriangles; j++)
+    {
+        Poly_Triangle triangle = (triangulation -> Triangles())(j);
+        std::array<Point<3>,3> pts;
+        for (int k = 0; k < 3; k++)
+            pts[k] = occ2ng( (triangulation -> Nodes())(triangle(k+1)).Transformed(loc) );
+
+        if(flip)
+            Swap(pts[1], pts[2]);
+
+        for (int k = 0; k < 3; k++)
+        {
+            box.Add(pts[k]);
+            for (int d = 0; d < 3; d++)
+                p[k].push_back( pts[k][d] );
+            p[k].push_back( index );
+        }
+    }
+}
 
 py::object CastShape(const TopoDS_Shape & s)
 {
@@ -542,6 +571,74 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            
            // return MoveToNumpyArray(triangles);
            return triangles;
+         })
+    .def("_webgui_data", [](const TopoDS_Shape & shape)
+         {
+           BRepTools::Clean (shape);
+           double deflection = 0.01;
+           BRepMesh_IncrementalMesh (shape, deflection, true);
+           // triangulation = BRep_Tool::Triangulation (face, loc);
+
+           std::vector<double> p[3];
+           py::list names, colors;
+
+           int index = 0;
+
+           Box<3> box(Box<3>::EMPTY_BOX);
+           for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
+           {
+               TopoDS_Face face = TopoDS::Face(e.Current());
+               // Handle(TopoDS_Face) face = e.Current();
+               ExtractFaceData(face, index, p, box);
+               auto & props = OCCGeometry::global_shape_properties[face.TShape()];
+               if(props.col)
+               {
+                 auto & c = *props.col;
+                 colors.append(py::make_tuple(c[0], c[1], c[2]));
+               }
+               else
+                   colors.append(py::make_tuple(0.0, 1.0, 0.0));
+               if(props.name)
+               {
+                 names.append(*props.name);
+               }
+               else
+                   names.append("");
+               index++;
+           }
+           
+           auto center = box.Center();
+
+           py::list mesh_center;
+           mesh_center.append(center[0]);
+           mesh_center.append(center[1]);
+           mesh_center.append(center[2]);
+           py::dict data;
+           data["ngsolve_version"] = "Netgen x.x"; // TODO
+           data["mesh_dim"] = 3; // TODO
+           data["mesh_center"] = mesh_center;
+           data["mesh_radius"] = box.Diam()/2;
+           data["order2d"] = 1;
+           data["order3d"] = 0;
+           data["draw_vol"] = false;
+           data["draw_surf"] = true;
+           data["funcdim"] = 0;
+           data["show_wireframe"] = false;
+           data["show_mesh"] = true;
+           data["edges"] = py::list{};
+           data["Bezier_points"] = py::list{};
+           py::list points;
+           points.append(p[0]);
+           points.append(p[1]);
+           points.append(p[2]);
+           data["Bezier_trig_points"] = points;
+           data["funcmin"] = 0;
+           data["funcmax"] = 1;
+           data["mesh_regions_2d"] = index;
+           data["autoscale"] = false;
+           data["colors"] = colors;
+           data["names"] = names;
+           return data;
          })
     ;
   
