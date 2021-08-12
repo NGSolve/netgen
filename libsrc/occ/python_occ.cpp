@@ -322,9 +322,9 @@ DLL_HEADER void ExportNgOCC(py::module &m)
 
       cout << "handle(shape) = " << *(void**)(void*)(&(shape.TShape())) << endl;
       
-      TDF_LabelSequence doc_shapes;
-      shape_tool->GetShapes(doc_shapes);
-      cout << "shape tool nbentities: " << doc_shapes.Size() << endl;
+      // TDF_LabelSequence doc_shapes;
+      // shape_tool->GetShapes(doc_shapes);
+      // cout << "shape tool nbentities: " << doc_shapes.Size() << endl;
       TDF_Label label = shape_tool -> FindShape(shape);
       cout << "shape label = " << endl << label << endl;
       if (label.IsNull()) return;
