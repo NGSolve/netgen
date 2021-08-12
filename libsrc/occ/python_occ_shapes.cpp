@@ -29,7 +29,6 @@
 #include <GC_MakeSegment.hxx>
 #include <GC_MakeCircle.hxx>
 #include <GC_MakeArcOfCircle.hxx>
-#include <GCE2d_MakeArcOfCircle.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
@@ -47,6 +46,7 @@
 #include <Geom2d_TrimmedCurve.hxx>
 #include <GCE2d_MakeSegment.hxx>
 #include <GCE2d_MakeCircle.hxx>
+#include <GCE2d_MakeArcOfCircle.hxx>
 
 #if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
 #define OCC_HAVE_DUMP_JSON
@@ -159,30 +159,61 @@ public:
     return shared_from_this();
   }
 
-  auto ArcTo (double h, double v, const gp_Vec2d tangv, double angle)
+  auto ArcTo (double h, double v, const gp_Vec2d t, double angle)
   {
     double newAngle = fmod(angle,360);
 
-    gp_Pnt2d old2d = localpos.Location();
-    //gp_Pnt oldp = axis.Location() . Translated(old2d.X() * axis.XDirection() + old2d.Y() * axis.YDirection());
+    gp_Pnt2d P1 = localpos.Location();
 
     localpos.SetLocation (gp_Pnt2d(h,v));
-    gp_Pnt2d new2d = localpos.Location();
-    gp_Pnt newp = axis.Location() . Translated(new2d.X() * axis.XDirection() + new2d.Y() * axis.YDirection());
+    gp_Pnt2d P2 = localpos.Location();
 
-    cout << "arcto, newp = " << occ2ng(newp) << endl;
-    cout << "tangv = (" << tangv.X() << ", " << tangv.Y() << ")" << endl;
-    gp_Pnt pfromsurf;
-    surf->D0(new2d.X(), new2d.Y(), pfromsurf);
-    //cout << "p from plane = " << occ2ng(pfromsurf) << endl;
+    cout << "ArcTo:" << endl;
+    cout << "P1 = (" << P1.X() <<", " << P1.Y() << ")"<<endl;
+    cout << "P2 = (" << P2.X() <<", " << P2.Y() << ")"<<endl;
+    cout << "t = (" << t.X() << ", " << t.Y() << ")" << endl;
 
-    //TODO: use GCE2d_MakeArcOfCircle
-    Handle(Geom2d_TrimmedCurve) curve2d = GCE2d_MakeArcOfCircle(old2d, tangv, new2d).Value();
+    //compute circle center point M
+    //point midway between p1 and p2
+    gp_Pnt2d P12 = gp_Pnt2d((P1.X() + h) / 2, (P1.Y() + v) / 2);
+    //vector normal to vector from P1 to P12
+    gp_Vec2d p12n = gp_Vec2d( - (P12.Y() - P1.Y()), (P12.X() - P1.X()));
+    //M is intersection of p12n and tn (tn ... normalvector to t)
+    double k = ((P12.Y()- P1.Y())*p12n.X() + (P1.X() - P12.X())*p12n.Y() )/ (t.X()*p12n.X() + t.Y()*p12n.Y());
+    gp_Pnt2d M = gp_Pnt2d(P1.X()-k*t.Y(), P1.Y() + k*t.X());
 
+    cout << "P12 = (" << P12.X() <<", " << P12.Y() << ")"<<endl;
+    cout << "p12n = (" << p12n.X() <<", " << p12n.Y() << ")"<<endl;
+    cout << "k = " << k <<endl;
+    cout << "M = (" << M.X() <<", " << M.Y() << ")"<<endl;
+
+    //radius
+    double r = P1.Distance(M);
+
+    //compute point P3 on circle between P1 and P2
+    p12n.Normalize();   //docu: reverses direction of p12n ??
+    cout << "p12n = (" << p12n.X() <<", " << p12n.Y() << ")"<<endl;
+
+    gp_Pnt2d P3;
+    if(t.Angle(p12n) > -M_PI/2 && t.Angle(p12n) < M_PI/2)
+        P3 = gp_Pnt2d(M.X() + r * p12n.X() , M.Y() + r * p12n.Y());
+    else
+        P3 = gp_Pnt2d(M.X() - r * p12n.X() , M.Y() - r * p12n.Y());
+
+    cout << "r = " << r <<endl;
+    cout << "angle t,p12n = " << t.Angle(p12n)<<endl;
+    cout << "P3 = (" << P3.X() <<", " << P3.Y() << ")"<<endl;
+    cout << "dist(M,P3) = " << P3.Distance(M) <<endl;
+
+    //Draw 2d arc of circle from P1 to P2 trough P3
+    Handle(Geom2d_TrimmedCurve) curve2d = GCE2d_MakeArcOfCircle(P1, P3, P2).Value();
+
+    //create 3d edge from 2d curve using surf
     auto edge = BRepBuilderAPI_MakeEdge(curve2d, surf).Edge();
     BRepLib::BuildCurves3d(edge);
     wire_builder.Add(edge);
 
+    //TODO: compute newAngle using P1, M, and P2. Remove angle function argument
     Rotate(newAngle);
     return shared_from_this();
   }
@@ -203,13 +234,15 @@ public:
 
     oldp.Translate(radius*dirn);
 
+    cout << "M = (" << oldp.X() << ", " << oldp.Y() << ")" << endl;
+
     dirn.Rotate(newAngle-M_PI);
     oldp.Translate(radius*dirn);
 
     //compute tangent vector in P1
     gp_Vec2d tangv = gp_Vec2d(dir.X(),dir.Y());
 
-    cout << "tangv = (" << tangv.X() << ", " << tangv.Y() << ")" << endl;
+    cout << "t = (" << tangv.X() << ", " << tangv.Y() << ")" << endl;
 
     //add arc
     return ArcTo (oldp.X(), oldp.Y(), tangv, newAngle*180/M_PI);
