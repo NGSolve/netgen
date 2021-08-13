@@ -257,12 +257,12 @@ public:
     oldp.Translate(radius*dirn);
 
     //compute tangent vector in P1
-    gp_Vec2d tangv = gp_Vec2d(dir.X(),dir.Y());
+    gp_Vec2d t = gp_Vec2d(dir.X(),dir.Y());
 
-    cout << "t = (" << tangv.X() << ", " << tangv.Y() << ")" << endl;
+    cout << "t = (" << t.X() << ", " << t.Y() << ")" << endl;
 
     //add arc
-    return ArcTo (oldp.X(), oldp.Y(), tangv);
+    return ArcTo (oldp.X(), oldp.Y(), t);
   }
 
   auto Rectangle (double l, double w)
