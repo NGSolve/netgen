@@ -83,7 +83,6 @@ class WorkPlane : public enable_shared_from_this<WorkPlane>
   gp_Ax3 axis;
   gp_Ax2d localpos;
   gp_Pnt2d startpnt;
-  gp_Dir2d oldDir;
   Handle(Geom_Surface) surf;
   // Geom_Plane surf;
 
@@ -103,7 +102,6 @@ public:
   auto MoveTo (double h, double v)
   {
     startpnt = gp_Pnt2d(h,v);
-    oldDir = gp_Dir2d(1,0);
     localpos.SetLocation(startpnt);
     return shared_from_this();
   }
@@ -154,15 +152,12 @@ public:
 
   auto Rotate (double angle)
   {
-    oldDir = localpos.Direction();
     localpos.Rotate(localpos.Location(), angle*M_PI/180);
     return shared_from_this();
   }
 
-  auto ArcTo (double h, double v, const gp_Vec2d t, double angle)
+  auto ArcTo (double h, double v, const gp_Vec2d t)
   {
-    double newAngle = fmod(angle,360);
-
     gp_Pnt2d P1 = localpos.Location();
 
     localpos.SetLocation (gp_Pnt2d(h,v));
@@ -195,7 +190,9 @@ public:
     cout << "p12n = (" << p12n.X() <<", " << p12n.Y() << ")"<<endl;
 
     gp_Pnt2d P3;
-    if(t.Angle(p12n) > -M_PI/2 && t.Angle(p12n) < M_PI/2)
+
+    double angletp12n = t.Angle(p12n);
+    if(angletp12n > -M_PI/2 && angletp12n < M_PI/2)
         P3 = gp_Pnt2d(M.X() + r * p12n.X() , M.Y() + r * p12n.Y());
     else
         P3 = gp_Pnt2d(M.X() - r * p12n.X() , M.Y() - r * p12n.Y());
@@ -205,7 +202,7 @@ public:
     cout << "P3 = (" << P3.X() <<", " << P3.Y() << ")"<<endl;
     cout << "dist(M,P3) = " << P3.Distance(M) <<endl;
 
-    //Draw 2d arc of circle from P1 to P2 trough P3
+    //Draw 2d arc of circle from P1 to P2 through P3
     Handle(Geom2d_TrimmedCurve) curve2d = GCE2d_MakeArcOfCircle(P1, P3, P2).Value();
 
     //create 3d edge from 2d curve using surf
@@ -213,8 +210,20 @@ public:
     BRepLib::BuildCurves3d(edge);
     wire_builder.Add(edge);
 
-    //TODO: compute newAngle using P1, M, and P2. Remove angle function argument
-    Rotate(newAngle);
+    //compute angle of rotation
+    //compute tangent t2 in P2
+    gp_Vec2d p2 = gp_Vec2d(P1.X()-P2.X(),P1.Y()-P2.Y());
+    gp_Vec2d t2;
+    if(t.Angle(p2) >=0)
+        t2 = gp_Vec2d((P2.Y()-M.Y()),-(P2.X()-M.X()));
+    else
+        t2 = gp_Vec2d(-(P2.Y()-M.Y()),(P2.X()-M.X()));
+    double angle = -t2.Angle(t);    //angle \in [-pi,pi]
+    cout << "angle t2,t = " << angle*180/M_PI << endl;
+
+    //update localpos.Direction()
+    Rotate(angle*180/M_PI);
+
     return shared_from_this();
   }
 
@@ -245,7 +254,7 @@ public:
     cout << "t = (" << tangv.X() << ", " << tangv.Y() << ")" << endl;
 
     //add arc
-    return ArcTo (oldp.X(), oldp.Y(), tangv, newAngle*180/M_PI);
+    return ArcTo (oldp.X(), oldp.Y(), tangv);
   }
 
   auto Rectangle (double l, double w)
