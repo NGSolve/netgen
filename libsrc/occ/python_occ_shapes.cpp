@@ -26,6 +26,8 @@
 #include <Standard_GUID.hxx>
 #include <Geom_TrimmedCurve.hxx>
 #include <Geom_Plane.hxx>
+#include <Geom_BSplineCurve.hxx>
+#include <Geom_BezierCurve.hxx>
 #include <GC_MakeSegment.hxx>
 #include <GC_MakeCircle.hxx>
 #include <GC_MakeArcOfCircle.hxx>
@@ -47,6 +49,8 @@
 #include <GCE2d_MakeSegment.hxx>
 #include <GCE2d_MakeCircle.hxx>
 #include <GCE2d_MakeArcOfCircle.hxx>
+#include <ShapeUpgrade_UnifySameDomain.hxx>
+#include <GeomLProp_SLProps.hxx>
 
 #if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
 #define OCC_HAVE_DUMP_JSON
@@ -54,6 +58,59 @@
 
 using namespace netgen;
 
+void ExtractEdgeData( const TopoDS_Edge & edge, int index, std::vector<double> * p, Box<3> & box )
+{
+    if (BRep_Tool::Degenerated(edge)) return;
+
+    Handle(Poly_PolygonOnTriangulation) poly;
+    Handle(Poly_Triangulation) T;
+    TopLoc_Location loc;
+    BRep_Tool::PolygonOnTriangulation(edge, poly, T, loc);
+
+    int nbnodes = poly -> NbNodes();
+    for (int j = 1; j < nbnodes; j++)
+    {
+        auto p0 = occ2ng((T -> Nodes())(poly->Nodes()(j)).Transformed(loc));
+        auto p1 = occ2ng((T -> Nodes())(poly->Nodes()(j+1)).Transformed(loc));
+        for(auto k : Range(3))
+        {
+            p[0].push_back(p0[k]);
+            p[1].push_back(p1[k]);
+        }
+        p[0].push_back(index);
+        p[1].push_back(index);
+        box.Add(p0);
+        box.Add(p1);
+    }
+}
+
+void ExtractFaceData( const TopoDS_Face & face, int index, std::vector<double> * p, Box<3> & box )
+{
+    TopLoc_Location loc;
+    Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation (face, loc);
+
+    bool flip = TopAbs_REVERSED == face.Orientation();
+
+    int ntriangles = triangulation -> NbTriangles();
+    for (int j = 1; j <= ntriangles; j++)
+    {
+        Poly_Triangle triangle = (triangulation -> Triangles())(j);
+        std::array<Point<3>,3> pts;
+        for (int k = 0; k < 3; k++)
+            pts[k] = occ2ng( (triangulation -> Nodes())(triangle(k+1)).Transformed(loc) );
+
+        if(flip)
+            Swap(pts[1], pts[2]);
+
+        for (int k = 0; k < 3; k++)
+        {
+            box.Add(pts[k]);
+            for (int d = 0; d < 3; d++)
+                p[k].push_back( pts[k][d] );
+            p[k].push_back( index );
+        }
+    }
+}
 
 py::object CastShape(const TopoDS_Shape & s)
 {
@@ -478,7 +535,13 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                   { return shape.Located(loc); })
 
     .def("__add__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
-        return BRepAlgoAPI_Fuse(shape1, shape2).Shape();
+        auto fused = BRepAlgoAPI_Fuse(shape1, shape2).Shape();
+        return fused;
+        // make one face when fusing in 2D
+        // from https://gitlab.onelab.info/gmsh/gmsh/-/issues/627
+        // ShapeUpgrade_UnifySameDomain unify(fused, true, true, true);
+        // unify.Build();
+        // return unify.Shape();
       })
     
     .def("__mul__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
@@ -652,6 +715,105 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            // return MoveToNumpyArray(triangles);
            return triangles;
          })
+    .def("_webgui_data", [](const TopoDS_Shape & shape)
+         {
+           BRepTools::Clean (shape);
+           double deflection = 0.01;
+           BRepMesh_IncrementalMesh (shape, deflection, true);
+           // triangulation = BRep_Tool::Triangulation (face, loc);
+
+           std::vector<double> p[3];
+           py::list names, colors;
+
+           int index = 0;
+
+           Box<3> box(Box<3>::EMPTY_BOX);
+           for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
+           {
+               TopoDS_Face face = TopoDS::Face(e.Current());
+               // Handle(TopoDS_Face) face = e.Current();
+               ExtractFaceData(face, index, p, box);
+               auto & props = OCCGeometry::global_shape_properties[face.TShape()];
+               if(props.col)
+               {
+                 auto & c = *props.col;
+                 colors.append(py::make_tuple(c[0], c[1], c[2]));
+               }
+               else
+                   colors.append(py::make_tuple(0.0, 1.0, 0.0));
+               if(props.name)
+               {
+                 names.append(*props.name);
+               }
+               else
+                   names.append("");
+               index++;
+           }
+
+           std::vector<double> edge_p[2];
+           py::list edge_names, edge_colors;
+           index = 0;
+           for (TopExp_Explorer e(shape, TopAbs_EDGE); e.More(); e.Next())
+           {
+               TopoDS_Edge edge = TopoDS::Edge(e.Current());
+               ExtractEdgeData(edge, index, edge_p, box);
+               auto & props = OCCGeometry::global_shape_properties[edge.TShape()];
+               if(props.col)
+               {
+                 auto & c = *props.col;
+                 edge_colors.append(py::make_tuple(c[0], c[1], c[2]));
+               }
+               else
+                   edge_colors.append(py::make_tuple(0.0, 0.0, 0.0));
+               if(props.name)
+               {
+                 edge_names.append(*props.name);
+               }
+               else
+                   edge_names.append("");
+               index++;
+           }
+           
+           
+           auto center = box.Center();
+
+           py::list mesh_center;
+           mesh_center.append(center[0]);
+           mesh_center.append(center[1]);
+           mesh_center.append(center[2]);
+           py::dict data;
+           data["ngsolve_version"] = "Netgen x.x"; // TODO
+           data["mesh_dim"] = 3; // TODO
+           data["mesh_center"] = mesh_center;
+           data["mesh_radius"] = box.Diam()/2;
+           data["order2d"] = 1;
+           data["order3d"] = 0;
+           data["draw_vol"] = false;
+           data["draw_surf"] = true;
+           data["funcdim"] = 0;
+           data["show_wireframe"] = true;
+           data["show_mesh"] = true;
+           data["Bezier_points"] = py::list{};
+           py::list points;
+           points.append(p[0]);
+           points.append(p[1]);
+           points.append(p[2]);
+           data["Bezier_trig_points"] = points;
+           data["funcmin"] = 0;
+           data["funcmax"] = 1;
+           data["mesh_regions_2d"] = index;
+           data["autoscale"] = false;
+           data["colors"] = colors;
+           data["names"] = names;
+
+           py::list edges;
+           edges.append(edge_p[0]);
+           edges.append(edge_p[1]);
+           data["edges"] = edges;
+           data["edge_names"] = edge_names;
+           data["edge_colors"] = edge_colors;
+           return data;
+         })
     ;
   
   py::class_<TopoDS_Vertex, TopoDS_Shape> (m, "TopoDS_Vertex")
@@ -677,6 +839,22 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                            double s0, s1;
                            auto curve = BRep_Tool::Curve(e, s0, s1);
                            return curve->Value(s1);
+                           })
+    .def_property_readonly("start_tangent",
+                           [](const TopoDS_Edge & e) {
+                           double s0, s1;
+                           auto curve = BRep_Tool::Curve(e, s0, s1);
+                           gp_Pnt p; gp_Vec v;
+                           curve->D1(s0, p, v);
+                           return v;
+                           })
+    .def_property_readonly("end_tangent",
+                           [](const TopoDS_Edge & e) {
+                           double s0, s1;
+                           auto curve = BRep_Tool::Curve(e, s0, s1);
+                           gp_Pnt p; gp_Vec v;
+                           curve->D1(s1, p, v);
+                           return v;
                            })
     ;
   py::class_<TopoDS_Wire, TopoDS_Shape> (m, "TopoDS_Wire");
@@ -710,6 +888,13 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         gp_Pnt p;
         surf->D1 (u,v,p,du,dv);
         return tuple(p,du,dv);
+      })
+    
+    .def("Normal", [] (const Handle(Geom_Surface) & surf, double u, double v) {
+        GeomLProp_SLProps lprop(surf,u,v,1,1e-8);
+        if (lprop.IsNormalDefined())
+          return lprop.Normal();
+        throw Exception("normal not defined");
       })
     ;
   
@@ -958,6 +1143,55 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     }, py::arg("p1"), py::arg("v"), py::arg("p2"));
 
 
+  m.def("BSplineCurve", [](std::vector<gp_Pnt> vpoles, int degree) {
+      // not yet working ????
+      TColgp_Array1OfPnt poles(0, vpoles.size()-1);
+      TColStd_Array1OfReal knots(0, vpoles.size()+degree);
+      TColStd_Array1OfInteger mult(0, vpoles.size()+degree);
+      int cnt = 0;
+      try
+        {
+          for (int i = 0; i < vpoles.size(); i++)
+            {
+              poles.SetValue(i, vpoles[i]);
+              knots.SetValue(i, i);
+              mult.SetValue(i,1);
+            }
+          for (int i = vpoles.size(); i < vpoles.size()+degree+1; i++)
+            {
+              knots.SetValue(i, i);
+              mult.SetValue(i, 1);
+            }
+
+          Handle(Geom_Curve) curve = new Geom_BSplineCurve(poles, knots, mult, degree);
+          return BRepBuilderAPI_MakeEdge(curve).Edge();
+        }
+      catch (Standard_Failure & e)
+        {
+          stringstream errstr;
+          e.Print(errstr);
+          throw NgException("cannot create spline: "+errstr.str());
+        }
+    });
+  
+  m.def("BezierCurve", [](std::vector<gp_Pnt> vpoles) {
+      TColgp_Array1OfPnt poles(0, vpoles.size()-1);
+      try
+        {
+          for (int i = 0; i < vpoles.size(); i++)
+            poles.SetValue(i, vpoles[i]);
+
+          Handle(Geom_Curve) curve = new Geom_BezierCurve(poles);
+          return BRepBuilderAPI_MakeEdge(curve).Edge();
+        }
+      catch (Standard_Failure & e)
+        {
+          stringstream errstr;
+          e.Print(errstr);
+          throw NgException("cannot create Bezier-spline: "+errstr.str());
+        }
+    });
+  
   m.def("Edge", [](Handle(Geom2d_Curve) curve2d, TopoDS_Face face) {
       auto edge = BRepBuilderAPI_MakeEdge(curve2d, BRep_Tool::Surface (face)).Edge();
       BRepLib::BuildCurves3d(edge);
@@ -966,32 +1200,25 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
   
   m.def("Wire", [](std::vector<TopoDS_Shape> edges) {
       BRepBuilderAPI_MakeWire builder;
-      for (auto s : edges)
-        switch (s.ShapeType())
-          {
-          case TopAbs_EDGE:
-            try
-              {
-              builder.Add(TopoDS::Edge(s)); break;
-              }
-            catch (Standard_Failure & e)
-              {
-                e.Print(cout);
-                throw NgException("cannot add to wire");
-              }
-          case TopAbs_WIRE:
-            builder.Add(TopoDS::Wire(s)); break;
-          default:
-            throw Exception("can make wire only from edges and wires");
-          }
       try
         {
+          for (auto s : edges)
+            switch (s.ShapeType())
+              {
+              case TopAbs_EDGE:
+                builder.Add(TopoDS::Edge(s)); break;
+              case TopAbs_WIRE:
+                builder.Add(TopoDS::Wire(s)); break;
+              default:
+                throw Exception("can make wire only from edges and wires");
+              }
           return builder.Wire();
         }
       catch (Standard_Failure & e)
         {
-          e.Print(cout);
-          throw NgException("error in wire builder");
+          stringstream errstr;
+          e.Print(errstr);
+          throw NgException("error in wire builder: "+errstr.str());
         }
     });
 
