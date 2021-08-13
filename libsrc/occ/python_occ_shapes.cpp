@@ -56,10 +56,34 @@
 
 using namespace netgen;
 
+void ExtractEdgeData( const TopoDS_Edge & edge, int index, std::vector<double> * p, Box<3> & box )
+{
+    if (BRep_Tool::Degenerated(edge)) return;
+
+    Handle(Poly_PolygonOnTriangulation) poly;
+    Handle(Poly_Triangulation) T;
+    TopLoc_Location loc;
+    BRep_Tool::PolygonOnTriangulation(edge, poly, T, loc);
+
+    int nbnodes = poly -> NbNodes();
+    for (int j = 1; j < nbnodes; j++)
+    {
+        auto p0 = occ2ng((T -> Nodes())(poly->Nodes()(j)).Transformed(loc));
+        auto p1 = occ2ng((T -> Nodes())(poly->Nodes()(j+1)).Transformed(loc));
+        for(auto k : Range(3))
+        {
+            p[0].push_back(p0[k]);
+            p[1].push_back(p1[k]);
+        }
+        p[0].push_back(index);
+        p[1].push_back(index);
+        box.Add(p0);
+        box.Add(p1);
+    }
+}
+
 void ExtractFaceData( const TopoDS_Face & face, int index, std::vector<double> * p, Box<3> & box )
 {
-    Handle(Geom_Surface) surf = BRep_Tool::Surface (face);
-
     TopLoc_Location loc;
     Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation (face, loc);
 
@@ -606,6 +630,31 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                    names.append("");
                index++;
            }
+
+           std::vector<double> edge_p[2];
+           py::list edge_names, edge_colors;
+           index = 0;
+           for (TopExp_Explorer e(shape, TopAbs_EDGE); e.More(); e.Next())
+           {
+               TopoDS_Edge edge = TopoDS::Edge(e.Current());
+               ExtractEdgeData(edge, index, edge_p, box);
+               auto & props = OCCGeometry::global_shape_properties[edge.TShape()];
+               if(props.col)
+               {
+                 auto & c = *props.col;
+                 edge_colors.append(py::make_tuple(c[0], c[1], c[2]));
+               }
+               else
+                   edge_colors.append(py::make_tuple(0.0, 0.0, 0.0));
+               if(props.name)
+               {
+                 edge_names.append(*props.name);
+               }
+               else
+                   edge_names.append("");
+               index++;
+           }
+           
            
            auto center = box.Center();
 
@@ -623,9 +672,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            data["draw_vol"] = false;
            data["draw_surf"] = true;
            data["funcdim"] = 0;
-           data["show_wireframe"] = false;
+           data["show_wireframe"] = true;
            data["show_mesh"] = true;
-           data["edges"] = py::list{};
            data["Bezier_points"] = py::list{};
            py::list points;
            points.append(p[0]);
@@ -638,6 +686,13 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            data["autoscale"] = false;
            data["colors"] = colors;
            data["names"] = names;
+
+           py::list edges;
+           edges.append(edge_p[0]);
+           edges.append(edge_p[1]);
+           data["edges"] = edges;
+           data["edge_names"] = edge_names;
+           data["edge_colors"] = edge_colors;
            return data;
          })
     ;

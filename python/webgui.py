@@ -22,6 +22,9 @@ class WebGLScene(BaseWebGuiScene):
         for i in range(len(bp)):
             bp[i] = encodeData(np.array(bp[i]))
 
+        ep = d['edges']
+        for i in range(len(ep)):
+            ep[i] = encodeData(np.array(ep[i]))
 
         if self.clipping is not None:
             d['clipping'] = True
