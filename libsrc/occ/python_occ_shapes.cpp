@@ -160,6 +160,10 @@ public:
   {
     gp_Pnt2d P1 = localpos.Location();
 
+    //check input
+    if(P1.X() == h && P1.Y() == v)
+        throw Exception("points P1 and P2 must not be congruent");
+
     localpos.SetLocation (gp_Pnt2d(h,v));
     gp_Pnt2d P2 = localpos.Location();
 
@@ -230,6 +234,10 @@ public:
   auto Arc(double radius, double angle)
   {
     double newAngle = fmod(angle,360)*M_PI/180;
+
+    //check input
+    if(newAngle<1e-16 && newAngle>-1e-16)
+        throw Exception("angle must not be an integer multiple of 360");
 
     gp_Dir2d dir = localpos.Direction();
     gp_Dir2d dirn;
