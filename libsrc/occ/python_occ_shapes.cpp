@@ -14,6 +14,7 @@
 #include <gp_Trsf.hxx>
 #include <BRepPrimAPI_MakeSphere.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
+#include <BRepPrimAPI_MakeRevol.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
 #include <BRepOffsetAPI_MakePipe.hxx>
@@ -47,6 +48,7 @@
 #include <Geom2d_TrimmedCurve.hxx>
 #include <GCE2d_MakeSegment.hxx>
 #include <GCE2d_MakeCircle.hxx>
+#include <GCE2d_MakeArcOfCircle.hxx>
 #include <ShapeUpgrade_UnifySameDomain.hxx>
 #include <GeomLProp_SLProps.hxx>
 
@@ -208,7 +210,116 @@ public:
   auto Rotate (double angle)
   {
     localpos.Rotate(localpos.Location(), angle*M_PI/180);
-    return shared_from_this();        
+    return shared_from_this();
+  }
+
+  auto ArcTo (double h, double v, const gp_Vec2d t)
+  {
+    gp_Pnt2d P1 = localpos.Location();
+
+    //check input
+    if(P1.X() == h && P1.Y() == v)
+        throw Exception("points P1 and P2 must not be congruent");
+
+    localpos.SetLocation (gp_Pnt2d(h,v));
+    gp_Pnt2d P2 = localpos.Location();
+
+    cout << "ArcTo:" << endl;
+    cout << "P1 = (" << P1.X() <<", " << P1.Y() << ")"<<endl;
+    cout << "P2 = (" << P2.X() <<", " << P2.Y() << ")"<<endl;
+    cout << "t = (" << t.X() << ", " << t.Y() << ")" << endl;
+
+    //compute circle center point M
+    //point midway between p1 and p2
+    gp_Pnt2d P12 = gp_Pnt2d((P1.X() + h) / 2, (P1.Y() + v) / 2);
+    //vector normal to vector from P1 to P12
+    gp_Vec2d p12n = gp_Vec2d( - (P12.Y() - P1.Y()), (P12.X() - P1.X()));
+    //M is intersection of p12n and tn (tn ... normalvector to t)
+    double k = ((P12.Y()- P1.Y())*p12n.X() + (P1.X() - P12.X())*p12n.Y() )/ (t.X()*p12n.X() + t.Y()*p12n.Y());
+    gp_Pnt2d M = gp_Pnt2d(P1.X()-k*t.Y(), P1.Y() + k*t.X());
+
+    cout << "P12 = (" << P12.X() <<", " << P12.Y() << ")"<<endl;
+    cout << "p12n = (" << p12n.X() <<", " << p12n.Y() << ")"<<endl;
+    cout << "k = " << k <<endl;
+    cout << "M = (" << M.X() <<", " << M.Y() << ")"<<endl;
+
+    //radius
+    double r = P1.Distance(M);
+
+    //compute point P3 on circle between P1 and P2
+    p12n.Normalize();   //docu: reverses direction of p12n ??
+    cout << "p12n = (" << p12n.X() <<", " << p12n.Y() << ")"<<endl;
+
+    gp_Pnt2d P3;
+
+    double angletp12n = t.Angle(p12n);
+    if(angletp12n > -M_PI/2 && angletp12n < M_PI/2)
+        P3 = gp_Pnt2d(M.X() + r * p12n.X() , M.Y() + r * p12n.Y());
+    else
+        P3 = gp_Pnt2d(M.X() - r * p12n.X() , M.Y() - r * p12n.Y());
+
+    cout << "r = " << r <<endl;
+    cout << "angle t,p12n = " << t.Angle(p12n)<<endl;
+    cout << "P3 = (" << P3.X() <<", " << P3.Y() << ")"<<endl;
+    cout << "dist(M,P3) = " << P3.Distance(M) <<endl;
+
+    //Draw 2d arc of circle from P1 to P2 through P3
+    Handle(Geom2d_TrimmedCurve) curve2d = GCE2d_MakeArcOfCircle(P1, P3, P2).Value();
+
+    //create 3d edge from 2d curve using surf
+    auto edge = BRepBuilderAPI_MakeEdge(curve2d, surf).Edge();
+    BRepLib::BuildCurves3d(edge);
+    wire_builder.Add(edge);
+
+    //compute angle of rotation
+    //compute tangent t2 in P2
+    gp_Vec2d p2 = gp_Vec2d(P1.X()-P2.X(),P1.Y()-P2.Y());
+    gp_Vec2d t2;
+    if(t.Angle(p2) >=0)
+        t2 = gp_Vec2d((P2.Y()-M.Y()),-(P2.X()-M.X()));
+    else
+        t2 = gp_Vec2d(-(P2.Y()-M.Y()),(P2.X()-M.X()));
+    double angle = -t2.Angle(t);    //angle \in [-pi,pi]
+    cout << "angle t2,t = " << angle*180/M_PI << endl;
+
+    //update localpos.Direction()
+    Rotate(angle*180/M_PI);
+
+    return shared_from_this();
+  }
+
+  auto Arc(double radius, double angle)
+  {
+    double newAngle = fmod(angle,360)*M_PI/180;
+
+    //check input
+    if(newAngle<1e-16 && newAngle>-1e-16)
+        throw Exception("angle must not be an integer multiple of 360");
+
+    gp_Dir2d dir = localpos.Direction();
+    gp_Dir2d dirn;
+    //compute center point of arc
+    if(newAngle>=0)
+        dirn = gp_Dir2d(-dir.Y(),dir.X());
+    else
+        dirn = gp_Dir2d(dir.Y(),-dir.X());
+
+    gp_Pnt2d oldp = localpos.Location();
+
+    oldp.Translate(radius*dirn);
+
+    cout << "M = (" << oldp.X() << ", " << oldp.Y() << ")" << endl;
+
+    dirn.Rotate(newAngle-M_PI);
+    oldp.Translate(radius*dirn);
+
+    //compute tangent vector in P1
+    gp_Vec2d t = gp_Vec2d(dir.X(),dir.Y());
+
+    cout << "t = (" << t.X() << ", " << t.Y() << ")" << endl;
+
+    //add arc
+    return ArcTo (oldp.X(), oldp.Y(), t);
   }
 
   auto Rectangle (double l, double w)
@@ -514,6 +625,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             return BRepPrimAPI_MakePrism (shape, h*du^dv).Shape();
           }
         throw Exception("no face found for extrusion");
+      })
+
+      .def("Revolve", [](const TopoDS_Shape & shape, const gp_Ax1 &A, const double D) {
+        for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
+          {
+            return BRepPrimAPI_MakeRevol (shape, A, D*M_PI/180).Shape();
+          }
+        throw Exception("no face found for revolve");
       })
     
     .def("Find", [](const TopoDS_Shape & shape, gp_Pnt p)
@@ -908,6 +1027,11 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       return BRepPrimAPI_MakePrism (face, vec).Shape();
     });
 
+  m.def("Revolve", [] (const TopoDS_Shape & face,const gp_Ax1 &A, const double D) {
+      //comvert angle from deg to rad
+      return BRepPrimAPI_MakeRevol (face, A, D*M_PI/180).Shape();
+    });
+
   m.def("Pipe", [] (const TopoDS_Wire & spine, const TopoDS_Shape & profile) {
       return BRepOffsetAPI_MakePipe (spine, profile).Shape();
     }, py::arg("spine"), py::arg("profile"));
@@ -1164,6 +1288,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("MoveTo", &WorkPlane::MoveTo)
     .def("Direction", &WorkPlane::Direction)    
     .def("LineTo", &WorkPlane::LineTo)
+    .def("ArcTo", &WorkPlane::ArcTo)
+    .def("Arc", &WorkPlane::Arc)
     .def("Rotate", &WorkPlane::Rotate)
     .def("Line", [](WorkPlane&wp,double l) { return wp.Line(l); })
     .def("Line", [](WorkPlane&wp,double h,double v) { return wp.Line(h,v); })
