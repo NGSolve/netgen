@@ -58,6 +58,10 @@
 
 using namespace netgen;
 
+
+class ListOfShapes : public std::vector<TopoDS_Shape> { };
+
+
 void ExtractEdgeData( const TopoDS_Edge & edge, int index, std::vector<double> * p, Box<3> & box )
 {
     if (BRep_Tool::Degenerated(edge)) return;
@@ -66,6 +70,30 @@ void ExtractEdgeData( const TopoDS_Edge & edge, int index, std::vector<double> *
     Handle(Poly_Triangulation) T;
     TopLoc_Location loc;
     BRep_Tool::PolygonOnTriangulation(edge, poly, T, loc);
+
+    if (poly.IsNull())
+      {
+        cout << "no edge mesh, do my own sampling" << endl;
+
+        double s0, s1;
+        Handle(Geom_Curve) c = BRep_Tool::Curve(edge, s0, s1);
+        
+        for (int i = 0; i < 50; i++)
+          {
+            auto p0 = occ2ng(c->Value (s0 + i*(s1-s0)/50.0));
+            auto p1 = occ2ng(c->Value (s0 + (i+1)*(s1-s0)/50.0));
+            for(auto k : Range(3))
+              {
+                p[0].push_back(p0[k]);
+                p[1].push_back(p1[k]);
+              }
+            p[0].push_back(index);
+            p[1].push_back(index);
+            box.Add(p0);
+            box.Add(p1);
+          }
+        return;
+      }        
 
     int nbnodes = poly -> NbNodes();
     for (int j = 1; j < nbnodes; j++)
@@ -90,6 +118,12 @@ void ExtractFaceData( const TopoDS_Face & face, int index, std::vector<double> *
     Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation (face, loc);
 
     bool flip = TopAbs_REVERSED == face.Orientation();
+
+    if (triangulation.IsNull())
+      {
+        cout << "pls build face triangulation before" << endl;
+        return;
+      }
 
     int ntriangles = triangulation -> NbTriangles();
     for (int j = 1; j <= ntriangles; j++)
@@ -374,14 +408,18 @@ public:
 
   TopoDS_Face Face()
   {
-         // crashes ????
     BRepBuilderAPI_MakeFace builder(surf, 1e-8);
     for (auto w : wires)
       builder.Add(w);
     return builder.Face();
-    
-    // only one wire, for now:
-    // return BRepBuilderAPI_MakeFace(wires.back()).Face();
+  }
+
+  auto Wires()
+  {
+    ListOfShapes ws;
+    for (auto w : wires)
+      ws.push_back(w);
+    return ws;
   }
 };
 
@@ -400,7 +438,6 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     ;
 
 
-  class ListOfShapes : public std::vector<TopoDS_Shape> { };
   
   
   py::class_<TopoDS_Shape> (m, "TopoDS_Shape")
@@ -536,14 +573,26 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 
     .def("__add__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
         auto fused = BRepAlgoAPI_Fuse(shape1, shape2).Shape();
-        return fused;
+        // return fused;
+        
         // make one face when fusing in 2D
         // from https://gitlab.onelab.info/gmsh/gmsh/-/issues/627
-        // ShapeUpgrade_UnifySameDomain unify(fused, true, true, true);
-        // unify.Build();
-        // return unify.Shape();
+        int cntsolid = 0;
+        for (TopExp_Explorer e(shape1, TopAbs_SOLID); e.More(); e.Next())
+          cntsolid++;
+        for (TopExp_Explorer e(shape2, TopAbs_SOLID); e.More(); e.Next())
+          cntsolid++;
+        if (cntsolid == 0)
+          {
+            ShapeUpgrade_UnifySameDomain unify(fused, true, true, true);
+            unify.Build();
+            return unify.Shape();
+          }
+        else
+          return fused;
       })
-    
+    .def("__radd__", [] (const TopoDS_Shape & shape, int i) // for sum([shapes])
+         { return shape; })
     .def("__mul__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
         // return BRepAlgoAPI_Common(shape1, shape2).Shape();
         
@@ -1299,6 +1348,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("Close", &WorkPlane::Close)
     .def("Last", &WorkPlane::Last)
     .def("Face", &WorkPlane::Face)
+    .def("Wires", &WorkPlane::Wires)
     ;
 
 
