@@ -1157,20 +1157,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 #ifdef OCC_HAVE_HISTORY          
           Handle(BRepTools_History) history = builder.History ();
 
-          for (auto & s : shapes)
-            for (TopExp_Explorer e(s, TopAbs_SOLID); e.More(); e.Next())
-              {
-                auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
-                for (auto mods : history->Modified(e.Current()))
-                  OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
-              }
-              /*
-              {
-                auto name = OCCGeometry::global_shape_names[e.Current().TShape()];
-                for (auto mods : history->Modified(e.Current()))
-                  OCCGeometry::global_shape_names[mods.TShape()] = name;
-              }
-              */
+          for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
+            for (auto & s : shapes)
+              for (TopExp_Explorer e(s, typ); e.More(); e.Next())
+                {
+                  auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+                  for (auto mods : history->Modified(e.Current()))
+                    OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+                }
 #endif // OCC_HAVE_HISTORY
           
           return builder.Shape();
