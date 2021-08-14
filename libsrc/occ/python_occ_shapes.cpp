@@ -371,9 +371,10 @@ public:
     return shared_from_this();            
   }
 
-  auto Circle(gp_Pnt2d p, double r)
+  auto Circle(double x, double y,  double r)
   {
-    MoveTo(p.X()+r, p.Y());
+    
+    MoveTo(x+r, y);
     Direction (0, 1);
     Arc(r, 180);
     Arc(r, 180);
