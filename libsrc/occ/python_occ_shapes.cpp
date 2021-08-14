@@ -370,6 +370,41 @@ public:
     wire_builder = BRepBuilderAPI_MakeWire();
     return shared_from_this();            
   }
+
+  auto Circle(gp_Pnt2d p, double r)
+  {
+    MoveTo(p.X()+r, p.Y());
+    Direction (0, 1);
+    Arc(r, 180);
+    Arc(r, 180);
+    wires.push_back (wire_builder.Wire());
+    wire_builder = BRepBuilderAPI_MakeWire();
+    return shared_from_this();            
+
+    /*
+
+      // could not get it working with MakeCircle 
+
+    cout << "make circle, p = " << p.X() << "/" << p.Y() << ", r = " << r << endl;
+    // Handle(Geom2d_Circle) circ_curve = GCE2d_MakeCircle(p, r).Value();
+    // Handle(Geom2d_Curve) curve2d = new Geom2d_TrimmedCurve (circ_curve, 0, M_PI);
+
+    gp_Vec2d v(r,0);
+    Handle(Geom2d_TrimmedCurve) curve2d = GCE2d_MakeArcOfCircle(p.Translated(v),
+                                                                p.Translated(-v),
+                                                                p.Translated(v)).Value();
+    // Handle(Geom2d_TrimmedCurve) curve2d = GCE2d_MakeCircle(p, r).Value();
+
+    
+    auto edge = BRepBuilderAPI_MakeEdge(curve2d, surf).Edge();
+    cout << "have edge, is null = " << edge.IsNull() << endl;
+    wire_builder.Add(edge);
+    wires.push_back (wire_builder.Wire());
+    cout << "have wire, is null = " << wires.back().IsNull() << endl;
+    wire_builder = BRepBuilderAPI_MakeWire();
+    return shared_from_this();    
+    */
+  }
   
   auto Close ()
   {
@@ -1343,6 +1378,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("Line", [](WorkPlane&wp,double l) { return wp.Line(l); })
     .def("Line", [](WorkPlane&wp,double h,double v) { return wp.Line(h,v); })
     .def("Rectangle", &WorkPlane::Rectangle)
+    .def("Circle", &WorkPlane::Circle)
     .def("Offset", &WorkPlane::Offset)
     .def("Reverse", &WorkPlane::Reverse)
     .def("Close", &WorkPlane::Close)
