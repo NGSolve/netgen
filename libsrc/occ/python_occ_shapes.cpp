@@ -195,6 +195,7 @@ public:
   {
     startpnt = gp_Pnt2d(h,v);
     localpos.SetLocation(startpnt);
+    startvertex.Nullify();
     return shared_from_this();
   }
 
@@ -214,26 +215,29 @@ public:
     gp_Pnt2d new2d = localpos.Location();
     gp_Pnt newp = axis.Location() . Translated(new2d.X() * axis.XDirection() + new2d.Y() * axis.YDirection());
 
-    cout << "lineto, newp = " << occ2ng(newp) << endl;
-    gp_Pnt pfromsurf;
-    surf->D0(new2d.X(), new2d.Y(), pfromsurf);
-    cout << "p from plane = " << occ2ng(pfromsurf) << endl;
+    if (new2d.Distance(old2d) < 1e-10) return shared_from_this();    
+    bool closing = new2d.Distance(startpnt) < 1e-10;
 
+      
+    cout << "lineto, newp = " << occ2ng(newp) << endl;
+    gp_Pnt pfromsurf = surf->Value(new2d.X(), new2d.Y());
+    cout << "p from plane = " << occ2ng(pfromsurf) << endl;
     
     Handle(Geom_TrimmedCurve) curve = GC_MakeSegment(oldp, newp);
 
     if (startvertex.IsNull())
       startvertex = lastvertex = BRepBuilderAPI_MakeVertex(oldp);
-    auto endv = BRepBuilderAPI_MakeVertex(newp);
+    auto endv = closing ? startvertex : BRepBuilderAPI_MakeVertex(newp);
     // liefert noch Fehler bei close
-    // auto edge = BRepBuilderAPI_MakeEdge(curve, lastvertex, endv).Edge();
+    auto edge = BRepBuilderAPI_MakeEdge(curve, lastvertex, endv).Edge();
     lastvertex = endv;
 
-    
-    auto edge = BRepBuilderAPI_MakeEdge(curve).Edge();
+    // auto edge = BRepBuilderAPI_MakeEdge(curve).Edge();
     if (name)
       OCCGeometry::global_shape_properties[edge.TShape()].name = name;
     wire_builder.Add(edge);
+
+    if (closing) Close();
     return shared_from_this();    
   }
 
@@ -312,9 +316,24 @@ public:
     //Draw 2d arc of circle from P1 to P2 through P3
     Handle(Geom2d_TrimmedCurve) curve2d = GCE2d_MakeArcOfCircle(P1, P3, P2).Value();
 
+    gp_Pnt P13d = surf->Value(P1.X(), P1.Y());
+    gp_Pnt P23d = surf->Value(P2.X(), P2.Y());
+    cout << "p13d = " << occ2ng(P13d) << ", p23d = " << occ2ng(P23d) << endl;
+    bool closing = P2.Distance(startpnt) < 1e-10;
+    if (startvertex.IsNull())
+      startvertex = lastvertex = BRepBuilderAPI_MakeVertex(P13d);
+    auto endv = closing ? startvertex : BRepBuilderAPI_MakeVertex(P23d);
+    // liefert noch Fehler bei close
+
+    cout << "closing = " << closing << endl;
+    cout << "startv isnull = " << lastvertex.IsNull() << endl;
+    cout << "endv isnull = " << endv.IsNull() << endl;
     //create 3d edge from 2d curve using surf
-    auto edge = BRepBuilderAPI_MakeEdge(curve2d, surf).Edge();
+    auto edge = BRepBuilderAPI_MakeEdge(curve2d, surf, lastvertex, endv).Edge();
+    lastvertex = endv;
+    cout << "have edge" << endl;
     BRepLib::BuildCurves3d(edge);
+    cout << "Have curve3d" << endl;
     wire_builder.Add(edge);
 
     //compute angle of rotation
@@ -330,7 +349,12 @@ public:
 
     //update localpos.Direction()
     Rotate(angle*180/M_PI);
-
+    if (closing)
+      {
+        cout << "call close from arc" << endl;
+        Close();
+        cout << "close is back" << endl;
+      }
     return shared_from_this();
   }
 
@@ -378,8 +402,8 @@ public:
     Rotate (90);
     Line(w);
     Rotate (90);
-    wires.push_back (wire_builder.Wire());
-    wire_builder = BRepBuilderAPI_MakeWire();
+    // wires.push_back (wire_builder.Wire());
+    // wire_builder = BRepBuilderAPI_MakeWire();
     return shared_from_this();            
   }
 
@@ -390,8 +414,8 @@ public:
     Direction (0, 1);
     Arc(r, 180);
     Arc(r, 180);
-    wires.push_back (wire_builder.Wire());
-    wire_builder = BRepBuilderAPI_MakeWire();
+    // wires.push_back (wire_builder.Wire());
+    // wire_builder = BRepBuilderAPI_MakeWire();
     return shared_from_this();            
 
     /*
@@ -419,12 +443,19 @@ public:
     */
   }
   
-  auto Close ()
+  shared_ptr<WorkPlane> Close ()
   {
-    LineTo (startpnt.X(), startpnt.Y());
-    wires.push_back (wire_builder.Wire());
-    wire_builder = BRepBuilderAPI_MakeWire();
-    startvertex.Nullify();
+    cout << "close called" << endl;
+    if (!startvertex.IsNull())
+      {
+        cout << "I am actually closing" << endl;
+        LineTo (startpnt.X(), startpnt.Y());
+        wires.push_back (wire_builder.Wire());
+        wire_builder = BRepBuilderAPI_MakeWire();
+        startvertex.Nullify();
+        cout << "complete" << endl;        
+      }
+    cout << "close returning" << endl;
     return shared_from_this();            
   }
   
@@ -1413,8 +1444,10 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("ArcTo", &WorkPlane::ArcTo)
     .def("Arc", &WorkPlane::Arc)
     .def("Rotate", &WorkPlane::Rotate)
-    .def("Line", [](WorkPlane&wp,double l, optional<string> name) { return wp.Line(l, name); })
-    .def("Line", [](WorkPlane&wp,double h,double v, optional<string> name) { return wp.Line(h,v,name); })
+    .def("Line", [](WorkPlane&wp,double l, optional<string> name) { return wp.Line(l, name); },
+         py::arg("l"), py::arg("name")=nullopt)
+    .def("Line", [](WorkPlane&wp,double h,double v, optional<string> name) { return wp.Line(h,v,name); },
+         py::arg("dx"), py::arg("dy"), py::arg("name")=nullopt)
     .def("Rectangle", &WorkPlane::Rectangle)
     .def("Circle", &WorkPlane::Circle)
     .def("Offset", &WorkPlane::Offset)
