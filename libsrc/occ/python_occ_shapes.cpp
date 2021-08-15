@@ -174,6 +174,7 @@ class WorkPlane : public enable_shared_from_this<WorkPlane>
   gp_Ax3 axis;
   gp_Ax2d localpos;
   gp_Pnt2d startpnt;
+  TopoDS_Vertex lastvertex, startvertex;
   Handle(Geom_Surface) surf;
   // Geom_Plane surf;
 
@@ -203,7 +204,7 @@ public:
     return shared_from_this();
   }
   
-  auto LineTo (double h, double v)
+  auto LineTo (double h, double v, optional<string> name = nullopt)
   {
     gp_Pnt2d old2d = localpos.Location();
     gp_Pnt oldp = axis.Location() . Translated(old2d.X() * axis.XDirection() + old2d.Y() * axis.YDirection());
@@ -220,25 +221,36 @@ public:
 
     
     Handle(Geom_TrimmedCurve) curve = GC_MakeSegment(oldp, newp);
+
+    if (startvertex.IsNull())
+      startvertex = lastvertex = BRepBuilderAPI_MakeVertex(oldp);
+    auto endv = BRepBuilderAPI_MakeVertex(newp);
+    // liefert noch Fehler bei close
+    // auto edge = BRepBuilderAPI_MakeEdge(curve, lastvertex, endv).Edge();
+    lastvertex = endv;
+
+    
     auto edge = BRepBuilderAPI_MakeEdge(curve).Edge();
+    if (name)
+      OCCGeometry::global_shape_properties[edge.TShape()].name = name;
     wire_builder.Add(edge);
     return shared_from_this();    
   }
 
-  auto Line(double h, double v)
+  auto Line(double h, double v, optional<string> name = nullopt)
   {
     gp_Pnt2d oldp = localpos.Location();
     oldp.Translate(gp_Vec2d(h,v));
-    return LineTo (oldp.X(), oldp.Y());
+    return LineTo (oldp.X(), oldp.Y(), name);
   }
   
-  auto Line(double len)
+  auto Line(double len, optional<string> name = nullopt)
   {
     gp_Dir2d dir = localpos.Direction();
     cout << "dir = " << dir.X() << ", " << dir.Y() << endl;
     gp_Pnt2d oldp = localpos.Location();
     oldp.Translate(len*dir);
-    return LineTo (oldp.X(), oldp.Y());
+    return LineTo (oldp.X(), oldp.Y(), name);
   }
 
   auto Rotate (double angle)
@@ -412,6 +424,7 @@ public:
     LineTo (startpnt.X(), startpnt.Y());
     wires.push_back (wire_builder.Wire());
     wire_builder = BRepBuilderAPI_MakeWire();
+    startvertex.Nullify();
     return shared_from_this();            
   }
   
@@ -1400,8 +1413,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("ArcTo", &WorkPlane::ArcTo)
     .def("Arc", &WorkPlane::Arc)
     .def("Rotate", &WorkPlane::Rotate)
-    .def("Line", [](WorkPlane&wp,double l) { return wp.Line(l); })
-    .def("Line", [](WorkPlane&wp,double h,double v) { return wp.Line(h,v); })
+    .def("Line", [](WorkPlane&wp,double l, optional<string> name) { return wp.Line(l, name); })
+    .def("Line", [](WorkPlane&wp,double h,double v, optional<string> name) { return wp.Line(h,v,name); })
     .def("Rectangle", &WorkPlane::Rectangle)
     .def("Circle", &WorkPlane::Circle)
     .def("Offset", &WorkPlane::Offset)
