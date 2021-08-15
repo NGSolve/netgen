@@ -13,7 +13,7 @@ namespace netgen
 #define TCL_OK 0
 #define TCL_ERROR 1
 
-#define DIVIDEEDGESECTIONS 1000
+#define DIVIDEEDGESECTIONS 10000   // better solution to come soon
 #define IGNORECURVELENGTH 1e-4
 #define VSMALL 1e-10
 
@@ -468,58 +468,127 @@ namespace netgen
                 cof = BRep_Tool::CurveOnSurface (edge, face, s0, s1);
 
                 int geomedgenr = geom.emap.FindIndex(edge);
-                NgArray <MeshPoint> mp;
+                NgArray<PointIndex> pnums;
                 NgArray <double> params;
+                
+                
+                // check for identifications
+                bool copy_identified = false;
+                if (auto it = geom.identifications.find(edge.TShape()); it != geom.identifications.end())
+                  for (auto & ids : it->second)
+                    {
+                      cout << "edge has identification with trafo " << ids.name << ", inv = " << ids.inverse << endl;
+                      int otherind = geom.emap.FindIndex(ids.other);
+                      Array<Segment> othersegs;
+                      for (auto & seg : mesh.LineSegments())
+                        if (seg.edgenr == otherind)
+                          othersegs.Append (seg);
 
-                DivideEdge (edge, mp, params, mesh, mparam);
-
-                NgArray<PointIndex> pnums(mp.Size()+2);
-
-                if (!merge_solids)
-                  {
-                    pnums[0] = geom.vmap.FindIndex (TopExp::FirstVertex (edge)) + PointIndex::BASE-1;
-                    pnums.Last() = geom.vmap.FindIndex (TopExp::LastVertex (edge)) + PointIndex::BASE-1;
-                  }
-                else
-                  {
-                    Point<3> fp = occ2ng (BRep_Tool::Pnt (TopExp::FirstVertex (edge)));
-                    Point<3> lp = occ2ng (BRep_Tool::Pnt (TopExp::LastVertex (edge)));
-
-                    pnums[0] = PointIndex::INVALID;
-                    pnums.Last() = PointIndex::INVALID;
-                    for (PointIndex pi : vertexrange)
-                      {
-                        if (Dist2 (mesh[pi], fp) < eps*eps) pnums[0] = pi;
-                        if (Dist2 (mesh[pi], lp) < eps*eps) pnums.Last() = pi;
-                      }
-                  }
-
-                for (size_t i = 1; i <= mp.Size(); i++)
-                  {
-                    bool exists = false;
-                    tsearch.Start();
-
-                    // for (PointIndex j = first_ep; j < mesh.Points().End(); j++)
-                    for (PointIndex j = first_ep; j < *mesh.Points().Range().end(); j++)
-                      if ((mesh.Point(j)-Point<3>(mp[i-1])).Length() < eps)
+                      if (othersegs.Size())
                         {
-                          exists = true;
-                          pnums[i] = j;
+                          cout << "other has already segs" << endl;
+                          copy_identified = true;
+                                                              
+                          Array<PointIndex> pnums_other;
+                          pnums_other.Append (othersegs[0][0]);
+                          for (auto & seg : othersegs)
+                            pnums_other.Append (seg[1]);
+
+                          auto inv = ids.trafo.CalcInverse();
+                          // for (auto & pi : pnums)
+                          for (auto oi : Range(pnums_other))
+                            {
+                              PointIndex piother = pnums_other[pnums_other.Size()-oi-1];
+                              Point<3> pother = mesh[piother];
+                              Point<3> p = inv(pother);
+                              
+                              bool found = false;
+                              PointIndex pi;
+                              for (PointIndex piv : vertexrange)
+                                if (Dist2 (mesh[piv], p) < eps*eps)
+                                  {
+                                    pi = piv;
+                                    found = true;
+                                  }
+                              
+                              if (!found)
+                                pi = mesh.AddPoint (p);
+                              
+                              // params.Add ( find parameter p );
+                              double s0, s1;
+                              Handle(Geom_Curve) curve = BRep_Tool::Curve(edge, s0, s1);
+                              
+                              GeomAPI_ProjectPointOnCurve proj(ng2occ(p), curve);
+                              params.Append (proj.LowerDistanceParameter());
+                              pnums.Append (pi);
+                              mesh.GetIdentifications().Add (pi, piother, geomedgenr);
+                              
+                            }
+                          mesh.GetIdentifications().SetType(geomedgenr,Identifications::PERIODIC);
+                          
+                          copy_identified = true;
                           break;
                         }
-                      
-                    tsearch.Stop();
+                    }
+
+                
+                if (!copy_identified)
+                  {
+                    NgArray <MeshPoint> mp;
                     
-                    if (!exists)
-                      pnums[i] = mesh.AddPoint (mp[i-1]);
+                    DivideEdge (edge, mp, params, mesh, mparam);
+                    
+                    pnums.SetSize(mp.Size()+2);
+                    if (!merge_solids)
+                      {
+                        pnums[0] = geom.vmap.FindIndex (TopExp::FirstVertex (edge)) + PointIndex::BASE-1;
+                        pnums.Last() = geom.vmap.FindIndex (TopExp::LastVertex (edge)) + PointIndex::BASE-1;
+                      }
+                    else
+                      {
+                        Point<3> fp = occ2ng (BRep_Tool::Pnt (TopExp::FirstVertex (edge)));
+                        Point<3> lp = occ2ng (BRep_Tool::Pnt (TopExp::LastVertex (edge)));
+                        
+                        pnums[0] = PointIndex::INVALID;
+                        pnums.Last() = PointIndex::INVALID;
+                        for (PointIndex pi : vertexrange)
+                          {
+                            if (Dist2 (mesh[pi], fp) < eps*eps) pnums[0] = pi;
+                            if (Dist2 (mesh[pi], lp) < eps*eps) pnums.Last() = pi;
+                          }
+                      }
+                    
+                    for (size_t i = 1; i <= mp.Size(); i++)
+                      {
+                        bool exists = false;
+                        tsearch.Start();
+                        
+                        // for (PointIndex j = first_ep; j < mesh.Points().End(); j++)
+                        for (PointIndex j = first_ep; j < *mesh.Points().Range().end(); j++)
+                          if ((mesh.Point(j)-Point<3>(mp[i-1])).Length() < eps)
+                            {
+                              exists = true;
+                              pnums[i] = j;
+                              break;
+                            }
+                        
+                        tsearch.Stop();
+                        
+                        if (!exists)
+                          pnums[i] = mesh.AddPoint (mp[i-1]);
+                      }
                   }
+                    
+
+                
                 if(geom.enames.Size() && geom.enames[curr-1] != "")
                   mesh.SetCD2Name(geomedgenr, geom.enames[curr-1]);
                 
                 (*testout) << "NP = " << mesh.GetNP() << endl;
                 //(*testout) << pnums[pnums.Size()-1] << endl;
 
-                for (size_t i = 1; i <= mp.Size()+1; i++)
+                // for (size_t i = 1; i <= mp.Size()+1; i++)
+                for (size_t i = 1; i < pnums.Size(); i++)
                   {
                     // edgenr++;
                     Segment seg;
@@ -534,15 +603,20 @@ namespace netgen
                     seg.epgeominfo[0].edgenr = geomedgenr;
                     seg.epgeominfo[1].edgenr = geomedgenr;
 
-                    gp_Pnt2d p2d;
-                    p2d = cof->Value(params[i-1]);
+                    gp_Pnt2d p2d1, p2d2;
+                    double s0 = params[i-1];
+                    double s1 = params[i];
+                    double delta = s1-s0;
+                    s0 += 1e-10*delta;   // fixes normal-vector roundoff problem when endpoint is cone-tip
+                    s1 -= 1e-10*delta;  
+                    p2d1 = cof->Value(s0);
+                    p2d2 = cof->Value(s1);
                     //			if (i == 1) p2d = cof->Value(s0);
-                    seg.epgeominfo[0].u = p2d.X();
-                    seg.epgeominfo[0].v = p2d.Y();
-                    p2d = cof->Value(params[i]);
+                    seg.epgeominfo[0].u = p2d1.X(); // + 1e-10 * vec.X();
+                    seg.epgeominfo[0].v = p2d1.Y(); // + 1e-10 * vec.Y();
                     //			if (i == mp.Size()+1) p2d = cof -> Value(s1);
-                    seg.epgeominfo[1].u = p2d.X();
-                    seg.epgeominfo[1].v = p2d.Y();
+                    seg.epgeominfo[1].u = p2d2.X(); // - 1e-10 * vec.X();
+                    seg.epgeominfo[1].v = p2d2.Y(); // - 1e-10 * vec.Y();
 
                     /*
                       if (occface->IsUPeriodic())
