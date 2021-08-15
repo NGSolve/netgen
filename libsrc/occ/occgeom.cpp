@@ -44,6 +44,7 @@ namespace netgen
   // std::map<Handle(TopoDS_TShape), string> OCCGeometry::global_shape_names;
   // std::map<Handle(TopoDS_TShape), Vec<3>> OCCGeometry::global_shape_cols;
   std::map<Handle(TopoDS_TShape), ShapeProperties> OCCGeometry::global_shape_properties;
+  std::map<Handle(TopoDS_TShape), std::vector<OCCIdentification>> OCCGeometry::identifications;
   
   OCCGeometry::OCCGeometry(const TopoDS_Shape& _shape)
   {

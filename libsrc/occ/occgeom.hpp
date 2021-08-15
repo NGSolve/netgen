@@ -220,6 +220,15 @@ namespace netgen
       if (prop2.col) col = prop2.col;      
     }
   };
+
+  class OCCIdentification
+  {
+  public:
+    TopoDS_Shape other;
+    Transformation<3> trafo;
+    bool inverse;
+    string name;
+  };
   
   class DLL_HEADER OCCGeometry : public NetgenGeometry
   {
@@ -228,7 +237,7 @@ namespace netgen
 
   public:
     static std::map<Handle(TopoDS_TShape), ShapeProperties> global_shape_properties;
-    
+    static std::map<Handle(TopoDS_TShape), std::vector<OCCIdentification>> identifications;
     // static std::map<Handle(TopoDS_TShape), string> global_shape_names;
     // static std::map<Handle(TopoDS_TShape), Vec<3>> global_shape_cols;
     

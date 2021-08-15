@@ -750,6 +750,31 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            double deflection = 0.01;
            BRepMesh_IncrementalMesh (shape, deflection, true);
          })
+
+    .def("Identify", [](const TopoDS_Shape & me, const TopoDS_Shape & you, string name) {
+        // only edges supported, by now
+        auto me_edge = TopoDS::Edge(me);
+        auto you_edge = TopoDS::Edge(you);
+
+        GProp_GProps props;
+        BRepGProp::LinearProperties(me, props);
+        gp_Pnt cme = props.CentreOfMass();
+        BRepGProp::LinearProperties(you, props);
+        gp_Pnt cyou = props.CentreOfMass();
+
+        double s0, s1;
+        auto curve_me = BRep_Tool::Curve(me_edge, s0, s1);
+        auto vme = occ2ng(curve_me->Value(s1))-occ2ng(curve_me->Value(s0));
+        auto curve_you = BRep_Tool::Curve(you_edge, s0, s1);
+        auto vyou = occ2ng(curve_you->Value(s1))-occ2ng(curve_you->Value(s0));
+        
+        bool inv = vme*vyou < 0;
+        OCCGeometry::identifications[me.TShape()].push_back
+                              (OCCIdentification { you, Transformation<3>(occ2ng(cyou) - occ2ng(cme)), inv, name });
+        OCCGeometry::identifications[you.TShape()].push_back
+                              (OCCIdentification { me, Transformation<3>(occ2ng(cme) - occ2ng(cyou)), inv, name });
+      })
+
     
     .def("Triangulation", [](const TopoDS_Shape & shape)
          {
@@ -1146,10 +1171,15 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           BOPAlgo_Builder builder;
           for (auto & s : shapes)
             {
-              for (TopExp_Explorer e(s, TopAbs_SOLID); e.More(); e.Next())            
-                builder.AddArgument(e.Current());
-              if (s.ShapeType() == TopAbs_FACE)
-                builder.AddArgument(s);
+              bool has_solid = false;
+              for (TopExp_Explorer e(s, TopAbs_SOLID); e.More(); e.Next())
+                {
+                  builder.AddArgument(e.Current());
+                  has_solid = true;
+                }
+              if (!has_solid)
+                for (TopExp_Explorer e(s, TopAbs_FACE); e.More(); e.Next())
+                  builder.AddArgument(e.Current());
             }
 
           builder.Perform();
@@ -1363,7 +1393,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 
 
   py::class_<WorkPlane, shared_ptr<WorkPlane>> (m, "WorkPlane")
-    .def(py::init<gp_Ax3, gp_Ax2d>(), py::arg("axis"), py::arg("pos")=gp_Ax2d())
+    .def(py::init<gp_Ax3, gp_Ax2d>(), py::arg("axis")=gp_Ax3(), py::arg("pos")=gp_Ax2d())
     .def("MoveTo", &WorkPlane::MoveTo)
     .def("Direction", &WorkPlane::Direction)    
     .def("LineTo", &WorkPlane::LineTo)
