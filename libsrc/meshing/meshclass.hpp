@@ -379,7 +379,7 @@ namespace netgen
     DLL_HEADER int GetNDomains() const;
     ///
     int GetDimension() const { return dimension; }
-    void SetDimension (int dim) { dimension = dim; }
+    void SetDimension (int dim); //  { dimension = dim; }
 
     /// sets internal tables
     DLL_HEADER void CalcSurfacesOfNode ();

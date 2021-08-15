@@ -4391,7 +4391,29 @@ namespace netgen
     return ndom;
   }
 
+  void Mesh :: SetDimension (int dim)
+  {
+    if (dimension == 3 && dim == 2)
+      {
+        // change mesh-dim from 3 to 2 (currently needed for OCC)
+        for (auto str : materials)
+          delete str;
+        materials.SetSize(0);
+        for (auto str : bcnames)
+          materials.Append(str);
+        bcnames.SetSize(0);
+        for (auto str : cd2names)
+          bcnames.Append(str);
+        cd2names.SetSize(0);
+        for (auto str : cd3names)
+          cd2names.Append(str);
+        cd3names.SetSize(0);
 
+        for (auto & seg : LineSegments())
+          seg.si = seg.edgenr;
+      }
+    dimension = dim;
+  }
 
   void Mesh :: SurfaceMeshOrientation ()
   {
