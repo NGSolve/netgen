@@ -219,6 +219,7 @@ public:
     bool closing = new2d.Distance(startpnt) < 1e-10;
 
       
+    cout << "lineto, oldp = " << occ2ng(oldp) << endl;
     cout << "lineto, newp = " << occ2ng(newp) << endl;
     gp_Pnt pfromsurf = surf->Value(new2d.X(), new2d.Y());
     cout << "p from plane = " << occ2ng(pfromsurf) << endl;
@@ -446,10 +447,17 @@ public:
   shared_ptr<WorkPlane> Close ()
   {
     cout << "close called" << endl;
+
+    if (startpnt.Distance(localpos.Location()) > 1e-10)
+      {
+        cout << "generate closing line" << endl;
+        LineTo (startpnt.X(), startpnt.Y());
+        return shared_from_this();                    
+      }
+    
     if (!startvertex.IsNull())
       {
         cout << "I am actually closing" << endl;
-        LineTo (startpnt.X(), startpnt.Y());
         wires.push_back (wire_builder.Wire());
         wire_builder = BRepBuilderAPI_MakeWire();
         startvertex.Nullify();
