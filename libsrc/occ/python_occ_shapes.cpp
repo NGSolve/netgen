@@ -77,11 +77,12 @@ void ExtractEdgeData( const TopoDS_Edge & edge, int index, std::vector<double> *
 
         double s0, s1;
         Handle(Geom_Curve) c = BRep_Tool::Curve(edge, s0, s1);
-        
-        for (int i = 0; i < 50; i++)
+
+        constexpr int num = 100;
+        for (int i = 0; i < num; i++)
           {
-            auto p0 = occ2ng(c->Value (s0 + i*(s1-s0)/50.0));
-            auto p1 = occ2ng(c->Value (s0 + (i+1)*(s1-s0)/50.0));
+            auto p0 = occ2ng(c->Value (s0 + i*(s1-s0)/num));
+            auto p1 = occ2ng(c->Value (s0 + (i+1)*(s1-s0)/num));
             for(auto k : Range(3))
               {
                 p[0].push_back(p0[k]);

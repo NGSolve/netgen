@@ -77,10 +77,15 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
         str << "(" << p.X() << ", " << p.Y() << ", " << p.Z() << ")";
         return str.str();
       })
-    // .def(py::self - py::self)
-    .def("__sub__", [](gp_Pnt p1, gp_Pnt p2) { return gp_Vec(p1.X()-p2.X(), p1.Y()-p2.Y(), p1.Z()-p2.Z()); })
-    .def("__add__", [](gp_Pnt p, gp_Vec v) { return gp_Pnt(p.X()+v.X(), p.Y()+v.Y(), p.Z()+v.Z()); })
-    .def("__sub__", [](gp_Pnt p, gp_Vec v) { return gp_Pnt(p.X()-v.X(), p.Y()-v.Y(), p.Z()-v.Z()); })
+    .def("__repr__", [] (const gp_Pnt & p) {
+        stringstream str;
+        str << "(" << p.X() << ", " << p.Y() << ", " << p.Z() << ")";
+        return str.str();
+      })
+
+    .def("__sub__", [](gp_Pnt p1, gp_Pnt p2) { return gp_Vec(p2, p1); }) 
+    .def("__add__", [](gp_Pnt p, gp_Vec v) { return p.Translated(v); }) // gp_Pnt(p.X()+v.X(), p.Y()+v.Y(), p.Z()+v.Z()); })
+    .def("__sub__", [](gp_Pnt p, gp_Vec v) { return p.Translated(-v); }) // gp_Pnt(p.X()-v.X(), p.Y()-v.Y(), p.Z()-v.Z()); })
     ;
   
   py::class_<gp_Vec>(m, "gp_Vec")
@@ -101,10 +106,15 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
         str << "(" << p.X() << ", " << p.Y() << ", " << p.Z() << ")";
         return str.str();
       })
-    .def("__add__", [](gp_Vec v1, gp_Vec v2) { return v1+v2; }) // return gp_Vec(v1.X()+v2.X(), v1.Y()+v2.Y(), v1.Z()+v2.Z()); })
-    .def("__sub__", [](gp_Vec v1, gp_Vec v2) { return v1-v2; }) // gp_Vec(v1.X()-v2.X(), v1.Y()-v2.Y(), v1.Z()-v2.Z()); })
-    .def("__rmul__", [](gp_Vec v, double s) { return s*v; }) // gp_Vec(s*v.X(), s*v.Y(), s*v.Z()); })
-    .def("__neg__", [](gp_Vec v) { return -v; }) // gp_Vec(-v.X(), -v.Y(), -v.Z()); })
+    .def("__repr__", [] (const gp_Vec & p) {
+        stringstream str;
+        str << "(" << p.X() << ", " << p.Y() << ", " << p.Z() << ")";
+        return str.str();
+      })
+    .def("__add__", [](gp_Vec v1, gp_Vec v2) { return v1+v2; }) 
+    .def("__sub__", [](gp_Vec v1, gp_Vec v2) { return v1-v2; }) 
+    .def("__rmul__", [](gp_Vec v, double s) { return s*v; }) 
+    .def("__neg__", [](gp_Vec v) { return -v; }) 
     .def("__xor__", [](gp_Vec v1, gp_Vec v2) { return v1^v2; }) 
     ;
 
@@ -126,7 +136,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
       })
     ;
   
-  py::class_<gp_Ax1>(m, "gp_Ax1")
+  py::class_<gp_Ax1>(m, "Axis") // "gp_Ax1")
     .def(py::init([](gp_Pnt p, gp_Dir d) {
           return gp_Ax1(p,d);
         }))
@@ -140,7 +150,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
         }))
     ;
 
-  py::class_<gp_Ax3>(m, "gp_Ax3")
+  py::class_<gp_Ax3>(m, "Axes") //  "gp_Ax3")
     .def(py::init([](gp_Pnt p, gp_Dir N, gp_Dir Vx) {
           return gp_Ax3(p,N, Vx);
         }), py::arg("p")=gp_Pnt(0,0,0), py::arg("n")=gp_Vec(0,0,1), py::arg("h")=gp_Vec(1,0,0))
@@ -160,7 +170,24 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
     .def(py::init([] (double x, double y) {
           return gp_Pnt2d(x, y);
         }))
+    .def_property("x", [](gp_Pnt2d&p) { return p.X(); }, [](gp_Pnt2d&p,double x) { p.SetX(x); })
+    .def_property("y", [](gp_Pnt2d&p) { return p.Y(); }, [](gp_Pnt2d&p,double y) { p.SetY(y); })
+    .def("__str__", [] (const gp_Pnt2d & p) {
+        stringstream str;
+        str << "(" << p.X() << ", " << p.Y() << ")";
+        return str.str();
+      })
+    .def("__repr__", [] (const gp_Pnt2d & p) {
+        stringstream str;
+        str << "(" << p.X() << ", " << p.Y() << ")";
+        return str.str();
+      })
+
+    .def("__sub__", [](gp_Pnt2d p1, gp_Pnt2d p2) { return gp_Vec2d(p1.X()-p2.X(), p1.Y()-p2.Y()); })
+    .def("__add__", [](gp_Pnt2d p, gp_Vec2d v) { return p.Translated(v); })
+    .def("__sub__", [](gp_Pnt2d p, gp_Vec2d v) { return p.Translated(-v); })
     ;
+  
   py::class_<gp_Vec2d>(m, "gp_Vec2d")
     .def(py::init([] (py::tuple vec)
                   {
@@ -172,6 +199,23 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
     .def(py::init([] (double x, double y) {
           return gp_Vec2d(x, y);
         }))
+    .def_property("x", [](gp_Vec2d&p) { return p.X(); }, [](gp_Vec2d&p,double x) { p.SetX(x); })
+    .def_property("y", [](gp_Vec2d&p) { return p.Y(); }, [](gp_Vec2d&p,double y) { p.SetY(y); })
+    .def("__str__", [] (const gp_Vec & p) {
+        stringstream str;
+        str << "(" << p.X() << ", " << p.Y() << ")";
+        return str.str();
+      })
+    .def("__repr__", [] (const gp_Vec & p) {
+        stringstream str;
+        str << "(" << p.X() << ", " << p.Y() << ")";
+        return str.str();
+      })
+    .def("__add__", [](gp_Vec2d v1, gp_Vec2d v2) { return v1+v2; }) 
+    .def("__sub__", [](gp_Vec2d v1, gp_Vec2d v2) { return v1-v2; })
+    .def("__rmul__", [](gp_Vec2d v, double s) { return s*v; })
+    .def("__neg__", [](gp_Vec2d v) { return -v; }) 
+    .def("__xor__", [](gp_Vec2d v1, gp_Vec2d v2) { return v1^v2; }) 
     ;
 
   py::class_<gp_Dir2d>(m, "gp_Dir2d")
@@ -187,6 +231,18 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
         }))
     ;
 
+  m.def("Pnt", [](double x, double y) { return gp_Pnt2d(x,y); });
+  m.def("Pnt", [](double x, double y, double z) { return gp_Pnt(x,y,z); });
+  m.def("Pnt", [](std::vector<double> p)
+        {
+          if (p.size() == 2)
+            return py::cast(gp_Pnt2d(p[0], p[1]));
+          if (p.size() == 3)
+            return py::cast(gp_Pnt(p[0], p[1], p[2]));
+          throw Exception("OCC-Points only in 2D or 3D");
+        });
+
+  
   py::class_<gp_Ax2d>(m, "gp_Ax2d")
     .def(py::init([](gp_Pnt2d p, gp_Dir2d d) {
           return gp_Ax2d(p,d);
