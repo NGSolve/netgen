@@ -688,13 +688,24 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 #ifdef OCC_HAVE_HISTORY
         Handle(BRepTools_History) history = builder.History ();
 
+        
+        for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
+          for (auto & s : { shape1, shape2 })
+            for (TopExp_Explorer e(s, typ); e.More(); e.Next())
+              {
+                auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+                for (auto mods : history->Modified(e.Current()))
+                  OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+              }
+
+        
         /*
           // work in progress ...
         TopTools_ListOfShape modlist = history->Modified(shape1);
         for (auto s : modlist)
           cout << "modified from list el: " << s.ShapeType() << endl;
         */
-
+        /*
         for (auto & s : { shape1, shape2 })
           for (TopExp_Explorer e(s, TopAbs_FACE); e.More(); e.Next())
             {
@@ -702,6 +713,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
               for (auto smod : history->Modified(e.Current()))            
                 OCCGeometry::global_shape_properties[smod.TShape()].Merge(prop);
             }        
+        */
 #endif // OCC_HAVE_HISTORY
         
         return builder.Shape();
@@ -714,6 +726,17 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 #ifdef OCC_HAVE_HISTORY        
         Handle(BRepTools_History) history = builder.History ();
 
+        
+        for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
+          for (auto & s : { shape1, shape2 })
+            for (TopExp_Explorer e(s, typ); e.More(); e.Next())
+              {
+                auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+                for (auto mods : history->Modified(e.Current()))
+                  OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+              }
+        
+#ifdef OLD        
         for (auto s : { shape1, shape2 })
           for (TopExp_Explorer e(s, TopAbs_FACE); e.More(); e.Next())
             {
@@ -743,6 +766,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                 OCCGeometry::global_shape_cols[s.TShape()] = it->second;
           }        
         */
+#endif
+        
 #endif // OCC_HAVE_HISTORY
 
         
@@ -1107,7 +1132,48 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         for (auto s : l2) l.push_back(py::cast<TopoDS_Shape>(s));
         return l;
       } )
-    .def("__len__", [](const ListOfShapes & l) { return l.size(); })
+    .def("__len__", [](const ListOfShapes & self) { return self.size(); })
+    .def("__getitem__",[](const ListOfShapes & self, string name)
+         {
+           ListOfShapes selected;
+           for (auto s : self)
+             if (auto sname = OCCGeometry::global_shape_properties[s.TShape()].name)
+               if (sname == name)
+                 selected.push_back(s);
+           return selected;
+         })
+    
+    .def("Sorted",[](ListOfShapes self, gp_Vec dir)
+         {
+           std::map<Handle(TopoDS_TShape), double> sortval;
+           for (auto shape : self)
+             {
+               GProp_GProps props;
+               gp_Pnt center;
+               
+               switch (shape.ShapeType())
+                 {
+                 case TopAbs_VERTEX:
+                   center = BRep_Tool::Pnt (TopoDS::Vertex(shape)); break;
+                 case TopAbs_FACE:
+                   BRepGProp::SurfaceProperties (shape, props);
+                   center = props.CentreOfMass();
+                   break;
+                 default:
+                   BRepGProp::LinearProperties(shape, props);
+                   center = props.CentreOfMass();
+                 }
+               
+               double val = center.X()*dir.X() + center.Y()*dir.Y() + center.Z() * dir.Z();
+               sortval[shape.TShape()] = val;
+             }
+
+           std::sort (std::begin(self), std::end(self),
+                      [&](TopoDS_Shape a, TopoDS_Shape b)
+                      { return sortval[a.TShape()] < sortval[b.TShape()]; });
+           return self;
+         })
+    
     .def("Max", [] (ListOfShapes & shapes, gp_Vec dir)
          {
            double maxval = -1e99;
