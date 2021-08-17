@@ -201,6 +201,14 @@ public:
     return shared_from_this();
   }
 
+  auto Move(double len)
+  {
+    gp_Dir2d dir = localpos.Direction();
+    gp_Pnt2d oldp = localpos.Location();
+    auto newp = oldp.Translated(len*dir);
+    return MoveTo(newp.X(), newp.Y());
+  }
+  
   auto Direction (double h, double v)
   {
     localpos.SetDirection(gp_Dir2d(h,v));
@@ -1272,6 +1280,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           BRepOffsetAPI_MakePipeShell builder(spine);
           builder.SetMode (auxspine, Standard_True);
           builder.Add (profile);
+          builder.Build();
+          builder.MakeSolid();
           return builder.Shape();
         }
       catch (Standard_Failure & e)
@@ -1532,6 +1542,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
   py::class_<WorkPlane, shared_ptr<WorkPlane>> (m, "WorkPlane")
     .def(py::init<gp_Ax3, gp_Ax2d>(), py::arg("axis")=gp_Ax3(), py::arg("pos")=gp_Ax2d())
     .def("MoveTo", &WorkPlane::MoveTo)
+    .def("Move", &WorkPlane::Move)
     .def("Direction", &WorkPlane::Direction)    
     // .def("LineTo", &WorkPlane::LineTo)
     .def("LineTo", [](WorkPlane&wp, double x, double y, optional<string> name) { return wp.LineTo(x, y, name); },
