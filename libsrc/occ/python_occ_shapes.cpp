@@ -18,6 +18,7 @@
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
 #include <BRepOffsetAPI_MakePipe.hxx>
+#include <BRepOffsetAPI_MakePipeShell.hxx>
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Common.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
@@ -1264,6 +1265,23 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
   m.def("Pipe", [] (const TopoDS_Wire & spine, const TopoDS_Shape & profile) {
       return BRepOffsetAPI_MakePipe (spine, profile).Shape();
     }, py::arg("spine"), py::arg("profile"));
+  
+  m.def("PipeShell", [] (const TopoDS_Wire & spine, const TopoDS_Shape & profile, const TopoDS_Wire & auxspine) {
+      try
+        {
+          BRepOffsetAPI_MakePipeShell builder(spine);
+          builder.SetMode (auxspine, Standard_True);
+          builder.Add (profile);
+          return builder.Shape();
+        }
+      catch (Standard_Failure & e)
+        {
+          stringstream errstr;
+          e.Print(errstr);
+          throw NgException("cannot create PipeShell: "+errstr.str());
+        }
+    }, py::arg("spine"), py::arg("profile"), py::arg("auxspine"));
+
 
   // Handle(Geom2d_Ellipse) anEllipse1 = new Geom2d_Ellipse(anAx2d, aMajor, aMinor);
   m.def("Ellipse", [] (const gp_Ax2d & ax, double major, double minor) -> Handle(Geom2d_Curve)
