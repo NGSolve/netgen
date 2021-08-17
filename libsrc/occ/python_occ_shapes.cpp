@@ -1280,8 +1280,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           BRepOffsetAPI_MakePipeShell builder(spine);
           builder.SetMode (auxspine, Standard_True);
           builder.Add (profile);
-          builder.Build();
-          builder.MakeSolid();
+          // builder.Build();
+          // builder.MakeSolid();
           return builder.Shape();
         }
       catch (Standard_Failure & e)
