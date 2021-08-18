@@ -428,7 +428,6 @@ public:
 
   auto Circle(double x, double y,  double r)
   {
-    
     MoveTo(x+r, y);
     Direction (0, 1);
     Arc(r, 180);
@@ -462,6 +461,11 @@ public:
     */
   }
 
+  auto Circle (double r)
+  {
+    gp_Pnt2d pos = localpos.Location();
+    return Circle (pos.X(), pos.Y(), r);
+  }
   
   shared_ptr<WorkPlane> Close ()
   {
@@ -1079,7 +1083,39 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                            return v;
                            })
     ;
-  py::class_<TopoDS_Wire, TopoDS_Shape> (m, "TopoDS_Wire");
+  py::class_<TopoDS_Wire, TopoDS_Shape> (m, "Wire")
+    .def(py::init([](const TopoDS_Edge & edge) {
+          BRepBuilderAPI_MakeWire builder;
+          builder.Add(edge); 
+          return builder.Wire();
+        }))
+    .def(py::init([](std::vector<TopoDS_Shape> edges) {
+          BRepBuilderAPI_MakeWire builder;
+          try
+            {
+              for (auto s : edges)
+                switch (s.ShapeType())
+                  {
+                  case TopAbs_EDGE:
+                    builder.Add(TopoDS::Edge(s)); break;
+                  case TopAbs_WIRE:
+                    builder.Add(TopoDS::Wire(s)); break;
+                  default:
+                    throw Exception("can make wire only from edges and wires");
+                  }
+              return builder.Wire();
+            }
+          catch (Standard_Failure & e)
+            {
+              stringstream errstr;
+              e.Print(errstr);
+              throw NgException("error in wire builder: "+errstr.str());
+            }
+        }))
+    ;
+
+
+    ;
   py::class_<TopoDS_Face, TopoDS_Shape> (m, "TopoDS_Face")
     .def(py::init([] (const TopoDS_Shape & shape) {
           return TopoDS::Face(shape);
@@ -1122,6 +1158,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
   
   
   py::implicitly_convertible<TopoDS_Shape, TopoDS_Face>();
+  py::implicitly_convertible<TopoDS_Edge, TopoDS_Wire>();
   
 
 
@@ -1506,7 +1543,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       BRepLib::BuildCurves3d(edge);
       return edge;
     });
-  
+
+  /*
   m.def("Wire", [](std::vector<TopoDS_Shape> edges) {
       BRepBuilderAPI_MakeWire builder;
       try
@@ -1530,7 +1568,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           throw NgException("error in wire builder: "+errstr.str());
         }
     });
-
+  */
   m.def("Face", [](TopoDS_Wire wire) {
       return BRepBuilderAPI_MakeFace(wire).Face();
     }, py::arg("w"));
@@ -1608,7 +1646,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("Line", [](WorkPlane&wp,double h,double v, optional<string> name) { return wp.Line(h,v,name); },
          py::arg("dx"), py::arg("dy"), py::arg("name")=nullopt)
     .def("Rectangle", &WorkPlane::Rectangle)
-    .def("Circle", &WorkPlane::Circle)
+    .def("Circle", [](WorkPlane&wp, double x, double y, double r) {
+        return wp.Circle(x,y,r); }, py::arg("x"), py::arg("y"), py::arg("r"))
+    .def("Circle", [](WorkPlane&wp, double r) { return wp.Circle(r); }, py::arg("r"))
     .def("Offset", &WorkPlane::Offset)
     .def("Reverse", &WorkPlane::Reverse)
     .def("Close", &WorkPlane::Close)
