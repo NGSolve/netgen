@@ -627,6 +627,32 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
              }
            return props.CentreOfMass();
       })
+
+    .def("Move", [](const TopoDS_Shape & shape, const gp_Vec v)
+         {
+           // which one to choose ? 
+           // version 1: Transoformation
+           gp_Trsf trafo;
+           trafo.SetTranslation(v);
+           return BRepBuilderAPI_Transform(shape, trafo).Shape();
+           // version 2: change location
+           // ...
+         }, py::arg("v"))
+
+
+    .def("Rotate", [](const TopoDS_Shape & shape, const gp_Ax1 ax, double ang)
+         {
+           gp_Trsf trafo;
+           trafo.SetRotation(ax, ang*M_PI/180);            
+           return BRepBuilderAPI_Transform(shape, trafo).Shape();
+         }, py::arg("axis"), py::arg("ang"))
+
+    .def("Mirror", [] (const TopoDS_Shape & shape, const gp_Ax3 & ax)
+         {
+           gp_Trsf trafo;
+           trafo.SetMirror(ax.Ax2());
+           return BRepBuilderAPI_Transform(shape, trafo).Shape();
+         })
     
     .def("bc", [](const TopoDS_Shape & shape, const string & name)
          {
