@@ -1296,9 +1296,37 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       return BRepPrimAPI_MakeRevol (face, A, D*M_PI/180).Shape();
     });
 
-  m.def("Pipe", [] (const TopoDS_Wire & spine, const TopoDS_Shape & profile) {
-      return BRepOffsetAPI_MakePipe (spine, profile).Shape();
-    }, py::arg("spine"), py::arg("profile"));
+  m.def("Pipe", [] (const TopoDS_Wire & spine, const TopoDS_Shape & profile,
+                    optional<tuple<gp_Pnt, double>> twist,
+                    optional<TopoDS_Wire> auxspine) {
+          if (twist)
+            {
+              auto [pnt, angle] = *twist;
+
+              /*
+                cyl = Cylinder((0,0,0), Z, r=1, h=1).faces[0]
+                heli = Edge(Segment((0,0), (2*math.pi, 1)), cyl)
+                auxspine = Wire( [heli] )
+                
+                Handle(Geom_Surface) cyl = new Geom_CylindricalSurface (gp_Ax3(pnt, gp_Vec(0,0,1)), 1);
+                auto edge = BRepBuilderAPI_MakeEdge(curve2d, cyl).Edge();
+                BRepLib::BuildCurves3d(edge);
+              */              
+              throw Exception("twist not implemented");
+            }
+          if (auxspine)
+            {
+              BRepOffsetAPI_MakePipeShell builder(spine);
+              builder.SetMode (*auxspine, Standard_True);
+              for (TopExp_Explorer e(profile, TopAbs_WIRE); e.More(); e.Next())
+                builder.Add (TopoDS::Wire(e.Current()));
+              builder.Build();
+              builder.MakeSolid();
+              return builder.Shape();
+            }
+          
+          return BRepOffsetAPI_MakePipe (spine, profile).Shape();
+        }, py::arg("spine"), py::arg("profile"), py::arg("twist")=nullopt, py::arg("auxspine")=nullopt);
   
   m.def("PipeShell", [] (const TopoDS_Wire & spine, const TopoDS_Shape & profile, const TopoDS_Wire & auxspine) {
       try
