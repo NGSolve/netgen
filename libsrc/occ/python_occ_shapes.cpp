@@ -191,7 +191,18 @@ public:
     // surf = GC_MakePlane (gp_Ax1(axis.Location(), axis.Direction()));
     surf = new Geom_Plane(axis);
   }
-  
+
+
+  auto Finish()
+  {
+    if (!startvertex.IsNull())
+      {
+        wires.push_back (wire_builder.Wire());
+        wire_builder = BRepBuilderAPI_MakeWire();
+        startvertex.Nullify();
+      }
+    return shared_from_this();            
+  }
 
   auto MoveTo (double h, double v)
   {
@@ -248,7 +259,7 @@ public:
       OCCGeometry::global_shape_properties[edge.TShape()].name = name;
     wire_builder.Add(edge);
 
-    if (closing) Close();
+    if (closing) Finish();
     return shared_from_this();    
   }
 
@@ -361,11 +372,8 @@ public:
     //update localpos.Direction()
     Rotate(angle*180/M_PI);
     if (closing)
-      {
-        cout << "call close from arc" << endl;
-        Close();
-        cout << "close is back" << endl;
-      }
+      Finish();
+
     return shared_from_this();
   }
 
@@ -453,27 +461,18 @@ public:
     return shared_from_this();    
     */
   }
+
   
   shared_ptr<WorkPlane> Close ()
   {
-    cout << "close called" << endl;
-
     if (startpnt.Distance(localpos.Location()) > 1e-10)
       {
-        cout << "generate closing line" << endl;
         LineTo (startpnt.X(), startpnt.Y());
         return shared_from_this();                    
       }
-    
+
     if (!startvertex.IsNull())
-      {
-        cout << "I am actually closing" << endl;
-        wires.push_back (wire_builder.Wire());
-        wire_builder = BRepBuilderAPI_MakeWire();
-        startvertex.Nullify();
-        cout << "complete" << endl;        
-      }
-    cout << "close returning" << endl;
+      Finish();
     return shared_from_this();            
   }
   
@@ -1613,6 +1612,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("Offset", &WorkPlane::Offset)
     .def("Reverse", &WorkPlane::Reverse)
     .def("Close", &WorkPlane::Close)
+    .def("Finish", &WorkPlane::Finish)
     .def("Last", &WorkPlane::Last)
     .def("Face", &WorkPlane::Face)
     .def("Wires", &WorkPlane::Wires)
