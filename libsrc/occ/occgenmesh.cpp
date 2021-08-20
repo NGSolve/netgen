@@ -225,7 +225,6 @@ namespace netgen
                    const MeshingParameters & mparam)
   {
     double s0, s1;
-    double maxh = mparam.maxh;
     int nsubedges = 1;
     gp_Pnt pnt, oldpnt;
     double svalue[DIVIDEEDGESECTIONS];
@@ -871,7 +870,7 @@ namespace netgen
 
 
         // Philippose - 15/01/2009
-        double maxh = geom.face_maxh[k-1];
+        double maxh = min2(geom.face_maxh[k-1], OCCGeometry::global_shape_properties[TopoDS::Face(geom.fmap(k)).TShape()].maxh);
         //double maxh = mparam.maxh;
         //      int noldpoints = mesh->GetNP();
         int noldsurfel = mesh.GetNSE();
@@ -1151,13 +1150,14 @@ namespace netgen
                 int face_index = geom.fmap.FindIndex(parent_face);
 
                 if(face_index >= 1) localh = min(localh,geom.face_maxh[face_index - 1]);
+                localh = min2(localh, OCCGeometry::global_shape_properties[parent_face.TShape()].maxh);
               }
 
             Handle(Geom_Curve) c = BRep_Tool::Curve(e, s0, s1);
 
+            localh = min2(localh, OCCGeometry::global_shape_properties[e.TShape()].maxh);
             maxedgelen = max (maxedgelen, len);
             minedgelen = min (minedgelen, len);
-
             int maxj = max((int) ceil(len/localh), 2);
 
             for (int j = 0; j <= maxj; j++)
