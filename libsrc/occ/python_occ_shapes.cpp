@@ -117,10 +117,13 @@ void ExtractEdgeData( const TopoDS_Edge & edge, int index, std::vector<double> *
     }
 }
 
-void ExtractFaceData( const TopoDS_Face & face, int index, std::vector<double> * p, Box<3> & box )
+void ExtractFaceData( const TopoDS_Face & face, int index, std::vector<double> * p, std::vector<double> * n, Box<3> & box )
 {
     TopLoc_Location loc;
     Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation (face, loc);
+    Handle(Geom_Surface) surf = BRep_Tool::Surface (face);
+    BRepAdaptor_Surface sf(face, Standard_False);
+    BRepLProp_SLProps prop(sf, 1, 1e-5);
 
     bool flip = TopAbs_REVERSED == face.Orientation();
 
@@ -135,17 +138,37 @@ void ExtractFaceData( const TopoDS_Face & face, int index, std::vector<double> *
     {
         Poly_Triangle triangle = (triangulation -> Triangles())(j);
         std::array<Point<3>,3> pts;
+        std::array<Vec<3>,3> normals;
         for (int k = 0; k < 3; k++)
             pts[k] = occ2ng( (triangulation -> Nodes())(triangle(k+1)).Transformed(loc) );
 
+        for (int k = 0; k < 3; k++)
+        {
+            auto uv = (triangulation -> UVNodes())(triangle(k+1));
+            prop.SetParameters (uv.X(), uv.Y());
+            if (!prop.IsNormalDefined())
+                throw Exception("No normal defined on face");
+            auto normal = prop.Normal();
+            normals[k] = { normal.X(), normal.Y(), normal.Z() };
+
+        }
+
         if(flip)
+        {
             Swap(pts[1], pts[2]);
+            Swap(normals[1], normals[2]);
+            for (int k = 0; k < 3; k++)
+                normals[k] = -normals[k];
+        }
 
         for (int k = 0; k < 3; k++)
         {
             box.Add(pts[k]);
             for (int d = 0; d < 3; d++)
+            {
                 p[k].push_back( pts[k][d] );
+                n[k].push_back( normals[k][d] );
+            }
             p[k].push_back( index );
         }
     }
@@ -960,6 +983,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            // triangulation = BRep_Tool::Triangulation (face, loc);
 
            std::vector<double> p[3];
+           std::vector<double> n[3];
            py::list names, colors;
 
            int index = 0;
@@ -969,7 +993,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            {
                TopoDS_Face face = TopoDS::Face(e.Current());
                // Handle(TopoDS_Face) face = e.Current();
-               ExtractFaceData(face, index, p, box);
+               ExtractFaceData(face, index, p, n, box);
                auto & props = OCCGeometry::global_shape_properties[face.TShape()];
                if(props.col)
                {
@@ -1028,6 +1052,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            data["draw_vol"] = false;
            data["draw_surf"] = true;
            data["funcdim"] = 0;
+           data["have_normals"] = true;
            data["show_wireframe"] = true;
            data["show_mesh"] = true;
            data["Bezier_points"] = py::list{};
@@ -1035,6 +1060,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            points.append(p[0]);
            points.append(p[1]);
            points.append(p[2]);
+           points.append(n[0]);
+           points.append(n[1]);
+           points.append(n[2]);
            data["Bezier_trig_points"] = points;
            data["funcmin"] = 0;
            data["funcmax"] = 1;
