@@ -53,6 +53,9 @@
 #include <ShapeUpgrade_UnifySameDomain.hxx>
 #include <GeomLProp_SLProps.hxx>
 
+#include <BOPTools_AlgoTools.hxx>
+#include <IntTools_Context.hxx>
+
 #if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
 #define OCC_HAVE_DUMP_JSON
 #endif
@@ -679,7 +682,15 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       }, [](const TopoDS_Shape & self, string name) {
         OCCGeometry::global_shape_properties[self.TShape()].name = name;            
       })
-
+    .def_property("maxh",
+                  [](const TopoDS_Shape& self)
+                  {
+                    return OCCGeometry::global_shape_properties[self.TShape()].maxh;
+                  },
+                  [](TopoDS_Shape& self, double val)
+                  {
+                    OCCGeometry::global_shape_properties[self.TShape()].maxh = val;
+                  })
     .def_property("col", [](const TopoDS_Shape & self) {
         auto it = OCCGeometry::global_shape_properties.find(self.TShape());
         Vec<3> col(0.2, 0.2, 0.2);
@@ -1082,6 +1093,42 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                            curve->D1(s1, p, v);
                            return v;
                            })
+    .def("Split", [](const TopoDS_Edge& self, py::args args)
+    {
+      ListOfShapes new_edges;
+      double s0, s1;
+      auto curve = BRep_Tool::Curve(self, s0, s1);
+      double tstart, t, dist;
+      TopoDS_Vertex vstart, vend;
+      vstart = TopExp::FirstVertex(self);
+      IntTools_Context context;
+      tstart = s0;
+      for(auto arg : args)
+        {
+          if(py::isinstance<py::float_>(arg))
+            t = s0 + py::cast<double>(arg) * (s1-s0);
+          else
+            {
+              auto p = py::cast<gp_Pnt>(arg);
+              auto result = context.ComputePE(p, 0., self, t, dist);
+              if(result != 0)
+                throw Exception("Error in finding splitting points on edge!");
+            }
+          auto p = curve->Value(t);
+          vend = BRepBuilderAPI_MakeVertex(p);
+          auto newE = TopoDS::Edge(self.EmptyCopied());
+          BOPTools_AlgoTools::MakeSplitEdge(self, vstart, tstart, vend, t, newE);
+          new_edges.push_back(newE);
+          vstart = vend;
+          tstart = t;
+        }
+      auto newE = TopoDS::Edge(self.EmptyCopied());
+      t = s1;
+      vend = TopExp::LastVertex(self);
+      BOPTools_AlgoTools::MakeSplitEdge(self, vstart, tstart, vend, t, newE);
+      new_edges.push_back(newE);
+      return new_edges;
+    }, "Splits edge at given parameters. Parameters can either be floating values in (0,1), then edge parametrization is used. Or it can be points, then the projection of these points are used for splitting the edge.")
     ;
   py::class_<TopoDS_Wire, TopoDS_Shape> (m, "Wire")
     .def(py::init([](const TopoDS_Edge & edge) {

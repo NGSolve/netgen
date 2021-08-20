@@ -214,10 +214,12 @@ namespace netgen
   public:
     optional<string> name;
     optional<Vec<3>> col;
+    double maxh = 1e99;
     void Merge(const ShapeProperties & prop2)
     {
       if (prop2.name) name = prop2.name;
-      if (prop2.col) col = prop2.col;      
+      if (prop2.col) col = prop2.col;
+      maxh = min2(maxh, prop2.maxh);
     }
   };
 
