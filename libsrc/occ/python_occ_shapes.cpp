@@ -1081,18 +1081,27 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          })
     ;
   
-  py::class_<TopoDS_Vertex, TopoDS_Shape> (m, "TopoDS_Vertex")
+  py::class_<TopoDS_Vertex, TopoDS_Shape> (m, "Vertex")
     .def(py::init([] (const TopoDS_Shape & shape) {
           return TopoDS::Vertex(shape);
+        }))
+    .def(py::init([] (const gp_Pnt & p) {
+          return BRepBuilderAPI_MakeVertex (p).Vertex();
         }))
     .def_property_readonly("p", [] (const TopoDS_Vertex & v) -> gp_Pnt {
         return BRep_Tool::Pnt (v); })
     ;
   
-  py::class_<TopoDS_Edge, TopoDS_Shape> (m, "TopoDS_Edge")
+  py::class_<TopoDS_Edge, TopoDS_Shape> (m, "Edge")
     .def(py::init([] (const TopoDS_Shape & shape) {
           return TopoDS::Edge(shape);
         }))
+    .def(py::init([] (Handle(Geom2d_Curve) curve2d, TopoDS_Face face) {
+          auto edge = BRepBuilderAPI_MakeEdge(curve2d, BRep_Tool::Surface (face)).Edge();
+          BRepLib::BuildCurves3d(edge);
+          return edge;
+        }))
+    
     .def_property_readonly("start",
                            [](const TopoDS_Edge & e) {
                            double s0, s1;
@@ -1489,9 +1498,29 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                   builder.AddArgument(e.Current());
                   has_solid = true;
                 }
-              if (!has_solid)
-                for (TopExp_Explorer e(s, TopAbs_FACE); e.More(); e.Next())
+              if (has_solid) continue;
+              
+              bool has_face = false;
+              for (TopExp_Explorer e(s, TopAbs_FACE); e.More(); e.Next())
+                {
                   builder.AddArgument(e.Current());
+                  has_face = true;
+                }
+              if (has_face) continue;
+
+              bool has_edge = false;
+              for (TopExp_Explorer e(s, TopAbs_EDGE); e.More(); e.Next())
+                {
+                  builder.AddArgument(e.Current());
+                  has_edge = true;
+                }
+              if (has_edge) continue;
+
+              
+              for (TopExp_Explorer e(s, TopAbs_VERTEX); e.More(); e.Next())
+                {
+                  builder.AddArgument(e.Current());
+                }
             }
 
           builder.Perform();
@@ -1612,13 +1641,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           throw NgException("cannot create Bezier-spline: "+errstr.str());
         }
     });
-  
+
+  /*
   m.def("Edge", [](Handle(Geom2d_Curve) curve2d, TopoDS_Face face) {
       auto edge = BRepBuilderAPI_MakeEdge(curve2d, BRep_Tool::Surface (face)).Edge();
       BRepLib::BuildCurves3d(edge);
       return edge;
     });
-
+  */
   /*
   m.def("Wire", [](std::vector<TopoDS_Shape> edges) {
       BRepBuilderAPI_MakeWire builder;
