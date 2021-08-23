@@ -2013,27 +2013,26 @@ namespace netgen
     int nfa = GetNFaces (mesh->VolumeElement(elnr).GetType());
     elfaces.SetSize (nfa);
 
-    if (!withorientation)
-
-      for (int i = 1; i <= nfa; i++)
-	{
-	  // elfaces.Elem(i) = (faces.Get(elnr)[i-1]-1) / 8 + 1;
-          elfaces.Elem(i) = faces.Get(elnr)[i-1].fnr+1;
-	}
+    for (auto i : Range(nfa))
+        elfaces[i] = faces.Get(elnr)[i].fnr+1;
     
-    else
-      {
-        cerr << "GetElementFaces with orientation currently not supported" << endl;
-        /*
-          for (int i = 1; i <= nfa; i++)
-          {
-	  elfaces.Elem(i) = (faces.Get(elnr)[i-1]-1) / 8 + 1;
-	  int orient = (faces.Get(elnr)[i-1]-1) % 8;
-	  if(orient == 1 || orient == 2 || orient == 4 || orient == 7)
-          elfaces.Elem(i) *= -1;
-          }
-        */
-      }
+    if(withorientation)
+    {
+        for(auto & face : elfaces)
+        {
+            auto v = face2vert[face-1];
+            if(v[3]!=0)
+                cerr << "GetElementFaces with orientation currently not supported for quads" << endl;
+
+            int classnr = 0;
+            if (v[0] > v[1]) { classnr++; }
+            if (v[1] > v[2]) { classnr++; }
+            if (v[2] > v[0]) { classnr++; }
+
+            if(classnr==1)
+                face = -face;
+        }
+    }
   }
 
   void MeshTopology :: GetElementEdgeOrientations (int elnr, NgArray<int> & eorient) const
