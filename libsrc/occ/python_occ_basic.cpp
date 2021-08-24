@@ -44,6 +44,9 @@
 #include <GCE2d_MakeSegment.hxx>
 #include <GCE2d_MakeCircle.hxx>
 
+#include <python_occ.hpp>
+
+
 #if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
 #define OCC_HAVE_DUMP_JSON
 #endif
@@ -115,7 +118,18 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
     .def("__sub__", [](gp_Vec v1, gp_Vec v2) { return v1-v2; }) 
     .def("__rmul__", [](gp_Vec v, double s) { return s*v; }) 
     .def("__neg__", [](gp_Vec v) { return -v; }) 
-    .def("__xor__", [](gp_Vec v1, gp_Vec v2) { return v1^v2; }) 
+    .def("__xor__", [](gp_Vec v1, gp_Vec v2) { return v1^v2; })
+    
+    .def("__lt__", [](gp_Vec v, double val)
+         {
+           cout << "vec, lt v - " << netgen::occ2ng(v) << ", val = " << val << endl;
+           return DirectionalInterval(v) < val;
+         })
+    .def("__gt__", [](gp_Vec v, double val)
+         {
+           cout << "vec, gt v - " << netgen::occ2ng(v) << ", val = " << val << endl;           
+           return DirectionalInterval(v) > val;
+         })
     ;
 
   py::class_<gp_Dir>(m, "gp_Dir")
@@ -242,6 +256,30 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
           throw Exception("OCC-Points only in 2D or 3D");
         });
 
+  m.def("Vec", [](double x, double y) { return gp_Vec2d(x,y); });
+  m.def("Vec", [](double x, double y, double z) { return gp_Vec(x,y,z); });
+  m.def("Vec", [](std::vector<double> p)
+        {
+          if (p.size() == 2)
+            return py::cast(gp_Vec2d(p[0], p[1]));
+          if (p.size() == 3)
+            return py::cast(gp_Vec(p[0], p[1], p[2]));
+          throw Exception("OCC-Vecs only in 2D or 3D");
+        });
+
+  m.def("Dir", [](double x, double y) { return gp_Dir2d(x,y); });
+  m.def("Dir", [](double x, double y, double z) { return gp_Dir(x,y,z); });
+  m.def("Dir", [](std::vector<double> p)
+        {
+          if (p.size() == 2)
+            return py::cast(gp_Dir2d(p[0], p[1]));
+          if (p.size() == 3)
+            return py::cast(gp_Dir(p[0], p[1], p[2]));
+          throw Exception("OCC-Dirs only in 2D or 3D");
+        });
+
+
+
   
   py::class_<gp_Ax2d>(m, "gp_Ax2d")
     .def(py::init([](gp_Pnt2d p, gp_Dir2d d) {
@@ -281,6 +319,20 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
     .def("Transformation", [](const TopLoc_Location & loc) { return loc.Transformation(); })
     ;
 
+
+  py::class_<DirectionalInterval> (m, "DirectionalInterval")
+    .def("__lt__", [](DirectionalInterval i, double val)
+         {
+           cout << "directionalinterval, lt, imin/max = " << i.minval << " / " << i.maxval << endl;
+           return i < val;
+         })
+    .def("__gt__", [](DirectionalInterval i, double val)
+         {
+           cout << "directionalinterval, gt, imin/max = " << i.minval << " / " << i.maxval << endl;
+           return i > val;
+         })
+    ;    
+  
   py::implicitly_convertible<py::tuple, gp_Pnt>();
   py::implicitly_convertible<py::tuple, gp_Vec>();
   py::implicitly_convertible<py::tuple, gp_Dir>();

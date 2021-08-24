@@ -56,6 +56,8 @@
 #include <BOPTools_AlgoTools.hxx>
 #include <IntTools_Context.hxx>
 
+#include <python_occ.hpp>
+
 #if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
 #define OCC_HAVE_DUMP_JSON
 #endif
@@ -683,6 +685,17 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            return BRepBuilderAPI_Transform(shape, trafo).Shape();
          })
     
+    .def("Scale", [](const TopoDS_Shape & shape, const gp_Pnt p, double s)
+         {
+           // which one to choose ? 
+           // version 1: Transoformation
+           gp_Trsf trafo;
+           trafo.SetScale(p, s);
+           return BRepBuilderAPI_Transform(shape, trafo).Shape();
+           // version 2: change location
+           // ...
+         }, py::arg("p"), py::arg("s"))
+    
     .def("bc", [](const TopoDS_Shape & shape, const string & name)
          {
            for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
@@ -861,14 +874,18 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           }
         throw Exception("no face found for extrusion");
       })
-
-      .def("Revolve", [](const TopoDS_Shape & shape, const gp_Ax1 &A, const double D) {
-        for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
-          {
-            return BRepPrimAPI_MakeRevol (shape, A, D*M_PI/180).Shape();
-          }
-        throw Exception("no face found for revolve");
+    
+    .def("Extrude", [] (const TopoDS_Shape & face, gp_Vec vec) {
+        return BRepPrimAPI_MakePrism (face, vec).Shape();
       })
+
+  .def("Revolve", [](const TopoDS_Shape & shape, const gp_Ax1 &A, const double D) {
+      for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
+        {
+          return BRepPrimAPI_MakeRevol (shape, A, D*M_PI/180).Shape();
+        }
+      throw Exception("no face found for revolve");
+    })
     
     .def("Find", [](const TopoDS_Shape & shape, gp_Pnt p)
          {
@@ -1298,7 +1315,16 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                  selected.push_back(s);
            return selected;
          })
-    
+
+    .def("__getitem__",[](const ListOfShapes & self, DirectionalInterval interval)
+         {
+           ListOfShapes selected;
+           for (auto s : self)
+             if (interval.Contains(Center(s)))
+               selected.push_back(s);
+           return selected;
+         })
+          
     .def("Sorted",[](ListOfShapes self, gp_Vec dir)
          {
            std::map<Handle(TopoDS_TShape), double> sortval;
