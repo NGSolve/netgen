@@ -321,6 +321,13 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
 
 
   py::class_<DirectionalInterval> (m, "DirectionalInterval")
+    .def("__str__", [](DirectionalInterval self)
+         {
+           stringstream str;
+           str << "(" << self.minval << ", " << self.maxval << ")";
+           return str.str();
+         })
+         
     .def("__lt__", [](DirectionalInterval i, double val)
          {
            cout << "directionalinterval, lt, imin/max = " << i.minval << " / " << i.maxval << endl;
@@ -331,6 +338,10 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
            cout << "directionalinterval, gt, imin/max = " << i.minval << " / " << i.maxval << endl;
            return i > val;
          })
+    .def("__and__", [](DirectionalInterval self, DirectionalInterval other) {
+        cout << "and of intervals" << endl;
+        return self.Intersect(other);
+      })
     ;    
   
   py::implicitly_convertible<py::tuple, gp_Pnt>();

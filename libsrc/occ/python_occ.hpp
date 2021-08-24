@@ -33,6 +33,14 @@ public:
     return i2;
   }
 
+
+  DirectionalInterval Intersect (const DirectionalInterval & i2)
+  {
+    DirectionalInterval res = *this;
+    res.minval = max(res.minval, i2.minval);
+    res.maxval = min(res.maxval, i2.maxval);
+    return res;
+  }
   
   bool Contains (gp_Pnt p, double eps = 1e-8)
   {
