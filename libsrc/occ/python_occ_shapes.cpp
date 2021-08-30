@@ -105,8 +105,8 @@ void ExtractEdgeData( const TopoDS_Edge & edge, int index, std::vector<double> *
     int nbnodes = poly -> NbNodes();
     for (int j = 1; j < nbnodes; j++)
       {
-        auto p0 = occ2ng((T -> Node(poly->Node(j))).Transformed(loc));
-        auto p1 = occ2ng((T -> Node(poly->Node(j+1))).Transformed(loc));
+        auto p0 = occ2ng((T -> Node(poly->Nodes()(j))).Transformed(loc));
+        auto p1 = occ2ng((T -> Node(poly->Nodes()(j+1))).Transformed(loc));
         for(auto k : Range(3))
           {
             p[0].push_back(p0[k]);
