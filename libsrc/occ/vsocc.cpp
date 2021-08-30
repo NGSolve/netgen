@@ -466,7 +466,7 @@ namespace netgen
 #if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=5           
            gp_Pnt p = T -> Node(aEdgePoly->Node(j)).Transformed(aEdgeLoc);
 #else           
-           gp_Pnt p = T -> Nodes())(aEdgePoly->Nodes()(j).Transformed(aEdgeLoc);
+           gp_Pnt p = T -> Nodes()(aEdgePoly->Nodes()(j)).Transformed(aEdgeLoc);
 #endif           
            glVertex3f (p.X(), p.Y(), p.Z());
          }
@@ -608,7 +608,7 @@ namespace netgen
 #if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=5              
               uv = triangulation -> UVNode(triangle(k));
 #else              
-              uv = triangulation -> UVNodes())(triangle(k);
+              uv = triangulation -> UVNodes()(triangle(k);
 #endif
                prop.SetParameters (uv.X(), uv.Y());
 
