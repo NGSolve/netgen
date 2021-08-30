@@ -312,7 +312,7 @@ namespace netgen
   {
     //  CSGeometry * geo = new CSGeometry;
   
-    char key[100], name[100], classname[100], sname[100];
+    char key[100], name[100], classname[100], sname[150];
     int ncoeff, i, j;
     NgArray<double> coeff;
 
@@ -622,7 +622,7 @@ namespace netgen
   {
     static int cntsurfs = 0;
     cntsurfs++;
-    char name[15];
+    char name[20];
     sprintf (name, "nnsurf%d", cntsurfs);
     AddSurface (name, surf);
   }

@@ -540,6 +540,7 @@ public:
     BRepBuilderAPI_MakeFace builder(surf, 1e-8);
     for (auto w : wires)
       builder.Add(w);
+    wires.clear();
     return builder.Face();
   }
 
@@ -746,8 +747,24 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                   { return shape.Located(loc); })
 
     .def("__add__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
-        auto fused = BRepAlgoAPI_Fuse(shape1, shape2).Shape();
+        // auto fused = BRepAlgoAPI_Fuse(shape1, shape2).Shape();
         // return fused;
+
+        BRepAlgoAPI_Fuse builder(shape1, shape2);
+#ifdef OCC_HAVE_HISTORY
+        Handle(BRepTools_History) history = builder.History ();
+        
+        for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
+          for (auto & s : { shape1, shape2 })
+            for (TopExp_Explorer e(s, typ); e.More(); e.Next())
+              {
+                auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+                for (auto mods : history->Modified(e.Current()))
+                  OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+              }
+#endif        
+        auto fused = builder.Shape();        
+
         
         // make one face when fusing in 2D
         // from https://gitlab.onelab.info/gmsh/gmsh/-/issues/627
