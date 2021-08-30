@@ -777,6 +777,19 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           {
             ShapeUpgrade_UnifySameDomain unify(fused, true, true, true);
             unify.Build();
+            
+#ifdef OCC_HAVE_HISTORY
+            Handle(BRepTools_History) history = unify.History ();
+            
+            for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
+              for (TopExp_Explorer e(fused, typ); e.More(); e.Next())
+                {
+                  auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+                  for (auto mods : history->Modified(e.Current()))
+                    OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+                }
+#endif        
+            
             return unify.Shape();
           }
         else
