@@ -608,7 +608,7 @@ namespace netgen
 #if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=5              
               uv = triangulation -> UVNode(triangle(k));
 #else              
-              uv = triangulation -> UVNodes()(triangle(k);
+              uv = triangulation -> UVNodes()(triangle(k));
 #endif
                prop.SetParameters (uv.X(), uv.Y());
 
