@@ -104,14 +104,14 @@ void ExtractEdgeData( const TopoDS_Edge & edge, int index, std::vector<double> *
 
     int nbnodes = poly -> NbNodes();
     for (int j = 1; j < nbnodes; j++)
-    {
-        auto p0 = occ2ng((T -> Nodes())(poly->Nodes()(j)).Transformed(loc));
-        auto p1 = occ2ng((T -> Nodes())(poly->Nodes()(j+1)).Transformed(loc));
+      {
+        auto p0 = occ2ng((T -> Node(poly->Node(j))).Transformed(loc));
+        auto p1 = occ2ng((T -> Node(poly->Node(j+1))).Transformed(loc));
         for(auto k : Range(3))
-        {
+          {
             p[0].push_back(p0[k]);
             p[1].push_back(p1[k]);
-        }
+          }
         p[0].push_back(index);
         p[1].push_back(index);
         box.Add(p0);
@@ -138,15 +138,15 @@ void ExtractFaceData( const TopoDS_Face & face, int index, std::vector<double> *
     int ntriangles = triangulation -> NbTriangles();
     for (int j = 1; j <= ntriangles; j++)
     {
-        Poly_Triangle triangle = (triangulation -> Triangles())(j);
+      Poly_Triangle triangle = triangulation -> Triangle(j);
         std::array<Point<3>,3> pts;
         std::array<Vec<3>,3> normals;
         for (int k = 0; k < 3; k++)
-            pts[k] = occ2ng( (triangulation -> Nodes())(triangle(k+1)).Transformed(loc) );
+          pts[k] = occ2ng( (triangulation -> Node(triangle(k+1))).Transformed(loc) );
 
         for (int k = 0; k < 3; k++)
         {
-            auto uv = (triangulation -> UVNodes())(triangle(k+1));
+          auto uv = triangulation -> UVNode(triangle(k+1));
             prop.SetParameters (uv.X(), uv.Y());
             if (!prop.IsNormalDefined())
                 throw Exception("No normal defined on face");
@@ -1011,11 +1011,10 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            Array< std::array<Point<3>,3> > triangles;
            for (int j = 1; j <= ntriangles; j++)
              {
-               Poly_Triangle triangle = (triangulation -> Triangles())(j);
+               Poly_Triangle triangle = triangulation -> Triangle(j);
                std::array<Point<3>,3> pts;
                for (int k = 0; k < 3; k++)
-                 pts[k] = occ2ng( (triangulation -> Nodes())(triangle(k+1)).Transformed(loc) );
-               
+                 pts[k] = occ2ng( (triangulation -> Node(triangle(k+1))).Transformed(loc) );
                triangles.Append ( pts );
              }
            

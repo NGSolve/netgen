@@ -463,8 +463,9 @@ namespace netgen
          glBegin (GL_LINE_STRIP);
          for (int j = 1; j <= nbnodes; j++)
          {
-            gp_Pnt p = (T -> Nodes())(aEdgePoly->Nodes()(j)).Transformed(aEdgeLoc);
-            glVertex3f (p.X(), p.Y(), p.Z());
+           // gp_Pnt p = (T -> Nodes())(aEdgePoly->Nodes()(j)).Transformed(aEdgeLoc);
+           gp_Pnt p = (T -> Node(aEdgePoly->Nodes()(j))).Transformed(aEdgeLoc);
+           glVertex3f (p.X(), p.Y(), p.Z());
          }
          glEnd ();
       }
@@ -509,10 +510,11 @@ namespace netgen
          int nbnodes = aEdgePoly -> NbNodes();
          glBegin (GL_LINE_STRIP);
          for (int j = 1; j <= nbnodes; j++)
-         {
-            gp_Pnt p = (T -> Nodes())(aEdgePoly->Nodes()(j)).Transformed(aEdgeLoc);
-            glVertex3f (p.X(), p.Y(), p.Z());
-         }
+           {
+             // gp_Pnt p = (T -> Nodes())(aEdgePoly->Nodes()(j)).Transformed(aEdgeLoc);
+             gp_Pnt p = (T -> Node(aEdgePoly->Node(j))).Transformed(aEdgeLoc);
+             glVertex3f (p.X(), p.Y(), p.Z());
+           }
          glEnd ();
       }
 
@@ -582,18 +584,18 @@ namespace netgen
          gp_Vec n;
 
          glBegin (GL_TRIANGLES);
-
          int ntriangles = triangulation -> NbTriangles();
          for (int j = 1; j <= ntriangles; j++)
          {
-            Poly_Triangle triangle = (triangulation -> Triangles())(j);
+           Poly_Triangle triangle = (triangulation -> Triangle(j));
             gp_Pnt p[3];
             for (int k = 1; k <= 3; k++)
-            p[k-1] = (triangulation -> Nodes())(triangle(k)).Transformed(loc);
+              p[k-1] = (triangulation -> Node(triangle(k))).Transformed(loc);
 
             for (int k = 1; k <= 3; k++)
             {
-               uv = (triangulation -> UVNodes())(triangle(k));
+              // uv = (triangulation -> UVNodes())(triangle(k));
+              uv = triangulation -> UVNode(triangle(k));
                prop.SetParameters (uv.X(), uv.Y());
 
                //	      surf->D0 (uv.X(), uv.Y(), pnt);

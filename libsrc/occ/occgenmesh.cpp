@@ -1236,9 +1236,13 @@ namespace netgen
 
                 for (int k = 1; k <=3; k++)
                   {
-                    int n = triangulation->Triangles()(j)(k);
-                    p[k-1] = triangulation->Nodes()(n).Transformed(loc);
-                    par[k-1] = triangulation->UVNodes()(n);
+                    // int n = triangulation->Triangles()(j)(k);
+                    // p[k-1] = triangulation->Nodes()(n).Transformed(loc);
+                    // par[k-1] = triangulation->UVNodes()(n);
+                    // fix for OCC7.6.0-dev
+                    int n = triangulation->Triangle(j)(k);
+                    p[k-1] = triangulation->Node(n).Transformed(loc);
+                    par[k-1] = triangulation->UVNode(n);
                   }
 
                 //double maxside = 0;
