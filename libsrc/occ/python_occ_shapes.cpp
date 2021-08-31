@@ -506,6 +506,13 @@ public:
     */
   }
 
+  auto NameVertex (string name)
+  {
+    if (!lastvertex.IsNull())
+      OCCGeometry::global_shape_properties[lastvertex.TShape()].name = name;
+    return shared_from_this();
+  }
+
   auto Circle (double r)
   {
     gp_Pnt2d pos = localpos.Location();
@@ -900,7 +907,18 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
   .def("Revolve", [](const TopoDS_Shape & shape, const gp_Ax1 &A, const double D) {
       for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
         {
-          return BRepPrimAPI_MakeRevol (shape, A, D*M_PI/180).Shape();
+          // return BRepPrimAPI_MakeRevol (shape, A, D*M_PI/180).Shape();
+          BRepPrimAPI_MakeRevol builder(shape, A, D*M_PI/180);
+            
+          for (auto typ : { TopAbs_EDGE, TopAbs_VERTEX })
+            for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+              {
+                auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+                for (auto mods : builder.Generated(e.Current()))
+                  OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+              }
+
+          return builder.Shape();          
         }
       throw Exception("no face found for revolve");
     })
@@ -1808,6 +1826,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("Circle", [](WorkPlane&wp, double x, double y, double r) {
         return wp.Circle(x,y,r); }, py::arg("x"), py::arg("y"), py::arg("r"))
     .def("Circle", [](WorkPlane&wp, double r) { return wp.Circle(r); }, py::arg("r"))
+    .def("NameVertex", &WorkPlane::NameVertex, py::arg("name"))
     .def("Offset", &WorkPlane::Offset)
     .def("Reverse", &WorkPlane::Reverse)
     .def("Close", &WorkPlane::Close)
