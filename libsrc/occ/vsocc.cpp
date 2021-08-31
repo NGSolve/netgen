@@ -463,11 +463,14 @@ namespace netgen
          glBegin (GL_LINE_STRIP);
          for (int j = 1; j <= nbnodes; j++)
          {
+           /*
 #if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=5           
-           gp_Pnt p = T -> Node(aEdgePoly->Node(j)).Transformed(aEdgeLoc);
+           gp_Pnt p = T -> Node(aEdgePoly->Nodes()(j)).Transformed(aEdgeLoc);
 #else           
            gp_Pnt p = T -> Nodes()(aEdgePoly->Nodes()(j)).Transformed(aEdgeLoc);
 #endif           
+           */
+           gp_Pnt p = T -> Node(aEdgePoly->Nodes()(j)).Transformed(aEdgeLoc);           
            glVertex3f (p.X(), p.Y(), p.Z());
          }
          glEnd ();
@@ -514,11 +517,14 @@ namespace netgen
          glBegin (GL_LINE_STRIP);
          for (int j = 1; j <= nbnodes; j++)
            {
+             /*
 #if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=5
              gp_Pnt p = T -> Node(aEdgePoly->Node(j)).Transformed(aEdgeLoc);
 #else             
              gp_Pnt p = (T -> Nodes())(aEdgePoly->Nodes()(j)).Transformed(aEdgeLoc);
 #endif             
+             */
+             gp_Pnt p = T -> Node(aEdgePoly->Nodes()(j)).Transformed(aEdgeLoc);             
              glVertex3f (p.X(), p.Y(), p.Z());
            }
          glEnd ();
@@ -593,11 +599,14 @@ namespace netgen
          int ntriangles = triangulation -> NbTriangles();
          for (int j = 1; j <= ntriangles; j++)
          {
+           /*
 #if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=5           
            Poly_Triangle triangle = triangulation -> Triangle(j);
 #else
            Poly_Triangle triangle = triangulation -> Triangles()(j);           
 #endif
+           */
+           Poly_Triangle triangle = triangulation -> Triangle(j);           
            
             gp_Pnt p[3];
             for (int k = 1; k <= 3; k++)

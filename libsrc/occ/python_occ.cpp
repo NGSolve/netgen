@@ -223,15 +223,15 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                normals.reserve(normals.size() + triangulation->NbTriangles()*3*3);
                for (int j = 1; j < triangulation->NbTriangles()+1; j++)
                  {
-                   auto triangle = (triangulation->Triangles())(j);
+                   auto triangle = triangulation->Triangle(j);
                    for (int k = 1; k < 4; k++)
-                     p[k-1] = (triangulation->Nodes())(triangle(k)).Transformed(loc);
+                     p[k-1] = triangulation->Node(triangle(k)).Transformed(loc);
                    for (int k = 1; k < 4; k++)
                      {
                        vertices.insert(vertices.end(),{float(p[k-1].X()), float(p[k-1].Y()), float(p[k-1].Z())});
                        trigs.insert(trigs.end(),{count, count+1, count+2,i});
                        count += 3;
-                       uv = (triangulation->UVNodes())(triangle(k));
+                       uv = triangulation->UVNode(triangle(k));
                        prop.SetParameters(uv.X(), uv.Y());
                        if (prop.IsNormalDefined())
                          n = prop.Normal();
