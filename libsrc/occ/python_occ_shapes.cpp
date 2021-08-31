@@ -29,6 +29,7 @@
 #include <Geom_Plane.hxx>
 #include <Geom_BSplineCurve.hxx>
 #include <Geom_BezierCurve.hxx>
+#include <GeomAPI_PointsToBSpline.hxx>
 #include <GC_MakeSegment.hxx>
 #include <GC_MakeCircle.hxx>
 #include <GC_MakeArcOfCircle.hxx>
@@ -1697,6 +1698,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         }
     });
 
+  m.def("SplineApproximation", [](std::vector<gp_Pnt> pnts, double tol) {
+      TColgp_Array1OfPnt points(0, pnts.size()-1);
+      for (int i = 0; i < pnts.size(); i++)
+        points.SetValue(i, pnts[i]);
+      GeomAPI_PointsToBSpline builder(points);
+      return BRepBuilderAPI_MakeEdge(builder.Curve()).Edge();
+    }, py::arg("points"), py::arg("tol"), "Generate spline-curve approximating list of points up to tolerance tol");
+
   /*
   m.def("Edge", [](Handle(Geom2d_Curve) curve2d, TopoDS_Face face) {
       auto edge = BRepBuilderAPI_MakeEdge(curve2d, BRep_Tool::Surface (face)).Edge();
@@ -1779,14 +1788,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           return maker.Shape();
         });
 
-  m.def("ThruSections", [](std::vector<TopoDS_Shape> wires)
+  m.def("ThruSections", [](std::vector<TopoDS_Shape> wires, bool solid)
         {
-          BRepOffsetAPI_ThruSections aTool(Standard_True);
+          BRepOffsetAPI_ThruSections aTool(solid); // Standard_True);
           for (auto shape : wires)
             aTool.AddWire(TopoDS::Wire(shape));
           aTool.CheckCompatibility(Standard_False);
           return aTool.Shape();
-        });
+        }, py::arg("wires"), py::arg("solid")=true);
 
 
 
