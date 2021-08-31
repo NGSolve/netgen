@@ -200,9 +200,25 @@ py::object CastShape(const TopoDS_Shape & s)
 };
 
 
+template <class TBuilder>
+void PropagateProperties (TBuilder & builder, TopoDS_Shape shape)
+{
+#ifdef OCC_HAVE_HISTORY  
+  Handle(BRepTools_History) history = builder.History();
+  for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
+    for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+      {
+        auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+        for (auto mods : history->Modified(e.Current()))
+          OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+      }
+#endif  
+}
+
+
 class WorkPlane : public enable_shared_from_this<WorkPlane>
 {
-  gp_Ax3 axis;
+  gp_Ax3 axes;
   gp_Ax2d localpos;
   gp_Pnt2d startpnt;
   TopoDS_Vertex lastvertex, startvertex;
@@ -214,11 +230,11 @@ class WorkPlane : public enable_shared_from_this<WorkPlane>
   
 public:
   
-  WorkPlane (const gp_Ax3 & _axis, const gp_Ax2d _localpos = gp_Ax2d())
-    : axis(_axis), localpos(_localpos) // , surf(_axis) 
+  WorkPlane (const gp_Ax3 & _axes, const gp_Ax2d _localpos = gp_Ax2d())
+    : axes(_axes), localpos(_localpos) // , surf(_axis) 
   {
     // surf = GC_MakePlane (gp_Ax1(axis.Location(), axis.Direction()));
-    surf = new Geom_Plane(axis);
+    surf = new Geom_Plane(axes);
   }
 
 
@@ -258,12 +274,12 @@ public:
   auto LineTo (double h, double v, optional<string> name = nullopt)
   {
     gp_Pnt2d old2d = localpos.Location();
-    gp_Pnt oldp = axis.Location() . Translated(old2d.X() * axis.XDirection() + old2d.Y() * axis.YDirection());
+    gp_Pnt oldp = axes.Location() . Translated(old2d.X() * axes.XDirection() + old2d.Y() * axes.YDirection());
 
     // localpos.Translate (gp_Vec2d(h,v));
     localpos.SetLocation (gp_Pnt2d(h,v));
     gp_Pnt2d new2d = localpos.Location();
-    gp_Pnt newp = axis.Location() . Translated(new2d.X() * axis.XDirection() + new2d.Y() * axis.YDirection());
+    gp_Pnt newp = axes.Location() . Translated(new2d.X() * axes.XDirection() + new2d.Y() * axes.YDirection());
 
     if (new2d.Distance(old2d) < 1e-10) return shared_from_this();    
     bool closing = new2d.Distance(startpnt) < 1e-10;
@@ -752,6 +768,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         // return fused;
 
         BRepAlgoAPI_Fuse builder(shape1, shape2);
+        PropagateProperties (builder, shape1);
+        PropagateProperties (builder, shape2);
+        /*
 #ifdef OCC_HAVE_HISTORY
         Handle(BRepTools_History) history = builder.History ();
         
@@ -764,6 +783,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                   OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
               }
 #endif        
+        */
         auto fused = builder.Shape();        
 
         
@@ -778,7 +798,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           {
             ShapeUpgrade_UnifySameDomain unify(fused, true, true, true);
             unify.Build();
-            
+
+            /*
 #ifdef OCC_HAVE_HISTORY
             Handle(BRepTools_History) history = unify.History ();
             
@@ -790,6 +811,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                     OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
                 }
 #endif        
+            */
+            PropagateProperties (unify, fused);
             
             return unify.Shape();
           }
@@ -802,6 +825,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         // return BRepAlgoAPI_Common(shape1, shape2).Shape();
         
         BRepAlgoAPI_Common builder(shape1, shape2);
+        /*
 #ifdef OCC_HAVE_HISTORY
         Handle(BRepTools_History) history = builder.History ();
 
@@ -814,24 +838,10 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                 for (auto mods : history->Modified(e.Current()))
                   OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
               }
-
-        
-        /*
-          // work in progress ...
-        TopTools_ListOfShape modlist = history->Modified(shape1);
-        for (auto s : modlist)
-          cout << "modified from list el: " << s.ShapeType() << endl;
-        */
-        /*
-        for (auto & s : { shape1, shape2 })
-          for (TopExp_Explorer e(s, TopAbs_FACE); e.More(); e.Next())
-            {
-              auto & prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
-              for (auto smod : history->Modified(e.Current()))            
-                OCCGeometry::global_shape_properties[smod.TShape()].Merge(prop);
-            }        
-        */
 #endif // OCC_HAVE_HISTORY
+        */
+        PropagateProperties (builder, shape1);
+        PropagateProperties (builder, shape2);
         
         return builder.Shape();
       })
@@ -842,7 +852,6 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         BRepAlgoAPI_Cut builder(shape1, shape2);
 #ifdef OCC_HAVE_HISTORY        
         Handle(BRepTools_History) history = builder.History ();
-
         
         for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
           for (auto & s : { shape1, shape2 })
@@ -852,41 +861,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                 for (auto mods : history->Modified(e.Current()))
                   OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
               }
-        
-#ifdef OLD        
-        for (auto s : { shape1, shape2 })
-          for (TopExp_Explorer e(s, TopAbs_FACE); e.More(); e.Next())
-            {
-              /*
-              const string & name = OCCGeometry::global_shape_names[e.Current().TShape()];
-              for (auto s : history->Modified(e.Current()))            
-                OCCGeometry::global_shape_names[s.TShape()] = name;
-              */
-              /*
-              auto it = OCCGeometry::global_shape_cols.find(e.Current().TShape());
-              if (it != OCCGeometry::global_shape_cols.end())
-                for (auto s : history->Modified(e.Current()))
-                  OCCGeometry::global_shape_cols[s.TShape()] = it->second;
-              */
-              auto propit = OCCGeometry::global_shape_properties.find(e.Current().TShape());
-              if (propit != OCCGeometry::global_shape_properties.end())
-                for (auto s : history->Modified(e.Current()))
-                  OCCGeometry::global_shape_properties[s.TShape()].Merge(propit->second);
-            }
-
-        /*
-        for (TopExp_Explorer e(shape2, TopAbs_FACE); e.More(); e.Next())
-          {
-            auto it = OCCGeometry::global_shape_cols[e.Current().TShape()];
-            if (it != OCCGeometry::global_shape_cols.end())
-              for (auto s : history->Modified(e.Current()))
-                OCCGeometry::global_shape_cols[s.TShape()] = it->second;
-          }        
-        */
-#endif
-        
 #endif // OCC_HAVE_HISTORY
-
         
         return builder.Shape();        
       })
@@ -901,7 +876,19 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             gp_Vec du, dv;
             gp_Pnt p;
             surf->D1 (0,0,p,du,dv);
-            return BRepPrimAPI_MakePrism (shape, h*du^dv).Shape();
+            BRepPrimAPI_MakePrism builder(shape, h*du^dv);
+            // PropagateProperties(builder, shape);
+
+            for (auto typ : { TopAbs_EDGE, TopAbs_VERTEX })
+              for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+                {
+                  auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+                  for (auto mods : builder.Generated(e.Current()))
+                    OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+                }
+            
+            
+            return builder.Shape();
           }
         throw Exception("no face found for extrusion");
       })
@@ -1611,6 +1598,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           if (builder.HasWarnings())
             builder.DumpWarnings(cout);
 
+          /*
 #ifdef OCC_HAVE_HISTORY
           Handle(BRepTools_History) history = builder.History ();
 
@@ -1621,6 +1609,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                 OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
             }
 #endif // OCC_HAVE_HISTORY
+          */
+          PropagateProperties (builder, shape);
           
           return builder.Shape();
         });
