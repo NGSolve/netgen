@@ -1422,6 +1422,28 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
              }
            return CastShape(maxshape);
          })
+    .def_property("name", [](ListOfShapes& shapes)
+    {
+      throw Exception("Cannot get property of ListOfShapes, get the property from individual shapes!");
+    },
+      [](ListOfShapes& shapes, std::string name)
+      {
+        for(auto& shape : shapes)
+          {
+            OCCGeometry::global_shape_properties[shape.TShape()].name = name;
+          }
+      })
+    .def_property("maxh", [](ListOfShapes& shapes)
+    {
+      throw Exception("Cannot get property of ListOfShapes, get the property from individual shapes!");
+    },
+      [](ListOfShapes& shapes, double maxh)
+      {
+        for(auto& shape : shapes)
+          {
+            OCCGeometry::global_shape_properties[shape.TShape()].maxh = maxh;
+          }
+      })
     
     ;
          
