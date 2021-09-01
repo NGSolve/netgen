@@ -250,7 +250,17 @@ namespace netgen
       if ( layer.Size() ) return layer[domnr-1]; 
       else return 1;
     }
-
+    void SetDomainLayer (int domnr, int layernr)
+    {
+      auto old_size = layer.Size();
+      if(domnr > old_size)
+        {
+          layer.SetSize(domnr);
+          for(size_t i = old_size; i < domnr; i++)
+            layer[i] = 1;
+        }
+      layer[domnr-1] = layernr;
+    }
 
     string GetBCName (int bcnr) const;
     void SetBCName (int bcnr, string name);

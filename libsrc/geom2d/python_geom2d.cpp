@@ -49,6 +49,7 @@ NGCORE_API_EXPORT void ExportGeom2d(py::module &m)
                   }))
     .def(NGSPickle<SplineGeometry2d>())
     .def("Load",&SplineGeometry2d::Load)
+    .def("SetDomainLayer", &SplineGeometry2d::SetDomainLayer)
     .def("AppendPoint", FunctionPointer
          ([](SplineGeometry2d &self, double px, double py, double maxh, double hpref, string name)
           {
