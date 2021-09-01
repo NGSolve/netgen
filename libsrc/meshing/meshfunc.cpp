@@ -472,9 +472,6 @@ namespace netgen
 
      mesh3d.Compress();
 
-     if (mp.checkoverlappingboundary)
-        if (mesh3d.CheckOverlappingBoundary())
-           throw NgException ("Stop meshing since boundary mesh is overlapping");
 
 
      if(mesh3d.GetNDomains()==0)
@@ -487,6 +484,10 @@ namespace netgen
 
      ParallelFor( md.Range(), [&](int i)
        {
+         if (mp.checkoverlappingboundary)
+           if (md[i].mesh->CheckOverlappingBoundary())
+             throw NgException ("Stop meshing since boundary mesh is overlapping");
+         
          CloseOpenQuads( md[i] );
          MeshDomain(md[i]);
        });
