@@ -630,6 +630,7 @@ struct Solid2d
 {
   Array<Loop> polys;
 
+  int layer = 1;
   string name = MAT_DEFAULT;
 
   Solid2d() = default;
@@ -705,6 +706,12 @@ struct Solid2d
   Solid2d & Mat(string mat)
   {
     name = mat;
+    return *this;
+  }
+
+  Solid2d & Layer(int layer_)
+  {
+    layer = layer_;
     return *this;
   }
 

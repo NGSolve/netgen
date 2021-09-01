@@ -2183,7 +2183,11 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
       }
     }
     if(!is_solid_degenerated)
+    {
       geo->SetMaterial(dom, s.name);
+      if(s.layer != 1)
+          geo->SetDomainLayer(dom, s.layer);
+    }
     else
       dom--; // degenerated solid, use same domain index again
   }
