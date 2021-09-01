@@ -117,6 +117,11 @@ namespace netgen
     return Point<3> (p.X(), p.Y(), p.Z());
   }
 
+  inline Point<2> occ2ng (const gp_Pnt2d & p)
+  {
+    return Point<2> (p.X(), p.Y());
+  }
+  
   inline Vec<3> occ2ng (const gp_Vec & v)
   {
     return Vec<3> (v.X(), v.Y(), v.Z());

@@ -146,15 +146,14 @@ void ExtractFaceData( const TopoDS_Face & face, int index, std::vector<double> *
           pts[k] = occ2ng( (triangulation -> Node(triangle(k+1))).Transformed(loc) );
 
         for (int k = 0; k < 3; k++)
-        {
-          auto uv = triangulation -> UVNode(triangle(k+1));
+          {
+            auto uv = triangulation -> UVNode(triangle(k+1));
             prop.SetParameters (uv.X(), uv.Y());
-            if (!prop.IsNormalDefined())
-                throw Exception("No normal defined on face");
-            auto normal = prop.Normal();
-            normals[k] = { normal.X(), normal.Y(), normal.Z() };
-
-        }
+            if (prop.IsNormalDefined())
+              normals[k] = occ2ng (prop.Normal());
+            else
+              normals[k] = Cross(pts[1]-pts[0], pts[2]-pts[0]);
+          }
 
         if(flip)
         {
@@ -203,16 +202,17 @@ py::object CastShape(const TopoDS_Shape & s)
 template <class TBuilder>
 void PropagateProperties (TBuilder & builder, TopoDS_Shape shape)
 {
-#ifdef OCC_HAVE_HISTORY  
-  Handle(BRepTools_History) history = builder.History();
+  // #ifdef OCC_HAVE_HISTORY  
+  // Handle(BRepTools_History) history = builder.History();
   for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
     for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
       {
         auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
-        for (auto mods : history->Modified(e.Current()))
+        // for (auto mods : history->Modified(e.Current()))
+        for (auto mods : builder.Modified(e.Current()))
           OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
       }
-#endif  
+  // #endif  
 }
 
 
@@ -466,13 +466,27 @@ public:
     Rotate (90);
     Line(w);
     Rotate (90);
-    // wires.push_back (wire_builder.Wire());
-    // wire_builder = BRepBuilderAPI_MakeWire();
     return shared_from_this();            
   }
 
+  auto RectangleCentered (double l, double w)
+  {
+    Move(-l/2);
+    Rotate(-90);
+    Move(w/2);
+    Rotate(90);
+    Rectangle(l,w);
+    Rotate(-90);
+    Move(-w/2);
+    Rotate(90);
+    Move(l/2);
+    return shared_from_this();                
+  }
+
+  
   auto Circle(double x, double y,  double r)
   {
+    /*
     MoveTo(x+r, y);
     Direction (0, 1);
     Arc(r, 180);
@@ -480,30 +494,18 @@ public:
     // wires.push_back (wire_builder.Wire());
     // wire_builder = BRepBuilderAPI_MakeWire();
     return shared_from_this();            
-
-    /*
-
-      // could not get it working with MakeCircle 
-
-    cout << "make circle, p = " << p.X() << "/" << p.Y() << ", r = " << r << endl;
-    // Handle(Geom2d_Circle) circ_curve = GCE2d_MakeCircle(p, r).Value();
-    // Handle(Geom2d_Curve) curve2d = new Geom2d_TrimmedCurve (circ_curve, 0, M_PI);
-
-    gp_Vec2d v(r,0);
-    Handle(Geom2d_TrimmedCurve) curve2d = GCE2d_MakeArcOfCircle(p.Translated(v),
-                                                                p.Translated(-v),
-                                                                p.Translated(v)).Value();
-    // Handle(Geom2d_TrimmedCurve) curve2d = GCE2d_MakeCircle(p, r).Value();
-
+    */
     
-    auto edge = BRepBuilderAPI_MakeEdge(curve2d, surf).Edge();
-    cout << "have edge, is null = " << edge.IsNull() << endl;
+    gp_Pnt2d p(x,y);
+    Handle(Geom2d_Circle) circ_curve = GCE2d_MakeCircle(p, r).Value();
+    
+    auto edge = BRepBuilderAPI_MakeEdge(circ_curve, surf).Edge();
+    BRepLib::BuildCurves3d(edge);
+
     wire_builder.Add(edge);
     wires.push_back (wire_builder.Wire());
-    cout << "have wire, is null = " << wires.back().IsNull() << endl;
     wire_builder = BRepBuilderAPI_MakeWire();
     return shared_from_this();    
-    */
   }
 
   auto NameVertex (string name)
@@ -806,8 +808,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             ShapeUpgrade_UnifySameDomain unify(fused, true, true, true);
             unify.Build();
 
-            /*
-#ifdef OCC_HAVE_HISTORY
+            // #ifdef OCC_HAVE_HISTORY
             Handle(BRepTools_History) history = unify.History ();
             
             for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
@@ -817,9 +818,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                   for (auto mods : history->Modified(e.Current()))
                     OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
                 }
-#endif        
-            */
-            PropagateProperties (unify, fused);
+            // #endif        
+            // PropagateProperties (unify, fused);
             
             return unify.Shape();
           }
@@ -1856,6 +1856,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("Line", [](WorkPlane&wp,double h,double v, optional<string> name) { return wp.Line(h,v,name); },
          py::arg("dx"), py::arg("dy"), py::arg("name")=nullopt)
     .def("Rectangle", &WorkPlane::Rectangle)
+    .def("RectangleC", &WorkPlane::RectangleCentered)
     .def("Circle", [](WorkPlane&wp, double x, double y, double r) {
         return wp.Circle(x,y,r); }, py::arg("x"), py::arg("y"), py::arg("r"))
     .def("Circle", [](WorkPlane&wp, double r) { return wp.Circle(r); }, py::arg("r"))
