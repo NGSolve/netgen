@@ -433,6 +433,7 @@ NGCORE_API_EXPORT void ExportGeom2d(py::module &m)
     .def("Mat", &Solid2d::Mat)
     .def("BC", &Solid2d::BC)
     .def("Maxh", &Solid2d::Maxh)
+    .def("Layer", &Solid2d::Layer)
 
     .def("Copy", [](Solid2d & self) -> Solid2d { return self; })
     .def("Move", &Solid2d::Move)
