@@ -1624,6 +1624,17 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           return builder.Shape();
         });
 
+  m.def("Compound", [](std::vector<TopoDS_Shape> shapes)
+    -> TopoDS_Shape
+  {
+    BRep_Builder builder;
+    TopoDS_Compound comp;
+    builder.MakeCompound(comp);
+    for(auto& s : shapes)
+      builder.Add(comp, s);
+    return comp;
+  });
+
   m.def("Glue", [] (TopoDS_Shape shape) -> TopoDS_Shape
         {
           BOPAlgo_Builder builder;
