@@ -101,9 +101,15 @@ DLL_HEADER void ExportNgOCC(py::module &m)
   ExportNgOCCBasic(m);
   ExportNgOCCShapes(m);
 
-  
-  // not working, since occ - exceptions don't derive from std::exception
-  // py::register_exception<Standard_Failure>(m, "OCC-Exception"); 
+  static py::exception<Standard_Failure> exc(m, "OCCException");
+  py::register_exception_translator([](std::exception_ptr p)
+  {
+    try {
+      if(p) std::rethrow_exception(p);
+    } catch (const Standard_Failure& e) {
+      exc((string(e.DynamicType()->Name()) + ": " + e.GetMessageString()).c_str());
+    }
+  });
   
   py::class_<OCCGeometry, shared_ptr<OCCGeometry>, NetgenGeometry> (m, "OCCGeometry", R"raw_string(Use LoadOCCGeometry to load the geometry from a *.step file.)raw_string")
     /*
