@@ -56,6 +56,7 @@
 
 #include <BOPTools_AlgoTools.hxx>
 #include <IntTools_Context.hxx>
+#include <STEPControl_Writer.hxx>
 
 #include <python_occ.hpp>
 
@@ -733,7 +734,16 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            // version 2: change location
            // ...
          }, py::arg("p"), py::arg("s"))
-    
+
+    .def("WriteStep", [](TopoDS_Shape shape, string filename)
+         {
+           STEPControl_Writer writer; 
+           writer.Transfer(shape, STEPControl_ManifoldSolidBrep); 
+           
+           // Translates TopoDS_Shape into manifold_solid_brep entity 
+           writer.Write(filename.c_str());
+         })
+
     .def("bc", [](const TopoDS_Shape & shape, const string & name)
          {
            for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
