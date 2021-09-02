@@ -314,9 +314,14 @@ install(TARGETS netgen_mpi netgen_metis ${NG_INSTALL_DIR})
 
 #######################################################################
 if (USE_OCC)
-    find_package(OpenCasCade REQUIRED)
-    add_definitions(-DOCCGEOMETRY -D_OCC64)
-    include_directories(${OCC_INCLUDE_DIR})
+    find_package(OpenCasCade NAMES OpenCASCADE opencascade REQUIRED)
+    add_definitions(-DOCCGEOMETRY)
+    set(OCC_LIBRARIES ${OpenCASCADE_LIBRARIES})
+    include_directories(${OpenCASCADE_INCLUDE_DIR})
+    if(NOT OpenCASCADE_BUILD_SHARED_LIBS)
+      find_library( FREETYPE NAMES freetype )
+      list(APPEND OCC_LIBRARIES ${FREETYPE})
+    endif()
 endif (USE_OCC)
 
 #######################################################################

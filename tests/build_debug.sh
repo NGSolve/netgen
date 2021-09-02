@@ -8,6 +8,7 @@ cmake \
     -DUSE_OCC=ON \
     -DCHECK_RANGE=ON \
     -DUSE_CGNS=ON \
+    -DCMAKE_INSTALL_PREFIX=/usr \
     ../../src/netgen
 make -j12
 make install
