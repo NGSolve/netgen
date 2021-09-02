@@ -31,7 +31,7 @@ endif(NOT WIN32)
 # target_link_libraries(nglib PRIVATE gen la gprim PUBLIC ngcore)
 target_link_libraries(nglib PUBLIC ngcore)
 
-target_link_libraries( nglib PRIVATE ${OCC_LIBRARIES} ${MPI_CXX_LIBRARIES} ${OPENGL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${X11_Xmu_LIB} ${JPEG_LIBRARIES} ${MKL_LIBRARIES} ${ZLIB_LIBRARIES} ${OCC_LIBRARIES} netgen_cgns )
+target_link_libraries( nglib PRIVATE ${MPI_CXX_LIBRARIES} ${OPENGL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${X11_Xmu_LIB} ${JPEG_LIBRARIES} ${MKL_LIBRARIES} ${ZLIB_LIBRARIES} ${OCC_LIBRARIES} netgen_cgns )
 
 if(USE_OCC AND NOT WIN32)
     target_link_libraries(nglib PUBLIC occ)

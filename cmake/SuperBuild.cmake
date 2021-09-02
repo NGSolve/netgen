@@ -16,7 +16,7 @@ macro(set_vars VAR_OUT)
 endmacro()
 #######################################################################
 set (DEPS_DOWNLOAD_URL "https://github.com/NGSolve/ngsolve_dependencies/releases/download/v1.0.0" CACHE STRING INTERNAL)
-set (OCC_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/occ_win64.zip" CACHE STRING INTERNAL)
+set (OCC_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/occ75_win64.zip" CACHE STRING INTERNAL)
 set (TCLTK_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/tcltk_win64.zip" CACHE STRING INTERNAL)
 set (ZLIB_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/zlib_win64.zip" CACHE STRING INTERNAL)
 set (CGNS_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/cgns_win64.zip" CACHE STRING INTERNAL)
@@ -65,19 +65,23 @@ endif (USE_PYTHON)
 
 #######################################################################
 
-if(USE_OCC AND WIN32 AND NOT OCC_INCLUDE_DIR)
-    ExternalProject_Add(win_download_occ
-      PREFIX ${CMAKE_CURRENT_BINARY_DIR}/tcl
-      URL ${OCC_DOWNLOAD_URL_WIN}
-      UPDATE_COMMAND "" # Disable update
-      BUILD_IN_SOURCE 1
-      CONFIGURE_COMMAND ""
-      BUILD_COMMAND ""
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory . ${CMAKE_INSTALL_PREFIX}
-      LOG_DOWNLOAD 1
-      )
-    list(APPEND NETGEN_DEPENDENCIES win_download_occ)
-endif(USE_OCC AND WIN32 AND NOT OCC_INCLUDE_DIR)
+if(USE_OCC)
+    if(WIN32 AND NOT OCC_INCLUDE_DIR AND NOT OpenCASCADE_DIR)
+        ExternalProject_Add(win_download_occ
+          PREFIX ${CMAKE_CURRENT_BINARY_DIR}/tcl
+          URL ${OCC_DOWNLOAD_URL_WIN}
+          UPDATE_COMMAND "" # Disable update
+          BUILD_IN_SOURCE 1
+          CONFIGURE_COMMAND ""
+          BUILD_COMMAND ""
+          INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory . ${CMAKE_INSTALL_PREFIX}
+          LOG_DOWNLOAD 1
+          )
+        list(APPEND NETGEN_DEPENDENCIES win_download_occ)
+    else()
+        find_package(OpenCasCade NAMES OpenCASCADE opencascade REQUIRED)
+    endif()
+endif(USE_OCC)
 
 #######################################################################
 
@@ -147,6 +151,7 @@ set_vars( NETGEN_CMAKE_ARGS
   BUILD_STUB_FILES
   BUILD_FOR_CONDA
   NG_COMPILE_FLAGS
+  OpenCasCade_DIR
   )
 
 # propagate all variables set on the command line using cmake -DFOO=BAR
