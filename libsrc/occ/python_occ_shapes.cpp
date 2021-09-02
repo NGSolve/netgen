@@ -685,6 +685,17 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
              }
            return props.CentreOfMass();
       })
+    .def_property_readonly("mass", [](const TopoDS_Shape & shape) {
+           GProp_GProps props;
+           switch (shape.ShapeType())
+             {
+             case TopAbs_FACE:
+               BRepGProp::SurfaceProperties (shape, props); break;
+             default:
+               BRepGProp::LinearProperties(shape, props);
+             }
+           return props.Mass();
+      })
 
     .def("Move", [](const TopoDS_Shape & shape, const gp_Vec v)
          {
@@ -1153,7 +1164,18 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           BRepLib::BuildCurves3d(edge);
           return edge;
         }))
-    
+    .def("Value", [](const TopoDS_Edge & e, double s) {
+        double s0, s1;
+        auto curve = BRep_Tool::Curve(e, s0, s1);
+        return curve->Value(s);        
+      })
+    .def("Tangent", [](const TopoDS_Edge & e, double s) {
+        gp_Pnt p; gp_Vec v;
+        double s0, s1;
+        auto curve = BRep_Tool::Curve(e, s0, s1);
+        curve->D1(s, p, v);
+        return v;
+      })
     .def_property_readonly("start",
                            [](const TopoDS_Edge & e) {
                            double s0, s1;
@@ -1182,6 +1204,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                            curve->D1(s1, p, v);
                            return v;
                            })
+    .def_property_readonly("parameter_interval",
+                           [](const TopoDS_Edge & e) {
+                             double s0, s1;
+                             auto curve = BRep_Tool::Curve(e, s0, s1);
+                             return tuple(s0, s1);
+                           })
+    
+    
     .def("Split", [](const TopoDS_Edge& self, py::args args)
     {
       ListOfShapes new_edges;
@@ -1250,9 +1280,20 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         }))
     ;
 
-
-    ;
-  py::class_<TopoDS_Face, TopoDS_Shape> (m, "TopoDS_Face")
+  py::class_<TopoDS_Face, TopoDS_Shape> (m, "Face")
+    .def(py::init([](TopoDS_Wire wire) {
+          return BRepBuilderAPI_MakeFace(wire).Face();
+        }), py::arg("w"))
+    .def(py::init([](const TopoDS_Face & face, const TopoDS_Wire & wire) {
+          return BRepBuilderAPI_MakeFace(BRep_Tool::Surface (face), wire).Face();
+        }), py::arg("f"), py::arg("w"))
+    .def(py::init([](const TopoDS_Face & face, std::vector<TopoDS_Wire> wires) {
+          auto surf = BRep_Tool::Surface (face);
+          BRepBuilderAPI_MakeFace builder(surf, 1e-8);
+          for (auto w : wires)
+            builder.Add(w);
+          return builder.Face();
+        }), py::arg("f"), py::arg("w"))
     .def(py::init([] (const TopoDS_Shape & shape) {
           return TopoDS::Face(shape);
         }))
@@ -1270,7 +1311,18 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         return make_shared<WorkPlane> (ax);
       })
     ;
-  py::class_<TopoDS_Solid, TopoDS_Shape> (m, "TopoDS_Solid");
+  py::class_<TopoDS_Solid, TopoDS_Shape> (m, "Solid");
+  
+  py::class_<TopoDS_Compound, TopoDS_Shape> (m, "Compound")
+    .def(py::init([](std::vector<TopoDS_Shape> shapes) {
+          BRep_Builder builder;
+          TopoDS_Compound comp;
+          builder.MakeCompound(comp);
+          for(auto& s : shapes)
+            builder.Add(comp, s);
+          return comp;
+        }))
+    ;
 
 
   
@@ -1433,6 +1485,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             OCCGeometry::global_shape_properties[shape.TShape()].name = name;
           }
       })
+    .def_property("col", [](ListOfShapes& shapes) {
+        throw Exception("Cannot get property of ListOfShapes, get the property from individual shapes!");
+      }, [](ListOfShapes& shapes, std::vector<double> c) {
+        Vec<3> col(c[0], c[1], c[2]);
+        for(auto& shape : shapes)
+          OCCGeometry::global_shape_properties[shape.TShape()].col = col;
+      })
+    
     .def_property("maxh", [](ListOfShapes& shapes)
     {
       throw Exception("Cannot get property of ListOfShapes, get the property from individual shapes!");
@@ -1624,6 +1684,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           return builder.Shape();
         });
 
+  /*
   m.def("Compound", [](std::vector<TopoDS_Shape> shapes)
     -> TopoDS_Shape
   {
@@ -1634,7 +1695,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       builder.Add(comp, s);
     return comp;
   });
-
+  */
+  
   m.def("Glue", [] (TopoDS_Shape shape) -> TopoDS_Shape
         {
           BOPAlgo_Builder builder;
@@ -1779,6 +1841,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         }
     });
   */
+
+  /*
   m.def("Face", [](TopoDS_Wire wire) {
       return BRepBuilderAPI_MakeFace(wire).Face();
     }, py::arg("w"));
@@ -1795,6 +1859,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         builder.Add(w);
       return builder.Face();
     }, py::arg("f"), py::arg("w"));
+  */
   /*
      not yet working .... ?
   m.def("Face", [](std::vector<TopoDS_Wire> wires) {
