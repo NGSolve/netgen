@@ -221,7 +221,7 @@ namespace netgen
 
 
   void DivideEdge (TopoDS_Edge & edge, NgArray<MeshPoint> & ps,
-                   NgArray<double> & params, Mesh & mesh,
+                   Array<double> & params, Mesh & mesh,
                    const MeshingParameters & mparam)
   {
     double s0, s1;
@@ -307,6 +307,9 @@ namespace netgen
     int nvertices = geom.vmap.Extent();
     int nedges = geom.emap.Extent();
 
+    Array<Array<PointIndex>> alledgepnums(nedges);
+    Array<Array<double>> alledgeparams(nedges);     
+    
     (*testout) << "nvertices = " << nvertices << endl;
     (*testout) << "nedges = " << nedges << endl;
 
@@ -467,8 +470,8 @@ namespace netgen
                 cof = BRep_Tool::CurveOnSurface (edge, face, s0, s1);
 
                 int geomedgenr = geom.emap.FindIndex(edge);
-                NgArray<PointIndex> pnums;
-                NgArray <double> params;
+                Array<PointIndex> pnums;
+                Array<double> params;
                 
                 
                 // check for identifications
@@ -533,56 +536,68 @@ namespace netgen
                 
                 if (!copy_identified)
                   {
-                    NgArray <MeshPoint> mp;
+
                     
-                    DivideEdge (edge, mp, params, mesh, mparam);
-                    
-                    pnums.SetSize(mp.Size()+2);
-                    if (!merge_solids)
+                    if (alledgepnums[geomedgenr-1].Size())
                       {
-                        pnums[0] = geom.vmap.FindIndex (TopExp::FirstVertex (edge)) + PointIndex::BASE-1;
-                        pnums.Last() = geom.vmap.FindIndex (TopExp::LastVertex (edge)) + PointIndex::BASE-1;
+                        pnums = alledgepnums[geomedgenr-1];
+                        params = alledgeparams[geomedgenr-1];
                       }
                     else
                       {
-                        Point<3> fp = occ2ng (BRep_Tool::Pnt (TopExp::FirstVertex (edge)));
-                        Point<3> lp = occ2ng (BRep_Tool::Pnt (TopExp::LastVertex (edge)));
+                        NgArray <MeshPoint> mp;
+                        DivideEdge (edge, mp, params, mesh, mparam);
                         
-                        pnums[0] = PointIndex::INVALID;
-                        pnums.Last() = PointIndex::INVALID;
-                        for (PointIndex pi : vertexrange)
+                        pnums.SetSize(mp.Size()+2);
+                        if (!merge_solids)
                           {
-                            if (Dist2 (mesh[pi], fp) < eps*eps) pnums[0] = pi;
-                            if (Dist2 (mesh[pi], lp) < eps*eps) pnums.Last() = pi;
+                            pnums[0] = geom.vmap.FindIndex (TopExp::FirstVertex (edge)) + PointIndex::BASE-1;
+                            pnums.Last() = geom.vmap.FindIndex (TopExp::LastVertex (edge)) + PointIndex::BASE-1;
+                          }
+                        else
+                          {
+                            Point<3> fp = occ2ng (BRep_Tool::Pnt (TopExp::FirstVertex (edge)));
+                            Point<3> lp = occ2ng (BRep_Tool::Pnt (TopExp::LastVertex (edge)));
+                            
+                            pnums[0] = PointIndex::INVALID;
+                            pnums.Last() = PointIndex::INVALID;
+                            for (PointIndex pi : vertexrange)
+                              {
+                                if (Dist2 (mesh[pi], fp) < eps*eps) pnums[0] = pi;
+                                if (Dist2 (mesh[pi], lp) < eps*eps) pnums.Last() = pi;
+                              }
+                          }
+                        
+                        for (size_t i = 1; i <= mp.Size(); i++)
+                          {
+                            bool exists = false;
+                            tsearch.Start();
+
+                            /*
+                            // for (PointIndex j = first_ep; j < mesh.Points().End(); j++)
+                            for (PointIndex j = first_ep; j < *mesh.Points().Range().end(); j++)
+                              if ((mesh.Point(j)-Point<3>(mp[i-1])).Length() < eps)
+                                {
+                                  exists = true;
+                                  pnums[i] = j;
+                                  break;
+                                }
+                            */
+                            tsearch.Stop();
+                            
+                            if (!exists)
+                              pnums[i] = mesh.AddPoint (mp[i-1]);
                           }
                       }
                     
-                    for (size_t i = 1; i <= mp.Size(); i++)
-                      {
-                        bool exists = false;
-                        tsearch.Start();
-                        
-                        // for (PointIndex j = first_ep; j < mesh.Points().End(); j++)
-                        for (PointIndex j = first_ep; j < *mesh.Points().Range().end(); j++)
-                          if ((mesh.Point(j)-Point<3>(mp[i-1])).Length() < eps)
-                            {
-                              exists = true;
-                              pnums[i] = j;
-                              break;
-                            }
-                        
-                        tsearch.Stop();
-                        
-                        if (!exists)
-                          pnums[i] = mesh.AddPoint (mp[i-1]);
-                      }
-                  }
-                    
 
-                
+                    alledgepnums[geomedgenr-1] = pnums;
+                    alledgeparams[geomedgenr-1] = params;
+                  }
+
                 if(geom.enames.Size() && geom.enames[curr-1] != "")
                   mesh.SetCD2Name(geomedgenr, geom.enames[curr-1]);
-                
+                  
                 (*testout) << "NP = " << mesh.GetNP() << endl;
                 //(*testout) << pnums[pnums.Size()-1] << endl;
 
@@ -602,20 +617,17 @@ namespace netgen
                     seg.epgeominfo[0].edgenr = geomedgenr;
                     seg.epgeominfo[1].edgenr = geomedgenr;
 
-                    gp_Pnt2d p2d1, p2d2;
                     double s0 = params[i-1];
                     double s1 = params[i];
                     double delta = s1-s0;
                     s0 += 1e-10*delta;   // fixes normal-vector roundoff problem when endpoint is cone-tip
                     s1 -= 1e-10*delta;  
-                    p2d1 = cof->Value(s0);
-                    p2d2 = cof->Value(s1);
-                    //			if (i == 1) p2d = cof->Value(s0);
-                    seg.epgeominfo[0].u = p2d1.X(); // + 1e-10 * vec.X();
-                    seg.epgeominfo[0].v = p2d1.Y(); // + 1e-10 * vec.Y();
-                    //			if (i == mp.Size()+1) p2d = cof -> Value(s1);
-                    seg.epgeominfo[1].u = p2d2.X(); // - 1e-10 * vec.X();
-                    seg.epgeominfo[1].v = p2d2.Y(); // - 1e-10 * vec.Y();
+                    gp_Pnt2d p2d1 = cof->Value(s0);
+                    gp_Pnt2d p2d2 = cof->Value(s1);
+                    seg.epgeominfo[0].u = p2d1.X(); 
+                    seg.epgeominfo[0].v = p2d1.Y(); 
+                    seg.epgeominfo[1].u = p2d2.X(); 
+                    seg.epgeominfo[1].v = p2d2.Y(); 
 
                     /*
                       if (occface->IsUPeriodic())
