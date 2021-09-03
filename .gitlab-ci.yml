@@ -13,7 +13,7 @@ push_github_sourceforge:
     - git remote add sourceforge ssh://mhochste@git.code.sf.net/p/netgen-mesher/git || true
     - git remote add github git@github.com:NGSolve/netgen.git || true
     - git remote update
-    - git checkout master
+    - git checkout --track origin/master
     - git pull origin master
     - git push sourceforge master --tags
     - git push github master --tags
