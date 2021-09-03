@@ -163,7 +163,7 @@ public:
   }
 
   /// allocates size bytes of memory from local heap
-  NETGEN_INLINE void * Alloc (size_t size) final // throw (LocalHeapOverflow)
+  void * Alloc (size_t size) final // throw (LocalHeapOverflow)
   {
     char * oldp = p;
   
@@ -181,7 +181,7 @@ public:
 
     /// allocates size objects of type T on local heap
     template <typename T>
-    NETGEN_INLINE T * Alloc (size_t size) // throw (LocalHeapOverflow)
+    T * Alloc (size_t size) // throw (LocalHeapOverflow)
     {
       char * oldp = p;
       size *= sizeof (T);
