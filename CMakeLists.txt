@@ -316,7 +316,40 @@ install(TARGETS netgen_mpi netgen_metis ${NG_INSTALL_DIR})
 if (USE_OCC)
     find_package(OpenCasCade NAMES OpenCASCADE opencascade REQUIRED)
     add_definitions(-DOCCGEOMETRY)
-    set(OCC_LIBRARIES ${OpenCASCADE_LIBRARIES})
+    set(OCC_LIBRARIES
+      TKBO
+      TKBRep
+      TKBool
+      TKCAF
+      TKCDF
+      TKFillet
+      TKG2d
+      TKG3d
+      TKGeomAlgo
+      TKGeomBase
+      TKHLR
+      TKIGES
+      TKLCAF
+      TKMath
+      TKMesh
+      TKOffset
+      TKPrim
+      TKSTEP
+      TKSTEP209
+      TKSTEPAttr
+      TKSTEPBase
+      TKSTL
+      TKService
+      TKShHealing
+      TKTopAlgo
+      TKV3d
+      TKVCAF
+      TKXCAF
+      TKXDEIGES
+      TKXDESTEP
+      TKXSBase
+      TKernel
+    )
     include_directories(${OpenCASCADE_INCLUDE_DIR})
     if(NOT OpenCASCADE_BUILD_SHARED_LIBS)
       find_library( FREETYPE NAMES freetype )
