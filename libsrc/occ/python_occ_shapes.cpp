@@ -319,7 +319,7 @@ public:
   auto Line(double len, optional<string> name = nullopt)
   {
     gp_Dir2d dir = localpos.Direction();
-    cout << "dir = " << dir.X() << ", " << dir.Y() << endl;
+    cout << IM(6) << "dir = " << dir.X() << ", " << dir.Y() << endl;
     gp_Pnt2d oldp = localpos.Location();
     oldp.Translate(len*dir);
     return LineTo (oldp.X(), oldp.Y(), name);
