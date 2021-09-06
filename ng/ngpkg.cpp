@@ -1281,7 +1281,7 @@ namespace netgen
 
     mparam.autozrefine = atoi (Tcl_GetVar (interp, "::options.autozrefine", 0));
 
-    extern int printmessage_importance;
+    // extern int printmessage_importance;
     extern int printdots;
     printmessage_importance = atoi (Tcl_GetVar (interp, "::options.printmsg", 0));
     printdots = (printmessage_importance >= 4);
