@@ -584,7 +584,6 @@ public:
 
 DLL_HEADER void ExportNgOCCShapes(py::module &m) 
 {
-  cout << "export shapes" << endl;
   py::enum_<TopAbs_ShapeEnum>(m, "TopAbs_ShapeEnum", "Enumeration of all supported TopoDS_Shapes")
     .value("COMPOUND", TopAbs_COMPOUND)   .value("COMPSOLID", TopAbs_COMPSOLID)
     .value("SOLID", TopAbs_SOLID)       .value("SHELL", TopAbs_SHELL)

@@ -57,8 +57,6 @@
 
 DLL_HEADER void ExportNgOCCBasic(py::module &m) 
 {
-  cout << "export basics" << endl;
-  
   py::class_<gp_Pnt>(m, "gp_Pnt")
     .def(py::init([] (py::tuple pnt)
                   {
