@@ -8,6 +8,8 @@
 #include <iostream>
 #include <regex>
 
+#include "ngstream.hpp"
+
 namespace ngcore
 {
     namespace detail
@@ -89,6 +91,9 @@ namespace ngcore
   }();
 
   const std::chrono::time_point<TClock> wall_time_start = TClock::now();
+
+  int printmessage_importance = 5;
+  bool NGSOStream :: glob_active = true;
 
 } // namespace ngcore
 

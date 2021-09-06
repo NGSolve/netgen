@@ -466,9 +466,9 @@ extern "C" {
 
 #ifdef __cplusplus
 #include <iostream>
-namespace netgen 
+namespace ngcore
 {
-  DLL_HEADER extern int printmessage_importance;
+  NGCORE_API extern int printmessage_importance;
 }
 
 #endif

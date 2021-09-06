@@ -18,5 +18,6 @@
 #include "taskmanager.hpp"
 #include "version.hpp"
 #include "xbool.hpp"
+#include "ngstream.hpp"
 
 #endif // NETGEN_CORE_NGCORE_HPP

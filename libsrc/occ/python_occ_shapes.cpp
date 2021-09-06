@@ -286,10 +286,10 @@ public:
     bool closing = new2d.Distance(startpnt) < 1e-10;
 
       
-    cout << "lineto, oldp = " << occ2ng(oldp) << endl;
-    cout << "lineto, newp = " << occ2ng(newp) << endl;
+    cout << IM(6) << "lineto, oldp = " << occ2ng(oldp) << endl;
+    cout << IM(6) << "lineto, newp = " << occ2ng(newp) << endl;
     gp_Pnt pfromsurf = surf->Value(new2d.X(), new2d.Y());
-    cout << "p from plane = " << occ2ng(pfromsurf) << endl;
+    cout << IM(6) << "p from plane = " << occ2ng(pfromsurf) << endl;
     
     Handle(Geom_TrimmedCurve) curve = GC_MakeSegment(oldp, newp);
 
@@ -342,10 +342,10 @@ public:
     localpos.SetLocation (gp_Pnt2d(h,v));
     gp_Pnt2d P2 = localpos.Location();
 
-    cout << "ArcTo:" << endl;
-    cout << "P1 = (" << P1.X() <<", " << P1.Y() << ")"<<endl;
-    cout << "P2 = (" << P2.X() <<", " << P2.Y() << ")"<<endl;
-    cout << "t = (" << t.X() << ", " << t.Y() << ")" << endl;
+    cout << IM(6) << "ArcTo:" << endl;
+    cout << IM(6) << "P1 = (" << P1.X() <<", " << P1.Y() << ")"<<endl;
+    cout << IM(6) << "P2 = (" << P2.X() <<", " << P2.Y() << ")"<<endl;
+    cout << IM(6) << "t = (" << t.X() << ", " << t.Y() << ")" << endl;
 
     //compute circle center point M
     //point midway between p1 and p2
@@ -356,17 +356,17 @@ public:
     double k = ((P12.Y()- P1.Y())*p12n.X() + (P1.X() - P12.X())*p12n.Y() )/ (t.X()*p12n.X() + t.Y()*p12n.Y());
     gp_Pnt2d M = gp_Pnt2d(P1.X()-k*t.Y(), P1.Y() + k*t.X());
 
-    cout << "P12 = (" << P12.X() <<", " << P12.Y() << ")"<<endl;
-    cout << "p12n = (" << p12n.X() <<", " << p12n.Y() << ")"<<endl;
-    cout << "k = " << k <<endl;
-    cout << "M = (" << M.X() <<", " << M.Y() << ")"<<endl;
+    cout << IM(6) << "P12 = (" << P12.X() <<", " << P12.Y() << ")"<<endl;
+    cout << IM(6) << "p12n = (" << p12n.X() <<", " << p12n.Y() << ")"<<endl;
+    cout << IM(6) << "k = " << k <<endl;
+    cout << IM(6) << "M = (" << M.X() <<", " << M.Y() << ")"<<endl;
 
     //radius
     double r = P1.Distance(M);
 
     //compute point P3 on circle between P1 and P2
     p12n.Normalize();   //docu: reverses direction of p12n ??
-    cout << "p12n = (" << p12n.X() <<", " << p12n.Y() << ")"<<endl;
+    cout << IM(6) << "p12n = (" << p12n.X() <<", " << p12n.Y() << ")"<<endl;
 
     gp_Pnt2d P3;
 
@@ -376,32 +376,26 @@ public:
     else
         P3 = gp_Pnt2d(M.X() - r * p12n.X() , M.Y() - r * p12n.Y());
 
-    cout << "r = " << r <<endl;
-    cout << "angle t,p12n = " << t.Angle(p12n)<<endl;
-    cout << "P3 = (" << P3.X() <<", " << P3.Y() << ")"<<endl;
-    cout << "dist(M,P3) = " << P3.Distance(M) <<endl;
+    cout << IM(6) << "r = " << r <<endl;
+    cout << IM(6) << "angle t,p12n = " << t.Angle(p12n)<<endl;
+    cout << IM(6) << "P3 = (" << P3.X() <<", " << P3.Y() << ")"<<endl;
+    cout << IM(6) << "dist(M,P3) = " << P3.Distance(M) <<endl;
 
     //Draw 2d arc of circle from P1 to P2 through P3
     Handle(Geom2d_TrimmedCurve) curve2d = GCE2d_MakeArcOfCircle(P1, P3, P2).Value();
 
     gp_Pnt P13d = surf->Value(P1.X(), P1.Y());
     gp_Pnt P23d = surf->Value(P2.X(), P2.Y());
-    cout << "p13d = " << occ2ng(P13d) << ", p23d = " << occ2ng(P23d) << endl;
+    cout << IM(6) << "p13d = " << occ2ng(P13d) << ", p23d = " << occ2ng(P23d) << endl;
     bool closing = P2.Distance(startpnt) < 1e-10;
     if (startvertex.IsNull())
       startvertex = lastvertex = BRepBuilderAPI_MakeVertex(P13d);
     auto endv = closing ? startvertex : BRepBuilderAPI_MakeVertex(P23d);
-    // liefert noch Fehler bei close
 
-    cout << "closing = " << closing << endl;
-    cout << "startv isnull = " << lastvertex.IsNull() << endl;
-    cout << "endv isnull = " << endv.IsNull() << endl;
     //create 3d edge from 2d curve using surf
     auto edge = BRepBuilderAPI_MakeEdge(curve2d, surf, lastvertex, endv).Edge();
     lastvertex = endv;
-    cout << "have edge" << endl;
     BRepLib::BuildCurves3d(edge);
-    cout << "Have curve3d" << endl;
     wire_builder.Add(edge);
 
     //compute angle of rotation
@@ -413,7 +407,6 @@ public:
     else
         t2 = gp_Vec2d(-(P2.Y()-M.Y()),(P2.X()-M.X()));
     double angle = -t2.Angle(t);    //angle \in [-pi,pi]
-    cout << "angle t2,t = " << angle*180/M_PI << endl;
 
     //update localpos.Direction()
     Rotate(angle*180/M_PI);
@@ -443,7 +436,7 @@ public:
 
     oldp.Translate(radius*dirn);
 
-    cout << "M = (" << oldp.X() << ", " << oldp.Y() << ")" << endl;
+    cout << IM(6) << "M = (" << oldp.X() << ", " << oldp.Y() << ")" << endl;
 
     dirn.Rotate(newAngle-M_PI);
     oldp.Translate(radius*dirn);
@@ -451,7 +444,7 @@ public:
     //compute tangent vector in P1
     gp_Vec2d t = gp_Vec2d(dir.X(),dir.Y());
 
-    cout << "t = (" << t.X() << ", " << t.Y() << ")" << endl;
+    cout << IM(6) << "t = (" << t.X() << ", " << t.Y() << ")" << endl;
 
     //add arc
     return ArcTo (oldp.X(), oldp.Y(), t);
@@ -547,12 +540,8 @@ public:
     wires.pop_back();
     BRepOffsetAPI_MakeOffset builder;
     builder.AddWire(wire);
-    cout << "call builder" << endl;
     builder.Perform(d);
-    cout << "perform is back" << endl;
     auto shape = builder.Shape();
-    cout << "builder is back" << endl;
-    cout << "Offset got shape type " << shape.ShapeType() << endl;
     wires.push_back (TopoDS::Wire(shape.Reversed()));
     return shared_from_this();
   }
