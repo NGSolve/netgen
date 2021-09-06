@@ -92,7 +92,7 @@ namespace ngcore
 
   const std::chrono::time_point<TClock> wall_time_start = TClock::now();
 
-  int printmessage_importance = 5;
+  int printmessage_importance = 0;
   bool NGSOStream :: glob_active = true;
 
 } // namespace ngcore
