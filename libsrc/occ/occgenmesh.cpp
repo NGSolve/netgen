@@ -907,13 +907,13 @@ namespace netgen
 
         catch (SingularMatrixException)
           {
-            (*myerr) << "Singular Matrix" << endl;
+            // (*myerr) << "Singular Matrix" << endl;
             res = MESHING2_GIVEUP;
           }
 
         catch (UVBoundsException)
           {
-            (*myerr) << "UV bounds exceeded" << endl;
+            // (*myerr) << "UV bounds exceeded" << endl;
             res = MESHING2_GIVEUP;
           }
 
