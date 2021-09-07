@@ -1836,9 +1836,10 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             aTool.AddWire(TopoDS::Wire(shape));
           aTool.CheckCompatibility(Standard_False);
           return aTool.Shape();
-        }, py::arg("wires"), py::arg("solid")=true);
-
-
+        }, py::arg("wires"), py::arg("solid")=true,
+        "Building a loft. This is a shell or solid passing through a set of sections (wires). "
+        "First and last sections may be vertices. See https://dev.opencascade.org/doc/refman/html/class_b_rep_offset_a_p_i___thru_sections.html#details");
+  
 
   py::class_<WorkPlane, shared_ptr<WorkPlane>> (m, "WorkPlane")
     .def(py::init<gp_Ax3, gp_Ax2d>(), py::arg("axes")=gp_Ax3(), py::arg("pos")=gp_Ax2d())
