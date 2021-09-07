@@ -67,7 +67,41 @@
 using namespace netgen;
 
 
-class ListOfShapes : public std::vector<TopoDS_Shape> { };
+class ListOfShapes : public std::vector<TopoDS_Shape>
+{
+public:
+  TopoDS_Shape Max(gp_Vec dir)
+  {
+    double maxval = -1e99;
+    TopoDS_Shape maxshape;
+    for (auto shape : *this)
+      {
+        GProp_GProps props;
+        gp_Pnt center;
+        
+        switch (shape.ShapeType())
+          {
+          case TopAbs_VERTEX:
+            center = BRep_Tool::Pnt (TopoDS::Vertex(shape)); break;
+          case TopAbs_FACE:
+            BRepGProp::SurfaceProperties (shape, props);
+            center = props.CentreOfMass();
+            break;
+          default:
+            BRepGProp::LinearProperties(shape, props);
+            center = props.CentreOfMass();
+          }
+        
+        double val = center.X()*dir.X() + center.Y()*dir.Y() + center.Z() * dir.Z();
+        if (val > maxval)
+          {
+            maxval = val;
+            maxshape = shape;
+          }
+      }
+    return maxshape;
+  }
+};
 
 
 void ExtractEdgeData( const TopoDS_Edge & edge, int index, std::vector<double> * p, Box<3> & box )
@@ -597,34 +631,19 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     
     .def("ShapeType", [] (const TopoDS_Shape & shape)
          {
-           cout << "WARNING: pls use 'shape' instead of 'ShapeType()'" << endl;
-           return shape.ShapeType();
-         })
+           throw Exception ("use 'shape.type' instead of 'shape.ShapeType()'");
+         }, "deprecated, use 'shape.type' instead")
+    
     .def_property_readonly("type", [](const TopoDS_Shape & shape)
-                           { return shape.ShapeType(); })    
+                           { return shape.ShapeType(); }, "returns type of shape, i.e. 'EDGE', 'FACE', ...")    
     
     .def("SubShapes", [] (const TopoDS_Shape & shape, TopAbs_ShapeEnum & type)
          {
-           /*
-           py::list sub;
-           TopExp_Explorer e;
-           for (e.Init(shape, type); e.More(); e.Next())
-             {
-               switch (type)
-                 {
-                 case TopAbs_FACE:
-                   sub.append(TopoDS::Face(e.Current())); break;
-                 default:
-                   sub.append(e.Current());
-                 }
-             }
-           return sub;
-           */
            ListOfShapes sub;
            for (TopExp_Explorer e(shape, type); e.More(); e.Next())
              sub.push_back(e.Current());
            return sub;
-         })
+         }, py::arg("type"), "returns list of sub-shapes of type 'type'")
     
     .def_property_readonly("faces", [] (const TopoDS_Shape & shape)
          {
@@ -632,21 +651,23 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
              sub.push_back(e.Current());
            return sub;
-         })
+         }, "returns all sub-shapes of type 'FACE'")
+    
     .def_property_readonly("edges", [] (const TopoDS_Shape & shape)
          {
            ListOfShapes sub;
            for (TopExp_Explorer e(shape, TopAbs_EDGE); e.More(); e.Next())
              sub.push_back(e.Current());
            return sub;
-         })
+         }, "returns all sub-shapes of type 'EDGE'")
+    
     .def_property_readonly("vertices", [] (const TopoDS_Shape & shape)
          {
            ListOfShapes sub;
            for (TopExp_Explorer e(shape, TopAbs_VERTEX); e.More(); e.Next())
              sub.push_back(e.Current());
            return sub;
-         })
+         }, "returns all sub-shapes of type 'VERTEX'")
 
     .def("Properties", [] (const TopoDS_Shape & shape)
          {
@@ -662,7 +683,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            double mass = props.Mass();
            gp_Pnt center = props.CentreOfMass();
            return tuple( py::cast(mass), py::cast(center) );
-         })
+         }, "returns tuple of shape properties, currently ('mass', 'center'")
+    
     .def_property_readonly("center", [](const TopoDS_Shape & shape) {
            GProp_GProps props;
            switch (shape.ShapeType())
@@ -673,7 +695,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                BRepGProp::LinearProperties(shape, props);
              }
            return props.CentreOfMass();
-      })
+      }, "returns center of gravity of shape")
+    
     .def_property_readonly("mass", [](const TopoDS_Shape & shape) {
            GProp_GProps props;
            switch (shape.ShapeType())
@@ -684,7 +707,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                BRepGProp::LinearProperties(shape, props);
              }
            return props.Mass();
-      })
+      }, "returns mass of shape, what is length, face, or volume")
 
     .def("Move", [](const TopoDS_Shape & shape, const gp_Vec v)
          {
@@ -695,7 +718,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            return BRepBuilderAPI_Transform(shape, trafo).Shape();
            // version 2: change location
            // ...
-         }, py::arg("v"))
+         }, py::arg("v"), "copy shape, and translate copy by vector 'v'")
 
 
     .def("Rotate", [](const TopoDS_Shape & shape, const gp_Ax1 ax, double ang)
@@ -703,25 +726,24 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            gp_Trsf trafo;
            trafo.SetRotation(ax, ang*M_PI/180);            
            return BRepBuilderAPI_Transform(shape, trafo).Shape();
-         }, py::arg("axis"), py::arg("ang"))
+         }, py::arg("axis"), py::arg("ang"),
+         "copy shape, and rotet copy by 'ang' degrees around 'axis'")
 
     .def("Mirror", [] (const TopoDS_Shape & shape, const gp_Ax3 & ax)
          {
            gp_Trsf trafo;
            trafo.SetMirror(ax.Ax2());
            return BRepBuilderAPI_Transform(shape, trafo).Shape();
-         })
+         }, py::arg("axes"),
+         "copy shape, and mirror over plane defined by 'axes'")
     
     .def("Scale", [](const TopoDS_Shape & shape, const gp_Pnt p, double s)
          {
-           // which one to choose ? 
-           // version 1: Transoformation
            gp_Trsf trafo;
            trafo.SetScale(p, s);
            return BRepBuilderAPI_Transform(shape, trafo).Shape();
-           // version 2: change location
-           // ...
-         }, py::arg("p"), py::arg("s"))
+         }, py::arg("p"), py::arg("s"),
+         "copy shape, and scale copy by factor 's'")
 
     .def("WriteStep", [](TopoDS_Shape shape, string filename)
          {
@@ -730,21 +752,21 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            
            // Translates TopoDS_Shape into manifold_solid_brep entity 
            writer.Write(filename.c_str());
-         })
+         }, py::arg("filename"), "export shape in STEP - format")
 
     .def("bc", [](const TopoDS_Shape & shape, const string & name)
          {
            for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
              OCCGeometry::global_shape_properties[e.Current().TShape()].name = name;
            return shape;
-         })
+         }, py::arg("name"), "sets 'name' property for all faces of shape")
 
     .def("mat", [](const TopoDS_Shape & shape, const string & name)
          {
            for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
              OCCGeometry::global_shape_properties[e.Current().TShape()].name = name;
            return shape;
-         })
+         }, py::arg("name"), "sets 'name' property to all solids of shape")
     
     .def_property("name", [](const TopoDS_Shape & self) {
         if (auto name = OCCGeometry::global_shape_properties[self.TShape()].name)
@@ -753,7 +775,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           return string();
       }, [](const TopoDS_Shape & self, string name) {
         OCCGeometry::global_shape_properties[self.TShape()].name = name;            
-      })
+      }, "'name' of shape")
+    
     .def_property("maxh",
                   [](const TopoDS_Shape& self)
                   {
@@ -762,28 +785,27 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                   [](TopoDS_Shape& self, double val)
                   {
                     OCCGeometry::global_shape_properties[self.TShape()].maxh = val;
-                  })
+                  }, "maximal mesh-size for shape")
+    
     .def_property("col", [](const TopoDS_Shape & self) {
         auto it = OCCGeometry::global_shape_properties.find(self.TShape());
         Vec<3> col(0.2, 0.2, 0.2);
         if (it != OCCGeometry::global_shape_properties.end() && it->second.col)
-          col = *it->second.col; // .value();
+          col = *it->second.col; 
         return std::vector<double> ( { col(0), col(1), col(2) } );
       }, [](const TopoDS_Shape & self, std::vector<double> c) {
         Vec<3> col(c[0], c[1], c[2]);
         OCCGeometry::global_shape_properties[self.TShape()].col = col;    
-      })
+      }, "color of shape as RGB - tuple")
     
     .def_property("location",
                   [](const TopoDS_Shape & shape) { return shape.Location(); },
                   [](TopoDS_Shape & shape, const TopLoc_Location & loc)
-                  { shape.Location(loc); })
+                  { shape.Location(loc); }, "Location of shape")
     .def("Located", [](const TopoDS_Shape & shape, const TopLoc_Location & loc)
-                  { return shape.Located(loc); })
+         { return shape.Located(loc); }, py::arg("loc"), "copy shape and sets location of copy")
 
     .def("__add__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
-        // auto fused = BRepAlgoAPI_Fuse(shape1, shape2).Shape();
-        // return fused;
 
         BRepAlgoAPI_Fuse builder(shape1, shape2);
         PropagateProperties (builder, shape1);
@@ -803,7 +825,6 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 #endif        
         */
         auto fused = builder.Shape();        
-
         
         // make one face when fusing in 2D
         // from https://gitlab.onelab.info/gmsh/gmsh/-/issues/627
@@ -834,11 +855,10 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           }
         else
           return fused;
-      })
+      }, "fuses shapes")
     .def("__radd__", [] (const TopoDS_Shape & shape, int i) // for sum([shapes])
-         { return shape; })
+         { return shape; }, "needed for Sum([shapes])")
     .def("__mul__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
-        // return BRepAlgoAPI_Common(shape1, shape2).Shape();
         
         BRepAlgoAPI_Common builder(shape1, shape2);
         /*
@@ -860,12 +880,12 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         PropagateProperties (builder, shape2);
         
         return builder.Shape();
-      })
+      }, "common of shapes")
     
     .def("__sub__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
-        // return BRepAlgoAPI_Cut(shape1, shape2).Shape();
         
         BRepAlgoAPI_Cut builder(shape1, shape2);
+        /*
 #ifdef OCC_HAVE_HISTORY        
         Handle(BRepTools_History) history = builder.History ();
         
@@ -878,9 +898,12 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                   OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
               }
 #endif // OCC_HAVE_HISTORY
+        */
+        PropagateProperties (builder, shape1);
+        PropagateProperties (builder, shape2);
         
         return builder.Shape();        
-      })
+      }, "cut of shapes")
 
     .def("Reversed", [](const TopoDS_Shape & shape) {
         return CastShape(shape.Reversed()); })
@@ -893,7 +916,6 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             gp_Pnt p;
             surf->D1 (0,0,p,du,dv);
             BRepPrimAPI_MakePrism builder(shape, h*du^dv);
-            // PropagateProperties(builder, shape);
 
             for (auto typ : { TopAbs_EDGE, TopAbs_VERTEX })
               for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
@@ -903,15 +925,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                     OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
                 }
             
-            
             return builder.Shape();
           }
         throw Exception("no face found for extrusion");
-      })
+      }, py::arg("h"), "extrude shape to thickness 'h', shape must contain a plane surface")
     
     .def("Extrude", [] (const TopoDS_Shape & face, gp_Vec vec) {
         return BRepPrimAPI_MakePrism (face, vec).Shape();
-      })
+      }, py::arg("v"), "extrude shape by vector 'v'")
 
   .def("Revolve", [](const TopoDS_Shape & shape, const gp_Ax1 &A, const double D) {
       for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
@@ -930,20 +951,21 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           return builder.Shape();          
         }
       throw Exception("no face found for revolve");
-    })
+    }, py::arg("axis"), py::arg("ang"), "revolve shape around 'axis' by 'ang' degrees")
     
     .def("Find", [](const TopoDS_Shape & shape, gp_Pnt p)
          {
+           throw Exception ("not implemented yet");
            // find sub-shape contianing point
            // BRepClass_FaceClassifier::Perform  (p);
-         })
+         }, py::arg("p"), "finds sub-shape containing point 'p' (not yet implemented)")
     
     .def("MakeFillet", [](const TopoDS_Shape & shape, std::vector<TopoDS_Shape> edges, double r) {
         BRepFilletAPI_MakeFillet mkFillet(shape);
         for (auto e : edges)
           mkFillet.Add (r, TopoDS::Edge(e));
         return mkFillet.Shape();
-      })
+      }, py::arg("edges"), py::arg("r"), "make fillets for edges 'edges' of radius 'r'")
   
     .def("MakeThickSolid", [](const TopoDS_Shape & body, std::vector<TopoDS_Shape> facestoremove,
                               double offset, double tol) {
@@ -954,7 +976,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            BRepOffsetAPI_MakeThickSolid maker;
            maker.MakeThickSolidByJoin(body, faces, offset, tol);
            return maker.Shape();
-         })
+         }, py::arg("facestoremove"), py::arg("offset"), py::arg("tol"), "makes shell-like solid from faces")
     
     .def("MakeTriangulation", [](const TopoDS_Shape & shape)
          {
@@ -985,7 +1007,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                               (OCCIdentification { you, Transformation<3>(occ2ng(cyou) - occ2ng(cme)), inv, name });
         OCCGeometry::identifications[you.TShape()].push_back
                               (OCCIdentification { me, Transformation<3>(occ2ng(cme) - occ2ng(cyou)), inv, name });
-      })
+      }, py::arg("other"), py::arg("name"), "Identify shapes for periodic meshing")
 
     
     .def("Triangulation", [](const TopoDS_Shape & shape)
@@ -1150,7 +1172,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           return BRepBuilderAPI_MakeVertex (p).Vertex();
         }))
     .def_property_readonly("p", [] (const TopoDS_Vertex & v) -> gp_Pnt {
-        return BRep_Tool::Pnt (v); })
+        return BRep_Tool::Pnt (v); }, "coordinates of vertex")
     ;
   
   py::class_<TopoDS_Edge, TopoDS_Shape> (m, "Edge")
@@ -1166,26 +1188,30 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         double s0, s1;
         auto curve = BRep_Tool::Curve(e, s0, s1);
         return curve->Value(s);        
-      })
+      }, py::arg("s"), "evaluate curve for paramters 's'")
+    
     .def("Tangent", [](const TopoDS_Edge & e, double s) {
         gp_Pnt p; gp_Vec v;
         double s0, s1;
         auto curve = BRep_Tool::Curve(e, s0, s1);
         curve->D1(s, p, v);
         return v;
-      })
+      }, py::arg("s"), "tangent vector to curve at parameter 's'")
+    
     .def_property_readonly("start",
                            [](const TopoDS_Edge & e) {
                            double s0, s1;
                            auto curve = BRep_Tool::Curve(e, s0, s1);
                            return curve->Value(s0);
-                           })
+                           },
+                           "start-point of curve")
     .def_property_readonly("end",
                            [](const TopoDS_Edge & e) {
                            double s0, s1;
                            auto curve = BRep_Tool::Curve(e, s0, s1);
                            return curve->Value(s1);
-                           })
+                           },
+                           "end-point of curve")
     .def_property_readonly("start_tangent",
                            [](const TopoDS_Edge & e) {
                            double s0, s1;
@@ -1193,7 +1219,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                            gp_Pnt p; gp_Vec v;
                            curve->D1(s0, p, v);
                            return v;
-                           })
+                           },
+                           "tangent at start-point")
     .def_property_readonly("end_tangent",
                            [](const TopoDS_Edge & e) {
                            double s0, s1;
@@ -1201,13 +1228,15 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                            gp_Pnt p; gp_Vec v;
                            curve->D1(s1, p, v);
                            return v;
-                           })
+                           },
+                           "tangent at end-point")
     .def_property_readonly("parameter_interval",
                            [](const TopoDS_Edge & e) {
                              double s0, s1;
                              auto curve = BRep_Tool::Curve(e, s0, s1);
                              return tuple(s0, s1);
-                           })
+                           },
+                           "parameter interval of curve")
     
     
     .def("Split", [](const TopoDS_Edge& self, py::args args)
@@ -1247,6 +1276,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       return new_edges;
     }, "Splits edge at given parameters. Parameters can either be floating values in (0,1), then edge parametrization is used. Or it can be points, then the projection of these points are used for splitting the edge.")
     ;
+  
   py::class_<TopoDS_Wire, TopoDS_Shape> (m, "Wire")
     .def(py::init([](const TopoDS_Edge & edge) {
           BRepBuilderAPI_MakeWire builder;
@@ -1357,7 +1387,6 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     auto operator*() const { return CastShape(*ptr); }
     bool operator!=(ListOfShapesIterator it2) const { return ptr != it2.ptr; }
     bool operator==(ListOfShapesIterator it2) const { return ptr == it2.ptr; }
-    
   };
   
   py::class_<ListOfShapes> (m, "ListOfShapes")
@@ -1399,7 +1428,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                if (sname == name)
                  selected.push_back(s);
            return selected;
-         })
+         }, "returns list of all shapes named 'name'")
 
     .def("__getitem__",[](const ListOfShapes & self, DirectionalInterval interval)
          {
@@ -1439,39 +1468,16 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                       [&](TopoDS_Shape a, TopoDS_Shape b)
                       { return sortval[a.TShape()] < sortval[b.TShape()]; });
            return self;
-         })
+         }, py::arg("dir"), "returns list of shapes, where center of gravity is sorted in direction of 'dir'")
     
     .def("Max", [] (ListOfShapes & shapes, gp_Vec dir)
-         {
-           double maxval = -1e99;
-           TopoDS_Shape maxshape;
-           for (auto shape : shapes)
-             {
-               GProp_GProps props;
-               gp_Pnt center;
-               
-               switch (shape.ShapeType())
-                 {
-                 case TopAbs_VERTEX:
-                   center = BRep_Tool::Pnt (TopoDS::Vertex(shape)); break;
-                 case TopAbs_FACE:
-                   BRepGProp::SurfaceProperties (shape, props);
-                   center = props.CentreOfMass();
-                   break;
-                 default:
-                   BRepGProp::LinearProperties(shape, props);
-                   center = props.CentreOfMass();
-                 }
-               
-               double val = center.X()*dir.X() + center.Y()*dir.Y() + center.Z() * dir.Z();
-               if (val > maxval)
-                 {
-                   maxval = val;
-                   maxshape = shape;
-                 }
-             }
-           return CastShape(maxshape);
-         })
+         { return CastShape(shapes.Max(dir)); },
+         py::arg("dir"), "returns shape where center of gravity is maximal in the direction 'dir'")
+    
+    .def("Min", [] (ListOfShapes & shapes, gp_Vec dir) 
+         { return CastShape(shapes.Max(-dir)); },
+         py::arg("dir"), "returns shape where center of gravity is minimal in the direction 'dir'")
+    
     .def_property("name", [](ListOfShapes& shapes)
     {
       throw Exception("Cannot get property of ListOfShapes, get the property from individual shapes!");
@@ -1482,14 +1488,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           {
             OCCGeometry::global_shape_properties[shape.TShape()].name = name;
           }
-      })
+      }, "set name for all elements of list")
     .def_property("col", [](ListOfShapes& shapes) {
         throw Exception("Cannot get property of ListOfShapes, get the property from individual shapes!");
       }, [](ListOfShapes& shapes, std::vector<double> c) {
         Vec<3> col(c[0], c[1], c[2]);
         for(auto& shape : shapes)
           OCCGeometry::global_shape_properties[shape.TShape()].col = col;
-      })
+      }, "set col for all elements of list")
     
     .def_property("maxh", [](ListOfShapes& shapes)
     {
@@ -1501,7 +1507,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           {
             OCCGeometry::global_shape_properties[shape.TShape()].maxh = maxh;
           }
-      })
+      }, "set maxh for all elements of list")
     
     ;
          
@@ -1535,22 +1541,27 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
   
   m.def("Sphere", [] (gp_Pnt cc, double r) {
       return BRepPrimAPI_MakeSphere (cc, r).Solid();
-    });
+    }, py::arg("c"), py::arg("r"), "create sphere with center 'c' and radius 'r'");
   
   m.def("Cylinder", [] (gp_Pnt cpnt, gp_Dir cdir, double r, double h) {
       return BRepPrimAPI_MakeCylinder (gp_Ax2(cpnt, cdir), r, h).Solid();
-    }, py::arg("p"), py::arg("d"), py::arg("r"), py::arg("h"));
+    }, py::arg("p"), py::arg("d"), py::arg("r"), py::arg("h"),
+    "create cylinder with base point 'p', axis direction 'd', radius 'r', and height 'h'");
+  
   m.def("Cylinder", [] (gp_Ax2 ax, double r, double h) {
       return BRepPrimAPI_MakeCylinder (ax, r, h).Solid();
-    }, py::arg("axis"), py::arg("r"), py::arg("h"));
+    }, py::arg("axis"), py::arg("r"), py::arg("h"),
+    "create cylinder given by axis, radius and height");
   
   m.def("Box", [] (gp_Pnt cp1, gp_Pnt cp2) {
       return BRepPrimAPI_MakeBox (cp1, cp2).Solid();
-    });
+    }, py::arg("p1"), py::arg("p2"),
+    "create box with opposite points 'p1' and 'p2'");
 
   m.def("Prism", [] (const TopoDS_Shape & face, gp_Vec vec) {
       return BRepPrimAPI_MakePrism (face, vec).Shape();
-    });
+    }, py::arg("face"), py::arg("v"),
+    "extrude face along the vector 'v'");
 
   m.def("Revolve", [] (const TopoDS_Shape & face,const gp_Ax1 &A, const double D) {
       //comvert angle from deg to rad
@@ -1665,7 +1676,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             }
 
           builder.Perform();
-
+          
+          /*
 #ifdef OCC_HAVE_HISTORY          
           Handle(BRepTools_History) history = builder.History ();
 
@@ -1678,23 +1690,12 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                     OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
                 }
 #endif // OCC_HAVE_HISTORY
-          
+          */
+          for (auto & s : shapes)
+            PropagateProperties (builder, s);          
           return builder.Shape();
-        });
+        }, py::arg("shapes"), "glue together shapes of list");
 
-  /*
-  m.def("Compound", [](std::vector<TopoDS_Shape> shapes)
-    -> TopoDS_Shape
-  {
-    BRep_Builder builder;
-    TopoDS_Compound comp;
-    builder.MakeCompound(comp);
-    for(auto& s : shapes)
-      builder.Add(comp, s);
-    return comp;
-  });
-  */
-  
   m.def("Glue", [] (TopoDS_Shape shape) -> TopoDS_Shape
         {
           BOPAlgo_Builder builder;
@@ -1724,7 +1725,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           PropagateProperties (builder, shape);
           
           return builder.Shape();
-        });
+        }, py::arg("shape"), "glue together shapes from shape, typically a compound");
 
 
   // py::class_<Handle(Geom_TrimmedCurve)> (m, "Geom_TrimmedCurve")
@@ -1807,70 +1808,6 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       return BRepBuilderAPI_MakeEdge(builder.Curve()).Edge();
     }, py::arg("points"), py::arg("tol"), "Generate spline-curve approximating list of points up to tolerance tol");
 
-  /*
-  m.def("Edge", [](Handle(Geom2d_Curve) curve2d, TopoDS_Face face) {
-      auto edge = BRepBuilderAPI_MakeEdge(curve2d, BRep_Tool::Surface (face)).Edge();
-      BRepLib::BuildCurves3d(edge);
-      return edge;
-    });
-  */
-  /*
-  m.def("Wire", [](std::vector<TopoDS_Shape> edges) {
-      BRepBuilderAPI_MakeWire builder;
-      try
-        {
-          for (auto s : edges)
-            switch (s.ShapeType())
-              {
-              case TopAbs_EDGE:
-                builder.Add(TopoDS::Edge(s)); break;
-              case TopAbs_WIRE:
-                builder.Add(TopoDS::Wire(s)); break;
-              default:
-                throw Exception("can make wire only from edges and wires");
-              }
-          return builder.Wire();
-        }
-      catch (Standard_Failure & e)
-        {
-          stringstream errstr;
-          e.Print(errstr);
-          throw NgException("error in wire builder: "+errstr.str());
-        }
-    });
-  */
-
-  /*
-  m.def("Face", [](TopoDS_Wire wire) {
-      return BRepBuilderAPI_MakeFace(wire).Face();
-    }, py::arg("w"));
-  m.def("Face", [](const TopoDS_Face & face, const TopoDS_Wire & wire) {
-      // return BRepBuilderAPI_MakeFace(face, wire).Face();
-      return BRepBuilderAPI_MakeFace(BRep_Tool::Surface (face), wire).Face();
-    }, py::arg("f"), py::arg("w"));
-  m.def("Face", [](const TopoDS_Face & face, std::vector<TopoDS_Wire> wires) {
-      // return BRepBuilderAPI_MakeFace(face, wire).Face();
-      cout << "build from list of wires" << endl;
-      auto surf = BRep_Tool::Surface (face);
-      BRepBuilderAPI_MakeFace builder(surf, 1e-8);
-      for (auto w : wires)
-        builder.Add(w);
-      return builder.Face();
-    }, py::arg("f"), py::arg("w"));
-  */
-  /*
-     not yet working .... ?
-  m.def("Face", [](std::vector<TopoDS_Wire> wires) {
-      cout << "face from wires" << endl;
-      BRepBuilderAPI_MakeFace builder;
-      for (auto w : wires)
-        {
-          cout << "add wire" << endl;
-          builder.Add(w);
-        }
-      return builder.Face();
-    }, py::arg("w"));
-  */
 
   m.def("MakeFillet", [](TopoDS_Shape shape, std::vector<TopoDS_Shape> edges, double r) {
       throw Exception("call 'shape.MakeFilled'");
@@ -1878,7 +1815,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       for (auto e : edges)
         mkFillet.Add (r, TopoDS::Edge(e));
       return mkFillet.Shape();
-    });
+    }, "deprecated, use 'shape.MakeFillet'");
   
   m.def("MakeThickSolid", [](TopoDS_Shape body, std::vector<TopoDS_Shape> facestoremove,
                              double offset, double tol) {
@@ -1890,7 +1827,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           BRepOffsetAPI_MakeThickSolid maker;
           maker.MakeThickSolidByJoin(body, faces, offset, tol);
           return maker.Shape();
-        });
+        }, "deprecated, use 'shape.MakeThickSolid'");
 
   m.def("ThruSections", [](std::vector<TopoDS_Shape> wires, bool solid)
         {
@@ -1904,33 +1841,33 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 
 
   py::class_<WorkPlane, shared_ptr<WorkPlane>> (m, "WorkPlane")
-    .def(py::init<gp_Ax3, gp_Ax2d>(), py::arg("axis")=gp_Ax3(), py::arg("pos")=gp_Ax2d())
-    .def("MoveTo", &WorkPlane::MoveTo)
-    .def("Move", &WorkPlane::Move)
-    .def("Direction", &WorkPlane::Direction)    
+    .def(py::init<gp_Ax3, gp_Ax2d>(), py::arg("axes")=gp_Ax3(), py::arg("pos")=gp_Ax2d())
+    .def("MoveTo", &WorkPlane::MoveTo, py::arg("h"), py::arg("v"), "moveto (h,v), and start new wire")
+    .def("Move", &WorkPlane::Move, py::arg("l"), "move 'l' from current position and direction, start new wire")
+    .def("Direction", &WorkPlane::Direction, py::arg("dirh"), py::arg("dirv"), "reset direction to (dirh, dirv)")    
     // .def("LineTo", &WorkPlane::LineTo)
     .def("LineTo", [](WorkPlane&wp, double x, double y, optional<string> name) { return wp.LineTo(x, y, name); },
-         py::arg("x"), py::arg("y"), py::arg("name")=nullopt)
+         py::arg("h"), py::arg("v"), py::arg("name")=nullopt, "draw line to position (h,v)")
     .def("ArcTo", &WorkPlane::ArcTo)
-    .def("Arc", &WorkPlane::Arc)
-    .def("Rotate", &WorkPlane::Rotate)
+    .def("Arc", &WorkPlane::Arc, py::arg("r"), py::arg("ang"), "draw arc tangential to current pos/dir, of radius 'r' and angle 'ang', draw to the left/right if ang is positive/negative")
+    .def("Rotate", &WorkPlane::Rotate, py::arg("ang"), "rotate current direction by 'ang' degrees")
     .def("Line", [](WorkPlane&wp,double l, optional<string> name) { return wp.Line(l, name); },
          py::arg("l"), py::arg("name")=nullopt)
     .def("Line", [](WorkPlane&wp,double h,double v, optional<string> name) { return wp.Line(h,v,name); },
          py::arg("dx"), py::arg("dy"), py::arg("name")=nullopt)
-    .def("Rectangle", &WorkPlane::Rectangle)
-    .def("RectangleC", &WorkPlane::RectangleCentered)
+    .def("Rectangle", &WorkPlane::Rectangle, py::arg("l"), py::arg("w"), "draw rectangle, with current position as corner, use current direction")
+    .def("RectangleC", &WorkPlane::RectangleCentered, py::arg("l"), py::arg("w"), "draw rectangle, with current position as center, use current direction")
     .def("Circle", [](WorkPlane&wp, double x, double y, double r) {
-        return wp.Circle(x,y,r); }, py::arg("x"), py::arg("y"), py::arg("r"))
-    .def("Circle", [](WorkPlane&wp, double r) { return wp.Circle(r); }, py::arg("r"))
-    .def("NameVertex", &WorkPlane::NameVertex, py::arg("name"))
-    .def("Offset", &WorkPlane::Offset)
-    .def("Reverse", &WorkPlane::Reverse)
-    .def("Close", &WorkPlane::Close)
-    .def("Finish", &WorkPlane::Finish)
-    .def("Last", &WorkPlane::Last)
-    .def("Face", &WorkPlane::Face)
-    .def("Wires", &WorkPlane::Wires)
+        return wp.Circle(x,y,r); }, py::arg("h"), py::arg("v"), py::arg("r"), "draw circle with center (h,v) and radius 'r'")
+    .def("Circle", [](WorkPlane&wp, double r) { return wp.Circle(r); }, py::arg("r"), "draw circle with center in current position")
+    .def("NameVertex", &WorkPlane::NameVertex, py::arg("name"), "name vertex at current position")
+    .def("Offset", &WorkPlane::Offset, py::arg("d"), "replace current wire by offset curve of distance 'd'")
+    .def("Reverse", &WorkPlane::Reverse, "revert orientation of current wire")
+    .def("Close", &WorkPlane::Close, "draw line to start point of wire, and finish wire")
+    .def("Finish", &WorkPlane::Finish, "finish current wire without closing")
+    .def("Last", &WorkPlane::Last, "returns current wire")
+    .def("Face", &WorkPlane::Face, "generate and return face of all wires, resets list of wires")
+    .def("Wires", &WorkPlane::Wires, "returns all wires")
     ;
 }
 
