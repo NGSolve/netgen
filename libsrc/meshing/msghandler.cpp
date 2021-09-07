@@ -3,7 +3,7 @@
 
 namespace netgen
 {
-int printmessage_importance = 3;
+  // int printmessage_importance = 3;
 int printwarnings = 1;
 int printerrors = 1;
 int printdots = 1;

@@ -1932,10 +1932,6 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("Face", &WorkPlane::Face)
     .def("Wires", &WorkPlane::Wires)
     ;
-
-
-  
-  
 }
 
 #endif // OCCGEOMETRY
