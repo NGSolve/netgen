@@ -109,6 +109,7 @@ namespace netgen
     Array<unique_ptr<GeometryVertex>> vertices;
     Array<unique_ptr<GeometryEdge>> edges;
     Array<unique_ptr<GeometryFace>> faces;
+    Array<std::pair<Point<3>, double>> restricted_h;
     Box<3> bounding_box;
   public:
     NetgenGeometry()
@@ -118,6 +119,11 @@ namespace netgen
     virtual ~NetgenGeometry () { ; }
 
     virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
+
+    void RestrictH(const Point<3>& pnt, double maxh)
+    {
+      restricted_h.Append({pnt, maxh});
+    }
 
     virtual const Refinement & GetRefinement () const
     {

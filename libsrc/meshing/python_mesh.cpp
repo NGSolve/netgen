@@ -611,6 +611,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   py::implicitly_convertible< int, PointIndex>();
 
   py::class_<NetgenGeometry, shared_ptr<NetgenGeometry>> (m, "NetgenGeometry", py::dynamic_attr())
+    .def("RestrictH", &NetgenGeometry::RestrictH)
              ;
   
   py::class_<Mesh,shared_ptr<Mesh>>(m, "Mesh")

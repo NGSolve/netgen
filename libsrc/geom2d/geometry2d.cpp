@@ -1058,7 +1058,16 @@ namespace netgen
 
   int SplineGeometry2d :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
   {
-    MeshFromSpline2D (*this, mesh, mparam);
+    if(restricted_h.Size())
+      {
+        // copy so that we don't change mparam outside
+        MeshingParameters mp = mparam;
+        for(const auto& [pnt, maxh] : restricted_h)
+          mp.meshsize_points.Append({pnt, maxh});
+        MeshFromSpline2D (*this, mesh, mp);
+      }
+    else
+      MeshFromSpline2D (*this, mesh, mparam);
     return 0;
   }
 
