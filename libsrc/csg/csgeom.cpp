@@ -220,7 +220,16 @@ namespace netgen
 
   int CSGeometry :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
   {
-    return CSGGenerateMesh (*this, mesh, mparam);
+    if(restricted_h.Size())
+      {
+        // copy so that we don't change mparam outside
+        MeshingParameters mp = mparam;
+        for(const auto& [pnt, maxh] : restricted_h)
+          mp.meshsize_points.Append({pnt, maxh});
+        return CSGGenerateMesh (*this, mesh, mp);
+      }
+    else
+      return CSGGenerateMesh (*this, mesh, mparam);
   }
   
   class WritePrimitivesIt : public SolidIterator

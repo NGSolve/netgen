@@ -518,9 +518,15 @@ namespace netgen
 
 
   
-  int NetgenGeometry :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
+  int NetgenGeometry :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mp)
   {
     multithread.percent = 0;
+
+    // copy so that we don't change them outside
+    MeshingParameters mparam = mp;
+    if(restricted_h.Size())
+      for(const auto& [pnt, maxh] : restricted_h)
+        mparam.meshsize_points.Append({pnt, maxh});
 
     if(mparam.perfstepsstart <= MESHCONST_ANALYSE)
       {
