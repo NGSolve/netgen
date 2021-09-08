@@ -355,6 +355,7 @@ if (USE_OCC)
       find_library( FREETYPE NAMES freetype )
       list(APPEND OCC_LIBRARIES ${FREETYPE})
     endif()
+    message(STATUS "OCC DIRS ${OpenCASCADE_INCLUDE_DIR}")
 endif (USE_OCC)
 
 #######################################################################
