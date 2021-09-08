@@ -57,7 +57,7 @@
 
 DLL_HEADER void ExportNgOCCBasic(py::module &m) 
 {
-  py::class_<gp_Pnt>(m, "gp_Pnt")
+  py::class_<gp_Pnt>(m, "gp_Pnt", "3d OCC point")
     .def(py::init([] (py::tuple pnt)
                   {
                     if (py::len(pnt) != 3)
@@ -69,7 +69,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
                   }))
     .def(py::init([] (double x, double y, double z) {
           return gp_Pnt(x, y, z);
-        }))
+        }), py::arg("x"), py::arg("y"), py::arg("z"))
     .def_property("x", [](gp_Pnt&p) { return p.X(); }, [](gp_Pnt&p,double x) { p.SetX(x); })
     .def_property("y", [](gp_Pnt&p) { return p.Y(); }, [](gp_Pnt&p,double y) { p.SetY(y); })
     .def_property("z", [](gp_Pnt&p) { return p.Z(); }, [](gp_Pnt&p,double z) { p.SetZ(z); })
@@ -89,7 +89,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
     .def("__sub__", [](gp_Pnt p, gp_Vec v) { return p.Translated(-v); }) // gp_Pnt(p.X()-v.X(), p.Y()-v.Y(), p.Z()-v.Z()); })
     ;
   
-  py::class_<gp_Vec>(m, "gp_Vec")
+  py::class_<gp_Vec>(m, "gp_Vec", "3d OCC vector")
     .def(py::init([] (py::tuple vec)
                   {
                     return gp_Vec(py::cast<double>(vec[0]),
@@ -98,7 +98,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
                   }))
     .def(py::init([] (double x, double y, double z) {
           return gp_Vec(x, y, z);
-        }))
+        }), py::arg("x"), py::arg("y"), py::arg("z"))
     .def_property("x", [](gp_Vec&p) { return p.X(); }, [](gp_Vec&p,double x) { p.SetX(x); })
     .def_property("y", [](gp_Vec&p) { return p.Y(); }, [](gp_Vec&p,double y) { p.SetY(y); })
     .def_property("z", [](gp_Vec&p) { return p.Z(); }, [](gp_Vec&p,double z) { p.SetZ(z); })
@@ -120,17 +120,17 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
     
     .def("__lt__", [](gp_Vec v, double val)
          {
-           cout << "vec, lt v - " << netgen::occ2ng(v) << ", val = " << val << endl;
+           cout << IM(6) << "vec, lt v - " << netgen::occ2ng(v) << ", val = " << val << endl;
            return DirectionalInterval(v) < val;
          })
     .def("__gt__", [](gp_Vec v, double val)
          {
-           cout << "vec, gt v - " << netgen::occ2ng(v) << ", val = " << val << endl;           
+           cout << IM(6) << "vec, gt v - " << netgen::occ2ng(v) << ", val = " << val << endl;           
            return DirectionalInterval(v) > val;
          })
     ;
 
-  py::class_<gp_Dir>(m, "gp_Dir")
+  py::class_<gp_Dir>(m, "gp_Dir", "3d OCC direction")
     .def(py::init([] (py::tuple dir)
                   {
                     return gp_Dir(py::cast<double>(dir[0]),
@@ -139,7 +139,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
                   }))
     .def(py::init([] (double x, double y, double z) {
           return gp_Dir(x, y, z);
-        }))
+        }), py::arg("x"), py::arg("y"), py::arg("z"))
     .def(py::init<gp_Vec>())
     .def("__str__", [] (const gp_Dir & p) {
         stringstream str;
@@ -148,10 +148,10 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
       })
     ;
   
-  py::class_<gp_Ax1>(m, "Axis") // "gp_Ax1")
+  py::class_<gp_Ax1>(m, "Axis", "an OCC axis in 3d") 
     .def(py::init([](gp_Pnt p, gp_Dir d) {
           return gp_Ax1(p,d);
-        }))
+        }), py::arg("p"), py::arg("d"))
     ;
   py::class_<gp_Ax2>(m, "gp_Ax2")
     .def(py::init([](gp_Pnt p, gp_Dir d) {
@@ -162,7 +162,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
         }))
     ;
 
-  py::class_<gp_Ax3>(m, "Axes") //  "gp_Ax3")
+  py::class_<gp_Ax3>(m, "Axes", "an OCC coordinate system in 3d")
     .def(py::init([](gp_Pnt p, gp_Dir N, gp_Dir Vx) {
           return gp_Ax3(p,N, Vx);
         }), py::arg("p")=gp_Pnt(0,0,0), py::arg("n")=gp_Vec(0,0,1), py::arg("h")=gp_Vec(1,0,0))
@@ -171,7 +171,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
     ;
 
 
-  py::class_<gp_Pnt2d>(m, "gp_Pnt2d")
+  py::class_<gp_Pnt2d>(m, "gp_Pnt2d", "2d OCC point")
     .def(py::init([] (py::tuple pnt)
                   {
                     if (py::len(pnt) != 2)
@@ -181,7 +181,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
                   }))
     .def(py::init([] (double x, double y) {
           return gp_Pnt2d(x, y);
-        }))
+        }), py::arg("x"), py::arg("y"))
     .def_property("x", [](gp_Pnt2d&p) { return p.X(); }, [](gp_Pnt2d&p,double x) { p.SetX(x); })
     .def_property("y", [](gp_Pnt2d&p) { return p.Y(); }, [](gp_Pnt2d&p,double y) { p.SetY(y); })
     .def("__str__", [] (const gp_Pnt2d & p) {
@@ -200,7 +200,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
     .def("__sub__", [](gp_Pnt2d p, gp_Vec2d v) { return p.Translated(-v); })
     ;
   
-  py::class_<gp_Vec2d>(m, "gp_Vec2d")
+  py::class_<gp_Vec2d>(m, "gp_Vec2d", "2d OCC vector")
     .def(py::init([] (py::tuple vec)
                   {
                     if (py::len(vec) != 2)
@@ -210,7 +210,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
                   }))
     .def(py::init([] (double x, double y) {
           return gp_Vec2d(x, y);
-        }))
+        }), py::arg("x"), py::arg("y"))
     .def_property("x", [](gp_Vec2d&p) { return p.X(); }, [](gp_Vec2d&p,double x) { p.SetX(x); })
     .def_property("y", [](gp_Vec2d&p) { return p.Y(); }, [](gp_Vec2d&p,double y) { p.SetY(y); })
     .def("__str__", [] (const gp_Vec & p) {
@@ -230,7 +230,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
     .def("__xor__", [](gp_Vec2d v1, gp_Vec2d v2) { return v1^v2; }) 
     ;
 
-  py::class_<gp_Dir2d>(m, "gp_Dir2d")
+  py::class_<gp_Dir2d>(m, "gp_Dir2d", "2d OCC direction")
     .def(py::init([] (py::tuple dir)
                   {
                     if (py::len(dir) != 2)
@@ -240,11 +240,13 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
                   }))
     .def(py::init([] (double x, double y) {
           return gp_Dir2d(x, y);
-        }))
+        }), py::arg("x"), py::arg("y"))
     ;
 
-  m.def("Pnt", [](double x, double y) { return gp_Pnt2d(x,y); });
-  m.def("Pnt", [](double x, double y, double z) { return gp_Pnt(x,y,z); });
+  m.def("Pnt", [](double x, double y) { return gp_Pnt2d(x,y); },
+        py::arg("x"), py::arg("y"), "create 2d OCC point");
+  m.def("Pnt", [](double x, double y, double z) { return gp_Pnt(x,y,z); },
+        py::arg("x"), py::arg("y"), py::arg("z"), "create 3d OCC point");
   m.def("Pnt", [](std::vector<double> p)
         {
           if (p.size() == 2)
@@ -252,10 +254,12 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
           if (p.size() == 3)
             return py::cast(gp_Pnt(p[0], p[1], p[2]));
           throw Exception("OCC-Points only in 2D or 3D");
-        });
+        }, py::arg("p"), "create 2d or 3d OCC point");
 
-  m.def("Vec", [](double x, double y) { return gp_Vec2d(x,y); });
-  m.def("Vec", [](double x, double y, double z) { return gp_Vec(x,y,z); });
+  m.def("Vec", [](double x, double y) { return gp_Vec2d(x,y); },
+        py::arg("x"), py::arg("y"), "create 2d OCC point");
+  m.def("Vec", [](double x, double y, double z) { return gp_Vec(x,y,z); },
+        py::arg("x"), py::arg("y"), py::arg("z"), "create 3d OCC point");        
   m.def("Vec", [](std::vector<double> p)
         {
           if (p.size() == 2)
@@ -263,10 +267,12 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
           if (p.size() == 3)
             return py::cast(gp_Vec(p[0], p[1], p[2]));
           throw Exception("OCC-Vecs only in 2D or 3D");
-        });
+        }, py::arg("v"), "create 2d or 3d OCC vector");          
 
-  m.def("Dir", [](double x, double y) { return gp_Dir2d(x,y); });
-  m.def("Dir", [](double x, double y, double z) { return gp_Dir(x,y,z); });
+  m.def("Dir", [](double x, double y) { return gp_Dir2d(x,y); },
+        py::arg("x"), py::arg("y"), "create 2d OCC direction");
+  m.def("Dir", [](double x, double y, double z) { return gp_Dir(x,y,z); },
+        py::arg("x"), py::arg("y"), py::arg("z"), "create 3d OCC direction");        
   m.def("Dir", [](std::vector<double> p)
         {
           if (p.size() == 2)
@@ -274,12 +280,12 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
           if (p.size() == 3)
             return py::cast(gp_Dir(p[0], p[1], p[2]));
           throw Exception("OCC-Dirs only in 2D or 3D");
-        });
+        }, py::arg("d"), "create 2d or 3d OCC direction");                    
 
 
 
   
-  py::class_<gp_Ax2d>(m, "gp_Ax2d")
+  py::class_<gp_Ax2d>(m, "gp_Ax2d", "2d OCC coordinate system")
     .def(py::init([](gp_Pnt2d p, gp_Dir2d d) {
           return gp_Ax2d(p,d);
         }), py::arg("p")=gp_Pnt2d(0,0), py::arg("d")=gp_Dir2d(1,0))
@@ -353,11 +359,9 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
 
   py::implicitly_convertible<gp_Ax3, gp_Ax2>();
 
-  static gp_Vec ex(1,0,0), ey(0,1,0), ez(0,0,1);
-  m.attr("X") = py::cast(&ex);
-  m.attr("Y") = py::cast(&ey);
-  m.attr("Z") = py::cast(&ez);
-
+  m.attr("X") = py::cast(gp_Vec(1,0,0));
+  m.attr("Y") = py::cast(gp_Vec(0,1,0));
+  m.attr("Z") = py::cast(gp_Vec(0,0,1));
 }
 
 

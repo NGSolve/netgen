@@ -737,6 +737,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          }, py::arg("axes"),
          "copy shape, and mirror over plane defined by 'axes'")
     
+    .def("Mirror", [] (const TopoDS_Shape & shape, const gp_Ax1 & ax)
+         {
+           gp_Trsf trafo;
+           trafo.SetMirror(ax);
+           return BRepBuilderAPI_Transform(shape, trafo).Shape();
+         }, py::arg("axes"),
+         "copy shape, and mirror around axis 'axis'")
+    
     .def("Scale", [](const TopoDS_Shape & shape, const gp_Pnt p, double s)
          {
            gp_Trsf trafo;
@@ -1623,21 +1631,23 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
   m.def("Ellipse", [] (const gp_Ax2d & ax, double major, double minor) -> Handle(Geom2d_Curve)
         {
           return new Geom2d_Ellipse(ax, major, minor);
-        });
+        }, py::arg("axes"), py::arg("major"), py::arg("minor"), "create 2d ellipse curve");
   
-  m.def("Segment", [](gp_Pnt2d p1, gp_Pnt2d p2) -> Handle(Geom2d_Curve) { 
+  m.def("Segment", [](gp_Pnt2d p1, gp_Pnt2d p2) -> Handle(Geom2d_Curve) {
+      return Handle(Geom2d_TrimmedCurve)(GCE2d_MakeSegment(p1, p2));   
+      /*
       Handle(Geom2d_TrimmedCurve) curve = GCE2d_MakeSegment(p1, p2);
       return curve;
-      // return BRepBuilderAPI_MakeEdge(curve).Edge();
-      // return GCE2d_MakeSegment(p1, p2);      
-    });
+      */
+    }, py::arg("p1"), py::arg("p2"), "create 2d line curve");
   
   m.def("Circle", [](gp_Pnt2d p1, double r) -> Handle(Geom2d_Curve) {
+      return Handle(Geom2d_Circle)(GCE2d_MakeCircle(p1, r));
+      /*
       Handle(Geom2d_Circle) curve = GCE2d_MakeCircle(p1, r);
       return curve;
-      // gp_Ax2d ax; ax.SetLocation(p1);
-      // return new Geom2d_Circle(ax, r);
-    });
+      */
+    }, py::arg("c"), py::arg("r"), "create 2d circle curve");
   
   m.def("Glue", [] (const std::vector<TopoDS_Shape> shapes) -> TopoDS_Shape
         {
@@ -1743,12 +1753,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
   m.def("ArcOfCircle", [](gp_Pnt p1, gp_Pnt p2, gp_Pnt p3) { 
       Handle(Geom_TrimmedCurve) curve = GC_MakeArcOfCircle(p1, p2, p3);
       return BRepBuilderAPI_MakeEdge(curve).Edge();
-    }, py::arg("p1"), py::arg("p2"), py::arg("p3"));
+    }, py::arg("p1"), py::arg("p2"), py::arg("p3"),
+    "create arc from p1 through p2 to p3");
   
   m.def("ArcOfCircle", [](gp_Pnt p1, gp_Vec v, gp_Pnt p2) { 
       Handle(Geom_TrimmedCurve) curve = GC_MakeArcOfCircle(p1, v, p2);
       return BRepBuilderAPI_MakeEdge(curve).Edge();
-    }, py::arg("p1"), py::arg("v"), py::arg("p2"));
+    }, py::arg("p1"), py::arg("v"), py::arg("p2"),
+    "create arc from p1, with tangent vector v, to point p2");
 
 
   m.def("BSplineCurve", [](std::vector<gp_Pnt> vpoles, int degree) {
@@ -1757,48 +1769,32 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       TColStd_Array1OfReal knots(0, vpoles.size()+degree);
       TColStd_Array1OfInteger mult(0, vpoles.size()+degree);
       int cnt = 0;
-      try
+
+      for (int i = 0; i < vpoles.size(); i++)
         {
-          for (int i = 0; i < vpoles.size(); i++)
-            {
-              poles.SetValue(i, vpoles[i]);
-              knots.SetValue(i, i);
-              mult.SetValue(i,1);
-            }
-          for (int i = vpoles.size(); i < vpoles.size()+degree+1; i++)
-            {
+          poles.SetValue(i, vpoles[i]);
+          knots.SetValue(i, i);
+          mult.SetValue(i,1);
+        }
+      for (int i = vpoles.size(); i < vpoles.size()+degree+1; i++)
+        {
               knots.SetValue(i, i);
               mult.SetValue(i, 1);
-            }
-
-          Handle(Geom_Curve) curve = new Geom_BSplineCurve(poles, knots, mult, degree);
-          return BRepBuilderAPI_MakeEdge(curve).Edge();
         }
-      catch (Standard_Failure & e)
-        {
-          stringstream errstr;
-          e.Print(errstr);
-          throw NgException("cannot create spline: "+errstr.str());
-        }
+      
+      Handle(Geom_Curve) curve = new Geom_BSplineCurve(poles, knots, mult, degree);
+      return BRepBuilderAPI_MakeEdge(curve).Edge();
     });
   
   m.def("BezierCurve", [](std::vector<gp_Pnt> vpoles) {
       TColgp_Array1OfPnt poles(0, vpoles.size()-1);
-      try
-        {
-          for (int i = 0; i < vpoles.size(); i++)
-            poles.SetValue(i, vpoles[i]);
 
-          Handle(Geom_Curve) curve = new Geom_BezierCurve(poles);
-          return BRepBuilderAPI_MakeEdge(curve).Edge();
-        }
-      catch (Standard_Failure & e)
-        {
-          stringstream errstr;
-          e.Print(errstr);
-          throw NgException("cannot create Bezier-spline: "+errstr.str());
-        }
-    });
+      for (int i = 0; i < vpoles.size(); i++)
+        poles.SetValue(i, vpoles[i]);
+      
+      Handle(Geom_Curve) curve = new Geom_BezierCurve(poles);
+      return BRepBuilderAPI_MakeEdge(curve).Edge();
+    }, py::arg("points"), "create Bezier curve");
 
   m.def("SplineApproximation", [](std::vector<gp_Pnt> pnts, double tol) {
       TColgp_Array1OfPnt points(0, pnts.size()-1);
@@ -1806,7 +1802,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         points.SetValue(i, pnts[i]);
       GeomAPI_PointsToBSpline builder(points);
       return BRepBuilderAPI_MakeEdge(builder.Curve()).Edge();
-    }, py::arg("points"), py::arg("tol"), "Generate spline-curve approximating list of points up to tolerance tol");
+    }, py::arg("points"), py::arg("tol"),
+    "Generate spline-curve approximating list of points up to tolerance tol");
 
 
   m.def("MakeFillet", [](TopoDS_Shape shape, std::vector<TopoDS_Shape> edges, double r) {
