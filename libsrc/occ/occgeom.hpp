@@ -241,7 +241,6 @@ namespace netgen
   {
     Point<3> center;
     OCCParameters occparam;
-
   public:
     static std::map<Handle(TopoDS_TShape), ShapeProperties> global_shape_properties;
     static std::map<Handle(TopoDS_TShape), std::vector<OCCIdentification>> identifications;
@@ -286,6 +285,8 @@ namespace netgen
     bool sewfaces;
     bool makesolids;
     bool splitpartitions;
+
+    int occdim = 3; // meshing is always done 3D, changed to 2D later of occdim=2
      
     OCCGeometry()
     {
@@ -297,7 +298,7 @@ namespace netgen
       vmap.Clear();
     }
 
-    OCCGeometry(const TopoDS_Shape& _shape);
+    OCCGeometry(const TopoDS_Shape& _shape, int aoccdim = 3);
 
     Mesh::GEOM_TYPE GetGeomType() const override
     { return Mesh::GEOM_OCC; }

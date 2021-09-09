@@ -46,9 +46,10 @@ namespace netgen
   std::map<Handle(TopoDS_TShape), ShapeProperties> OCCGeometry::global_shape_properties;
   std::map<Handle(TopoDS_TShape), std::vector<OCCIdentification>> OCCGeometry::identifications;
   
-  OCCGeometry::OCCGeometry(const TopoDS_Shape& _shape)
+  OCCGeometry::OCCGeometry(const TopoDS_Shape& _shape, int aoccdim)
   {
     shape = _shape;
+    occdim = aoccdim;
     changed = true;
     BuildFMap();
     CalcBoundingBox();
