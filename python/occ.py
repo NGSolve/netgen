@@ -19,3 +19,10 @@ gp_Ax1 = Axis
 Translation = gp_Trsf.Translation
 Rotation = gp_Trsf.Rotation
 Mirror = gp_Trsf.Mirror
+
+
+wp2d = WorkPlane()
+def Rectangle(l,w): return wp2d.Rectangle(l,w)
+def MoveTo(x,y): return wp2d.MoveTo(x,y)
+def LineTo(x,y): return wp2d.LineTo(x,y)
+def Line(l): return wp2d.Line(l)    

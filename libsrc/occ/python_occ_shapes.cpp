@@ -1544,6 +1544,21 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def_property_readonly("end", [](Handle(Geom2d_Curve) curve) {
         return curve->Value(curve->LastParameter());
       })
+    .def("Edge", [](Handle(Geom2d_Curve) curve) {
+        // Geom_Plane surf{gp_Ax3()};
+        auto surf = new Geom_Plane{gp_Ax3()};          
+        auto edge = BRepBuilderAPI_MakeEdge(curve, surf).Edge();
+        BRepLib::BuildCurves3d(edge);
+        return edge;
+      })
+    .def("Face", [](Handle(Geom2d_Curve) curve) {
+        // static surf = new Geom_Plane{gp_Ax3()};
+        static Geom_Plane surf{gp_Ax3()};  
+        auto edge = BRepBuilderAPI_MakeEdge(curve, &surf).Edge();
+        BRepLib::BuildCurves3d(edge);        
+        auto wire = BRepBuilderAPI_MakeWire(edge).Wire();        
+        return BRepBuilderAPI_MakeFace(wire).Face();
+      })
     ;
 
   
