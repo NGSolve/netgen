@@ -2912,7 +2912,7 @@ namespace netgen
 	  int ii = 8;
 	  const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (HEX);
 	  
-	  for (int i = 0; i < 8; i++)
+	  for (int i = 0; i < 12; i++)
 	    {
 	      int eorder = edgeorder[info.edgenrs[i]];
 	      if (eorder >= 2)
@@ -3606,8 +3606,7 @@ namespace netgen
 
 	  int ii = 8;
 	  const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (HEX);
-	  
-	  for (int i = 0; i < 8; i++)
+	  for (int i = 0; i < 12; i++) 
 	    {
 	      int eorder = edgeorder[info.edgenrs[i]];
 	      if (eorder >= 2)
@@ -3836,7 +3835,7 @@ namespace netgen
 	  // int ii = 8;
 	  const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (HEX);
 	  
-	  for (int i = 0; i < 8; i++)
+	  for (int i = 0; i < 12; i++)
 	    {
 	      int eorder = edgeorder[info.edgenrs[i]];
 	      if (eorder >= 2)
