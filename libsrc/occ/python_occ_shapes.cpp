@@ -1545,16 +1545,23 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         return curve->Value(curve->LastParameter());
       })
     .def("Edge", [](Handle(Geom2d_Curve) curve) {
-        // Geom_Plane surf{gp_Ax3()};
-        auto surf = new Geom_Plane{gp_Ax3()};          
+        // static Geom_Plane surf{gp_Ax3()}; // crashes in nbconvert ???
+        static auto surf = new Geom_Plane{gp_Ax3()};          
         auto edge = BRepBuilderAPI_MakeEdge(curve, surf).Edge();
         BRepLib::BuildCurves3d(edge);
         return edge;
       })
+    .def("Wire", [](Handle(Geom2d_Curve) curve) {
+        // static Geom_Plane surf{gp_Ax3()}; // crashes in nbconvert ???
+        static auto surf = new Geom_Plane{gp_Ax3()};          
+        auto edge = BRepBuilderAPI_MakeEdge(curve, surf).Edge();
+        BRepLib::BuildCurves3d(edge);
+        return BRepBuilderAPI_MakeWire(edge).Wire();                
+      })
     .def("Face", [](Handle(Geom2d_Curve) curve) {
-        // static surf = new Geom_Plane{gp_Ax3()};
-        static Geom_Plane surf{gp_Ax3()};  
-        auto edge = BRepBuilderAPI_MakeEdge(curve, &surf).Edge();
+        // static Geom_Plane surf{gp_Ax3()};  // crashes in nbconvert ???
+        static auto surf = new Geom_Plane{gp_Ax3()};
+        auto edge = BRepBuilderAPI_MakeEdge(curve, surf).Edge();
         BRepLib::BuildCurves3d(edge);        
         auto wire = BRepBuilderAPI_MakeWire(edge).Wire();        
         return BRepBuilderAPI_MakeFace(wire).Face();
@@ -1878,7 +1885,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("Reverse", &WorkPlane::Reverse, "revert orientation of current wire")
     .def("Close", &WorkPlane::Close, "draw line to start point of wire, and finish wire")
     .def("Finish", &WorkPlane::Finish, "finish current wire without closing")
-    .def("Last", &WorkPlane::Last, "returns current wire")
+    .def("Last", &WorkPlane::Last, "(deprecated) returns current wire")
+    .def("Wire", &WorkPlane::Last, "returns current wire")
     .def("Face", &WorkPlane::Face, "generate and return face of all wires, resets list of wires")
     .def("Wires", &WorkPlane::Wires, "returns all wires")
     ;

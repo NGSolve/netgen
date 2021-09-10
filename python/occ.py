@@ -21,8 +21,7 @@ Rotation = gp_Trsf.Rotation
 Mirror = gp_Trsf.Mirror
 
 
-wp2d = WorkPlane()
-def Rectangle(l,w): return wp2d.Rectangle(l,w)
-def MoveTo(x,y): return wp2d.MoveTo(x,y)
-def LineTo(x,y): return wp2d.LineTo(x,y)
-def Line(l): return wp2d.Line(l)    
+def Rectangle(l,w): return WorkPlane().Rectangle(l,w)
+def MoveTo(x,y): return WorkPlane().MoveTo(x,y)
+def LineTo(x,y): return WorkPlane().LineTo(x,y)
+def Line(l): return WorkPlane().Line(l)    
