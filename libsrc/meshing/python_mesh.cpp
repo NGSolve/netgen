@@ -848,6 +848,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("FaceDescriptor", static_cast<FaceDescriptor&(Mesh::*)(int)> (&Mesh::GetFaceDescriptor),
          py::return_value_policy::reference)
     .def("GetNFaceDescriptors", &Mesh::GetNFD)
+    
+    .def("FaceDescriptors", 
+         // static_cast<Array<Element>&(Mesh::*)()> (&Mesh::FaceDescriptors),
+         &Mesh::FaceDescriptors,         
+         py::return_value_policy::reference)
+    
+    
     .def("GetNDomains", &Mesh::GetNDomains)
 
     .def("GetVolumeNeighboursOfSurfaceElement", [](Mesh & self, size_t sel)

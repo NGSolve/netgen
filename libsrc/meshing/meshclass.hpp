@@ -81,7 +81,7 @@ namespace netgen
        the face-index of the surface element maps into
        this table.
     */
-    NgArray<FaceDescriptor> facedecoding;
+    Array<FaceDescriptor> facedecoding;
 
   
     /**
@@ -712,15 +712,19 @@ namespace netgen
     { return facedecoding.Size(); }
 
     const FaceDescriptor & GetFaceDescriptor (int i) const
-    { return facedecoding.Get(i); }
+    { return facedecoding[i-1]; }      
+    // { return facedecoding.Get(i); }
+
+    auto & FaceDescriptors () const { return facedecoding; }
 
     const EdgeDescriptor & GetEdgeDescriptor (int i) const
     { return edgedecoding[i]; }
 
 
     ///
-    FaceDescriptor & GetFaceDescriptor (int i) 
-    { return facedecoding.Elem(i); }
+    FaceDescriptor & GetFaceDescriptor (int i)
+    { return facedecoding[i-1]; }      
+    // { return facedecoding.Elem(i); }
 
     int IdentifyPeriodicBoundaries(const string& s1,
                                    const string& s2,
