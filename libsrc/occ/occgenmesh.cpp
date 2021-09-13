@@ -1095,6 +1095,10 @@ namespace netgen
     maxhdom.SetSize (geom.NrSolids());
     maxhdom = mparam.maxh;
 
+    int dom = 0;
+    for (TopExp_Explorer e(geom.GetShape(), TopAbs_SOLID); e.More(); e.Next(), dom++)
+      maxhdom[dom] = min2(maxhdom[dom], OCCGeometry::global_shape_properties[e.Current().TShape()].maxh);
+
     mesh.SetMaxHDomain (maxhdom);
 
     Box<3> bb = geom.GetBoundingBox();
