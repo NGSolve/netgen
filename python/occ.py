@@ -25,3 +25,16 @@ def Rectangle(l,w): return WorkPlane().Rectangle(l,w)
 def MoveTo(x,y): return WorkPlane().MoveTo(x,y)
 def LineTo(x,y): return WorkPlane().LineTo(x,y)
 def Line(l): return WorkPlane().Line(l)    
+
+
+unit_square_shape = WorkPlane().Line(1, name="bottom").Rotate(90) \
+  .Line(1, name="right").Rotate(90) \
+  .Line(1, name="top").Rotate(90) \
+  .Line(1, name="left").Rotate(90).Face()
+
+unit_square = OCCGeometry(unit_square_shape, dim=2)
+
+
+
+
+    
