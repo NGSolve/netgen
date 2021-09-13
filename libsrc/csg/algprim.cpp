@@ -877,9 +877,11 @@ namespace netgen
     Vec<3> v1 = b - a;
     Vec<3> v2 = cyl2->a - a;
 
-    if ( fabs (v1 * v2) < (1-eps) * v1.Length() * v2.Length()) return 0;
+    // if ( fabs (v1 * v2) < (1-1e-12) * v1.Length() * v2.Length()) return 0;
+    if ( Cross(v1,v2).Length2() > 1e-20 * v1.Length2() * v2.Length2()) return 0;
     v2 = cyl2->b - a;
-    if ( fabs (v1 * v2) < (1-eps) * v1.Length() * v2.Length()) return 0;
+    // if ( fabs (v1 * v2) < (1-eps) * v1.Length() * v2.Length()) return 0;
+    if ( Cross(v1,v2).Length2() > 1e-20 * v1.Length2() * v2.Length2()) return 0;
 
     inv = 0;
     return 1;
