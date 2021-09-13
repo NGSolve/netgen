@@ -101,6 +101,15 @@ public:
       }
     return maxshape;
   }
+  ListOfShapes operator*(const ListOfShapes& other) const
+  {
+    ListOfShapes common;
+    for(const auto& shape : (*this))
+      for(const auto& shape_o : other)
+        if(shape.IsSame(shape_o))
+          common.push_back(shape);
+    return common;
+  }
 };
 
 
@@ -1458,6 +1467,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                selected.push_back(s);
            return selected;
          })
+    .def(py::self * py::self)
           
     .def("Sorted",[](ListOfShapes self, gp_Vec dir)
          {
