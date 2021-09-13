@@ -645,6 +645,13 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            return sub;
          }, py::arg("type"), "returns list of sub-shapes of type 'type'")
     
+    .def_property_readonly("solids", [] (const TopoDS_Shape & shape)
+    {
+      ListOfShapes solids;
+      for(TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
+        solids.push_back(e.Current());
+      return solids;
+    }, "returns all sub-shapes of type 'SOLID'")
     .def_property_readonly("faces", [] (const TopoDS_Shape & shape)
          {
            ListOfShapes sub;
