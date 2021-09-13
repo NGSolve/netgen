@@ -646,7 +646,6 @@ namespace ngcore
     // Set ClassArchiveInfo for Demangled typeid, this is done by creating an instance of
     // RegisterClassForArchive<type, bases...>
     static void SetArchiveRegister(const std::string& classname, const detail::ClassArchiveInfo& info);
-    static void RemoveArchiveRegister(const std::string& classname);
     static bool IsRegistered(const std::string& classname);
 
     // Helper class for up-/downcasting
@@ -713,12 +712,6 @@ namespace ngcore
                         { return typeid(T) == ti ? p : Archive::Caster<T, Bases...>::tryDowncast(ti, p); };
       Archive::SetArchiveRegister(std::string(Demangle(typeid(T).name())),info);
     }
-    ~RegisterClassForArchive()
-    {
-      Archive::RemoveArchiveRegister(std::string(Demangle(typeid(T).name())));
-    }
-
-
   };
 
   // BinaryOutArchive ======================================================================
