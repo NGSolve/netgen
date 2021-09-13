@@ -66,6 +66,13 @@
 
 using namespace netgen;
 
+struct ShapeLess
+{
+  bool operator() (const TopoDS_Shape& s1, const TopoDS_Shape& s2) const
+  {
+    return s1.TShape() < s2.TShape();
+  }
+};
 
 class ListOfShapes : public std::vector<TopoDS_Shape>
 {
@@ -101,6 +108,34 @@ public:
       }
     return maxshape;
   }
+  ListOfShapes SubShapes(TopAbs_ShapeEnum type) const
+  {
+    std::set<TopoDS_Shape, ShapeLess> unique_shapes;
+    for(const auto& shape : *this)
+      for(TopExp_Explorer e(shape, type); e.More(); e.Next())
+        unique_shapes.insert(e.Current());
+    ListOfShapes sub;
+    for(const auto& shape : unique_shapes)
+      sub.push_back(shape);
+    return sub;
+  }
+  ListOfShapes Solids() const
+  {
+    return SubShapes(TopAbs_SOLID);
+  }
+  ListOfShapes Faces() const
+  {
+    return SubShapes(TopAbs_FACE);
+  }
+  ListOfShapes Edges() const
+  {
+    return SubShapes(TopAbs_EDGE);
+  }
+  ListOfShapes Vertices() const
+  {
+    return SubShapes(TopAbs_VERTEX);
+  }
+
   ListOfShapes operator*(const ListOfShapes& other) const
   {
     ListOfShapes common;
@@ -1467,8 +1502,12 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                selected.push_back(s);
            return selected;
          })
+    .def_property_readonly("solids", &ListOfShapes::Solids)
+    .def_property_readonly("faces", &ListOfShapes::Faces)
+    .def_property_readonly("edges", &ListOfShapes::Edges)
+    .def_property_readonly("vertices", &ListOfShapes::Vertices)
     .def(py::self * py::self)
-          
+
     .def("Sorted",[](ListOfShapes self, gp_Vec dir)
          {
            std::map<Handle(TopoDS_TShape), double> sortval;
