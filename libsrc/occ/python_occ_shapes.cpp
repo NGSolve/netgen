@@ -766,7 +766,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            // version 1: Transoformation
            gp_Trsf trafo;
            trafo.SetTranslation(v);
-           return BRepBuilderAPI_Transform(shape, trafo).Shape();
+           BRepBuilderAPI_Transform builder(shape, trafo);
+           PropagateProperties(builder, shape);
+           return builder.Shape();
            // version 2: change location
            // ...
          }, py::arg("v"), "copy shape, and translate copy by vector 'v'")
@@ -776,7 +778,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          {
            gp_Trsf trafo;
            trafo.SetRotation(ax, ang*M_PI/180);            
-           return BRepBuilderAPI_Transform(shape, trafo).Shape();
+           BRepBuilderAPI_Transform builder(shape, trafo);
+           PropagateProperties(builder, shape);
+           return builder.Shape();
          }, py::arg("axis"), py::arg("ang"),
          "copy shape, and rotet copy by 'ang' degrees around 'axis'")
 
@@ -784,7 +788,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          {
            gp_Trsf trafo;
            trafo.SetMirror(ax.Ax2());
-           return BRepBuilderAPI_Transform(shape, trafo).Shape();
+           BRepBuilderAPI_Transform builder(shape, trafo);
+           PropagateProperties(builder, shape);
+           return builder.Shape();
          }, py::arg("axes"),
          "copy shape, and mirror over plane defined by 'axes'")
     
@@ -792,7 +798,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          {
            gp_Trsf trafo;
            trafo.SetMirror(ax);
-           return BRepBuilderAPI_Transform(shape, trafo).Shape();
+           BRepBuilderAPI_Transform builder(shape, trafo);
+           PropagateProperties(builder, shape);
+           return builder.Shape();
          }, py::arg("axes"),
          "copy shape, and mirror around axis 'axis'")
     
