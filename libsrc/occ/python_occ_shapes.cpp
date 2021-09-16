@@ -800,7 +800,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          {
            gp_Trsf trafo;
            trafo.SetScale(p, s);
-           return BRepBuilderAPI_Transform(shape, trafo).Shape();
+           BRepBuilderAPI_Transform builder(shape, trafo);
+           PropagateProperties(builder, shape);
+           return builder.Shape();
          }, py::arg("p"), py::arg("s"),
          "copy shape, and scale copy by factor 's'")
 
