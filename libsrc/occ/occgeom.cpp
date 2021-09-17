@@ -1442,12 +1442,13 @@ namespace netgen
   {
     double s0, s1;
 
-    Point<3> hnewp = p1+secpoint*(p2-p1);
-    gp_Pnt pnt(hnewp(0), hnewp(1), hnewp(2));
+    newp = p1+secpoint*(p2-p1);
+    if(ap1.edgenr > emap.Size() || ap1.edgenr == 0)
+      return;
+    gp_Pnt pnt(newp(0), newp(1), newp(2));
     GeomAPI_ProjectPointOnCurve proj(pnt, BRep_Tool::Curve(TopoDS::Edge(emap(ap1.edgenr)), s0, s1));
     pnt = proj.NearestPoint();
-    hnewp = Point<3> (pnt.X(), pnt.Y(), pnt.Z());
-    newp = hnewp;
+    newp = Point<3> (pnt.X(), pnt.Y(), pnt.Z());
     newgi = ap1;
   };
 
