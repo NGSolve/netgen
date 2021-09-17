@@ -17,6 +17,7 @@
 #include <BRepPrimAPI_MakeRevol.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
+#include <BRepPrimAPI_MakeHalfSpace.hxx>
 #include <BRepOffsetAPI_MakePipe.hxx>
 #include <BRepOffsetAPI_MakePipeShell.hxx>
 #include <BRepAlgoAPI_Cut.hxx>
@@ -1639,7 +1640,15 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       })
     ;
 
-  
+  m.def("HalfSpace", [] (gp_Pnt p, gp_Vec n)
+  {
+    gp_Pln plane(p, n);
+    BRepBuilderAPI_MakeFace bface(plane);
+    auto face = bface.Face();
+    auto refpnt = p.Translated(-n);
+    BRepPrimAPI_MakeHalfSpace builder(face, refpnt);
+    return builder.Shape();
+  }, py::arg("p"), py::arg("n"), "Create a half space threw point p normal to n");
   m.def("Sphere", [] (gp_Pnt cc, double r) {
       return BRepPrimAPI_MakeSphere (cc, r).Solid();
     }, py::arg("c"), py::arg("r"), "create sphere with center 'c' and radius 'r'");
