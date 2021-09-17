@@ -54,50 +54,32 @@ namespace netgen
     BuildFMap();
     CalcBoundingBox();
 
-    TopExp_Explorer e, exp1;    
-    for (e.Init(shape, TopAbs_SOLID); e.More(); e.Next())
+    snames.SetSize(somap.Size());
+    for(auto i : Range(snames))
+      snames[i] = "domain_" + ToString(i+1);
+    for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
       {
          TopoDS_Solid solid = TopoDS::Solid(e.Current());
-         /*
-         string name = global_shape_names[solid.TShape()];
-         if (name == "")
-           name = string("domain_") + ToString(snames.Size());
-           snames.Append(name);
-         */
          if (auto name = global_shape_properties[solid.TShape()].name)
-           snames.Append(*name);
-         else
-           snames.Append(string("domain_") + ToString(snames.Size()));          
+           snames[somap.FindIndex(solid)-1] = *name;
       }
-    
-    for (e.Init(shape, TopAbs_FACE); e.More(); e.Next())
+
+    fnames.SetSize(fmap.Size());
+    for(auto i : Range(fnames))
+      fnames[i] = "bc_" + ToString(i+1);
+    for(TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
       {
          TopoDS_Face face = TopoDS::Face(e.Current());
-         /*
-         string name = global_shape_names[face.TShape()];
-         if (name == "")
-           name = string("bc_") + ToString(fnames.Size());
-         fnames.Append(name);
-         */
          if (auto name = global_shape_properties[face.TShape()].name)
-           fnames.Append(*name);
-         else
-           fnames.Append(string("bc_") + ToString(fnames.Size()));          
-
-         for (exp1.Init(face, TopAbs_EDGE); exp1.More(); exp1.Next())
-           {
-             TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
-             // name = STEP_GetEntityName(edge,&reader);
-             // cout << "getname = " << name << ", mapname = " << shape_names[edge.TShape()] << endl;
-             /*
-             name = global_shape_names[edge.TShape()];
-             enames.Append(name);
-             */
-             if (auto name = global_shape_properties[edge.TShape()].name)
-               enames.Append(*name);
-             else
-               enames.Append("noname-edge");
-           }
+           fnames[fmap.FindIndex(face)-1] = *name;
+      }
+    enames.SetSize(emap.Size());
+    enames = "";
+    for (TopExp_Explorer e(shape, TopAbs_EDGE); e.More(); e.Next())
+      {
+        TopoDS_Edge edge = TopoDS::Edge(e.Current());
+        if (auto name = global_shape_properties[edge.TShape()].name)
+          enames[emap.FindIndex(edge)-1] = *name;
       }
   }
 

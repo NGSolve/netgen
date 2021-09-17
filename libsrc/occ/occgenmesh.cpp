@@ -595,8 +595,9 @@ namespace netgen
                     alledgeparams[geomedgenr-1] = params;
                   }
 
-                if(geom.enames.Size() && geom.enames[curr-1] != "")
-                  mesh.SetCD2Name(geomedgenr, geom.enames[curr-1]);
+                auto name = geom.enames[geom.emap.FindIndex(edge)-1];
+                if(geom.enames.Size() && name != "")
+                  mesh.SetCD2Name(geomedgenr, name);
                   
                 (*testout) << "NP = " << mesh.GetNP() << endl;
                 //(*testout) << pnums[pnums.Size()-1] << endl;
