@@ -1010,22 +1010,57 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       }, py::arg("v"), "extrude shape by vector 'v'")
 
   .def("Revolve", [](const TopoDS_Shape & shape, const gp_Ax1 &A, const double D) {
-      for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
-        {
-          // return BRepPrimAPI_MakeRevol (shape, A, D*M_PI/180).Shape();
-          BRepPrimAPI_MakeRevol builder(shape, A, D*M_PI/180);
+        switch (shape.ShapeType())
+         {
+	  case TopAbs_EDGE:
+    	   for (TopExp_Explorer e(shape, TopAbs_EDGE); e.More(); e.Next())
+            {
+             // return BRepPrimAPI_MakeRevol (shape, A, D*M_PI/180).Shape();
+             BRepPrimAPI_MakeRevol builder(shape, A, D*M_PI/180);
+
+             for (auto typ : { TopAbs_VERTEX })
+               for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+                {
+                 auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+                 for (auto mods : builder.Generated(e.Current()))
+                   OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+                }
+             return builder.Shape();
+           } 
+	  case TopAbs_WIRE:
+    	   for (TopExp_Explorer e(shape, TopAbs_WIRE); e.More(); e.Next())
+            {
+             // return BRepPrimAPI_MakeRevol (shape, A, D*M_PI/180).Shape();
+             BRepPrimAPI_MakeRevol builder(shape, A, D*M_PI/180);
+
+             for (auto typ : { TopAbs_EDGE, TopAbs_VERTEX })
+               for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+                {
+                 auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+                 for (auto mods : builder.Generated(e.Current()))
+                   OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+                }
+             return builder.Shape();
+           } 
+
+          case TopAbs_FACE:
+           for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
+            {
+             // return BRepPrimAPI_MakeRevol (shape, A, D*M_PI/180).Shape();
+             BRepPrimAPI_MakeRevol builder(shape, A, D*M_PI/180);
             
-          for (auto typ : { TopAbs_EDGE, TopAbs_VERTEX })
-            for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
-              {
+             for (auto typ : { TopAbs_EDGE, TopAbs_VERTEX })
+              for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+               {
                 auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
                 for (auto mods : builder.Generated(e.Current()))
                   OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
-              }
-
-          return builder.Shape();          
-        }
-      throw Exception("no face found for revolve");
+               }
+             return builder.Shape();          
+             }
+	  default:
+           throw Exception("no edge / wire / face found for revolve");
+	 }
     }, py::arg("axis"), py::arg("ang"), "revolve shape around 'axis' by 'ang' degrees")
     
     .def("Find", [](const TopoDS_Shape & shape, gp_Pnt p)
