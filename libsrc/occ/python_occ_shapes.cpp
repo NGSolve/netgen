@@ -41,6 +41,7 @@
 #include <BRepFilletAPI_MakeFillet.hxx>
 #include <BRepOffsetAPI_ThruSections.hxx>
 #include <BRepOffsetAPI_MakeOffset.hxx>
+#include <BRepExtrema_DistShapeShape.hxx>
 
 #include <BRepGProp.hxx>
 #include <BRepOffsetAPI_MakeThickSolid.hxx>
@@ -109,6 +110,23 @@ public:
       }
     return maxshape;
   }
+
+  TopoDS_Shape Nearest(gp_Pnt pnt)
+  {
+    double mindist = 1e99;
+    TopoDS_Shape nearestshape;
+    auto vertex = BRepBuilderAPI_MakeVertex (pnt).Vertex();
+    
+    for (auto shape : *this)
+      {
+        double dist = BRepExtrema_DistShapeShape(shape, vertex).Value();
+        // cout << "dist = " << dist << endl;
+        if (dist < mindist)
+          nearestshape = shape;
+      }
+    return nearestshape;
+  }
+  
   ListOfShapes SubShapes(TopAbs_ShapeEnum type) const
   {
     std::set<TopoDS_Shape, ShapeLess> unique_shapes;
@@ -1010,7 +1028,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       }, py::arg("v"), "extrude shape by vector 'v'")
 
   .def("Revolve", [](const TopoDS_Shape & shape, const gp_Ax1 &A, const double D) {
-      for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
+      // for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
         {
           // return BRepPrimAPI_MakeRevol (shape, A, D*M_PI/180).Shape();
           BRepPrimAPI_MakeRevol builder(shape, A, D*M_PI/180);
@@ -1025,7 +1043,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 
           return builder.Shape();          
         }
-      throw Exception("no face found for revolve");
+        // throw Exception("no face found for revolve");
     }, py::arg("axis"), py::arg("ang"), "revolve shape around 'axis' by 'ang' degrees")
     
     .def("Find", [](const TopoDS_Shape & shape, gp_Pnt p)
@@ -1557,6 +1575,10 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("Min", [] (ListOfShapes & shapes, gp_Vec dir) 
          { return CastShape(shapes.Max(-dir)); },
          py::arg("dir"), "returns shape where center of gravity is minimal in the direction 'dir'")
+
+    .def("Nearest", [] (ListOfShapes & shapes, gp_Pnt pnt) 
+         { return CastShape(shapes.Nearest(pnt)); },
+         py::arg("p"), "returns shape nearest to point 'p'")
     
     .def_property("name", [](ListOfShapes& shapes)
     {
