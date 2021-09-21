@@ -890,6 +890,24 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         Vec<3> col(c[0], c[1], c[2]);
         OCCGeometry::global_shape_properties[self.TShape()].col = col;    
       }, "color of shape as RGB - tuple")
+    .def("UnifySameDomain", [](const TopoDS_Shape& shape,
+                               bool edges, bool faces,
+                               bool concatBSplines)
+    {
+      ShapeUpgrade_UnifySameDomain unify(shape, edges, faces,
+                                         concatBSplines);
+      unify.Build();
+      Handle(BRepTools_History) history = unify.History ();
+      for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
+        for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+          {
+            auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+            for (auto mods : history->Modified(e.Current()))
+              OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+          }
+      return unify.Shape();
+    }, py::arg("unifyEdges")=true, py::arg("unifyFaces")=true,
+         py::arg("concatBSplines")=true)
     
     .def_property("location",
                   [](const TopoDS_Shape & shape) { return shape.Location(); },
