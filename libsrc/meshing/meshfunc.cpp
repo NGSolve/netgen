@@ -313,7 +313,7 @@ namespace netgen
          
          mesh.FindOpenElements(domain);
          PrintMessage (5, mesh.GetNOpenElements(), " open faces");
-         GetOpenElements( mesh, domain )->Save("open_"+ToString(cntsteps)+".vol");
+         // GetOpenElements( mesh, domain )->Save("open_"+ToString(cntsteps)+".vol");
          cntsteps++;
 
 
