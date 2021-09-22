@@ -5779,6 +5779,9 @@ namespace netgen
             {
               if(faces[i] == 0)
                 continue;
+              auto sel = SurfaceElement(faces[i]);
+              if(indices && indices->Size() != 0 && !indices->Contains(sel.GetIndex()))
+                continue;
 
               auto & el = VolumeElement(velement);
 
@@ -5790,8 +5793,6 @@ namespace netgen
                 {
                   // found volume point very close to a face -> use barycentric coordinates directly
                   lami[2] = 0.0;
-                  auto sel = SurfaceElement(faces[i]);
-
                   for(auto j : Range(1,3))
                     for(auto k : Range(4))
                       if(sel[j] == el[k])
@@ -5800,21 +5801,8 @@ namespace netgen
                 }
               }
 
-              if(indices && indices->Size() != 0)
-                {
-                  if(indices->Contains(SurfaceElement(faces[i]).GetIndex()) &&
-                     PointContainedIn2DElement(p,lami,faces[i],true))
-                    return faces[i];
-                }
-              else
-                {
-                  if(PointContainedIn2DElement(p,lami,faces[i],true))
-                    {
-                      //(*testout) << "found point " << p << " in sel " << faces[i]
-                      //	       << ", lam " << lami[0] << ", " << lami[1] << ", " << lami[2] << endl;
-                      return faces[i];
-                    }
-                }
+              if(PointContainedIn2DElement(p,lami,faces[i],true))
+                return faces[i];
             }
         }
 
