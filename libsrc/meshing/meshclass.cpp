@@ -5609,124 +5609,77 @@ namespace netgen
       return -1;
 
     if (dimension == 2 || (dimension==3 && !GetNE() && GetNSE()))
+      return GetSurfaceElementOfPoint(p, lami, indices, build_searchtree, allowindex);
+
+    int ps_startelement = 0;  // disable global buffering
+    // int i, j;
+    int ne;
+
+    if(ps_startelement != 0 && PointContainedIn3DElement(p,lami,ps_startelement))
+      return ps_startelement;
+
+    NgArray<int> locels;
+    if (elementsearchtree || build_searchtree)
       {
-        int ne;
-        int ps_startelement = 0;  // disable global buffering
-
-        if(ps_startelement != 0 && ps_startelement <= GetNSE() && PointContainedIn2DElement(p,lami,ps_startelement))
-          return ps_startelement;
-
-        NgArray<int> locels;
-        if (elementsearchtree || build_searchtree)
-          {
-            // update if necessary:
-            const_cast<Mesh&>(*this).BuildElementSearchTree ();
-            // double tol = elementsearchtree->Tolerance();
-            // netgen::Point<3> pmin = p - Vec<3> (tol, tol, tol);
-            // netgen::Point<3> pmax = p + Vec<3> (tol, tol, tol);
-            elementsearchtree->GetIntersecting (p, p, locels);
-            ne = locels.Size();
-          }
-        else
-          ne = GetNSE();
-
-        for (int i = 1; i <= ne; i++)
-          {
-            int ii;
-
-            if (elementsearchtree)
-              ii = locels.Get(i);
-            else
-              ii = i;
-
-            if(ii == ps_startelement) continue;
-
-            if(indices != NULL && indices->Size() > 0)
-              {
-                bool contained = indices->Contains(SurfaceElement(ii).GetIndex());
-                if((allowindex && !contained) || (!allowindex && contained)) continue;
-              }
-
-            if(PointContainedIn2DElement(p,lami,ii)) return ii;
-
-          }
-        return 0;
+        // update if necessary:
+        const_cast<Mesh&>(*this).BuildElementSearchTree ();
+        // double tol = elementsearchtree->Tolerance();
+        // netgen::Point<3> pmin = p - Vec<3> (tol, tol, tol);
+        // netgen::Point<3> pmax = p + Vec<3> (tol, tol, tol);
+        elementsearchtree->GetIntersecting (p, p, locels);
+        ne = locels.Size();
       }
     else
+      ne = GetNE();
 
+    for (int i = 1; i <= ne; i++)
       {
-        int ps_startelement = 0;  // disable global buffering
-        // int i, j;
-        int ne;
+        int ii;
 
-        if(ps_startelement != 0 && PointContainedIn3DElement(p,lami,ps_startelement))
-          return ps_startelement;
-
-        NgArray<int> locels;
-        if (elementsearchtree || build_searchtree)
-          {
-            // update if necessary:
-            const_cast<Mesh&>(*this).BuildElementSearchTree ();
-            // double tol = elementsearchtree->Tolerance();            
-            // netgen::Point<3> pmin = p - Vec<3> (tol, tol, tol);
-            // netgen::Point<3> pmax = p + Vec<3> (tol, tol, tol);
-            elementsearchtree->GetIntersecting (p, p, locels);
-            ne = locels.Size();
-          }
+        if (elementsearchtree)
+          ii = locels.Get(i);
         else
-          ne = GetNE();
+          ii = i;
+        if(ii == ps_startelement) continue;
 
-        for (int i = 1; i <= ne; i++)
+        if(indices != NULL && indices->Size() > 0)
           {
-            int ii;
-
-            if (elementsearchtree)
-              ii = locels.Get(i);
-            else
-              ii = i;
-            if(ii == ps_startelement) continue;
-
-            if(indices != NULL && indices->Size() > 0)
-              {
-                bool contained = indices->Contains(VolumeElement(ii).GetIndex());
-                if((allowindex && !contained) || (!allowindex && contained)) continue;
-              }
-
-            if(PointContainedIn3DElement(p,lami,ii)) 
-              {
-                ps_startelement = ii;
-                return ii;
-              }
+            bool contained = indices->Contains(VolumeElement(ii).GetIndex());
+            if((allowindex && !contained) || (!allowindex && contained)) continue;
           }
 
-        // Not found, try uncurved variant:
-        for (int i = 1; i <= ne; i++)
+        if(PointContainedIn3DElement(p,lami,ii))
           {
-            int ii;
-
-            if (elementsearchtree)
-              ii = locels.Get(i);
-            else
-              ii = i;
-
-            if(indices != NULL && indices->Size() > 0)
-              {
-                bool contained = indices->Contains(VolumeElement(ii).GetIndex());
-                if((allowindex && !contained) || (!allowindex && contained)) continue;
-              }
-
-
-            if(PointContainedIn3DElementOld(p,lami,ii)) 
-              {
-                ps_startelement = ii;
-                (*testout) << "WARNING: found element of point " << p <<" only for uncurved mesh" << endl;
-                return ii;
-              }
+            ps_startelement = ii;
+            return ii;
           }
-
-
-        return 0;
       }
+
+    // Not found, try uncurved variant:
+    for (int i = 1; i <= ne; i++)
+      {
+        int ii;
+
+        if (elementsearchtree)
+          ii = locels.Get(i);
+        else
+          ii = i;
+
+        if(indices != NULL && indices->Size() > 0)
+          {
+            bool contained = indices->Contains(VolumeElement(ii).GetIndex());
+            if((allowindex && !contained) || (!allowindex && contained)) continue;
+          }
+
+
+        if(PointContainedIn3DElementOld(p,lami,ii))
+          {
+            ps_startelement = ii;
+            (*testout) << "WARNING: found element of point " << p <<" only for uncurved mesh" << endl;
+            return ii;
+          }
+      }
+    return 0;
   }
 
 
@@ -5809,76 +5762,98 @@ namespace netgen
         //(*testout) << "p " << p << endl;
         //(*testout) << "velement " << velement << endl;
 
-        if (!GetNE() && GetNSE() )
-          {
-            lami[0] = vlam[0];
-            lami[1] = vlam[1];
-            lami[2] = vlam[2];
-            return velement;
-          }
-        
-        NgArray<int> faces;
-        topology.GetElementFaces(velement,faces);
+        // first try to find a volume element containing p and project to face
+        if(velement!=0)
+        {
+          NgArray<int> faces;
+          topology.GetElementFaces(velement,faces);
 
-        //(*testout) << "faces " << faces << endl;
+          //(*testout) << "faces " << faces << endl;
 
-        for(int i=0; i<faces.Size(); i++)
-          faces[i] = topology.GetFace2SurfaceElement(faces[i]);
+          for(int i=0; i<faces.Size(); i++)
+            faces[i] = topology.GetFace2SurfaceElement(faces[i]);
 
-        //(*testout) << "surfel " << faces << endl;
+          //(*testout) << "surfel " << faces << endl;
 
-        for(int i=0; i<faces.Size(); i++)
-          {
-            if(faces[i] == 0)
-              continue;
-
-            auto & el = VolumeElement(velement);
-
-            if (el.GetType() == TET)
+          for(int i=0; i<faces.Size(); i++)
             {
-              double lam4[4] = { vlam[0], vlam[1], vlam[2], 1.0-vlam[0]-vlam[1]-vlam[2] };
-              double face_lam = lam4[i];
-              if(face_lam < 1e-5)
-              {
-                // found volume point very close to a face -> use barycentric coordinates directly
-                lami[2] = 0.0;
-                auto sel = SurfaceElement(faces[i]);
+              if(faces[i] == 0)
+                continue;
 
-                for(auto j : Range(1,3))
-                  for(auto k : Range(4))
-                    if(sel[j] == el[k])
-                      lami[j-1] = lam4[k]/(1.0-face_lam);
-                return faces[i];
-              }
-            }
+              auto & el = VolumeElement(velement);
 
-            if(indices && indices->Size() != 0)
+              if (el.GetType() == TET)
               {
-                if(indices->Contains(SurfaceElement(faces[i]).GetIndex()) &&
-                   PointContainedIn2DElement(p,lami,faces[i],true))
+                double lam4[4] = { vlam[0], vlam[1], vlam[2], 1.0-vlam[0]-vlam[1]-vlam[2] };
+                double face_lam = lam4[i];
+                if(face_lam < 1e-5)
+                {
+                  // found volume point very close to a face -> use barycentric coordinates directly
+                  lami[2] = 0.0;
+                  auto sel = SurfaceElement(faces[i]);
+
+                  for(auto j : Range(1,3))
+                    for(auto k : Range(4))
+                      if(sel[j] == el[k])
+                        lami[j-1] = lam4[k]/(1.0-face_lam);
                   return faces[i];
+                }
               }
-            else
-              {
-                if(PointContainedIn2DElement(p,lami,faces[i],true))
-                  {
-                    //(*testout) << "found point " << p << " in sel " << faces[i]
-                    //	       << ", lam " << lami[0] << ", " << lami[1] << ", " << lami[2] << endl;
-                    return faces[i];
-                  }
-              }
-          }
 
-        NgArray<int> faces2;
-        topology.GetElementFaces(velement,faces2);
-        /*
-        cout << "no matching surf element" << endl
-             << "p = " << p << endl
-             << "faces-orig = " << faces2 << endl
-             << "faces = " << faces << endl
-             << ", vol el = " << velement
-             << ", vlam = " << vlam[0] << "," << vlam[1] << "," << vlam[2] << endl;
-        */
+              if(indices && indices->Size() != 0)
+                {
+                  if(indices->Contains(SurfaceElement(faces[i]).GetIndex()) &&
+                     PointContainedIn2DElement(p,lami,faces[i],true))
+                    return faces[i];
+                }
+              else
+                {
+                  if(PointContainedIn2DElement(p,lami,faces[i],true))
+                    {
+                      //(*testout) << "found point " << p << " in sel " << faces[i]
+                      //	       << ", lam " << lami[0] << ", " << lami[1] << ", " << lami[2] << endl;
+                      return faces[i];
+                    }
+                }
+            }
+        }
+
+        // Did't find any matching face of a volume element, search 2d elements directly
+        int ne;
+
+        NgArray<int> locels;
+        // TODO: build search tree for surface elements
+        if (!GetNE() && GetNSE() && (elementsearchtree || build_searchtree))
+          {
+            // update if necessary:
+            const_cast<Mesh&>(*this).BuildElementSearchTree ();
+            // double tol = elementsearchtree->Tolerance();
+            // netgen::Point<3> pmin = p - Vec<3> (tol, tol, tol);
+            // netgen::Point<3> pmax = p + Vec<3> (tol, tol, tol);
+            elementsearchtree->GetIntersecting (p, p, locels);
+            ne = locels.Size();
+          }
+        else
+          ne = GetNSE();
+
+        for (int i = 1; i <= ne; i++)
+          {
+            int ii;
+
+            if (locels.Size())
+              ii = locels.Get(i);
+            else
+              ii = i;
+
+            if(indices != NULL && indices->Size() > 0)
+              {
+                bool contained = indices->Contains(SurfaceElement(ii).GetIndex());
+                if((allowindex && !contained) || (!allowindex && contained)) continue;
+              }
+
+            if(PointContainedIn2DElement(p,lami,ii)) return ii;
+
+          }
       }
 
     return 0;
