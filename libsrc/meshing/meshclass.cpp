@@ -5757,7 +5757,10 @@ namespace netgen
     else
       {
         double vlam[3];
-        int velement = GetElementOfPoint(p,vlam,NULL,build_searchtree,allowindex);
+        int velement = 0;
+
+        if(GetNE())
+          GetElementOfPoint(p,vlam,NULL,build_searchtree,allowindex);
 
         //(*testout) << "p " << p << endl;
         //(*testout) << "velement " << velement << endl;
