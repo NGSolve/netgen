@@ -872,7 +872,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                   },
                   [](TopoDS_Shape& self, double val)
                   {
-                    for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
+                    for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
                       for (TopExp_Explorer e(self, typ); e.More(); e.Next())
                       {
                         auto & maxh = OCCGeometry::global_shape_properties[e.Current().TShape()].maxh;

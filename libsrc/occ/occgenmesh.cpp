@@ -332,6 +332,9 @@ namespace netgen
 
         if (!exists)
           mesh.AddPoint (mp);
+        
+        double maxh = OCCGeometry::global_shape_properties[TopoDS::Vertex(geom.vmap(i)).TShape()].maxh;
+        mesh.RestrictLocalH (occ2ng(pnt), maxh);
       }
     tsearch.Stop();
     
