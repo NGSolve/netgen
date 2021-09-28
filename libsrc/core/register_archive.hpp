@@ -29,10 +29,7 @@ namespace ngcore {
 #ifdef NETGEN_PYTHON
       info.anyToPyCaster = [](const std::any& a)
       {
-        std::cout << "call anytopycast on " << Demangle(a.type().name()) << std::endl;
         const T* val = std::any_cast<T>(&a);
-        if(!val)
-          throw Exception("Incorrect type in any object!");
         return pybind11::cast(val); };
 #endif // NETGEN_PYTHON
       Archive::SetArchiveRegister(std::string(Demangle(typeid(T).name())),info);
