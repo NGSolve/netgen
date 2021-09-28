@@ -39,6 +39,7 @@
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepFilletAPI_MakeFillet.hxx>
+#include <BRepFilletAPI_MakeChamfer.hxx>
 #include <BRepOffsetAPI_ThruSections.hxx>
 #include <BRepOffsetAPI_MakeOffset.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
@@ -1064,19 +1065,19 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         // throw Exception("no face found for revolve");
     }, py::arg("axis"), py::arg("ang"), "revolve shape around 'axis' by 'ang' degrees")
     
-    .def("Find", [](const TopoDS_Shape & shape, gp_Pnt p)
-         {
-           throw Exception ("not implemented yet");
-           // find sub-shape contianing point
-           // BRepClass_FaceClassifier::Perform  (p);
-         }, py::arg("p"), "finds sub-shape containing point 'p' (not yet implemented)")
-    
     .def("MakeFillet", [](const TopoDS_Shape & shape, std::vector<TopoDS_Shape> edges, double r) {
         BRepFilletAPI_MakeFillet mkFillet(shape);
         for (auto e : edges)
           mkFillet.Add (r, TopoDS::Edge(e));
         return mkFillet.Shape();
       }, py::arg("edges"), py::arg("r"), "make fillets for edges 'edges' of radius 'r'")
+  
+    .def("MakeChamfer", [](const TopoDS_Shape & shape, std::vector<TopoDS_Shape> edges, double d) {
+        BRepFilletAPI_MakeChamfer mkChamfer(shape);
+        for (auto e : edges)
+          mkChamfer.Add (d, TopoDS::Edge(e));
+        return mkChamfer.Shape();
+      }, py::arg("edges"), py::arg("d"), "make symmetric chamfer for edges 'edges' of distrance 'd'")
   
     .def("MakeThickSolid", [](const TopoDS_Shape & body, std::vector<TopoDS_Shape> facestoremove,
                               double offset, double tol) {
@@ -1955,7 +1956,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         mkFillet.Add (r, TopoDS::Edge(e));
       return mkFillet.Shape();
     }, "deprecated, use 'shape.MakeFillet'");
-  
+
   m.def("MakeThickSolid", [](TopoDS_Shape body, std::vector<TopoDS_Shape> facestoremove,
                              double offset, double tol) {
           throw Exception("call 'shape.MakeThickSolid'");
