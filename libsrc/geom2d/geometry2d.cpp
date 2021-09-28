@@ -6,6 +6,7 @@
 
 #include <meshing.hpp>
 #include <geometry2d.hpp>
+#include <core/register_archive.hpp>
 
 namespace netgen
 {

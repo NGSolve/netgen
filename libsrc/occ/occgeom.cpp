@@ -3,6 +3,7 @@
 
 #include <mystdlib.h>
 #include <occgeom.hpp>
+#include <core/register_archive.hpp>
 #include <cstdio>
 #include "ShapeAnalysis_ShapeTolerance.hxx"
 #include "ShapeAnalysis_ShapeContents.hxx"

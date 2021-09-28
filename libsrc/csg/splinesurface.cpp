@@ -1,5 +1,6 @@
 
 #include <csg.hpp>
+#include <core/register_archive.hpp>
 
 namespace netgen
 {

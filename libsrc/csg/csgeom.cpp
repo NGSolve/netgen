@@ -1,5 +1,6 @@
 #include <mystdlib.h>
 #include <myadt.hpp>
+#include <core/register_archive.hpp>
 
 #include <linalg.hpp>
 #include <csg.hpp>

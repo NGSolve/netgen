@@ -167,6 +167,7 @@ namespace ngcore
     int GetNStringListFlags () const { return strlistflags.Size(); }
     /// number of num-list flags
     int GetNNumListFlags () const { return numlistflags.Size(); }
+    int GetNAnyFlags() const { return anyflags.Size(); }
 
     ///
     const std::string & GetStringFlag (int i, std::string & name) const
@@ -181,6 +182,8 @@ namespace ngcore
     { name = strlistflags.GetName(i); return strlistflags[i]; }
     const Flags & GetFlagsFlag (int i, std::string & name) const
     { name = flaglistflags.GetName(i); return flaglistflags[i]; }
+    const std::any& GetAnyFlag(int i, std::string& name) const
+    { name = anyflags.GetName(i); return anyflags[i]; }
   };
 
   /// Print flags

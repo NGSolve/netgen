@@ -1,4 +1,5 @@
 #include <meshing.hpp>
+#include <core/register_archive.hpp>
 
 #include "stlgeom.hpp"
 

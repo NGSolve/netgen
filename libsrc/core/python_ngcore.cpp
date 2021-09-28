@@ -157,6 +157,11 @@ namespace ngcore
         auto val = flags.GetDefineFlag(i, key);
         d[key.c_str()] = val;
       }
+    for(auto i : Range(flags.GetNAnyFlags()))
+      {
+        auto& a = flags.GetAnyFlag(i, key);
+        d[key.c_str()] = CastAnyToPy(a);
+      }
     return d;
   }
 
