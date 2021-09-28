@@ -268,7 +268,7 @@ namespace ngcore
 
   bool TaskManager :: ProcessTask()
   {
-    static Timer t("process task");
+    // static Timer t("process task");
     TNestedTask task;
     TCToken ctoken(taskqueue); 
     
@@ -285,14 +285,14 @@ namespace ngcore
           cout << "process nested, nr = " << ti.task_nr << "/" << ti.ntasks << endl;
         }
         */
-        if(trace && task.producing_thread != ti.thread_nr)
-            trace->StartTask (ti.thread_nr, t, PajeTrace::Task::ID_TIMER, task.producing_thread);
+        // if(trace && task.producing_thread != ti.thread_nr)
+        // trace->StartTask (ti.thread_nr, t, PajeTrace::Task::ID_TIMER, task.producing_thread);
 
         (*task.func)(ti);
         --*task.endcnt;
 
-        if(trace && task.producing_thread != ti.thread_nr)
-            trace->StopTask (ti.thread_nr, t);
+        // if(trace && task.producing_thread != ti.thread_nr)
+        // trace->StopTask (ti.thread_nr, t);
         return true;
       }
     return false;
