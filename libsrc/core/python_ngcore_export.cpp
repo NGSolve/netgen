@@ -177,6 +177,10 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
 
 	  return py::cast(self.GetDefineFlag(name));
       }, py::arg("name"), "Return flag by given name")
+    .def("ToDict", [](const Flags& flags)
+    {
+      return CreateDictFromFlags(flags);
+    })
   ;
   py::implicitly_convertible<py::dict, Flags>();
 
