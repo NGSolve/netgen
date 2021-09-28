@@ -1073,10 +1073,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       }, py::arg("edges"), py::arg("r"), "make fillets for edges 'edges' of radius 'r'")
   
     .def("MakeChamfer", [](const TopoDS_Shape & shape, std::vector<TopoDS_Shape> edges, double d) {
+#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4        
         BRepFilletAPI_MakeChamfer mkChamfer(shape);
         for (auto e : edges)
           mkChamfer.Add (d, TopoDS::Edge(e));
         return mkChamfer.Shape();
+#else
+        throw Exception("MakeChamfer not available");
+#endif        
       }, py::arg("edges"), py::arg("d"), "make symmetric chamfer for edges 'edges' of distrance 'd'")
   
     .def("MakeThickSolid", [](const TopoDS_Shape & body, std::vector<TopoDS_Shape> facestoremove,
