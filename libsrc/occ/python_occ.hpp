@@ -12,24 +12,15 @@ public:
   
   DirectionalInterval operator< (double val) const
   {
-    cout << "create interval with < " << ", val = " << val << endl;
-    cout << "me = " << this->minval << " - " << this->maxval << endl;    
     DirectionalInterval i2 = *this;
     i2.maxval = val;
-
-    cout << "resulting i = " << i2.minval << " - " << i2.maxval << endl;
     return i2;
   }
 
   DirectionalInterval operator> (double val) const
   {
-    cout << "create interval with > " << ", val = " << val << endl;
-    cout << "me = " << this->minval << " - " << this->maxval << endl;
-    
     DirectionalInterval i2 = *this;
     i2.minval = val;
-    cout << "resulting i = " << i2.minval << " - " << i2.maxval << endl;
-    
     return i2;
   }
 
