@@ -3,7 +3,7 @@ if(ENABLE_UNIT_TESTS)
 add_custom_target(unit_tests)
 
 # Build catch_main test object
-include_directories(${CATCH_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../../libsrc/include ${SPDLOG_INCLUDE_DIR} ${PYTHON_INCLUDE_DIRS})
+include_directories(${CATCH_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../../libsrc/include ${SPDLOG_INCLUDE_DIR})
 add_library(catch_main STATIC main.cpp)
 set_target_properties(catch_main PROPERTIES CXX_STANDARD 17)
 add_dependencies(unit_tests catch_main)
@@ -26,10 +26,8 @@ macro(add_unit_test name sources)
 endmacro()
 
 add_unit_test(archive archive.cpp)
-if(USE_PYTHON)
-  # RegisterForArchive needs Python.h if built with Python
-  target_link_libraries(test_archive netgen_python)
-endif(USE_PYTHON)
+# RegisterForArchive needs Python.h if built with Python
+target_link_libraries(test_archive netgen_python)
 add_unit_test(array array.cpp)
 add_unit_test(ranges ranges.cpp)
 add_unit_test(symboltable symboltable.cpp)
