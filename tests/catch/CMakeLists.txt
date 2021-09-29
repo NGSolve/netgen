@@ -28,7 +28,7 @@ endmacro()
 add_unit_test(archive archive.cpp)
 if(USE_PYTHON)
   # RegisterForArchive needs Python.h if built with Python
-  target_link_libraries(test_archive ${PYTHON_LIBRARIES})
+  target_link_libraries(test_archive netgen_python)
 endif(USE_PYTHON)
 add_unit_test(array array.cpp)
 add_unit_test(ranges ranges.cpp)
