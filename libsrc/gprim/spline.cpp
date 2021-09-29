@@ -9,6 +9,8 @@ Spline curve for Mesh generator
 #include <gprim.hpp>
 #include "spline.hpp"
 
+#include <core/register_archive.hpp>
+
 namespace netgen
 {
 

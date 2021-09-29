@@ -1,5 +1,6 @@
 
 #include "archive.hpp"
+#include "register_archive.hpp"
 #include "version.hpp"
 
 #ifndef WIN32
@@ -28,4 +29,13 @@ namespace ngcore
                                    std::make_unique<std::map<std::string, detail::ClassArchiveInfo>>();
     return type_register->count(classname) != 0;
   }
+
+#ifdef NETGEN_PYTHON
+  pybind11::object CastAnyToPy(const std::any& a)
+  {
+    auto info = Archive::GetArchiveRegister(Demangle(a.type().name()));
+    return info.anyToPyCaster(a);
+  }
+#endif // NETGEN_PYTHON
+
 } // namespace ngcore

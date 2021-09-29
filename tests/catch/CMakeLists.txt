@@ -14,7 +14,7 @@ add_test(NAME unit_tests_built COMMAND ${CMAKE_COMMAND} --build . --target unit_
 
 macro(add_unit_test name sources)
   add_executable(test_${name} ${sources} )
-  target_link_libraries(test_${name} ngcore catch_main nglib ${PYTHON_LIBRARIES})
+  target_link_libraries(test_${name} ngcore catch_main nglib)
 
   add_dependencies(unit_tests test_${name})
   add_test(NAME unit_${name} COMMAND test_${name})
@@ -26,6 +26,8 @@ macro(add_unit_test name sources)
 endmacro()
 
 add_unit_test(archive archive.cpp)
+# RegisterForArchive needs Python.h if built with Python
+target_link_libraries(test_archive netgen_python)
 add_unit_test(array array.cpp)
 add_unit_test(ranges ranges.cpp)
 add_unit_test(symboltable symboltable.cpp)

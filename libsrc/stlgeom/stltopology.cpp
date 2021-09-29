@@ -1,4 +1,5 @@
 #include <mystdlib.h>
+#include <core/register_archive.hpp>
 
 #include <myadt.hpp>
 #include <linalg.hpp>

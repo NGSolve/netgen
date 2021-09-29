@@ -1,6 +1,7 @@
 #ifndef NETGEN_CORE_ARCHIVE_HPP
 #define NETGEN_CORE_ARCHIVE_HPP
 
+#include <any>
 #include <array>                // for array
 #include <complex>              // for complex
 #include <cstring>              // for size_t, strlen
@@ -32,8 +33,11 @@ namespace pybind11
 namespace ngcore
 {
 
-  class NGCORE_API Archive;
+#ifdef NETGEN_PYTHON
+  pybind11::object CastAnyToPy(const std::any& a);
+#endif // NETGEN_PYTHON
 
+  class NGCORE_API Archive;
   namespace detail
   {
     // create new pointer of type T if it is default constructible, else throw
@@ -88,6 +92,10 @@ namespace ngcore
       // This caster takes a void* pointer to the (base)class type_info and returns void* pointing
       // to the type stored in this info
       std::function<void*(const std::type_info&, void*)> downcaster;
+
+#ifdef NETGEN_PYTHON
+      std::function<pybind11::object(const std::any&)> anyToPyCaster;
+#endif // NETGEN_PYTHON
     };
   } // namespace detail
 
@@ -641,6 +649,10 @@ namespace ngcore
     template<typename T, typename ... Bases>
     friend class RegisterClassForArchive;
 
+#ifdef NETGEN_PYTHON
+    friend pybind11::object CastAnyToPy(const std::any&);
+#endif // NETGEN_PYTHON
+
     // Returns ClassArchiveInfo of Demangled typeid
     static const detail::ClassArchiveInfo& GetArchiveRegister(const std::string& classname);
     // Set ClassArchiveInfo for Demangled typeid, this is done by creating an instance of
@@ -692,26 +704,6 @@ namespace ngcore
           }
       }
     };
-  };
-
-  template<typename T, typename ... Bases>
-  class RegisterClassForArchive
-  {
-  public:
-    RegisterClassForArchive()
-    {
-      static_assert(detail::all_of_tmpl<std::is_base_of<Bases,T>::value...>,
-                    "Variadic template arguments must be base classes of T");
-      detail::ClassArchiveInfo info {};
-      info.creator = [](const std::type_info& ti) -> void*
-                     { return typeid(T) == ti ? detail::constructIfPossible<T>()
-                         : Archive::Caster<T, Bases...>::tryUpcast(ti, detail::constructIfPossible<T>()); };
-      info.upcaster = [/*this*/](const std::type_info& ti, void* p) -> void*
-                      { return typeid(T) == ti ? p : Archive::Caster<T, Bases...>::tryUpcast(ti, static_cast<T*>(p)); };
-      info.downcaster = [/*this*/](const std::type_info& ti, void* p) -> void*
-                        { return typeid(T) == ti ? p : Archive::Caster<T, Bases...>::tryDowncast(ti, p); };
-      Archive::SetArchiveRegister(std::string(Demangle(typeid(T).name())),info);
-    }
   };
 
   // BinaryOutArchive ======================================================================

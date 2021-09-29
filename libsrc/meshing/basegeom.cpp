@@ -1,5 +1,6 @@
 #include <mystdlib.h>
 #include "meshing.hpp"
+#include <core/register_archive.hpp>
 
 namespace netgen
 {

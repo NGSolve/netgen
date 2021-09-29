@@ -1,6 +1,7 @@
 
 #include <catch2/catch.hpp>
 #include <../core/ngcore.hpp>
+#include <core/register_archive.hpp>
 using namespace ngcore;
 using namespace std;
 

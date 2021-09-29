@@ -8,6 +8,7 @@
 #include <mystdlib.h>
 #include <linalg.hpp>
 #include <gprim.hpp>
+#include <core/register_archive.hpp>
 #include "splinegeometry.hpp"
  
 namespace netgen
