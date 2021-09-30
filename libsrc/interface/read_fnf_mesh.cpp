@@ -469,5 +469,6 @@ namespace netgen
         else
           PrintMessage(3, "parse line: (", buf, ")");
       }
+    mesh.ComputeNVertices();
   }
 }
