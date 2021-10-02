@@ -1069,6 +1069,11 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         BRepFilletAPI_MakeFillet mkFillet(shape);
         for (auto e : edges)
           mkFillet.Add (r, TopoDS::Edge(e));
+        mkFillet.Build();
+        PropagateProperties (mkFillet, shape);
+        for (auto e : edges)
+          for (auto gen : mkFillet.Generated(e))
+            OCCGeometry::global_shape_properties[gen.TShape()].name = "fillet";
         return mkFillet.Shape();
       }, py::arg("edges"), py::arg("r"), "make fillets for edges 'edges' of radius 'r'")
   
@@ -1077,9 +1082,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         BRepFilletAPI_MakeChamfer mkChamfer(shape);
         for (auto e : edges)
           mkChamfer.Add (d, TopoDS::Edge(e));
+        mkChamfer.Build();
+        PropagateProperties (mkChamfer, shape);
+        for (auto e : edges)
+          for (auto gen : mkChamfer.Generated(e))
+            OCCGeometry::global_shape_properties[gen.TShape()].name = "chamfer";
         return mkChamfer.Shape();
 #else
-        throw Exception("MakeChamfer not available");
+        throw Exception("MakeChamfer not available for occ-version < 7.4");
 #endif        
       }, py::arg("edges"), py::arg("d"), "make symmetric chamfer for edges 'edges' of distrance 'd'")
   
