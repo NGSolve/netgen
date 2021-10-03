@@ -2525,7 +2525,7 @@ namespace netgen
     domin_singular = domout_singular = 0.;
     // Philippose - 06/07/2009
     // Initialise surface colour
-    surfcolour = Vec3d(0.0,1.0,0.0);
+    surfcolour = Vec<4>(0.0,1.0,0.0,1.0);
     tlosurf = -1; 
     // bcname = 0;
     firstelement = -1;
@@ -2548,7 +2548,7 @@ namespace netgen
     domout = domouti;
     // Philippose - 06/07/2009
     // Initialise surface colour
-    surfcolour = Vec3d(0.0,1.0,0.0);
+    surfcolour = Vec<4>(0.0,1.0,0.0,1.0);
     tlosurf = tlosurfi; 
     bcprop = surfnri;
     domin_singular = domout_singular = 0.;
@@ -2563,7 +2563,7 @@ namespace netgen
     domout = seg.domout+1;
     // Philippose - 06/07/2009
     // Initialise surface colour
-    surfcolour = Vec3d(0.0,1.0,0.0);
+    surfcolour = Vec<4>(0.0,1.0,0.0,1.0);
     tlosurf = seg.tlosurf+1;
     bcprop = 0;
     domin_singular = domout_singular = 0.;

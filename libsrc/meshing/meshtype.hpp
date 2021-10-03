@@ -1171,7 +1171,7 @@ namespace netgen
     // Add capability to store surface colours along with 
     // other face data
     /// surface colour (Default: R=0.0 ; G=1.0 ; B=0.0)
-    Vec<3> surfcolour;
+    Vec<4> surfcolour;
     
     ///
     static string default_bcname;
@@ -1203,7 +1203,7 @@ namespace netgen
 
     // Philippose - 06/07/2009
     // Get Surface colour
-    Vec<3> SurfColour () const { return surfcolour; }
+    Vec<4> SurfColour () const { return surfcolour; }
     DLL_HEADER const string & GetBCName () const { return *bcname; }
     // string * BCNamePtr () { return bcname; }
     // const string * BCNamePtr () const  { return bcname; }
@@ -1214,7 +1214,7 @@ namespace netgen
     void SetBCName (string * bcn); //  { bcname = bcn; }
     // Philippose - 06/07/2009
     // Set the surface colour
-    void SetSurfColour (Vec<3> colour) { surfcolour = colour; }
+    void SetSurfColour (Vec<4> colour) { surfcolour = colour; }
 
     void SetDomainInSingular (double v) { domin_singular = v; }
     void SetDomainOutSingular (double v) { domout_singular = v; }

@@ -1547,12 +1547,12 @@ namespace netgen
               for(i = 1; i <= n; i++)
               {
                  int surfnr = 0;
-                 Vec3d surfcolour(0.0,1.0,0.0);
+                 Vec<4> surfcolour(0.0,1.0,0.0,1.0);
 
                  infile >> surfnr 
-                        >> surfcolour.X() 
-                        >> surfcolour.Y() 
-                        >> surfcolour.Z();
+                        >> surfcolour[0]
+                        >> surfcolour[1]
+                        >> surfcolour[2];
 
                  surfnr--;
 
