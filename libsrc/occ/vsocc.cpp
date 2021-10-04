@@ -568,6 +568,10 @@ namespace netgen
                mat_col[1] = 1.0;
                mat_col[2] = 0.0;
             }
+
+            if(auto c = OCCGeometry::global_shape_properties[face.TShape()].col)
+              for(auto j : Range(4))
+                mat_col[j] = (*c)[j];
          }
          else
          {

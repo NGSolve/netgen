@@ -687,14 +687,14 @@ namespace netgen
      if(strcmp(argv[1], "getcolours") == 0)
      {
         stringstream outVar;
-        NgArray<Vec3d> face_colours;
+        NgArray<Vec<4>> face_colours;
         GetFaceColours(*mesh, face_colours);
 
         for(int i = 0; i < face_colours.Size();i++)
         {
-           outVar << "{ " << face_colours[i].X(1)
-                  << " "  << face_colours[i].X(2)
-                  << " "  << face_colours[i].X(3)
+           outVar << "{ " << face_colours[i][0]
+                  << " "  << face_colours[i][1]
+                  << " "  << face_colours[i][2]
                   << " } ";
         }
 
@@ -704,7 +704,7 @@ namespace netgen
 
      if(strcmp(argv[1], "showalso") == 0)
      {
-        NgArray<Vec3d> face_colours;
+        NgArray<Vec<4>> face_colours;
         GetFaceColours(*mesh,face_colours);
 
         int colourind = atoi (argv[2]);
@@ -728,7 +728,7 @@ namespace netgen
 
      if(strcmp(argv[1], "hidealso") == 0)
      {
-        NgArray<Vec3d> face_colours;
+       NgArray<Vec<4>> face_colours;
         GetFaceColours(*mesh,face_colours);
 
         int colourind = atoi (argv[2]);
@@ -752,7 +752,7 @@ namespace netgen
 
      if(strcmp(argv[1], "showonly") == 0)
      {
-        NgArray<Vec3d> face_colours;
+        NgArray<Vec<4>> face_colours;
         GetFaceColours(*mesh,face_colours);
 
         int colourind = atoi (argv[2]);
@@ -783,7 +783,7 @@ namespace netgen
 
      if(strcmp(argv[1], "hideonly") == 0)
      {
-       NgArray<Vec3d> face_colours;
+       NgArray<Vec<4>> face_colours;
         GetFaceColours(*mesh,face_colours);
 
         int colourind = atoi (argv[2]);

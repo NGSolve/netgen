@@ -883,12 +883,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     
     .def_property("col", [](const TopoDS_Shape & self) {
         auto it = OCCGeometry::global_shape_properties.find(self.TShape());
-        Vec<3> col(0.2, 0.2, 0.2);
+        Vec<4> col(0.2, 0.2, 0.2);
         if (it != OCCGeometry::global_shape_properties.end() && it->second.col)
-          col = *it->second.col; 
+          col = *it->second.col;
         return std::vector<double> ( { col(0), col(1), col(2) } );
       }, [](const TopoDS_Shape & self, std::vector<double> c) {
-        Vec<3> col(c[0], c[1], c[2]);
+        Vec<4> col(c[0], c[1], c[2], 1.0);
+        if(c.size() == 4)
+          col[3] = c[3];
         OCCGeometry::global_shape_properties[self.TShape()].col = col;    
       }, "color of shape as RGB - tuple")
     .def("UnifySameDomain", [](const TopoDS_Shape& shape,
@@ -1627,7 +1629,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def_property("col", [](ListOfShapes& shapes) {
         throw Exception("Cannot get property of ListOfShapes, get the property from individual shapes!");
       }, [](ListOfShapes& shapes, std::vector<double> c) {
-        Vec<3> col(c[0], c[1], c[2]);
+        Vec<4> col(c[0], c[1], c[2], 1.0);
+        if(c.size() == 4)
+          col[3] = c[3];
         for(auto& shape : shapes)
           OCCGeometry::global_shape_properties[shape.TShape()].col = col;
       }, "set col for all elements of list")

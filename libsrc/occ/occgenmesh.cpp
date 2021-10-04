@@ -418,7 +418,7 @@ namespace netgen
             auto it = OCCGeometry::global_shape_properties.find(face.TShape());
             if (it != OCCGeometry::global_shape_properties.end() && it->second.col)
               {
-                Vec<3> col = it->second.col.value_or(Vec<3>(0,1,0));
+                Vec<4> col = it->second.col.value_or(Vec<4>(0,1,0,1));
                 mesh.GetFaceDescriptor(facenr).SetSurfColour(col);                
               }
             else

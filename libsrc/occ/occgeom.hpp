@@ -218,7 +218,7 @@ namespace netgen
   {
   public:
     optional<string> name;
-    optional<Vec<3>> col;
+    optional<Vec<4>> col;
     double maxh = 1e99;
     void Merge(const ShapeProperties & prop2)
     {
