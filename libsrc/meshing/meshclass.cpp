@@ -1080,6 +1080,15 @@ namespace netgen
           outfile << GetFaceDescriptor(i).SurfColour()[2];
           outfile << endl;
        }
+
+       outfile << "face_transparencies" << endl << cnt_facedesc << endl;
+       for(i = 1; i <= cnt_facedesc; i++)
+         {
+           outfile.width(8);
+           outfile << GetFaceDescriptor(i).SurfNr()+1 << " ";
+           outfile.width(12);
+           outfile << GetFaceDescriptor(i).SurfColour()[3] << endl;
+         }
     }
 
     outfile << endl << endl << "endmesh" << endl << endl;
@@ -1569,6 +1578,36 @@ namespace netgen
               }
            }
         }
+
+        if (strcmp (str, "face_transparencies") == 0)
+          {
+            int cnt_facedesc = GetNFD();
+            infile >> n;
+            int index = 1;
+            if(n == cnt_facedesc)
+              {
+                for(int index = 1; index <= n; index++)
+                  {
+                    int surfnr;
+                    double transp;
+                    infile >> surfnr >> transp;
+                    surfnr--;
+                    if(surfnr > 0)
+                      {
+                        for(int facedesc = 1; facedesc <= cnt_facedesc; facedesc++)
+                          {
+                            if(surfnr == GetFaceDescriptor(facedesc).SurfNr())
+                              {
+                                auto& fd = GetFaceDescriptor(facedesc);
+                                auto scol = fd.SurfColour();
+                                scol[3] = transp;
+                                fd.SetSurfColour(scol);
+                              }
+                          }
+                      }
+                  }
+              }
+          }
 
         if (strcmp (str, "endmesh") == 0)
           endmesh = true;

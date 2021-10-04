@@ -259,12 +259,12 @@ namespace netgen
          if(bc_index == 0) 
          {
             PrintMessage(3, "BC Property: ",DEFAULT_BCNUM);
-            // PrintMessage(3, "   RGB Face Colour = ",ref_colour,"","\n");
+            PrintMessage(3, "   RGB Face Colour = ",Vec3d{ref_colour[0], ref_colour[1], ref_colour[2]},"","\n");
          }
          else if(bc_used.Elem(bc_index))
          {
             PrintMessage(3, "BC Property: ",bc_num.Elem(bc_index));
-            // PrintMessage(3, "   RGB Face Colour = ",ref_colour,"","\n");
+            PrintMessage(3, "   RGB Face Colour = ",Vec3d{ref_colour[0], ref_colour[1], ref_colour[2]},"","\n");
          }
       }
    }
@@ -401,7 +401,7 @@ namespace netgen
          PrintMessage(3, "BC Property: ",i + DEFAULT_BCNUM);
          PrintMessage(3, "   Nr. of Surface Elements = ", faces_sorted[i]);
          PrintMessage(3, "   Colour Index = ", colours_sorted[i]);
-         // PrintMessage(3, "   RGB Face Colour = ",ref_colour,"","\n");
+         PrintMessage(3, "   RGB Face Colour = ",Vec3d{ref_colour[0], ref_colour[1], ref_colour[2]},"","\n");
       }
    }
 
