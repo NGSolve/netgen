@@ -6937,7 +6937,7 @@ namespace netgen
 	  cd2names[i] = nullptr;
       }
     //if (cd2names[cd2nr]) delete cd2names[cd2nr];
-    if (abcname != "default")
+    if (abcname != "default" && abcname != "")
       cd2names[cd2nr] = new string(abcname);
     else
       cd2names[cd2nr] = nullptr;
