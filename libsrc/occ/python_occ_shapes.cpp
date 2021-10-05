@@ -942,13 +942,13 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         
         // make one face when fusing in 2D
         // from https://gitlab.onelab.info/gmsh/gmsh/-/issues/627
-        int cntsolid = 0;
-        for (TopExp_Explorer e(shape1, TopAbs_SOLID); e.More(); e.Next())
-          cntsolid++;
-        for (TopExp_Explorer e(shape2, TopAbs_SOLID); e.More(); e.Next())
-          cntsolid++;
-        if (cntsolid == 0)
-          {
+        // int cntsolid = 0;
+        // for (TopExp_Explorer e(shape1, TopAbs_SOLID); e.More(); e.Next())
+        //   cntsolid++;
+        // for (TopExp_Explorer e(shape2, TopAbs_SOLID); e.More(); e.Next())
+        //   cntsolid++;
+        // if (cntsolid == 0)
+        //   {
             ShapeUpgrade_UnifySameDomain unify(fused, true, true, true);
             unify.Build();
 
@@ -966,9 +966,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             // PropagateProperties (unify, fused);
             
             return unify.Shape();
-          }
-        else
-          return fused;
+        //   }
+        // else
+        //   return fused;
       }, "fuses shapes")
     .def("__radd__", [] (const TopoDS_Shape & shape, int i) // for sum([shapes])
          { return shape; }, "needed for Sum([shapes])")
