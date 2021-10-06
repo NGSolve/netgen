@@ -61,6 +61,7 @@ namespace netgen
     clipplane_isolinelist = 0;
     surface_vector_list = 0;
     isosurface_list = 0;
+    numtexturecols = 8;
 
     fieldlineslist = 0;
     pointcurvelist = 0;
@@ -387,7 +388,7 @@ namespace netgen
 
     BuildScene();
 
-    CreateTexture (numtexturecols, lineartexture, 0.5, GL_MODULATE);
+    CreateTexture (GetVSSolution().numtexturecols, lineartexture, 0.5, GL_MODULATE);
 
     glClearColor(backcolor, backcolor, backcolor, 1);
     // glClearColor(backcolor, backcolor, backcolor, 0);
