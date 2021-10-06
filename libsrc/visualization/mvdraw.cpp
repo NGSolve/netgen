@@ -494,8 +494,6 @@ namespace netgen
   void VisualScene :: CreateTexture (int ncols, int linear, double alpha, int typ)
   {
     if (linear) ncols = 32;
-    else   ncols = 8;
-
 
     if (ntexcols != ncols) 
       {
@@ -576,7 +574,7 @@ namespace netgen
   {
     if (!vispar.drawcolorbar) return;
 
-    CreateTexture (8, linear, 1, GL_DECAL);
+    CreateTexture (GetVSSolution().numtexturecols, linear, 1, GL_DECAL);
 
     if (logscale && maxval <= 0) maxval = 1;
     if (logscale && minval <= 0) minval = 1e-4 * maxval;

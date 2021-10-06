@@ -1282,6 +1282,13 @@ proc visual_dialog { } {
             -validatecommand "Ng_Vis_Set parameters; redraw;my_validatespinbox %W %P 10" \
             -command "Ng_Vis_Set parameters; redraw;" \
             -invalidcommand "my_invalidspinbox %W;Ng_Vis_Set parameters; redraw" -from -1e10 -to 1e10 -increment 0.001
+
+
+        ttk::label $w.as.lncols -text "N Colors"
+	ttk::spinbox $w.as.snumcols -textvariable visoptions.numtexturecols -width 5 -validate focus \
+            -command "Ng_Vis_Set parameters; redraw;" \
+            -from 2 -to 31 -increment 1
+
             
         #tixControl $w.as.minval -label "Min-value: " -integer false \
 	    -variable visoptions.mminval \
@@ -1301,7 +1308,7 @@ proc visual_dialog { } {
 	#    }	
 
 	pack $w.as -fill x -pady 5 -ipady 3
-	grid $w.as.autoscale $w.as.lmin $w.as.smin $w.as.lmax $w.as.smax -sticky nw -padx 4
+	grid $w.as.autoscale $w.as.lmin $w.as.smin $w.as.lmax $w.as.smax $w.as.lncols $w.as.snumcols -sticky nw -padx 4
         grid columnconfigure $w.as 0 -pad 20
         grid columnconfigure $w.as 2 -pad 20
         grid anchor $w.as center 
@@ -1592,11 +1599,6 @@ proc visual_dialog { } {
 	ttk::checkbutton $w.fcb.cb.lineartexture -text "Use Linear Texture" \
 	    -variable visoptions.lineartexture \
 	    -command { Ng_Vis_Set parameters; redraw }
-	
-	scale $w.numcols -orient horizontal -length 100 -from 0 -to 50 \
-	    -resolution 1   \
-	    -variable  visoptions.numtexturecols \
-	    -command { popupcheckredraw visual_dialog_pop1 }
 
 	ttk::checkbutton $w.fcb.cb.showclipsolution -text "Draw Clipping Plane Solution" \
 	    -variable visoptions.showclipsolution \

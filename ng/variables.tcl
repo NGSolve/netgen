@@ -273,7 +273,7 @@ set visoptions.usetexture 1
 set visoptions.invcolor 0
 set visoptions.imaginary 0
 set visoptions.lineartexture 0
-set visoptions.numtexturecols 16
+set visoptions.numtexturecols 8
 set visoptions.showclipsolution 1
 set visoptions.showsurfacesolution 0
 set visoptions.drawfieldlines 0
