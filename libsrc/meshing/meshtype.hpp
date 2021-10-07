@@ -437,7 +437,7 @@ namespace netgen
 
   public:
     ///
-    Element2d ();
+    DLL_HEADER Element2d ();
     Element2d (const Element2d &) = default;
     Element2d (Element2d &&) = default;
     Element2d & operator= (const Element2d &) = default;
@@ -597,7 +597,7 @@ namespace netgen
     /// invert orientation
     inline void Invert ();
     ///
-    void Invert2 ();
+    DLL_HEADER void Invert2 ();
     /// first point number is smallest
     inline void NormalizeNumbering ();
     ///
