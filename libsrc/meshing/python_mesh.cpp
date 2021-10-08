@@ -994,15 +994,16 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             OptimizeVolume (mp, self);
           }, py::arg("mp"), py::call_guard<py::gil_scoped_release>())
 
-    .def ("OptimizeMesh2d", [](Mesh & self)
+    .def ("OptimizeMesh2d", [](Mesh & self, MeshingParameters* pars)
           {
             self.CalcLocalH(0.5);
             MeshingParameters mp;
-            mp.optsteps2d = 5;
+            if(pars) mp = *pars;
+            else mp.optsteps2d = 5;
             if(!self.GetGeometry())
               throw Exception("Cannot optimize surface mesh without geometry!");
             Optimize2d (self, mp);
-          },py::call_guard<py::gil_scoped_release>())
+          }, py::arg("mp")=nullptr, py::call_guard<py::gil_scoped_release>())
     
     .def ("Refine", FunctionPointer
           ([](Mesh & self)
