@@ -1713,20 +1713,20 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     }, py::arg("c"), py::arg("r"), "create sphere with center 'c' and radius 'r'");
   
   m.def("Cylinder", [] (gp_Pnt cpnt, gp_Dir cdir, double r, double h,
-                        std::string bot, std::string top, std::string mantle) {
+                        optional<string> bot, optional<string> top, optional<string> mantle) {
     auto builder = BRepPrimAPI_MakeCylinder (gp_Ax2(cpnt, cdir), r, h);
-    if(mantle != "")
-      OCCGeometry::global_shape_properties[builder.Face().TShape()].name = mantle;
+    if(mantle)
+      OCCGeometry::global_shape_properties[builder.Face().TShape()].name = *mantle;
     auto pyshape = py::cast(builder.Solid());
     gp_Vec v = cdir;
-    if(bot != "")
-      pyshape.attr("faces").attr("Min")(v).attr("name") = bot;
-    if(top != "")
-      pyshape.attr("faces").attr("Max")(v).attr("name") = top;
+    if(bot)
+      pyshape.attr("faces").attr("Min")(v).attr("name") = *bot;
+    if(top)
+      pyshape.attr("faces").attr("Max")(v).attr("name") = *top;
     return pyshape;
     }, py::arg("p"), py::arg("d"), py::arg("r"), py::arg("h"),
-        py::arg("bot") = "", py::arg("top") = "",
-        py::arg("mantle") = "",
+        py::arg("bottom") = nullopt, py::arg("top") = nullopt,
+        py::arg("mantle") = nullopt,
     "create cylinder with base point 'p', axis direction 'd', radius 'r', and height 'h'");
   
   m.def("Cylinder", [] (gp_Ax2 ax, double r, double h) {
