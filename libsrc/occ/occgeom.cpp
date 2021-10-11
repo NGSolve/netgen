@@ -411,7 +411,8 @@ namespace netgen
             // Set the original colour of the face to the newly created 
             // face (after the healing process)
             face = TopoDS::Face (exp0.Current());
-            face_colours->SetColor(face,face_colour,XCAFDoc_ColorSurf);
+            if(face_colours)
+              face_colours->SetColor(face,face_colour,XCAFDoc_ColorSurf);
          }
          shape = rebuild->Apply(shape);
       }
