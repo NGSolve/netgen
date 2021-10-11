@@ -115,6 +115,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
     .def("__add__", [](gp_Vec v1, gp_Vec v2) { return v1+v2; }) 
     .def("__sub__", [](gp_Vec v1, gp_Vec v2) { return v1-v2; }) 
     .def("__rmul__", [](gp_Vec v, double s) { return s*v; }) 
+    .def("__mul__", [](gp_Vec v1, gp_Vec v2) { return v1*v2; })
     .def("__neg__", [](gp_Vec v) { return -v; }) 
     .def("__xor__", [](gp_Vec v1, gp_Vec v2) { return v1^v2; })
     
