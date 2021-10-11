@@ -348,7 +348,7 @@ namespace netgen
     }
 
     MeshPoint (const Point<3> & ap, int alayer = 1, POINTTYPE apt = INNERPOINT)
-      : Point<3> (ap), layer(alayer), singular(0.),type(apt) 
+      : Point<3> (ap), singular(0.), layer(alayer), type(apt) 
     { 
       ;
     }
