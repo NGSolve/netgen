@@ -14,7 +14,7 @@ endif(WIN32)
 if(USE_GUI)
 
     add_library(gui SHARED
-        gui.cpp ngpkg.cpp demoview.cpp parallelfunc.cpp
+        gui.cpp ngpkg.cpp demoview.cpp parallelfunc.cpp ngtcl.cpp
         ../libsrc/stlgeom/stlpkg.cpp ../libsrc/visualization/visualpkg.cpp
         ../libsrc/csg/csgpkg.cpp ../libsrc/geom2d/geom2dpkg.cpp
         ../libsrc/occ/occpkg.cpp ../libsrc/occ/vsocc.cpp
@@ -83,5 +83,9 @@ if(USE_GUI)
   endif()
 
   add_subdirectory(Togl2.1)
+  install(FILES
+    ngtcl.hpp
+    DESTINATION ${NG_INSTALL_DIR_INCLUDE} COMPONENT netgen_devel
+  )
 endif(USE_GUI)
 
