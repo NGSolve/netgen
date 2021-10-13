@@ -1,6 +1,8 @@
 #ifdef NG_PYTHON
 #ifdef OCCGEOMETRY
 
+#include <regex>
+
 #include <../general/ngpython.hpp>
 #include <core/python_ngcore.hpp>
 #include "../meshing/python_mesh.hpp"
@@ -1551,9 +1553,10 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("__getitem__",[](const ListOfShapes & self, string name)
          {
            ListOfShapes selected;
+           std::regex pattern(name);
            for (auto s : self)
              if (auto sname = OCCGeometry::global_shape_properties[s.TShape()].name)
-               if (sname == name)
+               if (std::regex_match(*sname, pattern))
                  selected.push_back(s);
            return selected;
          }, "returns list of all shapes named 'name'")
