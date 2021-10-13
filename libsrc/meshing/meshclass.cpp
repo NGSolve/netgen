@@ -2,6 +2,7 @@
 #include <atomic>
 #include <set>
 #include "meshing.hpp"
+#include "../general/gzstream.h"
 
 #ifdef NG_PYTHON
 // must be included to instantiate Archive::Shallow(NetgenGeometry&)

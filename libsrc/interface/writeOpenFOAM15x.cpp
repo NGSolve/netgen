@@ -30,6 +30,7 @@
 #include <meshing.hpp>
 #include <sys/stat.h>
 
+#include "../general/gzstream.h"
 
 namespace netgen
 {

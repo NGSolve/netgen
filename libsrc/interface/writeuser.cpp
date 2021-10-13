@@ -11,6 +11,7 @@
 #include <meshing.hpp>
 
 #include "writeuser.hpp"
+#include "../general/gzstream.h"
 
 
 namespace netgen
