@@ -1909,6 +1909,18 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           
           return builder.Shape();
         }, py::arg("shape"), "glue together shapes from shape, typically a compound");
+  m.def("Fuse", [](const vector<TopoDS_Shape>& shapes) -> TopoDS_Shape
+  {
+    auto s = shapes[0];
+    for(auto i : Range(size_t(1), shapes.size()))
+      {
+        BRepAlgoAPI_Fuse builder(s, shapes[i]);
+        PropagateProperties(builder, s);
+        PropagateProperties(builder, shapes[i]);
+        s = builder.Shape();
+      }
+    return s;
+  });
 
 
   // py::class_<Handle(Geom_TrimmedCurve)> (m, "Geom_TrimmedCurve")
