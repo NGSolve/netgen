@@ -1435,9 +1435,9 @@ namespace netgen
         if (seg.GetNP() == 2)
           {
             if (x)
-              *x = Point<3,T>((1-xi) * Vec<3>(mesh[seg.PNums()[0]]) + xi * Vec<3>(mesh[seg.PNums()[1]]));
+              *x = Point<3,T>(xi * Vec<3>(mesh[seg.PNums()[0]]) + (1-xi) * Vec<3>(mesh[seg.PNums()[1]]));
             if (dxdxi)
-              *dxdxi = Vec<3>(mesh[seg.PNums()[1]])-Vec<3>(mesh[seg.PNums()[0]]);
+              *dxdxi = Vec<3>(mesh[seg.PNums()[0]])-Vec<3>(mesh[seg.PNums()[1]]);
           }
         else
           {
@@ -1448,8 +1448,10 @@ namespace netgen
                                 + 2*xi*(xi-0.5) * Vec<3>(mesh[seg.PNums()[0]]));
               }
             if (dxdxi)
-              *dxdxi = T(1.0) * (Vec<3>(mesh[seg.PNums()[1]])-Vec<3>(mesh[seg.PNums()[0]]))
+              *dxdxi = (4*xi-1)*Vec<3>(mesh[seg.PNums()[0]])
+                + (4*xi-3)*Vec<3>(mesh[seg.PNums()[1]])
                 + (4-8*xi)*Vec<3>(mesh[seg.PNums()[2]]);
+
           }
         return;
       }
