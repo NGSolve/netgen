@@ -7168,7 +7168,10 @@ namespace netgen
         nel[i] = point_map[el[i]];
 
       if(!(nel==el))
-        nm.AddSurfaceElement(nel);
+        {
+          nel.Invert();
+          nm.AddSurfaceElement(nel);
+        }
     }
 
     for (auto ei : Range(LineSegments()))
@@ -7189,6 +7192,7 @@ namespace netgen
         nm.AddSegment(nel);
     }
 
+    nm.ComputeNVertices();
     return nm_;
   }
 
