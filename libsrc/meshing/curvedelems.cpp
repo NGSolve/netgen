@@ -1429,6 +1429,31 @@ namespace netgen
     info.order = order;
     info.ndof = info.nv = 2;
 
+    if (order == 1)
+      {
+        auto & seg = mesh.LineSegment(elnr);
+        if (seg.GetNP() == 2)
+          {
+            if (x)
+              *x = Point<3,T>((1-xi) * Vec<3>(mesh[seg.PNums()[0]]) + xi * Vec<3>(mesh[seg.PNums()[1]]));
+            if (dxdxi)
+              *dxdxi = Vec<3>(mesh[seg.PNums()[1]])-Vec<3>(mesh[seg.PNums()[0]]);
+          }
+        else
+          {
+            if (x)
+              {
+                *x = Point<3,T>(2*(xi-1)*(xi-0.5) * Vec<3>(mesh[seg.PNums()[1]])
+                                + 4*xi*(1-xi) * Vec<3>(mesh[seg.PNums()[2]])
+                                + 2*xi*(xi-0.5) * Vec<3>(mesh[seg.PNums()[0]]));
+              }
+            if (dxdxi)
+              *dxdxi = T(1.0) * (Vec<3>(mesh[seg.PNums()[1]])-Vec<3>(mesh[seg.PNums()[0]]))
+                + (4-8*xi)*Vec<3>(mesh[seg.PNums()[2]]);
+          }
+        return;
+      }
+    
     if (info.order > 1)
       {
 	const MeshTopology & top = mesh.GetTopology();

@@ -43,7 +43,7 @@ namespace netgen
     Point (const Point<D,T2> & p2)
     { for (int i = 0; i < D; i++) x[i] = p2(i); }
 
-    explicit Point (const Vec<D> & v)
+    explicit Point (const Vec<D,T> & v)
     { for (int i = 0; i < D; i++) x[i] = v(i); }
 
 

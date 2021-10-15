@@ -110,6 +110,7 @@ namespace netgen
 				   EDGEPOINT);
 	    between.Set (i2, el[2]);
 	  }
+        el.SetCurved(true);
       }
 
     // refine surface elements

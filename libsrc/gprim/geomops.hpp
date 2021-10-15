@@ -78,6 +78,15 @@ namespace netgen
     return res;
   }
 
+  template <int D, int SW>
+  inline Vec<D, SIMD<double,SW>> operator* (SIMD<double,SW> s, Vec<D,double> b)
+  {
+    Vec<D,SIMD<double,SW>> res;
+    for (int i = 0; i < D; i++)
+      res(i) = s * b(i);
+    return res;
+  }
+  
 
   template <int D>
   inline double operator* (Vec<D> a, Vec<D> b)
