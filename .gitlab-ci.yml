@@ -9,6 +9,7 @@ push_github_sourceforge:
   tags:
     - linux
     - docker
+    - bash
   script:
     - git remote add sourceforge ssh://mhochste@git.code.sf.net/p/netgen-mesher/git || true
     - git remote add github git@github.com:NGSolve/netgen.git || true
@@ -94,6 +95,7 @@ cleanup_win:
 .template_ubuntu: &ubuntu
   tags:
     - linux
+    - bash
   before_script:
     - pwd
     - ls
@@ -195,6 +197,7 @@ cleanup_ubuntu:
   stage: cleanup
   tags:
     - linux
+    - bash
   script:
     # remove intermediate and old docker images and containers
     - docker rm -f `docker ps --no-trunc -aq`
