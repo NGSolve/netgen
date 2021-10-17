@@ -7129,6 +7129,7 @@ namespace netgen
       return fabs(v*n_plane) < eps;
     };
 
+    /*
     auto mirror = [&] (PointIndex pi) -> PointIndex
     {
       auto & p = m[pi];
@@ -7151,14 +7152,51 @@ namespace netgen
 
     for(auto pi : Range(points))
       point_map[pi] = mirror(pi);
+    */
 
-    for(auto & el : VolumeElements())
-    {
-      auto nel = el;
+    Array<PointIndex, PointIndex> point_map(GetNP());
+    Array<PointIndex, PointIndex> point_map1(GetNP());
+
+    nm.Points().SetSize(0);
+    
+    for(auto pi : Range(points))
+      {
+        auto & p = m[pi];
+        
+        auto v = p_plane-p;
+        auto l = v.Length();
+
+        if(l < eps || fabs(v*n_plane)/l < eps)
+          {
+            auto npi = nm.AddPoint(p, p.GetLayer(), p.Type());
+            point_map[pi] = npi;
+            point_map1[pi] = npi;
+          }
+        else
+          {
+            auto new_point = p + 2*(v*n_plane)*n_plane;
+            point_map1[pi] = nm.AddPoint(p, p.GetLayer(), p.Type());
+            point_map[pi] = nm.AddPoint( new_point, p.GetLayer(), p.Type() );
+          }
+      }
+    
+    for(auto & el : nm.VolumeElements())
       for(auto i : Range(el.GetNP()))
-        nel[i] = point_map[el[i]];
-      nm.AddVolumeElement(nel);
-    }
+        el[i] = point_map1[el[i]];
+    for(auto & el : nm.SurfaceElements())
+      for(auto i : Range(el.GetNP()))
+        el[i] = point_map1[el[i]];
+    for(auto & el : nm.LineSegments())
+      for(auto i : Range(el.GetNP()))
+        el[i] = point_map1[el[i]];
+    
+    for(auto & el : VolumeElements())
+      {
+        auto nel = el;
+        for(auto i : Range(el.GetNP()))
+          nel[i] = point_map[el[i]];
+        nm.AddVolumeElement(nel);
+      }
 
     for (auto ei : Range(SurfaceElements()))
     {
