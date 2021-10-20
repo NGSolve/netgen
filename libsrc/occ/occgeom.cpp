@@ -1590,8 +1590,8 @@ namespace netgen
          occgeo->snames[occgeo->somap.FindIndex(solid)-1] = name;
       }
 
-      occgeo->fnames.SetSize(fmap.Size());
-      occgeo->enames.SetSize(emap.Size());
+      occgeo->fnames.SetSize(occgeo->fmap.Size());
+      occgeo->enames.SetSize(occgeo->emap.Size());
       for (exp0.Init(occgeo->shape, TopAbs_FACE); exp0.More(); exp0.Next())
       {
          TopoDS_Face face = TopoDS::Face(exp0.Current());
