@@ -1578,6 +1578,7 @@ namespace netgen
       
       
       timer_getnames.Start();
+      occgeo->snames.SetSize(occgeo->somap.Size());
       for (exp0.Init(occgeo->shape, TopAbs_SOLID); exp0.More(); exp0.Next())
       {
          TopoDS_Solid solid = TopoDS::Solid(exp0.Current());
@@ -1586,25 +1587,28 @@ namespace netgen
          name = shape_names[solid.TShape()];
          if (name == "")
            name = string("domain_") + ToString(occgeo->snames.Size());
-         occgeo->snames.Append(name);
+         occgeo->snames[occgeo->somap.FindIndex(solid)-1] = name;
       }
 
+      occgeo->fnames.SetSize(fmap.Size());
+      occgeo->enames.SetSize(emap.Size());
       for (exp0.Init(occgeo->shape, TopAbs_FACE); exp0.More(); exp0.Next())
       {
          TopoDS_Face face = TopoDS::Face(exp0.Current());
          // name = STEP_GetEntityName(face,&reader);
          // cout << "getname = " << name << ", mapname = " << shape_names[face.TShape()] << endl;
          name = shape_names[face.TShape()];
+         auto index = occgeo->fmap.FindIndex(face);
          if (name == "")
-           name = string("bc_") + ToString(occgeo->fnames.Size());
-         occgeo->fnames.Append(name);
+           name = string("bc_") + ToString(index);
+         occgeo->fnames[index-1] = name;
          for (exp1.Init(face, TopAbs_EDGE); exp1.More(); exp1.Next())
            {
              TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
              // name = STEP_GetEntityName(edge,&reader);
              // cout << "getname = " << name << ", mapname = " << shape_names[edge.TShape()] << endl;
              name = shape_names[edge.TShape()];
-             occgeo->enames.Append(name);
+             occgeo->enames[occgeo->emap.FindIndex(edge)-1] = name;
            }
       }
       timer_getnames.Stop();      
