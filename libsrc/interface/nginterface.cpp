@@ -8,6 +8,8 @@
 #include "../sockets/sockets.hpp"
 #endif
 
+#include "../general/gzstream.h"
+
 #include "nginterface.h"
 // #include "../visualization/soldata.hpp"
 // #include <visual.hpp>

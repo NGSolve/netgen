@@ -12,6 +12,7 @@
 // #include <geometry2d.hpp>
 #include <../interface/writeuser.hpp>
 #include <../include/nginterface.h>
+#include <../general/gzstream.h>
 
 
 class ClearSolutionClass

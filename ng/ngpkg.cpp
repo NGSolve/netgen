@@ -22,6 +22,8 @@ The interface between the GUI and the netgen library
 #include "../libsrc/sockets/socketmanager.hpp"
 #endif
 
+#include "../libsrc/general/gzstream.h"
+
 
 // to be sure to include the 'right' togl-version
 #include "Togl2.1/togl.h"

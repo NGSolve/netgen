@@ -4,6 +4,7 @@
 #include <core/python_ngcore.hpp>
 #include <csg.hpp>
 #include "../meshing/python_mesh.hpp"
+#include "../general/gzstream.h"
 
 
 using namespace netgen;
