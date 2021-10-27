@@ -3,6 +3,9 @@
   This file is a modification of tkAppInit.c from the Tcl/Tk package
 */
 
+#undef USE_TCL_STUBS
+#undef USE_TK_STUBS
+
 #include <mystdlib.h> 
 #include <inctcl.hpp>
 #include <meshing.hpp>

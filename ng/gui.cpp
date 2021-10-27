@@ -17,6 +17,8 @@ extern "C" void Ng_TclCmd(string);
 // tcl package dynamic load
 extern "C" int NGCORE_API_EXPORT Gui_Init (Tcl_Interp * interp)
 {
+  Tcl_InitStubs( interp, TCL_VERSION, 0 );
+  Tk_InitStubs( interp, TK_VERSION, 0 );
   if (Ng_Init(interp) == TCL_ERROR) {
     cerr << "Problem in Ng_Init: " << endl;
     cout << "result = " << Tcl_GetStringResult (interp) << endl;

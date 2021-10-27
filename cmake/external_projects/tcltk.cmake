@@ -1,3 +1,68 @@
+if(UNIX AND NOT APPLE)
+  set (LINUX TRUE)
+endif()
+if(LINUX)
+    find_package(TclStub 8.5 REQUIRED)
+else(LINUX)
+if(SKBUILD)
+# we are building a pip package - download the tcl/tk sources matching the tkinter version (for private headers not shipped with python)
+
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -c 
+"import tkinter;print(tkinter.Tcl().eval('info patchlevel').replace('.','-'))"
+OUTPUT_VARIABLE PYTHON_TCL_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+set(TCL_DIR ${CMAKE_CURRENT_BINARY_DIR}/dependencies/src/project_tcl)
+set(TK_DIR ${CMAKE_CURRENT_BINARY_DIR}/dependencies/src/project_tk)
+
+ExternalProject_Add(project_tcl
+  URL "https://github.com/tcltk/tcl/archive/refs/tags/core-${PYTHON_TCL_VERSION}.zip"
+  UPDATE_COMMAND ""
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND ""
+  INSTALL_COMMAND ""
+  ${SUBPROJECT_ARGS}
+  DOWNLOAD_DIR download_tcl
+)
+ExternalProject_Add(project_tk
+  URL "https://github.com/tcltk/tk/archive/refs/tags/core-${PYTHON_TCL_VERSION}.zip"
+  UPDATE_COMMAND ""
+  CONFIGURE_COMMAND ""
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ${CMAKE_COMMAND} -E copy_directory macosx generic
+  ${SUBPROJECT_ARGS}
+  DOWNLOAD_DIR download_tk
+  BUILD_IN_SOURCE 1
+)
+
+set(TCL_INCLUDE_PATH ${TCL_DIR}/generic)
+set(TK_INCLUDE_PATH ${TK_DIR}/generic;${TK_DIR}/xlib;${TK_DIR}/win)
+list(APPEND NETGEN_DEPENDENCIES project_tcl project_tk)
+
+if(APPLE OR WIN32)
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys; print(sys.prefix)" OUTPUT_VARIABLE PYTHON_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+    file(TO_CMAKE_PATH ${PYTHON_PREFIX} PYTHON_PREFIX)
+
+    set(tcl_find_args
+        REQUIRED
+        NO_DEFAULT_PATH
+        NO_PACKAGE_ROOT_PATH
+        NO_CMAKE_PATH
+        NO_CMAKE_ENVIRONMENT_PATH
+        NO_SYSTEM_ENVIRONMENT_PATH
+        NO_CMAKE_SYSTEM_PATH
+        NO_CMAKE_FIND_ROOT_PATH
+        HINTS ${PYTHON_PREFIX}/lib ${PYTHON_PREFIX}/tcl
+        )
+    find_library(TCL_STUB_LIBRARY NAMES tclstub85 tclstub8.5 tclstub86 tclstub8.6 ${tcl_find_args})
+    find_library(TK_STUB_LIBRARY NAMES tkstub85 tkstub8.5 tkstub86 tkstub8.6 ${tcl_find_args})
+    find_library(TCL_LIBRARY NAMES tcl85 tcl8.5 tcl86 tcl8.6 tcl86t ${tcl_find_args})
+    find_library(TK_LIBRARY NAMES tk85 tk8.5 tk86 tk8.6 tk86t ${tcl_find_args})
+else()
+    # use system tcl/tk on linux
+    find_package(TclStub REQUIRED)
+endif()
+
+else(SKBUILD)
 if(APPLE)
   set(tcl_prefix ${CMAKE_INSTALL_PREFIX})
   # URL "http://sourceforge.net/projects/tcl/files/Tcl/8.6.9/tcl8.6.9-src.tar.gz"
@@ -10,10 +75,7 @@ if(APPLE)
     CONFIGURE_COMMAND ../project_tcl/macosx/configure --enable-threads --enable-framework --prefix=${tcl_prefix} --libdir=${tcl_prefix}/Contents/Frameworks --bindir=${tcl_prefix}/Contents/Frameworks/Tcl.framework/bin
     BUILD_COMMAND make -j4 binaries libraries
     INSTALL_COMMAND make install-binaries install-headers install-libraries install-private-headers
-    LOG_DOWNLOAD 1
-    LOG_BUILD 1
-    LOG_CONFIGURE 1
-    LOG_INSTALL 1
+    ${SUBPROJECT_ARGS}
     )
 
   # URL "http://sourceforge.net/projects/tcl/files/Tcl/8.6.9/tk8.6.9.1-src.tar.gz"
@@ -27,10 +89,7 @@ if(APPLE)
     CONFIGURE_COMMAND ../project_tk/macosx/configure --enable-aqua=yes --enable-threads --enable-framework --prefix=${tcl_prefix} --libdir=${tcl_prefix}/Contents/Frameworks --bindir=${tcl_prefix}/Contents/Frameworks/Tcl.framework/bin --with-tcl=${tcl_prefix}/Contents/Frameworks/Tcl.framework
     BUILD_COMMAND make -j4 binaries libraries
     INSTALL_COMMAND make install-binaries install-headers install-libraries install-private-headers
-    LOG_DOWNLOAD 1
-    LOG_BUILD 1
-    LOG_CONFIGURE 1
-    LOG_INSTALL 1
+    ${SUBPROJECT_ARGS}
     )
 
   ExternalProject_Add(project_tkdnd
@@ -45,10 +104,7 @@ if(APPLE)
            -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}/Contents/MacOS
 	   -DTCL_INCLUDE_PATH=${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Tcl.framework/Headers
 	   -DTK_INCLUDE_PATH=${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Tk.framework/Headers
-    LOG_DOWNLOAD 1
-    LOG_CONFIGURE 1
-    LOG_BUILD 1
-    LOG_INSTALL 1
+    ${SUBPROJECT_ARGS}
   )
 
   list(APPEND NETGEN_DEPENDENCIES project_tcl project_tk project_tkdnd)
@@ -125,13 +181,15 @@ elseif(WIN32)
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory . ${CMAKE_INSTALL_PREFIX}
-    LOG_DOWNLOAD 1
+    ${SUBPROJECT_ARGS}
     )
 
   set (TK_INCLUDE_PATH ${CMAKE_INSTALL_PREFIX}/include)
   set (TCL_INCLUDE_PATH ${CMAKE_INSTALL_PREFIX}/include)
   set (TCL_LIBRARY ${CMAKE_INSTALL_PREFIX}/lib/tcl86t.lib)
   set (TK_LIBRARY ${CMAKE_INSTALL_PREFIX}/lib/tk86t.lib)
+  set (TCL_STUB_LIBRARY ${CMAKE_INSTALL_PREFIX}/lib/tclstub86.lib)
+  set (TK_STUB_LIBRARY ${CMAKE_INSTALL_PREFIX}/lib/tkstub86.lib)
 
   list(APPEND NETGEN_DEPENDENCIES project_win_tcltk)
 else(WIN32)
@@ -148,6 +206,8 @@ else(WIN32)
 # )
 # list(APPEND NETGEN_DEPENDENCIES project_tkdnd)
 endif(APPLE)
+endif(SKBUILD)
+endif(LINUX)
 
 # Propagate settings to Netgen subproject
-set_vars(NETGEN_CMAKE_ARGS TCL_INCLUDE_PATH TCL_LIBRARY TK_LIBRARY TK_INCLUDE_PATH TCL_TCLSH TK_WISH)
+set_vars(NETGEN_CMAKE_ARGS TCL_INCLUDE_PATH TCL_STUB_LIBRARY TCL_LIBRARY TK_STUB_LIBRARY TK_LIBRARY TK_INCLUDE_PATH TCL_TCLSH TK_WISH)

@@ -13,6 +13,8 @@ if sys.platform.startswith('win'):
 del sys
 del os
 
+from .version import __version__
+
 from . import libngpy
 
 def Redraw(*args, **kwargs):

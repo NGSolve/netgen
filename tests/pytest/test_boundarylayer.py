@@ -57,7 +57,7 @@ def test_boundarylayer2(outside, version, capfd):
     mesh.BoundaryLayer("default", [layersize, layersize], "part", domains="part", outside=outside)
     assert mesh.ne == should_ne
     assert not "elements are not matching" in capfd.readouterr().out
-    import netgen.gui
+    # import netgen.gui
     ngs = pytest.importorskip("ngsolve")
     ngs.Draw(ngs.Mesh(mesh))
     mesh = ngs.Mesh(mesh)
