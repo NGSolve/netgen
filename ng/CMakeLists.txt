@@ -20,30 +20,31 @@ if(USE_GUI)
         ../libsrc/occ/occpkg.cpp ../libsrc/occ/vsocc.cpp
     )
 
+    target_link_libraries( gui PUBLIC nglib )
+    target_link_libraries( gui PRIVATE ${LIBTOGL} ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} )
+    target_link_libraries( gui PRIVATE ${TCL_STUB_LIBRARY} ${TK_STUB_LIBRARY})
+
+    if(NOT BUILD_FOR_CONDA)
     add_executable(netgen ngappinit.cpp)
     if(WIN32)
       target_sources(netgen PRIVATE ../windows/netgen.rc)
-    endif(WIN32)
-
-    target_link_libraries( gui PUBLIC nglib )
-    target_link_libraries( gui PRIVATE ${LIBTOGL} ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} )
-    if(NOT APPLE)
-      target_link_libraries( gui PRIVATE ${TCL_LIBRARY} ${TK_LIBRARY})
-    endif(NOT APPLE)
-
-    target_link_libraries( netgen nglib gui netgen_python ${MPI_mpi_LIBRARY} ${MPI_CXX_LIBRARIES} ${LIBTOGL} ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} ${TK_LIBRARY} ${TCL_LIBRARY})
-
-    if(NOT WIN32)
+    else(WIN32)
       target_link_libraries( netgen mesh stlvis stl geom2dvis interface geom2d csg stl visual csgvis )
-      target_link_libraries( gui PUBLIC mesh stlvis stl geom2dvis interface geom2d csg stl visual csgvis )
-    endif(NOT WIN32)
-
+    endif(WIN32)
+    target_link_libraries( netgen nglib gui netgen_python ${MPI_mpi_LIBRARY} ${MPI_CXX_LIBRARIES} ${LIBTOGL} ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} ${TK_LIBRARY} ${TCL_LIBRARY})
     install(TARGETS netgen ${NG_INSTALL_DIR})
-    install(TARGETS gui ${NG_INSTALL_DIR})
-
     if(APPLE)
         set_target_properties(netgen PROPERTIES OUTPUT_NAME netgen)
     endif(APPLE)
+    target_link_libraries( netgen ${PYTHON_LIBRARIES})
+    endif(NOT BUILD_FOR_CONDA)
+
+    if(NOT WIN32)
+      target_link_libraries( gui PUBLIC mesh stlvis stl geom2dvis interface geom2d csg stl visual csgvis )
+    endif(NOT WIN32)
+
+    install(TARGETS gui ${NG_INSTALL_DIR})
+
     if(WIN32)
         set_target_properties( gui PROPERTIES OUTPUT_NAME libgui )
     endif(WIN32)
@@ -52,14 +53,6 @@ if(USE_GUI)
 endif(USE_GUI)
 
 if(USE_PYTHON)
-    if(USE_GUI)
-        if(${BUILD_FOR_CONDA} AND UNIX AND NOT APPLE)
-            target_link_libraries( netgen -Wl,--no-as-needed ${PYTHON_LIBRARIES})
-        elseif()
-            target_link_libraries( netgen ${PYTHON_LIBRARIES})
-        endif()
-    endif()
-
     add_library(ngpy SHARED netgenpy.cpp)
     target_link_libraries( ngpy PUBLIC nglib PRIVATE "$<BUILD_INTERFACE:netgen_python>" )
     if(APPLE)

@@ -11,20 +11,11 @@ def StartGUI():
     win.tk.eval('load "'+netgen._netgen_lib_dir.replace('\\','/')+'/libgui[info sharedlibextension]" gui')
     win.tk.eval( netgen.libngpy._meshing._ngscript)
 
-    try:
-        from IPython import get_ipython
-        ipython = get_ipython()
-        ipython.magic('gui tk')
-    except:
-        pass
     
 if not netgen.libngpy._meshing._netgen_executable_started:
     import os
     if not "NETGEN_DOCUMENTATION_RST_FORMAT" in os.environ:
-        try:
-            StartGUI()
-        except:
-            pass
+        StartGUI()
 
 def Snapshot(w,h, filename=None):
     netgen.Redraw(blocking=True)

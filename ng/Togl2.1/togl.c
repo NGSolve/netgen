@@ -14,6 +14,15 @@
  * Currently we support X11, Win32 and Mac OS X only
  */
 
+#ifndef MODULE_SCOPE
+#   ifdef __cplusplus
+#       define MODULE_SCOPE extern "C"
+#   else
+#       define MODULE_SCOPE extern
+#   endif
+#endif
+
+
 #define USE_TOGL_STUB_PROCS
 #include "togl.h"
 #include <tkInt.h>   // don't need it on osx ???

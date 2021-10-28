@@ -2,6 +2,7 @@ stages:
   - build
   - test
   - test_ngsolve
+  - deploy
   - cleanup
 
 push_github_sourceforge:
@@ -268,3 +269,36 @@ cleanup_mac:
   allow_failure: true
   needs: ["test_mac"]
 
+pip_linux:
+  image: quay.io/pypa/manylinux2014_x86_64
+  stage: build
+  tags:
+    - pip
+    - linux
+    - docker
+  script:
+    - ./tests/build_pip.sh
+  when: manual
+
+pip_windows:
+  stage: build
+  tags:
+    - pip
+    - windows
+  script:
+    - .\tests\build_pip.ps1 C:\Python38
+    - .\tests\build_pip.ps1 C:\Python39
+    - .\tests\build_pip.ps1 C:\Python310
+  when: manual
+
+pip_macos:
+  stage: build
+  tags:
+    - pip
+    - macosx
+    - m1
+  script:
+    - ./tests/build_pip_mac.sh 3.8
+    #- ./tests/build_pip_mac.sh 3.9
+    - ./tests/build_pip_mac.sh 3.10
+  when: manual

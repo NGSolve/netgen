@@ -9,6 +9,8 @@ else(WIN32)
   cmake_minimum_required(VERSION 3.8)
 endif(WIN32)
 
+cmake_policy(VERSION 3.12)
+
 option( USE_NATIVE_ARCH  "build for native cpu architecture" ON)
 
 option( USE_GUI     "don't build netgen with GUI" ON )
@@ -189,6 +191,10 @@ install(EXPORT netgen-targets DESTINATION ${NG_INSTALL_DIR_CMAKE} COMPONENT netg
 
 set(CMAKE_MACOSX_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH "${NG_RPATH_TOKEN};${NG_RPATH_TOKEN}/${NETGEN_RPATH}")
+if(BUILD_FOR_CONDA)
+    file(RELATIVE_PATH py_rpath "/bin" "/${NG_INSTALL_DIR_LIB}")
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH};${py_rpath}")
+endif(BUILD_FOR_CONDA)
 
 include (CheckIncludeFiles)
 check_include_files (dlfcn.h HAVE_DLFCN_H)
@@ -236,6 +242,7 @@ include_directories(${ZLIB_INCLUDE_DIRS})
 #######################################################################
 if (USE_GUI)
     find_package(TCL 8.5 REQUIRED)
+    find_package(TclStub 8.5 REQUIRED)
     find_package(Threads REQUIRED)
     if(APPLE)
           set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -framework AppKit")
@@ -244,7 +251,7 @@ if (USE_GUI)
     endif(APPLE)
     find_package(OpenGL REQUIRED)
 
-    add_definitions(-DTCL -DOPENGL -DUSE_TOGL_2)
+    add_definitions(-DTCL -DOPENGL -DUSE_TOGL_2 -DUSE_TCL_STUBS -DUSE_TK_STUBS)
     include_directories(${TCL_INCLUDE_PATH})
     include_directories(${TK_INCLUDE_PATH})
     set(LIBTOGL togl)
@@ -277,7 +284,7 @@ if (USE_PYTHON)
     endif( PYBIND_INCLUDE_DIR )
 
     target_include_directories(netgen_python INTERFACE ${PYBIND_INCLUDE_DIR} ${PYTHON_INCLUDE_DIRS})
-    if(NOT ${BUILD_FOR_CONDA})
+    if(NOT ${BUILD_FOR_CONDA} OR WIN32)
         # Don't link python libraries in conda environments
         target_link_libraries(netgen_python INTERFACE ${PYTHON_LIBRARIES})
     endif()
@@ -314,7 +321,7 @@ install(TARGETS netgen_mpi netgen_metis ${NG_INSTALL_DIR})
 
 #######################################################################
 if (USE_OCC)
-    find_package(OpenCasCade NAMES OpenCASCADE opencascade REQUIRED)
+    find_package(OpenCascade NAMES OpenCASCADE opencascade REQUIRED CMAKE_FIND_ROOT_PATH_BOTH)
     add_definitions(-DOCCGEOMETRY)
     set(OCC_LIBRARIES
       TKBO
@@ -352,8 +359,17 @@ if (USE_OCC)
     )
     include_directories(${OpenCASCADE_INCLUDE_DIR})
     if(NOT OpenCASCADE_BUILD_SHARED_LIBS)
-      find_library( FREETYPE NAMES freetype )
+      find_library( FREETYPE NAMES freetype HINTS ${OpenCASCADE_INSTALL_PREFIX}/lib)
       list(APPEND OCC_LIBRARIES ${FREETYPE})
+      if(UNIX AND NOT APPLE)
+        set(THREADS_PREFER_PTHREAD_FLAG ON)
+        find_package(Threads REQUIRED)
+        list(APPEND OCC_LIBRARIES Threads::Threads)
+        find_package(Fontconfig REQUIRED)
+        list(APPEND OCC_LIBRARIES ${Fontconfig_LIBRARIES})
+        list(PREPEND OCC_LIBRARIES -Wl,--start-group)
+        list(APPEND OCC_LIBRARIES -Wl,--end-group)
+      endif()
     endif()
     message(STATUS "OCC DIRS ${OpenCASCADE_INCLUDE_DIR}")
 endif (USE_OCC)

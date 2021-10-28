@@ -1,19 +1,58 @@
 include (ExternalProject)
 
+option( BUILD_ZLIB "Build and link static version of zlib (usefull for pip binaries)" OFF )
+option( BUILD_OCC "Build and link static version of occ (usefull for pip binaries)" OFF )
 set_property (DIRECTORY PROPERTY EP_PREFIX dependencies)
 
 set (NETGEN_DEPENDENCIES)
 set (LAPACK_DEPENDENCIES)
 set (NETGEN_CMAKE_ARGS "" CACHE INTERNAL "")
+set (SUBPROJECT_CMAKE_ARGS "" CACHE INTERNAL "")
+set (SUBPROJECT_ARGS
+    LOG_DOWNLOAD ON
+    LOG_BUILD ON
+    LOG_INSTALL ON
+    LOG_CONFIGURE ON
+    LIST_SEPARATOR |
+    PREFIX ${CMAKE_CURRENT_BINARY_DIR}/dependencies
+)
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.14.0")
+    set (SUBPROJECT_LOG_SETTINGS
+        ${SUBPROJECT_LOG_SETTINGS}
+        LOG_OUTPUT_ON_FAILURE 1
+        LOG_MERGED_STDOUTERR 1
+    )
+endif()
+
+
+set (NETGEN_CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} )
 
 macro(set_vars VAR_OUT)
   foreach(varname ${ARGN})
     if(NOT "${${varname}}" STREQUAL "")
-      string(REPLACE ";" "$<SEMICOLON>" varvalue "${${varname}}" )
-      set(${VAR_OUT} ${${VAR_OUT}};-D${varname}=${varvalue} CACHE INTERNAL "")
+      string(REPLACE ";" "|" varvalue "${${varname}}" )
+      set(${VAR_OUT} "${${VAR_OUT}};-D${varname}=${varvalue}" CACHE INTERNAL "")
     endif()
   endforeach()
 endmacro()
+#######################################################################
+
+set_vars(SUBPROJECT_CMAKE_ARGS CMAKE_OSX_DEPLOYMENT_TARGET)
+set_vars(SUBPROJECT_CMAKE_ARGS CMAKE_OSX_SYSROOT)
+set_vars(SUBPROJECT_CMAKE_ARGS CMAKE_OSX_ARCHITECTURES)
+set_vars(SUBPROJECT_CMAKE_ARGS CMAKE_C_COMPILER)
+set_vars(SUBPROJECT_CMAKE_ARGS CMAKE_CXX_COMPILER)
+set_vars(SUBPROJECT_CMAKE_ARGS CMAKE_BUILD_TYPE)
+
+set(SUBPROJECT_CMAKE_ARGS "${SUBPROJECT_CMAKE_ARGS};-DCMAKE_POSITION_INDEPENDENT_CODE=ON" CACHE INTERNAL "")
+
+if(USE_CCACHE)
+  find_program(CCACHE_FOUND NAMES ccache ccache.bat)
+  if(CCACHE_FOUND)
+      set(SUBPROJECT_CMAKE_ARGS "${SUBPROJECT_CMAKE_ARGS};-DCMAKE_CXX_COMPILER_LAUNCHER=${CCACHE_FOUND}" CACHE INTERNAL "")
+  endif()
+endif()
+
 #######################################################################
 set (DEPS_DOWNLOAD_URL "https://github.com/NGSolve/ngsolve_dependencies/releases/download/v1.0.0" CACHE STRING INTERNAL)
 set (OCC_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/occ75_win64.zip" CACHE STRING INTERNAL)
@@ -21,6 +60,7 @@ set (TCLTK_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/tcltk_win64.zip" CACHE STRING 
 set (ZLIB_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/zlib_win64.zip" CACHE STRING INTERNAL)
 set (CGNS_DOWNLOAD_URL_WIN "${DEPS_DOWNLOAD_URL}/cgns_win64.zip" CACHE STRING INTERNAL)
 set (CGNS_DOWNLOAD_URL_MAC "${DEPS_DOWNLOAD_URL}/cgns_mac.zip" CACHE STRING INTERNAL)
+
 
 if(UNIX)
   message("Checking for write permissions in install directory...")
@@ -31,10 +71,94 @@ if(UNIX)
   endif()
 endif(UNIX)
 
-if(NOT WIN32)
-    find_package(ZLIB REQUIRED)
-    set_vars(NETGEN_CMAKE_ARGS ZLIB_INCLUDE_DIRS ZLIB_LIBRARIES)
-endif(NOT WIN32)
+if(USE_OCC)
+if(BUILD_OCC)
+  set(OCC_DIR ${CMAKE_CURRENT_BINARY_DIR}/dependencies/occ)
+
+  ExternalProject_Add(project_freetype
+    URL https://github.com/freetype/freetype/archive/refs/tags/VER-2-11-0.zip
+    URL_MD5 f58ef6a7affb7794c4f125d98e0e6a25
+    DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
+    ${SUBPROJECT_ARGS}
+    CMAKE_ARGS
+         -DCMAKE_INSTALL_PREFIX=${OCC_DIR}
+         -DBUILD_SHARED_LIBS:BOOL=OFF
+         -DCMAKE_DISABLE_FIND_PACKAGE_ZLIB=TRUE
+         -DCMAKE_DISABLE_FIND_PACKAGE_BZip2=TRUE
+         -DCMAKE_DISABLE_FIND_PACKAGE_PNG=TRUE
+         -DCMAKE_DISABLE_FIND_PACKAGE_HarfBuzz=TRUE
+         -DCMAKE_DISABLE_FIND_PACKAGE_BrotliDec=TRUE
+         ${SUBPROJECT_CMAKE_ARGS}
+    UPDATE_COMMAND ""
+    )
+
+  ExternalProject_Add(project_occ
+    DEPENDS project_freetype
+    URL https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_5_0.zip
+    URL_MD5 a24e6d3cf2d24bf9347d2d4aee9dd80a
+    DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
+    ${SUBPROJECT_ARGS}
+    CMAKE_ARGS
+         -DCMAKE_INSTALL_PREFIX=${OCC_DIR}
+         -DCMAKE_PREFIX_PATH=${OCC_DIR}
+         -DBUILD_LIBRARY_TYPE:STRING=Static
+         -DBUILD_MODULE_FoundationClasses:BOOL=ON
+         -DBUILD_MODULE_ModelingData:BOOL=ON
+         -DBUILD_MODULE_ModelingAlgorithms:BOOL=ON
+         -DBUILD_MODULE_Visualization:BOOL=ON
+         -DBUILD_MODULE_DataExchange:BOOL=ON
+         -DBUILD_MODULE_ApplicationFramework:BOOL=OFF
+         -DBUILD_MODULE_Draw:BOOL=OFF
+         -DUSE_FREETYPE=OFF
+         ${SUBPROJECT_CMAKE_ARGS}
+    UPDATE_COMMAND ""
+    )
+
+  list(APPEND NETGEN_DEPENDENCIES project_occ)
+  set(OpenCascade_ROOT ${OCC_DIR})
+else(BUILD_OCC)
+    if(WIN32 AND NOT OCC_INCLUDE_DIR AND NOT OpenCASCADE_DIR)
+        # we can download prebuilt occ binaries for windows
+        ExternalProject_Add(win_download_occ
+          ${SUBPROJECT_ARGS}
+          URL ${OCC_DOWNLOAD_URL_WIN}
+          UPDATE_COMMAND "" # Disable update
+          BUILD_IN_SOURCE 1
+          CONFIGURE_COMMAND ""
+          BUILD_COMMAND ""
+          INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory . ${CMAKE_INSTALL_PREFIX}
+          )
+        list(APPEND NETGEN_DEPENDENCIES win_download_occ)
+    else()
+        find_package(OpenCascade NAMES OpenCasCade OpenCASCADE opencascade REQUIRED)
+    endif()
+endif(BUILD_OCC)
+endif(USE_OCC)
+
+if(BUILD_ZLIB)
+  set(ZLIB_DIR ${CMAKE_CURRENT_BINARY_DIR}/dependencies/zlib)
+  ExternalProject_Add(project_zlib
+    ${SUBPROJECT_ARGS}
+    URL https://github.com/madler/zlib/archive/refs/tags/v1.2.11.zip
+    URL_MD5 9d6a627693163bbbf3f26403a3a0b0b1
+    DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
+    CMAKE_ARGS
+         -DCMAKE_INSTALL_PREFIX=${ZLIB_DIR}
+         ${SUBPROJECT_CMAKE_ARGS}
+    UPDATE_COMMAND "" # Disable update
+    BUILD_IN_SOURCE 1
+    )
+
+  list(APPEND NETGEN_DEPENDENCIES project_zlib)
+  list(APPEND NETGEN_CMAKE_PREFIX_PATH ${ZLIB_DIR})
+  if(WIN32)
+    # force linking the static library
+    set(ZLIB_INCLUDE_DIRS ${ZLIB_DIR}/include)
+    set(ZLIB_LIBRARIES ${ZLIB_DIR}/lib/zlibstatic.lib)
+  endif(WIN32)
+else()
+    include(cmake/external_projects/zlib.cmake)
+endif()
 
 #######################################################################
 if (USE_PYTHON)
@@ -65,27 +189,6 @@ endif (USE_PYTHON)
 
 #######################################################################
 
-if(USE_OCC)
-    if(WIN32 AND NOT OCC_INCLUDE_DIR AND NOT OpenCASCADE_DIR)
-        ExternalProject_Add(win_download_occ
-          PREFIX ${CMAKE_CURRENT_BINARY_DIR}/tcl
-          URL ${OCC_DOWNLOAD_URL_WIN}
-          UPDATE_COMMAND "" # Disable update
-          BUILD_IN_SOURCE 1
-          CONFIGURE_COMMAND ""
-          BUILD_COMMAND ""
-          INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory . ${CMAKE_INSTALL_PREFIX}
-          LOG_DOWNLOAD 1
-          )
-        list(APPEND NETGEN_DEPENDENCIES win_download_occ)
-    else()
-        find_package(OpenCasCade NAMES OpenCASCADE opencascade REQUIRED)
-    endif()
-endif(USE_OCC)
-
-#######################################################################
-
-include(cmake/external_projects/zlib.cmake)
 if(USE_GUI)
   include(cmake/external_projects/tcltk.cmake)
 endif(USE_GUI)
@@ -116,14 +219,10 @@ endif(USE_MPI)
 #######################################################################
 # propagate cmake variables to Netgen subproject
 set_vars( NETGEN_CMAKE_ARGS
-  CMAKE_CXX_COMPILER
-  CMAKE_BUILD_TYPE
   CMAKE_SHARED_LINKER_FLAGS
   CMAKE_SHARED_LINKER_FLAGS_RELEASE
   CMAKE_CXX_FLAGS
   CMAKE_CXX_FLAGS_RELEASE
-  CMAKE_OSX_DEPLOYMENT_TARGET
-  CMAKE_OSX_SYSROOT
 
   USE_GUI
   USE_PYTHON
@@ -140,7 +239,6 @@ set_vars( NETGEN_CMAKE_ARGS
   USE_INTERNAL_TCL
   INSTALL_PROFILES
   INTEL_MIC
-  CMAKE_PREFIX_PATH
   CMAKE_INSTALL_PREFIX
   ENABLE_UNIT_TESTS
   ENABLE_CPP_CORE_GUIDELINES_CHECK
@@ -151,7 +249,9 @@ set_vars( NETGEN_CMAKE_ARGS
   BUILD_STUB_FILES
   BUILD_FOR_CONDA
   NG_COMPILE_FLAGS
-  OpenCasCade_DIR
+  OpenCascade_ROOT
+  ZLIB_INCLUDE_DIRS
+  ZLIB_LIBRARIES
   )
 
 # propagate all variables set on the command line using cmake -DFOO=BAR
@@ -161,7 +261,8 @@ foreach(CACHE_VAR ${CACHE_VARS})
   get_property(CACHE_VAR_HELPSTRING CACHE ${CACHE_VAR} PROPERTY HELPSTRING)
   if(CACHE_VAR_HELPSTRING STREQUAL "No help, variable specified on the command line.")
     get_property(CACHE_VAR_TYPE CACHE ${CACHE_VAR} PROPERTY TYPE)
-    set(NETGEN_CMAKE_ARGS ${NETGEN_CMAKE_ARGS};-D${CACHE_VAR}:${CACHE_VAR_TYPE}=${${CACHE_VAR}} CACHE INTERNAL "")
+    string(REPLACE ";" "|" varvalue "${${CACHE_VAR}}" )
+    set(NETGEN_CMAKE_ARGS ${NETGEN_CMAKE_ARGS};-D${CACHE_VAR}:${CACHE_VAR_TYPE}=${varvalue} CACHE INTERNAL "")
   endif()
 endforeach()
 
@@ -171,19 +272,21 @@ else()
   set(NETGEN_BUILD_COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/netgen --config ${CMAKE_BUILD_TYPE})
 endif()
 
-if(DEFINED ENV{CI} AND WIN32)
-    set(log_output LOG_BUILD ON LOG_MERGED_STDOUTERR ON LOG_OUTPUT_ON_FAILURE ON)
-endif()
 
+string(REPLACE ";" "|" NETGEN_CMAKE_PREFIX_PATH_ALT_SEP "${NETGEN_CMAKE_PREFIX_PATH}")
 ExternalProject_Add (netgen
+  ${SUBPROJECT_ARGS}
   DEPENDS ${NETGEN_DEPENDENCIES}
   SOURCE_DIR ${PROJECT_SOURCE_DIR}
-  CMAKE_ARGS -DUSE_SUPERBUILD=OFF ${NETGEN_CMAKE_ARGS}
+  CMAKE_ARGS
+      -DUSE_SUPERBUILD=OFF
+      ${NETGEN_CMAKE_ARGS}
+      ${SUBPROJECT_CMAKE_ARGS}
+      -DCMAKE_PREFIX_PATH=${NETGEN_CMAKE_PREFIX_PATH_ALT_SEP}
   INSTALL_COMMAND ""
   BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/netgen
   BUILD_COMMAND ${NETGEN_BUILD_COMMAND}
   STEP_TARGETS build
-  ${log_output}
 )
 
 # Check if the git submodules (i.e. pybind11) are up to date
