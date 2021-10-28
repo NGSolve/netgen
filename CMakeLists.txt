@@ -480,9 +480,6 @@ add_subdirectory(tutorials)
 add_subdirectory(py_tutorials)
 add_subdirectory(doc)
 add_subdirectory(nglib)
-if (USE_PYTHON)
-  add_subdirectory(python)
-endif (USE_PYTHON)
 add_subdirectory(tests)
 
 #######################################################################
@@ -540,6 +537,9 @@ if(USE_NATIVE_ARCH)
     endif(APPLE)
 endif(USE_NATIVE_ARCH)
 
+if (USE_PYTHON)
+  add_subdirectory(python)
+endif (USE_PYTHON)
 
 #######################################################################
 # Debian packager

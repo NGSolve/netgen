@@ -1,5 +1,7 @@
+#include "ngcore_api.hpp"
 #include "utils.hpp"
 #include "logging.hpp"
+#include "simd_generic.hpp"
 
 #ifndef WIN32
 #include <cxxabi.h>
@@ -94,6 +96,20 @@ namespace ngcore
 
   int printmessage_importance = 0;
   bool NGSOStream :: glob_active = true;
+
+  NGCORE_API int GetCompiledSIMDSize()
+  {
+      return GetDefaultSIMDSize();
+  }
+
+  NGCORE_API bool IsRangeCheckEnabled()
+  {
+#ifdef NETGEN_ENABLE_CHECK_RANGE
+      return true;
+#else
+      return false;
+#endif
+  }
 
 } // namespace ngcore
 

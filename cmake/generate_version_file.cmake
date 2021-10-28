@@ -2,12 +2,17 @@ if(NOT BDIR)
   set(BDIR ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
-if(SKBUILD)
-    set(git_version_string ${GIT_NETGEN_VERSION})
-else(SKBUILD)
+if(NETGEN_VERSION_GIT)
+    set(git_version_string ${NETGEN_VERSION_GIT})
+else()
     find_package(Git REQUIRED)
-    execute_process(COMMAND git describe --tags --match "v[0-9]*" --long --dirty WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR} OUTPUT_VARIABLE git_version_string RESULT_VARIABLE status ERROR_QUIET)
-endif(SKBUILD)
+    execute_process(COMMAND git describe --tags --match "v[0-9]*" --long --dirty
+        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+        OUTPUT_VARIABLE git_version_string
+        RESULT_VARIABLE status
+        ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+endif()
 
 if(status AND NOT status EQUAL 0)
   if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/../version.txt)
@@ -63,15 +68,6 @@ if(EXISTS ${version_file})
   endif()
 else()
     file(WRITE ${BDIR}/netgen_version.hpp ${new_version_file_string})
-endif()
-
-
-set(py_version "${NETGEN_VERSION_MAJOR}.${NETGEN_VERSION_MINOR}.${NETGEN_VERSION_PATCH}")
-if(${NETGEN_VERSION_TWEAK} GREATER 0)
-    set(py_version "${py_version}.dev${NETGEN_VERSION_TWEAK}")
-endif()
-if(NOT SKBUILD)
-    file(WRITE ${CMAKE_CURRENT_SOURCE_DIR}/python/version.py "__version__ = \"${py_version}\"\n")
 endif()
 
 file(GENERATE OUTPUT netgen_config.hpp CONTENT
