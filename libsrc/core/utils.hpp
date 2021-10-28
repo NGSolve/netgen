@@ -198,6 +198,8 @@ namespace ngcore
     ~MyLock () { mutex.unlock(); }
   };
 
+  NGCORE_API int GetCompiledSIMDSize();
+  NGCORE_API bool IsRangeCheckEnabled();
 
 } // namespace ngcore
 
