@@ -8,6 +8,10 @@ def handle_arguments():
           imp.load_module('__main__', pyfile, argv[1], (".py", "r", imp.PY_SOURCE))
 
 def main():
+    try:
+        import ngsolve
+    except:
+        pass
     from .gui import win
     th = threading.Thread(target=handle_arguments)
     th.start()
