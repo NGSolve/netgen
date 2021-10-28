@@ -38,7 +38,8 @@ py_install_dir = get_python_lib(1,0,'').replace('\\','/')
 name = "netgen-mesher"
 arch = None
 cmake_args = [
-        f'-DGIT_NETGEN_VERSION={git_version}',
+        f'-DNETGEN_VERSION_GIT={git_version}',
+        f'-DNETGEN_VERSION_PYTHON={version}',
     ]
 
 if 'NETGEN_ARCH' in os.environ:
