@@ -319,7 +319,9 @@ namespace netgen
     for (int i = 1; i <= nvertices; i++)
       {
         gp_Pnt pnt = BRep_Tool::Pnt (TopoDS::Vertex(geom.vmap(i)));
+        double hpref = OCCGeometry::global_shape_properties[TopoDS::Vertex(geom.vmap(i)).TShape()].hpref;
         MeshPoint mp(occ2ng(pnt));
+        // mp.Singularity(hpref);
 
         bool exists = false;
         if (merge_solids)
@@ -331,13 +333,15 @@ namespace netgen
               }
 
         if (!exists)
-          mesh.AddPoint (mp);
+          {
+            mesh.AddPoint (mp);
+            mesh.Points().Last().Singularity(hpref);
+          }
         
         double maxh = OCCGeometry::global_shape_properties[TopoDS::Vertex(geom.vmap(i)).TShape()].maxh;
         mesh.RestrictLocalH (occ2ng(pnt), maxh);
       }
     tsearch.Stop();
-    
     (*testout) << "different vertices = " << mesh.GetNP() << endl;
 
     // int first_ep = mesh.GetNP()+1;
@@ -604,6 +608,8 @@ namespace netgen
                 (*testout) << "NP = " << mesh.GetNP() << endl;
                 //(*testout) << pnums[pnums.Size()-1] << endl;
 
+                double hpref = OCCGeometry::global_shape_properties[edge.TShape()].hpref;
+                
                 // for (size_t i = 1; i <= mp.Size()+1; i++)
                 for (size_t i = 1; i < pnums.Size(); i++)
                   {
@@ -632,6 +638,8 @@ namespace netgen
                     seg.epgeominfo[1].u = p2d2.X(); 
                     seg.epgeominfo[1].v = p2d2.Y(); 
 
+                    seg.singedge_left = hpref;
+                    seg.singedge_right = hpref;
                     /*
                       if (occface->IsUPeriodic())
                       {

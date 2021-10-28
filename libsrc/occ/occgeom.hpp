@@ -220,6 +220,7 @@ namespace netgen
     optional<string> name;
     optional<Vec<4>> col;
     double maxh = 1e99;
+    double hpref = 0;  // number of hp refinement levels (will be multiplied by factor later)
     void Merge(const ShapeProperties & prop2)
     {
       if (prop2.name) name = prop2.name;

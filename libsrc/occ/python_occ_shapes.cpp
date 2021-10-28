@@ -883,6 +883,17 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                       }
                   }, "maximal mesh-size for shape")
     
+    .def_property("hpref",
+                  [](const TopoDS_Shape& self)
+                  {
+                    return OCCGeometry::global_shape_properties[self.TShape()].hpref;
+                  },
+                  [](TopoDS_Shape& self, double val)
+                  {
+                    auto & hpref = OCCGeometry::global_shape_properties[self.TShape()].hpref;
+                    hpref = max2(val, hpref);
+                  }, "number of refinement levels for geometric refinement")
+    
     .def_property("col", [](const TopoDS_Shape & self) {
         auto it = OCCGeometry::global_shape_properties.find(self.TShape());
         Vec<4> col(0.2, 0.2, 0.2);
