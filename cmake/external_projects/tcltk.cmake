@@ -114,6 +114,22 @@ if(APPLE)
   set(TK_LIBRARY ${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Tk.framework)
   set(TK_INCLUDE_PATH ${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Tk.framework/Headers)
 
+  set(tcl_find_args
+      REQUIRED
+      NO_DEFAULT_PATH
+      NO_PACKAGE_ROOT_PATH
+      NO_CMAKE_PATH
+      NO_CMAKE_ENVIRONMENT_PATH
+      NO_SYSTEM_ENVIRONMENT_PATH
+      NO_CMAKE_SYSTEM_PATH
+      NO_CMAKE_FIND_ROOT_PATH
+      HINTS 
+      ${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Tcl.framework
+      ${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Tk.framework
+  )
+  find_library(TCL_STUB_LIBRARY NAMES tclstub85 tclstub8.5 tclstub86 tclstub8.6 ${tcl_find_args})
+  find_library(TK_STUB_LIBRARY NAMES tkstub85 tkstub8.5 tkstub86 tkstub8.6 ${tcl_find_args})
+
 #   # use system tcl/tk
 #   if((${PYTHON_VERSION_STRING} VERSION_EQUAL "3.7") OR (${PYTHON_VERSION_STRING} VERSION_GREATER "3.7"))
 #     # fetch tcl/tk sources to match the one used in Python 3.7
