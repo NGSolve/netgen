@@ -4,7 +4,7 @@ if(have_options)
     get_target_property(ngcore_compile_options ngcore INTERFACE_COMPILE_OPTIONS)
 endif(have_options)
 
-configure_file(config.py ${CMAKE_CURRENT_BINARY_DIR}/config.py @ONLY)
+configure_file(config_template.py ${CMAKE_CURRENT_BINARY_DIR}/config.py @ONLY)
 
 install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/config.py __main__.py __init__.py
