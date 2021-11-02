@@ -27,6 +27,8 @@
 #include <BRepAlgoAPI_Fuse.hxx>
 // #include <XCAFDoc_VisMaterialTool.hxx>
 #include <TDF_Attribute.hxx>
+#include <TDataStd_Real.hxx>
+#include <TDataStd_Name.hxx>
 #include <Standard_GUID.hxx>
 #include <Geom_TrimmedCurve.hxx>
 #include <Geom_Plane.hxx>
@@ -836,14 +838,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          }, py::arg("p"), py::arg("s"),
          "copy shape, and scale copy by factor 's'")
 
-    .def("WriteStep", [](TopoDS_Shape shape, string filename)
-         {
-           STEPControl_Writer writer; 
-           writer.Transfer(shape, STEPControl_ManifoldSolidBrep); 
-           
-           // Translates TopoDS_Shape into manifold_solid_brep entity 
-           writer.Write(filename.c_str());
-         }, py::arg("filename"), "export shape in STEP - format")
+    .def("WriteStep", [](const TopoDS_Shape & shape, string & filename)
+            { step_utils::WriteSTEP(shape, filename); }
+         , py::arg("filename"), "export shape in STEP - format")
 
     .def("bc", [](const TopoDS_Shape & shape, const string & name)
          {

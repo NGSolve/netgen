@@ -30,6 +30,10 @@
 #include <Standard_Version.hxx>
 #endif
 
+#include <STEPConstruct.hxx>
+#include <Transfer_FinderProcess.hxx>
+#include <TDataStd_Name.hxx>
+
 #if OCC_VERSION_HEX < 0x070000
 // pass
 #elif OCC_VERSION_HEX < 0x070200
@@ -1571,6 +1575,7 @@ namespace netgen
           }
         // for (auto pair : shape_names)
         // cout << "name = " << pair.second << endl;
+        step_utils::LoadProperties(model, transProc);
       }
 
       for (auto [s,n] : shape_names)
@@ -1750,9 +1755,7 @@ namespace netgen
       }
     else if (strcmp (&filename[strlen(filename)-3], "stp") == 0)
       {
-	STEPControl_Writer writer;
-	writer.Transfer (shape, STEPControl_AsIs);
-	writer.Write (filename);
+          step_utils::WriteSTEP(*this, filename);
       }
     else if (strcmp (&filename[strlen(filename)-3], "stl") == 0)
       {
@@ -2105,6 +2108,125 @@ namespace netgen
   //    return OCCGenerateMesh (*this, mesh, mparam, occparam);
   //  }
   static RegisterClassForArchive<OCCGeometry, NetgenGeometry> regnggeo;
+
+  namespace step_utils
+  {
+      void LoadProperties(const Handle(Interface_InterfaceModel) model, Handle(Transfer_TransientProcess) transProc)
+      {
+        Standard_Integer nb = model->NbEntities();
+        for (Standard_Integer i = 1; i < nb; i++)
+          {
+            Handle(Standard_Transient) entity = model->Value(i);
+
+            auto item = Handle(StepRepr_CompoundRepresentationItem)::DownCast(entity);
+
+            if(item.IsNull())
+                continue;
+
+            string name = item->Name()->ToCString();
+            if(name != "netgen_geometry_properties")
+                continue;
+
+            auto shape_item = item->ItemElementValue(1);
+            Handle(Transfer_Binder) binder;
+            binder = transProc->Find(shape_item);
+            TopoDS_Shape shape = TransferBRep::ShapeResult(binder);
+            auto & prop = OCCGeometry::global_shape_properties[shape.TShape()];
+
+            auto nprops = item->NbItemElement();
+
+            for(auto i : Range(2, nprops+1))
+            {
+                auto prop_item = item->ItemElementValue(i);
+                string prop_name = prop_item->Name()->ToCString();
+
+                if(prop_name=="maxh")
+                    prop.maxh = Handle(StepRepr_ValueRepresentationItem)::DownCast(prop_item)
+                        ->ValueComponentMember()->Real();
+
+                if(prop_name=="opacity")
+                    (*prop.col)[3] = Handle(StepRepr_ValueRepresentationItem)::DownCast(prop_item)
+                        ->ValueComponentMember()->Real();
+
+                if(prop_name=="hpref")
+                    prop.hpref = Handle(StepRepr_ValueRepresentationItem)::DownCast(prop_item)
+                        ->ValueComponentMember()->Real();
+            }
+          }
+      }
+
+      void WriteProperties(const Handle(Interface_InterfaceModel) model, const Handle(Transfer_FinderProcess) finder, const TopoDS_Shape & shape)
+      {
+          static const ShapeProperties default_props;
+          Handle(StepRepr_RepresentationItem) item = STEPConstruct::FindEntity(finder, shape);
+          if(!item)
+              return;
+          auto prop = OCCGeometry::global_shape_properties[shape.TShape()];
+
+          if(auto n = prop.name)
+              item->SetName(MakeName(*n));
+
+          Array<Handle(StepRepr_RepresentationItem)> props;
+          props.Append(item);
+
+          if(auto maxh = prop.maxh; maxh != default_props.maxh)
+              props.Append( MakeReal(maxh, "maxh") );
+
+          if(auto col = prop.col)
+              props.Append( MakeReal((*col)[3], "opacity") );
+
+          if(auto hpref = prop.hpref; hpref != default_props.hpref)
+              props.Append( MakeReal(hpref, "hpref") );
+
+          if(props.Size()==1)
+              return;
+
+          for(auto & item : props.Range(1, props.Size()))
+              model->AddEntity(item);
+
+          auto compound = MakeCompound(props, "netgen_geometry_properties");
+          model->AddEntity(compound);
+      }
+
+      void WriteSTEP(const TopoDS_Shape & shape, string filename)
+      {
+          Interface_Static::SetCVal("write.step.schema", "AP242IS");
+          Interface_Static::SetIVal("write.step.assembly",1);
+          Handle(XCAFApp_Application) app = XCAFApp_Application::GetApplication();
+          Handle(TDocStd_Document) doc;
+
+          app->NewDocument("STEP-XCAF", doc);
+          Handle(XCAFDoc_ShapeTool) shapetool = XCAFDoc_DocumentTool::ShapeTool(doc->Main());
+          Handle(XCAFDoc_ColorTool) colortool = XCAFDoc_DocumentTool::ColorTool(doc->Main());
+          TDF_Label label = shapetool->NewShape();
+          shapetool->SetShape(label, shape);
+
+          Handle(XSControl_WorkSession) session = new XSControl_WorkSession;
+          STEPCAFControl_Writer writer(session);
+          const Handle(Interface_InterfaceModel) model = session->Model();
+
+          // Set colors (BEFORE transferring shape into step data structures)
+          for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
+            for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+              {
+                auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+                if(auto col = prop.col)
+                    colortool->SetColor(e.Current(), Quantity_Color((*col)[0], (*col)[1], (*col)[2], Quantity_TypeOfColor::Quantity_TOC_RGB), XCAFDoc_ColorGen);
+              }
+
+          // Transfer shape into step data structures -> now we can manipulate/add step representation items
+          writer.Transfer(doc, STEPControl_AsIs);
+
+          // Write all other properties
+          auto finder = session->TransferWriter()->FinderProcess();
+
+          for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
+            for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+                WriteProperties(model, finder, e.Current());
+
+          writer.Write(filename.c_str());
+      }
+  } // namespace step_utils
 }
 
 

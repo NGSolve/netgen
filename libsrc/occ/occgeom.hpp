@@ -85,6 +85,11 @@
 #include "IGESControl_Writer.hxx"
 #include "STEPControl_Writer.hxx"
 
+#include <StepRepr_ValueRepresentationItem.hxx>
+#include <StepRepr_IntegerRepresentationItem.hxx>
+#include <StepRepr_CompoundRepresentationItem.hxx>
+#include <StepBasic_MeasureValueMember.hxx>
+
 #include "StlAPI_Writer.hxx"
 #include "STEPControl_StepModelType.hxx"
 
@@ -228,6 +233,7 @@ namespace netgen
       maxh = min2(maxh, prop2.maxh);
     }
   };
+
 
   class OCCIdentification
   {
@@ -505,6 +511,53 @@ namespace netgen
   DLL_HEADER extern void OCCOptimizeSurface (OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam);
 
   DLL_HEADER extern void OCCFindEdges (const OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam);
+
+
+  namespace step_utils
+  {
+      inline Handle(TCollection_HAsciiString) MakeName (string s)
+      {
+          return new TCollection_HAsciiString(s.c_str());
+      };
+
+      inline Handle(StepRepr_RepresentationItem) MakeInt (int n, string name = "")
+      {
+          Handle(StepRepr_IntegerRepresentationItem) int_obj = new StepRepr_IntegerRepresentationItem;
+          int_obj->Init(MakeName(name), n);
+          return int_obj;
+      }
+
+      inline Handle(StepRepr_RepresentationItem) MakeReal (double val, string name = "")
+      {
+            Handle(StepBasic_MeasureValueMember) value_member = new StepBasic_MeasureValueMember;
+            value_member->SetReal(val);
+            Handle(StepRepr_ValueRepresentationItem) value_repr = new StepRepr_ValueRepresentationItem;
+            value_repr->Init(MakeName(name), value_member);
+            return value_repr;
+      }
+
+      inline Handle(StepRepr_RepresentationItem) MakeCompound( FlatArray<Handle(StepRepr_RepresentationItem)> items, string name = "" )
+      {
+            Handle(StepRepr_HArray1OfRepresentationItem) array_repr = new StepRepr_HArray1OfRepresentationItem(1,items.Size());
+
+            for(auto i : Range(items))
+                array_repr->SetValue(i+1, items[i]);
+
+            Handle(StepRepr_CompoundRepresentationItem) comp = new StepRepr_CompoundRepresentationItem;
+            comp->Init( MakeName(name), array_repr );
+            return comp;
+      }
+
+      void LoadProperties(const Handle(Interface_InterfaceModel) model, Handle(Transfer_TransientProcess) transProc);
+      void WriteProperties(const Handle(Interface_InterfaceModel) model, const Handle(Transfer_FinderProcess) finder, const TopoDS_Shape & shape);
+
+      void WriteSTEP(const TopoDS_Shape & shape, string filename);
+
+      inline void WriteSTEP(const OCCGeometry & geo, string filename)
+      {
+          WriteSTEP(geo.GetShape(), filename);
+      }
+  } // namespace step_utils
 }
 
 #endif
