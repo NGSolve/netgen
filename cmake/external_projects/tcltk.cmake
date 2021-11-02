@@ -114,8 +114,8 @@ if(APPLE)
   set(TK_LIBRARY ${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Tk.framework)
   set(TK_INCLUDE_PATH ${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Tk.framework/Headers)
 
-  set(TCL_STUB_LIBRARY ${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Tcl.framework/tclstub8.6.a)
-  set(TK_STUB_LIBRARY ${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Tk.framework/tkstub8.6.a)
+  set(TCL_STUB_LIBRARY ${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Tcl.framework/libtclstub8.6.a)
+  set(TK_STUB_LIBRARY ${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Tk.framework/libtkstub8.6.a)
 
 #   # use system tcl/tk
 #   if((${PYTHON_VERSION_STRING} VERSION_EQUAL "3.7") OR (${PYTHON_VERSION_STRING} VERSION_GREATER "3.7"))
