@@ -62,6 +62,7 @@ namespace netgen
     step_utils::WriteSTEP(_shape, filename);
     LoadOCCInto(this, filename);
     occdim = aoccdim;
+    std::remove(filename);
   }
 
   string STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * aReader)
