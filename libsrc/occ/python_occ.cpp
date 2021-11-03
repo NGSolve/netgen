@@ -119,7 +119,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     .def(py::init([] (const TopoDS_Shape& shape, int occdim)
                   {
                     auto geo = make_shared<OCCGeometry> (shape, occdim);
-                    ng_geometry = geo;
+                    // ng_geometry = geo;
                     
                     // geo->BuildFMap();
                     // geo->CalcBoundingBox();
