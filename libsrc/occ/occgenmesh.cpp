@@ -408,29 +408,11 @@ namespace netgen
 
         mesh.AddFaceDescriptor (FaceDescriptor(facenr, solidnr0, solidnr1, 0));
 
-        // Philippose - 06/07/2009
-        // Add the face colour to the mesh data
-        Quantity_Color face_colour;
+        Vec<4> col = OCCGeometry::global_shape_properties[face.TShape()].col.value_or(Vec<4>(0,1,0,1));
+        mesh.GetFaceDescriptor(facenr).SetSurfColour(col);
 
-        if(!(geom.face_colours.IsNull())
-           && (geom.face_colours->GetColor(face,XCAFDoc_ColorSurf,face_colour)))
-          {
-            mesh.GetFaceDescriptor(facenr).SetSurfColour({face_colour.Red(),face_colour.Green(),face_colour.Blue()});
-          }
-        else
-          {
-            auto it = OCCGeometry::global_shape_properties.find(face.TShape());
-            if (it != OCCGeometry::global_shape_properties.end() && it->second.col)
-              {
-                Vec<4> col = it->second.col.value_or(Vec<4>(0,1,0,1));
-                mesh.GetFaceDescriptor(facenr).SetSurfColour(col);                
-              }
-            else
-              mesh.GetFaceDescriptor(facenr).SetSurfColour({0.0,1.0,0.0});
-          }
-
-        if(geom.fnames.Size()>=facenr) 
-          mesh.GetFaceDescriptor(facenr).SetBCName(&geom.fnames[facenr-1]);
+        if(auto opt_name = geom.fprops[facenr-1]->name) 
+          mesh.GetFaceDescriptor(facenr).SetBCName(&*opt_name);
         mesh.GetFaceDescriptor(facenr).SetBCProperty(facenr);
         // ACHTUNG! STIMMT NICHT ALLGEMEIN (RG)
 
@@ -602,7 +584,7 @@ namespace netgen
                     alledgeparams[geomedgenr-1] = params;
                   }
 
-                auto name = geom.enames.Size() ? geom.enames[geom.emap.FindIndex(edge)-1] : "";
+                auto name = geom.eprops[geom.emap.FindIndex(edge)-1]->name.value_or("");
                 mesh.SetCD2Name(geomedgenr, name);
                   
                 (*testout) << "NP = " << mesh.GetNP() << endl;

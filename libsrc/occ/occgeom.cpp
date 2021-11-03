@@ -33,6 +33,12 @@
 #include <STEPConstruct.hxx>
 #include <Transfer_FinderProcess.hxx>
 #include <TDataStd_Name.hxx>
+#include <XCAFPrs.hxx>
+#include <TopoDS_Shape.hxx>
+#include <XCAFPrs_Style.hxx>
+#include <TopTools_ShapeMapHasher.hxx>
+#include <NCollection_IndexedDataMap.hxx>
+#include <StepShape_TopologicalRepresentationItem.hxx>
 
 #if OCC_VERSION_HEX < 0x070000
 // pass
@@ -45,47 +51,17 @@
 
 namespace netgen
 {
+  void LoadOCCInto(OCCGeometry* occgeo, const char* filename);
 
-  // std::map<Handle(TopoDS_TShape), string> OCCGeometry::global_shape_names;
-  // std::map<Handle(TopoDS_TShape), Vec<3>> OCCGeometry::global_shape_cols;
   std::map<Handle(TopoDS_TShape), ShapeProperties> OCCGeometry::global_shape_properties;
   std::map<Handle(TopoDS_TShape), std::vector<OCCIdentification>> OCCGeometry::identifications;
   
   OCCGeometry::OCCGeometry(const TopoDS_Shape& _shape, int aoccdim)
   {
-    shape = _shape;
+    auto filename = ".tmpfile_out.step";
+    step_utils::WriteSTEP(_shape, filename);
+    LoadOCCInto(this, filename);
     occdim = aoccdim;
-    changed = true;
-    BuildFMap();
-    CalcBoundingBox();
-
-    snames.SetSize(somap.Size());
-    for(auto i : Range(snames))
-      snames[i] = "domain_" + ToString(i+1);
-    for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
-      {
-         TopoDS_Solid solid = TopoDS::Solid(e.Current());
-         if (auto name = global_shape_properties[solid.TShape()].name)
-           snames[somap.FindIndex(solid)-1] = *name;
-      }
-
-    fnames.SetSize(fmap.Size());
-    for(auto i : Range(fnames))
-      fnames[i] = "bc_" + ToString(i+1);
-    for(TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
-      {
-         TopoDS_Face face = TopoDS::Face(e.Current());
-         if (auto name = global_shape_properties[face.TShape()].name)
-           fnames[fmap.FindIndex(face)-1] = *name;
-      }
-    enames.SetSize(emap.Size());
-    enames = "";
-    for (TopExp_Explorer e(shape, TopAbs_EDGE); e.More(); e.Next())
-      {
-        TopoDS_Edge edge = TopoDS::Edge(e.Current());
-        if (auto name = global_shape_properties[edge.TShape()].name)
-          enames[emap.FindIndex(edge)-1] = *name;
-      }
   }
 
   string STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * aReader)
@@ -142,8 +118,8 @@ namespace netgen
   void OCCGeometry :: FinalizeMesh(Mesh& mesh) const
   {
     for (int i = 0; i < mesh.GetNDomains(); i++)
-      if (snames.Size())
-        mesh.SetMaterial (i+1, snames[i]);
+      if (auto name = sprops[i]->name)
+        mesh.SetMaterial (i+1, *name);
   }
 
    void OCCGeometry :: PrintNrShapes ()
@@ -368,22 +344,10 @@ namespace netgen
          Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
          rebuild->Apply(shape);
 
-
          for (exp0.Init (shape, TopAbs_FACE); exp0.More(); exp0.Next())
          {
-            // Variable to hold the colour (if there exists one) of 
-            // the current face being processed
-            Quantity_Color face_colour;
-
             TopoDS_Face face = TopoDS::Face (exp0.Current());
-
-            if(face_colours.IsNull()
-               || (!(face_colours->GetColor(face,XCAFDoc_ColorSurf,face_colour))))
-            {
-               // Set the default face colour to green (Netgen Standard)
-               // if no colour has been defined for the face
-               face_colour = Quantity_Color(0.0,1.0,0.0,Quantity_TOC_RGB);
-            }
+            auto props = global_shape_properties[face.TShape()];
 
             sff = new ShapeFix_Face (face);
             sff->FixAddNaturalBoundMode() = Standard_True;
@@ -412,11 +376,9 @@ namespace netgen
                rebuild->Replace(face, newface);
             }
 
-            // Set the original colour of the face to the newly created 
+            // Set the original properties of the face to the newly created 
             // face (after the healing process)
-            face = TopoDS::Face (exp0.Current());
-            if(face_colours)
-              face_colours->SetColor(face,face_colour,XCAFDoc_ColorSurf);
+            global_shape_properties[face.TShape()];
          }
          shape = rebuild->Apply(shape);
       }
@@ -1058,6 +1020,28 @@ namespace netgen
       vsingular.SetSize (vmap.Extent());
 
       fsingular = esingular = vsingular = false;
+
+
+      sprops.SetSize(somap.Extent());
+      for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
+      {
+          auto s = e.Current();
+          sprops[somap.FindIndex(s)-1] = &global_shape_properties[s.TShape()];
+      }
+
+      fprops.SetSize(fmap.Extent());
+      for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
+      {
+          auto s = e.Current();
+          fprops[fmap.FindIndex(s)-1] = &global_shape_properties[s.TShape()];
+      }
+
+      eprops.SetSize(emap.Extent());
+      for (TopExp_Explorer e(shape, TopAbs_EDGE); e.More(); e.Next())
+      {
+          auto s = e.Current();
+          eprops[emap.FindIndex(s)-1] = &global_shape_properties[s.TShape()];
+      }
    }
 
 
@@ -1495,128 +1479,22 @@ namespace netgen
       timer_transfer.Stop();
 
       // Read in the shape(s) and the colours present in the STEP File
-      Handle(XCAFDoc_ShapeTool) step_shape_contents = XCAFDoc_DocumentTool::ShapeTool(step_doc->Main());
-      Handle(XCAFDoc_ColorTool) step_colour_contents = XCAFDoc_DocumentTool::ColorTool(step_doc->Main());
+      auto step_shape_contents = XCAFDoc_DocumentTool::ShapeTool(step_doc->Main());
 
       TDF_LabelSequence step_shapes;
       step_shape_contents->GetShapes(step_shapes);
 
-      // List out the available colours in the STEP File as Colour Names
-      TDF_LabelSequence all_colours;
-      step_colour_contents->GetColors(all_colours);
-      PrintMessage(1,"Number of colours in STEP File: ",all_colours.Length());
-      for(int i = 1; i <= all_colours.Length(); i++)
-      {
-         Quantity_Color col;
-         stringstream col_rgb;
-         step_colour_contents->GetColor(all_colours.Value(i),col);
-         col_rgb << " : (" << col.Red() << "," << col.Green() << "," << col.Blue() << ")";
-         PrintMessage(1, "Colour [", i, "] = ",col.StringName(col.Name()),col_rgb.str());
-      }
-
-
       // For the STEP File Reader in OCC, the 1st Shape contains the entire 
       // compound geometry as one shape
-      occgeo->shape = step_shape_contents->GetShape(step_shapes.Value(1));
-      occgeo->face_colours = step_colour_contents;
+      auto main_shape = step_shape_contents->GetShape(step_shapes.Value(1)); 
+
+      step_utils::LoadProperties(main_shape, reader, step_doc);
+
+      occgeo->shape = main_shape;
       occgeo->changed = 1;
       occgeo->BuildFMap();
-
       occgeo->CalcBoundingBox();
       PrintContents (occgeo);
-      string name;
-      TopExp_Explorer exp0,exp1;
-
-      
-      
-      std::map<Handle(TopoDS_TShape), string> shape_names;
-      {
-        static Timer t("file shape_names"); RegionTimer r(t);
-        // code inspired from 
-        // https://www.opencascade.com/content/reading-step-entity-id-slow
-        const Handle(XSControl_WorkSession) workSession = reader.Reader().WS();
-        const Handle(Interface_InterfaceModel) model = workSession->Model();
-        const Handle(XSControl_TransferReader) transferReader = workSession->TransferReader();
-        Handle(Transfer_TransientProcess) transProc = transferReader->TransientProcess();
-
-        Standard_Integer nb = model->NbEntities();
-        for (Standard_Integer i = 1; i < nb; i++)
-          {
-            Handle(Standard_Transient) entity = model->Value(i);
-            
-            // if (!entity->DynamicType()->SubType("StepShape_OpenShell")) continue;
-            
-            Handle(StepRepr_RepresentationItem) SRRI =
-              Handle(StepRepr_RepresentationItem)::DownCast(entity);
-            
-            if (SRRI.IsNull()) {
-              // cout << "no StepRepr_RepresentationItem found in " << entity->DynamicType()->Name();
-              continue;
-            }
-            Handle(TCollection_HAsciiString) hName = SRRI->Name();
-            string shapeName = hName->ToCString();
-            
-            // cout << "STEP " << i << " " << entity->DynamicType()->Name() << ", shapename = " << shapeName;
-            Handle(Transfer_Binder) binder;
-            if (!transProc->IsBound(SRRI)) {
-              // cout << "found unbound entity " << shapeName;
-              continue;
-            }
-            binder = transProc->Find(SRRI);
-            TopoDS_Shape shape = TransferBRep::ShapeResult(binder);
-            // if (!shape.IsNull())
-            shape_names[shape.TShape()] = shapeName;
-            /*
-            if (!shape.IsNull())
-              cout << " shapetype = " << shape.ShapeType() << endl;
-            else
-              cout << "is-Null" << endl;
-            */
-          }
-        // for (auto pair : shape_names)
-        // cout << "name = " << pair.second << endl;
-        step_utils::LoadProperties(model, transProc);
-      }
-
-      for (auto [s,n] : shape_names)
-        OCCGeometry::global_shape_properties[s].name = n;
-      
-      
-      timer_getnames.Start();
-      occgeo->snames.SetSize(occgeo->somap.Size());
-      for (exp0.Init(occgeo->shape, TopAbs_SOLID); exp0.More(); exp0.Next())
-      {
-         TopoDS_Solid solid = TopoDS::Solid(exp0.Current());
-         // name = STEP_GetEntityName(solid,&reader);
-         // cout << "solidname = " << name << ", mapname = " << shape_names[solid.TShape()] << endl;         
-         name = shape_names[solid.TShape()];
-         if (name == "")
-           name = string("domain_") + ToString(occgeo->snames.Size());
-         occgeo->snames[occgeo->somap.FindIndex(solid)-1] = name;
-      }
-
-      occgeo->fnames.SetSize(occgeo->fmap.Size());
-      occgeo->enames.SetSize(occgeo->emap.Size());
-      for (exp0.Init(occgeo->shape, TopAbs_FACE); exp0.More(); exp0.Next())
-      {
-         TopoDS_Face face = TopoDS::Face(exp0.Current());
-         // name = STEP_GetEntityName(face,&reader);
-         // cout << "getname = " << name << ", mapname = " << shape_names[face.TShape()] << endl;
-         name = shape_names[face.TShape()];
-         auto index = occgeo->fmap.FindIndex(face);
-         if (name == "")
-           name = string("bc_") + ToString(index);
-         occgeo->fnames[index-1] = name;
-         for (exp1.Init(face, TopAbs_EDGE); exp1.More(); exp1.Next())
-           {
-             TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
-             // name = STEP_GetEntityName(edge,&reader);
-             // cout << "getname = " << name << ", mapname = " << shape_names[edge.TShape()] << endl;
-             name = shape_names[edge.TShape()];
-             occgeo->enames[occgeo->emap.FindIndex(edge)-1] = name;
-           }
-      }
-      timer_getnames.Stop();      
   }
 
    // Philippose - 23/02/2009
@@ -1681,7 +1559,6 @@ namespace netgen
       // For the IGES Reader, all the shapes can be exported as one compound shape
       // using the "OneShape" member
       occgeo->shape = reader.OneShape();
-      occgeo->face_colours = iges_colour_contents;
       occgeo->changed = 1;
       occgeo->BuildFMap();
 
@@ -1725,12 +1602,6 @@ namespace netgen
          return NULL;
       }
 
-      // Philippose - 23/02/2009
-      // Fixed a bug in the OpenCascade XDE Colour handling when 
-      // opening BREP Files, since BREP Files have no colour data.
-      // Hence, the face_colours Handle needs to be created as a NULL handle.
-      occgeo->face_colours = Handle(XCAFDoc_ColorTool)();
-      occgeo->face_colours.Nullify();
       occgeo->changed = 1;
       occgeo->BuildFMap();
 
@@ -2111,9 +1982,59 @@ namespace netgen
 
   namespace step_utils
   {
-      void LoadProperties(const Handle(Interface_InterfaceModel) model, Handle(Transfer_TransientProcess) transProc)
+      void LoadProperties(const TopoDS_Shape & shape,
+                          const STEPCAFControl_Reader & reader,
+                          const Handle(TDocStd_Document) step_doc)
       {
+        static Timer t("step_utils::LoadProperties"); RegionTimer rt(t);
+
+        auto workSession = reader.Reader().WS();
+        auto model = workSession->Model();
+        auto transferReader = workSession->TransferReader();
+        auto transProc = transferReader->TransientProcess();
+        auto shapeTool = XCAFDoc_DocumentTool::ShapeTool(step_doc->Main());
+
+        // load colors
+        for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
+          for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+          {
+            TDF_Label label;
+            shapeTool->Search(e.Current(), label);
+
+            if(label.IsNull())
+                continue;
+
+            XCAFPrs_IndexedDataMapOfShapeStyle set;
+            TopLoc_Location loc;
+            XCAFPrs::CollectStyleSettings(label, loc, set);
+            XCAFPrs_Style aStyle;
+            set.FindFromKey(e.Current(), aStyle);
+
+            auto & prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+            if(aStyle.IsSetColorSurf())
+                prop.col = step_utils::ReadColor(aStyle.GetColorSurfRGBA());
+          }
+
+        // load names
         Standard_Integer nb = model->NbEntities();
+        for (Standard_Integer i = 1; i < nb; i++)
+          {
+            Handle(Standard_Transient) entity = model->Value(i);
+            auto item = Handle(StepRepr_RepresentationItem)::DownCast(entity);
+
+            if(item.IsNull())
+                continue;
+
+            TopoDS_Shape shape = TransferBRep::ShapeResult(transProc->Find(item));
+            string name = item->Name()->ToCString();
+            if (!transProc->IsBound(item))
+              continue;
+
+            OCCGeometry::global_shape_properties[shape.TShape()].name = name;
+          }
+
+
+        // load custom data (maxh etc.)
         for (Standard_Integer i = 1; i < nb; i++)
           {
             Handle(Standard_Transient) entity = model->Value(i);
@@ -2144,10 +2065,6 @@ namespace netgen
                     prop.maxh = Handle(StepRepr_ValueRepresentationItem)::DownCast(prop_item)
                         ->ValueComponentMember()->Real();
 
-                if(prop_name=="opacity")
-                    (*prop.col)[3] = Handle(StepRepr_ValueRepresentationItem)::DownCast(prop_item)
-                        ->ValueComponentMember()->Real();
-
                 if(prop_name=="hpref")
                     prop.hpref = Handle(StepRepr_ValueRepresentationItem)::DownCast(prop_item)
                         ->ValueComponentMember()->Real();
@@ -2171,9 +2088,6 @@ namespace netgen
 
           if(auto maxh = prop.maxh; maxh != default_props.maxh)
               props.Append( MakeReal(maxh, "maxh") );
-
-          if(auto col = prop.col)
-              props.Append( MakeReal((*col)[3], "opacity") );
 
           if(auto hpref = prop.hpref; hpref != default_props.hpref)
               props.Append( MakeReal(hpref, "hpref") );
@@ -2211,7 +2125,7 @@ namespace netgen
               {
                 auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
                 if(auto col = prop.col)
-                    colortool->SetColor(e.Current(), Quantity_Color((*col)[0], (*col)[1], (*col)[2], Quantity_TypeOfColor::Quantity_TOC_RGB), XCAFDoc_ColorGen);
+                    colortool->SetColor(e.Current(), step_utils::MakeColor(*col), XCAFDoc_ColorGen);
               }
 
           // Transfer shape into step data structures -> now we can manipulate/add step representation items
@@ -2226,6 +2140,7 @@ namespace netgen
 
           writer.Write(filename.c_str());
       }
+
   } // namespace step_utils
 }
 

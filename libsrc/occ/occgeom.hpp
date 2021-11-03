@@ -251,20 +251,13 @@ namespace netgen
   public:
     static std::map<Handle(TopoDS_TShape), ShapeProperties> global_shape_properties;
     static std::map<Handle(TopoDS_TShape), std::vector<OCCIdentification>> identifications;
-    // static std::map<Handle(TopoDS_TShape), string> global_shape_names;
-    // static std::map<Handle(TopoDS_TShape), Vec<3>> global_shape_cols;
-    
+
     TopoDS_Shape shape;
     TopTools_IndexedMapOfShape fmap, emap, vmap, somap, shmap, wmap;
     NgArray<bool> fsingular, esingular, vsingular;
     Box<3> boundingbox;
-    NgArray<string> fnames, enames, snames;
-    // Philippose - 29/01/2009
-    // OpenCascade XDE Support
-    // XCAF Handle to make the face colours available to the rest of
-    // the system
-    Handle(XCAFDoc_ColorTool) face_colours;
-     
+    Array<ShapeProperties*> fprops, eprops, sprops; // pointers to the gobal property map
+
     mutable int changed;
     mutable NgArray<int> facemeshstatus;
 
@@ -548,7 +541,21 @@ namespace netgen
             return comp;
       }
 
-      void LoadProperties(const Handle(Interface_InterfaceModel) model, Handle(Transfer_TransientProcess) transProc);
+      inline Quantity_ColorRGBA MakeColor(const Vec<4> & c)
+      {
+          return Quantity_ColorRGBA (c[0], c[1], c[2], c[3]);
+      }
+
+      inline Vec<4> ReadColor (const Quantity_ColorRGBA & c)
+      {
+          auto rgb = c.GetRGB();
+          return {rgb.Red(), rgb.Green(), rgb.Blue(), c.Alpha()};
+      }
+
+
+      void LoadProperties(const TopoDS_Shape & shape,
+                          const STEPCAFControl_Reader & reader,
+                          const Handle(TDocStd_Document) step_doc);
       void WriteProperties(const Handle(Interface_InterfaceModel) model, const Handle(Transfer_FinderProcess) finder, const TopoDS_Shape & shape);
 
       void WriteSTEP(const TopoDS_Shape & shape, string filename);
@@ -557,6 +564,9 @@ namespace netgen
       {
           WriteSTEP(geo.GetShape(), filename);
       }
+
+      // deep copy, also ensures consistent shape ordering (face numbers etc.)
+      TopoDS_Shape WriteAndRead(const TopoDS_Shape shape);
   } // namespace step_utils
 }
 
