@@ -549,29 +549,9 @@ namespace netgen
 
          if (!occgeometry->fvispar[i-1].IsHighlighted())
          {
-            // Philippose - 30/01/2009
-            // OpenCascade XDE Support
-            Quantity_Color face_colour;
-            // Philippose - 23/02/2009
-            // Check to see if colours have been extracted first!!
-            // Forum bug-fox (Jean-Yves - 23/02/2009)
-            if(!(occgeometry->face_colours.IsNull())
-               && (occgeometry->face_colours->GetColor(face,XCAFDoc_ColorSurf,face_colour)))
-            {
-               mat_col[0] = face_colour.Red();
-               mat_col[1] = face_colour.Green();
-               mat_col[2] = face_colour.Blue();
-            }
-            else
-            {
-               mat_col[0] = 0.0;
-               mat_col[1] = 1.0;
-               mat_col[2] = 0.0;
-            }
-
-            if(auto c = OCCGeometry::global_shape_properties[face.TShape()].col)
-              for(auto j : Range(4))
-                mat_col[j] = (*c)[j];
+            auto c = OCCGeometry::global_shape_properties[face.TShape()].col.value_or(Vec<4>(0,1,0,1) );
+            for(auto j : Range(4))
+               mat_col[j] = c[j];
          }
          else
          {
