@@ -48,6 +48,8 @@
 #include <GCE2d_MakeSegment.hxx>
 #include <GCE2d_MakeCircle.hxx>
 
+#include <Message.hxx>
+
 #if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
 #define OCC_HAVE_DUMP_JSON
 #endif
@@ -97,6 +99,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m);
 DLL_HEADER void ExportNgOCC(py::module &m) 
 {
   m.attr("occ_version") = OCC_VERSION_COMPLETE;
+
+  // suppress info messages from occ (like statistics on Transfer)
+  Message_Gravity aGravity = Message_Alarm;
+  for (Message_SequenceOfPrinters::Iterator aPrinterIter (Message::DefaultMessenger()->Printers());
+       aPrinterIter.More(); aPrinterIter.Next())
+  {
+    aPrinterIter.Value()->SetTraceLevel (aGravity);
+  }
 
   ExportNgOCCBasic(m);
   ExportNgOCCShapes(m);
