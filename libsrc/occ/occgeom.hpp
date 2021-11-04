@@ -520,6 +520,11 @@ namespace netgen
           return int_obj;
       }
 
+      inline int ReadInt (Handle(StepRepr_RepresentationItem) item)
+      {
+          return Handle(StepRepr_IntegerRepresentationItem)::DownCast(item)->Value();
+      }
+
       inline Handle(StepRepr_RepresentationItem) MakeReal (double val, string name = "")
       {
             Handle(StepBasic_MeasureValueMember) value_member = new StepBasic_MeasureValueMember;
@@ -528,6 +533,13 @@ namespace netgen
             value_repr->Init(MakeName(name), value_member);
             return value_repr;
       }
+
+      inline double ReadReal (Handle(StepRepr_RepresentationItem) item)
+      {
+          return Handle(StepRepr_ValueRepresentationItem)::DownCast(item)
+              ->ValueComponentMember()->Real();
+      }
+
 
       inline Handle(StepRepr_RepresentationItem) MakeCompound( FlatArray<Handle(StepRepr_RepresentationItem)> items, string name = "" )
       {
@@ -540,6 +552,9 @@ namespace netgen
             comp->Init( MakeName(name), array_repr );
             return comp;
       }
+
+      void WriteIdentifications(const Handle(Interface_InterfaceModel) model, const TopoDS_Shape & shape, const Handle(Transfer_FinderProcess) finder);
+      void ReadIdentifications(Handle(StepRepr_RepresentationItem) item, Handle(Transfer_TransientProcess) transProc);
 
       inline Quantity_ColorRGBA MakeColor(const Vec<4> & c)
       {
