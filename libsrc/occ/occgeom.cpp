@@ -58,11 +58,11 @@ namespace netgen
   
   OCCGeometry::OCCGeometry(const TopoDS_Shape& _shape, int aoccdim)
   {
-    auto filename = ".tmpfile_out.step";
-    step_utils::WriteSTEP(_shape, filename);
-    LoadOCCInto(this, filename);
+    auto filename = GetTempFilename();
+    step_utils::WriteSTEP(_shape, filename.c_str());
+    LoadOCCInto(this, filename.c_str());
     occdim = aoccdim;
-    std::remove(filename);
+    std::remove(filename.c_str());
   }
 
   string STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * aReader)
@@ -1650,24 +1650,24 @@ namespace netgen
         std::stringstream ss;
         STEPControl_Writer writer;
         writer.Transfer(shape, STEPControl_AsIs);
-        auto filename = ".tmpfile_out.step";
-        writer.Write(filename);
-        std::ifstream is(filename);
+        auto filename = GetTempFilename();
+        writer.Write(filename.c_str());
+        std::ifstream is(filename.c_str());
         ss << is.rdbuf();
         ar << ss.str();
-        std::remove(filename);
+        std::remove(filename.c_str());
       }
     else
       {
         std::string str;
         ar & str;
 
-        auto filename = ".tmpfile.step";
-        auto tmpfile = std::fopen(filename, "w");
+        auto filename = GetTempFilename();
+        auto tmpfile = std::fopen(filename.c_str(), "w");
         std::fputs(str.c_str(), tmpfile);
         std::fclose(tmpfile);
-        LoadOCCInto(this, filename);
-        std::remove(filename);
+        LoadOCCInto(this, filename.c_str());
+        std::remove(filename.c_str());
       }
   }
   
