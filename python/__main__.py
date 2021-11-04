@@ -8,6 +8,10 @@ def handle_arguments():
           imp.load_module('__main__', pyfile, argv[1], (".py", "r", imp.PY_SOURCE))
 
 def main():
+    import netgen
+    # Use Redraw without event handling
+    netgen.Redraw = netgen._Redraw
+
     try:
         import ngsolve
     except:
@@ -16,3 +20,6 @@ def main():
     th = threading.Thread(target=handle_arguments)
     th.start()
     win.tk.mainloop()
+
+if __name__ == "__main__":
+    sys.exit(main())

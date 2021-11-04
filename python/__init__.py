@@ -16,7 +16,9 @@ del os
 
 from . import libngpy
 
-def Redraw(*args, **kwargs):
+from .libngpy.meshvis import _Redraw
+
+def RedrawWithEventHandling(*args, **kwargs):
     try:
         if libngpy.meshvis._Redraw(*args, **kwargs):
             import netgen
@@ -27,4 +29,4 @@ def Redraw(*args, **kwargs):
     except:
         pass
 
-
+Redraw = RedrawWithEventHandling
