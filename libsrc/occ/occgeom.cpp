@@ -2045,14 +2045,16 @@ namespace netgen
             if(item.IsNull())
                 continue;
 
+            auto shape_item = item->ItemElementValue(1);
+            TopoDS_Shape shape = TransferBRep::ShapeResult(transProc->Find(shape_item));
             string name = item->Name()->ToCString();
+
+            if(name == "netgen_geometry_identification")
+                ReadIdentifications(item, transProc);
+
             if(name != "netgen_geometry_properties")
                 continue;
 
-            auto shape_item = item->ItemElementValue(1);
-            Handle(Transfer_Binder) binder;
-            binder = transProc->Find(shape_item);
-            TopoDS_Shape shape = TransferBRep::ShapeResult(binder);
             auto & prop = OCCGeometry::global_shape_properties[shape.TShape()];
 
             auto nprops = item->NbItemElement();
@@ -2093,14 +2095,75 @@ namespace netgen
           if(auto hpref = prop.hpref; hpref != default_props.hpref)
               props.Append( MakeReal(hpref, "hpref") );
 
-          if(props.Size()==1)
+          if(props.Size()>1)
+          {
+              for(auto & item : props.Range(1, props.Size()))
+                  model->AddEntity(item);
+
+              auto compound = MakeCompound(props, "netgen_geometry_properties");
+              model->AddEntity(compound);
+          }
+
+          WriteIdentifications(model, shape, finder);
+      }
+
+      void WriteIdentifications(const Handle(Interface_InterfaceModel) model, const TopoDS_Shape & shape, const Handle(Transfer_FinderProcess) finder)
+      {
+          Handle(StepRepr_RepresentationItem) item = STEPConstruct::FindEntity(finder, shape);
+          auto & identifications = OCCGeometry::identifications[shape.TShape()];
+          if(identifications.size()==0)
               return;
+          auto n = identifications.size();
+          Array<Handle(StepRepr_RepresentationItem)> ident_items;
+          ident_items.Append(item);
 
-          for(auto & item : props.Range(1, props.Size()))
+          for(auto & ident : identifications)
+          {
+              Array<Handle(StepRepr_RepresentationItem)> items;
+              items.Append(STEPConstruct::FindEntity(finder, ident.other));
+              items.Append(MakeInt(static_cast<int>(ident.inverse)));
+              auto & m = ident.trafo.GetMatrix();
+              for(auto i : Range(9))
+                  items.Append(MakeReal(m(i)));
+              auto & v = ident.trafo.GetVector();
+              for(auto i : Range(3))
+                  items.Append(MakeReal(v(i)));
+              for(auto & item : items.Range(1,items.Size()))
+                  model->AddEntity(item);
+              ident_items.Append(MakeCompound(items, ident.name));
+          }
+
+          for(auto & item : ident_items.Range(1,ident_items.Size()))
               model->AddEntity(item);
+          auto comp = MakeCompound(ident_items, "netgen_geometry_identification");
+          model->AddEntity(comp);
+      }
 
-          auto compound = MakeCompound(props, "netgen_geometry_properties");
-          model->AddEntity(compound);
+      void ReadIdentifications(Handle(StepRepr_RepresentationItem) item, Handle(Transfer_TransientProcess) transProc)
+      {
+          auto idents = Handle(StepRepr_CompoundRepresentationItem)::DownCast(item);
+          auto n = idents->NbItemElement();
+          std::vector<OCCIdentification> result;
+          auto shape_origin = TransferBRep::ShapeResult(transProc->Find(idents->ItemElementValue(1)));
+
+          for(auto i : Range(2,n+1))
+          {
+              auto id_item = Handle(StepRepr_CompoundRepresentationItem)::DownCast(idents->ItemElementValue(i));
+              OCCIdentification ident;
+              ident.name = id_item->Name()->ToCString();
+              ident.other = TransferBRep::ShapeResult(transProc->Find(id_item->ItemElementValue(1)));
+              ident.inverse = static_cast<bool>(ReadInt(id_item->ItemElementValue(2)));
+
+              auto & m = ident.trafo.GetMatrix();
+              for(auto i : Range(9))
+                  m(i) = ReadReal(id_item->ItemElementValue(3+i));
+              auto & v = ident.trafo.GetVector();
+              for(auto i : Range(3))
+                  v(i) = ReadReal(id_item->ItemElementValue(12+i));
+
+              result.push_back(ident);
+          }
+          OCCGeometry::identifications[shape_origin.TShape()] = result;
       }
 
       void WriteSTEP(const TopoDS_Shape & shape, string filename)

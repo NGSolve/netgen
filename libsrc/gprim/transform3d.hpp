@@ -130,6 +130,9 @@ public:
     //  (*testout) << "Rotation - Transformation:" << (*this) << endl;
   }
 
+  Mat<D> & GetMatrix() { return m; }
+  Vec<D> & GetVector() { return v; }
+
   /// 
   Transformation CalcInverse () const
   {
