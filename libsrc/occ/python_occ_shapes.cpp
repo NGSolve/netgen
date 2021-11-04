@@ -64,6 +64,8 @@
 #include <BOPTools_AlgoTools.hxx>
 #include <IntTools_Context.hxx>
 #include <STEPControl_Writer.hxx>
+#include <ShapeAnalysis_FreeBounds.hxx>
+
 
 #include <python_occ.hpp>
 
@@ -2032,7 +2034,20 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         }, py::arg("wires"), py::arg("solid")=true,
         "Building a loft. This is a shell or solid passing through a set of sections (wires). "
         "First and last sections may be vertices. See https://dev.opencascade.org/doc/refman/html/class_b_rep_offset_a_p_i___thru_sections.html#details");
-  
+
+  m.def("ConnectEdgesToWires", [](const vector<TopoDS_Shape>& edges,
+                                  double tol, bool shared)
+  {
+    Handle(TopTools_HSequenceOfShape) sedges = new TopTools_HSequenceOfShape;
+    Handle(TopTools_HSequenceOfShape) swires = new TopTools_HSequenceOfShape;
+    for(auto& e : edges)
+      sedges->Append(e);
+    ShapeAnalysis_FreeBounds::ConnectEdgesToWires(sedges, tol, shared, swires);
+    vector<TopoDS_Wire> wires;
+    for(auto& w : *swires)
+      wires.push_back(TopoDS::Wire(w));
+    return std::move(wires);
+  }, py::arg("edges"), py::arg("tol")=1e-8, py::arg("shared")=true);
 
   py::class_<WorkPlane, shared_ptr<WorkPlane>> (m, "WorkPlane")
     .def(py::init<gp_Ax3, gp_Ax2d>(), py::arg("axes")=gp_Ax3(), py::arg("pos")=gp_Ax2d())
