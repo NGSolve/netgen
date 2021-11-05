@@ -411,7 +411,7 @@ namespace netgen
         Vec<4> col = OCCGeometry::global_shape_properties[face.TShape()].col.value_or(Vec<4>(0,1,0,1));
         mesh.GetFaceDescriptor(facenr).SetSurfColour(col);
 
-        if(auto opt_name = geom.fprops[facenr-1]->name) 
+        if(auto & opt_name = geom.fprops[facenr-1]->name)
           mesh.GetFaceDescriptor(facenr).SetBCName(&*opt_name);
         mesh.GetFaceDescriptor(facenr).SetBCProperty(facenr);
         // ACHTUNG! STIMMT NICHT ALLGEMEIN (RG)
