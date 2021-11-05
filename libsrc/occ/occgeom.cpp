@@ -2018,7 +2018,7 @@ namespace netgen
 
         // load names
         Standard_Integer nb = model->NbEntities();
-        for (Standard_Integer i = 1; i < nb; i++)
+        for (Standard_Integer i = 1; i <= nb; i++)
           {
             Handle(Standard_Transient) entity = model->Value(i);
             auto item = Handle(StepRepr_RepresentationItem)::DownCast(entity);
@@ -2036,7 +2036,7 @@ namespace netgen
 
 
         // load custom data (maxh etc.)
-        for (Standard_Integer i = 1; i < nb; i++)
+        for (Standard_Integer i = 1; i <= nb; i++)
           {
             Handle(Standard_Transient) entity = model->Value(i);
 
