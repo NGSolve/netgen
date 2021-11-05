@@ -52,17 +52,30 @@
 namespace netgen
 {
   void LoadOCCInto(OCCGeometry* occgeo, const char* filename);
+  void PrintContents (OCCGeometry * geom);
 
   std::map<Handle(TopoDS_TShape), ShapeProperties> OCCGeometry::global_shape_properties;
   std::map<Handle(TopoDS_TShape), std::vector<OCCIdentification>> OCCGeometry::identifications;
   
-  OCCGeometry::OCCGeometry(const TopoDS_Shape& _shape, int aoccdim)
+  OCCGeometry::OCCGeometry(const TopoDS_Shape& _shape, int aoccdim, bool copy)
   {
-    auto filename = GetTempFilename();
-    step_utils::WriteSTEP(_shape, filename.c_str());
-    LoadOCCInto(this, filename.c_str());
-    occdim = aoccdim;
-    std::remove(filename.c_str());
+    if(copy)
+      {
+        auto filename = GetTempFilename();
+        step_utils::WriteSTEP(_shape, filename.c_str());
+        LoadOCCInto(this, filename.c_str());
+        occdim = aoccdim;
+        std::remove(filename.c_str());
+      }
+    else
+      {
+        shape = _shape;
+        changed = 1;
+        occdim = aoccdim;
+        BuildFMap();
+        CalcBoundingBox();
+        PrintContents (this);
+      }
   }
 
   string STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * aReader)

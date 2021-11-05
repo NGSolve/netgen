@@ -126,7 +126,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     .def(py::init<const TopoDS_Shape&>(), py::arg("shape"),
          "Create Netgen OCCGeometry from existing TopoDS_Shape")
     */
-    .def(py::init([] (const TopoDS_Shape& shape, int occdim)
+    .def(py::init([] (const TopoDS_Shape& shape, int occdim, bool copy)
                   {
                     auto geo = make_shared<OCCGeometry> (shape, occdim);
                     // ng_geometry = geo;
@@ -134,7 +134,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                     // geo->BuildFMap();
                     // geo->CalcBoundingBox();
                     return geo;
-                  }), py::arg("shape"), py::arg("dim")=3,
+                  }), py::arg("shape"), py::arg("dim")=3, py::arg("copy")=false,
          "Create Netgen OCCGeometry from existing TopoDS_Shape")
     
     .def(py::init([] (const std::vector<TopoDS_Shape> shapes)

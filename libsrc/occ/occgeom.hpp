@@ -298,7 +298,7 @@ namespace netgen
       vmap.Clear();
     }
 
-    OCCGeometry(const TopoDS_Shape& _shape, int aoccdim = 3);
+    OCCGeometry(const TopoDS_Shape& _shape, int aoccdim = 3, bool copy = false);
 
     Mesh::GEOM_TYPE GetGeomType() const override
     { return Mesh::GEOM_OCC; }
