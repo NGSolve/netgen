@@ -201,6 +201,8 @@ namespace ngcore
   NGCORE_API int GetCompiledSIMDSize();
   NGCORE_API bool IsRangeCheckEnabled();
 
+  NGCORE_API std::string GetTempFilename();
+
 } // namespace ngcore
 
 #endif // NETGEN_CORE_UTILS_HPP

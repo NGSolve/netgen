@@ -9,5 +9,5 @@ $PYDIR/python3 --version
 $PYDIR/pip3 install --user numpy twine scikit-build wheel
 
 export CMAKE_OSX_ARCHITECTURES='arm64;x86_64'
-$PYDIR/python3 setup.py bdist_wheel --plat-name macosx-10.14-universal2 -j10
+$PYDIR/python3 setup.py bdist_wheel --plat-name macosx-10.15-universal2 -j10
 $PYDIR/python3 -m twine upload --repository testpypi dist/*.whl

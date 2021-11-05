@@ -7,6 +7,7 @@
 #include <cxxabi.h>
 #endif
 #include <array>
+#include <filesystem>
 #include <iostream>
 #include <regex>
 
@@ -109,6 +110,15 @@ namespace ngcore
 #else
       return false;
 #endif
+  }
+
+  NGCORE_API std::string GetTempFilename()
+  {
+      static int counter = 0;
+      auto path = std::filesystem::temp_directory_path();
+      std::string filename = ".temp_netgen_file_"+ToString(counter++)+"_"+ToString(GetTimeCounter());
+      path.append(filename);
+      return path.string();
   }
 
 } // namespace ngcore
