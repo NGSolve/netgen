@@ -316,29 +316,17 @@ namespace netgen
     double eps = 1e-6 * geom.GetBoundingBox().Diam();
 
     tsearch.Start();
-    for (int i = 1; i <= nvertices; i++)
+    for (auto [i,vshape] : Enumerate(geom.vmap))
       {
-        gp_Pnt pnt = BRep_Tool::Pnt (TopoDS::Vertex(geom.vmap(i)));
-        double hpref = OCCGeometry::global_shape_properties[TopoDS::Vertex(geom.vmap(i)).TShape()].hpref;
-        MeshPoint mp(occ2ng(pnt));
-        // mp.Singularity(hpref);
+        TopoDS_Vertex vertex = TopoDS::Vertex(vshape);
+        gp_Pnt pnt = BRep_Tool::Pnt (vertex); 
 
-        bool exists = false;
-        if (merge_solids)
-          for (PointIndex pi : mesh.Points().Range())
-            if (Dist2 (mesh[pi], Point<3>(mp)) < eps*eps)
-              {
-                exists = true;
-                break;
-              }
-
-        if (!exists)
-          {
-            mesh.AddPoint (mp);
-            mesh.Points().Last().Singularity(hpref);
-          }
+        mesh.AddPoint (occ2ng(pnt));
         
-        double maxh = OCCGeometry::global_shape_properties[TopoDS::Vertex(geom.vmap(i)).TShape()].maxh;
+        double hpref = OCCGeometry::global_shape_properties[vertex.TShape()].hpref;
+        mesh.Points().Last().Singularity(hpref);
+        
+        double maxh = OCCGeometry::global_shape_properties[vertex.TShape()].maxh;
         mesh.RestrictLocalH (occ2ng(pnt), maxh);
       }
     tsearch.Stop();
@@ -356,6 +344,7 @@ namespace netgen
         face2solid[i] = 0;
       }
 
+    /*
     int solidnr = 0;
     for (TopExp_Explorer exp0(geom.shape, TopAbs_SOLID); exp0.More(); exp0.Next())
       {
@@ -372,6 +361,22 @@ namespace netgen
               face2solid[1][facenr-1] = solidnr;
           }
       }
+    */
+    int solidnr = 0;
+    for (auto solid : Explore(geom.shape, TopAbs_SOLID))
+      {
+        solidnr++;
+        for (auto face : Explore (solid, TopAbs_FACE))
+          if (geom.fmap.Contains(face))
+            {
+              int facenr = geom.fmap.FindIndex(face);
+              if (face2solid[0][facenr-1] == 0)
+                face2solid[0][facenr-1] = solidnr;
+              else
+                face2solid[1][facenr-1] = solidnr;
+            }
+      }
+    
 
 
     /*

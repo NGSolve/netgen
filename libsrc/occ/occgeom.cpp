@@ -1045,11 +1045,15 @@ namespace netgen
       }
 
       eprops.SetSize(emap.Extent());
+      /*
       for (TopExp_Explorer e(shape, TopAbs_EDGE); e.More(); e.Next())
       {
           auto s = e.Current();
           eprops[emap.FindIndex(s)-1] = &global_shape_properties[s.TShape()];
       }
+      */
+      for (auto [nr,s] : Enumerate(emap))
+        eprops[nr-1] = &global_shape_properties[s.TShape()];
    }
 
 

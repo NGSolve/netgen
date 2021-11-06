@@ -313,6 +313,8 @@ namespace netgen
     TopTools_IndexedMapOfShape fmap, emap, vmap, somap, shmap, wmap;
     NgArray<bool> fsingular, esingular, vsingular;
     Box<3> boundingbox;
+
+    // should we use 1-based arrays (JS->MH) ? 
     Array<ShapeProperties*> fprops, eprops, sprops; // pointers to the gobal property map
 
     mutable int changed;
