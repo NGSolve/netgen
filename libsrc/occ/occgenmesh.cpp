@@ -374,12 +374,20 @@ namespace netgen
       }
 
 
+    /*
     int total = 0;
     for (int i3 = 1; i3 <= geom.fmap.Extent(); i3++)
       for (TopExp_Explorer exp2(geom.fmap(i3), TopAbs_WIRE); exp2.More(); exp2.Next())
         for (TopExp_Explorer exp3(exp2.Current(), TopAbs_EDGE); exp3.More(); exp3.Next())
           total++;
-
+    */
+    int total = 0;
+    for (auto [i3, face] : Enumerate(geom.fmap))
+      for (auto wire : Explore(face, TopAbs_WIRE))
+        for (auto edge : Explore(wire, TopAbs_EDGE))
+          total++;
+      
+    
 
     int facenr = 0;
     // int edgenr = mesh.GetNSeg();

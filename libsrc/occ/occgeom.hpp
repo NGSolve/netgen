@@ -268,7 +268,38 @@ namespace netgen
     auto end() { return nullptr; }
   };
 
+  inline auto Explore (TopoDS_Shape shape, TopAbs_ShapeEnum toFind, TopAbs_ShapeEnum toAvoid = TopAbs_SHAPE)
+  {
+    return MyExplorer (shape, toFind, toAvoid);
+  }
+
   
+  class IndexMapIterator
+  {
+    class Iterator
+    {
+      const TopTools_IndexedMapOfShape & indmap;
+      int i;
+    public:
+      Iterator (const TopTools_IndexedMapOfShape & aindmap, int ai)
+        : indmap(aindmap), i(ai) { ; }
+      auto operator*() { return tuple(i, indmap(i)); }
+      Iterator & operator++() { i++; return *this; }
+      bool operator!= (const Iterator & i2) { return i != i2.i; }
+    };
+
+  public:
+    const TopTools_IndexedMapOfShape & indmap;
+    IndexMapIterator (const TopTools_IndexedMapOfShape & aindmap) : indmap(aindmap) { }
+    Iterator begin() { return Iterator(indmap, 1); }
+    Iterator end() { return Iterator(indmap, indmap.Extent()); }
+  };
+  
+  inline auto Enumerate (const TopTools_IndexedMapOfShape & indmap)
+  {
+    return IndexMapIterator(indmap);
+  }
+
   
   class DLL_HEADER OCCGeometry : public NetgenGeometry
   {
