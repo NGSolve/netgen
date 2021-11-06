@@ -303,7 +303,7 @@ namespace netgen
   {
   public:
     Mesh::T_POINTS & points;
-    const Array<Element> & elements;
+    const Array<Element, ElementIndex> & elements;
     Table<int, PointIndex> &elementsonpoint;
     bool own_elementsonpoint;
     const MeshingParameters & mp;
@@ -312,7 +312,7 @@ namespace netgen
   
   public:
     PointFunction (Mesh::T_POINTS & apoints, 
-		   const Array<Element> & aelements,
+		   const Array<Element, ElementIndex> & aelements,
 		   const MeshingParameters & amp);
     PointFunction (const PointFunction & pf);
     virtual ~PointFunction () { if(own_elementsonpoint) delete &elementsonpoint; }
@@ -333,7 +333,7 @@ namespace netgen
   { }
 
   PointFunction :: PointFunction (Mesh::T_POINTS & apoints, 
-				  const Array<Element> & aelements,
+				  const Array<Element, ElementIndex> & aelements,
 				  const MeshingParameters & amp)
     : points(apoints), elements(aelements), elementsonpoint(* new Table<int,PointIndex>()), own_elementsonpoint(true), mp(amp)
   {
@@ -494,7 +494,7 @@ namespace netgen
     DenseMatrix m;
   public:
     CheapPointFunction (Mesh::T_POINTS & apoints, 
-			const Array<Element> & aelements,
+			const Array<Element, ElementIndex> & aelements,
 			const MeshingParameters & amp);
     virtual void SetPointIndex (PointIndex aactpind);
     virtual double PointFunctionValue (const Point<3> & pp) const;
@@ -503,7 +503,7 @@ namespace netgen
 
 
   CheapPointFunction :: CheapPointFunction (Mesh::T_POINTS & apoints, 
-					    const Array<Element> & aelements,
+					    const Array<Element, ElementIndex> & aelements,
 					    const MeshingParameters & amp)
     : PointFunction (apoints, aelements, amp)
   {
@@ -990,7 +990,7 @@ int WrongOrientation (const Mesh::T_POINTS & points, const Element & el)
 
 JacobianPointFunction :: 
 JacobianPointFunction (Mesh::T_POINTS & apoints, 
-		       const Array<Element> & aelements)
+		       const Array<Element, ElementIndex> & aelements)
   : points(apoints), elements(aelements), elementsonpoint(apoints.Size())
 {
   for (int i = 0; i < elements.Size(); i++)

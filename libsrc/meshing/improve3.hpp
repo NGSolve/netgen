@@ -3,7 +3,7 @@
 
 
 extern double CalcTotalBad (const Mesh::T_POINTS & points, 
-			    const Array<Element> & elements,
+			    const Array<Element, ElementIndex> & elements,
 			    const MeshingParameters & mp);
 
 
@@ -54,7 +54,7 @@ public:
 
 
   double CalcTotalBad (const Mesh::T_POINTS & points, 
-		       const Array<Element> & elements)
+		       const Array<Element, ElementIndex> & elements)
   {
     return netgen::CalcTotalBad (points, elements, mp);
   }
@@ -121,7 +121,7 @@ class JacobianPointFunction : public MinFunction
 {
 public:
   Mesh::T_POINTS & points;
-  const Array<Element> & elements;
+  const Array<Element, ElementIndex> & elements;
   TABLE<INDEX> elementsonpoint;
   PointIndex actpind;
 
@@ -130,7 +130,7 @@ public:
   
 public:
   JacobianPointFunction (Mesh::T_POINTS & apoints, 
-			 const Array<Element> & aelements);
+			 const Array<Element, ElementIndex> & aelements);
   virtual ~JacobianPointFunction () { ; }
   virtual void SetPointIndex (PointIndex aactpind);
   virtual double Func (const Vector & x) const;

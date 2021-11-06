@@ -181,29 +181,29 @@ namespace netgen
 
       (*testout) << endl;
 
-      cout << "Highest entry in topology hierarchy: " << endl;
+      cout << IM(3) << "Highest entry in topology hierarchy: " << endl;
       if (count)
-         cout << count << " composite solid(s)" << endl;
+         cout << IM(3) << count << " composite solid(s)" << endl;
       else
          if (geom->somap.Extent())
-            cout << geom->somap.Extent() << " solid(s)" << endl;
+            cout << IM(3) << geom->somap.Extent() << " solid(s)" << endl;
          else
             if (geom->shmap.Extent())
-               cout << geom->shmap.Extent() << " shells(s)" << endl;
+               cout << IM(3) << geom->shmap.Extent() << " shells(s)" << endl;
             else
                if (geom->fmap.Extent())
-                  cout << geom->fmap.Extent() << " face(s)" << endl;
+                  cout << IM(3) << geom->fmap.Extent() << " face(s)" << endl;
                else
                   if (geom->wmap.Extent())
-                     cout << geom->wmap.Extent() << " wire(s)" << endl;
+                     cout << IM(3) << geom->wmap.Extent() << " wire(s)" << endl;
                   else
                      if (geom->emap.Extent())
-                        cout << geom->emap.Extent() << " edge(s)" << endl;
+                        cout << IM(3) << geom->emap.Extent() << " edge(s)" << endl;
                      else
                         if (geom->vmap.Extent())
-                           cout << geom->vmap.Extent() << " vertices(s)" << endl;
+                           cout << IM(3) << geom->vmap.Extent() << " vertices(s)" << endl;
                         else
-                           cout << "no entities" << endl;
+                           cout << IM(3) << "no entities" << endl;
 
    }
 

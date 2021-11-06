@@ -25,10 +25,8 @@ namespace netgen
   class Mesh
   {
   public:
-    typedef ::netgen::T_POINTS T_POINTS;
-    // typedef NgArray<Element, 0, size_t> T_VOLELEMENTS;
-    // typedef NgArray<Element2d, 0, SurfaceElementIndex> T_SURFELEMENTS;
-    // typedef NgArray<Element2d, 0, size_t> T_SURFELEMENTS;
+    // typedef Array<MeshPoint, PointIndex> T_POINTS;
+    typedef netgen::T_POINTS T_POINTS;
 
   private:
     /// point coordinates
@@ -42,7 +40,7 @@ namespace netgen
     /// surface elements, 2d-inner elements
     Array<Element2d, SurfaceElementIndex> surfelements;
     /// volume elements
-    Array<Element> volelements;
+    Array<Element, ElementIndex> volelements;
     /// points will be fixed forever
     Array<PointIndex> lockedpoints;
 
@@ -711,6 +709,9 @@ namespace netgen
     int GetNFD () const
     { return facedecoding.Size(); }
 
+    const FaceDescriptor & GetFaceDescriptor (const Element2d & el) const
+    { return facedecoding[el.GetIndex()-1]; }
+    
     const FaceDescriptor & GetFaceDescriptor (int i) const
     { return facedecoding[i-1]; }      
     // { return facedecoding.Get(i); }

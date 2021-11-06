@@ -41,7 +41,8 @@ namespace netgen
   // extern DLL_HEADER NgMPI_Comm ng_comm;
   
   static constexpr int POINTINDEX_BASE = 1;
-  
+
+  /*
   struct T_EDGE2
   {
     // int orient:1;
@@ -54,6 +55,9 @@ namespace netgen
     // int nr:29;    // 0-based
     int nr;    // 0-based
   };
+  */
+  typedef int T_EDGE2; 
+  typedef int T_FACE2; 
 
   template <typename T>
   class Ng_Buffer
@@ -114,7 +118,7 @@ namespace netgen
       const T_EDGE2 * ptr;
   
       size_t Size() const { return num; }
-      int operator[] (size_t i) const { return ptr[i].nr; }
+      int operator[] (size_t i) const { return ptr[i]; }
     };
 
     class Ng_Faces
@@ -124,7 +128,7 @@ namespace netgen
       const T_FACE2 * ptr;
   
       size_t Size() const { return num; }
-      int operator[] (size_t i) const { return ptr[i].nr; }
+      int operator[] (size_t i) const { return ptr[i]; }
     };
 
     class Ng_Facets

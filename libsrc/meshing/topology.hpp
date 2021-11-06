@@ -15,17 +15,23 @@
 namespace netgen
 {
   
-struct T_EDGE
-{
-  // int orient:1;
-  int nr;    // 0-based
-};
-
-struct T_FACE
-{
-  // int forient:3;
-  int fnr;    // 0-based
-};
+  /*
+    struct T_EDGE
+    {
+    // int orient:1;
+    int nr;    // 0-based
+    };
+    
+    struct T_FACE
+    {
+    // int forient:3;
+    int fnr;    // 0-based
+    };
+  */
+  
+  typedef int T_EDGE;
+  typedef int T_FACE;
+  
 
   /*
   template <typename T, int S>
@@ -111,12 +117,12 @@ public:
   inline static const ELEMENT_FACE * GetFaces1 (ELEMENT_TYPE et);
   inline static const ELEMENT_FACE * GetFaces0 (ELEMENT_TYPE et);
   
-  int GetSegmentEdge (int segnr) const { return segedges[segnr-1].nr+1; }
-  int GetEdge (SegmentIndex segnr) const { return segedges[segnr].nr; }
+  int GetSegmentEdge (int segnr) const { return segedges[segnr-1]+1; }
+  int GetEdge (SegmentIndex segnr) const { return segedges[segnr]; }
 
   void GetSegmentEdge (int segnr, int & enr, int & orient) const
   {
-    enr = segedges.Get(segnr).nr+1;
+    enr = segedges.Get(segnr)+1;
     // orient = segedges.Get(segnr).orient;
     orient = GetSegmentEdgeOrientation(segnr);
   }
@@ -153,7 +159,7 @@ public:
   int GetSurfaceElementFaceOrientation (int elnr) const;
   void GetEdges (SurfaceElementIndex elnr, NgArray<int> & edges) const;
   int GetFace (SurfaceElementIndex elnr) const
-  { return surffaces[elnr].fnr; }
+  { return surffaces[elnr]; }
 
   int GetSurfaceElementEdges (int elnr, int * edges, int * orient) const;
 

@@ -245,7 +245,7 @@ namespace netgen
     constexpr ElementIndex (int ai) : i(ai) { ; }
     ElementIndex & operator= (const ElementIndex & ai) { i = ai.i; return *this; }
     ElementIndex & operator= (int ai) { i = ai; return *this; }
-    operator int () const { return i; }
+    constexpr operator int () const { return i; }
     ElementIndex operator++ (int) { return ElementIndex(i++); }    
     ElementIndex operator-- (int) { return ElementIndex(i--); }
     ElementIndex & operator++ () { ++i; return *this; }
