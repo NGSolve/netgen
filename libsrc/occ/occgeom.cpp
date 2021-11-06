@@ -913,19 +913,19 @@ namespace netgen
 
       // Free Faces
       for (auto face : MyExplorer(shape, TopAbs_FACE, TopAbs_SHELL))
-        if (fmap.FindIndex(face) < 1)
+        if (!fmap.Contains(face))
           {
             fmap.Add (face);
             for (auto wire : MyExplorer(face, TopAbs_WIRE))
-              if (wmap.FindIndex(wire) < 1)
+              if (!wmap.Contains(wire))
                 {
                   wmap.Add (wire);
                   for (auto edge : MyExplorer(wire, TopAbs_EDGE))
-                    if (emap.FindIndex(edge) < 1)
+                    if (!emap.Contains(edge))
                       {
                         emap.Add (edge);
                         for (auto vertex : MyExplorer(edge, TopAbs_VERTEX))
-                          if (vmap.FindIndex(vertex) < 1)
+                          if (!vmap.Contains(vertex))
                             vmap.Add (vertex);
                       }
                 }
@@ -960,7 +960,7 @@ namespace netgen
 
 
       // Free Edges
-
+      /*
       for (exp4.Init(shape, TopAbs_EDGE, TopAbs_WIRE); exp4.More(); exp4.Next())
       {
          TopoDS_Edge edge = TopoDS::Edge(exp4.Current());
@@ -975,19 +975,29 @@ namespace netgen
             }
          }
       }
+      */
+      for (auto edge : MyExplorer(shape, TopAbs_EDGE, TopAbs_WIRE))
+        if (!emap.Contains(edge))
+          {
+            emap.Add (edge);
+            for (auto vertex : MyExplorer(edge, TopAbs_VERTEX))
+              if (!vmap.Contains(vertex))
+                vmap.Add (vertex);
+          }
 
-
+      
       // Free Vertices
-
+      /*
       for (exp5.Init(shape, TopAbs_VERTEX, TopAbs_EDGE); exp5.More(); exp5.Next())
       {
          TopoDS_Vertex vertex = TopoDS::Vertex(exp5.Current());
          if (vmap.FindIndex(vertex) < 1)
             vmap.Add (vertex);
       }
-
-
-
+      */
+      for (auto vertex : MyExplorer(shape, TopAbs_VERTEX, TopAbs_EDGE))
+        if (!vmap.Contains(vertex))
+          vmap.Add (vertex);
 
       facemeshstatus.DeleteAll();
       facemeshstatus.SetSize (fmap.Extent());

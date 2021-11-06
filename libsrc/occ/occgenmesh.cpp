@@ -391,7 +391,9 @@ namespace netgen
       {
         TopoDS_Face face = TopoDS::Face(geom.fmap(i3));
         facenr = geom.fmap.FindIndex (face);       // sollte doch immer == i3 sein ??? JS
-
+        if (facenr != i3)
+          cout << "info: facenr != i3" << endl;
+        
         int solidnr0 = face2solid[0][i3-1];
         int solidnr1 = face2solid[1][i3-1];
 
