@@ -2580,7 +2580,7 @@ namespace netgen
       tlosurf == seg.tlosurf+1;
   }
 
-  string FaceDescriptor :: default_bcname = "default";
+  // string FaceDescriptor :: default_bcname = "default";
   /*
   const string & FaceDescriptor :: GetBCName () const
   {
@@ -2593,9 +2593,9 @@ namespace netgen
   void FaceDescriptor :: SetBCName (string * bcn)
   {
     if (bcn)
-      bcname = bcn;
+      bcname = *bcn;
     else
-      bcn = &default_bcname;
+      bcname = "default";
   }
   
   void FaceDescriptor :: DoArchive (Archive & ar)

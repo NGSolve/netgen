@@ -1174,8 +1174,9 @@ namespace netgen
     Vec<4> surfcolour;
     
     ///
-    static string default_bcname;
-    string * bcname = &default_bcname;
+    // static string default_bcname;
+    // string * bcname = &default_bcname;
+    string bcname = "default";
     /// root of linked list 
     SurfaceElementIndex firstelement;
   
@@ -1204,7 +1205,7 @@ namespace netgen
     // Philippose - 06/07/2009
     // Get Surface colour
     Vec<4> SurfColour () const { return surfcolour; }
-    DLL_HEADER const string & GetBCName () const { return *bcname; }
+    /* DLL_HEADER */ const string & GetBCName () const { return bcname; }
     // string * BCNamePtr () { return bcname; }
     // const string * BCNamePtr () const  { return bcname; }
     void SetSurfNr (int sn) { surfnr = sn; }
@@ -1212,6 +1213,7 @@ namespace netgen
     void SetDomainOut (int dom) { domout = dom; }
     void SetBCProperty (int bc) { bcprop = bc; }
     void SetBCName (string * bcn); //  { bcname = bcn; }
+    void SetBCName (const string & bcn) { bcname = bcn; }    
     // Philippose - 06/07/2009
     // Set the surface colour
     void SetSurfColour (Vec<4> colour) { surfcolour = colour; }

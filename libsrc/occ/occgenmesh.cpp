@@ -392,7 +392,7 @@ namespace netgen
         TopoDS_Face face = TopoDS::Face(geom.fmap(i3));
         facenr = geom.fmap.FindIndex (face);       // sollte doch immer == i3 sein ??? JS
         if (facenr != i3)
-          cout << "info: facenr != i3" << endl;
+          cout << "info: facenr != i3, no problem, but please report to developers" << endl;
         
         int solidnr0 = face2solid[0][i3-1];
         int solidnr1 = face2solid[1][i3-1];
@@ -414,34 +414,40 @@ namespace netgen
         mesh.GetFaceDescriptor(facenr).SetSurfColour(col);
 
         if(auto & opt_name = geom.fprops[facenr-1]->name)
-          mesh.GetFaceDescriptor(facenr).SetBCName(&*opt_name);
+          mesh.GetFaceDescriptor(facenr).SetBCName(*opt_name);
         else
-          mesh.GetFaceDescriptor(facenr).SetBCName(new string("bc_"+ToString(facenr))); // mem-leak !
+          mesh.GetFaceDescriptor(facenr).SetBCName("bc_"+ToString(facenr));
         mesh.GetFaceDescriptor(facenr).SetBCProperty(facenr);
         // ACHTUNG! STIMMT NICHT ALLGEMEIN (RG)
+        // kA was RG damit meinte
 
 
         Handle(Geom_Surface) occface = BRep_Tool::Surface(face);
 
+        /*
         for (TopExp_Explorer exp2 (face, TopAbs_WIRE); exp2.More(); exp2.Next())
           {
             TopoDS_Shape wire = exp2.Current();
-
-            for (TopExp_Explorer exp3 (wire, TopAbs_EDGE); exp3.More(); exp3.Next())
+        */
+        for (auto wire : MyExplorer (face, TopAbs_WIRE))
+          {
+            // for (TopExp_Explorer exp3 (wire, TopAbs_EDGE); exp3.More(); exp3.Next())
+            for (auto edgeshape : MyExplorer (wire, TopAbs_EDGE))
               {
+                TopoDS_Edge edge = TopoDS::Edge(edgeshape);
                 curr++;
                 (*testout) << "edge nr " << curr << endl;
                 multithread.percent = 100 * curr / double (total);
                 if (multithread.terminate) return;
 
-                TopoDS_Edge edge = TopoDS::Edge (exp3.Current());
+                // TopoDS_Edge edge = TopoDS::Edge (exp3.Current());
                 if (BRep_Tool::Degenerated(edge))
                   {
                     //(*testout) << "ignoring degenerated edge" << endl;
                     continue;
                   }
 
-                if(geom.emap.FindIndex(edge) < 1) continue;
+                if (!geom.emap.Contains(edge)) continue;
 
                 if (geom.vmap.FindIndex(TopExp::FirstVertex (edge)) ==
                     geom.vmap.FindIndex(TopExp::LastVertex (edge)))
@@ -457,10 +463,8 @@ namespace netgen
                       }
                   }
 
-
-                Handle(Geom2d_Curve) cof;
                 double s0, s1;
-                cof = BRep_Tool::CurveOnSurface (edge, face, s0, s1);
+                Handle(Geom2d_Curve) cof = BRep_Tool::CurveOnSurface (edge, face, s0, s1);
 
                 int geomedgenr = geom.emap.FindIndex(edge);
                 Array<PointIndex> pnums;
