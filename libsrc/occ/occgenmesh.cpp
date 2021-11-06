@@ -413,6 +413,8 @@ namespace netgen
 
         if(auto & opt_name = geom.fprops[facenr-1]->name)
           mesh.GetFaceDescriptor(facenr).SetBCName(&*opt_name);
+        else
+          mesh.GetFaceDescriptor(facenr).SetBCName(new string("bc_"+ToString(facenr))); // mem-leak !
         mesh.GetFaceDescriptor(facenr).SetBCProperty(facenr);
         // ACHTUNG! STIMMT NICHT ALLGEMEIN (RG)
 
