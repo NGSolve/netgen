@@ -292,7 +292,7 @@ namespace netgen
     const TopTools_IndexedMapOfShape & indmap;
     IndexMapIterator (const TopTools_IndexedMapOfShape & aindmap) : indmap(aindmap) { }
     Iterator begin() { return Iterator(indmap, 1); }
-    Iterator end() { return Iterator(indmap, indmap.Extent()); }
+    Iterator end() { return Iterator(indmap, indmap.Extent()+1); }
   };
   
   inline auto Enumerate (const TopTools_IndexedMapOfShape & indmap)

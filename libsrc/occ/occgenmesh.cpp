@@ -395,9 +395,14 @@ namespace netgen
     (*testout) << "faces = " << geom.fmap.Extent() << endl;
     int curr = 0;
 
+    /*
     for (int i3 = 1; i3 <= geom.fmap.Extent(); i3++)
       {
         TopoDS_Face face = TopoDS::Face(geom.fmap(i3));
+    */
+    for (auto [i3,faceshape] : Enumerate(geom.fmap))
+      {
+        TopoDS_Face face = TopoDS::Face(faceshape);
         facenr = geom.fmap.FindIndex (face);       // sollte doch immer == i3 sein ??? JS
         if (facenr != i3)
           cout << "info: facenr != i3, no problem, but please report to developers" << endl;
