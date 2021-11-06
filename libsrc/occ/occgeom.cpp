@@ -779,7 +779,6 @@ namespace netgen
 
 
 
-
    void OCCGeometry :: BuildFMap()
    {
       somap.Clear();
@@ -881,7 +880,7 @@ namespace netgen
                TopoDS_Face face = TopoDS::Face(exp2.Current());
                if (fmap.FindIndex(face) < 1)
                {
-                  fmap.Add (face);
+                 fmap.Add (face);
 
                   for (exp3.Init(face, TopAbs_WIRE); exp3.More(); exp3.Next())
                   {
@@ -913,39 +912,24 @@ namespace netgen
 
 
       // Free Faces
-
-      for (exp2.Init(shape, TopAbs_FACE, TopAbs_SHELL); exp2.More(); exp2.Next())
-      {
-         TopoDS_Face face = TopoDS::Face(exp2.Current());
-         if (fmap.FindIndex(face) < 1)
-         {
+      for (auto face : MyExplorer(shape, TopAbs_FACE, TopAbs_SHELL))
+        if (fmap.FindIndex(face) < 1)
+          {
             fmap.Add (face);
-
-            for (exp3.Init(exp2.Current(), TopAbs_WIRE); exp3.More(); exp3.Next())
-            {
-               TopoDS_Wire wire = TopoDS::Wire (exp3.Current());
-               if (wmap.FindIndex(wire) < 1)
-               {
+            for (auto wire : MyExplorer(face, TopAbs_WIRE))
+              if (wmap.FindIndex(wire) < 1)
+                {
                   wmap.Add (wire);
-
-                  for (exp4.Init(exp3.Current(), TopAbs_EDGE); exp4.More(); exp4.Next())
-                  {
-                     TopoDS_Edge edge = TopoDS::Edge(exp4.Current());
-                     if (emap.FindIndex(edge) < 1)
-                     {
+                  for (auto edge : MyExplorer(wire, TopAbs_EDGE))
+                    if (emap.FindIndex(edge) < 1)
+                      {
                         emap.Add (edge);
-                        for (exp5.Init(exp4.Current(), TopAbs_VERTEX); exp5.More(); exp5.Next())
-                        {
-                           TopoDS_Vertex vertex = TopoDS::Vertex(exp5.Current());
-                           if (vmap.FindIndex(vertex) < 1)
-                              vmap.Add (vertex);
-                        }
-                     }
-                  }
-               }
-            }
-         }
-      }
+                        for (auto vertex : MyExplorer(edge, TopAbs_VERTEX))
+                          if (vmap.FindIndex(vertex) < 1)
+                            vmap.Add (vertex);
+                      }
+                }
+          }
 
 
       // Free Wires

@@ -243,6 +243,32 @@ namespace netgen
     bool inverse;
     string name;
   };
+
+
+  class MyExplorer
+  {
+    class Iterator
+    {
+      TopExp_Explorer exp;
+    public:
+      Iterator (TopoDS_Shape ashape, TopAbs_ShapeEnum atoFind, TopAbs_ShapeEnum atoAvoid)
+        : exp(ashape, atoFind, atoAvoid) { }
+      auto operator*() { return exp.Current(); }
+      Iterator & operator++() { exp.Next(); return *this; }
+      bool operator!= (nullptr_t nu) { return exp.More(); }
+    };
+
+  public:
+    TopoDS_Shape shape;
+    TopAbs_ShapeEnum toFind;
+    TopAbs_ShapeEnum toAvoid;
+    MyExplorer (TopoDS_Shape ashape, TopAbs_ShapeEnum atoFind, TopAbs_ShapeEnum atoAvoid = TopAbs_SHAPE)
+      : shape(ashape), toFind(atoFind), toAvoid(atoAvoid) { ; }
+    Iterator begin() { return Iterator(shape, toFind, toAvoid); }
+    auto end() { return nullptr; }
+  };
+
+  
   
   class DLL_HEADER OCCGeometry : public NetgenGeometry
   {
