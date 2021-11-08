@@ -18,10 +18,10 @@ do
     auditwheel repair netgen_mesher*-cp${pyversion}-*.whl
     rm netgen_mesher-*.whl
 
-    #rm -rf _skbuild
-    #NETGEN_ARCH=avx2 $PYDIR/pip wheel --use-feature=in-tree-build .
-    #auditwheel repair netgen_mesher_avx2*-cp${pyversion}-*.whl
-    #rm netgen_mesher_avx2-*.whl
+    rm -rf _skbuild
+    NETGEN_ARCH=avx2 $PYDIR/pip wheel --use-feature=in-tree-build .
+    auditwheel repair netgen_mesher_avx2*-cp${pyversion}-*.whl
+    rm netgen_mesher_avx2-*.whl
 
     $PYDIR/pip install wheelhouse/netgen_mesher*-cp${pyversion}-*.whl
     $PYDIR/python3 -c 'import netgen'

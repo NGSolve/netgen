@@ -45,7 +45,7 @@ cmake_args = [
 if 'NETGEN_ARCH' in os.environ:
   arch = os.environ['NETGEN_ARCH']
   name += "-"+arch
-  flag = '/'+arch if 'win' in sys.platform else f'-march={arch}'
+  flag = '/'+arch if 'win' in sys.platform else '-march=core-avx2'
   cmake_args += [f'-DNG_COMPILE_FLAGS={flag}']
 
 if 'NETGEN_CCACHE' in os.environ:
