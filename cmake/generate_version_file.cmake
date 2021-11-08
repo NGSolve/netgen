@@ -28,6 +28,7 @@ if(status AND NOT status EQUAL 0)
     set(git_version_string "v6.2.0.0")
   endif()
 endif()
+string(STRIP ${git_version_string} git_version_string)
 
 string(REGEX REPLACE "^v([0-9]+)\\..*" "\\1" NETGEN_VERSION_MAJOR "${git_version_string}")
 string(REGEX REPLACE "^v[0-9]+\\.([0-9]+).*" "\\1" NETGEN_VERSION_MINOR "${git_version_string}")
