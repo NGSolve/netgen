@@ -15,7 +15,7 @@ set (SUBPROJECT_ARGS
 )
 
 # only show output on failure in ci-builds
-if(DEFINED ENV{CI} AND WIN32)
+if(DEFINED ENV{CI})
     set (SUBPROJECT_ARGS
         LOG_DOWNLOAD ON
         LOG_BUILD ON
