@@ -82,6 +82,7 @@ cmake_args += [
         '-DUSE_OCC=ON',
         '-DBUILD_FOR_CONDA=ON',
         f'-DNETGEN_PYTHON_PACKAGE_NAME={name}',
+        '-DBUILD_STUB_FILES=OFF',
 ]
 
 if 'PYDIR' in os.environ:
