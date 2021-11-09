@@ -16,7 +16,7 @@ del os
 
 from . import libngpy
 
-from .libngpy.meshvis import _Redraw
+_Redraw = libngpy.meshvis._Redraw
 
 def RedrawWithEventHandling(*args, **kwargs):
     try:
