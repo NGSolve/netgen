@@ -33,5 +33,5 @@ if config.USE_GUI:
 
     Redraw = RedrawWithEventHandling
 else:
-    def Redraw():
+    def Redraw(*args, **kwargs):
         pass
