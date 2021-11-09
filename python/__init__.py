@@ -16,17 +16,19 @@ del os
 
 from . import libngpy
 
-_Redraw = libngpy.meshvis._Redraw
+if config.USE_GUI:
+    global _Redraw, Redraw
+    _Redraw = libngpy.meshvis._Redraw
 
-def RedrawWithEventHandling(*args, **kwargs):
-    try:
-        if libngpy.meshvis._Redraw(*args, **kwargs):
-            import netgen
-            import tkinter
-            cnt = 0
-            while(netgen.gui.win.tk.dooneevent(tkinter._tkinter.DONT_WAIT) and cnt < 100):
-                cnt += 1
-    except:
-        pass
+    def RedrawWithEventHandling(*args, **kwargs):
+        try:
+            if libngpy.meshvis._Redraw(*args, **kwargs):
+                import netgen
+                import tkinter
+                cnt = 0
+                while(netgen.gui.win.tk.dooneevent(tkinter._tkinter.DONT_WAIT) and cnt < 100):
+                    cnt += 1
+        except:
+            pass
 
-Redraw = RedrawWithEventHandling
+    Redraw = RedrawWithEventHandling
