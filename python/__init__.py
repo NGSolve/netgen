@@ -32,3 +32,6 @@ if config.USE_GUI:
             pass
 
     Redraw = RedrawWithEventHandling
+else:
+    def Redraw():
+        pass
