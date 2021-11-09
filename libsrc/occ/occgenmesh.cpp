@@ -948,7 +948,7 @@ namespace netgen
 
                 mesh.Compress();
 
-                cout << "retry Surface " << k << endl;
+                (*testout) << "retry Surface " << k << endl;
 
                 k--;
                 // projecttype*=-1;
