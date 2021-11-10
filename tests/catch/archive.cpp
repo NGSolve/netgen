@@ -265,6 +265,28 @@ void testEnum(Archive& in, Archive& out)
    CHECK(enin == CASE2);
   }
 
+void testOptional(Archive& in, Archive& out)
+  {
+    {
+      std::optional<int> no_value;
+      std::optional<int> myint = 42;
+      std::optional<string> mystr = "have an optional string";
+      out & no_value & myint & mystr;
+      out.FlushBuffer();
+    }
+    {
+      std::optional<int> no_value_;
+      std::optional<int> myint_;
+      std::optional<string> mystr_;
+      in & no_value_ & myint_ & mystr_;
+      CHECK(no_value_.has_value() == false);
+      CHECK(myint_.has_value() == true);
+      CHECK(*myint_ == 42);
+      CHECK(mystr_.has_value() == true);
+      CHECK(*mystr_ == "have an optional string");
+    }
+  }
+
 void testArchive(Archive& in, Archive& out)
 {
   SECTION("Empty String")
@@ -321,6 +343,10 @@ void testArchive(Archive& in, Archive& out)
   SECTION("enum")
     {
       testEnum(in, out);
+    }
+  SECTION("optional")
+    {
+      testOptional(in, out);
     }
 }
 

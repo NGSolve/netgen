@@ -9,6 +9,7 @@
 #include <functional>           // for function
 #include <map>                  // for map
 #include <memory>               // for shared_ptr
+#include <optional>             // for optional
 #include <string>               // for string
 #include <type_traits>          // for declval, enable_if_t, false_type, is_co...
 #include <cstddef>              // for std::byte
@@ -288,6 +289,24 @@ namespace ngcore
               map[key] = val;
             }
         }
+      return (*this);
+    }
+    template<typename T>
+    Archive& operator& (std::optional<T>& opt)
+    {
+        bool has_value = opt.has_value();
+        (*this) & has_value;
+        if(has_value)
+          {
+            if(Output())
+                (*this) << *opt;
+            else
+            {
+                T value;
+                (*this) & value;
+                opt = value;
+            }
+          }
       return (*this);
     }
     // Archive arrays =====================================================
