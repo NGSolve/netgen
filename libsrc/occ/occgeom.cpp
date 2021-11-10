@@ -1659,26 +1659,28 @@ namespace netgen
     if(ar.Output())
       {
         std::stringstream ss;
-        STEPControl_Writer writer;
-        writer.Transfer(shape, STEPControl_AsIs);
-        auto filename = GetTempFilename();
-        writer.Write(filename.c_str());
-        std::ifstream is(filename.c_str());
-        ss << is.rdbuf();
+        BRepTools::Write(shape, ss);
         ar << ss.str();
-        std::remove(filename.c_str());
       }
     else
       {
         std::string str;
         ar & str;
+        stringstream ss(str);
+        BRep_Builder builder;
+        BRepTools::Read(shape, ss, builder);
+      }
 
-        auto filename = GetTempFilename();
-        auto tmpfile = std::fopen(filename.c_str(), "w");
-        std::fputs(str.c_str(), tmpfile);
-        std::fclose(tmpfile);
-        LoadOCCInto(this, filename.c_str());
-        std::remove(filename.c_str());
+    ar & occdim;
+    for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
+      for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+        ar & global_shape_properties[e.Current().TShape()];
+
+    if(ar.Input())
+      {
+        changed = 1;
+        BuildFMap();
+        CalcBoundingBox();
       }
   }
   
