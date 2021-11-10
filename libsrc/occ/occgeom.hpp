@@ -232,6 +232,11 @@ namespace netgen
       if (prop2.col) col = prop2.col;
       maxh = min2(maxh, prop2.maxh);
     }
+
+    void DoArchive(Archive& ar)
+    {
+        ar & name & col & maxh & hpref;
+    }
   };
 
 
