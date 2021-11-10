@@ -509,7 +509,7 @@ namespace netgen
   {
     for (int i = 0; i < Size(); i++)
       {
-        NetgenGeometry * hgeom = (*this)[i]->LoadFromMeshFile (ist);
+        NetgenGeometry * hgeom = (*this)[i]->LoadFromMeshFile (ist, token);
         if (hgeom)
           return shared_ptr<NetgenGeometry>(hgeom);
       }

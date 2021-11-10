@@ -224,7 +224,7 @@ namespace netgen
   public:
     virtual ~GeometryRegister();
     virtual NetgenGeometry * Load (string filename) const = 0;
-    virtual NetgenGeometry * LoadFromMeshFile (istream & /* ist */) const { return NULL; }
+    virtual NetgenGeometry * LoadFromMeshFile (istream & /* ist */, string) const { return NULL; }
     virtual class VisualScene * GetVisualScene (const NetgenGeometry * /* geom */) const
     { return NULL; }
     virtual void SetParameters (Tcl_Interp * /* interp */) { ; }
