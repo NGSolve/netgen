@@ -1654,6 +1654,18 @@ namespace netgen
       }
   }
 
+  void OCCGeometry :: SaveToMeshFile (ostream & ost) const
+  {
+    auto ss = make_shared<stringstream>();
+    TextOutArchive out(ss);
+    NetgenGeometry *geo = const_cast<OCCGeometry*>(this);
+    out & geo;
+
+    ost << "TextOutArchive" << endl;
+    ost << ss->str().size() << endl;
+    ost << ss->str();
+  }
+
   void OCCGeometry :: DoArchive(Archive& ar)
   {
     if(ar.Output())

@@ -507,6 +507,24 @@ namespace netgen
   
   shared_ptr<NetgenGeometry> GeometryRegisterArray :: LoadFromMeshFile (istream & ist) const
   {
+    if (!ist.good())
+        return nullptr;
+
+    string token;
+    ist >> token;
+    if(token == "TextOutArchive")
+    {
+        NetgenGeometry *geo = nullptr;
+        size_t string_length;
+        ist >> string_length;
+        string buffer(string_length+1, '\0');
+        ist.read(&buffer[0], string_length);
+        auto ss = make_shared<stringstream>(buffer);
+        TextInArchive in(ss);
+        in & geo;
+
+        return shared_ptr<NetgenGeometry>(geo);
+    }
     for (int i = 0; i < Size(); i++)
       {
         NetgenGeometry * hgeom = (*this)[i]->LoadFromMeshFile (ist, token);
