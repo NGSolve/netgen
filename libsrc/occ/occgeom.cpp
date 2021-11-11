@@ -1668,8 +1668,12 @@ namespace netgen
 
   void OCCGeometry :: DoArchive(Archive& ar)
   {
-    int version = 0;
-    ar & version;
+    constexpr int current_format_version = 0;
+
+    int format_version = current_format_version;
+    auto netgen_version = GetLibraryVersion("netgen");
+    ar & netgen_version & format_version;
+
     if(ar.Output())
       {
         std::stringstream ss;
@@ -1678,6 +1682,11 @@ namespace netgen
       }
     else
       {
+        if(format_version>current_format_version)
+            throw Exception("Loading OCCGeometry from archive: unkown format version "
+                    + ToString(format_version)
+                    + ", written by netgen version "
+                    + ToString(netgen_version));
         std::string str;
         ar & str;
         stringstream ss(str);
