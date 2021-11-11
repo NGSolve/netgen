@@ -1668,6 +1668,8 @@ namespace netgen
 
   void OCCGeometry :: DoArchive(Archive& ar)
   {
+    int version = 0;
+    ar & version;
     if(ar.Output())
       {
         std::stringstream ss;
@@ -1683,10 +1685,62 @@ namespace netgen
         BRepTools::Read(shape, ss, builder);
       }
 
+    // enumerate shapes and archive only integers
+    auto my_hash = [](const TopoDS_Shape & key) {
+        auto occ_hash = key.HashCode(1<<31UL);
+        return std::hash<decltype(occ_hash)>()(occ_hash);
+    };
+    std::unordered_map<TopoDS_Shape, int, decltype(my_hash)> shape_map(10, my_hash);
+    Array<TopoDS_Shape> shape_list;
+
+    std::map<Handle(TopoDS_TShape), int> tshape_map;
+    Array<Handle(TopoDS_TShape)> tshape_list;
+
     ar & occdim;
     for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
       for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
-        ar & global_shape_properties[e.Current().TShape()];
+        {
+          auto ds = e.Current(); 
+          auto ts = ds.TShape();
+          if(shape_map.count(ds)==0)
+            {
+              shape_map[ds] = shape_list.Size();
+              shape_list.Append(ds);
+            }
+          if(tshape_map.count(ts)==0)
+            {
+              tshape_map[ts] = shape_list.Size();
+              tshape_list.Append(ts);
+            }
+        }
+
+    for (auto ts : tshape_list)
+      {
+        bool has_properties = global_shape_properties.count(ts);
+        ar & has_properties;
+        if(has_properties)
+            ar & global_shape_properties[ts];
+
+        bool has_identifications = identifications.count(ts);
+        ar & has_identifications;
+        if(has_identifications)
+          {
+            auto & idents = identifications[ts];
+            auto n_idents = idents.size();
+            ar & n_idents;
+            idents.resize(n_idents);
+            for(auto i : Range(n_idents))
+              {
+                auto & id = idents[i];
+                int shape_id;
+                if(ar.Output())
+                    shape_id = shape_map[id.other];
+                ar & shape_id & id.trafo & id.inverse & id.name;
+                if(ar.Input())
+                    id.other = shape_list[shape_id];
+              }
+          }
+      }
 
     if(ar.Input())
       {

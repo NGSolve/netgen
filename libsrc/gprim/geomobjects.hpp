@@ -269,6 +269,11 @@ namespace netgen
       CalcInverse (*this, inv);
       sol = inv * rhs;
     }
+
+    void DoArchive(Archive & ar)
+    {
+      ar.Do(x, H*W);
+    }
   };
 
 
