@@ -104,15 +104,8 @@ void Ng_LoadMeshFromStream ( istream & input )
   mesh -> Load(input);
 
   SetGlobalMesh (mesh);
-  for (int i = 0; i < geometryregister.Size(); i++)
-    {
-      NetgenGeometry * hgeom = geometryregister[i]->LoadFromMeshFile (input);
-      if (hgeom)
-	{
-          ng_geometry.reset (hgeom);
-	  break;
-	}
-    }
+  ng_geometry = geometryregister.LoadFromMeshFile (input);
+
   if (!ng_geometry)
     ng_geometry = make_shared<NetgenGeometry>();
   mesh->SetGeometry (ng_geometry);

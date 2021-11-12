@@ -232,6 +232,11 @@ namespace netgen
       if (prop2.col) col = prop2.col;
       maxh = min2(maxh, prop2.maxh);
     }
+
+    void DoArchive(Archive& ar)
+    {
+        ar & name & col & maxh & hpref;
+    }
   };
 
 
@@ -375,6 +380,7 @@ namespace netgen
     void FinalizeMesh(Mesh& mesh) const override;
      
     void Save (string filename) const override;
+    void SaveToMeshFile (ostream & /* ost */) const override;
      
     void DoArchive(Archive& ar) override;
 

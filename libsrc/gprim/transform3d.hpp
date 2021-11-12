@@ -133,6 +133,11 @@ public:
   Mat<D> & GetMatrix() { return m; }
   Vec<D> & GetVector() { return v; }
 
+  void DoArchive(Archive& ar)
+  {
+      ar & m & v;
+  }
+
   /// 
   Transformation CalcInverse () const
   {

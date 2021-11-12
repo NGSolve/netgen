@@ -1620,7 +1620,7 @@ namespace netgen
   {
   public:
     virtual NetgenGeometry * Load (string filename) const;
-    virtual NetgenGeometry * LoadFromMeshFile (istream & ist) const;
+    virtual NetgenGeometry * LoadFromMeshFile (istream & ist, string token) const;
     // virtual VisualScene * GetVisualScene (const NetgenGeometry * geom) const;
   };
 
@@ -1659,22 +1659,14 @@ namespace netgen
     return NULL;
   }
 
-  NetgenGeometry * CSGeometryRegister :: LoadFromMeshFile (istream & ist) const 
+  NetgenGeometry * CSGeometryRegister :: LoadFromMeshFile (istream & ist, string token) const
   {
-    string auxstring;
-    if (ist.good())
-      {
-	ist >> auxstring;
-	if (auxstring == "csgsurfaces")
-	  {
-	    CSGeometry * geometry = new CSGeometry ("");
-	    geometry -> LoadSurfaces(ist);
-	    return geometry;
-	  }
-	// else
-	// ist.putback (auxstring);
-      }
-    return NULL;
+	if (token != "csgsurfaces")
+        return nullptr;
+
+    CSGeometry * geometry = new CSGeometry ("");
+	geometry -> LoadSurfaces(ist);
+	return geometry;
   }
 
 

@@ -233,16 +233,10 @@ namespace netgen
 	MyMPI_SendCmd ("mesh");
 	mesh -> Distribute();
 #endif
-	for (int i = 0; i < geometryregister.Size(); i++)
-	  {
-	    NetgenGeometry * hgeom = geometryregister[i]->LoadFromMeshFile (*infile);
-	    if (hgeom)
-	      {
-                ng_geometry = shared_ptr<NetgenGeometry>(hgeom);
-		break;
-	      }
-	  }
-        delete infile;
+    auto geo = geometryregister.LoadFromMeshFile (*infile);
+    if(geo)
+        ng_geometry = geo;
+    delete infile;
 
 	/*
 	string auxstring;
