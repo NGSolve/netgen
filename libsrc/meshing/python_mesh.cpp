@@ -696,7 +696,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 	    int strs;
 
 	    if( id == 0) {
-	      if (filename.substr (filename.length()-8, 8) == ".vol.bin")
+	      if (filename.length() > 8 && filename.substr (filename.length()-8, 8) == ".vol.bin")
                 mesh -> Load(filename);
               else if (filename.substr (filename.length()-3, 3) == ".gz")
 		infile = new igzstream (filename.c_str());
