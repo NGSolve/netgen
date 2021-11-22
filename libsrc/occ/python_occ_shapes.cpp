@@ -35,6 +35,10 @@
 #include <Geom_BSplineCurve.hxx>
 #include <Geom_BezierCurve.hxx>
 #include <GeomAPI_PointsToBSpline.hxx>
+#include <GeomAbs_Shape.hxx>
+#include <Geom_BSplineSurface.hxx>
+#include <GeomAPI_PointsToBSplineSurface.hxx>
+#include <GeomAPI_Interpolate.hxx>
 #include <GC_MakeSegment.hxx>
 #include <GC_MakeCircle.hxx>
 #include <GC_MakeArcOfCircle.hxx>
@@ -685,8 +689,6 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .value("SHAPE", TopAbs_SHAPE)
     .export_values()
     ;
-
-
   
   
   py::class_<TopoDS_Shape> (m, "TopoDS_Shape")
@@ -1712,6 +1714,22 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       })
     ;
 
+
+  py::enum_<GeomAbs_Shape>(m, "ShapeContinuity", "Wrapper for OCC enum GeomAbs_Shape")
+    .value("C0", GeomAbs_Shape::GeomAbs_C0)
+    .value("C1", GeomAbs_Shape::GeomAbs_C1)
+    .value("C2", GeomAbs_Shape::GeomAbs_C2)
+    .value("C3", GeomAbs_Shape::GeomAbs_C3)
+    .value("CN", GeomAbs_Shape::GeomAbs_CN)
+    .value("G1", GeomAbs_Shape::GeomAbs_G1)
+    .value("G2", GeomAbs_Shape::GeomAbs_G2);
+
+  py::enum_<Approx_ParametrizationType>(m, "ApproxParamType", "Wrapper for Approx_ParametrizationType")
+    .value("Centripetal", Approx_ParametrizationType::Approx_Centripetal)
+    .value("ChordLength", Approx_ParametrizationType::Approx_ChordLength)
+    .value("IsoParametric", Approx_ParametrizationType::Approx_IsoParametric);
+
+
   m.def("HalfSpace", [] (gp_Pnt p, gp_Vec n)
   {
     gp_Pln plane(p, n);
@@ -1994,14 +2012,230 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       return BRepBuilderAPI_MakeEdge(curve).Edge();
     }, py::arg("points"), "create Bezier curve");
 
-  m.def("SplineApproximation", [](std::vector<gp_Pnt> pnts, double tol) {
-      TColgp_Array1OfPnt points(0, pnts.size()-1);
-      for (int i = 0; i < pnts.size(); i++)
-        points.SetValue(i, pnts[i]);
-      GeomAPI_PointsToBSpline builder(points);
+  m.def("SplineApproximation", [](py::object pnts, Approx_ParametrizationType approx_type, int deg_min,
+          int deg_max, GeomAbs_Shape continuity, double tol) {
+      TColgp_Array1OfPnt points(0, 0);
+      if (py::extract<std::vector<gp_Pnt>>(pnts).check()) {
+          std::vector<gp_Pnt> pnt_list{py::extract<std::vector<gp_Pnt>>(pnts)()};
+          points.Resize(0, pnt_list.size()-1, true);
+          for (int i = 0; i < pnt_list.size(); i++)
+              points.SetValue(i, pnt_list[i]);
+      } else if (py::extract<py::array_t<double>>(pnts).check()) {
+          py::array_t<double> pnt_array{py::extract<py::array_t<double>>(pnts)()};
+          if (pnt_array.ndim() != 2)
+            throw Exception("`points` array must have dimension 2.");
+          if (pnt_array.shape(1) != 3)
+            throw Exception("The second dimension must have size 3.");
+
+          points.Resize(0, pnt_array.shape(0)-1, true);
+          auto pnts_unchecked = pnt_array.unchecked<2>();
+          for (int i = 0; i < pnt_array.shape(0); ++i)
+            points.SetValue(i, gp_Pnt(pnts_unchecked(i, 0), pnts_unchecked(i, 1), pnts_unchecked(i, 2)));
+      } else
+          throw Exception("Not able to process the data type of points");
+
+      GeomAPI_PointsToBSpline builder(points, approx_type, deg_min, deg_max, continuity, tol);
       return BRepBuilderAPI_MakeEdge(builder.Curve()).Edge();
-    }, py::arg("points"), py::arg("tol"),
-    "Generate spline-curve approximating list of points up to tolerance tol");
+    },
+    py::arg("points"),
+    py::arg("approx_type") = Approx_ParametrizationType::Approx_ChordLength,
+    py::arg("deg_min") = 3,
+    py::arg("deg_max") = 8,
+    py::arg("continuity") = GeomAbs_Shape::GeomAbs_C2,
+    py::arg("tol")=1e-8,
+    R"delimiter(
+Generate a piecewise continuous spline-curve approximating a list of points.
+
+Parameters
+----------
+
+points : List[gp_Pnt] or Tuple[gp_Pnt] or np.ndarray[double]
+  List (or tuple) of gp_Pnt. If a numpy array is provided instead, the data must contain the coordinates
+
+approx_type : ApproxParamType
+  Assumption on location of parameters wrt points.
+
+deg_min : int
+  Minimum polynomial degree of splines
+
+deg_max : int
+  Maxmium polynomial degree of splines
+
+continuity : ShapeContinuity
+  Continuity requirement on the approximating surface
+
+tol : float
+  Tolerance for the distance from individual points to the approximating curve.
+
+)delimiter");
+
+// CRASHES BADLY during call of Curve()!
+//    m.def("SplineInterpolation", [](py::object pnts, bool periodic, double tol) {
+//              cout << "enter" << endl;
+//              TColgp_Array1OfPnt points(0, 0);
+//              cout << "points array exists" << endl;
+//              if (py::extract<std::vector<gp_Pnt>>(pnts).check()) {
+//                  std::vector<gp_Pnt> pnt_list{py::extract<std::vector<gp_Pnt>>(pnts)()};
+//                  points.Resize(1, pnt_list.size(), true);
+//                  for (int i = 0; i < pnt_list.size(); i++)
+//                      points.SetValue(i+1, pnt_list[i]);
+//              } else if (py::extract<py::array_t<double>>(pnts).check()) {
+//                  py::array_t<double> pnt_array{py::extract<py::array_t<double>>(pnts)()};
+//                  if (pnt_array.ndim() != 2)
+//                      throw Exception("`points` array must have dimension 2.");
+//                  if (pnt_array.shape(1) != 3)
+//                      throw Exception("The second dimension must have size 3.");
+//                  cout << "resize" << endl;
+//                  points.Resize(1, pnt_array.shape(0), true);
+//                  auto pnts_unchecked = pnt_array.unchecked<2>();
+//                  for (int i = 0; i < pnt_array.shape(0); ++i)
+//                      points.SetValue(i+1, gp_Pnt(pnts_unchecked(i, 0), pnts_unchecked(i, 1), pnts_unchecked(i, 2)));
+//                  cout << "values set" << endl;
+//              } else
+//                  throw Exception("Not able to process the data type of points");
+//
+//              TColgp_HArray1OfPnt hpoints{points};
+//              const auto _handle = opencascade::handle<TColgp_HArray1OfPnt>{&hpoints};
+//              cout << "build" << endl;
+//              GeomAPI_Interpolate builder(_handle, periodic, tol);
+//              cout << "done" << endl;
+//              auto curve = builder.Curve();
+//              cout << "curve done" << endl;
+//              return BRepBuilderAPI_MakeEdge(curve);
+////              return BRepBuilderAPI_MakeEdge(builder.Curve()).Edge();
+//          },
+//          py::arg("points"),
+//          py::arg("periodic")=false,
+//          py::arg("tol")=1e-8,
+//          R"delimiter(
+//Generate a piecewise continuous spline-curve interpolating a list of points.
+//
+//Parameters
+//----------
+//
+//points : List[gp_Pnt] or Tuple[gp_Pnt] or np.ndarray[double]
+//  List (or tuple) of gp_Pnt. If a numpy array is provided instead, the data must contain the coordinates
+//
+//periodic : bool
+//  Whether the result should be periodic
+//
+//tol : float
+//  Tolerance for the distance between points.
+//
+//)delimiter");
+
+
+  m.def("SplineSurfaceApproximation", [](py::array_t<double> pnt_array,
+          Approx_ParametrizationType approx_type, int deg_min, int deg_max, GeomAbs_Shape continuity, double tol,
+          bool periodic, double degen_tol) {
+      if (pnt_array.ndim() != 3)
+        throw Exception("`points` array must have dimension 3.");
+      if (pnt_array.shape(2) != 3)
+        throw Exception("The third dimension must have size 3.");
+
+      auto array = py::extract<py::array_t<double>>(pnt_array)();
+      TColgp_Array2OfPnt points(1, pnt_array.shape(0), 1, pnt_array.shape(1));
+      auto pnts_unchecked = pnt_array.unchecked<3>();
+      for (int i = 0; i < pnt_array.shape(0); ++i)
+        for (int j = 0; j < pnt_array.shape(1); ++j)
+          points.SetValue(i+1, j+1, gp_Pnt(pnts_unchecked(i, j, 0), pnts_unchecked(i, j, 1), pnts_unchecked(i, j, 2)));
+
+      GeomAPI_PointsToBSplineSurface builder;
+      builder.Init(points, approx_type, deg_min, deg_max, continuity, tol, periodic);
+      return BRepBuilderAPI_MakeFace(builder.Surface(), tol).Face();
+    },
+    py::arg("points"),
+    py::arg("approx_type") = Approx_ParametrizationType::Approx_ChordLength,
+    py::arg("deg_min") = 3,
+    py::arg("deg_max") = 8,
+    py::arg("continuity") = GeomAbs_Shape::GeomAbs_C2,
+    py::arg("tol") = 1e-3,
+    py::arg("periodic") = false,
+    py::arg("degen_tol") = 1e-8,
+    R"delimiter(
+Generate a piecewise continuous spline-surface approximating an array of points.
+
+Parameters
+----------
+
+points : np.ndarray
+  Array of points coordinates. The first dimension corresponds to the first surface coordinate point
+  index, the second dimension to the second surface coordinate point index. The third dimension refers to physical
+  coordinates. Such an array can be generated with code like::
+
+      px, py = np.meshgrid(*[np.linspace(0, 1, N)]*2)
+      points = np.array([[(px[i,j], py[i,j], px[i,j]*py[i,j]**2) for j in range(N)] for i in range(N)])
+
+approx_type : ApproxParamType
+  Assumption on location of parameters wrt points.
+
+deg_min : int
+  Minimum polynomial degree of splines
+
+deg_max : int
+  Maxmium polynomial degree of splines
+
+continuity : ShapeContinuity
+  Continuity requirement on the approximating surface
+
+tol : float
+  Tolerance for the distance from individual points to the approximating surface.
+
+periodic : bool
+  Whether the result should be periodic
+
+degen_tol : double
+  Tolerance for resolution of degenerate edges
+
+)delimiter");
+
+    m.def("SplineSurfaceInterpolation", [](
+            py::array_t<double> pnt_array, Approx_ParametrizationType approx_type, bool periodic, double degen_tol) {
+
+          if (pnt_array.ndim() != 3)
+              throw Exception("`points` array must have dimension 3.");
+          if (pnt_array.shape(2) != 3)
+              throw Exception("The third dimension must have size 3.");
+
+          auto array = py::extract<py::array_t<double>>(pnt_array)();
+          TColgp_Array2OfPnt points(1, pnt_array.shape(0), 1, pnt_array.shape(1));
+          auto pnts_unchecked = pnt_array.unchecked<3>();
+          for (int i = 0; i < pnt_array.shape(0); ++i)
+              for (int j = 0; j < pnt_array.shape(1); ++j)
+                  points.SetValue(i+1, j+1, gp_Pnt(pnts_unchecked(i, j, 0), pnts_unchecked(i, j, 1), pnts_unchecked(i, j, 2)));
+
+          GeomAPI_PointsToBSplineSurface builder;
+          builder.Interpolate(points, approx_type, periodic);
+          return BRepBuilderAPI_MakeFace(builder.Surface(), degen_tol).Face();
+      },
+      py::arg("points"),
+      py::arg("approx_type") = Approx_ParametrizationType::Approx_ChordLength,
+      py::arg("periodic") = false,
+      py::arg("degen_tol") = 1e-8,
+      R"delimiter(
+Generate a piecewise continuous spline-surface interpolating an array of points.
+
+Parameters
+----------
+
+points : np.ndarray
+  Array of points coordinates. The first dimension corresponds to the first surface coordinate point
+  index, the second dimension to the second surface coordinate point index. The third dimension refers to physical
+  coordinates. Such an array can be generated with code like::
+
+      px, py = np.meshgrid(*[np.linspace(0, 1, N)]*2)
+      points = np.array([[(px[i,j], py[i,j], px[i,j]*py[i,j]**2) for j in range(N)] for i in range(N)])
+
+approx_type : ApproxParamType
+  Assumption on location of parameters wrt points.
+
+periodic : bool
+  Whether the result should be periodic
+
+degen_tol : double
+  Tolerance for resolution of degenerate edges
+
+)delimiter");
 
 
   m.def("MakeFillet", [](TopoDS_Shape shape, std::vector<TopoDS_Shape> edges, double r) {
