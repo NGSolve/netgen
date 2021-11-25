@@ -127,9 +127,11 @@ public:
     for (auto shape : *this)
       {
         double dist = BRepExtrema_DistShapeShape(shape, vertex).Value();
-        // cout << "dist = " << dist << endl;
         if (dist < mindist)
-          nearestshape = shape;
+          {
+            nearestshape = shape;
+            mindist = dist;
+          }
       }
     return nearestshape;
   }
@@ -1626,6 +1628,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 
     .def("Nearest", [] (ListOfShapes & shapes, gp_Pnt pnt) 
          { return CastShape(shapes.Nearest(pnt)); },
+         py::arg("p"), "returns shape nearest to point 'p'")
+    .def("Nearest", [] (ListOfShapes & shapes, gp_Pnt2d pnt) 
+         { return CastShape(shapes.Nearest( { pnt.X(), pnt.Y(), 0 })); },
          py::arg("p"), "returns shape nearest to point 'p'")
     
     .def_property("name", [](ListOfShapes& shapes)
