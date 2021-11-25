@@ -794,7 +794,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            // version 1: Transoformation
            gp_Trsf trafo;
            trafo.SetTranslation(v);
-           BRepBuilderAPI_Transform builder(shape, trafo);
+           BRepBuilderAPI_Transform builder(shape, trafo, true);
            PropagateProperties(builder, shape);
            return builder.Shape();
            // version 2: change location
@@ -806,7 +806,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          {
            gp_Trsf trafo;
            trafo.SetRotation(ax, ang*M_PI/180);            
-           BRepBuilderAPI_Transform builder(shape, trafo);
+           BRepBuilderAPI_Transform builder(shape, trafo, true);
            PropagateProperties(builder, shape);
            return builder.Shape();
          }, py::arg("axis"), py::arg("ang"),
@@ -816,7 +816,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          {
            gp_Trsf trafo;
            trafo.SetMirror(ax.Ax2());
-           BRepBuilderAPI_Transform builder(shape, trafo);
+           BRepBuilderAPI_Transform builder(shape, trafo, true);
            PropagateProperties(builder, shape);
            return builder.Shape();
          }, py::arg("axes"),
@@ -826,7 +826,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          {
            gp_Trsf trafo;
            trafo.SetMirror(ax);
-           BRepBuilderAPI_Transform builder(shape, trafo);
+           BRepBuilderAPI_Transform builder(shape, trafo, true);
            PropagateProperties(builder, shape);
            return builder.Shape();
          }, py::arg("axes"),
@@ -836,7 +836,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          {
            gp_Trsf trafo;
            trafo.SetScale(p, s);
-           BRepBuilderAPI_Transform builder(shape, trafo);
+           BRepBuilderAPI_Transform builder(shape, trafo, true);
            PropagateProperties(builder, shape);
            return builder.Shape();
          }, py::arg("p"), py::arg("s"),
