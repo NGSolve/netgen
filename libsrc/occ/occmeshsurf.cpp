@@ -2,16 +2,16 @@
 
 #include <mystdlib.h>
 
-#include <occgeom.hpp>
 #include <meshing.hpp>
+#include "occgeom.hpp"
+
 #include <GeomLProp_SLProps.hxx>
 #include <ShapeAnalysis_Surface.hxx>
 
+#include "occmeshsurf.hpp"
 
 namespace netgen
 {
-#include "occmeshsurf.hpp"
-
 
   bool glob_testout(false);
 

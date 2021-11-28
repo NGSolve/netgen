@@ -1,59 +1,21 @@
 #ifdef NG_PYTHON
 #ifdef OCCGEOMETRY
 
-#include <../general/ngpython.hpp>
+#include <general/ngpython.hpp>
 #include <core/python_ngcore.hpp>
-#include "../meshing/python_mesh.hpp"
-
+#include <meshing/python_mesh.hpp>
 #include <meshing.hpp>
-#include <occgeom.hpp>
 
+#include "occgeom.hpp"
+
+#include <BRepBuilderAPI_Transform.hxx>
 #include <gp_Ax1.hxx>
 #include <gp_Ax2.hxx>
 #include <gp_Ax2d.hxx>
+#include <gp_Ax3.hxx>
 #include <gp_Trsf.hxx>
-#include <BRepPrimAPI_MakeSphere.hxx>
-#include <BRepPrimAPI_MakeCylinder.hxx>
-#include <BRepPrimAPI_MakeBox.hxx>
-#include <BRepPrimAPI_MakePrism.hxx>
-#include <BRepOffsetAPI_MakePipe.hxx>
-#include <BRepAlgoAPI_Cut.hxx>
-#include <BRepAlgoAPI_Common.hxx>
-#include <BRepAlgoAPI_Fuse.hxx>
-// #include <XCAFDoc_VisMaterialTool.hxx>
-#include <TDF_Attribute.hxx>
-#include <Standard_GUID.hxx>
-#include <Geom_TrimmedCurve.hxx>
-#include <GC_MakeSegment.hxx>
-#include <GC_MakeCircle.hxx>
-#include <GC_MakeArcOfCircle.hxx>
-#include <BRepBuilderAPI_MakeEdge.hxx>
-#include <BRepBuilderAPI_MakeWire.hxx>
-#include <BRepBuilderAPI_Transform.hxx>
-#include <BRepBuilderAPI_MakeFace.hxx>
-#include <BRepFilletAPI_MakeFillet.hxx>
-#include <BRepOffsetAPI_ThruSections.hxx>
 
-#include <BRepGProp.hxx>
-#include <BRepOffsetAPI_MakeThickSolid.hxx>
-#include <BRepLib.hxx>
-
-#include <Geom2d_Curve.hxx>
-#include <Geom2d_Ellipse.hxx>
-#include <Geom2d_TrimmedCurve.hxx>
-#include <GCE2d_MakeSegment.hxx>
-#include <GCE2d_MakeCircle.hxx>
-
-#include <python_occ.hpp>
-
-
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
-#define OCC_HAVE_DUMP_JSON
-#endif
-
-
-
-
+using namespace netgen;
 
 DLL_HEADER void ExportNgOCCBasic(py::module &m) 
 {

@@ -15,6 +15,9 @@
 
 #include "vsocc.hpp"
 
+#include <TopoDS_Edge.hxx>
+#include <IGESControl_Writer.hxx>
+
 // __declspec(dllimport) void AutoColourBcProps(Mesh & mesh, const char *bccolourfile);
 // __declspec(dllimport) void GetFaceColours(Mesh & mesh, NgArray<Vec3d> & face_colours);
 // __declspec(dllimport) bool ColourMatch(Vec3d col1, Vec3d col2, double eps = 2.5e-05);

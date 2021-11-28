@@ -2687,6 +2687,7 @@ namespace netgen
     identifiedpoints_nr.Set (tripl, 1);
 
     if (identnr > maxidentnr) maxidentnr = identnr;
+    names.SetSize(maxidentnr);
 
     if (identnr+1 > idpoints_table.Size())
       idpoints_table.ChangeSize (identnr+1);

@@ -6,9 +6,15 @@
 #include "occgeom.hpp"
 #include "mydefs.hpp"
 
+#include <TopoDS_Face.hxx>
+#include <Geom_Surface.hxx>
+#include <ShapeAnalysis.hxx>
+
 #define PARAMETERSPACE -1
 #define PLANESPACE     1
 
+namespace netgen
+{
 class OCCGeometry;
 
 class SingularMatrixException
@@ -144,8 +150,8 @@ protected:
 
 class OCCGeometry;
 
+} // namespace netgen
+
 #endif
-
-
 
 #endif

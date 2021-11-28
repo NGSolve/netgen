@@ -117,6 +117,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   m.def("_PushStatus", [](string s) { PushStatus(MyStr(s)); });
   m.def("_SetThreadPercentage", [](double percent) { SetThreadPercent(percent); });
 
+  py::enum_<Identifications::ID_TYPE>(m,"IdentificationType")
+    .value("UNDEFINED", Identifications::UNDEFINED)
+    .value("PERIODIC", Identifications::PERIODIC)
+    .value("CLOSESURFACES", Identifications::CLOSESURFACES)
+    .value("CLOSEEDGES", Identifications::CLOSEEDGES)
+    ;
+
   py::class_<NgMPI_Comm> (m, "MPI_Comm")
 #ifdef NG_MPI4PY
     .def(py::init([] (mpi4py_comm comm)
@@ -944,19 +951,19 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def ("GetCD3Name", &Mesh::GetCD3Name)
     .def ("SetCD3Name", &Mesh::SetCD3Name)
 
-    .def ("AddPointIdentification", [](Mesh & self, py::object pindex1, py::object pindex2, int identnr, int type)
+    .def ("AddPointIdentification", [](Mesh & self, py::object pindex1, py::object pindex2, int identnr, Identifications::ID_TYPE type)
                            {
 			     if(py::extract<PointIndex>(pindex1).check() && py::extract<PointIndex>(pindex2).check())
 			       {
 				 self.GetIdentifications().Add (py::extract<PointIndex>(pindex1)(), py::extract<PointIndex>(pindex2)(), identnr);
-				 self.GetIdentifications().SetType(identnr, Identifications::ID_TYPE(type)); // type = 2 ... periodic
+				 self.GetIdentifications().SetType(identnr, type); // type = 2 ... periodic
 			       }
                            },
           //py::default_call_policies(),
           py::arg("pid1"),
            py::arg("pid2"),
            py::arg("identnr"),
-           py::arg("type"))
+           py::arg("type")=Identifications::PERIODIC)
     .def("IdentifyPeriodicBoundaries", &Mesh::IdentifyPeriodicBoundaries,
          py::arg("face1"), py::arg("face2"), py::arg("mapping"), py::arg("point_tolerance") = -1.)
     .def("GetNrIdentifications", [](Mesh& self)

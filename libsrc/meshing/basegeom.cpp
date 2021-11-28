@@ -4,12 +4,66 @@
 
 namespace netgen
 {
+  struct PointTree
+  {
+      BoxTree<3> tree;
 
-  DLL_HEADER GeometryRegisterArray geometryregister; 
+      PointTree( Box<3> bb ) : tree(bb) {}
+
+      void Insert(Point<3> p, PointIndex n)
+      {
+          tree.Insert(p, p, n);
+      }
+
+      PointIndex Find(Point<3> p) const
+      {
+          ArrayMem<int, 1> points;
+          tree.GetIntersecting(p, p, points);
+          if(points.Size()==0)
+              throw Exception("cannot find mapped point");
+          return points[0];
+      }
+
+      double GetTolerance() { return tree.GetTolerance(); }
+  };
+
+  DLL_HEADER GeometryRegisterArray geometryregister;
   //DLL_HEADER NgArray<GeometryRegister*> geometryregister;
 
   GeometryRegister :: ~GeometryRegister()
   { ; }
+
+  bool GeometryShape :: IsMappedShape( const GeometryShape & other_, const Transformation<3> & trafo, double tol ) const
+  {
+      throw Exception("GeometryShape::IsMappedShape not implemented for class " + Demangle(typeid(this).name()));
+  }
+
+  bool GeometryVertex :: IsMappedShape( const GeometryShape & other_, const Transformation<3> & trafo, double tol ) const
+  {
+      const auto other_ptr = dynamic_cast<const GeometryVertex*>(&other_);
+      if(!other_ptr)
+          return false;
+
+      return Dist(trafo(GetPoint()), other_ptr->GetPoint()) < tol;
+  }
+
+  bool GeometryEdge :: IsMappedShape( const GeometryShape & other_, const Transformation<3> & trafo, double tol ) const
+  {
+      const auto other_ptr = dynamic_cast<const GeometryEdge*>(&other_);
+      if(!other_ptr)
+          return false;
+      auto & e = *other_ptr;
+
+      if(tol < Dist(GetCenter(), e.GetCenter()))
+          return false;
+
+      auto &v0 = GetStartVertex();
+      auto &v1 = GetEndVertex();
+      auto &w0 = e.GetStartVertex();
+      auto &w1 = e.GetEndVertex();
+      return( (v0.IsMappedShape(w0, trafo, tol) && v1.IsMappedShape(w1, trafo, tol)) ||
+              (v0.IsMappedShape(w1, trafo, tol) && v1.IsMappedShape(w0, trafo, tol)) );
+  }
 
   void GeometryFace :: RestrictHTrig(Mesh& mesh,
                                      const PointGeomInfo& gi0,
@@ -102,6 +156,64 @@ namespace netgen
       return 1e99;
     }
   };
+
+  void NetgenGeometry :: ProcessIdentifications()
+  {
+      auto mirror_identifications = [&] ( auto & shapes )
+      {
+          for(auto i : Range(shapes))
+          {
+              auto &s = shapes[i];
+              s->nr = i;
+              for(auto & ident : s->identifications)
+                  if(s.get() == ident.from)
+                      ident.to->identifications.Append(ident);
+          }
+      };
+
+      mirror_identifications(vertices);
+      mirror_identifications(edges);
+      mirror_identifications(faces);
+
+      // todo: propagate identifications faces -> edges -> vertices
+
+      auto find_primary = [&] (auto & shapes)
+      {
+          for(auto &s : shapes)
+          {
+              s->primary = s.get();
+              s->primary_to_me = Transformation<3>{ Vec<3> {0,0,0} }; // init with identity
+          }
+
+          bool changed = true;
+
+          while(changed) {
+            changed = false;
+            for(auto &s : shapes)
+            {
+              auto current = s->primary;
+              for(auto & ident : current->identifications)
+              {
+                  bool need_inverse = ident.from == s.get();
+                  auto other = need_inverse ? ident.to : ident.from;
+                  if(other->nr < current->nr)
+                  {
+                      auto trafo = ident.trafo;
+                      if(need_inverse)
+                          trafo = trafo.CalcInverse();
+                      s->primary = other;
+                      s->primary_to_me.Combine(trafo, s->primary_to_me);
+                      changed = true;
+                  }
+              }
+            }
+          }
+      };
+
+      find_primary(vertices);
+      find_primary(edges);
+      find_primary(faces);
+  }
 
   void NetgenGeometry :: Analyse(Mesh& mesh,
                                  const MeshingParameters& mparam) const
@@ -241,165 +353,257 @@ namespace netgen
     mesh.LoadLocalMeshSize(mparam.meshsizefilename);
   }
 
+  void DivideEdge(GeometryEdge * edge, const MeshingParameters & mparam, const Mesh & mesh, Array<Point<3>> & points, Array<double> & params)
+  {
+      static Timer tdivedgesections("Divide edge sections");
+      static Timer tdivide("Divide Edges");
+      RegionTimer rt(tdivide);
+      // -------------------- DivideEdge -----------------
+      static constexpr size_t divide_edge_sections = 1000;
+      double hvalue[divide_edge_sections+1];
+      hvalue[0] = 0;
+
+      Point<3> old_pt = edge->GetPoint(0.);
+      // calc local h for edge
+      tdivedgesections.Start();
+      for(auto i : Range(divide_edge_sections))
+      {
+          auto pt = edge->GetPoint(double(i+1)/divide_edge_sections);
+          hvalue[i+1] = hvalue[i] + 1./mesh.GetH(pt) * (pt-old_pt).Length();
+          old_pt = pt;
+      }
+      int nsubedges = max2(1, int(floor(hvalue[divide_edge_sections]+0.5)));
+      tdivedgesections.Stop();
+      points.SetSize(nsubedges-1);
+      params.SetSize(nsubedges+1);
+
+      int i = 1;
+      int i1 = 0;
+      do
+      {
+          if (hvalue[i1]/hvalue[divide_edge_sections]*nsubedges >= i)
+          {
+              params[i] = (double(i1)/divide_edge_sections);
+              points[i-1] = MeshPoint(edge->GetPoint(params[i]));
+              i++;
+          }
+          i1++;
+          if (i1 > divide_edge_sections)
+          {
+              nsubedges = i;
+              points.SetSize(nsubedges-1);
+              params.SetSize(nsubedges+1);
+              cout << "divide edge: local h too small" << endl;
+          }
+
+      } while(i < nsubedges);
+
+      params[0] = 0.;
+      params[nsubedges] = 1.;
+
+      if(params[nsubedges] <= params[nsubedges-1])
+      {
+          cout << "CORRECTED" << endl;
+          points.SetSize (nsubedges-2);
+          params.SetSize (nsubedges);
+          params[nsubedges-1] = 1.;
+      }
+  }
+
   void NetgenGeometry :: FindEdges(Mesh& mesh,
                                    const MeshingParameters& mparam) const
   {
     static Timer t1("MeshEdges"); RegionTimer regt(t1);
-    static Timer tdivide("Divide Edges");
-    static Timer tdivedgesections("Divide edge sections");
     const char* savetask = multithread.task;
     multithread.task = "Mesh Edges";
 
-    // create face descriptors and set bc names
-    mesh.SetNBCNames(faces.Size());
-    for(auto i : Range(faces.Size()))
-      {
-        mesh.SetBCName(i, faces[i]->GetName());
-        // todo find attached solids
-        FaceDescriptor fd(i+1, 1, 0, i+1);
-        fd.SetBCName(mesh.GetBCNamePtr(i));
-        mesh.AddFaceDescriptor(fd);
-      }
+    PointTree tree( bounding_box );
+
+    auto & identifications = mesh.GetIdentifications();
 
     std::map<size_t, PointIndex> vert2meshpt;
-    for(auto i : Range(vertices))
+    for(auto & vert : vertices)
       {
-        const auto& vert = *vertices[i];
-        MeshPoint mp(vert.GetPoint());
-        vert2meshpt[vert.GetHash()] = mesh.AddPoint(mp);
+        auto pi = mesh.AddPoint(vert->GetPoint());
+        tree.Insert(mesh[pi], pi);
+        vert2meshpt[vert->GetHash()] = pi;
+        mesh[pi].Singularity(vert->properties.hpref);
+
+        if(vert->properties.name)
+        {
+          Element0d el(pi, pi);
+          el.name = vert->properties.GetName();
+          mesh.SetCD3Name(pi, el.name);
+          mesh.pointelements.Append (el);
+        }
       }
 
+    for(auto & vert : vertices)
+        for(auto & ident : vert->identifications)
+            identifications.Add(vert2meshpt[ident.from->GetHash()],
+                                vert2meshpt[ident.to->GetHash()],
+                                ident.name,
+                                ident.type);
+
     size_t segnr = 0;
-    for(auto facenr : Range(faces.Size()))
-      {
-        const auto& face = *faces[facenr];
-        for(auto facebndnr : Range(face.GetNBoundaries()))
+    auto nedges = edges.Size();
+    Array<Array<PointIndex>> all_pnums(nedges);
+    Array<Array<double>> all_params(nedges);
+
+    for (auto edgenr : Range(edges))
+    {
+        auto edge = edges[edgenr].get();
+        PointIndex startp, endp;
+        // throws if points are not found
+        startp = vert2meshpt.at(edge->GetStartVertex().GetHash());
+        endp = vert2meshpt.at(edge->GetEndVertex().GetHash());
+
+        // ignore collapsed edges
+        if(startp == endp && edge->GetLength() < 1e-10 * bounding_box.Diam())
+            continue;
+
+        // ----------- Add Points to mesh and create segments -----
+        auto & pnums = all_pnums[edgenr];
+        auto & params = all_params[edgenr];
+        Array<Point<3>> edge_points;
+        Array<double> edge_params;
+
+        if(edge->primary == edge)
+        {
+            DivideEdge(edge, mparam, mesh, edge_points, edge_params);
+        }
+        else
+        {
+            auto nr_primary = edge->primary->nr;
+            auto & pnums_primary = all_pnums[nr_primary];
+            auto & params_primary = all_params[nr_primary];
+            auto trafo = edge->primary_to_me;
+
+            auto np = pnums_primary.Size();
+            edge_points.SetSize(np-2);
+            edge_params.SetSize(np-2);
+            for(auto i : Range(np-2))
+            {
+                edge_points[i] = trafo(mesh[pnums_primary[i+1]]);
+                EdgePointGeomInfo gi;
+                edge->ProjectPoint(edge_points[i], &gi);
+                edge_params[i] = gi.dist;
+            }
+
+            // reverse entries if we have decreasing parameters
+            if(edge_params.Size()>2 && edge_params[0] > edge_params.Last())
+                for(auto i : Range((np-2)/2))
+                {
+                    swap(edge_points[i], edge_points[np-3-i]);
+                    swap(edge_params[i], edge_params[np-3-i]);
+                }
+        }
+
+        pnums.SetSize(edge_points.Size() + 2);
+        pnums[0] = startp;
+        pnums.Last() = endp;
+
+        params.SetSize(edge_points.Size()+2);
+        params[0] = 0.;
+        params.Last() = 1.;
+
+        for(auto i : Range(edge_points))
+        {
+            auto pi = mesh.AddPoint(edge_points[i]);
+            tree.Insert(mesh[pi], pi);
+            pnums[i+1] = pi;
+            params[i+1] = edge_params[i];
+        }
+
+        for(auto i : Range(pnums.Size()-1))
+        {
+            segnr++;
+            Segment seg;
+            seg[0] = pnums[i];
+            seg[1] = pnums[i+1];
+            seg.edgenr = edgenr+1;
+            seg.si = edgenr+1;
+            seg.epgeominfo[0].dist = params[i];
+            seg.epgeominfo[1].dist = params[i+1];
+            seg.epgeominfo[0].edgenr = edgenr;
+            seg.epgeominfo[1].edgenr = edgenr;
+            seg.singedge_left = edge->properties.hpref;
+            seg.singedge_right = edge->properties.hpref;
+            mesh.AddSegment(seg);
+        }
+        mesh.SetCD2Name(edgenr+1, edge->properties.GetName());
+    }
+
+    for (auto & edge : edges)
+    {
+        // identify points on edge
+        for(auto & ident : edge->identifications)
+          if(ident.from == edge.get())
           {
-            auto boundary = face.GetBoundary(facebndnr);
-            for(auto enr : Range(boundary))
+            auto & pnums = all_pnums[edge->nr];
+            // start and end vertex are already identified
+            for(auto pi : pnums.Range(1, pnums.Size()-1))
+            {
+                auto pi_other = tree.Find(ident.trafo(mesh[pi]));
+                identifications.Add(pi, pi_other, ident.name, ident.type);
+            }
+          }
+    }
+    mesh.CalcSurfacesOfNode();
+    multithread.task = savetask;
+  }
+
+  bool NetgenGeometry :: MeshFace(Mesh& mesh, const MeshingParameters& mparam,
+                     int k, FlatArray<int, PointIndex> glob2loc) const
+  {
+    multithread.percent = 100. * k/faces.Size();
+    const auto& face = *faces[k];
+    auto bb = face.GetBoundingBox();
+    bb.Increase(bb.Diam()/10);
+    Meshing2 meshing(*this, mparam, bb);
+    glob2loc = 0;
+    int cntp = 0;
+
+    auto segments = face.GetBoundary(mesh);
+    for(auto& seg : segments)
+      {
+        for(auto j : Range(2))
+          {
+            auto pi = seg[j];
+            if(glob2loc[pi] == 0)
               {
-                multithread.percent = 100. * ((double(enr)/boundary.Size() + facebndnr)/face.GetNBoundaries() + facenr)/faces.Size();
-                const auto& oriented_edge = *boundary[enr];
-                auto edgenr = GetEdgeIndex(oriented_edge);
-                const auto& edge = edges[edgenr];
-                PointIndex startp, endp;
-                // throws if points are not found
-                startp = vert2meshpt.at(edge->GetStartVertex().GetHash());
-                endp = vert2meshpt.at(edge->GetEndVertex().GetHash());
-
-                // ignore collapsed edges
-                if(startp == endp && edge->GetLength() < 1e-10 * bounding_box.Diam())
-                  continue;
-                Array<MeshPoint> mps;
-                Array<double> params;
-                // -------------------- DivideEdge -----------------
-                static constexpr size_t divide_edge_sections = 1000;
-                tdivide.Start();
-                double hvalue[divide_edge_sections+1];
-                hvalue[0] = 0;
-
-                Point<3> old_pt = edge->GetPoint(0.);
-                // calc local h for edge
-                tdivedgesections.Start();
-                for(auto i : Range(divide_edge_sections))
-                  {
-                    auto pt = edge->GetPoint(double(i+1)/divide_edge_sections);
-                    hvalue[i+1] = hvalue[i] + 1./mesh.GetH(pt) * (pt-old_pt).Length();
-                    old_pt = pt;
-                  }
-                int nsubedges = max2(1, int(floor(hvalue[divide_edge_sections]+0.5)));
-                tdivedgesections.Stop();
-                mps.SetSize(nsubedges-1);
-                params.SetSize(nsubedges+1);
-
-                int i = 1;
-                int i1 = 0;
-                do
-                  {
-                    if (hvalue[i1]/hvalue[divide_edge_sections]*nsubedges >= i)
-                      {
-                        params[i] = (double(i1)/divide_edge_sections);
-                        mps[i-1] = MeshPoint(edge->GetPoint(params[i]));
-                        i++;
-                      }
-                    i1++;
-                    if (i1 > divide_edge_sections)
-                      {
-                        nsubedges = i;
-                        mps.SetSize(nsubedges-1);
-                        params.SetSize(nsubedges+1);
-                        cout << "divide edge: local h too small" << endl;
-                      }
-
-                  } while(i < nsubedges);
-
-                params[0] = 0.;
-                params[nsubedges] = 1.;
-
-                if(params[nsubedges] <= params[nsubedges-1])
-                  {
-                    cout << "CORRECTED" << endl;
-                    mps.SetSize (nsubedges-2);
-                    params.SetSize (nsubedges);
-                    params[nsubedges-1] = 1.;
-                  }
-                tdivide.Stop();
-                // ----------- Add Points to mesh and create segments -----
-                Array<PointIndex> pnums(mps.Size() + 2);
-                pnums[0] = startp;
-                pnums[mps.Size()+1] = endp;
-
-                double eps = bounding_box.Diam() * 1e-8;
-
-                for(auto i : Range(mps))
-                  {
-                    bool exists = false;
-                    for(auto pi : Range(mesh.Points()))
-                      {
-                        if((mesh[pi] - mps[i]).Length() < eps)
-                          {
-                            exists = true;
-                            pnums[i+1] = pi;
-                            break;
-                          }
-                      }
-                    if(!exists)
-                      pnums[i+1] = mesh.AddPoint(mps[i]);
-                  }
-
-                for(auto i : Range(pnums.Size()-1))
-                  {
-                    segnr++;
-                    Segment seg;
-                    seg[0] = pnums[i];
-                    seg[1] = pnums[i+1];
-                    seg.edgenr = segnr;
-                    seg.epgeominfo[0].dist = params[i];
-                    seg.epgeominfo[1].dist = params[i+1];
-                    seg.epgeominfo[0].edgenr = edgenr;
-                    seg.epgeominfo[1].edgenr = edgenr;
-                    seg.si = facenr+1;
-                    seg.surfnr1 = facenr+1;
-
-                    // TODO: implement functionality to transfer edge parameter t to face parameters u,v
-                    for(auto j : Range(2))
-                      face.CalcEdgePointGI(*edge, params[i+j],
-                                           seg.epgeominfo[j]);
-
-                    if(!oriented_edge.OrientedLikeGlobal())
-                      {
-                        swap (seg[0], seg[1]);
-                        swap (seg.epgeominfo[0].dist, seg.epgeominfo[1].dist);
-                        swap (seg.epgeominfo[0].u, seg.epgeominfo[1].u);
-                        swap (seg.epgeominfo[0].v, seg.epgeominfo[1].v);
-                      }
-                    mesh.AddSegment(seg);
-                  }
+                meshing.AddPoint(mesh[pi], pi);
+                cntp++;
+                glob2loc[pi] = cntp;
               }
           }
       }
-    mesh.CalcSurfacesOfNode();
-    multithread.task = savetask;
+    for(auto & seg : segments)
+      {
+        PointGeomInfo gi0, gi1;
+        gi0.trignum = gi1.trignum = k+1;
+        gi0.u = seg.epgeominfo[0].u;
+        gi0.v = seg.epgeominfo[0].v;
+        gi1.u = seg.epgeominfo[1].u;
+        gi1.v = seg.epgeominfo[1].v;
+        meshing.AddBoundaryElement(glob2loc[seg[0]],
+                                   glob2loc[seg[1]],
+                                   gi0, gi1);
+      }
+
+    // TODO Set max area 2* area of face
+
+    auto noldsurfels = mesh.GetNSE();
+
+
+    static Timer t("GenerateMesh"); RegionTimer reg(t);
+    MESHING2_RESULT res = meshing.GenerateMesh(mesh, mparam, mparam.maxh, k+1);
+
+    for(auto i : Range(noldsurfels, mesh.GetNSE()))
+      {
+        mesh.SurfaceElements()[i].SetIndex(k+1);
+      }
+    return res != MESHING2_OK;
   }
 
   void NetgenGeometry :: MeshSurface(Mesh& mesh,
@@ -409,63 +613,158 @@ namespace netgen
     const char* savetask = multithread.task;
     multithread.task = "Mesh Surface";
 
+    size_t n_failed_faces = 0;
     Array<int, PointIndex> glob2loc(mesh.GetNP());
     for(auto k : Range(faces))
-      {
-        multithread.percent = 100. * k/faces.Size();
-        const auto& face = *faces[k];
-        auto bb = face.GetBoundingBox();
-        bb.Increase(bb.Diam()/10);
-        Meshing2 meshing(*this, mparam, bb);
-        glob2loc = 0;
-        int cntp = 0;
+    {
+        auto & face = *faces[k];
+        mesh.SetBCName(k, face.properties.GetName());
+        // todo find attached solids
+        FaceDescriptor fd(k+1, face.domin+1, face.domout+1, k+1);
+        fd.SetBCName(mesh.GetBCNamePtr(k));
+        mesh.AddFaceDescriptor(fd);
+        if(face.primary == &face)
+        {
+            if(MeshFace(mesh, mparam, k, glob2loc))
+                n_failed_faces++;
+        }
+    }
 
-        for(auto& seg : mesh.LineSegments())
-          {
-            if(seg.si == k+1)
-              {
-                for(auto j : Range(2))
-                  {
-                    auto pi = seg[j];
-                    if(glob2loc[pi] == 0)
-                      {
-                        meshing.AddPoint(mesh[pi], pi);
-                        cntp++;
-                        glob2loc[pi] = cntp;
-                      }
-                  }
-              }
-          }
-        for(auto & seg : mesh.LineSegments())
-          {
-            if(seg.si == k+1)
-              {
-                PointGeomInfo gi0, gi1;
-                gi0.trignum = gi1.trignum = k+1;
-                gi0.u = seg.epgeominfo[0].u;
-                gi0.v = seg.epgeominfo[0].v;
-                gi1.u = seg.epgeominfo[1].u;
-                gi1.v = seg.epgeominfo[1].v;
-                meshing.AddBoundaryElement(glob2loc[seg[0]],
-                                           glob2loc[seg[1]],
-                                           gi0, gi1);
-              }
-          }
+    if(n_failed_faces) 
+    {
+        cout << "WARNING! NOT ALL FACES HAVE BEEN MESHED" << endl;
+        cout << "SURFACE MESHING ERROR OCCURRED IN " << n_failed_faces << " FACES:" << endl;
+        return;
+    }
 
-        // TODO Set max area 2* area of face
+    if (mparam.perfstepsend >= MESHCONST_OPTSURFACE)
+    {
+      mesh.CalcSurfacesOfNode();
+      OptimizeSurface(mesh, mparam);
+    }
 
-        auto noldsurfels = mesh.GetNSE();
+    bool have_identifications = false;
+    for(auto & face : faces)
+        if(face->primary != face.get())
+        {
+            have_identifications = true;
+            MapSurfaceMesh(mesh, *face);
+        }
 
+    // identify points on faces
+    if(have_identifications)
+    {
+        mesh.CalcSurfacesOfNode();
+        BitArray is_identified_face(faces.Size());
+        is_identified_face = false;
+        for(auto & face : faces)
+            for(auto & ident : face->identifications)
+            {
+                is_identified_face.SetBit(ident.from->nr);
+                is_identified_face.SetBit(ident.to->nr);
+            }
 
-        static Timer t("GenerateMesh"); RegionTimer reg(t);
-        MESHING2_RESULT res = meshing.GenerateMesh(mesh, mparam, mparam.maxh, k+1);
+        PointTree tree( bounding_box );
+        Array<int, PointIndex> pi_to_face(mesh.GetNP());
+        pi_to_face = -1;
+        Array<SurfaceElementIndex> si_of_face;
+        Array<Array<PointIndex>> pi_of_face(faces.Size());
+        for(auto & face : faces)
+            if(is_identified_face[face->nr])
+            {
+                mesh.GetSurfaceElementsOfFace(face->nr+1, si_of_face);
+                for(auto si : si_of_face)
+                    for(auto pi : mesh[si].PNums())
+                    {
+                        if(mesh[pi].Type() == SURFACEPOINT && pi_to_face[pi]==-1)
+                        {
+                            pi_to_face[pi] = face->nr;
+                            tree.Insert(mesh[pi], pi);
+                            pi_of_face[face->nr].Append(pi);
+                        }
+                    }
+            }
 
-        for(auto i : Range(noldsurfels, mesh.GetNSE()))
-          {
-            mesh.SurfaceElements()[i].SetIndex(k+1);
-          }
-      }
+        auto & mesh_ident = mesh.GetIdentifications();
+        for(auto & face : faces)
+            for(auto & ident : face->identifications)
+            {
+                if(ident.from == face.get())
+                    for(auto pi : pi_of_face[face->nr])
+                    {
+                        auto pi_other = tree.Find(ident.trafo(mesh[pi]));
+                        mesh_ident.Add(pi, pi_other, ident.name, ident.type);
+                    }
+            }
+    }
+
+    mesh.CalcSurfacesOfNode();
     multithread.task = savetask;
+  }
+
+  void NetgenGeometry :: MapSurfaceMesh( Mesh & mesh, const GeometryFace & dst ) const
+  {
+    static Timer timer("MapSurfaceMesh");
+    RegionTimer rt(timer);
+
+    const auto & src = dynamic_cast<const GeometryFace&>(*dst.primary);
+    auto trafo = dst.primary_to_me;
+
+    PrintMessage(2, "Map face ", src.nr+1, " -> ", dst.nr+1);
+
+    // point map from src to dst
+    Array<PointIndex, PointIndex> pmap(mesh.Points().Size());
+    pmap = PointIndex::INVALID;
+
+    // first map points on edges (mapped points alread in mesh, use search tree)
+    Array<bool, PointIndex> is_point_in_tree(mesh.Points().Size());
+    is_point_in_tree = false;
+    PointTree tree( bounding_box );
+
+    for (Segment & seg : src.GetBoundary(mesh))
+        for(auto i : Range(2))
+          {
+            auto pi = seg[i];
+            if(!is_point_in_tree[pi])
+            {
+              tree.Insert(trafo(mesh[pi]), pi);
+              is_point_in_tree[pi] = true;
+            }
+          }
+
+    for (Segment & seg : dst.GetBoundary(mesh))
+        for(auto i : Range(2))
+          {
+            auto pi = seg[i];
+            if(pmap[pi].IsValid())
+              continue;
+
+            pmap[tree.Find(mesh[pi])] = pi;
+          }
+
+    // now insert mapped surface elements
+    for(auto sei : mesh.SurfaceElements().Range())
+      {
+        auto sel = mesh[sei];
+        if(sel.GetIndex() != src.nr+1)
+          continue;
+
+        auto sel_new = sel;
+        sel_new.SetIndex(dst.nr+1);
+        for(auto i : Range(sel.PNums()))
+          {
+            auto pi = sel[i];
+            if(!pmap[pi].IsValid())
+              {
+                pmap[pi] = mesh.AddPoint(trafo(mesh[pi]), 1, SURFACEPOINT);
+              }
+              sel_new[i] = pmap[pi];
+          }
+          sel_new.Invert();
+          for(auto i : Range(sel.PNums()))
+              dst.CalcPointGeomInfo(mesh[sel_new[i]], sel_new.GeomInfo()[i]);
+          mesh.AddSurfaceElement(sel_new);
+      }
   }
 
   void NetgenGeometry :: OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam) const
@@ -503,6 +802,13 @@ namespace netgen
     mesh.CalcSurfacesOfNode();
     mesh.Compress();
     multithread.task = savetask;
+  }
+
+  void NetgenGeometry :: FinalizeMesh(Mesh& mesh) const
+  {
+    for (int i = 0; i < mesh.GetNDomains(); i++)
+      if (auto name = solids[i]->properties.name)
+        mesh.SetMaterial (i+1, *name);
   }
   
   shared_ptr<NetgenGeometry> GeometryRegisterArray :: LoadFromMeshFile (istream & ist) const
@@ -567,18 +873,17 @@ namespace netgen
     if (mparam.perfstepsstart <= MESHCONST_MESHSURFACE)
       {
         MeshSurface(*mesh, mparam);
-        mesh->CalcSurfacesOfNode();
       }
-
-    if (multithread.terminate || mparam.perfstepsend <= MESHCONST_MESHSURFACE)
-      return 0;
-
-    if (mparam.perfstepsstart <= MESHCONST_OPTSURFACE)
-      OptimizeSurface(*mesh, mparam);
 
     if (multithread.terminate || mparam.perfstepsend <= MESHCONST_OPTSURFACE)
       return 0;
 
+    if(dimension == 2)
+    {
+        FinalizeMesh(*mesh);
+        mesh->SetDimension(2);
+        return 0;
+    }
 
     if(mparam.perfstepsstart <= MESHCONST_MESHVOLUME)
       {
