@@ -1,14 +1,27 @@
 #ifdef OCCGEOMETRY
 
 #include <mystdlib.h>
-#include <occgeom.hpp>
 #include <meshing.hpp>
 
+#include "occgeom.hpp"
+#include "occmeshsurf.hpp"
+
+#include <BRepAdaptor_Curve.hxx>
+#include <BRepGProp.hxx>
+#include <BRepLProp_CLProps.hxx>
+#include <BRepLProp_SLProps.hxx>
+#include <BRepMesh_IncrementalMesh.hxx>
+#include <BRepTools.hxx>
+#include <GProp_GProps.hxx>
+#include <Quantity_Color.hxx>
+#include <ShapeAnalysis.hxx>
+#include <TopExp.hxx>
+#include <TopTools_IndexedDataMapOfShapeListOfShape.hxx>
+#include <TopoDS_Edge.hxx>
 
 namespace netgen
 {
 
-#include "occmeshsurf.hpp"
 
 #define TCL_OK 0
 #define TCL_ERROR 1
@@ -218,888 +231,237 @@ namespace netgen
       }
   }
 
-
-
-  void DivideEdge (TopoDS_Edge & edge, NgArray<MeshPoint> & ps,
-                   Array<double> & params, Mesh & mesh,
-                   const MeshingParameters & mparam)
+  bool OCCMeshFace (const OCCGeometry & geom, Mesh & mesh, FlatArray<int, PointIndex> glob2loc,
+                       const MeshingParameters & mparam, int nr, int projecttype, bool delete_on_failure)
   {
-    double s0, s1;
-    int nsubedges = 1;
-    gp_Pnt pnt, oldpnt;
-    double svalue[DIVIDEEDGESECTIONS];
-
-    GProp_GProps system;
-    BRepGProp::LinearProperties(edge, system);
-    double L = system.Mass();
-
-    Handle(Geom_Curve) c = BRep_Tool::Curve(edge, s0, s1);
-
-    double hvalue[DIVIDEEDGESECTIONS+1];
-    hvalue[0] = 0;
-    pnt = c->Value(s0);
-
-    int tmpVal = (int)(DIVIDEEDGESECTIONS);
-
-    for (int i = 1; i <= tmpVal; i++)
+    auto k = nr+1;
+    if(1==0 && !geom.fvispar[k-1].IsDrawable())
       {
-        oldpnt = pnt;
-        pnt = c->Value(s0+(i/double(DIVIDEEDGESECTIONS))*(s1-s0));
-        hvalue[i] = hvalue[i-1] +
-          1.0/mesh.GetH(Point3d(pnt.X(), pnt.Y(), pnt.Z()))*
-          pnt.Distance(oldpnt);
-
-        //(*testout) << "mesh.GetH(Point3d(pnt.X(), pnt.Y(), pnt.Z())) " << mesh.GetH(Point3d(pnt.X(), pnt.Y(), pnt.Z()))
-        //	   <<  " pnt.Distance(oldpnt) " << pnt.Distance(oldpnt) << endl;
+        (*testout) << "ignoring face " << k << endl;
+        cout << "ignoring face " << k << endl;
+        return true;
       }
 
-    //  nsubedges = int(ceil(hvalue[DIVIDEEDGESECTIONS]));
-    nsubedges = max (1, int(floor(hvalue[DIVIDEEDGESECTIONS]+0.5)));
+    // if(master_faces[k]!=k)
+    //     continue;
 
-    ps.SetSize(nsubedges-1);
-    params.SetSize(nsubedges+1);
+    (*testout) << "mesh face " << k << endl;
+    multithread.percent = 100 * k / (mesh.GetNFD() + VSMALL);
+    geom.facemeshstatus[k-1] = -1;
 
-    int i = 1;
-    int i1 = 0;
-    do
-      {
-        if (hvalue[i1]/hvalue[DIVIDEEDGESECTIONS]*nsubedges >= i)
-          {
-            params[i] = s0+(i1/double(DIVIDEEDGESECTIONS))*(s1-s0);
-            pnt = c->Value(params[i]);
-            ps[i-1] = MeshPoint (Point3d(pnt.X(), pnt.Y(), pnt.Z()));
-            i++;
-          }
-        i1++;
-        if (i1 > DIVIDEEDGESECTIONS)
-          {
-            nsubedges = i;
-            ps.SetSize(nsubedges-1);
-            params.SetSize(nsubedges+1);
-            cout << "divide edge: local h too small" << endl;
-          }
-      } while (i < nsubedges);
+    FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
+    auto face = TopoDS::Face(geom.fmap(k));
+    auto fshape = face.TShape();
 
-    params[0] = s0;
-    params[nsubedges] = s1;
+    int oldnf = mesh.GetNSE();
 
-    if (params[nsubedges] <= params[nsubedges-1])
-      {
-        cout << "CORRECTED" << endl;
-        ps.SetSize (nsubedges-2);
-        params.SetSize (nsubedges);
-        params[nsubedges] = s1;
-      }
-  }
+    Box<3> bb = geom.GetBoundingBox();
 
-
-
-
-  void OCCFindEdges (const OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam)
-  {
-    static Timer t("OCCFindEdges"); RegionTimer r(t);
-    static Timer tsearch("OCCFindEdges - search point");
-    const char * savetask = multithread.task;
-    multithread.task = "Edge meshing";
-
-    (*testout) << "edge meshing" << endl;
-
-    int nvertices = geom.vmap.Extent();
-    int nedges = geom.emap.Extent();
-
-    Array<Array<PointIndex>> alledgepnums(nedges);
-    Array<Array<double>> alledgeparams(nedges);     
+    // int projecttype = PLANESPACE;
+    // int projecttype = PARAMETERSPACE;
     
-    (*testout) << "nvertices = " << nvertices << endl;
-    (*testout) << "nedges = " << nedges << endl;
+    static Timer tinit("init");
+    tinit.Start();
+    Meshing2OCCSurfaces meshing(geom, face, bb, projecttype, mparam);
+    tinit.Stop();
 
-    double eps = 1e-6 * geom.GetBoundingBox().Diam();
 
-    tsearch.Start();
-    for (auto [i,vshape] : Enumerate(geom.vmap))
-      {
-        TopoDS_Vertex vertex = TopoDS::Vertex(vshape);
-        gp_Pnt pnt = BRep_Tool::Pnt (vertex); 
+    static Timer tprint("print");
+    tprint.Start();
+    if (meshing.GetProjectionType() == PLANESPACE)
+      PrintMessage (2, "Face ", k, " / ", mesh.GetNFD(), " (plane space projection)");
+    else
+      PrintMessage (2, "Face ", k, " / ", mesh.GetNFD(), " (parameter space projection)");
+    tprint.Stop();
 
-        mesh.AddPoint (occ2ng(pnt));
-        
-        double hpref = OCCGeometry::global_shape_properties[vertex.TShape()].hpref;
-        mesh.Points().Last().Singularity(hpref);
-        
-        double maxh = OCCGeometry::global_shape_properties[vertex.TShape()].maxh;
-        mesh.RestrictLocalH (occ2ng(pnt), maxh);
-      }
-    tsearch.Stop();
-    (*testout) << "different vertices = " << mesh.GetNP() << endl;
-
-    // int first_ep = mesh.GetNP()+1;
-    // PointIndex first_ep = mesh.Points().End();
-    PointIndex first_ep = *mesh.Points().Range().end();
-    auto vertexrange = mesh.Points().Range();
-
-    NgArray<int> face2solid[2];
-    for (int i = 0; i < 2; i++)
-      {
-        face2solid[i].SetSize (geom.fmap.Extent());
-        face2solid[i] = 0;
-      }
-
-    /*
-    int solidnr = 0;
-    for (TopExp_Explorer exp0(geom.shape, TopAbs_SOLID); exp0.More(); exp0.Next())
-      {
-        solidnr++;
-        for (TopExp_Explorer exp1(exp0.Current(), TopAbs_FACE); exp1.More(); exp1.Next())
-          {
-            TopoDS_Face face = TopoDS::Face(exp1.Current());
-            int facenr = geom.fmap.FindIndex(face);
-            if(facenr < 1) continue;
-
-            if (face2solid[0][facenr-1] == 0)
-              face2solid[0][facenr-1] = solidnr;
-            else
-              face2solid[1][facenr-1] = solidnr;
-          }
-      }
-    */
-    int solidnr = 0;
-    for (auto solid : Explore(geom.shape, TopAbs_SOLID))
-      {
-        solidnr++;
-        for (auto face : Explore (solid, TopAbs_FACE))
-          if (geom.fmap.Contains(face))
-            {
-              int facenr = geom.fmap.FindIndex(face);
-              if (face2solid[0][facenr-1] == 0)
-                face2solid[0][facenr-1] = solidnr;
-              else
-                face2solid[1][facenr-1] = solidnr;
-            }
-      }
+    //      Meshing2OCCSurfaces meshing(f2, bb);
+    // meshing.SetStartTime (starttime);
+    //(*testout) << "Face " << k << endl << endl;
     
 
+    auto segments = geom.GetFace(k-1).GetBoundary(mesh);
 
-    /*
-    int total = 0;
-    for (int i3 = 1; i3 <= geom.fmap.Extent(); i3++)
-      for (TopExp_Explorer exp2(geom.fmap(i3), TopAbs_WIRE); exp2.More(); exp2.Next())
-        for (TopExp_Explorer exp3(exp2.Current(), TopAbs_EDGE); exp3.More(); exp3.Next())
-          total++;
-    */
-    int total = 0;
-    for (auto [i3, face] : Enumerate(geom.fmap))
-      for (auto wire : Explore(face, TopAbs_WIRE))
-        for (auto edge : Explore(wire, TopAbs_EDGE))
-          total++;
-      
-    
-
-    int facenr = 0;
-    // int edgenr = mesh.GetNSeg();
-
-    (*testout) << "faces = " << geom.fmap.Extent() << endl;
-    int curr = 0;
-
-    /*
-    for (int i3 = 1; i3 <= geom.fmap.Extent(); i3++)
+    if (meshing.GetProjectionType() == PLANESPACE)
       {
-        TopoDS_Face face = TopoDS::Face(geom.fmap(i3));
-    */
-    for (auto [i3,faceshape] : Enumerate(geom.fmap))
-      {
-        TopoDS_Face face = TopoDS::Face(faceshape);
-        facenr = geom.fmap.FindIndex (face);       // sollte doch immer == i3 sein ??? JS
-        if (facenr != i3)
-          cout << "info: facenr != i3, no problem, but please report to developers" << endl;
-        
-        int solidnr0 = face2solid[0][i3-1];
-        int solidnr1 = face2solid[1][i3-1];
+        static Timer t("MeshSurface: Find edges and points - Physical"); RegionTimer r(t);
+        int cntp = 0;
+        glob2loc = 0;
 
-        /* auskommentiert am 3.3.05 von robert
-           for (exp2.Init (geom.somap(solidnr0), TopAbs_FACE); exp2.More(); exp2.Next())
-           {
-           TopoDS_Face face2 = TopoDS::Face(exp2.Current());
-           if (geom.fmap.FindIndex(face2) == facenr)
-           {
-           //		      if (face.Orientation() != face2.Orientation()) swap (solidnr0, solidnr1);
-           }
-           }
-        */
-
-        mesh.AddFaceDescriptor (FaceDescriptor(facenr, solidnr0, solidnr1, 0));
-
-        Vec<4> col = OCCGeometry::global_shape_properties[face.TShape()].col.value_or(Vec<4>(0,1,0,1));
-        mesh.GetFaceDescriptor(facenr).SetSurfColour(col);
-
-        if(auto & opt_name = geom.fprops[facenr-1]->name)
-          mesh.GetFaceDescriptor(facenr).SetBCName(*opt_name);
-        else
-          mesh.GetFaceDescriptor(facenr).SetBCName("bc_"+ToString(facenr));
-        mesh.GetFaceDescriptor(facenr).SetBCProperty(facenr);
-        // ACHTUNG! STIMMT NICHT ALLGEMEIN (RG)
-        // kA was RG damit meinte
-
-
-        Handle(Geom_Surface) occface = BRep_Tool::Surface(face);
+        for (Segment & seg : segments)
+          // if (seg.si == k)
+            for (int j = 0; j < 2; j++)
+              {
+                PointIndex pi = seg[j];
+                if (glob2loc[pi] == 0)
+                  {
+                    meshing.AddPoint (mesh.Point(pi), pi);
+                    cntp++;
+                    glob2loc[pi] = cntp;
+                  }
+              }
 
         /*
-        for (TopExp_Explorer exp2 (face, TopAbs_WIRE); exp2.More(); exp2.Next())
+        for (int i = 1; i <= mesh.GetNSeg(); i++)
           {
-            TopoDS_Shape wire = exp2.Current();
+            Segment & seg = mesh.LineSegment(i);
         */
-        for (auto wire : MyExplorer (face, TopAbs_WIRE))
-          {
-            // for (TopExp_Explorer exp3 (wire, TopAbs_EDGE); exp3.More(); exp3.Next())
-            for (auto edgeshape : MyExplorer (wire, TopAbs_EDGE))
-              {
-                TopoDS_Edge edge = TopoDS::Edge(edgeshape);
-                curr++;
-                (*testout) << "edge nr " << curr << endl;
-                multithread.percent = 100 * curr / double (total);
-                if (multithread.terminate) return;
-
-                // TopoDS_Edge edge = TopoDS::Edge (exp3.Current());
-                if (BRep_Tool::Degenerated(edge))
-                  {
-                    //(*testout) << "ignoring degenerated edge" << endl;
-                    continue;
-                  }
-
-                if (!geom.emap.Contains(edge)) continue;
-
-                if (geom.vmap.FindIndex(TopExp::FirstVertex (edge)) ==
-                    geom.vmap.FindIndex(TopExp::LastVertex (edge)))
-                  {
-                    GProp_GProps system;
-                    BRepGProp::LinearProperties(edge, system);
-
-                    if (system.Mass() < eps)
-                      {
-                        cout << "ignoring edge " << geom.emap.FindIndex (edge)
-                             << ". closed edge with length < " << eps << endl;
-                        continue;
-                      }
-                  }
-
-                double s0, s1;
-                Handle(Geom2d_Curve) cof = BRep_Tool::CurveOnSurface (edge, face, s0, s1);
-
-                int geomedgenr = geom.emap.FindIndex(edge);
-                Array<PointIndex> pnums;
-                Array<double> params;
-                
-                
-                // check for identifications
-                bool copy_identified = false;
-                if (auto it = geom.identifications.find(edge.TShape()); it != geom.identifications.end())
-                  for (auto & ids : it->second)
-                    {
-                      cout << "edge has identification with trafo " << ids.name << ", inv = " << ids.inverse << endl;
-                      int otherind = geom.emap.FindIndex(ids.other);
-                      Array<Segment> othersegs;
-                      for (auto & seg : mesh.LineSegments())
-                        if (seg.edgenr == otherind)
-                          othersegs.Append (seg);
-
-                      if (othersegs.Size())
-                        {
-                          cout << "other has already segs" << endl;
-                          copy_identified = true;
-                                                              
-                          Array<PointIndex> pnums_other;
-                          pnums_other.Append (othersegs[0][0]);
-                          for (auto & seg : othersegs)
-                            pnums_other.Append (seg[1]);
-
-                          auto inv = ids.trafo.CalcInverse();
-                          // for (auto & pi : pnums)
-                          for (auto oi : Range(pnums_other))
-                            {
-                              PointIndex piother = pnums_other[pnums_other.Size()-oi-1];
-                              Point<3> pother = mesh[piother];
-                              Point<3> p = inv(pother);
-                              
-                              bool found = false;
-                              PointIndex pi;
-                              for (PointIndex piv : vertexrange)
-                                if (Dist2 (mesh[piv], p) < eps*eps)
-                                  {
-                                    pi = piv;
-                                    found = true;
-                                  }
-                              
-                              if (!found)
-                                pi = mesh.AddPoint (p);
-                              
-                              // params.Add ( find parameter p );
-                              double s0, s1;
-                              Handle(Geom_Curve) curve = BRep_Tool::Curve(edge, s0, s1);
-                              
-                              GeomAPI_ProjectPointOnCurve proj(ng2occ(p), curve);
-                              params.Append (proj.LowerDistanceParameter());
-                              pnums.Append (pi);
-                              mesh.GetIdentifications().Add (pi, piother, geomedgenr);
-                              
-                            }
-                          mesh.GetIdentifications().SetType(geomedgenr,Identifications::PERIODIC);
-                          
-                          copy_identified = true;
-                          break;
-                        }
-                    }
-
-                
-                if (!copy_identified)
-                  {
-
-                    
-                    if (alledgepnums[geomedgenr-1].Size())
-                      {
-                        pnums = alledgepnums[geomedgenr-1];
-                        params = alledgeparams[geomedgenr-1];
-                      }
-                    else
-                      {
-                        NgArray <MeshPoint> mp;
-                        DivideEdge (edge, mp, params, mesh, mparam);
-                        
-                        pnums.SetSize(mp.Size()+2);
-                        if (!merge_solids)
-                          {
-                            pnums[0] = geom.vmap.FindIndex (TopExp::FirstVertex (edge)) + PointIndex::BASE-1;
-                            pnums.Last() = geom.vmap.FindIndex (TopExp::LastVertex (edge)) + PointIndex::BASE-1;
-                          }
-                        else
-                          {
-                            Point<3> fp = occ2ng (BRep_Tool::Pnt (TopExp::FirstVertex (edge)));
-                            Point<3> lp = occ2ng (BRep_Tool::Pnt (TopExp::LastVertex (edge)));
-                            
-                            pnums[0] = PointIndex::INVALID;
-                            pnums.Last() = PointIndex::INVALID;
-                            for (PointIndex pi : vertexrange)
-                              {
-                                if (Dist2 (mesh[pi], fp) < eps*eps) pnums[0] = pi;
-                                if (Dist2 (mesh[pi], lp) < eps*eps) pnums.Last() = pi;
-                              }
-                          }
-                        
-                        for (size_t i = 1; i <= mp.Size(); i++)
-                          {
-                            bool exists = false;
-                            tsearch.Start();
-
-                            /*
-                            // for (PointIndex j = first_ep; j < mesh.Points().End(); j++)
-                            for (PointIndex j = first_ep; j < *mesh.Points().Range().end(); j++)
-                              if ((mesh.Point(j)-Point<3>(mp[i-1])).Length() < eps)
-                                {
-                                  exists = true;
-                                  pnums[i] = j;
-                                  break;
-                                }
-                            */
-                            tsearch.Stop();
-                            
-                            if (!exists)
-                              pnums[i] = mesh.AddPoint (mp[i-1]);
-                          }
-                      }
-                    
-
-                    alledgepnums[geomedgenr-1] = pnums;
-                    alledgeparams[geomedgenr-1] = params;
-                  }
-
-                auto name = geom.eprops[geom.emap.FindIndex(edge)-1]->name.value_or("");
-                mesh.SetCD2Name(geomedgenr, name);
-                  
-                (*testout) << "NP = " << mesh.GetNP() << endl;
-                //(*testout) << pnums[pnums.Size()-1] << endl;
-
-                double hpref = OCCGeometry::global_shape_properties[edge.TShape()].hpref;
-                
-                // for (size_t i = 1; i <= mp.Size()+1; i++)
-                for (size_t i = 1; i < pnums.Size(); i++)
-                  {
-                    // edgenr++;
-                    Segment seg;
-
-                    seg[0] = pnums[i-1];
-                    seg[1] = pnums[i];
-                    // seg.edgenr = edgenr;
-                    seg.edgenr = geomedgenr;
-                    seg.si = facenr;
-                    seg.epgeominfo[0].dist = params[i-1];
-                    seg.epgeominfo[1].dist = params[i];
-                    seg.epgeominfo[0].edgenr = geomedgenr;
-                    seg.epgeominfo[1].edgenr = geomedgenr;
-
-                    double s0 = params[i-1];
-                    double s1 = params[i];
-                    double delta = s1-s0;
-                    s0 += 1e-10*delta;   // fixes normal-vector roundoff problem when endpoint is cone-tip
-                    s1 -= 1e-10*delta;  
-                    gp_Pnt2d p2d1 = cof->Value(s0);
-                    gp_Pnt2d p2d2 = cof->Value(s1);
-                    seg.epgeominfo[0].u = p2d1.X(); 
-                    seg.epgeominfo[0].v = p2d1.Y(); 
-                    seg.epgeominfo[1].u = p2d2.X(); 
-                    seg.epgeominfo[1].v = p2d2.Y(); 
-
-                    seg.singedge_left = hpref;
-                    seg.singedge_right = hpref;
-                    /*
-                      if (occface->IsUPeriodic())
-                      {
-                      cout << "U Periodic" << endl;
-                      if (fabs(seg.epgeominfo[1].u-seg.epgeominfo[0].u) >
-                      fabs(seg.epgeominfo[1].u-
-                      (seg.epgeominfo[0].u-occface->UPeriod())))
-                      seg.epgeominfo[0].u = p2d.X()+occface->UPeriod();
-
-                      if (fabs(seg.epgeominfo[1].u-seg.epgeominfo[0].u) >
-                      fabs(seg.epgeominfo[1].u-
-                      (seg.epgeominfo[0].u+occface->UPeriod())))
-                      seg.epgeominfo[0].u = p2d.X()-occface->UPeriod();
-                      }
-
-                      if (occface->IsVPeriodic())
-                      {
-                      cout << "V Periodic" << endl;
-                      if (fabs(seg.epgeominfo[1].v-seg.epgeominfo[0].v) >
-                      fabs(seg.epgeominfo[1].v-
-                      (seg.epgeominfo[0].v-occface->VPeriod())))
-                      seg.epgeominfo[0].v = p2d.Y()+occface->VPeriod();
-
-                      if (fabs(seg.epgeominfo[1].v-seg.epgeominfo[0].v) >
-                      fabs(seg.epgeominfo[1].v-
-                      (seg.epgeominfo[0].v+occface->VPeriod())))
-                      seg.epgeominfo[0].v = p2d.Y()-occface->VPeriod();
-                      }
-                    */
-
-                    if (edge.Orientation() == TopAbs_REVERSED)
-                      {
-                        swap (seg[0], seg[1]);
-                        swap (seg.epgeominfo[0].dist, seg.epgeominfo[1].dist);
-                        swap (seg.epgeominfo[0].u, seg.epgeominfo[1].u);
-                        swap (seg.epgeominfo[0].v, seg.epgeominfo[1].v);
-                      }
-
-                    mesh.AddSegment (seg);
-
-                    //edgesegments[geomedgenr-1]->Append(mesh.GetNSeg());
-
-                  }
-              }
-          }
-      }
-
-    //	for(i=1; i<=mesh.GetNSeg(); i++)
-    //		(*testout) << "edge " << mesh.LineSegment(i).edgenr << " face " << mesh.LineSegment(i).si
-    //				<< " p1 " << mesh.LineSegment(i)[0] << " p2 " << mesh.LineSegment(i)[1] << endl;
-    //	exit(10);
-
-    mesh.CalcSurfacesOfNode();
-    multithread.task = savetask;
-  }
-
-
-
-
-  void OCCMeshSurface (const OCCGeometry & geom, Mesh & mesh,
-                       const MeshingParameters & mparam)
-  {
-    static Timer t("OCCMeshSurface"); RegionTimer r(t);
-    
-    // int i, j, k;
-    // int changed;
-
-    const char * savetask = multithread.task;
-    multithread.task = "Surface meshing";
-
-    geom.facemeshstatus = 0;
-
-    int noldp = mesh.GetNP();
-
-    double starttime = GetTime();
-
-    NgArray<int, PointIndex::BASE> glob2loc(noldp);
-
-    //int projecttype = PARAMETERSPACE;
-
-    int projecttype = PARAMETERSPACE;
-
-    int notrys = 1;
-
-    int surfmesherror = 0;
-
-    for (int k = 1; k <= mesh.GetNFD(); k++)
-      {
-        if(1==0 && !geom.fvispar[k-1].IsDrawable())
-          {
-            (*testout) << "ignoring face " << k << endl;
-            cout << "ignoring face " << k << endl;
-            continue;
-          }
-
-        (*testout) << "mesh face " << k << endl;
-        multithread.percent = 100 * k / (mesh.GetNFD() + VSMALL);
-        geom.facemeshstatus[k-1] = -1;
-
-        FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
-
-        int oldnf = mesh.GetNSE();
-
-        Box<3> bb = geom.GetBoundingBox();
-
-        // int projecttype = PLANESPACE;
-        // int projecttype = PARAMETERSPACE;
-        
-        static Timer tinit("init");
-        tinit.Start();
-        Meshing2OCCSurfaces meshing(geom, TopoDS::Face(geom.fmap(k)), bb, projecttype, mparam);
-        tinit.Stop();
-
-
-        static Timer tprint("print");
-        tprint.Start();
-        if (meshing.GetProjectionType() == PLANESPACE)
-          PrintMessage (2, "Face ", k, " / ", mesh.GetNFD(), " (plane space projection)");
-        else
-          PrintMessage (2, "Face ", k, " / ", mesh.GetNFD(), " (parameter space projection)");
-        tprint.Stop();
-        if (surfmesherror)
-          cout << "Surface meshing error occurred before (in " << surfmesherror << " faces)" << endl;
-
-        //      Meshing2OCCSurfaces meshing(f2, bb);
-        meshing.SetStartTime (starttime);
-        //(*testout) << "Face " << k << endl << endl;
-
-
-        if (meshing.GetProjectionType() == PLANESPACE)
-          {
-            static Timer t("MeshSurface: Find edges and points - Physical"); RegionTimer r(t);
-            int cntp = 0;
-            glob2loc = 0;
-
-            for (Segment & seg : mesh.LineSegments())
-              if (seg.si == k)
-                for (int j = 0; j < 2; j++)
-                  {
-                    PointIndex pi = seg[j];
-                    if (glob2loc[pi] == 0)
-                      {
-                        meshing.AddPoint (mesh.Point(pi), pi);
-                        cntp++;
-                        glob2loc[pi] = cntp;
-                      }
-                  }
-
-            /*
-            for (int i = 1; i <= mesh.GetNSeg(); i++)
-              {
-                Segment & seg = mesh.LineSegment(i);
-            */
-            for (Segment & seg : mesh.LineSegments())                
-              if (seg.si == k)
-                {
-                  PointGeomInfo gi0, gi1;
-                  gi0.trignum = gi1.trignum = k;
-                  gi0.u = seg.epgeominfo[0].u;
-                  gi0.v = seg.epgeominfo[0].v;
-                  gi1.u = seg.epgeominfo[1].u;
-                  gi1.v = seg.epgeominfo[1].v;
-                  
-                  meshing.AddBoundaryElement (glob2loc[seg[0]], glob2loc[seg[1]], gi0, gi1);
-                }
-          }
-        else
-          {
-            static Timer t("MeshSurface: Find edges and points - Parameter"); RegionTimer r(t);
-            
-            int cntp = 0;
-
-            /*
-            for (int i = 1; i <= mesh.GetNSeg(); i++)
-              if (mesh.LineSegment(i).si == k)
-                cntp+=2;
-            */
-            for (Segment & seg : mesh.LineSegments())
-              if (seg.si == k)
-                cntp += 2;
-
-            NgArray<PointGeomInfo> gis;
-
-            gis.SetAllocSize (cntp);
-            gis.SetSize (0);
-
-            for (int i = 1; i <= mesh.GetNSeg(); i++)
-              {
-                Segment & seg = mesh.LineSegment(i);
-                if (seg.si == k)
-                  {
-                    PointGeomInfo gi0, gi1;
-                    gi0.trignum = gi1.trignum = k;
-                    gi0.u = seg.epgeominfo[0].u;
-                    gi0.v = seg.epgeominfo[0].v;
-                    gi1.u = seg.epgeominfo[1].u;
-                    gi1.v = seg.epgeominfo[1].v;
-
-                    int locpnum[2] = {0, 0};
-
-                    for (int j = 0; j < 2; j++)
-                      {
-                        PointGeomInfo gi = (j == 0) ? gi0 : gi1;
-
-                        /*
-                        int l;
-                        for (l = 0; l < gis.Size() && locpnum[j] == 0; l++)
-                          {
-                            double dist = sqr (gis[l].u-gi.u)+sqr(gis[l].v-gi.v);
-
-                            if (dist < 1e-10)
-                              locpnum[j] = l+1;
-                          }
-
-                        if (locpnum[j] == 0)
-                          {
-                            PointIndex pi = seg[j];
-                            meshing.AddPoint (mesh.Point(pi), pi);
-
-                            gis.SetSize (gis.Size()+1);
-                            gis[l] = gi;
-                            locpnum[j] = l+1;
-                          }
-                        */
-                        for (int l = 0; l < gis.Size(); l++)
-                          {
-                            double dist = sqr (gis[l].u-gi.u)+sqr(gis[l].v-gi.v);
-                            if (dist < 1e-10)
-                              {
-                                locpnum[j] = l+1;
-                                break;
-                              }
-                          }
-
-                        if (locpnum[j] == 0)
-                          {
-                            PointIndex pi = seg[j];
-                            meshing.AddPoint (mesh.Point(pi), pi);
-
-                            gis.Append (gi);
-                            locpnum[j] = gis.Size();
-                          }
-                      }
-
-                    meshing.AddBoundaryElement (locpnum[0], locpnum[1], gi0, gi1);
-                  }
-              }
-          }
-
-
-
-
-        // Philippose - 15/01/2009
-        double maxh = min2(geom.face_maxh[k-1], OCCGeometry::global_shape_properties[TopoDS::Face(geom.fmap(k)).TShape()].maxh);
-        //double maxh = mparam.maxh;
-        //      int noldpoints = mesh->GetNP();
-        int noldsurfel = mesh.GetNSE();
-
-        static Timer tsurfprop("surfprop");
-        tsurfprop.Start();
-        GProp_GProps sprops;
-        BRepGProp::SurfaceProperties(TopoDS::Face(geom.fmap(k)),sprops);
-        tsurfprop.Stop();
-        meshing.SetMaxArea(2.*sprops.Mass());
-
-        MESHING2_RESULT res;
-
-        // TODO: check overlap not correctly working here
-        MeshingParameters mparam_without_overlap = mparam;
-        mparam_without_overlap.checkoverlap = false;
-        
-        try {
-          static Timer t("GenerateMesh"); RegionTimer reg(t);
-          res = meshing.GenerateMesh (mesh, mparam_without_overlap, maxh, k);
-        }
-
-        catch (SingularMatrixException)
-          {
-            // (*myerr) << "Singular Matrix" << endl;
-            res = MESHING2_GIVEUP;
-          }
-
-        catch (UVBoundsException)
-          {
-            // (*myerr) << "UV bounds exceeded" << endl;
-            res = MESHING2_GIVEUP;
-          }
-
-        projecttype = PARAMETERSPACE;
-        static Timer t1("rest of loop"); RegionTimer reg1(t1);
-          
-        if (res != MESHING2_OK)
-          {
-            if (notrys == 1)
-              {
-                for (SurfaceElementIndex sei = noldsurfel; sei < mesh.GetNSE(); sei++)
-                  mesh.Delete(sei);
-
-                mesh.Compress();
-
-                (*testout) << "retry Surface " << k << endl;
-
-                k--;
-                // projecttype*=-1;
-                projecttype = PLANESPACE;
-                notrys++;
-                continue;
-              }
-            else
-              {
-                geom.facemeshstatus[k-1] = -1;
-                PrintError ("Problem in Surface mesh generation");
-                surfmesherror++;
-                //	      throw NgException ("Problem in Surface mesh generation");
-              }
-          }
-        else
-          {
-            geom.facemeshstatus[k-1] = 1;
-          }
-
-        notrys = 1;
-
-        for (SurfaceElementIndex sei = oldnf; sei < mesh.GetNSE(); sei++)
-          mesh[sei].SetIndex (k);
-
-        auto n_illegal_trigs = mesh.FindIllegalTrigs();
-        PrintMessage (3, n_illegal_trigs, " illegal triangles");
-      }
-
-    //      ofstream problemfile("occmesh.rep");
-
-    //      problemfile << "SURFACEMESHING" << endl << endl;
-
-    if (surfmesherror)
-      {
-        cout << "WARNING! NOT ALL FACES HAVE BEEN MESHED" << endl;
-        cout << "SURFACE MESHING ERROR OCCURRED IN " << surfmesherror << " FACES:" << endl;
-        for (int i = 1; i <= geom.fmap.Extent(); i++)
-          if (geom.facemeshstatus[i-1] == -1)
+        // for (Segment & seg : mesh.LineSegments())                
+        for (Segment & seg : segments)
+          //if (seg.si == k)
             {
-              cout << "Face " << i << endl;
-              //               problemfile << "problem with face " << i << endl;
-              //               problemfile << "vertices: " << endl;
-              TopExp_Explorer exp0,exp1,exp2;
-              for ( exp0.Init(TopoDS::Face (geom.fmap(i)), TopAbs_WIRE); exp0.More(); exp0.Next() )
-                {
-                  TopoDS_Wire wire = TopoDS::Wire(exp0.Current());
-                  for ( exp1.Init(wire,TopAbs_EDGE); exp1.More(); exp1.Next() )
-                    {
-                      TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
-                      for ( exp2.Init(edge,TopAbs_VERTEX); exp2.More(); exp2.Next() )
-                        {
-                          TopoDS_Vertex vertex = TopoDS::Vertex(exp2.Current());
-                          gp_Pnt point = BRep_Tool::Pnt(vertex);
-                          //                        problemfile << point.X() << " " << point.Y() << " " << point.Z() << endl;
-                        }
-                    }
-                }
-              //               problemfile << endl;
+              PointGeomInfo gi0, gi1;
+              gi0.trignum = gi1.trignum = k;
+              gi0.u = seg.epgeominfo[0].u;
+              gi0.v = seg.epgeominfo[0].v;
+              gi1.u = seg.epgeominfo[1].u;
+              gi1.v = seg.epgeominfo[1].v;
+              
+              //if(orientation & 1)
+              meshing.AddBoundaryElement (glob2loc[seg[0]], glob2loc[seg[1]], gi0, gi1);
 
             }
-        cout << endl << endl;
-        cout << "for more information open IGES/STEP Topology Explorer" << endl;
-        //            problemfile.close();
-        throw NgException ("Problem in Surface mesh generation");
       }
     else
       {
-        //         problemfile << "OK" << endl << endl;
-        //         problemfile.close();
-      }
-    
-    for (int i = 0; i < mesh.GetNFD(); i++)
-      mesh.SetBCName (i, mesh.GetFaceDescriptor(i+1).GetBCName());
-    multithread.task = savetask;
-  }
+        static Timer t("MeshSurface: Find edges and points - Parameter"); RegionTimer r(t);
+        
+        int cntp = 0;
 
-  void OCCOptimizeSurface(OCCGeometry & geom, Mesh & mesh,
-                          const MeshingParameters & mparam)
-  {
-    const char * savetask = multithread.task;
-    multithread.task = "Optimizing surface";
+        /*
+        for (int i = 1; i <= mesh.GetNSeg(); i++)
+          if (mesh.LineSegment(i).si == k)
+            cntp+=2;
+        */
+        cntp = 2*segments.Size();
+        //for (Segment & seg : mesh.LineSegments())
+          //if (seg.si == k)
+            //cntp += 2;
 
-    static Timer timer_opt2d("Optimization 2D");
-    timer_opt2d.Start();
+        NgArray<PointGeomInfo> gis;
 
-    for (int k = 1; k <= mesh.GetNFD(); k++)
-      {
-        //      if (k != 42) continue;
-        //      if (k != 36) continue;
+        gis.SetAllocSize (cntp);
+        gis.SetSize (0);
 
-        //      (*testout) << "optimize face " << k << endl;
-        multithread.percent = 100 * k / (mesh.GetNFD() + VSMALL);
-
-        FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
-
-        PrintMessage (1, "Optimize Surface ", k);
-        for (int i = 1; i <= mparam.optsteps2d; i++)
+        //for (int i = 1; i <= mesh.GetNSeg(); i++)
+        for(auto & seg : segments)
           {
-            //	  (*testout) << "optstep " << i << endl;
-            if (multithread.terminate) return;
+            //Segment & seg = mesh.LineSegment(i);
+            //if (seg.si == k)
+              {
+                PointGeomInfo gi0, gi1;
+                gi0.trignum = gi1.trignum = k;
+                gi0.u = seg.epgeominfo[0].u;
+                gi0.v = seg.epgeominfo[0].v;
+                gi1.u = seg.epgeominfo[1].u;
+                gi1.v = seg.epgeominfo[1].v;
 
-            {
-              MeshOptimize2d meshopt(mesh);
-              meshopt.SetFaceIndex (k);
-              meshopt.SetImproveEdges (0);
-              meshopt.SetMetricWeight (mparam.elsizeweight);
-              meshopt.SetWriteStatus (0);
-              meshopt.EdgeSwapping (i > mparam.optsteps2d/2);
-            }
+                int locpnum[2] = {0, 0};
 
-            if (multithread.terminate) return;
-            {
-              MeshOptimize2d meshopt(mesh);
-              meshopt.SetFaceIndex (k);
-              meshopt.SetImproveEdges (0);
-              meshopt.SetMetricWeight (mparam.elsizeweight);
-              meshopt.SetWriteStatus (0);
-              meshopt.ImproveMesh (mparam);
-            }
+                for (int j = 0; j < 2; j++)
+                  {
+                    PointGeomInfo gi = (j == 0) ? gi0 : gi1;
 
-            {
-              MeshOptimize2d meshopt(mesh);
-              meshopt.SetFaceIndex (k);
-              meshopt.SetImproveEdges (0);
-              meshopt.SetMetricWeight (mparam.elsizeweight);
-              meshopt.SetWriteStatus (0);
-              meshopt.CombineImprove ();
-            }
+                    /*
+                    int l;
+                    for (l = 0; l < gis.Size() && locpnum[j] == 0; l++)
+                      {
+                        double dist = sqr (gis[l].u-gi.u)+sqr(gis[l].v-gi.v);
 
-            if (multithread.terminate) return;
-            {
-              MeshOptimize2d meshopt(mesh);
-              meshopt.SetFaceIndex (k);
-              meshopt.SetImproveEdges (0);
-              meshopt.SetMetricWeight (mparam.elsizeweight);
-              meshopt.SetWriteStatus (0);
-              meshopt.ImproveMesh (mparam);
-            }
+                        if (dist < 1e-10)
+                          locpnum[j] = l+1;
+                      }
+
+                    if (locpnum[j] == 0)
+                      {
+                        PointIndex pi = seg[j];
+                        meshing.AddPoint (mesh.Point(pi), pi);
+
+                        gis.SetSize (gis.Size()+1);
+                        gis[l] = gi;
+                        locpnum[j] = l+1;
+                      }
+                    */
+                    for (int l = 0; l < gis.Size(); l++)
+                      {
+                        double dist = sqr (gis[l].u-gi.u)+sqr(gis[l].v-gi.v);
+                        if (dist < 1e-10)
+                          {
+                            locpnum[j] = l+1;
+                            break;
+                          }
+                      }
+
+                    if (locpnum[j] == 0)
+                      {
+                        PointIndex pi = seg[j];
+                        meshing.AddPoint (mesh.Point(pi), pi);
+
+                        gis.Append (gi);
+                        locpnum[j] = gis.Size();
+                      }
+                  }
+
+                meshing.AddBoundaryElement (locpnum[0], locpnum[1], gi0, gi1);
+              }
           }
-
       }
 
 
-    mesh.CalcSurfacesOfNode();
-    mesh.Compress();
-    timer_opt2d.Stop();
+    // Philippose - 15/01/2009
+    double maxh = min2(geom.face_maxh[k-1], OCCGeometry::global_shape_properties[TopoDS::Face(geom.fmap(k)).TShape()].maxh);
+    //double maxh = mparam.maxh;
+    //      int noldpoints = mesh->GetNP();
+    int noldsurfel = mesh.GetNSE();
 
-    multithread.task = savetask;
+    static Timer tsurfprop("surfprop");
+    tsurfprop.Start();
+    GProp_GProps sprops;
+    BRepGProp::SurfaceProperties(TopoDS::Face(geom.fmap(k)),sprops);
+    tsurfprop.Stop();
+    meshing.SetMaxArea(2.*sprops.Mass());
+
+    MESHING2_RESULT res;
+
+    // TODO: check overlap not correctly working here
+    MeshingParameters mparam_without_overlap = mparam;
+    mparam_without_overlap.checkoverlap = false;
+    
+    try {
+      static Timer t("GenerateMesh"); RegionTimer reg(t);
+      res = meshing.GenerateMesh (mesh, mparam_without_overlap, maxh, k);
+    }
+
+    catch (SingularMatrixException)
+      {
+        // (*myerr) << "Singular Matrix" << endl;
+        res = MESHING2_GIVEUP;
+      }
+
+    catch (UVBoundsException)
+      {
+        // (*myerr) << "UV bounds exceeded" << endl;
+        res = MESHING2_GIVEUP;
+      }
+
+    projecttype = PARAMETERSPACE;
+    static Timer t1("rest of loop"); RegionTimer reg1(t1);
+      
+    bool meshing_failed = res != MESHING2_OK;
+    if(meshing_failed && delete_on_failure)
+    {
+        for (SurfaceElementIndex sei = noldsurfel; sei < mesh.GetNSE(); sei++)
+            mesh.Delete(sei);
+
+        mesh.Compress();
+    }
+
+    for (SurfaceElementIndex sei = oldnf; sei < mesh.GetNSE(); sei++)
+      mesh[sei].SetIndex (k);
+
+    auto n_illegal_trigs = mesh.FindIllegalTrigs();
+    PrintMessage (3, n_illegal_trigs, " illegal triangles");
+    return meshing_failed;
   }
-
 
 
   void OCCSetLocalMeshSize(const OCCGeometry & geom, Mesh & mesh,

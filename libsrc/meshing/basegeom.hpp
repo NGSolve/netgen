@@ -12,26 +12,72 @@ struct Tcl_Interp;
 
 namespace netgen
 {
-  class GeometryVertex
+  struct ShapeProperties
   {
-  public:
-    virtual ~GeometryVertex() {}
-    virtual Point<3> GetPoint() const = 0;
-    virtual size_t GetHash() const = 0;
+    optional<string> name;
+    optional<Vec<4>> col;
+    double maxh = 1e99;
+    double hpref = 0;  // number of hp refinement levels (will be multiplied by factor later)
+    void Merge(const ShapeProperties & prop2)
+    {
+      if (prop2.name) name = prop2.name;
+      if (prop2.col) col = prop2.col;
+      maxh = min2(maxh, prop2.maxh);
+      hpref = max2(hpref, prop2.hpref);
+    }
+
+    string GetName() const { return name ? *name : "default"; }
+    Vec<4> GetColor() { return col ? *col : Vec<4>{0., 1., 0., 1.}; }
+
+    void DoArchive(Archive& ar)
+    {
+        ar & name & col & maxh & hpref;
+    }
   };
 
-  class GeometryEdge
+  class GeometryShape;
+
+  struct ShapeIdentification
+  {
+    GeometryShape * from;
+    GeometryShape * to;
+    Transformation<3> trafo;
+    Identifications::ID_TYPE type;
+    string name = "";
+  };
+
+  class DLL_HEADER GeometryShape
   {
   public:
-    virtual ~GeometryEdge() {}
+    int nr = -1;
+    ShapeProperties properties;
+    Array<ShapeIdentification> identifications;
+    GeometryShape * primary;
+    Transformation<3> primary_to_me;
+
+    virtual ~GeometryShape() {}
+    virtual size_t GetHash() const = 0;
+    virtual bool IsMappedShape( const GeometryShape & other, const Transformation<3> & trafo, double tolerance ) const;
+  };
+
+
+  class DLL_HEADER GeometryVertex : public GeometryShape
+  {
+  public:
+    virtual Point<3> GetPoint() const = 0;
+    virtual bool IsMappedShape( const GeometryShape & other, const Transformation<3> & trafo, double tolerance ) const override;
+  };
+
+  class DLL_HEADER GeometryEdge : public GeometryShape
+  {
+  public:
     virtual const GeometryVertex& GetStartVertex() const = 0;
     virtual const GeometryVertex& GetEndVertex() const = 0;
     virtual double GetLength() const = 0;
+    virtual Point<3> GetCenter() const = 0;
     virtual Point<3> GetPoint(double t) const = 0;
     // Calculate parameter step respecting edges sag value
     virtual double CalcStep(double t, double sag) const = 0;
-    virtual bool OrientedLikeGlobal() const = 0;
-    virtual size_t GetHash() const = 0;
     virtual void ProjectPoint(Point<3>& p, EdgePointGeomInfo* gi) const = 0;
     virtual void PointBetween(const Point<3>& p1,
                               const Point<3>& p2,
@@ -46,15 +92,17 @@ namespace netgen
       ProjectPoint(newp, &newgi);
     }
     virtual Vec<3> GetTangent(double t) const = 0;
+    virtual bool IsMappedShape( const GeometryShape & other, const Transformation<3> & trafo, double tolerance ) const override;
   };
 
-  class GeometryFace
+  class DLL_HEADER GeometryFace : public GeometryShape
   {
   public:
-    virtual ~GeometryFace() {}
+    int domin=-1, domout=-1;
+
+    virtual Point<3> GetCenter() const = 0;
     virtual size_t GetNBoundaries() const = 0;
-    virtual Array<unique_ptr<GeometryEdge>> GetBoundary(size_t index) const = 0;
-    virtual string GetName() const { return "default"; }
+    virtual Array<Segment> GetBoundary(const Mesh& mesh) const = 0;
     virtual PointGeomInfo Project(Point<3>& p) const = 0;
     // Project point using geo info. Fast if point is close to
     // parametrization in geo info.
@@ -102,6 +150,9 @@ namespace netgen
                        int depth = 0, double h = 0.) const;
   };
 
+  class DLL_HEADER GeometrySolid : public GeometryShape
+  { };
+
   class DLL_HEADER NetgenGeometry
   {
     unique_ptr<Refinement> ref;
@@ -109,14 +160,24 @@ namespace netgen
     Array<unique_ptr<GeometryVertex>> vertices;
     Array<unique_ptr<GeometryEdge>> edges;
     Array<unique_ptr<GeometryFace>> faces;
+    Array<unique_ptr<GeometrySolid>> solids;
     Array<std::pair<Point<3>, double>> restricted_h;
     Box<3> bounding_box;
+    int dimension = 3;
   public:
+
     NetgenGeometry()
     {
       ref = make_unique<Refinement>(*this);
     }
     virtual ~NetgenGeometry () { ; }
+
+    size_t GetNVertices() const { return vertices.Size(); }
+    size_t GetNEdges() const { return edges.Size(); }
+    size_t GetNFaces() const { return faces.Size(); }
+
+    const GeometryFace & GetFace(int i) const { return *faces[i]; }
+
 
     virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
 
@@ -134,13 +195,17 @@ namespace netgen
   { throw NgException("DoArchive not implemented for " + Demangle(typeid(*this).name())); }
 
     virtual Mesh::GEOM_TYPE GetGeomType() const { return Mesh::NO_GEOM; }
+    virtual void ProcessIdentifications();
     virtual void Analyse(Mesh& mesh,
                          const MeshingParameters& mparam) const;
     virtual void FindEdges(Mesh& mesh, const MeshingParameters& mparam) const;
     virtual void MeshSurface(Mesh& mesh, const MeshingParameters& mparam) const;
+    virtual bool MeshFace(Mesh& mesh, const MeshingParameters& mparam,
+                     int nr, FlatArray<int, PointIndex> glob2loc) const;
+    virtual void MapSurfaceMesh( Mesh & mesh, const GeometryFace & dst ) const;
     virtual void OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam) const;
 
-    virtual void FinalizeMesh(Mesh& mesh) const {}
+    virtual void FinalizeMesh(Mesh& mesh) const;
 
     virtual PointGeomInfo ProjectPoint (int surfind, Point<3> & p) const
     {

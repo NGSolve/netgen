@@ -1497,6 +1497,7 @@ namespace netgen
 
     /// number of identifications (or, actually used identifications ?)
     int maxidentnr;
+    Array<string> names;
 
   public:
     ///
@@ -1511,7 +1512,12 @@ namespace netgen
       identification nr identnr
     */
     DLL_HEADER void Add (PointIndex pi1, PointIndex pi2, int identnr);
-
+    void Add (PointIndex pi1, PointIndex pi2, string name, ID_TYPE type)
+    {
+        auto nr = GetNr(name);
+        Add(pi1, pi2, nr);
+        SetType(nr, type);
+    }
 
     int Get (PointIndex pi1, PointIndex pi2) const;
     int GetSymmetric (PointIndex pi1, PointIndex pi2) const;
@@ -1559,6 +1565,13 @@ namespace netgen
     void GetPairs (int identnr, NgArray<INDEX_2> & identpairs) const;
     ///
     int GetMaxNr () const { return maxidentnr; }  
+
+    int GetNr(string name)
+    {
+      if(!names.Contains(name))
+         names.Append(name);
+      return names.Pos(name)+1;
+    }
 
     /// remove secondorder
     void SetMaxPointNr (int maxpnum);

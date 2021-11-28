@@ -3,178 +3,67 @@
 
 #include <regex>
 
-#include <../general/ngpython.hpp>
+#include <general/ngpython.hpp>
 #include <core/python_ngcore.hpp>
-#include "../meshing/python_mesh.hpp"
-
+#include <meshing/python_mesh.hpp>
 #include <meshing.hpp>
-#include <occgeom.hpp>
 
-#include <gp_Ax1.hxx>
-#include <gp_Ax2.hxx>
-#include <gp_Ax2d.hxx>
-#include <gp_Trsf.hxx>
-#include <BRepPrimAPI_MakeSphere.hxx>
-#include <BRepPrimAPI_MakeCylinder.hxx>
-#include <BRepPrimAPI_MakeRevol.hxx>
-#include <BRepPrimAPI_MakeBox.hxx>
-#include <BRepPrimAPI_MakePrism.hxx>
-#include <BRepPrimAPI_MakeHalfSpace.hxx>
-#include <BRepOffsetAPI_MakePipe.hxx>
-#include <BRepOffsetAPI_MakePipeShell.hxx>
-#include <BRepAlgoAPI_Cut.hxx>
+#include "occgeom.hpp"
+
+#include <BOPAlgo_Builder.hxx>
+#include <BOPTools_AlgoTools.hxx>
 #include <BRepAlgoAPI_Common.hxx>
+#include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
-// #include <XCAFDoc_VisMaterialTool.hxx>
-#include <TDF_Attribute.hxx>
-#include <TDataStd_Real.hxx>
-#include <TDataStd_Name.hxx>
-#include <Standard_GUID.hxx>
-#include <Geom_TrimmedCurve.hxx>
-#include <Geom_Plane.hxx>
-#include <Geom_BSplineCurve.hxx>
-#include <Geom_BezierCurve.hxx>
-#include <GeomAPI_PointsToBSpline.hxx>
-#include <GC_MakeSegment.hxx>
-#include <GC_MakeCircle.hxx>
-#include <GC_MakeArcOfCircle.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
-#include <BRepBuilderAPI_MakeFace.hxx>
-#include <BRepFilletAPI_MakeFillet.hxx>
 #include <BRepFilletAPI_MakeChamfer.hxx>
-#include <BRepOffsetAPI_ThruSections.hxx>
-#include <BRepOffsetAPI_MakeOffset.hxx>
-#include <BRepExtrema_DistShapeShape.hxx>
-
+#include <BRepFilletAPI_MakeFillet.hxx>
 #include <BRepGProp.hxx>
-#include <BRepOffsetAPI_MakeThickSolid.hxx>
+#include <BRepLProp_SLProps.hxx>
 #include <BRepLib.hxx>
-
+#include <BRepMesh_IncrementalMesh.hxx>
+#include <BRepOffsetAPI_MakeOffset.hxx>
+#include <BRepOffsetAPI_MakePipe.hxx>
+#include <BRepOffsetAPI_MakePipeShell.hxx>
+#include <BRepOffsetAPI_MakeThickSolid.hxx>
+#include <BRepOffsetAPI_ThruSections.hxx>
+#include <BRepPrimAPI_MakeBox.hxx>
+#include <BRepPrimAPI_MakeCylinder.hxx>
+#include <BRepPrimAPI_MakeHalfSpace.hxx>
+#include <BRepPrimAPI_MakePrism.hxx>
+#include <BRepPrimAPI_MakeRevol.hxx>
+#include <BRepPrimAPI_MakeSphere.hxx>
+#include <BRepTools.hxx>
+#include <GCE2d_MakeArcOfCircle.hxx>
+#include <GCE2d_MakeCircle.hxx>
+#include <GCE2d_MakeSegment.hxx>
+#include <GC_MakeArcOfCircle.hxx>
+#include <GC_MakeCircle.hxx>
+#include <GC_MakeSegment.hxx>
+#include <GProp_GProps.hxx>
 #include <Geom2d_Curve.hxx>
 #include <Geom2d_Ellipse.hxx>
 #include <Geom2d_TrimmedCurve.hxx>
-#include <GCE2d_MakeSegment.hxx>
-#include <GCE2d_MakeCircle.hxx>
-#include <GCE2d_MakeArcOfCircle.hxx>
-#include <ShapeUpgrade_UnifySameDomain.hxx>
+#include <GeomAPI_PointsToBSpline.hxx>
 #include <GeomLProp_SLProps.hxx>
-
-#include <BOPTools_AlgoTools.hxx>
+#include <Geom_BSplineCurve.hxx>
+#include <Geom_BezierCurve.hxx>
+#include <Geom_Plane.hxx>
+#include <Geom_TrimmedCurve.hxx>
 #include <IntTools_Context.hxx>
-#include <STEPControl_Writer.hxx>
 #include <ShapeAnalysis_FreeBounds.hxx>
-
-
-#include <python_occ.hpp>
-
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
-#define OCC_HAVE_DUMP_JSON
-#endif
+#include <ShapeUpgrade_UnifySameDomain.hxx>
+#include <gp_Ax1.hxx>
+#include <gp_Ax2.hxx>
+#include <gp_Ax2d.hxx>
+#include <gp_Pln.hxx>
+#include <gp_Trsf.hxx>
 
 using namespace netgen;
-
-struct ShapeLess
-{
-  bool operator() (const TopoDS_Shape& s1, const TopoDS_Shape& s2) const
-  {
-    return s1.TShape() < s2.TShape();
-  }
-};
-
-class ListOfShapes : public std::vector<TopoDS_Shape>
-{
-public:
-  TopoDS_Shape Max(gp_Vec dir)
-  {
-    double maxval = -1e99;
-    TopoDS_Shape maxshape;
-    for (auto shape : *this)
-      {
-        GProp_GProps props;
-        gp_Pnt center;
-        
-        switch (shape.ShapeType())
-          {
-          case TopAbs_VERTEX:
-            center = BRep_Tool::Pnt (TopoDS::Vertex(shape)); break;
-          case TopAbs_FACE:
-            BRepGProp::SurfaceProperties (shape, props);
-            center = props.CentreOfMass();
-            break;
-          default:
-            BRepGProp::LinearProperties(shape, props);
-            center = props.CentreOfMass();
-          }
-        
-        double val = center.X()*dir.X() + center.Y()*dir.Y() + center.Z() * dir.Z();
-        if (val > maxval)
-          {
-            maxval = val;
-            maxshape = shape;
-          }
-      }
-    return maxshape;
-  }
-
-  TopoDS_Shape Nearest(gp_Pnt pnt)
-  {
-    double mindist = 1e99;
-    TopoDS_Shape nearestshape;
-    auto vertex = BRepBuilderAPI_MakeVertex (pnt).Vertex();
-    
-    for (auto shape : *this)
-      {
-        double dist = BRepExtrema_DistShapeShape(shape, vertex).Value();
-        if (dist < mindist)
-          {
-            nearestshape = shape;
-            mindist = dist;
-          }
-      }
-    return nearestshape;
-  }
-  
-  ListOfShapes SubShapes(TopAbs_ShapeEnum type) const
-  {
-    std::set<TopoDS_Shape, ShapeLess> unique_shapes;
-    for(const auto& shape : *this)
-      for(TopExp_Explorer e(shape, type); e.More(); e.Next())
-        unique_shapes.insert(e.Current());
-    ListOfShapes sub;
-    for(const auto& shape : unique_shapes)
-      sub.push_back(shape);
-    return sub;
-  }
-  ListOfShapes Solids() const
-  {
-    return SubShapes(TopAbs_SOLID);
-  }
-  ListOfShapes Faces() const
-  {
-    return SubShapes(TopAbs_FACE);
-  }
-  ListOfShapes Edges() const
-  {
-    return SubShapes(TopAbs_EDGE);
-  }
-  ListOfShapes Vertices() const
-  {
-    return SubShapes(TopAbs_VERTEX);
-  }
-
-  ListOfShapes operator*(const ListOfShapes& other) const
-  {
-    ListOfShapes common;
-    for(const auto& shape : (*this))
-      for(const auto& shape_o : other)
-        if(shape.IsSame(shape_o))
-          common.push_back(shape);
-    return common;
-  }
-};
-
 
 void ExtractEdgeData( const TopoDS_Edge & edge, int index, std::vector<double> * p, Box<3> & box )
 {
@@ -717,36 +606,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            return sub;
          }, py::arg("type"), "returns list of sub-shapes of type 'type'")
     
-    .def_property_readonly("solids", [] (const TopoDS_Shape & shape)
-    {
-      ListOfShapes solids;
-      for(TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
-        solids.push_back(e.Current());
-      return solids;
-    }, "returns all sub-shapes of type 'SOLID'")
-    .def_property_readonly("faces", [] (const TopoDS_Shape & shape)
-         {
-           ListOfShapes sub;
-           for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
-             sub.push_back(e.Current());
-           return sub;
-         }, "returns all sub-shapes of type 'FACE'")
-    
-    .def_property_readonly("edges", [] (const TopoDS_Shape & shape)
-         {
-           ListOfShapes sub;
-           for (TopExp_Explorer e(shape, TopAbs_EDGE); e.More(); e.Next())
-             sub.push_back(e.Current());
-           return sub;
-         }, "returns all sub-shapes of type 'EDGE'")
-    
-    .def_property_readonly("vertices", [] (const TopoDS_Shape & shape)
-         {
-           ListOfShapes sub;
-           for (TopExp_Explorer e(shape, TopAbs_VERTEX); e.More(); e.Next())
-             sub.push_back(e.Current());
-           return sub;
-         }, "returns all sub-shapes of type 'VERTEX'")
+    .def_property_readonly("solids", GetSolids,
+            "returns all sub-shapes of type 'SOLID'")
+    .def_property_readonly("faces", GetFaces,
+            "returns all sub-shapes of type 'FACE'")
+    .def_property_readonly("edges", GetEdges,
+            "returns all sub-shapes of type 'EDGE'")
+    .def_property_readonly("vertices", GetVertices,
+            "returns all sub-shapes of type 'VERTEX'")
 
     .def("Properties", [] (const TopoDS_Shape & shape)
          {
@@ -1127,30 +994,27 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            BRepMesh_IncrementalMesh (shape, deflection, true);
          })
 
-    .def("Identify", [](const TopoDS_Shape & me, const TopoDS_Shape & you, string name) {
+    .def("Identify", [](const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE idtype) {
         // only edges supported, by now
-        auto me_edge = TopoDS::Edge(me);
-        auto you_edge = TopoDS::Edge(you);
+        auto type = me.ShapeType();
+        auto tyou = you.ShapeType();
+        if(type != tyou)
+            throw NgException ("Identify: cannot identify different shape types");
 
-        GProp_GProps props;
-        BRepGProp::LinearProperties(me, props);
-        gp_Pnt cme = props.CentreOfMass();
-        BRepGProp::LinearProperties(you, props);
-        gp_Pnt cyou = props.CentreOfMass();
+        switch(type)
+        {
+          case TopAbs_VERTEX:
+          case TopAbs_EDGE:
+            OCCGeometry::IdentifyEdges(me, you, name, idtype);
+            break;
+          default:
+            throw NgException ("Identify: unsupported shape type");
+            break;
+        }
+      }, py::arg("other"), py::arg("name"), py::arg("type")=Identifications::PERIODIC, "Identify shapes for periodic meshing")
 
-        double s0, s1;
-        auto curve_me = BRep_Tool::Curve(me_edge, s0, s1);
-        auto vme = occ2ng(curve_me->Value(s1))-occ2ng(curve_me->Value(s0));
-        auto curve_you = BRep_Tool::Curve(you_edge, s0, s1);
-        auto vyou = occ2ng(curve_you->Value(s1))-occ2ng(curve_you->Value(s0));
-        
-        bool inv = vme*vyou < 0;
-        OCCGeometry::identifications[me.TShape()].push_back
-                              (OCCIdentification { you, Transformation<3>(occ2ng(cyou) - occ2ng(cme)), inv, name });
-        OCCGeometry::identifications[you.TShape()].push_back
-                              (OCCIdentification { me, Transformation<3>(occ2ng(cme) - occ2ng(cyou)), inv, name });
-      }, py::arg("other"), py::arg("name"), "Identify shapes for periodic meshing")
-
+    .def("Identify", OCCGeometry::IdentifyFaces, "Identify faces",
+            py::arg("from"), py::arg("to"), py::arg("name"), py::arg("type")=Identifications::PERIODIC)
     
     .def("Triangulation", [](const TopoDS_Shape & shape)
          {
@@ -1665,6 +1529,18 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             OCCGeometry::global_shape_properties[shape.TShape()].maxh = maxh;
           }
       }, "set maxh for all elements of list")
+    .def_property("hpref", [](ListOfShapes& shapes)
+    {
+      throw Exception("Cannot get property of ListOfShapes, get the property from individual shapes!");
+    },
+      [](ListOfShapes& shapes, double hpref)
+      {
+        for(auto& shape : shapes)
+          {
+            auto& val = OCCGeometry::global_shape_properties[shape.TShape()].hpref;
+            val = max2(hpref, val);
+          }
+      }, "set hpref for all elements of list")
     
     ;
          

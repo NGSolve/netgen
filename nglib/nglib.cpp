@@ -880,7 +880,7 @@ namespace nglib
 
       mp->Transfer_Parameters();
 
-      OCCFindEdges(*occgeom, *me, mparam);
+      occgeom->FindEdges(*me, mparam);
 
       if((me->GetNP()) && (me->GetNFD()))
       {
@@ -926,8 +926,8 @@ namespace nglib
          perfstepsend = MESHCONST_OPTSURFACE;
       }
 
-      OCCMeshSurface(*occgeom, *me, mparam);
-      OCCOptimizeSurface(*occgeom, *me, mparam);
+      occgeom->MeshSurface(*me, mparam);
+      occgeom->OptimizeSurface(*me, mparam);
 
       me->CalcSurfacesOfNode();
       

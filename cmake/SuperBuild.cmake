@@ -101,8 +101,8 @@ if(BUILD_OCC)
 
   ExternalProject_Add(project_occ
     DEPENDS project_freetype
-    URL https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_5_0.zip
-    URL_MD5 a24e6d3cf2d24bf9347d2d4aee9dd80a
+    URL https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_6_0.zip
+    URL_MD5 37519251c99cb3469ccfa82a9241d528
     DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
     ${SUBPROJECT_ARGS}
     CMAKE_ARGS
@@ -116,7 +116,7 @@ if(BUILD_OCC)
          -DBUILD_MODULE_DataExchange:BOOL=ON
          -DBUILD_MODULE_ApplicationFramework:BOOL=OFF
          -DBUILD_MODULE_Draw:BOOL=OFF
-         -DUSE_FREETYPE=OFF
+         -DUSE_FREETYPE=ON
          ${SUBPROJECT_CMAKE_ARGS}
     UPDATE_COMMAND ""
     )
