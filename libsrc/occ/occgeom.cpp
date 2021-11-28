@@ -1967,7 +1967,7 @@ namespace netgen
       {
           auto s = verts_me[i].TShape();
           if(vmap.count(s)>0)
-              throw Exception("vertex mapped twice!");
+              continue;
           auto p = trafo(occ2ng(s));
           tree.Insert( p, i );
           vmap[s] = nullptr;

@@ -57,12 +57,20 @@ namespace netgen
       if(tol < Dist(GetCenter(), e.GetCenter()))
           return false;
 
-      auto &v0 = GetStartVertex();
-      auto &v1 = GetEndVertex();
-      auto &w0 = e.GetStartVertex();
-      auto &w1 = e.GetEndVertex();
-      return( (v0.IsMappedShape(w0, trafo, tol) && v1.IsMappedShape(w1, trafo, tol)) ||
-              (v0.IsMappedShape(w1, trafo, tol) && v1.IsMappedShape(w0, trafo, tol)) );
+      auto v0 = GetStartVertex().GetPoint();
+      auto v1 = GetEndVertex().GetPoint();
+      auto w0 = e.GetStartVertex().GetPoint();
+      auto w1 = e.GetEndVertex().GetPoint();
+
+      // have two closed edges, use midpoints to compare
+      if(Dist(v0,v1) < tol && Dist(w0,w1) < tol)
+      {
+          v1 = GetPoint(0.5);
+          w1 = other_ptr->GetPoint(0.5);
+      }
+
+      return( (Dist(v0, w0) < tol && Dist(v1, w1) < tol) ||
+              (Dist(v0, w1) < tol && Dist(v1, w0) < tol) );
   }
 
   void GeometryFace :: RestrictHTrig(Mesh& mesh,
