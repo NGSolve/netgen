@@ -1,3 +1,5 @@
+#include <set>
+
 #include <mystdlib.h>
 #include "meshing.hpp"
 #include <core/register_archive.hpp>
@@ -204,13 +206,22 @@ namespace netgen
               {
                   bool need_inverse = ident.from == s.get();
                   auto other = need_inverse ? ident.to : ident.from;
-                  if(other->nr < current->nr)
+                  if(other->nr < s->primary->nr)
                   {
                       auto trafo = ident.trafo;
                       if(need_inverse)
                           trafo = trafo.CalcInverse();
                       s->primary = other;
                       s->primary_to_me.Combine(trafo, s->primary_to_me);
+                      changed = true;
+                  }
+                  if(other->primary->nr < s->primary->nr)
+                  {
+                      auto trafo = ident.trafo;
+                      if(need_inverse)
+                          trafo = trafo.CalcInverse();
+                      s->primary = other->primary;
+                      s->primary_to_me.Combine(trafo, other->primary_to_me);
                       changed = true;
                   }
               }
@@ -478,7 +489,30 @@ namespace netgen
 
         if(edge->primary == edge)
         {
-            DivideEdge(edge, mparam, mesh, edge_points, params);
+            // check if start and end vertex are identified (if so, we only insert one segement and do z-refinement later)
+            bool is_identified_edge = false;
+            auto v0 = vertices[edge->GetStartVertex().nr].get();
+            auto v1 = vertices[edge->GetEndVertex().nr].get();
+            for(auto & ident : v0->identifications)
+            {
+                auto other = ident.from == v0 ? ident.to : ident.from;
+                if(other->nr == v1->nr && ident.type == Identifications::CLOSESURFACES)
+                {
+                    is_identified_edge = true;
+                    break;
+                }
+            }
+
+            if(is_identified_edge)
+            {
+                params.SetSize(2);
+                params[0] = 0.;
+                params[1] = 1.;
+            }
+            else
+            {
+                DivideEdge(edge, mparam, mesh, edge_points, params);
+            }
         }
         else
         {
@@ -634,8 +668,73 @@ namespace netgen
         mesh.SetBCName(k, face.properties.GetName());
         if(face.primary == &face)
         {
-            if(MeshFace(mesh, mparam, k, glob2loc))
-                n_failed_faces++;
+            // check if this face connects two identified closesurfaces
+            bool is_connecting_closesurfaces = false;
+            auto & idents = mesh.GetIdentifications();
+            std::set<int> relevant_edges;
+            auto segments = face.GetBoundary(mesh);
+            for(const auto &s : segments)
+                relevant_edges.insert(s.edgenr-1);
+
+            Array<bool, PointIndex> is_point_in_tree(mesh.Points().Size());
+            is_point_in_tree = false;
+            PointTree tree( bounding_box );
+            for(const auto &s : segments)
+                for(auto pi : s.PNums())
+                    if(!is_point_in_tree[pi])
+                    {
+                        tree.Insert(mesh[pi], pi);
+                        is_point_in_tree[pi] = true;
+                    }
+
+            Array<int> mapped_edges(edges.Size());
+            constexpr int UNINITIALIZED = -2;
+            constexpr int NOT_MAPPED = -1;
+            mapped_edges = UNINITIALIZED;
+
+            Transformation<3> trafo;
+
+            for(const auto &s : segments)
+            {
+                auto edgenr = s.edgenr-1;
+                auto & edge = *edges[edgenr];
+                ShapeIdentification *edge_mapping;
+
+                // have edgenr first time, search for closesurface identification
+                if(mapped_edges[edgenr] == UNINITIALIZED)
+                {
+                    mapped_edges[edgenr] = NOT_MAPPED;
+                    for(auto & edge_ident : edge.identifications)
+                    {
+                        if(edge_ident.type == Identifications::CLOSESURFACES && 
+                                edge_ident.from->nr == edgenr &&
+                                relevant_edges.count(edge_ident.to->nr) > 0
+                          )
+                        {
+                            trafo = edge_ident.trafo;
+                            mapped_edges[edgenr] = edge_ident.to->nr;
+                            is_connecting_closesurfaces = true;
+                            break;
+                        }
+                    }
+                }
+
+                // this edge has a closesurface mapping to another -> make connecting quad
+                if(mapped_edges[edgenr] != NOT_MAPPED)
+                {
+                    Element2d sel(4);
+                    sel[0] = s[0];
+                    sel[1] = s[1];
+                    sel[2] = tree.Find(trafo(mesh[s[1]]));
+                    sel[3] = tree.Find(trafo(mesh[s[0]]));
+                    sel.SetIndex(face.nr+1);
+                    mesh.AddSurfaceElement(sel);
+                }
+            }
+
+            if(!is_connecting_closesurfaces)
+                if(MeshFace(mesh, mparam, k, glob2loc))
+                    n_failed_faces++;
         }
     }
 
@@ -751,6 +850,8 @@ namespace netgen
             pmap[tree.Find(mesh[pi])] = pi;
           }
 
+    xbool do_invert = maybe;
+
     // now insert mapped surface elements
     for(auto sei : mesh.SurfaceElements().Range())
       {
@@ -758,6 +859,14 @@ namespace netgen
         if(sel.GetIndex() != src.nr+1)
           continue;
 
+        if(do_invert.IsMaybe())
+        {
+            auto n_src = src.GetNormal(mesh[sel[0]]);
+            auto n_dist = dst.GetNormal(mesh[sel[0]]);
+            Mat<3> normal_matrix;
+            CalcInverse(Trans(trafo.GetMatrix()), normal_matrix);
+            do_invert = n_src * (normal_matrix * n_dist) < 0.0;
+        }
         auto sel_new = sel;
         sel_new.SetIndex(dst.nr+1);
         for(auto i : Range(sel.PNums()))
@@ -769,7 +878,8 @@ namespace netgen
               }
               sel_new[i] = pmap[pi];
           }
-          sel_new.Invert();
+          if(do_invert.IsTrue())
+              sel_new.Invert();
           for(auto i : Range(sel.PNums()))
               dst.CalcPointGeomInfo(mesh[sel_new[i]], sel_new.GeomInfo()[i]);
           mesh.AddSurfaceElement(sel_new);

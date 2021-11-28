@@ -20,10 +20,10 @@ namespace netgen
         double s0, s1;
         GProp_GProps props;
 
+        public:
         OCCVertex start;
         OCCVertex end;
 
-        public:
         OCCEdge(TopoDS_Shape edge_);
 
         auto Shape() const { return edge; }

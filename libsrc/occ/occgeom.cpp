@@ -1131,6 +1131,8 @@ namespace netgen
           edge_map[tshape] = edges.Size();
           auto occ_edge = make_unique<OCCEdge>(edge);
           occ_edge->properties = global_shape_properties[tshape];
+          occ_edge->start.nr = vertex_map[occ_edge->start.TShape()];
+          occ_edge->end.nr = vertex_map[occ_edge->end.TShape()];
           edges.Append(std::move(occ_edge));
       }
 

@@ -164,6 +164,11 @@ namespace netgen
     Array<std::pair<Point<3>, double>> restricted_h;
     Box<3> bounding_box;
     int dimension = 3;
+
+    std::map<size_t, GeometryVertex*> vertex_map;
+    std::map<size_t, GeometryEdge*> edge_map;
+    std::map<size_t, GeometryFace*> face_map;
+    std::map<size_t, GeometrySolid*> solid_map;
   public:
 
     NetgenGeometry()
