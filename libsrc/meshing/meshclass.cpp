@@ -6887,14 +6887,11 @@ namespace netgen
         int oldsize = bcnames.Size();
         bcnames.SetSize (bcnr+1);  // keeps contents
         for (int i = oldsize; i <= bcnr; i++)
-          bcnames[i] = nullptr;
+          bcnames[i] = new string("default");
       }
 
     if ( bcnames[bcnr] ) delete bcnames[bcnr];
-    if ( abcname != "default" )
-      bcnames[bcnr] = new string ( abcname );
-    else
-      bcnames[bcnr] = nullptr;
+    bcnames[bcnr] = new string ( abcname );
 
     for (auto & fd : facedecoding)
       if (fd.BCProperty() <= bcnames.Size())
