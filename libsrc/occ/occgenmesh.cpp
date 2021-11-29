@@ -443,7 +443,6 @@ namespace netgen
         res = MESHING2_GIVEUP;
       }
 
-    projecttype = PARAMETERSPACE;
     static Timer t1("rest of loop"); RegionTimer reg1(t1);
       
     bool meshing_failed = res != MESHING2_OK;

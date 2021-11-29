@@ -478,7 +478,7 @@ namespace netgen
 
         if(edge->primary == edge)
         {
-            DivideEdge(edge, mparam, mesh, edge_points, edge_params);
+            DivideEdge(edge, mparam, mesh, edge_points, params);
         }
         else
         {
@@ -505,22 +505,25 @@ namespace netgen
                     swap(edge_points[i], edge_points[np-3-i]);
                     swap(edge_params[i], edge_params[np-3-i]);
                 }
+
+            params.SetSize(edge_params.Size()+2);
+            params[0] = 0.;
+            params.Last() = 1.;
+
+            for(auto i : Range(edge_params))
+                params[i+1] = edge_params[i];
         }
 
         pnums.SetSize(edge_points.Size() + 2);
         pnums[0] = startp;
         pnums.Last() = endp;
 
-        params.SetSize(edge_points.Size()+2);
-        params[0] = 0.;
-        params.Last() = 1.;
 
         for(auto i : Range(edge_points))
         {
             auto pi = mesh.AddPoint(edge_points[i]);
             tree.Insert(mesh[pi], pi);
             pnums[i+1] = pi;
-            params[i+1] = edge_params[i];
         }
 
         for(auto i : Range(pnums.Size()-1))

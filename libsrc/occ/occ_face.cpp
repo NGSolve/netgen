@@ -102,14 +102,12 @@ namespace netgen
                 double s0, s1;
                 auto cof = BRep_Tool::CurveOnSurface (edge, face, s0, s1);
 
-                for(auto i : Range(2))
-                {
-                    Point<3> p = mesh[seg[i]];
-                    gedge.ProjectPoint(p, &seg.epgeominfo[i]);
-                }
                 double s[2] = { seg.epgeominfo[0].dist, seg.epgeominfo[1].dist };
 
                 // fixes normal-vector roundoff problem when endpoint is cone-tip
+                s[0] = s0 + s[0]*(s1-s0);
+                s[1] = s0 + s[1]*(s1-s0);
+
                 double delta = s[1]-s[0];
                 s[0] += 1e-10*delta;
                 s[1] -= 1e-10*delta;

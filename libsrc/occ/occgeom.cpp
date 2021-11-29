@@ -198,9 +198,9 @@ namespace netgen
   bool OCCGeometry :: MeshFace(Mesh& mesh,
                                   const MeshingParameters& mparam, int nr, FlatArray<int, PointIndex> glob2loc) const
   {
-      bool failed = OCCMeshFace(*this, mesh, glob2loc, mparam, nr, PLANESPACE, true); 
+      bool failed = OCCMeshFace(*this, mesh, glob2loc, mparam, nr, PARAMETERSPACE, true);
       if(failed)
-          failed = OCCMeshFace(*this, mesh, glob2loc, mparam, nr, PARAMETERSPACE, false); 
+          failed = OCCMeshFace(*this, mesh, glob2loc, mparam, nr, PLANESPACE, false);
 
       if(failed)
       {
