@@ -626,11 +626,9 @@ namespace netgen
     for(auto k : Range(faces))
     {
         auto & face = *faces[k];
-        mesh.SetBCName(k, face.properties.GetName());
-        // todo find attached solids
         FaceDescriptor fd(k+1, face.domin+1, face.domout+1, k+1);
-        fd.SetBCName(mesh.GetBCNamePtr(k));
         mesh.AddFaceDescriptor(fd);
+        mesh.SetBCName(k, face.properties.GetName());
         if(face.primary == &face)
         {
             if(MeshFace(mesh, mparam, k, glob2loc))
