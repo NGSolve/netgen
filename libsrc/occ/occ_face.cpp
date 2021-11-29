@@ -104,10 +104,11 @@ namespace netgen
 
                 double s[2] = { seg.epgeominfo[0].dist, seg.epgeominfo[1].dist };
 
-                // fixes normal-vector roundoff problem when endpoint is cone-tip
+                // dist is in [0,1], map parametrization to [s0, s1]
                 s[0] = s0 + s[0]*(s1-s0);
                 s[1] = s0 + s[1]*(s1-s0);
 
+                // fixes normal-vector roundoff problem when endpoint is cone-tip
                 double delta = s[1]-s[0];
                 s[0] += 1e-10*delta;
                 s[1] -= 1e-10*delta;
