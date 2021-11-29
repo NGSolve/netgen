@@ -15,6 +15,7 @@
 #include <BRepAlgoAPI_Common.hxx>
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
+#include <BRepAlgo_NormalProjection.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakeVertex.hxx>
@@ -612,6 +613,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             "returns all sub-shapes of type 'FACE'")
     .def_property_readonly("edges", GetEdges,
             "returns all sub-shapes of type 'EDGE'")
+    .def_property_readonly("wires", GetWires,
+                           "returns all sub-shapes of type 'WIRE'")
     .def_property_readonly("vertices", GetVertices,
             "returns all sub-shapes of type 'VERTEX'")
 
@@ -1344,6 +1347,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         auto ax = gp_Ax3(p, du^dv, du);
         return make_shared<WorkPlane> (ax);
       })
+    .def("ProjectWire", [](const TopoDS_Face& face,
+                           const TopoDS_Wire& wire)
+    {
+      BRepAlgo_NormalProjection builder(face);
+      builder.Add(wire);
+      builder.Build();
+      return builder.Projection();
+    })
     ;
   py::class_<TopoDS_Solid, TopoDS_Shape> (m, "Solid");
   
@@ -1447,6 +1458,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          })
     .def_property_readonly("solids", &ListOfShapes::Solids)
     .def_property_readonly("faces", &ListOfShapes::Faces)
+    .def_property_readonly("wires", &ListOfShapes::Wires)
     .def_property_readonly("edges", &ListOfShapes::Edges)
     .def_property_readonly("vertices", &ListOfShapes::Vertices)
     .def(py::self * py::self)

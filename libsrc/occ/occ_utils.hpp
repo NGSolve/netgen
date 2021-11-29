@@ -144,6 +144,10 @@ namespace netgen
       {
         return SubShapes(TopAbs_FACE);
       }
+      ListOfShapes Wires() const
+      {
+        return SubShapes(TopAbs_WIRE);
+      }
       ListOfShapes Edges() const
       {
         return SubShapes(TopAbs_EDGE);
@@ -176,6 +180,14 @@ namespace netgen
     {
       ListOfShapes sub;
       for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
+        sub.push_back(e.Current());
+      return sub;
+    }
+
+    inline ListOfShapes GetWires(const TopoDS_Shape & shape)
+    {
+      ListOfShapes sub;
+      for (TopExp_Explorer e(shape, TopAbs_WIRE); e.More(); e.Next())
         sub.push_back(e.Current());
       return sub;
     }
