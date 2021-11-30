@@ -69,7 +69,7 @@ namespace netgen
         GeomAPI_ProjectPointOnCurve proj(pnt, curve);
         pnt = proj.NearestPoint();
         if(gi)
-            gi->dist = proj.LowerDistanceParameter();
+            gi->dist = (proj.LowerDistanceParameter() - s0)/(s1-s0);
         p = occ2ng(pnt);
     }
 
