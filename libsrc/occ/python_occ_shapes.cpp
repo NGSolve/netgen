@@ -21,6 +21,7 @@
 #include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
+#include <BRepExtrema_DistShapeShape.hxx>
 #include <BRepFilletAPI_MakeChamfer.hxx>
 #include <BRepFilletAPI_MakeFillet.hxx>
 #include <BRepGProp.hxx>
@@ -1018,6 +1019,12 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 
     .def("Identify", OCCGeometry::IdentifyFaces, "Identify faces",
             py::arg("from"), py::arg("to"), py::arg("name"), py::arg("type")=Identifications::PERIODIC)
+
+    .def("Distance", [](const TopoDS_Shape& self,
+                        const TopoDS_Shape& other)
+    {
+      return BRepExtrema_DistShapeShape(self, other).Value();
+    })
     
     .def("Triangulation", [](const TopoDS_Shape & shape)
          {
