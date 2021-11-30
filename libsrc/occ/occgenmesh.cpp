@@ -269,9 +269,9 @@ namespace netgen
     static Timer tprint("print");
     tprint.Start();
     if (meshing.GetProjectionType() == PLANESPACE)
-      PrintMessage (2, "Face ", k, " / ", mesh.GetNFD(), " (plane space projection)");
+      PrintMessage (2, "Face ", k, " / ", geom.GetNFaces(), " (plane space projection)");
     else
-      PrintMessage (2, "Face ", k, " / ", mesh.GetNFD(), " (parameter space projection)");
+      PrintMessage (2, "Face ", k, " / ", geom.GetNFaces(), " (parameter space projection)");
     tprint.Stop();
 
     //      Meshing2OCCSurfaces meshing(f2, bb);
