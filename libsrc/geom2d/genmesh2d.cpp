@@ -429,7 +429,7 @@ namespace netgen
     PrintMessage (1, "Generate Mesh from spline geometry");
 
     Box<2> bbox = geometry.GetBoundingBox ();
-
+    bbox.Increase (1e-2*bbox.Diam());
     t_h.Start();
     if (bbox.Diam() < mp.maxh) 
       mp.maxh = bbox.Diam();
