@@ -270,7 +270,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
                 { gp_Trsf trafo; trafo.SetTransformation(from, to); return trafo; })
     .def(py::self * py::self)
     .def("__call__", [] (gp_Trsf & trafo, const TopoDS_Shape & shape) {
-        return BRepBuilderAPI_Transform(shape, trafo).Shape();
+        return BRepBuilderAPI_Transform(shape, trafo, true).Shape();
       })
     .def("__str__", [](gp_Trsf & trafo)
     {

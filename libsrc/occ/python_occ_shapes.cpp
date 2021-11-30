@@ -914,7 +914,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             gp_Vec du, dv;
             gp_Pnt p;
             surf->D1 (0,0,p,du,dv);
-            BRepPrimAPI_MakePrism builder(shape, h*du^dv);
+            BRepPrimAPI_MakePrism builder(shape, h*du^dv, true);
 
             for (auto typ : { TopAbs_EDGE, TopAbs_VERTEX })
               for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
