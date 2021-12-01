@@ -49,6 +49,16 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
     .def("__sub__", [](gp_Pnt p1, gp_Pnt p2) { return gp_Vec(p2, p1); }) 
     .def("__add__", [](gp_Pnt p, gp_Vec v) { return p.Translated(v); }) // gp_Pnt(p.X()+v.X(), p.Y()+v.Y(), p.Z()+v.Z()); })
     .def("__sub__", [](gp_Pnt p, gp_Vec v) { return p.Translated(-v); }) // gp_Pnt(p.X()-v.X(), p.Y()-v.Y(), p.Z()-v.Z()); })
+    .def("__getitem__", [](const gp_Pnt& p, int index)
+    {
+      if(index == 0)
+        return p.X();
+      if(index == 1)
+        return p.Y();
+      if(index == 2)
+        return p.Z();
+      throw std::out_of_range("Point index must be in range [0,3)!");
+    })
     ;
   
   py::class_<gp_Vec>(m, "gp_Vec", "3d OCC vector")

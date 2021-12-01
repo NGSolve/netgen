@@ -972,14 +972,22 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("Reversed", [](const TopoDS_Shape & shape) {
         return CastShape(shape.Reversed()); })
 
-    .def("Extrude", [](const TopoDS_Shape & shape, double h) {
+    .def("Extrude", [](const TopoDS_Shape & shape, double h,
+                       optional<gp_Vec> dir) {
         for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
           {
             Handle(Geom_Surface) surf = BRep_Tool::Surface (TopoDS::Face(e.Current()));
-            gp_Vec du, dv;
-            gp_Pnt p;
-            surf->D1 (0,0,p,du,dv);
-            BRepPrimAPI_MakePrism builder(shape, h*du^dv, true);
+            gp_Vec edir;
+            if(dir.has_value())
+              edir = *dir;
+            else
+              {
+                gp_Vec du, dv;
+                gp_Pnt p;
+                surf->D1 (0,0,p,du,dv);
+                edir = du^dv;
+              }
+            BRepPrimAPI_MakePrism builder(shape, h*edir, true);
 
             for (auto typ : { TopAbs_EDGE, TopAbs_VERTEX })
               for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
@@ -992,7 +1000,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             return builder.Shape();
           }
         throw Exception("no face found for extrusion");
-      }, py::arg("h"), "extrude shape to thickness 'h', shape must contain a plane surface")
+    }, py::arg("h"), py::arg("dir")=nullopt, "extrude shape to thickness 'h', shape must contain a plane surface, optionally give an extrusion direction")
     
     .def("Extrude", [] (const TopoDS_Shape & face, gp_Vec vec) {
         return BRepPrimAPI_MakePrism (face, vec).Shape();
