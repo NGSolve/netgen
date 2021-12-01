@@ -196,21 +196,81 @@ py::object CastShape(const TopoDS_Shape & s)
     }
 };
 
+template <class TBuilder>
+void PropagateIdentifications (TBuilder & builder, TopoDS_Shape shape)
+{
+  std::map<T_Shape, T_Shape> mod_map;
+  std::map<T_Shape, bool> tshape_handled;
+
+  for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
+    for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+    {
+        auto tshape = e.Current().TShape();
+        mod_map[tshape] = tshape;
+        tshape_handled[tshape] = false;
+    }
+
+  for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
+    for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+      {
+        auto tshape = e.Current().TShape();
+
+        auto & modified = builder.Modified(e.Current());
+        if(modified.Size()!=1)
+            continue;
+
+        mod_map[tshape] = modified.First().TShape();
+      }
+
+  for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
+    for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+    {
+        auto tshape = e.Current().TShape();
+
+        if(tshape_handled[tshape])
+            continue;
+        tshape_handled[tshape] = true;
+
+        if(OCCGeometry::identifications.count(tshape)==0)
+            continue;
+
+        auto tshape_mapped = mod_map[tshape];
+
+        for(auto & ident : OCCGeometry::identifications[tshape])
+        {
+            // update existing identification
+            if(tshape == tshape_mapped)
+            {
+                ident.to = mod_map[ident.to];
+                ident.from = mod_map[ident.from];
+            }
+            else
+            {
+                OCCIdentification id_new = ident;
+                id_new.to = mod_map[id_new.to];
+                id_new.from = mod_map[id_new.from];
+                OCCGeometry::identifications[mod_map[tshape]].push_back(id_new);
+            }
+        }
+    }
+}
 
 template <class TBuilder>
 void PropagateProperties (TBuilder & builder, TopoDS_Shape shape)
 {
-  // #ifdef OCC_HAVE_HISTORY  
-  // Handle(BRepTools_History) history = builder.History();
+  bool have_identifications = false;
+
   for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
     for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
       {
-        auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
-        // for (auto mods : history->Modified(e.Current()))
+        auto tshape = e.Current().TShape();
+        auto & prop = OCCGeometry::global_shape_properties[tshape];
         for (auto mods : builder.Modified(e.Current()))
           OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+        have_identifications |= OCCGeometry::identifications.count(tshape) > 0;
       }
-  // #endif  
+  if(have_identifications)
+      PropagateIdentifications(builder, shape);
 }
 
 
@@ -618,6 +678,11 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                            "returns all sub-shapes of type 'WIRE'")
     .def_property_readonly("vertices", GetVertices,
             "returns all sub-shapes of type 'VERTEX'")
+    .def_property_readonly("bounding_box", [] ( const TopoDS_Shape &shape )
+            {
+               auto box = GetBoundingBox(shape);
+               return py::make_tuple( ng2occ(box.PMin()), ng2occ(box.PMax()) );
+            }, "returns bounding box (pmin, pmax)")
 
     .def("Properties", [] (const TopoDS_Shape & shape)
          {
