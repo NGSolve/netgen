@@ -325,85 +325,48 @@ namespace netgen
       {
         static Timer t("MeshSurface: Find edges and points - Parameter"); RegionTimer r(t);
         
-        int cntp = 0;
-
-        /*
-        for (int i = 1; i <= mesh.GetNSeg(); i++)
-          if (mesh.LineSegment(i).si == k)
-            cntp+=2;
-        */
-        cntp = 2*segments.Size();
-        //for (Segment & seg : mesh.LineSegments())
-          //if (seg.si == k)
-            //cntp += 2;
-
-        NgArray<PointGeomInfo> gis;
-
-        gis.SetAllocSize (cntp);
+        Array<PointGeomInfo> gis(2*segments.Size());
         gis.SetSize (0);
 
-        //for (int i = 1; i <= mesh.GetNSeg(); i++)
+        Box<2> uv_box(Box<2>::EMPTY_BOX);
         for(auto & seg : segments)
-          {
-            //Segment & seg = mesh.LineSegment(i);
-            //if (seg.si == k)
-              {
-                PointGeomInfo gi0, gi1;
-                gi0.trignum = gi1.trignum = k;
-                gi0.u = seg.epgeominfo[0].u;
-                gi0.v = seg.epgeominfo[0].v;
-                gi1.u = seg.epgeominfo[1].u;
-                gi1.v = seg.epgeominfo[1].v;
+            for(auto i : Range(2))
+                uv_box.Add( {seg.epgeominfo[i].u, seg.epgeominfo[i].v } );
 
-                int locpnum[2] = {0, 0};
+        BoxTree<2> uv_tree(uv_box);
+        Array<int> found_points;
 
-                for (int j = 0; j < 2; j++)
-                  {
-                    PointGeomInfo gi = (j == 0) ? gi0 : gi1;
+        for(auto & seg : segments)
+        {
+            PointGeomInfo gi[2];
+            gi[0].trignum = gi[1].trignum = k;
+            gi[0].u = seg.epgeominfo[0].u;
+            gi[0].v = seg.epgeominfo[0].v;
+            gi[1].u = seg.epgeominfo[1].u;
+            gi[1].v = seg.epgeominfo[1].v;
 
-                    /*
-                    int l;
-                    for (l = 0; l < gis.Size() && locpnum[j] == 0; l++)
-                      {
-                        double dist = sqr (gis[l].u-gi.u)+sqr(gis[l].v-gi.v);
+            int locpnum[2] = {0, 0};
 
-                        if (dist < 1e-10)
-                          locpnum[j] = l+1;
-                      }
+            for (int j = 0; j < 2; j++)
+            {
+                Point<2> uv = {gi[j].u, gi[j].v};
+                uv_tree.GetIntersecting(uv, uv, found_points);
 
-                    if (locpnum[j] == 0)
-                      {
-                        PointIndex pi = seg[j];
-                        meshing.AddPoint (mesh.Point(pi), pi);
+                if(found_points.Size())
+                    locpnum[j] = found_points[0];
+                else
+                {
+                    PointIndex pi = seg[j];
+                    meshing.AddPoint (mesh.Point(pi), pi);
 
-                        gis.SetSize (gis.Size()+1);
-                        gis[l] = gi;
-                        locpnum[j] = l+1;
-                      }
-                    */
-                    for (int l = 0; l < gis.Size(); l++)
-                      {
-                        double dist = sqr (gis[l].u-gi.u)+sqr(gis[l].v-gi.v);
-                        if (dist < 1e-10)
-                          {
-                            locpnum[j] = l+1;
-                            break;
-                          }
-                      }
+                    gis.Append (gi[j]);
+                    locpnum[j] = gis.Size();
+                    uv_tree.Insert(uv, locpnum[j]);
+                }
+            }
 
-                    if (locpnum[j] == 0)
-                      {
-                        PointIndex pi = seg[j];
-                        meshing.AddPoint (mesh.Point(pi), pi);
-
-                        gis.Append (gi);
-                        locpnum[j] = gis.Size();
-                      }
-                  }
-
-                meshing.AddBoundaryElement (locpnum[0], locpnum[1], gi0, gi1);
-              }
-          }
+            meshing.AddBoundaryElement (locpnum[0], locpnum[1], gi[0], gi[1]);
+        }
       }
 
 
