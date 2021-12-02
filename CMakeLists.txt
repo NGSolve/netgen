@@ -254,6 +254,13 @@ if (USE_GUI)
     add_definitions(-DTCL -DOPENGL -DUSE_TOGL_2 -DUSE_TCL_STUBS -DUSE_TK_STUBS)
     include_directories(${TCL_INCLUDE_PATH})
     include_directories(${TK_INCLUDE_PATH})
+    if(NOT EXISTS ${TK_INCLUDE_PATH}/tkWin.h AND EXISTS ${TK_INCLUDE_PATH}/../win/tkWin.h)
+        include_directories(${TK_INCLUDE_PATH}/../win)
+    endif()
+    if(NOT EXISTS ${TK_INCLUDE_PATH}/x11/Xlib.h AND EXISTS ${TK_INCLUDE_PATH}/../xlib/X11/Xlib.h)
+        include_directories(${TK_INCLUDE_PATH}/../xlib)
+    endif()
+
     set(LIBTOGL togl)
 
     if(WIN32)
