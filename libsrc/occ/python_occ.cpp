@@ -166,6 +166,10 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                             {
                               self.SetFaceMaxH(fnr, meshsize);
                             }, "Set maximum meshsize for face fnr. Face numbers are 0 based.")
+    .def("Draw", [](shared_ptr<OCCGeometry> geo)
+    {
+      ng_geometry = geo;
+    })
     .def("_visualizationData", [] (shared_ptr<OCCGeometry> occ_geo)
          {
            std::vector<float> vertices;

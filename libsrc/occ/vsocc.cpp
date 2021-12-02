@@ -86,7 +86,7 @@ namespace netgen
       // Added clipping planes to Geometry view
       SetClippingPlane();
 
-      GLfloat matcoledge[] = {  0, 0, 1, 1};
+      GLfloat matcoledge[] = {  0, 0, 0, 1};
       GLfloat matcolhiedge[] = {  1, 0, 0, 1};
 
       glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, matcoledge);
