@@ -33,16 +33,19 @@
 #include <Geom_TrimmedCurve.hxx>
 #include <Geom_Plane.hxx>
 #include <Geom_BSplineCurve.hxx>
+#include <Geom2d_BSplineCurve.hxx>
 #include <Geom_BezierCurve.hxx>
 #include <GeomAPI_PointsToBSpline.hxx>
 #include <GeomAbs_Shape.hxx>
 #include <Geom_BSplineSurface.hxx>
 #include <GeomAPI_PointsToBSplineSurface.hxx>
 #include <GeomAPI_Interpolate.hxx>
+#include <Geom2dAPI_Interpolate.hxx>
 #include <GC_MakeSegment.hxx>
 #include <GC_MakeCircle.hxx>
 #include <GC_MakeArcOfCircle.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
+#include <BRepBuilderAPI_MakeEdge2d.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
@@ -2012,6 +2015,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       return BRepBuilderAPI_MakeEdge(curve).Edge();
     }, py::arg("points"), "create Bezier curve");
 
+  //TODO: 2d version
   m.def("SplineApproximation", [](py::object pnts, Approx_ParametrizationType approx_type, int deg_min,
           int deg_max, GeomAbs_Shape continuity, double tol) {
       TColgp_Array1OfPnt points(0, 0);
@@ -2070,28 +2074,61 @@ tol : float
 )delimiter");
 
     m.def("SplineInterpolation", [](py::object pnts, bool periodic, double tol) {
-        Handle(TColgp_HArray1OfPnt) points = new TColgp_HArray1OfPnt(1, 1);
-        if (py::extract<std::vector<gp_Pnt>>(pnts).check()) {
+
+        auto _2d = [](const Handle(TColgp_HArray1OfPnt2d) &points, bool periodic, double tol) {
+            Geom2dAPI_Interpolate builder(points, periodic, tol);
+            builder.Perform();
+            return BRepBuilderAPI_MakeEdge2d(builder.Curve()).Edge();
+        };
+
+        auto _3d = [](const Handle(TColgp_HArray1OfPnt) &points, bool periodic, double tol) {
+            GeomAPI_Interpolate builder(points, periodic, tol);
+            builder.Perform();
+            return BRepBuilderAPI_MakeEdge(builder.Curve()).Edge();
+        };
+
+        if (py::extract<std::vector<gp_Pnt>>(pnts).check())
+          {
             std::vector<gp_Pnt> pnt_list{py::extract<std::vector<gp_Pnt>>(pnts)()};
-            points->Resize(1, pnt_list.size(), true);
+            Handle(TColgp_HArray1OfPnt) points = new TColgp_HArray1OfPnt(1, pnt_list.size());
             for (int i = 0; i < pnt_list.size(); i++)
                 points->SetValue(i+1, pnt_list[i]);
-        } else if (py::extract<py::array_t<double>>(pnts).check()) {
+            return _3d(points, periodic, tol);
+          }
+        else if(py::extract<std::vector<gp_Pnt2d>>(pnts).check())
+          {
+            std::vector<gp_Pnt2d> pnt_list{py::extract<std::vector<gp_Pnt2d>>(pnts)()};
+            Handle(TColgp_HArray1OfPnt2d) points = new TColgp_HArray1OfPnt2d(1, pnt_list.size());
+            for (int i = 0; i < pnt_list.size(); i++)
+                points->SetValue(i+1, pnt_list[i]);
+            return _2d(points, periodic, tol);
+          }
+        else if (py::extract<py::array_t<double>>(pnts).check())
+          {
             py::array_t<double> pnt_array{py::extract<py::array_t<double>>(pnts)()};
             if (pnt_array.ndim() != 2)
                 throw Exception("`points` array must have dimension 2.");
-            if (pnt_array.shape(1) != 3)
-                throw Exception("The second dimension must have size 3.");
-            points->Resize(1, pnt_array.shape(0), false);
-            auto pnts_unchecked = pnt_array.unchecked<2>();
-            for (int i = 0; i < pnt_array.shape(0); ++i)
-                points->SetValue(i+1, gp_Pnt(pnts_unchecked(i, 0), pnts_unchecked(i, 1), pnts_unchecked(i, 2)));
-        } else
-            throw Exception("Not able to process the data type of points");
-
-        GeomAPI_Interpolate builder(points, periodic, tol);
-        builder.Perform();
-        return BRepBuilderAPI_MakeEdge(builder.Curve()).Edge();
+            if (pnt_array.shape(1) == 3)
+              {
+                Handle(TColgp_HArray1OfPnt) points = new TColgp_HArray1OfPnt(1, pnt_array.shape(0));
+                auto pnts_unchecked = pnt_array.unchecked<2>();
+                for (int i = 0; i < pnt_array.shape(0); ++i)
+                  points->SetValue(i+1, gp_Pnt(pnts_unchecked(i, 0), pnts_unchecked(i, 1), pnts_unchecked(i, 2)));
+                return _3d(points, periodic, tol);
+              }
+            else if (pnt_array.shape(1) == 2)
+              {
+                Handle(TColgp_HArray1OfPnt2d) points = new TColgp_HArray1OfPnt2d(1, pnt_array.shape(0));
+                auto pnts_unchecked = pnt_array.unchecked<2>();
+                for (int i = 0; i < pnt_array.shape(0); ++i)
+                    points->SetValue(i+1, gp_Pnt2d(pnts_unchecked(i, 0), pnts_unchecked(i, 1)));
+                return _2d(points, periodic, tol);
+              }
+            else
+                throw Exception("The second dimension must have size 2 or 3, but has " + to_string(pnt_array.shape(1)));
+        }
+      else
+        throw Exception("Not able to process the data type of points");
       },
       py::arg("points"),
       py::arg("periodic")=false,
@@ -2102,8 +2139,8 @@ Generate a piecewise continuous spline-curve interpolating a list of points.
 Parameters
 ----------
 
-points : List[gp_Pnt] or Tuple[gp_Pnt] or np.ndarray[double]
-  List (or tuple) of gp_Pnt. If a numpy array is provided instead, the data must contain the coordinates
+points : List|Tuple[gp_Pnt|gp_Pnt2d] or np.ndarray[double]
+  List (or tuple) of gp_Pnt (or gp_Pnt2d). If a numpy array is provided instead, the data must contain the coordinates
 
 periodic : bool
   Whether the result should be periodic
