@@ -2069,60 +2069,49 @@ tol : float
 
 )delimiter");
 
-// CRASHES BADLY during call of Curve()!
-//    m.def("SplineInterpolation", [](py::object pnts, bool periodic, double tol) {
-//              cout << "enter" << endl;
-//              TColgp_Array1OfPnt points(0, 0);
-//              cout << "points array exists" << endl;
-//              if (py::extract<std::vector<gp_Pnt>>(pnts).check()) {
-//                  std::vector<gp_Pnt> pnt_list{py::extract<std::vector<gp_Pnt>>(pnts)()};
-//                  points.Resize(1, pnt_list.size(), true);
-//                  for (int i = 0; i < pnt_list.size(); i++)
-//                      points.SetValue(i+1, pnt_list[i]);
-//              } else if (py::extract<py::array_t<double>>(pnts).check()) {
-//                  py::array_t<double> pnt_array{py::extract<py::array_t<double>>(pnts)()};
-//                  if (pnt_array.ndim() != 2)
-//                      throw Exception("`points` array must have dimension 2.");
-//                  if (pnt_array.shape(1) != 3)
-//                      throw Exception("The second dimension must have size 3.");
-//                  cout << "resize" << endl;
-//                  points.Resize(1, pnt_array.shape(0), true);
-//                  auto pnts_unchecked = pnt_array.unchecked<2>();
-//                  for (int i = 0; i < pnt_array.shape(0); ++i)
-//                      points.SetValue(i+1, gp_Pnt(pnts_unchecked(i, 0), pnts_unchecked(i, 1), pnts_unchecked(i, 2)));
-//                  cout << "values set" << endl;
-//              } else
-//                  throw Exception("Not able to process the data type of points");
-//
-//              TColgp_HArray1OfPnt hpoints{points};
-//              const auto _handle = opencascade::handle<TColgp_HArray1OfPnt>{&hpoints};
-//              cout << "build" << endl;
-//              GeomAPI_Interpolate builder(_handle, periodic, tol);
-//              cout << "done" << endl;
-//              auto curve = builder.Curve();
-//              cout << "curve done" << endl;
-//              return BRepBuilderAPI_MakeEdge(curve);
-////              return BRepBuilderAPI_MakeEdge(builder.Curve()).Edge();
-//          },
-//          py::arg("points"),
-//          py::arg("periodic")=false,
-//          py::arg("tol")=1e-8,
-//          R"delimiter(
-//Generate a piecewise continuous spline-curve interpolating a list of points.
-//
-//Parameters
-//----------
-//
-//points : List[gp_Pnt] or Tuple[gp_Pnt] or np.ndarray[double]
-//  List (or tuple) of gp_Pnt. If a numpy array is provided instead, the data must contain the coordinates
-//
-//periodic : bool
-//  Whether the result should be periodic
-//
-//tol : float
-//  Tolerance for the distance between points.
-//
-//)delimiter");
+    m.def("SplineInterpolation", [](py::object pnts, bool periodic, double tol) {
+        Handle(TColgp_HArray1OfPnt) points = new TColgp_HArray1OfPnt(1, 1);
+        if (py::extract<std::vector<gp_Pnt>>(pnts).check()) {
+            std::vector<gp_Pnt> pnt_list{py::extract<std::vector<gp_Pnt>>(pnts)()};
+            points->Resize(1, pnt_list.size(), true);
+            for (int i = 0; i < pnt_list.size(); i++)
+                points->SetValue(i+1, pnt_list[i]);
+        } else if (py::extract<py::array_t<double>>(pnts).check()) {
+            py::array_t<double> pnt_array{py::extract<py::array_t<double>>(pnts)()};
+            if (pnt_array.ndim() != 2)
+                throw Exception("`points` array must have dimension 2.");
+            if (pnt_array.shape(1) != 3)
+                throw Exception("The second dimension must have size 3.");
+            points->Resize(1, pnt_array.shape(0), false);
+            auto pnts_unchecked = pnt_array.unchecked<2>();
+            for (int i = 0; i < pnt_array.shape(0); ++i)
+                points->SetValue(i+1, gp_Pnt(pnts_unchecked(i, 0), pnts_unchecked(i, 1), pnts_unchecked(i, 2)));
+        } else
+            throw Exception("Not able to process the data type of points");
+
+        GeomAPI_Interpolate builder(points, periodic, tol);
+        builder.Perform();
+        return BRepBuilderAPI_MakeEdge(builder.Curve()).Edge();
+      },
+      py::arg("points"),
+      py::arg("periodic")=false,
+      py::arg("tol")=1e-8,
+      R"delimiter(
+Generate a piecewise continuous spline-curve interpolating a list of points.
+
+Parameters
+----------
+
+points : List[gp_Pnt] or Tuple[gp_Pnt] or np.ndarray[double]
+  List (or tuple) of gp_Pnt. If a numpy array is provided instead, the data must contain the coordinates
+
+periodic : bool
+  Whether the result should be periodic
+
+tol : float
+  Tolerance for the distance between points.
+
+)delimiter");
 
 
   m.def("SplineSurfaceApproximation", [](py::array_t<double> pnt_array,
@@ -2182,7 +2171,7 @@ tol : float
   Tolerance for the distance from individual points to the approximating surface.
 
 periodic : bool
-  Whether the result should be periodic
+  Whether the result should be periodic in the first surface parameter
 
 degen_tol : double
   Tolerance for resolution of degenerate edges
@@ -2230,7 +2219,7 @@ approx_type : ApproxParamType
   Assumption on location of parameters wrt points.
 
 periodic : bool
-  Whether the result should be periodic
+  Whether the result should be periodic in the first surface parameter
 
 degen_tol : double
   Tolerance for resolution of degenerate edges
