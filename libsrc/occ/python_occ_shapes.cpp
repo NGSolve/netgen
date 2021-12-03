@@ -36,6 +36,7 @@
 #include <Geom2d_BSplineCurve.hxx>
 #include <Geom_BezierCurve.hxx>
 #include <GeomAPI_PointsToBSpline.hxx>
+#include <Geom2dAPI_PointsToBSpline.hxx>
 #include <GeomAbs_Shape.hxx>
 #include <Geom_BSplineSurface.hxx>
 #include <GeomAPI_PointsToBSplineSurface.hxx>
@@ -439,6 +440,75 @@ public:
   auto Rotate (double angle)
   {
     localpos.Rotate(localpos.Location(), angle*M_PI/180);
+    return shared_from_this();
+  }
+
+  auto Spline(const std::vector<gp_Pnt2d> &points, bool periodic, double tol, const std::map<int, gp_Vec2d> &tangents, optional<string> name = nullopt)
+  {
+    gp_Pnt2d P1 = localpos.Location();
+    gp_Pnt P13d = surf->Value(P1.X(), P1.Y());
+
+    gp_Pnt2d PLast = points.back();
+    gp_Pnt PLast3d = surf->Value(PLast.X(), PLast.Y());
+
+    Handle(TColgp_HArray1OfPnt2d) allpoints = new TColgp_HArray1OfPnt2d(1, points.size() + 1);
+    allpoints->SetValue(1, P1);
+    for (int i = 0; i < points.size(); i++)
+        allpoints->SetValue(i+2, points[i]);
+    Geom2dAPI_Interpolate builder(allpoints, periodic, tol);
+
+    if (tangents.size() > 0)
+      {
+        const gp_Vec2d dummy_vec = tangents.begin()->second;
+        TColgp_Array1OfVec2d tangent_vecs(1, allpoints->Length());
+        Handle(TColStd_HArray1OfBoolean) tangent_flags = new TColStd_HArray1OfBoolean(1, allpoints->Length());
+        for (int i : Range(allpoints->Length()))
+          {
+            if (tangents.count(i) > 0)
+              {
+                tangent_vecs.SetValue(i+1, tangents.at(i));
+                tangent_flags->SetValue(i+1, true);
+              }
+            else
+              {
+                tangent_vecs.SetValue(i+1, dummy_vec);
+                tangent_flags->SetValue(i+1, false);
+              }
+          }
+        builder.Load(tangent_vecs, tangent_flags);
+      }
+
+
+    builder.Perform();
+    auto curve2d = builder.Curve();
+
+    if (startvertex.IsNull())
+        startvertex = lastvertex = BRepBuilderAPI_MakeVertex(P13d).Vertex();
+    auto endv = periodic ? startvertex : BRepBuilderAPI_MakeVertex(PLast3d).Vertex();
+
+    //create 3d edge from 2d curve using surf
+    auto edge = BRepBuilderAPI_MakeEdge(curve2d, surf, lastvertex, endv).Edge();
+    lastvertex = endv;
+    BRepLib::BuildCurves3d(edge);
+    wire_builder.Add(edge);
+
+    // update localpos
+    localpos.SetLocation(PLast);
+
+    //compute angle of rotation
+    //compute tangent t2 in PLast
+    const auto dir = localpos.Direction();
+    gp_Vec2d t = gp_Vec2d(dir.X(), dir.Y());
+    gp_Vec2d t2 = curve2d->DN(curve2d->LastParameter(), 1);
+
+    double angle = t.Angle(t2);    //angle \in [-pi,pi]
+    
+    //update localpos.Direction()
+    Rotate(angle*180/M_PI);
+
+    if (periodic)
+        Finish();
+
     return shared_from_this();
   }
 
@@ -1855,6 +1925,100 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       return curve;
       */
     }, py::arg("c"), py::arg("r"), "create 2d circle curve");
+
+  m.def("SplineApproximation", [](const std::vector<gp_Pnt2d> &points, Approx_ParametrizationType approx_type, int deg_min,
+                                    int deg_max, GeomAbs_Shape continuity, double tol) -> Handle(Geom2d_Curve) {
+      TColgp_Array1OfPnt2d hpoints(0, 0);
+      hpoints.Resize(0, points.size() - 1, true);
+      for (int i = 0; i < points.size(); i++)
+          hpoints.SetValue(i, points[i]);
+
+      Geom2dAPI_PointsToBSpline builder(hpoints, approx_type, deg_min, deg_max, continuity, tol);
+      return Handle(Geom2d_BSplineCurve)(builder.Curve());
+    },
+    py::arg("points"),
+    py::arg("approx_type") = Approx_ParametrizationType::Approx_ChordLength,
+    py::arg("deg_min") = 3,
+    py::arg("deg_max") = 8,
+    py::arg("continuity") = GeomAbs_Shape::GeomAbs_C2,
+    py::arg("tol")=1e-8,
+    R"delimiter(
+Generate a piecewise continuous spline-curve approximating a list of points in 2d.
+
+Parameters
+----------
+
+points : List|Tuple[gp_Pnt2d]
+  List (or tuple) of gp_Pnt.
+
+approx_type : ApproxParamType
+  Assumption on location of parameters wrt points.
+
+deg_min : int
+  Minimum polynomial degree of splines
+
+deg_max : int
+  Maxmium polynomial degree of splines
+
+continuity : ShapeContinuity
+  Continuity requirement on the approximating surface
+
+tol : float
+  Tolerance for the distance from individual points to the approximating curve.
+
+)delimiter");
+
+  m.def("SplineInterpolation", [](const std::vector<gp_Pnt2d> &points, bool periodic, double tol, const std::map<int, gp_Vec2d> &tangents) -> Handle(Geom2d_Curve) {
+      Handle(TColgp_HArray1OfPnt2d) hpoints = new TColgp_HArray1OfPnt2d(1, points.size());
+      for (int i = 0; i < points.size(); i++)
+          hpoints->SetValue(i+1, points[i]);
+      Geom2dAPI_Interpolate builder(hpoints, periodic, tol);
+
+      if (tangents.size() > 0)
+      {
+        const gp_Vec2d dummy_vec = tangents.begin()->second;
+        TColgp_Array1OfVec2d tangent_vecs(1, points.size());
+        Handle(TColStd_HArray1OfBoolean) tangent_flags = new TColStd_HArray1OfBoolean(1, points.size());
+        for (int i : Range(points.size()))
+        {
+          if (tangents.count(i) > 0)
+          {
+              tangent_vecs.SetValue(i+1, tangents.at(i));
+              tangent_flags->SetValue(i+1, true);
+          } else{
+              tangent_vecs.SetValue(i+1, dummy_vec);
+              tangent_flags->SetValue(i+1, false);
+          }
+        }
+        builder.Load(tangent_vecs, tangent_flags);
+      }
+
+      builder.Perform();
+      return Handle(Geom2d_BSplineCurve)(builder.Curve());
+    },
+    py::arg("points"),
+    py::arg("periodic")=false,
+    py::arg("tol")=1e-8,
+    py::arg("tangents")=std::map<int, gp_Vec2d>{},
+    R"delimiter(
+Generate a piecewise continuous spline-curve interpolating a list of points in 2d.
+
+Parameters
+----------
+
+points : List|Tuple[gp_Pnt2d]
+  List (or tuple) of gp_Pnt2d.
+
+periodic : bool
+  Whether the result should be periodic
+
+tol : float
+  Tolerance for the distance between points.
+
+tangents : Dict[int, gp_Vec2d]
+  Tangent vectors for the points indicated by the key value (0-based).
+
+)delimiter");
   
   m.def("Glue", [] (const std::vector<TopoDS_Shape> shapes) -> TopoDS_Shape
         {
@@ -2015,30 +2179,15 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       return BRepBuilderAPI_MakeEdge(curve).Edge();
     }, py::arg("points"), "create Bezier curve");
 
-  //TODO: 2d version
-  m.def("SplineApproximation", [](py::object pnts, Approx_ParametrizationType approx_type, int deg_min,
+
+  m.def("SplineApproximation", [](const std::vector<gp_Pnt> &points, Approx_ParametrizationType approx_type, int deg_min,
           int deg_max, GeomAbs_Shape continuity, double tol) {
-      TColgp_Array1OfPnt points(0, 0);
-      if (py::extract<std::vector<gp_Pnt>>(pnts).check()) {
-          std::vector<gp_Pnt> pnt_list{py::extract<std::vector<gp_Pnt>>(pnts)()};
-          points.Resize(0, pnt_list.size()-1, true);
-          for (int i = 0; i < pnt_list.size(); i++)
-              points.SetValue(i, pnt_list[i]);
-      } else if (py::extract<py::array_t<double>>(pnts).check()) {
-          py::array_t<double> pnt_array{py::extract<py::array_t<double>>(pnts)()};
-          if (pnt_array.ndim() != 2)
-            throw Exception("`points` array must have dimension 2.");
-          if (pnt_array.shape(1) != 3)
-            throw Exception("The second dimension must have size 3.");
+      TColgp_Array1OfPnt hpoints(0, 0);
+      hpoints.Resize(0, points.size() - 1, true);
+      for (int i = 0; i < points.size(); i++)
+        hpoints.SetValue(i, points[i]);
 
-          points.Resize(0, pnt_array.shape(0)-1, true);
-          auto pnts_unchecked = pnt_array.unchecked<2>();
-          for (int i = 0; i < pnt_array.shape(0); ++i)
-            points.SetValue(i, gp_Pnt(pnts_unchecked(i, 0), pnts_unchecked(i, 1), pnts_unchecked(i, 2)));
-      } else
-          throw Exception("Not able to process the data type of points");
-
-      GeomAPI_PointsToBSpline builder(points, approx_type, deg_min, deg_max, continuity, tol);
+      GeomAPI_PointsToBSpline builder(hpoints, approx_type, deg_min, deg_max, continuity, tol);
       return BRepBuilderAPI_MakeEdge(builder.Curve()).Edge();
     },
     py::arg("points"),
@@ -2048,13 +2197,13 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     py::arg("continuity") = GeomAbs_Shape::GeomAbs_C2,
     py::arg("tol")=1e-8,
     R"delimiter(
-Generate a piecewise continuous spline-curve approximating a list of points.
+Generate a piecewise continuous spline-curve approximating a list of points in 3d.
 
 Parameters
 ----------
 
-points : List[gp_Pnt] or Tuple[gp_Pnt] or np.ndarray[double]
-  List (or tuple) of gp_Pnt. If a numpy array is provided instead, the data must contain the coordinates
+points : List[gp_Pnt] or Tuple[gp_Pnt]
+  List (or tuple) of gp_Pnt.
 
 approx_type : ApproxParamType
   Assumption on location of parameters wrt points.
@@ -2073,80 +2222,56 @@ tol : float
 
 )delimiter");
 
-    m.def("SplineInterpolation", [](py::object pnts, bool periodic, double tol) {
+    m.def("SplineInterpolation", [](const std::vector<gp_Pnt> &points, bool periodic, double tol, const std::map<int, gp_Vec> &tangents) {
+        Handle(TColgp_HArray1OfPnt) hpoints = new TColgp_HArray1OfPnt(1, points.size());
+        for (int i = 0; i < points.size(); i++)
+          hpoints->SetValue(i+1, points[i]);
 
-        auto _2d = [](const Handle(TColgp_HArray1OfPnt2d) &points, bool periodic, double tol) {
-            Geom2dAPI_Interpolate builder(points, periodic, tol);
-            builder.Perform();
-            return BRepBuilderAPI_MakeEdge2d(builder.Curve()).Edge();
-        };
+        GeomAPI_Interpolate builder(hpoints, periodic, tol);
 
-        auto _3d = [](const Handle(TColgp_HArray1OfPnt) &points, bool periodic, double tol) {
-            GeomAPI_Interpolate builder(points, periodic, tol);
-            builder.Perform();
-            return BRepBuilderAPI_MakeEdge(builder.Curve()).Edge();
-        };
-
-        if (py::extract<std::vector<gp_Pnt>>(pnts).check())
+        if (tangents.size() > 0)
+        {
+          const gp_Vec dummy_vec = tangents.begin()->second;
+          TColgp_Array1OfVec tangent_vecs(1, points.size());
+          Handle(TColStd_HArray1OfBoolean) tangent_flags = new TColStd_HArray1OfBoolean(1, points.size());
+          for (int i : Range(points.size()))
           {
-            std::vector<gp_Pnt> pnt_list{py::extract<std::vector<gp_Pnt>>(pnts)()};
-            Handle(TColgp_HArray1OfPnt) points = new TColgp_HArray1OfPnt(1, pnt_list.size());
-            for (int i = 0; i < pnt_list.size(); i++)
-                points->SetValue(i+1, pnt_list[i]);
-            return _3d(points, periodic, tol);
+            if (tangents.count(i) > 0)
+            {
+              tangent_vecs.SetValue(i+1, tangents.at(i));
+              tangent_flags->SetValue(i+1, true);
+            } else{
+              tangent_vecs.SetValue(i+1, dummy_vec);
+              tangent_flags->SetValue(i+1, false);
+            }
           }
-        else if(py::extract<std::vector<gp_Pnt2d>>(pnts).check())
-          {
-            std::vector<gp_Pnt2d> pnt_list{py::extract<std::vector<gp_Pnt2d>>(pnts)()};
-            Handle(TColgp_HArray1OfPnt2d) points = new TColgp_HArray1OfPnt2d(1, pnt_list.size());
-            for (int i = 0; i < pnt_list.size(); i++)
-                points->SetValue(i+1, pnt_list[i]);
-            return _2d(points, periodic, tol);
-          }
-        else if (py::extract<py::array_t<double>>(pnts).check())
-          {
-            py::array_t<double> pnt_array{py::extract<py::array_t<double>>(pnts)()};
-            if (pnt_array.ndim() != 2)
-                throw Exception("`points` array must have dimension 2.");
-            if (pnt_array.shape(1) == 3)
-              {
-                Handle(TColgp_HArray1OfPnt) points = new TColgp_HArray1OfPnt(1, pnt_array.shape(0));
-                auto pnts_unchecked = pnt_array.unchecked<2>();
-                for (int i = 0; i < pnt_array.shape(0); ++i)
-                  points->SetValue(i+1, gp_Pnt(pnts_unchecked(i, 0), pnts_unchecked(i, 1), pnts_unchecked(i, 2)));
-                return _3d(points, periodic, tol);
-              }
-            else if (pnt_array.shape(1) == 2)
-              {
-                Handle(TColgp_HArray1OfPnt2d) points = new TColgp_HArray1OfPnt2d(1, pnt_array.shape(0));
-                auto pnts_unchecked = pnt_array.unchecked<2>();
-                for (int i = 0; i < pnt_array.shape(0); ++i)
-                    points->SetValue(i+1, gp_Pnt2d(pnts_unchecked(i, 0), pnts_unchecked(i, 1)));
-                return _2d(points, periodic, tol);
-              }
-            else
-                throw Exception("The second dimension must have size 2 or 3, but has " + to_string(pnt_array.shape(1)));
+          builder.Load(tangent_vecs, tangent_flags);
         }
-      else
-        throw Exception("Not able to process the data type of points");
+
+        builder.Perform();
+        return BRepBuilderAPI_MakeEdge(builder.Curve()).Edge();
       },
       py::arg("points"),
       py::arg("periodic")=false,
       py::arg("tol")=1e-8,
+      py::arg("tangents")=std::map<int, gp_Vec>{},
       R"delimiter(
-Generate a piecewise continuous spline-curve interpolating a list of points.
+Generate a piecewise continuous spline-curve interpolating a list of points in 3d.
 
 Parameters
 ----------
 
-points : List|Tuple[gp_Pnt|gp_Pnt2d] or np.ndarray[double]
-  List (or tuple) of gp_Pnt (or gp_Pnt2d). If a numpy array is provided instead, the data must contain the coordinates
+points : List|Tuple[gp_Pnt]
+  List (or tuple) of gp_Pnt
 
 periodic : bool
   Whether the result should be periodic
 
 tol : float
   Tolerance for the distance between points.
+
+tangents : Dict[int, gp_Vec]
+  Tangent vectors for the points indicated by the key value (0-based).
 
 )delimiter");
 
@@ -2324,6 +2449,7 @@ degen_tol : double
          py::arg("l"), py::arg("name")=nullopt)
     .def("Line", [](WorkPlane&wp,double h,double v, optional<string> name) { return wp.Line(h,v,name); },
          py::arg("dx"), py::arg("dy"), py::arg("name")=nullopt)
+    .def("Spline", &WorkPlane::Spline, py::arg("points"), py::arg("periodic")=false, py::arg("tol")=1e-8, py::arg("tangents")=std::map<int, gp_Vec2d>{}, py::arg("name")=nullopt, "draw spline starting from current position, tangents can be given for each point (0 refers to current position)")
     .def("Rectangle", &WorkPlane::Rectangle, py::arg("l"), py::arg("w"), "draw rectangle, with current position as corner, use current direction")
     .def("RectangleC", &WorkPlane::RectangleCentered, py::arg("l"), py::arg("w"), "draw rectangle, with current position as center, use current direction")
     .def("Circle", [](WorkPlane&wp, double x, double y, double r) {
