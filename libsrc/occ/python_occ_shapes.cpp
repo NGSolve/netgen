@@ -1010,7 +1010,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       // for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
         {
           // return BRepPrimAPI_MakeRevol (shape, A, D*M_PI/180).Shape();
-          BRepPrimAPI_MakeRevol builder(shape, A, D*M_PI/180);
+          BRepPrimAPI_MakeRevol builder(shape, A, D*M_PI/180, true);
             
           for (auto typ : { TopAbs_EDGE, TopAbs_VERTEX })
             for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
@@ -1726,13 +1726,13 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     "create box with opposite points 'p1' and 'p2'");
 
   m.def("Prism", [] (const TopoDS_Shape & face, gp_Vec vec) {
-      return BRepPrimAPI_MakePrism (face, vec).Shape();
+      return BRepPrimAPI_MakePrism (face, vec, true).Shape();
     }, py::arg("face"), py::arg("v"),
     "extrude face along the vector 'v'");
 
   m.def("Revolve", [] (const TopoDS_Shape & face,const gp_Ax1 &A, const double D) {
-      //comvert angle from deg to rad
-      return BRepPrimAPI_MakeRevol (face, A, D*M_PI/180).Shape();
+      //convert angle from deg to rad
+      return BRepPrimAPI_MakeRevol (face, A, D*M_PI/180, true).Shape();
     });
 
   m.def("Pipe", [] (const TopoDS_Wire & spine, const TopoDS_Shape & profile,
