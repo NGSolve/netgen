@@ -451,10 +451,13 @@ public:
     gp_Pnt2d PLast = points.back();
     gp_Pnt PLast3d = surf->Value(PLast.X(), PLast.Y());
 
+    if (points.front().Distance(P1) <= tol)
+      throw Exception("First item of given list of points is too close to current position (distance <= tol).")
+
     Handle(TColgp_HArray1OfPnt2d) allpoints = new TColgp_HArray1OfPnt2d(1, points.size() + 1);
     allpoints->SetValue(1, P1);
     for (int i = 0; i < points.size(); i++)
-        allpoints->SetValue(i+2, points[i]);
+      allpoints->SetValue(i + 2, points[i]);
     Geom2dAPI_Interpolate builder(allpoints, periodic, tol);
 
     if (tangents.size() > 0)
@@ -2449,7 +2452,9 @@ degen_tol : double
          py::arg("l"), py::arg("name")=nullopt)
     .def("Line", [](WorkPlane&wp,double h,double v, optional<string> name) { return wp.Line(h,v,name); },
          py::arg("dx"), py::arg("dy"), py::arg("name")=nullopt)
-    .def("Spline", &WorkPlane::Spline, py::arg("points"), py::arg("periodic")=false, py::arg("tol")=1e-8, py::arg("tangents")=std::map<int, gp_Vec2d>{}, py::arg("name")=nullopt, "draw spline starting from current position, tangents can be given for each point (0 refers to current position)")
+    .def("Spline", &WorkPlane::Spline, py::arg("points"), py::arg("periodic")=false, py::arg("tol")=1e-8,
+         py::arg("tangents")=std::map<int, gp_Vec2d>{}, py::arg("name")=nullopt,
+         "draw spline starting from current position (implicitly added to given list of points), tangents can be specified for each point (0 refers to current position)")
     .def("Rectangle", &WorkPlane::Rectangle, py::arg("l"), py::arg("w"), "draw rectangle, with current position as corner, use current direction")
     .def("RectangleC", &WorkPlane::RectangleCentered, py::arg("l"), py::arg("w"), "draw rectangle, with current position as center, use current direction")
     .def("Circle", [](WorkPlane&wp, double x, double y, double r) {
