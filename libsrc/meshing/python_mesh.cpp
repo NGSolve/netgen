@@ -124,6 +124,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .value("CLOSEEDGES", Identifications::CLOSEEDGES)
     ;
 
+  py::implicitly_convertible<int, Identifications::ID_TYPE>();
+
   py::class_<NgMPI_Comm> (m, "MPI_Comm")
 #ifdef NG_MPI4PY
     .def(py::init([] (mpi4py_comm comm)
