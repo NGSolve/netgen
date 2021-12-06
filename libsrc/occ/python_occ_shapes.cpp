@@ -452,7 +452,7 @@ public:
     gp_Pnt PLast3d = surf->Value(PLast.X(), PLast.Y());
 
     if (points.front().Distance(P1) <= tol)
-      throw Exception("First item of given list of points is too close to current position (distance <= tol).")
+      throw Exception("First item of given list of points is too close to current position (distance <= tol).");
 
     Handle(TColgp_HArray1OfPnt2d) allpoints = new TColgp_HArray1OfPnt2d(1, points.size() + 1);
     allpoints->SetValue(1, P1);
