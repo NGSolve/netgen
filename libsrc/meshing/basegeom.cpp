@@ -574,6 +574,8 @@ namespace netgen
             seg.epgeominfo[1].edgenr = edgenr;
             seg.singedge_left = edge->properties.hpref;
             seg.singedge_right = edge->properties.hpref;
+            seg.domin = edge->domin+1;
+            seg.domout = edge->domout+1;
             mesh.AddSegment(seg);
         }
         mesh.SetCD2Name(edgenr+1, edge->properties.GetName());

@@ -1148,8 +1148,19 @@ namespace netgen
               if(global_shape_properties.count(tshape)>0)
                   occ_face->properties = global_shape_properties[tshape];
               faces.Append(std::move(occ_face));
+
+              if(dimension==2)
+                  for(auto e : GetEdges(f))
+                  {
+                      auto & edge = *edges[edge_map[e.TShape()]];
+                      if(e.Orientation() == TopAbs_REVERSED)
+                          edge.domout = k;
+                      else
+                          edge.domin = k;
+                  }
           }
       }
+
 
       for(auto s : GetSolids(shape))
       {

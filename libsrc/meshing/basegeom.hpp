@@ -71,6 +71,8 @@ namespace netgen
   class DLL_HEADER GeometryEdge : public GeometryShape
   {
   public:
+    int domin=-1, domout=-1;
+
     virtual const GeometryVertex& GetStartVertex() const = 0;
     virtual const GeometryVertex& GetEndVertex() const = 0;
     virtual double GetLength() const = 0;
