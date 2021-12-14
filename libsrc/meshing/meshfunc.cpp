@@ -156,8 +156,6 @@ namespace netgen
                   if(!pi0.IsValid() || !pi1.IsValid())
                       continue;
 
-                  if(pi1<pi0)
-                      Swap(pi0,pi1);
                   m_ident.Add(pi0, pi1, n);
               }
               m_ident.SetType( n, identifications.GetType(n) );
