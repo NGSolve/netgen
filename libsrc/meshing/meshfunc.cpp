@@ -166,6 +166,58 @@ namespace netgen
       return ret;
   }
 
+  // Add between identified surface elements (only consider closesurface identifications)
+  void FillCloseSurface( MeshingData & md)
+  {
+      static Timer timer("FillCloseSurface"); RegionTimer rtimer(timer);
+
+      auto & mesh = md.mesh;
+      auto & identifications = mesh->GetIdentifications();
+      auto nmax = identifications.GetMaxNr();
+
+      bool have_closesurfaces = false;
+      for(auto i : Range(1,nmax+1))
+          if(identifications.GetType(i) == Identifications::CLOSESURFACES)
+              have_closesurfaces = true;
+      if(!have_closesurfaces)
+          return;
+
+      NgArray<int, PointIndex::BASE> map;
+      for(auto identnr : Range(1,nmax+1))
+      {
+          if(identifications.GetType(identnr) != Identifications::CLOSESURFACES)
+              continue;
+
+          identifications.GetMap(identnr, map);
+
+          for(auto & sel : mesh->SurfaceElements())
+          {
+              bool is_mapped = true;
+              for(auto pi : sel.PNums())
+                  if(!PointIndex(map[pi]).IsValid())
+                      is_mapped = false;
+
+              if(!is_mapped)
+                  continue;
+              
+              // in case we have symmetric mapping (used in csg), only map in one direction
+              if(map[map[sel[0]]] == sel[0] && map[sel[0]] < sel[0])
+                  continue;
+
+              // insert prism
+              auto np = sel.GetNP();
+              Element el(2*np);
+              for(auto i : Range(np))
+              {
+                  el[i] = sel[i];
+                  el[i+np] = map[sel[i]];
+              }
+              el.SetIndex(md.domain);
+              mesh->AddVolumeElement(el);
+          }
+      }
+  }
+
   void CloseOpenQuads( MeshingData & md)
   {
     auto & mesh = *md.mesh;
@@ -488,6 +540,8 @@ namespace netgen
            if (md[i].mesh->CheckOverlappingBoundary())
              throw NgException ("Stop meshing since boundary mesh is overlapping");
          
+         // TODO: FillCloseSurface is still not working with CSG closesurfaces
+         // FillCloseSurface( md[i] );
          CloseOpenQuads( md[i] );
          MeshDomain(md[i]);
        });
