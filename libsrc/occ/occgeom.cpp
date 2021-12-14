@@ -1940,12 +1940,19 @@ namespace netgen
       return occ2ng( props.CentreOfMass() );
   }
 
-  void OCCGeometry :: IdentifyEdges(const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type) 
+  void OCCGeometry :: IdentifyEdges(const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<gp_Trsf> opt_trafo) 
   {
-    auto cme = GetCenter(me);
-    auto cyou = GetCenter(you);
-    Transformation<3> trafo{cyou-cme};
-    identifications[me.TShape()].push_back( {me.TShape(), you.TShape(), Transformation<3>(cyou - cme), name, type} );
+    Transformation<3> trafo;
+    if(opt_trafo)
+        trafo = occ2ng(*opt_trafo);
+    else
+    {
+        auto cme = GetCenter(me);
+        auto cyou = GetCenter(you);
+        trafo = Transformation<3>{cyou-cme};
+    }
+
+    identifications[me.TShape()].push_back( {me.TShape(), you.TShape(), trafo, name, type} );
 
     auto vme = GetVertices(me);
     auto vyou = GetVertices(you);
@@ -1976,6 +1983,11 @@ namespace netgen
       std::map<T_Shape, T_Shape> vmap;
 
       auto verts_me = GetVertices(me);
+      auto verts_you = GetVertices(you);
+
+      if(verts_me.size() != verts_you.size())
+          return false;
+
       for (auto i : Range(verts_me.size()))
       {
           auto s = verts_me[i].TShape();
@@ -1987,7 +1999,7 @@ namespace netgen
       }
           
       bool all_verts_mapped = true;
-      for (auto vert : GetVertices(you))
+      for (auto vert : verts_you)
       {
           auto s = vert.TShape();
           auto p = occ2ng(s);
@@ -2006,22 +2018,40 @@ namespace netgen
       return all_verts_mapped;
   }
 
-  void OCCGeometry :: IdentifyFaces(const TopoDS_Shape & solid, const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type) 
+  void OCCGeometry :: IdentifyFaces(const TopoDS_Shape & solid, const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<gp_Trsf> opt_trafo) 
   {
-    auto cme = GetCenter(me);
-    auto cyou = GetCenter(you);
-    Transformation<3> trafo(cyou-cme);
+    Transformation<3> trafo;
+    if(opt_trafo)
+    {
+        trafo = occ2ng(*opt_trafo);
+    }
+    else
+    {
+        auto cme = GetCenter(me);
+        auto cyou = GetCenter(you);
+        trafo = Transformation<3>(cyou-cme);
+    }
 
-    identifications[me.TShape()].push_back
-        (OCCIdentification { me.TShape(), you.TShape(), trafo, name, type });
+    auto faces_me = GetFaces(me);
+    auto faces_you = GetFaces(you);
 
-    auto edges_me = GetEdges(me);
-    auto edges_you = GetEdges(you);
+    for(auto face_me : faces_me)
+        for(auto face_you : faces_you)
+        {
+            if(!IsMappedShape(trafo, face_me, face_you))
+                continue;
 
-    for (auto e_me : edges_me)
-      for (auto e_you : edges_you)
-        if(IsMappedShape(trafo, e_me, e_you))
-            IdentifyEdges(e_me, e_you, name, type);
+            identifications[face_me.TShape()].push_back
+                (OCCIdentification { face_me.TShape(), face_you.TShape(), trafo, name, type });
+
+            auto edges_me = GetEdges(me);
+            auto edges_you = GetEdges(you);
+
+            for (auto e_me : edges_me)
+                for (auto e_you : edges_you)
+                    if(IsMappedShape(trafo, e_me, e_you))
+                        IdentifyEdges(e_me, e_you, name, type, opt_trafo);
+        }
   }
 
   void OCCParameters :: Print(ostream & ost) const

@@ -1091,7 +1091,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       }, py::arg("other"), py::arg("name"), py::arg("type")=Identifications::PERIODIC, "Identify shapes for periodic meshing")
 
     .def("Identify", OCCGeometry::IdentifyFaces, "Identify faces",
-            py::arg("from"), py::arg("to"), py::arg("name"), py::arg("type")=Identifications::PERIODIC)
+            py::arg("from"), py::arg("to"), py::arg("name"), py::arg("type")=Identifications::PERIODIC, py::arg("trafo")=nullopt)
 
     .def("Distance", [](const TopoDS_Shape& self,
                         const TopoDS_Shape& other)
