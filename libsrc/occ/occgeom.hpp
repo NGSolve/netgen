@@ -44,6 +44,7 @@ namespace netgen
 #define OCCGEOMETRYVISUALIZATIONFULLCHANGE 1  // Compute transformation matrices and redraw
 #define OCCGEOMETRYVISUALIZATIONHALFCHANGE 2  // Redraw
 
+  bool IsMappedShape(const Transformation<3> & trafo, const TopoDS_Shape & me, const TopoDS_Shape & you);
 
   class EntityVisualizationCode
   {
@@ -341,8 +342,7 @@ namespace netgen
     bool ErrorInSurfaceMeshing ();
 
     //      void WriteOCC_STL(char * filename);
-    static void IdentifyEdges(const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<gp_Trsf> opt_trafo = nullopt);
-    static void IdentifyFaces(const TopoDS_Shape & solid,const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<gp_Trsf> opt_trafo = nullopt);
+    static void Identify(const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<gp_Trsf> opt_trafo = nullopt);
 
   private:
     //bool FastProject (int surfi, Point<3> & ap, double& u, double& v) const;

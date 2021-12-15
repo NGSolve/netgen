@@ -70,11 +70,19 @@ namespace netgen
 
   class DLL_HEADER GeometryEdge : public GeometryShape
   {
+  protected:
+      GeometryVertex *start, *end;
   public:
     int domin=-1, domout=-1;
 
-    virtual const GeometryVertex& GetStartVertex() const = 0;
-    virtual const GeometryVertex& GetEndVertex() const = 0;
+    GeometryEdge( GeometryVertex &start_, GeometryVertex &end_ )
+        : start(&start_), end(&end_)
+    {}
+
+    virtual const GeometryVertex& GetStartVertex() const { return *start; }
+    virtual const GeometryVertex& GetEndVertex() const { return *end; }
+    virtual GeometryVertex& GetStartVertex() { return *start; }
+    virtual GeometryVertex& GetEndVertex() { return *end; }
     virtual double GetLength() const = 0;
     virtual Point<3> GetCenter() const = 0;
     virtual Point<3> GetPoint(double t) const = 0;
@@ -100,11 +108,13 @@ namespace netgen
   class DLL_HEADER GeometryFace : public GeometryShape
   {
   public:
+    Array<GeometryEdge*> edges;
     int domin=-1, domout=-1;
 
     virtual Point<3> GetCenter() const = 0;
     virtual size_t GetNBoundaries() const = 0;
     virtual Array<Segment> GetBoundary(const Mesh& mesh) const = 0;
+
     virtual PointGeomInfo Project(Point<3>& p) const = 0;
     // Project point using geo info. Fast if point is close to
     // parametrization in geo info.
@@ -142,6 +152,8 @@ namespace netgen
       if(!ProjectPointGI(newp, newgi))
         newgi = Project(newp);
     }
+
+    virtual bool IsMappedShape( const GeometryShape & other, const Transformation<3> & trafo, double tolerance ) const override;
 
   protected:
     void RestrictHTrig(Mesh& mesh,

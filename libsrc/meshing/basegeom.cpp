@@ -56,23 +56,55 @@ namespace netgen
           return false;
       auto & e = *other_ptr;
 
-      if(tol < Dist(GetCenter(), e.GetCenter()))
+      if(tol < Dist(trafo(GetCenter()), e.GetCenter()))
           return false;
 
-      auto v0 = GetStartVertex().GetPoint();
-      auto v1 = GetEndVertex().GetPoint();
+      auto v0 = trafo(GetStartVertex().GetPoint());
+      auto v1 = trafo(GetEndVertex().GetPoint());
       auto w0 = e.GetStartVertex().GetPoint();
       auto w1 = e.GetEndVertex().GetPoint();
 
       // have two closed edges, use midpoints to compare
       if(Dist(v0,v1) < tol && Dist(w0,w1) < tol)
       {
-          v1 = GetPoint(0.5);
+          v1 = trafo(GetPoint(0.5));
           w1 = other_ptr->GetPoint(0.5);
       }
 
       return( (Dist(v0, w0) < tol && Dist(v1, w1) < tol) ||
               (Dist(v0, w1) < tol && Dist(v1, w0) < tol) );
+  }
+
+  bool GeometryFace :: IsMappedShape( const GeometryShape & other_, const Transformation<3> & trafo, double tol ) const
+  {
+      const auto other_ptr = dynamic_cast<const GeometryFace*>(&other_);
+      if(!other_ptr)
+          return false;
+      auto & f = *other_ptr;
+
+      if(tol < Dist(GetCenter(), f.GetCenter()))
+          return false;
+
+      // simple check: check if there is a bijective mapping of mapped edges
+      auto & other_edges = f.edges;
+      if(edges.Size() != other_edges.Size())
+          return false;
+
+      auto nedges = edges.Size();
+      Array<bool> is_mapped(nedges);
+      is_mapped = false;
+
+      for(auto e : edges)
+      {
+          int found_mapping = 0;
+          for(auto other_e : other_edges)
+              if(e->IsMappedShape(*other_e, trafo, tol))
+                  found_mapping++;
+          if(found_mapping != 1)
+              return false;
+      }
+
+      return true;
   }
 
   void GeometryFace :: RestrictHTrig(Mesh& mesh,
@@ -169,6 +201,15 @@ namespace netgen
 
   void NetgenGeometry :: ProcessIdentifications()
   {
+      for(auto i : Range(vertices))
+          vertices[i]->nr = i;
+      for(auto i : Range(edges))
+          edges[i]->nr = i;
+      for(auto i : Range(faces))
+          faces[i]->nr = i;
+      for(auto i : Range(solids))
+          solids[i]->nr = i;
+
       auto mirror_identifications = [&] ( auto & shapes )
       {
           for(auto i : Range(shapes))
@@ -181,11 +222,39 @@ namespace netgen
           }
       };
 
+      auto tol = 1e-8 * bounding_box.Diam();
+      for(auto & f : faces)
+        for(auto & ident: f->identifications)
+          for(auto e : static_cast<GeometryFace*>(ident.from)->edges)
+            for(auto e_other : static_cast<GeometryFace*>(ident.to)->edges)
+              if(e->IsMappedShape(*e_other, ident.trafo, tol))
+                e->identifications.Append( {e, e_other, ident.trafo, ident.type, ident.name} );
+
+      for(auto & e : edges)
+        for(auto & ident: e->identifications)
+          {
+              auto & from = static_cast<GeometryEdge&>(*ident.from);
+              auto & to = static_cast<GeometryEdge&>(*ident.to);
+
+              GeometryVertex * pfrom[] = { &from.GetStartVertex(), &from.GetEndVertex() };
+              GeometryVertex * pto[] = { &to.GetStartVertex(), &to.GetEndVertex() };
+
+              // swap points of other edge if necessary
+              Point<3> p_from0 = ident.trafo(from.GetStartVertex().GetPoint());
+              Point<3> p_from1 = ident.trafo(from.GetEndVertex().GetPoint());
+              Point<3> p_to0 = ident.trafo(to.GetStartVertex().GetPoint());
+
+              if(Dist(p_from1, p_to0) < Dist(p_from1, p_to0))
+                  swap(pto[0], pto[1]);
+
+              for(auto i : Range(2))
+                  pfrom[i]->identifications.Append( {pfrom[i], pto[i], ident.trafo, ident.type, ident.name} );
+          }
+
       mirror_identifications(vertices);
       mirror_identifications(edges);
       mirror_identifications(faces);
 
-      // todo: propagate identifications faces -> edges -> vertices
 
       auto find_primary = [&] (auto & shapes)
       {
@@ -729,6 +798,9 @@ namespace netgen
                     sel[1] = s[1];
                     sel[2] = tree.Find(trafo(mesh[s[1]]));
                     sel[3] = tree.Find(trafo(mesh[s[0]]));
+                    for(auto i : Range(4))
+                        sel.GeomInfo()[i] = face.Project(mesh[sel[i]]);
+
                     sel.SetIndex(face.nr+1);
                     mesh.AddSurfaceElement(sel);
                 }

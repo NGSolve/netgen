@@ -199,14 +199,14 @@ py::object CastShape(const TopoDS_Shape & s)
 template <class TBuilder>
 void PropagateIdentifications (TBuilder & builder, TopoDS_Shape shape)
 {
-  std::map<T_Shape, T_Shape> mod_map;
+  std::map<T_Shape, std::set<T_Shape>> mod_map;
   std::map<T_Shape, bool> tshape_handled;
 
   for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
     for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
     {
         auto tshape = e.Current().TShape();
-        mod_map[tshape] = tshape;
+        mod_map[tshape].insert(tshape);
         tshape_handled[tshape] = false;
     }
 
@@ -215,11 +215,8 @@ void PropagateIdentifications (TBuilder & builder, TopoDS_Shape shape)
       {
         auto tshape = e.Current().TShape();
 
-        auto & modified = builder.Modified(e.Current());
-        if(modified.Size()!=1)
-            continue;
-
-        mod_map[tshape] = modified.First().TShape();
+        for (auto mods : builder.Modified(e.Current()))
+            mod_map[tshape].insert(mods.TShape());
       }
 
   for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
@@ -236,21 +233,33 @@ void PropagateIdentifications (TBuilder & builder, TopoDS_Shape shape)
 
         auto tshape_mapped = mod_map[tshape];
 
-        for(auto & ident : OCCGeometry::identifications[tshape])
+        for(auto ident : OCCGeometry::identifications[tshape])
         {
-            // update existing identification
-            if(tshape == tshape_mapped)
-            {
-                ident.to = mod_map[ident.to];
-                ident.from = mod_map[ident.from];
-            }
-            else
-            {
-                OCCIdentification id_new = ident;
-                id_new.to = mod_map[id_new.to];
-                id_new.from = mod_map[id_new.from];
-                OCCGeometry::identifications[mod_map[tshape]].push_back(id_new);
-            }
+            // nothing happened
+            if(mod_map[ident.to].size()==1 && mod_map[ident.from].size() ==1)
+                continue;
+
+            auto from = ident.from;
+            auto to = ident.to;
+
+            for(auto from_mapped : mod_map[from])
+                for(auto to_mapped : mod_map[to])
+                {
+                    if(from==from_mapped && to==to_mapped)
+                        continue;
+
+                    TopoDS_Shape s_from; s_from.TShape(from_mapped);
+                    TopoDS_Shape s_to; s_to.TShape(to_mapped);
+
+                    if(!IsMappedShape(ident.trafo, s_from, s_to))
+                        continue;
+
+                    OCCIdentification id_new = ident;
+                    id_new.to = to_mapped;
+                    id_new.from = from_mapped;
+                    auto id_owner = from == tshape ? from_mapped : to_mapped;
+                    OCCGeometry::identifications[id_owner].push_back(id_new);
+                }
         }
     }
 }
@@ -1071,27 +1080,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            BRepMesh_IncrementalMesh (shape, deflection, true);
          })
 
-    .def("Identify", [](const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE idtype) {
-        // only edges supported, by now
-        auto type = me.ShapeType();
-        auto tyou = you.ShapeType();
-        if(type != tyou)
-            throw NgException ("Identify: cannot identify different shape types");
-
-        switch(type)
-        {
-          case TopAbs_VERTEX:
-          case TopAbs_EDGE:
-            OCCGeometry::IdentifyEdges(me, you, name, idtype);
-            break;
-          default:
-            throw NgException ("Identify: unsupported shape type");
-            break;
-        }
-      }, py::arg("other"), py::arg("name"), py::arg("type")=Identifications::PERIODIC, "Identify shapes for periodic meshing")
-
-    .def("Identify", OCCGeometry::IdentifyFaces, "Identify faces",
-            py::arg("from"), py::arg("to"), py::arg("name"), py::arg("type")=Identifications::PERIODIC, py::arg("trafo")=nullopt)
+    .def("Identify", OCCGeometry::Identify, py::arg("other"), py::arg("name"),
+            py::arg("type")=Identifications::PERIODIC, py::arg("trafo")=nullopt,
+            "Identify shapes for periodic meshing")
 
     .def("Distance", [](const TopoDS_Shape& self,
                         const TopoDS_Shape& other)

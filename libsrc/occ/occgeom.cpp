@@ -1113,8 +1113,10 @@ namespace netgen
           auto tshape = v.TShape();
           if(vertex_map.count(tshape)!=0)
               continue;
-          vertex_map[tshape] = vertices.Size();
           auto occ_vertex = make_unique<OCCVertex>(TopoDS::Vertex(v));
+          occ_vertex->nr = vertices.Size();
+          vertex_map[tshape] = occ_vertex->nr;
+
           if(global_shape_properties.count(tshape)>0)
               occ_vertex->properties = global_shape_properties[tshape];
           vertices.Append(std::move(occ_vertex));
@@ -1129,10 +1131,9 @@ namespace netgen
           if(BRep_Tool::Degenerated(edge))
               continue;
           edge_map[tshape] = edges.Size();
-          auto occ_edge = make_unique<OCCEdge>(edge);
+          auto verts = GetVertices(e);
+          auto occ_edge = make_unique<OCCEdge>(edge, *vertices[vertex_map[verts[0].TShape()]], *vertices[vertex_map[verts[1].TShape()]] );
           occ_edge->properties = global_shape_properties[tshape];
-          occ_edge->start.nr = vertex_map[occ_edge->start.TShape()];
-          occ_edge->end.nr = vertex_map[occ_edge->end.TShape()];
           edges.Append(std::move(occ_edge));
       }
 
@@ -1145,6 +1146,10 @@ namespace netgen
               auto k = faces.Size();
               face_map[tshape] = k;
               auto occ_face = make_unique<OCCFace>(f);
+
+              for(auto e : GetEdges(f))
+                  occ_face->edges.Append( edges[edge_map[e.TShape()]].get() );
+
               if(global_shape_properties.count(tshape)>0)
                   occ_face->properties = global_shape_properties[tshape];
               faces.Append(std::move(occ_face));
@@ -1194,6 +1199,9 @@ namespace netgen
             if(identifications.count(tshape))
                 for(auto & ident : identifications[tshape])
                 {
+                    if(shape_map.count(ident.from)==0 || shape_map.count(ident.to)==0)
+                        continue;
+
                     ShapeIdentification si{
                         shapes[shape_map[ident.from]].get(),
                         shapes[shape_map[ident.to]].get(),
@@ -1208,9 +1216,8 @@ namespace netgen
       add_identifications( edges, edge_map );
       add_identifications( faces, face_map );
 
-      ProcessIdentifications();
-
       bounding_box = ::netgen::GetBoundingBox( shape );
+      ProcessIdentifications();
    }
 
 
@@ -1940,32 +1947,6 @@ namespace netgen
       return occ2ng( props.CentreOfMass() );
   }
 
-  void OCCGeometry :: IdentifyEdges(const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<gp_Trsf> opt_trafo) 
-  {
-    Transformation<3> trafo;
-    if(opt_trafo)
-        trafo = occ2ng(*opt_trafo);
-    else
-    {
-        auto cme = GetCenter(me);
-        auto cyou = GetCenter(you);
-        trafo = Transformation<3>{cyou-cme};
-    }
-
-    identifications[me.TShape()].push_back( {me.TShape(), you.TShape(), trafo, name, type} );
-
-    auto vme = GetVertices(me);
-    auto vyou = GetVertices(you);
-    Point<3> pme0 = trafo(occ2ng(vme[0]));
-    Point<3> pme1 = trafo(occ2ng(vme[1]));
-    Point<3> pyou = occ2ng(vyou[0]);
-
-    bool do_swap = Dist(pme1, pyou) < Dist(pme0, pyou);
-
-    for(auto i : Range(2))
-        identifications[vme[i].TShape()].push_back( {vme[i].TShape(), vyou[do_swap ? 1-i : i].TShape(), trafo, name, type} );
-  }
-
   bool IsMappedShape(const Transformation<3> & trafo, const TopoDS_Shape & me, const TopoDS_Shape & you)
   {
       if(me.ShapeType() != you.ShapeType()) return false;
@@ -1998,7 +1979,6 @@ namespace netgen
           vmap[s] = nullptr;
       }
           
-      bool all_verts_mapped = true;
       for (auto vert : verts_you)
       {
           auto s = vert.TShape();
@@ -2010,16 +1990,18 @@ namespace netgen
                   return true;
           });
           if(!vert_mapped)
-          {
-              all_verts_mapped = false;
-              break;
-          }
+              return false;
       }
-      return all_verts_mapped;
+      return true;
   }
 
-  void OCCGeometry :: IdentifyFaces(const TopoDS_Shape & solid, const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<gp_Trsf> opt_trafo) 
+  void OCCGeometry :: Identify(const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<gp_Trsf> opt_trafo) 
   {
+    auto type_me = me.ShapeType();
+    auto type_you = you.ShapeType();
+    if(type_me != type_you)
+      throw NgException ("Identify: cannot identify different shape types");
+
     Transformation<3> trafo;
     if(opt_trafo)
     {
@@ -2032,25 +2014,33 @@ namespace netgen
         trafo = Transformation<3>(cyou-cme);
     }
 
-    auto faces_me = GetFaces(me);
-    auto faces_you = GetFaces(you);
+    ListOfShapes id_me;
+    ListOfShapes id_you;
 
-    for(auto face_me : faces_me)
-        for(auto face_you : faces_you)
+    if(auto faces_me = GetFaces(me); faces_me.size()>0)
+    {
+        id_me = faces_me;
+        id_you = GetFaces(you);
+    }
+    else if(auto edges_me = GetEdges(me); edges_me.size()>0)
+    {
+        id_me = edges_me;
+        id_you = GetEdges(you);
+    }
+    else
+    {
+        id_me = GetVertices(me);
+        id_you = GetVertices(you);
+    }
+
+    for(auto shape_me : id_me)
+        for(auto shape_you : id_you)
         {
-            if(!IsMappedShape(trafo, face_me, face_you))
+            if(!IsMappedShape(trafo, shape_me, shape_you))
                 continue;
 
-            identifications[face_me.TShape()].push_back
-                (OCCIdentification { face_me.TShape(), face_you.TShape(), trafo, name, type });
-
-            auto edges_me = GetEdges(me);
-            auto edges_you = GetEdges(you);
-
-            for (auto e_me : edges_me)
-                for (auto e_you : edges_you)
-                    if(IsMappedShape(trafo, e_me, e_you))
-                        IdentifyEdges(e_me, e_you, name, type, opt_trafo);
+            identifications[shape_me.TShape()].push_back
+                (OCCIdentification { shape_me.TShape(), shape_you.TShape(), trafo, name, type });
         }
   }
 

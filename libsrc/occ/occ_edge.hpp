@@ -14,6 +14,7 @@ namespace netgen
 {
     class OCCEdge : public GeometryEdge 
     {
+        public:
         T_Shape tedge;
         TopoDS_Edge edge;
         Handle(Geom_Curve) curve;
@@ -21,16 +22,11 @@ namespace netgen
         GProp_GProps props;
 
         public:
-        OCCVertex start;
-        OCCVertex end;
-
-        OCCEdge(TopoDS_Shape edge_);
+        OCCEdge(TopoDS_Shape edge_, GeometryVertex & start_, GeometryVertex & end_);
 
         auto Shape() const { return edge; }
         T_Shape TShape() const { return tedge; }
 
-        const GeometryVertex& GetStartVertex() const override;
-        const GeometryVertex& GetEndVertex() const override;
         double GetLength() const override;
         Point<3> GetCenter() const override;
         Point<3> GetPoint(double t) const override;

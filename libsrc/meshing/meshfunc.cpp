@@ -210,6 +210,7 @@ namespace netgen
                   el[i] = sel[i];
                   el[i+np] = map[sel[i]];
               }
+
               el.SetIndex(md.domain);
               mesh->AddVolumeElement(el);
           }

@@ -98,7 +98,6 @@ namespace netgen
 
                 // auto cof = curve_on_face[ORIENTATION][edgenr];
                 auto edge = edge_on_face[ORIENTATION][edgenr];
-                OCCEdge gedge(edge);
                 double s0, s1;
                 auto cof = BRep_Tool::CurveOnSurface (edge, face, s0, s1);
 
