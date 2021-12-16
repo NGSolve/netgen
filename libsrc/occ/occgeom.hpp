@@ -342,11 +342,13 @@ namespace netgen
     bool ErrorInSurfaceMeshing ();
 
     //      void WriteOCC_STL(char * filename);
-    static void Identify(const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<gp_Trsf> opt_trafo = nullopt);
 
   private:
     //bool FastProject (int surfi, Point<3> & ap, double& u, double& v) const;
   };
+
+  void Identify(const ListOfShapes & me, const ListOfShapes & you, string name, Identifications::ID_TYPE type, gp_Trsf occ_trafo);
+  void Identify(const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<gp_Trsf> opt_trafo);
    
 
   void PrintContents (OCCGeometry * geom);

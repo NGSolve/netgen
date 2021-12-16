@@ -1995,42 +1995,46 @@ namespace netgen
       return true;
   }
 
-  void OCCGeometry :: Identify(const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<gp_Trsf> opt_trafo) 
+  void Identify(const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<gp_Trsf> opt_trafo) 
   {
-    auto type_me = me.ShapeType();
-    auto type_you = you.ShapeType();
-    if(type_me != type_you)
-      throw NgException ("Identify: cannot identify different shape types");
-
-    Transformation<3> trafo;
+    gp_Trsf trafo;
     if(opt_trafo)
     {
-        trafo = occ2ng(*opt_trafo);
+        trafo = *opt_trafo;
     }
     else
     {
-        auto cme = GetCenter(me);
-        auto cyou = GetCenter(you);
-        trafo = Transformation<3>(cyou-cme);
+        auto v = GetCenter(you) - GetCenter(me);
+        trafo.SetTranslation(gp_Vec(v[0], v[1], v[2]));
     }
+
+    ListOfShapes list_me, list_you;
+    list_me.push_back(me);
+    list_you.push_back(you);
+    Identify(list_me, list_you, name, type, trafo);
+  }
+
+  void Identify(const ListOfShapes & me, const ListOfShapes & you, string name, Identifications::ID_TYPE type, gp_Trsf occ_trafo) 
+  {
+    Transformation<3> trafo = occ2ng(occ_trafo);
 
     ListOfShapes id_me;
     ListOfShapes id_you;
 
-    if(auto faces_me = GetFaces(me); faces_me.size()>0)
+    if(auto faces_me = me.Faces(); faces_me.size()>0)
     {
         id_me = faces_me;
-        id_you = GetFaces(you);
+        id_you = you.Faces();
     }
-    else if(auto edges_me = GetEdges(me); edges_me.size()>0)
+    else if(auto edges_me = me.Edges(); edges_me.size()>0)
     {
         id_me = edges_me;
-        id_you = GetEdges(you);
+        id_you = you.Edges();
     }
     else
     {
-        id_me = GetVertices(me);
-        id_you = GetVertices(you);
+        id_me = me.Vertices();
+        id_you = you.Vertices();
     }
 
     for(auto shape_me : id_me)
@@ -2039,7 +2043,7 @@ namespace netgen
             if(!IsMappedShape(trafo, shape_me, shape_you))
                 continue;
 
-            identifications[shape_me.TShape()].push_back
+            OCCGeometry::identifications[shape_me.TShape()].push_back
                 (OCCIdentification { shape_me.TShape(), shape_you.TShape(), trafo, name, type });
         }
   }

@@ -539,8 +539,9 @@ namespace netgen
            if (md[i].mesh->CheckOverlappingBoundary())
              throw NgException ("Stop meshing since boundary mesh is overlapping");
          
-         // TODO: FillCloseSurface is still not working with CSG closesurfaces
-         // FillCloseSurface( md[i] );
+         // TODO: FillCloseSurface is not working with CSG closesurfaces
+         if(md[i].mesh->GetGeometry()->GetGeomType() == Mesh::GEOM_OCC)
+           FillCloseSurface( md[i] );
          CloseOpenQuads( md[i] );
          MeshDomain(md[i]);
        });

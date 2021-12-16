@@ -1080,7 +1080,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            BRepMesh_IncrementalMesh (shape, deflection, true);
          })
 
-    .def("Identify", OCCGeometry::Identify, py::arg("other"), py::arg("name"),
+
+    .def("Identify", py::overload_cast<const TopoDS_Shape &, const TopoDS_Shape &, string, Identifications::ID_TYPE, std::optional<gp_Trsf>>(&Identify),
+            py::arg("other"), py::arg("name"),
             py::arg("type")=Identifications::PERIODIC, py::arg("trafo")=nullopt,
             "Identify shapes for periodic meshing")
 
@@ -1625,6 +1627,11 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           }
       }, "set hpref for all elements of list")
     
+    .def("Identify", py::overload_cast<const ListOfShapes&, const ListOfShapes&, string, Identifications::ID_TYPE, gp_Trsf>(&Identify),
+            py::arg("other"), py::arg("name"),
+            py::arg("type")=Identifications::PERIODIC, py::arg("trafo"),
+            "Identify shapes for periodic meshing")
+
     ;
          
 
