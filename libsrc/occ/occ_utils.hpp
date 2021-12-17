@@ -9,6 +9,7 @@
 #include <TopTools_IndexedMapOfShape.hxx>
 #include <TopoDS.hxx>
 #include <TopoDS_Vertex.hxx>
+#include <gp_Trsf.hxx>
 
 #include "meshing.hpp"
 
@@ -46,6 +47,8 @@ namespace netgen
     {
         return occ2ng (BRep_Tool::Pnt (v));
     }
+
+    DLL_HEADER Transformation<3> occ2ng (const gp_Trsf & t);
 
     inline gp_Pnt ng2occ (const Point<3> & p)
     {

@@ -1108,20 +1108,24 @@ namespace netgen
       fsingular = esingular = vsingular = false;
 
       // Add shapes
-      for(auto v : GetVertices(shape))
+      for(auto i1 : Range(1, vmap.Extent()+1))
       {
+          auto v = vmap(i1);
           auto tshape = v.TShape();
           if(vertex_map.count(tshape)!=0)
               continue;
-          vertex_map[tshape] = vertices.Size();
           auto occ_vertex = make_unique<OCCVertex>(TopoDS::Vertex(v));
+          occ_vertex->nr = vertices.Size();
+          vertex_map[tshape] = occ_vertex->nr;
+
           if(global_shape_properties.count(tshape)>0)
               occ_vertex->properties = global_shape_properties[tshape];
           vertices.Append(std::move(occ_vertex));
       }
 
-      for(auto e : GetEdges(shape))
+      for(auto i1 : Range(1, emap.Extent()+1))
       {
+          auto e = emap(i1);
           auto tshape = e.TShape();
           auto edge = TopoDS::Edge(e);
           if(edge_map.count(tshape)!=0)
@@ -1129,15 +1133,15 @@ namespace netgen
           if(BRep_Tool::Degenerated(edge))
               continue;
           edge_map[tshape] = edges.Size();
-          auto occ_edge = make_unique<OCCEdge>(edge);
+          auto verts = GetVertices(e);
+          auto occ_edge = make_unique<OCCEdge>(edge, *vertices[vertex_map[verts[0].TShape()]], *vertices[vertex_map[verts[1].TShape()]] );
           occ_edge->properties = global_shape_properties[tshape];
-          occ_edge->start.nr = vertex_map[occ_edge->start.TShape()];
-          occ_edge->end.nr = vertex_map[occ_edge->end.TShape()];
           edges.Append(std::move(occ_edge));
       }
 
-      for(auto f : GetFaces(shape))
+      for(auto i1 : Range(1, fmap.Extent()+1))
       {
+          auto f = fmap(i1);
           auto tshape = f.TShape();
           if(face_map.count(tshape)==0)
           {
@@ -1145,6 +1149,10 @@ namespace netgen
               auto k = faces.Size();
               face_map[tshape] = k;
               auto occ_face = make_unique<OCCFace>(f);
+
+              for(auto e : GetEdges(f))
+                  occ_face->edges.Append( edges[edge_map[e.TShape()]].get() );
+
               if(global_shape_properties.count(tshape)>0)
                   occ_face->properties = global_shape_properties[tshape];
               faces.Append(std::move(occ_face));
@@ -1162,8 +1170,9 @@ namespace netgen
       }
 
 
-      for(auto s : GetSolids(shape))
+      for(auto i1 : Range(1, somap.Extent()+1))
       {
+          auto s = somap(i1);
           auto tshape = s.TShape();
           int k;
           if(solid_map.count(tshape)==0)
@@ -1194,6 +1203,9 @@ namespace netgen
             if(identifications.count(tshape))
                 for(auto & ident : identifications[tshape])
                 {
+                    if(shape_map.count(ident.from)==0 || shape_map.count(ident.to)==0)
+                        continue;
+
                     ShapeIdentification si{
                         shapes[shape_map[ident.from]].get(),
                         shapes[shape_map[ident.to]].get(),
@@ -1208,9 +1220,8 @@ namespace netgen
       add_identifications( edges, edge_map );
       add_identifications( faces, face_map );
 
-      ProcessIdentifications();
-
       bounding_box = ::netgen::GetBoundingBox( shape );
+      ProcessIdentifications();
    }
 
 
@@ -1940,25 +1951,6 @@ namespace netgen
       return occ2ng( props.CentreOfMass() );
   }
 
-  void OCCGeometry :: IdentifyEdges(const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type) 
-  {
-    auto cme = GetCenter(me);
-    auto cyou = GetCenter(you);
-    Transformation<3> trafo{cyou-cme};
-    identifications[me.TShape()].push_back( {me.TShape(), you.TShape(), Transformation<3>(cyou - cme), name, type} );
-
-    auto vme = GetVertices(me);
-    auto vyou = GetVertices(you);
-    Point<3> pme0 = trafo(occ2ng(vme[0]));
-    Point<3> pme1 = trafo(occ2ng(vme[1]));
-    Point<3> pyou = occ2ng(vyou[0]);
-
-    bool do_swap = Dist(pme1, pyou) < Dist(pme0, pyou);
-
-    for(auto i : Range(2))
-        identifications[vme[i].TShape()].push_back( {vme[i].TShape(), vyou[do_swap ? 1-i : i].TShape(), trafo, name, type} );
-  }
-
   bool IsMappedShape(const Transformation<3> & trafo, const TopoDS_Shape & me, const TopoDS_Shape & you)
   {
       if(me.ShapeType() != you.ShapeType()) return false;
@@ -1976,6 +1968,11 @@ namespace netgen
       std::map<T_Shape, T_Shape> vmap;
 
       auto verts_me = GetVertices(me);
+      auto verts_you = GetVertices(you);
+
+      if(verts_me.size() != verts_you.size())
+          return false;
+
       for (auto i : Range(verts_me.size()))
       {
           auto s = verts_me[i].TShape();
@@ -1986,8 +1983,7 @@ namespace netgen
           vmap[s] = nullptr;
       }
           
-      bool all_verts_mapped = true;
-      for (auto vert : GetVertices(you))
+      for (auto vert : verts_you)
       {
           auto s = vert.TShape();
           auto p = occ2ng(s);
@@ -1998,30 +1994,62 @@ namespace netgen
                   return true;
           });
           if(!vert_mapped)
-          {
-              all_verts_mapped = false;
-              break;
-          }
+              return false;
       }
-      return all_verts_mapped;
+      return true;
   }
 
-  void OCCGeometry :: IdentifyFaces(const TopoDS_Shape & solid, const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type) 
+  void Identify(const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<gp_Trsf> opt_trafo) 
   {
-    auto cme = GetCenter(me);
-    auto cyou = GetCenter(you);
-    Transformation<3> trafo(cyou-cme);
+    gp_Trsf trafo;
+    if(opt_trafo)
+    {
+        trafo = *opt_trafo;
+    }
+    else
+    {
+        auto v = GetCenter(you) - GetCenter(me);
+        trafo.SetTranslation(gp_Vec(v[0], v[1], v[2]));
+    }
 
-    identifications[me.TShape()].push_back
-        (OCCIdentification { me.TShape(), you.TShape(), trafo, name, type });
+    ListOfShapes list_me, list_you;
+    list_me.push_back(me);
+    list_you.push_back(you);
+    Identify(list_me, list_you, name, type, trafo);
+  }
 
-    auto edges_me = GetEdges(me);
-    auto edges_you = GetEdges(you);
+  void Identify(const ListOfShapes & me, const ListOfShapes & you, string name, Identifications::ID_TYPE type, gp_Trsf occ_trafo) 
+  {
+    Transformation<3> trafo = occ2ng(occ_trafo);
 
-    for (auto e_me : edges_me)
-      for (auto e_you : edges_you)
-        if(IsMappedShape(trafo, e_me, e_you))
-            IdentifyEdges(e_me, e_you, name, type);
+    ListOfShapes id_me;
+    ListOfShapes id_you;
+
+    if(auto faces_me = me.Faces(); faces_me.size()>0)
+    {
+        id_me = faces_me;
+        id_you = you.Faces();
+    }
+    else if(auto edges_me = me.Edges(); edges_me.size()>0)
+    {
+        id_me = edges_me;
+        id_you = you.Edges();
+    }
+    else
+    {
+        id_me = me.Vertices();
+        id_you = you.Vertices();
+    }
+
+    for(auto shape_me : id_me)
+        for(auto shape_you : id_you)
+        {
+            if(!IsMappedShape(trafo, shape_me, shape_you))
+                continue;
+
+            OCCGeometry::identifications[shape_me.TShape()].push_back
+                (OCCIdentification { shape_me.TShape(), shape_you.TShape(), trafo, name, type });
+        }
   }
 
   void OCCParameters :: Print(ostream & ost) const

@@ -7,8 +7,9 @@
 
 namespace netgen
 {
-    OCCEdge::OCCEdge(TopoDS_Shape edge_)
-        : tedge(edge_.TShape()),
+    OCCEdge::OCCEdge(TopoDS_Shape edge_, GeometryVertex & start_, GeometryVertex & end_)
+        : GeometryEdge(start_, end_),
+          tedge(edge_.TShape()),
           edge(TopoDS::Edge(edge_))
     {
         curve = BRep_Tool::Curve(edge, s0, s1);
@@ -18,24 +19,11 @@ namespace netgen
         if(verts.size() != 2)
             throw Exception("OCC edge does not have 2 vertices");
 
-        start = OCCVertex(verts[0]);
-        end = OCCVertex(verts[1]);
-
         // swap start/end if necessary
-        double d00 = Dist(GetPoint(0), start.GetPoint());
-        double d01 = Dist(GetPoint(0), end.GetPoint());
+        double d00 = Dist(GetPoint(0), start->GetPoint());
+        double d01 = Dist(GetPoint(0), end->GetPoint());
         if(d01 < d00)
             swap(start, end);
-    }
-
-    const GeometryVertex& OCCEdge::GetStartVertex() const 
-    {
-        return start;
-    }
-
-    const GeometryVertex& OCCEdge::GetEndVertex() const
-    {
-        return end;
     }
 
     double OCCEdge::GetLength() const
