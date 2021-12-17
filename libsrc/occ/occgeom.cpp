@@ -1108,8 +1108,9 @@ namespace netgen
       fsingular = esingular = vsingular = false;
 
       // Add shapes
-      for(auto v : GetVertices(shape))
+      for(auto i1 : Range(1, vmap.Extent()+1))
       {
+          auto v = vmap(i1);
           auto tshape = v.TShape();
           if(vertex_map.count(tshape)!=0)
               continue;
@@ -1122,8 +1123,9 @@ namespace netgen
           vertices.Append(std::move(occ_vertex));
       }
 
-      for(auto e : GetEdges(shape))
+      for(auto i1 : Range(1, emap.Extent()+1))
       {
+          auto e = emap(i1);
           auto tshape = e.TShape();
           auto edge = TopoDS::Edge(e);
           if(edge_map.count(tshape)!=0)
@@ -1137,8 +1139,9 @@ namespace netgen
           edges.Append(std::move(occ_edge));
       }
 
-      for(auto f : GetFaces(shape))
+      for(auto i1 : Range(1, fmap.Extent()+1))
       {
+          auto f = fmap(i1);
           auto tshape = f.TShape();
           if(face_map.count(tshape)==0)
           {
@@ -1167,8 +1170,9 @@ namespace netgen
       }
 
 
-      for(auto s : GetSolids(shape))
+      for(auto i1 : Range(1, somap.Extent()+1))
       {
+          auto s = somap(i1);
           auto tshape = s.TShape();
           int k;
           if(solid_map.count(tshape)==0)
