@@ -427,7 +427,7 @@ namespace netgen
                       TopoDS_Shape s_from; s_from.TShape(from_mapped);
                       TopoDS_Shape s_to; s_to.TShape(to_mapped);
 
-                      Transformation<3> trafo_mapped;
+                      Transformation<3> trafo_mapped = ident.trafo;
                       if(trafo)
                       {
                           Transformation<3> trafo_temp;
@@ -441,8 +441,7 @@ namespace netgen
                       OCCIdentification id_new = ident;
                       id_new.to = to_mapped;
                       id_new.from = from_mapped;
-                      if(trafo)
-                          id_new.trafo = trafo_mapped;
+                      id_new.trafo = trafo_mapped;
                       auto id_owner = from == tshape ? from_mapped : to_mapped;
                       OCCGeometry::identifications[id_owner].push_back(id_new);
                   }
