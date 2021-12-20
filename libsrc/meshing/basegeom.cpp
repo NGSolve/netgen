@@ -242,9 +242,9 @@ namespace netgen
               // swap points of other edge if necessary
               Point<3> p_from0 = ident.trafo(from.GetStartVertex().GetPoint());
               Point<3> p_from1 = ident.trafo(from.GetEndVertex().GetPoint());
-              Point<3> p_to0 = ident.trafo(to.GetStartVertex().GetPoint());
+              Point<3> p_to0 = to.GetStartVertex().GetPoint();
 
-              if(Dist(p_from1, p_to0) < Dist(p_from1, p_to0))
+              if(Dist(p_from1, p_to0) < Dist(p_from0, p_to0))
                   swap(pto[0], pto[1]);
 
               for(auto i : Range(2))
