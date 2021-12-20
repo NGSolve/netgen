@@ -269,6 +269,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
   py::class_<gp_Trsf>(m, "gp_Trsf")
     .def(py::init<>())    
     .def("SetMirror", [] (gp_Trsf & trafo, const gp_Ax1 & ax) { trafo.SetMirror(ax); return trafo; })
+    .def("Inverted", &gp_Trsf::Inverted)
     .def_static("Translation", [] (const gp_Vec & v) { gp_Trsf trafo; trafo.SetTranslation(v); return trafo; })
     .def_static("Scale", [] (const gp_Pnt & p, double s) { gp_Trsf trafo; trafo.SetScale(p,s); return trafo; })    
     .def_static("Mirror", [] (const gp_Ax1 & ax) { gp_Trsf trafo; trafo.SetMirror(ax); return trafo; })
@@ -280,7 +281,9 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
                 { gp_Trsf trafo; trafo.SetTransformation(from, to); return trafo; })
     .def(py::self * py::self)
     .def("__call__", [] (gp_Trsf & trafo, const TopoDS_Shape & shape) {
-        return BRepBuilderAPI_Transform(shape, trafo, true).Shape();
+        BRepBuilderAPI_Transform builder(shape, trafo, true);
+        PropagateProperties(builder, shape, occ2ng(trafo));
+        return builder.Shape();
       })
     .def("__str__", [](gp_Trsf & trafo)
     {

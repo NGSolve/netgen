@@ -196,92 +196,6 @@ py::object CastShape(const TopoDS_Shape & s)
     }
 };
 
-template <class TBuilder>
-void PropagateIdentifications (TBuilder & builder, TopoDS_Shape shape)
-{
-  std::map<T_Shape, std::set<T_Shape>> mod_map;
-  std::map<T_Shape, bool> tshape_handled;
-
-  for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
-    for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
-    {
-        auto tshape = e.Current().TShape();
-        mod_map[tshape].insert(tshape);
-        tshape_handled[tshape] = false;
-    }
-
-  for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
-    for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
-      {
-        auto tshape = e.Current().TShape();
-
-        for (auto mods : builder.Modified(e.Current()))
-            mod_map[tshape].insert(mods.TShape());
-      }
-
-  for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
-    for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
-    {
-        auto tshape = e.Current().TShape();
-
-        if(tshape_handled[tshape])
-            continue;
-        tshape_handled[tshape] = true;
-
-        if(OCCGeometry::identifications.count(tshape)==0)
-            continue;
-
-        auto tshape_mapped = mod_map[tshape];
-
-        for(auto ident : OCCGeometry::identifications[tshape])
-        {
-            // nothing happened
-            if(mod_map[ident.to].size()==1 && mod_map[ident.from].size() ==1)
-                continue;
-
-            auto from = ident.from;
-            auto to = ident.to;
-
-            for(auto from_mapped : mod_map[from])
-                for(auto to_mapped : mod_map[to])
-                {
-                    if(from==from_mapped && to==to_mapped)
-                        continue;
-
-                    TopoDS_Shape s_from; s_from.TShape(from_mapped);
-                    TopoDS_Shape s_to; s_to.TShape(to_mapped);
-
-                    if(!IsMappedShape(ident.trafo, s_from, s_to))
-                        continue;
-
-                    OCCIdentification id_new = ident;
-                    id_new.to = to_mapped;
-                    id_new.from = from_mapped;
-                    auto id_owner = from == tshape ? from_mapped : to_mapped;
-                    OCCGeometry::identifications[id_owner].push_back(id_new);
-                }
-        }
-    }
-}
-
-template <class TBuilder>
-void PropagateProperties (TBuilder & builder, TopoDS_Shape shape)
-{
-  bool have_identifications = false;
-
-  for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
-    for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
-      {
-        auto tshape = e.Current().TShape();
-        auto & prop = OCCGeometry::global_shape_properties[tshape];
-        for (auto mods : builder.Modified(e.Current()))
-          OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
-        have_identifications |= OCCGeometry::identifications.count(tshape) > 0;
-      }
-  if(have_identifications)
-      PropagateIdentifications(builder, shape);
-}
-
 
 class WorkPlane : public enable_shared_from_this<WorkPlane>
 {
@@ -740,7 +654,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            gp_Trsf trafo;
            trafo.SetTranslation(v);
            BRepBuilderAPI_Transform builder(shape, trafo, true);
-           PropagateProperties(builder, shape);
+           PropagateProperties(builder, shape, occ2ng(trafo));
            return builder.Shape();
            // version 2: change location
            // ...
@@ -752,7 +666,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            gp_Trsf trafo;
            trafo.SetRotation(ax, ang*M_PI/180);            
            BRepBuilderAPI_Transform builder(shape, trafo, true);
-           PropagateProperties(builder, shape);
+           PropagateProperties(builder, shape, occ2ng(trafo));
            return builder.Shape();
          }, py::arg("axis"), py::arg("ang"),
          "copy shape, and rotet copy by 'ang' degrees around 'axis'")
@@ -762,7 +676,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            gp_Trsf trafo;
            trafo.SetMirror(ax.Ax2());
            BRepBuilderAPI_Transform builder(shape, trafo, true);
-           PropagateProperties(builder, shape);
+           PropagateProperties(builder, shape, occ2ng(trafo));
            return builder.Shape();
          }, py::arg("axes"),
          "copy shape, and mirror over plane defined by 'axes'")
@@ -772,7 +686,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            gp_Trsf trafo;
            trafo.SetMirror(ax);
            BRepBuilderAPI_Transform builder(shape, trafo, true);
-           PropagateProperties(builder, shape);
+           PropagateProperties(builder, shape, occ2ng(trafo));
            return builder.Shape();
          }, py::arg("axes"),
          "copy shape, and mirror around axis 'axis'")
@@ -782,7 +696,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            gp_Trsf trafo;
            trafo.SetScale(p, s);
            BRepBuilderAPI_Transform builder(shape, trafo, true);
-           PropagateProperties(builder, shape);
+           PropagateProperties(builder, shape, occ2ng(trafo));
            return builder.Shape();
          }, py::arg("p"), py::arg("s"),
          "copy shape, and scale copy by factor 's'")

@@ -9,6 +9,8 @@
 
 #ifdef OCCGEOMETRY
 
+#include <set>
+
 #include <meshing.hpp>
 #include "occ_utils.hpp"
 #include "occmeshsurf.hpp"
@@ -366,6 +368,105 @@ namespace netgen
   DLL_HEADER extern bool OCCMeshFace (const OCCGeometry & geom, Mesh & mesh, FlatArray<int, PointIndex> glob2loc,
                        const MeshingParameters & mparam, int nr, int projecttype, bool delete_on_failure);
 
+
+  template <class TBuilder>
+  void PropagateIdentifications (TBuilder & builder, TopoDS_Shape shape, std::optional<Transformation<3>> trafo = nullopt)
+  {
+    std::map<T_Shape, std::set<T_Shape>> mod_map;
+    std::map<T_Shape, bool> tshape_handled;
+    Transformation<3> trafo_inv;
+    if(trafo)
+        trafo_inv = trafo->CalcInverse();
+  
+    for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
+      for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+      {
+          auto tshape = e.Current().TShape();
+          mod_map[tshape].insert(tshape);
+          tshape_handled[tshape] = false;
+      }
+  
+    for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
+      for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+        {
+          auto tshape = e.Current().TShape();
+  
+          for (auto mods : builder.Modified(e.Current()))
+              mod_map[tshape].insert(mods.TShape());
+        }
+  
+    for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
+      for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+      {
+          auto tshape = e.Current().TShape();
+  
+          if(tshape_handled[tshape])
+              continue;
+          tshape_handled[tshape] = true;
+  
+          if(OCCGeometry::identifications.count(tshape)==0)
+              continue;
+  
+          auto tshape_mapped = mod_map[tshape];
+  
+          for(auto ident : OCCGeometry::identifications[tshape])
+          {
+              // nothing happened
+              if(mod_map[ident.to].size()==1 && mod_map[ident.from].size() ==1)
+                  continue;
+  
+              auto from = ident.from;
+              auto to = ident.to;
+  
+              for(auto from_mapped : mod_map[from])
+                  for(auto to_mapped : mod_map[to])
+                  {
+                      if(from==from_mapped && to==to_mapped)
+                          continue;
+  
+                      TopoDS_Shape s_from; s_from.TShape(from_mapped);
+                      TopoDS_Shape s_to; s_to.TShape(to_mapped);
+
+                      Transformation<3> trafo_mapped;
+                      if(trafo)
+                      {
+                          Transformation<3> trafo_temp;
+                          trafo_temp.Combine(ident.trafo, trafo_inv);
+                          trafo_mapped.Combine(*trafo, trafo_temp);
+                      }
+  
+                      if(!IsMappedShape(trafo_mapped, s_from, s_to))
+                          continue;
+  
+                      OCCIdentification id_new = ident;
+                      id_new.to = to_mapped;
+                      id_new.from = from_mapped;
+                      if(trafo)
+                          id_new.trafo = trafo_mapped;
+                      auto id_owner = from == tshape ? from_mapped : to_mapped;
+                      OCCGeometry::identifications[id_owner].push_back(id_new);
+                  }
+          }
+      }
+  }
+  
+  template <class TBuilder>
+  void PropagateProperties (TBuilder & builder, TopoDS_Shape shape, std::optional<Transformation<3>> trafo = nullopt)
+  {
+    bool have_identifications = false;
+  
+    for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
+      for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+        {
+          auto tshape = e.Current().TShape();
+          auto & prop = OCCGeometry::global_shape_properties[tshape];
+          for (auto mods : builder.Modified(e.Current()))
+            OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+          have_identifications |= OCCGeometry::identifications.count(tshape) > 0;
+        }
+    if(have_identifications)
+        PropagateIdentifications(builder, shape, trafo);
+  }
 
   namespace step_utils
   {
