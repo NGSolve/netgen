@@ -443,7 +443,7 @@ public:
     return shared_from_this();
   }
 
-  auto Spline(const std::vector<gp_Pnt2d> &points, bool periodic, double tol, const std::map<int, gp_Vec2d> &tangents, optional<string> name = nullopt)
+  auto Spline(const std::vector<gp_Pnt2d> &points, bool periodic, double tol, const std::map<int, gp_Vec2d> &tangents)
   {
     gp_Pnt2d P1 = localpos.Location();
     gp_Pnt P13d = surf->Value(P1.X(), P1.Y());
@@ -485,9 +485,10 @@ public:
     builder.Perform();
     auto curve2d = builder.Curve();
 
+    const bool closing = periodic || PLast.Distance(startpnt) < 1e-10;
     if (startvertex.IsNull())
         startvertex = lastvertex = BRepBuilderAPI_MakeVertex(P13d).Vertex();
-    auto endv = periodic ? startvertex : BRepBuilderAPI_MakeVertex(PLast3d).Vertex();
+    auto endv = closing ? startvertex : BRepBuilderAPI_MakeVertex(PLast3d).Vertex();
 
     //create 3d edge from 2d curve using surf
     auto edge = BRepBuilderAPI_MakeEdge(curve2d, surf, lastvertex, endv).Edge();
@@ -509,7 +510,7 @@ public:
     //update localpos.Direction()
     Rotate(angle*180/M_PI);
 
-    if (periodic)
+    if (closing)
         Finish();
 
     return shared_from_this();
@@ -2453,7 +2454,7 @@ degen_tol : double
     .def("Line", [](WorkPlane&wp,double h,double v, optional<string> name) { return wp.Line(h,v,name); },
          py::arg("dx"), py::arg("dy"), py::arg("name")=nullopt)
     .def("Spline", &WorkPlane::Spline, py::arg("points"), py::arg("periodic")=false, py::arg("tol")=1e-8,
-         py::arg("tangents")=std::map<int, gp_Vec2d>{}, py::arg("name")=nullopt,
+         py::arg("tangents")=std::map<int, gp_Vec2d>{},
          "draw spline starting from current position (implicitly added to given list of points), tangents can be specified for each point (0 refers to current position)")
     .def("Rectangle", &WorkPlane::Rectangle, py::arg("l"), py::arg("w"), "draw rectangle, with current position as corner, use current direction")
     .def("RectangleC", &WorkPlane::RectangleCentered, py::arg("l"), py::arg("w"), "draw rectangle, with current position as center, use current direction")
