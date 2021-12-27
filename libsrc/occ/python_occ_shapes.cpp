@@ -362,6 +362,20 @@ public:
     return shared_from_this();            
   }
 
+  auto StartPnt() const {
+      return startpnt;
+  }
+
+  auto CurrentLocation() const
+  {
+    return localpos.Location();
+  }
+
+  auto CurrentDirection() const
+  {
+      return gp_Vec2d(localpos.Direction());
+  }
+
   auto MoveTo (double h, double v)
   {
     startpnt = gp_Pnt2d(h,v);
@@ -443,21 +457,32 @@ public:
     return shared_from_this();
   }
 
-  auto Spline(const std::vector<gp_Pnt2d> &points, bool periodic, double tol, const std::map<int, gp_Vec2d> &tangents)
+  auto Spline(const std::vector<gp_Pnt2d> &points, bool periodic, double tol, const std::map<int, gp_Vec2d> &tangents,
+              bool start_from_localpos)
   {
-    gp_Pnt2d P1 = localpos.Location();
+    gp_Pnt2d P1 = start_from_localpos ? localpos.Location() : points.front();
     gp_Pnt P13d = surf->Value(P1.X(), P1.Y());
 
     gp_Pnt2d PLast = points.back();
     gp_Pnt PLast3d = surf->Value(PLast.X(), PLast.Y());
 
-    if (points.front().Distance(P1) <= tol)
-      throw Exception("First item of given list of points is too close to current position (distance <= tol).");
+    Handle(TColgp_HArray1OfPnt2d) allpoints;
+    if (start_from_localpos)
+      {
+        if (points.front().Distance(P1) <= tol)
+          throw Exception("First item of given list of points is too close to current position (distance <= tol).");
+        allpoints = new TColgp_HArray1OfPnt2d(1, points.size() + 1);
+        allpoints->SetValue(1, P1);
+        for (int i = 0; i < points.size(); i++)
+          allpoints->SetValue(i + 2, points[i]);
+      }
+    else
+      {
+        allpoints = new TColgp_HArray1OfPnt2d(1, points.size());
+        for (int i = 0; i < points.size(); i++)
+          allpoints->SetValue(i + 1, points[i]);
+      }
 
-    Handle(TColgp_HArray1OfPnt2d) allpoints = new TColgp_HArray1OfPnt2d(1, points.size() + 1);
-    allpoints->SetValue(1, P1);
-    for (int i = 0; i < points.size(); i++)
-      allpoints->SetValue(i + 2, points[i]);
     Geom2dAPI_Interpolate builder(allpoints, periodic, tol);
 
     if (tangents.size() > 0)
@@ -2440,6 +2465,9 @@ degen_tol : double
 
   py::class_<WorkPlane, shared_ptr<WorkPlane>> (m, "WorkPlane")
     .def(py::init<gp_Ax3, gp_Ax2d>(), py::arg("axes")=gp_Ax3(), py::arg("pos")=gp_Ax2d())
+    .def_property_readonly("CurrentLocation", &WorkPlane::CurrentLocation)
+    .def_property_readonly("CurrentDirection", &WorkPlane::CurrentDirection)
+    .def_property_readonly("StartPnt", &WorkPlane::StartPnt)
     .def("MoveTo", &WorkPlane::MoveTo, py::arg("h"), py::arg("v"), "moveto (h,v), and start new wire")
     .def("Move", &WorkPlane::Move, py::arg("l"), "move 'l' from current position and direction, start new wire")
     .def("Direction", &WorkPlane::Direction, py::arg("dirh"), py::arg("dirv"), "reset direction to (dirh, dirv)")    
@@ -2454,7 +2482,7 @@ degen_tol : double
     .def("Line", [](WorkPlane&wp,double h,double v, optional<string> name) { return wp.Line(h,v,name); },
          py::arg("dx"), py::arg("dy"), py::arg("name")=nullopt)
     .def("Spline", &WorkPlane::Spline, py::arg("points"), py::arg("periodic")=false, py::arg("tol")=1e-8,
-         py::arg("tangents")=std::map<int, gp_Vec2d>{},
+         py::arg("tangents")=std::map<int, gp_Vec2d>{}, py::arg("start_from_localpos")=true,
          "draw spline starting from current position (implicitly added to given list of points), tangents can be specified for each point (0 refers to current position)")
     .def("Rectangle", &WorkPlane::Rectangle, py::arg("l"), py::arg("w"), "draw rectangle, with current position as corner, use current direction")
     .def("RectangleC", &WorkPlane::RectangleCentered, py::arg("l"), py::arg("w"), "draw rectangle, with current position as center, use current direction")
