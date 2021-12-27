@@ -2483,7 +2483,7 @@ degen_tol : double
          py::arg("dx"), py::arg("dy"), py::arg("name")=nullopt)
     .def("Spline", &WorkPlane::Spline, py::arg("points"), py::arg("periodic")=false, py::arg("tol")=1e-8,
          py::arg("tangents")=std::map<int, gp_Vec2d>{}, py::arg("start_from_localpos")=true,
-         "draw spline starting from current position (implicitly added to given list of points), tangents can be specified for each point (0 refers to current position)")
+         "draw spline (default: starting from current position, which is implicitly added to given list of points), tangents can be specified for each point (0 refers to starting point)")
     .def("Rectangle", &WorkPlane::Rectangle, py::arg("l"), py::arg("w"), "draw rectangle, with current position as corner, use current direction")
     .def("RectangleC", &WorkPlane::RectangleCentered, py::arg("l"), py::arg("w"), "draw rectangle, with current position as center, use current direction")
     .def("Circle", [](WorkPlane&wp, double x, double y, double r) {
