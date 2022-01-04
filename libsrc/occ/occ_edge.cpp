@@ -19,11 +19,14 @@ namespace netgen
         if(verts.size() != 2)
             throw Exception("OCC edge does not have 2 vertices");
 
-        // swap start/end if necessary
-        double d00 = Dist(GetPoint(0), start->GetPoint());
-        double d01 = Dist(GetPoint(0), end->GetPoint());
-        if(d01 < d00)
-            swap(start, end);
+        if(start != end)
+        {
+            // swap start/end if necessary
+            double d00 = Dist(GetPoint(0), start->GetPoint());
+            double d01 = Dist(GetPoint(0), end->GetPoint());
+            if(d01 < d00)
+                swap(start, end);
+        }
     }
 
     double OCCEdge::GetLength() const

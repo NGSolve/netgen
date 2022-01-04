@@ -1130,8 +1130,6 @@ namespace netgen
           auto edge = TopoDS::Edge(e);
           if(edge_map.count(tshape)!=0)
               continue;
-          if(BRep_Tool::Degenerated(edge))
-              continue;
           edge_map[tshape] = edges.Size();
           auto verts = GetVertices(e);
           auto occ_edge = make_unique<OCCEdge>(edge, *vertices[vertex_map[verts[0].TShape()]], *vertices[vertex_map[verts[1].TShape()]] );
