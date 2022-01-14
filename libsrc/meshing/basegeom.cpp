@@ -447,7 +447,7 @@ namespace netgen
       static Timer tdivide("Divide Edges");
       RegionTimer rt(tdivide);
       // -------------------- DivideEdge -----------------
-      static constexpr size_t divide_edge_sections = 1000;
+      static constexpr size_t divide_edge_sections = 10000;
       double hvalue[divide_edge_sections+1];
       hvalue[0] = 0;
 
