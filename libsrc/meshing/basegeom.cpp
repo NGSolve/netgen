@@ -728,6 +728,7 @@ namespace netgen
     static Timer t1("Surface Meshing"); RegionTimer regt(t1);
     const char* savetask = multithread.task;
     multithread.task = "Mesh Surface";
+    mesh.ClearFaceDescriptors();
 
     size_t n_failed_faces = 0;
     Array<int, PointIndex> glob2loc(mesh.GetNP());

@@ -910,11 +910,6 @@ namespace nglib
       // parameters structure
       mp->Transfer_Parameters();
 
-
-      // Only go into surface meshing if the face descriptors have already been added
-      if(!me->GetNFD())
-         return NG_ERROR;
-
       numpoints = me->GetNP();
 
       // Initially set up only for surface meshing without any optimisation
