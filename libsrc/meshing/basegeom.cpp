@@ -199,6 +199,19 @@ namespace netgen
     }
   };
 
+  void NetgenGeometry :: Clear()
+  {
+      vertex_map.clear();
+      edge_map.clear();
+      face_map.clear();
+      solid_map.clear();
+
+      vertices.SetSize0();
+      edges.SetSize0();
+      faces.SetSize0();
+      solids.SetSize0();
+  }
+
   void NetgenGeometry :: ProcessIdentifications()
   {
       for(auto i : Range(vertices))
