@@ -1107,6 +1107,12 @@ namespace netgen
 
       fsingular = esingular = vsingular = false;
 
+      NetgenGeometry::Clear();
+      edge_map.clear();
+      vertex_map.clear();
+      face_map.clear();
+      solid_map.clear();
+
       // Add shapes
       for(auto i1 : Range(1, vmap.Extent()+1))
       {

@@ -197,6 +197,7 @@ namespace netgen
 
     const GeometryFace & GetFace(int i) const { return *faces[i]; }
 
+    void Clear();
 
     virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
 
