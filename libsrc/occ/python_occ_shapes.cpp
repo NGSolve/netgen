@@ -912,7 +912,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
               }
             BRepPrimAPI_MakePrism builder(shape, h*edir, true);
 
-            for (auto typ : { TopAbs_EDGE, TopAbs_VERTEX })
+            for (auto typ : { TopAbs_SOLID, TopAbs_FACE, TopAbs_EDGE, TopAbs_VERTEX })
               for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
                 {
                   auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
