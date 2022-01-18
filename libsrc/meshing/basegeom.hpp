@@ -196,6 +196,8 @@ namespace netgen
     size_t GetNFaces() const { return faces.Size(); }
 
     const GeometryFace & GetFace(int i) const { return *faces[i]; }
+    const GeometryEdge & GetEdge(int i) const { return *edges[i]; }
+    const GeometryVertex & GetVertex(int i) const { return *vertices[i]; }
 
     void Clear();
 
