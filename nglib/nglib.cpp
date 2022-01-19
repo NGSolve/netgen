@@ -880,7 +880,7 @@ namespace nglib
 
       mp->Transfer_Parameters();
 
-      OCCFindEdges(*occgeom, *me, mparam);
+      occgeom->FindEdges(*me, mparam);
 
       if((me->GetNP()) && (me->GetNFD()))
       {
@@ -910,11 +910,6 @@ namespace nglib
       // parameters structure
       mp->Transfer_Parameters();
 
-
-      // Only go into surface meshing if the face descriptors have already been added
-      if(!me->GetNFD())
-         return NG_ERROR;
-
       numpoints = me->GetNP();
 
       // Initially set up only for surface meshing without any optimisation
@@ -926,8 +921,8 @@ namespace nglib
          perfstepsend = MESHCONST_OPTSURFACE;
       }
 
-      OCCMeshSurface(*occgeom, *me, mparam);
-      OCCOptimizeSurface(*occgeom, *me, mparam);
+      occgeom->MeshSurface(*me, mparam);
+      occgeom->OptimizeSurface(*me, mparam);
 
       me->CalcSurfacesOfNode();
       

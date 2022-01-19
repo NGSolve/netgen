@@ -9,6 +9,10 @@ For more detailed documentation consult the OCCT docs, a good starting point is
 https://dev.opencascade.org/doc/refman/html/class_b_rep_builder_a_p_i___make_shape.html
 """
 
+from .config import USE_OCC
+if not USE_OCC:
+    raise ImportError("Netgen was not built with Opencascade support")
+
 from .libngpy._NgOCC import *
 from .meshing import meshsize
 

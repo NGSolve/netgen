@@ -9,7 +9,6 @@ if(WIN32)
           $<TARGET_OBJECTS:csg>
 
           $<TARGET_OBJECTS:visual>
-          $<TARGET_OBJECTS:occ>
        )
        if(USE_GUI)
            set(nglib_objects ${nglib_objects}
@@ -18,6 +17,9 @@ if(WIN32)
                $<TARGET_OBJECTS:csgvis>
            )
        endif(USE_GUI)
+       if(USE_OCC)
+           set(nglib_objects ${nglib_objects} $<TARGET_OBJECTS:occ>)
+       endif(USE_OCC)
 endif(WIN32)
 
 add_library(nglib SHARED nglib.cpp ${nglib_objects})

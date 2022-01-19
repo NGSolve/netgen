@@ -1,52 +1,69 @@
 
 #ifdef OCCGEOMETRY
 
-#include <mystdlib.h>
-#include <occgeom.hpp>
-#include <core/register_archive.hpp>
 #include <cstdio>
-#include "ShapeAnalysis_ShapeTolerance.hxx"
-#include "ShapeAnalysis_ShapeContents.hxx"
-#include "ShapeAnalysis_CheckSmallFace.hxx"
-#include "ShapeAnalysis_DataMapOfShapeListOfReal.hxx"
-#include "ShapeAnalysis_Surface.hxx"
+#include <set>
 
-#include "BRepCheck_Analyzer.hxx"
-#include "BRepLib.hxx"
-#include "ShapeBuild_ReShape.hxx"
-#include "ShapeFix.hxx"
-#include "ShapeFix_FixSmallFace.hxx"
-#include "Partition_Spliter.hxx"
-#include "BRepAlgoAPI_Fuse.hxx"
-#include "Interface_InterfaceModel.hxx"
+#include <mystdlib.h>
+#include <core/register_archive.hpp>
 
-#include "XSControl_WorkSession.hxx"
-#include "XSControl_TransferReader.hxx"
-#include "StepRepr_RepresentationItem.hxx"
-#include "StepBasic_ProductDefinitionRelationship.hxx"
-#include "Transfer_TransientProcess.hxx"
-#include "TransferBRep.hxx"
-#ifndef _Standard_Version_HeaderFile
-#include <Standard_Version.hxx>
-#endif
+#include "occ_vertex.hpp"
+#include "occ_edge.hpp"
+#include "occ_face.hpp"
+#include "occ_solid.hpp"
+#include "occgeom.hpp"
 
+#include <BOPAlgo_Builder.hxx>
+#include <BRepBndLib.hxx>
+#include <BRepBuilderAPI_MakeSolid.hxx>
+#include <BRepBuilderAPI_MakeVertex.hxx>
+#include <BRepCheck_Analyzer.hxx>
+#include <BRepExtrema_DistShapeShape.hxx>
+#include <BRepGProp.hxx>
+#include <BRepLib.hxx>
+#include <BRepMesh_IncrementalMesh.hxx>
+#include <BRepOffsetAPI_Sewing.hxx>
+#include <BRepTools.hxx>
+#include <IGESCAFControl_Reader.hxx>
+#include <IGESControl_Writer.hxx>
+#include <Interface_InterfaceModel.hxx>
+#include <Interface_Static.hxx>
+#include <Partition_Spliter.hxx>
+#include <STEPCAFControl_Writer.hxx>
 #include <STEPConstruct.hxx>
-#include <Transfer_FinderProcess.hxx>
-#include <TDataStd_Name.hxx>
-#include <XCAFPrs.hxx>
+#include <STEPControl_Writer.hxx>
+#include <ShapeAnalysis_CheckSmallFace.hxx>
+#include <ShapeAnalysis_DataMapOfShapeListOfReal.hxx>
+#include <ShapeAnalysis_ShapeContents.hxx>
+#include <ShapeBuild_ReShape.hxx>
+#include <ShapeFix_Face.hxx>
+#include <ShapeFix_FixSmallFace.hxx>
+#include <ShapeFix_Shape.hxx>
+#include <ShapeFix_Wire.hxx>
+#include <ShapeFix_Wireframe.hxx>
+#include <StepBasic_ProductDefinitionRelationship.hxx>
+#include <StepRepr_RepresentationItem.hxx>
+#include <StlAPI_Writer.hxx>
 #include <TopoDS_Shape.hxx>
+#include <TransferBRep.hxx>
+#include <Transfer_FinderProcess.hxx>
+#include <Transfer_TransientProcess.hxx>
+#include <XCAFApp_Application.hxx>
+#include <XCAFDoc_ColorTool.hxx>
+#include <XCAFDoc_DocumentTool.hxx>
+#include <XCAFDoc_ShapeTool.hxx>
+#include <XCAFPrs.hxx>
 #include <XCAFPrs_Style.hxx>
-#include <TopTools_ShapeMapHasher.hxx>
-#include <NCollection_IndexedDataMap.hxx>
-#include <StepShape_TopologicalRepresentationItem.hxx>
+#include <XSControl_TransferReader.hxx>
+#include <XSControl_WorkSession.hxx>
 
 #if OCC_VERSION_HEX < 0x070000
 // pass
 #elif OCC_VERSION_HEX < 0x070200
-   #include "StlTransfer.hxx"
-   #include "TopoDS_Iterator.hxx"
+   #include <StlTransfer.hxx>
+   #include <TopoDS_Iterator.hxx>
 #else
-   #include "TopoDS_Iterator.hxx"
+   #include <TopoDS_Iterator.hxx>
 #endif
 
 namespace netgen
@@ -57,6 +74,67 @@ namespace netgen
   std::map<Handle(TopoDS_TShape), ShapeProperties> OCCGeometry::global_shape_properties;
   std::map<Handle(TopoDS_TShape), std::vector<OCCIdentification>> OCCGeometry::identifications;
   
+  TopoDS_Shape ListOfShapes::Max(gp_Vec dir)
+  {
+    double maxval = -1e99;
+    TopoDS_Shape maxshape;
+    for (auto shape : *this)
+      {
+        GProp_GProps props;
+        gp_Pnt center;
+
+        switch (shape.ShapeType())
+          {
+          case TopAbs_VERTEX:
+            center = BRep_Tool::Pnt (TopoDS::Vertex(shape)); break;
+          case TopAbs_FACE:
+            BRepGProp::SurfaceProperties (shape, props);
+            center = props.CentreOfMass();
+            break;
+          default:
+            BRepGProp::LinearProperties(shape, props);
+            center = props.CentreOfMass();
+          }
+
+        double val = center.X()*dir.X() + center.Y()*dir.Y() + center.Z() * dir.Z();
+        if (val > maxval)
+          {
+            maxval = val;
+            maxshape = shape;
+          }
+      }
+    return maxshape;
+  }
+  TopoDS_Shape ListOfShapes::Nearest(gp_Pnt pnt)
+  {
+    double mindist = 1e99;
+    TopoDS_Shape nearestshape;
+    auto vertex = BRepBuilderAPI_MakeVertex (pnt).Vertex();
+    
+    for (auto shape : *this)
+      {
+        double dist = BRepExtrema_DistShapeShape(shape, vertex).Value();
+        if (dist < mindist)
+          {
+            nearestshape = shape;
+            mindist = dist;
+          }
+      }
+    return nearestshape;
+  }
+
+  ListOfShapes ListOfShapes::SubShapes(TopAbs_ShapeEnum type) const
+  {
+    std::set<TopoDS_Shape, ShapeLess> unique_shapes;
+    for(const auto& shape : *this)
+      for(TopExp_Explorer e(shape, type); e.More(); e.Next())
+        unique_shapes.insert(e.Current());
+    ListOfShapes sub;
+    for(const auto& shape : unique_shapes)
+      sub.push_back(shape);
+    return sub;
+  }
+
   OCCGeometry::OCCGeometry(const TopoDS_Shape& _shape, int aoccdim, bool copy)
   {
     if(copy)
@@ -64,14 +142,14 @@ namespace netgen
         auto filename = GetTempFilename();
         step_utils::WriteSTEP(_shape, filename.c_str());
         LoadOCCInto(this, filename.c_str());
-        occdim = aoccdim;
+        dimension = aoccdim;
         std::remove(filename.c_str());
       }
     else
       {
         shape = _shape;
         changed = 1;
-        occdim = aoccdim;
+        dimension = aoccdim;
         BuildFMap();
         CalcBoundingBox();
         PrintContents (this);
@@ -117,23 +195,23 @@ namespace netgen
     OCCSetLocalMeshSize(*this, mesh, mparam, occparam);
   }
 
-  void OCCGeometry :: FindEdges(Mesh& mesh,
-                                const MeshingParameters& mparam) const
+  bool OCCGeometry :: MeshFace(Mesh& mesh,
+                                  const MeshingParameters& mparam, int nr, FlatArray<int, PointIndex> glob2loc) const
   {
-    OCCFindEdges(*this, mesh, mparam);
-  }
+      bool failed = OCCMeshFace(*this, mesh, glob2loc, mparam, nr, PARAMETERSPACE, true);
+      if(failed)
+          failed = OCCMeshFace(*this, mesh, glob2loc, mparam, nr, PLANESPACE, false);
 
-  void OCCGeometry :: MeshSurface(Mesh& mesh,
-                                  const MeshingParameters& mparam) const
-  {
-    OCCMeshSurface(*this, mesh, mparam);
-  }
-
-  void OCCGeometry :: FinalizeMesh(Mesh& mesh) const
-  {
-    for (int i = 0; i < mesh.GetNDomains(); i++)
-      if (auto name = sprops[i]->name)
-        mesh.SetMaterial (i+1, *name);
+      if(failed)
+      {
+          facemeshstatus[nr] = -1;
+          PrintError ("Problem in Surface mesh generation");
+      }
+      else
+      {
+          facemeshstatus[nr] = 1;
+      }
+      return failed;
   }
 
    void OCCGeometry :: PrintNrShapes ()
@@ -1029,31 +1107,125 @@ namespace netgen
 
       fsingular = esingular = vsingular = false;
 
+      NetgenGeometry::Clear();
+      edge_map.clear();
+      vertex_map.clear();
+      face_map.clear();
+      solid_map.clear();
 
-      sprops.SetSize(somap.Extent());
-      for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
+      // Add shapes
+      for(auto i1 : Range(1, vmap.Extent()+1))
       {
-          auto s = e.Current();
-          sprops[somap.FindIndex(s)-1] = &global_shape_properties[s.TShape()];
+          auto v = vmap(i1);
+          auto tshape = v.TShape();
+          if(vertex_map.count(tshape)!=0)
+              continue;
+          auto occ_vertex = make_unique<OCCVertex>(TopoDS::Vertex(v));
+          occ_vertex->nr = vertices.Size();
+          vertex_map[tshape] = occ_vertex->nr;
+
+          if(global_shape_properties.count(tshape)>0)
+              occ_vertex->properties = global_shape_properties[tshape];
+          vertices.Append(std::move(occ_vertex));
       }
 
-      fprops.SetSize(fmap.Extent());
-      for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
+      for(auto i1 : Range(1, emap.Extent()+1))
       {
-          auto s = e.Current();
-          fprops[fmap.FindIndex(s)-1] = &global_shape_properties[s.TShape()];
+          auto e = emap(i1);
+          auto tshape = e.TShape();
+          auto edge = TopoDS::Edge(e);
+          if(edge_map.count(tshape)!=0)
+              continue;
+          edge_map[tshape] = edges.Size();
+          auto verts = GetVertices(e);
+          auto occ_edge = make_unique<OCCEdge>(edge, *vertices[vertex_map[verts[0].TShape()]], *vertices[vertex_map[verts[1].TShape()]] );
+          occ_edge->properties = global_shape_properties[tshape];
+          edges.Append(std::move(occ_edge));
       }
 
-      eprops.SetSize(emap.Extent());
-      /*
-      for (TopExp_Explorer e(shape, TopAbs_EDGE); e.More(); e.Next())
+      for(auto i1 : Range(1, fmap.Extent()+1))
       {
-          auto s = e.Current();
-          eprops[emap.FindIndex(s)-1] = &global_shape_properties[s.TShape()];
+          auto f = fmap(i1);
+          auto tshape = f.TShape();
+          if(face_map.count(tshape)==0)
+          {
+
+              auto k = faces.Size();
+              face_map[tshape] = k;
+              auto occ_face = make_unique<OCCFace>(f);
+
+              for(auto e : GetEdges(f))
+                  occ_face->edges.Append( edges[edge_map[e.TShape()]].get() );
+
+              if(global_shape_properties.count(tshape)>0)
+                  occ_face->properties = global_shape_properties[tshape];
+              faces.Append(std::move(occ_face));
+
+              if(dimension==2)
+                  for(auto e : GetEdges(f))
+                  {
+                      auto & edge = *edges[edge_map[e.TShape()]];
+                      if(e.Orientation() == TopAbs_REVERSED)
+                          edge.domout = k;
+                      else
+                          edge.domin = k;
+                  }
+          }
       }
-      */
-      for (auto [nr,s] : Enumerate(emap))
-        eprops[nr-1] = &global_shape_properties[s.TShape()];
+
+
+      for(auto i1 : Range(1, somap.Extent()+1))
+      {
+          auto s = somap(i1);
+          auto tshape = s.TShape();
+          int k;
+          if(solid_map.count(tshape)==0)
+          {
+              k = solids.Size();
+              solid_map[tshape] = k;
+              auto occ_solid = make_unique<OCCSolid>(s);
+              if(global_shape_properties.count(tshape)>0)
+                  occ_solid->properties = global_shape_properties[tshape];
+              solids.Append(std::move(occ_solid));
+          }
+
+          for(auto f : GetFaces(s))
+          {
+              auto face_nr = face_map[f.TShape()];
+              auto & face = faces[face_nr];
+              if(face->domin==-1)
+                  face->domin = k;
+              else
+                  face->domout = k;
+          }
+      }
+
+      // Add identifications
+      auto add_identifications = [&](auto & shapes, auto & shape_map)
+      {
+          for(auto &[tshape, nr] : shape_map)
+            if(identifications.count(tshape))
+                for(auto & ident : identifications[tshape])
+                {
+                    if(shape_map.count(ident.from)==0 || shape_map.count(ident.to)==0)
+                        continue;
+
+                    ShapeIdentification si{
+                        shapes[shape_map[ident.from]].get(),
+                        shapes[shape_map[ident.to]].get(),
+                        ident.trafo,
+                        ident.type,
+                        ident.name
+                    };
+                    shapes[nr]->identifications.Append(si);
+                }
+      };
+      add_identifications( vertices, vertex_map );
+      add_identifications( edges, edge_map );
+      add_identifications( faces, face_map );
+
+      bounding_box = ::netgen::GetBoundingBox( shape );
+      ProcessIdentifications();
    }
 
 
@@ -1156,285 +1328,10 @@ namespace netgen
 
    void OCCGeometry :: CalcBoundingBox ()
    {
-      Bnd_Box bb;
-#if OCC_VERSION_HEX < 0x070000
-      BRepBndLib::Add (shape, bb);
-#else
-      BRepBndLib::Add ((const TopoDS_Shape) shape, bb,(Standard_Boolean)true);
-#endif
-
-      double x1,y1,z1,x2,y2,z2;
-      bb.Get (x1,y1,z1,x2,y2,z2);
-      Point<3> p1 = Point<3> (x1,y1,z1);
-      Point<3> p2 = Point<3> (x2,y2,z2);
-
-      (*testout) << "Bounding Box = [" << p1 << " - " << p2 << "]" << endl;
-      boundingbox = Box<3> (p1,p2);
+      boundingbox = ::netgen::GetBoundingBox(shape);
+      (*testout) << "Bounding Box = [" << boundingbox.PMin() << " - " << boundingbox.PMax() << "]" << endl;
       SetCenter();
    }
-
-   PointGeomInfo OCCGeometry :: ProjectPoint(int surfi, Point<3> & p) const
-   {
-      static int cnt = 0;
-      if (++cnt % 1000 == 0) cout << "Project cnt = " << cnt << endl;
-
-      gp_Pnt pnt(p(0), p(1), p(2));
-
-      double u,v;
-      Handle( Geom_Surface ) thesurf = BRep_Tool::Surface(TopoDS::Face(fmap(surfi)));
-      Handle( ShapeAnalysis_Surface ) su = new ShapeAnalysis_Surface( thesurf );
-      gp_Pnt2d suval = su->ValueOfUV ( pnt, BRep_Tool::Tolerance( TopoDS::Face(fmap(surfi)) ) );
-      suval.Coord( u, v);
-      pnt = thesurf->Value( u, v );
-
-      PointGeomInfo gi;
-      gi.trignum = surfi;
-      gi.u = u;
-      gi.v = v;
-      p = Point<3> (pnt.X(), pnt.Y(), pnt.Z());
-      return gi;
-   }
-
-  bool OCCGeometry :: ProjectPointGI(int surfind, Point<3>& p, PointGeomInfo& gi) const
-  {
-    double u = gi.u;
-    double v = gi.v;
-
-    Point<3> hp = p;
-    if (FastProject (surfind, hp, u, v))
-      {
-	p = hp;
-	return 1;
-      }
-    ProjectPoint (surfind, p);
-    return CalcPointGeomInfo (surfind, gi, p);
-  }
-
-  void OCCGeometry :: ProjectPointEdge(int surfind, INDEX surfind2,
-                                       Point<3> & p, EdgePointGeomInfo* gi) const
-  {
-    TopExp_Explorer exp0, exp1;
-    bool done = false;
-    Handle(Geom_Curve) c;
-
-    for (exp0.Init(fmap(surfind), TopAbs_EDGE); !done && exp0.More(); exp0.Next())
-      for (exp1.Init(fmap(surfind2), TopAbs_EDGE); !done && exp1.More(); exp1.Next())
-	{
-	  if (TopoDS::Edge(exp0.Current()).IsSame(TopoDS::Edge(exp1.Current())))
-	    {
-	      done = true;
-	      double s0, s1;
-	      c = BRep_Tool::Curve(TopoDS::Edge(exp0.Current()), s0, s1);
-	    }
-	}
-
-    gp_Pnt pnt(p(0), p(1), p(2));
-    GeomAPI_ProjectPointOnCurve proj(pnt, c);
-    pnt = proj.NearestPoint();
-    p(0) = pnt.X();
-    p(1) = pnt.Y();
-    p(2) = pnt.Z();
-
-  }
-
-   bool OCCGeometry :: FastProject (int surfi, Point<3> & ap, double& u, double& v) const
-   {
-      gp_Pnt p(ap(0), ap(1), ap(2));
-
-      Handle(Geom_Surface) surface = BRep_Tool::Surface(TopoDS::Face(fmap(surfi)));
-
-      gp_Pnt x = surface->Value (u,v);
-
-      if (p.SquareDistance(x) <= sqr(PROJECTION_TOLERANCE)) return true;
-
-      gp_Vec du, dv;
-
-      surface->D1(u,v,x,du,dv);
-
-      int count = 0;
-
-      gp_Pnt xold;
-      gp_Vec n;
-      double det, lambda, mu;
-
-      do {
-         count++;
-
-         n = du^dv;
-
-         det = Det3 (n.X(), du.X(), dv.X(),
-            n.Y(), du.Y(), dv.Y(),
-            n.Z(), du.Z(), dv.Z());
-
-         if (det < 1e-15) return false;
-
-         lambda = Det3 (n.X(), p.X()-x.X(), dv.X(),
-            n.Y(), p.Y()-x.Y(), dv.Y(),
-            n.Z(), p.Z()-x.Z(), dv.Z())/det;
-
-         mu     = Det3 (n.X(), du.X(), p.X()-x.X(),
-            n.Y(), du.Y(), p.Y()-x.Y(),
-            n.Z(), du.Z(), p.Z()-x.Z())/det;
-
-         u += lambda;
-         v += mu;
-
-         xold = x;
-         surface->D1(u,v,x,du,dv);
-
-      } while (xold.SquareDistance(x) > sqr(PROJECTION_TOLERANCE) && count < 50);
-
-      //    (*testout) << "FastProject count: " << count << endl;
-
-      if (count == 50) return false;
-
-      ap = Point<3> (x.X(), x.Y(), x.Z());
-
-      return true;
-   }
-
-  Vec<3> OCCGeometry :: GetNormal(int surfind, const Point<3> & p, const PointGeomInfo* geominfo) const
-  {
-    if(geominfo)
-      {
-        gp_Pnt pnt;
-        gp_Vec du, dv;
-
-        Handle(Geom_Surface) occface;
-        occface = BRep_Tool::Surface(TopoDS::Face(fmap(surfind)));
-
-        occface->D1(geominfo->u,geominfo->v,pnt,du,dv);
-
-        auto n = Cross (Vec<3>(du.X(), du.Y(), du.Z()),
-                        Vec<3>(dv.X(), dv.Y(), dv.Z()));
-        n.Normalize();
-
-        if (fmap(surfind).Orientation() == TopAbs_REVERSED) n *= -1;
-        return n;
-      }
-    Standard_Real u,v;
-
-    gp_Pnt pnt(p(0), p(1), p(2));
-
-    Handle(Geom_Surface) occface;
-    occface = BRep_Tool::Surface(TopoDS::Face(fmap(surfind)));
-
-    /*
-    GeomAPI_ProjectPointOnSurf proj(pnt, occface);
-
-    if (proj.NbPoints() < 1)
-      {
-	cout << "ERROR: OCCSurface :: GetNormalVector: GeomAPI_ProjectPointOnSurf failed!"
-	     << endl;
-	cout << p << endl;
-	return;
-      }
- 
-    proj.LowerDistanceParameters (u, v);
-    */
-    
-    Handle( ShapeAnalysis_Surface ) su = new ShapeAnalysis_Surface( occface );
-    gp_Pnt2d suval = su->ValueOfUV ( pnt, BRep_Tool::Tolerance( TopoDS::Face(fmap(surfind)) ) );
-    suval.Coord( u, v);
-    pnt = occface->Value( u, v );
-
-    gp_Vec du, dv;
-    occface->D1(u,v,pnt,du,dv);
-
-    /*
-      if (!occface->IsCNu (1) || !occface->IsCNv (1))
-      (*testout) << "SurfOpt: Differentiation FAIL" << endl;
-    */
-
-    auto n = Cross (Vec3d(du.X(), du.Y(), du.Z()),
-	       Vec3d(dv.X(), dv.Y(), dv.Z()));
-    n.Normalize();
-
-    if (fmap(surfind).Orientation() == TopAbs_REVERSED) n *= -1;
-    return n;
-  }
-
-  bool OCCGeometry :: CalcPointGeomInfo(int surfind, PointGeomInfo& gi, const Point<3> & p) const
-  {
-    Standard_Real u,v;
-
-    gp_Pnt pnt(p(0), p(1), p(2));
-
-    Handle(Geom_Surface) occface;
-    occface = BRep_Tool::Surface(TopoDS::Face(fmap(surfind)));
-
-    /*
-    GeomAPI_ProjectPointOnSurf proj(pnt, occface);
-
-    if (proj.NbPoints() < 1)
-      {
-	cout << "ERROR: OCCSurface :: GetNormalVector: GeomAPI_ProjectPointOnSurf failed!"
-	     << endl;
-	cout << p << endl;
-	return 0;
-      }
- 
-    proj.LowerDistanceParameters (u, v);  
-    */
-
-    Handle( ShapeAnalysis_Surface ) su = new ShapeAnalysis_Surface( occface );
-    gp_Pnt2d suval = su->ValueOfUV ( pnt, BRep_Tool::Tolerance( TopoDS::Face(fmap(surfind)) ) );
-    suval.Coord( u, v);
-    //pnt = occface->Value( u, v );
-    
-
-    gi.u = u;
-    gi.v = v;
-    return true;
-  }
-
-  void OCCGeometry :: PointBetween(const Point<3> & p1, const Point<3> & p2, double secpoint,
-                                   int surfi, 
-                                   const PointGeomInfo & gi1, 
-                                   const PointGeomInfo & gi2,
-                                   Point<3> & newp, PointGeomInfo & newgi) const
-  {
-    Point<3> hnewp;
-    hnewp = p1+secpoint*(p2-p1);
-
-    if (surfi > 0)
-      {
-	double u = gi1.u+secpoint*(gi2.u-gi1.u);
-	double v = gi1.v+secpoint*(gi2.v-gi1.v);
-
-        auto savept = hnewp;
-	if (!FastProject(surfi, hnewp, u, v) || Dist(hnewp, savept) > Dist(p1,p2))
-	  {
-            //  cout << "Fast projection to surface fails! Using OCC projection" << endl;
-            hnewp = savept;
-	    ProjectPoint(surfi, hnewp);
-	  }
-	newgi.trignum = 1;
-        newgi.u = u;
-        newgi.v = v;
-      }
-    newp = hnewp;
-  }
-
-
-  void OCCGeometry :: PointBetweenEdge(const Point<3> & p1,
-                                       const Point<3> & p2, double secpoint,
-                                       int surfi1, int surfi2, 
-                                       const EdgePointGeomInfo & ap1, 
-                                       const EdgePointGeomInfo & ap2,
-                                       Point<3> & newp, EdgePointGeomInfo & newgi) const
-  {
-    double s0, s1;
-
-    newp = p1+secpoint*(p2-p1);
-    if(ap1.edgenr > emap.Size() || ap1.edgenr == 0)
-      return;
-    gp_Pnt pnt(newp(0), newp(1), newp(2));
-    GeomAPI_ProjectPointOnCurve proj(pnt, BRep_Tool::Curve(TopoDS::Edge(emap(ap1.edgenr)), s0, s1));
-    pnt = proj.NearestPoint();
-    newp = Point<3> (pnt.X(), pnt.Y(), pnt.Z());
-    newgi = ap1;
-  };
 
 
 //    void OCCGeometry :: WriteOCC_STL(char * filename)
@@ -1699,26 +1596,18 @@ namespace netgen
         auto occ_hash = key.HashCode(1<<31UL);
         return std::hash<decltype(occ_hash)>()(occ_hash);
     };
-    std::unordered_map<TopoDS_Shape, int, decltype(my_hash)> shape_map(10, my_hash);
-    Array<TopoDS_Shape> shape_list;
-
     std::map<Handle(TopoDS_TShape), int> tshape_map;
     Array<Handle(TopoDS_TShape)> tshape_list;
 
-    ar & occdim;
+    ar & dimension;
     for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
       for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
         {
           auto ds = e.Current(); 
           auto ts = ds.TShape();
-          if(shape_map.count(ds)==0)
-            {
-              shape_map[ds] = shape_list.Size();
-              shape_list.Append(ds);
-            }
           if(tshape_map.count(ts)==0)
             {
-              tshape_map[ts] = shape_list.Size();
+              tshape_map[ts] = tshape_list.Size();
               tshape_list.Append(ts);
             }
         }
@@ -1741,12 +1630,18 @@ namespace netgen
             for(auto i : Range(n_idents))
               {
                 auto & id = idents[i];
-                int shape_id;
+                int id_from, id_to;
                 if(ar.Output())
-                    shape_id = shape_map[id.other];
-                ar & shape_id & id.trafo & id.inverse & id.name;
+                {
+                    id_from = tshape_map[id.from];
+                    id_to = tshape_map[id.to];
+                }
+                ar & id_from & id_to & id.trafo & id.name;
                 if(ar.Input())
-                    id.other = shape_list[shape_id];
+                {
+                    id.from = tshape_list[id_from];
+                    id.to = tshape_list[id_to];
+                }
               }
           }
       }
@@ -2053,6 +1948,114 @@ namespace netgen
       return false;
    }
 
+  Point<3> GetCenter(const TopoDS_Shape & shape)
+  {
+      GProp_GProps props;
+      BRepGProp::LinearProperties(shape, props);
+      return occ2ng( props.CentreOfMass() );
+  }
+
+  bool IsMappedShape(const Transformation<3> & trafo, const TopoDS_Shape & me, const TopoDS_Shape & you)
+  {
+      if(me.ShapeType() != you.ShapeType()) return false;
+
+      Bnd_Box bbox;
+      BRepBndLib::Add(me, bbox);
+      BRepBndLib::Add(you, bbox);
+      BoxTree<3> tree( occ2ng(bbox.CornerMin()), occ2ng(bbox.CornerMax()) );
+
+      Point<3> c_me = GetCenter(me);
+      Point<3> c_you = GetCenter(you);
+      if(tree.GetTolerance() < Dist(trafo(c_me), c_you))
+          return false;
+
+      std::map<T_Shape, T_Shape> vmap;
+
+      auto verts_me = GetVertices(me);
+      auto verts_you = GetVertices(you);
+
+      if(verts_me.size() != verts_you.size())
+          return false;
+
+      for (auto i : Range(verts_me.size()))
+      {
+          auto s = verts_me[i].TShape();
+          if(vmap.count(s)>0)
+              continue;
+          auto p = trafo(occ2ng(s));
+          tree.Insert( p, i );
+          vmap[s] = nullptr;
+      }
+          
+      for (auto vert : verts_you)
+      {
+          auto s = vert.TShape();
+          auto p = occ2ng(s);
+          bool vert_mapped = false;
+          tree.GetFirstIntersecting( p, p, [&](size_t i ) {
+                  vmap[verts_me[i].TShape()] = s;
+                  vert_mapped = true;
+                  return true;
+          });
+          if(!vert_mapped)
+              return false;
+      }
+      return true;
+  }
+
+  void Identify(const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<gp_Trsf> opt_trafo) 
+  {
+    gp_Trsf trafo;
+    if(opt_trafo)
+    {
+        trafo = *opt_trafo;
+    }
+    else
+    {
+        auto v = GetCenter(you) - GetCenter(me);
+        trafo.SetTranslation(gp_Vec(v[0], v[1], v[2]));
+    }
+
+    ListOfShapes list_me, list_you;
+    list_me.push_back(me);
+    list_you.push_back(you);
+    Identify(list_me, list_you, name, type, trafo);
+  }
+
+  void Identify(const ListOfShapes & me, const ListOfShapes & you, string name, Identifications::ID_TYPE type, gp_Trsf occ_trafo) 
+  {
+    Transformation<3> trafo = occ2ng(occ_trafo);
+
+    ListOfShapes id_me;
+    ListOfShapes id_you;
+
+    if(auto faces_me = me.Faces(); faces_me.size()>0)
+    {
+        id_me = faces_me;
+        id_you = you.Faces();
+    }
+    else if(auto edges_me = me.Edges(); edges_me.size()>0)
+    {
+        id_me = edges_me;
+        id_you = you.Edges();
+    }
+    else
+    {
+        id_me = me.Vertices();
+        id_you = you.Vertices();
+    }
+
+    for(auto shape_me : id_me)
+        for(auto shape_you : id_you)
+        {
+            if(!IsMappedShape(trafo, shape_me, shape_you))
+                continue;
+
+            OCCGeometry::identifications[shape_me.TShape()].push_back
+                (OCCIdentification { shape_me.TShape(), shape_you.TShape(), trafo, name, type });
+        }
+  }
+
   void OCCParameters :: Print(ostream & ost) const
    {
       ost << "OCC Parameters:" << endl
@@ -2062,6 +2065,18 @@ namespace netgen
 
   DLL_HEADER extern OCCParameters occparam;
   OCCParameters occparam;
+
+
+
+
+
+
+
+
+
+
+
+
 
   // int OCCGeometry :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
   //  {
@@ -2208,8 +2223,7 @@ namespace netgen
           for(auto & ident : identifications)
           {
               Array<Handle(StepRepr_RepresentationItem)> items;
-              items.Append(STEPConstruct::FindEntity(finder, ident.other));
-              items.Append(MakeInt(static_cast<int>(ident.inverse)));
+              // items.Append(STEPConstruct::FindEntity(finder, ident.other)); // TODO!
               auto & m = ident.trafo.GetMatrix();
               for(auto i : Range(9))
                   items.Append(MakeReal(m(i)));
@@ -2239,8 +2253,7 @@ namespace netgen
               auto id_item = Handle(StepRepr_CompoundRepresentationItem)::DownCast(idents->ItemElementValue(i));
               OCCIdentification ident;
               ident.name = id_item->Name()->ToCString();
-              ident.other = TransferBRep::ShapeResult(transProc->Find(id_item->ItemElementValue(1)));
-              ident.inverse = static_cast<bool>(ReadInt(id_item->ItemElementValue(2)));
+              // ident.other = TransferBRep::ShapeResult(transProc->Find(id_item->ItemElementValue(1))); /TODO!
 
               auto & m = ident.trafo.GetMatrix();
               for(auto i : Range(9))

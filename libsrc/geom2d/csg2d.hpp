@@ -632,6 +632,7 @@ struct Solid2d
 
   int layer = 1;
   string name = MAT_DEFAULT;
+  double maxh = MAXH_DEFAULT;
 
   Solid2d() = default;
   Solid2d(string name_) : name(name_) {}
@@ -697,6 +698,7 @@ struct Solid2d
 
   Solid2d & Maxh(double maxh)
   {
+    this->maxh = maxh;
     for(auto & p : polys)
       for(auto v : p.Vertices(ALL))
         v->info.maxh = maxh;

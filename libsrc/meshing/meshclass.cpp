@@ -665,6 +665,13 @@ namespace netgen
 
     outfile << "geomtype\n" << int(geomtype) << "\n";
 
+    outfile << "\n";
+    outfile << "# surfnr\tdomin\tdomout\ttlosurf\tbcprop\n";
+    outfile << "facedescriptors\n";
+    outfile << GetNFD() << "\n";
+    for(auto & fd : FaceDescriptors())
+        outfile << fd.SurfNr() << ' ' << fd.DomainIn() << ' ' << fd.DomainOut() << ' ' << fd.TLOSurface() << ' ' << fd.BCProperty() << '\n';
+
 
     outfile << "\n";
     outfile << "# surfnr    bcnr   domin  domout      np      p1      p2      p3"
@@ -1190,6 +1197,19 @@ namespace netgen
             int hi;
             infile >> hi;
             geomtype = GEOM_TYPE(hi);
+          }
+
+        if (strcmp (str, "facedescriptors") == 0)
+          {
+            int nfd;
+            infile >> nfd;
+            for(auto i : Range(nfd))
+            {
+                int surfnr, domin, domout, tlosurf, bcprop;
+                infile >> surfnr >> domin >> domout >> tlosurf >> bcprop;
+                auto faceind = AddFaceDescriptor (FaceDescriptor(surfnr, domin, domout, tlosurf));
+                GetFaceDescriptor(faceind).SetBCProperty(bcprop);
+            }
           }
 
 
@@ -6887,14 +6907,11 @@ namespace netgen
         int oldsize = bcnames.Size();
         bcnames.SetSize (bcnr+1);  // keeps contents
         for (int i = oldsize; i <= bcnr; i++)
-          bcnames[i] = nullptr;
+          bcnames[i] = new string("default");
       }
 
     if ( bcnames[bcnr] ) delete bcnames[bcnr];
-    if ( abcname != "default" )
-      bcnames[bcnr] = new string ( abcname );
-    else
-      bcnames[bcnr] = nullptr;
+    bcnames[bcnr] = new string ( abcname );
 
     for (auto & fd : facedecoding)
       if (fd.BCProperty() <= bcnames.Size())

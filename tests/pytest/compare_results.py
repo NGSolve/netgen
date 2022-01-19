@@ -73,6 +73,13 @@ for bad1,bad2, f1, f2 in zip(data['badness'], data2['badness'], data['file'], da
     if bad2>0 and bad2<0.9*bad1:
         print(f"file {f1} got better: {bad1} -> {bad2}")
 
+for bad1,bad2, f1, f2 in zip(data['#trigs'], data2['#trigs'], data['file'], data2['file']):
+    assert f1==f2
+    if bad2>0 and bad2>1.1*bad1:
+        print(f"file {f1} got worse:  {bad1} -> {bad2}")
+    if bad2>0 and bad2<0.9*bad1:
+        print(f"file {f1} got better: {bad1} -> {bad2}")
+
 n = len(data)+1
 fig,ax = plt.subplots(figsize=(10,7))
 for i,d in enumerate(['min trig angle','min tet angle','max trig angle','max tet angle']):

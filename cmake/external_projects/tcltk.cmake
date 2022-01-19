@@ -35,7 +35,7 @@ ExternalProject_Add(project_tk
 )
 
 set(TCL_INCLUDE_PATH ${TCL_DIR}/generic)
-set(TK_INCLUDE_PATH ${TK_DIR}/generic;${TK_DIR}/xlib;${TK_DIR}/win)
+set(TK_INCLUDE_PATH ${TK_DIR}/generic)
 list(APPEND NETGEN_DEPENDENCIES project_tcl project_tk)
 
 if(APPLE OR WIN32)

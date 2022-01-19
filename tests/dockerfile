@@ -11,12 +11,15 @@ RUN apt-get update && apt-get -y install \
         libcgns-dev \
         libglu1-mesa-dev \
         libhdf5-dev \
+        libocct-ocaf-dev \
+        libocct-visualization-dev \
         libocct-data-exchange-dev \
         libocct-draw-dev \
         libpython3-dev \
         libtbb-dev \
         libxi-dev \
         libxmu-dev \
+        occt-misc \
         python3 \
         python3-distutils \
         python3-numpy \

@@ -9,100 +9,30 @@
 
 #ifdef OCCGEOMETRY
 
+#include <set>
+
 #include <meshing.hpp>
+#include "occ_utils.hpp"
+#include "occmeshsurf.hpp"
 
-#include <Standard_Version.hxx>
-#include "BRep_Tool.hxx"
-#include "Geom_Curve.hxx"
-#include "Geom2d_Curve.hxx"
-#include "Geom_Surface.hxx"
-#include "GeomAPI_ProjectPointOnSurf.hxx"
-#include "GeomAPI_ProjectPointOnCurve.hxx"
-#include "BRepTools.hxx"
-#include "TopExp.hxx"
-#include "BRepBuilderAPI_MakeVertex.hxx"
-#include "BRepBuilderAPI_MakeShell.hxx"
-#include "BRepBuilderAPI_MakeSolid.hxx"
-#include "BRepOffsetAPI_Sewing.hxx"
-#include "BRepLProp_SLProps.hxx"
-#include "BRepAdaptor_Surface.hxx"
-#include "Poly_Triangulation.hxx"
-#include "Poly_Array1OfTriangle.hxx"
-#include "TColgp_Array1OfPnt2d.hxx"
-#include "Poly_Triangle.hxx"
-#include "GProp_GProps.hxx"
-#include "BRepGProp.hxx"
-#include "gp_Pnt.hxx"
-#include "TopoDS.hxx"
-#include "TopoDS_Solid.hxx"
-#include "TopExp_Explorer.hxx"
-#include "TopTools_ListIteratorOfListOfShape.hxx"
-#include "TopoDS_Wire.hxx"
-#include "BRepTools_WireExplorer.hxx"
-#include "TopTools_IndexedMapOfShape.hxx"
-#include "BRepLProp_CLProps.hxx"
-#include "BRepAdaptor_Curve.hxx"
-#include "TopoDS_Shape.hxx"
-#include "TopoDS_Face.hxx"
-#include "IGESToBRep_Reader.hxx"
-#include "Interface_Static.hxx"
-#include "GeomAPI_ExtremaCurveCurve.hxx"
-#include "Standard_ErrorHandler.hxx"
-#include "Standard_Failure.hxx"
-#include "ShapeUpgrade_ShellSewing.hxx"
-#include "ShapeFix_Shape.hxx"
-#include "ShapeFix_Wireframe.hxx"
-#include "BRepMesh_IncrementalMesh.hxx"
-#include "BRepBndLib.hxx"
-#include "Bnd_Box.hxx"
-#include "ShapeAnalysis.hxx"
-#include "ShapeBuild_ReShape.hxx"
-#include "BOPAlgo_Builder.hxx"
-
-// Philippose - 29/01/2009
-// OpenCascade XDE Support
-// Include support for OpenCascade XDE Features
-#include "TDocStd_Document.hxx"
-#include "Quantity_Color.hxx"
-#include "XCAFApp_Application.hxx"
-#include "XCAFDoc_ShapeTool.hxx"
-#include "XCAFDoc_Color.hxx"
-#include "XCAFDoc_ColorTool.hxx"
-#include "XCAFDoc_ColorType.hxx"
-#include "XCAFDoc_LayerTool.hxx"
-#include "XCAFDoc_DimTolTool.hxx"
-#include "XCAFDoc_MaterialTool.hxx"
-#include "XCAFDoc_DocumentTool.hxx"
-#include "TDF_Label.hxx"
-#include "TDF_LabelSequence.hxx"
-#include "STEPCAFControl_Reader.hxx"
-#include "STEPCAFControl_Writer.hxx"
-#include "IGESCAFControl_Reader.hxx"
-#include "IGESCAFControl_Writer.hxx"
-
-#include "IGESControl_Reader.hxx"
-#include "STEPControl_Reader.hxx"
-#include "IGESControl_Writer.hxx"
-#include "STEPControl_Writer.hxx"
-
-#include <StepRepr_ValueRepresentationItem.hxx>
-#include <StepRepr_IntegerRepresentationItem.hxx>
-#include <StepRepr_CompoundRepresentationItem.hxx>
+#include <Quantity_ColorRGBA.hxx>
+#include <STEPCAFControl_Reader.hxx>
 #include <StepBasic_MeasureValueMember.hxx>
-
-#include "StlAPI_Writer.hxx"
-#include "STEPControl_StepModelType.hxx"
+#include <StepRepr_CompoundRepresentationItem.hxx>
+#include <StepRepr_IntegerRepresentationItem.hxx>
+#include <StepRepr_ValueRepresentationItem.hxx>
+#include <TCollection_HAsciiString.hxx>
+#include <TDocStd_Document.hxx>
+#include <TopoDS.hxx>
+#include <TopoDS_Shape.hxx>
+#include <Transfer_FinderProcess.hxx>
 
 #if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
 #define OCC_HAVE_HISTORY
 #endif
 
-
-
-
 namespace netgen
 {
-#include "occmeshsurf.hpp"
 
   // extern DLL_HEADER MeshingParameters mparam;
 
@@ -116,28 +46,7 @@ namespace netgen
 #define OCCGEOMETRYVISUALIZATIONFULLCHANGE 1  // Compute transformation matrices and redraw
 #define OCCGEOMETRYVISUALIZATIONHALFCHANGE 2  // Redraw
 
-
-  inline Point<3> occ2ng (const gp_Pnt & p)
-  {
-    return Point<3> (p.X(), p.Y(), p.Z());
-  }
-
-  inline Point<2> occ2ng (const gp_Pnt2d & p)
-  {
-    return Point<2> (p.X(), p.Y());
-  }
-  
-  inline Vec<3> occ2ng (const gp_Vec & v)
-  {
-    return Vec<3> (v.X(), v.Y(), v.Z());
-  }
-
-  inline gp_Pnt ng2occ (const Point<3> & p)
-  {
-    return gp_Pnt(p(0), p(1), p(2));
-  }
-
-  
+  bool IsMappedShape(const Transformation<3> & trafo, const TopoDS_Shape & me, const TopoDS_Shape & you);
 
   class EntityVisualizationCode
   {
@@ -219,108 +128,20 @@ namespace netgen
   };
 
 
-  class ShapeProperties
-  {
-  public:
-    optional<string> name;
-    optional<Vec<4>> col;
-    double maxh = 1e99;
-    double hpref = 0;  // number of hp refinement levels (will be multiplied by factor later)
-    void Merge(const ShapeProperties & prop2)
-    {
-      if (prop2.name) name = prop2.name;
-      if (prop2.col) col = prop2.col;
-      maxh = min2(maxh, prop2.maxh);
-    }
-
-    void DoArchive(Archive& ar)
-    {
-        ar & name & col & maxh & hpref;
-    }
-  };
-
-
-  class OCCIdentification
-  {
-  public:
-    TopoDS_Shape other;
-    Transformation<3> trafo;
-    bool inverse;
-    string name;
-  };
-
-
-  class MyExplorer
-  {
-    class Iterator
-    {
-      TopExp_Explorer exp;
-    public:
-      Iterator (TopoDS_Shape ashape, TopAbs_ShapeEnum atoFind, TopAbs_ShapeEnum atoAvoid)
-        : exp(ashape, atoFind, atoAvoid) { }
-      auto operator*() { return exp.Current(); }
-      Iterator & operator++() { exp.Next(); return *this; }
-      bool operator!= (nullptr_t nu) { return exp.More(); }
-    };
-
-  public:
-    TopoDS_Shape shape;
-    TopAbs_ShapeEnum toFind;
-    TopAbs_ShapeEnum toAvoid;
-    MyExplorer (TopoDS_Shape ashape, TopAbs_ShapeEnum atoFind, TopAbs_ShapeEnum atoAvoid = TopAbs_SHAPE)
-      : shape(ashape), toFind(atoFind), toAvoid(atoAvoid) { ; }
-    Iterator begin() { return Iterator(shape, toFind, toAvoid); }
-    auto end() { return nullptr; }
-  };
-
-  inline auto Explore (TopoDS_Shape shape, TopAbs_ShapeEnum toFind, TopAbs_ShapeEnum toAvoid = TopAbs_SHAPE)
-  {
-    return MyExplorer (shape, toFind, toAvoid);
-  }
-
-  
-  class IndexMapIterator
-  {
-    class Iterator
-    {
-      const TopTools_IndexedMapOfShape & indmap;
-      int i;
-    public:
-      Iterator (const TopTools_IndexedMapOfShape & aindmap, int ai)
-        : indmap(aindmap), i(ai) { ; }
-      auto operator*() { return tuple(i, indmap(i)); }
-      Iterator & operator++() { i++; return *this; }
-      bool operator!= (const Iterator & i2) { return i != i2.i; }
-    };
-
-  public:
-    const TopTools_IndexedMapOfShape & indmap;
-    IndexMapIterator (const TopTools_IndexedMapOfShape & aindmap) : indmap(aindmap) { }
-    Iterator begin() { return Iterator(indmap, 1); }
-    Iterator end() { return Iterator(indmap, indmap.Extent()+1); }
-  };
-  
-  inline auto Enumerate (const TopTools_IndexedMapOfShape & indmap)
-  {
-    return IndexMapIterator(indmap);
-  }
-
-  
   class DLL_HEADER OCCGeometry : public NetgenGeometry
   {
     Point<3> center;
     OCCParameters occparam;
   public:
-    static std::map<Handle(TopoDS_TShape), ShapeProperties> global_shape_properties;
-    static std::map<Handle(TopoDS_TShape), std::vector<OCCIdentification>> identifications;
+    static std::map<T_Shape, ShapeProperties> global_shape_properties;
+    static std::map<T_Shape, std::vector<OCCIdentification>> identifications;
 
     TopoDS_Shape shape;
-    TopTools_IndexedMapOfShape fmap, emap, vmap, somap, shmap, wmap;
+    TopTools_IndexedMapOfShape fmap, emap, vmap, somap, shmap, wmap; // legacy maps
     NgArray<bool> fsingular, esingular, vsingular;
     Box<3> boundingbox;
 
-    // should we use 1-based arrays (JS->MH) ? 
-    Array<ShapeProperties*> fprops, eprops, sprops; // pointers to the gobal property map
+    std::map<T_Shape, int> edge_map, vertex_map, face_map, solid_map;
 
     mutable int changed;
     mutable NgArray<int> facemeshstatus;
@@ -350,8 +171,6 @@ namespace netgen
     bool makesolids;
     bool splitpartitions;
 
-    int occdim = 3; // meshing is always done 3D, changed to 2D later of occdim=2
-     
     OCCGeometry()
     {
       somap.Clear();
@@ -372,35 +191,14 @@ namespace netgen
 
     void Analyse(Mesh& mesh,
                  const MeshingParameters& mparam) const override;
-    void FindEdges(Mesh& mesh,
-                   const MeshingParameters& mparam) const override;
-    void MeshSurface(Mesh& mesh,
-                     const MeshingParameters& mparam) const override;
+    bool MeshFace(Mesh& mesh, const MeshingParameters& mparam,
+                     int nr, FlatArray<int, PointIndex> glob2loc) const override;
+    // void OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam) const override {}
  
-    void FinalizeMesh(Mesh& mesh) const override;
-     
     void Save (string filename) const override;
     void SaveToMeshFile (ostream & /* ost */) const override;
      
     void DoArchive(Archive& ar) override;
-
-    PointGeomInfo ProjectPoint(int surfind, Point<3> & p) const override;
-    void ProjectPointEdge (int surfind, int surfind2, Point<3> & p,
-                           EdgePointGeomInfo* gi = nullptr) const override;
-    bool ProjectPointGI (int surfind, Point<3> & p, PointGeomInfo & gi) const override;
-    Vec<3> GetNormal(int surfind, const Point<3> & p, const PointGeomInfo* gi) const override;
-    bool CalcPointGeomInfo(int surfind, PointGeomInfo& gi, const Point<3> & p3) const override;
-
-    void PointBetweenEdge(const Point<3> & p1, const Point<3> & p2, double secpoint,
-                          int surfi1, int surfi2, 
-                          const EdgePointGeomInfo & ap1, 
-                          const EdgePointGeomInfo & ap2,
-                          Point<3> & newp, EdgePointGeomInfo & newgi) const override;
-    void PointBetween(const Point<3> & p1, const Point<3> & p2, double secpoint,
-                      int surfi, 
-                      const PointGeomInfo & gi1, 
-                      const PointGeomInfo & gi2,
-                      Point<3> & newp, PointGeomInfo & newgi) const override;
 
     void BuildFMap();
 
@@ -548,8 +346,11 @@ namespace netgen
     //      void WriteOCC_STL(char * filename);
 
   private:
-    bool FastProject (int surfi, Point<3> & ap, double& u, double& v) const;
+    //bool FastProject (int surfi, Point<3> & ap, double& u, double& v) const;
   };
+
+  void Identify(const ListOfShapes & me, const ListOfShapes & you, string name, Identifications::ID_TYPE type, gp_Trsf occ_trafo);
+  void Identify(const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<gp_Trsf> opt_trafo);
    
 
   void PrintContents (OCCGeometry * geom);
@@ -564,12 +365,107 @@ namespace netgen
   DLL_HEADER extern void OCCSetLocalMeshSize(const OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam,
                                              const OCCParameters& occparam);
 
-  DLL_HEADER extern void OCCMeshSurface (const OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam);
+  DLL_HEADER extern bool OCCMeshFace (const OCCGeometry & geom, Mesh & mesh, FlatArray<int, PointIndex> glob2loc,
+                       const MeshingParameters & mparam, int nr, int projecttype, bool delete_on_failure);
 
-  DLL_HEADER extern void OCCOptimizeSurface (OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam);
 
-  DLL_HEADER extern void OCCFindEdges (const OCCGeometry & geom, Mesh & mesh, const MeshingParameters & mparam);
+  template <class TBuilder>
+  void PropagateIdentifications (TBuilder & builder, TopoDS_Shape shape, std::optional<Transformation<3>> trafo = nullopt)
+  {
+    std::map<T_Shape, std::set<T_Shape>> mod_map;
+    std::map<T_Shape, bool> tshape_handled;
+    Transformation<3> trafo_inv;
+    if(trafo)
+        trafo_inv = trafo->CalcInverse();
+  
+    for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
+      for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+      {
+          auto tshape = e.Current().TShape();
+          mod_map[tshape].insert(tshape);
+          tshape_handled[tshape] = false;
+      }
+  
+    for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
+      for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+        {
+          auto tshape = e.Current().TShape();
+  
+          for (auto mods : builder.Modified(e.Current()))
+              mod_map[tshape].insert(mods.TShape());
+        }
+  
+    for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
+      for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+      {
+          auto tshape = e.Current().TShape();
+  
+          if(tshape_handled[tshape])
+              continue;
+          tshape_handled[tshape] = true;
+  
+          if(OCCGeometry::identifications.count(tshape)==0)
+              continue;
+  
+          auto tshape_mapped = mod_map[tshape];
+  
+          for(auto ident : OCCGeometry::identifications[tshape])
+          {
+              // nothing happened
+              if(mod_map[ident.to].size()==1 && mod_map[ident.from].size() ==1)
+                  continue;
+  
+              auto from = ident.from;
+              auto to = ident.to;
+  
+              for(auto from_mapped : mod_map[from])
+                  for(auto to_mapped : mod_map[to])
+                  {
+                      if(from==from_mapped && to==to_mapped)
+                          continue;
+  
+                      TopoDS_Shape s_from; s_from.TShape(from_mapped);
+                      TopoDS_Shape s_to; s_to.TShape(to_mapped);
 
+                      Transformation<3> trafo_mapped = ident.trafo;
+                      if(trafo)
+                      {
+                          Transformation<3> trafo_temp;
+                          trafo_temp.Combine(ident.trafo, trafo_inv);
+                          trafo_mapped.Combine(*trafo, trafo_temp);
+                      }
+  
+                      if(!IsMappedShape(trafo_mapped, s_from, s_to))
+                          continue;
+  
+                      OCCIdentification id_new = ident;
+                      id_new.to = to_mapped;
+                      id_new.from = from_mapped;
+                      id_new.trafo = trafo_mapped;
+                      auto id_owner = from == tshape ? from_mapped : to_mapped;
+                      OCCGeometry::identifications[id_owner].push_back(id_new);
+                  }
+          }
+      }
+  }
+  
+  template <class TBuilder>
+  void PropagateProperties (TBuilder & builder, TopoDS_Shape shape, std::optional<Transformation<3>> trafo = nullopt)
+  {
+    bool have_identifications = false;
+  
+    for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
+      for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+        {
+          auto tshape = e.Current().TShape();
+          auto & prop = OCCGeometry::global_shape_properties[tshape];
+          for (auto mods : builder.Modified(e.Current()))
+            OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+          have_identifications |= OCCGeometry::identifications.count(tshape) > 0;
+        }
+    if(have_identifications)
+        PropagateIdentifications(builder, shape, trafo);
+  }
 
   namespace step_utils
   {

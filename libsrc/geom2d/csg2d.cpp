@@ -2185,6 +2185,7 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
     if(!is_solid_degenerated)
     {
       geo->SetMaterial(dom, s.name);
+      geo->SetDomainMaxh(dom, s.maxh);
       if(s.layer != 1)
           geo->SetDomainLayer(dom, s.layer);
     }

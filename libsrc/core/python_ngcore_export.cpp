@@ -37,12 +37,14 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
     .def("__len__", &BitArray::Size)
     .def("__getitem__", [] (BitArray & self, int i)
                                          {
+                                           if (i < 0) i+=self.Size();
                                            if (i < 0 || i >= self.Size())
                                              throw py::index_error();
                                            return self.Test(i);
                                          }, py::arg("pos"), "Returns bit from given position")
     .def("__setitem__", [] (BitArray & self, int i, bool b)
                                          {
+                                           if (i < 0) i+=self.Size();
                                            if (i < 0 || i >= self.Size())
                                              throw py::index_error();
                                            if (b) self.SetBit(i); else self.Clear(i);

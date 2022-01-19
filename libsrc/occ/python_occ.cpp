@@ -1,58 +1,25 @@
 #ifdef NG_PYTHON
 #ifdef OCCGEOMETRY
 
-#include <../general/ngpython.hpp>
-#include <core/python_ngcore.hpp>
-#include "../meshing/python_mesh.hpp"
 #include <memory>
 
+#include <general/ngpython.hpp>
+#include <core/python_ngcore.hpp>
+#include <meshing/python_mesh.hpp>
 #include <meshing.hpp>
-#include <occgeom.hpp>
 
-#include <gp_Ax1.hxx>
-#include <gp_Ax2.hxx>
-#include <gp_Ax2d.hxx>
-#include <gp_Trsf.hxx>
-#include <BRepPrimAPI_MakeSphere.hxx>
-#include <BRepPrimAPI_MakeCylinder.hxx>
-#include <BRepPrimAPI_MakeRevol.hxx>
-#include <BRepPrimAPI_MakeBox.hxx>
-#include <BRepPrimAPI_MakePrism.hxx>
-#include <BRepOffsetAPI_MakePipe.hxx>
-#include <BRepAlgoAPI_Cut.hxx>
-#include <BRepAlgoAPI_Common.hxx>
-#include <BRepAlgoAPI_Fuse.hxx>
-// #include <XCAFDoc_VisMaterialTool.hxx>
-#include <TDF_Attribute.hxx>
-#include <Standard_GUID.hxx>
-#include <Geom_TrimmedCurve.hxx>
-#include <Geom_Plane.hxx>
-#include <GC_MakeSegment.hxx>
-#include <GC_MakeCircle.hxx>
-#include <GC_MakeArcOfCircle.hxx>
-#include <GC_MakePlane.hxx>
-#include <BRepBuilderAPI_MakeEdge.hxx>
-#include <BRepBuilderAPI_MakeWire.hxx>
-#include <BRepBuilderAPI_Transform.hxx>
-#include <BRepBuilderAPI_MakeFace.hxx>
-#include <BRepFilletAPI_MakeFillet.hxx>
-#include <BRepOffsetAPI_ThruSections.hxx>
+#include "occgeom.hpp"
 
-#include <BRepGProp.hxx>
-#include <BRepOffsetAPI_MakeThickSolid.hxx>
-#include <BRepLib.hxx>
-
-#include <Geom2d_Curve.hxx>
-#include <Geom2d_Ellipse.hxx>
-#include <Geom2d_TrimmedCurve.hxx>
-#include <GCE2d_MakeSegment.hxx>
-#include <GCE2d_MakeCircle.hxx>
-
+#include <BOPAlgo_Builder.hxx>
+#include <BRepLProp_SLProps.hxx>
 #include <Message.hxx>
-
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
-#define OCC_HAVE_DUMP_JSON
-#endif
+#include <Standard_GUID.hxx>
+#include <Standard_Version.hxx>
+#include <TDF_Attribute.hxx>
+#include <XCAFApp_Application.hxx>
+#include <XCAFDoc_DocumentTool.hxx>
+#include <XCAFDoc_MaterialTool.hxx>
+#include <XCAFDoc_ShapeTool.hxx>
 
 using namespace netgen;
 
@@ -199,6 +166,10 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                             {
                               self.SetFaceMaxH(fnr, meshsize);
                             }, "Set maximum meshsize for face fnr. Face numbers are 0 based.")
+    .def("Draw", [](shared_ptr<OCCGeometry> geo)
+    {
+      ng_geometry = geo;
+    })
     .def("_visualizationData", [] (shared_ptr<OCCGeometry> occ_geo)
          {
            std::vector<float> vertices;
@@ -294,12 +265,10 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                            geo->SetOCCParameters(occparam);
                            auto mesh = make_shared<Mesh>();
                            mesh->SetGeometry(geo);
+                           SetGlobalMesh(mesh);
                            auto result = geo->GenerateMesh(mesh, mp);
                            if(result != 0)
                              throw Exception("Meshing failed!");
-                           if (geo->occdim==2)
-                             mesh->SetDimension(2);
-                           SetGlobalMesh(mesh);
                            ng_geometry = geo;
                            return mesh;
                          }, py::arg("mp") = nullptr,

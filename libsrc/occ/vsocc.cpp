@@ -8,19 +8,18 @@
 
 #include <occgeom.hpp>
 
-#include "TopoDS_Shape.hxx"
-#include "TopoDS_Vertex.hxx"
-#include "TopExp_Explorer.hxx"
-#include "BRep_Tool.hxx"
-#include "TopoDS.hxx"
-#include "gp_Pnt.hxx"
-#include "Geom_Curve.hxx"
-#include "Poly_Triangulation.hxx"
-#include "Poly_Array1OfTriangle.hxx"
-#include "TColgp_Array1OfPnt2d.hxx"
-#include "Poly_Triangle.hxx"
-#include "Poly_Polygon3D.hxx"
-#include "Poly_PolygonOnTriangulation.hxx"
+#include <BRepAdaptor_Surface.hxx>
+#include <BRepBndLib.hxx>
+#include <BRepLProp_SLProps.hxx>
+#include <BRep_Tool.hxx>
+#include <Bnd_Box.hxx>
+#include <Geom_Curve.hxx>
+#include <Poly_PolygonOnTriangulation.hxx>
+#include <Poly_Triangle.hxx>
+#include <Poly_Triangulation.hxx>
+#include <TopoDS.hxx>
+#include <TopoDS_Edge.hxx>
+#include <gp_Pnt.hxx>
 
 #include <visual.hpp>
 
@@ -87,7 +86,7 @@ namespace netgen
       // Added clipping planes to Geometry view
       SetClippingPlane();
 
-      GLfloat matcoledge[] = {  0, 0, 1, 1};
+      GLfloat matcoledge[] = {  0, 0, 0, 1};
       GLfloat matcolhiedge[] = {  1, 0, 0, 1};
 
       glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, matcoledge);

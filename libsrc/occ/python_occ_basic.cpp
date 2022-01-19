@@ -1,59 +1,21 @@
 #ifdef NG_PYTHON
 #ifdef OCCGEOMETRY
 
-#include <../general/ngpython.hpp>
+#include <general/ngpython.hpp>
 #include <core/python_ngcore.hpp>
-#include "../meshing/python_mesh.hpp"
-
+#include <meshing/python_mesh.hpp>
 #include <meshing.hpp>
-#include <occgeom.hpp>
 
+#include "occgeom.hpp"
+
+#include <BRepBuilderAPI_Transform.hxx>
 #include <gp_Ax1.hxx>
 #include <gp_Ax2.hxx>
 #include <gp_Ax2d.hxx>
+#include <gp_Ax3.hxx>
 #include <gp_Trsf.hxx>
-#include <BRepPrimAPI_MakeSphere.hxx>
-#include <BRepPrimAPI_MakeCylinder.hxx>
-#include <BRepPrimAPI_MakeBox.hxx>
-#include <BRepPrimAPI_MakePrism.hxx>
-#include <BRepOffsetAPI_MakePipe.hxx>
-#include <BRepAlgoAPI_Cut.hxx>
-#include <BRepAlgoAPI_Common.hxx>
-#include <BRepAlgoAPI_Fuse.hxx>
-// #include <XCAFDoc_VisMaterialTool.hxx>
-#include <TDF_Attribute.hxx>
-#include <Standard_GUID.hxx>
-#include <Geom_TrimmedCurve.hxx>
-#include <GC_MakeSegment.hxx>
-#include <GC_MakeCircle.hxx>
-#include <GC_MakeArcOfCircle.hxx>
-#include <BRepBuilderAPI_MakeEdge.hxx>
-#include <BRepBuilderAPI_MakeWire.hxx>
-#include <BRepBuilderAPI_Transform.hxx>
-#include <BRepBuilderAPI_MakeFace.hxx>
-#include <BRepFilletAPI_MakeFillet.hxx>
-#include <BRepOffsetAPI_ThruSections.hxx>
 
-#include <BRepGProp.hxx>
-#include <BRepOffsetAPI_MakeThickSolid.hxx>
-#include <BRepLib.hxx>
-
-#include <Geom2d_Curve.hxx>
-#include <Geom2d_Ellipse.hxx>
-#include <Geom2d_TrimmedCurve.hxx>
-#include <GCE2d_MakeSegment.hxx>
-#include <GCE2d_MakeCircle.hxx>
-
-#include <python_occ.hpp>
-
-
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
-#define OCC_HAVE_DUMP_JSON
-#endif
-
-
-
-
+using namespace netgen;
 
 DLL_HEADER void ExportNgOCCBasic(py::module &m) 
 {
@@ -87,6 +49,16 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
     .def("__sub__", [](gp_Pnt p1, gp_Pnt p2) { return gp_Vec(p2, p1); }) 
     .def("__add__", [](gp_Pnt p, gp_Vec v) { return p.Translated(v); }) // gp_Pnt(p.X()+v.X(), p.Y()+v.Y(), p.Z()+v.Z()); })
     .def("__sub__", [](gp_Pnt p, gp_Vec v) { return p.Translated(-v); }) // gp_Pnt(p.X()-v.X(), p.Y()-v.Y(), p.Z()-v.Z()); })
+    .def("__getitem__", [](const gp_Pnt& p, int index)
+    {
+      if(index == 0)
+        return p.X();
+      if(index == 1)
+        return p.Y();
+      if(index == 2)
+        return p.Z();
+      throw std::out_of_range("Point index must be in range [0,3)!");
+    })
     ;
   
   py::class_<gp_Vec>(m, "gp_Vec", "3d OCC vector")
@@ -297,6 +269,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
   py::class_<gp_Trsf>(m, "gp_Trsf")
     .def(py::init<>())    
     .def("SetMirror", [] (gp_Trsf & trafo, const gp_Ax1 & ax) { trafo.SetMirror(ax); return trafo; })
+    .def("Inverted", &gp_Trsf::Inverted)
     .def_static("Translation", [] (const gp_Vec & v) { gp_Trsf trafo; trafo.SetTranslation(v); return trafo; })
     .def_static("Scale", [] (const gp_Pnt & p, double s) { gp_Trsf trafo; trafo.SetScale(p,s); return trafo; })    
     .def_static("Mirror", [] (const gp_Ax1 & ax) { gp_Trsf trafo; trafo.SetMirror(ax); return trafo; })
@@ -308,7 +281,9 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
                 { gp_Trsf trafo; trafo.SetTransformation(from, to); return trafo; })
     .def(py::self * py::self)
     .def("__call__", [] (gp_Trsf & trafo, const TopoDS_Shape & shape) {
-        return BRepBuilderAPI_Transform(shape, trafo).Shape();
+        BRepBuilderAPI_Transform builder(shape, trafo, true);
+        PropagateProperties(builder, shape, occ2ng(trafo));
+        return builder.Shape();
       })
     .def("__str__", [](gp_Trsf & trafo)
     {
