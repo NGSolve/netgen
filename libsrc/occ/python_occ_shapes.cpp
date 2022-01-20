@@ -719,11 +719,11 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            return shape;
          }, py::arg("name"), "sets 'name' property to all solids of shape")
     
-    .def_property("name", [](const TopoDS_Shape & self) {
+    .def_property("name", [](const TopoDS_Shape & self) -> optional<string> {
         if (auto name = OCCGeometry::global_shape_properties[self.TShape()].name)
           return *name;
         else
-          return string();
+          return nullopt;
       }, [](const TopoDS_Shape & self, optional<string> name) {
         OCCGeometry::global_shape_properties[self.TShape()].name = name;            
       }, "'name' of shape")
