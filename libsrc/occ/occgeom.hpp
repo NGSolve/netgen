@@ -115,10 +115,11 @@ namespace netgen
     // int resthcloseedgeenable = true;
 
     /// Minimum edge length to be used for dividing edges to mesh points
-    double resthminedgelen = 0.001;
+    // double resthminedgelen = 0.001;
+    double resthminedgelen = 1e-4;
 
     /// Enable / Disable use of the minimum edge length (by default use 1e-4)
-    int resthminedgelenenable = true;
+    int resthminedgelenenable = false;
 
     /*!
       Dump all the OpenCascade specific meshing parameters 

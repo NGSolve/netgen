@@ -27,7 +27,7 @@ namespace netgen
 #define TCL_ERROR 1
 
 #define DIVIDEEDGESECTIONS 10000   // better solution to come soon
-#define IGNORECURVELENGTH 1e-4
+#define IGNORECURVELENGTH 0
 #define VSMALL 1e-10
 
 
