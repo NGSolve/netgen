@@ -20,7 +20,7 @@ else(WIN32)
   include_directories(BEFORE "${TCL_INCLUDE_PATH}") 
   include_directories(BEFORE "${TK_INCLUDE_PATH}") 
 
-  add_library(togl togl.c toglProcAddr.c toglStubInit.c)
+  add_library(togl OBJECT togl.c toglProcAddr.c toglStubInit.c)
   target_link_libraries(togl ${TCL_STUB_LIBRARY} ${TK_STUB_LIBRARY})
 endif(WIN32)
 
