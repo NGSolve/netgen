@@ -265,7 +265,7 @@ set_vars( NETGEN_CMAKE_ARGS
 get_cmake_property(CACHE_VARS CACHE_VARIABLES)
 foreach(CACHE_VAR ${CACHE_VARS})
   get_property(CACHE_VAR_HELPSTRING CACHE ${CACHE_VAR} PROPERTY HELPSTRING)
-  if(CACHE_VAR_HELPSTRING STREQUAL "No help, variable specified on the command line.")
+  if(CACHE_VAR_HELPSTRING STREQUAL "No help, variable specified on the command line." AND NOT CACHE_VAR STREQUAL "CMAKE_OSX_ARCHITECTURES")
     get_property(CACHE_VAR_TYPE CACHE ${CACHE_VAR} PROPERTY TYPE)
     string(REPLACE ";" "|" varvalue "${${CACHE_VAR}}" )
     set(NETGEN_CMAKE_ARGS ${NETGEN_CMAKE_ARGS};-D${CACHE_VAR}:${CACHE_VAR_TYPE}=${varvalue} CACHE INTERNAL "")
