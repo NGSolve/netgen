@@ -587,7 +587,7 @@ if(UNIX)
     endif(temp)
 endif(UNIX)
 
-if(APPLE)
+if(APPLE AND NOT SKBUILD)
     # create some auxiliary files
     set(mac_startup ${CMAKE_CURRENT_BINARY_DIR}/startup.sh)
     file(WRITE ${mac_startup} "\
@@ -632,7 +632,7 @@ open -a /Applications/Utilities/Terminal.app $Netgen_MACOS/startup.sh || open -a
     install(FILES ${mac_plist} DESTINATION ${NG_INSTALL_DIR_BIN}/../)
     install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/netgen.icns DESTINATION ${NG_INSTALL_DIR_RES}/../ RENAME Netgen.icns)
 
-endif(APPLE)
+endif(APPLE AND NOT SKBUILD)
 
 if(NOT APPLE)
   include(CPack) 
