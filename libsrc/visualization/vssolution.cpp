@@ -4878,7 +4878,7 @@ namespace netgen
 
     marker = p;
 
-    if(selelement==0)
+    if(selelement<=0)
         return;
 
     double lami[3] = {0.0, 0.0, 0.0};
