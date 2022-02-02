@@ -635,6 +635,8 @@ namespace netgen
     for (int i = 0; i < user_vis.Size(); i++)
       user_vis[i] -> Draw();
 
+    DrawMarker();
+
     glPopMatrix();
     
     glDisable(GL_CLIP_PLANE0);
@@ -4757,6 +4759,7 @@ namespace netgen
   {
     auto mesh = GetMesh();
     auto dim = mesh->GetDimension();
+    marker = nullopt;
 
     auto formatComplex = [](double real, double imag)
     {
@@ -4832,6 +4835,7 @@ namespace netgen
             if(auto el3d = mesh->GetElementOfPoint( p_clipping_plane, lami ))
               {
                 cout << endl << "Selected point " << p_clipping_plane << " on clipping plane" << endl;
+                marker = p_clipping_plane;
 
                 bool have_scal_func = scalfunction!=-1 && soldata[scalfunction]->draw_volume;
                 bool have_vec_func = vecfunction!=-1 && soldata[vecfunction]->draw_volume;
@@ -4871,6 +4875,8 @@ namespace netgen
     bool found_point = vsmesh.Unproject(px, py, p);
     if(!found_point)
         return;
+
+    marker = p;
 
     if(selelement==0)
         return;
