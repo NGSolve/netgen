@@ -71,6 +71,7 @@ namespace netgen
   int VisualScene :: seledge;
 
   int VisualScene :: selecttimestamp;
+  optional<Point<3>> VisualScene :: marker = nullopt;
 
   int VisualScene :: viewport[4];
 
@@ -705,6 +706,27 @@ namespace netgen
     glMatrixMode (GL_MODELVIEW); 
     glPopMatrix();
     glEnable (GL_DEPTH_TEST);
+  }
+
+
+  void VisualScene :: DrawMarker()
+  {
+    static constexpr GLubyte cross[] = { 0xc6, 0xee, 0x7c, 0x38, 0x7c, 0xee, 0xc6 };
+
+    if(!marker)
+        return;
+
+    glColor3d (0, 0, 1);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    glDisable (GL_COLOR_MATERIAL);
+    glDisable (GL_LIGHTING);
+    glDisable (GL_CLIP_PLANE0);
+
+    auto & p = *marker;
+    glRasterPos3d (p[0], p[1], p[2]);
+    glBitmap (7, 7, 3, 3, 0, 0, &cross[0]);
   }
 
 

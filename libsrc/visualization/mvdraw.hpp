@@ -32,6 +32,7 @@ namespace netgen
     static int DLL_HEADER seledge;
 
     static int selecttimestamp;
+    static optional<Point<3>> marker;
 
   public:
     static int viewport[4];
@@ -70,6 +71,7 @@ namespace netgen
     DLL_HEADER void CreateTexture (int ncols, int linear, double alpha, int typ);
     DLL_HEADER void DrawColorBar (double minval, double maxval, int logscale = 0, bool linear = 1);
     DLL_HEADER void DrawCoordinateCross ();
+    DLL_HEADER void DrawMarker();
     DLL_HEADER void DrawNetgenLogo ();
     DLL_HEADER void SetOpenGlColor(double val, double valmin, double valmax, int logscale = 0);
 	

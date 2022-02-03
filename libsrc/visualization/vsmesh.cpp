@@ -256,36 +256,7 @@ namespace netgen
 	glCallList (edgelist);
       }
 
-    if (selpoint > 0 && selpoint <= mesh->GetNP())
-      {
-	/*
-	  glPointSize (3.0);
-	  glColor3d (0, 0, 1);
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, matcolblue);
-	  glBegin (GL_POINTS);
-
-	  const Point3d p = mesh->Point(selpoint);
-	  glVertex3f (p.X(), p.Y(), p.Z());
-	  glEnd();
-	*/
-
-	glColor3d (0, 0, 1);
-
-	static GLubyte cross[] =
-	  {
-            0xc6, 0xee, 0x7c, 0x38, 0x7c, 0xee, 0xc6
-	  };
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-	glDisable (GL_COLOR_MATERIAL);
-	glDisable (GL_LIGHTING);
-	glDisable (GL_CLIP_PLANE0);
-
-	const Point3d p = mesh->Point(selpoint);
-	glRasterPos3d (p.X(), p.Y(), p.Z());
-	glBitmap (7, 7, 3, 3, 0, 0, &cross[0]);
-      }
-
+    DrawMarker();
 
     glDisable(GL_CLIP_PLANE0);
 
@@ -3133,6 +3104,7 @@ namespace netgen
 
     BuildFilledList (true);
 
+    marker = nullopt;
     MouseDblClickSelect(px,py,clipplane,backcolor,transformationmat,center,rad,
 			filledlist,selelement,selface,seledge,selpoint,selpoint2,locpi);
 
@@ -3168,6 +3140,7 @@ namespace netgen
                  &result[0], &result[1], &result[2]);
 
     p = Point<3>{result[0], result[1], result[2]};
+    marker = p;
     return true;
   }
 
