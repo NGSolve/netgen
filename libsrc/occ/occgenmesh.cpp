@@ -650,6 +650,7 @@ namespace netgen
             BoxTree<3> searchtree(bb.PMin(), bb.PMax());
             
             int nlines = 0;
+            Array<int> edgenumber;
             for (int i = 1; i <= nedges && !multithread.terminate; i++)
               {
                 TopoDS_Edge edge = TopoDS::Edge (geom.emap(i));
@@ -684,6 +685,7 @@ namespace netgen
 
                         searchtree.Insert (box.PMin(), box.PMax(), nlines+1);
                         nlines++;
+                        edgenumber.Append(i);
 
                         s_start = s;
                         d0 = d1;
@@ -692,6 +694,22 @@ namespace netgen
               }
 
             NgArray<int> linenums;
+            auto is_identified_edge = [&](int e0, int e1) {
+                const auto& edge0 = geom.GetEdge(e0-1);
+                const auto& edge1 = geom.GetEdge(e1-1);
+
+                if(edge0.primary == edge1.primary)
+                    return true;
+
+                Array<const GeometryVertex *> v0 = { &edge0.GetStartVertex(), &edge0.GetEndVertex() };
+                Array<const GeometryVertex *> v1 = { &edge1.GetStartVertex(), &edge1.GetEndVertex() };
+                for(auto i : Range(2))
+                    for(auto j : Range(2))
+                        if(v0[i]->primary == v1[j]->primary)
+                            return true;
+
+                return false;
+            };
 
             for (int i = 0; i < nlines; i++)
               {
@@ -713,6 +731,7 @@ namespace netgen
                   {
                     int num = linenums[j]-1;
                     if (i == num) continue;
+                    if( is_identified_edge(edgenumber[i], edgenumber[num]) ) continue;
                     if ((line.p0-lines[num].p0).Length2() < 1e-15) continue;
                     if ((line.p0-lines[num].p1).Length2() < 1e-15) continue;
                     if ((line.p1-lines[num].p0).Length2() < 1e-15) continue;
