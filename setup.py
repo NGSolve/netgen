@@ -99,7 +99,7 @@ setup(
     author='The Netgen team',
     license="LGPL2.1",
     packages=['netgen'],
-    package_dir={'netgen': 'python'},
+    #package_dir={'netgen': 'python'},
     tests_require=['pytest'],
     include_package_data=True,
     cmake_process_manifest_hook=install_filter,
