@@ -51,23 +51,27 @@ if 'NETGEN_CCACHE' in os.environ:
 
 if 'darwin' in sys.platform:
     cmake_args += [
-        f'-DNG_INSTALL_DIR_LIB={py_install_dir}/netgen',
-        f'-DNG_INSTALL_DIR_PYTHON={py_install_dir}',
+        f'-DNG_INSTALL_DIR_LIB=netgen',
+        f'-DNG_INSTALL_DIR_PYTHON=.',
         f'-DNG_INSTALL_DIR_CMAKE=lib/cmake',
         f'-DNG_INSTALL_DIR_BIN=bin',
     ]
+    packages = ['netgen']
 elif 'win' in sys.platform:
     cmake_args += [
         '-A Win64',
-        f'-DNG_INSTALL_DIR_BIN={py_install_dir}/netgen',
+        f'-DNG_INSTALL_DIR_BIN=netgen',
+        f'-DNG_INSTALL_DIR_PYTHON=.',
         f'-DNG_INSTALL_DIR_LIB=Library/lib',
     ]
+    packages = ['netgen']
 elif 'linux' in sys.platform:
     name_dir = name.replace('-','_')
     cmake_args += [
         f'-DNG_INSTALL_DIR_LIB={py_install_dir}/{name_dir}.libs',
         f'-DNG_INSTALL_DIR_BIN=bin',
     ]
+    packages = []
 
 cmake_args += [
         '-DUSE_SUPERBUILD:BOOL=ON',
@@ -92,7 +96,7 @@ setup(
     description="Netgen",
     author='The Netgen team',
     license="LGPL2.1",
-    #packages=['netgen'],
+    packages=packages,
     #package_dir={'netgen': 'python'},
     tests_require=['pytest'],
     #include_package_data=True,
