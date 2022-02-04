@@ -117,8 +117,14 @@ namespace ngcore
   {
     // return SIMD<double,2> (a[0]+a[1], b[0]+b[1]);
     return vpaddq_f64(a.Data(), b.Data());
-    
   }
+
+  NETGEN_INLINE SIMD<double,4> HSum(SIMD<double,2> a, SIMD<double,2> b, SIMD<double,2> c, SIMD<double,2> d)
+  {
+    return SIMD<double,4> (HSum(a,b), HSum(c,d));
+  }
+
+  
 
   // a*b+c
   NETGEN_INLINE SIMD<double,2> FMA (SIMD<double,2> a, SIMD<double,2> b, SIMD<double,2> c)

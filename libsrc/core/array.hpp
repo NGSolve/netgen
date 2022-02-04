@@ -658,7 +658,13 @@ namespace ngcore
     return true;
   }
 		 
-
+  template <class T1, class T2>
+  inline bool operator!= (const FlatArray<T1> & a1,
+                          const FlatArray<T2> & a2)
+  {
+    return !(a1==a2);
+  }
+  
 
   /** 
       Dynamic array container.
