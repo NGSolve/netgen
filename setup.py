@@ -31,8 +31,6 @@ if len(version)>2:
     version = version[:2]
 version = '.dev'.join(version)
 
-version_file = os.path.join(os.path.dirname(__file__), "python", "version.py")
-
 py_install_dir = get_python_lib(1,0,'').replace('\\','/')
 
 name = "netgen-mesher"
@@ -87,10 +85,6 @@ cmake_args += [
 
 if 'PYDIR' in os.environ:
     cmake_args += [f'-DCMAKE_PREFIX_PATH={os.environ["PYDIR"]}']
-
-with open(version_file, "w") as f:
-    f.write(f'__version__ = "{version}"\n')
-    f.write(f'__package_name__ = "{name}"\n')
 
 setup(
     name=name,

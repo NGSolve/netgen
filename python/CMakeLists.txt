@@ -5,9 +5,12 @@ if(have_options)
 endif(have_options)
 
 configure_file(config_template.py ${CMAKE_CURRENT_BINARY_DIR}/config.py @ONLY)
+configure_file(version_template.py ${CMAKE_CURRENT_BINARY_DIR}/version.py @ONLY)
 
 install(FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/config.py __main__.py __init__.py
+        ${CMAKE_CURRENT_BINARY_DIR}/config.py
+        ${CMAKE_CURRENT_BINARY_DIR}/version.py
+        __main__.py __init__.py
         meshing.py csg.py geom2d.py stl.py gui.py NgOCC.py occ.py read_gmsh.py
         webgui.py
         DESTINATION ${NG_INSTALL_DIR_PYTHON}/${NG_INSTALL_SUFFIX}

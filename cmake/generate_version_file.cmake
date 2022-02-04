@@ -49,6 +49,15 @@ endif()
 
 set(NETGEN_VERSION_LONG ${NETGEN_VERSION_SHORT}-${NETGEN_VERSION_TWEAK}-${NETGEN_VERSION_HASH})
 
+if(NOT NETGEN_VERSION_GIT)
+    set(NETGEN_VERSION_GIT ${NETGEN_VERSION_LONG})
+endif()
+
+if(NOT NETGEN_VERSION_PYTHON)
+    set(NETGEN_VERSION_PYTHON ${NETGEN_VERSION_TWEAK})
+endif()
+
+
 set(version_file ${BDIR}/netgen_version.hpp)
 set(new_version_file_string "\
 #ifndef NETGEN_VERSION_HPP_INCLUDED
