@@ -87,6 +87,6 @@ if(USE_PYTHON)
   pybind11_add_module(pyngcore SHARED python_ngcore_export.cpp)
   target_link_libraries(pyngcore PUBLIC ngcore netgen_python)
   set_target_properties(pyngcore PROPERTIES INSTALL_RPATH "${NG_RPATH_TOKEN}/${NETGEN_PYTHON_RPATH}")
-  install(TARGETS pyngcore DESTINATION ${NG_INSTALL_DIR_PYTHON} COMPONENT netgen)
+  install(TARGETS pyngcore DESTINATION ${NG_INSTALL_DIR_PYTHON}/pyngcore COMPONENT netgen)
 endif(USE_PYTHON)
 

@@ -73,6 +73,8 @@ elif 'linux' in sys.platform:
     ]
     packages = []
 
+packages.append("pyngcore")
+
 cmake_args += [
         '-DUSE_SUPERBUILD:BOOL=ON',
         '-DUSE_CCACHE:BOOL=ON',

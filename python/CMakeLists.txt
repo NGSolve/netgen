@@ -18,6 +18,12 @@ install(FILES
         COMPONENT netgen
         )
 
+install(FILES
+        pyngcore/__init__.py
+        DESTINATION ${NG_INSTALL_DIR_PYTHON}/pyngcore
+        COMPONENT netgen
+        )
+
 # build stub files for pybind11 packages
 if(BUILD_STUB_FILES)
 execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import pybind11_stubgen; print(pybind11_stubgen.__file__)" OUTPUT_VARIABLE stubgen_path RESULT_VARIABLE pybind11_stubgen)
