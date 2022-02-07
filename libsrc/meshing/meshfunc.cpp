@@ -1,3 +1,5 @@
+#include <set>
+
 #include <mystdlib.h>
 #include "meshing.hpp"
 #include "debugging.hpp"
@@ -169,8 +171,8 @@ namespace netgen
   {
       static Timer timer("FillCloseSurface"); RegionTimer rtimer(timer);
 
-      auto & mesh = md.mesh;
-      auto & identifications = mesh->GetIdentifications();
+      auto & mesh = *md.mesh;
+      auto & identifications = mesh.GetIdentifications();
       auto nmax = identifications.GetMaxNr();
 
       bool have_closesurfaces = false;
@@ -188,7 +190,7 @@ namespace netgen
 
           identifications.GetMap(identnr, map);
 
-          for(auto & sel : mesh->SurfaceElements())
+          for(auto & sel : mesh.SurfaceElements())
           {
               bool is_mapped = true;
               for(auto pi : sel.PNums())
@@ -197,28 +199,45 @@ namespace netgen
 
               if(!is_mapped)
                   continue;
-              
-              // in case we have symmetric mapping (used in csg), only map in one direction
-              if(map[map[sel[0]]] == sel[0] && map[sel[0]] < sel[0])
-                  continue;
 
-              // insert prism
+              // insert prism/hex
               auto np = sel.GetNP();
               Element el(2*np);
+              std::set<int> pis;
               for(auto i : Range(np))
               {
                   el[i] = sel[i];
                   el[i+np] = map[sel[i]];
+                  pis.insert(sel[i]);
+                  pis.insert(map[sel[i]]);
               }
 
+              // degenerate element (mapped element onto itself, might happend for surface elements connecting two identified faces)
+              if(pis.size() < 2*np)
+                  continue;
+
+              bool is_domout = md.domain == mesh.GetFaceDescriptor(sel.GetIndex()).DomainOut();
+
+              // check if new element is inside current domain
+              auto p0 = mesh[sel[0]];
+              Vec<3> n = Cross(mesh[sel[1]] - p0, mesh[sel[2]] - p0 );
+              n = is_domout ? n : -n;
+
+              if(n*(mesh[el[np]]-p0) < 0.0)
+                  continue;
+
+              if(is_domout)
+                  el.Invert();
+
               el.SetIndex(md.domain);
-              mesh->AddVolumeElement(el);
+              mesh.AddVolumeElement(el);
           }
       }
   }
 
   void CloseOpenQuads( MeshingData & md)
   {
+    static Timer t("CloseOpenQuads"); RegionTimer rt(t);
     auto & mesh = *md.mesh;
     auto domain = md.domain;
     MeshingParameters & mp = md.mp;
@@ -277,10 +296,11 @@ namespace netgen
                {
                  mesh.GetIdentifications().GetPairs (nr, connectednodes);
                  for (auto pair : connectednodes)
+                 {
                    meshing.AddConnectedPair (pair);
+                   meshing.AddConnectedPair ({pair[1], pair[0]});
+                 }
                }
-           // for (auto pair : md.connected_pairs)
-           //     meshing.AddConnectedPair (pair);
            
            for (int i = 1; i <= mesh.GetNOpenElements(); i++)
              {
@@ -539,7 +559,6 @@ namespace netgen
            if (md[i].mesh->CheckOverlappingBoundary())
              throw NgException ("Stop meshing since boundary mesh is overlapping");
          
-         // TODO: FillCloseSurface is not working with CSG closesurfaces
          if(md[i].mesh->GetGeometry()->GetGeomType() == Mesh::GEOM_OCC)
            FillCloseSurface( md[i] );
          CloseOpenQuads( md[i] );

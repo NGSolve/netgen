@@ -27,7 +27,7 @@ namespace netgen
 #define TCL_ERROR 1
 
 #define DIVIDEEDGESECTIONS 10000   // better solution to come soon
-#define IGNORECURVELENGTH 1e-4
+#define IGNORECURVELENGTH 0
 #define VSMALL 1e-10
 
 
@@ -494,6 +494,24 @@ namespace netgen
                 (*testout) << "ignored" << endl;
                 continue;
               }
+
+            bool is_identified_edge = false;
+            // TODO: change to use hash value
+            const auto& gedge = geom.GetEdge(geom.edge_map.at(e.TShape()));
+            auto& v0 = gedge.GetStartVertex();
+            auto& v1 = gedge.GetEndVertex();
+            for(auto & ident : v0.identifications)
+            {
+                auto other = ident.from == &v0 ? ident.to : ident.from;
+                if(other->nr == v1.nr && ident.type == Identifications::CLOSESURFACES)
+                {
+                    is_identified_edge = true;
+                    break;
+                }
+            }
+
+            if(is_identified_edge)
+              continue;
 
             double localh = len/mparam.segmentsperedge;
             double s0, s1;
