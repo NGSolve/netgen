@@ -286,6 +286,9 @@ namespace netgen
     for (int i = 0; i < cd2names.Size(); i++)
       delete cd2names[i];
 
+    for (int i = 0; i < cd3names.Size(); i++)
+      delete cd3names[i];
+
     // #ifdef PARALLEL
     // delete paralleltop;
     // #endif
