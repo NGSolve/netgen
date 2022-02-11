@@ -604,6 +604,12 @@ namespace ngcore
     return ngcore::SIMD<double,N>([a](int i)->double { return log(a[i]); } );
   }
 
+  using std::erf;
+  template <int N>
+  NETGEN_INLINE ngcore::SIMD<double,N> erf (ngcore::SIMD<double,N> a) {
+    return ngcore::SIMD<double,N>([a](int i)->double { return erf(a[i]); } );
+  }
+
   using std::pow;
   template <int N>
   NETGEN_INLINE ngcore::SIMD<double,N> pow (ngcore::SIMD<double,N> a, double x) {
