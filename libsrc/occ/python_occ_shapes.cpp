@@ -2204,7 +2204,13 @@ tangents : Dict[int, gp_Vec]
           points.SetValue(i+1, j+1, gp_Pnt(pnts_unchecked(i, j, 0), pnts_unchecked(i, j, 1), pnts_unchecked(i, j, 2)));
 
       GeomAPI_PointsToBSplineSurface builder;
+#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
       builder.Init(points, approx_type, deg_min, deg_max, continuity, tol, periodic);
+#else
+      if(periodic)
+          throw Exception("periodic not supported");
+      builder.Init(points, approx_type, deg_min, deg_max, continuity, tol);
+#endif
       return BRepBuilderAPI_MakeFace(builder.Surface(), tol).Face();
     },
     py::arg("points"),
@@ -2268,7 +2274,13 @@ degen_tol : double
                   points.SetValue(i+1, j+1, gp_Pnt(pnts_unchecked(i, j, 0), pnts_unchecked(i, j, 1), pnts_unchecked(i, j, 2)));
 
           GeomAPI_PointsToBSplineSurface builder;
+#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
           builder.Interpolate(points, approx_type, periodic);
+#else
+          if(periodic)
+              throw Exception("periodic not supported");
+          builder.Interpolate(points, approx_type);
+#endif
           return BRepBuilderAPI_MakeFace(builder.Surface(), degen_tol).Face();
       },
       py::arg("points"),
