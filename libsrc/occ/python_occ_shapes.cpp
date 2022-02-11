@@ -2348,9 +2348,9 @@ degen_tol : double
 
   py::class_<WorkPlane, shared_ptr<WorkPlane>> (m, "WorkPlane")
     .def(py::init<gp_Ax3, gp_Ax2d>(), py::arg("axes")=gp_Ax3(), py::arg("pos")=gp_Ax2d())
-    .def_property_readonly("CurrentLocation", &WorkPlane::CurrentLocation)
-    .def_property_readonly("CurrentDirection", &WorkPlane::CurrentDirection)
-    .def_property_readonly("StartPnt", &WorkPlane::StartPnt)
+    .def_property_readonly("cur_loc", &WorkPlane::CurrentLocation)
+    .def_property_readonly("cur_dir", &WorkPlane::CurrentDirection)
+    .def_property_readonly("start_pnt", &WorkPlane::StartPnt)
     .def("MoveTo", &WorkPlane::MoveTo, py::arg("h"), py::arg("v"), "moveto (h,v), and start new wire")
     .def("Move", &WorkPlane::Move, py::arg("l"), "move 'l' from current position and direction, start new wire")
     .def("Direction", &WorkPlane::Direction, py::arg("dirh"), py::arg("dirv"), "reset direction to (dirh, dirv)")    
