@@ -147,7 +147,7 @@ namespace ngcore
     };
   };
 
-
+  
   struct TNoTracing{ static constexpr bool do_tracing=false; };
   struct TTracing{ static constexpr bool do_tracing=true; };
 
@@ -163,8 +163,8 @@ namespace ngcore
       constexpr bool is_timing_type_v = std::is_same_v<T, TNoTiming> || std::is_same_v<T, TTiming>;
   }
 
-  static TNoTracing NoTracing;
-  static TNoTiming NoTiming;
+  [[maybe_unused]] static TNoTracing NoTracing;
+  [[maybe_unused]] static TNoTiming NoTiming;
 
   template<typename TTracing=TTracing, typename TTiming=TTiming>
   class Timer
