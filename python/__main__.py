@@ -1,7 +1,7 @@
-import imp, threading
+import imp, threading, sys
 
 def handle_arguments():
-    import sys, __main__
+    import __main__
     argv = sys.argv
     if len(argv)>1 and argv[1].endswith(".py"):
       with open(argv[1]) as pyfile:
