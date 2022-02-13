@@ -914,16 +914,23 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             return self.AddFaceDescriptor (fd);
           })
 
-    .def ("AddPoints", [](Mesh & self, py::buffer b)
+    .def ("AddPoints", [](Mesh & self, py::buffer b1)
           {
             static Timer timer("Mesh::AddPoints");
+            static Timer timercast("Mesh::AddPoints - casting");            
             RegionTimer reg(timer);
+
+            timercast.Start();
+            // casting from here: https://github.com/pybind/pybind11/issues/1908
+            auto b = b1.cast<py::array_t<double_t, py::array::c_style | py::array::forcecast>>();
+            timercast.Stop();
             
             py::buffer_info info = b.request();
+            // cout << "data format = " << info.format << endl;
             if (info.ndim != 2)
               throw std::runtime_error("AddPoints needs buffer of dimension 2");
-            if (info.format != py::format_descriptor<double>::format())
-              throw std::runtime_error("AddPoints needs buffer of type double");
+            // if (info.format != py::format_descriptor<double>::format())
+            // throw std::runtime_error("AddPoints needs buffer of type double");
             if (info.strides[0] != sizeof(double)*info.shape[1])
               throw std::runtime_error("AddPoints needs packed array");              
             double * ptr = static_cast<double*> (info.ptr);
@@ -942,16 +949,21 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   ptr += 3;
                 }
           })
-    .def ("AddElements", [](Mesh & self, int dim, int index, py::buffer b, int base)
+    .def ("AddElements", [](Mesh & self, int dim, int index, py::buffer b1, int base)
           {
             static Timer timer("Mesh::AddElements");
+            static Timer timercast("Mesh::AddElements casting");
             RegionTimer reg(timer);
+
+            timercast.Start();
+            auto b = b1.cast<py::array_t<int, py::array::c_style | py::array::forcecast>>();
+            timercast.Stop();
             
             py::buffer_info info = b.request();
             if (info.ndim != 2)
               throw std::runtime_error("AddElements needs buffer of dimension 2");
-            if (info.format != py::format_descriptor<int>::format())
-              throw std::runtime_error("AddPoints needs buffer of type int");
+            // if (info.format != py::format_descriptor<int>::format())
+            // throw std::runtime_error("AddPoints needs buffer of type int");
 
             int * ptr = static_cast<int*> (info.ptr);
             if (dim == 2)
