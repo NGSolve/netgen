@@ -916,6 +916,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
     .def ("AddPoints", [](Mesh & self, py::buffer b)
           {
+            static Timer timer("Mesh::AddPoints");
+            RegionTimer reg(timer);
+            
             py::buffer_info info = b.request();
             if (info.ndim != 2)
               throw std::runtime_error("AddPoints needs buffer of dimension 2");
@@ -924,6 +927,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             if (info.strides[0] != sizeof(double)*info.shape[1])
               throw std::runtime_error("AddPoints needs packed array");              
             double * ptr = static_cast<double*> (info.ptr);
+            
+            self.Points().SetAllocSize(self.Points().Size()+info.shape[0]);
             if (info.shape[1]==2)
               for (auto i : Range(info.shape[0]))
                 {
@@ -939,6 +944,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
           })
     .def ("AddElements", [](Mesh & self, int dim, int index, py::buffer b, int base)
           {
+            static Timer timer("Mesh::AddElements");
+            RegionTimer reg(timer);
+            
             py::buffer_info info = b.request();
             if (info.ndim != 2)
               throw std::runtime_error("AddElements needs buffer of dimension 2");
@@ -959,6 +967,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   default:
                     throw Exception("unsupported 2D element with "+ToString(np)+" points");
                   }
+                self.SurfaceElements().SetAllocSize(self.SurfaceElements().Size()+info.shape[0]);                
                 for (auto i : Range(info.shape[0]))
                   {
                     Element2d el(type);
@@ -984,6 +993,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   default:
                     throw Exception("unsupported 3D element with "+ToString(np)+" points");
                   }
+                self.VolumeElements().SetAllocSize(self.VolumeElements().Size()+info.shape[0]);
                 for (auto i : Range(info.shape[0]))
                   {
                     Element el(type);
