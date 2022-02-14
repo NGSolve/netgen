@@ -20,8 +20,8 @@ namespace netgen
     double hpref = 0;  // number of hp refinement levels (will be multiplied by factor later)
     void Merge(const ShapeProperties & prop2)
     {
-      if (prop2.name) name = prop2.name;
-      if (prop2.col) col = prop2.col;
+      if (!name && prop2.name) name = prop2.name;
+      if (!col && prop2.col) col = prop2.col;
       maxh = min2(maxh, prop2.maxh);
       hpref = max2(hpref, prop2.hpref);
     }
