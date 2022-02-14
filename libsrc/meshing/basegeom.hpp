@@ -21,7 +21,7 @@ namespace netgen
     void Merge(const ShapeProperties & prop2)
     {
       if (!name && prop2.name) name = prop2.name;
-      if (prop2.col) col = prop2.col;
+      if (!col && prop2.col) col = prop2.col;
       maxh = min2(maxh, prop2.maxh);
       hpref = max2(hpref, prop2.hpref);
     }
