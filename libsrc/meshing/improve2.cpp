@@ -394,6 +394,7 @@ namespace netgen
         return 0.0;
 
     double loch = mesh.GetH (mesh[pi1]);
+    int faceindex = -1;
 
     for (SurfaceElementIndex sei2 : elementsonnode[pi1])
       {
@@ -403,13 +404,8 @@ namespace netgen
 
         if (el2[0] == pi2 || el2[1] == pi2 || el2[2] == pi2)
           {
+            faceindex = el2.GetIndex();
             hasbothpi.Append (sei2);
-            nv = Cross (Vec3d (mesh[el2[0]], mesh[el2[1]]),
-                    Vec3d (mesh[el2[0]], mesh[el2[2]]));
-          }
-        else
-          {
-            hasonepi.Append (sei2);
           }
       }
 
@@ -417,7 +413,7 @@ namespace netgen
         return 0.0;
 
 
-    nv = normals[pi1];
+    nv = normals[pi2];
 
 
     for (SurfaceElementIndex sei2 :  elementsonnode[pi2])
@@ -476,7 +472,14 @@ namespace netgen
 
         for (int l = 0; l < 3; l++)
           {
-            if ( (normals[el[l]] * nv) < 0.5)
+            auto normal = normals[el[l]];
+            if(fixed[el[l]])
+            {
+                // point possibly on edge -> multiple normal vectors (for each surface), need to calculate it to be sure
+                const int surfnr = mesh.GetFaceDescriptor (el.GetIndex()).SurfNr();
+                normal = mesh.GetGeometry()->GetNormal (surfnr, mesh[el[l]], &el.GeomInfo()[l]);
+            }
+            if ( ( normal * nv) < 0.5)
                 bad2 += 1e10;
           }
 
@@ -532,10 +535,10 @@ namespace netgen
           {
             const Element2d & el1p = mesh[sei];
             if (el1p.IsDeleted()) continue;
+            if(el1p.GetIndex() != faceindex) continue;
 
             for (int l = 0; l < el1p.GetNP(); l++)
                 if (el1p[l] == pi1)
-                    // gi = el1p.GeomInfoPi (l+1);
                     gi = el1p.GeomInfo()[l];
             break;
           }
