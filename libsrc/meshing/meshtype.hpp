@@ -1295,6 +1295,9 @@ namespace netgen
     int giveuptol2d = 200;
     /// give up quality class, 3d meshing
     int giveuptol = 10;
+    /// give up quality class for closing open quads, > 100 for
+    /// free pyramids
+    int giveuptolopenquads = 15;
     /// maximal outer steps
     int maxoutersteps = 10;
     /// class starting star-shape filling
