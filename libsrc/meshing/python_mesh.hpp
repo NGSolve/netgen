@@ -144,6 +144,8 @@ inline void CreateMPfromKwargs(MeshingParameters& mp, py::kwargs kwargs, bool th
       mp.giveuptol2d = py::cast<int>(kwargs.attr("pop")("giveuptol2d"));
     if(kwargs.contains("giveuptol"))
       mp.giveuptol = py::cast<int>(kwargs.attr("pop")("giveuptol"));
+    if(kwargs.contains("giveuptolopenquads"))
+      mp.giveuptolopenquads = py::cast<int>(kwargs.attr("pop")("giveuptolopenquads"));
     if(kwargs.contains("maxoutersteps"))
       mp.maxoutersteps = py::cast<int>(kwargs.attr("pop")("maxoutersteps"));
     if(kwargs.contains("starshapeclass"))

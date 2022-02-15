@@ -281,7 +281,7 @@ namespace netgen
            
            MeshingParameters mpquad = mp;
            
-           mpquad.giveuptol = 15;
+           mpquad.giveuptol = mp.giveuptolopenquads;
            mpquad.baseelnp = 4;
            mpquad.starshapeclass = 1000;
            mpquad.check_impossible = qstep == 1;   // for prisms only (air domain in trafo)
