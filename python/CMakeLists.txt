@@ -11,7 +11,8 @@ install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/config.py
         ${CMAKE_CURRENT_BINARY_DIR}/version.py
         __main__.py __init__.py
-        meshing.py csg.py geom2d.py stl.py gui.py NgOCC.py occ.py read_gmsh.py
+        meshing.py csg.py geom2d.py stl.py gui.py NgOCC.py occ.py
+        read_gmsh.py read_meshio.py
         webgui.py
         DESTINATION ${NG_INSTALL_DIR_PYTHON}/${NG_INSTALL_SUFFIX}
         COMPONENT netgen

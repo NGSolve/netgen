@@ -913,6 +913,111 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
           {
             return self.AddFaceDescriptor (fd);
           })
+
+    .def ("AddPoints", [](Mesh & self, py::buffer b1)
+          {
+            static Timer timer("Mesh::AddPoints");
+            static Timer timercast("Mesh::AddPoints - casting");            
+            RegionTimer reg(timer);
+
+            timercast.Start();
+            // casting from here: https://github.com/pybind/pybind11/issues/1908
+            auto b = b1.cast<py::array_t<double_t, py::array::c_style | py::array::forcecast>>();
+            timercast.Stop();
+            
+            py::buffer_info info = b.request();
+            // cout << "data format = " << info.format << endl;
+            if (info.ndim != 2)
+              throw std::runtime_error("AddPoints needs buffer of dimension 2");
+            // if (info.format != py::format_descriptor<double>::format())
+            // throw std::runtime_error("AddPoints needs buffer of type double");
+            if (info.strides[0] != sizeof(double)*info.shape[1])
+              throw std::runtime_error("AddPoints needs packed array");              
+            double * ptr = static_cast<double*> (info.ptr);
+            
+            self.Points().SetAllocSize(self.Points().Size()+info.shape[0]);
+            if (info.shape[1]==2)
+              for (auto i : Range(info.shape[0]))
+                {
+                  self.AddPoint (Point<3>(ptr[0], ptr[1], 0));
+                  ptr += 2;
+                }
+            if (info.shape[1]==3)
+              for (auto i : Range(info.shape[0]))
+                {
+                  self.AddPoint (Point<3>(ptr[0], ptr[1], ptr[2]));
+                  ptr += 3;
+                }
+          })
+    .def ("AddElements", [](Mesh & self, int dim, int index, py::buffer b1, int base)
+          {
+            static Timer timer("Mesh::AddElements");
+            static Timer timercast("Mesh::AddElements casting");
+            RegionTimer reg(timer);
+
+            timercast.Start();
+            auto b = b1.cast<py::array_t<int, py::array::c_style | py::array::forcecast>>();
+            timercast.Stop();
+            
+            py::buffer_info info = b.request();
+            if (info.ndim != 2)
+              throw std::runtime_error("AddElements needs buffer of dimension 2");
+            // if (info.format != py::format_descriptor<int>::format())
+            // throw std::runtime_error("AddPoints needs buffer of type int");
+
+            int * ptr = static_cast<int*> (info.ptr);
+            if (dim == 2)
+              {
+                ELEMENT_TYPE type;
+                int np = info.shape[1];
+                switch (np)
+                  {
+                  case 3: type = TRIG; break;
+                  case 4: type = QUAD; break;
+                  case 6: type = TRIG6; break;
+                  case 8: type = QUAD8; break;
+                  default:
+                    throw Exception("unsupported 2D element with "+ToString(np)+" points");
+                  }
+                self.SurfaceElements().SetAllocSize(self.SurfaceElements().Size()+info.shape[0]);                
+                for (auto i : Range(info.shape[0]))
+                  {
+                    Element2d el(type);
+                    for (int j = 0; j < np;j ++)
+                      el[j] = ptr[j]+PointIndex::BASE-base;
+                    el.SetIndex(index);
+                    self.AddSurfaceElement (el);
+                    ptr += info.strides[0]/sizeof(int);
+                  }
+              }
+            if (dim == 3)
+              {
+                ELEMENT_TYPE type;
+                int np = info.shape[1];
+                switch (np)
+                  {
+                  case 4: type = TET; break;
+                    /* // have to check ordering of points
+                       case 10: type = TET10; break;
+                       case 8: type = HEX; break;
+                       case 6: type = PRISM; break;
+                    */
+                  default:
+                    throw Exception("unsupported 3D element with "+ToString(np)+" points");
+                  }
+                self.VolumeElements().SetAllocSize(self.VolumeElements().Size()+info.shape[0]);
+                for (auto i : Range(info.shape[0]))
+                  {
+                    Element el(type);
+                    for (int j = 0; j < np;j ++)
+                      el[j] = ptr[j]+PointIndex::BASE-base;
+                    el.SetIndex(index);
+                    self.AddVolumeElement (el);
+                    ptr += info.strides[0]/sizeof(int);
+                  }
+              }
+            
+          }, py::arg("dim"), py::arg("index"), py::arg("data"), py::arg("base")=0)
     
     .def ("DeleteSurfaceElement",
           [](Mesh & self, SurfaceElementIndex i)
