@@ -49,6 +49,8 @@ if 'NETGEN_ARCH' in os.environ:
 if 'NETGEN_CCACHE' in os.environ:
   cmake_args += [f'-DUSE_CCACHE=ON']
 
+packages = ['netgen', 'pyngcore']
+
 if 'darwin' in sys.platform:
     cmake_args += [
         f'-DNG_INSTALL_DIR_LIB=netgen',
@@ -56,7 +58,6 @@ if 'darwin' in sys.platform:
         f'-DNG_INSTALL_DIR_CMAKE=lib/cmake',
         f'-DNG_INSTALL_DIR_BIN=bin',
     ]
-    packages = ['netgen']
 elif 'win' in sys.platform:
     cmake_args += [
         '-A Win64',
@@ -64,7 +65,6 @@ elif 'win' in sys.platform:
         f'-DNG_INSTALL_DIR_PYTHON=.',
         f'-DNG_INSTALL_DIR_LIB=Library/lib',
     ]
-    packages = ['netgen']
 elif 'linux' in sys.platform:
     name_dir = name.replace('-','_')
     cmake_args += [
@@ -72,8 +72,6 @@ elif 'linux' in sys.platform:
         f'-DNG_INSTALL_DIR_BIN=bin',
     ]
     packages = []
-
-packages.append("pyngcore")
 
 cmake_args += [
         '-DUSE_SUPERBUILD:BOOL=ON',
