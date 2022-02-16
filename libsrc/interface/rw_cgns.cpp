@@ -245,8 +245,8 @@ namespace netgen::cg
       return 0;
 
     int section;
-    int start = 1;
-    int end = ne;
+    // int start = 1;
+    // int end = ne;
 #if CGNS_VERSION < 3400
     cg_section_write(fn,base,zone, name.c_str(), MIXED, ne_before+1, ne_before+ne, 0, &data[0], &section);
 #else
@@ -762,7 +762,7 @@ namespace netgen
         imax1 = max(imax1, el.si);
 
       int ne_written = 0;
-      int meshdim = mesh.GetDimension();
+      // int meshdim = mesh.GetDimension();
 
       for(const auto i : IntRange(imax3))
         ne_written += cg::WriteCGNSRegion(mesh, 3, i+1, fn, base, zone, ne_written);
