@@ -91,6 +91,94 @@ namespace netgen
       cout << "Quads: " << nq << endl;
    }
 
+  // depending on the geometry type, the mesh contains segments multiple times (once for each face)
+  bool HaveSingleSegments( const Mesh & mesh )
+  {
+      auto& topo = mesh.GetTopology();
+      NgArray<SurfaceElementIndex> surf_els;
+
+      for(auto segi : Range(mesh.LineSegments()))
+      {
+          mesh.GetTopology().GetSegmentSurfaceElements(segi+1, surf_els);
+          if(surf_els.Size()<2)
+              continue;
+
+          auto seg = mesh[segi];
+          auto pi0 = min(seg[0], seg[1]);
+          auto pi1 = max(seg[0], seg[1]);
+          auto p0_segs = topo.GetVertexSegments(seg[0]);
+
+          for(auto segi_other : p0_segs)
+          {
+              if(segi_other == segi)
+                  continue;
+
+              auto seg_other = mesh[segi_other];
+              auto pi0_other = min(seg_other[0], seg_other[1]);
+              auto pi1_other = max(seg_other[0], seg_other[1]);
+              if( pi0_other == pi0 && pi1_other == pi1 )
+                  return false;
+          }
+
+          // found segment with multiple adjacent surface elements but no other segments with same points -> have single segments
+          return true;
+      }
+
+      return true;
+  }
+
+  // duplicates segments (and sets seg.si accordingly) to have a unified data structure for all geometry types
+  Array<Segment> BuildSegments( Mesh & mesh )
+  {
+      Array<Segment> segments;
+      auto& topo = mesh.GetTopology();
+
+      NgArray<SurfaceElementIndex> surf_els;
+
+      for(auto segi : Range(mesh.LineSegments()))
+      {
+          auto seg = mesh[segi];
+          mesh.GetTopology().GetSegmentSurfaceElements(segi+1, surf_els);
+          for(auto seli : surf_els)
+          {
+              const auto & sel = mesh[seli];
+              seg.si = sel.GetIndex();
+
+              auto np = sel.GetNP();
+              for(auto i : Range(np))
+              {
+                  if(sel[i] == seg[0])
+                  {
+                      if(sel[(i+1)%np] != seg[1])
+                          swap(seg[0], seg[1]);
+                      break;
+                  }
+              }
+
+              seg.edgenr = topo.GetEdge(segi)+1;
+              segments.Append(seg);
+          }
+      }
+      return segments;
+  }
+
+  void MergeAndAddSegments( Mesh & mesh, FlatArray<Segment> new_segments)
+  {
+      INDEX_2_HASHTABLE<bool> already_added( 2*new_segments.Size() );
+
+      for(auto & seg : new_segments)
+      {
+          INDEX_2 i2 (seg[0], seg[1]);
+          i2.Sort();
+
+          if(!already_added.Used(i2))
+          {
+              mesh.AddSegment(seg);
+              already_added.Set(i2, true);
+          }
+      }
+  }
+
   void GenerateBoundaryLayer(Mesh& mesh, const BoundaryLayerParameters& blp)
   {
     static Timer timer("Create Boundarylayers");
@@ -109,12 +197,20 @@ namespace netgen
       domains.Invert();
 
     mesh.UpdateTopology();
+
+    bool have_single_segments = HaveSingleSegments(mesh);
+    Array<Segment> segments;
+    if(have_single_segments)
+        segments = BuildSegments(mesh);
+    else
+        segments = mesh.LineSegments();
+
     auto& meshtopo = mesh.GetTopology();
 
     int np = mesh.GetNP();
     int ne = mesh.GetNE();
     int nse = mesh.GetNSE();
-    int nseg = mesh.GetNSeg();
+    int nseg = segments.Size();
 
     Array<Array<PointIndex>, PointIndex> mapto(np);
 
@@ -178,7 +274,7 @@ namespace netgen
       }
 
     // Bit array to keep track of segments already processed
-    BitArray segs_done(nseg);
+    BitArray segs_done(nseg+1);
     segs_done.Clear();
 
     // map for all segments with same points
@@ -188,10 +284,11 @@ namespace netgen
     // 1 == adjacent surface doesn't grow layer, but layer ends on it
     // 2 == adjacent surface is interior surface that ends on layer
     // 3 == adjacent surface is exterior surface that ends on layer (not allowed yet)
-    Array<Array<pair<SegmentIndex, int>>, SegmentIndex> segmap(mesh.GetNSeg());
+    Array<Array<pair<SegmentIndex, int>>, SegmentIndex> segmap(segments.Size());
 
     // moved segments
     Array<SegmentIndex> moved_segs;
+    Array<Segment> new_segments;
 
     // boundaries to project endings to
     BitArray project_boundaries(fd_old+1);
@@ -199,30 +296,18 @@ namespace netgen
     project_boundaries.Clear();
     move_boundaries.Clear();
 
-    Array<SurfaceElementIndex, SegmentIndex> seg2surfel(mesh.GetNSeg());
-    for(auto si : Range(mesh.SurfaceElements()))
-      {
-        NgArray<int> surfeledges;
-        meshtopo.GetSurfaceElementEdges(si+1, surfeledges);
-        for(auto edgenr : surfeledges)
-          for(auto sei : Range(mesh.LineSegments()))
-            if(meshtopo.GetEdge(sei)+1 == edgenr &&
-               mesh[sei].si == mesh[si].GetIndex())
-              seg2surfel[sei] = si;
-      }
-
-    for(auto si : Range(mesh.LineSegments()))
+    for(auto si : Range(segments))
       {
         if(segs_done[si]) continue;
-        const auto& segi = mesh[si];
+        const auto& segi = segments[si];
         if(si_map[segi.si] == -1) continue;
         segs_done.SetBit(si);
         segmap[si].Append(make_pair(si, 0));
         moved_segs.Append(si);
-        for(auto sj : Range(mesh.LineSegments()))
+        for(auto sj : Range(segments))
           {
             if(segs_done.Test(sj)) continue;
-            const auto& segj = mesh[sj];
+            const auto& segj = segments[sj];
             if((segi[0] == segj[0] && segi[1] == segj[1]) ||
                (segi[0] == segj[1] && segi[1] == segj[0]))
               {
@@ -291,10 +376,10 @@ namespace netgen
       }
     else
       {
-        for(const auto& seg : mesh.LineSegments())
+        for(const auto& seg : segments)
           {
             int count = 0;
-            for(const auto& seg2 : mesh.LineSegments())
+            for(const auto& seg2 : segments)
               if(((seg[0] == seg2[0] && seg[1] == seg2[1]) || (seg[0] == seg2[1] && seg[1] == seg2[0])) && blp.surfid.Contains(seg2.si))
                 count++;
             if(count == 1)
@@ -325,10 +410,10 @@ namespace netgen
           {
             // copy here since we will add segments and this would
             // invalidate a reference!
-            auto segi = mesh[sei];
+            auto segi = segments[sei];
             for(auto [sej, type] : segmap[sei])
               {
-                auto segj = mesh[sej];
+                auto segj = segments[sej];
                 if(type == 0)
                   {
                     Segment s;
@@ -340,7 +425,7 @@ namespace netgen
                       seg2edge[pair] = ++max_edge_nr;
                     s.edgenr = seg2edge[pair];
                     s.si = si_map[segj.si];
-                    mesh.AddSegment(s);
+                    new_segments.Append(s);
                   }
                 // here we need to grow the quad elements
                 else if(type == 1)
@@ -361,7 +446,7 @@ namespace netgen
                     s0[2] = PointIndex::INVALID;
                     s0.edgenr = segj.edgenr;
                     s0.si = segj.si;
-                    mesh.AddSegment(s0);
+                    new_segments.Append(s0);
 
                     for(auto i : Range(blp.heights))
                       {
@@ -372,6 +457,11 @@ namespace netgen
                         sel[1] = p2;
                         sel[2] = p3;
                         sel[3] = p4;
+                        for(auto i : Range(4))
+                        {
+                            sel.GeomInfo()[i].u = 0.0;
+                            sel.GeomInfo()[i].v = 0.0;
+                        }
                         sel.SetIndex(segj.si);
                         mesh.AddSurfaceElement(sel);
 
@@ -385,7 +475,7 @@ namespace netgen
                           seg2edge[pair] = ++max_edge_nr;
                         s1.edgenr = seg2edge[pair];
                         s1.si = segj.si;
-                        mesh.AddSegment(s1);
+                        new_segments.Append(s1);
                         Segment s2;
                         s2[0] = p4;
                         s2[1] = p1;
@@ -395,7 +485,7 @@ namespace netgen
                           seg2edge[pair] = ++max_edge_nr;
                         s2.edgenr = seg2edge[pair];
                         s2.si = segj.si;
-                        mesh.AddSegment(s2);
+                        new_segments.Append(s2);
                         p1 = p4;
                         p2 = p3;
                       }
@@ -408,7 +498,7 @@ namespace netgen
                       seg2edge[pair] = ++max_edge_nr;
                     s3.edgenr = seg2edge[pair];
                     s3.si = segj.si;
-                    mesh.AddSegment(s3);
+                    new_segments.Append(s3);
                   }
               }
           }
@@ -473,7 +563,7 @@ namespace netgen
 
     for(SegmentIndex sei = 0; sei < nseg; sei++)
       {
-        auto& seg = mesh[sei];
+        auto& seg = segments[sei];
         if(move_boundaries.Test(seg.si))
           for(auto& p : seg.PNums())
             if(mapto[p].Size())
@@ -627,6 +717,13 @@ namespace netgen
           else
             mesh.GetFaceDescriptor(i).SetDomainIn(new_mat_nr);
         }
+    if(have_single_segments)
+        MergeAndAddSegments(mesh, new_segments);
+    else
+    {
+      for(auto & seg : new_segments)
+        mesh.AddSegment(seg);
+    }
     mesh.GetTopology().ClearEdges();
     mesh.UpdateTopology();
   }
@@ -1279,6 +1376,11 @@ namespace netgen
 //               Swap(newel[2], newel[3]);
 //            }
 
+           for(auto i : Range(4))
+           {
+               newel.GeomInfo()[i].u = 0.0;
+               newel.GeomInfo()[i].v = 0.0;
+           }
            mesh.AddSurfaceElement(newel);
 
         }
