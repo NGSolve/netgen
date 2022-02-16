@@ -12,10 +12,6 @@ def main():
     # Use Redraw without event handling
     netgen.Redraw = netgen._Redraw
 
-    try:
-        import ngsolve
-    except:
-        pass
     from .gui import win
     th = threading.Thread(target=handle_arguments)
     th.start()

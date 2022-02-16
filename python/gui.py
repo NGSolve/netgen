@@ -2,6 +2,13 @@ import netgen
 
 def StartGUI():
     from tkinter import Tk
+    try:
+        # the GUI tries to load ngsolve.tcl (which loads ngsolve shared libraries)
+        # BUT might fail to load dependencies (like mkl), these are handled by the
+        # ngsolve __init__.py script, so import ngsolve from python already here
+        import ngsolve
+    except:
+        pass
 
     global win
     win = Tk()
