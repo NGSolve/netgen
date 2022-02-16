@@ -1495,8 +1495,7 @@ namespace netgen
 	      {
 		string nextcd3name;
                 ReadNumberAndName( infile, cd3nrs[i], nextcd3name );
-		infile >> cd3nrs[i-1] >> nextcd3name;
-		cd3names[cd3nrs[i-1]-1] = new string(nextcd3name);
+                cd3names[cd3nrs[i]-1] = new string(nextcd3name);
 	      }
 	    if (GetDimension() < 3)
 	      {
