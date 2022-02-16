@@ -55,8 +55,8 @@ if 'darwin' in sys.platform:
     cmake_args += [
         f'-DNG_INSTALL_DIR_LIB=netgen',
         f'-DNG_INSTALL_DIR_PYTHON=.',
-        f'-DNG_INSTALL_DIR_CMAKE=lib/cmake',
         f'-DNG_INSTALL_DIR_BIN=bin',
+        f'-DNG_INSTALL_DIR_CMAKE=netgen/cmake',
     ]
 elif 'win' in sys.platform:
     cmake_args += [
@@ -64,6 +64,7 @@ elif 'win' in sys.platform:
         f'-DNG_INSTALL_DIR_BIN=netgen',
         f'-DNG_INSTALL_DIR_PYTHON=.',
         f'-DNG_INSTALL_DIR_LIB=Library/lib',
+        f'-DNG_INSTALL_DIR_CMAKE=netgen/cmake',
     ]
 elif 'linux' in sys.platform:
     name_dir = name.replace('-','_')
