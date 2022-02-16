@@ -2,8 +2,9 @@ cd
 mkdir -p build/netgen
 cd build/netgen
 cmake \
+    -DCMAKE_CXX_FLAGS="-Og -Wall -Wno-sign-compare -DDebug" \
     -DUSE_CCACHE=ON \
-    -DBUILD_TYPE=DEBUG \
+    -DCMAKE_BUILD_TYPE=DEBUG \
     -DENABLE_UNIT_TESTS=ON \
     -DUSE_OCC=ON \
     -DCHECK_RANGE=ON \
