@@ -182,7 +182,7 @@ namespace netgen
 
     void Clean ();
 
-    virtual void Save (string filename) const override;
+    virtual void Save (const filesystem::path & filename) const override;
     void Save (ostream & ost) const;
     void Load (istream & ist);
 

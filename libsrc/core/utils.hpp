@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <filesystem>
 #include <map>
 #include <ostream>
 #include <sstream>
@@ -79,6 +80,22 @@ namespace ngcore
       std::stringstream ss;
       ss << t;
       return ss.str();
+  }
+
+  inline std::string ToLower( const std::string & s )
+  {
+    std::string res;
+    res.reserve(s.size());
+
+    for(auto & c : res)
+        res.push_back(tolower(c));
+
+    return res;
+  }
+
+  inline std::string ToLower( const std::filesystem::path & p )
+  {
+    return ToLower(p.string());
   }
 
   template<typename T1, typename T2>
@@ -201,7 +218,7 @@ namespace ngcore
   NGCORE_API int GetCompiledSIMDSize();
   NGCORE_API bool IsRangeCheckEnabled();
 
-  NGCORE_API std::string GetTempFilename();
+  NGCORE_API std::filesystem::path GetTempFilename();
 
 } // namespace ngcore
 

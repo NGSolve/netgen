@@ -196,7 +196,7 @@ namespace netgen
                      int nr, FlatArray<int, PointIndex> glob2loc) const override;
     // void OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam) const override {}
  
-    void Save (string filename) const override;
+    void Save (const filesystem::path & filename) const override;
     void SaveToMeshFile (ostream & /* ost */) const override;
      
     void DoArchive(Archive& ar) override;
@@ -356,9 +356,9 @@ namespace netgen
 
   void PrintContents (OCCGeometry * geom);
 
-  DLL_HEADER OCCGeometry * LoadOCC_IGES (const char * filename);
-  DLL_HEADER OCCGeometry * LoadOCC_STEP (const char * filename);
-  DLL_HEADER OCCGeometry * LoadOCC_BREP (const char * filename);
+  DLL_HEADER OCCGeometry * LoadOCC_IGES (const filesystem::path & filename);
+  DLL_HEADER OCCGeometry * LoadOCC_STEP (const filesystem::path & filename);
+  DLL_HEADER OCCGeometry * LoadOCC_BREP (const filesystem::path & filename);
 
   // Philippose - 31.09.2009
   // External access to the mesh generation functions within the OCC
@@ -535,9 +535,9 @@ namespace netgen
                           const Handle(TDocStd_Document) step_doc);
       void WriteProperties(const Handle(Interface_InterfaceModel) model, const Handle(Transfer_FinderProcess) finder, const TopoDS_Shape & shape);
 
-      void WriteSTEP(const TopoDS_Shape & shape, string filename);
+      void WriteSTEP(const TopoDS_Shape & shape, const filesystem::path & filename);
 
-      inline void WriteSTEP(const OCCGeometry & geo, string filename)
+      inline void WriteSTEP(const OCCGeometry & geo, const filesystem::path & filename)
       {
           WriteSTEP(geo.GetShape(), filename);
       }

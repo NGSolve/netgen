@@ -22,18 +22,18 @@ namespace netgen
 
 
     // This should be the new function to export a PERMAS file
-    void WritePermasFormat (const Mesh &mesh, const string &filename, 
+    void WritePermasFormat (const Mesh &mesh, const filesystem::path &filename, 
                             string &strComp, string &strSitu) 
     {
-        ofstream outfile (filename.c_str());
+        ofstream outfile (filename);
         addComponent(strComp, strSitu, outfile);
         WritePermasFormat ( mesh, filename);
     }
 
-    void WritePermasFormat (const Mesh &mesh, const string &filename)
+    void WritePermasFormat (const Mesh &mesh, const filesystem::path &filename)
     {
         string strComp, strSitu;
-        ofstream outfile (filename.c_str());
+        ofstream outfile (filename);
         
         outfile.precision(8);
 

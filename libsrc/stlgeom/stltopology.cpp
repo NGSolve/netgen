@@ -90,7 +90,7 @@ STLGeometry *  STLTopology :: LoadBinary (istream & ist)
 }
 
 
-void STLTopology :: SaveBinary (const char* filename, const char* aname) const
+void STLTopology :: SaveBinary (const filesystem::path & filename, const char* aname) const
 {
   ofstream ost(filename);
   PrintFnStart("Write STL binary file '",filename,"'");
@@ -149,7 +149,7 @@ void STLTopology :: SaveBinary (const char* filename, const char* aname) const
 }
 
 
-void STLTopology :: SaveSTLE (const char* filename) const
+void STLTopology :: SaveSTLE (const filesystem::path & filename) const
 {
   ofstream outf (filename);
   int i, j;
@@ -266,7 +266,7 @@ STLGeometry *  STLTopology :: LoadNaomi (istream & ist)
   return geom;
 }
 
-void STLTopology :: Save (const char* filename) const
+void STLTopology :: Save (const filesystem::path & filename) const
 { 
   PrintFnStart("Write stl-file '",filename, "'");
 

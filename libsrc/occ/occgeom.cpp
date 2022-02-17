@@ -68,7 +68,7 @@
 
 namespace netgen
 {
-  void LoadOCCInto(OCCGeometry* occgeo, const char* filename);
+  void LoadOCCInto(OCCGeometry* occgeo, const filesystem::path & filename);
   void PrintContents (OCCGeometry * geom);
 
   std::map<Handle(TopoDS_TShape), ShapeProperties> OCCGeometry::global_shape_properties;
@@ -140,10 +140,10 @@ namespace netgen
     if(copy)
       {
         auto filename = GetTempFilename();
-        step_utils::WriteSTEP(_shape, filename.c_str());
-        LoadOCCInto(this, filename.c_str());
+        step_utils::WriteSTEP(_shape, filename);
+        LoadOCCInto(this, filename);
         dimension = aoccdim;
-        std::remove(filename.c_str());
+        filesystem::remove(filename);
       }
     else
       {
@@ -1347,7 +1347,7 @@ namespace netgen
 //    }
 
 
-  void LoadOCCInto(OCCGeometry* occgeo, const char* filename)
+  void LoadOCCInto(OCCGeometry* occgeo, const filesystem::path & filename)
   {
       static Timer timer_all("LoadOCC"); RegionTimer rtall(timer_all);
       static Timer timer_readfile("LoadOCC-ReadFile");
@@ -1375,7 +1375,7 @@ namespace netgen
       // Enable transfer of colours
       reader.SetColorMode(Standard_True);
       reader.SetNameMode(Standard_True);
-      Standard_Integer stat = reader.ReadFile((char*)filename);
+      Standard_Integer stat = reader.ReadFile(filename.string().c_str());
       timer_readfile.Stop();
 
       timer_transfer.Start();
@@ -1411,7 +1411,7 @@ namespace netgen
    to extract individual surface colours via the extended
    OpenCascade XDE and XCAF Feature set.
    */
-   OCCGeometry *LoadOCC_IGES(const char *filename)
+   OCCGeometry *LoadOCC_IGES(const filesystem::path & filename)
    {
       OCCGeometry *occgeo;
       occgeo = new OCCGeometry;
@@ -1432,7 +1432,7 @@ namespace netgen
 
       IGESCAFControl_Reader reader;
 
-      Standard_Integer stat = reader.ReadFile((char*)filename);
+      Standard_Integer stat = reader.ReadFile(filename.string().c_str());
 
       if(stat != IFSelect_RetDone)
       {
@@ -1485,7 +1485,7 @@ namespace netgen
    to extract individual surface colours via the extended
    OpenCascade XDE and XCAF Feature set.
    */
-   OCCGeometry * LoadOCC_STEP (const char * filename)
+   OCCGeometry * LoadOCC_STEP (const filesystem::path & filename)
    {
       OCCGeometry * occgeo;
       occgeo = new OCCGeometry;
@@ -1497,13 +1497,13 @@ namespace netgen
 
 
 
-   OCCGeometry *LoadOCC_BREP (const char *filename)
+   OCCGeometry *LoadOCC_BREP (const filesystem::path & filename)
    {
       OCCGeometry * occgeo;
       occgeo = new OCCGeometry;
 
       BRep_Builder aBuilder;
-      Standard_Boolean result = BRepTools::Read(occgeo->shape, const_cast<char*> (filename),aBuilder);
+      Standard_Boolean result = BRepTools::Read(occgeo->shape, filename.string().c_str(), aBuilder);
 
       if(!result)
       {
@@ -1521,34 +1521,36 @@ namespace netgen
    }
 
 
-  void OCCGeometry :: Save (string sfilename) const
+  void OCCGeometry :: Save (const filesystem::path & filename) const
   {
-    const char * filename = sfilename.c_str();
-    if (strlen(filename) < 4) 
-      throw NgException ("illegal filename");
-    
-    if (strcmp (&filename[strlen(filename)-3], "igs") == 0)
+    string ext = ToLower(filename.extension());
+    auto s_filename = filename.string();
+    auto c_filename = s_filename.c_str();
+
+    if (ext == ".igs")
       {
 	IGESControl_Writer writer("millimeters", 1);
 	writer.AddShape (shape);
-	writer.Write (filename);
+	writer.Write (c_filename);
       }
-    else if (strcmp (&filename[strlen(filename)-3], "stp") == 0)
+    else if (ext == ".stp")
       {
           step_utils::WriteSTEP(*this, filename);
       }
-    else if (strcmp (&filename[strlen(filename)-3], "stl") == 0)
+    else if (ext == ".stl")
       {
 	StlAPI_Writer writer;
 	writer.ASCIIMode() = Standard_True;
-	writer.Write (shape, filename);
+	writer.Write (shape, c_filename);
       }
-    else if (strcmp (&filename[strlen(filename)-4], "stlb") == 0)
+    else if (ext == ".stlb")
       {
 	StlAPI_Writer writer;
 	writer.ASCIIMode() = Standard_False;
-	writer.Write (shape, filename);
+	writer.Write (shape, c_filename);
       }
+
+    throw NgException ("Unkown target format: " + filename);
   }
 
   void OCCGeometry :: SaveToMeshFile (ostream & ost) const
@@ -2267,7 +2269,7 @@ namespace netgen
           OCCGeometry::identifications[shape_origin.TShape()] = result;
       }
 
-      void WriteSTEP(const TopoDS_Shape & shape, string filename)
+      void WriteSTEP(const TopoDS_Shape & shape, const filesystem::path & filename)
       {
           Interface_Static::SetCVal("write.step.schema", "AP242IS");
           Interface_Static::SetIVal("write.step.assembly",1);
@@ -2303,7 +2305,7 @@ namespace netgen
             for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
                 WriteProperties(model, finder, e.Current());
 
-          writer.Write(filename.c_str());
+          writer.Write(filename.string().c_str());
       }
 
   } // namespace step_utils

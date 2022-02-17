@@ -137,11 +137,11 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                   {
                     shared_ptr<OCCGeometry> geo;
                     if(EndsWith(filename, ".step") || EndsWith(filename, ".stp"))
-                      geo.reset(LoadOCC_STEP(filename.c_str()));
+                      geo.reset(LoadOCC_STEP(filename));
                     else if(EndsWith(filename, ".brep"))
-                      geo.reset(LoadOCC_BREP(filename.c_str()));
+                      geo.reset(LoadOCC_BREP(filename));
                     else if(EndsWith(filename, ".iges"))
-                      geo.reset(LoadOCC_IGES(filename.c_str()));
+                      geo.reset(LoadOCC_IGES(filename));
                     else
                       throw Exception("Cannot load file " + filename + "\nValid formats are: step, stp, brep, iges");
                     ng_geometry = geo;
@@ -279,7 +279,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
 
   
   
-  m.def("LoadOCCGeometry",[] (const string & filename)
+  m.def("LoadOCCGeometry",[] (filesystem::path filename)
         {
           cout << "WARNING: LoadOCCGeometry is deprecated! Just use the OCCGeometry(filename) constructor. It is able to read brep and iges files as well!" << endl;
           ifstream ist(filename);

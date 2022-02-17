@@ -306,9 +306,9 @@ namespace netgen
     
 
   void WriteUserChemnitz (const Mesh & mesh,
-                          const string & filename)
+                          const filesystem::path & filename)
   {
-    ofstream outfile (filename.c_str());
+    ofstream outfile (filename);
 
     ReadFileMesh (mesh);
     Convert ();

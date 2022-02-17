@@ -15,22 +15,18 @@
 namespace netgen
 {
   void ReadFile (Mesh & mesh,
-                 const string & hfilename)
+                 const filesystem::path & filename)
   {
     PrintMessage(3, "Read User File");
 
-    const char * filename = hfilename.c_str();
+    auto ext = filename.extension();
 
     char reco[100];
     int np, nbe;
 
 
 
-    // ".surf" - mesh
-  
-    if ( (strlen (filename) > 5) &&
-         strcmp (&filename[strlen (filename)-5], ".surf") == 0 )
-    
+    if ( ext == ".surf" )
       {
         cout << "Surface file" << endl;
       
@@ -80,11 +76,7 @@ namespace netgen
       }
   
   
-  
-
-  
-    if ( (strlen (filename) > 4) &&
-         strcmp (&filename[strlen (filename)-4], ".unv") == 0 )
+    if ( ext == ".unv" )
       {  
         char reco[100];
         // int invert;
@@ -407,8 +399,7 @@ namespace netgen
 
     // fepp format2d:
   
-    if ( (strlen (filename) > 7) &&
-         strcmp (&filename[strlen (filename)-7], ".mesh2d") == 0 )
+    if ( ext == ".mesh2d" )
       {
         cout << "Reading FEPP2D Mesh" << endl;
       
@@ -449,8 +440,7 @@ namespace netgen
       }
 
   
-    else if ( (strlen (filename) > 5) &&
-              strcmp (&filename[strlen (filename)-5], ".mesh") == 0 )
+    else if ( ext == ".mesh" )
       {
         cout << "Reading Neutral Format" << endl;
       
@@ -522,21 +512,17 @@ namespace netgen
       }
 
 
-    if ( (strlen (filename) > 4) &&
-         strcmp (&filename[strlen (filename)-4], ".emt") == 0 )
+    if ( ext == ".emt" )
       {
         ifstream inemt (filename);
       
-        string pktfile = filename;
-        int len = strlen (filename);
-        pktfile[len-3] = 'p';
-        pktfile[len-2] = 'k';
-        pktfile[len-1] = 't';
+        auto pktfile = filename;
+        pktfile.replace_extension("pkt");
         cout << "pktfile = " << pktfile << endl;
 
         int np, nse, i;
         int bcprop;
-        ifstream inpkt (pktfile.c_str());
+        ifstream inpkt (pktfile);
         inpkt >> np;
         NgArray<double> values(np);
         for (i = 1; i <= np; i++)
@@ -629,31 +615,20 @@ namespace netgen
 
 
     // .tet mesh
-    if ( (strlen (filename) > 4) &&
-         strcmp (&filename[strlen (filename)-4], ".tet") == 0 )
-      {
+    if ( ext == ".tet" )
         ReadTETFormat (mesh, filename);
-      }
-
 
     // .fnf mesh (FNF - PE neutral format)
-    if ( (strlen (filename) > 4) &&
-         strcmp (&filename[strlen (filename)-4], ".fnf") == 0 )
-      {
+    if ( ext == ".fnf" )
         ReadFNFFormat (mesh, filename);
-      }
 
     // .cgns file - CFD General Notation System
-    if ( (strlen (filename) > 5) &&
-         strcmp (&filename[strlen (filename)-5], ".cgns") == 0 )
-      {
+    if ( ext == ".cgns" )
         ReadCGNSMesh (mesh, filename);
-      }
 
-    if ( ( (strlen (filename) > 4) && strcmp (&filename[strlen (filename)-4], ".stl") == 0 ) ||
-         ( (strlen (filename) > 5) && strcmp (&filename[strlen (filename)-5], ".stlb") == 0 ) )
+    if ( ext == ".stl" || ext == ".stlb" )
       {
-        ifstream ist{string{filename}};
+        ifstream ist{filename};
         auto geom = shared_ptr<STLGeometry>(STLGeometry::Load(ist));
 
         mesh.SetDimension (3);

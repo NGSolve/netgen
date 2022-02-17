@@ -627,9 +627,12 @@ namespace netgen
 
 
 
-  void Mesh :: Save (const string & filename) const
+  void Mesh :: Save (const filesystem::path & filename) const
   {
-    if (filename.find(".vol.bin") != string::npos)
+    string ext0 = filename.stem().extension().string();
+    string ext = filename.extension().string();
+
+    if (ext0 == ".vol" && ext == ".bin")
     {
         BinaryOutArchive in(filename);
         in & const_cast<Mesh&>(*this);
@@ -637,12 +640,12 @@ namespace netgen
     }
 
     ostream * outfile;
-    if (filename.find(".vol.gz")!=string::npos)
-      outfile = new ogzstream(filename.c_str());
-    else if (filename.find(".vol")!=string::npos)
-      outfile = new ofstream(filename.c_str());
+    if (ext0 == ".vol" && ext == ".gz")
+      outfile = new ogzstream(filename);
+    else if (ext == ".vol")
+      outfile = new ofstream(filename);
     else
-      outfile = new ogzstream((filename+".vol.gz").c_str());
+      outfile = new ogzstream(filesystem::path(filename).concat(".vol.gz"));
 
     Save(*outfile);
     delete outfile;
@@ -1109,11 +1112,14 @@ namespace netgen
 
 
 
-  void Mesh :: Load (const string & filename)
+  void Mesh :: Load (const filesystem::path & filename)
   {
-    cout << "filename = " << filename << endl;
+    PrintMessage (1, "filename = ", filename);
 
-    if (filename.find(".vol.bin") != string::npos)
+    string ext0 = filename.stem().extension().string();
+    string ext = filename.extension().string();
+
+    if (ext0 == ".vol" && ext == ".bin")
     {
         BinaryInArchive in(filename);
         in & (*this);
@@ -1122,12 +1128,11 @@ namespace netgen
 
     istream * infile = NULL;
 
-    if (filename.find(".vol.gz") != string::npos)
-      infile = new igzstream (filename.c_str());
+    if (ext0 == ".vol" && ext == ".gz")
+      infile = new igzstream (filename);
     else
-      infile = new ifstream (filename.c_str());
+      infile = new ifstream (filename);
 
-    // ifstream infile(filename.c_str());
     if (! (infile -> good()) )
       throw NgException ("mesh file not found");
 
@@ -1651,6 +1656,10 @@ namespace netgen
 	clusters -> Update();
       }
 
+    auto geo = geometryregister.LoadFromMeshFile (infile);
+    if(geo)
+       geometry = geo;
+
     SetNextMajorTimeStamp();
     //  PrintMemInfo (cout);
   }
@@ -1840,9 +1849,9 @@ namespace netgen
   }
 
 
-  void Mesh :: Merge (const string & filename, const int surfindex_offset)
+  void Mesh :: Merge (const filesystem::path & filename, const int surfindex_offset)
   {
-    ifstream infile(filename.c_str());
+    ifstream infile(filename);
     if (!infile.good())
       throw NgException ("mesh file not found");
 
@@ -3758,7 +3767,7 @@ namespace netgen
   }
 
 
-  void Mesh :: LoadLocalMeshSize (const string &  meshsizefilename)
+  void Mesh :: LoadLocalMeshSize (const filesystem::path &  meshsizefilename)
   {
     // Philippose - 10/03/2009
     // Improve error checking when loading and reading
@@ -3766,7 +3775,7 @@ namespace netgen
 
     if (meshsizefilename.empty()) return;
 
-    ifstream msf(meshsizefilename.c_str());
+    ifstream msf(meshsizefilename);
 
     // Philippose - 09/03/2009
     // Adding print message information in case the specified 

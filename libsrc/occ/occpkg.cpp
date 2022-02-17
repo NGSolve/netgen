@@ -43,7 +43,7 @@ namespace netgen
   class OCCGeometryRegister : public GeometryRegister
   {
   public:
-    virtual NetgenGeometry * Load (string filename) const;
+    virtual NetgenGeometry * Load (const filesystem::path & filename) const;
     virtual VisualScene * GetVisualScene (const NetgenGeometry * geom) const;
 
     virtual void SetParameters (Tcl_Interp * interp) 
@@ -893,55 +893,27 @@ namespace netgen
 
 
 
-  NetgenGeometry *  OCCGeometryRegister :: Load (string filename) const
+  NetgenGeometry *  OCCGeometryRegister :: Load (const filesystem::path & filename) const
   {
-    const char * lgfilename = filename.c_str();
+    string ext = ToLower(filename.extension());
 
-
-    /*
-    if (strcmp (&cfilename[strlen(cfilename)-3], "geo") == 0)
+    if (ext == ".iges" || ext == ".igs")
       {
-	PrintMessage (1, "Load OCCG geometry file ", cfilename);
-	
-	extern OCCGeometry * ParseOCCG (istream & istr);
-
-	ifstream infile(cfilename);
-
-	OCCGeometry * hgeom = ParseOCCG (infile);
-	if (!hgeom)
-	  throw NgException ("geo-file should start with 'algebraic3d'");
-
-	hgeom -> FindIdenticSurfaces(1e-8 * hgeom->MaxSize()); 
-	return hgeom;
-      }
-    */
-
-
-    if ((strcmp (&lgfilename[strlen(lgfilename)-4], "iges") == 0) ||
-	(strcmp (&lgfilename[strlen(lgfilename)-3], "igs") == 0) ||
-	(strcmp (&lgfilename[strlen(lgfilename)-3], "IGS") == 0) ||
-	(strcmp (&lgfilename[strlen(lgfilename)-4], "IGES") == 0))
-      {
-	PrintMessage (1, "Load IGES geometry file ", lgfilename);
-	OCCGeometry * occgeometry = LoadOCC_IGES (lgfilename);
+	PrintMessage (1, "Load IGES geometry file ", filename);
+	OCCGeometry * occgeometry = LoadOCC_IGES (filename);
 	return occgeometry;
       }
 
-    else if ((strcmp (&lgfilename[strlen(lgfilename)-4], "step") == 0) ||
-		     (strcmp (&lgfilename[strlen(lgfilename)-3], "stp") == 0) ||
-		     (strcmp (&lgfilename[strlen(lgfilename)-3], "STP") == 0) ||
-		     (strcmp (&lgfilename[strlen(lgfilename)-4], "STEP") == 0))
+    else if (ext == ".stp" || ext == ".step")
       {
-	PrintMessage (1, "Load STEP geometry file ", lgfilename);
-	OCCGeometry * occgeometry = LoadOCC_STEP (lgfilename);
+	PrintMessage (1, "Load STEP geometry file ", filename);
+	OCCGeometry * occgeometry = LoadOCC_STEP (filename);
 	return occgeometry;    
       }
-    else if ((strcmp (&lgfilename[strlen(lgfilename)-4], "brep") == 0) ||
-	     (strcmp (&lgfilename[strlen(lgfilename)-4], "Brep") == 0) ||
-	     (strcmp (&lgfilename[strlen(lgfilename)-4], "BREP") == 0))
+    else if (ext == ".brep")
       {
-	PrintMessage (1, "Load BREP geometry file ", lgfilename);
-	OCCGeometry * occgeometry = LoadOCC_BREP (lgfilename);
+	PrintMessage (1, "Load BREP geometry file ", filename);
+	OCCGeometry * occgeometry = LoadOCC_BREP (filename);
 	return occgeometry;
       }
     

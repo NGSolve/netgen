@@ -17,7 +17,7 @@ namespace netgen
 
 void WriteJCMFormat (const Mesh & mesh,
                      const NetgenGeometry & geom,
-                     const string & filename)
+                     const filesystem::path & filename)
 {
   if (mesh.GetDimension() != 3)
   {
@@ -122,7 +122,7 @@ void WriteJCMFormat (const Mesh & mesh,
       nbquad++;
   }
   
-  ofstream outfile (filename.c_str());
+  ofstream outfile (filename);
   outfile.precision(6);
   outfile.setf (ios::fixed, ios::floatfield);
   outfile.setf (ios::showpoint);

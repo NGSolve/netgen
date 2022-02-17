@@ -5,6 +5,7 @@
 #include <array>                // for array
 #include <complex>              // for complex
 #include <cstring>              // for size_t, strlen
+#include <filesystem>           // for path
 #include <fstream>              // for ifstream, ofstream
 #include <functional>           // for function
 #include <map>                  // for map
@@ -740,7 +741,7 @@ namespace ngcore
     BinaryOutArchive(std::shared_ptr<std::ostream>&& astream)
       : Archive(true), stream(std::move(astream))
     { }
-    BinaryOutArchive(const std::string& filename)
+    BinaryOutArchive(const std::filesystem::path& filename)
       : BinaryOutArchive(std::make_shared<std::ofstream>(filename)) {}
     ~BinaryOutArchive () override { FlushBuffer(); }
 
@@ -828,7 +829,7 @@ namespace ngcore
     BinaryInArchive (std::shared_ptr<std::istream>&& astream)
       : Archive(false), stream(std::move(astream))
     { }
-    BinaryInArchive (const std::string& filename)
+    BinaryInArchive (const std::filesystem::path& filename)
       : BinaryInArchive(std::make_shared<std::ifstream>(filename)) { ; }
 
     using Archive::operator&;
@@ -903,7 +904,7 @@ namespace ngcore
     TextOutArchive (std::shared_ptr<std::ostream>&& astream)
       : Archive(true), stream(std::move(astream))
     { }
-    TextOutArchive (const std::string& filename) :
+    TextOutArchive (const std::filesystem::path& filename) :
       TextOutArchive(std::make_shared<std::ofstream>(filename)) { }
 
     using Archive::operator&;
@@ -958,7 +959,7 @@ namespace ngcore
     TextInArchive (std::shared_ptr<std::istream>&& astream) :
       Archive(false), stream(std::move(astream))
     { }
-    TextInArchive (const std::string& filename)
+    TextInArchive (const std::filesystem::path& filename)
       : TextInArchive(std::make_shared<std::ifstream>(filename)) {}
 
     using Archive::operator&;

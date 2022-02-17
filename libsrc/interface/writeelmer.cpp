@@ -21,7 +21,7 @@ namespace netgen
 
 
 void WriteElmerFormat (const Mesh &mesh,
-                       const string &filename)
+                       const filesystem::path &dirname)
 {
   cout << "write elmer mesh files" << endl;
 
@@ -62,25 +62,17 @@ void WriteElmerFormat (const Mesh &mesh,
   int inverttets = mparam.inverttets;
   int invertsurf = mparam.inverttrigs;
 
-#ifdef WIN32
-  char a[256];
-  sprintf( a, "mkdir %s", filename.c_str() );
-  system( a );
-#else
-  // int rc = 
-  mkdir(filename.c_str(), S_IRWXU|S_IRWXG);
-#endif
+  filesystem::create_directories(dirname);
 
-  sprintf( str, "%s/mesh.header", filename.c_str() );
-  ofstream outfile_h(str);
-  sprintf( str, "%s/mesh.nodes", filename.c_str() );
-  ofstream outfile_n(str);
-  sprintf( str, "%s/mesh.elements", filename.c_str() );
-  ofstream outfile_e(str);
-  sprintf( str, "%s/mesh.boundary", filename.c_str() );
-  ofstream outfile_b(str);
-  sprintf( str, "%s/mesh.names", filename.c_str() );
-  ofstream outfile_names(str);
+  auto get_name = [&dirname]( string s ) {
+      return filesystem::path(dirname).append(s);
+  };
+
+  ofstream outfile_h(get_name("mesh.header"));
+  ofstream outfile_n(get_name("mesh.nodes"));
+  ofstream outfile_e(get_name("mesh.elements"));
+  ofstream outfile_b(get_name("mesh.boundary"));
+  ofstream outfile_names(get_name("mesh.names"));
 
   for( auto codim : IntRange(0, mesh.GetDimension()-1) )
   {

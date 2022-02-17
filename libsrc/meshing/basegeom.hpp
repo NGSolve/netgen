@@ -7,7 +7,6 @@
 /* Date:   23. Aug. 09                                                    */
 /**************************************************************************/
 
-
 struct Tcl_Interp;
 
 namespace netgen
@@ -298,7 +297,7 @@ namespace netgen
           return i;
       throw Exception("Couldn't find edge index");
     }
-    virtual void Save (string filename) const;
+    virtual void Save (const filesystem::path & filename) const;
     virtual void SaveToMeshFile (ostream & /* ost */) const { ; }
   };
 
@@ -310,7 +309,7 @@ namespace netgen
   {
   public:
     virtual ~GeometryRegister();
-    virtual NetgenGeometry * Load (string filename) const = 0;
+    virtual NetgenGeometry * Load (const filesystem::path & filename) const = 0;
     virtual NetgenGeometry * LoadFromMeshFile (istream & /* ist */, string) const { return NULL; }
     virtual class VisualScene * GetVisualScene (const NetgenGeometry * /* geom */) const
     { return NULL; }

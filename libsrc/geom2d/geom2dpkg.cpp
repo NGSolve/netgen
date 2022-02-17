@@ -21,7 +21,7 @@ namespace netgen
   class SplineGeometryVisRegister : public GeometryRegister
   {
   public:
-    virtual NetgenGeometry * Load (string filename) const { return NULL; }
+    virtual NetgenGeometry * Load (const filesystem::path & filename) const { return NULL; }
     virtual VisualScene * GetVisualScene (const NetgenGeometry * geom) const;
   };
 

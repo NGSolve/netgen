@@ -22,7 +22,7 @@ namespace netgen
 
 
 void WriteFEAPFormat (const Mesh & mesh,
-		      const string & filename)
+		      const filesystem::path & filename)
   
 {
   // Feap format by A. Rieger 
@@ -35,7 +35,7 @@ void WriteFEAPFormat (const Mesh & mesh,
 
   double scale = 1;   // globflags.GetNumFlag ("scale", 1);
   
-  ofstream outfile(filename.c_str());
+  ofstream outfile(filename);
  
   outfile << "feap" << "\n";
   outfile << mesh.GetNP();

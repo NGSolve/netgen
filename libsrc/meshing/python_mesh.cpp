@@ -813,8 +813,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 	    if(geo!=nullptr) mesh->SetGeometry(geo);
 	    else if(ng_geometry!=nullptr) mesh->SetGeometry(ng_geometry);
 	  }),py::call_guard<py::gil_scoped_release>())
-    // static_cast<void(Mesh::*)(const string & name)>(&Mesh::Load))
-    .def("Save", static_cast<void(Mesh::*)(const string & name)const>(&Mesh::Save),py::call_guard<py::gil_scoped_release>())
+    .def("Save", static_cast<void(Mesh::*)(const filesystem::path & name)const>(&Mesh::Save),py::call_guard<py::gil_scoped_release>())
     .def("Export",
          [] (Mesh & self, string filename, string format)
           {

@@ -60,9 +60,9 @@ namespace netgen
 
   
   void ReadFNFFormat (Mesh & mesh, 
-                      const string & filename)
+                      const filesystem::path & filename)
   {
-    ifstream fin (filename.c_str());
+    ifstream fin (filename);
 
     string buf;
 

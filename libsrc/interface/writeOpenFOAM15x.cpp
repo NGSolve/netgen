@@ -597,7 +597,7 @@ namespace netgen
 
 
 
-   void WriteOpenFOAM15xFormat (const Mesh & mesh, const string & casename, const bool compressed)
+   void WriteOpenFOAM15xFormat (const Mesh & mesh, const filesystem::path & dirname, const bool compressed)
    {
       bool error = false;
       char casefiles[256];
@@ -639,22 +639,12 @@ namespace netgen
       }
 
 
-      cout << "Writing OpenFOAM 1.5+ Mesh files to case: " << casename << "\n";
+      cout << "Writing OpenFOAM 1.5+ Mesh files to case: " << dirname.string() << "\n";
 
       // Create the case directory if it does not already exist
       // NOTE: This needs to be improved for the Linux variant....!!!
-   #ifdef WIN32
-      char casedir[256];
-      sprintf(casedir, "mkdir %s\\constant\\polyMesh", casename.c_str());
-      system(casedir);
-   #else
-      char casedir[256];
-      mkdir(casename.c_str(), S_IRWXU|S_IRWXG);
-      sprintf(casedir, "%s/constant", casename.c_str());
-      mkdir(casedir, S_IRWXU|S_IRWXG);
-      sprintf(casedir, "%s/constant/polyMesh", casename.c_str());
-      mkdir(casedir, S_IRWXU|S_IRWXG);
-   #endif
+      auto mesh_dir = filesystem::path(dirname).append("constant").append("polyMesh");
+      filesystem::create_directories(mesh_dir);
 
       // Open handles to the five required mesh files
       // points
@@ -662,59 +652,21 @@ namespace netgen
       // owner
       // neighbour
       // boundary
-	  ostream *outfile_pnts;
-	  ostream *outfile_faces;
-	  ostream *outfile_own;
-	  ostream *outfile_nei;
-	  ostream *outfile_bnd;
 
-	  if(compressed)
-	  {
-		  sprintf(casefiles, "%s/constant/polyMesh/points.gz", casename.c_str());
-		  outfile_pnts = new ogzstream(casefiles);
-	  }
-	  else
-	  {
-		  sprintf(casefiles, "%s/constant/polyMesh/points", casename.c_str());
-		  outfile_pnts = new ofstream(casefiles);
-	  }
+      auto get_name = [compressed, &mesh_dir]( string s ) {
+          auto p = filesystem::path(mesh_dir).append(s);
+          if(compressed)
+              p.concat(".gz");
+          return p;
+      };
 
-	  if(compressed)
-	  {
-		  sprintf(casefiles, "%s/constant/polyMesh/faces.gz", casename.c_str());
-		  outfile_faces = new ogzstream(casefiles);
-	  }
-	  else
-	  {
-		  sprintf(casefiles, "%s/constant/polyMesh/faces", casename.c_str());
-		  outfile_faces = new ofstream(casefiles);
-	  }
+      auto outfile_pnts  = make_unique<ofstream>(get_name("points"));
+      auto outfile_faces = make_unique<ofstream>(get_name("faces"));
+      auto outfile_own   = make_unique<ofstream>(get_name("owner"));
+      auto outfile_nei   = make_unique<ofstream>(get_name("neighbor"));
 
-	  if(compressed)
-	  {
-		  sprintf(casefiles, "%s/constant/polyMesh/owner.gz", casename.c_str()); 
-		  outfile_own = new ogzstream(casefiles);
-	  }
-	  else
-	  {
-		  sprintf(casefiles, "%s/constant/polyMesh/owner", casename.c_str()); 
-		  outfile_own = new ofstream(casefiles);
-	  }
-
-	  if(compressed)
-	  {
-		  sprintf(casefiles, "%s/constant/polyMesh/neighbour.gz", casename.c_str());
-		  outfile_nei = new ogzstream(casefiles);
-	  }
-	  else
-	  {
-		  sprintf(casefiles, "%s/constant/polyMesh/neighbour", casename.c_str());
-		  outfile_nei = new ofstream(casefiles);
-	  }
-
-	  // Note... the boundary file is not compressed
-      sprintf(casefiles, "%s/constant/polyMesh/boundary", casename.c_str()); 
-      outfile_bnd = new ofstream(casefiles);
+      // Note... the boundary file is not compressed
+      auto outfile_bnd   = make_unique<ofstream>(mesh_dir.append("boundary"));
 
       ResetTime();
 
@@ -731,8 +683,7 @@ namespace netgen
       if(outfile_own->good() && !error)
       {
          cout << "Writing the owner file: ";
-         WriteOwnerFile(outfile_own);
-         delete outfile_own;
+         WriteOwnerFile(outfile_own.get());
          cout << "Done! (Time Elapsed = " << GetTime() << " sec)\n";
       }
       else
@@ -746,8 +697,7 @@ namespace netgen
       if(outfile_nei->good() && !error)
       {
          cout << "Writing the neighbour file: ";
-         WriteNeighbourFile(outfile_nei);
-         delete outfile_nei;
+         WriteNeighbourFile(outfile_nei.get());
          cout << "Done! (Time Elapsed = " << GetTime() << " sec)\n";
       }
       else
@@ -761,8 +711,7 @@ namespace netgen
       if(outfile_faces->good() && !error)
       {
          cout << "Writing the faces file: ";
-         WriteFacesFile(outfile_faces, mesh);
-         delete outfile_faces;
+         WriteFacesFile(outfile_faces.get(), mesh);
          cout << "Done! (Time Elapsed = " << GetTime() << " sec)\n";
       }
       else
@@ -776,8 +725,7 @@ namespace netgen
       if(outfile_pnts->good() && !error)
       {
          cout << "Writing the points file: ";
-         WritePointsFile(outfile_pnts,mesh);
-         delete outfile_pnts;
+         WritePointsFile(outfile_pnts.get(),mesh);
          cout << "Done! (Time Elapsed = " << GetTime() << " sec)\n";
       }
       else
@@ -791,8 +739,7 @@ namespace netgen
       if(outfile_bnd->good() && !error)
       {
          cout << "Writing the boundary file: ";
-         WriteBoundaryFile(outfile_bnd);
-         delete outfile_bnd;
+         WriteBoundaryFile(outfile_bnd.get());
          cout << "Done! (Time Elapsed = " << GetTime() << " sec)\n";
       }
       else

@@ -92,7 +92,7 @@ namespace netgen
     return Vec<3> (0,0,1);
   }
 
-  void SplineGeometry2d :: Load (const char * filename)
+  void SplineGeometry2d :: Load (const filesystem::path & filename)
   {
 
     ifstream infile;
@@ -104,7 +104,7 @@ namespace netgen
   
     if ( ! infile.good() )
       throw NgException(string ("Input file '") + 
-			string (filename) +
+			filename.string() +
 			string ("' not available!"));
 
     TestComment ( infile );
@@ -1075,21 +1075,20 @@ namespace netgen
   class SplineGeometryRegister : public GeometryRegister
   {
   public:
-    virtual NetgenGeometry * Load (string filename) const;
+    virtual NetgenGeometry * Load (const filesystem::path & filename) const;
   };
 
-  NetgenGeometry *  SplineGeometryRegister :: Load (string filename) const
+  NetgenGeometry *  SplineGeometryRegister :: Load (const filesystem::path & filename) const
   {
-    const char * cfilename = filename.c_str();
-    if (strcmp (&cfilename[strlen(cfilename)-4], "in2d") == 0)
+    string ext = ToLower(filename.extension());
+    if (ext == ".in2d")
       {
-	PrintMessage (1, "Load 2D-Spline geometry file ", cfilename);
-	
+	PrintMessage (1, "Load 2D-Spline geometry file ", filename);
 
-	ifstream infile(cfilename);
+	ifstream infile(filename);
 
 	SplineGeometry2d * hgeom = new SplineGeometry2d();
-	hgeom -> Load (cfilename);
+	hgeom -> Load (filename);
 	return hgeom;
       }
     

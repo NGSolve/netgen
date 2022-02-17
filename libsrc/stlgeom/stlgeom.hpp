@@ -190,7 +190,7 @@ namespace netgen
 
     void Clear();
 
-    virtual void Save (string filename) const override;
+    virtual void Save (const filesystem::path & filename) const override;
 
     bool CalcPointGeomInfo(int surfind, PointGeomInfo& gi, const Point<3> & p3) const override;
     PointGeomInfo ProjectPoint(INDEX surfind, Point<3> & p) const override;
@@ -236,8 +236,8 @@ namespace netgen
 	DLL_HEADER void ImportEdges();
 	DLL_HEADER void AddEdges(const NgArray<Point<3> >& eps);
 	DLL_HEADER void ExportEdges();
-	DLL_HEADER void LoadEdgeData(const char* file);
-	DLL_HEADER void SaveEdgeData(const char* file);
+	DLL_HEADER void LoadEdgeData(const filesystem::path & file);
+	DLL_HEADER void SaveEdgeData(const filesystem::path & file);
     //  void SetEdgeAtSelected(int mode);
   
 
@@ -475,7 +475,7 @@ namespace netgen
     int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam) override;
     
     // Add additional Point to chart to close the surface and write the resulting stl to a file
-    DLL_HEADER void WriteChartToFile( ChartId chartnumber, string filename="chart.slb" );
+    DLL_HEADER void WriteChartToFile( ChartId chartnumber, filesystem::path filename="chart.slb" );
   };
  
 

@@ -18,13 +18,13 @@ namespace netgen
 
 
 void WriteAbaqusFormat (const Mesh & mesh,
-			const string & filename)
+			const filesystem::path & filename)
 
 {
       
   cout << "\nWrite Abaqus Volume Mesh" << endl;
 
-  ofstream outfile (filename.c_str());
+  ofstream outfile (filename);
 
   outfile << "*Heading" << endl;
   outfile << " " << filename << endl;
@@ -124,16 +124,11 @@ void WriteAbaqusFormat (const Mesh & mesh,
       // periodic identification, implementation for
       // Helmut J. Boehm, TU Vienna
 	  
-      char cfilename[255];
-      strcpy (cfilename, filename.c_str());
-
-      char mpcfilename[255];
-      strcpy (mpcfilename, cfilename);
-      size_t len = strlen (cfilename);
-      if (len >= 4 && (strcmp (mpcfilename+len-4, ".inp") == 0))
-	strcpy (mpcfilename+len-4, ".mpc");
+      auto mpcfilename = filename;
+      if (filename.extension() == ".inp")
+        mpcfilename.replace_extension(".mpc");
       else
-	strcat (mpcfilename, ".mpc");
+        mpcfilename.concat(".mpc");
 	  
       ofstream mpc (mpcfilename);
 

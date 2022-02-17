@@ -19,6 +19,8 @@
 #ifndef MYSTRING__H
 #define MYSTRING__H
 
+#include <filesystem>
+
 namespace netgen
 {
 
@@ -58,6 +60,7 @@ public:
   MyStr(const Point3d& p);
   MyStr(const Vec3d& p);
   MyStr(const string & st);
+  MyStr(const filesystem::path & st);
 
   ~MyStr();
   MyStr Left(unsigned);

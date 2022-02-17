@@ -49,9 +49,9 @@ namespace netgen
    */
    void WriteGmsh2Format (const Mesh & mesh,
       const NetgenGeometry & geom,
-      const string & filename)
+      const filesystem::path & filename)
    {
-      ofstream outfile (filename.c_str());
+      ofstream outfile (filename);
       outfile.precision(6);
       outfile.setf (ios::fixed, ios::floatfield);
       outfile.setf (ios::showpoint);
