@@ -63,7 +63,7 @@ elif 'win' in sys.platform:
         '-A Win64',
         f'-DNG_INSTALL_DIR_BIN=netgen',
         f'-DNG_INSTALL_DIR_PYTHON=.',
-        f'-DNG_INSTALL_DIR_LIB=Library/lib',
+        f'-DNG_INSTALL_DIR_LIB=netgen/lib',
         f'-DNG_INSTALL_DIR_CMAKE=netgen/cmake',
     ]
 elif 'linux' in sys.platform:
