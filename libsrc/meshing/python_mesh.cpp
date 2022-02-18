@@ -1296,7 +1296,88 @@ project_boundaries : Optional[str] = None
           })
     .def ("CalcTotalBadness", &Mesh::CalcTotalBad)
     .def ("GetQualityHistogram", &Mesh::GetQualityHistogram)
-    .def("Mirror", &Mesh::Mirror);
+    .def("Mirror", &Mesh::Mirror)
+    .def("_getVertices", [](Mesh & self)
+          {
+            std::vector<float> verts(3*self.GetNV());
+
+            ParallelForRange( self.GetNV(), [&](auto myrange) {
+                const auto & points = self.Points();
+                for(auto i : myrange)
+                {
+                    auto p = points[PointIndex::BASE+i];
+                    auto * v = &verts[3*i];
+                    for(auto k : Range(3))
+                        v[k] = p[k];
+                } });
+            return verts;
+          })
+    .def("_getSegments", [](Mesh & self)
+          {
+            std::vector<int> output;
+            output.resize(2*self.GetNSeg());
+
+            ParallelForRange( self.GetNSeg(), [&](auto myrange) {
+                const auto & segs = self.LineSegments();
+                for(auto i : myrange)
+                {
+                    const auto & seg = segs[i];
+                    for(auto k : Range(2))
+                        output[2*i+k] = seg[k]-PointIndex::BASE;
+                } });
+            return output;
+          })
+    .def("_getWireframe", [](Mesh & self)
+          {
+            const auto & topo = self.GetTopology();
+            size_t n = topo.GetNEdges();
+            std::vector<int> output;
+            output.resize(2*n);
+
+            ParallelForRange( n, [&](auto myrange) {
+                for(auto i : myrange)
+                {
+                    PointIndex p0,p1;
+                    topo.GetEdgeVertices(i+1, p0, p1);
+                    output[2*i] = p0-PointIndex::BASE;
+                    output[2*i+1] = p1-PointIndex::BASE;
+                } });
+            return output;
+          })
+    .def("_get2dElementsAsTriangles", [](Mesh & self)
+          {
+            std::vector<int> trigs;
+            trigs.resize(3*self.GetNSE());
+
+            ParallelForRange( self.GetNSE(), [&](auto myrange) {
+                const auto & surfels = self.SurfaceElements();
+                for(auto i : myrange)
+                {
+                    const auto & sel = surfels[i];
+                    auto * trig = &trigs[3*i];
+                    for(auto k : Range(3))
+                        trig[k] = sel[k]-PointIndex::BASE;
+                        // todo: quads (store the second trig in thread-local extra array, merge them at the end (mutex)
+                } });
+            return trigs;
+          })
+    .def("_get3dElementsAsTets", [](Mesh & self)
+        {
+            std::vector<int> tets;
+            tets.resize(4*self.GetNE());
+
+            ParallelForRange( self.GetNE(), [&](auto myrange) {
+                const auto & els = self.VolumeElements();
+                for(auto i : myrange)
+                {
+                    const auto & el = els[i];
+                    auto * trig = &tets[4*i];
+                    for(auto k : Range(4))
+                        trig[k] = el[k]-PointIndex::BASE;
+                        // todo: prisms etc (store the extra tets in thread-local extra array, merge them at the end (mutex)
+                } });
+            return tets;
+        })
     ;
 
   m.def("ImportMesh", [](const string& filename)
