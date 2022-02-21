@@ -15,6 +15,24 @@
 #include "profiler.hpp"
 namespace py = pybind11;
 
+namespace ngcore
+{
+  namespace detail
+  {
+    template<typename T>
+    struct HasPyFormat
+    {
+    private:
+      template<typename T2>
+      static auto check(T2*) -> std::enable_if_t<std::is_same_v<decltype(std::declval<py::format_descriptor<T2>>().format()), std::string>, std::true_type>;
+      static auto check(...) -> std::false_type;
+    public:
+      static constexpr bool value = decltype(check((T*) nullptr))::value;
+    };
+  } // namespace detail
+} // namespace ngcore
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // automatic conversion of python list to Array<>
 namespace pybind11 {
@@ -57,7 +75,8 @@ public:
     PYBIND11_TYPE_CASTER(Type, _("Array[") + value_conv::name + _("]"));
 };
 
-template <typename Type> struct type_caster<ngcore::Array<Type>>
+
+template <typename Type> struct type_caster<ngcore::Array<Type>, enable_if_t<!ngcore::detail::HasPyFormat<Type>::value>>
  : ngcore_list_caster<ngcore::Array<Type>, Type> { };
 
 
@@ -150,20 +169,6 @@ namespace ngcore
       throw py::type_error("Cannot convert Python object to C Array");
     return arr;
   }
-
-  namespace detail
-  {
-    template<typename T>
-    struct HasPyFormat
-    {
-    private:
-      template<typename T2>
-      static auto check(T2*) -> std::enable_if_t<std::is_same_v<decltype(std::declval<py::format_descriptor<T2>>().format()), std::string>, std::true_type>;
-      static auto check(...) -> std::false_type;
-    public:
-      static constexpr bool value = decltype(check((T*) nullptr))::value;
-    };
-  } // namespace detail
 
   template <typename T, typename TIND=typename FlatArray<T>::index_type>
   void ExportArray (py::module &m)

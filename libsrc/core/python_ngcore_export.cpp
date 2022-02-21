@@ -18,6 +18,11 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
   ExportArray<unsigned>(m);
   ExportArray<size_t>(m);
   ExportArray<double>(m);
+  ExportArray<float>(m);
+  ExportArray<signed short>(m);
+  ExportArray<signed char>(m);
+  ExportArray<unsigned short>(m);
+  ExportArray<unsigned char>(m);
 
   ExportTable<int>(m);
   
