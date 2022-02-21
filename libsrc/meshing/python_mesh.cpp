@@ -1299,8 +1299,8 @@ project_boundaries : Optional[str] = None
     .def("Mirror", &Mesh::Mirror)
     .def("_getVertices", [](Mesh & self)
           {
-            std::vector<float> verts(3*self.GetNV());
-
+            // std::vector<float> verts(3*self.GetNV());
+            Array<float> verts(3*self.GetNV());
             ParallelForRange( self.GetNV(), [&](auto myrange) {
                 const auto & points = self.Points();
                 for(auto i : myrange)
@@ -1314,9 +1314,9 @@ project_boundaries : Optional[str] = None
           })
     .def("_getSegments", [](Mesh & self)
           {
-            std::vector<int> output;
-            output.resize(2*self.GetNSeg());
-
+            // std::vector<int> output;
+            // output.resize(2*self.GetNSeg());
+            Array<int> output(2*self.GetNSeg());
             ParallelForRange( self.GetNSeg(), [&](auto myrange) {
                 const auto & segs = self.LineSegments();
                 for(auto i : myrange)
@@ -1331,9 +1331,11 @@ project_boundaries : Optional[str] = None
           {
             const auto & topo = self.GetTopology();
             size_t n = topo.GetNEdges();
+            /*
             std::vector<int> output;
             output.resize(2*n);
-
+            */
+            Array<int> output(2*n);
             ParallelForRange( n, [&](auto myrange) {
                 for(auto i : myrange)
                 {
@@ -1346,9 +1348,11 @@ project_boundaries : Optional[str] = None
           })
     .def("_get2dElementsAsTriangles", [](Mesh & self)
           {
+            /*
             std::vector<int> trigs;
             trigs.resize(3*self.GetNSE());
-
+            */
+            Array<int> trigs(3*self.GetNSE());
             ParallelForRange( self.GetNSE(), [&](auto myrange) {
                 const auto & surfels = self.SurfaceElements();
                 for(auto i : myrange)
@@ -1363,9 +1367,10 @@ project_boundaries : Optional[str] = None
           })
     .def("_get3dElementsAsTets", [](Mesh & self)
         {
-            std::vector<int> tets;
-            tets.resize(4*self.GetNE());
+          // std::vector<int> tets;
+          // tets.resize(4*self.GetNE());
 
+            Array<int> tets(4*self.GetNE());
             ParallelForRange( self.GetNE(), [&](auto myrange) {
                 const auto & els = self.VolumeElements();
                 for(auto i : myrange)
