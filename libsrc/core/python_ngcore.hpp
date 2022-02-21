@@ -261,6 +261,7 @@ namespace ngcore
                   }), py::arg("vec"), "Makes array with given list of elements")
 
       ;
+      py::implicitly_convertible<std::vector<T>, TArray>();
     }
 
   template <typename T>
