@@ -35,6 +35,7 @@ namespace netgen
 
     if (t2 == -1) return false;
     if (swapped[t1] || swapped[t2]) return false;
+    if (mesh[t2].IsDeleted()) return false;
 
     const int faceindex = mesh[t1].GetIndex();
     const int surfnr = mesh.GetFaceDescriptor (faceindex).SurfNr();
@@ -278,6 +279,7 @@ namespace netgen
             }
 
           const auto sel = mesh[sei];
+          auto index = sel.GetIndex();
           for (int j = 0; j < 3; j++)
             {
               PointIndex pi1 = sel.PNumMod(j+2);
@@ -286,6 +288,7 @@ namespace netgen
               for (auto sei_other : elements_on_node[pi1])
                 {
                   if(sei_other==sei) continue;
+                  if(mesh[sei_other].GetIndex()!=index) continue;
                   const auto & other = mesh[sei_other];
                   int pi1_other = -1;
                   int pi2_other = -1;
@@ -333,7 +336,7 @@ namespace netgen
             if (mesh[t1].IsDeleted())
               return;
 
-            if (mesh[t1].GetIndex() != faceindex)
+            if (swapped[t1])
               return;
 
             if (multithread.terminate)
