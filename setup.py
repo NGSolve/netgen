@@ -53,24 +53,27 @@ packages = ['netgen', 'pyngcore']
 
 if 'darwin' in sys.platform:
     cmake_args += [
-        f'-DNG_INSTALL_DIR_LIB=netgen',
-        f'-DNG_INSTALL_DIR_PYTHON=.',
-        f'-DNG_INSTALL_DIR_BIN=bin',
-        f'-DNG_INSTALL_DIR_CMAKE=netgen/cmake',
+        '-DNG_INSTALL_DIR_LIB=netgen',
+        '-DNG_INSTALL_DIR_PYTHON=.',
+        '-DNG_INSTALL_DIR_BIN=bin',
+        '-DNG_INSTALL_DIR_CMAKE=netgen/cmake',
+        '-DNG_INSTALL_DIR_INCLUDE=netgen/include',
     ]
 elif 'win' in sys.platform:
     cmake_args += [
         '-A Win64',
-        f'-DNG_INSTALL_DIR_BIN=netgen',
-        f'-DNG_INSTALL_DIR_PYTHON=.',
-        f'-DNG_INSTALL_DIR_LIB=netgen/lib',
-        f'-DNG_INSTALL_DIR_CMAKE=netgen/cmake',
+        '-DNG_INSTALL_DIR_BIN=netgen',
+        '-DNG_INSTALL_DIR_PYTHON=.',
+        '-DNG_INSTALL_DIR_LIB=netgen/lib',
+        '-DNG_INSTALL_DIR_CMAKE=netgen/cmake',
+        '-DNG_INSTALL_DIR_INCLUDE=netgen/include',
     ]
 elif 'linux' in sys.platform:
     name_dir = name.replace('-','_')
     cmake_args += [
         f'-DNG_INSTALL_DIR_LIB={py_install_dir}/{name_dir}.libs',
-        f'-DNG_INSTALL_DIR_BIN=bin',
+        '-DNG_INSTALL_DIR_BIN=bin',
+        '-DNG_INSTALL_DIR_INCLUDE=include/netgen',
     ]
     packages = []
 
@@ -79,7 +82,6 @@ cmake_args += [
         '-DUSE_CCACHE:BOOL=ON',
         '-DUSE_GUI=ON',
         '-DUSE_NATIVE_ARCH=OFF',
-        '-DNG_INSTALL_DIR_INCLUDE=include/netgen',
         '-DBUILD_ZLIB=ON',
         '-DBUILD_OCC=ON',
         '-DUSE_OCC=ON',
