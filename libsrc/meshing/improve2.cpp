@@ -366,6 +366,7 @@ namespace netgen
                            Array<Vec<3>, PointIndex> & normals,
                            Array<bool, PointIndex> & fixed,
                            PointIndex pi1, PointIndex pi2,
+                           double metricweight,
                            bool check_only = true)
   {
     Vec<3> nv;
@@ -441,7 +442,7 @@ namespace netgen
     for (const Element2d & el : mesh.SurfaceElements()[hasonepi])
       {
         bad1 += CalcTriangleBadness (mesh[el[0]], mesh[el[1]], mesh[el[2]],
-                nv, -1, loch);
+                nv, metricweight, loch);
         illegal1 += 1-mesh.LegalTrig(el);
       }
 
@@ -449,7 +450,7 @@ namespace netgen
       {
         const Element2d & el = mesh[hasbothpi[k]];
         bad1 += CalcTriangleBadness (mesh[el[0]], mesh[el[1]], mesh[el[2]],
-                nv, -1, loch);
+                nv, metricweight, loch);
         illegal1 += 1-mesh.LegalTrig(el);
       }
 
@@ -463,7 +464,7 @@ namespace netgen
 
         double err =
             CalcTriangleBadness (mesh[el[0]], mesh[el[1]], mesh[el[2]],
-                    nv, -1, loch);
+                    nv, metricweight, loch);
         bad2 += err;
 
         Vec<3> hnv = Cross (Vec3d (mesh[el[0]],
@@ -672,7 +673,7 @@ namespace netgen
     ParallelFor( Range(edges), [&] (auto i) NETGEN_LAMBDA_INLINE
       {
         auto [pi1, pi2] = edges[i];
-        double d_badness = CombineImproveEdge(mesh, elementsonnode, normals, fixed, pi1, pi2, true);
+        double d_badness = CombineImproveEdge(mesh, elementsonnode, normals, fixed, pi1, pi2, metricweight, true);
         if(d_badness < 0.0)
             candidate_edges[improvement_counter++] = make_tuple(d_badness, i);
       }, TasksPerThread(4));
@@ -683,7 +684,7 @@ namespace netgen
     for(auto [d_badness, ei] : edges_with_improvement)
       {
         auto [pi1, pi2] = edges[ei];
-        CombineImproveEdge(mesh, elementsonnode, normals, fixed, pi1, pi2, false);
+        CombineImproveEdge(mesh, elementsonnode, normals, fixed, pi1, pi2, metricweight, false);
       }
 
     //  mesh.Compress();
