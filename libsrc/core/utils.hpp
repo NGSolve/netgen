@@ -87,7 +87,7 @@ namespace ngcore
     std::string res;
     res.reserve(s.size());
 
-    for(auto & c : res)
+    for(auto & c : s)
         res.push_back(tolower(c));
 
     return res;
