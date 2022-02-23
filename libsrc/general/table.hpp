@@ -201,6 +201,8 @@ public:
   inline const T & Get (int i, int nr) const
     { return ((T*)data.Get(i).col)[nr-1]; }
 
+  inline T & Get (int i, int nr)
+    { return ((T*)data.Get(i).col)[nr-1]; }
 
   /** Returns pointer to the first element in row i. */
   inline const T * GetLine (int i) const

@@ -1127,6 +1127,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
              self.UpdateTopology();
            }),py::call_guard<py::gil_scoped_release>())
 
+    .def("ZRefine", &Mesh::ZRefine)
+
     .def ("SecondOrder", FunctionPointer
           ([](Mesh & self)
            {

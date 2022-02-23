@@ -6213,7 +6213,169 @@ namespace netgen
     */
   }
 
+  void Mesh :: ZRefine(const string& name, const Array<double>& slices)
+  {
+    auto nr = GetIdentifications().GetNr(name);
+    auto& identpts = GetIdentifications().GetIdentifiedPoints();
 
+    UpdateTopology();
+
+    std::map<std::pair<PointIndex, PointIndex>,
+             Array<PointIndex>> inserted_points;
+    BitArray mapped_points(GetNV()+1);
+    mapped_points = false;
+
+    // Add new points
+    for(auto [p1p2, idnr] : identpts)
+      {
+        if(idnr != nr)
+          continue;
+        auto& ipts = inserted_points[{p1p2.I1(), p1p2.I2()}];
+        auto p1 = Point(p1p2.I1());
+        auto p2 = Point(p1p2.I2());
+        ipts.Append(p1p2.I1());
+        mapped_points.SetBit(p1p2.I1());
+        for(auto slice : slices)
+          {
+            auto np = p1 + slice * (p2-p1);
+            auto npi = AddPoint(np);
+            ipts.Append(npi);
+          }
+        ipts.Append(p1p2.I2());
+      }
+
+    // Split segments
+    for(auto si : Range(segments))
+      {
+        auto& seg = segments[si];
+        auto p1 = seg[0];
+        auto p2 = seg[1];
+
+        auto c1 = inserted_points.count({p1, p2});
+        auto c2 = inserted_points.count({p2, p1});
+
+        if(c1 == 0 && c2 == 0)
+          continue;
+
+        if(c2)
+          Swap(p1,p2);
+
+        const auto& ipts = inserted_points[{p1,p2}];
+        if(c2)
+          seg[1] = ipts[ipts.Size()-2];
+        else
+          seg[1] = ipts[1];
+        for(auto i : Range(size_t(1), ipts.Size()-1))
+          {
+            Segment snew = seg;
+            if(c2)
+              {
+                seg[0] = ipts[ipts.Size()-1-i];
+                seg[1] = ipts[ipts.Size()-2-i];
+              }
+            else
+              {
+                snew[0] = ipts[i];
+                snew[1] = ipts[i+1];
+              }
+            AddSegment(snew);
+          }
+      }
+
+    BitArray sel_done(surfelements.Size());
+    sel_done = false;
+
+    // Split surface elements
+    auto p2sel = CreatePoint2SurfaceElementTable();
+    for(const auto& [pair, inserted] : inserted_points)
+      {
+        for(auto si : p2sel[pair.first])
+          {
+            if(sel_done[si])
+              continue;
+            sel_done.SetBit(si);
+            auto sel = surfelements[si];
+            map<PointIndex, Array<PointIndex>> mapped_points;
+            int nmapped = 0;
+            for(auto i : Range(sel.GetNP()))
+              {
+                auto p1 = sel[i];
+                auto p2 = sel[(i+1)%sel.GetNP()];
+                auto c1 = inserted_points.count({p1, p2});
+                auto c2 = inserted_points.count({p2, p1});
+                if(c1 == 0 && c2 == 0)
+                  continue;
+                if(c2)
+                  Swap(p1, p2);
+                auto& ipts = inserted_points[{p1, p2}];
+                auto& a1 = mapped_points[p1];
+                auto& a2 = mapped_points[p2];
+                a1 = ipts.Range(0, ipts.Size()-1);
+                a2 = ipts.Range(1, ipts.Size());
+                nmapped = ipts.Size()-1;
+              }
+            for(auto i : Range(nmapped))
+              {
+                Element2d nsel = sel;
+                for(auto& pi : nsel.PNums())
+                  if(mapped_points.count(pi))
+                    pi = mapped_points[pi][i];
+                AddSurfaceElement(nsel);
+              }
+            if(nmapped)
+              surfelements[si].Delete();
+          }
+      }
+
+    // Split volume elements
+    BitArray vol_done(volelements.Size());
+    vol_done = false;
+    auto p2el = CreatePoint2ElementTable(); // mapped_points);
+    for(const auto& [pair, inserted] : inserted_points)
+      {
+        for(auto ei : p2el[pair.first])
+          {
+            if(vol_done[ei])
+              continue;
+            vol_done.SetBit(ei);
+            auto el = volelements[ei];
+            map<PointIndex, Array<PointIndex>> mapped_points;
+            int nmapped = 0;
+            NgArray<int> eledges;
+            topology.GetElementEdges(ei+1, eledges);
+            for(auto edgei : eledges)
+              {
+                int p1, p2;
+                topology.GetEdgeVertices(edgei, p1, p2);
+                auto c1 = inserted_points.count({p1, p2});
+                auto c2 = inserted_points.count({p2, p1});
+                if(c1 == 0 && c2 == 0)
+                  continue;
+                if(c2)
+                  Swap(p1, p2);
+                auto& ipts = inserted_points[{p1, p2}];
+                auto& a1 = mapped_points[p1];
+                auto& a2 = mapped_points[p2];
+                a1 = ipts.Range(0, ipts.Size()-1);
+                a2 = ipts.Range(1, ipts.Size());
+                nmapped = ipts.Size()-1;
+              }
+
+            for(auto i : Range(nmapped))
+              {
+                Element nel = el;
+                for(auto& pi : nel.PNums())
+                  if(mapped_points.count(pi))
+                    pi = mapped_points[pi][i];
+                AddVolumeElement(nel);
+              }
+            if(nmapped)
+              volelements[ei].Delete();
+          }
+      }
+
+    Compress();
+  }
 
   void Mesh :: RebuildSurfaceElementLists ()
   {
