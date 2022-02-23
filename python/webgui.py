@@ -20,11 +20,11 @@ class WebGLScene(BaseWebGuiScene):
         d = self.mesh._webgui_data()
         bp = d['Bezier_trig_points']
         for i in range(len(bp)):
-            bp[i] = encodeData(np.array(bp[i]))
+            bp[i] = encodeData(np.array(bp[i], dtype=np.float32))
 
         ep = d['edges']
         for i in range(len(ep)):
-            ep[i] = encodeData(np.array(ep[i]))
+            ep[i] = encodeData(np.array(ep[i], dtype=np.float32))
 
         if self.clipping is not None:
             d['clipping'] = True
@@ -144,7 +144,7 @@ def BuildRenderData(mesh, func, order=2, draw_surf=True, draw_vol=True, deformat
         
         timer2list.Start()        
         for i in range(og+1):
-            Bezier_points.append(encodeData(BezierPnts[i]))
+            Bezier_points.append(encodeData(BezierPnts[i], dtype=np.float32))
         timer2list.Stop()        
 
         d['Bezier_points'] = Bezier_points
@@ -160,7 +160,7 @@ def BuildRenderData(mesh, func, order=2, draw_surf=True, draw_vol=True, deformat
         edge_data = np.tensordot(iBvals.NumPy(), pmat, axes=(1,1))
         edges = []
         for i in range(og+1):
-            edges.append(encodeData(edge_data[i]))
+            edges.append(encodeData(edge_data[i], dtype=np.float32))
         d['edges'] = edges
 
         ndtrig = int((og+1)*(og+2)/2)
@@ -215,7 +215,7 @@ def BuildRenderData(mesh, func, order=2, draw_surf=True, draw_vol=True, deformat
         BezierPnts = np.tensordot(iBvals_trig.NumPy(), pmat, axes=(1,1))
 
         for i in range(ndtrig):
-            Bezier_points.append(encodeData(BezierPnts[i]))
+            Bezier_points.append(encodeData(BezierPnts[i], dtype=np.float32))
 
 
         d['Bezier_trig_points'] = Bezier_points    
