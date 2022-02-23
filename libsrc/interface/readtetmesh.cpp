@@ -20,10 +20,8 @@ namespace netgen
 
 
   void ReadTETFormat (Mesh & mesh, 
-                      const string & hfilename)
+                      const filesystem::path & filename)
   {
-    const char * filename = hfilename.c_str();
-
     cout << "Reading .tet mesh" << endl;
 
     ifstream in (filename);

@@ -68,28 +68,27 @@ STLGeometry :: ~STLGeometry()
   // delete edgedata;
 }
 
-void STLGeometry :: Save (string filename) const
+void STLGeometry :: Save (const filesystem::path & filename) const
 {
-  const char  * cfilename = filename.c_str();
-  if (strlen(cfilename) < 4) 
-    throw NgException ("illegal filename");
+  string ext = ToLower(filename.extension());
 
-  if (strlen(cfilename) > 3 &&
-      strcmp (&cfilename[strlen(cfilename)-3], "stl") == 0)
+  if (ext == ".stl")
     {
-      STLTopology::Save (cfilename);
+      STLTopology::Save (filename);
+      return;
     }
-  else if (strlen(cfilename) > 4 &&
-	   strcmp (&cfilename[strlen(cfilename)-4], "stlb") == 0)
+  else if (ext == ".stlb")
     {
-      SaveBinary (cfilename,"Binary STL Geometry");
-      
+      SaveBinary (filename,"Binary STL Geometry");
+      return;
     }
-  else if (strlen(cfilename) > 4 &&
-	   strcmp (&cfilename[strlen(cfilename)-4], "stle") == 0)
+  else if (ext == ".stle")
     {
-      SaveSTLE (cfilename);
+      SaveSTLE (filename);
+      return;
     }
+
+  throw Exception ("Unknown target format: " + filename.string());
 }
 
 
@@ -1100,22 +1099,22 @@ void STLGeometry :: ExportEdges()
 
 }
 
-void STLGeometry :: LoadEdgeData(const char* file)
+void STLGeometry :: LoadEdgeData(const filesystem::path & filename)
 {
   StoreEdgeData();
 
-  PrintFnStart("Load edges from file '", file, "'");
-  ifstream fin(file);
+  PrintFnStart("Load edges from file '", filename, "'");
+  ifstream fin(filename);
 
   edgedata->Read(fin);
 
   //  calcedgedataanglesnew = 1;
 }
 
-void STLGeometry :: SaveEdgeData(const char* file)
+void STLGeometry :: SaveEdgeData(const filesystem::path & filename)
 {
-  PrintFnStart("save edges to file '", file, "'");
-  ofstream fout(file);
+  PrintFnStart("save edges to file '", filename, "'");
+  ofstream fout(filename);
 
   edgedata->Write(fout);
 }
@@ -3627,7 +3626,7 @@ void STLGeometry :: SmoothGeometry ()
     }
 }
 
-void STLGeometry :: WriteChartToFile( ChartId chartnumber, string filename )
+void STLGeometry :: WriteChartToFile( ChartId chartnumber, filesystem::path filename )
 {
   PrintMessage(1,"write chart ", int(chartnumber), " to ", filename);
   Array<int> trignums;
@@ -3701,38 +3700,38 @@ void STLGeometry :: WriteChartToFile( ChartId chartnumber, string filename )
   class STLGeometryRegister : public GeometryRegister
   {
   public:
-    virtual NetgenGeometry * Load (string filename) const;
+    virtual NetgenGeometry * Load (const filesystem::path & filename) const;
   };
 
-  NetgenGeometry *  STLGeometryRegister :: Load (string filename) const
+  NetgenGeometry *  STLGeometryRegister :: Load (const filesystem::path & filename) const
   {
-    const char * cfilename = filename.c_str();
+    string ext = ToLower(filename.extension());
 
-    if (strcmp (&cfilename[strlen(cfilename)-3], "stl") == 0)
+    if (ext == ".stl")
       {
-	PrintMessage (1, "Load STL geometry file ", cfilename);
+	PrintMessage (1, "Load STL geometry file ", filename);
 
-	ifstream infile(cfilename);
+	ifstream infile(filename);
 
 	STLGeometry * hgeom = STLGeometry :: Load (infile);
 	hgeom -> edgesfound = 0;
 	return hgeom;
       }
-    else if (strcmp (&cfilename[strlen(cfilename)-4], "stlb") == 0)
+    else if (ext == ".stlb")
       {
-	PrintMessage (1, "Load STL binary geometry file ", cfilename);
+	PrintMessage (1, "Load STL binary geometry file ", filename);
 
-	ifstream infile(cfilename);
+	ifstream infile(filename);
 
 	STLGeometry * hgeom = STLGeometry :: LoadBinary (infile);
 	hgeom -> edgesfound = 0;
 	return hgeom;
       }
-    else if (strcmp (&cfilename[strlen(cfilename)-3], "nao") == 0)
+    else if (ext == ".nao")
       {
-	PrintMessage (1, "Load naomi (F. Kickinger) geometry file ", cfilename);
+	PrintMessage (1, "Load naomi (F. Kickinger) geometry file ", filename);
 
-	ifstream infile(cfilename);
+	ifstream infile(filename);
 
 	STLGeometry * hgeom = STLGeometry :: LoadNaomi (infile);
 	hgeom -> edgesfound = 0;

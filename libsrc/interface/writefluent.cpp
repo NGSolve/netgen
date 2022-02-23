@@ -18,7 +18,7 @@ namespace netgen
 
 
 void WriteFluentFormat (const Mesh & mesh,
-			const string & filename)
+			const filesystem::path & filename)
 
 {
   cout << "start writing fluent export" << endl;
@@ -28,7 +28,7 @@ void WriteFluentFormat (const Mesh & mesh,
   int nse = mesh.GetNSE();
   int i, j;
 
-  ofstream outfile (filename.c_str());
+  ofstream outfile (filename);
   char str[100];
 
   outfile.precision(6);

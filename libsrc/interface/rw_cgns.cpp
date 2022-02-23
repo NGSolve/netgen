@@ -629,12 +629,12 @@ namespace netgen::cg
 
 namespace netgen
 {
-  int ReadCGNSMesh (Mesh & mesh, const string & filename, Array<unique_ptr<cg::Zone>> & zones)
+  int ReadCGNSMesh (Mesh & mesh, const filesystem::path & filename, Array<unique_ptr<cg::Zone>> & zones)
     {
       mesh.SetDimension(3);
       static Timer tall("CGNS::ReadMesh"); RegionTimer rtall(tall);
       int fn;
-      cg_open(filename.c_str(),CG_MODE_READ,&fn);
+      cg_open(filename.string().c_str(),CG_MODE_READ,&fn);
 
       int base = 1;
       int nzones;
@@ -698,7 +698,7 @@ namespace netgen
       return fn;
     }
 
-  void ReadCGNSMesh (Mesh & mesh, const string & filename)
+  void ReadCGNSMesh (Mesh & mesh, const filesystem::path & filename)
     {
       Array<unique_ptr<cg::Zone>> zones;
       int fn = ReadCGNSMesh(mesh, filename, zones);
@@ -706,7 +706,7 @@ namespace netgen
     }
 
   // Reads mesh and solutions of .csns file
-  tuple<shared_ptr<Mesh>, vector<string>, vector<Array<double>>, vector<int>> ReadCGNSFile(string filename, int base)
+  tuple<shared_ptr<Mesh>, vector<string>, vector<Array<double>>, vector<int>> ReadCGNSFile(const filesystem::path & filename, int base)
     {
       static Timer tall("CGNS::ReadFile"); RegionTimer rtall(tall);
 
@@ -775,11 +775,11 @@ namespace netgen
 
     }
 
-  void WriteCGNSMesh (const Mesh & mesh, const string & filename)
+  void WriteCGNSMesh (const Mesh & mesh, const filesystem::path & filename)
     {
       static Timer tall("CGNS::WriteMesh"); RegionTimer rtall(tall);
       int fn, base, zone;
-      cg_open(filename.c_str(),CG_MODE_WRITE,&fn);
+      cg_open(filename.string().c_str(),CG_MODE_WRITE,&fn);
 
       WriteCGNSMesh(mesh, fn, base, zone);
 
@@ -787,11 +787,11 @@ namespace netgen
     }
 
 
-  void WriteCGNSFile(shared_ptr<Mesh> mesh, string filename, vector<string> fields, vector<Array<double>> values, vector<int> locations)
+  void WriteCGNSFile(shared_ptr<Mesh> mesh, const filesystem::path & filename, vector<string> fields, vector<Array<double>> values, vector<int> locations)
   {
       static Timer tall("CGNS::WriteFile"); RegionTimer rtall(tall);
       int fn, base, zone;
-      cg_open(filename.c_str(),CG_MODE_WRITE,&fn);
+      cg_open(filename.string().c_str(),CG_MODE_WRITE,&fn);
 
       WriteCGNSMesh(*mesh, fn, base, zone);
 
@@ -814,22 +814,22 @@ namespace netgen
 
 namespace netgen
 {
-  void ReadCGNSMesh (Mesh & mesh, const string & filename)
+  void ReadCGNSMesh (Mesh & mesh, const filesystem::path & filename)
     {
       PrintMessage(1, "Could not import CGNS mesh: Netgen was built without CGNS support");
     }
 
-  tuple<shared_ptr<Mesh>, vector<string>, vector<Array<double>>, vector<int>> ReadCGNSFile(string filename, int base)
+  tuple<shared_ptr<Mesh>, vector<string>, vector<Array<double>>, vector<int>> ReadCGNSFile(const filesystem::path & filename, int base)
     {
       throw Exception("Netgen was built without CGNS support");
     }
 
-  void WriteCGNSMesh (const Mesh & mesh, const string & filename)
+  void WriteCGNSMesh (const Mesh & mesh, const filesystem::path & filename)
     {
       PrintMessage(1, "Could not write CGNS mesh: Netgen was built without CGNS support");
     }
 
-  void WriteCGNSFile(shared_ptr<Mesh> mesh, string filename, vector<string> fields, vector<Array<double>> values, vector<int> locations)
+  void WriteCGNSFile(shared_ptr<Mesh> mesh, const filesystem::path & filename, vector<string> fields, vector<Array<double>> values, vector<int> locations)
     {
       throw Exception("Netgen was built without CGNS support");
     }

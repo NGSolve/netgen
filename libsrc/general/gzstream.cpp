@@ -44,7 +44,7 @@ namespace GZSTREAM_NAMESPACE {
 // class gzstreambuf:
 // --------------------------------------
 
-gzstreambuf* gzstreambuf::open( const char* name, int open_mode) {
+gzstreambuf* gzstreambuf::open( const filesystem::path & name, int open_mode) {
     if ( is_open())
         return (gzstreambuf*)0;
     mode = open_mode;
@@ -60,7 +60,11 @@ gzstreambuf* gzstreambuf::open( const char* name, int open_mode) {
         *fmodeptr++ = 'w';
     *fmodeptr++ = 'b';
     *fmodeptr = '\0';
-    file = gzopen( name, fmode);
+#ifdef WIN32
+    file = gzopen_w( name.c_str(), fmode);
+#else // WIN32
+    file = gzopen( name.c_str(), fmode);
+#endif // WIN32
     if (file == 0)
         return (gzstreambuf*)0;
     opened = 1;
@@ -139,17 +143,17 @@ int gzstreambuf::sync() {
 // class gzstreambase:
 // --------------------------------------
 
-gzstreambase::gzstreambase( const char* name, int mode) {
+gzstreambase::gzstreambase( const filesystem::path & name, int mode) {
     init( &buf);
-    open( name, mode);
+    open( name.c_str(), mode);
 }
 
 gzstreambase::~gzstreambase() {
     buf.close();
 }
 
-void gzstreambase::open( const char* name, int open_mode) {
-    if ( ! buf.open( name, open_mode))
+void gzstreambase::open( const filesystem::path & name, int open_mode) {
+    if ( ! buf.open( name.c_str(), open_mode))
         clear( rdstate() | std::ios::badbit);
 }
 

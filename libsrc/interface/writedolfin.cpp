@@ -19,7 +19,7 @@ namespace netgen
 
 
 
-  void WriteDolfinFormat (const Mesh & mesh, const string & filename)
+  void WriteDolfinFormat (const Mesh & mesh, const filesystem::path & filename)
   {
     cout << "start writing dolfin export" << endl;
 
@@ -30,7 +30,7 @@ namespace netgen
     // int invertsurf = mparam.inverttrigs;
     // int i, j;
 
-    ofstream outfile (filename.c_str());
+    ofstream outfile (filename);
 
     // char str[100];
     outfile.precision(8);

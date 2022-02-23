@@ -223,6 +223,10 @@ MyStr::MyStr(const string & st)
   strcpy (str, st.c_str());
 }
 
+MyStr::MyStr(const filesystem::path & path)
+    : MyStr(path.string())
+{ }
+
 
 
 MyStr MyStr::Left(unsigned r)

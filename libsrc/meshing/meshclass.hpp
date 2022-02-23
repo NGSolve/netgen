@@ -11,8 +11,12 @@
   The mesh class
 */
 
+#include<filesystem>
+
 namespace netgen
 {
+  using namespace std;
+
   enum resthtype { RESTRICTH_FACE, RESTRICTH_EDGE, 
 		   RESTRICTH_SURFACEELEMENT, RESTRICTH_POINT, RESTRICTH_SEGMENT };
 
@@ -446,7 +450,7 @@ namespace netgen
     ///
     DLL_HEADER void RestrictLocalH (resthtype rht, int nr, double loch);
     ///
-    DLL_HEADER void LoadLocalMeshSize (const string & meshsizefilename);
+    DLL_HEADER void LoadLocalMeshSize (const filesystem::path & meshsizefilename);
     ///
     DLL_HEADER void SetGlobalH (double h);
     ///
@@ -546,11 +550,11 @@ namespace netgen
     ///
 	DLL_HEADER void Merge (istream & infile, const int surfindex_offset = 0);
     ///
-	DLL_HEADER void Save (const string & filename) const;
+	DLL_HEADER void Save (const filesystem::path & filename) const;
     ///
-	DLL_HEADER void Load (const string & filename);
+	DLL_HEADER void Load (const filesystem::path & filename);
     ///
-	DLL_HEADER void Merge (const string & filename, const int surfindex_offset = 0);
+	DLL_HEADER void Merge (const filesystem::path & filename, const int surfindex_offset = 0);
 
 
     DLL_HEADER void DoArchive (Archive & archive);

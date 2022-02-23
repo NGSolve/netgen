@@ -112,13 +112,12 @@ namespace ngcore
 #endif
   }
 
-  NGCORE_API std::string GetTempFilename()
+  NGCORE_API std::filesystem::path GetTempFilename()
   {
       static int counter = 0;
       auto path = std::filesystem::temp_directory_path();
-      std::string filename = ".temp_netgen_file_"+ToString(counter++)+"_"+ToString(GetTimeCounter());
-      path.append(filename);
-      return path.string();
+      path += ".temp_netgen_file_"+ToString(counter++)+"_"+ToString(GetTimeCounter());
+      return path;
   }
 
 } // namespace ngcore

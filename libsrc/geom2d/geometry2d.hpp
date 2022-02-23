@@ -143,7 +143,7 @@ namespace netgen
   public:
     DLL_HEADER virtual ~SplineGeometry2d();
 
-    DLL_HEADER void Load (const char * filename);
+    DLL_HEADER void Load (const filesystem::path & filename);
 
     DLL_HEADER void LoadData( ifstream & infile );
     DLL_HEADER void LoadDataNew ( ifstream & infile );

@@ -205,9 +205,9 @@ namespace netgen
 		   Tcl_Interp * interp,
 		   int argc, tcl_const char *argv[])
   {
-    string filename (argv[1]);
+    auto filename = filesystem::u8path(argv[1]);
 
-    if (filename.find(".vol") == string::npos) 
+    if (filename.string().find(".vol") == string::npos)
       {
 	return Ng_ImportMesh(clientData,interp,argc,argv);
       }
@@ -217,42 +217,15 @@ namespace netgen
     mesh = make_shared<Mesh>();
     try
       {
-        istream * infile;
-        // if (filename.substr (filename.length()-3, 3) == ".gz")
-        if (filename.find(".vol.gz") != string::npos)
-          infile = new igzstream (filename.c_str());
-        else
-          infile = new ifstream (filename.c_str());
-
-	// ifstream infile(filename.c_str());
-	mesh -> Load(*infile);
-        // vsmesh.SetMesh (mesh);
+	mesh -> Load(filename);
         SetGlobalMesh (mesh);
 
 #ifdef PARALLEL
 	MyMPI_SendCmd ("mesh");
 	mesh -> Distribute();
 #endif
-    auto geo = geometryregister.LoadFromMeshFile (*infile);
-    if(geo)
-        ng_geometry = geo;
-    delete infile;
-
-	/*
-	string auxstring;
-	if(infile.good())
-	  {
-	    infile >> auxstring;
-	    if(auxstring == "csgsurfaces")
-	      {
-		CSGeometry * geometry = new CSGeometry ("");
-		geometry -> LoadSurfaces(infile);
-
-		delete ng_geometry;
-		ng_geometry = geometry;
-	      }
-	  }
-	*/
+        if(mesh->GetGeometry())
+          ng_geometry = mesh->GetGeometry();
       }
     catch (NgException e)
       {

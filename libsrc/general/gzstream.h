@@ -62,7 +62,7 @@ public:
         // ASSERT: both input & output capabilities will not be used together
     }
     int is_open() { return opened; }
-    gzstreambuf* open( const char* name, int open_mode);
+    gzstreambuf* open( const filesystem::path & name, int open_mode);
     gzstreambuf* close();
     ~gzstreambuf() { close(); }
     
@@ -76,9 +76,9 @@ protected:
     gzstreambuf buf;
 public:
     gzstreambase() { init(&buf); }
-    DLL_HEADER gzstreambase( const char* name, int open_mode);
+    DLL_HEADER gzstreambase( const filesystem::path & name, int open_mode);
     DLL_HEADER ~gzstreambase();
-    void open( const char* name, int open_mode);
+    void open( const filesystem::path & name, int open_mode);
     void close();
     gzstreambuf* rdbuf() { return &buf; }
 };
@@ -92,10 +92,10 @@ public:
 class DLL_HEADER igzstream : public gzstreambase, public std::istream {
 public:
     igzstream() : std::istream( &buf) {} 
-    igzstream( const char* name, int open_mode = std::ios::in)
+    igzstream( const filesystem::path & name, int open_mode = std::ios::in)
         : gzstreambase( name, open_mode), std::istream( &buf) {}  
     gzstreambuf* rdbuf() { return gzstreambase::rdbuf(); }
-    void open( const char* name, int open_mode = std::ios::in) {
+    void open( const filesystem::path & name, int open_mode = std::ios::in) {
         gzstreambase::open( name, open_mode);
     }
 };
@@ -103,10 +103,10 @@ public:
 class DLL_HEADER ogzstream : public gzstreambase, public std::ostream {
 public:
     ogzstream() : std::ostream( &buf) {}
-    ogzstream( const char* name, int mode = std::ios::out)
+    ogzstream( const filesystem::path & name, int mode = std::ios::out)
         : gzstreambase( name, mode), std::ostream( &buf) {}  
     gzstreambuf* rdbuf() { return gzstreambase::rdbuf(); }
-    void open( const char* name, int open_mode = std::ios::out) {
+    void open( const filesystem::path & name, int open_mode = std::ios::out) {
         gzstreambase::open( name, open_mode);
     }
 };

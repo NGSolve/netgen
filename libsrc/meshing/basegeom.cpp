@@ -1124,7 +1124,7 @@ namespace netgen
     return 0;
   }
 
-  void NetgenGeometry :: Save (string filename) const
+  void NetgenGeometry :: Save (const filesystem::path & filename) const
   {
     throw NgException("Cannot save geometry - no geometry available");
   }

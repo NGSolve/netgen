@@ -264,7 +264,7 @@ namespace netgen
   }
 
 
-  void CSGeometry :: Save (string filename) const
+  void CSGeometry :: Save (const filesystem::path & filename) const
   {
     ofstream ost (filename.c_str());
     Save (ost);
@@ -1619,21 +1619,21 @@ namespace netgen
   class CSGeometryRegister : public GeometryRegister
   {
   public:
-    virtual NetgenGeometry * Load (string filename) const;
+    virtual NetgenGeometry * Load (const filesystem::path & filename) const;
     virtual NetgenGeometry * LoadFromMeshFile (istream & ist, string token) const;
     // virtual VisualScene * GetVisualScene (const NetgenGeometry * geom) const;
   };
 
   extern CSGeometry * ParseCSG (istream & istr, CSGeometry *instance=nullptr);
 
-  NetgenGeometry *  CSGeometryRegister :: Load (string filename) const
+  NetgenGeometry *  CSGeometryRegister :: Load (const filesystem::path & filename) const
   {
-    const char * cfilename = filename.c_str();
-    if (strcmp (&cfilename[strlen(cfilename)-3], "geo") == 0)
+    string extension = filename.extension().string();
+    if (extension == ".geo")
       {
-	PrintMessage (1, "Load CSG geometry file ", cfilename);
+	PrintMessage (1, "Load CSG geometry file ", filename);
 
-	ifstream infile(cfilename);
+	ifstream infile(filename);
 
 	CSGeometry * hgeom = ParseCSG (infile);
 	if (!hgeom)
@@ -1643,18 +1643,16 @@ namespace netgen
 	return hgeom;
       }
 
-    if (strcmp (&cfilename[strlen(cfilename)-3], "ngg") == 0)
+    if (extension == ".ngg")
       {
-	PrintMessage (1, "Load new CSG geometry file ", cfilename);
+	PrintMessage (1, "Load new CSG geometry file ", filename);
 
-	ifstream infile(cfilename);
+	ifstream infile(filename);
 	CSGeometry * hgeom = new CSGeometry("");
 	hgeom -> Load (infile);
 
 	return hgeom;
       }
-
-
     
     return NULL;
   }

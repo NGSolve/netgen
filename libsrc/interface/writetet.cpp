@@ -272,7 +272,7 @@ namespace netgen
 
 
 
-    ofstream outfile(filename.c_str());
+    ofstream outfile(filename);
 
     outfile.precision(16);
 

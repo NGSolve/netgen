@@ -21,12 +21,12 @@ namespace netgen
 
 void WriteDiffPackFormat (const Mesh & mesh,
 			  const NetgenGeometry & geom,
-			  const string & filename)
+			  const filesystem::path & filename)
 {
   //   double scale = globflags.GetNumFlag ("scale", 1);
   double scale = 1;
 
-  ofstream outfile(filename.c_str());
+  ofstream outfile(filename);
   outfile.precision(14);
 
 

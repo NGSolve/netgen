@@ -58,9 +58,9 @@ namespace netgen
   
 
 
-bool WriteUserFormat (const string & format,
+bool WriteUserFormat (const filesystem::path & format,
 		      const Mesh & mesh,
-		      const string & filename)
+		      const filesystem::path & filename)
 {
   // cout << "write user &hgeom = " << &hgeom << endl;
   // const CSGeometry & geom = *dynamic_cast<const CSGeometry*> (&hgeom);
@@ -167,7 +167,7 @@ bool WriteUserFormat (const string & format,
 
 void WriteNeutralFormat (const Mesh & mesh,
 			 const NetgenGeometry & geom,
-			 const string & filename)
+			 const filesystem::path & filename)
 {
   cout << "write neutral, new" << endl;
   int np = mesh.GetNP();
@@ -179,7 +179,7 @@ void WriteNeutralFormat (const Mesh & mesh,
   int inverttets = mparam.inverttets;
   int invertsurf = mparam.inverttrigs;
 
-  ofstream outfile (filename.c_str());
+  ofstream outfile (filename);
 
   outfile.precision(6);
   outfile.setf (ios::fixed, ios::floatfield);
@@ -283,14 +283,14 @@ void WriteNeutralFormat (const Mesh & mesh,
 
 
 void WriteSurfaceFormat (const Mesh & mesh,
-			 const string & filename)
+			 const filesystem::path & filename)
 {
   // surface mesh
   int i, j;
 
   cout << "Write Surface Mesh" << endl;
 
-  ofstream outfile (filename.c_str());
+  ofstream outfile (filename);
 
   outfile << "surfacemesh" << endl;
 
@@ -325,16 +325,17 @@ void WriteSurfaceFormat (const Mesh & mesh,
  */
 
 void WriteSTLFormat (const Mesh & mesh,
-		     const string & filename)
+		     const filesystem::path & filename)
 {
   cout << "\nWrite STL Surface Mesh" << endl;
 
+  auto ext = filename.extension();
   ostream *outfile;
 
-  if(filename.substr(filename.length()-3,3) == ".gz")
-	  outfile = new ogzstream(filename.c_str());
+  if(ext == ".gz")
+	  outfile = new ogzstream(filename);
   else
-	  outfile = new ofstream(filename.c_str());
+	  outfile = new ofstream(filename);
 
   int i;
 
@@ -382,16 +383,17 @@ void WriteSTLFormat (const Mesh & mesh,
  *    when using a third-party mesher
  */
 void WriteSTLExtFormat (const Mesh & mesh,
-		     const string & filename)
+		     const filesystem::path & filename)
 {
   cout << "\nWrite STL Surface Mesh (with separated boundary faces)" << endl;
 
+  auto ext = filename.extension();
   ostream *outfile;
 
-  if(filename.substr(filename.length()-3,3) == ".gz")
-	  outfile = new ogzstream(filename.c_str());
+  if(ext == ".gz")
+	  outfile = new ogzstream(filename);
   else
-	  outfile = new ofstream(filename.c_str());
+	  outfile = new ofstream(filename);
 
   outfile->precision(10);
 
@@ -474,7 +476,7 @@ void WriteSTLExtFormat (const Mesh & mesh,
 
 void WriteVRMLFormat (const Mesh & mesh,
 		      bool faces,
-		      const string & filename)
+		      const filesystem::path & filename)
 {
 
   if (faces)
@@ -487,7 +489,7 @@ void WriteVRMLFormat (const Mesh & mesh,
       int nse = mesh.GetNSE();
       int i, j;
 
-      ofstream outfile (filename.c_str());
+      ofstream outfile (filename);
 
       outfile.precision(6);
       outfile.setf (ios::fixed, ios::floatfield);
@@ -563,7 +565,7 @@ void WriteVRMLFormat (const Mesh & mesh,
       int nse = mesh.GetNSE();
       int i, j;
 
-      ofstream outfile (filename.c_str());
+      ofstream outfile (filename);
 
       outfile.precision(6);
       outfile.setf (ios::fixed, ios::floatfield);
@@ -639,10 +641,10 @@ void WriteVRMLFormat (const Mesh & mesh,
  */
 void WriteFEPPFormat (const Mesh & mesh,
 		      const NetgenGeometry & geom,
-		      const string & filename)
+		      const filesystem::path & filename)
 {
 
-  ofstream outfile (filename.c_str());
+  ofstream outfile (filename);
 
   if (mesh.GetDimension() == 3)
 
@@ -770,7 +772,7 @@ void WriteFEPPFormat (const Mesh & mesh,
 
 void WriteEdgeElementFormat (const Mesh & mesh,
 			     const NetgenGeometry & geom,
-			     const string & filename)
+			     const filesystem::path & filename)
 {
   cout << "write edge element format" << endl;
 
@@ -785,7 +787,7 @@ void WriteEdgeElementFormat (const Mesh & mesh,
   int invertsurf = mparam.inverttrigs;
   NgArray<int> edges;
 
-  ofstream outfile (filename.c_str());
+  ofstream outfile (filename);
 
   outfile.precision(6);
   outfile.setf (ios::fixed, ios::floatfield);
@@ -908,8 +910,8 @@ void WriteEdgeElementFormat (const Mesh & mesh,
 void WriteFile (int typ,
 		const Mesh & mesh,
 		const CSGeometry & geom,
-		const char * filename,
-		const char * geomfile,
+		const filesystem::path & filename,
+		const filesystem::path & geomfile,
 		double h)
 {
 
