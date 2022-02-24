@@ -6063,7 +6063,11 @@ namespace netgen
       {
         GetSurfaceElementsOfFace (fdi, els_of_face);
 
-        if (els_of_face.Size() == 0) continue;
+        if (els_of_face.Size() == 0)
+        {
+            fdi++;
+            continue;
+        }
 
         SurfaceElementIndex firstel = els_of_face[0];
 
