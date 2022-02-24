@@ -2,6 +2,21 @@
 import pytest
 from netgen.csg import *
 
+geometries=[unit_cube]
+
+try:
+    import netgen.occ as occ
+    box = occ.Box( (0,0,0), (1,1,1) )
+    box.faces.Min(occ.Y).name = "back"
+    box.faces.Max(occ.Y).name = "front"
+    box.faces.Min(occ.X).name = "left"
+    box.faces.Max(occ.X).name = "right"
+    box.faces.Min(occ.Z).name = "bottom"
+    box.faces.Max(occ.Z).name = "top"
+    geometries.append(occ.OCCGeometry(box))
+except ImportError:
+    pass
+
 def GetNSurfaceElements(mesh, boundaries, adjacent_domain=None):
     nse_in_layer = 0
     for el in mesh.Elements2D():
@@ -14,8 +29,9 @@ def GetNSurfaceElements(mesh, boundaries, adjacent_domain=None):
     return nse_in_layer
 
 @pytest.mark.parametrize("outside", [True, False])
-def test_boundarylayer(outside, capfd):
-    mesh = unit_cube.GenerateMesh(maxh=0.3)
+@pytest.mark.parametrize("geo", geometries)
+def test_boundarylayer(outside, geo, capfd):
+    mesh = geo.GenerateMesh(maxh=0.3)
     ne_before = mesh.ne
     layer_surfacenames = ["right", "top", "left", "back", "bottom"]
     mesh.BoundaryLayer("|".join(layer_surfacenames), [0.01, 0.01], "layer", outside=outside)
