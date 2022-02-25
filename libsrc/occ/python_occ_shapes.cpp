@@ -1423,6 +1423,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def(py::init([] (const TopoDS_Shape & shape) {
           return TopoDS::Face(shape);
         }))
+    .def_property("quad_dominated", [](const TopoDS_Face& self) -> optional<bool>
+                  {
+                    return OCCGeometry::global_shape_properties[self.TShape()].quad_dominated;
+                  },
+                  [](TopoDS_Face& self, optional<bool> quad_dominated)
+                  {
+                    OCCGeometry::global_shape_properties[self.TShape()].quad_dominated = quad_dominated;
+                  })
     .def_property_readonly("surf", [] (TopoDS_Face face) -> Handle(Geom_Surface)
          {
            Handle(Geom_Surface) surf = BRep_Tool::Surface (face);
@@ -1642,6 +1650,15 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             val = max2(hpref, val);
           }
       }, "set hpref for all elements of list")
+    .def_property("quad_dominated", [](ListOfShapes& shapes)
+                  {
+                    throw Exception("Cannot get property of ListOfShapes, get the property from individual shapes!");
+                  },
+                  [](ListOfShapes& shapes, optional<bool> quad_dominated)
+                  {
+                    for(auto& shape : shapes)
+                      OCCGeometry::global_shape_properties[shape.TShape()].quad_dominated = quad_dominated;
+                  })
     
     .def("Identify", py::overload_cast<const ListOfShapes&, const ListOfShapes&, string, Identifications::ID_TYPE, gp_Trsf>(&Identify),
             py::arg("other"), py::arg("name"),

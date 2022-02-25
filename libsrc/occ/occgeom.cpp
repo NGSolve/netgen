@@ -198,9 +198,14 @@ namespace netgen
   bool OCCGeometry :: MeshFace(Mesh& mesh,
                                   const MeshingParameters& mparam, int nr, FlatArray<int, PointIndex> glob2loc) const
   {
-      bool failed = OCCMeshFace(*this, mesh, glob2loc, mparam, nr, PARAMETERSPACE, true);
+    MeshingParameters local_mp = mparam;
+    auto face = TopoDS::Face(fmap(nr+1));
+    if(auto quad_dominated = OCCGeometry::global_shape_properties[face.TShape()].quad_dominated; quad_dominated.has_value())
+      local_mp.quad = *quad_dominated;
+
+      bool failed = OCCMeshFace(*this, mesh, glob2loc, local_mp, nr, PARAMETERSPACE, true);
       if(failed)
-          failed = OCCMeshFace(*this, mesh, glob2loc, mparam, nr, PLANESPACE, false);
+          failed = OCCMeshFace(*this, mesh, glob2loc, local_mp, nr, PLANESPACE, false);
 
       if(failed)
       {
