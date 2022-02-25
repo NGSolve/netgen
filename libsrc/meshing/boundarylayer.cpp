@@ -360,8 +360,11 @@ namespace netgen
                   auto v2 = (mesh[prev] - mesh[pi]).Normalize();
                   auto v3 = growthvectors[pi];
                   v3.Normalize();
-                  if((v1 * v3 > 1e-12) || (v2 * v3 > 1e-12))
+                  auto tol = v1.Length() * 1e-12;
+                  if((v1 * v3 > -tol) && (v2 * v3 > -tol))
                     in_surface_direction.SetBit(sel.GetIndex());
+                  else
+                    continue;
 
                   auto& g = growthvectors[pi];
                   auto ng = n * g;
