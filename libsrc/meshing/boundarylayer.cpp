@@ -1,6 +1,7 @@
 #include <mystdlib.h>
 #include "meshing.hpp"
 #include "meshing2.hpp"
+#include "delaunay2d.hpp"
 #include "global.hpp"
 #include "../geom2d/csg2d.hpp"
 
@@ -262,6 +263,8 @@ namespace netgen
           {
             for(auto pi : sel.PNums())
               {
+                if(mesh[pi].Type() >= SURFACEPOINT)
+                    continue;
                 auto & np = growthvectors[pi];
                 if(np.Length() == 0) { np = n; continue; }
                 auto npn = np * n;
@@ -352,6 +355,8 @@ namespace netgen
               for(auto i : Range(sel.PNums()))
                 {
                   auto pi = sel.PNums()[i];
+                  if(mesh[pi].Type() >= SURFACEPOINT)
+                    continue;
                   if(growthvectors[pi].Length2() == 0.)
                     continue;
                   auto next = sel.PNums()[(i+1)%sel.GetNV()];
@@ -392,6 +397,73 @@ namespace netgen
               }
           }
       }
+
+    Array<Point<2>, PointIndex> delaunay_points(mesh.GetNP());
+    Array<int, PointIndex> p2face(mesh.GetNP());
+    p2face = 0;
+
+    // interpolate growth vectors at inner surface points from surrounding edge points
+    Array<SurfaceElementIndex> surface_els;
+    Array<PointIndex> edge_points;
+    Array<PointIndex> surface_points;
+    for(auto facei : Range(1, fd_old+1))
+      {
+        if(!blp.surfid.Contains(facei))
+            continue;
+
+        p2face = 0;
+
+        edge_points.SetSize(0);
+        surface_points.SetSize(0);
+        surface_els.SetSize(0);
+        mesh.GetSurfaceElementsOfFace (facei, surface_els);
+        Box<2> bbox ( Box<2>::EMPTY_BOX );
+        for(auto sei : surface_els)
+        {
+            const auto & sel = mesh[sei];
+            for (auto i : Range(sel.GetNP()))
+            {
+                auto pi = sel[i];
+                if(p2face[pi] != 0)
+                    continue;
+
+                p2face[pi] = facei;
+
+                if(mesh[pi].Type() <= EDGEPOINT)
+                    edge_points.Append(pi);
+                else
+                    surface_points.Append(pi);
+
+                auto & gi = sel.GeomInfo()[i];
+                // TODO: project to plane if u,v not available?
+                delaunay_points[pi] = {gi.u, gi.v};
+                bbox.Add(delaunay_points[pi]);
+            }
+        }
+
+        if(surface_points.Size()==0)
+            continue;
+
+        DelaunayMesh dmesh( delaunay_points, bbox  );
+
+        for(auto pi : edge_points)
+        {
+            p2face[pi] = 0;
+            dmesh.AddPoint(pi);
+        }
+
+        std::map<PointIndex, double> weights;
+        for(auto pi : surface_points)
+        {
+            dmesh.AddPoint(pi, &weights);
+            auto & v = growthvectors[pi];
+            for(auto & [pi_other, weight] : weights)
+                v += weight * growthvectors[pi_other];
+        }
+
+      }
+
+
 
     // insert new points
     for (PointIndex pi = 1; pi <= np; pi++)
