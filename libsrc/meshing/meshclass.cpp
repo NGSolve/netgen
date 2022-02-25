@@ -310,6 +310,9 @@ namespace netgen
     lockedpoints = mesh2.lockedpoints;
     facedecoding = mesh2.facedecoding;
     dimension = mesh2.dimension;
+    hglob = mesh2.hglob;
+    hmin = mesh2.hmin;
+    maxhdomain = mesh2.maxhdomain;
 
 
     materials.SetSize( mesh2.materials.Size() );
