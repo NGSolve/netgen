@@ -232,12 +232,15 @@ namespace netgen
 
     virtual PointGeomInfo ProjectPoint (int surfind, Point<3> & p) const
     {
-      return faces[surfind-1]->Project(p);
+      if(surfind <= faces.Size() && surfind > 0)
+        return faces[surfind-1]->Project(p);
+      return PointGeomInfo();
     }
 
   virtual void ProjectPointEdge (int surfind, int surfind2, Point<3> & p, EdgePointGeomInfo* gi = nullptr) const
   {
-    edges[gi->edgenr]->ProjectPoint(p, gi);
+    if(gi && gi->edgenr < edges.Size())
+      edges[gi->edgenr]->ProjectPoint(p, gi);
   }
 
     virtual bool CalcPointGeomInfo(int surfind, PointGeomInfo& gi, const Point<3> & p3) const
@@ -246,11 +249,17 @@ namespace netgen
     }
     virtual bool ProjectPointGI (int surfind, Point<3> & p, PointGeomInfo & gi) const
     {
-      return faces[surfind-1]->ProjectPointGI(p, gi);
+      if(surfind > 0 && surfind <= faces.Size())
+        return faces[surfind-1]->ProjectPointGI(p, gi);
     }
 
     virtual Vec<3> GetNormal(int surfind, const Point<3> & p, const PointGeomInfo* gi = nullptr) const
-    { return faces[surfind-1]->GetNormal(p, gi); }
+    {
+      if(surfind > 0 && surfind <= faces.Size())
+        return faces[surfind-1]->GetNormal(p, gi);
+      else
+        return {0., 0., 0.};
+    }
 
     virtual void PointBetween (const Point<3> & p1,
                                const Point<3> & p2, double secpoint,
@@ -260,7 +269,7 @@ namespace netgen
                                Point<3> & newp,
                                PointGeomInfo & newgi) const
     {
-      if(faces.Size())
+      if(faces.Size() >= surfi && surfi > 0)
         {
           faces[surfi-1]->PointBetween(p1, p2, secpoint, gi1, gi2, newp, newgi);
           return;
@@ -276,7 +285,7 @@ namespace netgen
                                   Point<3> & newp,
                                   EdgePointGeomInfo & newgi) const
     {
-      if(edges.Size())
+      if(ap1.edgenr < edges.Size() && ap1.edgenr >= 0)
         {
           edges[ap1.edgenr]->PointBetween(p1, p2, secpoint,
                                           ap1, ap2, newp, newgi);
