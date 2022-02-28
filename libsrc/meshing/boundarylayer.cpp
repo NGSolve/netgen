@@ -180,10 +180,84 @@ namespace netgen
       }
   }
 
+  void InterpolateSurfaceGrowthVectors(const Mesh & mesh, const BoundaryLayerParameters& blp, int fd_old, FlatArray<Vec<3>, PointIndex> growthvectors)
+  {
+    // interpolate growth vectors at inner surface points from surrounding edge points
+    Array<Point<2>, PointIndex> delaunay_points(mesh.GetNP());
+    Array<int, PointIndex> p2face(mesh.GetNP());
+    p2face = 0;
+
+    Array<SurfaceElementIndex> surface_els;
+    Array<PointIndex> edge_points;
+    Array<PointIndex> surface_points;
+    for(auto facei : Range(1, fd_old+1))
+      {
+        if(!blp.surfid.Contains(facei))
+            continue;
+
+        p2face = 0;
+
+        edge_points.SetSize(0);
+        surface_points.SetSize(0);
+        surface_els.SetSize(0);
+        mesh.GetSurfaceElementsOfFace (facei, surface_els);
+        Box<2> bbox ( Box<2>::EMPTY_BOX );
+        for(auto sei : surface_els)
+        {
+            const auto & sel = mesh[sei];
+            for (auto i : Range(sel.GetNP()))
+            {
+                auto pi = sel[i];
+                if(p2face[pi] != 0)
+                    continue;
+
+                p2face[pi] = facei;
+
+                if(mesh[pi].Type() <= EDGEPOINT)
+                    edge_points.Append(pi);
+                else
+                    surface_points.Append(pi);
+
+                auto & gi = sel.GeomInfo()[i];
+                // TODO: project to plane if u,v not available?
+                delaunay_points[pi] = {gi.u, gi.v};
+                bbox.Add(delaunay_points[pi]);
+            }
+        }
+
+        if(surface_points.Size()==0)
+            continue;
+
+        DelaunayMesh dmesh( delaunay_points, bbox  );
+
+        for(auto pi : edge_points)
+        {
+            p2face[pi] = 0;
+            dmesh.AddPoint(pi);
+        }
+
+        std::map<PointIndex, double> weights;
+        for(auto pi : surface_points)
+        {
+            dmesh.AddPoint(pi, &weights);
+            auto & v = growthvectors[pi];
+            for(auto & [pi_other, weight] : weights)
+                v += weight * growthvectors[pi_other];
+        }
+
+      }
+
+
+  }
+
   void GenerateBoundaryLayer(Mesh& mesh, const BoundaryLayerParameters& blp)
   {
     static Timer timer("Create Boundarylayers");
     RegionTimer regt(timer);
+
+    bool interpolate_growth_vectors = false;
+    if(mesh.GetGeometry())
+        interpolate_growth_vectors = mesh.GetGeometry()->GetGeomType() == Mesh::GEOM_OCC;
 
     int max_edge_nr = -1;
     for(const auto& seg : mesh.LineSegments())
@@ -263,7 +337,7 @@ namespace netgen
           {
             for(auto pi : sel.PNums())
               {
-                if(mesh[pi].Type() >= SURFACEPOINT)
+                if(interpolate_growth_vectors && mesh[pi].Type() >= SURFACEPOINT)
                     continue;
                 auto & np = growthvectors[pi];
                 if(np.Length() == 0) { np = n; continue; }
@@ -358,7 +432,7 @@ namespace netgen
               for(auto i : Range(sel.PNums()))
                 {
                   auto pi = sel.PNums()[i];
-                  if(mesh[pi].Type() >= SURFACEPOINT)
+                  if(interpolate_growth_vectors && mesh[pi].Type() >= SURFACEPOINT)
                     continue;
                   if(growthvectors[pi].Length2() == 0.)
                     continue;
@@ -401,17 +475,11 @@ namespace netgen
           }
       }
 
-    Array<Point<2>, PointIndex> delaunay_points(mesh.GetNP());
-    Array<int, PointIndex> p2face(mesh.GetNP());
-    p2face = 0;
-
     // interpolate tangential component of growth vector along edge
+    if(interpolate_growth_vectors)
     for(auto edgenr : Range(max_edge_nr))
       {
         if(!moved_edges[edgenr+1]) continue;
-        // can only interpolate on geometry edges
-        if(!mesh.GetGeometry())
-          break;
         const auto& geo = *mesh.GetGeometry();
         if(edgenr >= geo.GetNEdges())
           continue;
@@ -472,68 +540,8 @@ namespace netgen
           }
       }
 
-    // interpolate growth vectors at inner surface points from surrounding edge points
-    Array<SurfaceElementIndex> surface_els;
-    Array<PointIndex> edge_points;
-    Array<PointIndex> surface_points;
-    for(auto facei : Range(1, fd_old+1))
-      {
-        if(!blp.surfid.Contains(facei))
-            continue;
-
-        p2face = 0;
-
-        edge_points.SetSize(0);
-        surface_points.SetSize(0);
-        surface_els.SetSize(0);
-        mesh.GetSurfaceElementsOfFace (facei, surface_els);
-        Box<2> bbox ( Box<2>::EMPTY_BOX );
-        for(auto sei : surface_els)
-        {
-            const auto & sel = mesh[sei];
-            for (auto i : Range(sel.GetNP()))
-            {
-                auto pi = sel[i];
-                if(p2face[pi] != 0)
-                    continue;
-
-                p2face[pi] = facei;
-
-                if(mesh[pi].Type() <= EDGEPOINT)
-                    edge_points.Append(pi);
-                else
-                    surface_points.Append(pi);
-
-                auto & gi = sel.GeomInfo()[i];
-                // TODO: project to plane if u,v not available?
-                delaunay_points[pi] = {gi.u, gi.v};
-                bbox.Add(delaunay_points[pi]);
-            }
-        }
-
-        if(surface_points.Size()==0)
-            continue;
-
-        DelaunayMesh dmesh( delaunay_points, bbox  );
-
-        for(auto pi : edge_points)
-        {
-            p2face[pi] = 0;
-            dmesh.AddPoint(pi);
-        }
-
-        std::map<PointIndex, double> weights;
-        for(auto pi : surface_points)
-        {
-            dmesh.AddPoint(pi, &weights);
-            auto & v = growthvectors[pi];
-            for(auto & [pi_other, weight] : weights)
-                v += weight * growthvectors[pi_other];
-        }
-
-      }
-
-
+    if(interpolate_growth_vectors)
+        InterpolateSurfaceGrowthVectors(mesh, blp, fd_old, growthvectors);
 
     // insert new points
     for (PointIndex pi = 1; pi <= np; pi++)

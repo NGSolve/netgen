@@ -6,9 +6,6 @@
 
 namespace netgen
 {
-  using ngcore::INT;
-
-
   void DelaunayTrig::CalcCenter (FlatArray<Point<2>, PointIndex> points)
   {
     Point<2> p1 = points[pnums[0]];

@@ -2,6 +2,8 @@
 
 namespace netgen
 {
+  using ngcore::INT;
+
   static inline Point<2> P2( Point<3> p )
   {
     return {p[0], p[1]};
