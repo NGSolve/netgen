@@ -156,7 +156,7 @@ namespace netgen
                   }
               }
 
-              seg.edgenr = topo.GetEdge(segi)+1;
+              // seg.edgenr = topo.GetEdge(segi)+1;
               segments.Append(seg);
           }
       }
@@ -291,6 +291,8 @@ namespace netgen
 
     // moved segments
     Array<SegmentIndex> moved_segs;
+    BitArray moved_edges(max_edge_nr+1);
+    moved_edges = false;
     Array<Segment> new_segments;
 
     // boundaries to project endings to
@@ -307,6 +309,7 @@ namespace netgen
         segs_done.SetBit(si);
         segmap[si].Append(make_pair(si, 0));
         moved_segs.Append(si);
+        moved_edges.SetBit(segi.edgenr);
         for(auto sj : Range(segments))
           {
             if(segs_done.Test(sj)) continue;
@@ -401,6 +404,73 @@ namespace netgen
     Array<Point<2>, PointIndex> delaunay_points(mesh.GetNP());
     Array<int, PointIndex> p2face(mesh.GetNP());
     p2face = 0;
+
+    // interpolate tangential component of growth vector along edge
+    for(auto edgenr : Range(max_edge_nr))
+      {
+        if(!moved_edges[edgenr+1]) continue;
+        // can only interpolate on geometry edges
+        if(!mesh.GetGeometry())
+          break;
+        const auto& geo = *mesh.GetGeometry();
+        if(edgenr >= geo.GetNEdges())
+          continue;
+
+        // build sorted list of edge
+        Array<PointIndex> points;
+        // find first vertex on edge
+        for(const auto& seg : segments)
+          {
+            if(seg.edgenr-1 == edgenr && mesh[seg[0]].Type() == FIXEDPOINT)
+              {
+                points.Append(seg[0]);
+                break;
+              }
+          }
+        while(true)
+          {
+            for(auto si : meshtopo.GetVertexSegments(points.Last()))
+              {
+                const auto& seg = mesh[si];
+                if(seg.edgenr-1 != edgenr)
+                  continue;
+                if(seg[0] == points.Last() &&
+                   (points.Size() < 2 || points[points.Size()-2] !=seg[1]))
+                  {
+                    points.Append(seg[1]);
+                    break;
+                  }
+              }
+            if(mesh[points.Last()].Type() == FIXEDPOINT)
+              break;
+          }
+
+        // tangential part of growth vectors
+        EdgePointGeomInfo gi;
+        Point<3> p = mesh[points[0]];
+        const auto& edge = geo.GetEdge(edgenr);
+        edge.ProjectPoint(p, &gi);
+        auto tau1 = gi.dist;
+        auto t1 = edge.GetTangent(tau1);
+        t1 *= 1./t1.Length();
+        p = mesh[points.Last()];
+        edge.ProjectPoint(p, &gi);
+        auto tau2 = gi.dist;
+        auto t2 = edge.GetTangent(gi.dist);
+        t2 *= 1./t2.Length();
+        auto gt1 = (growthvectors[points[0]] * t1) * t1;
+        auto gt2 = (growthvectors[points.Last()] * t2) * t2;
+
+        for(size_t i = 1; i < points.Size()-1; i++)
+          {
+            auto pi = points[i];
+            p = mesh[pi];
+            edge.ProjectPoint(p, &gi);
+            auto tau = gi.dist;
+            auto interpol = (1-fabs(tau-tau1)) * gt1 + (1-fabs(tau-tau2))*gt2;
+             growthvectors[pi] += interpol;
+          }
+      }
 
     // interpolate growth vectors at inner surface points from surrounding edge points
     Array<SurfaceElementIndex> surface_els;
