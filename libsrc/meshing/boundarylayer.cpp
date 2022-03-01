@@ -239,13 +239,14 @@ namespace netgen
         std::map<PointIndex, double> weights;
         for(auto pi : surface_points)
         {
-            dmesh.AddPoint(pi, &weights);
+            dmesh.CalcIntersecting(pi);
+            dmesh.CalcWeights(pi, weights);
             auto & v = growthvectors[pi];
             auto n = 1./v.Length() * v;
             for(auto & [pi_other, weight] : weights)
               {
                 auto t = weight * growthvectors[pi_other];
-                t -= (t * n) * t;
+                t -= (t * n) * n;
                 v += t;
               }
         }

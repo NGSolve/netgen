@@ -315,14 +315,11 @@ namespace netgen
           weight *= isum;
   }
 
-  void DelaunayMesh::AddPoint( PointIndex pi_new, std::map<PointIndex, double> * weights )
+  void DelaunayMesh::AddPoint( PointIndex pi_new)
   {
       static Timer t("AddPoint"); RegionTimer reg(t);
 
       CalcIntersecting(pi_new);
-
-      if(weights)
-          CalcWeights(pi_new, *weights);
 
       for (int j : intersecting)
         {

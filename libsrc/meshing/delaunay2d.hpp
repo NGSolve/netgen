@@ -66,7 +66,7 @@ namespace netgen
 
     void CalcIntersecting( PointIndex pi_new );
     void CalcWeights( PointIndex pi_new, std::map<PointIndex, double> & weights );
-    void AddPoint( PointIndex pi_new, std::map<PointIndex, double> * weights = nullptr );
+    void AddPoint( PointIndex pi_new );
     Array<DelaunayTrig> & GetElements() { return trigs; }
 
   };
