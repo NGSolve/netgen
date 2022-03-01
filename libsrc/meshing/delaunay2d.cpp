@@ -190,26 +190,7 @@ namespace netgen
 
     if(definitive_overlapping_trig==-1)
     {
-      Mesh m;
-      m.AddFaceDescriptor (FaceDescriptor (1, 1, 0, 0));
-      for(auto pi : points.Range())
-          m.AddPoint(P3(points[pi]));
-
-      for (DelaunayTrig & trig : trigs)
-      {
-        if (trig[0] < 0) continue;
-
-        Vec<3> n = Cross (P3(points[trig[1]])-P3(points[trig[0]]), 
-            P3(points[trig[2]])-P3(points[trig[0]]));
-        if (n(2) < 0) Swap (trig[1], trig[2]);
-
-        Element2d el(trig[0], trig[1], trig[2]);
-        el.SetIndex (1);
-        m.AddSurfaceElement (el);
-      }
-      m.Compress();
-      m.AddPoint(P3(points[pi_new]));
-      m.Save("error.vol.gz");
+      // GetMesh(pi_new)->Save("error.vol.gz");
       throw Exception("point not in any circle "+ ToString(pi_new));
     }
 
@@ -299,15 +280,18 @@ namespace netgen
       auto pi_last = *points.Range().end()-3;
       for(auto edge : edges)
       {
+          auto v0 = points[edge[0]] - p;
+          auto v1 = points[edge[1]] - p;
+          v0.Normalize();
+          v1.Normalize();
+          double angle = acos(v0*v1);
           for(PointIndex pi : {edge[0], edge[1]})
           {
-          if(pi>=pi_last)
+            if(pi>=pi_last)
               continue;
-          if(weights.count(pi))
-              continue;
-          double weight = 1.0/(eps+Dist(p, points[pi]));
-          sum += weight;
-          weights[pi] = weight;
+            double weight = angle/(eps+Dist(p, points[pi]));
+            sum += weight;
+            weights[pi] += weight;
           }
       }
       double isum = 1.0/sum;
@@ -334,6 +318,31 @@ namespace netgen
 
       for (int j : intersecting)
           tree->DeleteElement (j);
+  }
+
+  unique_ptr<Mesh> DelaunayMesh::GetMesh(PointIndex pi_new)
+  {
+      auto mesh = make_unique<Mesh>();
+      Mesh & m = *mesh;
+      m.AddFaceDescriptor (FaceDescriptor (1, 1, 0, 0));
+      for(auto pi : points.Range())
+          m.AddPoint(P3(points[pi]));
+
+      for (DelaunayTrig & trig : trigs)
+      {
+        if (trig[0] < 0) continue;
+
+        Vec<3> n = Cross (P3(points[trig[1]])-P3(points[trig[0]]),
+            P3(points[trig[2]])-P3(points[trig[0]]));
+        if (n(2) < 0) Swap (trig[1], trig[2]);
+
+        Element2d el(trig[0], trig[1], trig[2]);
+        el.SetIndex (1);
+        m.AddSurfaceElement (el);
+      }
+      m.Compress();
+      m.AddPoint(P3(points[pi_new]));
+      return mesh;
   }
 
   ostream & operator<< (ostream & ost, DelaunayTrig trig)

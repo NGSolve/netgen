@@ -180,12 +180,12 @@ namespace netgen
       }
   }
 
-  void InterpolateSurfaceGrowthVectors(const Mesh & mesh, const BoundaryLayerParameters& blp, int fd_old, FlatArray<Vec<3>, PointIndex> growthvectors)
+  void InterpolateSurfaceGrowthVectors(const Mesh & mesh, const BoundaryLayerParameters& blp, int fd_old, FlatArray<Vec<3>, PointIndex> growthvectors, const Table<SurfaceElementIndex, PointIndex> & p2sel)
   {
+    auto np = mesh.GetNP();
     // interpolate growth vectors at inner surface points from surrounding edge points
-    Array<Point<2>, PointIndex> delaunay_points(mesh.GetNP());
-    Array<int, PointIndex> p2face(mesh.GetNP());
-    p2face = 0;
+    Array<Point<2>, PointIndex> delaunay_points(np);
+    Array<PointIndex, PointIndex> pmap(np); // maps duplicated points
 
     Array<SurfaceElementIndex> surface_els;
     Array<PointIndex> edge_points;
@@ -195,33 +195,75 @@ namespace netgen
         if(!blp.surfid.Contains(facei))
             continue;
 
-        p2face = 0;
-
         edge_points.SetSize(0);
         surface_points.SetSize(0);
         surface_els.SetSize(0);
+        delaunay_points.SetSize(np);
+        pmap.SetSize(np);
         mesh.GetSurfaceElementsOfFace (facei, surface_els);
         Box<2> bbox ( Box<2>::EMPTY_BOX );
         for(auto sei : surface_els)
         {
-            const auto & sel = mesh[sei];
+            auto sel = mesh[sei];
             for (auto i : Range(sel.GetNP()))
             {
-                auto pi = sel[i];
-                if(p2face[pi] != 0)
+                auto & gi = sel.GeomInfo()[i];
+                Point<2> p = {gi.u, gi.v};
+                bbox.Add(p);
+            }
+        }
+
+        BoxTree<2> tree(bbox);
+
+        for(auto pi : mesh.Points().Range())
+        {
+            auto n_surf_els = p2sel[pi].Size();
+
+            bool has_relevant_sel = false;
+            for(auto sei : p2sel[pi])
+                if(mesh[sei].GetIndex()==facei)
+                {
+                    has_relevant_sel = true;
+                    break;
+                }
+            if(!has_relevant_sel)
+                continue;
+
+            if(mesh[pi].Type() <= EDGEPOINT)
+                edge_points.Append(pi);
+            else
+                surface_points.Append(pi);
+
+            // the same point might have different uv coordinates (closed edges for instance)
+            // duplicate these points for the delaunay tree
+            bool inserted = false;
+            for(auto sei : p2sel[pi])
+            {
+                auto sel = mesh[sei];
+                if(sel.GetIndex()!=facei)
                     continue;
 
-                p2face[pi] = facei;
+                PointGeomInfo gi = sel.GeomInfo()[sel.PNums().Pos(pi)];
+                Point<2> p = {gi.u, gi.v};
+                bool found = false;
+                tree.GetFirstIntersecting( p, p, [&] (const auto pi_found) { return found = true; });
+                if(found)
+                    continue;
 
-                if(mesh[pi].Type() <= EDGEPOINT)
-                    edge_points.Append(pi);
+                auto pi_new = pi;
+                if(inserted)
+                {
+                    pi_new = delaunay_points.Append(p);
+                    pmap.Append(pi);
+                    edge_points.Append(pi_new);
+                }
                 else
-                    surface_points.Append(pi);
-
-                auto & gi = sel.GeomInfo()[i];
-                // TODO: project to plane if u,v not available?
-                delaunay_points[pi] = {gi.u, gi.v};
-                bbox.Add(delaunay_points[pi]);
+                {
+                    delaunay_points[pi] = p;
+                    pmap[pi] = pi;
+                }
+                tree.Insert(p, pi_new);
+                inserted = true;
             }
         }
 
@@ -231,10 +273,7 @@ namespace netgen
         DelaunayMesh dmesh( delaunay_points, bbox  );
 
         for(auto pi : edge_points)
-        {
-            p2face[pi] = 0;
             dmesh.AddPoint(pi);
-        }
 
         std::map<PointIndex, double> weights;
         for(auto pi : surface_points)
@@ -245,15 +284,13 @@ namespace netgen
             auto n = 1./v.Length() * v;
             for(auto & [pi_other, weight] : weights)
               {
-                auto t = weight * growthvectors[pi_other];
+                // interpolate only the tangential part of the growth vector
+                auto t = weight * growthvectors[pmap[pi_other]];
                 t -= (t * n) * n;
                 v += t;
               }
         }
-
       }
-
-
   }
 
   void GenerateBoundaryLayer(Mesh& mesh, const BoundaryLayerParameters& blp)
@@ -277,20 +314,16 @@ namespace netgen
     if(!blp.outside)
       domains.Invert();
 
+    auto& meshtopo = mesh.GetTopology();
+    meshtopo.SetBuildVertex2Element(true);
     mesh.UpdateTopology();
 
     bool have_single_segments = HaveSingleSegments(mesh);
     Array<Segment> segments;
     if(have_single_segments)
-      {
         segments = BuildSegments(mesh);
-        mesh.SetNextMajorTimeStamp();
-        mesh.UpdateTopology();
-      }
     else
         segments = mesh.LineSegments();
-
-    auto& meshtopo = mesh.GetTopology();
 
     int np = mesh.GetNP();
     int ne = mesh.GetNE();
@@ -339,24 +372,50 @@ namespace netgen
           }
       }
 
-    // mark points for remapping
-    for(const auto& sel : mesh.SurfaceElements())
-      {
-        auto n = surfacefacs[sel.GetIndex()] * getSurfaceNormal(sel);
-        if(n.Length2() != 0.)
-          {
-            for(auto pi : sel.PNums())
-              {
-                auto & np = growthvectors[pi];
-                if(np.Length() == 0) { np = n; continue; }
-                auto npn = np * n;
-                auto npnp = np * np;
-                auto nn = n * n;
-                if(nn-npn*npn/npnp == 0) { np = n; continue; }
-                np += (nn - npn)/(nn - npn*npn/npnp) * (n - npn/npnp * np);
-              }
-          }
-      }
+    const auto & p2sel = mesh.CreatePoint2SurfaceElementTable();
+
+    for(auto pi : mesh.Points().Range())
+    {
+        const auto & p = mesh[pi];
+        if(p.Type() == INNERPOINT)
+            continue;
+
+        std::map<int, Vec<3>> normals;
+
+        // calculate one normal vector per face (average with angles as weights for multiple surface elements within a face)
+        for(auto sei : p2sel[pi])
+        {
+            const auto & sel = mesh[sei];
+            auto facei = sel.GetIndex();
+            if(!blp.surfid.Contains(facei))
+                continue;
+
+            auto n = surfacefacs[sel.GetIndex()] * getSurfaceNormal(sel);
+
+            int itrig = sel.PNums().Pos(pi);
+            itrig += sel.GetNP();
+            auto v0 = (mesh[sel.PNumMod(itrig+1)] - mesh[pi]).Normalize();
+            auto v1 = (mesh[sel.PNumMod(itrig-1)] - mesh[pi]).Normalize();
+            if(normals.count(facei)==0)
+                normals[facei] = {0.,0.,0.};
+            normals[facei] += acos(v0*v1)*n;
+        }
+
+        for(auto & [facei, n] : normals)
+            n *= 1.0/n.Length();
+
+        // combine normal vectors for each face to keep uniform distances
+        auto & np = growthvectors[pi];
+        for(auto & [facei, n] : normals)
+        {
+            if(np.Length() == 0) { np = n; continue; }
+            auto npn = np * n;
+            auto npnp = np * np;
+            auto nn = n * n;
+            if(nn-npn*npn/npnp == 0) { np = n; continue; }
+            np += (nn - npn)/(nn - npn*npn/npnp) * (n - npn/npnp * np);
+        }
+    }
 
     // Bit array to keep track of segments already processed
     BitArray segs_done(nseg+1);
@@ -551,7 +610,7 @@ namespace netgen
       }
 
     if(interpolate_growth_vectors)
-        InterpolateSurfaceGrowthVectors(mesh, blp, fd_old, growthvectors);
+        InterpolateSurfaceGrowthVectors(mesh, blp, fd_old, growthvectors, p2sel);
 
     // insert new points
     for (PointIndex pi = 1; pi <= np; pi++)
@@ -889,6 +948,7 @@ namespace netgen
     }
     mesh.GetTopology().ClearEdges();
     mesh.UpdateTopology();
+    mesh.SetGeometry(nullptr);
   }
 
   void AddDirection( Vec<3> & a, Vec<3> b )

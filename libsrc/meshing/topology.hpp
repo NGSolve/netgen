@@ -186,6 +186,7 @@ public:
   { return vert2element[vnr]; }
 
   void GetVertexSurfaceElements( int vnr, Array<SurfaceElementIndex>& elements ) const;
+  const auto & GetVertexSurfaceElements( ) const { return vert2surfelement; }
   FlatArray<SurfaceElementIndex> GetVertexSurfaceElements(PointIndex vnr) const
   { return vert2surfelement[vnr]; }
 

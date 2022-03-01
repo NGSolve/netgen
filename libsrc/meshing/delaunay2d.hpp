@@ -68,7 +68,7 @@ namespace netgen
     void CalcWeights( PointIndex pi_new, std::map<PointIndex, double> & weights );
     void AddPoint( PointIndex pi_new );
     Array<DelaunayTrig> & GetElements() { return trigs; }
-
+    unique_ptr<Mesh> GetMesh(PointIndex pi_new); // for debugging purposes
   };
 
 } // namespace netgen
