@@ -241,8 +241,13 @@ namespace netgen
         {
             dmesh.AddPoint(pi, &weights);
             auto & v = growthvectors[pi];
+            auto n = 1./v.Length() * v;
             for(auto & [pi_other, weight] : weights)
-                v += weight * growthvectors[pi_other];
+              {
+                auto t = weight * growthvectors[pi_other];
+                t -= (t * n) * t;
+                v += t;
+              }
         }
 
       }
@@ -341,8 +346,6 @@ namespace netgen
           {
             for(auto pi : sel.PNums())
               {
-                if(interpolate_growth_vectors && mesh[pi].Type() >= SURFACEPOINT)
-                    continue;
                 auto & np = growthvectors[pi];
                 if(np.Length() == 0) { np = n; continue; }
                 auto npn = np * n;
@@ -436,8 +439,6 @@ namespace netgen
               for(auto i : Range(sel.PNums()))
                 {
                   auto pi = sel.PNums()[i];
-                  if(interpolate_growth_vectors && mesh[pi].Type() >= SURFACEPOINT)
-                    continue;
                   if(growthvectors[pi].Length2() == 0.)
                     continue;
                   auto next = sel.PNums()[(i+1)%sel.GetNV()];
