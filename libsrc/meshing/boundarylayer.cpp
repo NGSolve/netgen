@@ -276,7 +276,11 @@ namespace netgen
     bool have_single_segments = HaveSingleSegments(mesh);
     Array<Segment> segments;
     if(have_single_segments)
+      {
         segments = BuildSegments(mesh);
+        mesh.SetNextMajorTimeStamp();
+        mesh.UpdateTopology();
+      }
     else
         segments = mesh.LineSegments();
 
@@ -492,25 +496,29 @@ namespace netgen
             if(seg.edgenr-1 == edgenr && mesh[seg[0]].Type() == FIXEDPOINT)
               {
                 points.Append(seg[0]);
+                points.Append(seg[1]);
                 break;
               }
           }
         while(true)
           {
+            bool point_found = false;
             for(auto si : meshtopo.GetVertexSegments(points.Last()))
               {
                 const auto& seg = mesh[si];
                 if(seg.edgenr-1 != edgenr)
                   continue;
-                if(seg[0] == points.Last() &&
-                   (points.Size() < 2 || points[points.Size()-2] !=seg[1]))
+                if(seg[0] == points.Last() && points[points.Size()-2] !=seg[1])
                   {
                     points.Append(seg[1]);
+                    point_found = true;
                     break;
                   }
               }
             if(mesh[points.Last()].Type() == FIXEDPOINT)
               break;
+            if(!point_found)
+              throw Exception(string("Could not find connected list of line segements for edge ") + edgenr);
           }
 
         // tangential part of growth vectors

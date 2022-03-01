@@ -529,6 +529,8 @@ namespace netgen
         tree.Insert(mesh[pi], pi);
         vert2meshpt[vert->GetHash()] = pi;
         mesh[pi].Singularity(vert->properties.hpref);
+        mesh[pi].SetType(FIXEDPOINT);
+        mesh.AddLockedPoint(pi);
 
         if(vert->properties.name)
         {
