@@ -1,6 +1,7 @@
 #include <mystdlib.h>
 #include "meshing.hpp"
 #include "meshing2.hpp"
+#include "delaunay2d.hpp"
 #include "global.hpp"
 #include "../geom2d/csg2d.hpp"
 
@@ -155,7 +156,7 @@ namespace netgen
                   }
               }
 
-              seg.edgenr = topo.GetEdge(segi)+1;
+              // seg.edgenr = topo.GetEdge(segi)+1;
               segments.Append(seg);
           }
       }
@@ -179,10 +180,84 @@ namespace netgen
       }
   }
 
+  void InterpolateSurfaceGrowthVectors(const Mesh & mesh, const BoundaryLayerParameters& blp, int fd_old, FlatArray<Vec<3>, PointIndex> growthvectors)
+  {
+    // interpolate growth vectors at inner surface points from surrounding edge points
+    Array<Point<2>, PointIndex> delaunay_points(mesh.GetNP());
+    Array<int, PointIndex> p2face(mesh.GetNP());
+    p2face = 0;
+
+    Array<SurfaceElementIndex> surface_els;
+    Array<PointIndex> edge_points;
+    Array<PointIndex> surface_points;
+    for(auto facei : Range(1, fd_old+1))
+      {
+        if(!blp.surfid.Contains(facei))
+            continue;
+
+        p2face = 0;
+
+        edge_points.SetSize(0);
+        surface_points.SetSize(0);
+        surface_els.SetSize(0);
+        mesh.GetSurfaceElementsOfFace (facei, surface_els);
+        Box<2> bbox ( Box<2>::EMPTY_BOX );
+        for(auto sei : surface_els)
+        {
+            const auto & sel = mesh[sei];
+            for (auto i : Range(sel.GetNP()))
+            {
+                auto pi = sel[i];
+                if(p2face[pi] != 0)
+                    continue;
+
+                p2face[pi] = facei;
+
+                if(mesh[pi].Type() <= EDGEPOINT)
+                    edge_points.Append(pi);
+                else
+                    surface_points.Append(pi);
+
+                auto & gi = sel.GeomInfo()[i];
+                // TODO: project to plane if u,v not available?
+                delaunay_points[pi] = {gi.u, gi.v};
+                bbox.Add(delaunay_points[pi]);
+            }
+        }
+
+        if(surface_points.Size()==0)
+            continue;
+
+        DelaunayMesh dmesh( delaunay_points, bbox  );
+
+        for(auto pi : edge_points)
+        {
+            p2face[pi] = 0;
+            dmesh.AddPoint(pi);
+        }
+
+        std::map<PointIndex, double> weights;
+        for(auto pi : surface_points)
+        {
+            dmesh.AddPoint(pi, &weights);
+            auto & v = growthvectors[pi];
+            for(auto & [pi_other, weight] : weights)
+                v += weight * growthvectors[pi_other];
+        }
+
+      }
+
+
+  }
+
   void GenerateBoundaryLayer(Mesh& mesh, const BoundaryLayerParameters& blp)
   {
     static Timer timer("Create Boundarylayers");
     RegionTimer regt(timer);
+
+    bool interpolate_growth_vectors = false;
+    if(mesh.GetGeometry())
+        interpolate_growth_vectors = mesh.GetGeometry()->GetGeomType() == Mesh::GEOM_OCC;
 
     int max_edge_nr = -1;
     for(const auto& seg : mesh.LineSegments())
@@ -262,6 +337,8 @@ namespace netgen
           {
             for(auto pi : sel.PNums())
               {
+                if(interpolate_growth_vectors && mesh[pi].Type() >= SURFACEPOINT)
+                    continue;
                 auto & np = growthvectors[pi];
                 if(np.Length() == 0) { np = n; continue; }
                 auto npn = np * n;
@@ -288,6 +365,8 @@ namespace netgen
 
     // moved segments
     Array<SegmentIndex> moved_segs;
+    BitArray moved_edges(max_edge_nr+1);
+    moved_edges = false;
     Array<Segment> new_segments;
 
     // boundaries to project endings to
@@ -304,6 +383,7 @@ namespace netgen
         segs_done.SetBit(si);
         segmap[si].Append(make_pair(si, 0));
         moved_segs.Append(si);
+        moved_edges.SetBit(segi.edgenr);
         for(auto sj : Range(segments))
           {
             if(segs_done.Test(sj)) continue;
@@ -352,6 +432,8 @@ namespace netgen
               for(auto i : Range(sel.PNums()))
                 {
                   auto pi = sel.PNums()[i];
+                  if(interpolate_growth_vectors && mesh[pi].Type() >= SURFACEPOINT)
+                    continue;
                   if(growthvectors[pi].Length2() == 0.)
                     continue;
                   auto next = sel.PNums()[(i+1)%sel.GetNV()];
@@ -392,6 +474,74 @@ namespace netgen
               }
           }
       }
+
+    // interpolate tangential component of growth vector along edge
+    if(interpolate_growth_vectors)
+    for(auto edgenr : Range(max_edge_nr))
+      {
+        if(!moved_edges[edgenr+1]) continue;
+        const auto& geo = *mesh.GetGeometry();
+        if(edgenr >= geo.GetNEdges())
+          continue;
+
+        // build sorted list of edge
+        Array<PointIndex> points;
+        // find first vertex on edge
+        for(const auto& seg : segments)
+          {
+            if(seg.edgenr-1 == edgenr && mesh[seg[0]].Type() == FIXEDPOINT)
+              {
+                points.Append(seg[0]);
+                break;
+              }
+          }
+        while(true)
+          {
+            for(auto si : meshtopo.GetVertexSegments(points.Last()))
+              {
+                const auto& seg = mesh[si];
+                if(seg.edgenr-1 != edgenr)
+                  continue;
+                if(seg[0] == points.Last() &&
+                   (points.Size() < 2 || points[points.Size()-2] !=seg[1]))
+                  {
+                    points.Append(seg[1]);
+                    break;
+                  }
+              }
+            if(mesh[points.Last()].Type() == FIXEDPOINT)
+              break;
+          }
+
+        // tangential part of growth vectors
+        EdgePointGeomInfo gi;
+        Point<3> p = mesh[points[0]];
+        const auto& edge = geo.GetEdge(edgenr);
+        edge.ProjectPoint(p, &gi);
+        auto tau1 = gi.dist;
+        auto t1 = edge.GetTangent(tau1);
+        t1 *= 1./t1.Length();
+        p = mesh[points.Last()];
+        edge.ProjectPoint(p, &gi);
+        auto tau2 = gi.dist;
+        auto t2 = edge.GetTangent(gi.dist);
+        t2 *= 1./t2.Length();
+        auto gt1 = (growthvectors[points[0]] * t1) * t1;
+        auto gt2 = (growthvectors[points.Last()] * t2) * t2;
+
+        for(size_t i = 1; i < points.Size()-1; i++)
+          {
+            auto pi = points[i];
+            p = mesh[pi];
+            edge.ProjectPoint(p, &gi);
+            auto tau = gi.dist;
+            auto interpol = (1-fabs(tau-tau1)) * gt1 + (1-fabs(tau-tau2))*gt2;
+             growthvectors[pi] += interpol;
+          }
+      }
+
+    if(interpolate_growth_vectors)
+        InterpolateSurfaceGrowthVectors(mesh, blp, fd_old, growthvectors);
 
     // insert new points
     for (PointIndex pi = 1; pi <= np; pi++)

@@ -1,265 +1,169 @@
 #include <mystdlib.h>
-#include "meshing.hpp"
+#include "delaunay2d.hpp"
 
 #include <geom2d/csg2d.hpp>
 
 
-// not yet working ....
-
 namespace netgen
 {
-  using ngcore::INT;
-  extern void Optimize2d (Mesh & mesh, MeshingParameters & mp);
-
-  static inline Point<2> P2( Point<3> p )
+  void DelaunayTrig::CalcCenter (FlatArray<Point<2>, PointIndex> points)
   {
-    return {p[0], p[1]};
+    Point<2> p1 = points[pnums[0]];
+    Point<2> p2 = points[pnums[1]];
+    Point<2> p3 = points[pnums[2]];
+
+    Vec<2> v1 = p2-p1;
+    Vec<2> v2 = p3-p1;
+
+    // without normal equation ...
+    Mat<2,2> mat, inv;
+    mat(0,0) = v1(0); mat(0,1) = v1(1);
+    mat(1,0) = v2(0); mat(1,1) = v2(1);
+    CalcInverse (mat, inv);
+    Vec<2> rhs, sol;
+    rhs(0) = 0.5 * v1*v1;
+    rhs(1) = 0.5 * v2*v2;
+    sol = inv * rhs;
+    c = p1 + sol;
+
+    rad2 = Dist2(c, p1);
+    r = sqrt(rad2);
   }
 
-  static inline Point<3> P3( Point<2> p )
+  int DelaunayMesh::GetNeighbour( int eli, int edge )
   {
-    return {p[0], p[1], 0};
+    auto p0 = trigs[eli][(edge+1)%3];
+    auto p1 = trigs[eli][(edge+2)%3];
+    if(p1<p0)
+      Swap(p0,p1);
+
+    INT<2> hash = {p0,p1};
+
+    auto pos = edge_to_trig.Position(hash);
+    if (pos == -1) return -1;
+    auto i2 = edge_to_trig.GetData(pos);
+    return i2[0] == eli ? i2[1] : i2[0];
   }
 
-
-  class DelaunayTrig
+  void DelaunayMesh::SetNeighbour( int eli, int edge )
   {
-    PointIndex pnums[3];
-    Point<2> c;
-  public:    
-    double r;
-    double rad2;
-    DelaunayTrig () = default;
-    DelaunayTrig (int p1, int p2, int p3)
-    { 
-      pnums[0] = p1;
-      pnums[1] = p2;
-      pnums[2] = p3;
-    }
+    auto p0 = trigs[eli][(edge+1)%3];
+    auto p1 = trigs[eli][(edge+2)%3];
+    if(p1<p0)
+      Swap(p0,p1);
 
-    PointIndex & operator[] (int j) { return pnums[j]; }
-    const PointIndex & operator[] (int j) const { return pnums[j]; }
-
-    void CalcCenter (Mesh & mesh)
-    {
-      Point<2> p1 = P2(mesh[pnums[0]]);
-      Point<2> p2 = P2(mesh[pnums[1]]);
-      Point<2> p3 = P2(mesh[pnums[2]]);
-
-      Vec<2> v1 = p2-p1;
-      Vec<2> v2 = p3-p1;
-      /*
-      Mat<2,2> mat, inv;
-      mat(0,0) = v1*v1;
-      mat(0,1) = v1*v2;
-      mat(1,0) = v2*v1;
-      mat(1,1) = v2*v2;
-      Vec<2> rhs, sol;
-      rhs(0) = 0.5 * v1*v1;
-      rhs(1) = 0.5 * v2*v2;
-      CalcInverse (mat, inv);
-      sol = inv * rhs;
-      
-      c = p1 + sol(0) * v1 + sol(1) * v2;
-      rad2 = Dist2(c, p1);
-      r = sqrt(rad2);
-      */
-
-      // without normal equation ...
-      Mat<2,2> mat, inv;
-      mat(0,0) = v1(0); mat(0,1) = v1(1);
-      mat(1,0) = v2(0); mat(1,1) = v2(1);
-      CalcInverse (mat, inv);
-      Vec<2> rhs, sol;
-      rhs(0) = 0.5 * v1*v1;
-      rhs(1) = 0.5 * v2*v2;
-      sol = inv * rhs;
-      c = p1 + sol;
-
-      rad2 = Dist2(c, p1);
-      r = sqrt(rad2);
-    }
-
-    Point<2> Center() const { return c; }
-    double Radius2() const { return rad2; }
-    Box<2> BoundingBox() const { return Box<2> (c-Vec<2>(r,r), c+Vec<2>(r,r)); }
-
-    mutable PointIndex visited_pi = -1;
-  };
-
-  class DelaunayMesh
-  {
-    ngcore::ClosedHashTable<INT<2>, INT<2>> edge_to_trig;
-    Array<DelaunayTrig> trigs;
-    unique_ptr<DelaunayTree<2>> tree;
-    Mesh & mesh;
-
-    Array<int> closeels;
-    Array<int> intersecting;
-    Array<INT<2>> edges;
-
-    int GetNeighbour( int eli, int edge )
-    {
-      auto p0 = trigs[eli][(edge+1)%3];
-      auto p1 = trigs[eli][(edge+2)%3];
-      if(p1<p0)
-        Swap(p0,p1);
-
-      INT<2> hash = {p0,p1};
-      /*
-      if(!edge_to_trig.Used(hash))
-        return -1;
-
-      auto i2 = edge_to_trig.Get({p0,p1});
-
-      return i2[0] == eli ? i2[1] : i2[0];
-      */
-      auto pos = edge_to_trig.Position(hash);
-      if (pos == -1) return -1;
-      auto i2 = edge_to_trig.GetData(pos);
-      return i2[0] == eli ? i2[1] : i2[0];
-    }
-
-    void SetNeighbour( int eli, int edge )
-    {
-      auto p0 = trigs[eli][(edge+1)%3];
-      auto p1 = trigs[eli][(edge+2)%3];
-      if(p1<p0)
-        Swap(p0,p1);
-
-      INT<2> hash = {p0,p1};
-      auto pos = edge_to_trig.Position(hash);
-      if (pos == -1)
-        edge_to_trig[hash] = {eli, -1};
-      else
-        {
-          auto i2 = edge_to_trig.GetData(pos);
-          if(i2[0]==-1)
-            i2[0] = eli;
-          else
-            {
-              if(i2[1]==-1)
-                i2[1] = eli;
-            }
-          edge_to_trig.SetData (pos, i2);
-        }
-      /*
-      if(!edge_to_trig.Used(hash))
-        edge_to_trig[hash] = {eli, -1};
-      else
+    INT<2> hash = {p0,p1};
+    auto pos = edge_to_trig.Position(hash);
+    if (pos == -1)
+      edge_to_trig[hash] = {eli, -1};
+    else
       {
-
-        auto i2 = edge_to_trig.Get({p0,p1});
-
+        auto i2 = edge_to_trig.GetData(pos);
         if(i2[0]==-1)
           i2[0] = eli;
         else
-        {
-          if(i2[1]==-1)
-            i2[1] = eli;
-        }
-
-        edge_to_trig[hash] = i2;
-      }
-      */
-    }
-
-    void UnsetNeighbours( int eli )
-    {
-      for(int edge : Range(3))
-      {
-        auto p0 = trigs[eli][(edge+1)%3];
-        auto p1 = trigs[eli][(edge+2)%3];
-        if(p1<p0)
-          Swap(p0,p1);
-
-        INT<2> hash = {p0,p1};
-        // auto i2 = edge_to_trig.Get({p0,p1});
-        auto pos = edge_to_trig.Position(hash);
-        auto i2 = edge_to_trig.GetData(pos);
-          
-        if(i2[0]==eli)
-          i2[0] = i2[1];
-        i2[1] = -1;
-
-        // edge_to_trig[hash] = i2;
+          {
+            if(i2[1]==-1)
+              i2[1] = eli;
+          }
         edge_to_trig.SetData (pos, i2);
       }
-    }
+  }
 
-
-    void AppendTrig( int pi0, int pi1, int pi2 )
+  void DelaunayMesh::UnsetNeighbours( int eli )
+  {
+    for(int edge : Range(3))
     {
-      DelaunayTrig el;
-      el[0] = pi0;
-      el[1] = pi1;
-      el[2] = pi2;
+      auto p0 = trigs[eli][(edge+1)%3];
+      auto p1 = trigs[eli][(edge+2)%3];
+      if(p1<p0)
+        Swap(p0,p1);
 
-      el.CalcCenter(mesh);
+      INT<2> hash = {p0,p1};
+      auto pos = edge_to_trig.Position(hash);
+      auto i2 = edge_to_trig.GetData(pos);
 
-      trigs.Append(el);
-      int ti = trigs.Size()-1;
-      tree->Insert(el.BoundingBox(), ti);
+      if(i2[0]==eli)
+        i2[0] = i2[1];
+      i2[1] = -1;
 
-      for(int i : Range(3))
-        SetNeighbour(ti, i);
+      edge_to_trig.SetData (pos, i2);
     }
+  }
 
-    public:
-    DelaunayMesh( Mesh & mesh_, Box<2> box  ) 
-      : mesh(mesh_)
-    {
-      Vec<2> vdiag = box.PMax()-box.PMin();
 
-      double w = vdiag(0);
-      double h = vdiag(1);
+  void DelaunayMesh::AppendTrig( int pi0, int pi1, int pi2 )
+  {
+    DelaunayTrig el;
+    el[0] = pi0;
+    el[1] = pi1;
+    el[2] = pi2;
 
-      Point<2> p0 = box.PMin() + Vec<2> ( -3*h, -h);
-      Point<2> p1 = box.PMin() + Vec<2> (w+3*h, -h);
-      Point<2> p2 = box.Center() + Vec<2> (0, 1.5*h+0.5*w);
+    el.CalcCenter(points);
 
-      box.Add( p0 );
-      box.Add( p1 );
-      box.Add( p2 );
+    trigs.Append(el);
+    int ti = trigs.Size()-1;
+    tree->Insert(el.BoundingBox(), ti);
 
-      tree = make_unique<DelaunayTree<2>>(box);
+    for(int i : Range(3))
+      SetNeighbour(ti, i);
+  }
 
-      auto pi0 = mesh.AddPoint (P3(p0));
-      auto pi1 = mesh.AddPoint (P3(p1));
-      auto pi2 = mesh.AddPoint (P3(p2));
-      AppendTrig(pi0, pi1, pi2);
-    }
+  DelaunayMesh::DelaunayMesh( Array<Point<2>, PointIndex> & points_, Box<2> box  )
+    : points(points_)
+  {
+    Vec<2> vdiag = box.PMax()-box.PMin();
 
-    void AddPoint( PointIndex pi_new )
-    {
-      static Timer t("AddPoint"); RegionTimer reg(t);
-      Point<2> newp = P2(mesh[pi_new]);
-      intersecting.SetSize(0);
-      edges.SetSize(0);
+    double w = vdiag(0);
+    double h = vdiag(1);
 
-      int definitive_overlapping_trig = -1;
+    Point<2> p0 = box.PMin() + Vec<2> ( -3*h, -h);
+    Point<2> p1 = box.PMin() + Vec<2> (w+3*h, -h);
+    Point<2> p2 = box.Center() + Vec<2> (0, 1.5*h+0.5*w);
 
-      double minquot{1e20};
-      tree->GetFirstIntersecting (newp, newp, [&] (const auto i_trig)
-          {
-             const auto trig = trigs[i_trig];
-             double rad2 = trig.Radius2();
-             double d2 = Dist2 (trig.Center(), newp);
-             if (d2 >= rad2) return false;
-             
-             if (d2 < 0.999 * rad2)
-               {
-                 definitive_overlapping_trig = i_trig;
-                 return true;
-               }
-             
-            if (definitive_overlapping_trig == -1 || d2 < 0.99*minquot*rad2) 
-              {
-                minquot = d2/rad2;
-                definitive_overlapping_trig = i_trig;
-              }
-            return false;
-          });
+    box.Add( p0 );
+    box.Add( p1 );
+    box.Add( p2 );
+
+    tree = make_unique<DelaunayTree<2>>(box);
+
+    auto pi0 = points.Append (p0);
+    auto pi1 = points.Append (p1);
+    auto pi2 = points.Append (p2);
+    AppendTrig(pi0, pi1, pi2);
+  }
+
+  void DelaunayMesh::CalcIntersecting( PointIndex pi_new )
+  {
+    static Timer t("CalcIntersecting"); RegionTimer reg(t);
+
+    Point<2> newp = points[pi_new];
+    intersecting.SetSize(0);
+    edges.SetSize(0);
+
+    int definitive_overlapping_trig = -1;
+
+    double minquot{1e20};
+    tree->GetFirstIntersecting (newp, newp, [&] (const auto i_trig)
+        {
+           const auto trig = trigs[i_trig];
+           double rad2 = trig.Radius2();
+           double d2 = Dist2 (trig.Center(), newp);
+           if (d2 >= rad2) return false;
+
+           if (d2 < 0.999 * rad2)
+             {
+               definitive_overlapping_trig = i_trig;
+               return true;
+             }
+
+          if (definitive_overlapping_trig == -1 || d2 < 0.99*minquot*rad2)
+            {
+              minquot = d2/rad2;
+              definitive_overlapping_trig = i_trig;
+            }
+          return false;
+        });
 
     if(definitive_overlapping_trig==-1)
     {
@@ -284,52 +188,63 @@ namespace netgen
       }
     }
 
-    // static Timer tvis("trig visited");
-    // tvis.Start();
-    // BitArray trig_visited(trigs.Size());
-    // trig_visited.Clear();
     if(definitive_overlapping_trig==-1)
+    {
+      Mesh m;
+      m.AddFaceDescriptor (FaceDescriptor (1, 1, 0, 0));
+      for(auto pi : points.Range())
+          m.AddPoint(P3(points[pi]));
+
+      for (DelaunayTrig & trig : trigs)
+      {
+        if (trig[0] < 0) continue;
+
+        Vec<3> n = Cross (P3(points[trig[1]])-P3(points[trig[0]]), 
+            P3(points[trig[2]])-P3(points[trig[0]]));
+        if (n(2) < 0) Swap (trig[1], trig[2]);
+
+        Element2d el(trig[0], trig[1], trig[2]);
+        el.SetIndex (1);
+        m.AddSurfaceElement (el);
+      }
+      m.Compress();
+      m.AddPoint(P3(points[pi_new]));
+      m.Save("error.vol.gz");
       throw Exception("point not in any circle "+ ToString(pi_new));
-    // tvis.Stop();
-    // static Timer t2("addpoint - rest"); RegionTimer r2(t2);
+    }
+
     Array<int> trigs_to_visit;
     trigs_to_visit.Append(definitive_overlapping_trig);
     intersecting.Append(definitive_overlapping_trig);
-    // trig_visited.SetBit(definitive_overlapping_trig);
     trigs[definitive_overlapping_trig].visited_pi = pi_new;
-    
+
     while(trigs_to_visit.Size())
     {
       int ti = trigs_to_visit.Last();
       trigs_to_visit.DeleteLast();
 
-      // trig_visited.SetBit(ti);
-
       auto & trig = trigs[ti];
       trig.visited_pi = pi_new;
-      
+
       for(auto ei : Range(3))
       {
         auto nb = GetNeighbour(ti, ei);
         if(nb==-1)
           continue;
-        // if(trig_visited.Test(nb))
-        // continue;
 
         const auto & trig_nb = trigs[nb];
         if (trig_nb.visited_pi == pi_new)
           continue;
 
-        // trig_visited.SetBit(nb);
         trig_nb.visited_pi = pi_new;
-        
+
         bool is_intersecting = Dist2(newp, trig_nb.Center()) < trig_nb.Radius2()*(1+1e-12);
 
         if(!is_intersecting)
         {
-          const Point<2> p0 = P2(mesh[PointIndex (trig[(ei+1)%3])]);
-          const Point<2> p1 = P2(mesh[PointIndex (trig[(ei+2)%3])]);
-          const Point<2> p2 = P2(mesh[PointIndex (trig[ei])]);
+          const Point<2> p0 = points[PointIndex (trig[(ei+1)%3])];
+          const Point<2> p1 = points[PointIndex (trig[(ei+2)%3])];
+          const Point<2> p2 = points[PointIndex (trig[ei])];
           auto v = p1-p0;
 
           Vec<2> n = {-v[1], v[0]};
@@ -365,7 +280,7 @@ namespace netgen
         for (int l = 0; l < edges.Size(); l++)
           if (edges[l] == edge)
           {
-            edges.RemoveElement(l); 
+            edges.RemoveElement(l);
             found = true;
             break;
           }
@@ -373,47 +288,56 @@ namespace netgen
           edges.Append (edge);
       }
     }
+  }
 
-    for (int j : intersecting)
-    {
-      UnsetNeighbours(j);
-      trigs[j][0] = -1;
-      trigs[j][1] = -1;
-      trigs[j][2] = -1;
-    }
-
-    for (auto edge : edges)
-      AppendTrig( edge[0], edge[1], pi_new );
-
-    for (int j : intersecting)
-      tree->DeleteElement (j);
-
-    static int counter=0;
-    if(0)
-    {
-      Mesh m;
-      m = mesh;
-      m.ClearSurfaceElements();
-      for (DelaunayTrig & trig : trigs)
+  void DelaunayMesh::CalcWeights( PointIndex pi_new, std::map<PointIndex, double> & weights )
+  {
+      double eps = tree->GetTolerance();
+      weights.clear();
+      double sum = 0.0;
+      auto p = points[pi_new];
+      auto pi_last = *points.Range().end()-3;
+      for(auto edge : edges)
       {
-        if (trig[0] < 0) continue;
-
-        Vec<3> n = Cross (mesh[trig[1]]-mesh[trig[0]], 
-            mesh[trig[2]]-mesh[trig[0]]);
-        if (n(2) < 0) Swap (trig[1], trig[2]);
-
-        Element2d el(trig[0], trig[1], trig[2]);
-        el.SetIndex (1);
-        m.AddSurfaceElement (el);
+          for(PointIndex pi : {edge[0], edge[1]})
+          {
+          if(pi>=pi_last)
+              continue;
+          if(weights.count(pi))
+              continue;
+          double weight = 1.0/(eps+Dist(p, points[pi]));
+          sum += weight;
+          weights[pi] = weight;
+          }
       }
-      m.Save("meshes/mesh_"+ToString(counter++)+".vol.gz");
-    }
+      double isum = 1.0/sum;
+      for(auto & [pi, weight] : weights)
+          weight *= isum;
+  }
 
-    }
+  void DelaunayMesh::AddPoint( PointIndex pi_new, std::map<PointIndex, double> * weights )
+  {
+      static Timer t("AddPoint"); RegionTimer reg(t);
 
-    Array<DelaunayTrig> & GetElements() { return trigs; }
+      CalcIntersecting(pi_new);
 
-  };
+      if(weights)
+          CalcWeights(pi_new, *weights);
+
+      for (int j : intersecting)
+        {
+          UnsetNeighbours(j);
+          trigs[j][0] = -1;
+          trigs[j][1] = -1;
+          trigs[j][2] = -1;
+        }
+
+      for (auto edge : edges)
+          AppendTrig( edge[0], edge[1], pi_new );
+
+      for (int j : intersecting)
+          tree->DeleteElement (j);
+  }
 
   ostream & operator<< (ostream & ost, DelaunayTrig trig)
   {
@@ -699,26 +623,25 @@ namespace netgen
     Array<PointIndex, PointIndex> compress;
     Array<PointIndex, PointIndex> icompress(mesh.Points().Size());
 
-    /*
-    for(auto pi : mesh.Points().Range())
-      if(add_point.Test(pi))
-    */
+    Array<Point<2>, PointIndex> temp_points;
     for (PointIndex pi : addpoints)
       {
         icompress[pi] = tempmesh.AddPoint(mesh[pi]);
         compress.Append(pi);
+        temp_points.Append(P2(mesh[pi]));
       }
 
     for (PointIndex pi : Range(first_point_blockfill, last_point_blockfill))
       {
         icompress[pi] = tempmesh.AddPoint(mesh[pi]);
         compress.Append(pi);
+        temp_points.Append(P2(mesh[pi]));
       }
     t3.Stop();
     // DelaunayMesh adds surrounding trig (don't add the last 3 points to delaunay AGAIN!
-    auto tempmesh_points = tempmesh.Points().Range();
+    auto points_range = temp_points.Range();
 
-    DelaunayMesh dmesh(tempmesh, bbox);
+    DelaunayMesh dmesh(temp_points, bbox);
 
     timer_addpoints.Start();
 
@@ -736,7 +659,7 @@ namespace netgen
 //     for (PointIndex pi : old_points)
 //       mixed[pi] = PointIndex ( (prim * pi) % old_points.Size() + PointIndex::BASE );
     
-    for (auto pi : tempmesh_points)
+    for (auto pi : points_range)
       dmesh.AddPoint(pi);
 
     timer_addpoints.Stop();

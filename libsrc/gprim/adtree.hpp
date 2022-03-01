@@ -1184,6 +1184,8 @@ public:
         : DelaunayTree(box.PMin(), box.PMax())
       { }
 
+    double GetTolerance() { return tol; }
+
     size_t GetNLeaves()
       {
         return n_leaves;
