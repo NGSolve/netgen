@@ -33,7 +33,7 @@ namespace netgen
   }
 
   HPRefElement :: HPRefElement(Element & el) :
-    np(el.GetNV()), index(el.GetIndex()), levelx(0), levely(0), levelz(0), type(HP_NONE), domin(-1), domout(-1) //domin,out for segements
+    type(HP_NONE), index(el.GetIndex()), levelx(0), levely(0), levelz(0), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segements
   { 
     //Reset();
     for (int i=0; i<np ; i++) 
@@ -48,7 +48,7 @@ namespace netgen
 
   
   HPRefElement :: HPRefElement(Element2d & el) :
-    levelx(0), levely(0), levelz(0), type(HP_NONE), index(el.GetIndex()), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segements
+    type(HP_NONE), index(el.GetIndex()), levelx(0), levely(0), levelz(0), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segements
   { 
     //Reset();
     
@@ -63,7 +63,7 @@ namespace netgen
   }
 
   HPRefElement :: HPRefElement(Segment & el) :
-    levelx(0), levely(0), levelz(0), type(HP_NONE), np(2), domin(el.domin), domout(el.domout), singedge_left(el.singedge_left), singedge_right(el.singedge_right) 
+    type(HP_NONE), levelx(0), levely(0), levelz(0), np(2), domin(el.domin), domout(el.domout), singedge_left(el.singedge_left), singedge_right(el.singedge_right)
   { 
     //Reset();
     for (int i=0; i<np ; i++) 
@@ -84,7 +84,7 @@ namespace netgen
   }
   
   HPRefElement :: HPRefElement(HPRefElement & el) :
-    np(el.np), levelx(el.levelx), levely(el.levely), levelz(el.levelz), type(el.type), domin(el.domin), domout(el.domout), index(el.index), si(el.si), coarse_elnr(el.coarse_elnr), singedge_left(el.singedge_left), singedge_right(el.singedge_right) 
+    type(el.type), index(el.index), si(el.si), levelx(el.levelx), levely(el.levely), levelz(el.levelz), np(el.np), coarse_elnr(el.coarse_elnr), domin(el.domin), domout(el.domout), singedge_left(el.singedge_left), singedge_right(el.singedge_right)
     
   {
     //Reset();

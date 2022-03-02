@@ -2372,7 +2372,7 @@ degen_tol : double
     vector<TopoDS_Wire> wires;
     for(auto& w : *swires)
       wires.push_back(TopoDS::Wire(w));
-    return std::move(wires);
+    return wires;
   }, py::arg("edges"), py::arg("tol")=1e-8, py::arg("shared")=true);
 
   py::class_<WorkPlane, shared_ptr<WorkPlane>> (m, "WorkPlane")

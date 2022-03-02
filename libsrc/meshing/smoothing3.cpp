@@ -338,7 +338,7 @@ namespace netgen
     : points(apoints), elements(aelements), elementsonpoint(* new Table<int,PointIndex>()), own_elementsonpoint(true), mp(amp)
   {
     static Timer tim("PointFunction - build elementsonpoint table"); RegionTimer reg(tim);
-    elementsonpoint = std::move(ngcore::CreateSortedTable<int, PointIndex>( elements.Range(),
+    elementsonpoint = ngcore::CreateSortedTable<int, PointIndex>( elements.Range(),
                [&](auto & table, ElementIndex ei)
                {
                  const auto & el = elements[ei];
@@ -348,7 +348,7 @@ namespace netgen
 
                  for (PointIndex pi : el.PNums())
                      table.Add (pi, ei);
-               }, points.Size()));
+               }, points.Size());
   }
 
   void PointFunction :: SetPointIndex (PointIndex aactpind)

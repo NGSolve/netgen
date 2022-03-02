@@ -242,7 +242,7 @@ namespace ngcore
     TNestedTask (const function<void(TaskInfo&)> & _func,
                  int _mynr, int _total,
                  atomic<int> & _endcnt, int prod_tid)
-      : func(&_func), mynr(_mynr), total(_total), endcnt(&_endcnt), producing_thread(prod_tid)
+      : func(&_func), mynr(_mynr), total(_total), producing_thread(prod_tid), endcnt(&_endcnt)
     {
       ;
     }
