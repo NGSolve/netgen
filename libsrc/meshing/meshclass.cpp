@@ -6412,25 +6412,17 @@ namespace netgen
     static int timer = NgProfiler::CreateTimer ("GetSurfaceElementsOfFace");
     NgProfiler::RegionTimer reg (timer);
 
-     /*
-     sei.SetSize (0);
-     for (SurfaceElementIndex i = 0; i < GetNSE(); i++)
-     {
-        if ( (*this)[i].GetIndex () == facenr && (*this)[i][0] >= PointIndex::BASE &&
-           !(*this)[i].IsDeleted() )
-        {
-           sei.Append (i);
-        }
-     }
-     */
+    if(facenr==0)
+    {
+        sei.SetSize(GetNSE());
+        ParallelForRange( IntRange(GetNSE()), [&sei] (auto myrange)
+            {
+                for(auto i : myrange)
+                    sei[i] = i;
+            });
+        return;
+    }
 
-     /* Philippose - 01/10/2009
-     Commented out the following lines, and activated the originally 
-     commented out lines above because of a bug which causes corruption 
-     of the variable "facedecoding" when a mesh is converted to second order
-     */
-
-     //      int size1 = sei.Size();
      sei.SetSize(0);
 
      SurfaceElementIndex si = facedecoding[facenr-1].firstelement;
@@ -6444,16 +6436,6 @@ namespace netgen
 
         si = (*this)[si].next;
      }
-     
-     /*
-     // *testout << "with list = " << endl << sei << endl;
-
-     if (size1 != sei.Size()) 
-     {
-        cout << "size mismatch" << endl;
-        exit(1);
-     }
-     */
   }
 
 
