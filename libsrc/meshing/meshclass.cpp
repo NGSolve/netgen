@@ -2352,6 +2352,8 @@ namespace netgen
     for (int i = 0; i < lockedpoints.Size(); i++)
       points[lockedpoints[i]].SetType(FIXEDPOINT);
 
+    for(const auto& pointel : pointelements)
+      points[pointel.pnum].SetType(FIXEDPOINT);
 
     /*
       for (i = 0; i < openelements.Size(); i++)
