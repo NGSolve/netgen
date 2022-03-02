@@ -530,15 +530,11 @@ namespace netgen
         vert2meshpt[vert->GetHash()] = pi;
         mesh[pi].Singularity(vert->properties.hpref);
         mesh[pi].SetType(FIXEDPOINT);
-        mesh.AddLockedPoint(pi);
 
-        if(vert->properties.name)
-        {
-          Element0d el(pi, pi);
-          el.name = vert->properties.GetName();
-          mesh.SetCD3Name(pi, el.name);
-          mesh.pointelements.Append (el);
-        }
+        Element0d el(pi, pi);
+        el.name = vert->properties.GetName();
+        mesh.SetCD3Name(pi, el.name);
+        mesh.pointelements.Append (el);
       }
 
     for(auto & vert : vertices)

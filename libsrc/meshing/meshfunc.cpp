@@ -102,7 +102,7 @@ namespace netgen
       // mark locked/fixed points for each domain TODO: domain bounding box to add only relevant points?
       for(auto pi : mesh.LockedPoints())
         for(auto i : Range(ret))
-          ipmap[i][pi] = 1;
+          ipmap[i][pi] = 2;
 
       // add used points to domain mesh, build point mapping
       for(auto i : Range(ret))
@@ -113,7 +113,10 @@ namespace netgen
           for(auto pi : Range(ipmap[i]))
             if(ipmap[i][pi])
             {
-              auto pi_new = m.AddPoint( mesh[pi] );
+              const auto& mp = mesh[pi];
+              auto pi_new = m.AddPoint( mp, mp.GetLayer(), mp.Type() );
+              if(ipmap[i][pi] == 2)
+                mesh.AddLockedPoint(pi_new);
               ipmap[i][pi] = pi_new;
               pmap.Append( pi );
             }
