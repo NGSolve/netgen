@@ -203,20 +203,20 @@ namespace netgen
     if(auto quad_dominated = OCCGeometry::global_shape_properties[face.TShape()].quad_dominated; quad_dominated.has_value())
       local_mp.quad = *quad_dominated;
 
-      bool failed = OCCMeshFace(*this, mesh, glob2loc, local_mp, nr, PARAMETERSPACE, true);
-      if(failed)
-          failed = OCCMeshFace(*this, mesh, glob2loc, local_mp, nr, PLANESPACE, false);
+    bool failed = OCCMeshFace(*this, mesh, glob2loc, local_mp, nr, PARAMETERSPACE, true);
+    if(failed)
+        failed = OCCMeshFace(*this, mesh, glob2loc, local_mp, nr, PLANESPACE, false);
 
-      if(failed)
-      {
-          facemeshstatus[nr] = -1;
-          PrintError ("Problem in Surface mesh generation");
-      }
-      else
-      {
-          facemeshstatus[nr] = 1;
-      }
-      return failed;
+    if(failed)
+    {
+        facemeshstatus[nr] = -1;
+        PrintError ("Problem in Surface mesh generation");
+    }
+    else
+    {
+        facemeshstatus[nr] = 1;
+    }
+    return failed;
   }
 
    void OCCGeometry :: PrintNrShapes ()

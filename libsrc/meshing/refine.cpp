@@ -663,8 +663,8 @@ namespace netgen
 	    // if (elrev)
 	    // swap (pnums.Elem(3), pnums.Elem(4));
 
-	     for (int j = 0; j < 9; j++)
-	     {
+	   for (int j = 0; j < 9; j++)
+           {
 	       INDEX_2 i2;
 	       i2.I1() = pnums.Get(betw[j][0]);
 	       i2.I2() = pnums.Get(betw[j][1]);
@@ -679,10 +679,10 @@ namespace netgen
 			   mesh.Point(i2.I2())));
 		  between.Set (i2, pnums.Elem(7+j));
 	       }
-	    }
+           }
 
-	    for (int j = 0; j < 3; j++)
-	    {
+           for (int j = 0; j < 3; j++)
+	   {
 	       INDEX_2 i2a, i2b;
 	       i2a.I1() = pnums.Get(fbetw[2*j][0]);
 	       i2a.I2() = pnums.Get(fbetw[2*j][1]);

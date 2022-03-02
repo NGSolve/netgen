@@ -41,7 +41,7 @@ namespace netgen
   Meshing2 :: Meshing2 (const NetgenGeometry& ageo,
                         const MeshingParameters & mp,
                         const Box<3> & aboundingbox)
-    : geo(ageo), adfront(aboundingbox), boundingbox(aboundingbox)
+    : adfront(aboundingbox), boundingbox(aboundingbox), geo(ageo)
   {
     static Timer t("Mesing2::Meshing2"); RegionTimer r(t);
 

@@ -18,6 +18,27 @@ namespace netgen
     { tnr = atnr; sidenr = asidenr; }
   };
 
+  // check if element is quad with at least one surface point -> relevant for optimization
+  // (quads with 4 edge points are not optimized and can be ignored)
+  bool checkMixedElement(const Mesh & mesh, FlatArray<SurfaceElementIndex> seia)
+  {
+      bool mixed = false;
+      ParallelForRange( Range(seia), [&] (auto myrange) NETGEN_LAMBDA_INLINE
+         {
+            for (SurfaceElementIndex i : myrange)
+            {
+              const auto & sel = mesh[i];
+
+              if(sel.GetNP() == 3)
+                  continue;
+
+              for(auto i : Range(sel.GetNP()))
+                  if(mesh[sel[i]].Type() == SURFACEPOINT)
+                      mixed = true;
+            }
+         });
+      return mixed;
+  }
 
   bool MeshOptimize2d :: EdgeSwapping (const int usemetric,
     Array<Neighbour> &neighbors,
@@ -181,35 +202,14 @@ namespace netgen
     timerstart.Start();
 
     Array<SurfaceElementIndex> seia;
-    bool mixed = false;
+    mesh.GetSurfaceElementsOfFace (faceindex, seia);
 
-    if(faceindex==0)
-      {
-        seia.SetSize(mesh.GetNSE());
-        ParallelFor( Range(seia), [&] (auto i) NETGEN_LAMBDA_INLINE
-            {
-              SurfaceElementIndex sei(i);
-              seia[i] = sei;
-              if (mesh[sei].GetNP() != 3)
-              {
-                  const auto & sel = mesh[sei];
-                  for(auto i : Range(sel.GetNP()))
-                    if(mesh[sel[i]].Type() == INNERPOINT)
-                      mixed = true;
-              }
-            });
-      }
-    else
-      {
-        mesh.GetSurfaceElementsOfFace (faceindex, seia);
-        for (SurfaceElementIndex sei : seia)
-            if (mesh[sei].GetNP() != 3)
-                mixed = true;
-      }
-
-    if(mixed)
+    if(checkMixedElement(mesh, seia))
+    {
+        timerstart.Stop();
         return GenericImprove();
-      
+    }
+
     Array<Neighbour> neighbors(mesh.GetNSE());
     auto elements_on_node = mesh.CreatePoint2SurfaceElementTable(faceindex);
 
@@ -595,25 +595,14 @@ namespace netgen
 
     
     Array<SurfaceElementIndex> seia;
+    mesh.GetSurfaceElementsOfFace (faceindex, seia);
 
-    if(faceindex)
-        mesh.GetSurfaceElementsOfFace (faceindex, seia);
-    else
-      {
-        seia.SetSize(mesh.GetNSE());
-        ParallelFor( IntRange(mesh.GetNSE()), [&seia] (auto i) NETGEN_LAMBDA_INLINE
-                { seia[i] = i; });
-      }
-
-    bool mixed = false;
-    ParallelFor( Range(seia), [&] (auto i) NETGEN_LAMBDA_INLINE
-            {
-                if (mesh[seia[i]].GetNP() != 3)
-                    mixed = true;
-            });
-
-    if(mixed)
+    if(checkMixedElement(mesh, seia))
+    {
+        timerstart1.Stop();
+        timerstart.Stop();
         return;
+    }
 
     int np = mesh.GetNP();
 
@@ -625,18 +614,8 @@ namespace netgen
     BuildEdgeList( mesh, elementsonnode, edges );
 
     Array<bool,PointIndex> fixed(np);
-    ParallelFor( fixed.Range(), [&fixed] (auto i) NETGEN_LAMBDA_INLINE
-            { fixed[i] = false; });
-
-    ParallelFor( edges.Range(), [&] (auto i) NETGEN_LAMBDA_INLINE
-            {
-              auto [pi0, pi1] = edges[i];
-              if (mesh.IsSegment (pi0, pi1))
-                {
-                  fixed[pi0] = true;
-                  fixed[pi1] = true;
-                }
-            });
+    ParallelFor( fixed.Range(), [&] (auto i) NETGEN_LAMBDA_INLINE
+            { fixed[i] = mesh[i].Type() != SURFACEPOINT; });
 
     timerstart1.Stop();
 

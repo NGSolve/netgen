@@ -980,11 +980,10 @@ namespace netgen
     static Timer timer_opt2d("Optimization 2D");
     RegionTimer reg(timer_opt2d);
     auto meshopt = MeshOptimize2d(mesh);
+    meshopt.SetFaceIndex(0);
     for(auto i : Range(mparam.optsteps2d))
-    for(auto k : Range(mesh.GetNFD()))
       {
         PrintMessage(3, "Optimization step ", i);
-        meshopt.SetFaceIndex(k+1);
         int innerstep = 0;
         for(auto optstep : mparam.optimize2d)
           {
