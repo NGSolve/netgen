@@ -5,8 +5,17 @@
 #include "global.hpp"
 #include "../geom2d/csg2d.hpp"
 
+#include <set>
+
 namespace netgen
 {
+
+   Vec<3> getSurfaceNormal(const Mesh & mesh, const Element2d & el)
+   {
+     auto v0 = mesh[el[0]];
+     return Cross(mesh[el[1]]-v0, mesh[el[2]]-v0).Normalize();
+   };
+
 
    void InsertVirtualBoundaryLayer (Mesh & mesh)
    {
@@ -182,125 +191,73 @@ namespace netgen
 
   void InterpolateSurfaceGrowthVectors(const Mesh & mesh, const BoundaryLayerParameters& blp, int fd_old, FlatArray<Vec<3>, PointIndex> growthvectors, const Table<SurfaceElementIndex, PointIndex> & p2sel)
   {
+    static Timer tall("InterpolateSurfaceGrowthVectors"); RegionTimer rtall(tall);
+    static Timer tsmooth("InterpolateSurfaceGrowthVectors-Smoothing");
     auto np = mesh.GetNP();
-    // interpolate growth vectors at inner surface points from surrounding edge points
-    Array<Point<2>, PointIndex> delaunay_points(np);
-    Array<PointIndex, PointIndex> pmap(np); // maps duplicated points
+    BitArray is_point_on_bl_surface(np+1);
+    is_point_on_bl_surface.Clear();
+    Array<Vec<3>, PointIndex> normals(np);
+    for(auto pi : Range(growthvectors))
+        normals[pi] = growthvectors[pi];
 
-    Array<SurfaceElementIndex> surface_els;
-    Array<PointIndex> edge_points;
-    Array<PointIndex> surface_points;
-    for(auto facei : Range(1, fd_old+1))
+    ParallelForRange( mesh.SurfaceElements().Range(), [&] ( auto myrange )
       {
-        if(!blp.surfid.Contains(facei))
-            continue;
-
-        edge_points.SetSize(0);
-        surface_points.SetSize(0);
-        surface_els.SetSize(0);
-        delaunay_points.SetSize(np);
-        pmap.SetSize(np);
-        mesh.GetSurfaceElementsOfFace (facei, surface_els);
-        Box<2> bbox ( Box<2>::EMPTY_BOX );
-        for(auto sei : surface_els)
-        {
-            auto sel = mesh[sei];
-            for (auto i : Range(sel.GetNP()))
-            {
-                auto & gi = sel.GeomInfo()[i];
-                Point<2> p = {gi.u, gi.v};
-                bbox.Add(p);
-            }
-        }
-
-        BoxTree<2> tree(bbox);
-
-        for(auto pi : mesh.Points().Range())
-        {
-            auto n_surf_els = p2sel[pi].Size();
-
-            bool has_relevant_sel = false;
-            for(auto sei : p2sel[pi])
-                if(mesh[sei].GetIndex()==facei)
-                {
-                    has_relevant_sel = true;
-                    break;
-                }
-            if(!has_relevant_sel)
+        for(SurfaceElementIndex sei : myrange)
+          {
+            auto facei = mesh[sei].GetIndex();
+            if(facei < fd_old && !blp.surfid.Contains(facei))
                 continue;
+            for(auto pi : mesh[sei].PNums())
+                if(mesh[pi].Type() == SURFACEPOINT)
+                    is_point_on_bl_surface.SetBitAtomic(pi);
+          }
+      });
 
-            if(mesh[pi].Type() <= EDGEPOINT)
-                edge_points.Append(pi);
-            else
-                surface_points.Append(pi);
-
-            // the same point might have different uv coordinates (closed edges for instance)
-            // duplicate these points for the delaunay tree
-            bool inserted = false;
-            for(auto sei : p2sel[pi])
-            {
-                auto sel = mesh[sei];
-                if(sel.GetIndex()!=facei)
-                    continue;
-
-                PointGeomInfo gi = sel.GeomInfo()[sel.PNums().Pos(pi)];
-                Point<2> p = {gi.u, gi.v};
-                bool found = false;
-                tree.GetFirstIntersecting( p, p, [&] (const auto pi_found) { return found = true; });
-                if(found)
-                    continue;
-
-                auto pi_new = pi;
-                if(inserted)
-                {
-                    pi_new = delaunay_points.Append(p);
-                    pmap.Append(pi);
-                    edge_points.Append(pi_new);
-                }
-                else
-                {
-                    delaunay_points[pi] = p;
-                    pmap[pi] = pi;
-                }
-                tree.Insert(p, pi_new);
-                inserted = true;
-            }
-        }
-
-        if(surface_points.Size()==0)
-            continue;
-
-        DelaunayMesh dmesh( delaunay_points, bbox  );
-
-        for(auto pi : edge_points)
-            dmesh.AddPoint(pi);
-
-        std::map<PointIndex, double> weights;
-        for(auto pi : surface_points)
+    Array<PointIndex> points;
+    for(PointIndex pi : mesh.Points().Range())
+        if(is_point_on_bl_surface[pi])
         {
-            dmesh.CalcIntersecting(pi);
-            dmesh.CalcWeights(pi, weights);
-            auto & v = growthvectors[pi];
-            auto n = 1./v.Length() * v;
-            for(auto & [pi_other, weight] : weights)
-              {
-                // interpolate only the tangential part of the growth vector
-                auto t = weight * growthvectors[pmap[pi_other]];
-                t -= (t * n) * n;
-                v += t;
-              }
+            points.Append(pi);
+            growthvectors[pi] = 0.0;
         }
-      }
+
+    // smooth tangential part of growth vectors from edges to surface elements
+    RegionTimer rtsmooth(tsmooth);
+    for(auto i : Range(10))
+    {
+        for(auto pi : points)
+        {
+            auto sels = p2sel[pi];
+            Vec<3> new_gw = growthvectors[pi];
+            int cnt = 1;
+            std::set<PointIndex> suround;
+            suround.insert(pi);
+            auto normal = normals[pi];
+            for(auto sei: sels)
+            {
+                const auto & sel = mesh[sei];
+                for(auto pi1 : sel.PNums())
+                    if(suround.count(pi1)==0)
+                    {
+                        suround.insert(pi1);
+                        auto gw_other = growthvectors[pi1];
+                        auto tangent_part = gw_other - (gw_other*normal)*normal;
+                        new_gw += tangent_part;
+                    }
+            }
+
+            growthvectors[pi] = 1.0/suround.size() * new_gw;
+        }
+    }
+
+    for(auto pi : points)
+        growthvectors[pi] += normals[pi];
   }
 
   void GenerateBoundaryLayer(Mesh& mesh, const BoundaryLayerParameters& blp)
   {
     static Timer timer("Create Boundarylayers");
     RegionTimer regt(timer);
-
-    bool interpolate_growth_vectors = false;
-    if(mesh.GetGeometry())
-        interpolate_growth_vectors = mesh.GetGeometry()->GetGeomType() == Mesh::GEOM_OCC;
 
     int max_edge_nr = -1;
     for(const auto& seg : mesh.LineSegments())
@@ -337,12 +294,6 @@ namespace netgen
 
     Array<double> surfacefacs(mesh.GetNFD()+1);
     surfacefacs = 0.;
-
-    auto getSurfaceNormal = [&mesh] (const Element2d& el)
-    {
-      auto v0 = mesh[el[0]];
-      return Cross(mesh[el[1]]-v0, mesh[el[2]]-v0).Normalize();
-    };
 
     // surface index map
     Array<int> si_map(mesh.GetNFD()+1);
@@ -390,7 +341,7 @@ namespace netgen
             if(!blp.surfid.Contains(facei))
                 continue;
 
-            auto n = surfacefacs[sel.GetIndex()] * getSurfaceNormal(sel);
+            auto n = surfacefacs[sel.GetIndex()] * getSurfaceNormal(mesh, sel);
 
             int itrig = sel.PNums().Pos(pi);
             itrig += sel.GetNP();
@@ -495,7 +446,7 @@ namespace netgen
         for(const auto& sel : mesh.SurfaceElements())
           if(project_boundaries.Test(sel.GetIndex()))
             {
-              auto n = getSurfaceNormal(sel);
+              auto n = getSurfaceNormal(mesh, sel);
               for(auto i : Range(sel.PNums()))
                 {
                   auto pi = sel.PNums()[i];
@@ -541,7 +492,6 @@ namespace netgen
       }
 
     // interpolate tangential component of growth vector along edge
-    if(interpolate_growth_vectors)
     for(auto edgenr : Range(max_edge_nr))
       {
         if(!moved_edges[edgenr+1]) continue;
@@ -609,8 +559,7 @@ namespace netgen
           }
       }
 
-    if(interpolate_growth_vectors)
-        InterpolateSurfaceGrowthVectors(mesh, blp, fd_old, growthvectors, p2sel);
+    InterpolateSurfaceGrowthVectors(mesh, blp, fd_old, growthvectors, p2sel);
 
     // insert new points
     for (PointIndex pi = 1; pi <= np; pi++)
