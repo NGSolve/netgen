@@ -258,7 +258,7 @@ namespace ngcore
     void AllReduce (FlatArray<T> d, const MPI_Op & op) const
     {
       static Timer t("MPI - AllReduce Array"); RegionTimer reg(t);
-      if (size == 1) return d;
+      if (size == 1) return;
       
       MPI_Allreduce (MPI_IN_PLACE, d.Data(), d.Size(), GetMPIType<T>(), op, comm);
     }
