@@ -99,6 +99,17 @@ namespace netgen
         }
       }
 
+      // mark used points for already existing volume elements, add them (with wrong point numbers) to domain mesh
+      for(const auto & el : mesh.VolumeElements())
+      {
+        auto dom = el.GetIndex();
+
+        auto & els = ret[dom-1].mesh->VolumeElements();
+        for(auto pi : el.PNums())
+            ipmap[dom-1][pi] = 1;
+        els.Append(el);
+      }
+
       // mark locked/fixed points for each domain TODO: domain bounding box to add only relevant points?
       for(auto pi : mesh.LockedPoints())
         for(auto i : Range(ret))
@@ -147,6 +158,10 @@ namespace netgen
 
           for (auto & sel : m.SurfaceElements())
             for(auto & pi : sel.PNums())
+              pi = imap[pi];
+
+          for (auto & el : m.VolumeElements())
+            for(auto & pi : el.PNums())
               pi = imap[pi];
 
           for(auto n : Range(1,nmax+1))
