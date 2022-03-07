@@ -373,6 +373,7 @@ namespace netgen
       }
 
     const auto & p2sel = mesh.CreatePoint2SurfaceElementTable();
+    Array<Vec<3>, PointIndex> edge_tangents(np);
 
     for(auto pi : mesh.Points().Range())
     {
@@ -413,6 +414,7 @@ namespace netgen
             auto npnp = np * np;
             auto nn = n * n;
             if(nn-npn*npn/npnp == 0) { np = n; continue; }
+            edge_tangents[pi] = Cross(np, n).Normalize();
             np += (nn - npn)/(nn - npn*npn/npnp) * (n - npn/npnp * np);
         }
     }
@@ -552,12 +554,14 @@ namespace netgen
         // build sorted list of edge
         Array<PointIndex> points;
         // find first vertex on edge
+        double edge_len = 0.;
         for(const auto& seg : segments)
           {
             if(seg.edgenr-1 == edgenr && mesh[seg[0]].Type() == FIXEDPOINT)
               {
                 points.Append(seg[0]);
                 points.Append(seg[1]);
+                edge_len += (mesh[seg[1]] - mesh[seg[0]]).Length();
                 break;
               }
           }
@@ -571,6 +575,7 @@ namespace netgen
                   continue;
                 if(seg[0] == points.Last() && points[points.Size()-2] !=seg[1])
                   {
+                    edge_len += (mesh[points.Last()] - mesh[seg[1]]).Length();
                     points.Append(seg[1]);
                     point_found = true;
                     break;
@@ -583,29 +588,18 @@ namespace netgen
           }
 
         // tangential part of growth vectors
-        EdgePointGeomInfo gi;
-        Point<3> p = mesh[points[0]];
-        const auto& edge = geo.GetEdge(edgenr);
-        edge.ProjectPoint(p, &gi);
-        auto tau1 = gi.dist;
-        auto t1 = edge.GetTangent(tau1);
-        t1 *= 1./t1.Length();
-        p = mesh[points.Last()];
-        edge.ProjectPoint(p, &gi);
-        auto tau2 = gi.dist;
-        auto t2 = edge.GetTangent(gi.dist);
-        t2 *= 1./t2.Length();
-        auto gt1 = (growthvectors[points[0]] * t1) * t1;
-        auto gt2 = (growthvectors[points.Last()] * t2) * t2;
+        auto gt1 = growthvectors[points[0]];
+        auto gt2 = growthvectors[points.Last()];
 
+        double len = 0.;
         for(size_t i = 1; i < points.Size()-1; i++)
           {
             auto pi = points[i];
-            p = mesh[pi];
-            edge.ProjectPoint(p, &gi);
-            auto tau = gi.dist;
-            auto interpol = (1-fabs(tau-tau1)) * gt1 + (1-fabs(tau-tau2))*gt2;
-             growthvectors[pi] += interpol;
+            len += (mesh[pi] - mesh[points[i-1]]).Length();
+            auto t = edge_tangents[pi];
+            auto lam = len/edge_len;
+            auto interpol = (1-lam) * (gt1 * t) * t + lam * (gt2 * t) * t;
+            growthvectors[pi] += interpol;
           }
       }
 
