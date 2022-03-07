@@ -900,6 +900,7 @@ namespace netgen
     }
 
     mesh.GetTopology().ClearEdges();
+    mesh.SetNextMajorTimeStamp();
     mesh.UpdateTopology();
   }
 
