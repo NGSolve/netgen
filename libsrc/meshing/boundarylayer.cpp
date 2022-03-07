@@ -889,9 +889,9 @@ namespace netgen
       for(auto & seg : new_segments)
         mesh.AddSegment(seg);
     }
+
     mesh.GetTopology().ClearEdges();
     mesh.UpdateTopology();
-    mesh.SetGeometry(nullptr);
   }
 
   void AddDirection( Vec<3> & a, Vec<3> b )
