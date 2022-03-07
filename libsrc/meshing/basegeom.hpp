@@ -251,6 +251,7 @@ namespace netgen
     {
       if(surfind > 0 && surfind <= faces.Size())
         return faces[surfind-1]->ProjectPointGI(p, gi);
+      return true;
     }
 
     virtual Vec<3> GetNormal(int surfind, const Point<3> & p, const PointGeomInfo* gi = nullptr) const
