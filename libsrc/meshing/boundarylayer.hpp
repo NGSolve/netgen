@@ -43,12 +43,14 @@ class BoundaryLayerTool
     Array<SegmentIndex> moved_segs;
     int max_edge_nr, new_mat_nr, nfd_old;
     int np, nseg, nse, ne;
+    double height;
 
     bool have_single_segments;
     Array<Segment> segments, new_segments;
 
     Array<double> surfacefacs;
     Array<int> si_map;
+    Array<double, PointIndex> limits;
 
     // major steps called in Perform()
     void CreateNewFaceDescriptors();
@@ -56,20 +58,20 @@ class BoundaryLayerTool
     Array<Array<pair<SegmentIndex, int>>, SegmentIndex> BuildSegMap();
 
     BitArray ProjectGrowthVectorsOnSurface();
+    void InterpolateSurfaceGrowthVectors();
     void InterpolateGrowthVectors();
+    void LimitGrowthVectorLengths();
 
     void InsertNewElements(FlatArray<Array<pair<SegmentIndex, int>>, SegmentIndex> segmap, const BitArray & in_surface_direction);
     void SetDomInOut();
     void AddSegments();
+    void FixVolumeElements();
 
     // utility functions
-    array<Point<3>, 2> GetGrowSeg( PointIndex pi0 );
-
-    ArrayMem<Point<3>, 4> GetGrowFace( SurfaceElementIndex sei );
-    ArrayMem<Point<3>, 4> GetGrowFace( SurfaceElementIndex sei, int face );
-
-    bool IsSegIntersectingPlane ( array<Point<3>, 2> seg, array<Point<3>, 3> trig, double & lam);
-    bool IsIntersectingTrig ( array<Point<3>, 2> seg, array<Point<3>, 3> trig, double & lam);
+    array<Point<3>, 2> GetMappedSeg( PointIndex pi );
+    ArrayMem<Point<3>, 4> GetFace( SurfaceElementIndex sei );
+    ArrayMem<Point<3>, 4> GetMappedFace( SurfaceElementIndex sei );
+    ArrayMem<Point<3>, 4> GetMappedFace( SurfaceElementIndex sei, int face );
 
     Vec<3> getNormal(const Element2d & el)
     {
@@ -77,17 +79,7 @@ class BoundaryLayerTool
         return Cross(mesh[el[1]]-v0, mesh[el[2]]-v0).Normalize();
     }
 
-    Vec<3> getEdgeTangent(PointIndex pi)
-    {
-        Vec<3> tangent = 0.0;
-        for(auto segi : topo.GetVertexSegments(pi))
-        {
-            auto & seg = mesh[segi];
-            tangent += (mesh[seg[1]] - mesh[seg[0]]);
-        }
-        return tangent.Normalize();
-    }
-
+    Vec<3> getEdgeTangent(PointIndex pi, int edgenr);
 };
 
 #endif
