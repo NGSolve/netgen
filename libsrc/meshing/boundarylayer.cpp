@@ -16,6 +16,17 @@ namespace netgen
      return Cross(mesh[el[1]]-v0, mesh[el[2]]-v0).Normalize();
    };
 
+   Vec<3> getEdgeTangent(const Mesh & mesh, PointIndex pi)
+   {
+       Vec<3> tangent = 0.0;
+       for(auto segi : mesh.GetTopology().GetVertexSegments(pi))
+       {
+           auto & seg = mesh[segi];
+           tangent += (mesh[seg[1]] - mesh[seg[0]]);
+       }
+       return tangent.Normalize();
+   }
+
 
    void InsertVirtualBoundaryLayer (Mesh & mesh)
    {
@@ -324,7 +335,6 @@ namespace netgen
       }
 
     const auto & p2sel = mesh.CreatePoint2SurfaceElementTable();
-    Array<Vec<3>, PointIndex> edge_tangents(np);
 
     for(auto pi : mesh.Points().Range())
     {
@@ -365,7 +375,6 @@ namespace netgen
             auto npnp = np * np;
             auto nn = n * n;
             if(nn-npn*npn/npnp == 0) { np = n; continue; }
-            edge_tangents[pi] = Cross(np, n).Normalize();
             np += (nn - npn)/(nn - npn*npn/npnp) * (n - npn/npnp * np);
         }
     }
@@ -546,7 +555,7 @@ namespace netgen
           {
             auto pi = points[i];
             len += (mesh[pi] - mesh[points[i-1]]).Length();
-            auto t = edge_tangents[pi];
+            auto t = getEdgeTangent(mesh, pi);
             auto lam = len/edge_len;
             auto interpol = (1-lam) * (gt1 * t) * t + lam * (gt2 * t) * t;
             growthvectors[pi] += interpol;
