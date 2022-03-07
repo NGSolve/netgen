@@ -477,7 +477,7 @@ namespace netgen
         for (int l = 0; l < 3; l++)
           {
             auto normal = normals[el[l]];
-            if(fixed[el[l]])
+            if(mesh[el[l]].Type() != SURFACEPOINT)
             {
                 // point possibly on edge -> multiple normal vectors (for each surface), need to calculate it to be sure
                 const int surfnr = mesh.GetFaceDescriptor (el.GetIndex()).SurfNr();
