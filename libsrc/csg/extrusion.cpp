@@ -141,16 +141,21 @@ namespace netgen
   void ExtrusionFace :: CalcProj(const Point<3> & point3d, Point<2> & point2d,
 				 int & seg, double & t) const
   {
-    if (Dist2 (point3d, latest_point3d) < 
-        1e-25 * Dist2(path->GetSpline(0).StartPI(), path->GetSpline(0).EndPI()))
+    static mutex set_latest_point;
+
+    auto eps = 1e-25 * Dist2(path->GetSpline(0).StartPI(), path->GetSpline(0).EndPI());
+    if (Dist2 (point3d, latest_point3d) < eps)
       {
-	point2d = latest_point2d;
-	seg = latest_seg;
-	t = latest_t;
-	return;
+        std::lock_guard<std::mutex> guard(set_latest_point);
+        if (Dist2 (point3d, latest_point3d) < eps)
+        {
+            point2d = latest_point2d;
+            seg = latest_seg;
+            t = latest_t;
+            return;
+        }
       }
     
-    latest_point3d = point3d;
 
     double cutdist = -1;
     
@@ -214,11 +219,13 @@ namespace netgen
 	    point2d = testpoint2d;
 	    t = thist;
 	    seg = i;
-	    latest_seg = i;
-	    latest_t = t;
-	    latest_point2d = point2d;
 	  }
       }
+    std::lock_guard<std::mutex> guard(set_latest_point);
+    latest_seg = seg;
+    latest_t = t;
+    latest_point2d = point2d;
+    latest_point3d = point3d;
   }
 
   double ExtrusionFace :: CalcProj(const Point<3> & point3d, Point<2> & point2d,
