@@ -9,25 +9,6 @@
 
 namespace netgen
 {
-
-   Vec<3> getSurfaceNormal(const Mesh & mesh, const Element2d & el)
-   {
-     auto v0 = mesh[el[0]];
-     return Cross(mesh[el[1]]-v0, mesh[el[2]]-v0).Normalize();
-   };
-
-   Vec<3> getEdgeTangent(const Mesh & mesh, PointIndex pi)
-   {
-       Vec<3> tangent = 0.0;
-       for(auto segi : mesh.GetTopology().GetVertexSegments(pi))
-       {
-           auto & seg = mesh[segi];
-           tangent += (mesh[seg[1]] - mesh[seg[0]]);
-       }
-       return tangent.Normalize();
-   }
-
-
    void InsertVirtualBoundaryLayer (Mesh & mesh)
    {
       cout << "Insert virt. b.l." << endl;
@@ -265,59 +246,56 @@ namespace netgen
         growthvectors[pi] += normals[pi];
   }
 
-  void GenerateBoundaryLayer(Mesh& mesh, const BoundaryLayerParameters& blp)
+
+  BoundaryLayerTool::BoundaryLayerTool(Mesh & mesh_, const BoundaryLayerParameters & params_)
+      : mesh(mesh_), topo(mesh_.GetTopology()), params(params_)
   {
-    static Timer timer("Create Boundarylayers");
+    static Timer timer("BoundaryLayerTool::ctor");
     RegionTimer regt(timer);
 
-    int max_edge_nr = -1;
+    max_edge_nr = -1;
     for(const auto& seg : mesh.LineSegments())
       if(seg.edgenr > max_edge_nr)
         max_edge_nr = seg.edgenr;
 
-    int new_mat_nr = mesh.GetNDomains() +1;
-    mesh.SetMaterial(new_mat_nr, blp.new_mat);
+    new_mat_nr = mesh.GetNDomains() +1;
+    mesh.SetMaterial(new_mat_nr, params.new_mat);
 
-    auto domains = blp.domains;
-    if(!blp.outside)
+    domains = params.domains;
+    if(!params.outside)
       domains.Invert();
 
-    auto& meshtopo = mesh.GetTopology();
-    meshtopo.SetBuildVertex2Element(true);
+    topo.SetBuildVertex2Element(true);
     mesh.UpdateTopology();
 
-    bool have_single_segments = HaveSingleSegments(mesh);
-    Array<Segment> segments;
+    have_single_segments = HaveSingleSegments(mesh);
     if(have_single_segments)
         segments = BuildSegments(mesh);
     else
         segments = mesh.LineSegments();
 
-    int np = mesh.GetNP();
-    int ne = mesh.GetNE();
-    int nse = mesh.GetNSE();
-    int nseg = segments.Size();
+    np = mesh.GetNP();
+    ne = mesh.GetNE();
+    nse = mesh.GetNSE();
+    nseg = segments.Size();
 
-    Array<Array<PointIndex>, PointIndex> mapto(np);
+    p2sel = mesh.CreatePoint2SurfaceElementTable();
 
-    Array<Vec<3>, PointIndex> growthvectors(np);
-    growthvectors = 0.;
-
-    Array<double> surfacefacs(mesh.GetNFD()+1);
-    surfacefacs = 0.;
-
-    // surface index map
-    Array<int> si_map(mesh.GetNFD()+1);
+    nfd_old = mesh.GetNFD();
+    si_map.SetSize(nfd_old+1);
     si_map = -1;
+  }
 
-    int fd_old = mesh.GetNFD();
-
+  void BoundaryLayerTool :: CreateNewFaceDescriptors()
+  {
+    surfacefacs.SetSize(nfd_old+1);
+    surfacefacs = 0.0;
     // create new FaceDescriptors
-    for(auto i : Range(1, fd_old+1))
+    for(auto i : Range(1, nfd_old+1))
       {
         const auto& fd = mesh.GetFaceDescriptor(i);
         string name = fd.GetBCName();
-        if(blp.surfid.Contains(i))
+        if(params.surfid.Contains(i))
           {
             if(auto isIn = domains.Test(fd.DomainIn()); isIn != domains.Test(fd.DomainOut()))
               {
@@ -333,8 +311,12 @@ namespace netgen
               }
           }
       }
+  }
 
-    const auto & p2sel = mesh.CreatePoint2SurfaceElementTable();
+  void BoundaryLayerTool :: CalculateGrowthVectors()
+  {
+    growthvectors.SetSize(np);
+    growthvectors = 0.;
 
     for(auto pi : mesh.Points().Range())
     {
@@ -349,10 +331,10 @@ namespace netgen
         {
             const auto & sel = mesh[sei];
             auto facei = sel.GetIndex();
-            if(!blp.surfid.Contains(facei))
+            if(!params.surfid.Contains(facei))
                 continue;
 
-            auto n = surfacefacs[sel.GetIndex()] * getSurfaceNormal(mesh, sel);
+            auto n = surfacefacs[sel.GetIndex()] * getNormal(sel);
 
             int itrig = sel.PNums().Pos(pi);
             itrig += sel.GetNP();
@@ -378,7 +360,10 @@ namespace netgen
             np += (nn - npn)/(nn - npn*npn/npnp) * (n - npn/npnp * np);
         }
     }
+  }
 
+  Array<Array<pair<SegmentIndex, int>>, SegmentIndex> BoundaryLayerTool :: BuildSegMap()
+  {
     // Bit array to keep track of segments already processed
     BitArray segs_done(nseg+1);
     segs_done.Clear();
@@ -393,16 +378,14 @@ namespace netgen
     Array<Array<pair<SegmentIndex, int>>, SegmentIndex> segmap(segments.Size());
 
     // moved segments
-    Array<SegmentIndex> moved_segs;
-    BitArray moved_edges(max_edge_nr+1);
-    moved_edges = false;
-    Array<Segment> new_segments;
+    is_edge_moved.SetSize(max_edge_nr+1);
+    is_edge_moved = false;
 
     // boundaries to project endings to
-    BitArray project_boundaries(fd_old+1);
-    BitArray move_boundaries(fd_old+1);
-    project_boundaries.Clear();
-    move_boundaries.Clear();
+    is_boundary_projected.SetSize(nfd_old+1);
+    is_boundary_projected.Clear();
+    is_boundary_moved.SetSize(nfd_old+1);
+    is_boundary_moved.Clear();
 
     for(auto si : Range(segments))
       {
@@ -412,7 +395,7 @@ namespace netgen
         segs_done.SetBit(si);
         segmap[si].Append(make_pair(si, 0));
         moved_segs.Append(si);
-        moved_edges.SetBit(segi.edgenr);
+        is_edge_moved.SetBit(segi.edgenr);
         for(auto sj : Range(segments))
           {
             if(segs_done.Test(sj)) continue;
@@ -428,36 +411,40 @@ namespace netgen
                   {
                     type = 2;
                     if(fd.DomainIn() == 0 || fd.DomainOut() == 0)
-                      project_boundaries.SetBit(segj.si);
+                        is_boundary_projected.SetBit(segj.si);
                   }
                 else if(const auto& fd = mesh.GetFaceDescriptor(segj.si); !domains.Test(fd.DomainIn()) && !domains.Test(fd.DomainOut()))
                   {
                     type = 3;
                     if(fd.DomainIn() == 0 || fd.DomainOut() == 0)
-                      project_boundaries.SetBit(segj.si);
-                    move_boundaries.SetBit(segj.si);
+                        is_boundary_projected.SetBit(segj.si);
+                    is_boundary_moved.SetBit(segj.si);
                   }
                 else
                   {
                     type = 1;
                     // in case 1 we project the growthvector onto the surface
-                    project_boundaries.SetBit(segj.si);
+                    is_boundary_projected.SetBit(segj.si);
                   }
                 segmap[si].Append(make_pair(sj, type));
               }
           }
       }
 
-    BitArray in_surface_direction(fd_old+1);
-    in_surface_direction.Clear();
+    return segmap;
+  }
 
+  BitArray BoundaryLayerTool :: ProjectGrowthVectorsOnSurface()
+  {
+    BitArray in_surface_direction(nfd_old+1);
+    in_surface_direction.Clear();
     // project growthvector on surface for inner angles
-    if(blp.grow_edges)
+    if(params.grow_edges)
       {
         for(const auto& sel : mesh.SurfaceElements())
-          if(project_boundaries.Test(sel.GetIndex()))
+          if(is_boundary_projected.Test(sel.GetIndex()))
             {
-              auto n = getSurfaceNormal(mesh, sel);
+              auto n = getNormal(sel);
               for(auto i : Range(sel.PNums()))
                 {
                   auto pi = sel.PNums()[i];
@@ -492,7 +479,7 @@ namespace netgen
           {
             int count = 0;
             for(const auto& seg2 : segments)
-              if(((seg[0] == seg2[0] && seg[1] == seg2[1]) || (seg[0] == seg2[1] && seg[1] == seg2[0])) && blp.surfid.Contains(seg2.si))
+              if(((seg[0] == seg2[0] && seg[1] == seg2[1]) || (seg[0] == seg2[1] && seg[1] == seg2[0])) && params.surfid.Contains(seg2.si))
                 count++;
             if(count == 1)
               {
@@ -502,10 +489,15 @@ namespace netgen
           }
       }
 
+        return in_surface_direction;
+    }
+
+  void BoundaryLayerTool :: InterpolateGrowthVectors()
+  {
     // interpolate tangential component of growth vector along edge
     for(auto edgenr : Range(max_edge_nr))
       {
-        if(!moved_edges[edgenr+1]) continue;
+        if(!is_edge_moved[edgenr+1]) continue;
         const auto& geo = *mesh.GetGeometry();
         if(edgenr >= geo.GetNEdges())
           continue;
@@ -527,11 +519,11 @@ namespace netgen
         while(true)
           {
             bool point_found = false;
-            for(auto si : meshtopo.GetVertexSegments(points.Last()))
+            for(auto si : topo.GetVertexSegments(points.Last()))
               {
                 const auto& seg = mesh[si];
                 if(seg.edgenr-1 != edgenr)
-                  continue;
+                    continue;
                 if(seg[0] == points.Last() && points[points.Size()-2] !=seg[1])
                   {
                     edge_len += (mesh[points.Last()] - mesh[seg[1]]).Length();
@@ -555,30 +547,34 @@ namespace netgen
           {
             auto pi = points[i];
             len += (mesh[pi] - mesh[points[i-1]]).Length();
-            auto t = getEdgeTangent(mesh, pi);
+            auto t = getEdgeTangent(pi);
             auto lam = len/edge_len;
             auto interpol = (1-lam) * (gt1 * t) * t + lam * (gt2 * t) * t;
             growthvectors[pi] += interpol;
           }
       }
 
-    InterpolateSurfaceGrowthVectors(mesh, blp, fd_old, growthvectors, p2sel);
+    InterpolateSurfaceGrowthVectors(mesh, params, nfd_old, growthvectors, p2sel);
+  }
 
+  void BoundaryLayerTool :: InsertNewElements( FlatArray<Array<pair<SegmentIndex, int>>, SegmentIndex> segmap, const BitArray & in_surface_direction )
+  {
+    Array<Array<PointIndex>, PointIndex> mapto(np);
     // insert new points
     for (PointIndex pi = 1; pi <= np; pi++)
       if (growthvectors[pi].Length2() != 0)
         {
           Point<3> p = mesh[pi];
-          for(auto i : Range(blp.heights))
+          for(auto i : Range(params.heights))
             {
-              p += blp.heights[i] * growthvectors[pi];
+              p += params.heights[i] * growthvectors[pi];
               mapto[pi].Append(mesh.AddPoint(p));
             }
         }
 
     // add 2d quads on required surfaces
     map<pair<PointIndex, PointIndex>, int> seg2edge;
-    if(blp.grow_edges)
+    if(params.grow_edges)
       {
         for(auto sei : moved_segs)
           {
@@ -609,7 +605,7 @@ namespace netgen
                     if(in_surface_direction.Test(segj.si))
                       {
                         Swap(pp1, pp2);
-                        move_boundaries.SetBit(segj.si);
+                        is_boundary_moved.SetBit(segj.si);
                       }
                     PointIndex p1 = pp1;
                     PointIndex p2 = pp2;
@@ -622,7 +618,7 @@ namespace netgen
                     s0.si = segj.si;
                     new_segments.Append(s0);
 
-                    for(auto i : Range(blp.heights))
+                    for(auto i : Range(params.heights))
                       {
                         Element2d sel(QUAD);
                         p3 = mapto[pp2][i];
@@ -690,7 +686,7 @@ namespace netgen
           {
             Array<PointIndex> points(sel.PNums());
             if(surfacefacs[sel.GetIndex()] > 0) Swap(points[0], points[2]);
-            for(auto j : Range(blp.heights))
+            for(auto j : Range(params.heights))
               {
                 auto eltype = points.Size() == 3 ? PRISM : HEX;
                 Element el(eltype);
@@ -722,12 +718,12 @@ namespace netgen
                   if(!mapto[p].Size())
                     {
                       fixed_points.SetBit(p);
-                      if(move_boundaries.Test(sel.GetIndex()))
+                      if(is_boundary_moved.Test(sel.GetIndex()))
                         moveboundarypoint.SetBit(p);
                     }
                 }
           }
-        if(move_boundaries.Test(sel.GetIndex()))
+        if(is_boundary_moved.Test(sel.GetIndex()))
           {
             for(auto& p : mesh[si].PNums())
               if(mapto[p].Size())
@@ -738,7 +734,7 @@ namespace netgen
     for(SegmentIndex sei = 0; sei < nseg; sei++)
       {
         auto& seg = segments[sei];
-        if(move_boundaries.Test(seg.si))
+        if(is_boundary_moved.Test(seg.si))
           for(auto& p : seg.PNums())
             if(mapto[p].Size())
               p = mapto[p].Last();
@@ -795,7 +791,7 @@ namespace netgen
                     PointIndex p4 = p1;
                     PointIndex p5 = p2;
                     PointIndex p6 = p3;
-                    for(auto i : Range(blp.heights))
+                    for(auto i : Range(params.heights))
                       {
                         Element nel(PRISM);
                         nel[0] = p4; nel[1] = p5; nel[2] = p6;
@@ -811,7 +807,7 @@ namespace netgen
                       {
                         PointIndex p1 = moved[0];
                         PointIndex p2 = moved[1];
-                        for(auto i : Range(blp.heights))
+                        for(auto i : Range(params.heights))
                           {
                             PointIndex p3 = mapto[moved[1]][i];
                             PointIndex p4 = mapto[moved[0]][i];
@@ -833,7 +829,7 @@ namespace netgen
                 if(moved.Size() == 1 && fixed.Size() == 1)
                   {
                     PointIndex p1 = moved[0];
-                    for(auto i : Range(blp.heights))
+                    for(auto i : Range(params.heights))
                       {
                         Element nel = el;
                         PointIndex p2 = mapto[moved[0]][i];
@@ -857,7 +853,7 @@ namespace netgen
                       throw Exception("This case is not implemented yet! Fixed size = " + ToString(fixed.Size()));
                     PointIndex p1 = moved[0];
                     PointIndex p2 = moved[1];
-                    for(auto i : Range(blp.heights))
+                    for(auto i : Range(params.heights))
                       {
                         PointIndex p3 = mapto[moved[1]][i];
                         PointIndex p4 = mapto[moved[0]][i];
@@ -882,8 +878,11 @@ namespace netgen
               throw Exception("Boundarylayer only implemented for tets and pyramids outside yet!");
           }
       }
+  }
 
-    for(auto i : Range(1, fd_old+1))
+  void BoundaryLayerTool :: SetDomInOut()
+  {
+    for(auto i : Range(1, nfd_old+1))
       if(si_map[i] != -1)
         {
           if(mesh.GetFaceDescriptor(mesh.GetNFD()).DomainIn() == new_mat_nr)
@@ -891,6 +890,10 @@ namespace netgen
           else
             mesh.GetFaceDescriptor(i).SetDomainIn(new_mat_nr);
         }
+  }
+
+  void BoundaryLayerTool :: AddSegments()
+  {
     if(have_single_segments)
         MergeAndAddSegments(mesh, new_segments);
     else
@@ -898,10 +901,33 @@ namespace netgen
       for(auto & seg : new_segments)
         mesh.AddSegment(seg);
     }
+  }
 
-    mesh.GetTopology().ClearEdges();
-    mesh.SetNextMajorTimeStamp();
-    mesh.UpdateTopology();
+  void BoundaryLayerTool :: Perform()
+  {
+      CreateNewFaceDescriptors();
+      CalculateGrowthVectors();
+      auto segmap = BuildSegMap();
+
+      auto in_surface_direction = ProjectGrowthVectorsOnSurface();
+      InterpolateGrowthVectors();
+
+      InsertNewElements(segmap, in_surface_direction);
+      SetDomInOut();
+      AddSegments();
+      mesh.GetTopology().ClearEdges();
+      mesh.SetNextMajorTimeStamp();
+      mesh.UpdateTopology();
+  }
+
+
+  void GenerateBoundaryLayer(Mesh& mesh, const BoundaryLayerParameters& blp)
+  {
+    static Timer timer("Create Boundarylayers");
+    RegionTimer regt(timer);
+
+    BoundaryLayerTool tool(mesh, blp);
+    tool.Perform();
   }
 
   void AddDirection( Vec<3> & a, Vec<3> b )
