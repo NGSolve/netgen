@@ -1350,6 +1350,7 @@ namespace netgen
     public:
       Point<3> pnt;
       double h;
+      int layer = 1;
       MeshSizePoint (Point<3> _pnt, double _h) : pnt(_pnt), h(_h) { ; }
       MeshSizePoint () = default;
       MeshSizePoint (const MeshSizePoint &) = default;

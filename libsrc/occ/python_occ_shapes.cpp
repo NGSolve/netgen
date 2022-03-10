@@ -1456,14 +1456,29 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
   py::class_<TopoDS_Solid, TopoDS_Shape> (m, "Solid");
   
   py::class_<TopoDS_Compound, TopoDS_Shape> (m, "Compound")
-    .def(py::init([](std::vector<TopoDS_Shape> shapes) {
+    .def(py::init([](std::vector<TopoDS_Shape> shapes, bool separate_layers) {
           BRep_Builder builder;
           TopoDS_Compound comp;
           builder.MakeCompound(comp);
-          for(auto& s : shapes)
-            builder.Add(comp, s);
+          for(auto i : Range(shapes.size()))
+          {
+            builder.Add(comp, shapes[i]);
+            if(separate_layers)
+            {
+                auto & props = OCCGeometry::global_shape_properties;
+                for(auto & s : GetSolids(shapes[i]))
+                    props[s.TShape()].layer = i+1;
+                for(auto & s : GetFaces(shapes[i]))
+                    props[s.TShape()].layer = i+1;
+                for(auto & s : GetEdges(shapes[i]))
+                    props[s.TShape()].layer = i+1;
+                for(auto & s : GetVertices(shapes[i]))
+                    props[s.TShape()].layer = i+1;
+            }
+          }
+
           return comp;
-        }))
+        }), py::arg("shapes"), py::arg("separate_layers")=false)
     ;
 
 

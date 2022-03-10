@@ -91,6 +91,7 @@ namespace netgen
   {
   public:
     Point<3> p0, p1;
+    int layer = 1;
     double Dist (Line l);
     double Length () { return (p1-p0).Length(); }
   };

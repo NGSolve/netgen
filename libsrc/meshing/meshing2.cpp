@@ -241,7 +241,7 @@ namespace netgen
 
 
 
-  MESHING2_RESULT Meshing2 :: GenerateMesh (Mesh & mesh, const MeshingParameters & mp, double gh, int facenr)
+  MESHING2_RESULT Meshing2 :: GenerateMesh (Mesh & mesh, const MeshingParameters & mp, double gh, int facenr, int layer)
   {
     static Timer timer("surface meshing"); RegionTimer reg(timer);
 
@@ -477,7 +477,7 @@ namespace netgen
 	double his = Dist (p1, p2);
 
 	Point<3> pmid = Center (p1, p2);
-	double hshould = CalcLocalH (pmid, mesh.GetH (pmid));
+	double hshould = CalcLocalH (pmid, mesh.GetH (pmid, layer));
 	if (gh < hshould) hshould = gh;
 
 	mesh.RestrictLocalH (pmid, hshould);

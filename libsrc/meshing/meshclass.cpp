@@ -229,7 +229,7 @@ namespace netgen
     surfelementht = nullptr; 
     segmentht = nullptr;
 
-    lochfunc = nullptr;
+    lochfunc = {nullptr};
     // mglevels = 1;
     elementsearchtree = nullptr;
     elementsearchtreets = NextTimeStamp();
@@ -3264,7 +3264,7 @@ namespace netgen
 
 
 
-  void Mesh :: SetLocalH (netgen::Point<3> pmin, netgen::Point<3> pmax, double grading)
+  void Mesh :: SetLocalH (netgen::Point<3> pmin, netgen::Point<3> pmax, double grading, int layer)
   {
     using netgen::Point;
     Point<3> c = Center (pmin, pmax);
@@ -3275,30 +3275,30 @@ namespace netgen
     Point<3> pmin2 = c - Vec<3> (d, d, d);
     Point<3> pmax2 = c + Vec<3> (d, d, d);
 
-    lochfunc = make_unique<LocalH> (pmin2, pmax2, grading, dimension);
+    SetLocalH(make_unique<LocalH> (pmin2, pmax2, grading, dimension), layer);
   }
 
-  void Mesh :: RestrictLocalH (const Point3d & p, double hloc)
+  void Mesh :: RestrictLocalH (const Point3d & p, double hloc, int layer)
   {
     if(hloc < hmin)
       hloc = hmin;
 
     //cout << "restrict h in " << p << " to " << hloc << endl;
-    if (!lochfunc)
+    if (!lochfunc[layer-1])
       {
         PrintWarning("RestrictLocalH called, creating mesh-size tree");
 
         Point3d boxmin, boxmax;
         GetBox (boxmin, boxmax);
-        SetLocalH (boxmin, boxmax, 0.8);
+        SetLocalH (boxmin, boxmax, 0.8, layer);
       }
 
-    lochfunc -> SetH (p, hloc);
+    lochfunc[layer-1] -> SetH (p, hloc);
   }
 
   void Mesh :: RestrictLocalHLine (const Point3d & p1, 
                                    const Point3d & p2,
-                                   double hloc)
+                                   double hloc, int layer)
   {
     if(hloc < hmin)
       hloc = hmin;
@@ -3311,7 +3311,7 @@ namespace netgen
     for (i = 0; i <= steps; i++)
       {
         Point3d p = p1 + (double(i)/double(steps) * v);
-        RestrictLocalH (p, hloc);
+        RestrictLocalH (p, hloc, layer);
       }
   }
 
@@ -3343,24 +3343,24 @@ namespace netgen
   }
 
 
-  double Mesh :: GetH (const Point3d & p) const
+  double Mesh :: GetH (const Point3d & p, int layer) const
   {
     double hmin = hglob;
-    if (lochfunc)
+    if (lochfunc[layer-1])
       {
-        double hl = lochfunc->GetH (p);
+        double hl = lochfunc[layer-1]->GetH (p);
         if (hl < hglob)
           hmin = hl;
       }
     return hmin;
   }
 
-  double Mesh :: GetMinH (const Point3d & pmin, const Point3d & pmax)
+  double Mesh :: GetMinH (const Point3d & pmin, const Point3d & pmax, int layer)
   {
     double hmin = hglob;
-    if (lochfunc)
+    if (lochfunc[layer-1])
       {
-        double hl = lochfunc->GetMinH (pmin, pmax);
+        double hl = lochfunc[layer-1]->GetMinH (pmin, pmax);
         if (hl < hmin)
           hmin = hl;
       }
@@ -3404,16 +3404,16 @@ namespace netgen
 
 
 
-  void Mesh :: CalcLocalH (double grading) 
+  void Mesh :: CalcLocalH (double grading, int layer)
   {
     static Timer t("Mesh::CalcLocalH"); RegionTimer reg(t);
     
-    if (!lochfunc)
+    if (!lochfunc[layer-1])
       {
         Point3d pmin, pmax;
         GetBox (pmin, pmax);
         // SetLocalH (pmin, pmax, mparam.grading);
-	SetLocalH (pmin, pmax, grading);
+	SetLocalH (pmin, pmax, grading, layer);
       }
 
     PrintMessage (3,
@@ -3459,7 +3459,7 @@ namespace netgen
                 const Point3d & p1 = points[el.PNum(1)];
                 const Point3d & p2 = points[el.PNum(2)];
                 const Point3d & p3 = points[el.PNum(3)];
-                lochfunc->SetH (Center (p1, p2, p3), hel);
+                lochfunc[layer-1]->SetH (Center (p1, p2, p3), hel);
               }
           }
         else
@@ -3467,12 +3467,12 @@ namespace netgen
             {
               const Point3d & p1 = points[el.PNum(1)];
               const Point3d & p2 = points[el.PNum(2)];
-              lochfunc->SetH (Center (p1, p2), 2 * Dist (p1, p2));
+              lochfunc[layer-1]->SetH (Center (p1, p2), 2 * Dist (p1, p2));
             }
             {
               const Point3d & p1 = points[el.PNum(3)];
               const Point3d & p2 = points[el.PNum(4)];
-              lochfunc->SetH (Center (p1, p2), 2 * Dist (p1, p2));
+              lochfunc[layer-1]->SetH (Center (p1, p2), 2 * Dist (p1, p2));
             }
           }
       }
@@ -3490,7 +3490,7 @@ namespace netgen
         */
         if (!ident -> UsedSymmetric (seg[0], seg[1]))
           {
-            lochfunc->SetH (Center (p1, p2), Dist (p1, p2));
+            lochfunc[layer-1]->SetH (Center (p1, p2), Dist (p1, p2));
           }
       }
     /*
@@ -3540,17 +3540,17 @@ namespace netgen
   }
 
 
-  void Mesh :: CalcLocalHFromPointDistances(double grading)
+  void Mesh :: CalcLocalHFromPointDistances(double grading, int layer)
   {
     PrintMessage (3, "Calculating local h from point distances");
 
-    if (!lochfunc)
+    if (!lochfunc[layer-1])
       {
         Point3d pmin, pmax;
         GetBox (pmin, pmax);
 
         // SetLocalH (pmin, pmax, mparam.grading);
-	SetLocalH (pmin, pmax, grading);
+	SetLocalH (pmin, pmax, grading, layer);
       }
 
     PointIndex i,j;
@@ -3575,17 +3575,17 @@ namespace netgen
   }
 
 
-  void Mesh :: CalcLocalHFromSurfaceCurvature (double grading, double elperr) 
+  void Mesh :: CalcLocalHFromSurfaceCurvature (double grading, double elperr, int layer) 
   {
     PrintMessage (3, "Calculating local h from surface curvature");
 
-    if (!lochfunc)
+    if (!lochfunc[layer-1])
       {
         Point3d pmin, pmax;
         GetBox (pmin, pmax);
 
         // SetLocalH (pmin, pmax, mparam.grading);
-	SetLocalH (pmin, pmax, grading);
+	SetLocalH (pmin, pmax, grading, layer);
       }
 
 
@@ -3838,6 +3838,18 @@ namespace netgen
   }
 
 
+
+  void Mesh :: SetLocalH(shared_ptr<LocalH> loch, int layer)
+  {
+      if(layer>lochfunc.Size())
+      {
+          auto pre_size = lochfunc.Size();
+          lochfunc.SetSize(layer);
+          for(auto & func : lochfunc.Range(pre_size, layer-1))
+              func = lochfunc[0];
+      }
+      lochfunc[layer-1] = loch;
+  }
 
   void Mesh :: GetBox (Point3d & pmin, Point3d & pmax, int dom) const
   {

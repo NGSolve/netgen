@@ -78,8 +78,7 @@ namespace netgen
 
 
   void RestrictHTriangle (gp_Pnt2d & par0, gp_Pnt2d & par1, gp_Pnt2d & par2,
-                          BRepLProp_SLProps * prop, BRepLProp_SLProps * prop2, Mesh & mesh, int depth, double h,
-                          const MeshingParameters & mparam)
+                          BRepLProp_SLProps * prop, BRepLProp_SLProps * prop2, Mesh & mesh, int depth, double h, int layer, const MeshingParameters & mparam)
   {
     int ls = -1;
 
@@ -190,20 +189,20 @@ namespace netgen
         if(ls == 0)
           {
             pm.SetX(0.5*(par1.X()+par2.X())); pm.SetY(0.5*(par1.Y()+par2.Y()));
-            RestrictHTriangle(pm, par2, par0, prop, prop2, mesh, depth+1, h, mparam);
-            RestrictHTriangle(pm, par0, par1, prop, prop2, mesh, depth+1, h, mparam);
+            RestrictHTriangle(pm, par2, par0, prop, prop2, mesh, depth+1, h, layer, mparam);
+            RestrictHTriangle(pm, par0, par1, prop, prop2, mesh, depth+1, h, layer, mparam);
           }
         else if(ls == 1)
           {
             pm.SetX(0.5*(par0.X()+par2.X())); pm.SetY(0.5*(par0.Y()+par2.Y()));
-            RestrictHTriangle(pm, par1, par2, prop, prop2, mesh, depth+1, h, mparam);
-            RestrictHTriangle(pm, par0, par1, prop, prop2, mesh, depth+1, h, mparam);
+            RestrictHTriangle(pm, par1, par2, prop, prop2, mesh, depth+1, h, layer, mparam);
+            RestrictHTriangle(pm, par0, par1, prop, prop2, mesh, depth+1, h, layer, mparam);
           }
         else if(ls == 2)
           {
             pm.SetX(0.5*(par0.X()+par1.X())); pm.SetY(0.5*(par0.Y()+par1.Y()));
-            RestrictHTriangle(pm, par1, par2, prop, prop2, mesh, depth+1, h, mparam);
-            RestrictHTriangle(pm, par2, par0, prop, prop2, mesh, depth+1, h, mparam);
+            RestrictHTriangle(pm, par1, par2, prop, prop2, mesh, depth+1, h, layer, mparam);
+            RestrictHTriangle(pm, par2, par0, prop, prop2, mesh, depth+1, h, layer, mparam);
           }
 
       }
@@ -215,16 +214,16 @@ namespace netgen
         prop->SetParameters (parmid.X(), parmid.Y());
         pnt = prop->Value();
         p3d = Point3d(pnt.X(), pnt.Y(), pnt.Z());
-        mesh.RestrictLocalH (p3d, h);
+        mesh.RestrictLocalH (p3d, h, layer);
 
         p3d = Point3d(pnt0.X(), pnt0.Y(), pnt0.Z());
-        mesh.RestrictLocalH (p3d, h);
+        mesh.RestrictLocalH (p3d, h, layer);
 
         p3d = Point3d(pnt1.X(), pnt1.Y(), pnt1.Z());
-        mesh.RestrictLocalH (p3d, h);
+        mesh.RestrictLocalH (p3d, h, layer);
 
         p3d = Point3d(pnt2.X(), pnt2.Y(), pnt2.Z());
-        mesh.RestrictLocalH (p3d, h);
+        mesh.RestrictLocalH (p3d, h, layer);
 
         //(*testout) << "p = " << p3d << ", h = " << h << ", maxside = " << maxside << endl;
 
@@ -375,6 +374,7 @@ namespace netgen
     //double maxh = mparam.maxh;
     //      int noldpoints = mesh->GetNP();
     int noldsurfel = mesh.GetNSE();
+    int layer = OCCGeometry::global_shape_properties[TopoDS::Face(geom.fmap(k)).TShape()].layer;
 
     static Timer tsurfprop("surfprop");
     tsurfprop.Start();
@@ -391,7 +391,7 @@ namespace netgen
     
     try {
       static Timer t("GenerateMesh"); RegionTimer reg(t);
-      res = meshing.GenerateMesh (mesh, mparam_without_overlap, maxh, k);
+      res = meshing.GenerateMesh (mesh, mparam_without_overlap, maxh, k, layer);
     }
 
     catch (SingularMatrixException)
@@ -437,24 +437,28 @@ namespace netgen
     NgArray<double> maxhdom;
     maxhdom.SetSize (geom.NrSolids());
     maxhdom = mparam.maxh;
+    int maxlayer = 1;
 
     int dom = 0;
     for (TopExp_Explorer e(geom.GetShape(), TopAbs_SOLID); e.More(); e.Next(), dom++)
+    {
       maxhdom[dom] = min2(maxhdom[dom], OCCGeometry::global_shape_properties[e.Current().TShape()].maxh);
+      maxlayer = max2(maxlayer, OCCGeometry::global_shape_properties[e.Current().TShape()].layer);
+    }
+
 
     mesh.SetMaxHDomain (maxhdom);
 
     Box<3> bb = geom.GetBoundingBox();
     bb.Increase (bb.Diam()/10);
 
-    mesh.SetLocalH (bb.PMin(), bb.PMax(), 0.5);
-
     if (mparam.uselocalh)
       {
         const char * savetask = multithread.task;
         multithread.percent = 0;
 
-        mesh.SetLocalH (bb.PMin(), bb.PMax(), mparam.grading);
+        for(auto layer : Range(1, maxlayer+1))
+            mesh.SetLocalH (bb.PMin(), bb.PMax(), mparam.grading, layer);
 
         int nedges = geom.emap.Extent();
 
@@ -482,6 +486,7 @@ namespace netgen
         for (int i = 1; i <= nedges && !multithread.terminate; i++)
           {
             TopoDS_Edge e = TopoDS::Edge (geom.emap(i));
+            int layer = OCCGeometry::global_shape_properties[e.TShape()].layer;
             multithread.percent = 100 * (i-1)/double(nedges);
             if (BRep_Tool::Degenerated(e)) continue;
 
@@ -540,7 +545,7 @@ namespace netgen
             for (int j = 0; j <= maxj; j++)
               {
                 gp_Pnt pnt = c->Value (s0+double(j)/maxj*(s1-s0));
-                mesh.RestrictLocalH (Point3d(pnt.X(), pnt.Y(), pnt.Z()), localh);
+                mesh.RestrictLocalH (Point3d(pnt.X(), pnt.Y(), pnt.Z()), localh, layer);
               }
           }
 
@@ -555,6 +560,7 @@ namespace netgen
             double maxcur = 0;
             multithread.percent = 100 * (i-1)/double(nedges);
             TopoDS_Edge edge = TopoDS::Edge (geom.emap(i));
+            int layer = OCCGeometry::global_shape_properties[edge.TShape()].layer;
             if (BRep_Tool::Degenerated(edge)) continue;
             double s0, s1;
             Handle(Geom_Curve) c = BRep_Tool::Curve(edge, s0, s1);
@@ -575,7 +581,7 @@ namespace netgen
 
                 gp_Pnt pnt = c->Value (s);
 
-                mesh.RestrictLocalH (Point3d(pnt.X(), pnt.Y(), pnt.Z()), ComputeH (fabs(curvature), mparam));
+                mesh.RestrictLocalH (Point3d(pnt.X(), pnt.Y(), pnt.Z()), ComputeH (fabs(curvature), mparam), layer);
               }
           }
 
@@ -589,6 +595,7 @@ namespace netgen
           {
             multithread.percent = 100 * (i-1)/double(nfaces);
             TopoDS_Face face = TopoDS::Face(geom.fmap(i));
+            int layer = OCCGeometry::global_shape_properties[face.TShape()].layer;
             TopLoc_Location loc;
             Handle(Geom_Surface) surf = BRep_Tool::Surface (face);
             Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation (face, loc);
@@ -628,7 +635,7 @@ namespace netgen
                 //maxside = max (maxside, p[1].Distance(p[2]));
                 //cout << "\rFace " << i << " pos11 ntriangles " << ntriangles << " maxside " << maxside << flush;
 
-                RestrictHTriangle (par[0], par[1], par[2], &prop, &prop2, mesh, 0, 0, mparam);
+                RestrictHTriangle (par[0], par[1], par[2], &prop, &prop2, mesh, 0, 0, layer, mparam);
                 //cout << "\rFace " << i << " pos12 ntriangles " << ntriangles << flush;
               }
           }
@@ -654,6 +661,7 @@ namespace netgen
             for (int i = 1; i <= nedges && !multithread.terminate; i++)
               {
                 TopoDS_Edge edge = TopoDS::Edge (geom.emap(i));
+                int layer = OCCGeometry::global_shape_properties[edge.TShape()].layer;
                 if (BRep_Tool::Degenerated(edge)) continue;
 
                 double s0, s1;
@@ -678,6 +686,7 @@ namespace netgen
                         gp_Pnt p1 = c->Value (s);
                         lines[nlines].p0 = Point<3> (p0.X(), p0.Y(), p0.Z());
                         lines[nlines].p1 = Point<3> (p1.X(), p1.Y(), p1.Z());
+                        lines[nlines].layer = layer;
 
                         Box3d box;
                         box.SetPoint (Point3d(lines[nlines].p0));
@@ -719,8 +728,8 @@ namespace netgen
                 Box3d box;
                 box.SetPoint (Point3d(line.p0));
                 box.AddPoint (Point3d(line.p1));
-                double maxhline = max (mesh.GetH(box.PMin()),
-                                       mesh.GetH(box.PMax()));
+                double maxhline = max (mesh.GetH(box.PMin(), line.layer),
+                                       mesh.GetH(box.PMax(), line.layer));
                 box.Increase(maxhline);
 
                 double mindist = 1e99;
@@ -731,6 +740,7 @@ namespace netgen
                   {
                     int num = linenums[j]-1;
                     if (i == num) continue;
+                    if (line.layer != lines[num].layer) continue;
                     if( is_identified_edge(edgenumber[i], edgenumber[num]) ) continue;
                     if ((line.p0-lines[num].p0).Length2() < 1e-15) continue;
                     if ((line.p0-lines[num].p1).Length2() < 1e-15) continue;
@@ -749,12 +759,12 @@ namespace netgen
                     mindist = 1e-3 * bb.Diam();
                   }
 
-                mesh.RestrictLocalHLine(line.p0, line.p1, mindist);
+                mesh.RestrictLocalHLine(line.p0, line.p1, mindist, line.layer);
               }
           }
 
         for (auto mspnt : mparam.meshsize_points)
-          mesh.RestrictLocalH(mspnt.pnt, mspnt.h);
+          mesh.RestrictLocalH(mspnt.pnt, mspnt.h, mspnt.layer);
 
         multithread.task = savetask;
 

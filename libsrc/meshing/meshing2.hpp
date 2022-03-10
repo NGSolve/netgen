@@ -59,7 +59,7 @@ public:
   void LoadRules (const char * filename, bool quad);
 
   /// 
-  DLL_HEADER MESHING2_RESULT GenerateMesh (Mesh & mesh, const MeshingParameters & mp, double gh, int facenr);
+  DLL_HEADER MESHING2_RESULT GenerateMesh (Mesh & mesh, const MeshingParameters & mp, double gh, int facenr, int layer=1);
 
   DLL_HEADER void Delaunay (Mesh & mesh, int domainnr, const MeshingParameters & mp);
   DLL_HEADER void BlockFillLocalH (Mesh & mesh, const MeshingParameters & mp);

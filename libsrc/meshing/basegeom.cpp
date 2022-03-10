@@ -454,7 +454,7 @@ namespace netgen
     mesh.LoadLocalMeshSize(mparam.meshsizefilename);
   }
 
-  void DivideEdge(GeometryEdge * edge, const MeshingParameters & mparam, const Mesh & mesh, Array<Point<3>> & points, Array<double> & params)
+  void DivideEdge(GeometryEdge * edge, const MeshingParameters & mparam, const Mesh & mesh, Array<Point<3>> & points, Array<double> & params, int layer)
   {
       static Timer tdivedgesections("Divide edge sections");
       static Timer tdivide("Divide Edges");
@@ -470,7 +470,7 @@ namespace netgen
       for(auto i : Range(divide_edge_sections))
       {
           auto pt = edge->GetPoint(double(i+1)/divide_edge_sections);
-          hvalue[i+1] = hvalue[i] + 1./mesh.GetH(pt) * (pt-old_pt).Length();
+          hvalue[i+1] = hvalue[i] + 1./mesh.GetH(pt, layer) * (pt-old_pt).Length();
           old_pt = pt;
       }
       int nsubedges = max2(1, int(floor(hvalue[divide_edge_sections]+0.5)));
@@ -525,7 +525,7 @@ namespace netgen
     std::map<size_t, PointIndex> vert2meshpt;
     for(auto & vert : vertices)
       {
-        auto pi = mesh.AddPoint(vert->GetPoint());
+        auto pi = mesh.AddPoint(vert->GetPoint(), vert->properties.layer);
         tree.Insert(mesh[pi], pi);
         vert2meshpt[vert->GetHash()] = pi;
         mesh[pi].Singularity(vert->properties.hpref);
@@ -591,7 +591,7 @@ namespace netgen
             }
             else
             {
-                DivideEdge(edge, mparam, mesh, edge_points, params);
+                DivideEdge(edge, mparam, mesh, edge_points, params, edge->properties.layer);
             }
         }
         else
@@ -635,7 +635,7 @@ namespace netgen
 
         for(auto i : Range(edge_points))
         {
-            auto pi = mesh.AddPoint(edge_points[i]);
+            auto pi = mesh.AddPoint(edge_points[i], edge->properties.layer);
             tree.Insert(mesh[pi], pi);
             pnums[i+1] = pi;
         }
@@ -724,7 +724,7 @@ namespace netgen
 
 
     static Timer t("GenerateMesh"); RegionTimer reg(t);
-    MESHING2_RESULT res = meshing.GenerateMesh(mesh, mparam, mparam.maxh, k+1);
+    MESHING2_RESULT res = meshing.GenerateMesh(mesh, mparam, mparam.maxh, k+1, face.properties.layer);
 
     for(auto i : Range(noldsurfels, mesh.GetNSE()))
       {
