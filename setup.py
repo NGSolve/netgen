@@ -58,6 +58,7 @@ if 'darwin' in sys.platform:
         '-DNG_INSTALL_DIR_BIN=bin',
         '-DNG_INSTALL_DIR_CMAKE=netgen/cmake',
         '-DNG_INSTALL_DIR_INCLUDE=netgen/include',
+        '-DNG_INSTALL_DIR_RES=share',
     ]
 elif 'win' in sys.platform:
     cmake_args += [
