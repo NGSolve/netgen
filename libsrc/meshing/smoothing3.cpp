@@ -1243,8 +1243,8 @@ void Mesh :: ImproveMesh (const CSG eometry & geometry, OPTIMIZEGOAL goal)
 
       //      if (uselocalh)
       {
-	double lh = GetH (points.Get(i));
-	pf->SetLocalH (GetH (points.Get(i)));
+	double lh = GetH(points.Get(i), points.Get(i).GetLayer());
+	pf->SetLocalH (lh);
 	par.typx = lh / 10;
 	//	  (*testout) << "lh(" << points.Get(i) << ") = " << lh << "\n";
       }
@@ -1366,10 +1366,10 @@ void Mesh :: ImproveMeshSequential (const MeshingParameters & mp, OPTIMIZEGOAL g
 
   NgArray<double, PointIndex::BASE> pointh (points.Size());
 
-  if(lochfunc)
+  if(HasLocalHFunction())
     {
       for (PointIndex pi : points.Range())
-	pointh[pi] = GetH(points[pi]);
+	pointh[pi] = GetH(pi);
     }
   else
     {
@@ -1505,13 +1505,13 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
 
   Array<double, PointIndex> pointh (points.Size());
 
-  if(lochfunc)
+  if(HasLocalHFunction())
     {
       RegionTimer rt(tloch);
       ParallelForRange(points.Range(), [&] (auto myrange)
          {
            for(auto pi : myrange)
-             pointh[pi] = GetH(points[pi]);
+             pointh[pi] = GetH(pi);
          });
     }
   else
@@ -1640,11 +1640,11 @@ void Mesh :: ImproveMeshJacobian (const MeshingParameters & mp,
 
   NgArray<double, PointIndex::BASE, PointIndex> pointh (points.Size());
 
-  if(lochfunc)
+  if(HasLocalHFunction())
     {
       // for(i = 1; i<=points.Size(); i++)
       for (PointIndex pi : points.Range())
-	pointh[pi] = GetH(points[pi]);
+	pointh[pi] = GetH(pi);
     }
   else
     {
@@ -1797,11 +1797,11 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
 
   NgArray<double, PointIndex::BASE> pointh (points.Size());
  
-  if(lochfunc)
+  if(HasLocalHFunction())
     {
       // for(i=1; i<=points.Size(); i++)
       for (PointIndex pi : points.Range())
-	pointh[pi] = GetH(points[pi]);
+	pointh[pi] = GetH(pi);
     }
   else
     {

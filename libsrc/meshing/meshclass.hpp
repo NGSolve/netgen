@@ -69,9 +69,9 @@ namespace netgen
 
 
     /**
-       Representation of local mesh-size h
+       Representation of local mesh-size h (one function per mesh layer)
     */
-    shared_ptr<LocalH> lochfunc;
+    Array<shared_ptr<LocalH>> lochfunc;
     ///
     double hglob;
     ///
@@ -435,18 +435,18 @@ namespace netgen
     */
     DLL_HEADER double AverageH (int surfnr = 0) const;
     /// Calculates localh 
-    DLL_HEADER void CalcLocalH (double grading);
+    DLL_HEADER void CalcLocalH (double grading, int layer=1);
     ///
-    DLL_HEADER void SetLocalH (netgen::Point<3> pmin, netgen::Point<3> pmax, double grading);
+    DLL_HEADER void SetLocalH (netgen::Point<3> pmin, netgen::Point<3> pmax, double grading, int layer=1);
     ///
-    DLL_HEADER void RestrictLocalH (const Point3d & p, double hloc);
+    DLL_HEADER void RestrictLocalH (const Point3d & p, double hloc, int layer=1);
     ///
     DLL_HEADER void RestrictLocalHLine (const Point3d & p1, const Point3d & p2, 
-			     double hloc);
+			     double hloc, int layer=1);
     /// number of elements per radius
-    DLL_HEADER void CalcLocalHFromSurfaceCurvature(double grading, double elperr);
+    DLL_HEADER void CalcLocalHFromSurfaceCurvature(double grading, double elperr, int layer=1);
     ///
-    DLL_HEADER void CalcLocalHFromPointDistances(double grading);
+    DLL_HEADER void CalcLocalHFromPointDistances(double grading, int layer=1);
     ///
     DLL_HEADER void RestrictLocalH (resthtype rht, int nr, double loch);
     ///
@@ -460,19 +460,25 @@ namespace netgen
     ///
 	DLL_HEADER void SetMaxHDomain (const NgArray<double> & mhd);
     ///
-    DLL_HEADER double GetH (const Point3d & p) const;
+    DLL_HEADER double GetH (const Point3d & p, int layer=1) const;
+    DLL_HEADER double GetH (PointIndex pi) const { return GetH(points[pi], points[pi].GetLayer()); }
     ///
-    double GetMinH (const Point3d & pmin, const Point3d & pmax);
+    double GetMinH (const Point3d & pmin, const Point3d & pmax, int layer=1);
     ///
-    bool HasLocalHFunction () { return lochfunc != nullptr; }
+    bool HasLocalHFunction (int layer=1) { return lochfunc[layer-1] != nullptr; }
     ///
-    LocalH & LocalHFunction () { return * lochfunc; }
+    LocalH & LocalHFunction (int layer=1) { return * lochfunc[layer-1]; }
 
-    shared_ptr<LocalH> GetLocalH() const { return lochfunc; }
-    void SetLocalH(shared_ptr<LocalH> loch) { lochfunc = loch; }
+    shared_ptr<LocalH> GetLocalH(int layer=1) const
+    {
+      if(lochfunc.Size() == 1)
+        return lochfunc[0];
+      return lochfunc[layer-1];
+    }
+    void SetLocalH(shared_ptr<LocalH> loch, int layer=1);
 
     ///
-    bool LocalHFunctionGenerated(void) const { return (lochfunc != NULL); }
+    bool LocalHFunctionGenerated(int layer=1) const { return (lochfunc[layer-1] != NULL); }
 
     /// Find bounding box
     DLL_HEADER void GetBox (Point3d & pmin, Point3d & pmax, int dom = -1) const;
