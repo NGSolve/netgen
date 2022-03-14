@@ -3345,10 +3345,11 @@ namespace netgen
 
   double Mesh :: GetH (const Point3d & p, int layer) const
   {
+    const auto& lh = GetLocalH(layer);
     double hmin = hglob;
-    if (lochfunc[layer-1])
+    if (lh)
       {
-        double hl = lochfunc[layer-1]->GetH (p);
+        double hl = lh->GetH (p);
         if (hl < hglob)
           hmin = hl;
       }
@@ -3357,10 +3358,11 @@ namespace netgen
 
   double Mesh :: GetMinH (const Point3d & pmin, const Point3d & pmax, int layer)
   {
+    const auto& lh = GetLocalH(layer);
     double hmin = hglob;
-    if (lochfunc[layer-1])
+    if (lh)
       {
-        double hl = lochfunc[layer-1]->GetMinH (pmin, pmax);
+        double hl = lh->GetMinH (pmin, pmax);
         if (hl < hmin)
           hmin = hl;
       }
