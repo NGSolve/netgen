@@ -1326,11 +1326,14 @@ FlatArray<int>  Ngx_Mesh :: GetDistantProcs (int nodetype, int locnum) const
     switch (nodetype)
       {
       case 0:
-        return mesh->GetParallelTopology().GetDistantPNums(locnum);
+        // return mesh->GetParallelTopology().GetDistantPNums(locnum);
+        return mesh->GetParallelTopology().GetDistantProcs(locnum+PointIndex::BASE);
       case 1:
-        return mesh->GetParallelTopology().GetDistantEdgeNums(locnum);
+        // return mesh->GetParallelTopology().GetDistantEdgeNums(locnum);
+        return mesh->GetParallelTopology().GetDistantEdgeProcs(locnum);
       case 2:
-        return mesh->GetParallelTopology().GetDistantFaceNums(locnum);
+        // return mesh->GetParallelTopology().GetDistantFaceNums(locnum);
+        return mesh->GetParallelTopology().GetDistantFaceProcs(locnum);
       default:
 	return FlatArray<int>(0, nullptr);
       }

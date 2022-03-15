@@ -1190,6 +1190,7 @@ namespace netgen
 
   ostream & operator<< (ostream  & s, const FaceDescriptor & fd);
 
+  
  
   class EdgeDescriptor
   {

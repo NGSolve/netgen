@@ -247,7 +247,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
             return res;
          }, py::call_guard<py::gil_scoped_release>())
     .def("GenerateMesh", [](shared_ptr<OCCGeometry> geo,
-                            MeshingParameters* pars, py::kwargs kwargs)
+                            MeshingParameters* pars, NgMPI_Comm comm, py::kwargs kwargs)
                          {
                            MeshingParameters mp;
                            OCCParameters occparam;
@@ -264,14 +264,25 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                            }
                            geo->SetOCCParameters(occparam);
                            auto mesh = make_shared<Mesh>();
+                           mesh->SetCommunicator(comm);
                            mesh->SetGeometry(geo);
-                           SetGlobalMesh(mesh);
-                           auto result = geo->GenerateMesh(mesh, mp);
-                           if(result != 0)
-                             throw Exception("Meshing failed!");
-                           ng_geometry = geo;
+
+                           if (comm.Rank()==0)
+                             {
+                               SetGlobalMesh(mesh);
+                               auto result = geo->GenerateMesh(mesh, mp);
+                               if(result != 0)
+                                 throw Exception("Meshing failed!");
+                               ng_geometry = geo;
+                               if (comm.Size() > 1)
+                                 mesh->Distribute();
+                             }
+                           else
+                             {
+                               mesh->SendRecvMesh();
+                             }
                            return mesh;
-                         }, py::arg("mp") = nullptr,
+                         }, py::arg("mp") = nullptr, py::arg("comm")=NgMPI_Comm{},
       py::call_guard<py::gil_scoped_release>(),
          (meshingparameter_description + occparameter_description).c_str())
     .def_property_readonly("shape", [](const OCCGeometry & self) { return self.GetShape(); })

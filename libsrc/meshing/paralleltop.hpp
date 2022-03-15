@@ -76,18 +76,19 @@ namespace netgen
     
     [[deprecated("Use L2G(pi) instead!")]]                
     void SetLoc2Glob_Vert   (int locnum, int globnum) { glob_vert[locnum-1] = globnum; }
-    [[deprecated("Try to avoid global enumration!")]]                
+    // [[deprecated("Try to avoid global enumration!")]]                
     void SetLoc2Glob_Edge   (int locnum, int globnum) { glob_edge[locnum-1] = globnum; }
-    [[deprecated("Try to avoid global enumration!")]]                
+    // [[deprecated("Try to avoid global enumration!")]]                
     void SetLoc2Glob_Face   (int locnum, int globnum) { glob_face[locnum-1] = globnum; }
-    [[deprecated("Try to avoid global enumration!")]]                
+    // [[deprecated("Try to avoid global enumration!")]]                
     void SetLoc2Glob_VolEl  (int locnum, int globnum) { glob_el[locnum-1] = globnum; }
-    [[deprecated("Try to avoid global enumration!")]]                
+    // [[deprecated("Try to avoid global enumration!")]]                
     void SetLoc2Glob_SurfEl (int locnum, int globnum) { glob_surfel[locnum-1] = globnum; }
-    [[deprecated("Try to avoid global enumration!")]]                
+    // [[deprecated("Try to avoid global enumration!")]]                
     void SetLoc2Glob_Segm   (int locnum, int globnum) { glob_segm[locnum-1] = globnum; }
 
-    int GetGlobalPNum    (int locnum) const { return glob_vert[locnum-1]; }
+    // [[deprecated("Try to avoid global enumration!")]]                    
+    int GetGlobalPNum    (PointIndex locnum) const { return glob_vert[locnum-PointIndex::BASE]; }
     [[deprecated("Try to avoid global enumration!")]]                
     int GetGlobalEdgeNum (int locnum) const { return glob_edge[locnum-1]; }
     [[deprecated("Try to avoid global enumration!")]]                
