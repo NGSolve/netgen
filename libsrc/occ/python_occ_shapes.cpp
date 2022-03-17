@@ -1453,7 +1453,20 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       return builder.Projection();
     })
     ;
-  py::class_<TopoDS_Solid, TopoDS_Shape> (m, "Solid");
+  py::class_<TopoDS_Solid, TopoDS_Shape> (m, "Solid")
+    .def(py::init([](const TopoDS_Shape& faces)
+    {
+      BRep_Builder builder;
+      TopoDS_Shell shell;
+      builder.MakeShell(shell);
+      for(auto& face : GetFaces(faces))
+        builder.Add(shell, face);
+      TopoDS_Solid solid;
+      builder.MakeSolid(solid);
+      builder.Add(solid, shell);
+      return solid;
+    }), "Create solid from shell. Shell must consist of topologically closed faces (share vertices and edges).")
+    ;
   
   py::class_<TopoDS_Compound, TopoDS_Shape> (m, "Compound")
     .def(py::init([](std::vector<TopoDS_Shape> shapes, bool separate_layers) {
