@@ -304,6 +304,24 @@ namespace ngcore
     }
 
     template <typename T>
+    void GatherRoot (FlatArray<T> recv) const
+    {
+      recv[0] = T(0);
+      if (size == 1) return;      
+      MPI_Gather (MPI_IN_PLACE, 1, GetMPIType<T>(), 
+                  recv.Data(), 1, GetMPIType<T>(), 0, comm);
+    }
+
+    template <typename T>
+    void Gather (T send) const
+    {
+      if (size == 1) return;            
+      MPI_Gather (&send, 1, GetMPIType<T>(), 
+                  NULL, 1, GetMPIType<T>(), 0, comm);
+    }
+
+    
+    template <typename T>
     void AllGather (T val, FlatArray<T> recv) const
     {
       if (size == 1)
