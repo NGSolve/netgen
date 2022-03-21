@@ -274,8 +274,7 @@ threads : int
               "size in Megabytes"
         )
     .def("__enter__", [](PajeTrace & self) { })
-    .def("__exit__", [](PajeTrace & self, py::args) { self.StopTracing(); })
-    .def("__del__", [](PajeTrace & self) { trace = nullptr; })
+    .def("__exit__", [](PajeTrace & self, py::args) { trace = nullptr; })
     .def_static("SetTraceThreads", &PajeTrace::SetTraceThreads)
     .def_static("SetTraceThreadCounter", &PajeTrace::SetTraceThreadCounter)
     .def_static("SetMaxTracefileSize", &PajeTrace::SetMaxTracefileSize)
