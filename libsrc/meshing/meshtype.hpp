@@ -758,16 +758,16 @@ namespace netgen
     Element & operator= (Element &&) = default;
 
     ///
-    Element (int anp);
+    DLL_HEADER Element (int anp);
     ///
-    Element (ELEMENT_TYPE type);
+    DLL_HEADER Element (ELEMENT_TYPE type);
     ///
     // Element & operator= (const Element & el2);
   
     ///
-    void SetNP (int anp);
+    DLL_HEADER void SetNP (int anp);
     ///
-    void SetType (ELEMENT_TYPE atyp);
+    DLL_HEADER void SetType (ELEMENT_TYPE atyp);
     ///
     int GetNP () const { return np; }
     ///
@@ -798,7 +798,7 @@ namespace netgen
         }
     }
 
-    bool operator==(const Element & el2) const;
+    DLL_HEADER bool operator==(const Element & el2) const;
 
     // old style:
     int NP () const { return np; }
@@ -905,9 +905,9 @@ namespace netgen
     ///
     inline void GetFace (int i, Element2d & face) const;
     ///
-    void GetFace2 (int i, Element2d & face) const;
+    DLL_HEADER void GetFace2 (int i, Element2d & face) const;
     ///
-    void Invert ();
+    DLL_HEADER void Invert ();
 
     /// split into 4 node tets
     void GetTets (NgArray<Element> & locels) const;
