@@ -283,8 +283,7 @@ namespace netgen
             changed = false;
             for(auto &s : shapes)
             {
-              auto current = s->primary;
-              for(auto & ident : current->identifications)
+              for(auto & ident : s->identifications)
               {
                   bool need_inverse = ident.from == s.get();
                   auto other = need_inverse ? ident.to : ident.from;
