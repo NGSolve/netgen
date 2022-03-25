@@ -40,5 +40,13 @@ unit_square = OCCGeometry(unit_square_shape, dim=2)
 
 
 
-
+uc_shape = Box((0,0,0),(1,1,1))
+uc_shape.faces.Max(X).name = "front"
+uc_shape.faces.Min(X).name = "back"
+uc_shape.faces.Max(Y).name = "right"
+uc_shape.faces.Min(Y).name = "left"
+uc_shape.faces.Max(Z).name = "top"
+uc_shape.faces.Min(Z).name = "bottom"
     
+unit_cube = OCCGeometry(uc_shape)
+
