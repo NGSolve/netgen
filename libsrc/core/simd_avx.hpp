@@ -141,7 +141,7 @@ namespace ngcore
 
     NETGEN_INLINE double operator[] (int i) const { return ((double*)(&data))[i]; }
     NETGEN_INLINE double & operator[] (int i) { return ((double*)(&data))[i]; }
-    // [[deprecated("don't write to individual elments of SIMD")]]
+    // [[deprecated("don't write to individual elements of SIMD")]]
     // NETGEN_INLINE double & operator[] (int i) { return ((double*)(&data))[i]; }
     template <int I>
     double Get() const { return ((double*)(&data))[I]; }

@@ -190,7 +190,7 @@ proc AddRecentMeshFile { filename } {
     }
 loadmeshinifile;
 
-# astrid ende
+# astrid end
 
 
 .ngmenu.file add command -label "Save Mesh..." -accelerator "<s><m>" \

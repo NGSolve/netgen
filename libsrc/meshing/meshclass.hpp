@@ -61,7 +61,7 @@ namespace netgen
 
     /// faces of rest-solid
     NgArray<Element2d> openelements;
-    /// open segmenets for surface meshing  
+    /// open segments for surface meshing
     NgArray<Segment> opensegments;
 
     Array<int> tets_in_qualclass;
@@ -132,9 +132,9 @@ namespace netgen
     /// changed after finishing global algorithm (improve, ...)
     int majortimestamp;
 
-    /// mesh access semaphors.
+    /// mesh access semaphores.
     NgMutex mutex;
-    /// mesh access semaphors.
+    /// mesh access semaphores.
     NgMutex majormutex;
 
     SymbolTable< NgArray<int>* > userdata_int;

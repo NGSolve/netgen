@@ -605,7 +605,7 @@ namespace ngcore
 	      }
 	    else
 	      {
-                // to be cleand up ...
+                // to be cleaned up ...
 		Array<char *> strs;
 
 		posbrack++;

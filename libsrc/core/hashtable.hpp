@@ -500,7 +500,7 @@ namespace ngcore
       for (int i = 0; i < table[bnr].Size(); i++)
 	if (table[bnr][i].first == ind)
 	  return i;
-      throw Exception ("Ask for unsused hash-value");
+      throw Exception ("Ask for unused hash-value");
     }
 
     T & operator[] (T_HASH ahash)

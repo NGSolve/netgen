@@ -70,8 +70,8 @@ namespace netgen
     else if (name == "parentfaces")
       SetBuildParentFaces(set);
     else
-      throw Exception ("noting known about table "+name +"\n"
-                       "knwon are 'edges', 'faces', 'parentedges', 'parentfaces'");
+      throw Exception ("nothing known about table "+name +"\n"
+                       "known are 'edges', 'faces', 'parentedges', 'parentfaces'");
   }
 
   bool MeshTopology :: static_buildedges = true; 
@@ -87,8 +87,8 @@ namespace netgen
     else if (name == "vertex2element")
       static_buildvertex2element = set;      
     else
-      throw Exception ("noting known about table "+name +"\n"
-                       "knwon are 'edges', 'faces', 'vertex2element'");
+      throw Exception ("nothing known about table "+name +"\n"
+                       "known are 'edges', 'faces', 'vertex2element'");
   }
 
   
@@ -753,7 +753,7 @@ namespace netgen
                 int orient_inner = 0;
                 paedge1 = INT<2> (pa0[0], pa0[1]);
                 paedge2 = INT<2> (pa1[0], pa1[1]);
-                // find common vertex and the thrid pa edge
+                // find common vertex and the third pa edge
                 if (pa0[0]==pa1[0]){// 00
                   //orient1 = 0; 
                   orient2 = 1; 

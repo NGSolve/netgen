@@ -39,7 +39,7 @@ namespace ngcore
   class SurfPointPackage
   {
   public:
-    int num;     // point numebr
+    int num;     // point number
     int trignum; // STL geo info
     double u, v; // OCC geo info
     SurfPointPackage () { ; }
@@ -502,7 +502,7 @@ namespace netgen
 
 
     /**
-       Next, we send the identifications themselfs.
+       Next, we send the identifications themselves.
        
        Info about periodic identifications sent to each proc is an array of
        integers.
@@ -872,7 +872,7 @@ namespace netgen
 		    segm_buf.Add (dest, seg.singedge_right);
 		    segm_buf.Add (dest, seg.singedge_left);
 		  });
-    // distrubute segment data
+    // distribute segment data
     for (int dest = 1; dest < ntasks; dest++)
       sendrequests.Append (comm.ISend(segm_buf[dest], dest, MPI_TAG_MESH+5));
 

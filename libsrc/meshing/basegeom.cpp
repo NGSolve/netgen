@@ -568,7 +568,7 @@ namespace netgen
 
         if(edge->primary == edge)
         {
-            // check if start and end vertex are identified (if so, we only insert one segement and do z-refinement later)
+            // check if start and end vertex are identified (if so, we only insert one segment and do z-refinement later)
             bool is_identified_edge = false;
             auto v0 = vertices[edge->GetStartVertex().nr].get();
             auto v1 = vertices[edge->GetEndVertex().nr].get();
@@ -909,7 +909,7 @@ namespace netgen
     Array<PointIndex, PointIndex> pmap(mesh.Points().Size());
     pmap = PointIndex::INVALID;
 
-    // first map points on edges (mapped points alread in mesh, use search tree)
+    // first map points on edges (mapped points already in mesh, use search tree)
     Array<bool, PointIndex> is_point_in_tree(mesh.Points().Size());
     is_point_in_tree = false;
     PointTree tree( bounding_box );

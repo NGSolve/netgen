@@ -1,7 +1,7 @@
 include (ExternalProject)
 
-option( BUILD_ZLIB "Build and link static version of zlib (usefull for pip binaries)" OFF )
-option( BUILD_OCC "Build and link static version of occ (usefull for pip binaries)" OFF )
+option( BUILD_ZLIB "Build and link static version of zlib (useful for pip binaries)" OFF )
+option( BUILD_OCC "Build and link static version of occ (useful for pip binaries)" OFF )
 set_property (DIRECTORY PROPERTY EP_PREFIX dependencies)
 
 set (NETGEN_DEPENDENCIES)

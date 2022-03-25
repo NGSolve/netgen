@@ -307,7 +307,7 @@ IntersectionType IntersectSplineSegment1( const Spline & s, const Point<2> & r0,
     vbeta[0] = 1.0/(2*a_) * (-b_ + sqrt_det);
     vbeta[1] = 1.0/(2*a_) * (-b_ - sqrt_det);
   }
-  else // degenrate quadratic equation
+  else // degenerate quadratic equation
     vbeta[0] = vbeta[1] = -c_/b_;
 
   int dim = fabs(vr[0]) > fabs(vr[1]) ? 0 : 1;
@@ -542,7 +542,7 @@ bool BisectIntersect( Spline p, Spline s, double &t0, double &t1, double &s0, do
   bool left_hull_intersecting = IntersectTrigs( {left.StartPI(), left.TangentPoint(), left.EndPI()}, {curr.StartPI(), curr.TangentPoint(), curr.EndPI()});
   bool right_hull_intersecting = IntersectTrigs( {right.StartPI(), right.TangentPoint(), right.EndPI()}, {curr.StartPI(), curr.TangentPoint(), curr.EndPI()});
 
-  // TODO: Additionaly check if one spline intersects with convex hull of other?
+  // TODO: Additionally check if one spline intersects with convex hull of other?
   //   // Check if one spline intersects with convex hull of spline
   //   if(left_hull_intersecting)
   //   {
@@ -936,7 +936,7 @@ RelativePositionType oracle_spline_p(Point<2> q, Point<2> p1, Point<2> p1t, Poin
 }
 
 // (q,p2) is a spline segment, compare with tangent (qt,p2) instead of Segment (q,p2)
-// BUT take care if tangent at p2 is collinear with eiter (p1,p2) or (p2,p3) (then use the segment (q,p2) again)
+// BUT take care if tangent at p2 is collinear with either (p1,p2) or (p2,p3) (then use the segment (q,p2) again)
 RelativePositionType oracle_spline_q(Point<2> q, Point<2> qt, Point<2> p1, Point<2> p2, Point<2> p3)
 {
   double s1 = Area( qt, p1, p2);
@@ -1402,7 +1402,7 @@ void CreateResult(Solid2d & sp, Solid2d & sr, bool UNION)
   //
   // for all crossing vertices
   //
-  // NOTE: all crossing vertices that are visited while contructing a
+  // NOTE: all crossing vertices that are visited while constructing a
   //       component of the result polygon are marked as "not intersection",
   //       so that they cannot serve as start vertex of another component
   //

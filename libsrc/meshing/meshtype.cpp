@@ -241,7 +241,7 @@ namespace netgen
       & edgenr & singedge_left & singedge_right
       & si & cd2i & domin & domout & tlosurf
       & surfnr1 & surfnr2
-      & bcname_dummy // keep this for backward compatiblity
+      & bcname_dummy // keep this for backward compatibility
       & epgeominfo[0].edgenr & epgeominfo[1].edgenr;
   }
 
@@ -1570,7 +1570,7 @@ namespace netgen
         }
       default:
         {
-          cout << "GetNodesLocal not impelemented for element " << GetType() << endl;
+          cout << "GetNodesLocal not implemented for element " << GetType() << endl;
           np = 0;
         }
       }
@@ -1676,7 +1676,7 @@ namespace netgen
         }
       default:
         {
-          cout << "GetNodesLocal not impelemented for element " << GetType() << endl;
+          cout << "GetNodesLocal not implemented for element " << GetType() << endl;
           np = 0;
 	  pp = NULL;
         }

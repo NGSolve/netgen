@@ -848,7 +848,7 @@ namespace netgen
         {
           have_unknown_trigs = true;
 
-          // any edge of unkown trig already marked?
+          // any edge of unknown trig already marked?
           for(auto i : IntRange(3))
           {
             INT<2> edge{el[(i+1)%3], el[(i+2)%3]};

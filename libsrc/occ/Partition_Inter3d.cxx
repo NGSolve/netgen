@@ -218,7 +218,7 @@ static void PutInBounds (const TopoDS_Face&          F,
   const Standard_Real Um = 0.34*f + 0.66*l;
   gp_Pnt2d Pm = C2d->Value( Um );
 
-  // sometimes on shpere, pcurve is out of domain by V though S is
+  // sometimes on sphere, pcurve is out of domain by V though S is
   // UPeriodic, sometimes it is in domain but nonetheless it has
   // wrong position.
   // Check pcurve position by 3D point
@@ -499,7 +499,7 @@ void Partition_Inter3d::Inter3D(const TopoDS_Face& F1,
 
     const TopoDS_Face& F = (ancRank == 1) ? F2 : F1;
 
-    // add se to face but dont add twice
+    // add se to face but don't add twice
     TopTools_ListIteratorOfListOfShape itE( myAsDes->Descendant( F ));
     if (myAsDes->HasDescendant( F )) {
       for ( ; itE.More(); itE.Next())

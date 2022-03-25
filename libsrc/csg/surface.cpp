@@ -258,7 +258,7 @@ Primitive * Primitive :: CreatePrimitive (const char * classname)
 
 
   stringstream ost;
-  ost << "Primitve::CreatePrimitive not implemented for " << classname << endl;
+  ost << "Primitive::CreatePrimitive not implemented for " << classname << endl;
   throw NgException (ost.str());
 }
 
@@ -266,7 +266,7 @@ Primitive * Primitive :: CreatePrimitive (const char * classname)
 Primitive * Primitive :: Copy () const
 {
   stringstream ost;
-  ost << "Primitve::Copy not implemented for " << typeid(*this).name() << endl;
+  ost << "Primitive::Copy not implemented for " << typeid(*this).name() << endl;
   throw NgException (ost.str());
 }
 
@@ -274,7 +274,7 @@ Primitive * Primitive :: Copy () const
 void Primitive :: Transform (Transformation<3> & trans)
 {
   stringstream ost;
-  ost << "Primitve::Transform not implemented for " << typeid(*this).name() << endl;
+  ost << "Primitive::Transform not implemented for " << typeid(*this).name() << endl;
   throw NgException (ost.str());
 }
 

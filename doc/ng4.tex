@@ -176,7 +176,7 @@ Lines starting with $\#$ are comment lines. Every CSG file must contain the
 keyword {\tt algebraic3d} before any non-comment line.
 The keyword {\tt solid} defines a named solid, here the solid {\it cube}
 is defined. A solid is defined by the Eulerian operations applied to 
-primitives. Here, the solid is just the primitve defined by {\tt orthobrick}.
+primitives. Here, the solid is just the primitive defined by {\tt orthobrick}.
 This is a brick parallel to the axis, specified by the minimal $x$, $y$, and
 $z$ coordinates, and the maximal $x$, $y$, and $z$ coordinates. The present
 definition gives the cube $[0,1]^3$. Finally, the definition {\tt tlo cube}
@@ -260,7 +260,7 @@ amount of red, green and blue (RGB) values. The flag {\tt
   -transparent} makes the solid appear transparent.
 
 
-It is possible to specify bounday condition numbers for individual
+It is possible to specify boundary condition numbers for individual
 surfaces of a solid. The flag {\tt -bc} assigns the bc to all 
 surfaces of that solid-tree. If several flags are given the one closest
 to the leaves of the tree dominates. The following file defines a 
@@ -536,7 +536,7 @@ STL is a standardized file format to describe (approximate) geometies
 by triangulated surfaces. It is useful to describe complicated parts
 which are modeled with some CAD programmes. Also, some users have written
 their own (C) programmes to define STL geometries, where was not so easy
-to use the CSG format. The syntac of STL files is as follos
+to use the CSG format. The syntax of STL files is as follows
 \begin{quote}
 (not available yet. please figure out the syntax from the examples)
 \end{quote}
@@ -593,10 +593,10 @@ Finally, the refinement factor along the line follows.
 \chapter{Mesh and Solution Formats}
 
 You can export meshes to a couple of file formats. Some are self-defined,
-some other are standard formats. The self-defined are the followings:
+some other are standard formats. The self-defined are the following:
 
 \section{Mesh Size File}
-By means of a mesh size file you can provide a local mesh size density. The file extension must be {\it .msz}. If you want to use the mesh size file, you specify it in the ``Meshing Options'', doalog box, page ``Mesh Size''.
+By means of a mesh size file you can provide a local mesh size density. The file extension must be {\it .msz}. If you want to use the mesh size file, you specify it in the ``Meshing Options'', dialog box, page ``Mesh Size''.
 
 The syntay is:
 \begin{verbatim}
@@ -643,7 +643,7 @@ The Fepp 2D format contains the following sections:
 
 \begin{enumerate}
 \item
-boundary segmetns \\
+boundary segments \\
 After the number of boundary segments there follows a list of 
 segments. Each segment is specified by the spline - patch number,
 and the two node indices. Counting starts with 1
@@ -749,7 +749,7 @@ the bottom, and the large drawing window. The menu items will be explained in
 \item Quit \newline
 Terminate Netgen
 \item Generate mesh \newline
-Performe mesh generation 
+Perform mesh generation 
 \item Stop Meshing \newline
 Stop mesh generation 
 \item Geometry/Edges/Mesh/Solution \newline

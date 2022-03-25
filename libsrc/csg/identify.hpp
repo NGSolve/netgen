@@ -38,13 +38,13 @@ namespace netgen
 
     /// can identify both special points (fixed direction)
     /// (identified points, same tangent)
-    virtual int Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
+    virtual int Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 			      const TABLE<int> & specpoint2solid,			  
 			      const TABLE<int> & specpoint2surface) const;
     ///
-    virtual int Identifyable (const Point<3> & p1, const Point<3> & sp2) const;
+    virtual int Identifiable (const Point<3> & p1, const Point<3> & sp2) const;
     /// is it possible to identify sp1 with some other ?
-    virtual int IdentifyableCandidate (const SpecialPoint & sp1) const;
+    virtual int IdentifiableCandidate (const SpecialPoint & sp1) const;
   
     /// are points (if connected) by a short edge (direction anyhow) ?
     virtual int ShortEdge (const SpecialPoint & sp1, const SpecialPoint & sp2) const;
@@ -96,7 +96,7 @@ namespace netgen
 			      const TABLE<int> & specpoint2solid,
 			      const TABLE<int> & specpoint2surface) const override;
 
-    virtual int Identifyable (const Point<3> & p1, const Point<3> & sp2) const override;
+    virtual int Identifiable (const Point<3> & p1, const Point<3> & sp2) const override;
     virtual int GetIdentifiedPoint (class Mesh & mesh, int pi1) override;
     virtual void IdentifyPoints (class Mesh & mesh) override;
     virtual void IdentifyFaces (class Mesh & mesh) override;
@@ -150,8 +150,8 @@ namespace netgen
     virtual int Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 			      const TABLE<int> & specpoint2solid,
 			      const TABLE<int> & specpoint2surface) const;
-    virtual int Identifyable (const Point<3> & p1, const Point<3> & sp2) const;
-    virtual int IdentifyableCandidate (const SpecialPoint & sp1) const;
+    virtual int Identifiable (const Point<3> & p1, const Point<3> & sp2) const;
+    virtual int IdentifiableCandidate (const SpecialPoint & sp1) const;
     virtual int ShortEdge (const SpecialPoint & sp1, const SpecialPoint & sp2) const;
     virtual int GetIdentifiedPoint (class Mesh & mesh, int pi1);
     const Array<double> & GetSlices () const { return slices; }

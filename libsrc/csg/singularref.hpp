@@ -19,7 +19,7 @@ namespace netgen
 
   /**
      Singular Face.
-     Causes a bounday layer mesh refinement.
+     Causes a boundary layer mesh refinement.
      All elements in subdomain domnr will get a boundary layer
      on faces sharing the solid sol
   */

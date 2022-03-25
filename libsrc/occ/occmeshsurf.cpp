@@ -370,7 +370,7 @@ namespace netgen
     double u = gi.u;
     double v = gi.v;
 #ifdef OLD
-    // was a problem for pheres: got u-v paramters outside range of definition
+    // was a problem for pheres: got u-v parameters outside range of definition
     
     gp_Pnt x = occface->Value (u,v);
 

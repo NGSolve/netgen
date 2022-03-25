@@ -33,7 +33,7 @@ namespace netgen
   }
 
   HPRefElement :: HPRefElement(Element & el) :
-    type(HP_NONE), index(el.GetIndex()), levelx(0), levely(0), levelz(0), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segements
+    type(HP_NONE), index(el.GetIndex()), levelx(0), levely(0), levelz(0), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segments
   { 
     //Reset();
     for (int i=0; i<np ; i++) 
@@ -48,7 +48,7 @@ namespace netgen
 
   
   HPRefElement :: HPRefElement(Element2d & el) :
-    type(HP_NONE), index(el.GetIndex()), levelx(0), levely(0), levelz(0), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segements
+    type(HP_NONE), index(el.GetIndex()), levelx(0), levely(0), levelz(0), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segments
   { 
     //Reset();
     
@@ -1637,7 +1637,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	    }
 
 	// if 2 adjacent edges of an element are singular, the 
-	// commen point must be a singular point
+	// common point must be a singular point
 	for (int i = 1; i <= mesh.GetNE(); i++)
 	  {
 	    const Element & el = mesh.VolumeElement(i);

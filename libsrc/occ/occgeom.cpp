@@ -856,7 +856,7 @@ namespace netgen
       cout << "Edges           : " << nnre << " (" << nre << ")" << endl;
       cout << "Vertices        : " << nnrv << " (" << nrv << ")" << endl;
       cout << endl;
-      cout << "Totol surface area : " << newsurfacecont << " (" << surfacecont << ")" << endl;
+      cout << "Total surface area : " << newsurfacecont << " (" << surfacecont << ")" << endl;
       cout << endl;
    }
 
@@ -1555,7 +1555,7 @@ namespace netgen
 	writer.Write (shape, c_filename);
       }
 
-    throw NgException ("Unkown target format: " + filename);
+    throw NgException ("Unknown target format: " + filename);
   }
 
   void OCCGeometry :: SaveToMeshFile (ostream & ost) const
@@ -1587,7 +1587,7 @@ namespace netgen
     else
       {
         if(format_version>current_format_version)
-            throw Exception("Loading OCCGeometry from archive: unkown format version "
+            throw Exception("Loading OCCGeometry from archive: unknown format version "
                     + ToString(format_version)
                     + ", written by netgen version "
                     + ToString(netgen_version));
@@ -1716,7 +1716,7 @@ namespace netgen
 	   case TopAbs_VERTEX:
 	     count2 = vmap.FindIndex(TopoDS::Vertex(e.Current())); break;
 	   default:
-	     cout << "RecursiveTopologyTree: Case " << e.Current().ShapeType() << " not handeled" << endl;
+	     cout << "RecursiveTopologyTree: Case " << e.Current().ShapeType() << " not handled" << endl;
          }
 
          int nrsubshapes = 0;

@@ -17,7 +17,7 @@ namespace netgen
   {
       int domain;
 
-      // mesh for one domain (contains all adjacent surface elments)
+      // mesh for one domain (contains all adjacent surface elements)
       unique_ptr<Mesh> mesh;
 
       // maps from local (domain) mesh to global mesh
@@ -133,7 +133,7 @@ namespace netgen
             }
       }
 
-      // add segmetns
+      // add segments
       for(auto i : Range(ret))
       {
           auto & imap = ipmap[i];
@@ -230,7 +230,7 @@ namespace netgen
                   pis.insert(map[sel[i]]);
               }
 
-              // degenerate element (mapped element onto itself, might happend for surface elements connecting two identified faces)
+              // degenerate element (mapped element onto itself, might happen for surface elements connecting two identified faces)
               if(pis.size() < 2*np)
                   continue;
 

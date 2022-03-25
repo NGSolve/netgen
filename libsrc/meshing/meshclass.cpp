@@ -4606,7 +4606,7 @@ namespace netgen
           if (bface[i] && bface[j])
             if (!segedge[pi3map[i][j]][pi4map[i][j]])
               {
-                // 2 boundary faces withoud edge in between
+                // 2 boundary faces without edge in between
                 el.SetLegal (0);
                 return 0;
               }

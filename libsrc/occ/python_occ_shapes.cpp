@@ -1286,7 +1286,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         double s0, s1;
         auto curve = BRep_Tool::Curve(e, s0, s1);
         return curve->Value(s);        
-      }, py::arg("s"), "evaluate curve for paramters 's'")
+      }, py::arg("s"), "evaluate curve for parameters 's'")
     
     .def("Tangent", [](const TopoDS_Edge & e, double s) {
         gp_Pnt p; gp_Vec v;

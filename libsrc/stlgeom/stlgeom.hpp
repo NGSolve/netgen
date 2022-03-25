@@ -2,7 +2,7 @@
 #define FILE_STLGEOM
 
 /**************************************************************************/
-/* File:   stlgeom.hpp                                                     */
+/* File:   stlgeom.hpp                                                    */
 /* Author: Joachim Schoeberl                                              */
 /* Author2: Johannes Gerstmayr                                            */
 /* Date:   26. Jul. 99                                                    */

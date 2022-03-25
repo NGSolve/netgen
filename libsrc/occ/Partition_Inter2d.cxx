@@ -170,7 +170,7 @@ TopoDS_Vertex Partition_Inter2d::AddVonE(const TopoDS_Vertex& theV,
   //-------------------------------------------------------------
   // test if the points of intersection already exist. If not,
   // add as descendants of the edges.
-  // nb: theses points are only vertices of intersection.
+  // nb: these points are only vertices of intersection.
   //-------------------------------------------------------------
   const TopTools_ListOfShape& VOnE1 = AsDes->Descendant(E1);
   const TopTools_ListOfShape& VOnE2 = AsDes->Descendant(E2);
@@ -247,7 +247,7 @@ TopoDS_Vertex Partition_Inter2d::AddVonE(const TopoDS_Vertex& theV,
     // if 3 faces intersects each others, 3 new edges on them must pass
     // through one vertex but real intersection points of each
     // pair of edges are sometimes more far than a tolerance.
-    // Try to analitically find vertices that E1 and E2 must pass trough
+    // Try to analytically find vertices that E1 and E2 must pass through
 
     TopoDS_Shape F1 = getOtherShape( theF, AsDes->Ascendant( E1 ));
     TopoDS_Shape F2 = getOtherShape( theF, AsDes->Ascendant( E2 ));
@@ -405,7 +405,7 @@ static void EdgesPartition(const TopoDS_Face&            F,
 
   // if E1 and E2 are results of intersection of F and two connex faces then
   // no need to intersect edges, they can contact by vertices only
-  // (encounted an exception in TopOpeBRep_EdgesIntersector in such a case)
+  // (encountered an exception in TopOpeBRep_EdgesIntersector in such a case)
   Standard_Boolean intersect = Standard_True;
   TopTools_IndexedMapOfShape ME;
   TopExp::MapShapes(F, TopAbs_EDGE, ME);

@@ -66,7 +66,7 @@ namespace netgen
     if (!actsize)
       {
 	throw Exception ("NgArray should not be empty");
-	//      cerr << "NgArray souldn't be empty";
+	//      cerr << "NgArray shouldn't be empty";
       }
   }
 #endif

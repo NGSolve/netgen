@@ -36,24 +36,24 @@ void Identification :: IdentifySpecialPoints (NgArray<class SpecialPoint> & poin
 
 
 int Identification :: 
-Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
+Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 	      const TABLE<int> & specpoint2solid,
 	      const TABLE<int> & specpoint2surface) const
 {
-  cout << "Identification::Identifyable called for base-class" << endl;
+  cout << "Identification::Identifiable called for base-class" << endl;
   return 0;
 }
 
 int Identification :: 
-Identifyable (const Point<3> & p1, const Point<3> & sp2) const
+Identifiable (const Point<3> & p1, const Point<3> & sp2) const
 {
-  cout << "Identification::Identifyable called for base-class" << endl;
+  cout << "Identification::Identifiable called for base-class" << endl;
   return 0;
 }
 
 
 int Identification :: 
-IdentifyableCandidate (const SpecialPoint & sp1) const
+IdentifiableCandidate (const SpecialPoint & sp1) const
 {
   return 1;
 }
@@ -196,7 +196,7 @@ void PeriodicIdentification :: IdentifySpecialPoints
 */
 
 int PeriodicIdentification :: 
-Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
+Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 	      const TABLE<int> & specpoint2solid,
 	      const TABLE<int> & specpoint2surface) const
 {
@@ -252,7 +252,7 @@ Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 }
 
 int PeriodicIdentification :: 
-Identifyable (const Point<3> & p1, const Point<3> & p2) const
+Identifiable (const Point<3> & p1, const Point<3> & p2) const
 {
   return (s1->PointOnSurface (p1) &&
 	  s2->PointOnSurface (p2));
@@ -672,7 +672,7 @@ void CloseSurfaceIdentification :: IdentifySpecialPoints
 */
 
 int CloseSurfaceIdentification :: 
-Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
+Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 	      const TABLE<int> & specpoint2solid,
 	      const TABLE<int> & specpoint2surface) const
 {
@@ -830,7 +830,7 @@ Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 }
 
 int CloseSurfaceIdentification :: 
-Identifyable (const Point<3> & p1, const Point<3> & p2) const
+Identifiable (const Point<3> & p1, const Point<3> & p2) const
 {  
 //   if (domain)
 //     if (!domain->GetSolid()->IsIn (p1) || !domain->GetSolid()->IsIn (p2))
@@ -842,7 +842,7 @@ Identifyable (const Point<3> & p1, const Point<3> & p2) const
 
 
 int CloseSurfaceIdentification :: 
-IdentifyableCandidate (const SpecialPoint & sp1) const
+IdentifiableCandidate (const SpecialPoint & sp1) const
 {
   if (domain)
     if (!domain->GetSolid()->IsIn (sp1.p))
@@ -1544,7 +1544,7 @@ void CloseEdgesIdentification :: IdentifySpecialPoints
 */
 
 int CloseEdgesIdentification :: 
-Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
+Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 	      const TABLE<int> & specpoint2solid,
 	      const TABLE<int> & specpoint2surface) const
 {

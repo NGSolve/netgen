@@ -73,7 +73,7 @@ extern "C" {
   // number of surface triangles
   DLL_HEADER int Ng_GetNSE ();
   
-  // Get Point coordintes, index from 1 .. np
+  // Get Point coordinates, index from 1 .. np
   DLL_HEADER void Ng_GetPoint (int pi, double * p);
   
   // Get Element Points

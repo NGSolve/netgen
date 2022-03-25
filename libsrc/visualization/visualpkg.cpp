@@ -111,7 +111,7 @@ namespace netgen
                 vssolution.vecfunction = vssolution.fieldlines_vecfunction;
               }
                
-	    // reset visoptions.scalfunction and visoptions.vecfunction if not avialable 
+	    // reset visoptions.scalfunction and visoptions.vecfunction if not available 
 	    if ( vssolution.scalfunction == -1 && strcmp (scalname, "none") != 0)
               Tcl_SetVar ( interp, "::visoptions.scalfunction", "none", TCL_GLOBAL_ONLY );
 	    if ( vssolution.vecfunction == -1  && strcmp (vecname, "none") != 0)

@@ -232,7 +232,7 @@ public:
   inline void PrintMemInfo (ostream & ost) const
   {
     int els = AllocatedElements(); 
-    ost << "table: allocaed " << els 
+    ost << "table: allocated " << els 
 	<< " a " << sizeof(T) << " Byts = " 
 	<< els * sizeof(T) 
 	<< " bytes in " << Size() << " bags."

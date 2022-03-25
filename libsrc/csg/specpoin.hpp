@@ -86,7 +86,7 @@ namespace netgen
     ///
     double size;
     ///
-    double relydegtest;   // maximal dimension of bisection intervall for
+    double relydegtest;   // maximal dimension of bisection interval for
     /// test of degeneration parameters
     double cpeps1, epeps1, epeps2, epspointdist2;
 

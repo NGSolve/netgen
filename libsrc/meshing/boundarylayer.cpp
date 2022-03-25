@@ -535,7 +535,7 @@ namespace netgen
             if(mesh[points.Last()].Type() == FIXEDPOINT)
               break;
             if(!point_found)
-              throw Exception(string("Could not find connected list of line segements for edge ") + edgenr);
+              throw Exception(string("Could not find connected list of line segments for edge ") + edgenr);
           }
 
         // tangential part of growth vectors

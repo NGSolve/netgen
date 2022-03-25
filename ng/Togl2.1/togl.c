@@ -5112,7 +5112,7 @@ static int ObjectIsEmpty(Tcl_Obj *objPtr);
  *
  * GetStereo -
  *
- *      Converts an internal int into a a Tcl string obj.
+ *      Converts an internal int into a Tcl string obj.
  *
  * Results:
  *      Tcl_Obj containing the string representation of the stereo value.
@@ -5282,7 +5282,7 @@ RestoreStereo(ClientData clientData, Tk_Window tkwin, char *internalPtr,
  *
  * GetWideInt -
  *
- *      Converts an internal wide integer into a a Tcl WideInt obj.
+ *      Converts an internal wide integer into a Tcl WideInt obj.
  *
  * Results:
  *      Tcl_Obj containing the wide int value.

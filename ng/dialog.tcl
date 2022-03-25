@@ -676,7 +676,7 @@ proc meshingoptionsdialog { } {
         
         ttk::checkbutton $f.cb1.slowchecks -text "Slow checks" \
             -variable debug.slowchecks -command { Ng_SetDebugParameters }
-        ttk::checkbutton $f.cb1.debugoutput -text "Debugging outout" \
+        ttk::checkbutton $f.cb1.debugoutput -text "Debugging output" \
             -variable debug.debugoutput -command { Ng_SetDebugParameters }
         ttk::checkbutton $f.cb1.haltexline -text "Halt on existing line" \
             -variable debug.haltexistingline  -command { Ng_SetDebugParameters }

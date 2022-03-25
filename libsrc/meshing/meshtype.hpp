@@ -1030,7 +1030,7 @@ namespace netgen
 
     /// surface decoding index
     int si;
-    /// co dim 2 deconding index
+    /// co dim 2 decoding index
     int cd2i;
     /// domain number inner side
     int domin;

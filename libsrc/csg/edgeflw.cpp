@@ -180,7 +180,7 @@ namespace netgen
 
 	pi1 = 0;
 	copyedge = 0;
-	// identifyable point available ?
+	// identifiable point available ?
 
 	
 	for (int i = 0; i < geometry.identifications.Size() && !pi1; i++)
@@ -191,8 +191,8 @@ namespace netgen
 			 << ", v = " << specpoints[startpoints[j]].v 
 			 << " for copying (i,j = " << i << ", " << j << ")" << endl;	  
 #endif
- 	      if (geometry.identifications[i]->IdentifyableCandidate (specpoints[startpoints[j]]) &&
-		  geometry.identifications[i]->IdentifyableCandidate (specpoints[endpoints[j]]))
+ 	      if (geometry.identifications[i]->IdentifiableCandidate (specpoints[startpoints[j]]) &&
+		  geometry.identifications[i]->IdentifiableCandidate (specpoints[endpoints[j]]))
 		  
 	      
 		{
@@ -201,7 +201,7 @@ namespace netgen
 		
 		  for (int k = 0; k < hsp.Size() && !pi1; k++)
 		    {
-		      //(*testout) << "   ? identifyable with " << specpoints[hsp[k]].p 
+		      //(*testout) << "   ? identifiable with " << specpoints[hsp[k]].p 
 		      //<< ", v = " << specpoints[hsp[k]].v
 		      //		 << endl;
 		      if (identification_used.Used (INDEX_2(i, startpoints[j])) ||
@@ -212,12 +212,12 @@ namespace netgen
 			}
 		      
 		      if (geometry.identifications[i]
-			  ->Identifyable(specpoints[startpoints[j]], specpoints[hsp[k]], specpoint2tlo, specpoint2surface) ||
+			  ->Identifiable(specpoints[startpoints[j]], specpoints[hsp[k]], specpoint2tlo, specpoint2surface) ||
 			  geometry.identifications[i]
-			  ->Identifyable(specpoints[hsp[k]], specpoints[startpoints[j]], specpoint2tlo, specpoint2surface))
+			  ->Identifiable(specpoints[hsp[k]], specpoints[startpoints[j]], specpoint2tlo, specpoint2surface))
 			{
 #ifdef DEVELOP
-			  (*testout) << "identifyable: " << specpoints[hsp[k]].p << ", v = " << specpoints[hsp[k]].v
+			  (*testout) << "identifiable: " << specpoints[hsp[k]].p << ", v = " << specpoints[hsp[k]].v
 				     << " and " << specpoints[startpoints[j]].p << ", v = " << specpoints[startpoints[j]].v 
 				     << " (identification " << i+1 << ")" << endl;
 #endif
@@ -245,7 +245,7 @@ namespace netgen
 	    }
 	
       
-	// cannot copy from other ege ?
+	// cannot copy from other edge ?
 	if (!pi1)
 	  checkedcopy = startpoints.Size();
       
@@ -1680,9 +1680,9 @@ namespace netgen
 	  (*geometry.identifications.Get(copyedgeidentification));
 
 
-	if (csi.Identifyable (mesh[frompi], mesh[topi]))
+	if (csi.Identifiable (mesh[frompi], mesh[topi]))
 	  mesh.GetIdentifications().Add(frompi, topi, copyedgeidentification);
-	else if (csi.Identifyable (mesh[topi], mesh[frompi]))
+	else if (csi.Identifiable (mesh[topi], mesh[frompi]))
 	  mesh.GetIdentifications().Add(topi, frompi, copyedgeidentification);
 	else
 	  {

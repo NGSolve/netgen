@@ -214,7 +214,7 @@ namespace netgen
               case SOL_SURFACE_NONCONTINUOUS:
                 ost << " -type=surfacenoncontinuous"; break;
               default:
-                cerr << "save solution data, case not handeld" << endl;
+                cerr << "save solution data, case not handled" << endl;
               }
       
             ost << endl;
@@ -2019,7 +2019,7 @@ namespace netgen
                                          double(iz)/n);
                         break;
                       default:
-                        cerr << "case not implementd 878234" << endl;
+                        cerr << "case not implemented 878234" << endl;
                         ploc = 0.0;
                       }
                     if (compress[ii] != -1)
@@ -2889,7 +2889,7 @@ namespace netgen
                 break;
               }     
             default:
-              cerr << "case not implementd 23523" << endl;
+              cerr << "case not implemented 23523" << endl;
             }
 
           for (int i = 0; i < np; i++)
@@ -3408,7 +3408,7 @@ namespace netgen
           return ok;
         }
       default:
-        cerr << "case not implementd 6565" << endl;
+        cerr << "case not implemented 6565" << endl;
       }
     return 0;
   }
@@ -3575,7 +3575,7 @@ namespace netgen
                       break;
                     }
                   default:
-                    cerr << "case not implementd 2342" << endl;
+                    cerr << "case not implemented 2342" << endl;
                   }
                 break;
               }
@@ -3844,7 +3844,7 @@ namespace netgen
                       break;
                     }
                   default:
-                    cerr << "case not implented 3234" << endl;
+                    cerr << "case not implemented 3234" << endl;
                   }
                 break;
               }

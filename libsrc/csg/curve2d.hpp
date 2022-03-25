@@ -13,7 +13,7 @@ namespace netgen
 
   /*
 
-  2D Curve repesentation
+  2D Curve representation
 
   */
 

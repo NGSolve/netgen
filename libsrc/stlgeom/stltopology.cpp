@@ -212,7 +212,7 @@ STLGeometry *  STLTopology :: LoadNaomi (istream & ist)
   if (strcmp (buf, "NODES") == 0)
     {
       ist >> novertex;
-      PrintMessage(5,"nuber of vertices = ", novertex);
+      PrintMessage(5,"number of vertices = ", novertex);
       for (i = 0; i < novertex; i++)
 	{
 	  ist >> px;

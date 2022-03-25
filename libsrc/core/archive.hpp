@@ -466,7 +466,7 @@ namespace ngcore
           // -1 restores a new shared ptr by restoring the inner pointer and creating a shared_ptr to it
           if (nr == -1)
             {
-              logger->debug("Createing new shared_ptr");
+              logger->debug("Creating new shared_ptr");
               T* p = nullptr;
               bool neededDowncast;
               (*this) & neededDowncast & p;
