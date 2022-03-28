@@ -200,6 +200,7 @@ py::object CastShape(const TopoDS_Shape & s)
     case TopAbs_SHAPE:
       return py::cast(s);
     }
+    throw Exception("Invalid Shape type");
 };
 
 
