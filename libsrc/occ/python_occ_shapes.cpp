@@ -1098,7 +1098,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          })
 
 
-    .def("Identify", py::overload_cast<const TopoDS_Shape &, const TopoDS_Shape &, string, Identifications::ID_TYPE, std::optional<gp_Trsf>>(&Identify),
+    .def("Identify", py::overload_cast<const TopoDS_Shape &, const TopoDS_Shape &, string, Identifications::ID_TYPE, std::optional<std::variant<gp_Trsf, gp_GTrsf>>>(&Identify),
             py::arg("other"), py::arg("name"),
             py::arg("type")=Identifications::PERIODIC, py::arg("trafo")=nullopt,
             "Identify shapes for periodic meshing")
@@ -1689,10 +1689,16 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                       OCCGeometry::global_shape_properties[shape.TShape()].quad_dominated = quad_dominated;
                   })
     
-    .def("Identify", py::overload_cast<const ListOfShapes&, const ListOfShapes&, string, Identifications::ID_TYPE, gp_Trsf>(&Identify),
-            py::arg("other"), py::arg("name"),
-            py::arg("type")=Identifications::PERIODIC, py::arg("trafo"),
-            "Identify shapes for periodic meshing")
+    .def("Identify", [](const ListOfShapes& me,
+                        const ListOfShapes& other,
+                        string name,
+                        Identifications::ID_TYPE type,
+                        std::variant<gp_Trsf, gp_GTrsf> trafo)
+    {
+      Identify(me, other, name, type, occ2ng(trafo));
+    }, py::arg("other"), py::arg("name"),
+         py::arg("type")=Identifications::PERIODIC, py::arg("trafo"),
+         "Identify shapes for periodic meshing")
 
     ;
          

@@ -9,11 +9,13 @@
 #include "occgeom.hpp"
 
 #include <BRepBuilderAPI_Transform.hxx>
+#include <BRepBuilderAPI_GTransform.hxx>
 #include <gp_Ax1.hxx>
 #include <gp_Ax2.hxx>
 #include <gp_Ax2d.hxx>
 #include <gp_Ax3.hxx>
 #include <gp_Trsf.hxx>
+#include <gp_GTrsf.hxx>
 
 using namespace netgen;
 
@@ -264,7 +266,27 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
         }), py::arg("p")=gp_Pnt2d(0,0), py::arg("d")=gp_Dir2d(1,0))
     ;
 
-
+  py::class_<gp_GTrsf>(m, "gp_GTrsf")
+    .def(py::init([](const std::vector<double>& mat,
+                     const std::vector<double>& vec)
+         {
+           if(mat.size() != 9)
+             throw Exception("Need 9 matrix values for construction of gp_GTrsf");
+           if(vec.size() != 3)
+             throw Exception("Need 3 vector values for construction of gp_GTrsf");
+           gp_GTrsf trafo;
+           trafo.SetVectorialPart({ mat[0], mat[1], mat[2],
+               mat[3], mat[4], mat[5],
+               mat[6], mat[7], mat[8] });
+           trafo.SetTranslationPart( { vec[0], vec[1], vec[2] });
+           return trafo;
+         }), py::arg("mat"), py::arg("vec") = std::vector<double>{ 0., 0., 0. })
+    .def("__call__", [] (gp_GTrsf & trafo, const TopoDS_Shape & shape) {
+        BRepBuilderAPI_GTransform builder(shape, trafo, true);
+        PropagateProperties(builder, shape, occ2ng(trafo));
+        return builder.Shape();
+      })
+    ;
   
   py::class_<gp_Trsf>(m, "gp_Trsf")
     .def(py::init<>())    
