@@ -92,7 +92,7 @@ namespace netgen
 
 
     //  virtual void IdentifySpecialPoints (NgArray<class SpecialPoint> & points);
-    virtual int Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
+    virtual int Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 			      const TABLE<int> & specpoint2solid,
 			      const TABLE<int> & specpoint2surface) const override;
 
@@ -147,7 +147,7 @@ namespace netgen
 
 
     //  virtual void IdentifySpecialPoints (NgArray<class SpecialPoint> & points);
-    virtual int Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
+    virtual int Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 			      const TABLE<int> & specpoint2solid,
 			      const TABLE<int> & specpoint2surface) const;
     virtual int Identifiable (const Point<3> & p1, const Point<3> & sp2) const;
@@ -197,7 +197,7 @@ namespace netgen
     virtual void GetData (ostream & ost) const;
 
     //  virtual void IdentifySpecialPoints (NgArray<class SpecialPoint> & points);
-    virtual int Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
+    virtual int Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 			      const TABLE<int> & specpoint2solid,
 			      const TABLE<int> & specpoint2surface) const;
 
