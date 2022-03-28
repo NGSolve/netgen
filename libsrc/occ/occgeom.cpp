@@ -1955,13 +1955,6 @@ namespace netgen
       return false;
    }
 
-  Point<3> GetCenter(const TopoDS_Shape & shape)
-  {
-      GProp_GProps props;
-      BRepGProp::LinearProperties(shape, props);
-      return occ2ng( props.CentreOfMass() );
-  }
-
   bool IsMappedShape(const Transformation<3> & trafo, const TopoDS_Shape & me, const TopoDS_Shape & you)
   {
       if(me.ShapeType() != you.ShapeType()) return false;
@@ -1971,8 +1964,8 @@ namespace netgen
       BRepBndLib::Add(you, bbox);
       BoxTree<3> tree( occ2ng(bbox.CornerMin()), occ2ng(bbox.CornerMax()) );
 
-      Point<3> c_me = GetCenter(me);
-      Point<3> c_you = GetCenter(you);
+      Point<3> c_me = occ2ng(Center(me));
+      Point<3> c_you = occ2ng(Center(you));
       if(tree.GetTolerance() < Dist(trafo(c_me), c_you))
           return false;
 
@@ -2010,17 +2003,17 @@ namespace netgen
       return true;
   }
 
-  void Identify(const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<gp_Trsf> opt_trafo) 
+  void Identify(const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<std::variant<gp_Trsf, gp_GTrsf>> opt_trafo) 
   {
-    gp_Trsf trafo;
+    Transformation<3> trafo;
     if(opt_trafo)
     {
-        trafo = *opt_trafo;
+        trafo = occ2ng(*opt_trafo);
     }
     else
     {
-        auto v = GetCenter(you) - GetCenter(me);
-        trafo.SetTranslation(gp_Vec(v[0], v[1], v[2]));
+        auto v = occ2ng(Center(you)) - occ2ng(Center(me));
+        trafo = Transformation<3>(v);
     }
 
     ListOfShapes list_me, list_you;
@@ -2029,10 +2022,8 @@ namespace netgen
     Identify(list_me, list_you, name, type, trafo);
   }
 
-  void Identify(const ListOfShapes & me, const ListOfShapes & you, string name, Identifications::ID_TYPE type, gp_Trsf occ_trafo) 
+  void Identify(const ListOfShapes & me, const ListOfShapes & you, string name, Identifications::ID_TYPE type, Transformation<3> trafo) 
   {
-    Transformation<3> trafo = occ2ng(occ_trafo);
-
     ListOfShapes id_me;
     ListOfShapes id_you;
 

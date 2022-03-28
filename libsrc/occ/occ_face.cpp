@@ -12,7 +12,7 @@ namespace netgen
         : tface(dshape.TShape()),
           face(TopoDS::Face(dshape))
     {
-        BRepGProp::LinearProperties(face, props);
+        BRepGProp::SurfaceProperties (dshape, props);
         bbox = ::netgen::GetBoundingBox(face);
 
         surface = BRep_Tool::Surface(face);

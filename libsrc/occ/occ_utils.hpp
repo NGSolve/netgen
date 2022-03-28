@@ -1,6 +1,8 @@
 #ifndef FILE_OCC_UTILS_INCLUDED
 #define FILE_OCC_UTILS_INCLUDED
 
+#include <variant>
+
 #include <BRepGProp.hxx>
 #include <BRep_Tool.hxx>
 #include <GProp_GProps.hxx>
@@ -10,6 +12,7 @@
 #include <TopoDS.hxx>
 #include <TopoDS_Vertex.hxx>
 #include <gp_Trsf.hxx>
+#include <gp_GTrsf.hxx>
 
 #include "meshing.hpp"
 
@@ -49,6 +52,13 @@ namespace netgen
     }
 
     DLL_HEADER Transformation<3> occ2ng (const gp_Trsf & t);
+    DLL_HEADER Transformation<3> occ2ng (const gp_GTrsf & t);
+    inline Transformation<3> occ2ng (const variant<gp_Trsf, gp_GTrsf> & t)
+    {
+      if(auto t1 = get_if<gp_Trsf>(&t))
+        return occ2ng(*t1);
+      return occ2ng(get<gp_GTrsf>(t));
+    }
 
     inline gp_Pnt ng2occ (const Point<3> & p)
     {
