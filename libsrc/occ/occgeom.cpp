@@ -1316,6 +1316,14 @@ namespace netgen
    }
 
 
+  Array<GeometryVertex*> OCCGeometry :: GetFaceVertices(const GeometryFace& face) const
+  {
+    Array<GeometryVertex*> verts;
+    const auto& occface = dynamic_cast<const OCCFace&>(face);
+    for(auto& vert : GetVertices(occface.Shape()))
+      verts.Append(vertices[vertex_map.at(vert.TShape())].get());
+    return move(verts);
+  }
 
 
    void OCCGeometry :: BuildVisualizationMesh (double deflection)

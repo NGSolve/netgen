@@ -203,6 +203,8 @@ namespace netgen
     const GeometryEdge & GetEdge(int i) const { return *edges[i]; }
     const GeometryVertex & GetVertex(int i) const { return *vertices[i]; }
 
+    virtual Array<GeometryVertex*> GetFaceVertices(const GeometryFace& face) const { return Array<GeometryVertex*>{}; }
+
     void Clear();
 
     virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
