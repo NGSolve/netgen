@@ -704,6 +704,16 @@ namespace netgen
               }
           }
       }
+    for(const auto& vert : GetFaceVertices(face))
+      {
+        PointIndex pi = vert->nr + 1;
+        if(glob2loc[pi] == 0)
+          {
+            meshing.AddPoint(mesh[pi], pi);
+            cntp++;
+            glob2loc[pi] = cntp;
+          }
+      }
     for(auto & seg : segments)
       {
         PointGeomInfo gi0, gi1;

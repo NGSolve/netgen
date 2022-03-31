@@ -4,6 +4,7 @@
 #include <meshing.hpp>
 
 #include "occgeom.hpp"
+#include "occ_face.hpp"
 #include "occmeshsurf.hpp"
 
 #include <BRepAdaptor_Curve.hxx>
@@ -250,6 +251,7 @@ namespace netgen
 
     FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
     auto face = TopoDS::Face(geom.fmap(k));
+    const auto& occface = dynamic_cast<const OCCFace&>(geom.GetFace(k-1));
     auto fshape = face.TShape();
 
     int oldnf = mesh.GetNSE();
@@ -298,6 +300,20 @@ namespace netgen
                     glob2loc[pi] = cntp;
                   }
               }
+        for(const auto& vert : geom.GetFaceVertices(geom.GetFace(k-1)))
+          {
+            PointIndex pi = vert->nr + 1;
+            if(glob2loc[pi] == 0)
+              {
+                auto gi = occface.Project(mesh[pi]);
+                MultiPointGeomInfo mgi;
+                mgi.AddPointGeomInfo(gi);
+                meshing.AddPoint(mesh[pi], pi, &mgi);
+                cntp++;
+                glob2loc[pi] = cntp;
+              }
+          }
+
 
         /*
         for (int i = 1; i <= mesh.GetNSeg(); i++)
@@ -323,9 +339,11 @@ namespace netgen
     else
       {
         static Timer t("MeshSurface: Find edges and points - Parameter"); RegionTimer r(t);
-        
+
         Array<PointGeomInfo> gis(2*segments.Size());
         gis.SetSize (0);
+        glob2loc = 0;
+        int cntpt = 0;
 
         Box<2> uv_box(Box<2>::EMPTY_BOX);
         for(auto & seg : segments)
@@ -357,7 +375,7 @@ namespace netgen
                 {
                     PointIndex pi = seg[j];
                     meshing.AddPoint (mesh.Point(pi), pi);
-
+                    glob2loc[pi] = ++cntpt;
                     gis.Append (gi[j]);
                     locpnum[j] = gis.Size();
                     uv_tree.Insert(uv, locpnum[j]);
@@ -366,6 +384,21 @@ namespace netgen
 
             meshing.AddBoundaryElement (locpnum[0], locpnum[1], gi[0], gi[1]);
         }
+        for(const auto& vert : geom.GetFaceVertices(geom.GetFace(k-1)))
+          {
+            PointIndex pi = vert->nr + 1;
+            if(glob2loc[pi] == 0)
+              {
+                auto gi = occface.Project(mesh[pi]);
+                MultiPointGeomInfo mgi;
+                mgi.AddPointGeomInfo(gi);
+                meshing.AddPoint(mesh[pi], pi, &mgi);
+                gis.Append(gi);
+                Point<2> uv = { gi.u, gi.v };
+                uv_tree.Insert(uv, gis.Size());
+                glob2loc[pi] = ++cntpt;
+              }
+          }
       }
 
 

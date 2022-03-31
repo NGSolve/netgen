@@ -247,6 +247,8 @@ namespace netgen
 
     void MakeSolid();
 
+    Array<GeometryVertex*> GetFaceVertices(const GeometryFace& face) const override;
+
     void HealGeometry();
     void GlueGeometry();
 

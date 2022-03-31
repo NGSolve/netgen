@@ -25,6 +25,7 @@ namespace netgen
         public:
         OCCFace(TopoDS_Shape dshape);
 
+        const TopoDS_Face Shape() const { return face; }
         T_Shape TShape() { return tface; }
 
         size_t GetHash() const override;
