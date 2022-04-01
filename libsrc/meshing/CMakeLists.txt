@@ -28,7 +28,7 @@ add_library(mesh ${NG_LIB_TYPE}
         topology.cpp validate.cpp bcfunctions.cpp   
         parallelmesh.cpp  paralleltop.cpp  basegeom.cpp
         python_mesh.cpp surfacegeom.cpp
-        ../../ng/onetcl.cpp
+        ../../ng/onetcl.cpp debugging.cpp
         ${rules_sources}
         ${mesh_object_libs}
         )
