@@ -29,7 +29,10 @@ git_version = check_output(['git', 'describe', '--tags']).decode('utf-8').strip(
 version = git_version[1:].split('-')
 if len(version)>2:
     version = version[:2]
-version = '.dev'.join(version)
+if len(version)>1:
+    version = '.post'.join(version) + '.dev'
+else:
+    version = version[0]
 
 py_install_dir = get_python_lib(1,0,'').replace('\\','/')
 
