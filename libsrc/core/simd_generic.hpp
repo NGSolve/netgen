@@ -571,31 +571,31 @@ namespace ngcore
   using std::sqrt;
   template <int N>
   NETGEN_INLINE ngcore::SIMD<double,N> sqrt (ngcore::SIMD<double,N> a) {
-    return ngcore::SIMD<double>([a](int i)->double { return sqrt(a[i]); } );
+    return ngcore::SIMD<double,N>([a](int i)->double { return sqrt(a[i]); } );
   }
 
   using std::fabs;
   template <int N>
   NETGEN_INLINE ngcore::SIMD<double,N> fabs (ngcore::SIMD<double,N> a) {
-    return ngcore::SIMD<double>([a](int i)->double { return fabs(a[i]); } );
+    return ngcore::SIMD<double,N>([a](int i)->double { return fabs(a[i]); } );
   }
 
   using std::floor;
   template <int N>
   NETGEN_INLINE ngcore::SIMD<double,N> floor (ngcore::SIMD<double,N> a) {
-    return ngcore::SIMD<double>([a](int i)->double { return floor(a[i]); } );
+    return ngcore::SIMD<double,N>([a](int i)->double { return floor(a[i]); } );
   }
 
   using std::ceil;
   template <int N>
   NETGEN_INLINE ngcore::SIMD<double,N> ceil (ngcore::SIMD<double,N> a) {
-    return ngcore::SIMD<double>([a](int i)->double { return ceil(a[i]); } );
+    return ngcore::SIMD<double,N>([a](int i)->double { return ceil(a[i]); } );
   }
 
   using std::exp;
   template <int N>
   NETGEN_INLINE ngcore::SIMD<double,N> exp (ngcore::SIMD<double,N> a) {
-    return ngcore::SIMD<double>([a](int i)->double { return exp(a[i]); } );
+    return ngcore::SIMD<double,N>([a](int i)->double { return exp(a[i]); } );
   }
 
   using std::log;
