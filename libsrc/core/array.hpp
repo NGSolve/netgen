@@ -1353,6 +1353,12 @@ namespace ngcore
     return array;
   }
 
+  template <typename T, typename T2>
+  inline Array<T> operator+= (Array<T> && array, const BaseArrayObject<T2> & a2)
+  {
+    array += a2;
+    return std::move(array);
+  }
 
 
   /// bubble sort array
