@@ -84,7 +84,7 @@ void ExtractEdgeData( const TopoDS_Edge & edge, int index, std::vector<double> *
 
     if (poly.IsNull())
       {
-        cout << "no edge mesh, do my own sampling" << endl;
+        cout << IM(2) << "no edge mesh, do my own sampling" << endl;
 
         double s0, s1;
         Handle(Geom_Curve) c = BRep_Tool::Curve(edge, s0, s1);
