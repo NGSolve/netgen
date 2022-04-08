@@ -263,8 +263,12 @@ namespace netgen
           }
     };
 
-    // first step: intersect with other surface elements
+    // first step: intersect with other surface elements that are boundary of domain the layer is grown into
     // second (and subsequent) steps: intersect with other boundary layers, allow restriction by 20% in each step
+    auto changed_domains = domains;
+      if(!params.outside)
+          changed_domains.Invert();
+
     bool limit_reached = true;
     double lam_lower_limit = 1.0;
     int step = 0;
@@ -287,6 +291,10 @@ namespace netgen
         {
             const auto & sel = mesh[sei];
             Box<3> box(Box<3>::EMPTY_BOX);
+            const auto& fd = mesh.GetFaceDescriptor(sel.GetIndex());
+            if(!changed_domains.Test(fd.DomainIn()) &&
+               !changed_domains.Test(fd.DomainOut()))
+              continue;
             for(auto pi : sel.PNums())
                 box.Add(mesh[pi]);
             // also add moved points to bounding box
