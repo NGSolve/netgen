@@ -818,11 +818,22 @@ namespace netgen
                     point_found = true;
                     break;
                   }
+                else if(seg[1] == points.Last() &&
+                        points[points.Size()-2] != seg[0])
+                  {
+                    edge_len += (mesh[points.Last()] - mesh[seg[0]]).Length();
+                    points.Append(seg[0]);
+                    point_found = true;
+                    break;
+                  }
               }
             if(is_end_point(points.Last()))
               break;
             if(!point_found)
-              throw Exception(string("Could not find connected list of line segments for edge ") + edgenr);
+              {
+                cout << "points = " << points << endl;
+                throw Exception(string("Could not find connected list of line segments for edge ") + edgenr);
+              }
           }
 
         // tangential part of growth vectors
