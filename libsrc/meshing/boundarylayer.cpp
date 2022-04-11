@@ -740,6 +740,8 @@ namespace netgen
                   else
                     continue;
 
+                  if(!params.project_boundaries.Contains(sel.GetIndex()))
+                    continue;
                   auto& g = growthvectors[pi];
                   auto ng = n * g;
                   auto gg = g * g;
