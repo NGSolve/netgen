@@ -9,6 +9,7 @@
 #include <csg.hpp>
 #include <stlgeom.hpp>
 #include <meshing.hpp>
+#include <algorithm>
 
 #include "writeuser.hpp"
 
@@ -80,6 +81,10 @@ namespace netgen
       {  
         char reco[100];
         // int invert;
+	// read files that are stored with D instead of E as exponent prefix
+	// such files are for example exported by GMSH
+	bool Dnotation;
+	bool DnotationSet = false;
       
         ifstream in(filename);
 
@@ -105,20 +110,47 @@ namespace netgen
                 while (1)
                   {
                     int pi, hi;
-                    Point<3> p;
+		    Point<3> p;
+		    string p1tmp, p2tmp, p3tmp;
 
                     in >> pi;
                     if (pi == -1)
                       break;
 		    
                     in >> hi >> hi >> hi;
-                    in >> p(0) >> p(1) >> p(2);
-
-                    mesh.AddPoint (p);
+		    if (DnotationSet == false) {
+			in >> p1tmp >> p2tmp >> p3tmp;
+			if (p1tmp.find("D") != std::string::npos){
+			    DnotationSet = true;
+			    Dnotation = true;
+			    cout << "Attention: in your UNV file, D is used as an exponent prefix instead of E" << endl;
+			    std::replace( p1tmp.begin(), p1tmp.end(), 'D', 'E');
+			    std::replace( p2tmp.begin(), p2tmp.end(), 'D', 'E');
+			    std::replace( p3tmp.begin(), p3tmp.end(), 'D', 'E');
+			}
+			p(0) = std::stod(p1tmp);
+			p(1) = std::stod(p2tmp);
+			p(2) = std::stod(p3tmp);
+		    }
+		    else if (Dnotation == true) {
+		        in >> p1tmp >> p2tmp >> p3tmp;
+			std::replace( p1tmp.begin(), p1tmp.end(), 'D', 'E');
+			std::replace( p2tmp.begin(), p2tmp.end(), 'D', 'E');
+			std::replace( p3tmp.begin(), p3tmp.end(), 'D', 'E');
+			p(0) = std::stod(p1tmp);
+			p(1) = std::stod(p2tmp);
+			p(2) = std::stod(p3tmp);
+		    }
+		    else{
+			in >> p(0) >> p(1) >> p(2);
+		    }
+		    mesh.AddPoint(p);
                   }
 		cout << "read " << mesh.GetNP() << " points" << endl;
                 Point3d pmin, pmax;
+		cout << "Get Box" << endl;
                 mesh.GetBox (pmin, pmax);
+		cout << "Pmin: " << pmin << " Pmax: " << pmax << endl;
                 if(fabs(pmin.Z() - pmax.Z()) < 1e-10 * Dist(pmin, pmax))
                 {
                        cout << "Set Dimension to 2." << endl;
@@ -382,11 +414,17 @@ namespace netgen
 	}
       
 
+	cout << "Finalize mesh" << endl;
         Point3d pmin, pmax;
+	cout << "ComputeNVertices" << endl;
         mesh.ComputeNVertices();
+	cout << "RebuildSurfaceElementLists" << endl;
         mesh.RebuildSurfaceElementLists();
+	cout << "GetBox" << endl;
         mesh.GetBox (pmin, pmax);
+	cout << "UpdateTopology" << endl;
         mesh.UpdateTopology();
+	cout << "increment bccounter" << endl;
         if(dim == 3) bccounter++;
         cout << "bounding-box = " << pmin << "-" << pmax << endl;
 	cout << "Created " << bccounter << " boundaries." << endl;
