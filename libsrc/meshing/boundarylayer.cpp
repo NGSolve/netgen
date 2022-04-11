@@ -696,8 +696,6 @@ namespace netgen
                 else if(const auto& fd = mesh.GetFaceDescriptor(segj.si); !domains.Test(fd.DomainIn()) && !domains.Test(fd.DomainOut()))
                   {
                     type = 3;
-                    if(fd.DomainIn() == 0 || fd.DomainOut() == 0)
-                        is_boundary_projected.SetBit(segj.si);
                     is_boundary_moved.SetBit(segj.si);
                   }
                 else
