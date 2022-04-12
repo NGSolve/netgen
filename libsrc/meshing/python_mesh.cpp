@@ -855,23 +855,14 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          py::return_value_policy::reference)
 
     .def("Coordinates", [](Mesh & self) {
-        size_t shape[2] = { self.Points().Size(), size_t(self.GetDimension())  };
-        size_t stride[2] = { sizeof(self.Points()[0]), sizeof(double) };
-
-        return py::memoryview::from_buffer
-          (&self.Points()[PointIndex::BASE](0), sizeof(double),
-           py::format_descriptor<double>::value,
-           { self.Points().Size(), size_t(self.GetDimension())  },
-           { sizeof(self.Points()[1]), sizeof(double) } );
-
-        /*
-          // how to avoid copying array ? 
         return py::array
           (
-           shape, stride,
-           &self.Points()[PointIndex::BASE](0)  // , borrowed_t{}  // how to use borrow ? 
+           py::memoryview::from_buffer
+           (&self.Points()[PointIndex::BASE](0), sizeof(double),
+            py::format_descriptor<double>::value,
+            { self.Points().Size(), size_t(self.GetDimension())  }, 
+            { sizeof(self.Points()[PointIndex::BASE]), sizeof(double) } )
            );
-        */
       })
     
     .def("FaceDescriptor", static_cast<FaceDescriptor&(Mesh::*)(int)> (&Mesh::GetFaceDescriptor),
