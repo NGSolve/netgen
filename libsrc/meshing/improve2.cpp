@@ -145,7 +145,7 @@ namespace netgen
           }
         else
           {
-            double loch = mesh.GetH(mesh[pi1]);
+            double loch = 0.25*(mesh.GetH(pi1) + mesh.GetH(pi2) + mesh.GetH(pi3) + mesh.GetH(pi4));
             should =
                 CalcTriangleBadness (mesh[pi4], mesh[pi3], mesh[pi1], metricweight, loch) +
                 CalcTriangleBadness (mesh[pi3], mesh[pi4], mesh[pi2], metricweight, loch) <
@@ -383,21 +383,10 @@ namespace netgen
             << "pi1 = " << pi1 << " pi2 = " << pi2 << endl;
       }
 
-    /*
-    // save version:
-    if (fixed.Get(pi1) || fixed.Get(pi2))
-    return 0.0;
-    if (pi2 < pi1) swap (pi1, pi2);
-    */
-
-    // more general
-    if (fixed[pi2])
-        Swap (pi1, pi2);
-
     if (fixed[pi2])
         return 0.0;
 
-    double loch = mesh.GetH (mesh[pi1]);
+    double loch = 0.5*(mesh.GetH(pi1) + mesh.GetH(pi2));
     int faceindex = -1;
 
     for (SurfaceElementIndex sei2 : elementsonnode[pi1])
@@ -655,6 +644,9 @@ namespace netgen
         double d_badness = CombineImproveEdge(mesh, elementsonnode, normals, fixed, pi1, pi2, metricweight, true);
         if(d_badness < 0.0)
             candidate_edges[improvement_counter++] = make_tuple(d_badness, i);
+        d_badness = CombineImproveEdge(mesh, elementsonnode, normals, fixed, pi2, pi1, metricweight, true);
+        if(d_badness < 0.0)
+            candidate_edges[improvement_counter++] = make_tuple(d_badness, -i);
       }, TasksPerThread(4));
 
     auto edges_with_improvement = candidate_edges.Part(0, improvement_counter.load());
@@ -662,7 +654,9 @@ namespace netgen
 
     for(auto [d_badness, ei] : edges_with_improvement)
       {
-        auto [pi1, pi2] = edges[ei];
+        auto [pi1, pi2] = edges[ei < 0 ? -ei : ei];
+        if(ei<0)
+            Swap(pi1,pi2);
         CombineImproveEdge(mesh, elementsonnode, normals, fixed, pi1, pi2, metricweight, false);
       }
 

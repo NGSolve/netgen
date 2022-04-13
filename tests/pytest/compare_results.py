@@ -66,19 +66,27 @@ data2 = readData(s2, filenames)
 
 assert(len(data) == len(data2))
 
+w = 90
+GREEN = '\033[92m'
+RED = '\033[91m'
+RESET = '\033[0m'
+
 for bad1,bad2, f1, f2 in zip(data['badness'], data2['badness'], data['file'], data2['file']):
     assert f1==f2
-    if bad2>0 and bad2>1.1*bad1:
-        print(f"file {f1} got worse:  {bad1} -> {bad2}")
-    if bad2>0 and bad2<0.9*bad1:
-        print(f"file {f1} got better: {bad1} -> {bad2}")
+
+    diff = f"{100*(bad2-bad1)/bad1:+.2f}%"
+    if bad2>0 and bad2>1.2*bad1:
+        print(f"{RED}badness {f1} got worse:  {bad1} -> {bad2}".ljust(w) + diff + RESET)
+    if bad2>0 and bad2<0.8*bad1:
+        print(f"{GREEN}badness {f1} got better: {bad1} -> {bad2}".ljust(w) + diff + RESET)
 
 for bad1,bad2, f1, f2 in zip(data['#trigs'], data2['#trigs'], data['file'], data2['file']):
     assert f1==f2
-    if bad2>0 and bad2>1.1*bad1:
-        print(f"file {f1} got worse:  {bad1} -> {bad2}")
-    if bad2>0 and bad2<0.9*bad1:
-        print(f"file {f1} got better: {bad1} -> {bad2}")
+    diff = f"{100*(bad2-bad1)/bad1:+.2f}%"
+    if bad2>0 and bad2>1.2*bad1:
+        print(f"{RED}ntrigs {f1} got worse:  {bad1} -> {bad2}".ljust(w) + diff + RESET)
+    if bad2>0 and bad2<0.8*bad1:
+        print(f"{GREEN}ntrigs {f1} got better: {bad1} -> {bad2}".ljust(w) + diff + RESET)
 
 n = len(data)+1
 fig,ax = plt.subplots(figsize=(10,7))
