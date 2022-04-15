@@ -3976,6 +3976,7 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
   static Timer t("MeshOptimize3d::SwapImprove2"); RegionTimer reg(t);
 
   // return SwapImprove2Sequential(mesh, goal);
+  if (goal == OPT_CONFORM) return;
 
   mesh.BuildBoundaryEdges(false);
 
@@ -3985,8 +3986,6 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
   int np = mesh.GetNP();
   int ne = mesh.GetNE();
   int nse = mesh.GetNSE();
-
-  if (goal == OPT_CONFORM) return;
 
   // contains at least all elements at node
   TABLE<SurfaceElementIndex, PointIndex::BASE> belementsonnode(np);
