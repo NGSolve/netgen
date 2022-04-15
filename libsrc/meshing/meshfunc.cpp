@@ -469,9 +469,7 @@ namespace netgen
 
             mesh.FindOpenElements(domain);
             PrintMessage (3, "Call remove problem");
-            // mesh.Save("before_remove.vol");
             RemoveProblem (mesh, domain);
-            // mesh.Save("after_remove.vol");
             mesh.FindOpenElements(domain);
          }
          else
@@ -582,7 +580,7 @@ namespace netgen
            FillCloseSurface( md[i] );
          CloseOpenQuads( md[i] );
          MeshDomain(md[i]);
-       });
+       }, md.Size());
 
      MergeMeshes(mesh3d, md);
 
