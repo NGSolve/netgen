@@ -86,6 +86,9 @@ NETGEN_INLINE SIMD<int64_t,2> operator- (SIMD<int64_t,2> a, SIMD<int64_t,2> b) {
     SIMD () {}
     SIMD (const SIMD &) = default;
     SIMD (double v0, double v1) { data = _mm_set_pd(v1,v0); }
+    SIMD (SIMD<double,1> v0, SIMD<double,1> v1)
+        : data{_mm_set_pd(v0.Data(), v1.Data())}
+    { }
     SIMD (std::array<double, 2> arr)
         : data{_mm_set_pd(arr[1], arr[0])}
     {}
@@ -136,6 +139,13 @@ NETGEN_INLINE SIMD<int64_t,2> operator- (SIMD<int64_t,2> a, SIMD<int64_t,2> b) {
     NETGEN_INLINE double operator[] (int i) const { return ((double*)(&data))[i]; }
     NETGEN_INLINE __m128d Data() const { return data; }
     NETGEN_INLINE __m128d & Data() { return data; }
+
+    template <int I>
+    double Get()
+    {
+      static_assert(I>=0 && I<2, "Index out of range");
+      return (*this)[I];
+    }
 
     operator std::tuple<double&,double&> ()
     {
