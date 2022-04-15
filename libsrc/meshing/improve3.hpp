@@ -21,10 +21,8 @@ public:
             FlatArray<bool, PointIndex> is_point_removed, bool check_only=false);
 
   void CombineImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
-  void CombineImproveSequential (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
 
   void SplitImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
-  void SplitImproveSequential (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
   double SplitImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, Table<ElementIndex,PointIndex> & elementsonnode, Array<double> &elerrs, NgArray<INDEX_3> &locfaces, double badmax, PointIndex pi1, PointIndex pi2, PointIndex ptmp, bool check_only=false);
 
   void SplitImprove2 (Mesh & mesh);
@@ -34,12 +32,9 @@ public:
   double SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, const NgBitArray * working_elements, Table<ElementIndex,PointIndex> & elementsonnode, INDEX_3_HASHTABLE<int> & faces, PointIndex pi1, PointIndex pi2, bool check_only=false);
   void SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
 		    const NgBitArray * working_elements = NULL);
-  void SwapImproveSequential (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
-		    const NgBitArray * working_elements = NULL);
   void SwapImproveSurface (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
 			   const NgBitArray * working_elements = NULL,
 			   const NgArray< NgArray<int,PointIndex::BASE>* > * idmaps = NULL);
-  void SwapImprove2Sequential (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
   void SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
   double SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementIndex eli1, int face, Table<ElementIndex, PointIndex> & elementsonnode, TABLE<SurfaceElementIndex, PointIndex::BASE> & belementsonnode, bool check_only=false );
 
