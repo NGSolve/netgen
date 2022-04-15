@@ -28,6 +28,28 @@ namespace ngcore
 #endif
   }
 
+  constexpr bool IsNativeSIMDSize(int n) {
+    if(n==1) return true;
+#if defined NETGEN_ARCH_AMD64 || defined  __SSE__ || defined __aarch64__
+    if(n==2) return true;
+#endif
+#if defined __AVX__
+    if(n==4) return true;
+#endif
+#if defined __AVX512F__
+    if(n==8) return true;
+#endif
+    return false;
+  }
+
+  // split n = k+l such that k is the largest natively supported simd size < n
+  constexpr int GetLargestNativeSIMDPart(int n) {
+      int k = n-1;
+      while(!IsNativeSIMDSize(k))
+          k--;
+      return k;
+  }
+
 
   template <typename T, int N=GetDefaultSIMDSize()> class SIMD;
 
@@ -67,9 +89,9 @@ namespace ngcore
 
 
   template <int N>
-  class alignas(GetDefaultSIMDSize()*sizeof(int64_t)) SIMD<mask64,N>
+  class alignas(GetLargestNativeSIMDPart(N)*sizeof(int64_t)) SIMD<mask64,N>
   {
-    static constexpr int N1 = std::min(GetDefaultSIMDSize(), N/2);
+    static constexpr int N1 = GetLargestNativeSIMDPart(N);
     static constexpr int N2 = N-N1;
 
     SIMD<mask64,N1> lo;
@@ -123,9 +145,9 @@ namespace ngcore
   };
 
   template<int N>
-  class alignas(GetDefaultSIMDSize()*sizeof(int64_t)) SIMD<int64_t,N>
+  class alignas(GetLargestNativeSIMDPart(N)*sizeof(int64_t)) SIMD<int64_t,N>
   {
-    static constexpr int N1 = std::min(GetDefaultSIMDSize(), N/2);
+    static constexpr int N1 = GetLargestNativeSIMDPart(N);
     static constexpr int N2 = N-N1;
 
     SIMD<int64_t,N1> lo;
@@ -240,9 +262,9 @@ namespace ngcore
 
 
   template<int N>
-  class alignas(GetDefaultSIMDSize()*sizeof(double)) SIMD<double, N>
+  class alignas(GetLargestNativeSIMDPart(N)*sizeof(double)) SIMD<double, N>
   {
-    static constexpr int N1 = std::min(GetDefaultSIMDSize(), N/2);
+    static constexpr int N1 = GetLargestNativeSIMDPart(N);
     static constexpr int N2 = N-N1;
 
     SIMD<double, N1> lo;
@@ -543,7 +565,7 @@ namespace ngcore
 
   
   template <int i, typename T, int N>
-  T get(SIMD<T,N> a) { return a[i]; }
+  T get(SIMD<T,N> a) { return a.template Get<i>(); }
 
   template <int NUM, typename FUNC>
   NETGEN_INLINE void Iterate2 (FUNC f)
