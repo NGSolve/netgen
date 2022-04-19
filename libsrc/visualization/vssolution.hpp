@@ -1,6 +1,7 @@
 #ifndef FILE_VSSOLUTION
 #define FILE_VSSOLUTION
 
+#include "vsfieldlines.hpp"
 
 typedef void * ClientData;
 struct Tcl_Interp;
@@ -12,8 +13,6 @@ namespace netgen
 DLL_HEADER extern void ImportSolution (const char * filename);
 
 
-class FieldLineCalc;
-  
   extern int Ng_Vis_Set (ClientData clientData,
                          Tcl_Interp * interp,
                          int argc, const char *argv[]);
@@ -183,10 +182,10 @@ public:
   bool imag_part;
 
 private:
-  void BuildFieldLinesFromFile(NgArray<Point3d> & startpoints);
-  void BuildFieldLinesFromFace(NgArray<Point3d> & startpoints);
-  void BuildFieldLinesFromBox(NgArray<Point3d> & startpoints);
-  void BuildFieldLinesFromLine(NgArray<Point3d> & startpoints);
+  void BuildFieldLinesFromFile(Array<Point<3>> & startpoints);
+  void BuildFieldLinesFromFace(Array<Point<3>> & startpoints);
+  void BuildFieldLinesFromBox(Array<Point<3>> & startpoints);
+  void BuildFieldLinesFromLine(Array<Point<3>> & startpoints);
   // weak_ptr<Mesh> wp_mesh;
 public:
   VisualSceneSolution ();
@@ -359,95 +358,6 @@ public:
 
 
 
-class RKStepper
-{
-private:
-  NgArray<double> c,b;
-  TABLE<double> *a;
-  int steps;
-  int order;
-  
-  double tolerance;
-  
-  NgArray<Vec3d> K;
-  
-  int stepcount;
-  
-  double h;
-  double startt;
-  double startt_bak;
-  Point3d startval;
-  Point3d startval_bak;
-  
-  bool adaptive;
-  int adrun;
-  Point3d valh;
-  
-  int notrestarted;
-
-public:
-  
-  ~RKStepper();
-    
-  RKStepper(int type = 0);
-
-  void SetTolerance(const double tol){tolerance = tol;}
-        
-  void StartNextValCalc(const Point3d & astartval, const double astartt, const double ah, const bool aadaptive = false);
-
-  bool GetNextData(Point3d & val, double & t, double & ah);
-
-  bool FeedNextF(const Vec3d & f);
-};
-
-
-
-
-
-class FieldLineCalc
-{
-private:
-  const Mesh & mesh;
-  
-  VisualSceneSolution & vss;
-  
-  const VisualSceneSolution::SolData * vsol;
-
-  RKStepper stepper;
-
-  double maxlength;
-
-  int maxpoints;
-  
-  int direction;
-  
-  Point3d pmin, pmax;
-  double rad;
-  double phaser, phasei;
-  
-  double critical_value;
-
-  bool randomized;
-
-  double thickness;
-
-public:
-  FieldLineCalc(const Mesh & amesh, VisualSceneSolution & avss, const VisualSceneSolution::SolData * solution, 
-		const double rel_length, const int amaxpoints = -1, 
-		const double rel_thickness = -1, const double rel_tolerance = -1, const int rk_type = 0, const int adirection = 0);
-
-  void SetPhase(const double real, const double imag) { phaser = real; phasei = imag; }
-  
-  void SetCriticalValue(const double val) { critical_value = val; }
-
-  void Randomized(void) { randomized = true; }
-  void NotRandomized(void) { randomized = false; }
-
-  void Calc(const Point3d & startpoint, NgArray<Point3d> & points, NgArray<double> & vals, NgArray<bool> & drawelems, NgArray<int> & dirstart);
-  
-  void GenerateFieldLines(NgArray<Point3d> & potential_startpoints, const int numlines, const int gllist,
-			  const double minval, const double maxval, const int logscale, double phaser, double phasei);
-};
 
 
 

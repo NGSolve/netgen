@@ -14,6 +14,6 @@ install( TARGETS visual ${NG_INSTALL_DIR})
 
 install(FILES
   meshdoc.hpp mvdraw.hpp
-  vispar.hpp visual.hpp vssolution.hpp
+  vispar.hpp visual.hpp vssolution.hpp vsfieldlines.hpp
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/visualization COMPONENT netgen_devel
 )

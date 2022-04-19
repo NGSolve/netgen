@@ -451,6 +451,7 @@ namespace netgen
             const char * optstr = "mcmstmcmstmcmstmcm";
             for (size_t j = 1; j <= strlen(optstr); j++)
             {
+               mesh.FindOpenElements();
                mesh.CalcSurfacesOfNode();
                mesh.FreeOpenElementsEnvironment(2);
                mesh.CalcSurfacesOfNode();
@@ -466,12 +467,10 @@ namespace netgen
 
             }
 
-            mesh.FindOpenElements();	      
+            mesh.FindOpenElements(domain);
             PrintMessage (3, "Call remove problem");
-            // mesh.Save("before_remove.vol");
             RemoveProblem (mesh, domain);
-            // mesh.Save("after_remove.vol");
-            mesh.FindOpenElements();
+            mesh.FindOpenElements(domain);
          }
          else
            {
@@ -581,7 +580,7 @@ namespace netgen
            FillCloseSurface( md[i] );
          CloseOpenQuads( md[i] );
          MeshDomain(md[i]);
-       });
+       }, md.Size());
 
      MergeMeshes(mesh3d, md);
 

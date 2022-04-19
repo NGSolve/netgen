@@ -71,7 +71,7 @@ namespace netgen
     K.SetSize(steps);
   }
 
-  void RKStepper :: StartNextValCalc(const Point3d & astartval, const double astartt, const double ah, const bool aadaptive)
+  void RKStepper :: StartNextValCalc(const Point<3> & astartval, const double astartt, const double ah, const bool aadaptive)
   {
     //cout << "Starting RK-Step with h=" << ah << endl;
 
@@ -83,12 +83,9 @@ namespace netgen
     adrun = 0;
   }
 
-  bool RKStepper :: GetNextData(Point3d & val, double & t, double & ah)
+  bool RKStepper :: GetNextData(Point<3> & val, double & t, double & ah)
   {
-    bool finished(false);
-    
-    
-    //cout << "stepcount " << stepcount << endl;
+    bool finished = false;
     
     if(stepcount <= steps)
       {
@@ -125,9 +122,9 @@ namespace netgen
 	      }
 	    else if (adrun == 2)
 	      {
-		Point3d valh2 = val;
+		Point<3> valh2 = val;
 		val = valh2 + 1./(pow(2.,order)-1.) * (valh2 - valh);
-		Vec3d errvec = val - valh;
+		auto errvec = val - valh;
 		
 		double err = errvec.Length();
 		
@@ -172,7 +169,7 @@ namespace netgen
   }
 
 
-  bool RKStepper :: FeedNextF(const Vec3d & f)
+  bool RKStepper :: FeedNextF(const Vec<3> & f)
   {
     K[stepcount] = f;
     stepcount++;
@@ -181,19 +178,17 @@ namespace netgen
   
 
 
-  void FieldLineCalc :: GenerateFieldLines(NgArray<Point3d> & potential_startpoints, const int numlines, const int gllist,
-					   const double minval, const double maxval, const int logscale, double phaser, double phasei)
+  void FieldLineCalc :: GenerateFieldLines(Array<Point<3>> & potential_startpoints, const int numlines)
   {
 
     
-    NgArray<Point3d> points;
-    NgArray<double> values;
-    NgArray<bool> drawelems;
-    NgArray<int> dirstart;
-
-
-    if(vsol -> iscomplex)
-      SetPhase(phaser,phasei);
+    Array<Point<3>> line_points;
+    Array<double> line_values;
+    Array<bool> drawelems;
+    Array<int> dirstart;
+    pstart.SetSize0();
+    pend.SetSize0();
+    values.SetSize0();
 
     double crit = 1.0;
 
@@ -201,8 +196,7 @@ namespace netgen
       {
 	double sum = 0;
 	double lami[3];
-	double values[6];
-	Vec3d v;
+        Vec<3> v;
 	
 	for(int i=0; i<potential_startpoints.Size(); i++)
 	  {
@@ -212,15 +206,8 @@ namespace netgen
 
 	    mesh.SetPointSearchStartElement(elnr);
 	    
-	    if (mesh.GetDimension()==3)
-              vss.GetValues ( vsol, elnr, lami[0], lami[1], lami[2], values);
-            else
-              vss.GetSurfValues ( vsol, elnr, -1, lami[0], lami[1], values);
-              
-	    
-	    VisualSceneSolution::RealVec3d ( values, v, vsol->iscomplex, phaser, phasei);
-	    
-	    sum += v.Length();
+            func(elnr, lami, v);
+            sum += v.Length();
 	  }
 
 	crit = sum/double(numlines);
@@ -232,8 +219,6 @@ namespace netgen
     cout << endl;
 
 
-
-
     for(int i=0; i<potential_startpoints.Size(); i++)
       {
 	cout << "\rFieldline Calculation " << int(100.*i/potential_startpoints.Size()) << "%"; cout.flush();
@@ -243,7 +228,7 @@ namespace netgen
 
 	if(calculated >= numlines) break;
 
-	Calc(potential_startpoints[i],points,values,drawelems,dirstart);
+	Calc(potential_startpoints[i],line_points,line_values,drawelems,dirstart);
 
 	bool usable = false;
 
@@ -253,16 +238,9 @@ namespace netgen
 	      if(!drawelems[k] || !drawelems[k+1]) continue;
 	     
 	      usable = true;
- 
-	      // vss.SetOpenGlColor  (0.5*(values[k]+values[k+1]), minval, maxval, logscale);
-              
-              /*
-              if (vss.usetexture == 1)
-                glTexCoord1f ( 0.5*(values[k]+values[k+1]) );
-              else
-              */
-              vss.SetOpenGlColor  (0.5*(values[k]+values[k+1]) );
-	      vss.DrawCylinder (points[k], points[k+1], thickness);
+              pstart.Append(line_points[k]);
+              pend.Append(line_points[k+1]);
+              values.Append( 0.5*(line_values[k]+line_values[k+1]) );
 	    }
 
 	if(usable) calculated++;
@@ -273,10 +251,10 @@ namespace netgen
 
 
 
-  FieldLineCalc :: FieldLineCalc(const Mesh & amesh, VisualSceneSolution & avss, const VisualSceneSolution::SolData * solution, 
+  FieldLineCalc :: FieldLineCalc(const Mesh & amesh, const VectorFunction & afunc,
 				 const double rel_length, const int amaxpoints, 
 				 const double rel_thickness, const double rel_tolerance, const int rk_type, const int adirection) :
-    mesh(amesh), vss(avss), vsol(solution), stepper(rk_type)
+    mesh(amesh), func(afunc), stepper(rk_type)
   {
     mesh.GetBox (pmin, pmax);
     rad = 0.5 * Dist (pmin, pmax);
@@ -305,9 +283,6 @@ namespace netgen
       }
     
 
-    phaser = 1;
-    phasei = 0;
-    
     critical_value = -1;
 
     randomized = false;
@@ -317,24 +292,10 @@ namespace netgen
 
 
   
-  void FieldLineCalc :: Calc(const Point3d & startpoint, NgArray<Point3d> & points, NgArray<double> & vals, NgArray<bool> & drawelems, NgArray<int> & dirstart)
+  void FieldLineCalc :: Calc(const Point<3> & startpoint, Array<Point<3>> & points, Array<double> & vals, Array<bool> & drawelems, Array<int> & dirstart)
   {
-    double lami[3], startlami[3];
-    double values[6];
-    double dummyt(0);
-    Vec3d v;
-    Vec3d startv;
-    Point3d newp;
-    double h;
-    
-    double startval;
-    bool startdraw;
-    bool drawelem = false;
-    int elnr;
-
-    for (int i=0; i<6; i++) values[i]=0.0;
-    for (int i=0; i<3; i++) lami[i]=0.0;
-    for (int i=0; i<3; i++) startlami[i]=0.0;
+    Vec<3> v = 0.0;
+    double startlami[3] = {0.0, 0.0, 0.0};
     
     points.SetSize(0);
     vals.SetSize(0);
@@ -351,14 +312,10 @@ namespace netgen
       
     mesh.SetPointSearchStartElement(startelnr);
 
-    if (mesh.GetDimension()==3)
-      startdraw = vss.GetValues ( vsol, startelnr, startlami[0], startlami[1], startlami[2], values);
-    else
-      startdraw = vss.GetSurfValues ( vsol, startelnr, -1, startlami[0], startlami[1], values);
+    Vec<3> startv;
+    bool startdraw = func(startelnr, startlami, startv);
 
-    VisualSceneSolution::RealVec3d ( values, startv, vsol->iscomplex, phaser, phasei);
-
-    startval = startv.Length();
+    double startval = startv.Length();
 
     if(critical_value > 0 && fabs(startval) < critical_value)
       return;
@@ -375,13 +332,13 @@ namespace netgen
 	vals.Append(startval);
 	drawelems.Append(startdraw);
 	  
-	h = 0.001*rad/startval; // otherwise no nice lines; should be made accessible from outside
+	double h = 0.001*rad/startval; // otherwise no nice lines; should be made accessible from outside
 	
 	v = startv;
 	if(dir == -1) v *= -1.;
 
-	elnr = startelnr;
-	lami[0] = startlami[0]; lami[1] = startlami[1]; lami[2] = startlami[2]; 
+	int elnr = startelnr;
+        double lami[3] = { startlami[0], startlami[1], startlami[2]}; 
 	  
 
 	for(double length = 0; length < maxlength; length += h*vals.Last())
@@ -392,21 +349,19 @@ namespace netgen
 		break;
 	      }
 
+            double dummyt;
 	    stepper.StartNextValCalc(points.Last(),dummyt,h,true);
 	    stepper.FeedNextF(v);
+            bool drawelem = false;
 
+            Point<3> newp;
 	    while(!stepper.GetNextData(newp,dummyt,h) && elnr != -1)
 	      {
 		elnr = mesh.GetElementOfPoint(newp,lami,true) - 1;
 		if(elnr != -1)
 		  {
 		    mesh.SetPointSearchStartElement(elnr);
-                    if (mesh.GetDimension()==3)
-                        drawelem = vss.GetValues (vsol, elnr, lami[0], lami[1], lami[2], values);
-                    else
-                      drawelem = vss.GetSurfValues (vsol, elnr, -1, lami[0], lami[1], values);
-
-		    VisualSceneSolution::RealVec3d (values, v, vsol->iscomplex, phaser, phasei);
+                    drawelem = func(elnr, lami, v);
 		    if(dir == -1) v *= -1.;
 		    stepper.FeedNextF(v);
 		  }
@@ -440,7 +395,7 @@ namespace netgen
 
 
   
-  void VisualSceneSolution :: BuildFieldLinesFromBox(NgArray<Point3d> & startpoints)
+  void VisualSceneSolution :: BuildFieldLinesFromBox(Array<Point<3>> & startpoints)
   {
     shared_ptr<Mesh> mesh = GetMesh();
     if (!mesh) return;
@@ -462,7 +417,7 @@ namespace netgen
     
     for (int i = 1; i <= startpoints.Size(); i++)
       {
-	Point3d p (fieldlines_startarea_parameter[0] + double (rand()) / RAND_MAX * (fieldlines_startarea_parameter[3]-fieldlines_startarea_parameter[0]),
+	Point<3> p (fieldlines_startarea_parameter[0] + double (rand()) / RAND_MAX * (fieldlines_startarea_parameter[3]-fieldlines_startarea_parameter[0]),
 		   fieldlines_startarea_parameter[1] + double (rand()) / RAND_MAX * (fieldlines_startarea_parameter[4]-fieldlines_startarea_parameter[1]),
 		   fieldlines_startarea_parameter[2] + double (rand()) / RAND_MAX * (fieldlines_startarea_parameter[5]-fieldlines_startarea_parameter[2]));
 	
@@ -470,7 +425,7 @@ namespace netgen
       }
   }
 
-  void VisualSceneSolution :: BuildFieldLinesFromLine(NgArray<Point3d> & startpoints)
+  void VisualSceneSolution :: BuildFieldLinesFromLine(Array<Point<3>> & startpoints)
   {
     shared_ptr<Mesh> mesh = GetMesh();
     if (!mesh) return;
@@ -480,7 +435,7 @@ namespace netgen
       {
 	double s = double (rand()) / RAND_MAX;
 
-	Point3d p (fieldlines_startarea_parameter[0] + s * (fieldlines_startarea_parameter[3]-fieldlines_startarea_parameter[0]),
+	Point<3> p (fieldlines_startarea_parameter[0] + s * (fieldlines_startarea_parameter[3]-fieldlines_startarea_parameter[0]),
 		   fieldlines_startarea_parameter[1] + s * (fieldlines_startarea_parameter[4]-fieldlines_startarea_parameter[1]),
 		   fieldlines_startarea_parameter[2] + s * (fieldlines_startarea_parameter[5]-fieldlines_startarea_parameter[2]));
 	
@@ -489,7 +444,7 @@ namespace netgen
   }
 
 
-  void VisualSceneSolution :: BuildFieldLinesFromFile(NgArray<Point3d> & startpoints)
+  void VisualSceneSolution :: BuildFieldLinesFromFile(Array<Point<3>> & startpoints)
   {
     shared_ptr<Mesh> mesh = GetMesh();
     if (!mesh) return;
@@ -538,7 +493,9 @@ namespace netgen
 
 	if (keyword == "point")
 	  {
-	    (*infile) >> startpoints[numpoints].X(); (*infile) >> startpoints[numpoints].Y(); (*infile) >> startpoints[numpoints].Z();
+	    (*infile) >> startpoints[numpoints][0];
+            (*infile) >> startpoints[numpoints][1];
+            (*infile) >> startpoints[numpoints][2];
 	    numpoints++;
 	  }
 	else if (keyword == "line" || keyword == "box")
@@ -546,7 +503,7 @@ namespace netgen
 	    for(int i=0; i<6; i++) (*infile) >> fieldlines_startarea_parameter[i];
 	    (*infile) >> iparam;
 
-	    NgArray<Point3d> auxpoints(iparam);
+	    Array<Point<3>> auxpoints(iparam);
 	    
 	    if (keyword == "box")
 	      BuildFieldLinesFromBox(auxpoints);
@@ -571,7 +528,7 @@ namespace netgen
   }
 
   
-  void VisualSceneSolution :: BuildFieldLinesFromFace(NgArray<Point3d> & startpoints)
+  void VisualSceneSolution :: BuildFieldLinesFromFace(Array<Point<3>> & startpoints)
   {
     shared_ptr<Mesh> mesh = GetMesh();
     if (!mesh) return;
@@ -678,8 +635,25 @@ namespace netgen
 
     num_fieldlineslists = (vsol -> iscomplex && !fieldlines_fixedphase) ? 100 : 1;
    
+    double phaser=1.0;
+    double phasei=0.0;
+    std::function eval_func = [&](int elnr, const double * lami, Vec<3> & vec)
+    {
+        double values[6] = {0., 0., 0., 0., 0., 0.};
+        bool drawelem;
+        auto mesh = GetMesh();
+        if (mesh->GetDimension()==3)
+            drawelem = GetValues (vsol, elnr, lami[0], lami[1], lami[2], values);
+        else
+            drawelem = GetSurfValues (vsol, elnr, -1, lami[0], lami[1], values);
 
-    FieldLineCalc linecalc(*mesh,*this,vsol,
+        Vec3d v;
+        RealVec3d (values, v, vsol->iscomplex, phaser, phasei);
+        vec = v;
+        return drawelem;
+    };
+
+    FieldLineCalc linecalc(*mesh, eval_func,
 			   fieldlines_rellength,fieldlines_maxpoints,fieldlines_relthickness,fieldlines_reltolerance,fieldlines_rktype);
 
     if(fieldlines_randomstart) 
@@ -694,7 +668,7 @@ namespace netgen
       num_startpoints *= 10;
 
     
-    NgArray<Point3d> startpoints(num_startpoints);
+    Array<Point<3>> startpoints(num_startpoints);
     
 
     for (int ln = 0; ln < num_fieldlineslists; ln++)
@@ -722,17 +696,27 @@ namespace netgen
 
 	cout << "phi = " << phi << endl;
 
-	double phaser = cos(phi), phasei = sin(phi);
+	phaser = cos(phi);
+        phasei = sin(phi);
 	
 
+	linecalc.GenerateFieldLines(startpoints,num_fieldlines / num_fieldlineslists+1);
+
+        auto & pstart = linecalc.GetPStart();
+        auto & pend = linecalc.GetPEnd();
+        auto & values = linecalc.GetValues();
+        auto nlines = values.Size();
+
         glNewList(fieldlineslist+ln, GL_COMPILE);
-        
         SetTextureMode (usetexture);
-	linecalc.GenerateFieldLines(startpoints,num_fieldlines / num_fieldlineslists+1,
-				    fieldlineslist+ln,minval,maxval,logscale,phaser,phasei);
+
+        for(auto i : Range(nlines))
+          {
+            SetOpenGlColor  (values[i]);
+            DrawCylinder (pstart[i], pend[i], fieldlines_relthickness);
+          }
 
         glEndList ();
-
       }
   }
 

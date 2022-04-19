@@ -566,7 +566,6 @@ namespace netgen
     DLL_HEADER void DoArchive (Archive & archive);
     ///
 	DLL_HEADER void ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal = OPT_QUALITY);
-	DLL_HEADER void ImproveMeshSequential (const MeshingParameters & mp, OPTIMIZEGOAL goal = OPT_QUALITY);
 
     ///
     void ImproveMeshJacobian (const MeshingParameters & mp, OPTIMIZEGOAL goal = OPT_QUALITY, const NgBitArray * usepoint = NULL);
