@@ -717,6 +717,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
              {
              case TopAbs_FACE:
                BRepGProp::SurfaceProperties (shape, props); break;
+             case TopAbs_SHELL:
+               BRepGProp::SurfaceProperties (shape, props); break;
+	     case TopAbs_SOLID:
+               BRepGProp::VolumeProperties (shape, props); break;
+	     case TopAbs_COMPOUND:
+               BRepGProp::VolumeProperties (shape, props); break;
+	     case TopAbs_COMPSOLID:
+               BRepGProp::VolumeProperties (shape, props); break;
              default:
                BRepGProp::LinearProperties(shape, props);
                // throw Exception("Properties implemented only for FACE");
@@ -744,6 +752,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
              {
              case TopAbs_FACE:
                BRepGProp::SurfaceProperties (shape, props); break;
+             case TopAbs_SHELL:
+               BRepGProp::SurfaceProperties (shape, props); break;
+	     case TopAbs_SOLID:
+               BRepGProp::VolumeProperties (shape, props); break;
+	     case TopAbs_COMPOUND:
+               BRepGProp::VolumeProperties (shape, props); break;
+	     case TopAbs_COMPSOLID:
+               BRepGProp::VolumeProperties (shape, props); break;
              default:
                BRepGProp::LinearProperties(shape, props);
              }
