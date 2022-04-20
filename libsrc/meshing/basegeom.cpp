@@ -107,6 +107,35 @@ namespace netgen
       return true;
   }
 
+  bool GeometryFace :: IsConnectingCloseSurfaces() const
+  {
+    std::map<const GeometryShape*, bool> verts;
+    for(const auto& edge : edges)
+      {
+        verts[&edge->GetStartVertex()] = false;
+        verts[&edge->GetEndVertex()] = false;
+      }
+    for(const auto& [v, is_mapped] : verts)
+      {
+        if(is_mapped)
+          continue;
+        for(const auto& v_ident : v->identifications)
+          {
+            const auto& other = v_ident.to == v ? v_ident.from : v_ident.to;
+            if(v_ident.type == Identifications::CLOSESURFACES &&
+               verts.count(other))
+              {
+                verts[v] = true;
+                verts[other] = true;
+              }
+          }
+      }
+    for(auto& [v, is_mapped] : verts)
+      if(!is_mapped)
+        return false;
+    return true;
+  }
+
   void GeometryFace :: RestrictHTrig(Mesh& mesh,
                                      const PointGeomInfo& gi0,
                                      const PointGeomInfo& gi1,
@@ -761,7 +790,6 @@ namespace netgen
         if(face.primary == &face)
         {
             // check if this face connects two identified closesurfaces
-            bool is_connecting_closesurfaces = false;
             auto & idents = mesh.GetIdentifications();
             std::set<int> relevant_edges;
             auto segments = face.GetBoundary(mesh);
@@ -786,6 +814,7 @@ namespace netgen
 
             Transformation<3> trafo;
 
+            if(face.IsConnectingCloseSurfaces())
             for(const auto &s : segments)
             {
                 auto edgenr = s.edgenr-1;
@@ -793,6 +822,7 @@ namespace netgen
                 ShapeIdentification *edge_mapping;
 
                 // have edgenr first time, search for closesurface identification
+
                 if(mapped_edges[edgenr] == UNINITIALIZED)
                 {
                     mapped_edges[edgenr] = NOT_MAPPED;
@@ -805,7 +835,6 @@ namespace netgen
                         {
                             trafo = edge_ident.trafo;
                             mapped_edges[edgenr] = edge_ident.to->nr;
-                            is_connecting_closesurfaces = true;
                             break;
                         }
                     }
@@ -826,8 +855,7 @@ namespace netgen
                     mesh.AddSurfaceElement(sel);
                 }
             }
-
-            if(!is_connecting_closesurfaces)
+            else
                 if(MeshFace(mesh, mparam, k, glob2loc))
                     n_failed_faces++;
         }

@@ -158,6 +158,7 @@ namespace netgen
     }
 
     virtual bool IsMappedShape( const GeometryShape & other, const Transformation<3> & trafo, double tolerance ) const override;
+    virtual bool IsConnectingCloseSurfaces() const;
 
   protected:
     void RestrictHTrig(Mesh& mesh,
