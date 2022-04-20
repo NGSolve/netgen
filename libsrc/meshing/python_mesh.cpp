@@ -854,6 +854,17 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          static_cast<Mesh::T_POINTS&(Mesh::*)()> (&Mesh::Points),
          py::return_value_policy::reference)
 
+    .def("Coordinates", [](Mesh & self) {
+        return py::array
+          (
+           py::memoryview::from_buffer
+           (&self.Points()[PointIndex::BASE](0), sizeof(double),
+            py::format_descriptor<double>::value,
+            { self.Points().Size(), size_t(self.GetDimension())  }, 
+            { sizeof(self.Points()[PointIndex::BASE]), sizeof(double) } )
+           );
+      })
+    
     .def("FaceDescriptor", static_cast<FaceDescriptor&(Mesh::*)(int)> (&Mesh::GetFaceDescriptor),
          py::return_value_policy::reference)
     .def("GetNFaceDescriptors", &Mesh::GetNFD)

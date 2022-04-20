@@ -6407,6 +6407,7 @@ namespace netgen
       }
 
     Compress();
+    SetNextMajorTimeStamp();
   }
 
   void Mesh :: RebuildSurfaceElementLists ()

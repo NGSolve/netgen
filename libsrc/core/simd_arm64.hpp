@@ -42,6 +42,7 @@ namespace ngcore
     SIMD (const SIMD &) = default;
     // SIMD (double v0, double v1) : data{v0,v1} { }
     SIMD (double v0, double v1) : data{vcombine_f64(float64x1_t{v0}, float64x1_t{v1})} { }
+    SIMD (SIMD<double,1> v0, SIMD<double,1> v1) : data{vcombine_f64(float64x1_t{v0.Data()}, float64x1_t{v1.Data()})} { }
     SIMD (std::array<double, 2> arr) : data{arr[0], arr[1]} { } 
 
     SIMD & operator= (const SIMD &) = default;

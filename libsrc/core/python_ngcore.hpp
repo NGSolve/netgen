@@ -156,165 +156,7 @@ namespace ngcore
     { return std::string("sp_")+GetPyName<T>(); }
   };
 
-  template<typename T>
-  Array<T> makeCArray(const py::object& obj)
-  {
-    Array<T> arr;
-    if(py::isinstance<py::list>(obj))
-        for(auto& val : py::cast<py::list>(obj))
-          arr.Append(py::cast<T>(val));
-    else if(py::isinstance<py::tuple>(obj))
-      for(auto& val : py::cast<py::tuple>(obj))
-        arr.Append(py::cast<T>(val));
-    else
-      throw py::type_error("Cannot convert Python object to C Array");
-    return arr;
-  }
-
-  template <typename T, typename TIND=typename FlatArray<T>::index_type>
-  void ExportArray (py::module &m)
-  {
-      using TFlat = FlatArray<T, TIND>;
-      using TArray = Array<T, TIND>;
-      std::string suffix = GetPyName<T>() + "_" +
-        GetPyName<TIND>();
-      std::string fname = std::string("FlatArray_") + suffix;
-      auto flatarray_class = py::class_<TFlat>(m, fname.c_str(),
-                                               py::buffer_protocol())
-        .def ("__len__", [] ( TFlat &self ) { return self.Size(); } )
-        .def ("__getitem__",
-              [](TFlat & self, TIND i) -> T&
-                             {
-                               static constexpr int base = IndexBASE<TIND>();
-                               if (i < base || i >= self.Size()+base)
-                                 throw py::index_error();
-                               return self[i]; 
-                             },
-              py::return_value_policy::reference)
-        .def ("__setitem__",
-              [](TFlat & self, TIND i, T val) -> T&
-                             {
-                               static constexpr int base = IndexBASE<TIND>();
-                               if (i < base || i >= self.Size()+base)
-                                 throw py::index_error();
-                               self[i] = val;
-                               return self[i];
-                             },
-              py::return_value_policy::reference)
-
-        .def ("__setitem__",
-              [](TFlat & self, py::slice slice, T val)
-              {
-                size_t start, stop, step, slicelength;
-                if (!slice.compute(self.Size(), &start, &stop, &step, &slicelength))
-                  throw py::error_already_set();
-                static constexpr int base = IndexBASE<TIND>();
-                if (start < base || start+(slicelength-1)*step >= self.Size()+base)
-                  throw py::index_error();
-                for (size_t i = 0; i < slicelength; i++, start+=step)
-                  self[start] = val;
-              })
-
-        .def("__iter__", [] ( TFlat & self) {
-             return py::make_iterator (self.begin(),self.end());
-             }, py::keep_alive<0,1>()) // keep array alive while iterator is used
-
-        .def("__str__", [](TFlat& self)
-                        {
-                          return ToString(self);
-                        })
-      ;
-
-      if constexpr (detail::HasPyFormat<T>::value)
-        {
-          if(ngcore_have_numpy && !py::detail::npy_format_descriptor<T>::dtype().is_none())
-            {
-              flatarray_class
-                .def_buffer([](TFlat& self)
-                            {
-                              return py::buffer_info(
-                                self.Addr(0),
-                                sizeof(T),
-                                py::format_descriptor<T>::format(),
-                                1,
-                                { self.Size() },
-                                { sizeof(T) * (self.Addr(1) - self.Addr(0)) });
-                            })
-                .def("NumPy", [](py::object self)
-                              {
-                                return py::module::import("numpy")
-                                  .attr("frombuffer")(self, py::detail::npy_format_descriptor<T>::dtype());
-                              })
-                ;
-              }
-          }
-
-      std::string aname = std::string("Array_") + suffix;
-      py::class_<TArray, TFlat>(m, aname.c_str())
-        .def(py::init([] (size_t n) { return new TArray(n); }),py::arg("n"), "Makes array of given length")
-        .def(py::init([] (std::vector<T> const & x)
-                  {
-                    size_t s = x.size();
-                    TArray tmp(s);
-                    for (size_t i : Range(tmp))
-                      tmp[TIND(i)] = x[i];
-                    return tmp;
-                  }), py::arg("vec"), "Makes array with given list of elements")
-
-      ;
-      py::implicitly_convertible<std::vector<T>, TArray>();
-    }
-
-  template <typename T>
-  void ExportTable (py::module &m)
-  {
-    py::class_<ngcore::Table<T>, std::shared_ptr<ngcore::Table<T>>> (m, ("Table_"+GetPyName<T>()).c_str())
-      .def(py::init([] (py::list blocks)
-                    {
-                       size_t size = py::len(blocks);
-                       Array<int> cnt(size);
-                       size_t i = 0;
-                       for (auto block : blocks)
-                         cnt[i++] = py::len(block);
-                       
-                       i = 0;
-                       Table<T> blocktable(cnt);
-                       for (auto block : blocks)
-                         {
-                           auto row = blocktable[i++];
-                           size_t j = 0;
-                           for (auto val : block)
-                             row[j++] = val.cast<T>();
-                         }
-                       // cout << "blocktable = " << *blocktable << endl;
-                       return blocktable;
-                      
-                    }), py::arg("blocks"), "a list of lists")
-
-      .def ("__len__", [] (Table<T> &self ) { return self.Size(); } )
-      .def ("__getitem__",
-            [](Table<T> & self, size_t i) -> FlatArray<T>
-            {
-              if (i >= self.Size())
-                throw py::index_error();
-              return self[i]; 
-            })
-      .def("__str__", [](Table<T> & self)
-           {
-             return ToString(self);
-           })
-      ;
-  }
-
-  
-  void NGCORE_API SetFlag(Flags &flags, std::string s, py::object value);
-  // Parse python kwargs to flags
-  Flags NGCORE_API CreateFlagsFromKwArgs(const py::kwargs& kwargs, py::object pyclass = py::none(),
-                                         py::list info = py::list());
-  // Create python dict from kwargs
-  py::dict NGCORE_API CreateDictFromFlags(const Flags& flags);
-
-  // ***************  Archiving functionality  **************
+    // ***************  Archiving functionality  **************
 
     template<typename T>
     Archive& Archive :: Shallow(T& val)
@@ -428,6 +270,165 @@ namespace ngcore
                         return val;
                       });
   }
+
+  template<typename T>
+  Array<T> makeCArray(const py::object& obj)
+  {
+    Array<T> arr;
+    if(py::isinstance<py::list>(obj))
+        for(auto& val : py::cast<py::list>(obj))
+          arr.Append(py::cast<T>(val));
+    else if(py::isinstance<py::tuple>(obj))
+      for(auto& val : py::cast<py::tuple>(obj))
+        arr.Append(py::cast<T>(val));
+    else
+      throw py::type_error("Cannot convert Python object to C Array");
+    return arr;
+  }
+
+  template <typename T, typename TIND=typename FlatArray<T>::index_type>
+  void ExportArray (py::module &m)
+  {
+      using TFlat = FlatArray<T, TIND>;
+      using TArray = Array<T, TIND>;
+      std::string suffix = GetPyName<T>() + "_" +
+        GetPyName<TIND>();
+      std::string fname = std::string("FlatArray_") + suffix;
+      auto flatarray_class = py::class_<TFlat>(m, fname.c_str(),
+                                               py::buffer_protocol())
+        .def ("__len__", [] ( TFlat &self ) { return self.Size(); } )
+        .def ("__getitem__",
+              [](TFlat & self, TIND i) -> T&
+                             {
+                               static constexpr int base = IndexBASE<TIND>();
+                               if (i < base || i >= self.Size()+base)
+                                 throw py::index_error();
+                               return self[i]; 
+                             },
+              py::return_value_policy::reference)
+        .def ("__setitem__",
+              [](TFlat & self, TIND i, T val) -> T&
+                             {
+                               static constexpr int base = IndexBASE<TIND>();
+                               if (i < base || i >= self.Size()+base)
+                                 throw py::index_error();
+                               self[i] = val;
+                               return self[i];
+                             },
+              py::return_value_policy::reference)
+
+        .def ("__setitem__",
+              [](TFlat & self, py::slice slice, T val)
+              {
+                size_t start, stop, step, slicelength;
+                if (!slice.compute(self.Size(), &start, &stop, &step, &slicelength))
+                  throw py::error_already_set();
+                static constexpr int base = IndexBASE<TIND>();
+                if (start < base || start+(slicelength-1)*step >= self.Size()+base)
+                  throw py::index_error();
+                for (size_t i = 0; i < slicelength; i++, start+=step)
+                  self[start] = val;
+              })
+
+        .def("__iter__", [] ( TFlat & self) {
+             return py::make_iterator (self.begin(),self.end());
+             }, py::keep_alive<0,1>()) // keep array alive while iterator is used
+
+        .def("__str__", [](TFlat& self)
+                        {
+                          return ToString(self);
+                        })
+      ;
+
+      if constexpr (detail::HasPyFormat<T>::value)
+        {
+          if(ngcore_have_numpy && !py::detail::npy_format_descriptor<T>::dtype().is_none())
+            {
+              flatarray_class
+                .def_buffer([](TFlat& self)
+                            {
+                              return py::buffer_info(
+                                self.Addr(0),
+                                sizeof(T),
+                                py::format_descriptor<T>::format(),
+                                1,
+                                { self.Size() },
+                                { sizeof(T) * (self.Addr(1) - self.Addr(0)) });
+                            })
+                .def("NumPy", [](py::object self)
+                              {
+                                return py::module::import("numpy")
+                                  .attr("frombuffer")(self, py::detail::npy_format_descriptor<T>::dtype());
+                              })
+                ;
+              }
+          }
+
+      std::string aname = std::string("Array_") + suffix;
+      auto arr = py::class_<TArray, TFlat> (m, aname.c_str())
+        .def(py::init([] (size_t n) { return new TArray(n); }),py::arg("n"), "Makes array of given length")
+        .def(py::init([] (std::vector<T> const & x)
+                  {
+                    size_t s = x.size();
+                    TArray tmp(s);
+                    for (size_t i : Range(tmp))
+                      tmp[TIND(i)] = x[i];
+                    return tmp;
+                  }), py::arg("vec"), "Makes array with given list of elements")
+        ;
+      if constexpr(is_archivable<TArray>)
+        arr.def(NGSPickle<TArray>());
+      py::implicitly_convertible<std::vector<T>, TArray>();
+    }
+
+  template <typename T>
+  void ExportTable (py::module &m)
+  {
+    py::class_<ngcore::Table<T>, std::shared_ptr<ngcore::Table<T>>> (m, ("Table_"+GetPyName<T>()).c_str())
+      .def(py::init([] (py::list blocks)
+                    {
+                       size_t size = py::len(blocks);
+                       Array<int> cnt(size);
+                       size_t i = 0;
+                       for (auto block : blocks)
+                         cnt[i++] = py::len(block);
+                       
+                       i = 0;
+                       Table<T> blocktable(cnt);
+                       for (auto block : blocks)
+                         {
+                           auto row = blocktable[i++];
+                           size_t j = 0;
+                           for (auto val : block)
+                             row[j++] = val.cast<T>();
+                         }
+                       // cout << "blocktable = " << *blocktable << endl;
+                       return blocktable;
+                      
+                    }), py::arg("blocks"), "a list of lists")
+
+      .def ("__len__", [] (Table<T> &self ) { return self.Size(); } )
+      .def ("__getitem__",
+            [](Table<T> & self, size_t i) -> FlatArray<T>
+            {
+              if (i >= self.Size())
+                throw py::index_error();
+              return self[i]; 
+            })
+      .def("__str__", [](Table<T> & self)
+           {
+             return ToString(self);
+           })
+      ;
+  }
+
+  
+  void NGCORE_API SetFlag(Flags &flags, std::string s, py::object value);
+  // Parse python kwargs to flags
+  Flags NGCORE_API CreateFlagsFromKwArgs(const py::kwargs& kwargs, py::object pyclass = py::none(),
+                                         py::list info = py::list());
+  // Create python dict from kwargs
+  py::dict NGCORE_API CreateDictFromFlags(const Flags& flags);
 
 
 } // namespace ngcore

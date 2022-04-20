@@ -92,6 +92,12 @@ namespace ngcore
     SIMD (double const * p, SIMD<mask64,8> mask)
       { data = _mm512_mask_loadu_pd(_mm512_setzero_pd(), mask.Data(), p); }
     SIMD (__m512d _data) { data = _data; }
+    SIMD (SIMD<double,4> v0, SIMD<double,4> v1)
+        : data(_mm512_set_pd(v1[3], v1[2], v1[1], v1[0], v0[3], v0[2], v0[1], v0[0]))
+    {}
+    SIMD (SIMD<double,6> v0, SIMD<double,2> v1)
+        : data(_mm512_set_pd(v1[1], v1[0], v0[5], v0[4], v0[3], v0[2], v0[1], v0[0]))
+    {}
 
     template<typename T, typename std::enable_if<std::is_convertible<T, std::function<double(int)>>::value, int>::type = 0>
     SIMD (const T & func)
@@ -129,6 +135,12 @@ namespace ngcore
     NETGEN_INLINE __m512d Data() const { return data; }
     NETGEN_INLINE __m512d & Data() { return data; }
 
+    template <int I>
+    double Get() const
+    {
+      static_assert(I>=0 && I<8, "Index out of range");
+      return (*this)[I];
+    }
   };
 
   NETGEN_INLINE SIMD<double,8> operator- (SIMD<double,8> a) { return -a.Data(); }

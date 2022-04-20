@@ -1331,127 +1331,6 @@ void Mesh :: ImproveMesh (const CSG eometry & geometry, OPTIMIZEGOAL goal)
 
 
   
-void Mesh :: ImproveMeshSequential (const MeshingParameters & mp, OPTIMIZEGOAL goal)
-{
-  static Timer t("Mesh::ImproveMesh"); RegionTimer reg(t);
-  
-  (*testout) << "Improve Mesh" << "\n";
-  PrintMessage (3, "ImproveMesh");
-
-  int np = GetNP();
-  int ne = GetNE();
-
-
-  if (goal == OPT_QUALITY)
-    {
-      double bad1 = CalcTotalBad (mp);
-      (*testout) << "Total badness = " << bad1 << endl;
-      PrintMessage (5, "Total badness = ", bad1);
-    }
-  
-  Vector x(3);
-  
-  (*testout) << setprecision(8);
-  
-  //int uselocalh = mparam.uselocalh;
-
-
-  PointFunction pf(points, volelements, mp);
-  
-  Opti3FreeMinFunction freeminf(pf);
-
-  OptiParameters par;
-  par.maxit_linsearch = 20;
-  par.maxit_bfgs = 20;
-
-  NgArray<double, PointIndex::BASE> pointh (points.Size());
-
-  if(HasLocalHFunction())
-    {
-      for (PointIndex pi : points.Range())
-	pointh[pi] = GetH(pi);
-    }
-  else
-    {
-      pointh = 0;
-      for (Element & el : VolumeElements())
-	{
-	  double h = pow(el.Volume(points),1./3.);
-          for (PointIndex pi : el.PNums())
-	    if (h > pointh[pi])
-              pointh[pi] = h;
-	}
-    }
- 
-
-  int printmod = 1;
-  char printdot = '.';
-  if (points.Size() > 1000)
-    {
-      printmod = 10;
-      printdot = '+';
-    }
-  if (points.Size() > 10000)
-    {
-      printmod = 100;
-      printdot = '*';
-    }
-
-
-  const char * savetask = multithread.task;
-  multithread.task = "Optimize Volume: Smooth Mesh";
-
-  for (PointIndex pi : points.Range())
-    if ( (*this)[pi].Type() == INNERPOINT )
-      {
-	if (multithread.terminate)
-	  throw NgException ("Meshing stopped");
-
-	multithread.percent = 100.0 * (pi+1-PointIndex::BASE) / points.Size();
-
-        if (  (pi+1-PointIndex::BASE) % printmod == 0) PrintDot (printdot);
-
-	double lh = pointh[pi];
-	pf.SetLocalH (lh);
-	par.typx = lh;
-
-	freeminf.SetPoint (points[pi]);
-	pf.SetPointIndex (pi);
-
-	x = 0;
-	int pok;
-	pok = freeminf.Func (x) < 1e10; 
-
-	if (!pok)
-	  {
-	    pok = pf.MovePointToInner ();
-
-	    freeminf.SetPoint (points[pi]);
-	    pf.SetPointIndex (pi);
-	  }
-
-	if (pok)
-	  {
-            //*testout << "start BFGS, pok" << endl;
-	    BFGS (x, freeminf, par);
-            //*testout << "BFGS complete, pok" << endl;
-	    points[pi](0) += x(0);
-	    points[pi](1) += x(1);
-	    points[pi](2) += x(2);
-	  }
-      }
-  PrintDot ('\n');
-  
-  multithread.task = savetask;
-
-  if (goal == OPT_QUALITY)
-    {
-      double bad1 = CalcTotalBad (mp);
-      (*testout) << "Total badness = " << bad1 << endl;
-      PrintMessage (5, "Total badness = ", bad1);
-    }
-}
-
 void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
 {
   static Timer t("Mesh::ImproveMesh"); RegionTimer reg(t);
@@ -1461,7 +1340,6 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
   static Timer trange("range");
   static Timer tloch("loch");
 
-  // return ImproveMeshSequential(mp, goal);
   BuildBoundaryEdges(false);
 
   (*testout) << "Improve Mesh" << "\n";

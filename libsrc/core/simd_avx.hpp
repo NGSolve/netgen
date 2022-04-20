@@ -143,8 +143,6 @@ namespace ngcore
     NETGEN_INLINE double & operator[] (int i) { return ((double*)(&data))[i]; }
     // [[deprecated("don't write to individual elements of SIMD")]]
     // NETGEN_INLINE double & operator[] (int i) { return ((double*)(&data))[i]; }
-    template <int I>
-    double Get() const { return ((double*)(&data))[I]; }
     NETGEN_INLINE __m256d Data() const { return data; }
     NETGEN_INLINE __m256d & Data() { return data; }
 
@@ -153,6 +151,13 @@ namespace ngcore
 
     operator std::tuple<double&,double&,double&,double&> ()
     { return std::tuple<double&,double&,double&,double&>((*this)[0], (*this)[1], (*this)[2], (*this)[3]); }
+
+    template <int I>
+    double Get() const
+    {
+      static_assert(I>=0 && I<4, "Index out of range");
+      return (*this)[I];
+    }
   };
 
   NETGEN_INLINE auto Unpack (SIMD<double,4> a, SIMD<double,4> b)
