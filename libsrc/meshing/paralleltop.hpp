@@ -34,7 +34,9 @@ namespace netgen
     void Reset ();
     void Print() const;
 
+    
     void UpdateCoarseGrid();
+    [[deprecated("should not need it anymore")]]                    
     void UpdateCoarseGridGlobal();
     void IdentifyVerticesAfterRefinement();
     void EnumeratePointsGlobally ();

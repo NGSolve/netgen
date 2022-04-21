@@ -1878,8 +1878,10 @@ void Ng_GetPeriodicEdges (int idnr, int * pairs)
 	if (other1 && other2 && mesh->IsSegment (other1, other2))
 	  {
 	    SegmentIndex otherseg = mesh->SegmentNr (other1, other2);
-	    pairs[cnt++] = top.GetSegmentEdge (si+1);
-	    pairs[cnt++] = top.GetSegmentEdge (otherseg+1);
+	    // pairs[cnt++] = top.GetSegmentEdge (si+1);
+	    // pairs[cnt++] = top.GetSegmentEdge (otherseg+1);
+	    pairs[cnt++] = top.GetEdge (si)+1;
+	    pairs[cnt++] = top.GetEdge (otherseg)+1;
 	  }
       }
   }

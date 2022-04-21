@@ -307,7 +307,7 @@ namespace netgen
 
     const MeshTopology & topology = mesh.GetTopology();
     auto comm = mesh.GetCommunicator();
-    
+
     if ( id == 0 )
       {
 	NgArray<NgArray<int>*> sendarrays(ntasks);

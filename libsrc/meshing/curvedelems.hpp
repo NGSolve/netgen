@@ -206,6 +206,26 @@ private:
     int facenrs[6];
     Mat<3> hdxdxi;
     Vec<3> hcoefs[10]; // enough for second order tets
+
+    void SetEdges (FlatArray<int> edges)
+    {
+      nedges = edges.Size();
+      for (int i = 0; i < edges.Size(); i++)
+        edgenrs[i] = edges[i];
+    }
+    
+    auto GetEdges() const
+    { return FlatArray(nedges, edgenrs); }
+
+    void SetFaces (FlatArray<int> faces)
+    {
+      nfaces = faces.Size();
+      for (int i = 0; i < faces.Size(); i++)
+        facenrs[i] = faces[i];
+    }
+
+    auto GetFaces() const
+    { return FlatArray(nfaces, facenrs); }
   };
 
   template <typename T>

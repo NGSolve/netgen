@@ -1458,6 +1458,7 @@ namespace netgen
         return;
       }
     
+    
     if (info.order > 1)
       {
 	const MeshTopology & top = mesh.GetTopology();
@@ -2452,19 +2453,12 @@ namespace netgen
     if (info.order > 1)
       {
 	const MeshTopology & top = mesh.GetTopology();
-	
-	info.nedges = top.GetElementEdges (elnr+1, info.edgenrs, 0);
-	for (int i = 0; i < info.nedges; i++)
-	  info.edgenrs[i]--;
 
-	info.nfaces = top.GetElementFaces (elnr+1, info.facenrs, 0);
-	for (int i = 0; i < info.nfaces; i++)
-	  info.facenrs[i]--;
-
-	for (int i = 0; i < info.nedges; i++)
-	  info.ndof += edgecoeffsindex[info.edgenrs[i]+1] - edgecoeffsindex[info.edgenrs[i]];
-	for (int i = 0; i < info.nfaces; i++)
-	  info.ndof += facecoeffsindex[info.facenrs[i]+1] - facecoeffsindex[info.facenrs[i]];
+        for (auto e : top.GetEdges(elnr))
+          info.ndof += edgecoeffsindex[e+1] - edgecoeffsindex[e];
+        
+        for (auto f : top.GetFaces(elnr))
+          info.ndof += facecoeffsindex[f+1] - facecoeffsindex[f];
       }
 
     return (info.ndof > info.nv);
@@ -2491,17 +2485,13 @@ namespace netgen
     if (info.order > 1)
       {
 	const MeshTopology & top = mesh.GetTopology();
-	
-	info.nedges = top.GetElementEdges (elnr+1, info.edgenrs, 0);
-	for (int i = 0; i < info.nedges; i++) info.edgenrs[i]--;
 
-	info.nfaces = top.GetElementFaces (elnr+1, info.facenrs, 0);
-	for (int i = 0; i < info.nfaces; i++) info.facenrs[i]--;
+        for (auto e : top.GetEdges(elnr))
+          if (edgecoeffsindex[e+1] > edgecoeffsindex[e]) return true;
+        
+        for (auto f : top.GetFaces(elnr))
+          if (facecoeffsindex[f+1] > facecoeffsindex[f]) return true;
 
-	for (int i = 0; i < info.nedges; i++)
-          if (edgecoeffsindex[info.edgenrs[i]+1] > edgecoeffsindex[info.edgenrs[i]]) return true;
-	for (int i = 0; i < info.nfaces; i++)
-          if (facecoeffsindex[info.facenrs[i]+1] > facecoeffsindex[info.facenrs[i]]) return true;
       }
     return false;
   }
@@ -2570,7 +2560,8 @@ namespace netgen
 	if (info.order > 1)
 	  {
 	    const MeshTopology & top = mesh.GetTopology();
-            
+
+            /*
 	    info.nedges = top.GetElementEdges (elnr+1, info.edgenrs, 0);
 	    for (int i = 0; i < info.nedges; i++)
 	      info.edgenrs[i]--;
@@ -2578,11 +2569,22 @@ namespace netgen
 	    info.nfaces = top.GetElementFaces (elnr+1, info.facenrs, 0);
 	    for (int i = 0; i < info.nfaces; i++)
 	      info.facenrs[i]--;
-            
+            */
+            info.SetEdges (top.GetEdges(elnr));
+            info.SetFaces (top.GetFaces(elnr));
+
+            /*
 	    for (int i = 0; i < info.nedges; i++)
 	      info.ndof += edgecoeffsindex[info.edgenrs[i]+1] - edgecoeffsindex[info.edgenrs[i]];
 	    for (int i = 0; i < info.nfaces; i++)
 	      info.ndof += facecoeffsindex[info.facenrs[i]+1] - facecoeffsindex[info.facenrs[i]];
+            */
+
+            for (auto e : info.GetEdges())
+              info.ndof += edgecoeffsindex[e+1] - edgecoeffsindex[e];
+            
+            for (auto f : info.GetFaces())
+              info.ndof += facecoeffsindex[f+1] - facecoeffsindex[f];
 	  }
       }
 
@@ -4603,20 +4605,15 @@ namespace netgen
     if (info.order > 1)
       {
 	const MeshTopology & top = mesh.GetTopology();
-	
-	info.nedges = top.GetElementEdges (elnr+1, info.edgenrs, 0);
-	for (int i = 0; i < info.nedges; i++)
-	  info.edgenrs[i]--;
 
-	info.nfaces = top.GetElementFaces (elnr+1, info.facenrs, 0);
-	for (int i = 0; i < info.nfaces; i++)
-	  info.facenrs[i]--;
+        info.SetEdges (top.GetEdges(elnr));
+        info.SetFaces (top.GetFaces(elnr));
 
-	for (int i = 0; i < info.nedges; i++)
-	  info.ndof += edgecoeffsindex[info.edgenrs[i]+1] - edgecoeffsindex[info.edgenrs[i]];
-	for (int i = 0; i < info.nfaces; i++)
-	  info.ndof += facecoeffsindex[info.facenrs[i]+1] - facecoeffsindex[info.facenrs[i]];
-	// info.ndof += facecoeffsindex[info.facenr+1] - facecoeffsindex[info.facenr];
+        for (auto e : info.GetEdges())
+          info.ndof += edgecoeffsindex[e+1] - edgecoeffsindex[e];
+        
+        for (auto f : info.GetFaces())
+          info.ndof += facecoeffsindex[f+1] - facecoeffsindex[f];
       }
 
     // NgProfiler::StopTimer (timer2);

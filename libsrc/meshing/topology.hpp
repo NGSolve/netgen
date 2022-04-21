@@ -149,7 +149,9 @@ public:
 
   void GetSurfaceElementEdges (int elnr, NgArray<int> & edges) const;
   int GetSurfaceElementFace (int elnr) const;
+  [[deprecated("orientation is outdated")]]                          
   void GetSurfaceElementEdgeOrientations (int elnr, NgArray<int> & eorient) const;
+  [[deprecated("orientation is outdated")]]                            
   int GetSurfaceElementFaceOrientation (int elnr) const;
 
   [[deprecated("use GetEdge -> FlatArray instead")]]                        
