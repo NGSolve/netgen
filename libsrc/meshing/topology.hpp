@@ -15,36 +15,9 @@
 namespace netgen
 {
   
-  /*
-    struct T_EDGE
-    {
-    // int orient:1;
-    int nr;    // 0-based
-    };
-    
-    struct T_FACE
-    {
-    // int forient:3;
-    int fnr;    // 0-based
-    };
-  */
-  
   typedef int T_EDGE;
   typedef int T_FACE;
-  
 
-  /*
-  template <typename T, int S>
-  struct FixArray
-  {
-    T vals[S];
-    T & operator[] (size_t i) { return vals[i]; }
-    T operator[] (size_t i) const { return vals[i]; }
-  };
-  */
-
-  template <typename T, int S>
-  using FixArray = std::array<T,S>;
 
 class MeshTopology
 {
@@ -56,16 +29,15 @@ class MeshTopology
   bool build_parent_faces = false; // may be changed to default = false
   static bool static_buildedges, static_buildfaces, static_buildvertex2element;
 
-  NgArray<INDEX_2> edge2vert;
-  NgArray<INDEX_4> face2vert;
-  /*
-  NgArray<T_EDGE[12]> edges;
-  NgArray<T_FACE[6]> faces;
-  NgArray<T_EDGE[4]> surfedges;
-  */
-  NgArray<FixArray<T_EDGE,12>> edges;
-  NgArray<FixArray<T_FACE,6>> faces;
-  NgArray<FixArray<T_EDGE,4>> surfedges;
+  // NgArray<INDEX_2> edge2vert;
+  // NgArray<INDEX_4> face2vert;
+  // should be that:
+  NgArray<std::array<PointIndex,2>> edge2vert;
+  NgArray<std::array<PointIndex,4>> face2vert;
+
+  NgArray<std::array<T_EDGE,12>> edges;
+  NgArray<std::array<T_FACE,6>> faces;
+  NgArray<std::array<T_EDGE,4>> surfedges;
   
   NgArray<T_EDGE> segedges;
   NgArray<T_FACE> surffaces;
@@ -114,12 +86,16 @@ public:
   static const Point3d * GetVertices (ELEMENT_TYPE et);
   inline static const ELEMENT_EDGE * GetEdges1 (ELEMENT_TYPE et);
   inline static const ELEMENT_EDGE * GetEdges0 (ELEMENT_TYPE et);
+  inline static FlatArray<ELEMENT_EDGE> GetEdges (ELEMENT_TYPE et);
   inline static const ELEMENT_FACE * GetFaces1 (ELEMENT_TYPE et);
   inline static const ELEMENT_FACE * GetFaces0 (ELEMENT_TYPE et);
-  
+
+  [[deprecated("use GetEdge(SegmentIndex) instead")]]                    
   int GetSegmentEdge (int segnr) const { return segedges[segnr-1]+1; }
+  
   int GetEdge (SegmentIndex segnr) const { return segedges[segnr]; }
 
+  [[deprecated("use GetEdge(SegmentIndex) instead")]]                      
   void GetSegmentEdge (int segnr, int & enr, int & orient) const
   {
     enr = segedges.Get(segnr)+1;
@@ -129,16 +105,24 @@ public:
 
   void GetElementEdges (int elnr, NgArray<int> & edges) const;
   void GetElementFaces (int elnr, NgArray<int> & faces, bool withorientation = false) const;
+
+  [[deprecated("use GetElementEdge instead")]]                        
   void GetElementEdgeOrientations (int elnr, NgArray<int> & eorient) const;
+  [[deprecated("use GetElementEdge instead")]]                        
   void GetElementFaceOrientations (int elnr, NgArray<int> & forient) const;
 
   int GetElementEdges (int elnr, int * edges, int * orient) const;
   int GetElementFaces (int elnr, int * faces, int * orient) const;
 
+  [[deprecated("use GetElementEdge instead")]]                      
   int GetElementEdgeOrientation (int elnr, int locedgenr) const; // old style
+  [[deprecated("use GetElementEdge instead")]]                        
   int GetElementFaceOrientation (int elnr, int locfacenr) const; // old style
+  [[deprecated("use GetElementEdge instead")]]                        
   int GetSurfaceElementEdgeOrientation (int elnr, int locedgenr) const; // old style
+  [[deprecated("use GetElementEdge instead")]]                        
   int GetSurfaceElementFaceOrientation2 (int elnr) const; // old style
+  [[deprecated("use GetElementEdge instead")]]                        
   int GetSegmentEdgeOrientation (int elnr) const; // old style
   
   
@@ -146,8 +130,9 @@ public:
   void GetFaceVertices (int fnr, int * vertices) const;
   void GetEdgeVertices (int enr, int & v1, int & v2) const;
   void GetEdgeVertices (int enr, PointIndex & v1, PointIndex & v2) const;
-  const int * GetEdgeVerticesPtr (int enr) const { return &edge2vert[enr][0]; }
-  const int * GetFaceVerticesPtr (int fnr) const { return &face2vert[fnr][0]; }
+  auto GetEdgeVertices (int enr) const { return tuple(edge2vert[enr][0], edge2vert[enr][1]); }
+  auto GetEdgeVerticesPtr (int enr) const { return &edge2vert[enr][0]; }
+  auto GetFaceVerticesPtr (int fnr) const { return &face2vert[fnr][0]; }
   void GetFaceEdges (int fnr, NgArray<int> & edges, bool withorientation = false) const;
 
   ELEMENT_TYPE GetFaceType (int fnr) const
@@ -157,7 +142,13 @@ public:
   int GetSurfaceElementFace (int elnr) const;
   void GetSurfaceElementEdgeOrientations (int elnr, NgArray<int> & eorient) const;
   int GetSurfaceElementFaceOrientation (int elnr) const;
+
+  [[deprecated("use GetEdge -> FlatArray instead")]]                        
   void GetEdges (SurfaceElementIndex elnr, NgArray<int> & edges) const;
+
+  FlatArray<T_EDGE> GetEdges (SurfaceElementIndex elnr) const;
+  // { return FlatArray<T_EDGE>(GetNEdges ( (*mesh)[elnr].GetType()), &surfedges[elnr][0]); }
+  
   int GetFace (SurfaceElementIndex elnr) const
   { return surffaces[elnr]; }
 
@@ -180,13 +171,17 @@ public:
   int GetFace2SurfaceElement (int fnr) const { return face2surfel[fnr-1]; }
 
   SegmentIndex GetSegmentOfEdge(int edgenr) const { return edge2segment[edgenr-1]; }
-  
+
+  [[deprecated("use GetVertexElements -> FlatArray instead")]]                  
   void GetVertexElements (int vnr, Array<ElementIndex> & elements) const;
+  
   FlatArray<ElementIndex> GetVertexElements (int vnr) const
   { return vert2element[vnr]; }
 
+  [[deprecated("use GetVertexSurfaceElements -> FlatArray instead")]]                    
   void GetVertexSurfaceElements( int vnr, Array<SurfaceElementIndex>& elements ) const;
   const auto & GetVertexSurfaceElements( ) const { return vert2surfelement; }
+  
   FlatArray<SurfaceElementIndex> GetVertexSurfaceElements(PointIndex vnr) const
   { return vert2surfelement[vnr]; }
 
@@ -606,6 +601,104 @@ const ELEMENT_EDGE * MeshTopology :: GetEdges0 (ELEMENT_TYPE et)
 }
 
 
+FlatArray<ELEMENT_EDGE> MeshTopology :: GetEdges (ELEMENT_TYPE et)
+{
+  static ELEMENT_EDGE segm_edges[1] =
+    { { 0, 1 }};
+
+  static ELEMENT_EDGE trig_edges[3] =
+    { { 2, 0 },
+      { 1, 2 },        
+      { 0, 1 }};
+
+  static ELEMENT_EDGE quad_edges[4] =
+    { { 0, 1 },
+      { 2, 3 },
+      { 3, 0 },
+      { 1, 2 }};
+
+
+  static ELEMENT_EDGE tet_edges[6] =
+    { { 3, 0 },
+      { 3, 1 },
+      { 3, 2 }, 
+      { 0, 1 },
+      { 0, 2 },
+      { 1, 2 }};
+
+  static ELEMENT_EDGE prism_edges[9] =
+    { { 2, 0 },
+      { 0, 1 },
+      { 2, 1 },
+      { 5, 3 },
+      { 3, 4 },
+      { 5, 4 },
+      { 2, 5 },
+      { 0, 3 },
+      { 1, 4 }};
+
+  static ELEMENT_EDGE pyramid_edges[8] =
+    { { 0, 1 },
+      { 1, 2 },
+      { 0, 3 },
+      { 3, 2 },
+      { 0, 4 },
+      { 1, 4 },
+      { 2, 4 },
+      { 3, 4 }};
+
+  static ELEMENT_EDGE hex_edges[12] =
+    {
+      { 0, 1 },
+      { 2, 3 },
+      { 3, 0 },
+      { 1, 2 },
+      { 4, 5 },
+      { 6, 7 },
+      { 7, 4 },
+      { 5, 6 },
+      { 0, 4 },
+      { 1, 5 },
+      { 2, 6 },
+      { 3, 7 },
+    };
+  
+  switch (et)
+    {
+    case SEGMENT:
+    case SEGMENT3:
+      return { 1, segm_edges };
+
+    case TRIG:
+    case TRIG6:
+      return { 3, trig_edges };
+
+    case QUAD:
+    case QUAD6:
+    case QUAD8:
+      return { 4, quad_edges };
+
+    case TET:
+    case TET10:
+      return { 6, tet_edges };
+
+    case PYRAMID:
+    case PYRAMID13:
+      return { 8, pyramid_edges };
+
+    case PRISM:
+    case PRISM12:
+    case PRISM15:
+      return { 9, prism_edges };
+
+    case HEX:
+    case HEX20:
+      return { 12, hex_edges };
+      // default:
+      // cerr << "Ng_ME_GetEdges, illegal element type " << et << endl;
+    }
+  return { 0, nullptr };  
+}
 
 
 

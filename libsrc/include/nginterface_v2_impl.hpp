@@ -296,14 +296,14 @@ template <> NGX_INLINE DLL_HEADER const Ng_Node<0> Ngx_Mesh :: GetNode<0> (int v
 template <> NGX_INLINE DLL_HEADER const Ng_Node<1> Ngx_Mesh :: GetNode<1> (int nr) const
 {
   Ng_Node<1> node;
-  node.vertices.ptr = mesh->GetTopology().GetEdgeVerticesPtr(nr);
+  node.vertices.ptr = (const int*)mesh->GetTopology().GetEdgeVerticesPtr(nr);
   return node;
 }
 
 template <> NGX_INLINE DLL_HEADER const Ng_Node<2> Ngx_Mesh :: GetNode<2> (int nr) const
 {
   Ng_Node<2> node;
-  node.vertices.ptr = mesh->GetTopology().GetFaceVerticesPtr(nr);
+  node.vertices.ptr = (const int*)mesh->GetTopology().GetFaceVerticesPtr(nr);
   node.vertices.nv = (node.vertices.ptr[3] == 0) ? 3 : 4;
   node.surface_el = mesh->GetTopology().GetFace2SurfaceElement (nr+1)-1;
   return node;

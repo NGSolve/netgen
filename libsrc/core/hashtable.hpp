@@ -783,6 +783,12 @@ namespace ngcore
           pos = nextpos;
         }
     }
+
+    void DeleteData()
+    {
+      hash = T_HASH(invalid);
+      used = 0;
+    }
     
     class Iterator
     {

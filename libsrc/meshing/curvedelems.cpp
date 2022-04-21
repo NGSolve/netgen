@@ -623,7 +623,8 @@ namespace netgen
 	if (mesh.GetDimension() == 3)
 	  for (SurfaceElementIndex i = 0; i < mesh.GetNSE(); i++)
 	    {
-	      top.GetEdges (i, edgenrs);
+	      // top.GetEdges (i, edgenrs);
+              auto edgenrs = top.GetEdges (i);
 	      for (int j = 0; j < edgenrs.Size(); j++)
 		edgeorder[edgenrs[j]] = aorder;
 	      faceorder[top.GetFace (i)] = aorder;
@@ -722,7 +723,8 @@ namespace netgen
 	if (working)
 	  for (SurfaceElementIndex i = 0; i < mesh.GetNSE(); i++)
 	    {
-	      top.GetEdges (i, edgenrs);
+	      // top.GetEdges (i, edgenrs);
+              auto edgenrs = top.GetEdges(i);
 	      const Element2d & el = mesh[i];
 	      const ELEMENT_EDGE * edges = MeshTopology::GetEdges0 (el.GetType());
 
@@ -1381,7 +1383,7 @@ namespace netgen
     if (info.order > 1)
       {
 	const MeshTopology & top = mesh.GetTopology();
-	info.edgenr = top.GetSegmentEdge (elnr+1)-1;	
+	info.edgenr = top.GetEdge (elnr);	
 	info.ndof += edgeorder[info.edgenr]-1;
       }
 
@@ -1459,7 +1461,7 @@ namespace netgen
     if (info.order > 1)
       {
 	const MeshTopology & top = mesh.GetTopology();
-	info.edgenr = top.GetSegmentEdge (elnr+1)-1;	
+	info.edgenr = top.GetEdge (elnr);	
 	info.ndof += edgeorder[info.edgenr]-1;
       }
 
