@@ -717,13 +717,10 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            switch (shape.ShapeType())
              {
              case TopAbs_FACE:
-               BRepGProp::SurfaceProperties (shape, props); break;
              case TopAbs_SHELL:
                BRepGProp::SurfaceProperties (shape, props); break;
 	     case TopAbs_SOLID:
-               BRepGProp::VolumeProperties (shape, props); break;
 	     case TopAbs_COMPOUND:
-               BRepGProp::VolumeProperties (shape, props); break;
 	     case TopAbs_COMPSOLID:
                BRepGProp::VolumeProperties (shape, props); break;
              default:
@@ -752,13 +749,10 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            switch (shape.ShapeType())
              {
              case TopAbs_FACE:
-               BRepGProp::SurfaceProperties (shape, props); break;
              case TopAbs_SHELL:
                BRepGProp::SurfaceProperties (shape, props); break;
 	     case TopAbs_SOLID:
-               BRepGProp::VolumeProperties (shape, props); break;
 	     case TopAbs_COMPOUND:
-               BRepGProp::VolumeProperties (shape, props); break;
 	     case TopAbs_COMPSOLID:
                BRepGProp::VolumeProperties (shape, props); break;
              default:
