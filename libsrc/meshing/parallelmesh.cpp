@@ -370,35 +370,20 @@ namespace netgen
     NgArray<int> num_verts_on_proc (ntasks);
     num_verts_on_proc = 0;
     num_procs_on_vert = 0;
+    
     auto iterate_vertices = [&](auto f) {
       vert_flag = -1;
       for (int dest = 1; dest < ntasks; dest++)
 	{
-          /*
-	  FlatArray<ElementIndex> els = els_of_proc[dest];
-	  for (int hi = 0; hi < els.Size(); hi++)
-	    {
-	      const Element & el = (*this) [ els[hi] ];
-	      for (int i = 0; i < el.GetNP(); i++)
-		f(el[i], dest);
-	    }
-          */
-          for (auto & ei : els_of_proc[dest])
-            for (auto pnum : (*this)[ei].PNums())
-              f(pnum, dest);
-          /*
-	  FlatArray<SurfaceElementIndex> sels = sels_of_proc[dest];
-	  for (int hi = 0; hi < sels.Size(); hi++)
-	    {
-	      const Element2d & el = (*this) [ sels[hi] ];
-	      for (int i = 0; i < el.GetNP(); i++)
-		f(el[i], dest);
-	    }
-          */
-          for (auto & ei : sels_of_proc[dest])
+          for (auto ei : els_of_proc[dest])
             for (auto pnum : (*this)[ei].PNums())
               f(pnum, dest);
 
+          for (auto ei : sels_of_proc[dest])
+            for (auto pnum : (*this)[ei].PNums())
+              f(pnum, dest);
+
+          /*
 	  NgFlatArray<SegmentIndex> segs = segs_of_proc[dest];
 	  for (int hi = 0; hi < segs.Size(); hi++)
 	    {
@@ -406,6 +391,10 @@ namespace netgen
 	      for (int i = 0; i < 2; i++)
 		f(el[i], dest);
 	    }
+          */
+          for (auto segi : segs_of_proc[dest])
+            for (auto pnum : (*this)[segi].PNums())
+              f(pnum, dest);
 	}
     };
     /** count vertices per proc and procs per vertex **/
@@ -417,16 +406,9 @@ namespace netgen
 	      vert_flag[vertex] = dest;
 	      num_verts_on_proc[dest]++;
 	      num_procs_on_vert[vertex]++;
-	      // GetParallelTopology().SetDistantPNum (dest, vertex);
-              // GetParallelTopology().AddDistantProc (PointIndex(vertex), dest); 
 	    }
 	};
 	countit(vertex, dest);
-        /*
-	auto pers = per_verts_trans[vertex];
-	for(int j = 0; j < pers.Size(); j++)
-	  countit(pers[j], dest);
-        */
         for (auto v : per_verts_trans[vertex])
 	  countit(v, dest);
       });
@@ -448,14 +430,8 @@ namespace netgen
 	    }
 	};
 	addit(vertex, dest);
-        /*
-	auto pers = per_verts_trans[vertex];
-	for(int j = 0; j < pers.Size(); j++)
-	  addit(pers[j], dest);
-        */
         for (auto v : per_verts_trans[vertex])
 	  addit(v, dest);
-        
       });
     tbuildvertexb.Stop();        
     /** 
@@ -628,7 +604,6 @@ namespace netgen
     tbuildelementtable.Stop();
     
     for (int dest = 1; dest < ntasks; dest ++ )
-      // sendrequests.Append (MyMPI_ISend (elementarrays[dest], dest, MPI_TAG_MESH+2, comm));
       sendrequests.Append (comm.ISend (elementarrays[dest], dest, MPI_TAG_MESH+2));
 
 
