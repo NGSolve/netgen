@@ -523,32 +523,24 @@ namespace netgen
                      v2eht.Set (v2, ednr);
                    }
 
-                 int cnti = 0;
-
+                 size_t usedold = v2eht.UsedElements();
+                 
                  for (int v2 : vert2vertcoarse[v])
-                   if (!v2eht.Used(v2))
-                     {
-                       cnti++;
-                       v2eht.Set (v2, 33);   // some value
-                     }
+                   v2eht.Set (v2, 33);   // some value                   
                  
                  LoopOverEdges (*mesh, *this, v,
                                 [&] (INDEX_2 edge, int elnr, int loc_edge, int element_dim)
                                 {
-                                  if (!v2eht.Used (edge.I2()))
-                                    {
-                                      cnti++;
-                                      v2eht.Set (edge.I2(), 33); // something
-                                    }
+                                  v2eht.Set (edge[1], 33); // something                                  
                                 });
-                 cnt[v] = cnti;
+                 
+                 cnt[v] = v2eht.UsedElements()-usedold;
                }
            }, TasksPerThread(4) );
 
         // accumulate number of edges
         int ned = edge2vert.Size();
 
-        // for (size_t v = 0; v < mesh->GetNV(); v++)
         for (size_t v : cnt.Range())
           {
             auto hv = cnt[v];
@@ -570,14 +562,15 @@ namespace netgen
              auto begin = r.First();
              auto end = r.Next();
              // INDEX_CLOSED_HASHTABLE<int> v2eht(2*max_edge_on_vertex+10);
-             ngcore::ClosedHashTable<int, int> v2eht(2*max_edge_on_vertex+10);             
+             ngcore::ClosedHashTable<int, int> v2eht(2*max_edge_on_vertex+10);
+
              Array<int> vertex2;
              for (PointIndex v = begin+PointIndex::BASE;
                   v < end+PointIndex::BASE; v++)
                {
                  int ned = cnt[v];
                  v2eht.DeleteData();            
-                 vertex2.SetSize (0);
+                 vertex2.SetSize0 ();
                  
                  for (int ednr : vert2edge[v])
                    {
@@ -595,27 +588,42 @@ namespace netgen
                  LoopOverEdges (*mesh, *this, v,
                                 [&](INDEX_2 edge, int elnr, int loc_edge, int element_dim)
                                 {
+                                  size_t pos;
+                                  if (v2eht.PositionCreate(edge[1], pos))
+                                    {
+                                      vertex2.Append (edge[1]);
+                                      v2eht.SetData (pos, 33);
+                                    }
+                                  /*
                                   if (!v2eht.Used(edge.I2()))
                                     {
                                       vertex2.Append (edge.I2());
                                       v2eht.Set (edge.I2(), 33); 
                                     }
+                                  */
                                 });
                  
                  QuickSort (vertex2);
-                 
+
+                 /*
                  for (int j = 0; j < vertex2.Size(); j++)
                    {
                      v2eht.Set (vertex2[j], ned);
-                     // edge2vert[ned] = INDEX_2 (v, vertex2[j]);
                      edge2vert[ned] = { v, vertex2[j] };
+                     ned++;
+                   }
+                 */
+                 for (auto v2 : vertex2)
+                   {
+                     v2eht.Set (v2, ned);
+                     edge2vert[ned] = { v, v2 };
                      ned++;
                    }
                  
                  LoopOverEdges (*mesh, *this, v,
                                 [&](INDEX_2 edge, int elnr, int loc_edge, int element_dim)
                                 {
-                                  int edgenum = v2eht.Get(edge.I2());
+                                  int edgenum = v2eht.Get(edge[1]);
                                   switch (element_dim)
                                     {
                                     case 3:

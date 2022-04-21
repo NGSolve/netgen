@@ -632,24 +632,16 @@ namespace ngcore
     size_t UsedElements () const
     {
       return used;
-      /*
-      size_t cnt = 0;
-      for (size_t i = 0; i < size; i++)
-	if (hash[i] != invalid)
-	  cnt++;
-      return cnt;
-      */
     }
 
     size_t Position (const T_HASH ind) const
     {
       size_t i = HashValue2(ind, mask);
-      while (1)
+      while (true)
 	{
 	  if (hash[i] == ind) return i;
 	  if (hash[i] == invalid) return size_t(-1);
-	  i++;
-	  if (i >= size) i = 0;
+          i = (i+1) & mask;          
 	}
     }
 
@@ -668,7 +660,7 @@ namespace ngcore
       
       size_t i = HashValue2 (ind, mask);
 
-      while (1)
+      while (true)
 	{
 	  if (hash[i] == invalid)
 	    { 
@@ -682,8 +674,7 @@ namespace ngcore
 	      apos = i; 
 	      return false; 
 	    }
-	  i++;
-	  if (i >= size) i = 0;
+          i = (i+1) & mask;
 	}
     }
 
