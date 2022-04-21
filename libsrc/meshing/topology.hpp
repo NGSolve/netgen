@@ -103,15 +103,24 @@ public:
     orient = GetSegmentEdgeOrientation(segnr);
   }
 
+  [[deprecated("use GetEdges (ElementIndex) -> FlatArray")]]                          
   void GetElementEdges (int elnr, NgArray<int> & edges) const;
+  [[deprecated("use GetFaces (ElementIndex) -> FlatArray")]]                            
   void GetElementFaces (int elnr, NgArray<int> & faces, bool withorientation = false) const;
 
+  FlatArray<T_EDGE> GetEdges (ElementIndex elnr) const;
+  FlatArray<T_FACE> GetFaces (ElementIndex elnr) const;    
+
+  
   [[deprecated("use GetElementEdge instead")]]                        
   void GetElementEdgeOrientations (int elnr, NgArray<int> & eorient) const;
   [[deprecated("use GetElementEdge instead")]]                        
   void GetElementFaceOrientations (int elnr, NgArray<int> & forient) const;
 
+  [[deprecated("use GetEdges (ElementIndex) -> FlatArray")]]                            
   int GetElementEdges (int elnr, int * edges, int * orient) const;
+
+  [[deprecated("use GetFaces (ElementIndex) -> FlatArray")]]                              
   int GetElementFaces (int elnr, int * faces, int * orient) const;
 
   [[deprecated("use GetElementEdge instead")]]                      

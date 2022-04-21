@@ -1483,13 +1483,19 @@ namespace netgen
           (ne,
            [&] (IntRange r)
             {
+              /*
               NgArray<int> hfaces;              
               for (ElementIndex ei : r)
-                {
+              {
                   GetElementFaces (ei+1, hfaces);
                   for (auto f : hfaces)
                     AsAtomic(face_els[f-1])++;
                 }
+              */
+              for (ElementIndex ei : r)
+                for (auto f : GetFaces(ei))
+                  AsAtomic(face_els[f])++;
+              
             }, TasksPerThread(4));
 	for (int i = 1; i <= nse; i++)
 	  face_surfels[GetSurfaceElementFace (i)-1]++;
@@ -2052,7 +2058,7 @@ namespace netgen
   }
 
 
-
+  
   int MeshTopology :: GetElementEdges (int elnr, int * eledges, int * orient) const
   {
     //  int ned = GetNEdges (mesh.VolumeElement(elnr).GetType());
@@ -2166,7 +2172,18 @@ namespace netgen
     return FlatArray<T_EDGE>(GetNEdges ( (*mesh)[elnr].GetType()), &surfedges[elnr][0]);
   }
   
+  FlatArray<T_EDGE> MeshTopology :: GetEdges (ElementIndex elnr) const
+  {
+    return FlatArray<T_EDGE>(GetNEdges ( (*mesh)[elnr].GetType()), &edges[elnr][0]);
+  }
 
+  FlatArray<T_FACE> MeshTopology :: GetFaces (ElementIndex elnr) const
+  {
+    return FlatArray<T_FACE>(GetNFaces ( (*mesh)[elnr].GetType()), &faces[elnr][0]);
+  }
+
+  
+  
   int MeshTopology :: GetSurfaceElementFace (int elnr) const
   {
     return surffaces.Get(elnr)+1;
