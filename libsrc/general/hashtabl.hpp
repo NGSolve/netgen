@@ -1449,13 +1449,6 @@ inline size_t HashValue (INDEX_3 i3, size_t size) { return (i3[0]+15*size_t(i3[1
     size_t UsedElements () const
     {
       return used;
-      /*
-      size_t cnt = 0;
-      for (size_t i = 0; i < size; i++)
-	if (hash[i] != invalid)
-	  cnt++;
-      return cnt;
-      */
     }
 
     size_t Position (const T_HASH ind) const

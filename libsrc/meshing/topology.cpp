@@ -7,7 +7,8 @@ namespace netgen
   using ngcore::ParallelFor;
   using ngcore::INT;
   using ngcore::TasksPerThread;
-  
+
+  /*
   template <class T>
   void QuickSortRec (NgFlatArray<T> data,
 		     int left, int right)
@@ -38,8 +39,7 @@ namespace netgen
     if (data.Size() > 1)
       QuickSortRec (data, 0, data.Size()-1);
   }
-
-
+  */
 
 
 
@@ -1023,12 +1023,13 @@ namespace netgen
           (mesh->GetNV(), // Points().Size(),
            [&] (IntRange r)
             {
-              auto begin = r.First();
-              auto end = r.Next();
+              // auto begin = r.First();
+              // auto end = r.Next();
               // INDEX_3_CLOSED_HASHTABLE<int> vert2face(2*max_face_on_vertex+10);
               ClosedHashTable<INDEX_3, int> vert2face(2*max_face_on_vertex+10); 
-              for (PointIndex v = begin+PointIndex::BASE;
-                   v < end+PointIndex::BASE; v++)
+              // for (PointIndex v = begin+PointIndex::BASE;
+              // v < end+PointIndex::BASE; v++)
+              for (PointIndex v : r+PointIndex::BASE)                
                 {
                   vert2face.DeleteData();
                   
@@ -1082,18 +1083,20 @@ namespace netgen
           }
         face2vert.SetSize(nfa);
         
-        // for (auto v : mesh.Points().Range())
 
         ParallelForRange
-          (mesh->GetNV(), // Points().Size(),
+          (mesh->GetNV(),
            [&] (IntRange r)
             {
-              auto begin = r.First();
-              auto end = r.Next();
+              // auto begin = r.First();
+              // auto end = r.Next();
               // INDEX_3_CLOSED_HASHTABLE<int> vert2face(2*max_face_on_vertex+10);
-              ClosedHashTable<INDEX_3, int> vert2face(2*max_face_on_vertex+10);               
+              ClosedHashTable<INDEX_3, int> vert2face(2*max_face_on_vertex+10);
+              /*
               for (PointIndex v = begin+PointIndex::BASE;
                    v < end+PointIndex::BASE; v++)
+              */
+              for (PointIndex v : r+PointIndex::BASE)
                 {
                   int first_fa = cnt[v];
                   int nfa = first_fa;
@@ -1115,26 +1118,41 @@ namespace netgen
                                     intermediate_faces[fnr][1],
                                     intermediate_faces[fnr][2]);
                       face.Sort();
+                      /*
                       if (!vert2face.Used(face))
                         {
-                          // INDEX_4 i4(face.I1(), face.I2(), face.I3(), 0);
                           face2vert[nfa] = { face[0], face[1], face[2], 0 }; // i4;
                           vert2face.Set (face, nfa);
                           nfa++;
-                          // cout << "adding face " << i4 << endl;
-                          // cnti++;
-                          // vert2face.Set (face, 33); // something
                         }
+                      */
+                      size_t pos;
+                      if (vert2face.PositionCreate(face, pos))
+                        {
+                          face2vert[nfa] = { face[0], face[1], face[2], 0 }; // i4;
+                          vert2face.SetData (pos, face, nfa);
+                          nfa++;
+                        }
+                      
                     }
                   
                   LoopOverFaces (*mesh, *this, v,
                                  [&] (INDEX_4 i4, int elnr, int j, bool volume)
                                  {
                                    INDEX_3 face(i4.I1(), i4.I2(), i4.I3());
+                                   /*
                                    if (!vert2face.Used (face))
                                      {
                                        face2vert[nfa] = { i4[0], i4[1], i4[2], i4[3] }; // i4;
                                        vert2face.Set (face, nfa);
+                                       nfa++;
+                                     }
+                                   */
+                                   size_t pos;
+                                   if (vert2face.PositionCreate(face, pos))
+                                     {
+                                       face2vert[nfa] = { i4[0], i4[1], i4[2], i4[3] }; // i4;
+                                       vert2face.SetData (pos, face, nfa);
                                        nfa++;
                                      }
                                  });
@@ -1169,254 +1187,6 @@ namespace netgen
                 }
             }, TasksPerThread(4) );
         
-          /*
-          int oldnfa = face2vert.Size();
-        int nfa = oldnfa;
-        INDEX_3_CLOSED_HASHTABLE<int> vert2face(2*max_face_on_vertex+10); 
-
-        for (auto v : mesh.Points().Range())
-          {
-            int first_fa = nfa;
-
-            vert2face.DeleteData();
-            
-            for (int j = 0; j < vert2oldface[v].Size(); j++)
-              {
-                int fnr = vert2oldface[v][j];
-                INDEX_3 face (face2vert[fnr].I1(),
-                              face2vert[fnr].I2(),
-                              face2vert[fnr].I3());
-                vert2face.Set (face, fnr+1);
-              }
-            
-
-            for (int pass = 1; pass <= 2; pass++)
-	      {
-
-                for (ElementIndex elnr : (*vert2element)[v])
-		  {
-		    const Element & el = mesh[elnr];
-	  
-		    int nelfaces = GetNFaces (el.GetType());
-		    const ELEMENT_FACE * elfaces = GetFaces0 (el.GetType());
-	  
-		    for (int j = 0; j < nelfaces; j++)
-		      if (elfaces[j][3] < 0)
-                        
-			{ // triangle
-			  INDEX_3 face(el[elfaces[j][0]], el[elfaces[j][1]], 
-                                       el[elfaces[j][2]]);
-                          
-			  int facedir = 0;
-			  if (face.I1() > face.I2())
-			    { swap (face.I1(), face.I2()); facedir += 1; }
-			  if (face.I2() > face.I3())
-			    { swap (face.I2(), face.I3()); facedir += 2; }
-			  if (face.I1() > face.I2())
-			    { swap (face.I1(), face.I2()); facedir += 4; }
-		      
-			  if (face.I1() != v) continue;
-
-                          if (pass == 1)
-                            {
-                              if (!vert2face.Used (face))
-                                {
-                                  nfa++;
-                                  vert2face.Set (face, nfa);
-                                  INDEX_4 hface(face.I1(),face.I2(),face.I3(),0);
-                                  face2vert.Append (hface);
-                                }
-                            }
-                          else
-                            {
-                              int facenum = vert2face.Get(face);
-                              faces[elnr][j].fnr = facenum-1;
-                              faces[elnr][j].forient = facedir;
-                            }
-			}
-                    
-		      else
-		    
-			{
-			  // quad
-			  int facenum;
-			  INDEX_4Q face4(el[elfaces[j][0]], el[elfaces[j][1]],
-					 el[elfaces[j][2]], el[elfaces[j][3]]);
-		      
-			  int facedir = 0;
-			  if (min2 (face4.I1(), face4.I2()) > 
-			      min2 (face4.I4(), face4.I3())) 
-			    {  // z - flip
-			      facedir += 1; 
-			      swap (face4.I1(), face4.I4());
-			      swap (face4.I2(), face4.I3());
-			    }
-			  if (min2 (face4.I1(), face4.I4()) >
-			      min2 (face4.I2(), face4.I3())) 
-			    {  // x - flip
-			      facedir += 2; 
-			      swap (face4.I1(), face4.I2());
-			      swap (face4.I3(), face4.I4());
-			    }
-			  if (face4.I2() > face4.I4())
-			    {  // diagonal flip
-			      facedir += 4; 
-			      swap (face4.I2(), face4.I4());
-			    }
-
-		
-			  INDEX_3 face(face4.I1(), face4.I2(), face4.I3());
-
-			  if (face.I1() != v) continue;
-		      
-			  if (vert2face.Used (face))
-			    {
-			      facenum = vert2face.Get(face);
-			    }
-			  else
-			    {
-                              if (pass == 2) cout << "hier in pass 2" << endl;
-			      nfa++;
-			      vert2face.Set (face, nfa);
-			      facenum = nfa;
-			  
-			      INDEX_4 hface(face4.I1(),face4.I2(),face4.I3(),face4.I4());
-			      face2vert.Append (hface);
-			    }
-		      
-                          faces[elnr][j].fnr = facenum-1;
-                          faces[elnr][j].forient = facedir;
-			}
-		  }
-
-		for (int j = 0; j < (*vert2surfelement)[v].Size(); j++)
-		  {
-		    SurfaceElementIndex elnr = (*vert2surfelement)[v][j];
-		    const Element2d & el = mesh.SurfaceElement (elnr);
-		
-		    const ELEMENT_FACE * elfaces = GetFaces1 (el.GetType());
-		
-		    if (elfaces[0][3] == 0)
-	    
-		      { // triangle
-	      
-			int facenum;
-			int facedir;
-		    
-			INDEX_3 face(el.PNum(elfaces[0][0]),
-				     el.PNum(elfaces[0][1]),
-				     el.PNum(elfaces[0][2]));
-		    
-			facedir = 0;
-			if (face.I1() > face.I2())
-			  {
-			    swap (face.I1(), face.I2());
-			    facedir += 1;
-			  }
-			if (face.I2() > face.I3())
-			  {
-			    swap (face.I2(), face.I3());
-			    facedir += 2;
-			  }
-			if (face.I1() > face.I2())
-			  {
-			    swap (face.I1(), face.I2());
-			    facedir += 4;
-			  }
-		    
-			if (face.I1() != v) continue;
-		    
-			if (vert2face.Used (face))
-			  facenum = vert2face.Get(face);
-			else
-			  {
-			    nfa++;
-			    vert2face.Set (face, nfa);
-			    facenum = nfa;
-			
-			    INDEX_4 hface(face.I1(),face.I2(),face.I3(),0);
-			    face2vert.Append (hface);
-			  }
-
-                        surffaces[elnr].fnr = facenum-1;
-                        surffaces[elnr].forient = facedir;
-		      }
-	  
-		    else
-	    
-		      {
-			// quad
-			int facenum;
-			int facedir;
-		    
-			INDEX_4Q face4(el.PNum(elfaces[0][0]),
-				       el.PNum(elfaces[0][1]),
-				       el.PNum(elfaces[0][2]),
-				       el.PNum(elfaces[0][3]));
-		    
-			facedir = 0;
-			if (min2 (face4.I1(), face4.I2()) > 
-			    min2 (face4.I4(), face4.I3())) 
-			  {  // z - orientation
-			    facedir += 1; 
-			    swap (face4.I1(), face4.I4());
-			    swap (face4.I2(), face4.I3());
-			  }
-			if (min2 (face4.I1(), face4.I4()) >
-			    min2 (face4.I2(), face4.I3())) 
-			  {  // x - orientation
-			    facedir += 2; 
-			    swap (face4.I1(), face4.I2());
-			    swap (face4.I3(), face4.I4());
-			  }
-			if (face4.I2() > face4.I4())
-			  { 
-			    facedir += 4; 
-			    swap (face4.I2(), face4.I4());
-			  }
-		    
-			INDEX_3 face(face4.I1(), face4.I2(), face4.I3());
-			if (face.I1() != v) continue;
-		    
-			if (vert2face.Used (face))
-			  facenum = vert2face.Get(face);
-			else
-			  {
-			    nfa++;
-			    vert2face.Set (face, nfa);
-			    facenum = nfa;
-			
-			    INDEX_4 hface(face4.I1(),face4.I2(),face4.I3(),face4.I4());
-			    face2vert.Append (hface);
-			  }
-
-                        surffaces[elnr].fnr = facenum-1;
-                        surffaces[elnr].forient = facedir;
-		      }
-		  }
-
-		// sort faces
-		if (pass == 1)
-		  {
-                    QuickSort (face2vert.Range(first_fa, nfa));
-
-                    for (int j = first_fa; j < face2vert.Size(); j++)
-                      {
-                        if (face2vert[j][0] == v)
-                          {
-                            INDEX_3 face (face2vert[j].I1(),
-                                          face2vert[j].I2(),
-                                          face2vert[j].I3());
-                            vert2face.Set (face, j+1);
-                          }
-                        else
-                          break;
-                      }
-		  }
-	      }
-	  }
-        face2vert.SetAllocSize (nfa);            
-          */
 
 	// *testout << "face2vert = " << endl << face2vert << endl;
 
@@ -1478,15 +1248,7 @@ namespace netgen
 	NgArray<short int> face_els(nfa), face_surfels(nfa);
 	face_els = 0;
 	face_surfels = 0;
-        /*
-	NgArray<int> hfaces;
-	for (int i = 1; i <= ne; i++)
-	  {
-	    GetElementFaces (i, hfaces);
-	    for (int j = 0; j < hfaces.Size(); j++)
-	      face_els[hfaces[j]-1]++;
-	  }
-        */
+
         ParallelForRange
           (ne,
            [&] (IntRange r)
@@ -2162,7 +1924,6 @@ namespace netgen
     int ned = GetNEdges (mesh->SurfaceElement(elnr).GetType());
     eledges.SetSize (ned);
     for (int i = 0; i < ned; i++)
-      // eledges[i] = abs (surfedges.Get(elnr)[i]);
       eledges[i] = surfedges.Get(elnr)[i]+1;
   }
 
@@ -2171,15 +1932,15 @@ namespace netgen
     int ned = GetNEdges ( (*mesh)[elnr].GetType());
     eledges.SetSize (ned);
     for (int i = 0; i < ned; i++)
-      // eledges[i] = abs (surfedges[elnr][i])-1;
       eledges[i] = surfedges[elnr][i];
   }
 
+  /*
   FlatArray<T_EDGE> MeshTopology :: GetEdges (SurfaceElementIndex elnr) const
   {
     return FlatArray<T_EDGE>(GetNEdges ( (*mesh)[elnr].GetType()), &surfedges[elnr][0]);
   }
-  
+
   FlatArray<T_EDGE> MeshTopology :: GetEdges (ElementIndex elnr) const
   {
     return FlatArray<T_EDGE>(GetNEdges ( (*mesh)[elnr].GetType()), &edges[elnr][0]);
@@ -2189,7 +1950,7 @@ namespace netgen
   {
     return FlatArray<T_FACE>(GetNFaces ( (*mesh)[elnr].GetType()), &faces[elnr][0]);
   }
-
+  */
   
   
   int MeshTopology :: GetSurfaceElementFace (int elnr) const
@@ -2424,7 +2185,7 @@ namespace netgen
   {
     vertices.SetSize(4);
     for (int i = 0; i < 4; i++)
-      vertices[i] = face2vert.Get(fnr)[i];
+      vertices[i] = face2vert[fnr-1][i];
     if (vertices[3] == 0)
       vertices.SetSize(3);
   }
@@ -2432,7 +2193,7 @@ namespace netgen
   void MeshTopology :: GetFaceVertices (int fnr, int * vertices) const
   {
     for (int i = 0; i <= 3; i++)
-      vertices[i] = face2vert.Get(fnr)[i];
+      vertices[i] = face2vert[fnr-1][i];
   }
 
 
@@ -2443,14 +2204,14 @@ namespace netgen
       cerr << "illegal edge nr: " << ednr << ", numedges = " << edge2vert.Size() 
 	   << " id = " << id 
 	   << endl;
-    v1 = edge2vert.Get(ednr)[0];
-    v2 = edge2vert.Get(ednr)[1];
+    v1 = edge2vert[ednr-1][0];
+    v2 = edge2vert[ednr-1][1];
   }
 
   void MeshTopology :: GetEdgeVertices (int ednr, PointIndex & v1, PointIndex & v2) const
   {
-    v1 = edge2vert.Get(ednr)[0];
-    v2 = edge2vert.Get(ednr)[1];
+    v1 = edge2vert[ednr-1][0];
+    v2 = edge2vert[ednr-1][1];
   }
 
 

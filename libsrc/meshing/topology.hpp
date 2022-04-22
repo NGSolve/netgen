@@ -29,11 +29,8 @@ class MeshTopology
   bool build_parent_faces = false; // may be changed to default = false
   static bool static_buildedges, static_buildfaces, static_buildvertex2element;
 
-  // NgArray<INDEX_2> edge2vert;
-  // NgArray<INDEX_4> face2vert;
-  // should be that:
-  NgArray<std::array<PointIndex,2>> edge2vert;
-  NgArray<std::array<PointIndex,4>> face2vert;
+  Array<std::array<PointIndex,2>> edge2vert;
+  Array<std::array<PointIndex,4>> face2vert;
 
   NgArray<std::array<T_EDGE,12>> edges;
   NgArray<std::array<T_FACE,6>> faces;
@@ -108,8 +105,9 @@ public:
   [[deprecated("use GetFaces (ElementIndex) -> FlatArray")]]                            
   void GetElementFaces (int elnr, NgArray<int> & faces, bool withorientation = false) const;
 
-  FlatArray<T_EDGE> GetEdges (ElementIndex elnr) const;
-  FlatArray<T_FACE> GetFaces (ElementIndex elnr) const;    
+  // definition in meshclass.hpp 
+  inline FlatArray<T_EDGE> GetEdges (ElementIndex elnr) const;
+  inline FlatArray<T_FACE> GetFaces (ElementIndex elnr) const;    
 
   
   [[deprecated("use GetElementEdge instead")]]                        
@@ -145,7 +143,8 @@ public:
   void GetFaceEdges (int fnr, NgArray<int> & edges, bool withorientation = false) const;
 
   ELEMENT_TYPE GetFaceType (int fnr) const
-  { return (face2vert.Get(fnr)[3] == 0) ? TRIG : QUAD; }
+  // { return (face2vert.Get(fnr)[3] == 0) ? TRIG : QUAD; }
+  { return (face2vert[fnr-1][3] == 0) ? TRIG : QUAD; }    
 
   void GetSurfaceElementEdges (int elnr, NgArray<int> & edges) const;
   int GetSurfaceElementFace (int elnr) const;
@@ -157,7 +156,7 @@ public:
   [[deprecated("use GetEdge -> FlatArray instead")]]                        
   void GetEdges (SurfaceElementIndex elnr, NgArray<int> & edges) const;
 
-  FlatArray<T_EDGE> GetEdges (SurfaceElementIndex elnr) const;
+  inline FlatArray<T_EDGE> GetEdges (SurfaceElementIndex elnr) const;
   // { return FlatArray<T_EDGE>(GetNEdges ( (*mesh)[elnr].GetType()), &surfedges[elnr][0]); }
   
   int GetFace (SurfaceElementIndex elnr) const
@@ -186,7 +185,7 @@ public:
   [[deprecated("use GetVertexElements -> FlatArray instead")]]                  
   void GetVertexElements (int vnr, Array<ElementIndex> & elements) const;
   
-  FlatArray<ElementIndex> GetVertexElements (int vnr) const
+  FlatArray<ElementIndex> GetVertexElements (PointIndex vnr) const
   { return vert2element[vnr]; }
 
   [[deprecated("use GetVertexSurfaceElements -> FlatArray instead")]]                    
@@ -196,10 +195,10 @@ public:
   FlatArray<SurfaceElementIndex> GetVertexSurfaceElements(PointIndex vnr) const
   { return vert2surfelement[vnr]; }
 
-  FlatArray<SegmentIndex> GetVertexSegments (int vnr) const
+  FlatArray<SegmentIndex> GetVertexSegments (PointIndex vnr) const
   { return vert2segment[vnr]; }
 
-  FlatArray<int> GetVertexPointElements (int vnr) const
+  FlatArray<int> GetVertexPointElements (PointIndex vnr) const
   { return vert2pointelement[vnr]; }
   
   int GetVerticesEdge ( int v1, int v2) const;
@@ -207,7 +206,7 @@ public:
   void GetSegmentSurfaceElements ( int segnr, NgArray<SurfaceElementIndex> & els ) const;
 
   // Call this before Update() to discard old edges
-  void ClearEdges() { edge2vert.SetSize(0); }
+  void ClearEdges() { edge2vert.SetSize0(); }
 
 private:
   Array<std::tuple<int, std::array<int,3>>> parent_edges;
