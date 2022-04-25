@@ -1,7 +1,7 @@
 #ifndef FILE_VSSOLUTION
 #define FILE_VSSOLUTION
 
-#include "vsfieldlines.hpp"
+#include "fieldlines.hpp"
 
 typedef void * ClientData;
 struct Tcl_Interp;
