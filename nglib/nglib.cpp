@@ -882,7 +882,7 @@ namespace nglib
 
       occgeom->FindEdges(*me, mparam);
 
-      if((me->GetNP()) && (me->GetNFD()))
+      if((me->GetNP()))
       {
          return NG_OK;
       }
