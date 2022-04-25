@@ -9,6 +9,7 @@
 #include <csg.hpp>
 #include <stlgeom.hpp>
 #include <meshing.hpp>
+#include <algorithm>
 
 #include "writeuser.hpp"
 
@@ -28,7 +29,7 @@ namespace netgen
 
     if ( ext == ".surf" )
       {
-        cout << "Surface file" << endl;
+        cout << IM(3) << "Surface file" << endl;
       
         ifstream in (filename);
       
@@ -72,7 +73,7 @@ namespace netgen
           }
       
       
-        cout << "points: " << np << " faces: " << nbe << endl;
+        cout << IM(3) << "points: " << np << " faces: " << nbe << endl;
       }
   
   
@@ -80,6 +81,10 @@ namespace netgen
       {  
         char reco[100];
         // int invert;
+	// read files that are stored with D instead of E as exponent prefix
+	// such files are for example exported by GMSH
+	bool Dnotation;
+	bool DnotationSet = false;
       
         ifstream in(filename);
 
@@ -100,28 +105,60 @@ namespace netgen
 
             else if (strcmp (reco, "2411") == 0)
               {
-                cout << "nodes found" << endl;
+                cout << IM(3) << "nodes found" << endl;
 
                 while (1)
                   {
                     int pi, hi;
-                    Point<3> p;
+		    Point<3> p;
+		    string p1tmp, p2tmp, p3tmp;
 
                     in >> pi;
                     if (pi == -1)
                       break;
 		    
                     in >> hi >> hi >> hi;
-                    in >> p(0) >> p(1) >> p(2);
+		    // check if D in first line
+		    if (DnotationSet == false) {
+			in >> p1tmp >> p2tmp >> p3tmp;
+			if (p1tmp.find("D") != std::string::npos){
+			    Dnotation = true;
+			    cout << IM(3) << "Attention: in your UNV file, D is used as an exponent prefix instead of E" << endl;
+			    std::replace(p1tmp.begin(), p1tmp.end(), 'D', 'E');
+			    std::replace(p2tmp.begin(), p2tmp.end(), 'D', 'E');
+			    std::replace(p3tmp.begin(), p3tmp.end(), 'D', 'E');
+			}
+			p(0) = std::stod(p1tmp);
+			p(1) = std::stod(p2tmp);
+			p(2) = std::stod(p3tmp);
+		    	mesh.AddPoint(p);
 
-                    mesh.AddPoint (p);
+			DnotationSet = true;
+			continue;
+		    }
+
+		    if (Dnotation == true) {
+		        in >> p1tmp >> p2tmp >> p3tmp;
+			std::replace(p1tmp.begin(), p1tmp.end(), 'D', 'E');
+			std::replace(p2tmp.begin(), p2tmp.end(), 'D', 'E');
+			std::replace(p3tmp.begin(), p3tmp.end(), 'D', 'E');
+			p(0) = std::stod(p1tmp);
+			p(1) = std::stod(p2tmp);
+			p(2) = std::stod(p3tmp);
+		    }
+		    else{
+			in >> p(0) >> p(1) >> p(2);
+		    }
+		    mesh.AddPoint(p);
                   }
-		cout << "read " << mesh.GetNP() << " points" << endl;
+		cout << IM(3) << "read " << mesh.GetNP() << " points" << endl;
                 Point3d pmin, pmax;
+		cout << IM(5) << "Get Box" << endl;
                 mesh.GetBox (pmin, pmax);
+		cout << IM(5)  << "Pmin: " << pmin << " Pmax: " << pmax << endl;
                 if(fabs(pmin.Z() - pmax.Z()) < 1e-10 * Dist(pmin, pmax))
                 {
-                       cout << "Set Dimension to 2." << endl;
+                       cout << IM(5)  << "Set Dimension to 2." << endl;
                        mesh.SetDimension(2);
                        dim = 2 ;
 		}
@@ -130,7 +167,7 @@ namespace netgen
 
             else if (strcmp (reco, "2412") == 0)
               {
-                cout << "elements found" << endl;
+                cout << IM(3)  << "elements found" << endl;
 
                 while (1)
                   {
@@ -234,18 +271,18 @@ namespace netgen
                           break;
                         }
                       default:
-                        cout << "Do not know fe_id = " << fe_id << ", skipping it." << endl;
+                        cout << IM(3)  << "Do not know fe_id = " << fe_id << ", skipping it." << endl;
                         break;
 		      }
                   }
-                cout << mesh.GetNE() << " elements found" << endl;
-                cout << mesh.GetNSE() << " surface elements found" << endl;
+                cout << IM(3)  << mesh.GetNE() << " elements found" << endl;
+                cout << IM(3)  << mesh.GetNSE() << " surface elements found" << endl;
 
               }
             else if(strcmp (reco, "2467") == 0)
               {
                 int matnr = 1;
-                cout << "Groups found" << endl;
+                cout << IM(3)  << "Groups found" << endl;
                 while(in.good())
                   {
                     int len;
@@ -256,7 +293,7 @@ namespace netgen
                     for(int i=0; i < 7; i++)
                       in >> len;
                     in >> name;
-                    cout << len << " element are in group " << name << endl;
+                    cout << IM(3)  << len << " element are in group " << name << endl;
                     int hi, index;
                     int fdnr, ednr;
 
@@ -318,7 +355,7 @@ namespace netgen
                         }
                       default:
                         {
-                          cout << "Codim " << codim << " not implemented yet!" << endl;
+                          cout << IM(3)  << "Codim " << codim << " not implemented yet!" << endl;
                         }
                       }
                         
@@ -357,7 +394,7 @@ namespace netgen
               }
             else
               {
-                cout << "Do not know data field type " << reco << ", skipping it" << endl;
+                cout << IM(3)  << "Do not know data field type " << reco << ", skipping it" << endl;
                 while(in.good())
                   {
                     in >> reco;
@@ -382,16 +419,22 @@ namespace netgen
 	}
       
 
+	cout << IM(5)  << "Finalize mesh" << endl;
         Point3d pmin, pmax;
+	cout << IM(5)  << "ComputeNVertices" << endl;
         mesh.ComputeNVertices();
+	cout << IM(5)  << "RebuildSurfaceElementLists" << endl;
         mesh.RebuildSurfaceElementLists();
+	cout << IM(5)  << "GetBox" << endl;
         mesh.GetBox (pmin, pmax);
+	cout << IM(5)  << "UpdateTopology" << endl;
         mesh.UpdateTopology();
+	cout << IM(5)  << "increment bccounter" << endl;
         if(dim == 3) bccounter++;
-        cout << "bounding-box = " << pmin << "-" << pmax << endl;
-	cout << "Created " << bccounter << " boundaries." << endl;
+        cout << IM(5)  << "bounding-box = " << pmin << "-" << pmax << endl;
+	cout << IM(5)  << "Created " << bccounter << " boundaries." << endl;
 	for(int i=0; i<bccounter; i++){
-		cout << mesh.GetBCName(i) << endl;
+		cout << IM(5)  << mesh.GetBCName(i) << endl;
 	}
       }
 
@@ -401,7 +444,7 @@ namespace netgen
   
     if ( ext == ".mesh2d" )
       {
-        cout << "Reading FEPP2D Mesh" << endl;
+        cout << IM(3)  << "Reading FEPP2D Mesh" << endl;
       
         char buf[100];
         int np, ne, nseg, i, j;
@@ -442,7 +485,7 @@ namespace netgen
   
     else if ( ext == ".mesh" )
       {
-        cout << "Reading Neutral Format" << endl;
+        cout << IM(3)  << "Reading Neutral Format" << endl;
       
         int np, ne, nse, i, j;
 
@@ -500,11 +543,11 @@ namespace netgen
             do
               {
                 in >> buf;
-                cout << "buf = " << buf << endl;
+                cout << IM(5)  << "buf = " << buf << endl;
                 if (strcmp (buf, "points") == 0)
                   {
                     in >> np;
-                    cout << "np = " << np << endl;
+                    cout << IM(5)  << "np = " << np << endl;
                   }
               }
             while (in.good());
@@ -518,7 +561,7 @@ namespace netgen
       
         auto pktfile = filename;
         pktfile.replace_extension("pkt");
-        cout << "pktfile = " << pktfile << endl;
+        cout << IM(3) << "pktfile = " << pktfile << endl;
 
         int np, nse, i;
         int bcprop;
@@ -559,7 +602,7 @@ namespace netgen
             p3++;
             if (p1 < 1 || p1 > np || p2 < 1 || p2 > np || p3 < 1 || p3 > np)
               {
-                cout << "p1 = " << p1 << " p2 = " << p2 << " p3 = " << p3 << endl;
+                cout << IM(3)  << "p1 = " << p1 << " p2 = " << p2 << " p3 = " << p3 << endl;
               }
 
             if (i > 110354) Swap (p2, p3);
@@ -589,7 +632,7 @@ namespace netgen
         ifstream incyl ("ngusers/guenter/cylinder.surf");
         int npcyl, nsecyl; 
         incyl >> npcyl;
-        cout << "npcyl = " << npcyl << endl;
+        cout << IM(3) << "npcyl = " << npcyl << endl;
         for (i = 1; i <= npcyl; i++)
           {
             Point3d p(0,0,0);
@@ -597,7 +640,7 @@ namespace netgen
             mesh.AddPoint (p);
           }
         incyl >> nsecyl;
-        cout << "nsecyl = " << nsecyl << endl;
+        cout << IM(3) << "nsecyl = " << nsecyl << endl;
         for (i = 1; i <= nsecyl; i++)
           {
             incyl >> p1 >> p2 >> p3;

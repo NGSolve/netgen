@@ -35,6 +35,7 @@
 #include <BRepOffsetAPI_ThruSections.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
+#include <BRepPrimAPI_MakeCone.hxx>
 #include <BRepPrimAPI_MakeHalfSpace.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
 #include <BRepPrimAPI_MakeRevol.hxx>
@@ -716,7 +717,12 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            switch (shape.ShapeType())
              {
              case TopAbs_FACE:
+             case TopAbs_SHELL:
                BRepGProp::SurfaceProperties (shape, props); break;
+	     case TopAbs_SOLID:
+	     case TopAbs_COMPOUND:
+	     case TopAbs_COMPSOLID:
+               BRepGProp::VolumeProperties (shape, props); break;
              default:
                BRepGProp::LinearProperties(shape, props);
                // throw Exception("Properties implemented only for FACE");
@@ -743,7 +749,12 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            switch (shape.ShapeType())
              {
              case TopAbs_FACE:
+             case TopAbs_SHELL:
                BRepGProp::SurfaceProperties (shape, props); break;
+	     case TopAbs_SOLID:
+	     case TopAbs_COMPOUND:
+	     case TopAbs_COMPSOLID:
+               BRepGProp::VolumeProperties (shape, props); break;
              default:
                BRepGProp::LinearProperties(shape, props);
              }
@@ -1802,6 +1813,11 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     }, py::arg("axis"), py::arg("r"), py::arg("h"),
     "create cylinder given by axis, radius and height");
   
+  m.def("Cone", [] (gp_Ax2 ax, double r1, double r2, double h, double angle) {
+     return BRepPrimAPI_MakeCone (ax, r1, r2, h, angle).Solid();
+    }, py::arg("axis"), py::arg("r1"), py::arg("r2"), py::arg("h"), py::arg("angle"),
+    "create cone given by axis, radius at bottom (z=0) r1, radius at top (z=h) r2, height and angle");
+
   m.def("Box", [] (gp_Pnt cp1, gp_Pnt cp2) {
       return BRepPrimAPI_MakeBox (cp1, cp2).Solid();
     }, py::arg("p1"), py::arg("p2"),
