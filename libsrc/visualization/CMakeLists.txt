@@ -2,9 +2,9 @@ add_definitions(-DNGINTERFACE_EXPORTS)
 install(FILES soldata.hpp DESTINATION ${NG_INSTALL_DIR_INCLUDE} COMPONENT netgen_devel )
 
 if(USE_GUI)
-    set( LIB_VISUAL_SOURCES meshdoc.cpp mvdraw.cpp vsfieldlines.cpp vsmesh.cpp vssolution.cpp importsolution.cpp )
+    set( LIB_VISUAL_SOURCES meshdoc.cpp mvdraw.cpp vsfieldlines.cpp fieldlines.cpp vsmesh.cpp vssolution.cpp importsolution.cpp )
 else(USE_GUI)
-    set( LIB_VISUAL_SOURCES visual_dummy.cpp )
+    set( LIB_VISUAL_SOURCES visual_dummy.cpp fieldlines.cpp)
 endif(USE_GUI)
 
 add_library(visual ${NG_LIB_TYPE} ${LIB_VISUAL_SOURCES})
@@ -14,6 +14,6 @@ install( TARGETS visual ${NG_INSTALL_DIR})
 
 install(FILES
   meshdoc.hpp mvdraw.hpp
-  vispar.hpp visual.hpp vssolution.hpp vsfieldlines.hpp
+  vispar.hpp visual.hpp vssolution.hpp fieldlines.hpp
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/visualization COMPONENT netgen_devel
 )
