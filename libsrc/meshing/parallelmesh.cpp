@@ -1123,8 +1123,10 @@ namespace netgen
 
 
     {
-      NgArray<double> segmbuf;
-      MyMPI_Recv ( segmbuf, 0, MPI_TAG_MESH+5, comm);
+      // NgArray<double> segmbuf;
+      // MyMPI_Recv ( segmbuf, 0, MPI_TAG_MESH+5, comm);
+      Array<double> segmbuf;
+      comm.Recv (segmbuf, 0, MPI_TAG_MESH+5);
 
       Segment seg;
       int globsegi;

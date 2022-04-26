@@ -94,6 +94,7 @@ namespace netgen
   }
 
   template <class T, int BASE>
+  [[deprecated("use ngcore - Array insterad")]]                  
   inline void MyMPI_Recv ( NgArray <T, BASE> & s, int src, int tag, MPI_Comm comm)
   {
     MPI_Status status;
@@ -106,6 +107,7 @@ namespace netgen
   }
 
   template <class T, int BASE>
+  [[deprecated("use ngcore - Array insterad")]]                    
   inline int MyMPI_Recv ( NgArray <T, BASE> & s, int tag, MPI_Comm comm)
   {
     MPI_Status status;
@@ -139,7 +141,8 @@ namespace netgen
   */
 
   template <class T, int BASE>
-  [[deprecated("mympi_isend ngflatarray, use comm.send instead")]]                
+  [[deprecated("mympi_isend ngflatarray, use comm.send instead")]]
+  [[deprecated("use ngcore - Array insterad")]]                    
   inline MPI_Request MyMPI_ISend (NgFlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm)
   {
     MPI_Request request;
@@ -183,6 +186,7 @@ namespace netgen
    */
 
   template <typename T>
+  // [[deprecated("do we need that ? ")]]       
   inline void MyMPI_ExchangeTable (TABLE<T> & send_data, 
 				   TABLE<T> & recv_data, int tag,
 				   const NgMPI_Comm & comm)
@@ -213,17 +217,21 @@ namespace netgen
   }
 
 
+  [[deprecated("do we still send commands?")]]                      
   extern void MyMPI_SendCmd (const char * cmd);
+  [[deprecated("do we still send commands?")]]                        
   extern string MyMPI_RecvCmd ();
 
 
   template <class T>
+  // [[deprecated("use comm.BCast instead")]]                      
   inline void MyMPI_Bcast (T & s, MPI_Comm comm)
   {
     MPI_Bcast (&s, 1, GetMPIType<T>(), 0, comm);
   }
 
   template <class T>
+  // [[deprecated("use comm.BCast instead")]]                        
   inline void MyMPI_Bcast (NgArray<T, 0> & s, NgMPI_Comm comm)
   {
     int size = s.Size();
@@ -234,6 +242,7 @@ namespace netgen
   }
 
   template <class T>
+  [[deprecated("use comm.BCast instead")]]                        
   inline void MyMPI_Bcast (NgArray<T, 0> & s, int root, MPI_Comm comm)
   {
     int id;

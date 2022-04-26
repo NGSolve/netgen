@@ -2661,7 +2661,7 @@ namespace netgen
     // static int timer1 = NgProfiler::CreateTimer ("getminmax, vol");
     // static int timer2 = NgProfiler::CreateTimer ("getminmax, surf");
 
-#ifdef PARALLEL
+#ifdef PARALLELGL
     auto comm = mesh->GetCommunicator();
     if (comm.Size() > 1)
       {
@@ -4535,7 +4535,7 @@ namespace netgen
     glEndList ();
 
 
-#ifdef PARALLELGL
+#ifdef PARALLELGLGL
     glFinish();
     if (id > 0)
       MyMPI_Send (clipplanelist_scal, 0, MPI_TAG_VIS);
