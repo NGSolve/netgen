@@ -280,6 +280,7 @@ namespace netgen
   }
   
 
+  FieldLineCalc :: ~FieldLineCalc() {;}
 
   
   void FieldLineCalc :: Calc(const Point<3> & startpoint, Array<Point<3>> & points, Array<double> & vals, Array<bool> & drawelems, Array<int> & dirstart)

@@ -32,7 +32,7 @@ private:
 
 public:
 
-  ~RKStepper();
+  DLL_HEADER ~RKStepper();
 
   RKStepper(int type = 0);
 
@@ -77,18 +77,20 @@ private:
   double thickness;
 
 public:
-  FieldLineCalc(const Mesh & amesh, const VectorFunction & afunc,
+  DLL_HEADER FieldLineCalc(const Mesh & amesh, const VectorFunction & afunc,
 		const double rel_length, const int amaxpoints = -1,
 		const double rel_thickness = -1, const double rel_tolerance = -1, const int rk_type = 0, const int adirection = 0);
+
+  DLL_HEADER ~FieldLineCalc();
 
   void SetCriticalValue(const double val) { critical_value = val; }
 
   void Randomized(void) { randomized = true; }
   void NotRandomized(void) { randomized = false; }
 
-  void Calc(const Point<3> & startpoint, Array<Point<3>> & points, Array<double> & vals, Array<bool> & drawelems, Array<int> & dirstart);
+  DLL_HEADER void Calc(const Point<3> & startpoint, Array<Point<3>> & points, Array<double> & vals, Array<bool> & drawelems, Array<int> & dirstart);
 
-  void GenerateFieldLines(Array<Point<3>> & potential_startpoints, const int numlines);
+  DLL_HEADER void GenerateFieldLines(Array<Point<3>> & potential_startpoints, const int numlines);
 
   const auto & GetPStart() const { return pstart; }
   const auto & GetPEnd() const { return pend; }
