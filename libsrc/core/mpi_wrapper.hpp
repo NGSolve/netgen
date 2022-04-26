@@ -347,14 +347,14 @@ namespace ngcore
 
   }; // class NgMPI_Comm
 
-  NETGEN_INLINE void MyMPI_WaitAll (FlatArray<MPI_Request> requests)
+  inline void MyMPI_WaitAll (FlatArray<MPI_Request> requests)
   {
     static Timer t("MPI - WaitAll"); RegionTimer reg(t);    
     if (!requests.Size()) return;
     MPI_Waitall (requests.Size(), requests.Data(), MPI_STATUSES_IGNORE);
   }
   
-  NETGEN_INLINE int MyMPI_WaitAny (FlatArray<MPI_Request> requests)
+  inline int MyMPI_WaitAny (FlatArray<MPI_Request> requests)
   {
     int nr;
     MPI_Waitany (requests.Size(), requests.Data(), &nr, MPI_STATUS_IGNORE);
@@ -433,7 +433,8 @@ namespace ngcore
     { return *this; }
   };  
 
-  NETGEN_INLINE void MyMPI_WaitAll (FlatArray<MPI_Request> requests) { ; }
+  inline void MyMPI_WaitAll (FlatArray<MPI_Request> requests) { ; }
+  inline int MyMPI_WaitAny (FlatArray<MPI_Request> requests) { return 0; }
 
 #endif // PARALLEL
 
