@@ -150,10 +150,10 @@ namespace netgen
     mutable int ps_startelement;
 
 
-    // #ifdef PARALLEL
+#ifdef PARALLEL
     /// connection to parallel meshes
     unique_ptr<ParallelMeshTopology> paralleltop;
-    // #endif
+#endif
 
     
     shared_ptr<NetgenGeometry> geometry;
@@ -902,12 +902,11 @@ namespace netgen
     GEOM_TYPE geomtype;
   
 
-
+#ifdef PARALLEL
     /// returns parallel topology
     class ParallelMeshTopology & GetParallelTopology () const
     { return *paralleltop; }
 
-#ifdef PARALLEL
     /// distributes the master-mesh to local meshes
     void Distribute ();
     void Distribute (NgArray<int> & volume_weights, NgArray<int> & surface_weights, 
