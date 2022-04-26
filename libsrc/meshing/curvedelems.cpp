@@ -639,7 +639,7 @@ namespace netgen
       }
 
 
-    // #ifdef PARALLEL
+#ifdef PARALLEL
     // TABLE<int> send_orders(ntasks), recv_orders(ntasks);
     DynamicTable<int> send_orders(ntasks), recv_orders(ntasks);
 
@@ -668,7 +668,7 @@ namespace netgen
           for (auto proc : partop.GetDistantFaceProcs(f))
             faceorder[f] = max(faceorder[f], recv_orders[proc][cnt[proc]++]);              
       }
-    // #endif
+#endif
 
 
     edgecoeffsindex.SetSize (nedges+1);
