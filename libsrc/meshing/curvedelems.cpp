@@ -560,10 +560,10 @@ namespace netgen
     order = 1;
 
     auto comm = mesh.GetCommunicator();
-#ifdef PARALLEL
+    // #ifdef PARALLEL
     enum { MPI_TAG_CURVE = MPI_TAG_MESH+20 };
     const ParallelMeshTopology & partop = mesh.GetParallelTopology ();
-#endif
+    //#endif
     int ntasks = comm.Size();
     bool working = (ntasks == 1) || (comm.Rank() > 0);
 
