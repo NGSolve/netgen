@@ -10,7 +10,6 @@ namespace netgen
   
   //   bool rational = true;
 
-  
   static void ComputeGaussRule (int n, NgArray<double> & xi, NgArray<double> & wi)
   {
     xi.SetSize (n);
@@ -640,8 +639,9 @@ namespace netgen
       }
 
 
-#ifdef PARALLEL
-    TABLE<int> send_orders(ntasks), recv_orders(ntasks);
+    // #ifdef PARALLEL
+    // TABLE<int> send_orders(ntasks), recv_orders(ntasks);
+    DynamicTable<int> send_orders(ntasks), recv_orders(ntasks);
 
     if (ntasks > 1 && working)
       {
@@ -654,11 +654,12 @@ namespace netgen
       }
 
     if (ntasks > 1)
-      MyMPI_ExchangeTable (send_orders, recv_orders, MPI_TAG_CURVE, comm);
+      //  MyMPI_ExchangeTable (send_orders, recv_orders, MPI_TAG_CURVE, comm);
+      comm.ExchangeTable (send_orders, recv_orders, MPI_TAG_CURVE);
 
     if (ntasks > 1 && working)
       {
-	NgArray<int> cnt(ntasks);
+	Array<int> cnt(ntasks);
 	cnt = 0;
 	for (int e = 0; e < edgeorder.Size(); e++)
           for (auto proc : partop.GetDistantEdgeProcs(e))
@@ -667,7 +668,7 @@ namespace netgen
           for (auto proc : partop.GetDistantFaceProcs(f))
             faceorder[f] = max(faceorder[f], recv_orders[proc][cnt[proc]++]);              
       }
-#endif
+    // #endif
 
 
     edgecoeffsindex.SetSize (nedges+1);
@@ -750,7 +751,9 @@ namespace netgen
 	if (ntasks > 1)
 	  {
 	    // distribute it ...
-	    TABLE<double> senddata(ntasks), recvdata(ntasks);
+	    // TABLE<double> senddata(ntasks), recvdata(ntasks);
+            DynamicTable<double> senddata(ntasks), recvdata(ntasks);
+            
 	    if (working)
 	      for (int e = 0; e < nedges; e++)
                 for (int proc : partop.GetDistantEdgeProcs(e))
@@ -767,7 +770,8 @@ namespace netgen
                       }
                   }
 	    
-	    MyMPI_ExchangeTable (senddata, recvdata, MPI_TAG_CURVE, comm);
+            // MyMPI_ExchangeTable (senddata, recvdata, MPI_TAG_CURVE, comm);
+            comm.ExchangeTable (senddata, recvdata, MPI_TAG_CURVE);
 
 	    NgArray<int> cnt(ntasks);
 	    cnt = 0;
@@ -945,7 +949,9 @@ namespace netgen
     if (ntasks > 1)
       {
 	// distribute it ...
-	TABLE<double> senddata(ntasks), recvdata(ntasks);
+	// TABLE<double> senddata(ntasks), recvdata(ntasks);
+        DynamicTable<double> senddata(ntasks), recvdata(ntasks);
+        
 	if (working)
 	  for (int e = 0; e < nedges; e++)
             for (int proc : partop.GetDistantEdgeProcs(e))
@@ -969,7 +975,9 @@ namespace netgen
                   }
               }
 
-	MyMPI_ExchangeTable (senddata, recvdata, MPI_TAG_CURVE, comm);
+	// MyMPI_ExchangeTable (senddata, recvdata, MPI_TAG_CURVE, comm);
+        comm.ExchangeTable (senddata, recvdata, MPI_TAG_CURVE);
+        
 	NgArray<int> cnt(ntasks);
 	cnt = 0;
 	if (working)
@@ -1145,7 +1153,8 @@ namespace netgen
 	  mesh.GetFaceDescriptor(mesh[i].GetIndex()).SurfNr();
 
 #ifdef PARALLEL
-    TABLE<int> send_surfnr(ntasks), recv_surfnr(ntasks);
+    // TABLE<int> send_surfnr(ntasks), recv_surfnr(ntasks);
+    DynamicTable<int> send_surfnr(ntasks), recv_surfnr(ntasks);
 
     if (ntasks > 1 && working)
       {
@@ -1155,7 +1164,8 @@ namespace netgen
       }
 
     if (ntasks > 1)
-      MyMPI_ExchangeTable (send_surfnr, recv_surfnr, MPI_TAG_CURVE, comm);
+      // MyMPI_ExchangeTable (send_surfnr, recv_surfnr, MPI_TAG_CURVE, comm);
+      comm.ExchangeTable (send_surfnr, recv_surfnr, MPI_TAG_CURVE);
 
     if (ntasks > 1 && working)
       {

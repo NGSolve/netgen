@@ -13,7 +13,7 @@
 #ifdef PARALLEL
 #include <mpi.h>
 
-extern void ParallelRun();
+// extern void ParallelRun();
 #endif
 
 #include "../libsrc/interface/writeuser.hpp"
@@ -281,7 +281,7 @@ int main(int argc, char ** argv)
 #ifdef PARALLEL
   else
     {
-      ParallelRun();
+      // ParallelRun();
       MPI_Finalize();
     }  
 

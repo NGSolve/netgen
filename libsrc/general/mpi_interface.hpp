@@ -186,7 +186,7 @@ namespace netgen
    */
 
   template <typename T>
-  // [[deprecated("do we need that ? ")]]       
+  [[deprecated("do we need that ? ")]]       
   inline void MyMPI_ExchangeTable (TABLE<T> & send_data, 
 				   TABLE<T> & recv_data, int tag,
 				   const NgMPI_Comm & comm)
@@ -217,6 +217,41 @@ namespace netgen
   }
 
 
+  template <typename T>
+  [[deprecated("do we need that ? ")]]       
+  inline void MyMPI_ExchangeTable (DynamicTable<T> & send_data, 
+				   DynamicTable<T> & recv_data, int tag,
+				   const NgMPI_Comm & comm)
+  {
+    int rank = comm.Rank();
+    int ntasks = comm.Size();
+    
+    Array<int> send_sizes(ntasks);
+    Array<int> recv_sizes(ntasks);
+    for (int i = 0; i < ntasks; i++)
+      send_sizes[i] = send_data[i].Size();
+
+    comm.AllToAll (send_sizes, recv_sizes);
+    
+    // for (int i = 0; i < ntasks; i++)
+    // recv_data.SetEntrySize (i, recv_sizes[i], sizeof(T));
+    recv_data = DynamicTable<T> (recv_sizes, true);
+    
+    Array<MPI_Request> requests;
+    for (int dest = 0; dest < ntasks; dest++)
+      if (dest != rank && send_data[dest].Size())
+        requests.Append (comm.ISend (FlatArray<T>(send_data[dest]), dest, tag));
+
+    for (int dest = 0; dest < ntasks; dest++)
+      if (dest != rank && recv_data[dest].Size())
+        requests.Append (comm.IRecv (FlatArray<T>(recv_data[dest]), dest, tag));
+
+    MyMPI_WaitAll (requests);
+  }
+
+
+
+  
   [[deprecated("do we still send commands?")]]                      
   extern void MyMPI_SendCmd (const char * cmd);
   [[deprecated("do we still send commands?")]]                        
@@ -224,14 +259,14 @@ namespace netgen
 
 
   template <class T>
-  // [[deprecated("use comm.BCast instead")]]                      
+  [[deprecated("use comm.BCast instead")]]                      
   inline void MyMPI_Bcast (T & s, MPI_Comm comm)
   {
     MPI_Bcast (&s, 1, GetMPIType<T>(), 0, comm);
   }
 
   template <class T>
-  // [[deprecated("use comm.BCast instead")]]                        
+  [[deprecated("use comm.BCast instead")]]                        
   inline void MyMPI_Bcast (NgArray<T, 0> & s, NgMPI_Comm comm)
   {
     int size = s.Size();

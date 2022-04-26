@@ -7,8 +7,10 @@
 #endif
 
 #include "array.hpp"
+#include "table.hpp"
 #include "exception.hpp"
 #include "profiler.hpp"
+#include "ngstream.hpp"
 
 namespace ngcore
 {
@@ -51,6 +53,23 @@ namespace ngcore
   inline MPI_Datatype GetMPIType (T &) {
     return GetMPIType<T>();
   }
+
+
+  inline void MyMPI_WaitAll (FlatArray<MPI_Request> requests)
+  {
+    static Timer t("MPI - WaitAll"); RegionTimer reg(t);    
+    if (!requests.Size()) return;
+    MPI_Waitall (requests.Size(), requests.Data(), MPI_STATUSES_IGNORE);
+  }
+  
+  inline int MyMPI_WaitAny (FlatArray<MPI_Request> requests)
+  {
+    int nr;
+    MPI_Waitany (requests.Size(), requests.Data(), &nr, MPI_STATUS_IGNORE);
+    return nr;
+  }
+
+  
 
   class NgMPI_Comm
   {
@@ -265,10 +284,24 @@ namespace ngcore
     
     template <typename T, typename T2 = decltype(GetMPIType<T>())> 
     void Bcast (T & s, int root = 0) const {
-      if (size == 1) return ;
+      if (size == 1) return;
       static Timer t("MPI - Bcast"); RegionTimer reg(t);
       MPI_Bcast (&s, 1, GetMPIType<T>(), root, comm);
     }
+
+    
+    template <class T>
+    void Bcast (Array<T> & d, int root = 0)
+    {
+      if (size == 1) return;
+      
+      int ds = d.Size();
+      Bcast (ds, root);
+      if (Rank() != root) d.SetSize (ds);
+      if (ds != 0)
+        MPI_Bcast (d.Data(), ds, GetMPIType<T>(), root, comm);
+    }
+
     
     void Bcast (std::string & s, int root = 0) const 
     {
@@ -334,6 +367,37 @@ namespace ngcore
                      comm);
     }
     
+
+
+    template <typename T>
+    void ExchangeTable (DynamicTable<T> & send_data, 
+                        DynamicTable<T> & recv_data, int tag)
+    {
+      Array<int> send_sizes(size);
+      Array<int> recv_sizes(size);
+      
+      for (int i = 0; i < size; i++)
+        send_sizes[i] = send_data[i].Size();
+      
+      AllToAll (send_sizes, recv_sizes);
+    
+      recv_data = DynamicTable<T> (recv_sizes, true);
+      
+      Array<MPI_Request> requests;
+      for (int dest = 0; dest < size; dest++)
+        if (dest != rank && send_data[dest].Size())
+          requests.Append (ISend (FlatArray<T>(send_data[dest]), dest, tag));
+      
+      for (int dest = 0; dest < size; dest++)
+        if (dest != rank && recv_data[dest].Size())
+          requests.Append (IRecv (FlatArray<T>(recv_data[dest]), dest, tag));
+
+      MyMPI_WaitAll (requests);
+    }
+    
+
+
+
     
     NgMPI_Comm SubCommunicator (FlatArray<int> procs) const
     {
@@ -347,19 +411,44 @@ namespace ngcore
 
   }; // class NgMPI_Comm
 
-  inline void MyMPI_WaitAll (FlatArray<MPI_Request> requests)
-  {
-    static Timer t("MPI - WaitAll"); RegionTimer reg(t);    
-    if (!requests.Size()) return;
-    MPI_Waitall (requests.Size(), requests.Data(), MPI_STATUSES_IGNORE);
-  }
+
+
+
+
   
-  inline int MyMPI_WaitAny (FlatArray<MPI_Request> requests)
+  class MyMPI
   {
-    int nr;
-    MPI_Waitany (requests.Size(), requests.Data(), &nr, MPI_STATUS_IGNORE);
-    return nr;
-  }
+    bool initialized_by_me;
+  public:
+    MyMPI(int argc, char ** argv) 
+    {
+      int is_init = -1;
+      MPI_Initialized(&is_init);
+      if (!is_init)
+        {
+          MPI_Init (&argc, &argv);
+          initialized_by_me = true;
+        }
+      else
+        initialized_by_me = false;
+      
+      NgMPI_Comm comm(MPI_COMM_WORLD);
+      NGSOStream::SetGlobalActive (comm.Rank() == 0);
+      
+      if (comm.Size() > 1)
+        TaskManager::SetNumThreads (1);
+    }
+    
+    ~MyMPI()
+    {
+      if (initialized_by_me)
+        MPI_Finalize ();
+    }
+  };
+  
+
+
+  
 
 #else // PARALLEL
   class MPI_Comm {
@@ -429,6 +518,14 @@ namespace ngcore
     template <typename T>
     void Bcast (T & s, int root = 0) const { ; } 
 
+    template <class T>
+    void Bcast (Array<T> & d, int root = 0) { ; } 
+
+    template <typename T>
+    void ExchangeTable (DynamicTable<T> & send_data, 
+                        DynamicTable<T> & recv_data, int tag) { ; }
+
+    
     NgMPI_Comm SubCommunicator (FlatArray<int> procs) const
     { return *this; }
   };  
@@ -436,6 +533,13 @@ namespace ngcore
   inline void MyMPI_WaitAll (FlatArray<MPI_Request> requests) { ; }
   inline int MyMPI_WaitAny (FlatArray<MPI_Request> requests) { return 0; }
 
+  class MyMPI
+  {
+  public:
+    MyMPI(int argc, char ** argv) { ; }
+  };
+
+  
 #endif // PARALLEL
 
 } // namespace ngcore

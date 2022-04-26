@@ -26,7 +26,10 @@
 namespace ngcore
 {
   // MPI rank, nranks TODO: Rename
-  extern NGCORE_API int id, ntasks;
+  // [[deprecated("don't use global id/ntasks")]]       
+  extern NGCORE_API int id;
+  // [[deprecated("don't use global id/ntasks")]]         
+  extern NGCORE_API int ntasks;
   
   NGCORE_API std::string Demangle(const char* typeinfo);
 

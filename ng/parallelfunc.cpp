@@ -1,3 +1,6 @@
+#ifdef OLDFILE
+
+
 #ifdef PARALLEL
 
 #include "dlfcn.h"
@@ -351,6 +354,9 @@ void ParallelRun()
 }
 
 
+
+
+#endif
 
 
 #endif

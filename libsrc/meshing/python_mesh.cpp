@@ -701,7 +701,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 	      }
 
 	    istream * infile = nullptr;
-	    NgArray<char> buf; // for distributing geometry!
+	    Array<char> buf; // for distributing geometry!
 	    int strs;
 
 	    if( id == 0) {
@@ -796,13 +796,16 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 	    }
 
 	    if(ntasks>1) {
-#ifdef PARALLEL
+              // #ifdef PARALLEL
 	      /** Scatter the geometry-string (no dummy-implementation in mpi_interface) **/
+              /*
 	      int strs = buf.Size();
 	      MyMPI_Bcast(strs, comm);
 	      if(strs>0)
 		MyMPI_Bcast(buf, comm);
-#endif
+              */
+              comm.Bcast(buf);
+              // #endif
 	    }
 
 	    shared_ptr<NetgenGeometry> geo;

@@ -465,7 +465,7 @@ namespace ngcore
     }
 
     /// Creates table with a priori fixed entry sizes.
-    DynamicTable (const Array<int, IndexType> & entrysizes)
+    DynamicTable (const Array<int, IndexType> & entrysizes, bool setentrysize=false)
       : data(entrysizes.Size())
     {
       size_t cnt = 0;
@@ -479,7 +479,10 @@ namespace ngcore
       for (auto i : data.Range())
         {
           data[i].maxsize = entrysizes[i];
-          data[i].size = 0;
+          if (setentrysize)
+            data[i].size = entrysizes[i];
+          else
+            data[i].size = 0;
           data[i].col = &oneblock[cnt];
           cnt += entrysizes[i];
         }
