@@ -723,7 +723,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   strs = geom_part_string.size();
                   // buf = new char[strs];
                   buf.SetSize(strs);
-                  memcpy(&buf[0], geom_part_string.c_str(), strs*sizeof(char));
+                  memcpy(buf.Data(), geom_part_string.c_str(), strs*sizeof(char));
                   delete infile;
                 }
 
@@ -810,7 +810,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
 	    shared_ptr<NetgenGeometry> geo;
 	    if(buf.Size()) { // if we had geom-info in the file, take it
-	      istringstream geom_infile(string((const char*)&buf[0], buf.Size()));
+	      istringstream geom_infile(string((const char*)buf.Data(), buf.Size()));
 	      geo = geometryregister.LoadFromMeshFile(geom_infile);
 	    }
 	    if(geo!=nullptr) mesh->SetGeometry(geo);
