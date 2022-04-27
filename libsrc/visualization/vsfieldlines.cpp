@@ -10,6 +10,7 @@
 #include <stlgeom.hpp>
 
 #include <visual.hpp>
+#include <meshing/fieldlines.hpp>
 
 
 namespace netgen

@@ -688,7 +688,7 @@ protected:
   size_t mask;
 public:
   ///
-  BASE_INDEX_2_CLOSED_HASHTABLE (size_t size);
+  DLL_HEADER BASE_INDEX_2_CLOSED_HASHTABLE (size_t size);
 
   int Size() const { return hash.Size(); }
   bool UsedPos0 (int pos) const { return ! (hash[pos].I1() == invalid); }
@@ -738,9 +738,9 @@ public:
 protected:
   ///
 
-  int Position2 (const INDEX_2 & ind) const;
-  bool PositionCreate2 (const INDEX_2 & ind, int & apos);
-  void BaseSetSize (int asize);
+  DLL_HEADER int Position2 (const INDEX_2 & ind) const;
+  DLL_HEADER bool PositionCreate2 (const INDEX_2 & ind, int & apos);
+  DLL_HEADER void BaseSetSize (int asize);
 };
 
 

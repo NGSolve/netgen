@@ -3540,7 +3540,7 @@ namespace netgen
 #include <../general/ngpython.hpp>
 #include "../include/nginterface.h"
 
-DLL_HEADER void ExportMeshVis(py::module &m)
+NGGUI_API void ExportMeshVis(py::module &m)
 {
   using namespace netgen;
   vispar.drawcolorbar = true;

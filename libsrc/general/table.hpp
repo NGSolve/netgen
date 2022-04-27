@@ -40,11 +40,11 @@ public:
     table2.oneblock = nullptr;
   }
 
-  BASE_TABLE (int size);
+  DLL_HEADER BASE_TABLE (int size);
   ///
-  BASE_TABLE (const NgFlatArray<int> & entrysizes, int elemsize);
+  DLL_HEADER BASE_TABLE (const NgFlatArray<int> & entrysizes, int elemsize);
   ///
-  ~BASE_TABLE ();
+  DLL_HEADER ~BASE_TABLE ();
 
   BASE_TABLE & operator= (BASE_TABLE && table2)
   {

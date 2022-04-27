@@ -1,12 +1,12 @@
 #ifdef NG_PYTHON
 
-#include <../general/ngpython.hpp>
-#include <core/python_ngcore.hpp>
+#include "../general/ngpython.hpp"
+#include "../core/python_ngcore.hpp"
 #include "../meshing/python_mesh.hpp"
 
-#include <meshing.hpp>
-#include <geometry2d.hpp>
-#include <csg2d.hpp>
+#include "../include/meshing.hpp"
+#include "../include/geometry2d.hpp"
+#include "csg2d.hpp"
 
 using namespace netgen;
 using namespace pybind11::literals;

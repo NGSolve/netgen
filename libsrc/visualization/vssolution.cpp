@@ -9,11 +9,12 @@
 // #include <parallel.hpp>
 #include <visual.hpp>
 #include <limits>
+
 namespace netgen
 {
 
 
-  DLL_HEADER VisualSceneSolution & GetVSSolution()
+  VisualSceneSolution & GetVSSolution()
   {
     static VisualSceneSolution vssolution;
     return vssolution;
@@ -22,19 +23,6 @@ namespace netgen
   
   // extern shared_ptr<Mesh> mesh;
   extern VisualSceneMesh vsmesh;
-
-
-  DLL_HEADER void AddUserVisualizationObject (UserVisualizationObject * vis)
-  {
-    // vssolution.AddUserVisualizationObject (vis);
-    GetVSSolution().AddUserVisualizationObject (vis);
-  }
-  DLL_HEADER void DeleteUserVisualizationObject (UserVisualizationObject * vis)
-  {
-    // vssolution.AddUserVisualizationObject (vis);
-    GetVSSolution().DeleteUserVisualizationObject (vis);
-  }
-
 
   VisualSceneSolution :: SolData :: SolData ()
     : data (0), solclass(0)
@@ -4984,7 +4972,7 @@ namespace netgen
 
 #include "../include/nginterface.h"
 
-void Ng_ClearSolutionData ()
+void Impl_Ng_ClearSolutionData ()
 {
 #ifdef OPENGL
   // if (nodisplay) return;
@@ -4993,7 +4981,7 @@ void Ng_ClearSolutionData ()
 #endif
 }
 
-void Ng_InitSolutionData (Ng_SolutionData * soldata)
+void Impl_Ng_InitSolutionData (Ng_SolutionData * soldata)
 {
   // soldata -> name = NULL;
   soldata -> data = NULL;
@@ -5007,7 +4995,7 @@ void Ng_InitSolutionData (Ng_SolutionData * soldata)
   soldata -> solclass = 0;
 }
 
-void Ng_SetSolutionData (Ng_SolutionData * soldata)
+void Impl_Ng_SetSolutionData (Ng_SolutionData * soldata)
 {
 #ifdef OPENGL
   // if (nodisplay) return;
@@ -5033,12 +5021,7 @@ void Ng_SetSolutionData (Ng_SolutionData * soldata)
 
 
 
-namespace netgen
-{
-  extern void Render (bool blocking);
-}
-
-void Ng_Redraw (bool blocking)
+void Impl_Ng_Redraw (bool blocking)
 {
 #ifdef OPENGL
   //netgen::vssolution.UpdateSolutionTimeStamp();
@@ -5065,7 +5048,7 @@ void (*glGenRenderbuffers) (GLsizei n, GLuint *renderbuffers);
 void (*glRenderbufferStorage) (GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
 void (*glFramebufferRenderbuffer) (GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
 
-DLL_HEADER void LoadOpenGLFunctionPointers() {
+NGGUI_API void LoadOpenGLFunctionPointers() {
 #ifdef USE_BUFFERS
   glBindBuffer = (decltype(glBindBuffer)) wglGetProcAddress("glBindBuffer");
   glBufferSubData = (decltype(glBufferSubData)) wglGetProcAddress("glBufferSubData");
@@ -5086,6 +5069,15 @@ DLL_HEADER void LoadOpenGLFunctionPointers() {
   glFramebufferRenderbuffer = (decltype(glFramebufferRenderbuffer )) wglGetProcAddress("glFramebufferRenderbuffer");
 }
 #else  // WIN32
-DLL_HEADER void LoadOpenGLFunctionPointers() { }
+NGGUI_API void LoadOpenGLFunctionPointers() { }
 #endif // WIN32
 #endif // OPENGL
+
+// set function pointers
+static bool dummy_init = [](){
+    Ptr_Ng_ClearSolutionData = Impl_Ng_ClearSolutionData;
+    Ptr_Ng_InitSolutionData = Impl_Ng_InitSolutionData;
+    Ptr_Ng_SetSolutionData = Impl_Ng_SetSolutionData;
+    Ptr_Ng_Redraw = Impl_Ng_Redraw;
+    return true;
+}();

@@ -128,7 +128,7 @@ namespace netgen
 
 
 
-  class SplineGeometry2d : public SplineGeometry<2>, public NetgenGeometry
+  class DLL_HEADER SplineGeometry2d : public SplineGeometry<2>, public NetgenGeometry
   {
   protected:
     NgArray<char*> materials;
@@ -141,13 +141,13 @@ namespace netgen
 
 
   public:
-    DLL_HEADER virtual ~SplineGeometry2d();
+    virtual ~SplineGeometry2d();
 
-    DLL_HEADER void Load (const filesystem::path & filename);
+    void Load (const filesystem::path & filename);
 
-    DLL_HEADER void LoadData( ifstream & infile );
-    DLL_HEADER void LoadDataNew ( ifstream & infile );
-    DLL_HEADER void LoadDataV2 ( ifstream & infile );
+    void LoadData( ifstream & infile );
+    void LoadDataNew ( ifstream & infile );
+    void LoadDataV2 ( ifstream & infile );
 
     void TestComment ( ifstream & infile ) ;
 
@@ -196,7 +196,7 @@ namespace netgen
     }
 
     
-    DLL_HEADER int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam) override;
+    int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam) override;
     
     void PartitionBoundary (MeshingParameters & mp, double h, Mesh & mesh2d);
 
@@ -204,8 +204,8 @@ namespace netgen
 
 
     size_t GetNDomains() const { return materials.Size(); }
-    DLL_HEADER void GetMaterial (int  domnr, char* & material );
-    DLL_HEADER void SetMaterial (int  domnr, const string & material);
+    void GetMaterial (int  domnr, char* & material );
+    void SetMaterial (int  domnr, const string & material);
 
     double GetDomainMaxh ( const int domnr );
     void SetDomainMaxh ( const int domnr, double maxh );

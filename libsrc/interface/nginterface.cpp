@@ -2371,13 +2371,6 @@ void Ng_GetArgs (int & argc, char ** &argv)
 
 
 
-void LinkFunction ()
-{
-  Ng_Redraw();
-}
-
-
-
 void Ng_TclCmd(string cmd)
 {
   lock_guard<mutex> guard(tcl_todo_mutex);

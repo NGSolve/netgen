@@ -71,13 +71,13 @@ public:
     virtual int     sync();
 };
 
-class gzstreambase : virtual public std::ios {
+class DLL_HEADER gzstreambase : virtual public std::ios {
 protected:
     gzstreambuf buf;
 public:
     gzstreambase() { init(&buf); }
-    DLL_HEADER gzstreambase( const filesystem::path & name, int open_mode);
-    DLL_HEADER ~gzstreambase();
+    gzstreambase( const filesystem::path & name, int open_mode);
+    ~gzstreambase();
     void open( const filesystem::path & name, int open_mode);
     void close();
     gzstreambuf* rdbuf() { return &buf; }

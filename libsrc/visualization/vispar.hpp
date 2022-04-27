@@ -120,7 +120,7 @@ public:
 public:
   VisualizationParameters();
 };
-DLL_HEADER extern VisualizationParameters vispar;
+NGGUI_API extern VisualizationParameters vispar;
 }
 
 #endif

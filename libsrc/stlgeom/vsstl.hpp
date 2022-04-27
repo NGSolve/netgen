@@ -10,7 +10,7 @@
 namespace netgen
 {
 
- class DLL_HEADER VisualSceneSTLGeometry : public VisualScene
+ class NGGUI_API VisualSceneSTLGeometry : public VisualScene
   {
     NgArray<int> trilists;
     class STLGeometry * stlgeometry;
@@ -25,7 +25,7 @@ namespace netgen
   };
 
 
-  class DLL_HEADER VisualSceneSTLMeshing : public VisualScene
+  class NGGUI_API VisualSceneSTLMeshing : public VisualScene
   {
     NgArray<int> trilists;
     int selecttrig, nodeofseltrig;

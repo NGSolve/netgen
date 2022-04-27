@@ -12,6 +12,7 @@
 #include "occ_face.hpp"
 #include "occ_solid.hpp"
 #include "occgeom.hpp"
+#include "Partition_Spliter.hxx"
 
 #include <BOPAlgo_Builder.hxx>
 #include <BRepBndLib.hxx>
@@ -28,7 +29,6 @@
 #include <IGESControl_Writer.hxx>
 #include <Interface_InterfaceModel.hxx>
 #include <Interface_Static.hxx>
-#include <Partition_Spliter.hxx>
 #include <STEPCAFControl_Writer.hxx>
 #include <STEPConstruct.hxx>
 #include <STEPControl_Writer.hxx>

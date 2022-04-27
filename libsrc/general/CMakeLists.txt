@@ -1,12 +1,18 @@
-add_definitions(-DNGINTERFACE_EXPORTS)
-add_library(gen INTERFACE)
-set(sdir ${CMAKE_CURRENT_SOURCE_DIR})
-target_sources(gen INTERFACE
-  ${sdir}/ngarray.cpp ${sdir}/ngbitarray.cpp ${sdir}/dynamicmem.cpp
-        ${sdir}/hashtabl.cpp ${sdir}/mystring.cpp ${sdir}/optmem.cpp ${sdir}/parthreads.cpp
-        ${sdir}/seti.cpp ${sdir}/sort.cpp ${sdir}/spbita2d.cpp ${sdir}/table.cpp
-        ${sdir}/mpi_interface.cpp ${sdir}/gzstream.cpp
-        )
+target_sources(nglib PRIVATE
+    dynamicmem.cpp
+    gzstream.cpp
+    hashtabl.cpp
+    mpi_interface.cpp
+    mystring.cpp
+    ngarray.cpp
+    ngbitarray.cpp
+    optmem.cpp
+    parthreads.cpp
+    seti.cpp
+    sort.cpp
+    spbita2d.cpp
+    table.cpp
+)
 
 install(FILES
   ngarray.hpp autodiff.hpp autoptr.hpp ngbitarray.hpp

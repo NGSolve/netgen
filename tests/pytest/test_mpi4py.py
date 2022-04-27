@@ -2,6 +2,7 @@ import pytest
 import netgen.meshing
 
 mpi4py = pytest.importorskip("mpi4py")
+_ = pytest.importorskip("pytest_mpi")
 
 @pytest.mark.mpi
 def test_mpi4py():

@@ -364,7 +364,7 @@ public:
   int GetNTE() const { return topedges.Size(); }
   const STLTopEdge & GetTopEdge (int nr) const { return topedges.Get(nr); }
   STLTopEdge & GetTopEdge (int nr)  { return topedges.Elem(nr); }
-  int GetTopEdgeNum (int pi1, int pi2) const;
+  DLL_HEADER int GetTopEdgeNum (int pi1, int pi2) const;
 
 
   int NOTrigsPerPoint(int pn) { return trigsperpoint.EntrySize(pn); }

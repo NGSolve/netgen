@@ -11,7 +11,7 @@
 namespace netgen
 {
 
-  NgArray<SpecialPoint> global_specpoints;  // for visualization
+  DLL_HEADER NgArray<SpecialPoint> global_specpoints;  // for visualization
   //static NgArray<MeshPoint> spoints;
   
 #define TCL_OK 0

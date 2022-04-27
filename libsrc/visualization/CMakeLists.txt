@@ -1,19 +1,16 @@
-add_definitions(-DNGINTERFACE_EXPORTS)
-install(FILES soldata.hpp DESTINATION ${NG_INSTALL_DIR_INCLUDE} COMPONENT netgen_devel )
-
-if(USE_GUI)
-    set( LIB_VISUAL_SOURCES meshdoc.cpp mvdraw.cpp vsfieldlines.cpp fieldlines.cpp vsmesh.cpp vssolution.cpp importsolution.cpp )
-else(USE_GUI)
-    set( LIB_VISUAL_SOURCES visual_dummy.cpp fieldlines.cpp)
-endif(USE_GUI)
-
-add_library(visual ${NG_LIB_TYPE} ${LIB_VISUAL_SOURCES})
-
-target_link_libraries( visual PUBLIC ngcore PRIVATE "$<BUILD_INTERFACE:netgen_python>" ${MPI_CXX_LIBRARIES} ${OPENGL_LIBRARIES} )
-install( TARGETS visual ${NG_INSTALL_DIR})
+target_sources(nggui PRIVATE
+    importsolution.cpp
+    meshdoc.cpp
+    mvdraw.cpp
+    vsfieldlines.cpp
+    vsmesh.cpp
+    vssolution.cpp
+    visualpkg.cpp
+)
+target_link_libraries( nggui PUBLIC "$<BUILD_INTERFACE:netgen_python>" ${MPI_CXX_LIBRARIES} ${OPENGL_LIBRARIES} )
 
 install(FILES
-  meshdoc.hpp mvdraw.hpp
-  vispar.hpp visual.hpp vssolution.hpp fieldlines.hpp
+  meshdoc.hpp mvdraw.hpp visual_api.hpp
+  vispar.hpp visual.hpp vssolution.hpp
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/visualization COMPONENT netgen_devel
 )

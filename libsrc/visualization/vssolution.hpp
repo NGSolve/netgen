@@ -1,7 +1,8 @@
 #ifndef FILE_VSSOLUTION
 #define FILE_VSSOLUTION
 
-#include "fieldlines.hpp"
+#include "visual_api.hpp"
+#include "mvdraw.hpp"
 
 typedef void * ClientData;
 struct Tcl_Interp;
@@ -10,7 +11,7 @@ struct Tcl_Interp;
 namespace netgen
 {
 
-DLL_HEADER extern void ImportSolution (const char * filename);
+NGGUI_API extern void ImportSolution (const char * filename);
 
 
   extern int Ng_Vis_Set (ClientData clientData,
@@ -19,7 +20,7 @@ DLL_HEADER extern void ImportSolution (const char * filename);
 
 
 
-class DLL_HEADER VisualSceneSolution : public VisualScene
+class NGGUI_API VisualSceneSolution : public VisualScene
 {
   friend class FieldLineCalc;
   
@@ -355,15 +356,17 @@ public:
 
 };
 
+NGGUI_API VisualSceneSolution & GetVSSolution();
 
+inline void AddUserVisualizationObject (UserVisualizationObject * vis)
+{
+    GetVSSolution().AddUserVisualizationObject (vis);
+}
 
-
-
-
-
-
-  // DLL_HEADER extern VisualSceneSolution vssolution;
-DLL_HEADER extern VisualSceneSolution & GetVSSolution();
+inline void DeleteUserVisualizationObject (UserVisualizationObject * vis)
+{
+    GetVSSolution().DeleteUserVisualizationObject (vis);
+}
 
 
 }

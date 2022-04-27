@@ -615,13 +615,13 @@ namespace netgen
 			    class DenseMatrix & trans) const;
 
     void GetShape (const Point<2> & p, class Vector & shape) const;
-    void GetShapeNew (const Point<2> & p, class FlatVector & shape) const;
+    DLL_HEADER void GetShapeNew (const Point<2> & p, class FlatVector & shape) const;
     template <typename T>
-    void GetShapeNew (const Point<2,T> & p, TFlatVector<T> shape) const;    
+    DLL_HEADER void GetShapeNew (const Point<2,T> & p, TFlatVector<T> shape) const;
     /// matrix 2 * np
-    void GetDShape (const Point<2> & p, class DenseMatrix & dshape) const;
+    DLL_HEADER void GetDShape (const Point<2> & p, class DenseMatrix & dshape) const;
     template <typename T>
-    void GetDShapeNew (const Point<2,T> & p, class MatrixFixWidth<2,T> & dshape) const;
+    DLL_HEADER void GetDShapeNew (const Point<2,T> & p, class MatrixFixWidth<2,T> & dshape) const;
     
     /// matrix 2 * np
     void GetPointMatrix (const NgArray<Point<2>> & points,
@@ -918,7 +918,7 @@ namespace netgen
     void GetNodesLocalNew (NgArray<Point<3> > & points) const;
 
     /// split surface into 3 node trigs
-    void GetSurfaceTriangles (NgArray<Element2d> & surftrigs) const;
+    DLL_HEADER void GetSurfaceTriangles (NgArray<Element2d> & surftrigs) const;
 
 
     /// get number of 'integration points'
@@ -933,7 +933,7 @@ namespace netgen
     void GetShape (const Point<3> & p, class Vector & shape) const;
     // void GetShapeNew (const Point<3> & p, class FlatVector & shape) const;
     template <typename T>
-    void GetShapeNew (const Point<3,T> & p, TFlatVector<T> shape) const;    
+    DLL_HEADER void GetShapeNew (const Point<3,T> & p, TFlatVector<T> shape) const;
     /// matrix 2 * np
     void GetDShape (const Point<3> & p, class DenseMatrix & dshape) const;
     template <typename T>
@@ -1567,7 +1567,7 @@ namespace netgen
     }
     
     ///
-    void GetPairs (int identnr, NgArray<INDEX_2> & identpairs) const;
+    DLL_HEADER void GetPairs (int identnr, NgArray<INDEX_2> & identpairs) const;
     ///
     int GetMaxNr () const { return maxidentnr; }  
 

@@ -17,17 +17,17 @@ class VisualSceneMeshDoctor : public VisualScene
   
 
 public:
-  DLL_HEADER VisualSceneMeshDoctor ();
-  DLL_HEADER virtual ~VisualSceneMeshDoctor ();
+  NGGUI_API VisualSceneMeshDoctor ();
+  NGGUI_API virtual ~VisualSceneMeshDoctor ();
 
-  DLL_HEADER virtual void BuildScene (int zoomall = 0);
-  DLL_HEADER virtual void DrawScene ();
-  DLL_HEADER virtual void MouseDblClick (int px, int py);
+  NGGUI_API virtual void BuildScene (int zoomall = 0);
+  NGGUI_API virtual void DrawScene ();
+  NGGUI_API virtual void MouseDblClick (int px, int py);
 
-  DLL_HEADER void SetMarkEdgeDist (int dist);
-  DLL_HEADER void ClickElement (int elnr);
-  DLL_HEADER void UpdateTables ();
-  DLL_HEADER int IsSegmentMarked (int segnr) const;
+  NGGUI_API void SetMarkEdgeDist (int dist);
+  NGGUI_API void ClickElement (int elnr);
+  NGGUI_API void UpdateTables ();
+  NGGUI_API int IsSegmentMarked (int segnr) const;
 };
 
 class MeshDoctorParameters 
@@ -37,6 +37,6 @@ public:
 };
 
 
-DLL_HEADER extern MeshDoctorParameters meshdoctor;
+NGGUI_API extern MeshDoctorParameters meshdoctor;
 
 }

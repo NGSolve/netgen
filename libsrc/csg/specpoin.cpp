@@ -21,7 +21,7 @@
 
 namespace netgen
 {
-  NgArray<Box<3> > boxes; // for visualizaton
+  DLL_HEADER NgArray<Box<3> > boxes; // for visualizaton
 
 
   void ProjectToEdge (const Surface * f1, const Surface * f2, Point<3> & hp);
