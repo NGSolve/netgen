@@ -209,6 +209,12 @@ NGCORE_API_EXPORT void ExportSTL(py::module & m)
                          }, py::arg("mp") = nullptr,
       py::call_guard<py::gil_scoped_release>(),
          (meshingparameter_description + stlparameter_description).c_str())
+    .def("Draw", FunctionPointer
+         ([] (shared_ptr<STLGeometry> self)
+          {
+             ng_geometry = self;
+          })
+         )
     ;
   m.def("LoadSTLGeometry", [] (const string & filename)
                            {
