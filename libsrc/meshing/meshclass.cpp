@@ -94,13 +94,14 @@ namespace netgen
     if(velement!=0)
     {
       auto & topology = mesh.GetTopology();
-      NgArray<int> faces;
-      topology.GetElementFaces(velement,faces);
+      // NgArray<int> faces;
+      // topology.GetElementFaces(velement,faces);
+      auto faces = Array<int> (topology.GetFaces(ElementIndex(velement-1)));
 
       //(*testout) << "faces " << faces << endl;
 
       for(int i=0; i<faces.Size(); i++)
-        faces[i] = topology.GetFace2SurfaceElement(faces[i]);
+        faces[i] = topology.GetFace2SurfaceElement(faces[i]+1);
 
       //(*testout) << "surfel " << faces << endl;
 
@@ -6373,12 +6374,13 @@ namespace netgen
             auto el = volelements[ei];
             map<PointIndex, Array<PointIndex>> mapped_points;
             int nmapped = 0;
-            NgArray<int> eledges;
-            topology.GetElementEdges(ei+1, eledges);
-            for(auto edgei : eledges)
+            // NgArray<int> eledges;
+            // topology.GetElementEdges(ei+1, eledges);
+            // for(auto edgei : eledges)
+            for(auto edgei : topology.GetEdges(ElementIndex(ei)))
               {
                 int p1, p2;
-                topology.GetEdgeVertices(edgei, p1, p2);
+                topology.GetEdgeVertices(edgei+1, p1, p2);
                 auto c1 = inserted_points.count({p1, p2});
                 auto c2 = inserted_points.count({p2, p1});
                 if(c1 == 0 && c2 == 0)

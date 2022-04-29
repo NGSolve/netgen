@@ -136,7 +136,7 @@ void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
     }
 
   istream * infile;
-  NgArray<char> buf; // for distributing geometry!
+  Array<char> buf; // for distributing geometry!
   int strs;
 
   if( id == 0) {
@@ -167,7 +167,7 @@ void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
         strs = geom_part_string.size();
         // buf = new char[strs];
         buf.SetSize(strs);
-        memcpy(&buf[0], geom_part_string.c_str(), strs*sizeof(char));
+        memcpy(buf.Data(), geom_part_string.c_str(), strs*sizeof(char));
         
         delete infile;
       }
@@ -243,15 +243,18 @@ void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
     mesh->SendRecvMesh();
   }
 
+    /*
   if(ntasks>1) {
 #ifdef PARALLEL
-    /** Scatter the geometry-string (no dummy-implementation in mpi_interface) **/
+    // Scatter the geometry-string (no dummy-implementation in mpi_interface) 
     int strs = buf.Size();
     MyMPI_Bcast(strs, comm);
     if(strs>0)
       MyMPI_Bcast(buf, comm);
-#endif
-  }
+ #endif
+ }
+  */
+  comm.Bcast(buf);
 
   shared_ptr<NetgenGeometry> geo;
   if(buf.Size()) { // if we had geom-info in the file, take it
