@@ -220,7 +220,7 @@ namespace netgen
 	mesh -> Load(filename);
         SetGlobalMesh (mesh);
 
-#ifdef PARALLEL
+#ifdef PARALLEL_NETGEN
 	MyMPI_SendCmd ("mesh");
 	mesh -> Distribute();
 #endif
