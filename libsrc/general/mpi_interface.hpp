@@ -270,7 +270,8 @@ namespace netgen
   inline void MyMPI_Bcast (NgArray<T, 0> & s, NgMPI_Comm comm)
   {
     int size = s.Size();
-    MyMPI_Bcast (size, comm);
+    // MyMPI_Bcast (size, comm);
+    comm.Bcast(size);
     // if (MyMPI_GetId(comm) != 0) s.SetSize (size);
     if (comm.Rank() != 0) s.SetSize (size);
     MPI_Bcast (&s[0], size, GetMPIType<T>(), 0, comm);
