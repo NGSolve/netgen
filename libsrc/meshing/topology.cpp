@@ -2167,6 +2167,13 @@ namespace netgen
         return facedir;
       }
   }
+
+  void MeshTopology :: GetSegmentEdge (int segnr, int & enr, int & orient) const
+  {
+    enr = segedges.Get(segnr)+1;
+    orient = GetSegmentEdgeOrientation(segnr);
+  }
+
   
   int MeshTopology :: GetSegmentEdgeOrientation (int elnr) const
   {

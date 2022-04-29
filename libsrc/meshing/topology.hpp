@@ -93,12 +93,14 @@ public:
   int GetEdge (SegmentIndex segnr) const { return segedges[segnr]; }
 
   [[deprecated("use GetEdge(SegmentIndex) instead")]]                      
-  void GetSegmentEdge (int segnr, int & enr, int & orient) const
+  void GetSegmentEdge (int segnr, int & enr, int & orient) const;
+  /*
   {
     enr = segedges.Get(segnr)+1;
     // orient = segedges.Get(segnr).orient;
     orient = GetSegmentEdgeOrientation(segnr);
-  }
+    }
+  */
 
   [[deprecated("use GetEdges (ElementIndex) -> FlatArray")]]                          
   void GetElementEdges (int elnr, NgArray<int> & edges) const;
