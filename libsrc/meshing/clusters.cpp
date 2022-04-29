@@ -85,29 +85,31 @@ namespace netgen
       (mesh.VolumeElements().Range(),
        [&] (auto myrange)
        {
-         NgArray<int> nnums, ednums, fanums;
+         NgArray<int> nnums; // , ednums, fanums;
          for (int i_ : myrange)
            {
              int i = i_+1;
              const Element & el = mesh.VolumeElement(i);
              ELEMENT_TYPE typ = el.GetType();
              
-             top.GetElementEdges (i, ednums);
-             top.GetElementFaces (i, fanums);
+             // top.GetElementEdges (i, ednums);
+             auto ednums = top.GetEdges (ElementIndex(i_));
+             // top.GetElementFaces (i, fanums);
+             auto fanums = top.GetFaces (ElementIndex(i_));
              
              int elnv = top.GetNVertices (typ);
              int elned = ednums.Size();
              int elnfa = fanums.Size();
              
              nnums.SetSize(elnv+elned+elnfa+1);
-             for (int j = 1; j <= elnv; j++)
-               nnums.Elem(j) = el.PNum(j)+1-PointIndex::BASE;
-             for (int j = 1; j <= elned; j++)
-               nnums.Elem(elnv+j) = nv+ednums.Elem(j);
-             for (int j = 1; j <= elnfa; j++)
-               nnums.Elem(elnv+elned+j) = nv+ned+fanums.Elem(j);
-             nnums.Elem(elnv+elned+elnfa+1) = nv+ned+nfa+i;
-             
+             for (int j = 0; j < elnv; j++)
+               nnums[j] = el[j]+1-PointIndex::BASE;
+             for (int j = 0; j < elned; j++)
+               nnums[elnv+j] = nv+ednums[j]+1;
+             for (int j = 0; j < elnfa; j++)
+               nnums[elnv+elned+j] = nv+ned+fanums[j]+1;
+             nnums[elnv+elned+elnfa] = nv+ned+nfa+i;
+
              for (int j = 0; j < nnums.Size(); j++)
                cluster_reps.Elem(nnums[j]) = nnums[j];
            }
@@ -142,25 +144,28 @@ namespace netgen
       (mesh.SurfaceElements().Range(),
        [&] (auto myrange)
        {
-         NgArrayMem<int,9> nnums, ednums;
+         NgArrayMem<int,9> nnums; // , ednums;
          for (int i_ : myrange)
            {
              int i = i_+1;
              const Element2d & el = mesh.SurfaceElement(i);
              ELEMENT_TYPE typ = el.GetType();
              
-             top.GetSurfaceElementEdges (i, ednums);
+             // top.GetSurfaceElementEdges (i, ednums);
+             auto ednums = top.GetEdges (SurfaceElementIndex(i_));
+             // cout << "ednums = " << ednums << endl;
+             
              int fanum = top.GetSurfaceElementFace (i);             
              
              int elnv = top.GetNVertices (typ);
              int elned = ednums.Size();
              
              nnums.SetSize(elnv+elned+1);
-             for (int j = 1; j <= elnv; j++)
-               nnums.Elem(j) = el.PNum(j)+1-PointIndex::BASE;
-             for (int j = 1; j <= elned; j++)
-               nnums.Elem(elnv+j) = nv+ednums.Elem(j);
-             nnums.Elem(elnv+elned+1) = fanum;             
+             for (int j = 0; j < elnv; j++)
+               nnums[j] = el[j]+1-PointIndex::BASE;
+             for (int j = 0; j < elned; j++)
+               nnums[elnv+j] = nv+ednums[j]+1;
+             nnums[elnv+elned] = fanum;             
              
              for (int j = 0; j < nnums.Size(); j++)
                cluster_reps.Elem(nnums[j]) = nnums[j];
@@ -270,23 +275,24 @@ namespace netgen
 	  
 	    if (clustertab)
               {
-                top.GetElementEdges (i, ednums);
-                top.GetElementFaces (i, fanums);
+                // top.GetElementEdges (i, ednums);
+                // top.GetElementFaces (i, fanums);
+                auto ednums = top.GetEdges (ElementIndex(i-1));
+                auto fanums = top.GetFaces (ElementIndex(i-1));                
                 
                 int elnv = top.GetNVertices (typ);
                 int elned = ednums.Size();
                 int elnfa = fanums.Size();
                 
                 nnums.SetSize(elnv+elned+elnfa+1);
-                for (int j = 1; j <= elnv; j++)
-                  nnums.Elem(j) = el.PNum(j)+1-PointIndex::BASE;
-                for (int j = 1; j <= elned; j++)
-                  nnums.Elem(elnv+j) = nv+ednums.Elem(j);
-                for (int j = 1; j <= elnfa; j++)
-                  nnums.Elem(elnv+elned+j) = nv+ned+fanums.Elem(j);
-                nnums.Elem(elnv+elned+elnfa+1) = nv+ned+nfa+i;
+                for (int j = 0; j < elnv; j++)
+                  nnums[j] = el[j]+1-PointIndex::BASE;
+                for (int j = 0; j < elned; j++)
+                  nnums[elnv+j] = nv+ednums[j]+1;
+                for (int j = 0; j < elnfa; j++)
+                  nnums[elnv+elned+j] = nv+ned+fanums[j]+1;
+                nnums[elnv+elned+elnfa] = nv+ned+nfa+i;
                 
-
                 
 	      for (int j = 0; j < nnums.Size(); j++)
 		for (int k = 0; k < j; k++)
