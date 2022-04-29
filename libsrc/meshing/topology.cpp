@@ -1919,6 +1919,7 @@ namespace netgen
     return 6;
   }
 
+  
   void MeshTopology :: GetSurfaceElementEdges (int elnr, NgArray<int> & eledges) const
   {
     int ned = GetNEdges (mesh->SurfaceElement(elnr).GetType());
@@ -2001,7 +2002,8 @@ namespace netgen
 		if (surfedges.Get(elnr)[i] == -1) return i;
 		eledges[i] = surfedges.Get(elnr)[i]+1;
 		// orient[i] = (surfedges.Get(elnr)[i].orient) ? -1 : 1;
-                orient[i] = GetSurfaceElementEdgeOrientation(elnr, i) ? -1 : 1;
+                // orient[i] = GetSurfaceElementEdgeOrientation(elnr, i) ? -1 : 1;
+                orient[i] = 1;
 
 	      }
 	  }
@@ -2029,7 +2031,8 @@ namespace netgen
 	eledges[0] = segedges.Get(elnr)+1;
 	if (orient)
 	  // orient[0] = segedges.Get(elnr).orient ? -1 : 1;
-          orient[0] = GetSegmentEdgeOrientation(elnr) ? -1 : 1;
+          // orient[0] = GetSegmentEdgeOrientation(elnr) ? -1 : 1;
+          orient[0] = 1;
       }
     return 1;
   }
@@ -2346,7 +2349,7 @@ namespace netgen
 
   int MeshTopology :: GetVerticesEdge ( int v1, int v2 ) const
   {
-    NgArray<int> elementedges;
+    // NgArray<int> elementedges;
     // Array<ElementIndex> elements_v1;
     // GetVertexElements ( v1, elements_v1);
     auto elements_v1 = GetVertexElements ( v1 );
@@ -2354,10 +2357,11 @@ namespace netgen
 
     for ( int i = 0; i < elements_v1.Size(); i++ )
       {
-	GetElementEdges( elements_v1[i]+1, elementedges );
+	// GetElementEdges( elements_v1[i]+1, elementedges );
+        auto elementedges = GetEdges(ElementIndex(elements_v1[i]));
 	for ( int ed = 0; ed < elementedges.Size(); ed ++)
 	  {
-	    GetEdgeVertices( elementedges[ed], edv1, edv2 );
+	    GetEdgeVertices( elementedges[ed]+1, edv1, edv2 );
 	    if ( ( edv1 == v1 && edv2 == v2 ) || ( edv1 == v2 && edv2 == v1 ) )
 	      return elementedges[ed];
 	  }
