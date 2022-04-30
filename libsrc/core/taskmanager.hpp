@@ -464,23 +464,26 @@ public:
     
     bool PopFirst (size_t & first)
     {
-      first = begin++;
-      return first < end;
-      /*
-      // int oldbegin = begin;
-      size_t oldbegin = begin.load(std::memory_order_acquire);
-      if (oldbegin >= end) return false;
-      while (!begin.compare_exchange_weak (oldbegin, oldbegin+1,
-                                           std::memory_order_relaxed, std::memory_order_relaxed))
-        if (oldbegin >= end) return false;
+      // first = begin++;
+      // return first < end;
       
-      first = oldbegin;
-      return true;
-      */
+      first = begin;
+      
+      size_t nextfirst = first+1;
+      if (first >= end) nextfirst = std::numeric_limits<size_t>::max()-1;
+
+      while (!begin.compare_exchange_weak (first, nextfirst))
+        {
+          first = begin;
+          nextfirst = first+1;
+          if (nextfirst >= end) nextfirst = std::numeric_limits<size_t>::max()-1;
+        }
+      return first < end;
     }
     
     bool PopHalf (IntRange & r)
     {
+      /*
       // int oldbegin = begin;
       size_t oldbegin = begin.load(std::memory_order_acquire);
       size_t oldend = end.load(std::memory_order_acquire);
@@ -492,6 +495,28 @@ public:
         {
           oldend = end.load(std::memory_order_acquire);
           if (oldbegin >= oldend) return false;
+        }
+      
+      r = IntRange(oldbegin, (oldbegin+oldend+1)/2);
+      return true;
+      */
+
+
+      size_t oldbegin = begin; // .load(std::memory_order_acquire);
+      size_t oldend = end; // .load(std::memory_order_acquire);
+      if (oldbegin >= oldend) return false;
+      
+      size_t nextbegin = (oldbegin+oldend+1)/2;
+      if (nextbegin >= oldend) nextbegin = std::numeric_limits<size_t>::max()-1;
+      
+      while (!begin.compare_exchange_weak (oldbegin, nextbegin))
+        // std::memory_order_relaxed, std::memory_order_relaxed))
+        {
+          oldend = end; // .load(std::memory_order_acquire);
+          if (oldbegin >= oldend) return false;
+          
+          nextbegin = (oldbegin+oldend+1)/2;
+          if (nextbegin >= oldend) nextbegin = std::numeric_limits<size_t>::max()-1;
         }
       
       r = IntRange(oldbegin, (oldbegin+oldend+1)/2);
