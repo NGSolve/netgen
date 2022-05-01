@@ -91,8 +91,15 @@ namespace ngcore
 #define NETGEN_CHECK_RANGE(value, min, max_plus_one) \
   { if ((value)<(min) ||  (value)>=(max_plus_one)) \
       throw ngcore::RangeException(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t", (value), (min), (max_plus_one)); }
+#define NETGEN_CHECK_SHAPE(a,b) \
+  { if(a.Shape() != b.Shape()) \
+      throw ngcore::Exception(__FILE__": shape don't match"); }
 #else // NETGEN_ENABLE_CHECK_RANGE
 #define NETGEN_CHECK_RANGE(value, min, max)
+#define NETGEN_CHECK_SHAPE(a,b)
+
 #endif // NETGEN_ENABLE_CHECK_RANGE
 
+
+  
 #endif // NETGEN_CORE_EXCEPTION_HPP
