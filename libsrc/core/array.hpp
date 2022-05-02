@@ -1525,6 +1525,9 @@ namespace ngcore
   public:
     HTArray () = default;
     HTArray (const HTArray &) = default;
+    template <typename T2>
+    HTArray (const HTArray<S,T2> & a2) : tail(a2.Tail()), head(a2.Head()) { ; }
+    
     HTArray & operator= (const HTArray &) = default;
 
     T * Ptr () { return tail.Ptr(); }
@@ -1534,6 +1537,9 @@ namespace ngcore
     const T & operator[] (size_t i) const { return Ptr()[i]; }
     template <int NR>
     T & Elem() { return (NR==S-1) ? head : tail.template Elem<NR>(); }
+
+    auto Tail() const { return tail; }
+    auto Head() const { return head; }
   };
 
   template <typename T>
@@ -1543,6 +1549,9 @@ namespace ngcore
   public:
     HTArray () = default;
     HTArray (const HTArray &) = default;
+    template <typename T2>
+    HTArray (const HTArray<1,T2> & a2) : head(a2.Head()) { ; }
+    
     HTArray & operator= (const HTArray &) = default;
 
     T * Ptr () { return &head; }
@@ -1556,6 +1565,8 @@ namespace ngcore
       // assert(NR==0, "HTArray index error");
       return head;
     }
+
+    auto Head() const { return head; }
   };
 
   template <typename T>
@@ -1565,6 +1576,9 @@ namespace ngcore
   public:
     HTArray () = default;
     HTArray (const HTArray &) = default;
+    template <typename T2>
+    HTArray (const HTArray<0,T2> & a2) { ; }
+    
     HTArray & operator= (const HTArray &) = default;
 
     /*
