@@ -30,7 +30,7 @@ push_github:
     - x64
   before_script:
     - "echo off"
-    - 'call "%VS2017INSTALLDIR%\VC\Auxiliary\Build\vcvars64"'
+    - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64"
     - set CI_DIR=C:\ci\%CI_PIPELINE_ID%
     - set CLCACHE_BASEDIR=C:\ci\%CI_PIPELINE_ID%
     - set NETGEN_BUILD_DIR=%CI_DIR%\build
