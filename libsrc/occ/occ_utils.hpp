@@ -230,13 +230,13 @@ namespace netgen
     bool openmin = false, openmax = false;
 
     DirectionalInterval (gp_Vec adir) : dir(adir) { ; }
-    DirectionalInterval (const DirectionalInterval & i2)
-      : dir(i2.dir), minval(i2.minval), maxval(i2.maxval) { ; }
+    DirectionalInterval (const DirectionalInterval & i2) = default;
 
     DirectionalInterval operator< (double val) const
     {
       DirectionalInterval i2 = *this;
       i2.maxval = val;
+      i2.openmax = true;
       return i2;
     }
 
@@ -244,9 +244,25 @@ namespace netgen
     {
       DirectionalInterval i2 = *this;
       i2.minval = val;
+      i2.openmin = true;
       return i2;
     }
 
+    DirectionalInterval operator<= (double val) const
+    {
+      DirectionalInterval i2 = *this;
+      i2.maxval = val;
+      i2.openmax = false;
+      return i2;
+    }
+
+    DirectionalInterval operator>= (double val) const
+    {
+      DirectionalInterval i2 = *this;
+      i2.minval = val;
+      i2.openmin = false;
+      return i2;
+    }
 
     DirectionalInterval Intersect (const DirectionalInterval & i2)
     {
