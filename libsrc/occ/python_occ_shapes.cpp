@@ -1589,7 +1589,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          {
            ListOfShapes selected;
            for (auto s : self)
-             if (interval.Contains(Center(s)))
+             if (interval.Contains(Center(s), GetBoundingBox(s).Diam() * 1e-7))
                selected.push_back(s);
            return selected;
          })
