@@ -265,12 +265,12 @@ if (USE_GUI)
     find_package(OpenGL REQUIRED)
 
     target_compile_definitions(nggui PUBLIC -DTCL -DOPENGL -DUSE_TOGL_2 PRIVATE -DUSE_TCL_STUBS -DUSE_TK_STUBS)
-    target_include_directories(nggui PUBLIC ${TCL_INCLUDE_PATH} ${TK_INCLUDE_PATH})
+    target_include_directories(nggui PRIVATE ${TCL_INCLUDE_PATH} ${TK_INCLUDE_PATH})
     if(NOT EXISTS ${TK_INCLUDE_PATH}/tkWin.h AND EXISTS ${TK_INCLUDE_PATH}/../win/tkWin.h)
-        target_include_directories(nggui PUBLIC ${TK_INCLUDE_PATH}/../win)
+        target_include_directories(nggui PRIVATE ${TK_INCLUDE_PATH}/../win)
     endif()
     if(NOT EXISTS ${TK_INCLUDE_PATH}/x11/Xlib.h AND EXISTS ${TK_INCLUDE_PATH}/../xlib/X11/Xlib.h)
-        target_include_directories(nggui PUBLIC ${TK_INCLUDE_PATH}/../xlib)
+        target_include_directories(nggui PRIVATE ${TK_INCLUDE_PATH}/../xlib)
     endif()
 
     target_link_libraries(nggui PUBLIC nglib togl
