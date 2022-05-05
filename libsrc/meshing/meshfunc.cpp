@@ -207,8 +207,9 @@ namespace netgen
               continue;
 
           identifications.GetMap(identnr, map);
+          mesh.FindOpenElements(md.domain);
 
-          for(auto & sel : mesh.SurfaceElements())
+          for(auto & sel : mesh.OpenElements())
           {
               bool is_mapped = true;
               for(auto pi : sel.PNums())
