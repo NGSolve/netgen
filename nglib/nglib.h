@@ -7,6 +7,8 @@
 /* Date:   7. May. 2000                                                   */
 /**************************************************************************/
 
+#include <stddef.h>
+
 /*!
    \file nglib.h
    \brief Library interface to the netgen meshing kernel
@@ -23,16 +25,14 @@
 
 // Philippose - 14.02.2009
 // Modifications for creating a DLL in Windows
-#ifndef NGLIB_API
 #ifdef WIN32
-   #ifdef NGLIB_EXPORTS || nglib_EXPORTS
+   #ifdef nglib_EXPORTS
       #define NGLIB_API   __declspec(dllexport)
    #else
       #define NGLIB_API   __declspec(dllimport)
    #endif
 #else
   #define NGLIB_API __attribute__((visibility("default")))
-#endif
 #endif
 
 
@@ -58,11 +58,6 @@ typedef void * Ng_Geometry_2D;
 /// Data type for NETGEN STL geometry
 typedef void * Ng_STL_Geometry;
 
-#ifdef OCCGEOMETRY
-/// Data type for NETGEN OpenCascade geometry
-typedef void * Ng_OCC_Geometry;
-typedef void * Ng_OCC_TopTools_IndexedMapOfShape;
-#endif
 
 
 // *** Special Enum types used within Netgen ***********
@@ -650,47 +645,6 @@ NGLIB_API Ng_Result Ng_ACIS_GenerateSurfaceMesh (Ng_ACIS_Geometry * geom,
 
 
 
-#ifdef OCCGEOMETRY
-
-// **********************************************************
-// **   OpenCascade Geometry / Meshing Utilities           **
-// **********************************************************
-
-// Create new OCC Geometry Object
-NGLIB_API Ng_OCC_Geometry * Ng_OCC_NewGeometry ();
-
-// Delete an OCC Geometry Object
-NGLIB_API Ng_Result Ng_OCC_DeleteGeometry (Ng_OCC_Geometry * geom);
-
-// Loads geometry from STEP file
-NGLIB_API Ng_OCC_Geometry * Ng_OCC_Load_STEP (const char * filename);
-
-// Loads geometry from IGES file
-NGLIB_API Ng_OCC_Geometry * Ng_OCC_Load_IGES (const char * filename);
-
-// Loads geometry from BREP file
-NGLIB_API Ng_OCC_Geometry * Ng_OCC_Load_BREP (const char * filename);
-
-// Set the local mesh size based on geometry / topology
-NGLIB_API Ng_Result Ng_OCC_SetLocalMeshSize (Ng_OCC_Geometry * geom,
-                                              Ng_Mesh * mesh,
-                                              Ng_Meshing_Parameters * mp);
-
-// Mesh the edges and add Face descriptors to prepare for surface meshing
-NGLIB_API Ng_Result Ng_OCC_GenerateEdgeMesh (Ng_OCC_Geometry * geom,
-                                              Ng_Mesh * mesh,
-                                              Ng_Meshing_Parameters * mp);
-
-// Mesh the surfaces of an OCC geometry
-NGLIB_API Ng_Result Ng_OCC_GenerateSurfaceMesh (Ng_OCC_Geometry * geom,
-                                                 Ng_Mesh * mesh,
-                                                 Ng_Meshing_Parameters * mp); 
-
-// Get the face map of an already loaded OCC geometry
-NGLIB_API Ng_Result Ng_OCC_GetFMap(Ng_OCC_Geometry * geom, 
-                                    Ng_OCC_TopTools_IndexedMapOfShape * FMap);
-
-#endif // OCCGEOMETRY
 
 
 
@@ -713,10 +667,6 @@ NGLIB_API void Ng_STL_Uniform_Refinement (Ng_STL_Geometry * geom,
 NGLIB_API void Ng_CSG_Uniform_Refinement (Ng_CSG_Geometry * geom,
 					   Ng_Mesh * mesh);
 
-#ifdef OCCGEOMETRY
-NGLIB_API void Ng_OCC_Uniform_Refinement (Ng_OCC_Geometry * geom,
-					   Ng_Mesh * mesh);
-#endif
 
 
 
@@ -739,10 +689,9 @@ NGLIB_API void Ng_STL_Generate_SecondOrder (Ng_STL_Geometry * geom,
 NGLIB_API void Ng_CSG_Generate_SecondOrder (Ng_CSG_Geometry * geom,
 					   Ng_Mesh * mesh);
 
+
 #ifdef OCCGEOMETRY
-NGLIB_API void Ng_OCC_Generate_SecondOrder (Ng_OCC_Geometry * geom,
-					   Ng_Mesh * mesh);
-#endif
-
-
+#include "nglib_occ.h"
+#endif // OCCGEOMETRY
+       //
 #endif // NGLIB

@@ -1,7 +1,9 @@
-add_library( la INTERFACE )
-set(sdir ${CMAKE_CURRENT_SOURCE_DIR})
-target_sources( la INTERFACE
-  ${sdir}/densemat.cpp ${sdir}/polynomial.cpp ${sdir}/bfgs.cpp ${sdir}/linopt.cpp ${sdir}/linsearch.cpp
+target_sources(nglib PRIVATE
+  bfgs.cpp
+  densemat.cpp
+  linopt.cpp
+  linsearch.cpp
+  polynomial.cpp
 )
 
 install(FILES

@@ -14,10 +14,6 @@ void NGCORE_API_IMPORT ExportSTLVis(py::module &m);
 #ifdef OCCGEOMETRY
 void NGCORE_API_IMPORT ExportNgOCC(py::module &m);
 #endif // OCCGEOMETRY
-namespace netgen
-{
-  std::vector<unsigned char> NGCORE_API_IMPORT Snapshot( int w, int h );
-}
 
 PYBIND11_MODULE(libngpy, ngpy)
 {
@@ -34,23 +30,4 @@ PYBIND11_MODULE(libngpy, ngpy)
     py::module NgOCC = ngpy.def_submodule("_NgOCC", "pybind NgOCC module");
     ExportNgOCC(NgOCC);
 #endif // OCCGEOMETRY
-#ifdef OPENGL
-    py::module meshvis = ngpy.def_submodule("meshvis", "pybind meshvis module");
-    ExportMeshVis(meshvis);
-    py::module csgvis = ngpy.def_submodule("csgvis", "pybind csgvis module");
-    ExportCSGVis(csgvis);
-    py::module stlvis = ngpy.def_submodule("stlvis", "pybind stlvis module");
-    ExportSTLVis(stlvis);
-    ngpy.def("Snapshot", netgen::Snapshot);
-#endif // OPENGL
-}
-
-// Force linking libnglib to libnetgenpy
-namespace netgen
-{
-   void MyBeep (int i);
-   void MyDummyToForceLinkingNGLib()
-   {
-       MyBeep(0);
-   }
 }

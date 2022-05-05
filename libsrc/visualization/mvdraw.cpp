@@ -22,11 +22,11 @@
 
 namespace netgen
 {
-  DLL_HEADER Point3d VisualScene :: center;
-  DLL_HEADER double VisualScene :: rad;
-  DLL_HEADER GLdouble VisualScene :: backcolor;
-  DLL_HEADER VisualScene visual_scene_cross;
-  DLL_HEADER VisualScene *visual_scene = &visual_scene_cross;
+  NGGUI_API Point3d VisualScene :: center;
+  NGGUI_API double VisualScene :: rad;
+  NGGUI_API GLdouble VisualScene :: backcolor;
+  NGGUI_API VisualScene visual_scene_cross;
+  NGGUI_API VisualScene *visual_scene = &visual_scene_cross;
 
   /*
 #if TOGL_MAJOR_VERSION!=2
@@ -114,18 +114,6 @@ namespace netgen
     ;
   }
 
-
-  extern DLL_HEADER void Render(bool blocking);
-  DLL_HEADER void Render (bool blocking)
-  {
-    if (blocking && multithread.running)
-      {
-        multithread.redraw = 2;
-        while (multithread.redraw == 2) ; 
-      }
-    else
-      multithread.redraw = 1;
-  }
 
 
   void VisualScene :: BuildScene (int zoomall)
@@ -860,6 +848,226 @@ namespace netgen
     glPopMatrix();
     return buffer;
   }
+
+  VisualSceneSurfaceMeshing :: VisualSceneSurfaceMeshing ()
+    : VisualScene()
+  {
+    ;
+  }
+
+  VisualSceneSurfaceMeshing :: ~VisualSceneSurfaceMeshing ()
+  {
+    ;
+  }
+
+  void VisualSceneSurfaceMeshing :: DrawScene ()
+  {
+    // int i, j, k;
+    if(!locpointsptr)
+      return;
+    auto& locpoints = *locpointsptr;
+    auto& loclines = *loclinesptr;
+    auto& plainpoints = *plainpointsptr;
+
+    if (loclines.Size() != changeval)
+      {
+	center = Point<3>(0,0,-5);
+	rad = 0.1;
+
+	// CalcTransformationMatrices();
+	changeval = loclines.Size();
+      }
+
+  glClearColor(backcolor, backcolor, backcolor, 1.0);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  SetLight();
+
+  //  glEnable (GL_COLOR_MATERIAL);
+
+  //  glDisable (GL_SHADING);
+  //  glColor3f (0.0f, 1.0f, 1.0f);
+  //  glLineWidth (1.0f);
+  //  glShadeModel (GL_SMOOTH);
+
+  //  glCallList (linelists.Get(1));
+
+  //  SetLight();
+
+  glPushMatrix();
+  glMultMatrixd (transformationmat);
+
+  glShadeModel (GL_SMOOTH);
+  // glDisable (GL_COLOR_MATERIAL);
+  glEnable (GL_COLOR_MATERIAL);
+  glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+
+  glEnable (GL_BLEND);
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  //  glEnable (GL_LIGHTING);
+
+  double shine = vispar.shininess;
+  double transp = vispar.transp;
+
+  glMaterialf (GL_FRONT_AND_BACK, GL_SHININESS, shine);
+  glLogicOp (GL_COPY);
+
+
+
+
+
+  float mat_col[] = { 0.2, 0.2, 0.8, 1 };
+  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col);
+
+  glPolygonOffset (1, 1);
+  glEnable (GL_POLYGON_OFFSET_FILL);
+
+    float mat_colbl[] = { 0.8, 0.2, 0.2, 1 };
+    float mat_cololdl[] = { 0.2, 0.8, 0.2, 1 };
+    float mat_colnewl[] = { 0.8, 0.8, 0.2, 1 };
+
+
+    glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+    glPolygonOffset (1, -1);
+    glLineWidth (3);
+
+    for (int i = 1; i <= loclines.Size(); i++)
+      {
+	if (i == 1)
+	  {
+	    glEnable (GL_POLYGON_OFFSET_FILL);
+	    glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colbl);
+	  }
+	else if (i <= oldnl)
+	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_cololdl);
+	else
+	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colnewl);
+
+	int pi1 = loclines.Get(i).I1();
+	int pi2 = loclines.Get(i).I2();
+
+	if (pi1 >= 1 && pi2 >= 1)
+	  {
+	    Point3d p1 = locpoints.Get(pi1);
+	    Point3d p2 = locpoints.Get(pi2);
+
+	    glBegin (GL_LINES);
+	    glVertex3f (p1.X(), p1.Y(), p1.Z());
+	    glVertex3f (p2.X(), p2.Y(), p2.Z());
+	    glEnd();
+	  }
+
+	glDisable (GL_POLYGON_OFFSET_FILL);
+      }
+
+
+    glLineWidth (1);
+
+
+    glPointSize (5);
+    float mat_colp[] = { 1, 0, 0, 1 };
+    glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colp);
+    glBegin (GL_POINTS);
+    for (int i = 1; i <= locpoints.Size(); i++)
+      {
+	Point3d p = locpoints.Get(i);
+	glVertex3f (p.X(), p.Y(), p.Z());
+      }
+    glEnd();
+
+
+    glPopMatrix();
+
+
+    // float mat_colp[] = { 1, 0, 0, 1 };
+
+    float mat_col2d1[] = { 1, 0.5, 0.5, 1 };
+    float mat_col2d[] = { 1, 1, 1, 1 };
+    glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col2d);
+
+    glBegin (GL_LINES);
+    for (int i = 1; i <= loclines.Size(); i++)
+      {
+	glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col2d);
+	if (i == 1)
+	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col2d1);
+
+	int pi1 = loclines.Get(i).I1();
+	int pi2 = loclines.Get(i).I2();
+
+	if (pi1 >= 1 && pi2 >= 1)
+	  {
+	    const auto& p1 = plainpoints.Get(pi1);
+	    const auto& p2 = plainpoints.Get(pi2);
+
+	    glBegin (GL_LINES);
+	    glVertex3f (scalex * p1[0] + shiftx, scaley * p1[1] + shifty, -5);
+	    glVertex3f (scalex * p2[0] + shiftx, scaley * p2[1] + shifty, -5);
+	    glEnd();
+	  }
+      }
+    glEnd ();
+
+
+    glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colp);
+    glBegin (GL_POINTS);
+    for (int i = 1; i <= plainpoints.Size(); i++)
+      {
+	const auto& p = plainpoints.Get(i);
+	glVertex3f (scalex * p[0] + shiftx, scaley * p[1] + shifty, -5);
+      }
+    glEnd();
+
+
+
+
+
+
+  glDisable (GL_POLYGON_OFFSET_FILL);
+
+  glPopMatrix();
+  DrawCoordinateCross ();
+  DrawNetgenLogo ();
+  glFinish();
+
+  }
+
+
+  void VisualSceneSurfaceMeshing :: BuildScene (int zoomall)
+  {
+  }
+
+  VisualSceneSurfaceMeshing vssurfacemeshing;
+
+  void Impl_Render (bool blocking)
+  {
+    if (blocking && multithread.running)
+      {
+        multithread.redraw = 2;
+        while (multithread.redraw == 2) ;
+      }
+    else
+      multithread.redraw = 1;
+  }
+
+  void Impl_UpdateVisSurfaceMeshData(int oldnl,
+            shared_ptr<NgArray<Point<3>>> locpointsptr,
+            shared_ptr<NgArray<INDEX_2>> loclinesptr,
+            shared_ptr<NgArray<Point<2>>> plainpointsptr)
+  {
+      vssurfacemeshing.oldnl = oldnl;
+      if(locpointsptr) vssurfacemeshing.locpointsptr = locpointsptr;
+      if(loclinesptr) vssurfacemeshing.loclinesptr = loclinesptr;
+      if(plainpointsptr) vssurfacemeshing.plainpointsptr = plainpointsptr;
+  }
+
+  static bool set_function_pointers = []()
+  {
+      Ptr_Render = Impl_Render;
+      Ptr_UpdateVisSurfaceMeshData = Impl_UpdateVisSurfaceMeshData;
+      return true;
+  }();
+
 
 
 #ifdef PARALLELGL

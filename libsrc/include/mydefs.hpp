@@ -16,7 +16,7 @@
 
 // #define DEBUG
 
-#if defined(NGINTERFACE_EXPORTS) || ( defined(WIN32) && (defined(NGLIB_EXPORTS) || defined(nglib_EXPORTS)) )
+#if defined(nglib_EXPORTS)
    #define DLL_HEADER   NGCORE_API_EXPORT
 #else
    #define DLL_HEADER   NGCORE_API_IMPORT

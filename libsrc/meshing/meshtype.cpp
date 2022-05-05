@@ -2253,8 +2253,8 @@ namespace netgen
   template void Element2d::GetDShapeNew<SIMD<double>> (const Point<2,SIMD<double>> &, MatrixFixWidth<2,SIMD<double>> &) const;
 
 
-  template void Element :: GetShapeNew (const Point<3,double> & p, TFlatVector<double> shape) const;
-  template void Element :: GetShapeNew (const Point<3,SIMD<double>> & p, TFlatVector<SIMD<double>> shape) const;
+  template DLL_HEADER void Element :: GetShapeNew (const Point<3,double> & p, TFlatVector<double> shape) const;
+  template DLL_HEADER void Element :: GetShapeNew (const Point<3,SIMD<double>> & p, TFlatVector<SIMD<double>> shape) const;
   
   template void Element::GetDShapeNew<double> (const Point<3> &, MatrixFixWidth<3> &) const;
   template void Element::GetDShapeNew<SIMD<double>> (const Point<3,SIMD<double>> &, MatrixFixWidth<3,SIMD<double>> &) const;

@@ -302,7 +302,7 @@ namespace netgen
     friend inline void Cross (const Vec3d & v1, const Vec3d & v2, Vec3d & prod);
 
     /// Returns one normal-vector to n
-    void GetNormal (Vec3d & n) const;
+    DLL_HEADER void GetNormal (Vec3d & n) const;
     ///
     friend double Angle (const Vec3d & v);
     ///
@@ -578,15 +578,15 @@ namespace netgen
     ///
     Box3d () { };
     ///
-    Box3d ( double aminx, double amaxx,
+    DLL_HEADER Box3d ( double aminx, double amaxx,
 	    double aminy, double amaxy,
 	    double aminz, double amaxz );
     ///
-    Box3d ( const Box3d & b2 );
+    DLL_HEADER Box3d ( const Box3d & b2 );
     ///
-    Box3d (const Point3d& p1, const Point3d& p2);
+    DLL_HEADER Box3d (const Point3d& p1, const Point3d& p2);
     ///
-    Box3d (const Box<3> & b2);
+    DLL_HEADER Box3d (const Box<3> & b2);
     ///
     double MinX () const { return minx[0]; }
     ///

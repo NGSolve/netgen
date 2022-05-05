@@ -177,8 +177,8 @@ namespace netgen
   double Det (const Mat<3,3> & m);
 
   // eigenvalues of a symmetric matrix
-  void EigenValues (const Mat<3,3> & m, Vec<3> & ev);
-  void EigenValues (const Mat<2,2> & m, Vec<3> & ev);
+  DLL_HEADER void EigenValues (const Mat<3,3> & m, Vec<3> & ev);
+  DLL_HEADER void EigenValues (const Mat<2,2> & m, Vec<3> & ev);
 
 
   template <typename T> 

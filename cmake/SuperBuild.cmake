@@ -81,27 +81,9 @@ if(USE_OCC)
 if(BUILD_OCC)
   set(OCC_DIR ${CMAKE_CURRENT_BINARY_DIR}/dependencies/occ)
 
-  ExternalProject_Add(project_freetype
-    URL https://github.com/freetype/freetype/archive/refs/tags/VER-2-11-0.zip
-    URL_MD5 f58ef6a7affb7794c4f125d98e0e6a25
-    DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
-    ${SUBPROJECT_ARGS}
-    CMAKE_ARGS
-         -DCMAKE_INSTALL_PREFIX=${OCC_DIR}
-         -DBUILD_SHARED_LIBS:BOOL=OFF
-         -DCMAKE_DISABLE_FIND_PACKAGE_ZLIB=TRUE
-         -DCMAKE_DISABLE_FIND_PACKAGE_BZip2=TRUE
-         -DCMAKE_DISABLE_FIND_PACKAGE_PNG=TRUE
-         -DCMAKE_DISABLE_FIND_PACKAGE_HarfBuzz=TRUE
-         -DCMAKE_DISABLE_FIND_PACKAGE_BrotliDec=TRUE
-         ${SUBPROJECT_CMAKE_ARGS}
-    UPDATE_COMMAND ""
-    )
-
   ExternalProject_Add(project_occ
-    DEPENDS project_freetype
-    URL https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_6_0.zip
-    URL_MD5 37519251c99cb3469ccfa82a9241d528
+    URL https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_6_1.zip
+    URL_MD5 e891d85cad61c5cc7ccba3d0110f0c8c
     DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
     ${SUBPROJECT_ARGS}
     CMAKE_ARGS
@@ -111,11 +93,14 @@ if(BUILD_OCC)
          -DBUILD_MODULE_FoundationClasses:BOOL=ON
          -DBUILD_MODULE_ModelingData:BOOL=ON
          -DBUILD_MODULE_ModelingAlgorithms:BOOL=ON
-         -DBUILD_MODULE_Visualization:BOOL=ON
          -DBUILD_MODULE_DataExchange:BOOL=ON
+         -DBUILD_MODULE_Visualization:BOOL=OFF
          -DBUILD_MODULE_ApplicationFramework:BOOL=OFF
          -DBUILD_MODULE_Draw:BOOL=OFF
-         -DUSE_FREETYPE=ON
+         -DUSE_FREETYPE:BOOL=OFF
+         -DUSE_OPENGL:BOOL=OFF
+         -DUSE_XLIB:BOOL=OFF
+         -DBUILD_DOC_Overview:BOOL=OFF
          ${SUBPROJECT_CMAKE_ARGS}
     UPDATE_COMMAND ""
     )
@@ -258,6 +243,10 @@ set_vars( NETGEN_CMAKE_ARGS
   OpenCascade_ROOT
   ZLIB_INCLUDE_DIRS
   ZLIB_LIBRARIES
+
+  NGLIB_LIBRARY_TYPE
+  NGCORE_LIBRARY_TYPE
+  NGGUI_LIBRARY_TYPE
   )
 
 # propagate all variables set on the command line using cmake -DFOO=BAR

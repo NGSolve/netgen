@@ -160,16 +160,16 @@ namespace netgen
 
 
   public:
-    void BuildBoundaryEdges(bool rebuild=true);
+    DLL_HEADER void BuildBoundaryEdges(bool rebuild=true);
 
-    bool PointContainedIn2DElement(const Point3d & p,
+    DLL_HEADER bool PointContainedIn2DElement(const Point3d & p,
 				   double lami[3],
 				   const int element,
 				   bool consider3D = false) const;
-    bool PointContainedIn3DElement(const Point3d & p,
+    DLL_HEADER bool PointContainedIn3DElement(const Point3d & p,
 				   double lami[3],
 				   const int element) const;
-    bool PointContainedIn3DElementOld(const Point3d & p,
+    DLL_HEADER bool PointContainedIn3DElementOld(const Point3d & p,
 				      double lami[3],
 				      const int element) const;
 
@@ -628,22 +628,22 @@ namespace netgen
     void SetPointSearchStartElement(const int el) const {ps_startelement = el;}
 
     /// gives element of point, barycentric coordinates
-    int GetElementOfPoint (const netgen::Point<3> & p,
+    DLL_HEADER int GetElementOfPoint (const netgen::Point<3> & p,
 			   double * lami,
 			   bool build_searchtree = 0,
 			   const int index = -1,
 			   const bool allowindex = true) const;
-    int GetElementOfPoint (const netgen::Point<3> & p,
+    DLL_HEADER int GetElementOfPoint (const netgen::Point<3> & p,
 			   double * lami,
 			   const NgArray<int> * const indices,
 			   bool build_searchtree = 0,
 			   const bool allowindex = true) const;
-    int GetSurfaceElementOfPoint (const netgen::Point<3> & p,
+    DLL_HEADER int GetSurfaceElementOfPoint (const netgen::Point<3> & p,
 				  double * lami,
 				  bool build_searchtree = 0,
 				  const int index = -1,
 				  const bool allowindex = true) const;
-    int GetSurfaceElementOfPoint (const netgen::Point<3> & p,
+    DLL_HEADER int GetSurfaceElementOfPoint (const netgen::Point<3> & p,
 				  double * lami,
 				  const NgArray<int> * const indices,
 				  bool build_searchtree = 0,
@@ -775,27 +775,27 @@ namespace netgen
     ///
     bool HasIdentifications() const { return ident != nullptr; }
 
-    void InitPointCurve(double red = 1, double green = 0, double blue = 0) const;
-    void AddPointCurvePoint(const Point3d & pt) const;
-    int GetNumPointCurves(void) const;
-    int GetNumPointsOfPointCurve(int curve) const;
-    Point3d & GetPointCurvePoint(int curve, int n) const;
-    void GetPointCurveColor(int curve, double & red, double & green, double & blue) const;
+    DLL_HEADER void InitPointCurve(double red = 1, double green = 0, double blue = 0) const;
+    DLL_HEADER void AddPointCurvePoint(const Point3d & pt) const;
+    DLL_HEADER int GetNumPointCurves(void) const;
+    DLL_HEADER int GetNumPointsOfPointCurve(int curve) const;
+    DLL_HEADER Point3d & GetPointCurvePoint(int curve, int n) const;
+    DLL_HEADER void GetPointCurveColor(int curve, double & red, double & green, double & blue) const;
 
 
 
 
     /// find number of vertices
-    void ComputeNVertices ();
+    DLL_HEADER void ComputeNVertices ();
     /// number of vertices (no edge-midpoints)
-    int GetNV () const;
+    DLL_HEADER int GetNV () const;
     /// remove edge points
-    void SetNP (int np);
+    DLL_HEADER void SetNP (int np);
 
   
 
-    Table<ElementIndex, PointIndex> CreatePoint2ElementTable(std::optional<BitArray> points = std::nullopt) const;
-    Table<SurfaceElementIndex, PointIndex> CreatePoint2SurfaceElementTable( int faceindex=0 ) const;
+    DLL_HEADER Table<ElementIndex, PointIndex> CreatePoint2ElementTable(std::optional<BitArray> points = std::nullopt) const;
+    DLL_HEADER Table<SurfaceElementIndex, PointIndex> CreatePoint2SurfaceElementTable( int faceindex=0 ) const;
 
     DLL_HEADER bool PureTrigMesh (int faceindex = 0) const;
     DLL_HEADER bool PureTetMesh () const;
@@ -908,8 +908,8 @@ namespace netgen
     { return *paralleltop; }
 
     /// distributes the master-mesh to local meshes
-    void Distribute ();
-    void Distribute (NgArray<int> & volume_weights, NgArray<int> & surface_weights, 
+    DLL_HEADER void Distribute ();
+    DLL_HEADER void Distribute (NgArray<int> & volume_weights, NgArray<int> & surface_weights,
 		     NgArray<int> & segment_weights);
 
 
@@ -920,8 +920,8 @@ namespace netgen
     //   void FindExchangeFaces ();
 
     /// use metis to decompose master mesh 
-    void ParallelMetis (int nproc); //  NgArray<int> & neloc );
-    void ParallelMetis (NgArray<int> & volume_weights, NgArray<int> & surface_weights, 
+    DLL_HEADER void ParallelMetis (int nproc); //  NgArray<int> & neloc );
+    DLL_HEADER void ParallelMetis (NgArray<int> & volume_weights, NgArray<int> & surface_weights,
 			NgArray<int> & segment_weights); 
 
     void PartHybridMesh (); //  NgArray<int> & neloc );

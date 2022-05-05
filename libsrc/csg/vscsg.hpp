@@ -10,7 +10,7 @@
 namespace netgen
 {
 
-  class DLL_HEADER VisualSceneGeometry : public VisualScene
+  class NGGUI_API VisualSceneGeometry : public VisualScene
   {
     class CSGeometry * geometry;
     NgArray<int> trilists;

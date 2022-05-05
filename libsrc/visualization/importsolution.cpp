@@ -2,6 +2,7 @@
 //  Read solution file
 //
 
+#include "visual_api.hpp"
 
 #include <mystdlib.h>
 
@@ -16,9 +17,9 @@
 namespace netgen
 {
 
-  extern shared_ptr<Mesh> mesh;
+  DLL_HEADER extern shared_ptr<Mesh> mesh;
 
-DLL_HEADER void ImportSolution2 (const char * filename)
+NGGUI_API void ImportSolution2 (const char * filename)
 {
   ifstream inf (filename);
   char buf[100], name[1000];

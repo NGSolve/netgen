@@ -1,21 +1,4 @@
-# generate .cpp files containing the string of the .rls meshing rule files
-add_executable(makerls ${CMAKE_CURRENT_SOURCE_DIR}/../../rules/makerlsfile.cpp)
-
-set(rules hexrules prismrules2 pyramidrules pyramidrules2 quadrules tetrules triarules)
-
-foreach(rule ${rules})
-    list(APPEND rules_sources rule_${rule}.cpp)
-    set(rule_file ${CMAKE_CURRENT_SOURCE_DIR}/../../rules/${rule}.rls)
-
-    add_custom_command(OUTPUT rule_${rule}.cpp
-      COMMAND makerls ${rule_file} rule_${rule}.cpp ${rule}
-      DEPENDS makerls ${rule_file}
-    )
-endforeach()
-
-
-add_definitions(-DNGINTERFACE_EXPORTS)
-add_library(mesh ${NG_LIB_TYPE}
+target_sources(nglib PRIVATE
         adfront2.cpp adfront3.cpp bisect.cpp boundarylayer.cpp 
         clusters.cpp curvedelems.cpp delaunay.cpp delaunay2d.cpp	    
         geomsearch.cpp global.cpp hprefinement.cpp improve2.cpp		    
@@ -28,21 +11,10 @@ add_library(mesh ${NG_LIB_TYPE}
         topology.cpp validate.cpp bcfunctions.cpp   
         parallelmesh.cpp  paralleltop.cpp  basegeom.cpp
         python_mesh.cpp surfacegeom.cpp
-        ../../ng/onetcl.cpp debugging.cpp
-        ${rules_sources}
-        ${mesh_object_libs}
-        )
+        debugging.cpp fieldlines.cpp visual_interface.cpp
+)
 
-if(APPLE)
-    set_target_properties( mesh PROPERTIES SUFFIX ".so")
-endif(APPLE)
-
-target_link_libraries( mesh PUBLIC ngcore PRIVATE gprim la gen )
-
-target_link_libraries( mesh PRIVATE netgen_metis "$<BUILD_INTERFACE:netgen_python>" ${ZLIB_LIBRARIES} )
-if(NOT WIN32)
-  install( TARGETS mesh ${NG_INSTALL_DIR})
-endif(NOT WIN32)
+target_link_libraries( nglib PRIVATE netgen_metis "$<BUILD_INTERFACE:netgen_python>" ${ZLIB_LIBRARIES} )
 
 install(FILES
   adfront2.hpp adfront3.hpp basegeom.hpp bcfunctions.hpp bisect.hpp
@@ -54,5 +26,6 @@ install(FILES
   meshing.hpp meshtool.hpp meshtype.hpp msghandler.hpp paralleltop.hpp
   ruler2.hpp ruler3.hpp specials.hpp topology.hpp validate.hpp
   python_mesh.hpp surfacegeom.hpp delaunay2d.hpp
+  fieldlines.hpp soldata.hpp visual_interface.hpp
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/meshing COMPONENT netgen_devel
 )

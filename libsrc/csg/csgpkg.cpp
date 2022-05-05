@@ -17,7 +17,6 @@ extern "C" int Ng_CSG_Init (Tcl_Interp * interp);
 
 namespace netgen
 {
-  // extern DLL_HEADER NetgenGeometry * ng_geometry;
   extern DLL_HEADER shared_ptr<NetgenGeometry> ng_geometry;
   extern DLL_HEADER shared_ptr<Mesh> mesh;
 

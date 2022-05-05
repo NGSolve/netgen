@@ -57,10 +57,10 @@ public:
       & edgeweight & order & rational & ishighorder;
   }
 
-  bool IsSegmentCurved (SegmentIndex segnr) const;
-  bool IsSurfaceElementCurved (SurfaceElementIndex sei) const;
-  bool IsElementCurved (ElementIndex ei) const;
-  bool IsElementHighOrder (ElementIndex ei) const;
+  DLL_HEADER bool IsSegmentCurved (SegmentIndex segnr) const;
+  DLL_HEADER bool IsSurfaceElementCurved (SurfaceElementIndex sei) const;
+  DLL_HEADER bool IsElementCurved (ElementIndex ei) const;
+  DLL_HEADER bool IsElementHighOrder (ElementIndex ei) const;
 
 
   void CalcSegmentTransformation (double xi, SegmentIndex segnr,
@@ -135,7 +135,7 @@ public:
                                             T * x, size_t sx,
                                             T * dxdxi, size_t sdxdxi);
 
-  void CalcMultiPointSurfaceTransformation (NgArray< Point<2> > * xi, SurfaceElementIndex elnr,
+  DLL_HEADER void CalcMultiPointSurfaceTransformation (NgArray< Point<2> > * xi, SurfaceElementIndex elnr,
 					    NgArray< Point<3> > * x,
 					    NgArray< Mat<3,2> > * dxdxi);
 
@@ -145,7 +145,7 @@ public:
                                             T * x, size_t sx,
                                             T * dxdxi, size_t sdxdxi);
 
-  void CalcMultiPointElementTransformation (NgArray< Point<3> > * xi, ElementIndex elnr,
+  DLL_HEADER void CalcMultiPointElementTransformation (NgArray< Point<3> > * xi, ElementIndex elnr,
 					    NgArray< Point<3> > * x,
 					    NgArray< Mat<3,3> > * dxdxi);
 
@@ -161,13 +161,13 @@ public:
 private:
 
   template <typename T>
-  void CalcSegmentTransformation (const T & xi, SegmentIndex segnr,
+  DLL_HEADER void CalcSegmentTransformation (const T & xi, SegmentIndex segnr,
 				  Point<3,T> * x = NULL, Vec<3,T> * dxdxi = NULL, bool * curved = NULL);
 
-  void CalcSurfaceTransformation (Point<2> xi, SurfaceElementIndex elnr,
+  DLL_HEADER void CalcSurfaceTransformation (Point<2> xi, SurfaceElementIndex elnr,
 				  Point<3> * x = NULL, Mat<3,2> * dxdxi = NULL, bool * curved = NULL);
 
-  void CalcElementTransformation (Point<3> xi, ElementIndex elnr,
+  DLL_HEADER void CalcElementTransformation (Point<3> xi, ElementIndex elnr,
 				  Point<3> * x = NULL, Mat<3,3> * dxdxi = NULL, // bool * curved = NULL,
                                   void * buffer = NULL, bool valid = 0);
 

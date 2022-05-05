@@ -17,12 +17,13 @@ del os
 from . import libngpy
 
 if config.USE_GUI:
+    from . import libngguipy
     global _Redraw, Redraw
-    _Redraw = libngpy.meshvis._Redraw
+    _Redraw = libngguipy.meshvis._Redraw
 
     def RedrawWithEventHandling(*args, **kwargs):
         try:
-            if libngpy.meshvis._Redraw(*args, **kwargs):
+            if libngguipy.meshvis._Redraw(*args, **kwargs):
                 import netgen
                 import tkinter
                 cnt = 0

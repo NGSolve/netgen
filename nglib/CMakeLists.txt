@@ -1,47 +1,13 @@
-add_definitions(-DNGLIB_EXPORTS)
+target_sources(nglib PRIVATE nglib.cpp)
 
-if(WIN32)
-    set(nglib_objects 
-          $<TARGET_OBJECTS:mesh>
-          $<TARGET_OBJECTS:stl>
-          $<TARGET_OBJECTS:interface>
-          $<TARGET_OBJECTS:geom2d>
-          $<TARGET_OBJECTS:csg>
+if(USE_OCC)
+    target_sources(nglib PRIVATE nglib_occ.cpp)
+    install(FILES nglib_occ.h DESTINATION ${NG_INSTALL_DIR_INCLUDE} COMPONENT netgen_devel)
+endif(USE_OCC)
 
-          $<TARGET_OBJECTS:visual>
-       )
-       if(USE_GUI)
-           set(nglib_objects ${nglib_objects}
-	       $<TARGET_OBJECTS:stlvis>
-	       $<TARGET_OBJECTS:geom2dvis>
-               $<TARGET_OBJECTS:csgvis>
-           )
-       endif(USE_GUI)
-       if(USE_OCC)
-           set(nglib_objects ${nglib_objects} $<TARGET_OBJECTS:occ>)
-       endif(USE_OCC)
-endif(WIN32)
-
-add_library(nglib SHARED nglib.cpp ${nglib_objects})
-if(NOT WIN32)
-      target_link_libraries( nglib PUBLIC mesh interface geom2d csg stl visual)
-      if(USE_GUI)
-          target_link_libraries( nglib PUBLIC stlvis geom2dvis csgvis )
-      endif(USE_GUI)
-endif(NOT WIN32)
-
-# target_link_libraries(nglib PRIVATE gen la gprim PUBLIC ngcore)
 target_link_libraries(nglib PUBLIC ngcore)
 
-target_link_libraries( nglib PRIVATE ${MPI_CXX_LIBRARIES} ${OPENGL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${X11_Xmu_LIB} ${JPEG_LIBRARIES} ${MKL_LIBRARIES} ${ZLIB_LIBRARIES} ${OCC_LIBRARIES} netgen_cgns )
+target_link_libraries( nglib PRIVATE ${MPI_CXX_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${JPEG_LIBRARIES} ${MKL_LIBRARIES} ${ZLIB_LIBRARIES} ${OCC_LIBRARIES} netgen_cgns )
 
-if(USE_OCC AND NOT WIN32)
-    target_link_libraries(nglib PUBLIC occ)
-endif(USE_OCC AND NOT WIN32)
-
-if(USE_PYTHON)
-    target_link_libraries(nglib PRIVATE netgen_python)
-endif(USE_PYTHON)
-
-install(TARGETS nglib ${NG_INSTALL_DIR})
+install(TARGETS nglib netgen_cgns ${NG_INSTALL_DIR})
 install(FILES nglib.h DESTINATION ${NG_INSTALL_DIR_INCLUDE} COMPONENT netgen_devel)

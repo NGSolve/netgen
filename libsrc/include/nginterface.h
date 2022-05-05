@@ -281,7 +281,7 @@ extern "C" {
   int NgPar_GetDistantNodeNums ( int nodetype, int locnum, int * pnums );
   int NgPar_GetNDistantNodeNums ( int nodetype, int locnum );
   
-  int NgPar_GetGlobalNodeNum (int nodetype, int locnum);
+  DLL_HEADER int NgPar_GetGlobalNodeNum (int nodetype, int locnum);
 
 #endif
   

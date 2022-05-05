@@ -1,5 +1,5 @@
 
-add_library(ngcore SHARED
+add_library(ngcore ${NGCORE_LIBRARY_TYPE}
   archive.cpp
   bitarray.cpp
   exception.cpp
@@ -34,8 +34,6 @@ if(WIN32)
   get_WIN32_WINNT(ver)
   target_compile_definitions(ngcore PUBLIC _WIN32_WINNT=${ver} WNT WNT_WINDOW NOMINMAX MSVC_EXPRESS _CRT_SECURE_NO_WARNINGS HAVE_STRUCT_TIMESPEC WIN32)
   target_link_options(ngcore PUBLIC /ignore:4273 /ignore:4217 /ignore:4049)
-else(WIN32)
-  target_compile_options(ngcore PRIVATE -fvisibility=hidden)
 endif(WIN32)
 
 target_compile_definitions(ngcore PRIVATE NGCORE_EXPORTS)
