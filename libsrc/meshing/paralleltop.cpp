@@ -500,7 +500,8 @@ namespace netgen
 		}
 
 	    DynamicTable<int> recv_verts(ntasks);
-	    MyMPI_ExchangeTable (send_verts, recv_verts, MPI_TAG_MESH+9, comm);
+	    // MyMPI_ExchangeTable (send_verts, recv_verts, MPI_TAG_MESH+9, comm);
+            comm.ExchangeTable (send_verts, recv_verts, MPI_TAG_MESH+9);
 
 	    for (int dest = 0; dest < ntasks; dest++)
 	      if (dest != id)
@@ -692,7 +693,8 @@ namespace netgen
     // cout << "UpdateCoarseGrid - edges mpi-exchange" << endl;
     // TABLE<int> recv_edges(ntasks);
     DynamicTable<int> recv_edges(ntasks);
-    MyMPI_ExchangeTable (send_edges, recv_edges, MPI_TAG_MESH+9, comm);
+    // MyMPI_ExchangeTable (send_edges, recv_edges, MPI_TAG_MESH+9, comm);
+    comm.ExchangeTable (send_edges, recv_edges, MPI_TAG_MESH+9);
     // cout << "UpdateCoarseGrid - edges mpi-exchange done" << endl;
 
     for (int dest = 0; dest < ntasks; dest++)
@@ -800,7 +802,8 @@ namespace netgen
 	// cout << "UpdateCoarseGrid - faces mpi-exchange" << endl;
 	// TABLE<int> recv_faces(ntasks);
 	DynamicTable<int> recv_faces(ntasks);
-	MyMPI_ExchangeTable (send_faces, recv_faces, MPI_TAG_MESH+9, comm);
+	// MyMPI_ExchangeTable (send_faces, recv_faces, MPI_TAG_MESH+9, comm);
+        comm.ExchangeTable (send_faces, recv_faces, MPI_TAG_MESH+9);
 	// cout << "UpdateCoarseGrid - faces mpi-exchange done" << endl;
 	
 	for (int dest = 0; dest < ntasks; dest++)

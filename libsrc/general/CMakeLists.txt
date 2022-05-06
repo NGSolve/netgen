@@ -2,7 +2,6 @@ target_sources(nglib PRIVATE
     dynamicmem.cpp
     gzstream.cpp
     hashtabl.cpp
-    mpi_interface.cpp
     mystring.cpp
     ngarray.cpp
     ngbitarray.cpp

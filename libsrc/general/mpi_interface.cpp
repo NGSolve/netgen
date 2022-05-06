@@ -4,6 +4,7 @@
 /* Date:   04. Apr. 97                                                    */
 /**************************************************************************/
 
+#ifdef OLD
 #include <mystdlib.h>
 #include <myadt.hpp>
 
@@ -50,3 +51,4 @@ namespace netgen
 
 
 
+#endif

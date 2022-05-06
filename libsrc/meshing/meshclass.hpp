@@ -17,6 +17,9 @@ namespace netgen
 {
   using namespace std;
 
+  static constexpr int  MPI_TAG_MESH = 210;
+  
+
   enum resthtype { RESTRICTH_FACE, RESTRICTH_EDGE, 
 		   RESTRICTH_SURFACEELEMENT, RESTRICTH_POINT, RESTRICTH_SEGMENT };
 

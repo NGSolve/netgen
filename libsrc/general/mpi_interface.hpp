@@ -2,7 +2,6 @@
 #define FILE_PARALLEL
 
 
-
 #ifdef VTRACE
 #include "vt_user.h"
 #else

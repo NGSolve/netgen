@@ -43,7 +43,7 @@ namespace netgen
 #include "stack.hpp"
 #include "mystring.hpp"
 
-#include "mpi_interface.hpp"
+// #include "mpi_interface.hpp"
 #include "netgenout.hpp"
 
 
