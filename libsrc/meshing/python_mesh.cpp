@@ -1538,6 +1538,32 @@ project_boundaries : Optional[str] = None
       .def(py::init<>())
       ;
     m.def("SetParallelPickling", [](bool par) { parallel_pickling = par; });
+    m.def ("_Redraw",
+        ([](bool blocking, double fr)
+          {
+            static auto last_time = std::chrono::system_clock::now()-std::chrono::seconds(10);
+            auto now = std::chrono::system_clock::now();
+            double elapsed = std::chrono::duration<double>(now-last_time).count();
+            if (blocking || elapsed * fr > 1)
+              {
+                Ng_Redraw(blocking);
+                last_time = std::chrono::system_clock::now();
+                return true;
+              }
+            return false;
+          }),
+        py::arg("blocking")=false, py::arg("fr") = 25, R"raw_string(
+  Redraw all
+
+  Parameters:
+
+  blocking : bool
+    input blocking
+
+  fr : double
+    input framerate
+
+  )raw_string");
 }
 
 PYBIND11_MODULE(libmesh, m) {

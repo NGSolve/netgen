@@ -1,5 +1,8 @@
 import netgen
 
+from . import libngguipy
+from . import libngpy
+
 def StartGUI():
     from tkinter import Tk
     from netgen import config
@@ -18,7 +21,7 @@ def StartGUI():
     win.tk.eval('lappend ::auto_path ' + netgen._netgen_lib_dir)
     win.tk.eval('lappend ::auto_path ' + netgen._netgen_bin_dir)
     # load with absolute path to avoid issues on MacOS
-    win.tk.eval('load "'+netgen._netgen_lib_dir.replace('\\','/')+'/libgui[info sharedlibextension]" gui')
+    win.tk.eval('load "'+netgen._netgen_lib_dir.replace('\\','/')+'/libnggui[info sharedlibextension]" gui')
 
     if config.is_python_package and 'darwin' in sys.platform:
         # libngsolve and other libraries are installed into netgen python dir to keep relative installation paths, but tcl won't find them there automatically
@@ -26,6 +29,17 @@ def StartGUI():
         win.tk.eval(f'set netgen_library_dir {netgen_dir}')
 
     win.tk.eval( netgen.libngpy._meshing._ngscript)
+
+    def _Redraw(*args, **kwargs):
+        if libngpy._meshing._Redraw(*args, **kwargs):
+            import netgen
+            import tkinter
+            cnt = 0
+            while(win.tk.dooneevent(tkinter._tkinter.DONT_WAIT) and cnt < 100):
+                cnt += 1
+
+    netgen._Redraw = _Redraw
+    _Redraw(blocking=True)
 
     
 if not netgen.libngpy._meshing._netgen_executable_started:

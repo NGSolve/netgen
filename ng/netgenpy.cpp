@@ -5,12 +5,9 @@
 #include <core/ngcore_api.hpp>
 
 void NGCORE_API_IMPORT ExportNetgenMeshing(py::module &m);
-void NGCORE_API_IMPORT ExportMeshVis(py::module &m);
 void NGCORE_API_IMPORT ExportCSG(py::module &m);
-void NGCORE_API_IMPORT ExportCSGVis(py::module &m);
 void NGCORE_API_IMPORT ExportGeom2d(py::module &m);
 void NGCORE_API_IMPORT ExportSTL(py::module &m);
-void NGCORE_API_IMPORT ExportSTLVis(py::module &m);
 #ifdef OCCGEOMETRY
 void NGCORE_API_IMPORT ExportNgOCC(py::module &m);
 #endif // OCCGEOMETRY
