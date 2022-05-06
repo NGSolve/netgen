@@ -610,7 +610,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   [](const FaceDescriptor& self)
                   {
                     auto sc = self.SurfColour();
-                    return py::tuple(sc[0], sc[1], sc[2]);
+                    return py::make_tuple(sc[0], sc[1], sc[2]);
                   },
                   [](FaceDescriptor& self, py::tuple col)
                   {
