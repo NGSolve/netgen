@@ -64,9 +64,7 @@ namespace netgen
 #include "basegeom.hpp"
 #include "surfacegeom.hpp"
 
-#ifdef PARALLEL
 #include "paralleltop.hpp"
-#endif
 
 
 #endif

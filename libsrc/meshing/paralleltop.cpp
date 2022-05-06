@@ -1,4 +1,4 @@
-#ifdef PARALLEL
+// #ifdef PARALLEL
 
 
 #include <meshing.hpp>
@@ -90,7 +90,7 @@ namespace netgen
           L2G(pi) = num_master_points++;
       }
     
-    *testout << "nummaster = " << num_master_points << endl;
+    // *testout << "nummaster = " << num_master_points << endl;
 
     Array<int> first_master_point(comm.Size());
     comm.AllGather (num_master_points, first_master_point);
@@ -355,8 +355,10 @@ namespace netgen
     else
 
       {
-	NgArray<int> recvarray;
-	MyMPI_Recv (recvarray, 0, MPI_TAG_MESH+10, comm);
+	// NgArray<int> recvarray;
+	// MyMPI_Recv (recvarray, 0, MPI_TAG_MESH+10, comm);
+	Array<int> recvarray;
+	comm.Recv (recvarray, 0, MPI_TAG_MESH+10); // MyMPI_Recv (recvarray, 0, MPI_TAG_MESH+10, comm);
 
 	int ii = 0;
 
@@ -409,7 +411,7 @@ namespace netgen
     
     const MeshTopology & topology = mesh.GetTopology();
 
-    NgArray<int> cnt_send(ntasks);
+    Array<int> cnt_send(ntasks);
 
     int maxsize = comm.AllReduce (mesh.mlbetweennodes.Size(), MPI_MAX);
     // update new vertices after mesh-refinement
@@ -429,7 +431,8 @@ namespace netgen
 	    for (PointIndex pi : mesh.Points().Range())
 	      for (int dist : GetDistantProcs(pi))
 		cnt_send[dist]++;
-	    TABLE<int> dest2vert(cnt_send);    
+            // TABLE<int> dest2vert(cnt_send);    
+	    DynamicTable<int> dest2vert(cnt_send);    
 	    for (PointIndex pi : mesh.Points().Range())
 	      for (int dist : GetDistantProcs(pi))
 		dest2vert.Add (dist, pi);
@@ -444,7 +447,8 @@ namespace netgen
                       cnt_send[p]++;
                 }
 
-	    TABLE<int> dest2pair(cnt_send);
+	    // TABLE<int> dest2pair(cnt_send);
+            DynamicTable<int> dest2pair(cnt_send);            
             
             for (PointIndex pi : mesh.mlbetweennodes.Range())
               if (auto [v1,v2] = mesh.mlbetweennodes[pi]; v1.IsValid())
@@ -468,7 +472,8 @@ namespace netgen
                       cnt_send[p]+=2;
                 }
 	    
-	    TABLE<int> send_verts(cnt_send);
+	    // TABLE<int> send_verts(cnt_send);
+            DynamicTable<int> send_verts(cnt_send);
 
 	    NgArray<int, PointIndex::BASE> loc2exchange(mesh.GetNV());
 
@@ -494,7 +499,7 @@ namespace netgen
                       }
 		}
 
-	    TABLE<int> recv_verts(ntasks);
+	    DynamicTable<int> recv_verts(ntasks);
 	    MyMPI_ExchangeTable (send_verts, recv_verts, MPI_TAG_MESH+9, comm);
 
 	    for (int dest = 0; dest < ntasks; dest++)
@@ -506,7 +511,7 @@ namespace netgen
 		  for (PointIndex pi : dest2vert[dest])
 		    loc2exchange[pi] = cnt++;
 		  
-		  NgFlatArray<int> recvarray = recv_verts[dest];
+		  FlatArray<int> recvarray = recv_verts[dest];
 		  for (int ii = 0; ii < recvarray.Size(); ii+=2)
 		    for (PointIndex pi : dest2pair[dest])
 		      {
@@ -546,7 +551,8 @@ namespace netgen
     for (PointIndex pi : mesh.Points().Range())
       for (int dist : GetDistantProcs(pi))
 	cnt_send[dist]++;
-    TABLE<int> dest2vert(cnt_send);    
+    // TABLE<int> dest2vert(cnt_send);
+    DynamicTable<int> dest2vert(cnt_send);    
     for (PointIndex pi : mesh.Points().Range())
       for (int dist : GetDistantProcs(pi))
 	dest2vert.Add (dist, pi);
@@ -603,7 +609,7 @@ namespace netgen
     
     const MeshTopology & topology = mesh.GetTopology();
 
-    NgArray<int> cnt_send(ntasks);
+    Array<int> cnt_send(ntasks);
 
     // NgArray<int> sendarray, recvarray;
     // cout << "UpdateCoarseGrid - edges" << endl;
@@ -624,7 +630,8 @@ namespace netgen
     for (PointIndex pi : mesh.Points().Range())
       for (int dist : GetDistantProcs(pi))
 	cnt_send[dist]++;
-    TABLE<int> dest2vert(cnt_send);    
+    // TABLE<int> dest2vert(cnt_send);
+    DynamicTable<int> dest2vert(cnt_send);    
     for (PointIndex pi : mesh.Points().Range())
       for (int dist : GetDistantProcs(pi))
 	dest2vert.Add (dist, pi);
@@ -646,9 +653,11 @@ namespace netgen
 	    cnt_send[p]+=1;
       }
     
-    TABLE<int> dest2edge(cnt_send);
+    // TABLE<int> dest2edge(cnt_send);
+    DynamicTable<int> dest2edge(cnt_send);
     for (int & v : cnt_send) v *= 2;
-    TABLE<int> send_edges(cnt_send);
+    // TABLE<int> send_edges(cnt_send);
+    DynamicTable<int> send_edges(cnt_send);
 
     for (int edge = 1; edge <= ned; edge++)
       {
@@ -681,7 +690,8 @@ namespace netgen
       }
 
     // cout << "UpdateCoarseGrid - edges mpi-exchange" << endl;
-    TABLE<int> recv_edges(ntasks);
+    // TABLE<int> recv_edges(ntasks);
+    DynamicTable<int> recv_edges(ntasks);
     MyMPI_ExchangeTable (send_edges, recv_edges, MPI_TAG_MESH+9, comm);
     // cout << "UpdateCoarseGrid - edges mpi-exchange done" << endl;
 
@@ -697,7 +707,7 @@ namespace netgen
 	    vert2edge.Set(INDEX_2(v1,v2), edge);
 	  }
 
-	NgFlatArray<int> recvarray = recv_edges[dest];
+	FlatArray<int> recvarray = recv_edges[dest];
         for (int ii = 0; ii < recvarray.Size(); ii+=2)
 	  {
 	    INDEX_2 re(ex2loc[recvarray[ii]], 
@@ -736,7 +746,8 @@ namespace netgen
 		  cnt_send[dest]++;
 	  }
 	
-	TABLE<int> dest2face(cnt_send);
+	// TABLE<int> dest2face(cnt_send);
+        DynamicTable<int> dest2face(cnt_send);
 	for (int face = 1; face <= nfa; face++)
 	  {
 	    topology.GetFaceVertices (face, verts);
@@ -754,7 +765,8 @@ namespace netgen
 	  }
 
 	for (int & c : cnt_send) c*=3;
-	TABLE<int> send_faces(cnt_send);
+	// TABLE<int> send_faces(cnt_send);
+        DynamicTable<int> send_faces(cnt_send);
 	NgArray<int, PointIndex::BASE> loc2exchange(mesh.GetNV());
 	for (int dest = 0; dest < ntasks; dest++)
 	  if (dest != id)
@@ -786,7 +798,8 @@ namespace netgen
 	    }
 	
 	// cout << "UpdateCoarseGrid - faces mpi-exchange" << endl;
-	TABLE<int> recv_faces(ntasks);
+	// TABLE<int> recv_faces(ntasks);
+	DynamicTable<int> recv_faces(ntasks);
 	MyMPI_ExchangeTable (send_faces, recv_faces, MPI_TAG_MESH+9, comm);
 	// cout << "UpdateCoarseGrid - faces mpi-exchange done" << endl;
 	
@@ -802,7 +815,7 @@ namespace netgen
 		vert2face.Set(INDEX_3(verts[0], verts[1], verts[2]), face);
 	      }
 	    
-	    NgFlatArray<int> recvarray = recv_faces[dest];
+	    FlatArray<int> recvarray = recv_faces[dest];
 	    for (int ii = 0; ii < recvarray.Size(); ii+=3)
 	      {
 		INDEX_3 re(ex2loc[recvarray[ii]], 
@@ -825,4 +838,4 @@ namespace netgen
 }
 
 
-#endif
+// #endif

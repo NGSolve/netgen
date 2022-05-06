@@ -39,11 +39,11 @@ namespace netgen
 #endif
 
   
-#ifdef PARALLEL
   enum { MPI_TAG_CMD = 110 };
   enum { MPI_TAG_MESH = 210 };
   enum { MPI_TAG_VIS = 310 };
 
+#ifdef PARALLEL
 
   [[deprecated("mympi_send int, use comm.Send instead")]]            
   inline void MyMPI_Send (int i, int dest, int tag, MPI_Comm comm)
@@ -306,6 +306,22 @@ namespace netgen
   }
 
 
+#else
+  template <typename T>
+  [[deprecated("do we need that ? ")]]       
+  inline void MyMPI_ExchangeTable (TABLE<T> & send_data, 
+				   TABLE<T> & recv_data, int tag,
+				   const NgMPI_Comm & comm)
+  {
+    ;
+  }
+
+  template <typename T>
+  [[deprecated("do we need that ? ")]]       
+  inline void MyMPI_ExchangeTable (DynamicTable<T> & send_data, 
+				   DynamicTable<T> & recv_data, int tag,
+				   const NgMPI_Comm & comm)
+  { ; } 
 #endif // PARALLEL
 
 }

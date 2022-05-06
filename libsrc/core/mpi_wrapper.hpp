@@ -522,6 +522,12 @@ namespace ngcore
     void Bcast (Array<T> & d, int root = 0) { ; } 
 
     template <typename T>
+    void AllGather (T val, FlatArray<T> recv) const
+    {
+      recv[0] = val;
+    }
+
+    template <typename T>
     void ExchangeTable (DynamicTable<T> & send_data, 
                         DynamicTable<T> & recv_data, int tag) { ; }
 
