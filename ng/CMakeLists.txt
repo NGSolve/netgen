@@ -15,7 +15,7 @@ target_sources(nglib PRIVATE onetcl.cpp)
 
 if(USE_GUI)
     target_sources(nggui PRIVATE
-        gui.cpp ngpkg.cpp demoview.cpp parallelfunc.cpp ngtcl.cpp
+        gui.cpp ngpkg.cpp demoview.cpp parallelfunc.cpp
     )
 
     if(NOT BUILD_FOR_CONDA)
@@ -71,9 +71,5 @@ if(USE_GUI)
   endif()
 
   add_subdirectory(Togl2.1)
-  install(FILES
-    ngtcl.hpp
-    DESTINATION ${NG_INSTALL_DIR_INCLUDE} COMPONENT netgen_devel
-  )
 endif(USE_GUI)
 

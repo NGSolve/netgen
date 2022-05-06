@@ -3,6 +3,7 @@
 
 #include <mystdlib.h>
 #include <meshing.hpp>
+#include <myadt.hpp>
 
 class Ng_SolutionData;
 
@@ -13,7 +14,25 @@ DLL_HEADER extern void (*Ptr_Ng_InitSolutionData) (Ng_SolutionData * soldata);
 DLL_HEADER extern void (*Ptr_Ng_SetSolutionData) (Ng_SolutionData * soldata);
 DLL_HEADER extern void (*Ptr_Ng_Redraw) (bool blocking);
 
+// Tcl wrapper functions
+class Tcl_Interp;
+typedef int (Tcl_CmdProc) (void * clientData, Tcl_Interp *interp,
+        int argc, const char *argv[]);
 namespace netgen {
+
+    inline constexpr int NG_TCL_VOLATILE = 1;
+    inline constexpr int NG_TCL_STATIC   = 0;
+    inline constexpr int NG_TCL_DYNAMIC  = 3;
+
+    inline constexpr int NG_TCL_OK       = 0;
+    inline constexpr int NG_TCL_ERROR    = 1;
+    inline constexpr int NG_TCL_RETURN   = 2;
+    inline constexpr int NG_TCL_BREAK    = 3;
+    inline constexpr int NG_TCL_CONTINUE = 4;
+    DLL_HEADER extern void (*Ptr_Ng_Tcl_SetResult)(Tcl_Interp *interp, char *result, const int freeProc);
+    DLL_HEADER extern void (*Ptr_Ng_Tcl_CreateCommand)(Tcl_Interp *interp,
+                                    const char *cmdName, Tcl_CmdProc *proc);
+
     DLL_HEADER extern void (*Ptr_Render)(bool);
     DLL_HEADER extern void (*Ptr_UpdateVisSurfaceMeshData)(int,
             shared_ptr<NgArray<Point<3>>>,
@@ -28,6 +47,17 @@ namespace netgen {
             shared_ptr<NgArray<Point<2>>> plainpointsptr = nullptr
             ) {
         if(Ptr_UpdateVisSurfaceMeshData) Ptr_UpdateVisSurfaceMeshData(oldnl, locpointsptr, loclinesptr, plainpointsptr);
+    }
+
+    inline void Ng_Tcl_SetResult(Tcl_Interp *interp, char *result, const int freeProc)
+    {
+        if(Ptr_Ng_Tcl_SetResult)
+            Ptr_Ng_Tcl_SetResult(interp, result, freeProc);
+    }
+    inline void Ng_Tcl_CreateCommand(Tcl_Interp *interp, const char *cmdName, Tcl_CmdProc *proc)
+    {
+        if(Ptr_Ng_Tcl_CreateCommand)
+            Ptr_Ng_Tcl_CreateCommand(interp, cmdName, proc);
     }
 }
 

@@ -13,6 +13,9 @@ void Ng_Redraw (bool blocking) { if(Ptr_Ng_Redraw) Ptr_Ng_Redraw(blocking); }
 
 namespace netgen
 {
+    void (*Ptr_Ng_Tcl_SetResult)(Tcl_Interp *interp, char *result, const int freeProc) = nullptr;
+    void (*Ptr_Ng_Tcl_CreateCommand)(Tcl_Interp *interp,
+                                    const char *cmdName, Tcl_CmdProc *proc) = nullptr;
     void (*Ptr_Render)(bool) = nullptr;
     void (*Ptr_UpdateVisSurfaceMeshData)(int,
             shared_ptr<NgArray<Point<3>>>,
@@ -20,3 +23,4 @@ namespace netgen
             shared_ptr<NgArray<Point<2>>>
             ) = nullptr;
 } // namespace netgen
+
