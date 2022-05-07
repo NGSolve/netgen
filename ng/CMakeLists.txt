@@ -15,7 +15,7 @@ target_sources(nglib PRIVATE onetcl.cpp)
 
 if(USE_GUI)
     target_sources(nggui PRIVATE
-        gui.cpp ngpkg.cpp demoview.cpp parallelfunc.cpp
+        gui.cpp ngpkg.cpp demoview.cpp parallelfunc.cpp ngtcl.cpp
     )
 
     if(NOT BUILD_FOR_CONDA)

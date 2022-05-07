@@ -1,9 +1,19 @@
+#include <inctcl.hpp>
 #include "../libsrc/meshing/visual_interface.hpp"
 
-#include <inctcl.hpp>
+
+static void Impl_Ng_Tcl_SetResult(Tcl_Interp *interp, char *result, const int freeProc)
+{
+    Tcl_SetResult(interp, result, (Tcl_FreeProc*)freeProc);
+}
+
+static void Impl_Ng_Tcl_CreateCommand(Tcl_Interp *interp, const char *cmdName, Tcl_CmdProc *proc)
+{
+    Tcl_CreateCommand(interp, cmdName, proc, nullptr, nullptr);
+}
 
 static bool dummy_init_pointers = [](){
-    Ptr_Ng_Tcl_SetResult = Tcl_SetResult;
-    Ptr_Ng_Tcl_CreateCommand = Tcl_CreateCommand;
+    netgen::Ptr_Ng_Tcl_SetResult = Impl_Ng_Tcl_SetResult;
+    netgen::Ptr_Ng_Tcl_CreateCommand = Impl_Ng_Tcl_CreateCommand;
     return true;
 }();
