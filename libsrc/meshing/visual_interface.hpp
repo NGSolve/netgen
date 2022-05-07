@@ -22,10 +22,15 @@ typedef void (Tcl_FreeProc) (char *blockPtr);
 
 namespace netgen {
 
+  /*
     inline constexpr int NG_TCL_VOLATILE = 1;
     inline constexpr int NG_TCL_STATIC   = 0;
     inline constexpr int NG_TCL_DYNAMIC  = 3;
-
+  */
+#define TCL_VOLATILE		((Tcl_FreeProc *) 1)
+#define TCL_STATIC		((Tcl_FreeProc *) 0)
+#define TCL_DYNAMIC		((Tcl_FreeProc *) 3)
+  
     inline constexpr int NG_TCL_OK       = 0;
     inline constexpr int NG_TCL_ERROR    = 1;
     inline constexpr int NG_TCL_RETURN   = 2;
