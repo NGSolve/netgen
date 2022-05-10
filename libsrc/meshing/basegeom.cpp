@@ -785,6 +785,8 @@ namespace netgen
     {
         auto & face = *faces[k];
         FaceDescriptor fd(k+1, face.domin+1, face.domout+1, k+1);
+        if(face.properties.col)
+          fd.SetSurfColour(*face.properties.col);
         mesh.AddFaceDescriptor(fd);
         mesh.SetBCName(k, face.properties.GetName());
         if(face.primary == &face)
