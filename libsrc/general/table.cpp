@@ -108,14 +108,16 @@ namespace netgen
     if (line.size == line.maxsize)
       {
 	void * p = new char [(line.maxsize+5) * elsize];
-      
-	memcpy (p, line.col, line.maxsize * elsize);
-	delete [] (char*)line.col;
+
+        if (line.size > 0 && line.col != NULL) {
+          memcpy (p, line.col, line.maxsize * elsize);
+          delete [] (char*)line.col;
+        }
 
 	line.col = p;
 	line.maxsize += 5;
       }
-  
+
     line.size++;
   }
 
