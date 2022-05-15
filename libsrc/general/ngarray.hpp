@@ -295,8 +295,9 @@ namespace netgen
     /// if responsible, deletes memory
     ~NgArray()
     {
-      if (ownmem)
-	delete [] data;
+      if (data)
+        if (ownmem)
+          delete [] data;
     }
 
     /// Change logical size. If necessary, do reallocation. Keeps contents.
@@ -374,8 +375,9 @@ namespace netgen
     /// Deallocate memory
     void DeleteAll ()
     {
-      if (ownmem)
-	delete [] data;
+      if (data)
+        if (ownmem)
+          delete [] data;
       data = 0;
       size = allocsize = 0;
     }
