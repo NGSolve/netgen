@@ -133,7 +133,7 @@ if(USE_PYTHON)
     file(TO_CMAKE_PATH ${PYTHON_PACKAGES_INSTALL_DIR} PYTHON_PACKAGES_INSTALL_DIR)
 endif(USE_PYTHON)
 
-set(NG_INSTALL_SUFFIX netgen CACHE STRING "Suffix appended to install directories (project name)")
+set(NG_INSTALL_SUFFIX netgen-mesher CACHE STRING "Suffix appended to install directories (project name)")
 
 if(APPLE)
   set(NG_INSTALL_DIR_BIN_DEFAULT Contents/MacOS)
