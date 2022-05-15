@@ -202,7 +202,7 @@ NGCORE_API_EXPORT void ExportGeom2d(py::module &m)
            
            self.AppendSegment (spex);
          }, py::arg("func"), py::arg("leftdomain") = 1, py::arg("rightdomain") = py::int_(0),
-         py::arg("bc")=NGDummyArgument(), py::arg("maxh")=1e99,
+         py::arg_v("bc", NGDummyArgument(), "NGDummyArgument()"), py::arg("maxh")=1e99,
          "Curve is given as parametrization on the interval [0,1]")
     
     .def("SetMaterial", &SplineGeometry2d::SetMaterial)
@@ -439,7 +439,7 @@ NGCORE_API_EXPORT void ExportGeom2d(py::module &m)
     .def("Move", &Solid2d::Move)
     .def("Scale", static_cast<Solid2d& (Solid2d::*)(double)>(&Solid2d::Scale))
     .def("Scale", static_cast<Solid2d& (Solid2d::*)(Vec<2>)>(&Solid2d::Scale))
-    .def("Rotate", &Solid2d::RotateDeg, py::arg("angle"), py::arg("center")=Point<2>{0,0})
+    .def("Rotate", &Solid2d::RotateDeg, py::arg("angle"), py::arg_v("center", Point<2>{0,0}, "Point<2>{0,0}"))
     ;
   
 

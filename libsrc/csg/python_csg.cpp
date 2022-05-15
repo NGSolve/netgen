@@ -616,7 +616,7 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
                 trafo));
           }),
          py::arg("solid1"), py::arg("solid2"),
-         py::arg("trafo")=Transformation<3>(Vec<3>(0,0,0))
+         py::arg_v("trafo", Transformation<3>(Vec<3>(0,0,0)), "Transformation<3>(Vec<3>(0,0,0))")
          )
     .def("NameEdge", [] (CSGeometry & self, shared_ptr<SPSolid> s1, shared_ptr<SPSolid> s2, string name)
          {

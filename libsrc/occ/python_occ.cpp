@@ -282,7 +282,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                                mesh->SendRecvMesh();
                              }
                            return mesh;
-                         }, py::arg("mp") = nullptr, py::arg("comm")=NgMPI_Comm{},
+                         }, py::arg("mp") = static_cast<MeshingParameters*>(nullptr), py::arg_v("comm", NgMPI_Comm(), "NgMPI_Comm()"),
       py::call_guard<py::gil_scoped_release>(),
          (meshingparameter_description + occparameter_description).c_str())
     .def_property_readonly("shape", [](const OCCGeometry & self) { return self.GetShape(); })
@@ -356,7 +356,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
           cout << "IsMaterial = " << material_tool->IsMaterial(label) << endl;
           // cout << "IsVisMaterial = " << vismaterial_tool->IsMaterial(label) << endl;
         }
-    }, py::arg("shape")=TopoDS_Shape());
+    }, py::arg_v("shape", TopoDS_Shape(), "TopoDS_Shape()"));
         
 }
 
