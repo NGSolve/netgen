@@ -1,0 +1,15 @@
+function git_last_tag_raw {
+        git describe --tags --abbrev=0
+}
+
+function git_last_tag {
+	 git_last_tag_raw |
+	  sed -e 's/^[^0-9]*//g' |
+	  sed -e 's/[.!@#$%^&*_+=-]*\(pre\|rc\|alpha\|beta\|test\)/~\1/g' |
+	  sed -e 's/[!@#$%^&*_+=-]*\(post\|fix\|patch\|pl\|update\)/.\1/g' |
+	  sed -e 's/[^A-Za-z0-9._~-]/_/g'
+}
+
+function git_last_tag_commits {
+        echo -n $(git rev-list --count $(git_last_tag_raw)..HEAD)
+}
