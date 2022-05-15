@@ -1,9 +1,10 @@
 #ifndef NETGEN_CORE_VERSION_HPP
 #define NETGEN_CORE_VERSION_HPP
 
-#include <ostream>
+#include <iostream>
 #include <string>
 #include <tuple>
+#include "exception.hpp"
 
 #include "ngcore_api.hpp"
 
@@ -18,37 +19,44 @@ namespace ngcore
     VersionInfo() = default;
     VersionInfo(std::string vstring)
     {
-      minor_ = release = patch = 0;
-      git_hash = "";
-      if(vstring.substr(0,1) == "v")
-        vstring = vstring.substr(1,vstring.size()-1);
-      auto dot = vstring.find('.');
-      mayor_ = std::stoi(vstring.substr(0,dot));
-      if(dot == size_t(-1)) vstring = "";
-      else vstring = vstring.substr(dot+1, vstring.size()-dot-1);
-      if(!vstring.empty())
-        {
-          dot = vstring.find('.');
-          minor_ = std::stoi(vstring.substr(0,dot));
-          if (dot == size_t(-1)) vstring = "";
-          else vstring = vstring.substr(dot+1, vstring.size()-dot-1);
-          if(!vstring.empty())
-            {
-              dot = vstring.find('-');
-              release = std::stoi(vstring.substr(0,dot));
-              if(dot == size_t(-1)) vstring = "";
-              else vstring = vstring.substr(dot+1,vstring.size()-dot-1);
-              if(!vstring.empty())
-                {
-                  dot = vstring.find('-');
-                  patch = std::stoi(vstring.substr(0,dot));
-                  if(dot == size_t(-1)) vstring = "";
-                  else vstring = vstring.substr(dot+1, vstring.size()-dot-1);
-                  if(!vstring.empty())
-                    git_hash = vstring;
-                }
-            }
-        }
+      std::string save = vstring;
+      try {
+        minor_ = release = patch = 0;
+        git_hash = "";
+        if(vstring.substr(0,1) == "v")
+          vstring = vstring.substr(1,vstring.size()-1);
+        auto dot = vstring.find('.');
+        mayor_ = std::stoi(vstring.substr(0,dot));
+        if(dot == size_t(-1)) vstring = "";
+        else vstring = vstring.substr(dot+1, vstring.size()-dot-1);
+        if(!vstring.empty())
+          {
+            dot = vstring.find('.');
+            minor_ = std::stoi(vstring.substr(0,dot));
+            if (dot == size_t(-1)) vstring = "";
+            else vstring = vstring.substr(dot+1, vstring.size()-dot-1);
+            if(!vstring.empty())
+              {
+                dot = vstring.find('-');
+                release = std::stoi(vstring.substr(0,dot));
+                if(dot == size_t(-1)) vstring = "";
+                else vstring = vstring.substr(dot+1,vstring.size()-dot-1);
+                if(!vstring.empty())
+                  {
+                    dot = vstring.find('-');
+                    patch = std::stoi(vstring.substr(0,dot));
+                    if(dot == size_t(-1)) vstring = "";
+                    else vstring = vstring.substr(dot+1, vstring.size()-dot-1);
+                    if(!vstring.empty())
+                      git_hash = vstring;
+                  }
+              }
+          }
+      } catch(...) {
+        std::cerr << "Malformed NETGEN_VERSION (" << save <<"\n";
+        std::cerr << "Micompiled/mispackaged Netgen library\n";
+        abort();
+      }
     }
     VersionInfo(const char* cstr) : VersionInfo(std::string(cstr)) { }
 
