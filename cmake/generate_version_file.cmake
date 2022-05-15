@@ -24,8 +24,8 @@ if(status AND NOT status EQUAL 0)
       string(REGEX REPLACE "^netgen(.*)" "\\1" git_version_string "${git_version_string}")
     endif()
   else()
-    MESSAGE(WARNING "Could not determine git-version from source code - assuming 6.2.0.0")
-    set(git_version_string "v6.2.0.0")
+    MESSAGE(WARNING "Could not determine git-version from source code - assuming 6.99.2200-0-0")
+    set(git_version_string "v6.99.2200-0-0")
   endif()
 endif()
 string(STRIP ${git_version_string} git_version_string)
@@ -57,6 +57,7 @@ if(NOT NETGEN_VERSION_PYTHON)
     set(NETGEN_VERSION_PYTHON ${NETGEN_VERSION_TWEAK})
 endif()
 
+set(NETGEN_LIBRARY_VERSION "${NETGEN_VERSION_SHORT}")
 
 set(version_file ${BDIR}/netgen_version.hpp)
 set(new_version_file_string "\

@@ -7,32 +7,33 @@ cmake_policy(VERSION 3.13)
 
 option( USE_NATIVE_ARCH  "build for native cpu architecture" ON)
 
-option( USE_GUI     "build with GUI" ON )
-option( USE_PYTHON  "build with python interface" ON )
-option( USE_MPI     "enable mpi parallelization" OFF )
-option( USE_MPI4PY  "enable mpi4py interface" ON )
-option( USE_OCC     "build with OpenCascade geometry kernel interface" OFF)
-option( USE_STLGEOM     "build with STL geometry support" ON)
-option( USE_CSG     "build with CSG kernel" ON)
-option( USE_INTERFACE     "build nginterface" ON)
-option( USE_GEOM2D     "build 2d geometry kernels" ON)
-option( USE_JPEG    "enable snapshots using library libjpeg" OFF )
-option( USE_MPEG    "enable video recording with FFmpeg, uses libavcodec" OFF )
-option( USE_CGNS    "enable CGNS file read/write support" OFF )
-option( USE_NUMA         "compile with NUMA-aware code")
-option( INTEL_MIC        "cross compile for intel xeon phi")
+option( USE_GUI          "build with GUI" ON )
+option( USE_PYTHON       "build with python interface" ON )
+option( USE_MPI          "enable mpi parallelization" OFF )
+option( USE_MPI4PY       "enable mpi4py interface" ON )
+option( USE_OCC          "build with OpenCascade geometry kernel interface" OFF)
+option( USE_STLGEOM      "build with STL geometry support" ON)
+option( USE_CSG          "build with CSG kernel" ON)
+option( USE_INTERFACE    "build nginterface" ON)
+option( USE_GEOM2D       "build 2d geometry kernels" ON)
+option( USE_JPEG         "enable snapshots using library libjpeg" OFF )
+option( USE_MPEG         "enable video recording with FFmpeg, uses libavcodec" OFF )
+option( USE_CGNS         "enable CGNS file read/write support" OFF )
+option( USE_NUMA         "compile with NUMA-aware code" OFF )
+option( INTEL_MIC        "cross compile for intel xeon phi" OFF )
 option( INSTALL_PROFILES "install environment variable settings to /etc/profile.d" OFF )
-option( USE_CCACHE       "use ccache")
+option( USE_CCACHE       "use ccache" OFF )
 option( USE_INTERNAL_TCL "Compile tcl files into the code and don't install them" ON)
-option( ENABLE_UNIT_TESTS "Enable Catch unit tests")
+option( USE_INTERNAL_PYBIND11 "Use internally bundled version of Pybind11" ON)
+option( ENABLE_UNIT_TESTS "Enable Catch unit tests" OFF)
 option( ENABLE_CPP_CORE_GUIDELINES_CHECK "Enable cpp core guideline checks on ngcore" OFF)
-option( USE_SPDLOG "Enable spd log logging" OFF)
-option( DEBUG_LOG "Enable more debug output (may increase computation time) - only works with USE_SPDLOG=ON" OFF)
-option( CHECK_RANGE "Check array range access, automatically enabled if built in debug mode" OFF)
+option( USE_SPDLOG       "Enable spd log logging" OFF)
+option( DEBUG_LOG        "Enable more debug output (may increase computation time) - only works with USE_SPDLOG=ON" OFF)
+option( CHECK_RANGE      "Check array range access, automatically enabled if built in debug mode" OFF)
 option( BUILD_STUB_FILES "Build stub files for better autocompletion" ON)
-option( BUILD_FOR_CONDA "Link python libraries only to executables" OFF)
+option( BUILD_FOR_CONDA  "Link python libraries only to executables" OFF)
 
-option( USE_SUPERBUILD       "build dependencies automatically" ON)
+option( USE_SUPERBUILD   "build dependencies automatically" ON)
 option( TRACE_MEMORY     "Enable memory tracing" OFF)
 
 set(NG_COMPILE_FLAGS "" CACHE STRING "Additional compile flags")
@@ -76,19 +77,20 @@ if (USE_SUPERBUILD)
   # execute the superbuild (this script will be invoked again without the
   # USE_SUPERBUILD option this time)
   include (cmake/SuperBuild.cmake)
-  return()                      # stop processing this file further
-else()
-  project(Netgen)
-  if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR_DEFAULT}" CACHE PATH "Install directory" FORCE)
-  endif()
+  return() # stop processing this file further
 endif()
 
+# Versioning variables come in from the configuration include, need them now.
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include (${CMAKE_CURRENT_LIST_DIR}/cmake/generate_version_file.cmake)
 set(CPACK_PACKAGE_VERSION "${NETGEN_VERSION}")
+set(PACKAGE_VERSION "${NETGEN_VERSION}")
 
+project(Netgen VERSION "${NETGEN_VERSION_SHORT}")
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR_DEFAULT}" CACHE PATH "Install directory" FORCE)
+endif()
 
 #######################################################################
 if(USE_CCACHE)
@@ -230,11 +232,20 @@ endif(WIN32)
 if(APPLE)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
 endif(APPLE)
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    add_compile_options(-Wno-deprecated -Wno-sign-compare -Wno-unused-variable -Wno-unused-but-set-variable)
+    add_compile_options(-Wno-cpp -Wno-unused -Wno-parentheses)
+    # Uncomment below to run sanitizers
+    #add_compile_options(-g3 -O0 -fno-inline -fno-omit-frame-pointer -fsanitize=undefined -fsanitize=address -fno-common)
+    #add_link_options(-g3 -O0 -fno-inline -fno-omit-frame-pointer -fsanitize=undefined -fsanitize=address -fno-common)
 
+endif()
 #######################################################################
 add_library(nglib ${NGLIB_LIBRARY_TYPE})
+set_target_properties(nglib PROPERTIES VERSION "${NETGEN_LIBRARY_VERSION}")
 if(USE_GUI)
     add_library(nggui ${NGGUI_LIBRARY_TYPE})
+    set_target_properties(nggui PROPERTIES VERSION "${NETGEN_LIBRARY_VERSION}")
     if(WIN32)
         set_target_properties( nggui PROPERTIES OUTPUT_NAME "libnggui")
     endif(WIN32)
@@ -302,7 +313,13 @@ else()
 endif()
 
 if (USE_PYTHON)
-    add_subdirectory(external_dependencies/pybind11)
+    if (USE_INTERNAL_PYBIND11)
+        message(STATUS "Checking for bundled Pybind11...")
+        add_subdirectory(external_dependencies/pybind11)
+    else()
+        message(STATUS "Looking for external Pybind11...")
+        include(cmake/pybind11Tools.cmake)
+    endif()
     find_path(PYBIND_INCLUDE_DIR pybind11/pybind11.h HINTS ${PYTHON_INCLUDE_DIR})
     if( PYBIND_INCLUDE_DIR )
         message(STATUS "Found Pybind11: ${PYBIND_INCLUDE_DIR}")
@@ -427,11 +444,23 @@ if (USE_MPEG)
 endif (USE_MPEG)
 
 #######################################################################
-add_custom_target(ng_generate_version_file
-  ${CMAKE_COMMAND}
+# When not building directly from git source, version will need to be
+# set explicitly--- but still get it from git!
+if (NETGEN_VERSION_GIT)
+  add_custom_target(ng_generate_version_file
+    ${CMAKE_COMMAND}
+    -DNETGEN_VERSION_GIT=${NETGEN_VERSION_GIT}
     -DBDIR=${CMAKE_CURRENT_BINARY_DIR}
     -P ${CMAKE_CURRENT_LIST_DIR}/cmake/generate_version_file.cmake
     )
+else()
+  add_custom_target(ng_generate_version_file
+    ${CMAKE_COMMAND}
+    -DBDIR=${CMAKE_CURRENT_BINARY_DIR}
+    -P ${CMAKE_CURRENT_LIST_DIR}/cmake/generate_version_file.cmake
+    )
+endif()
+
 #######################################################################
 if(INSTALL_PROFILES)
     file(WRITE  ${CMAKE_CURRENT_BINARY_DIR}/netgen.sh "#!/bin/sh\n")
