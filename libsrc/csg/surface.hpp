@@ -19,7 +19,7 @@ namespace netgen
      This class is used for generation of surface meshes
      in NETGEN 
   */
-  class Surface
+  class DLL_HEADER Surface
   {
   protected:
     /// invert normal vector
@@ -236,7 +236,7 @@ namespace netgen
 
 
 
-  class Primitive
+  class DLL_HEADER Primitive
   {
   protected:
     NgArray<int> surfaceids;
