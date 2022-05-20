@@ -1172,7 +1172,7 @@ namespace netgen
     void SetDomainIn (int di) { domin = di; }
     void SetDomainOut (int dom) { domout = dom; }
     void SetBCProperty (int bc) { bcprop = bc; }
-    void SetBCName (string * bcn); //  { bcname = bcn; }
+    DLL_HEADER void SetBCName (string * bcn); //  { bcname = bcn; }
     void SetBCName (const string & bcn) { bcname = bcn; }    
     // Philippose - 06/07/2009
     // Set the surface colour
