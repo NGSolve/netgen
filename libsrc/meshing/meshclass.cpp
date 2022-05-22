@@ -1660,7 +1660,8 @@ namespace netgen
 	clusters -> Update();
       }
 
-    auto geo = geometryregister.LoadFromMeshFile (infile);
+    GeometryRegisterArray& gra = FetchGeometryRegisterArray();
+    auto geo = gra.LoadFromMeshFile (infile);
     if(geo)
        geometry = geo;
 

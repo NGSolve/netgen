@@ -33,8 +33,10 @@ VisualSceneSTLMeshing :: VisualSceneSTLMeshing ()
 {
   selecttrig = 0;
   nodeofseltrig = 1;
-  stlgeometry->SetSelectTrig(selecttrig);
-  stlgeometry->SetNodeOfSelTrig(nodeofseltrig);
+  if(stlgeometry){ // don't let the default initializer crash init
+    stlgeometry->SetSelectTrig(selecttrig);
+    stlgeometry->SetNodeOfSelTrig(nodeofseltrig);
+  }
 }
 
 VisualSceneSTLMeshing :: ~VisualSceneSTLMeshing ()

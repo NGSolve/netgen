@@ -570,7 +570,8 @@ using namespace netgen;
 
 int Ng_CSG_Init (Tcl_Interp * interp)
 {
-  geometryregister.Append (new CSGeometryVisRegister);
+  GeometryRegisterArray& gra = FetchGeometryRegisterArray();
+  gra.Append (new CSGeometryVisRegister);
   if (interp == NULL) return TCL_OK;
   
 

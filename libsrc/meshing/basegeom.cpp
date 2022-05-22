@@ -29,9 +29,6 @@ namespace netgen
       double GetTolerance() { return tree.GetTolerance(); }
   };
 
-  DLL_HEADER GeometryRegisterArray geometryregister;
-  //DLL_HEADER NgArray<GeometryRegister*> geometryregister;
-
   GeometryRegister :: ~GeometryRegister()
   { ; }
 
@@ -1165,4 +1162,10 @@ namespace netgen
   }
 
   static RegisterClassForArchive<NetgenGeometry> regnggeo;
+
+  GeometryRegisterArray& FetchGeometryRegisterArray (){
+    static GeometryRegisterArray *geometryregister = new GeometryRegisterArray();
+    return *geometryregister;
+  }
+
 }
