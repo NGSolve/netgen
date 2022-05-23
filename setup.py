@@ -36,7 +36,7 @@ else:
 
 py_install_dir = get_python_lib(1,0,'').replace('\\','/')
 
-name = "netgen-mesher"
+name = "netgen"
 arch = None
 cmake_args = [
         f'-DNETGEN_VERSION_GIT={git_version}',

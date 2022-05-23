@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=Netgen
+GenericName=Mesh Generator
+Comment=3D finite element mesh generator
+Exec=netgen-mesher
+Icon=netgen-mesher
+Type=Application
+Terminal=false
+Categories=Science;Engineering;

@@ -276,7 +276,7 @@ ostream& operator<<(ostream& os, const STLTriangle& t);
 
 
 
-class STLTopology
+class DLL_HEADER STLTopology
 {
 protected:
   Array<STLTriangle, STLTrigId> trias;

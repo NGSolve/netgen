@@ -13,6 +13,7 @@ add_library(ngcore ${NGCORE_LIBRARY_TYPE}
   utils.cpp
   version.cpp
   )
+set_target_properties(ngcore PROPERTIES VERSION "${NETGEN_LIBRARY_VERSION}")
 
 target_compile_options(ngcore PUBLIC "${NG_COMPILE_FLAGS}")
 

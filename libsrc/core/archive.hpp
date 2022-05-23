@@ -225,7 +225,8 @@ namespace ngcore
       (*this) & size;
       if(Input())
         v.resize(size);
-      Do(&v[0], size);
+      if(size > 0) // can't deref v[0] if it doesn't exist
+        Do(&v[0], size);
       return (*this);
     }
  

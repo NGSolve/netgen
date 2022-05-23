@@ -69,6 +69,8 @@
 #include <gp_Ax1.hxx>
 #include <gp_Ax2.hxx>
 #include <gp_Ax2d.hxx>
+#include <gp_Ax3.hxx>
+#include <gp_GTrsf.hxx>
 #include <gp_Pln.hxx>
 #include <gp_Trsf.hxx>
 
@@ -668,7 +670,10 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .export_values()
     ;
   
-  
+  auto pyListOfShapes_Forward = py::class_<ListOfShapes> (m, "ListOfShapes");
+  auto pyGeom2d_Curve_Forward = py::class_<Handle(Geom2d_Curve)> (m, "Geom2d_Curve");
+  py::class_<Array<std::array<Point<3>,3>,size_t>>(m, "ArrayOfTriangles");
+
   py::class_<TopoDS_Shape> (m, "TopoDS_Shape")
     .def("__str__", [] (const TopoDS_Shape & shape)
          {
@@ -1543,7 +1548,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     bool operator==(ListOfShapesIterator it2) const { return ptr == it2.ptr; }
   };
   
-  py::class_<ListOfShapes> (m, "ListOfShapes")
+  pyListOfShapes_Forward
     .def("__iter__", [](ListOfShapes &s) {
         return py::make_iterator(ListOfShapesIterator(&*s.begin()),
                                  ListOfShapesIterator(&*s.end()));
@@ -1715,7 +1720,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     {
       Identify(me, other, name, type, occ2ng(trafo));
     }, py::arg("other"), py::arg("name"),
-         py::arg("type")=Identifications::PERIODIC, py::arg("trafo"),
+         py::arg("type")=Identifications::PERIODIC,
+         py::arg_v("trafo", gp_Trsf(), "gp_Trsf()"),
          "Identify shapes for periodic meshing")
 
     ;
@@ -1731,7 +1737,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 
 
   
-  py::class_<Handle(Geom2d_Curve)> (m, "Geom2d_Curve")
+  pyGeom2d_Curve_Forward
     .def("Trim", [](Handle(Geom2d_Curve) curve, double u1, double u2) -> Handle(Geom2d_Curve)
          {
            return new Geom2d_TrimmedCurve (curve, u1, u2);
@@ -2434,7 +2440,7 @@ degen_tol : double
   }, py::arg("edges"), py::arg("tol")=1e-8, py::arg("shared")=true);
 
   py::class_<WorkPlane, shared_ptr<WorkPlane>> (m, "WorkPlane")
-    .def(py::init<gp_Ax3, gp_Ax2d>(), py::arg("axes")=gp_Ax3(), py::arg("pos")=gp_Ax2d())
+    .def(py::init<gp_Ax3, gp_Ax2d>(), py::arg_v("axes", gp_Ax3(), "gp_Ax3()"), py::arg_v("pos", gp_Ax2d(), "gp_Ax2d()"))
     .def_property_readonly("cur_loc", &WorkPlane::CurrentLocation)
     .def_property_readonly("cur_dir", &WorkPlane::CurrentDirection)
     .def_property_readonly("start_pnt", &WorkPlane::StartPnt)

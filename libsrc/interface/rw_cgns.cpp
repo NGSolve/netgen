@@ -215,7 +215,7 @@ namespace netgen::cg
     if(codim==2) name += mesh.GetCD2Name(index);
 
     int ne = 0;
-    Array<int> data;
+    Array<cgsize_t> data;
 
     if(dim==3)
       for(const auto el : mesh.VolumeElements())
@@ -333,7 +333,7 @@ namespace netgen::cg
       ZoneType_t zone_type;
       int fn, base, zone;
       int first_index_1d, first_index_2d, first_index_3d;
-      int nv=0, ne_1d=0, ne_2d=0, ne_3d=0;
+      cgsize_t nv=0, ne_1d=0, ne_2d=0, ne_3d=0;
 
       Array<string> names_1d, names_2d, names_3d;
 
@@ -643,7 +643,7 @@ namespace netgen
       int n_vertices = 0;
       for (auto zi : Range(1, nzones+1))
       {
-        int size[3];
+        cgsize_t size[3];
         char name[100];
         cg_zone_read(fn,base,zi, name, size);
         n_vertices += size[0];
