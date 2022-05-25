@@ -1589,7 +1589,11 @@ namespace netgen
     if(ar.Output())
       {
         std::stringstream ss;
+#if OCC_VERSION_HEX < 0x070600
         BRepTools::Write(shape, ss);
+#else
+        BRepTools::Write(shape, ss, false, false, TopTools_FormatVersion_VERSION_1);
+#endif
         ar << ss.str();
       }
     else
