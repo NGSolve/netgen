@@ -250,6 +250,8 @@ namespace netgen
 
               el.SetIndex(md.domain);
               mesh.AddVolumeElement(el);
+              // TODO: Fix double hexes
+              return;
           }
       }
   }
@@ -577,8 +579,8 @@ namespace netgen
            if (md[i].mesh->CheckOverlappingBoundary())
              throw NgException ("Stop meshing since boundary mesh is overlapping");
          
-         if(md[i].mesh->GetGeometry()->GetGeomType() == Mesh::GEOM_OCC)
-           FillCloseSurface( md[i] );
+         // if(md[i].mesh->GetGeometry()->GetGeomType() == Mesh::GEOM_OCC)
+         //   FillCloseSurface( md[i] );
          CloseOpenQuads( md[i] );
          MeshDomain(md[i]);
        }, md.Size());
