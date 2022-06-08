@@ -1544,7 +1544,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
   };
   
   py::class_<ListOfShapes> (m, "ListOfShapes")
-    .def(py::init<vector<TopoDS_Shape>())
+    .def(py::init<vector<TopoDS_Shape>>())
     .def("__iter__", [](ListOfShapes &s) {
         return py::make_iterator(ListOfShapesIterator(&*s.begin()),
                                  ListOfShapesIterator(&*s.end()));
