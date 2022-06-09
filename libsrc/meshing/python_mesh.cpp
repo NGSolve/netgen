@@ -1196,7 +1196,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                               string material,
                               variant<string, int> domain, bool outside,
                               optional<string> project_boundaries,
-                              bool grow_edges)
+                              bool grow_edges, bool limit_growth_vectors)
            {
              BoundaryLayerParameters blp;
              if(int* bc = get_if<int>(&boundary); bc)
@@ -1265,12 +1265,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
              blp.outside = outside;
              blp.grow_edges = grow_edges;
+             blp.limit_growth_vectors = limit_growth_vectors;
 
              GenerateBoundaryLayer (self, blp);
              self.UpdateTopology();
            }, py::arg("boundary"), py::arg("thickness"), py::arg("material"),
           py::arg("domains") = ".*", py::arg("outside") = false,
-          py::arg("project_boundaries")=nullopt, py::arg("grow_edges")=true,
+          py::arg("project_boundaries")=nullopt, py::arg("grow_edges")=true, py::arg("limit_growth_vectors") = true,
           R"delimiter(
 Add boundary layer to mesh.
 

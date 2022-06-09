@@ -194,7 +194,8 @@ namespace netgen
 
   ArrayMem<Point<3>, 4> BoundaryLayerTool :: GetMappedFace( SurfaceElementIndex sei, int face )
   {
-      if(face == -1) return GetMappedFace(sei);
+      if(face == -1) return GetFace(sei);
+      if(face == -2) return GetMappedFace(sei);
       const auto & sel = mesh[sei];
       auto np = sel.GetNP();
       auto pi0 = sel[face % np];
@@ -210,23 +211,25 @@ namespace netgen
   Vec<3> BoundaryLayerTool :: getEdgeTangent(PointIndex pi, int edgenr)
   {
       Vec<3> tangent = 0.0;
+      ArrayMem<PointIndex,2> pts;
       for(auto segi : topo.GetVertexSegments(pi))
       {
           auto & seg = mesh[segi];
-          if(seg.edgenr != edgenr)
+          if(seg.edgenr != edgenr+1)
               continue;
           PointIndex other = seg[0]+seg[1]-pi;
-          tangent += mesh[other] - mesh[pi];
+          if(!pts.Contains(other))
+            pts.Append(other);
       }
+      if(pts.Size() != 2)
+        throw Exception("Something went wrong in getEdgeTangent!");
+      tangent = mesh[pts[1]] - mesh[pts[0]];
       return tangent.Normalize();
   }
 
   void BoundaryLayerTool :: LimitGrowthVectorLengths()
   {
     static Timer tall("BoundaryLayerTool::LimitGrowthVectorLengths"); RegionTimer rtall(tall);
-    height = 0.0;
-    for (auto h : params.heights)
-       height += h;
 
     limits.SetSize(np);
     limits = 1.0;
@@ -320,7 +323,7 @@ namespace netgen
                 const auto & sel = mesh[sei];
                 if(sel.PNums().Contains(pi))
                     return false;
-                auto face = GetFace(sei);
+                auto face = GetMappedFace(sei, -2);
                 double lam_ = 999;
                 bool is_bl_sel = params.surfid.Contains(sel.GetIndex());
 
@@ -464,6 +467,8 @@ namespace netgen
     auto np = mesh.GetNP();
     BitArray is_point_on_bl_surface(np+1);
     is_point_on_bl_surface.Clear();
+    BitArray is_point_on_other_surface(np+1);
+    is_point_on_other_surface.Clear();
     Array<Vec<3>, PointIndex> normals(np);
     for(auto pi : Range(growthvectors))
         normals[pi] = growthvectors[pi];
@@ -474,20 +479,33 @@ namespace netgen
           {
             auto facei = mesh[sei].GetIndex();
             if(facei < nfd_old && !params.surfid.Contains(facei))
-                continue;
-            for(auto pi : mesh[sei].PNums())
-                if(mesh[pi].Type() == SURFACEPOINT)
+              {
+                for(auto pi : mesh[sei].PNums())
+                  if(mesh[pi].Type() == SURFACEPOINT)
+                    is_point_on_other_surface.SetBitAtomic(pi);
+              }
+            else
+              {
+                for(auto pi : mesh[sei].PNums())
+                  if(mesh[pi].Type() == SURFACEPOINT)
                     is_point_on_bl_surface.SetBitAtomic(pi);
+              }
           }
       });
 
     Array<PointIndex> points;
     for(PointIndex pi : mesh.Points().Range())
+      {
         if(is_point_on_bl_surface[pi])
         {
             points.Append(pi);
             growthvectors[pi] = 0.0;
         }
+        if(is_point_on_other_surface[pi])
+          {
+            points.Append(pi);
+          }
+      }
 
     // smooth tangential part of growth vectors from edges to surface elements
     RegionTimer rtsmooth(tsmooth);
@@ -511,7 +529,10 @@ namespace netgen
                         auto gw_other = growthvectors[pi1];
                         auto normal_other = getNormal(mesh[sei]);
                         auto tangent_part = gw_other - (gw_other*normal_other)*normal_other;
-                        new_gw += tangent_part;
+                        if(is_point_on_bl_surface[pi])
+                          new_gw += tangent_part;
+                        else
+                          new_gw += gw_other;
                     }
             }
 
@@ -532,6 +553,10 @@ namespace netgen
 
     //for(auto & seg : mesh.LineSegments())
         //seg.edgenr = seg.epgeominfo[1].edgenr;
+
+    height = 0.0;
+    for (auto h : params.heights)
+      height += h;
 
     max_edge_nr = -1;
     for(const auto& seg : mesh.LineSegments())
@@ -777,7 +802,7 @@ namespace netgen
     // interpolate tangential component of growth vector along edge
     for(auto edgenr : Range(max_edge_nr))
       {
-        if(!is_edge_moved[edgenr+1]) continue;
+        // if(!is_edge_moved[edgenr+1]) continue;
 
         // build sorted list of edge
         Array<PointIndex> points;
@@ -785,6 +810,9 @@ namespace netgen
         double edge_len = 0.;
         auto is_end_point = [&] (PointIndex pi)
         {
+          // if(mesh[pi].Type() == FIXEDPOINT)
+          //   return true;
+          // return false;
             auto segs = topo.GetVertexSegments(pi);
             auto first_edgenr = mesh[segs[0]].edgenr;
             for(auto segi : segs)
@@ -792,16 +820,30 @@ namespace netgen
                     return true;
             return false;
         };
+
+        bool any_grows = false;
+        
         for(const auto& seg : segments)
           {
-            if(seg.edgenr-1 == edgenr && is_end_point(seg[0]))
+            if(seg.edgenr-1 == edgenr)
               {
-                points.Append(seg[0]);
-                points.Append(seg[1]);
-                edge_len += (mesh[seg[1]] - mesh[seg[0]]).Length();
-                break;
+                if(growthvectors[seg[0]].Length2() != 0 ||
+                   growthvectors[seg[1]].Length2() != 0)
+                  any_grows = true;
+                if(points.Size() == 0 && is_end_point(seg[0]))
+                  {
+                    points.Append(seg[0]);
+                    points.Append(seg[1]);
+                    edge_len += (mesh[seg[1]] - mesh[seg[0]]).Length();
+                  }
               }
           }
+
+        if(!any_grows)
+          continue;
+
+        if(!points.Size())
+          throw Exception("Could not find startpoint for edge " + ToString(edgenr));
 
         while(true)
           {
@@ -831,16 +873,27 @@ namespace netgen
               break;
             if(!point_found)
               {
-                cout << "points = " << points << endl;
                 throw Exception(string("Could not find connected list of line segments for edge ") + edgenr);
               }
           }
+
+        if(growthvectors[points[0]].Length2() == 0 &&
+           growthvectors[points.Last()].Length2() == 0)
+          continue;
 
         // tangential part of growth vectors
         auto t1 = (mesh[points[1]]-mesh[points[0]]).Normalize();
         auto gt1 = growthvectors[points[0]] * t1 * t1;
         auto t2 = (mesh[points.Last()]-mesh[points[points.Size()-2]]).Normalize();
         auto gt2 = growthvectors[points.Last()] * t2 * t2;
+
+        if(!is_edge_moved[edgenr+1])
+          {
+            if(growthvectors[points[0]] * (mesh[points[1]] - mesh[points[0]]) < 0)
+              gt1 = 0.;
+            if(growthvectors[points.Last()] * (mesh[points[points.Size()-2]] - mesh[points.Last()]) < 0)
+              gt2 = 0.;
+          }
 
         double len = 0.;
         for(size_t i = 1; i < points.Size()-1; i++)
@@ -1262,7 +1315,9 @@ namespace netgen
 
       auto in_surface_direction = ProjectGrowthVectorsOnSurface();
       InterpolateGrowthVectors();
-      LimitGrowthVectorLengths();
+
+      if(params.limit_growth_vectors)
+        LimitGrowthVectorLengths();
       FixVolumeElements();
       InsertNewElements(segmap, in_surface_direction);
       SetDomInOut();

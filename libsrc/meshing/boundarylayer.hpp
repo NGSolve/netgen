@@ -18,6 +18,7 @@ public:
   BitArray domains;
   bool outside = false; // set the boundary layer on the outside
   bool grow_edges = false;
+  bool limit_growth_vectors = true;
   Array<size_t> project_boundaries;
 };
 
