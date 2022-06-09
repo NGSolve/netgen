@@ -201,6 +201,7 @@ namespace netgen
           return;
 
       NgArray<int, PointIndex::BASE> map;
+      std::set<std::tuple<int,int,int>> hex_faces;
       for(auto identnr : Range(1,nmax+1))
       {
           if(identifications.GetType(identnr) != Identifications::CLOSESURFACES)
@@ -211,6 +212,15 @@ namespace netgen
 
           for(auto & sel : mesh.OpenElements())
           {
+              // For quads: check if this open element is already closed by a hex
+              // this happends when we have identifications in two directions
+              if(sel.GetNP() == 4)
+              {
+                  Element2d face = sel;
+                  face.NormalizeNumbering();
+                  if(hex_faces.count({face[0], face[1], face[2]}))
+                      continue;
+              }
               bool is_mapped = true;
               for(auto pi : sel.PNums())
                   if(!PointIndex(map[pi]).IsValid())
@@ -235,23 +245,26 @@ namespace netgen
               if(pis.size() < 2*np)
                   continue;
 
-              bool is_domout = md.domain == mesh.GetFaceDescriptor(sel.GetIndex()).DomainOut();
-
               // check if new element is inside current domain
               auto p0 = mesh[sel[0]];
-              Vec<3> n = Cross(mesh[sel[1]] - p0, mesh[sel[2]] - p0 );
-              n = is_domout ? n : -n;
+              Vec<3> n = -Cross(mesh[sel[1]] - p0, mesh[sel[2]] - p0 );
 
               if(n*(mesh[el[np]]-p0) < 0.0)
                   continue;
 
-              if(is_domout)
-                  el.Invert();
-
               el.SetIndex(md.domain);
               mesh.AddVolumeElement(el);
-              // TODO: Fix double hexes
-              return;
+              if(el.NP()==8)
+              {
+                  // remember all adjacent faces of the new hex (to skip corresponding openelements accordingly)
+                  for(auto facei : Range(1,7))
+                  {
+                      Element2d face;
+                      el.GetFace(facei, face);
+                      face.NormalizeNumbering();
+                      hex_faces.insert({face[0], face[1], face[2]});
+                  }
+              }
           }
       }
   }
@@ -578,9 +591,9 @@ namespace netgen
          if (mp.checkoverlappingboundary)
            if (md[i].mesh->CheckOverlappingBoundary())
              throw NgException ("Stop meshing since boundary mesh is overlapping");
-         
-         // if(md[i].mesh->GetGeometry()->GetGeomType() == Mesh::GEOM_OCC)
-         //   FillCloseSurface( md[i] );
+
+         if(md[i].mesh->GetGeometry()->GetGeomType() == Mesh::GEOM_OCC)
+            FillCloseSurface( md[i] );
          CloseOpenQuads( md[i] );
          MeshDomain(md[i]);
        }, md.Size());
