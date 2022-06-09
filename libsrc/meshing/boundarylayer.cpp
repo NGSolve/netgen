@@ -218,7 +218,8 @@ namespace netgen
           if(seg.edgenr != edgenr+1)
               continue;
           PointIndex other = seg[0]+seg[1]-pi;
-          pts.Append(other);
+          if(!pts.Contains(other))
+            pts.Append(other);
       }
       if(pts.Size() != 2)
         throw Exception("Something went wrong in getEdgeTangent!");
