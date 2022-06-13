@@ -769,7 +769,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            trafo.SetTranslation(v);
            BRepBuilderAPI_Transform builder(shape, trafo, true);
            PropagateProperties(builder, shape, occ2ng(trafo));
-           return builder.Shape();
+           return CastShape(builder.Shape());
            // version 2: change location
            // ...
          }, py::arg("v"), "copy shape, and translate copy by vector 'v'")
