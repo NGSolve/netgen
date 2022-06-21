@@ -478,7 +478,7 @@ namespace netgen
         return lochfunc[0];
       return lochfunc[layer-1];
     }
-    void SetLocalH(shared_ptr<LocalH> loch, int layer=1);
+    DLL_HEADER void SetLocalH(shared_ptr<LocalH> loch, int layer=1);
 
     ///
     bool LocalHFunctionGenerated(int layer=1) const { return (lochfunc[layer-1] != NULL); }
