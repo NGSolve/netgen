@@ -14,12 +14,12 @@ do
     $PYDIR/pip install -U pytest-check numpy wheel scikit-build
 
     rm -rf _skbuild
-    $PYDIR/pip wheel --use-feature=in-tree-build .
+    $PYDIR/pip wheel .
     auditwheel repair netgen_mesher*-cp${pyversion}-*.whl
     rm netgen_mesher-*.whl
 
     rm -rf _skbuild
-    NETGEN_ARCH=avx2 $PYDIR/pip wheel --use-feature=in-tree-build .
+    NETGEN_ARCH=avx2 $PYDIR/pip wheel .
     auditwheel repair netgen_mesher_avx2*-cp${pyversion}-*.whl
     rm netgen_mesher_avx2-*.whl
 
