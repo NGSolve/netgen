@@ -1660,10 +1660,6 @@ namespace netgen
 	clusters -> Update();
       }
 
-    auto geo = geometryregister.LoadFromMeshFile (infile);
-    if(geo)
-       geometry = geo;
-
     SetNextMajorTimeStamp();
     //  PrintMemInfo (cout);
   }
