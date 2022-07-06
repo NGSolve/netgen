@@ -339,15 +339,12 @@ namespace netgen
   public:
     virtual ~GeometryRegisterArray()
     {
-      for (int i = 0; i < Size(); i++)
-        delete (*this)[i];
+      DeleteAll();
     }
-
     virtual shared_ptr<NetgenGeometry> LoadFromMeshFile (istream & ist) const;
   };
 
-  // extern DLL_HEADER NgArray<GeometryRegister*> geometryregister; 
-  extern DLL_HEADER GeometryRegisterArray geometryregister; 
+  DLL_HEADER GeometryRegisterArray& FetchGeometryRegisterArray ();
 }
 
 
