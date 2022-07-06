@@ -676,7 +676,6 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
     .def("Draw", FunctionPointer
          ([] (shared_ptr<CSGeometry> self)
           {
-             self->FindIdenticSurfaces(1e-6);
              self->CalcTriangleApproximation(0.01, 20);
              ng_geometry = self;
           })
