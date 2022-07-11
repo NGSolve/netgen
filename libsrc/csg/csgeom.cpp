@@ -949,6 +949,7 @@ namespace netgen
   {
     int inv;
     int nsurf = GetNSurf();
+    identicsurfaces.DeleteData();
 
 
     isidenticto.SetSize(nsurf);

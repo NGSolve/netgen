@@ -676,6 +676,7 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
     .def("Draw", FunctionPointer
          ([] (shared_ptr<CSGeometry> self)
           {
+             self->FindIdenticSurfaces(1e-8 * self->MaxSize());
              self->CalcTriangleApproximation(0.01, 20);
              ng_geometry = self;
           })
@@ -705,8 +706,8 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
                auto surf = csg_geo->GetSurface(i);
                surfnames.push_back(surf->GetBCName());
              }
-           csg_geo->FindIdenticSurfaces(1e-6);
-           csg_geo->CalcTriangleApproximation(0.01,100);
+           csg_geo->FindIdenticSurfaces(1e-8 * csg_geo->MaxSize());
+           csg_geo->CalcTriangleApproximation(0.01,20);
            auto nto = csg_geo->GetNTopLevelObjects();
            size_t np = 0;
            size_t ntrig = 0;
