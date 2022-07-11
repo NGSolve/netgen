@@ -1199,11 +1199,14 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                               bool grow_edges, bool limit_growth_vectors)
            {
              BoundaryLayerParameters blp;
+             BitArray boundaries(self.GetNFD()+1);
+             boundaries.Set();
              if(int* bc = get_if<int>(&boundary); bc)
                {
+                 boundaries.Clear();
                  for (int i = 1; i <= self.GetNFD(); i++)
                    if(self.GetFaceDescriptor(i).BCProperty() == *bc)
-                     blp.surfid.Append (i);
+                     boundaries.SetBit(i);
                }
              else
                {
@@ -1218,14 +1221,23 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                          if(dom_pattern)
                            {
                              regex pattern(*dom_pattern);
-                             if((fd.DomainIn() > 0 && regex_match(self.GetMaterial(fd.DomainIn()), pattern)) || (fd.DomainOut() > 0 && regex_match(self.GetMaterial(fd.DomainOut()), pattern)))
-                               blp.surfid.Append(i);
+                             bool mat1_match = fd.DomainIn() > 0 && regex_match(self.GetMaterial(fd.DomainIn()), pattern);
+                             bool mat2_match = fd.DomainOut() > 0 && regex_match(self.GetMaterial(fd.DomainOut()), pattern);
+                             // if boundary is inner or outer remove from list
+                             if(mat1_match == mat2_match)
+                               boundaries.Clear(i);
+                             // if((fd.DomainIn() > 0 && regex_match(self.GetMaterial(fd.DomainIn()), pattern)) || (fd.DomainOut() > 0 && regex_match(self.GetMaterial(fd.DomainOut()), pattern)))
+                             // boundaries.Clear(i);
+                             // blp.surfid.Append(i);
                            }
-                         else
-                           blp.surfid.Append(i);
+                         // else
+                         //   blp.surfid.Append(i);
                        }
                      }
                }
+             for(int i = 1; i<=self.GetNFD(); i++)
+               if(boundaries.Test(i))
+                 blp.surfid.Append(i);
              blp.new_mat = material;
 
              if(project_boundaries.has_value())
