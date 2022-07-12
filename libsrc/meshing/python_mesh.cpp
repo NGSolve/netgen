@@ -1200,10 +1200,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
            {
              BoundaryLayerParameters blp;
              BitArray boundaries(self.GetNFD()+1);
-             boundaries.Set();
+             boundaries.Clear();
              if(int* bc = get_if<int>(&boundary); bc)
                {
-                 boundaries.Clear();
                  for (int i = 1; i <= self.GetNFD(); i++)
                    if(self.GetFaceDescriptor(i).BCProperty() == *bc)
                      boundaries.SetBit(i);
@@ -1216,6 +1215,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                      auto& fd = self.GetFaceDescriptor(i);
                      if(regex_match(fd.GetBCName(), pattern))
                        {
+                         boundaries.SetBit(i);
                          auto dom_pattern = get_if<string>(&domain);
                          // only add if adjacent to domain
                          if(dom_pattern)
