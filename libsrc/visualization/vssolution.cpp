@@ -800,7 +800,6 @@ namespace netgen
                 center.X() = vispar.centerx;
                 center.Y() = vispar.centery;
                 center.Z() = vispar.centerz;
-                cout << "use center coords, center = " << center.X() << ", " << center.Y() << ", " << center.Z() << endl;
               }
             else if(selpoint >= 1 && zoomall == 2)
               center = mesh->Point(selpoint);
