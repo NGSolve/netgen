@@ -19,7 +19,6 @@ namespace netgen
 
 /* *********************** Draw STL Geometry **************** */
 
-extern STLGeometry * stlgeometry;
 extern AutoPtr<Mesh> mesh;
 
 
@@ -33,8 +32,6 @@ VisualSceneSTLMeshing :: VisualSceneSTLMeshing ()
 {
   selecttrig = 0;
   nodeofseltrig = 1;
-  stlgeometry->SetSelectTrig(selecttrig);
-  stlgeometry->SetNodeOfSelTrig(nodeofseltrig);
 }
 
 VisualSceneSTLMeshing :: ~VisualSceneSTLMeshing ()
