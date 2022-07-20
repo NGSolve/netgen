@@ -188,12 +188,12 @@ namespace netgen
     mutable double proj_latest_t;
   public:
     ///
-    SplineSeg3 (const GeomPoint<D> & ap1, 
+    DLL_HEADER SplineSeg3 (const GeomPoint<D> & ap1,
 		const GeomPoint<D> & ap2, 
 		const GeomPoint<D> & ap3,
                 string bcname="default",
                 double maxh=1e99);
-    SplineSeg3 (const GeomPoint<D> & ap1,
+    DLL_HEADER SplineSeg3 (const GeomPoint<D> & ap1,
 		const GeomPoint<D> & ap2,
 		const GeomPoint<D> & ap3,
                 double aweight,
