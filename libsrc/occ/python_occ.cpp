@@ -274,7 +274,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                                auto result = geo->GenerateMesh(mesh, mp);
                                if(result != 0)
                                  {
-                                   netgen::mesh = mesh;
+                                   netgen::mesh = mesh;   // keep mesh for debugging
                                    throw Exception("Meshing failed!");
                                  }
                                ng_geometry = geo;
