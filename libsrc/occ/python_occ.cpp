@@ -271,10 +271,12 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                            if (comm.Rank()==0)
                              {
                                SetGlobalMesh(mesh);
-                               netgen::mesh = mesh;
                                auto result = geo->GenerateMesh(mesh, mp);
                                if(result != 0)
-                                 throw Exception("Meshing failed!");
+                                 {
+                                   netgen::mesh = mesh;
+                                   throw Exception("Meshing failed!");
+                                 }
                                ng_geometry = geo;
                                if (comm.Size() > 1)
                                  mesh->Distribute();
