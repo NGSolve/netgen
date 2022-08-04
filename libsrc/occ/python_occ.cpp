@@ -26,6 +26,7 @@ using namespace netgen;
 namespace netgen
 {
   extern std::shared_ptr<NetgenGeometry> ng_geometry;
+  extern std::shared_ptr<Mesh> mesh;
 }
 
 static string occparameter_description = R"delimiter(
@@ -270,6 +271,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                            if (comm.Rank()==0)
                              {
                                SetGlobalMesh(mesh);
+                               netgen::mesh = mesh;
                                auto result = geo->GenerateMesh(mesh, mp);
                                if(result != 0)
                                  throw Exception("Meshing failed!");
