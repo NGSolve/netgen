@@ -586,6 +586,8 @@ namespace netgen
 
      auto md = DivideMesh(mesh3d, mp);
 
+     try
+       {
      ParallelFor( md.Range(), [&](int i)
        {
          if (mp.checkoverlappingboundary)
@@ -597,6 +599,12 @@ namespace netgen
          CloseOpenQuads( md[i] );
          MeshDomain(md[i]);
        }, md.Size());
+       }
+     catch(...)
+       {
+         MergeMeshes(mesh3d, md);
+         return MESHING3_GIVEUP;
+       }
 
      MergeMeshes(mesh3d, md);
 
