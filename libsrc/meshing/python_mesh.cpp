@@ -1191,6 +1191,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     
     .def ("BuildSearchTree", &Mesh::BuildElementSearchTree,py::call_guard<py::gil_scoped_release>())
 
+    .def ("BoundaryLayer2", GenerateBoundaryLayer2, py::arg("domain"), py::arg("thicknesses"), py::arg("make_new_domain")=true, py::arg("boundaries")=Array<int>{})
     .def ("BoundaryLayer", [](Mesh & self, variant<string, int> boundary,
                               variant<double, py::list> thickness,
                               string material,

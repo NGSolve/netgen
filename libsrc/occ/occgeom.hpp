@@ -202,6 +202,12 @@ namespace netgen
     Mesh::GEOM_TYPE GetGeomType() const override
     { return Mesh::GEOM_OCC; }
 
+    void SetDimension(int dim)
+    {
+        dimension = dim;
+        BuildFMap();
+    }
+
     void SetOCCParameters(const OCCParameters& par)
     { occparam = par; }
 

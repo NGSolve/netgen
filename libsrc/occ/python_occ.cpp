@@ -134,7 +134,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                   }), py::arg("shape"),
          "Create Netgen OCCGeometry from existing TopoDS_Shape")
     
-    .def(py::init([] (const string& filename)
+    .def(py::init([] (const string& filename, int dim)
                   {
                     shared_ptr<OCCGeometry> geo;
                     if(EndsWith(filename, ".step") || EndsWith(filename, ".stp"))
@@ -145,9 +145,11 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                       geo.reset(LoadOCC_IGES(filename));
                     else
                       throw Exception("Cannot load file " + filename + "\nValid formats are: step, stp, brep, iges");
+                    if(dim<3)
+                      geo->SetDimension(dim);
                     ng_geometry = geo;
                     return geo;
-                  }), py::arg("filename"),
+                  }), py::arg("filename"), py::arg("dim")=3,
         "Load OCC geometry from step, brep or iges file")
     .def(NGSPickle<OCCGeometry>())
     .def("Glue", &OCCGeometry::GlueGeometry)
