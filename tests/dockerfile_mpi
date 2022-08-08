@@ -23,5 +23,5 @@ RUN apt-get update && apt-get -y install \
         tcl-dev \
         tk-dev
 
-RUN python3 -m pip install pytest-mpi pytest-check pytest
+RUN python3 -m pip install pytest-mpi pytest-check pytest pybind11-stubgen
 ADD . /root/src/netgen

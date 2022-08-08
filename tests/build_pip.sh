@@ -11,7 +11,7 @@ for pyversion in 38 39 310
 do
     export PYDIR="/opt/python/cp${pyversion}-cp${pyversion}/bin"
     echo $PYDIR
-    $PYDIR/pip install -U pytest-check numpy wheel scikit-build
+    $PYDIR/pip install -U pytest-check numpy wheel scikit-build pybind11-stubgen
 
     rm -rf _skbuild
     $PYDIR/pip wheel .
