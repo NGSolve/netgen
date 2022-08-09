@@ -123,7 +123,6 @@ public:
   STLTriangle ()
   {
     pts[0]=0;pts[1]=0;pts[2]=0;
-    topedges[0] = topedges[1] = topedges[2] = 0.;
     nbtrigs[0][0] = nbtrigs[0][1] = nbtrigs[0][2] = 0.;
     nbtrigs[1][0] = nbtrigs[1][1] = nbtrigs[1][2] = 0.;
   }
