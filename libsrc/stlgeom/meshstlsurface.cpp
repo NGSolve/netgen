@@ -106,7 +106,7 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
 		   << ", trig2 = " << trig2
 		   << ", trig2b = " << trig2b << endl;
 
-	  if (trig1 <= 0 || trig2 <= 0 || trig1b <= 0 || trig2b <= 0)
+	  if (trig1 <= 0 || trig2 < 0 || trig1b <= 0 || trig2b < 0)
 	    {
 	      cout << "negative trigs, "
 		   << ", trig1 = " << trig1
@@ -177,50 +177,14 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
 	  mesh.AddSegment (seg);
 
 
+          if(trig2 != 0)
+            {
 	  Segment seg2;
 	  seg2[0] = p2 + PointIndex::BASE-1;;
 	  seg2[1] = p1 + PointIndex::BASE-1;;
 	  seg2.si = geom.GetTriangle(trig2).GetFaceNum();
-	  seg2.edgenr = i;
-
-	  seg2.epgeominfo[0].edgenr = i;
-	  seg2.epgeominfo[0].dist = line->GetDist(j+1);
-	  seg2.epgeominfo[1].edgenr = i;
-	  seg2.epgeominfo[1].dist = line->GetDist(j);
-	  /*
-	  (*testout) << "seg = " 
-		     << "edgenr " << seg2.epgeominfo[0].edgenr
-		     << " dist " << seg2.epgeominfo[0].dist
-		     << " edgenr " << seg2.epgeominfo[1].edgenr
-		     << " dist " << seg2.epgeominfo[1].dist << endl;
-	  */
-	  
-	  seg2.geominfo[0].trignum = trig2b;
-	  seg2.geominfo[1].trignum = trig2;
-	  
-	  /*
-	  geom.SelectChartOfTriangle (trig2);
-	  hp = hp2 = mesh.Point (seg[0]);
-	  seg2.geominfo[0].trignum = geom.Project (hp);
-
-	  (*testout) << "hp = " << hp2 << ", hp proj = " << hp << ", trignum = " << seg.geominfo[0].trignum << endl;
-	  if (Dist (hp, hp2) > 1e-5 || seg2.geominfo[0].trignum == 0) 
-	    {
-	      (*testout) << "Get GeomInfo PROBLEM" << endl;
-	    }
-
-
-	  geom.SelectChartOfTriangle (trig2b);
-	  hp = hp2 = mesh.Point (seg[1]);
-	  seg2.geominfo[1].trignum = geom.Project (hp);
-	  (*testout) << "hp = " << hp2 << ", hp proj = " << hp << ", trignum = " << seg.geominfo[1].trignum << endl;
-	  if (Dist (hp, hp2) > 1e-5 || seg2.geominfo[1].trignum == 0) 
-	    {
-	      (*testout) << "Get GeomInfo PROBLEM" << endl;
-	    }
-	  */	  
-
 	  mesh.AddSegment (seg2);
+            }
 	}
     }
 

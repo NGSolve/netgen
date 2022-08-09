@@ -2578,7 +2578,7 @@ void STLGeometry :: CalcEdgeDataAngles()
   for (int i = 1; i <= GetNTE(); i++)
     {
       STLTopEdge & edge = GetTopEdge (i);
-      double cosang = 
+      double cosang = edge.TrigNum(2) == 0 ? 1. :
 	GetTriangle(edge.TrigNum(1)).Normal() *
 	GetTriangle(edge.TrigNum(2)).Normal();
       edge.SetCosAngle (cosang);
@@ -2611,6 +2611,8 @@ void STLGeometry :: FindEdgesFromAngles(const STLParameters& stlparam)
   for (int i = 1; i <= edgedata->Size(); i++)
     {
       STLTopEdge & sed = edgedata->Elem(i);
+      if(sed.TrigNum(2) == 0)
+        sed.SetStatus(ED_CONFIRMED);
       if (sed.GetStatus() == ED_CANDIDATE || 
 	  sed.GetStatus() == ED_UNDEFINED)
 	{
@@ -3187,7 +3189,7 @@ void STLGeometry :: BuildSmoothEdges ()
       ng1 = trig.GeomNormal(points);
       ng1 /= (ng1.Length() + 1e-24);
 
-      for (int j = 1; j <= 3; j++)
+      for (int j = 1; j <= NONeighbourTrigs(i); j++)
 	{ 
 	  int nbt = NeighbourTrig (i, j);
 
@@ -3261,7 +3263,7 @@ void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
 	  STLTrigId t = chart.GetChartTrig1(j); 
 	  const STLTriangle& tt = GetTriangle(t);
 
-	  for (int k = 1; k <= 3; k++)
+	  for (int k = 1; k <= NONeighbourTrigs(t); k++)
 	    {
 	      STLTrigId nt = NeighbourTrig(t,k); 
 	      if (GetChartNr(nt) != i && !TrigIsInOC(nt,i))
