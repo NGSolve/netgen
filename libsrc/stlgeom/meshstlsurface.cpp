@@ -106,7 +106,7 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
 		   << ", trig2 = " << trig2
 		   << ", trig2b = " << trig2b << endl;
 
-	  if (trig1 <= 0 || trig2 <= 0 || trig1b <= 0 || trig2b <= 0)
+	  if (trig1 <= 0 || trig2 < 0 || trig1b <= 0 || trig2b < 0)
 	    {
 	      cout << "negative trigs, "
 		   << ", trig1 = " << trig1
@@ -177,10 +177,13 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
 	  mesh.AddSegment (seg);
 
 
+          if(trig2 != 0)
+            {
 	  Segment seg2;
 	  seg2[0] = p2 + PointIndex::BASE-1;;
 	  seg2[1] = p1 + PointIndex::BASE-1;;
 	  seg2.si = geom.GetTriangle(trig2).GetFaceNum();
+
 	  seg2.edgenr = i;
 
 	  seg2.epgeominfo[0].edgenr = i;
@@ -219,8 +222,8 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
 	      (*testout) << "Get GeomInfo PROBLEM" << endl;
 	    }
 	  */	  
-
 	  mesh.AddSegment (seg2);
+            }
 	}
     }
 
