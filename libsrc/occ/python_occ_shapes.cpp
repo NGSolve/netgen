@@ -1177,15 +1177,18 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 
            std::vector<double> p[3];
            std::vector<double> n[3];
-           py::list names, colors;
+           py::list names, colors, solid_names;
+           std::vector<std::vector<int>> solid_face_map;
 
            int index = 0;
 
            Box<3> box(Box<3>::EMPTY_BOX);
+           TopTools_IndexedMapOfShape fmap;
            for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
            {
                TopoDS_Face face = TopoDS::Face(e.Current());
                // Handle(TopoDS_Face) face = e.Current();
+               fmap.Add(face);
                ExtractFaceData(face, index, p, n, box);
                auto & props = OCCGeometry::global_shape_properties[face.TShape()];
                if(props.col)
@@ -1203,6 +1206,19 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                    names.append("");
                index++;
            }
+
+           for(auto& solid : GetSolids(shape))
+             {
+               std::vector<int> faces;
+               for(auto& face : GetFaces(solid))
+                 faces.push_back(fmap.FindIndex(face)-1);
+               solid_face_map.push_back(move(faces));
+               auto& props = OCCGeometry::global_shape_properties[solid.TShape()];
+               if(props.name)
+                 solid_names.append(*props.name);
+               else
+                 solid_names.append("");
+             }
 
            std::vector<double> edge_p[2];
            py::list edge_names, edge_colors;
@@ -1263,6 +1279,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            data["autoscale"] = false;
            data["colors"] = colors;
            data["names"] = names;
+           data["solid_names"] = solid_names;
 
            py::list edges;
            edges.append(edge_p[0]);
@@ -1270,6 +1287,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            data["edges"] = edges;
            data["edge_names"] = edge_names;
            data["edge_colors"] = edge_colors;
+           data["solid_face_map"] = solid_face_map;
            return data;
          })
     ;
