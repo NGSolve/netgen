@@ -71,8 +71,8 @@ namespace netgen
   void LoadOCCInto(OCCGeometry* occgeo, const filesystem::path & filename);
   void PrintContents (OCCGeometry * geom);
 
-  std::map<Handle(TopoDS_TShape), ShapeProperties> OCCGeometry::global_shape_properties;
-  std::map<Handle(TopoDS_TShape), std::vector<OCCIdentification>> OCCGeometry::identifications;
+  std::map<TopoDS_Shape, ShapeProperties> OCCGeometry::global_shape_properties;
+  std::map<TopoDS_Shape, std::vector<OCCIdentification>> OCCGeometry::identifications;
   
   TopoDS_Shape ListOfShapes::Max(gp_Vec dir)
   {
@@ -125,7 +125,7 @@ namespace netgen
 
   ListOfShapes ListOfShapes::SubShapes(TopAbs_ShapeEnum type) const
   {
-    std::set<TopoDS_Shape, ShapeLess> unique_shapes;
+    std::set<TopoDS_Shape> unique_shapes;
     for(const auto& shape : *this)
       for(TopExp_Explorer e(shape, type); e.More(); e.Next())
         unique_shapes.insert(e.Current());
@@ -200,7 +200,7 @@ namespace netgen
   {
     MeshingParameters local_mp = mparam;
     auto face = TopoDS::Face(fmap(nr+1));
-    if(auto quad_dominated = OCCGeometry::global_shape_properties[face.TShape()].quad_dominated; quad_dominated.has_value())
+    if(auto quad_dominated = OCCGeometry::global_shape_properties[face].quad_dominated; quad_dominated.has_value())
       local_mp.quad = *quad_dominated;
 
     bool failed = OCCMeshFace(*this, mesh, glob2loc, local_mp, nr, PARAMETERSPACE, true);
@@ -376,9 +376,9 @@ namespace netgen
     
     for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
       {
-        if (auto name = OCCGeometry::global_shape_properties[e.Current().TShape()].name)
+        if (auto name = OCCGeometry::global_shape_properties[e.Current()].name)
           for (auto mods : history->Modified(e.Current()))
-            OCCGeometry::global_shape_properties[mods.TShape()].name = *name;
+            OCCGeometry::global_shape_properties[mods].name = *name;
       }
 #endif // OCC_HAVE_HISTORY    
     
@@ -444,7 +444,7 @@ namespace netgen
          for (exp0.Init (shape, TopAbs_FACE); exp0.More(); exp0.Next())
          {
             TopoDS_Face face = TopoDS::Face (exp0.Current());
-            auto props = global_shape_properties[face.TShape()];
+            auto props = global_shape_properties[face];
 
             sff = new ShapeFix_Face (face);
             sff->FixAddNaturalBoundMode() = Standard_True;
@@ -475,7 +475,7 @@ namespace netgen
 
             // Set the original properties of the face to the newly created 
             // face (after the healing process)
-            global_shape_properties[face.TShape()];
+            global_shape_properties[face];
          }
          shape = rebuild->Apply(shape);
       }
@@ -1122,54 +1122,51 @@ namespace netgen
       for(auto i1 : Range(1, vmap.Extent()+1))
       {
           auto v = vmap(i1);
-          auto tshape = v.TShape();
-          if(vertex_map.count(tshape)!=0)
+          if(vertex_map.count(v)!=0)
               continue;
           auto occ_vertex = make_unique<OCCVertex>(TopoDS::Vertex(v));
           occ_vertex->nr = vertices.Size();
-          vertex_map[tshape] = occ_vertex->nr;
+          vertex_map[v] = occ_vertex->nr;
 
-          if(global_shape_properties.count(tshape)>0)
-              occ_vertex->properties = global_shape_properties[tshape];
+          if(global_shape_properties.count(v)>0)
+              occ_vertex->properties = global_shape_properties[v];
           vertices.Append(std::move(occ_vertex));
       }
 
       for(auto i1 : Range(1, emap.Extent()+1))
       {
           auto e = emap(i1);
-          auto tshape = e.TShape();
           auto edge = TopoDS::Edge(e);
-          if(edge_map.count(tshape)!=0)
+          if(edge_map.count(e)!=0)
               continue;
-          edge_map[tshape] = edges.Size();
+          edge_map[e] = edges.Size();
           auto verts = GetVertices(e);
-          auto occ_edge = make_unique<OCCEdge>(edge, *vertices[vertex_map[verts[0].TShape()]], *vertices[vertex_map[verts[1].TShape()]] );
-          occ_edge->properties = global_shape_properties[tshape];
+          auto occ_edge = make_unique<OCCEdge>(edge, *vertices[vertex_map[verts[0]]], *vertices[vertex_map[verts[1]]] );
+          occ_edge->properties = global_shape_properties[e];
           edges.Append(std::move(occ_edge));
       }
 
       for(auto i1 : Range(1, fmap.Extent()+1))
       {
           auto f = fmap(i1);
-          auto tshape = f.TShape();
-          if(face_map.count(tshape)==0)
+          if(face_map.count(f)==0)
           {
 
               auto k = faces.Size();
-              face_map[tshape] = k;
+              face_map[f] = k;
               auto occ_face = make_unique<OCCFace>(f);
 
               for(auto e : GetEdges(f))
-                  occ_face->edges.Append( edges[edge_map[e.TShape()]].get() );
+                  occ_face->edges.Append( edges[edge_map[e]].get() );
 
-              if(global_shape_properties.count(tshape)>0)
-                  occ_face->properties = global_shape_properties[tshape];
+              if(global_shape_properties.count(f)>0)
+                  occ_face->properties = global_shape_properties[f];
               faces.Append(std::move(occ_face));
 
               if(dimension==2)
                   for(auto e : GetEdges(f))
                   {
-                      auto & edge = *edges[edge_map[e.TShape()]];
+                      auto & edge = *edges[edge_map[e]];
                       if(e.Orientation() == TopAbs_REVERSED)
                           edge.domout = k;
                       else
@@ -1182,21 +1179,20 @@ namespace netgen
       for(auto i1 : Range(1, somap.Extent()+1))
       {
           auto s = somap(i1);
-          auto tshape = s.TShape();
           int k;
-          if(solid_map.count(tshape)==0)
+          if(solid_map.count(s)==0)
           {
               k = solids.Size();
-              solid_map[tshape] = k;
+              solid_map[s] = k;
               auto occ_solid = make_unique<OCCSolid>(s);
-              if(global_shape_properties.count(tshape)>0)
-                  occ_solid->properties = global_shape_properties[tshape];
+              if(global_shape_properties.count(s)>0)
+                  occ_solid->properties = global_shape_properties[s];
               solids.Append(std::move(occ_solid));
           }
 
           for(auto f : GetFaces(s))
           {
-              auto face_nr = face_map[f.TShape()];
+              auto face_nr = face_map[f];
               auto & face = faces[face_nr];
               if(face->domin==-1)
                   face->domin = k;
@@ -1208,9 +1204,9 @@ namespace netgen
       // Add identifications
       auto add_identifications = [&](auto & shapes, auto & shape_map)
       {
-          for(auto &[tshape, nr] : shape_map)
-            if(identifications.count(tshape))
-                for(auto & ident : identifications[tshape])
+          for(auto &[shape, nr] : shape_map)
+            if(identifications.count(shape))
+                for(auto & ident : identifications[shape])
                 {
                     if(shape_map.count(ident.from)==0 || shape_map.count(ident.to)==0)
                         continue;
@@ -1321,7 +1317,7 @@ namespace netgen
     Array<GeometryVertex*> verts;
     const auto& occface = dynamic_cast<const OCCFace&>(face);
     for(auto& vert : GetVertices(occface.Shape()))
-      verts.Append(vertices[vertex_map.at(vert.TShape())].get());
+      verts.Append(vertices[vertex_map.at(vert)].get());
     return move(verts);
   }
 
@@ -1615,34 +1611,33 @@ namespace netgen
         auto occ_hash = key.HashCode(1<<31UL);
         return std::hash<decltype(occ_hash)>()(occ_hash);
     };
-    std::map<Handle(TopoDS_TShape), int> tshape_map;
-    Array<Handle(TopoDS_TShape)> tshape_list;
+    std::map<TopoDS_Shape, int> shape_map;
+    Array<TopoDS_Shape> shape_list;
 
     ar & dimension;
     for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
       for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
         {
           auto ds = e.Current(); 
-          auto ts = ds.TShape();
-          if(tshape_map.count(ts)==0)
+          if(shape_map.count(ds)==0)
             {
-              tshape_map[ts] = tshape_list.Size();
-              tshape_list.Append(ts);
+              shape_map[ds] = shape_list.Size();
+              shape_list.Append(ds);
             }
         }
 
-    for (auto ts : tshape_list)
+    for (auto s : shape_list)
       {
-        bool has_properties = global_shape_properties.count(ts);
+        bool has_properties = global_shape_properties.count(s);
         ar & has_properties;
         if(has_properties)
-            ar & global_shape_properties[ts];
+            ar & global_shape_properties[s];
 
-        bool has_identifications = identifications.count(ts);
+        bool has_identifications = identifications.count(s);
         ar & has_identifications;
         if(has_identifications)
           {
-            auto & idents = identifications[ts];
+            auto & idents = identifications[s];
             auto n_idents = idents.size();
             ar & n_idents;
             idents.resize(n_idents);
@@ -1652,14 +1647,14 @@ namespace netgen
                 int id_from, id_to;
                 if(ar.Output())
                 {
-                    id_from = tshape_map[id.from];
-                    id_to = tshape_map[id.to];
+                    id_from = shape_map[id.from];
+                    id_to = shape_map[id.to];
                 }
                 ar & id_from & id_to & id.trafo & id.name;
                 if(ar.Input())
                 {
-                    id.from = tshape_list[id_from];
-                    id.to = tshape_list[id_to];
+                    id.from = shape_list[id_from];
+                    id.to = shape_list[id_to];
                 }
               }
           }
@@ -1981,7 +1976,7 @@ namespace netgen
       if(tree.GetTolerance() < Dist(trafo(c_me), c_you))
           return false;
 
-      std::map<T_Shape, T_Shape> vmap;
+      std::map<TopoDS_Shape, optional<TopoDS_Shape>> vmap;
 
       auto verts_me = GetVertices(me);
       auto verts_you = GetVertices(you);
@@ -1991,21 +1986,21 @@ namespace netgen
 
       for (auto i : Range(verts_me.size()))
       {
-          auto s = verts_me[i].TShape();
+          auto s = verts_me[i];
           if(vmap.count(s)>0)
               continue;
           auto p = trafo(occ2ng(s));
           tree.Insert( p, i );
-          vmap[s] = nullptr;
+          vmap[s] = nullopt;
       }
           
       for (auto vert : verts_you)
       {
-          auto s = vert.TShape();
+          auto s = vert;
           auto p = occ2ng(s);
           bool vert_mapped = false;
           tree.GetFirstIntersecting( p, p, [&](size_t i ) {
-                  vmap[verts_me[i].TShape()] = s;
+                  vmap[verts_me[i]] = s;
                   vert_mapped = true;
                   return true;
           });
@@ -2061,8 +2056,8 @@ namespace netgen
             if(!IsMappedShape(trafo, shape_me, shape_you))
                 continue;
 
-            OCCGeometry::identifications[shape_me.TShape()].push_back
-                (OCCIdentification { shape_me.TShape(), shape_you.TShape(), trafo, name, type });
+            OCCGeometry::identifications[shape_me].push_back
+                (OCCIdentification { shape_me, shape_you, trafo, name, type });
         }
   }
 
@@ -2124,7 +2119,7 @@ namespace netgen
             XCAFPrs_Style aStyle;
             set.FindFromKey(e.Current(), aStyle);
 
-            auto & prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+            auto & prop = OCCGeometry::global_shape_properties[e.Current()];
             if(aStyle.IsSetColorSurf())
                 prop.col = step_utils::ReadColor(aStyle.GetColorSurfRGBA());
           }
@@ -2144,7 +2139,7 @@ namespace netgen
             if (!transProc->IsBound(item))
               continue;
 
-            OCCGeometry::global_shape_properties[shape.TShape()].name = name;
+            OCCGeometry::global_shape_properties[shape].name = name;
           }
 
 
@@ -2168,7 +2163,7 @@ namespace netgen
             if(name != "netgen_geometry_properties")
                 continue;
 
-            auto & prop = OCCGeometry::global_shape_properties[shape.TShape()];
+            auto & prop = OCCGeometry::global_shape_properties[shape];
 
             auto nprops = item->NbItemElement();
 
@@ -2194,7 +2189,7 @@ namespace netgen
           Handle(StepRepr_RepresentationItem) item = STEPConstruct::FindEntity(finder, shape);
           if(!item)
               return;
-          auto prop = OCCGeometry::global_shape_properties[shape.TShape()];
+          auto prop = OCCGeometry::global_shape_properties[shape];
 
           if(auto n = prop.name)
               item->SetName(MakeName(*n));
@@ -2223,7 +2218,7 @@ namespace netgen
       void WriteIdentifications(const Handle(Interface_InterfaceModel) model, const TopoDS_Shape & shape, const Handle(Transfer_FinderProcess) finder)
       {
           Handle(StepRepr_RepresentationItem) item = STEPConstruct::FindEntity(finder, shape);
-          auto & identifications = OCCGeometry::identifications[shape.TShape()];
+          auto & identifications = OCCGeometry::identifications[shape];
           if(identifications.size()==0)
               return;
           auto n = identifications.size();
@@ -2274,7 +2269,7 @@ namespace netgen
 
               result.push_back(ident);
           }
-          OCCGeometry::identifications[shape_origin.TShape()] = result;
+          OCCGeometry::identifications[shape_origin] = result;
       }
 
       void WriteSTEP(const TopoDS_Shape & shape, const filesystem::path & filename)
@@ -2298,7 +2293,7 @@ namespace netgen
           for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
             for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
               {
-                auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+                auto prop = OCCGeometry::global_shape_properties[e.Current()];
                 if(auto col = prop.col)
                     colortool->SetColor(e.Current(), step_utils::MakeColor(*col), XCAFDoc_ColorGen);
               }

@@ -304,7 +304,7 @@ public:
 
     // auto edge = BRepBuilderAPI_MakeEdge(curve).Edge();
     if (name)
-      OCCGeometry::global_shape_properties[edge.TShape()].name = name;
+      OCCGeometry::global_shape_properties[edge].name = name;
     wire_builder.Add(edge);
 
     if (closing) Finish();
@@ -591,7 +591,7 @@ public:
   auto NameVertex (string name)
   {
     if (!lastvertex.IsNull())
-      OCCGeometry::global_shape_properties[lastvertex.TShape()].name = name;
+      OCCGeometry::global_shape_properties[lastvertex].name = name;
     return shared_from_this();
   }
 
@@ -822,37 +822,37 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("bc", [](const TopoDS_Shape & shape, const string & name)
          {
            for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
-             OCCGeometry::global_shape_properties[e.Current().TShape()].name = name;
+             OCCGeometry::global_shape_properties[e.Current()].name = name;
            return shape;
          }, py::arg("name"), "sets 'name' property for all faces of shape")
 
     .def("mat", [](const TopoDS_Shape & shape, const string & name)
          {
            for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
-             OCCGeometry::global_shape_properties[e.Current().TShape()].name = name;
+             OCCGeometry::global_shape_properties[e.Current()].name = name;
            return shape;
          }, py::arg("name"), "sets 'name' property to all solids of shape")
     
     .def_property("name", [](const TopoDS_Shape & self) -> optional<string> {
-        if (auto name = OCCGeometry::global_shape_properties[self.TShape()].name)
+        if (auto name = OCCGeometry::global_shape_properties[self].name)
           return *name;
         else
           return nullopt;
       }, [](const TopoDS_Shape & self, optional<string> name) {
-        OCCGeometry::global_shape_properties[self.TShape()].name = name;            
+        OCCGeometry::global_shape_properties[self].name = name;
       }, "'name' of shape")
     
     .def_property("maxh",
                   [](const TopoDS_Shape& self)
                   {
-                    return OCCGeometry::global_shape_properties[self.TShape()].maxh;
+                    return OCCGeometry::global_shape_properties[self].maxh;
                   },
                   [](TopoDS_Shape& self, double val)
                   {
                     for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
                       for (TopExp_Explorer e(self, typ); e.More(); e.Next())
                       {
-                        auto & maxh = OCCGeometry::global_shape_properties[e.Current().TShape()].maxh;
+                        auto & maxh = OCCGeometry::global_shape_properties[e.Current()].maxh;
                         maxh = min2(val, maxh);
                       }
                   }, "maximal mesh-size for shape")
@@ -860,16 +860,16 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def_property("hpref",
                   [](const TopoDS_Shape& self)
                   {
-                    return OCCGeometry::global_shape_properties[self.TShape()].hpref;
+                    return OCCGeometry::global_shape_properties[self].hpref;
                   },
                   [](TopoDS_Shape& self, double val)
                   {
-                    auto & hpref = OCCGeometry::global_shape_properties[self.TShape()].hpref;
+                    auto & hpref = OCCGeometry::global_shape_properties[self].hpref;
                     hpref = max2(val, hpref);
                   }, "number of refinement levels for geometric refinement")
     
     .def_property("col", [](const TopoDS_Shape & self) {
-        auto it = OCCGeometry::global_shape_properties.find(self.TShape());
+        auto it = OCCGeometry::global_shape_properties.find(self);
         Vec<4> col(0.2, 0.2, 0.2);
         if (it != OCCGeometry::global_shape_properties.end() && it->second.col)
           col = *it->second.col;
@@ -878,7 +878,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         Vec<4> col(c[0], c[1], c[2], 1.0);
         if(c.size() == 4)
           col[3] = c[3];
-        OCCGeometry::global_shape_properties[self.TShape()].col = col;    
+        OCCGeometry::global_shape_properties[self].col = col;
       }, "color of shape as RGB - tuple")
     .def("UnifySameDomain", [](const TopoDS_Shape& shape,
                                bool edges, bool faces,
@@ -891,9 +891,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
         for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
           {
-            auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+            auto prop = OCCGeometry::global_shape_properties[e.Current()];
             for (auto mods : history->Modified(e.Current()))
-              OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+              OCCGeometry::global_shape_properties[mods].Merge(prop);
           }
       return unify.Shape();
     }, py::arg("unifyEdges")=true, py::arg("unifyFaces")=true,
@@ -919,9 +919,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           for (auto & s : { shape1, shape2 })
             for (TopExp_Explorer e(s, typ); e.More(); e.Next())
               {
-                auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+                auto prop = OCCGeometry::global_shape_properties[e.Current()];
                 for (auto mods : history->Modified(e.Current()))
-                  OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+                  OCCGeometry::global_shape_properties[mods].Merge(prop);
               }
 #endif        
         */
@@ -945,9 +945,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
               for (TopExp_Explorer e(fused, typ); e.More(); e.Next())
                 {
-                  auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+                  auto prop = OCCGeometry::global_shape_properties[e.Current()];
                   for (auto mods : history->Modified(e.Current()))
-                    OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+                    OCCGeometry::global_shape_properties[mods].Merge(prop);
                 }
             // #endif        
             // PropagateProperties (unify, fused);
@@ -971,9 +971,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           for (auto & s : { shape1, shape2 })
             for (TopExp_Explorer e(s, typ); e.More(); e.Next())
               {
-                auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+                auto prop = OCCGeometry::global_shape_properties[e.Current()];
                 for (auto mods : history->Modified(e.Current()))
-                  OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+                  OCCGeometry::global_shape_properties[mods].Merge(prop);
               }
 #endif // OCC_HAVE_HISTORY
         */
@@ -994,9 +994,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           for (auto & s : { shape1, shape2 })
             for (TopExp_Explorer e(s, typ); e.More(); e.Next())
               {
-                auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+                auto prop = OCCGeometry::global_shape_properties[e.Current()];
                 for (auto mods : history->Modified(e.Current()))
-                  OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+                  OCCGeometry::global_shape_properties[mods].Merge(prop);
               }
 #endif // OCC_HAVE_HISTORY
         */
@@ -1005,6 +1005,12 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         
         return builder.Shape();        
       }, "cut of shapes")
+    .def("__eq__", [] (const TopoDS_Shape& shape1, const TopoDS_Shape& shape2) {
+      return shape1.IsSame(shape2);
+    })
+    .def("__hash__", [] (const TopoDS_Shape& shape) {
+      return shape.HashCode(std::numeric_limits<Standard_Integer>::max());
+    })
 
     .def("Reversed", [](const TopoDS_Shape & shape) {
         return CastShape(shape.Reversed()); })
@@ -1029,9 +1035,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             for (auto typ : { TopAbs_SOLID, TopAbs_FACE, TopAbs_EDGE, TopAbs_VERTEX })
               for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
                 {
-                  auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+                  auto prop = OCCGeometry::global_shape_properties[e.Current()];
                   for (auto mods : builder.Generated(e.Current()))
-                    OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+                    OCCGeometry::global_shape_properties[mods].Merge(prop);
                 }
             
             return builder.Shape();
@@ -1052,9 +1058,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           for (auto typ : { TopAbs_EDGE, TopAbs_VERTEX })
             for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
               {
-                auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+                auto prop = OCCGeometry::global_shape_properties[e.Current()];
                 for (auto mods : builder.Generated(e.Current()))
-                  OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+                  OCCGeometry::global_shape_properties[mods].Merge(prop);
               }
 
           return builder.Shape();          
@@ -1070,7 +1076,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         PropagateProperties (mkFillet, shape);
         for (auto e : edges)
           for (auto gen : mkFillet.Generated(e))
-            OCCGeometry::global_shape_properties[gen.TShape()].name = "fillet";
+            OCCGeometry::global_shape_properties[gen].name = "fillet";
         return mkFillet.Shape();
       }, py::arg("edges"), py::arg("r"), "make fillets for edges 'edges' of radius 'r'")
   
@@ -1083,7 +1089,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         PropagateProperties (mkChamfer, shape);
         for (auto e : edges)
           for (auto gen : mkChamfer.Generated(e))
-            OCCGeometry::global_shape_properties[gen.TShape()].name = "chamfer";
+            OCCGeometry::global_shape_properties[gen].name = "chamfer";
         return mkChamfer.Shape();
 #else
         throw Exception("MakeChamfer not available for occ-version < 7.4");
@@ -1191,7 +1197,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                // Handle(TopoDS_Face) face = e.Current();
                fmap.Add(face);
                ExtractFaceData(face, index, p, n, box);
-               auto & props = OCCGeometry::global_shape_properties[face.TShape()];
+               auto & props = OCCGeometry::global_shape_properties[face];
                if(props.col)
                {
                  auto & c = *props.col;
@@ -1214,7 +1220,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                for(auto& face : GetFaces(solid))
                  faces.push_back(fmap.FindIndex(face)-1);
                solid_face_map.push_back(move(faces));
-               auto& props = OCCGeometry::global_shape_properties[solid.TShape()];
+               auto& props = OCCGeometry::global_shape_properties[solid];
                if(props.name)
                  solid_names.append(*props.name);
                else
@@ -1228,7 +1234,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            {
                TopoDS_Edge edge = TopoDS::Edge(e.Current());
                ExtractEdgeData(edge, index, edge_p, box);
-               auto & props = OCCGeometry::global_shape_properties[edge.TShape()];
+               auto & props = OCCGeometry::global_shape_properties[edge];
                if(props.col)
                {
                  auto & c = *props.col;
@@ -1456,11 +1462,11 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         }))
     .def_property("quad_dominated", [](const TopoDS_Face& self) -> optional<bool>
                   {
-                    return OCCGeometry::global_shape_properties[self.TShape()].quad_dominated;
+                    return OCCGeometry::global_shape_properties[self].quad_dominated;
                   },
                   [](TopoDS_Face& self, optional<bool> quad_dominated)
                   {
-                    OCCGeometry::global_shape_properties[self.TShape()].quad_dominated = quad_dominated;
+                    OCCGeometry::global_shape_properties[self].quad_dominated = quad_dominated;
                   })
     .def_property_readonly("surf", [] (TopoDS_Face face) -> Handle(Geom_Surface)
          {
@@ -1511,13 +1517,13 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             {
                 auto & props = OCCGeometry::global_shape_properties;
                 for(auto & s : GetSolids(shapes[i]))
-                    props[s.TShape()].layer = i+1;
+                    props[s].layer = i+1;
                 for(auto & s : GetFaces(shapes[i]))
-                    props[s.TShape()].layer = i+1;
+                    props[s].layer = i+1;
                 for(auto & s : GetEdges(shapes[i]))
-                    props[s.TShape()].layer = i+1;
+                    props[s].layer = i+1;
                 for(auto & s : GetVertices(shapes[i]))
-                    props[s.TShape()].layer = i+1;
+                    props[s].layer = i+1;
             }
           }
 
@@ -1599,7 +1605,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            ListOfShapes selected;
            std::regex pattern(name);
            for (auto s : self)
-             if (auto sname = OCCGeometry::global_shape_properties[s.TShape()].name)
+             if (auto sname = OCCGeometry::global_shape_properties[s].name)
                if (std::regex_match(*sname, pattern))
                  selected.push_back(s);
            return selected;
@@ -1622,7 +1628,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 
     .def("Sorted",[](ListOfShapes self, gp_Vec dir)
          {
-           std::map<Handle(TopoDS_TShape), double> sortval;
+           std::map<TopoDS_Shape, double> sortval;
            for (auto shape : self)
              {
                GProp_GProps props;
@@ -1642,12 +1648,12 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                  }
                
                double val = center.X()*dir.X() + center.Y()*dir.Y() + center.Z() * dir.Z();
-               sortval[shape.TShape()] = val;
+               sortval[shape] = val;
              }
 
            std::sort (std::begin(self), std::end(self),
-                      [&](TopoDS_Shape a, TopoDS_Shape b)
-                      { return sortval[a.TShape()] < sortval[b.TShape()]; });
+                      [&](const TopoDS_Shape& a, const TopoDS_Shape& b)
+                      { return sortval[a] < sortval[b]; });
            return self;
          }, py::arg("dir"), "returns list of shapes, where center of gravity is sorted in direction of 'dir'")
     
@@ -1674,7 +1680,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       {
         for(auto& shape : shapes)
           {
-            OCCGeometry::global_shape_properties[shape.TShape()].name = name;
+            OCCGeometry::global_shape_properties[shape].name = name;
           }
       }, "set name for all elements of list")
     .def_property("col", [](ListOfShapes& shapes) {
@@ -1684,7 +1690,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         if(c.size() == 4)
           col[3] = c[3];
         for(auto& shape : shapes)
-          OCCGeometry::global_shape_properties[shape.TShape()].col = col;
+          OCCGeometry::global_shape_properties[shape].col = col;
       }, "set col for all elements of list")
     
     .def_property("maxh", [](ListOfShapes& shapes)
@@ -1696,13 +1702,13 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         for(auto& shape : shapes)
           {
             for(auto& s : GetSolids(shape))
-              OCCGeometry::global_shape_properties[s.TShape()].maxh = maxh;
+              OCCGeometry::global_shape_properties[s].maxh = maxh;
             for(auto& s : GetFaces(shape))
-              OCCGeometry::global_shape_properties[s.TShape()].maxh = maxh;
+              OCCGeometry::global_shape_properties[s].maxh = maxh;
             for(auto& s : GetEdges(shape))
-              OCCGeometry::global_shape_properties[s.TShape()].maxh = maxh;
+              OCCGeometry::global_shape_properties[s].maxh = maxh;
             for(auto& s : GetVertices(shape))
-              OCCGeometry::global_shape_properties[s.TShape()].maxh = maxh;
+              OCCGeometry::global_shape_properties[s].maxh = maxh;
           }
       }, "set maxh for all elements of list")
     .def_property("hpref", [](ListOfShapes& shapes)
@@ -1713,7 +1719,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       {
         for(auto& shape : shapes)
           {
-            auto& val = OCCGeometry::global_shape_properties[shape.TShape()].hpref;
+            auto& val = OCCGeometry::global_shape_properties[shape].hpref;
             val = max2(hpref, val);
           }
       }, "set hpref for all elements of list")
@@ -1724,7 +1730,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                   [](ListOfShapes& shapes, optional<bool> quad_dominated)
                   {
                     for(auto& shape : shapes)
-                      OCCGeometry::global_shape_properties[shape.TShape()].quad_dominated = quad_dominated;
+                      OCCGeometry::global_shape_properties[shape].quad_dominated = quad_dominated;
                   })
     
     .def("Identify", [](const ListOfShapes& me,
@@ -1822,7 +1828,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                         optional<string> bot, optional<string> top, optional<string> mantle) {
     auto builder = BRepPrimAPI_MakeCylinder (gp_Ax2(cpnt, cdir), r, h);
     if(mantle)
-      OCCGeometry::global_shape_properties[builder.Face().TShape()].name = *mantle;
+      OCCGeometry::global_shape_properties[builder.Face()].name = *mantle;
     auto pyshape = py::cast(builder.Solid());
     gp_Vec v = cdir;
     if(bot)
@@ -2073,9 +2079,9 @@ tangents : Dict[int, gp_Vec2d]
             for (auto & s : shapes)
               for (TopExp_Explorer e(s, typ); e.More(); e.Next())
                 {
-                  auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+                  auto prop = OCCGeometry::global_shape_properties[e.Current()];
                   for (auto mods : history->Modified(e.Current()))
-                    OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+                    OCCGeometry::global_shape_properties[mods].Merge(prop);
                 }
 #endif // OCC_HAVE_HISTORY
           */
@@ -2104,9 +2110,9 @@ tangents : Dict[int, gp_Vec2d]
 
           for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
             {
-              auto prop = OCCGeometry::global_shape_properties[e.Current().TShape()];
+              auto prop = OCCGeometry::global_shape_properties[e.Current()];
               for (auto mods : history->Modified(e.Current()))
-                OCCGeometry::global_shape_properties[mods.TShape()].Merge(prop);
+                OCCGeometry::global_shape_properties[mods].Merge(prop);
             }
 #endif // OCC_HAVE_HISTORY
           */

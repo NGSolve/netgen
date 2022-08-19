@@ -9,7 +9,6 @@ namespace netgen
 {
     OCCEdge::OCCEdge(TopoDS_Shape edge_, GeometryVertex & start_, GeometryVertex & end_)
         : GeometryEdge(start_, end_),
-          tedge(edge_.TShape()),
           edge(TopoDS::Edge(edge_))
     {
         curve = BRep_Tool::Curve(edge, s0, s1);
@@ -51,7 +50,7 @@ namespace netgen
 
     size_t OCCEdge::GetHash() const
     {
-        return reinterpret_cast<size_t>(tedge.get());
+      return edge.HashCode(std::numeric_limits<Standard_Integer>::max());
     }
 
     void OCCEdge::ProjectPoint(Point<3>& p, EdgePointGeomInfo* gi) const
