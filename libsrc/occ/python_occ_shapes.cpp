@@ -1187,6 +1187,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
            {
                TopoDS_Face face = TopoDS::Face(e.Current());
+               if(fmap.Contains(face)) continue;
                // Handle(TopoDS_Face) face = e.Current();
                fmap.Add(face);
                ExtractFaceData(face, index, p, n, box);
