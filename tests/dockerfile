@@ -29,5 +29,5 @@ RUN apt-get update && apt-get -y install \
         tcl-dev \
         tk-dev
 
-RUN python3 -m pip install pytest-check
+RUN python3 -m pip install pytest-check pybind11-stubgen
 ADD . /root/src/netgen
