@@ -22,8 +22,6 @@
 
 namespace netgen
 {
-    typedef Handle(TopoDS_TShape) T_Shape;
-
     inline Point<3> occ2ng (const gp_Pnt & p)
     {
         return Point<3> (p.X(), p.Y(), p.Z());
@@ -39,12 +37,7 @@ namespace netgen
         return Vec<3> (v.X(), v.Y(), v.Z());
     }
 
-    DLL_HEADER Point<3> occ2ng (T_Shape shape);
-
-    inline Point<3> occ2ng (const TopoDS_Shape & s)
-    {
-        return occ2ng(s.TShape());
-    }
+    DLL_HEADER Point<3> occ2ng (const TopoDS_Shape & s);
 
     inline Point<3> occ2ng (const TopoDS_Vertex & v)
     {
@@ -70,8 +63,8 @@ namespace netgen
     class OCCIdentification
     {
     public:
-      T_Shape from;
-      T_Shape to;
+      TopoDS_Shape from;
+      TopoDS_Shape to;
       Transformation<3> trafo;
       string name;
       Identifications::ID_TYPE type;
@@ -133,14 +126,6 @@ namespace netgen
     {
       return IndexMapIterator(indmap);
     }
-
-    struct ShapeLess
-    {
-      bool operator() (const TopoDS_Shape& s1, const TopoDS_Shape& s2) const
-      {
-        return s1.TShape() < s2.TShape();
-      }
-    };
 
     class ListOfShapes : public std::vector<TopoDS_Shape>
     {

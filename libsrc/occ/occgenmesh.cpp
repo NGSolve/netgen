@@ -252,7 +252,6 @@ namespace netgen
     FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
     auto face = TopoDS::Face(geom.fmap(k));
     const auto& occface = dynamic_cast<const OCCFace&>(geom.GetFace(k-1));
-    auto fshape = face.TShape();
 
     int oldnf = mesh.GetNSE();
 
@@ -403,11 +402,11 @@ namespace netgen
 
 
     // Philippose - 15/01/2009
-    double maxh = min2(geom.face_maxh[k-1], OCCGeometry::global_shape_properties[TopoDS::Face(geom.fmap(k)).TShape()].maxh);
+    double maxh = min2(geom.face_maxh[k-1], OCCGeometry::global_shape_properties[geom.fmap(k)].maxh);
     //double maxh = mparam.maxh;
     //      int noldpoints = mesh->GetNP();
     int noldsurfel = mesh.GetNSE();
-    int layer = OCCGeometry::global_shape_properties[TopoDS::Face(geom.fmap(k)).TShape()].layer;
+    int layer = OCCGeometry::global_shape_properties[geom.fmap(k)].layer;
 
     static Timer tsurfprop("surfprop");
     tsurfprop.Start();
@@ -475,8 +474,8 @@ namespace netgen
     int dom = 0;
     for (TopExp_Explorer e(geom.GetShape(), TopAbs_SOLID); e.More(); e.Next(), dom++)
     {
-      maxhdom[dom] = min2(maxhdom[dom], OCCGeometry::global_shape_properties[e.Current().TShape()].maxh);
-      maxlayer = max2(maxlayer, OCCGeometry::global_shape_properties[e.Current().TShape()].layer);
+      maxhdom[dom] = min2(maxhdom[dom], OCCGeometry::global_shape_properties[e.Current()].maxh);
+      maxlayer = max2(maxlayer, OCCGeometry::global_shape_properties[e.Current()].layer);
     }
 
 
@@ -519,7 +518,7 @@ namespace netgen
         for (int i = 1; i <= nedges && !multithread.terminate; i++)
           {
             TopoDS_Edge e = TopoDS::Edge (geom.emap(i));
-            int layer = OCCGeometry::global_shape_properties[e.TShape()].layer;
+            int layer = OCCGeometry::global_shape_properties[e].layer;
             multithread.percent = 100 * (i-1)/double(nedges);
             if (BRep_Tool::Degenerated(e)) continue;
 
@@ -535,7 +534,7 @@ namespace netgen
 
             bool is_identified_edge = false;
             // TODO: change to use hash value
-            const auto& gedge = geom.GetEdge(geom.edge_map.at(e.TShape()));
+            const auto& gedge = geom.GetEdge(geom.edge_map.at(e));
             auto& v0 = gedge.GetStartVertex();
             auto& v1 = gedge.GetEndVertex();
             for(auto & ident : v0.identifications)
@@ -565,12 +564,12 @@ namespace netgen
                 int face_index = geom.fmap.FindIndex(parent_face);
 
                 if(face_index >= 1) localh = min(localh,geom.face_maxh[face_index - 1]);
-                localh = min2(localh, OCCGeometry::global_shape_properties[parent_face.TShape()].maxh);
+                localh = min2(localh, OCCGeometry::global_shape_properties[parent_face].maxh);
               }
 
             Handle(Geom_Curve) c = BRep_Tool::Curve(e, s0, s1);
 
-            localh = min2(localh, OCCGeometry::global_shape_properties[e.TShape()].maxh);
+            localh = min2(localh, OCCGeometry::global_shape_properties[e].maxh);
             maxedgelen = max (maxedgelen, len);
             minedgelen = min (minedgelen, len);
             int maxj = max((int) ceil(len/localh), 2);
@@ -593,7 +592,7 @@ namespace netgen
             double maxcur = 0;
             multithread.percent = 100 * (i-1)/double(nedges);
             TopoDS_Edge edge = TopoDS::Edge (geom.emap(i));
-            int layer = OCCGeometry::global_shape_properties[edge.TShape()].layer;
+            int layer = OCCGeometry::global_shape_properties[edge].layer;
             if (BRep_Tool::Degenerated(edge)) continue;
             double s0, s1;
             Handle(Geom_Curve) c = BRep_Tool::Curve(edge, s0, s1);
@@ -628,7 +627,7 @@ namespace netgen
           {
             multithread.percent = 100 * (i-1)/double(nfaces);
             TopoDS_Face face = TopoDS::Face(geom.fmap(i));
-            int layer = OCCGeometry::global_shape_properties[face.TShape()].layer;
+            int layer = OCCGeometry::global_shape_properties[face].layer;
             TopLoc_Location loc;
             Handle(Geom_Surface) surf = BRep_Tool::Surface (face);
             Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation (face, loc);
@@ -694,7 +693,7 @@ namespace netgen
             for (int i = 1; i <= nedges && !multithread.terminate; i++)
               {
                 TopoDS_Edge edge = TopoDS::Edge (geom.emap(i));
-                int layer = OCCGeometry::global_shape_properties[edge.TShape()].layer;
+                int layer = OCCGeometry::global_shape_properties[edge].layer;
                 if (BRep_Tool::Degenerated(edge)) continue;
 
                 double s0, s1;

@@ -6,9 +6,11 @@
 
 namespace netgen
 {
-    Point<3> occ2ng (Handle(TopoDS_TShape) shape)
+    Point<3> occ2ng (const TopoDS_Shape& shape)
     {
-        return occ2ng( Handle(BRep_TVertex)::DownCast(shape)->Pnt() );
+      if(shape.ShapeType() != TopAbs_VERTEX)
+        throw Exception("Try to convert non vertex to point!");
+      return occ2ng( BRep_Tool::Pnt(TopoDS::Vertex(shape)) );
     }
 
     Transformation<3> occ2ng (const gp_Trsf & occ_trafo)
