@@ -1058,9 +1058,10 @@ namespace netgen
 
   void NetgenGeometry :: FinalizeMesh(Mesh& mesh) const
   {
-    for (int i = 0; i < mesh.GetNDomains(); i++)
-      if (auto name = solids[i]->properties.name)
-        mesh.SetMaterial (i+1, *name);
+    if(solids.Size())
+      for (int i = 0; i < mesh.GetNDomains(); i++)
+        if (auto name = solids[i]->properties.name)
+          mesh.SetMaterial (i+1, *name);
   }
   
   shared_ptr<NetgenGeometry> GeometryRegisterArray :: LoadFromMeshFile (istream & ist) const
