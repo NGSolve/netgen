@@ -282,7 +282,12 @@ namespace netgen
     GProp_GProps props;
     switch (shape.ShapeType())
       {
+      case TopAbs_SOLID:
+      case TopAbs_COMPOUND:
+      case TopAbs_COMPSOLID:
+        BRepGProp::VolumeProperties (shape, props); break;
       case TopAbs_FACE:
+      case TopAbs_SHELL:
         BRepGProp::SurfaceProperties (shape, props); break;
       default:
         BRepGProp::LinearProperties(shape, props);
