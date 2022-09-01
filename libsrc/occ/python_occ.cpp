@@ -251,7 +251,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
          }, py::call_guard<py::gil_scoped_release>())
     .def("GenerateMesh", [](shared_ptr<OCCGeometry> geo,
                             MeshingParameters* pars, NgMPI_Comm comm,
-                            shared_ptr<Mesh>, py::kwargs kwargs)
+                            shared_ptr<Mesh> mesh, py::kwargs kwargs)
                          {
                            MeshingParameters mp;
                            OCCParameters occparam;
