@@ -250,7 +250,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
             return res;
          }, py::call_guard<py::gil_scoped_release>())
     .def("GenerateMesh", [](shared_ptr<OCCGeometry> geo,
-                            MeshingParameters* pars, NgMPI_Comm comm, py::kwargs kwargs)
+                            MeshingParameters* pars, NgMPI_Comm comm,
+                            shared_ptr<Mesh>, py::kwargs kwargs)
                          {
                            MeshingParameters mp;
                            OCCParameters occparam;
@@ -266,7 +267,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                              CreateMPfromKwargs(mp, kwargs);
                            }
                            geo->SetOCCParameters(occparam);
-                           auto mesh = make_shared<Mesh>();
+                           if(!mesh)
+                             mesh = make_shared<Mesh>();
                            mesh->SetCommunicator(comm);
                            mesh->SetGeometry(geo);
 
@@ -289,7 +291,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                              }
                            return mesh;
                          }, py::arg("mp") = nullptr, py::arg("comm")=NgMPI_Comm{},
-      py::call_guard<py::gil_scoped_release>(),
+         py::arg("mesh")=nullptr, py::call_guard<py::gil_scoped_release>(),
          (meshingparameter_description + occparameter_description).c_str())
     .def_property_readonly("shape", [](const OCCGeometry & self) { return self.GetShape(); })
     ;

@@ -494,7 +494,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     ;
 
   py::class_<Segment>(m, "Element1D")
-    .def(py::init([](py::list vertices, py::list surfaces, int index, int edgenr)
+    .def(py::init([](py::list vertices, py::list surfaces, int index, int edgenr,
+                     py::list trignums)
                   {
                     Segment * newel = new Segment();
                     for (int i = 0; i < 2; i++)
@@ -505,6 +506,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                     newel -> epgeominfo[1].edgenr = edgenr;
                     // needed for codim2 in 3d
                     newel -> edgenr = index;
+                    for(auto i : Range(len(trignums)))
+                      newel->geominfo[i].trignum = py::cast<int>(trignums[i]);
                     if (len(surfaces))
                       {
                         newel->surfnr1 = py::extract<int>(surfaces[0])();
@@ -516,6 +519,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
            py::arg("surfaces")=py::list(),
            py::arg("index")=1,
            py::arg("edgenr")=1,
+           py::arg("trignums")=py::list(), // for stl
          "create segment element"
          )
     .def("__repr__", &ToString<Segment>)
