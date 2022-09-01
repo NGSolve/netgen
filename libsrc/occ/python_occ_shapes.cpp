@@ -2035,6 +2035,8 @@ tangents : Dict[int, gp_Vec2d]
   
   m.def("Glue", [] (const std::vector<TopoDS_Shape> shapes) -> TopoDS_Shape
         {
+          if(shapes.size() == 1)
+            return shapes[0];
           BOPAlgo_Builder builder;
           for (auto & s : shapes)
             {
