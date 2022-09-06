@@ -668,6 +668,11 @@ namespace netgen
     for (auto pi : points_range)
       dmesh.AddPoint(pi);
 
+    auto first_new_point = points_range.Next();
+    tempmesh.AddPoint(P3(temp_points[first_new_point]));
+    tempmesh.AddPoint(P3(temp_points[first_new_point+1]));
+    tempmesh.AddPoint(P3(temp_points[first_new_point+2]));
+
     timer_addpoints.Stop();
 
     static Timer taddseg("addseg");
