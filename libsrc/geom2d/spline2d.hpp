@@ -88,7 +88,7 @@ public:
   virtual void GetPoints (int n, NgArray<Point<2> > & points);
 
   /** calculates lineintersections:
-      for lines $$ a x + b y + c = 0 $$ the interecting points are calculated
+      for lines $$ a x + b y + c = 0 $$ the intersecting points are calculated
       and stored in points */
   virtual void LineIntersections (const double a, const double b, const double c,
 				  NgArray < Point<2> > & points, const double eps) const

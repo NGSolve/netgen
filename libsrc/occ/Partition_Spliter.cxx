@@ -1080,7 +1080,7 @@ void Partition_Spliter::MakeShells(const TopoDS_Shape& S,
 //function : findEqual
 //purpose  : compare edges of EL1 against edges of EL2,
 //           Result is in EMM binding EL1 edges to list of equal edges.
-//           Edges are considered equall only if they have same vertices.
+//           Edges are considered equal only if they have same vertices.
 //           <addSame>==True makes consider same edges as equal
 //           Put in <AllEqMap> all equal edges
 //=======================================================================
@@ -1486,7 +1486,7 @@ void Partition_Spliter::MakeEdges (const TopoDS_Edge& E,
 
 
   //----------------------------------------------------------------
-  // Construction of the new edges .
+  // Construction of the new edges.
   //----------------------------------------------------------------
 
   if (VF.IsSame(VL)) { // closed edge
@@ -1501,7 +1501,7 @@ void Partition_Spliter::MakeEdges (const TopoDS_Edge& E,
       else if (endV.IsSame(SV.Last()))
 	SV.Prepend(endV);
       else
-	MESSAGE ("END VERTEX IS IN SEQUNCE MIDDLE");
+	MESSAGE ("END VERTEX IS IN SEQUENCE MIDDLE");
     }
     NbVer = SV.Length();
   }

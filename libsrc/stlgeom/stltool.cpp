@@ -1162,7 +1162,7 @@ bool STLBoundary :: TestSeg(const Point<3>& p1, const Point<3> & p2, const Vec<3
 	/*
 	(*testout) << "TestSeg-calls for classes:" << endl;
 	(*testout) << cnti << " inner calls, " << cnto << " outercalls" << endl;
-	(*testout) << "total testes segments: " << cntsegs << endl;
+	(*testout) << "total tested segments: " << cntsegs << endl;
 	for (i = 1; i <= cntclass.Size(); i++)
 	  {
 	    (*testout) << int (exp (i * log(2.0))) << " bnd segs: " << cntclass.Get(i) << endl;

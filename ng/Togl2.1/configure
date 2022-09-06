@@ -6028,8 +6028,8 @@ fi
 
 		LIBGLU=-lGLU
 
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking if GLX_GLXEXT_LEGACY interfers with including GL/glxext.h" >&5
-$as_echo_n "checking if GLX_GLXEXT_LEGACY interfers with including GL/glxext.h... " >&6; }
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking if GLX_GLXEXT_LEGACY interferes with including GL/glxext.h" >&5
+$as_echo_n "checking if GLX_GLXEXT_LEGACY interferes with including GL/glxext.h... " >&6; }
     ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'

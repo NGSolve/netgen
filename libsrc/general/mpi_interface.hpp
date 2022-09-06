@@ -93,7 +93,7 @@ namespace netgen
   }
 
   template <class T, int BASE>
-  [[deprecated("use ngcore - Array insterad")]]                  
+  [[deprecated("use ngcore - Array instead")]]
   inline void MyMPI_Recv ( NgArray <T, BASE> & s, int src, int tag, MPI_Comm comm)
   {
     MPI_Status status;
@@ -106,7 +106,7 @@ namespace netgen
   }
 
   template <class T, int BASE>
-  [[deprecated("use ngcore - Array insterad")]]                    
+  [[deprecated("use ngcore - Array instead")]]
   inline int MyMPI_Recv ( NgArray <T, BASE> & s, int tag, MPI_Comm comm)
   {
     MPI_Status status;
@@ -141,7 +141,7 @@ namespace netgen
 
   template <class T, int BASE>
   [[deprecated("mympi_isend ngflatarray, use comm.send instead")]]
-  [[deprecated("use ngcore - Array insterad")]]                    
+  [[deprecated("use ngcore - Array instead")]]
   inline MPI_Request MyMPI_ISend (NgFlatArray<T, BASE> s, int dest, int tag, MPI_Comm comm)
   {
     MPI_Request request;

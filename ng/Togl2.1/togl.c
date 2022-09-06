@@ -5018,7 +5018,7 @@ Togl_Frustum(const Togl *togl, GLdouble left, GLdouble right,
         eyeOffset = togl->EyeSeparation / 2;    /* for right eye */
     eyeShift = (togl->Convergence - zNear) * (eyeOffset / togl->Convergence);
 
-    /* compenstate for altered viewports */
+    /* compensate for altered viewports */
     switch (togl->Stereo) {
       default:
           break;
@@ -5053,7 +5053,7 @@ Togl_Ortho(const Togl *togl, GLdouble left, GLdouble right,
         eyeOffset = togl->EyeSeparation / 2;    /* for right eye */
     eyeShift = (togl->Convergence - zNear) * (eyeOffset / togl->Convergence);
 
-    /* compenstate for altered viewports */
+    /* compensate for altered viewports */
     switch (togl->Stereo) {
       default:
           break;

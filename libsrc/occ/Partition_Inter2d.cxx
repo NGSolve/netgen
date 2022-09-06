@@ -157,7 +157,7 @@ static Standard_Boolean findVOnE(const TopoDS_Vertex &         theV,
 //           Check that vertex equal to V already exists on one
 //           of edges, in  such  a  case,  V  is  not added but
 //           existing vertex is updated to  be on E1 and E2 and
-//           is returned insead of V.
+//           is returned instead of V.
 //=======================================================================
 
 TopoDS_Vertex Partition_Inter2d::AddVonE(const TopoDS_Vertex& theV,

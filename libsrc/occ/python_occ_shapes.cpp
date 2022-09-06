@@ -2227,7 +2227,7 @@ deg_min : int
   Minimum polynomial degree of splines
 
 deg_max : int
-  Maxmium polynomial degree of splines
+  Maximum polynomial degree of splines
 
 continuity : ShapeContinuity
   Continuity requirement on the approximating surface
@@ -2345,7 +2345,7 @@ deg_min : int
   Minimum polynomial degree of splines
 
 deg_max : int
-  Maxmium polynomial degree of splines
+  Maximum polynomial degree of splines
 
 continuity : ShapeContinuity
   Continuity requirement on the approximating surface
