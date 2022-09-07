@@ -756,10 +756,17 @@ namespace netgen
       {
         for (auto & se : mesh.SurfaceElements())
           if (se.GetNP() != 3)
-            {
-              mixed = true;
-              break;
-            }
+          {
+              for(auto pi : se.PNums())
+                  if(mesh[pi].Type() == SURFACEPOINT)
+                  {
+                      mixed = true;
+                      break;
+                  }
+              if(mixed)
+                  break;
+          }
+
         const auto & getDofs = [&] (int i)
           {
             return elementsonpoint[i+PointIndex::BASE];
