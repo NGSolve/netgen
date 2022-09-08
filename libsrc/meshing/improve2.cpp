@@ -339,6 +339,9 @@ namespace netgen
             if (swapped[t1])
               return;
 
+            if(mesh[t1].GetNP() != 3)
+              return;
+
             if (multithread.terminate)
               throw NgException ("Meshing stopped");
 
