@@ -444,8 +444,8 @@ namespace netgen
               for(auto from_mapped : mod_map[from])
                   for(auto to_mapped : mod_map[to])
                   {
-                      if(from==from_mapped && to==to_mapped)
-                          continue;
+                      if(from.IsSame(from_mapped) && to.IsSame(to_mapped))
+                        continue;
   
                       Transformation<3> trafo_mapped = ident.trafo;
                       if(trafo)
