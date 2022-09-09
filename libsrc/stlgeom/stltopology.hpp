@@ -319,7 +319,7 @@ public:
   virtual ~STLTopology();
 
   static STLGeometry * LoadNaomi (istream & ist);
-  static STLGeometry * Load (istream & ist, bool surface=false);
+  DLL_HEADER static STLGeometry * Load (istream & ist, bool surface=false);
   static STLGeometry * LoadBinary (istream & ist);
 
   void Save (const filesystem::path & filename) const;
