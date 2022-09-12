@@ -46,8 +46,7 @@ namespace ngcore
     /// Access entry
     NETGEN_INLINE const FlatArray<T> operator[] (IndexType i) const
     {
-      i = i-BASE;
-      return FlatArray<T> (index[i+1]-index[i], data+index[i]);
+      return FlatArray<T> (index[i-BASE+1]-index[i-BASE], data+index[i-BASE]);
     }
 
     NETGEN_INLINE T * Data() const { return data; }
