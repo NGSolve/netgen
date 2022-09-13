@@ -360,7 +360,7 @@ namespace netgen
   void OCCSurface :: Project (Point<3> & ap, PointGeomInfo & gi)
   {
     static Timer t("OccSurface::Project"); RegionTimer reg(t);
-    static Timer t2("OccSurface::Project actural"); 
+    static Timer t2("OccSurface::Project actual"); 
 
 
     // try Newton's method ...

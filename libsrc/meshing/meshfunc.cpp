@@ -213,7 +213,7 @@ namespace netgen
           for(auto & sel : mesh.OpenElements())
           {
               // For quads: check if this open element is already closed by a hex
-              // this happends when we have identifications in two directions
+              // this happens when we have identifications in two directions
               if(sel.GetNP() == 4)
               {
                   Element2d face = sel;
