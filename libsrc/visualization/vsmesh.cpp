@@ -597,8 +597,8 @@ namespace netgen
 
 	for (int i = 1; i <= mesh->GetNE(); i++)
 	  {
-            if (mesh->VolumeElement(i).flags.badel ||
-		mesh->VolumeElement(i).flags.illegal ||
+            if (mesh->VolumeElement(i).Flags().badel ||
+		mesh->VolumeElement(i).Flags().illegal ||
 		(i == vispar.drawelement))
 	      {
 		// copy to be thread-safe
@@ -636,7 +636,7 @@ namespace netgen
 
 	for (ElementIndex ei : mesh->VolumeElements().Range())
 	  {
-            if ((*mesh)[ei].flags.badel)
+            if ((*mesh)[ei].Flags().badel)
 	      {
 		// copy to be thread-safe
 		Element el = (*mesh)[ei];

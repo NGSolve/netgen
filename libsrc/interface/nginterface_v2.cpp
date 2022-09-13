@@ -701,9 +701,9 @@ namespace netgen
       {
 	int hpelnr = -1;
 	if (mesh->GetDimension() == 2)
-	  hpelnr = mesh->SurfaceElement(ei).hp_elnr;
+	  hpelnr = mesh->SurfaceElement(ei).GetHpElnr();
 	else
-	  hpelnr = mesh->VolumeElement(ei).hp_elnr;
+	  hpelnr = mesh->VolumeElement(ei).GetHpElnr();
 
         if (hpelnr < 0)
           throw NgException("Ngx_Mesh::GetHPElementLevel: Wrong hp-element number!");
