@@ -434,6 +434,27 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                    }))
     ;
 
+  if(ngcore_have_numpy)
+  {
+    auto data_layout = Element::GetDataLayout();
+
+    py::detail::npy_format_descriptor<Element>::register_dtype({
+        py::detail::field_descriptor {
+          "nodes", data_layout["pnum"],
+          ELEMENT_MAXPOINTS * sizeof(PointIndex),
+          py::format_descriptor<int[ELEMENT_MAXPOINTS]>::format(),
+          py::detail::npy_format_descriptor<int[ELEMENT_MAXPOINTS]>::dtype() },
+        py::detail::field_descriptor {
+          "index", data_layout["index"], sizeof(int),
+          py::format_descriptor<int>::format(),
+          py::detail::npy_format_descriptor<int>::dtype() },
+        py::detail::field_descriptor {
+          "np", data_layout["np"], sizeof(int8_t),
+          py::format_descriptor<signed char>::format(),
+          pybind11::dtype("int8") }
+      });
+  }
+
   py::class_<Element2d>(m, "Element2D")
     .def(py::init ([](int index, std::vector<PointIndex> vertices)
                    {
@@ -492,6 +513,26 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                      return li;
                                    }))
     ;
+
+  if(ngcore_have_numpy)
+  {
+    auto data_layout = Element2d::GetDataLayout();
+    py::detail::npy_format_descriptor<Element2d>::register_dtype({
+        py::detail::field_descriptor {
+          "nodes", data_layout["pnum"],
+          ELEMENT2D_MAXPOINTS * sizeof(PointIndex),
+          py::format_descriptor<int[ELEMENT2D_MAXPOINTS]>::format(),
+          py::detail::npy_format_descriptor<int[ELEMENT2D_MAXPOINTS]>::dtype() },
+        py::detail::field_descriptor {
+          "index", data_layout["index"], sizeof(int),
+          py::format_descriptor<int>::format(),
+          py::detail::npy_format_descriptor<int>::dtype() },
+        py::detail::field_descriptor {
+          "np", data_layout["np"], sizeof(int8_t),
+          py::format_descriptor<signed char>::format(),
+          pybind11::dtype("int8") }
+      });
+  }
 
   py::class_<Segment>(m, "Element1D")
     .def(py::init([](py::list vertices, py::list surfaces, int index, int edgenr,
@@ -557,6 +598,20 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 						     }))
     ;
 
+  if(ngcore_have_numpy)
+  {
+    py::detail::npy_format_descriptor<Segment>::register_dtype({
+        py::detail::field_descriptor {
+          "nodes", offsetof(Segment, pnums),
+          3 * sizeof(PointIndex),
+          py::format_descriptor<int[3]>::format(),
+          py::detail::npy_format_descriptor<int[3]>::dtype() },
+        py::detail::field_descriptor {
+          "index", offsetof(Segment, edgenr), sizeof(int),
+          py::format_descriptor<int>::format(),
+          py::detail::npy_format_descriptor<int>::dtype() },
+      });
+  }
 
   py::class_<Element0d>(m, "Element0D")
     .def(py::init([](PointIndex vertex, int index)

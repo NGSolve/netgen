@@ -41,7 +41,7 @@ static ArrayMem<Element, 3> SplitElement (Element old, PointIndex pi0, PointInde
   ArrayMem<Element, 3> new_elements;
   // split element by cutting edge pi0,pi1 at pinew
   auto np = old.GetNP();
-  old.flags.illegal_valid = 0;
+  old.Flags().illegal_valid = 0;
   if(np == 4)
   {
     // Split tet into two tets
@@ -232,7 +232,7 @@ double MeshOptimize3d :: CombineImproveEdge (Mesh & mesh,
                   break;
               }
 
-          elem.flags.illegal_valid = 0;
+          elem.Flags().illegal_valid = 0;
           if (!mesh.LegalTet(elem))
               badness_new += 1e4;
       }
@@ -255,7 +255,7 @@ double MeshOptimize3d :: CombineImproveEdge (Mesh & mesh,
               if (elem[l] == pi1)
                   elem[l] = pi0;
 
-          elem.flags.illegal_valid = 0;
+          elem.Flags().illegal_valid = 0;
           if (!mesh.LegalTet (elem))
               (*testout) << "illegal tet " << ei << endl;
       }
@@ -265,7 +265,7 @@ double MeshOptimize3d :: CombineImproveEdge (Mesh & mesh,
 
       for (auto ei : has_both_points)
       {
-          mesh[ei].flags.illegal_valid = 0;
+          mesh[ei].Flags().illegal_valid = 0;
           mesh[ei].Delete();
       }
   }
@@ -505,9 +505,9 @@ double MeshOptimize3d :: SplitImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, Table
       Element newel1 = oldel;
       Element newel2 = oldel;
 
-      oldel.flags.illegal_valid = 0;
-      newel1.flags.illegal_valid = 0;
-      newel2.flags.illegal_valid = 0;
+      oldel.Flags().illegal_valid = 0;
+      newel1.Flags().illegal_valid = 0;
+      newel2.Flags().illegal_valid = 0;
 
       for (int l = 0; l < 4; l++)
         {
@@ -536,11 +536,11 @@ double MeshOptimize3d :: SplitImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, Table
           Element newel1 = oldel;
           Element newel2 = oldel;
 
-          oldel.flags.illegal_valid = 0;
+          oldel.Flags().illegal_valid = 0;
           oldel.Delete();
 
-          newel1.flags.illegal_valid = 0;
-          newel2.flags.illegal_valid = 0;
+          newel1.Flags().illegal_valid = 0;
+          newel2.Flags().illegal_valid = 0;
 
           for (int l = 0; l < 4; l++)
             {
@@ -799,9 +799,9 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
           CalcBad (mesh.Points(), el32, 0) +
           CalcBad (mesh.Points(), el33, 0);
 
-      el31.flags.illegal_valid = 0;
-      el32.flags.illegal_valid = 0;
-      el33.flags.illegal_valid = 0;
+      el31.Flags().illegal_valid = 0;
+      el32.Flags().illegal_valid = 0;
+      el33.Flags().illegal_valid = 0;
 
       if (!mesh.LegalTet(el31) ||
               !mesh.LegalTet(el32) ||
@@ -823,8 +823,8 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
       bad2 = CalcBad (mesh.Points(), el21, 0) +
           CalcBad (mesh.Points(), el22, 0);
 
-      el21.flags.illegal_valid = 0;
-      el22.flags.illegal_valid = 0;
+      el21.Flags().illegal_valid = 0;
+      el22.Flags().illegal_valid = 0;
 
       if (!mesh.LegalTet(el21) ||
               !mesh.LegalTet(el22))
@@ -866,8 +866,8 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
           mesh[hasbothpoints[1]].Delete();
           mesh[hasbothpoints[2]].Delete();
 
-          el21.flags.illegal_valid = 0;
-          el22.flags.illegal_valid = 0;
+          el21.Flags().illegal_valid = 0;
+          el22.Flags().illegal_valid = 0;
           mesh.AddVolumeElement(el21);
           mesh.AddVolumeElement(el22);
         }
@@ -942,10 +942,10 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
           CalcBad (mesh.Points(), el4, 0);
 
 
-      el1.flags.illegal_valid = 0;
-      el2.flags.illegal_valid = 0;
-      el3.flags.illegal_valid = 0;
-      el4.flags.illegal_valid = 0;
+      el1.Flags().illegal_valid = 0;
+      el2.Flags().illegal_valid = 0;
+      el3.Flags().illegal_valid = 0;
+      el4.Flags().illegal_valid = 0;
 
 
       if (goal != OPT_CONFORM)
@@ -978,10 +978,10 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
           CalcBad (mesh.Points(), el3, 0) +
           CalcBad (mesh.Points(), el4, 0);
 
-      el1.flags.illegal_valid = 0;
-      el2.flags.illegal_valid = 0;
-      el3.flags.illegal_valid = 0;
-      el4.flags.illegal_valid = 0;
+      el1.Flags().illegal_valid = 0;
+      el2.Flags().illegal_valid = 0;
+      el3.Flags().illegal_valid = 0;
+      el4.Flags().illegal_valid = 0;
 
       if (goal != OPT_CONFORM)
         {
@@ -1014,10 +1014,10 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
           CalcBad (mesh.Points(), el3b, 0) +
           CalcBad (mesh.Points(), el4b, 0);
 
-      el1b.flags.illegal_valid = 0;
-      el2b.flags.illegal_valid = 0;
-      el3b.flags.illegal_valid = 0;
-      el4b.flags.illegal_valid = 0;
+      el1b.Flags().illegal_valid = 0;
+      el2b.Flags().illegal_valid = 0;
+      el3b.Flags().illegal_valid = 0;
+      el4b.Flags().illegal_valid = 0;
 
       if (goal != OPT_CONFORM)
         {
@@ -1054,10 +1054,10 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
           for (auto i : IntRange(4))
               mesh[hasbothpoints[i]].Delete();
 
-          el1.flags.illegal_valid = 0;
-          el2.flags.illegal_valid = 0;
-          el3.flags.illegal_valid = 0;
-          el4.flags.illegal_valid = 0;
+          el1.Flags().illegal_valid = 0;
+          el2.Flags().illegal_valid = 0;
+          el3.Flags().illegal_valid = 0;
+          el4.Flags().illegal_valid = 0;
           mesh.AddVolumeElement (el1);
           mesh.AddVolumeElement (el2);
           mesh.AddVolumeElement (el3);
@@ -1068,10 +1068,10 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
           for (auto i : IntRange(4))
               mesh[hasbothpoints[i]].Delete();
 
-          el1b.flags.illegal_valid = 0;
-          el2b.flags.illegal_valid = 0;
-          el3b.flags.illegal_valid = 0;
-          el4b.flags.illegal_valid = 0;
+          el1b.Flags().illegal_valid = 0;
+          el2b.Flags().illegal_valid = 0;
+          el3b.Flags().illegal_valid = 0;
+          el4b.Flags().illegal_valid = 0;
           mesh.AddVolumeElement (el1b);
           mesh.AddVolumeElement (el2b);
           mesh.AddVolumeElement (el3b);
@@ -1174,7 +1174,7 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
               hel[3] = pi2;
 
               bad2 += CalcBad (mesh.Points(), hel, 0);
-              hel.flags.illegal_valid = 0;
+              hel.Flags().illegal_valid = 0;
               if (!mesh.LegalTet(hel)) bad2 += 1e4;
 
               hel[2] = suroundpts[k % nsuround];
@@ -1183,7 +1183,7 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
 
               bad2 += CalcBad (mesh.Points(), hel, 0);
 
-              hel.flags.illegal_valid = 0;
+              hel.Flags().illegal_valid = 0;
               if (!mesh.LegalTet(hel)) bad2 += 1e4;
             }
           // (*testout) << "bad2," << l << " = " << bad2 << endl;
@@ -1253,7 +1253,7 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
               hel[1] = suroundpts[k % nsuround];
               hel[2] = suroundpts[(k+1) % nsuround];
               hel[3] = pi2;
-              hel.flags.illegal_valid = 0;
+              hel.Flags().illegal_valid = 0;
 
               /*
                  (*testout) << nsuround << "-swap, new el,top = "
@@ -1309,7 +1309,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
         for (ElementIndex eli : myrange)
           {
             const auto & el = mesh[eli];
-            if(el.flags.fixed)
+            if(el.Flags().fixed)
               continue;
 
             for (auto pi : el.PNums())
@@ -2412,9 +2412,9 @@ double MeshOptimize3d :: SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementI
                 CalcBad (mesh.Points(), el33, 0);
 
 
-              el31.flags.illegal_valid = 0;
-              el32.flags.illegal_valid = 0;
-              el33.flags.illegal_valid = 0;
+              el31.Flags().illegal_valid = 0;
+              el32.Flags().illegal_valid = 0;
+              el33.Flags().illegal_valid = 0;
 
               if (!mesh.LegalTet(el31) ||
                   !mesh.LegalTet(el32) ||
@@ -2433,9 +2433,9 @@ double MeshOptimize3d :: SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementI
 
               if (d_badness<0.0)
               {
-                  el31.flags.illegal_valid = 0;
-                  el32.flags.illegal_valid = 0;
-                  el33.flags.illegal_valid = 0;
+                  el31.Flags().illegal_valid = 0;
+                  el32.Flags().illegal_valid = 0;
+                  el33.Flags().illegal_valid = 0;
 
                   mesh[eli1].Delete();
                   mesh[eli2].Delete();
@@ -2655,7 +2655,7 @@ double MeshOptimize3d :: SplitImprove2Element (Mesh & mesh,
   if(badness_after<badness_before)
   {
     PointIndex pinew = mesh.AddPoint (center);
-    el.flags.illegal_valid = 0;
+    el.Flags().illegal_valid = 0;
     el.Delete();
 
     for (auto ei1 : has_both_points0)

@@ -473,10 +473,10 @@ namespace netgen
       if (mesh.VolumeElement(i).CalcJacobianBadness (mesh.Points()) > 1e10)
 	{
 	  wrongels++;
-	  mesh.VolumeElement(i).flags.badel = 1;
+	  mesh.VolumeElement(i).Flags().badel = 1;
 	}
       else
-	mesh.VolumeElement(i).flags.badel = 0;
+	mesh.VolumeElement(i).Flags().badel = 0;
 
     double facok = 0;
     double factry;
@@ -559,7 +559,7 @@ namespace netgen
 		      {
 			wrongels++;
 			Element & el = mesh.VolumeElement(i);
-			el.flags.badel = 1;
+			el.Flags().badel = 1;
 		     
 		      
 			if (lam < 1e-4)
@@ -574,7 +574,7 @@ namespace netgen
 			*/
 		      }
 		    else
-		      mesh.VolumeElement(i).flags.badel = 0;
+		      mesh.VolumeElement(i).Flags().badel = 0;
 		  }
 		cout << "wrongels = " << wrongels << endl;
 	      }
@@ -597,10 +597,10 @@ namespace netgen
 	if (illegalels.Test(i))
 	  {
 	    cout << "illegal element: " << i << endl;
-	    mesh.VolumeElement(i).flags.badel = 1;	
+	    mesh.VolumeElement(i).Flags().badel = 1;
 	  }
 	else
-	  mesh.VolumeElement(i).flags.badel = 0;	
+	  mesh.VolumeElement(i).Flags().badel = 0;
       }
   
     /*

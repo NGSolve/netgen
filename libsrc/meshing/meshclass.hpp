@@ -365,7 +365,7 @@ namespace netgen
     Element & operator[] (ElementIndex ei) { return volelements[ei]; }
 
     ELEMENTTYPE ElementType (ElementIndex i) const 
-    { return (volelements[i].flags.fixed) ? FIXEDELEMENT : FREEELEMENT; }
+    { return (volelements[i].Flags().fixed) ? FIXEDELEMENT : FREEELEMENT; }
 
     const auto & VolumeElements() const { return volelements; }
     auto & VolumeElements() { return volelements; }
