@@ -414,7 +414,7 @@ namespace netgen
 	       { 2, 4, 9 },
 	       { 3, 4, 10 } };
 
-	     int elrev = el.flags.reverse;
+	     int elrev = el.Flags().reverse;
 
 	     for (int j = 1; j <= 4; j++)
                pnums.Elem(j) = el.PNum(j);
@@ -480,10 +480,10 @@ namespace netgen
 	      for (int k = 1; k <= 4; k++)
 	        nel.PNum(k) = pnums.Get(reftab[j][k-1]);
 	      nel.SetIndex(ind);
-	      nel.flags.reverse = reverse[j];
+	      nel.Flags().reverse = reverse[j];
 	      if (elrev)
 	      {
-		nel.flags.reverse = !nel.flags.reverse;
+		nel.Flags().reverse = !nel.Flags().reverse;
 		swap (nel.PNum(3), nel.PNum(4));
 	      }
 
@@ -794,10 +794,10 @@ namespace netgen
       if (mesh.VolumeElement(i).Volume(mesh.Points()) < 0)
 	{
 	  wrongels++;
-	  mesh.VolumeElement(i).flags.badel = 1;
+	  mesh.VolumeElement(i).Flags().badel = 1;
 	}
       else
-	mesh.VolumeElement(i).flags.badel = 0;
+	mesh.VolumeElement(i).Flags().badel = 0;
 
     if (wrongels)
       {
@@ -900,14 +900,14 @@ namespace netgen
 		    if (mesh.VolumeElement(i).Volume(mesh.Points()) < 0)
 		      {
 			wrongels++;
-			mesh.VolumeElement(i).flags.badel = 1;
+			mesh.VolumeElement(i).Flags().badel = 1;
 			(*testout) << "wrong el: ";
 			for (int j = 1; j <= 4; j++)
 			  (*testout) << mesh.VolumeElement(i).PNum(j) << " ";
 			(*testout) << endl;
 		      }
 		    else
-		      mesh.VolumeElement(i).flags.badel = 0;
+		      mesh.VolumeElement(i).Flags().badel = 0;
 		  }
 		cout << "wrongels = " << wrongels << endl;
 	      }

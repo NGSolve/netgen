@@ -77,7 +77,7 @@ namespace netgen
   {
     bool finished = false;
     
-    if(stepcount <= steps)
+    if(stepcount <= steps && stepcount>0)
       {
 	t = startt + c[stepcount-1]*h;
 	val = startval;

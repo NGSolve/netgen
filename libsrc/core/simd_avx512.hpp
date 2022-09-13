@@ -143,7 +143,7 @@ namespace ngcore
     }
   };
 
-  NETGEN_INLINE SIMD<double,8> operator- (SIMD<double,8> a) { return -a.Data(); }
+  NETGEN_INLINE SIMD<double,8> operator- (SIMD<double,8> a) { return _mm512_xor_pd(a.Data(), _mm512_set1_pd(-0.0)); } //{ return -a.Data(); }
   NETGEN_INLINE SIMD<double,8> operator+ (SIMD<double,8> a, SIMD<double,8> b) { return _mm512_add_pd(a.Data(),b.Data()); }
   NETGEN_INLINE SIMD<double,8> operator- (SIMD<double,8> a, SIMD<double,8> b) { return _mm512_sub_pd(a.Data(),b.Data()); }
   NETGEN_INLINE SIMD<double,8> operator* (SIMD<double,8> a, SIMD<double,8> b) { return _mm512_mul_pd(a.Data(),b.Data()); }
@@ -154,7 +154,7 @@ namespace ngcore
   NETGEN_INLINE SIMD<double,8> sqrt (SIMD<double,8> a) { return _mm512_sqrt_pd(a.Data()); }
   NETGEN_INLINE SIMD<double,8> floor (SIMD<double,8> a) { return _mm512_floor_pd(a.Data()); }
   NETGEN_INLINE SIMD<double,8> ceil (SIMD<double,8> a) { return _mm512_ceil_pd(a.Data()); }
-  NETGEN_INLINE SIMD<double,8> fabs (SIMD<double,8> a) { return _mm512_max_pd(a.Data(), -a.Data()); }
+  NETGEN_INLINE SIMD<double,8> fabs (SIMD<double,8> a) { return _mm512_max_pd(a.Data(), ( - a).Data()); }
 
   NETGEN_INLINE SIMD<mask64,8> operator<= (SIMD<double,8> a , SIMD<double,8> b)
   { return _mm512_cmp_pd_mask (a.Data(), b.Data(), _CMP_LE_OQ); }
@@ -233,9 +233,9 @@ namespace ngcore
     // sum01  b a b a b a b a
     // sum23  d c d c d c d c
     // __m512 perm = _mm512_permutex2var_pd (sum01.Data(), _mm512_set_epi64(1,2,3,4,5,6,7,8), sum23.Data());
-    __m256d ab =  _mm512_extractf64x4_pd(sum01.Data(),0) + _mm512_extractf64x4_pd(sum01.Data(),1);
-    __m256d cd =  _mm512_extractf64x4_pd(sum23.Data(),0) + _mm512_extractf64x4_pd(sum23.Data(),1);
-    return _mm256_add_pd (_mm256_permute2f128_pd (ab, cd, 1+2*16), _mm256_blend_pd (ab, cd, 12));
+    SIMD<double,4> ab =  _mm512_extractf64x4_pd(sum01.Data(),0) + _mm512_extractf64x4_pd(sum01.Data(),1);
+    SIMD<double,4> cd =  _mm512_extractf64x4_pd(sum23.Data(),0) + _mm512_extractf64x4_pd(sum23.Data(),1);
+    return _mm256_add_pd (_mm256_permute2f128_pd (ab.Data(), cd.Data(), 1 + 2 * 16), _mm256_blend_pd(ab.Data(), cd.Data(), 12));
   }
 
   NETGEN_INLINE SIMD<double,8> FMA (SIMD<double,8> a, SIMD<double,8> b, SIMD<double,8> c)

@@ -128,15 +128,7 @@ namespace netgen
     EdgePointGeomInfo ()
       : edgenr(-1), body(0), dist(0.0), u(0.0), v(0.0) { ; }
 
-
-    EdgePointGeomInfo & operator= (const EdgePointGeomInfo & gi2)
-    {
-      edgenr = gi2.edgenr;  
-      body = gi2.body;
-      dist = gi2.dist;
-      u = gi2.u; v = gi2.v;
-      return *this;
-    }
+    EdgePointGeomInfo & operator= (const EdgePointGeomInfo & gi2) = default;
   };
 
   inline ostream & operator<< (ostream & ost, const EdgePointGeomInfo & gi)
@@ -430,8 +422,19 @@ namespace netgen
 
     /// a linked list for all segments in the same face
     SurfaceElementIndex next;
+    ///
+    int hp_elnr;
 
   public:
+    static auto GetDataLayout()
+    {
+      return std::map<string, int>({
+          { "pnum", offsetof(Element2d, pnum)},
+          { "index", offsetof(Element2d, index) },
+          { "np", offsetof(Element2d, np) }
+        });
+    }
+
     ///
     DLL_HEADER Element2d ();
     Element2d (const Element2d &) = default;
@@ -587,6 +590,8 @@ namespace netgen
     void SetOrder (int ox, int oy, int  /* oz */) { orderx = ox; ordery = oy;}
     void SetOrder (int ox, int oy) { orderx = ox; ordery = oy;}
 
+    int GetHpElnr() const { return hp_elnr; }
+    void SetHpElnr(int _hp_elnr) { hp_elnr = _hp_elnr; }
 
     ///
     void GetBox (const T_POINTS & points, Box3d & box) const;
@@ -679,10 +684,6 @@ namespace netgen
     bool operator==(const Element2d & el2) const;
 
     int HasFace(const Element2d& el) const;
-    ///
-    int meshdocval;
-    ///
-    int hp_elnr;
   };
 
   ostream & operator<<(ostream  & s, const Element2d & el);
@@ -719,20 +720,6 @@ namespace netgen
     ELEMENT_TYPE typ;
     /// number of points (4..tet, 5..pyramid, 6..prism, 8..hex, 10..quad tet, 12..quad prism)
     int8_t np;
-    ///
-    class flagstruct { 
-    public:
-      bool marked:1;  // marked for refinement
-      bool badel:1;   // angles worse then limit
-      bool reverse:1; // for refinement a la Bey
-      bool illegal:1; // illegal, will be split or swapped 
-      bool illegal_valid:1; // is illegal-flag valid ?
-      bool badness_valid:1; // is badness valid ?
-      bool refflag:1;     // mark element for refinement
-      bool strongrefflag:1;
-      bool deleted:1;   // element is deleted, will be removed from array
-      bool fixed:1;     // don't change element in optimization
-    };
 
     /// sub-domain index
     int index;
@@ -747,8 +734,32 @@ namespace netgen
     float badness;
     bool is_curved:1;   // element is (high order) curved
 
-  public:
+    class flagstruct {
+    public:
+      bool marked:1;  // marked for refinement
+      bool badel:1;   // angles worse then limit
+      bool reverse:1; // for refinement a la Bey
+      bool illegal:1; // illegal, will be split or swapped
+      bool illegal_valid:1; // is illegal-flag valid ?
+      bool badness_valid:1; // is badness valid ?
+      bool refflag:1;     // mark element for refinement
+      bool strongrefflag:1;
+      bool deleted:1;   // element is deleted, will be removed from array
+      bool fixed:1;     // don't change element in optimization
+    };
+
     flagstruct flags;
+    int hp_elnr;
+  public:
+
+    static auto GetDataLayout()
+    {
+      return std::map<string, int>({
+          { "pnum", offsetof(Element, pnum)},
+          { "index", offsetof(Element, index) },
+          { "np", offsetof(Element, np) }
+        });
+    }
 
     ///
     DLL_HEADER Element () = default;
@@ -763,6 +774,9 @@ namespace netgen
     DLL_HEADER Element (ELEMENT_TYPE type);
     ///
     // Element & operator= (const Element & el2);
+
+    const flagstruct& Flags() const { return flags; }
+    flagstruct& Flags() { return flags; }
   
     ///
     DLL_HEADER void SetNP (int anp);
@@ -909,6 +923,9 @@ namespace netgen
     ///
     DLL_HEADER void Invert ();
 
+    int GetHpElnr() const { return hp_elnr; }
+    void SetHpElnr(int _hp_elnr) { hp_elnr = _hp_elnr; }
+
     /// split into 4 node tets
     void GetTets (NgArray<Element> & locels) const;
     /// split into 4 node tets, local point nrs
@@ -993,7 +1010,6 @@ namespace netgen
     bool IsCurved () const { return is_curved; }
     void SetCurved (bool acurved) { is_curved = acurved; }
 
-    int hp_elnr;
   };
 
   ostream & operator<<(ostream  & s, const Element & el);
@@ -1011,10 +1027,7 @@ namespace netgen
   public:
     ///
     DLL_HEADER Segment();
-    DLL_HEADER Segment (const Segment& other);
-
-    ~Segment()
-    { ; }
+    Segment (const Segment& other) = default;
 
     // friend ostream & operator<<(ostream  & s, const Segment & seg);
 
@@ -1050,10 +1063,8 @@ namespace netgen
     ///
     int meshdocval;
 
-  private:
     bool is_curved;
-
-  public:
+    int hp_elnr;
     /*
       PointIndex operator[] (int i) const
       { return (i == 0) ? p1 : p2; }
@@ -1062,10 +1073,9 @@ namespace netgen
       { return (i == 0) ? p1 : p2; }
     */
 
-    Segment& operator=(const Segment & other);
+    Segment& operator=(const Segment & other) = default;
 
   
-    int hp_elnr;
 
     int GetNP() const
     {
@@ -1172,7 +1182,7 @@ namespace netgen
     void SetDomainIn (int di) { domin = di; }
     void SetDomainOut (int dom) { domout = dom; }
     void SetBCProperty (int bc) { bcprop = bc; }
-    void SetBCName (string * bcn); //  { bcname = bcn; }
+    DLL_HEADER void SetBCName (string * bcn); //  { bcname = bcn; }
     void SetBCName (const string & bcn) { bcname = bcn; }    
     // Philippose - 06/07/2009
     // Set the surface colour

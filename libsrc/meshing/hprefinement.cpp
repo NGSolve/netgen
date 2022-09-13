@@ -1403,7 +1403,7 @@ namespace netgen
 		    Element2d el(hpel.np); 
 		    for(int j=0;j<hpel.np;j++) 
 		      el.PNum(j+1) = hpel.pnums[j]; 
-		    el.hp_elnr = i; 
+		    el.SetHpElnr(i);
 		    el.SetIndex(hpel.index);
 		    if(setorders)
 		      el.SetOrder(act_ref+1,act_ref+1,0); 
@@ -1421,7 +1421,7 @@ namespace netgen
 		    for(int j=0;j<hpel.np;j++) 
 		      el.PNum(j+1) = hpel.pnums[j]; 
 		    el.SetIndex(hpel.index); 
-		    el.hp_elnr = i; 
+		    el.SetHpElnr(i);
 		    if(setorders)
 		      el.SetOrder(act_ref+1,act_ref+1,act_ref+1);
                     if((*mesh.coarsemesh)[ElementIndex{hpel.coarse_elnr}].IsCurved())
@@ -1451,7 +1451,7 @@ namespace netgen
 	for(ElementIndex i=0;i<mesh.GetNE(); i++) 
 	  { 
 	    // Element el = mesh[i] ;
-	    HPRefElement & hpel = hpelements[mesh[i].hp_elnr];
+	    HPRefElement & hpel = hpelements[mesh[i].GetHpElnr()];
 	    const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (mesh[i].GetType());
 	    double dist[3] = {0,0,0}; 
 	    int ord_dir[3] = {0,0,0}; 
@@ -1523,7 +1523,7 @@ namespace netgen
 	for(SurfaceElementIndex i=0;i<mesh.GetNSE(); i++) 
 	  { 
 	    // Element2d el = mesh[i] ;
-	    HPRefElement & hpel = hpelements[mesh[i].hp_elnr];
+	    HPRefElement & hpel = hpelements[mesh[i].GetHpElnr()];
 	    const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (mesh[i].GetType());
 	    double dist[3] = {0,0,0}; 
 	    int ord_dir[3] = {0,0,0}; 

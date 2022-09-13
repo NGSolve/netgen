@@ -13,7 +13,6 @@ namespace netgen
 {
     class OCCFace : public GeometryFace 
     {
-        T_Shape tface;
         TopoDS_Face face;
         GProp_GProps props;
         Box<3> bbox;
@@ -26,7 +25,6 @@ namespace netgen
         OCCFace(TopoDS_Shape dshape);
 
         const TopoDS_Face Shape() const { return face; }
-        T_Shape TShape() { return tface; }
 
         size_t GetHash() const override;
         Point<3> GetCenter() const override;

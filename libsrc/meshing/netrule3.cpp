@@ -77,6 +77,7 @@ void vnetrule :: SetFreeZoneTransformation (const Vector & allp, int tolclass)
   fzbox.SetPoint (transfreezone.Elem(1));
   for (i = 2; i <= freezone.Size(); i++)
     fzbox.AddPoint (transfreezone.Elem(i));
+  fzbox.IncreaseRel(1e-8);
   
   
   // MARK(setfz3);

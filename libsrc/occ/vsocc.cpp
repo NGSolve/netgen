@@ -548,7 +548,7 @@ namespace netgen
 
          if (!occgeometry->fvispar[i-1].IsHighlighted())
          {
-            auto c = OCCGeometry::global_shape_properties[face.TShape()].col.value_or(Vec<4>(0,1,0,1) );
+            auto c = OCCGeometry::global_shape_properties[face].col.value_or(Vec<4>(0,1,0,1) );
             for(auto j : Range(4))
                mat_col[j] = c[j];
          }

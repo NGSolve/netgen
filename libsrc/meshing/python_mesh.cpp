@@ -434,6 +434,27 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                    }))
     ;
 
+  if(ngcore_have_numpy)
+  {
+    auto data_layout = Element::GetDataLayout();
+
+    py::detail::npy_format_descriptor<Element>::register_dtype({
+        py::detail::field_descriptor {
+          "nodes", data_layout["pnum"],
+          ELEMENT_MAXPOINTS * sizeof(PointIndex),
+          py::format_descriptor<int[ELEMENT_MAXPOINTS]>::format(),
+          py::detail::npy_format_descriptor<int[ELEMENT_MAXPOINTS]>::dtype() },
+        py::detail::field_descriptor {
+          "index", data_layout["index"], sizeof(int),
+          py::format_descriptor<int>::format(),
+          py::detail::npy_format_descriptor<int>::dtype() },
+        py::detail::field_descriptor {
+          "np", data_layout["np"], sizeof(int8_t),
+          py::format_descriptor<signed char>::format(),
+          pybind11::dtype("int8") }
+      });
+  }
+
   py::class_<Element2d>(m, "Element2D")
     .def(py::init ([](int index, std::vector<PointIndex> vertices)
                    {
@@ -493,8 +514,29 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                    }))
     ;
 
+  if(ngcore_have_numpy)
+  {
+    auto data_layout = Element2d::GetDataLayout();
+    py::detail::npy_format_descriptor<Element2d>::register_dtype({
+        py::detail::field_descriptor {
+          "nodes", data_layout["pnum"],
+          ELEMENT2D_MAXPOINTS * sizeof(PointIndex),
+          py::format_descriptor<int[ELEMENT2D_MAXPOINTS]>::format(),
+          py::detail::npy_format_descriptor<int[ELEMENT2D_MAXPOINTS]>::dtype() },
+        py::detail::field_descriptor {
+          "index", data_layout["index"], sizeof(int),
+          py::format_descriptor<int>::format(),
+          py::detail::npy_format_descriptor<int>::dtype() },
+        py::detail::field_descriptor {
+          "np", data_layout["np"], sizeof(int8_t),
+          py::format_descriptor<signed char>::format(),
+          pybind11::dtype("int8") }
+      });
+  }
+
   py::class_<Segment>(m, "Element1D")
-    .def(py::init([](py::list vertices, py::list surfaces, int index, int edgenr)
+    .def(py::init([](py::list vertices, py::list surfaces, int index, int edgenr,
+                     py::list trignums)
                   {
                     Segment * newel = new Segment();
                     for (int i = 0; i < 2; i++)
@@ -505,6 +547,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                     newel -> epgeominfo[1].edgenr = edgenr;
                     // needed for codim2 in 3d
                     newel -> edgenr = index;
+                    for(auto i : Range(len(trignums)))
+                      newel->geominfo[i].trignum = py::cast<int>(trignums[i]);
                     if (len(surfaces))
                       {
                         newel->surfnr1 = py::extract<int>(surfaces[0])();
@@ -516,6 +560,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
            py::arg("surfaces")=py::list(),
            py::arg("index")=1,
            py::arg("edgenr")=1,
+           py::arg("trignums")=py::list(), // for stl
          "create segment element"
          )
     .def("__repr__", &ToString<Segment>)
@@ -553,6 +598,20 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 						     }))
     ;
 
+  if(ngcore_have_numpy)
+  {
+    py::detail::npy_format_descriptor<Segment>::register_dtype({
+        py::detail::field_descriptor {
+          "nodes", offsetof(Segment, pnums),
+          3 * sizeof(PointIndex),
+          py::format_descriptor<int[3]>::format(),
+          py::detail::npy_format_descriptor<int[3]>::dtype() },
+        py::detail::field_descriptor {
+          "index", offsetof(Segment, edgenr), sizeof(int),
+          py::format_descriptor<int>::format(),
+          py::detail::npy_format_descriptor<int>::dtype() },
+      });
+  }
 
   py::class_<Element0d>(m, "Element0D")
     .def(py::init([](PointIndex vertex, int index)
@@ -1191,19 +1250,22 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     
     .def ("BuildSearchTree", &Mesh::BuildElementSearchTree,py::call_guard<py::gil_scoped_release>())
 
+    .def ("BoundaryLayer2", GenerateBoundaryLayer2, py::arg("domain"), py::arg("thicknesses"), py::arg("make_new_domain")=true, py::arg("boundaries")=Array<int>{})
     .def ("BoundaryLayer", [](Mesh & self, variant<string, int> boundary,
                               variant<double, py::list> thickness,
                               string material,
                               variant<string, int> domain, bool outside,
                               optional<string> project_boundaries,
-                              bool grow_edges)
+                              bool grow_edges, bool limit_growth_vectors)
            {
              BoundaryLayerParameters blp;
+             BitArray boundaries(self.GetNFD()+1);
+             boundaries.Clear();
              if(int* bc = get_if<int>(&boundary); bc)
                {
                  for (int i = 1; i <= self.GetNFD(); i++)
                    if(self.GetFaceDescriptor(i).BCProperty() == *bc)
-                     blp.surfid.Append (i);
+                     boundaries.SetBit(i);
                }
              else
                {
@@ -1213,19 +1275,29 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                      auto& fd = self.GetFaceDescriptor(i);
                      if(regex_match(fd.GetBCName(), pattern))
                        {
+                         boundaries.SetBit(i);
                          auto dom_pattern = get_if<string>(&domain);
                          // only add if adjacent to domain
                          if(dom_pattern)
                            {
                              regex pattern(*dom_pattern);
-                             if((fd.DomainIn() > 0 && regex_match(self.GetMaterial(fd.DomainIn()), pattern)) || (fd.DomainOut() > 0 && regex_match(self.GetMaterial(fd.DomainOut()), pattern)))
-                               blp.surfid.Append(i);
+                             bool mat1_match = fd.DomainIn() > 0 && regex_match(self.GetMaterial(fd.DomainIn()), pattern);
+                             bool mat2_match = fd.DomainOut() > 0 && regex_match(self.GetMaterial(fd.DomainOut()), pattern);
+                             // if boundary is inner or outer remove from list
+                             if(mat1_match == mat2_match)
+                               boundaries.Clear(i);
+                             // if((fd.DomainIn() > 0 && regex_match(self.GetMaterial(fd.DomainIn()), pattern)) || (fd.DomainOut() > 0 && regex_match(self.GetMaterial(fd.DomainOut()), pattern)))
+                             // boundaries.Clear(i);
+                             // blp.surfid.Append(i);
                            }
-                         else
-                           blp.surfid.Append(i);
+                         // else
+                         //   blp.surfid.Append(i);
                        }
                      }
                }
+             for(int i = 1; i<=self.GetNFD(); i++)
+               if(boundaries.Test(i))
+                 blp.surfid.Append(i);
              blp.new_mat = material;
 
              if(project_boundaries.has_value())
@@ -1265,12 +1337,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
              blp.outside = outside;
              blp.grow_edges = grow_edges;
+             blp.limit_growth_vectors = limit_growth_vectors;
 
              GenerateBoundaryLayer (self, blp);
              self.UpdateTopology();
            }, py::arg("boundary"), py::arg("thickness"), py::arg("material"),
           py::arg("domains") = ".*", py::arg("outside") = false,
-          py::arg("project_boundaries")=nullopt, py::arg("grow_edges")=true,
+          py::arg("project_boundaries")=nullopt, py::arg("grow_edges")=true, py::arg("limit_growth_vectors") = true,
           R"delimiter(
 Add boundary layer to mesh.
 

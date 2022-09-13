@@ -338,7 +338,7 @@ void STLTopology :: Save (const filesystem::path & filename) const
 }
 
 
-STLGeometry *  STLTopology ::Load (istream & ist)
+STLGeometry *  STLTopology ::Load (istream & ist, bool surface)
 {
   // Check if the file starts with "solid". If not, the file is binary
   {
@@ -457,6 +457,7 @@ STLGeometry *  STLTopology ::Load (istream & ist)
       PrintWarning("File has normal vectors which differ extremely from geometry->correct with stldoctor!!!");
     }
 
+  geom->surface = surface;
   geom->InitSTLGeometry(readtrigs);
   return geom;
 }
@@ -650,6 +651,7 @@ void STLTopology :: FindNeighbourTrigs()
 	  }
       }
 
+  if(!surface)
   for (int i = 1; i <= ne; i++)
     {
       const STLTopEdge & edge = GetTopEdge (i);
@@ -668,9 +670,12 @@ void STLTopology :: FindNeighbourTrigs()
 	  const STLTriangle & t = GetTriangle (i);
 	  for (int j = 1; j <= 3; j++)
 	    {
-	      const STLTriangle & nbt = GetTriangle (t.NBTrigNum(j));
-	      if (!t.IsNeighbourFrom (nbt))
-		orientation_ok = 0;
+              if(t.NBTrigNum(j) != 0)
+                {
+                  const STLTriangle & nbt = GetTriangle (t.NBTrigNum(j));
+                  if (!t.IsNeighbourFrom (nbt))
+                    orientation_ok = 0;
+                }
 	    }
 	}
     }
@@ -801,7 +806,8 @@ void STLTopology :: FindNeighbourTrigs()
       neighbourtrigs.SetSize(GetNT());
       for (int i = 1; i <= GetNT(); i++)
 	for (int k = 1; k <= 3; k++)
-	  AddNeighbourTrig (i, GetTriangle(i).NBTrigNum(k));
+          if(GetTriangle(i).NBTrigNum(k) != 0)
+            AddNeighbourTrig (i, GetTriangle(i).NBTrigNum(k));
     }
   else
     {

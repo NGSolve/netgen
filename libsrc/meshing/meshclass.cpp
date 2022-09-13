@@ -599,9 +599,9 @@ namespace netgen
       {
         volelements.Append (el);
       }
-    volelements.Last().flags.illegal_valid = 0;
-    volelements.Last().flags.fixed = 0;
-    volelements.Last().flags.deleted = 0;
+    volelements.Last().Flags().illegal_valid = 0;
+    volelements.Last().Flags().fixed = 0;
+    volelements.Last().Flags().deleted = 0;
 
     // while (volelements.Size() > eltyps.Size())
     // eltyps.Append (FREEELEMENT);
@@ -622,9 +622,9 @@ namespace netgen
     */
 
     volelements[ei]  = el;
-    volelements[ei].flags.illegal_valid = 0;
-    volelements[ei].flags.fixed = 0;
-    volelements[ei].flags.deleted = 0;
+    volelements[ei].Flags().illegal_valid = 0;
+    volelements[ei].Flags().fixed = 0;
+    volelements[ei].Flags().deleted = 0;
   }
 
 
@@ -1659,10 +1659,6 @@ namespace netgen
 	topology.Update();
 	clusters -> Update();
       }
-
-    auto geo = geometryregister.LoadFromMeshFile (infile);
-    if(geo)
-       geometry = geo;
 
     SetNextMajorTimeStamp();
     //  PrintMemInfo (cout);
@@ -3245,7 +3241,7 @@ namespace netgen
           if (dist[el[j]] < elmin)
             elmin = dist[el[j]];
 
-        el.flags.fixed = elmin > layers;
+        el.Flags().fixed = elmin > layers;
         // eltyps.Elem(i) = (elmin <= layers) ? 
         // FREEELEMENT : FIXEDELEMENT;
         if (elmin <= layers)
@@ -4388,7 +4384,7 @@ namespace netgen
     for (i = 1; i <= ne; i++)
       {
         Element & el = (Element&) VolumeElement(i);
-        el.flags.badel = 0;
+        el.Flags().badel = 0;
         int nip = el.GetNIP();
         for (j = 1; j <= nip; j++)
           {
@@ -4397,7 +4393,7 @@ namespace netgen
             if (det > 0)
               {
                 PrintError ("Element ", i , " has wrong orientation");
-                el.flags.badel = 1;
+                el.Flags().badel = 1;
               }
           }
       }
@@ -6476,7 +6472,7 @@ namespace netgen
 
         if (el.GetType() != TET)
           {
-            VolumeElement(i).flags.badel = 0;
+            VolumeElement(i).Flags().badel = 0;
             continue;
           }
 
@@ -6558,7 +6554,7 @@ namespace netgen
           }
 
 
-        VolumeElement(i).flags.badel = badel;
+        VolumeElement(i).Flags().badel = badel;
         if (badel) badtets++;
       }
 

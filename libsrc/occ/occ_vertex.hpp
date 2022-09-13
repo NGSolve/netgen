@@ -12,7 +12,6 @@ namespace netgen
     class OCCVertex : public GeometryVertex
     {
         TopoDS_Vertex vertex;
-        T_Shape tvertex;
         Point<3> p;
 
         public:
@@ -21,7 +20,6 @@ namespace netgen
         ~OCCVertex() {}
         Point<3> GetPoint() const override;
         size_t GetHash() const override;
-        T_Shape TShape() { return tvertex; }
     };
 }
 

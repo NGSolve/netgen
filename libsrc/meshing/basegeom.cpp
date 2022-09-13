@@ -785,6 +785,8 @@ namespace netgen
     {
         auto & face = *faces[k];
         FaceDescriptor fd(k+1, face.domin+1, face.domout+1, k+1);
+        if(face.properties.col)
+          fd.SetSurfColour(*face.properties.col);
         mesh.AddFaceDescriptor(fd);
         mesh.SetBCName(k, face.properties.GetName());
         if(face.primary == &face)
@@ -974,6 +976,12 @@ namespace netgen
           }
 
     xbool do_invert = maybe;
+    if(dst.identifications[0].type == Identifications::PERIODIC)
+      {
+        auto other = static_cast<GeometryFace*>(dst.primary);
+        if(dst.domin != other->domout && dst.domout != other->domin)
+          do_invert = true;
+      }
 
     // now insert mapped surface elements
     for(auto sei : mesh.SurfaceElements().Range())
@@ -1050,9 +1058,10 @@ namespace netgen
 
   void NetgenGeometry :: FinalizeMesh(Mesh& mesh) const
   {
-    for (int i = 0; i < mesh.GetNDomains(); i++)
-      if (auto name = solids[i]->properties.name)
-        mesh.SetMaterial (i+1, *name);
+    if(solids.Size())
+      for (int i = 0; i < mesh.GetNDomains(); i++)
+        if (auto name = solids[i]->properties.name)
+          mesh.SetMaterial (i+1, *name);
   }
   
   shared_ptr<NetgenGeometry> GeometryRegisterArray :: LoadFromMeshFile (istream & ist) const

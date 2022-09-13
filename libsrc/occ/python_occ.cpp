@@ -26,6 +26,7 @@ using namespace netgen;
 namespace netgen
 {
   extern std::shared_ptr<NetgenGeometry> ng_geometry;
+  extern std::shared_ptr<Mesh> mesh;
 }
 
 static string occparameter_description = R"delimiter(
@@ -117,11 +118,11 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                     
                     for (auto & s : shapes)
                       for (TopExp_Explorer e(s, TopAbs_SOLID); e.More(); e.Next())
-                        if (auto name = OCCGeometry::global_shape_properties[e.Current().TShape()].name)
+                        if (auto name = OCCGeometry::global_shape_properties[e.Current()].name)
                           {
                             TopTools_ListOfShape modlist = history->Modified(e.Current());
                             for (auto mods : modlist)
-                              OCCGeometry::global_shape_properties[mods.TShape()].name = *name;
+                              OCCGeometry::global_shape_properties[mods].name = *name;
                           }
 #endif // OCC_HAVE_HISTORY
 
@@ -133,7 +134,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                   }), py::arg("shape"),
          "Create Netgen OCCGeometry from existing TopoDS_Shape")
     
-    .def(py::init([] (const string& filename)
+    .def(py::init([] (const string& filename, int dim)
                   {
                     shared_ptr<OCCGeometry> geo;
                     if(EndsWith(filename, ".step") || EndsWith(filename, ".stp"))
@@ -144,9 +145,11 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                       geo.reset(LoadOCC_IGES(filename));
                     else
                       throw Exception("Cannot load file " + filename + "\nValid formats are: step, stp, brep, iges");
+                    if(dim<3)
+                      geo->SetDimension(dim);
                     ng_geometry = geo;
                     return geo;
-                  }), py::arg("filename"),
+                  }), py::arg("filename"), py::arg("dim")=3,
         "Load OCC geometry from step, brep or iges file")
     .def(NGSPickle<OCCGeometry>())
     .def("Glue", &OCCGeometry::GlueGeometry)
@@ -247,7 +250,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
             return res;
          }, py::call_guard<py::gil_scoped_release>())
     .def("GenerateMesh", [](shared_ptr<OCCGeometry> geo,
-                            MeshingParameters* pars, NgMPI_Comm comm, py::kwargs kwargs)
+                            MeshingParameters* pars, NgMPI_Comm comm,
+                            shared_ptr<Mesh> mesh, py::kwargs kwargs)
                          {
                            MeshingParameters mp;
                            OCCParameters occparam;
@@ -263,7 +267,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                              CreateMPfromKwargs(mp, kwargs);
                            }
                            geo->SetOCCParameters(occparam);
-                           auto mesh = make_shared<Mesh>();
+                           if(!mesh)
+                             mesh = make_shared<Mesh>();
                            mesh->SetCommunicator(comm);
                            mesh->SetGeometry(geo);
 
@@ -272,7 +277,10 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                                SetGlobalMesh(mesh);
                                auto result = geo->GenerateMesh(mesh, mp);
                                if(result != 0)
-                                 throw Exception("Meshing failed!");
+                                 {
+                                   netgen::mesh = mesh;   // keep mesh for debugging
+                                   throw Exception("Meshing failed!");
+                                 }
                                ng_geometry = geo;
                                if (comm.Size() > 1)
                                  mesh->Distribute();
@@ -283,7 +291,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                              }
                            return mesh;
                          }, py::arg("mp") = nullptr, py::arg("comm")=NgMPI_Comm{},
-      py::call_guard<py::gil_scoped_release>(),
+         py::arg("mesh")=nullptr, py::call_guard<py::gil_scoped_release>(),
          (meshingparameter_description + occparameter_description).c_str())
     .def_property_readonly("shape", [](const OCCGeometry & self) { return self.GetShape(); })
     ;
@@ -319,8 +327,6 @@ DLL_HEADER void ExportNgOCC(py::module &m)
       Handle(XCAFDoc_MaterialTool) material_tool = XCAFDoc_DocumentTool::MaterialTool(doc->Main());
       // Handle(XCAFDoc_VisMaterialTool) vismaterial_tool = XCAFDoc_DocumentTool::VisMaterialTool(doc->Main());
 
-      cout << "handle(shape) = " << *(void**)(void*)(&(shape.TShape())) << endl;
-      
       // TDF_LabelSequence doc_shapes;
       // shape_tool->GetShapes(doc_shapes);
       // cout << "shape tool nbentities: " << doc_shapes.Size() << endl;

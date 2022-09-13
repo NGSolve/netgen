@@ -238,7 +238,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 			      */
 			      
 			      //find overlapping charts exacter (fast, too): 
-			      for (int k = 1; k <= 3; k++) 
+			      for (int k = 1; k <= NONeighbourTrigs(nt); k++)
 				{ 
 				  int nnt = NeighbourTrig(nt,k);
 				  if (GetMarker(nnt) != chartnum)
@@ -387,7 +387,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
                       // NgProfiler::StartTimer (timer4a);
                       
 		      if (spiralcheckon && !isdirtytrig)
-			for (int k = 1; k <= 3; k++) 
+			for (int k = 1; k <= NONeighbourTrigs(nt); k++)
 			  {
                             // NgProfiler::StartTimer (timer4b);                            
 			    STLTrigId nnt = NeighbourTrig(nt,k);
@@ -695,7 +695,7 @@ void STLGeometry :: GetInnerChartLimes(NgArray<twoint>& limes, ChartId chartnum)
     {
       STLTrigId t = chart.GetChartTrig1(j); 
       const STLTriangle& tt = GetTriangle(t);
-      for (int k = 1; k <= 3; k++)
+      for (int k = 1; k <= NONeighbourTrigs(t); k++)
 	{
 	  STLTrigId nt = NeighbourTrig(t,k); 
 	  if (GetChartNr(nt) != chartnum)
@@ -756,7 +756,7 @@ void STLGeometry :: GetDirtyChartTrigs(int chartnum, STLChart& chart,
       STLTrigId t = chart.GetChartTrig1(j); 
       const STLTriangle& tt = GetTriangle(t);
       
-      for (int k = 1; k <= 3; k++)
+      for (int k = 1; k <= NONeighbourTrigs(t); k++)
 	{
 	  STLTrigId nt = NeighbourTrig(t,k); 
 	  if (GetChartNr(nt) != chartnum && outercharttrigs[nt] != chartnum)

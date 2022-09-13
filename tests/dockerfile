@@ -1,4 +1,4 @@
-FROM ubuntu:21.10
+FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 MAINTAINER Matthias Hochsteger <matthias.hochsteger@tuwien.ac.at>
 RUN apt-get update && apt-get -y install \
@@ -29,5 +29,5 @@ RUN apt-get update && apt-get -y install \
         tcl-dev \
         tk-dev
 
-RUN python3 -m pip install pytest-check
+RUN python3 -m pip install pytest-check pybind11-stubgen
 ADD . /root/src/netgen

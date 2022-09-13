@@ -194,7 +194,8 @@ namespace netgen
 
   ArrayMem<Point<3>, 4> BoundaryLayerTool :: GetMappedFace( SurfaceElementIndex sei, int face )
   {
-      if(face == -1) return GetMappedFace(sei);
+      if(face == -1) return GetFace(sei);
+      if(face == -2) return GetMappedFace(sei);
       const auto & sel = mesh[sei];
       auto np = sel.GetNP();
       auto pi0 = sel[face % np];
@@ -210,23 +211,25 @@ namespace netgen
   Vec<3> BoundaryLayerTool :: getEdgeTangent(PointIndex pi, int edgenr)
   {
       Vec<3> tangent = 0.0;
+      ArrayMem<PointIndex,2> pts;
       for(auto segi : topo.GetVertexSegments(pi))
       {
           auto & seg = mesh[segi];
-          if(seg.edgenr != edgenr)
+          if(seg.edgenr != edgenr+1)
               continue;
           PointIndex other = seg[0]+seg[1]-pi;
-          tangent += mesh[other] - mesh[pi];
+          if(!pts.Contains(other))
+            pts.Append(other);
       }
+      if(pts.Size() != 2)
+        throw Exception("Something went wrong in getEdgeTangent!");
+      tangent = mesh[pts[1]] - mesh[pts[0]];
       return tangent.Normalize();
   }
 
   void BoundaryLayerTool :: LimitGrowthVectorLengths()
   {
     static Timer tall("BoundaryLayerTool::LimitGrowthVectorLengths"); RegionTimer rtall(tall);
-    height = 0.0;
-    for (auto h : params.heights)
-       height += h;
 
     limits.SetSize(np);
     limits = 1.0;
@@ -320,7 +323,7 @@ namespace netgen
                 const auto & sel = mesh[sei];
                 if(sel.PNums().Contains(pi))
                     return false;
-                auto face = GetFace(sei);
+                auto face = GetMappedFace(sei, -2);
                 double lam_ = 999;
                 bool is_bl_sel = params.surfid.Contains(sel.GetIndex());
 
@@ -433,7 +436,6 @@ namespace netgen
                   }
               }
 
-              // seg.edgenr = topo.GetEdge(segi)+1;
               segments.Append(seg);
           }
       }
@@ -464,6 +466,8 @@ namespace netgen
     auto np = mesh.GetNP();
     BitArray is_point_on_bl_surface(np+1);
     is_point_on_bl_surface.Clear();
+    BitArray is_point_on_other_surface(np+1);
+    is_point_on_other_surface.Clear();
     Array<Vec<3>, PointIndex> normals(np);
     for(auto pi : Range(growthvectors))
         normals[pi] = growthvectors[pi];
@@ -474,20 +478,33 @@ namespace netgen
           {
             auto facei = mesh[sei].GetIndex();
             if(facei < nfd_old && !params.surfid.Contains(facei))
-                continue;
-            for(auto pi : mesh[sei].PNums())
-                if(mesh[pi].Type() == SURFACEPOINT)
+              {
+                for(auto pi : mesh[sei].PNums())
+                  if(mesh[pi].Type() == SURFACEPOINT)
+                    is_point_on_other_surface.SetBitAtomic(pi);
+              }
+            else
+              {
+                for(auto pi : mesh[sei].PNums())
+                  if(mesh[pi].Type() == SURFACEPOINT)
                     is_point_on_bl_surface.SetBitAtomic(pi);
+              }
           }
       });
 
     Array<PointIndex> points;
     for(PointIndex pi : mesh.Points().Range())
+      {
         if(is_point_on_bl_surface[pi])
         {
             points.Append(pi);
             growthvectors[pi] = 0.0;
         }
+        if(is_point_on_other_surface[pi])
+          {
+            points.Append(pi);
+          }
+      }
 
     // smooth tangential part of growth vectors from edges to surface elements
     RegionTimer rtsmooth(tsmooth);
@@ -511,7 +528,10 @@ namespace netgen
                         auto gw_other = growthvectors[pi1];
                         auto normal_other = getNormal(mesh[sei]);
                         auto tangent_part = gw_other - (gw_other*normal_other)*normal_other;
-                        new_gw += tangent_part;
+                        if(is_point_on_bl_surface[pi])
+                          new_gw += tangent_part;
+                        else
+                          new_gw += gw_other;
                     }
             }
 
@@ -532,6 +552,10 @@ namespace netgen
 
     //for(auto & seg : mesh.LineSegments())
         //seg.edgenr = seg.epgeominfo[1].edgenr;
+
+    height = 0.0;
+    for (auto h : params.heights)
+      height += h;
 
     max_edge_nr = -1;
     for(const auto& seg : mesh.LineSegments())
@@ -777,7 +801,7 @@ namespace netgen
     // interpolate tangential component of growth vector along edge
     for(auto edgenr : Range(max_edge_nr))
       {
-        if(!is_edge_moved[edgenr+1]) continue;
+        // if(!is_edge_moved[edgenr+1]) continue;
 
         // build sorted list of edge
         Array<PointIndex> points;
@@ -785,6 +809,9 @@ namespace netgen
         double edge_len = 0.;
         auto is_end_point = [&] (PointIndex pi)
         {
+          // if(mesh[pi].Type() == FIXEDPOINT)
+          //   return true;
+          // return false;
             auto segs = topo.GetVertexSegments(pi);
             auto first_edgenr = mesh[segs[0]].edgenr;
             for(auto segi : segs)
@@ -792,16 +819,30 @@ namespace netgen
                     return true;
             return false;
         };
+
+        bool any_grows = false;
+        
         for(const auto& seg : segments)
           {
-            if(seg.edgenr-1 == edgenr && is_end_point(seg[0]))
+            if(seg.edgenr-1 == edgenr)
               {
-                points.Append(seg[0]);
-                points.Append(seg[1]);
-                edge_len += (mesh[seg[1]] - mesh[seg[0]]).Length();
-                break;
+                if(growthvectors[seg[0]].Length2() != 0 ||
+                   growthvectors[seg[1]].Length2() != 0)
+                  any_grows = true;
+                if(points.Size() == 0 && is_end_point(seg[0]))
+                  {
+                    points.Append(seg[0]);
+                    points.Append(seg[1]);
+                    edge_len += (mesh[seg[1]] - mesh[seg[0]]).Length();
+                  }
               }
           }
+
+        if(!any_grows)
+          continue;
+
+        if(!points.Size())
+          throw Exception("Could not find startpoint for edge " + ToString(edgenr));
 
         while(true)
           {
@@ -831,16 +872,27 @@ namespace netgen
               break;
             if(!point_found)
               {
-                cout << "points = " << points << endl;
                 throw Exception(string("Could not find connected list of line segments for edge ") + edgenr);
               }
           }
+
+        if(growthvectors[points[0]].Length2() == 0 &&
+           growthvectors[points.Last()].Length2() == 0)
+          continue;
 
         // tangential part of growth vectors
         auto t1 = (mesh[points[1]]-mesh[points[0]]).Normalize();
         auto gt1 = growthvectors[points[0]] * t1 * t1;
         auto t2 = (mesh[points.Last()]-mesh[points[points.Size()-2]]).Normalize();
         auto gt2 = growthvectors[points.Last()] * t2 * t2;
+
+        if(!is_edge_moved[edgenr+1])
+          {
+            if(growthvectors[points[0]] * (mesh[points[1]] - mesh[points[0]]) < 0)
+              gt1 = 0.;
+            if(growthvectors[points.Last()] * (mesh[points[points.Size()-2]] - mesh[points.Last()]) < 0)
+              gt2 = 0.;
+          }
 
         double len = 0.;
         for(size_t i = 1; i < points.Size()-1; i++)
@@ -1262,7 +1314,9 @@ namespace netgen
 
       auto in_surface_direction = ProjectGrowthVectorsOnSurface();
       InterpolateGrowthVectors();
-      LimitGrowthVectorLengths();
+
+      if(params.limit_growth_vectors)
+        LimitGrowthVectorLengths();
       FixVolumeElements();
       InsertNewElements(segmap, in_surface_direction);
       SetDomInOut();
@@ -1339,20 +1393,24 @@ namespace netgen
      compress = PointIndex::INVALID;
 
      PointIndex cnt = PointIndex::BASE;
-     for(const auto & seg : mesh.LineSegments())
-        if (seg.si == domain)
-           for (auto pi : {seg[0], seg[1]})
-              if (compress[pi]==PointIndex{PointIndex::INVALID})
-              {
-                 meshing.AddPoint(mesh[pi], pi);
-                 compress[pi] = cnt++;
-              }
 
+     auto p2sel = mesh.CreatePoint2SurfaceElementTable();
+     Array<Segment> domain_segments;
      PointGeomInfo gi;
      gi.trignum = domain;
-     for(const auto & seg : mesh.LineSegments())
-        if (seg.si == domain)
-           meshing.AddBoundaryElement (compress[seg[0]], compress[seg[1]], gi, gi);
+     for(auto seg : mesh.LineSegments())
+     {
+         for (auto pi : {seg[0], seg[1]})
+            if (compress[pi]==PointIndex{PointIndex::INVALID})
+            {
+               meshing.AddPoint(mesh[pi], pi);
+               compress[pi] = cnt++;
+            }
+         if(seg.domin == domain)
+             meshing.AddBoundaryElement (compress[seg[0]], compress[seg[1]], gi, gi);
+         if(seg.domout == domain)
+             meshing.AddBoundaryElement (compress[seg[1]], compress[seg[0]], gi, gi);
+     }
 
      auto oldnf = mesh.GetNSE();
      auto res = meshing.GenerateMesh (mesh, mp, mp.maxh, domain);
@@ -1395,17 +1453,20 @@ namespace netgen
      }
 
      mesh.Compress();
+     mesh.CalcSurfacesOfNode();
      mesh.OrderElements();
      mesh.SetNextMajorTimeStamp();
-
   }
 
   int GenerateBoundaryLayer2 (Mesh & mesh, int domain, const Array<double> & thicknesses, bool should_make_new_domain, const Array<int> & boundaries)
   {
+     mesh.GetTopology().SetBuildVertex2Element(true);
+     mesh.UpdateTopology();
+     const auto & line_segments = mesh.LineSegments();
      SegmentIndex first_new_seg = mesh.LineSegments().Range().Next();
 
      int np = mesh.GetNP();
-     int nseg = mesh.GetNSeg();
+     int nseg = line_segments.Size();
      int ne = mesh.GetNSE();
      mesh.UpdateTopology();
 
@@ -1427,23 +1488,10 @@ namespace netgen
 
      auto & meshtopo = mesh.GetTopology();
 
-     Array<SurfaceElementIndex, SegmentIndex> seg2surfel(mesh.GetNSeg());
-     seg2surfel = -1;
-     NgArray<SurfaceElementIndex> temp_els;
-     for(auto si : Range(mesh.LineSegments()))
-     {
-        meshtopo.GetSegmentSurfaceElements ( si+1, temp_els );
-        // NgArray<int> surfeledges;
-        // meshtopo.GetSurfaceElementEdges(si+1, surfeledges);
-        for(auto seli : temp_els)
-           if(mesh[seli].GetIndex() == mesh[si].si)
-              seg2surfel[si] = seli;
-     }
-
      Array<SegmentIndex> segments;
 
     // surface index map
-    Array<int> si_map(mesh.GetNFD()+1);
+    Array<int> si_map(mesh.GetNFD()+2);
     si_map = -1;
 
     int fd_old = mesh.GetNFD();
@@ -1451,12 +1499,14 @@ namespace netgen
     int max_edge_nr = -1;
     int max_domain = -1;
 
-    for(const auto& seg : mesh.LineSegments())
+    for(const auto& seg : line_segments)
     {
       if(seg.epgeominfo[0].edgenr > max_edge_nr)
         max_edge_nr = seg.epgeominfo[0].edgenr;
-      if(seg.si > max_domain)
-         max_domain = seg.si;
+      if(seg.domin > max_domain)
+         max_domain = seg.domin;
+      if(seg.domout > max_domain)
+         max_domain = seg.domout;
     }
 
     int new_domain = max_domain+1;
@@ -1472,95 +1522,43 @@ namespace netgen
        for(auto edgenr : boundaries)
           active_boundaries.SetBit(edgenr);
 
-    for(auto segi : Range(mesh.LineSegments()))
+    for(auto segi : Range(line_segments))
     {
-       const auto seg = mesh[segi];
-       if(active_boundaries.Test(seg.epgeominfo[0].edgenr) && seg.si==domain)
+       const auto seg = line_segments[segi];
+       if(active_boundaries.Test(seg.epgeominfo[0].edgenr) && (seg.domin==domain || seg.domout==domain))
           active_segments.SetBit(segi);
     }
 
-    for(auto segi : Range(mesh.LineSegments()))
     {
-        const auto& seg = mesh[segi];
-        auto si = seg.si;
-
-        if(si_map[si]!=-1)
-           continue;
-
-        if(!active_segments.Test(segi))
-           continue;
-
         FaceDescriptor new_fd(0, 0, 0, -1);
         new_fd.SetBCProperty(new_domain);
         int new_fd_index = mesh.AddFaceDescriptor(new_fd);
-        si_map[si] = new_domain;
         if(should_make_new_domain)
-           mesh.SetBCName(new_domain-1, "mapped_" + mesh.GetBCName(si-1));
+           mesh.SetBCName(new_domain-1, "mapped_" + mesh.GetBCName(domain-1));
     }
 
-    for(auto si : Range(mesh.LineSegments()))
+    for(auto segi : Range(line_segments))
       {
-        if(segs_done[si]) continue;
-        segs_done.SetBit(si);
-        const auto& segi = mesh[si];
-        if(si_map[segi.si] == -1) continue;
-        if(!active_boundaries.Test(segi.epgeominfo[0].edgenr))
+        if(segs_done[segi]) continue;
+        segs_done.SetBit(segi);
+        const auto& seg = line_segments[segi];
+        if(seg.domin != domain && seg.domout != domain) continue;
+        if(!active_boundaries.Test(seg.epgeominfo[0].edgenr))
            continue;
-        moved_segs.Append(si);
+        moved_segs.Append(segi);
       }
 
      // calculate growth vectors (average normal vectors of adjacent segments at each point)
      for (auto si : moved_segs)
      {
-       auto & seg = mesh[si];
-
-       meshtopo.GetSegmentSurfaceElements ( si+1, temp_els );
-       ArrayMem<int, 10> seg_domains;
-
-       temp_els.SetSize(0);
-       if(seg2surfel[si]!=-1)
-          temp_els.Append(seg2surfel[si]);
-
-       int n_temp_els = temp_els.Size();
-       if(n_temp_els==0)
-          continue;
-
-       int dom0 = mesh[temp_els[0]].GetIndex();
-       int dom1 = n_temp_els==2 ? mesh[temp_els[1]].GetIndex() : 0;
-
-       bool in_dom0 = dom0 == domain;
-       bool in_dom1 = dom1 == domain;
-
-       if(!in_dom0 && !in_dom1)
-          continue;
-
-       int side = in_dom0 ? 0 : 1;
-
-       auto & sel = mesh[ temp_els[side] ];
-
-       int domain = sel.GetIndex();
-       Vec<3> pcenter = 0.0;
-       for(auto i : IntRange(sel.GetNP()))
-       {
-          for(auto d : IntRange(3))
-             pcenter[d] += mesh[sel[i]][d];
-       }
-       pcenter = 1.0/sel.GetNP() * pcenter;
+       auto & seg = line_segments[si];
 
        auto n = mesh[seg[1]] - mesh[seg[0]];
        n = {-n[1], n[0], 0};
        n.Normalize();
 
-       Vec<3> p0{mesh[seg[0]]};
-       Vec<3> p1{mesh[seg[0]]};
-
-
-       auto v = pcenter -0.5*(p0+p1);
-
-       const auto Dot = [](Vec<3> a, Vec<3> b)
-       { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]; };
-       if(Dot(n, v)<0)
-          n = -1*n;
+       if(seg.domout == domain)
+           n = -n;
 
        AddDirection(growthvectors[seg[0]], n);
        AddDirection(growthvectors[seg[1]], n);
@@ -1573,7 +1571,7 @@ namespace netgen
 
      for(auto si : moved_segs)
      {
-        auto current_seg = mesh[si];
+        auto current_seg = line_segments[si];
         auto current_si = si;
 
         auto first = current_seg[0];
@@ -1711,8 +1709,9 @@ namespace netgen
         const auto & seg0 = mesh[segi0];
         const auto & seg1 = mesh[segi1];
 
-        if(seg0.si != seg1.si)
-           return;
+        if( (seg0.domin != domain && seg0.domout != domain) ||
+            (seg1.domin != domain && seg1.domout != domain) )
+            return;
 
         if(segi0 == segi1)
            return;
@@ -1825,7 +1824,7 @@ namespace netgen
      {
         auto p2 = [](Point<3> p) { return Point<2>{p[0], p[1]}; };
 
-        auto seg = mesh[segi];
+        auto seg = line_segments[segi];
         double alpha,beta;
         intersect( p2(mesh[seg[0]]), p2(mesh[seg[0]]+total_thickness*growthvectors[seg[0]]), p2(mesh[seg[1]]), p2(mesh[seg[1]]+total_thickness*growthvectors[seg[1]]), alpha, beta );
 
@@ -1863,13 +1862,13 @@ namespace netgen
      // insert new elements ( and move old ones )
      for(auto si : moved_segs)
      {
-        auto seg = mesh[si];
+        auto seg = line_segments[si];
 
         bool swap = false;
         auto & pm0 = mapto[seg[0]];
         auto & pm1 = mapto[seg[1]];
 
-        auto newindex = si_map[seg.si];
+        auto newindex = si_map[domain];
 
         Segment s = seg;
         s.geominfo[0] = {};
@@ -1882,10 +1881,6 @@ namespace netgen
            seg2edge[pair] = ++max_edge_nr;
         s.edgenr = seg2edge[pair];
         s.si = seg.si;
-        mesh.AddSegment(s);
-
-        Swap(s[0], s[1]);
-        s.si =  newindex;
         mesh.AddSegment(s);
 
         for ( auto i : Range(thicknesses))
@@ -1925,14 +1920,14 @@ namespace netgen
            newel[1] = pi1;
            newel[2] = pi2;
            newel[3] = pi3;
-           newel.SetIndex(si_map[seg.si]);
+           newel.SetIndex(new_domain);
            newel.GeomInfo() = PointGeomInfo{};
 
-//            if(swap)
-//            {
-//               Swap(newel[0], newel[1]);
-//               Swap(newel[2], newel[3]);
-//            }
+            if(swap)
+            {
+               Swap(newel[0], newel[1]);
+               Swap(newel[2], newel[3]);
+            }
 
            for(auto i : Range(4))
            {
@@ -1943,7 +1938,10 @@ namespace netgen
 
         }
         // segment now adjacent to new 2d-domain!
-        mesh[si].si = si_map[seg.si];
+        if(line_segments[si].domin == domain)
+            line_segments[si].domin = new_domain;
+        if(line_segments[si].domout == domain)
+            line_segments[si].domout = new_domain;
      }
 
      for(auto pi : Range(mapto))
@@ -1988,7 +1986,12 @@ namespace netgen
         }
 
         for(auto segi : moved_segs)
-           mesh[segi].si = domain;
+        {
+            if(mesh[segi].domin == new_domain)
+                mesh[segi].domin = domain;
+            if(mesh[segi].domout == new_domain)
+                mesh[segi].domout = domain;
+        }
 
         mesh.Compress();
         mesh.CalcSurfacesOfNode();

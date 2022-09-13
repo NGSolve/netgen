@@ -30,6 +30,13 @@ def StartGUI():
 
     win.tk.eval( netgen.libngpy._meshing._ngscript)
 
+    try:
+        from IPython import get_ipython
+        ipython = get_ipython()
+        ipython.magic('gui tk')
+    except:
+        pass
+
     def _Redraw(*args, **kwargs):
         if libngpy._meshing._Redraw(*args, **kwargs):
             import netgen

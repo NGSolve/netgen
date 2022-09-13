@@ -178,62 +178,6 @@ namespace netgen
     */
   }    
 
-  Segment::Segment (const Segment & other)
-    : 
-    edgenr(other.edgenr),
-    singedge_left(other.singedge_left),
-    singedge_right(other.singedge_right),
-    seginfo(other.seginfo),
-    si(other.si),
-    domin(other.domin),
-    domout(other.domout),
-    tlosurf(other.tlosurf),
-    geominfo(),
-    surfnr1(other.surfnr1),
-    surfnr2(other.surfnr2),
-    epgeominfo(),
-    meshdocval(other.meshdocval),
-    is_curved(other.is_curved),
-    hp_elnr(other.hp_elnr)
-  {
-    for (int j = 0; j < 3; j++)
-      pnums[j] = other.pnums[j];
-
-    geominfo[0] = other.geominfo[0];
-    geominfo[1] = other.geominfo[1];
-    epgeominfo[0] = other.epgeominfo[0];
-    epgeominfo[1] = other.epgeominfo[1];
-  }
-
-  Segment& Segment::operator=(const Segment & other)
-  {
-    if (&other != this)
-      {
-	pnums[0] = other[0];
-	pnums[1] = other[1];
-	edgenr = other.edgenr;
-	singedge_left = other.singedge_left;
-	singedge_right = other.singedge_right;
-	seginfo = other.seginfo;
-	si = other.si;
-	domin = other.domin;
-	domout = other.domout;
-	tlosurf = other.tlosurf;
-	geominfo[0] = other.geominfo[0];
-	geominfo[1] = other.geominfo[1];
-	surfnr1 = other.surfnr1;
-	surfnr2 = other.surfnr2;
-	epgeominfo[0] = other.epgeominfo[0];
-	epgeominfo[1] = other.epgeominfo[1];
-	pnums[2] = other.pnums[2];
-	meshdocval = other.meshdocval;
-	hp_elnr = other.hp_elnr;
-        is_curved = other.is_curved;
-      }
-    
-    return *this;
-  }
-  
   void Segment :: DoArchive (Archive & ar)
   {
     string * bcname_dummy = nullptr;

@@ -250,7 +250,7 @@ target_include_directories(nglib PRIVATE ${ZLIB_INCLUDE_DIRS})
 if(USE_GUI)
     target_include_directories(nggui PRIVATE ${ZLIB_INCLUDE_DIRS})
 endif(USE_GUI)
-target_link_libraries(nglib PUBLIC ${ZLIB_LIBRARIES})
+target_link_libraries(nglib PRIVATE ${ZLIB_LIBRARIES})
 
 #######################################################################
 if(WIN32)
@@ -415,9 +415,9 @@ if (USE_OCC)
       endif()
     endif()
     message(STATUS "OCC DIRS ${OpenCASCADE_INCLUDE_DIR}")
-    if(WIN32)
+    if(WIN32 AND USE_GUI)
       target_link_libraries(nggui PRIVATE ${OCC_LIBRARIES})
-    endif(WIN32)
+    endif(WIN32 AND USE_GUI)
 endif (USE_OCC)
 
 #######################################################################

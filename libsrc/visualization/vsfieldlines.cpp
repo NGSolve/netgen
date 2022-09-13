@@ -260,7 +260,7 @@ namespace netgen
    
     double phaser=1.0;
     double phasei=0.0;
-    std::function eval_func = [&](int elnr, const double * lami, Vec<3> & vec)
+    std::function<bool(int, const double *, Vec<3> &)> eval_func = [&](int elnr, const double * lami, Vec<3> & vec)
     {
         double values[6] = {0., 0., 0., 0., 0., 0.};
         bool drawelem;

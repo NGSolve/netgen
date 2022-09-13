@@ -417,7 +417,7 @@ namespace netgen
       & identpoints & boundingbox & isidenticto & ideps
       & filename & spline_surfaces & splinecurves2d & splinecurves3d & surf2prim;
     if(archive.Input())
-      FindIdenticSurfaces(1e-6);
+      FindIdenticSurfaces(1e-8 * MaxSize());
   }
 
   void CSGeometry :: SaveSurfaces (ostream & out) const
@@ -949,6 +949,7 @@ namespace netgen
   {
     int inv;
     int nsurf = GetNSurf();
+    identicsurfaces.DeleteData();
 
 
     isidenticto.SetSize(nsurf);

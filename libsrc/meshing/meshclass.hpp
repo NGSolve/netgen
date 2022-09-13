@@ -365,7 +365,7 @@ namespace netgen
     Element & operator[] (ElementIndex ei) { return volelements[ei]; }
 
     ELEMENTTYPE ElementType (ElementIndex i) const 
-    { return (volelements[i].flags.fixed) ? FIXEDELEMENT : FREEELEMENT; }
+    { return (volelements[i].Flags().fixed) ? FIXEDELEMENT : FREEELEMENT; }
 
     const auto & VolumeElements() const { return volelements; }
     auto & VolumeElements() { return volelements; }
@@ -384,7 +384,7 @@ namespace netgen
     DLL_HEADER int GetNDomains() const;
     ///
     int GetDimension() const { return dimension; }
-    void SetDimension (int dim); //  { dimension = dim; }
+    DLL_HEADER void SetDimension (int dim); //  { dimension = dim; }
 
     /// sets internal tables
     DLL_HEADER void CalcSurfacesOfNode ();
@@ -478,7 +478,7 @@ namespace netgen
         return lochfunc[0];
       return lochfunc[layer-1];
     }
-    void SetLocalH(shared_ptr<LocalH> loch, int layer=1);
+    DLL_HEADER void SetLocalH(shared_ptr<LocalH> loch, int layer=1);
 
     ///
     bool LocalHFunctionGenerated(int layer=1) const { return (lochfunc[layer-1] != NULL); }

@@ -795,12 +795,24 @@ namespace netgen
             static double oldrad = 0;
           
             mesh->GetBox (pmin, pmax, -1);
-            center = Center (pmin, pmax);
+            if(vispar.use_center_coords && zoomall == 2)
+              {
+                center.X() = vispar.centerx;
+                center.Y() = vispar.centery;
+                center.Z() = vispar.centerz;
+              }
+            else if(selpoint >= 1 && zoomall == 2)
+              center = mesh->Point(selpoint);
+            else if(vispar.centerpoint >= 1 && zoomall == 2)
+              center = mesh->Point(vispar.centerpoint);
+            else
+              center = Center (pmin, pmax);
             rad = 0.5 * Dist (pmin, pmax);
+            if(rad == 0) rad = 1e-6;
           
             glEnable (GL_NORMALIZE);
           
-            if (rad > 1.5 * oldrad ||
+            if (rad > 1.2 * oldrad ||
                 mesh->GetMajorTimeStamp() > surfeltimestamp ||
                 zoomall)
               {

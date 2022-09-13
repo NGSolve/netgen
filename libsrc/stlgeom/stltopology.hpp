@@ -120,7 +120,12 @@ public:
 
 
   STLTriangle (const STLPointId * apts);
-  STLTriangle () {pts[0]=0;pts[1]=0;pts[2]=0;}
+  STLTriangle ()
+  {
+    pts[0]=0;pts[1]=0;pts[2]=0;
+    nbtrigs[0][0] = nbtrigs[0][1] = nbtrigs[0][2] = 0.;
+    nbtrigs[1][0] = nbtrigs[1][1] = nbtrigs[1][2] = 0.;
+  }
 
   void DoArchive(Archive& ar)
   {
@@ -282,6 +287,7 @@ protected:
   Array<STLTriangle, STLTrigId> trias;
   NgArray<STLTopEdge> topedges;
   Array<Point<3>, STLPointId> points;
+  bool surface = false;
 
   // mapping of sorted pair of points to topedge
   INDEX_2_HASHTABLE<int> * ht_topedges;
@@ -313,12 +319,14 @@ public:
   virtual ~STLTopology();
 
   static STLGeometry * LoadNaomi (istream & ist);
-  static STLGeometry * Load (istream & ist);
+  DLL_HEADER static STLGeometry * Load (istream & ist, bool surface=false);
   static STLGeometry * LoadBinary (istream & ist);
 
   void Save (const filesystem::path & filename) const;
   void SaveBinary (const filesystem::path & filename, const char* aname) const;
   void SaveSTLE (const filesystem::path & filename) const; // stores trigs and edges
+
+  bool IsSurfaceSTL() const { return surface; }
 
   virtual void DoArchive(Archive& ar)
   {

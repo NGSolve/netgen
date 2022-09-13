@@ -240,7 +240,10 @@ threads : int
   class ParallelContextManager {
       int num_threads;
     public:
-      ParallelContextManager() : num_threads(0) {};
+      ParallelContextManager() : num_threads(0) {
+        TaskManager::SetPajeTrace(0);
+        PajeTrace::SetMaxTracefileSize(0);
+      };
       ParallelContextManager(size_t pajesize) : num_threads(0) {
         TaskManager::SetPajeTrace(pajesize > 0);
         PajeTrace::SetMaxTracefileSize(pajesize);

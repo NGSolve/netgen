@@ -11,15 +11,15 @@ for pyversion in 38 39 310
 do
     export PYDIR="/opt/python/cp${pyversion}-cp${pyversion}/bin"
     echo $PYDIR
-    $PYDIR/pip install -U pytest-check numpy wheel scikit-build
+    $PYDIR/pip install -U pytest-check numpy wheel scikit-build pybind11-stubgen
 
     rm -rf _skbuild
-    $PYDIR/pip wheel --use-feature=in-tree-build .
+    $PYDIR/pip wheel .
     auditwheel repair netgen_mesher*-cp${pyversion}-*.whl
     rm netgen_mesher-*.whl
 
     rm -rf _skbuild
-    NETGEN_ARCH=avx2 $PYDIR/pip wheel --use-feature=in-tree-build .
+    NETGEN_ARCH=avx2 $PYDIR/pip wheel .
     auditwheel repair netgen_mesher_avx2*-cp${pyversion}-*.whl
     rm netgen_mesher_avx2-*.whl
 

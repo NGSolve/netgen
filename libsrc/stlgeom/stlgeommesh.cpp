@@ -1169,7 +1169,7 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& a
     {
       int t = chart.GetChartTrig1(j); 
       tt = GetTriangle(t);
-      for (int k = 1; k <= 3; k++)
+      for (int k = 1; k <= NONeighbourTrigs(t); k++)
 	{
 	  int nt = NeighbourTrig(t,k); 
 	  if (GetChartNr(nt) != chartnum)
@@ -1494,6 +1494,9 @@ int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, const Me
 	}
       if (multithread.terminate)
 	return 0;
+
+      if(stlgeometry->IsSurfaceSTL())
+        return 0;
 
       if (mparam.perfstepsstart <= MESHCONST_MESHVOLUME && 
 	  mparam.perfstepsend >= MESHCONST_MESHVOLUME)
