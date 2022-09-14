@@ -5,6 +5,7 @@
 
 extern "C" {
 #include <libavutil/avassert.h>
+#include <libavcodec/avcodec.h>
 #include <libavutil/channel_layout.h>
 #include <libavutil/opt.h>
 #include <libavutil/mathematics.h>
@@ -137,11 +138,11 @@ class Mpeg {
 //         oc->preload= (int)(0.5*AV_TIME_BASE);
         oc->max_delay= (int)(0.7*AV_TIME_BASE);
 
-        fmt = oc->oformat;
+        fmt = (AVOutputFormat*) oc->oformat;
 
         if (fmt->video_codec != AV_CODEC_ID_NONE) {
             /* find the encoder */
-            video_codec = avcodec_find_encoder(fmt->video_codec);
+            video_codec = (AVCodec*) avcodec_find_encoder(fmt->video_codec);
             if (!(video_codec)) {
                 cerr << "Could not find encoder for '" << avcodec_get_name(fmt->video_codec) << "'" << endl;
                 return 1;
