@@ -16,10 +16,6 @@ add_library(ngcore ${NGCORE_LIBRARY_TYPE}
 
 target_compile_options(ngcore PUBLIC "${NG_COMPILE_FLAGS}")
 
-# Pybind11 2.3 Issue https://github.com/pybind/pybind11/issues/1604
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-  target_compile_options(ngcore PUBLIC -fsized-deallocation -faligned-allocation)
-endif()
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
     target_link_libraries(ngcore PUBLIC stdc++fs)
 endif()
