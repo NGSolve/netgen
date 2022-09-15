@@ -35,7 +35,12 @@ namespace netgen
     VisualSceneSTLMeshing ();
     virtual ~VisualSceneSTLMeshing ();
 
-    void SetGeometry (class STLGeometry * astlgeometry) { stlgeometry = astlgeometry; }
+    void SetGeometry (class STLGeometry * astlgeometry)
+    {
+      stlgeometry = astlgeometry;
+      stlgeometry->SetSelectTrig(selecttrig);
+      stlgeometry->SetNodeOfSelTrig(nodeofseltrig);
+    }
 
     virtual void BuildScene (int zoomall = 0);
     virtual void DrawScene ();

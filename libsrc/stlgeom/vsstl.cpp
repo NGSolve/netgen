@@ -21,7 +21,6 @@ namespace netgen
 
 /* *********************** Draw STL Geometry **************** */
 
-extern STLGeometry * stlgeometry;
 DLL_HEADER extern shared_ptr<Mesh> mesh;
 
 
@@ -33,8 +32,6 @@ VisualSceneSTLMeshing :: VisualSceneSTLMeshing ()
 {
   selecttrig = 0;
   nodeofseltrig = 1;
-  stlgeometry->SetSelectTrig(selecttrig);
-  stlgeometry->SetNodeOfSelTrig(nodeofseltrig);
 }
 
 VisualSceneSTLMeshing :: ~VisualSceneSTLMeshing ()
