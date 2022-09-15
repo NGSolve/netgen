@@ -78,6 +78,8 @@ elif 'linux' in sys.platform:
         f'-DNG_INSTALL_DIR_LIB={py_install_dir}/{name_dir}.libs',
         '-DNG_INSTALL_DIR_BIN=bin',
         '-DNG_INSTALL_DIR_INCLUDE=include/netgen',
+        '-DTCL_INCLUDE_PATH=/usr/include',
+        '-DTK_INCLUDE_PATH=/usr/include',
     ]
     packages = []
 
