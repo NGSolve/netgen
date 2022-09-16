@@ -14,7 +14,8 @@ add_library(ngcore ${NGCORE_LIBRARY_TYPE}
   version.cpp
   )
 
-target_compile_options(ngcore PUBLIC "${NG_COMPILE_FLAGS}")
+string(REPLACE "|" ";" ${NG_COMPILE_FLAGS} ng_compile_flags_replace_sep)
+target_compile_options(ngcore PUBLIC ${ng_compile_flags_replace_sep})
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
     target_link_libraries(ngcore PUBLIC stdc++fs)
