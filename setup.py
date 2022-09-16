@@ -43,11 +43,15 @@ cmake_args = [
         f'-DNETGEN_VERSION_PYTHON={version}',
     ]
 
-if 'NETGEN_ARCH' in os.environ:
-  arch = os.environ['NETGEN_ARCH']
-  name += "-"+arch
-  flag = '/'+arch if 'win' in sys.platform else '-march=core-avx2'
-  cmake_args += [f'-DNG_COMPILE_FLAGS={flag}']
+if 'NETGEN_ARCH' in os.environ and os.environ['NETGEN_ARCH'] == 'avx2':
+    # build for avx2 architecture
+    if 'darwin' in sys.platform:
+        flag = "'-Xarch_x86_64;-march=core-avx2'"
+    elif 'win' in sys.platform:
+        flag = '/AVX2'
+    else:
+        flag = '-march=core-avx2'
+    cmake_args += [f'-DNG_COMPILE_FLAGS={flag}']
 
 if 'NETGEN_CCACHE' in os.environ:
   cmake_args += [f'-DUSE_CCACHE=ON']

@@ -14,14 +14,10 @@ do
     $PYDIR/pip install -U pytest-check numpy wheel scikit-build pybind11-stubgen
 
     rm -rf _skbuild
+    NETGEN_ARCH=avx2 $PYDIR/pip wheel .
     $PYDIR/pip wheel .
     auditwheel repair netgen_mesher*-cp${pyversion}-*.whl
     rm netgen_mesher-*.whl
-
-    rm -rf _skbuild
-    NETGEN_ARCH=avx2 $PYDIR/pip wheel .
-    auditwheel repair netgen_mesher_avx2*-cp${pyversion}-*.whl
-    rm netgen_mesher_avx2-*.whl
 
     $PYDIR/pip install wheelhouse/netgen_mesher*-cp${pyversion}-*.whl
     $PYDIR/python3 -c 'import netgen'
