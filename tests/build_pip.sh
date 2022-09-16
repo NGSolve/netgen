@@ -15,7 +15,6 @@ do
 
     rm -rf _skbuild
     NETGEN_ARCH=avx2 $PYDIR/pip wheel .
-    $PYDIR/pip wheel .
     auditwheel repair netgen_mesher*-cp${pyversion}-*.whl
     rm netgen_mesher-*.whl
 
