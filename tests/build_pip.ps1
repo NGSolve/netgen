@@ -6,7 +6,7 @@ if (test-path dist) {
 }
 
 $env:NETGEN_CCACHE = 1
-$env:NETGEN_ARCH = avx2
+$env:NETGEN_ARCH = 'avx2'
 
 $pydir=$args[0]
 & $pydir\python.exe --version
