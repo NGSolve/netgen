@@ -16,16 +16,10 @@ namespace netgen
   class DelaunayTet
   {
     PointIndex pnums[4];
-    int nb[4];
+    int nb[4] = {0,0,0,0};
 
   public:
-    DelaunayTet () { ; }
-
-    DelaunayTet (const DelaunayTet & el)
-    {
-      for (int i = 0; i < 4; i++)
-	pnums[i] = el[i];
-    }
+    DelaunayTet () = default;
 
     DelaunayTet (const Element & el)
     {
@@ -1541,8 +1535,6 @@ namespace netgen
   {
     static Timer t("Meshing3::Delaunay"); RegionTimer reg(t);
     
-    int np, ne;
-
     PrintMessage (1, "Delaunay meshing");
     PrintMessage (3, "number of points: ", mesh.GetNP());
     // PushStatus ("Delaunay meshing");
@@ -1560,7 +1552,7 @@ namespace netgen
 	PrintMessage (3, "number of points: ", mesh.GetNP());
       }
 
-    np = mesh.GetNP();
+    int np = mesh.GetNP();
 
     Delaunay1 (mesh, mp, adfront, tempels, oldnp, startel, pmin, pmax);
 
