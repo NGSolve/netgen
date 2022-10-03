@@ -1382,7 +1382,7 @@ namespace netgen
   {
      Box<3> box{Box<3>::EMPTY_BOX};
      for(const auto & seg : mesh.LineSegments())
-        if (seg.si == domain)
+        if (seg.domin == domain || seg.domout == domain)
            for (auto pi : {seg[0], seg[1]})
               box.Add(mesh[pi]);
 
@@ -1395,11 +1395,13 @@ namespace netgen
      PointIndex cnt = PointIndex::BASE;
 
      auto p2sel = mesh.CreatePoint2SurfaceElementTable();
-     Array<Segment> domain_segments;
      PointGeomInfo gi;
+     gi.u = 0.0;
+     gi.v = 0.0;
      gi.trignum = domain;
      for(auto seg : mesh.LineSegments())
      {
+         if(seg.domin == domain || seg.domout == domain)
          for (auto pi : {seg[0], seg[1]})
             if (compress[pi]==PointIndex{PointIndex::INVALID})
             {
