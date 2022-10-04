@@ -359,6 +359,8 @@ namespace netgen
 
    if (mesh.HasOpenQuads())
    {
+      if(debugparam.write_mesh_on_error)
+        md.mesh->Save("open_quads_"+ToString(md.domain)+".vol.gz");
       PrintSysError ("mesh has still open quads");
       throw NgException ("Stop meshing since too many attempts");
       // return MESHING3_GIVEUP;
@@ -423,7 +425,11 @@ namespace netgen
 
 
          if (cntsteps > mp.maxoutersteps) 
-            throw NgException ("Stop meshing since too many attempts");
+         {
+           if(debugparam.write_mesh_on_error)
+             md.mesh->Save("meshing_error_domain_"+ToString(md.domain)+".vol.gz");
+           throw NgException ("Stop meshing since too many attempts in domain " + ToString(md.domain));
+         }
 
          PrintMessage (1, "start tetmeshing");
 
@@ -504,6 +510,8 @@ namespace netgen
         bool res = (mesh.CheckConsistentBoundary() != 0);
         if (res)
         {
+           if(debugparam.write_mesh_on_error)
+              md.mesh->Save("inconsistent_surface_domain_"+ToString(md.domain)+".vol.gz");
            PrintError ("Surface mesh not consistent");
            throw NgException ("Stop meshing since surface mesh not consistent");
         }
@@ -592,7 +600,11 @@ namespace netgen
        {
          if (mp.checkoverlappingboundary)
            if (md[i].mesh->CheckOverlappingBoundary())
+           {
+             if(debugparam.write_mesh_on_error)
+               md[i].mesh->Save("overlapping_mesh_domain_"+ToString(md[i].domain)+".vol.gz");
              throw NgException ("Stop meshing since boundary mesh is overlapping");
+           }
 
          if(md[i].mesh->GetGeometry()->GetGeomType() == Mesh::GEOM_OCC)
             FillCloseSurface( md[i] );

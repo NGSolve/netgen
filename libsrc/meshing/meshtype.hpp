@@ -1415,6 +1415,8 @@ namespace netgen
     ///
     int haltfacenr;
     ///
+    bool write_mesh_on_error;
+    ///
     DebugParameters ();
   };
 
