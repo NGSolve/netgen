@@ -641,7 +641,7 @@ namespace netgen
             }
 
             // reverse entries if we have decreasing parameters
-            if(edge_params.Size()>2 && edge_params[0] > edge_params.Last())
+            if(edge_params.Size()>=2 && edge_params[0] > edge_params.Last())
                 for(auto i : Range((np-2)/2))
                 {
                     swap(edge_points[i], edge_points[np-3-i]);
