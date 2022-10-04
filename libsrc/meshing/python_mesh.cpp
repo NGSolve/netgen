@@ -1567,6 +1567,24 @@ project_boundaries : Optional[str] = None
                                                      return old;
                                                    }));
 
+  py::class_<DebugParameters> (m, "_DebugParameters")
+      .def_readwrite("debugoutput", &DebugParameters::debugoutput)
+      .def_readwrite("slowchecks", &DebugParameters::slowchecks)
+      .def_readwrite("haltsuccess", &DebugParameters::haltsuccess)
+      .def_readwrite("haltnosuccess", &DebugParameters::haltnosuccess)
+      .def_readwrite("haltlargequalclass", &DebugParameters::haltlargequalclass)
+      .def_readwrite("haltsegment", &DebugParameters::haltsegment)
+      .def_readwrite("haltnode", &DebugParameters::haltnode)
+      .def_readwrite("haltsegmentp1", &DebugParameters::haltsegmentp1)
+      .def_readwrite("haltsegmentp2", &DebugParameters::haltsegmentp2)
+      .def_readwrite("haltexistingline", &DebugParameters::haltexistingline)
+      .def_readwrite("haltoverlap", &DebugParameters::haltoverlap)
+      .def_readwrite("haltface", &DebugParameters::haltface)
+      .def_readwrite("haltfacenr", &DebugParameters::haltfacenr)
+      .def_readwrite("write_mesh_on_error", &DebugParameters::write_mesh_on_error)
+      ;
+
+  m.attr("debugparam") = py::cast(&debugparam);
 
   m.def("ReadCGNSFile", &ReadCGNSFile, py::arg("filename"), py::arg("base")=1, "Read mesh and solution vectors from CGNS file");
   m.def("WriteCGNSFile", &WriteCGNSFile, py::arg("mesh"), py::arg("filename"), py::arg("names"), py::arg("values"), py::arg("locations"),
