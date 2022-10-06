@@ -582,8 +582,9 @@ namespace netgen
     glDisable (GL_DEPTH_TEST);
     glBegin (GL_QUAD_STRIP);
 
-    for (double x = minx; x <= maxx; x += (maxx - minx) / 50)
+    for (auto i : Range(50))
       {
+        double x = minx + i*1.0/49*(maxx-minx);
 	SetOpenGlColor (x, minx, maxx);
 	glVertex3d (x, miny, -5);
 	glVertex3d (x, maxy, -5);
