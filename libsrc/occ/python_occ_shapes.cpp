@@ -733,15 +733,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          }, "returns tuple of shape properties, currently ('mass', 'center'")
     
     .def_property_readonly("center", [](const TopoDS_Shape & shape) {
-           GProp_GProps props;
-           switch (shape.ShapeType())
-             {
-             case TopAbs_FACE:
-               BRepGProp::SurfaceProperties (shape, props); break;
-             default:
-               BRepGProp::LinearProperties(shape, props);
-             }
-           return props.CentreOfMass();
+           return Center(shape);
       }, "returns center of gravity of shape")
     
     .def_property_readonly("mass", [](const TopoDS_Shape & shape) {
