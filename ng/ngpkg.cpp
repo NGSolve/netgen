@@ -1992,7 +1992,7 @@ namespace netgen
 
     SetVisualScene (Togl_Interp(togl));
     visual_scene->DrawScene();
-    Set_OpenGLText_Callback (&MyOpenGLText_GUI);
+    Set_OpenGLText_Callback (&MyOpenGLText_GUI, font->Width());
     return TCL_OK;
   }
 

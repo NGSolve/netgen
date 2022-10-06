@@ -84,7 +84,8 @@ namespace netgen
 
 
   NGGUI_API extern void MyOpenGLText (const char * text);
-  NGGUI_API extern void Set_OpenGLText_Callback ( void (*fun) (const char * text) );
+  NGGUI_API extern int MyOpenGLTextWidth ();
+  NGGUI_API extern void Set_OpenGLText_Callback ( void (*fun) (const char * text), int width );
   NGGUI_API extern VisualScene visual_scene_cross;
   NGGUI_API extern VisualScene *visual_scene;
 

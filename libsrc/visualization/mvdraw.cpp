@@ -38,9 +38,11 @@ namespace netgen
   */
 
   void (*opengl_text_function)(const char * text) = NULL;
-  void Set_OpenGLText_Callback ( void (*fun) (const char * text) )
+  int opengl_text_width = 0;
+  void Set_OpenGLText_Callback ( void (*fun) (const char * text), int width )
   {
     opengl_text_function = fun;
+    opengl_text_width = width;
   }
 
   void MyOpenGLText (const char * text)
@@ -48,6 +50,11 @@ namespace netgen
     if (opengl_text_function)
       (*opengl_text_function) (text);
     // cout << "MyOpenGLText: " << text << endl;
+  }
+
+  int MyOpenGLTextWidth ()
+  {
+      return opengl_text_width;
   }
 
 
@@ -602,20 +609,26 @@ namespace netgen
     glPushAttrib (GL_LIST_BIT);
     // glListBase (fontbase);
 
-    char buf[20];
+    constexpr size_t buf_size = 20;
+    char buf[buf_size];
+    GLint viewport[4];
+    glGetIntegerv (GL_VIEWPORT, viewport);
+    double char_width = 2.0*MyOpenGLTextWidth()/(viewport[3]);
     for (int i = 0; i <= 4; i++)
       {
-	double x = minx + i * (maxx-minx) / 4;
-	glRasterPos3d (x, 0.7,-5);
-      
 	double val;
 	if (logscale)
 	  val = minval * pow (maxval / minval, i / 4.0);
 	else
 	  val = minval + i * (maxval-minval) / 4;
 
-	sprintf (buf, "%8.3e", val);
+	snprintf (buf, buf_size, "%8.3e", val);
+        auto n = strlen(buf);
 	// glCallLists (GLsizei(strlen (buf)), GL_UNSIGNED_BYTE, buf);
+	double x = minx + i * (maxx-minx) / 4;
+        x -= 0.5*char_width * n; // center text
+	glRasterPos3d (x, 0.7,-5);
+
 	MyOpenGLText (buf);
       }
 
