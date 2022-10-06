@@ -83,7 +83,7 @@ namespace netgen
                 if ( (strlen (vssolution.soldata[i]->name.c_str()) == size_t(pointpos-1)) &&
                      (strncmp (vssolution.soldata[i]->name.c_str(), scalname, pointpos-1) == 0) )
                   {
-                    vssolution.scalfunction = i;
+                    vssolution.SetScalfunction(i);
                     vssolution.scalcomp = atoi (scalname + pointpos);
 		    if ( vssolution.scalcomp > vssolution.soldata[i]->components )
                       vssolution.scalcomp = 1;
@@ -98,7 +98,7 @@ namespace netgen
 		    scalname = Tcl_GetVar (interp, "::visoptions.scalfunction", TCL_GLOBAL_ONLY);
                   }
                 if (strcmp (vssolution.soldata[i]->name.c_str(), vecname) == 0)
-		  vssolution.vecfunction = i;
+		  vssolution.SetVecfunction(i);
 
                 if (strcmp (vssolution.soldata[i]->name.c_str(), fieldlines_vecname) == 0)
 		  vssolution.fieldlines_vecfunction = i;

@@ -307,6 +307,9 @@ extern "C" {
   struct Ng_SolutionData
   {
     std::string name;      // name of gridfunction
+    std::string title = ""; // name of gridfunction ( printed on top of window )
+    std::string number_format = "%.3e"; // printf-style string to format colormap values
+    std::string unit = ""; // string to append to last number in colormap (ASCII only)
     double * data;    // solution values
     int components;   // relevant (double) components in solution vector
     int dist;         // # doubles per entry alignment! 

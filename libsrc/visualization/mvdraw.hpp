@@ -69,7 +69,8 @@ namespace netgen
     { backcolor = col; }
 
     NGGUI_API void CreateTexture (int ncols, int linear, double alpha, int typ);
-    NGGUI_API void DrawColorBar (double minval, double maxval, int logscale = 0, bool linear = 1);
+    NGGUI_API void DrawColorBar (double minval, double maxval, int logscale = 0, bool linear = 1, string format="%8.3e", string unit="");
+    NGGUI_API void DrawTitle (string title);
     NGGUI_API void DrawCoordinateCross ();
     NGGUI_API void DrawMarker();
     NGGUI_API void DrawNetgenLogo ();
