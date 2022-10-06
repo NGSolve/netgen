@@ -98,6 +98,11 @@ class NGGUI_API VisualSceneSolution : public VisualScene
   int timetimestamp;
   double minval, maxval;
 
+  int scalfunction, vecfunction;
+  string number_format = "%8.3e";
+  string unit = "";
+  string title = "";
+
   NgLock *lock;
 
   
@@ -137,6 +142,9 @@ public:
     ~SolData ();
     
     string name;
+    string number_format = "%8.3e";
+    string unit = "";
+    string title = "";
     double * data;
     int components;
     int dist;
@@ -159,7 +167,7 @@ public:
 
   int usetexture;    // 0..no, 1..1D texture (standard), 2..2D-texture (complex)
   int clipsolution;  // 0..no, 1..scal, 2..vec
-  int scalfunction, scalcomp, vecfunction;
+  int scalcomp;
   int gridsize;
   double xoffset, yoffset;
 
@@ -348,6 +356,19 @@ public:
                          Tcl_Interp * interp,
 			 int argc, const char *argv[]);
 
+  void SetScalfunction( int i ) {
+      scalfunction = i;
+      title = soldata[i]->title;
+      number_format = soldata[i]->number_format;
+      unit = soldata[i]->unit;
+  }
+
+  void SetVecfunction( int i ) {
+      vecfunction = i;
+      title = soldata[i]->title;
+      number_format = soldata[i]->number_format;
+      unit = soldata[i]->unit;
+  }
 
 #ifdef PARALLELGL
   void Broadcast ();

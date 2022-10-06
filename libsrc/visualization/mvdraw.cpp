@@ -566,7 +566,7 @@ namespace netgen
 
 
 
-  void VisualScene :: DrawColorBar (double minval, double maxval, int logscale, bool linear)
+  void VisualScene :: DrawColorBar (double minval, double maxval, int logscale, bool linear, string format, string unit)
   {
     if (!vispar.drawcolorbar) return;
 
@@ -622,9 +622,8 @@ namespace netgen
 	else
 	  val = minval + i * (maxval-minval) / 4;
 
-	snprintf (buf, buf_size, "%8.3e", val);
+	snprintf (buf, buf_size, format.c_str(), val);
         auto n = strlen(buf);
-	// glCallLists (GLsizei(strlen (buf)), GL_UNSIGNED_BYTE, buf);
 	double x = minx + i * (maxx-minx) / 4;
         x -= 0.5*char_width * n; // center text
 	glRasterPos3d (x, 0.7,-5);
@@ -632,6 +631,34 @@ namespace netgen
 	MyOpenGLText (buf);
       }
 
+    if(unit != "")
+        MyOpenGLText (unit.c_str());
+
+    glPopAttrib ();
+    glEnable (GL_DEPTH_TEST);
+  }
+
+  void VisualScene :: DrawTitle (string title)
+  {
+    if(title=="")
+      return;
+    glDisable (GL_LIGHTING);
+    glDisable (GL_DEPTH_TEST);
+
+    glEnable (GL_COLOR_MATERIAL);
+    GLfloat textcol[3] = { GLfloat(1 - backcolor),
+                           GLfloat(1 - backcolor),
+                           GLfloat(1 - backcolor) };
+    glColor3fv (textcol);
+
+    glPushAttrib (GL_LIST_BIT);
+
+    GLint viewport[4];
+    glGetIntegerv (GL_VIEWPORT, viewport);
+    double char_width = 2.0*MyOpenGLTextWidth()/(viewport[3]);
+    double x = -0.5*char_width * title.size(); // center text
+    glRasterPos3d (x, 0.82,-5);
+    MyOpenGLText (title.c_str());
     glPopAttrib ();
     glEnable (GL_DEPTH_TEST);
   }

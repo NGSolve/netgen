@@ -628,7 +628,8 @@ namespace netgen
     glPopMatrix();
     
     glDisable(GL_CLIP_PLANE0);
-    DrawColorBar (minval, maxval, logscale, lineartexture);
+    DrawColorBar (minval, maxval, logscale, lineartexture, number_format, unit);
+    DrawTitle (title);
     
     if (vispar.drawcoordinatecross)
       DrawCoordinateCross ();
@@ -5017,6 +5018,9 @@ void Impl_Ng_SetSolutionData (Ng_SolutionData * soldata)
   // vss->name = new char[strlen (soldata->name)+1];
   // strcpy (vss->name, soldata->name);
   vss->name = soldata->name;
+  vss->title = soldata->title;
+  vss->number_format = soldata->number_format;
+  vss->unit = soldata->unit;
   vss->data = soldata->data;
   vss->components = soldata->components;
   vss->dist = soldata->dist;
