@@ -1480,7 +1480,7 @@ proc visual_dialog { } {
         global visoptions.scalfunction
         foreach { name textval } $scalentries {
             $f.m add command -label "$textval" -command \
-                "$f.b configure -text \"$textval\" ; set visoptions.scalfunction $name ; Ng_Vis_Set parameters ; redraw ; "
+                "$f.b configure -text \"$textval\" ; set visoptions.scalfunction \"$name\" ; Ng_Vis_Set parameters ; redraw ; "
         }
         
         pack $f.b $f.l -side right
