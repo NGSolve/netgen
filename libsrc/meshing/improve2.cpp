@@ -527,7 +527,7 @@ namespace netgen
         // gi_set = true;
         }
         */
-        for (SurfaceElementIndex sei : elementsonnode[pi1])
+        for (auto sei : hasbothpi)
           {
             const Element2d & el1p = mesh[sei];
             if (el1p.IsDeleted()) continue;
