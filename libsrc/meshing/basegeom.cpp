@@ -817,44 +817,74 @@ namespace netgen
             Transformation<3> trafo;
 
             if(face.IsConnectingCloseSurfaces())
-            for(const auto &s : segments)
             {
-                auto edgenr = s.edgenr-1;
-                auto & edge = *edges[edgenr];
-                ShapeIdentification *edge_mapping;
-
-                // have edgenr first time, search for closesurface identification
-
-                if(mapped_edges[edgenr] == UNINITIALIZED)
+                Array<ArrayMem<int, 2>, PointIndex> p2seg(mesh.Points().Size());
+                for(int si : Range(segments))
                 {
-                    mapped_edges[edgenr] = NOT_MAPPED;
-                    for(auto & edge_ident : edge.identifications)
+                    const auto & s = segments[si];
+                    p2seg[s[0]].Append(si);
+                    p2seg[s[1]].Append(si);
+                }
+                for(const auto & s : segments)
+                {
+                    auto edgenr = s.edgenr-1;
+                    auto & edge = *edges[edgenr];
+                    ShapeIdentification *edge_mapping;
+
+                    // have edgenr first time, search for closesurface identification
+
+                    if(mapped_edges[edgenr] == UNINITIALIZED)
                     {
-                        if(edge_ident.type == Identifications::CLOSESURFACES && 
-                                edge_ident.from->nr == edgenr &&
-                                relevant_edges.count(edge_ident.to->nr) > 0
-                          )
+                        mapped_edges[edgenr] = NOT_MAPPED;
+                        for(auto & edge_ident : edge.identifications)
                         {
-                            trafo = edge_ident.trafo;
-                            mapped_edges[edgenr] = edge_ident.to->nr;
-                            break;
+                            if(edge_ident.type == Identifications::CLOSESURFACES &&
+                                    edge_ident.from->nr == edgenr &&
+                                    relevant_edges.count(edge_ident.to->nr) > 0
+                              )
+                            {
+                                trafo = edge_ident.trafo;
+                                mapped_edges[edgenr] = edge_ident.to->nr;
+                                break;
+                            }
                         }
                     }
-                }
 
-                // this edge has a closesurface mapping to another -> make connecting quad
-                if(mapped_edges[edgenr] != NOT_MAPPED)
-                {
-                    Element2d sel(4);
-                    sel[0] = s[0];
-                    sel[1] = s[1];
-                    sel[2] = tree.Find(trafo(mesh[s[1]]));
-                    sel[3] = tree.Find(trafo(mesh[s[0]]));
-                    for(auto i : Range(4))
-                        sel.GeomInfo()[i] = face.Project(mesh[sel[i]]);
+                    // this edge has a closesurface mapping to another -> make connecting quad
+                    if(mapped_edges[edgenr] != NOT_MAPPED)
+                    {
+                        Element2d sel(4);
+                        sel[0] = s[0];
+                        sel[1] = s[1];
+                        sel[2] = tree.Find(trafo(mesh[s[1]]));
+                        sel[3] = tree.Find(trafo(mesh[s[0]]));
+                        auto gis = sel.GeomInfo();
+                        for(auto i : Range(2))
+                        {
+                            gis[i].u = s.epgeominfo[i].u;
+                            gis[i].v = s.epgeominfo[i].v;
+                        }
 
-                    sel.SetIndex(face.nr+1);
-                    mesh.AddSurfaceElement(sel);
+                        // find mapped segment to set PointGeomInfo correctly
+                        Segment s_other;
+                        for(auto si_other : p2seg[sel[2]])
+                        {
+                            s_other = segments[si_other];
+                            if(s_other[0] == sel[2] && s_other[1] == sel[3])
+                                break;
+                            if(s_other[0] == sel[3] && s_other[1] == sel[2])
+                                break;
+                        }
+                        for(auto i : Range(2))
+                        {
+                            auto i_other = sel[i+2] == s_other[i] ? i : 1-i;
+                            gis[i+2].u = s_other.epgeominfo[i_other].u;
+                            gis[i+2].v = s_other.epgeominfo[i_other].v;
+                        }
+
+                        sel.SetIndex(face.nr+1);
+                        mesh.AddSurfaceElement(sel);
+                    }
                 }
             }
             else
