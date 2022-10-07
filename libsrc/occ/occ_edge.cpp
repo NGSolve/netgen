@@ -56,7 +56,7 @@ namespace netgen
     void OCCEdge::ProjectPoint(Point<3>& p, EdgePointGeomInfo* gi) const
     {
         auto pnt = ng2occ(p);
-        GeomAPI_ProjectPointOnCurve proj(pnt, curve);
+        GeomAPI_ProjectPointOnCurve proj(pnt, curve, s0, s1);
         pnt = proj.NearestPoint();
         if(gi)
             gi->dist = (proj.LowerDistanceParameter() - s0)/(s1-s0);
