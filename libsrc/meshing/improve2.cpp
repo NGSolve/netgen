@@ -284,6 +284,8 @@ namespace netgen
             {
               PointIndex pi1 = sel.PNumMod(j+2);
               PointIndex pi2 = sel.PNumMod(j+3);
+              if(mesh.IsSegment(pi1, pi2))
+                  continue;
 
               for (auto sei_other : elements_on_node[pi1])
                 {
