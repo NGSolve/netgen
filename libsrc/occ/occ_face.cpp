@@ -148,6 +148,16 @@ namespace netgen
 
     bool OCCFace::ProjectPointGI(Point<3>& p_, PointGeomInfo& gi) const
     {
+        static Timer t("OCCFace::ProjectPointGI");
+        RegionTimer rt(t);
+
+        auto suval = shape_analysis->NextValueOfUV({gi.u, gi.v}, ng2occ(p_), tolerance);
+        gi.trignum = nr+1;
+        suval.Coord(gi.u, gi.v);
+        return true;
+        
+        // Old code: do newton iterations manually
+        /*
         double u = gi.u;
         double v = gi.v;
         auto p = ng2occ(p_);
@@ -197,6 +207,7 @@ namespace netgen
         p_ = occ2ng(x);
 
         return true;
+        */
     }
 
     Point<3> OCCFace::GetPoint(const PointGeomInfo& gi) const

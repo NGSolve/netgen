@@ -976,14 +976,16 @@ namespace netgen
     PrintMessage(2, "Map face ", src.nr+1, " -> ", dst.nr+1);
 
     // point map from src to dst
-    Array<PointIndex, PointIndex> pmap(mesh.Points().Size());
+    auto np = mesh.Points().Size();
+    Array<PointIndex, PointIndex> pmap(np);
     pmap = PointIndex::INVALID;
+    BitArray is_double_edge_point(np);
+    is_double_edge_point.Clear();
 
     // first map points on edges (mapped points already in mesh, use search tree)
     Array<bool, PointIndex> is_point_in_tree(mesh.Points().Size());
     is_point_in_tree = false;
     PointTree tree( bounding_box );
-
     for (Segment & seg : src.GetBoundary(mesh))
         for(auto i : Range(2))
           {
@@ -995,15 +997,27 @@ namespace netgen
             }
           }
 
+    Array<ArrayMem<tuple<double,double>, 2>, PointIndex> uv_values(np);
     for (Segment & seg : dst.GetBoundary(mesh))
+    {
         for(auto i : Range(2))
           {
             auto pi = seg[i];
-            if(pmap[pi].IsValid())
-              continue;
+            if(!pmap[pi].IsValid())
+                pmap[tree.Find(mesh[pi])] = pi;
 
-            pmap[tree.Find(mesh[pi])] = pi;
+            // store uv values (might be different values for same point in case of internal edges)
+            double u = seg.epgeominfo[i].u;
+            double v = seg.epgeominfo[i].v;
+            auto & vals = uv_values[pi];
+            bool found = false;
+            for(const auto & [u1,v1] : vals)
+                if((u-u1)*(u-u1)+(v-v1)*(v-v1) < 1e-7)
+                    found = true;
+            if(!found)
+                vals.Append({u,v});
           }
+    }
 
     xbool do_invert = maybe;
     if(dst.identifications[0].type == Identifications::PERIODIC)
@@ -1041,8 +1055,55 @@ namespace netgen
           }
           if(do_invert.IsTrue())
               sel_new.Invert();
+
           for(auto i : Range(sel.PNums()))
-              dst.CalcPointGeomInfo(mesh[sel_new[i]], sel_new.GeomInfo()[i]);
+          {
+              auto pi = sel_new[i];
+              if(uv_values.Range().Next() <= pi)
+              {
+                  // new point (inner surface point)
+                  PointGeomInfo gi;
+                  dst.CalcPointGeomInfo(mesh[sel_new[i]], gi);
+                  sel_new.GeomInfo()[i] = gi;
+                  continue;
+              }
+
+              const auto & uvs = uv_values[pi];
+              if(uvs.Size() == 1)
+              {
+                  // appears only once -> take uv values from edgepointgeominfo
+                  const auto & [u,v] = uvs[0];
+                  PointGeomInfo gi;
+                  gi.u = u;
+                  gi.v = v;
+                  sel_new.GeomInfo()[i] = gi;
+              }
+              else if(uvs.Size() > 1)
+              {
+                  // multiple uv pairs -> project to close point and select closest uv pair
+                  double eps = 1e-3;
+                  auto p = Point<3>((1.0-eps)*Vec<3>(mesh[sel_new.PNumMod(i+1)]) +
+                                        eps/2*Vec<3>(mesh[sel_new.PNumMod(i+2)]) +
+                                        eps/2*Vec<3>(mesh[sel_new.PNumMod(i+3)]));
+                  PointGeomInfo gi_p, gi;
+                  dst.CalcPointGeomInfo(p, gi_p);
+                  gi.trignum = gi_p.trignum;
+                  double min_dist = numeric_limits<double>::max();
+                  for(const auto & [u,v] : uvs)
+                  {
+                      double dist = (gi_p.u-u)*(gi_p.u-u) + (gi_p.v-v)*(gi_p.v-v);
+                      if(dist < min_dist)
+                      {
+                          min_dist = dist;
+                          gi.u = u;
+                          gi.v = v;
+                      }
+                  }
+                  sel_new.GeomInfo()[i] = gi;
+              }
+              else
+                  throw Exception(string(__FILE__) + ":"+ToString(__LINE__) + " shouldn't come here");
+          }
           mesh.AddSurfaceElement(sel_new);
       }
   }
