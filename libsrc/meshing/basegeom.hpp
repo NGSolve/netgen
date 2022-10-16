@@ -151,8 +151,12 @@ namespace netgen
     {
       newp = p1 + secpoint * (p2-p1);
       newgi.trignum = gi1.trignum;
+      /*
       newgi.u = 0.5 * (gi1.u + gi1.u);
       newgi.v = 0.5 * (gi1.v + gi2.v);
+      */
+      newgi.u = gi1.u + secpoint*(gi2.u - gi1.u);
+      newgi.v = gi1.v + secpoint*(gi2.v - gi1.v);
       if(!ProjectPointGI(newp, newgi))
         newgi = Project(newp);
     }
