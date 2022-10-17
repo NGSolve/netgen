@@ -280,15 +280,22 @@ namespace netgen
   inline gp_Pnt Center (TopoDS_Shape shape)
   {
     GProp_GProps props;
+    double tol;
     switch (shape.ShapeType())
       {
       case TopAbs_SOLID:
       case TopAbs_COMPOUND:
       case TopAbs_COMPSOLID:
-        BRepGProp::VolumeProperties (shape, props); break;
+        tol = 1e-2 * BRep_Tool::MaxTolerance(shape, TopAbs_FACE);
+        BRepGProp::VolumeProperties (shape, props, tol); break;
       case TopAbs_FACE:
       case TopAbs_SHELL:
-        BRepGProp::SurfaceProperties (shape, props); break;
+        tol = 1e-2 * BRep_Tool::MaxTolerance(shape, TopAbs_FACE);
+        BRepGProp::SurfaceProperties (shape, props, tol); break;
+      case TopAbs_WIRE:
+      case TopAbs_EDGE:
+        tol = 1e-2 * BRep_Tool::MaxTolerance(shape, TopAbs_EDGE);
+        BRepGProp::LinearProperties(shape, props, tol); break;
       default:
         BRepGProp::LinearProperties(shape, props);
       }
