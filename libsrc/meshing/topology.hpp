@@ -123,15 +123,15 @@ public:
   // [[deprecated("use GetFaces (ElementIndex) -> FlatArray")]]                              
   int GetElementFaces (int elnr, int * faces, int * orient) const;
 
-  [[deprecated("use GetElementEdge instead")]]                      
+  // [[deprecated("use GetElementEdge instead")]]                      
   int GetElementEdgeOrientation (int elnr, int locedgenr) const; // old style
-  [[deprecated("use GetElementEdge instead")]]                        
+  // [[deprecated("use GetElementEdge instead")]]                        
   int GetElementFaceOrientation (int elnr, int locfacenr) const; // old style
-  [[deprecated("use GetElementEdge instead")]]                        
+  // [[deprecated("use GetElementEdge instead")]]                        
   int GetSurfaceElementEdgeOrientation (int elnr, int locedgenr) const; // old style
-  [[deprecated("use GetElementEdge instead")]]                        
+  // [[deprecated("use GetElementEdge instead")]]                        
   int GetSurfaceElementFaceOrientation2 (int elnr) const; // old style
-  [[deprecated("use GetElementEdge instead")]]                        
+  // [[deprecated("use GetElementEdge instead")]]                        
   int GetSegmentEdgeOrientation (int elnr) const; // old style
   
   
