@@ -1943,8 +1943,9 @@ int Ng_IsRunning()
 int Ng_GetVertex_Elements( int vnr, int* elems )
 {
   const MeshTopology& topology = mesh->GetTopology();
-  ArrayMem<ElementIndex,4> indexArray;
-  topology.GetVertexElements( vnr, indexArray );
+  // ArrayMem<ElementIndex,4> indexArray;
+  // topology.GetVertexElements( vnr, indexArray );
+  auto indexArray = topology.GetVertexElements( vnr );
   
   for( int i=0; i<indexArray.Size(); i++ )
     elems[i] = indexArray[i]+1;
@@ -1960,8 +1961,9 @@ int Ng_GetVertex_SurfaceElements( int vnr, int* elems )
     case 3:
       {
         const MeshTopology& topology = mesh->GetTopology();
-        ArrayMem<SurfaceElementIndex,4> indexArray;
-        topology.GetVertexSurfaceElements( vnr, indexArray );
+        // ArrayMem<SurfaceElementIndex,4> indexArray;
+        // topology.GetVertexSurfaceElements( vnr, indexArray );
+        auto indexArray = topology.GetVertexSurfaceElements( vnr );
         
         for( int i=0; i<indexArray.Size(); i++ )
           elems[i] = indexArray[i]+1;
@@ -1992,10 +1994,12 @@ int Ng_GetVertex_SurfaceElements( int vnr, int* elems )
 int Ng_GetVertex_NElements( int vnr )
 {
   const MeshTopology& topology = mesh->GetTopology();
+  /*
   ArrayMem<ElementIndex,4> indexArray;
   topology.GetVertexElements( vnr, indexArray );
-  
   return indexArray.Size();
+  */
+  return topology.GetVertexElements(vnr).Size();
 }
 
 ///// Added by Roman Stainko ....
@@ -2006,8 +2010,9 @@ int Ng_GetVertex_NSurfaceElements( int vnr )
     case 3:
       {
         const MeshTopology& topology = mesh->GetTopology();
-        ArrayMem<SurfaceElementIndex,4> indexArray;
-        topology.GetVertexSurfaceElements( vnr, indexArray );
+        // ArrayMem<SurfaceElementIndex,4> indexArray;
+        // topology.GetVertexSurfaceElements( vnr, indexArray );
+        auto indexArray = topology.GetVertexSurfaceElements( vnr );
         return indexArray.Size();
       }
     case 2:
@@ -2251,8 +2256,9 @@ int Ng_GetClosureNodes (int nt, int nodenr, int nodeset, int * nodes)
         if (nodeset & 2)  // Edges
           {
             int edges[12];
-            int ned;
-            ned = mesh->GetTopology().GetElementEdges (nodenr+1, edges, 0);
+            // int ned;
+            // ned = mesh->GetTopology().GetElementEdges (nodenr+1, edges, 0);
+            int ned = mesh->GetTopology().GetEdges (ElementIndex(nodenr)).Size();
             for (int i = 0; i < ned; i++)
               {
                 nodes[cnt++] = 1;

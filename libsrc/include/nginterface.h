@@ -222,11 +222,11 @@ extern "C" {
 
   [[deprecated("orientation is not supported anymore")]]                          
   DLL_HEADER int Ng_GetElement_Edges (int elnr, int * edges, int * orient = 0);
-  [[deprecated("orientation is not supported anymore")]]                            
+  // [[deprecated("orientation is not supported anymore")]]                            
   DLL_HEADER int Ng_GetElement_Faces (int elnr, int * faces, int * orient = 0);
   [[deprecated("orientation is not supported anymore")]]                          
   DLL_HEADER int Ng_GetSurfaceElement_Edges (int selnr, int * edges, int * orient = 0);
-  [[deprecated("orientation is not supported anymore")]]                            
+  // [[deprecated("orientation is not supported anymore")]]                            
   DLL_HEADER int Ng_GetSurfaceElement_Face (int selnr, int * orient = 0);
 
   DLL_HEADER void Ng_GetSurfaceElementNeighbouringDomains(const int selnr, int & in, int & out);
