@@ -1618,6 +1618,64 @@ namespace ngcore
   {
     return ar.Ptr()+i;
   }
+
+
+
+
+
+
+
+
+
+
+  template <typename TIA, typename TIB>
+  class IteratorPair
+  {
+    TIA a;
+    TIB b;
+  public:
+    IteratorPair (TIA _a, TIB _b) : a(_a), b(_b) { ; }
+    
+    IteratorPair & operator++() { ++a; ++b; return *this; }
+    bool operator!= (const IteratorPair & it2)  { return a != it2.a; }
+    
+    auto operator*()
+    {
+      // return pair(*a,*b);
+      return std::pair<decltype(*a), decltype(*b)> (*a, *b); // keep reference
+    }
+  };
+  
+  
+  template <typename TA, typename TB>
+  class Zip
+  {
+    const TA & a;
+    const TB & b;
+  public:
+    Zip(const TA & _a, const TB & _b) : a(_a), b(_b) { ; }
+    auto begin() const { return IteratorPair(a.begin(), b.begin()); }
+    auto end() const { return IteratorPair(a.end(), b.end()); }
+  };
+
+  template <typename T>
+  inline size_t size (const BaseArrayObject<T> & ao) { return ao.Size(); }
+  
+  template <typename TA>
+  class Enumerate
+  {
+    IntRange r;
+    const TA & a;
+  public:
+    Enumerate(const TA & _a) : r(size(_a)), a(_a) { ; }
+    auto begin() const { return IteratorPair(r.begin(), a.begin()); }
+    auto end() const { return IteratorPair(r.end(), a.end()); }
+  };
+  
+  
+
+
+  
 }
 
 

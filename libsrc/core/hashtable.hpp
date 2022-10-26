@@ -57,7 +57,7 @@ namespace ngcore
     }
 
     /// init i[0], i[1]
-    NETGEN_INLINE INT (T ai1, T ai2)
+    constexpr NETGEN_INLINE INT (T ai1, T ai2)
     { i[0] = ai1; i[1] = ai2; }
 
     /// init i[0], i[1], i[2]
