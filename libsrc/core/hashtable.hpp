@@ -58,24 +58,23 @@ namespace ngcore
 
     /// init i[0], i[1]
     constexpr NETGEN_INLINE INT (T ai1, T ai2)
-      : i{ai1,ai2} { ; } 
-    // { i[0] = ai1; i[1] = ai2; }
+      : i{ai1, ai2} { ; } 
 
     /// init i[0], i[1], i[2]
-    NETGEN_INLINE INT (T ai1, T ai2, T ai3)
-    { i[0] = ai1; i[1] = ai2; i[2] = ai3; }
+    constexpr NETGEN_INLINE INT (T ai1, T ai2, T ai3)
+      : i{ai1, ai2, ai3} { ; } 
 
     /// init i[0], i[1], i[2]
-    NETGEN_INLINE INT (T ai1, T ai2, T ai3, T ai4)
-    { i[0] = ai1; i[1] = ai2; i[2] = ai3; i[3] = ai4; }
-
+    constexpr NETGEN_INLINE INT (T ai1, T ai2, T ai3, T ai4)
+      : i{ai1, ai2, ai3, ai4} { ; }
+    
     /// init i[0], i[1], i[2]
-    NETGEN_INLINE INT (T ai1, T ai2, T ai3, T ai4, T ai5)
-    { i[0] = ai1; i[1] = ai2; i[2] = ai3; i[3] = ai4; i[4] = ai5;}
-
+    constexpr NETGEN_INLINE INT (T ai1, T ai2, T ai3, T ai4, T ai5)
+      : i{ai1, ai2, ai3, ai4, ai5} { ; }      
+      
     /// init i[0], i[1], i[2]
     NETGEN_INLINE INT (T ai1, T ai2, T ai3, T ai4, T ai5, T ai6, T ai7, T ai8, T ai9)
-    { i[0] = ai1; i[1] = ai2; i[2] = ai3; i[3] = ai4; i[4] = ai5; i[5] = ai6; i[6] = ai7; i[7] = ai8; i[8] = ai9; }
+      : i{ai1, ai2, ai3, ai4, ai5, ai6, ai7, ai8, ai9 } { ; }            
 
     void DoArchive(Archive& ar)
     {
