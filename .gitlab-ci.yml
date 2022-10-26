@@ -299,4 +299,5 @@ pip_macos:
     - ./tests/build_pip_mac.sh 3.8
     - ./tests/build_pip_mac.sh 3.9
     - ./tests/build_pip_mac.sh 3.10
+    - ./tests/build_pip_max.sh 3.11
   when: manual
