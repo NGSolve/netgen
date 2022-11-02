@@ -7,7 +7,7 @@ export NETGEN_CCACHE=1
 
 /opt/python/cp39-cp39/bin/python tests/fix_auditwheel_policy.py
 
-for pyversion in 38 39 310
+for pyversion in 38 39 310 311
 do
     export PYDIR="/opt/python/cp${pyversion}-cp${pyversion}/bin"
     echo $PYDIR
