@@ -14,7 +14,7 @@ public:
   // parameters by Philippose ..
   Array<int> surfid;
   Array<double> heights;
-  string new_mat;
+  map<string, string> new_mat;
   BitArray domains;
   bool outside = false; // set the boundary layer on the outside
   bool grow_edges = false;
@@ -42,7 +42,8 @@ class BoundaryLayerTool
 
     BitArray domains, is_edge_moved, is_boundary_projected, is_boundary_moved;
     Array<SegmentIndex> moved_segs;
-    int max_edge_nr, new_mat_nr, nfd_old;
+    int max_edge_nr, nfd_old, ndom_old;
+    Array<int> new_mat_nrs;
     int np, nseg, nse, ne;
     double height;
 

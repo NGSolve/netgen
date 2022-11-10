@@ -7,6 +7,7 @@
 #include "../geom2d/csg2d.hpp"
 
 #include <set>
+#include <regex>
 
 namespace netgen
 {
@@ -562,8 +563,22 @@ namespace netgen
       if(seg.edgenr > max_edge_nr)
         max_edge_nr = seg.edgenr;
 
-    new_mat_nr = mesh.GetNDomains() +1;
-    mesh.SetMaterial(new_mat_nr, params.new_mat);
+    int ndom = mesh.GetNDomains();
+    ndom_old = ndom;
+
+    new_mat_nrs.SetSize(mesh.FaceDescriptors().Size() + 1);
+    new_mat_nrs = -1;
+    for(auto [bcname, matname] : params.new_mat)
+      {
+        mesh.SetMaterial(++ndom, matname);
+        regex pattern(bcname);
+        for(auto i : Range(1, mesh.GetNFD()+1))
+          {
+            auto& fd = mesh.GetFaceDescriptor(i);
+            if(regex_match(fd.GetBCName(), pattern))
+              new_mat_nrs[i] = ndom;
+          }
+      }
 
     domains = params.domains;
     if(!params.outside)
@@ -606,8 +621,8 @@ namespace netgen
                 int new_si = mesh.GetNFD()+1;
                 surfacefacs[i] = isIn ? 1. : -1.;
                 // -1 surf nr is so that curving does not do anything
-                FaceDescriptor new_fd(-1, isIn ? new_mat_nr : fd.DomainIn(),
-                                      isIn ? fd.DomainOut() : new_mat_nr, -1);
+                FaceDescriptor new_fd(-1, isIn ? new_mat_nrs[i] : fd.DomainIn(),
+                                      isIn ? fd.DomainOut() : new_mat_nrs[i], -1);
                 new_fd.SetBCProperty(new_si);
                 mesh.AddFaceDescriptor(new_fd);
                 si_map[i] = new_si;
@@ -1050,7 +1065,7 @@ namespace netgen
                 if(surfacefacs[sel.GetIndex()] > 0) Swap(points[0], points[2]);
                 for(auto i : Range(points))
                   el[sel.PNums().Size() + i] = points[i];
-                el.SetIndex(new_mat_nr);
+                el.SetIndex(new_mat_nrs[sel.GetIndex()]);
                 mesh.AddVolumeElement(el);
               }
             Element2d newel = sel;
@@ -1238,10 +1253,10 @@ namespace netgen
     for(auto i : Range(1, nfd_old+1))
       if(si_map[i] != -1)
         {
-          if(mesh.GetFaceDescriptor(mesh.GetNFD()).DomainIn() == new_mat_nr)
-            mesh.GetFaceDescriptor(i).SetDomainOut(new_mat_nr);
+          if(auto dom = mesh.GetFaceDescriptor(si_map[i]).DomainIn(); dom > ndom_old)
+            mesh.GetFaceDescriptor(i).SetDomainOut(dom);
           else
-            mesh.GetFaceDescriptor(i).SetDomainIn(new_mat_nr);
+            mesh.GetFaceDescriptor(i).SetDomainIn(mesh.GetFaceDescriptor(si_map[i]).DomainOut());
         }
   }
 
