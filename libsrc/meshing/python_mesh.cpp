@@ -1253,7 +1253,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def ("BoundaryLayer2", GenerateBoundaryLayer2, py::arg("domain"), py::arg("thicknesses"), py::arg("make_new_domain")=true, py::arg("boundaries")=Array<int>{})
     .def ("BoundaryLayer", [](Mesh & self, variant<string, int> boundary,
                               variant<double, py::list> thickness,
-                              string material,
+                              variant<string, map<string, string>> material,
                               variant<string, int> domain, bool outside,
                               optional<string> project_boundaries,
                               bool grow_edges, bool limit_growth_vectors)
@@ -1298,7 +1298,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
              for(int i = 1; i<=self.GetNFD(); i++)
                if(boundaries.Test(i))
                  blp.surfid.Append(i);
-             blp.new_mat = material;
+             if(string* mat = get_if<string>(&material); mat)
+                 blp.new_mat = { { ".*", *mat } };
+             else
+                 blp.new_mat = *get_if<map<string, string>>(&material);
 
              if(project_boundaries.has_value())
                {
