@@ -1153,6 +1153,8 @@ namespace netgen
       for (int i = 0; i < mesh.GetNDomains(); i++)
         if (auto name = solids[i]->properties.name)
           mesh.SetMaterial (i+1, *name);
+
+    mesh.OrderElements();
   }
   
   shared_ptr<NetgenGeometry> GeometryRegisterArray :: LoadFromMeshFile (istream & ist) const
