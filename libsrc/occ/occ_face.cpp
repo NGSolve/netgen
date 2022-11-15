@@ -38,7 +38,7 @@ namespace netgen
     {
         auto & geom = dynamic_cast<OCCGeometry&>(*mesh.GetGeometry());
 
-        auto n_edges = geom.edge_map.size();
+        auto n_edges = geom.GetNEdges();
         constexpr int UNUSED = 0;
         constexpr int FORWARD = 1;
         constexpr int REVERSED = 2;
@@ -58,9 +58,7 @@ namespace netgen
         for(auto edge_ : GetEdges(face))
         {
             auto edge = TopoDS::Edge(edge_);
-            if(geom.edge_map.count(edge)==0)
-                continue;
-            auto edgenr = geom.edge_map[edge];
+            auto edgenr = geom.GetEdge(edge).nr;
             auto & orientation = edge_orientation[edgenr];
             double s0, s1;
             auto cof = BRep_Tool::CurveOnSurface (edge, face, s0, s1);

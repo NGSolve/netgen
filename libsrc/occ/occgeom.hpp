@@ -153,11 +153,9 @@ namespace netgen
     static std::map<TopoDS_Shape, std::vector<OCCIdentification>> identifications;
 
     TopoDS_Shape shape;
-    TopTools_IndexedMapOfShape fmap, emap, vmap, somap, shmap, wmap; // legacy maps
+    TopTools_IndexedMapOfShape fmap, emap, vmap, somap, shmap, wmap;
     NgArray<bool> fsingular, esingular, vsingular;
     Box<3> boundingbox;
-
-    std::map<TopoDS_Shape, int> solid_map, face_map, edge_map, vertex_map;
 
     mutable int changed;
     mutable NgArray<int> facemeshstatus;
@@ -210,6 +208,34 @@ namespace netgen
 
     void SetOCCParameters(const OCCParameters& par)
     { occparam = par; }
+
+    using NetgenGeometry::GetVertex;
+    using NetgenGeometry::GetEdge;
+    using NetgenGeometry::GetFace;
+
+    GeometryShape & GetShape(const TopoDS_Shape & shape)
+    {
+        return const_cast<GeometryShape&>(as_const(*this).GetShape(shape));
+    }
+    GeometryVertex & GetVertex(const TopoDS_Shape & shape)
+    {
+        return const_cast<GeometryVertex&>(as_const(*this).GetVertex(shape));
+    }
+
+    GeometryEdge & GetEdge(const TopoDS_Shape & shape)
+    {
+        return const_cast<GeometryEdge&>(as_const(*this).GetEdge(shape));
+    }
+
+    GeometryFace & GetFace(const TopoDS_Shape & shape)
+    {
+        return const_cast<GeometryFace&>(as_const(*this).GetFace(shape));
+    }
+
+    const GeometryShape & GetShape(const TopoDS_Shape & shape) const;
+    const GeometryVertex & GetVertex(const TopoDS_Shape & shape) const;
+    const GeometryEdge & GetEdge(const TopoDS_Shape & shape) const;
+    const GeometryFace & GetFace(const TopoDS_Shape & shape) const;
 
     void Analyse(Mesh& mesh,
                  const MeshingParameters& mparam) const override;
@@ -267,7 +293,7 @@ namespace netgen
 
     void MakeSolid();
 
-    Array<GeometryVertex*> GetFaceVertices(const GeometryFace& face) const override;
+    Array<const GeometryVertex*> GetFaceVertices(const GeometryFace& face) const override;
 
     void HealGeometry();
     void GlueGeometry();

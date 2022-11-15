@@ -156,6 +156,37 @@ namespace netgen
       }
   }
 
+  const GeometryShape & OCCGeometry :: GetShape(const TopoDS_Shape & shape) const
+  {
+    switch (shape.ShapeType())
+    {
+      case TopAbs_VERTEX:
+        return GetVertex(shape);
+      case TopAbs_EDGE:
+        return GetEdge(shape);
+      case TopAbs_FACE:
+        return GetFace(shape);
+      default:
+        throw Exception("unknown shape type");
+    }
+  }
+
+  const GeometryVertex & OCCGeometry :: GetVertex(const TopoDS_Shape & shape) const
+  {
+      return *vertices[vmap.FindIndex(shape)-1];
+  }
+
+  const GeometryEdge & OCCGeometry :: GetEdge(const TopoDS_Shape & shape) const
+  {
+      return *edges[emap.FindIndex(shape)-1];
+  }
+
+  const GeometryFace & OCCGeometry :: GetFace(const TopoDS_Shape & shape) const
+  {
+      return *faces[fmap.FindIndex(shape)-1];
+  }
+
+
   string STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * aReader)
   {
     const Handle(XSControl_WorkSession)& theSession = aReader->Reader().WS();
@@ -1113,20 +1144,13 @@ namespace netgen
       fsingular = esingular = vsingular = false;
 
       NetgenGeometry::Clear();
-      edge_map.clear();
-      vertex_map.clear();
-      face_map.clear();
-      solid_map.clear();
 
       // Add shapes
       for(auto i1 : Range(1, vmap.Extent()+1))
       {
           auto v = vmap(i1);
-          if(vertex_map.count(v)!=0)
-              continue;
           auto occ_vertex = make_unique<OCCVertex>(TopoDS::Vertex(v));
           occ_vertex->nr = vertices.Size();
-          vertex_map[v] = occ_vertex->nr;
 
           if(global_shape_properties.count(v)>0)
               occ_vertex->properties = global_shape_properties[v];
@@ -1137,11 +1161,8 @@ namespace netgen
       {
           auto e = emap(i1);
           auto edge = TopoDS::Edge(e);
-          if(edge_map.count(e)!=0)
-              continue;
-          edge_map[e] = edges.Size();
           auto verts = GetVertices(e);
-          auto occ_edge = make_unique<OCCEdge>(edge, *vertices[vertex_map[verts[0]]], *vertices[vertex_map[verts[1]]] );
+          auto occ_edge = make_unique<OCCEdge>(edge, GetVertex(verts[0]), GetVertex(verts[1]) );
           occ_edge->properties = global_shape_properties[e];
           edges.Append(std::move(occ_edge));
       }
@@ -1149,81 +1170,73 @@ namespace netgen
       for(auto i1 : Range(1, fmap.Extent()+1))
       {
           auto f = fmap(i1);
-          if(face_map.count(f)==0)
-          {
 
-              auto k = faces.Size();
-              face_map[f] = k;
-              auto occ_face = make_unique<OCCFace>(f);
+          auto k = faces.Size();
+          auto occ_face = make_unique<OCCFace>(f);
 
+          for(auto e : GetEdges(f))
+              occ_face->edges.Append( &GetEdge(e) );
+
+          if(global_shape_properties.count(f)>0)
+              occ_face->properties = global_shape_properties[f];
+          faces.Append(std::move(occ_face));
+
+          if(dimension==2)
               for(auto e : GetEdges(f))
-                  occ_face->edges.Append( edges[edge_map[e]].get() );
-
-              if(global_shape_properties.count(f)>0)
-                  occ_face->properties = global_shape_properties[f];
-              faces.Append(std::move(occ_face));
-
-              if(dimension==2)
-                  for(auto e : GetEdges(f))
-                  {
-                      auto & edge = *edges[edge_map[e]];
-                      if(e.Orientation() == TopAbs_REVERSED)
-                          edge.domout = k;
-                      else
-                          edge.domin = k;
-                  }
-          }
+              {
+                  auto & edge = GetEdge(e);
+                  if(e.Orientation() == TopAbs_REVERSED)
+                      edge.domout = k;
+                  else
+                      edge.domin = k;
+              }
       }
 
 
       for(auto i1 : Range(1, somap.Extent()+1))
       {
           auto s = somap(i1);
-          int k;
-          if(solid_map.count(s)==0)
-          {
-              k = solids.Size();
-              solid_map[s] = k;
-              auto occ_solid = make_unique<OCCSolid>(s);
-              if(global_shape_properties.count(s)>0)
-                  occ_solid->properties = global_shape_properties[s];
-              solids.Append(std::move(occ_solid));
-          }
+          int k = solids.Size();
+          auto occ_solid = make_unique<OCCSolid>(s);
+          if(global_shape_properties.count(s)>0)
+              occ_solid->properties = global_shape_properties[s];
+          solids.Append(std::move(occ_solid));
 
           for(auto f : GetFaces(s))
           {
-              auto face_nr = face_map[f];
-              auto & face = faces[face_nr];
-              if(face->domin==-1)
-                  face->domin = k;
+              auto & face = GetFace(f);
+              if(face.domin==-1)
+                  face.domin = k;
               else
-                  face->domout = k;
+                  face.domout = k;
           }
       }
 
       // Add identifications
       auto add_identifications = [&](auto & shapes, auto & shape_map)
       {
-          for(auto &[shape, nr] : shape_map)
+          for(auto i1 : Range(1, shape_map.Extent()+1))
+          {
+            auto shape = shape_map(i1);
             if(identifications.count(shape))
                 for(auto & ident : identifications[shape])
                 {
-                    if(shape_map.count(ident.from)==0 || shape_map.count(ident.to)==0)
+                    if(!shape_map.Contains(ident.from) || !shape_map.Contains(ident.to))
                         continue;
-
                     ShapeIdentification si{
-                        shapes[shape_map[ident.from]].get(),
-                        shapes[shape_map[ident.to]].get(),
+                        &GetShape(ident.from),
+                        &GetShape(ident.to),
                         ident.trafo,
                         ident.type,
                         ident.name
                     };
-                    shapes[nr]->identifications.Append(si);
+                    shapes[i1-1]->identifications.Append(si);
                 }
+          }
       };
-      add_identifications( vertices, vertex_map );
-      add_identifications( edges, edge_map );
-      add_identifications( faces, face_map );
+      add_identifications( vertices, vmap );
+      add_identifications( edges, emap );
+      add_identifications( faces, fmap );
 
       bounding_box = ::netgen::GetBoundingBox( shape );
       ProcessIdentifications();
@@ -1312,12 +1325,12 @@ namespace netgen
    }
 
 
-  Array<GeometryVertex*> OCCGeometry :: GetFaceVertices(const GeometryFace& face) const
+  Array<const GeometryVertex*> OCCGeometry :: GetFaceVertices(const GeometryFace& face) const
   {
-    Array<GeometryVertex*> verts;
+    Array<const GeometryVertex*> verts;
     const auto& occface = dynamic_cast<const OCCFace&>(face);
     for(auto& vert : GetVertices(occface.Shape()))
-      verts.Append(vertices[vertex_map.at(vert)].get());
+      verts.Append(&GetVertex(vert));
     return move(verts);
   }
 

@@ -188,10 +188,6 @@ namespace netgen
     Box<3> bounding_box;
     int dimension = 3;
 
-    std::map<size_t, GeometryVertex*> vertex_map;
-    std::map<size_t, GeometryEdge*> edge_map;
-    std::map<size_t, GeometryFace*> face_map;
-    std::map<size_t, GeometrySolid*> solid_map;
   public:
 
     NetgenGeometry()
@@ -208,7 +204,7 @@ namespace netgen
     const GeometryEdge & GetEdge(int i) const { return *edges[i]; }
     const GeometryVertex & GetVertex(int i) const { return *vertices[i]; }
 
-    virtual Array<GeometryVertex*> GetFaceVertices(const GeometryFace& face) const { return Array<GeometryVertex*>{}; }
+    virtual Array<const GeometryVertex*> GetFaceVertices(const GeometryFace& face) const { return Array<const GeometryVertex*>{}; }
 
     void Clear();
 
