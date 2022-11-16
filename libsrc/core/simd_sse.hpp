@@ -141,7 +141,7 @@ NETGEN_INLINE SIMD<int64_t,2> operator- (SIMD<int64_t,2> a, SIMD<int64_t,2> b) {
     NETGEN_INLINE __m128d & Data() { return data; }
 
     template <int I>
-    double Get()
+    double Get() const
     {
       static_assert(I>=0 && I<2, "Index out of range");
       return (*this)[I];
