@@ -147,6 +147,9 @@ NETGEN_INLINE SIMD<int64_t,2> operator- (SIMD<int64_t,2> a, SIMD<int64_t,2> b) {
       return (*this)[I];
     }
 
+    double Lo() const { return Get<0>(); } 
+    double Hi() const { return Get<1>(); } 
+    
     operator std::tuple<double&,double&> ()
     {
       auto pdata = (double*)&data;
