@@ -135,6 +135,9 @@ namespace ngcore
     NETGEN_INLINE __m512d Data() const { return data; }
     NETGEN_INLINE __m512d & Data() { return data; }
 
+    SIMD<double,4> Lo() const { return _mm512_extractf64x4_pd(data, 0); }
+    SIMD<double,4> Hi() const { return _mm512_extractf64x4_pd(data, 1); }
+
     template <int I>
     double Get() const
     {
