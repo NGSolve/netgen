@@ -259,6 +259,16 @@ namespace ngcore
     return _mm512_fnmadd_pd (_mm512_set1_pd(a), b.Data(), c.Data());
   }
 
+  NETGEN_INLINE auto FMAddSub (SIMD<double,8> a, SIMD<double,8> b, SIMD<double,8> c)
+  {
+    return _mm512_fmaddsub_pd(a,b,c);
+  }
+
+  NETGEN_INLINE auto SwapPairs (SIMD<double,8> a)
+  {
+    reutrn _mm512_shuffle_pd (a.Data(), a.Data(), 0b01010101);
+  }
+  
 }
 
 #endif // NETGEN_CORE_SIMD_AVX512_HPP

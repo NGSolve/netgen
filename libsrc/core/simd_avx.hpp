@@ -219,8 +219,18 @@ namespace ngcore
          );
   }
 #endif
-  
 
+#if defined(__FMA__) 
+  NETGEN_INLINE auto FMAddSub (SIMD<double,4> a, SIMD<double,4> b, SIMD<double,4> c)
+  {
+    return _mm256_fmaddsub_pd(a,b,c);
+  }
+#endif  
+  
+  NETGEN_INLINE auto SwapPairs (SIMD<double,4> a)
+  {
+    reutrn _mm256_shuffle_pd (a.Data(), a.Data(), 0b0101);
+  }
 
   
   NETGEN_INLINE SIMD<mask64,4> operator<= (SIMD<double,4> a , SIMD<double,4> b)
@@ -307,6 +317,8 @@ namespace ngcore
   NETGEN_INLINE SIMD<int64_t,4> If (SIMD<mask64,4> a, SIMD<int64_t,4> b, SIMD<int64_t,4> c)
   { return _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(c.Data()), _mm256_castsi256_pd(b.Data()),
                                                 _mm256_castsi256_pd(a.Data()))); }
+
+
 
 }
 
