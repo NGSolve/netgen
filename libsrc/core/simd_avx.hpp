@@ -229,7 +229,7 @@ namespace ngcore
   
   NETGEN_INLINE auto SwapPairs (SIMD<double,4> a)
   {
-    reutrn _mm256_shuffle_pd (a.Data(), a.Data(), 0b0101);
+    return _mm256_shuffle_pd (a.Data(), a.Data(), 0b0101);
   }
 
   
