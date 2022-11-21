@@ -221,13 +221,13 @@ namespace ngcore
 #endif
 
 #if defined(__FMA__) 
-  NETGEN_INLINE auto FMAddSub (SIMD<double,4> a, SIMD<double,4> b, SIMD<double,4> c)
+  NETGEN_INLINE SIMD<double,4> FMAddSub (SIMD<double,4> a, SIMD<double,4> b, SIMD<double,4> c)
   {
-    return _mm256_fmaddsub_pd(a,b,c);
+    return _mm256_fmaddsub_pd(a.Data(), b.Data(), c.Data());
   }
 #endif  
   
-  NETGEN_INLINE auto SwapPairs (SIMD<double,4> a)
+  NETGEN_INLINE SIMD<double,4> SwapPairs (SIMD<double,4> a)
   {
     return _mm256_shuffle_pd (a.Data(), a.Data(), 0b0101);
   }

@@ -259,12 +259,12 @@ namespace ngcore
     return _mm512_fnmadd_pd (_mm512_set1_pd(a), b.Data(), c.Data());
   }
 
-  NETGEN_INLINE auto FMAddSub (SIMD<double,8> a, SIMD<double,8> b, SIMD<double,8> c)
+  NETGEN_INLINE SIMD<double,8> FMAddSub (SIMD<double,8> a, SIMD<double,8> b, SIMD<double,8> c)
   {
-    return _mm512_fmaddsub_pd(a,b,c);
+    return _mm512_fmaddsub_pd(a.Data(), b.Data(), c.Data());
   }
 
-  NETGEN_INLINE auto SwapPairs (SIMD<double,8> a)
+  NETGEN_INLINE SIMD<double,8> SwapPairs (SIMD<double,8> a)
   {
     return _mm512_shuffle_pd (a.Data(), a.Data(), 0b01010101);
   }
