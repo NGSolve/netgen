@@ -146,11 +146,11 @@ namespace ngcore
     { return i[j]; }
 
     /// access
-    NETGEN_INLINE const T & operator[] (int j) const
+    NETGEN_INLINE constexpr const T & operator[] (int j) const
     { return i[j]; }
 
     template <size_t J>
-    T get() const { return i[J]; }
+    constexpr T get() const { return i[J]; }
     
     operator FlatArray<T> () { return FlatArray<T> (N, &i[0]); } 
 
