@@ -1,6 +1,6 @@
 import json
 
-policy_file = "/opt/_internal/pipx/venvs/auditwheel/lib/python3.9/site-packages/auditwheel/policy/manylinux-policy.json"
+policy_file = "/opt/_internal/pipx/venvs/auditwheel/lib/python3.10/site-packages/auditwheel/policy/manylinux-policy.json"
 data = json.load(open(policy_file))
 additional_libs = [
         "libbz2.so.1.0.6",
