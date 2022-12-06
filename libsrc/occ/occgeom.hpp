@@ -31,20 +31,6 @@
 #define OCC_HAVE_HISTORY
 #endif
 
-namespace std
-{
-  template<>
-  struct less<TopoDS_Shape>
-  {
-    bool operator() (const TopoDS_Shape& s1, const TopoDS_Shape& s2) const
-    {
-      return s1.HashCode(std::numeric_limits<Standard_Integer>::max()) <
-        s2.HashCode(std::numeric_limits<Standard_Integer>::max());
-    }
-  };
-}
-
-
 namespace netgen
 {
 
@@ -149,8 +135,38 @@ namespace netgen
     Point<3> center;
     OCCParameters occparam;
   public:
-    static std::map<TopoDS_Shape, ShapeProperties> global_shape_properties;
-    static std::map<TopoDS_Shape, std::vector<OCCIdentification>> identifications;
+    static TopTools_IndexedMapOfShape global_shape_property_indices;
+    static std::vector<ShapeProperties> global_shape_properties;
+    static TopTools_IndexedMapOfShape global_identification_indices;
+    static std::vector<std::vector<OCCIdentification>> global_identifications;
+
+    static ShapeProperties& GetProperties(const TopoDS_Shape& shape)
+    {
+      auto index = OCCGeometry::global_shape_property_indices.FindIndex(shape);
+      if(index > 0)
+        return OCCGeometry::global_shape_properties
+          [index-1];
+      OCCGeometry::global_shape_property_indices.Add(shape);
+      OCCGeometry::global_shape_properties.push_back({});
+      return OCCGeometry::global_shape_properties.back();
+    }
+    static bool HaveProperties(const TopoDS_Shape& shape)
+    {
+      return OCCGeometry::global_shape_property_indices.FindIndex(shape) > 1;
+    }
+    static std::vector<OCCIdentification>& GetIdentifications(const TopoDS_Shape& shape)
+    {
+      auto index = OCCGeometry::global_identification_indices.FindIndex(shape);
+      if(index > 0)
+        return OCCGeometry::global_identifications[index-1];
+      OCCGeometry::global_identification_indices.Add(shape);
+      OCCGeometry::global_identifications.push_back({});
+      return OCCGeometry::global_identifications.back();
+    }
+    static bool HaveIdentifications(const TopoDS_Shape& shape)
+    {
+      return OCCGeometry::global_identification_indices.FindIndex(shape) > 1;
+    }
 
     TopoDS_Shape shape;
     TopTools_IndexedMapOfShape fmap, emap, vmap, somap, shmap, wmap;
@@ -422,8 +438,10 @@ namespace netgen
   template <class TBuilder>
   void PropagateIdentifications (TBuilder & builder, TopoDS_Shape shape, std::optional<Transformation<3>> trafo = nullopt)
   {
-    std::map<TopoDS_Shape, std::set<TopoDS_Shape>> mod_map;
-    std::map<TopoDS_Shape, bool> shape_handled;
+    TopTools_IndexedMapOfShape mod_indices;
+    std::vector<TopTools_IndexedMapOfShape> modifications;
+    TopTools_MapOfShape shape_handled;
+
     Transformation<3> trafo_inv;
     if(trafo)
         trafo_inv = trafo->CalcInverse();
@@ -432,8 +450,9 @@ namespace netgen
       for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
       {
           auto s = e.Current();
-          mod_map[s].insert(s);
-          shape_handled[s] = false;
+          mod_indices.Add(s);
+          modifications.push_back({});
+          modifications.back().Add(s);
       }
   
     for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
@@ -441,7 +460,10 @@ namespace netgen
         {
           auto s = e.Current();
             for (auto mods : builder.Modified(s))
-              mod_map[s].insert(mods);
+              {
+                auto index = mod_indices.FindIndex(s)-1;
+                modifications[index].Add(mods);
+              }
         }
   
     for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
@@ -449,27 +471,32 @@ namespace netgen
       {
           auto s = e.Current();
   
-          if(shape_handled[s])
+          if(shape_handled.Contains(s))
               continue;
-          shape_handled[s] = true;
+          shape_handled.Add(s);
+
+          if(!OCCGeometry::HaveIdentifications(s))
+            continue;
+          auto& identifications = OCCGeometry::GetIdentifications(s);
+
+          auto& shape_mapped = modifications[mod_indices.FindIndex(s)-1];
   
-          if(OCCGeometry::identifications.count(s)==0)
-              continue;
-  
-          auto shape_mapped = mod_map[s];
-  
-          for(auto ident : OCCGeometry::identifications[s])
+          for(auto ident : identifications)
           {
               // nothing happened
-              if(mod_map[ident.to].size()==1 && mod_map[ident.from].size() ==1)
-                  continue;
+              auto& mods_to = modifications[mod_indices.FindIndex(ident.to)-1];
+              auto& mods_from = modifications[mod_indices.FindIndex(ident.from)-1];
+              if(mods_to.Extent()==1 && mods_from.Extent() ==1)
+                continue;
   
               auto from = ident.from;
               auto to = ident.to;
   
-              for(auto from_mapped : mod_map[from])
-                  for(auto to_mapped : mod_map[to])
+              for(auto it = mods_from.cbegin(); it != mods_from.cend(); it++)
+                for(auto it2 = mods_to.cbegin(); it2 != mods_to.cend(); it2++)
                   {
+                      auto& from_mapped = it.Iterator().Value();
+                      auto& to_mapped = it2.Iterator().Value();
                       if(from.IsSame(from_mapped) && to.IsSame(to_mapped))
                         continue;
   
@@ -489,7 +516,7 @@ namespace netgen
                       id_new.from = from_mapped;
                       id_new.trafo = trafo_mapped;
                       auto id_owner = from.IsSame(s) ? from_mapped : to_mapped;
-                      OCCGeometry::identifications[id_owner].push_back(id_new);
+                      OCCGeometry::GetIdentifications(id_owner).push_back(id_new);
                   }
           }
       }
@@ -504,10 +531,12 @@ namespace netgen
       for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
         {
           auto s = e.Current();
-          auto & prop = OCCGeometry::global_shape_properties[s];
+          have_identifications |= OCCGeometry::HaveIdentifications(s);
+          if(!OCCGeometry::HaveProperties(s))
+            continue;
+          auto & prop = OCCGeometry::GetProperties(s);
           for (auto mods : builder.Modified(s))
-            OCCGeometry::global_shape_properties[mods].Merge(prop);
-          have_identifications |= OCCGeometry::identifications.count(s) > 0;
+            OCCGeometry::GetProperties(mods).Merge(prop);
         }
     if(have_identifications)
         PropagateIdentifications(builder, shape, trafo);
