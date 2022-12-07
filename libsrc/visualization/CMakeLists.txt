@@ -7,7 +7,7 @@ target_sources(nggui PRIVATE
     vssolution.cpp
     visualpkg.cpp
 )
-target_link_libraries( nggui PUBLIC "$<BUILD_INTERFACE:netgen_python>" ${MPI_CXX_LIBRARIES} ${OPENGL_LIBRARIES} )
+target_link_libraries( nggui PUBLIC "$<BUILD_INTERFACE:netgen_python>" ${MPI_CXX_LIBRARIES} ${OPENGL_LIBRARIES} nglib)
 
 install(FILES
   meshdoc.hpp mvdraw.hpp visual_api.hpp
