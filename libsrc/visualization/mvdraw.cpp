@@ -714,15 +714,15 @@ namespace netgen
     char buf[20];
 
     glRasterPos3d (len, 0.0f, 0.0f);
-    sprintf (buf, "x");
+    snprintf (buf, size(buf), "x");
     // glCallLists (GLsizei(strlen (buf)), GL_UNSIGNED_BYTE, buf);
     MyOpenGLText (buf);
     glRasterPos3d (0.0f, len, 0.0f);
-    sprintf (buf, "y");
+    snprintf (buf, size(buf), "y");
     // glCallLists (GLsizei(strlen (buf)), GL_UNSIGNED_BYTE, buf);
     MyOpenGLText (buf);
     glRasterPos3d (0.0f, 0.0f, len);
-    sprintf (buf, "z");
+    snprintf (buf, size(buf), "z");
     // glCallLists (GLsizei(strlen (buf)), GL_UNSIGNED_BYTE, buf);
     MyOpenGLText (buf);
 

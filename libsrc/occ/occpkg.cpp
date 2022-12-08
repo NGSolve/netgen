@@ -76,7 +76,7 @@ namespace netgen
 	  if (showvolume < 0 || showvolume > occgeometry->NrSolids())
 	    {
 	      char buf[20];
-	      sprintf (buf, "%5i", vispar.occshowvolumenr);
+	      snprintf (buf, size(buf),  "%5i", vispar.occshowvolumenr);
 	      Tcl_SetVar (interp, "::occoptions.showvolumenr", buf, 0);
 	    }
 	  else
@@ -621,18 +621,18 @@ namespace netgen
 	   int facenr = atoi (argv[2]);
 	   if (occgeometry && facenr >= 1 && facenr <= occgeometry->NrFaces())
 	   {
-	     sprintf (buf, "%5.2f", occgeometry->GetFaceMaxH(facenr));
+	     snprintf (buf, size(buf),  "%5.2f", occgeometry->GetFaceMaxH(facenr));
 	   }
 	   else
 	   {
-	     sprintf (buf, "%5.2f", mparam.maxh);
+	     snprintf (buf, size(buf),  "%5.2f", mparam.maxh);
 	   }
 	   Tcl_SetResult (interp, buf, TCL_STATIC);
     }
 
     if (strcmp (argv[1], "getactive") == 0)
     {
-	   sprintf (buf, "%d", occgeometry->SelectedFace());
+	   snprintf (buf, size(buf),  "%d", occgeometry->SelectedFace());
 	   Tcl_SetResult (interp, buf, TCL_STATIC);
     }
 
@@ -652,9 +652,9 @@ namespace netgen
     if (strcmp (argv[1], "getnfd") == 0)
     {
 	   if (occgeometry)
-	     sprintf (buf, "%d", occgeometry->NrFaces());
+	     snprintf (buf, size(buf),  "%d", occgeometry->NrFaces());
 	   else
-	     sprintf (buf, "0");
+	     snprintf (buf, size(buf),  "0");
 	   Tcl_SetResult (interp, buf, TCL_STATIC);
     }
     return TCL_OK;

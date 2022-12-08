@@ -1,3 +1,8 @@
+braucht keiner mehr
+
+
+#ifdef XXXXXX
+
 #ifndef FILE_PARALLEL
 #define FILE_PARALLEL
 
@@ -324,5 +329,8 @@ namespace netgen
 #endif // PARALLEL
 
 }
+
+#endif
+
 
 #endif

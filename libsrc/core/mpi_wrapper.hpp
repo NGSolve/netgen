@@ -48,7 +48,7 @@ namespace ngcore
   inline MPI_Datatype GetMPIType () {
     return MPI_typetrait<T>::MPIType();
   }
-  
+
   template <class T>
   inline MPI_Datatype GetMPIType (T &) {
     return GetMPIType<T>();

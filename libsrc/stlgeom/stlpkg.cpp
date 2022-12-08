@@ -463,12 +463,12 @@ namespace netgen
 	      }
 	    if (strcmp (argv[1], "topology_ok") == 0)
 	      {
-		sprintf (buf, "%d", stlgeometry->Topology_Ok());
+		snprintf (buf, size(buf), "%d", stlgeometry->Topology_Ok());
 		Tcl_SetResult (interp, buf, TCL_STATIC);
 	      }
 	    if (strcmp (argv[1], "orientation_ok") == 0)
 	      {
-		sprintf (buf, "%d", stlgeometry->Orientation_Ok());
+		snprintf (buf, size(buf), "%d", stlgeometry->Orientation_Ok());
 		Tcl_SetResult (interp, buf, TCL_STATIC);
 	      }
 	  }
@@ -488,24 +488,24 @@ namespace netgen
 
 
 
-    sprintf (buf, "%i", (int)data[0]);
+    snprintf (buf, size(buf), "%i", (int)data[0]);
     Tcl_SetVar (interp, argv[1], buf, 0);
 
-    sprintf (buf, "%5.3g", data[1]);
+    snprintf (buf, size(buf), "%5.3g", data[1]);
     Tcl_SetVar (interp, argv[2], buf, 0);
-    sprintf (buf, "%5.3g", data[2]);
+    snprintf (buf, size(buf), "%5.3g", data[2]);
     Tcl_SetVar (interp, argv[3], buf, 0);
-    sprintf (buf, "%5.3g", data[3]);
+    snprintf (buf, size(buf), "%5.3g", data[3]);
     Tcl_SetVar (interp, argv[4], buf, 0);
 
-    sprintf (buf, "%5.3g", data[4]);
+    snprintf (buf, size(buf), "%5.3g", data[4]);
     Tcl_SetVar (interp, argv[5], buf, 0);
-    sprintf (buf, "%5.3g", data[5]);
+    snprintf (buf, size(buf), "%5.3g", data[5]);
     Tcl_SetVar (interp, argv[6], buf, 0);
-    sprintf (buf, "%5.3g", data[6]);
+    snprintf (buf, size(buf), "%5.3g", data[6]);
     Tcl_SetVar (interp, argv[7], buf, 0);
 
-    sprintf (buf, "%i", (int)data[7]);
+    snprintf (buf, size(buf), "%i", (int)data[7]);
     Tcl_SetVar (interp, argv[8], buf, 0);
 
     return TCL_OK;

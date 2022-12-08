@@ -91,7 +91,7 @@ namespace netgen
 		    for ( int ii = 0; ii < pointpos; ii++ )
 		      newscalname[ii] = scalname[ii];
 		    newscalname[pointpos] = ':';
-		    sprintf (newscalname+pointpos, "%i", vssolution.scalcomp);
+		    snprintf (newscalname+pointpos, sizeof(newscalname)-pointpos, "%i", vssolution.scalcomp);
 
                     if (strcmp (scalname, newscalname) != 0)
                       Tcl_SetVar ( interp, "::visoptions.scalfunction", newscalname, TCL_GLOBAL_ONLY );
@@ -325,22 +325,22 @@ namespace netgen
 
         if (strcmp (argv[1], "getnfieldnames") == 0)
           {
-            sprintf (buf, "%d", vssolution.GetNSolData());
+            snprintf (buf, size(buf),  "%d", vssolution.GetNSolData());
           }
       
         if (strcmp (argv[1], "getfieldname") == 0)
           {
-            sprintf (buf, "%s", vssolution.GetSolData(atoi(argv[2])-1)->name.c_str());
+            snprintf (buf, size(buf),  "%s", vssolution.GetSolData(atoi(argv[2])-1)->name.c_str());
           }
 
         if (strcmp (argv[1], "iscomplex") == 0)
           {
-            sprintf (buf, "%d", vssolution.GetSolData(atoi(argv[2])-1)->iscomplex);
+            snprintf (buf, size(buf),  "%d", vssolution.GetSolData(atoi(argv[2])-1)->iscomplex);
           }
 
         if (strcmp (argv[1], "getfieldcomponents") == 0)
           {
-            sprintf (buf, "%d", vssolution.GetSolData(atoi(argv[2])-1)->components);
+            snprintf (buf, size(buf),  "%d", vssolution.GetSolData(atoi(argv[2])-1)->components);
           }
 
       
@@ -362,13 +362,13 @@ namespace netgen
 
         if (strcmp (argv[1], "getactivefield") == 0)
           {
-            sprintf (buf, "1");
+            snprintf (buf, size(buf),  "1");
           }
 
         if (strcmp (argv[1], "getdimension") == 0)
           {
             auto mesh = vssolution.GetMesh();
-            sprintf (buf, "%d", mesh->GetDimension());
+            snprintf (buf, size(buf),  "%d", mesh->GetDimension());
           }
       }
 

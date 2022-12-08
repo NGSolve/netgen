@@ -285,9 +285,9 @@ void STLTopology :: Save (const filesystem::path & filename) const
       fout << "facet normal ";
       const Vec3d& n = GetTriangle(i).Normal();
 
-      sprintf(buf1,"%1.9g",n.X());
-      sprintf(buf2,"%1.9g",n.Y());
-      sprintf(buf3,"%1.9g",n.Z());
+      snprintf(buf1, size(buf1), "%1.9g",n.X());
+      snprintf(buf2, size(buf2), "%1.9g",n.Y());
+      snprintf(buf3, size(buf3), "%1.9g",n.Z());
 
       fout << buf1 << " " << buf2 << " " << buf3 << "\n";
       fout << "outer loop\n";
@@ -296,9 +296,9 @@ void STLTopology :: Save (const filesystem::path & filename) const
 	{
 	  const Point3d p = GetPoint(t.PNum(j));
 	  
-	  sprintf(buf1,"%1.9g",p.X());
-	  sprintf(buf2,"%1.9g",p.Y());
-	  sprintf(buf3,"%1.9g",p.Z());
+	  snprintf(buf1, size(buf1), "%1.9g",p.X());
+	  snprintf(buf2, size(buf2), "%1.9g",p.Y());
+	  snprintf(buf3, size(buf3), "%1.9g",p.Z());
 
 	  fout << "vertex " << buf1 << " " << buf2 << " " << buf3 << "\n";
 	}

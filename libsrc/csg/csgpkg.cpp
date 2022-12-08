@@ -65,18 +65,18 @@ namespace netgen
 	    Point3d pmin = geometry->BoundingBox ().PMin();
 	    Point3d pmax = geometry->BoundingBox ().PMax();
 	    
-	    sprintf (buf, "%5.1lf", pmin.X());
+	    snprintf (buf, size(buf), "%5.1lf", pmin.X());
 	    Tcl_SetVar (interp, "::geooptions.minx", buf, 0);
-	    sprintf (buf, "%5.1lf", pmin.Y());
+	    snprintf (buf, size(buf), "%5.1lf", pmin.Y());
 	    Tcl_SetVar (interp, "::geooptions.miny", buf, 0);
-	    sprintf (buf, "%5.1lf", pmin.Z());
+	    snprintf (buf, size(buf), "%5.1lf", pmin.Z());
 	    Tcl_SetVar (interp, "::geooptions.minz", buf, 0);
 	    
-	    sprintf (buf, "%5.1lf", pmax.X());
+	    snprintf (buf, size(buf), "%5.1lf", pmax.X());
 	    Tcl_SetVar (interp, "::geooptions.maxx", buf, 0);
-	    sprintf (buf, "%5.1lf", pmax.Y());
+	    snprintf (buf, size(buf), "%5.1lf", pmax.Y());
 	    Tcl_SetVar (interp, "::geooptions.maxy", buf, 0);
-	    sprintf (buf, "%5.1lf", pmax.Z());
+	    snprintf (buf, size(buf), "%5.1lf", pmax.Z());
 	    Tcl_SetVar (interp, "::geooptions.maxz", buf, 0);
 	  }
       }
@@ -432,17 +432,17 @@ namespace netgen
 	if (!tlo) return TCL_OK;
 
 	char varname[50];
-	sprintf (varname, "%s(red)", propvar);
+	snprintf (varname, size(varname), "%s(red)", propvar);
 	double red = atof (Tcl_GetVar (interp, varname, 0));
-	sprintf (varname, "%s(blue)", propvar);
+	snprintf (varname, size(varname), "%s(blue)", propvar);
 	double blue = atof (Tcl_GetVar (interp, varname, 0));
-	sprintf (varname, "%s(green)", propvar);
+	snprintf (varname, size(varname), "%s(green)", propvar);
 	double green = atof (Tcl_GetVar (interp, varname, 0));
 	tlo -> SetRGB (red, green, blue);
 
-	sprintf (varname, "%s(visible)", propvar);
+	snprintf (varname, size(varname), "%s(visible)", propvar);
 	tlo -> SetVisible (bool(atoi (Tcl_GetVar (interp, varname, 0))));
-	sprintf (varname, "%s(transp)", propvar);
+	snprintf (varname, size(varname), "%s(transp)", propvar);
 	tlo -> SetTransparent (bool(atoi (Tcl_GetVar (interp, varname, 0))));
       }
 
@@ -460,24 +460,24 @@ namespace netgen
 
 	char varname[50], varval[10];
 
-	sprintf (varname, "%s(red)", propvar);
-	sprintf (varval, "%lf", tlo->GetRed());
+	snprintf (varname, size(varname), "%s(red)", propvar);
+	snprintf (varval, size(varval), "%lf", tlo->GetRed());
 	Tcl_SetVar (interp, varname, varval, 0);
 
-	sprintf (varname, "%s(green)", propvar);
-	sprintf (varval, "%lf", tlo->GetGreen());
+	snprintf (varname, size(varname), "%s(green)", propvar);
+	snprintf (varval, size(varval), "%lf", tlo->GetGreen());
 	Tcl_SetVar (interp, varname, varval, 0);
 
-	sprintf (varname, "%s(blue)", propvar);
-	sprintf (varval, "%lf", tlo->GetBlue());
+	snprintf (varname, size(varname), "%s(blue)", propvar);
+	snprintf (varval, size(varval), "%lf", tlo->GetBlue());
 	Tcl_SetVar (interp, varname, varval, 0);
 
-	sprintf (varname, "%s(visible)", propvar);
-	sprintf (varval, "%d", tlo->GetVisible());
+	snprintf (varname, size(varname), "%s(visible)", propvar);
+	snprintf (varval, size(varval), "%d", tlo->GetVisible());
 	Tcl_SetVar (interp, varname, varval, 0);
 
-	sprintf (varname, "%s(transp)", propvar);
-	sprintf (varval, "%d", tlo->GetTransparent());
+	snprintf (varname, size(varname), "%s(transp)", propvar);
+	snprintf (varval, size(varval), "%d", tlo->GetTransparent());
 	Tcl_SetVar (interp, varname, varval, 0);
       }
 

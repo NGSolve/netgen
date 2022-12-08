@@ -624,21 +624,21 @@ namespace netgen
       {
         if (prev_np != mesh->GetNP())
           {
-            sprintf (buf, "%u", unsigned(mesh->GetNP()));
+            snprintf (buf, size(buf),  "%u", unsigned(mesh->GetNP()));
             Tcl_SetVar  (interp, "::status_np", buf, 0);
             prev_np = mesh->GetNP();
           }
 
         if (prev_ne != mesh->GetNE())
           {
-            sprintf (buf, "%u", unsigned(mesh->GetNE()));
+            snprintf (buf, size(buf),  "%u", unsigned(mesh->GetNE()));
             Tcl_SetVar  (interp, "::status_ne", buf, 0);
             prev_ne = mesh->GetNE();
           }
 
         if (prev_nse != mesh->GetNSE())
           {
-            sprintf (buf, "%u", unsigned(mesh->GetNSE()));
+            snprintf (buf, size(buf),  "%u", unsigned(mesh->GetNSE()));
             Tcl_SetVar  (interp, "::status_nse", buf, 0);
             prev_nse = mesh->GetNSE();
           }
@@ -647,7 +647,7 @@ namespace netgen
         lstring[0] = 0;
         for (int i = 0; i < tets_in_qualclass.Size(); i++)
           {
-            sprintf (buf, " %d", tets_in_qualclass[i]);
+            snprintf (buf, size(buf),  " %d", tets_in_qualclass[i]);
             strcat (lstring, buf);
           }
         for (int i = tets_in_qualclass.Size(); i < 20; i++)
@@ -702,7 +702,7 @@ namespace netgen
     if (prev_percent != multithread.percent)
       {
         prev_percent = multithread.percent;
-        sprintf (buf, "%lf", prev_percent);
+        snprintf (buf, size(buf),  "%lf", prev_percent);
         Tcl_SetVar  (interp, "::status_percent", buf, 0);
       }
         
@@ -780,7 +780,7 @@ namespace netgen
 	int facenr = atoi (argv[2]);
 	if (mesh && facenr >= 1 && facenr <= mesh->GetNFD())
 	  {
-	    sprintf (buf, "%d", mesh->GetFaceDescriptor(facenr).BCProperty());
+	    snprintf (buf, size(buf),  "%d", mesh->GetFaceDescriptor(facenr).BCProperty());
 	  }
 	else
 	  {
@@ -794,7 +794,7 @@ namespace netgen
 	int facenr = atoi (argv[2]);
 	if (mesh && facenr >= 1 && facenr <= mesh->GetNFD())
 	  {
-	    sprintf (buf, "%s", mesh->GetFaceDescriptor(facenr).GetBCName().c_str());
+	    snprintf (buf, size(buf),  "%s", mesh->GetFaceDescriptor(facenr).GetBCName().c_str());
 	  }
 	else
 	  {
@@ -806,7 +806,7 @@ namespace netgen
 
     if (strcmp (argv[1], "getactive") == 0)
       {
-	sprintf (buf, "%d", vsmesh.SelectedFace());
+	snprintf (buf, size(buf),  "%d", vsmesh.SelectedFace());
 	Tcl_SetResult (interp, buf, TCL_STATIC);
       }
 
@@ -822,9 +822,9 @@ namespace netgen
     if (strcmp (argv[1], "getnfd") == 0)
       {
 	if (mesh)
-	  sprintf (buf, "%d", mesh->GetNFD());
+	  snprintf (buf, size(buf),  "%d", mesh->GetNFD());
 	else
-	  sprintf (buf, "0");
+	  snprintf (buf, size(buf),  "0");
 	Tcl_SetResult (interp, buf, TCL_STATIC);
       }
 
@@ -1311,7 +1311,7 @@ namespace netgen
                        const_cast<char*>(parameters.GetStringFlag (argv[1], NULL).c_str()), TCL_VOLATILE);
     else if (parameters.NumFlagDefined (argv[1]))
       {
-	sprintf (buf, "%lf", parameters.GetNumFlag (argv[1], 0));
+	snprintf (buf, size(buf),  "%lf", parameters.GetNumFlag (argv[1], 0));
 	Tcl_SetResult (interp, buf, TCL_STATIC);
       }
     else if (parameters.GetDefineFlag (argv[1]))
@@ -1586,13 +1586,13 @@ namespace netgen
       {
 	angles[0] = angles[1] = angles[2] = angles[3] = 0;
       }
-    sprintf (buf, "%5.1lf", angles[0]);
+    snprintf (buf, size(buf),  "%5.1lf", angles[0]);
     Tcl_SetVar (interp, argv[1], buf, 0);
-    sprintf (buf, "%5.1lf", angles[1]);
+    snprintf (buf, size(buf),  "%5.1lf", angles[1]);
     Tcl_SetVar (interp, argv[2], buf, 0);
-    sprintf (buf, "%5.1lf", angles[2]);
+    snprintf (buf, size(buf),  "%5.1lf", angles[2]);
     Tcl_SetVar (interp, argv[3], buf, 0);
-    sprintf (buf, "%5.1lf", angles[3]);
+    snprintf (buf, size(buf),  "%5.1lf", angles[3]);
     Tcl_SetVar (interp, argv[4], buf, 0);
 
     return TCL_OK;
@@ -2415,7 +2415,7 @@ namespace netgen
   void SelectFaceInOCCDialogTree (int facenr)
   {
     char script[50];
-    sprintf (script, "selectentity {Face %i}", facenr);
+    snprintf (script, size(script), "selectentity {Face %i}", facenr);
     Tcl_GlobalEval (tcl_interp, script);
   }
 
@@ -2448,7 +2448,7 @@ namespace netgen
     // #ifdef OPENGL
     // #ifndef NOTCL
     char buf[100];
-    sprintf (buf, "visoptions.%s", name);
+    snprintf (buf, size(buf),  "visoptions.%s", name);
     if (printmessage_importance>0)
       {
 	cout << "name = " << name << ", value = " << value << endl;
@@ -2504,7 +2504,7 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
   int rti = (animcnt%(maxcnt-1)) + 1;
   animcnt+=speed;
   
-  sprintf(str2,"%05i.sol",rti);
+  snprintf(str2, sizeof(str2), "%05i.sol",rti);
   strcpy(str,"mbssol/");
   strcat(str,name);
   strcat(str,str2);

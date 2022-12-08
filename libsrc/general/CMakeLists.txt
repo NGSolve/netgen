@@ -15,7 +15,7 @@ target_sources(nglib PRIVATE
 
 install(FILES
   ngarray.hpp autodiff.hpp autoptr.hpp ngbitarray.hpp
-  dynamicmem.hpp hashtabl.hpp mpi_interface.hpp myadt.hpp
+  dynamicmem.hpp hashtabl.hpp myadt.hpp
   mystring.hpp netgenout.hpp ngpython.hpp
   optmem.hpp parthreads.hpp seti.hpp sort.hpp
   spbita2d.hpp stack.hpp table.hpp template.hpp
