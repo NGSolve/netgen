@@ -349,7 +349,7 @@ namespace netgen
 
 	    for (j = 0; j < nprim->GetNSurfaces(); j++)
 	      {
-		sprintf (sname, "%s,%d", name, j);
+		snprintf (sname, size(sname), "%s,%d", name, j);
 		AddSurface (sname, &nprim->GetSurface(j));
 		nprim -> SetSurfaceId (j, GetNSurf());
 	      }
@@ -633,7 +633,7 @@ namespace netgen
     static int cntsurfs = 0;
     cntsurfs++;
     char name[20];
-    sprintf (name, "nnsurf%d", cntsurfs);
+    snprintf (name, size(name), "nnsurf%d", cntsurfs);
     AddSurface (name, surf);
   }
  

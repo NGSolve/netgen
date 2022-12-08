@@ -42,11 +42,11 @@ void WriteFluentFormat (const Mesh & mesh,
   outfile << "(0 \"Nodes:\")" << endl;
 
   //number of nodes:
-  sprintf(str,"(10 (0 1 %x 1))",np); //hexadecimal!!!
+  snprintf (str, size(str), "(10 (0 1 %x 1))",np); //hexadecimal!!!
   outfile << str << endl;
 
   //nodes of zone 1:
-  sprintf(str,"(10 (7 1 %x 1)(",np); //hexadecimal!!!
+  snprintf (str, size(str), "(10 (7 1 %x 1)(",np); //hexadecimal!!!
   outfile << str << endl;
   for (i = 1; i <= np; i++)
     {
@@ -74,10 +74,10 @@ void WriteFluentFormat (const Mesh & mesh,
 
   int noverbface = 2*ne-nse/2;
       
-  sprintf(str,"(13 (0 1 %x 0))",(noverbface+nse)); //hexadecimal!!!
+  snprintf (str, size(str), "(13 (0 1 %x 0))",(noverbface+nse)); //hexadecimal!!!
   outfile << str << endl;
       
-  sprintf(str,"(13 (4 1 %x 2 3)(",noverbface); //hexadecimal!!!
+  snprintf (str, size(str), "(13 (4 1 %x 2 3)(",noverbface); //hexadecimal!!!
   outfile << str << endl;
 
   const_cast<Mesh&> (mesh).BuildElementSearchTree();
@@ -156,7 +156,7 @@ void WriteFluentFormat (const Mesh & mesh,
     }
   outfile << "))" << endl;
       
-  sprintf(str,"(13 (2 %x %x 3 3)(",(noverbface+1),noverbface+nse); //hexadecimal!!!
+  snprintf (str, size(str), "(13 (2 %x %x 3 3)(",(noverbface+1),noverbface+nse); //hexadecimal!!!
   outfile << str << endl;
 
   for (i = 1; i <= surfaceelp.Size(); i++)
@@ -171,10 +171,10 @@ void WriteFluentFormat (const Mesh & mesh,
 
   outfile << "(0 \"Cells:\")" << endl;
       
-  sprintf(str,"(12 (0 1 %x 0))",ne); //hexadecimal!!!
+  snprintf (str, size(str), "(12 (0 1 %x 0))",ne); //hexadecimal!!!
   outfile << str << endl;
 
-  sprintf(str,"(12 (1 1 %x 1 2))",ne); //hexadecimal!!!
+  snprintf (str, size(str), "(12 (1 1 %x 1 2))",ne); //hexadecimal!!!
   outfile << str << endl << endl;
 
 

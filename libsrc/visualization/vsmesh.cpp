@@ -416,7 +416,7 @@ namespace netgen
 	      const Point3d & p = mesh->Point(pi);
 	      glRasterPos3d (p.X(), p.Y(), p.Z());
 
-	      sprintf (buf, "%d", int(pi));
+	      snprintf (buf, size(buf),  "%d", int(pi));
 
 	      // glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
 	      MyOpenGLText (buf);
@@ -434,7 +434,7 @@ namespace netgen
 	      const Point3d p = Center (p1, p2);
 	      glRasterPos3d (p.X(), p.Y(), p.Z());
 
-	      sprintf (buf, "%d", seg.edgenr);
+	      snprintf (buf, size(buf),  "%d", seg.edgenr);
 	      glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
 	      }
 	    */
@@ -449,7 +449,7 @@ namespace netgen
 		const Point3d p = Center (p1, p2);
 		glRasterPos3d (p.X(), p.Y(), p.Z());
 
-		sprintf (buf, "%d", i);
+		snprintf (buf, size(buf),  "%d", i);
 		// glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
 		MyOpenGLText (buf);
 
@@ -482,7 +482,7 @@ namespace netgen
                   }
 
 		glRasterPos3d (p.X(), p.Y(), p.Z());
-		sprintf (buf, "%d", i);
+		snprintf (buf, size(buf),  "%d", i);
 		// glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
 		MyOpenGLText (buf);
 	      }
@@ -567,7 +567,7 @@ namespace netgen
                   }
 
 		glRasterPos3d (p.X(), p.Y(), p.Z());
-		sprintf (buf, "%d", i);
+		snprintf (buf, size(buf),  "%d", i);
 		// glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
 		MyOpenGLText (buf);
 
