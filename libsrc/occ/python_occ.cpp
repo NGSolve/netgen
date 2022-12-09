@@ -118,11 +118,11 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                     
                     for (auto & s : shapes)
                       for (TopExp_Explorer e(s, TopAbs_SOLID); e.More(); e.Next())
-                        if (auto name = OCCGeometry::global_shape_properties[e.Current()].name)
+                        if (auto name = OCCGeometry::GetProperties(e.Current()).name)
                           {
                             TopTools_ListOfShape modlist = history->Modified(e.Current());
                             for (auto mods : modlist)
-                              OCCGeometry::global_shape_properties[mods].name = *name;
+                              OCCGeometry::GetProperties(mods).name = *name;
                           }
 #endif // OCC_HAVE_HISTORY
 
