@@ -439,7 +439,7 @@ namespace netgen
   void PropagateIdentifications (TBuilder & builder, TopoDS_Shape shape, std::optional<Transformation<3>> trafo = nullopt)
   {
     TopTools_IndexedMapOfShape mod_indices;
-    std::vector<TopTools_IndexedMapOfShape> modifications;
+    Array<TopTools_IndexedMapOfShape> modifications;
     TopTools_MapOfShape shape_handled;
 
     Transformation<3> trafo_inv;
@@ -451,8 +451,8 @@ namespace netgen
       {
           auto s = e.Current();
           mod_indices.Add(s);
-          modifications.push_back({});
-          modifications.back().Add(s);
+          modifications.Append(TopTools_IndexedMapOfShape());
+          modifications.Last().Add(s);
       }
   
     for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
@@ -483,9 +483,12 @@ namespace netgen
   
           for(auto ident : identifications)
           {
-              // nothing happened
-              auto& mods_to = modifications[mod_indices.FindIndex(ident.to)-1];
-              auto& mods_from = modifications[mod_indices.FindIndex(ident.from)-1];
+              auto i1 = mod_indices.FindIndex(ident.to);
+              auto i2 = mod_indices.FindIndex(ident.from);
+              if(i1 == 0 || i2 == 0) // not in geometry
+                continue;
+              auto& mods_to = modifications[i1-1];
+              auto& mods_from = modifications[i2-1];
               if(mods_to.Extent()==1 && mods_from.Extent() ==1)
                 continue;
   

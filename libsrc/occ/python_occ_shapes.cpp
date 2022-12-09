@@ -1000,7 +1000,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       return shape1.IsSame(shape2);
     })
     .def("__hash__", [] (const TopoDS_Shape& shape) {
-      return shape.HashCode(std::numeric_limits<Standard_Integer>::max());
+      OCCGeometry::GetProperties(shape); // make sure it is in global properties
+      return OCCGeometry::global_shape_property_indices.FindIndex(shape);
     })
 
     .def("Reversed", [](const TopoDS_Shape & shape) {
