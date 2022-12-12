@@ -143,6 +143,21 @@ namespace ngcore
       data = new T[cnt];
     }
 
+    explicit NETGEN_INLINE Table (const FlatTable<T,IndexType> & tab2)
+      : FlatTable<T,IndexType>(0, nullptr, nullptr)
+    {
+      size = tab2.Size();
+
+      index = new size_t[size+1];
+      for (size_t i = 0; i <= size; i++)
+        index[i] = tab2.index[i];
+
+      size_t cnt = index[size];
+      data = new T[cnt];
+      for (size_t i = 0; i < cnt; i++)
+        data[i] = tab2.data[i];
+    }
+    
     explicit NETGEN_INLINE Table (const Table & tab2)
       : FlatTable<T,IndexType>(0, nullptr, nullptr)
     {
