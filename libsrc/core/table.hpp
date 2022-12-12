@@ -149,13 +149,17 @@ namespace ngcore
       size = tab2.Size();
 
       index = new size_t[size+1];
-      for (size_t i = 0; i <= size; i++)
-        index[i] = tab2.index[i];
+      this->IndexArray() = tab2.IndexArray();
+      // for (size_t i = 0; i <= size; i++)
+      // index[i] = tab2.index[i];
 
       size_t cnt = index[size];
       data = new T[cnt];
+      this->AsArray() = tab2.AsArray();
+      /*
       for (size_t i = 0; i < cnt; i++)
         data[i] = tab2.data[i];
+      */
     }
     
     explicit NETGEN_INLINE Table (const Table & tab2)
