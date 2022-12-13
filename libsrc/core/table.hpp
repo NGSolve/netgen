@@ -36,7 +36,8 @@ namespace ngcore
 
   public:
     FlatTable() = delete;
-
+    FlatTable (const FlatTable &) = default;
+    
     NETGEN_INLINE FlatTable(size_t as, size_t * aindex, T * adata)
       : size(as), index(aindex), data(adata) { ; }
 
@@ -147,7 +148,8 @@ namespace ngcore
       : FlatTable<T,IndexType>(0, nullptr, nullptr)
     {
       size = tab2.Size();
-
+      if (size == 0) return;
+      
       index = new size_t[size+1];
       this->IndexArray() = tab2.IndexArray();
       // for (size_t i = 0; i <= size; i++)
@@ -166,7 +168,8 @@ namespace ngcore
       : FlatTable<T,IndexType>(0, nullptr, nullptr)
     {
       size = tab2.Size();
-
+      if (size == 0) return;
+      
       index = new size_t[size+1];
       for (size_t i = 0; i <= size; i++)
         index[i] = tab2.index[i];
