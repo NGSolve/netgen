@@ -205,6 +205,7 @@ namespace netgen
         if (count == 50) return false;
 
         p_ = occ2ng(x);
+        gi.u = u; gi.v = v;
 
         return true;
     }
