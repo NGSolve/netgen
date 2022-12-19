@@ -92,6 +92,9 @@ namespace netgen
     virtual Point<3> GetPoint(double t) const = 0;
     // Calculate parameter step respecting edges sag value
     virtual double CalcStep(double t, double sag) const = 0;
+    virtual bool IsDegenerated(double tol = 1e-10) const {
+      return GetLength() < tol;
+    }
     virtual void ProjectPoint(Point<3>& p, EdgePointGeomInfo* gi) const = 0;
     virtual void PointBetween(const Point<3>& p1,
                               const Point<3>& p2,

@@ -55,6 +55,8 @@ namespace netgen
       if(!other_ptr)
           return false;
       auto & e = *other_ptr;
+      if (IsDegenerated(tol) || e.IsDegenerated(tol))
+        return false;
 
       if(tol < Dist(trafo(GetCenter()), e.GetCenter()))
           return false;

@@ -152,7 +152,7 @@ namespace netgen
     }
     static bool HaveProperties(const TopoDS_Shape& shape)
     {
-      return OCCGeometry::global_shape_property_indices.FindIndex(shape) > 1;
+      return OCCGeometry::global_shape_property_indices.FindIndex(shape) > 0;
     }
     static std::vector<OCCIdentification>& GetIdentifications(const TopoDS_Shape& shape)
     {
@@ -165,7 +165,7 @@ namespace netgen
     }
     static bool HaveIdentifications(const TopoDS_Shape& shape)
     {
-      return OCCGeometry::global_identification_indices.FindIndex(shape) > 1;
+      return OCCGeometry::global_identification_indices.FindIndex(shape) > 0;
     }
 
     TopoDS_Shape shape;

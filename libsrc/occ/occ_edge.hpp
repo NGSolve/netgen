@@ -6,6 +6,7 @@
 #include <TopoDS_Edge.hxx>
 #include <Geom_Curve.hxx>
 #include <BRep_TEdge.hxx>
+#include <BRep_Tool.hxx>
 
 #include "occ_vertex.hpp"
 #include "meshing.hpp"
@@ -32,6 +33,9 @@ namespace netgen
         size_t GetHash() const override;
         void ProjectPoint(Point<3>& p, EdgePointGeomInfo* gi) const override;
         Vec<3> GetTangent(double t) const override;
+        bool IsDegenerated(double) const override {
+          return BRep_Tool::Degenerated(edge);
+        }
     };
 }
 
