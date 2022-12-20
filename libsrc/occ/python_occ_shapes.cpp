@@ -632,9 +632,11 @@ public:
     return shared_from_this();
   }
   
-  TopoDS_Wire Last()
+  optional<TopoDS_Wire> Last()
   {
-    return wires.back();
+    return wires.empty() ?
+                         optional<TopoDS_Wire>{} :
+                         optional<TopoDS_Wire>{wires.back()};
   }
 
   TopoDS_Face Face()
@@ -1567,7 +1569,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       },
       py::keep_alive<0, 1>() /* Essential: keep object alive while iterator exists */)
     .def("__getitem__", [](const ListOfShapes & list, size_t i) {
-        return CastShape(list[i]); })
+        return CastShape(list.at(i)); })
     
     .def("__getitem__", [](const ListOfShapes & self, py::slice inds) {
         size_t start, step, n, stop;
