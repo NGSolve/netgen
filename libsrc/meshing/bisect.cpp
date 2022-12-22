@@ -3418,9 +3418,17 @@ namespace netgen
 		  INDEX_2 edge(oldpi1, oldpi2);
 		  edge.Sort();
 
+                  int si = mesh.GetFaceDescriptor (oldtri.surfid).SurfNr();
+                  PointGeomInfo npgi;
+                  PointGeomInfo gi1 = oldtri.pgeominfo[(oldtri.markededge+1)%3];
+                  PointGeomInfo gi2 = oldtri.pgeominfo[(oldtri.markededge+2)%3];
+
 		  if (cutedges.Used (edge))
 		    {
 		      newp = cutedges.Get(edge);
+                      npgi.u = 0.5*(gi1.u + gi2.u);
+                      npgi.v = 0.5*(gi1.v + gi2.v);
+                      geo.ProjectPointGI (si, mesh[newp], npgi);
 		    }
 		  else
 		    {
@@ -3428,17 +3436,9 @@ namespace netgen
                                              mesh.Point (edge.I2()));
 		      newp = mesh.AddPoint (npt);
                       cutedges.Set (edge, newp);
+                      geo.PointBetween (mesh.Point (oldpi1), mesh.Point (oldpi2),
+                                      0.5, si, gi1, gi2, mesh.Point (newp), npgi);
 		    }
-		
-		  int si = mesh.GetFaceDescriptor (oldtri.surfid).SurfNr();
-		  PointGeomInfo npgi;
-		
-                  if (mesh[newp].Type() != EDGEPOINT)
-                    geo.PointBetween (mesh.Point (oldpi1), mesh.Point (oldpi2),
-                                      0.5, si,
-                                      oldtri.pgeominfo[(oldtri.markededge+1)%3],
-                                      oldtri.pgeominfo[(oldtri.markededge+2)%3],
-                                      mesh.Point (newp), npgi);
 		
 		  BTBisectTri (oldtri, newp, npgi, newtri1, newtri2);
 		
