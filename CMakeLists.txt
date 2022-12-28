@@ -282,7 +282,7 @@ if (USE_GUI)
        target_include_directories(netgen_gui INTERFACE ${TK_INCLUDE_PATH}/../xlib)
     endif()
 
-    target_link_libraries(nggui PUBLIC nglib togl PRIVATE "$<BUILD_INTERFACE:netgen_python>" )
+    target_link_libraries(nggui PUBLIC nglib togl PRIVATE "$<BUILD_INTERFACE:netgen_python>" "$<BUILD_INTERFACE:netgen_gui>" )
 
     if(WIN32)
       target_compile_definitions(netgen_gui INTERFACE -DTOGL_WGL)
