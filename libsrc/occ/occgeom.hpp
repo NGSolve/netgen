@@ -537,7 +537,7 @@ namespace netgen
           have_identifications |= OCCGeometry::HaveIdentifications(s);
           if(!OCCGeometry::HaveProperties(s))
             continue;
-          auto & prop = OCCGeometry::GetProperties(s);
+          auto prop = OCCGeometry::GetProperties(s);
           for (auto mods : builder.Modified(s))
             OCCGeometry::GetProperties(mods).Merge(prop);
         }
