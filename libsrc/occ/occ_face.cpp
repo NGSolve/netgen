@@ -116,7 +116,11 @@ namespace netgen
                     seg.epgeominfo[i].v = uv.Y();
                 }
 
-                if(ORIENTATION == REVERSED)
+                bool do_swap = ORIENTATION == REVERSED;
+                if(seg.epgeominfo[1].dist < seg.epgeominfo[0].dist)
+                  do_swap = !do_swap;
+
+                if(do_swap)
                 {
                     swap(seg[0], seg[1]);
                     swap(seg.epgeominfo[0].dist, seg.epgeominfo[1].dist);

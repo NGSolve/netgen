@@ -637,25 +637,44 @@ namespace netgen
                 edge_params[i] = gi.dist;
             }
 
-            // reverse entries if we have decreasing parameters
-            if(edge_params.Size()>=2 && edge_params[0] > edge_params.Last())
-                for(auto i : Range((np-2)/2))
-                {
-                    swap(edge_points[i], edge_points[np-3-i]);
-                    swap(edge_params[i], edge_params[np-3-i]);
-                }
-
             params.SetSize(edge_params.Size()+2);
-            params[0] = 0.;
-            params.Last() = 1.;
 
             for(auto i : Range(edge_params))
                 params[i+1] = edge_params[i];
+
+            if(edge_params.Size()>1)
+            {
+              // Just projecting (code below) does not work for closed edges (startp == endp)
+              // In this case, there are at least 2 inner points which we use to check edge orientation
+              bool reversed = edge_params[1] < edge_params[0];
+              if(reversed)
+              {
+                params[0] = 1.0;
+                params.Last() = 0.0;
+              }
+              else
+              {
+                params.Last() = 1.0;
+                params[0] = 0.0;
+              }
+            }
+            else
+            {
+              for(size_t i : {0UL, pnums_primary.Size()-1})
+              {
+                auto p_mapped = trafo(mesh[pnums_primary[i]]);
+                EdgePointGeomInfo gi;
+                edge->ProjectPoint(p_mapped, &gi);
+                params[i] = gi.dist;
+              }
+            }
         }
 
         pnums.SetSize(edge_points.Size() + 2);
-        pnums[0] = startp;
-        pnums.Last() = endp;
+
+        bool is_reversed = params.Last() < params[0];
+        pnums[0] = is_reversed ? endp : startp;
+        pnums.Last() = is_reversed ? startp : endp;
 
 
         for(auto i : Range(edge_points))
