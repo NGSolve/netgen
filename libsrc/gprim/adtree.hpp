@@ -817,6 +817,7 @@ public:
       : BoxTree(box.PMin(), box.PMax())
     { }
 
+  void SetTolerance(double _tol) { tol = _tol; }
   double GetTolerance() { return tol; }
 
   size_t GetNLeaves()

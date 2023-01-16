@@ -350,6 +350,14 @@ namespace netgen
                 uv_box.Add( {seg.epgeominfo[i].u, seg.epgeominfo[i].v } );
 
         BoxTree<2> uv_tree(uv_box);
+        double tol = 1e99;
+        for(auto& seg : segments)
+          {
+            Point<2> p1 = { seg.epgeominfo[0].u, seg.epgeominfo[0].v };
+            Point<2> p2 = { seg.epgeominfo[1].u, seg.epgeominfo[1].v };
+            tol = min2(tol, Dist(p1, p2));
+          }
+        uv_tree.SetTolerance(0.9 * tol);
         Array<int> found_points;
 
         for(auto & seg : segments)
@@ -368,15 +376,21 @@ namespace netgen
                 Point<2> uv = {gi[j].u, gi[j].v};
                 uv_tree.GetIntersecting(uv, uv, found_points);
 
-                if(found_points.Size())
-                    locpnum[j] = found_points[0];
-                else
+                bool found = false;
+                for(auto& fp : found_points)
+                  {
+                    if(meshing.GetGlobalIndex(fp - 1) == seg[j])
+                      {
+                        locpnum[j] = fp;
+                        found = true;
+                      }
+                  }
+                if(!found)
                 {
                     PointIndex pi = seg[j];
-                    meshing.AddPoint (mesh.Point(pi), pi);
-                    glob2loc[pi] = ++cntpt;
+                    locpnum[j] = meshing.AddPoint (mesh.Point(pi), pi) + 1;
+                    glob2loc[pi] = locpnum[j];
                     gis.Append (gi[j]);
-                    locpnum[j] = gis.Size();
                     uv_tree.Insert(uv, locpnum[j]);
                 }
             }
@@ -391,11 +405,10 @@ namespace netgen
                 auto gi = occface.Project(mesh[pi]);
                 MultiPointGeomInfo mgi;
                 mgi.AddPointGeomInfo(gi);
-                meshing.AddPoint(mesh[pi], pi, &mgi);
+                glob2loc[pi] = meshing.AddPoint(mesh[pi], pi, &mgi) + 1;
                 gis.Append(gi);
                 Point<2> uv = { gi.u, gi.v };
-                uv_tree.Insert(uv, gis.Size());
-                glob2loc[pi] = ++cntpt;
+                uv_tree.Insert(uv, glob2loc[pi]);
               }
           }
       }

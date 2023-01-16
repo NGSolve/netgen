@@ -66,8 +66,9 @@ public:
 
 
   ///
-  DLL_HEADER void AddPoint (const Point3d & p, PointIndex globind, MultiPointGeomInfo * mgi = NULL,
+  DLL_HEADER int AddPoint (const Point3d & p, PointIndex globind, MultiPointGeomInfo * mgi = NULL,
 		 bool pointonsurface = true);
+  DLL_HEADER PointIndex GetGlobalIndex(int pi) const;
 
   ///
   DLL_HEADER void AddBoundaryElement (INDEX i1, INDEX i2,
