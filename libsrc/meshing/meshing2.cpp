@@ -79,12 +79,17 @@ namespace netgen
   Meshing2 :: ~Meshing2 ()
   { ; } 
 
-  void Meshing2 :: AddPoint (const Point3d & p, PointIndex globind, 
-			     MultiPointGeomInfo * mgi,
-			     bool pointonsurface)
+  int Meshing2 :: AddPoint (const Point3d & p, PointIndex globind,
+                            MultiPointGeomInfo * mgi,
+                            bool pointonsurface)
   {
     //(*testout) << "add point " << globind << endl;
-    adfront.AddPoint (p, globind, mgi, pointonsurface);
+    return adfront.AddPoint (p, globind, mgi, pointonsurface);
+  }
+
+  PointIndex Meshing2 :: GetGlobalIndex(int pi) const
+  {
+    return adfront.GetGlobalIndex(pi);
   }
 
   void Meshing2 :: AddBoundaryElement (int i1, int i2,
