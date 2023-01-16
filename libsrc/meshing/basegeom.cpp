@@ -1053,7 +1053,7 @@ namespace netgen
         if(do_invert.IsMaybe())
         {
             auto n_src = src.GetNormal(mesh[sel[0]]);
-            auto n_dist = dst.GetNormal(mesh[sel[0]]);
+            auto n_dist = dst.GetNormal(trafo(mesh[sel[0]]));
             Mat<3> normal_matrix;
             CalcInverse(Trans(trafo.GetMatrix()), normal_matrix);
             do_invert = n_src * (normal_matrix * n_dist) < 0.0;
