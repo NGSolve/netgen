@@ -660,7 +660,7 @@ namespace netgen
             }
             else
             {
-              for(size_t i : {0UL, pnums_primary.Size()-1})
+              for(size_t i : std::vector{0UL, pnums_primary.Size()-1})
               {
                 auto p_mapped = trafo(mesh[pnums_primary[i]]);
                 EdgePointGeomInfo gi;
