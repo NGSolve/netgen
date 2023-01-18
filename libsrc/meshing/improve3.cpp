@@ -323,7 +323,7 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
       (*testout) << "Total badness = " << totalbad << endl;
     }
 
-  auto elementsonnode = mesh.CreatePoint2ElementTable();
+  auto elementsonnode = mesh.CreatePoint2ElementTable(nullopt, mp.only3D_domain_nr);
 
   Array<std::tuple<PointIndex,PointIndex>> edges;
   BuildEdgeList(mesh, elementsonnode, edges);
@@ -567,7 +567,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
   double bad = 0.0;
   double badmax = 0.0;
 
-  auto elementsonnode = mesh.CreatePoint2ElementTable();
+  auto elementsonnode = mesh.CreatePoint2ElementTable(nullopt, mp.only3D_domain_nr);
 
   Array<double> elerrs(ne);
 
@@ -1312,13 +1312,16 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
             if(el.Flags().fixed)
               continue;
 
+            if(mp.only3D_domain_nr && mp.only3D_domain_nr != el.GetIndex())
+              continue;
+
             for (auto pi : el.PNums())
               if(!free_points[pi])
                   free_points.SetBitAtomic(pi);
           }
       });
 
-  auto elementsonnode = mesh.CreatePoint2ElementTable(free_points);
+  auto elementsonnode = mesh.CreatePoint2ElementTable(free_points, mp.only3D_domain_nr );
 
   NgArray<ElementIndex> hasbothpoints;
 
@@ -2480,7 +2483,8 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 
   // find elements on node
 
-  auto elementsonnode = mesh.CreatePoint2ElementTable();
+  auto elementsonnode = mesh.CreatePoint2ElementTable(nullopt, mp.only3D_domain_nr);
+  // todo: respect mp.only3D_domain_nr
   
   for (SurfaceElementIndex sei = 0; sei < nse; sei++)
     for (int j = 0; j < 3; j++)
@@ -2685,7 +2689,7 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh)
   static Timer topt("Optimize");
 
   int ne = mesh.GetNE();
-  auto elements_of_point = mesh.CreatePoint2ElementTable();
+  auto elements_of_point = mesh.CreatePoint2ElementTable(nullopt, mp.only3D_domain_nr);
   int ntasks = 4*ngcore::TaskManager::GetNumThreads();
 
   const char * savetask = multithread.task;

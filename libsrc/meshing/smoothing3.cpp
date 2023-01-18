@@ -304,22 +304,20 @@ namespace netgen
   public:
     Mesh::T_POINTS & points;
     const Array<Element, ElementIndex> & elements;
-    Table<int, PointIndex> &elementsonpoint;
+    Table<ElementIndex, PointIndex> &elementsonpoint;
     bool own_elementsonpoint;
     const MeshingParameters & mp;
     PointIndex actpind;
     double h;
   
   public:
-    PointFunction (Mesh::T_POINTS & apoints, 
-		   const Array<Element, ElementIndex> & aelements,
-		   const MeshingParameters & amp);
+    PointFunction (Mesh & mesh, const MeshingParameters & amp);
     PointFunction (const PointFunction & pf);
     virtual ~PointFunction () { if(own_elementsonpoint) delete &elementsonpoint; }
     virtual void SetPointIndex (PointIndex aactpind);
     void SetLocalH (double ah) { h = ah; }
     double GetLocalH () const { return h; }
-    const Table<int, PointIndex> & GetPointToElementTable() { return elementsonpoint; };
+    const Table<ElementIndex, PointIndex> & GetPointToElementTable() { return elementsonpoint; };
     virtual double PointFunctionValue (const Point<3> & pp) const;
     virtual double PointFunctionValueGrad (const Point<3> & pp, Vec<3> & grad) const;
     virtual double PointFunctionValueDeriv (const Point<3> & pp, const Vec<3> & dir, double & deriv) const;
@@ -332,23 +330,26 @@ namespace netgen
     : points(pf.points), elements(pf.elements), elementsonpoint(pf.elementsonpoint), own_elementsonpoint(false), mp(pf.mp)
   { }
 
-  PointFunction :: PointFunction (Mesh::T_POINTS & apoints, 
-				  const Array<Element, ElementIndex> & aelements,
-				  const MeshingParameters & amp)
-    : points(apoints), elements(aelements), elementsonpoint(* new Table<int,PointIndex>()), own_elementsonpoint(true), mp(amp)
+  PointFunction :: PointFunction (Mesh & mesh, const MeshingParameters & amp)
+    : points(mesh.Points()), elements(mesh.VolumeElements()), elementsonpoint(* new Table<ElementIndex,PointIndex>()), own_elementsonpoint(true), mp(amp)
   {
     static Timer tim("PointFunction - build elementsonpoint table"); RegionTimer reg(tim);
-    elementsonpoint = ngcore::CreateSortedTable<int, PointIndex>( elements.Range(),
-               [&](auto & table, ElementIndex ei)
-               {
-                 const auto & el = elements[ei];
+    BitArray free_points(points.Size()+PointIndex::BASE);
+    free_points.Clear();
 
-                 if(el.NP()!=4)
-                     return;
-
-                 for (PointIndex pi : el.PNums())
-                     table.Add (pi, ei);
-               }, points.Size());
+    ParallelForRange(elements.Range(), [&] (auto myrange)
+        {
+          for (ElementIndex eli : myrange)
+            {
+              const auto & el = elements[eli];
+              if(el.Flags().fixed || el.NP()!=4 || (mp.only3D_domain_nr && mp.only3D_domain_nr != el.GetIndex()) )
+                for (auto pi : el.PNums())
+                  if(free_points[pi])
+                      free_points.SetBitAtomic(pi);
+            }
+        });
+    free_points.Invert();
+    elementsonpoint = mesh.CreatePoint2ElementTable(free_points, mp.only3D_domain_nr);
   }
 
   void PointFunction :: SetPointIndex (PointIndex aactpind)
@@ -493,19 +494,15 @@ namespace netgen
   {
     DenseMatrix m;
   public:
-    CheapPointFunction (Mesh::T_POINTS & apoints, 
-			const Array<Element, ElementIndex> & aelements,
-			const MeshingParameters & amp);
+    CheapPointFunction (Mesh & mesh, const MeshingParameters & amp);
     virtual void SetPointIndex (PointIndex aactpind);
     virtual double PointFunctionValue (const Point<3> & pp) const;
     virtual double PointFunctionValueGrad (const Point<3> & pp, Vec<3> & grad) const;
   };
 
 
-  CheapPointFunction :: CheapPointFunction (Mesh::T_POINTS & apoints, 
-					    const Array<Element, ElementIndex> & aelements,
-					    const MeshingParameters & amp)
-    : PointFunction (apoints, aelements, amp)
+  CheapPointFunction :: CheapPointFunction (Mesh & mesh, const MeshingParameters & amp)
+    : PointFunction (mesh, amp)
   {
     ;
   }
@@ -1348,14 +1345,14 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
   int np = GetNP();
   int ne = GetNE();
 
-  PointFunction pf_glob(points, volelements, mp);
+  PointFunction pf_glob(*this, mp);
 
   auto & elementsonpoint = pf_glob.GetPointToElementTable();
 
   const auto & getDofs = [&] (int i)
   {
       i += PointIndex::BASE;
-      return FlatArray<int>(elementsonpoint[i].Size(), elementsonpoint[i].Data());
+      return FlatArray<ElementIndex>(elementsonpoint[i].Size(), elementsonpoint[i].Data());
   };
 
   Array<int> colors(points.Size());
