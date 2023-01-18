@@ -6814,7 +6814,7 @@ namespace netgen
   }
 
 
-  Table<ElementIndex, PointIndex> Mesh :: CreatePoint2ElementTable(std::optional<BitArray> points) const
+  Table<ElementIndex, PointIndex> Mesh :: CreatePoint2ElementTable(std::optional<BitArray> points, int domain) const
   {
     if(points)
       {
@@ -6824,6 +6824,9 @@ namespace netgen
                {
                  const auto & el = (*this)[ei];
                  if(el.IsDeleted())
+                     return;
+
+                 if(domain && el.GetIndex() != domain)
                      return;
 
                  for (PointIndex pi : el.PNums())
@@ -6837,6 +6840,9 @@ namespace netgen
                {
                  const auto & el = (*this)[ei];
                  if(el.IsDeleted())
+                     return;
+
+                 if(domain && el.GetIndex() != domain)
                      return;
 
                  for (PointIndex pi : el.PNums())
