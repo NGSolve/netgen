@@ -987,6 +987,8 @@ namespace ngcore
       *stream >> len;
       char ch;
       stream->get(ch); // '\n'
+      if(ch == '\r') // windows line endings -> read \n as well
+        stream->get(ch);
       str.resize(len);
       if(len)
         stream->get(&str[0], len+1, '\0');
@@ -1006,6 +1008,8 @@ namespace ngcore
       if(len)
         {
           stream->get(ch); // \n
+          if(ch == '\r') // windows line endings, read \n as well
+            stream->get(ch);
           stream->get(&str[0], len+1, '\0'); // NOLINT
         }
       str[len] = '\0'; // NOLINT
