@@ -25,15 +25,15 @@ namespace netgen
       bool mixed = false;
       ParallelForRange( Range(seia), [&] (auto myrange) NETGEN_LAMBDA_INLINE
          {
-            for (SurfaceElementIndex i : myrange)
+            for (auto i : myrange)
             {
-              const auto & sel = mesh[i];
+              const auto & sel = mesh[seia[i]];
 
               if(sel.GetNP() == 3)
                   continue;
 
-              for(auto i : Range(sel.GetNP()))
-                  if(mesh[sel[i]].Type() == SURFACEPOINT)
+              for(auto pi : Range(sel.GetNP()))
+                  if(mesh[sel[pi]].Type() == SURFACEPOINT)
                       mixed = true;
             }
          });
