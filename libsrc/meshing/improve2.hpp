@@ -107,19 +107,19 @@ public:
   {}
   virtual ~MeshOptimize2d() { ; }
   ///
-  void ImproveMesh (const MeshingParameters & mp);
-  void ImproveMeshJacobian (const MeshingParameters & mp);
-  void ImproveVolumeMesh ();
-  void ProjectBoundaryPoints(NgArray<int> & surfaceindex, 
+  DLL_HEADER void ImproveMesh (const MeshingParameters & mp);
+  DLL_HEADER void ImproveMeshJacobian (const MeshingParameters & mp);
+  DLL_HEADER void ImproveVolumeMesh ();
+  DLL_HEADER void ProjectBoundaryPoints(NgArray<int> & surfaceindex, 
 			     const NgArray<Point<3>* > & from, NgArray<Point<3>* > & dest);
 
-  bool EdgeSwapping (const int usemetric, Array<Neighbour> &neighbors, Array<bool> &swapped,
-    const SurfaceElementIndex t1, const int edge, const int t, Array<int,PointIndex> &pdef, const bool check_only=false);
-  void EdgeSwapping (int usemetric);
-  void CombineImprove ();
-  void SplitImprove ();
+  DLL_HEADER bool EdgeSwapping (const int usemetric, Array<Neighbour> &neighbors, Array<bool> &swapped,
+    DLL_HEADER const SurfaceElementIndex t1, const int edge, const int t, Array<int,PointIndex> &pdef, const bool check_only=false);
+  DLL_HEADER void EdgeSwapping (int usemetric);
+  DLL_HEADER void CombineImprove ();
+  DLL_HEADER void SplitImprove ();
 
-  void GenericImprove ();
+  DLL_HEADER void GenericImprove ();
 
 
   void SetFaceIndex (int fi) { faceindex = fi; }
