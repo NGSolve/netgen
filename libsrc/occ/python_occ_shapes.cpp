@@ -1049,7 +1049,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           // return BRepPrimAPI_MakeRevol (shape, A, D*M_PI/180).Shape();
           BRepPrimAPI_MakeRevol builder(shape, A, D*M_PI/180, true);
             
-          for (auto typ : { TopAbs_EDGE, TopAbs_VERTEX })
+          for (auto typ : { TopAbs_FACE, TopAbs_EDGE, TopAbs_VERTEX})
             for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
               {
                 auto prop = OCCGeometry::GetProperties(e.Current());
