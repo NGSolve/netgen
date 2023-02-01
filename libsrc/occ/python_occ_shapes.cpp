@@ -1091,15 +1091,28 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       }, py::arg("edges"), py::arg("d"), "make symmetric chamfer for edges 'edges' of distrance 'd'")
   
     .def("MakeThickSolid", [](const TopoDS_Shape & body, std::vector<TopoDS_Shape> facestoremove,
-                              double offset, double tol) {
+                              double offset, double tol, bool intersection,
+                              string joinT, bool removeIntEdges) {
            TopTools_ListOfShape faces;
            for (auto f : facestoremove)
              faces.Append(f);
            
            BRepOffsetAPI_MakeThickSolid maker;
-           maker.MakeThickSolidByJoin(body, faces, offset, tol);
+           GeomAbs_JoinType joinType;
+           if(joinT == "arc")
+             joinType = GeomAbs_Arc;
+           else if(joinT == "intersection")
+             joinType = GeomAbs_Intersection;
+           else
+             throw Exception("Only joinTypes 'arc' and 'intersection' exist!");
+           maker.MakeThickSolidByJoin(body, faces, offset, tol,
+                                      BRepOffset_Skin, intersection,
+                                      false, joinType, removeIntEdges);
            return maker.Shape();
-         }, py::arg("facestoremove"), py::arg("offset"), py::arg("tol"), "makes shell-like solid from faces")
+       }, py::arg("facestoremove"), py::arg("offset"), py::arg("tol"),
+         py::arg("intersection") = false,py::arg("joinType")="arc",
+         py::arg("removeIntersectingEdges") = false,
+         "makes shell-like solid from faces")
     
     .def("MakeTriangulation", [](const TopoDS_Shape & shape)
          {
