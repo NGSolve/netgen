@@ -23,7 +23,7 @@ endif()
 
 if(USE_PYTHON)
   target_sources(ngcore PRIVATE python_ngcore.cpp)
-  target_compile_definitions(ngcore PUBLIC NETGEN_PYTHON NG_PYTHON)
+  target_compile_definitions(ngcore PUBLIC NETGEN_PYTHON NG_PYTHON PYBIND11_SIMPLE_GIL_MANAGEMENT)
 endif(USE_PYTHON)
 
 if(WIN32)
@@ -36,9 +36,13 @@ endif(WIN32)
 target_compile_definitions(ngcore PRIVATE NGCORE_EXPORTS)
 target_include_directories(ngcore INTERFACE $<INSTALL_INTERFACE:${NG_INSTALL_DIR_INCLUDE}> $<INSTALL_INTERFACE:${NG_INSTALL_DIR_INCLUDE}/include>)
 
-if(CHECK_RANGE OR CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "DEBUG")
+if(CHECK_RANGE)
   target_compile_definitions(ngcore PUBLIC NETGEN_ENABLE_CHECK_RANGE)
-endif(CHECK_RANGE OR CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "DEBUG")
+endif(CHECK_RANGE)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "DEBUG")
+  target_compile_definitions(ngcore PUBLIC _DEBUG NETGEN_ENABLE_CHECK_RANGE)
+endif(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "DEBUG")
 
 if(TRACE_MEMORY)
   target_compile_definitions(ngcore PUBLIC NETGEN_TRACE_MEMORY)
