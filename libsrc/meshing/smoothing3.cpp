@@ -334,22 +334,18 @@ namespace netgen
     : points(mesh.Points()), elements(mesh.VolumeElements()), elementsonpoint(* new Table<ElementIndex,PointIndex>()), own_elementsonpoint(true), mp(amp)
   {
     static Timer tim("PointFunction - build elementsonpoint table"); RegionTimer reg(tim);
-    BitArray free_points(points.Size()+PointIndex::BASE);
-    free_points.Clear();
 
-    ParallelForRange(elements.Range(), [&] (auto myrange)
-        {
-          for (ElementIndex eli : myrange)
-            {
-              const auto & el = elements[eli];
-              if(el.Flags().fixed || el.NP()!=4 || (mp.only3D_domain_nr && mp.only3D_domain_nr != el.GetIndex()) )
-                for (auto pi : el.PNums())
-                  if(free_points[pi])
-                      free_points.SetBitAtomic(pi);
-            }
-        });
-    free_points.Invert();
-    elementsonpoint = mesh.CreatePoint2ElementTable(free_points, mp.only3D_domain_nr);
+    elementsonpoint = ngcore::CreateSortedTable<ElementIndex, PointIndex>( elements.Range(),
+               [&](auto & table, ElementIndex ei)
+               {
+                 const auto & el = elements[ei];
+
+                 if(el.Flags().fixed || el.NP()!=4 || (mp.only3D_domain_nr && mp.only3D_domain_nr != el.GetIndex()) )
+                   return;
+
+                 for (PointIndex pi : el.PNums())
+                     table.Add (pi, ei);
+               }, points.Size());
   }
 
   void PointFunction :: SetPointIndex (PointIndex aactpind)
@@ -1351,8 +1347,7 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
 
   const auto & getDofs = [&] (int i)
   {
-      i += PointIndex::BASE;
-      return FlatArray<ElementIndex>(elementsonpoint[i].Size(), elementsonpoint[i].Data());
+      return elementsonpoint[i += PointIndex::BASE];
   };
 
   Array<int> colors(points.Size());
