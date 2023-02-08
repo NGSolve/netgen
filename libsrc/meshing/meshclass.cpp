@@ -2421,6 +2421,7 @@ namespace netgen
            [&](auto & table, ElementIndex ei)
            {
              const Element & el = (*this)[ei];
+             if(el.IsDeleted()) return;
              if (dom == 0 || dom == el.GetIndex())
                {
                  if (el.GetNP() == 4)
@@ -2742,6 +2743,7 @@ namespace netgen
               for (ElementIndex ei : elsonpoint[pi])
                 {
                   const Element & el = VolumeElement(ei);
+                  if(el.IsDeleted()) continue;
                   
                   if (dom == 0 || el.GetIndex() == dom)
                     {
