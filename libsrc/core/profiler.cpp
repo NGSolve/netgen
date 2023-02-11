@@ -94,7 +94,7 @@ namespace ngcore
     if (first_overflow)
       {
         first_overflow = false;
-        NgProfiler::logger->warn("no more timer available, reusing last one");
+        NgProfiler::logger->warn( ("no more timer available ("+name+"), reusing last one").c_str());
       }
     return 0;
   }
