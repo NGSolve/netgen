@@ -105,7 +105,7 @@ MyStr::MyStr(const MyStr& s)
 MyStr::MyStr(int i)
 {
   char buffer[32];
-  sprintf(buffer, "%d", i);
+  snprintf(buffer, 32, "%d", i);
   length = unsigned(strlen(buffer));
   if (length > SHORTLEN)
     str = new char[length + 1];
@@ -129,7 +129,7 @@ MyStr::MyStr(unsigned int i)
 MyStr::MyStr(void * p)
 {
   char buffer[32];
-  sprintf(buffer, "%p", p);
+  snprintf(buffer, 32, "%p", p);
   length = unsigned(strlen(buffer));
   if (length > SHORTLEN)
     str = new char[length + 1];
@@ -155,7 +155,7 @@ MyStr::MyStr(long l)
 MyStr::MyStr(size_t l)
 {
   char buffer[32];
-  sprintf(buffer, "%ld", l);
+  snprintf(buffer, 32, "%ld", l);
   length = unsigned(strlen(buffer));
   if (length > SHORTLEN)
     str = new char[length + 1];
@@ -168,7 +168,7 @@ MyStr::MyStr(double d)
 {
   char buffer[32];
   //if (fabs(d) < 1E-100) {d = 0;}
-  sprintf(buffer, "%g", d);
+  snprintf(buffer, 32, "%g", d);
   length = unsigned(strlen(buffer));
   if (length > SHORTLEN)
     str = new char[length + 1];
@@ -181,7 +181,7 @@ MyStr::MyStr(const Point3d& p)
 {
   char buffer[80];
   //if (fabs(d) < 1E-100) {d = 0;}
-  sprintf(buffer, "[%g, %g, %g]", p.X(), p.Y(), p.Z());
+  snprintf(buffer, 80, "[%g, %g, %g]", p.X(), p.Y(), p.Z());
   length = unsigned(strlen(buffer));
   if (length > SHORTLEN)
     str = new char[length + 1];
@@ -194,7 +194,7 @@ MyStr::MyStr(const Vec3d& p)
 {
   char buffer[80];
   //if (fabs(d) < 1E-100) {d = 0;}
-  sprintf(buffer, "[%g, %g, %g]", p.X(), p.Y(), p.Z());
+  snprintf(buffer, 80, "[%g, %g, %g]", p.X(), p.Y(), p.Z());
   length = unsigned(strlen(buffer));
   if (length > SHORTLEN)
     str = new char[length + 1];
