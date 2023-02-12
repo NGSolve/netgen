@@ -114,7 +114,7 @@ public:
 			     const NgArray<Point<3>* > & from, NgArray<Point<3>* > & dest);
 
   DLL_HEADER bool EdgeSwapping (const int usemetric, Array<Neighbour> &neighbors, Array<bool> &swapped,
-    DLL_HEADER const SurfaceElementIndex t1, const int edge, const int t, Array<int,PointIndex> &pdef, const bool check_only=false);
+                                const SurfaceElementIndex t1, const int edge, const int t, Array<int,PointIndex> &pdef, const bool check_only=false);
   DLL_HEADER void EdgeSwapping (int usemetric);
   DLL_HEADER void CombineImprove ();
   DLL_HEADER void SplitImprove ();
