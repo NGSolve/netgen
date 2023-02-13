@@ -1,6 +1,7 @@
 #include <BRepGProp.hxx>
 #include <BRep_Tool.hxx>
 #include <GeomAPI_ProjectPointOnCurve.hxx>
+#include <BRepLProp_SLProps.hxx>
 
 #include "occ_edge.hpp"
 #include "occ_face.hpp"
@@ -111,9 +112,16 @@ namespace netgen
 
                 for(auto i : Range(2))
                 {
+                    // take uv from CurveOnSurface as start value but project again for better accuracy
+                    // (cof->Value yields wrong values (outside of surface) for complicated faces
                     auto uv = cof->Value(s[i]);
-                    seg.epgeominfo[i].u = uv.X();
-                    seg.epgeominfo[i].v = uv.Y();
+                    PointGeomInfo gi;
+                    gi.u = uv.X();
+                    gi.v = uv.Y();
+                    Point<3> pproject = mesh[seg[i]];
+                    ProjectPointGI(pproject, gi);
+                    seg.epgeominfo[i].u = gi.u;
+                    seg.epgeominfo[i].v = gi.v;
                 }
 
                 bool do_swap = ORIENTATION == REVERSED;
@@ -234,7 +242,11 @@ namespace netgen
 
     double OCCFace::GetCurvature(const PointGeomInfo& gi) const
     {
-        throw Exception(ToString("not implemented") + __FILE__ + ":" + ToString(__LINE__));
+        BRepAdaptor_Surface sf(face, Standard_True);
+        BRepLProp_SLProps prop2(sf, 2, 1e-5);
+        prop2.SetParameters (gi.u, gi.v);
+        return max(fabs(prop2.MinCurvature()),
+                   fabs(prop2.MaxCurvature()));
     }
 
     void OCCFace::RestrictH(Mesh& mesh, const MeshingParameters& mparam) const

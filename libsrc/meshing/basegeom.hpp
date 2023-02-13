@@ -110,6 +110,7 @@ namespace netgen
     }
     virtual Vec<3> GetTangent(double t) const = 0;
     virtual bool IsMappedShape( const GeometryShape & other, const Transformation<3> & trafo, double tolerance ) const override;
+    virtual void Divide(const MeshingParameters & mparam, const Mesh & mesh, Array<Point<3>> & points, Array<double> & params);
   };
 
   class DLL_HEADER GeometryFace : public GeometryShape

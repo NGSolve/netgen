@@ -537,9 +537,7 @@ namespace netgen
             multithread.percent = 100 * (i-1)/double(nedges);
             if (BRep_Tool::Degenerated(e)) continue;
 
-            GProp_GProps system;
-            BRepGProp::LinearProperties(e, system);
-            double len = system.Mass();
+            double len = Mass(e);
 
             if (len < mincurvelength)
               {
@@ -587,7 +585,7 @@ namespace netgen
             localh = min2(localh, OCCGeometry::GetProperties(e).maxh);
             maxedgelen = max (maxedgelen, len);
             minedgelen = min (minedgelen, len);
-            int maxj = max((int) ceil(len/localh), 2);
+            int maxj = max((int) ceil(len/localh)*2, 2);
 
             for (int j = 0; j <= maxj; j++)
               {

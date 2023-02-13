@@ -276,13 +276,12 @@ namespace netgen
     }
   };
 
-
-  inline gp_Pnt Center (TopoDS_Shape shape)
+  inline auto Properties (TopoDS_Shape shape)
   {
     GProp_GProps props;
     double tol;
     switch (shape.ShapeType())
-      {
+    {
       case TopAbs_SOLID:
       case TopAbs_COMPOUND:
       case TopAbs_COMPSOLID:
@@ -298,8 +297,18 @@ namespace netgen
         BRepGProp::LinearProperties(shape, props, tol); break;
       default:
         BRepGProp::LinearProperties(shape, props);
-      }
-    return props.CentreOfMass();
+    }
+    return props;
+  }
+
+  inline gp_Pnt Center (TopoDS_Shape shape)
+  {
+    return Properties(shape).CentreOfMass();
+  }
+
+  inline double Mass (TopoDS_Shape shape)
+  {
+    return Properties(shape).Mass();
   }
 
 }

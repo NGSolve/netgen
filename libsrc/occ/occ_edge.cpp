@@ -69,6 +69,7 @@ namespace netgen
         gp_Pnt p;
         gp_Vec v;
         curve->D1(t, p, v);
-        return occ2ng(v);
+        return occ2ng(v) * (s1-s0);
     }
+
 }
