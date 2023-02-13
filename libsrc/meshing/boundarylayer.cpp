@@ -669,15 +669,82 @@ namespace netgen
 
         // combine normal vectors for each face to keep uniform distances
         auto & np = growthvectors[pi];
-        for(auto & [facei, n] : normals)
-        {
-            if(np.Length() == 0) { np = n; continue; }
+        ArrayMem<Vec<3>, 3> ns;
+        for (auto &[facei, n] : normals) {
+          ns.Append(n);
+        }
+
+        ArrayMem<Vec<3>, 3> removed;
+        // reduce to full rank of max 3
+        while(true)
+          {
+            if(ns.Size() <= 1)
+              break;
+            if(ns.Size() == 2 && ns[0] * ns[1] < 1 - 1e-6)
+              break;
+            if (ns.Size() == 3)
+              {
+                DenseMatrix mat(3,3);
+                for(auto i : Range(3))
+                  for(auto j : Range(3))
+                    mat(i,j) = ns[i][j];
+                if(fabs(mat.Det()) > 1e-6)
+                  break;
+              }
+            int maxpos1;
+            int maxpos2;
+            double val = 0;
+            for (auto i : Range(ns))
+              {
+                for (auto j : Range(i + 1, ns.Size()))
+                  {
+                    double ip = ns[i] * ns[j];
+                    if(ip > val)
+                      {
+                        val = ip;
+                        maxpos1 = i;
+                        maxpos2 = j;
+                      }
+                  }
+              }
+            removed.Append(ns[maxpos1]);
+            removed.Append(ns[maxpos2]);
+            ns[maxpos1] = 0.5 * (ns[maxpos1] + ns[maxpos2]);
+            ns.DeleteElement(maxpos2);
+          }
+
+        if(ns.Size() == 0)
+          continue;
+        if(ns.Size() == 1)
+          np = ns[0];
+        else if(ns.Size() == 2)
+          {
+            np = ns[0];
+            auto n = ns[1];
             auto npn = np * n;
             auto npnp = np * np;
             auto nn = n * n;
             if(nn-npn*npn/npnp == 0) { np = n; continue; }
             np += (nn - npn)/(nn - npn*npn/npnp) * (n - npn/npnp * np);
-        }
+          }
+        else // ns.Size() == 3
+          {
+            DenseMatrix mat(3,3);
+            for(auto i : Range(3))
+              for(auto j : Range(3))
+                mat(i, j) = ns[i] * ns[j];
+            Vector rhs(3);
+            rhs = 1.;
+            Vector res(3);
+            DenseMatrix inv(3, ns.Size());
+            CalcInverse(mat, inv);
+            inv.Mult(rhs, res);
+            for(auto i : Range(ns))
+              np += res[i] * ns[i];
+          }
+        for(auto& n : removed)
+          if(n * np < 0)
+            cout << "WARNING: Growth vector at point " << pi << " in opposite direction to face normal!" << endl << "Growthvector = " << np << ", face normal = " << n << endl;
     }
   }
 
