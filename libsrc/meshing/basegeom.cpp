@@ -479,61 +479,82 @@ namespace netgen
     mesh.LoadLocalMeshSize(mparam.meshsizefilename);
   }
 
-  void DivideEdge(GeometryEdge * edge, const MeshingParameters & mparam, const Mesh & mesh, Array<Point<3>> & points, Array<double> & params, int layer)
+  void GeometryEdge :: Divide(const MeshingParameters & mparam, const Mesh & mesh, Array<Point<3>> & points, Array<double> & params)
   {
-      static Timer tdivedgesections("Divide edge sections");
-      static Timer tdivide("Divide Edges");
-      RegionTimer rt(tdivide);
-      // -------------------- DivideEdge -----------------
-      static constexpr size_t divide_edge_sections = 10000;
-      double hvalue[divide_edge_sections+1];
-      hvalue[0] = 0;
+    static Timer tdivedgesections("Divide edge sections");
+    static Timer tdivide("Divide Edges");
+    RegionTimer rt(tdivide);
+    // -------------------- DivideEdge -----------------
+    tdivedgesections.Start();
+    auto layer = properties.layer;
+    double safety = 0.5*(1.-mparam.grading);
 
-      Point<3> old_pt = edge->GetPoint(0.);
-      // calc local h for edge
-      tdivedgesections.Start();
-      for(auto i : Range(divide_edge_sections))
+    double lam = 0.0;
+    Point<3> p = GetPoint(0.0);
+    auto old_p = p;
+    Array<double> hvalue, fine_params;
+    hvalue.Append(.0);
+
+    while (lam<1. && hvalue.Size() < 20000) {
+      fine_params.Append(lam);
+      auto h = mesh.GetH(old_p, layer);
+      auto step = safety * h/GetTangent(lam).Length();
+      lam += step;
+      lam = min2(lam, 1.0);
+      p = GetPoint(lam);
+      hvalue.Append((hvalue.Size()==0 ? 0.0 : hvalue.Last()) + 1./h * (p-old_p).Length());
+      old_p = p;
+    }
+
+    fine_params.Append(1.0);
+
+    if(hvalue.Size()==20000 && lam<1.0)
+      cout << "Warning: Could not divide Edge" << endl;
+
+    tdivedgesections.Stop();
+
+    auto n = hvalue.Size()-1;
+    int nsubedges = max2(1, int(floor(hvalue.Last()+0.5)));
+    points.SetSize(nsubedges-1);
+    params.SetSize(nsubedges+1);
+
+    int i1 = 0;
+    for(auto i : Range(1,nsubedges))
+    {
+      auto h_target = i*hvalue.Last()/nsubedges;
+      while(hvalue[i1]<h_target && i1<hvalue.Size())
+        i1++;
+
+      if(i1==hvalue.Size())
       {
-          auto pt = edge->GetPoint(double(i+1)/divide_edge_sections);
-          hvalue[i+1] = hvalue[i] + 1./mesh.GetH(pt, layer) * (pt-old_pt).Length();
-          old_pt = pt;
+        points.SetSize(i-1);
+        params.SetSize(i+1);
+        cout << "divide edge: local h too small" << endl;
+        break;
       }
-      int nsubedges = max2(1, int(floor(hvalue[divide_edge_sections]+0.5)));
-      tdivedgesections.Stop();
-      points.SetSize(nsubedges-1);
-      params.SetSize(nsubedges+1);
 
-      int i = 1;
-      int i1 = 0;
-      do
-      {
-          if (hvalue[i1]/hvalue[divide_edge_sections]*nsubedges >= i)
-          {
-              params[i] = (double(i1)/divide_edge_sections);
-              points[i-1] = MeshPoint(edge->GetPoint(params[i]));
-              i++;
-          }
-          i1++;
-          if (i1 > divide_edge_sections)
-          {
-              nsubedges = i;
-              points.SetSize(nsubedges-1);
-              params.SetSize(nsubedges+1);
-              cout << "divide edge: local h too small" << endl;
-          }
+      // interpolate lam between points
+      auto lam0 = fine_params[i1-1];
+      auto lam1 = fine_params[i1];
+      auto h0 = hvalue[i1-1];
+      auto h1 = hvalue[i1];
 
-      } while(i < nsubedges);
+      auto fac = (h_target-h0)/(h1-h0);
+      auto lam = lam0 + fac*(lam1-lam0);
+      params[i] = lam;
+      points[i-1] = MeshPoint(GetPoint(params[i]));
+    }
 
-      params[0] = 0.;
-      params[nsubedges] = 1.;
+    params[0] = 0.;
+    params[nsubedges] = 1.;
 
-      if(params[nsubedges] <= params[nsubedges-1])
-      {
-          cout << "CORRECTED" << endl;
-          points.SetSize (nsubedges-2);
-          params.SetSize (nsubedges);
-          params[nsubedges-1] = 1.;
-      }
+    if(params[nsubedges] <= params[nsubedges-1])
+    {
+        cout << "CORRECTED" << endl;
+        points.SetSize (nsubedges-2);
+        params.SetSize (nsubedges);
+        params[nsubedges-1] = 1.;
+    }
   }
 
   void NetgenGeometry :: FindEdges(Mesh& mesh,
@@ -616,7 +637,7 @@ namespace netgen
             }
             else
             {
-                DivideEdge(edge, mparam, mesh, edge_points, params, edge->properties.layer);
+                edge->Divide(mparam, mesh, edge_points, params);
             }
         }
         else

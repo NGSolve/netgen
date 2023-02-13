@@ -715,23 +715,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 
     .def("Properties", [] (const TopoDS_Shape & shape)
          {
-           GProp_GProps props;
-           switch (shape.ShapeType())
-             {
-             case TopAbs_FACE:
-             case TopAbs_SHELL:
-               BRepGProp::SurfaceProperties (shape, props); break;
-	     case TopAbs_SOLID:
-	     case TopAbs_COMPOUND:
-	     case TopAbs_COMPSOLID:
-               BRepGProp::VolumeProperties (shape, props); break;
-             default:
-               BRepGProp::LinearProperties(shape, props);
-               // throw Exception("Properties implemented only for FACE");
-             }
-           double mass = props.Mass();
-           gp_Pnt center = props.CentreOfMass();
-           return tuple( py::cast(mass), py::cast(center) );
+           auto props = Properties(shape);
+           return tuple( py::cast(props.Mass()), py::cast(props.CentreOfMass()) );
          }, "returns tuple of shape properties, currently ('mass', 'center'")
     
     .def_property_readonly("center", [](const TopoDS_Shape & shape) {
@@ -739,20 +724,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       }, "returns center of gravity of shape")
     
     .def_property_readonly("mass", [](const TopoDS_Shape & shape) {
-           GProp_GProps props;
-           switch (shape.ShapeType())
-             {
-             case TopAbs_FACE:
-             case TopAbs_SHELL:
-               BRepGProp::SurfaceProperties (shape, props); break;
-	     case TopAbs_SOLID:
-	     case TopAbs_COMPOUND:
-	     case TopAbs_COMPSOLID:
-               BRepGProp::VolumeProperties (shape, props); break;
-             default:
-               BRepGProp::LinearProperties(shape, props);
-             }
-           return props.Mass();
+           return Mass(shape);
       }, "returns mass of shape, what is length, face, or volume")
 
     .def("Move", [](const TopoDS_Shape & shape, const gp_Vec v)
