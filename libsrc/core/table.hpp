@@ -16,7 +16,6 @@
 #include "memtracer.hpp"
 #include "ngcore_api.hpp"
 #include "profiler.hpp"
-#include "taskmanager.hpp"
 
 namespace ngcore
 {
@@ -189,7 +188,8 @@ namespace ngcore
       Swap (data, tab2.data);
     }
 
-    void DoArchive(Archive& ar)
+    template<typename ARCHIVE>
+    auto DoArchive(ARCHIVE& ar)
     {
       ar & size;
       if(size == 0)

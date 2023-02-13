@@ -11,7 +11,6 @@
 #include <cstring>
 #include <ostream>
 
-#include "archive.hpp"
 #include "array.hpp"
 #include "localheap.hpp"
 #include "ngcore_api.hpp"
@@ -147,7 +146,7 @@ public:
 
   NGCORE_API size_t NumSet () const;
 
-  NGCORE_API void DoArchive(Archive& archive);
+  NGCORE_API void DoArchive(class Archive& archive);
   
   NGCORE_API auto * Data() const { return data; }
 

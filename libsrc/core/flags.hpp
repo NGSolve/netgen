@@ -58,7 +58,7 @@ namespace ngcore
     Flags & operator= (const Flags & f2) = default;
     Flags & operator= (Flags && f2) = default;
 
-    void DoArchive(Archive& ar);
+    void DoArchive(class Archive& ar);
 
     void Update(const Flags& other);
   

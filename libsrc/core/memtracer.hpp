@@ -3,7 +3,6 @@
 
 #include <array>
 #include <chrono>
-#include <functional>
 #include <string>
 
 #include "array.hpp"

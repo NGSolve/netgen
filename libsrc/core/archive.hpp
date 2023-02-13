@@ -131,6 +131,9 @@ namespace ngcore
     std::map<std::string, VersionInfo> version_map = GetLibraryVersions();
     std::shared_ptr<Logger> logger = GetLogger("Archive");
   public:
+    template<typename T>
+      static constexpr bool is_archivable = detail::is_Archivable_struct<T>::value;
+
     Archive() = delete;
     Archive(const Archive&) = delete;
     Archive(Archive&&) = delete;

@@ -7,9 +7,13 @@
 /* Date:   01. Jun. 95                                                    */
 /**************************************************************************/
 
+#include <cstring>
+#include <type_traits>
 
-#include "archive.hpp"
 #include "exception.hpp"
+#include "logging.hpp"          // for logger
+#include "ngcore_api.hpp"       // for NGCORE_API
+#include "type_traits.hpp"      // for all_of_tmpl
 #include "localheap.hpp"
 #include "memtracer.hpp"
 #include "utils.hpp"
@@ -500,7 +504,8 @@ namespace ngcore
       return *this;
     }
 
-    NETGEN_INLINE const FlatArray & operator= (const std::function<T(int)> & func) const
+    template <typename T2, std::enable_if_t<std::is_function<T2>::value>>
+    NETGEN_INLINE const FlatArray & operator= (const T2 & func) const
     {
       for (size_t i = 0; i < size; i++)
         data[i] = func(i+BASE);
@@ -806,8 +811,9 @@ namespace ngcore
     }
 
     // Only provide this function if T is archivable
-    template<typename T2=T>
-    auto DoArchive(Archive& archive) -> typename std::enable_if_t<is_archivable<T2>, void>
+    template<typename ARCHIVE>
+    auto DoArchive(ARCHIVE& archive)
+      -> typename std::enable_if_t<ARCHIVE::template is_archivable<T>, void>
     {
       if(archive.Output())
         archive << size;
