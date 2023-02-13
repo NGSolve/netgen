@@ -9,6 +9,7 @@
 */
 
 #include "bitarray.hpp"
+#include "archive.hpp"
 
 namespace ngcore
 {

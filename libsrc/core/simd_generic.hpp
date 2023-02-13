@@ -10,6 +10,7 @@
 #include <type_traits>
 #include <functional>
 #include <tuple>
+#include <cmath>
 
 #include "array.hpp"
 
