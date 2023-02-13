@@ -76,7 +76,8 @@ namespace ngcore
     NETGEN_INLINE INT (T ai1, T ai2, T ai3, T ai4, T ai5, T ai6, T ai7, T ai8, T ai9)
       : i{ai1, ai2, ai3, ai4, ai5, ai6, ai7, ai8, ai9 } { ; }            
 
-    void DoArchive(class Archive& ar)
+    template <typename ARCHIVE>
+    void DoArchive(ARCHIVE& ar)
     {
       ar.Do(i, N);
     }
