@@ -11,6 +11,8 @@
 
 #include "simd_generic.hpp"
 
+#ifndef __CUDA_ARCH__
+
 #ifdef NETGEN_ARCH_AMD64
 #ifndef __SSE__
 #define __SSE__
@@ -30,8 +32,11 @@
 #include "simd_arm64.hpp"
 #endif
 
+#endif // __CUDA_ARCH__
+
 namespace ngcore
 {
+#ifndef __CUDA_ARCH__
 #ifdef NETGEN_ARCH_AMD64
   NETGEN_INLINE auto HSum (SIMD<double,2> v1, SIMD<double,2> v2, SIMD<double,2> v3, SIMD<double,2> v4)
   {
@@ -45,6 +50,7 @@ namespace ngcore
     return SIMD<mask64>::GetMaskFromBits(i);
   }
 #endif
+#endif // __CUDA_ARCH__
 
   NETGEN_INLINE void SIMDTranspose (SIMD<double,4> a1, SIMD<double,4> a2, SIMD <double,4> a3, SIMD<double,4> a4,
                                     SIMD<double,4> & b1, SIMD<double,4> & b2, SIMD<double,4> & b3, SIMD<double,4> & b4)

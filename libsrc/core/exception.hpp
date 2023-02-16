@@ -87,18 +87,18 @@ namespace ngcore
 // Convenience macro to append file name and line of exception origin to the string
 #define NG_EXCEPTION(s) ngcore::Exception(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t"+std::string(s))
 
-#ifdef NETGEN_ENABLE_CHECK_RANGE
+#if defined(NETGEN_ENABLE_CHECK_RANGE) && !defined(__CUDA_ARCH__)
 #define NETGEN_CHECK_RANGE(value, min, max_plus_one) \
   { if ((value)<(min) ||  (value)>=(max_plus_one)) \
       throw ngcore::RangeException(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t", (value), (min), (max_plus_one)); }
 #define NETGEN_CHECK_SHAPE(a,b) \
   { if(a.Shape() != b.Shape()) \
       throw ngcore::Exception(__FILE__": shape don't match"); }
-#else // NETGEN_ENABLE_CHECK_RANGE
+#else // defined(NETGEN_ENABLE_CHECK_RANGE) && !defined(__CUDA_ARCH__)
 #define NETGEN_CHECK_RANGE(value, min, max)
 #define NETGEN_CHECK_SHAPE(a,b)
 
-#endif // NETGEN_ENABLE_CHECK_RANGE
+#endif // defined(NETGEN_ENABLE_CHECK_RANGE) && !defined(__CUDA_ARCH__)
 
 
   
