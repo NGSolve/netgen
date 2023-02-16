@@ -136,7 +136,7 @@ public:
 
 
   /// free memory
-  NETGEN_INLINE virtual ~LocalHeap ()
+  virtual ~LocalHeap ()
   {
     if (owner)
       delete [] data;
