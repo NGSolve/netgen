@@ -620,8 +620,8 @@ namespace ngcore
     
     //auto begin() const { return ArrayIterator<T,IndexType> (*this, BASE); }
     // auto end() const { return ArrayIterator<T,IndexType> (*this, size+BASE); }
-    auto begin() const { return data; }
-    auto end() const { return data+Size(); }
+    NETGEN_INLINE auto begin() const { return data; }
+    NETGEN_INLINE auto end() const { return data+Size(); }
   };
 
   template <typename T>
