@@ -749,16 +749,17 @@ namespace ngcore
     NETGEN_INLINE explicit Array (const Array & a2)
       : FlatArray<T,IndexType> (a2.Size(), a2.Size() ? new T[a2.Size()] : nullptr)
     {
-      static_assert(std::is_copy_assignable<T>::value, "cannot copy-construct Array");
-      // if constexpr (std::is_copy_assignable<T>::value)
+      if constexpr (std::is_copy_assignable<T>::value)
         {
           allocsize = size;
           mem_to_delete = data;
           for (size_t i = 0; i < size; i++)
             data[i] = a2.data[i];
         }
-      // else
-      // throw Exception(std::string("cannot copy-construct Array of type ") + typeid(T).name());        
+#ifdef __cpp_exceptions
+      else
+        throw Exception(std::string("cannot copy-construct Array of type ") + typeid(T).name());
+#endif      
     }
 
     
