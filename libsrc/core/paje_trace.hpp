@@ -171,7 +171,7 @@ namespace ngcore
         }
 
 
-      NETGEN_INLINE int StartTask(int thread_id, int id, int id_type = Task::ID_NONE, int additional_value = -1)
+      int StartTask(int thread_id, int id, int id_type = Task::ID_NONE, int additional_value = -1)
         {
           if(!tracing_enabled) return -1;
           if(!trace_threads && !trace_thread_counter) return -1;
