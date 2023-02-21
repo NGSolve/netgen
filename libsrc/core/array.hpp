@@ -294,7 +294,7 @@ namespace ngcore
     NETGEN_INLINE ArrayRangeIterator<T> begin() const { return first; }
     NETGEN_INLINE ArrayRangeIterator<T> end() const { return next; }
 
-    T_Range Split (size_t nr, int tot) const
+    NETGEN_INLINE T_Range Split (size_t nr, int tot) const
     {
       T diff = next-first;
       return T_Range (first + nr * diff / tot,
