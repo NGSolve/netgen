@@ -65,6 +65,7 @@ namespace ngcore
 
     jobs.reserve(reserve_size);
     timer_events.reserve(reserve_size);
+    gpu_events.reserve(reserve_size);
     memory_events.reserve(1024*1024);
 
     // sync start time when running in parallel
@@ -95,6 +96,9 @@ namespace ngcore
     for(auto & event : timer_events)
         event.time -= start_time;
 
+    for(auto & event : gpu_events)
+        event.time -= start_time;
+
     for(auto & llink : links)
         for(auto & link : llink)
             link.time -= start_time;
@@ -112,6 +116,9 @@ namespace ngcore
     {
       // make sure the timer id is unique across all ranks
       for(auto & event : timer_events)
+        event.timer_id += NgProfiler::SIZE*comm.Rank();
+
+      for(auto & event : gpu_events)
         event.timer_id += NgProfiler::SIZE*comm.Rank();
 
       if(comm.Rank() == MPI_PAJE_WRITER)
@@ -148,7 +155,7 @@ namespace ngcore
           else if (x<5*d)
             r=6*(x-4*d), g=0,b=1;
           else
-            r=1, g=0,b=1-5*(x-d);
+            r=1, g=0,b=1-6*(x-5*d);
         };
 
       int alias_counter;
@@ -504,7 +511,8 @@ namespace ngcore
           for (int i=0; i<nthreads; i++)
           {
             auto name = "Thread " + ToString(i);
-            thread_aliases.emplace_back( paje.CreateContainer( container_type_thread, container_nodes[i*num_nodes/nthreads], name ) );
+            if(tasks[i].size())
+              thread_aliases.emplace_back( paje.CreateContainer( container_type_thread, container_nodes[i*num_nodes/nthreads], name ) );
           }
       }
 
@@ -556,6 +564,8 @@ namespace ngcore
       for(auto & event : timer_events)
           timer_ids.insert(event.timer_id);
 
+      for(auto & event : gpu_events)
+          timer_ids.insert(event.timer_id);
 
       // Timer names
       for(auto & vtasks : tasks)
@@ -622,6 +632,18 @@ namespace ngcore
           else
             paje.PopState( event.time, state_type_timer, timer_container_aliases[--timerdepth] );
         }
+
+      if(gpu_events.size())
+      {
+        auto gpu_container =  paje.CreateContainer( container_type_timer, container_task_manager, "GPU" );
+        for(auto & event : gpu_events)
+        {
+          if(event.is_start)
+            paje.PushState( event.time, state_type_timer, gpu_container, timer_aliases[event.timer_id] );
+          else
+            paje.PopState( event.time, state_type_timer, gpu_container);
+        }
+      }
 
       for(auto & vtasks : tasks)
         {

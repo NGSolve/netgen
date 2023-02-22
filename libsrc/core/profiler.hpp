@@ -247,7 +247,7 @@ namespace ngcore
     double GetMFlops ()
     { return NgProfiler::GetFlops(timernr)
         / NgProfiler::GetTime(timernr) * 1e-6; }
-    operator int () { return timernr; }
+    operator int () const { return timernr; }
   };
 
 

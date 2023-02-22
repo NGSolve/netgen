@@ -119,6 +119,7 @@ namespace ngcore
       std::vector<std::vector<Task> > tasks;
       std::vector<Job> jobs;
       std::vector<TimerEvent> timer_events;
+      std::vector<TimerEvent> gpu_events;
       std::vector<std::vector<ThreadLink> > links;
       NGCORE_API static std::vector<MemoryEvent> memory_events;
 
@@ -133,6 +134,22 @@ namespace ngcore
 
       void operator=(const PajeTrace &) = delete;
       void operator=(PajeTrace &&) = delete;
+
+      void StartGPU(int timer_id = 0)
+        {
+          if(!tracing_enabled) return;
+          if(unlikely(gpu_events.size() == max_num_events_per_thread))
+            StopTracing();
+          gpu_events.push_back(TimerEvent{timer_id, GetTimeCounter(), true});
+        }
+
+      void StopGPU(int timer_id)
+        {
+          if(!tracing_enabled) return;
+          if(unlikely(gpu_events.size() == max_num_events_per_thread))
+            StopTracing();
+          gpu_events.push_back(TimerEvent{timer_id, GetTimeCounter(), false});
+        }
 
       void StartTimer(int timer_id)
         {
