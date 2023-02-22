@@ -756,7 +756,9 @@ namespace ngcore
           for (size_t i = 0; i < size; i++)
             data[i] = a2.data[i];
         }
-#ifdef __cpp_exceptions
+      
+// #ifdef __cpp_exceptions
+#ifndef __CUDA_ARCH__
       else
         throw Exception(std::string("cannot copy-construct Array of type ") + typeid(T).name());
 #endif      
