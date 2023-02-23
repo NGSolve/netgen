@@ -97,6 +97,16 @@ namespace ngcore
           bool operator < (const TimerEvent & other) const { return time < other.time; }
         };
 
+      struct UserEvent
+        {
+          TTimePoint t_start, t_end;
+          std::string data;
+          int container = 0;
+          int id = 0;
+
+          bool operator < (const UserEvent & other) const { return t_start < other.t_start; }
+        };
+
       struct ThreadLink
         {
           int thread_id;
@@ -119,6 +129,7 @@ namespace ngcore
       std::vector<std::vector<Task> > tasks;
       std::vector<Job> jobs;
       std::vector<TimerEvent> timer_events;
+      std::vector<UserEvent> user_events;
       std::vector<TimerEvent> gpu_events;
       std::vector<std::vector<ThreadLink> > links;
       NGCORE_API static std::vector<MemoryEvent> memory_events;
@@ -135,6 +146,11 @@ namespace ngcore
       void operator=(const PajeTrace &) = delete;
       void operator=(PajeTrace &&) = delete;
 
+      void AddUserEvent(TTimePoint t_start, TTimePoint t_end, const std::string & data, int container = 0, int id=0 )
+      {
+          if(!tracing_enabled) return;
+          user_events.push_back(UserEvent{t_start, t_end, data, container, id});
+      }
       void StartGPU(int timer_id = 0)
         {
           if(!tracing_enabled) return;

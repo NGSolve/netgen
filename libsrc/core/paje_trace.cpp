@@ -96,6 +96,12 @@ namespace ngcore
     for(auto & event : timer_events)
         event.time -= start_time;
 
+    for(auto & event : user_events)
+      {
+        event.t_start -= start_time;
+        event.t_end -= start_time;
+      }
+
     for(auto & event : gpu_events)
         event.time -= start_time;
 
@@ -192,6 +198,10 @@ namespace ngcore
             : time(atime), event_type(aevent_type), type(atype), container(acontainer), value(avalue), id(aid), value_is_alias(avalue_is_alias)
             { }
 
+          PajeEvent( int aevent_type, double atime, int atype, int acontainer, std::string as_value, int aid = 0 )
+            : time(atime), event_type(aevent_type), type(atype), container(acontainer), id(aid), s_value(as_value), value_is_alias(false), value_is_int(false)
+            { }
+
           PajeEvent( int aevent_type, double atime, int atype, int acontainer, int avalue, int astart_container, int akey )
             : time(atime), event_type(aevent_type), type(atype), container(acontainer), value(avalue), start_container(astart_container), id(akey)
             { }
@@ -201,10 +211,12 @@ namespace ngcore
           int event_type;
           int type;
           int container;
+          std::string s_value = "";
           int value = 0;
           int start_container = 0;
           int id = 0;
           bool value_is_alias = true;
+          bool value_is_int = true;
 
           bool operator < (const PajeEvent & other) const {
               // Same start and stop times can occur for very small tasks -> take "starting" events first (eg. PajePushState before PajePopState)
@@ -228,8 +240,10 @@ namespace ngcore
                 case PajePushState:
                   if(value_is_alias)
                     return fprintf( stream, "%d\t%.15g\ta%d\ta%d\ta%d\t%d\n", PajePushState, time, type, container, value, id); // NOLINT
-                  else
+                  else if(value_is_int)
                     return fprintf( stream, "%d\t%.15g\ta%d\ta%d\t%d\t%d\n", PajePushState, time, type, container, value, id); // NOLINT
+                  else
+                    return fprintf( stream, "%d\t%.15g\ta%d\ta%d\t\"%s\"\t%d\n", PajePushState, time, type, container, s_value.c_str(), id); // NOLINT
                 case PajePopState:
                   return fprintf( stream, "%d\t%.15g\ta%d\ta%d\n", PajePopState, time, type, container ); // NOLINT
                 case PajeStartLink:
@@ -352,6 +366,11 @@ namespace ngcore
       void PushState ( TTimePoint time, int type, int container, int value, int id = 0, bool value_is_alias = true )
         {
           events.emplace_back( PajeEvent( PajePushState, ConvertTime(time), type, container, value, id, value_is_alias) );
+        }
+
+      void PushState ( TTimePoint time, int type, int container, std::string value, int id = 0)
+        {
+          events.emplace_back( PajeEvent( PajePushState, ConvertTime(time), type, container, value, id) );
         }
 
       void PopState ( TTimePoint time, int type, int container )
@@ -644,6 +663,30 @@ namespace ngcore
             paje.PopState( event.time, state_type_timer, gpu_container);
         }
       }
+
+      if(user_events.size())
+        {
+          std::sort (user_events.begin(), user_events.end());
+
+          std::map<int, int> containers;
+
+          for(auto ev : user_events)
+            if(containers[ev.container]==0)
+              containers[ev.container] = paje.CreateContainer( container_type_timer, container_task_manager, "User " + ToString(ev.container) );
+
+          int i_start = 0;
+          for(auto i : Range(user_events.size()))
+          {
+            auto & event = user_events[i];
+            while(i_start < user_events.size() && user_events[i_start].t_start < event.t_end)
+            {
+              auto & ev = user_events[i_start];
+              paje.PushState( ev.t_start, state_type_timer, containers[ev.container], ev.data, ev.id );
+              i_start++;
+            }
+            paje.PopState( event.t_end, state_type_timer, containers[event.container]);
+          }
+        }
 
       for(auto & vtasks : tasks)
         {
