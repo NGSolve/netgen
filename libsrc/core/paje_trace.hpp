@@ -1,6 +1,7 @@
 #ifndef NETGEN_CORE_PAJE_TRACE_HPP
 #define NETGEN_CORE_PAJE_TRACE_HPP
 
+#include <algorithm>
 #include <limits>
 #include <vector>
 
@@ -99,8 +100,8 @@ namespace ngcore
 
       struct UserEvent
         {
-          TTimePoint t_start, t_end;
-          std::string data;
+          TTimePoint t_start = 0, t_end = 0;
+          std::string data = "";
           int container = 0;
           int id = 0;
 
@@ -130,6 +131,7 @@ namespace ngcore
       std::vector<Job> jobs;
       std::vector<TimerEvent> timer_events;
       std::vector<UserEvent> user_events;
+      std::vector<std::tuple<std::string, int>> user_containers;
       std::vector<TimerEvent> gpu_events;
       std::vector<std::vector<ThreadLink> > links;
       NGCORE_API static std::vector<MemoryEvent> memory_events;
@@ -146,10 +148,19 @@ namespace ngcore
       void operator=(const PajeTrace &) = delete;
       void operator=(PajeTrace &&) = delete;
 
-      void AddUserEvent(TTimePoint t_start, TTimePoint t_end, const std::string & data, int container = 0, int id=0 )
+      int AddUserContainer(std::string name, int parent=-1)
+      {
+        if(auto pos = std::find(user_containers.begin(), user_containers.end(), std::tuple{name,parent}); pos != user_containers.end())
+          return pos - user_containers.begin();
+        int id = user_containers.size();
+        user_containers.push_back({name, parent});
+        return id;
+      }
+
+      void AddUserEvent(UserEvent ue)
       {
           if(!tracing_enabled) return;
-          user_events.push_back(UserEvent{t_start, t_end, data, container, id});
+          user_events.push_back(ue);
       }
       void StartGPU(int timer_id = 0)
         {

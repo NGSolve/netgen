@@ -670,9 +670,21 @@ namespace ngcore
 
           std::map<int, int> containers;
 
+          for(auto i : Range(user_containers.size()))
+          {
+              auto & [name, parent] = user_containers[i];
+              int a_parent = parent == -1 ? container_task_manager : containers[parent];
+              containers[i] = paje.CreateContainer( container_type_timer, a_parent, name );
+          }
+
           for(auto ev : user_events)
+          {
             if(containers[ev.container]==0)
-              containers[ev.container] = paje.CreateContainer( container_type_timer, container_task_manager, "User " + ToString(ev.container) );
+            {
+              std::string name = "User " + ToString(ev.container);
+              containers[ev.container] = paje.CreateContainer( container_type_timer, container_task_manager, name );
+            }
+          }
 
           int i_start = 0;
           for(auto i : Range(user_events.size()))
