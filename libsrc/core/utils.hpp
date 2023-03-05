@@ -117,6 +117,9 @@ namespace ngcore
       b = std::move(temp);
   }
 
+  NETGEN_INLINE double IfPos (double a, double b, double c) { return a>0 ? b : c; }
+  NETGEN_INLINE double IfZero (double a, double b, double c) { return a==0. ? b : c; }
+
   // checks if string starts with sequence
   inline bool StartsWith(const std::string& str, const std::string& start)
   {

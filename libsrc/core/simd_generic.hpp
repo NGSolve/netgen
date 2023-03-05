@@ -514,8 +514,6 @@ namespace ngcore
           return HSum(a.Lo()) + HSum(a.Hi());
     }
 
-  NETGEN_INLINE double IfPos (double a, double b, double c) { return a>0 ? b : c; }
-  NETGEN_INLINE double IfZero (double a, double b, double c) { return a==0. ? b : c; }
 
   template<typename T, int N>
   NETGEN_INLINE SIMD<T,N> IfPos (SIMD<T,N> a, SIMD<T,N> b, SIMD<T,N> c)

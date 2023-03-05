@@ -465,6 +465,9 @@ namespace ngcore
   typedef int MPI_Request;
   
   enum { MPI_SUM = 0, MPI_MIN = 1, MPI_MAX = 2, MPI_LOR = 4711 };
+
+  inline void MPI_Type_contiguous ( int, MPI_Datatype, MPI_Dataype*) { ; } 
+  inline void MPI_Type_commit ( MPI_Dataype * ) { ; }
   
   class NgMPI_Comm
   {
