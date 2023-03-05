@@ -881,6 +881,30 @@ public:
   auto GetNum() const { return num; } 
 };
 
+
+/*
+  // some idea, not yet supported
+
+ using namespace std;
+  template <typename T>
+  class ParallelValue
+  {
+    T val;
+  public:
+    ParallelValue (const T & _val) : val(_val) { ; }
+    operator T () const { return val; }
+  };
+  
+  template <typename FUNC> class ParallelFunction
+  {
+    FUNC f;
+  public:
+    ParallelFunction (const FUNC & _f) : f(_f) { ; }
+    operator FUNC () const { return f; }
+    auto operator() (size_t i) const { return f(i); }
+  };
+*/
+
 /* currently not used, plus causing problems on MSVC 2017
 template <typename T, typename std::enable_if<ngstd::has_call_operator<T>::value, int>::type = 0>                                  
 inline ParallelFunction<T> operator| (const T & func, Tasks tasks)

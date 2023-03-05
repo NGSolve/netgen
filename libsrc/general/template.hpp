@@ -387,7 +387,7 @@ inline bool operator< (const INDEX_4 & a, const INDEX_4 & b)
 
 
 
-
+/*
 
 
 
@@ -425,6 +425,7 @@ inline T max3 (T a, T b, T c)
 
 ///
 
+
 ///
 template <class T>
 inline int sgn (T a)
@@ -445,6 +446,7 @@ inline T pow3 (const T a)
 {
   return a * a * a; 
 }
+*/
 
 
 

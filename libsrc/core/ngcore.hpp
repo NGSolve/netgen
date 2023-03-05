@@ -19,5 +19,6 @@
 #include "version.hpp"
 #include "xbool.hpp"
 #include "ngstream.hpp"
+#include "utils.hpp"
 
 #endif // NETGEN_CORE_NGCORE_HPP
