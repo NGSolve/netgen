@@ -35,7 +35,7 @@ protected:
 public:
   ///
   BASE_TABLE (BASE_TABLE && table2)
-    : data(move(table2.data)), oneblock(table2.oneblock)
+    : data(std::move(table2.data)), oneblock(table2.oneblock)
   {
     table2.oneblock = nullptr;
   }
@@ -48,7 +48,7 @@ public:
 
   BASE_TABLE & operator= (BASE_TABLE && table2)
   {
-    data = move(table2.data);
+    data = std::move(table2.data);
     Swap (oneblock, table2.oneblock);
     return *this;
   }

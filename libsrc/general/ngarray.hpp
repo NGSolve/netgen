@@ -452,7 +452,7 @@ namespace netgen
           if constexpr(std::is_trivially_copyable<T>::value)
             memcpy (p, data, sizeof(T)*mins);
           else
-            for (size_t i = 0; i < mins; i++) p[i] = move(data[i]);
+            for (size_t i = 0; i < mins; i++) p[i] = std::move(data[i]);
 
 	  if (ownmem)
 	    delete [] data;

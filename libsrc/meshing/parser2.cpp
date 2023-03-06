@@ -477,7 +477,7 @@ void netrule :: LoadRule (istream & ist)
     {
       double lam1 = 1.0/(i+1);
 
-      oldutofreearea_i[i] = move(DenseMatrix (oldutofreearea.Height(), oldutofreearea.Width()));
+      oldutofreearea_i[i] = std::move(DenseMatrix (oldutofreearea.Height(), oldutofreearea.Width()));
       DenseMatrix & mati = oldutofreearea_i[i];
       for (j = 0; j < oldutofreearea.Height(); j++)
 	for (int k = 0; k < oldutofreearea.Width(); k++)
@@ -597,7 +597,7 @@ void Meshing2 :: LoadRules (const char * filename, bool quad)
 	  rule -> LoadRule(*ist);
 	  //(*testout) << "fr2" << endl;
 	  
-	  rules.Append (move(rule));
+	  rules.Append (std::move(rule));
 	}
       //(*testout) << "loop" << endl;
     }
