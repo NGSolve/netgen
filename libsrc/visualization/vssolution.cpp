@@ -2202,7 +2202,7 @@ namespace netgen
 
   void  VisualSceneSolution :: DrawTrigSurfaceVectors(const NgArray< Point<3> > & lp, 
                                                       const Point<3> & pmin, const Point<3> & pmax,
-                                                      const int sei, const SolData * vsol)
+                                                      const int sei, const SolData * vsol, bool swap_lam)
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
@@ -2267,12 +2267,17 @@ namespace netgen
               
               if (lam1 >= 0 && lam2 >= 0 && lam1+lam2 <= 1)
                 {
+                  if(swap_lam)
+                  {
+                    Swap(lam1, lam2);
+                    lam1 = 1.0-lam1;
+                    lam2 = 1.0-lam2;
+                  }
                   Point<3> cp;
                   for (k = 0; k < 3; k++)
                     cp(k) = lp[0](k) + 
                       lam1 * (lp[1](k)-lp[0](k)) + 
                       lam2 * (lp[2](k)-lp[0](k));
-
                   Point<2> xref(lam1, lam2);
                   if (mesh->GetCurvedElements().IsHighOrder())
                     mesh->GetCurvedElements().
@@ -2460,22 +2465,21 @@ namespace netgen
               }
             else if (el.GetType() == QUAD)
               {
-                /*
 		  NgArray < Point<3> > lp(3);
 
 		  lp[0] = mesh->Point(el[0]);
 		  lp[1] = mesh->Point(el[1]);
-		  lp[2] = mesh->Point(el[2]);
-
-		  DrawTrigSurfaceVectors(lp,pmin,pmax,sei,vsol);
-
-		  lp[0] = mesh->Point(el[0]);
-		  lp[1] = mesh->Point(el[2]);
 		  lp[2] = mesh->Point(el[3]);
 
 		  DrawTrigSurfaceVectors(lp,pmin,pmax,sei,vsol);
-                */
+
+		  lp[0] = mesh->Point(el[2]);
+		  lp[1] = mesh->Point(el[1]);
+		  lp[2] = mesh->Point(el[3]);
+
+		  DrawTrigSurfaceVectors(lp,pmin,pmax,sei,vsol, true);
                 
+                /*
                 Point<3> lp[4];
                 Point<2> p2d[4];
                 
@@ -2574,6 +2578,7 @@ namespace netgen
                               
                             }
                         }
+              */
               }
           }
       }
