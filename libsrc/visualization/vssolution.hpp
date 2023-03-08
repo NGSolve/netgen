@@ -328,7 +328,7 @@ public:
 
   void DrawSurfaceVectors ();
   void DrawTrigSurfaceVectors(const NgArray< Point<3> > & lp, const Point<3> & pmin, const Point<3> & pmax,
-			      const int sei, const SolData * vsol);
+			      const int sei, const SolData * vsol, bool swap_lam=false);
   void DrawIsoSurface(const SolData * sol, const SolData * grad, int comp);
   
   void DrawIsoLines (const Point<3> & p1, 
