@@ -1,3 +1,5 @@
+braucht man nicht mehr
+
 #ifndef FILE_AUTOPTR
 #define FILE_AUTOPTR
 

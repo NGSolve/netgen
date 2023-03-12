@@ -38,7 +38,7 @@ namespace netgen
 
 #include "seti.hpp"
 #include "optmem.hpp"
-#include "autoptr.hpp"
+// #include "autoptr.hpp"
 #include "sort.hpp"
 #include "stack.hpp"
 #include "mystring.hpp"
