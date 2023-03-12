@@ -36,6 +36,7 @@
 
 namespace ngcore
 {
+  /*
 #ifndef __CUDA_ARCH__
 #ifdef NETGEN_ARCH_AMD64
   NETGEN_INLINE auto HSum (SIMD<double,2> v1, SIMD<double,2> v2, SIMD<double,2> v3, SIMD<double,2> v4)
@@ -51,7 +52,8 @@ namespace ngcore
   }
 #endif
 #endif // __CUDA_ARCH__
-
+  */
+  
   NETGEN_INLINE void SIMDTranspose (SIMD<double,4> a1, SIMD<double,4> a2, SIMD <double,4> a3, SIMD<double,4> a4,
                                     SIMD<double,4> & b1, SIMD<double,4> & b2, SIMD<double,4> & b3, SIMD<double,4> & b4)
   {
@@ -82,7 +84,8 @@ namespace ngcore
   template<int N>
   NETGEN_INLINE auto HSum (SIMD<double,N> s1, SIMD<double,N> s2, SIMD<double,N> s3, SIMD<double,N> s4 )
   {
-    return SIMD<double,4>(HSum(s1), HSum(s2), HSum(s3), HSum(s4));
+    // return SIMD<double,4>(HSum(s1), HSum(s2), HSum(s3), HSum(s4));
+    return SIMD<double,4>(HSum(s1, s2), HSum(s3,s4));
   }
 }
 
