@@ -31,6 +31,7 @@ namespace netgen
 	  GenericImprove ();
       
 	faceindex = 0;
+        return;
       }
 
     // int j, k, l, ri;
