@@ -1337,7 +1337,7 @@ namespace netgen
 
         idxtype edgecut;
         
-        idxtype ncommon = 3;
+        idxtype ncommon = GetDimension();
         PrintMessage (3, "metis start");
 
         static Timer tm("metis library");
