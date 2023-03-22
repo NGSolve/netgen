@@ -10,8 +10,8 @@ public:
   const char * femcode;
   int maxlevel;
   int usemarkedelements;
-  bool refine_hp;
-  bool refine_p;
+  bool refine_hp = false;
+  bool refine_p = false;
   bool onlyonce = false;
   NgTaskManager task_manager = &DummyTaskManager;
   NgTracer tracer = &DummyTracer;

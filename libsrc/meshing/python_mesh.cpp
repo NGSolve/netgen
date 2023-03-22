@@ -415,7 +415,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          )
     .def("__repr__", &ToString<Element>)
     .def_property("index", &Element::GetIndex, &Element::SetIndex)
-    .def_property("curved", &Element::IsCurved, &Element::SetCurved)    
+    .def_property("curved", &Element::IsCurved, &Element::SetCurved)
+    .def_property("refine", &Element::TestRefinementFlag, &Element::SetRefinementFlag)
     .def_property_readonly("vertices", 
                   FunctionPointer ([](const Element & self) -> py::list
                                    {
@@ -451,7 +452,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
         py::detail::field_descriptor {
           "np", data_layout["np"], sizeof(int8_t),
           py::format_descriptor<signed char>::format(),
-          pybind11::dtype("int8") }
+            pybind11::dtype("int8") },
+        py::detail::field_descriptor {
+          "refine", data_layout["refine"], sizeof(bool),
+          py::format_descriptor<bool>::format(),
+          py::detail::npy_format_descriptor<bool>::dtype() }            
       });
   }
 
@@ -496,6 +501,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          )
     .def_property("index", &Element2d::GetIndex, &Element2d::SetIndex)
     .def_property("curved", &Element2d::IsCurved, &Element2d::SetCurved)
+    .def_property("refine", &Element2d::TestRefinementFlag, &Element2d::SetRefinementFlag)
     .def_property_readonly("vertices",
                   FunctionPointer([](const Element2d & self) -> py::list
                                   {
@@ -511,7 +517,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                      for (int i = 0; i < self.GetNP(); i++)
                                        li.append (py::cast(self[i]));
                                      return li;
-                                   }))
+                                   }))    
     ;
 
   if(ngcore_have_numpy)
@@ -530,7 +536,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
         py::detail::field_descriptor {
           "np", data_layout["np"], sizeof(int8_t),
           py::format_descriptor<signed char>::format(),
-          pybind11::dtype("int8") }
+        pybind11::dtype("int8") },
+        py::detail::field_descriptor {
+          "refine", data_layout["refine"], sizeof(bool),
+          py::format_descriptor<bool>::format(),
+          py::detail::npy_format_descriptor<bool>::dtype() }
       });
   }
 
@@ -1220,12 +1230,32 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
           }, py::arg("mp")=nullptr, py::call_guard<py::gil_scoped_release>())
     
     .def ("Refine", FunctionPointer
-          ([](Mesh & self)
+          ([](Mesh & self, bool adaptive)
            {
-             self.GetGeometry()->GetRefinement().Refine(self);
-             self.UpdateTopology();
-           }),py::call_guard<py::gil_scoped_release>())
-
+             if (!adaptive)
+               {
+                 self.GetGeometry()->GetRefinement().Refine(self);
+                 self.UpdateTopology();
+               }
+             else
+               {
+                 BisectionOptions biopt;
+                 biopt.usemarkedelements = 1;
+                 biopt.refine_p = 0;
+                 biopt.refine_hp = 0;
+                 /*
+                   biopt.onlyonce = onlyonce;
+                   if (reftype == NG_REFINE_P)
+                   biopt.refine_p = 1;
+                   if (reftype == NG_REFINE_HP)
+                   biopt.refine_hp = 1;
+                 */
+                 self.GetGeometry()->GetRefinement().Bisect (self, biopt);
+                 self.UpdateTopology();
+                 self.GetCurvedElements().SetIsHighOrder (false);
+               }
+           }), py::arg("adaptive")=false, py::call_guard<py::gil_scoped_release>())
+    
     .def("ZRefine", &Mesh::ZRefine)
 
     .def ("SecondOrder", FunctionPointer
