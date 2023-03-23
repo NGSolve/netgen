@@ -5288,6 +5288,32 @@ namespace netgen
         const Point3d & p3 = Point(el.PNum(3));
         const Point3d & p4 = Point(el.PNum(4));
 
+        if (el.GetOrder() > 1 || el.GetHpElnr() != -1) {
+          netgen::Point<2> lam(0.5,0.5);
+          Vec<3> rhs;
+          Vec<2> deltalam;
+
+          netgen::Point<3> x;
+          Mat<3,2> Jac;
+          double delta = 1.;
+          const int maxits = 30;
+          int i = 0;
+          while(delta > 1e-16 && i < maxits)
+            {
+              curvedelems->CalcSurfaceTransformation(lam,element-1,x,Jac);
+              rhs = p - x;
+              Jac.Solve(rhs,deltalam);
+              lam += deltalam;
+              delta = deltalam.Length2();
+              i++;
+            }
+          if(i == maxits)
+            return false;
+          lami[0] = lam[0];
+          lami[1] = lam[1];
+          return true;
+        }
+
         // Coefficients of Bilinear Mapping from Ref-Elem to global Elem
         // X = a + b x + c y + d x y 
         Vec3d a = p1; 
@@ -5638,7 +5664,13 @@ namespace netgen
 
             if (SurfaceElement(element).GetType() ==TRIG6 || curvedelems->IsSurfaceElementCurved(element-1))
               {
-                netgen::Point<2> lam(1./3,1./3);
+                // netgen::Point<2> lam(1./3,1./3);
+                netgen::Point<2> lam(sol.X(), sol.Y());
+                if(SurfaceElement(element).GetType() != TRIG6)
+                  {
+                    lam[0] = 1-sol.X()-sol.Y();
+                    lam[1] = sol.X();
+                  }
                 Vec<3> rhs;
                 Vec<2> deltalam;
                 netgen::Point<3> x;
