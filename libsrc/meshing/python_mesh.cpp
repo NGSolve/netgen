@@ -1153,6 +1153,29 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
              }
            return idx;
          }, py::arg("name"), py::arg("dim"))
+
+    .def ("GetRegionNames", [] (Mesh & self, optional<int> optdim, optional<int> optcodim)
+          {
+            int codim;
+            if (optdim)
+              codim = self.GetDimension() - *optdim;
+            else if (optcodim)
+              codim = *optcodim;
+            else
+              throw Exception("either 'dim' or 'codim' must be specified");
+            
+            NgArray<string*> & codimnames = self.GetRegionNamesCD (codim);
+            
+            std::vector<string> names;
+            for (auto name : codimnames)
+              {
+                if (name)
+                  names.push_back(*name);
+                else
+                  names.push_back("");
+              }
+            return names;               
+          }, py::arg("dim")=nullopt, py::arg("codim")=nullopt)
     
     .def ("SetBCName", &Mesh::SetBCName)
     .def ("GetBCName", FunctionPointer([](Mesh & self, int bc)->string 
