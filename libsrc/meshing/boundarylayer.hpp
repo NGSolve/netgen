@@ -19,6 +19,7 @@ public:
   bool outside = false; // set the boundary layer on the outside
   bool grow_edges = false;
   bool limit_growth_vectors = true;
+  bool sides_keep_surfaceindex = false;
   Array<size_t> project_boundaries;
 };
 
@@ -44,6 +45,7 @@ class BoundaryLayerTool
     Array<SegmentIndex> moved_segs;
     int max_edge_nr, nfd_old, ndom_old;
     Array<int> new_mat_nrs;
+    BitArray moved_surfaces;
     int np, nseg, nse, ne;
     double height;
 
@@ -56,6 +58,7 @@ class BoundaryLayerTool
 
     // major steps called in Perform()
     void CreateNewFaceDescriptors();
+    void CreateFaceDescriptorsSides();
     void CalculateGrowthVectors();
     Array<Array<pair<SegmentIndex, int>>, SegmentIndex> BuildSegMap();
 
@@ -66,6 +69,7 @@ class BoundaryLayerTool
 
     void InsertNewElements(FlatArray<Array<pair<SegmentIndex, int>>, SegmentIndex> segmap, const BitArray & in_surface_direction);
     void SetDomInOut();
+    void SetDomInOutSides();
     void AddSegments();
     void FixVolumeElements();
 
