@@ -5367,7 +5367,7 @@ namespace netgen
          */
 
         lami[2]=0.; 
-        double eps = 1.E-12;
+        // double eps = 1.E-12;
         double c1,c2,r;
 
         //First check if point is "exactly" a vertex point
