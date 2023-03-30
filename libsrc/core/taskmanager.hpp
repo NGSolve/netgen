@@ -462,22 +462,26 @@ public:
     //   return IntRange(begin, end);
     // }
     
-    bool PopFirst (size_t & first)
+    bool PopFirst (size_t & hfirst)
     {
       // first = begin++;
       // return first < end;
       
-      first = begin;
+      size_t first = begin.load(std::memory_order_relaxed);
       
       size_t nextfirst = first+1;
       if (first >= end) nextfirst = std::numeric_limits<size_t>::max()-1;
 
-      while (!begin.compare_exchange_weak (first, nextfirst))
+      // while (!begin.compare_exchange_weak (first, nextfirst))
+      while (!begin.compare_exchange_weak (first, nextfirst,
+                                           std::memory_order_relaxed,
+                                           std::memory_order_relaxed))
         {
           first = begin;
           nextfirst = first+1;
           if (nextfirst >= end) nextfirst = std::numeric_limits<size_t>::max()-1;
         }
+      hfirst = first;
       return first < end;
     }
     
