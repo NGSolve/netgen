@@ -45,7 +45,6 @@ class BoundaryLayerTool
     Array<SegmentIndex> moved_segs;
     int max_edge_nr, nfd_old, ndom_old;
     Array<int> new_mat_nrs;
-    Array<int> domain_map;
     BitArray moved_surfaces;
     int np, nseg, nse, ne;
     double height;
@@ -70,6 +69,7 @@ class BoundaryLayerTool
 
     void InsertNewElements(FlatArray<Array<pair<SegmentIndex, int>>, SegmentIndex> segmap, const BitArray & in_surface_direction);
     void SetDomInOut();
+    void SetDomInOutSides();
     void AddSegments();
     void FixVolumeElements();
 

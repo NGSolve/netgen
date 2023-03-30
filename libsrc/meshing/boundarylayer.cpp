@@ -613,9 +613,6 @@ namespace netgen
     surfacefacs.SetSize(nfd_old+1);
     surfacefacs = 0.0;
     // create new FaceDescriptors
-    domain_map.SetSize(mesh.GetNDomains()+1);
-    for(auto i : Range(mesh.GetNDomains()+1))
-      domain_map[i] = i;
     for(auto i : Range(1, nfd_old+1))
       {
         const auto& fd = mesh.GetFaceDescriptor(i);
@@ -629,7 +626,6 @@ namespace netgen
                 // -1 surf nr is so that curving does not do anything
                 FaceDescriptor new_fd(-1, isIn ? new_mat_nrs[i] : fd.DomainIn(),
                                       isIn ? fd.DomainOut() : new_mat_nrs[i], -1);
-                domain_map[isIn ? fd.DomainIn() : fd.DomainOut()] = new_mat_nrs[i];
                 new_fd.SetBCProperty(new_si);
                 mesh.AddFaceDescriptor(new_fd);
                 si_map[i] = new_si;
@@ -665,8 +661,9 @@ namespace netgen
             auto isIn = domains.Test(fd.DomainIn());
             auto isOut = domains.Test(fd.DomainOut());
             int si = params.sides_keep_surfaceindex ? facei : -1;
-            FaceDescriptor new_fd(si, domain_map[fd.DomainIn()],
-                                  domain_map[fd.DomainOut()], si);
+            // domin and domout can only be set later
+            FaceDescriptor new_fd(si, -1,
+                                  -1, si);
             new_fd.SetBCProperty(new_si);
             mesh.AddFaceDescriptor(new_fd);
             si_map[facei] = new_si;
@@ -1371,6 +1368,33 @@ namespace netgen
         }
   }
 
+  void BoundaryLayerTool :: SetDomInOutSides()
+  {
+    BitArray done(mesh.GetNFD()+1);
+    done.Clear();
+    for(auto sei : Range(mesh.SurfaceElements()))
+      {
+        auto& sel = mesh[sei];
+        auto index = sel.GetIndex();
+        if(done.Test(index))
+          continue;
+        done.SetBit(index);
+        auto& fd = mesh.GetFaceDescriptor(index);
+        if(fd.DomainIn() != -1)
+          continue;
+        int e1, e2;
+        mesh.GetTopology().GetSurface2VolumeElement(sei+1, e1, e2);
+        if(e1 == 0)
+          fd.SetDomainIn(0);
+        else
+          fd.SetDomainIn(mesh.VolumeElement(e1).GetIndex());
+        if(e2 == 0)
+          fd.SetDomainOut(0);
+        else
+          fd.SetDomainOut(mesh.VolumeElement(e2).GetIndex());
+      }
+  }
+
   void BoundaryLayerTool :: AddSegments()
   {
     if(have_single_segments)
@@ -1451,6 +1475,7 @@ namespace netgen
       mesh.GetTopology().ClearEdges();
       mesh.SetNextMajorTimeStamp();
       mesh.UpdateTopology();
+      SetDomInOutSides();
       MeshingParameters mp;
       mp.optimize3d ="m";
       mp.optsteps3d = 4;
