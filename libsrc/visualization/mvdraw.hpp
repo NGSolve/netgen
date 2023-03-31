@@ -222,6 +222,7 @@ namespace netgen
     { return selpoint; }
     void BuildFilledList (bool select);
     void BuildColorTexture();
+    void SelectCenter(int zoomall);
     // private:
     void BuildLineList();
     void BuildEdgeList();

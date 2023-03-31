@@ -791,35 +791,7 @@ namespace netgen
         if (mesh->GetTimeStamp() > surfeltimestamp || zoomall)
           {
             // mesh has changed
-          
-            Point3d pmin, pmax;
-            static double oldrad = 0;
-          
-            mesh->GetBox (pmin, pmax, -1);
-            if(vispar.use_center_coords && zoomall == 2)
-              {
-                center.X() = vispar.centerx;
-                center.Y() = vispar.centery;
-                center.Z() = vispar.centerz;
-              }
-            else if(selpoint >= 1 && zoomall == 2)
-              center = mesh->Point(selpoint);
-            else if(vispar.centerpoint >= 1 && zoomall == 2)
-              center = mesh->Point(vispar.centerpoint);
-            else
-              center = Center (pmin, pmax);
-            rad = 0.5 * Dist (pmin, pmax);
-            if(rad == 0) rad = 1e-6;
-          
-            glEnable (GL_NORMALIZE);
-          
-            if (rad > 1.2 * oldrad ||
-                mesh->GetMajorTimeStamp() > surfeltimestamp ||
-                zoomall)
-              {
-                CalcTransformationMatrices();
-                oldrad = rad;
-              }
+            vsmesh.SelectCenter(zoomall);
           }
       
         DrawSurfaceElements();
@@ -4775,6 +4747,7 @@ namespace netgen
     auto printScalValue = [&formatComplex]
       (SolData & sol, int comp, double value, double imag=0., bool iscomplex=false)
       {
+        cout << '\t';
         if(sol.components>1)
           {
             if(comp==0)

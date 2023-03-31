@@ -253,6 +253,47 @@ namespace netgen
 
   }
 
+  void VisualSceneMesh :: SelectCenter (int zoomall)
+  {
+    shared_ptr<Mesh> mesh = GetMesh();
+    Point3d pmin, pmax;
+    mesh->GetBox (pmin, pmax, -1);
+
+    // works in NGSolve, mesh view
+    if (mesh->GetDimension() == 2)
+      mesh->GetBox (pmin, pmax);
+    else // otherwise strange zooms during mesh generation
+      mesh->GetBox (pmin, pmax, SURFACEPOINT);
+
+    if (vispar.use_center_coords && zoomall==2)
+    {
+      center.X() = vispar.centerx;
+      center.Y() = vispar.centery;
+      center.Z() = vispar.centerz;
+    }
+    else if (selpoint >= 1 && zoomall==2)
+      center = mesh->Point (selpoint);
+    else if (marker && zoomall==2)
+      center = *marker;
+    else if (vispar.centerpoint >= 1 && zoomall==2)
+      center = mesh->Point (vispar.centerpoint);
+    else
+      center = Center (pmin, pmax);
+
+    double oldrad = rad;
+    rad = 0.5 * Dist (pmin, pmax);
+    if(rad == 0) rad = 1e-6;
+
+    if (rad > 1.2 * oldrad ||
+        mesh->GetMajorTimeStamp() > vstimestamp ||
+        zoomall)
+    {
+      CalcTransformationMatrices();
+    }
+
+    glEnable (GL_NORMALIZE);
+
+  }
 
   void VisualSceneMesh :: BuildScene (int zoomall)
   {
@@ -277,48 +318,11 @@ namespace netgen
 
 
 
-    Point3d pmin, pmax;
-    static double oldrad = 0;
-
     NgArray<Element2d> faces;
 
     int meshtimestamp = mesh->GetTimeStamp();
     if (meshtimestamp > vstimestamp || zoomall)
-      {
-	if (mesh->GetDimension() == 2)
-	  {
-            // works in NGSolve, mesh view
-            mesh->GetBox (pmin, pmax);
-	  }
-	else
-	  {
-            // otherwise strange zooms douring mesh generation
-            mesh->GetBox (pmin, pmax, SURFACEPOINT);
-	  }
-
-	if (vispar.use_center_coords && zoomall == 2)
-	  {
-            center.X() = vispar.centerx; center.Y() = vispar.centery; center.Z() = vispar.centerz;
-	  }
-	else if (selpoint >= 1 && zoomall == 2)
-	  center = mesh->Point (selpoint);
-	else if (vispar.centerpoint >= 1 && zoomall == 2)
-	  center = mesh->Point (vispar.centerpoint);
-	else
-	  center = Center (pmin, pmax);
-	rad = 0.5 * Dist (pmin, pmax);
-	if(rad == 0) rad = 1e-6;
-
-	if (rad > 1.2 * oldrad ||
-            mesh->GetMajorTimeStamp() > vstimestamp ||
-            zoomall)
-	  {
-            CalcTransformationMatrices();
-            oldrad = rad;
-	  }
-      }
-
-    glEnable (GL_NORMALIZE);
+        SelectCenter(zoomall);
 
     if (pointnumberlist)
       {
