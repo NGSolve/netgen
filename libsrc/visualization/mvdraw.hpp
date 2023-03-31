@@ -157,6 +157,13 @@ namespace netgen
     int domainsurftimestamp = -1;
 
     struct {
+      unsigned texture = -1;
+      int width = 0;
+      int height = 0;
+      int size = 0;
+    } colors;
+
+    struct {
       unsigned framebuffer = 0;
       unsigned render_buffers[2];
       unsigned width = 0;
@@ -214,6 +221,7 @@ namespace netgen
 	NGGUI_API int SelectedPoint () const
     { return selpoint; }
     void BuildFilledList (bool select);
+    void BuildColorTexture();
     // private:
     void BuildLineList();
     void BuildEdgeList();

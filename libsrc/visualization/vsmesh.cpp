@@ -185,8 +185,7 @@ namespace netgen
 	glPolygonOffset (1, 1);
 	glEnable (GL_POLYGON_OFFSET_LINE);
 
-	if (linetimestamp < mesh->GetTimeStamp ())
-	  BuildLineList ();
+        BuildLineList ();
 
 #ifdef PARALLELGL
 	if (ntasks > 1 && vispar.drawtetsdomain > 0 && vispar.drawtetsdomain < ntasks)
@@ -848,6 +847,33 @@ namespace netgen
 
 
 
+  void VisualSceneMesh :: BuildColorTexture ()
+  {
+    shared_ptr<Mesh> mesh = GetMesh();
+
+    if(colors.texture == -1)
+      glGenTextures(1, &colors.texture);
+
+    // build color texture
+    glBindTexture(GL_TEXTURE_2D, colors.texture);
+    Array<float> data;
+    for(auto fdi : Range(1, mesh->GetNFD()+1))
+    {
+      auto c = mesh->GetFaceDescriptor(fdi).SurfColour();
+      ArrayMem<float, 4> cf{float(c[0]), float(c[1]), float(c[2]), float(c[3])};
+      if(fdi==selface)
+        cf = {1.0f, 0.0f, 0.0f, 1.0f};
+      data.Append(cf);
+    }
+    int n = data.Size()/4;
+    colors.width = min2(n, 1024);
+    colors.height = (n+colors.width-1)/colors.width;
+    for(auto i: Range(n, colors.width*colors.height))
+      data.Append({0.0f, 0.0f, 0.0f, 0.0f});
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, colors.width, colors.height, 0, GL_RGBA, GL_FLOAT, data.Data());
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  }
 
   void VisualSceneMesh :: BuildFilledList (bool build_select)
   {
@@ -898,12 +924,16 @@ namespace netgen
 
     timestamp = NextTimeStamp();
 
+    if(!build_select && !vispar.colormeshsize && colors.texture==-1)
+      BuildColorTexture();
+
     if (list)
       glDeleteLists (list, 1);
 
     list = glGenLists (1);
     glNewList (list, GL_COMPILE);
 
+    glBindTexture(GL_TEXTURE_2D, colors.texture);
       
 #ifdef STLGEOM
     STLGeometry * stlgeometry = dynamic_cast<STLGeometry*> (ng_geometry);
@@ -935,17 +965,21 @@ namespace netgen
             maxh = 10; 
 	  }
       }
-    else
-      glDisable (GL_COLOR_MATERIAL);
-
-    if(build_select)
+    else if (build_select)
     {
+      glDisable(GL_TEXTURE_1D);
       glDisable(GL_TEXTURE_2D);
       glDisable(GL_FOG);
       glDisable(GL_LIGHTING);
       glDisable (GL_COLOR_MATERIAL);
     }
-
+    else
+    {
+      glDisable(GL_TEXTURE_1D);
+      glEnable(GL_TEXTURE_2D);
+      glEnable (GL_COLOR_MATERIAL);
+      glBindTexture(GL_TEXTURE_2D, colors.texture);
+    }
 
     GLfloat matcol[] = { 0, 1, 0, 1 };
     GLfloat matcolsel[] = { 1, 0, 0, 1 };
@@ -964,20 +998,12 @@ namespace netgen
       {
 	mesh->GetSurfaceElementsOfFace (faceindex, seia);
 
-	// Philippose - 06/07/2009
-	// Modified the colour system to integrate the face colours into 
-	// the mesh data structure, rather than limit it to the OCC geometry 
-	// structure... allows other geometry types to use face colours too
-
-        for (auto i : Range(4))
-            matcol[i] = mesh->GetFaceDescriptor(faceindex).SurfColour()[i];
-
-        if(!build_select)
+        if(!build_select && !vispar.colormeshsize)
         {
-          if (faceindex == selface)
-            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, matcolsel);
-          else
-            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, matcol);
+          int i = faceindex-1;
+          float x = (0.5+i%colors.width)/colors.width;
+          float y = (0.5+i/colors.width)/colors.height;
+          glTexCoord2f(x,y);
         }
 	
         static Point<3> xa[129];
@@ -1249,6 +1275,7 @@ namespace netgen
     
 
     glLoadName (0);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glEndList ();
 
 
@@ -1263,6 +1290,8 @@ namespace netgen
   void VisualSceneMesh :: BuildLineList()
   {
     shared_ptr<Mesh> mesh = GetMesh();
+    if (linetimestamp > max(mesh->GetTimeStamp (), subdivision_timestamp))
+      return;
 
     static int timer = NgProfiler::CreateTimer ("Mesh::BuildLineList");
     NgProfiler::RegionTimer reg (timer);
@@ -1552,7 +1581,7 @@ namespace netgen
 	lock -> Lock();
       }
 
-    if (edgetimestamp > mesh->GetTimeStamp () && vispar.drawtetsdomain == 0 
+    if (edgetimestamp > max(mesh->GetTimeStamp(), subdivision_timestamp) && vispar.drawtetsdomain == 0
 	&& vispar.shrink == 1)
       return;
 
@@ -3220,11 +3249,11 @@ namespace netgen
   {
     Point<3> p;
     bool found_point = SelectSurfaceElement(px, py, p, false);
-    int sel_face = 0;
 
     if(selelement>0)
       {
         const Element2d & sel = GetMesh()->SurfaceElement(selelement);
+        SetSelectedFace(sel.GetIndex());
 
         auto pi_nearest = sel[0];
         double min_dist = 1e99;
@@ -3235,45 +3264,38 @@ namespace netgen
             pi_nearest = pi;
           }
         auto p_win = Project(GetMesh()->Point(pi_nearest));
-        cout << endl;
         if(abs(p_win[0]-px) < 5 && abs(p_win[1]-py) < 5)
         {
-          cout << "select point " << pi_nearest << endl;
           marker = GetMesh()->Point(pi_nearest);
-          sel_face = sel.GetIndex();
+          selpoint = pi_nearest;
+          cout << "select point " << pi_nearest << " at " << *marker << endl;
           locpi = -2;
         }
         else
         {
           if(locpi < 0)
           {
-            cout << "select element " << selelement
+            cout << endl << "select element " << selelement
               << " on face " << sel.GetIndex() << endl;
-            cout << "Nodes: ";
+            cout << "\tpoint: " << p << endl;;
+            cout << "\tnodes: ";
             for (int i = 1; i <= sel.GetNP(); i++)
               cout << sel.PNum(i) << " ";
             cout << endl;
           }
           else {
             auto pi = sel[locpi%sel.GetNP()];
-            auto p = GetMesh()->Points()[pi];
-            marker = p;
-            cout << "selected point " << pi << endl;
+            marker = GetMesh()->Points()[pi];
+            cout << "select point " << pi << " at " << *marker << endl;
           }
         }
       }
 
-    SetSelectedFace(sel_face);
-
-    if(found_point)
-      {
-        cout << "point : " << p << endl;
-        if (user_me_handler)
-          {
-            if (selelement != -1)
-              user_me_handler -> DblClick (selelement-1, p[0], p[1], p[2]);
-          }
-      }
+    if(found_point && user_me_handler)
+    {
+      if (selelement != -1)
+        user_me_handler -> DblClick (selelement-1, p[0], p[1], p[2]);
+    }
 
     if(lock)
       {
@@ -3288,8 +3310,10 @@ namespace netgen
   void VisualSceneMesh :: SetSelectedFace (int asf)
   {
     if(selface != asf)
-      filledlist = 0;
-    selface = asf;
+    {
+      selface = asf;
+      BuildColorTexture();
+    }
   }
 
 
