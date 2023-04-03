@@ -23,38 +23,9 @@ namespace netgen
   VisualSceneMesh :: VisualSceneMesh ()
     : VisualScene()
   {
-    filledlist = 0;
-    linelist = 0;
-    edgelist = 0;
-    badellist = 0;
-    tetlist = 0;
-    prismlist = 0;
-    hexlist = 0;
-    pyramidlist = 0;
-    identifiedlist = 0;
-    pointnumberlist = 0;
-    domainsurflist = 0;
-
-    vstimestamp = -1; // GetTimeStamp();
-    selecttimestamp = -1; // GetTimeStamp();
-    filledtimestamp = -1; // GetTimeStamp();
-    linetimestamp = -1; // GetTimeStamp();
-    edgetimestamp = -1; // GetTimeStamp();
-    pointnumbertimestamp = -1; // GetTimeStamp();
-
-    tettimestamp = -1; // GetTimeStamp();
-    prismtimestamp = -1; // GetTimeStamp();
-    hextimestamp = -1; // GetTimeStamp();
-    pyramidtimestamp = -1; // GetTimeStamp();
-
-    badeltimestamp = -1; // GetTimeStamp();
-    identifiedtimestamp = -1; // GetTimeStamp();
-    domainsurftimestamp = -1; // GetTimeStamp();
-
-
     selface = -1;
     selelement = -1;
-    locpi = 1;
+    locpi = -2;
     selpoint = PointIndex::INVALID;
     selpoint2 = PointIndex::INVALID;
     seledge = -1;
@@ -62,7 +33,6 @@ namespace netgen
     minh = 0.0;
     maxh = 0.0;
     user_me_handler = NULL;
-
   }
 
   VisualSceneMesh :: ~VisualSceneMesh ()
@@ -150,11 +120,7 @@ namespace netgen
 
     if (vispar.drawfilledtrigs)
       {
-	if (filledtimestamp < mesh->GetTimeStamp () ||
-            filledtimestamp < selecttimestamp)
-	  {
-            BuildFilledList (false);
-	  }
+        BuildFilledList (false);
 
 
 #ifdef PARALLELGL
@@ -219,8 +185,7 @@ namespace netgen
 	glPolygonOffset (1, 1);
 	glEnable (GL_POLYGON_OFFSET_LINE);
 
-	if (linetimestamp < mesh->GetTimeStamp ())
-	  BuildLineList ();
+        BuildLineList ();
 
 #ifdef PARALLELGL
 	if (ntasks > 1 && vispar.drawtetsdomain > 0 && vispar.drawtetsdomain < ntasks)
@@ -288,6 +253,47 @@ namespace netgen
 
   }
 
+  void VisualSceneMesh :: SelectCenter (int zoomall)
+  {
+    shared_ptr<Mesh> mesh = GetMesh();
+    Point3d pmin, pmax;
+    mesh->GetBox (pmin, pmax, -1);
+
+    // works in NGSolve, mesh view
+    if (mesh->GetDimension() == 2)
+      mesh->GetBox (pmin, pmax);
+    else // otherwise strange zooms during mesh generation
+      mesh->GetBox (pmin, pmax, SURFACEPOINT);
+
+    if (vispar.use_center_coords && zoomall==2)
+    {
+      center.X() = vispar.centerx;
+      center.Y() = vispar.centery;
+      center.Z() = vispar.centerz;
+    }
+    else if (selpoint >= 1 && zoomall==2)
+      center = mesh->Point (selpoint);
+    else if (marker && zoomall==2)
+      center = *marker;
+    else if (vispar.centerpoint >= 1 && zoomall==2)
+      center = mesh->Point (vispar.centerpoint);
+    else
+      center = Center (pmin, pmax);
+
+    double oldrad = rad;
+    rad = 0.5 * Dist (pmin, pmax);
+    if(rad == 0) rad = 1e-6;
+
+    if (rad > 1.2 * oldrad ||
+        mesh->GetMajorTimeStamp() > vstimestamp ||
+        zoomall)
+    {
+      CalcTransformationMatrices();
+    }
+
+    glEnable (GL_NORMALIZE);
+
+  }
 
   void VisualSceneMesh :: BuildScene (int zoomall)
   {
@@ -312,48 +318,11 @@ namespace netgen
 
 
 
-    Point3d pmin, pmax;
-    static double oldrad = 0;
-
     NgArray<Element2d> faces;
 
     int meshtimestamp = mesh->GetTimeStamp();
     if (meshtimestamp > vstimestamp || zoomall)
-      {
-	if (mesh->GetDimension() == 2)
-	  {
-            // works in NGSolve, mesh view
-            mesh->GetBox (pmin, pmax);
-	  }
-	else
-	  {
-            // otherwise strange zooms douring mesh generation
-            mesh->GetBox (pmin, pmax, SURFACEPOINT);
-	  }
-
-	if (vispar.use_center_coords && zoomall == 2)
-	  {
-            center.X() = vispar.centerx; center.Y() = vispar.centery; center.Z() = vispar.centerz;
-	  }
-	else if (selpoint >= 1 && zoomall == 2)
-	  center = mesh->Point (selpoint);
-	else if (vispar.centerpoint >= 1 && zoomall == 2)
-	  center = mesh->Point (vispar.centerpoint);
-	else
-	  center = Center (pmin, pmax);
-	rad = 0.5 * Dist (pmin, pmax);
-	if(rad == 0) rad = 1e-6;
-
-	if (rad > 1.2 * oldrad ||
-            mesh->GetMajorTimeStamp() > vstimestamp ||
-            zoomall)
-	  {
-            CalcTransformationMatrices();
-            oldrad = rad;
-	  }
-      }
-
-    glEnable (GL_NORMALIZE);
+        SelectCenter(zoomall);
 
     if (pointnumberlist)
       {
@@ -882,13 +851,45 @@ namespace netgen
 
 
 
+  void VisualSceneMesh :: BuildColorTexture ()
+  {
+    shared_ptr<Mesh> mesh = GetMesh();
 
-  void VisualSceneMesh :: BuildFilledList (bool names)
+    if(colors.texture == -1)
+      glGenTextures(1, &colors.texture);
+
+    // build color texture
+    glBindTexture(GL_TEXTURE_2D, colors.texture);
+    Array<float> data;
+    for(auto fdi : Range(1, mesh->GetNFD()+1))
+    {
+      auto c = mesh->GetFaceDescriptor(fdi).SurfColour();
+      ArrayMem<float, 4> cf{float(c[0]), float(c[1]), float(c[2]), float(c[3])};
+      if(fdi==selface)
+        cf = {1.0f, 0.0f, 0.0f, 1.0f};
+      data.Append(cf);
+    }
+    int n = data.Size()/4;
+    colors.width = min2(n, 1024);
+    colors.height = (n+colors.width-1)/colors.width;
+    for(auto i: Range(n, colors.width*colors.height))
+      data.Append({0.0f, 0.0f, 0.0f, 0.0f});
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, colors.width, colors.height, 0, GL_RGBA, GL_FLOAT, data.Data());
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  }
+
+  void VisualSceneMesh :: BuildFilledList (bool build_select)
   {
     shared_ptr<Mesh> mesh = GetMesh();
     
     static int timer = NgProfiler::CreateTimer ("Mesh::BuildFilledList");
     NgProfiler::RegionTimer reg (timer);
+    auto & list = build_select ? select.list : filledlist;
+    auto & timestamp = build_select ? select.list_timestamp : filledtimestamp;
+    if (list && timestamp > max(mesh->GetTimeStamp(), subdivision_timestamp))
+      return;
+
 
 #ifdef PARALLELGL
     if (id == 0 && ntasks > 1)
@@ -901,18 +902,18 @@ namespace netgen
 	for ( int dest = 1; dest < ntasks; dest++ )
 	  MyMPI_Recv (par_filledlists[dest], dest, MPI_TAG_VIS);
 
-	if (filledlist)
-	  glDeleteLists (filledlist, 1);
+	if (list)
+	  glDeleteLists (list, 1);
 
-	filledlist = glGenLists (1);
-	glNewList (filledlist, GL_COMPILE);
+	list = glGenLists (1);
+	glNewList (list, GL_COMPILE);
 
 	for ( int dest = 1; dest < ntasks; dest++ )
 	  glCallList (par_filledlists[dest]);
 
 	glEndList();
 
-	filledtimestamp = NextTimeStamp();
+	timestamp = NextTimeStamp();
 	return;
       }
 
@@ -925,14 +926,18 @@ namespace netgen
 	lock -> Lock();
       }
 
-    filledtimestamp = NextTimeStamp();
+    timestamp = NextTimeStamp();
 
-    if (filledlist)
-      glDeleteLists (filledlist, 1);
+    if(!build_select && !vispar.colormeshsize && colors.texture==-1)
+      BuildColorTexture();
 
-    filledlist = glGenLists (1);
-    glNewList (filledlist, GL_COMPILE);
+    if (list)
+      glDeleteLists (list, 1);
 
+    list = glGenLists (1);
+    glNewList (list, GL_COMPILE);
+
+    glBindTexture(GL_TEXTURE_2D, colors.texture);
       
 #ifdef STLGEOM
     STLGeometry * stlgeometry = dynamic_cast<STLGeometry*> (ng_geometry);
@@ -964,9 +969,21 @@ namespace netgen
             maxh = 10; 
 	  }
       }
-    else
+    else if (build_select)
+    {
+      glDisable(GL_TEXTURE_1D);
+      glDisable(GL_TEXTURE_2D);
+      glDisable(GL_FOG);
+      glDisable(GL_LIGHTING);
       glDisable (GL_COLOR_MATERIAL);
-
+    }
+    else
+    {
+      glDisable(GL_TEXTURE_1D);
+      glEnable(GL_TEXTURE_2D);
+      glEnable (GL_COLOR_MATERIAL);
+      glBindTexture(GL_TEXTURE_2D, colors.texture);
+    }
 
     GLfloat matcol[] = { 0, 1, 0, 1 };
     GLfloat matcolsel[] = { 1, 0, 0, 1 };
@@ -976,7 +993,7 @@ namespace netgen
 
     CurvedElements & curv = mesh->GetCurvedElements();
 
-    int hoplotn = 1 << vispar.subdivisions;
+    int hoplotn = 1 << subdivisions;
     
     Array<SurfaceElementIndex> seia;
 
@@ -985,18 +1002,13 @@ namespace netgen
       {
 	mesh->GetSurfaceElementsOfFace (faceindex, seia);
 
-	// Philippose - 06/07/2009
-	// Modified the colour system to integrate the face colours into 
-	// the mesh data structure, rather than limit it to the OCC geometry 
-	// structure... allows other geometry types to use face colours too
-
-        for (auto i : Range(4))
-            matcol[i] = mesh->GetFaceDescriptor(faceindex).SurfColour()[i];
-
-	if (faceindex == selface)
-	  glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, matcolsel);
-	else
-	  glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, matcol);
+        if(!build_select && !vispar.colormeshsize)
+        {
+          int i = faceindex-1;
+          float x = (0.5+i%colors.width)/colors.width;
+          float y = (0.5+i/colors.width)/colors.height;
+          glTexCoord2f(x,y);
+        }
 	
         static Point<3> xa[129];
         static Vec<3> na[129];
@@ -1020,8 +1032,14 @@ namespace netgen
             if (!drawel)
 	      continue;
 	    
-	    if (names)
-	      glLoadName (sei+1);
+	    if (build_select)
+            {
+              GLushort r,g,b;
+              r = (sei+1) % (1<<16);
+              g = (sei+1) >> 16;
+              b = 0;
+              glColor3us(r,g,b);
+            }
 
             switch (el.GetType())
 	      {
@@ -1261,13 +1279,14 @@ namespace netgen
     
 
     glLoadName (0);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glEndList ();
 
 
 #ifdef PARALLELGL
     glFinish();
     if (id > 0)
-      MyMPI_Send (filledlist, 0, MPI_TAG_VIS);
+      MyMPI_Send (list, 0, MPI_TAG_VIS);
 #endif
   }
 
@@ -1275,6 +1294,8 @@ namespace netgen
   void VisualSceneMesh :: BuildLineList()
   {
     shared_ptr<Mesh> mesh = GetMesh();
+    if (linetimestamp > max(mesh->GetTimeStamp (), subdivision_timestamp))
+      return;
 
     static int timer = NgProfiler::CreateTimer ("Mesh::BuildLineList");
     NgProfiler::RegionTimer reg (timer);
@@ -1335,7 +1356,7 @@ namespace netgen
     glLineWidth (1.0f);
 
 
-    int hoplotn = 1 << vispar.subdivisions;
+    int hoplotn = 1 << subdivisions;
 
     // PrintMessage (3, "nse = ", mesh->GetNSE());
     for (SurfaceElementIndex sei = 0; sei < mesh->GetNSE(); sei++)
@@ -1564,7 +1585,7 @@ namespace netgen
 	lock -> Lock();
       }
 
-    if (edgetimestamp > mesh->GetTimeStamp () && vispar.drawtetsdomain == 0 
+    if (edgetimestamp > max(mesh->GetTimeStamp(), subdivision_timestamp) && vispar.drawtetsdomain == 0
 	&& vispar.shrink == 1)
       return;
 
@@ -1621,7 +1642,7 @@ namespace netgen
 
 	if (mesh->GetCurvedElements().IsHighOrder())
 	  {
-            int hoplotn = 1 << vispar.subdivisions;
+            int hoplotn = 1 << subdivisions;
             // mesh->GetCurvedElements().GetNVisualSubsecs();
 
             Point<3> x;
@@ -1832,7 +1853,7 @@ namespace netgen
     else
       glShadeModel (GL_SMOOTH);
 
-    int hoplotn = max (2, 1 << vispar.subdivisions);
+    int hoplotn = max (2, 1 << subdivisions);
 
 
 
@@ -2134,7 +2155,7 @@ namespace netgen
 
 		Point<3> grid[11][11];
 		Point<3> fpts[4];
-		int order = vispar.subdivisions+1;
+		int order = subdivisions+1;
 
 		for (int trig = 0; trig < 2; trig++)
 		  {
@@ -2233,7 +2254,7 @@ namespace netgen
 
 
 		/*
-		  int hoplotn = 1 << vispar.subdivisions;
+		  int hoplotn = 1 << subdivisions;
 		  // int hoplotn = curv.GetNVisualSubsecs();
 
 		  const Point3d * facepoint = MeshTopology :: GetVertices (TRIG);
@@ -2521,7 +2542,7 @@ namespace netgen
 
 		Point<3> grid[11][11];
 		Point<3> fpts[4];
-		int order = vispar.subdivisions+1;
+		int order = subdivisions+1;
 
 		for (int quad = 0; quad<6; quad++)
 		  {
@@ -2672,7 +2693,7 @@ namespace netgen
 
 		Point<3> grid[11][11];
 		Point<3> fpts[4];
-		int order = vispar.subdivisions+1;
+		int order = subdivisions+1;
 
 		for (int trig = 0; trig < 4; trig++)
 		  {
@@ -3097,28 +3118,105 @@ namespace netgen
 
 
 
-
-  bool VisualSceneMesh :: Unproject (int px, int py, Point<3> &p)
+  bool VisualSceneMesh :: SelectSurfaceElement (int px, int py, Point<3> &p, bool select_on_clipping_plane)
   {
-    shared_ptr<Mesh> mesh = GetMesh();
-
-    BuildFilledList (true);
-
+    selelement = -1;
     marker = nullopt;
-    MouseDblClickSelect(px,py,clipplane,backcolor,transformationmat,center,rad,
-			filledlist,selelement,selface,seledge,selpoint,selpoint2,locpi);
+    shared_ptr<Mesh> mesh = GetMesh();
+    if(px != select.x || py != select.y)
+    {
+      select.x = px;
+      select.y = py;
+      locpi = -2;
+    }
 
+    glGetIntegerv (GL_VIEWPORT, select.viewport);
+    GLenum err;
+    if(select.framebuffer == 0 || select.viewport[2] != select.width || select.viewport[3] != select.height)
+    {
+      select.width = select.viewport[2];
+      select.height = select.viewport[3];
+      if(select.framebuffer != 0)
+      {
+        glDeleteRenderbuffers(2, select.render_buffers);
+        glDeleteFramebuffers(1, &select.framebuffer);
+      }
 
-    GLdouble /* modelview[16], */ projection[16];
-    GLint viewport[4];
-    GLdouble result[3];
+      glGenFramebuffers(1, &select.framebuffer);
+      glBindFramebuffer(GL_FRAMEBUFFER, select.framebuffer);
 
-    glGetDoublev(GL_PROJECTION_MATRIX, &projection[0]); 
-    glGetIntegerv(GL_VIEWPORT, &viewport[0]);
+      // create, reserve and attach color and depth renderbuffer
+      glGenRenderbuffers(2, select.render_buffers);
+      glBindRenderbuffer(GL_RENDERBUFFER, select.render_buffers[0]);
+      glRenderbufferStorage(GL_RENDERBUFFER, GL_RGB16, select.width, select.height);
+      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, select.render_buffers[0]);
 
-    int hy = viewport[3]-py;
+      glBindRenderbuffer(GL_RENDERBUFFER, select.render_buffers[1]);
+      glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, select.width, select.height);
+      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, select.render_buffers[1]);
 
-    GLfloat pz;
+      // check if framebuffer status is complete
+      if(int fbstatus; (fbstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE)
+        cerr << "no frame buffer " << fbstatus << endl;
+
+    }
+      glFlush();
+
+      glBindFramebuffer(GL_FRAMEBUFFER, select.framebuffer);
+      BuildFilledList (true);
+
+      glEnable(GL_DEPTH_TEST);
+      glClearColor(0, 0, 0, 1.0);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+      glMatrixMode (GL_MODELVIEW);
+      glPushMatrix();
+      glLoadIdentity();
+      glMultMatrixd (transformationmat);
+
+      glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+      auto hy = select.viewport[3] - py;
+
+      SetClippingPlane();
+      if (vispar.clipping.enable)
+      {
+        Vec<3> n(clipplane[0], clipplane[1], clipplane[2]);
+        double len = Abs(n);
+        double mu = -clipplane[3] / (len*len);
+        Point<3> p (mu * n);
+        n /= len;
+        Vec<3> t1 = n.GetNormal ();
+        Vec<3> t2 = Cross (n, t1);
+
+        double xi1mid = (center - p) * t1;
+        double xi2mid = (center - p) * t2;
+
+        if(select_on_clipping_plane)
+        {
+          glColor3us(0,0,0);
+          glBegin (GL_QUADS);
+          glVertex3dv (p + (xi1mid-rad) * t1 + (xi2mid-rad) * t2);
+          glVertex3dv (p + (xi1mid+rad) * t1 + (xi2mid-rad) * t2);
+          glVertex3dv (p + (xi1mid+rad) * t1 + (xi2mid+rad) * t2);
+          glVertex3dv (p + (xi1mid-rad) * t1 + (xi2mid+rad) * t2);
+          glEnd ();
+        }
+      }
+      glCallList (select.list);
+      glFinish();
+
+      glGetDoublev (GL_PROJECTION_MATRIX, select.projmat);
+      auto found = Unproject(px, py, p);
+      if(found)
+      {
+        marker = p;
+        GLushort numbers[3];
+        glReadPixels (px, hy, 1, 1, GL_RGB, GL_UNSIGNED_SHORT, numbers);
+        selelement = numbers[0] + numbers[1]*(1<<16);
+        locpi++;
+      }
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+      glPopMatrix();
 
     if(lock)
       {
@@ -3127,59 +3225,81 @@ namespace netgen
 	lock = NULL;
       }
 
-    // cout << "x, y = " << px << ", " << hy << endl;
+    return found;
+  }
+
+  bool VisualSceneMesh :: Unproject(int px, int py, Point<3> &p)
+  {
+    auto hy = select.viewport[3] - py;
+    float pz;
     glReadPixels (px, hy, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &pz);
+    if(pz<1 && pz>0)
+      gluUnProject(px, hy, pz, transformationmat, select.projmat, select.viewport,
+          &p[0], &p[1], &p[2]);
+    return pz<1 && pz>0;
+  }
 
-    if(pz>=1.0)
-        return false;
-    if(pz<=0.0)
-        return false;
+  ngcore::INT<2> VisualSceneMesh :: Project(Point<3> p)
+  {
+    Point<3> pwin;
+    gluProject(p[0], p[1], p[2], transformationmat, select.projmat, select.viewport,
+        &pwin[0], &pwin[1], &pwin[2]);
 
-    // cout << "pz = " << pz << endl;    
-    gluUnProject(px, hy, pz, transformationmat, projection, viewport,
-                 &result[0], &result[1], &result[2]);
-
-    p = Point<3>{result[0], result[1], result[2]};
-    marker = p;
-    return true;
+    return ngcore::INT<2>(pwin[0]+0.5, select.viewport[3]-pwin[1]+0.5);
   }
 
 
   void VisualSceneMesh :: MouseDblClick (int px, int py)
   {
     Point<3> p;
-    bool found_point = Unproject(px, py, p);
+    bool found_point = SelectSurfaceElement(px, py, p, false);
 
-    if(selelement!=-1)
+    if(selelement>0)
       {
         const Element2d & sel = GetMesh()->SurfaceElement(selelement);
+        SetSelectedFace(sel.GetIndex());
 
-	cout << "select element " << selelement
-	     << " on face " << sel.GetIndex() << endl;
-	cout << "Nodes: ";
-	for (int i = 1; i <= sel.GetNP(); i++)
-	  cout << sel.PNum(i) << " ";
-	cout << endl;
-
-	cout << "selected point " << selpoint
-	     << ", pos = " << GetMesh()->Point (selpoint)
-	     << endl;
-
-        cout << "seledge = " << seledge << endl;
-
-      }
-
-    if(found_point)
-      {
-        cout << "point : " << p << endl;
-        if (user_me_handler)
+        auto pi_nearest = sel[0];
+        double min_dist = 1e99;
+        for(auto pi : sel.PNums())
+          if(Dist2(GetMesh()->Point(pi), p) < min_dist)
           {
-            if (selelement != -1)
-              user_me_handler -> DblClick (selelement-1, p[0], p[1], p[2]);
+            min_dist = Dist2(GetMesh()->Point(pi), p);
+            pi_nearest = pi;
           }
+        auto p_win = Project(GetMesh()->Point(pi_nearest));
+        if(abs(p_win[0]-px) < 5 && abs(p_win[1]-py) < 5)
+        {
+          marker = GetMesh()->Point(pi_nearest);
+          selpoint = pi_nearest;
+          cout << "select point " << pi_nearest << " at " << *marker << endl;
+          locpi = -2;
+        }
+        else
+        {
+          if(locpi < 0)
+          {
+            cout << endl << "select element " << selelement
+              << " on face " << sel.GetIndex() << endl;
+            cout << "\tpoint: " << p << endl;;
+            cout << "\tnodes: ";
+            for (int i = 1; i <= sel.GetNP(); i++)
+              cout << sel.PNum(i) << " ";
+            cout << endl;
+          }
+          else {
+            auto pi = sel[locpi%sel.GetNP()];
+            marker = GetMesh()->Points()[pi];
+            cout << "select point " << pi << " at " << *marker << endl;
+          }
+        }
       }
 
-    selecttimestamp = NextTimeStamp();
+    if(found_point && user_me_handler)
+    {
+      if (selelement != -1)
+        user_me_handler -> DblClick (selelement-1, p[0], p[1], p[2]);
+    }
 
     if(lock)
       {
@@ -3187,345 +3307,17 @@ namespace netgen
 	delete lock;
 	lock = NULL;
       }
-
-    /*
-      int i, hits;
-
-      // select surface triangle by mouse click
-
-      GLuint selbuf[10000];
-      glSelectBuffer (10000, selbuf);
-
-
-      glRenderMode (GL_SELECT);
-
-      GLint viewport[4];
-      glGetIntegerv (GL_VIEWPORT, viewport);
-
-
-      glMatrixMode (GL_PROJECTION);
-      glPushMatrix();
-
-      GLdouble projmat[16];
-      glGetDoublev (GL_PROJECTION_MATRIX, projmat);
-
-      glLoadIdentity();
-      gluPickMatrix (px, viewport[3] - py, 1, 1, viewport);
-      glMultMatrixd (projmat);
-
-
-
-      glClearColor(backcolor, backcolor, backcolor, 1.0);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-      glMatrixMode (GL_MODELVIEW);
-
-      glPushMatrix();
-      glMultMatrixf (transformationmat);
-
-
-      //  SetClippingPlane();
-
-      glInitNames();
-      glPushName (1);
-
-      glPolygonOffset (1, 1);
-      glEnable (GL_POLYGON_OFFSET_FILL);
-
-      glDisable(GL_CLIP_PLANE0);
-
-      if (vispar.clipenable)
-      {
-      Vec<3> n(clipplane[0], clipplane[1], clipplane[2]);
-      double len = Abs(n);
-      double mu = -clipplane[3] / (len*len);
-      Point<3> p (mu * n);
-      n /= len;
-      Vec<3> t1 = n.GetNormal ();
-      Vec<3> t2 = Cross (n, t1);
-
-      double xi1mid = (center - p) * t1;
-      double xi2mid = (center - p) * t2;
-
-      glLoadName (0);
-      glBegin (GL_QUADS);
-      glVertex3dv (p + (xi1mid-rad) * t1 + (xi2mid-rad) * t2);
-      glVertex3dv (p + (xi1mid+rad) * t1 + (xi2mid-rad) * t2);
-      glVertex3dv (p + (xi1mid+rad) * t1 + (xi2mid+rad) * t2);
-      glVertex3dv (p + (xi1mid-rad) * t1 + (xi2mid+rad) * t2);
-      glEnd ();
-      }
-
-      //  SetClippingPlane();
-
-      glCallList (filledlist);
-
-      glDisable (GL_POLYGON_OFFSET_FILL);
-
-      glPopName();
-
-      glMatrixMode (GL_PROJECTION);
-      glPopMatrix();
-
-      glMatrixMode (GL_MODELVIEW);
-      glPopMatrix();
-
-      glFlush();
-
-
-      hits = glRenderMode (GL_RENDER);
-
-      //  cout << "hits = " << hits << endl;
-
-      int minname = 0;
-      GLuint mindepth = 0;
-
-      // find clippingplane
-      GLuint clipdepth = 0; // GLuint(-1);
-
-      for (i = 0; i < hits; i++)
-      {
-      int curname = selbuf[4*i+3];
-      if (!curname) clipdepth = selbuf[4*i+1];
-      }
-
-      for (i = 0; i < hits; i++)
-      {
-      int curname = selbuf[4*i+3];
-      GLuint curdepth = selbuf[4*i+1];
-
-      if (curname && (curdepth > clipdepth) &&
-      (curdepth < mindepth || !minname))
-      {
-      mindepth = curdepth;
-      minname = curname;
-      }
-      }
-
-      seledge = -1;
-      if (minname)
-      {
-      const Element2d & sel = mesh->SurfaceElement(minname);
-
-
-      cout << "select element " << minname
-      << " on face " << sel.GetIndex() << endl;
-      cout << "Nodes: ";
-      for (i = 1; i <= sel.GetNP(); i++)
-      cout << sel.PNum(i) << " ";
-      cout << endl;
-
-      selelement = minname;
-      selface = mesh->SurfaceElement(minname).GetIndex();
-
-      locpi = (locpi % sel.GetNP()) + 1;
-      selpoint2 = selpoint;
-      selpoint = sel.PNum(locpi);
-      cout << "selected point " << selpoint
-      << ", pos = " << mesh->Point (selpoint)
-      << endl;
-
-      for (i = 1; i <= mesh->GetNSeg(); i++)
-      {
-      const Segment & seg = mesh->LineSegment(i);
-      if (seg[0] == selpoint && seg[1] == selpoint2 ||
-      seg[1] == selpoint && seg[0] == selpoint2)
-      {
-      seledge = seg.edgenr;
-      cout << "seledge = " << seledge << endl;
-      }
-      }
-
-      }
-      else
-      {
-      selface = -1;
-      selelement = -1;
-      selpoint = -1;
-      selpoint2 = -1;
-      }
-
-      glDisable(GL_CLIP_PLANE0);
-
-      selecttimestamp = NextTimeStamp();
-    */
-
   }
 
-
-
-
-
-  void MouseDblClickSelect (const int px, const int py,
-			    const GLdouble * clipplane, const GLdouble backcolor,
-			    const double * transformationmat,
-			    const Point3d & center,
-			    const double rad,
-			    const int displaylist,
-			    int & selelement, int & selface, int & seledge, PointIndex & selpoint,
-			    PointIndex & selpoint2, int & locpi)
-  {
-    auto mesh = vsmesh.GetMesh();
-
-    int i, hits;
-
-    // select surface triangle by mouse click
-
-    GLuint selbuf[10000];
-    glSelectBuffer (10000, selbuf);
-
-
-    glRenderMode (GL_SELECT);
-
-    GLint viewport[4];
-    glGetIntegerv (GL_VIEWPORT, viewport);
-
-
-    glMatrixMode (GL_PROJECTION);
-    glPushMatrix();
-
-    GLdouble projmat[16];
-    glGetDoublev (GL_PROJECTION_MATRIX, projmat);
-
-    glLoadIdentity();
-    gluPickMatrix (px, viewport[3] - py, 1, 1, viewport);
-    glMultMatrixd (projmat);
-
-
-
-    glClearColor(backcolor, backcolor, backcolor, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glMatrixMode (GL_MODELVIEW);
-
-    glPushMatrix();
-    glMultMatrixd (transformationmat);
-
-
-    //  SetClippingPlane();
-
-    glInitNames();
-    glPushName (1);
-
-    glPolygonOffset (1, 1);
-    glEnable (GL_POLYGON_OFFSET_FILL);
-
-    glDisable(GL_CLIP_PLANE0);
-
-    if (vispar.clipping.enable)
-      {
-        glEnable(GL_CLIP_PLANE0);
-	Vec<3> n(clipplane[0], clipplane[1], clipplane[2]);
-	double len = Abs(n);
-	double mu = -clipplane[3] / (len*len);
-	Point<3> p (mu * n);
-	n /= len;
-	Vec<3> t1 = n.GetNormal ();
-	Vec<3> t2 = Cross (n, t1);
-
-	double xi1mid = (center - p) * t1;
-	double xi2mid = (center - p) * t2;
-
-	glLoadName (0);
-	glBegin (GL_QUADS);
-	glVertex3dv (p + (xi1mid-rad) * t1 + (xi2mid-rad) * t2);
-	glVertex3dv (p + (xi1mid+rad) * t1 + (xi2mid-rad) * t2);
-	glVertex3dv (p + (xi1mid+rad) * t1 + (xi2mid+rad) * t2);
-	glVertex3dv (p + (xi1mid-rad) * t1 + (xi2mid+rad) * t2);
-	glEnd ();
-      }
-
-    //  SetClippingPlane();
-    glCallList (displaylist);
-
-    glDisable (GL_POLYGON_OFFSET_FILL);
-
-    glPopName();
-
-    glMatrixMode (GL_PROJECTION);
-    glPopMatrix();
-
-    glMatrixMode (GL_MODELVIEW);
-    glPopMatrix();
-
-    glFlush();
-
-
-    hits = glRenderMode (GL_RENDER);
-    //cout << "hits = " << hits << endl;
-
-    int minname = 0;
-    GLuint mindepth = 0;
-
-    // find clippingplane
-    GLuint clipdepth = 0; // GLuint(-1);
-
-    for (i = 0; i < hits; i++)
-      {
-	int curname = selbuf[4*i+3];
-	if (!curname) clipdepth = selbuf[4*i+1];
-      }
-
-    for (i = 0; i < hits; i++)
-      {
-	int curname = selbuf[4*i+3];
-	GLuint curdepth = selbuf[4*i+1];
-	/*
-	  cout << selbuf[4*i] << " " << selbuf[4*i+1] << " "
-	  << selbuf[4*i+2] << " " << selbuf[4*i+3] << endl;
-	*/
-	if (curname && (curdepth > clipdepth) &&
-            (curdepth < mindepth || !minname))
-	  {
-            mindepth = curdepth;
-            minname = curname;
-	  }
-      }
-
-    seledge = -1;
-    if (minname)
-      {
-	const Element2d & sel = mesh->SurfaceElement(minname);
-
-	selelement = minname;
-	selface = mesh->SurfaceElement(minname).GetIndex();
-
-	locpi = (locpi % sel.GetNP()) + 1;
-	selpoint2 = selpoint;
-	selpoint = sel.PNum(locpi);
-
-	for (i = 1; i <= mesh->GetNSeg(); i++)
-	  {
-            const Segment & seg = mesh->LineSegment(i);
-            if ( (seg[0] == selpoint && seg[1] == selpoint2) ||
-		 (seg[1] == selpoint && seg[0] == selpoint2) )
-	      {
-		seledge = seg.edgenr;
-	      }
-	  }
-      }
-    else
-      {
-	selface = -1;
-	selelement = -1;
-	selpoint = -1;
-	selpoint2 = -1;
-      }
-
-    glDisable(GL_CLIP_PLANE0);
-
-
-
-#ifdef PARALLELGL
-    vsmesh.Broadcast ();
-#endif
-  }
 
 
   void VisualSceneMesh :: SetSelectedFace (int asf)
   {
-    selface = asf;
-    selecttimestamp = NextTimeStamp();
+    if(selface != asf)
+    {
+      selface = asf;
+      BuildColorTexture();
+    }
   }
 
 

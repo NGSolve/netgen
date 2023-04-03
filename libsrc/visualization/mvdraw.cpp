@@ -77,8 +77,10 @@ namespace netgen
   int VisualScene :: locpi;
   int VisualScene :: seledge;
 
-  int VisualScene :: selecttimestamp;
   optional<Point<3>> VisualScene :: marker = nullopt;
+
+  int VisualScene :: subdivision_timestamp = -1;
+  int VisualScene :: subdivisions = 2;
 
   int VisualScene :: viewport[4];
 

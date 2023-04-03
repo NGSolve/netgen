@@ -94,7 +94,6 @@ class NGGUI_API VisualSceneSolution : public VisualScene
   int fieldlinestimestamp, surface_vector_timestamp;
   int pointcurve_timestamp;
   int isosurface_timestamp;
-  int subdivision_timestamp;
   int timetimestamp;
   double minval, maxval;
 
@@ -174,7 +173,6 @@ public:
   int autoscale, logscale;
   double mminval, mmaxval;
   int numisolines;
-  int subdivisions;
 
   bool showclipsolution;
   bool showsurfacesolution;

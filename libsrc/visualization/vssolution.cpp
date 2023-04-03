@@ -791,35 +791,7 @@ namespace netgen
         if (mesh->GetTimeStamp() > surfeltimestamp || zoomall)
           {
             // mesh has changed
-          
-            Point3d pmin, pmax;
-            static double oldrad = 0;
-          
-            mesh->GetBox (pmin, pmax, -1);
-            if(vispar.use_center_coords && zoomall == 2)
-              {
-                center.X() = vispar.centerx;
-                center.Y() = vispar.centery;
-                center.Z() = vispar.centerz;
-              }
-            else if(selpoint >= 1 && zoomall == 2)
-              center = mesh->Point(selpoint);
-            else if(vispar.centerpoint >= 1 && zoomall == 2)
-              center = mesh->Point(vispar.centerpoint);
-            else
-              center = Center (pmin, pmax);
-            rad = 0.5 * Dist (pmin, pmax);
-            if(rad == 0) rad = 1e-6;
-          
-            glEnable (GL_NORMALIZE);
-          
-            if (rad > 1.2 * oldrad ||
-                mesh->GetMajorTimeStamp() > surfeltimestamp ||
-                zoomall)
-              {
-                CalcTransformationMatrices();
-                oldrad = rad;
-              }
+            vsmesh.SelectCenter(zoomall);
           }
       
         DrawSurfaceElements();
@@ -4775,6 +4747,7 @@ namespace netgen
     auto printScalValue = [&formatComplex]
       (SolData & sol, int comp, double value, double imag=0., bool iscomplex=false)
       {
+        cout << '\t';
         if(sol.components>1)
           {
             if(comp==0)
@@ -4806,91 +4779,79 @@ namespace netgen
           }
       };
 
-    // Check if clipping plane is drawn at current mouse cursor position
-    if(dim==3 && clipsolution && vispar.clipping.enable)
-      {
-        GLint viewport[4];
-        GLdouble projection[16];
-        glGetDoublev(GL_PROJECTION_MATRIX, &projection[0]); 
-
-        glGetIntegerv(GL_VIEWPORT, &viewport[0]);
-
-        int hy = viewport[3]-py;
-
-        // manually intersect the view vector with the clipping plane (also working if clipping vectors are shown)
-        Point<3> p_clipping_plane;
-        gluUnProject(px, hy, 1.0, transformationmat, projection, viewport,
-            &p_clipping_plane[0], &p_clipping_plane[1], &p_clipping_plane[2]);
-
-        Point<3> eye;
-        gluUnProject( (viewport[2]-viewport[0])/2 , (viewport[3]-viewport[1])/2,
-            0.0, transformationmat, projection, viewport, &eye[0], &eye[1], &eye[2]);
-
-        Vec<3> n{vispar.clipping.normal};
-        n.Normalize();
-        Vec<3> view = p_clipping_plane-eye;
-
-        // check if we look at the clipping plane from the right direction
-        if(n*view > 1e-8)
-          {
-            double lam = vispar.clipping.dist - Vec<3>{eye}*n;
-            lam /= n*view;
-            p_clipping_plane = eye + lam*view;
-
-            double lami[3];
-            if(auto el3d = mesh->GetElementOfPoint( p_clipping_plane, lami ))
-              {
-                cout << endl << "Selected point " << p_clipping_plane << " on clipping plane" << endl;
-                marker = p_clipping_plane;
-
-                bool have_scal_func = scalfunction!=-1 && soldata[scalfunction]->draw_volume;
-                bool have_vec_func = vecfunction!=-1 && soldata[vecfunction]->draw_volume;
-
-                if(have_scal_func)
-                  {
-                    auto & sol = *soldata[scalfunction];
-                    double val;
-                    double imag = 0;
-                    int rcomponent = scalcomp;
-                    int comp = scalcomp;
-                    if(sol.iscomplex && rcomponent != 0)
-                      {
-                        rcomponent = 2 * ((rcomponent-1)/2) + 1;
-                        GetValue(&sol, el3d-1,  lami[0], lami[1], lami[2], rcomponent+1,
-                            imag);
-                        comp = (scalcomp-1)/2 + 1;
-                      }
-                    GetValue(&sol, el3d-1,  lami[0], lami[1], lami[2], rcomponent, val);
-                    printScalValue(sol, comp, val, imag, sol.iscomplex && comp > 0);
-                  }
-                if(vecfunction!=-1 && soldata[vecfunction]->draw_volume)
-                  {
-                    auto & sol = *soldata[vecfunction];
-                    ArrayMem<double, 10> values(sol.components);
-                    GetValues(&sol, el3d-1,  lami[0], lami[1], lami[2], &values[0]);
-                    printVecValue(sol, values);
-                  }
-                return;
-              }
-          }
-      }
-
-    // no point on clipping plane found -> continue searching for surface element
-
     Point<3> p;
-    bool found_point = vsmesh.Unproject(px, py, p);
+    bool found_point = vsmesh.SelectSurfaceElement(px, py, p, showclipsolution && clipsolution);
     if(!found_point)
         return;
 
-    marker = p;
+    // marker = p;
 
-    if(selelement<=0)
-        return;
+    // found point on clipping plane
+    if(selelement==0)
+    {
+      GLint viewport[4];
+      GLdouble projection[16];
+      glGetDoublev(GL_PROJECTION_MATRIX, &projection[0]); 
+
+      glGetIntegerv(GL_VIEWPORT, &viewport[0]);
+
+      Point<3> eye;
+      gluUnProject( (viewport[2]-viewport[0])/2 , (viewport[3]-viewport[1])/2,
+          0.0, transformationmat, projection, viewport, &eye[0], &eye[1], &eye[2]);
+
+      Vec<3> n{vispar.clipping.normal};
+      n.Normalize();
+      Vec<3> view = p-eye;
+
+      // check if we look at the clipping plane from the right direction
+      if(n*view > 1e-8)
+      {
+        double lam = vispar.clipping.dist - Vec<3>{eye}*n;
+        lam /= n*view;
+        p = eye + lam*view;
+
+        double lami[3];
+        if(auto el3d = mesh->GetElementOfPoint( p, lami ))
+        {
+          cout << endl << "Selected point " << p << " on clipping plane" << endl;
+          // marker = p;
+
+          bool have_scal_func = scalfunction!=-1 && soldata[scalfunction]->draw_volume;
+          bool have_vec_func = vecfunction!=-1 && soldata[vecfunction]->draw_volume;
+
+          if(have_scal_func)
+          {
+            auto & sol = *soldata[scalfunction];
+            double val;
+            double imag = 0;
+            int rcomponent = scalcomp;
+            int comp = scalcomp;
+            if(sol.iscomplex && rcomponent != 0)
+            {
+              rcomponent = 2 * ((rcomponent-1)/2) + 1;
+              GetValue(&sol, el3d-1,  lami[0], lami[1], lami[2], rcomponent+1,
+                  imag);
+              comp = (scalcomp-1)/2 + 1;
+            }
+            GetValue(&sol, el3d-1,  lami[0], lami[1], lami[2], rcomponent, val);
+            printScalValue(sol, comp, val, imag, sol.iscomplex && comp > 0);
+          }
+          if(vecfunction!=-1 && soldata[vecfunction]->draw_volume)
+          {
+            auto & sol = *soldata[vecfunction];
+            ArrayMem<double, 10> values(sol.components);
+            GetValues(&sol, el3d-1,  lami[0], lami[1], lami[2], &values[0]);
+            printVecValue(sol, values);
+          }
+          return;
+        }
+      }
+    }
 
     double lami[3] = {0.0, 0.0, 0.0};
     // Check if unprojected Point is close to surface element (eps of 1e-3 due to z-Buffer accuracy)
     bool found_2del = false;
-    if(mesh->PointContainedIn2DElement(p, lami, selelement, false && fabs(lami[2])<1e-3))
+    if(selelement>0 && mesh->PointContainedIn2DElement(p, lami, selelement, false && fabs(lami[2])<1e-3))
       {
         // Found it, use coordinates of point projected to surface element
         mesh->GetCurvedElements().CalcSurfaceTransformation({1.0-lami[0]-lami[1], lami[0]}, selelement-1, p);

@@ -31,9 +31,10 @@ namespace netgen
     static int locpi;
     static int NGGUI_API seledge;
 
-    static int selecttimestamp;
     static optional<Point<3>> marker;
 
+    static int subdivision_timestamp;
+    static int subdivisions;
   public:
     static int viewport[4];
     static GLuint coltexname;
@@ -126,35 +127,54 @@ namespace netgen
 
   class VisualSceneMesh : public VisualScene
   {
-    int filledlist;
-    int linelist;
-    int edgelist;
-    int pointnumberlist;
+    int filledlist = 0;
+    int linelist = 0;
+    int edgelist = 0;
+    int pointnumberlist = 0;
 
-    int tetlist;
-    int prismlist;
-    int pyramidlist;
-    int hexlist;
+    int tetlist = 0;
+    int prismlist = 0;
+    int pyramidlist = 0;
+    int hexlist = 0;
 
-    int badellist;
-    int identifiedlist;
-    int domainsurflist;
+    int badellist = 0;
+    int identifiedlist = 0;
+    int domainsurflist = 0;
 
-    int vstimestamp;//, selecttimestamp;
-    int filledtimestamp;
-    int linetimestamp;
-    int edgetimestamp;
-    int pointnumbertimestamp;
+    int vstimestamp = -1;
+    int filledtimestamp = -1;
+    int linetimestamp = -1;
+    int edgetimestamp = -1;
+    int pointnumbertimestamp = -1;
 
-    int tettimestamp;
-    int prismtimestamp;
-    int pyramidtimestamp;
-    int hextimestamp;
+    int tettimestamp = -1;
+    int prismtimestamp = -1;
+    int pyramidtimestamp = -1;
+    int hextimestamp = -1;
 
-    int badeltimestamp;
-    int identifiedtimestamp;
-    int domainsurftimestamp;
+    int badeltimestamp = -1;
+    int identifiedtimestamp = -1;
+    int domainsurftimestamp = -1;
 
+    struct {
+      unsigned texture = -1;
+      int width = 0;
+      int height = 0;
+      int size = 0;
+    } colors;
+
+    struct {
+      unsigned framebuffer = 0;
+      unsigned render_buffers[2];
+      unsigned width = 0;
+      unsigned height = 0;
+      unsigned x = 0;
+      unsigned y = 0;
+      int list = 0;
+      int list_timestamp = -1;
+      double projmat[16];
+      int viewport[4];
+    } select;
 
 #ifdef PARALLELGL
     NgArray<int> par_linelists;
@@ -200,7 +220,9 @@ namespace netgen
     { return selelement; }
 	NGGUI_API int SelectedPoint () const
     { return selpoint; }
-    void BuildFilledList (bool names);
+    void BuildFilledList (bool select);
+    void BuildColorTexture();
+    void SelectCenter(int zoomall);
     // private:
     void BuildLineList();
     void BuildEdgeList();
@@ -215,7 +237,9 @@ namespace netgen
     void BuildIdentifiedList();
     void BuildDomainSurfList();
 
-    bool Unproject (int px, int py, Point<3> &p);
+    bool SelectSurfaceElement (int px, int py, Point<3> &p, bool select_on_clipping_plane);
+    bool Unproject(int px, int py, Point<3> &p);
+    ngcore::INT<2> Project(Point<3> p);
   };
 
   NGGUI_API extern VisualSceneMesh vsmesh;
