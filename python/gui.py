@@ -49,10 +49,6 @@ def StartGUI():
     _Redraw(blocking=True)
 
     
-if not netgen.libngpy._meshing._netgen_executable_started:
-    import os
-    if not "NETGEN_DOCUMENTATION_RST_FORMAT" in os.environ:
-        StartGUI()
 
 def Snapshot(w,h, filename=None):
     netgen.Redraw(blocking=True)
@@ -65,3 +61,22 @@ def Snapshot(w,h, filename=None):
         im = PIL.Image.fromarray(image)
         im.save(filename)
     return image
+
+def run_pyfile(filename):
+    with open(filename) as f:
+        exec(f.read(), {})
+
+if __name__ == "__main__":
+    import sys, threading
+    StartGUI()
+    if(len(sys.argv) > 1):
+        if(sys.argv[1].endswith(".py")):
+            t = threading.Thread(target=run_pyfile, args=(sys.argv[1],),
+                                 daemon=True)
+            t.start()
+    win.mainloop()
+else:
+    if not netgen.libngpy._meshing._netgen_executable_started:
+        import os
+        if not "NETGEN_DOCUMENTATION_RST_FORMAT" in os.environ:
+            StartGUI()
