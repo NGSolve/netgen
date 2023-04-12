@@ -5311,6 +5311,8 @@ namespace netgen
             return false;
           lami[0] = lam[0];
           lami[1] = lam[1];
+          if(lami[0] < -eps || lami[0] > 1+eps || lami[1] < -eps || lami[1] > 1+eps)
+            return false;
           return true;
         }
 
