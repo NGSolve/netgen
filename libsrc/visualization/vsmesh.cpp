@@ -2137,6 +2137,7 @@ namespace netgen
     NgArray<Element2d> faces;
 
 
+    glDisable (GL_COLOR_MATERIAL);
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, prismcol);
 
     for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
@@ -2461,6 +2462,7 @@ namespace netgen
 
     static float hexcol[] = { 1.0f, 1.0f, 0.0f, 1.0f };
     glLineWidth (1.0f);
+    glDisable (GL_COLOR_MATERIAL);
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, hexcol);
 
     NgArray<Element2d> faces;
@@ -2672,6 +2674,7 @@ namespace netgen
     glNewList (pyramidlist, GL_COMPILE);
 
     static float pyramidcol[] = { 1.0f, 0.0f, 1.0f, 1.0f };
+    glDisable (GL_COLOR_MATERIAL);
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, pyramidcol);
 
     glLineWidth (1.0f);
