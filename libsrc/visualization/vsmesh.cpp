@@ -3283,7 +3283,12 @@ namespace netgen
           if(locpi < 0)
           {
             cout << endl << "select element " << selelement
-              << " on face " << sel.GetIndex() << endl;
+              << " on face " << sel.GetIndex();
+            // output face name
+            auto name = GetMesh()->GetFaceDescriptor(sel.GetIndex()).GetBCName();
+            if(name != "")
+              cout << " with name " << name;
+            cout << endl;
             cout << "\tpoint: " << p << endl;;
             cout << "\tnodes: ";
             for (int i = 1; i <= sel.GetNP(); i++)
