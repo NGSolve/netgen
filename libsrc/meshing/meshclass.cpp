@@ -6335,8 +6335,8 @@ namespace netgen
             Segment snew = seg;
             if(c2)
               {
-                seg[0] = ipts[ipts.Size()-1-i];
-                seg[1] = ipts[ipts.Size()-2-i];
+                snew[0] = ipts[ipts.Size()-1-i];
+                snew[1] = ipts[ipts.Size()-2-i];
               }
             else
               {
