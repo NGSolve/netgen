@@ -654,7 +654,7 @@ namespace netgen
             else
               point_fixed = true;
           }
-        if(point_moved && point_fixed)
+        if(point_moved && !moved_surfaces.Test(facei))
           {
             int new_si = mesh.GetNFD()+1;
             const auto& fd = mesh.GetFaceDescriptor(facei);

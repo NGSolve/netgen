@@ -395,6 +395,7 @@ namespace netgen
 
       PrintMessage (3, mesh.GetNP(), " points, ",
          mesh.GetNE(), " elements");
+      mesh.FindOpenElements(domain);
    }
 
    Box<3> domain_bbox( Box<3>::EMPTY_BOX ); 
@@ -407,8 +408,6 @@ namespace netgen
          domain_bbox.Add (mesh[pi]);
      }
    domain_bbox.Increase (0.01 * domain_bbox.Diam());
-
-   mesh.FindOpenElements(domain);
 
    int cntsteps = 0;
    int meshed;
@@ -532,6 +531,7 @@ namespace netgen
          return;
      }
 
+     mesh.VolumeElements().DeleteAll();
      for(auto & m_ : md)
      {
          auto first_new_pi = m_.pmap.Range().Next();
