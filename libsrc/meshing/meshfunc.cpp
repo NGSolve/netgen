@@ -531,6 +531,7 @@ namespace netgen
          return;
      }
 
+     mesh.VolumeElements().DeleteAll();
      for(auto & m_ : md)
      {
          auto first_new_pi = m_.pmap.Range().Next();
