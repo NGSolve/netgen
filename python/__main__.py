@@ -1,8 +1,10 @@
-import imp, threading, sys
+import importlib.util, threading, sys, os
 
 def _py_handler(f):
-    with open(f) as pyfile:
-        imp.load_module('__main__', pyfile, f, (".py", "r", imp.PY_SOURCE))
+    spec = importlib.util.spec_from_file_location(os.path.basename(f), os.path.abspath(f))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 def _geo_handler(f):
     from netgen.csg import CSGeometry
