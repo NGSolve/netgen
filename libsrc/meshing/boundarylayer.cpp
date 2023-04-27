@@ -360,6 +360,14 @@ namespace netgen
   {
       INDEX_2_HASHTABLE<bool> already_added( 2*new_segments.Size() );
 
+      for(auto & seg : mesh.LineSegments())
+      {
+          INDEX_2 i2 (seg[0], seg[1]);
+          i2.Sort();
+          if(!already_added.Used(i2))
+              already_added.Set(i2, true);
+      }
+
       for(auto & seg : new_segments)
       {
           INDEX_2 i2 (seg[0], seg[1]);
