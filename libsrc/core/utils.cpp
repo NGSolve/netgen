@@ -64,8 +64,14 @@ namespace ngcore
     try
       {
         char *s = abi::__cxa_demangle(typeinfo, nullptr, nullptr, &status);
-        std::string result{s};
-        free(s);
+        std::string result;
+        if (s == nullptr)
+          result = typeinfo;
+        else
+          {
+            result = s;
+            free(s);
+          }
         result = detail::CleanupDemangledName(result);
         return result;
       }
