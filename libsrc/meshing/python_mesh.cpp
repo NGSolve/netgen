@@ -1075,6 +1075,21 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             // throw std::runtime_error("AddPoints needs buffer of type int");
 
             int * ptr = static_cast<int*> (info.ptr);
+            if (dim == 1)
+              {
+                ELEMENT_TYPE type;
+                int np = info.shape[1];
+                self.LineSegments().SetAllocSize(self.LineSegments().Size()+info.shape[0]);                
+                for (auto i : Range(info.shape[0]))
+                  {
+                    Segment el;
+                    for (int j = 0; j < np; j++)
+                      el[j] = ptr[j]+PointIndex::BASE-base;
+                    el.si = index;
+                    self.AddSegment(el);
+                    ptr += info.strides[0]/sizeof(int);
+                  }
+              }
             if (dim == 2)
               {
                 ELEMENT_TYPE type;
@@ -1092,7 +1107,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                 for (auto i : Range(info.shape[0]))
                   {
                     Element2d el(type);
-                    for (int j = 0; j < np;j ++)
+                    for (int j = 0; j < np; j++)
                       el[j] = ptr[j]+PointIndex::BASE-base;
                     el.SetIndex(index);
                     self.AddSurfaceElement (el);
