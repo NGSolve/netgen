@@ -1187,7 +1187,10 @@ namespace netgen
     (*tracer)("call updatetop", false);
     mesh -> UpdateTopology(task_manager, tracer);
     (*tracer)("call updatetop", true);
-    mesh -> GetCurvedElements().SetIsHighOrder (false);
+    if(mesh->GetCurvedElements().IsHighOrder())
+      mesh->GetCurvedElements()
+        .BuildCurvedElements(&mesh->GetGeometry()->GetRefinement(),
+                                mesh->GetCurvedElements().GetOrder());
   }
 
 
