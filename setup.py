@@ -100,8 +100,7 @@ cmake_args += [
         '-DBUILD_STUB_FILES=OFF',
 ]
 
-if 'PYDIR' in os.environ:
-    cmake_args += [f'-DCMAKE_PREFIX_PATH={os.environ["PYDIR"]}']
+cmake_args += [f'-DCMAKE_PREFIX_PATH={sys.prefix}']
 
 setup(
     name=name,
