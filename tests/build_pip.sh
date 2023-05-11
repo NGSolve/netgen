@@ -1,4 +1,5 @@
 set -e
+ulimit -n 1024000 # lower open file limit, seems to affect performance
 yum -y update
 yum -y install ninja-build fontconfig-devel tk-devel tcl-devel libXmu-devel mesa-libGLU-devel ccache
 
