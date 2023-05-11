@@ -127,7 +127,9 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 if(USE_PYTHON)
     find_package(PythonInterp 3 REQUIRED)
-    find_package(PythonLibs 3 REQUIRED)
+    if(NOT BUILD_FOR_CONDA)
+      find_package(PythonLibs 3 REQUIRED)
+    endif()
 
     execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1,0,''))" OUTPUT_VARIABLE PYTHON_PACKAGES_INSTALL_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
     file(TO_CMAKE_PATH ${PYTHON_PACKAGES_INSTALL_DIR} PYTHON_PACKAGES_INSTALL_DIR)

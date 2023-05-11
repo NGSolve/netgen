@@ -166,7 +166,9 @@ if (USE_PYTHON)
         message(FATAL_ERROR "Could NOT find pybind11!")
     endif( PYBIND_INCLUDE_DIR )
     find_package(PythonInterp 3 REQUIRED)
-    find_package(PythonLibs 3 REQUIRED)
+    if(NOT BUILD_FOR_CONDA)
+      find_package(PythonLibs 3 REQUIRED)
+    endif()
 
     set_vars(NETGEN_CMAKE_ARGS
       PYTHON_INCLUDE_DIRS
