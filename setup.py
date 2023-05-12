@@ -1,6 +1,7 @@
 import glob
 import os
 import sys
+import pathlib
 
 from skbuild import setup
 import skbuild.cmaker
@@ -100,7 +101,8 @@ cmake_args += [
         '-DBUILD_STUB_FILES=OFF',
 ]
 
-cmake_args += [f'-DCMAKE_PREFIX_PATH={sys.prefix}']
+pyprefix = pathlib.Path(sys.prefix).as_posix()
+cmake_args += [f'-DCMAKE_PREFIX_PATH={pyprefix}']
 
 setup(
     name=name,
