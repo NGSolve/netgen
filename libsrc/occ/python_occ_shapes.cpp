@@ -998,7 +998,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                 surf->D1 (0,0,p,du,dv);
                 edir = du^dv;
               }
-            BRepPrimAPI_MakePrism builder(shape, h*edir, true);
+            BRepPrimAPI_MakePrism builder(shape, h*edir, false);
 
             for (auto typ : { TopAbs_SOLID, TopAbs_FACE, TopAbs_EDGE, TopAbs_VERTEX })
               for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
@@ -1010,12 +1010,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             if(identify)
               {
                 Transformation<3> trsf(h * occ2ng(edir));
-                for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next()) {
-                  auto mods = builder.Generated(e.Current());
-                  auto faces = GetFaces(mods.First());
-                  Identify(faces, faces, "extrusion_cs", idtype,
-                           trsf);
-                }
+                Identify(GetFaces(shape), GetFaces(builder.LastShape()),
+                         "extrusion_cs", idtype, trsf);
             }
             return builder.Shape();
           }
