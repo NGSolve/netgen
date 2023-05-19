@@ -3279,10 +3279,16 @@ namespace netgen
 		  edge.Sort();
 
 		  PointIndex newp;
+                  /*
 		  if (cutedges.Used (edge))
 		    {
 		      newp = cutedges.Get(edge);
 		    }
+                  */
+                  if (auto optnewp = cutedges.GetIfUsed(edge))
+                    {
+                      newp = *optnewp;
+                    }
 		  else
 		    {
 		      Point<3> npt = Center (mesh.Point (edge.I1()),
@@ -3296,7 +3302,6 @@ namespace netgen
 
 		  mtets.Elem(i) = newtet1;
 		  mtets.Append (newtet2);
-
 		  mesh.mlparentelement.Append (i);
 		}
             NgProfiler::StopTimer (timer_bisecttet);

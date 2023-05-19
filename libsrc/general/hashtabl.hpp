@@ -772,6 +772,15 @@ public:
     int pos = Position0 (ahash);
     return (pos != -1);
   }
+
+  inline optional<T> GetIfUsed (const INDEX_2 & ahash) const
+  {
+    int pos = Position0 (ahash);
+    if (pos != -1)
+      return cont[pos];
+    else
+      return nullopt;
+  }
     
   inline void SetData0 (int pos, const INDEX_2 & ahash, const T & acont)
   {
