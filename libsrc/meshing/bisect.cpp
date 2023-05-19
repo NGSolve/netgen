@@ -12,7 +12,7 @@ namespace netgen
   class MarkedTri;
   class MarkedQuad;
   
-  typedef NgArray<MarkedTet> T_MTETS;
+  typedef Array<MarkedTet> T_MTETS;
   typedef NgArray<MarkedPrism> T_MPRISMS;
   typedef NgArray<MarkedIdentification> T_MIDS;
   typedef NgArray<MarkedTri> T_MTRIS;
@@ -1120,8 +1120,8 @@ namespace netgen
 	    for (int j = 0; j < 3; j++)
 	      for (int k = j+1; k < 4; k++)
 		{
-		  const Point<3> & p1 = mesh.Point (mtets.Get(i).pnums[j]);
-		  const Point<3> & p2 = mesh.Point (mtets.Get(i).pnums[k]);
+		  const Point<3> & p1 = mesh.Point (mtets[i-1].pnums[j]);
+		  const Point<3> & p2 = mesh.Point (mtets[i-1].pnums[k]);
 		  double hh = Dist2 (p1, p2);
 		  if (hh > h) h = hh;
 		}
@@ -1130,7 +1130,7 @@ namespace netgen
 	    double hshould = 1e10;
 	    for (int j = 0; j < 4; j++)
 	      {
-		double hi = hv (mtets.Get(i).pnums[j]-1);
+		double hi = hv (mtets[i-1].pnums[j]-1);
 		if (hi < hshould)
 		  hshould = hi;
 	      }
@@ -1145,11 +1145,11 @@ namespace netgen
 	      {
 		if (h > hshould * hfac)
 		  {
-		    mtets.Elem(i).marked = 1;
+		    mtets[i-1].marked = 1;
 		    marked = 1;
 		  }
 		else
-		  mtets.Elem(i).marked = 0;
+		  mtets[i-1].marked = 0;
 	      }
 	  
 	  }
@@ -2712,6 +2712,8 @@ namespace netgen
     static int timer_bisecttet = NgProfiler::CreateTimer ("Bisect tets");
     static int timer_bisecttrig = NgProfiler::CreateTimer ("Bisect trigs");
     static int timer_bisectsegms = NgProfiler::CreateTimer ("Bisect segms");
+
+    
     NgProfiler::RegionTimer reg1 (timer);
 
     (*opt.tracer)("Bisect", false);
@@ -2863,7 +2865,7 @@ namespace netgen
 	      // new version
 	      {
 		for(int i=1; i<=mtets.Size(); i++)
-		  mtets.Elem(i).marked = 0;
+		  mtets[i-1].marked = 0;
 		for(int i=1; i<=mprisms.Size(); i++)
 		  mprisms.Elem(i).marked = 0;
 		for(int i=1; i<=mtris.Size(); i++)
@@ -2904,7 +2906,7 @@ namespace netgen
 			    
 			    while(inf && isint)
 			      {
-				mtets.Elem(atoi(st.c_str())).marked = 3;
+				mtets[atoi(st.c_str())-1].marked = 3;
 				marked = 1;
 
 				inf >> st;
@@ -2996,7 +2998,7 @@ namespace netgen
 		    inf >> ch;
 		    if(!inf)
 		      throw NgException("something wrong with refinementinfo file (old format)");
-		    mtets.Elem(i).marked = (ch == '1');
+		    mtets[i-1].marked = (ch == '1');
 		  }
 		marked = 1;
 	      }
@@ -3018,9 +3020,9 @@ namespace netgen
 			mesh.VolumeElement(i).GetType() == TET10)
 		      {
 			cnttet++;
-			mtets.Elem(cnttet).marked =
+			mtets[cnttet-1].marked =
 			  (opt.onlyonce ? 3 : 1) * mesh.VolumeElement(i).TestRefinementFlag();
-			if (mtets.Elem(cnttet).marked)
+			if (mtets[cnttet-1].marked)
 			  cntm++;
 		      }
 		    else
@@ -3037,9 +3039,9 @@ namespace netgen
 	    else
 	      for (int i = 1; i <= mtets.Size(); i++)
 		{
-		  mtets.Elem(i).marked =
+		  mtets[i-1].marked =
 		    (opt.onlyonce ? 1 : 3) * mesh.VolumeElement(i).TestRefinementFlag();
-		  if (mtets.Elem(i).marked)
+		  if (mtets[i-1].marked)
 		    cntm++;
 		}
 
@@ -3137,11 +3139,11 @@ namespace netgen
 	    PrintMessage(3,"refine p");
 
 	    for (int i = 1; i <= mtets.Size(); i++)
-	      mtets.Elem(i).incorder = mtets.Elem(i).marked ? 1 : 0;
+	      mtets[i-1].incorder = mtets[i-1].marked ? 1 : 0;
 
 	    for (int i = 1; i <= mtets.Size(); i++)
-	      if (mtets.Elem(i).incorder)
-		mtets.Elem(i).marked = 0;
+	      if (mtets[i-1].incorder)
+		mtets[i-1].marked = 0;
 
 
 	    for (int i = 1; i <= mprisms.Size(); i++)
@@ -3207,18 +3209,18 @@ namespace netgen
 
 
 	    for (int i = 1; i <= mtets.Size(); i++)
-	      mtets.Elem(i).incorder = 1;
+	      mtets[i-1].incorder = 1;
 	    for (int i = 1; i <= mtets.Size(); i++)
 	      {
-		if (!mtets.Elem(i).marked)
-		  mtets.Elem(i).incorder = 0;
+		if (!mtets[i-1].marked)
+		  mtets[i-1].incorder = 0;
 		for (int j = 0; j < 4; j++)
-		  if (singv.Test (mtets.Elem(i).pnums[j]))
-		    mtets.Elem(i).incorder = 0;
+		  if (singv.Test (mtets[i-1].pnums[j]))
+		    mtets[i-1].incorder = 0;
 	      }
 	    for (int i = 1; i <= mtets.Size(); i++)
-	      if (mtets.Elem(i).incorder)
-		mtets.Elem(i).marked = 0;
+	      if (mtets[i-1].incorder)
+		mtets[i-1].marked = 0;
 
 
 	    for (int i = 1; i <= mprisms.Size(); i++)
@@ -3268,23 +3270,17 @@ namespace netgen
 	    // refine volume elements
             NgProfiler::StartTimer (timer_bisecttet);
             (*opt.tracer)("bisecttet", false);
-	    int nel = mtets.Size();
-	    for (int i = 1; i <= nel; i++)
-	      if (mtets.Elem(i).marked)
+	    size_t nel = mtets.Size();
+	    for (size_t i = 0; i < nel; i++)
+	      if (mtets[i].marked)
 		{
-		  MarkedTet oldtet = mtets.Get(i);
+		  MarkedTet oldtet = mtets[i];
                   
 		  INDEX_2 edge(oldtet.pnums[oldtet.tetedge1],
 			       oldtet.pnums[oldtet.tetedge2]);
 		  edge.Sort();
 
 		  PointIndex newp;
-                  /*
-		  if (cutedges.Used (edge))
-		    {
-		      newp = cutedges.Get(edge);
-		    }
-                  */
                   if (auto optnewp = cutedges.GetIfUsed(edge))
                     {
                       newp = *optnewp;
@@ -3300,9 +3296,9 @@ namespace netgen
 		  MarkedTet newtet1, newtet2;
 		  BTBisectTet (oldtet, newp, newtet1, newtet2);
 
-		  mtets.Elem(i) = newtet1;
+		  mtets[i] = newtet1;
 		  mtets.Append (newtet2);
-		  mesh.mlparentelement.Append (i);
+		  mesh.mlparentelement.Append (i+1);
 		}
             NgProfiler::StopTimer (timer_bisecttet);
             (*opt.tracer)("bisecttet", true);            
@@ -3616,8 +3612,8 @@ namespace netgen
 	if (mesh.GetDimension() == 3)
 	  {
 	    for (int i = 1; i <= mtets.Size(); i++)
-	      if (mtets.Elem(i).incorder)
-		mtets.Elem(i).order++;
+	      if (mtets[i-1].incorder)
+		mtets[i-1].order++;
       
 	    for (int i = 0; i < mtets.Size(); i++)
 	      for (int j = 0; j < 4; j++)
@@ -3826,9 +3822,12 @@ namespace netgen
       }
     */
 
+    
     NgBitArray isnewpoint(np);
     isnewpoint.Clear();
 
+    {
+    static Timer t("update mlbetween"); RegionTimer reg(t);
     for (int i = 0; i < cutedges.Size(); i++)
       if (cutedges.UsedPos0(i))
 	{
@@ -3838,8 +3837,7 @@ namespace netgen
 	  isnewpoint.Set(newpi);
 	  mesh.mlbetweennodes.Elem(newpi) = edge;
 	}
-
-
+    }
     /*
       mesh.PrintMemInfo (cout);
       cout << "tets ";
@@ -3903,16 +3901,17 @@ namespace netgen
     //  mesh.BuildConnectedNodes();
 
     
-
-
+    {
+    static Timer t("ComputeNV"); RegionTimer reg(t);
     mesh.ComputeNVertices();
-
+    }
+    
     (*opt.tracer)("call RebuildSurfElList", false);
     mesh.RebuildSurfaceElementLists();
     (*opt.tracer)("call RebuildSurfElList", true);
   
     
-    // update identification tables
+    // update identification tables    
     for (int i = 1; i <= mesh.GetIdentifications().GetMaxNr(); i++)
       {
 	NgArray<int,PointIndex::BASE> identmap;
