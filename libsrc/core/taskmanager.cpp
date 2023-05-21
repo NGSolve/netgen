@@ -485,6 +485,7 @@ namespace ngcore
 #endif
 
     
+    size_t no_job_counter = 0;
     while (!done)
       {
         if (complete[mynode] > jobdone)
@@ -492,11 +493,12 @@ namespace ngcore
 
         if (jobnr == jobdone)
           {
+            no_job_counter++;
             // RegionTracer t(ti.thread_nr, tCASyield, ti.task_nr);
-            while (ProcessTask()); // do the nested tasks
+            while (ProcessTask()) no_job_counter = 0; // do the nested tasks
                    
-            if(sleep)
-              std::this_thread::sleep_for(std::chrono::microseconds(sleep_usecs));
+            if(sleep || no_job_counter > 10000)
+              std::this_thread::sleep_for(std::chrono::microseconds(10));
             else
               {
 #ifdef WIN32
@@ -537,6 +539,7 @@ namespace ngcore
                 
                 ti.task_nr = mytasks.First()+mytask;
                 ti.ntasks = ntasks;
+                no_job_counter = 0;
                 
                 {
                   RegionTracer t(ti.thread_nr, jobnr, RegionTracer::ID_JOB, ti.task_nr);
