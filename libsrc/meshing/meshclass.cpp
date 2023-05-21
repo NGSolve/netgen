@@ -6810,8 +6810,9 @@ namespace netgen
 
   void Mesh :: ComputeNVertices ()
   {
-    numvertices = 0;
 
+    numvertices = 0;
+    /*
     for (const Element & el : VolumeElements())
       for (PointIndex v : el.Vertices())
         if (v > numvertices) numvertices = v;
@@ -6821,6 +6822,25 @@ namespace netgen
         if (v > numvertices) numvertices = v;
 
     numvertices += 1-PointIndex::BASE;
+    */
+    numvertices = 0;    
+    numvertices =
+      ParallelReduce (VolumeElements().Size(),
+                      [&](size_t nr)
+                      {
+                        return int(Max(VolumeElements()[nr].Vertices()));
+                      },
+                      [](auto a, auto b) { return a > b ?  a : b; },
+                      numvertices);
+    numvertices =
+      ParallelReduce (SurfaceElements().Size(),
+                      [&](size_t nr)
+                      {
+                        return int(Max(SurfaceElements()[nr].Vertices()));
+                      },
+                      [](auto a, auto b) { return a > b ?  a : b; },
+                      numvertices);
+    numvertices += 1-PointIndex::BASE;    
   }
 
   int Mesh :: GetNV () const

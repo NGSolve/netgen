@@ -628,7 +628,7 @@ namespace ngcore
   FlatArray<T> View (FlatArray<T> fa) { return fa; }
 
   template <typename T, typename TI>
-  auto Max (FlatArray<T,TI> array, T max = std::numeric_limits<T>::min()) -> T
+  auto Max (FlatArray<T,TI> array, typename std::remove_const<T>::type max = std::numeric_limits<T>::min()) -> T
   {
     for (auto & v : array)
       if (v > max) max = v;
@@ -636,7 +636,7 @@ namespace ngcore
   }
 
   template <typename T, typename TI>
-  auto Min (FlatArray<T,TI> array, T min = std::numeric_limits<T>::max()) -> T
+  auto Min (FlatArray<T,TI> array, typename std::remove_const<T>::type min = std::numeric_limits<T>::max()) -> T
   {
     for (auto & v : array)
       if (v < min) min = v;
