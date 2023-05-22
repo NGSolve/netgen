@@ -983,7 +983,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 
     .def("Extrude", [](const TopoDS_Shape & shape, double h,
                        optional<gp_Vec> dir, bool identify,
-                       Identifications::ID_TYPE idtype)
+                       Identifications::ID_TYPE idtype,
+                       string idname)
     {
         for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
           {
@@ -1011,13 +1012,15 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
               {
                 Transformation<3> trsf(h * occ2ng(edir));
                 Identify(GetFaces(shape), GetFaces(builder.LastShape()),
-                         "extrusion_cs", idtype, trsf);
+                         idname, idtype, trsf);
             }
             return builder.Shape();
           }
         throw Exception("no face found for extrusion");
     }, py::arg("h"), py::arg("dir")=nullopt, py::arg("identify")=false,
-         py::arg("idtype")=Identifications::CLOSESURFACES, "extrude shape to thickness 'h', shape must contain a plane surface, optionally give an extrusion direction")
+         py::arg("idtype")=Identifications::CLOSESURFACES,
+         py::arg("idname") = "extrusion",
+         "extrude shape to thickness 'h', shape must contain a plane surface, optionally give an extrusion direction")
     
     .def("Extrude", [] (const TopoDS_Shape & face, gp_Vec vec) {
         return BRepPrimAPI_MakePrism (face, vec).Shape();
