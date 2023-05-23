@@ -26,7 +26,7 @@ def _check_python_version():
     compile_version = f"{config.PYTHON_VERSION_MAJOR}.{config.PYTHON_VERSION_MINOR}"
 
     if sys_version != compile_version:
-        print(get_diagnostics(), file=sys.stderr)
+        print(_get_diagnostics(), file=sys.stderr)
         raise RuntimeError(f"Python version mismatch: compile-time version is {compile_version}, run-time version is {sys_version}")
 
 _check_python_version()
