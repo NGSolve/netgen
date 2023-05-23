@@ -1209,7 +1209,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                std::vector<int> faces;
                for(auto& face : GetFaces(solid))
                  faces.push_back(fmap.FindIndex(face)-1);
-               solid_face_map.push_back(move(faces));
+               solid_face_map.push_back(std::move(faces));
                auto& props = OCCGeometry::GetProperties(solid);
                if(props.name)
                  solid_names.append(*props.name);
