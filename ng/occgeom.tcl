@@ -101,7 +101,7 @@ proc occdialogbuildtree {} {
 	set nrfaces [expr [llength $faces]]
 	if {$nrfaces >= 2} {
 	    #$hlist add ErrorFaces -itemtype text -text "Faces with surface meshing error"
-        $w.tree insert {} -id ErrorFaces -text "Faces with surface meshing error"
+        $w.tree insert {} end -id "ErrorFaces" -text "Faces with surface meshing error"
 	    #$w.mtre open ErrorFaces
         $w.tree item ErrorFaces -open true
 	    set i [expr 0]
@@ -109,12 +109,12 @@ proc occdialogbuildtree {} {
 		set entity [lindex $faces [expr $i]]
         set myroot [string range $entity 0 [string last / $entity]-1]
         if { [string length $myroot] == 0 } {
-            set myroot ErrorFaces
-        }
+            set myroot "ErrorFaces"
+                }
 		incr i 1
 		set entityname [lindex $faces [expr $i]]
 		#$hlist add ErrorFaces/$entity -text $entityname -data $entityname
-        $w.tree insert {myroot} end -id $entity -text $entityname -value 0
+        $w.tree insert $myroot end -id $entity -text $entityname -value 0
 		incr i 1
 	    }
 	}

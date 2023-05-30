@@ -48,7 +48,7 @@ AC_DEFUN(TOGL_ENABLE_STUBS, [
 #------------------------------------------------------------------------
 # TOGL_UNDEF_GET_PROC_ADDRESS --
 #
-#	Does defining GLX_GLXEXT_LEGACY interfer with including GL/glxext.h?
+#	Does defining GLX_GLXEXT_LEGACY interfere with including GL/glxext.h?
 #
 # Arguments:
 #	none
@@ -59,7 +59,7 @@ AC_DEFUN(TOGL_ENABLE_STUBS, [
 #
 #------------------------------------------------------------------------
 AC_DEFUN(TOGL_UNDEF_GET_PROC_ADDRESS, [
-    AC_MSG_CHECKING([if GLX_GLXEXT_LEGACY interfers with including GL/glxext.h])
+    AC_MSG_CHECKING([if GLX_GLXEXT_LEGACY interferes with including GL/glxext.h])
     AC_LANG_PUSH(C)
     ac_save_CFLAGS=$CFLAGS
     CFLAGS=$TK_XINCLUDES

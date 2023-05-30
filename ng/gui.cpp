@@ -1,30 +1,24 @@
 #include <mystdlib.h> 
 #include <inctcl.hpp>
 #include <meshing.hpp>
-
-#ifdef WIN32
-  #define DLL_HEADER_IMPORT __declspec(dllimport)
-  #define DLL_HEADER_EXPORT __declspec(dllexport)
-#else
-  #define DLL_HEADER_IMPORT
-  #define DLL_HEADER_EXPORT
-#endif
-
+#include <core/ngcore_api.hpp>
 
 namespace netgen
 {
-  DLL_HEADER_EXPORT Flags parameters;
+  NGCORE_API_EXPORT Flags parameters;
 }
 
-DLL_HEADER_EXPORT bool nodisplay = false;
+NGCORE_API_EXPORT bool nodisplay = false;
 
 extern "C" int Ng_Init (Tcl_Interp * interp);
 extern "C" int Ng_Vis_Init (Tcl_Interp * interp);
 extern "C" void Ng_TclCmd(string);
 
 // tcl package dynamic load
-extern "C" int DLL_HEADER_EXPORT Gui_Init (Tcl_Interp * interp)
+extern "C" int NGCORE_API_EXPORT Gui_Init (Tcl_Interp * interp)
 {
+  Tcl_InitStubs( interp, TCL_VERSION, 0 );
+  Tk_InitStubs( interp, TK_VERSION, 0 );
   if (Ng_Init(interp) == TCL_ERROR) {
     cerr << "Problem in Ng_Init: " << endl;
     cout << "result = " << Tcl_GetStringResult (interp) << endl;

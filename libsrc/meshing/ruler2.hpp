@@ -21,35 +21,35 @@ private:
   ///
   int quality;
   ///
-  char * name;
+  string name;
   ///
-  Array<Point2d> points;
+  NgArray<Point<2>> points;
   ///
-  Array<INDEX_2> lines;
+  NgArray<INDEX_2> lines;
   ///
-  Array<Point2d> freezone, freezonelimit;
+  NgArray<Point<2>> freezone, freezonelimit;
   ///
-  Array<Array<Point2d>*> freezone_i;
+  NgArray<NgArray<Point<2>>> freezone_i;
   ///
-  Array<Point2d> transfreezone;
+  NgArray<Point<2>> transfreezone;
 
   ///
-  Array<int> dellines;
+  NgArray<int> dellines;
   ///
-  Array<Element2d> elements;
+  NgArray<Element2d> elements;
   ///
-  Array<threefloat> tolerances, linetolerances;
+  NgArray<threefloat> tolerances, linetolerances;
   ///
-  Array<threeint> orientations;
+  NgArray<threeint> orientations;
   ///
   DenseMatrix oldutonewu, oldutofreearea, oldutofreearealimit;
   ///
-  Array<DenseMatrix*> oldutofreearea_i;
+  NgArray<DenseMatrix> oldutofreearea_i;
   ///
   MatrixFixWidth<3> freesetinequ;
 
   ///
-  Array<Vec2d> linevecs;
+  NgArray<Vec<2>> linevecs;
 
   ///
   int noldp, noldl;
@@ -57,7 +57,7 @@ private:
   float fzminx, fzmaxx, fzminy, fzmaxy;
 
   /// topological distance of line to base element
-  Array<int> lnearness;
+  NgArray<int> lnearness;
 
 public:
 
@@ -86,7 +86,7 @@ public:
   int GetLNearness (int li) const { return lnearness.Get(li); }
 
   ///
-  const Point2d & GetPoint (int i) const { return points.Get(i); }
+  const Point<2>& GetPoint (int i) const { return points.Get(i); }
   ///
   const INDEX_2 & GetLine (int i) const { return lines.Get(i); }
   ///
@@ -96,55 +96,55 @@ public:
   ///
   int GetDelLine (int i) const { return dellines.Get(i); }
   ///
-  const Array<int> & GetDelLines() const { return dellines; }
+  const NgArray<int> & GetDelLines() const { return dellines; }
   ///
-  void GetFreeZone (Array<Point2d> & afreearea);
+  void GetFreeZone (NgArray<Point<2>> & afreearea);
   ///
 
-  double CalcPointDist (int pi, const Point2d & p) const
+  double CalcPointDist (int pi, const Point<2> & p) const
   {
-    double dx = p.X() - points.Get(pi).X();
-    double dy = p.Y() - points.Get(pi).Y();
+    double dx = p[0] - points.Get(pi)[0];
+    double dy = p[1] - points.Get(pi)[1];
     const threefloat * tfp = &tolerances.Get(pi);
     return tfp->f1 * dx * dx + tfp->f2 * dx * dy + tfp->f3 * dy * dy;
   }
 
   ///
-  float CalcLineError (int li, const Vec2d & v) const;
+  float CalcLineError (int li, const Vec<2>& v) const;
 
   ///
   void SetFreeZoneTransformation (const Vector & u, int tolclass);
 
   ///
-  bool IsInFreeZone (const Point2d & p) const
+  bool IsInFreeZone (const Point<2> & p) const
   {
-    if (p.X() < fzminx || p.X() > fzmaxx ||
-	p.Y() < fzminy || p.Y() > fzmaxy) return 0;
+    if (p[0] < fzminx || p[0] > fzmaxx ||
+	p[1] < fzminy || p[1] > fzmaxy) return 0;
 
     for (int i = 0; i < transfreezone.Size(); i++)
       {
-	if (freesetinequ(i, 0) * p.X() + 
-	    freesetinequ(i, 1) * p.Y() +
+	if (freesetinequ(i, 0) * p[0] + 
+	    freesetinequ(i, 1) * p[1] +
 	    freesetinequ(i, 2) > 0) return 0;
       }
     return 1;
   }
 
   ///
-  int IsLineInFreeZone (const Point2d & p1, const Point2d & p2) const
+  int IsLineInFreeZone (const Point<2> & p1, const Point<2> & p2) const
   {
-    if ( (p1.X() > fzmaxx && p2.X() > fzmaxx) ||
-         (p1.X() < fzminx && p2.X() < fzminx) ||
-         (p1.Y() > fzmaxy && p2.Y() > fzmaxy) ||
-         (p1.Y() < fzminy && p2.Y() < fzminy) ) return 0;
+    if ( (p1[0] > fzmaxx && p2[0] > fzmaxx) ||
+         (p1[0] < fzminx && p2[0] < fzminx) ||
+         (p1[1] > fzmaxy && p2[1] > fzmaxy) ||
+         (p1[1] < fzminy && p2[1] < fzminy) ) return 0;
     return IsLineInFreeZone2 (p1, p2);
   }
   ///
-  int IsLineInFreeZone2 (const Point2d & p1, const Point2d & p2) const;
+  int IsLineInFreeZone2 (const Point<2> & p1, const Point<2> & p2) const;
   ///
   int ConvexFreeZone () const;
   ///
-  const Array<Point2d> & GetTransFreeZone () { return transfreezone; }
+  const NgArray<Point<2>> & GetTransFreeZone () { return transfreezone; }
 
   ///
   int GetPointNr (int ln, int endp) const { return lines.Get(ln).I(endp); }
@@ -154,7 +154,7 @@ public:
   ///
   const DenseMatrix & GetOldUToFreeArea () const { return oldutofreearea; }
   ///
-  const char * Name () const { return name; }
+  const string & Name () const { return name; }
 
   ///
   void LoadRule (istream & ist);

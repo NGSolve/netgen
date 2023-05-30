@@ -10,15 +10,19 @@
 
 namespace netgen
 {
-  Array<SpecialPoint> specpoints;
-  static Array<MeshPoint> spoints;
 
+  DLL_HEADER NgArray<SpecialPoint> global_specpoints;  // for visualization
+  //static NgArray<MeshPoint> spoints;
+  
 #define TCL_OK 0
 #define TCL_ERROR 1
 
 
 
-  static void FindPoints (CSGeometry & geom, Mesh & mesh)
+  static void FindPoints (CSGeometry & geom,
+                          NgArray<SpecialPoint> &  specpoints,
+                          NgArray<MeshPoint> & spoints,
+                          Mesh & mesh)
   {
     PrintMessage (1, "Start Findpoints");
 
@@ -32,7 +36,11 @@ namespace netgen
 	auto pnum = mesh.AddPoint(up);
 	mesh.Points().Last().Singularity (geom.GetUserPointRefFactor(i));
 	mesh.AddLockedPoint (PointIndex (i+1));
-        mesh.pointelements.Append (Element0d(pnum, up.GetIndex()));
+        int index = up.GetIndex();
+        if (index == -1)
+          index = mesh.AddCD3Name (up.GetName())+1;
+        // cout << "adding 0d element, pnum = " << pnum << ", material index = " << index << endl;
+        mesh.pointelements.Append (Element0d(pnum, index));
       }
 
     SpecialPointCalculation spc;
@@ -44,7 +52,13 @@ namespace netgen
     
     PrintMessage (2, "Analyze spec points");
     spc.AnalyzeSpecialPoints (geom, spoints, specpoints);
-  
+
+    {
+      static mutex mut;
+      lock_guard<mutex> guard(mut);
+      global_specpoints = specpoints;
+    }
+    
     PrintMessage (5, "done");
 
     (*testout) << specpoints.Size() << " special points:" << endl;
@@ -63,7 +77,10 @@ namespace netgen
 
 
 
-  static void FindEdges (CSGeometry & geom, Mesh & mesh, MeshingParameters & mparam,
+  static void FindEdges (CSGeometry & geom, Mesh & mesh,
+                         NgArray<SpecialPoint> &  specpoints,
+                         NgArray<MeshPoint> & spoints,
+                         MeshingParameters & mparam,
                          const bool setmeshsize = false)
   {
     EdgeCalculation ec (geom, specpoints, mparam);
@@ -140,7 +157,7 @@ namespace netgen
 	  }
       }
 
-    Array<int> loc;
+    NgArray<int> loc;
     if (!ec.point_on_edge_problem)
       for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
 	{
@@ -234,17 +251,17 @@ namespace netgen
     const char * savetask = multithread.task;
     multithread.task = "Surface meshing";
   
-    Array<Segment> segments;
+    NgArray<Segment> segments;
     int noldp = mesh.GetNP();
 
     double starttime = GetTime();
 
     // find master faces from identified
-    Array<int> masterface(mesh.GetNFD());
+    NgArray<int> masterface(mesh.GetNFD());
     for (int i = 1; i <= mesh.GetNFD(); i++)
       masterface.Elem(i) = i;
   
-    Array<INDEX_2> fpairs;
+    NgArray<INDEX_2> fpairs;
     bool changed;
     do
       {
@@ -382,7 +399,7 @@ namespace netgen
 
     for (int j = 0; j < geom.singfaces.Size(); j++)
       {
-	Array<int> surfs;
+	NgArray<int> surfs;
 	geom.GetIndependentSurfaceIndices (geom.singfaces[j]->GetSolid(),
 					   geom.BoundingBox(), surfs);
 	for (int k = 1; k <= mesh.GetNFD(); k++)
@@ -422,7 +439,7 @@ namespace netgen
 	  geom.GetSurface((mesh.GetFaceDescriptor(k).SurfNr()));
 
 
-	Meshing2Surfaces meshing(*surf, mparam, geom.BoundingBox());
+	Meshing2Surfaces meshing(geom, *surf, mparam, geom.BoundingBox());
 	meshing.SetStartTime (starttime);
 
         double eps = 1e-8 * geom.MaxSize();
@@ -500,10 +517,12 @@ namespace netgen
 	  }
 
 	if (multithread.terminate) return;
-      
+        
 	for (SurfaceElementIndex sei = oldnf; sei < mesh.GetNSE(); sei++)
 	  mesh[sei].SetIndex (k);
 
+        auto n_illegal_trigs = mesh.FindIllegalTrigs();
+        PrintMessage (3, n_illegal_trigs, " illegal triangles");
 
 	//      mesh.CalcSurfacesOfNode();
 
@@ -521,48 +540,48 @@ namespace netgen
 		if (multithread.terminate) return;
 		
 		{
-		  MeshOptimize2dSurfaces meshopt(geom);
+		  MeshOptimize2d meshopt(mesh);
 		  meshopt.SetFaceIndex (k);
 		  meshopt.SetImproveEdges (0);
 		  meshopt.SetMetricWeight (mparam.elsizeweight);
 		  meshopt.SetWriteStatus (0);
 		  
-		  meshopt.EdgeSwapping (mesh, (i > mparam.optsteps2d/2));
+		  meshopt.EdgeSwapping (i > mparam.optsteps2d/2);
 		}
 		
 		if (multithread.terminate) return;
 		{
 		  //		mesh.CalcSurfacesOfNode();
 		
-		  MeshOptimize2dSurfaces meshopt(geom);
+		  MeshOptimize2d meshopt(mesh);
 		  meshopt.SetFaceIndex (k);
 		  meshopt.SetImproveEdges (0);
 		  meshopt.SetMetricWeight (mparam.elsizeweight);
 		  meshopt.SetWriteStatus (0);
 
-		  meshopt.ImproveMesh (mesh, mparam);
+		  meshopt.ImproveMesh(mparam);
 		}
 		
 		{
-		  MeshOptimize2dSurfaces meshopt(geom);
+		  MeshOptimize2d meshopt(mesh);
 		  meshopt.SetFaceIndex (k);
 		  meshopt.SetImproveEdges (0);
 		  meshopt.SetMetricWeight (mparam.elsizeweight);
 		  meshopt.SetWriteStatus (0);
 
-		  meshopt.CombineImprove (mesh);
+		  meshopt.CombineImprove();
 		  //		mesh.CalcSurfacesOfNode();
 		}
 		
 		if (multithread.terminate) return;
 		{
-		  MeshOptimize2dSurfaces meshopt(geom);
+		  MeshOptimize2d meshopt(mesh);
 		  meshopt.SetFaceIndex (k);
 		  meshopt.SetImproveEdges (0);
 		  meshopt.SetMetricWeight (mparam.elsizeweight);
 		  meshopt.SetWriteStatus (0);
 
-		  meshopt.ImproveMesh (mesh, mparam);
+		  meshopt.ImproveMesh(mparam);
 		}
 	      }
 	  }
@@ -663,6 +682,10 @@ namespace netgen
   int CSGGenerateMesh (CSGeometry & geom, 
 		       shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
   {
+    NgArray<SpecialPoint> specpoints;
+    NgArray<MeshPoint> spoints;
+
+    
     if (mesh && mesh->GetNSE() &&
 	!geom.GetNSolids())
       {
@@ -680,7 +703,7 @@ namespace netgen
 	mesh->SetGlobalH (mparam.maxh);
 	mesh->SetMinimalH (mparam.minh);
 
-	Array<double> maxhdom(geom.GetNTopLevelObjects());
+	NgArray<double> maxhdom(geom.GetNTopLevelObjects());
 	for (int i = 0; i < maxhdom.Size(); i++)
 	  maxhdom[i] = geom.GetTopLevelObject(i)->GetMaxH();
 
@@ -699,7 +722,7 @@ namespace netgen
 	  }
 
 	spoints.SetSize(0);
-	FindPoints (geom, *mesh);
+	FindPoints (geom, specpoints, spoints, *mesh);
       
 	PrintMessage (5, "find points done");
 
@@ -717,7 +740,7 @@ namespace netgen
 
     if (mparam.perfstepsstart <= MESHCONST_MESHEDGES)
       {
-	FindEdges (geom, *mesh, mparam, true);
+	FindEdges (geom, *mesh, specpoints, spoints, mparam, true);
 	if (multithread.terminate) return TCL_OK;
 #ifdef LOG_STREAM      
 	(*logout) << "Edges meshed" << endl
@@ -734,16 +757,16 @@ namespace netgen
 	    mesh->CalcLocalH(mparam.grading);
 	    mesh->DeleteMesh();
 	    
-	    FindPoints (geom, *mesh);
+	    FindPoints (geom, specpoints, spoints, *mesh);
 	    if (multithread.terminate) return TCL_OK;
-	    FindEdges (geom, *mesh, mparam, true);
+	    FindEdges (geom, *mesh, specpoints, spoints, mparam, true);
 	    if (multithread.terminate) return TCL_OK;
 	    
 	    mesh->DeleteMesh();
 	  
-	    FindPoints (geom, *mesh);
+	    FindPoints (geom, specpoints, spoints, *mesh);
 	    if (multithread.terminate) return TCL_OK;
-	    FindEdges (geom, *mesh, mparam);
+	    FindEdges (geom, *mesh, specpoints, spoints, mparam);
 	    if (multithread.terminate) return TCL_OK;
 	  }
       }

@@ -3,7 +3,7 @@
 
 
 extern double CalcTotalBad (const Mesh::T_POINTS & points, 
-			    const Mesh::T_VOLELEMENTS & elements,
+			    const Array<Element, ElementIndex> & elements,
 			    const MeshingParameters & mp);
 
 
@@ -11,16 +11,32 @@ extern double CalcTotalBad (const Mesh::T_POINTS & points,
 class MeshOptimize3d
 {
   const MeshingParameters & mp;
+
 public:
   MeshOptimize3d (const MeshingParameters & amp) : mp(amp) { ; }
+
+  double CombineImproveEdge (Mesh & mesh, const MeshingParameters & mp,
+            Table<ElementIndex, PointIndex> & elements_of_point,
+            Array<double> & elerrs, PointIndex pi0, PointIndex pi1,
+            FlatArray<bool, PointIndex> is_point_removed, bool check_only=false);
+
   void CombineImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
+
   void SplitImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
+  double SplitImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, Table<ElementIndex,PointIndex> & elementsonnode, Array<double> &elerrs, NgArray<INDEX_3> &locfaces, double badmax, PointIndex pi1, PointIndex pi2, PointIndex ptmp, bool check_only=false);
+
+  void SplitImprove2 (Mesh & mesh);
+  double SplitImprove2Element (Mesh & mesh, ElementIndex ei, const Table<ElementIndex, PointIndex> & elements_of_point, const Array<double> & elerrs, bool check_only);
+  
+
+  double SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, const NgBitArray * working_elements, Table<ElementIndex,PointIndex> & elementsonnode, INDEX_3_HASHTABLE<int> & faces, PointIndex pi1, PointIndex pi2, bool check_only=false);
   void SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
-		    const BitArray * working_elements = NULL);
+		    const NgBitArray * working_elements = NULL);
   void SwapImproveSurface (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
-			   const BitArray * working_elements = NULL,
-			   const Array< Array<int,PointIndex::BASE>* > * idmaps = NULL);
+			   const NgBitArray * working_elements = NULL,
+			   const NgArray< NgArray<int,PointIndex::BASE>* > * idmaps = NULL);
   void SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
+  double SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementIndex eli1, int face, Table<ElementIndex, PointIndex> & elementsonnode, TABLE<SurfaceElementIndex, PointIndex::BASE> & belementsonnode, bool check_only=false );
 
   double 
   CalcBad (const Mesh::T_POINTS & points, const Element & elem, double h)
@@ -33,7 +49,7 @@ public:
 
 
   double CalcTotalBad (const Mesh::T_POINTS & points, 
-		       const Mesh::T_VOLELEMENTS & elements)
+		       const Array<Element, ElementIndex> & elements)
   {
     return netgen::CalcTotalBad (points, elements, mp);
   }
@@ -61,7 +77,7 @@ extern int WrongOrientation (const Mesh::T_POINTS & points, const Element & el);
 class MinFunctionSum : public MinFunction
 {
 protected:
-  Array<MinFunction*> functions;
+  NgArray<MinFunction*> functions;
  
 public:
   
@@ -81,12 +97,12 @@ public:
 class PointFunction1 : public MinFunction
 {
   Mesh::T_POINTS & points;
-  const Array<INDEX_3> & faces;
+  const NgArray<INDEX_3> & faces;
   const MeshingParameters & mp;
   double h;
 public:
   PointFunction1 (Mesh::T_POINTS & apoints, 
-		  const Array<INDEX_3> & afaces,
+		  const NgArray<INDEX_3> & afaces,
 		  const MeshingParameters & amp,
 		  double ah);
   
@@ -100,7 +116,7 @@ class JacobianPointFunction : public MinFunction
 {
 public:
   Mesh::T_POINTS & points;
-  const Mesh::T_VOLELEMENTS & elements;
+  const Array<Element, ElementIndex> & elements;
   TABLE<INDEX> elementsonpoint;
   PointIndex actpind;
 
@@ -109,7 +125,7 @@ public:
   
 public:
   JacobianPointFunction (Mesh::T_POINTS & apoints, 
-			 const Mesh::T_VOLELEMENTS & aelements);
+			 const Array<Element, ElementIndex> & aelements);
   virtual ~JacobianPointFunction () { ; }
   virtual void SetPointIndex (PointIndex aactpind);
   virtual double Func (const Vector & x) const;

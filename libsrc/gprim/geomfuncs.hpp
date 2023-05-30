@@ -142,10 +142,24 @@ namespace netgen
 
   inline void CalcInverse (const Mat<2,3> & m, Mat<3,2> & inv)
   {
+    Vec<3> a0 = m.Row(0);
+    Vec<3> a1 = m.Row(1);
+    Vec<3> n = Cross(a0, a1);
+    Vec<3> d0 = Cross(a1, n);
+    Vec<3> d1 = Cross(a0, n);
+    double s0 = 1.0/(a0*d0);
+    double s1 = 1.0/(a1*d1);
+    for (int i = 0; i < 3; i++)
+      {
+        inv(i,0) = s0*d0(i);
+        inv(i,1) = s1*d1(i);
+      }
+    /*
     Mat<2,2> a = m * Trans (m);
     Mat<2,2> ainv;
     CalcInverse (a, ainv);
     inv = Trans (m) * ainv;
+    */
   }
 
   void CalcInverse (const Mat<3,2> & m, Mat<2,3> & inv);
@@ -163,9 +177,34 @@ namespace netgen
   double Det (const Mat<3,3> & m);
 
   // eigenvalues of a symmetric matrix
-  void EigenValues (const Mat<3,3> & m, Vec<3> & ev);
-  void EigenValues (const Mat<2,2> & m, Vec<3> & ev);
+  DLL_HEADER void EigenValues (const Mat<3,3> & m, Vec<3> & ev);
+  DLL_HEADER void EigenValues (const Mat<2,2> & m, Vec<3> & ev);
 
+
+  template <typename T> 
+  Vec<3,T> StableSolve (Mat<2,3,T> mat, Vec<2,T> rhs)
+  {
+    Vec<3> a0 = mat.Row(0);
+    Vec<3> a1 = mat.Row(1);
+    /*
+    Vec<3> d = Cross ( Cross (a0, a1), a0);
+
+    double alpha = rhs(0) / a0.Length2();
+    double beta = (rhs(1)-alpha* (a0*a1)) / (d*a1);
+    return alpha * a0 + beta * d;
+    */
+    Vec<3> n = Cross(a0, a1);
+    Vec<3> d0 = Cross(a1, n);
+    Vec<3> d1 = Cross(a0, n);
+    double alpha = rhs(0) / (a0*d0);
+    double beta = rhs(1) / (a1*d1);
+    return alpha * d0 + beta * d1;
+  }
+
+
+
+
+  
 }
 
 #endif

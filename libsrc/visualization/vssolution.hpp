@@ -1,6 +1,8 @@
 #ifndef FILE_VSSOLUTION
 #define FILE_VSSOLUTION
 
+#include "visual_api.hpp"
+#include "mvdraw.hpp"
 
 typedef void * ClientData;
 struct Tcl_Interp;
@@ -9,18 +11,16 @@ struct Tcl_Interp;
 namespace netgen
 {
 
-DLL_HEADER extern void ImportSolution (const char * filename);
+NGGUI_API extern void ImportSolution (const char * filename);
 
 
-class FieldLineCalc;
-  
   extern int Ng_Vis_Set (ClientData clientData,
                          Tcl_Interp * interp,
                          int argc, const char *argv[]);
 
 
 
-class DLL_HEADER VisualSceneSolution : public VisualScene
+class NGGUI_API VisualSceneSolution : public VisualScene
 {
   friend class FieldLineCalc;
   
@@ -76,7 +76,7 @@ class DLL_HEADER VisualSceneSolution : public VisualScene
   int fieldlineslist;
   int num_fieldlineslists;
   int fieldlines_startarea;
-  Array<double> fieldlines_startarea_parameter;
+  NgArray<double> fieldlines_startarea_parameter;
   int fieldlines_startface;
   string fieldlines_filename;
   double fieldlines_reltolerance;
@@ -94,19 +94,23 @@ class DLL_HEADER VisualSceneSolution : public VisualScene
   int fieldlinestimestamp, surface_vector_timestamp;
   int pointcurve_timestamp;
   int isosurface_timestamp;
-  int subdivision_timestamp;
   int timetimestamp;
   double minval, maxval;
+
+  int scalfunction, vecfunction;
+  string number_format = "%8.3e";
+  string unit = "";
+  string title = "";
 
   NgLock *lock;
 
   
 #ifdef PARALLELGL
-  Array<int> par_linelists;
-  Array<int> par_surfellists;
+  NgArray<int> par_linelists;
+  NgArray<int> par_surfellists;
 #endif
 
-  Array<UserVisualizationObject*> user_vis;
+  NgArray<UserVisualizationObject*> user_vis;
 
 public:
 
@@ -137,6 +141,9 @@ public:
     ~SolData ();
     
     string name;
+    string number_format = "%8.3e";
+    string unit = "";
+    string title = "";
     double * data;
     int components;
     int dist;
@@ -154,19 +161,18 @@ public:
   
 
 
-  Array<SolData*> soldata;
+  NgArray<SolData*> soldata;
 
 
   int usetexture;    // 0..no, 1..1D texture (standard), 2..2D-texture (complex)
   int clipsolution;  // 0..no, 1..scal, 2..vec
-  int scalfunction, scalcomp, vecfunction;
+  int scalcomp;
   int gridsize;
   double xoffset, yoffset;
 
   int autoscale, logscale;
   double mminval, mmaxval;
   int numisolines;
-  int subdivisions;
 
   bool showclipsolution;
   bool showsurfacesolution;
@@ -183,10 +189,10 @@ public:
   bool imag_part;
 
 private:
-  void BuildFieldLinesFromFile(Array<Point3d> & startpoints);
-  void BuildFieldLinesFromFace(Array<Point3d> & startpoints);
-  void BuildFieldLinesFromBox(Array<Point3d> & startpoints);
-  void BuildFieldLinesFromLine(Array<Point3d> & startpoints);
+  void BuildFieldLinesFromFile(Array<Point<3>> & startpoints);
+  void BuildFieldLinesFromFace(Array<Point<3>> & startpoints);
+  void BuildFieldLinesFromBox(Array<Point<3>> & startpoints);
+  void BuildFieldLinesFromLine(Array<Point<3>> & startpoints);
   // weak_ptr<Mesh> wp_mesh;
 public:
   VisualSceneSolution ();
@@ -233,11 +239,16 @@ public:
   {
     user_vis.Append (vis);
   }
-  
+  void DeleteUserVisualizationObject (UserVisualizationObject * vis)
+  {
+    int pos = user_vis.Pos(vis);
+    if (pos >= 0)
+      user_vis.Delete(pos);
+  }
 
 private:
-  void GetClippingPlaneTrigs (Array<ClipPlaneTrig> & trigs, Array<ClipPlanePoint> & pts);
-  void GetClippingPlaneGrid (Array<ClipPlanePoint> & pts);
+  void GetClippingPlaneTrigs (NgArray<ClipPlaneTrig> & trigs, NgArray<ClipPlanePoint> & pts);
+  void GetClippingPlaneGrid (NgArray<ClipPlanePoint> & pts);
   void DrawCone (const Point<3> & p1, const Point<3> & p2, double r);
   void DrawCylinder (const Point<3> & p1, const Point<3> & p2, double r);
 
@@ -314,8 +325,8 @@ public:
   void Draw1DElements();
 
   void DrawSurfaceVectors ();
-  void DrawTrigSurfaceVectors(const Array< Point<3> > & lp, const Point<3> & pmin, const Point<3> & pmax,
-			      const int sei, const SolData * vsol);
+  void DrawTrigSurfaceVectors(const NgArray< Point<3> > & lp, const Point<3> & pmin, const Point<3> & pmax,
+			      const int sei, const SolData * vsol, bool swap_lam=false);
   void DrawIsoSurface(const SolData * sol, const SolData * grad, int comp);
   
   void DrawIsoLines (const Point<3> & p1, 
@@ -343,6 +354,19 @@ public:
                          Tcl_Interp * interp,
 			 int argc, const char *argv[]);
 
+  void SetScalfunction( int i ) {
+      scalfunction = i;
+      title = soldata[i]->title;
+      number_format = soldata[i]->number_format;
+      unit = soldata[i]->unit;
+  }
+
+  void SetVecfunction( int i ) {
+      vecfunction = i;
+      title = soldata[i]->title;
+      number_format = soldata[i]->number_format;
+      unit = soldata[i]->unit;
+  }
 
 #ifdef PARALLELGL
   void Broadcast ();
@@ -351,104 +375,17 @@ public:
 
 };
 
+NGGUI_API VisualSceneSolution & GetVSSolution();
 
-
-
-class RKStepper
+inline void AddUserVisualizationObject (UserVisualizationObject * vis)
 {
-private:
-  Array<double> c,b;
-  TABLE<double> *a;
-  int steps;
-  int order;
-  
-  double tolerance;
-  
-  Array<Vec3d> K;
-  
-  int stepcount;
-  
-  double h;
-  double startt;
-  double startt_bak;
-  Point3d startval;
-  Point3d startval_bak;
-  
-  bool adaptive;
-  int adrun;
-  Point3d valh;
-  
-  int notrestarted;
+    GetVSSolution().AddUserVisualizationObject (vis);
+}
 
-public:
-  
-  ~RKStepper();
-    
-  RKStepper(int type = 0);
-
-  void SetTolerance(const double tol){tolerance = tol;}
-        
-  void StartNextValCalc(const Point3d & astartval, const double astartt, const double ah, const bool aadaptive = false);
-
-  bool GetNextData(Point3d & val, double & t, double & ah);
-
-  bool FeedNextF(const Vec3d & f);
-};
-
-
-
-
-
-class FieldLineCalc
+inline void DeleteUserVisualizationObject (UserVisualizationObject * vis)
 {
-private:
-  const Mesh & mesh;
-  
-  VisualSceneSolution & vss;
-  
-  const VisualSceneSolution::SolData * vsol;
-
-  RKStepper stepper;
-
-  double maxlength;
-
-  int maxpoints;
-  
-  int direction;
-  
-  Point3d pmin, pmax;
-  double rad;
-  double phaser, phasei;
-  
-  double critical_value;
-
-  bool randomized;
-
-  double thickness;
-
-public:
-  FieldLineCalc(const Mesh & amesh, VisualSceneSolution & avss, const VisualSceneSolution::SolData * solution, 
-		const double rel_length, const int amaxpoints = -1, 
-		const double rel_thickness = -1, const double rel_tolerance = -1, const int rk_type = 0, const int adirection = 0);
-
-  void SetPhase(const double real, const double imag) { phaser = real; phasei = imag; }
-  
-  void SetCriticalValue(const double val) { critical_value = val; }
-
-  void Randomized(void) { randomized = true; }
-  void NotRandomized(void) { randomized = false; }
-
-  void Calc(const Point3d & startpoint, Array<Point3d> & points, Array<double> & vals, Array<bool> & drawelems, Array<int> & dirstart);
-  
-  void GenerateFieldLines(Array<Point3d> & potential_startpoints, const int numlines, const int gllist,
-			  const double minval, const double maxval, const int logscale, double phaser, double phasei);
-};
-
-
-
-
-  // DLL_HEADER extern VisualSceneSolution vssolution;
-DLL_HEADER extern VisualSceneSolution & GetVSSolution();
+    GetVSSolution().DeleteUserVisualizationObject (vis);
+}
 
 
 }

@@ -27,95 +27,41 @@ public:
 
 protected:
   ///
-  virtual void DefineTransformation (const Point3d & p1, const Point3d & p2,
-				     const PointGeomInfo * geominfo1,
-				     const PointGeomInfo * geominfo2);
+  void DefineTransformation (const Point<3> & p1, const Point<3> & p2,
+                             const PointGeomInfo * geominfo1,
+                             const PointGeomInfo * geominfo2) override;
   ///
-  virtual void TransformToPlain (const Point3d & locpoint, const MultiPointGeomInfo & geominfo,
-      Point2d & plainpoint, double h, int & zone);
+  void TransformToPlain (const Point<3> & locpoint, const MultiPointGeomInfo & geominfo,
+                         Point<2> & plainpoint, double h, int & zone) override;
   ///
-  virtual int TransformFromPlain (Point2d & plainpoint,
-				  Point3d & locpoint, 
-				  PointGeomInfo & gi,
-				  double h);
+  int TransformFromPlain (const Point<2>& plainpoint,
+                          Point<3> & locpoint, 
+                          PointGeomInfo & gi,
+                          double h) override;
   ///
-  virtual int BelongsToActiveChart (const Point3d & p, 
-				    const PointGeomInfo & gi);
+  int BelongsToActiveChart (const Point3d & p, 
+                            const PointGeomInfo & gi) override;
 
   ///
-  virtual int ComputePointGeomInfo (const Point3d & p, PointGeomInfo & gi);
+  int ComputePointGeomInfo (const Point3d & p, PointGeomInfo & gi) override;
   ///
-  virtual int ChooseChartPointGeomInfo (const MultiPointGeomInfo & mpgi, 
-					 PointGeomInfo & pgi);
+  int ChooseChartPointGeomInfo (const MultiPointGeomInfo & mpgi, 
+                                PointGeomInfo & pgi) override;
 
   ///
-  virtual int IsLineVertexOnChart (const Point3d & p1, const Point3d & p2,
-				   int endpoint, const PointGeomInfo & gi);
+  int IsLineVertexOnChart (const Point3d & p1, const Point3d & p2,
+                           int endpoint, const PointGeomInfo & gi) override;
 
-  virtual void GetChartBoundary (Array<Point2d > & points, 
-				 Array<Point3d > & poitns3d,
-				 Array<INDEX_2> & lines, double h) const;
-
-  ///
-  virtual double CalcLocalH (const Point3d & p, double gh) const;
+  void GetChartBoundary (NgArray<Point<2>> & points, 
+                         NgArray<Point<3>> & poitns3d,
+                         NgArray<INDEX_2> & lines, double h) const override;
 
   ///
-  virtual double Area () const;
+  double CalcLocalH (const Point<3> & p, double gh) const override;
+
+  ///
+  double Area () const override;
 };
-
-
-
-///
-class MeshOptimizeSTLSurface : public MeshOptimize2d
-  {
-  ///
-    STLGeometry & geom;
-
-public:
-    ///
-    MeshOptimizeSTLSurface (STLGeometry & ageom); 
-   
-    ///
-    virtual void SelectSurfaceOfPoint (const Point<3> & p,
-				       const PointGeomInfo & gi);
-    ///
-    virtual void ProjectPoint (INDEX surfind, Point<3> & p) const;
-    ///
-    virtual void ProjectPoint2 (INDEX surfind, INDEX surfind2, Point<3> & p) const;
-    ///
-    virtual int CalcPointGeomInfo(PointGeomInfo& gi, const Point<3> & p3) const;
-    ///
-    virtual void GetNormalVector(INDEX surfind, const Point<3> & p, Vec<3> & n) const;
-};
-
-
-
-
-class RefinementSTLGeometry : public Refinement
-{
-  const STLGeometry & geom;
-
-public:
-  RefinementSTLGeometry (const STLGeometry & ageom);
-  virtual ~RefinementSTLGeometry ();
-  
-  virtual void PointBetween (const Point<3> & p1, const Point<3> & p2, double secpoint,
-			     int surfi, 
-			     const PointGeomInfo & gi1, 
-			     const PointGeomInfo & gi2,
-			     Point<3> & newp, PointGeomInfo & newgi) const;
-
-  virtual void PointBetween (const Point<3> & p1, const Point<3> & p2, double secpoint,
-			     int surfi1, int surfi2, 
-			     const EdgePointGeomInfo & ap1, 
-			     const EdgePointGeomInfo & ap2,
-			     Point<3> & newp, EdgePointGeomInfo & newgi) const;
-
-  virtual void ProjectToSurface (Point<3> & p, int surfi) const;
-  virtual void ProjectToSurface (Point<3> & p, int surfi, PointGeomInfo & gi) const;
-};
-
-
 
 #endif
 

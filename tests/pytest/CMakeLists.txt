@@ -1,4 +1,8 @@
 if(USE_PYTHON)
     add_test(NAME pytest COMMAND ${PYTHON_EXECUTABLE} -m pytest WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     add_custom_target(pytest ${PYTHON_EXECUTABLE} -m pytest WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    set_tests_properties ( pytest PROPERTIES TIMEOUT 1800 )
+    if(USE_MPI AND USE_MPI4PY)
+      add_test(NAME pytest-mpi COMMAND ${MPIEXEC_EXECUTABLE} --allow-run-as-root -np 4 ${PYTHON_EXECUTABLE} -m pytest --with-mpi test_mpi4py.py WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    endif(USE_MPI AND USE_MPI4PY)
 endif(USE_PYTHON)

@@ -197,7 +197,7 @@ int STLEdgeDataList :: GetNConfCandEPP(int p) const
 }
 
 
-void STLEdgeDataList :: BuildLineWithEdge(int ep1, int ep2, Array<twoint>& line)
+void STLEdgeDataList :: BuildLineWithEdge(int ep1, int ep2, NgArray<twoint>& line)
 {
   int status = Get(GetEdgeNum(ep1,ep2)).GetStatus();
 
@@ -424,7 +424,7 @@ int STLEdgeDataList :: GetNConfCandEPP(int p) const
 }
 
 
-void STLEdgeDataList :: BuildLineWithEdge(int ep1, int ep2, Array<twoint>& line)
+void STLEdgeDataList :: BuildLineWithEdge(int ep1, int ep2, NgArray<twoint>& line)
 {
   int status = Get(GetEdgeNum(ep1,ep2)).GetStatus();
 
@@ -473,7 +473,7 @@ void STLEdgeDataList :: BuildLineWithEdge(int ep1, int ep2, Array<twoint>& line)
   
 }
 
-int Exists(int p1, int p2, const Array<twoint>& line)
+int Exists(int p1, int p2, const NgArray<twoint>& line)
 {
   int i;
   for (i = 1; i <= line.Size(); i++)
@@ -485,7 +485,7 @@ int Exists(int p1, int p2, const Array<twoint>& line)
   return 0;
 }
 
-void STLEdgeDataList :: BuildClusterWithEdge(int ep1, int ep2, Array<twoint>& line)
+void STLEdgeDataList :: BuildClusterWithEdge(int ep1, int ep2, NgArray<twoint>& line)
 {
   int status = Get(GetEdgeNum(ep1,ep2)).GetStatus();
 
@@ -493,7 +493,8 @@ void STLEdgeDataList :: BuildClusterWithEdge(int ep1, int ep2, Array<twoint>& li
   int j, i, k;
   int oldend;
   int newend = 1;
-  int pnew, ennew(0);
+  STLPointId pnew;
+  int ennew(0);
 
   int changed = 1;
   while (changed)
@@ -581,59 +582,57 @@ int STLLine :: GetRightTrig(int nr) const
   return righttrigs.Get(nr);
 };
 
-double STLLine :: GetSegLen(const Array<Point<3> >& ap, int nr) const
+double STLLine :: GetSegLen(const Array<Point<3>,STLPointId>& ap, int nr) const
 {
-  return Dist(ap.Get(PNum(nr)),ap.Get(PNum(nr+1)));
+  return Dist(ap[PNum(nr)],ap[PNum(nr+1)]);
 }
 
-double STLLine :: GetLength(const Array<Point<3> >& ap) const
+double STLLine :: GetLength(const Array<Point<3>,STLPointId>& ap) const
 {
   double len = 0;
   for (int i = 2; i <= pts.Size(); i++)
-    {
-      len += (ap.Get(pts.Get(i)) - ap.Get(pts.Get(i-1))).Length();
-    }
+    len += (ap[pts.Get(i)] - ap[pts.Get(i-1)]).Length();
   return len;
 }
 
-void STLLine :: GetBoundingBox (const Array<Point<3> > & ap, Box<3> & box) const
+void STLLine :: GetBoundingBox (const Array<Point<3>,STLPointId> & ap, Box<3> & box) const
 {
-  box.Set (ap.Get (pts[0]));
+  box.Set (ap[pts[0]]);
   for (int i = 1; i < pts.Size(); i++)
-    box.Add (ap.Get(pts[i]));
+    box.Add (ap[pts[i]]);
 }
 
 
 
 Point<3> STLLine :: 
-GetPointInDist(const Array<Point<3> >& ap, double dist, int& index) const
+GetPointInDist(const Array<Point<3>,STLPointId>& ap, double dist, int& index) const
 {
   if (dist <= 0)
     {
       index = 1;
-      return ap.Get(StartP());
+      return ap[StartP()];
     }
   
   double len = 0;
   int i;
   for (i = 1; i < pts.Size(); i++)
     {
-      double seglen = Dist (ap.Get(pts.Get(i)),
-			    ap.Get(pts.Get(i+1)));
+      double seglen = Dist (ap[pts.Get(i)],
+			    ap[pts.Get(i+1)]);
 
       if (len + seglen > dist)
 	{
 	  index = i;
 	  double relval = (dist - len) / (seglen + 1e-16);
-	  Vec3d v (ap.Get(pts.Get(i)), ap.Get(pts.Get(i+1)));
-	  return ap.Get(pts.Get(i)) + relval * v;
+	  Vec3d v (ap[pts.Get(i)], ap[pts.Get(i+1)]);
+	  return ap[pts.Get(i)] + relval * v;
 	}
 
       len += seglen;
     }
 
   index = pts.Size() - 1;
-  return ap.Get(EndP());
+  return ap[EndP()];
 }
 
 
@@ -644,8 +643,8 @@ double GetH(const Point3d& p, double x)
   return stlgh;//+0.5)*(x+0.5);
 }
 */
-STLLine* STLLine :: Mesh(const Array<Point<3> >& ap, 
-			 Array<Point3d>& mp, double ghi,
+STLLine* STLLine :: Mesh(const Array<Point<3>,STLPointId>& ap, 
+			 NgArray<Point3d>& mp, double ghi,
 			 class Mesh& mesh) const
 {
   static int timer1a = NgProfiler::CreateTimer ("mesh stl-line 1a");
@@ -678,8 +677,8 @@ STLLine* STLLine :: Mesh(const Array<Point<3> >& ap,
   
   int nph = 10+int(maxseglen / minh); //anzahl der integralauswertungen pro segment
 
-  Array<double> inthi(GetNS()*nph);
-  Array<double> curvelen(GetNS()*nph);
+  NgArray<double> inthi(GetNS()*nph);
+  NgArray<double> curvelen(GetNS()*nph);
 
   NgProfiler::StopTimer (timer1a);
   NgProfiler::StartTimer (timer1b);
@@ -720,7 +719,7 @@ STLLine* STLLine :: Mesh(const Array<Point<3> >& ap,
   int j = 1;
 
 
-  p = ap.Get(StartP());
+  p = ap[StartP()];
   int pn = AddPointIfNotExists(mp, p, 1e-10*diam);
 
   int segn = 1;
@@ -773,7 +772,7 @@ STLLine* STLLine :: Mesh(const Array<Point<3> >& ap,
   NgProfiler::StartTimer (timer3);
 
 
-  p = ap.Get(EndP());
+  p = ap[EndP()];
   pn = AddPointIfNotExists(mp, p, 1e-10*diam);
   segn = GetNS();
   line->AddPoint(pn);

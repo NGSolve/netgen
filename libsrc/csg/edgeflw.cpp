@@ -10,7 +10,7 @@ namespace netgen
 
   EdgeCalculation :: 
   EdgeCalculation (const CSGeometry & ageometry,
-		   Array<SpecialPoint> & aspecpoints,
+		   NgArray<SpecialPoint> & aspecpoints,
                    MeshingParameters & amparam)
     : geometry(ageometry), specpoints(aspecpoints), mparam(amparam)
   {
@@ -48,7 +48,7 @@ namespace netgen
     // add all special points before edge points (important for periodic identification)
     // JS, Jan 2007
     const double di=1e-7*geometry.MaxSize();
-    Array<int> locsearch;
+    NgArray<int> locsearch;
 
     for (int i = 0; i < specpoints.Size(); i++)
       if (specpoints[i].unconditional)
@@ -96,9 +96,9 @@ namespace netgen
 
   void EdgeCalculation :: CalcEdges1 (double h, Mesh & mesh)
   {
-    Array<int> hsp(specpoints.Size());
-    Array<int> glob2hsp(specpoints.Size());
-    Array<int> startpoints, endpoints;
+    NgArray<int> hsp(specpoints.Size());
+    NgArray<int> glob2hsp(specpoints.Size());
+    NgArray<int> startpoints, endpoints;
 
 
     int pos, ep;
@@ -107,11 +107,11 @@ namespace netgen
     Point<3> p, np; 
     int pi1, s1, s2, s1_orig, s2_orig;
 
-    Array<Point<3> > edgepoints;
-    Array<double> curvelength;
+    NgArray<Point<3> > edgepoints;
+    NgArray<double> curvelength;
     int copyedge = 0, copyfromedge = -1, copyedgeidentification = -1;
 
-    Array<int> locsurfind, locind;
+    NgArray<int> locsurfind, locind;
 
     int checkedcopy = 0;
 
@@ -180,7 +180,7 @@ namespace netgen
 
 	pi1 = 0;
 	copyedge = 0;
-	// identifyable point available ?
+	// identifiable point available ?
 
 	
 	for (int i = 0; i < geometry.identifications.Size() && !pi1; i++)
@@ -191,8 +191,8 @@ namespace netgen
 			 << ", v = " << specpoints[startpoints[j]].v 
 			 << " for copying (i,j = " << i << ", " << j << ")" << endl;	  
 #endif
- 	      if (geometry.identifications[i]->IdentifyableCandidate (specpoints[startpoints[j]]) &&
-		  geometry.identifications[i]->IdentifyableCandidate (specpoints[endpoints[j]]))
+ 	      if (geometry.identifications[i]->IdentifiableCandidate (specpoints[startpoints[j]]) &&
+		  geometry.identifications[i]->IdentifiableCandidate (specpoints[endpoints[j]]))
 		  
 	      
 		{
@@ -201,7 +201,7 @@ namespace netgen
 		
 		  for (int k = 0; k < hsp.Size() && !pi1; k++)
 		    {
-		      //(*testout) << "   ? identifyable with " << specpoints[hsp[k]].p 
+		      //(*testout) << "   ? identifiable with " << specpoints[hsp[k]].p 
 		      //<< ", v = " << specpoints[hsp[k]].v
 		      //		 << endl;
 		      if (identification_used.Used (INDEX_2(i, startpoints[j])) ||
@@ -212,12 +212,12 @@ namespace netgen
 			}
 		      
 		      if (geometry.identifications[i]
-			  ->Identifyable(specpoints[startpoints[j]], specpoints[hsp[k]], specpoint2tlo, specpoint2surface) ||
+			  ->Identifiable(specpoints[startpoints[j]], specpoints[hsp[k]], specpoint2tlo, specpoint2surface) ||
 			  geometry.identifications[i]
-			  ->Identifyable(specpoints[hsp[k]], specpoints[startpoints[j]], specpoint2tlo, specpoint2surface))
+			  ->Identifiable(specpoints[hsp[k]], specpoints[startpoints[j]], specpoint2tlo, specpoint2surface))
 			{
 #ifdef DEVELOP
-			  (*testout) << "identifyable: " << specpoints[hsp[k]].p << ", v = " << specpoints[hsp[k]].v
+			  (*testout) << "identifiable: " << specpoints[hsp[k]].p << ", v = " << specpoints[hsp[k]].v
 				     << " and " << specpoints[startpoints[j]].p << ", v = " << specpoints[startpoints[j]].v 
 				     << " (identification " << i+1 << ")" << endl;
 #endif
@@ -245,7 +245,7 @@ namespace netgen
 	    }
 	
       
-	// cannot copy from other ege ?
+	// cannot copy from other edge ?
 	if (!pi1)
 	  checkedcopy = startpoints.Size();
       
@@ -406,8 +406,8 @@ namespace netgen
 	  }
 
       
-	Array<Segment> refedges;
-	Array<bool> refedgesinv;
+	NgArray<Segment> refedges;
+	NgArray<bool> refedgesinv;
       
 
 	AnalyzeEdge (s1_orig, s2_orig, s1, s2, pos, layer,
@@ -485,6 +485,29 @@ namespace netgen
 		      layer,
 		      mesh);
 	  }
+
+
+        {
+          // named edge ?
+          // cout << "check edge name, size = " << geometry.named_edges.size() << endl;
+          // for (auto pair : geometry.named_edges)
+          // cout << "key = " << get<0> (pair.first) << "-" << get<1> (pair.first) << ", val = " << pair.second << endl;
+          
+          Surface * sp1 = const_cast<Surface*> (geometry.GetSurface(s1));
+          Surface * sp2 = const_cast<Surface*> (geometry.GetSurface(s2));
+          // cout << "sp1 = " << sp1 << ", sp2 = " << sp2 << endl;
+
+          auto ptr = geometry.named_edges.find(tuple(sp1, sp2));
+          if (ptr != geometry.named_edges.end())
+            for (int i = 0; i < refedges.Size(); i++)
+              mesh.SetCD2Name(refedges[i].edgenr, ptr->second);
+          
+          ptr = geometry.named_edges.find(tuple(sp2, sp1));
+          if (ptr != geometry.named_edges.end())
+            for (int i = 0; i < refedges.Size(); i++)
+              mesh.SetCD2Name(refedges[i].edgenr, ptr->second);
+        }
+        
 	for(int i=0; i<refedges.Size(); i++)
 	  {
 	    auto splinesurface = dynamic_cast<const SplineSurface*>(geometry.GetSurface(refedges[i].surfnr1));
@@ -546,7 +569,7 @@ namespace netgen
     SegmentIndex si;
     PointIndex pi;
 
-    Array<int> osedges(cntedge);
+    NgArray<int> osedges(cntedge);
     INDEX_2_HASHTABLE<int> osedgesht (cntedge+1);
 
     osedges = 2;
@@ -678,17 +701,17 @@ namespace netgen
 
   void EdgeCalculation :: 
   FollowEdge (int pi1, int & ep, int & pos,
-	      const Array<int> & hsp,
+	      const NgArray<int> & hsp,
 	      double h, const Mesh & mesh,
-	      Array<Point<3> > & edgepoints,
-	      Array<double> & curvelength)
+	      NgArray<Point<3> > & edgepoints,
+	      NgArray<double> & curvelength)
   {
     int s1, s2, s1_rep, s2_rep;
     double len, steplen, cursteplen, loch;
     Point<3> p, np, pnp;
     Vec<3> a1, a2, t;
 
-    Array<int> locind;
+    NgArray<int> locind;
 
     double size = geometry.MaxSize();  
     double epspointdist2 = size * 1e-6;
@@ -904,14 +927,14 @@ namespace netgen
 
   void EdgeCalculation :: 
   AnalyzeEdge (int s1, int s2, int s1_rep, int s2_rep, int pos, int layer,
-	       const Array<Point<3> > & edgepoints,
-	       Array<Segment> & refedges,
-	       Array<bool> & refedgesinv)
+	       const NgArray<Point<3> > & edgepoints,
+	       NgArray<Segment> & refedges,
+	       NgArray<bool> & refedgesinv)
   {
     Segment seg;
-    Array<int> locsurfind, locsurfind2;
+    NgArray<int> locsurfind, locsurfind2;
 
-    Array<int> edges_priority;
+    NgArray<int> edges_priority;
 
     double size = geometry.MaxSize();
     bool debug = 0;
@@ -947,7 +970,7 @@ namespace netgen
   
     for (int i = 0; i < geometry.GetNTopLevelObjects(); i++)
       {
-	Solid * locsol;
+	// Solid * locsol;
 
 	if (geometry.GetTopLevelObject(i)->GetLayer() != layer) 
 	  continue;
@@ -955,7 +978,8 @@ namespace netgen
 	const Solid * sol = geometry.GetTopLevelObject(i)->GetSolid();
 	const Surface * surf = geometry.GetTopLevelObject(i)->GetSurface();
 
-	sol -> TangentialSolid (hp, locsol, locsurfind, size*ideps);
+	// sol -> TangentialSolid (hp, locsol, locsurfind, size*ideps);
+        auto locsol = sol -> TangentialSolid (hp, locsurfind, size*ideps);
 
 	//*testout << "hp = " << hp << endl;
 	//(*testout) << "locsol: " << endl;
@@ -972,7 +996,8 @@ namespace netgen
 	ReducePrimitiveIterator rpi(boxp);
 	UnReducePrimitiveIterator urpi;
       
-	((Solid*)locsol) -> IterateSolid (rpi);
+	// ((Solid*)locsol) -> IterateSolid (rpi);
+        locsol -> IterateSolid (rpi);
 
 	locsol -> CalcSurfaceInverse ();
       
@@ -997,7 +1022,8 @@ namespace netgen
 		}
 	  }
 
-	((Solid*)locsol) -> IterateSolid (urpi);
+	// ((Solid*)locsol) -> IterateSolid (urpi);
+        locsol -> IterateSolid (urpi);
 
       
 	if (debug)
@@ -1062,23 +1088,33 @@ namespace netgen
 	    //int k;
 	    double eps = 1e-8*size;
 
-	    Array<bool> pre_ok(2);
+            ArrayMem<bool,2> pre_ok(2);
+            bool flip = false;
 
  	    do
  	      {
  		eps *= 0.5;
- 		pre_ok[0] = (locsol -> VectorIn2 (hp, m, n, eps) == IS_OUTSIDE &&
-			     locsol -> VectorIn2 (hp, m, -1. * n, eps) == IS_INSIDE);
- 		pre_ok[1] = (locsol -> VectorIn2 (hp, -1.*m, n, eps) == IS_OUTSIDE &&
-			     locsol -> VectorIn2 (hp, -1.*m, -1. * n, eps) == IS_INSIDE);
+                auto in00 = locsol -> VectorIn2 (hp, m, n, eps);
+                auto in01 = locsol -> VectorIn2 (hp, m, -1. * n, eps);
+                pre_ok[0] = in00 == IS_OUTSIDE && in01 == IS_INSIDE;
+
+                if(in00 == IS_INSIDE && in01 == IS_OUTSIDE)
+                  pre_ok[0] = flip = true;
+
+                auto in10 = locsol -> VectorIn2 (hp, -1.*m, n, eps);
+                auto in11 = locsol -> VectorIn2 (hp, -1.*m, -1. * n, eps);
+                pre_ok[1] = (in10 == IS_OUTSIDE && in11 == IS_INSIDE);
+
+                if(in10 == IS_INSIDE && in11 == IS_OUTSIDE)
+                  pre_ok[1] = flip = true;
 		
 		if (debug)
 		  {
 		    *testout << "eps = " << eps << endl;
-		    *testout << "in,1 = " << locsol -> VectorIn2 (hp, m, n, eps) << endl;
-		    *testout << "in,1 = " << locsol -> VectorIn2 (hp, m, -1. * n, eps) << endl;
-		    *testout << "in,1 = " << locsol -> VectorIn2 (hp, -1.*m, n, eps) << endl;
-		    *testout << "in,1 = " << locsol -> VectorIn2 (hp, -1.*m, -1. * n, eps) << endl;
+                    *testout << "in,1 = " << in00 << endl;
+                    *testout << "in,1 = " << in01 << endl;
+                    *testout << "in,1 = " << in10 << endl;
+                    *testout << "in,1 = " << in11 << endl;
 		  }
  	      }
  	    while(pre_ok[0] && pre_ok[1] && eps > 1e-16*size);
@@ -1127,10 +1163,10 @@ namespace netgen
 		m2 = fac * grad;
 		// (*testout) << "hp = " << hp << ", m = " << m << ", m2 = " << m2 << endl;
 
-		Solid * locsol2;
-		locsol -> TangentialSolid3 (hp, m, m2, locsol2, locsurfind2, ideps*size);
+		// Solid * locsol2;
+		auto locsol2 = locsol -> TangentialSolid3 (hp, m, m2, locsurfind2, ideps*size);
 		if (!locsol2) ok = 0;
-		delete locsol2;
+		// delete locsol2;
 
 
 		if (ok)
@@ -1174,7 +1210,10 @@ namespace netgen
 		  
 		    if (!surf)
 		      {
-			if (sameasref)
+                        bool inside = sameasref;
+                        if(flip)
+                          inside = !inside;
+                        if (inside)
 			  refedges.Elem(hi).domin = i;
 			else 
 			  refedges.Elem(hi).domout = i;
@@ -1223,7 +1262,7 @@ namespace netgen
 		m *= -1;
 	      } 
 	  }
-	delete locsol;          
+	// delete locsol;          
       }
 
    
@@ -1232,8 +1271,11 @@ namespace netgen
 	*testout << "Refsegments, before delete: " << endl << refedges << endl;
 	*testout << "inv: " << endl << refedgesinv << endl;
       }
+
+    if(refedges.Size() == 0)
+      throw Exception("No edges found, something wrong.");
     
-    BitArray todelete(refedges.Size());
+    NgBitArray todelete(refedges.Size());
     todelete.Clear();
 
 
@@ -1291,17 +1333,17 @@ namespace netgen
 
 
   void EdgeCalculation :: 
-  StoreEdge (const Array<Segment> & refedges,
-	     const Array<bool> & refedgesinv,
-	     const Array<Point<3> > & edgepoints,
-	     const Array<double> & curvelength,
+  StoreEdge (const NgArray<Segment> & refedges,
+	     const NgArray<bool> & refedgesinv,
+	     const NgArray<Point<3> > & edgepoints,
+	     const NgArray<double> & curvelength,
 	     int layer,
 	     Mesh & mesh)
   {
   
     // Calculate optimal element-length
     int i, j, k;
-    PointIndex pi;
+    // PointIndex pi;
     int ne;
 
     double len, corr, lam;
@@ -1326,7 +1368,7 @@ namespace netgen
 
     // generate initial point
     p = edgepoints.Get(1);
-    lastpi = -1;
+    lastpi = PointIndex::INVALID;
 
     /*
     for (pi = PointIndex::BASE; 
@@ -1340,7 +1382,7 @@ namespace netgen
 
     const double di=1e-7*geometry.MaxSize();
 
-    Array<int> locsearch;
+    NgArray<int> locsearch;
     meshpoint_tree -> GetIntersecting (p-Vec<3> (di,di,di),
 				       p+Vec<3> (di,di,di), locsearch);
     if (locsearch.Size())
@@ -1348,7 +1390,7 @@ namespace netgen
 				       
 
 
-    if (lastpi == -1)
+    if (!lastpi.IsValid())
       {
 	lastpi = mesh.AddPoint (p, layer, FIXEDPOINT);
 	meshpoint_tree -> Insert (p, lastpi); 
@@ -1368,7 +1410,7 @@ namespace netgen
 	np(1) = (1-lam) * edgepoints.Get(j-1)(1) + lam * edgepoints.Get(j)(1);
 	np(2) = (1-lam) * edgepoints.Get(j-1)(2) + lam * edgepoints.Get(j)(2);
       
-	thispi = -1;
+        thispi = PointIndex::INVALID;
 	if (i == ne)
 	  {
 	    /*
@@ -1384,7 +1426,7 @@ namespace netgen
 	      thispi = locsearch[0];
 	  }
 
-	if (thispi == -1)
+	if (!thispi.IsValid())
 	  {
 	    ProjectToEdge (surf1, surf2, np);
 	    thispi = mesh.AddPoint (np, layer, (i==ne) ? FIXEDPOINT : EDGEPOINT);
@@ -1463,10 +1505,10 @@ namespace netgen
 
 
   void EdgeCalculation :: 
-  StoreShortEdge (const Array<Segment> & refedges,
-		  const Array<bool> & refedgesinv,
-		  const Array<Point<3> > & edgepoints,
-		  const Array<double> & curvelength,
+  StoreShortEdge (const NgArray<Segment> & refedges,
+		  const NgArray<bool> & refedgesinv,
+		  const NgArray<Point<3> > & edgepoints,
+		  const NgArray<double> & curvelength,
 		  int layer,
 		  Mesh & mesh)
   {
@@ -1496,7 +1538,7 @@ namespace netgen
 
     // generate initial point
     Point<3> p = edgepoints[0];
-    PointIndex pi1 = -1;
+    PointIndex pi1 = PointIndex::INVALID;
     for (pi = PointIndex::BASE; 
 	 pi < mesh.GetNP()+PointIndex::BASE; pi++)
 
@@ -1506,7 +1548,7 @@ namespace netgen
 	  break;
 	}
 
-    if (pi1 == -1) 
+    if (!pi1.IsValid())
       {
 	pi1 = mesh.AddPoint (p, layer, FIXEDPOINT);
 	meshpoint_tree -> Insert (p, pi1);
@@ -1514,7 +1556,7 @@ namespace netgen
       }
 
     p = edgepoints.Last();
-    PointIndex pi2 = -1;
+    PointIndex pi2 = PointIndex::INVALID;
     for (pi = PointIndex::BASE; 
 	 pi < mesh.GetNP()+PointIndex::BASE; pi++)
 
@@ -1523,7 +1565,7 @@ namespace netgen
 	  pi2 = pi;
 	  break;
 	}
-    if (pi2==-1) 
+    if (!pi2.IsValid())
       {
 	pi2 = mesh.AddPoint (p, layer, FIXEDPOINT);
 	meshpoint_tree -> Insert (p, pi2);
@@ -1594,8 +1636,8 @@ namespace netgen
 
 
   void EdgeCalculation :: 
-  CopyEdge (const Array<Segment> & refedges,
-	    const Array<bool> & refedgesinv,
+  CopyEdge (const NgArray<Segment> & refedges,
+	    const NgArray<bool> & refedgesinv,
 	    int copyfromedge, 
 	    const Point<3> & fromstart, const Point<3> & fromend,
 	    const Point<3> & tostart, const Point<3> & toend,
@@ -1616,8 +1658,8 @@ namespace netgen
 	Point<3> top =
 	  (i == 1) ? tostart : toend;
       
-	PointIndex frompi = -1;
-	PointIndex topi = -1;
+	PointIndex frompi = PointIndex::INVALID;
+	PointIndex topi = PointIndex::INVALID;
 	for (pi = PointIndex::BASE; 
 	     pi < mesh.GetNP()+PointIndex::BASE; pi++)
 	  {
@@ -1628,7 +1670,7 @@ namespace netgen
 	  }
 
 	
-	if (topi == -1)
+	if (!topi.IsValid())
 	  {
 	    topi = mesh.AddPoint (top, layer, FIXEDPOINT);
 	    meshpoint_tree -> Insert (top, topi);
@@ -1638,9 +1680,9 @@ namespace netgen
 	  (*geometry.identifications.Get(copyedgeidentification));
 
 
-	if (csi.Identifyable (mesh[frompi], mesh[topi]))
+	if (csi.Identifiable (mesh[frompi], mesh[topi]))
 	  mesh.GetIdentifications().Add(frompi, topi, copyedgeidentification);
-	else if (csi.Identifyable (mesh[topi], mesh[frompi]))
+	else if (csi.Identifiable (mesh[topi], mesh[frompi]))
 	  mesh.GetIdentifications().Add(topi, frompi, copyedgeidentification);
 	else
 	  {
@@ -1741,14 +1783,14 @@ namespace netgen
     int nsurf = geometry.GetNSurf();
     int layer = 0;
 
-    Solid * tansol;
-    Array<int> tansurfind;
+    // Solid * tansol;
+    NgArray<int> tansurfind;
 
     double size = geometry.MaxSize();
     int nsol = geometry.GetNTopLevelObjects();
     
 
-    BitArray pointatsurface (nsurf);
+    NgBitArray pointatsurface (nsurf);
     pointatsurface.Clear();
   
     for (int i = 1; i <= mesh.GetNSeg(); i++)
@@ -1799,7 +1841,8 @@ namespace netgen
 		  continue;
 		  
 		const Solid * sol = geometry.GetTopLevelObject(j)->GetSolid();
-		sol -> TangentialSolid (p1, tansol, tansurfind, ideps*size);
+		// sol -> TangentialSolid (p1, tansol, tansurfind, ideps*size);
+                auto tansol = sol -> TangentialSolid (p1, tansurfind, ideps*size);
 		layer = geometry.GetTopLevelObject(j)->GetLayer();
 
 		
@@ -1829,7 +1872,7 @@ namespace netgen
 			//        seg.invs1 = surfaces[i] -> Inverse();
 			//        seg.invs2 = ! (surfaces[i] -> Inverse());
 		      }
-		    delete tansol;
+		    // delete tansol;
 		  }
 	      }
 

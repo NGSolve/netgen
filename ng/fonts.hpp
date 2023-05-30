@@ -2312,6 +2312,8 @@ namespace netgen {
 
             return list_base;
         }
+        int Width() { return w; };
+        int Height() { return h; };
     };
 
     // create Fonts statically and return pointer on selecting

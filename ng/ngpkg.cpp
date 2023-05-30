@@ -22,6 +22,8 @@ The interface between the GUI and the netgen library
 #include "../libsrc/sockets/socketmanager.hpp"
 #endif
 
+#include "../libsrc/general/gzstream.h"
+
 
 // to be sure to include the 'right' togl-version
 #include "Togl2.1/togl.h"
@@ -94,8 +96,8 @@ namespace netgen
 #ifdef SOCKETS
   AutoPtr<ClientSocket> clientsocket;
   ServerSocketManager serversocketmanager;
-  //Array< AutoPtr < ServerInfo > > servers;
-  Array< ServerInfo* > servers;
+  //NgArray< AutoPtr < ServerInfo > > servers;
+  NgArray< ServerInfo* > servers;
   AutoPtr<ServerSocketUserNetgen> serversocketusernetgen;
 #endif
 
@@ -103,7 +105,6 @@ namespace netgen
 
   // visualization scenes, pointer vs selects which one is drawn:
 
-  static VisualScene vscross;
   DLL_HEADER extern VisualSceneSurfaceMeshing vssurfacemeshing;
   DLL_HEADER extern VisualSceneMeshDoctor vsmeshdoc;
 
@@ -111,7 +112,8 @@ namespace netgen
 
 
 
-  VisualScene *vs = &vscross;
+  DLL_HEADER extern VisualScene *visual_scene;
+  DLL_HEADER extern VisualScene visual_scene_cross;
 
 
 
@@ -121,39 +123,6 @@ namespace netgen
 
 
 
-
-#ifndef SMALLLIB
-//  // Destination for messages, errors, ...
-#ifndef WIN32
-  DLL_HEADER void Ng_PrintDest(const char * s)
-  {
-    /*
-#ifdef PARALLEL
-    int id, ntasks;
-    MPI_Comm_size(MPI_COMM_WORLD, &ntasks);
-    MPI_Comm_rank(MPI_COMM_WORLD, &id);
-#else
-    int id = 0; int ntasks = 1;
-#endif
-    */
-
-    if (id == 0)
-      (*mycout) << s << flush;
-
-    /*
-    if ( ntasks == 1 )
-      (*mycout) << s << flush;
-    else
-      (*mycout) << "p" << id << ": " << s << flush ;
-    */
-  }
-#endif
-  void MyError2(const char * ch)
-  {
-    cout << ch;
-    (*testout) << "Error !!! " << ch << endl << flush;
-  }
-#endif
 
   static clock_t starttimea;
   void ResetTime2 ()
@@ -203,9 +172,9 @@ namespace netgen
 		   Tcl_Interp * interp,
 		   int argc, tcl_const char *argv[])
   {
-    string filename (argv[1]);
+    auto filename = filesystem::u8path(argv[1]);
 
-    if (filename.find(".vol") == string::npos) 
+    if (filename.string().find(".vol") == string::npos)
       {
 	return Ng_ImportMesh(clientData,interp,argc,argv);
       }
@@ -215,48 +184,15 @@ namespace netgen
     mesh = make_shared<Mesh>();
     try
       {
-        istream * infile;
-        // if (filename.substr (filename.length()-3, 3) == ".gz")
-        if (filename.find(".vol.gz") != string::npos)
-          infile = new igzstream (filename.c_str());
-        else
-          infile = new ifstream (filename.c_str());
-
-	// ifstream infile(filename.c_str());
-	mesh -> Load(*infile);
-        // vsmesh.SetMesh (mesh);
+	mesh -> Load(filename);
         SetGlobalMesh (mesh);
 
-#ifdef PARALLEL
+#ifdef PARALLEL_NETGEN
 	MyMPI_SendCmd ("mesh");
 	mesh -> Distribute();
 #endif
-	for (int i = 0; i < geometryregister.Size(); i++)
-	  {
-	    NetgenGeometry * hgeom = geometryregister[i]->LoadFromMeshFile (*infile);
-	    if (hgeom)
-	      {
-                ng_geometry = shared_ptr<NetgenGeometry>(hgeom);
-		break;
-	      }
-	  }
-        delete infile;
-
-	/*
-	string auxstring;
-	if(infile.good())
-	  {
-	    infile >> auxstring;
-	    if(auxstring == "csgsurfaces")
-	      {
-		CSGeometry * geometry = new CSGeometry ("");
-		geometry -> LoadSurfaces(infile);
-
-		delete ng_geometry;
-		ng_geometry = geometry;
-	      }
-	  }
-	*/
+        if(mesh->GetGeometry())
+          ng_geometry = mesh->GetGeometry();
       }
     catch (NgException e)
       {
@@ -346,7 +282,21 @@ namespace netgen
   }
 
 
-
+  int Ng_GetExportFormats (ClientData clientData,
+                           Tcl_Interp * interp,
+                           int argc, tcl_const char *argv[])
+  {
+    NgArray<const char*> userformats;
+    NgArray<const char*> extensions;
+    RegisterUserFormats (userformats, extensions);
+    
+    ostringstream fstr;
+    for (int i = 1; i <= userformats.Size(); i++)
+      fstr << "{ {" << userformats.Get(i) << "} {" << extensions.Get(i) << "} }\n";
+    
+    Tcl_SetResult (interp, const_cast<char*>(fstr.str().c_str()), TCL_VOLATILE);
+    return TCL_OK;
+  }
 
 
   int Ng_ExportMesh (ClientData clientData,
@@ -391,6 +341,7 @@ namespace netgen
     PrintMessage (2, mesh->GetNP(), " Points, ",
 		  mesh->GetNE(), " Elements.");
 
+    SetGlobalMesh (mesh);
     mesh->SetGlobalH (mparam.maxh);
     mesh->CalcLocalH(mparam.grading);
 
@@ -522,6 +473,7 @@ namespace netgen
                 // delete ng_geometry;
 		// ng_geometry = hgeom;
                 ng_geometry = shared_ptr<NetgenGeometry> (hgeom);
+                geometryregister[i]->SetParameters(interp);
 		
 		mesh.reset();
 		return TCL_OK;
@@ -664,40 +616,96 @@ namespace netgen
 		     int argc, tcl_const char *argv[])
   {
     char buf[20], lstring[200];
+    static int prev_np = -1;
+    static int prev_ne = -1;
+    static int prev_nse = -1;
+    
     if (mesh)
       {
-	sprintf (buf, "%d", mesh->GetNP());
-        Tcl_SetVar  (interp, "::status_np", buf, 0);
-	sprintf (buf, "%d", mesh->GetNE());
-        Tcl_SetVar  (interp, "::status_ne", buf, 0);
-	sprintf (buf, "%d", mesh->GetNSE());
-        Tcl_SetVar  (interp, "::status_nse", buf, 0);
+        if (prev_np != mesh->GetNP())
+          {
+            snprintf (buf, size(buf),  "%u", unsigned(mesh->GetNP()));
+            Tcl_SetVar  (interp, "::status_np", buf, 0);
+            prev_np = mesh->GetNP();
+          }
+
+        if (prev_ne != mesh->GetNE())
+          {
+            snprintf (buf, size(buf),  "%u", unsigned(mesh->GetNE()));
+            Tcl_SetVar  (interp, "::status_ne", buf, 0);
+            prev_ne = mesh->GetNE();
+          }
+
+        if (prev_nse != mesh->GetNSE())
+          {
+            snprintf (buf, size(buf),  "%u", unsigned(mesh->GetNSE()));
+            Tcl_SetVar  (interp, "::status_nse", buf, 0);
+            prev_nse = mesh->GetNSE();
+          }
+        
+        auto tets_in_qualclass = mesh->GetQualityHistogram();
+        lstring[0] = 0;
+        for (int i = 0; i < tets_in_qualclass.Size(); i++)
+          {
+            snprintf (buf, size(buf),  " %d", tets_in_qualclass[i]);
+            strcat (lstring, buf);
+          }
+        for (int i = tets_in_qualclass.Size(); i < 20; i++)
+            strcat (lstring, " 0");
+        Tcl_SetVar  (interp, "::status_tetqualclasses", lstring, 0);
       }
     else
       {
-        Tcl_SetVar  (interp, "::status_np", "0", 0);
-        Tcl_SetVar  (interp, "::status_ne", "0", 0);
-        Tcl_SetVar  (interp, "::status_nse", "0", 0);
+        if (prev_np != 0)
+          {
+            Tcl_SetVar  (interp, "::status_np", "0", 0);
+            prev_np = 0;
+          }
+
+        if (prev_ne != 0)
+          {
+            Tcl_SetVar  (interp, "::status_ne", "0", 0);
+            prev_ne = 0;
+          }
+
+        if (prev_nse != 0)
+          {
+            Tcl_SetVar  (interp, "::status_nse", "0", 0);
+            prev_nse = 0;
+          }
+        Tcl_SetVar  (interp, "::status_tetqualclasses", "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0", 0);
       }
 
+    static string prev_working;
+    string working = multithread.running ? "working" : "       ";
+    if (working != prev_working)
+      {
+        Tcl_SetVar (interp, "::status_working", working.c_str(), 0);
+        prev_working = working;
+      }
+
+    /*
     if (multithread.running)
       Tcl_SetVar (interp, "::status_working", "working", 0);
     else
       Tcl_SetVar (interp, "::status_working", "       ", 0);
-
-    Tcl_SetVar (interp, "::status_task", const_cast<char *>(multithread.task), 0);
-    sprintf (buf, "%lf", multithread.percent);
-    Tcl_SetVar  (interp, "::status_percent", buf, 0);
-
-    lstring[0] = 0;
-    for (int i = 1; i <= tets_in_qualclass.Size(); i++)
+    */
+    
+    static string prev_task;
+    if (prev_task != string(multithread.task))
       {
-	sprintf (buf, " %d", tets_in_qualclass.Get(i));
-	strcat (lstring, buf);
+        prev_task = multithread.task;
+        Tcl_SetVar (interp, "::status_task", prev_task.c_str(), 0);
       }
-    for (int i = tets_in_qualclass.Size()+1; i <= 20; i++)
-      strcat (lstring, " 0");
-    Tcl_SetVar  (interp, "::status_tetqualclasses", lstring, 0);
+
+    static double prev_percent = -1;
+    if (prev_percent != multithread.percent)
+      {
+        prev_percent = multithread.percent;
+        snprintf (buf, size(buf),  "%lf", prev_percent);
+        Tcl_SetVar  (interp, "::status_percent", buf, 0);
+      }
+        
 
     {
       lock_guard<mutex> guard(tcl_todo_mutex);
@@ -772,7 +780,7 @@ namespace netgen
 	int facenr = atoi (argv[2]);
 	if (mesh && facenr >= 1 && facenr <= mesh->GetNFD())
 	  {
-	    sprintf (buf, "%d", mesh->GetFaceDescriptor(facenr).BCProperty());
+	    snprintf (buf, size(buf),  "%d", mesh->GetFaceDescriptor(facenr).BCProperty());
 	  }
 	else
 	  {
@@ -786,7 +794,7 @@ namespace netgen
 	int facenr = atoi (argv[2]);
 	if (mesh && facenr >= 1 && facenr <= mesh->GetNFD())
 	  {
-	    sprintf (buf, "%s", mesh->GetFaceDescriptor(facenr).GetBCName().c_str());
+	    snprintf (buf, size(buf),  "%s", mesh->GetFaceDescriptor(facenr).GetBCName().c_str());
 	  }
 	else
 	  {
@@ -798,7 +806,7 @@ namespace netgen
 
     if (strcmp (argv[1], "getactive") == 0)
       {
-	sprintf (buf, "%d", vsmesh.SelectedFace());
+	snprintf (buf, size(buf),  "%d", vsmesh.SelectedFace());
 	Tcl_SetResult (interp, buf, TCL_STATIC);
       }
 
@@ -814,9 +822,9 @@ namespace netgen
     if (strcmp (argv[1], "getnfd") == 0)
       {
 	if (mesh)
-	  sprintf (buf, "%d", mesh->GetNFD());
+	  snprintf (buf, size(buf),  "%d", mesh->GetNFD());
 	else
-	  sprintf (buf, "0");
+	  snprintf (buf, size(buf),  "0");
 	Tcl_SetResult (interp, buf, TCL_STATIC);
       }
 
@@ -1100,8 +1108,8 @@ namespace netgen
      cout << "Number of surfaces entered = " << surfid.Size() << endl; 
      cout << "Selected surfaces are:" << endl;
      
-     for(int i = 1; i <= surfid.Size(); i++)
-       cout << "Surface " << i << ": " << surfid.Elem(i) << endl;
+     for(auto i : Range(surfid))
+       cout << "Surface " << i << ": " << surfid[i] << endl;
      
      cout << endl << "Enter number of prism layers: ";
      cin >> prismlayers;
@@ -1117,9 +1125,14 @@ namespace netgen
      
      BoundaryLayerParameters blp;
      blp.surfid = surfid;
-     blp.prismlayers = prismlayers;
-     blp.hfirst = blp.hfirst;
-     blp.growthfactor = growthfactor;
+     for(auto i : Range(prismlayers))
+       {
+         auto layer = i+1;
+         if(growthfactor == 1)
+           blp.heights.Append(layer * hfirst);
+         else
+           blp.heights.Append(hfirst * (pow(growthfactor, (layer+1))-1)/(growthfactor-1));
+       }
      GenerateBoundaryLayer (*mesh, blp);
      return TCL_OK;
   }
@@ -1204,10 +1217,17 @@ namespace netgen
 
     mparam.autozrefine = atoi (Tcl_GetVar (interp, "::options.autozrefine", 0));
 
-    extern int printmessage_importance;
+    // extern int printmessage_importance;
     extern int printdots;
     printmessage_importance = atoi (Tcl_GetVar (interp, "::options.printmsg", 0));
     printdots = (printmessage_importance >= 4);
+
+    mparam.parallel_meshing = atoi (Tcl_GetVar (interp, "::options.parallel_meshing", 0));
+    mparam.nthreads = atoi (Tcl_GetVar (interp, "::options.nthreads", 0));
+    if(atoi(Tcl_GetVar (interp, "::stloptions.resthcloseedgeenable", 0)))
+      mparam.closeedgefac = atof(Tcl_GetVar (interp, "::stloptions.resthcloseedgefac", 0));
+    else
+      mparam.closeedgefac = {};
 
     //BaseMoveableMem::totalsize = 0;
     // 1048576 * atoi (Tcl_GetVar (interp, "::options.memory", 0));
@@ -1217,7 +1237,7 @@ namespace netgen
 	mesh->SetMinimalH (mparam.minh);
       }
 
-#ifdef PARALLEL
+#ifdef PARALLELGL
     MyMPI_SendCmd ("bcastparthread");
     MyMPI_Bcast (mparam.parthread, MPI_COMM_WORLD);
 #endif
@@ -1249,6 +1269,28 @@ namespace netgen
 
 
 
+  int Ng_SetCommandLineParameter  (ClientData clientData,
+				   Tcl_Interp * interp,
+				   int argc, tcl_const char *argv[])
+  {
+    if (argc != 2)
+      {
+	Tcl_SetResult (interp, (char*)"Ng_SetCommandLineParameter needs 1 parameter",
+                       TCL_STATIC);
+	return TCL_ERROR;
+      }
+
+    if (argv[1][0] == '-')
+      parameters.SetCommandLineFlag (argv[1]);
+    else
+      {
+        if (strstr(argv[1], ".py"))
+          parameters.SetFlag ("py", argv[1]);
+        else
+          parameters.SetFlag ("geofile", argv[1]);
+      }
+    return TCL_OK;
+  }
 
 
   int Ng_GetCommandLineParameter  (ClientData clientData,
@@ -1265,11 +1307,11 @@ namespace netgen
     static char buf[10];
 
     if (parameters.StringFlagDefined (argv[1]))
-      Tcl_SetResult (interp,
-		     (char*)parameters.GetStringFlag (argv[1], NULL), TCL_STATIC);
+        Tcl_SetResult (interp,
+                       const_cast<char*>(parameters.GetStringFlag (argv[1], NULL).c_str()), TCL_VOLATILE);
     else if (parameters.NumFlagDefined (argv[1]))
       {
-	sprintf (buf, "%lf", parameters.GetNumFlag (argv[1], 0));
+	snprintf (buf, size(buf),  "%lf", parameters.GetNumFlag (argv[1], 0));
 	Tcl_SetResult (interp, buf, TCL_STATIC);
       }
     else if (parameters.GetDefineFlag (argv[1]))
@@ -1314,12 +1356,19 @@ namespace netgen
 #endif
           if (ng_geometry)
 	    {
-              mesh = make_shared<Mesh> ();
-              // vsmesh.SetMesh (mesh);
-              SetGlobalMesh (mesh);
-              mesh -> SetGeometry(ng_geometry);
+              if (perfstepsstart == 1)
+                {
+                  mesh = make_shared<Mesh> ();
+                  // vsmesh.SetMesh (mesh);
+                  SetGlobalMesh (mesh);
+                  mesh -> SetGeometry(ng_geometry);
+                }
+              if(!mesh)
+                throw Exception("Need existing global mesh");
               mparam.perfstepsstart = perfstepsstart;
 	      mparam.perfstepsend = perfstepsend;
+              if(optstring)
+                mparam.optimize3d = *optstring;
               int res = ng_geometry -> GenerateMesh (mesh, mparam);
 
 	      if (res != MESHING3_OK) 
@@ -1329,6 +1378,14 @@ namespace netgen
 		  return 0;
 		}
 	    }
+          else if (mesh)
+            {
+              if(perfstepsstart > 1 && perfstepsstart < 5)
+                throw Exception("Need geometry for surface mesh operations!");
+              MeshVolume(mparam, *mesh);
+              OptimizeVolume(mparam, *mesh);
+              return 0;
+            }
           else // no ng_geometry
             {
               multithread.task = savetask;
@@ -1529,13 +1586,13 @@ namespace netgen
       {
 	angles[0] = angles[1] = angles[2] = angles[3] = 0;
       }
-    sprintf (buf, "%5.1lf", angles[0]);
+    snprintf (buf, size(buf),  "%5.1lf", angles[0]);
     Tcl_SetVar (interp, argv[1], buf, 0);
-    sprintf (buf, "%5.1lf", angles[1]);
+    snprintf (buf, size(buf),  "%5.1lf", angles[1]);
     Tcl_SetVar (interp, argv[2], buf, 0);
-    sprintf (buf, "%5.1lf", angles[2]);
+    snprintf (buf, size(buf),  "%5.1lf", angles[2]);
     Tcl_SetVar (interp, argv[3], buf, 0);
-    sprintf (buf, "%5.1lf", angles[3]);
+    snprintf (buf, size(buf),  "%5.1lf", angles[3]);
     Tcl_SetVar (interp, argv[4], buf, 0);
 
     return TCL_OK;
@@ -1857,7 +1914,8 @@ namespace netgen
   {
     const char * vismode = vispar.selectvisual;
     // Tcl_GetVar (interp, "selectvisual", 0);
-    vs = &vscross;
+    VisualScene *& vs = visual_scene;
+    vs = &visual_scene_cross;
     if (GetVisualizationScenes().Used(vismode))
       {
 	vs = GetVisualizationScenes()[vismode];
@@ -1890,7 +1948,7 @@ namespace netgen
 	      vs = &vsmeshdoc;
 	  }
 
-	// if (strcmp (vismode, "surfmeshing") == 0) vs = &vssurfacemeshing;
+	if (strcmp (vismode, "surfmeshing") == 0) vs = &vssurfacemeshing;
 	if (strcmp (vismode, "specpoints") == 0) vs = &vsspecpoints;
         if (strcmp (vismode, "solution") == 0) vs = &netgen::GetVSSolution();
       }
@@ -1933,8 +1991,8 @@ namespace netgen
     glMatrixMode(GL_MODELVIEW);
 
     SetVisualScene (Togl_Interp(togl));
-    vs->DrawScene();
-    Set_OpenGLText_Callback (&MyOpenGLText_GUI);
+    visual_scene->DrawScene();
+    Set_OpenGLText_Callback (&MyOpenGLText_GUI, font->Width());
     return TCL_OK;
   }
 
@@ -1953,7 +2011,7 @@ namespace netgen
     glPushMatrix();
 
     glLoadIdentity();
-    vs->DrawScene();
+    visual_scene->DrawScene();
     Togl_SwapBuffers(togl);
 
     glPopMatrix();
@@ -2007,7 +2065,7 @@ namespace netgen
     int w = Togl_PixelScale(togl)*Togl_Width (togl);
     int h = Togl_PixelScale(togl)*Togl_Height (togl);
 
-    Array<unsigned char> buffer(w*h*3);
+    NgArray<unsigned char> buffer(w*h*3);
     glPixelStorei(GL_UNPACK_ALIGNMENT,1);
     glPixelStorei(GL_PACK_ALIGNMENT,1);
     glReadPixels (0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, &buffer[0]);
@@ -2174,7 +2232,7 @@ namespace netgen
     newy = atoi (argv[4]);
 
     SetVisualScene(interp);
-    vs->MouseMove (oldx, oldy, newx, newy, argv[5][0]);
+    visual_scene->MouseMove (oldx, oldy, newx, newy, argv[5][0]);
 
     return TCL_OK;
   }
@@ -2188,7 +2246,7 @@ namespace netgen
     int py = Togl_PixelScale(togl)*atoi (argv[2]);
 
     SetVisualScene(interp);
-    vs->MouseDblClick (px, py);
+    visual_scene->MouseDblClick (px, py);
 
     return TCL_OK;
   }
@@ -2199,7 +2257,7 @@ namespace netgen
 		  int argc, tcl_const char *argv[])
   {
     SetVisualScene(interp);
-    vs->BuildScene (1);
+    visual_scene->BuildScene (1);
 
     return TCL_OK;
   }
@@ -2210,7 +2268,7 @@ namespace netgen
 		 int argc, tcl_const char *argv[])
   {
     SetVisualScene(interp);
-    vs->BuildScene (2);
+    visual_scene->BuildScene (2);
 
     return TCL_OK;
   }
@@ -2221,7 +2279,7 @@ namespace netgen
 			   int argc, tcl_const char *argv[])
   {
     SetVisualScene(interp);
-    vs->StandardRotation (argv[1]);
+    visual_scene->StandardRotation (argv[1]);
 
     return TCL_OK;
   }
@@ -2231,8 +2289,8 @@ namespace netgen
 			    int argc, tcl_const char *argv[])
   {
     SetVisualScene(interp);
-    Array<double> alpha;
-    Array<Vec3d> vec;
+    NgArray<double> alpha;
+    NgArray<Vec3d> vec;
 
     for(int i=1; i<argc; i+=4)
       {
@@ -2240,7 +2298,7 @@ namespace netgen
 	vec.Append(Vec3d(atof(argv[i+1]),atof(argv[i+2]),atof(argv[i+3])));
       }
 
-    vs->ArbitraryRotation (alpha,vec);
+    visual_scene->ArbitraryRotation (alpha,vec);
 
     return TCL_OK;
   }
@@ -2261,7 +2319,7 @@ namespace netgen
     int nparts = atoi (argv[1]);
     ntasks = nparts+1;
     cout << "calling metis ... " << flush;
-    mesh->ParallelMetis();
+    mesh->ParallelMetis(ntasks);
     cout << "done" << endl;
     ntasks = 1;
 
@@ -2357,7 +2415,7 @@ namespace netgen
   void SelectFaceInOCCDialogTree (int facenr)
   {
     char script[50];
-    sprintf (script, "selectentity {Face %i}", facenr);
+    snprintf (script, size(script), "selectentity {Face %i}", facenr);
     Tcl_GlobalEval (tcl_interp, script);
   }
 
@@ -2390,7 +2448,7 @@ namespace netgen
     // #ifdef OPENGL
     // #ifndef NOTCL
     char buf[100];
-    sprintf (buf, "visoptions.%s", name);
+    snprintf (buf, size(buf),  "visoptions.%s", name);
     if (printmessage_importance>0)
       {
 	cout << "name = " << name << ", value = " << value << endl;
@@ -2446,7 +2504,7 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
   int rti = (animcnt%(maxcnt-1)) + 1;
   animcnt+=speed;
   
-  sprintf(str2,"%05i.sol",rti);
+  snprintf(str2, sizeof(str2), "%05i.sol",rti);
   strcpy(str,"mbssol/");
   strcat(str,name);
   strcat(str,str2);
@@ -2703,7 +2761,7 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
     //cout << "stopped acis, outcome = " << res.ok() << endl;
 #endif
 
-#ifdef PARALLEL
+#ifdef PARALLELGL
     if (id == 0) MyMPI_SendCmd ("end");
     MPI_Finalize();
 #endif
@@ -2812,6 +2870,10 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 		       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_MergeMesh", Ng_MergeMesh,
+		       (ClientData)NULL,
+		       (Tcl_CmdDeleteProc*) NULL);
+
+    Tcl_CreateCommand (interp, "Ng_GetExportFormats", Ng_GetExportFormats,
 		       (ClientData)NULL,
 		       (Tcl_CmdDeleteProc*) NULL);
 
@@ -3011,6 +3073,11 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 		       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_SetDebugParameters", Ng_SetDebugParameters,
+		       (ClientData)NULL,
+		       (Tcl_CmdDeleteProc*) NULL);
+
+    Tcl_CreateCommand (interp, "Ng_SetCommandLineParameter",
+		       Ng_SetCommandLineParameter,
 		       (ClientData)NULL,
 		       (Tcl_CmdDeleteProc*) NULL);
 

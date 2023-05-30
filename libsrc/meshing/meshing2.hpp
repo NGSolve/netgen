@@ -29,11 +29,11 @@ derive from Meshing2, and replace transformation.
 class Meshing2
 {
   /// the current advancing front
-  AdFront2 * adfront;
+  AdFront2 adfront;
   /// rules for mesh generation
-  Array<netrule*> rules;
+  Array<unique_ptr<netrule>> rules;
   /// statistics
-  Array<int> ruleused, canuse, foundmap;
+  NgArray<int> ruleused, canuse, foundmap;
   /// 
   Box<3> boundingbox;
   ///
@@ -41,12 +41,16 @@ class Meshing2
   ///
   double maxarea;
 
-  Vec3d ex, ey;
-  Point3d globp1;
+  Vec3d ex, ey, ez;
+  Point<3> p1, p2;
+
+  const NetgenGeometry& geo;
 
 public:
   ///
-  DLL_HEADER Meshing2 (const MeshingParameters & mp, const Box<3> & aboundingbox);
+  DLL_HEADER Meshing2 (const NetgenGeometry& geo,
+                       const MeshingParameters & mp,
+                       const Box<3> & aboundingbox);
 
   ///
   DLL_HEADER virtual ~Meshing2 ();
@@ -55,15 +59,16 @@ public:
   void LoadRules (const char * filename, bool quad);
 
   /// 
-  DLL_HEADER MESHING2_RESULT GenerateMesh (Mesh & mesh, const MeshingParameters & mp, double gh, int facenr);
+  DLL_HEADER MESHING2_RESULT GenerateMesh (Mesh & mesh, const MeshingParameters & mp, double gh, int facenr, int layer=1);
 
   DLL_HEADER void Delaunay (Mesh & mesh, int domainnr, const MeshingParameters & mp);
   DLL_HEADER void BlockFillLocalH (Mesh & mesh, const MeshingParameters & mp);
 
 
   ///
-  DLL_HEADER void AddPoint (const Point3d & p, PointIndex globind, MultiPointGeomInfo * mgi = NULL,
+  DLL_HEADER int AddPoint (const Point3d & p, PointIndex globind, MultiPointGeomInfo * mgi = NULL,
 		 bool pointonsurface = true);
+  DLL_HEADER PointIndex GetGlobalIndex(int pi) const;
 
   ///
   DLL_HEADER void AddBoundaryElement (INDEX i1, INDEX i2,
@@ -81,19 +86,19 @@ protected:
   ///
   virtual void EndMesh ();
   ///
-  virtual double CalcLocalH (const Point3d & p, double gh) const;
+  virtual double CalcLocalH (const Point<3> & p, double gh) const;
 
   ///
-  virtual void DefineTransformation (const Point3d & p1, const Point3d & p2,
+  virtual void DefineTransformation (const Point<3> & p1, const Point<3> & p2,
 				     const PointGeomInfo * geominfo1,
 				     const PointGeomInfo * geominfo2);
   ///
-  virtual void TransformToPlain (const Point3d & locpoint, const MultiPointGeomInfo &  geominfo,
-				 Point2d & plainpoint, double h, int & zone);
+  virtual void TransformToPlain (const Point<3> & locpoint, const MultiPointGeomInfo &  geominfo,
+				 Point<2> & plainpoint, double h, int & zone);
   /// return 0 .. ok
   /// return >0 .. cannot transform point to true surface
-  virtual int TransformFromPlain (Point2d & plainpoint,
-				  Point3d & locpoint, 
+  virtual int TransformFromPlain (const Point<2>& plainpoint,
+				  Point<3> & locpoint, 
 				  PointGeomInfo & geominfo, 
 				  double h);
   
@@ -126,21 +131,21 @@ protected:
   /*
     get (projected) boundary of current chart
    */
-  virtual void GetChartBoundary (Array<Point2d> & points, 
-				 Array<Point3d> & points3d,
-				 Array<INDEX_2> & lines, double p) const;
+  virtual void GetChartBoundary (NgArray<Point<2>> & points, 
+				 NgArray<Point<3>> & points3d,
+				 NgArray<INDEX_2> & lines, double p) const;
 
   virtual double Area () const;
 
 
 /** Applies 2D rules.
  Tests all 2D rules */
-  int ApplyRules (Array<Point2d> & lpoints, 
-		  Array<int> & legalpoints,
+  int ApplyRules (NgArray<Point<2>> & lpoints, 
+		  NgArray<int> & legalpoints,
 		  int maxlegalpoint,
-		  Array<INDEX_2> & llines,
+		  NgArray<INDEX_2> & llines,
 		  int maxlegelline,
-		  Array<Element2d> & elements, Array<INDEX> & dellines,
+		  NgArray<Element2d> & elements, NgArray<INDEX> & dellines,
 		  int tolerance,
 		  const MeshingParameters & mp);
   

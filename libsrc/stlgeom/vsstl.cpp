@@ -21,8 +21,7 @@ namespace netgen
 
 /* *********************** Draw STL Geometry **************** */
 
-extern STLGeometry * stlgeometry;
-extern shared_ptr<Mesh> mesh;
+DLL_HEADER extern shared_ptr<Mesh> mesh;
 
 
 // #include "../../ngtcltk/mvdraw.hpp"
@@ -33,8 +32,6 @@ VisualSceneSTLMeshing :: VisualSceneSTLMeshing ()
 {
   selecttrig = 0;
   nodeofseltrig = 1;
-  stlgeometry->SetSelectTrig(selecttrig);
-  stlgeometry->SetNodeOfSelTrig(nodeofseltrig);
 }
 
 VisualSceneSTLMeshing :: ~VisualSceneSTLMeshing ()
@@ -153,7 +150,7 @@ void VisualSceneSTLMeshing :: DrawScene ()
     MoCombine cb1(&z1,&z2);
     model.Add(&cb1);
     
-    Array<MoTriangle> trigs;
+    NgArray<MoTriangle> trigs;
     model.GetTriangles(trigs);
     int i, k;
     glBegin (GL_TRIANGLES);
@@ -382,7 +379,7 @@ void VisualSceneSTLMeshing :: DrawScene ()
 	    {
 	      //multiedge
 	      
-	      const Array<twoint>& me = stlgeometry->SelectedMultiEdge();
+	      const NgArray<twoint>& me = stlgeometry->SelectedMultiEdge();
 	      if (stlgeometry->GetSelectTrig() > 0 && 
 		  stlgeometry->GetSelectTrig() <= stlgeometry->GetNT() &&
 		  me.Size())
@@ -544,10 +541,10 @@ void VisualSceneSTLMeshing :: DrawScene ()
 		  else
 		    {glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colbrown);}
 		  */
-		  const STLTriangle& st = stlgeometry -> GetTriangle(chart.GetChartTrig(j));
+		  const STLTriangle& st = stlgeometry -> GetTriangle(chart.GetChartTrig1(j));
 
 		  
-		  const Vec3d & n = stlgeometry->GetTriangle(chart.GetChartTrig(j)).Normal();
+		  const Vec3d & n = stlgeometry->GetTriangle(chart.GetChartTrig1(j)).Normal();
 		  glNormal3f (n.X(), n.Y(), n.Z());
 		  /*
 		  const STLReadTriangle& tria = stlgeometry -> GetReadTriangle(chart.GetChartTrig(j));
@@ -567,9 +564,9 @@ void VisualSceneSTLMeshing :: DrawScene ()
 	      for (j = 1; j <= chart.GetNOuterT(); j++)
 		{
 		  
-		  const STLTriangle& st = stlgeometry -> GetTriangle(chart.GetOuterTrig(j));
+		  const STLTriangle& st = stlgeometry -> GetTriangle(chart.GetOuterTrig1(j));
 
-		  const Vec3d & n = stlgeometry->GetTriangle(chart.GetOuterTrig(j)).Normal();
+		  const Vec3d & n = stlgeometry->GetTriangle(chart.GetOuterTrig1(j)).Normal();
 		  glNormal3f (n.X(), n.Y(), n.Z());
 
 
@@ -1216,13 +1213,10 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
 #ifdef NG_PYTHON
 
 
-#ifdef WIN32
-   #define DLL_HEADER   __declspec(dllexport)
-#endif
-
 #include <../general/ngpython.hpp>
+#include <core/ngcore_api.hpp>
 
-DLL_HEADER void ExportSTLVis(py::module &m)
+NGCORE_API_EXPORT void ExportSTLVis(py::module &m)
 {
 	using namespace netgen;
 

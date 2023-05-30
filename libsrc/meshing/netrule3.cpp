@@ -77,6 +77,7 @@ void vnetrule :: SetFreeZoneTransformation (const Vector & allp, int tolclass)
   fzbox.SetPoint (transfreezone.Elem(1));
   for (i = 2; i <= freezone.Size(); i++)
     fzbox.AddPoint (transfreezone.Elem(i));
+  fzbox.IncreaseRel(1e-8);
   
   
   // MARK(setfz3);
@@ -84,7 +85,7 @@ void vnetrule :: SetFreeZoneTransformation (const Vector & allp, int tolclass)
 
   for (fs = 1; fs <= freesets.Size(); fs++)
     {
-      Array<threeint> & freesetfaces = *freefaces.Get(fs);
+      NgArray<threeint> & freesetfaces = *freefaces.Get(fs);
       DenseMatrix & freesetinequ = *freefaceinequ.Get(fs);
       
       for (i = 1; i <= freesetfaces.Size(); i++)
@@ -142,9 +143,9 @@ int vnetrule :: ConvexFreeZone () const
     {
       const DenseMatrix & freesetinequ = *freefaceinequ.Get(fs);
 
-      // const Array<int> & freeset = *freesets.Get(fs);
-      const Array<twoint> & freesetedges = *freeedges.Get(fs);
-      // const Array<threeint> & freesetfaces = *freefaces.Get(fs);
+      // const NgArray<int> & freeset = *freesets.Get(fs);
+      const NgArray<twoint> & freesetedges = *freeedges.Get(fs);
+      // const NgArray<threeint> & freesetfaces = *freefaces.Get(fs);
       
       for (i = 1; i <= freesetedges.Size(); i++)
 	{
@@ -175,7 +176,7 @@ int vnetrule :: IsInFreeZone (const Point3d & p) const
   for (fs = 1; fs <= freesets.Size(); fs++)
     {
       inthis = 1;
-      Array<threeint> & freesetfaces = *freefaces.Get(fs);
+      NgArray<threeint> & freesetfaces = *freefaces.Get(fs);
       DenseMatrix & freesetinequ = *freefaceinequ.Get(fs);
       
       for (i = 1; i <= freesetfaces.Size() && inthis; i++)
@@ -195,13 +196,13 @@ int vnetrule :: IsInFreeZone (const Point3d & p) const
 int vnetrule :: IsTriangleInFreeZone (const Point3d & p1, 
 				      const Point3d & p2,
 				      const Point3d & p3, 
-				      const Array<int> & pi, int newone)
+				      const NgArray<int> & pi, int newone)
 {
   int fs;
   int infreeset, cannot = 0;
 
 
-  ArrayMem<int,3> pfi(3), pfi2(3);
+  NgArrayMem<int,3> pfi(3), pfi2(3);
 
   // convert from local index to freeset index
   int i, j;
@@ -218,7 +219,7 @@ int vnetrule :: IsTriangleInFreeZone (const Point3d & p1,
 
   for (fs = 1; fs <= freesets.Size(); fs++)
     {
-      const Array<int> & freeseti = *freesets.Get(fs);
+      const NgArray<int> & freeseti = *freesets.Get(fs);
       for (i = 1; i <= 3; i++)
 	{
 	  pfi2.Elem(i) = 0;
@@ -239,7 +240,7 @@ int vnetrule :: IsTriangleInFreeZone (const Point3d & p1,
 
 int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
                                      const Point3d & p3, int fs,
-				     const Array<int> & pi, int newone)
+				     const NgArray<int> & pi, int newone)
 {
   int i, ii;
   Vec3d n;
@@ -251,13 +252,13 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
   double hpx, hpy, hpz, v1x, v1y, v1z, v2x, v2y, v2z;
   int act1, act2, act3, it;
   int cntout;
-  Array<int> activefaces;
+  NgArray<int> activefaces;
   int isin;
   
 
   // MARK(triinfz);
   
-  Array<threeint> & freesetfaces = *freefaces.Get(fs);
+  NgArray<threeint> & freesetfaces = *freefaces.Get(fs);
   DenseMatrix & freesetinequ = *freefaceinequ.Get(fs);
   
 
@@ -575,7 +576,7 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
 	case 3: trivec = (p3 - p2); break;
 	}
 
-      Array<int> lpi(freezonepi.Size());
+      NgArray<int> lpi(freezonepi.Size());
       for (i = 1; i <= lpi.Size(); i++)
 	lpi.Elem(i) = 0;
       lpi.Elem(pi1) = 1;
@@ -614,7 +615,7 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
     {
       // MARK(triinfz3);  
 
-      Array<int> lpi(freezonepi.Size());
+      NgArray<int> lpi(freezonepi.Size());
       for (i = 1; i <= lpi.Size(); i++)
 	lpi.Elem(i) = 0;
 
@@ -862,13 +863,13 @@ int vnetrule :: IsQuadInFreeZone (const Point3d & p1,
 				  const Point3d & p2,
 				  const Point3d & p3, 
 				  const Point3d & p4, 
-				  const Array<int> & pi, int newone)
+				  const NgArray<int> & pi, int newone)
 {
   int fs;
   int infreeset, cannot = 0;
 
 
-  ArrayMem<int,4> pfi(4), pfi2(4);
+  NgArrayMem<int,4> pfi(4), pfi2(4);
 
   // convert from local index to freeset index
   int i, j;
@@ -885,7 +886,7 @@ int vnetrule :: IsQuadInFreeZone (const Point3d & p1,
 
   for (fs = 1; fs <= freesets.Size(); fs++)
     {
-      const Array<int> & freeseti = *freesets.Get(fs);
+      const NgArray<int> & freeseti = *freesets.Get(fs);
       for (i = 1; i <= 4; i++)
 	{
 	  pfi2.Elem(i) = 0;
@@ -905,7 +906,7 @@ int vnetrule :: IsQuadInFreeZone (const Point3d & p1,
 
 int vnetrule :: IsQuadInFreeSet (const Point3d & p1, const Point3d & p2,
 				 const Point3d & p3, const Point3d & p4, 
-				 int fs, const Array<int> & pi, int newone)
+				 int fs, const NgArray<int> & pi, int newone)
 {
   int i;
   
@@ -931,7 +932,7 @@ int vnetrule :: IsQuadInFreeSet (const Point3d & p1, const Point3d & p2,
       return 1;
     }
 
-  ArrayMem<int,3> pi3(3);
+  NgArrayMem<int,3> pi3(3);
   int res;
 
   pi3.Elem(1) = pi.Get(1);
@@ -985,9 +986,9 @@ float vnetrule :: CalcPointDist (int pi, const Point3d & p) const
 
 int vnetrule :: TestOk () const
 {
-  Array<int> cntpused(points.Size());
-  Array<int> edge1, edge2;
-  Array<int> delf(faces.Size());
+  NgArray<int> cntpused(points.Size());
+  NgArray<int> edge1, edge2;
+  NgArray<int> delf(faces.Size());
   int i, j, k;
   int pi1, pi2;
   int found;

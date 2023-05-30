@@ -2,16 +2,16 @@
 
 #include <mystdlib.h>
 
-#include <occgeom.hpp>
 #include <meshing.hpp>
+#include "occgeom.hpp"
+
 #include <GeomLProp_SLProps.hxx>
 #include <ShapeAnalysis_Surface.hxx>
 
+#include "occmeshsurf.hpp"
 
 namespace netgen
 {
-#include "occmeshsurf.hpp"
-
 
   bool glob_testout(false);
 
@@ -19,34 +19,18 @@ namespace netgen
 				      const PointGeomInfo & geominfo,
 				      Vec<3> & n) const
   {
-    gp_Pnt pnt;
-    gp_Vec du, dv;
+    GeomLProp_SLProps lprop(occface,geominfo.u,geominfo.v,1,1e-8);
 
-    /*
-      double gu = geominfo.u;
-      double gv = geominfo.v;
-
-      if (fabs (gu) < 1e-3) gu = 0;
-      if (fabs (gv) < 1e-3) gv = 0;
-
-      occface->D1(gu,gv,pnt,du,dv);
-    */
-
-    /*
-      occface->D1(geominfo.u,geominfo.v,pnt,du,dv);
-
-      n = Cross (Vec<3>(du.X(), du.Y(), du.Z()),
-      Vec<3>(dv.X(), dv.Y(), dv.Z()));
-      n.Normalize();
-    */
-
-
-
-    GeomLProp_SLProps lprop(occface,geominfo.u,geominfo.v,1,1e-5);
-    double setu=geominfo.u,setv=geominfo.v;
-
-    if(lprop.D1U().Magnitude() < 1e-5 || lprop.D1V().Magnitude() < 1e-5)
+    if (lprop.IsNormalDefined())
       {
+        n = occ2ng(lprop.Normal());
+      }
+    else
+      {
+        gp_Pnt pnt;
+        gp_Vec du, dv;
+
+        double setu=geominfo.u,setv=geominfo.v;
 	double ustep = 0.01*(umax-umin);
 	double vstep = 0.01*(vmax-vmin);
 
@@ -57,9 +41,12 @@ namespace netgen
 	if(setu < umax)
 	  {
 	    lprop.SetParameters(setu,setv);
+            /*
 	    n(0)+=lprop.Normal().X();
 	    n(1)+=lprop.Normal().Y();
 	    n(2)+=lprop.Normal().Z();
+            */
+            n += occ2ng(lprop.Normal());
 	  }
 	setu = geominfo.u;
 	while(setu > umin && (lprop.D1U().Magnitude() < 1e-5 || lprop.D1V().Magnitude() < 1e-5))
@@ -67,9 +54,12 @@ namespace netgen
 	if(setu > umin)
 	  {
 	    lprop.SetParameters(setu,setv);
+            /*
 	    n(0)+=lprop.Normal().X();
 	    n(1)+=lprop.Normal().Y();
 	    n(2)+=lprop.Normal().Z();
+            */
+            n += occ2ng(lprop.Normal());            
 	  }
 	setu = geominfo.u;
 
@@ -78,9 +68,12 @@ namespace netgen
 	if(setv < vmax)
 	  {
 	    lprop.SetParameters(setu,setv);
+            /*
 	    n(0)+=lprop.Normal().X();
 	    n(1)+=lprop.Normal().Y();
 	    n(2)+=lprop.Normal().Z();
+            */
+            n += occ2ng(lprop.Normal());
 	  }
 	setv = geominfo.v;
 	while(setv > vmin && (lprop.D1U().Magnitude() < 1e-5 || lprop.D1V().Magnitude() < 1e-5))
@@ -88,19 +81,16 @@ namespace netgen
 	if(setv > vmin)
 	  {
 	    lprop.SetParameters(setu,setv);
+            /*
 	    n(0)+=lprop.Normal().X();
 	    n(1)+=lprop.Normal().Y();
 	    n(2)+=lprop.Normal().Z();
+            */
+            n += occ2ng(lprop.Normal());            
 	  }
 	setv = geominfo.v;
 
 	n.Normalize();
-      }
-    else
-      {
-	n(0)=lprop.Normal().X();
-	n(1)=lprop.Normal().Y();
-	n(2)=lprop.Normal().Z();
       }
 
     if(glob_testout)
@@ -112,7 +102,7 @@ namespace netgen
 
 
 
-    if (orient == TopAbs_REVERSED) n = -1*n;
+    if (orient == TopAbs_REVERSED) n = -n;
     //  (*testout) << "GetNormalVector" << endl;
   }
 
@@ -173,6 +163,50 @@ namespace netgen
 	gp_Vec du, dv;
 	occface->D1 (geominfo1.u, geominfo1.v, pnt, du, dv);
 
+        // static Timer t("occ-defintangplane calculations");
+        // RegionTimer reg(t);
+
+        Mat<3,2> D1_;
+	D1_(0,0) = du.X(); D1_(1,0) = du.Y(); D1_(2,0) = du.Z();
+	D1_(0,1) = dv.X(); D1_(1,1) = dv.Y(); D1_(2,1) = dv.Z();
+        auto D1T_ = Trans(D1_);
+	auto D1TD1_ = D1T_*D1_;
+	if (Det (D1TD1_) == 0) throw SingularMatrixException();
+        Mat<2,2> DDTinv_;
+        CalcInverse (D1TD1_, DDTinv_);
+
+        Mat<3,2> Y_;
+	Vec<3> y1_ = (ap2-ap1).Normalize();
+	Vec<3> y2_ = Cross(n, y1_).Normalize();
+	for (int i = 0; i < 3; i++)
+	  {
+	    Y_(i,0) = y1_(i);
+	    Y_(i,1) = y2_(i);
+	  }
+
+        auto A_ = DDTinv_ * D1T_ * Y_;
+	Mat<2,2> Ainv_;
+	if (Det(A_) == 0) throw SingularMatrixException();
+	CalcInverse (A_, Ainv_);
+
+	Vec<2> temp_ = Ainv_ * (psp2-psp1);
+	double r_ = temp_.Length();
+        Mat<2,2> R_;
+        R_(0,0) = temp_(0)/r_;
+        R_(1,0) = temp_(1)/r_;
+        R_(0,1) = -R_(1,0);
+        R_(1,1) = R_(0,0);
+
+        A_ = A_ * R_;
+        Ainv_ = Trans(R_) * Ainv_;
+
+        Amat = A_;
+        Amatinv = Ainv_;
+        
+	// temp = Amatinv * (psp2-psp1);
+        
+
+#ifdef OLD
 	DenseMatrix D1(3,2), D1T(2,3), DDTinv(2,2);
 	D1(0,0) = du.X(); D1(1,0) = du.Y(); D1(2,0) = du.Z();
 	D1(0,1) = dv.X(); D1(1,1) = dv.Y(); D1(2,1) = dv.Z();
@@ -190,6 +224,8 @@ namespace netgen
 	if (D1TD1.Det() == 0) throw SingularMatrixException();
       
 	CalcInverse (D1TD1, DDTinv);
+        // cout << " =?= inv = " << DDTinv << endl;
+        
 	DenseMatrix Y(3,2);
 	Vec<3> y1 = (ap2-ap1).Normalize();
 	Vec<3> y2 = Cross(n, y1).Normalize();
@@ -226,6 +262,7 @@ namespace netgen
 	R(0,1) = sin (alpha);
 	R(1,1) = cos (alpha);
 
+        // cout << "=?= R = " << R << endl;
 
 	A = A*R;
 
@@ -240,9 +277,10 @@ namespace netgen
 	      Amat(i,j) = A(i,j);
 	      Amatinv(i,j) = Ainv(i,j);
 	    }
-
+        // cout << "=?= Ainv = " << endl << Ainv << endl;
 	temp = Amatinv * (psp2-psp1);
-      
+        cout << " =?= Amatinv = " << Amatinv << endl;        
+#endif
       };
  
   }
@@ -294,7 +332,9 @@ namespace netgen
 				Point<3> & p3d,
 				PointGeomInfo & gi,
 				double h) 
-  { 
+  {
+    static Timer t("FromPlane"); RegionTimer reg(t);
+    
     if (projecttype == PLANESPACE)
       {
 	//      cout << "2d   : " << pplane << endl;
@@ -311,19 +351,85 @@ namespace netgen
 	gi.u = pspnew(0);
 	gi.v = pspnew(1);
 	gi.trignum = 1;
-	gp_Pnt val = occface->Value (gi.u, gi.v);
-	p3d = Point<3> (val.X(), val.Y(), val.Z());
+        p3d = occ2ng(occface->Value (gi.u, gi.v));
       };
   }
 
 
 
-  void OCCSurface :: Project (Point<3> & p, PointGeomInfo & gi)
+  void OCCSurface :: Project (Point<3> & ap, PointGeomInfo & gi)
   {
+    static Timer t("OccSurface::Project"); RegionTimer reg(t);
+    static Timer t2("OccSurface::Project actual"); 
+
+
+    // try Newton's method ...
+    
+    gp_Pnt p = ng2occ(ap);
+
+    double u = gi.u;
+    double v = gi.v;
+#ifdef OLD
+    // was a problem for pheres: got u-v parameters outside range of definition
+    
+    gp_Pnt x = occface->Value (u,v);
+
+    if (p.SquareDistance(x) <= sqr(PROJECTION_TOLERANCE)) return;
+
+    gp_Vec du, dv;
+    occface->D1(u,v,x,du,dv);
+
+    int count = 0;
+    
+    gp_Pnt xold;
+    gp_Vec n;
+    double det, lambda, mu;
+    
+    do
+      {
+        count++;
+        
+        n = du^dv;
+        
+        det = Det3 (n.X(), du.X(), dv.X(),
+                    n.Y(), du.Y(), dv.Y(),
+                    n.Z(), du.Z(), dv.Z());
+        
+        if (det < 1e-15)
+          break;
+        
+        lambda = Det3 (n.X(), p.X()-x.X(), dv.X(),
+                       n.Y(), p.Y()-x.Y(), dv.Y(),
+                       n.Z(), p.Z()-x.Z(), dv.Z())/det;
+        
+        mu     = Det3 (n.X(), du.X(), p.X()-x.X(),
+                       n.Y(), du.Y(), p.Y()-x.Y(),
+                       n.Z(), du.Z(), p.Z()-x.Z())/det;
+        
+        u += lambda;
+        v += mu;
+        
+        xold = x;
+        occface->D1(u,v,x,du,dv);
+        
+        if (xold.SquareDistance(x) < sqr(PROJECTION_TOLERANCE))
+          {
+            ap = Point<3> (x.X(), x.Y(), x.Z());
+            gi.u = u;
+            gi.v = v;
+            return;
+          }
+      }
+    while (count < 20);
+#endif
+
+    // Newton did not converge, use OCC projection
+
+    
     //   static int cnt = 0;
     //  if (cnt++ % 1000 == 0) cout << "********************************************** OCCSurfce :: Project, cnt = " << cnt << endl;
   
-    gp_Pnt pnt(p(0), p(1), p(2));
+    gp_Pnt pnt = p;  // (p(0), p(1), p(2));
 
     //(*testout) << "pnt = " << pnt.X() << ", " << pnt.Y() << ", " << pnt.Z() << endl;
 
@@ -358,248 +464,66 @@ namespace netgen
     proj.LowerDistanceParameters (gi.u, gi.v);
     */
 
-    double u,v;
+    // double u,v;
     Handle( ShapeAnalysis_Surface ) su = new ShapeAnalysis_Surface( occface );
-    gp_Pnt2d suval = su->ValueOfUV ( pnt, BRep_Tool::Tolerance( topods_face ) );
+    auto toltool =  BRep_Tool::Tolerance( topods_face );
+
+    // gp_Pnt2d suval = su->ValueOfUV ( pnt, toltool);
+    t2.Start();
+    gp_Pnt2d suval = su->NextValueOfUV (gp_Pnt2d(u,v), pnt, toltool);
+    t2.Stop();
     suval.Coord( u, v);
     pnt = occface->Value( u, v );
     
     //(*testout) << "pnt(proj) = " << pnt.X() << ", " << pnt.Y() << ", " << pnt.Z() << endl;
     gi.u = u;
     gi.v = v;
-    
-
     gi.trignum = 1;
 
-    p = Point<3> (pnt.X(), pnt.Y(), pnt.Z());
+    ap = occ2ng(pnt); // Point<3> (pnt.X(), pnt.Y(), pnt.Z());
   } 
 
 
-  Meshing2OCCSurfaces :: Meshing2OCCSurfaces (const TopoDS_Shape & asurf,
-					      const Box<3> & abb, int aprojecttype)
-    : Meshing2(mparam, Box<3>(abb.PMin(), abb.PMax())), surface(TopoDS::Face(asurf), aprojecttype)
+  Meshing2OCCSurfaces :: Meshing2OCCSurfaces (const NetgenGeometry& geo,
+                                              const TopoDS_Shape & asurf,
+					      const Box<3> & abb, int aprojecttype,
+                                              const MeshingParameters & mparam)
+    : Meshing2(geo, mparam, Box<3>(abb.PMin(), abb.PMax())),
+      surface(TopoDS::Face(asurf), aprojecttype)
   {
     ;
   }
 
 
-  void Meshing2OCCSurfaces :: DefineTransformation (const Point3d & p1, const Point3d & p2,
+  void Meshing2OCCSurfaces :: DefineTransformation (const Point<3> & p1, const Point<3> & p2,
 						    const PointGeomInfo * geominfo1,
 						    const PointGeomInfo * geominfo2)
   {
     ((OCCSurface&)surface).DefineTangentialPlane (p1, *geominfo1, p2, *geominfo2);
   }
  
-  void Meshing2OCCSurfaces :: TransformToPlain (const Point3d & locpoint, 
+  void Meshing2OCCSurfaces :: TransformToPlain (const Point<3>& locpoint, 
 						const MultiPointGeomInfo & geominfo,
-						Point2d & planepoint, 
+						Point<2> & planepoint, 
 						double h, int & zone)
   {
-    Point<2> hp;
-    surface.ToPlane (locpoint, geominfo.GetPGI(1), hp, h, zone);
-    planepoint.X() = hp(0);
-    planepoint.Y() = hp(1);
+    surface.ToPlane (locpoint, geominfo.GetPGI(1), planepoint, h, zone);
   }
 
-  int Meshing2OCCSurfaces :: TransformFromPlain (Point2d & planepoint,
-						 Point3d & locpoint,
+  int Meshing2OCCSurfaces :: TransformFromPlain (const Point<2> & planepoint,
+						 Point<3> & locpoint,
 						 PointGeomInfo & gi,
 						 double h)
   {
-    Point<3> hp;
-    Point<2> hp2 (planepoint.X(), planepoint.Y());
-    surface.FromPlane (hp2, hp, gi, h);
-    locpoint = hp;
+    surface.FromPlane (planepoint, locpoint, gi, h);
     return 0;
   }
 
 
 
-  double Meshing2OCCSurfaces :: CalcLocalH (const Point3d & p, double gh) const
+  double Meshing2OCCSurfaces :: CalcLocalH (const Point<3> & p, double gh) const
   {
     return gh;
-  }
-
-
-
-
-
-
-  MeshOptimize2dOCCSurfaces :: MeshOptimize2dOCCSurfaces (const OCCGeometry & ageometry)
-    : MeshOptimize2d(), geometry(ageometry)
-  {
-    ;
-  }
-
-
-  void MeshOptimize2dOCCSurfaces :: ProjectPoint (INDEX surfind, Point<3> & p) const
-  {
-    geometry.Project (surfind, p);
-  }
-
-
-  int MeshOptimize2dOCCSurfaces :: ProjectPointGI (INDEX surfind, Point<3> & p, PointGeomInfo & gi) const
-  {
-    double u = gi.u;
-    double v = gi.v;
-
-    Point<3> hp = p;
-    if (geometry.FastProject (surfind, hp, u, v))
-      {
-	p = hp;
-	return 1;
-      }
-    ProjectPoint (surfind, p); 
-    return CalcPointGeomInfo (surfind, gi, p); 
-  }
-
-
-  void MeshOptimize2dOCCSurfaces :: ProjectPoint2 (INDEX surfind, INDEX surfind2, 
-						   Point<3> & p) const
-  {
-    TopExp_Explorer exp0, exp1;
-    bool done = false;
-    Handle(Geom_Curve) c;
-
-    for (exp0.Init(geometry.fmap(surfind), TopAbs_EDGE); !done && exp0.More(); exp0.Next())
-      for (exp1.Init(geometry.fmap(surfind2), TopAbs_EDGE); !done && exp1.More(); exp1.Next())
-	{
-	  if (TopoDS::Edge(exp0.Current()).IsSame(TopoDS::Edge(exp1.Current())))
-	    {
-	      done = true;
-	      double s0, s1;
-	      c = BRep_Tool::Curve(TopoDS::Edge(exp0.Current()), s0, s1);
-	    }
-	}
-  
-    gp_Pnt pnt(p(0), p(1), p(2));
-    GeomAPI_ProjectPointOnCurve proj(pnt, c);
-    pnt = proj.NearestPoint();  
-    p(0) = pnt.X();
-    p(1) = pnt.Y();
-    p(2) = pnt.Z();
-	
-  }
-
-  void MeshOptimize2dOCCSurfaces :: 
-  GetNormalVector(INDEX surfind, const Point<3> & p, PointGeomInfo & geominfo, Vec<3> & n) const
-  {
-    gp_Pnt pnt;
-    gp_Vec du, dv;
-
-    Handle(Geom_Surface) occface;
-    occface = BRep_Tool::Surface(TopoDS::Face(geometry.fmap(surfind)));
-
-    occface->D1(geominfo.u,geominfo.v,pnt,du,dv);
-
-    n = Cross (Vec<3>(du.X(), du.Y(), du.Z()),
-	       Vec<3>(dv.X(), dv.Y(), dv.Z()));
-    n.Normalize();
-
-    if (geometry.fmap(surfind).Orientation() == TopAbs_REVERSED) n = -1*n;  
-  
-    //  GetNormalVector (surfind, p, n);
-  }
-
-
-  void MeshOptimize2dOCCSurfaces :: 
-  GetNormalVector(INDEX surfind, const Point<3> & p, Vec<3> & n) const
-  {
-    //  static int cnt = 0;
-    //  if (cnt++ % 1000 == 0) cout << "GetNV cnt = " << cnt << endl;
-    Standard_Real u,v;
-
-    gp_Pnt pnt(p(0), p(1), p(2));
-
-    Handle(Geom_Surface) occface;
-    occface = BRep_Tool::Surface(TopoDS::Face(geometry.fmap(surfind)));
-
-    /*
-    GeomAPI_ProjectPointOnSurf proj(pnt, occface);
-
-    if (proj.NbPoints() < 1)
-      {
-	cout << "ERROR: OCCSurface :: GetNormalVector: GeomAPI_ProjectPointOnSurf failed!"
-	     << endl;
-	cout << p << endl;
-	return;
-      }
- 
-    proj.LowerDistanceParameters (u, v);
-    */
-    
-    Handle( ShapeAnalysis_Surface ) su = new ShapeAnalysis_Surface( occface );
-    gp_Pnt2d suval = su->ValueOfUV ( pnt, BRep_Tool::Tolerance( TopoDS::Face(geometry.fmap(surfind)) ) );
-    suval.Coord( u, v);
-    pnt = occface->Value( u, v );
-    
-    
-
-    gp_Vec du, dv;
-    occface->D1(u,v,pnt,du,dv);
-
-    /*
-      if (!occface->IsCNu (1) || !occface->IsCNv (1))
-      (*testout) << "SurfOpt: Differentiation FAIL" << endl;
-    */
-
-    n = Cross (Vec3d(du.X(), du.Y(), du.Z()),
-	       Vec3d(dv.X(), dv.Y(), dv.Z()));
-    n.Normalize();
-
-    if (geometry.fmap(surfind).Orientation() == TopAbs_REVERSED) n = -1*n;  
-  }
-
-
-  int MeshOptimize2dOCCSurfaces :: 
-  CalcPointGeomInfo(int surfind, PointGeomInfo& gi, const Point<3> & p) const
-  {
-    Standard_Real u,v;
-
-    gp_Pnt pnt(p(0), p(1), p(2));
-
-    Handle(Geom_Surface) occface;
-    occface = BRep_Tool::Surface(TopoDS::Face(geometry.fmap(surfind)));
-
-    /*
-    GeomAPI_ProjectPointOnSurf proj(pnt, occface);
-
-    if (proj.NbPoints() < 1)
-      {
-	cout << "ERROR: OCCSurface :: GetNormalVector: GeomAPI_ProjectPointOnSurf failed!"
-	     << endl;
-	cout << p << endl;
-	return 0;
-      }
- 
-    proj.LowerDistanceParameters (u, v);  
-    */
-
-    Handle( ShapeAnalysis_Surface ) su = new ShapeAnalysis_Surface( occface );
-    gp_Pnt2d suval = su->ValueOfUV ( pnt, BRep_Tool::Tolerance( TopoDS::Face(geometry.fmap(surfind)) ) );
-    suval.Coord( u, v);
-    //pnt = occface->Value( u, v );
-    
-
-    gi.u = u;
-    gi.v = v;
-    return 1;
-  }
-
-
-
-
-
-
-  OCCRefinementSurfaces :: OCCRefinementSurfaces (const OCCGeometry & ageometry)
-    : Refinement(), geometry(ageometry)
-  {
-    ;
-  }
-
-  OCCRefinementSurfaces :: ~OCCRefinementSurfaces ()
-  {
-    ;
   }
 
   /*
@@ -660,76 +584,6 @@ namespace netgen
     return true;
     }
   */
-
-  void OCCRefinementSurfaces :: 
-  PointBetween (const Point<3> & p1, const Point<3> & p2, double secpoint,
-		int surfi, 
-		const PointGeomInfo & gi1, 
-		const PointGeomInfo & gi2,
-		Point<3> & newp, PointGeomInfo & newgi) const
-  {
-    Point<3> hnewp;
-    hnewp = p1+secpoint*(p2-p1);
-
-    if (surfi > 0)
-      {
-	double u = gi1.u+secpoint*(gi2.u-gi1.u);
-	double v = gi1.v+secpoint*(gi2.v-gi1.v);
-
-        auto savept = hnewp;
-	if (!geometry.FastProject (surfi, hnewp, u, v) || Dist(hnewp, savept) > Dist(p1,p2))
-	  {
-            //  cout << "Fast projection to surface fails! Using OCC projection" << endl;
-            hnewp = savept;
-	    geometry.Project (surfi, hnewp);
-	  }
-
-	newgi.trignum = 1;
-        newgi.u = u;
-        newgi.v = v;
-      }
-  
-    newp = hnewp;
-  }
-
-
-  void OCCRefinementSurfaces :: 
-  PointBetween (const Point<3> & p1, const Point<3> & p2, double secpoint,
-		int surfi1, int surfi2, 
-		const EdgePointGeomInfo & ap1, 
-		const EdgePointGeomInfo & ap2,
-		Point<3> & newp, EdgePointGeomInfo & newgi) const
-  {
-    double s0, s1;
-
-    Point<3> hnewp = p1+secpoint*(p2-p1);
-    gp_Pnt pnt(hnewp(0), hnewp(1), hnewp(2));
-    GeomAPI_ProjectPointOnCurve proj(pnt, BRep_Tool::Curve(TopoDS::Edge(geometry.emap(ap1.edgenr)), s0, s1));
-    pnt = proj.NearestPoint();
-    hnewp = Point<3> (pnt.X(), pnt.Y(), pnt.Z());
-    newp = hnewp;
-    newgi = ap1;
-  };
-
-
-  void OCCRefinementSurfaces :: ProjectToSurface (Point<3> & p, int surfi) const
-  {
-    if (surfi > 0)
-      geometry.Project (surfi, p);
-  };
-
-  void OCCRefinementSurfaces :: ProjectToSurface (Point<3> & p, int surfi, PointGeomInfo & gi) const
-  {
-    if (surfi > 0)
-      if (!geometry.FastProject (surfi, p, gi.u, gi.v))
-	{
-	  cout << "Fast projection to surface fails! Using OCC projection" << endl;
-	  geometry.Project (surfi, p);
-	}
-  };
-
-
-
 }
 
 

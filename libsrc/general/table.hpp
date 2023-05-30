@@ -29,26 +29,26 @@ protected:
   };
   
   ///
-  Array<linestruct> data;
+  NgArray<linestruct> data;
   char * oneblock;
 
 public:
   ///
   BASE_TABLE (BASE_TABLE && table2)
-    : data(move(table2.data)), oneblock(table2.oneblock)
+    : data(std::move(table2.data)), oneblock(table2.oneblock)
   {
     table2.oneblock = nullptr;
   }
 
-  BASE_TABLE (int size);
+  DLL_HEADER BASE_TABLE (int size);
   ///
-  BASE_TABLE (const FlatArray<int> & entrysizes, int elemsize);
+  DLL_HEADER BASE_TABLE (const NgFlatArray<int> & entrysizes, int elemsize);
   ///
-  ~BASE_TABLE ();
+  DLL_HEADER ~BASE_TABLE ();
 
   BASE_TABLE & operator= (BASE_TABLE && table2)
   {
-    data = move(table2.data);
+    data = std::move(table2.data);
     Swap (oneblock, table2.oneblock);
     return *this;
   }
@@ -114,11 +114,22 @@ public:
   /// Creates table of size size
   inline TABLE (int size) : BASE_TABLE (size) { ; }
 
+  TABLE (TABLE && tab2)
+    : BASE_TABLE(move(tab2))
+  { }
+  
   /// Creates fixed maximal element size table
-  inline TABLE (const FlatArray<int,BASE> & entrysizes)
-    : BASE_TABLE (FlatArray<int> (entrysizes.Size(), const_cast<int*>(&entrysizes[BASE])), 
+  inline TABLE (const NgFlatArray<int,BASE> & entrysizes)
+    : BASE_TABLE (NgFlatArray<int> (entrysizes.Size(), const_cast<int*>(&entrysizes[BASE])), 
 		  sizeof(T))
   { ; }
+
+  TABLE & operator= (TABLE && tab2)
+  {
+    BASE_TABLE::operator=(move(tab2));
+    return *this;
+  }
+
   
   /// Changes Size of table to size, deletes data
   inline void SetSize (int size)
@@ -190,6 +201,8 @@ public:
   inline const T & Get (int i, int nr) const
     { return ((T*)data.Get(i).col)[nr-1]; }
 
+  inline T & Get (int i, int nr)
+    { return ((T*)data.Get(i).col)[nr-1]; }
 
   /** Returns pointer to the first element in row i. */
   inline const T * GetLine (int i) const
@@ -219,7 +232,7 @@ public:
   inline void PrintMemInfo (ostream & ost) const
   {
     int els = AllocatedElements(); 
-    ost << "table: allocaed " << els 
+    ost << "table: allocated " << els 
 	<< " a " << sizeof(T) << " Byts = " 
 	<< els * sizeof(T) 
 	<< " bytes in " << Size() << " bags."
@@ -228,14 +241,14 @@ public:
   }
 
   /// Access entry.
-  FlatArray<T> operator[] (int i) const
+  NgFlatArray<T> operator[] (int i) const
   { 
 #ifdef DEBUG
     if (i-BASE < 0 || i-BASE >= data.Size())
       cout << "table out of range, i = " << i << ", s = " << data.Size() << endl;
 #endif
 
-    return FlatArray<T> (data[i-BASE].size, (T*)data[i-BASE].col);
+    return NgFlatArray<T> (data[i-BASE].size, (T*)data[i-BASE].col);
   }
 
   void DoArchive (Archive & ar)
@@ -251,7 +264,7 @@ inline ostream & operator<< (ostream & ost, const TABLE<T,BASE> & table)
   for (int i = BASE; i < table.Size()+BASE; i++)
     {
       ost << i << ": ";
-      FlatArray<T> row = table[i];
+      NgFlatArray<T> row = table[i];
       ost << "(" << row.Size() << ") ";
       for (int j = 0; j < row.Size(); j++)
 	ost << row[j] << " ";

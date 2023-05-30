@@ -190,7 +190,7 @@ proc AddRecentMeshFile { filename } {
     }
 loadmeshinifile;
 
-# astrid ende
+# astrid end
 
 
 .ngmenu.file add command -label "Save Mesh..." -accelerator "<s><m>" \
@@ -231,7 +231,9 @@ loadmeshinifile;
 	    {"Universal format"  {.unv} }
 	    {"Olaf format"  {.emt} }
 	    {"TET format" {.tet} }
+	    {"STL format" {.stl .stlb} }
 	    {"Pro/ENGINEER neutral format" {.fnf} }
+	    {"CFD General Notation System" {.cgns} }
 	          }
 	set file [tk_getOpenFile -filetypes $types ]
 	if {$file != ""} {
@@ -243,6 +245,8 @@ loadmeshinifile;
 	}
     }
 
+
+set meshexportformats [Ng_GetExportFormats]
 
 .ngmenu.file add command -label "Export Mesh..." \
     -command {
@@ -261,8 +265,11 @@ loadmeshinifile;
         } elseif { $exportfiletype == "OpenFOAM 1.5+ Compressed"} {
 	    set file [file nativename [tk_chooseDirectory -title "OpenFOAM 1.5+ Mesh Export - Select Case Directory"]]
         } else {
-#	    set file [tk_getSaveFile  -filetypes "{ \"$exportfiletype\" {$extension} }" ]
-	    set file [tk_getSaveFile  -filetypes "{ \"$exportfiletype\" {*}}" ]
+            # set file [tk_getSaveFile  -filetypes "{ \"$exportfiletype\" {$extension} }" ]
+	    # set file [tk_getSaveFile  -filetypes "{ \"$exportfiletype\" {*}}" ]
+            set file [tk_getSaveFile  -filetypes $meshexportformats -typevariable exportfiletype]
+            puts "type = $exportfiletype"
+            puts "filename = $file"
 	}
 
 	if {$file != ""} {
@@ -271,8 +278,11 @@ loadmeshinifile;
     }
 
 .ngmenu.file add cascade -label "Export Filetype" -menu .ngmenu.file.filetype 
-
 menu .ngmenu.file.filetype 
+
+foreach exportformat $meshexportformats {
+    .ngmenu.file.filetype add radio -label [lindex $exportformat 0] -variable exportfiletype -command { .ngmenu.file invoke "Export Mesh..." }
+}
 
 
 .ngmenu.file add separator
@@ -1122,7 +1132,7 @@ proc timer2 { } {
 	}
 
     }
-    after 10 { timer2 }
+    after 40 { timer2 }
 }
 # after 1000 { timer2 }
 timer2

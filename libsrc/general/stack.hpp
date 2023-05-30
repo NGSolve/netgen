@@ -41,7 +41,7 @@ public:
 
 private:
   ///
-  Array<T> elems;
+  NgArray<T> elems;
   ///
   INDEX size;
 };

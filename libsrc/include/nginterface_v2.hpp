@@ -8,6 +8,8 @@
 /* Date:   May  09                                                        */
 /**************************************************************************/
 
+#include "mydefs.hpp"
+
 /*
   C++ interface to Netgen
 */
@@ -39,7 +41,8 @@ namespace netgen
   // extern DLL_HEADER NgMPI_Comm ng_comm;
   
   static constexpr int POINTINDEX_BASE = 1;
-  
+
+  /*
   struct T_EDGE2
   {
     // int orient:1;
@@ -52,6 +55,9 @@ namespace netgen
     // int nr:29;    // 0-based
     int nr;    // 0-based
   };
+  */
+  typedef int T_EDGE2; 
+  typedef int T_FACE2; 
 
   template <typename T>
   class Ng_Buffer
@@ -112,7 +118,7 @@ namespace netgen
       const T_EDGE2 * ptr;
   
       size_t Size() const { return num; }
-      int operator[] (size_t i) const { return ptr[i].nr; }
+      int operator[] (size_t i) const { return ptr[i]; }
     };
 
     class Ng_Faces
@@ -122,7 +128,7 @@ namespace netgen
       const T_FACE2 * ptr;
   
       size_t Size() const { return num; }
-      int operator[] (size_t i) const { return ptr[i].nr; }
+      int operator[] (size_t i) const { return ptr[i]; }
     };
 
     class Ng_Facets
@@ -274,7 +280,7 @@ namespace netgen
     void UpdateTopology ();
     void DoArchive (Archive & archive);
 
-    NgMPI_Comm GetCommunicator() const;
+    const NgMPI_Comm & GetCommunicator() const;
     
     virtual ~Ngx_Mesh();
 
@@ -282,7 +288,8 @@ namespace netgen
     
     int GetDimension() const;
     int GetNLevels() const;
-
+    size_t GetNVLevel (int level) const;
+    
     int GetNElements (int dim) const;
     int GetNNodes (int nt) const;
 
@@ -340,8 +347,11 @@ namespace netgen
       void SetRefinementFlag (size_t elnr, bool flag);
     
     void Curve (int order);
+    int GetCurveOrder ();
 
-    void Refine (NG_REFINEMENT_TYPE reftype,
+    void EnableTable (string name, bool set);
+
+    void Refine (NG_REFINEMENT_TYPE reftype, bool onlyonce,
                  void (*taskmanager)(function<void(int,int)>) = &DummyTaskManager2,
                  void (*tracer)(string, bool) = &DummyTracer2);
 
@@ -351,6 +361,10 @@ namespace netgen
     int GetParentElement (int ei) const;
     int GetParentSElement (int ei) const;
 
+    bool HasParentEdges() const;
+    std::tuple<int, std::array<int,3>> GetParentEdges (int enr) const;
+    std::tuple<int, std::array<int,4>> GetParentFaces (int fnr) const;
+    
     int GetNIdentifications() const;
     int GetIdentificationType(int idnr) const;
     Ng_Buffer<int[2]> GetPeriodicVertices(int idnr) const;
@@ -364,8 +378,9 @@ namespace netgen
     
 
     // for MPI-parallel
-    std::tuple<int,int*> GetDistantProcs (int nodetype, int locnum) const;
-
+    FlatArray<int> GetDistantProcs (int nodetype, int locnum) const;
+    size_t GetGlobalVertexNum (int locnum) const;
+                               
     shared_ptr<Mesh> GetMesh () const { return mesh; } 
     shared_ptr<Mesh> SelectMesh () const;
     inline auto GetTimeStamp() const;

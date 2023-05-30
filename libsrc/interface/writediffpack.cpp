@@ -21,12 +21,12 @@ namespace netgen
 
 void WriteDiffPackFormat (const Mesh & mesh,
 			  const NetgenGeometry & geom,
-			  const string & filename)
+			  const filesystem::path & filename)
 {
   //   double scale = globflags.GetNumFlag ("scale", 1);
   double scale = 1;
 
-  ofstream outfile(filename.c_str());
+  ofstream outfile(filename);
   outfile.precision(14);
 
 
@@ -39,8 +39,8 @@ void WriteDiffPackFormat (const Mesh & mesh,
       int np = mesh.GetNP();
       int ne = mesh.GetNE();
       int nse = mesh.GetNSE();
-      Array <int> BIname;
-      Array <int> BCsinpoint;
+      NgArray <int> BIname;
+      NgArray <int> BCsinpoint;
       int i, j, k, l;
 
 
@@ -112,7 +112,7 @@ void WriteDiffPackFormat (const Mesh & mesh,
 	      /*
 	      for (j = 1; j <= nse; j++) 
 	      */
-	      FlatArray<SurfaceElementIndex> sels = point2sel[i];
+	      NgFlatArray<SurfaceElementIndex> sels = point2sel[i];
 	      for (int jj = 0; jj < sels.Size(); jj++)
 		{
 		  for (k = 1; k <= mesh[sels[jj]].GetNP(); k++) 
@@ -203,8 +203,8 @@ void WriteDiffPackFormat (const Mesh & mesh,
       int np = mesh.GetNP();
       //int ne = mesh.GetNE();
       int nse = mesh.GetNSE();
-      Array <int> BIname;
-      Array <int> BCsinpoint;
+      NgArray <int> BIname;
+      NgArray <int> BCsinpoint;
       int i, j, k, l;
 
 

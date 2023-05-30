@@ -9,30 +9,32 @@ namespace netgen
   class VisualScene
   {
   protected:
-    static DLL_HEADER Point3d center;
-    static DLL_HEADER double rad;
+    static NGGUI_API Point3d center;
+    static NGGUI_API double rad;
 
     static double lookatmat[16];
     static double transmat[16];
     static double rotmat[16];
     static double centermat[16];
 	
-    static DLL_HEADER double transformationmat[16];
+    static NGGUI_API double transformationmat[16];
 
     GLdouble clipplane[4];
 
     int changeval;
-    static DLL_HEADER GLdouble backcolor;
+    static NGGUI_API GLdouble backcolor;
 
-    static int DLL_HEADER selface;
+    static int NGGUI_API selface;
     static int selelement;
-    static PointIndex DLL_HEADER selpoint;
+    static PointIndex NGGUI_API selpoint;
     static PointIndex selpoint2;
     static int locpi;
-    static int DLL_HEADER seledge;
+    static int NGGUI_API seledge;
 
-    static int selecttimestamp;
+    static optional<Point<3>> marker;
 
+    static int subdivision_timestamp;
+    static int subdivisions;
   public:
     static int viewport[4];
     static GLuint coltexname;
@@ -41,48 +43,53 @@ namespace netgen
 
 
   public:
-    DLL_HEADER VisualScene ();
-    DLL_HEADER virtual ~VisualScene();
+    NGGUI_API VisualScene ();
+    NGGUI_API virtual ~VisualScene();
 
-    DLL_HEADER virtual void BuildScene (int zoomall = 0);
-    DLL_HEADER virtual void DrawScene ();
+    NGGUI_API virtual void BuildScene (int zoomall = 0);
+    NGGUI_API virtual void DrawScene ();
   
-    DLL_HEADER void CalcTransformationMatrices();
-    DLL_HEADER void StandardRotation (const char * dir);
-    DLL_HEADER void ArbitraryRotation (const Array<double> & alpha, const Array<Vec3d> & vec);
-    DLL_HEADER void ArbitraryRotation (const double alpha, const Vec3d & vec);
+    NGGUI_API void CalcTransformationMatrices();
+    NGGUI_API void StandardRotation (const char * dir);
+    NGGUI_API void ArbitraryRotation (const NgArray<double> & alpha, const NgArray<Vec3d> & vec);
+    NGGUI_API void ArbitraryRotation (const double alpha, const Vec3d & vec);
 
-    DLL_HEADER void MouseMove(int oldx, int oldy,
-                   int newx, int newy,
-                   char mode);
+    NGGUI_API virtual void MouseMove(int oldx, int oldy,
+                                      int newx, int newy,
+                                      char mode);
 
-    DLL_HEADER void LookAt (const Point<3> & cam, const Point<3> & obj,
+    NGGUI_API void LookAt (const Point<3> & cam, const Point<3> & obj,
                  const Point<3> & camup);
 
-    DLL_HEADER void SetClippingPlane ();
+    NGGUI_API void SetClippingPlane ();
 
-    DLL_HEADER virtual void MouseDblClick (int px, int py);
+    NGGUI_API virtual void MouseDblClick (int px, int py);
 
-    DLL_HEADER void SetLight ();
+    NGGUI_API void SetLight ();
     static void SetBackGroundColor (double col)
     { backcolor = col; }
 
-    DLL_HEADER void CreateTexture (int ncols, int linear, double alpha, int typ);
-    DLL_HEADER void DrawColorBar (double minval, double maxval, int logscale = 0, bool linear = 1);
-    DLL_HEADER void DrawCoordinateCross ();
-    DLL_HEADER void DrawNetgenLogo ();
-    DLL_HEADER void SetOpenGlColor(double val, double valmin, double valmax, int logscale = 0);
+    NGGUI_API void CreateTexture (int ncols, int linear, double alpha, int typ);
+    NGGUI_API void DrawColorBar (double minval, double maxval, int logscale = 0, bool linear = 1, string format="%8.3e", string unit="");
+    NGGUI_API void DrawTitle (string title);
+    NGGUI_API void DrawCoordinateCross ();
+    NGGUI_API void DrawMarker();
+    NGGUI_API void DrawNetgenLogo ();
+    NGGUI_API void SetOpenGlColor(double val, double valmin, double valmax, int logscale = 0);
 	
 
 #ifdef PARALLELGL
-    DLL_HEADER void InitParallelGL ();
-    DLL_HEADER void Broadcast ();
+    NGGUI_API void InitParallelGL ();
+    NGGUI_API void Broadcast ();
 #endif 
   };
 
 
-  DLL_HEADER extern void MyOpenGLText (const char * text);
-  DLL_HEADER extern void Set_OpenGLText_Callback ( void (*fun) (const char * text) );
+  NGGUI_API extern void MyOpenGLText (const char * text);
+  NGGUI_API extern int MyOpenGLTextWidth ();
+  NGGUI_API extern void Set_OpenGLText_Callback ( void (*fun) (const char * text), int width );
+  NGGUI_API extern VisualScene visual_scene_cross;
+  NGGUI_API extern VisualScene *visual_scene;
 
 
 
@@ -95,14 +102,23 @@ namespace netgen
 
   class VisualSceneSurfaceMeshing : public VisualScene
   {
+    double scalex = 1., scaley = 1., shiftx = 0., shifty = 0.;
   public:
+    shared_ptr<NgArray<Point<3>>> locpointsptr;
+    shared_ptr<NgArray<INDEX_2>> loclinesptr;
+    shared_ptr<NgArray<Point<2>>> plainpointsptr;
+    int oldnl;
+    bool clearptr;
     VisualSceneSurfaceMeshing ();
     virtual ~VisualSceneSurfaceMeshing ();
 
-    virtual void BuildScene (int zoomall = 0);
-    virtual void DrawScene ();
+    void BuildScene (int zoomall = 0) override;
+    void DrawScene () override;
+    NGGUI_API void MouseMove(int oldx, int oldy, int newx, int newy,
+                   char mode) override;
   };
 
+  NGGUI_API extern VisualSceneSurfaceMeshing vssurfacemeshing;
 
 
 
@@ -111,39 +127,58 @@ namespace netgen
 
   class VisualSceneMesh : public VisualScene
   {
-    int filledlist;
-    int linelist;
-    int edgelist;
-    int pointnumberlist;
+    int filledlist = 0;
+    int linelist = 0;
+    int edgelist = 0;
+    int pointnumberlist = 0;
 
-    int tetlist;
-    int prismlist;
-    int pyramidlist;
-    int hexlist;
+    int tetlist = 0;
+    int prismlist = 0;
+    int pyramidlist = 0;
+    int hexlist = 0;
 
-    int badellist;
-    int identifiedlist;
-    int domainsurflist;
+    int badellist = 0;
+    int identifiedlist = 0;
+    int domainsurflist = 0;
 
-    int vstimestamp;//, selecttimestamp;
-    int filledtimestamp;
-    int linetimestamp;
-    int edgetimestamp;
-    int pointnumbertimestamp;
+    int vstimestamp = -1;
+    int filledtimestamp = -1;
+    int linetimestamp = -1;
+    int edgetimestamp = -1;
+    int pointnumbertimestamp = -1;
 
-    int tettimestamp;
-    int prismtimestamp;
-    int pyramidtimestamp;
-    int hextimestamp;
+    int tettimestamp = -1;
+    int prismtimestamp = -1;
+    int pyramidtimestamp = -1;
+    int hextimestamp = -1;
 
-    int badeltimestamp;
-    int identifiedtimestamp;
-    int domainsurftimestamp;
+    int badeltimestamp = -1;
+    int identifiedtimestamp = -1;
+    int domainsurftimestamp = -1;
 
+    struct {
+      unsigned texture = -1;
+      int width = 0;
+      int height = 0;
+      int size = 0;
+    } colors;
+
+    struct {
+      unsigned framebuffer = 0;
+      unsigned render_buffers[2];
+      unsigned width = 0;
+      unsigned height = 0;
+      unsigned x = 0;
+      unsigned y = 0;
+      int list = 0;
+      int list_timestamp = -1;
+      double projmat[16];
+      int viewport[4];
+    } select;
 
 #ifdef PARALLELGL
-    Array<int> par_linelists;
-    Array<int> par_filledlists;
+    NgArray<int> par_linelists;
+    NgArray<int> par_filledlists;
 #endif
 
     MouseEventHandler * user_me_handler;
@@ -159,12 +194,12 @@ namespace netgen
     // weak_ptr<Mesh> wp_mesh;
 
   public:
-    DLL_HEADER VisualSceneMesh ();
-	DLL_HEADER virtual ~VisualSceneMesh ();
+    NGGUI_API VisualSceneMesh ();
+	NGGUI_API virtual ~VisualSceneMesh ();
 
-	DLL_HEADER virtual void BuildScene (int zoomall = 0);
-	DLL_HEADER virtual void DrawScene ();
-	DLL_HEADER virtual void MouseDblClick (int px, int py);
+	NGGUI_API virtual void BuildScene (int zoomall = 0);
+	NGGUI_API virtual void DrawScene ();
+	NGGUI_API virtual void MouseDblClick (int px, int py);
 
     // void SetMesh (shared_ptr<Mesh> mesh) { wp_mesh = mesh; }
     // shared_ptr<Mesh> GetMesh () { return shared_ptr<Mesh>(wp_mesh); }
@@ -174,18 +209,20 @@ namespace netgen
     { user_me_handler = handler; }
 
 
-	DLL_HEADER int SelectedFace () const
+	NGGUI_API int SelectedFace () const
     { return selface; }
-	DLL_HEADER void SetSelectedFace (int asf);
+	NGGUI_API void SetSelectedFace (int asf);
     //    { selface = asf; selecttimestamp = GetTimeStamp(); }
 
-	DLL_HEADER int SelectedEdge () const
+	NGGUI_API int SelectedEdge () const
     { return seledge; }
-	DLL_HEADER int SelectedElement () const
+	NGGUI_API int SelectedElement () const
     { return selelement; }
-	DLL_HEADER int SelectedPoint () const
+	NGGUI_API int SelectedPoint () const
     { return selpoint; }
-    void BuildFilledList (bool names);
+    void BuildFilledList (bool select);
+    void BuildColorTexture();
+    void SelectCenter(int zoomall);
     // private:
     void BuildLineList();
     void BuildEdgeList();
@@ -199,12 +236,16 @@ namespace netgen
     void BuildBadelList();
     void BuildIdentifiedList();
     void BuildDomainSurfList();
+
+    bool SelectSurfaceElement (int px, int py, Point<3> &p, bool select_on_clipping_plane);
+    bool Unproject(int px, int py, Point<3> &p);
+    ngcore::INT<2> Project(Point<3> p);
   };
 
-  DLL_HEADER extern VisualSceneMesh vsmesh;
+  NGGUI_API extern VisualSceneMesh vsmesh;
   
 
-  class DLL_HEADER VisualSceneSpecPoints : public VisualScene
+  class NGGUI_API VisualSceneSpecPoints : public VisualScene
   {
   public:
     VisualSceneSpecPoints ();
@@ -239,6 +280,7 @@ namespace netgen
                             PointIndex & selpoint2, int & locpi);
 
 
+  NGGUI_API std::vector<unsigned char> Snapshot( int w, int h );
 }
 
 

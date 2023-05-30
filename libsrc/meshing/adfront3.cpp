@@ -84,11 +84,15 @@ AdFront3 :: ~AdFront3 ()
   delete connectedpairs;
 }
 
-void AdFront3 :: GetPoints (Array<Point<3> > & apoints) const
+void AdFront3 :: GetPoints (NgArray<Point<3> > & apoints) const
 {
+  /*
   for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
     
     apoints.Append (points[pi].P());
+  */
+  for (auto & p : points)
+    apoints.Append(p.P());
 }
 
 
@@ -105,7 +109,8 @@ PointIndex AdFront3 :: AddPoint (const Point<3> & p, PointIndex globind)
   else
     {
       points.Append (FrontPoint3 (p, globind));
-      return --points.End();
+      // return --points.End();
+      return *points.Range().end()-1;
       // return points.Size()-1+PointIndex::BASE;
     }
 }
@@ -267,7 +272,7 @@ void AdFront3 :: CreateTrees ()
 
 
 void AdFront3 :: GetIntersectingFaces (const Point<3> & pmin, const Point<3> & pmax, 
-				       Array<int> & ifaces) const
+				       NgArray<int> & ifaces) const
 {
   facetree -> GetIntersecting (pmin, pmax, ifaces);
 }
@@ -302,7 +307,8 @@ void AdFront3 :: RebuildInternalTables ()
 
   int np = points.Size();
 
-  for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+  // for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+  for (PointIndex pi : points.Range())
     points[pi].cluster = pi;
   
   NgProfiler::StopTimer (timer_a);	  
@@ -343,21 +349,21 @@ void AdFront3 :: RebuildInternalTables ()
 
 
 
-  BitArrayChar<PointIndex::BASE> usecl(np);
-  usecl.Clear();
+  Array<bool, PointIndex> usecl(np);
+  usecl = false;
   for (int i = 1; i <= faces.Size(); i++)
     {
-      usecl.Set (points[faces.Get(i).Face().PNum(1)].cluster);
+      usecl[points[faces.Get(i).Face().PNum(1)].cluster] = true;
       faces.Elem(i).cluster =
 	points[faces.Get(i).Face().PNum(1)].cluster;
     }
   int cntcl = 0;
   for (int i = PointIndex::BASE; 
        i < np+PointIndex::BASE; i++)
-    if (usecl.Test(i))
+    if (usecl[i])
       cntcl++;
 
-  Array<double, PointIndex::BASE> clvol (np);
+  NgArray<double, PointIndex::BASE> clvol (np);
   clvol = 0.0;
 
   for (int i = 1; i <= faces.Size(); i++)
@@ -395,12 +401,13 @@ void AdFront3 :: RebuildInternalTables ()
       if (clvol[i] < 0)
 	negvol = 1;
     }
-
+  
   if (negvol)
     {
       for (int i = 1; i <= faces.Size(); i++)
 	faces.Elem(i).cluster = 1;
-      for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+      // for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
+      for (PointIndex pi : points.Range())
 	points[pi].cluster = 1;
     }
 
@@ -485,10 +492,10 @@ int AdFront3 :: SelectBaseElement ()
 
 
 int AdFront3 :: GetLocals (int fstind,
-			   Array<Point3d, PointIndex::BASE> & locpoints,
-			   Array<MiniElement2d> & locfaces,   // local index
-			   Array<PointIndex, PointIndex::BASE> & pindex,
-			   Array<INDEX> & findex,
+			   NgArray<Point3d, PointIndex::BASE> & locpoints,
+			   NgArray<MiniElement2d> & locfaces,   // local index
+			   NgArray<PointIndex, PointIndex::BASE> & pindex,
+			   NgArray<INDEX> & findex,
 			   INDEX_2_HASHTABLE<int> & getconnectedpairs,
 			   float xh,
 			   float relh,
@@ -509,11 +516,11 @@ int AdFront3 :: GetLocals (int fstind,
   PointIndex pstind;
   Point3d midp, p0;
 
-  //  static Array<int, PointIndex::BASE> invpindex;
+  //  static NgArray<int, PointIndex::BASE> invpindex;
   
-  Array<MiniElement2d> locfaces2;           //all local faces in radius xh
-  Array<int> locfaces3;           // all faces in outer radius relh
-  Array<INDEX> findex2;
+  NgArray<MiniElement2d> locfaces2;           //all local faces in radius xh
+  NgArray<int> locfaces3;           // all faces in outer radius relh
+  NgArray<INDEX> findex2;
 
   locfaces2.SetSize(0);
   locfaces3.SetSize(0);
@@ -590,7 +597,7 @@ int AdFront3 :: GetLocals (int fstind,
     for (j = 1; j <= locfaces.Get(i).GetNP(); j++)
       {
 	PointIndex pi = locfaces.Get(i).PNum(j);
-	invpindex[pi] = -1;
+        invpindex[pi] = PointIndex::INVALID;
       }
 
   for (i = 1; i <= locfaces.Size(); i++)
@@ -598,7 +605,7 @@ int AdFront3 :: GetLocals (int fstind,
       for (j = 1; j <= locfaces.Get(i).GetNP(); j++)
 	{
 	  PointIndex pi = locfaces.Get(i).PNum(j);
-	  if (invpindex[pi] == -1)
+	  if (!invpindex[pi].IsValid())
 	    {
 	      pindex.Append (pi);
               locpoints.Append (points[pi].P());
@@ -657,19 +664,19 @@ int AdFront3 :: GetLocals (int fstind,
 
 // returns all points connected with fi
 void AdFront3 :: GetGroup (int fi,
-			   Array<MeshPoint, PointIndex::BASE> & grouppoints,
-			   Array<MiniElement2d> & groupelements,
-			   Array<PointIndex, PointIndex::BASE> & pindex,
-			   Array<INDEX> & findex) 
+			   NgArray<MeshPoint, PointIndex::BASE> & grouppoints,
+			   NgArray<MiniElement2d> & groupelements,
+			   NgArray<PointIndex, PointIndex::BASE> & pindex,
+			   NgArray<INDEX> & findex) 
 {
-  // static Array<char> pingroup;
+  // static NgArray<char> pingroup;
   int changed;
 
   pingroup.SetSize(points.Size());
 
   pingroup = 0;
   for (int j = 1; j <= 3; j++)
-    pingroup.Elem (faces.Get(fi).Face().PNum(j)) = 1;
+    pingroup[faces.Get(fi).Face().PNum(j)] = 1;
 
   do
     {
@@ -702,14 +709,14 @@ void AdFront3 :: GetGroup (int fi,
 
 	    int fused = 0;
 	    for (int j = 1; j <= 3; j++)
-	      if (pingroup.Elem(face.PNum(j))) 
+	      if (pingroup[face.PNum(j)]) 
 		fused++;
             
 	    if (fused >= 2)
 	      for (int j = 1; j <= 3; j++)
-		if (!pingroup.Elem(face.PNum(j)))
+		if (!pingroup[face.PNum(j)])
 		  {
-		    pingroup.Elem(face.PNum(j)) = 1;
+		    pingroup[face.PNum(j)] = 1;
 		    changed = 1;
 		  }
 	  }
@@ -733,7 +740,7 @@ void AdFront3 :: GetGroup (int fi,
       {
 	int fused = 0;
 	for (int j = 1; j <= 3; j++)
-	  if (pingroup.Get(faces.Get(i).Face().PNum(j)))
+	  if (pingroup[faces.Get(i).Face().PNum(j)])
 	    fused++;
 
 	if (fused >= 2)
@@ -753,7 +760,7 @@ void AdFront3 :: GetGroup (int fi,
   */
   for (auto & e : groupelements)
     for (int j = 1; j <= 3; j++)
-      e.PNum(j) = invpindex.Get(e.PNum(j));
+      e.PNum(j) = invpindex[e.PNum(j)];
 }
 
 
@@ -780,6 +787,7 @@ void AdFront3 :: SetStartFront (int /* baseelnp */)
 
 bool AdFront3 :: Inside (const Point<3> & p) const
 {
+  static Timer timer("AdFront3::Inside"); RegionTimer rt(timer);
   int cnt;
   Vec3d n, v1, v2;
   DenseMatrix a(3), ainv(3);
@@ -833,7 +841,7 @@ bool AdFront3 :: Inside (const Point<3> & p) const
 
 
 int AdFront3 :: SameSide (const Point<3> & lp1, const Point<3> & lp2,
-			  const Array<int> * testfaces) const
+			  const NgArray<int> * testfaces) const
 {
   const Point<3> *line[2];
   line[0] = &lp1;
@@ -845,7 +853,7 @@ int AdFront3 :: SameSide (const Point<3> & lp1, const Point<3> & lp2,
   pmin.SetToMin (lp2);
   pmax.SetToMax (lp2);
   
-  ArrayMem<int, 100> aprif;
+  NgArrayMem<int, 100> aprif;
   aprif.SetSize(0);
   
   if (!testfaces)

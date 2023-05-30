@@ -149,7 +149,14 @@ public:
     int pos = Position (bnr, ahash);
     return cont.Get (bnr, pos);
   }
-  
+
+  T & Get (const INDEX_2 & ahash)
+  {
+    int bnr = HashValue (ahash);
+    int pos = Position (bnr, ahash);
+    return cont.Get (bnr, pos);
+  }
+
   ///
   bool Used (const INDEX_2 & ahash) const
   {
@@ -214,9 +221,14 @@ public:
     int BagNr() const { return bagnr; }
     int Pos() const { return pos; }
 
-    void operator++ (int)
+    Iterator operator++ (int)
     {
-      // cout << "begin Operator ++: bagnr = " << bagnr << " -  pos = " << pos << endl;
+      Iterator it(ht, bagnr, pos);
+      ++(*this);
+      return it;
+    }
+    Iterator& operator++()
+    {
       pos++;
       while (bagnr < ht.GetNBags() && 
 	     pos == ht.GetBagSize(bagnr+1))
@@ -224,7 +236,12 @@ public:
 	  pos = 0;
 	  bagnr++;
 	}
-      // cout << "end Operator ++: bagnr = " << bagnr << " - pos = " << pos << endl;
+      return *this;
+    }
+
+    std::pair<INDEX_2, T> operator*()
+    {
+      return std::make_pair(ht.hash[bagnr][pos], ht.cont[bagnr][pos]);
     }
 
     bool operator != (int i) const
@@ -242,6 +259,18 @@ public:
   }
 
   int End() const
+  {
+    return GetNBags();
+  }
+
+  Iterator begin () const
+  {
+    Iterator it(*this, 0, -1);
+    it++;
+    return it;
+  }
+
+  int end() const
   {
     return GetNBags();
   }
@@ -480,7 +509,7 @@ class BASE_INDEX_CLOSED_HASHTABLE
 protected:
   ///
   // MoveableArray<INDEX> hash;
-  Array<INDEX> hash;
+  NgArray<INDEX> hash;
   ///
   int invalid;
 public:
@@ -556,7 +585,7 @@ class INDEX_CLOSED_HASHTABLE : public BASE_INDEX_CLOSED_HASHTABLE
 {
   ///
 // MoveableArray<T> cont;
-  Array<T> cont;
+  NgArray<T> cont;
 
 public:
   ///
@@ -653,13 +682,13 @@ class BASE_INDEX_2_CLOSED_HASHTABLE
 protected:
   ///
   // MoveableArray<INDEX_2> hash;
-  Array<INDEX_2> hash;
+  NgArray<INDEX_2> hash;
   ///
   int invalid;
   size_t mask;
 public:
   ///
-  BASE_INDEX_2_CLOSED_HASHTABLE (size_t size);
+  DLL_HEADER BASE_INDEX_2_CLOSED_HASHTABLE (size_t size);
 
   int Size() const { return hash.Size(); }
   bool UsedPos0 (int pos) const { return ! (hash[pos].I1() == invalid); }
@@ -709,16 +738,16 @@ public:
 protected:
   ///
 
-  int Position2 (const INDEX_2 & ind) const;
-  bool PositionCreate2 (const INDEX_2 & ind, int & apos);
-  void BaseSetSize (int asize);
+  DLL_HEADER int Position2 (const INDEX_2 & ind) const;
+  DLL_HEADER bool PositionCreate2 (const INDEX_2 & ind, int & apos);
+  DLL_HEADER void BaseSetSize (int asize);
 };
 
 
 template <class T>
 class INDEX_2_CLOSED_HASHTABLE : public BASE_INDEX_2_CLOSED_HASHTABLE
 {
-  Array<T> cont;
+  NgArray<T> cont;
 public:
   INDEX_2_CLOSED_HASHTABLE (size_t size)
     : BASE_INDEX_2_CLOSED_HASHTABLE(size), cont(RoundUp2(size))
@@ -742,6 +771,15 @@ public:
   {
     int pos = Position0 (ahash);
     return (pos != -1);
+  }
+
+  inline optional<T> GetIfUsed (const INDEX_2 & ahash) const
+  {
+    int pos = Position0 (ahash);
+    if (pos != -1)
+      return cont[pos];
+    else
+      return nullopt;
   }
     
   inline void SetData0 (int pos, const INDEX_2 & ahash, const T & acont)
@@ -813,7 +851,7 @@ inline ostream & operator<< (ostream & ost, const INDEX_2_CLOSED_HASHTABLE<T> & 
 class BASE_INDEX_3_CLOSED_HASHTABLE
 {
 protected:
-  Array<INDEX_3> hash;
+  NgArray<INDEX_3> hash;
   int invalid;
   size_t mask;
 
@@ -922,7 +960,7 @@ template <class T>
 class INDEX_3_CLOSED_HASHTABLE : public BASE_INDEX_3_CLOSED_HASHTABLE
 {
   // MoveableArray<T,0> cont;
-  Array<T,0> cont;
+  NgArray<T,0> cont;
 
 public:
   INDEX_3_CLOSED_HASHTABLE (int size)
@@ -1361,6 +1399,10 @@ inline void SetInvalid (INDEX_2 & i2) { i2[0] = -1; }
 inline bool IsInvalid (INDEX_2 i2) { return i2[0] == -1; }
 inline size_t HashValue (INDEX_2 i2, size_t size) { return (113*size_t(i2[0])+size_t(i2[1])) % size; }
 
+inline void SetInvalid (INDEX_3 & i3) { i3[0] = -1; }
+inline bool IsInvalid (INDEX_3 i3) { return i3[0] == -1; }
+inline size_t HashValue (INDEX_3 i3, size_t size) { return (i3[0]+15*size_t(i3[1])+41*size_t(i3[2])) % size; }
+
 
   /**
      A closed hash-table.
@@ -1376,9 +1418,9 @@ inline size_t HashValue (INDEX_2 i2, size_t size) { return (113*size_t(i2[0])+si
     ///
     size_t used;
     ///
-    Array<T_HASH> hash;
+    NgArray<T_HASH> hash;
     ///
-    Array<T> cont;
+    NgArray<T> cont;
   public:
     ///
     ClosedHashTable (size_t asize = 128)
@@ -1390,8 +1432,7 @@ inline size_t HashValue (INDEX_2 i2, size_t size) { return (113*size_t(i2[0])+si
 
     ClosedHashTable (ClosedHashTable && ht2) = default;
 
-      // who needs that ? 
-    ClosedHashTable (FlatArray<T_HASH> _hash, FlatArray<T> _cont)
+    ClosedHashTable (NgFlatArray<T_HASH> _hash, NgFlatArray<T> _cont)
       : size(_hash.Size()), used(0), hash(_hash.Size(), _hash.Addr(0)), cont(_cont.Size(), _cont.Addr(0))
     {
       for (auto & v : hash)
@@ -1417,13 +1458,6 @@ inline size_t HashValue (INDEX_2 i2, size_t size) { return (113*size_t(i2[0])+si
     size_t UsedElements () const
     {
       return used;
-      /*
-      size_t cnt = 0;
-      for (size_t i = 0; i < size; i++)
-	if (hash[i] != invalid)
-	  cnt++;
-      return cnt;
-      */
     }
 
     size_t Position (const T_HASH ind) const
@@ -1443,7 +1477,7 @@ inline size_t HashValue (INDEX_2 i2, size_t size) { return (113*size_t(i2[0])+si
       ClosedHashTable tmp(2*Size());
       for (auto both : *this)
         tmp[both.first] = both.second;
-      *this = move(tmp);
+      *this = std::move(tmp);
     }
     
     // returns true if new position is created
@@ -1564,6 +1598,13 @@ inline size_t HashValue (INDEX_2 i2, size_t size) { return (113*size_t(i2[0])+si
           Set (key, val);
           pos = nextpos;
         }
+    }
+
+    void DeleteData()
+    {
+      for (auto & v : hash)
+        SetInvalid(v);
+      used = 0;
     }
     
     class Iterator

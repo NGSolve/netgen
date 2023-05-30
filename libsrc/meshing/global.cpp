@@ -1,5 +1,6 @@
 #include <mystdlib.h>
 #include "meshing.hpp"
+#include <netgen_version.hpp>
 
 
 namespace netgen
@@ -18,9 +19,10 @@ namespace netgen
   // testout -> clear(ios::failbit);
 
   // ostream * testout = &cout;
-  ostream * testout = new ostream(0);
 
   // NetgenOutStream * testout = new NetgenOutStream;
+
+  const string netgen_version = NETGEN_VERSION;
 
   ostream * mycout = &cout;
   ostream * myerr = &cerr;
@@ -65,20 +67,18 @@ namespace netgen
     (*testout) << "Error !!! " << ch << endl << flush;
   }
 
-  static clock_t starttimea;
+  static double starttimea;
   void ResetTime ()
   {
-    starttimea = clock();
+    starttimea = WallTime();
   }
 
   double GetTime ()
   {
-    return double(clock() - starttimea) / CLOCKS_PER_SEC;
+    return WallTime() - starttimea;
   }
 
 
-
-  Array<int> tets_in_qualclass;
 
   mutex tcl_todo_mutex;
 

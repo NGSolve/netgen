@@ -1,4 +1,5 @@
 #include <mystdlib.h>
+#include <core/register_archive.hpp>
 
 #include <linalg.hpp>
 #include <csg.hpp>
@@ -48,17 +49,19 @@ namespace netgen
     isfirst(first), islast(last), spline(&spline_in), p0(p), v_axis(vec),  id(id_in)
   {    
     deletable = false;
+    maxh = spline_in.GetMaxh();
+    bcname = spline_in.GetBCName();
     Init();
   }
 
 
-  RevolutionFace :: RevolutionFace(const Array<double> & raw_data)
+  RevolutionFace :: RevolutionFace(const NgArray<double> & raw_data)
   {
     deletable = true;
     
     int pos = 0;
 
-    Array< Point<2> > p(3);
+    NgArray< Point<2> > p(3);
 
     int stype = int(raw_data[pos]); pos++;
 
@@ -305,6 +308,7 @@ namespace netgen
       }
     else
       {
+        hesse = 0;
 	(*testout) << "hesse4: " << hesse <<endl;
       }
   }
@@ -332,7 +336,7 @@ namespace netgen
   {
     double retval = spline->MaxCurvature();
 
-    Array < Point<2> > checkpoints;
+    NgArray < Point<2> > checkpoints;
 
     const SplineSeg3<2> * ss3 = dynamic_cast<const SplineSeg3<2> *>(spline);
     const LineSeg<2> * ls = dynamic_cast<const LineSeg<2> *>(spline);
@@ -385,7 +389,7 @@ namespace netgen
 
 
     // find smallest y value of spline:
-    Array<double> testt;
+    NgArray<double> testt;
 
     if(!isfirst)
       testt.Append(0);
@@ -623,7 +627,7 @@ namespace netgen
 
   
 
-  void RevolutionFace :: GetRawData(Array<double> & data) const
+  void RevolutionFace :: GetRawData(NgArray<double> & data) const
   {
     data.DeleteAll();
     spline->GetRawData(data);
@@ -639,10 +643,10 @@ namespace netgen
 
   Revolution :: Revolution(const Point<3> & p0_in,
 			   const Point<3> & p1_in,
-			   const SplineGeometry<2> & spline_in) :
-    p0(p0_in), p1(p1_in)
+			   shared_ptr<SplineGeometry<2>> spline_in) :
+    p0(p0_in), p1(p1_in), splinegeo(spline_in)
   {
-    auto nsplines = spline_in.GetNSplines();
+    auto nsplines = spline_in->GetNSplines();
     surfaceactive.SetSize(0);
     surfaceids.SetSize(0);
 
@@ -650,24 +654,41 @@ namespace netgen
 
     v_axis.Normalize();
 
-    if(spline_in.GetSpline(0).StartPI()(1) <= 0. &&
-       spline_in.GetSpline(nsplines-1).EndPI()(1) <= 0.)
+    if(spline_in->GetSpline(0).StartPI()(1) <= 0. &&
+       spline_in->GetSpline(nsplines-1).EndPI()(1) <= 0.)
       type = 2;
-    else if (Dist(spline_in.GetSpline(0).StartPI(),
-		  spline_in.GetSpline(nsplines-1).EndPI()) < 1e-7)
+    else if (Dist(spline_in->GetSpline(0).StartPI(),
+		  spline_in->GetSpline(nsplines-1).EndPI()) < 1e-7)
       type = 1;
     else
       cerr << "Surface of revolution cannot be constructed" << endl;
 
-    for(int i=0; i<spline_in.GetNSplines(); i++)
+    for(int i=0; i<spline_in->GetNSplines(); i++)
       {
-	RevolutionFace * face = new RevolutionFace(spline_in.GetSpline(i),
-						   p0,v_axis,
-						   type==2 && i==0,
-						   type==2 && i==spline_in.GetNSplines()-1);
-	faces.Append(face);
-	surfaceactive.Append(1);
+	faces.Append(new RevolutionFace
+                     (spline_in->GetSpline(i),
+                      p0,v_axis,
+                      type==2 && i==0,
+                      type==2 && i==spline_in->GetNSplines()-1));
+        surfaceactive.Append(1);
 	surfaceids.Append(0);
+      }
+
+    // checking
+    if (type == 2)
+      {
+        auto t0 = spline_in->GetSpline(0).GetTangent(0);
+        cout << "tstart (must be vertically): " << t0 << endl;
+
+        auto tn = spline_in->GetSpline(nsplines-1).GetTangent(1);
+        cout << "tend (must be vertically): " << tn << endl;
+
+        for (int i = 0; i < nsplines-1; i++)
+          {
+            auto ta = spline_in->GetSpline(i).GetTangent(1);
+            auto tb = spline_in->GetSpline(i+1).GetTangent(0);
+            cout << "sin (must not be 0) = " << abs(ta(0)*tb(1)-ta(1)*tb(0)) / (Abs(ta)*Abs(tb)); 
+          }
       }
   }
   
@@ -717,7 +738,7 @@ namespace netgen
 	  return DOES_INTERSECT;
 	else
 	  {
-	    Array < Point<3> > pext(2);
+	    NgArray < Point<3> > pext(2);
 	    Point<3> p;
 
 	    pext[0] = box.PMin();
@@ -763,15 +784,16 @@ namespace netgen
     int intersections_before(0), intersections_after(0);
     double randomx = 7.42357;
     double randomy = 1.814756;
-    randomx *= 1./sqrt(randomx*randomx+randomy*randomy);
-    randomy *= 1./sqrt(randomx*randomx+randomy*randomy);
+    double randomlen = sqrt(randomx*randomx+randomy*randomy);
+    randomx *= 1./randomlen;
+    randomy *= 1./randomlen;
     
 
     const double a = randomy;
     const double b = -randomx;
     const double c = -a*p2d(0)-b*p2d(1);
 
-    Array < Point<2> > points;
+    NgArray < Point<2> > points;
 
     //(*testout) << "face intersections at: " << endl;
     for(int i=0; i<faces.Size(); i++)
@@ -795,14 +817,14 @@ namespace netgen
 	  }
       }
 
-    if(intersections_before % 2 == 0)
+    if(intersections_after % 2 == 0)
       return IS_OUTSIDE;
     else
       return IS_INSIDE;
   }
 
   void Revolution :: GetTangentialSurfaceIndices (const Point<3> & p, 
-                                                 Array<int> & surfind, double eps) const
+                                                 NgArray<int> & surfind, double eps) const
   {
     for (int j = 0; j < faces.Size(); j++)
       if (faces[j] -> PointInFace(p, eps))
@@ -822,7 +844,7 @@ namespace netgen
 	return pInSolid;
       }
 
-    Array<int> intersecting_faces;
+    NgArray<int> intersecting_faces;
 
     for(int i=0; i<faces.Size(); i++)
       if(faces[i]->PointInFace(p,eps)) //  == DOES_INTERSECT)
@@ -929,6 +951,67 @@ namespace netgen
 
     return VecInSolid(p,v1+0.01*v2,eps);
   }
+
+  void Revolution ::
+  GetTangentialVecSurfaceIndices2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
+                                   NgArray<int> & surfind, double eps) const
+  {
+    *testout << "tangentialvecsurfind2, p = " << p << endl;
+    for (int i = 0; i < faces.Size(); i++)
+      if (faces[i]->PointInFace (p, eps))
+        {
+          *testout << "check face " << i << endl;
+          Point<2> p2d;
+          Vec<2> v12d;
+          faces[i]->CalcProj(p,p2d,v1,v12d);
+          *testout << "v12d = " << v12d << endl;
+          auto & spline = faces[i]->GetSpline();
+          if (Dist2 (spline.StartPI(), p2d) < sqr(eps))
+            {
+              *testout << "start pi" << endl;
+              Vec<2> tang = spline.GetTangent(0);
+              double ip = tang*v12d;
+              *testout << "ip = " << ip << endl;
+              if (ip > eps)
+                surfind.Append(GetSurfaceId(i));
+              else if (ip > -eps)
+                {
+                  Vec<2> v22d;
+                  faces[i]->CalcProj(p,p2d,v2,v22d);
+                  double ip2 = tang*v22d;
+                  *testout << "ip2 = " << ip2 << endl;
+                  if (ip2 > -eps)
+                    surfind.Append(GetSurfaceId(i));                    
+                }
+            }
+          else if (Dist2 (faces[i]->GetSpline().EndPI(), p2d) < sqr(eps))
+            {
+              *testout << "end pi" << endl;
+              
+              Vec<2> tang = spline.GetTangent(1);
+              double ip = tang*v12d;
+              *testout << "ip = " << ip << endl;
+              if (ip < -eps)
+                surfind.Append(GetSurfaceId(i));
+              else if (ip < eps)
+                {
+                  Vec<2> v22d;
+                  faces[i]->CalcProj(p,p2d,v2,v22d);
+                  double ip2 = tang*v22d;
+                  *testout << "ip2 = " << ip2 << endl;                  
+                  if (ip2 < eps)
+                    surfind.Append(GetSurfaceId(i));                    
+                }
+            }
+          else
+            {
+              *testout << "inner point" << endl;
+              surfind.Append(GetSurfaceId(i));
+            }
+        }
+  }
+
+
   
   int Revolution :: GetNSurfaces() const
   {

@@ -7,8 +7,12 @@
 
 #include "ngcore_api.hpp"  // for NGCORE_API
 
+
 namespace ngcore
 {
+
+  NGCORE_API std::string GetBackTrace();
+
   // Exception for code that shouldn't be executed
   class NGCORE_API UnreachableCodeException : public std::exception
   {
@@ -27,8 +31,8 @@ namespace ngcore
     Exception() = default;
     Exception(const Exception&) = default;
     Exception(Exception&&) = default;
-    Exception(const std::string& s) : m_what(s) {}
-    Exception(const char* s) : m_what(s) {}
+    Exception(const std::string& s); //  : m_what(s) {}
+    Exception(const char* s); //  : m_what(s) {}
     ~Exception() override = default;
 
     Exception& operator =(const Exception&) = default;
@@ -45,7 +49,10 @@ namespace ngcore
     /// implement virtual function of std::exception
     const char* what() const noexcept override { return m_what.c_str(); }
   };
-
+  
+  NGCORE_API void ThrowException(const std::string & s);
+  NGCORE_API void ThrowException(const char * s);
+  
   // Out of Range exception
   class NGCORE_API RangeException : public Exception
   {
@@ -55,8 +62,9 @@ namespace ngcore
                     int ind, int imin, int imax) : Exception("")
       {
         std::stringstream str;
-        str << where << ": index " << ind << " out of range [" << imin << "," << imax << "]\n";
+        str << where << ": index " << ind << " out of range [" << imin << "," << imax << ")\n";
         Append (str.str());
+        Append (GetBackTrace());
       }
 
     template<typename T>
@@ -79,12 +87,19 @@ namespace ngcore
 // Convenience macro to append file name and line of exception origin to the string
 #define NG_EXCEPTION(s) ngcore::Exception(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t"+std::string(s))
 
-#ifdef NETGEN_ENABLE_CHECK_RANGE
-#define NETGEN_CHECK_RANGE(value, min, max) \
-  { if ((value)<(min) ||  (value)>=(max)) \
-      throw ngcore::RangeException(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t", (value), (min), (max)); }
-#else // NETGEN_ENABLE_CHECK_RANGE
+#if defined(NETGEN_ENABLE_CHECK_RANGE) && !defined(__CUDA_ARCH__)
+#define NETGEN_CHECK_RANGE(value, min, max_plus_one) \
+  { if ((value)<(min) ||  (value)>=(max_plus_one)) \
+      throw ngcore::RangeException(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t", (value), (min), (max_plus_one)); }
+#define NETGEN_CHECK_SHAPE(a,b) \
+  { if(a.Shape() != b.Shape()) \
+      throw ngcore::Exception(__FILE__": shape don't match"); }
+#else // defined(NETGEN_ENABLE_CHECK_RANGE) && !defined(__CUDA_ARCH__)
 #define NETGEN_CHECK_RANGE(value, min, max)
-#endif // NETGEN_ENABLE_CHECK_RANGE
+#define NETGEN_CHECK_SHAPE(a,b)
 
+#endif // defined(NETGEN_ENABLE_CHECK_RANGE) && !defined(__CUDA_ARCH__)
+
+
+  
 #endif // NETGEN_CORE_EXCEPTION_HPP

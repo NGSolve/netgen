@@ -7,22 +7,22 @@ namespace netgen
 {
 
 
-  void MeshOptimize2d :: ProjectBoundaryPoints(Array<int> & surfaceindex, 
-					       const Array<Point<3>* > & from, Array<Point<3>* > & dest)
+  void MeshOptimize2d :: ProjectBoundaryPoints(NgArray<int> & surfaceindex, 
+					       const NgArray<Point<3>* > & from, NgArray<Point<3>* > & dest)
   {
     for(int i=0; i<surfaceindex.Size(); i++)
       {
 	if(surfaceindex[i] >= 0)
 	  {
 	    *dest[i] = *from[i];
-	    ProjectPoint(surfaceindex[i],*dest[i]);
+	    geo.ProjectPoint(surfaceindex[i],*dest[i]);
 	  }
       }
       
 
   }
 
-  void MeshOptimize2d :: ImproveVolumeMesh (Mesh & mesh)
+  void MeshOptimize2d :: ImproveVolumeMesh ()
   {
     
     if (!faceindex)
@@ -31,7 +31,7 @@ namespace netgen
 
 	for (faceindex = 1; faceindex <= mesh.GetNFD(); faceindex++)
 	  {
-	    ImproveVolumeMesh (mesh);
+	    ImproveVolumeMesh ();
 	    if (multithread.terminate)
 	      throw NgException ("Meshing stopped");
 	  }
@@ -73,9 +73,9 @@ namespace netgen
 
     Vector x(3);
 
-    Array<MeshPoint, PointIndex::BASE> savepoints(mesh.GetNP());
+    NgArray<MeshPoint, PointIndex::BASE> savepoints(mesh.GetNP());
 
-    Array<int, PointIndex::BASE> nelementsonpoint(mesh.GetNP());
+    NgArray<int, PointIndex::BASE> nelementsonpoint(mesh.GetNP());
     nelementsonpoint = 0;
 
     for (i = 0; i < seia.Size(); i++)
@@ -110,7 +110,7 @@ namespace netgen
     int np = mesh.GetNP();
     int ne = mesh.GetNE();
 
-    BitArray badnodes(np);
+    NgBitArray badnodes(np);
     badnodes.Clear();
 
     for (i = 1; i <= ne; i++)
@@ -139,10 +139,11 @@ namespace netgen
     int cnt = 0;
 
 
-    Array<SurfaceElementIndex> locelements(0);
-    Array<int> locrots(0);
+    NgArray<SurfaceElementIndex> locelements(0);
+    NgArray<int> locrots(0);
 
-    for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End(); pi++)
+    // for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End(); pi++)
+    for (PointIndex pi : mesh.Points().Range())
       {
 	if (mesh[pi].Type() != SURFACEPOINT)
 	  continue;
@@ -228,7 +229,7 @@ namespace netgen
 		//cout << "origp " << origp << " newp " << mesh[pi];
 	    
 		ngi = gi1;
-		moveisok = (ProjectPointGI (surfi, mesh[pi], ngi) != 0);
+		moveisok = (geo.ProjectPointGI(surfi, mesh[pi], ngi) != 0);
 
 		//cout << " projected " << mesh[pi] << endl;
 

@@ -1,6 +1,6 @@
 HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
-                               BitArray & cornerpoint, BitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-                               INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex::BASE> & facepoint)
+                               NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
+                               INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint)
 {
   int ep1(0), ep2(0), ep3(0), ep4(0), cp1(0), cp2(0), cp3(0), cp4(0), fp1, fp2, fp3, fp4;
   int isedge1(0), isedge2(0), isedge3(0), isedge4(0), isedge5(0), isedge6(0);
@@ -423,8 +423,8 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 
 
 HPREF_ELEMENT_TYPE ClassifyPrism(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
-                                 BitArray & cornerpoint, BitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-                                 INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex::BASE> & facepoint)
+                                 NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
+                                 INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint)
 {
 
   HPREF_ELEMENT_TYPE type = HP_NONE;
@@ -660,11 +660,11 @@ HPREF_ELEMENT_TYPE ClassifyPrism(HPRefElement & el, INDEX_2_HASHTABLE<int> & edg
 
 // #ifdef SABINE 
 HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
-                                BitArray & cornerpoint, BitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int>  & face_edges, 
-				INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex::BASE> & facepoint, int dim, const FaceDescriptor & fd)
+                                NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int>  & face_edges, 
+				INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int dim, const FaceDescriptor & fd)
 
 {
-  HPREF_ELEMENT_TYPE type = HP_NONE; 
+  HPREF_ELEMENT_TYPE type = HP_NONE;
   
   int pnums[3]; 
   int p[3];   
@@ -761,11 +761,10 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 	      int ep1=p[eledges[k][0]-1];  
 	      int ep2=p[eledges[k][1]-1];  
 	     
-	      INDEX_2 i2(el.PNum(ep1),el.PNum(ep2));  
+	      INDEX_2 i2 = INDEX_2::Sort(el.PNum(ep1),el.PNum(ep2));
 	     
 	      if(edges.Used(i2)) 
 		{
-		  
 		  if(edgepoint_dom.Used(INDEX_2(fd.SurfNr(),pnums[ep1-1])) || 
 		     edgepoint_dom.Used(INDEX_2(-1,pnums[ep1-1])) || 
 		     edgepoint_dom.Used(INDEX_2(fd.SurfNr(),pnums[ep2-1])) || 
@@ -782,11 +781,13 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 
      
 	 
-      for(int k=0;k<3;k++) 
-	if(edgepoint.Test(pnums[k])) //edgepoint, but not member of sing_edge on trig -> cp 
+      for (int k=0;k<3;k++) 
+        if (edgepoint.Test(pnums[k]) &&
+            (dim==3 || edgepoint_dom.Used(INDEX_2(fd.SurfNr(),pnums[k])) || edgepoint_dom.Used(INDEX_2(-1,pnums[k]))))
+          //edgepoint, but not member of sing_edge on trig -> cp
 	  {
 	    INDEX_2 i2a=INDEX_2::Sort(el.PNum(p[k]), el.PNum(p[(k+1)%3])); 
-	    INDEX_2 i2b=INDEX_2::Sort(el.PNum(p[k]), el.PNum(p[(k+2)%3])); 
+            INDEX_2 i2b=INDEX_2::Sort(el.PNum(p[k]), el.PNum(p[(k+2)%3]));
 	    
 	    if(!edges.Used(i2a) && !edges.Used(i2b)) 
 	      point_sing[p[k]-1] = 3; 	
@@ -794,7 +795,7 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
       
       for(int k=0;k<3;k++) 
 	if(cornerpoint.Test(el.PNum(p[k]))) 
-	  point_sing[p[k]-1] = 3; 
+	  point_sing[p[k]-1] = 3;
       
       *testout << "point_sing = " << point_sing[0] << point_sing[1] << point_sing[2] << endl;
 
@@ -875,8 +876,8 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 }
 #ifdef HPREF_OLD 
 HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
-				BitArray & cornerpoint, BitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-				INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex::BASE> & facepoint, int dim, const FaceDescriptor & fd)
+				NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
+				INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int dim, const FaceDescriptor & fd)
 {
   HPREF_ELEMENT_TYPE type = HP_NONE; 
   
@@ -1136,8 +1137,8 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 }
 #endif
 HPREF_ELEMENT_TYPE ClassifyQuad(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
-                                BitArray & cornerpoint, BitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int>  & face_edges, 
-				INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex::BASE> & facepoint, int dim, const FaceDescriptor & fd)
+                                NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int>  & face_edges, 
+				INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int dim, const FaceDescriptor & fd)
 {
   HPREF_ELEMENT_TYPE type = HP_NONE; 
   
@@ -1486,8 +1487,8 @@ HPREF_ELEMENT_TYPE ClassifyQuad(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 
 
 HPREF_ELEMENT_TYPE ClassifyHex(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
-                               BitArray & cornerpoint, BitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-                               INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex::BASE> & facepoint)
+                               NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
+                               INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint)
 {
   HPREF_ELEMENT_TYPE type = HP_NONE;
   
@@ -1586,8 +1587,8 @@ HPREF_ELEMENT_TYPE ClassifyHex(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 }
 
 HPREF_ELEMENT_TYPE ClassifySegm(HPRefElement & hpel, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
-                                BitArray & cornerpoint, BitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-                                INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex::BASE> & facepoint)
+                                NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
+                                INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint)
 {
   
   int cp1 = cornerpoint.Test (hpel[0]);
@@ -1629,8 +1630,8 @@ HPREF_ELEMENT_TYPE ClassifySegm(HPRefElement & hpel, INDEX_2_HASHTABLE<int> & ed
 
 
 HPREF_ELEMENT_TYPE ClassifyPyramid(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
-                                   BitArray & cornerpoint, BitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-                                   INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex::BASE> & facepoint)
+                                   NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
+                                   INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint)
 {
   HPREF_ELEMENT_TYPE type = HP_NONE;
   

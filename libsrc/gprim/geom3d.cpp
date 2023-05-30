@@ -711,8 +711,8 @@ void referencetransform :: ToPlain (const Point3d & p, Point3d & pp) const
   pp.Z() = (ez_h * v);
 }
 
-void referencetransform :: ToPlain (const Array<Point3d> & p,
-                                    Array<Point3d> & pp) const
+void referencetransform :: ToPlain (const NgArray<Point3d> & p,
+                                    NgArray<Point3d> & pp) const
 {
   Vec3d v;
   int i;

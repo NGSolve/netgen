@@ -17,7 +17,7 @@ namespace netgen
 
 
   template <int D, typename T>
-  class Point : public ngsimd::AlignedAlloc<Point<D,T>>
+  class Point
   {
 
   protected:
@@ -43,7 +43,7 @@ namespace netgen
     Point (const Point<D,T2> & p2)
     { for (int i = 0; i < D; i++) x[i] = p2(i); }
 
-    explicit Point (const Vec<D> & v)
+    explicit Point (const Vec<D,T> & v)
     { for (int i = 0; i < D; i++) x[i] = v(i); }
 
 
@@ -63,6 +63,9 @@ namespace netgen
     T & operator() (int i) { return x[i]; }
     const T & operator() (int i) const { return x[i]; }
 
+    T& operator[] (int i) { return x[i]; }
+    const T& operator[] (int i) const { return x[i]; }
+
     operator const T* () const { return x; }
 
     void DoArchive(Archive& archive)
@@ -73,7 +76,7 @@ namespace netgen
   };
 
   template <int D, typename T>
-  class Vec : public ngsimd::AlignedAlloc<Vec<D,T>>
+  class Vec
   {
 
   protected:
@@ -101,9 +104,8 @@ namespace netgen
     explicit Vec (const Point<D,T> & p)
     { for (int i = 0; i < D; i++) x[i] = p(i); }
 
-    Vec (const Vec & p1, const Vec & p2)
-    { for(int i=0; i<D; i++) x[i] = p2(i)-p1(1); }
-  
+    explicit Vec(const Point<D,T>& p1, const Point<D,T>& p2)
+    { for(int i=0; i<D; i++) x[i] = p2(i)-p1(i); }
 
     template <typename T2>
     Vec & operator= (const Vec<D,T2> & p2)
@@ -118,8 +120,19 @@ namespace netgen
       return *this;
     }
 
+    bool operator== (const Vec<D,T> &a) const
+    {
+      bool res = true;
+      for (auto i : Range(D))
+        res &= (x[i]==a.x[i]);
+      return res;
+    }
+
     T & operator() (int i) { return x[i]; }
     const T & operator() (int i) const { return x[i]; }
+
+    T& operator[] (int i) { return x[i]; }
+    const T& operator[] (int i) const { return x[i]; }
 
     operator const T* () const { return x; }
 
@@ -157,12 +170,56 @@ namespace netgen
     Vec<D> GetNormal () const;
   };
 
+  template<int D>
+  inline Vec<D> operator-(const Point<D>& p1, const Point<D>& p2)
+  {
+    Vec<D> result;
+    for(auto i : Range(D))
+      result[i] = p1[i] - p2[i];
+    return result;
+  }
 
+  template<int D>
+  inline Vec<D> operator*(const Vec<D>& v, double d)
+  {
+    Vec<D> result;
+    for(auto i : Range(D))
+      result[i] = d*v[i];
+    return result;
+  }
 
+  inline double Cross2(const Vec<2>& v1, const Vec<2>& v2)
+  {
+    return v1[0] * v2[1] - v1[1] * v2[0];
+  }
+
+  // are points clockwise?
+  inline bool CW(const Point<2>& p1, const Point<2>& p2,
+                  const Point<2>& p3)
+  {
+    return Cross2(p2-p1, p3-p2) < 0;
+  }
+
+  // are points counterclockwise?
+  inline bool CCW(const Point<2>& p1, const Point<2>& p2,
+                  const Point<2>& p3)
+  {
+    return Cross2(p2-p1, p3-p2) > 0;
+  }
+
+  // are strictly points counterclockwise?
+  inline bool CCW(const Point<2>& p1, const Point<2>& p2,
+                  const Point<2>& p3, double eps)
+  {
+    auto v1 = p2-p1;
+    auto v2 = p3-p2;
+    return Cross2(v1, v2) > eps*eps*max2(v1.Length2(),
+                                         v2.Length2());
+  }
 
 
   template <int H, int W=H, typename T = double>
-  class Mat : public ngsimd::AlignedAlloc<Mat<H,W,T>>
+  class Mat
   {
 
   protected:
@@ -211,6 +268,11 @@ namespace netgen
       Mat<W,H,T> inv;
       CalcInverse (*this, inv);
       sol = inv * rhs;
+    }
+
+    void DoArchive(Archive & ar)
+    {
+      ar.Do(x, H*W);
     }
   };
 
@@ -278,15 +340,18 @@ namespace netgen
     template <typename T1, typename T2>
     void Set (const IndirectArray<T1, T2> & points)
     {
-      Set (points[points.Begin()]);
-      for (int i = points.Begin()+1; i < points.End(); i++)
+      // Set (points[points.Begin()]);
+      Set (points[*points.Range().begin()]);
+      // for (int i = points.Begin()+1; i < points.End(); i++)
+      for (int i : points.Range().Modify(1,0))
         Add (points[i]);
     }
 
     template <typename T1, typename T2>
     void Add (const IndirectArray<T1, T2> & points)
     {
-      for (int i = points.Begin(); i < points.End(); i++)
+      // for (int i = points.Begin(); i < points.End(); i++)
+      for (int i : points.Range())
         Add (points[i]);
     }
 
@@ -324,8 +389,16 @@ namespace netgen
     bool IsIn (const Point<D> & p) const
     {
       for (int i = 0; i < D; i++)
-	if (p(i) < pmin(i) || p(i) > pmax(i)) return 0;
-      return 1;
+	if (p(i) < pmin(i) || p(i) > pmax(i)) return false;
+      return true;
+    }
+
+    // is point in eps-increased box
+    bool IsIn (const Point<D> & p, double eps) const
+    {
+      for (int i = 0; i < D; i++)
+	if (p(i) < pmin(i)-eps || p(i) > pmax(i)+eps) return false;
+      return true;
     }
 
 
@@ -336,6 +409,13 @@ namespace netgen
 	  pmin(i) -= dist;
 	  pmax(i) += dist;
 	}
+    }
+
+    void Scale (double factor)
+    {
+      auto center = Center();
+      pmin = center + factor*(pmin-center);
+      pmax = center + factor*(pmax-center);
     }
 
     void DoArchive(Archive& archive)
@@ -418,7 +498,7 @@ namespace netgen
   };
 
 
-#ifdef PARALLEL
+#ifdef PARALLEL_OLD
   template <> 
   inline MPI_Datatype MyGetMPIType<Vec<3, double> > ()
   {

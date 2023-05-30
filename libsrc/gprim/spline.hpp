@@ -50,8 +50,11 @@ namespace netgen
   template < int D >
   class SplineSeg
   {
+    double maxh;
+    string bcname;
   public:
-    SplineSeg () { ; }
+    SplineSeg (double amaxh = 1e99, string abcname = "default")
+      : maxh(amaxh), bcname(abcname) { ; }
     ///
     virtual ~SplineSeg() { ; }
     /// calculates length of curve
@@ -94,13 +97,13 @@ namespace netgen
     virtual void GetCoeff (Vector & coeffs) const = 0;
     virtual void GetCoeff (Vector & coeffs, Point<D> p0) const { ; } 
 
-    virtual void GetPoints (int n, Array<Point<D> > & points) const;
+    virtual void GetPoints (int n, NgArray<Point<D> > & points) const;
 
     /** calculates (2D) lineintersections:
-	for lines $$ a x + b y + c = 0 $$ the interecting points are calculated
+	for lines $$ a x + b y + c = 0 $$ the intersecting points are calculated
 	and stored in points */
     virtual void LineIntersections (const double a, const double b, const double c,
-				    Array < Point<D> > & points, const double eps) const
+				    NgArray < Point<D> > & points, const double eps) const
     {points.SetSize(0);}
 
     // is the point in the convex hull (increased by eps) of the spline ?
@@ -113,9 +116,11 @@ namespace netgen
     virtual void Project (const Point<D> point, Point<D> & point_on_curve, double & t) const
     { cerr << "Project not implemented for spline base-class" << endl;}
 
-    virtual void GetRawData (Array<double> & data) const
+    virtual void GetRawData (NgArray<double> & data) const
     { cerr << "GetRawData not implemented for spline base-class" << endl;}
 
+    double GetMaxh() const { return maxh; }
+    string GetBCName() const { return bcname; }
   };
 
 
@@ -127,7 +132,8 @@ namespace netgen
     GeomPoint<D> p1, p2;
   public:
     ///
-    LineSeg (const GeomPoint<D> & ap1, const GeomPoint<D> & ap2);
+    LineSeg (const GeomPoint<D> & ap1, const GeomPoint<D> & ap2,
+             double maxh=1e99, string bcname="default");
     ///
     // default constructor for archive
     LineSeg() {}
@@ -157,7 +163,7 @@ namespace netgen
     virtual string GetType(void) const {return "line";}
 
     virtual void LineIntersections (const double a, const double b, const double c,
-				    Array < Point<D> > & points, const double eps) const;
+				    NgArray < Point<D> > & points, const double eps) const;
     
     virtual bool InConvexHull (Point<D> p, double eps) const
     {
@@ -168,7 +174,7 @@ namespace netgen
 
     virtual void Project (const Point<D> point, Point<D> & point_on_curve, double & t) const;
 
-    virtual void GetRawData (Array<double> & data) const;
+    virtual void GetRawData (NgArray<double> & data) const;
   };
 
 
@@ -182,9 +188,17 @@ namespace netgen
     mutable double proj_latest_t;
   public:
     ///
-    SplineSeg3 (const GeomPoint<D> & ap1, 
+    DLL_HEADER SplineSeg3 (const GeomPoint<D> & ap1,
 		const GeomPoint<D> & ap2, 
-		const GeomPoint<D> & ap3);
+		const GeomPoint<D> & ap3,
+                string bcname="default",
+                double maxh=1e99);
+    DLL_HEADER SplineSeg3 (const GeomPoint<D> & ap1,
+		const GeomPoint<D> & ap2,
+		const GeomPoint<D> & ap3,
+                double aweight,
+                string bcname="default",
+                double maxh=1e99);
     // default constructor for archive
     SplineSeg3() {}
     ///
@@ -192,9 +206,13 @@ namespace netgen
     {
       ar & p1 & p2 & p3 & weight & proj_latest_t;
     }
-    virtual Point<D> GetPoint (double t) const;
     ///
-    virtual Vec<D> GetTangent (const double t) const;
+    double GetWeight () const { return weight; }
+    void SetWeight (double w) { weight = w; }
+    ///
+    DLL_HEADER virtual Point<D> GetPoint (double t) const;
+    ///
+    DLL_HEADER virtual Vec<D> GetTangent (const double t) const;
 
   
     DLL_HEADER virtual void GetDerivatives (const double t, 
@@ -202,19 +220,19 @@ namespace netgen
 				 Vec<D> & first,
 				 Vec<D> & second) const;
     ///
-    virtual const GeomPoint<D> & StartPI () const { return p1; };
+    DLL_HEADER virtual const GeomPoint<D> & StartPI () const { return p1; };
     ///
-    virtual const GeomPoint<D> & EndPI () const { return p3; }
+    DLL_HEADER virtual const GeomPoint<D> & EndPI () const { return p3; }
     ///
-    virtual void GetCoeff (Vector & coeffs) const;
-    virtual void GetCoeff (Vector & coeffs, Point<D> p0) const;
+    DLL_HEADER virtual void GetCoeff (Vector & coeffs) const;
+    DLL_HEADER virtual void GetCoeff (Vector & coeffs, Point<D> p0) const;
     
     virtual string GetType(void) const {return "spline3";}
 
     const GeomPoint<D> & TangentPoint (void) const { return p2; }
 
     DLL_HEADER virtual void LineIntersections (const double a, const double b, const double c,
-				    Array < Point<D> > & points, const double eps) const;
+				    NgArray < Point<D> > & points, const double eps) const;
 
     virtual bool InConvexHull (Point<D> p, double eps) const
     {
@@ -225,7 +243,7 @@ namespace netgen
 
     DLL_HEADER virtual void Project (const Point<D> point, Point<D> & point_on_curve, double & t) const;
 
-    DLL_HEADER virtual void GetRawData (Array<double> & data) const;
+    DLL_HEADER virtual void GetRawData (NgArray<double> & data) const;
   };
 
 
@@ -271,7 +289,7 @@ namespace netgen
     virtual string GetType(void) const {return "circle";}
 
     virtual void LineIntersections (const double a, const double b, const double c,
-				    Array < Point<D> > & points, const double eps) const;
+				    NgArray < Point<D> > & points, const double eps) const;
 
     virtual bool InConvexHull (Point<D> p, double eps) const
     {
@@ -290,11 +308,11 @@ namespace netgen
   template<int D>
   class DiscretePointsSeg : public SplineSeg<D>
   {
-    Array<Point<D> > pts;
+    NgArray<Point<D> > pts;
     GeomPoint<D> p1n, p2n;
   public:
     ///
-    DiscretePointsSeg (const Array<Point<D> > & apts);
+    DiscretePointsSeg (const NgArray<Point<D> > & apts);
     // default constructor for archive
     DiscretePointsSeg() {}
     virtual void DoArchive(Archive& ar)
@@ -346,7 +364,7 @@ namespace netgen
 
 
   template<int D>
-  void SplineSeg<D> :: GetPoints (int n, Array<Point<D> > & points) const
+  void SplineSeg<D> :: GetPoints (int n, NgArray<Point<D> > & points) const
   {
     points.SetSize (n);
     if (n >= 2)
@@ -376,8 +394,9 @@ namespace netgen
 
   template<int D>
   LineSeg<D> :: LineSeg (const GeomPoint<D> & ap1, 
-			 const GeomPoint<D> & ap2)
-    : p1(ap1), p2(ap2)
+			 const GeomPoint<D> & ap2,
+                         double maxh, string bcname)
+    : SplineSeg<D>(maxh, bcname), p1(ap1), p2(ap2)
   {
     ;
   }
@@ -445,7 +464,7 @@ namespace netgen
 
   template<int D>
   void LineSeg<D> :: LineIntersections (const double a, const double b, const double c,
-					Array < Point<D> > & points, const double eps) const
+					NgArray < Point<D> > & points, const double eps) const
   {
     points.SetSize(0);
 
@@ -478,7 +497,7 @@ namespace netgen
 
 
   template<int D>
-  void LineSeg<D> :: GetRawData (Array<double> & data) const
+  void LineSeg<D> :: GetRawData (NgArray<double> & data) const
   {
     data.Append(2);
     for(int i=0; i<D; i++)
@@ -599,7 +618,7 @@ namespace netgen
 
 
   template<int D>
-  DiscretePointsSeg<D> ::   DiscretePointsSeg (const Array<Point<D> > & apts)
+  DiscretePointsSeg<D> ::   DiscretePointsSeg (const NgArray<Point<D> > & apts)
     : pts (apts)
   { 
     for(int i=0; i<D; i++)
@@ -647,13 +666,13 @@ namespace netgen
   template<int D, int ORDER>
   class BSplineSeg : public SplineSeg<D>
   {
-    Array<Point<D> > pts;
+    NgArray<Point<D> > pts;
     GeomPoint<D> p1n, p2n;    
-    Array<int> ti; 
+    NgArray<int> ti; 
 
   public:
     ///
-    BSplineSeg (const Array<Point<D> > & apts);
+    BSplineSeg (const NgArray<Point<D> > & apts);
     ///
     //default constructor for archive
     BSplineSeg() {}
@@ -680,7 +699,7 @@ namespace netgen
 
   // Constructor
   template<int D,int ORDER>
-  BSplineSeg<D,ORDER> :: BSplineSeg (const Array<Point<D> > & apts)
+  BSplineSeg<D,ORDER> :: BSplineSeg (const NgArray<Point<D> > & apts)
     : pts (apts)
   { 
     /*

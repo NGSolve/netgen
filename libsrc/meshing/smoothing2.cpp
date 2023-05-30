@@ -186,10 +186,10 @@ namespace netgen
     MeshPoint sp1; 
     PointGeomInfo gi1;
     Vec<3> normal, t1, t2;
-    Array<SurfaceElementIndex> locelements;
-    Array<int> locrots;
-    Array<double> lochs;
-    Array<Point<3> > loc_pnts2, loc_pnts3;
+    NgArray<SurfaceElementIndex> locelements;
+    NgArray<int> locrots;
+    NgArray<double> lochs;
+    NgArray<Point<3> > loc_pnts2, loc_pnts3;
   // static int locerr2;
     double locmetricweight;
     double loch;
@@ -205,22 +205,20 @@ namespace netgen
 
   class Opti2SurfaceMinFunction : public MinFunction
   {
-    const Mesh & mesh;
     Opti2dLocalData & ld;
+    const NetgenGeometry& geo;
   public:
     Opti2SurfaceMinFunction (const Mesh & amesh,
 			     Opti2dLocalData & ald)
-      : mesh(amesh), ld(ald)
+      : ld(ald), geo(*amesh.GetGeometry())
     { } ;
 
 
     virtual double Func (const Vector & x) const
     {
-      Vec<3> n;
-      
       double badness = 0;
       
-      ld.meshthis -> GetNormalVector (ld.surfi, ld.sp1, ld.gi1, n);
+      auto n = geo.GetNormal(ld.surfi, ld.sp1, &ld.gi1);
       Point<3> pp1 = ld.sp1 + x(0) * ld.t1 + x(1) * ld.t2;
       
       for (int j = 0; j < ld.locelements.Size(); j++)
@@ -355,13 +353,13 @@ namespace netgen
     // static int timer = NgProfiler::CreateTimer ("opti2surface - funcgrad");
     // NgProfiler::RegionTimer reg (timer);
 
-    Vec<3> n, vgrad;
+    Vec<3> vgrad;
     Point<3> pp1;
 
     vgrad = 0;
     double badness = 0;
 
-    ld.meshthis -> GetNormalVector (ld.surfi, ld.sp1, ld.gi1, n);
+    auto n = geo.GetNormal(ld.surfi, ld.sp1, &ld.gi1);
     pp1 = ld.sp1 + x(0) * ld.t1 + x(1) * ld.t2;
 
     //  meshthis -> ProjectPoint (surfi, pp1);
@@ -410,13 +408,13 @@ namespace netgen
     // static int timer = NgProfiler::CreateTimer ("opti2surface - funcderiv");
     // NgProfiler::RegionTimer reg (timer);
 
-    Vec<3> n, vgrad;
+    Vec<3> vgrad;
     Point<3> pp1;
 
     vgrad = 0;
     double badness = 0;
 
-    ld.meshthis -> GetNormalVector (ld.surfi, ld.sp1, ld.gi1, n);
+    auto n = geo.GetNormal(ld.surfi, ld.sp1, &ld.gi1);
     pp1 = ld.sp1 + x(0) * ld.t1 + x(1) * ld.t2;
 
     for (int j = 0; j < ld.locelements.Size(); j++)
@@ -474,11 +472,12 @@ namespace netgen
   {
     const Mesh & mesh;
     Opti2dLocalData & ld;
+    const NetgenGeometry& geo;
 
   public:
     Opti2EdgeMinFunction (const Mesh & amesh,
 			  Opti2dLocalData & ald)
-      : mesh(amesh), ld(ald) { } ;
+      : mesh(amesh), ld(ald), geo(*amesh.GetGeometry()) { } ;
 
     virtual double FuncGrad (const Vector & x, Vector & g) const;
     virtual double Func (const Vector & x) const;
@@ -493,7 +492,7 @@ namespace netgen
   double Opti2EdgeMinFunction :: FuncGrad (const Vector & x, Vector & grad) const
   {
     int j, rot;
-    Vec<3> n1, n2, v1, v2, e1, e2, vgrad;
+    Vec<3> v1, v2, e1, e2, vgrad;
     Point<3> pp1;
     Vec<2> g1;
     double badness, hbadness;
@@ -502,7 +501,7 @@ namespace netgen
     badness = 0;
 
     pp1 = ld.sp1 + x(0) * ld.t1;
-    ld.meshthis -> ProjectPoint2 (ld.surfi, ld.surfi2, pp1);
+    geo.ProjectPointEdge(ld.surfi, ld.surfi2, pp1);
 
     for (j = 0; j < ld.locelements.Size(); j++)
       {
@@ -526,8 +525,8 @@ namespace netgen
         vgrad += g1(0) * e1 + g1(1) * e2;
       }
 
-    ld.meshthis -> GetNormalVector (ld.surfi, pp1, n1);
-    ld.meshthis -> GetNormalVector (ld.surfi2, pp1, n2);
+    auto n1 = geo.GetNormal(ld.surfi, pp1);
+    auto n2 = geo.GetNormal(ld.surfi2, pp1);
 
     v1 = Cross (n1, n2);
     v1.Normalize();
@@ -544,11 +543,12 @@ namespace netgen
   {
     const Mesh & mesh;
     Opti2dLocalData & ld;
+    const NetgenGeometry& geo;
 
   public:
     Opti2SurfaceMinFunctionJacobian (const Mesh & amesh,
 				     Opti2dLocalData & ald)
-      : mesh(amesh), ld(ald)
+      : mesh(amesh), ld(ald), geo(*amesh.GetGeometry())
     { } ;
     virtual double FuncGrad (const Vector & x, Vector & g) const;
     virtual double FuncDeriv (const Vector & x, const Vector & dir, double & deriv) const;
@@ -569,22 +569,22 @@ namespace netgen
     // from 2d:
 
     int lpi, gpi;
-    Vec<3> n, vgrad;
+    Vec<3> vgrad;
     Point<3> pp1;
-    Vec2d g1, vdir;
+    Vec<2> g1, vdir;
     double badness, hbad, hderiv;
 
     vgrad = 0;
     badness = 0;
 
-    ld.meshthis -> GetNormalVector (ld.surfi, ld.sp1, ld.gi1, n);
+    // auto n = geo.GetNormal(ld.surfi, ld.sp1, &ld.gi1);
 
     pp1 = ld.sp1 + x(0) * ld.t1 + x(1) * ld.t2;
 
     //  meshthis -> ProjectPoint (surfi, pp1);
     //  meshthis -> GetNormalVector (surfi, pp1, n);
 
-    static Array<Point2d> pts2d;
+    static NgArray<Point<2>> pts2d;
     pts2d.SetSize(mesh.GetNP());
 
     grad = 0;
@@ -603,15 +603,15 @@ namespace netgen
 	    pts2d.Elem(pi) = Point2d (ld.t1 * (mesh.Point(pi) - ld.sp1), 
 				      ld.t2 * (mesh.Point(pi) - ld.sp1)); 
 	  }				    
-	pts2d.Elem(gpi) = Point2d (x(0), x(1));
+	pts2d.Elem(gpi) = { x(0), x(1) };
       
 
 	for (int k = 1; k <= 2; k++)
 	  {
 	    if (k == 1)
-	      vdir = Vec2d (1, 0);
+	      vdir = {1., 0.};
 	    else
-	      vdir = Vec2d (0, 1);
+	      vdir = {0., 1.};
 	  
 	    hbad = bel.
 	      CalcJacobianBadnessDirDeriv (pts2d, lpi, vdir, hderiv);
@@ -641,21 +641,19 @@ namespace netgen
     // from 2d:
 
     int j, k, lpi, gpi;
-    Vec<3> n, vgrad;
+    Vec<3> vgrad;
     Point<3> pp1;
-    Vec2d g1, vdir;
+    Vec<2> g1, vdir;
     double badness, hbad, hderiv;
 
     vgrad = 0;
     badness = 0;
 
-    ld.meshthis -> GetNormalVector (ld.surfi, ld.sp1, ld.gi1, n);
-
     // pp1 = sp1;
     //    pp1.Add2 (x.Get(1), t1, x.Get(2), t2);
     pp1 = ld.sp1 + x(0) * ld.t1 + x(1) * ld.t2;
 
-    static Array<Point2d> pts2d;
+    static NgArray<Point<2>> pts2d;
     pts2d.SetSize(mesh.GetNP());
 
     deriv = 0;
@@ -677,7 +675,7 @@ namespace netgen
 	pts2d.Elem(gpi) = Point2d (x(0), x(1));
       
 
-	vdir = Vec2d (dir(0), dir(1));
+	vdir = { dir(0), dir(1) };
 	  
 	hbad = bel.
 	  CalcJacobianBadnessDirDeriv (pts2d, lpi, vdir, hderiv);
@@ -690,144 +688,104 @@ namespace netgen
     return badness;
   }
 
-
-
-
-
-
-
-  MeshOptimize2d dummy;
-
-  MeshOptimize2d :: MeshOptimize2d ()
+  void MeshOptimize2d :: ImproveMesh (const MeshingParameters & mp)
   {
-    SetFaceIndex (0);
-    SetImproveEdges (0);
-    SetMetricWeight (0);
-    SetWriteStatus (1);
-  }
+    static Timer timer("MeshSmoothing 2D"); RegionTimer reg (timer);
 
-
-  void MeshOptimize2d :: SelectSurfaceOfPoint (const Point<3> & p,
-					       const PointGeomInfo & gi)
-  {
-    ;
-  }
-
-  void MeshOptimize2d :: ImproveMesh (Mesh & mesh, const MeshingParameters & mp)
-  {
-    if (!faceindex)
-      {
-	PrintMessage (3, "Smoothing");
-
-	for (faceindex = 1; faceindex <= mesh.GetNFD(); faceindex++)
-	  {
-	    ImproveMesh (mesh, mp);
-	    if (multithread.terminate)
-	      throw NgException ("Meshing stopped");
-	  }
-	faceindex = 0;
-	return;
-      }
-
-    static int timer = NgProfiler::CreateTimer ("MeshSmoothing 2D");
-    static int timer1 = NgProfiler::CreateTimer ("MeshSmoothing 2D start");
-    static int timer2 = NgProfiler::CreateTimer ("MeshSmoothing 2D - BFGS");
-
-    NgProfiler::RegionTimer reg (timer);
-    NgProfiler::StartTimer (timer1);
+    PrintMessage (3, "Smoothing");
 
     CheckMeshApproximation (mesh);
 
-    Opti2dLocalData ld;
+    int ncolors;
+    Array<int> colors;
+    bool mixed = false;
+    auto elementsonpoint = mesh.CreatePoint2SurfaceElementTable( faceindex );
+    NgArray<MeshPoint, PointIndex::BASE> savepoints(mesh.GetNP());
 
-
-    Array<SurfaceElementIndex> seia;
-    mesh.GetSurfaceElementsOfFace (faceindex, seia);
-    bool mixed = 0;
-    for (int i = 0; i < seia.Size(); i++)
-      if (mesh[seia[i]].GetNP() != 3)
-	{
-	  mixed = 1;
-	  break;
-	}
-
-    Vector x(2);
-
-    Array<MeshPoint, PointIndex::BASE> savepoints(mesh.GetNP());
-
-    ld.uselocalh = mp.uselocalh;
-
-    Array<int, PointIndex::BASE> compress(mesh.GetNP());
-    Array<PointIndex> icompress;
-    for (int i = 0; i < seia.Size(); i++)
+    Table<PointIndex> color_table;
+    if(faceindex)
       {
-	const Element2d & el = mesh[seia[i]];
-	for (int j = 0; j < el.GetNP(); j++)
-	  compress[el[j]] = -1;
-      }
-    for (int i = 0; i < seia.Size(); i++)
-      {
-	const Element2d & el = mesh[seia[i]];
-	for (int j = 0; j < el.GetNP(); j++)
-	  if (compress[el[j]] == -1)
-	    {
-	      compress[el[j]] = icompress.Size();
-	      icompress.Append(el[j]);
-	    }
-      }
-    Array<int> cnta(icompress.Size());
-    cnta = 0;
-    for (int i = 0; i < seia.Size(); i++)
-      {
-	const Element2d & el = mesh[seia[i]];
-	for (int j = 0; j < el.GetNP(); j++)
-	  cnta[compress[el[j]]]++;
-      }
-    TABLE<SurfaceElementIndex> elementsonpoint(cnta);
-    for (int i = 0; i < seia.Size(); i++)
-      {
-	const Element2d & el = mesh[seia[i]];
-	for (int j = 0; j < el.GetNP(); j++)
-	  elementsonpoint.Add (compress[el[j]], seia[i]);
-      }
+        Array<SurfaceElementIndex> seia;
+        mesh.GetSurfaceElementsOfFace (faceindex, seia);
+        for (auto sei : seia)
+          if (mesh[sei].GetNP() != 3)
+            {
+              mixed = true;
+              break;
+            }
 
+        Array<int, PointIndex> compress(mesh.GetNP());
+        NgArray<PointIndex> icompress;
+        for (int i = 0; i < seia.Size(); i++)
+          {
+            const Element2d & el = mesh[seia[i]];
+            for (int j = 0; j < el.GetNP(); j++)
+              compress[el[j]] = -1;
+          }
+        for (int i = 0; i < seia.Size(); i++)
+          {
+            const Element2d & el = mesh[seia[i]];
+            for (int j = 0; j < el.GetNP(); j++)
+              if (compress[el[j]] == -1)
+                {
+                  compress[el[j]] = icompress.Size();
+                  icompress.Append(el[j]);
+                }
+          }
+
+        const auto & getDofs = [&] (int i)
+          {
+            return elementsonpoint[icompress[i]];
+          };
+
+        colors.SetSize(icompress.Size());
+
+        ncolors = ngcore::ComputeColoring( colors, mesh.GetNSE(), getDofs );
+
+        TableCreator<PointIndex> creator(ncolors);
+        for ( ; !creator.Done(); creator++)
+            ParallelForRange( Range(colors), [&](auto myrange)
+                    {
+                    for(auto i : myrange)
+                    creator.Add(colors[i], icompress[i]);
+                    });
+
+        color_table = creator.MoveTable();
+      }
+    else
+      {
+        for (auto & se : mesh.SurfaceElements())
+          if (se.GetNP() != 3)
+          {
+              for(auto pi : se.PNums())
+                  if(mesh[pi].Type() == SURFACEPOINT)
+                  {
+                      mixed = true;
+                      break;
+                  }
+              if(mixed)
+                  break;
+          }
+
+        const auto & getDofs = [&] (int i)
+          {
+            return elementsonpoint[i+PointIndex::BASE];
+          };
+
+        colors.SetSize(mesh.GetNP());
+        ncolors = ngcore::ComputeColoring( colors, mesh.GetNSE(), getDofs );
+
+        TableCreator<PointIndex> creator(ncolors);
+        for ( ; !creator.Done(); creator++)
+            ParallelForRange( Range(colors), [&](auto myrange)
+                    {
+                    for(auto i : myrange)
+                    creator.Add(colors[i], PointIndex(i+PointIndex::BASE));
+                    });
+
+        color_table = creator.MoveTable();
+      }
     
-    /*
-    Array<int, PointIndex::BASE> nelementsonpoint(mesh.GetNP());
-    nelementsonpoint = 0;
-    for (int i = 0; i < seia.Size(); i++)
-      {
-	const Element2d & el = mesh[seia[i]];
-	for (int j = 0; j < el.GetNP(); j++)
-	  nelementsonpoint[el[j]]++;
-      }
-
-    TABLE<SurfaceElementIndex,PointIndex::BASE> elementsonpoint(nelementsonpoint);
-
-    for (int i = 0; i < seia.Size(); i++)
-      {
-	const Element2d & el = mesh[seia[i]];
-	for (int j = 0; j < el.GetNP(); j++)
-	  elementsonpoint.Add (el[j], seia[i]);
-      }
-    */
-    
-
-
-    ld.loch = mp.maxh;
-    ld.locmetricweight = metricweight;
-    ld.meshthis = this;
-
-
-
-    Opti2SurfaceMinFunction surfminf(mesh, ld);
-    Opti2EdgeMinFunction edgeminf(mesh, ld);
-    Opti2SurfaceMinFunctionJacobian surfminfj(mesh, ld);
-
-    OptiParameters par;
-    par.maxit_linsearch = 8;
-    par.maxit_bfgs = 5;
-
     /*
     int i, j, k;
     Vector xedge(1);
@@ -897,55 +855,48 @@ namespace netgen
     */
 
 
-    bool printeddot = 0;
-    char plotchar = '.';
-    int modplot = 1;
-    if (mesh.GetNP() > 1000)
-      {
-	plotchar = '+';
-	modplot = 100;
-      }
-    if (mesh.GetNP() > 10000)
-      {
-	plotchar = 'o';
-	modplot = 1000;
-      }
-    if (mesh.GetNP() > 100000)
-      {
-	plotchar = 'O';
-	modplot = 10000;
-      }
-    int cnt = 0;
-
-
-    NgProfiler::StopTimer (timer1);
+    // NgProfiler::StopTimer (timer1);
 
     /*
     for (PointIndex pi = PointIndex::BASE; pi < mesh.GetNP()+PointIndex::BASE; pi++)
       if (mesh[pi].Type() == SURFACEPOINT)
     */
-    for (int hi = 0; hi < icompress.Size(); hi++)
-      {
-	PointIndex pi = icompress[hi];
+
+    static Timer tloop("MeshSmooting 2D - loop");
+    tloop.Start();
+    for (auto icolor : Range(color_table))
+    {
+     if (multithread.terminate)
+         break;
+     ParallelForRange( Range(color_table[icolor].Size()), [&](auto myrange)
+     {
+      Opti2dLocalData ld;
+      ld.uselocalh = mp.uselocalh;
+      ld.loch = mp.maxh;
+      ld.locmetricweight = metricweight;
+      ld.meshthis = this;
+
+      Opti2SurfaceMinFunction surfminf(mesh, ld);
+      Opti2SurfaceMinFunctionJacobian surfminfj(mesh, ld);
+
+      MinFunction & minfunc = mixed ? static_cast<MinFunction&>(surfminfj) : surfminf;
+
+      OptiParameters par;
+      par.maxit_linsearch = 8;
+      par.maxit_bfgs = 5;
+      for (auto i : myrange)
+        {
+	PointIndex pi = color_table[icolor][i];
 	if (mesh[pi].Type() == SURFACEPOINT)
 	  {
 	    if (multithread.terminate)
-	      throw NgException ("Meshing stopped");
+	      return;
 	    
-	    cnt++;
-	    if (cnt % modplot == 0 && writestatus)
-	      {
-		printeddot = 1;
-		PrintDot (plotchar);
-	      }
-	    
-	    // if (elementsonpoint[pi].Size() == 0) continue;
-	    if (elementsonpoint[hi].Size() == 0) continue;
-	
+	    if (elementsonpoint[pi].Size() == 0) continue;
+            
 	    ld.sp1 = mesh[pi];
 	    
-	    // Element2d & hel = mesh[elementsonpoint[pi][0]];
-	    Element2d & hel = mesh[elementsonpoint[hi][0]];
+	    Element2d & hel = mesh[elementsonpoint[pi][0]];
 	    
 	    int hpi = 0;
 	    for (int j = 1; j <= hel.GetNP(); j++)
@@ -956,17 +907,17 @@ namespace netgen
 		}
 
 	    ld.gi1 = hel.GeomInfoPi(hpi);
-	    SelectSurfaceOfPoint (ld.sp1, ld.gi1);
+	    // SelectSurfaceOfPoint (ld.sp1, ld.gi1);
 	  
 	    ld.locelements.SetSize(0);
 	    ld.locrots.SetSize (0);
 	    ld.lochs.SetSize (0);
             ld.loc_pnts2.SetSize (0);
             ld.loc_pnts3.SetSize (0);
-	
-	    for (int j = 0; j < elementsonpoint[hi].Size(); j++)
+
+	    for (int j = 0; j < elementsonpoint[pi].Size(); j++)
 	      {
-		SurfaceElementIndex sei = elementsonpoint[hi][j];
+		SurfaceElementIndex sei = elementsonpoint[pi][j];
 		const Element2d & bel = mesh[sei];
 		ld.surfi = mesh.GetFaceDescriptor(bel.GetIndex()).SurfNr();
 		
@@ -987,61 +938,62 @@ namespace netgen
 		    ld.lochs.Append (mesh.GetH(pmid));
 		  }
 	      }
-	    
-	  GetNormalVector (ld.surfi, ld.sp1, ld.gi1, ld.normal);
+
+
+          ld.normal = geo.GetNormal(ld.surfi, ld.sp1, &ld.gi1);
 	  ld.t1 = ld.normal.GetNormal ();
 	  ld.t2 = Cross (ld.normal, ld.t1);
 	  
-	  // save points, and project to tangential plane
-	  for (int j = 0; j < ld.locelements.Size(); j++)
-	    {
-	      const Element2d & el = mesh[ld.locelements[j]];
-	      for (int k = 0; k < el.GetNP(); k++)
-		savepoints[el[k]] = mesh[el[k]];
-	    }
+          if(mixed)
+            {
+              // save points, and project to tangential plane (only for optimization with Opti2SurfaceMinFunctionJacobian in mixed element meshes)
+              for (int j = 0; j < ld.locelements.Size(); j++)
+                {
+                  const Element2d & el = mesh[ld.locelements[j]];
+                  for (int k = 0; k < el.GetNP(); k++)
+                    savepoints[el[k]] = mesh[el[k]];
+                }
 
-	  for (int j = 0; j < ld.locelements.Size(); j++)
-	    {
-	      const Element2d & el = mesh[ld.locelements[j]];
-	      for (int k = 0; k < el.GetNP(); k++)
-		{
-		  PointIndex hhpi = el[k];
-		  double lam = ld.normal * (mesh[hhpi] - ld.sp1);
-		  mesh[hhpi] -= lam * ld.normal;
-		}
-	    }
+              for (int j = 0; j < ld.locelements.Size(); j++)
+                {
+                  const Element2d & el = mesh[ld.locelements[j]];
+                  for (int k = 0; k < el.GetNP(); k++)
+                    {
+                      PointIndex hhpi = el[k];
+                      double lam = ld.normal * (mesh[hhpi] - ld.sp1);
+                      mesh[hhpi] -= lam * ld.normal;
+                    }
+                }
+            }
 	  
+          Vector x(2);
 	  x = 0;
 	  par.typx = 0.3*ld.lochs[0];
 
-          NgProfiler::StartTimer (timer2);
+          // NgProfiler::StartTimer (timer2);
 
-	  if (mixed)
-	    {
-	      BFGS (x, surfminfj, par, 1e-6);
-	    }
-	  else
-	    {
-	      BFGS (x, surfminf, par, 1e-6);
-	    }
+          BFGS (x, minfunc, par, 1e-6);
 
-          NgProfiler::StopTimer (timer2);
+          // NgProfiler::StopTimer (timer2);
 
-	  Point3d origp = mesh[pi];
+	  auto origp = mesh[pi];
 	  int loci = 1;
 	  double fact = 1;
 	  int moveisok = 0;
 
-	  // restore other points
-	  for (int j = 0; j < ld.locelements.Size(); j++)
-	    {
-	      const Element2d & el = mesh[ld.locelements[j]];
-	      for (int k = 0; k < el.GetNP(); k++)
-		{
-		  PointIndex hhpi = el[k];
-		  if (hhpi != pi) mesh[hhpi] = savepoints[hhpi];
-		}
-	    }
+          if(mixed)
+            {
+              // restore other points
+              for (int j = 0; j < ld.locelements.Size(); j++)
+                {
+                  const Element2d & el = mesh[ld.locelements[j]];
+                  for (int k = 0; k < el.GetNP(); k++)
+                    {
+                      PointIndex hhpi = el[k];
+                      if (hhpi != pi) mesh[hhpi] = savepoints[hhpi];
+                    }
+                }
+            }
 
 	  
 	  //optimizer loop (if whole distance is not possible, move only a bit!!!!)
@@ -1066,7 +1018,7 @@ namespace netgen
 
 	      PointGeomInfo ngi;
 	      ngi = ld.gi1;
-	      moveisok = ProjectPointGI (ld.surfi, mesh[pi], ngi);
+	      moveisok = geo.ProjectPointGI(ld.surfi, mesh[pi], ngi);
 	      // point lies on same chart in stlsurface
 	    
 	      if (moveisok)
@@ -1076,26 +1028,17 @@ namespace netgen
 		}
 	      else
 		{
-		  mesh[pi] = Point<3> (origp);
+		  mesh[pi] = origp;
 		}
 	    
 	    }
-	}
-      }
-    if (printeddot)
-      PrintDot ('\n');
+          }
+        }
+      }, mixed ? 1 : ngcore::TasksPerThread(4)); // mixed element smoothing not parallel yet
+    }
 
+    tloop.Stop();
     CheckMeshApproximation (mesh);
     mesh.SetNextTimeStamp();
-  }
-
-  void MeshOptimize2d :: GetNormalVector(INDEX /* surfind */, const Point<3> & p, Vec<3> & nv) const
-  {
-    nv = Vec<3> (0, 0, 1);
-  }
-
-  void MeshOptimize2d :: GetNormalVector(INDEX surfind, const Point<3> & p, PointGeomInfo & gi, Vec<3> & n) const
-  {
-    GetNormalVector (surfind, p, n);
   }
 }

@@ -22,9 +22,11 @@
 
 namespace netgen
 {
-  DLL_HEADER Point3d VisualScene :: center;
-  DLL_HEADER double VisualScene :: rad;
-  DLL_HEADER GLdouble VisualScene :: backcolor;
+  NGGUI_API Point3d VisualScene :: center;
+  NGGUI_API double VisualScene :: rad;
+  NGGUI_API GLdouble VisualScene :: backcolor;
+  NGGUI_API VisualScene visual_scene_cross;
+  NGGUI_API VisualScene *visual_scene = &visual_scene_cross;
 
   /*
 #if TOGL_MAJOR_VERSION!=2
@@ -36,9 +38,11 @@ namespace netgen
   */
 
   void (*opengl_text_function)(const char * text) = NULL;
-  void Set_OpenGLText_Callback ( void (*fun) (const char * text) )
+  int opengl_text_width = 0;
+  void Set_OpenGLText_Callback ( void (*fun) (const char * text), int width )
   {
     opengl_text_function = fun;
+    opengl_text_width = width;
   }
 
   void MyOpenGLText (const char * text)
@@ -46,6 +50,11 @@ namespace netgen
     if (opengl_text_function)
       (*opengl_text_function) (text);
     // cout << "MyOpenGLText: " << text << endl;
+  }
+
+  int MyOpenGLTextWidth ()
+  {
+      return opengl_text_width;
   }
 
 
@@ -68,7 +77,10 @@ namespace netgen
   int VisualScene :: locpi;
   int VisualScene :: seledge;
 
-  int VisualScene :: selecttimestamp;
+  optional<Point<3>> VisualScene :: marker = nullopt;
+
+  int VisualScene :: subdivision_timestamp = -1;
+  int VisualScene :: subdivisions = 2;
 
   int VisualScene :: viewport[4];
 
@@ -81,7 +93,7 @@ namespace netgen
     transp = 0.3;
     locviewer = 0;
     showstltrias = 0;
-    centerpoint = 0;
+    centerpoint = PointIndex::INVALID;
     usedispllists = 1;
     strcpy (selectvisual, "cross");
 
@@ -111,18 +123,6 @@ namespace netgen
     ;
   }
 
-
-  extern DLL_HEADER void Render(bool blocking);
-  DLL_HEADER void Render (bool blocking)
-  {
-    if (blocking && multithread.running)
-      {
-        multithread.redraw = 2;
-        while (multithread.redraw == 2) ; 
-      }
-    else
-      multithread.redraw = 1;
-  }
 
 
   void VisualScene :: BuildScene (int zoomall)
@@ -202,7 +202,7 @@ namespace netgen
   }
 
 
-  void VisualScene :: ArbitraryRotation (const Array<double> & alpha, const Array<Vec3d> & vec)
+  void VisualScene :: ArbitraryRotation (const NgArray<double> & alpha, const NgArray<Vec3d> & vec)
   {
     glPushMatrix();
 
@@ -229,8 +229,8 @@ namespace netgen
 
   void VisualScene :: ArbitraryRotation (const double alpha, const Vec3d & vec)
   {
-    Array<double> a(1); a[0] = alpha;
-    Array<Vec3d> v(1); v[0] = vec;
+    NgArray<double> a(1); a[0] = alpha;
+    NgArray<Vec3d> v(1); v[0] = vec;
 
     ArbitraryRotation(a,v);
   } 
@@ -492,8 +492,6 @@ namespace netgen
   void VisualScene :: CreateTexture (int ncols, int linear, double alpha, int typ)
   {
     if (linear) ncols = 32;
-    else   ncols = 8;
-
 
     if (ntexcols != ncols) 
       {
@@ -570,11 +568,11 @@ namespace netgen
 
 
 
-  void VisualScene :: DrawColorBar (double minval, double maxval, int logscale, bool linear)
+  void VisualScene :: DrawColorBar (double minval, double maxval, int logscale, bool linear, string format, string unit)
   {
     if (!vispar.drawcolorbar) return;
 
-    CreateTexture (8, linear, 1, GL_DECAL);
+    CreateTexture (GetVSSolution().numtexturecols, linear, 1, GL_DECAL);
 
     if (logscale && maxval <= 0) maxval = 1;
     if (logscale && minval <= 0) minval = 1e-4 * maxval;
@@ -593,8 +591,9 @@ namespace netgen
     glDisable (GL_DEPTH_TEST);
     glBegin (GL_QUAD_STRIP);
 
-    for (double x = minx; x <= maxx; x += (maxx - minx) / 50)
+    for (auto i : Range(50))
       {
+        double x = minx + i*1.0/49*(maxx-minx);
 	SetOpenGlColor (x, minx, maxx);
 	glVertex3d (x, miny, -5);
 	glVertex3d (x, maxy, -5);
@@ -612,23 +611,56 @@ namespace netgen
     glPushAttrib (GL_LIST_BIT);
     // glListBase (fontbase);
 
-    char buf[20];
+    constexpr size_t buf_size = 20;
+    char buf[buf_size];
+    GLint viewport[4];
+    glGetIntegerv (GL_VIEWPORT, viewport);
+    double char_width = 2.0*MyOpenGLTextWidth()/(viewport[3]);
     for (int i = 0; i <= 4; i++)
       {
-	double x = minx + i * (maxx-minx) / 4;
-	glRasterPos3d (x, 0.7,-5);
-      
 	double val;
 	if (logscale)
 	  val = minval * pow (maxval / minval, i / 4.0);
 	else
 	  val = minval + i * (maxval-minval) / 4;
 
-	sprintf (buf, "%8.3e", val);
-	// glCallLists (GLsizei(strlen (buf)), GL_UNSIGNED_BYTE, buf);
+	snprintf (buf, buf_size, format.c_str(), val);
+        auto n = strlen(buf);
+	double x = minx + i * (maxx-minx) / 4;
+        x -= 0.5*char_width * n; // center text
+	glRasterPos3d (x, 0.7,-5);
+
 	MyOpenGLText (buf);
       }
 
+    if(unit != "")
+        MyOpenGLText (unit.c_str());
+
+    glPopAttrib ();
+    glEnable (GL_DEPTH_TEST);
+  }
+
+  void VisualScene :: DrawTitle (string title)
+  {
+    if(title=="")
+      return;
+    glDisable (GL_LIGHTING);
+    glDisable (GL_DEPTH_TEST);
+
+    glEnable (GL_COLOR_MATERIAL);
+    GLfloat textcol[3] = { GLfloat(1 - backcolor),
+                           GLfloat(1 - backcolor),
+                           GLfloat(1 - backcolor) };
+    glColor3fv (textcol);
+
+    glPushAttrib (GL_LIST_BIT);
+
+    GLint viewport[4];
+    glGetIntegerv (GL_VIEWPORT, viewport);
+    double char_width = 2.0*MyOpenGLTextWidth()/(viewport[3]);
+    double x = -0.5*char_width * title.size(); // center text
+    glRasterPos3d (x, 0.82,-5);
+    MyOpenGLText (title.c_str());
     glPopAttrib ();
     glEnable (GL_DEPTH_TEST);
   }
@@ -684,15 +716,15 @@ namespace netgen
     char buf[20];
 
     glRasterPos3d (len, 0.0f, 0.0f);
-    sprintf (buf, "x");
+    snprintf (buf, size(buf), "x");
     // glCallLists (GLsizei(strlen (buf)), GL_UNSIGNED_BYTE, buf);
     MyOpenGLText (buf);
     glRasterPos3d (0.0f, len, 0.0f);
-    sprintf (buf, "y");
+    snprintf (buf, size(buf), "y");
     // glCallLists (GLsizei(strlen (buf)), GL_UNSIGNED_BYTE, buf);
     MyOpenGLText (buf);
     glRasterPos3d (0.0f, 0.0f, len);
-    sprintf (buf, "z");
+    snprintf (buf, size(buf), "z");
     // glCallLists (GLsizei(strlen (buf)), GL_UNSIGNED_BYTE, buf);
     MyOpenGLText (buf);
 
@@ -705,6 +737,27 @@ namespace netgen
     glMatrixMode (GL_MODELVIEW); 
     glPopMatrix();
     glEnable (GL_DEPTH_TEST);
+  }
+
+
+  void VisualScene :: DrawMarker()
+  {
+    static constexpr GLubyte cross[] = { 0xc6, 0xee, 0x7c, 0x38, 0x7c, 0xee, 0xc6 };
+
+    if(!marker)
+        return;
+
+    glColor3d (0, 0, 1);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    glDisable (GL_COLOR_MATERIAL);
+    glDisable (GL_LIGHTING);
+    glDisable (GL_CLIP_PLANE0);
+
+    auto & p = *marker;
+    glRasterPos3d (p[0], p[1], p[2]);
+    glBitmap (7, 7, 3, 3, 0, 0, &cross[0]);
   }
 
 
@@ -758,8 +811,305 @@ namespace netgen
   }
 
 
+  void VisualSceneSurfaceMeshing::MouseMove(int oldx, int oldy,
+                                            int newx, int newy,
+                                            char mode)
+  {
+    double fac = 0.001;
+    if(mode == 'M')
+      {
+        shiftx += fac * (newx - oldx);
+        shifty += fac * (oldy - newy);
+        return;
+      }
+    else if(mode == 'Z')
+      {
+        scalex *= (1 - fac * (newy - oldy));
+        scaley *= (1 - fac * (newy - oldy));
+        return;
+      }
+    
+    VisualScene::MouseMove(oldx, oldy, newx, newy, mode);
+  }
+
+  std::vector<unsigned char> Snapshot( int w, int h )
+  {
+    // save current settings
+    GLint viewport[4];
+    glGetIntegerv (GL_VIEWPORT, viewport);
+
+    glMatrixMode (GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+
+    double pnear = 0.1;
+    double pfar = 10;
+
+    gluPerspective(20.0f, double(w) / h, pnear, pfar);
+
+    glMatrixMode (GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glViewport(0,0,w,h);
+
+    GLuint fb = 0;
+    glGenFramebuffers(1, &fb);
+    glBindFramebuffer(GL_FRAMEBUFFER, fb);
+
+    // create, reserve and attach color and depth renderbuffer
+    GLuint rbs[2];
+    glGenRenderbuffers(2, rbs);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbs[0]);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, w, h);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rbs[0]);
+
+    glBindRenderbuffer(GL_RENDERBUFFER, rbs[1]);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, w, h);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbs[1]);
+
+    // check if framebuffer status is complete
+    if(int fbstatus; (fbstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE)
+        cerr << "no frame buffer " << fbstatus << endl;
+
+    visual_scene->DrawScene();
+    glFinish();
+
+    std::vector<unsigned char> buffer(w*h*3);
+    glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+    glPixelStorei(GL_PACK_ALIGNMENT,1);
+    glReadPixels (0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, &buffer[0]);
+
+    glDeleteRenderbuffers(2, rbs);
+    glDeleteFramebuffers(1, &fb);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // restore previous settings
+    glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+    glMatrixMode (GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode (GL_MODELVIEW);
+    glPopMatrix();
+    return buffer;
+  }
+
+  VisualSceneSurfaceMeshing :: VisualSceneSurfaceMeshing ()
+    : VisualScene()
+  {
+    ;
+  }
+
+  VisualSceneSurfaceMeshing :: ~VisualSceneSurfaceMeshing ()
+  {
+    ;
+  }
+
+  void VisualSceneSurfaceMeshing :: DrawScene ()
+  {
+    // int i, j, k;
+    if(!locpointsptr)
+      return;
+    auto& locpoints = *locpointsptr;
+    auto& loclines = *loclinesptr;
+    auto& plainpoints = *plainpointsptr;
+
+    if (loclines.Size() != changeval)
+      {
+	center = Point<3>(0,0,-5);
+	rad = 0.1;
+
+	// CalcTransformationMatrices();
+	changeval = loclines.Size();
+      }
+
+  glClearColor(backcolor, backcolor, backcolor, 1.0);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  SetLight();
+
+  //  glEnable (GL_COLOR_MATERIAL);
+
+  //  glDisable (GL_SHADING);
+  //  glColor3f (0.0f, 1.0f, 1.0f);
+  //  glLineWidth (1.0f);
+  //  glShadeModel (GL_SMOOTH);
+
+  //  glCallList (linelists.Get(1));
+
+  //  SetLight();
+
+  glPushMatrix();
+  glMultMatrixd (transformationmat);
+
+  glShadeModel (GL_SMOOTH);
+  // glDisable (GL_COLOR_MATERIAL);
+  glEnable (GL_COLOR_MATERIAL);
+  glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+
+  glEnable (GL_BLEND);
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  //  glEnable (GL_LIGHTING);
+
+  double shine = vispar.shininess;
+  double transp = vispar.transp;
+
+  glMaterialf (GL_FRONT_AND_BACK, GL_SHININESS, shine);
+  glLogicOp (GL_COPY);
 
 
+
+
+
+  float mat_col[] = { 0.2, 0.2, 0.8, 1 };
+  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col);
+
+  glPolygonOffset (1, 1);
+  glEnable (GL_POLYGON_OFFSET_FILL);
+
+    float mat_colbl[] = { 0.8, 0.2, 0.2, 1 };
+    float mat_cololdl[] = { 0.2, 0.8, 0.2, 1 };
+    float mat_colnewl[] = { 0.8, 0.8, 0.2, 1 };
+
+
+    glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+    glPolygonOffset (1, -1);
+    glLineWidth (3);
+
+    for (int i = 1; i <= loclines.Size(); i++)
+      {
+	if (i == 1)
+	  {
+	    glEnable (GL_POLYGON_OFFSET_FILL);
+	    glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colbl);
+	  }
+	else if (i <= oldnl)
+	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_cololdl);
+	else
+	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colnewl);
+
+	int pi1 = loclines.Get(i).I1();
+	int pi2 = loclines.Get(i).I2();
+
+	if (pi1 >= 1 && pi2 >= 1)
+	  {
+	    Point3d p1 = locpoints.Get(pi1);
+	    Point3d p2 = locpoints.Get(pi2);
+
+	    glBegin (GL_LINES);
+	    glVertex3f (p1.X(), p1.Y(), p1.Z());
+	    glVertex3f (p2.X(), p2.Y(), p2.Z());
+	    glEnd();
+	  }
+
+	glDisable (GL_POLYGON_OFFSET_FILL);
+      }
+
+
+    glLineWidth (1);
+
+
+    glPointSize (5);
+    float mat_colp[] = { 1, 0, 0, 1 };
+    glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colp);
+    glBegin (GL_POINTS);
+    for (int i = 1; i <= locpoints.Size(); i++)
+      {
+	Point3d p = locpoints.Get(i);
+	glVertex3f (p.X(), p.Y(), p.Z());
+      }
+    glEnd();
+
+
+    glPopMatrix();
+
+
+    // float mat_colp[] = { 1, 0, 0, 1 };
+
+    float mat_col2d1[] = { 1, 0.5, 0.5, 1 };
+    float mat_col2d[] = { 1, 1, 1, 1 };
+    glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col2d);
+
+    glBegin (GL_LINES);
+    for (int i = 1; i <= loclines.Size(); i++)
+      {
+	glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col2d);
+	if (i == 1)
+	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col2d1);
+
+	int pi1 = loclines.Get(i).I1();
+	int pi2 = loclines.Get(i).I2();
+
+	if (pi1 >= 1 && pi2 >= 1)
+	  {
+	    const auto& p1 = plainpoints.Get(pi1);
+	    const auto& p2 = plainpoints.Get(pi2);
+
+	    glBegin (GL_LINES);
+	    glVertex3f (scalex * p1[0] + shiftx, scaley * p1[1] + shifty, -5);
+	    glVertex3f (scalex * p2[0] + shiftx, scaley * p2[1] + shifty, -5);
+	    glEnd();
+	  }
+      }
+    glEnd ();
+
+
+    glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colp);
+    glBegin (GL_POINTS);
+    for (int i = 1; i <= plainpoints.Size(); i++)
+      {
+	const auto& p = plainpoints.Get(i);
+	glVertex3f (scalex * p[0] + shiftx, scaley * p[1] + shifty, -5);
+      }
+    glEnd();
+
+
+
+
+
+
+  glDisable (GL_POLYGON_OFFSET_FILL);
+
+  glPopMatrix();
+  DrawCoordinateCross ();
+  DrawNetgenLogo ();
+  glFinish();
+
+  }
+
+
+  void VisualSceneSurfaceMeshing :: BuildScene (int zoomall)
+  {
+  }
+
+  VisualSceneSurfaceMeshing vssurfacemeshing;
+
+  void Impl_Render (bool blocking)
+  {
+    if (blocking && multithread.running)
+      {
+        multithread.redraw = 2;
+        while (multithread.redraw == 2) ;
+      }
+    else
+      multithread.redraw = 1;
+  }
+
+  void Impl_UpdateVisSurfaceMeshData(int oldnl,
+            shared_ptr<NgArray<Point<3>>> locpointsptr,
+            shared_ptr<NgArray<INDEX_2>> loclinesptr,
+            shared_ptr<NgArray<Point<2>>> plainpointsptr)
+  {
+      vssurfacemeshing.oldnl = oldnl;
+      if(locpointsptr) vssurfacemeshing.locpointsptr = locpointsptr;
+      if(loclinesptr) vssurfacemeshing.loclinesptr = loclinesptr;
+      if(plainpointsptr) vssurfacemeshing.plainpointsptr = plainpointsptr;
+  }
+
+  static bool set_function_pointers = []()
+  {
+      Ptr_Render = Impl_Render;
+      Ptr_UpdateVisSurfaceMeshData = Impl_UpdateVisSurfaceMeshData;
+      return true;
+  }();
 
 
 

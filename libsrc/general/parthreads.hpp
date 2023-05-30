@@ -96,14 +96,8 @@ void ParallelFor( int first, int next, const TFunc & f )
 
 
   
-  template<typename T>
-  inline atomic<T> & AsAtomic (T & d)
-  {
-    return reinterpret_cast<atomic<T>&> (d);
-  }
-
-  typedef void (*TaskManager)(std::function<void(int,int)>);
-  typedef void (*Tracer)(string, bool);  // false .. start, true .. stop
+  typedef void (*NgTaskManager)(std::function<void(int,int)>);
+  typedef void (*NgTracer)(string, bool);  // false .. start, true .. stop
 
   inline void DummyTaskManager (std::function<void(int,int)> func)
   {
@@ -114,7 +108,7 @@ void ParallelFor( int first, int next, const TFunc & f )
   inline void DummyTracer (string, bool) { ; }
   
   template <typename FUNC>
-  inline void ParallelFor (TaskManager tm, size_t n, FUNC func)
+  inline void ParallelFor (NgTaskManager tm, size_t n, FUNC func)
   {
     (*tm) ([n,func] (size_t nr, size_t nums)
            {
@@ -127,7 +121,7 @@ void ParallelFor( int first, int next, const TFunc & f )
   }
   
   template <typename FUNC>
-  inline void ParallelForRange (TaskManager tm, size_t n, FUNC func)
+  inline void ParallelForRange (NgTaskManager tm, size_t n, FUNC func)
   {
     (*tm) ([n,func] (size_t nr, size_t nums)
            {

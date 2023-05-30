@@ -11,7 +11,7 @@ solid cube = plane (0, 0, 0; 0, 0, -1)
          and plane (1, 1, 1; 0, 1, 0)
          and plane (1, 1, 1; 1, 0, 0);
 
-# two shperes
+# two spheres
 solid sph1 = sphere (0.5, 0.5, 0.5; 0.58);
 solid sph2 = sphere (0.5, 0.5, 0.5; 0.75);
 

@@ -79,14 +79,14 @@ namespace netgen
     ///
     const CSGeometry * geometry;
     ///
-    Array<MeshPoint> * points;
+    NgArray<MeshPoint> * points;
     ///
-    Array<long int> boxesinlevel;
+    NgArray<long int> boxesinlevel;
 
     ///
     double size;
     ///
-    double relydegtest;   // maximal dimension of bisection intervall for
+    double relydegtest;   // maximal dimension of bisection interval for
     /// test of degeneration parameters
     double cpeps1, epeps1, epeps2, epspointdist2;
 
@@ -102,11 +102,11 @@ namespace netgen
 
     ///
     void CalcSpecialPoints (const CSGeometry & ageometry, 
-			    Array<MeshPoint> & points);
+			    NgArray<MeshPoint> & points);
     ///
     void AnalyzeSpecialPoints (const CSGeometry & geometry, 
-			       Array<MeshPoint> & points, 
-			       Array<SpecialPoint> & specpoints);
+			       NgArray<MeshPoint> & points, 
+			       NgArray<SpecialPoint> & specpoints);
 
   protected:
     ///
@@ -161,27 +161,30 @@ namespace netgen
 
     void ComputeExtremalPoints (const Plane * plane, 
 				const QuadraticSurface * quadric, 
-				Array<Point<3> > & pts);
+				NgArray<Point<3> > & pts);
 
     void ComputeExtremalPoints (const Sphere * sphere1, 
 				const Sphere * sphere2, 
-				Array<Point<3> > & pts);
+				NgArray<Point<3> > & pts);
 
+    bool ComputeExtremalPoints (const RevolutionFace * rev1, 
+				const RevolutionFace * rev2, 
+				NgArray<Point<3> > & pts);
 
     void ComputeCrossPoints (const Plane * plane1, 
 			     const Plane * plane2, 
 			     const Plane * plane3, 
-			     Array<Point<3> > & pts);
+			     NgArray<Point<3> > & pts);
 
     void ComputeCrossPoints (const Plane * plane1, 
 			     const Plane * plane2, 
 			     const QuadraticSurface * quadratic, 
-			     Array<Point<3> > & pts);
+			     NgArray<Point<3> > & pts);
 
     void ComputeCrossPoints (const Sphere * sphere1, 
 			     const Sphere * sphere2, 
 			     const Sphere * sphere3, 
-			     Array<Point<3> > & pts);
+			     NgArray<Point<3> > & pts);
   };
 
 }

@@ -17,7 +17,7 @@
 #include "../include/mydefs.hpp"
 
 
-#include "../core/ngcore.hpp"
+#include <core/ngcore.hpp>
 namespace netgen
 {
   using namespace ngcore;
@@ -28,27 +28,23 @@ namespace netgen
 #include "dynamicmem.hpp"
 
 #include "template.hpp"
-#include "array.hpp"
+#include "ngarray.hpp"
 #include "table.hpp"
 #include "hashtabl.hpp"
 
 
-#include "bitarray.hpp"
-#include "flags.hpp"
+#include "ngbitarray.hpp"
 #include "spbita2d.hpp"
 
 #include "seti.hpp"
 #include "optmem.hpp"
-#include "autoptr.hpp"
+// #include "autoptr.hpp"
 #include "sort.hpp"
 #include "stack.hpp"
 #include "mystring.hpp"
 
-#include "mpi_interface.hpp"
+// #include "mpi_interface.hpp"
 #include "netgenout.hpp"
-#include "gzstream.h"
-
-#include "ngsimd.hpp"
 
 
 #endif

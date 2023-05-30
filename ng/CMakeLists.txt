@@ -4,54 +4,39 @@ else()
   add_definitions(-DINTERNAL_TCL_DEFAULT=0)
 endif()
 
-set(netgen_sources ngappinit.cpp onetcl.cpp)
 if(WIN32)
-    # add icon to netgen executable
-    enable_language(RC)
-    set(netgen_sources ${netgen_sources} ../windows/netgen.rc)
-    # Don't use ccache here due to incompatibility with the resource compiler
-    set_directory_properties(PROPERTIES RULE_LAUNCH_COMPILE "")
+  # add icon and version info to netgen executable
+  enable_language(RC)
+  # Don't use ccache here due to incompatibility with the resource compiler
+  set_directory_properties(PROPERTIES RULE_LAUNCH_COMPILE "")
 endif(WIN32)
 
-if(USE_GUI)
+target_sources(nglib PRIVATE onetcl.cpp)
 
-    add_library(gui SHARED
-        gui.cpp ngpkg.cpp demoview.cpp parallelfunc.cpp
-        ../libsrc/stlgeom/stlpkg.cpp ../libsrc/visualization/visualpkg.cpp
-        ../libsrc/csg/csgpkg.cpp ../libsrc/geom2d/geom2dpkg.cpp
-        ../libsrc/occ/occpkg.cpp ../libsrc/occ/vsocc.cpp
+if(USE_GUI)
+    target_sources(nggui PRIVATE
+        gui.cpp ngpkg.cpp demoview.cpp parallelfunc.cpp ngtcl.cpp
     )
 
-    add_executable(netgen ngappinit.cpp onetcl.cpp)
-
-    target_link_libraries( gui PUBLIC nglib )
-    target_link_libraries( gui PRIVATE ${LIBTOGL} ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} )
-    if(NOT APPLE)
-      target_link_libraries( gui PRIVATE ${TCL_LIBRARY} ${TK_LIBRARY})
-    endif(NOT APPLE)
-
-    target_link_libraries( netgen nglib gui ${LIBTOGL} ${ZLIB_LIBRARIES} ${JPEG_LIBRARIES} ${FFMPEG_LIBRARIES} ${X11_Xmu_LIB} ${X11_X11_LIB} ${OCC_LIBRARIES} ${TK_LIBRARY} ${TCL_LIBRARY})
-
-    if(NOT WIN32)
-      target_link_libraries( netgen mesh stlvis stl geom2dvis interface geom2d csg stl visual csgvis )
-      target_link_libraries( gui PUBLIC mesh stlvis stl geom2dvis interface geom2d csg stl visual csgvis )
-    endif(NOT WIN32)
-
+    if(NOT BUILD_FOR_CONDA)
+      add_executable(netgen ngappinit.cpp)
+    if(WIN32)
+      target_sources(netgen PRIVATE ../windows/netgen.rc)
+    endif(WIN32)
+    target_link_libraries( netgen nglib nggui netgen_python netgen_gui)
     install(TARGETS netgen ${NG_INSTALL_DIR})
-    install(TARGETS gui ${NG_INSTALL_DIR})
-
     if(APPLE)
         set_target_properties(netgen PROPERTIES OUTPUT_NAME netgen)
     endif(APPLE)
-    if(WIN32)
-        set_target_properties( gui PROPERTIES OUTPUT_NAME libgui )
-    endif(WIN32)
+    target_link_libraries( netgen ${PYTHON_LIBRARIES} ${TCL_LIBRARY} ${TK_LIBRARY})
+    endif(NOT BUILD_FOR_CONDA)
 
+    install(TARGETS nggui ${NG_INSTALL_DIR})
 endif(USE_GUI)
 
 if(USE_PYTHON)
     add_library(ngpy SHARED netgenpy.cpp)
-    target_link_libraries( ngpy PUBLIC nglib PRIVATE ${PYTHON_LIBRARIES})
+    target_link_libraries( ngpy PUBLIC nglib PRIVATE "$<BUILD_INTERFACE:netgen_python>" )
     if(APPLE)
         set_target_properties( ngpy PROPERTIES SUFFIX ".so")
     elseif(WIN32)
@@ -60,6 +45,19 @@ if(USE_PYTHON)
     endif()
     set_target_properties(ngpy PROPERTIES INSTALL_RPATH "${NG_RPATH_TOKEN}/../${NETGEN_PYTHON_RPATH}")
     install(TARGETS ngpy DESTINATION ${NG_INSTALL_DIR_PYTHON}/${NG_INSTALL_SUFFIX} COMPONENT netgen)
+
+    if(USE_GUI)
+        add_library(ngguipy SHARED ngguipy.cpp)
+        target_link_libraries( ngguipy PUBLIC nglib nggui PRIVATE "$<BUILD_INTERFACE:netgen_python>" $<BUILD_INTERFACE:netgen_gui>)
+        if(APPLE)
+            set_target_properties( ngguipy PROPERTIES SUFFIX ".so")
+        elseif(WIN32)
+            set_target_properties( ngguipy PROPERTIES SUFFIX ".pyd")
+            set_target_properties( ngguipy PROPERTIES OUTPUT_NAME "libngguipy")
+        endif()
+        set_target_properties(ngguipy PROPERTIES INSTALL_RPATH "${NG_RPATH_TOKEN}/../${NETGEN_PYTHON_RPATH}")
+        install(TARGETS ngguipy DESTINATION ${NG_INSTALL_DIR_PYTHON}/${NG_INSTALL_SUFFIX} COMPONENT netgen)
+    endif(USE_GUI)
 endif(USE_PYTHON)
 
 if(USE_GUI)

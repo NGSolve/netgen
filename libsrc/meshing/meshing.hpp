@@ -42,12 +42,11 @@ namespace netgen
 
 #define _INCLUDE_MORE
 
+#include "findip.hpp"
+#include "findip2.hpp"
 
 #include "meshing3.hpp"
 #include "improve3.hpp"
-
-#include "findip.hpp"
-#include "findip2.hpp"
 
 #include "curvedelems.hpp"
 #include "clusters.hpp"
@@ -58,14 +57,14 @@ namespace netgen
 #include "hprefinement.hpp"
 #include "boundarylayer.hpp"
 #include "specials.hpp"
+
 }
 
 #include "validate.hpp"
 #include "basegeom.hpp"
+#include "surfacegeom.hpp"
 
-#ifdef PARALLEL
 #include "paralleltop.hpp"
-#endif
 
 
 #endif

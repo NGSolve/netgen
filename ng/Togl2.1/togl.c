@@ -14,6 +14,15 @@
  * Currently we support X11, Win32 and Mac OS X only
  */
 
+#ifndef MODULE_SCOPE
+#   ifdef __cplusplus
+#       define MODULE_SCOPE extern "C"
+#   else
+#       define MODULE_SCOPE extern
+#   endif
+#endif
+
+
 #define USE_TOGL_STUB_PROCS
 #include "togl.h"
 #include <tkInt.h>   // don't need it on osx ???
@@ -5009,7 +5018,7 @@ Togl_Frustum(const Togl *togl, GLdouble left, GLdouble right,
         eyeOffset = togl->EyeSeparation / 2;    /* for right eye */
     eyeShift = (togl->Convergence - zNear) * (eyeOffset / togl->Convergence);
 
-    /* compenstate for altered viewports */
+    /* compensate for altered viewports */
     switch (togl->Stereo) {
       default:
           break;
@@ -5044,7 +5053,7 @@ Togl_Ortho(const Togl *togl, GLdouble left, GLdouble right,
         eyeOffset = togl->EyeSeparation / 2;    /* for right eye */
     eyeShift = (togl->Convergence - zNear) * (eyeOffset / togl->Convergence);
 
-    /* compenstate for altered viewports */
+    /* compensate for altered viewports */
     switch (togl->Stereo) {
       default:
           break;
@@ -5103,7 +5112,7 @@ static int ObjectIsEmpty(Tcl_Obj *objPtr);
  *
  * GetStereo -
  *
- *      Converts an internal int into a a Tcl string obj.
+ *      Converts an internal int into a Tcl string obj.
  *
  * Results:
  *      Tcl_Obj containing the string representation of the stereo value.
@@ -5273,7 +5282,7 @@ RestoreStereo(ClientData clientData, Tk_Window tkwin, char *internalPtr,
  *
  * GetWideInt -
  *
- *      Converts an internal wide integer into a a Tcl WideInt obj.
+ *      Converts an internal wide integer into a Tcl WideInt obj.
  *
  * Results:
  *      Tcl_Obj containing the wide int value.

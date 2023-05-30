@@ -16,16 +16,16 @@ class Mesh;
 // class CSGeometry;
 
 /// Build tet-mesh
-MESHING3_RESULT MeshVolume (MeshingParameters & mp, Mesh& mesh3d);
+DLL_HEADER MESHING3_RESULT MeshVolume (const MeshingParameters & mp, Mesh& mesh3d);
 
 /// Build mixed-element mesh
 // MESHING3_RESULT MeshMixedVolume (MeshingParameters & mp, Mesh& mesh3d);
 
 /// Optimize tet-mesh
-MESHING3_RESULT OptimizeVolume (MeshingParameters & mp, Mesh& mesh3d);
+DLL_HEADER MESHING3_RESULT OptimizeVolume (const MeshingParameters & mp, Mesh& mesh3d);
 //			       const CSGeometry * geometry = NULL);
 
-void RemoveIllegalElements (Mesh & mesh3d);
+DLL_HEADER void RemoveIllegalElements (Mesh & mesh3d);
 
 
 enum MESHING_STEP { 

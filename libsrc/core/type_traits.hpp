@@ -28,6 +28,29 @@ namespace ngcore
     template<typename T>
     constexpr bool is_any_pointer = is_any_pointer_impl<T>::value;
   } // namespace detail
+
+  
+  // Type trait to check if a class implements a 'range_type Range()' function
+  namespace detail
+  {
+    template<typename T>
+    struct has_Range
+    {
+    private:
+      template<typename T2>
+      static constexpr auto check(T2*) ->
+        std::enable_if_t<!std::is_same_v<decltype(std::declval<T2>().Range()), void>, std::true_type>
+      { std::true_type(); }
+      template<typename>
+      static constexpr std::false_type check(...);
+      using type = decltype(check<T>(nullptr)); // NOLINT
+    public:
+      NGCORE_API static constexpr bool value = type::value;
+    };
+  }
+  template<typename T>
+  constexpr bool has_range = detail::has_Range<T>::value;
+
 } // namespace ngcore
 
 #endif // NETGEN_CORE_TYPE_TRAITS_HPP

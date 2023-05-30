@@ -22,7 +22,7 @@ namespace netgen
 
 
 void WriteFEAPFormat (const Mesh & mesh,
-		      const string & filename)
+		      const filesystem::path & filename)
   
 {
   // Feap format by A. Rieger 
@@ -35,7 +35,7 @@ void WriteFEAPFormat (const Mesh & mesh,
 
   double scale = 1;   // globflags.GetNumFlag ("scale", 1);
   
-  ofstream outfile(filename.c_str());
+  ofstream outfile(filename);
  
   outfile << "feap" << "\n";
   outfile << mesh.GetNP();
@@ -144,11 +144,11 @@ void WriteFEAPFormat (const Mesh & mesh,
 
   // BEGIN CONTACT OUTPUT
   /*      
-	  int masterindex, slaveindex;
+	  int masterindex, minionindex;
 	  cout << "Master Surface index = ";
 	  cin >> masterindex;
-	  cout << "Slave Surface index  = ";
-	  cin >> slaveindex;
+	  cout << "Minion Surface index  = ";
+	  cin >> minionindex;
 
 
 	  // CONTACT SURFACE 1
@@ -196,7 +196,7 @@ void WriteFEAPFormat (const Mesh & mesh,
 	  Element2d sel = mesh.SurfaceElement(i);
 	  if (invertsurf)
 	  sel.Invert();
-	  if (mesh.GetFaceDescriptor(sel.GetIndex ()).BCProperty() == slaveindex)
+	  if (mesh.GetFaceDescriptor(sel.GetIndex ()).BCProperty() == minionindex)
 	  {
 	  zz++;
 	  outfile.width(14);

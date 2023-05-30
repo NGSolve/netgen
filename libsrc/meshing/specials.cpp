@@ -20,7 +20,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
 		othermesh.GetNP(), " points, ",
 		othermesh.GetNSE(), " surface elements.");
 
-  Array<Box3d> otherbounds(nse);  
+  NgArray<Box3d> otherbounds(nse);  
   Box3d otherbox;
 
   double maxh = 0;
@@ -62,7 +62,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
     }
   cout << endl;
 
-  BitArray connected(mesh.GetNP());
+  NgBitArray connected(mesh.GetNP());
   connected.Clear();
   for (i = 1; i <= mesh.GetNSE(); i++)
     {
@@ -120,7 +120,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
   mesh.Compress();
   
   mesh.FindOpenElements();
-  BitArray locked(mesh.GetNP());
+  NgBitArray locked(mesh.GetNP());
   locked.Set();
   for (i = 1; i <= mesh.GetNOpenElements(); i++)
     for (j = 1; j <= 3; j++)
@@ -135,7 +135,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
 
 
   
-  Array<PointIndex> pmat(onp);
+  NgArray<PointIndex> pmat(onp);
 
   for (i = 1; i <= onp; i++)
     pmat.Elem(i) = mesh.AddPoint (othermesh.Point(i));

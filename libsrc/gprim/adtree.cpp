@@ -206,7 +206,7 @@ namespace netgen
   }
 
 
-  void ADTree :: GetMatch (Array <int> & matches)
+  void ADTree :: GetMatch (NgArray <int> & matches)
   {
     int nodenr;
 
@@ -398,25 +398,25 @@ namespace netgen
 
   void ADTree3 :: GetIntersecting (const float * bmin, 
 				   const float * bmax,
-				   Array<int> & pis) const
+				   NgArray<int> & pis) const
   {
-    static Array<ADTreeNode3*> stack(1000);
-    static Array<int> stackdir(1000);
+    ArrayMem<ADTreeNode3*, 1000> stack(1000);
+    ArrayMem<int, 1000> stackdir(1000);
     ADTreeNode3 * node;
     int dir, stacks;
 
-    stack.SetSize (1000);
-    stackdir.SetSize(1000);
+    // stack.SetSize (1000);
+    // stackdir.SetSize(1000);
     pis.SetSize(0);
 
-    stack.Elem(1) = root;
-    stackdir.Elem(1) = 0;
-    stacks = 1;
+    stack[0] = root;
+    stackdir[0] = 0;
+    stacks = 0;
 
-    while (stacks)
+    while (stacks >= 0)
       {
-	node = stack.Get(stacks);
-	dir = stackdir.Get(stacks); 
+	node = stack[stacks];
+	dir = stackdir[stacks]; 
 	stacks--;
 
 	if (node->pi != -1)
@@ -436,14 +436,14 @@ namespace netgen
 	if (node->left && bmin[dir] <= node->sep)
 	  {
 	    stacks++;
-	    stack.Elem(stacks) = node->left;
-	    stackdir.Elem(stacks) = ndir;
+	    stack[stacks] = node->left;
+	    stackdir[stacks] = ndir;
 	  }
 	if (node->right && bmax[dir] >= node->sep)
 	  {
 	    stacks++;
-	    stack.Elem(stacks) = node->right;
-	    stackdir.Elem(stacks) = ndir;
+	    stack[stacks] = node->right;
+	    stackdir[stacks] = ndir;
 	  }
       }
   }
@@ -658,10 +658,10 @@ namespace netgen
 
   void ADTree3Div :: GetIntersecting (const float * bmin, 
 				      const float * bmax,
-				      Array<int> & pis) const
+				      NgArray<int> & pis) const
   {
-    static Array<ADTreeNode3Div*> stack(1000);
-    static Array<int> stackdir(1000);
+    static NgArray<ADTreeNode3Div*> stack(1000);
+    static NgArray<int> stackdir(1000);
     ADTreeNode3Div * node;
     int dir, i, stacks;
 
@@ -917,10 +917,10 @@ namespace netgen
 
   void ADTree3M :: GetIntersecting (const float * bmin, 
 				    const float * bmax,
-				    Array<int> & pis) const
+				    NgArray<int> & pis) const
   {
-    static Array<ADTreeNode3M*> stack(1000);
-    static Array<int> stackdir(1000);
+    static NgArray<ADTreeNode3M*> stack(1000);
+    static NgArray<int> stackdir(1000);
     ADTreeNode3M * node;
     int dir, i, stacks;
 
@@ -1163,9 +1163,9 @@ namespace netgen
 
   void ADTree3F :: GetIntersecting (const float * bmin, 
 				    const float * bmax,
-				    Array<int> & pis) const
+				    NgArray<int> & pis) const
   {
-    static Array<ADTreeNode3F*> stack(1000);
+    static NgArray<ADTreeNode3F*> stack(1000);
     ADTreeNode3F * node;
     int dir, i, stacks;
 
@@ -1427,9 +1427,9 @@ namespace netgen
 
   void ADTree3FM :: GetIntersecting (const float * bmin, 
 				     const float * bmax,
-				     Array<int> & pis) const
+				     NgArray<int> & pis) const
   {
-    static Array<ADTreeNode3FM*> stack(1000);
+    static NgArray<ADTreeNode3FM*> stack(1000);
     ADTreeNode3FM * node;
     int dir, i, stacks;
 
@@ -1700,11 +1700,11 @@ namespace netgen
 
   void ADTree6 :: GetIntersecting (const float * bmin, 
 				   const float * bmax,
-				   Array<int> & pis) const
+				   NgArray<int> & pis) const
   {
-    // static Array<inttn6> stack(10000);
+    // static NgArray<inttn6> stack(10000);
     // stack.SetSize (10000);
-    ArrayMem<inttn6,10000> stack(10000);
+    NgArrayMem<inttn6,10000> stack(10000);
     pis.SetSize(0);
 
     stack[0].node = root;
@@ -1794,7 +1794,7 @@ namespace netgen
 
 
 
-  
+  /*
   template <int dim, typename T>
   T_ADTree<dim,T> :: T_ADTree (Point<dim> acmin, Point<dim> acmax)
   // : ela(0)
@@ -1805,14 +1805,18 @@ namespace netgen
     root = new T_ADTreeNode<dim,T>;
     root->sep = (cmin[0] + cmax[0]) / 2;
   }
+  */
 
+  /*
   template <int dim, typename T>  
   T_ADTree<dim,T> :: ~T_ADTree ()
   {
     root->DeleteChilds();
     delete root;
   }
+  */
 
+  /*
   template <int dim, typename T>
   void T_ADTree<dim,T> :: Insert (Point<dim> p, T pi)
   {
@@ -1883,7 +1887,9 @@ namespace netgen
 	node = node->father;
       }
   }
+  */
 
+  /*
   template <int dim, typename T>
   void T_ADTree<dim,T> :: DeleteElement (T pi)
   {
@@ -1899,7 +1905,9 @@ namespace netgen
 	node = node->father;
       }
   }
+  */
 
+  /*
   template <int dim, typename T>
   void T_ADTree<dim,T> :: PrintMemInfo (ostream & ost) const
   {
@@ -1908,8 +1916,9 @@ namespace netgen
 	<< Elements() * sizeof(T_ADTreeNode<dim,T>) << endl;
     ost << "maxind = " << ela.Size() << " = " << sizeof(T_ADTreeNode<dim,T>*) * ela.Size() << " Bytes" << endl;
   }
+  */
 
-
+  /*
   template <int dim, typename T>
   class inttn {
   public:
@@ -1920,11 +1929,11 @@ namespace netgen
 
   template <int dim, typename T>
   void T_ADTree<dim,T> :: GetIntersecting (Point<dim> bmin, Point<dim> bmax,
-                                           Array<T> & pis) const
+                                           NgArray<T> & pis) const
   {
-    // static Array<inttn6> stack(10000);
+    // static NgArray<inttn6> stack(10000);
     // stack.SetSize (10000);
-    ArrayMem<inttn<dim,T>,10000> stack(10000);
+    NgArrayMem<inttn<dim,T>,10000> stack(10000);
     pis.SetSize(0);
 
     stack[0].node = root;
@@ -1948,19 +1957,18 @@ namespace netgen
                 found = false;
             if (found)
               pis.Append (node->pi);            
-            /*
-	    if (node->data[0] > bmax[0] || 
-		node->data[1] > bmax[1] || 
-		node->data[2] > bmax[2] || 
-		node->data[3] < bmin[3] || 
-		node->data[4] < bmin[4] || 
-		node->data[5] < bmin[5])
-	      ;
-	    else
-              {
-                pis.Append (node->pi);
-              }
-            */
+
+            //	if (node->data[0] > bmax[0] || 
+            // node->data[1] > bmax[1] || 
+            // node->data[2] > bmax[2] || 
+            // node->data[3] < bmin[3] || 
+            // node->data[4] < bmin[4] || 
+            // node->data[5] < bmin[5])
+            // ;
+	    // else
+            // {
+            // pis.Append (node->pi);
+            // }
 	  }
 
 	int ndir = (dir+1) % dim;
@@ -1979,7 +1987,9 @@ namespace netgen
 	  }
       }
   }
+*/
 
+  /*
   template <int dim, typename T>
   void T_ADTree<dim,T> :: PrintRec (ostream & ost, const T_ADTreeNode<dim,T> * node) const
   {
@@ -2021,8 +2031,7 @@ namespace netgen
       els += ElementsRec(node->right);
     return els;
   }
-
-
+*/
 
 
   
@@ -2195,9 +2204,9 @@ namespace netgen
 
   void ADTree6F :: GetIntersecting (const float * bmin, 
 				    const float * bmax,
-				    Array<int> & pis) const
+				    NgArray<int> & pis) const
   {
-    static Array<ADTreeNode6F*> stack(1000);
+    static NgArray<ADTreeNode6F*> stack(1000);
     ADTreeNode6F * node;
     int dir, i, stacks;
 
@@ -2329,7 +2338,7 @@ namespace netgen
   }
 
   void Point3dTree :: GetIntersecting (const Point<3> & pmin, const Point<3> & pmax, 
-				       Array<int> & pis) const
+				       NgArray<int> & pis) const
   {
     float pmi[3], pma[3];
     for (int i = 0; i < 3; i++)
@@ -2346,7 +2355,7 @@ namespace netgen
 
 
 
-
+  /*
   template <int dim, typename T>
   BoxTree<dim,T> :: BoxTree (const Box<dim> & abox)
   {
@@ -2360,7 +2369,9 @@ namespace netgen
       }
     tree = new T_ADTree<2*dim,T> (tpmin, tpmax);
   }
+  */
 
+  /*
   template <int dim, typename T>
   BoxTree<dim,T> :: BoxTree (const Point<dim> & apmin, const Point<dim> & apmax)
   {
@@ -2394,10 +2405,12 @@ namespace netgen
 
     tree->Insert (tp, pi);
   }
+  */
 
+  /*
   template <int dim, typename T>
   void BoxTree<dim,T> ::GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax, 
-                                         Array<T> & pis) const
+                                         NgArray<T> & pis) const
   {
     Point<2*dim> tpmin, tpmax;
     double tol = Tolerance();
@@ -2412,8 +2425,9 @@ namespace netgen
 
     tree->GetIntersecting (tpmin, tpmax, pis);
   }
-
-
+  */
+  
+  /*
   template<> BlockAllocator T_ADTreeNode<4,INDEX> :: ball(sizeof (T_ADTreeNode<4,INDEX>));
   template class T_ADTree<4,INDEX>;
   template class BoxTree<2,INDEX>;
@@ -2426,4 +2440,6 @@ namespace netgen
   template<> BlockAllocator T_ADTreeNode<6,INDEX> :: ball(sizeof (T_ADTreeNode<6,INDEX>));
   template class T_ADTree<6,INDEX>;
   template class BoxTree<3,INDEX>;
+  */
+  
 }

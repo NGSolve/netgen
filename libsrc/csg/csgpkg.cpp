@@ -17,7 +17,6 @@ extern "C" int Ng_CSG_Init (Tcl_Interp * interp);
 
 namespace netgen
 {
-  // extern DLL_HEADER NetgenGeometry * ng_geometry;
   extern DLL_HEADER shared_ptr<NetgenGeometry> ng_geometry;
   extern DLL_HEADER shared_ptr<Mesh> mesh;
 
@@ -66,18 +65,18 @@ namespace netgen
 	    Point3d pmin = geometry->BoundingBox ().PMin();
 	    Point3d pmax = geometry->BoundingBox ().PMax();
 	    
-	    sprintf (buf, "%5.1lf", pmin.X());
+	    snprintf (buf, size(buf), "%5.1lf", pmin.X());
 	    Tcl_SetVar (interp, "::geooptions.minx", buf, 0);
-	    sprintf (buf, "%5.1lf", pmin.Y());
+	    snprintf (buf, size(buf), "%5.1lf", pmin.Y());
 	    Tcl_SetVar (interp, "::geooptions.miny", buf, 0);
-	    sprintf (buf, "%5.1lf", pmin.Z());
+	    snprintf (buf, size(buf), "%5.1lf", pmin.Z());
 	    Tcl_SetVar (interp, "::geooptions.minz", buf, 0);
 	    
-	    sprintf (buf, "%5.1lf", pmax.X());
+	    snprintf (buf, size(buf), "%5.1lf", pmax.X());
 	    Tcl_SetVar (interp, "::geooptions.maxx", buf, 0);
-	    sprintf (buf, "%5.1lf", pmax.Y());
+	    snprintf (buf, size(buf), "%5.1lf", pmax.Y());
 	    Tcl_SetVar (interp, "::geooptions.maxy", buf, 0);
-	    sprintf (buf, "%5.1lf", pmax.Z());
+	    snprintf (buf, size(buf), "%5.1lf", pmax.Z());
 	    Tcl_SetVar (interp, "::geooptions.maxz", buf, 0);
 	  }
       }
@@ -154,7 +153,7 @@ namespace netgen
     tcl_const char * name = argv[1];
     tcl_const char * value = argv[2];
 
-    Array<double> coeffs;
+    NgArray<double> coeffs;
 
 
     cout << "Set primitive data, name = " << name
@@ -222,7 +221,7 @@ namespace netgen
 
     const char * classname;
 
-    Array<double> coeffs;
+    NgArray<double> coeffs;
 
     geometry->GetSolid (name)->GetPrimitive()->GetPrimitiveData (classname, coeffs);
 
@@ -433,17 +432,17 @@ namespace netgen
 	if (!tlo) return TCL_OK;
 
 	char varname[50];
-	sprintf (varname, "%s(red)", propvar);
+	snprintf (varname, size(varname), "%s(red)", propvar);
 	double red = atof (Tcl_GetVar (interp, varname, 0));
-	sprintf (varname, "%s(blue)", propvar);
+	snprintf (varname, size(varname), "%s(blue)", propvar);
 	double blue = atof (Tcl_GetVar (interp, varname, 0));
-	sprintf (varname, "%s(green)", propvar);
+	snprintf (varname, size(varname), "%s(green)", propvar);
 	double green = atof (Tcl_GetVar (interp, varname, 0));
 	tlo -> SetRGB (red, green, blue);
 
-	sprintf (varname, "%s(visible)", propvar);
+	snprintf (varname, size(varname), "%s(visible)", propvar);
 	tlo -> SetVisible (bool(atoi (Tcl_GetVar (interp, varname, 0))));
-	sprintf (varname, "%s(transp)", propvar);
+	snprintf (varname, size(varname), "%s(transp)", propvar);
 	tlo -> SetTransparent (bool(atoi (Tcl_GetVar (interp, varname, 0))));
       }
 
@@ -461,24 +460,24 @@ namespace netgen
 
 	char varname[50], varval[10];
 
-	sprintf (varname, "%s(red)", propvar);
-	sprintf (varval, "%lf", tlo->GetRed());
+	snprintf (varname, size(varname), "%s(red)", propvar);
+	snprintf (varval, size(varval), "%lf", tlo->GetRed());
 	Tcl_SetVar (interp, varname, varval, 0);
 
-	sprintf (varname, "%s(green)", propvar);
-	sprintf (varval, "%lf", tlo->GetGreen());
+	snprintf (varname, size(varname), "%s(green)", propvar);
+	snprintf (varval, size(varval), "%lf", tlo->GetGreen());
 	Tcl_SetVar (interp, varname, varval, 0);
 
-	sprintf (varname, "%s(blue)", propvar);
-	sprintf (varval, "%lf", tlo->GetBlue());
+	snprintf (varname, size(varname), "%s(blue)", propvar);
+	snprintf (varval, size(varval), "%lf", tlo->GetBlue());
 	Tcl_SetVar (interp, varname, varval, 0);
 
-	sprintf (varname, "%s(visible)", propvar);
-	sprintf (varval, "%d", tlo->GetVisible());
+	snprintf (varname, size(varname), "%s(visible)", propvar);
+	snprintf (varval, size(varval), "%d", tlo->GetVisible());
 	Tcl_SetVar (interp, varname, varval, 0);
 
-	sprintf (varname, "%s(transp)", propvar);
-	sprintf (varval, "%d", tlo->GetTransparent());
+	snprintf (varname, size(varname), "%s(transp)", propvar);
+	snprintf (varval, size(varval), "%d", tlo->GetTransparent());
 	Tcl_SetVar (interp, varname, varval, 0);
       }
 
@@ -547,86 +546,10 @@ namespace netgen
   }
 
 
-  /*
-  class CSGeometryRegister : public GeometryRegister
-  {
-  public:
-    virtual NetgenGeometry * Load (string filename) const;
-    virtual NetgenGeometry * LoadFromMeshFile (istream & ist) const;
-    virtual VisualScene * GetVisualScene (const NetgenGeometry * geom) const;
-  };
-
-  extern CSGeometry * ParseCSG (istream & istr);
-
-  NetgenGeometry *  CSGeometryRegister :: Load (string filename) const
-  {
-    const char * cfilename = filename.c_str();
-    if (strcmp (&cfilename[strlen(cfilename)-3], "geo") == 0)
-      {
-	PrintMessage (1, "Load CSG geometry file ", cfilename);
-
-	ifstream infile(cfilename);
-
-	CSGeometry * hgeom = ParseCSG (infile);
-	if (!hgeom)
-	  throw NgException ("geo-file should start with 'algebraic3d'");
-
-	hgeom -> FindIdenticSurfaces(1e-8 * hgeom->MaxSize()); 
-	return hgeom;
-      }
-
-    if (strcmp (&cfilename[strlen(cfilename)-3], "ngg") == 0)
-      {
-	PrintMessage (1, "Load new CSG geometry file ", cfilename);
-
-	ifstream infile(cfilename);
-	CSGeometry * hgeom = new CSGeometry("");
-	hgeom -> Load (infile);
-
-	return hgeom;
-      }
-
-
-    
-    return NULL;
-  }
-
-  NetgenGeometry * CSGeometryRegister :: LoadFromMeshFile (istream & ist) const 
-  {
-    string auxstring;
-    if (ist.good())
-      {
-	ist >> auxstring;
-	if (auxstring == "csgsurfaces")
-	  {
-	    CSGeometry * geometry = new CSGeometry ("");
-	    geometry -> LoadSurfaces(ist);
-	    return geometry;
-	  }
-	// else
-	// ist.putback (auxstring);
-      }
-    return NULL;
-  }
-
-  VisualScene * CSGeometryRegister :: GetVisualScene (const NetgenGeometry * geom) const
-  {
-    CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry.get());
-    if (geometry)
-      {
-	vsgeom.SetGeometry (geometry);
-	return &vsgeom;
-      }
-    return NULL;
-  }
-  */
-
-
-
   class CSGeometryVisRegister : public GeometryRegister
   {
   public:
-    virtual NetgenGeometry * Load (string filename) const { return NULL; }
+    virtual NetgenGeometry * Load (const filesystem::path & filename) const { return NULL; }
     virtual VisualScene * GetVisualScene (const NetgenGeometry * geom) const;
   };
 

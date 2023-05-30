@@ -10,32 +10,37 @@
 namespace netgen
 {
 
- class VisualSceneSTLGeometry : public VisualScene
+ class NGGUI_API VisualSceneSTLGeometry : public VisualScene
   {
-    Array<int> trilists;
+    NgArray<int> trilists;
     class STLGeometry * stlgeometry;
 
   public:
-    DLL_HEADER VisualSceneSTLGeometry ();
-	DLL_HEADER virtual ~VisualSceneSTLGeometry ();
-	DLL_HEADER void SetGeometry (class STLGeometry * astlgeometry) { stlgeometry = astlgeometry; }
+    VisualSceneSTLGeometry ();
+    virtual ~VisualSceneSTLGeometry ();
+    void SetGeometry (class STLGeometry * astlgeometry) { stlgeometry = astlgeometry; }
 
-	DLL_HEADER virtual void BuildScene (int zoomall = 0);
-	DLL_HEADER virtual void DrawScene ();
+    virtual void BuildScene (int zoomall = 0);
+    virtual void DrawScene ();
   };
 
 
-  class VisualSceneSTLMeshing : public VisualScene
+  class NGGUI_API VisualSceneSTLMeshing : public VisualScene
   {
-    Array<int> trilists;
+    NgArray<int> trilists;
     int selecttrig, nodeofseltrig;
     class STLGeometry * stlgeometry;
 
   public:
-    DLL_HEADER VisualSceneSTLMeshing ();
-	DLL_HEADER virtual ~VisualSceneSTLMeshing ();
+    VisualSceneSTLMeshing ();
+    virtual ~VisualSceneSTLMeshing ();
 
-    void SetGeometry (class STLGeometry * astlgeometry) { stlgeometry = astlgeometry; }
+    void SetGeometry (class STLGeometry * astlgeometry)
+    {
+      stlgeometry = astlgeometry;
+      stlgeometry->SetSelectTrig(selecttrig);
+      stlgeometry->SetNodeOfSelTrig(nodeofseltrig);
+    }
 
     virtual void BuildScene (int zoomall = 0);
     virtual void DrawScene ();

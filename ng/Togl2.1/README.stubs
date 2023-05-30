@@ -4,7 +4,7 @@ interface, witch means that the same binary works with any stubs-aware
 wish (i.e. version >= 8.1)
 
 It has been tested on Windows NT/2000 and Linux for several Tcl/Tk versions up
-to 8.4a3. I haven't been able to test the Mac port, it propably needs mending 
+to 8.4a3. I haven't been able to test the Mac port, it probably needs mending 
 but I can't see why it shouldn't work in principle.
 
 Implementation wise, what differs from Togl 1.5 is that Togl_MakeWindowExist()
@@ -16,6 +16,6 @@ same binary runs on all versions of Wish from 8.1 and up. For this to
 work you need to compile against the headers from Tcl/Tk 8.4a3 or later, or
 the binary will only work for Tcl/Tk 8.1-8.4a2.
 The tk8.4a3 public headers (tk8.4a3.h + tkDecls.h) are included for
-conveniance, and they are used if the flag -DUSE_LOCAL_TK_H is specified.
+convenience, and they are used if the flag -DUSE_LOCAL_TK_H is specified.
 
 Jonas Beskow, December 2001

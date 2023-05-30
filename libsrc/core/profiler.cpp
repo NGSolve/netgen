@@ -8,10 +8,10 @@ namespace ngcore
 
   std::string NgProfiler::filename;
 
-  size_t NgProfiler::dummy_thread_times[NgProfiler::SIZE];
-  size_t * NgProfiler::thread_times = NgProfiler::dummy_thread_times; // NOLINT
-  size_t NgProfiler::dummy_thread_flops[NgProfiler::SIZE];
-  size_t * NgProfiler::thread_flops = NgProfiler::dummy_thread_flops; // NOLINT
+  std::array<size_t,NgProfiler::SIZE> NgProfiler::dummy_thread_times;
+  size_t * NgProfiler::thread_times = NgProfiler::dummy_thread_times.data(); // NOLINT
+  std::array<size_t,NgProfiler::SIZE> NgProfiler::dummy_thread_flops;
+  size_t * NgProfiler::thread_flops = NgProfiler::dummy_thread_flops.data(); // NOLINT
 
   std::shared_ptr<Logger> NgProfiler::logger = GetLogger("Profiler"); // NOLINT
 
@@ -94,7 +94,7 @@ namespace ngcore
     if (first_overflow)
       {
         first_overflow = false;
-        NgProfiler::logger->warn("no more timer available, reusing last one");
+        NgProfiler::logger->warn( ("no more timer available ("+name+"), reusing last one").c_str());
       }
     return 0;
   }
@@ -113,5 +113,9 @@ namespace ngcore
 
   NgProfiler prof; // NOLINT
 
+#ifdef NETGEN_TRACE_MEMORY
+  std::vector<std::string> MemoryTracer::names{"all"};
+  std::vector<int> MemoryTracer::parents{-1};
+#endif // NETGEN_TRACE_MEMORY
 
 } // namespace ngcore

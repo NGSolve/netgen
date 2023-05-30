@@ -39,7 +39,8 @@ namespace netgen
     allflines = 0;
 
     minval = 0;
-    starti = lines.Begin();
+    // starti = lines.Begin();
+    starti = *lines.Range().begin();
   }
 
   AdFront2 :: ~AdFront2 ()
@@ -53,7 +54,8 @@ namespace netgen
     if (nfl > 0)
       {
 	ost << nfl << " open front segments left:" << endl;
-	for (int i = lines.Begin(); i < lines.End(); i++)
+	// for (int i = lines.Begin(); i < lines.End(); i++)
+        for (int i : lines.Range())
 	  if (lines[i].Valid())
 	    ost << i << ": " 
                 << GetGlobalIndex (lines[i].L().I1()) << "-"
@@ -62,7 +64,7 @@ namespace netgen
   }
 
   /*
-  void AdFront2 :: GetPoints (Array<Point<3> > & apoints) const
+  void AdFront2 :: GetPoints (NgArray<Point<3> > & apoints) const
   {
     apoints.Append (points);
     // for (int i = 0; i < points.Size(); i++)
@@ -219,8 +221,9 @@ namespace netgen
 				  int & qualclass)
   {
     int baselineindex = -1; 
-
-    for (int i = starti; i < lines.End(); i++)
+    
+    // for (int i = starti; i < lines.End(); i++)
+    for (int i = starti; i < *lines.Range().end(); i++)
       {
 	if (lines[i].Valid())
 	  {
@@ -240,7 +243,8 @@ namespace netgen
     if (baselineindex == -1)
       {
 	minval = INT_MAX;
-	for (int i = lines.Begin(); i < lines.End(); i++)
+	// for (int i = lines.Begin(); i < lines.End(); i++)
+        for (int i : lines.Range())
 	  if (lines[i].Valid())
 	    {
 	      int hi = lines[i].LineClass() +
@@ -270,17 +274,15 @@ namespace netgen
 
 
   int AdFront2 :: GetLocals (int baselineindex,
-			     Array<Point3d> & locpoints,
-			     Array<MultiPointGeomInfo> & pgeominfo,
-			     Array<INDEX_2> & loclines,   // local index
-			     Array<INDEX> & pindex,
-			     Array<INDEX> & lindex,
+			     NgArray<Point<3>> & locpoints,
+			     NgArray<MultiPointGeomInfo> & pgeominfo,
+			     NgArray<INDEX_2> & loclines,   // local index
+			     NgArray<INDEX> & pindex,
+			     NgArray<INDEX> & lindex,
 			     double xh)
   {
-    static int timer = NgProfiler::CreateTimer ("adfront2::GetLocals");
-    NgProfiler::RegionTimer reg (timer);
-
-
+    static Timer timer("adfront2::GetLocals"); RegionTimer reg (timer);
+    
     int pstind;
     Point<3>  midp, p0;
 
@@ -291,20 +293,21 @@ namespace netgen
     lindex.Append(baselineindex);  
 
     ArrayMem<int, 1000> nearlines(0);
-    ArrayMem<int, 1000> nearpoints(0);
+    NgArrayMem<int, 1000> nearpoints(0);
 
     // dominating costs !!
     linesearchtree.GetIntersecting (p0 - Vec3d(xh, xh, xh),
 				    p0 + Vec3d(xh, xh, xh),
 				    nearlines);
 
-    pointsearchtree.GetIntersecting (p0 - Vec3d(xh, xh, xh),
+    // only special points that are not in adfront,
+    // other points are from linesearchtree
+    cpointsearchtree.GetIntersecting(p0 - Vec3d(xh, xh, xh),
                                      p0 + Vec3d(xh, xh, xh),
                                      nearpoints);
-    
-    for (int ii = 0; ii < nearlines.Size(); ii++)
+
+    for(auto i : nearlines)
       {
-	int i = nearlines[ii];
 	if (lines[i].Valid() && i != baselineindex) 
 	  {
             loclines.Append(lines[i].L());
@@ -312,41 +315,40 @@ namespace netgen
 	  }
       }
 
-    // static Array<int> invpindex;
+    // static NgArray<int> invpindex;
     invpindex.SetSize (points.Size()); 
     // invpindex = -1;
-    for (int i = 0; i < nearpoints.Size(); i++)
-      invpindex[nearpoints[i]] = -1;
+    for(auto pi : nearpoints)
+      invpindex[pi] = -1;
 
-    for (int i = 0; i < loclines.Size(); i++)
+    for(const auto& li : loclines)
       {
-	invpindex[loclines[i].I1()] = 0;
-	invpindex[loclines[i].I2()] = 0;
+	invpindex[li.I1()] = 0;
+	invpindex[li.I2()] = 0;
       }
 
 
-    for (int i = 0; i < loclines.Size(); i++)
+    for(auto& line : loclines)
       {
-	for (int j = 0; j < 2; j++)
-	  {
-	    int pi = loclines[i][j];
+        for(auto i : Range(2))
+          {
+            auto& pi = line[i];
 	    if (invpindex[pi] == 0)
 	      {
 		pindex.Append (pi);
 		invpindex[pi] = pindex.Size();
                 locpoints.Append (points[pi].P());
-		loclines[i][j] = locpoints.Size();
+		pi = locpoints.Size();
 	      }
 	    else
-	      loclines[i][j] = invpindex[pi];
+	      pi = invpindex[pi];
 	  }
       }
 
 
     // double xh2 = xh*xh;
-    for (int ii = 0; ii < nearpoints.Size(); ii++)
+    for(auto i : nearpoints)
       {
-        int i = nearpoints[ii];
 	if (points[i].Valid() && 
 	    points[i].OnSurface() &&
 	    // Dist2 (points.Get(i).P(), p0) <= xh2 &&
@@ -420,7 +422,7 @@ namespace netgen
    
     if (loclines.Size() == 1)
       {
-	cout << "loclines.Size = 1" << endl;
+	cout << IM(5) << "loclines.Size = 1" << endl;
 	(*testout) << "loclines.size = 1" << endl
 		   << " h = " << xh << endl
 		   << " nearline.size = " << nearlines.Size() << endl
@@ -434,7 +436,8 @@ namespace netgen
 
   void AdFront2 :: SetStartFront ()
   {
-    for (int i = lines.Begin(); i < lines.End(); i++)
+    // for (int i = lines.Begin(); i < lines.End(); i++)
+    for (int i : lines.Range())
       if (lines[i].Valid())
 	for (int j = 1; j <= 2; j++)
 	  points[lines[i].L().I(j)].DecFrontNr(0);
@@ -444,12 +447,14 @@ namespace netgen
   void AdFront2 :: Print (ostream & ost) const
   {
     ost << points.Size() << " Points: " << endl;
-    for (int i = points.Begin(); i < points.End(); i++)
+    // for (int i = points.Begin(); i < points.End(); i++)
+    for (int i : points.Range())
       if (points[i].Valid())
 	ost << i << "  " << points[i].P() << endl;
 
     ost << nfl << " Lines: " << endl;
-    for (int i = lines.Begin(); i < lines.End(); i++)
+    // for (int i = lines.Begin(); i < lines.End(); i++)
+    for (int i : lines.Range())
       if (lines[i].Valid())
 	ost << lines[i].L().I1() << " - " << lines[i].L().I2() << endl;
 
@@ -498,7 +503,7 @@ namespace netgen
   }
 
   bool AdFront2 :: SameSide (const Point<2> & lp1, const Point<2> & lp2, 
-                             const Array<int> * testfaces) const
+                             const FlatArray<int> * testfaces) const
   {
     int cnt = 0;
 

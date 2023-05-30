@@ -11,6 +11,7 @@
 #include <meshing.hpp>
 
 #include "writeuser.hpp"
+#include "../general/gzstream.h"
 
 
 namespace netgen
@@ -18,8 +19,8 @@ namespace netgen
   extern MeshingParameters mparam;
 
 
-  void RegisterUserFormats (Array<const char*> & names,
-			    Array<const char*> & extensions)
+  void RegisterUserFormats (NgArray<const char*> & names,
+			    NgArray<const char*> & extensions)
 			    
 {
   const char *types[] =
@@ -44,6 +45,7 @@ namespace netgen
 	    "OpenFOAM 1.5+ Compressed", "*",
       "JCMwave Format", ".jcm",
       "TET Format", ".tet",
+      "CGNS Format", ".cgns",
       //      { "Chemnitz Format" },
       0
     };
@@ -57,9 +59,9 @@ namespace netgen
   
 
 
-bool WriteUserFormat (const string & format,
+bool WriteUserFormat (const filesystem::path & format,
 		      const Mesh & mesh,
-		      const string & filename)
+		      const filesystem::path & filename)
 {
   // cout << "write user &hgeom = " << &hgeom << endl;
   // const CSGeometry & geom = *dynamic_cast<const CSGeometry*> (&hgeom);
@@ -148,6 +150,9 @@ bool WriteUserFormat (const string & format,
     WriteTETFormat( mesh, filename);//, "High Frequency" );
 #endif
 
+  else if (format == "CGNS Format")
+    WriteCGNSMesh( mesh, filename);
+
   else
     {
       return 1;
@@ -166,7 +171,7 @@ bool WriteUserFormat (const string & format,
 
 void WriteNeutralFormat (const Mesh & mesh,
 			 const NetgenGeometry & geom,
-			 const string & filename)
+			 const filesystem::path & filename)
 {
   cout << "write neutral, new" << endl;
   int np = mesh.GetNP();
@@ -178,7 +183,7 @@ void WriteNeutralFormat (const Mesh & mesh,
   int inverttets = mparam.inverttets;
   int invertsurf = mparam.inverttrigs;
 
-  ofstream outfile (filename.c_str());
+  ofstream outfile (filename);
 
   outfile.precision(6);
   outfile.setf (ios::fixed, ios::floatfield);
@@ -282,14 +287,14 @@ void WriteNeutralFormat (const Mesh & mesh,
 
 
 void WriteSurfaceFormat (const Mesh & mesh,
-			 const string & filename)
+			 const filesystem::path & filename)
 {
   // surface mesh
   int i, j;
 
   cout << "Write Surface Mesh" << endl;
 
-  ofstream outfile (filename.c_str());
+  ofstream outfile (filename);
 
   outfile << "surfacemesh" << endl;
 
@@ -324,16 +329,17 @@ void WriteSurfaceFormat (const Mesh & mesh,
  */
 
 void WriteSTLFormat (const Mesh & mesh,
-		     const string & filename)
+		     const filesystem::path & filename)
 {
   cout << "\nWrite STL Surface Mesh" << endl;
 
+  auto ext = filename.extension();
   ostream *outfile;
 
-  if(filename.substr(filename.length()-3,3) == ".gz")
-	  outfile = new ogzstream(filename.c_str());
+  if(ext == ".gz")
+	  outfile = new ogzstream(filename);
   else
-	  outfile = new ofstream(filename.c_str());
+	  outfile = new ofstream(filename);
 
   int i;
 
@@ -381,22 +387,23 @@ void WriteSTLFormat (const Mesh & mesh,
  *    when using a third-party mesher
  */
 void WriteSTLExtFormat (const Mesh & mesh,
-		     const string & filename)
+		     const filesystem::path & filename)
 {
   cout << "\nWrite STL Surface Mesh (with separated boundary faces)" << endl;
 
+  auto ext = filename.extension();
   ostream *outfile;
 
-  if(filename.substr(filename.length()-3,3) == ".gz")
-	  outfile = new ogzstream(filename.c_str());
+  if(ext == ".gz")
+	  outfile = new ogzstream(filename);
   else
-	  outfile = new ofstream(filename.c_str());
+	  outfile = new ofstream(filename);
 
   outfile->precision(10);
 
   int numBCs = 0;
 
-  Array<int> faceBCs;
+  NgArray<int> faceBCs;
   TABLE<int> faceBCMapping;
 
   faceBCs.SetSize(mesh.GetNFD());
@@ -431,15 +438,15 @@ void WriteSTLExtFormat (const Mesh & mesh,
 
       for(int faceNr = 1;faceNr <= faceBCMapping.EntrySize(bcInd); faceNr++)
       {
-          Array<SurfaceElementIndex> faceSei;
+        Array<SurfaceElementIndex> faceSei;
           mesh.GetSurfaceElementsOfFace(faceBCMapping.Get(bcInd,faceNr),faceSei);
 
           for (int i = 0; i < faceSei.Size(); i++)
           {
         	  *outfile << "facet normal ";
-        	  const Point3d& p1 = mesh.Point(mesh.SurfaceElement(faceSei[i]).PNum(1));
-        	  const Point3d& p2 = mesh.Point(mesh.SurfaceElement(faceSei[i]).PNum(2));
-        	  const Point3d& p3 = mesh.Point(mesh.SurfaceElement(faceSei[i]).PNum(3));
+        	  const Point3d& p1 = mesh.Point(mesh[faceSei[i]].PNum(1));
+        	  const Point3d& p2 = mesh.Point(mesh[faceSei[i]].PNum(2));
+        	  const Point3d& p3 = mesh.Point(mesh[faceSei[i]].PNum(3));
 
         	  Vec3d normal = Cross(p2-p1,p3-p1);
         	  if (normal.Length() != 0)
@@ -473,7 +480,7 @@ void WriteSTLExtFormat (const Mesh & mesh,
 
 void WriteVRMLFormat (const Mesh & mesh,
 		      bool faces,
-		      const string & filename)
+		      const filesystem::path & filename)
 {
 
   if (faces)
@@ -486,7 +493,7 @@ void WriteVRMLFormat (const Mesh & mesh,
       int nse = mesh.GetNSE();
       int i, j;
 
-      ofstream outfile (filename.c_str());
+      ofstream outfile (filename);
 
       outfile.precision(6);
       outfile.setf (ios::fixed, ios::floatfield);
@@ -562,7 +569,7 @@ void WriteVRMLFormat (const Mesh & mesh,
       int nse = mesh.GetNSE();
       int i, j;
 
-      ofstream outfile (filename.c_str());
+      ofstream outfile (filename);
 
       outfile.precision(6);
       outfile.setf (ios::fixed, ios::floatfield);
@@ -638,10 +645,10 @@ void WriteVRMLFormat (const Mesh & mesh,
  */
 void WriteFEPPFormat (const Mesh & mesh,
 		      const NetgenGeometry & geom,
-		      const string & filename)
+		      const filesystem::path & filename)
 {
 
-  ofstream outfile (filename.c_str());
+  ofstream outfile (filename);
 
   if (mesh.GetDimension() == 3)
 
@@ -769,7 +776,7 @@ void WriteFEPPFormat (const Mesh & mesh,
 
 void WriteEdgeElementFormat (const Mesh & mesh,
 			     const NetgenGeometry & geom,
-			     const string & filename)
+			     const filesystem::path & filename)
 {
   cout << "write edge element format" << endl;
 
@@ -782,9 +789,9 @@ void WriteEdgeElementFormat (const Mesh & mesh,
 
   int inverttets = mparam.inverttets;
   int invertsurf = mparam.inverttrigs;
-  Array<int> edges;
+  NgArray<int> edges;
 
-  ofstream outfile (filename.c_str());
+  ofstream outfile (filename);
 
   outfile.precision(6);
   outfile.setf (ios::fixed, ios::floatfield);
@@ -907,8 +914,8 @@ void WriteEdgeElementFormat (const Mesh & mesh,
 void WriteFile (int typ,
 		const Mesh & mesh,
 		const CSGeometry & geom,
-		const char * filename,
-		const char * geomfile,
+		const filesystem::path & filename,
+		const filesystem::path & geomfile,
 		double h)
 {
 
@@ -939,10 +946,10 @@ void WriteFile (int typ,
       INDEX_2_HASHTABLE<int> edgeht(mesh.GetNP());
 
       // list of edges
-      Array<INDEX_2> edgelist;
+      NgArray<INDEX_2> edgelist;
 
       // edge (point) on boundary ?
-      BitArray bedge, bpoint(mesh.GetNP());
+      NgBitArray bedge, bpoint(mesh.GetNP());
 
       static int eledges[6][2] = { { 1, 2 } , { 1, 3 } , { 1, 4 },
 				   { 2, 3 } , { 2, 4 } , { 3, 4 } };

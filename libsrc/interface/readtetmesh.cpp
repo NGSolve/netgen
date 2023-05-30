@@ -20,10 +20,8 @@ namespace netgen
 
 
   void ReadTETFormat (Mesh & mesh, 
-                      const string & hfilename)
+                      const filesystem::path & filename)
   {
-    const char * filename = hfilename.c_str();
-
     cout << "Reading .tet mesh" << endl;
 
     ifstream in (filename);
@@ -49,17 +47,17 @@ namespace netgen
     Point3d p;
     int numObj3D,numObj2D,numObj1D,numObj0D;
     // bool nullstarted;
-    Array<int> eldom;
+    NgArray<int> eldom;
     int minId3D = -1, minId2D = -1;
     int maxId3D(-1), maxId2D(-1), maxId1D(-1), maxId0D(-1);
-    Array<Array<int> *> segmentdata;
-    Array<Element2d* > tris;
+    NgArray<NgArray<int> *> segmentdata;
+    NgArray<Element2d* > tris;
 
-    Array<int> userdata_int;  // just save data for 1:1 output
-    Array<double> userdata_double;
-    Array<int> point_pids;
-    Array<int> tetfacedata;
-    Array<int> uid_to_group_3D, uid_to_group_2D, uid_to_group_1D, uid_to_group_0D;
+    NgArray<int> userdata_int;  // just save data for 1:1 output
+    NgArray<double> userdata_double;
+    NgArray<int> point_pids;
+    NgArray<int> tetfacedata;
+    NgArray<int> uid_to_group_3D, uid_to_group_2D, uid_to_group_1D, uid_to_group_0D;
 
     while(!done)
       {
@@ -154,7 +152,7 @@ namespace netgen
             break;
 
           case 7:
-            // NodeID, X, Y, Z, Type (0=Reg 1=PMaster 2=PSlave 3=CPMaster 4=CPSlave), PID:
+            // NodeID, X, Y, Z, Type (0=Reg 1=PMaster 2=PMinion 3=CPMaster 4=CPMinion), PID:
             {
               cout << "read nodes" << endl;
               for(int i=0; i<nnodes; i++)
@@ -175,7 +173,7 @@ namespace netgen
             break;
 
           case 9:
-            // MasterNodeID, SlaveNodeID, TranslCode (1=dS1 2=dS2 3=dS1+dS2)
+            // MasterNodeID, MinionNodeID, TranslCode (1=dS1 2=dS2 3=dS1+dS2)
             for(int i=0; i<nperiodicmasternodes; i++)
               {
                 for(int j=0; j<2; j++)
@@ -191,7 +189,7 @@ namespace netgen
             break;
 
           case 11:
-            // MasterNodeID, 3-SlaveNodeID's, 3-TranslCodes (1=dS1 2=dS2 3=dS1+dS2)
+            // MasterNodeID, 3-MinionNodeID's, 3-TranslCodes (1=dS1 2=dS2 3=dS1+dS2)
             for(int i=0; i<ncornerperiodicmasternodes; i++)
               {
                 for(int j=0; j<4; j++)
@@ -208,7 +206,7 @@ namespace netgen
             break;
 
           case 13:
-            //MasterNodeID, 7-SlaveNodeID's, TranslCodes
+            //MasterNodeID, 7-MinionNodeID's, TranslCodes
             for(int i=0; i<ncubicperiodicmasternodes; i++)
               {
                 for(int j=0; j<8; j++)
@@ -220,13 +218,13 @@ namespace netgen
             break;
 
           case 14:
-            // EdgeID, NodeID0, NodeID1, Type (0=Reg 1=PMaster 2=PSlave 3=CPMaster 4=CPSlave), PID
+            // EdgeID, NodeID0, NodeID1, Type (0=Reg 1=PMaster 2=PMinion 3=CPMaster 4=CPMinion), PID
             cout << "read edges" << endl;
             // nullstarted = false;
             segmentdata.SetSize(nedges);
             for(int i=0; i<nedges; i++)
               {
-                segmentdata[i] = new Array<int>(7);
+                segmentdata[i] = new NgArray<int>(7);
                 *segmentdata[i] = -1;
                 in >> dummyint;
                 in >> (*segmentdata[i])[0] >> (*segmentdata[i])[1];
@@ -243,7 +241,7 @@ namespace netgen
             break;
 
           case 16:
-            // MasterEdgeID, SlaveEdgeID, TranslCode (1=dS1 2=dS2 3=dS1+dS2)
+            // MasterEdgeID, MinionEdgeID, TranslCode (1=dS1 2=dS2 3=dS1+dS2)
             for(int i=0; i<nperiodicmasteredges; i++)
               in >> dummyint >> dummyint >> dummyint;
             break;
@@ -254,7 +252,7 @@ namespace netgen
             break;
 
           case 18:
-            // MasterEdgeID, 3 SlaveEdgeID's, 3 TranslCode (1=dS1 2=dS2 3=dS1+dS2)
+            // MasterEdgeID, 3 MinionEdgeID's, 3 TranslCode (1=dS1 2=dS2 3=dS1+dS2)
             for(int i=0; i<ncornerperiodicmasteredges; i++)
               {
                 in >> dummyint;
@@ -266,7 +264,7 @@ namespace netgen
             break;
 
           case 19:
-            // FaceID, EdgeID0, EdgeID1, EdgeID2, FaceType (0=Reg 1=PMaster 2=PSlave), PID
+            // FaceID, EdgeID0, EdgeID1, EdgeID2, FaceType (0=Reg 1=PMaster 2=PMinion), PID
             {
               //Segment seg;
               int segnum_ng[3];
@@ -343,15 +341,15 @@ namespace netgen
             break;
 
           case 21:
-            // MasterFaceID, SlaveFaceID, TranslCode (1=dS1 2=dS2)
+            // MasterFaceID, MinionFaceID, TranslCode (1=dS1 2=dS2)
             {
               Vec<3> randomvec(-1.32834,3.82399,0.5429151);
               int maxtransl = -1;
               for(int i=0; i<nperiodicmasterfaces; i++)
                 {
                   int tri1,tri2,transl;
-                  Array<PointIndex> nodes1(3),nodes2(3);
-                  Array<double> sortval1(3),sortval2(3);
+                  NgArray<PointIndex> nodes1(3),nodes2(3);
+                  NgArray<double> sortval1(3),sortval2(3);
                   in >> tri1 >> tri2 >> transl;
 
                   if(transl > maxtransl)
@@ -455,7 +453,7 @@ namespace netgen
               cout << endl;
 		
 		
-              // 		Array<int> indextodescriptor(maxId2D+1);
+              // 		NgArray<int> indextodescriptor(maxId2D+1);
 		
               // 		for(int i=1; i<=mesh.GetNFD(); i++)
               // 		  indextodescriptor[mesh.GetFaceDescriptor(i).SurfNr()] = i;
@@ -538,7 +536,7 @@ namespace netgen
           case 27:
             // Object2D GroupID, #Faces <immediately followed by> FaceID List
             {
-              Array<int> ports;
+              NgArray<int> ports;
               //int totnum = 0;
               uid_to_group_2D.SetSize(maxId2D+1);
               uid_to_group_2D = -1;
@@ -665,7 +663,7 @@ namespace netgen
     mesh.SetUserData("TETmesh:uid_to_group_0D",uid_to_group_0D);
 
 
-    Array<SurfaceElementIndex> surfindices(tris.Size());
+    NgArray<SurfaceElementIndex> surfindices(tris.Size());
     surfindices = -1;
 
     for(int i=0; i<tris.Size(); i++)
@@ -740,7 +738,7 @@ namespace netgen
 
       }
       
-    //       Array<int> indextodescriptor(maxId2D+1);
+    //       NgArray<int> indextodescriptor(maxId2D+1);
 		
     //       for(int i=1; i<=mesh.GetNFD(); i++)
     // 	indextodescriptor[mesh.GetFaceDescriptor(i).SurfNr()] = i;

@@ -85,13 +85,13 @@ public:
 
   virtual void GetCoeff (Vector & coeffs) const = 0;
 
-  virtual void GetPoints (int n, Array<Point<2> > & points);
+  virtual void GetPoints (int n, NgArray<Point<2> > & points);
 
   /** calculates lineintersections:
-      for lines $$ a x + b y + c = 0 $$ the interecting points are calculated
+      for lines $$ a x + b y + c = 0 $$ the intersecting points are calculated
       and stored in points */
   virtual void LineIntersections (const double a, const double b, const double c,
-				  Array < Point<2> > & points, const double eps) const
+				  NgArray < Point<2> > & points, const double eps) const
   {points.SetSize(0);}
 
   virtual double MaxCurvature(void) const = 0;
@@ -123,7 +123,7 @@ public:
   virtual string GetType(void) const {return "line";}
 
   virtual void LineIntersections (const double a, const double b, const double c,
-				  Array < Point<2> > & points, const double eps) const;
+				  NgArray < Point<2> > & points, const double eps) const;
 
   virtual double MaxCurvature(void) const {return 0;}
 };
@@ -154,7 +154,7 @@ public:
   const GeomPoint2d & TangentPoint (void) const { return p2; }
 
   virtual void LineIntersections (const double a, const double b, const double c,
-				  Array < Point<2> > & points, const double eps) const;
+				  NgArray < Point<2> > & points, const double eps) const;
 
   virtual double MaxCurvature(void) const;
 };
@@ -195,7 +195,7 @@ public:
   virtual string GetType(void) const {return "circle";}
 
   virtual void LineIntersections (const double a, const double b, const double c,
-				  Array < Point<2> > & points, const double eps) const;
+				  NgArray < Point<2> > & points, const double eps) const;
 
   virtual double MaxCurvature(void) const {return 1./radius;}
 };
@@ -208,11 +208,11 @@ public:
 /// 
 class DiscretePointsSegment : public SplineSegment
 {
-  Array<Point<2> > pts;
+  NgArray<Point<2> > pts;
   GeomPoint2d p1, p2;
 public:
   ///
-  DiscretePointsSegment (const Array<Point<2> > & apts);
+  DiscretePointsSegment (const NgArray<Point<2> > & apts);
   ///
   virtual ~DiscretePointsSegment ();
   ///

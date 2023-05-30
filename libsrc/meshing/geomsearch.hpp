@@ -22,7 +22,7 @@ public:
   virtual ~GeomSearch3d();
 
   ///
-  void Init (Array <FrontPoint3,PointIndex::BASE, PointIndex> *pointsi, Array <FrontFace> *facesi);
+  void Init (NgArray <FrontPoint3,PointIndex::BASE, PointIndex> *pointsi, NgArray <FrontFace> *facesi);
 
   ///get elements max extension
   void ElemMaxExt(Point3d& minp, Point3d& maxp, const MiniElement2d& elem);
@@ -41,15 +41,15 @@ public:
   void AddElem(const MiniElement2d& elem, INDEX elemnum);
 
   ///GetLocal faces in sphere with radius xh and middlepoint p
-  void GetLocals(Array<MiniElement2d> & locfaces,  Array<INDEX> & findex,
+  void GetLocals(NgArray<MiniElement2d> & locfaces,  NgArray<INDEX> & findex,
 		 INDEX fstind, const Point3d& p0, double xh);
 
 private:
   
-  Array <FrontFace> *faces; // Pointers to Arrays in Adfront
-  Array <FrontPoint3,PointIndex::BASE, PointIndex> *points;
+  NgArray <FrontFace> *faces; // Pointers to Arrays in Adfront
+  NgArray <FrontPoint3,PointIndex::BASE, PointIndex> *points;
 
-  Array <Array <int>*> hashtable;
+  NgArray <NgArray <int>*> hashtable;
 
   Point3d minext; //extension of Hashdomain
   Point3d maxext;

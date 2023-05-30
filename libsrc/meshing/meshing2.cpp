@@ -1,33 +1,75 @@
 #include <mystdlib.h>
 #include "meshing.hpp"
+#include "visual_interface.hpp"
 
 namespace netgen
 {
-  static void glrender (int wait);
-
-
-  // global variable for visualization
-//   static Array<Point3d> locpoints;
-//   static Array<int> legalpoints;
-//   static Array<Point2d> plainpoints;
-//   static Array<int> plainzones;
-//   static Array<INDEX_2> loclines;
-//   // static int geomtrig;
-//   //static const char * rname;
-//   static int cntelem, trials, nfaces;
-//   static int oldnl;
-//   static int qualclass;
-
-
-  Meshing2 :: Meshing2 (const MeshingParameters & mp, const Box<3> & aboundingbox)
+  static void glrender (int wait)
   {
-    boundingbox = aboundingbox;
-    
-    LoadRules (NULL, mp.quad);
+    //  cout << "plot adfront" << endl;
+
+    if (multithread.drawing)
+      {
+        // vssurfacemeshing.DrawScene();
+	Render ();
+
+	if (wait || multithread.testmode)
+	  {
+	    multithread.pause = 1;
+	  }
+	while (multithread.pause);
+      }
+  }
+
+  ostream& operator << (ostream& ost, const MultiPointGeomInfo& mpgi)
+  {
+    for(auto i : Range(mpgi.GetNPGI()))
+      {
+        ost << "gi[" << i << "] = " << mpgi.GetPGI(i+1) << endl;
+      }
+    return ost;
+  }
+
+  static Array<unique_ptr<netrule>> global_trig_rules;
+  static Array<unique_ptr<netrule>> global_quad_rules;
+
+  
+  Meshing2 :: Meshing2 (const NetgenGeometry& ageo,
+                        const MeshingParameters & mp,
+                        const Box<3> & aboundingbox)
+    : adfront(aboundingbox), boundingbox(aboundingbox), geo(ageo)
+  {
+    static Timer t("Mesing2::Meshing2"); RegionTimer r(t);
+
+    auto & globalrules = mp.quad ? global_quad_rules : global_trig_rules;
+
+    {
+      static mutex mut;
+      lock_guard<mutex> guard(mut);
+      if (!globalrules.Size())
+        {
+          LoadRules (NULL, mp.quad);
+          for (auto & rule : rules)
+            globalrules.Append (make_unique<netrule>(*rule));
+          rules.SetSize(0);
+        }
+      /*
+      else
+        {
+          for (auto i : globalrules.Range())
+            rules.Append (globalrules[i].get());
+        }
+      */
+    }
+    for (auto i : globalrules.Range())
+      rules.Append (make_unique<netrule>(*globalrules[i]));
+
     // LoadRules ("rules/quad.rls");
     // LoadRules ("rules/triangle.rls");
 
-    adfront = new AdFront2(boundingbox);
+
+    
+    // adfront = new AdFront2(boundingbox);
     starttime = GetTime();
 
     maxarea = -1;
@@ -35,18 +77,19 @@ namespace netgen
 
 
   Meshing2 :: ~Meshing2 ()
-  {
-    delete adfront;
-    for (int i = 0; i < rules.Size(); i++)
-      delete rules[i];
-  }
+  { ; } 
 
-  void Meshing2 :: AddPoint (const Point3d & p, PointIndex globind, 
-			     MultiPointGeomInfo * mgi,
-			     bool pointonsurface)
+  int Meshing2 :: AddPoint (const Point3d & p, PointIndex globind,
+                            MultiPointGeomInfo * mgi,
+                            bool pointonsurface)
   {
     //(*testout) << "add point " << globind << endl;
-    adfront ->AddPoint (p, globind, mgi, pointonsurface);
+    return adfront.AddPoint (p, globind, mgi, pointonsurface);
+  }
+
+  PointIndex Meshing2 :: GetGlobalIndex(int pi) const
+  {
+    return adfront.GetGlobalIndex(pi);
   }
 
   void Meshing2 :: AddBoundaryElement (int i1, int i2,
@@ -57,7 +100,7 @@ namespace netgen
       {
 	PrintSysError ("addboundaryelement: illegal geominfo");
       }
-    adfront -> AddLine (i1-1, i2-1, gi1, gi2);
+    adfront.AddLine (i1-1, i2-1, gi1, gi2);
   }
 
 
@@ -95,7 +138,7 @@ namespace netgen
   }
 
 
-  double Meshing2 :: CalcLocalH (const Point3d & /* p */, double gh) const
+  double Meshing2 :: CalcLocalH (const Point<3> & /* p */, double gh) const
   {
     return gh;
   }
@@ -104,42 +147,48 @@ namespace netgen
   // static Vec3d ex, ey;
   // static Point3d globp1;
 
-  void Meshing2 :: DefineTransformation (const Point3d & p1, const Point3d & p2,
-					 const PointGeomInfo * geominfo1,
-					 const PointGeomInfo * geominfo2)
+  void Meshing2 :: DefineTransformation (const Point<3> & ap1,
+                                         const Point<3> & ap2,
+					 const PointGeomInfo * gi1,
+					 const PointGeomInfo * gi2)
   {
-    globp1 = p1;
-    ex = p2 - p1;
-    ex /= ex.Length();
-    ey.X() = -ex.Y();
-    ey.Y() =  ex.X();
-    ey.Z() = 0;
+    p1 = ap1;
+    p2 = ap2;
+    auto n1 = geo.GetNormal(gi1->trignum, p1, gi1);
+    auto n2 = geo.GetNormal(gi2->trignum, p2, gi2);
+
+    ez = 0.5 * (n1+n2);
+    ez.Normalize();
+    ex = (p2-p1).Normalize();
+    ez -= (ez*ex)*ex;
+    ez.Normalize();
+    ey = Cross(ez, ex);
   }
 
-  void Meshing2 :: TransformToPlain (const Point3d & locpoint, 
-				     const MultiPointGeomInfo & geominf,
-				     Point2d & plainpoint, double h, int & zone)
+  void Meshing2 :: TransformToPlain (const Point<3> & locpoint, 
+				     const MultiPointGeomInfo & geominfo,
+				     Point<2> & plainpoint, double h, int & zone)
   {
-    Vec3d p1p (globp1, locpoint);
+    auto& gi = geominfo.GetPGI(1);
+    auto n = geo.GetNormal(gi.trignum, locpoint, &gi);
+    auto p1p = locpoint - p1;
+    plainpoint(0) = (p1p * ex) / h;
+    plainpoint(1) = (p1p * ey) / h;
 
-    //    p1p = locpoint - globp1;
-    p1p /= h;
-    plainpoint.X() = p1p * ex;
-    plainpoint.Y() = p1p * ey;
-    zone = 0;
+    if(n*ez < 0)
+      zone = -1;
+    else
+      zone = 0;
   }
 
-  int Meshing2 :: TransformFromPlain (Point2d & plainpoint,
-				      Point3d & locpoint, 
+  int Meshing2 :: TransformFromPlain (const Point<2> & plainpoint,
+				      Point<3> & locpoint, 
 				      PointGeomInfo & gi, 
 				      double h)
   {
-    Vec3d p1p;
-    gi.trignum = 1;
-
-    p1p = plainpoint.X() * ex + plainpoint.Y() * ey;
-    p1p *= h;
-    locpoint = globp1 + p1p;
+    locpoint = p1 + (h*plainpoint(0)) * ex + (h* plainpoint(1)) * ey;
+    if (!geo.ProjectPointGI(gi.trignum, locpoint, gi))
+      gi = geo.ProjectPoint(gi.trignum, locpoint);
     return 0;
   }
 
@@ -175,9 +224,9 @@ namespace netgen
   }
 
   void Meshing2 ::
-  GetChartBoundary (Array<Point2d> & points, 
-		    Array<Point3d> & points3d, 
-		    Array<INDEX_2> & lines, double h) const
+  GetChartBoundary (NgArray<Point<2>> & points, 
+		    NgArray<Point<3>> & points3d, 
+		    NgArray<INDEX_2> & lines, double h) const
   {
     points.SetSize (0);
     points3d.SetSize (0);
@@ -193,9 +242,9 @@ namespace netgen
 
 
 
-  MESHING2_RESULT Meshing2 :: GenerateMesh (Mesh & mesh, const MeshingParameters & mp, double gh, int facenr)
+  MESHING2_RESULT Meshing2 :: GenerateMesh (Mesh & mesh, const MeshingParameters & mp, double gh, int facenr, int layer)
   {
-    static int timer = NgProfiler::CreateTimer ("surface meshing");
+    static Timer timer("surface meshing"); RegionTimer reg(timer);
 
     static int timer1 = NgProfiler::CreateTimer ("surface meshing1");
     static int timer2 = NgProfiler::CreateTimer ("surface meshing2");
@@ -206,22 +255,19 @@ namespace netgen
     static int ts3 = NgProfiler::CreateTimer ("surface meshing start 3");
 
 
-    NgProfiler::RegionTimer reg (timer);
-
     NgProfiler::StartTimer (ts1);
 
-    Array<int> pindex, lindex;
-    Array<int> delpoints, dellines;
+    NgArray<int> pindex, lindex;
+    NgArray<int> delpoints, dellines;
 
-    Array<PointGeomInfo> upgeominfo;  // unique info
-    Array<MultiPointGeomInfo> mpgeominfo;  // multiple info
+    NgArray<PointGeomInfo> upgeominfo;  // unique info
+    NgArray<MultiPointGeomInfo> mpgeominfo;  // multiple info
 
-    Array<Element2d> locelements;
+    NgArray<Element2d> locelements;
 
     int z1, z2, oldnp(-1);
     bool found;
     int rulenr(-1);
-    Point<3> p1, p2;
 
     const PointGeomInfo * blgeominfo1;
     const PointGeomInfo * blgeominfo2;
@@ -229,16 +275,21 @@ namespace netgen
     bool morerisc;
     bool debugflag;
 
-    double h, his, hshould;
+    // double h;
 
-
-    Array<Point3d> locpoints;
-    Array<int> legalpoints;
-    Array<Point2d> plainpoints;
-    Array<int> plainzones;
-    Array<INDEX_2> loclines;
+    auto locpointsptr = make_shared<NgArray<Point<3>>>();
+    auto& locpoints = *locpointsptr;
+    NgArray<int> legalpoints;
+    auto plainpointsptr = make_shared<NgArray<Point<2>>>();
+    auto& plainpoints = *plainpointsptr;
+    NgArray<int> plainzones;
+    auto loclinesptr = make_shared<NgArray<INDEX_2>>();
+    auto &loclines = *loclinesptr;
     int cntelem = 0, trials = 0, nfaces = 0;
     int oldnl = 0;
+
+    UpdateVisSurfaceMeshData(oldnl, locpointsptr, loclinesptr, plainpointsptr);
+
     int qualclass;
 
 
@@ -247,8 +298,8 @@ namespace netgen
     BoxTree<3> surfeltree (boundingbox.PMin(),
                            boundingbox.PMax());
 
-    Array<int> intersecttrias;
-    Array<Point3d> critpoints;
+    NgArray<int> intersecttrias;
+    NgArray<Point3d> critpoints;
 
     // test for doubled edges
     //INDEX_2_HASHTABLE<int> doubleedge(300000);
@@ -258,14 +309,14 @@ namespace netgen
 
     StartMesh();
 
-    Array<Point2d> chartboundpoints;
-    Array<Point3d> chartboundpoints3d;
-    Array<INDEX_2> chartboundlines;
+    NgArray<Point<2>> chartboundpoints;
+    NgArray<Point<3>> chartboundpoints3d;
+    NgArray<INDEX_2> chartboundlines;
 
     // illegal points: points with more then 50 elements per node
     int maxlegalpoint(-1), maxlegalline(-1);
-    Array<int,PointIndex::BASE> trigsonnode;
-    Array<int,PointIndex::BASE> illegalpoint;
+    NgArray<int,PointIndex::BASE> trigsonnode;
+    NgArray<int,PointIndex::BASE> illegalpoint;
 
     trigsonnode.SetSize (mesh.GetNP());
     illegalpoint.SetSize (mesh.GetNP());
@@ -342,7 +393,7 @@ namespace netgen
     const char * savetask = multithread.task;
     multithread.task = "Surface meshing";
 
-    adfront ->SetStartFront ();
+    adfront.SetStartFront ();
 
 
     int plotnexttrial = 999;
@@ -351,7 +402,11 @@ namespace netgen
 
     NgProfiler::StopTimer (ts3);
 
-    while (!adfront ->Empty() && !multithread.terminate)
+    static Timer tloop("surfacemeshing mainloop");
+    // static Timer tgetlocals("surfacemeshing getlocals");
+    {
+      RegionTimer rloop(tloop);
+    while (!adfront.Empty() && !multithread.terminate)
       {
 	NgProfiler::RegionTimer reg1 (timer1);
 
@@ -366,13 +421,13 @@ namespace netgen
 	  multithread.percent = 0;
 	*/
 
-	locpoints.SetSize(0);
-	loclines.SetSize(0);
-	pindex.SetSize(0);
-	lindex.SetSize(0);
-	delpoints.SetSize(0);
-	dellines.SetSize(0);
-	locelements.SetSize(0);
+	locpoints.SetSize0();
+	loclines.SetSize0();
+	pindex.SetSize0();
+	lindex.SetSize0();
+	delpoints.SetSize0();
+	dellines.SetSize0();
+	locelements.SetSize0();
 
 
 
@@ -390,11 +445,11 @@ namespace netgen
 
 
 	// unique-pgi, multi-pgi
-	upgeominfo.SetSize(0);
-	mpgeominfo.SetSize(0);
+	upgeominfo.SetSize0();
+	mpgeominfo.SetSize0();
 
 
-	nfaces = adfront->GetNFL();
+	nfaces = adfront.GetNFL();
 	trials ++;
     
 
@@ -405,32 +460,32 @@ namespace netgen
 	      {
 		(*testout) << foundmap.Get(i) << "/" 
 			   << canuse.Get(i) << "/"
-			   << ruleused.Get(i) << " map/can/use rule " << rules.Get(i)->Name() << "\n";
+			   << ruleused.Get(i) << " map/can/use rule " << rules[i-1]->Name() << "\n";
 	      }
 	    (*testout) << "\n";
 	  }
 
-
-	int baselineindex = adfront -> SelectBaseLine (p1, p2, blgeominfo1, blgeominfo2, qualclass);
-
+        Point<3> p1, p2;
+	int baselineindex = adfront.SelectBaseLine (p1, p2, blgeominfo1, blgeominfo2, qualclass);
 
 	found = 1;
 
-	his = Dist (p1, p2);
+	double his = Dist (p1, p2);
 
-	Point3d pmid = Center (p1, p2);
-	hshould = CalcLocalH (pmid, mesh.GetH (pmid));
+	Point<3> pmid = Center (p1, p2);
+	double hshould = CalcLocalH (pmid, mesh.GetH (pmid, layer));
 	if (gh < hshould) hshould = gh;
 
 	mesh.RestrictLocalH (pmid, hshould);
 
-	h = hshould;
+	double h = hshould;
 
 	double hinner = (3 + qualclass) * max2 (his, hshould);
 
-	adfront ->GetLocals (baselineindex, locpoints, mpgeominfo, loclines, 
+        // tgetlocals.Start();
+	adfront.GetLocals (baselineindex, locpoints, mpgeominfo, loclines, 
 			     pindex, lindex, 2*hinner);
-
+        // tgetlocals.Stop();
 
 	NgProfiler::RegionTimer reg2 (timer2);
 
@@ -442,7 +497,7 @@ namespace netgen
 	if (qualclass > mp.giveuptol2d)
 	  {
 	    PrintMessage (3, "give up with qualclass ", qualclass);
-	    PrintMessage (3, "number of frontlines = ", adfront->GetNFL());
+	    PrintMessage (3, "number of frontlines = ", adfront.GetNFL());
 	    // throw NgException ("Give up 2d meshing");
 	    break;
 	  }
@@ -458,8 +513,8 @@ namespace netgen
 	morerisc = 0;
 
 
-	PointIndex gpi1 = adfront -> GetGlobalIndex (pindex.Get(loclines[0].I1()));
-	PointIndex gpi2 = adfront -> GetGlobalIndex (pindex.Get(loclines[0].I2()));
+	PointIndex gpi1 = adfront.GetGlobalIndex (pindex.Get(loclines[0].I1()));
+	PointIndex gpi2 = adfront.GetGlobalIndex (pindex.Get(loclines[0].I2()));
 
 
 	debugflag = 
@@ -481,7 +536,7 @@ namespace netgen
 	    cout << "set debugflag" << endl;
 	  }
 	
-	if (debugparam.haltlargequalclass && qualclass > 50)
+	if (debugparam.haltlargequalclass && qualclass == 50)
 	  debugflag = 1;
 
 	// problem recognition !
@@ -494,12 +549,14 @@ namespace netgen
 	  }
 
 
-	Point2d p12d, p22d;
+	// Point2d p12d, p22d;
 
 	if (found)
 	  {
 	    oldnp = locpoints.Size();
 	    oldnl = loclines.Size();
+
+            UpdateVisSurfaceMeshData(oldnl);
 	  
 	    if (debugflag)
 	      (*testout) << "define new transformation" << endl;
@@ -517,6 +574,16 @@ namespace netgen
 		*testout << "3d points: " << endl << locpoints << endl;
 	      }
 
+
+	    for (size_t i = 0; i < locpoints.Size(); i++)
+              {
+                Point<2> pp;
+                TransformToPlain (locpoints[i], mpgeominfo[i],
+                                  pp, h, plainzones[i]);
+                plainpoints[i] = pp;
+              }
+            
+            /*
 	    for (int i = 1; i <= locpoints.Size(); i++)
 	      {
 		// (*testout) << "pindex(i) = " << pindex[i-1] << endl;
@@ -527,6 +594,7 @@ namespace netgen
 		//		(*testout) << plainpoints.Get(i).X() << " " << plainpoints.Get(i).Y() << endl;
 		//(*testout) << "transform " << locpoints.Get(i) << " to " << plainpoints.Get(i).X() << " " << plainpoints.Get(i).Y() << endl;
 	      }
+            */
 	    //	    (*testout) << endl << endl << endl;
 
 
@@ -534,8 +602,8 @@ namespace netgen
 	      *testout << "2d points: " << endl << plainpoints << endl;
 
 
-	    p12d = plainpoints.Get(1);
-	    p22d = plainpoints.Get(2);
+	    // p12d = plainpoints.Get(1);
+	    // p22d = plainpoints.Get(2);
 
 	    /*
 	    // last idea on friday
@@ -581,22 +649,19 @@ namespace netgen
 		    if (IsLineVertexOnChart (locpoints.Get(loclines.Get(i).I1()),
 					     locpoints.Get(loclines.Get(i).I2()),
 					     innerp,
-					     adfront->GetLineGeomInfo (lindex.Get(i), innerp)))
+					     adfront.GetLineGeomInfo (lindex.Get(i), innerp)))
 		      // pgeominfo.Get(loclines.Get(i).I(innerp))))
 		      {		
 
 			if (!morerisc)
 			  {
 			    // use one end of line
-			    int pini, pouti;
-			    Vec2d v;
+			    int pini = loclines.Get(i).I(innerp);
+			    int pouti = loclines.Get(i).I(3-innerp);
 			  
-			    pini = loclines.Get(i).I(innerp);
-			    pouti = loclines.Get(i).I(3-innerp);
-			  
-			    Point2d pin (plainpoints.Get(pini));
-			    Point2d pout (plainpoints.Get(pouti));
-			    v = pout - pin;
+			    const auto& pin = plainpoints.Get(pini);
+			    const auto& pout = plainpoints.Get(pouti);
+			    auto v = pout - pin;
 			    double len = v.Length();
 			    if (len <= 1e-6)
 			      (*testout) << "WARNING(js): inner-outer: short vector" << endl;
@@ -610,12 +675,12 @@ namespace netgen
 			    v *= -1;  
 			    */
 
-			    Point2d newpout = pin + 1000 * v;
+			    Point<2> newpout = pin + 1000. * v;
 			    newpout = pout;
 
 			  
 			    plainpoints.Append (newpout);
-			    Point3d pout3d = locpoints.Get(pouti);
+			    auto pout3d = locpoints.Get(pouti);
 			    locpoints.Append (pout3d);
 
 			    plainzones.Append (0);
@@ -653,31 +718,34 @@ namespace netgen
 
 
 	    legalpoints.SetSize(plainpoints.Size());
+            legalpoints = 1;
+            /*
 	    for (int i = 1; i <= legalpoints.Size(); i++)
 	      legalpoints.Elem(i) = 1;
-
+            */
+            
 	    double avy = 0;
-	    for (int i = 1; i <= plainpoints.Size(); i++)
-	      avy += plainpoints.Elem(i).Y();
+	    for (size_t i = 0; i < plainpoints.Size(); i++)
+	      avy += plainpoints[i][1];
 	    avy *= 1./plainpoints.Size();
 		
 
-	    for (int i = 1; i <= plainpoints.Size(); i++)
+	    for (auto i : Range(plainpoints))
 	      {
-		if (plainzones.Elem(i) < 0)
+		if (plainzones[i] < 0)
 		  {
-		    plainpoints.Elem(i) = Point2d (1e4, 1e4);
-		    legalpoints.Elem(i) = 0;
+		    plainpoints[i] = {1e4, 1e4};
+		    legalpoints[i] = 0;
 		  }
-		if (pindex.Elem(i) == -1)
+		if (pindex[i] == -1)
 		  {
-		    legalpoints.Elem(i) = 0;
+		    legalpoints[i] = 0;
 		  }
 		    
 
-		if (plainpoints.Elem(i).Y() < -1e-10*avy) // changed
+		if (plainpoints[i][1] < -1e-10*avy) // changed
 		  {
-		    legalpoints.Elem(i) = 0;
+		    legalpoints[i] = 0;
 		  }
 	      }
 	    /*
@@ -735,6 +803,7 @@ namespace netgen
 	      {
 		for (int i = 1; i <= chartboundpoints.Size(); i++)
 		  {
+                    pindex.Append(-1);
 		    plainpoints.Append (chartboundpoints.Get(i));
 		    locpoints.Append (chartboundpoints3d.Get(i));
 		    legalpoints.Append (0);
@@ -760,12 +829,14 @@ namespace netgen
 	  {
 	  multithread.drawing = 1;
 	  glrender(1);
-	  cout << "qualclass 100, nfl = " << adfront->GetNFL() << endl;
+	  cout << "qualclass 100, nfl = " << adfront.GetNFL() << endl;
 	  }
 	*/
 
 	if (found)
 	  {
+            // static Timer t("ApplyRules");
+            // RegionTimer r(t);
 	    rulenr = ApplyRules (plainpoints, legalpoints, maxlegalpoint,
 				 loclines, maxlegalline, locelements,
 				 dellines, qualclass, mp);
@@ -802,9 +873,12 @@ namespace netgen
 
 	    for (int i = oldnp+1; i <= plainpoints.Size(); i++)
 	      {
+                Point<3> locp;
+                upgeominfo.Elem(i) = *blgeominfo1;
 		int err =
-		  TransformFromPlain (plainpoints.Elem(i), locpoints.Elem(i), 
+		  TransformFromPlain (plainpoints.Elem(i), locp, 
 				      upgeominfo.Elem(i), h);
+                locpoints.Elem(i) = locp;
 
 		if (err)
 		  {
@@ -820,7 +894,7 @@ namespace netgen
 	  
 
 	//      for (i = 1; i <= oldnl; i++)
-	//        adfront -> ResetClass (lindex[i]);
+	//        adfront.ResetClass (lindex[i]);
 
 
 	/*
@@ -949,7 +1023,7 @@ namespace netgen
 	      for (j = 1; j <= 2; j++)
 	      {
 	      upgeominfo.Elem(loclines.Get(dellines.Get(i)).I(j)) =
-	      adfront -> GetLineGeomInfo (lindex.Get(dellines.Get(i)), j);
+	      adfront.GetLineGeomInfo (lindex.Get(dellines.Get(i)), j);
 	      }
 	    */
 
@@ -1147,7 +1221,7 @@ namespace netgen
 			    //		      cout << "overlap !!!" << endl;
 #endif
 			    for (int k = 1; k <= 5; k++)
-			      adfront -> IncrementClass (lindex.Get(1));
+			      adfront.IncrementClass (lindex.Get(1));
 
 			    found = 0;
 			  
@@ -1181,10 +1255,10 @@ namespace netgen
 		int nlgpi2 = loclines.Get(i).I2();
 		if (nlgpi1 <= pindex.Size() && nlgpi2 <= pindex.Size())
 		  {
-		    nlgpi1 = adfront->GetGlobalIndex (pindex.Get(nlgpi1));
-		    nlgpi2 = adfront->GetGlobalIndex (pindex.Get(nlgpi2));
+		    nlgpi1 = adfront.GetGlobalIndex (pindex.Get(nlgpi1));
+		    nlgpi2 = adfront.GetGlobalIndex (pindex.Get(nlgpi2));
 
-		    int exval = adfront->ExistsLine (nlgpi1, nlgpi2);
+		    int exval = adfront.ExistsLine (nlgpi1, nlgpi2);
 		    if (exval)
 		      {
 			cout << "ERROR: new line exits, val = " << exval << endl;
@@ -1213,8 +1287,8 @@ namespace netgen
 	  int tpi2 = locelements.Get(i).PNumMod (j+1);
 	  if (tpi1 <= pindex.Size() && tpi2 <= pindex.Size())
 	  {
-	  tpi1 = adfront->GetGlobalIndex (pindex.Get(tpi1));
-	  tpi2 = adfront->GetGlobalIndex (pindex.Get(tpi2));
+	  tpi1 = adfront.GetGlobalIndex (pindex.Get(tpi1));
+	  tpi2 = adfront.GetGlobalIndex (pindex.Get(tpi2));
 
 	  if (doubleedge.Used (INDEX_2(tpi1, tpi2)))
 	  {
@@ -1243,7 +1317,7 @@ namespace netgen
 	    for (int i = oldnp+1; i <= locpoints.Size(); i++)
 	      {
 		PointIndex globind = mesh.AddPoint (locpoints.Get(i));
-		pindex.Elem(i) = adfront -> AddPoint (locpoints.Get(i), globind);
+		pindex.Elem(i) = adfront.AddPoint (locpoints.Get(i), globind);
 	      }
 	      
 	    for (int i = oldnl+1; i <= loclines.Size(); i++)
@@ -1273,7 +1347,7 @@ namespace netgen
 		    cout << "new el: illegal geominfo" << endl;
 		  }
 
-		adfront -> AddLine (pindex.Get(loclines.Get(i).I1()),
+		adfront.AddLine (pindex.Get(loclines.Get(i).I1()),
 				    pindex.Get(loclines.Get(i).I2()),
 				    upgeominfo.Get(loclines.Get(i).I1()),
 				    upgeominfo.Get(loclines.Get(i).I2()));
@@ -1298,7 +1372,7 @@ namespace netgen
 		  {
 		    mtri.PNum(j) = 
 		      locelements.Elem(i).PNum(j) =
-		      adfront -> GetGlobalIndex (pindex.Get(locelements.Get(i).PNum(j)));
+		      adfront.GetGlobalIndex (pindex.Get(locelements.Get(i).PNum(j)));
 		  }
 	      
 		
@@ -1377,7 +1451,7 @@ namespace netgen
 	      }
 	      
 	    for (int i = 1; i <= dellines.Size(); i++)
-	      adfront -> DeleteLine (lindex.Get(dellines.Get(i)));
+	      adfront.DeleteLine (lindex.Get(dellines.Get(i)));
 	      
 	    //	  rname = rules.Get(rulenr)->Name();
 #ifdef MYGRAPH
@@ -1400,8 +1474,8 @@ namespace netgen
 	  
 	    if ( debugparam.haltsuccess || debugflag )
 	      {
-		// adfront -> PrintOpenSegments (*testout);
-		cout << "success of rule" << rules.Get(rulenr)->Name() << endl;
+		// adfront.PrintOpenSegments (*testout);
+		cout << "success of rule" << rules[rulenr-1]->Name() << endl;
 		multithread.drawing = 1;
 		multithread.testmode = 1;
 		multithread.pause = 1;
@@ -1417,14 +1491,17 @@ namespace netgen
 		  }
 		*/
 
-		(*testout) << "success of rule" << rules.Get(rulenr)->Name() << endl;
+		(*testout) << "success of rule" << rules[rulenr-1]->Name() << endl;
 		(*testout) << "trials = " << trials << endl;
 
 		(*testout) << "locpoints " << endl;
 		for (int i = 1; i <= pindex.Size(); i++)
-		  (*testout) << adfront->GetGlobalIndex (pindex.Get(i)) << endl;
+		  (*testout) << adfront.GetGlobalIndex (pindex.Get(i)) << endl;
 
 		(*testout) << "old number of lines = " << oldnl << endl;
+
+                UpdateVisSurfaceMeshData(oldnl);
+
 		for (int i = 1; i <= loclines.Size(); i++)
 		  {
 		    (*testout) << "line ";
@@ -1433,7 +1510,7 @@ namespace netgen
 			int hi = 0;
 			if (loclines.Get(i).I(j) >= 1 &&
 			    loclines.Get(i).I(j) <= pindex.Size())
-			  hi = adfront->GetGlobalIndex (pindex.Get(loclines.Get(i).I(j)));
+			  hi = adfront.GetGlobalIndex (pindex.Get(loclines.Get(i).I(j)));
 
 			(*testout) << hi << " ";
 		      }
@@ -1452,7 +1529,7 @@ namespace netgen
 	  }
 	else
 	  {
-	    adfront -> IncrementClass (lindex.Get(1));
+	    adfront.IncrementClass (lindex.Get(1));
 
 	    if ( debugparam.haltnosuccess || debugflag )
 	      {
@@ -1485,7 +1562,7 @@ namespace netgen
 			int hi = 0;
 			if (loclines.Get(i).I(j) >= 1 &&
 			    loclines.Get(i).I(j) <= pindex.Size())
-			  hi = adfront->GetGlobalIndex (pindex.Get(loclines.Get(i).I(j)));
+			  hi = adfront.GetGlobalIndex (pindex.Get(loclines.Get(i).I(j)));
 
 			(*testout) << hi << " ";
 		      }
@@ -1520,11 +1597,11 @@ namespace netgen
 	  }
 
       }
-
+    }
     PrintMessage (3, "Surface meshing done");
 
 
-    adfront->PrintOpenSegments (*testout);
+    adfront.PrintOpenSegments (*testout);
 
     multithread.task = savetask;
 
@@ -1532,434 +1609,12 @@ namespace netgen
     EndMesh ();
 
 
-    if (!adfront->Empty())
+    if (!adfront.Empty())
       return MESHING2_GIVEUP;
     
     return MESHING2_OK;
   }
 
 
-
-
-
-
-
-
-
 }
 
-
-
-
-
-
-// #define OPENGL
-#ifdef OPENGLxx
-
-/* *********************** Draw Surface Meshing **************** */
-
-
-#include <visual.hpp>
-#include <stlgeom.hpp>
-
-namespace netgen 
-{
-
-  extern STLGeometry * stlgeometry;
-  extern Mesh * mesh;
-  VisualSceneSurfaceMeshing vssurfacemeshing;
-
-
-
-  void glrender (int wait)
-  {
-    //  cout << "plot adfront" << endl;
-
-    if (multithread.drawing)
-      {
-	//      vssurfacemeshing.Render();
-	Render ();
-      
-	if (wait || multithread.testmode)
-	  {
-	    multithread.pause = 1;
-	  }
-	while (multithread.pause);
-      }
-  }
-
-
-
-  VisualSceneSurfaceMeshing :: VisualSceneSurfaceMeshing ()
-    : VisualScene()
-  {
-    ;
-  }
-
-  VisualSceneSurfaceMeshing :: ~VisualSceneSurfaceMeshing ()
-  {
-    ;
-  }
-
-  void VisualSceneSurfaceMeshing :: DrawScene ()
-  {
-    int i, j, k;
-
-    if (loclines.Size() != changeval)
-      {
-	center = Point<3>(0,0,-5);
-	rad = 0.1;
-  
-	CalcTransformationMatrices();
-	changeval = loclines.Size();
-      }
-
-  glClearColor(backcolor, backcolor, backcolor, 1.0);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  SetLight();
-
-  //  glEnable (GL_COLOR_MATERIAL);
-
-  //  glDisable (GL_SHADING);
-  //  glColor3f (0.0f, 1.0f, 1.0f);
-  //  glLineWidth (1.0f);
-  //  glShadeModel (GL_SMOOTH);
-
-  //  glCallList (linelists.Get(1));
-
-  //  SetLight();
-
-  glPushMatrix();
-  glMultMatrixf (transformationmat);
-
-  glShadeModel (GL_SMOOTH);
-  // glDisable (GL_COLOR_MATERIAL);
-  glEnable (GL_COLOR_MATERIAL);
-  glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
-
-  glEnable (GL_BLEND);
-  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-  //  glEnable (GL_LIGHTING);
-
-  double shine = vispar.shininess;
-  double transp = vispar.transp;
-
-  glMaterialf (GL_FRONT_AND_BACK, GL_SHININESS, shine);
-  glLogicOp (GL_COPY);
-
-
-
-  /*
-
-  float mat_col[] = { 0.2, 0.2, 0.8, 1 };
-  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col);
-
-  glPolygonOffset (1, 1);
-  glEnable (GL_POLYGON_OFFSET_FILL);
-
-    float mat_colbl[] = { 0.8, 0.2, 0.2, 1 };
-    float mat_cololdl[] = { 0.2, 0.8, 0.2, 1 };
-    float mat_colnewl[] = { 0.8, 0.8, 0.2, 1 };
-
-
-    glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
-    glPolygonOffset (1, -1);
-    glLineWidth (3);
-
-    for (i = 1; i <= loclines.Size(); i++)
-      {
-	if (i == 1)
-	  {
-	    glEnable (GL_POLYGON_OFFSET_FILL);
-	    glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colbl);
-	  }
-	else if (i <= oldnl) 
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_cololdl);
-	else 
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colnewl);
-
-	int pi1 = loclines.Get(i).I1();
-	int pi2 = loclines.Get(i).I2();
-
-	if (pi1 >= 1 && pi2 >= 1)
-	  {
-	    Point3d p1 = locpoints.Get(pi1);
-	    Point3d p2 = locpoints.Get(pi2);
-	  
-	    glBegin (GL_LINES);
-	    glVertex3f (p1.X(), p1.Y(), p1.Z());
-	    glVertex3f (p2.X(), p2.Y(), p2.Z());
-	    glEnd();
-	  }
-
-	glDisable (GL_POLYGON_OFFSET_FILL);
-      }
-  
-
-    glLineWidth (1);
-
-
-    glPointSize (5);
-    float mat_colp[] = { 1, 0, 0, 1 };
-    glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colp);
-    glBegin (GL_POINTS);
-    for (i = 1; i <= locpoints.Size(); i++)
-      {
-	Point3d p = locpoints.Get(i);
-	glVertex3f (p.X(), p.Y(), p.Z());
-      }
-    glEnd();
-
-
-    glPopMatrix();
-  */
-
-    float mat_colp[] = { 1, 0, 0, 1 };
-
-    float mat_col2d1[] = { 1, 0.5, 0.5, 1 };
-    float mat_col2d[] = { 1, 1, 1, 1 };
-    glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col2d);
-  
-    double scalex = 0.1, scaley = 0.1;
-
-    glBegin (GL_LINES);
-    for (i = 1; i <= loclines.Size(); i++)
-      {
-	glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col2d);
-	if (i == 1)
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col2d1);
-
-	int pi1 = loclines.Get(i).I1();
-	int pi2 = loclines.Get(i).I2();
-
-	if (pi1 >= 1 && pi2 >= 1)
-	  {
-	    Point2d p1 = plainpoints.Get(pi1);
-	    Point2d p2 = plainpoints.Get(pi2);
-	  
-	    glBegin (GL_LINES);
-	    glVertex3f (scalex * p1.X(), scaley * p1.Y(), -5);
-	    glVertex3f (scalex * p2.X(), scaley * p2.Y(), -5);
-	    glEnd();
-	  }
-      }
-    glEnd ();
-
-
-    glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colp);
-    glBegin (GL_POINTS);
-    for (i = 1; i <= plainpoints.Size(); i++)
-      {
-	Point2d p = plainpoints.Get(i);
-	glVertex3f (scalex * p.X(), scaley * p.Y(), -5);
-      }
-    glEnd();
-
-
-
-
-
-
-  glDisable (GL_POLYGON_OFFSET_FILL);
- 
-  glPopMatrix();
-  DrawCoordinateCross ();
-  DrawNetgenLogo ();
-  glFinish();  
-
-  /*
-    glDisable (GL_POLYGON_OFFSET_FILL);
-
-    //  cout << "draw surfacemeshing" << endl;
-    //
-    //  if (changeval != stlgeometry->GetNT())
-    //      BuildScene();
-    //      changeval = stlgeometry->GetNT();
-    
-
-    glClearColor(backcolor, backcolor, backcolor, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    SetLight();
-
-    glPushMatrix();
-    glLoadMatrixf (transmat);
-    glMultMatrixf (rotmat);
-
-    glShadeModel (GL_SMOOTH);
-    glDisable (GL_COLOR_MATERIAL);
-    glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
-
-    glEnable (GL_BLEND);
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    float mat_spec_col[] = { 1, 1, 1, 1 };
-    glMaterialfv (GL_FRONT_AND_BACK, GL_SPECULAR, mat_spec_col);
-
-    double shine = vispar.shininess;
-    double transp = vispar.transp;
-
-    glMaterialf (GL_FRONT_AND_BACK, GL_SHININESS, shine);
-    glLogicOp (GL_COPY);
-
-
-    float mat_col[] = { 0.2, 0.2, 0.8, transp };
-    float mat_colrt[] = { 0.2, 0.8, 0.8, transp };
-    glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col);
-
-    glPolygonOffset (1, 1);
-    glEnable (GL_POLYGON_OFFSET_FILL);
-
-    glColor3f (1.0f, 1.0f, 1.0f);
-
-    glEnable (GL_NORMALIZE);
-    
-    //  glBegin (GL_TRIANGLES);
-    //      for (j = 1; j <= stlgeometry -> GetNT(); j++)
-    //      {
-    //      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col);
-    //      if (j == geomtrig)
-    //      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colrt);
-	
-
-    //      const STLReadTriangle & tria = stlgeometry -> GetReadTriangle(j);
-    //      glNormal3f (tria.normal.X(),
-    //      tria.normal.Y(),
-    //      tria.normal.Z());
-		  
-    //      for (k = 0; k < 3; k++)
-    //      {
-    //      glVertex3f (tria.pts[k].X(),
-    //      tria.pts[k].Y(),
-    //      tria.pts[k].Z());
-    //      }
-    //      }    
-    //      glEnd ();
-    
-
-
-    glDisable (GL_POLYGON_OFFSET_FILL);
-
-    float mat_colbl[] = { 0.8, 0.2, 0.2, 1 };
-    float mat_cololdl[] = { 0.2, 0.8, 0.2, 1 };
-    float mat_colnewl[] = { 0.8, 0.8, 0.2, 1 };
-
-
-    glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
-    glPolygonOffset (1, -1);
-    glLineWidth (3);
-
-    for (i = 1; i <= loclines.Size(); i++)
-      {
-	if (i == 1)
-	  {
-	    glEnable (GL_POLYGON_OFFSET_FILL);
-	    glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colbl);
-	  }
-	else if (i <= oldnl) 
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_cololdl);
-	else 
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colnewl);
-
-	int pi1 = loclines.Get(i).I1();
-	int pi2 = loclines.Get(i).I2();
-
-	if (pi1 >= 1 && pi2 >= 1)
-	  {
-	    Point3d p1 = locpoints.Get(pi1);
-	    Point3d p2 = locpoints.Get(pi2);
-	  
-	    glBegin (GL_LINES);
-	    glVertex3f (p1.X(), p1.Y(), p1.Z());
-	    glVertex3f (p2.X(), p2.Y(), p2.Z());
-	    glEnd();
-	  }
-
-	glDisable (GL_POLYGON_OFFSET_FILL);
-      }
-
-
-    glLineWidth (1);
-
-
-    glPointSize (5);
-    float mat_colp[] = { 1, 0, 0, 1 };
-    glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colp);
-    glBegin (GL_POINTS);
-    for (i = 1; i <= locpoints.Size(); i++)
-      {
-	Point3d p = locpoints.Get(i);
-	glVertex3f (p.X(), p.Y(), p.Z());
-      }
-    glEnd();
-
-
-    glPopMatrix();
-
-
-    float mat_col2d1[] = { 1, 0.5, 0.5, 1 };
-    float mat_col2d[] = { 1, 1, 1, 1 };
-    glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col2d);
-  
-    double scalex = 0.1, scaley = 0.1;
-
-    glBegin (GL_LINES);
-    for (i = 1; i <= loclines.Size(); i++)
-      {
-	glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col2d);
-	if (i == 1)
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col2d1);
-
-	int pi1 = loclines.Get(i).I1();
-	int pi2 = loclines.Get(i).I2();
-
-	if (pi1 >= 1 && pi2 >= 1)
-	  {
-	    Point2d p1 = plainpoints.Get(pi1);
-	    Point2d p2 = plainpoints.Get(pi2);
-	  
-	    glBegin (GL_LINES);
-	    glVertex3f (scalex * p1.X(), scaley * p1.Y(), -5);
-	    glVertex3f (scalex * p2.X(), scaley * p2.Y(), -5);
-	    glEnd();
-	  }
-      }
-    glEnd ();
-
-
-    glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colp);
-    glBegin (GL_POINTS);
-    for (i = 1; i <= plainpoints.Size(); i++)
-      {
-	Point2d p = plainpoints.Get(i);
-	glVertex3f (scalex * p.X(), scaley * p.Y(), -5);
-      }
-    glEnd();
-
-    glFinish();  
-*/
-  }
-
-
-  void VisualSceneSurfaceMeshing :: BuildScene (int zoomall)
-  {
-    int i, j, k;
-    /*
-      center = stlgeometry -> GetBoundingBox().Center();
-      rad = stlgeometry -> GetBoundingBox().Diam() / 2;
-
-      CalcTransformationMatrices();
-    */
-  }
-
-}
-
-
-#else
-namespace netgen
-{
-  void glrender (int wait)
-  { ; }
-}
-#endif

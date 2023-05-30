@@ -399,7 +399,7 @@ namespace netgen
 	      int inputface = 0;
 	      while (1)
 		{
-		  Array<int> pnums,cleaned_pnums;
+		  NgArray<int> pnums,cleaned_pnums;
 		  for(int i=0; i<3; i++)
 		    {
 		      pnums.Append((int) (ParseNumber (scan)));
@@ -479,7 +479,7 @@ namespace netgen
 		}
 
 	      Primitive * nprim = new Revolution(p0,p1,
-						 *(geom->GetSplineCurve2d(spline)));
+						 geom->GetSplineCurve2d(spline));
 
 	      geom->AddSurfaces (nprim);
 	      return new Solid(nprim);
@@ -511,8 +511,8 @@ namespace netgen
 		  break;
 		}
 	      
-	      Primitive * nprim = new Extrusion(*(geom->GetSplineCurve3d(epath)),
-						*(geom->GetSplineCurve2d(profile)),
+	      Primitive * nprim = new Extrusion(geom->GetSplineCurve3d(epath),
+						geom->GetSplineCurve2d(profile),
 						z_dir);
 	      geom->AddSurfaces (nprim);
 	      return new Solid(nprim);
@@ -794,28 +794,22 @@ namespace netgen
 			vals.Append (ParseNumber(scan));
 		      }
 		    ParseChar (scan, ']');
-		    flags.SetFlag (name.c_str(), vals);
+		    flags.SetFlag (name, vals);
 		  }
 		else
 		  { // string list
-		    Array<char*> vals;
-		    string val = scan.GetStringValue();
-		    vals.Append(new char[val.size()+1]);
-		    strcpy(vals.Last(),val.c_str());
+		    Array<string> vals;
+                    vals.Append(scan.GetStringValue());
 		    scan.ReadNext();
 
 		    while (scan.GetToken() == ',')
 		      {
 			scan.ReadNext();
-			val = scan.GetStringValue();
-			vals.Append(new char[val.size()+1]);
-			strcpy(vals.Last(),val.c_str());
+                        vals.Append(scan.GetStringValue());
 			scan.ReadNext();
 		      }
 		    ParseChar (scan, ']');
-		    flags.SetFlag (name.c_str(), vals);
-		    for(int i=0; i<vals.Size(); i++)
-		      delete [] vals[i];
+		    flags.SetFlag (name, vals);
 		  }
 	      }
 	    else if (scan.GetToken() == TOK_NUM)
@@ -934,7 +928,7 @@ namespace netgen
 		    
 		    ParseChar (scan, ';');
 
-		    Array<int> si;
+		    NgArray<int> si;
 		    geom->GetSolid(surfname)->GetSurfaceIndices(si);
 		    int tlonr = 
 		      geom->SetTopLevelObject ((Solid*)geom->GetSolid(name),
@@ -942,8 +936,8 @@ namespace netgen
 		    TopLevelObject * tlo = geom->GetTopLevelObject (tlonr);
 		    if (flags.NumListFlagDefined ("col"))
 		      {
-			const Array<double> & col = flags.GetNumListFlag ("col");
-			tlo->SetRGB (col.Get(1), col.Get(2), col.Get(3));
+			const auto& col = flags.GetNumListFlag ("col");
+			tlo->SetRGB (col[0], col[1], col[2]);
 		      }
 		    if (flags.GetDefineFlag ("transparent"))
 		      tlo->SetTransparent (1);
@@ -980,7 +974,7 @@ namespace netgen
 		      ParseChar (scan, ';');
 		      
 		      
-		      Array<int> si1, si2;
+		      NgArray<int> si1, si2;
 		      geom->GetSolid(name1)->GetSurfaceIndices(si1);
 		      geom->GetSolid(name2)->GetSurfaceIndices(si2);
 
@@ -1016,7 +1010,7 @@ namespace netgen
 		      ParseChar (scan, ';');
 
 		      
-		      Array<int> si1, si2;
+		      NgArray<int> si1, si2;
 		      geom->GetSolid(name1)->GetSurfaceIndices(si1);
 		      geom->GetSolid(name2)->GetSurfaceIndices(si2);
 		      
@@ -1192,7 +1186,7 @@ namespace netgen
 		ParseChar (scan, '=');
 		ParseChar (scan, '(');
 		
-		SplineGeometry<2> * newspline = new SplineGeometry<2>;
+		auto newspline = make_shared<SplineGeometry<2>>();
 		// newspline->CSGLoad(scan);
 		LoadSpline (*newspline, scan);
 
@@ -1218,7 +1212,7 @@ namespace netgen
 		ParseChar (scan, '=');
 		ParseChar (scan, '(');
 		
-		SplineGeometry<3> * newspline = new SplineGeometry<3>;
+		auto newspline = make_shared<SplineGeometry<3>>();
 		// newspline->CSGLoad(scan);
 		LoadSpline (*newspline, scan);
 
@@ -1246,7 +1240,7 @@ namespace netgen
 
 		CSGeometry::BCModification bcm;
 		bcm.bcname = NULL;
-		Array<int> si;
+		NgArray<int> si;
 		
 		geom->GetSolid(name1)->GetSurfaceIndices(si);
 		if(si.Size() == 0)
@@ -1298,7 +1292,7 @@ namespace netgen
 		bcm.bcname = NULL;
 
 
-		Array<int> si;
+		NgArray<int> si;
 		
 		geom->GetSolid(name1)->GetSurfaceIndices(si);
 		if(si.Size() == 0)

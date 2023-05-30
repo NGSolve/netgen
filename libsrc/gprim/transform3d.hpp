@@ -102,6 +102,8 @@ public:
       m(i,i) = 1;
   }
 
+  Transformation (const Point<D> & c, const Vec<3> & axes, double angle);
+  
   // rotation with ...
   Transformation (const Point<D> & c, double alpha, double beta, double gamma)
   {
@@ -126,6 +128,14 @@ public:
     
     // cout << "Rotation - Transformation:" << (*this) << endl;
     //  (*testout) << "Rotation - Transformation:" << (*this) << endl;
+  }
+
+  Mat<D> & GetMatrix() { return m; }
+  Vec<D> & GetVector() { return v; }
+
+  void DoArchive(Archive& ar)
+  {
+      ar & m & v;
   }
 
   /// 

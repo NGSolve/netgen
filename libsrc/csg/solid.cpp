@@ -6,21 +6,6 @@
 
 namespace netgen
 {
-  //using namespace netgen;
-
-
-  /*
-  SolidIterator :: SolidIterator ()
-  {
-    ;
-  }
-
-  SolidIterator :: ~SolidIterator ()
-  {
-    ;
-  }
-  */
-
 
 
   // int Solid :: cntnames = 0;
@@ -193,9 +178,73 @@ namespace netgen
 
 
 
+  INSOLID_TYPE Solid ::
+  PointInSolid (const Point<3> & p, double eps) const
+  {
+    switch (op)
+      {
+      case TERM: case TERM_REF:
+        return prim->PointInSolid (p, eps);
+      case SECTION:
+        return Intersection (s1->PointInSolid (p, eps), s2->PointInSolid (p, eps));
+      case UNION:
+        return Union (s1->PointInSolid (p, eps), s2->PointInSolid (p, eps));          
+      case SUB:
+        return Complement (s1->PointInSolid (p, eps));
+      case ROOT:
+	return s1->PointInSolid (p, eps);
+      }
+      throw Exception("PointInSolid: invalid op");
+  }
+
+  
+  INSOLID_TYPE Solid ::
+  VecInSolid (const Point<3> & p, const Vec<3> & v, double eps) const
+  {
+    switch (op)
+      {
+      case TERM: case TERM_REF:
+        return prim->VecInSolid (p, v, eps);
+      case SECTION:
+        return Intersection (s1->VecInSolid (p, v, eps), s2->VecInSolid (p, v, eps));        
+      case UNION:
+        return Union (s1->VecInSolid (p, v, eps), s2->VecInSolid (p, v, eps));                
+      case SUB:
+        return Complement (s1->VecInSolid (p, v, eps));
+      case ROOT:
+	return s1->VecInSolid (p, v, eps);
+      }
+      throw Exception("VecInSolid: invalid op");
+  }
+  
+  // checks if lim s->0 lim t->0  p + t(v1 + s v2) in solid
+  INSOLID_TYPE Solid ::
+  VecInSolid2 (const Point<3> & p, const Vec<3> & v1,
+               const Vec<3> & v2, double eps) const
+  {
+    switch (op)
+      {
+      case TERM: case TERM_REF:
+        return prim->VecInSolid2 (p, v1, v2, eps);
+      case SECTION:
+        return Intersection (s1->VecInSolid2 (p, v1, v2, eps), s2->VecInSolid2 (p, v1, v2, eps));
+      case UNION:
+        return Union (s1->VecInSolid2 (p, v1, v2, eps), s2->VecInSolid2 (p, v1, v2, eps));          
+      case SUB:
+        return Complement (s1->VecInSolid2 (p, v1, v2, eps));
+      case ROOT:
+	return s1->VecInSolid2 (p, v1, v2, eps);
+      }
+      throw Exception("VecInSolid2: invalid op");
+  }
+
+  
+
 
   bool Solid :: IsIn (const Point<3> & p, double eps) const
   {
+    return PointInSolid (p,eps) != IS_OUTSIDE;
+      /*
     switch (op)
       {
       case TERM: case TERM_REF:
@@ -213,10 +262,13 @@ namespace netgen
 	return s1->IsIn (p, eps);
       }
     return 0;
+      */
   }
 
   bool Solid :: IsStrictIn (const Point<3> & p, double eps) const
   {
+    return PointInSolid (p,eps) == IS_INSIDE;
+    /*
     switch (op)
       {
       case TERM: case TERM_REF:
@@ -234,11 +286,14 @@ namespace netgen
 	return s1->IsStrictIn (p, eps);
       }
     return 0;
+    */
   }
 
   bool Solid :: VectorIn (const Point<3> & p, const Vec<3> & v, 
 			 double eps) const
   {
+    return VecInSolid (p,v,eps) != IS_OUTSIDE;
+    /*
     Vec<3> hv;
     switch (op)
       {
@@ -257,11 +312,14 @@ namespace netgen
 	return s1->VectorIn(p, v, eps);
       }
     return 0;
+    */
   }
 
   bool Solid :: VectorStrictIn (const Point<3> & p, const Vec<3> & v,
 			       double eps) const
   {
+    return VecInSolid (p,v,eps) == IS_INSIDE;
+    /*
     Vec<3> hv;
     switch (op)
       {
@@ -282,9 +340,11 @@ namespace netgen
 	return s1->VectorStrictIn(p, v, eps);
       }
     return 0;
+    */
   }
 
 
+  /*
   bool Solid::VectorIn2 (const Point<3> & p, const Vec<3> & v1, 
 			const Vec<3> & v2, double eps) const
   {
@@ -317,10 +377,57 @@ namespace netgen
       }
     return 0;  
   }
+  */
 
 
+  bool Solid::VectorIn2 (const Point<3> & p, const Vec<3> & v1, 
+                         const Vec<3> & v2, double eps) const
+  {
+    return VecInSolid2 (p,v1,v2,eps) != IS_OUTSIDE;
+    /*
+    switch (op)
+      {
+      case TERM: case TERM_REF:
+        {
+          auto res = prim->VecInSolid2 (p, v1, v2, eps);
+          return res != IS_OUTSIDE;
+        }
+      case SECTION:
+	return s1->VectorIn2 (p, v1, v2, eps) && s2->VectorIn2 (p, v1, v2, eps);
+      case UNION:
+	return s1->VectorIn2 (p, v1, v2, eps) || s2->VectorIn2 (p, v1, v2, eps);
+      case SUB:
+	return !s1->VectorStrictIn2 (p, v1, v2, eps);
+      case ROOT:
+	return s1->VectorIn2 (p, v1, v2, eps);
+      }
+    // return 0;  
+    */
+  }
 
-
+  bool Solid :: VectorStrictIn2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
+                                 double eps) const
+  {
+    return VecInSolid2 (p,v1,v2,eps) == IS_INSIDE;
+    /*
+    switch (op)
+      {
+      case TERM: case TERM_REF:
+        {
+          auto res = prim->VecInSolid2 (p, v1, v2, eps);
+          return (res == IS_INSIDE);
+        }
+      case SECTION:
+	return s1->VectorStrictIn2 (p, v1, v2, eps) && s2->VectorStrictIn2 (p, v1, v2, eps);
+      case UNION:
+	return s1->VectorStrictIn2 (p, v1, v2, eps) || s2->VectorStrictIn2 (p, v1, v2, eps);
+      case SUB:
+	return !s1->VectorIn2 (p, v1, v2, eps);
+      case ROOT:
+	return s1->VectorStrictIn2 (p, v1, v2, eps);
+      }
+    */
+  }
 
 
   void Solid :: Print (ostream & str) const
@@ -557,14 +664,14 @@ namespace netgen
 
 
 
-  void Solid :: Boundaries (const Point<3> & p, Array<int> & bounds) const
+  void Solid :: Boundaries (const Point<3> & p, NgArray<int> & bounds) const
   {
     int in, strin;
     bounds.SetSize (0);
     RecBoundaries (p, bounds, in, strin);
   }
 
-  void Solid :: RecBoundaries (const Point<3> & p, Array<int> & bounds,
+  void Solid :: RecBoundaries (const Point<3> & p, NgArray<int> & bounds,
 			       int & in, int & strin) const
   {
     switch (op)
@@ -585,7 +692,7 @@ namespace netgen
       case SECTION:
 	{
 	  int i, in1, in2, strin1, strin2;
-	  Array<int> bounds1, bounds2;
+	  NgArray<int> bounds1, bounds2;
 
 	  s1 -> RecBoundaries (p, bounds1, in1, strin1);
 	  s2 -> RecBoundaries (p, bounds2, in2, strin2);
@@ -604,7 +711,7 @@ namespace netgen
       case UNION:
 	{
 	  int i, in1, in2, strin1, strin2;
-	  Array<int> bounds1, bounds2;
+	  NgArray<int> bounds1, bounds2;
 
 	  s1 -> RecBoundaries (p, bounds1, in1, strin1);
 	  s2 -> RecBoundaries (p, bounds2, in2, strin2);
@@ -638,18 +745,20 @@ namespace netgen
   }
 
 
-  void Solid :: TangentialSolid (const Point<3> & p, Solid *& tansol, Array<int> & surfids, double eps) const
+  unique_ptr<Solid> Solid :: TangentialSolid (const Point<3> & p, NgArray<int> & surfids, double eps) const
   {
-    int in, strin;
+    bool in, strin;
+    Solid * tansol = nullptr;
     RecTangentialSolid (p, tansol, surfids, in, strin, eps);
     surfids.SetSize (0);
     if (tansol)
       tansol -> GetTangentialSurfaceIndices (p, surfids, eps);
+    return unique_ptr<Solid> (tansol);
   }
 
 
-  void Solid :: RecTangentialSolid (const Point<3> & p, Solid *& tansol, Array<int> & surfids,
-				    int & in, int & strin, double eps) const
+  void Solid :: RecTangentialSolid (const Point<3> & p, Solid *& tansol, NgArray<int> & surfids,
+				    bool & in, bool & strin, double eps) const
   {
     tansol = NULL;
 
@@ -671,7 +780,7 @@ namespace netgen
 	}
       case SECTION:
 	{
-	  int in1, in2, strin1, strin2;
+	  bool in1, in2, strin1, strin2;
 	  Solid * tansol1, * tansol2;
 
 	  s1 -> RecTangentialSolid (p, tansol1, surfids, in1, strin1, eps);
@@ -686,13 +795,13 @@ namespace netgen
 	      else if (tansol2)
 		tansol = tansol2;
 	    }
-	  in = (in1 && in2);
-	  strin = (strin1 && strin2);
+	  in = in1 && in2;
+	  strin = strin1 && strin2;
 	  break;
 	}
       case UNION:
 	{
-	  int in1, in2, strin1, strin2;
+	  bool in1, in2, strin1, strin2;
 	  Solid * tansol1 = 0, * tansol2 = 0;
 
 	  s1 -> RecTangentialSolid (p, tansol1, surfids, in1, strin1, eps);
@@ -712,13 +821,13 @@ namespace netgen
 	      delete tansol1;
 	      delete tansol2;
 	    }
-	  in = (in1 || in2);
-	  strin = (strin1 || strin2);
+	  in = in1 || in2;
+	  strin = strin1 || strin2;
 	  break;
 	}
       case SUB:
 	{
-	  int hin, hstrin;
+	  bool hin, hstrin;
 	  Solid * tansol1;
 
 	  s1 -> RecTangentialSolid (p, tansol1, surfids, hin, hstrin, eps);
@@ -740,22 +849,24 @@ namespace netgen
 
 
 
-  void Solid :: TangentialSolid2 (const Point<3> & p, 
-				  const Vec<3> & t,
-				  Solid *& tansol, Array<int> & surfids, double eps) const
+  unique_ptr<Solid> Solid :: TangentialSolid2 (const Point<3> & p, 
+                                               const Vec<3> & t,
+                                               NgArray<int> & surfids, double eps) const
   {
-    int in, strin;
+    Solid * tansol = nullptr;
+    bool in, strin;
     surfids.SetSize (0);
     RecTangentialSolid2 (p, t, tansol, surfids, in, strin, eps);
     if (tansol)
       tansol -> GetTangentialSurfaceIndices2 (p, t, surfids, eps);
+    return unique_ptr<Solid> (tansol);
   }
 
   void Solid :: RecTangentialSolid2 (const Point<3> & p, const Vec<3> & t,
-				     Solid *& tansol, Array<int> & surfids, 
-				     int & in, int & strin, double eps) const
+				     Solid *& tansol, NgArray<int> & surfids, 
+				     bool & in, bool & strin, double eps) const
   {
-    tansol = NULL;
+    tansol = nullptr;
 
     switch (op)
       {
@@ -774,8 +885,8 @@ namespace netgen
 	  if (ist == DOES_INTERSECT)
 	    ist = prim->VecInSolid (p, t, eps);
 
-	  in = (ist == IS_INSIDE || ist == DOES_INTERSECT);
-	  strin = (ist == IS_INSIDE);
+	  in = (ist == IS_INSIDE) || (ist == DOES_INTERSECT);
+	  strin = ist == IS_INSIDE;
 
 	  if (ist == DOES_INTERSECT)
 	    {
@@ -786,7 +897,7 @@ namespace netgen
 	}
       case SECTION:
 	{
-	  int in1, in2, strin1, strin2;
+	  bool in1, in2, strin1, strin2;
 	  Solid * tansol1, * tansol2;
 
 	  s1 -> RecTangentialSolid2 (p, t, tansol1, surfids, in1, strin1, eps);
@@ -801,13 +912,13 @@ namespace netgen
 	      else if (tansol2)
 		tansol = tansol2;
 	    }
-	  in = (in1 && in2);
-	  strin = (strin1 && strin2);
+	  in = in1 && in2;
+	  strin = strin1 && strin2;
 	  break;
 	}
       case UNION:
 	{
-	  int in1, in2, strin1, strin2;
+	  bool in1, in2, strin1, strin2;
 	  Solid * tansol1, * tansol2;
 
 	  s1 -> RecTangentialSolid2 (p, t, tansol1, surfids, in1, strin1, eps);
@@ -822,13 +933,13 @@ namespace netgen
 	      else if (tansol2)
 		tansol = tansol2;
 	    }
-	  in = (in1 || in2);
-	  strin = (strin1 || strin2);
+	  in = in1 || in2;
+	  strin = strin1 || strin2;
 	  break;
 	}
       case SUB:
 	{
-	  int hin, hstrin;
+	  bool hin, hstrin;
 	  Solid * tansol1;
 
 	  s1 -> RecTangentialSolid2 (p, t, tansol1, surfids, hin, hstrin, eps);
@@ -854,25 +965,28 @@ namespace netgen
 
 
 
-  void Solid :: TangentialSolid3 (const Point<3> & p, 
-				  const Vec<3> & t, const Vec<3> & t2,
-				  Solid *& tansol, Array<int> & surfids, 
-				  double eps) const
+  unique_ptr<Solid> Solid :: TangentialSolid3 (const Point<3> & p, 
+                                               const Vec<3> & t, const Vec<3> & t2,
+                                               NgArray<int> & surfids, 
+                                               double eps) const
   {
-    int in, strin;
+    bool in, strin;
+    Solid * tansol = nullptr;
     surfids.SetSize (0);
     RecTangentialSolid3 (p, t, t2, tansol, surfids, in, strin, eps);
 
     if (tansol)
       tansol -> GetTangentialSurfaceIndices3 (p, t, t2, surfids, eps);
+
+    return unique_ptr<Solid>(tansol);
   }
 
   void Solid :: RecTangentialSolid3 (const Point<3> & p, 
 				     const Vec<3> & t, const Vec<3> & t2,
-				     Solid *& tansol, Array<int> & surfids, 
-				     int & in, int & strin, double eps) const
+				     Solid *& tansol, NgArray<int> & surfids, 
+				     bool & in, bool & strin, double eps) const
   {
-    tansol = NULL;
+    tansol = nullptr;
 
     switch (op)
       {
@@ -882,8 +996,8 @@ namespace netgen
 
 	  if (ist == DOES_INTERSECT)
 	    ist = prim->VecInSolid3 (p, t, t2, eps);
-	  in = (ist == IS_INSIDE || ist == DOES_INTERSECT);
-	  strin = (ist == IS_INSIDE);
+	  in = (ist == IS_INSIDE) || (ist == DOES_INTERSECT);
+	  strin = ist == IS_INSIDE;
 
 	  if (ist == DOES_INTERSECT)
 	    {
@@ -894,7 +1008,7 @@ namespace netgen
 	}
       case SECTION:
 	{
-	  int in1, in2, strin1, strin2;
+	  bool in1, in2, strin1, strin2;
 	  Solid * tansol1, * tansol2;
 
 	  s1 -> RecTangentialSolid3 (p, t, t2, tansol1, surfids, in1, strin1, eps);
@@ -909,13 +1023,13 @@ namespace netgen
 	      else if (tansol2)
 		tansol = tansol2;
 	    }
-	  in = (in1 && in2);
-	  strin = (strin1 && strin2);
+	  in = in1 && in2;
+	  strin = strin1 && strin2;
 	  break;
 	}
       case UNION:
 	{
-	  int in1, in2, strin1, strin2;
+	  bool in1, in2, strin1, strin2;
 	  Solid * tansol1, * tansol2;
 
 	  s1 -> RecTangentialSolid3 (p, t, t2, tansol1, surfids, in1, strin1, eps);
@@ -930,13 +1044,13 @@ namespace netgen
 	      else if (tansol2)
 		tansol = tansol2;
 	    }
-	  in = (in1 || in2);
-	  strin = (strin1 || strin2);
+	  in = in1 || in2;
+	  strin = strin1 || strin2;
 	  break;
 	}
       case SUB:
 	{
-	  int hin, hstrin;
+	  bool hin, hstrin;
 	  Solid * tansol1;
 
 	  s1 -> RecTangentialSolid3 (p, t, t2, tansol1, surfids, hin, hstrin, eps);
@@ -965,12 +1079,13 @@ namespace netgen
 
 
 
-  void Solid :: TangentialEdgeSolid (const Point<3> & p, 
-				     const Vec<3> & t, const Vec<3> & t2, const Vec<3> & m, 
-				     Solid *& tansol, Array<int> & surfids, 
-				     double eps) const
+  unique_ptr<Solid> Solid :: TangentialEdgeSolid (const Point<3> & p, 
+                                                  const Vec<3> & t, const Vec<3> & t2, const Vec<3> & m, 
+                                                  NgArray<int> & surfids, 
+                                                  double eps) const
   {
-    int in, strin;
+    Solid * tansol = nullptr;
+    bool in, strin;
     surfids.SetSize (0);
 
     // *testout << "tangentialedgesolid,sol = " << (*this) << endl;
@@ -978,12 +1093,14 @@ namespace netgen
 
     if (tansol)
       tansol -> RecGetTangentialEdgeSurfaceIndices (p, t, t2, m, surfids, eps);
+
+    return unique_ptr<Solid> (tansol);
   }
 
   void Solid :: RecTangentialEdgeSolid (const Point<3> & p, 
 					const Vec<3> & t, const Vec<3> & t2, const Vec<3> & m,
-					Solid *& tansol, Array<int> & surfids, 
-					int & in, int & strin, double eps) const
+					Solid *& tansol, NgArray<int> & surfids, 
+					bool & in, bool & strin, double eps) const
   {
     tansol = NULL;
 
@@ -1005,8 +1122,8 @@ namespace netgen
 
 	  // (*testout) << "ist2 = " << ist << endl;
 
-	  in = (ist == IS_INSIDE || ist == DOES_INTERSECT);
-	  strin = (ist == IS_INSIDE);
+	  in = (ist == IS_INSIDE) || (ist == DOES_INTERSECT);
+	  strin = ist == IS_INSIDE;
 
 	  if (ist == DOES_INTERSECT)
 	    {
@@ -1017,7 +1134,7 @@ namespace netgen
 	}
       case SECTION:
 	{
-	  int in1, in2, strin1, strin2;
+	  bool in1, in2, strin1, strin2;
 	  Solid * tansol1, * tansol2;
 
 	  s1 -> RecTangentialEdgeSolid (p, t, t2, m, tansol1, surfids, in1, strin1, eps);
@@ -1032,13 +1149,13 @@ namespace netgen
 	      else if (tansol2)
 		tansol = tansol2;
 	    }
-	  in = (in1 && in2);
-	  strin = (strin1 && strin2);
+	  in = in1 && in2;
+	  strin = strin1 && strin2;
 	  break;
 	}
       case UNION:
 	{
-	  int in1, in2, strin1, strin2;
+	  bool in1, in2, strin1, strin2;
 	  Solid * tansol1, * tansol2;
 
 	  s1 -> RecTangentialEdgeSolid (p, t, t2, m, tansol1, surfids, in1, strin1, eps);
@@ -1053,13 +1170,13 @@ namespace netgen
 	      else if (tansol2)
 		tansol = tansol2;
 	    }
-	  in = (in1 || in2);
-	  strin = (strin1 || strin2);
+	  in = in1 || in2;
+	  strin = strin1 || strin2;
 	  break;
 	}
       case SUB:
 	{
-	  int hin, hstrin;
+	  bool hin, hstrin;
 	  Solid * tansol1;
 
 	  s1 -> RecTangentialEdgeSolid (p, t, t2, m, tansol1, surfids, hin, hstrin, eps);
@@ -1095,29 +1212,31 @@ namespace netgen
 
   int Solid :: Edge (const Point<3> & p, const Vec<3> & v, double eps) const
   {
-    int in, strin, faces;
+    bool in, strin;
+    int faces;
     RecEdge (p, v, in, strin, faces, eps);
     return faces >= 2;
   }
 
   int Solid :: OnFace (const Point<3> & p, const Vec<3> & v, double eps) const
   {
-    int in, strin, faces;
+    bool in, strin;
+    int faces;
     RecEdge (p, v, in, strin, faces, eps);
     return faces >= 1;
   }
 
 
   void Solid :: RecEdge (const Point<3> & p, const Vec<3> & v,
-			 int & in, int & strin, int & faces, double eps) const
+			 bool & in, bool & strin, int & faces, double eps) const
   {
     switch (op)
       {
       case TERM: case TERM_REF:
 	{
 	  INSOLID_TYPE ist = prim->VecInSolid (p, v, eps);
-	  in = (ist == IS_INSIDE || ist == DOES_INTERSECT);
-	  strin = (ist == IS_INSIDE);
+	  in = (ist == IS_INSIDE) || (ist == DOES_INTERSECT);
+	  strin = ist == IS_INSIDE;
 	  /*
 	    in = VectorIn (p, v);
 	    strin = VectorStrictIn (p, v);
@@ -1143,7 +1262,8 @@ namespace netgen
 	}
       case SECTION:
 	{
-	  int in1, in2, strin1, strin2, faces1, faces2;
+	  bool in1, in2, strin1, strin2;
+          int faces1, faces2;
 
 	  s1 -> RecEdge (p, v, in1, strin1, faces1, eps);
 	  s2 -> RecEdge (p, v, in2, strin2, faces2, eps);
@@ -1157,7 +1277,8 @@ namespace netgen
 	}
       case UNION:
 	{
-	  int in1, in2, strin1, strin2, faces1, faces2;
+	  bool in1, in2, strin1, strin2;
+          int faces1, faces2;
 
 	  s1 -> RecEdge (p, v, in1, strin1, faces1, eps);
 	  s2 -> RecEdge (p, v, in2, strin2, faces2, eps);
@@ -1171,7 +1292,7 @@ namespace netgen
 	}
       case SUB:
 	{
-	  int in1, strin1;
+	  bool in1, strin1;
 	  s1 -> RecEdge (p, v, in1, strin1, faces, eps);
 	  in = !strin1;
 	  strin = !in1;
@@ -1450,13 +1571,13 @@ namespace netgen
     return 0;
   }
 
-  void Solid :: GetSurfaceIndices (Array<int> & surfind) const
+  void Solid :: GetSurfaceIndices (NgArray<int> & surfind) const
   {
     surfind.SetSize (0);
     RecGetSurfaceIndices (surfind);
   }
 
-  void Solid :: RecGetSurfaceIndices (Array<int> & surfind) const
+  void Solid :: RecGetSurfaceIndices (NgArray<int> & surfind) const
   {
     switch (op)
       {
@@ -1533,13 +1654,13 @@ namespace netgen
   }
 
 
-  void Solid :: GetTangentialSurfaceIndices (const Point<3> & p, Array<int> & surfind, double eps) const
+  void Solid :: GetTangentialSurfaceIndices (const Point<3> & p, NgArray<int> & surfind, double eps) const
   {
     surfind.SetSize (0);
     RecGetTangentialSurfaceIndices (p, surfind, eps);
   }
 
-  void Solid :: RecGetTangentialSurfaceIndices (const Point<3> & p, Array<int> & surfind, double eps) const
+  void Solid :: RecGetTangentialSurfaceIndices (const Point<3> & p, NgArray<int> & surfind, double eps) const
   {
     switch (op)
       {
@@ -1576,14 +1697,14 @@ namespace netgen
 
 
   void Solid :: GetTangentialSurfaceIndices2 (const Point<3> & p, const Vec<3> & v,
-					     Array<int> & surfind, double eps) const
+					     NgArray<int> & surfind, double eps) const
   {
     surfind.SetSize (0);
     RecGetTangentialSurfaceIndices2 (p, v, surfind, eps);
   }
 
   void Solid :: RecGetTangentialSurfaceIndices2 (const Point<3> & p, const Vec<3> & v,
-						 Array<int> & surfind, double eps) const
+						 NgArray<int> & surfind, double eps) const
   {
     switch (op)
       {
@@ -1628,14 +1749,14 @@ namespace netgen
 
 
   void Solid :: GetTangentialSurfaceIndices3 (const Point<3> & p, const Vec<3> & v, const Vec<3> & v2, 
-					     Array<int> & surfind, double eps) const
+					     NgArray<int> & surfind, double eps) const
   {
     surfind.SetSize (0);
     RecGetTangentialSurfaceIndices3 (p, v, v2, surfind, eps);
   }
 
   void Solid :: RecGetTangentialSurfaceIndices3 (const Point<3> & p, const Vec<3> & v, const Vec<3> & v2, 
-						 Array<int> & surfind, double eps) const
+						 NgArray<int> & surfind, double eps) const
   {
     switch (op)
       {
@@ -1697,7 +1818,7 @@ namespace netgen
 
 
   void Solid :: RecGetTangentialEdgeSurfaceIndices (const Point<3> & p, const Vec<3> & v, const Vec<3> & v2, const Vec<3> & m,
-						    Array<int> & surfind, double eps) const
+						    NgArray<int> & surfind, double eps) const
   {
     switch (op)
       {
@@ -1801,7 +1922,7 @@ namespace netgen
   }
 
 
-  void Solid :: CalcOnePrimitiveSpecialPoints (const Box<3> & box, Array<Point<3> > & pts) const
+  void Solid :: CalcOnePrimitiveSpecialPoints (const Box<3> & box, NgArray<Point<3> > & pts) const
   {
     double eps = 1e-8 * box.Diam ();
 
@@ -1814,7 +1935,7 @@ namespace netgen
       }
   }
 
-  void Solid :: RecCalcOnePrimitiveSpecialPoints (Array<Point<3> > & pts) const
+  void Solid :: RecCalcOnePrimitiveSpecialPoints (NgArray<Point<3> > & pts) const
   {
     switch (op)
       {
@@ -1842,5 +1963,6 @@ namespace netgen
 
 
 
-  BlockAllocator Solid :: ball(sizeof (Solid));
+  // BlockAllocator Solid :: ball(sizeof (Solid));
+  shared_ptr<BlockAllocator> Solid :: ball = make_shared<BlockAllocator>(sizeof (Solid));
 }

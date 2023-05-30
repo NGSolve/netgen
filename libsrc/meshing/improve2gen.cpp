@@ -9,27 +9,29 @@ namespace netgen
   class ImprovementRule
   {
   public:
-    Array<Element2d> oldels;
-    Array<Element2d> newels;
-    Array<INDEX_2> deledges;
-    Array<int> incelsonnode;
-    Array<int> reused;
+    NgArray<Element2d> oldels;
+    NgArray<Element2d> newels;
+    NgArray<INDEX_2> deledges;
+    NgArray<int> incelsonnode;
+    NgArray<int> reused;
     int bonus;
     int onp;
   };
 
 
-  void MeshOptimize2d :: GenericImprove (Mesh & mesh)
+  void MeshOptimize2d :: GenericImprove ()
   {
+    static Timer timer("MeshOptimize2d::GenericImprove"); RegionTimer reg(timer);
     if (!faceindex)
       {
 	if (writestatus)
 	  PrintMessage (3, "Generic Improve");
 
 	for (faceindex = 1; faceindex <= mesh.GetNFD(); faceindex++)
-	  GenericImprove (mesh);
+	  GenericImprove ();
       
 	faceindex = 0;
+        return;
       }
 
     // int j, k, l, ri;
@@ -50,11 +52,11 @@ namespace netgen
     bool ok;
     int olddef, newdef;
 
-    Array<ImprovementRule*> rules;
-    Array<SurfaceElementIndex> elmap;
-    Array<int> elrot;
-    Array<PointIndex> pmap;
-    Array<PointGeomInfo> pgi;
+    NgArray<ImprovementRule*> rules;
+    NgArray<SurfaceElementIndex> elmap;
+    NgArray<int> elrot;
+    NgArray<PointIndex> pmap;
+    NgArray<PointGeomInfo> pgi;
 
     int surfnr = mesh.GetFaceDescriptor (faceindex).SurfNr();
   
@@ -195,8 +197,8 @@ namespace netgen
 
 
 
-    Array<int> mapped(rules.Size());
-    Array<int> used(rules.Size());
+    NgArray<int> mapped(rules.Size());
+    NgArray<int> used(rules.Size());
     used = 0;
     mapped = 0;
 
@@ -208,18 +210,23 @@ namespace netgen
 	rule.incelsonnode.SetSize (rule.onp);
 	rule.reused.SetSize (rule.onp);
 
-	for (int j = 1; j <= rule.onp; j++)
+	for (int j = 0; j < rule.onp; j++)
 	  {
-	    rule.incelsonnode.Elem(j) = 0;
-	    rule.reused.Elem(j) = 0;
+	    rule.incelsonnode[j] = 0;
+	    rule.reused[j] = 0;
 	  }
 
+        /*
 	for (int j = 1; j <= rule.oldels.Size(); j++)
 	  {
 	    const Element2d & el = rule.oldels.Elem(j);
 	    for (int k = 1; k <= el.GetNP(); k++)
 	      rule.incelsonnode.Elem(el.PNum(k))--;
 	  }
+        */
+        for (const Element2d & el : rule.oldels)
+          for (PointIndex pi : el.PNums())
+            rule.incelsonnode[pi-PointIndex::BASE]--;
 
 	for (int j = 1; j <= rule.newels.Size(); j++)
 	  {
@@ -236,7 +243,7 @@ namespace netgen
 
   
     TABLE<int,PointIndex::BASE> elonnode(np);
-    Array<int,PointIndex::BASE> nelonnode(np);
+    NgArray<int,PointIndex::BASE> nelonnode(np);
     TABLE<SurfaceElementIndex> nbels(ne);
 
     nelonnode = -4;
@@ -296,7 +303,7 @@ namespace netgen
 	    if (mesh[sei].IsDeleted()) continue;
 
 	    elmap[0] = sei;
-	    FlatArray<SurfaceElementIndex> neighbours = nbels[sei];
+	    NgFlatArray<SurfaceElementIndex> neighbours = nbels[sei];
 	    
 	    for (elrot[0] = 0; elrot[0] < mesh[sei].GetNP(); elrot[0]++)
 	      {
@@ -390,13 +397,11 @@ namespace netgen
 
 		// calc metric badness
 		double bad1 = 0, bad2 = 0;
-		Vec<3> n;
-
-		SelectSurfaceOfPoint (mesh.Point(pmap.Get(1)), pgi.Get(1));
-		GetNormalVector (surfnr, mesh.Point(pmap.Get(1)), pgi.Elem(1), n);
+		// SelectSurfaceOfPoint (mesh.Point(pmap.Get(1)), pgi.Get(1));
+		auto n = geo.GetNormal(surfnr, mesh.Point(pmap.Get(1)), &pgi.Elem(1));
 		  
-		for (int j = 1; j <= rule.oldels.Size(); j++)
-		  bad1 += mesh.SurfaceElement(elmap.Get(j)).CalcJacobianBadness (mesh.Points(), n);
+		for (int j = 0; j < rule.oldels.Size(); j++)
+		  bad1 += mesh[elmap[j]].CalcJacobianBadness (mesh.Points(), n);
 		  
 		// check new element:
 		for (int j = 1; j <= rule.newels.Size(); j++)
@@ -430,7 +435,7 @@ namespace netgen
 		  }
 		  
 		for (int j = 0; j < rule.oldels.Size(); j++)
-		  mesh.DeleteSurfaceElement ( elmap[j] );
+		  mesh.Delete (elmap[j]);
 
 		for (int j = 1; j <= pmap.Size(); j++)
 		  nelonnode[pmap.Get(j)] += rule.incelsonnode.Get(j);

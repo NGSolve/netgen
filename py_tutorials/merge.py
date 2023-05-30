@@ -16,9 +16,9 @@ m2 = geo2.GenerateMesh (maxh=0.05)
 m2.Refine()
 m2.Refine()
 
-print ("***************************")
-print ("** merging suface meshes **")
-print ("***************************")
+print ("****************************")
+print ("** merging surface meshes **")
+print ("****************************")
 
 # create an empty mesh
 mesh = Mesh()

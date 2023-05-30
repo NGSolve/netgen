@@ -5,7 +5,7 @@
 /**************************************************************************/
 
 /* 
-   Abstract data type Array
+   Abstract data type NgArray
 */
 
 
@@ -14,7 +14,7 @@
 
 namespace netgen
 {
-  static mutex block_allocator_mutex;
+  // static mutex block_allocator_mutex;
 
   BlockAllocator :: BlockAllocator (unsigned asize, unsigned ablocks)
     : bablocks (0)
@@ -28,6 +28,7 @@ namespace netgen
 
   BlockAllocator :: ~BlockAllocator ()
   {
+    lock_guard<mutex> guard(block_allocator_mutex);     
     // cout << "****************** delete BlockAllocator " << endl;
     for (int i = 0; i < bablocks.Size(); i++)
       delete [] bablocks[i];

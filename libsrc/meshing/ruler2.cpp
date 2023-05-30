@@ -5,13 +5,13 @@ namespace netgen
 {
 
 
-  static double CalcElementBadness (const Array<Point2d> & points,
+  static double CalcElementBadness (const NgArray<Point<2>> & points,
 				    const Element2d & elem)
   {
     // badness = sqrt(3) /36 * circumference^2 / area - 1 +
     //           h / li + li / h - 2
 
-    Vec2d v12, v13, v23;
+    Vec<2> v12, v13, v23;
     double l12, l13, l23, cir, area;
     static const double c = sqrt(3.0) / 36;
 
@@ -24,7 +24,7 @@ namespace netgen
     l23 = v23.Length();
 
     cir = l12 + l13 + l23;
-    area = 0.5 * (v12.X() * v13.Y() - v12.Y() * v13.X());
+    area = 0.5 * (v12[0] * v13[1] - v12[1] * v13[0]);
     if (area < 1e-6)
       {
 	return 1e8;
@@ -45,18 +45,16 @@ namespace netgen
 
 
 
-  int Meshing2 ::ApplyRules (Array<Point2d> & lpoints, 
-			     Array<int> & legalpoints,
+  int Meshing2 ::ApplyRules (NgArray<Point<2>> & lpoints, 
+			     NgArray<int> & legalpoints,
 			     int maxlegalpoint,
-			     Array<INDEX_2> & llines1,
+			     NgArray<INDEX_2> & llines1,
 			     int maxlegalline,
-			     Array<Element2d> & elements,
-			     Array<INDEX> & dellines, int tolerance,
+			     NgArray<Element2d> & elements,
+			     NgArray<INDEX> & dellines, int tolerance,
 			     const MeshingParameters & mp)
   {
-    static int timer = NgProfiler::CreateTimer ("meshing2::ApplyRules");
-    NgProfiler::RegionTimer reg (timer);
-
+    // static Timer timer ("meshing2::ApplyRules"); RegionTimer reg (timer);
 
 
     double maxerr = 0.5 + 0.3 * tolerance;
@@ -66,16 +64,19 @@ namespace netgen
     int noldll = llines1.Size();
 
 
-    ArrayMem<int,100> pused(maxlegalpoint), lused(maxlegalline);
-    ArrayMem<int,100> pnearness(noldlp), lnearness(llines1.Size());
+    NgArrayMem<int,100> pused(maxlegalpoint), lused(maxlegalline);
+    NgArrayMem<int,100> pnearness(noldlp), lnearness(llines1.Size());
 
-    ArrayMem<int, 20> pmap, pfixed, lmap;
+    NgArrayMem<int, 20> pmap, pfixed, lmap;
   
-    ArrayMem<Point2d,100> tempnewpoints;
-    ArrayMem<INDEX_2,100> tempnewlines;
-    ArrayMem<int,100> tempdellines;
-    ArrayMem<Element2d,100> tempelements;
+    NgArrayMem<Point<2>,100> tempnewpoints;
+    NgArrayMem<INDEX_2,100> tempnewlines;
+    NgArrayMem<int,100> tempdellines;
+    NgArrayMem<Element2d,100> tempelements;
 
+    // a least 2 * maximal number of old points in rules,
+    // what is actually 4 now
+    double oldumem[20];  
 
     elements.SetSize (0);
     dellines.SetSize (0);
@@ -135,8 +136,8 @@ namespace netgen
 
 
     // resort lines after lnearness
-    Array<INDEX_2> llines(llines1.Size());
-    Array<int> sortlines(llines1.Size());
+    NgArray<INDEX_2> llines(llines1.Size());
+    NgArray<int> sortlines(llines1.Size());
     int lnearness_class[MAX_NEARNESS];
 
     for (int j = 0; j < MAX_NEARNESS; j++)
@@ -208,7 +209,7 @@ namespace netgen
     for (int ri = 1; ri <= rules.Size(); ri++)
       {
 	// NgProfiler::RegionTimer reg(timers[ri-1]);
-	netrule * rule = rules.Get(ri);
+	netrule * rule = rules[ri-1].get();
 
 #ifdef LOCDEBUG
 	if (loctestmode)
@@ -262,7 +263,7 @@ namespace netgen
 		    ok = 1;
 
 		    INDEX_2 loclin = llines.Get(locli);
-		    Vec2d linevec = lpoints.Get(loclin.I2()) - lpoints.Get(loclin.I1());
+		    auto linevec = lpoints.Get(loclin.I2()) - lpoints.Get(loclin.I1());
 
 		    if (rule->CalcLineError (nlok, linevec) > maxerr)
 		      {
@@ -457,7 +458,8 @@ namespace netgen
 
 			if (!ok) continue;
 
-			Vector oldu (2 * rule->GetNOldP());
+			// Vector oldu (2 * rule->GetNOldP());
+                        Vector oldu (2 * rule->GetNOldP(), &oldumem[0]);
 		      
 			for (int i = 1; i <= rule->GetNOldP(); i++)
 			  {
@@ -590,9 +592,9 @@ namespace netgen
 			    int oldnp = rule->GetNOldP();
 			    for (int i = oldnp + 1; i <= rule->GetNP(); i++)
 			      {
-				Point2d np = rule->GetPoint(i);
-				np.X() += newu (2 * (i-oldnp) - 2);
-				np.Y() += newu (2 * (i-oldnp) - 1);
+				auto np = rule->GetPoint(i);
+				np[0] += newu (2 * (i-oldnp) - 2);
+				np[1] += newu (2 * (i-oldnp) - 1);
 
                                 lpoints.Append (np);
 				pmap.Elem(i) = lpoints.Size();

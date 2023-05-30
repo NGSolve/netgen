@@ -211,7 +211,7 @@ namespace netgen
   {
     int i, j;
     int nseg = mesh.GetNSeg();
-    Array<int> edgesonpoint(mesh.GetNP());
+    NgArray<int> edgesonpoint(mesh.GetNP());
     for (i = 1; i <= mesh.GetNP(); i++)
       edgesonpoint.Elem(i) = 0;
 
@@ -251,11 +251,11 @@ namespace netgen
 
     // markers for z-refinement:  p1, p2, levels  
     // p1-p2 is an edge to be refined
-    Array<INDEX_3> ref_uniform;
-    Array<INDEX_3> ref_singular;
-    Array<INDEX_4 > ref_slices;
+    NgArray<INDEX_3> ref_uniform;
+    NgArray<INDEX_3> ref_singular;
+    NgArray<INDEX_4 > ref_slices;
 
-    BitArray first_id(geom->identifications.Size());
+    NgBitArray first_id(geom->identifications.Size());
     first_id.Set();
 
   
@@ -287,7 +287,7 @@ namespace netgen
 		    }
 		  else
 		    {   
-		      //const Array<double> & slices = csid->GetSlices();
+		      //const NgArray<double> & slices = csid->GetSlices();
 		      INDEX_4 i4;
 		      i4[0] = pair.I1();
 		      i4[1] = pair.I2();
@@ -301,7 +301,7 @@ namespace netgen
 
   
   
-    Array<EdgePointGeomInfo> epgi;
+    NgArray<EdgePointGeomInfo> epgi;
 
     while (1)
       {
@@ -389,12 +389,12 @@ namespace netgen
 		edge.Sort();
 		if (!refedges.Used(edge))
 		  {
-		    const Array<double> & slices = csid->GetSlices();
+		    const auto& slices = csid->GetSlices();
 		    //(*testout) << "idnr " << idnr << " i " << i << endl;
 		    //(*testout) << "slices " << slices << endl;
-		    double slicefac = slices.Get(slicenr);
+		    double slicefac = slices[slicenr-1];
 		    double slicefaclast = 
-		      (slicenr == slices.Size()) ? 1 : slices.Get(slicenr+1);
+		      (slicenr == slices.Size()) ? 1 : slices[slicenr];
 		    
 		    Point3d np = p1 + (slicefac / slicefaclast) * (p2-p1);
 		    //(*testout) << "slicenr " << slicenr << " slicefac " << slicefac << " quot " << (slicefac / slicefaclast) << " np " << np << endl;

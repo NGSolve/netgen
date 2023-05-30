@@ -1,4 +1,5 @@
 #include <mystdlib.h>
+#include <core/register_archive.hpp>
 
 #include <linalg.hpp>
 #include <csg.hpp>
@@ -343,7 +344,7 @@ INSOLID_TYPE Brick :: VecInSolid4 (const Point<3> & p,
 
 
 void Brick :: 
-GetPrimitiveData (const char *& classname, Array<double> & coeffs) const
+GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const
 {
   classname = "brick";
   coeffs.SetSize(12);
@@ -364,7 +365,7 @@ GetPrimitiveData (const char *& classname, Array<double> & coeffs) const
   coeffs.Elem(12) = p4(2);
 }
 
-void Brick :: SetPrimitiveData (Array<double> & coeffs)
+void Brick :: SetPrimitiveData (NgArray<double> & coeffs)
 {
   p1(0) = coeffs.Elem(1);
   p1(1) = coeffs.Elem(2);
@@ -414,7 +415,7 @@ void Brick :: CalcData()
     { 1, 5, 3, 7 },
     { 2, 4, 6, 8 } };
   
-  Array<double> data(6);
+  NgArray<double> data(6);
   for (i = 0; i < 6; i++)
     {
       const Point<3> lp1 = pi[lface[i][0]-1];

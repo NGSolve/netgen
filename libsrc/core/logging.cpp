@@ -13,13 +13,16 @@
 
 namespace ngcore
 {
+  std::ostream* testout = new std::ostream(nullptr); // NOLINT
+
+  level::level_enum Logger::global_level = level::warn;
 
   void Logger::log(level::level_enum level, std::string && s)
   {
 #ifdef NETGEN_USE_SPDLOG
     logger->log(spdlog::level::level_enum(level), s);
 #else // NETGEN_USE_SPDLOG
-    if(level>level::debug)
+    if(level>=global_level)
       std::clog << s << '\n';
 #endif // NETGEN_USE_SPDLOG
   }
@@ -125,7 +128,11 @@ namespace ngcore
     return std::make_shared<Logger>(std::make_shared<spdlog::logger>());
   }
 
-  void SetLoggingLevel(level::level_enum /*unused*/, const std::string& /*unused*/) {}
+  void SetLoggingLevel(level::level_enum level, const std::string& /*unused*/)
+  {
+    Logger::SetGlobalLoggingLevel(level);
+  }
+
   void AddFileSink(const std::string& /*unused*/, level::level_enum /*unused*/,
       const std::string& /*unused*/)
   {}

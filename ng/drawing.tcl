@@ -40,7 +40,7 @@ if { [Ng_GetToglVersion] == 2 } {
 if { $toglok == 1} {
     
     #
-    pack .ndraw -expand true -fill both -padx 10 -pady 10
+    pack .ndraw -expand true -fill both -padx 0 -pady 0
     catch { tkdnd::drop_target register .ndraw DND_Files }
     #
     bind .ndraw <Button-1> {
@@ -80,6 +80,18 @@ if { $toglok == 1} {
         }
 	.ndraw render
 	set oldmousex %x; set oldmousey %y;
+    }
+    
+    bind .ndraw <Alt-B2-Motion> {
+        Ng_MouseMove $oldmousex $oldmousey %x %y Move2d
+        .ndraw render
+        set oldmousex %x; set oldmousey %y;
+    }
+    
+    bind .ndraw <Alt-B3-Motion> {
+        Ng_MouseMove $oldmousex $oldmousey %x %y Zoom2d
+        .ndraw render
+        set oldmousex %x; set oldmousey %y;
     }
 }
 

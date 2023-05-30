@@ -9,6 +9,8 @@ Spline curve for Mesh generator
 #include <gprim.hpp>
 #include "spline.hpp"
 
+#include <core/register_archive.hpp>
+
 namespace netgen
 {
 
@@ -35,14 +37,14 @@ namespace netgen
 
   template <> 
   void CircleSeg<3> :: LineIntersections (const double a, const double b, const double c,
-					  Array < Point<3> > & points, const double eps) const
+					  NgArray < Point<3> > & points, const double eps) const
   {
     cerr << "CircleSeg<3>::LineIntersections not implemented" << endl;
   }
   
   template <> 
   void CircleSeg<2> :: LineIntersections (const double a, const double b, const double c,
-					  Array < Point<2> > & points, const double eps) const
+					  NgArray < Point<2> > & points, const double eps) const
   {
     points.SetSize(0);
 
@@ -62,7 +64,7 @@ namespace netgen
     if(discr < 0)
       return;
 
-    Array<double> t;
+    NgArray<double> t;
 
     if(fabs(discr) < 1e-20)
       t.Append(-0.5*c2/c1);
@@ -89,12 +91,26 @@ namespace netgen
   template<int D>
   SplineSeg3<D> :: SplineSeg3 (const GeomPoint<D> & ap1, 
 			       const GeomPoint<D> & ap2,
-			       const GeomPoint<D> & ap3)
-    : p1(ap1), p2(ap2), p3(ap3)
+			       const GeomPoint<D> & ap3,
+                               string bcname,
+                               double maxh)
+    : SplineSeg<D>(maxh, bcname), p1(ap1), p2(ap2), p3(ap3)
   {
     weight = Dist (p1, p3) / sqrt (0.5 * (Dist2 (p1, p2) + Dist2 (p2, p3)));
     // weight = sqrt(2);
     // cout << "weight = " << weight << endl;
+    proj_latest_t = 0.5;
+  }
+
+  template<int D>
+  SplineSeg3<D> :: SplineSeg3 (const GeomPoint<D> & ap1,
+			       const GeomPoint<D> & ap2,
+			       const GeomPoint<D> & ap3,
+                               double aweight,
+                               string bcname,
+                               double maxh)
+    : SplineSeg<D>(maxh, bcname), p1(ap1), p2(ap2), p3(ap3), weight(aweight)
+  {
     proj_latest_t = 0.5;
   }
 
@@ -488,7 +504,7 @@ namespace netgen
 
   template<int D>
   void SplineSeg3<D> :: LineIntersections (const double a, const double b, const double c,
-					   Array < Point<D> > & points, const double eps) const
+					   NgArray < Point<D> > & points, const double eps) const
   {
     points.SetSize(0);
 
@@ -535,7 +551,7 @@ namespace netgen
 
 
   template < int D >
-  void SplineSeg3<D> :: GetRawData (Array<double> & data) const
+  void SplineSeg3<D> :: GetRawData (NgArray<double> & data) const
   {
     data.Append(3);
     for(int i=0; i<D; i++)

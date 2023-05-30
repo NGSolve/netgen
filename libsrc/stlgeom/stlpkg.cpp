@@ -21,6 +21,8 @@ namespace netgen
 {
   DLL_HEADER extern shared_ptr<NetgenGeometry>  ng_geometry;
   DLL_HEADER extern shared_ptr<Mesh> mesh;
+  DLL_HEADER extern MeshingParameters mparam;
+  DLL_HEADER extern STLParameters stlparam;
 
   static VisualSceneSTLGeometry vsstlgeom;
   static VisualSceneSTLMeshing vsstlmeshing;
@@ -34,7 +36,7 @@ namespace netgen
   class STLGeometryVisRegister : public GeometryRegister
   {
   public:
-    virtual NetgenGeometry * Load (string filename) const { return NULL; }
+    virtual NetgenGeometry * Load (const filesystem::path & filename) const { return NULL; }
     virtual VisualScene * GetVisualScene (const NetgenGeometry * geom) const;
     virtual void SetParameters (Tcl_Interp * interp) 
     {
@@ -75,11 +77,6 @@ namespace netgen
 	atof (Tcl_GetVar (interp, "::stloptions.resthlinelengthfac", 0));
       stlparam.resthlinelengthenable =
 	atoi (Tcl_GetVar (interp, "::stloptions.resthlinelengthenable", 0));
-
-      stlparam.resthcloseedgefac =
-	atof (Tcl_GetVar (interp, "::stloptions.resthcloseedgefac", 0));
-      stlparam.resthcloseedgeenable =
-	atoi (Tcl_GetVar (interp, "::stloptions.resthcloseedgeenable", 0));
 
       stlparam.resthedgeanglefac =
 	atof (Tcl_GetVar (interp, "::stloptions.resthedgeanglefac", 0));
@@ -243,15 +240,15 @@ namespace netgen
 	  }
 	else if (strcmp (argv[1], "markdirtytrigs") == 0)
 	  {
-	    stlgeometry->MarkDirtyTrigs();
+	    stlgeometry->MarkDirtyTrigs(stlparam);
 	  }
 	else if (strcmp (argv[1], "smoothdirtytrigs") == 0)
 	  {
-	    stlgeometry->SmoothDirtyTrigs();
+	    stlgeometry->SmoothDirtyTrigs(stlparam);
 	  }
 	else if (strcmp (argv[1], "smoothrevertedtrigs") == 0)
 	  {
-	    stlgeometry->GeomSmoothRevertedTrigs();
+	    stlgeometry->GeomSmoothRevertedTrigs(stlparam);
 	  }
 	else if (strcmp (argv[1], "invertselectedtrig") == 0)
 	  {
@@ -306,11 +303,11 @@ namespace netgen
 	  }
 	else if (strcmp (argv[1], "smoothnormals") == 0)
 	  {
-	    stlgeometry->SmoothNormals();
+	    stlgeometry->SmoothNormals(stlparam);
 	  }
 	else if (strcmp (argv[1], "marknonsmoothnormals") == 0)
 	  {
-	    stlgeometry->MarkNonSmoothNormals();
+	    stlgeometry->MarkNonSmoothNormals(stlparam);
 	  }
 	else if (strcmp (argv[1], "addexternaledge") == 0)
 	  {
@@ -359,7 +356,7 @@ namespace netgen
 	  }
 	else if (strcmp (argv[1], "buildedges") == 0)
 	  {
-	    stlgeometry->STLDoctorBuildEdges();
+	    stlgeometry->STLDoctorBuildEdges(stlparam);
 	  }
 	else if (strcmp (argv[1], "confirmedge") == 0)
 	  {
@@ -392,6 +389,16 @@ namespace netgen
 	else if (strcmp (argv[1], "confirmedtocandidateedges") == 0)
 	  {
 	    stlgeometry->STLDoctorConfirmedToCandidateEdges();
+	  }
+	else if (strcmp (argv[1], "writechart") == 0)
+	  {
+            int st = stlgeometry->GetSelectTrig();
+
+            if (st >= 1 && st <= stlgeometry->GetNT() && stlgeometry->AtlasMade())
+            {
+              auto chartnumber = stlgeometry->GetChartNr(st);
+              stlgeometry->WriteChartToFile(chartnumber, "chart.stlb");
+            }
 	  }
       }
 
@@ -456,12 +463,12 @@ namespace netgen
 	      }
 	    if (strcmp (argv[1], "topology_ok") == 0)
 	      {
-		sprintf (buf, "%d", stlgeometry->Topology_Ok());
+		snprintf (buf, size(buf), "%d", stlgeometry->Topology_Ok());
 		Tcl_SetResult (interp, buf, TCL_STATIC);
 	      }
 	    if (strcmp (argv[1], "orientation_ok") == 0)
 	      {
-		sprintf (buf, "%d", stlgeometry->Orientation_Ok());
+		snprintf (buf, size(buf), "%d", stlgeometry->Orientation_Ok());
 		Tcl_SetResult (interp, buf, TCL_STATIC);
 	      }
 	  }
@@ -481,24 +488,24 @@ namespace netgen
 
 
 
-    sprintf (buf, "%i", (int)data[0]);
+    snprintf (buf, size(buf), "%i", (int)data[0]);
     Tcl_SetVar (interp, argv[1], buf, 0);
 
-    sprintf (buf, "%5.3g", data[1]);
+    snprintf (buf, size(buf), "%5.3g", data[1]);
     Tcl_SetVar (interp, argv[2], buf, 0);
-    sprintf (buf, "%5.3g", data[2]);
+    snprintf (buf, size(buf), "%5.3g", data[2]);
     Tcl_SetVar (interp, argv[3], buf, 0);
-    sprintf (buf, "%5.3g", data[3]);
+    snprintf (buf, size(buf), "%5.3g", data[3]);
     Tcl_SetVar (interp, argv[4], buf, 0);
 
-    sprintf (buf, "%5.3g", data[4]);
+    snprintf (buf, size(buf), "%5.3g", data[4]);
     Tcl_SetVar (interp, argv[5], buf, 0);
-    sprintf (buf, "%5.3g", data[5]);
+    snprintf (buf, size(buf), "%5.3g", data[5]);
     Tcl_SetVar (interp, argv[6], buf, 0);
-    sprintf (buf, "%5.3g", data[6]);
+    snprintf (buf, size(buf), "%5.3g", data[6]);
     Tcl_SetVar (interp, argv[7], buf, 0);
 
-    sprintf (buf, "%i", (int)data[7]);
+    snprintf (buf, size(buf), "%i", (int)data[7]);
     Tcl_SetVar (interp, argv[8], buf, 0);
 
     return TCL_OK;
@@ -526,7 +533,7 @@ namespace netgen
 	mesh -> SetLocalH (stlgeometry->GetBoundingBox().PMin() - Vec3d(10, 10, 10),
 			   stlgeometry->GetBoundingBox().PMax() + Vec3d(10, 10, 10),
 			   mparam.grading);
-	stlgeometry -> RestrictLocalH(*mesh, mparam.maxh);
+	stlgeometry -> RestrictLocalH(*mesh, mparam.maxh, stlparam, mparam);
 
 	if (stlparam.resthsurfmeshcurvenable)
 	  mesh -> CalcLocalHFromSurfaceCurvature (mparam.grading, 

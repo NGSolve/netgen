@@ -31,6 +31,8 @@ namespace spdlog
 
 namespace ngcore
 {
+  NGCORE_API extern std::ostream* testout; // NOLINT
+  
   namespace level
   {
     enum level_enum
@@ -47,7 +49,11 @@ namespace ngcore
 
   class Logger
   {
+    static NGCORE_API level::level_enum global_level;
+
   public:
+    static void SetGlobalLoggingLevel( level::level_enum level ) { global_level = level; }
+
     std::shared_ptr<spdlog::logger> logger;
 
     Logger(std::shared_ptr<spdlog::logger> l) : logger(std::move(l)) {}

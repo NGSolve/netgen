@@ -17,7 +17,7 @@ namespace netgen
 
 void WriteJCMFormat (const Mesh & mesh,
                      const NetgenGeometry & geom,
-                     const string & filename)
+                     const filesystem::path & filename)
 {
   if (mesh.GetDimension() != 3)
   {
@@ -33,7 +33,7 @@ void WriteJCMFormat (const Mesh & mesh,
   int np = mesh.GetNP();
 
   // Identic points
-  Array<int,PointIndex::BASE> identmap1, identmap2, identmap3;
+  NgArray<int,PointIndex::BASE> identmap1, identmap2, identmap3;
   mesh.GetIdentifications().GetMap(1, identmap1);
   mesh.GetIdentifications().GetMap(2, identmap2);
   mesh.GetIdentifications().GetMap(3, identmap3);
@@ -95,7 +95,7 @@ void WriteJCMFormat (const Mesh & mesh,
   int nbquad = 0;
   // array with 1 if point on any tetra, 0 else 
   // this is needed in order to arrange the prism points in the right order
-  Array<int,1> pointsOnTetras;
+  NgArray<int,1> pointsOnTetras;
   pointsOnTetras.SetSize (mesh.GetNP());
   pointsOnTetras = 0;
   for (i = 1; i <= ne; i++)
@@ -122,7 +122,7 @@ void WriteJCMFormat (const Mesh & mesh,
       nbquad++;
   }
   
-  ofstream outfile (filename.c_str());
+  ofstream outfile (filename);
   outfile.precision(6);
   outfile.setf (ios::fixed, ios::floatfield);
   outfile.setf (ios::showpoint);

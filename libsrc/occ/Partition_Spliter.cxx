@@ -1065,7 +1065,7 @@ void Partition_Spliter::MakeShells(const TopoDS_Shape& S,
   NS = ShellMaker.MakeShells( myAddedFacesMap );
 
   // Add faces added to new shell to myAddedFacesMap:
-  // avoid rebuilding twice commont part of 2 solids.
+  // avoid rebuilding twice common part of 2 solids.
   TopTools_ListIteratorOfListOfShape itS(NS);
   while ( itS.More()) {
     TopExp_Explorer expF (itS.Value(), TopAbs_FACE);
@@ -1080,7 +1080,7 @@ void Partition_Spliter::MakeShells(const TopoDS_Shape& S,
 //function : findEqual
 //purpose  : compare edges of EL1 against edges of EL2,
 //           Result is in EMM binding EL1 edges to list of equal edges.
-//           Edges are considered equall only if they have same vertices.
+//           Edges are considered equal only if they have same vertices.
 //           <addSame>==True makes consider same edges as equal
 //           Put in <AllEqMap> all equal edges
 //=======================================================================
@@ -1486,7 +1486,7 @@ void Partition_Spliter::MakeEdges (const TopoDS_Edge& E,
 
 
   //----------------------------------------------------------------
-  // Construction of the new edges .
+  // Construction of the new edges.
   //----------------------------------------------------------------
 
   if (VF.IsSame(VL)) { // closed edge
@@ -1501,7 +1501,7 @@ void Partition_Spliter::MakeEdges (const TopoDS_Edge& E,
       else if (endV.IsSame(SV.Last()))
 	SV.Prepend(endV);
       else
-	MESSAGE ("END VERTEX IS IN SEQUNCE MIDDLE");
+	MESSAGE ("END VERTEX IS IN SEQUENCE MIDDLE");
     }
     NbVer = SV.Length();
   }
@@ -1664,7 +1664,7 @@ void Partition_Spliter::MergeEqualEdges (const TopTools_ListOfShape& LSE)
 
 //=======================================================================
 //function : KeepShapesInside
-//purpose  : remove shapes that are outside of S from resul
+//purpose  : remove shapes that are outside of S from result
 //=======================================================================
 
 void Partition_Spliter::KeepShapesInside (const TopoDS_Shape& S)
@@ -1735,7 +1735,7 @@ void Partition_Spliter::KeepShapesInside (const TopoDS_Shape& S)
 
 //=======================================================================
 //function : RemoveShapesInside
-//purpose  : remove shapes that are inside S from resul
+//purpose  : remove shapes that are inside S from result
 //=======================================================================
 
 void Partition_Spliter::RemoveShapesInside (const TopoDS_Shape& S)
@@ -1815,7 +1815,7 @@ void Partition_Spliter::RemoveShapesInside (const TopoDS_Shape& S)
       TopoDS_Shell Shell;
       myBuilder.MakeShell( Shell );
 
-      // exclude redundant internal face with edges encounterd only once
+      // exclude redundant internal face with edges encountered only once
       TopTools_IndexedDataMapOfShapeListOfShape MEF;
       TopTools_MapIteratorOfMapOfShape itF (RFM);
       for ( ; itF.More(); itF.Next()) 

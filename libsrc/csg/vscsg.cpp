@@ -17,9 +17,11 @@ namespace netgen
 
   /* *********************** Draw Geometry **************** */
 
-  extern shared_ptr<Mesh> mesh;
-  extern Array<SpecialPoint> specpoints;
-  extern Array<Box<3> > boxes;
+  DLL_HEADER extern shared_ptr<Mesh> mesh;
+  DLL_HEADER extern NgArray<SpecialPoint> global_specpoints;
+  NgArray<SpecialPoint> & specpoints = global_specpoints;
+  
+  DLL_HEADER extern NgArray<Box<3> > boxes;
 
 
 
@@ -498,7 +500,7 @@ namespace netgen
 #ifdef NG_PYTHON
 #include <../general/ngpython.hpp>
 
-DLL_HEADER void ExportCSGVis(py::module &m)
+NGGUI_API void ExportCSGVis(py::module &m)
 {
 	using namespace netgen;
 

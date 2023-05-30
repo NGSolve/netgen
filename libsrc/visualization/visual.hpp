@@ -17,10 +17,12 @@ Visualization
 // #define PARALLELGL
 // #endif
 
+#include "visual_api.hpp"
 #include "../include/incopengl.hpp"
 
+#include "../meshing/visual_interface.hpp"
+#include "../meshing/soldata.hpp"
 #include "vispar.hpp"
-#include "soldata.hpp"
 #include "mvdraw.hpp"
 
 #include <complex>

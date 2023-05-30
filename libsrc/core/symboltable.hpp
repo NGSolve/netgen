@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 
-#include "archive.hpp"
 #include "exception.hpp"
 #include "ngcore_api.hpp"
 
@@ -38,8 +37,9 @@ namespace ngcore
     SymbolTable& operator=(const SymbolTable<T>&) = default;
     SymbolTable& operator=(SymbolTable<T>&&) = default;
 
-    template<typename T2=T>
-    auto DoArchive(Archive& ar) -> typename std::enable_if_t<is_archivable<T2>>
+    template<typename ARCHIVE>
+    auto DoArchive(ARCHIVE& ar)
+      -> typename std::enable_if_t<ARCHIVE::template is_archivable<T>, void>
     {
       ar & names & data;
     }

@@ -98,7 +98,7 @@ template <class S>
 class InterpolationSpline
 {
 protected:
-  // Array < InterpolationPoint<S>[3] > ip;
+  // NgArray < InterpolationPoint<S>[3] > ip;
 
   class intpts
   {
@@ -106,7 +106,7 @@ protected:
     InterpolationPoint<S> pts[3];
     InterpolationPoint<S> & operator[](int i) { return pts[i]; }
   };
-  Array < intpts > ip;
+  NgArray < intpts > ip;
   
   int finished;
 

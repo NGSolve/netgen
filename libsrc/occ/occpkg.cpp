@@ -15,8 +15,11 @@
 
 #include "vsocc.hpp"
 
+#include <TopoDS_Edge.hxx>
+#include <IGESControl_Writer.hxx>
+
 // __declspec(dllimport) void AutoColourBcProps(Mesh & mesh, const char *bccolourfile);
-// __declspec(dllimport) void GetFaceColours(Mesh & mesh, Array<Vec3d> & face_colours);
+// __declspec(dllimport) void GetFaceColours(Mesh & mesh, NgArray<Vec3d> & face_colours);
 // __declspec(dllimport) bool ColourMatch(Vec3d col1, Vec3d col2, double eps = 2.5e-05);
 
 extern "C" int Ng_occ_Init (Tcl_Interp * interp);
@@ -27,6 +30,8 @@ namespace netgen
 {
   extern DLL_HEADER shared_ptr<NetgenGeometry> ng_geometry;
   extern DLL_HEADER shared_ptr<Mesh> mesh;
+  extern DLL_HEADER MeshingParameters mparam;
+  extern DLL_HEADER OCCParameters occparam;
  
   char * err_needsoccgeometry = (char*) "This operation needs an OCC geometry";
   extern char * err_needsmesh;
@@ -38,19 +43,17 @@ namespace netgen
   class OCCGeometryRegister : public GeometryRegister
   {
   public:
-    virtual NetgenGeometry * Load (string filename) const;
+    virtual NetgenGeometry * Load (const filesystem::path & filename) const;
     virtual VisualScene * GetVisualScene (const NetgenGeometry * geom) const;
 
     virtual void SetParameters (Tcl_Interp * interp) 
     {
-      occparam.resthcloseedgefac =
-	atof (Tcl_GetVar (interp, "::stloptions.resthcloseedgefac", 0));
-      occparam.resthcloseedgeenable =
-	atoi (Tcl_GetVar (interp, "::stloptions.resthcloseedgeenable", 0));
-	  occparam.resthminedgelen = 
-	atof (Tcl_GetVar (interp, "::stloptions.resthminedgelen", 0));
-	  occparam.resthminedgelenenable = 
-	atoi (Tcl_GetVar (interp, "::stloptions.resthminedgelenenable", 0));
+      // occparam.resthminedgelen = 
+      //   atof (Tcl_GetVar (interp, "::stloptions.resthminedgelen", 0));
+      //     occparam.resthminedgelenenable = 
+      //   atoi (Tcl_GetVar (interp, "::stloptions.resthminedgelenenable", 0));
+      if(auto geo = dynamic_pointer_cast<OCCGeometry>(ng_geometry); geo)
+        geo->SetOCCParameters(occparam);
     }
   };
 
@@ -73,7 +76,7 @@ namespace netgen
 	  if (showvolume < 0 || showvolume > occgeometry->NrSolids())
 	    {
 	      char buf[20];
-	      sprintf (buf, "%5i", vispar.occshowvolumenr);
+	      snprintf (buf, size(buf),  "%5i", vispar.occshowvolumenr);
 	      Tcl_SetVar (interp, "::occoptions.showvolumenr", buf, 0);
 	    }
 	  else
@@ -519,7 +522,8 @@ namespace netgen
 		stringstream str;
 		occgeometry->GetTopologyTree (str);
 
-		char* cstr = (char*)str.str().c_str();
+                auto txt = str.str();
+		char* cstr = (char*) txt.c_str();
 
 		(*testout) << cstr << endl;
 
@@ -588,7 +592,7 @@ namespace netgen
     {
            if(!occgeometry->GetFaceMaxhModified(i))
            {
-              occgeometry->SetFaceMaxH(i, mparam.maxh);
+             occgeometry->SetFaceMaxH(i, mparam.maxh, mparam);
            }   
     }
 
@@ -597,7 +601,7 @@ namespace netgen
 	   int facenr = atoi (argv[2]);
 	   double surfms = atof (argv[3]);
 	   if (occgeometry && facenr >= 1 && facenr <= occgeometry->NrFaces())
-	     occgeometry->SetFaceMaxH(facenr, surfms);
+	     occgeometry->SetFaceMaxH(facenr, surfms, mparam);
 
     }
 
@@ -608,7 +612,7 @@ namespace netgen
 	   {
 	     int nrFaces = occgeometry->NrFaces();
 	     for (int i = 1; i <= nrFaces; i++)
-	      occgeometry->SetFaceMaxH(i, surfms);
+               occgeometry->SetFaceMaxH(i, surfms, mparam);
 	   }
     }
 
@@ -617,18 +621,18 @@ namespace netgen
 	   int facenr = atoi (argv[2]);
 	   if (occgeometry && facenr >= 1 && facenr <= occgeometry->NrFaces())
 	   {
-	     sprintf (buf, "%5.2f", occgeometry->GetFaceMaxH(facenr));
+	     snprintf (buf, size(buf),  "%5.2f", occgeometry->GetFaceMaxH(facenr));
 	   }
 	   else
 	   {
-	     sprintf (buf, "%5.2f", mparam.maxh);
+	     snprintf (buf, size(buf),  "%5.2f", mparam.maxh);
 	   }
 	   Tcl_SetResult (interp, buf, TCL_STATIC);
     }
 
     if (strcmp (argv[1], "getactive") == 0)
     {
-	   sprintf (buf, "%d", occgeometry->SelectedFace());
+	   snprintf (buf, size(buf),  "%d", occgeometry->SelectedFace());
 	   Tcl_SetResult (interp, buf, TCL_STATIC);
     }
 
@@ -648,9 +652,9 @@ namespace netgen
     if (strcmp (argv[1], "getnfd") == 0)
     {
 	   if (occgeometry)
-	     sprintf (buf, "%d", occgeometry->NrFaces());
+	     snprintf (buf, size(buf),  "%d", occgeometry->NrFaces());
 	   else
-	     sprintf (buf, "0");
+	     snprintf (buf, size(buf),  "0");
 	   Tcl_SetResult (interp, buf, TCL_STATIC);
     }
     return TCL_OK;
@@ -686,14 +690,14 @@ namespace netgen
      if(strcmp(argv[1], "getcolours") == 0)
      {
         stringstream outVar;
-        Array<Vec3d> face_colours;
+        NgArray<Vec<4>> face_colours;
         GetFaceColours(*mesh, face_colours);
 
         for(int i = 0; i < face_colours.Size();i++)
         {
-           outVar << "{ " << face_colours[i].X(1)
-                  << " "  << face_colours[i].X(2)
-                  << " "  << face_colours[i].X(3)
+           outVar << "{ " << face_colours[i][0]
+                  << " "  << face_colours[i][1]
+                  << " "  << face_colours[i][2]
                   << " } ";
         }
 
@@ -703,14 +707,14 @@ namespace netgen
 
      if(strcmp(argv[1], "showalso") == 0)
      {
-        Array<Vec3d> face_colours;
+        NgArray<Vec<4>> face_colours;
         GetFaceColours(*mesh,face_colours);
 
         int colourind = atoi (argv[2]);
 
         for(int i = 1; i <= mesh->GetNFD(); i++)
         {
-           Array<SurfaceElementIndex> surfElems;
+          Array<SurfaceElementIndex> surfElems;
            mesh->GetSurfaceElementsOfFace(i,surfElems);
 
            if(ColourMatch(face_colours[colourind],mesh->GetFaceDescriptor(i).SurfColour()))
@@ -727,7 +731,7 @@ namespace netgen
 
      if(strcmp(argv[1], "hidealso") == 0)
      {
-        Array<Vec3d> face_colours;
+       NgArray<Vec<4>> face_colours;
         GetFaceColours(*mesh,face_colours);
 
         int colourind = atoi (argv[2]);
@@ -751,7 +755,7 @@ namespace netgen
 
      if(strcmp(argv[1], "showonly") == 0)
      {
-        Array<Vec3d> face_colours;
+        NgArray<Vec<4>> face_colours;
         GetFaceColours(*mesh,face_colours);
 
         int colourind = atoi (argv[2]);
@@ -782,7 +786,7 @@ namespace netgen
 
      if(strcmp(argv[1], "hideonly") == 0)
      {
-        Array<Vec3d> face_colours;
+       NgArray<Vec<4>> face_colours;
         GetFaceColours(*mesh,face_colours);
 
         int colourind = atoi (argv[2]);
@@ -889,55 +893,27 @@ namespace netgen
 
 
 
-  NetgenGeometry *  OCCGeometryRegister :: Load (string filename) const
+  NetgenGeometry *  OCCGeometryRegister :: Load (const filesystem::path & filename) const
   {
-    const char * lgfilename = filename.c_str();
+    string ext = ToLower(filename.extension());
 
-
-    /*
-    if (strcmp (&cfilename[strlen(cfilename)-3], "geo") == 0)
+    if (ext == ".iges" || ext == ".igs")
       {
-	PrintMessage (1, "Load OCCG geometry file ", cfilename);
-	
-	extern OCCGeometry * ParseOCCG (istream & istr);
-
-	ifstream infile(cfilename);
-
-	OCCGeometry * hgeom = ParseOCCG (infile);
-	if (!hgeom)
-	  throw NgException ("geo-file should start with 'algebraic3d'");
-
-	hgeom -> FindIdenticSurfaces(1e-8 * hgeom->MaxSize()); 
-	return hgeom;
-      }
-    */
-
-
-    if ((strcmp (&lgfilename[strlen(lgfilename)-4], "iges") == 0) ||
-	(strcmp (&lgfilename[strlen(lgfilename)-3], "igs") == 0) ||
-	(strcmp (&lgfilename[strlen(lgfilename)-3], "IGS") == 0) ||
-	(strcmp (&lgfilename[strlen(lgfilename)-4], "IGES") == 0))
-      {
-	PrintMessage (1, "Load IGES geometry file ", lgfilename);
-	OCCGeometry * occgeometry = LoadOCC_IGES (lgfilename);
+	PrintMessage (1, "Load IGES geometry file ", filename);
+	OCCGeometry * occgeometry = LoadOCC_IGES (filename);
 	return occgeometry;
       }
 
-    else if ((strcmp (&lgfilename[strlen(lgfilename)-4], "step") == 0) ||
-		     (strcmp (&lgfilename[strlen(lgfilename)-3], "stp") == 0) ||
-		     (strcmp (&lgfilename[strlen(lgfilename)-3], "STP") == 0) ||
-		     (strcmp (&lgfilename[strlen(lgfilename)-4], "STEP") == 0))
+    else if (ext == ".stp" || ext == ".step")
       {
-	PrintMessage (1, "Load STEP geometry file ", lgfilename);
-	OCCGeometry * occgeometry = LoadOCC_STEP (lgfilename);
+	PrintMessage (1, "Load STEP geometry file ", filename);
+	OCCGeometry * occgeometry = LoadOCC_STEP (filename);
 	return occgeometry;    
       }
-    else if ((strcmp (&lgfilename[strlen(lgfilename)-4], "brep") == 0) ||
-	     (strcmp (&lgfilename[strlen(lgfilename)-4], "Brep") == 0) ||
-	     (strcmp (&lgfilename[strlen(lgfilename)-4], "BREP") == 0))
+    else if (ext == ".brep")
       {
-	PrintMessage (1, "Load BREP geometry file ", lgfilename);
-	OCCGeometry * occgeometry = LoadOCC_BREP (lgfilename);
+	PrintMessage (1, "Load BREP geometry file ", filename);
+	OCCGeometry * occgeometry = LoadOCC_BREP (filename);
 	return occgeometry;
       }
     

@@ -49,7 +49,7 @@ namespace netgen
 #define ELEMENT2D_MAXPOINTS 8
 
 
-  enum POINTTYPE { FIXEDPOINT = 1, EDGEPOINT = 2, SURFACEPOINT = 3, INNERPOINT = 4 };
+  enum POINTTYPE : unsigned char { FIXEDPOINT = 1, EDGEPOINT = 2, SURFACEPOINT = 3, INNERPOINT = 4 };
   enum ELEMENTTYPE { FREEELEMENT, FIXEDELEMENT };
   enum OPTIMIZEGOAL { OPT_QUALITY, OPT_CONFORM, OPT_REST, OPT_WORSTCASE, OPT_LEGAL };
 
@@ -97,19 +97,22 @@ namespace netgen
 
 
 
-#define MULTIPOINTGEOMINFO_MAX 100
   class MultiPointGeomInfo
   {
-    int cnt;
-    PointGeomInfo mgi[MULTIPOINTGEOMINFO_MAX];
+    ArrayMem<PointGeomInfo, 100> mgi;
   public:
-    MultiPointGeomInfo () { cnt = 0; }
     int AddPointGeomInfo (const PointGeomInfo & gi);
-    void Init () { cnt = 0; }
-    void DeleteAll () { cnt = 0; }
+    void Init () { mgi.SetSize(0); }
+    void DeleteAll () { mgi.SetSize(0); }
 
-    int GetNPGI () const { return cnt; }
+    int GetNPGI () const { return mgi.Size(); }
     const PointGeomInfo & GetPGI (int i) const { return mgi[i-1]; }
+
+    MultiPointGeomInfo () = default;
+    MultiPointGeomInfo (const MultiPointGeomInfo&) = default;
+    MultiPointGeomInfo (MultiPointGeomInfo &&) = default;
+    MultiPointGeomInfo & operator= (const MultiPointGeomInfo&) = delete;
+    MultiPointGeomInfo & operator= (MultiPointGeomInfo&&) = default;
   };
 
 
@@ -123,17 +126,9 @@ namespace netgen
 
   public:
     EdgePointGeomInfo ()
-      : edgenr(0), body(0), dist(0.0), u(0.0), v(0.0) { ; }
+      : edgenr(-1), body(0), dist(0.0), u(0.0), v(0.0) { ; }
 
-
-    EdgePointGeomInfo & operator= (const EdgePointGeomInfo & gi2)
-    {
-      edgenr = gi2.edgenr;  
-      body = gi2.body;
-      dist = gi2.dist;
-      u = gi2.u; v = gi2.v;
-      return *this;
-    }
+    EdgePointGeomInfo & operator= (const EdgePointGeomInfo & gi2) = default;
   };
 
   inline ostream & operator<< (ostream & ost, const EdgePointGeomInfo & gi)
@@ -150,30 +145,54 @@ namespace netgen
   {
     int i;
   public:
+    class t_invalid { public: constexpr t_invalid() = default; };
+    static constexpr t_invalid INVALID{};
+    
     PointIndex () = default;
     PointIndex (const PointIndex&) = default;
     PointIndex (PointIndex &&) = default;
     PointIndex & operator= (const PointIndex&) = default;
     PointIndex & operator= (PointIndex&&) = default;
      
-    PointIndex (int ai) : i(ai) { ; }
+    constexpr PointIndex (int ai) : i(ai)
+    {
+#ifdef DEBUG
+      if (ai < PointIndex::BASE)
+        cout << "illegal PointIndex, use PointIndex::INVALID instead" << endl;
+        // throw Exception("illegal PointIndex, use PointIndex::INVALID instead");
+#endif
+    }
+    constexpr PointIndex (t_invalid inv) : i(PointIndex::BASE-1) { ; }
     // PointIndex & operator= (const PointIndex &ai) { i = ai.i; return *this; }
-    operator int () const { return i; }
+    constexpr operator int () const { return i; }
     PointIndex operator++ (int) { PointIndex hi(*this); i++; return hi; }
     PointIndex operator-- (int) { PointIndex hi(*this); i--; return hi; }
-    PointIndex operator++ () { i++; return *this; }
+    PointIndex & operator++ () { i++; return *this; }
     PointIndex operator-- () { i--; return *this; }
+    PointIndex operator+= (int add) { i += add; return *this; }
     void Invalidate() { i = PointIndex::BASE-1; }
     bool IsValid() const { return i != PointIndex::BASE-1; }
 #ifdef BASE0
-    enum { BASE = 0 };
+    static constexpr size_t BASE = 0;
 #else
-    enum { BASE = 1 };
+    static constexpr size_t BASE = 1;
 #endif  
 
     void DoArchive (Archive & ar) { ar & i; }
   };
 
+}
+
+namespace ngcore
+{
+  template<> 
+  constexpr netgen::PointIndex IndexBASE<netgen::PointIndex> () { return netgen::PointIndex(netgen::PointIndex::BASE); }
+}
+
+namespace netgen
+{
+
+  
   inline istream & operator>> (istream & ist, PointIndex & pi)
   {
     int i; ist >> i; pi = PointIndex(i); return ist;
@@ -193,20 +212,32 @@ namespace netgen
     PointIndices (PointIndex i1, PointIndex i2) : INDEX_2(i1,i2) { ; } 
     PointIndex operator[] (int i) const { return PointIndex(INDEX_2::operator[](i)); }
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_2::operator[](i)); }
-    static PointIndices Sort(PointIndex i1, PointIndex i2) { return INDEX_2::Sort(i1, i2); } 
+    static PointIndices Sort(PointIndex i1, PointIndex i2) { return INDEX_2::Sort(i1, i2); }
+    template <size_t J>
+    PointIndex get() const { return PointIndex(INDEX_2::operator[](J)); }    
   };
-  
+}
 
+namespace std
+{
+  // structured binding support
+  template <auto N>
+  struct tuple_size<netgen::PointIndices<N>> : std::integral_constant<std::size_t, N> {};
+  template<size_t N, auto M> struct tuple_element<N,netgen::PointIndices<M>> { using type = netgen::PointIndex; };
+}
+
+namespace netgen
+{
 
   class ElementIndex
   {
     int i;
   public:
-    ElementIndex () { ; }
-    ElementIndex (int ai) : i(ai) { ; }
+    ElementIndex () = default;
+    constexpr ElementIndex (int ai) : i(ai) { ; }
     ElementIndex & operator= (const ElementIndex & ai) { i = ai.i; return *this; }
     ElementIndex & operator= (int ai) { i = ai; return *this; }
-    operator int () const { return i; }
+    constexpr operator int () const { return i; }
     ElementIndex operator++ (int) { return ElementIndex(i++); }    
     ElementIndex operator-- (int) { return ElementIndex(i--); }
     ElementIndex & operator++ () { ++i; return *this; }
@@ -229,22 +260,24 @@ namespace netgen
     int i;
   public:
     SurfaceElementIndex () = default;
-    SurfaceElementIndex (int ai) : i(ai) { ; }
+    constexpr SurfaceElementIndex (int ai) : i(ai) { ; }
     /*
     SurfaceElementIndex & operator= (const SurfaceElementIndex & ai) 
     { i = ai.i; return *this; }
     */
     SurfaceElementIndex & operator= (const SurfaceElementIndex & ai) = default;
     SurfaceElementIndex & operator= (int ai) { i = ai; return *this; }
-    operator int () const { return i; }
+    constexpr operator int () const { return i; }
     SurfaceElementIndex operator++ (int) { SurfaceElementIndex hi(*this); i++; return hi; }
     SurfaceElementIndex operator-- (int) { SurfaceElementIndex hi(*this); i--; return hi; }
     SurfaceElementIndex & operator++ () { ++i; return *this; }
     SurfaceElementIndex & operator-- () { --i; return *this; }
     SurfaceElementIndex & operator+= (int inc) { i+=inc; return *this; }
-
     void DoArchive (Archive & ar) { ar & i; }
   };
+  
+  inline void SetInvalid (SurfaceElementIndex & id) { id = -1; }
+  inline bool IsInvalid (SurfaceElementIndex & id) { return id == -1; }
 
   inline istream & operator>> (istream & ist, SurfaceElementIndex & pi)
   {
@@ -260,15 +293,21 @@ namespace netgen
   {
     int i;
   public:
-    SegmentIndex () { ; }
-    SegmentIndex (int ai) : i(ai) { ; }
+    SegmentIndex () = default;
+    constexpr SegmentIndex (int ai) : i(ai) { ; }
     SegmentIndex & operator= (const SegmentIndex & ai) 
     { i = ai.i; return *this; }
     SegmentIndex & operator= (int ai) { i = ai; return *this; }
-    operator int () const { return i; }
-    SegmentIndex & operator++ (int) { i++; return *this; }
-    SegmentIndex & operator-- (int) { i--; return *this; }
+    constexpr operator int () const { return i; }
+    SegmentIndex& operator++ () { ++i; return *this; }
+    SegmentIndex& operator-- () { --i; return *this; }
+    SegmentIndex operator++ (int) { return i++; }
+    SegmentIndex operator-- (int) { return i--; }
   };
+
+  inline void SetInvalid (SegmentIndex & id) { id = -1; }
+  inline bool IsInvalid (SegmentIndex & id) { return id == -1; }
+
 
   inline istream & operator>> (istream & ist, SegmentIndex & pi)
   {
@@ -289,8 +328,8 @@ namespace netgen
   */
   class MeshPoint : public Point<3>
   {
-    int layer;
     double singular; // singular factor for hp-refinement
+    int layer;
     POINTTYPE type;
 
 
@@ -301,7 +340,7 @@ namespace netgen
     }
 
     MeshPoint (const Point<3> & ap, int alayer = 1, POINTTYPE apt = INNERPOINT)
-      : Point<3> (ap), layer(alayer), singular(0.),type(apt) 
+      : Point<3> (ap), singular(0.), layer(alayer), type(apt) 
     { 
       ;
     }
@@ -330,8 +369,11 @@ namespace netgen
 
     void DoArchive (Archive & ar)
     {
-      ar & x[0] & x[1] & x[2] & layer & singular;
-      ar & (unsigned char&)(type);
+      // ar & x[0] & x[1] & x[2] & layer & singular;
+      // ar.Do(&x[0], 3);
+      // ar & layer & singular;
+      // ar & (unsigned char&)(type);
+      ar.DoPacked (x[0], x[1], x[2], layer, singular, (unsigned char&)(type));
     }
   };
 
@@ -343,7 +385,8 @@ namespace netgen
 
 
 
-  typedef Array<MeshPoint, PointIndex::BASE, PointIndex> T_POINTS;
+  // typedef NgArray<MeshPoint, PointIndex::BASE, PointIndex> T_POINTS;
+  typedef Array<MeshPoint, PointIndex> T_POINTS;
 
 
 
@@ -358,13 +401,13 @@ namespace netgen
     PointGeomInfo geominfo[ELEMENT2D_MAXPOINTS];
 
     /// surface nr
-    short int index;
+    int index;
     ///
     ELEMENT_TYPE typ;
     /// number of points
-    unsigned int np:4;
+    int8_t np;
+    bool refflag;  // marked for refinement
     bool badel:1;
-    bool refflag:1;  // marked for refinement
     bool strongrefflag:1;
     bool deleted:1;  // element is deleted
 
@@ -377,20 +420,45 @@ namespace netgen
     unsigned int orderx:6;
     unsigned int ordery:6;
 
-    // #ifdef PARALLEL
-    // int partitionNumber; 
-    // #endif
-
     /// a linked list for all segments in the same face
     SurfaceElementIndex next;
+    ///
+    int hp_elnr;
 
   public:
+    static auto GetDataLayout()
+    {
+      return std::map<string, int>({
+          { "pnum", offsetof(Element2d, pnum)},
+          { "index", offsetof(Element2d, index) },
+          { "np", offsetof(Element2d, np) },
+          { "refine", offsetof(Element2d, refflag) }
+        });
+    }
+
     ///
-    Element2d () = default;
+    DLL_HEADER Element2d ();
     Element2d (const Element2d &) = default;
     Element2d (Element2d &&) = default;
     Element2d & operator= (const Element2d &) = default;
     Element2d & operator= (Element2d &&) = default;
+    Element2d & operator= (initializer_list<PointIndex> list)
+    {
+      size_t cnt = 0;
+      for (auto val : list)
+        pnum[cnt++] = val;
+      return *this;
+    }
+    Element2d & operator= (initializer_list<std::tuple<PointIndex,PointGeomInfo>> list)
+    {
+      size_t cnt = 0;
+      for (auto val : list)
+        {
+          pnum[cnt] = get<0>(val);
+          geominfo[cnt++] = get<1>(val);
+        }
+      return *this;
+    }
     ///
     DLL_HEADER Element2d (int anp);
     ///
@@ -428,7 +496,7 @@ namespace netgen
         {
 #ifdef DEBUG
           if (typ != QUAD && typ != QUAD6 && typ != QUAD8)
-            PrintSysError ("element2d::GetNV not implemented for typ", typ);
+            PrintSysError ("element2d::GetNV not implemented for typ", int(typ));
 #endif
           return 4;
         }
@@ -456,12 +524,14 @@ namespace netgen
     ///
     const PointIndex & operator[] (int i) const { return pnum[i]; }
 
-    FlatArray<const PointIndex> PNums () const 
-    { return FlatArray<const PointIndex> (np, &pnum[0]); }
-    FlatArray<PointIndex> PNums ()
-    { return FlatArray<PointIndex> (np, &pnum[0]); }
-    auto Vertices() const
-    { return FlatArray<const PointIndex> (GetNV(), &pnum[0]); }
+    auto PNums () const { return FlatArray<const PointIndex> (np, &pnum[0]); }
+    auto PNums ()  { return FlatArray<PointIndex> (np, &pnum[0]); }
+    template <int NP>
+    auto PNums() const { return FlatArray<const PointIndex> (NP, &pnum[0]); }
+    auto Vertices() const { return FlatArray<const PointIndex> (GetNV(), &pnum[0]); }
+
+    auto GeomInfo() const { return FlatArray<const PointGeomInfo> (np, &geominfo[0]); }
+    auto GeomInfo() { return FlatArray<PointGeomInfo> (np, &geominfo[0]); }
     
     ///
     PointIndex & PNum (int i) { return pnum[i-1]; }
@@ -489,14 +559,24 @@ namespace netgen
       if (ar.Output())
         { _np = np; _typ = typ; _curved = is_curved;
           _vis = visible; _deleted = deleted; }
-      ar & _np & _typ & index & _curved & _vis & _deleted;
+      // ar & _np & _typ & index & _curved & _vis & _deleted;
+      ar.DoPacked (_np, _typ, index, _curved, _vis, _deleted);
       // ar & next; don't need 
       if (ar.Input())
         { np = _np; typ = ELEMENT_TYPE(_typ); is_curved = _curved;
           visible = _vis; deleted = _deleted; }
+      /*
       for (size_t i = 0; i < np; i++)
         ar & pnum[i];
+      */
+      static_assert(sizeof(int) == sizeof (PointIndex));
+      ar.Do( (int*)&pnum[0], np);
     }
+
+#ifdef PARALLEL
+    static MPI_Datatype MyGetMPIType();
+#endif
+    
 
     void SetIndex (int si) { index = si; }
     ///
@@ -511,13 +591,15 @@ namespace netgen
     void SetOrder (int ox, int oy, int  /* oz */) { orderx = ox; ordery = oy;}
     void SetOrder (int ox, int oy) { orderx = ox; ordery = oy;}
 
+    int GetHpElnr() const { return hp_elnr; }
+    void SetHpElnr(int _hp_elnr) { hp_elnr = _hp_elnr; }
 
     ///
     void GetBox (const T_POINTS & points, Box3d & box) const;
     /// invert orientation
     inline void Invert ();
     ///
-    void Invert2 ();
+    DLL_HEADER void Invert2 ();
     /// first point number is smallest
     inline void NormalizeNumbering ();
     ///
@@ -531,41 +613,41 @@ namespace netgen
 
     /// get number of 'integration points'
     int GetNIP () const;
-    void GetIntegrationPoint (int ip, Point2d & p, double & weight) const;
+    void GetIntegrationPoint (int ip, Point<2> & p, double & weight) const;
 
-    void GetTransformation (int ip, const Array<Point2d> & points,
+    void GetTransformation (int ip, const NgArray<Point<2>> & points,
 			    class DenseMatrix & trans) const;
     void GetTransformation (int ip, class DenseMatrix & pmat,
 			    class DenseMatrix & trans) const;
 
-    void GetShape (const Point2d & p, class Vector & shape) const;
-    void GetShapeNew (const Point<2> & p, class FlatVector & shape) const;
+    void GetShape (const Point<2> & p, class Vector & shape) const;
+    DLL_HEADER void GetShapeNew (const Point<2> & p, class FlatVector & shape) const;
     template <typename T>
-    void GetShapeNew (const Point<2,T> & p, TFlatVector<T> shape) const;    
+    DLL_HEADER void GetShapeNew (const Point<2,T> & p, TFlatVector<T> shape) const;
     /// matrix 2 * np
-    void GetDShape (const Point2d & p, class DenseMatrix & dshape) const;
+    DLL_HEADER void GetDShape (const Point<2> & p, class DenseMatrix & dshape) const;
     template <typename T>
-    void GetDShapeNew (const Point<2,T> & p, class MatrixFixWidth<2,T> & dshape) const;
+    DLL_HEADER void GetDShapeNew (const Point<2,T> & p, class MatrixFixWidth<2,T> & dshape) const;
     
     /// matrix 2 * np
-    void GetPointMatrix (const Array<Point2d> & points,
+    void GetPointMatrix (const NgArray<Point<2>> & points,
 			 class DenseMatrix & pmat) const; 
 
     void ComputeIntegrationPointData () const;
   
 
-    double CalcJacobianBadness (const Array<Point2d> & points) const;
+    double CalcJacobianBadness (const NgArray<Point<2>> & points) const;
     double CalcJacobianBadness (const T_POINTS & points, 
 				const Vec<3> & n) const;
-    double CalcJacobianBadnessDirDeriv (const Array<Point2d> & points,
-					int pi, Vec2d & dir, double & dd) const;
+    double CalcJacobianBadnessDirDeriv (const NgArray<Point<2>> & points,
+					int pi, Vec<2> & dir, double & dd) const;
 
 
     
     void Delete ()
     {
       deleted = 1;
-      for (PointIndex & p : pnum) p.Invalidate(); 
+      // for (PointIndex & p : pnum) p.Invalidate(); 
     }
     
     bool IsDeleted () const 
@@ -579,17 +661,17 @@ namespace netgen
 
     // Philippose - 08 August 2010
     // Access functions for the new property: visible
-    void Visible(bool vis = 1) 
+    void Visible(bool vis = true) 
     { visible = vis; }
     bool IsVisible () const 
     { return visible; }
    
-    void SetRefinementFlag (bool rflag = 1) 
+    void SetRefinementFlag (bool rflag = true) 
     { refflag = rflag; }
     bool TestRefinementFlag () const
     { return refflag; }
 
-    void SetStrongRefinementFlag (bool rflag = 1) 
+    void SetStrongRefinementFlag (bool rflag = true) 
     { strongrefflag = rflag; }
     bool TestStrongRefinementFlag () const
     { return strongrefflag; }
@@ -603,17 +685,6 @@ namespace netgen
     bool operator==(const Element2d & el2) const;
 
     int HasFace(const Element2d& el) const;
-    ///
-    int meshdocval;
-    ///
-    int hp_elnr;
-
-    /*
-#ifdef PARALLEL
-    int GetPartition () const { return partitionNumber; }
-    void SetPartition (int nr) { partitionNumber = nr; }; 
-#endif
-    */
   };
 
   ostream & operator<<(ostream  & s, const Element2d & el);
@@ -649,24 +720,10 @@ namespace netgen
     ///
     ELEMENT_TYPE typ;
     /// number of points (4..tet, 5..pyramid, 6..prism, 8..hex, 10..quad tet, 12..quad prism)
-    int np:6;
-    ///
-    class flagstruct { 
-    public:
-      bool marked:1;  // marked for refinement
-      bool badel:1;   // angles worse then limit
-      bool reverse:1; // for refinement a la Bey
-      bool illegal:1; // illegal, will be split or swapped 
-      bool illegal_valid:1; // is illegal-flag valid ?
-      bool badness_valid:1; // is badness valid ?
-      bool refflag:1;     // mark element for refinement
-      bool strongrefflag:1;
-      bool deleted:1;   // element is deleted, will be removed from array
-      bool fixed:1;     // don't change element in optimization
-    };
+    int8_t np;
 
     /// sub-domain index
-    short int index;
+    int index;
     /// order for hp-FEM
     unsigned int orderx:6;
     unsigned int ordery:6;
@@ -677,15 +734,34 @@ namespace netgen
     /// stored shape-badness of element
     float badness;
     bool is_curved:1;   // element is (high order) curved
-  
-    // #ifdef PARALLEL
-    /// number of partition for parallel computation 
-    // int partitionNumber;
 
-    // #endif
+    class flagstruct {
+    public:
+      bool refflag;     // mark element for refinement
+      bool marked:1;  // marked for refinement
+      bool badel:1;   // angles worse then limit
+      bool reverse:1; // for refinement a la Bey
+      bool illegal:1; // illegal, will be split or swapped
+      bool illegal_valid:1; // is illegal-flag valid ?
+      bool badness_valid:1; // is badness valid ?
+      bool strongrefflag:1;
+      bool deleted:1;   // element is deleted, will be removed from array
+      bool fixed:1;     // don't change element in optimization
+    };
 
-  public:
     flagstruct flags;
+    int hp_elnr;
+  public:
+
+    static auto GetDataLayout()
+    {
+      return std::map<string, int>({
+          { "pnum", offsetof(Element, pnum)},
+          { "index", offsetof(Element, index) },
+          { "np", offsetof(Element, np) },
+          { "refine", offsetof(Element, flags.refflag) }          
+        });
+    }
 
     ///
     DLL_HEADER Element () = default;
@@ -695,16 +771,19 @@ namespace netgen
     Element & operator= (Element &&) = default;
 
     ///
-    Element (int anp);
+    DLL_HEADER Element (int anp);
     ///
-    Element (ELEMENT_TYPE type);
+    DLL_HEADER Element (ELEMENT_TYPE type);
     ///
     // Element & operator= (const Element & el2);
+
+    const flagstruct& Flags() const { return flags; }
+    flagstruct& Flags() { return flags; }
   
     ///
-    void SetNP (int anp);
+    DLL_HEADER void SetNP (int anp);
     ///
-    void SetType (ELEMENT_TYPE atyp);
+    DLL_HEADER void SetType (ELEMENT_TYPE atyp);
     ///
     int GetNP () const { return np; }
     ///
@@ -728,14 +807,14 @@ namespace netgen
 	  return 8;
         default: // not a 3D element
 #ifdef DEBUG
-          PrintSysError ("Element3d::GetNV not implemented for typ ", typ);
+          PrintSysError ("Element3d::GetNV not implemented for typ ", int(typ));
 #endif
           __assume(false);
           return -1;
         }
     }
 
-    bool operator==(const Element & el2) const;
+    DLL_HEADER bool operator==(const Element & el2) const;
 
     // old style:
     int NP () const { return np; }
@@ -748,8 +827,12 @@ namespace netgen
     ///
     const PointIndex & operator[] (int i) const { return pnum[i]; }
 
-    FlatArray<const PointIndex> PNums () const 
-    { return FlatArray<const PointIndex> (np, &pnum[0]); }
+    auto PNums () const { return FlatArray<const PointIndex> (np, &pnum[0]); }
+    auto PNums () { return FlatArray<PointIndex> (np, &pnum[0]); }    
+    template <int NP>
+    auto PNums() const { return FlatArray<const PointIndex> (NP, &pnum[0]); }
+
+    FlatArray<const PointIndex> Vertices() const { return { GetNV(), &pnum[0] }; }
 
     ///
     PointIndex & PNum (int i) { return pnum[i-1]; }
@@ -763,14 +846,36 @@ namespace netgen
     void DoArchive (Archive & ar)
     {
       short _np, _typ;
+      bool _curved;
       if (ar.Output())
-        { _np = np; _typ = typ; }
-      ar & _np & _typ & index;
+        { _np = np; _typ = typ; _curved = is_curved; }
+      // ar & _np & _typ & index & _curved;
+      ar.DoPacked (_np, _typ, index, _curved);                
+
       if (ar.Input())
-        { np = _np; typ = ELEMENT_TYPE(_typ); }
-      for (size_t i = 0; i < np; i++)
-        ar & pnum[i];
+        {
+          np = _np;
+          typ = ELEMENT_TYPE(_typ);
+          is_curved = _curved;
+          flags.marked = 1;
+          flags.badel = 0;
+          flags.reverse = 0;
+          flags.illegal = 0;
+          flags.illegal_valid = 0;
+          flags.badness_valid = 0;
+          flags.refflag = 1;
+          flags.strongrefflag = false;
+          flags.deleted = 0;
+          flags.fixed = 0;
+        }
+
+      static_assert(sizeof(int) == sizeof (PointIndex));
+      ar.Do( (int*)&pnum[0], np);
     }
+    
+#ifdef PARALLEL
+    static MPI_Datatype MyGetMPIType();
+#endif
 
     ///
     void SetIndex (int si) { index = si; }
@@ -807,7 +912,7 @@ namespace netgen
           return 6;
 	default:
 #ifdef DEBUG
-	  PrintSysError ("element3d::GetNFaces not implemented for typ", typ)
+	  PrintSysError ("element3d::GetNFaces not implemented for typ", int(typ))
 #endif
 	    ;
 	}
@@ -816,20 +921,23 @@ namespace netgen
     ///
     inline void GetFace (int i, Element2d & face) const;
     ///
-    void GetFace2 (int i, Element2d & face) const;
+    DLL_HEADER void GetFace2 (int i, Element2d & face) const;
     ///
-    void Invert ();
+    DLL_HEADER void Invert ();
+
+    int GetHpElnr() const { return hp_elnr; }
+    void SetHpElnr(int _hp_elnr) { hp_elnr = _hp_elnr; }
 
     /// split into 4 node tets
-    void GetTets (Array<Element> & locels) const;
+    void GetTets (NgArray<Element> & locels) const;
     /// split into 4 node tets, local point nrs
-    void GetTetsLocal (Array<Element> & locels) const;
+    void GetTetsLocal (NgArray<Element> & locels) const;
     /// returns coordinates of nodes
-    // void GetNodesLocal (Array<Point<3> > & points) const;
-    void GetNodesLocalNew (Array<Point<3> > & points) const;
+    // void GetNodesLocal (NgArray<Point<3> > & points) const;
+    void GetNodesLocalNew (NgArray<Point<3> > & points) const;
 
     /// split surface into 3 node trigs
-    void GetSurfaceTriangles (Array<Element2d> & surftrigs) const;
+    DLL_HEADER void GetSurfaceTriangles (NgArray<Element2d> & surftrigs) const;
 
 
     /// get number of 'integration points'
@@ -844,7 +952,7 @@ namespace netgen
     void GetShape (const Point<3> & p, class Vector & shape) const;
     // void GetShapeNew (const Point<3> & p, class FlatVector & shape) const;
     template <typename T>
-    void GetShapeNew (const Point<3,T> & p, TFlatVector<T> shape) const;    
+    DLL_HEADER void GetShapeNew (const Point<3,T> & p, TFlatVector<T> shape) const;
     /// matrix 2 * np
     void GetDShape (const Point<3> & p, class DenseMatrix & dshape) const;
     template <typename T>
@@ -904,16 +1012,6 @@ namespace netgen
     bool IsCurved () const { return is_curved; }
     void SetCurved (bool acurved) { is_curved = acurved; }
 
-    /*
-#ifdef PARALLEL
-    int GetPartition () const { return partitionNumber; }
-    void SetPartition (int nr) { partitionNumber = nr; }; 
-#else
-    int GetPartition () const { return 0; }
-#endif
-    */
-    
-    int hp_elnr;
   };
 
   ostream & operator<<(ostream  & s, const Element & el);
@@ -931,10 +1029,7 @@ namespace netgen
   public:
     ///
     DLL_HEADER Segment();
-    DLL_HEADER Segment (const Segment& other);
-
-    ~Segment()
-    { ; }
+    Segment (const Segment& other) = default;
 
     // friend ostream & operator<<(ostream  & s, const Segment & seg);
 
@@ -950,7 +1045,7 @@ namespace netgen
 
     /// surface decoding index
     int si;
-    /// co dim 2 deconding index
+    /// co dim 2 decoding index
     int cd2i;
     /// domain number inner side
     int domin;
@@ -970,16 +1065,8 @@ namespace netgen
     ///
     int meshdocval;
 
-    // #ifdef PARALLEL
-    /// number of partition for parallel computation 
-    // int partitionNumber;
-    // #endif
-
-  private:
-    string* bcname;
     bool is_curved;
-
-  public:
+    int hp_elnr;
     /*
       PointIndex operator[] (int i) const
       { return (i == 0) ? p1 : p2; }
@@ -988,37 +1075,22 @@ namespace netgen
       { return (i == 0) ? p1 : p2; }
     */
 
-    Segment& operator=(const Segment & other);
+    Segment& operator=(const Segment & other) = default;
 
   
-    int hp_elnr;
-
-    void SetBCName ( string * abcname )
-    {
-      bcname = abcname;
-    }
-
-    string * BCNamePtr () 
-    { return bcname; }
-
-    const string * BCNamePtr () const 
-    { return bcname; }
-
-    const string & GetBCName () const
-    {
-      static string defaultstring = "default";
-      if (! bcname ) return defaultstring;
-      return *bcname;
-    }
 
     int GetNP() const
     {
-      return (pnums[2] < 0) ? 2 : 3;
+      return pnums[2].IsValid() ? 3 : 2;
     }
 
+    auto PNums() const { return FlatArray<const PointIndex> (GetNP(), &pnums[0]); }
+    auto PNums() { return FlatArray<PointIndex> (GetNP(), &pnums[0]); }
+    
+    
     ELEMENT_TYPE GetType() const
     {
-      return (pnums[2] < 0) ? SEGMENT : SEGMENT3;
+      return pnums[2].IsValid() ? SEGMENT3 : SEGMENT;
     }
   
     PointIndex & operator[] (int i) { return pnums[i]; }
@@ -1027,17 +1099,12 @@ namespace netgen
 
     bool IsCurved () const { return is_curved; }
     void SetCurved (bool acurved) { is_curved = acurved; }
-
-    /*
-#ifdef PARALLEL
-    int GetPartition () const { return partitionNumber; }
-    void SetPartition (int nr) { partitionNumber = nr; }; 
-#else
-    int GetPartition () const { return 0; }
-#endif
-    */
     
     void DoArchive (Archive & ar);
+#ifdef PARALLEL
+    static MPI_Datatype MyGetMPIType();
+#endif
+    
   };
 
   ostream & operator<<(ostream  & s, const Segment & seg);
@@ -1076,11 +1143,12 @@ namespace netgen
     // Add capability to store surface colours along with 
     // other face data
     /// surface colour (Default: R=0.0 ; G=1.0 ; B=0.0)
-    Vec3d surfcolour;
+    Vec<4> surfcolour;
     
     ///
-    static string default_bcname;
-    string * bcname = &default_bcname;
+    // static string default_bcname;
+    // string * bcname = &default_bcname;
+    string bcname = "default";
     /// root of linked list 
     SurfaceElementIndex firstelement;
   
@@ -1108,18 +1176,19 @@ namespace netgen
 
     // Philippose - 06/07/2009
     // Get Surface colour
-    Vec3d SurfColour () const { return surfcolour; }
-    DLL_HEADER const string & GetBCName () const { return *bcname; }
+    Vec<4> SurfColour () const { return surfcolour; }
+    /* DLL_HEADER */ const string & GetBCName () const { return bcname; }
     // string * BCNamePtr () { return bcname; }
     // const string * BCNamePtr () const  { return bcname; }
     void SetSurfNr (int sn) { surfnr = sn; }
     void SetDomainIn (int di) { domin = di; }
     void SetDomainOut (int dom) { domout = dom; }
     void SetBCProperty (int bc) { bcprop = bc; }
-    void SetBCName (string * bcn); //  { bcname = bcn; }
+    DLL_HEADER void SetBCName (string * bcn); //  { bcname = bcn; }
+    void SetBCName (const string & bcn) { bcname = bcn; }    
     // Philippose - 06/07/2009
     // Set the surface colour
-    void SetSurfColour (Vec3d colour) { surfcolour = colour; }
+    void SetSurfColour (Vec<4> colour) { surfcolour = colour; }
 
     void SetDomainInSingular (double v) { domin_singular = v; }
     void SetDomainOutSingular (double v) { domout_singular = v; }
@@ -1133,6 +1202,7 @@ namespace netgen
 
   ostream & operator<< (ostream  & s, const FaceDescriptor & fd);
 
+  
  
   class EdgeDescriptor
   {
@@ -1162,12 +1232,13 @@ namespace netgen
        // s .. swap faces
        // c .. combine elements
        // d .. divide elements
+       // D .. divide and join opposite edges, remove element
        // p .. plot, no pause
        // P .. plot, Pause
        // h .. Histogramm, no pause
        // H .. Histogramm, pause
        */
-    string optimize3d = "cmdmustm";
+    string optimize3d = "cmdDmustm";
     /// number of 3d optimization steps
     int optsteps3d = 3;
     /**
@@ -1179,13 +1250,13 @@ namespace netgen
        // P .. plot, pause
        // c .. combine
        **/
-    string optimize2d = "smsmsmSmSmSm";
+    string optimize2d = "smcmSmcmSmcm";
     /// number of 2d optimization steps
     int optsteps2d = 3;
     /// power of error (to approximate max err optimization)
     double opterrpow = 2;
     /// do block filling ?  
-    int blockfill = 1;
+    bool blockfill = true;
     /// block filling up to distance
     double filldist = 0.1;
     /// radius of local environment (times h)
@@ -1193,31 +1264,35 @@ namespace netgen
     /// radius of active environment (times h)
     double relinnersafety = 3;
     /// use local h ?
-    int uselocalh = 1;
+    bool uselocalh = true;
     /// grading for local h
     double grading = 0.3;
-    /// use delaunay meshing
-    int delaunay = 1;
+    /// use delaunay for 3d meshing
+    bool delaunay = true;
+    /// use delaunay for 2d meshing
+    bool delaunay2d = false;
     /// maximal mesh size
     double maxh = 1e10;
     /// minimal mesh size
     double minh = 0.0;
     /// file for meshsize
     string meshsizefilename = "";
+    /// restrict h based on close edges
+    optional<double> closeedgefac = nullopt;
     /// start surfacemeshing from everywhere in surface
-    int startinsurface = 0;
+    bool startinsurface = false;
     /// check overlapping surfaces (debug)
-    int checkoverlap = 1;
+    bool checkoverlap = true;
     /// check overlapping surface mesh before volume meshing
-    int checkoverlappingboundary = 1;
+    bool checkoverlappingboundary = true;
     /// check chart boundary (sometimes too restrictive)
-    int checkchartboundary = 1;
+    bool checkchartboundary = true;
     /// safety factor for curvatures (elements per radius)
     double curvaturesafety = 2;
     /// minimal number of segments per edge
     double segmentsperedge = 1;
     /// use parallel threads
-    int parthread = 0;
+    bool parthread = 0;
     /// weight of element size w.r.t element shape
     double elsizeweight = 0.2;
     /// init with default values
@@ -1233,6 +1308,9 @@ namespace netgen
     int giveuptol2d = 200;
     /// give up quality class, 3d meshing
     int giveuptol = 10;
+    /// give up quality class for closing open quads, > 100 for
+    /// free pyramids
+    int giveuptolopenquads = 15;
     /// maximal outer steps
     int maxoutersteps = 10;
     /// class starting star-shape filling
@@ -1245,24 +1323,29 @@ namespace netgen
     /// limit for max element angle (150-180)
     double badellimit = 175;
 
-    bool check_impossible = 0;
+    bool check_impossible = false;
 
     int only3D_domain_nr = 0;
   
     ///
-    int secondorder = 0;
+    bool secondorder = false;
     /// high order element curvature
     int elementorder = 1;
     /// quad-dominated surface meshing
-    int quad = 0;
+    bool quad = false;
     ///
     bool try_hexes = false;
     ///
-    int inverttets = 0;
+    bool inverttets = false;
     ///
-    int inverttrigs = 0;
+    bool inverttrigs = false;
     ///
-    int autozrefine = 0;
+    bool autozrefine = false;
+
+    bool parallel_meshing = true;
+    int nthreads = 4;
+
+    Flags geometrySpecificParameters;
     ///
     MeshingParameters ();
     ///
@@ -1280,6 +1363,7 @@ namespace netgen
     public:
       Point<3> pnt;
       double h;
+      int layer = 1;
       MeshSizePoint (Point<3> _pnt, double _h) : pnt(_pnt), h(_h) { ; }
       MeshSizePoint () = default;
       MeshSizePoint (const MeshSizePoint &) = default;
@@ -1287,10 +1371,10 @@ namespace netgen
       MeshSizePoint & operator= (const MeshSizePoint &) = default;
       MeshSizePoint & operator= (MeshSizePoint &&) = default;      
     };
-    Array<MeshSizePoint> meshsize_points;
+    NgArray<MeshSizePoint> meshsize_points;
     
     void (*render_function)(bool) = NULL;
-    void Render(bool blocking = false)
+    void Render(bool blocking = false) const
     {
       if (render_function) 
         (*render_function)(blocking);
@@ -1332,6 +1416,8 @@ namespace netgen
     int haltface;
     ///
     int haltfacenr;
+    ///
+    bool write_mesh_on_error;
     ///
     DebugParameters ();
   };
@@ -1426,10 +1512,11 @@ namespace netgen
     /// sorted by identification nr
     TABLE<INDEX_2> idpoints_table;
 
-    Array<ID_TYPE> type;
+    NgArray<ID_TYPE> type;
 
     /// number of identifications (or, actually used identifications ?)
     int maxidentnr;
+    Array<string> names;
 
   public:
     ///
@@ -1444,7 +1531,12 @@ namespace netgen
       identification nr identnr
     */
     DLL_HEADER void Add (PointIndex pi1, PointIndex pi2, int identnr);
-
+    void Add (PointIndex pi1, PointIndex pi2, string name, ID_TYPE type)
+    {
+        auto nr = GetNr(name);
+        Add(pi1, pi2, nr);
+        SetType(nr, type);
+    }
 
     int Get (PointIndex pi1, PointIndex pi2) const;
     int GetSymmetric (PointIndex pi1, PointIndex pi2) const;
@@ -1472,7 +1564,7 @@ namespace netgen
     }
 
     ///
-    void GetMap (int identnr, Array<int,PointIndex::BASE> & identmap, bool symmetric = false) const;
+    void GetMap (int identnr, NgArray<int,PointIndex::BASE> & identmap, bool symmetric = false) const;
     ///
     ID_TYPE GetType(int identnr) const
     {
@@ -1489,9 +1581,16 @@ namespace netgen
     }
     
     ///
-    void GetPairs (int identnr, Array<INDEX_2> & identpairs) const;
+    DLL_HEADER void GetPairs (int identnr, NgArray<INDEX_2> & identpairs) const;
     ///
     int GetMaxNr () const { return maxidentnr; }  
+
+    int GetNr(string name)
+    {
+      if(!names.Contains(name))
+         names.Append(name);
+      return names.Pos(name)+1;
+    }
 
     /// remove secondorder
     void SetMaxPointNr (int maxpnum);
@@ -1503,6 +1602,33 @@ namespace netgen
 }
 
 
+#ifdef PARALLEL
+namespace ngcore
+{
+  template <> struct MPI_typetrait<netgen::PointIndex> {
+    static MPI_Datatype MPIType ()  { return MPI_INT; }
+  };
+
+  template <> struct MPI_typetrait<netgen::ELEMENT_TYPE> {
+    static MPI_Datatype MPIType ()  { return MPI_CHAR; }
+  };
+
+  template <> struct MPI_typetrait<netgen::MeshPoint> {
+    static MPI_Datatype MPIType ()  { return netgen::MeshPoint::MyGetMPIType(); }
+  };
+
+  template <> struct MPI_typetrait<netgen::Element> {
+    static MPI_Datatype MPIType ()  { return netgen::Element::MyGetMPIType(); }
+  };
+  template <> struct MPI_typetrait<netgen::Element2d> {
+    static MPI_Datatype MPIType ()  { return netgen::Element2d::MyGetMPIType(); }
+  };
+  template <> struct MPI_typetrait<netgen::Segment> {
+    static MPI_Datatype MPIType ()  { return netgen::Segment::MyGetMPIType(); }
+  };
+
+}
+#endif
 
 
 #endif

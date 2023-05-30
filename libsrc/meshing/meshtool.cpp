@@ -129,7 +129,7 @@ namespace netgen
   void MeshQuality2d (const Mesh & mesh)
   {
     int ncl = 20, cl;
-    Array<INDEX> incl(ncl);
+    NgArray<INDEX> incl(ncl);
     INDEX i;
     SurfaceElementIndex sei;
     double qual;
@@ -540,7 +540,7 @@ namespace netgen
 
   
   /*
-    double CalcVolume (const Array<Point3d> & points,
+    double CalcVolume (const NgArray<Point3d> & points,
     const Element & el)
     {
     Vec3d v1 = points.Get(el.PNum(2)) - 
@@ -554,8 +554,8 @@ namespace netgen
     }  
   */
 
-  double CalcVolume (const Array<Point3d> & points, 
-		     const Array<Element> & elements)
+  double CalcVolume (const NgArray<Point3d> & points, 
+		     const NgArray<Element> & elements)
   {
     double vol;
     Vec3d v1, v2, v3;
@@ -574,11 +574,11 @@ namespace netgen
   
   
 
-  void MeshQuality3d (const Mesh & mesh, Array<int> * inclass)
+  void MeshQuality3d (const Mesh & mesh, NgArray<int> * inclass)
   { 
     int ncl = 20;
     signed int cl;
-    Array<INDEX> incl(ncl);
+    NgArray<INDEX> incl(ncl);
     INDEX i;
     double qual;
     double sum = 0;
@@ -697,7 +697,7 @@ namespace netgen
 #ifdef OLD
   void Save2DMesh (
 		   const Mesh & mesh2d,
-		   const Array<SplineSegment *> * splines,
+		   const NgArray<SplineSegment *> * splines,
 		   ostream & outfile)
 
   {
@@ -964,7 +964,7 @@ namespace netgen
     mesh.FindOpenElements(domainnr);
     int np = mesh.GetNP();
 
-    BitArrayChar<PointIndex::BASE> ppoints(np);
+    Array<bool, PointIndex> ppoints(np);
   
     // int ndom = mesh.GetNDomains();
 
@@ -972,7 +972,7 @@ namespace netgen
     // for (k = 1; k <= ndom; k++)
     k = domainnr;
       {
-	ppoints.Clear();
+	ppoints = false;
       
 	for (i = 1; i <= mesh.GetNOpenElements(); i++)
 	  {
@@ -980,7 +980,7 @@ namespace netgen
 	    if (sel.GetIndex() == k)
 	      {
 		for (j = 1; j <= sel.GetNP(); j++)
-		  ppoints.Set (sel.PNum(j));
+		  ppoints[sel.PNum(j)] = true;
 	      }
 	  }
 
@@ -991,7 +991,7 @@ namespace netgen
 	      {
 		int todel = 0;
 		for (j = 0; j < el.GetNP(); j++)
-		  if (ppoints.Test (el[j]))
+		  if (ppoints[el[j]])
 		    todel = 1;
 	      
 		if (el.GetNP() != 4)

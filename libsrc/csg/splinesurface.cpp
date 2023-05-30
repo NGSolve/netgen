@@ -1,5 +1,6 @@
 
 #include <csg.hpp>
+#include <core/register_archive.hpp>
 
 namespace netgen
 {
@@ -36,11 +37,11 @@ void SplineSurface :: AppendPoint(const Point<3> & p, const double reffac, const
     return "default";
   }
 
-  const shared_ptr<Array<shared_ptr<OneSurfacePrimitive>>> SplineSurface :: CreateCuttingSurfaces()
+  const shared_ptr<NgArray<shared_ptr<OneSurfacePrimitive>>> SplineSurface :: CreateCuttingSurfaces()
   {
     if(all_cuts)
       return all_cuts;
-    auto cuttings = make_shared<Array<shared_ptr<OneSurfacePrimitive>>>();
+    auto cuttings = make_shared<NgArray<shared_ptr<OneSurfacePrimitive>>>();
     for (auto cut : *cuts)
       cuttings->Append(cut);
     for(int i = 0; i<splines.Size(); i++)

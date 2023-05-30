@@ -52,7 +52,7 @@ namespace netgen
     glColor3f (0, 0, 1);
   
 
-    Array<Point<2> > points, otherpoints;
+    NgArray<Point<2> > points, otherpoints;
 
     for (int i = 1; i <= geometry2d->GetSplines().Size(); i++)
       {

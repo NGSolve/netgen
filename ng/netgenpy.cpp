@@ -2,27 +2,19 @@
 
 #include <iostream>
 #include <../general/ngpython.hpp>
+#include <core/ngcore_api.hpp>
 
-#ifdef WIN32
-#define DLL_HEADER __declspec(dllimport)
-#else
-#define DLL_HEADER
-#endif
-
-
-void DLL_HEADER ExportNetgenMeshing(py::module &m);
-void DLL_HEADER ExportMeshVis(py::module &m);
-void DLL_HEADER ExportCSG(py::module &m);
-void DLL_HEADER ExportCSGVis(py::module &m);
-void DLL_HEADER ExportGeom2d(py::module &m);
-void DLL_HEADER ExportSTL(py::module &m);
-void DLL_HEADER ExportSTLVis(py::module &m);
+void NGCORE_API_IMPORT ExportNetgenMeshing(py::module &m);
+void NGCORE_API_IMPORT ExportCSG(py::module &m);
+void NGCORE_API_IMPORT ExportGeom2d(py::module &m);
+void NGCORE_API_IMPORT ExportSTL(py::module &m);
 #ifdef OCCGEOMETRY
-void DLL_HEADER ExportNgOCC(py::module &m);
+void NGCORE_API_IMPORT ExportNgOCC(py::module &m);
 #endif // OCCGEOMETRY
 
 PYBIND11_MODULE(libngpy, ngpy)
 {
+  py::module::import("pyngcore");
     py::module meshing = ngpy.def_submodule("_meshing", "pybind meshing module");
     ExportNetgenMeshing(meshing);
     py::module csg = ngpy.def_submodule("_csg", "pybind csg module");
@@ -35,22 +27,4 @@ PYBIND11_MODULE(libngpy, ngpy)
     py::module NgOCC = ngpy.def_submodule("_NgOCC", "pybind NgOCC module");
     ExportNgOCC(NgOCC);
 #endif // OCCGEOMETRY
-#ifdef OPENGL
-    py::module meshvis = ngpy.def_submodule("meshvis", "pybind meshvis module");
-    ExportMeshVis(meshvis);
-    py::module csgvis = ngpy.def_submodule("csgvis", "pybind csgvis module");
-    ExportCSGVis(csgvis);
-    py::module stlvis = ngpy.def_submodule("stlvis", "pybind stlvis module");
-    ExportSTLVis(stlvis);
-#endif // OPENGL
-}
-
-// Force linking libnglib to libnetgenpy
-namespace netgen
-{
-   void MyBeep (int i);
-   void MyDummyToForceLinkingNGLib()
-   {
-       MyBeep(0);
-   }
 }

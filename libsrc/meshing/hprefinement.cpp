@@ -33,7 +33,7 @@ namespace netgen
   }
 
   HPRefElement :: HPRefElement(Element & el) :
-    np(el.GetNV()), index(el.GetIndex()), levelx(0), levely(0), levelz(0), type(HP_NONE), domin(-1), domout(-1) //domin,out for segements
+    type(HP_NONE), index(el.GetIndex()), levelx(0), levely(0), levelz(0), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segments
   { 
     //Reset();
     for (int i=0; i<np ; i++) 
@@ -48,7 +48,7 @@ namespace netgen
 
   
   HPRefElement :: HPRefElement(Element2d & el) :
-    levelx(0), levely(0), levelz(0), type(HP_NONE), index(el.GetIndex()), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segements
+    type(HP_NONE), index(el.GetIndex()), levelx(0), levely(0), levelz(0), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segments
   { 
     //Reset();
     
@@ -63,7 +63,7 @@ namespace netgen
   }
 
   HPRefElement :: HPRefElement(Segment & el) :
-    levelx(0), levely(0), levelz(0), type(HP_NONE), np(2), domin(el.domin), domout(el.domout), singedge_left(el.singedge_left), singedge_right(el.singedge_right) 
+    type(HP_NONE), levelx(0), levely(0), levelz(0), np(2), domin(el.domin), domout(el.domout), singedge_left(el.singedge_left), singedge_right(el.singedge_right)
   { 
     //Reset();
     for (int i=0; i<np ; i++) 
@@ -84,7 +84,7 @@ namespace netgen
   }
   
   HPRefElement :: HPRefElement(HPRefElement & el) :
-    np(el.np), levelx(el.levelx), levely(el.levely), levelz(el.levelz), type(el.type), domin(el.domin), domout(el.domout), index(el.index), coarse_elnr(el.coarse_elnr), singedge_left(el.singedge_left), singedge_right(el.singedge_right) 
+    type(el.type), index(el.index), si(el.si), levelx(el.levelx), levely(el.levely), levelz(el.levelz), np(el.np), coarse_elnr(el.coarse_elnr), domin(el.domin), domout(el.domout), singedge_left(el.singedge_left), singedge_right(el.singedge_right)
     
   {
     //Reset();
@@ -551,13 +551,13 @@ namespace netgen
   }
 
   bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoiclt_dom, 
-		       BitArray & cornerpoint, BitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-			INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex::BASE> & facepoint, int & levels, int & act_ref); 
+		       NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
+			INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int & levels, int & act_ref); 
 
-  bool ClassifyHPElements (Mesh & mesh, Array<HPRefElement> & elements, int & act_ref, int & levels);
+  bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, int & act_ref, int & levels);
   
   
-  void  InitHPElements(Mesh & mesh, Array<HPRefElement> & elements) 
+  void  InitHPElements(Mesh & mesh, NgArray<HPRefElement> & elements) 
   { 
     for(ElementIndex i = 0; i < mesh.GetNE(); i++) 
       {
@@ -600,11 +600,15 @@ namespace netgen
 	HPRefElement hpel(mesh[i]);
 	hpel.coarse_elnr = i; 
 	hpel.type = HP_SEGM; 
-	hpel.index = seg.edgenr + 10000*seg.si; 
+	// hpel.index = seg.edgenr + 10000*seg.si;
+        hpel.index = seg.edgenr;
+        hpel.si = seg.si;
+        /*
 	if(seg.edgenr >= 10000)
 	  {
 	    throw NgException("assumption that seg.edgenr < 10000 is wrong");
 	  }
+        */
 	elements.Append(hpel); 
       }
   }
@@ -612,7 +616,7 @@ namespace netgen
  
  
   /* *******************************  DoRefinement *************************************** */
-  void DoRefinement (Mesh & mesh, Array<HPRefElement> & elements,
+  void DoRefinement (Mesh & mesh, NgArray<HPRefElement> & elements,
 		     Refinement * ref, double fac1) 
   {
     elements.SetAllocSize (5 * elements.Size());
@@ -622,7 +626,7 @@ namespace netgen
     // prepare new points  
     
     fac1 = max(0.001,min(0.33,fac1));
-    cout << " in HP-REFINEMENT with fac1 " << fac1 << endl; 
+    PrintMessage(3, " in HP-REFINEMENT with fac1 ", fac1); 
     *testout << " in HP-REFINEMENT with fac1 " << fac1 <<  endl; 
    
 
@@ -868,7 +872,7 @@ namespace netgen
 
   /* ************************** DoRefineDummies ******************************** */
 
-  void DoRefineDummies (Mesh & mesh, Array<HPRefElement> & elements,
+  void DoRefineDummies (Mesh & mesh, NgArray<HPRefElement> & elements,
 			Refinement * ref)
   {
     int oldelsize = elements.Size();
@@ -925,6 +929,7 @@ namespace netgen
 	    for (int k = 0; k < 8; k++)
 	      newel.pnums[k] = newpnums[hprs->newels[j][k]-1];
 	    newel.index = el.index;
+            newel.si = el.si;
 	    newel.coarse_elnr = el.coarse_elnr;
 	    newel.levelx = newel.levely = newel.levelz = newlevel;
 
@@ -947,7 +952,7 @@ namespace netgen
 
 
 
-  void SubdivideDegeneratedHexes (Mesh & mesh, Array<HPRefElement> & elements, double fac1)
+  void SubdivideDegeneratedHexes (Mesh & mesh, NgArray<HPRefElement> & elements, double fac1)
   {
     int oldne = elements.Size();
     for (int i = 0; i < oldne; i++)
@@ -988,7 +993,7 @@ namespace netgen
 
 	      for (int j = 0; j < 6; j++)  
 		{
-		  Array<int> pts;
+		  NgArray<int> pts;
 		  for (int k = 0; k < 4; k++)
 		    {
 		      bool same = 0;
@@ -1086,7 +1091,7 @@ namespace netgen
   }
 
 
-  void CalcStatistics (Array<HPRefElement> & elements)
+  void CalcStatistics (NgArray<HPRefElement> & elements)
   {
     return;
 #ifdef ABC    
@@ -1238,9 +1243,9 @@ namespace netgen
 
 
 
-  void ReorderPoints (Mesh & mesh, Array<HPRefElement> & hpelements)
+  void ReorderPoints (Mesh & mesh, NgArray<HPRefElement> & hpelements)
   {
-    Array<int, 1> map (mesh.GetNP());
+    NgArray<int, 1> map (mesh.GetNP());
     
     for (int i = 1; i <= mesh.GetNP(); i++)
       map[i] = i;
@@ -1278,10 +1283,10 @@ namespace netgen
         // cout << nwrong << " wrong prisms, " << nright << " right prisms" << endl;
       }
 
-    cout << nwrong << " wrong prisms, " << nright << " right prisms" << endl;
+    PrintMessage(3, nwrong, " wrong prisms, ",  nright, " right prisms");
 
 
-    Array<MeshPoint, 1> hpts(mesh.GetNP());
+    NgArray<MeshPoint, 1> hpts(mesh.GetNP());
 
     for (int i = 1; i <= mesh.GetNP(); i++)
       hpts[map[i]] = mesh.Point(i);
@@ -1308,7 +1313,7 @@ namespace netgen
  
     // NgLock mem_lock (mem_mutex,1);
 
-    mesh.coarsemesh = new Mesh; 
+    mesh.coarsemesh = make_unique<Mesh>(); 
     *mesh.coarsemesh = mesh;
     
     // #ifdef CURVEDELEMS_NEW
@@ -1317,14 +1322,14 @@ namespace netgen
     // #endif
 
 
-    delete mesh.hpelements;
-    mesh.hpelements = new Array<HPRefElement>;
+    // delete mesh.hpelements;
+    mesh.hpelements = make_unique<NgArray<HPRefElement>>();
         
-    Array<HPRefElement> & hpelements = *mesh.hpelements; 
+    NgArray<HPRefElement> & hpelements = *mesh.hpelements; 
         
     InitHPElements(mesh,hpelements); 
 
-    Array<int> nplevel;
+    NgArray<int> nplevel;
     nplevel.Append (mesh.GetNP());
     
     int act_ref=1;
@@ -1333,7 +1338,7 @@ namespace netgen
     sing = true; // iterate at least once
     while(sing) 
       {
-	cout << " Start new hp-refinement: step " <<  act_ref  << endl; 
+	PrintMessage(3, " Start new hp-refinement: step ", act_ref);
 		
 	DoRefinement (mesh, hpelements, ref, fac1); 
 	DoRefineDummies (mesh, hpelements, ref);
@@ -1361,8 +1366,10 @@ namespace netgen
 		    seg[0] = hpel.pnums[0];
 		    seg[1] = hpel.pnums[1];
 		    // NOTE: only for less than 10000 elements (HACK) !!!
-		    seg.edgenr = hpel.index % 10000;
-		    seg.si     = hpel.index / 10000;
+		    // seg.edgenr = hpel.index % 10000;
+		    // seg.si     = hpel.index / 10000;
+                    seg.edgenr = hpel.index;
+                    seg.si = hpel.si;
 
                     /*
                     seg.epgeominfo[0].dist = hpel.param[0][0]; // he: war hpel.param[0][0]
@@ -1396,10 +1403,12 @@ namespace netgen
 		    Element2d el(hpel.np); 
 		    for(int j=0;j<hpel.np;j++) 
 		      el.PNum(j+1) = hpel.pnums[j]; 
-		    el.hp_elnr = i; 
+		    el.SetHpElnr(i);
 		    el.SetIndex(hpel.index);
 		    if(setorders)
 		      el.SetOrder(act_ref+1,act_ref+1,0); 
+                    if((*mesh.coarsemesh)[SurfaceElementIndex{hpel.coarse_elnr}].IsCurved())
+                        el.SetCurved(true);
 		    mesh.AddSurfaceElement(el);
 		    break; 
 		  } 
@@ -1412,9 +1421,11 @@ namespace netgen
 		    for(int j=0;j<hpel.np;j++) 
 		      el.PNum(j+1) = hpel.pnums[j]; 
 		    el.SetIndex(hpel.index); 
-		    el.hp_elnr = i; 
+		    el.SetHpElnr(i);
 		    if(setorders)
 		      el.SetOrder(act_ref+1,act_ref+1,act_ref+1);
+                    if((*mesh.coarsemesh)[ElementIndex{hpel.coarse_elnr}].IsCurved())
+                        el.SetCurved(true);
 		    mesh.AddVolumeElement(el); 
 		    break;
 		  } 
@@ -1424,23 +1435,23 @@ namespace netgen
 				 int(Get_HPRef_Struct (hpel.type) -> geom));
 		}
 	  }
-	cout << " Start with Update Topology " << endl; 
+	PrintMessage(5, " Start with Update Topology ");
 	mesh.UpdateTopology();
-	cout << " Mesh Update Topology done " << endl; 
+	PrintMessage(5, " Mesh Update Topology done ");
 
 	act_ref++; 
 	
 	sing = ClassifyHPElements(mesh,hpelements, act_ref, levels); 
       }
 
-    cout << " HP-Refinement done with " << --act_ref << " refinement steps." << endl; 
+    PrintMessage(3, " HP-Refinement done with ", --act_ref, " refinement steps.");
 
     if(act_ref>=1)
       { 
 	for(ElementIndex i=0;i<mesh.GetNE(); i++) 
 	  { 
 	    // Element el = mesh[i] ;
-	    HPRefElement & hpel = hpelements[mesh[i].hp_elnr];
+	    HPRefElement & hpel = hpelements[mesh[i].GetHpElnr()];
 	    const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (mesh[i].GetType());
 	    double dist[3] = {0,0,0}; 
 	    int ord_dir[3] = {0,0,0}; 
@@ -1512,7 +1523,7 @@ namespace netgen
 	for(SurfaceElementIndex i=0;i<mesh.GetNSE(); i++) 
 	  { 
 	    // Element2d el = mesh[i] ;
-	    HPRefElement & hpel = hpelements[mesh[i].hp_elnr];
+	    HPRefElement & hpel = hpelements[mesh[i].GetHpElnr()];
 	    const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (mesh[i].GetType());
 	    double dist[3] = {0,0,0}; 
 	    int ord_dir[3] = {0,0,0}; 
@@ -1558,16 +1569,16 @@ namespace netgen
   }
 
 bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
-		       BitArray & cornerpoint, BitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-			INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex::BASE> & facepoint, int & levels, int & act_ref)
-{ 
+		       NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
+			INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int & levels, int & act_ref)
+{
   bool sing = 0; 
   if (mesh.GetDimension() == 3)
     {
 	/*
 	// check, if point has as least 3 different surfs:
 
-	Array<INDEX_3, PointIndex::BASE> surfonpoint(mesh.GetNP());
+	NgArray<INDEX_3, PointIndex::BASE> surfonpoint(mesh.GetNP());
   	surfonpoint = INDEX_3(0,0,0);
 
 	for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
@@ -1626,7 +1637,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	    }
 
 	// if 2 adjacent edges of an element are singular, the 
-	// commen point must be a singular point
+	// common point must be a singular point
 	for (int i = 1; i <= mesh.GetNE(); i++)
 	  {
 	    const Element & el = mesh.VolumeElement(i);
@@ -1710,7 +1721,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	// 2D case
 
 	// check, if point has as least 3 different surfs:
-	Array<INDEX_3, PointIndex::BASE> surfonpoint(mesh.GetNP());
+	NgArray<INDEX_3, PointIndex::BASE> surfonpoint(mesh.GetNP());
 
 	for (int i = 1; i <= mesh.GetNP(); i++)
 	  surfonpoint.Elem(i) = INDEX_3(0,0,0);
@@ -1722,7 +1733,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	    
 	    if (seg.singedge_left * levels >= act_ref)
 	      {
-		INDEX_2 i2 (mesh.LineSegment(i)[0], 
+		INDEX_2 i2 = INDEX_2::Sort(mesh.LineSegment(i)[0], 
 			    mesh.LineSegment(i)[1]);
 		edges.Set(i2,1); 
 		edgepoint.Set(i2.I1());
@@ -1738,7 +1749,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	    
 	    if (seg.singedge_right * levels >= act_ref)
 	      {
-		INDEX_2 i2 (mesh.LineSegment(i)[1], 
+		INDEX_2 i2 = INDEX_2::Sort(mesh.LineSegment(i)[1], 
 			    mesh.LineSegment(i)[0]);  
 		edges.Set (i2, 1);
 		edgepoint.Set(i2.I1());
@@ -1802,21 +1813,21 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
       }
 
     if (!sing)
-      cout << "PrepareElements no more to do for actual refinement " << act_ref << endl; 
+      PrintMessage(3, "PrepareElements no more to do for actual refinement ", act_ref);
 
     return(sing); 
 }
 
 
 
-  bool ClassifyHPElements (Mesh & mesh, Array<HPRefElement> & elements, int & act_ref, int & levels)
+  bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, int & act_ref, int & levels)
   {
     INDEX_2_HASHTABLE<int> edges(mesh.GetNSeg()+1);
-    BitArray edgepoint(mesh.GetNP());
+    NgBitArray edgepoint(mesh.GetNP());
     INDEX_2_HASHTABLE<int> edgepoint_dom(mesh.GetNSeg()+1);
 
     edgepoint.Clear();
-    BitArray cornerpoint(mesh.GetNP());
+    NgBitArray cornerpoint(mesh.GetNP());
     cornerpoint.Clear();
 
     // value = nr > 0 ... refine elements in domain nr
@@ -1824,7 +1835,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
     INDEX_3_HASHTABLE<int> faces(mesh.GetNSE()+1);
     INDEX_2_HASHTABLE<int> face_edges(mesh.GetNSE()+1);
     INDEX_2_HASHTABLE<int> surf_edges(mesh.GetNSE()+1);
-    Array<int, PointIndex::BASE> facepoint(mesh.GetNP());
+    NgArray<int, PointIndex::BASE> facepoint(mesh.GetNP());
 
     bool sing = CheckSingularities(mesh, edges, edgepoint_dom, 
 			      cornerpoint, edgepoint, faces, face_edges, 
@@ -1833,7 +1844,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
     if(sing==0) return(sing); 
 
     int cnt_undef = 0, cnt_nonimplement = 0;
-    Array<int> misses(10000);
+    NgArray<int> misses(10000);
     misses = 0;
 
     (*testout) << "edgepoint_dom = " << endl << edgepoint_dom << endl;
@@ -1949,8 +1960,8 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
       }
     
     
-    cout << "undefined elements update classification: " << cnt_undef << endl;
-    cout << "non-implemented in update classification: " << cnt_nonimplement << endl;
+    PrintMessage(3, "undefined elements update classification: ", cnt_undef);
+    PrintMessage(3, "non-implemented in update classification: ", cnt_nonimplement);
 
     for (int i = 0; i < misses.Size(); i++)
       if (misses[i])

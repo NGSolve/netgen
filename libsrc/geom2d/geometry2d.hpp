@@ -9,11 +9,11 @@
 
 #include <myadt.hpp>
 #include <gprim.hpp>
+#include <meshing.hpp>
 
 
 // #include "../gprim/spline.hpp"
 // #include "../gprim/splinegeometry.hpp"
-#include "geom2dmesh.hpp"
 
 namespace netgen
 {
@@ -94,7 +94,7 @@ namespace netgen
       seg->GetCoeff (coeffs);
     }
 
-    virtual void GetPoints (int n, Array<Point<2> > & points) const
+    virtual void GetPoints (int n, NgArray<Point<2> > & points) const
     {
       seg->GetPoints (n, points);
     }
@@ -128,34 +128,62 @@ namespace netgen
 
 
 
-  class SplineGeometry2d : public SplineGeometry<2>, public NetgenGeometry
+  class DLL_HEADER SplineGeometry2d : public SplineGeometry<2>, public NetgenGeometry
   {
   protected:
-    Array<char*> materials;
-    Array<double> maxh;
-    Array<bool> quadmeshing;
+    NgArray<char*> materials;
+    NgArray<double> maxh;
+    NgArray<bool> quadmeshing;
     Array<bool> tensormeshing;
-    Array<int> layer;
-    Array<string*> bcnames;
+    NgArray<int> layer;
+    NgArray<string*> bcnames;
     double elto0 = 1.0;
 
 
   public:
-    DLL_HEADER virtual ~SplineGeometry2d();
+    virtual ~SplineGeometry2d();
 
-    DLL_HEADER void Load (const char * filename);
+    void Load (const filesystem::path & filename);
 
-    DLL_HEADER void LoadData( ifstream & infile );
-    DLL_HEADER void LoadDataNew ( ifstream & infile );
-    DLL_HEADER void LoadDataV2 ( ifstream & infile );
+    void LoadData( ifstream & infile );
+    void LoadDataNew ( ifstream & infile );
+    void LoadDataV2 ( ifstream & infile );
 
     void TestComment ( ifstream & infile ) ;
 
-    void DoArchive(Archive& ar)
+    void DoArchive(Archive& ar) override
     {
       SplineGeometry<2>::DoArchive(ar);
       ar & materials & maxh & quadmeshing & tensormeshing & layer & bcnames & elto0;
     }
+
+    bool ProjectPointGI (int surfind, Point<3> & p, PointGeomInfo & gi) const override
+    {
+      p(2) = 0.0;
+      return true;
+    }
+
+    void PointBetween(const Point<3> & p1, const Point<3> & p2, double secpoint,
+                      int surfi,
+                      const PointGeomInfo & gi1,
+                      const PointGeomInfo & gi2,
+                      Point<3> & newp, PointGeomInfo & newgi) const override
+    {
+      newp = p1+secpoint*(p2-p1);
+      newgi.trignum = 1;
+    }
+
+    void PointBetweenEdge(const Point<3> & p1, const Point<3> & p2, double secpoint,
+                          int surfi1, int surfi2,
+                          const EdgePointGeomInfo & ap1,
+                          const EdgePointGeomInfo & ap2,
+                          Point<3> & newp, EdgePointGeomInfo & newgi) const override;
+
+
+    Vec<3> GetTangent (const Point<3> & p, int surfi1, int surfi2,
+                       const EdgePointGeomInfo & ap1) const override;
+    Vec<3> GetNormal(int surfi1, const Point<3> & p,
+                     const PointGeomInfo* gi) const override;
 
     const SplineSegExt & GetSpline (const int i) const 
     { 
@@ -168,7 +196,7 @@ namespace netgen
     }
 
     
-    DLL_HEADER virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
+    int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam) override;
     
     void PartitionBoundary (MeshingParameters & mp, double h, Mesh & mesh2d);
 
@@ -187,17 +215,52 @@ namespace netgen
       if ( quadmeshing.Size() ) return quadmeshing[domnr-1]; 
       else return false;
     }
+    void SetDomainQuadMeshing ( int domnr, bool quad_meshing )
+    {
+      auto oldsize = quadmeshing.Size();
+
+      if ( oldsize<domnr )
+        {
+          quadmeshing.SetSize(domnr);
+          for(auto dom : IntRange(oldsize, domnr-1))
+              quadmeshing[dom] = false;
+        }
+
+      quadmeshing[domnr-1] = quad_meshing;
+    }
+
     bool GetDomainTensorMeshing ( int domnr ) 
     { 
-      if ( tensormeshing.Size() ) return tensormeshing[domnr-1]; 
+      if ( tensormeshing.Size()>=domnr ) return tensormeshing[domnr-1];
       else return false;
+    }
+    void SetDomainTensorMeshing ( int domnr, bool tm )
+    {
+      if ( tensormeshing.Size()<domnr )
+      {
+        auto oldsize = tensormeshing.Size();
+        tensormeshing.SetSize(domnr);
+        for(auto i : IntRange(oldsize, domnr-1))
+          tensormeshing[i] = false;
+      }
+      tensormeshing[domnr-1] = tm;
     }
     int GetDomainLayer ( int domnr ) 
     { 
       if ( layer.Size() ) return layer[domnr-1]; 
       else return 1;
     }
-
+    void SetDomainLayer (int domnr, int layernr)
+    {
+      auto old_size = layer.Size();
+      if(domnr > old_size)
+        {
+          layer.SetSize(domnr);
+          for(size_t i = old_size; i < domnr; i++)
+            layer[i] = 1;
+        }
+      layer[domnr-1] = layernr;
+    }
 
     string GetBCName (int bcnr) const;
     void SetBCName (int bcnr, string name);
@@ -205,9 +268,6 @@ namespace netgen
     int AddBCName (string name);
 
     string * BCNamePtr ( const int bcnr );
-
-    
-    DLL_HEADER virtual Refinement & GetRefinement () const; 
   };
 }
 

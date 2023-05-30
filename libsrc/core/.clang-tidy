@@ -1,5 +1,8 @@
-Checks: '*,-clang-analyzer-alpha.*,-*braces-around-statements,-fuchsia-*,-google-runtime-references,-readability-implicit-bool-conversion,-google-explicit-constructor,-hicpp-explicit-conversions,-google-runtime-int,-llvm-header-guard,-modernize-pass-by-value'
+Checks: '*,-clang-analyzer-alpha.*,-*braces-around-statements,-fuchsia-*,-google-runtime-references,-readability-implicit-bool-conversion,-google-explicit-constructor,-hicpp-explicit-conversions,-google-runtime-int,-llvm-header-guard,-modernize-pass-by-value,-cppcoreguidelines-non-private-member-variables-in-classes,-misc-non-private-member-variables-in-classes,-readability-magic-numbers,-cppcoreguidelines-avoid-magic-numbers'
 CheckOptions:
         - key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor
           value: 1
+        - key: cppcoreguidelines-macro-usage.AllowedRegexp
+          value: NGCORE_*|NETGEN_*|NG_EXCEPTION*
+
 WarningsAsErrors: '*'

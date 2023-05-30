@@ -6,6 +6,7 @@
 
 #include <meshing.hpp>
 #include <geometry2d.hpp>
+#include <core/register_archive.hpp>
 
 namespace netgen
 {
@@ -20,8 +21,78 @@ namespace netgen
       delete [] materials[i];
   }
 
+  void SplineGeometry2d :: PointBetweenEdge(const Point<3> & p1, const Point<3> & p2, double secpoint,
+                                         int surfi1, int surfi2,
+                                         const EdgePointGeomInfo & ap1,
+                                         const EdgePointGeomInfo & ap2,
+                                         Point<3> & newp, EdgePointGeomInfo & newgi) const
+  {
+    Point<2> p2d;
+    double newdist;
+    auto spline = GetSplines().Get(ap1.edgenr);
+    if( (ap1.dist == 0.0) && (ap2.dist == 0.0) )
+      {
+        // used for manually generated meshes
+        const SplineSeg3<2> * ss3;
+        const LineSeg<2> * ls;
+        auto ext = dynamic_cast<const SplineSegExt *>(spline);
+        if(ext)
+          {
+            ss3 = dynamic_cast<const SplineSeg3<2> *>(ext->seg);
+            ls = dynamic_cast<const LineSeg<2> *>(ext->seg);
+          }
+        else
+          {
+            ss3 = dynamic_cast<const SplineSeg3<2> *>(spline);
+            ls = dynamic_cast<const LineSeg<2> *>(spline);
+          }
+        Point<2> p12d(p1(0),p1(1)), p22d(p2(0),p2(1));
+        Point<2> p1_proj(0.0,0.0), p2_proj(0.0,0.0);
+        double t1_proj = 0.0;
+        double t2_proj = 0.0;
+        if(ss3)
+          {
+            ss3->Project(p12d,p1_proj,t1_proj);
+            ss3->Project(p22d,p2_proj,t2_proj);
+          }
+        else if(ls)
+          {
+            ls->Project(p12d,p1_proj,t1_proj);
+            ls->Project(p22d,p2_proj,t2_proj);
+          }
+        p2d = spline->GetPoint (((1-secpoint)*t1_proj+secpoint*t2_proj));
+        newdist = (1-secpoint)*t1_proj+secpoint*t2_proj;
+      }
+    else
+      {
+        p2d = spline->GetPoint (((1-secpoint)*ap1.dist+secpoint*ap2.dist));
+        newdist = (1-secpoint)*ap1.dist+secpoint*ap2.dist;
+      }
 
-  void SplineGeometry2d :: Load (const char * filename)
+    //  (*testout) << "refine 2d line, ap1.dist, ap2.dist = " << ap1.dist << ", " << ap2.dist << endl;
+    //  (*testout) << "p1, p2 = " << p1 << p2 << ", newp = " << p2d << endl;
+
+    newp = Point3d (p2d(0), p2d(1), 0);
+    newgi.edgenr = ap1.edgenr;
+    newgi.dist = newdist;
+  };
+
+
+
+  Vec<3> SplineGeometry2d :: GetTangent(const Point<3> & p, int surfi1, int surfi2,
+                                     const EdgePointGeomInfo & ap1) const
+  {
+    Vec<2> t2d = GetSplines().Get(ap1.edgenr) -> GetTangent(ap1.dist);
+    return Vec<3> (t2d(0), t2d(1), 0);
+  }
+
+  Vec<3> SplineGeometry2d :: GetNormal(int surfi1, const Point<3> & p,
+                                       const PointGeomInfo* gi) const
+  {
+    return Vec<3> (0,0,1);
+  }
+
+  void SplineGeometry2d :: Load (const filesystem::path & filename)
   {
 
     ifstream infile;
@@ -33,7 +104,7 @@ namespace netgen
   
     if ( ! infile.good() )
       throw NgException(string ("Input file '") + 
-			string (filename) +
+			filename.string() +
 			string ("' not available!"));
 
     TestComment ( infile );
@@ -138,7 +209,7 @@ namespace netgen
 
 	geompoints.Append (GeomPoint<D>(x, hd));
 	geompoints.Last().hpref = flags.GetDefineFlag ("hpref");
-	geompoints.Last().hmax = 1e99;
+	geompoints.Last().hmax = flags.GetNumFlag("hmax", 1e99);
       }
 
     PrintMessage (3, nump, " points loaded");
@@ -187,7 +258,7 @@ namespace netgen
 	  {
 	    int npts;
 	    infile >> npts;
-	    Array< Point<D> > pts(npts);
+	    NgArray< Point<D> > pts(npts);
 	    for (int j = 0; j < npts; j++)
 	      for(int k=0; k<D; k++)
 		infile >> pts[j](k);
@@ -201,7 +272,6 @@ namespace netgen
 	infile >> spex->reffak;
 	spex -> leftdom = leftdom;
 	spex -> rightdom = rightdom;
-	spex -> hmax = 1e99;
 	splines.Append (spex);
 
 
@@ -233,6 +303,7 @@ namespace netgen
 	    delete bcnames[mybc];
 	    bcnames[mybc] = new string (flags.GetStringFlag("bcname","") );
 	  }
+	spex -> hmax = flags.GetNumFlag("hmax", 1e99);
       }
   }
 
@@ -358,7 +429,7 @@ namespace netgen
 	  {
 	    int npts;
 	    infile >> npts;
-	    Array< Point<D> > pts(npts);
+	    NgArray< Point<D> > pts(npts);
 	    for (int j = 0; j < npts; j++)
 	      for(int k=0; k<D; k++)
 		infile >> pts[j](k);
@@ -489,8 +560,8 @@ namespace netgen
 
     string keyword;
 
-    Array < GeomPoint<D> > infilepoints (0);
-    Array <int> pointnrs (0);
+    NgArray < GeomPoint<D> > infilepoints (0);
+    NgArray <int> pointnrs (0);
     nump = 0;
     int numdomains = 0;
 
@@ -654,7 +725,7 @@ namespace netgen
 		  {
 		    int npts;
 		    infile >> npts;
-		    Array< Point<D> > pts(npts);
+		    NgArray< Point<D> > pts(npts);
 		    for (int j = 0; j < npts; j++)
 		      for(int k=0; k<D; k++)
 			infile >> pts[j](k);
@@ -666,7 +737,7 @@ namespace netgen
 		    int npts,order;
 		    infile >> npts;    
 		    infile >> order;
-		    Array< Point<D> > pts(npts);
+		    NgArray< Point<D> > pts(npts);
 		    for (int j = 0; j < npts; j++)
 		      for(int k=0; k<D; k++)
 			infile >> pts[j](k);	    		    
@@ -830,7 +901,7 @@ namespace netgen
   /*
   void CalcPartition (const SplineSegExt & spline,
 		      double l, double h, double h1, double h2,
-		      double hcurve, double elto0, Array<double> & points)
+		      double hcurve, double elto0, NgArray<double> & points)
   {
     double fperel, oldf, f;
 
@@ -988,36 +1059,36 @@ namespace netgen
 
   int SplineGeometry2d :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
   {
-    MeshFromSpline2D (*this, mesh, mparam);
+    if(restricted_h.Size())
+      {
+        // copy so that we don't change mparam outside
+        MeshingParameters mp = mparam;
+        for(const auto& [pnt, maxh] : restricted_h)
+          mp.meshsize_points.Append({pnt, maxh});
+        MeshFromSpline2D (*this, mesh, mp);
+      }
+    else
+      MeshFromSpline2D (*this, mesh, mparam);
     return 0;
   }
-
-
-  Refinement & SplineGeometry2d :: GetRefinement () const
-  {
-    return * new Refinement2d (*this);
-  }
-
-
 
   class SplineGeometryRegister : public GeometryRegister
   {
   public:
-    virtual NetgenGeometry * Load (string filename) const;
+    virtual NetgenGeometry * Load (const filesystem::path & filename) const;
   };
 
-  NetgenGeometry *  SplineGeometryRegister :: Load (string filename) const
+  NetgenGeometry *  SplineGeometryRegister :: Load (const filesystem::path & filename) const
   {
-    const char * cfilename = filename.c_str();
-    if (strcmp (&cfilename[strlen(cfilename)-4], "in2d") == 0)
+    string ext = ToLower(filename.extension());
+    if (ext == ".in2d")
       {
-	PrintMessage (1, "Load 2D-Spline geometry file ", cfilename);
-	
+	PrintMessage (1, "Load 2D-Spline geometry file ", filename);
 
-	ifstream infile(cfilename);
+	ifstream infile(filename);
 
 	SplineGeometry2d * hgeom = new SplineGeometry2d();
-	hgeom -> Load (cfilename);
+	hgeom -> Load (filename);
 	return hgeom;
       }
     

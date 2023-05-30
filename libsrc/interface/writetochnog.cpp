@@ -20,11 +20,11 @@ namespace netgen
 
 
 void WriteTochnogFormat (const Mesh & mesh,
-			 const string & filename)
+			 const filesystem::path & filename)
 {
   cout << "\nWrite Tochnog Volume Mesh" << endl;
 
-  ofstream outfile (filename.c_str());
+  ofstream outfile (filename);
 
   outfile << "(Nodes and Elements generated with NETGEN" << endl;
   outfile << " " << filename << ")" << endl;

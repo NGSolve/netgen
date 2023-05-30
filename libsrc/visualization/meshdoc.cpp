@@ -119,9 +119,6 @@ void VisualSceneMeshDoctor :: DrawScene ()
 
 void VisualSceneMeshDoctor :: BuildScene (int zoomall)
 {
-  int i, j;
- 
-  
   if (zoomall)
     {
       Point3d pmin, pmax;
@@ -159,15 +156,16 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
   
   glDisable (GL_COLOR_MATERIAL);
     
-  for (i = 1; i <= mesh->GetNSE(); i++)
+  for (int i = 1; i <= mesh->GetNSE(); i++)
     {
       glLoadName (i);
 
       // copy to be thread-safe
-      Element2d el = mesh->SurfaceElement (i);
+      // Element2d el = mesh->SurfaceElement (i);
+      Element2d el = (*mesh)[SurfaceElementIndex(i-1)];
 
       int drawel = 1;
-      for (j = 1; j <= el.GetNP(); j++)
+      for (int j = 1; j <= el.GetNP(); j++)
 	{
 	  if (!el.PNum(j))
 	    drawel = 0;
@@ -245,7 +243,7 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
 	    { 3, 5, 4 },
 	    { 4, 5, 6 } };
 
-	  for (j = 0; j < 4; j++)
+	  for (int j = 0; j < 4; j++)
 	    {
 	      const Point3d & lp1 = mesh->Point (el.PNum(trigs[j][0]));
 	      const Point3d & lp2 = mesh->Point (el.PNum(trigs[j][1]));
@@ -275,12 +273,12 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
   glColor3f (0.0f, 0.0f, 0.0f);
   glEnable (GL_COLOR_MATERIAL);
   
-  for (i = 1; i <= mesh->GetNSE(); i++)
+  for (int i = 1; i <= mesh->GetNSE(); i++)
     {
-      Element2d el = mesh->SurfaceElement(i);
+      Element2d el = (*mesh)[SurfaceElementIndex(i-1)];
 
       int drawel = 1;
-      for (j = 1; j <= el.GetNP(); j++)
+      for (int j = 1; j <= el.GetNP(); j++)
 	{
 	  if (!el.PNum(j))
 	    drawel = 0;
@@ -372,7 +370,7 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
 
   glLineWidth (2.0f);
 
-  for (i = 1; i <= mesh->GetNSeg(); i++)
+  for (int i = 1; i <= mesh->GetNSeg(); i++)
     {
       const Segment & seg = mesh->LineSegment(i);
       const Point3d & p1 = mesh->Point(seg[0]);
@@ -498,14 +496,14 @@ void VisualSceneMeshDoctor :: SetMarkEdgeDist (int dist)
 void VisualSceneMeshDoctor :: ClickElement (int elnr)
 {
   selelement = elnr;
-
   int oldlocpi = locpi;
   locpi = locpi % 3 + 1;
   
   if (selelement > 0 && selelement <= mesh->GetNSE())
     {
-      selpoint = mesh->SurfaceElement(selelement).PNum(locpi);
-      selpoint2 = mesh->SurfaceElement(selelement).PNum(oldlocpi);
+      SurfaceElementIndex sei(elnr-1);
+      selpoint = (*mesh)[sei].PNum(locpi);
+      selpoint2 = (*mesh)[sei].PNum(oldlocpi);
       cout << "selpts = " << selpoint << ", " << selpoint2 << endl;
     }
 

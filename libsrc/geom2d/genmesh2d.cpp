@@ -14,33 +14,48 @@ namespace netgen
 		      // double l, 
 		      MeshingParameters & mp, Mesh & mesh, 
 		      // double h, double h1, double h2, double hcurve, 
-		      double elto0, Array<double> & points)
+		      double elto0, NgArray<double> & points)
   {
     double fperel, oldf, f;
 
-    int n = 10000;
-    
-    Array<Point<2> > xi(n);
-    Array<double> hi(n);
-    
-    for (int i = 0; i < n; i++)
+    int n = 1;
+    NgArray<Point<2> > xi;
+    NgArray<double> hi;
+
+    // do one extra step
+    int not_fine_enough = 2;
+
+    while(not_fine_enough && n < 10000)
+    {
+      not_fine_enough--;
+      n*=4;
+
+      xi.SetSize(n);
+      hi.SetSize(n);
+
+      for (int i = 0; i < n; i++)
       {
-	xi[i] = spline.GetPoint ( (i+0.5) / n );
-	hi[i] = mesh.GetH (Point<3> (xi[i](0), xi[i](1), 0));
+        xi[i] = spline.GetPoint ( (i+0.5) / n );
+        hi[i] = mesh.GetH (Point<3> (xi[i](0), xi[i](1), 0));
       }
 
-    // limit slope
-    double gradh = min(1/elto0,mp.grading);
-    for (int i = 0; i < n-1; i++)
+      // limit slope
+      double gradh = min(1/elto0,mp.grading);
+      for (int i = 0; i < n-1; i++)
       {
-	double hnext = hi[i] + gradh * (xi[i+1]-xi[i]).Length();
-	hi[i+1] = min(hi[i+1], hnext);
+        double hnext = hi[i] + gradh * (xi[i+1]-xi[i]).Length();
+        if(hnext > 2*hi[i])
+          not_fine_enough = 2;
+        hi[i+1] = min(hi[i+1], hnext);
       } 
-    for (int i = n-1; i > 1; i--)
+      for (int i = n-1; i > 1; i--)
       {
-	double hnext = hi[i] + gradh * (xi[i-1]-xi[i]).Length();
-	hi[i-1] = min(hi[i-1], hnext);
+        double hnext = hi[i] + gradh * (xi[i-1]-xi[i]).Length();
+        if(hnext > 2*hi[i])
+          not_fine_enough = 2;
+        hi[i-1] = min(hi[i-1], hnext);
       }
+    }
 
     points.SetSize (0);
 
@@ -98,7 +113,7 @@ namespace netgen
     int n = 100;
 
     Point<2> mark, oldmark;
-    Array<double> curvepoints;
+    NgArray<double> curvepoints;
     double edgelength, edgelengthold;
 
     CalcPartition (spline, mp, mesh, elto0, curvepoints);
@@ -111,7 +126,7 @@ namespace netgen
     double lold = 0;
     oldmark = pold;
     edgelengthold = 0;
-    Array<int> locsearch;
+    NgArray<int> locsearch;
     
     for (int i = 1; i <= n; i++)
       {
@@ -233,13 +248,22 @@ namespace netgen
 	double hr = GetDomainMaxh (spline.rightdom);
 	if (hr > 0) hcurve = min2 (hcurve, hr);
 
-	int np = 1000;
-	for (double t = 0.5/np; t < 1; t += 1.0/np)
-	  {
-	    Point<2> x = spline.GetPoint(t);
-	    double hc = 1.0/mp.curvaturesafety / (1e-99+spline.CalcCurvature (t));
-	    mesh2d.RestrictLocalH (Point<3> (x(0), x(1), 0), min2(hc, hcurve));
-	  }
+        // skip curvature restrictions for straight lines
+        if(spline.MaxCurvature()==0)
+        {
+          mesh2d.RestrictLocalHLine (Point<3>(p1(0),p1(1),0), 
+                                     Point<3>(p2(0),p2(1),0), hcurve);
+        }
+        else
+        {
+          int np = 1000;
+          for (double t = 0.5/np; t < 1; t += 1.0/np)
+            {
+              Point<2> x = spline.GetPoint(t);
+              double hc = 1.0/mp.curvaturesafety / (1e-99+spline.CalcCurvature (t));
+              mesh2d.RestrictLocalH (Point<3> (x(0), x(1), 0), min2(hc, hcurve));
+            }
+        }
       }
     
     for (auto mspnt : mp.meshsize_points)
@@ -278,6 +302,11 @@ namespace netgen
 	      {
 		npi = mesh2d.AddPoint (newp, layer);
 		searchtree.Insert (newp, npi);
+                mesh2d.AddLockedPoint(npi);
+                Element0d el(npi, npi);
+                el.name = "";
+                mesh2d.SetCD2Name(npi, "");
+                mesh2d.pointelements.Append (el);
 	      }
           }
     }
@@ -308,55 +337,50 @@ namespace netgen
 
   void SplineGeometry2d :: CopyEdgeMesh (int from, int to, Mesh & mesh, Point3dTree & searchtree)
   {
-    // const int D = 2;
-
-    Array<int, PointIndex::BASE> mappoints (mesh.GetNP());
-    Array<double, PointIndex::BASE> param (mesh.GetNP());
-    mappoints = -1;
+    Array<PointIndex, PointIndex> mappoints (mesh.GetNP());
+    Array<double, PointIndex> param (mesh.GetNP());
+    mappoints = PointIndex::INVALID;
     param = 0;
 
     Point3d pmin, pmax;
     mesh.GetBox (pmin, pmax);
     double diam2 = Dist2(pmin, pmax);
 
-    if (printmessage_importance>0)
-      cout << "copy edge, from = " << from << " to " << to << endl;
+    PrintMessage(3, string("Copy edge, from ") + ToString(from) + " to " + ToString(to));
   
-    for (int i = 1; i <= mesh.GetNSeg(); i++)
+    for (const auto& seg : mesh.LineSegments())
       {
-	const Segment & seg = mesh.LineSegment(i);
 	if (seg.edgenr == from)
 	  {
-	    mappoints.Elem(seg[0]) = 1;
-	    param.Elem(seg[0]) = seg.epgeominfo[0].dist;
+	    mappoints[seg[0]] = 1;
+	    param[seg[0]] = seg.epgeominfo[0].dist;
 
-	    mappoints.Elem(seg[1]) = 1;
-	    param.Elem(seg[1]) = seg.epgeominfo[1].dist;
+	    mappoints[seg[1]] = 1;
+	    param[seg[1]] = seg.epgeominfo[1].dist;
 	  }
       }
 
     bool mapped = false;
-    for (int i = 1; i <= mappoints.Size(); i++)
+    for (auto i : Range(mappoints))
       {
-	if (mappoints.Get(i) != -1)
+	if (mappoints[i].IsValid())
 	  {
-	    Point<2> newp = splines.Get(to)->GetPoint (param.Get(i));
+	    Point<2> newp = splines.Get(to)->GetPoint (param[i]);
 	    Point<3> newp3 (newp(0), newp(1), 0);
 	  
-	    int npi = -1;
+	    PointIndex npi = PointIndex::INVALID;
 	  
-	    for (PointIndex pi = PointIndex::BASE; 
-		 pi < mesh.GetNP()+PointIndex::BASE; pi++)
+	    for (auto pi : Range(mesh.Points()))
 	      if (Dist2 (mesh.Point(pi), newp3) < 1e-12 * diam2)
 		npi = pi;
 	  
-	    if (npi == -1)
+	    if (!npi.IsValid())
 	      {
 		npi = mesh.AddPoint (newp3);
 		searchtree.Insert (newp3, npi);
 	      }
 
-	    mappoints.Elem(i) = npi;
+	    mappoints[i] = npi;
 
 	    mesh.GetIdentifications().Add (i, npi, to);
 	    mapped = true;
@@ -375,15 +399,15 @@ namespace netgen
 	    Segment nseg;
 	    nseg.edgenr = to;
 	    nseg.si = GetSpline(to-1).bc;      // splines.Get(to)->bc;
-	    nseg[0] = mappoints.Get(seg[0]);
-	    nseg[1] = mappoints.Get(seg[1]);
+	    nseg[0] = mappoints[seg[0]];
+	    nseg[1] = mappoints[seg[1]];
 	    nseg.domin = GetSpline(to-1).leftdom;
 	    nseg.domout = GetSpline(to-1).rightdom;
 	  
 	    nseg.epgeominfo[0].edgenr = to;
-	    nseg.epgeominfo[0].dist = param.Get(seg[0]);
+	    nseg.epgeominfo[0].dist = param[seg[0]];
 	    nseg.epgeominfo[1].edgenr = to;
-	    nseg.epgeominfo[1].dist = param.Get(seg[1]);
+	    nseg.epgeominfo[1].dist = param[seg[1]];
 	    mesh.AddSegment (nseg);
 	  }
       }
@@ -397,10 +421,16 @@ namespace netgen
 			 shared_ptr<Mesh> & mesh, 
 			 MeshingParameters & mp)
   {
+    static Timer tall("MeshFromSpline2D"); RegionTimer rtall(tall);
+    static Timer t_h("SetH");
+    static Timer t_tensor("tensor domain meshing");
+    static Timer t_part_boundary("PartitionBoundary");
+    static Timer t_hpref("mark hpref points");
     PrintMessage (1, "Generate Mesh from spline geometry");
 
     Box<2> bbox = geometry.GetBoundingBox ();
-
+    bbox.Increase (1e-2*bbox.Diam());
+    t_h.Start();
     if (bbox.Diam() < mp.maxh) 
       mp.maxh = bbox.Diam();
 
@@ -417,11 +447,14 @@ namespace netgen
 
     
 
+    t_part_boundary.Start();
     geometry.PartitionBoundary (mp, mp.maxh, *mesh);
+    t_part_boundary.Stop();
     
     PrintMessage (3, "Boundary mesh done, np = ", mesh->GetNP());
 
 
+    t_hpref.Start();
     // marks mesh points for hp-refinement
     for (int i = 0; i < geometry.GetNP(); i++)
       if (geometry.GetPoint(i).hpref)
@@ -439,6 +472,7 @@ namespace netgen
 	      }
 	  (*mesh)[mpi].Singularity(geometry.GetPoint(i).hpref);
 	}
+    t_hpref.Stop();
 
 
     int maxdomnr = 0;
@@ -448,11 +482,21 @@ namespace netgen
 	if ( (*mesh)[si].domout > maxdomnr) maxdomnr = (*mesh)[si].domout;
       }
 
+    TableCreator<const Segment*> dom2seg_creator(maxdomnr+1);
+    for ( ; !dom2seg_creator.Done(); dom2seg_creator++)
+      for (const Segment & seg : mesh->LineSegments())
+        {
+          dom2seg_creator.Add (seg.domin, &seg);
+          if (seg.domin != seg.domout)
+            dom2seg_creator.Add (seg.domout, &seg);
+        }
+    auto dom2seg = dom2seg_creator.MoveTable();
+    
     mesh->ClearFaceDescriptors();
     for (int i = 1; i <= maxdomnr; i++)
       mesh->AddFaceDescriptor (FaceDescriptor (i, 0, 0, i));
 
-    // set Array<string*> bcnames... 
+    // set NgArray<string*> bcnames... 
     // number of bcnames
     int maxsegmentindex = 0;
     for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
@@ -463,10 +507,8 @@ namespace netgen
     for ( int sindex = 0; sindex < maxsegmentindex; sindex++ )
       mesh->SetBCName ( sindex, geometry.GetBCName( sindex+1 ) );
 
-    for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
-      (*mesh)[si].SetBCName ( (*mesh).GetBCNamePtr( (*mesh)[si].si-1 ) );
-  
     mesh->CalcLocalH(mp.grading);
+    t_h.Stop();
 
     int bnp = mesh->GetNP(); // boundary points
     auto BndPntRange = mesh->Points().Range();
@@ -477,10 +519,11 @@ namespace netgen
     for (int domnr = 1; domnr <= maxdomnr; domnr++)
       if (geometry.GetDomainTensorMeshing (domnr))
         { // tensor product mesh
+          RegionTimer rt(t_tensor);
           
-          Array<PointIndex, PointIndex::BASE> nextpi(bnp);
-          Array<int, PointIndex::BASE> si1(bnp), si2(bnp);
-          PointIndex firstpi;
+          NgArray<PointIndex, PointIndex::BASE> nextpi(bnp);
+          NgArray<int, PointIndex::BASE> si1(bnp), si2(bnp);
+          // PointIndex firstpi;
           
           nextpi = -1;
           si1 = -1;
@@ -518,7 +561,7 @@ namespace netgen
 
 
 
-          Array<PointIndex> pts ( (nex+1) * (ney+1) );   // x ... inner loop
+          NgArray<PointIndex> pts ( (nex+1) * (ney+1) );   // x ... inner loop
           pts = -1;
 
           for (PointIndex pi = c1, i = 0; pi != c2; pi = nextpi[pi], i++)
@@ -532,11 +575,16 @@ namespace netgen
 
 
           for (PointIndex pix = nextpi[c1], ix = 0; pix != c2; pix = nextpi[pix], ix++)
+          {
+            Point<3> px = (*mesh)[pix];
             for (PointIndex piy = nextpi[c2], iy = 0; piy != c3; piy = nextpi[piy], iy++)
               {
-                Point<3> p = (*mesh)[pix] + ( (*mesh)[piy] - (*mesh)[c2] );
-                pts[(nex+1)*(iy+1) + ix+1] = mesh -> AddPoint (p , 1, FIXEDPOINT);
+                double lam = Dist((*mesh)[piy],(*mesh)[c2]) / Dist((*mesh)[c3],(*mesh)[c2]);
+                auto pix1 = pts[(nex+1)*ney+ix+1];
+                auto pnew = px + lam*((*mesh)[pix1]-px);
+                pts[(nex+1)*(iy+1) + ix+1] = mesh -> AddPoint (pnew, 1, FIXEDPOINT);
               }
+          }
 
           for (int i = 0; i < ney; i++)
             for (int j = 0; j < nex; j++)
@@ -550,13 +598,20 @@ namespace netgen
 
                 mesh -> AddSurfaceElement (el);
               }
+          char* material;
+          geometry.GetMaterial(domnr, material);
+          if(material)
+            mesh->SetMaterial(domnr, material);
         }
 
 
 
 
+    static Timer t_domain("Mesh domain");
+    static Timer t_points("Mesh domain - find points");
     for (int domnr = 1; domnr <= maxdomnr; domnr++)
       {
+        RegionTimer rt(t_domain);
         if (geometry.GetDomainTensorMeshing (domnr)) continue;
         
         double h = mp.maxh;
@@ -570,21 +625,45 @@ namespace netgen
 
         mp.quad = hquad || geometry.GetDomainQuadMeshing (domnr);
 
-	Meshing2 meshing (mp, Box<3> (pmin, pmax));
+	Meshing2 meshing (geometry, mp, Box<3> (pmin, pmax));
 
-	Array<int, PointIndex::BASE> compress(bnp);
+	NgArray<int, PointIndex::BASE> compress(mesh->GetNP());
 	compress = -1;
 	int cnt = 0;
-        for (PointIndex pi : BndPntRange)
-	  if ( (*mesh)[pi].GetLayer() == geometry.GetDomainLayer(domnr))
-	    {
-	      meshing.AddPoint ((*mesh)[pi], pi);
-	      cnt++;
-	      compress[pi] = cnt;
-	    }
+
+        t_points.Start();
+        /*
+        for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
+        {
+          const auto & s = (*mesh)[si];
+          if ( s.domin==domnr || s.domout==domnr )
+          {
+            for (auto pi : {s[0], s[1]})
+            {
+              if(compress[pi]==-1)
+              {
+                meshing.AddPoint((*mesh)[pi], pi);
+                cnt++;
+                compress[pi] = cnt;
+              }
+            }
+          }
+        }
+        */
+        for (const Segment * seg : dom2seg[domnr])
+          if (seg->domin==domnr || seg->domout==domnr )
+            for (auto pi : {(*seg)[0], (*seg)[1]})
+              if (compress[pi]==-1)
+                {
+                  meshing.AddPoint((*mesh)[pi], pi);
+                  cnt++;
+                  compress[pi] = cnt;
+                }
+
 
 	PointGeomInfo gi;
 	gi.trignum = 1;
+        /*
 	for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
 	  {
 	    if ( (*mesh)[si].domin == domnr)
@@ -598,13 +677,31 @@ namespace netgen
                                             compress[(*mesh)[si][0]], gi, gi);
 	      }
 	  }
+        */
 
-        // not complete, use at own risk ...
-        // meshing.Delaunay(*mesh, domnr, mp);
-        mp.checkoverlap = 0;
-        auto res = meshing.GenerateMesh (*mesh, mp, h, domnr);
-        if (res != 0)
-          throw NgException("meshing failed");
+	for (const Segment * seg : dom2seg[domnr])
+	  {
+	    if (seg->domin == domnr)
+              meshing.AddBoundaryElement (compress[(*seg)[0]], 
+                                          compress[(*seg)[1]], gi, gi);
+            
+	    if (seg->domout == domnr)
+              meshing.AddBoundaryElement (compress[(*seg)[1]],
+                                          compress[(*seg)[0]], gi, gi);
+	  }
+
+        
+        t_points.Stop();
+
+        if(mp.delaunay2d && cnt>1)
+          meshing.Delaunay(*mesh, domnr, mp);
+        else
+        {
+          // mp.checkoverlap = 0;
+          auto res = meshing.GenerateMesh (*mesh, mp, h, domnr);
+          if (res != 0)
+            throw NgException("meshing failed");
+        }
         
 	for (SurfaceElementIndex sei = oldnf; sei < mesh->GetNSE(); sei++)
 	  (*mesh)[sei].SetIndex (domnr);
@@ -615,6 +712,8 @@ namespace netgen
 	if (material)
           mesh->SetMaterial (domnr, material);
       }
+
+    mesh->Compress();
 
     mp.quad = hquad;
 

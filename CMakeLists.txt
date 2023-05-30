@@ -2,23 +2,26 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING INTERNAL)
 endif(NOT CMAKE_BUILD_TYPE)
 
-if(WIN32)
-  # we are linking to object libraries on Windows
-  cmake_minimum_required(VERSION 3.12)
-else(WIN32)
-  cmake_minimum_required(VERSION 3.1.3)
-endif(WIN32)
+cmake_minimum_required(VERSION 3.13)
+cmake_policy(VERSION 3.13)
 
-if(NOT WIN32)
-    option( USE_NATIVE_ARCH  "build which -march=native" ON)
-endif(NOT WIN32)
+include (CMakeDependentOption)
+option( USE_NATIVE_ARCH  "build for native cpu architecture" ON)
 
-option( USE_GUI     "don't build netgen with GUI" ON )
+option( USE_GUI     "build with GUI" ON )
 option( USE_PYTHON  "build with python interface" ON )
+cmake_dependent_option( PREFER_SYSTEM_PYBIND11  "Use system wide PyBind11" OFF "USE_PYTHON" OFF)
 option( USE_MPI     "enable mpi parallelization" OFF )
-option( USE_OCC     "(not supported) compile with OpenCascade geometry kernel" OFF)
+option( USE_MPI4PY  "enable mpi4py interface" ON )
+option( USE_OCC     "build with OpenCascade geometry kernel interface" OFF)
+option( USE_STLGEOM     "build with STL geometry support" ON)
+option( USE_CSG     "build with CSG kernel" ON)
+option( USE_INTERFACE     "build nginterface" ON)
+option( USE_GEOM2D     "build 2d geometry kernels" ON)
 option( USE_JPEG    "enable snapshots using library libjpeg" OFF )
 option( USE_MPEG    "enable video recording with FFmpeg, uses libavcodec" OFF )
+option( USE_CGNS    "enable CGNS file read/write support" OFF )
+option( USE_NUMA         "compile with NUMA-aware code")
 option( INTEL_MIC        "cross compile for intel xeon phi")
 option( INSTALL_PROFILES "install environment variable settings to /etc/profile.d" OFF )
 option( USE_CCACHE       "use ccache")
@@ -28,8 +31,17 @@ option( ENABLE_CPP_CORE_GUIDELINES_CHECK "Enable cpp core guideline checks on ng
 option( USE_SPDLOG "Enable spd log logging" OFF)
 option( DEBUG_LOG "Enable more debug output (may increase computation time) - only works with USE_SPDLOG=ON" OFF)
 option( CHECK_RANGE "Check array range access, automatically enabled if built in debug mode" OFF)
+option( BUILD_STUB_FILES "Build stub files for better autocompletion" ON)
+option( BUILD_FOR_CONDA "Link python libraries only to executables" OFF)
 
-option( USE_SUPERBUILD       "use ccache" ON)
+option( USE_SUPERBUILD       "build dependencies automatically" ON)
+option( TRACE_MEMORY     "Enable memory tracing" OFF)
+
+set(NG_COMPILE_FLAGS "" CACHE STRING "Additional compile flags")
+
+set(NGLIB_LIBRARY_TYPE SHARED CACHE STRING "nglib library type")
+set(NGCORE_LIBRARY_TYPE SHARED CACHE STRING "ngcore library type")
+set(NGGUI_LIBRARY_TYPE SHARED CACHE STRING "nggui library type")
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_modules")
 
@@ -48,14 +60,14 @@ if(INSTALL_DIR)
   set(INSTALL_DIR_DEFAULT ${INSTALL_DIR})
 endif(INSTALL_DIR)
 
-if(UNIX)
+if(UNIX AND USE_SUPERBUILD)
   message("Checking for write permissions in install directory...")
   execute_process(COMMAND mkdir -p ${CMAKE_INSTALL_PREFIX})
   execute_process(COMMAND test -w ${CMAKE_INSTALL_PREFIX} RESULT_VARIABLE res)
   if(res)
     message(WARNING "No write access at install directory, please set correct permissions")
   endif()
-endif(UNIX)
+endif(UNIX AND USE_SUPERBUILD)
 
 if (USE_SUPERBUILD)
   project (SUPERBUILD)
@@ -74,12 +86,10 @@ else()
   endif()
 endif()
 
-set(NETGEN_VERSION_MAJOR 6)
-set(NETGEN_VERSION_MINOR 2)
-string(TIMESTAMP NETGEN_VERSION_PATCH "%y%U%w" )
-set(NETGEN_VERSION "${NETGEN_VERSION_MAJOR}.${NETGEN_VERSION_MINOR}-dev")
-set(PACKAGE_VERSION "${NETGEN_VERSION_MAJOR}.${NETGEN_VERSION_MINOR}-${NETGEN_VERSION_PATCH}")
-set(CPACK_PACKAGE_VERSION "${PACKAGE_VERSION}")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+include (${CMAKE_CURRENT_LIST_DIR}/cmake/generate_version_file.cmake)
+set(CPACK_PACKAGE_VERSION "${NETGEN_VERSION}")
 
 
 #######################################################################
@@ -89,11 +99,6 @@ if(USE_CCACHE)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_FOUND})
   endif(CCACHE_FOUND)
 endif(USE_CCACHE)
-
-#######################################################################
-if(USE_NATIVE_ARCH)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
-endif(USE_NATIVE_ARCH)
 
 #######################################################################
 if(INTEL_MIC)
@@ -114,6 +119,7 @@ endif (ADDITIONAL_PATHS)
 #######################################################################
 # build options
 include_directories ("${PROJECT_SOURCE_DIR}/include")
+include_directories ("${PROJECT_SOURCE_DIR}/libsrc")
 include_directories ("${PROJECT_SOURCE_DIR}/libsrc/include")
 include_directories ("${PROJECT_BINARY_DIR}")
 
@@ -121,7 +127,9 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 if(USE_PYTHON)
     find_package(PythonInterp 3 REQUIRED)
-    find_package(PythonLibs 3 REQUIRED)
+    if(NOT BUILD_FOR_CONDA)
+      find_package(PythonLibs 3 REQUIRED)
+    endif()
 
     execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1,0,''))" OUTPUT_VARIABLE PYTHON_PACKAGES_INSTALL_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
     file(TO_CMAKE_PATH ${PYTHON_PACKAGES_INSTALL_DIR} PYTHON_PACKAGES_INSTALL_DIR)
@@ -189,13 +197,16 @@ install(EXPORT netgen-targets DESTINATION ${NG_INSTALL_DIR_CMAKE} COMPONENT netg
 
 set(CMAKE_MACOSX_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH "${NG_RPATH_TOKEN};${NG_RPATH_TOKEN}/${NETGEN_RPATH}")
+if(BUILD_FOR_CONDA)
+    file(RELATIVE_PATH py_rpath "/bin" "/${NG_INSTALL_DIR_LIB}")
+    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH};${py_rpath}")
+endif(BUILD_FOR_CONDA)
 
 include (CheckIncludeFiles)
 check_include_files (dlfcn.h HAVE_DLFCN_H)
 if(HAVE_DLFCN_H)
   add_definitions(-DHAVE_DLFCN_H)
 endif()
-add_definitions(-DNETGEN_VERSION="${NETGEN_VERSION}")
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -215,90 +226,193 @@ macro(get_dll_from_lib dll_path lib_path)
         get_filename_component(lib_name ${lib} name)
 endmacro()
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_CXX_STANDARD 17)
 if(WIN32)
-    get_WIN32_WINNT(ver)
-    add_definitions(-D_WIN32_WINNT=${ver} -DWNT -DWNT_WINDOW -DNOMINMAX)
     set(CMAKE_MFC_FLAG 0)
-    add_definitions(-DMSVC_EXPRESS -D_CRT_SECURE_NO_WARNINGS -DHAVE_STRUCT_TIMESPEC)
-    # build convenience (aka object) libraries in windows)
-    set(NG_LIB_TYPE OBJECT)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /wd4244 /wd4800")
-else(WIN32)
-    # build shared libraries
-    set(NG_LIB_TYPE SHARED)
 endif(WIN32)
 if(APPLE)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
 endif(APPLE)
 
 #######################################################################
+add_library(nglib ${NGLIB_LIBRARY_TYPE})
+if(USE_GUI)
+    add_library(nggui ${NGGUI_LIBRARY_TYPE})
+    if(WIN32)
+        set_target_properties( nggui PROPERTIES OUTPUT_NAME "libnggui")
+    endif(WIN32)
+endif(USE_GUI)
+
+#######################################################################
 if(NOT ZLIB_INCLUDE_DIRS)
   find_package(ZLIB REQUIRED)
 endif(NOT ZLIB_INCLUDE_DIRS)
-include_directories(${ZLIB_INCLUDE_DIRS})
+target_include_directories(nglib PRIVATE ${ZLIB_INCLUDE_DIRS})
+if(USE_GUI)
+    target_include_directories(nggui PRIVATE ${ZLIB_INCLUDE_DIRS})
+endif(USE_GUI)
+target_link_libraries(nglib PRIVATE ${ZLIB_LIBRARIES})
 
 #######################################################################
+if(WIN32)
+    add_library(netgen_gui INTERFACE IMPORTED)
+else()
+    add_library(netgen_gui INTERFACE)
+endif()
+
 if (USE_GUI)
     find_package(TCL 8.5 REQUIRED)
+    find_package(TclStub 8.5 REQUIRED)
     find_package(Threads REQUIRED)
     if(APPLE)
           set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -framework AppKit")
+          target_link_libraries(netgen_gui INTERFACE "-framework AppKit")
     else(APPLE)
           find_package(X11 REQUIRED) 
+          target_link_libraries( netgen_gui INTERFACE ${X11_Xmu_LIB} ${X11_X11_LIB})
     endif(APPLE)
     find_package(OpenGL REQUIRED)
 
-    add_definitions(-DTCL -DOPENGL -DUSE_TOGL_2)
-    include_directories(${TCL_INCLUDE_PATH})
-    include_directories(${TK_INCLUDE_PATH})
-    set(LIBTOGL togl)
+    target_compile_definitions(netgen_gui INTERFACE -DTCL -DOPENGL -DUSE_TOGL_2 -DUSE_TCL_STUBS -DUSE_TK_STUBS)
+    target_include_directories(netgen_gui INTERFACE ${TCL_INCLUDE_PATH} ${TK_INCLUDE_PATH})
+    target_link_libraries(netgen_gui INTERFACE ${TCL_STUB_LIBRARY} ${TK_STUB_LIBRARY})
+    if(NOT EXISTS ${TK_INCLUDE_PATH}/tkWin.h AND EXISTS ${TK_INCLUDE_PATH}/../win/tkWin.h)
+       target_include_directories(netgen_gui INTERFACE ${TK_INCLUDE_PATH}/../win)
+    endif()
+    if(NOT EXISTS ${TK_INCLUDE_PATH}/x11/Xlib.h AND EXISTS ${TK_INCLUDE_PATH}/../xlib/X11/Xlib.h)
+       target_include_directories(netgen_gui INTERFACE ${TK_INCLUDE_PATH}/../xlib)
+    endif()
+
+    target_link_libraries(nggui PUBLIC nglib togl PRIVATE "$<BUILD_INTERFACE:netgen_python>" )
 
     if(WIN32)
-        add_definitions(-DTOGL_WGL)
-    else(WIN32)
-        if(APPLE)
-                ADD_DEFINITIONS(-DTOGL_NSOPENGL)
-        else(APPLE)
-                ADD_DEFINITIONS(-DTOGL_X11)
-        endif(APPLE)
-    endif(WIN32)
+      target_compile_definitions(netgen_gui INTERFACE -DTOGL_WGL)
+    endif()
+    if(APPLE)
+      target_compile_definitions(netgen_gui INTERFACE -DTOGL_NSOPENGL)
+    endif()
+    if(UNIX AND NOT APPLE)
+      target_compile_definitions(netgen_gui INTERFACE -DTOGL_X11)
+    endif()
+
 endif (USE_GUI)
 
 #######################################################################
-if (USE_PYTHON)
-    add_subdirectory(external_dependencies/pybind11)
-    add_definitions(-DNG_PYTHON)
-    find_path(PYBIND_INCLUDE_DIR pybind11/pybind11.h HINTS ${PYTHON_INCLUDE_DIR})
-    if( PYBIND_INCLUDE_DIR )
-        message(STATUS "Found Pybind11: ${PYBIND_INCLUDE_DIR}")
-    else( PYBIND_INCLUDE_DIR )
-        message(FATAL_ERROR "Could NOT find pybind11!")
-    endif( PYBIND_INCLUDE_DIR )
+if(WIN32)
+    add_library(netgen_python INTERFACE IMPORTED)
+else()
+    add_library(netgen_python INTERFACE)
+endif()
 
-    include_directories(${PYBIND_INCLUDE_DIR})
-    include_directories(${PYTHON_INCLUDE_DIRS})
+if (USE_PYTHON)
+    if (PREFER_SYSTEM_PYBIND11)
+      set(NG_INSTALL_PYBIND OFF)
+      find_package(pybind11 CONFIG REQUIRED)
+    else()
+      add_subdirectory(external_dependencies/pybind11)
+    endif()
+
+    target_include_directories(netgen_python INTERFACE ${pybind11_INCLUDE_DIR} ${PYTHON_INCLUDE_DIRS})
+    target_include_directories(nglib PRIVATE ${pybind11_INCLUDE_DIR} ${PYTHON_INCLUDE_DIRS})
+    if(NOT ${BUILD_FOR_CONDA} OR WIN32)
+        # Don't link python libraries in conda environments
+        target_link_libraries(netgen_python INTERFACE ${PYTHON_LIBRARIES})
+    endif()
 
     if(NG_INSTALL_PYBIND)
-      install(DIRECTORY ${PYBIND_INCLUDE_DIR}/pybind11 DESTINATION ${NG_INSTALL_DIR_INCLUDE} COMPONENT netgen_devel)
-      install(FILES ${PYBIND_INCLUDE_DIR}/../LICENSE DESTINATION ${NG_INSTALL_DIR_INCLUDE}/pybind11 COMPONENT netgen_devel)
+      install(DIRECTORY ${pybind11_INCLUDE_DIR}/pybind11 DESTINATION ${NG_INSTALL_DIR_INCLUDE} COMPONENT netgen_devel)
+      install(FILES ${pybind11_INCLUDE_DIR}/../LICENSE DESTINATION ${NG_INSTALL_DIR_INCLUDE}/pybind11 COMPONENT netgen_devel)
     endif(NG_INSTALL_PYBIND)
 endif (USE_PYTHON)
 
 #######################################################################
+add_library(netgen_mpi INTERFACE)
+add_library(netgen_metis INTERFACE)
 if (USE_MPI)
     find_package(MPI REQUIRED)
+    target_include_directories(netgen_mpi INTERFACE ${MPI_CXX_INCLUDE_PATH})
+    target_link_libraries(netgen_mpi INTERFACE ${MPI_mpi_LIBRARY} ${MPI_CXX_LIBRARIES} )
+    target_compile_definitions(netgen_mpi INTERFACE PARALLEL )
+
     find_package(METIS REQUIRED)
-    add_definitions(-DPARALLEL -DMETIS)
-    include_directories(${MPI_CXX_INCLUDE_PATH})
-    include_directories(${METIS_INCLUDE_DIR})
+    target_include_directories(netgen_metis INTERFACE ${METIS_INCLUDE_DIR})
+    target_link_libraries(netgen_metis INTERFACE ${METIS_LIBRARY} )
+    target_compile_definitions(netgen_metis INTERFACE METIS )
+
+    if(USE_MPI4PY AND USE_PYTHON)
+      execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import mpi4py;print(mpi4py.get_include())" OUTPUT_VARIABLE mpi4py_path OUTPUT_STRIP_TRAILING_WHITESPACE)
+      find_path(MPI4PY_INCLUDE_DIR mpi4py.h HINTS ${mpi4py_path}/mpi4py NO_DEFAULT_PATH REQUIRED)
+      target_include_directories(netgen_metis INTERFACE ${MPI4PY_INCLUDE_DIR})
+      target_compile_definitions(netgen_metis INTERFACE NG_MPI4PY )
+      message(STATUS "Found mpi4py: ${MPI4PY_INCLUDE_DIR}")
+    endif(USE_MPI4PY AND USE_PYTHON)
 endif (USE_MPI)
+install(TARGETS netgen_mpi netgen_metis ${NG_INSTALL_DIR})
 
 #######################################################################
 if (USE_OCC)
-    find_package(OpenCasCade REQUIRED)
-    add_definitions(-DOCCGEOMETRY -D_OCC64)
-    include_directories(${OCC_INCLUDE_DIR})
+    find_package(OpenCascade NAMES OpenCASCADE opencascade REQUIRED CMAKE_FIND_ROOT_PATH_BOTH)
+    add_definitions(-DOCCGEOMETRY)
+    set(OCC_LIBRARIES
+      TKBO
+      TKBRep
+      TKBool
+      TKCAF
+      TKCDF
+      TKFillet
+      TKG2d
+      TKG3d
+      TKGeomAlgo
+      TKGeomBase
+      TKHLR
+      TKIGES
+      TKLCAF
+      TKMath
+      TKMesh
+      TKOffset
+      TKPrim
+      TKSTEP
+      TKSTEP209
+      TKSTEPAttr
+      TKSTEPBase
+      TKSTL
+      TKService
+      TKShHealing
+      TKTopAlgo
+      TKV3d
+      TKVCAF
+      TKXCAF
+      TKXDEIGES
+      TKXDESTEP
+      TKXSBase
+      TKernel
+    )
+    include_directories(${OpenCASCADE_INCLUDE_DIR})
+    if(NOT OpenCASCADE_BUILD_SHARED_LIBS)
+      if(OpenCASCADE_WITH_FREETYPE)
+        find_library( FREETYPE NAMES freetype HINTS ${OpenCASCADE_INSTALL_PREFIX}/lib)
+        list(APPEND OCC_LIBRARIES ${FREETYPE})
+        if(UNIX AND NOT APPLE)
+          find_package(Fontconfig REQUIRED)
+          list(APPEND OCC_LIBRARIES ${Fontconfig_LIBRARIES})
+        endif()
+      endif(OpenCASCADE_WITH_FREETYPE)
+      if(UNIX AND NOT APPLE)
+        set(THREADS_PREFER_PTHREAD_FLAG ON)
+        find_package(Threads REQUIRED)
+        list(APPEND OCC_LIBRARIES Threads::Threads)
+        list(PREPEND OCC_LIBRARIES -Wl,--start-group)
+        list(APPEND OCC_LIBRARIES -Wl,--end-group)
+      endif()
+      if(WIN32)
+          list(APPEND OCC_LIBRARIES Ws2_32.lib)
+      endif()
+    endif()
+    message(STATUS "OCC DIRS ${OpenCASCADE_INCLUDE_DIR}")
+    if(WIN32 AND USE_GUI)
+      target_link_libraries(nggui PRIVATE ${OCC_LIBRARIES})
+    endif(WIN32 AND USE_GUI)
 endif (USE_OCC)
 
 #######################################################################
@@ -315,6 +429,12 @@ if (USE_MPEG)
     include_directories(${FFMPEG_INCLUDE_DIR})
 endif (USE_MPEG)
 
+#######################################################################
+add_custom_target(ng_generate_version_file
+  ${CMAKE_COMMAND}
+    -DBDIR=${CMAKE_CURRENT_BINARY_DIR}
+    -P ${CMAKE_CURRENT_LIST_DIR}/cmake/generate_version_file.cmake
+    )
 #######################################################################
 if(INSTALL_PROFILES)
     file(WRITE  ${CMAKE_CURRENT_BINARY_DIR}/netgen.sh "#!/bin/sh\n")
@@ -379,18 +499,91 @@ if(ENABLE_CPP_CORE_GUIDELINES_CHECK)
   endif()
 endif(ENABLE_CPP_CORE_GUIDELINES_CHECK)
 
+add_library(netgen_cgns INTERFACE)
+if(USE_CGNS)
+    find_library( CGNS_LIBRARY NAMES cgns cgnsdll )
+    find_path( CGNS_INCLUDE_DIR cgnslib.h )
+    target_compile_definitions(netgen_cgns INTERFACE NG_CGNS)
+    target_include_directories(netgen_cgns INTERFACE ${CGNS_INCLUDE_DIR})
+    target_link_libraries(netgen_cgns INTERFACE ${CGNS_LIBRARY})
+    if(NOT WIN32 AND NOT APPLE) # hdf5 is statically linked into cgns in Windows amd MacOS binaries
+        find_library(HDF5_LIBRARY NAMES hdf5 hdf5_serial)
+        target_link_libraries(netgen_cgns INTERFACE ${HDF5_LIBRARY})
+    endif(NOT WIN32 AND NOT APPLE)
+endif(USE_CGNS)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/netgen_version.hpp ${CMAKE_CURRENT_BINARY_DIR}/netgen_config.hpp DESTINATION ${NG_INSTALL_DIR_INCLUDE}/include COMPONENT netgen_devel)
+
+# include instead of add_subdirectory to recognize the generated source files properly
+include(rules/CMakeLists.txt)
+
+add_subdirectory(windows)
 add_subdirectory(libsrc)
 add_subdirectory(ng)
 add_subdirectory(tutorials)
-if (USE_PYTHON)
-  add_subdirectory(python)
-endif (USE_PYTHON)
 add_subdirectory(py_tutorials)
 add_subdirectory(doc)
-add_subdirectory(windows)
 add_subdirectory(nglib)
 add_subdirectory(tests)
 
+#######################################################################
+if(USE_NATIVE_ARCH)
+    if(WIN32)
+        include(CheckCXXSourceRuns)
+        check_cxx_source_runs("
+                #include <immintrin.h>
+                int main()
+                {
+                    __m256d a{1.,2.,3.,4.};
+                    __m256d b{2.,0.,3.,5.};
+                    __m256d c = _mm256_mul_pd(a,b);
+                    return 0;
+                } " NG_HAVE_AVX)
+        check_cxx_source_runs("
+                #include <immintrin.h>
+                int main()
+                {
+                    __m256i a{1,2,3,4};
+                    __m256i b{2,0,3,5};
+                    __m256i c = _mm256_cmpgt_epi64 (a,b);
+                    return 0;
+                } " NG_HAVE_AVX2)
+        check_cxx_source_runs("
+                #include <immintrin.h>
+                int main()
+                {
+                    __m512d a{1.,2.,3.,4.};
+                    __m512d b{5.,6.,7.,8.};
+                    __m512d c = _mm512_mul_pd(a,b);
+                    return 0;
+                } " NG_HAVE_AVX512)
+
+        if(NG_HAVE_AVX512)
+            target_compile_options(ngcore PUBLIC "/arch:AVX512")
+            message(STATUS "Build for AVX512 CPU")
+        elseif(NG_HAVE_AVX2)
+            target_compile_options(ngcore PUBLIC "/arch:AVX2")
+            message(STATUS "Build for AVX2 CPU")
+        elseif(NG_HAVE_AVX)
+            target_compile_options(ngcore PUBLIC "/arch:AVX")
+            message(STATUS "Build for AVX CPU")
+        else()
+            message(STATUS "Build for generic CPU")
+        endif()
+    elseif(APPLE AND CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
+	# no flag necessary/available on Apple M1
+    else()
+        target_compile_options(ngcore PUBLIC "-march=native")
+    endif(WIN32)
+    if(APPLE)
+        # work-around for bug in Xcode 11.3: https://forums.developer.apple.com/thread/121887
+        target_compile_options(ngcore PUBLIC "-fno-stack-check")
+    endif(APPLE)
+endif(USE_NATIVE_ARCH)
+
+if (USE_PYTHON)
+  add_subdirectory(python)
+endif (USE_PYTHON)
 
 #######################################################################
 # Debian packager
@@ -428,7 +621,7 @@ if(UNIX)
     endif(temp)
 endif(UNIX)
 
-if(APPLE)
+if(APPLE AND NOT SKBUILD)
     # create some auxiliary files
     set(mac_startup ${CMAKE_CURRENT_BINARY_DIR}/startup.sh)
     file(WRITE ${mac_startup} "\
@@ -450,7 +643,7 @@ $Netgen_MACOS/netgen
 #!/bin/sh
 Netgen_BUNDLE=\"`echo \"$0\" | sed -e 's/\\/Contents\\/MacOS\\/Netgen1//'`\"
 Netgen_MACOS=\"$Netgen_BUNDLE/Contents/MacOS\"
-open -a /Applications/Utilities/Terminal.app $Netgen_MACOS/startup.sh
+open -a /Applications/Utilities/Terminal.app $Netgen_MACOS/startup.sh || open -a /System/Applications/Utilities/Terminal.app $Netgen_MACOS/startup.sh
 ")
     install(PROGRAMS ${mac_ngsuite} DESTINATION ${NG_INSTALL_DIR_BIN} RENAME Netgen1)
 
@@ -473,7 +666,7 @@ open -a /Applications/Utilities/Terminal.app $Netgen_MACOS/startup.sh
     install(FILES ${mac_plist} DESTINATION ${NG_INSTALL_DIR_BIN}/../)
     install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/netgen.icns DESTINATION ${NG_INSTALL_DIR_RES}/../ RENAME Netgen.icns)
 
-endif(APPLE)
+endif(APPLE AND NOT SKBUILD)
 
 if(NOT APPLE)
   include(CPack) 

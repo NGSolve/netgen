@@ -3,7 +3,7 @@
 
 namespace netgen
 {
-int printmessage_importance = 5;
+  // int printmessage_importance = 3;
 int printwarnings = 1;
 int printerrors = 1;
 int printdots = 1;
@@ -112,8 +112,8 @@ void PrintTime(const MyStr& s1, const MyStr& s2, const MyStr& s3, const MyStr& s
 }
 
 
-static Array<MyStr*> msgstatus_stack(0);
-static Array<double> threadpercent_stack(0);
+static NgArray<MyStr*> msgstatus_stack(0);
+static NgArray<double> threadpercent_stack(0);
 static MyStr msgstatus = "";
 
 

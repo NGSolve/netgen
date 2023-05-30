@@ -11,25 +11,13 @@
 /* Date:   20. Nov. 99                                                    */
 /**************************************************************************/
 
+#include "mydefs.hpp"
+#include <meshing/visual_interface.hpp>
+
 /*
   Application program interface to Netgen
 
 */
-
-#ifdef WIN32
-   #if NGINTERFACE_EXPORTS || NGLIB_EXPORTS || nglib_EXPORTS
-      #define DLL_HEADER   __declspec(dllexport)
-   #else
-      #define DLL_HEADER   __declspec(dllimport)
-   #endif
-#else
-   #if __GNUC__ >= 4
-      #define DLL_HEADER __attribute__ ((visibility ("default")))
-   #else
-      #define DLL_HEADER
-   #endif
-#endif
-
 
 // max number of nodes per element
 #define NG_ELEMENT_MAXPOINTS 20
@@ -86,7 +74,7 @@ extern "C" {
   // number of surface triangles
   DLL_HEADER int Ng_GetNSE ();
   
-  // Get Point coordintes, index from 1 .. np
+  // Get Point coordinates, index from 1 .. np
   DLL_HEADER void Ng_GetPoint (int pi, double * p);
   
   // Get Element Points
@@ -232,11 +220,13 @@ extern "C" {
   DLL_HEADER int Ng_GetNEdges();
   DLL_HEADER int Ng_GetNFaces();
 
-  
+  [[deprecated("orientation is not supported anymore")]]                          
   DLL_HEADER int Ng_GetElement_Edges (int elnr, int * edges, int * orient = 0);
+  // [[deprecated("orientation is not supported anymore")]]                            
   DLL_HEADER int Ng_GetElement_Faces (int elnr, int * faces, int * orient = 0);
-
+  [[deprecated("orientation is not supported anymore")]]                          
   DLL_HEADER int Ng_GetSurfaceElement_Edges (int selnr, int * edges, int * orient = 0);
+  // [[deprecated("orientation is not supported anymore")]]                            
   DLL_HEADER int Ng_GetSurfaceElement_Face (int selnr, int * orient = 0);
 
   DLL_HEADER void Ng_GetSurfaceElementNeighbouringDomains(const int selnr, int & in, int & out);
@@ -292,7 +282,7 @@ extern "C" {
   int NgPar_GetDistantNodeNums ( int nodetype, int locnum, int * pnums );
   int NgPar_GetNDistantNodeNums ( int nodetype, int locnum );
   
-  int NgPar_GetGlobalNodeNum (int nodetype, int locnum);
+  DLL_HEADER int NgPar_GetGlobalNodeNum (int nodetype, int locnum);
 
 #endif
   
@@ -317,6 +307,9 @@ extern "C" {
   struct Ng_SolutionData
   {
     std::string name;      // name of gridfunction
+    std::string title = ""; // name of gridfunction ( printed on top of window )
+    std::string number_format = "%.3e"; // printf-style string to format colormap values
+    std::string unit = ""; // string to append to last number in colormap (ASCII only)
     double * data;    // solution values
     int components;   // relevant (double) components in solution vector
     int dist;         // # doubles per entry alignment! 
@@ -462,15 +455,6 @@ extern "C" {
     return value is number of nodes
    */
   DLL_HEADER int Ng_GetElementClosureNodes (int dim, int elementnr, int nodeset, int * nodes);
-
-
-  struct Ng_Tcl_Interp;
-  typedef int (Ng_Tcl_CmdProc) (Ng_Tcl_Interp *interp, int argc, const char *argv[]);
-
-  DLL_HEADER void Ng_Tcl_CreateCommand (Ng_Tcl_Interp * interp, 
-                                        const char * cmdName, Ng_Tcl_CmdProc * proc);
-
-  void Ng_Tcl_SetResult (Ng_Tcl_Interp * interp, const char * result);
 }
 
 
@@ -479,10 +463,9 @@ extern "C" {
 
 #ifdef __cplusplus
 #include <iostream>
-namespace netgen 
+namespace ngcore
 {
-  DLL_HEADER extern std::ostream * testout;
-  DLL_HEADER extern int printmessage_importance;
+  NGCORE_API extern int printmessage_importance;
 }
 
 #endif

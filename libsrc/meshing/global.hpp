@@ -27,8 +27,6 @@ namespace netgen
 
   // extern DLL_HEADER MeshingParameters mparam;
 
-  DLL_HEADER extern Array<int> tets_in_qualclass;
-
   DLL_HEADER extern mutex tcl_todo_mutex;
 
   class DLL_HEADER multithreadt

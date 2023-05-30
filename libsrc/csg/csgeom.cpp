@@ -1,5 +1,6 @@
 #include <mystdlib.h>
 #include <myadt.hpp>
+#include <core/register_archive.hpp>
 
 #include <linalg.hpp>
 #include <csg.hpp>
@@ -72,10 +73,97 @@ namespace netgen
     Clean();
   }
 
+  PointGeomInfo CSGeometry :: ProjectPoint(int surfind, Point<3> & p) const
+  {
+    Point<3> hp = p;
+    GetSurface(surfind)->Project (hp);
+    p = hp;
+    return PointGeomInfo();
+  }
+
+  bool CSGeometry :: ProjectPointGI(int surfind, Point<3> & p, PointGeomInfo & gi) const
+  {
+    GetSurface(surfind)->Project (p);
+    return true;
+  }
+
+  void CSGeometry :: ProjectPointEdge(int surfind, INDEX surfind2,
+                                      Point<3> & p, EdgePointGeomInfo* /*unused*/) const
+  {
+    Point<3> hp = p;
+    ProjectToEdge (GetSurface(surfind),
+                   GetSurface(surfind2), hp);
+    p = hp;
+  }
+
+
+  Vec<3> CSGeometry :: GetNormal(int surfind, const Point<3> & p,
+                                 const PointGeomInfo* /*unused*/) const
+  {
+    Vec<3> hn;
+    GetSurface(surfind)->CalcGradient(p, hn);
+    hn.Normalize();
+    return hn;
+  }
+
+  void CSGeometry ::
+  PointBetween(const Point<3> & p1, const Point<3> & p2, double secpoint,
+               int surfi,
+               const PointGeomInfo & gi1,
+               const PointGeomInfo & gi2,
+               Point<3> & newp, PointGeomInfo & newgi) const
+  {
+    Point<3> hnewp;
+    hnewp = p1+secpoint*(p2-p1);
+    if (surfi != -1)
+      {
+        GetSurface (surfi) -> Project (hnewp);
+        newgi.trignum = 1;
+      }
+
+    newp = hnewp;
+  }
+
+  void CSGeometry :: PointBetweenEdge(const Point<3> & p1, const Point<3> & p2, double secpoint,
+               int surfi1, int surfi2,
+               const EdgePointGeomInfo & ap1,
+               const EdgePointGeomInfo & ap2,
+               Point<3> & newp, EdgePointGeomInfo & newgi) const
+  {
+    Point<3> hnewp = p1+secpoint*(p2-p1);
+
+    //(*testout) << "hnewp " << hnewp << " s1 " << surfi1 << " s2 " << surfi2 << endl;
+    if (surfi1 != -1 && surfi2 != -1 && surfi1 != surfi2)
+      {
+        netgen::ProjectToEdge (GetSurface(surfi1),
+                               GetSurface(surfi2),
+                               hnewp);
+        // (*testout) << "Pointbetween, newp = " << hnewp << endl
+        // << ", err = " << sqrt (sqr (hnewp(0))+ sqr(hnewp(1)) + sqr (hnewp(2))) - 1 << endl;
+        newgi.edgenr = 1;
+        //(*testout) << "hnewp (a1) " << hnewp << endl;
+      }
+    else if (surfi1 != -1)
+      {
+        GetSurface (surfi1) -> Project (hnewp);
+        //(*testout) << "hnewp (a2) " << hnewp << endl;
+      }
+
+    newp = hnewp;
+  };
+
+  Vec<3> CSGeometry :: GetTangent(const Point<3> & p, int surfi1, int surfi2,
+                                  const EdgePointGeomInfo & ap1) const
+  {
+    Vec<3> n1 = GetSurface (surfi1)->GetNormalVector (p);
+    Vec<3> n2 = GetSurface (surfi2)->GetNormalVector (p);
+    Vec<3> tau = Cross (n1, n2).Normalize();
+    return tau;
+  }
 
   void CSGeometry :: Clean ()
   {
-    Array< Solid* > to_delete;
+    NgArray< Solid* > to_delete;
     
     for (int i = 0; i < solids.Size(); i++)
       if(!to_delete.Contains(solids[i]->S1()))
@@ -89,9 +177,8 @@ namespace netgen
     
     solids.DeleteAll ();
 
-    for (int i = 0; i < splinecurves2d.Size(); i++)
-      delete splinecurves2d[i];
     splinecurves2d.DeleteAll();
+    splinecurves3d.DeleteAll();
     
     /*
     for (int i = 0; i < surfaces.Size(); i++)
@@ -134,18 +221,18 @@ namespace netgen
 
   int CSGeometry :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
   {
-    return CSGGenerateMesh (*this, mesh, mparam);
+    if(restricted_h.Size())
+      {
+        // copy so that we don't change mparam outside
+        MeshingParameters mp = mparam;
+        for(const auto& [pnt, maxh] : restricted_h)
+          mp.meshsize_points.Append({pnt, maxh});
+        return CSGGenerateMesh (*this, mesh, mp);
+      }
+    else
+      return CSGGenerateMesh (*this, mesh, mparam);
   }
   
-  const Refinement & CSGeometry :: GetRefinement () const
-  {
-    // cout << "get CSGeometry - Refinement" << endl;
-    // should become class variables
-    RefinementSurfaces * ref = new RefinementSurfaces(*this);
-    ref -> Set2dOptimizer(new MeshOptimize2dSurfaces(*this));
-    return *ref;
-  }
-
   class WritePrimitivesIt : public SolidIterator
   {
     ostream & ost;
@@ -162,7 +249,7 @@ namespace netgen
     if (prim)
       {
 	const char * classname;
-	Array<double> coeffs;
+	NgArray<double> coeffs;
 
 	prim -> GetPrimitiveData (classname, coeffs);
 
@@ -177,7 +264,7 @@ namespace netgen
   }
 
 
-  void CSGeometry :: Save (string filename) const
+  void CSGeometry :: Save (const filesystem::path & filename) const
   {
     ofstream ost (filename.c_str());
     Save (ost);
@@ -235,9 +322,9 @@ namespace netgen
   {
     //  CSGeometry * geo = new CSGeometry;
   
-    char key[100], name[100], classname[100], sname[100];
+    char key[100], name[100], classname[100], sname[150];
     int ncoeff, i, j;
-    Array<double> coeff;
+    NgArray<double> coeff;
 
     while (ist.good())
       {
@@ -262,7 +349,7 @@ namespace netgen
 
 	    for (j = 0; j < nprim->GetNSurfaces(); j++)
 	      {
-		sprintf (sname, "%s,%d", name, j);
+		snprintf (sname, size(sname), "%s,%d", name, j);
 		AddSurface (sname, &nprim->GetSurface(j));
 		nprim -> SetSurfaceId (j, GetNSurf());
 	      }
@@ -330,7 +417,7 @@ namespace netgen
       & identpoints & boundingbox & isidenticto & ideps
       & filename & spline_surfaces & splinecurves2d & splinecurves3d & surf2prim;
     if(archive.Input())
-      FindIdenticSurfaces(1e-6);
+      FindIdenticSurfaces(1e-8 * MaxSize());
   }
 
   void CSGeometry :: SaveSurfaces (ostream & out) const
@@ -343,7 +430,7 @@ namespace netgen
 
 
     
-    Array<double> coeffs;
+    NgArray<double> coeffs;
     const char * classname;
 
     out << "csgsurfaces " << GetNSurf() << "\n";
@@ -408,7 +495,7 @@ namespace netgen
 
   void CSGeometry :: LoadSurfaces (istream & in)
   {
-    Array<double> coeffs;
+    NgArray<double> coeffs;
     string classname;
     int nsurfaces,size;
 
@@ -485,6 +572,15 @@ namespace netgen
 	    delete_them.Append(cone);
 	  }
 
+	else if(classname == "ellipsoid")
+	  {
+	    Ellipsoid * ellipsoid = new Ellipsoid(dummypoint,dummyvec,dummyvec,dummyvec);
+	    ellipsoid->SetPrimitiveData(coeffs);
+
+	    AddSurface(ellipsoid);
+	    delete_them.Append(ellipsoid);
+	  }
+
        else if(classname == "ellipticcone")
          {
 	    EllipticCone * ellipticcone = new EllipticCone(dummypoint,dummyvec,dummyvec,dummydouble,dummydouble);
@@ -536,8 +632,8 @@ namespace netgen
   {
     static int cntsurfs = 0;
     cntsurfs++;
-    char name[15];
-    sprintf (name, "nnsurf%d", cntsurfs);
+    char name[20];
+    snprintf (name, size(name), "nnsurf%d", cntsurfs);
     AddSurface (name, surf);
   }
  
@@ -625,24 +721,24 @@ namespace netgen
 
 
 
-  void CSGeometry :: SetSplineCurve (const char * name, SplineGeometry<2> * spl)
+  void CSGeometry :: SetSplineCurve (const char * name, shared_ptr<SplineGeometry<2>> spl)
   {
     splinecurves2d.Set(name,spl);
   }
-  void CSGeometry :: SetSplineCurve (const char * name, SplineGeometry<3> * spl)
+  void CSGeometry :: SetSplineCurve (const char * name, shared_ptr<SplineGeometry<3>> spl)
   {
     splinecurves3d.Set(name,spl);
   }
 
 
-  const SplineGeometry<2> * CSGeometry :: GetSplineCurve2d (const string & name) const
+  shared_ptr<SplineGeometry<2>> CSGeometry :: GetSplineCurve2d (const string & name) const
   {
     if (splinecurves2d.Used(name))
       return splinecurves2d[name];
     else
       return NULL;
   }
-  const SplineGeometry<3> * CSGeometry :: GetSplineCurve3d (const string & name) const
+  shared_ptr<SplineGeometry<3>> CSGeometry :: GetSplineCurve3d (const string & name) const
   {
     if (splinecurves3d.Used(name))
       return splinecurves3d[name];
@@ -722,7 +818,7 @@ namespace netgen
   void CSGeometry :: SetFlags (const char * solidname, const Flags & flags)
   {
     Solid * solid = solids[solidname];
-    Array<int> surfind;
+    NgArray<int> surfind;
 
     int i;
     double maxh = flags.GetNumFlag ("maxh", -1);
@@ -752,7 +848,7 @@ namespace netgen
 
     if (flags.StringListFlagDefined ("bcname"))
       {
-	const Array<char*> & bcname = flags.GetStringListFlag("bcname");
+	auto& bcname = flags.GetStringListFlag("bcname");
 
 	Polyhedra * polyh;
 	if(solid->S1())
@@ -762,7 +858,7 @@ namespace netgen
 
 	if(polyh)
 	  {
-	    Array < Array<int> * > polysurfs;
+	    NgArray < NgArray<int> * > polysurfs;
 	    polyh->GetPolySurfs(polysurfs);
 	    if(bcname.Size() != polysurfs.Size())
 	      cerr << "WARNING: solid \"" << solidname << "\" has " << polysurfs.Size()
@@ -806,7 +902,7 @@ namespace netgen
    
     if (flags.NumListFlagDefined ("bc"))
       {
-	const Array<double> & bcnum = flags.GetNumListFlag("bc");
+	const auto& bcnum = flags.GetNumListFlag("bc");
 
 	Polyhedra * polyh;
 	if(solid->S1())
@@ -816,7 +912,7 @@ namespace netgen
 
 	if(polyh)
 	  {
-	    Array < Array<int> * > polysurfs;
+	    NgArray < NgArray<int> * > polysurfs;
 	    polyh->GetPolySurfs(polysurfs);
 	    if(bcnum.Size() != polysurfs.Size())
 	      cerr << "WARNING: solid \"" << solidname << "\" has " << polysurfs.Size()
@@ -853,6 +949,7 @@ namespace netgen
   {
     int inv;
     int nsurf = GetNSurf();
+    identicsurfaces.DeleteData();
 
 
     isidenticto.SetSize(nsurf);
@@ -880,7 +977,7 @@ namespace netgen
   void CSGeometry ::
   GetSurfaceIndices (const Solid * sol, 
 		     const BoxSphere<3> & box, 
-		     Array<int> & locsurf) const
+		     NgArray<int> & locsurf) const
   {
     ReducePrimitiveIterator rpi(box);
     UnReducePrimitiveIterator urpi;
@@ -909,7 +1006,7 @@ namespace netgen
   void CSGeometry ::
   GetIndependentSurfaceIndices (const Solid * sol, 
 				const BoxSphere<3> & box, 
-				Array<int> & locsurf) const
+				NgArray<int> & locsurf) const
   {
     ReducePrimitiveIterator rpi(box);
     UnReducePrimitiveIterator urpi;
@@ -968,7 +1065,7 @@ namespace netgen
   void CSGeometry ::
   GetIndependentSurfaceIndices (const Solid * sol, 
 				const Point<3> & p, Vec<3> & v,
-				Array<int> & locsurf) const
+				NgArray<int> & locsurf) const
   {
     cout << "very dangerous" << endl;
     Point<3> p2 = p + 1e-2 * v;
@@ -980,7 +1077,7 @@ namespace netgen
   */
 
   void CSGeometry ::
-  GetIndependentSurfaceIndices (Array<int> & locsurf) const
+  GetIndependentSurfaceIndices (NgArray<int> & locsurf) const
   {
     for (int i = 0; i < locsurf.Size(); i++)
       locsurf[i] = isidenticto[locsurf[i]];
@@ -1022,7 +1119,7 @@ namespace netgen
       delete triapprox[i];
     triapprox.SetSize (ntlo);
 
-    Array<int> surfind;
+    NgArray<int> surfind;
     IndexSet iset(GetNSurf());
 
     for (int i = 0; i < ntlo; i++)
@@ -1148,7 +1245,7 @@ namespace netgen
     //return;
 
     int pinds[6];
-    ArrayMem<int,500> surfused(GetNSurf());
+    NgArrayMem<int,500> surfused(GetNSurf());
   
     ReducePrimitiveIterator rpi(box);
     UnReducePrimitiveIterator urpi;
@@ -1159,7 +1256,7 @@ namespace netgen
 
     //    IndexSet iset(GetNSurf());
     locsol -> GetSurfaceIndices (iset);
-    const Array<int> & lsurfi = iset.GetArray();
+    const NgArray<int> & lsurfi = iset.GetArray();
 
     locsol -> IterateSolid (urpi);
 
@@ -1523,21 +1620,21 @@ namespace netgen
   class CSGeometryRegister : public GeometryRegister
   {
   public:
-    virtual NetgenGeometry * Load (string filename) const;
-    virtual NetgenGeometry * LoadFromMeshFile (istream & ist) const;
+    virtual NetgenGeometry * Load (const filesystem::path & filename) const;
+    virtual NetgenGeometry * LoadFromMeshFile (istream & ist, string token) const;
     // virtual VisualScene * GetVisualScene (const NetgenGeometry * geom) const;
   };
 
   extern CSGeometry * ParseCSG (istream & istr, CSGeometry *instance=nullptr);
 
-  NetgenGeometry *  CSGeometryRegister :: Load (string filename) const
+  NetgenGeometry *  CSGeometryRegister :: Load (const filesystem::path & filename) const
   {
-    const char * cfilename = filename.c_str();
-    if (strcmp (&cfilename[strlen(cfilename)-3], "geo") == 0)
+    string extension = filename.extension().string();
+    if (extension == ".geo")
       {
-	PrintMessage (1, "Load CSG geometry file ", cfilename);
+	PrintMessage (1, "Load CSG geometry file ", filename);
 
-	ifstream infile(cfilename);
+	ifstream infile(filename);
 
 	CSGeometry * hgeom = ParseCSG (infile);
 	if (!hgeom)
@@ -1547,38 +1644,28 @@ namespace netgen
 	return hgeom;
       }
 
-    if (strcmp (&cfilename[strlen(cfilename)-3], "ngg") == 0)
+    if (extension == ".ngg")
       {
-	PrintMessage (1, "Load new CSG geometry file ", cfilename);
+	PrintMessage (1, "Load new CSG geometry file ", filename);
 
-	ifstream infile(cfilename);
+	ifstream infile(filename);
 	CSGeometry * hgeom = new CSGeometry("");
 	hgeom -> Load (infile);
 
 	return hgeom;
       }
-
-
     
     return NULL;
   }
 
-  NetgenGeometry * CSGeometryRegister :: LoadFromMeshFile (istream & ist) const 
+  NetgenGeometry * CSGeometryRegister :: LoadFromMeshFile (istream & ist, string token) const
   {
-    string auxstring;
-    if (ist.good())
-      {
-	ist >> auxstring;
-	if (auxstring == "csgsurfaces")
-	  {
-	    CSGeometry * geometry = new CSGeometry ("");
-	    geometry -> LoadSurfaces(ist);
-	    return geometry;
-	  }
-	// else
-	// ist.putback (auxstring);
-      }
-    return NULL;
+	if (token != "csgsurfaces")
+        return nullptr;
+
+    CSGeometry * geometry = new CSGeometry ("");
+	geometry -> LoadSurfaces(ist);
+	return geometry;
   }
 
 

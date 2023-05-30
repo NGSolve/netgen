@@ -6,9 +6,15 @@
 #include "occgeom.hpp"
 #include "mydefs.hpp"
 
+#include <TopoDS_Face.hxx>
+#include <Geom_Surface.hxx>
+#include <ShapeAnalysis.hxx>
+
 #define PARAMETERSPACE -1
 #define PLANESPACE     1
 
+namespace netgen
+{
 class OCCGeometry;
 
 class SingularMatrixException
@@ -55,6 +61,7 @@ protected:
 public:
   OCCSurface (const TopoDS_Face & aface, int aprojecttype)
   {
+    static Timer t("occurface ctor"); RegionTimer r(t);
     topods_face = aface;
     occface = BRep_Tool::Surface(topods_face);
     orient = topods_face.Orientation();
@@ -112,7 +119,9 @@ class Meshing2OCCSurfaces : public Meshing2
 
 public:
   ///
-  Meshing2OCCSurfaces (const TopoDS_Shape & asurf, const Box<3> & aboundingbox, int aprojecttype);
+  Meshing2OCCSurfaces (const NetgenGeometry& geo,
+                       const TopoDS_Shape & asurf, const Box<3> & aboundingbox,
+                       int aprojecttype, const MeshingParameters & mparam);
 
   ///
   int GetProjectionType ()
@@ -120,85 +129,29 @@ public:
 
 protected:
   ///
-  virtual void DefineTransformation (const Point3d & p1, const Point3d & p2,
-				     const PointGeomInfo * geominfo1,
-				     const PointGeomInfo * geominfo2);
+  void DefineTransformation (const Point<3> & p1, const Point<3> & p2,
+                             const PointGeomInfo * geominfo1,
+                             const PointGeomInfo * geominfo2) override;
   ///
-  virtual void TransformToPlain (const Point3d & locpoint, 
-				 const MultiPointGeomInfo & geominfo,
-				 Point2d & plainpoint, 
-				 double h, int & zone);
+  void TransformToPlain (const Point<3> & locpoint, 
+                         const MultiPointGeomInfo & geominfo,
+                         Point<2> & plainpoint, 
+                         double h, int & zone) override;
   ///
 
-  virtual int TransformFromPlain (Point2d & plainpoint,
-				  Point3d & locpoint,
-				  PointGeomInfo & gi,
-				  double h);
+  int TransformFromPlain (const Point<2> & plainpoint,
+                          Point<3> & locpoint,
+                          PointGeomInfo & gi,
+                          double h) override;
   ///
-  virtual double CalcLocalH (const Point3d & p, double gh) const;
+  double CalcLocalH (const Point<3> & p, double gh) const override;
   
 };
-
-
-
-///
-class MeshOptimize2dOCCSurfaces : public MeshOptimize2d
-  {
-  ///
-  const OCCGeometry & geometry;
-
-public:
-    ///
-    MeshOptimize2dOCCSurfaces (const OCCGeometry & ageometry); 
-   
-    ///
-    virtual void ProjectPoint (INDEX surfind, Point<3> & p) const;
-    ///
-    virtual void ProjectPoint2 (INDEX surfind, INDEX surfind2, Point<3> & p) const;
-    ///
-    virtual int ProjectPointGI (INDEX surfind, Point<3> & p, PointGeomInfo & gi) const;
-    ///
-    virtual void GetNormalVector(INDEX surfind, const Point<3> & p, Vec<3> & n) const;
-    ///
-    virtual void GetNormalVector(INDEX surfind, const Point<3> & p, PointGeomInfo & gi, Vec<3> & n) const;
-    
-    virtual int CalcPointGeomInfo(int surfind, PointGeomInfo& gi, const Point<3> & p3) const;
-};
-
-
 
 class OCCGeometry;
 
-
-class DLL_HEADER OCCRefinementSurfaces : public Refinement
-{
-  const OCCGeometry & geometry;
-
-public:
-  OCCRefinementSurfaces (const OCCGeometry & ageometry);
-  virtual ~OCCRefinementSurfaces ();
-  
-  virtual void PointBetween (const Point<3> & p1, const Point<3> & p2, double secpoint,
-			     int surfi, 
-			     const PointGeomInfo & gi1, 
-			     const PointGeomInfo & gi2,
-			     Point<3> & newp, PointGeomInfo & newgi) const;
-
-  virtual void PointBetween (const Point<3> & p1, const Point<3> & p2, double secpoint,
-			     int surfi1, int surfi2, 
-			     const EdgePointGeomInfo & ap1, 
-			     const EdgePointGeomInfo & ap2,
-			     Point<3> & newp, EdgePointGeomInfo & newgi) const;
-
-  virtual void ProjectToSurface (Point<3> & p, int surfi) const;
-
-  virtual void ProjectToSurface (Point<3> & p, int surfi, PointGeomInfo & gi) const;
-};
-
-
+} // namespace netgen
 
 #endif
-
-
 
 #endif

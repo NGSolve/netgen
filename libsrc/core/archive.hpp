@@ -1,14 +1,19 @@
 #ifndef NETGEN_CORE_ARCHIVE_HPP
 #define NETGEN_CORE_ARCHIVE_HPP
 
+#include <any>
+#include <array>                // for array
 #include <complex>              // for complex
 #include <cstring>              // for size_t, strlen
+#include <filesystem>           // for path
 #include <fstream>              // for ifstream, ofstream
 #include <functional>           // for function
 #include <map>                  // for map
 #include <memory>               // for shared_ptr
+#include <optional>             // for optional
 #include <string>               // for string
 #include <type_traits>          // for declval, enable_if_t, false_type, is_co...
+#include <cstddef>              // for std::byte
 #include <typeinfo>             // for type_info
 #include <utility>              // for move, swap, pair
 #include <vector>               // for vector
@@ -21,17 +26,20 @@
 #include "version.hpp"          // for VersionInfo
 
 #ifdef NETGEN_PYTHON
-#include <pybind11/pybind11.h>
+namespace pybind11
+{
+  class object;
+}
 #endif // NETGEN_PYTHON
 
 namespace ngcore
 {
-  // Libraries using this archive can store their version here to implement backwards compatibility
-  NGCORE_API const VersionInfo& GetLibraryVersion(const std::string& library);
-  NGCORE_API void SetLibraryVersion(const std::string& library, const VersionInfo& version);
+
+#ifdef NETGEN_PYTHON
+  pybind11::object CastAnyToPy(const std::any& a);
+#endif // NETGEN_PYTHON
 
   class NGCORE_API Archive;
-
   namespace detail
   {
     // create new pointer of type T if it is default constructible, else throw
@@ -86,12 +94,27 @@ namespace ngcore
       // This caster takes a void* pointer to the (base)class type_info and returns void* pointing
       // to the type stored in this info
       std::function<void*(const std::type_info&, void*)> downcaster;
+
+#ifdef NETGEN_PYTHON
+      std::function<pybind11::object(const std::any&)> anyToPyCaster;
+#endif // NETGEN_PYTHON
     };
   } // namespace detail
 
   template<typename T>
   constexpr bool is_archivable = detail::is_Archivable_struct<T>::value;
 
+  
+  template <typename T, typename ... Trest>
+  constexpr size_t TotSize () 
+  {
+    if constexpr (sizeof...(Trest) == 0)
+                   return sizeof(T);
+    else
+      return sizeof(T) + TotSize<Trest...> ();
+  }
+  
+  
   // Base Archive class
   class NGCORE_API Archive
   {
@@ -108,6 +131,9 @@ namespace ngcore
     std::map<std::string, VersionInfo> version_map = GetLibraryVersions();
     std::shared_ptr<Logger> logger = GetLogger("Archive");
   public:
+    template<typename T>
+      static constexpr bool is_archivable = detail::is_Archivable_struct<T>::value;
+
     Archive() = delete;
     Archive(const Archive&) = delete;
     Archive(Archive&&) = delete;
@@ -120,28 +146,23 @@ namespace ngcore
     // once and put them together correctly afterwards. Therefore all objects that may live in
     // Python should be archived using this Shallow function. If Shallow is called from C++ code
     // it archives the object normally.
+#ifdef NETGEN_PYTHON
+    template<typename T>
+    Archive& Shallow(T& val); // implemented in python_ngcore.hpp
+#else // NETGEN_PYTHON
     template<typename T>
     Archive& Shallow(T& val)
     {
       static_assert(detail::is_any_pointer<T>, "ShallowArchive must be given pointer type!");
-#ifdef NETGEN_PYTHON
-      if(shallow_to_python)
-        {
-          if(is_output)
-            ShallowOutPython(pybind11::cast(val));
-          else
-            val = pybind11::cast<T>(ShallowInPython());
-        }
-      else
-#endif // NETGEN_PYTHON
         *this & val;
       return *this;
     }
+#endif // NETGEN_PYTHON
 
 #ifdef NETGEN_PYTHON
     virtual void ShallowOutPython(const pybind11::object& /*unused*/)
     { throw UnreachableCodeException{}; }
-    virtual pybind11::object ShallowInPython()
+    virtual void ShallowInPython(pybind11::object &)
     { throw UnreachableCodeException{}; }
 #endif // NETGEN_PYTHON
 
@@ -157,6 +178,8 @@ namespace ngcore
     virtual void NeedsVersion(const std::string& /*unused*/, const std::string& /*unused*/) {}
 
     // Pure virtual functions that have to be implemented by In-/OutArchive
+    virtual Archive & operator & (std::byte & d) = 0;    
+    virtual Archive & operator & (float & d) = 0;
     virtual Archive & operator & (double & d) = 0;
     virtual Archive & operator & (int & i) = 0;
     virtual Archive & operator & (long & i) = 0;
@@ -208,7 +231,7 @@ namespace ngcore
       Do(&v[0], size);
       return (*this);
     }
-
+ 
     // archive implementation for enums
     template<typename T>
     auto operator & (T& val) -> std::enable_if_t<std::is_enum<T>::value, Archive&>
@@ -272,11 +295,32 @@ namespace ngcore
         }
       return (*this);
     }
+    template<typename T>
+    Archive& operator& (std::optional<T>& opt)
+    {
+        bool has_value = opt.has_value();
+        (*this) & has_value;
+        if(has_value)
+          {
+            if(Output())
+                (*this) << *opt;
+            else
+            {
+                T value;
+                (*this) & value;
+                opt = value;
+            }
+          }
+      return (*this);
+    }
     // Archive arrays =====================================================
     // this functions can be overloaded in Archive implementations for more efficiency
     template <typename T, typename = std::enable_if_t<is_archivable<T>>>
     Archive & Do (T * data, size_t n)
     { for (size_t j = 0; j < n; j++) { (*this) & data[j]; }; return *this; }; // NOLINT
+
+    virtual Archive & Do (std::byte * d, size_t n)
+    { for (size_t j = 0; j < n; j++) { (*this) & d[j]; }; return *this; }; // NOLINT
 
     virtual Archive & Do (double * d, size_t n)
     { for (size_t j = 0; j < n; j++) { (*this) & d[j]; }; return *this; }; // NOLINT
@@ -305,6 +349,55 @@ namespace ngcore
     {
       val.DoArchive(*this); return *this;
     }
+
+
+
+    
+    // pack elements to binary
+    template <typename ... Types>
+      Archive & DoPacked (Types & ... args)
+    {
+      if (true) // (isbinary)
+        {
+          constexpr size_t totsize = TotSize<Types...>(); // (args...);
+          std::byte mem[totsize];
+          if (is_output)
+            {
+              CopyToBin (&mem[0], args...);
+              Do(&mem[0], totsize);
+            }
+          else
+            {
+              Do(&mem[0], totsize);
+              CopyFromBin (&mem[0], args...);
+            }
+        }
+      // else
+      // cout << "DoPacked of non-binary called --> individual pickling" << endl;
+      return *this;
+    }
+    
+    
+    template <typename T, typename ... Trest>
+      constexpr void CopyToBin (std::byte * ptr, T & first, Trest & ...rest) const
+    {
+      memcpy (ptr, &first, sizeof(first));
+      CopyToBin(ptr+sizeof(first), rest...);
+    }
+    constexpr void CopyToBin (std::byte * ptr) const { }
+    
+    template <typename T, typename ... Trest>
+      constexpr void CopyFromBin (std::byte * ptr, T & first, Trest & ...rest) const
+    {
+      memcpy (&first, ptr, sizeof(first));
+      CopyFromBin(ptr+sizeof(first), rest...);
+    }
+    constexpr void CopyFromBin (std::byte * ptr) const { }
+
+
+      
+
+      
 
     // Archive shared_ptrs =================================================
     template <typename T>
@@ -376,7 +469,7 @@ namespace ngcore
           // -1 restores a new shared ptr by restoring the inner pointer and creating a shared_ptr to it
           if (nr == -1)
             {
-              logger->debug("Createing new shared_ptr");
+              logger->debug("Creating new shared_ptr");
               T* p = nullptr;
               bool neededDowncast;
               (*this) & neededDowncast & p;
@@ -571,12 +664,17 @@ namespace ngcore
 
     virtual void FlushBuffer() {}
 
-  protected:
-    static std::map<std::string, VersionInfo>& GetLibraryVersions();
-
+    bool parallel = false;
+    bool IsParallel() const { return parallel; }
+    void SetParallel (bool _parallel) { parallel = _parallel; }
+    
   private:
     template<typename T, typename ... Bases>
     friend class RegisterClassForArchive;
+
+#ifdef NETGEN_PYTHON
+    friend pybind11::object CastAnyToPy(const std::any&);
+#endif // NETGEN_PYTHON
 
     // Returns ClassArchiveInfo of Demangled typeid
     static const detail::ClassArchiveInfo& GetArchiveRegister(const std::string& classname);
@@ -631,33 +729,11 @@ namespace ngcore
     };
   };
 
-  template<typename T, typename ... Bases>
-  class RegisterClassForArchive
-  {
-  public:
-    RegisterClassForArchive()
-    {
-      static_assert(detail::all_of_tmpl<std::is_base_of<Bases,T>::value...>,
-                    "Variadic template arguments must be base classes of T");
-      detail::ClassArchiveInfo info {};
-      info.creator = [this,&info](const std::type_info& ti) -> void*
-                     { return typeid(T) == ti ? detail::constructIfPossible<T>()
-                         : Archive::Caster<T, Bases...>::tryUpcast(ti, detail::constructIfPossible<T>()); };
-      info.upcaster = [this](const std::type_info& ti, void* p) -> void*
-                      { return typeid(T) == ti ? p : Archive::Caster<T, Bases...>::tryUpcast(ti, static_cast<T*>(p)); };
-      info.downcaster = [this](const std::type_info& ti, void* p) -> void*
-                        { return typeid(T) == ti ? p : Archive::Caster<T, Bases...>::tryDowncast(ti, p); };
-      Archive::SetArchiveRegister(std::string(Demangle(typeid(T).name())),info);
-    }
-
-
-  };
-
   // BinaryOutArchive ======================================================================
   class NGCORE_API BinaryOutArchive : public Archive
   {
     static constexpr size_t BUFFERSIZE = 1024;
-    char buffer[BUFFERSIZE] = {};
+    std::array<char,BUFFERSIZE> buffer{};
     size_t ptr = 0;
   protected:
     std::shared_ptr<std::ostream> stream;
@@ -668,7 +744,7 @@ namespace ngcore
     BinaryOutArchive(std::shared_ptr<std::ostream>&& astream)
       : Archive(true), stream(std::move(astream))
     { }
-    BinaryOutArchive(const std::string& filename)
+    BinaryOutArchive(const std::filesystem::path& filename)
       : BinaryOutArchive(std::make_shared<std::ofstream>(filename)) {}
     ~BinaryOutArchive () override { FlushBuffer(); }
 
@@ -676,6 +752,10 @@ namespace ngcore
     BinaryOutArchive& operator=(BinaryOutArchive&&) = delete;
 
     using Archive::operator&;
+    Archive & operator & (std::byte & d) override
+    { return Write(d); }
+    Archive & operator & (float & f) override
+    { return Write(f); }
     Archive & operator & (double & d) override
     { return Write(d); }
     Archive & operator & (int & i) override
@@ -683,13 +763,18 @@ namespace ngcore
     Archive & operator & (short & i) override
     { return Write(i); }
     Archive & operator & (long & i) override
-    { return Write(i); }
+    {
+      // for platform independence
+      int64_t tmp = i;
+      return Write(tmp);
+    }
     Archive & operator & (size_t & i) override
     { return Write(i); }
     Archive & operator & (unsigned char & i) override
     { return Write(i); }
     Archive & operator & (bool & b) override
     { return Write(b); }
+
     Archive & operator & (std::string & str) override
     {
       int len = str.length();
@@ -701,7 +786,7 @@ namespace ngcore
     }
     Archive & operator & (char *& str) override
     {
-      long len = str ? strlen (str) : -1;
+      long len = str ? static_cast<long>(strlen (str)) : -1;
       (*this) & len;
       FlushBuffer();
       if(len > 0)
@@ -716,19 +801,23 @@ namespace ngcore
           ptr = 0;
         }
     }
+    Archive & Do (std::byte * d, size_t n) override
+    {
+      FlushBuffer();
+      stream->write(reinterpret_cast<char*>(d), n*sizeof(std::byte)); return *this;
+    } 
 
   private:
     template <typename T>
     Archive & Write (T x)
     {
+      static_assert(sizeof(T) < BUFFERSIZE, "Cannot write large types with this function!");
       if (unlikely(ptr > BUFFERSIZE-sizeof(T)))
         {
           stream->write(&buffer[0], ptr);
-          *reinterpret_cast<T*>(&buffer[0]) = x; // NOLINT
-          ptr = sizeof(T);
-          return *this;
+          ptr = 0;
         }
-      *reinterpret_cast<T*>(&buffer[ptr]) = x; // NOLINT
+      memcpy(&buffer[ptr], &x, sizeof(T));
       ptr += sizeof(T);
       return *this;
     }
@@ -743,10 +832,14 @@ namespace ngcore
     BinaryInArchive (std::shared_ptr<std::istream>&& astream)
       : Archive(false), stream(std::move(astream))
     { }
-    BinaryInArchive (const std::string& filename)
+    BinaryInArchive (const std::filesystem::path& filename)
       : BinaryInArchive(std::make_shared<std::ifstream>(filename)) { ; }
 
     using Archive::operator&;
+    Archive & operator & (std::byte & d) override
+    { Read(d); return *this; }
+    Archive & operator & (float & f) override
+    { Read(f); return *this; }
     Archive & operator & (double & d) override
     { Read(d); return *this; }
     Archive & operator & (int & i) override
@@ -754,7 +847,12 @@ namespace ngcore
     Archive & operator & (short & i) override
     { Read(i); return *this; }
     Archive & operator & (long & i) override
-    { Read(i); return *this; }
+    {
+      int64_t tmp;
+      Read(tmp);
+      i = tmp;
+      return *this;
+    }
     Archive & operator & (size_t & i) override
     { Read(i); return *this; }
     Archive & operator & (unsigned char & i) override
@@ -785,6 +883,8 @@ namespace ngcore
       return *this;
     }
 
+    Archive & Do (std::byte * d, size_t n) override
+    { stream->read(reinterpret_cast<char*>(d), n*sizeof(std::byte)); return *this; } // NOLINT
     Archive & Do (double * d, size_t n) override
     { stream->read(reinterpret_cast<char*>(d), n*sizeof(double)); return *this; } // NOLINT
     Archive & Do (int * i, size_t n) override
@@ -807,10 +907,14 @@ namespace ngcore
     TextOutArchive (std::shared_ptr<std::ostream>&& astream)
       : Archive(true), stream(std::move(astream))
     { }
-    TextOutArchive (const std::string& filename) :
+    TextOutArchive (const std::filesystem::path& filename) :
       TextOutArchive(std::make_shared<std::ofstream>(filename)) { }
 
     using Archive::operator&;
+    Archive & operator & (std::byte & d) override
+    { *stream << std::hex << int(d) << ' '; return *this; }
+    Archive & operator & (float & f) override
+    { *stream << f << '\n'; return *this; }
     Archive & operator & (double & d) override
     { *stream << d << '\n'; return *this; }
     Archive & operator & (int & i) override
@@ -838,7 +942,7 @@ namespace ngcore
     }
     Archive & operator & (char *& str) override
     {
-      long len = str ? strlen (str) : -1;
+      long len = str ? static_cast<long>(strlen (str)) : -1;
       *this & len;
       if(len > 0)
         {
@@ -858,10 +962,14 @@ namespace ngcore
     TextInArchive (std::shared_ptr<std::istream>&& astream) :
       Archive(false), stream(std::move(astream))
     { }
-    TextInArchive (const std::string& filename)
+    TextInArchive (const std::filesystem::path& filename)
       : TextInArchive(std::make_shared<std::ifstream>(filename)) {}
 
     using Archive::operator&;
+    Archive & operator & (std::byte & d) override
+    { int tmp; *stream >> std::hex >> tmp; d = std::byte(tmp); return *this; }
+    Archive & operator & (float & f) override
+    { *stream >> f; return *this; }
     Archive & operator & (double & d) override
     { *stream >> d; return *this; }
     Archive & operator & (int & i) override
@@ -882,6 +990,8 @@ namespace ngcore
       *stream >> len;
       char ch;
       stream->get(ch); // '\n'
+      if(ch == '\r') // windows line endings -> read \n as well
+        stream->get(ch);
       str.resize(len);
       if(len)
         stream->get(&str[0], len+1, '\0');
@@ -901,6 +1011,8 @@ namespace ngcore
       if(len)
         {
           stream->get(ch); // \n
+          if(ch == '\r') // windows line endings, read \n as well
+            stream->get(ch);
           stream->get(&str[0], len+1, '\0'); // NOLINT
         }
       str[len] = '\0'; // NOLINT
@@ -908,105 +1020,56 @@ namespace ngcore
     }
   };
 
-#ifdef NETGEN_PYTHON
+  // HashArchive =================================================================
+  // This class enables to easily create hashes for archivable objects by xoring
+  // threw its data
 
-  template<typename ARCHIVE>
-  class PyArchive : public ARCHIVE
+  class NGCORE_API HashArchive : public Archive
   {
-  private:
-    pybind11::list lst;
-    size_t index = 0;
-    std::map<std::string, VersionInfo> version_needed;
-  protected:
-    using ARCHIVE::stream;
-    using ARCHIVE::version_map;
-    using ARCHIVE::logger;
-    using ARCHIVE::GetLibraryVersions;
+    size_t hash_value = 0;
+    char* h;
+    int offset = 0;
   public:
-    PyArchive(const pybind11::object& alst = pybind11::none()) :
-      ARCHIVE(std::make_shared<std::stringstream>()),
-      lst(alst.is_none() ? pybind11::list() : pybind11::cast<pybind11::list>(alst))
+    HashArchive() : Archive(true)
+      { h = (char*)&hash_value; }
+
+    using Archive::operator&;
+    Archive & operator & (std::byte & d) override { return ApplyHash(d); }    
+    Archive & operator & (float & f) override { return ApplyHash(f); }
+    Archive & operator & (double & d) override { return ApplyHash(d); }
+    Archive & operator & (int & i) override { return ApplyHash(i); }
+    Archive & operator & (short & i) override { return ApplyHash(i); }
+    Archive & operator & (long & i) override { return ApplyHash(i); }
+    Archive & operator & (size_t & i) override { return ApplyHash(i); }
+    Archive & operator & (unsigned char & i) override { return ApplyHash(i); }
+    Archive & operator & (bool & b) override { return ApplyHash(b); }
+    Archive & operator & (std::string & str) override
+    { for(auto c : str) ApplyHash(c);  return *this; }
+    Archive & operator & (char *& str) override
+    { char* s = str; while(*s != '\0') ApplyHash(*(s++)); return *this; }
+
+    // HashArchive can be used in const context
+    template<typename T>
+      Archive & operator& (const T& val) const
+    { return (*this) & const_cast<T&>(val); }
+
+    size_t GetHash() const { return hash_value; }
+
+  private:
+    template<typename T>
+      Archive& ApplyHash(T val)
     {
-      ARCHIVE::shallow_to_python = true;
-      if(Input())
+      size_t n = sizeof(T);
+      char* pval = (char*)&val;
+      for(size_t i = 0; i < n; i++)
         {
-          stream = std::make_shared<std::stringstream>
-            (pybind11::cast<pybind11::bytes>(lst[pybind11::len(lst)-1]));
-          *this & version_needed;
-          logger->debug("versions needed for unpickling = {}", version_needed);
-          for(auto& libversion : version_needed)
-            if(libversion.second > GetLibraryVersion(libversion.first))
-              throw Exception("Error in unpickling data:\nLibrary " + libversion.first +
-                              " must be at least " + libversion.second.to_string());
-          stream = std::make_shared<std::stringstream>
-            (pybind11::cast<pybind11::bytes>(lst[pybind11::len(lst)-2]));
-          *this & version_map;
-          stream = std::make_shared<std::stringstream>
-            (pybind11::cast<pybind11::bytes>(lst[pybind11::len(lst)-3]));
+          h[offset++] ^= pval[i];
+          offset %= 8;
         }
-    }
-
-    void NeedsVersion(const std::string& library, const std::string& version) override
-    {
-      if(Output())
-        {
-          logger->debug("Need version {} of library {}.", version, library);
-          version_needed[library] = version_needed[library] > version ? version_needed[library] : version;
-        }
-    }
-
-    using ARCHIVE::Output;
-    using ARCHIVE::Input;
-    using ARCHIVE::FlushBuffer;
-    using ARCHIVE::operator&;
-    using ARCHIVE::operator<<;
-    using ARCHIVE::GetVersion;
-    void ShallowOutPython(const pybind11::object& val) override { lst.append(val); }
-    pybind11::object ShallowInPython() override { return lst[index++]; }
-
-    pybind11::list WriteOut()
-    {
-      FlushBuffer();
-      lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
-      stream = std::make_shared<std::stringstream>();
-      *this & GetLibraryVersions();
-      FlushBuffer();
-      lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
-      stream = std::make_shared<std::stringstream>();
-      logger->debug("Writeout version needed = {}", version_needed);
-      *this & version_needed;
-      FlushBuffer();
-      lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
-      return lst;
+      return *this;
     }
   };
 
-  template<typename T, typename T_ARCHIVE_OUT=BinaryOutArchive, typename T_ARCHIVE_IN=BinaryInArchive>
-  auto NGSPickle()
-  {
-    return pybind11::pickle([](T* self)
-                      {
-                        PyArchive<T_ARCHIVE_OUT> ar;
-                        ar & self;
-                        auto output = pybind11::make_tuple(ar.WriteOut());
-                        GetLogger("Archive")->trace("Pickling output for object of type {} = {}",
-                                                    Demangle(typeid(T).name()),
-                                                    std::string(pybind11::str(output)));
-                        return output;
-                      },
-                      [](pybind11::tuple state)
-                      {
-                        T* val = nullptr;
-                        GetLogger("Archive")->trace("State for unpickling of object of type {} = {}",
-                                                    Demangle(typeid(T).name()),
-                                                    std::string(pybind11::str(state[0])));
-                        PyArchive<T_ARCHIVE_IN> ar(state[0]);
-                        ar & val;
-                        return val;
-                      });
-  }
-
-#endif // NETGEN_PYTHON
 } // namespace ngcore
 
 #endif // NETGEN_CORE_ARCHIVE_HPP

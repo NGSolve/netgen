@@ -8,6 +8,8 @@
 #include "../sockets/sockets.hpp"
 #endif
 
+#include "../general/gzstream.h"
+
 #include "nginterface.h"
 // #include "../visualization/soldata.hpp"
 // #include <visual.hpp>
@@ -58,8 +60,8 @@ namespace netgen
 
 #ifdef SOCKETS
   extern AutoPtr<ClientSocket> clientsocket;
-  //extern Array< AutoPtr < ServerInfo > > servers;
-  extern Array< ServerInfo* > servers;
+  //extern NgArray< AutoPtr < ServerInfo > > servers;
+  extern NgArray< ServerInfo* > servers;
 #endif
 
   
@@ -102,15 +104,8 @@ void Ng_LoadMeshFromStream ( istream & input )
   mesh -> Load(input);
 
   SetGlobalMesh (mesh);
-  for (int i = 0; i < geometryregister.Size(); i++)
-    {
-      NetgenGeometry * hgeom = geometryregister[i]->LoadFromMeshFile (input);
-      if (hgeom)
-	{
-          ng_geometry.reset (hgeom);
-	  break;
-	}
-    }
+  ng_geometry = geometryregister.LoadFromMeshFile (input);
+
   if (!ng_geometry)
     ng_geometry = make_shared<NetgenGeometry>();
   mesh->SetGeometry (ng_geometry);
@@ -146,28 +141,38 @@ void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
 
   if( id == 0) {
 
-    string fn(filename);
-    if (fn.substr (fn.length()-3, 3) == ".gz")
-      infile = new igzstream (filename);
-    else
-      infile = new ifstream (filename);
     mesh.reset (new Mesh());
     mesh->SetCommunicator(comm);
-    mesh -> Load(*infile);
-    SetGlobalMesh (mesh);
+    
+    string fn(filename);
+    if (fn.length() > 8 && fn.substr (fn.length()-8, 8) == ".vol.bin")
+      {
+        mesh -> Load(fn);
+        SetGlobalMesh (mesh);        
+      }
+    else
+      {
+        if (fn.substr (fn.length()-3, 3) == ".gz")
+          infile = new igzstream (filename);
+        else
+          infile = new ifstream (filename);
+        mesh -> Load(*infile);
+        SetGlobalMesh (mesh);
+        
+        // make string from rest of file (for geometry info!)
+        // (this might be empty, in which case we take the global ng_geometry)
+        stringstream geom_part;
+        geom_part << infile->rdbuf();
+        string geom_part_string = geom_part.str();
+        strs = geom_part_string.size();
+        // buf = new char[strs];
+        buf.SetSize(strs);
+        memcpy(buf.Data(), geom_part_string.c_str(), strs*sizeof(char));
+        
+        delete infile;
+      }
 
-    // make string from rest of file (for geometry info!)
-    // (this might be empty, in which case we take the global ng_geometry)
-    stringstream geom_part;
-    geom_part << infile->rdbuf();
-    string geom_part_string = geom_part.str();
-    strs = geom_part_string.size();
-    // buf = new char[strs];
-    buf.SetSize(strs);
-    memcpy(&buf[0], geom_part_string.c_str(), strs*sizeof(char));
-
-    delete infile;
-
+    
     if (ntasks > 1)
       {
 
@@ -191,9 +196,9 @@ void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
 	    bool endfile = false;
 	    int n, dummy;
 	      
-	    Array<int> segment_weights;
-	    Array<int> surface_weights;
-	    Array<int> volume_weights;
+	    NgArray<int> segment_weights;
+	    NgArray<int> surface_weights;
+	    NgArray<int> volume_weights;
 	      
 	    while (weightsfile.good() && !endfile)
 	      {
@@ -238,22 +243,28 @@ void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
     mesh->SendRecvMesh();
   }
 
+    /*
   if(ntasks>1) {
 #ifdef PARALLEL
-    /** Scatter the geometry-string (no dummy-implementation in mpi_interface) **/
+    // Scatter the geometry-string (no dummy-implementation in mpi_interface) 
     int strs = buf.Size();
     MyMPI_Bcast(strs, comm);
     if(strs>0)
       MyMPI_Bcast(buf, comm);
-#endif
-  }
+ #endif
+ }
+  */
+  comm.Bcast(buf);
 
   shared_ptr<NetgenGeometry> geo;
   if(buf.Size()) { // if we had geom-info in the file, take it
     istringstream geom_infile(string((const char*)&buf[0], buf.Size()));
     geo = geometryregister.LoadFromMeshFile(geom_infile);
   }
-  if(geo!=nullptr) mesh->SetGeometry(geo);
+  if(geo!=nullptr) {
+    ng_geometry = geo;
+    mesh->SetGeometry(geo);
+  }
   else if(ng_geometry!=nullptr) mesh->SetGeometry(ng_geometry);
 }
 
@@ -476,14 +487,14 @@ const char * Ng_GetDomainMaterial (int dom)
 
 int Ng_GetUserDataSize (char * id)
 {
-  Array<double> da;
+  NgArray<double> da;
   mesh->GetUserData (id, da);
   return da.Size();
 }
 
 void Ng_GetUserData (char * id, double * data)
 {
-  Array<double> da;
+  NgArray<double> da;
   mesh->GetUserData (id, da);
   for (int i = 0; i < da.Size(); i++)
     data[i] = da[i];
@@ -557,7 +568,7 @@ char * Ng_GetSurfaceElementBCName (int ei)
   if ( mesh->GetDimension() == 3 )
     return const_cast<char *>(mesh->GetFaceDescriptor(mesh->SurfaceElement(ei).GetIndex()).GetBCName().c_str());
   else
-    return const_cast<char *>(mesh->LineSegment(ei).GetBCName().c_str());
+    return const_cast<char *>(mesh->GetBCName(mesh->LineSegment(ei).si).c_str());
 }
 
 
@@ -637,12 +648,12 @@ int Ng_FindElementOfPoint (double * p, double * lami, int build_searchtree,
 			   const int * const indices, const int numind)
   
 {
-  Array<int> * dummy(NULL);
+  NgArray<int> * dummy(NULL);
   int ind = -1;
 
   if(indices != NULL)
     {
-      dummy = new Array<int>(numind);
+      dummy = new NgArray<int>(numind);
       for(int i=0; i<numind; i++) (*dummy)[i] = indices[i];
     }
 
@@ -683,12 +694,12 @@ int Ng_FindSurfaceElementOfPoint (double * p, double * lami, int build_searchtre
 				  const int * const indices, const int numind)
   
 {
-  Array<int> * dummy(NULL);
+  NgArray<int> * dummy(NULL);
   int ind = -1;
 
   if(indices != NULL)
     {
-      dummy = new Array<int>(numind);
+      dummy = new NgArray<int>(numind);
       for(int i=0; i<numind; i++) (*dummy)[i] = indices[i];
     }
 
@@ -902,6 +913,7 @@ void Ng_GetSurfaceElementNeighbouringDomains(const int selnr, int & in, int & ou
 
 // gibt anzahl an distant pnums zurueck
 // * pnums entspricht ARRAY<int[2] >
+[[deprecated("Use GetDistantNodeNums(locnum) -> FlatArray instead!")]]                    
 int NgPar_GetDistantNodeNums ( int nodetype, int locnum, int * distnums )
 {
   int size = NgPar_GetNDistantNodeNums (nodetype, locnum);
@@ -928,6 +940,7 @@ int NgPar_GetDistantNodeNums ( int nodetype, int locnum, int * distnums )
   return size;
 }
 
+[[deprecated("Use GetDistantNodeNums(locnum) -> FlatArray instead!")]]                    
 int NgPar_GetNDistantNodeNums ( int nodetype, int locnum )
 {
   locnum++;
@@ -941,6 +954,7 @@ int NgPar_GetNDistantNodeNums ( int nodetype, int locnum )
   return -1;
 }
 
+[[deprecated("Use GetDistantNodeNums(locnum) -> FlatArray instead!")]]                    
 int NgPar_GetGlobalNodeNum (int nodetype, int locnum)
 {
   locnum++;
@@ -1547,7 +1561,7 @@ int Ng_GetSurfaceElement_Edges (int elnr, int * edges, int * orient)
   /*
     int i, ned;
     const MeshTopology & topology = mesh->GetTopology();
-    Array<int> ia;
+    NgArray<int> ia;
     topology.GetSurfaceElementEdges (elnr, ia);
     ned = ia.Size();
     for (i = 1; i <= ned; i++)
@@ -1578,7 +1592,7 @@ int Ng_GetSurfaceElement_Face (int selnr, int * orient)
 int Ng_GetFace_Vertices (int fnr, int * vert)
 {
   const MeshTopology & topology = mesh->GetTopology();
-  ArrayMem<int,4> ia;
+  NgArrayMem<int,4> ia;
   topology.GetFaceVertices (fnr, ia);
   for (int i = 0; i < ia.Size(); i++)
     vert[i] = ia[i];
@@ -1590,7 +1604,7 @@ int Ng_GetFace_Vertices (int fnr, int * vert)
 int Ng_GetFace_Edges (int fnr, int * edge)
 {
   const MeshTopology & topology = mesh->GetTopology();
-  ArrayMem<int,4> ia;
+  NgArrayMem<int,4> ia;
   topology.GetFaceEdges (fnr, ia);
   for (int i = 0; i < ia.Size(); i++)
     edge[i] = ia[i];
@@ -1635,19 +1649,19 @@ void Ng_GetVertexElements (int vnr, int * els)
     {
     case 3:
       {
-        FlatArray<ElementIndex> ia = mesh->GetTopology().GetVertexElements(vnr);
+        auto ia = mesh->GetTopology().GetVertexElements(vnr);
         for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
         break;
       }
     case 2:
       {
-        FlatArray<SurfaceElementIndex> ia = mesh->GetTopology().GetVertexSurfaceElements(vnr);
+        auto ia = mesh->GetTopology().GetVertexSurfaceElements(vnr);
         for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
         break;
       }
     case 1:
       {
-        FlatArray<SegmentIndex> ia = mesh->GetTopology().GetVertexSegments(vnr);
+        auto ia = mesh->GetTopology().GetVertexSegments(vnr);
         for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
         break;
         /*
@@ -1721,7 +1735,9 @@ void Ng_SetSurfaceElementOrders (int enr, int ox, int oy)
 
 int Ng_GetNLevels ()
 {
-  return (mesh) ? mesh->mglevels : 0;
+  if (!mesh) return 0;
+  return max(size_t(1), mesh -> level_nv.Size());  
+  // return (mesh) ? mesh->mglevels : 0;
 }
 
 
@@ -1797,7 +1813,7 @@ int Ng_GetClusterRepElement (int pi)
 		
 int Ng_GetNPeriodicVertices (int idnr)
 {
-  Array<INDEX_2> apairs;
+  NgArray<INDEX_2> apairs;
   mesh->GetIdentifications().GetPairs (idnr, apairs);
   return apairs.Size();
 }
@@ -1806,7 +1822,7 @@ int Ng_GetNPeriodicVertices (int idnr)
 // pairs should be an integer array of 2*npairs
 void Ng_GetPeriodicVertices (int idnr, int * pairs)
 {
-  Array<INDEX_2> apairs;
+  NgArray<INDEX_2> apairs;
   mesh->GetIdentifications().GetPairs (idnr, apairs);
   for (int i = 0; i < apairs.Size(); i++)
     {
@@ -1820,7 +1836,7 @@ void Ng_GetPeriodicVertices (int idnr, int * pairs)
 
 int Ng_GetNPeriodicEdges (int idnr)
 {
-  Array<int,PointIndex::BASE> map;
+  NgArray<int,PointIndex::BASE> map;
   //const MeshTopology & top = mesh->GetTopology();
   int nse = mesh->GetNSeg();
 
@@ -1847,7 +1863,7 @@ int Ng_GetNPeriodicEdges (int idnr)
 
 void Ng_GetPeriodicEdges (int idnr, int * pairs)
 {
-  Array<int,PointIndex::BASE> map;
+  NgArray<int,PointIndex::BASE> map;
   const MeshTopology & top = mesh->GetTopology();
   int nse = mesh->GetNSeg();
 
@@ -1865,8 +1881,10 @@ void Ng_GetPeriodicEdges (int idnr, int * pairs)
 	if (other1 && other2 && mesh->IsSegment (other1, other2))
 	  {
 	    SegmentIndex otherseg = mesh->SegmentNr (other1, other2);
-	    pairs[cnt++] = top.GetSegmentEdge (si+1);
-	    pairs[cnt++] = top.GetSegmentEdge (otherseg+1);
+	    // pairs[cnt++] = top.GetSegmentEdge (si+1);
+	    // pairs[cnt++] = top.GetSegmentEdge (otherseg+1);
+	    pairs[cnt++] = top.GetEdge (si)+1;
+	    pairs[cnt++] = top.GetEdge (otherseg)+1;
 	  }
       }
   }
@@ -1925,8 +1943,9 @@ int Ng_IsRunning()
 int Ng_GetVertex_Elements( int vnr, int* elems )
 {
   const MeshTopology& topology = mesh->GetTopology();
-  ArrayMem<ElementIndex,4> indexArray;
-  topology.GetVertexElements( vnr, indexArray );
+  // ArrayMem<ElementIndex,4> indexArray;
+  // topology.GetVertexElements( vnr, indexArray );
+  auto indexArray = topology.GetVertexElements( vnr );
   
   for( int i=0; i<indexArray.Size(); i++ )
     elems[i] = indexArray[i]+1;
@@ -1942,8 +1961,9 @@ int Ng_GetVertex_SurfaceElements( int vnr, int* elems )
     case 3:
       {
         const MeshTopology& topology = mesh->GetTopology();
-        ArrayMem<SurfaceElementIndex,4> indexArray;
-        topology.GetVertexSurfaceElements( vnr, indexArray );
+        // ArrayMem<SurfaceElementIndex,4> indexArray;
+        // topology.GetVertexSurfaceElements( vnr, indexArray );
+        auto indexArray = topology.GetVertexSurfaceElements( vnr );
         
         for( int i=0; i<indexArray.Size(); i++ )
           elems[i] = indexArray[i]+1;
@@ -1974,10 +1994,12 @@ int Ng_GetVertex_SurfaceElements( int vnr, int* elems )
 int Ng_GetVertex_NElements( int vnr )
 {
   const MeshTopology& topology = mesh->GetTopology();
+  /*
   ArrayMem<ElementIndex,4> indexArray;
   topology.GetVertexElements( vnr, indexArray );
-  
   return indexArray.Size();
+  */
+  return topology.GetVertexElements(vnr).Size();
 }
 
 ///// Added by Roman Stainko ....
@@ -1988,8 +2010,9 @@ int Ng_GetVertex_NSurfaceElements( int vnr )
     case 3:
       {
         const MeshTopology& topology = mesh->GetTopology();
-        ArrayMem<SurfaceElementIndex,4> indexArray;
-        topology.GetVertexSurfaceElements( vnr, indexArray );
+        // ArrayMem<SurfaceElementIndex,4> indexArray;
+        // topology.GetVertexSurfaceElements( vnr, indexArray );
+        auto indexArray = topology.GetVertexSurfaceElements( vnr );
         return indexArray.Size();
       }
     case 2:
@@ -2154,9 +2177,9 @@ int Ng_Bisect_WithInfo ( const char * refinementfile, double ** qualityloss, int
   
   mesh->LocalHFunction().SetGrading (mparam.grading);
 
-  Array<double> * qualityloss_arr = NULL;
+  NgArray<double> * qualityloss_arr = NULL;
   if(qualityloss != NULL)
-    qualityloss_arr = new Array<double>;
+    qualityloss_arr = new NgArray<double>;
 
   ref -> Bisect (*mesh, biopt, qualityloss_arr);
 
@@ -2233,8 +2256,9 @@ int Ng_GetClosureNodes (int nt, int nodenr, int nodeset, int * nodes)
         if (nodeset & 2)  // Edges
           {
             int edges[12];
-            int ned;
-            ned = mesh->GetTopology().GetElementEdges (nodenr+1, edges, 0);
+            // int ned;
+            // ned = mesh->GetTopology().GetElementEdges (nodenr+1, edges, 0);
+            int ned = mesh->GetTopology().GetEdges (ElementIndex(nodenr)).Size();
             for (int i = 0; i < ned; i++)
               {
                 nodes[cnt++] = 1;
@@ -2349,13 +2373,6 @@ void Ng_GetArgs (int & argc, char ** &argv)
 {
   argc = h_argc;
   argv = h_argv;
-}
-
-
-
-void LinkFunction ()
-{
-  Ng_Redraw();
 }
 
 

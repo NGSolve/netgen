@@ -171,8 +171,14 @@ public:
   { height = h; data = adata; ownmem = false; }
   ///
   MatrixFixWidth (const MatrixFixWidth & m2)
-    : height(m2.height), data(m2.data), ownmem(false)
-  { ; } 
+    : height(m2.height), ownmem(true)
+  {
+    data = new T[height*WIDTH];
+    for (int i = 0; i < WIDTH*height; i++)
+      data[i] = m2.data[i];
+  }
+  // : height(m2.height), data(m2.data), ownmem(false)
+  //{ ; } 
   ///
   ~MatrixFixWidth ()
   { if (ownmem) delete [] data; }
@@ -277,6 +283,15 @@ public:
   ///
   MatrixFixWidth (int h)
   { height = h; data = new double[WIDTH*height]; ownmem = true; }
+  
+  MatrixFixWidth (const MatrixFixWidth & m2)
+    : height(m2.height), ownmem(true)
+  {
+    data = new double[height*WIDTH];
+    for (int i = 0; i < WIDTH*height; i++)
+      data[i] = m2.data[i];
+  }
+
   /// 
   MatrixFixWidth (int h, double * adata)
   { height = h; data = adata; ownmem = false; }

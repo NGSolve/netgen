@@ -1,24 +1,10 @@
-add_library(stl ${NG_LIB_TYPE} 
+target_sources(nglib PRIVATE
         meshstlsurface.cpp stlgeom.cpp stlgeomchart.cpp 
         stlgeommesh.cpp stlline.cpp stltool.cpp stltopology.cpp python_stl.cpp
-        )
-
-if(NOT WIN32)
-    target_link_libraries( stl mesh ${PYTHON_LIBRARIES})
-    install( TARGETS stl ${NG_INSTALL_DIR})
-endif(NOT WIN32)
-
-target_link_libraries( stl ngcore )
-
+)
 
 if(USE_GUI)
-    add_library(stlvis ${NG_LIB_TYPE}
-            vsstl.cpp
-            )
-    if(NOT WIN32)
-        target_link_libraries( stlvis stl )
-        install( TARGETS stlvis ${NG_INSTALL_DIR})
-    endif(NOT WIN32)
+    target_sources(nggui PRIVATE vsstl.cpp stlpkg.cpp)
 endif(USE_GUI)
 
 install(FILES

@@ -3,6 +3,9 @@
   This file is a modification of tkAppInit.c from the Tcl/Tk package
 */
 
+#undef USE_TCL_STUBS
+#undef USE_TK_STUBS
+
 #include <mystdlib.h> 
 #include <inctcl.hpp>
 #include <meshing.hpp>
@@ -10,13 +13,8 @@
 #ifdef PARALLEL
 #include <mpi.h>
 
-extern void ParallelRun();
-namespace netgen
-{
-  MPI_Comm mesh_comm;
-}
+// extern void ParallelRun();
 #endif
-
 
 #include "../libsrc/interface/writeuser.hpp"
 
@@ -32,7 +30,7 @@ DLL_HEADER extern bool nodisplay;
 using netgen::parameters;
 using netgen::ngdir;
 using netgen::verbose;
-using netgen::Array;
+using netgen::NgArray;
 using netgen::RegisterUserFormats;
 
 
@@ -83,7 +81,7 @@ int main(int argc, char ** argv)
 
   if ( netgen::id == 0 )
     {
-      cout << "NETGEN-" << PACKAGE_VERSION << endl;
+      cout << "NETGEN-" << netgen::netgen_version << endl;
       
       cout << "Developed by Joachim Schoeberl at" << endl
 	   << "2010-xxxx Vienna University of Technology" << endl
@@ -146,8 +144,11 @@ int main(int argc, char ** argv)
 
   if ( netgen::id == 0 )
     {
-      if (parameters.StringFlagDefined ("testout"))      
-        netgen::testout = new ofstream (parameters.GetStringFlag ("testout", "test.out"));
+      if (parameters.StringFlagDefined ("testout"))
+        {
+          delete ngcore::testout;
+          ngcore::testout = new ofstream (parameters.GetStringFlag ("testout", "test.out"));
+        }
 
 
 #ifdef SOCKETS
@@ -204,7 +205,7 @@ int main(int argc, char ** argv)
             cout << "using internal Tcl-script" << endl;
       
           // connect to one string 
-          extern const char * ngscript[];
+          DLL_HEADER extern const char * ngscript[];
           const char ** hcp = ngscript;
           int len = 0;
           while (*hcp)
@@ -247,10 +248,10 @@ int main(int argc, char ** argv)
           exit (1);
         }
 
-
+      /*
       // lookup user file formats and insert into format list:
-      Array<const char*> userformats;
-      Array<const char*> extensions;
+      NgArray<const char*> userformats;
+      NgArray<const char*> extensions;
       RegisterUserFormats (userformats, extensions);
 
       ostringstream fstr;
@@ -259,13 +260,13 @@ int main(int argc, char ** argv)
       for (int i = 1; i <= userformats.Size(); i++)
 	{
 	  fstr << ".ngmenu.file.filetype add radio -label \"" 
-	       << userformats.Get(i) << "\" -variable exportfiletype\n";
+	       << userformats.Get(i) << "\" -variable exportfiletype -command { .ngmenu.file invoke \"Export Mesh...\" } \n";
 	  fstr << "lappend meshexportformats { {" << userformats.Get(i) << "} {" << extensions.Get(i) << "} }\n";
 	}
 
-      Tcl_Eval (myinterp, (char*)fstr.str().c_str());
+        Tcl_Eval (myinterp, (char*)fstr.str().c_str());
       Tcl_SetVar (myinterp, "exportfiletype", exportft, 0);
-
+      */
 
 #ifdef SOCKETS
       Ng_ServerSocketManagerRun();
@@ -280,7 +281,7 @@ int main(int argc, char ** argv)
 #ifdef PARALLEL
   else
     {
-      ParallelRun();
+      // ParallelRun();
       MPI_Finalize();
     }  
 

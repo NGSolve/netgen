@@ -76,8 +76,8 @@ Meshing3 :: ~Meshing3 ()
 
 /*
   // was war das ????
-static double CalcLocH (const Array<Point3d> & locpoints,
-			const Array<MiniElement2d> & locfaces,
+static double CalcLocH (const NgArray<Point3d> & locpoints,
+			const NgArray<MiniElement2d> & locfaces,
 			double h)
 {
   return h;
@@ -169,10 +169,10 @@ MESHING3_RESULT Meshing3 ::
 GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 {
   static Timer t("Meshing3::GenerateMesh"); RegionTimer reg(t);
-  static Timer meshing3_timer_a("Meshing3::GenerateMesh a", 2);
-  static Timer meshing3_timer_b("Meshing3::GenerateMesh b", 2);
-  static Timer meshing3_timer_c("Meshing3::GenerateMesh c", 1);
-  static Timer meshing3_timer_d("Meshing3::GenerateMesh d", 2);
+  // static Timer meshing3_timer_a("Meshing3::GenerateMesh a", 2);
+  // static Timer meshing3_timer_b("Meshing3::GenerateMesh b", 2);
+  // static Timer meshing3_timer_c("Meshing3::GenerateMesh c", 1);
+  // static Timer meshing3_timer_d("Meshing3::GenerateMesh d", 2);
   // static int meshing3_timer = NgProfiler::CreateTimer ("Meshing3::GenerateMesh");
   // static int meshing3_timer_a = NgProfiler::CreateTimer ("Meshing3::GenerateMesh a");
   // static int meshing3_timer_b = NgProfiler::CreateTimer ("Meshing3::GenerateMesh b");
@@ -181,16 +181,16 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   // NgProfiler::RegionTimer reg (meshing3_timer);
 
 
-  Array<Point3d, PointIndex::BASE> locpoints;      // local points
-  Array<MiniElement2d> locfaces;                   // local faces
-  Array<PointIndex, PointIndex::BASE> pindex;      // mapping from local to front point numbering
-  Array<int, PointIndex::BASE> allowpoint;         // point is allowed ?
-  Array<INDEX> findex;                             // mapping from local to front face numbering
+  NgArray<Point3d, PointIndex::BASE> locpoints;      // local points
+  NgArray<MiniElement2d> locfaces;                   // local faces
+  NgArray<PointIndex, PointIndex::BASE> pindex;      // mapping from local to front point numbering
+  NgArray<int, PointIndex::BASE> allowpoint;         // point is allowed ?
+  NgArray<INDEX> findex;                             // mapping from local to front face numbering
   //INDEX_2_HASHTABLE<int> connectedpairs(100);    // connecgted pairs for prism meshing
 
-  Array<Point3d, PointIndex::BASE> plainpoints;    // points in reference coordinates
-  Array<int> delpoints, delfaces;   // points and lines to be deleted
-  Array<Element> locelements;       // new generated elements
+  NgArray<Point3d, PointIndex::BASE> plainpoints;    // points in reference coordinates
+  NgArray<int> delpoints, delfaces;   // points and lines to be deleted
+  NgArray<Element> locelements;       // new generated elements
 
   int j, oldnp, oldnf;
   int found;
@@ -211,10 +211,10 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 
   
   // for star-shaped domain meshing
-  Array<MeshPoint, PointIndex::BASE> grouppoints;      
-  Array<MiniElement2d> groupfaces;
-  Array<PointIndex, PointIndex::BASE> grouppindex;
-  Array<INDEX> groupfindex;
+  NgArray<MeshPoint, PointIndex::BASE> grouppoints;      
+  NgArray<MiniElement2d> groupfaces;
+  NgArray<PointIndex, PointIndex::BASE> grouppindex;
+  NgArray<INDEX> groupfindex;
   
   
   float minerr;
@@ -223,10 +223,10 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   // int giveup = 0;
 
   
-  Array<Point3d> tempnewpoints;
-  Array<MiniElement2d> tempnewfaces;
-  Array<int> tempdelfaces;
-  Array<Element> templocelements;
+  NgArray<Point3d> tempnewpoints;
+  NgArray<MiniElement2d> tempnewfaces;
+  NgArray<int> tempdelfaces;
+  NgArray<Element> templocelements;
 
 
   stat.h = mp.maxh;
@@ -293,13 +293,13 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
       double hinner = hmax * (1 + stat.qualclass);
       double houter = hmax * (1 + 2 * stat.qualclass);
 
-      meshing3_timer_a.Start();
+      // meshing3_timer_a.Start();
       stat.qualclass =
         adfront -> GetLocals (baseelem, locpoints, locfaces, 
 			      pindex, findex, connectedpairs,
 			      houter, hinner,
 			      locfacesplit);
-      meshing3_timer_a.Stop();
+      // meshing3_timer_a.Stop();
 
       // (*testout) << "locfaces = " << endl << locfaces << endl;
 
@@ -355,7 +355,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
       if (stat.qualclass >= mp.starshapeclass &&
 	  mp.baseelnp != 4)   
 	{
-	  NgProfiler::RegionTimer reg1 (meshing3_timer_b);
+	  // NgProfiler::RegionTimer reg1 (meshing3_timer_b);
 	  // star-shaped domain removing
 
 	  grouppoints.SetSize (0);
@@ -478,7 +478,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	    }
 
 	  // NgProfiler::StartTimer (meshing3_timer_c);
-          meshing3_timer_c.Start();
+          // meshing3_timer_c.Start();
 
 	  found = ApplyRules (plainpoints, allowpoint, 
 			      locfaces, locfacesplit, connectedpairs,
@@ -488,12 +488,12 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	  if (found >= 0) impossible = 0;
 	  if (found < 0) found = 0;
 
-          meshing3_timer_c.Stop();
+          // meshing3_timer_c.Stop();
 	  // NgProfiler::StopTimer (meshing3_timer_c);	  
 
 	  if (!found) loktestmode = 0;
 
-	  NgProfiler::RegionTimer reg2 (meshing3_timer_d);	  
+	  // NgProfiler::RegionTimer reg2 (meshing3_timer_d);	  
 	  
 	  if (loktestmode)
 	    {
@@ -774,9 +774,9 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
   
   PrintMessage (5, "n1 = ", n1, " n2 = ", n2, " n3 = ", n3);
 
-  Array<blocktyp> inner(n);
-  Array<PointIndex> pointnr(n);
-  Array<int> frontpointnr(n);
+  NgArray<blocktyp> inner(n);
+  NgArray<PointIndex> pointnr(n);
+  NgArray<int> frontpointnr(n);
 
 
   // initialize inner to 1
@@ -1107,7 +1107,7 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
   PrintMessage (3, "blockfill local h");
 
 
-  Array<Point<3> > npoints;
+  NgArray<Point<3> > npoints;
   
   adfront -> CreateTrees();
 
@@ -1144,11 +1144,18 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
 
   if (mp.maxh < maxh) maxh = mp.maxh;
 
+  auto loch_ptr = mesh.LocalHFunction().Copy(bbox);
+  auto & loch = *loch_ptr;
+
   bool changed;
+  static Timer t1("loop1");
+  t1.Start();
   do 
     {
-      mesh.LocalHFunction().ClearFlags();
+      loch.ClearFlags();
 
+      static Timer tbox("adfront-bbox");
+      tbox.Start();
       for (int i = 1; i <= adfront->GetNF(); i++)
 	{
 	  const MiniElement2d & el = adfront->GetFace(i);
@@ -1161,26 +1168,28 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
 	  double filld = filldist * bbox.Diam();
 	  bbox.Increase (filld);
       
-      	  mesh.LocalHFunction().CutBoundary (bbox); // .PMin(), bbox.PMax());
+      	  loch.CutBoundary (bbox); // .PMin(), bbox.PMax());
 	}
+      tbox.Stop();
 
       //      locadfront = adfront;
-      mesh.LocalHFunction().FindInnerBoxes (adfront, NULL);
+      loch.FindInnerBoxes (adfront, NULL);
 
       npoints.SetSize(0);
-      mesh.LocalHFunction().GetInnerPoints (npoints);
+      loch.GetInnerPoints (npoints);
 
       changed = false;
       for (int i = 1; i <= npoints.Size(); i++)
 	{
-	  if (mesh.LocalHFunction().GetH(npoints.Get(i)) > 1.5 * maxh)
+	  if (loch.GetH(npoints.Get(i)) > 1.5 * maxh)
 	    {
-	      mesh.LocalHFunction().SetH (npoints.Get(i), maxh);
+	      loch.SetH (npoints.Get(i), maxh);
 	      changed = true;
 	    }
 	}
     }
   while (changed);
+  t1.Stop();
 
   if (debugparam.slowchecks)
     (*testout) << "Blockfill with points: " << endl;
@@ -1208,6 +1217,8 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
 
   // find outer points
   
+  static Timer tloch2("build loch2");
+  tloch2.Start();
   loch2.ClearFlags();
 
   for (int i = 1; i <= adfront->GetNF(); i++)
@@ -1245,6 +1256,7 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
       // loch2.CutBoundary (pmin, pmax);
       loch2.CutBoundary (Box<3> (pmin, pmax)); // pmin, pmax);
     }
+  tloch2.Stop();
 
   // locadfront = adfront;
   loch2.FindInnerBoxes (adfront, NULL);

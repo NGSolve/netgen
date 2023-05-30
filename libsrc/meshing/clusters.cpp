@@ -15,19 +15,19 @@ namespace netgen
   {
     ;
   }
-
-  void AnisotropicClusters ::  Update(TaskManager tm, Tracer tracer)
+  
+  void AnisotropicClusters ::  Update()
   {
-    static int timer = NgProfiler::CreateTimer ("clusters");
-    static int timer1 = NgProfiler::CreateTimer ("clusters1");
-    static int timer2 = NgProfiler::CreateTimer ("clusters2");
-    static int timer3 = NgProfiler::CreateTimer ("clusters3");
-    NgProfiler::RegionTimer reg (timer);
+    static Timer timer("clusters");
+    // static int timer1 = NgProfiler::CreateTimer ("clusters1");
+    // static int timer2 = NgProfiler::CreateTimer ("clusters2");
+    // static int timer3 = NgProfiler::CreateTimer ("clusters3");
+    RegionTimer reg (timer);
 
     const MeshTopology & top = mesh.GetTopology();
 
     auto id = this->mesh.GetCommunicator().Rank();
-    auto ntasks = this->mesh.GetCommunicator().Size();
+    // auto ntasks = this->mesh.GetCommunicator().Size();
 
     bool hasedges = top.HasEdges();
     bool hasfaces = top.HasFaces();
@@ -46,13 +46,13 @@ namespace netgen
     cluster_reps.SetSize (nv+ned+nfa+ne);
     cluster_reps = -1;
 
-    Array<int> llist (nv+ned+nfa+ne);
+    NgArray<int> llist (nv+ned+nfa+ne);
     llist = 0;
   
-    Array<int> nnums, ednums, fanums;
+    NgArray<int> nnums, ednums, fanums;
     int changed;
 
-    NgProfiler::StartTimer(timer1);    
+    // NgProfiler::StartTimer(timer1);    
 
   
     /*
@@ -81,39 +81,42 @@ namespace netgen
 	  cluster_reps.Elem(nnums[j]) = nnums[j];
       }
     */
-    ParallelForRange
-      (tm, ne,
-       [&] (size_t begin, size_t end)
+    ngcore::ParallelForRange
+      (mesh.VolumeElements().Range(),
+       [&] (auto myrange)
        {
-         Array<int> nnums, ednums, fanums;
-         for (int i = begin+1; i <= end; i++)
+         NgArray<int> nnums; // , ednums, fanums;
+         for (int i_ : myrange)
            {
+             int i = i_+1;
              const Element & el = mesh.VolumeElement(i);
              ELEMENT_TYPE typ = el.GetType();
              
-             top.GetElementEdges (i, ednums);
-             top.GetElementFaces (i, fanums);
+             // top.GetElementEdges (i, ednums);
+             auto ednums = top.GetEdges (ElementIndex(i_));
+             // top.GetElementFaces (i, fanums);
+             auto fanums = top.GetFaces (ElementIndex(i_));
              
              int elnv = top.GetNVertices (typ);
              int elned = ednums.Size();
              int elnfa = fanums.Size();
              
              nnums.SetSize(elnv+elned+elnfa+1);
-             for (int j = 1; j <= elnv; j++)
-               nnums.Elem(j) = el.PNum(j)+1-PointIndex::BASE;
-             for (int j = 1; j <= elned; j++)
-               nnums.Elem(elnv+j) = nv+ednums.Elem(j);
-             for (int j = 1; j <= elnfa; j++)
-               nnums.Elem(elnv+elned+j) = nv+ned+fanums.Elem(j);
-             nnums.Elem(elnv+elned+elnfa+1) = nv+ned+nfa+i;
-             
+             for (int j = 0; j < elnv; j++)
+               nnums[j] = el[j]+1-PointIndex::BASE;
+             for (int j = 0; j < elned; j++)
+               nnums[elnv+j] = nv+ednums[j]+1;
+             for (int j = 0; j < elnfa; j++)
+               nnums[elnv+elned+j] = nv+ned+fanums[j]+1;
+             nnums[elnv+elned+elnfa] = nv+ned+nfa+i;
+
              for (int j = 0; j < nnums.Size(); j++)
                cluster_reps.Elem(nnums[j]) = nnums[j];
            }
-       });
+       }, ngcore::TasksPerThread(4));
     
-    NgProfiler::StopTimer(timer1);
-    NgProfiler::StartTimer(timer2);      
+    // NgProfiler::StopTimer(timer1);
+    // NgProfiler::StartTimer(timer2);      
     /*
     for (int i = 1; i <= nse; i++)
       {
@@ -137,37 +140,41 @@ namespace netgen
 	  cluster_reps.Elem(nnums[j]) = nnums[j];
       }
     */
-    ParallelForRange
-      (tm, nse,
-       [&] (size_t begin, size_t end)
+    ngcore::ParallelForRange
+      (mesh.SurfaceElements().Range(),
+       [&] (auto myrange)
        {
-         ArrayMem<int,9> nnums, ednums;
-         for (int i = begin+1; i <= end; i++)
+         NgArrayMem<int,9> nnums; // , ednums;
+         for (int i_ : myrange)
            {
+             int i = i_+1;
              const Element2d & el = mesh.SurfaceElement(i);
              ELEMENT_TYPE typ = el.GetType();
              
-             top.GetSurfaceElementEdges (i, ednums);
+             // top.GetSurfaceElementEdges (i, ednums);
+             auto ednums = top.GetEdges (SurfaceElementIndex(i_));
+             // cout << "ednums = " << ednums << endl;
+             
              int fanum = top.GetSurfaceElementFace (i);             
              
              int elnv = top.GetNVertices (typ);
              int elned = ednums.Size();
              
              nnums.SetSize(elnv+elned+1);
-             for (int j = 1; j <= elnv; j++)
-               nnums.Elem(j) = el.PNum(j)+1-PointIndex::BASE;
-             for (int j = 1; j <= elned; j++)
-               nnums.Elem(elnv+j) = nv+ednums.Elem(j);
-             nnums.Elem(elnv+elned+1) = fanum;             
+             for (int j = 0; j < elnv; j++)
+               nnums[j] = el[j]+1-PointIndex::BASE;
+             for (int j = 0; j < elned; j++)
+               nnums[elnv+j] = nv+ednums[j]+1;
+             nnums[elnv+elned] = fanum;             
              
              for (int j = 0; j < nnums.Size(); j++)
                cluster_reps.Elem(nnums[j]) = nnums[j];
            }
-       });
+       }, ngcore::TasksPerThread(4));
 
     
-    NgProfiler::StopTimer(timer2);
-    NgProfiler::StartTimer(timer3);      
+    // NgProfiler::StopTimer(timer2);
+    // NgProfiler::StartTimer(timer3);      
 
     
     static const int hex_cluster[] =
@@ -215,7 +222,8 @@ namespace netgen
 
     do
       {
-        (*tracer) ("update cluster, identify", false);
+        static Timer t("update cluster, identify");
+        RegionTimer rtr(t);
 	cnt++;
 	changed = 0;
       
@@ -267,23 +275,24 @@ namespace netgen
 	  
 	    if (clustertab)
               {
-                top.GetElementEdges (i, ednums);
-                top.GetElementFaces (i, fanums);
+                // top.GetElementEdges (i, ednums);
+                // top.GetElementFaces (i, fanums);
+                auto ednums = top.GetEdges (ElementIndex(i-1));
+                auto fanums = top.GetFaces (ElementIndex(i-1));                
                 
                 int elnv = top.GetNVertices (typ);
                 int elned = ednums.Size();
                 int elnfa = fanums.Size();
                 
                 nnums.SetSize(elnv+elned+elnfa+1);
-                for (int j = 1; j <= elnv; j++)
-                  nnums.Elem(j) = el.PNum(j)+1-PointIndex::BASE;
-                for (int j = 1; j <= elned; j++)
-                  nnums.Elem(elnv+j) = nv+ednums.Elem(j);
-                for (int j = 1; j <= elnfa; j++)
-                  nnums.Elem(elnv+elned+j) = nv+ned+fanums.Elem(j);
-                nnums.Elem(elnv+elned+elnfa+1) = nv+ned+nfa+i;
+                for (int j = 0; j < elnv; j++)
+                  nnums[j] = el[j]+1-PointIndex::BASE;
+                for (int j = 0; j < elned; j++)
+                  nnums[elnv+j] = nv+ednums[j]+1;
+                for (int j = 0; j < elnfa; j++)
+                  nnums[elnv+elned+j] = nv+ned+fanums[j]+1;
+                nnums[elnv+elned+elnfa] = nv+ned+nfa+i;
                 
-
                 
 	      for (int j = 0; j < nnums.Size(); j++)
 		for (int k = 0; k < j; k++)
@@ -338,10 +347,9 @@ namespace netgen
 	      }
 	    */
 	  }
-        (*tracer) ("update cluster, identify", true);        
       }
     while (changed);
-    NgProfiler::StopTimer(timer3);
+    // NgProfiler::StopTimer(timer3);
     /*
       (*testout) << "cluster reps:" << endl;
       for (i = 1; i <= cluster_reps.Size(); i++)

@@ -21,13 +21,13 @@ class AnisotropicClusters
   int nv, ned, nfa, ne;
 
   // connected nodes, nodes = vertices, edges, faces, elements
-  Array<int> cluster_reps;
+  NgArray<int> cluster_reps;
 
 public:
   AnisotropicClusters (const Mesh & amesh);
   ~AnisotropicClusters();
 
-  void Update(TaskManager tm = &DummyTaskManager, Tracer trace = &DummyTracer);
+  void Update();
 
   int GetVertexRepresentant (int vnr) const
   { return cluster_reps.Get(vnr); }

@@ -222,7 +222,7 @@ proc editprimitivedialog2 { name } {
 
 #
 #
-#      Select primitve to edit
+#      Select primitive to edit
 #
 #
 

@@ -11,22 +11,29 @@
   The mesh class
 */
 
+#include<filesystem>
+
 namespace netgen
 {
+  using namespace std;
+
+  static constexpr int  MPI_TAG_MESH = 210;
+  
+
   enum resthtype { RESTRICTH_FACE, RESTRICTH_EDGE, 
 		   RESTRICTH_SURFACEELEMENT, RESTRICTH_POINT, RESTRICTH_SEGMENT };
 
   class HPRefElement;
-
-
+  class CurvedElements;
+  class AnisotropicClusters;
+  class ParallelMeshTopology;
+  
   /// 2d/3d mesh
   class Mesh
   {
   public:
-    typedef ::netgen::T_POINTS T_POINTS;
-    typedef Array<Element, 0, size_t> T_VOLELEMENTS;
-    // typedef Array<Element2d, 0, SurfaceElementIndex> T_SURFELEMENTS;
-    typedef Array<Element2d, 0, size_t> T_SURFELEMENTS;
+    // typedef Array<MeshPoint, PointIndex> T_POINTS;
+    typedef netgen::T_POINTS T_POINTS;
 
   private:
     /// point coordinates
@@ -36,11 +43,11 @@ namespace netgen
     NgMPI_Comm comm;
     
     /// line-segments at edges
-    Array<Segment, 0, size_t> segments;
+    Array<Segment, SegmentIndex> segments;
     /// surface elements, 2d-inner elements
-    T_SURFELEMENTS surfelements;
+    Array<Element2d, SurfaceElementIndex> surfelements;
     /// volume elements
-    T_VOLELEMENTS volelements;
+    Array<Element, ElementIndex> volelements;
     /// points will be fixed forever
     Array<PointIndex> lockedpoints;
 
@@ -48,29 +55,32 @@ namespace netgen
     /// surface indices at boundary nodes
     // TABLE<int,PointIndex::BASE> surfacesonnode;
     /// boundary edges  (1..normal bedge, 2..segment)
-    INDEX_2_CLOSED_HASHTABLE<int> * boundaryedges;
+    unique_ptr<INDEX_2_CLOSED_HASHTABLE<int>> boundaryedges;
     ///
-    INDEX_2_CLOSED_HASHTABLE<int> * segmentht;
+    unique_ptr<INDEX_2_CLOSED_HASHTABLE<int>> segmentht;
     ///
-    INDEX_3_CLOSED_HASHTABLE<int> * surfelementht;
+    unique_ptr<INDEX_3_CLOSED_HASHTABLE<int>> surfelementht;
+    unique_ptr<INDEX_3_CLOSED_HASHTABLE<int>> illegal_trigs;
 
     /// faces of rest-solid
-    Array<Element2d> openelements;
-    /// open segmenets for surface meshing  
-    Array<Segment> opensegments;
+    NgArray<Element2d> openelements;
+    /// open segments for surface meshing
+    NgArray<Segment> opensegments;
+
+    Array<int> tets_in_qualclass;
 
 
 
     /**
-       Representation of local mesh-size h
+       Representation of local mesh-size h (one function per mesh layer)
     */
-    LocalH * lochfunc;
+    Array<shared_ptr<LocalH>> lochfunc;
     ///
     double hglob;
     ///
     double hmin;
     ///
-    Array<double> maxhdomain;
+    NgArray<double> maxhdomain;
   
     /**
        the face-index of the surface element maps into
@@ -83,39 +93,39 @@ namespace netgen
        the edge-index of the line element maps into
        this table.
     */
-    Array<EdgeDescriptor> edgedecoding;
+    NgArray<EdgeDescriptor> edgedecoding;
 
     /// sub-domain materials 
-    Array<string*> materials;
+    NgArray<string*> materials;
 
     /// labels for boundary conditions
-    Array<string*> bcnames;
+    NgArray<string*> bcnames;
 
     /// labels for co dim 2 bboundary conditions
-    Array<string*> cd2names;
+    NgArray<string*> cd2names;
 
     /// labels for co dim 3 bbboundary conditions
-    Array<string*> cd3names;
+    NgArray<string*> cd3names;
 
     /// Periodic surface, close surface, etc. identifications
-    Identifications * ident;
+    unique_ptr<Identifications> ident;
 
 
     /// number of vertices (if < 0, use np)
     int numvertices;
 
     /// geometric search tree for interval intersection search
-    BoxTree<3> * elementsearchtree;
+    unique_ptr<BoxTree<3>> elementsearchtree;
     /// time stamp for tree
     mutable int elementsearchtreets;
 
     /// element -> face, element -> edge etc ...
     MeshTopology topology;
     /// methods for high order elements
-    class CurvedElements * curvedelems;
+    unique_ptr<CurvedElements> curvedelems;
 
     /// nodes identified by close points 
-    class AnisotropicClusters * clusters;
+    unique_ptr<AnisotropicClusters> clusters;
 
     /// space dimension (2 or 3)
     int dimension;
@@ -125,18 +135,18 @@ namespace netgen
     /// changed after finishing global algorithm (improve, ...)
     int majortimestamp;
 
-    /// mesh access semaphors.
+    /// mesh access semaphores.
     NgMutex mutex;
-    /// mesh access semaphors.
+    /// mesh access semaphores.
     NgMutex majormutex;
 
-    SymbolTable< Array<int>* > userdata_int;
-    SymbolTable< Array<double>* > userdata_double;
+    SymbolTable< NgArray<int>* > userdata_int;
+    SymbolTable< NgArray<double>* > userdata_double;
 
 
-    mutable Array< Point3d > pointcurves;
-    mutable Array<int> pointcurves_startpoint;
-    mutable Array<double> pointcurves_red,pointcurves_green,pointcurves_blue;
+    mutable NgArray< Point3d > pointcurves;
+    mutable NgArray<int> pointcurves_startpoint;
+    mutable NgArray<double> pointcurves_red,pointcurves_green,pointcurves_blue;
 
 
     /// start element for point search (GetElementOfPoint)
@@ -145,43 +155,45 @@ namespace netgen
 
 #ifdef PARALLEL
     /// connection to parallel meshes
-    class ParallelMeshTopology * paralleltop;
-
+    unique_ptr<ParallelMeshTopology> paralleltop;
 #endif
 
     
     shared_ptr<NetgenGeometry> geometry;
 
-  private:
-    void BuildBoundaryEdges(void);
 
   public:
-    bool PointContainedIn2DElement(const Point3d & p,
+    DLL_HEADER void BuildBoundaryEdges(bool rebuild=true);
+
+    DLL_HEADER bool PointContainedIn2DElement(const Point3d & p,
 				   double lami[3],
 				   const int element,
 				   bool consider3D = false) const;
-    bool PointContainedIn3DElement(const Point3d & p,
+    DLL_HEADER bool PointContainedIn3DElement(const Point3d & p,
 				   double lami[3],
 				   const int element) const;
-    bool PointContainedIn3DElementOld(const Point3d & p,
+    DLL_HEADER bool PointContainedIn3DElementOld(const Point3d & p,
 				      double lami[3],
 				      const int element) const;
 
   public:
+    Signal<> updateSignal;
 
     // store coarse mesh before hp-refinement
-    Array<HPRefElement> * hpelements;
-    Mesh * coarsemesh;
+    unique_ptr<NgArray<HPRefElement>> hpelements;
+    unique_ptr<Mesh> coarsemesh;
   
   
     /// number of refinement levels
-    int mglevels;
+    // int mglevels;
+    // number of vertices on each refinement level:
+    NgArray<size_t> level_nv;
     /// refinement hierarchy
-    Array<PointIndices<2>,PointIndex::BASE> mlbetweennodes;
+    NgArray<PointIndices<2>,PointIndex::BASE> mlbetweennodes;
     /// parent element of volume element
-    Array<int> mlparentelement;
+    NgArray<int> mlparentelement;
     /// parent element of surface element
-    Array<int> mlparentsurfaceelement;
+    NgArray<int> mlparentsurfaceelement;
 
 
 
@@ -224,10 +236,18 @@ namespace netgen
     auto GetNP () const { return points.Size(); }
 
     // [[deprecated("Use Point(PointIndex) instead of int !")]]        
-    MeshPoint & Point(int i) { return points.Elem(i); }
+    MeshPoint & Point(int i)
+    {
+      // return points.Elem(i);
+      return Point (PointIndex(i+PointIndex::BASE-1));
+    }
     MeshPoint & Point(PointIndex pi) { return points[pi]; }
     // [[deprecated("Use Point(PointIndex) instead of int !")]]            
-    const MeshPoint & Point(int i) const { return points.Get(i); }
+    const MeshPoint & Point(int i) const
+    {
+      // return points.Get(i);
+      return Point (PointIndex(i+PointIndex::BASE-1));      
+    }
     const MeshPoint & Point(PointIndex pi) const { return points[pi]; }
 
     const MeshPoint & operator[] (PointIndex pi) const { return points[pi]; }
@@ -240,8 +260,8 @@ namespace netgen
     DLL_HEADER SegmentIndex AddSegment (const Segment & s);
     void DeleteSegment (int segnr)
     {
-      segments.Elem(segnr)[0].Invalidate();
-      segments.Elem(segnr)[1].Invalidate();
+      segments[segnr-1][0].Invalidate();
+      segments[segnr-1][1].Invalidate();
     }
     /*
     void FullDeleteSegment (int segnr)  // von wem ist das ???
@@ -252,19 +272,15 @@ namespace netgen
 
     int GetNSeg () const { return segments.Size(); }
     // [[deprecated("Use LineSegment(SegmentIndex) instead of int !")]]                
-    Segment & LineSegment(int i) { return segments.Elem(i); }
+    Segment & LineSegment(int i) { return segments[i-1]; }
     // [[deprecated("Use LineSegment(SegmentIndex) instead of int !")]]                    
-    const Segment & LineSegment(int i) const { return segments.Get(i); }
+    const Segment & LineSegment(int i) const { return segments[i-1]; }
 
     Segment & LineSegment(SegmentIndex si) { return segments[si]; }
     const Segment & LineSegment(SegmentIndex si) const { return segments[si]; }
     const Segment & operator[] (SegmentIndex si) const { return segments[si]; }
     Segment & operator[] (SegmentIndex si) { return segments[si]; }
 
-    /*
-    const Array<Segment> & LineSegments() const { return segments; }
-    Array<Segment> & LineSegments() { return segments; }
-    */
     const auto & LineSegments() const { return segments; }
     auto & LineSegments() { return segments; }
     
@@ -274,19 +290,35 @@ namespace netgen
     // write to pre-allocated container, thread-safe
     DLL_HEADER void SetSurfaceElement (SurfaceElementIndex sei, const Element2d & el);
     
-    // [[deprecated("Use DeleteSurfaceElement(SurfaceElementIndex) instead of int !")]]
+    [[deprecated("Use Delete(SurfaceElementIndex) instead of int !")]]
     void DeleteSurfaceElement (int eli)
-    { 
+    {
+      /*
       surfelements.Elem(eli).Delete();
       surfelements.Elem(eli).PNum(1).Invalidate();
       surfelements.Elem(eli).PNum(2).Invalidate();
       surfelements.Elem(eli).PNum(3).Invalidate();
+      */
+      surfelements[eli-1].Delete();
+      /*
+      surfelements[eli-1].PNum(1).Invalidate();
+      surfelements[eli-1].PNum(2).Invalidate();
+      surfelements[eli-1].PNum(3).Invalidate();
+      */
       timestamp = NextTimeStamp();
     }
 
+    [[deprecated("Use Delete(SurfaceElementIndex) instead !")]]        
     void DeleteSurfaceElement (SurfaceElementIndex eli)
     {
-      for (auto & p : surfelements[eli].PNums()) p.Invalidate();
+      // for (auto & p : surfelements[eli].PNums()) p.Invalidate();
+      surfelements[eli].Delete();
+      timestamp = NextTimeStamp();
+    }
+    
+    void Delete (SurfaceElementIndex eli)
+    {
+      // for (auto & p : surfelements[eli].PNums()) p.Invalidate();
       surfelements[eli].Delete();
       timestamp = NextTimeStamp();
     }
@@ -294,10 +326,12 @@ namespace netgen
     auto GetNSE () const { return surfelements.Size(); }
 
     // [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]    
-    Element2d & SurfaceElement(int i) { return surfelements.Elem(i); }
+    Element2d & SurfaceElement(int i) { return surfelements[i-1]; }
     // [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]        
-    const Element2d & SurfaceElement(int i) const { return surfelements.Get(i); }
+    const Element2d & SurfaceElement(int i) const { return surfelements[i-1]; }
+    // [[deprecated("Use mesh[](SurfaceElementIndex) instead !")]]
     Element2d & SurfaceElement(SurfaceElementIndex i) { return surfelements[i]; }
+    // [[deprecated("Use mesh[](SurfaceElementIndex) instead !")]]
     const Element2d & SurfaceElement(SurfaceElementIndex i) const { return surfelements[i]; }
 
     const Element2d & operator[] (SurfaceElementIndex ei) const
@@ -305,8 +339,8 @@ namespace netgen
     Element2d & operator[] (SurfaceElementIndex ei)
     { return surfelements[ei]; }
 
-    const T_SURFELEMENTS & SurfaceElements() const { return surfelements; }
-    T_SURFELEMENTS & SurfaceElements() { return surfelements; }
+    const auto & SurfaceElements() const { return surfelements; }
+    auto & SurfaceElements() { return surfelements; }
 
   
     DLL_HEADER void RebuildSurfaceElementLists ();
@@ -319,21 +353,19 @@ namespace netgen
     auto GetNE () const { return volelements.Size(); }
 
     // [[deprecated("Use VolumeElement(ElementIndex) instead of int !")]]    
-    Element & VolumeElement(int i) { return volelements.Elem(i); }
+    Element & VolumeElement(int i) { return volelements[i-1]; }
     // [[deprecated("Use VolumeElement(ElementIndex) instead of int !")]]        
-    const Element & VolumeElement(int i) const { return volelements.Get(i); }
+    const Element & VolumeElement(int i) const { return volelements[i-1]; }
+    // [[deprecated("Use mesh[](VolumeElementIndex) instead !")]]
     Element & VolumeElement(ElementIndex i) { return volelements[i]; }
+    // [[deprecated("Use mesh[](VolumeElementIndex) instead !")]]
     const Element & VolumeElement(ElementIndex i) const { return volelements[i]; }
 
-    const Element & operator[] (ElementIndex ei) const 
-    { return volelements[ei]; }
-    Element & operator[] (ElementIndex ei)
-    { return volelements[ei]; }
-
-
+    const Element & operator[] (ElementIndex ei) const { return volelements[ei]; }
+    Element & operator[] (ElementIndex ei) { return volelements[ei]; }
 
     ELEMENTTYPE ElementType (ElementIndex i) const 
-    { return (volelements[i].flags.fixed) ? FIXEDELEMENT : FREEELEMENT; }
+    { return (volelements[i].Flags().fixed) ? FIXEDELEMENT : FREEELEMENT; }
 
     const auto & VolumeElements() const { return volelements; }
     auto & VolumeElements() { return volelements; }
@@ -352,13 +384,13 @@ namespace netgen
     DLL_HEADER int GetNDomains() const;
     ///
     int GetDimension() const { return dimension; }
-    void SetDimension (int dim) { dimension = dim; }
+    DLL_HEADER void SetDimension (int dim); //  { dimension = dim; }
 
     /// sets internal tables
     DLL_HEADER void CalcSurfacesOfNode ();
 
     /// additional (temporarily) fix points 
-    void FixPoints (const BitArray & fixpoints);
+    void FixPoints (const NgBitArray & fixpoints);
 
     /**
        finds elements without neighbour and
@@ -406,22 +438,22 @@ namespace netgen
     */
     DLL_HEADER double AverageH (int surfnr = 0) const;
     /// Calculates localh 
-    DLL_HEADER void CalcLocalH (double grading);
+    DLL_HEADER void CalcLocalH (double grading, int layer=1);
     ///
-    DLL_HEADER void SetLocalH (netgen::Point<3> pmin, netgen::Point<3> pmax, double grading);
+    DLL_HEADER void SetLocalH (netgen::Point<3> pmin, netgen::Point<3> pmax, double grading, int layer=1);
     ///
-    DLL_HEADER void RestrictLocalH (const Point3d & p, double hloc);
+    DLL_HEADER void RestrictLocalH (const Point3d & p, double hloc, int layer=1);
     ///
     DLL_HEADER void RestrictLocalHLine (const Point3d & p1, const Point3d & p2, 
-			     double hloc);
+			     double hloc, int layer=1);
     /// number of elements per radius
-    DLL_HEADER void CalcLocalHFromSurfaceCurvature(double grading, double elperr);
+    DLL_HEADER void CalcLocalHFromSurfaceCurvature(double grading, double elperr, int layer=1);
     ///
-    DLL_HEADER void CalcLocalHFromPointDistances(double grading);
+    DLL_HEADER void CalcLocalHFromPointDistances(double grading, int layer=1);
     ///
     DLL_HEADER void RestrictLocalH (resthtype rht, int nr, double loch);
     ///
-    DLL_HEADER void LoadLocalMeshSize (const string & meshsizefilename);
+    DLL_HEADER void LoadLocalMeshSize (const filesystem::path & meshsizefilename);
     ///
     DLL_HEADER void SetGlobalH (double h);
     ///
@@ -429,17 +461,27 @@ namespace netgen
     ///
 	DLL_HEADER double MaxHDomain (int dom) const;
     ///
-	DLL_HEADER void SetMaxHDomain (const Array<double> & mhd);
+	DLL_HEADER void SetMaxHDomain (const NgArray<double> & mhd);
     ///
-    DLL_HEADER double GetH (const Point3d & p) const;
+    DLL_HEADER double GetH (const Point3d & p, int layer=1) const;
+    DLL_HEADER double GetH (PointIndex pi) const { return GetH(points[pi], points[pi].GetLayer()); }
     ///
-    double GetMinH (const Point3d & pmin, const Point3d & pmax);
+    double GetMinH (const Point3d & pmin, const Point3d & pmax, int layer=1);
     ///
-    bool HasLocalHFunction () { return lochfunc != nullptr; }
+    bool HasLocalHFunction (int layer=1) { return lochfunc[layer-1] != nullptr; }
     ///
-    LocalH & LocalHFunction () { return * lochfunc; }
+    LocalH & LocalHFunction (int layer=1) { return * lochfunc[layer-1]; }
+
+    shared_ptr<LocalH> GetLocalH(int layer=1) const
+    {
+      if(lochfunc.Size() == 1)
+        return lochfunc[0];
+      return lochfunc[layer-1];
+    }
+    DLL_HEADER void SetLocalH(shared_ptr<LocalH> loch, int layer=1);
+
     ///
-    bool LocalHFunctionGenerated(void) const { return (lochfunc != NULL); }
+    bool LocalHFunctionGenerated(int layer=1) const { return (lochfunc[layer-1] != NULL); }
 
     /// Find bounding box
     DLL_HEADER void GetBox (Point3d & pmin, Point3d & pmax, int dom = -1) const;
@@ -455,6 +497,8 @@ namespace netgen
     { return openelements.Get(i); }
 
     auto & OpenElements() const { return openelements; }
+
+    auto & OpenElements() { return openelements; }
     
     /// are also quads open elements
     bool HasOpenQuads () const;
@@ -467,7 +511,8 @@ namespace netgen
 
     /// Refines mesh and projects points to true surface
     // void Refine (int levels, const CSGeometry * geom);
-  
+
+    void ZRefine(const string& name, const Array<double>& slices);
     
     bool BoundaryEdge (PointIndex pi1, PointIndex pi2) const
     {
@@ -477,6 +522,11 @@ namespace netgen
       INDEX_2 i2 (pi1, pi2);
       i2.Sort();
       return boundaryedges->Used (i2);
+    }
+
+    void DeleteBoundaryEdges ()
+    {
+        boundaryedges = nullptr;
     }
 
     bool IsSegment (PointIndex pi1, PointIndex pi2) const
@@ -509,11 +559,11 @@ namespace netgen
     ///
 	DLL_HEADER void Merge (istream & infile, const int surfindex_offset = 0);
     ///
-	DLL_HEADER void Save (const string & filename) const;
+	DLL_HEADER void Save (const filesystem::path & filename) const;
     ///
-	DLL_HEADER void Load (const string & filename);
+	DLL_HEADER void Load (const filesystem::path & filename);
     ///
-	DLL_HEADER void Merge (const string & filename, const int surfindex_offset = 0);
+	DLL_HEADER void Merge (const filesystem::path & filename, const int surfindex_offset = 0);
 
 
     DLL_HEADER void DoArchive (Archive & archive);
@@ -521,18 +571,22 @@ namespace netgen
 	DLL_HEADER void ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal = OPT_QUALITY);
 
     ///
-    void ImproveMeshJacobian (const MeshingParameters & mp, OPTIMIZEGOAL goal = OPT_QUALITY, const BitArray * usepoint = NULL);
+    void ImproveMeshJacobian (const MeshingParameters & mp, OPTIMIZEGOAL goal = OPT_QUALITY, const NgBitArray * usepoint = NULL);
     ///
     void ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
-				       const BitArray & usepoint, 
-				       const Array< Vec<3>* > & nv,
+				       const NgBitArray & usepoint, 
+				       const NgArray< Vec<3>* > & nv,
 				       OPTIMIZEGOAL goal = OPT_QUALITY,
-				       const Array< Array<int,PointIndex::BASE>* > * idmaps = NULL);
+				       const NgArray< NgArray<int,PointIndex::BASE>* > * idmaps = NULL);
     /**
        free nodes in environment of openelements 
        for optimiztion
     */
     void FreeOpenElementsEnvironment (int layers);
+
+
+    DLL_HEADER double CalcTotalBad (const MeshingParameters & mp);
+    FlatArray<int> GetQualityHistogram() { return tets_in_qualclass; }
 
     ///
     bool LegalTet (Element & el) const
@@ -546,6 +600,10 @@ namespace netgen
 
 
     ///
+    // Find trigs with same vertices
+    // return: number of illegal trigs
+    int FindIllegalTrigs ();
+
     bool LegalTrig (const Element2d & el) const;
     /**
        if values non-null, return values in 4-double array:
@@ -573,30 +631,30 @@ namespace netgen
     void SetPointSearchStartElement(const int el) const {ps_startelement = el;}
 
     /// gives element of point, barycentric coordinates
-    int GetElementOfPoint (const netgen::Point<3> & p,
+    DLL_HEADER int GetElementOfPoint (const netgen::Point<3> & p,
 			   double * lami,
 			   bool build_searchtree = 0,
 			   const int index = -1,
 			   const bool allowindex = true) const;
-    int GetElementOfPoint (const netgen::Point<3> & p,
+    DLL_HEADER int GetElementOfPoint (const netgen::Point<3> & p,
 			   double * lami,
-			   const Array<int> * const indices,
+			   const NgArray<int> * const indices,
 			   bool build_searchtree = 0,
 			   const bool allowindex = true) const;
-    int GetSurfaceElementOfPoint (const netgen::Point<3> & p,
+    DLL_HEADER int GetSurfaceElementOfPoint (const netgen::Point<3> & p,
 				  double * lami,
 				  bool build_searchtree = 0,
 				  const int index = -1,
 				  const bool allowindex = true) const;
-    int GetSurfaceElementOfPoint (const netgen::Point<3> & p,
+    DLL_HEADER int GetSurfaceElementOfPoint (const netgen::Point<3> & p,
 				  double * lami,
-				  const Array<int> * const indices,
+				  const NgArray<int> * const indices,
 				  bool build_searchtree = 0,
 				  const bool allowindex = true) const;
 
     /// give list of vol elements which are int the box(p1,p2)
     void GetIntersectingVolEls(const Point3d& p1, const Point3d& p2, 
-			       Array<int> & locels) const;
+			       NgArray<int> & locels) const;
 
     ///
     int AddFaceDescriptor(const FaceDescriptor& fd)
@@ -605,7 +663,7 @@ namespace netgen
     int AddEdgeDescriptor(const EdgeDescriptor & fd)
     { edgedecoding.Append(fd); return edgedecoding.Size() - 1; }
 
-    auto GetCommunicator() const { return this->comm; }
+    auto & GetCommunicator() const { return this->comm; }
     void SetCommunicator(NgMPI_Comm acomm);
     
     ///
@@ -638,6 +696,7 @@ namespace netgen
 
     DLL_HEADER void SetNCD3Names (int ncd3n);
     DLL_HEADER void SetCD3Name (int cd3nr, const string & abcname);
+    DLL_HEADER int AddCD3Name (const string & aname);
 
     DLL_HEADER const string & GetCD3Name (int cd3nr ) const;
     DLL_HEADER static string cd3_default_name;
@@ -652,6 +711,9 @@ namespace netgen
     string * GetBCNamePtr (int bcnr) const
     { return (bcnr < bcnames.Size() && bcnames[bcnr]) ? bcnames[bcnr] : &default_bc; }
 
+
+    NgArray<string*> & GetRegionNamesCD (int codim);
+    
     ///
     void ClearFaceDescriptors()
     { facedecoding.SetSize(0); }
@@ -660,16 +722,28 @@ namespace netgen
     int GetNFD () const
     { return facedecoding.Size(); }
 
+    const FaceDescriptor & GetFaceDescriptor (const Element2d & el) const
+    { return facedecoding[el.GetIndex()-1]; }
+    
     const FaceDescriptor & GetFaceDescriptor (int i) const
-    { return facedecoding.Get(i); }
+    { return facedecoding[i-1]; }      
+    // { return facedecoding.Get(i); }
+
+    auto & FaceDescriptors () const { return facedecoding; }
 
     const EdgeDescriptor & GetEdgeDescriptor (int i) const
     { return edgedecoding[i]; }
 
 
     ///
-    FaceDescriptor & GetFaceDescriptor (int i) 
-    { return facedecoding.Elem(i); }
+    FaceDescriptor & GetFaceDescriptor (int i)
+    { return facedecoding[i-1]; }      
+    // { return facedecoding.Elem(i); }
+
+    int IdentifyPeriodicBoundaries(const string& s1,
+                                   const string& s2,
+                                   const Transformation<3>& mapping,
+                                   double pointTolerance);
 
     // #ifdef NONE
     //   /*
@@ -687,9 +761,9 @@ namespace netgen
     //   }
 
     //   ///
-    //   void GetIdentificationMap (int identnr, Array<int> & identmap) const;
+    //   void GetIdentificationMap (int identnr, NgArray<int> & identmap) const;
     //   ///
-    //   void GetIdentificationPairs (int identnr, Array<INDEX_2> & identpairs) const;
+    //   void GetIdentificationPairs (int identnr, NgArray<INDEX_2> & identpairs) const;
     //   ///
     //   int GetMaxIdentificationNr () const
     //   { 
@@ -704,35 +778,37 @@ namespace netgen
     ///
     bool HasIdentifications() const { return ident != nullptr; }
 
-    void InitPointCurve(double red = 1, double green = 0, double blue = 0) const;
-    void AddPointCurvePoint(const Point3d & pt) const;
-    int GetNumPointCurves(void) const;
-    int GetNumPointsOfPointCurve(int curve) const;
-    Point3d & GetPointCurvePoint(int curve, int n) const;
-    void GetPointCurveColor(int curve, double & red, double & green, double & blue) const;
+    DLL_HEADER void InitPointCurve(double red = 1, double green = 0, double blue = 0) const;
+    DLL_HEADER void AddPointCurvePoint(const Point3d & pt) const;
+    DLL_HEADER int GetNumPointCurves(void) const;
+    DLL_HEADER int GetNumPointsOfPointCurve(int curve) const;
+    DLL_HEADER Point3d & GetPointCurvePoint(int curve, int n) const;
+    DLL_HEADER void GetPointCurveColor(int curve, double & red, double & green, double & blue) const;
 
 
 
 
     /// find number of vertices
-    void ComputeNVertices ();
+    DLL_HEADER void ComputeNVertices ();
     /// number of vertices (no edge-midpoints)
-    int GetNV () const;
+    DLL_HEADER int GetNV () const;
     /// remove edge points
-    void SetNP (int np);
+    DLL_HEADER void SetNP (int np);
 
   
 
+    DLL_HEADER Table<ElementIndex, PointIndex> CreatePoint2ElementTable(std::optional<BitArray> points = std::nullopt, int domain = 0) const;
+    DLL_HEADER Table<SurfaceElementIndex, PointIndex> CreatePoint2SurfaceElementTable( int faceindex=0 ) const;
 
     DLL_HEADER bool PureTrigMesh (int faceindex = 0) const;
     DLL_HEADER bool PureTetMesh () const;
 
 
-    const MeshTopology & GetTopology () const
-    { return topology; }
+    const MeshTopology & GetTopology () const { return topology; }
+    MeshTopology & GetTopology () { return topology; }
 
-    DLL_HEADER void UpdateTopology (TaskManager tm = &DummyTaskManager,
-                                    Tracer tracer = &DummyTracer);
+    DLL_HEADER void UpdateTopology (NgTaskManager tm = &DummyTaskManager,
+                                    NgTracer tracer = &DummyTracer);
   
     class CurvedElements & GetCurvedElements () const
     { return *curvedelems; }
@@ -751,7 +827,7 @@ namespace netgen
       double area;
     public:
       CSurfaceArea (const Mesh & amesh) 
-	: mesh(amesh), valid(false) { ; }
+	: mesh(amesh), valid(false), area(0.) { ; }
 
       void Add (const Element2d & sel)
       {
@@ -765,8 +841,12 @@ namespace netgen
       void ReCalc ()
       {
 	area = 0;
+        /*
 	for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
 	  Add (mesh[sei]);
+        */
+        for (const Element2d & el : mesh.SurfaceElements())
+          Add (el);
 	valid = true;
       }
 
@@ -795,8 +875,9 @@ namespace netgen
 
 
     shared_ptr<NetgenGeometry> GetGeometry() const
-    { 
-      return geometry; 
+    {
+      static auto global_geometry = make_shared<NetgenGeometry>();
+      return geometry ? geometry : global_geometry;
     }
     void SetGeometry (shared_ptr<NetgenGeometry> geom) 
     {
@@ -804,13 +885,13 @@ namespace netgen
     }
 
     ///
-    void SetUserData(const char * id, Array<int> & data);
+    void SetUserData(const char * id, NgArray<int> & data);
     ///
-    bool GetUserData(const char * id, Array<int> & data, int shift = 0) const;
+    bool GetUserData(const char * id, NgArray<int> & data, int shift = 0) const;
     ///
-    void SetUserData(const char * id, Array<double> & data);
+    void SetUserData(const char * id, NgArray<double> & data);
     ///
-    bool GetUserData(const char * id, Array<double> & data, int shift = 0) const;
+    bool GetUserData(const char * id, NgArray<double> & data, int shift = 0) const;
 
     ///
     friend void OptimizeRestart (Mesh & mesh3d);
@@ -819,22 +900,20 @@ namespace netgen
     /// 
     friend class Meshing3;
 
-
+    // only for saving the geometry
     enum GEOM_TYPE { NO_GEOM = 0, GEOM_2D = 1, GEOM_CSG = 10, GEOM_STL = 11, GEOM_OCC = 12, GEOM_ACIS = 13 };
     GEOM_TYPE geomtype;
   
-
 
 #ifdef PARALLEL
     /// returns parallel topology
     class ParallelMeshTopology & GetParallelTopology () const
     { return *paralleltop; }
 
-
     /// distributes the master-mesh to local meshes
-    void Distribute ();
-    void Distribute (Array<int> & volume_weights, Array<int> & surface_weights, 
-		     Array<int> & segment_weights);
+    DLL_HEADER void Distribute ();
+    DLL_HEADER void Distribute (NgArray<int> & volume_weights, NgArray<int> & surface_weights,
+		     NgArray<int> & segment_weights);
 
 
     /// find connection to parallel meshes
@@ -844,35 +923,47 @@ namespace netgen
     //   void FindExchangeFaces ();
 
     /// use metis to decompose master mesh 
-    void ParallelMetis (); //  Array<int> & neloc );
-    void ParallelMetis (Array<int> & volume_weights, Array<int> & surface_weights, 
-			Array<int> & segment_weights); 
+    DLL_HEADER void ParallelMetis (int nproc); //  NgArray<int> & neloc );
+    DLL_HEADER void ParallelMetis (NgArray<int> & volume_weights, NgArray<int> & surface_weights,
+			NgArray<int> & segment_weights); 
 
-    void PartHybridMesh (); //  Array<int> & neloc );
-    void PartDualHybridMesh (); //  Array<int> & neloc );
-    void PartDualHybridMesh2D ();  // ( Array<int> & neloc );
+    void PartHybridMesh (); //  NgArray<int> & neloc );
+    void PartDualHybridMesh (); //  NgArray<int> & neloc );
+    void PartDualHybridMesh2D ();  // ( NgArray<int> & neloc );
 
 
     /// send mesh from master to local procs
     void SendRecvMesh ();
 
     /// send mesh to parallel machine, keep global mesh at master 
-    void SendMesh ( ) const;   // Mesh * mastermesh, Array<int> & neloc) const;
+    void SendMesh ( ) const;   // Mesh * mastermesh, NgArray<int> & neloc) const;
     /// loads a mesh sent from master processor
     void ReceiveParallelMesh ();
 
-    Array<int> vol_partition;
-    Array<int> surf_partition;
-    Array<int> seg_partition;
     
 #else
+    void ParallelMetis (int /* nproc */) {}
     void Distribute () {}
     void SendRecvMesh () {}
-    void Distribute (Array<int> & volume_weights, Array<int> & surface_weights, 
-      Array<int> & segment_weights){ }
+    void Distribute (NgArray<int> & volume_weights, NgArray<int> & surface_weights, 
+      NgArray<int> & segment_weights){ }
 #endif
 
+    NgArray<int> vol_partition;
+    NgArray<int> surf_partition;
+    NgArray<int> seg_partition;
 
+    shared_ptr<Mesh> Mirror( netgen::Point<3> p, Vec<3> n );
+
+    private:
+    MemoryTracer mem_tracer = {"Mesh",
+      points, "points",
+      segments, "segments",
+      surfelements, "surfelements",
+      volelements, "volelements"
+    };
+    public:
+    const MemoryTracer & GetMemoryTracer() { return mem_tracer; }
   };
 
   inline ostream& operator<<(ostream& ost, const Mesh& mesh)
@@ -882,6 +973,24 @@ namespace netgen
     return ost;
   }
 
+
+
+  FlatArray<T_EDGE> MeshTopology :: GetEdges (SurfaceElementIndex elnr) const
+  {
+    return FlatArray<T_EDGE>(GetNEdges ( (*mesh)[elnr].GetType()), &surfedges[elnr][0]);
+  }
+
+  FlatArray<T_EDGE> MeshTopology :: GetEdges (ElementIndex elnr) const
+  {
+    return FlatArray<T_EDGE>(GetNEdges ( (*mesh)[elnr].GetType()), &edges[elnr][0]);
+  }
+  
+  FlatArray<T_FACE> MeshTopology :: GetFaces (ElementIndex elnr) const
+  {
+    return FlatArray<T_FACE>(GetNFaces ( (*mesh)[elnr].GetType()), &faces[elnr][0]);
+  }
+
+  
 }
 
 #endif

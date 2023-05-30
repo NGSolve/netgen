@@ -1,4 +1,5 @@
 #include <mystdlib.h>
+#include <core/register_archive.hpp>
 
 #include <myadt.hpp>
 #include <csg.hpp>
@@ -16,6 +17,7 @@ Surface :: Surface ()
   strcpy (name, "noname");
   bcprop = -1;
   bcname = "default";
+  inverse = false;
 }
 
 Surface :: ~Surface()
@@ -230,13 +232,13 @@ void Primitive :: SetSurfaceId (int i, int id)
 
 
 void Primitive :: GetPrimitiveData (const char *& classname, 
-				    Array<double> & coeffs) const
+				    NgArray<double> & coeffs) const
 {
   classname = "undef";
   coeffs.SetSize (0);
 }
 
-void Primitive :: SetPrimitiveData (Array<double> & coeffs)
+void Primitive :: SetPrimitiveData (NgArray<double> & coeffs)
 {
   ;
 }
@@ -256,7 +258,7 @@ Primitive * Primitive :: CreatePrimitive (const char * classname)
 
 
   stringstream ost;
-  ost << "Primitve::CreatePrimitive not implemented for " << classname << endl;
+  ost << "Primitive::CreatePrimitive not implemented for " << classname << endl;
   throw NgException (ost.str());
 }
 
@@ -264,7 +266,7 @@ Primitive * Primitive :: CreatePrimitive (const char * classname)
 Primitive * Primitive :: Copy () const
 {
   stringstream ost;
-  ost << "Primitve::Copy not implemented for " << typeid(*this).name() << endl;
+  ost << "Primitive::Copy not implemented for " << typeid(*this).name() << endl;
   throw NgException (ost.str());
 }
 
@@ -272,12 +274,12 @@ Primitive * Primitive :: Copy () const
 void Primitive :: Transform (Transformation<3> & trans)
 {
   stringstream ost;
-  ost << "Primitve::Transform not implemented for " << typeid(*this).name() << endl;
+  ost << "Primitive::Transform not implemented for " << typeid(*this).name() << endl;
   throw NgException (ost.str());
 }
 
 void Primitive :: GetTangentialSurfaceIndices (const Point<3> & p, 
-					       Array<int> & surfind, double eps) const
+					       NgArray<int> & surfind, double eps) const
 {
   for (int j = 0; j < GetNSurfaces(); j++)
     if (fabs (GetSurface(j).CalcFunctionValue (p)) < eps)
@@ -288,7 +290,7 @@ void Primitive :: GetTangentialSurfaceIndices (const Point<3> & p,
 
 void Primitive :: 
 GetTangentialVecSurfaceIndices (const Point<3> & p, const Vec<3> & v,
-				Array<int> & surfind, double eps) const
+				NgArray<int> & surfind, double eps) const
 {
   cout << "get tangvecsurfind not implemented" << endl;
   surfind.SetSize (0);
@@ -296,7 +298,7 @@ GetTangentialVecSurfaceIndices (const Point<3> & p, const Vec<3> & v,
 
 void Primitive :: 
 GetTangentialVecSurfaceIndices2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
-				 Array<int> & surfind, double eps) const
+				 NgArray<int> & surfind, double eps) const
 {
   for (int j = 0; j < GetNSurfaces(); j++)
     {
@@ -428,10 +430,19 @@ VecInSolid2 (const Point<3> & p,
     return IS_OUTSIDE;
 
   double hv2 = v2 * hv;
+  if (hv2 <= -eps)
+    return IS_INSIDE;
+  if (hv2 >= eps)
+    return IS_OUTSIDE;
+  return DOES_INTERSECT;
+  
+  /*
+  double hv2 = v2 * hv;
   if (hv2 <= 0)
     return IS_INSIDE;
   else
     return IS_OUTSIDE;
+  */
 }
   
 

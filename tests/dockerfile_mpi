@@ -1,0 +1,27 @@
+FROM ubuntu:22.04
+ENV DEBIAN_FRONTEND=noninteractive
+MAINTAINER Matthias Hochsteger <matthias.hochsteger@tuwien.ac.at>
+RUN apt-get update && apt-get -y install \
+        ccache \
+        clang \
+        clang-tidy \
+        cmake \
+        g++ \
+        gfortran \
+        git \
+        libglu1-mesa-dev \
+        libopenmpi-dev \
+        libpython3-dev \
+        libxmu-dev \
+        openmpi-bin \
+        python3 \
+        python3-distutils \
+        python3-mpi4py \
+        python3-numpy \
+        python3-pip \
+        python3-tk \
+        tcl-dev \
+        tk-dev
+
+RUN python3 -m pip install pytest-mpi pytest-check pytest pybind11-stubgen
+ADD . /root/src/netgen

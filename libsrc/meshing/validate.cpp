@@ -5,8 +5,8 @@
 
 namespace netgen
 {
-  void GetPureBadness(Mesh & mesh, Array<double> & pure_badness,
-		      const BitArray & isnewpoint)
+  void GetPureBadness(Mesh & mesh, NgArray<double> & pure_badness,
+		      const NgBitArray & isnewpoint)
   {
     //const int ne = mesh.GetNE();
     const int np = mesh.GetNP();
@@ -14,7 +14,7 @@ namespace netgen
     pure_badness.SetSize(np+PointIndex::BASE+1);
     pure_badness = -1;
 
-    Array< Point<3>* > backup(np);
+    NgArray< Point<3>* > backup(np);
 
     for(int i=0; i<np; i++)
       {
@@ -47,10 +47,10 @@ namespace netgen
   }
 
 
-  double Validate(const Mesh & mesh, Array<ElementIndex> & bad_elements,
-		  const Array<double> & pure_badness,
+  double Validate(const Mesh & mesh, NgArray<ElementIndex> & bad_elements,
+		  const NgArray<double> & pure_badness,
 		  double max_worsening, const bool uselocalworsening,
-		  Array<double> * quality_loss)
+		  NgArray<double> * quality_loss)
   {
     PrintMessage(3,"!!!! Validating !!!!");
     //if(max_worsening > 0)
@@ -104,8 +104,8 @@ namespace netgen
   }
 
 
-  void GetWorkingArea(BitArray & working_elements, BitArray & working_points,
-		      const Mesh & mesh, const Array<ElementIndex> & bad_elements,
+  void GetWorkingArea(NgBitArray & working_elements, NgBitArray & working_points,
+		      const Mesh & mesh, const NgArray<ElementIndex> & bad_elements,
 		      const int width)
   {
     working_elements.Clear();
@@ -151,11 +151,11 @@ namespace netgen
 
 
 
-  void RepairBisection(Mesh & mesh, Array<ElementIndex> & bad_elements, 
-		       const BitArray & isnewpoint, const Refinement & refinement,
-		       const Array<double> & pure_badness, 
+  void RepairBisection(Mesh & mesh, NgArray<ElementIndex> & bad_elements, 
+		       const NgBitArray & isnewpoint, const Refinement & refinement,
+		       const NgArray<double> & pure_badness, 
 		       double max_worsening, const bool uselocalworsening,
-		       const Array< Array<int,PointIndex::BASE>* > & idmaps)
+		       const NgArray< NgArray<int,PointIndex::BASE>* > & idmaps)
   {
     ostringstream ostrstr;
 
@@ -175,9 +175,9 @@ namespace netgen
 
     PushStatus("Repair Bisection");
 
-    Array<Point<3>* > should(np);
-    Array<Point<3>* > can(np);
-    Array<Vec<3>* > nv(np);
+    NgArray<Point<3>* > should(np);
+    NgArray<Point<3>* > can(np);
+    NgArray<Vec<3>* > nv(np);
     for(int i=0; i<np; i++)
       {
 	nv[i] = new Vec<3>;
@@ -185,7 +185,7 @@ namespace netgen
 	can[i] = new Point<3>;
       }
     
-    BitArray isboundarypoint(np),isedgepoint(np);
+    NgBitArray isboundarypoint(np),isedgepoint(np);
     isboundarypoint.Clear();
     isedgepoint.Clear();
 
@@ -196,7 +196,7 @@ namespace netgen
 	isedgepoint.Set(seg[1]);
       }
 
-    Array<int> surfaceindex(np);
+    NgArray<int> surfaceindex(np);
     surfaceindex = -1;
     
     for (int i = 1; i <= mesh.GetNSE(); i++)
@@ -216,8 +216,8 @@ namespace netgen
     Validate(mesh,bad_elements,pure_badness,
 	     ((uselocalworsening) ?  (0.8*(max_worsening-1.) + 1.) : (0.1*(max_worsening-1.) + 1.)),
 	     uselocalworsening); // -> larger working area
-    BitArray working_elements(ne);
-    BitArray working_points(np);
+    NgBitArray working_elements(ne);
+    NgBitArray working_points(np);
 
     GetWorkingArea(working_elements,working_points,mesh,bad_elements,numbadneighbours);
     //working_elements.Set();
@@ -240,7 +240,7 @@ namespace netgen
     PrintMessage(5,ostrstr.str());
     
 
-    BitArray isworkingboundary(np);
+    NgBitArray isworkingboundary(np);
     for(int i=1; i<=np; i++)
       if(working_points.Test(i) && isboundarypoint.Test(i))
 	isworkingboundary.Set(i);
@@ -276,8 +276,8 @@ namespace netgen
 
     double oldlamedge,oldlamface;
 
-    MeshOptimize2d * optimizer2d = refinement.Get2dOptimizer();
-    if(!optimizer2d)
+    auto geo = mesh.GetGeometry();
+    if(!geo)
       {
 	cerr << "No 2D Optimizer!" << endl;
 	return;
@@ -382,8 +382,15 @@ namespace netgen
 	    for (int i = 1; i <= np; i++)
 	      *can.Elem(i) = mesh.Point(i);
 	    
-	    if(optimizer2d)
-	      optimizer2d->ProjectBoundaryPoints(surfaceindex,can,should);
+	    if(geo)
+              for(int i=0; i<surfaceindex.Size(); i++)
+                {
+                  if(surfaceindex[i] >= 0)
+                    {
+                      *should[i] = *can[i];
+                      geo->ProjectPoint(surfaceindex[i],*should[i]);
+                    }
+                }
 	  }
 
 

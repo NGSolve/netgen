@@ -83,7 +83,7 @@ namespace netgen
                 if ( (strlen (vssolution.soldata[i]->name.c_str()) == size_t(pointpos-1)) &&
                      (strncmp (vssolution.soldata[i]->name.c_str(), scalname, pointpos-1) == 0) )
                   {
-                    vssolution.scalfunction = i;
+                    vssolution.SetScalfunction(i);
                     vssolution.scalcomp = atoi (scalname + pointpos);
 		    if ( vssolution.scalcomp > vssolution.soldata[i]->components )
                       vssolution.scalcomp = 1;
@@ -91,14 +91,14 @@ namespace netgen
 		    for ( int ii = 0; ii < pointpos; ii++ )
 		      newscalname[ii] = scalname[ii];
 		    newscalname[pointpos] = ':';
-		    sprintf (newscalname+pointpos, "%i", vssolution.scalcomp);
+		    snprintf (newscalname+pointpos, sizeof(newscalname)-pointpos, "%i", vssolution.scalcomp);
 
                     if (strcmp (scalname, newscalname) != 0)
                       Tcl_SetVar ( interp, "::visoptions.scalfunction", newscalname, TCL_GLOBAL_ONLY );
 		    scalname = Tcl_GetVar (interp, "::visoptions.scalfunction", TCL_GLOBAL_ONLY);
                   }
                 if (strcmp (vssolution.soldata[i]->name.c_str(), vecname) == 0)
-		  vssolution.vecfunction = i;
+		  vssolution.SetVecfunction(i);
 
                 if (strcmp (vssolution.soldata[i]->name.c_str(), fieldlines_vecname) == 0)
 		  vssolution.fieldlines_vecfunction = i;
@@ -111,7 +111,7 @@ namespace netgen
                 vssolution.vecfunction = vssolution.fieldlines_vecfunction;
               }
                
-	    // reset visoptions.scalfunction and visoptions.vecfunction if not avialable 
+	    // reset visoptions.scalfunction and visoptions.vecfunction if not available 
 	    if ( vssolution.scalfunction == -1 && strcmp (scalname, "none") != 0)
               Tcl_SetVar ( interp, "::visoptions.scalfunction", "none", TCL_GLOBAL_ONLY );
 	    if ( vssolution.vecfunction == -1  && strcmp (vecname, "none") != 0)
@@ -325,22 +325,22 @@ namespace netgen
 
         if (strcmp (argv[1], "getnfieldnames") == 0)
           {
-            sprintf (buf, "%d", vssolution.GetNSolData());
+            snprintf (buf, size(buf),  "%d", vssolution.GetNSolData());
           }
       
         if (strcmp (argv[1], "getfieldname") == 0)
           {
-            sprintf (buf, "%s", vssolution.GetSolData(atoi(argv[2])-1)->name.c_str());
+            snprintf (buf, size(buf),  "%s", vssolution.GetSolData(atoi(argv[2])-1)->name.c_str());
           }
 
         if (strcmp (argv[1], "iscomplex") == 0)
           {
-            sprintf (buf, "%d", vssolution.GetSolData(atoi(argv[2])-1)->iscomplex);
+            snprintf (buf, size(buf),  "%d", vssolution.GetSolData(atoi(argv[2])-1)->iscomplex);
           }
 
         if (strcmp (argv[1], "getfieldcomponents") == 0)
           {
-            sprintf (buf, "%d", vssolution.GetSolData(atoi(argv[2])-1)->components);
+            snprintf (buf, size(buf),  "%d", vssolution.GetSolData(atoi(argv[2])-1)->components);
           }
 
       
@@ -362,13 +362,13 @@ namespace netgen
 
         if (strcmp (argv[1], "getactivefield") == 0)
           {
-            sprintf (buf, "1");
+            snprintf (buf, size(buf),  "1");
           }
 
         if (strcmp (argv[1], "getdimension") == 0)
           {
             auto mesh = vssolution.GetMesh();
-            sprintf (buf, "%d", mesh->GetDimension());
+            snprintf (buf, size(buf),  "%d", mesh->GetDimension());
           }
       }
 

@@ -34,17 +34,17 @@ namespace netgen
     DLL_HEADER virtual void GetData (ostream & ost) const = 0;
 
     /// obsolete
-    //  virtual void IdentifySpecialPoints (Array<class SpecialPoint> & points);
+    //  virtual void IdentifySpecialPoints (NgArray<class SpecialPoint> & points);
 
     /// can identify both special points (fixed direction)
     /// (identified points, same tangent)
-    virtual int Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
+    virtual int Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 			      const TABLE<int> & specpoint2solid,			  
 			      const TABLE<int> & specpoint2surface) const;
     ///
-    virtual int Identifyable (const Point<3> & p1, const Point<3> & sp2) const;
+    virtual int Identifiable (const Point<3> & p1, const Point<3> & sp2) const;
     /// is it possible to identify sp1 with some other ?
-    virtual int IdentifyableCandidate (const SpecialPoint & sp1) const;
+    virtual int IdentifiableCandidate (const SpecialPoint & sp1) const;
   
     /// are points (if connected) by a short edge (direction anyhow) ?
     virtual int ShortEdge (const SpecialPoint & sp1, const SpecialPoint & sp2) const;
@@ -59,16 +59,16 @@ namespace netgen
     virtual int GetIdentifiedPoint (class Mesh & mesh, int pi1);
 
     /// copy surfaces, or fill rectangles
-    virtual void BuildSurfaceElements (Array<class Segment> & segs,
+    virtual void BuildSurfaceElements (NgArray<class Segment> & segs,
 				       class Mesh & mesh,
 				       const Surface * surf);
 
     /// insert volume elements in thin layers
-    virtual void BuildVolumeElements (Array<class Element2d> & surfels,
+    virtual void BuildVolumeElements (NgArray<class Element2d> & surfels,
 				      class Mesh & mesh);
 
     /// get list of identified faces
-    virtual void GetIdentifiedFaces (Array<INDEX_2> & idfaces) const;
+    virtual void GetIdentifiedFaces (NgArray<INDEX_2> & idfaces) const;
 
     friend ostream & operator<< (ostream & ost, Identification & ident);
   };
@@ -91,16 +91,16 @@ namespace netgen
     virtual void GetData (ostream & ost) const override;
 
 
-    //  virtual void IdentifySpecialPoints (Array<class SpecialPoint> & points);
-    virtual int Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
+    //  virtual void IdentifySpecialPoints (NgArray<class SpecialPoint> & points);
+    virtual int Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 			      const TABLE<int> & specpoint2solid,
 			      const TABLE<int> & specpoint2surface) const override;
 
-    virtual int Identifyable (const Point<3> & p1, const Point<3> & sp2) const override;
+    virtual int Identifiable (const Point<3> & p1, const Point<3> & sp2) const override;
     virtual int GetIdentifiedPoint (class Mesh & mesh, int pi1) override;
     virtual void IdentifyPoints (class Mesh & mesh) override;
     virtual void IdentifyFaces (class Mesh & mesh) override;
-    virtual void BuildSurfaceElements (Array<class Segment> & segs,
+    virtual void BuildSurfaceElements (NgArray<class Segment> & segs,
 				       class Mesh & mesh,
 				       const Surface * surf) override;
   };
@@ -125,7 +125,7 @@ namespace netgen
     double eps_n;
     Array<double> slices;
     /// used only for domain-local identification:
-    Array<int> domain_surfaces;
+    NgArray<int> domain_surfaces;
     ///
     bool dom_surf_valid;
 
@@ -146,25 +146,25 @@ namespace netgen
     virtual void GetData (ostream & ost) const;
 
 
-    //  virtual void IdentifySpecialPoints (Array<class SpecialPoint> & points);
-    virtual int Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
+    //  virtual void IdentifySpecialPoints (NgArray<class SpecialPoint> & points);
+    virtual int Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 			      const TABLE<int> & specpoint2solid,
 			      const TABLE<int> & specpoint2surface) const;
-    virtual int Identifyable (const Point<3> & p1, const Point<3> & sp2) const;
-    virtual int IdentifyableCandidate (const SpecialPoint & sp1) const;
+    virtual int Identifiable (const Point<3> & p1, const Point<3> & sp2) const;
+    virtual int IdentifiableCandidate (const SpecialPoint & sp1) const;
     virtual int ShortEdge (const SpecialPoint & sp1, const SpecialPoint & sp2) const;
     virtual int GetIdentifiedPoint (class Mesh & mesh, int pi1);
     const Array<double> & GetSlices () const { return slices; }
     virtual void IdentifyPoints (class Mesh & mesh);
     virtual void IdentifyFaces (class Mesh & mesh);
-    virtual void BuildSurfaceElements (Array<class Segment> & segs,
+    virtual void BuildSurfaceElements (NgArray<class Segment> & segs,
 				       class Mesh & mesh,
 				       const Surface * surf);
-    void BuildSurfaceElements2 (Array<class Segment> & segs,
+    void BuildSurfaceElements2 (NgArray<class Segment> & segs,
 				class Mesh & mesh,
 				const Surface * surf);
 
-    virtual void BuildVolumeElements (Array<class Element2d> & surfels,
+    virtual void BuildVolumeElements (NgArray<class Element2d> & surfels,
 				      class Mesh & mesh);
 
     int RefLevels () const { return ref_levels; }
@@ -196,14 +196,14 @@ namespace netgen
     virtual void Print (ostream & ost) const;
     virtual void GetData (ostream & ost) const;
 
-    //  virtual void IdentifySpecialPoints (Array<class SpecialPoint> & points);
-    virtual int Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
+    //  virtual void IdentifySpecialPoints (NgArray<class SpecialPoint> & points);
+    virtual int Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 			      const TABLE<int> & specpoint2solid,
 			      const TABLE<int> & specpoint2surface) const;
 
 
     virtual void IdentifyPoints (class Mesh & mesh);
-    virtual void BuildSurfaceElements (Array<class Segment> & segs,
+    virtual void BuildSurfaceElements (NgArray<class Segment> & segs,
 				       class Mesh & mesh,
 				       const Surface * surf);
   };

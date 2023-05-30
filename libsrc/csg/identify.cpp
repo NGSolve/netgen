@@ -28,7 +28,7 @@ ostream & operator<< (ostream & ost, Identification & ident)
 
 
 /*
-void Identification :: IdentifySpecialPoints (Array<class SpecialPoint> & points)
+void Identification :: IdentifySpecialPoints (NgArray<class SpecialPoint> & points)
 {
   ;
 }
@@ -36,24 +36,24 @@ void Identification :: IdentifySpecialPoints (Array<class SpecialPoint> & points
 
 
 int Identification :: 
-Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
+Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 	      const TABLE<int> & specpoint2solid,
 	      const TABLE<int> & specpoint2surface) const
 {
-  cout << "Identification::Identifyable called for base-class" << endl;
+  cout << "Identification::Identifiable called for base-class" << endl;
   return 0;
 }
 
 int Identification :: 
-Identifyable (const Point<3> & p1, const Point<3> & sp2) const
+Identifiable (const Point<3> & p1, const Point<3> & sp2) const
 {
-  cout << "Identification::Identifyable called for base-class" << endl;
+  cout << "Identification::Identifiable called for base-class" << endl;
   return 0;
 }
 
 
 int Identification :: 
-IdentifyableCandidate (const SpecialPoint & sp1) const
+IdentifiableCandidate (const SpecialPoint & sp1) const
 {
   return 1;
 }
@@ -84,7 +84,7 @@ void Identification :: IdentifyFaces (class Mesh & mesh)
 }
 
 void Identification :: 
-BuildSurfaceElements (Array<Segment> & segs,
+BuildSurfaceElements (NgArray<Segment> & segs,
 		      Mesh & mesh, const Surface * surf)
 {
   cout << "Identification::BuildSurfaceElements called for base-class" << endl;
@@ -93,14 +93,14 @@ BuildSurfaceElements (Array<Segment> & segs,
 
 
 void Identification :: 
-BuildVolumeElements (Array<class Element2d> & surfels,
+BuildVolumeElements (NgArray<class Element2d> & surfels,
 			  class Mesh & mesh)
 {
   ;
 }
 
 void Identification :: 
-GetIdentifiedFaces (Array<INDEX_2> & idfaces) const
+GetIdentifiedFaces (NgArray<INDEX_2> & idfaces) const
 {
   idfaces.SetSize(0);
   for (int i = 1; i <= identfaces.GetNBags(); i++)
@@ -136,7 +136,7 @@ PeriodicIdentification :: ~PeriodicIdentification ()
 
 /*
 void PeriodicIdentification :: IdentifySpecialPoints 
-(Array<class SpecialPoint> & points)
+(NgArray<class SpecialPoint> & points)
 {
   int i, j;
   int bestj;
@@ -196,7 +196,7 @@ void PeriodicIdentification :: IdentifySpecialPoints
 */
 
 int PeriodicIdentification :: 
-Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
+Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 	      const TABLE<int> & specpoint2solid,
 	      const TABLE<int> & specpoint2surface) const
 {
@@ -252,7 +252,7 @@ Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 }
 
 int PeriodicIdentification :: 
-Identifyable (const Point<3> & p1, const Point<3> & p2) const
+Identifiable (const Point<3> & p1, const Point<3> & p2) const
 {
   return (s1->PointOnSurface (p1) &&
 	  s2->PointOnSurface (p2));
@@ -318,6 +318,10 @@ GetIdentifiedPoint (class Mesh & mesh,  int pi)
 
 void PeriodicIdentification :: IdentifyPoints (class Mesh & mesh)
 {
+  Point3d p1, p2;
+  mesh.GetBox(p1, p2);
+  auto eps = 1e-6 * (p2-p1).Length();
+
   for (int i = 1; i <= mesh.GetNP(); i++)
     {
       Point<3> p = mesh.Point(i);
@@ -327,7 +331,7 @@ void PeriodicIdentification :: IdentifyPoints (class Mesh & mesh)
           pp = trafo(pp);
 	  s2->Project (pp);
 	  for (int j = 1; j <= mesh.GetNP(); j++)
-	    if (Dist2(mesh.Point(j), pp) < 1e-6)
+	    if (Dist2(mesh.Point(j), pp) < eps)
 	      {
 		mesh.GetIdentifications().Add (i, j, nr);
 		/*
@@ -446,7 +450,7 @@ void PeriodicIdentification :: IdentifyFaces (class Mesh & mesh)
 
 
 void PeriodicIdentification :: 
-BuildSurfaceElements (Array<Segment> & segs,
+BuildSurfaceElements (NgArray<Segment> & segs,
 		      Mesh & mesh, const Surface * surf)
 {
   int found = 0;
@@ -458,7 +462,7 @@ BuildSurfaceElements (Array<Segment> & segs,
   if (geom.GetSurface(surfnr) == s1 ||
       geom.GetSurface(surfnr) == s2)
     {
-      Array<int> copy_points;
+      NgArray<int> copy_points;
 
       for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
 	{
@@ -609,7 +613,7 @@ void CloseSurfaceIdentification :: GetData (ostream & ost) const
 
 /*
 void CloseSurfaceIdentification :: IdentifySpecialPoints 
-(Array<class SpecialPoint> & points)
+(NgArray<class SpecialPoint> & points)
 {
   int i, j;
   int bestj;
@@ -668,7 +672,7 @@ void CloseSurfaceIdentification :: IdentifySpecialPoints
 */
 
 int CloseSurfaceIdentification :: 
-Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
+Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 	      const TABLE<int> & specpoint2solid,
 	      const TABLE<int> & specpoint2surface) const
 {
@@ -677,7 +681,7 @@ Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
   if (!dom_surf_valid)
     {
       const_cast<bool&> (dom_surf_valid) = 1;
-      Array<int> & hsurf = const_cast<Array<int>&> (domain_surfaces);
+      NgArray<int> & hsurf = const_cast<NgArray<int>&> (domain_surfaces);
 
       if (domain)
 	{
@@ -826,7 +830,7 @@ Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 }
 
 int CloseSurfaceIdentification :: 
-Identifyable (const Point<3> & p1, const Point<3> & p2) const
+Identifiable (const Point<3> & p1, const Point<3> & p2) const
 {  
 //   if (domain)
 //     if (!domain->GetSolid()->IsIn (p1) || !domain->GetSolid()->IsIn (p2))
@@ -838,7 +842,7 @@ Identifyable (const Point<3> & p1, const Point<3> & p2) const
 
 
 int CloseSurfaceIdentification :: 
-IdentifyableCandidate (const SpecialPoint & sp1) const
+IdentifiableCandidate (const SpecialPoint & sp1) const
 {
   if (domain)
     if (!domain->GetSolid()->IsIn (sp1.p))
@@ -887,7 +891,7 @@ GetIdentifiedPoint (class Mesh & mesh,  int pi)
   const Surface *snew;
   const Point<3> & p = mesh.Point (pi);
 
-  Array<int,PointIndex::BASE> identmap(mesh.GetNP());
+  NgArray<int,PointIndex::BASE> identmap(mesh.GetNP());
   mesh.GetIdentifications().GetMap (nr, identmap);
   if (identmap.Get(pi))
     return identmap.Get(pi);
@@ -958,13 +962,13 @@ void CloseSurfaceIdentification :: IdentifyPoints (Mesh & mesh)
 {
   int np = mesh.GetNP();
 
-  Array<int> points_on_surf2;
+  NgArray<int> points_on_surf2;
 
   for (int i2 = 1; i2 <= np; i2++)
     if (s2->PointOnSurface (mesh.Point(i2)))
       points_on_surf2.Append (i2);
     
-  Array<int> surfs_of_p1;
+  NgArray<int> surfs_of_p1;
 
   for (int i1 = 1; i1 <= np; i1++)
     {
@@ -1080,7 +1084,7 @@ void CloseSurfaceIdentification :: IdentifyFaces (class Mesh & mesh)
 	s2rep = geom.GetSurfaceClassRepresentant(i);
     }
 
-  Array<int> segs_on_face1, segs_on_face2;
+  NgArray<int> segs_on_face1, segs_on_face2;
 
   identfaces.DeleteData();
 
@@ -1219,13 +1223,13 @@ void CloseSurfaceIdentification :: IdentifyFaces (class Mesh & mesh)
 
 
 void CloseSurfaceIdentification :: 
-BuildSurfaceElements (Array<Segment> & segs,
+BuildSurfaceElements (NgArray<Segment> & segs,
 		      Mesh & mesh, const Surface * surf)
 {
   bool found = 0;
   int cntquads = 0;
 
-  Array<int,PointIndex::BASE>  identmap;
+  NgArray<int,PointIndex::BASE>  identmap;
   identmap = 0;
 
   mesh.GetIdentifications().GetMap (nr, identmap);
@@ -1240,7 +1244,7 @@ BuildSurfaceElements (Array<Segment> & segs,
   //(*testout) << "segs = " << endl << segs << endl;
   //(*testout) << "identmap = " << endl << identmap << endl;
   
-  //Array<bool> foundseg(segs.Size());
+  //NgArray<bool> foundseg(segs.Size());
   //foundseg = false;
 
   // insert quad layer:
@@ -1301,7 +1305,7 @@ BuildSurfaceElements (Array<Segment> & segs,
     {
       PrintMessage(3, "insert quad layer of ", cntquads,
 		   " elements at face ", segs.Get(1).si);
-      //Array<Segment> aux;
+      //NgArray<Segment> aux;
       //for(int i=0; i<segs.Size();i++)
       //	if(!foundseg[i])
       //	  aux.Append(segs[i]);
@@ -1319,7 +1323,7 @@ BuildSurfaceElements (Array<Segment> & segs,
 
 
 void CloseSurfaceIdentification :: 
-BuildSurfaceElements2 (Array<Segment> & segs,
+BuildSurfaceElements2 (NgArray<Segment> & segs,
 		       Mesh & mesh, const Surface * surf)
 {
   // copy mesh
@@ -1420,7 +1424,7 @@ BuildSurfaceElements2 (Array<Segment> & segs,
 
 
 void CloseSurfaceIdentification :: 
-BuildVolumeElements (Array<class Element2d> & surfels,
+BuildVolumeElements (NgArray<class Element2d> & surfels,
 		     class Mesh & mesh)
 {
   ;
@@ -1481,7 +1485,7 @@ void CloseEdgesIdentification :: GetData (ostream & ost) const
 
 /*
 void CloseEdgesIdentification :: IdentifySpecialPoints 
-(Array<class SpecialPoint> & points)
+(NgArray<class SpecialPoint> & points)
 {
   int i, j;
   int bestj;
@@ -1540,7 +1544,7 @@ void CloseEdgesIdentification :: IdentifySpecialPoints
 */
 
 int CloseEdgesIdentification :: 
-Identifyable (const SpecialPoint & sp1, const SpecialPoint & sp2,
+Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 	      const TABLE<int> & specpoint2solid,
 	      const TABLE<int> & specpoint2surface) const
 {
@@ -1633,7 +1637,7 @@ void CloseEdgesIdentification :: IdentifyPoints (Mesh & mesh)
 }
 
 void CloseEdgesIdentification :: 
-BuildSurfaceElements (Array<Segment> & segs,
+BuildSurfaceElements (NgArray<Segment> & segs,
 		      Mesh & mesh, const Surface * surf)
 {
   int found = 0;

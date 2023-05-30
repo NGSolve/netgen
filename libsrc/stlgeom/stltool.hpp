@@ -1,7 +1,6 @@
 #ifndef FILE_STLTOOL
 #define FILE_STLTOOL
 
-
 //#include "gprim/gprim.hh"
 
 /**************************************************************************/
@@ -11,14 +10,14 @@
 /* Date:   20. Nov. 99                                                    */
 /**************************************************************************/
 
-
+namespace netgen {
 
 // use one normal vector for whole chart
 extern int usechartnormal;
 extern int chartdebug;
 
 extern int geomsearchtreeon;
-extern int AddPointIfNotExists(Array<Point3d>& ap, const Point3d& p, double eps = 1e-8);
+extern int AddPointIfNotExists(NgArray<Point3d>& ap, const Point3d& p, double eps = 1e-8);
 //get distance from line lp1-lp2 to point p
 extern double GetDistFromLine(const Point<3>& lp1, const Point<3>& lp2, Point<3>& p);
 extern double GetDistFromInfiniteLine(const Point<3>& lp1, const Point<3>& lp2, const Point<3>& p);
@@ -35,62 +34,90 @@ extern void FIOReadStringE(istream& ios, char* str, int len);
 extern void FIOWriteString(ostream& ios, char* str, int len);
 
 
-typedef Array <int> * ArrayINTPTR;
+typedef NgArray <int> * ArrayINTPTR;
 
 class STLGeometry;
+class STLParameters;
 
+// typedef int ChartId
+class ChartId
+{
+  int i;
+public:
+  class t_invalid { public: constexpr t_invalid() = default; };
+  static constexpr t_invalid INVALID{};
+  
+  ChartId() { }
+  constexpr ChartId(t_invalid inv) : i(0) { ; }
+  constexpr ChartId(int ai) : i(ai) { } 
+  operator int() const { return i; }
+  ChartId operator++ (int) { ChartId hi(*this); i++; return hi; }
+  ChartId & operator++ () { i++; return *this; }
+};
+}
+
+namespace ngcore
+{
+  template<> 
+  constexpr netgen::ChartId IndexBASE<netgen::ChartId> () { return netgen::ChartId(1); }
+}
+
+
+namespace netgen  {
+  
 class STLChart
 {
 private:
   STLGeometry * geometry;
-  Array<int> charttrigs; // trigs which only belong to this chart
-  Array<int> outertrigs; // trigs which belong to other charts
-  BoxTree<3> * searchtree; // ADT containing outer trigs
+  Array<STLTrigId> charttrigs; // trigs which only belong to this chart
+  Array<STLTrigId> outertrigs; // trigs which belong to other charts
+  BoxTree<3,STLTrigId> * searchtree; // ADT containing outer trigs
 
-  Array<twoint> olimit; //outer limit of outer chart
-  Array<twoint> ilimit; //outer limit of inner chart
+  NgArray<twoint> olimit; //outer limit of outer chart
+  NgArray<twoint> ilimit; //outer limit of inner chart
+  const STLParameters& stlparam;
 
 
 public:
   
-  STLChart(STLGeometry * ageometry);
+  STLChart(STLGeometry * ageometry, const STLParameters& astlparam);
   ~STLChart();
-  void AddChartTrig(int i);
-  void AddOuterTrig(int i);
+  void AddChartTrig(STLTrigId i);
+  void AddOuterTrig(STLTrigId i);
   
-  int IsInWholeChart(int nr) const;
+  bool IsInWholeChart(int nr) const;
 
-  int GetChartTrig(int i) const {return charttrigs.Get(i);}
-  int GetOuterTrig(int i) const {return outertrigs.Get(i);}
+  STLTrigId GetChartTrig1(int i) const {return charttrigs[i-1];}
+  STLTrigId GetOuterTrig1(int i) const {return outertrigs[i-1];}
   //get all trigs:
-  int GetTrig(int i) const
+  STLTrigId GetTrig1(int i) const
     {
-      if (i <= charttrigs.Size()) {return charttrigs.Get(i);}
-      else {return outertrigs.Get(i-charttrigs.Size());}
+      if (i <= charttrigs.Size()) {return charttrigs[i-1];}
+      else {return outertrigs[i-charttrigs.Size()-1];}
     }
   
-  int GetNChartT() const {return charttrigs.Size();}
-  int GetNOuterT() const {return outertrigs.Size();}
-  int GetNT() const {return charttrigs.Size()+outertrigs.Size(); }
+  size_t GetNChartT() const {return charttrigs.Size();}
+  size_t GetNOuterT() const {return outertrigs.Size();}
+  size_t GetNT() const {return charttrigs.Size()+outertrigs.Size(); }
 
   void GetTrianglesInBox (const Point3d & pmin,
 			  const Point3d & pmax,
-			  Array<int> & trias) const;
+			  NgArray<STLTrigId> & trias) const;
   void AddOLimit(twoint l) {olimit.Append(l);}
   void AddILimit(twoint l) {ilimit.Append(l);}
 
   void ClearOLimit() {olimit.SetSize(0);}
   void ClearILimit() {ilimit.SetSize(0);}
 
-  int GetNOLimit() const {return olimit.Size();}
-  int GetNILimit() const {return ilimit.Size();}
+  size_t GetNOLimit() const {return olimit.Size();}
+  size_t GetNILimit() const {return ilimit.Size();}
 
   twoint GetOLimit(int i) const {return olimit.Get(i);}
   twoint GetILimit(int i) const {return ilimit.Get(i);}
 
   //move triangles trigs (local chart-trig numbers) to outer chart
-  void MoveToOuterChart(const Array<int>& trigs);
-  void DelChartTrigs(const Array<int>& trigs);
+  void MoveToOuterChart(const NgArray<int>& trigs);
+  void DelChartTrigs(const NgArray<int>& trigs);
 
 
   // define local coordinate system, JS:
@@ -98,6 +125,7 @@ private:
   Vec<3> normal;
   Point<3> pref;
   Vec<3> t1, t2;
+  unique_ptr<BoxTree<2,STLTrigId>> inner_searchtree;
 public:
   void SetNormal (const Point<3> & apref, const Vec<3> & anormal);
   const Vec<3> & GetNormal () const { return normal; }
@@ -106,6 +134,8 @@ public:
     Vec<3> v = p3d-pref;
     return Point<2> (t1 * v, t2 * v);
   }
+  void BuildInnerSearchTree();
+  STLTrigId ProjectNormal (Point<3> & p) const;
 };
 
 class STLBoundarySeg
@@ -113,16 +143,15 @@ class STLBoundarySeg
   Point<3> p1, p2, center;
   Point<2> p2d1, p2d2;
   Box<2> boundingbox;
-  //  Point<2> p2dmin, p2dmax;
 
   double rad;
-  int i1, i2;
-  int smoothedge;
+  STLPointId i1, i2;
+  bool smoothedge;
 public:
   STLBoundarySeg () { ; }
-  STLBoundarySeg (int ai1, int ai2, const Array<Point<3> > & points,
+  STLBoundarySeg (STLPointId ai1, STLPointId ai2, const Array<Point<3>,STLPointId> & points,
 		  const STLChart * chart)
-    : p1(points.Get(ai1)), p2(points.Get(ai2)),
+    : p1(points[ai1]), p2(points[ai2]),
       i1(ai1), i2(ai2)
   {
     center = ::netgen::Center (p1, p2);
@@ -138,8 +167,8 @@ public:
   int operator== (const STLBoundarySeg & s2) const
     { return i1 == s2.i1 && i2 == s2.i2; }
   void Swap ();
-  int I1() const { return i1; }
-  int I2() const { return i2; }
+  STLPointId I1() const { return i1; }
+  STLPointId I2() const { return i2; }
   const Point<3> & P1() const { return p1; }
   const Point<3> & P2() const { return p2; }
   const Point<2> & P2D1() const { return p2d1; }
@@ -150,8 +179,8 @@ public:
   const Box<2> & BoundingBox() const { return boundingbox; }
   double Radius () const { return rad; }
 
-  void SetSmoothEdge (int se) { smoothedge = se; }
-  int IsSmoothEdge () const { return smoothedge; }
+  void SetSmoothEdge (bool se) { smoothedge = se; }
+  bool IsSmoothEdge () const { return smoothedge; }
   friend class STLBoundary;
 };
 
@@ -160,31 +189,31 @@ class STLBoundary
 private:
   STLGeometry * geometry;
   const STLChart * chart;
-  Array<STLBoundarySeg> boundary;
+  // NgArray<STLBoundarySeg> boundary;
   ClosedHashTable<INDEX_2, STLBoundarySeg> boundary_ht;  
-  BoxTree<2,INDEX_2> * searchtree = nullptr;
+  unique_ptr<BoxTree<2,INDEX_2>> searchtree;
 public:
   STLBoundary(STLGeometry * ageometry);
-  ~STLBoundary() { delete searchtree; }
+  ~STLBoundary() {}
 
-  void Clear() {boundary.SetSize(0); boundary_ht = ClosedHashTable<INDEX_2,STLBoundarySeg>(); }
+  void Clear() { /* boundary.SetSize(0); */ boundary_ht = ClosedHashTable<INDEX_2,STLBoundarySeg>(); }
   void SetChart (const STLChart * achart) { chart = achart; }
   //don't check, if already exists!
-  void AddNewSegment(const STLBoundarySeg & seg) {boundary.Append(seg);};
+  // void AddNewSegment(const STLBoundarySeg & seg) {boundary.Append(seg);};
   //check if segment exists
-  void AddOrDelSegment(const STLBoundarySeg & seg);
+  // void AddOrDelSegment(const STLBoundarySeg & seg);
   //addordelsegment for all 3 triangle segments!
   void AddTriangle(const STLTriangle & t);
-  int NOSegments() {return boundary.Size();};
-  const STLBoundarySeg & GetSegment(int i) {return boundary.Get(i);}
+  int NOSegments() {return boundary_ht.UsedElements();};
+  // const STLBoundarySeg & GetSegment(int i) {return boundary.Get(i);}
 
   void BuildSearchTree();
   void DeleteSearchTree();
-  int TestSeg(const Point<3> & p1, const Point<3> & p2, const Vec<3> & sn, 
-	      double sinchartangle, int divisions, Array<Point<3> >& points,
-	      double eps);
-
-  int TestSegChartNV(const Point3d& p1, const Point3d& p2, const Vec3d& sn);
+  bool TestSeg(const Point<3> & p1, const Point<3> & p2, const Vec<3> & sn, 
+               double sinchartangle, int divisions, Array<Point<3>,STLPointId>& points,
+               double eps);
+  
+  bool TestSegChartNV(const Point3d& p1, const Point3d& p2, const Vec3d& sn);
 };
 
 
@@ -227,66 +256,76 @@ DLL_HEADER extern STLDoctorParams stldoctor;
 
 
 
-class STLParameters
+// TODO change enable flag to optional parameters
+class DLL_HEADER STLParameters
 {
 public:
   /// angle for edge detection
-  double yangle;
-  double contyangle; //edges continued with contyangle
+  double yangle = 30.;
+  double contyangle = 20.; //edges continued with contyangle
   /// angle of geometry edge at which the mesher should set a point
-  double edgecornerangle;
+  double edgecornerangle = 60.;
   /// angle inside on chart
-  double chartangle;
+  double chartangle = 15.;
   /// angle for overlapping parts of char
-  double outerchartangle;
+  double outerchartangle = 70.;
   /// 0 .. no, 1 .. local, (2 .. global)
-  int usesearchtree;
+  int usesearchtree = 0;
   ///
-  double resthatlasfac; 
-  int resthatlasenable;
-  double atlasminh;
+  double resthatlasfac = 2.; 
+  bool resthatlasenable = true;
+  double atlasminh = 0.1;
 
-  double resthsurfcurvfac; 
-  int resthsurfcurvenable;
+  double resthsurfcurvfac = 2.; 
+  bool resthsurfcurvenable = false;
 
-  double resthchartdistfac;
-  int resthchartdistenable;
+  double resthchartdistfac = 1.2;
+  bool resthchartdistenable = true;
 
-  double resthcloseedgefac;
-  int resthcloseedgeenable;
+  // double resthcloseedgefac = 1.;
+  // bool resthcloseedgeenable = true;
   
-  double resthedgeanglefac;
-  int resthedgeangleenable;
+  double resthedgeanglefac = 1.;
+  bool resthedgeangleenable = false;
   
-  double resthsurfmeshcurvfac;
-  int resthsurfmeshcurvenable;
+  double resthsurfmeshcurvfac = 1.;
+  bool resthsurfmeshcurvenable = false;
   
-  double resthlinelengthfac;
-  int resthlinelengthenable;
+  double resthlinelengthfac = 0.5;
+  bool resthlinelengthenable = true;
 
   ///
-  int recalc_h_opt;
+  bool recalc_h_opt = true;
   ///
   STLParameters();
   ///
   void Print (ostream & ost) const;
 };
 
-DLL_HEADER extern STLParameters stlparam;
+inline ostream & operator<< (ostream & ost, const STLParameters & stlparam)
+  {
+    stlparam.Print (ost);
+    return ost;
+  }
+
 
 
 void STLMeshing (STLGeometry & geom,
-		 class Mesh & mesh);
+		 Mesh & mesh,
+                 const MeshingParameters& mparam,
+                 const STLParameters& stlpar);
 
 
 int STLSurfaceMeshing (STLGeometry & geom,
-			class Mesh & mesh);
+                       Mesh & mesh,
+                       const MeshingParameters& mparam,
+                       const STLParameters& stlpar);
 
 void STLSurfaceOptimization (STLGeometry & geom,
-			     class Mesh & mesh,
-			     class MeshingParameters & mparam);
+			     Mesh & mesh,
+			     const MeshingParameters & mparam);
 
 
-
+} // namespace netgen
 
 #endif

@@ -26,7 +26,7 @@ namespace netgen
           - Use colour index 0 (zero) for all faces with no colour defined
           - Calculate the number of faces of the surface mesh for each colour
           - Sort the number of surface elements in ascending order, with the 
-            colour indices as a slave
+            colour indices as a index
           - Use the indices of the sorted array as the BC property number
 
           Example: If there are 3 colours, present in the mesh and the number 
@@ -45,9 +45,9 @@ namespace netgen
    //extern void OCCAutoColourBcProps(Mesh & mesh, OCCGeometry & occgeometry, const char *occcolourfile);
    extern DLL_HEADER void AutoColourBcProps(Mesh & mesh, const char *bccolourfile);
 
-   extern DLL_HEADER void GetFaceColours(Mesh & mesh, Array<Vec3d> & face_colours);
+  extern DLL_HEADER void GetFaceColours(Mesh & mesh, NgArray<Vec<4>> & face_colours);
 
-   extern DLL_HEADER bool ColourMatch(Vec3d col1, Vec3d col2, double eps = 2.5e-05);
+   extern DLL_HEADER bool ColourMatch(Vec<4> col1, Vec<4> col2, double eps = 2.5e-05);
 }
 #endif
 

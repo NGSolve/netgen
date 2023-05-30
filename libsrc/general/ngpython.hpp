@@ -1,13 +1,14 @@
 #ifdef NG_PYTHON
 
-#include <pybind11/pybind11.h>
+#include <core/python_ngcore.hpp>
+
 #include <pybind11/operators.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
-namespace py = pybind11;
 #include <iostream>
 #include <sstream>
 
+using namespace ngcore;
 
 template <typename T>
 py::array MoveToNumpy(std::vector<T>& vec)

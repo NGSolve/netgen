@@ -183,7 +183,7 @@ proc meshingoptionsdialog { } {
         ttk::labelframe $f.bts -borderwidth 3 -relief groove -text "Additional meshing options"
         pack $f.bts -fill x -pady 15
 	ttk::frame $f.bts.btnframe
-	ttk::checkbutton $f.bts.btnframe.parthread -text "Parallel meshing thread" \
+	ttk::checkbutton $f.bts.btnframe.parthread -text "Separate meshing thread" \
 	    -variable options.parthread
 	ttk::checkbutton $f.bts.btnframe.second -text "Second order elements" \
 	    -variable options.secondorder
@@ -214,9 +214,21 @@ proc meshingoptionsdialog { } {
 
         #ttk::frame $f.bts.sbox        
         #pack $f.bts.sbox -anchor w -pady 10
-        ttk::label $f.bts.btnframe.l -text "Element order"
-        ttk::spinbox $f.bts.btnframe.elementorder2 -from 1 -to 20 -textvariable options.elementorder -width 2
-        pack $f.bts.btnframe.elementorder2 $f.bts.btnframe.l  -anchor w -side left
+        ttk::frame $f.bts.btnframe.elorder
+        ttk::label $f.bts.btnframe.elorder.l -text "Element order"
+        ttk::spinbox $f.bts.btnframe.elorder.elementorder2 -from 1 -to 20 -textvariable options.elementorder -width 2
+        pack $f.bts.btnframe.elorder -fill x
+        pack $f.bts.btnframe.elorder.elementorder2 $f.bts.btnframe.elorder.l  -anchor w -side left
+
+        ttk::frame $f.bts.btnframe.pm
+        ttk::checkbutton $f.bts.btnframe.pm.parallel_meshing -text "Parallel meshing" \
+            -variable options.parallel_meshing
+        pack $f.bts.btnframe.pm -fill x -pady 5
+        pack $f.bts.btnframe.pm.parallel_meshing  -anchor w
+
+        ttk::label $f.bts.btnframe.pm.lnthreads -text "Number of meshing threads"
+        ttk::spinbox $f.bts.btnframe.pm.nthreads -from 1 -to 128 -textvariable options.nthreads -width 2
+        pack $f.bts.btnframe.pm.nthreads $f.bts.btnframe.pm.lnthreads  -anchor w -side left
         
 
 
@@ -664,7 +676,7 @@ proc meshingoptionsdialog { } {
         
         ttk::checkbutton $f.cb1.slowchecks -text "Slow checks" \
             -variable debug.slowchecks -command { Ng_SetDebugParameters }
-        ttk::checkbutton $f.cb1.debugoutput -text "Debugging outout" \
+        ttk::checkbutton $f.cb1.debugoutput -text "Debugging output" \
             -variable debug.debugoutput -command { Ng_SetDebugParameters }
         ttk::checkbutton $f.cb1.haltexline -text "Halt on existing line" \
             -variable debug.haltexistingline  -command { Ng_SetDebugParameters }
@@ -677,23 +689,23 @@ proc meshingoptionsdialog { } {
         ttk::checkbutton $f.cb1.haltlargequal -text "Halt on large quality class" \
             -variable debug.haltlargequalclass  -command { Ng_SetDebugParameters }
         ttk::checkbutton $f.cb1.haltseg -text "Halt on Segment:" \
-            -variable debug.haltsegment  -command "enable_cb %W $f.cb1.segs.ent1 $f.cb1.segs.ent2"
+            -variable debug.haltsegment  -command { Ng_SetDebugParameters }
         ttk::checkbutton $f.cb1.haltnode -text "Halt on Node:" \
-            -variable debug.haltnode  -command "enable_cb %W $f.cb1.segs.ent1 $f.cb1.segs.ent2"
+            -variable debug.haltnode  -command { Ng_SetDebugParameters }
         ttk::frame $f.cb1.fr
         ttk::checkbutton $f.cb1.fr.cb -text "Halt on Face:" \
-            -variable debug.haltface -command "enable_cb %W $f.cb1.fr.ent $f.cb1.fr.ent"
-        ttk::entry $f.cb1.fr.ent -textvariable debug.haltfacenr -width 3 -state disabled
+            -variable debug.haltface -command { Ng_SetDebugParameters }
+        ttk::entry $f.cb1.fr.ent -textvariable debug.haltfacenr -width 3
         
         pack $f.cb1.fr.cb $f.cb1.fr.ent -side left 
 
         ttk::frame $f.cb1.segs
         ttk::label $f.cb1.segs.lab1 -text "P1:"
         ttk::entry $f.cb1.segs.ent1 -width 6 \
-            -textvariable debug.haltsegmentp1  -state disabled
+            -textvariable debug.haltsegmentp1
         ttk::label $f.cb1.segs.lab2 -text "P2:"
         ttk::entry $f.cb1.segs.ent2 -width 6 \
-            -textvariable debug.haltsegmentp2  -state disabled
+            -textvariable debug.haltsegmentp2
 
         pack $f.cb1.segs.lab1 $f.cb1.segs.ent1 $f.cb1.segs.lab2 $f.cb1.segs.ent2 -side left
 
@@ -944,8 +956,14 @@ proc viewingoptionsdialog { } {
 	    -textvariable stloptions.chartnumberoffset -validate focus -takefocus 0 \
             -validatecommand "my_validate %W 0 1e9 %P 0" \
             -invalidcommand "my_invalid %W"
+
+        ttk::button $f.fn.btn_write_chart -text "Write selected chart to chart.stlb" -command {
+            Ng_STLDoctor writechart
+        }
+
 	grid $f.fn.lab -sticky ne -padx 4
         grid $f.fn.ent -sticky nw -padx 4 -row 1 -column 1
+        grid $f.fn.btn_write_chart -padx 4 -row 2 -column 1
         grid anchor $f.fn center 
         
 	ttk::labelframe $f.advstl -text "Advanced STL options" -relief groove -borderwidth 3
@@ -1418,7 +1436,7 @@ proc viewingoptionsdialog { } {
 	#pack $f.f1 -pady 5 -anchor center
 	ttk::label $f.center.lab1 -text "SpecPoint Veclen"
 	ttk::entry $f.center.ent1 -width 5 -textvariable viewoptions.specpointvlen -validate focus \
-            -validatecommand "my_validate %W 0 1e9 %P 1" \
+            -validatecommand "my_validate %W 0 1e9 %P 4" \
             -invalidcommand "my_invalid %W"
 	grid $f.center.ent1 $f.center.lab1 -sticky nw -padx 4
 	
@@ -2228,7 +2246,7 @@ proc stloptionsdialog { } {
 }
 
 proc stldoctordialog { } {
-    Ng_STLDoctor 0 0
+    Ng_STLDoctor
     set wd .stldoctor_dlg
 
     if {[winfo exists .stldoctor_dlg] == 1} {
@@ -2642,17 +2660,17 @@ proc stldoctordialog { } {
 
     
     #tixControl $f.gtol -label "load-geometry tolerance factor" -integer false \
-	-variable stldoctor.geom_tol_fact \
-	-options {
+	# -variable stldoctor.geom_tol_fact \
+	# -options {
 	#    entry.width 8
 	#    label.width 30
 	#    label.anchor e
 	#}	
-    ttk::spinbox $f.gtol -from 1 -to 20 -textvariable stldoctor.geom_tol_fact -width 8
-    pack $f.gtol
+    ttk::label $f.gtol_lbl -text "LoadSTL tolerance factor"
+    ttk::spinbox $f.gtol -from 1e-15 -to 0.001 -textvariable stldoctor.geom_tol_fact -width 8
+    pack $f.gtol_lbl $f.gtol
 
     ttk::button $f.adap -text "Apply" -command {
-	.stldoctor_dlg.nb.advanced.gtol invoke
 	Ng_STLDoctor; 
     }
     pack $f.adap -expand yes

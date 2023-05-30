@@ -23,9 +23,9 @@ namespace netgen
     mutable Vector spline_coefficient_shifted;
 
 
-    Array < Vec<2>* > checklines_vec;
-    Array < Point<2>* > checklines_start;
-    Array < Vec<2>* > checklines_normal;
+    NgArray < Vec<2>* > checklines_vec;
+    NgArray < Point<2>* > checklines_start;
+    NgArray < Vec<2>* > checklines_normal;
   
   private:
     void Init (void);
@@ -44,7 +44,7 @@ namespace netgen
 		   bool last = false,
 		   const int id_in = 0);
 
-    RevolutionFace(const Array<double> & raw_data);
+    RevolutionFace(const NgArray<double> & raw_data);
     // default constructor for archive
     RevolutionFace() {}
 
@@ -67,7 +67,10 @@ namespace netgen
     virtual double MaxCurvature () const;
     //virtual double MaxCurvatureLoc (const Point<3> & /* c */ , 
     //				  double /* rad */) const;
-
+    
+    Point<3> P0() const { return p0; }
+    Vec<3> Axis() const { return v_axis; }
+    
     virtual void Project (Point<3> & p) const;
 
     virtual Point<3> GetSurfacePoint () const;
@@ -87,7 +90,7 @@ namespace netgen
 
     /* INSOLID_TYPE */ bool PointInFace (const Point<3> & p, const double eps) const;
 
-    void GetRawData(Array<double> & data) const;
+    void GetRawData(NgArray<double> & data) const;
 
   };
 
@@ -112,13 +115,14 @@ namespace netgen
   
 
     Array<RevolutionFace*> faces;
+    shared_ptr<SplineGeometry<2>> splinegeo;
 
     mutable int intersecting_face;
 
   public:
     Revolution(const Point<3> & p0_in,
 	       const Point<3> & p1_in,
-	       const SplineGeometry<2> & spline_in);
+	       shared_ptr<SplineGeometry<2>> spline_in);
     // default constructor for archive
     Revolution() {}
 
@@ -143,7 +147,7 @@ namespace netgen
 				       double eps) const;
 
     virtual void GetTangentialSurfaceIndices (const Point<3> & p, 
-					      Array<int> & surfind, double eps) const;
+					      NgArray<int> & surfind, double eps) const;
     
     virtual INSOLID_TYPE VecInSolid (const Point<3> & p,
 				     const Vec<3> & v,
@@ -155,7 +159,10 @@ namespace netgen
 				      const Vec<3> & v2,
 				      double eps) const;
 
-  
+    virtual void GetTangentialVecSurfaceIndices2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
+						  NgArray<int> & surfind, double eps) const;
+
+    
     virtual int GetNSurfaces() const;
     virtual Surface & GetSurface (int i = 0);
     virtual const Surface & GetSurface (int i = 0) const;

@@ -9,11 +9,12 @@
 // #include <parallel.hpp>
 #include <visual.hpp>
 #include <limits>
+
 namespace netgen
 {
 
 
-  DLL_HEADER VisualSceneSolution & GetVSSolution()
+  VisualSceneSolution & GetVSSolution()
   {
     static VisualSceneSolution vssolution;
     return vssolution;
@@ -22,14 +23,6 @@ namespace netgen
   
   // extern shared_ptr<Mesh> mesh;
   extern VisualSceneMesh vsmesh;
-
-
-  void AddUserVisualizationObject (UserVisualizationObject * vis)
-  {
-    // vssolution.AddUserVisualizationObject (vis);
-    GetVSSolution().AddUserVisualizationObject (vis);
-  }
-
 
   VisualSceneSolution :: SolData :: SolData ()
     : data (0), solclass(0)
@@ -56,6 +49,7 @@ namespace netgen
     clipplane_isolinelist = 0;
     surface_vector_list = 0;
     isosurface_list = 0;
+    numtexturecols = 8;
 
     fieldlineslist = 0;
     pointcurvelist = 0;
@@ -208,7 +202,7 @@ namespace netgen
               case SOL_SURFACE_NONCONTINUOUS:
                 ost << " -type=surfacenoncontinuous"; break;
               default:
-                cerr << "save solution data, case not handeld" << endl;
+                cerr << "save solution data, case not handled" << endl;
               }
       
             ost << endl;
@@ -340,7 +334,7 @@ namespace netgen
 	  {
 	  double values[3], sumvalues[3] = { 0, 0, 0 };
 
-	  FlatArray<int> els = mesh->GetTopology().GetVertexElements(pi);
+	  NgFlatArray<int> els = mesh->GetTopology().GetVertexElements(pi);
 
 	  for (int j = 0; j < els.Size(); j++)
 	  {
@@ -382,7 +376,7 @@ namespace netgen
 
     BuildScene();
 
-    CreateTexture (numtexturecols, lineartexture, 0.5, GL_MODULATE);
+    CreateTexture (GetVSSolution().numtexturecols, lineartexture, 0.5, GL_MODULATE);
 
     glClearColor(backcolor, backcolor, backcolor, 1);
     // glClearColor(backcolor, backcolor, backcolor, 0);
@@ -451,8 +445,8 @@ namespace netgen
 	glCallList (surfellist);
         
 #ifdef USE_BUFFERS
-        static int timer = NgProfiler::CreateTimer ("Solution::drawing - DrawSurfaceElements VBO");
-        NgProfiler::StartTimer(timer);
+        // static int timer = NgProfiler::CreateTimer ("Solution::drawing - DrawSurfaceElements VBO");
+        // NgProfiler::StartTimer(timer);
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_NORMAL_ARRAY);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -460,7 +454,7 @@ namespace netgen
         glDisableClientState(GL_VERTEX_ARRAY);
         glDisableClientState(GL_NORMAL_ARRAY);
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-        NgProfiler::StopTimer(timer);
+        // NgProfiler::StopTimer(timer);
 #endif
         
 	glDisable(GL_BLEND); 
@@ -629,10 +623,13 @@ namespace netgen
     for (int i = 0; i < user_vis.Size(); i++)
       user_vis[i] -> Draw();
 
+    DrawMarker();
+
     glPopMatrix();
     
     glDisable(GL_CLIP_PLANE0);
-    DrawColorBar (minval, maxval, logscale, lineartexture);
+    DrawColorBar (minval, maxval, logscale, lineartexture, number_format, unit);
+    DrawTitle (title);
     
     if (vispar.drawcoordinatecross)
       DrawCoordinateCross ();
@@ -794,23 +791,7 @@ namespace netgen
         if (mesh->GetTimeStamp() > surfeltimestamp || zoomall)
           {
             // mesh has changed
-          
-            Point3d pmin, pmax;
-            static double oldrad = 0;
-          
-            mesh->GetBox (pmin, pmax, -1);
-            center = Center (pmin, pmax);
-            rad = 0.5 * Dist (pmin, pmax);
-          
-            glEnable (GL_NORMALIZE);
-          
-            if (rad > 1.5 * oldrad ||
-                mesh->GetMajorTimeStamp() > surfeltimestamp ||
-                zoomall)
-              {
-                CalcTransformationMatrices();
-                oldrad = rad;
-              }
+            vsmesh.SelectCenter(zoomall);
           }
       
         DrawSurfaceElements();
@@ -881,7 +862,7 @@ namespace netgen
             if (autoscale)
               GetMinMax (vecfunction, 0, minval, maxval);
 
-            Array<ClipPlanePoint> cpp;
+            NgArray<ClipPlanePoint> cpp;
             GetClippingPlaneGrid (cpp);
 
             for (int i = 0; i < cpp.Size(); i++)
@@ -1101,19 +1082,20 @@ namespace netgen
         glEndList ();
 
         if (clipplane_isolinelist) glDeleteLists (clipplane_isolinelist, 1);
-            
+
         if (vispar.clipping.enable && clipsolution == 1 && sol)
           {
             clipplane_isolinelist = glGenLists (1);
             glNewList (clipplane_isolinelist, GL_COMPILE);
 
-            Array<ClipPlaneTrig> cpt;
-            Array<ClipPlanePoint> pts;
+            NgArray<ClipPlaneTrig> cpt;
+            NgArray<ClipPlanePoint> pts;
             GetClippingPlaneTrigs (cpt, pts);  
             bool drawelem;
           
             glNormal3d (-clipplane[0], -clipplane[1], -clipplane[2]);
-          
+            glBegin (GL_LINES);
+            
             if (numisolines)
               for (int i = 0; i < cpt.Size(); i++)
                 {
@@ -1129,13 +1111,11 @@ namespace netgen
                     DrawIsoLines (pts[trig.points[0].pnr].p,
                                   pts[trig.points[1].pnr].p,
                                   pts[trig.points[2].pnr].p,
-                                  // trig.points[1].p,
-                                  // trig.points[2].p,
                                   vali[0], vali[1], vali[2]);
                 }
+            glEnd();
             glEndList ();
           }
-        glEnd();
       }
   
     clipplanetimestamp = max2 (vispar.clipping.timestamp, solutiontimestamp);
@@ -1158,8 +1138,8 @@ namespace netgen
     glNewList (element1dlist, GL_COMPILE);
 
     int npt = (1 << subdivisions) + 1;
-    Array<double> pref(npt), values(npt);
-    Array<Point<3> > points(npt);
+    NgArray<double> pref(npt), values(npt);
+    NgArray<Point<3> > points(npt);
 
     const SolData * sol = NULL;
     if (scalfunction != -1) sol = soldata[scalfunction];
@@ -1170,12 +1150,12 @@ namespace netgen
     int ncomp = 0;
     if (sol) ncomp = sol->components;
     if (vsol) ncomp = vsol->components;
-    Array<double> mvalues(ncomp);
+    NgArray<double> mvalues(ncomp);
 
 
     for (int i = 0; i < npt; i++)
       pref[i] = double(i) / (npt-1);
-
+    int meshdim = mesh->GetDimension();
     for (SegmentIndex i = 0; i < mesh -> GetNSeg(); i++)
       {
         // mesh->GetCurvedElements().
@@ -1190,8 +1170,10 @@ namespace netgen
               {
                 vsol->solclass->GetSegmentValue (i, pref[j], &mvalues[0]);
                 // values[j] = ExtractValue (sol, scalcomp, &mvalues[0]);
-                points[j](0) += scaledeform * mvalues[0];
-                points[j](1) += scaledeform * mvalues[1];
+                for (int k = 0; k < min(ncomp, 3); k++)
+                  points[j](k) += scaledeform * mvalues[k];
+                // points[j](0) += scaledeform * mvalues[0];
+                // points[j](1) += scaledeform * mvalues[1];
               }
           }
         else if (sol)
@@ -1200,7 +1182,8 @@ namespace netgen
               {
                 sol->solclass->GetSegmentValue (i, pref[j], &mvalues[0]);
                 values[j] = ExtractValue (sol, scalcomp, &mvalues[0]);
-                points[j](1) += scaledeform * values[j];
+                if (meshdim <= 2)
+                  points[j](meshdim) += scaledeform * values[j];
               }
           }
 
@@ -1218,6 +1201,7 @@ namespace netgen
     shared_ptr<Mesh> mesh = GetMesh();
 
     static int timer = NgProfiler::CreateTimer ("Solution::DrawSurfaceElements");
+    /*
     static int timerstart = NgProfiler::CreateTimer ("Solution::DrawSurfaceElements start");
     static int timerloops = NgProfiler::CreateTimer ("Solution::DrawSurfaceElements loops");
     static int timerlist = NgProfiler::CreateTimer ("Solution::DrawSurfaceElements list");
@@ -1229,6 +1213,7 @@ namespace netgen
     static int timer2 = NgProfiler::CreateTimer ("Solution::DrawSurfaceElements 2");
     static int timer2a = NgProfiler::CreateTimer ("Solution::DrawSurfaceElements 2a");
     static int timer2b = NgProfiler::CreateTimer ("Solution::DrawSurfaceElements 2b");
+    */
     NgProfiler::RegionTimer reg (timer);
   
     
@@ -1260,7 +1245,7 @@ namespace netgen
       }
 #endif
 
-    NgProfiler::StartTimer(timerstart);
+    // NgProfiler::StartTimer(timerstart);
 
     if (surfellist)
       glDeleteLists (surfellist, 1);
@@ -1296,29 +1281,29 @@ namespace netgen
     int n = 1 << subdivisions;
     int npt = sqr(n+1);
 
-    Array<Point<2> > pref (npt);
-    Array<Point<3> > points (npt);
-    Array<Mat<3,2> > dxdxis (npt);
-    Array<Vec<3> > nvs(npt);
-    Array<double> values(npt);
+    NgArray<Point<2> > pref (npt);
+    NgArray<Point<3> > points (npt);
+    NgArray<Mat<3,2> > dxdxis (npt);
+    NgArray<Vec<3> > nvs(npt);
+    NgArray<double> values(npt);
 
-    Array<double> mvalues(npt);
+    NgArray<double> mvalues(npt);
     int sol_comp = (sol && sol->draw_surface) ? sol->components : 0;
-    Array<Point<2,SIMD<double>> > simd_pref ( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
-    Array<Point<3,SIMD<double>> > simd_points ( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
-    Array<Mat<3,2,SIMD<double>> > simd_dxdxis ( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
-    Array<Vec<3,SIMD<double>> > simd_nvs( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
-    Array<SIMD<double>> simd_values( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() * sol_comp);
+    NgArray<Point<2,SIMD<double>> > simd_pref ( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
+    NgArray<Point<3,SIMD<double>> > simd_points ( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
+    NgArray<Mat<3,2,SIMD<double>> > simd_dxdxis ( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
+    NgArray<Vec<3,SIMD<double>> > simd_nvs( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
+    NgArray<SIMD<double>> simd_values( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() * sol_comp);
 
     
     
-    // Array<Point<3,float>> glob_pnts;
-    // Array<Vec<3,float>> glob_nvs;
-    // Array<double> glob_values;
+    // NgArray<Point<3,float>> glob_pnts;
+    // NgArray<Vec<3,float>> glob_nvs;
+    // NgArray<double> glob_values;
     
     if (sol && sol->draw_surface) mvalues.SetSize (npt * sol->components);
       
-    Array<complex<double> > valuesc(npt);
+    NgArray<complex<double> > valuesc(npt);
     
 #ifdef USE_BUFFERS
     if (has_surfel_vbo)
@@ -1351,7 +1336,7 @@ namespace netgen
 #endif
     
     
-    NgProfiler::StopTimer(timerstart);
+    // NgProfiler::StopTimer(timerstart);
     
     for (SurfaceElementIndex sei = 0; sei < nse; sei++)
       {
@@ -1506,7 +1491,7 @@ namespace netgen
     n = 1 << subdivisions;
     double invn = 1.0 / n;
     npt = (n+1)*(n+2)/2;
-    NgProfiler::StartTimer(timerloops);
+    // NgProfiler::StartTimer(timerloops);
     size_t base_pi = 0;
 
     for (int iy = 0, ii = 0; iy <= n; iy++)
@@ -1522,7 +1507,7 @@ namespace netgen
         simd_pref[i](1) = [&] (size_t j) { size_t ii = i*simd_size+j; return (ii < npt) ? pref[ii](1) : 0; };
       }
 
-    Array<int> ind_reftrig;
+    NgArray<int> ind_reftrig;
     for (int iy = 0, ii = 0; iy < n; iy++,ii++)
       for (int ix = 0; ix < n-iy; ix++, ii++)
         {
@@ -1532,7 +1517,7 @@ namespace netgen
           for (int j = 0; j < nv; j++)
             ind_reftrig.Append (ind[j]);
         }
-    Array<int> glob_ind;
+    NgArray<int> glob_ind;
     glob_ind.SetSize(ind_reftrig.Size());    
 
     
@@ -1558,7 +1543,7 @@ namespace netgen
         
         if ( el.GetType() == TRIG || el.GetType() == TRIG6 )
           {
-            NgProfiler::StartTimer(timer1);
+            // NgProfiler::StartTimer(timer1);
 #ifdef __AVX_try_it_out__
             // NgProfiler::StartTimer(timer1a);            
 	    bool curved = curv.IsSurfaceElementCurved(sei);
@@ -1642,7 +1627,7 @@ namespace netgen
             // NgProfiler::StopTimer(timer1c);
             
 #else
-	    bool curved = curv.IsSurfaceElementCurved(sei);
+	    bool curved = (*mesh)[sei].IsCurved();
 
             for (int iy = 0, ii = 0; iy <= n; iy++)
               for (int ix = 0; ix <= n-iy; ix++, ii++)
@@ -1699,7 +1684,7 @@ namespace netgen
               for (int ii = 0; ii < npt; ii++)
                 points[ii] += GetSurfDeformation (sei, -1, pref[ii](0), pref[ii](1));
 #endif
-            NgProfiler::StopTimer(timer1);
+            // NgProfiler::StopTimer(timer1);
 
             int save_usetexture = usetexture;
             if (!drawelem)
@@ -1708,7 +1693,7 @@ namespace netgen
                 SetTextureMode (usetexture);
               }
 
-            NgProfiler::StartTimer(timer2);
+            // NgProfiler::StartTimer(timer2);
 
 #ifdef USE_BUFFERS
             if (drawelem && usetexture == 1 && !logscale)
@@ -1759,7 +1744,7 @@ namespace netgen
                   glEnd();
                 }
             
-            NgProfiler::StopTimer(timer2);            
+            // NgProfiler::StopTimer(timer2);            
 
 
 
@@ -1771,15 +1756,15 @@ namespace netgen
               }
 	  }
       }
-    NgProfiler::StopTimer(timerloops);
+    // NgProfiler::StopTimer(timerloops);
 
-    NgProfiler::StartTimer(timerbuffer);
+    // NgProfiler::StartTimer(timerbuffer);
 
     // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, surfel_vbo[3]);
     // glBufferData(GL_ELEMENT_ARRAY_BUFFER, glob_ind.Size()*sizeof(int), &glob_ind[0], GL_STATIC_DRAW);
     // surfel_vbo_size = glob_ind.Size();
  
-    NgProfiler::StopTimer(timerbuffer);        
+    // NgProfiler::StopTimer(timerbuffer);        
 
     // glDrawElements(GL_TRIANGLES, surfel_vbo_size, GL_UNSIGNED_INT, 0);
 
@@ -1793,9 +1778,9 @@ namespace netgen
     // glDeleteBuffers (4, &vboId[0]);
 
     
-    NgProfiler::StartTimer(timerlist);
+    // NgProfiler::StartTimer(timerlist);
     glEndList ();
-    NgProfiler::StopTimer(timerlist);
+    // NgProfiler::StopTimer(timerlist);
     
 #ifdef PARALLELGL
     glFinish();
@@ -1848,8 +1833,8 @@ namespace netgen
     CurvedElements & curv = mesh->GetCurvedElements();
 
     int n = 1 << subdivisions;
-    ArrayMem<Point<2>, 65> ptsloc(n+1);
-    ArrayMem<Point<3>, 65> ptsglob(n+1);
+    NgArrayMem<Point<2>, 65> ptsloc(n+1);
+    NgArrayMem<Point<3>, 65> ptsglob(n+1);
 
     double trigpts[3][2]  = { { 0, 0 }, { 0, 1 }, { 1, 0} };
     double trigvecs[3][2] = { { 1, 0 }, { 0, -1 }, { -1, 1} };
@@ -1946,12 +1931,12 @@ namespace netgen
     int n = 1 << subdivisions;
     int n3 = (n+1)*(n+1)*(n+1);
     
-    Array<Point<3> > grid(n3);
-    Array<Point<3> > locgrid(n3);
-    Array<Mat<3,3> > trans(n3);
-    Array<double> val1(n3*sol->components);
-    Array<Vec<3> > grads1(n3);
-    Array<int> compress(n3);
+    NgArray<Point<3> > grid(n3);
+    NgArray<Point<3> > locgrid(n3);
+    NgArray<Mat<3,3> > trans(n3);
+    NgArray<double> val1(n3*sol->components);
+    NgArray<Vec<3> > grads1(n3);
+    NgArray<int> compress(n3);
     
     MatrixFixWidth<3> pointmat(8);
     grads1 = Vec<3> (0.0);
@@ -2007,7 +1992,7 @@ namespace netgen
                                          double(iz)/n);
                         break;
                       default:
-                        cerr << "case not implementd 878234" << endl;
+                        cerr << "case not implemented 878234" << endl;
                         ploc = 0.0;
                       }
                     if (compress[ii] != -1)
@@ -2187,9 +2172,9 @@ namespace netgen
 
 
 
-  void  VisualSceneSolution :: DrawTrigSurfaceVectors(const Array< Point<3> > & lp, 
+  void  VisualSceneSolution :: DrawTrigSurfaceVectors(const NgArray< Point<3> > & lp, 
                                                       const Point<3> & pmin, const Point<3> & pmax,
-                                                      const int sei, const SolData * vsol)
+                                                      const int sei, const SolData * vsol, bool swap_lam)
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
@@ -2254,12 +2239,17 @@ namespace netgen
               
               if (lam1 >= 0 && lam2 >= 0 && lam1+lam2 <= 1)
                 {
+                  if(swap_lam)
+                  {
+                    Swap(lam1, lam2);
+                    lam1 = 1.0-lam1;
+                    lam2 = 1.0-lam2;
+                  }
                   Point<3> cp;
                   for (k = 0; k < 3; k++)
                     cp(k) = lp[0](k) + 
                       lam1 * (lp[1](k)-lp[0](k)) + 
                       lam2 * (lp[2](k)-lp[0](k));
-
                   Point<2> xref(lam1, lam2);
                   if (mesh->GetCurvedElements().IsHighOrder())
                     mesh->GetCurvedElements().
@@ -2341,7 +2331,7 @@ namespace netgen
             if (el.GetType() == TRIG || el.GetType() == TRIG6)
               {
           
-                Array< Point<3> > lp(3);
+                NgArray< Point<3> > lp(3);
 
                 lp[0] = mesh->Point(el[2]);
                 lp[1] = mesh->Point(el[0]);
@@ -2447,22 +2437,21 @@ namespace netgen
               }
             else if (el.GetType() == QUAD)
               {
-                /*
-		  Array < Point<3> > lp(3);
+		  NgArray < Point<3> > lp(3);
 
 		  lp[0] = mesh->Point(el[0]);
 		  lp[1] = mesh->Point(el[1]);
-		  lp[2] = mesh->Point(el[2]);
-
-		  DrawTrigSurfaceVectors(lp,pmin,pmax,sei,vsol);
-
-		  lp[0] = mesh->Point(el[0]);
-		  lp[1] = mesh->Point(el[2]);
 		  lp[2] = mesh->Point(el[3]);
 
 		  DrawTrigSurfaceVectors(lp,pmin,pmax,sei,vsol);
-                */
+
+		  lp[0] = mesh->Point(el[2]);
+		  lp[1] = mesh->Point(el[1]);
+		  lp[2] = mesh->Point(el[3]);
+
+		  DrawTrigSurfaceVectors(lp,pmin,pmax,sei,vsol, true);
                 
+                /*
                 Point<3> lp[4];
                 Point<2> p2d[4];
                 
@@ -2561,6 +2550,7 @@ namespace netgen
                               
                             }
                         }
+              */
               }
           }
       }
@@ -2646,10 +2636,10 @@ namespace netgen
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
-    static int timer1 = NgProfiler::CreateTimer ("getminmax, vol");
-    static int timer2 = NgProfiler::CreateTimer ("getminmax, surf");
+    // static int timer1 = NgProfiler::CreateTimer ("getminmax, vol");
+    // static int timer2 = NgProfiler::CreateTimer ("getminmax, surf");
 
-#ifdef PARALLEL
+#ifdef PARALLELGL
     auto comm = mesh->GetCommunicator();
     if (comm.Size() > 1)
       {
@@ -2680,7 +2670,7 @@ namespace netgen
 
           if (sol->draw_volume)
             {
-              NgProfiler::RegionTimer reg1 (timer1);
+              // NgProfiler::RegionTimer reg1 (timer1);
               
               int ne = mesh->GetNE();
 
@@ -2719,12 +2709,13 @@ namespace netgen
           
           if (sol->draw_surface)
             {
-              NgProfiler::RegionTimer reg2 (timer2);
+              // NgProfiler::RegionTimer reg2 (timer2);
               
-              int nse = mesh->GetNSE();
-              for (int i = 0; i < nse; i++)
+              // int nse = mesh->GetNSE();
+              // for (int i = 0; i < nse; i++)
+              for (SurfaceElementIndex i : mesh->SurfaceElements().Range())
                 {
-                  ELEMENT_TYPE type = mesh->SurfaceElement(i+1).GetType();
+                  ELEMENT_TYPE type = (*mesh)[i].GetType();
                   double val;
                   bool considerElem = (type == QUAD) 
                     ? GetSurfValue (sol, i, -1, 0.5, 0.5, comp, val)
@@ -2825,7 +2816,7 @@ namespace netgen
 
     if (comp == 0)
       {
-        ArrayMem<double,20> values(data->components);
+        NgArrayMem<double,20> values(data->components);
         ok = GetValues (data, elnr, xref, x, dxdxref, &values[0]);
 
 	val = ExtractValue (data, 0, &values[0]);
@@ -2876,7 +2867,7 @@ namespace netgen
                 break;
               }     
             default:
-              cerr << "case not implementd 23523" << endl;
+              cerr << "case not implemented 23523" << endl;
             }
 
           for (int i = 0; i < np; i++)
@@ -2996,7 +2987,7 @@ namespace netgen
 
     if (comp == 0)
       {
-        ArrayMem<double,20> values(data->components);
+        NgArrayMem<double,20> values(data->components);
         ok = GetValues (data, elnr, lam1, lam2, lam3, &values[0]);
 	val = ExtractValue (data, 0, &values[0]);
 	return ok;
@@ -3379,7 +3370,7 @@ namespace netgen
       {
       case SOL_VIRTUALFUNCTION:
         {
-          ArrayMem<double,20> values(data->components);
+          NgArrayMem<double,20> values(data->components);
           bool ok;
           
           ok = data->solclass->GetSurfValue (selnr, facetnr, lam1, lam2, &values[0]);
@@ -3395,7 +3386,7 @@ namespace netgen
           return ok;
         }
       default:
-        cerr << "case not implementd 6565" << endl;
+        cerr << "case not implemented 6565" << endl;
       }
     return 0;
   }
@@ -3409,7 +3400,7 @@ namespace netgen
     if (comp == 0)
       {
         val = 0;
-        ArrayMem<double,20> values(data->components);
+        NgArrayMem<double,20> values(data->components);
         ok = GetSurfValues (data, selnr, facetnr, lam1, lam2, &values[0]);
 	val = ExtractValue (data, 0, &values[0]);
 	return ok;
@@ -3421,7 +3412,7 @@ namespace netgen
       case SOL_VIRTUALFUNCTION:
         {
   
-          ArrayMem<double,20> values(data->components);
+          NgArrayMem<double,20> values(data->components);
           bool ok;
 
           ok = data->solclass->GetSurfValue (selnr, facetnr, lam1, lam2, &values[0]);
@@ -3562,7 +3553,7 @@ namespace netgen
                       break;
                     }
                   default:
-                    cerr << "case not implementd 2342" << endl;
+                    cerr << "case not implemented 2342" << endl;
                   }
                 break;
               }
@@ -3651,7 +3642,7 @@ namespace netgen
     if (comp == 0)
       {
         val = 0;
-        ArrayMem<double,20> values(data->components);
+        NgArrayMem<double,20> values(data->components);
         ok = GetSurfValues (data, selnr, facetnr, xref, x, dxdxref, &values[0]);
 	val = ExtractValue (data, 0, &values[0]);
 	return ok;
@@ -3662,7 +3653,7 @@ namespace netgen
       {
       case SOL_VIRTUALFUNCTION:
         {
-          ArrayMem<double,20> values(data->components);
+          NgArrayMem<double,20> values(data->components);
           bool ok;
 
           // ok = data->solclass->GetSurfValue (selnr, lam1, lam2, &values[0]);
@@ -3831,7 +3822,7 @@ namespace netgen
                       break;
                     }
                   default:
-                    cerr << "case not implented 3234" << endl;
+                    cerr << "case not implemented 3234" << endl;
                   }
                 break;
               }
@@ -3957,18 +3948,18 @@ namespace netgen
 
 
 
-  void VisualSceneSolution :: GetClippingPlaneTrigs (Array<ClipPlaneTrig> & trigs,
-                                                     Array<ClipPlanePoint> & pts)
+  void VisualSceneSolution :: GetClippingPlaneTrigs (NgArray<ClipPlaneTrig> & trigs,
+                                                     NgArray<ClipPlanePoint> & pts)
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
-    static int timer_vals = NgProfiler::CreateTimer ("ClipPlaneTrigs - vertex values");
+    // static int timer_vals = NgProfiler::CreateTimer ("ClipPlaneTrigs - vertex values");
     static int timer1 = NgProfiler::CreateTimer ("ClipPlaneTrigs1");
     // static int timer1a = NgProfiler::CreateTimer ("ClipPlaneTrigs1a");
     // static int timer2 = NgProfiler::CreateTimer ("ClipPlaneTrigs2");
-    static int timer3 = NgProfiler::CreateTimer ("ClipPlaneTrigs3");
-    static int timer4 = NgProfiler::CreateTimer ("ClipPlaneTrigs4");
-    static int timer4b = NgProfiler::CreateTimer ("ClipPlaneTrigs4b");
+    // static int timer3 = NgProfiler::CreateTimer ("ClipPlaneTrigs3");
+    // static int timer4 = NgProfiler::CreateTimer ("ClipPlaneTrigs4");
+    // static int timer4b = NgProfiler::CreateTimer ("ClipPlaneTrigs4b");
 
 
     NgProfiler::RegionTimer reg1 (timer1);
@@ -3987,24 +3978,25 @@ namespace netgen
     int cntce;
     int cpe1 = 0, cpe2 = 0, cpe3 = 0;
 
-    // Array<Element> loctets;
-    // Array<Element> loctetsloc;
-    // Array<Point<3> > pointsloc;
+    // NgArray<Element> loctets;
+    // NgArray<Element> loctetsloc;
+    // NgArray<Point<3> > pointsloc;
 
     int n = 1 << subdivisions;
     int n3 = (n+1)*(n+1)*(n+1);
 
-    Array<Point<3> > grid(n3);
-    Array<Point<3> > locgrid(n3);
-    Array<Mat<3,3> > trans(n3);
-    Array<double> val(n3);
-    Array<bool> locposval(n3);
-    Array<int> compress(n3);
+    NgArray<Point<3> > grid(n3);
+    NgArray<Point<3> > locgrid(n3);
+    NgArray<Mat<3,3> > trans(n3);
+    NgArray<double> val(n3);
+    NgArray<bool> locposval(n3);
+    NgArray<int> compress(n3);
 
-    NgProfiler::StartTimer (timer_vals);
-    Array<double,PointIndex::BASE> vertval(mesh->GetNV());
-    Array<bool,PointIndex::BASE> posval(mesh->GetNV());
-    for (PointIndex pi = vertval.Begin(); pi < vertval.End(); pi++)
+    // NgProfiler::StartTimer (timer_vals);
+    NgArray<double,PointIndex::BASE> vertval(mesh->GetNP());
+    NgArray<bool,PointIndex::BASE> posval(mesh->GetNP());
+    // for (PointIndex pi = vertval.Begin(); pi < vertval.End(); pi++)
+    for (PointIndex pi : vertval.Range())
       {
         Point<3> vert = (*mesh)[pi];
         vertval[pi] = 
@@ -4014,7 +4006,7 @@ namespace netgen
           clipplane[3]; 
         posval[pi] = vertval[pi] > 0;
       }
-    NgProfiler::StopTimer (timer_vals);
+    // NgProfiler::StopTimer (timer_vals);
 
     INDEX_2_CLOSED_HASHTABLE<int> edges(8*n3);  // point nr of edge
     
@@ -4127,13 +4119,13 @@ namespace netgen
 
             if (mesh->GetCurvedElements().IsHighOrder())
               {
-                NgProfiler::RegionTimer reg4(timer4);
+                // NgProfiler::RegionTimer reg4(timer4);
                 mesh->GetCurvedElements().
                   CalcMultiPointElementTransformation (&locgrid, ei, &grid, 0);
               }
             else
               {
-                NgProfiler::RegionTimer reg4(timer4b);
+                // NgProfiler::RegionTimer reg4(timer4b);
                 Vector shape(el.GetNP());
                 MatrixFixWidth<3> pointmat(el.GetNP());
 
@@ -4155,7 +4147,7 @@ namespace netgen
                   }
               }
 
-            NgProfiler::RegionTimer reg3(timer3);
+            // NgProfiler::RegionTimer reg3(timer3);
 
             bool has_pos = false, all_pos = true;
 
@@ -4305,7 +4297,7 @@ namespace netgen
       }
   }
 
-  void VisualSceneSolution :: GetClippingPlaneGrid (Array<ClipPlanePoint> & pts)
+  void VisualSceneSolution :: GetClippingPlaneGrid (NgArray<ClipPlanePoint> & pts)
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
@@ -4373,7 +4365,7 @@ namespace netgen
       {
 	InitParallelGL();
 
-	Array<int> parlists (ntasks);
+	NgArray<int> parlists (ntasks);
 
 	MyMPI_SendCmd ("redraw");
 	MyMPI_SendCmd ("clipplanetrigs");
@@ -4406,8 +4398,8 @@ namespace netgen
     glNewList (clipplanelist_scal, GL_COMPILE);
 
 
-    Array<ClipPlaneTrig> trigs;
-    Array<ClipPlanePoint> points;
+    NgArray<ClipPlaneTrig> trigs;
+    NgArray<ClipPlanePoint> points;
     GetClippingPlaneTrigs (trigs, points);
 	    
     glNormal3d (-clipplane[0], -clipplane[1], -clipplane[2]);
@@ -4429,14 +4421,14 @@ namespace netgen
       for (int j = 0; j < 3; j++)
         maxlpnr = max2 (maxlpnr, trigs[i].points[j].locpnr);
 
-    Array<double> vals(maxlpnr+1);
-    Array<complex<double> > valsc(maxlpnr+1);
-    Array<int> elnrs(maxlpnr+1);
-    Array<bool> trigok(maxlpnr+1);
-    Array<Point<3> > locpoints(maxlpnr+1);
-    Array<Point<3> > globpoints(maxlpnr+1);
-    Array<Mat<3> > jacobi(maxlpnr+1);
-    Array<double> mvalues( (maxlpnr+1) * sol->components);
+    NgArray<double> vals(maxlpnr+1);
+    NgArray<complex<double> > valsc(maxlpnr+1);
+    NgArray<int> elnrs(maxlpnr+1);
+    NgArray<bool> trigok(maxlpnr+1);
+    NgArray<Point<3> > locpoints(maxlpnr+1);
+    NgArray<Point<3> > globpoints(maxlpnr+1);
+    NgArray<Mat<3> > jacobi(maxlpnr+1);
+    NgArray<double> mvalues( (maxlpnr+1) * sol->components);
     trigok = false;
     elnrs = -1;
 
@@ -4521,7 +4513,7 @@ namespace netgen
     glEndList ();
 
 
-#ifdef PARALLELGL
+#ifdef PARALLELGLGL
     glFinish();
     if (id > 0)
       MyMPI_Send (clipplanelist_scal, 0, MPI_TAG_VIS);
@@ -4743,9 +4735,159 @@ namespace netgen
 
   void VisualSceneSolution :: MouseDblClick (int px, int py)
   {
-    vsmesh.SetClippingPlane();
-    // vsmesh.BuildFilledList();
-    vsmesh.MouseDblClick(px,py);
+    auto mesh = GetMesh();
+    auto dim = mesh->GetDimension();
+    marker = nullopt;
+
+    auto formatComplex = [](double real, double imag)
+    {
+      return ToString(real) + (imag < 0 ? "" : "+") + ToString(imag) + "j";
+    };
+
+    auto printScalValue = [&formatComplex]
+      (SolData & sol, int comp, double value, double imag=0., bool iscomplex=false)
+      {
+        cout << '\t';
+        if(sol.components>1)
+          {
+            if(comp==0)
+                cout << "func(" << sol.name << ")";
+            else
+                cout << sol.name << "["+ToString(comp)+"]";
+          }
+        else
+            cout << sol.name;
+        cout << " = " << (iscomplex ? formatComplex(value, imag) : ToString(value)) << endl;
+      };
+
+    auto printVecValue = [&formatComplex]
+      (SolData & sol, FlatArray<double> values)
+      {
+        if(sol.iscomplex)
+          {
+            cout << sol.name << " = ( " << formatComplex(values[0], values[1]);
+            for(int i = 2; i < values.Size(); i+=2)
+              cout << ", " << formatComplex(values[i], values[i+1]);
+            cout << " )" << endl;
+          }
+        else
+          {
+            cout << sol.name << " = ( " << values[0];
+            for(int i = 1; i < values.Size(); i++)
+              cout << ", " << values[i];
+            cout << " )" << endl;
+          }
+      };
+
+    Point<3> p;
+    bool found_point = vsmesh.SelectSurfaceElement(px, py, p, showclipsolution && clipsolution);
+    if(!found_point)
+        return;
+
+    // marker = p;
+
+    // found point on clipping plane
+    if(selelement==0)
+    {
+      GLint viewport[4];
+      GLdouble projection[16];
+      glGetDoublev(GL_PROJECTION_MATRIX, &projection[0]); 
+
+      glGetIntegerv(GL_VIEWPORT, &viewport[0]);
+
+      Point<3> eye;
+      gluUnProject( (viewport[2]-viewport[0])/2 , (viewport[3]-viewport[1])/2,
+          0.0, transformationmat, projection, viewport, &eye[0], &eye[1], &eye[2]);
+
+      Vec<3> n{vispar.clipping.normal};
+      n.Normalize();
+      Vec<3> view = p-eye;
+
+      // check if we look at the clipping plane from the right direction
+      if(n*view > 1e-8)
+      {
+        double lam = vispar.clipping.dist - Vec<3>{eye}*n;
+        lam /= n*view;
+        p = eye + lam*view;
+
+        double lami[3];
+        if(auto el3d = mesh->GetElementOfPoint( p, lami ))
+        {
+          cout << endl << "Selected point " << p << " on clipping plane" << endl;
+          // marker = p;
+
+          bool have_scal_func = scalfunction!=-1 && soldata[scalfunction]->draw_volume;
+          bool have_vec_func = vecfunction!=-1 && soldata[vecfunction]->draw_volume;
+
+          if(have_scal_func)
+          {
+            auto & sol = *soldata[scalfunction];
+            double val;
+            double imag = 0;
+            int rcomponent = scalcomp;
+            int comp = scalcomp;
+            if(sol.iscomplex && rcomponent != 0)
+            {
+              rcomponent = 2 * ((rcomponent-1)/2) + 1;
+              GetValue(&sol, el3d-1,  lami[0], lami[1], lami[2], rcomponent+1,
+                  imag);
+              comp = (scalcomp-1)/2 + 1;
+            }
+            GetValue(&sol, el3d-1,  lami[0], lami[1], lami[2], rcomponent, val);
+            printScalValue(sol, comp, val, imag, sol.iscomplex && comp > 0);
+          }
+          if(vecfunction!=-1 && soldata[vecfunction]->draw_volume)
+          {
+            auto & sol = *soldata[vecfunction];
+            ArrayMem<double, 10> values(sol.components);
+            GetValues(&sol, el3d-1,  lami[0], lami[1], lami[2], &values[0]);
+            printVecValue(sol, values);
+          }
+          return;
+        }
+      }
+    }
+
+    double lami[3] = {0.0, 0.0, 0.0};
+    // Check if unprojected Point is close to surface element (eps of 1e-3 due to z-Buffer accuracy)
+    bool found_2del = false;
+    if(selelement>0 && mesh->PointContainedIn2DElement(p, lami, selelement, false && fabs(lami[2])<1e-3))
+      {
+        // Found it, use coordinates of point projected to surface element
+        mesh->GetCurvedElements().CalcSurfaceTransformation({1.0-lami[0]-lami[1], lami[0]}, selelement-1, p);
+        found_2del = true;
+      }
+    cout << endl << "Selected point " << p << " on surface" << endl;
+
+    if(!found_2del)
+        return;
+
+    bool have_scal_func = scalfunction!=-1 && soldata[scalfunction]->draw_surface;
+    bool have_vec_func = vecfunction!=-1 && soldata[vecfunction]->draw_surface;
+
+    if(have_scal_func)
+      {
+        auto & sol = *soldata[scalfunction];
+        double val;
+        double imag = 0;
+        int rcomponent = scalcomp;
+        int comp = scalcomp;
+        if(sol.iscomplex && rcomponent != 0)
+          {
+            rcomponent = 2 * ((rcomponent-1)/2) + 1;
+            GetSurfValue(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], rcomponent+1, imag);
+            comp = (scalcomp-1)/2 + 1;
+          }
+        GetSurfValue(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], rcomponent, val);
+        printScalValue(sol, comp, val, imag, sol.iscomplex && comp > 0);
+      }
+    if(have_vec_func)
+      {
+        auto & sol = *soldata[vecfunction];
+        ArrayMem<double, 10> values(sol.components);
+        GetSurfValues(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], &values[0]);
+        printVecValue(sol, values);
+      }
   }
 
 
@@ -4809,7 +4951,7 @@ namespace netgen
 
 #include "../include/nginterface.h"
 
-void Ng_ClearSolutionData ()
+void Impl_Ng_ClearSolutionData ()
 {
 #ifdef OPENGL
   // if (nodisplay) return;
@@ -4818,7 +4960,7 @@ void Ng_ClearSolutionData ()
 #endif
 }
 
-void Ng_InitSolutionData (Ng_SolutionData * soldata)
+void Impl_Ng_InitSolutionData (Ng_SolutionData * soldata)
 {
   // soldata -> name = NULL;
   soldata -> data = NULL;
@@ -4832,7 +4974,7 @@ void Ng_InitSolutionData (Ng_SolutionData * soldata)
   soldata -> solclass = 0;
 }
 
-void Ng_SetSolutionData (Ng_SolutionData * soldata)
+void Impl_Ng_SetSolutionData (Ng_SolutionData * soldata)
 {
 #ifdef OPENGL
   // if (nodisplay) return;
@@ -4842,6 +4984,9 @@ void Ng_SetSolutionData (Ng_SolutionData * soldata)
   // vss->name = new char[strlen (soldata->name)+1];
   // strcpy (vss->name, soldata->name);
   vss->name = soldata->name;
+  vss->title = soldata->title;
+  vss->number_format = soldata->number_format;
+  vss->unit = soldata->unit;
   vss->data = soldata->data;
   vss->components = soldata->components;
   vss->dist = soldata->dist;
@@ -4858,12 +5003,7 @@ void Ng_SetSolutionData (Ng_SolutionData * soldata)
 
 
 
-namespace netgen
-{
-  extern void Render (bool blocking);
-}
-
-void Ng_Redraw (bool blocking)
+void Impl_Ng_Redraw (bool blocking)
 {
 #ifdef OPENGL
   //netgen::vssolution.UpdateSolutionTimeStamp();
@@ -4879,7 +5019,18 @@ void (*glDeleteBuffers) (GLsizei a, const GLuint *b);
 void (*glGenBuffers) (GLsizei a, GLuint *b);
 void (*glBufferData) (GLenum a, GLsizeiptr b, const GLvoid *c, GLenum d);
 void (*glBufferSubData) (GLenum a, GLintptr b, GLsizeiptr c, const GLvoid *d);
-DLL_HEADER void LoadOpenGLFunctionPointers() {
+
+GLenum (*glCheckFramebufferStatus) (GLenum target);
+void (*glBindFramebuffer) (GLenum target, GLuint framebuffer);
+void (*glBindRenderbuffer) (GLenum target, GLuint renderbuffer);
+void (*glDeleteFramebuffers) (GLsizei n, const GLuint *framebuffers);
+void (*glDeleteRenderbuffers) (GLsizei n, const GLuint *renderbuffers);
+void (*glGenFramebuffers) (GLsizei n, GLuint *framebuffers);
+void (*glGenRenderbuffers) (GLsizei n, GLuint *renderbuffers);
+void (*glRenderbufferStorage) (GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
+void (*glFramebufferRenderbuffer) (GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
+
+NGGUI_API void LoadOpenGLFunctionPointers() {
 #ifdef USE_BUFFERS
   glBindBuffer = (decltype(glBindBuffer)) wglGetProcAddress("glBindBuffer");
   glBufferSubData = (decltype(glBufferSubData)) wglGetProcAddress("glBufferSubData");
@@ -4888,8 +5039,27 @@ DLL_HEADER void LoadOpenGLFunctionPointers() {
   glGenBuffers = (decltype(glGenBuffers)) wglGetProcAddress("glGenBuffers");
   if(!glBindBuffer) throw std::runtime_error("Could not load OpenGL functions!");
 #endif
+
+  glCheckFramebufferStatus = (decltype(glCheckFramebufferStatus )) wglGetProcAddress("glCheckFramebufferStatus");
+  glBindFramebuffer = (decltype(glBindFramebuffer )) wglGetProcAddress("glBindFramebuffer");
+  glBindRenderbuffer = (decltype(glBindRenderbuffer )) wglGetProcAddress("glBindRenderbuffer");
+  glDeleteFramebuffers = (decltype(glDeleteFramebuffers )) wglGetProcAddress("glDeleteFramebuffers");
+  glDeleteRenderbuffers = (decltype(glDeleteRenderbuffers )) wglGetProcAddress("glDeleteRenderbuffers");
+  glGenFramebuffers = (decltype(glGenFramebuffers )) wglGetProcAddress("glGenFramebuffers");
+  glGenRenderbuffers = (decltype(glGenRenderbuffers )) wglGetProcAddress("glGenRenderbuffers");
+  glRenderbufferStorage = (decltype(glRenderbufferStorage )) wglGetProcAddress("glRenderbufferStorage");
+  glFramebufferRenderbuffer = (decltype(glFramebufferRenderbuffer )) wglGetProcAddress("glFramebufferRenderbuffer");
 }
 #else  // WIN32
-DLL_HEADER void LoadOpenGLFunctionPointers() { }
+NGGUI_API void LoadOpenGLFunctionPointers() { }
 #endif // WIN32
 #endif // OPENGL
+
+// set function pointers
+static bool dummy_init = [](){
+    Ptr_Ng_ClearSolutionData = Impl_Ng_ClearSolutionData;
+    Ptr_Ng_InitSolutionData = Impl_Ng_InitSolutionData;
+    Ptr_Ng_SetSolutionData = Impl_Ng_SetSolutionData;
+    Ptr_Ng_Redraw = Impl_Ng_Redraw;
+    return true;
+}();

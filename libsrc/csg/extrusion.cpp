@@ -1,4 +1,5 @@
 #include <mystdlib.h>
+#include <core/register_archive.hpp>
 
 #include <linalg.hpp>
 #include <csg.hpp>
@@ -7,7 +8,7 @@
 namespace netgen
 {
 
-  Array<Point<3> > project1, project2;
+  NgArray<Point<3> > project1, project2;
 
 
 
@@ -41,6 +42,18 @@ namespace netgen
 	    loc_z_dir[i] = glob_z_direction;
 	  }
       }
+
+    double cum_angle = 0.;
+    for(auto i : Range(path->GetSplines()))
+      {
+        const auto& sp = path->GetSpline(i);
+        auto t1 = sp.GetTangent(0.);
+        t1.Normalize();
+        auto t2 = sp.GetTangent(1.);
+        t2.Normalize();
+        cum_angle += acos(t1 * t2);
+        angles.Append(cum_angle);
+      }
     
     profile->GetCoeff(profile_spline_coeff);
     latest_point3d = -1.111e30;
@@ -57,13 +70,13 @@ namespace netgen
     Init();
   }
 
-  ExtrusionFace :: ExtrusionFace(const Array<double> & raw_data)
+  ExtrusionFace :: ExtrusionFace(const NgArray<double> & raw_data)
   {
     deletable = true;
 
     int pos=0;
 
-    Array< Point<2> > p(3);
+    NgArray< Point<2> > p(3);
 
     int ptype = int(raw_data[pos]); pos++;
 
@@ -128,21 +141,26 @@ namespace netgen
   void ExtrusionFace :: CalcProj(const Point<3> & point3d, Point<2> & point2d,
 				 int & seg, double & t) const
   {
-    if (Dist2 (point3d, latest_point3d) < 
-        1e-25 * Dist2(path->GetSpline(0).StartPI(), path->GetSpline(0).EndPI()))
+    static mutex set_latest_point;
+
+    auto eps = 1e-25 * Dist2(path->GetSpline(0).StartPI(), path->GetSpline(0).EndPI());
+    if (Dist2 (point3d, latest_point3d) < eps)
       {
-	point2d = latest_point2d;
-	seg = latest_seg;
-	t = latest_t;
-	return;
+        std::lock_guard<std::mutex> guard(set_latest_point);
+        if (Dist2 (point3d, latest_point3d) < eps)
+        {
+            point2d = latest_point2d;
+            seg = latest_seg;
+            t = latest_t;
+            return;
+        }
       }
     
-    latest_point3d = point3d;
 
     double cutdist = -1;
     
 
-    Array<double> mindist(path->GetNSplines());
+    NgArray<double> mindist(path->GetNSplines());
 
     for(int i = 0; i < path->GetNSplines(); i++)
       {
@@ -201,11 +219,13 @@ namespace netgen
 	    point2d = testpoint2d;
 	    t = thist;
 	    seg = i;
-	    latest_seg = i;
-	    latest_t = t;
-	    latest_point2d = point2d;
 	  }
       }
+    std::lock_guard<std::mutex> guard(set_latest_point);
+    latest_seg = seg;
+    latest_t = t;
+    latest_point2d = point2d;
+    latest_point3d = point3d;
   }
 
   double ExtrusionFace :: CalcProj(const Point<3> & point3d, Point<2> & point2d,
@@ -415,6 +435,14 @@ namespace netgen
   }
 
 
+  bool ExtrusionFace :: PointInFace (const Point<3> & p, const double eps) const
+  {
+    Point<3> hp = p;
+    Project(hp);
+    return Dist2(p,hp) < sqr(eps);
+  }
+  
+
   void ExtrusionFace :: LineIntersections ( const Point<3> & p,
 					    const Vec<3> & v,
 					    const double eps,
@@ -453,7 +481,7 @@ namespace netgen
     v2d(1) = v * loc_z_dir[seg];
     
     Vec<2> n(v2d(1),-v2d(0));
-    Array < Point<2> > ips;
+    NgArray < Point<2> > ips;
 
 
     profile->LineIntersections(v2d(1),
@@ -593,7 +621,7 @@ namespace netgen
   }
   
 
-  void ExtrusionFace :: GetRawData(Array<double> & data) const
+  void ExtrusionFace :: GetRawData(NgArray<double> & data) const
   {
     data.DeleteAll();
     profile->GetRawData(data);
@@ -648,20 +676,35 @@ namespace netgen
     dez /= lenz;
     dez -= (dez * ez) * ez;
   }
-  
 
-  Extrusion :: Extrusion(const SplineGeometry<3> & path_in,
-			 const SplineGeometry<2> & profile_in,
+  void ExtrusionFace :: DefineTangentialPlane(const Point<3>& ap1,
+                                              const Point<3>& ap2)
+  {
+    Surface::DefineTangentialPlane(ap1, ap2);
+    tangential_plane_seg = latest_seg;
+  }
+
+  void ExtrusionFace :: ToPlane(const Point<3>& p3d, Point<2>& p2d,
+                                double h, int& zone) const
+  {
+    Surface::ToPlane(p3d, p2d, h, zone);
+    double angle = angles[tangential_plane_seg] - angles[latest_seg];
+    if(fabs(angle) > 3.14/2.)
+      zone = -1;
+  }
+
+  Extrusion :: Extrusion(shared_ptr<SplineGeometry<3>> path_in,
+			 shared_ptr<SplineGeometry<2>> profile_in,
 			 const Vec<3> & z_dir) :
-    path(&path_in), profile(&profile_in), z_direction(z_dir)
+    path(path_in), profile(profile_in), z_direction(z_dir)
   {
     surfaceactive.SetSize(0);
     surfaceids.SetSize(0);
 
     for(int j=0; j<profile->GetNSplines(); j++)
       {
-	ExtrusionFace * face = new ExtrusionFace(&((*profile).GetSpline(j)),
-						 path,
+	ExtrusionFace * face = new ExtrusionFace(&(profile->GetSpline(j)),
+						 path.get(),
 						 z_direction);
 	faces.Append(face);
 	surfaceactive.Append(true);
@@ -695,7 +738,7 @@ namespace netgen
 
   INSOLID_TYPE Extrusion :: PointInSolid (const Point<3> & p,
 					  const double eps,
-					  Array<int> * const facenums) const
+					  NgArray<int> * const facenums) const
   {
     Vec<3> random_vec(-0.4561,0.7382,0.4970247);
 
@@ -737,11 +780,21 @@ namespace netgen
     return PointInSolid(p,eps,NULL);    
   }
 
+  void Extrusion :: GetTangentialSurfaceIndices (const Point<3> & p, 
+                                                 NgArray<int> & surfind, double eps) const
+  {
+    for (int j = 0; j < faces.Size(); j++)
+      if (faces[j] -> PointInFace(p, eps))
+        if (!surfind.Contains (GetSurfaceId(j)))
+          surfind.Append (GetSurfaceId(j));
+  }
+
+  
   INSOLID_TYPE Extrusion :: VecInSolid (const Point<3> & p,
 					const Vec<3> & v,
 					double eps) const
   {
-    Array<int> facenums;
+    NgArray<int> facenums;
     INSOLID_TYPE pInSolid = PointInSolid(p,eps,&facenums);
 
     if(pInSolid != DOES_INTERSECT)
@@ -838,7 +891,7 @@ namespace netgen
       return retval;
 
     if(latestfacenum >= 0)
-      return faces[latestfacenum]->VecInFace(p,v2,0);
+      return faces[latestfacenum]->VecInFace(p,v2,eps);
     else
       return VecInSolid(p,v2,eps);
   }
