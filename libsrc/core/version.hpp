@@ -24,25 +24,25 @@ namespace ngcore
         vstring = vstring.substr(1,vstring.size()-1);
       auto dot = vstring.find('.');
       mayor_ = std::stoi(vstring.substr(0,dot));
-      if(dot == size_t(-1)) vstring = "";
+      if(dot == std::string::npos) vstring = "";
       else vstring = vstring.substr(dot+1, vstring.size()-dot-1);
       if(!vstring.empty())
         {
           dot = vstring.find('.');
           minor_ = std::stoi(vstring.substr(0,dot));
-          if (dot == size_t(-1)) vstring = "";
+          if (dot == std::string::npos) vstring = "";
           else vstring = vstring.substr(dot+1, vstring.size()-dot-1);
           if(!vstring.empty())
             {
               dot = vstring.find('-');
               release = std::stoi(vstring.substr(0,dot));
-              if(dot == size_t(-1)) vstring = "";
+              if(dot == std::string::npos) vstring = "";
               else vstring = vstring.substr(dot+1,vstring.size()-dot-1);
               if(!vstring.empty())
                 {
                   dot = vstring.find('-');
                   patch = std::stoi(vstring.substr(0,dot));
-                  if(dot == size_t(-1)) vstring = "";
+                  if(dot == std::string::npos) vstring = "";
                   else vstring = vstring.substr(dot+1, vstring.size()-dot-1);
                   if(!vstring.empty())
                     git_hash = vstring;

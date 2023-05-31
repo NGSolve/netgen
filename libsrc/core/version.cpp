@@ -23,7 +23,7 @@ namespace ngcore
   }
 
   static bool dummy = [](){
-    SetLibraryVersion("netgen", NETGEN_VERSION);
+    SetLibraryVersion("netgen", VersionInfo(NETGEN_VERSION));
     return true;
   }();
 } // namespace ngcore
