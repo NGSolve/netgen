@@ -18,6 +18,7 @@ namespace ngcore
     VersionInfo() = default;
     VersionInfo(std::string vstring)
     {
+      try {
       minor_ = release = patch = 0;
       git_hash = "";
       if(vstring.substr(0,1) == "v")
@@ -49,6 +50,9 @@ namespace ngcore
                 }
             }
         }
+      }
+      catch (std::invalid_argument&)
+      {}
     }
     VersionInfo(const char* cstr) : VersionInfo(std::string(cstr)) { }
 
