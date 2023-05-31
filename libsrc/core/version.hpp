@@ -51,7 +51,7 @@ namespace ngcore
             }
         }
       }
-      catch (std::invalid_argument&)
+      catch (const std::invalid_argument&)
       {}
     }
     VersionInfo(const char* cstr) : VersionInfo(std::string(cstr)) { }
