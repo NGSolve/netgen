@@ -40,8 +40,9 @@ namespace netgen
       "VRML Format", ".*",
       "Gmsh Format", ".gmsh",
       "Gmsh2 Format", ".gmsh2",
+      "VTK Format", ".vtk",
       "OpenFOAM 1.5+ Format", "*",
-	  "OpenFOAM 1.5+ Compressed", "*",
+	    "OpenFOAM 1.5+ Compressed", "*",
       "JCMwave Format", ".jcm",
       "TET Format", ".tet",
       "CGNS Format", ".cgns",
@@ -129,6 +130,9 @@ bool WriteUserFormat (const filesystem::path & format,
   // Added Gmsh v2.xx Mesh export capability
   else if (format == "Gmsh2 Format")
     WriteGmsh2Format (mesh, geom, filename);
+
+  else if (format == "VTK Format")
+    WriteVtkFormat (mesh, filename);
 
   // Philippose - 25/10/2009
   // Added OpenFOAM 1.5+ Mesh export capability

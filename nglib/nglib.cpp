@@ -17,15 +17,15 @@
 #include <stlgeom.hpp>
 #include <geometry2d.hpp>
 #include <meshing.hpp>
-#include <../meshing/soldata.hpp>
 
-#include <nginterface.h>
+#include <../interface/writeuser.hpp>
 
 
 namespace netgen {
    extern void MeshFromSpline2D (SplineGeometry2d & geometry,
                                  shared_ptr<Mesh> & mesh, 
                                  MeshingParameters & mp);
+   extern void Optimize2d(Mesh & mesh, MeshingParameters & mp);
    extern MeshingParameters mparam;
    DLL_HEADER extern STLParameters stlparam;
 }
@@ -36,7 +36,6 @@ namespace netgen {
 #include <mpi.h>
 
 #endif
-
 
 /*
 namespace netgen
@@ -56,6 +55,11 @@ namespace netgen {
 */
 
 
+// Bryn Lloyd - get rid of warning about macro redefinition (previously defined in mydefs.hpp)
+#if defined(NGLIB_API)
+   #undef NGLIB_API
+#endif
+
 namespace nglib {
 #include "nglib.h"
 }
@@ -66,19 +70,42 @@ using namespace netgen;
 
 namespace nglib
 {
-  inline void NOOP_Deleter(void *) { ; }
+   inline void NOOP_Deleter(void *) { ; }
 
-  
-   // initialize, deconstruct Netgen library:
-   NGLIB_API void Ng_Init ()
+   class NullStreambuf : public std::streambuf
    {
-      mycout = &cout;
-      myerr = &cerr;
-      // netgen::testout->SetOutStream (new ofstream ("test.out"));
-      // testout = new ofstream ("test.out");
+      char dummyBuffer[64];
+   protected:
+      virtual int overflow(int c)
+      {
+         setp(dummyBuffer, dummyBuffer + sizeof(dummyBuffer));
+         return (c == traits_type::eof()) ? '\0' : c;
+      }
+   };
+
+   // initialize, deconstruct Netgen library:
+   NGLIB_API void Ng_Init (bool cout_to_null, bool cerr_to_null, bool testout_to_null)
+   {
+      static ostream* null_stream = new ostream(new NullStreambuf);
+      mycout  = cout_to_null ? null_stream : &cout;
+      myerr   = cerr_to_null ? null_stream : &cerr;
+      testout = testout_to_null ? null_stream :  new ofstream("test.out");
    }
 
 
+   NGLIB_API void Ng_GetStatus(char ** str, double & percent)
+   {
+	   ::netgen::MyStr s;
+	   ::netgen::GetStatus(s, percent);
+	   *str = new char[s.Length() + 1];
+	   strcpy(*str, s.c_str());
+   }
+
+
+   NGLIB_API void Ng_SetTerminate(bool abort)
+   {
+	   ::netgen::multithread.terminate = abort ? 1 : 0;
+   }
 
 
    // Clean-up functions before ending usage of nglib
@@ -137,6 +164,25 @@ namespace nglib
       return ( (Ng_Mesh*)mesh );
    }
 
+
+
+   NGLIB_API void Ng_ExportMesh(Ng_Mesh * ng_mesh, Ng_Export_Formats format, const char* filename)
+   {
+      Mesh * mesh = (Mesh*)ng_mesh;
+      switch (format)
+      {
+      case NG_GMSH:
+         WriteUserFormat( "Gmsh Format", *mesh, filename ); break;
+      case NG_GMSH2:
+         WriteUserFormat( "Gmsh2 Format", *mesh, filename ); break;
+      case NG_VTK:
+         WriteUserFormat( "VTK Format", *mesh, filename ); break;
+      case NG_FLUENT:
+         WriteUserFormat( "Fluent Format", *mesh, filename ); break;
+      case NG_ABAQUS:
+         WriteUserFormat( "Abaqus Format", *mesh, filename ); break;
+      }
+   }
 
 
 
@@ -198,18 +244,82 @@ namespace nglib
    }
 
 
+   // Manually lock a specific point
+   NGLIB_API void Ng_AddLockedPoint(Ng_Mesh * mesh, int pi)
+   {
+      Mesh * m = (Mesh*)mesh;
+      m->AddLockedPoint(pi);
+   }
+
+
+   NGLIB_API void Ng_ClearFaceDescriptors (Ng_Mesh * ng_mesh)
+   {
+      Mesh * mesh = (Mesh*)ng_mesh;
+      mesh->ClearFaceDescriptors();
+   }
+
+
+   NGLIB_API int Ng_AddFaceDescriptor (Ng_Mesh * ng_mesh, int surfnr, int domin, int domout, int bcp)
+   {
+      Mesh * mesh = (Mesh*)ng_mesh;
+      int nfd = mesh->GetNFD();
+      
+      int faceind = 0;
+      for (int j = 1; j <= nfd; j++)
+      {
+         if (mesh->GetFaceDescriptor(j).SurfNr() == surfnr 
+            && mesh->GetFaceDescriptor(j).BCProperty() == bcp 
+            && mesh->GetFaceDescriptor(j).DomainIn() == domin 
+            && mesh->GetFaceDescriptor(j).DomainOut() == domout)
+         {
+            faceind = j;
+            break;
+         }
+      }
+
+      if (!faceind)
+      {
+         faceind = mesh->AddFaceDescriptor (FaceDescriptor(surfnr, domin, domout, 0));
+         mesh->GetFaceDescriptor(faceind).SetBCProperty (bcp);
+      }
+      return faceind;
+   }
+
+
+   NGLIB_API void Ng_SetupFacedescriptors (Ng_Mesh * mesh, int maxbc)
+   {
+	   Mesh * m = (Mesh*)mesh;
+	   m->ClearFaceDescriptors();
+	   for (int i = 1; i <= maxbc; i++)
+		   m->AddFaceDescriptor (FaceDescriptor (i, 0, 0, i));
+   }
 
 
    // Manually add a surface element of a given type to an existing mesh object
    NGLIB_API void Ng_AddSurfaceElement (Ng_Mesh * mesh, Ng_Surface_Element_Type et,
-                                         int * pi)
+                                         int * pi, int facenr)
    {
+      int n = 3;
+      switch (et)
+      {
+      case NG_TRIG:
+         n = 3; break;
+      case NG_QUAD:
+         n = 4; break;
+      case NG_QUAD6:
+         n = 6; break;
+      case NG_TRIG6:
+         n = 6; break;
+      case NG_QUAD8:
+         n = 8; break;
+      default: break;
+      }
+      
       Mesh * m = (Mesh*)mesh;
-      Element2d el (3);
-      el.SetIndex (1);
-      el.PNum(1) = pi[0];
-      el.PNum(2) = pi[1];
-      el.PNum(3) = pi[2];
+      Element2d el (n);
+      el.SetIndex (facenr);
+      for (int i=0; i<n; ++i)
+         el.PNum(i+1) = pi[i];
       m->AddSurfaceElement (el);
    }
 
@@ -218,19 +328,31 @@ namespace nglib
 
    // Manually add a volume element of a given type to an existing mesh object
    NGLIB_API void Ng_AddVolumeElement (Ng_Mesh * mesh, Ng_Volume_Element_Type et,
-                                        int * pi)
+                                        int * pi, int domain)
    {
+      int n = 4;
+      switch (et)
+      {
+      case NG_TET:
+         n = 4; break;
+      case NG_PYRAMID:
+         n = 5; break;
+      case NG_PRISM:
+         n = 6; break;
+      case NG_HEX:
+         n = 8; break;
+      case NG_TET10:
+         n = 10; break;
+      default: break;
+      }
+      
       Mesh * m = (Mesh*)mesh;
-      Element el (4);
-      el.SetIndex (1);
-      el.PNum(1) = pi[0];
-      el.PNum(2) = pi[1];
-      el.PNum(3) = pi[2];
-      el.PNum(4) = pi[3];
+      Element el (n);
+      el.SetIndex (domain);
+      for (int i=0; i<n; ++i)
+         el.PNum(i+1) = pi[i];
       m->AddVolumeElement (el);
    }
-
-
 
 
    // Obtain the number of points in the mesh
@@ -270,11 +392,23 @@ namespace nglib
    }
 
 
-
+   NGLIB_API bool Ng_GetFaceDescriptor (Ng_Mesh * mesh, int facenr, int &surfnr, int &domin, int &domout, int &bcp)
+   {
+      Mesh * m = (Mesh*)mesh;
+      if (facenr <= m->GetNFD())
+      {
+         surfnr = m->GetFaceDescriptor(facenr).SurfNr();
+         domin = m->GetFaceDescriptor(facenr).DomainIn();
+         domout = m->GetFaceDescriptor(facenr).DomainOut();
+         bcp = m->GetFaceDescriptor(facenr).BCProperty();
+         return true;
+      }
+      return false;
+   }
 
    // Return the surface element at a given index "pi"
    NGLIB_API Ng_Surface_Element_Type 
-      Ng_GetSurfaceElement (Ng_Mesh * mesh, int num, int * pi)
+      Ng_GetSurfaceElement (Ng_Mesh * mesh, int num, int * pi, int * facenr)
    {
       const Element2d & el = ((Mesh*)mesh)->SurfaceElement(num);
       for (int i = 1; i <= el.GetNP(); i++)
@@ -297,6 +431,8 @@ namespace nglib
       default:
          et = NG_TRIG; break; // for the compiler
       }
+      if (facenr)
+        *facenr = el.GetIndex();
       return et;
    }
 
@@ -305,7 +441,7 @@ namespace nglib
 
    // Return the volume element at a given index "pi"
    NGLIB_API Ng_Volume_Element_Type
-      Ng_GetVolumeElement (Ng_Mesh * mesh, int num, int * pi)
+      Ng_GetVolumeElement (Ng_Mesh * mesh, int num, int * pi, int * domain)
    {
       const Element & el = ((Mesh*)mesh)->VolumeElement(num);
       for (int i = 1; i <= el.GetNP(); i++)
@@ -316,10 +452,13 @@ namespace nglib
       case 4: et = NG_TET; break;
       case 5: et = NG_PYRAMID; break;
       case 6: et = NG_PRISM; break;
+      case 8: et = NG_HEX; break;
       case 10: et = NG_TET10; break;
       default:
          et = NG_TET; break; // for the compiler
       }
+      if (domain)
+        *domain = el.GetIndex();
       return et;
    }
 
@@ -379,6 +518,24 @@ namespace nglib
 
 
 
+   // Optimize existing mesh
+   NGLIB_API Ng_Result Ng_OptimizeVolume(Ng_Mesh *mesh, Ng_Meshing_Parameters *mp)
+   {
+      Mesh * m = (Mesh*)mesh;
+
+      mp->Transfer_Parameters();
+
+      m->CalcLocalH(mparam.grading);
+
+      RemoveIllegalElements(*m);
+      OptimizeVolume(mparam, *m);
+
+      return NG_OK;
+   }
+
+
+
+
    /* ------------------ 2D Meshing Functions ------------------------- */
    NGLIB_API void Ng_AddPoint_2D (Ng_Mesh * mesh, double * x)
    {
@@ -390,14 +547,16 @@ namespace nglib
 
 
 
-   NGLIB_API void Ng_AddBoundarySeg_2D (Ng_Mesh * mesh, int pi1, int pi2)
+   NGLIB_API void Ng_AddBoundarySeg_2D (Ng_Mesh * mesh, int pi1, int pi2, int domain_in, int domain_out)
    {
       Mesh * m = (Mesh*)mesh;
 
       Segment seg;
       seg[0] = pi1;
       seg[1] = pi2;
-      m->AddSegment (seg);
+      seg.domin = domain_in;
+      seg.domout = domain_out;
+     m->AddSegment(seg);
    }
 
 
@@ -498,6 +657,73 @@ namespace nglib
    }
 
 
+   NGLIB_API Ng_Geometry_2D * Ng_NewGeometry_2D ()
+   {
+      SplineGeometry2d * geom = new SplineGeometry2d();
+      return (Ng_Geometry_2D *)geom;
+   }
+
+   NGLIB_API void Ng_DeleteGeometry_2D (Ng_Geometry_2D * geom)
+   {
+      if (geom)
+      {
+         SplineGeometry2d* spline_geom = (SplineGeometry2d*)geom;
+         delete spline_geom;
+         geom = NULL;
+      }
+   }
+
+   NGLIB_API void Ng_AppendPoint_2D (Ng_Geometry_2D* geom, double * x, double h)
+   {
+      if (geom)
+      {
+         SplineGeometry2d* spline_geom = (SplineGeometry2d*)geom;
+         Point<2> p(x[0],x[1]);
+         spline_geom->AppendPoint(p, h);
+      }
+   }
+
+   NGLIB_API void Ng_AppendLineSegment_2D (Ng_Geometry_2D* geom, int n1, int n2,
+      int leftdomain, int rightdomain, double h)
+   {
+      if (geom)
+      {
+         SplineGeometry2d* spline_geom = (SplineGeometry2d*)geom;
+         // zero-offset!
+         LineSeg<2>* line = new LineSeg<2>(spline_geom->geompoints[n1-1], spline_geom->geompoints[n2-1]);
+         SplineSegExt* seg = new SplineSegExt(*line);
+         seg->leftdom = leftdomain;
+         seg->rightdom = rightdomain;
+         seg->hmax = h;
+         seg->copyfrom = -1;
+         seg->bc = 1;
+         spline_geom->AppendSegment(seg);
+      }
+   }
+
+   NGLIB_API void Ng_AppendSplinSegment_2D (Ng_Geometry_2D* geom, int n1, int n2, int n3,
+      int leftdomain, int rightdomain, double h)
+   {
+      if (geom)
+      {
+         SplineGeometry2d* spline_geom = (SplineGeometry2d*)geom;
+         // zero-offset!
+         NgArray<Point<2> > pts;
+         pts.Append(spline_geom->geompoints[n1-1]);
+         pts.Append(spline_geom->geompoints[n2-1]);
+         pts.Append(spline_geom->geompoints[n3-1]);
+         auto line = new BSplineSeg<2,3>(pts);
+         //SplineSeg3<2>* line = new SplineSeg3<2>(spline_geom->geompoints[n1-1], spline_geom->geompoints[n2-1], spline_geom->geompoints[n3-1]);
+         SplineSegExt* seg = new SplineSegExt(*line);
+         seg->leftdom = leftdomain;
+         seg->rightdom = rightdomain;
+         seg->hmax = h;
+         seg->copyfrom = -1;
+         seg->bc = 1;
+         spline_geom->AppendSegment(seg);
+      }
+   }
+
    NGLIB_API Ng_Result Ng_GenerateMesh_2D (Ng_Geometry_2D * geom,
                                             Ng_Mesh ** mesh,
                                             Ng_Meshing_Parameters * mp)
@@ -508,15 +734,24 @@ namespace nglib
 
       shared_ptr<Mesh> m(new Mesh, &NOOP_Deleter);
       MeshFromSpline2D (*(SplineGeometry2d*)geom, m, mparam);
-      // new shared_ptr<Mesh> (m);  // hack to keep mesh m alive 
-      
-      cout << m->GetNSE() << " elements, " << m->GetNP() << " points" << endl;
 
       *mesh = (Ng_Mesh*)m.get();
       return NG_OK;
    }
 
 
+   NGLIB_API Ng_Result Ng_OptimizeMesh_2D(Ng_Mesh *mesh, Ng_Meshing_Parameters * mp)
+   {
+       Mesh * m = (Mesh*)mesh;
+
+       mp->Transfer_Parameters();
+
+       m->CalcLocalH(mparam.grading);
+
+       Optimize2d(*m, mparam);
+
+       return NG_OK;
+   }
 
 
    NGLIB_API void Ng_HP_Refinement (Ng_Geometry_2D * geom,
@@ -601,6 +836,16 @@ namespace nglib
    } 
 
 
+   NGLIB_API void Ng_STL_DeleteGeometry (Ng_STL_Geometry * geom)
+   {
+      if (geom)
+      {
+         STLGeometry* geometry = (STLGeometry*)geom;
+         geometry->Clear();
+         delete geometry;
+         geometry = NULL;
+      }
+   }
 
 
    // after adding triangles (and edges) initialize
@@ -631,7 +876,8 @@ namespace nglib
    // automatically generates edges:
    NGLIB_API Ng_Result Ng_STL_MakeEdges (Ng_STL_Geometry * geom,
                                           Ng_Mesh* mesh,
-                                          Ng_Meshing_Parameters * mp)
+                                          Ng_Meshing_Parameters * mp,
+                                          Ng_STL_Parameters * stlp)
    {
       STLGeometry* stlgeometry = (STLGeometry*)geom;
       Mesh* me = (Mesh*)mesh;
@@ -642,6 +888,7 @@ namespace nglib
       // object 
       //MeshingParameters mparam;
       mp->Transfer_Parameters();
+      if (stlp) stlp->Transfer_Parameters();
 
       me -> SetGlobalH (mparam.maxh);
       me -> SetLocalH (stlgeometry->GetBoundingBox().PMin() - Vec3d(10, 10, 10),
@@ -677,7 +924,8 @@ namespace nglib
    // generates mesh, empty mesh be already created.
    NGLIB_API Ng_Result Ng_STL_GenerateSurfaceMesh (Ng_STL_Geometry * geom,
                                                     Ng_Mesh* mesh,
-                                                    Ng_Meshing_Parameters * mp)
+                                                    Ng_Meshing_Parameters * mp,
+                                                    Ng_STL_Parameters * stlp)
    {
       STLGeometry* stlgeometry = (STLGeometry*)geom;
       Mesh* me = (Mesh*)mesh;
@@ -688,6 +936,7 @@ namespace nglib
       // object
       //MeshingParameters mparam;
       mp->Transfer_Parameters();
+      if (stlp) stlp->Transfer_Parameters();
 
 
       /*
@@ -787,9 +1036,9 @@ namespace nglib
 
       closeedgeenable = 0;
       closeedgefact = 2.0;
-
-	  minedgelenenable = 0;
-	  minedgelen = 1e-4;
+      
+      minedgelenenable = 0;
+      minedgelen = 1e-4;
 
       second_order = 0;
       quad_dominated = 0;
@@ -801,6 +1050,9 @@ namespace nglib
 
       optsteps_2d = 3;
       optsteps_3d = 3;
+      
+      optimize3d = "cmdmustm";
+      optimize2d = "smsmsmSmSmSm";
 
       invert_tets = 0;
       invert_trigs = 0;
@@ -815,39 +1067,7 @@ namespace nglib
    // Reset the local meshing parameters to the default values
    NGLIB_API void Ng_Meshing_Parameters :: Reset_Parameters()
    {
-      uselocalh = 1;
-
-      maxh = 1000;
-      minh = 0;
-
-      fineness = 0.5;
-      grading = 0.3;
-
-      elementsperedge = 2.0;
-      elementspercurve = 2.0;
-
-      closeedgeenable = 0;
-      closeedgefact = 2.0;
-
-  	  minedgelenenable = 0;
-	  minedgelen = 1e-4;
-
-      second_order = 0;
-      quad_dominated = 0;
-
-      meshsize_filename = 0;
-
-      optsurfmeshenable = 1;
-      optvolmeshenable = 1;
-
-      optsteps_2d = 3;
-      optsteps_3d = 3;
-
-      invert_tets = 0;
-      invert_trigs = 0;
-
-      check_overlap = 1;
-      check_overlapping_boundary = 1;
+      (*this) = Ng_Meshing_Parameters();
    }
 
 
@@ -874,12 +1094,81 @@ namespace nglib
         mparam.meshsizefilename = "";
       mparam.optsteps2d = optsteps_2d;
       mparam.optsteps3d = optsteps_3d;
+      
+      if (strlen(optimize2d) > 0) mparam.optimize2d = optimize2d;
+      if (strlen(optimize3d) > 0) mparam.optimize3d = optimize3d;
 
       mparam.inverttets = invert_tets;
       mparam.inverttrigs = invert_trigs;
 
       mparam.checkoverlap = check_overlap;
       mparam.checkoverlappingboundary = check_overlapping_boundary;
+   }
+
+
+
+   NGLIB_API Ng_STL_Parameters :: Ng_STL_Parameters()
+   {
+      yangle = 30;
+      contyangle = 20;
+      
+      chartangle = 10; // original = 15
+      outerchartangle = 80; // original = 70;
+      
+      usesearchtree = 0;
+      
+      atlasminh = 1.0; // original = 1E-4
+      
+      resthatlasenable = 1;
+      resthatlasfac = 2;
+      
+      resthchartdistenable = 1;
+      resthchartdistfac = 0.3; // original = 1.2
+      
+      resthedgeangleenable = 0;
+      resthedgeanglefac = 1;
+      
+      resthsurfmeshcurvenable = 1;
+      resthsurfmeshcurvfac = 1;
+      
+      resthlinelengthenable = 1;
+      resthlinelengthfac = 0.2; // original = 0.5
+      
+      resthcloseedgefac = 1;
+      resthcloseedgeenable = 1;
+   }
+
+
+
+   NGLIB_API void Ng_STL_Parameters :: Transfer_Parameters()
+   {
+      stlparam.yangle = yangle;
+      stlparam.contyangle = contyangle;
+
+      stlparam.chartangle = chartangle;
+      stlparam.outerchartangle = outerchartangle;
+
+      stlparam.usesearchtree = usesearchtree;
+
+      stlparam.atlasminh = atlasminh;
+
+      stlparam.resthatlasenable = resthatlasenable;
+      stlparam.resthatlasfac = resthatlasfac;
+
+      stlparam.resthchartdistenable = resthchartdistenable;
+      stlparam.resthchartdistfac = resthchartdistfac;
+
+      stlparam.resthedgeangleenable = resthedgeangleenable;
+      stlparam.resthedgeanglefac = resthedgeanglefac;
+
+      stlparam.resthsurfmeshcurvenable = resthsurfmeshcurvenable;
+      stlparam.resthsurfmeshcurvfac = resthsurfmeshcurvfac;
+
+      stlparam.resthlinelengthenable = resthlinelengthenable;
+      stlparam.resthlinelengthfac = resthlinelengthfac;
+
+      // stlparam.resthcloseedgeenable = resthcloseedgeenable;
+      // stlparam.resthcloseedgefac = resthcloseedgefac;
    }
    // ------------------ End - Meshing Parameters related functions --------------------
 
@@ -897,7 +1186,7 @@ namespace nglib
 
 
    NGLIB_API void Ng_2D_Generate_SecondOrder(Ng_Geometry_2D * geom,
-					  Ng_Mesh * mesh)
+                 Ng_Mesh * mesh)
    {
       ( (SplineGeometry2d*)geom ) -> GetRefinement().MakeSecondOrder( * (Mesh*) mesh );
    }
@@ -906,7 +1195,7 @@ namespace nglib
 
 
    NGLIB_API void Ng_STL_Generate_SecondOrder(Ng_STL_Geometry * geom,
-					   Ng_Mesh * mesh)
+                  Ng_Mesh * mesh)
    {
       ((STLGeometry*)geom)->GetRefinement().MakeSecondOrder(*(Mesh*) mesh);
    }
@@ -915,7 +1204,7 @@ namespace nglib
 
 
    NGLIB_API void Ng_CSG_Generate_SecondOrder (Ng_CSG_Geometry * geom,
-					   Ng_Mesh * mesh)
+                  Ng_Mesh * mesh)
    {
       ((CSGeometry*)geom)->GetRefinement().MakeSecondOrder(*(Mesh*) mesh);
    }
@@ -931,10 +1220,55 @@ namespace nglib
    // ------------------ Begin - Uniform Mesh Refinement functions ---------------------
    NGLIB_API void Ng_Uniform_Refinement (Ng_Mesh * mesh)
    {
-     Refinement ref(*((Mesh*)mesh)->GetGeometry());
-     ref.Refine ( * (Mesh*) mesh );
+      Refinement ref(*((Mesh*)mesh)->GetGeometry());
+      ref.Refine ( * (Mesh*) mesh );
    }
 
+
+   NGLIB_API void Ng_SetRefinementFlag (Ng_Mesh * ng_mesh, int ei, int flag)
+   {
+      Mesh * mesh = (Mesh*) ng_mesh;
+      
+      if (mesh->GetDimension() == 3)
+      {
+         mesh->VolumeElement(ei).SetRefinementFlag (flag != 0);
+         mesh->VolumeElement(ei).SetStrongRefinementFlag (flag >= 10);
+      }
+      else
+      {
+         mesh->SurfaceElement(ei).SetRefinementFlag (flag != 0);
+         mesh->SurfaceElement(ei).SetStrongRefinementFlag (flag >= 10);
+      }
+   }
+
+
+   NGLIB_API void Ng_SetSurfaceRefinementFlag (Ng_Mesh * ng_mesh, int ei, int flag)
+   {
+      Mesh * mesh = (Mesh*) ng_mesh;
+
+      if (mesh->GetDimension() == 3)
+      {
+         mesh->SurfaceElement(ei).SetRefinementFlag (flag != 0);
+         mesh->SurfaceElement(ei).SetStrongRefinementFlag (flag >= 10);
+      }
+   }
+
+
+   NGLIB_API void Ng_Refine (Ng_Mesh * ng_mesh)
+   {
+      Mesh * mesh = (Mesh*) ng_mesh;
+      BisectionOptions biopt;
+      biopt.usemarkedelements = 1;
+      biopt.refine_p = 0; // only h-refinement
+      biopt.refine_hp = 0;
+
+	  Refinement ref(*((Mesh*)mesh)->GetGeometry());
+	  ref.Bisect(*(Mesh*)mesh, biopt);
+
+      // \todo not sure if this is needed?
+      //mesh -> UpdateTopology();
+      //mesh -> GetCurvedElements().SetIsHighOrder (false);
+   }
 
 
 
@@ -943,7 +1277,6 @@ namespace nglib
    {
       ( (SplineGeometry2d*)geom ) -> GetRefinement().Refine ( * (Mesh*) mesh );
    }
-
 
 
 
@@ -1037,11 +1370,3 @@ void Ng_SetSolutionData (Ng_SolutionData * soldata)
 }
 void Ng_InitSolutionData (Ng_SolutionData * soldata) { ; }
 */
-
-// Force linking libinterface to libnglib
-#include <../interface/writeuser.hpp>
-void MyDummyToForceLinkingLibInterface(Mesh &mesh, NetgenGeometry &geom)
-{
-  netgen::WriteUserFormat("", mesh, /* geom, */ "");
-}
-
