@@ -17,6 +17,7 @@ namespace ngcore
 {
     namespace detail
     {
+      /*
         // see https://github.com/RobotLocomotion/drake/blob/master/common/nice_type_name.cc
         static const auto demangle_regexes =
             std::array<std::pair<std::regex, std::string>, 8>{
@@ -39,10 +40,11 @@ namespace ngcore
                 {std::regex("\\bstd::basic_string<char,std::char_traits<char>,"
                         "std::allocator<char>>"), "std::string"}
             };
+        */
         std::string CleanupDemangledName( std::string s )
         {
-            for(const auto & [r, sub] : demangle_regexes)
-                s = std::regex_replace (s,r,sub);
+            //for(const auto & [r, sub] : demangle_regexes)
+            //    s = std::regex_replace (s,r,sub);
 
             return s;
         }
