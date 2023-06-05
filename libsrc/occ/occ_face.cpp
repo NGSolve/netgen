@@ -63,7 +63,7 @@ namespace netgen
             auto & orientation = edge_orientation[edgenr];
             double s0, s1;
             auto cof = BRep_Tool::CurveOnSurface (edge, face, s0, s1);
-            if(edge.Orientation() == TopAbs_FORWARD)
+            if(edge.Orientation() == TopAbs_FORWARD || edge.Orientation() == TopAbs_INTERNAL)
             {
                 curve_on_face[FORWARD][edgenr] = cof;
                 orientation += FORWARD;
@@ -74,6 +74,15 @@ namespace netgen
                 curve_on_face[REVERSED][edgenr] = cof;
                 orientation += REVERSED;
                 edge_on_face[REVERSED][edgenr] = edge;
+            }
+            if(edge.Orientation() == TopAbs_INTERNAL)
+            {
+              // add reversed edge
+              auto r_edge = TopoDS::Edge(edge.Reversed());
+              auto cof = BRep_Tool::CurveOnSurface (r_edge, face, s0, s1);
+              curve_on_face[REVERSED][edgenr] = cof;
+              orientation += REVERSED;
+              edge_on_face[REVERSED][edgenr] = r_edge;
             }
 
             if(orientation > BOTH)
