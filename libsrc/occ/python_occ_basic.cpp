@@ -151,6 +151,11 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
     .def(py::init([](gp_Pnt p, gp_Dir N, gp_Dir Vx) {
           return gp_Ax3(p,N, Vx);
         }), py::arg("p")=gp_Pnt(0,0,0), py::arg("n")=gp_Vec(0,0,1), py::arg("h")=gp_Vec(1,0,0))
+    .def(py::init([](gp_Ax1 ax1) {
+          gp_Ax3 ax;
+          ax.SetAxis(ax1);
+          return ax;
+        }), py::arg("axis"))
     .def(py::init<gp_Ax2>())
     .def_property("p", [](gp_Ax3 & ax) { return ax.Location(); }, [](gp_Ax3&ax, gp_Pnt p) { ax.SetLocation(p); })
     ;
@@ -363,6 +368,9 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
   py::implicitly_convertible<py::tuple, gp_Pnt2d>();  
   py::implicitly_convertible<py::tuple, gp_Vec2d>();  
   py::implicitly_convertible<py::tuple, gp_Dir2d>();
+  
+  py::implicitly_convertible<gp_Ax1, gp_Ax3>();  
+  py::implicitly_convertible<gp_Ax3, gp_Ax1>();  
 
 
   py::implicitly_convertible<gp_Ax3, gp_Ax2>();

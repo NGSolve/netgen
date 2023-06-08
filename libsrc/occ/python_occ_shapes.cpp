@@ -21,6 +21,7 @@
 #include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
+#include <BRepBuilderAPI_GTransform.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
 #include <BRepFilletAPI_MakeChamfer.hxx>
 #include <BRepFilletAPI_MakeFillet.hxx>
@@ -1815,9 +1816,32 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     BRepPrimAPI_MakeHalfSpace builder(face, refpnt);
     return builder.Shape();
   }, py::arg("p"), py::arg("n"), "Create a half space threw point p normal to n");
+
   m.def("Sphere", [] (gp_Pnt cc, double r) {
       return BRepPrimAPI_MakeSphere (cc, r).Solid();
     }, py::arg("c"), py::arg("r"), "create sphere with center 'c' and radius 'r'");
+
+  m.def("Ellipsoid", [] (gp_Ax3 ax, double r1, double r2, optional<double> hr3) {
+      auto sp = BRepPrimAPI_MakeSphere (gp_Pnt(0,0,0), 1).Solid();
+
+      gp_GTrsf gtrafo;
+      double r3 = hr3.value_or(r2);
+      gtrafo.SetVectorialPart({ r2, 0, 0,  0, r3, 0,  0, 0, r1 });
+      gtrafo.SetTranslationPart( { 0.0, 0.0, 0.0 } );
+
+      BRepBuilderAPI_GTransform gbuilder(sp, gtrafo, true);
+      PropagateProperties(gbuilder, sp, occ2ng(gtrafo));
+
+      auto gsp = gbuilder.Shape();      
+      
+      gp_Trsf trafo;
+      trafo.SetTransformation(ax, gp_Ax3());
+      BRepBuilderAPI_Transform builder(gsp, trafo, true);
+      PropagateProperties(builder, gsp, occ2ng(trafo));
+      return builder.Shape();
+    }, py::arg("axes"), py::arg("r1"), py::arg("r2"), py::arg("r3")=std::nullopt,
+    "create ellipsoid with local coordinates given by axes, radi 'r1', 'r2', 'r3'");
+
   
   m.def("Cylinder", [] (gp_Pnt cpnt, gp_Dir cdir, double r, double h,
                         optional<string> bot, optional<string> top, optional<string> mantle) {
