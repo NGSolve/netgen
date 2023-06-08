@@ -152,9 +152,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
           return gp_Ax3(p,N, Vx);
         }), py::arg("p")=gp_Pnt(0,0,0), py::arg("n")=gp_Vec(0,0,1), py::arg("h")=gp_Vec(1,0,0))
     .def(py::init([](gp_Ax1 ax1) {
-          gp_Ax3 ax;
-          ax.SetAxis(ax1);
-          return ax;
+          return gp_Ax3(ax1.Location(), ax1.Direction());
         }), py::arg("axis"))
     .def(py::init<gp_Ax2>())
     .def_property("p", [](gp_Ax3 & ax) { return ax.Location(); }, [](gp_Ax3&ax, gp_Pnt p) { ax.SetLocation(p); })
