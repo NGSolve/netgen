@@ -1610,7 +1610,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 		sing = 1; 
 	      } 
 	  }
-	cout << endl; 
+	// cout << endl; 
 
 	for (int i = 1; i <= mesh.GetNSeg(); i++)
 	  if (mesh.LineSegment(i).singedge_left * levels >= act_ref)
