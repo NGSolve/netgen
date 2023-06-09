@@ -1392,7 +1392,8 @@ namespace netgen
                     seg.domin = hpel.domin; seg.domout=hpel.domout; // he: needed for segments!
 		    seg.hp_elnr = i;
 		    seg.singedge_left = hpel.singedge_left; 
-		    seg.singedge_right = hpel.singedge_right; 
+		    seg.singedge_right = hpel.singedge_right;
+                    seg.SetCurved (coarseseg.IsCurved());
 		    mesh.AddSegment (seg); 
 		    break;
 		  }
