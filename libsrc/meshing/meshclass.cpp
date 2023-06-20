@@ -5221,7 +5221,37 @@ namespace netgen
 
                       auto & el = volelements[ei];
                       if(el.IsCurved() && curvedelems->IsElementCurved(ei))
+                      {
+                        // add edge/face midpoints to box
+                        auto eltype = el.GetType();
+                        const auto verts = topology.GetVertices(eltype);
+
+
+                        const auto edges = FlatArray<const ELEMENT_EDGE>(topology.GetNEdges(eltype), topology.GetEdges0(eltype));
+                        for (const auto & edge: edges) {
+                          netgen::Point<3> lam = netgen::Point<3>(0.5* (verts[edge[0]] + verts[edge[1]]));
+                          auto p = netgen::Point<3>(0.0);
+                          curvedelems->CalcElementTransformation(lam,ei,p);
+                          box.Add(p);
+                        }
+
+                        const auto faces = FlatArray<const ELEMENT_FACE>(topology.GetNFaces(eltype), topology.GetFaces0(eltype));
+                        for (const auto & face: faces) {
+                          netgen::Vec<3> lam = netgen::Vec<3>(verts[face[0]] + verts[face[1] + verts[face[2]]]);
+                          if(face[3] != -1) {
+                            lam += netgen::Vec<3>(verts[face[3]]);
+                            lam *= 0.25;
+                          }
+                          else
+                            lam *= 1.0/3;
+                          auto p = netgen::Point<3>(0.0);
+                          curvedelems->CalcElementTransformation(netgen::Point<3>(lam),ei,p);
+                          box.Add(p);
+                        }
+
+
                         box.Scale(1.2);
+                      }
 
 
                       elementsearchtree -> Insert (box, ei+1);
