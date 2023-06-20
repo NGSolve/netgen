@@ -358,7 +358,7 @@ namespace netgen
 
   void MergeAndAddSegments( Mesh & mesh, FlatArray<Segment> new_segments)
   {
-      INDEX_2_HASHTABLE<bool> already_added( 2*new_segments.Size() );
+      INDEX_2_HASHTABLE<bool> already_added( mesh.LineSegments().Size() + 2*new_segments.Size() );
 
       for(auto & seg : mesh.LineSegments())
       {
