@@ -5237,7 +5237,7 @@ namespace netgen
 
                         const auto faces = FlatArray<const ELEMENT_FACE>(topology.GetNFaces(eltype), topology.GetFaces0(eltype));
                         for (const auto & face: faces) {
-                          netgen::Vec<3> lam = netgen::Vec<3>(verts[face[0]] + verts[face[1] + verts[face[2]]]);
+                          netgen::Vec<3> lam = netgen::Vec<3>(verts[face[0]] + verts[face[1]] + verts[face[2]]);
                           if(face[3] != -1) {
                             lam += netgen::Vec<3>(verts[face[3]]);
                             lam *= 0.25;
