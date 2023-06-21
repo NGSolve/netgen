@@ -1023,6 +1023,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             return self.AddFaceDescriptor (fd);
           })
 
+    .def ("AddSingularity", [](Mesh & self, PointIndex pi, double factor)
+         {
+	   self[pi].Singularity(factor);
+         })
+
     .def ("AddPoints", [](Mesh & self, py::buffer b1)
           {
             static Timer timer("Mesh::AddPoints");
@@ -1683,14 +1688,14 @@ project_boundaries : Optional[str] = None
                   }), py::arg("mapping"))
     .def(NGSPickle<SurfaceGeometry>())
     .def("GenerateMesh", [](shared_ptr<SurfaceGeometry> geo,
-                            bool quads, int nx, int ny, bool flip_triangles, py::list py_bbbpts, py::list py_bbbnames, py::list py_hppts, py::list py_hpbnd)
+                            bool quads, int nx, int ny, bool flip_triangles, py::list py_bbbpts, py::list py_bbbnames, py::list py_hppnts, py::dict/*list*/ py_hpbnd, py::dict py_layers)
            {
              if (py::len(py_bbbpts) != py::len(py_bbbnames))
                throw Exception("In SurfaceGeometry::GenerateMesh bbbpts and bbbnames do not have same lengths.");
              Array<Point<3>> bbbpts(py::len(py_bbbpts));
              Array<string> bbbname(py::len(py_bbbpts));
-             Array<Point<3>> hppts(py::len(py_hppts));
-             Array<float> hpptsfac(py::len(py_hppts));
+             Array<Point<3>> hppnts(py::len(py_hppnts));
+             Array<float> hppntsfac(py::len(py_hppnts));
              Array<string> hpbnd(py::len(py_hpbnd));
              Array<float> hpbndfac(py::len(py_hpbnd));
              for(int i = 0; i<py::len(py_bbbpts);i++)
@@ -1699,30 +1704,82 @@ project_boundaries : Optional[str] = None
                    bbbpts[i] = Point<3>(py::extract<double>(pnt[0])(),py::extract<double>(pnt[1])(),py::extract<double>(pnt[2])());
                    bbbname[i] = py::extract<string>(py_bbbnames[i])();
                  }
-             for(int i = 0; i<py::len(py_hppts);i++)
+             for(int i = 0; i<py::len(py_hppnts);i++)
 		 {
-                   py::tuple pnt = py::extract<py::tuple>(py_hppts[i])();
-                   hppts[i] = Point<3>(py::extract<double>(pnt[0])(),py::extract<double>(pnt[1])(),py::extract<double>(pnt[2])());
-                   //hpptsfac[i] = py::len(pnt) > 3 ? py::extract<double>(pnt[3])() : 0.0;
-                   hpptsfac[i] = py::extract<double>(pnt[3])();
+                   py::tuple pnt = py::extract<py::tuple>(py_hppnts[i])();
+                   hppnts[i] = Point<3>(py::extract<double>(pnt[0])(),py::extract<double>(pnt[1])(),py::extract<double>(pnt[2])());
+                   hppntsfac[i] = py::extract<double>(pnt[3])();
                  }
 
-             for(int i = 0; i<py::len(py_hpbnd);i++)
-		 {
-                   py::tuple bnd = py::extract<py::tuple>(py_hpbnd[i])();
-                   hpbnd[i] = py::extract<string>(bnd[0])();
-                   hpbndfac[i] = py::extract<double>(bnd[1])();
-                 }
+	     int ii=0;
+             for(auto val : py_hpbnd)
+               {
+                 hpbnd[ii] = py::cast<string>(val.first);
+		 hpbndfac[ii] = py::cast<float>(val.second);
+		 ii++;
+	       }
+
+             
+             Array<double> layer_thickness[4];
+             bool layer_quad = false;
+
+             for(auto val : py_layers)
+               {
+		 int index = -1;
+                 if (py::cast<string>(val.first) == "left") index = 0;
+                 else if (py::cast<string>(val.first) == "top") index = 3;
+                 else if (py::cast<string>(val.first) == "right") index = 2;
+                 else if (py::cast<string>(val.first) == "bottom") index = 1;
+		 else if (py::cast<string>(val.first) == "quads") layer_quad = py::cast<bool>(val.second);
+		 else throw Exception("Unknown parameter " + string(py::cast<string>(val.first)));
+		 if (index < 0) continue;
+
+		 auto list = py::cast<py::list>(val.second);
+		 layer_thickness[index] = Array<double>(py::len(list));
+		 for (size_t i = 0; i < py::len(list); i++)
+		   layer_thickness[index][i] = py::cast<double>(list[i]);
+               }
+                   
              auto mesh = make_shared<Mesh>();
              SetGlobalMesh (mesh);
              mesh->SetGeometry(geo);
 	     ng_geometry = geo;
-             auto result = geo->GenerateStructuredMesh (mesh, quads, nx, ny, flip_triangles, bbbpts, bbbname, hppts, hpptsfac, hpbnd, hpbndfac);
+             auto result = geo->GenerateStructuredMesh (mesh, quads, nx, ny, flip_triangles, bbbpts, bbbname, hppnts, hppntsfac, hpbnd, hpbndfac, layer_thickness, layer_quad);
              if(result != 0)
                throw Exception("SurfaceGeometry: Meshing failed!");
              return mesh;
-           }, py::arg("quads")=true, py::arg("nx")=10, py::arg("ny")=10, py::arg("flip_triangles")=false, py::arg("bbbpts")=py::list(), py::arg("bbbnames")=py::list(), py::arg("hppts")=py::list(), py::arg("hpbnd")=py::list())
-      ;
+           }, py::arg("quads")=true, py::arg("nx")=10, py::arg("ny")=10, py::arg("flip_triangles")=false, py::arg("bbbpts")=py::list(), py::arg("bbbnames")=py::list(), py::arg("hppnts")=py::list(), py::arg("hpbnd")=py::dict(), py::arg("boundarylayer")=py::dict());/*, R"raw_string(
+      Generate a structured 2D surface mesh
+
+    Parameters:
+    
+    quads : bool
+      If True, a quadrilateral mesh is generated. If False, the quads are split to triangles.
+
+    nx : int
+      Number of cells in x-direction.
+
+    ny : int
+      Number of cells in y-direction.
+
+    flip_triangles : bool
+      If set to True together with quads=False the quads are cut the other way round
+
+    bbbpts : list
+      List of points which should be handled as BBBND and are named with bbbnames. The mesh must be constructed in such a way that the bbbpts coincide with generated points.
+
+    bbbnames : list
+      List of bbbnd names as strings. Size must coincide with size of bbbpts.
+
+    hppnts : list
+      If not None it expects a list of the form [ (px1,py1,pz1, hpref1), (px2,py2,pz2, hpref2), ... ] where px,py,pz are the point coordinates which have to be resolved in the mesh and hpref the refinement factor.
+
+    hpbnd : dict
+      If not None it expects a dictionary of the form {"boundaryname" : hpref } where boundaryname in [left, right, top, bottom] and hpref the refinement factor.
+
+    boundarylayer : dict
+      If not None it expects a dictionary of the form { "boundaryname" : [t1,...,tn], "quads" : False } where ti denote the thickness of layer i. The number of layers are included in nx/ny. After the layers are placed the remaining number of cells are used to divide the remaining grid uniformly. If quads are set to True quadrilaterals are used inside the boundarylayer. If set False the value of "quads" of the function call is used.
+      )raw_string");*/
     ;
 
     py::class_<ClearSolutionClass> (m, "ClearSolutionClass")

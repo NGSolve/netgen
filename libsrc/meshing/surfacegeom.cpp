@@ -197,6 +197,7 @@ namespace netgen
     return false;
   }
 
+  
   void  SurfaceGeometry :: PointBetweenEdge(const Point<3> & p1, const Point<3> & p2, double secpoint, int surfi1, int surfi2, const EdgePointGeomInfo & ap1, const EdgePointGeomInfo & ap2, Point<3> & newp, EdgePointGeomInfo & newgi) const
   {
     newgi.u = ap1.u+secpoint*(ap2.u-ap1.u);
@@ -206,6 +207,32 @@ namespace netgen
     newgi.dist = -1.0;
 
     newp = Point<3>(func(Point<2>(newgi.u, newgi.v)));
+  }
+
+    void CheckForBBBPnt(const Array<Point<3>>& bbbpts, const Point<3>& pnt, Array<bool>& found, Array<PointIndex>& indbbbpts, const Array<PointIndex>& pids)
+  {
+    for (int k = 0; k < bbbpts.Size(); k++)
+      {
+        auto diff = pnt - bbbpts[k];
+        if(diff.Length2() < 1e-14)
+          {
+            found[k] = true;
+            indbbbpts[k] = pids[pids.Size()-1];
+          }
+      }
+  }
+
+  void CheckForSingularity(const Array<Point<3>>& hppoints, const Point<3>& pnt, const Array<float>& hpptsfac, shared_ptr<Mesh> & mesh, const Array<PointIndex>& pids)
+  {
+    for (int k = 0; k < hppoints.Size(); k++)
+      {
+        auto diff = pnt - hppoints[k];
+        if(diff.Length2() < 1e-14)
+          {
+            (*mesh)[pids[pids.Size()-1]].Singularity(hpptsfac[k]);
+          }
+        
+      }
   }
   
   void SurfaceGeometry :: PointBetween(const Point<3> & p1, const Point<3> & p2, double secpoint,
@@ -223,7 +250,7 @@ namespace netgen
     //ProjectPointGI(surfi, newp, newgi);
   }
 
-  int SurfaceGeometry :: GenerateStructuredMesh(shared_ptr<Mesh> & mesh, bool quads, int nx, int ny, bool flip_triangles, const Array<Point<3>>& bbbpts, const Array<string>& bbbnames, const Array<Point<3>>& hppoints, const Array<float>& hpptsfac, const Array<string>& hpbnd, const Array<float>& hpbndfac)
+  int SurfaceGeometry :: GenerateStructuredMesh(shared_ptr<Mesh> & mesh, bool quads, int nx, int ny, bool flip_triangles, const Array<Point<3>>& bbbpts, const Array<string>& bbbnames, const Array<Point<3>>& hppoints, const Array<float>& hpptsfac, const Array<string>& hpbnd, const Array<float>& hpbndfac, Array<double> layer_thickness[4], bool layer_quad)
   {
     mesh->SetDimension(3);
 
@@ -231,41 +258,87 @@ namespace netgen
     found = false;
     Array<PointIndex> indbbbpts(bbbpts.Size());
 
+    int numx = nx;
+    int numy = ny;
+
+    size_t total_layer_el[4] = {layer_thickness[0].Size(), layer_thickness[1].Size(), layer_thickness[2].Size(), layer_thickness[3].Size()};
+    
+    double interior_x = 1.0;
+    double interior_y = 1.0;
+    for(double scale : layer_thickness[0])
+      interior_x -= scale;
+    for(double scale : layer_thickness[2])
+      interior_x -= scale;
+    for(double scale : layer_thickness[1])
+      interior_y -= scale;
+    for(double scale : layer_thickness[3])
+      interior_y -= scale;
+
+    auto AddPoint = [&] (double offsetx, double offsety, Array<PointIndex> & pids, Array<PointGeomInfo> & pgis)
+    {
+      PointGeomInfo pgi;
+      pgi.trignum = -1;
+      pgi.u = offsetx;
+      pgi.v = offsety;
+
+      
+      Point<3> pnt = Point<3>(func(Point<2>(pgi.u,pgi.v)));
+      pids.Append(mesh->AddPoint(pnt));
+      pgis.Append(pgi);
+      
+      CheckForBBBPnt(bbbpts, pnt, found, indbbbpts, pids);
+      CheckForSingularity(hppoints, pnt, hpptsfac, mesh, pids);
+    };
+
+    auto InternalLoop = [&] (double offsety, Array<PointIndex> & pids, Array<PointGeomInfo> & pgis)
+    {
+      int j = 0;
+      double offsetx = 0.0;
+
+      for(int l=0; l < layer_thickness[0].Size(); l++,j++)
+        {
+	  AddPoint(offsetx+layer_thickness[0][l]*double(j-l), offsety, pids, pgis);
+          offsetx += layer_thickness[0][l];
+        }
+      
+      
+      for(;j <= nx-total_layer_el[2]; j++)
+        AddPoint(offsetx + interior_x*double(j-total_layer_el[0])/(nx-total_layer_el[0]-total_layer_el[2]), offsety, pids, pgis);
+      offsetx += interior_x;
+            
+      int startj = j;
+      for(int l=0; l < layer_thickness[2].Size(); l++, j++)
+        {
+	  AddPoint(offsetx+layer_thickness[2][layer_thickness[2].Size()-1-l]*double(j-startj-l+1), offsety, pids, pgis);
+
+          offsetx += layer_thickness[2][layer_thickness[2].Size()-1-l];
+        }
+    };
     
     Array<PointIndex> pids;
     Array<PointGeomInfo> pgis;
-    for(int i=0; i <= ny; i++)
-      for(int j=0; j <= nx; j++)
-        {
-          PointGeomInfo pgi;
-          pgi.trignum = -1;
-          pgi.u = double(j)/nx;
-          pgi.v = double(i)/ny;
+    
+    int i = 0;
+    double offsety = 0.0;
 
-          Point<3> pnt = Point<3>(func(Point<2>(pgi.u,pgi.v)));
-          pids.Append(mesh->AddPoint(pnt));
-          pgis.Append(pgi);
-          
-          for (int k = 0; k < bbbpts.Size(); k++)
-            {
-              auto diff = pnt - bbbpts[k];
-              if(diff.Length2() < 1e-14)
-                {
-                  found[k] = true;
-                  indbbbpts[k] = pids[pids.Size()-1];
-                }
-            }
+    for(int k=0; k < layer_thickness[1].Size(); k++,i++)
+      {
+	InternalLoop(offsety, pids, pgis);
+	offsety += layer_thickness[1][k];
+      }
 
-          for (int k = 0; k < hppoints.Size(); k++)
-            {
-              auto diff = pnt - hppoints[k];
-              if(diff.Length2() < 1e-14)
-                {
-                  (*mesh)[pids[pids.Size()-1]].Singularity(hpptsfac[k]);
-                }
-              
-            }
-        }
+    for(; i <= ny-total_layer_el[3]; i++)
+      {
+        InternalLoop(offsety, pids, pgis);        
+	offsety +=  interior_y/(ny-total_layer_el[1]-total_layer_el[3]);
+      }
+    offsety -=  interior_y/(ny-total_layer_el[1]-total_layer_el[3]);
+
+    for(int k=0; k < layer_thickness[3].Size(); k++,i++)
+      {
+	offsety += layer_thickness[3][layer_thickness[3].Size()-1-k];
+	InternalLoop(offsety, pids, pgis); 
+      }
 
     for (bool f : found)
       if (!f)
@@ -279,14 +352,14 @@ namespace netgen
     mesh->AddFaceDescriptor(fd);
 
 
-    for(int i=0; i < ny; i++)
+    for(int i=0; i < numy; i++)
       {
-        for(int j=0; j < nx; j++)
+        for(int j=0; j < numx; j++)
           {
-            int base = i * (nx+1) + j;
-            if (quads)
+            int base = i * (numx+1) + j;
+            if (quads || (layer_quad && i < total_layer_el[1]) || (layer_quad && i > numy-1-total_layer_el[3]) || (layer_quad && j < total_layer_el[0]) || (layer_quad && j > numx-1-total_layer_el[2]) )
               {
-                int pnum[4] = {base,base+1,base+nx+2,base+nx+1};
+                int pnum[4] = {base,base+1,base+numx+2,base+numx+1};
                 Element2d el = Element2d(QUAD);
                 for (int i = 0; i < 4; i++)
                   {
@@ -305,19 +378,19 @@ namespace netgen
                   {
                     pnum1[0] = base;
                     pnum1[1] = base+1;
-                    pnum1[2] = base+nx+2;
+                    pnum1[2] = base+numx+2;
                     pnum2[0] = base;
-                    pnum2[1] = base+nx+2;
-                    pnum2[2] = base+nx+1;
+                    pnum2[1] = base+numx+2;
+                    pnum2[2] = base+numx+1;
                   }
                 else
                   {
                     pnum1[0] = base;
                     pnum1[1] = base+1;
-                    pnum1[2] = base+nx+1;
+                    pnum1[2] = base+numx+1;
                     pnum2[0] = base+1;
-                    pnum2[1] = base+nx+2;
-                    pnum2[2] = base+nx+1;
+                    pnum2[1] = base+numx+2;
+                    pnum2[2] = base+numx+1;
                   }
 
                 Element2d el = Element2d(TRIG);
@@ -357,7 +430,7 @@ namespace netgen
       }
     // needed for codim2 in 3d
     seg.edgenr = 1;
-    for(int i=0; i < nx; i++)
+    for(int i=0; i < numx; i++)
       {
         seg[0] = pids[i];
         seg[1] = pids[i+1];
@@ -388,18 +461,18 @@ namespace netgen
           }
       }
 
-    for(int i=0; i<ny; i++)
+    for(int i=0; i<numy; i++)
       {
-        seg[0] = pids[i*(nx+1)+nx];
-        seg[1] = pids[(i+1)*(nx+1)+nx];
+        seg[0] = pids[i*(numx+1)+numx];
+        seg[1] = pids[(i+1)*(numx+1)+numx];
 
-        seg.geominfo[0] = pgis[i*(nx+1)+nx];
-        seg.geominfo[1] = pgis[(i+1)*(nx+1)+nx];
-        seg.epgeominfo[0].u = pgis[i*(nx+1)+nx].u;
-        seg.epgeominfo[0].v = pgis[i*(nx+1)+nx].v;
+        seg.geominfo[0] = pgis[i*(numx+1)+numx];
+        seg.geominfo[1] = pgis[(i+1)*(numx+1)+numx];
+        seg.epgeominfo[0].u = pgis[i*(numx+1)+numx].u;
+        seg.epgeominfo[0].v = pgis[i*(numx+1)+numx].v;
         seg.epgeominfo[0].edgenr = seg.edgenr;
-        seg.epgeominfo[1].u = pgis[(i+1)*(nx+1)+nx].u;
-        seg.epgeominfo[1].v = pgis[(i+1)*(nx+1)+nx].v;
+        seg.epgeominfo[1].u = pgis[(i+1)*(numx+1)+numx].u;
+        seg.epgeominfo[1].v = pgis[(i+1)*(numx+1)+numx].v;
         seg.epgeominfo[1].edgenr = seg.edgenr;
 
         mesh->AddSegment(seg);
@@ -419,18 +492,18 @@ namespace netgen
           }
       }
 
-    for(int i=0; i<nx; i++)
+    for(int i=0; i<numx; i++)
       {
-        seg[0] = pids[ny*(nx+1)+i+1];
-        seg[1] = pids[ny*(nx+1)+i];
+        seg[0] = pids[numy*(numx+1)+i+1];
+        seg[1] = pids[numy*(numx+1)+i];
 
-        seg.geominfo[0] = pgis[ny*(nx+1)+i+1];
-        seg.geominfo[1] = pgis[ny*(nx+1)+i];
-        seg.epgeominfo[0].u = pgis[ny*(nx+1)+i+1].u;
-        seg.epgeominfo[0].v = pgis[ny*(nx+1)+i+1].v;
+        seg.geominfo[0] = pgis[numy*(numx+1)+i+1];
+        seg.geominfo[1] = pgis[numy*(numx+1)+i];
+        seg.epgeominfo[0].u = pgis[numy*(numx+1)+i+1].u;
+        seg.epgeominfo[0].v = pgis[numy*(numx+1)+i+1].v;
         seg.epgeominfo[0].edgenr = seg.edgenr;
-        seg.epgeominfo[1].u = pgis[ny*(nx+1)+i].u;
-        seg.epgeominfo[1].v = pgis[ny*(nx+1)+i].v;
+        seg.epgeominfo[1].u = pgis[numy*(numx+1)+i].u;
+        seg.epgeominfo[1].v = pgis[numy*(numx+1)+i].v;
         seg.epgeominfo[1].edgenr = seg.edgenr;
         
         mesh->AddSegment(seg);
@@ -450,18 +523,18 @@ namespace netgen
       }
 
 
-    for(int i=0; i<ny; i++)
+    for(int i=0; i<numy; i++)
       {
-        seg[0] = pids[(i+1)*(nx+1)];
-        seg[1] = pids[i*(nx+1)];
+        seg[0] = pids[(i+1)*(numx+1)];
+        seg[1] = pids[i*(numx+1)];
 
-        seg.geominfo[0] = pgis[(i+1)*(nx+1)];
-        seg.geominfo[1] = pgis[i*(nx+1)];
-        seg.epgeominfo[0].u = pgis[(i+1)*(nx+1)].u;
-        seg.epgeominfo[0].v = pgis[(i+1)*(nx+1)].v;
+        seg.geominfo[0] = pgis[(i+1)*(numx+1)];
+        seg.geominfo[1] = pgis[i*(numx+1)];
+        seg.epgeominfo[0].u = pgis[(i+1)*(numx+1)].u;
+        seg.epgeominfo[0].v = pgis[(i+1)*(numx+1)].v;
         seg.epgeominfo[0].edgenr = seg.edgenr;
-        seg.epgeominfo[1].u = pgis[i*(nx+1)].u;
-        seg.epgeominfo[1].v = pgis[i*(nx+1)].v;
+        seg.epgeominfo[1].u = pgis[i*(numx+1)].u;
+        seg.epgeominfo[1].v = pgis[i*(numx+1)].v;
         seg.epgeominfo[1].edgenr = seg.edgenr;
 
         mesh->AddSegment(seg);
