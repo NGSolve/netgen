@@ -4,6 +4,7 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 cmake_minimum_required(VERSION 3.13)
 cmake_policy(VERSION 3.13)
+set(CMAKE_POLICY_DEFAULT_CMP0135 NEW) # DOWNLOAD_TIMESTAMP to extract date
 
 include (CMakeDependentOption)
 option( USE_NATIVE_ARCH  "build for native cpu architecture" ON)
@@ -71,59 +72,15 @@ endif(UNIX AND USE_SUPERBUILD)
 
 if (USE_SUPERBUILD)
   project (SUPERBUILD)
-  if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR_DEFAULT}" CACHE PATH "Install directory" FORCE)
-  endif()
-
-  # execute the superbuild (this script will be invoked again without the
-  # USE_SUPERBUILD option this time)
-  include (cmake/SuperBuild.cmake)
-  return()                      # stop processing this file further
 else()
   project(Netgen)
-  if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR_DEFAULT}" CACHE PATH "Install directory" FORCE)
-  endif()
 endif()
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR_DEFAULT}" CACHE PATH "Install directory" FORCE)
+endif()
 
-include (${CMAKE_CURRENT_LIST_DIR}/cmake/generate_version_file.cmake)
-set(CPACK_PACKAGE_VERSION "${NETGEN_VERSION}")
-
-
-#######################################################################
-if(USE_CCACHE)
-  find_program(CCACHE_FOUND NAMES ccache ccache.bat)
-  if(CCACHE_FOUND)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_FOUND})
-  endif(CCACHE_FOUND)
-endif(USE_CCACHE)
-
-#######################################################################
-if(INTEL_MIC)
-    set(MKL_ARCH "mic")
-    include(cmake/mic.cmake)
-else(INTEL_MIC)
-    set(MKL_ARCH "intel64")
-endif(INTEL_MIC)
-
-#######################################################################
-# Append install paths of software in non-standard paths (e.g. openmpi, metis, intel mkl, ...)
-# cmake -DUSE_MPI=ON -DCMAKE_PREFIX_PATH="/opt/openmpi165;/opt/metis51" ../
-set(ADDITIONAL_PATHS "" CACHE PATH "List of paths to additional libraries in non-standard locations, separated by ';'")
-if (ADDITIONAL_PATHS)
-  set(CMAKE_PREFIX_PATH ${ADDITIONAL_PATHS})
-endif (ADDITIONAL_PATHS)
-
-#######################################################################
-# build options
-include_directories ("${PROJECT_SOURCE_DIR}/include")
-include_directories ("${PROJECT_SOURCE_DIR}/libsrc")
-include_directories ("${PROJECT_SOURCE_DIR}/libsrc/include")
-include_directories ("${PROJECT_BINARY_DIR}")
-
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(NG_INSTALL_SUFFIX netgen CACHE STRING "Suffix appended to install directories (project name)")
 
 if(USE_PYTHON)
     find_package(PythonInterp 3 REQUIRED)
@@ -134,8 +91,6 @@ if(USE_PYTHON)
     execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1,0,''))" OUTPUT_VARIABLE PYTHON_PACKAGES_INSTALL_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
     file(TO_CMAKE_PATH ${PYTHON_PACKAGES_INSTALL_DIR} PYTHON_PACKAGES_INSTALL_DIR)
 endif(USE_PYTHON)
-
-set(NG_INSTALL_SUFFIX netgen CACHE STRING "Suffix appended to install directories (project name)")
 
 if(APPLE)
   set(NG_INSTALL_DIR_BIN_DEFAULT Contents/MacOS)
@@ -181,6 +136,52 @@ file(RELATIVE_PATH NETGEN_INCLUDE_DIR ${NETGEN_CMAKE_DIR_ABSOLUTE} ${NETGEN_INCL
 file(RELATIVE_PATH NETGEN_RESOURCE_DIR ${NETGEN_CMAKE_DIR_ABSOLUTE} ${NETGEN_RESOURCE_DIR_ABSOLUTE})
 
 file(RELATIVE_PATH NETGEN_RPATH ${NETGEN_BINARY_DIR_ABSOLUTE} ${NETGEN_LIBRARY_DIR_ABSOLUTE})
+
+if (USE_SUPERBUILD)
+  # execute the superbuild (this script will be invoked again without the
+  # USE_SUPERBUILD option this time)
+  include (cmake/SuperBuild.cmake)
+  return()                      # stop processing this file further
+endif()
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+include (${CMAKE_CURRENT_LIST_DIR}/cmake/generate_version_file.cmake)
+set(CPACK_PACKAGE_VERSION "${NETGEN_VERSION}")
+
+
+#######################################################################
+if(USE_CCACHE)
+  find_program(CCACHE_FOUND NAMES ccache ccache.bat)
+  if(CCACHE_FOUND)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_FOUND})
+  endif(CCACHE_FOUND)
+endif(USE_CCACHE)
+
+#######################################################################
+if(INTEL_MIC)
+    set(MKL_ARCH "mic")
+    include(cmake/mic.cmake)
+else(INTEL_MIC)
+    set(MKL_ARCH "intel64")
+endif(INTEL_MIC)
+
+#######################################################################
+# Append install paths of software in non-standard paths (e.g. openmpi, metis, intel mkl, ...)
+# cmake -DUSE_MPI=ON -DCMAKE_PREFIX_PATH="/opt/openmpi165;/opt/metis51" ../
+set(ADDITIONAL_PATHS "" CACHE PATH "List of paths to additional libraries in non-standard locations, separated by ';'")
+if (ADDITIONAL_PATHS)
+  set(CMAKE_PREFIX_PATH ${ADDITIONAL_PATHS})
+endif (ADDITIONAL_PATHS)
+
+#######################################################################
+# build options
+include_directories ("${PROJECT_SOURCE_DIR}/include")
+include_directories ("${PROJECT_SOURCE_DIR}/libsrc")
+include_directories ("${PROJECT_SOURCE_DIR}/libsrc/include")
+include_directories ("${PROJECT_BINARY_DIR}")
+
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 if(USE_PYTHON)
     get_filename_component(NETGEN_PYTHON_DIR_ABSOLUTE ${NG_INSTALL_DIR_PYTHON} ABSOLUTE BASE_DIR ${CMAKE_INSTALL_PREFIX})
