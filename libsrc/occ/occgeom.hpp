@@ -530,7 +530,7 @@ namespace netgen
   {
     bool have_identifications = false;
   
-    for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
+    for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
       for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
         {
           auto s = e.Current();

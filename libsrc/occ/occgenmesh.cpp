@@ -515,6 +515,16 @@ namespace netgen
         for(auto layer : Range(1, maxlayer+1))
             mesh.SetLocalH (bb.PMin(), bb.PMax(), mparam.grading, layer);
 
+        for(const auto& v : GetVertices(geom.GetShape()))
+          {
+            if(OCCGeometry::HaveProperties(v))
+              {
+                auto& props = OCCGeometry::GetProperties(v);
+                if(props.maxh < 1e99)
+                  mesh.GetLocalH(props.layer)->SetH(occ2ng(BRep_Tool::Pnt(TopoDS::Vertex(v))), props.maxh);
+              }
+          }
+
         int nedges = geom.emap.Extent();
 
         double mincurvelength = IGNORECURVELENGTH;
