@@ -1209,7 +1209,16 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
     .def ("GetCD3Name", &Mesh::GetCD3Name)
     .def ("SetCD3Name", &Mesh::SetCD3Name)
-
+    .def("GetIdentifications", [](Mesh & self) -> py::list
+         {
+           py::list points;
+           for(const auto& pair : self.GetIdentifications().GetIdentifiedPoints())
+             {
+               py::tuple pnts = py::make_tuple(pair.first.I1(), pair.first.I2());
+               points.append(pnts);
+             }
+           return points;
+         })
     .def ("AddPointIdentification", [](Mesh & self, py::object pindex1, py::object pindex2, int identnr, Identifications::ID_TYPE type)
                            {
 			     if(py::extract<PointIndex>(pindex1).check() && py::extract<PointIndex>(pindex2).check())
