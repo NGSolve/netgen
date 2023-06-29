@@ -846,6 +846,13 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           col[3] = c[3];
         OCCGeometry::GetProperties(self).col = col;
       }, "color of shape as RGB - tuple")
+    .def_property("layer", [](const TopoDS_Shape& self) {
+    if (!OCCGeometry::HaveProperties(self))
+      return 1;
+    return OCCGeometry::GetProperties(self).layer;
+    }, [](const TopoDS_Shape& self, int layer) {
+    OCCGeometry::GetProperties(self).layer = layer;
+    }, "layer of shape")
     .def("UnifySameDomain", [](const TopoDS_Shape& shape,
                                bool edges, bool faces,
                                bool concatBSplines)

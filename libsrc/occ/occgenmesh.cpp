@@ -486,13 +486,21 @@ namespace netgen
     int maxlayer = 1;
 
     int dom = 0;
-    for (TopExp_Explorer e(geom.GetShape(), TopAbs_SOLID); e.More(); e.Next(), dom++)
+    for(const auto& s : GetSolids(geom.GetShape()))
     {
-      auto& props = OCCGeometry::GetProperties(e.Current());
+      if(!OCCGeometry::HaveProperties(s))
+        continue;
+      auto& props = OCCGeometry::GetProperties(s);
       maxhdom[dom] = min2(maxhdom[dom], props.maxh);
       maxlayer = max2(maxlayer, props.layer);
+      dom++;
     }
-
+    for(const auto& f : GetFaces(geom.GetShape()))
+      if(OCCGeometry::HaveProperties(f))
+        maxlayer = max2(maxlayer, OCCGeometry::GetProperties(f).layer);
+    for(const auto& e : GetEdges(geom.GetShape()))
+      if(OCCGeometry::HaveProperties(e))
+        maxlayer = max2(maxlayer, OCCGeometry::GetProperties(e).layer);
 
     mesh.SetMaxHDomain (maxhdom);
 
