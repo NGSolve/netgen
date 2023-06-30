@@ -195,7 +195,7 @@ def Draw(obj, *args, **kwargs):
 def _DrawDocu(obj, *args, **kwargs):
     kwargs_with_defaults = _get_draw_default_args()
     kwargs_with_defaults.update(kwargs)
-    scene = WebGLScene(obj, args, kwargs)
+    scene = WebGLScene(obj, args, kwargs_with_defaults)
     import json
 
     docu_path = os.environ["NETGEN_DOCUMENTATION_OUT_DIR"]
