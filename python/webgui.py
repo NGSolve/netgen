@@ -46,7 +46,7 @@ class WebGLScene(BaseWebGuiScene):
 
             for t in inspect.getmro(typ):
                 if t in _registered_draw_types:
-                    print("check type", t)
+                    # print("check type", t)
                     d = _registered_draw_types[t](self.obj, self.args, self.kwargs)
                     break
         if d is None and hasattr(self.obj, "_webgui_data"):
