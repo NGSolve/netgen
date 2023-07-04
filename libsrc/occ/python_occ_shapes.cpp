@@ -25,6 +25,7 @@
 #include <BRepExtrema_DistShapeShape.hxx>
 #include <BRepFilletAPI_MakeChamfer.hxx>
 #include <BRepFilletAPI_MakeFillet.hxx>
+#include <BRepFilletAPI_MakeFillet2d.hxx>
 #include <BRepGProp.hxx>
 #include <BRepLProp_SLProps.hxx>
 #include <BRepLib.hxx>
@@ -1052,8 +1053,36 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         }
         // throw Exception("no face found for revolve");
     }, py::arg("axis"), py::arg("ang"), "revolve shape around 'axis' by 'ang' degrees")
-    
-    .def("MakeFillet", [](const TopoDS_Shape & shape, std::vector<TopoDS_Shape> edges, double r) {
+    .def("MakeFillet", [](const TopoDS_Shape& shape, const std::vector<std::pair<TopoDS_Shape, double>>& fillets) -> TopoDS_Shape
+    {
+      if (shape.ShapeType() == TopAbs_FACE) {
+        BRepFilletAPI_MakeFillet2d mkFillet2d(TopoDS::Face(shape));
+        for (auto [v, r] : fillets)
+          mkFillet2d.AddFillet(TopoDS::Vertex(v), r);
+        mkFillet2d.Build();
+        PropagateProperties (mkFillet2d, shape);
+        return mkFillet2d.Shape();
+      }
+        BRepFilletAPI_MakeFillet mkFillet(shape);
+        for (auto [e, r] : fillets)
+          mkFillet.Add(r, TopoDS::Edge(e));
+        mkFillet.Build();
+        PropagateProperties (mkFillet, shape);
+        for (auto [e, r] : fillets)
+          for (auto gen : mkFillet.Generated(e))
+            OCCGeometry::GetProperties(gen).name = "fillet";
+        return mkFillet.Shape();
+      }, py::arg("fillets"), "make fillets for shapes of radius 'r'")
+    .def("MakeFillet", [](const TopoDS_Shape & shape, std::vector<TopoDS_Shape> edges, double r) -> TopoDS_Shape {
+        if(shape.ShapeType() == TopAbs_FACE)
+        {
+          BRepFilletAPI_MakeFillet2d mkFillet(TopoDS::Face(shape));
+          for (auto e : edges)
+            mkFillet.AddFillet (TopoDS::Vertex(e), r);
+          mkFillet.Build();
+          PropagateProperties (mkFillet, shape);
+          return mkFillet.Shape();
+        }
         BRepFilletAPI_MakeFillet mkFillet(shape);
         for (auto e : edges)
           mkFillet.Add (r, TopoDS::Edge(e));
