@@ -84,8 +84,8 @@ class WebGLScene(BaseWebGuiScene):
                         )
                     d["clipping_" + name] = val
 
-        if "on_init" in kwargs:
-            d["on_init"] = kwargs["on_init"]
+        if "js_code" in kwargs:
+            d["on_init"] = kwargs["js_code"]
 
         if set_minmax:
             if "min" in kwargs:
@@ -142,7 +142,6 @@ bezier_trig_trafos = {}  # cache trafos for different orders
 #         if filename:
 #             scene.GenerateHTML(filename=filename)
 #         return scene
-
 
 def _get_draw_default_args():
     return dict(
