@@ -119,6 +119,8 @@ class WebGLScene(BaseWebGuiScene):
             elif eval_ == "imag":
                 d["eval"] = 6
 
+        if "fullscreen" in kwargs:
+            d["fullscreen"] = kwargs["fullscreen"]
         return d
 
 
@@ -156,6 +158,7 @@ def _get_draw_default_args():
         objects=[],
         nodal_p1=False,
         settings={},
+        fullscreen=False,
         width=_default_width,
         height=_default_height,
     )
