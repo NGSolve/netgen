@@ -1060,7 +1060,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         for (auto [v, r] : fillets)
           mkFillet2d.AddFillet(TopoDS::Vertex(v), r);
         mkFillet2d.Build();
-        PropagateProperties (mkFillet2d, shape);
+        // TODO: CL I think we shouldn't do this here but, double check
+        // PropagateProperties (mkFillet2d, shape);
         return mkFillet2d.Shape();
       }
         BRepFilletAPI_MakeFillet mkFillet(shape);
@@ -1080,7 +1081,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           for (auto e : edges)
             mkFillet.AddFillet (TopoDS::Vertex(e), r);
           mkFillet.Build();
-          PropagateProperties (mkFillet, shape);
+          // TODO: CL I think we shouldn't do this here but, double check
+          // PropagateProperties (mkFillet, shape);
           return mkFillet.Shape();
         }
         BRepFilletAPI_MakeFillet mkFillet(shape);
