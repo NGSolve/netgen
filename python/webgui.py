@@ -87,12 +87,11 @@ class WebGLScene(BaseWebGuiScene):
         if "js_code" in kwargs:
             d["on_init"] = kwargs["js_code"]
 
-        if set_minmax:
-            if "min" in kwargs:
-                d["funcmin"] = kwargs["min"]
-            if "max" in kwargs:
-                d["funcmax"] = kwargs["max"]
-            d["autoscale"] = kwargs["autoscale"]
+        if "min" in kwargs:
+            d["funcmin"] = kwargs["min"]
+        if "max" in kwargs:
+            d["funcmax"] = kwargs["max"]
+        d['autoscale'] = kwargs['autoscale']
 
         if "vectors" in kwargs:
             d["vectors"] = True
