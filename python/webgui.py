@@ -121,6 +121,8 @@ class WebGLScene(BaseWebGuiScene):
 
         if "fullscreen" in kwargs:
             d["fullscreen"] = kwargs["fullscreen"]
+        if "gui_settings" not in d:
+            d["gui_settings"] = self.kwargs["settings"]
         return d
 
 
