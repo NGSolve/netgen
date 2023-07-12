@@ -41,6 +41,8 @@ enum HPREF_ELEMENT_TYPE {
   HP_TRIG_SINGEDGES23,
   HP_TRIG_3SINGEDGES = 40,
 
+  HP_TRIG_ALEFELD,
+  
   HP_QUAD = 50,
   HP_QUAD_SINGCORNER,
   HP_DUMMY_QUAD_SINGCORNER,
@@ -309,7 +311,6 @@ public:
   //  EdgePointGeomInfo epgeominfo[2];
   
 };
-
 
 
 DLL_HEADER extern void HPRefinement (Mesh & mesh, Refinement * ref, int levels,
