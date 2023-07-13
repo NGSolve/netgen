@@ -1903,7 +1903,6 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
                 hpel.type = HP_TRIG_ALEFELD;
 
 	      dd = 2;
-              continue;
 	      break; 
 	    } 
 	  case HP_QUAD: 
@@ -1937,8 +1936,6 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	    }
 	  }
 
-        continue;
-	    
 	if(hpel.type == HP_NONE) 
 	  cnt_undef++; 
 
