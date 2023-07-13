@@ -2787,15 +2787,20 @@ namespace netgen
 		  int vi1 = edges[i][0]-1, vi2 = edges[i][1]-1;
 		  if (el[vi1] > el[vi2]) swap (vi1, vi2);
 
-		  T bubz = lamiz[vi1]*lamiz[vi2];
-		  T polyz = lamiz[vi1] - lamiz[vi2];
 		  T bubxy = lami[vi1];
-
+                  /*
+                  T bubz = lamiz[vi1]*lamiz[vi2];
+                  T polyz = lamiz[vi1] - lamiz[vi2];
 		  for (int j = 0; j < eorder-1; j++)
 		    {
 		      shapes(ii+j) = bubxy * bubz;
 		      bubz *= polyz;
 		    }
+                  */
+		  CalcEdgeShape (eorder, lamiz[vi1]-lamiz[vi2], &shapes(ii));
+		  for (int j = 0; j < eorder-1; j++)
+                    shapes(ii+j) *= bubxy;
+                  
 		  ii += eorder-1;
 		}
 	    }
@@ -3245,7 +3250,8 @@ namespace netgen
 	  int ii = 6;
 
 	  if (info.order == 1) return;
-
+          
+	  NgArrayMem<T, 20> hshapes(order+1), hdshapes(order+1);
           
 	  const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (PRISM);
 	  for (int i = 0; i < 6; i++)    // horizontal edges
@@ -3311,7 +3317,7 @@ namespace netgen
 		  T bubxy = lami[(vi1)%3];
 		  T dbubxydx = dlami[(vi1)%3][0];
 		  T dbubxydy = dlami[(vi1)%3][1];
-
+                  /*
 		  for (int j = 0; j < eorder-1; j++)
 		    {
 		      dshapes(ii+j,0) = dbubxydx * bubz;
@@ -3321,6 +3327,18 @@ namespace netgen
 		      dbubz = bubz * dpolyz + dbubz * polyz;
 		      bubz *= polyz;
 		    }
+                  */
+
+   		  CalcEdgeShapeDx (eorder, lamiz[vi1]-lamiz[vi2], &hshapes[0], &hdshapes[0]);
+		  for (int j = 0; j < eorder-1; j++)
+                    {
+                      dshapes(ii+j,0) = dbubxydx * hshapes[j];
+                      dshapes(ii+j,1) = dbubxydy * hshapes[j];
+                      dshapes(ii+j,2) = bubxy * hdshapes[j];                      
+                    }
+
+
+                  
 		  ii += eorder-1;
 		}
 	    }
