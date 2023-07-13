@@ -313,9 +313,16 @@ public:
 };
 
 
-DLL_HEADER extern void HPRefinement (Mesh & mesh, Refinement * ref, int levels,
+enum SplittingType { SPLIT_HP, SPLIT_ALEFELD };
+
+DLL_HEADER extern void HPRefinement (Mesh & mesh, Refinement * ref, SplittingType split, int levels,
 			  double fac1=0.125, bool setorders=true, bool ref_level = false);
 
+inline void HPRefinement (Mesh & mesh, Refinement * ref, int levels,
+			  double fac1=0.125, bool setorders=true, bool ref_level = false)
+{
+  HPRefinement (mesh, ref, SPLIT_HP, levels, fac1, setorders, ref_level);
+}
 
 #endif
 

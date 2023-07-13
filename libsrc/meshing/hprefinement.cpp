@@ -557,7 +557,7 @@ namespace netgen
 		       NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
 			INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int & levels, int & act_ref); 
 
-  bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, int & act_ref, int & levels);
+  bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, SplittingType split, int & act_ref, int & levels);
   
   
   void  InitHPElements(Mesh & mesh, NgArray<HPRefElement> & elements) 
@@ -1309,7 +1309,8 @@ namespace netgen
 
   /* ***************************** HPRefinement ********************************** */
 
-  void HPRefinement (Mesh & mesh, Refinement * ref, int levels, double fac1, bool setorders, bool reflevels)
+  void HPRefinement (Mesh & mesh, Refinement * ref, SplittingType split,
+                     int levels, double fac1, bool setorders, bool reflevels)
   {
     PrintMessage (1, "HP Refinement called, levels = ", levels);
 
@@ -1336,12 +1337,12 @@ namespace netgen
     nplevel.Append (mesh.GetNP());
     
     int act_ref=1;
-    bool sing = ClassifyHPElements (mesh,hpelements, act_ref, levels); 
+    bool sing = ClassifyHPElements (mesh,hpelements, split, act_ref, levels); 
 
     sing = true; // iterate at least once
     while(sing) 
       {
-	PrintMessage(0, " Start new hp-refinement: step ", act_ref);
+	PrintMessage(3, " Start new hp-refinement: step ", act_ref);
 		
 	DoRefinement (mesh, hpelements, ref, fac1); 
 	DoRefineDummies (mesh, hpelements, ref);
@@ -1445,7 +1446,7 @@ namespace netgen
 
 	act_ref++; 
 	
-	sing = ClassifyHPElements(mesh,hpelements, act_ref, levels); 
+	sing = ClassifyHPElements(mesh,hpelements, split, act_ref, levels); 
       }
 
     PrintMessage(3, " HP-Refinement done with ", --act_ref, " refinement steps.");
@@ -1824,9 +1825,8 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 
 
 
-  bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, int & act_ref, int & levels)
+  bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, SplittingType split, int & act_ref, int & levels)
   {
-    cout << "in classify" << endl;
     INDEX_2_HASHTABLE<int> edges(mesh.GetNSeg()+1);
     NgBitArray edgepoint(mesh.GetNP());
     INDEX_2_HASHTABLE<int> edgepoint_dom(mesh.GetNSeg()+1);
@@ -1846,8 +1846,8 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 			      cornerpoint, edgepoint, faces, face_edges, 
 			      surf_edges, facepoint, levels, act_ref); 
 
-    if (act_ref == 1)
-      sing = true;   // Joachim
+    if (act_ref == 1 && split == SPLIT_ALEFELD)
+      sing = true;   
     if(sing==0) return(sing); 
 
     int cnt_undef = 0, cnt_nonimplement = 0;
@@ -1894,13 +1894,14 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	  case HP_TRIG: 
 	    {
 	      int dim = mesh.GetDimension(); 
-	      const FaceDescriptor & fd = mesh.GetFaceDescriptor (hpel.GetIndex());	
-              hpel.type = HP_TRIG_ALEFELD;
-              
-	      /*
-	      hpel.type = ClassifyTrig(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, 
-				       faces, face_edges, surf_edges, facepoint, dim, fd);    
-              */
+	      const FaceDescriptor & fd = mesh.GetFaceDescriptor (hpel.GetIndex());
+
+              if (split == SPLIT_HP)
+                hpel.type = ClassifyTrig(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, 
+                                         faces, face_edges, surf_edges, facepoint, dim, fd);    
+              else
+                hpel.type = HP_TRIG_ALEFELD;
+
 	      dd = 2;
               continue;
 	      break; 
