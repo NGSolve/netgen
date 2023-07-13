@@ -174,8 +174,8 @@ namespace netgen
       case HP_TRIG_3SINGEDGES:
 	hps = &reftrig_3singedges; break;
  
-      case HP_TRIG_ALEFELD:
-        hps = &reftrig_Alefeld; break;
+      case HP_TRIG_ALFELD:
+        hps = &reftrig_Alfeld; break;
 
         
       case HP_QUAD:
@@ -1846,7 +1846,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 			      cornerpoint, edgepoint, faces, face_edges, 
 			      surf_edges, facepoint, levels, act_ref); 
 
-    if (act_ref == 1 && split == SPLIT_ALEFELD)
+    if (act_ref == 1 && split == SPLIT_ALFELD)
       sing = true;   
     if(sing==0) return(sing); 
 
@@ -1900,7 +1900,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
                 hpel.type = ClassifyTrig(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, 
                                          faces, face_edges, surf_edges, facepoint, dim, fd);    
               else
-                hpel.type = HP_TRIG_ALEFELD;
+                hpel.type = HP_TRIG_ALFELD;
 
 	      dd = 2;
 	      break; 

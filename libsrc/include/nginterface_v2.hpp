@@ -389,7 +389,7 @@ namespace netgen
     // also added from nginterface.h, still 1-based, need redesign
     void HPRefinement (int levels, double parameter = 0.125,
                        bool setorders = true,bool ref_level = false);
-    void SplitAlefeld ();
+    void SplitAlfeld ();
     
     size_t GetNP() const;
     int GetSurfaceElementSurfaceNumber (size_t ei) const;

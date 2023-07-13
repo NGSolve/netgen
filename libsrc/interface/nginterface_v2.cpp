@@ -1229,11 +1229,11 @@ namespace netgen
     ::netgen::HPRefinement (*mesh, &ref, SPLIT_HP, levels, parameter, setorders, ref_level);
   }
 
-  void Ngx_Mesh::SplitAlefeld ()
+  void Ngx_Mesh::SplitAlfeld ()
   {
     NgLock meshlock (mesh->MajorMutex(), true);
     Refinement & ref = const_cast<Refinement&> (mesh->GetGeometry()->GetRefinement());
-    ::netgen::HPRefinement (*mesh, &ref, SPLIT_ALEFELD, 1, 0.5, true, true);
+    ::netgen::HPRefinement (*mesh, &ref, SPLIT_ALFELD, 1, 0.5, true, true);
   }
 
   

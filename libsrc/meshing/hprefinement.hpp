@@ -41,7 +41,7 @@ enum HPREF_ELEMENT_TYPE {
   HP_TRIG_SINGEDGES23,
   HP_TRIG_3SINGEDGES = 40,
 
-  HP_TRIG_ALEFELD,
+  HP_TRIG_ALFELD,
   
   HP_QUAD = 50,
   HP_QUAD_SINGCORNER,
@@ -313,7 +313,7 @@ public:
 };
 
 
-enum SplittingType { SPLIT_HP, SPLIT_ALEFELD };
+enum SplittingType { SPLIT_HP, SPLIT_ALFELD };
 
 DLL_HEADER extern void HPRefinement (Mesh & mesh, Refinement * ref, SplittingType split, int levels,
 			  double fac1=0.125, bool setorders=true, bool ref_level = false);
