@@ -774,3 +774,47 @@ HPRef_Struct reftrig_3singedges =
   reftrig_3singedges_newelstypes, 
   reftrig_3singedges_newels
 };
+
+
+
+
+
+
+
+
+
+
+
+
+// HP_TRIG_3SINGEDGES
+int reftrig_Alefeld_splitedges[][3] =
+{
+  { 0, 0, 0 }
+};
+int reftrig_Alefeld_splitfaces[][4] =
+{
+  { 1, 2, 3, 4 },
+  { 0, 0, 0, 0 }
+};
+
+HPREF_ELEMENT_TYPE reftrig_Alefeld_newelstypes[] =
+{
+  HP_TRIG, HP_TRIG, HP_TRIG,
+  HP_NONE, 
+};
+int reftrig_Alefeld_newels[][8] =
+{
+  { 1, 2, 4 }, 
+  { 2, 3, 4 }, 
+  { 3, 1, 4 },
+};
+HPRef_Struct reftrig_Alefeld =
+{
+  HP_TRIG,
+  reftrig_Alefeld_splitedges, 
+  reftrig_Alefeld_splitfaces,
+  0,
+  reftrig_Alefeld_newelstypes,
+  reftrig_Alefeld_newels
+};
+

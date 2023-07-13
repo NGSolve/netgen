@@ -1226,8 +1226,16 @@ namespace netgen
   {
     NgLock meshlock (mesh->MajorMutex(), true);
     Refinement & ref = const_cast<Refinement&> (mesh->GetGeometry()->GetRefinement());
-    ::netgen::HPRefinement (*mesh, &ref, levels, parameter, setorders, ref_level);
+    ::netgen::HPRefinement (*mesh, &ref, SPLIT_HP, levels, parameter, setorders, ref_level);
   }
+
+  void Ngx_Mesh::SplitAlefeld ()
+  {
+    NgLock meshlock (mesh->MajorMutex(), true);
+    Refinement & ref = const_cast<Refinement&> (mesh->GetGeometry()->GetRefinement());
+    ::netgen::HPRefinement (*mesh, &ref, SPLIT_ALEFELD, 1, 0.5, true, true);
+  }
+
   
 int Ngx_Mesh::GetElementOrder (int enr) const
 {

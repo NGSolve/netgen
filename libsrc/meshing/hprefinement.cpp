@@ -174,7 +174,10 @@ namespace netgen
       case HP_TRIG_3SINGEDGES:
 	hps = &reftrig_3singedges; break;
  
- 
+      case HP_TRIG_ALEFELD:
+        hps = &reftrig_Alefeld; break;
+
+        
       case HP_QUAD:
 	hps = &refquad; break;
       case HP_DUMMY_QUAD_SINGCORNER:
@@ -554,7 +557,7 @@ namespace netgen
 		       NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
 			INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int & levels, int & act_ref); 
 
-  bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, int & act_ref, int & levels);
+  bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, SplittingType split, int & act_ref, int & levels);
   
   
   void  InitHPElements(Mesh & mesh, NgArray<HPRefElement> & elements) 
@@ -1306,7 +1309,8 @@ namespace netgen
 
   /* ***************************** HPRefinement ********************************** */
 
-  void HPRefinement (Mesh & mesh, Refinement * ref, int levels, double fac1, bool setorders, bool reflevels)
+  void HPRefinement (Mesh & mesh, Refinement * ref, SplittingType split,
+                     int levels, double fac1, bool setorders, bool reflevels)
   {
     PrintMessage (1, "HP Refinement called, levels = ", levels);
 
@@ -1333,7 +1337,7 @@ namespace netgen
     nplevel.Append (mesh.GetNP());
     
     int act_ref=1;
-    bool sing = ClassifyHPElements (mesh,hpelements, act_ref, levels); 
+    bool sing = ClassifyHPElements (mesh,hpelements, split, act_ref, levels); 
 
     sing = true; // iterate at least once
     while(sing) 
@@ -1442,7 +1446,7 @@ namespace netgen
 
 	act_ref++; 
 	
-	sing = ClassifyHPElements(mesh,hpelements, act_ref, levels); 
+	sing = ClassifyHPElements(mesh,hpelements, split, act_ref, levels); 
       }
 
     PrintMessage(3, " HP-Refinement done with ", --act_ref, " refinement steps.");
@@ -1821,7 +1825,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 
 
 
-  bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, int & act_ref, int & levels)
+  bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, SplittingType split, int & act_ref, int & levels)
   {
     INDEX_2_HASHTABLE<int> edges(mesh.GetNSeg()+1);
     NgBitArray edgepoint(mesh.GetNP());
@@ -1841,7 +1845,9 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
     bool sing = CheckSingularities(mesh, edges, edgepoint_dom, 
 			      cornerpoint, edgepoint, faces, face_edges, 
 			      surf_edges, facepoint, levels, act_ref); 
-  
+
+    if (act_ref == 1 && split == SPLIT_ALEFELD)
+      sing = true;   
     if(sing==0) return(sing); 
 
     int cnt_undef = 0, cnt_nonimplement = 0;
@@ -1859,12 +1865,11 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	HPRefElement old_el = elements[i]; 
 	int dd=3; 
 
-
 	if(act_ref !=1 && (hpel.type == HP_HEX || hpel.type == HP_PRISM || hpel.type == HP_TET 
 			   || hpel.type == HP_PYRAMID || hpel.type == HP_QUAD || hpel.type == HP_TRIG || hpel.type == HP_SEGM)) 
 	  continue; 
 	
-	sing = 1; 
+	sing = 1;
 	switch (hprs->geom)
 	  {
 	  case HP_TET:
@@ -1887,23 +1892,25 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	      break; 
 	    } 
 	  case HP_TRIG: 
-	    { 
+	    {
 	      int dim = mesh.GetDimension(); 
-	      const FaceDescriptor & fd = mesh.GetFaceDescriptor (hpel.GetIndex());	
-	      
-	      hpel.type = ClassifyTrig(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, 
-				       faces, face_edges, surf_edges, facepoint, dim, fd);    
-	     
-	      dd = 2; 
+	      const FaceDescriptor & fd = mesh.GetFaceDescriptor (hpel.GetIndex());
+
+              if (split == SPLIT_HP)
+                hpel.type = ClassifyTrig(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, 
+                                         faces, face_edges, surf_edges, facepoint, dim, fd);    
+              else
+                hpel.type = HP_TRIG_ALEFELD;
+
+	      dd = 2;
 	      break; 
 	    } 
 	  case HP_QUAD: 
 	    { 
 	      int dim = mesh.GetDimension(); 
-	      const FaceDescriptor & fd = mesh.GetFaceDescriptor (hpel.GetIndex());	
+	      const FaceDescriptor & fd = mesh.GetFaceDescriptor (hpel.GetIndex());
 	      hpel.type = ClassifyQuad(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, 
 				  faces, face_edges, surf_edges, facepoint, dim, fd);    
-
 	      dd = 2; 
 	      break; 
 	    }
@@ -1928,15 +1935,13 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	      throw NgException ("hprefinement.cpp: don't know how to set parameters");
 	    }
 	  }
-	    
+
 	if(hpel.type == HP_NONE) 
 	  cnt_undef++; 
 
 	//else 
 	//cout << "elem " << i << " classified type " << hpel.type << endl; 
 
-	
-	
 	if (!Get_HPRef_Struct (hpel.type)) 
 	  {
 	    (*testout) << "hp-element-type " << hpel.type << " not implemented   " << endl;
@@ -1959,8 +1964,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	  } 
 
       }
-    
-    
+
     PrintMessage(3, "undefined elements update classification: ", cnt_undef);
     PrintMessage(3, "non-implemented in update classification: ", cnt_nonimplement);
 
