@@ -165,6 +165,9 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
         return self;
     }, py::arg("akey"), py::arg("value"), "Set flag by given value.")
 
+    .def("keys", [](Flags & self) -> py::list {
+        return CreateDictFromFlags(self).attr("keys")();
+    })
     .def("__getitem__", [](Flags & self, const string& name) -> py::object {
 
 	  if(self.NumListFlagDefined(name))
