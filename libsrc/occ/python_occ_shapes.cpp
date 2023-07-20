@@ -787,6 +787,10 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             { step_utils::WriteSTEP(shape, filename); }
          , py::arg("filename"), "export shape in STEP - format")
 
+    .def("Write", [](const TopoDS_Shape & shape, string & filename)
+            { BRepTools::Write(shape, filename.c_str()); }
+         , py::arg("filename"), "export shape in BREP - format")
+
     .def("bc", [](const TopoDS_Shape & shape, const string & name)
          {
            for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
