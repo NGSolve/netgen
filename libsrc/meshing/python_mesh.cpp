@@ -1310,13 +1310,80 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     
     .def("ZRefine", &Mesh::ZRefine)
 
-    .def ("SecondOrder", FunctionPointer
-          ([](Mesh & self)
-           {
-             self.GetGeometry()->GetRefinement().MakeSecondOrder(self);
-           }))
+    .def ("SecondOrder", [](Mesh & self)
+          {
+            self.GetGeometry()->GetRefinement().MakeSecondOrder(self);
+          })
+    
+    .def ("Curve", [](Mesh & self, int order)
+          {
+            self.BuildCurvedElements(order);
+          })
+    .def ("CalcElementMapping", [](Mesh & self, py::buffer refpts1, py::buffer physpts1)
+          {
+            auto refpts = refpts1.cast<py::array_t<double_t, py::array::c_style | py::array::forcecast>>();
+            auto physpts = physpts1.cast<py::array_t<double_t, py::array::c_style | py::array::forcecast>>();            
+            
+            py::buffer_info ref_info = refpts.request();
+            py::buffer_info phys_info = physpts.request();            
+            double * ref_ptr = static_cast<double*> (ref_info.ptr);
+            double * phys_ptr = static_cast<double*> (phys_info.ptr);
+            
+            if (ref_info.ndim != 2)
+              throw std::runtime_error("Reference points need buffer of dimension 2");
+            if (phys_info.ndim != 3)
+              throw std::runtime_error("Physical points need buffer of dimension 3");
 
-    .def ("GetGeometry", [] (Mesh& self) { return self.GetGeometry(); })
+            /*
+            cout << "ref_info.shape = " << FlatArray(2, &ref_info.shape[0]) << endl;
+            cout << "ref_info.stride = " << FlatArray(2, &ref_info.strides[0]) << endl;
+            cout << "phys_info.shape = " << FlatArray(3, &phys_info.shape[0]) << endl;
+            cout << "phys_info.stride = " << FlatArray(3, &phys_info.strides[0]) << endl;
+            */
+            
+            size_t npts = ref_info.shape[0];
+            size_t dim = ref_info.shape[1];
+            size_t nel = phys_info.shape[0];
+            size_t dim_phys = phys_info.shape[2];            
+
+            size_t stride_refpts = ref_info.strides[0]/sizeof(double);
+            size_t stride_physels = phys_info.strides[0]/sizeof(double);
+            size_t stride_physpts = phys_info.strides[1]/sizeof(double);
+            
+            auto & curved = self.GetCurvedElements();
+
+            if (dim == 2)  // mapping of 2D elements
+              {
+                for (SurfaceElementIndex i = 0; i < self.GetNSE(); i++)
+                  for (size_t j = 0; j < npts; j++)
+                    {
+                      Point<2> xref;
+                      Point<3> xphys;
+                      for (size_t k = 0; k < 2; k++)
+                        xref(k) = ref_ptr[j*stride_refpts+k];
+                      curved.CalcSurfaceTransformation(xref, i, xphys);
+                      for (size_t k = 0; k < dim_phys; k++)
+                        phys_ptr[i*stride_physels+j*stride_physpts+k] = xphys(k);
+                    }
+              }
+            
+            if (dim == 3)  // mapping of 3D elements
+              {
+                for (ElementIndex i = 0; i < self.GetNE(); i++)
+                  for (size_t j = 0; j < npts; j++)
+                    {
+                      Point<3> xref;
+                      Point<3> xphys;
+                      for (size_t k = 0; k < 3; k++)
+                        xref(k) = ref_ptr[j*stride_refpts+k];
+                      curved.CalcElementTransformation(xref, i, xphys);
+                      for (size_t k = 0; k < 3; k++)
+                        phys_ptr[i*stride_physels+j*stride_physpts+k] = xphys(k);
+                    }
+              }
+          })
+    
+    .def ("GetGeometry", [](Mesh & self) { return self.GetGeometry(); })
     .def ("SetGeometry", [](Mesh & self, shared_ptr<NetgenGeometry> geo)
            {
              self.SetGeometry(geo);
