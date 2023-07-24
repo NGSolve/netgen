@@ -1506,7 +1506,7 @@ namespace netgen
 
     if (IntersectTetTriangle (&pp[0], &tripp[0], tetpi, tripi))
     {
-    cout << "Intesection detected !!" << endl;
+    cout << "Intersection detected !!" << endl;
     }
     }
 

@@ -80,11 +80,11 @@ namespace netgen
 		     Vector & g,         // i: Gradient an der Stelle x
 		     // o: Gradient an der Stelle xneu, falls ifail = 0
 
-		     const MinFunction & fun,  // function to minmize
+		     const MinFunction & fun,  // function to minimize
 		     const OptiParameters & par, // parameters
-		     double & alphahat,  // i: Startwert für alpha_hat
+		     double & alphahat,  // i: Startwert fï¿½r alpha_hat
 		     // o: Loesung falls ifail = 0
-		     double fmin,        // i: untere Schranke für f
+		     double fmin,        // i: untere Schranke fï¿½r f
 		     double mu1,         // i: Parameter mu_1 aus Alg.2.1
 		     double sigma,       // i: Parameter sigma aus Alg.2.1
 		     double xi1,         // i: Parameter xi_1 aus Alg.2.1
@@ -94,7 +94,7 @@ namespace netgen
 		     double tau2,        // i: Parameter tau_2 aus Alg.2.1
 		     int & ifail);        // o:  0 bei erfolgreicher Liniensuche
   //    -1 bei Abbruch wegen Unterschreiten von fmin
-  //    1 bei Abbruch, aus sonstigen Gründen
+  //    1 bei Abbruch, aus sonstigen Grï¿½nden
 
 
 

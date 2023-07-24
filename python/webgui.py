@@ -235,7 +235,7 @@ def _DrawDocu(obj, *args, **kwargs):
 
 
 if "NETGEN_DOCUMENTATION_SRC_DIR" in os.environ:
-    # we are buiding the documentation, some things are handled differently:
+    # we are building the documentation, some things are handled differently:
     # 1) Draw() is generating a .png (using headless chromium via selenium) and a render_data.json
     #    to show a preview image and load the render_data only when requested by user
     # 2) return a NGSDocuWebGuiWidget instead of NGSWebGuiWidget implementing the preview/load on demand of webgui

@@ -1066,7 +1066,7 @@ proc viewingoptionsdialog { } {
 	    -options { entry.width 3 } \
 	    -command { Ng_SetOCCVisParameters }
         ttk::frame $f.occframe.vssm
-        ttk::label $f.occframe.vssm.lab -text "Visulization smoothness"        
+        ttk::label $f.occframe.vssm.lab -text "Visualization smoothness"        
         ttk::spinbox $f.occframe.vssm.sp -textvariable occoptions.deflection \
             -from 0.1 -to 3 -increment 0.1 -width 4 -command { catch Ng_SetOCCVisParameters } \
             -validate focus -validatecommand "my_validatespinbox %W %P 0" \
@@ -1082,7 +1082,7 @@ proc viewingoptionsdialog { } {
 
 	# ACIS visualization / construction
         
-        ttk::labelframe $f.occframe1 -relief groove -borderwidth 3 -text "ACIS visulization / construction"
+        ttk::labelframe $f.occframe1 -relief groove -borderwidth 3 -text "ACIS visualization / construction"
         pack $f.occframe1 -fill x -pady 15 -ipady 8 
         #ttk::frame $f.occframe1.shso
         ttk::label $f.occframe1.lab1 -text "Show solid (0 for all)"
