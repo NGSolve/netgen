@@ -10,6 +10,9 @@
  * See the LICENSE file for copyright details.
  */
 
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
+
 #include "togl.h"
 
 #if defined(TOGL_OSMESA) || defined(TOGL_WGL)

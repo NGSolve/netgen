@@ -343,7 +343,7 @@ namespace netgen
 	    const Point3d p = Center (p1, p2);
 	    glRasterPos3d (p.X(), p.Y(), p.Z());
 	  
-	    sprintf (buf, "%d", seg.edgenr);
+	    snprintf (buf, sizeof(buf), "%d", seg.edgenr);
 	    // glCallLists (GLsizei(strlen (buf)), GL_UNSIGNED_BYTE, buf);
 	    MyOpenGLText (buf);
 	  }
@@ -418,7 +418,7 @@ namespace netgen
 	    const Point3d & p = mesh->Point(i);
 	    glRasterPos3d (p.X(), p.Y(), p.Z());
 	  
-	    sprintf (buf, "%d", int(i));
+	    snprintf (buf, sizeof(buf), "%d", int(i));
 	    // glCallLists (GLsizei(strlen (buf)), GL_UNSIGNED_BYTE, buf);
 	    MyOpenGLText (buf);
 	  }

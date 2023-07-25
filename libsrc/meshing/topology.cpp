@@ -2228,7 +2228,7 @@ namespace netgen
   void MeshTopology :: GetFaceEdges (int fnr, NgArray<int> & fedges, bool withorientation) const
   {
     NgArrayMem<int,4> pi(4);
-    NgArrayMem<int,12> eledges;
+    // NgArrayMem<int,12> eledges;
   
     fedges.SetSize (0);
     GetFaceVertices(fnr, pi);
@@ -2279,7 +2279,8 @@ namespace netgen
 	  {
 	    const ELEMENT_EDGE * fa_ref_edges = GetEdges1 (GetFaceType(fnr)); 
 	    fedges.SetSize(nfa_ref_edges);
-	    GetElementEdges (els[i]+1, eledges);
+	    // GetElementEdges (els[i]+1, eledges);
+            auto eledges = GetEdges (els[i]);
 	  
 	    for (int j = 0; j < eledges.Size(); j++)
 	      {

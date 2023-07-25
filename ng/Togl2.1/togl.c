@@ -22,6 +22,8 @@
 #   endif
 #endif
 
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 
 #define USE_TOGL_STUB_PROCS
 #include "togl.h"
