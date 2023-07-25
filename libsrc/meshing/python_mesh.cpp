@@ -753,6 +753,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     
     .def_property_readonly("_timestamp", &Mesh::GetTimeStamp)
     .def_property_readonly("ne", [](Mesh& m) { return m.GetNE(); })
+    .def_property_readonly("bounding_box", [](Mesh& m) {
+          Point3d pmin, pmax;
+          m.GetBox(pmin, pmax);
+          return py::make_tuple( Point<3>(pmin),Point<3>(pmax));
+    })
     .def("Partition", [](shared_ptr<Mesh> self, int numproc) {
         self->ParallelMetis(numproc);
       }, py::arg("numproc"))
