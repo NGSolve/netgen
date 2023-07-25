@@ -245,12 +245,12 @@ int Meshing3 :: ApplyRules
 	  if (rule->GetQuality() < 100) impossible = 0;
 
 	  if (testmode)
-	    sprintf (problems.Elem(ri), "Quality not ok");
+	    snprintf (problems.Elem(ri), 255, "Quality not ok");
 	  continue;
 	}
       
       if (testmode)
-	sprintf (problems.Elem(ri), "no mapping found");
+	snprintf (problems.Elem(ri), 255, "no mapping found");
       
       loktestmode = testmode || rule->TestFlag ('t') || tolerance > 5;
 
@@ -419,7 +419,7 @@ int Meshing3 :: ApplyRules
 	      if (loktestmode)
 		{
 		  (*testout) << "Faces Ok" << endl;
-		  sprintf (problems.Elem(ri), "Faces Ok");
+		  snprintf (problems.Elem(ri), 255, "Faces Ok");
 		}
 
 	      int npok = 1;
@@ -527,7 +527,7 @@ int Meshing3 :: ApplyRules
 			  for (auto pi : pmap)
 			    (*testout) << pi << " ";
 			  (*testout) << endl;
-			  sprintf (problems.Elem(ri), "mapping found");
+			  snprintf (problems.Elem(ri), 255, "mapping found");
 			  (*testout) << rule->GetNP(1) << " = " << lfaces.Get(1).GetNP() << endl;
 			}
 		      
@@ -642,7 +642,7 @@ int Meshing3 :: ApplyRules
 		      if (!rule->ConvexFreeZone())
 			{
 			  ok = 0;
-			  sprintf (problems.Elem(ri), "Freezone not convex");
+			  snprintf (problems.Elem(ri), 255, "Freezone not convex");
 
 			  if (loktestmode)
 			    (*testout) << "Freezone not convex" << endl;
@@ -673,7 +673,7 @@ int Meshing3 :: ApplyRules
 					{
 					  (*testout) << "Point " << i 
 						     << " in Freezone" << endl;
-					  sprintf (problems.Elem(ri), 
+					  snprintf (problems.Elem(ri), 255,
 						   "locpoint %d in Freezone", i);
 					}
 				      ok = 0;
@@ -787,7 +787,7 @@ int Meshing3 :: ApplyRules
 						     << lpoints[lfacei.PNum(4)] 
 						     << endl;
 
-				      sprintf (problems.Elem(ri), "triangle (%d, %d, %d) in Freezone",
+				      snprintf (problems.Elem(ri), 255, "triangle (%d, %d, %d) in Freezone",
 					       int(lfaces.Get(i).PNum(1)), 
 					       int(lfaces.Get(i).PNum(2)),
 					       int(lfaces.Get(i).PNum(3)));
@@ -830,7 +830,7 @@ int Meshing3 :: ApplyRules
 						     << lfaces.Get(i).PNum(2) << " - "
 						     << lfaces.Get(i).PNum(3) << endl;
 
-					  sprintf (problems.Elem(ri), "triangle (%d, %d, %d) in Freezone",
+					  snprintf (problems.Elem(ri), 255, "triangle (%d, %d, %d) in Freezone",
 						   int (lfaces.Get(i).PNum(1)), 
 						   int (lfaces.Get(i).PNum(2)),
 						   int (lfaces.Get(i).PNum(3)));
@@ -857,7 +857,7 @@ int Meshing3 :: ApplyRules
 			  if (loktestmode)
 			    {
 			      (*testout) << "Rule ok" << endl;
-			      sprintf (problems.Elem(ri), "Rule ok, err = %f", err);
+			      snprintf (problems.Elem(ri), 255, "Rule ok, err = %f", err);
 			    }
 
 
@@ -922,7 +922,7 @@ int Meshing3 :: ApplyRules
 				{
 				  if (loktestmode)
 				    {
-				      sprintf (problems.Elem(ri), "Orientation wrong");
+				      snprintf (problems.Elem(ri), 255, "Orientation wrong");
 				      (*testout) << "Orientation wrong ("<< n*v3 << ")" << endl;
 				    }
 				  ok = 0;
@@ -939,7 +939,7 @@ int Meshing3 :: ApplyRules
 				  {
 				    (*testout) << "Newpoint " << lpoints.Get(pmap.Get(i))
 					       << " outside convex hull" << endl;
-				    sprintf (problems.Elem(ri), "newpoint outside convex hull");
+				    snprintf (problems.Elem(ri), 255, "newpoint outside convex hull");
 				  }
 				ok = 0;
 				
@@ -1014,7 +1014,7 @@ int Meshing3 :: ApplyRules
 				{
 				  ok = 0;
 				  if (loktestmode)
-				    sprintf (problems.Elem(ri), "oldlen < newlen");
+				    snprintf (problems.Elem(ri), 255, "oldlen < newlen");
 				}
 			    }
 			  
