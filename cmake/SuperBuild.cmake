@@ -121,7 +121,14 @@ else(BUILD_OCC)
           )
         list(APPEND NETGEN_DEPENDENCIES win_download_occ)
     else()
-        find_package(OpenCascade NAMES OpenCasCade OpenCASCADE opencascade REQUIRED)
+        find_package(OpenCascade NAMES OpenCasCade OpenCASCADE opencascade)
+        if(NOT OpenCascade_FOUND)
+          message(FATAL_ERROR "Opencascade not found, either\n\
+          - set OpenCascade_DIR to a directory containting opencascadeConfig.cmake\n\
+          - build OpenCascade automatically by passing -DBUILD_OCC=ON\n\
+          - disable OpenCascade by passing -DUSE_OCC=OFF\n\
+          ")
+        endif()
     endif()
 endif(BUILD_OCC)
 endif(USE_OCC)
