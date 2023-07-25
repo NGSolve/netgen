@@ -183,6 +183,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def(py::self+Vec<2>())
     .def(py::self-Vec<2>())
     .def("__getitem__", [](Point<2>& self, int index) { return self[index]; })
+    .def("__len__", [](Point<2>& /*unused*/) { return 2; })
     ;
 
   py::implicitly_convertible<py::tuple, Point<2>>();
@@ -198,7 +199,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def(py::self-py::self)
     .def(py::self+Vec<3>())
     .def(py::self-Vec<3>())
-    .def("__getitem__", [](Point<2>& self, int index) { return self[index]; })
+    .def("__getitem__", [](Point<3>& self, int index) { return self[index]; })
+    .def("__len__", [](Point<3>& /*unused*/) { return 3; })
     ;
 
   py::implicitly_convertible<py::tuple, Point<3>>();
@@ -751,6 +753,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     
     .def_property_readonly("_timestamp", &Mesh::GetTimeStamp)
     .def_property_readonly("ne", [](Mesh& m) { return m.GetNE(); })
+    .def_property_readonly("bounding_box", [](Mesh& m) {
+          Point3d pmin, pmax;
+          m.GetBox(pmin, pmax);
+          return py::make_tuple( Point<3>(pmin),Point<3>(pmax));
+    })
     .def("Partition", [](shared_ptr<Mesh> self, int numproc) {
         self->ParallelMetis(numproc);
       }, py::arg("numproc"))
