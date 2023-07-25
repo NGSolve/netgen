@@ -9,6 +9,8 @@ import webgui_jupyter_widgets.widget as wg
 
 from packaging.version import parse
 
+import netgen.meshing as ng
+
 if parse(webgui_jupyter_widgets.__version__) >= parse("0.2.18"):
     _default_width = None
     _default_height = None
@@ -26,6 +28,176 @@ def register_draw_type(*types):
             _registered_draw_types[typ] = func
 
     return inner
+
+
+_bernstein_cache = {}
+
+
+def GetIBernsteinBasis(etype, order):
+    if (etype, order) in _bernstein_cache:
+        return _bernstein_cache[(etype, order)]
+    bvals = None
+
+    if etype == "segment":
+
+        def Binomial(n, i):
+            return math.factorial(n) / math.factorial(i) / math.factorial(n - i)
+
+        def Bernstein(x, i, n):
+            return Binomial(n, i) * x**i * (1 - x) ** (n - i)
+
+        bvals = np.zeros(
+            (order + 1, order + 1), dtype=float
+        )  # .Matrix(order+1,order+1)
+        for i in range(order + 1):
+            for j in range(order + 1):
+                bvals[i, j] = Bernstein(i / order, j, order)
+
+    if etype == "trig":
+
+        def BernsteinTrig(x, y, i, j, n):
+            return (
+                math.factorial(n)
+                / math.factorial(i)
+                / math.factorial(j)
+                / math.factorial(n - i - j)
+                * x**i
+                * y**j
+                * (1 - x - y) ** (n - i - j)
+            )
+
+        og = order
+        ndtrig = int((og + 1) * (og + 2) / 2)
+        bvals = np.zeros((ndtrig, ndtrig))
+        ii = 0
+        for ix in range(og + 1):
+            for iy in range(og + 1 - ix):
+                jj = 0
+                for jx in range(og + 1):
+                    for jy in range(og + 1 - jx):
+                        bvals[ii, jj] = BernsteinTrig(ix / og, iy / og, jx, jy, og)
+                        jj += 1
+                ii += 1
+
+    if bvals is None:
+        raise RuntimeError(f"Unkown element type {etype}")
+
+    ibvals = _bernstein_cache[(etype, order)] = np.linalg.inv(bvals)
+    return ibvals
+
+
+def GetWireframePoints(etype, order):
+    n = order
+    if etype == "trig":
+        return np.array(
+            [(i / n, 0) for i in range(n + 1)]
+            + [(0, i / n) for i in range(n + 1)]
+            + [(i / n, 1.0 - i / n) for i in range(n + 1)]
+        )
+    if etype == "quad":
+        return np.array(
+            [(i / n, 0) for i in range(n + 1)]
+            + [(0, i / n) for i in range(n + 1)]
+            + [(i / n, 1.0) for i in range(n + 1)]
+            + [(1.0, i / n) for i in range(n + 1)]
+        )
+
+    raise RuntimeError(f"Unknown element type {etype}")
+
+
+def GetElementPoints(etype, order):
+    n = order
+    if etype == "trig":
+        return np.array(
+            [(i / n, j / n) for j in range(n + 1) for i in range(n + 1 - j)]
+        )
+    if etype == "quad":
+        return np.array(
+            [(i / n, j / n) for j in range(n + 1) for i in range(n + 1 - j)]
+            + [(1 - i / n, 1 - j / n) for j in range(n + 1) for i in range(n + 1 - j)]
+        )
+
+    raise RuntimeError(f"Unknown element type {etype}")
+
+
+def MapBernstein(pnts, etype, order):
+    """
+    Maps function values at equidistant control points to the Bernstein basis function.
+    Parameters:
+       pnts (numpy.ndarray): The input control points with shape (number_of_elements, points_per_element, function_dimension)
+            point_per_element must be a multiple of the basis size
+       etype (str): Element type (currently ignored and trig assumed)
+       order (int): Polynomial order
+
+    Returns:
+        numpy.ndarray: The mapped points with the shape (points_per_element, number_of_elements, function_dimension)
+    """
+    ibvals = GetIBernsteinBasis(etype, order)
+    # for wireframe or subdivided elements, we have multiple point sets per element
+    # so do a reshape to simulate more elements with correct number of control points per element instead
+    if pnts.shape[1] != ibvals.shape[0]:
+        pnts = pnts.reshape((-1, ibvals.shape[0], pnts.shape[2]))
+
+    points = np.zeros(pnts.shape, dtype=np.float32).transpose(1, 0, 2)
+    for i in range(points.shape[2]):
+        points[:, :, i] = np.tensordot(ibvals, pnts[:, :, i], axes=(1, 1))
+    return points
+
+
+@register_draw_type(ng.Mesh)
+def GetData(mesh, args, kwargs):
+    d = {}
+    d["gui_settings"] = kwargs["settings"]
+    d["mesh_dim"] = mesh.dim
+
+    pmin, pmax = mesh.bounding_box
+    diag = pmax - pmin
+    pmid = pmin + 0.5 * diag
+    d["mesh_center"] = [pmid[i] for i in range(3)]
+    d["mesh_radius"] = diag.Norm()
+
+    d["funcdim"] = 0
+    d["show_mesh"] = True
+    d["draw_surf"] = True
+    d["funcmin"] = 0.0
+    d["funcmax"] = 1.0
+
+    # Generate surface element data
+    # webgui code assumes 4 scalar fields (x,y,z, mesh_index)
+    # TODO: other element types than trigs
+    order = kwargs["order"]
+    refpts = GetElementPoints("trig", order)
+    pnts = np.ndarray((len(mesh.Elements2D()), refpts.shape[0], 4))
+    mesh.CalcElementMapping(refpts, pnts)
+
+    # set mesh_index
+    for i, el in enumerate(mesh.Elements2D()):
+        pnts[i, :, 3] = el.index - 1
+    fds = mesh.FaceDescriptors()
+    d["colors"] = [fd.color for fd in fds]
+    d["mesh_regions_2d"] = len(fds)
+    d["names"] = [fd.bcname for fd in fds]
+
+    d["Bezier_trig_points"] = MapBernstein(pnts, "trig", order)
+    d["order2d"] = order
+
+    # Generate wireframe data
+    refpts = GetWireframePoints("trig", order)
+    pnts = np.ndarray((len(mesh.Elements2D()), refpts.shape[0], 4))
+    mesh.CalcElementMapping(refpts, pnts)
+    d["Bezier_points"] = MapBernstein(pnts, "segment", order)
+    d["show_wireframe"] = True
+
+    # TODO: Generate edge data
+    d["edges"] = []
+
+    # encode data as b64
+    for name in ["Bezier_trig_points", "edges", "Bezier_points"]:
+        pnew = []
+        for plist in d[name]:
+            pnew.append(encodeData(np.array(plist, dtype=np.float32)))
+        d[name] = pnew
+    return d
 
 
 class WebGLScene(BaseWebGuiScene):
@@ -91,7 +263,7 @@ class WebGLScene(BaseWebGuiScene):
             d["funcmin"] = kwargs["min"]
         if "max" in kwargs:
             d["funcmax"] = kwargs["max"]
-        d['autoscale'] = kwargs['autoscale']
+        d["autoscale"] = kwargs["autoscale"]
 
         if "vectors" in kwargs:
             d["vectors"] = True
@@ -122,6 +294,14 @@ class WebGLScene(BaseWebGuiScene):
             d["fullscreen"] = kwargs["fullscreen"]
         if "gui_settings" not in d:
             d["gui_settings"] = self.kwargs["settings"]
+
+        d["objects"] = []
+        for obj in kwargs["objects"]:
+            if isinstance(obj, dict):
+                d["objects"].append(obj)
+            else:
+                d["objects"].append(obj._GetWebguiData())
+
         return d
 
 
@@ -145,6 +325,7 @@ bezier_trig_trafos = {}  # cache trafos for different orders
 #         if filename:
 #             scene.GenerateHTML(filename=filename)
 #         return scene
+
 
 def _get_draw_default_args():
     return dict(
