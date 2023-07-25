@@ -4,7 +4,10 @@ endif(NOT CMAKE_BUILD_TYPE)
 
 cmake_minimum_required(VERSION 3.13)
 cmake_policy(VERSION 3.13)
-set(CMAKE_POLICY_DEFAULT_CMP0135 NEW) # DOWNLOAD_TIMESTAMP to extract date
+
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24.0")
+  cmake_policy(SET CMP0135 NEW)
+endif()
 
 include (CMakeDependentOption)
 option( USE_NATIVE_ARCH  "build for native cpu architecture" ON)
