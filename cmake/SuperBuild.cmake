@@ -14,9 +14,16 @@ set (SUBPROJECT_ARGS
     PREFIX ${CMAKE_CURRENT_BINARY_DIR}/dependencies
 )
 
+if (EMSCRIPTEN)
+    set (SUBPROJECT_ARGS
+        ${SUBPROJECT_ARGS}
+        CMAKE_COMMAND emcmake ${CMAKE_COMMAND})
+endif()
+
 # only show output on failure in ci-builds
 if(DEFINED ENV{CI})
     set (SUBPROJECT_ARGS
+        ${SUBPROJECT_ARGS}
         LOG_DOWNLOAD ON
         LOG_BUILD ON
         LOG_INSTALL ON
@@ -134,25 +141,27 @@ endif(BUILD_OCC)
 endif(USE_OCC)
 
 if(BUILD_ZLIB)
-  set(ZLIB_DIR ${CMAKE_CURRENT_BINARY_DIR}/dependencies/zlib)
+  set(ZLIB_ROOT ${CMAKE_CURRENT_BINARY_DIR}/dependencies/zlib)
   ExternalProject_Add(project_zlib
     ${SUBPROJECT_ARGS}
     URL https://github.com/madler/zlib/archive/refs/tags/v1.2.11.zip
     URL_MD5 9d6a627693163bbbf3f26403a3a0b0b1
     DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
     CMAKE_ARGS
-         -DCMAKE_INSTALL_PREFIX=${ZLIB_DIR}
+         -DCMAKE_INSTALL_PREFIX=${ZLIB_ROOT}
          ${SUBPROJECT_CMAKE_ARGS}
     UPDATE_COMMAND "" # Disable update
     BUILD_IN_SOURCE 1
     )
 
   list(APPEND NETGEN_DEPENDENCIES project_zlib)
-  list(APPEND NETGEN_CMAKE_PREFIX_PATH ${ZLIB_DIR})
   if(WIN32)
     # force linking the static library
-    set(ZLIB_INCLUDE_DIRS ${ZLIB_DIR}/include)
-    set(ZLIB_LIBRARIES ${ZLIB_DIR}/lib/zlibstatic.lib)
+    set(ZLIB_INCLUDE_DIRS ${ZLIB_ROOT}/include)
+    set(ZLIB_LIBRARIES ${ZLIB_ROOT}/lib/zlibstatic.lib)
+  elseif(EMSCRIPTEN)
+    set(ZLIB_INCLUDE_DIRS ${ZLIB_ROOT}/include)
+    set(ZLIB_LIBRARIES ${ZLIB_ROOT}/lib/libz.a)
   endif(WIN32)
 else()
     include(cmake/external_projects/zlib.cmake)
@@ -252,6 +261,7 @@ set_vars( NETGEN_CMAKE_ARGS
   OpenCascade_ROOT
   ZLIB_INCLUDE_DIRS
   ZLIB_LIBRARIES
+  ZLIB_ROOT
 
   NGLIB_LIBRARY_TYPE
   NGCORE_LIBRARY_TYPE

@@ -71,6 +71,8 @@ namespace ngcore
     unsigned long long tics;
     __asm __volatile("mrs %0, CNTVCT_EL0" : "=&r" (tics));
     return tics;
+#elif defined(__EMSCRIPTEN__)
+    return std::chrono::high_resolution_clock::now().time_since_epoch().count();
 #else
 #warning "Unsupported CPU architecture"
     return 0;
