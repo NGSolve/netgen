@@ -18,16 +18,10 @@ namespace ngcore
 {
 #if defined __AVX512F__
     #define NETGEN_DEFAULT_SIMD_SIZE 8
-    #define NETGEN_NATIVE_SIMD_SIZE  8
 #elif defined __AVX__
     #define NETGEN_DEFAULT_SIMD_SIZE 4
-    #define NETGEN_NATIVE_SIMD_SIZE  4
-#elif defined NETGEN_ARCH_AMD64
-    #define NETGEN_DEFAULT_SIMD_SIZE 2
-    #define NETGEN_NATIVE_SIMD_SIZE  2
 #else
     #define NETGEN_DEFAULT_SIMD_SIZE 2
-    #define NETGEN_NATIVE_SIMD_SIZE  1
 #endif
 
   constexpr int GetDefaultSIMDSize() {
@@ -36,9 +30,7 @@ namespace ngcore
 
   constexpr bool IsNativeSIMDSize(int n) {
     if(n==1) return true;
-#if defined NETGEN_ARCH_AMD64 || defined  __SSE__ || defined __aarch64__
     if(n==2) return true;
-#endif
 #if defined __AVX__
     if(n==4) return true;
 #endif
