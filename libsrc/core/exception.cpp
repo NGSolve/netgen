@@ -23,7 +23,7 @@ namespace ngcore
 
 
 // ********* STUFF FOR GETBACKTRACE ***************************
-#ifdef __GNUC__
+#if defined __GNUC__ && !defined __EMSCRIPTEN__
 
 #include <execinfo.h>
 #include <string.h>
@@ -226,7 +226,7 @@ static bool dummy = []()
     return true;
 }();
 
-#else // __GNUC__
+#else // __GNUC__ and not __EMSCRIPTEN__
 
 namespace ngcore
 {

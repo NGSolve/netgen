@@ -4452,30 +4452,30 @@ namespace netgen
       }
 
     return 1;
-    if ( /* hp */ 1)  // needed for old, simple hp-refinement
-      { 
-        // trigs with 2 or more segments are illegal
-        int i;
-        int nseg = 0;
+    // if ( /* hp */ 1)  // needed for old, simple hp-refinement
+    //   { 
+    //     // trigs with 2 or more segments are illegal
+    //     int i;
+    //     int nseg = 0;
 
-        if (!segmentht)
-          {
-            cerr << "no segmentht allocated" << endl;
-            return 0;
-          }
+    //     if (!segmentht)
+    //       {
+    //         cerr << "no segmentht allocated" << endl;
+    //         return 0;
+    //       }
 
-        //      Point3d cp(0.5, 0.5, 0.5);
-        for (i = 1; i <= 3; i++)
-          {
-            INDEX_2 i2(el.PNumMod (i), el.PNumMod (i+1));
-            i2.Sort();
-            if (segmentht -> Used (i2))
-              nseg++;
-          }
-        if (nseg >= 2) 
-          return 0;
-      }
-    return 1;
+    //     //      Point3d cp(0.5, 0.5, 0.5);
+    //     for (i = 1; i <= 3; i++)
+    //       {
+    //         INDEX_2 i2(el.PNumMod (i), el.PNumMod (i+1));
+    //         i2.Sort();
+    //         if (segmentht -> Used (i2))
+    //           nseg++;
+    //       }
+    //     if (nseg >= 2) 
+    //       return 0;
+    //   }
+    // return 1;
   }
 
   double Mesh :: CalcTotalBad (const MeshingParameters & mp )

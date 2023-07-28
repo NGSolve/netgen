@@ -1,7 +1,15 @@
 # this file is included from the parent directory (otherwise generated source files are not recognized properly by cmake)
 
 # generate .cpp files containing the string of the .rls meshing rule files
-add_executable(makerls rules/makerlsfile.cpp)
+if(EMSCRIPTEN)
+  add_custom_command(OUTPUT makerls
+    COMMAND g++ ${CMAKE_CURRENT_SOURCE_DIR}/rules/makerlsfile.cpp -o ${CMAKE_CURRENT_BINARY_DIR}/makerls
+    )
+  set(rules_command ${CMAKE_BINARY_DIR}/makerls)
+else(EMSCRIPTEN)
+  add_executable(makerls rules/makerlsfile.cpp)
+  set(rules_command makerls)
+endif()
 
 set(rules
     hexrules
@@ -21,7 +29,7 @@ foreach(rule ${rules})
     set(rule_cpp ${CMAKE_CURRENT_BINARY_DIR}/rules/rule_${rule}.cpp)
 
     add_custom_command(OUTPUT ${rule_cpp}
-      COMMAND makerls ${rule_file} ${rule_cpp} ${rule}
+      COMMAND ${rules_command} ${rule_file} ${rule_cpp} ${rule}
       DEPENDS makerls ${rule_file}
     )
 endforeach()
