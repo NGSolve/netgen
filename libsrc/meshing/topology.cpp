@@ -2285,7 +2285,7 @@ namespace netgen
 	    for (int j = 0; j < eledges.Size(); j++)
 	      {
 		int vi1, vi2;
-		GetEdgeVertices (eledges[j], vi1, vi2);
+		GetEdgeVertices (eledges[j]+1, vi1, vi2);
 	    
 		bool has1 = 0;
 		bool has2 = 0;
@@ -2307,13 +2307,13 @@ namespace netgen
 			if(withorientation)
 			  {
 			    if(w1==vi1 && w2==vi2)
-			      fedges[k] = eledges[j];
+			      fedges[k] = eledges[j]+1;
 			    if(w1==vi2 && w2==vi1)
-			      fedges[k] = -eledges[j];
+			      fedges[k] = -eledges[j]+1;
 			  }
 			else
 			  if((w1==vi1 && w2==vi2) || (w1==vi2 && w2==vi1))
-			    fedges[k] = eledges[j];
+			    fedges[k] = eledges[j]+1;
 		      }
 		  }
 	      }
