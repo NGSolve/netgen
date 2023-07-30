@@ -1879,10 +1879,11 @@ namespace netgen
     NgArray<int> cnt(nn+1);
     cnt = 0;
 
-    for ( int edge = 1; edge <= nedges; edge++ )
+    for ( int edge = 0; edge < nedges; edge++ )
       {
-	int v1, v2;
-	topology.GetEdgeVertices ( edge, v1, v2);
+	// int v1, v2;
+	// topology.GetEdgeVertices ( edge, v1, v2);
+        auto [v1,v2] = topology.GetEdgeVertices(edge);
 	cnt[v1-1] ++;
 	cnt[v2-1] ++;
       }
@@ -1896,10 +1897,11 @@ namespace netgen
     adjacency = new idxtype[xadj[nn]];
     cnt = 0;
 
-    for ( int edge = 1; edge <= nedges; edge++ )
+    for ( int edge = 0; edge < nedges; edge++ )
       {
-	int v1, v2;
-	topology.GetEdgeVertices ( edge, v1, v2);
+	// int v1, v2;
+	// topology.GetEdgeVertices ( edge, v1, v2);
+        auto [v1,v2] = topology.GetEdgeVertices(edge);        
 	adjacency[ xadj[v1-1] + cnt[v1-1] ] = v2-1;
 	adjacency[ xadj[v2-1] + cnt[v2-1] ] = v1-1;
 	cnt[v1-1]++;
@@ -1973,7 +1975,7 @@ namespace netgen
     facevolels1 = -1;
     facevolels2 = -1;
 
-    NgArray<int, 0> elfaces;
+    // NgArray<int, 0> elfaces;
     xadj = new idxtype[ne+1];
     part = new idxtype[ne];
 
@@ -1983,16 +1985,17 @@ namespace netgen
     for ( int el=1; el <= ne; el++ )
       {
 	Element volel = VolumeElement(el);
-	topology.GetElementFaces(el, elfaces);
+	// topology.GetElementFaces(el, elfaces);
+        auto elfaces = topology.GetFaces (ElementIndex(el-1));
 	for ( int i = 0; i < elfaces.Size(); i++ )
 	  {
-	    if ( facevolels1[elfaces[i]-1] == -1 )
-	      facevolels1[elfaces[i]-1] = el;
+	    if ( facevolels1[elfaces[i]] == -1 )
+	      facevolels1[elfaces[i]] = el;
 	    else
 	      {
-		facevolels2[elfaces[i]-1] = el;
-		cnt[facevolels1[elfaces[i]-1]-1]++;
-		cnt[facevolels2[elfaces[i]-1]-1]++;
+		facevolels2[elfaces[i]] = el;
+		cnt[facevolels1[elfaces[i]]-1]++;
+		cnt[facevolels2[elfaces[i]]-1]++;
 	      }
 	  }
       }

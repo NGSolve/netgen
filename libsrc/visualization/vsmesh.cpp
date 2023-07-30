@@ -411,8 +411,9 @@ namespace netgen
 	    const MeshTopology & top = mesh->GetTopology();
 	    for (int i = 1; i <= top.GetNEdges(); i++)
 	      {
-		int v1, v2;
-		top.GetEdgeVertices (i, v1, v2);
+		// int v1, v2;
+		// top.GetEdgeVertices (i, v1, v2);
+                auto [v1,v2] = top.GetEdgeVertices(i-1);
 		const Point3d & p1 = mesh->Point(v1);
 		const Point3d & p2 = mesh->Point(v2);
 		const Point3d p = Center (p1, p2);

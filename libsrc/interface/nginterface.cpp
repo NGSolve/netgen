@@ -1614,7 +1614,8 @@ int Ng_GetFace_Edges (int fnr, int * edge)
 void Ng_GetEdge_Vertices (int ednr, int * vert)
 {
   const MeshTopology & topology = mesh->GetTopology();
-  topology.GetEdgeVertices (ednr, vert[0], vert[1]);
+  // topology.GetEdgeVertices (ednr, vert[0], vert[1]);
+  tie(vert[0], vert[1]) = topology.GetEdgeVertices(ednr-1);
 }
 
 

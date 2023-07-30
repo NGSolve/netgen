@@ -826,7 +826,8 @@ void WriteEdgeElementFormat (const Mesh & mesh,
 	  outfile << el.PNum(j);
 	}
 
-      top->GetElementEdges(i,edges);
+      // top->GetElementEdges(i,edges);
+      auto eledges = top->GetEdges(ElementIndex(i-1));
       outfile << endl << "      ";
       outfile.width(8);
       outfile << edges.Size();
@@ -834,7 +835,7 @@ void WriteEdgeElementFormat (const Mesh & mesh,
 	{
 	  outfile << " ";
 	  outfile.width(8);
-	  outfile << edges[j-1];
+	  outfile << edges[j-1]+1;
 	}
       outfile << "\n";
 
@@ -882,12 +883,13 @@ void WriteEdgeElementFormat (const Mesh & mesh,
     }
 
 
-  int v1, v2;
+  // int v1, v2;
   // edge - vertex - list
   outfile << nedges << "\n";
   for (i=1; i <= nedges; i++)
     {
-      top->GetEdgeVertices(i,v1,v2);
+      // top->GetEdgeVertices(i,v1,v2);
+      auto [v1,v2] = top->GetEdgeVertices(i-1);
       outfile.width(4);
       outfile << v1;
       outfile << " ";

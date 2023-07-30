@@ -639,10 +639,11 @@ namespace netgen
 
     // exchange edges
     cnt_send = 0;
-    int v1, v2;
+    // int v1, v2;
     for (int edge = 1; edge <= ned; edge++)
       {
-	topology.GetEdgeVertices (edge, v1, v2);
+	// topology.GetEdgeVertices (edge, v1, v2);
+        auto [v1,v2] = topology.GetEdgeVertices(edge-1);
         /*
 	for (int dest = 1; dest < ntasks; dest++)
 	  // if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
@@ -662,7 +663,8 @@ namespace netgen
 
     for (int edge = 1; edge <= ned; edge++)
       {
-	topology.GetEdgeVertices (edge, v1, v2);
+	// topology.GetEdgeVertices (edge, v1, v2);
+        auto [v1,v2] = topology.GetEdgeVertices(edge-1);        
 	for (int dest = 0; dest < ntasks; dest++)
 	  // if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
           if (GetDistantProcs(v1).Contains(dest) && GetDistantProcs(v2).Contains(dest))
@@ -680,7 +682,8 @@ namespace netgen
 
 	for (int edge : dest2edge[dest])
           {
-            topology.GetEdgeVertices (edge, v1, v2);
+            // topology.GetEdgeVertices (edge, v1, v2);
+            auto [v1,v2] = topology.GetEdgeVertices(edge-1);            
             // if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
             if (GetDistantProcs(v1).Contains(dest) && GetDistantProcs(v2).Contains(dest))            
               {
@@ -705,7 +708,8 @@ namespace netgen
 	INDEX_2_CLOSED_HASHTABLE<int> vert2edge(2*dest2edge[dest].Size()+10); 
 	for (int edge : dest2edge[dest])
 	  {
-	    topology.GetEdgeVertices (edge, v1, v2);
+	    // topology.GetEdgeVertices (edge, v1, v2);
+            auto [v1,v2] = topology.GetEdgeVertices(edge-1);            
 	    vert2edge.Set(INDEX_2(v1,v2), edge);
 	  }
 

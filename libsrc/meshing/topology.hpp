@@ -137,7 +137,9 @@ public:
   
   DLL_HEADER void GetFaceVertices (int fnr, NgArray<int> & vertices) const;
   DLL_HEADER void GetFaceVertices (int fnr, int * vertices) const;
+  [[deprecated("use GetEdgeVertices -> tupe(v0,v1) instead")]]                            
   DLL_HEADER void GetEdgeVertices (int enr, int & v1, int & v2) const;
+  [[deprecated("use GetEdgeVertices -> tupe(v0,v1) instead")]]
   DLL_HEADER void GetEdgeVertices (int enr, PointIndex & v1, PointIndex & v2) const;
   auto GetEdgeVertices (int enr) const { return tuple(edge2vert[enr][0], edge2vert[enr][1]); }
   auto GetEdgeVerticesPtr (int enr) const { return &edge2vert[enr][0]; }

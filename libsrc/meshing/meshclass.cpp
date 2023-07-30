@@ -6441,8 +6441,9 @@ namespace netgen
             // for(auto edgei : eledges)
             for(auto edgei : topology.GetEdges(ElementIndex(ei)))
               {
-                int p1, p2;
-                topology.GetEdgeVertices(edgei+1, p1, p2);
+                // int p1, p2;
+                // topology.GetEdgeVertices(edgei+1, p1, p2);
+                auto [p1, p2] = topology.GetEdgeVertices(edgei);
                 auto c1 = inserted_points.count({p1, p2});
                 auto c2 = inserted_points.count({p2, p1});
                 if(c1 == 0 && c2 == 0)

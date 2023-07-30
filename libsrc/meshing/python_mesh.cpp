@@ -1616,8 +1616,9 @@ project_boundaries : Optional[str] = None
             ParallelForRange( n, [&](auto myrange) {
                 for(auto i : myrange)
                 {
-                    PointIndex p0,p1;
-                    topo.GetEdgeVertices(i+1, p0, p1);
+                  // PointIndex p0,p1;
+                  // topo.GetEdgeVertices(i+1, p0, p1);
+                  auto [p0,p1] = topo.GetEdgeVertices(i);
                     output[2*i] = p0-PointIndex::BASE;
                     output[2*i+1] = p1-PointIndex::BASE;
                 } });

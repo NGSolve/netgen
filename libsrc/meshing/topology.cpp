@@ -2284,8 +2284,9 @@ namespace netgen
 	  
 	    for (int j = 0; j < eledges.Size(); j++)
 	      {
-		int vi1, vi2;
-		GetEdgeVertices (eledges[j]+1, vi1, vi2);
+		// int vi1, vi2;
+		// GetEdgeVertices (eledges[j]+1, vi1, vi2);
+                auto [vi1, vi2] = GetEdgeVertices(eledges[j]);
 	    
 		bool has1 = 0;
 		bool has2 = 0;
@@ -2354,7 +2355,7 @@ namespace netgen
     // Array<ElementIndex> elements_v1;
     // GetVertexElements ( v1, elements_v1);
     auto elements_v1 = GetVertexElements ( v1 );
-    int edv1, edv2;
+    // int edv1, edv2;
 
     for ( int i = 0; i < elements_v1.Size(); i++ )
       {
@@ -2362,7 +2363,8 @@ namespace netgen
         auto elementedges = GetEdges(ElementIndex(elements_v1[i]));
 	for ( int ed = 0; ed < elementedges.Size(); ed ++)
 	  {
-	    GetEdgeVertices( elementedges[ed]+1, edv1, edv2 );
+	    // GetEdgeVertices( elementedges[ed]+1, edv1, edv2 );
+            auto [edv1,edv2] = GetEdgeVertices (elementedges[ed]);
 	    if ( ( edv1 == v1 && edv2 == v2 ) || ( edv1 == v2 && edv2 == v1 ) )
 	      return elementedges[ed];
 	  }
@@ -2394,9 +2396,10 @@ namespace netgen
   void MeshTopology :: 
   GetSegmentSurfaceElements (int segnr, NgArray<SurfaceElementIndex> & els) const
   {
-    int v1, v2;
+    // int v1, v2;
     // GetEdgeVertices ( GetSegmentEdge (segnr), v1, v2 );
-    GetEdgeVertices ( GetEdge (segnr-1)+1, v1, v2 );
+    // GetEdgeVertices ( GetEdge (segnr-1)+1, v1, v2 );
+    auto [v1,v2] = GetEdgeVertices ( GetEdge (segnr-1) );
     auto els1 = GetVertexSurfaceElements ( v1 );
     auto els2 = GetVertexSurfaceElements ( v2 );
     els.SetSize(0);

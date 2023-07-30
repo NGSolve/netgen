@@ -801,8 +801,9 @@ namespace netgen
 	      if (surfnr[e] == -1) continue;
 	      SetThreadPercent(double(e)/surfnr.Size()*100.);
 
-	      PointIndex pi1, pi2;
-	      top.GetEdgeVertices (e+1, pi1, pi2);
+	      // PointIndex pi1, pi2;
+	      // top.GetEdgeVertices (e+1, pi1, pi2);
+              auto [pi1,pi2] = top.GetEdgeVertices(e);
 	      bool swap = (pi1 > pi2);
 
 	      Point<3> p1 = mesh[pi1];
@@ -1014,8 +1015,9 @@ namespace netgen
 
 	  SetThreadPercent(double(edgenr)/edge_surfnr1.Size()*100.);
 
-	  PointIndex pi1, pi2;
-	  top.GetEdgeVertices (edgenr+1, pi1, pi2);
+          //  PointIndex pi1, pi2;
+	  // top.GetEdgeVertices (edgenr+1, pi1, pi2);
+          auto [pi1,pi2] = top.GetEdgeVertices(edgenr);
 
 	  bool swap = swap_edge[edgenr]; // (pi1 > pi2);
 	  if (swap) Swap (pi1, pi2);
@@ -1239,8 +1241,9 @@ namespace netgen
 
 			int first = edgecoeffsindex[edgenrs[k]];
 			Vector eshape(eorder-1);
-			int vi1, vi2;
-			top.GetEdgeVertices (edgenrs[k]+1, vi1, vi2);
+			// int vi1, vi2;
+			// top.GetEdgeVertices (edgenrs[k]+1, vi1, vi2);
+                        auto [vi1,vi2] = top.GetEdgeVertices(edgenrs[k]);
 			if (vi1 > vi2) swap (vi1, vi2);
 			int v1 = -1, v2 = -1;
 			for (int j = 0; j < 3; j++)
