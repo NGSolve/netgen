@@ -10,6 +10,9 @@
 
 #include "occgeom.hpp"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 #include <BOPAlgo_Builder.hxx>
 #include <BOPTools_AlgoTools.hxx>
 #include <BRepAlgoAPI_Common.hxx>
@@ -73,6 +76,8 @@
 #include <gp_Ax2d.hxx>
 #include <gp_Pln.hxx>
 #include <gp_Trsf.hxx>
+
+#pragma clang diagnostic pop
 
 using namespace netgen;
 

@@ -1001,8 +1001,10 @@ namespace ngcore
             data[i] = a2.data[i];
           return *this;
         }
+#ifndef __CUDA_ARCH__      
       else
         throw Exception(std::string("cannot copy Array of type ") + typeid(T).name());
+#endif
     }
 
     

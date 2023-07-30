@@ -1,10 +1,15 @@
 #ifndef FILE_OCC_FACE_INCLUDED
 #define FILE_OCC_FACE_INCLUDED
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 #include <GProp_GProps.hxx>
 #include <TopoDS.hxx>
 #include <TopoDS_Face.hxx>
 #include <ShapeAnalysis_Surface.hxx>
+
+#pragma clang diagnostic pop
 
 #include "occ_vertex.hpp"
 #include "meshing.hpp"

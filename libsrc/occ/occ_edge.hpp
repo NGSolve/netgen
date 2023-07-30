@@ -1,12 +1,18 @@
 #ifndef FILE_OCC_EDGE_INCLUDED
 #define FILE_OCC_EDGE_INCLUDED
 
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 #include <GProp_GProps.hxx>
 #include <TopoDS.hxx>
 #include <TopoDS_Edge.hxx>
 #include <Geom_Curve.hxx>
 #include <BRep_TEdge.hxx>
 #include <BRep_Tool.hxx>
+
+#pragma clang diagnostic pop
 
 #include "occ_vertex.hpp"
 #include "meshing.hpp"

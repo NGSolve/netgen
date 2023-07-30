@@ -5,8 +5,13 @@
 #include <meshing.hpp>
 #include "occgeom.hpp"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 #include <GeomLProp_SLProps.hxx>
 #include <ShapeAnalysis_Surface.hxx>
+
+#pragma clang diagnostic pop
 
 #include "occmeshsurf.hpp"
 

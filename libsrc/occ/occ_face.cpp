@@ -1,7 +1,12 @@
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 #include <BRepGProp.hxx>
 #include <BRep_Tool.hxx>
 #include <GeomAPI_ProjectPointOnCurve.hxx>
 #include <BRepLProp_SLProps.hxx>
+
+#pragma clang diagnostic pop
 
 #include "occ_edge.hpp"
 #include "occ_face.hpp"

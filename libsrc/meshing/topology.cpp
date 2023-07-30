@@ -1780,6 +1780,17 @@ namespace netgen
       eledges[i] = edges.Get(elnr)[i]+1;
       // eledges[i] = abs (edges.Get(elnr)[i]);
   }
+
+  void MeshTopology :: GetElementFaces (int elnr, NgArray<int> & elfaces) const
+  {
+    int nfa = GetNFaces (mesh->VolumeElement(elnr).GetType());
+    elfaces.SetSize (nfa);
+
+    for (auto i : Range(nfa))
+      elfaces[i] = faces.Get(elnr)[i]+1;
+  }
+
+  
   void MeshTopology :: GetElementFaces (int elnr, NgArray<int> & elfaces, bool withorientation) const
   {
     int nfa = GetNFaces (mesh->VolumeElement(elnr).GetType());
