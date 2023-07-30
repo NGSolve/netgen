@@ -87,16 +87,20 @@ namespace ngcore
     {
       // create new object of this type and return a void* pointer that is points to the location
       // of the (base)class given by type_info
-      std::function<void*(const std::type_info&)> creator;
+      // std::function<void*(const std::type_info&)> creator;
+      void* (*creator)(const std::type_info&);
       // This caster takes a void* pointer to the type stored in this info and casts it to a
       // void* pointer pointing to the (base)class type_info
-      std::function<void*(const std::type_info&, void*)> upcaster;
+      // std::function<void*(const std::type_info&, void*)> upcaster;
+      void* (*upcaster) (const std::type_info&, void*);
       // This caster takes a void* pointer to the (base)class type_info and returns void* pointing
       // to the type stored in this info
-      std::function<void*(const std::type_info&, void*)> downcaster;
+      // std::function<void*(const std::type_info&, void*)> downcaster;
+      void* (*downcaster)(const std::type_info&, void*);
 
 #ifdef NETGEN_PYTHON
-      std::function<pybind11::object(const std::any&)> anyToPyCaster;
+      // std::function<pybind11::object(const std::any&)> anyToPyCaster;
+      pybind11::object (*anyToPyCaster)(const std::any&);
 #endif // NETGEN_PYTHON
     };
   } // namespace detail
