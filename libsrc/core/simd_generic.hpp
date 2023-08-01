@@ -559,6 +559,15 @@ namespace ngcore
     sum = FNMA(a,b,sum);
   }
 
+  // c += a*b    (a0re, a0im, a1re, a1im, ...), 
+  template <int N>
+  void FMAComplex (SIMD<double,N> a, SIMD<double,N> b, SIMD<double,N> & c)
+  {
+    auto [are, aim] = Unpack(a, a);
+    SIMD<double,N> bswap = SwapPairs(b);
+    SIMD<double,N> aim_bswap = aim*bswap;
+    c += FMAddSub (are, b, aim_bswap);
+  }
   
   template <int i, typename T, int N>
   T get(SIMD<T,N> a) { return a.template Get<i>(); }
