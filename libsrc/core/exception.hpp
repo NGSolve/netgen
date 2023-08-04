@@ -94,10 +94,11 @@ namespace ngcore
 #define NETGEN_CHECK_SHAPE(a,b) \
   { if(a.Shape() != b.Shape()) \
       throw ngcore::Exception(__FILE__": shape don't match"); }
+#define NETGEN_NOEXCEPT 
 #else // defined(NETGEN_ENABLE_CHECK_RANGE) && !defined(__CUDA_ARCH__)
 #define NETGEN_CHECK_RANGE(value, min, max)
 #define NETGEN_CHECK_SHAPE(a,b)
-
+#define NETGEN_NOEXCEPT noexcept
 #endif // defined(NETGEN_ENABLE_CHECK_RANGE) && !defined(__CUDA_ARCH__)
 
 
