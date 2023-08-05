@@ -49,7 +49,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<0> (size_t nr) const
   Ng_Element ret;
   ret.type = NG_PNT;
   ret.index = el.index;
-  ret.mat = &el.name;
+  ret.mat = el.name;
   
   ret.points.num = 1;
   ret.points.ptr = (int*)&el.pnum;
@@ -68,11 +68,11 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<0> (size_t nr) const
   ret.facets.ptr = (int*)&el.pnum;
 
   if (mesh->GetDimension() == 1)
-    ret.mat = mesh->GetBCNamePtr(el.index-1);
+    ret.mat = *(mesh->GetBCNamePtr(el.index-1));
   else if (mesh->GetDimension() == 2)
-    ret.mat = mesh->GetCD2NamePtr(el.index-1);
+    ret.mat = *(mesh->GetCD2NamePtr(el.index-1));
   else
-    ret.mat = mesh->GetCD3NamePtr(el.index-1);
+    ret.mat = *(mesh->GetCD3NamePtr(el.index-1));
   
   return ret;
 }
@@ -92,13 +92,13 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
   else
     ret.index = el.si;
   if (mesh->GetDimension() == 2)
-    ret.mat = mesh->GetBCNamePtr(el.si-1);
+    ret.mat = *(mesh->GetBCNamePtr(el.si-1));
   else
     {
       if (mesh->GetDimension() == 3)
-        ret.mat = mesh->GetCD2NamePtr(el.edgenr-1);
+        ret.mat = *(mesh->GetCD2NamePtr(el.edgenr-1));
       else
-        ret.mat = mesh->GetMaterialPtr(el.si);
+        ret.mat = *(mesh->GetMaterialPtr(el.si));
     }
 
   ret.points.num = el.GetNP();
@@ -148,9 +148,9 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<2> (size_t nr) const
   const FaceDescriptor & fd = mesh->GetFaceDescriptor(el); // .GetIndex());
   ret.index = fd.BCProperty();
   if (mesh->GetDimension() == 3)
-    ret.mat = &fd.GetBCName();
+    ret.mat = fd.GetBCName();
   else
-    ret.mat = mesh -> GetMaterialPtr(ret.index);
+    ret.mat = *(mesh -> GetMaterialPtr(ret.index));
   ret.points.num = el.GetNP();
   ret.points.ptr  = (int*)&el[0];
 
@@ -187,7 +187,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<3> (size_t nr) const
   Ng_Element ret;
   ret.type = NG_ELEMENT_TYPE(el.GetType());
   ret.index = el.GetIndex();
-  ret.mat = mesh -> GetMaterialPtr(ret.index);
+  ret.mat = *(mesh -> GetMaterialPtr(ret.index));
   ret.points.num = el.GetNP();
   ret.points.ptr = (int*)&el[0];
 
@@ -211,25 +211,25 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<3> (size_t nr) const
 
 
 template <> NGX_INLINE DLL_HEADER
-const string &  Ngx_Mesh :: GetMaterialCD<0> (int region_nr) const
+string_view Ngx_Mesh :: GetMaterialCD<0> (int region_nr) const
 {
   return mesh->GetMaterial(region_nr+1);
 }
 
 template <> NGX_INLINE DLL_HEADER
-const string &  Ngx_Mesh :: GetMaterialCD<1> (int region_nr) const
+string_view Ngx_Mesh :: GetMaterialCD<1> (int region_nr) const
 {
   return mesh->GetBCName(region_nr);
 }
 
 template <> NGX_INLINE DLL_HEADER
-const string &  Ngx_Mesh :: GetMaterialCD<2> (int region_nr) const
+string_view Ngx_Mesh :: GetMaterialCD<2> (int region_nr) const
 {
   return mesh->GetCD2Name(region_nr);
 }
 
 template <> NGX_INLINE DLL_HEADER
-const string &  Ngx_Mesh :: GetMaterialCD<3> (int region_nr) const
+string_view Ngx_Mesh :: GetMaterialCD<3> (int region_nr) const
 {
   return mesh->GetCD3Name(region_nr);
 }

@@ -146,7 +146,7 @@ namespace netgen
   public:
     NG_ELEMENT_TYPE type;
     int index;           // material / boundary condition 
-    const string * mat;   // material / boundary label
+    string_view mat;   // material / boundary label
     NG_ELEMENT_TYPE GetType() const { return type; }
     int GetIndex() const { return index-1; }
     Ng_Points points;      // all points
@@ -303,7 +303,7 @@ namespace netgen
 
     /// material/boundary label of region, template argument is co-dimension
     template <int DIM> 
-    const string & GetMaterialCD (int region_nr) const;
+    string_view GetMaterialCD (int region_nr) const;
 
     /// Curved Elements:
     /// elnr .. element nr
