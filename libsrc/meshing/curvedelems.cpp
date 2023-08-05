@@ -3313,10 +3313,10 @@ namespace netgen
 		  int vi1 = (edges[i][0]-1), vi2 = (edges[i][1]-1);
 		  if (el[vi1] > el[vi2]) swap (vi1, vi2);
 
-		  T bubz = lamiz[vi1] * lamiz[vi2];
-		  T dbubz = dlamiz[vi1]*lamiz[vi2] + lamiz[vi1]*dlamiz[vi2];
-		  T polyz = lamiz[vi1] - lamiz[vi2];
-		  T dpolyz = dlamiz[vi1] - dlamiz[vi2];
+		  // T bubz = lamiz[vi1] * lamiz[vi2];
+		  // T dbubz = dlamiz[vi1]*lamiz[vi2] + lamiz[vi1]*dlamiz[vi2];
+		  // T polyz = lamiz[vi1] - lamiz[vi2];
+		  // T dpolyz = dlamiz[vi1] - dlamiz[vi2];
 		  T bubxy = lami[(vi1)%3];
 		  T dbubxydx = dlami[(vi1)%3][0];
 		  T dbubxydy = dlami[(vi1)%3][1];

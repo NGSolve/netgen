@@ -285,7 +285,7 @@ namespace netgen
     NgArray<int> plainzones;
     auto loclinesptr = make_shared<NgArray<INDEX_2>>();
     auto &loclines = *loclinesptr;
-    int cntelem = 0, trials = 0, nfaces = 0;
+    int trials = 0, nfaces = 0;
     int oldnl = 0;
 
     UpdateVisSurfaceMeshData(oldnl, locpointsptr, loclinesptr, plainpointsptr);
@@ -1379,7 +1379,7 @@ namespace netgen
 	      
 	      
 		mesh.AddSurfaceElement (mtri);
-		cntelem++;
+		// cntelem++;
 		//	      cout << "elements: " << cntelem << endl;
 
 

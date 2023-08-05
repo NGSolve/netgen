@@ -1172,7 +1172,7 @@ bool STLBoundary :: TestSeg(const Point<3>& p1, const Point<3> & p2, const Vec<3
   }
 #endif
 
-  int i,j,k;
+  int i,k;
   Point<3> seg1p/*, seg2p*/;
   Point<3> sp1,sp2;
   double lambda1, lambda2, vlen2;

@@ -216,7 +216,7 @@ namespace netgen
     static Timer tbuildelementtable("SendMesh::Build_elementtable");
     
     NgMPI_Comm comm = GetCommunicator();
-    int id = comm.Rank();
+    // int id = comm.Rank();
     int ntasks = comm.Size();
 
     int dim = GetDimension();
@@ -630,7 +630,7 @@ namespace netgen
     size_t nse = GetNSE();
     NgArray<SurfaceElementIndex> ided_sel(nse);
     ided_sel = -1;
-    bool has_ided_sels = false;
+    [[maybe_unused]] bool has_ided_sels = false;
     if(GetNE() && has_periodic) //we can only have identified surf-els if we have vol-els (right?)
       {
 	Array<SurfaceElementIndex> os1, os2;
@@ -661,8 +661,8 @@ namespace netgen
 	    if(os1.Size()>1) {
 	      throw NgException("SurfaceElement identified with more than one other??");
 	    }
-	    const Element2d & sel2 = (*this)[sei];
-	    auto points2 = sel2.PNums();
+	    // const Element2d & sel2 = (*this)[sei];
+	    // auto points2 = sel2.PNums();
 	    has_ided_sels = true;
 	    ided_sel[sei] = os1[0];
 	    ided_sel[os1[0]] = sei;
@@ -937,13 +937,13 @@ namespace netgen
     self.segments = Array<Segment>(0);
     self.pointelements = Array<Element0d>(0);
     self.lockedpoints = Array<PointIndex>(0);
+    /*
     auto cleanup_ptr = [](auto & ptr) {
       if (ptr != nullptr) {
 	delete ptr;
 	ptr = nullptr;
       }
     };
-    /*
     cleanup_ptr(self.boundaryedges);
     cleanup_ptr(self.segmentht);
     cleanup_ptr(self.surfelementht);
@@ -991,7 +991,7 @@ namespace netgen
 
     NgMPI_Comm comm = GetCommunicator();
     int id = comm.Rank();
-    int ntasks = comm.Size();
+    // int ntasks = comm.Size();
     
     int dim;
     comm.Bcast(dim);

@@ -319,7 +319,7 @@ namespace netgen
 	  {
 	    topology.GetElementFaces (el, faces);
 	    topology.GetElementEdges (el, edges);
-	    const Element & volel = mesh.VolumeElement (el);
+	    // const Element & volel = mesh.VolumeElement (el);
 
 	    // NgArray<int> & sendarray = *sendarrays[volel.GetPartition()];
             NgArray<int> & sendarray = *sendarrays[mesh.vol_partition[el-1]];
@@ -333,7 +333,7 @@ namespace netgen
 	for (int el = 1; el <= mesh.GetNSE(); el++)
 	  {
 	    topology.GetSurfaceElementEdges (el, edges);
-	    const Element2d & surfel = mesh.SurfaceElement (el);
+	    // const Element2d & surfel = mesh.SurfaceElement (el);
 	    // NgArray<int> & sendarray = *sendarrays[surfel.GetPartition()];
             NgArray<int> & sendarray = *sendarrays[mesh.surf_partition[el-1]];
 
@@ -409,7 +409,7 @@ namespace netgen
       PrintMessage (1, "update parallel topology");
     
     
-    const MeshTopology & topology = mesh.GetTopology();
+    // const MeshTopology & topology = mesh.GetTopology();
 
     Array<int> cnt_send(ntasks);
 
@@ -542,7 +542,7 @@ namespace netgen
 
     // static int timerv = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex vertices");
     static int timere = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex edges");
-    static int timerf = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex faces");
+    // static int timerf = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex faces");
 
     
     NgProfiler::StartTimer (timere);

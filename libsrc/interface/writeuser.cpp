@@ -830,12 +830,12 @@ void WriteEdgeElementFormat (const Mesh & mesh,
       auto eledges = top->GetEdges(ElementIndex(i-1));
       outfile << endl << "      ";
       outfile.width(8);
-      outfile << edges.Size();
-      for (j=1; j <= edges.Size(); j++)
+      outfile << eledges.Size();
+      for (j=1; j <= eledges.Size(); j++)
 	{
 	  outfile << " ";
 	  outfile.width(8);
-	  outfile << edges[j-1]+1;
+	  outfile << eledges[j-1]+1;
 	}
       outfile << "\n";
 

@@ -224,7 +224,7 @@ double MeshOptimize3d :: CombineImproveEdge (Mesh & mesh,
       for (auto ei : has_one_point)
       {
           Element elem = mesh[ei];
-          int l;
+          // int l;
           for (int l = 0; l < 4; l++)
               if (elem[l] == pi1)
               {
@@ -392,7 +392,7 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 double MeshOptimize3d :: SplitImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, Table<ElementIndex,PointIndex> & elementsonnode, Array<double> &elerrs, NgArray<INDEX_3> &locfaces, double badmax, PointIndex pi1, PointIndex pi2, PointIndex ptmp, bool check_only)
 {
   double d_badness = 0.0;
-  int cnt = 0;
+  // int cnt = 0;
 
   ArrayMem<ElementIndex, 20> hasbothpoints;
 
@@ -526,7 +526,7 @@ double MeshOptimize3d :: SplitImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, Table
 
   if (d_badness<0.0)
     {
-      cnt++;
+      // cnt++;
 
       PointIndex pinew = mesh.AddPoint (pnew);
 
@@ -562,7 +562,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
   static Timer topt("Optimize");
   static Timer tsearch("Search");
 
-  int np = mesh.GetNP();
+  // int np = mesh.GetNP();
   int ne = mesh.GetNE();
   double bad = 0.0;
   double badmax = 0.0;
@@ -646,7 +646,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
       bad = mesh.CalcTotalBad (mp);
       (*testout) << "Total badness = " << bad << endl;
 
-      int cntill = 0;
+      [[maybe_unused]] int cntill = 0;
       ne = mesh.GetNE();
       for (ElementIndex ei = 0; ei < ne; ei++)
         if (!mesh.LegalTet (mesh[ei]))
@@ -1247,7 +1247,7 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
 
           for (int k = bestl+1; k <= nsuround + bestl - 2; k++)
             {
-              int k1;
+              // int k1;
 
               hel[0] = suroundpts[bestl];
               hel[1] = suroundpts[k % nsuround];
@@ -1297,8 +1297,8 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 
   int cnt = 0;
 
-  int np = mesh.GetNP();
-  int ne = mesh.GetNE();
+  // int np = mesh.GetNP();
+  // int ne = mesh.GetNE();
 
   mesh.BuildBoundaryEdges(false);
   BitArray free_points(mesh.GetNP()+PointIndex::BASE);
@@ -1449,7 +1449,7 @@ void MeshOptimize3d :: SwapImproveSurface (Mesh & mesh, OPTIMIZEGOAL goal,
     }
 
 
-  PointIndex pi1, pi2, pi3, pi4, pi5, pi6;
+  PointIndex pi1, pi2; // , pi3, pi4, pi5, pi6;
   PointIndex pi1other, pi2other;
   int cnt = 0;
 
@@ -2466,7 +2466,7 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
   mesh.BuildBoundaryEdges(false);
 
   int cnt = 0;
-  double bad1, bad2;
+  // double bad1, bad2;
 
   int np = mesh.GetNP();
   int ne = mesh.GetNE();
@@ -2478,7 +2478,7 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
   PrintMessage (3, "SwapImprove2 ");
   (*testout) << "\n" << "Start SwapImprove2" << "\n";
 
-  bad1 = mesh.CalcTotalBad (mp);
+  double bad1 = mesh.CalcTotalBad (mp);
   (*testout) << "Total badness = " << bad1 << endl;
 
   // find elements on node

@@ -513,7 +513,7 @@ namespace netgen
 
     tdivedgesections.Stop();
 
-    auto n = hvalue.Size()-1;
+    // auto n = hvalue.Size()-1;
     int nsubedges = max2(1, int(floor(hvalue.Last()+0.5)));
     points.SetSize(nsubedges-1);
     params.SetSize(nsubedges+1);
@@ -590,7 +590,7 @@ namespace netgen
                                 ident.name,
                                 ident.type);
 
-    size_t segnr = 0;
+    // size_t segnr = 0;
     auto nedges = edges.Size();
     Array<Array<PointIndex>> all_pnums(nedges);
     Array<Array<double>> all_params(nedges);
@@ -644,7 +644,7 @@ namespace netgen
         {
             auto nr_primary = edge->primary->nr;
             auto & pnums_primary = all_pnums[nr_primary];
-            auto & params_primary = all_params[nr_primary];
+            // auto & params_primary = all_params[nr_primary];
             auto trafo = edge->primary_to_me;
 
             auto np = pnums_primary.Size();
@@ -707,7 +707,7 @@ namespace netgen
 
         for(auto i : Range(pnums.Size()-1))
         {
-            segnr++;
+          // segnr++;
             Segment seg;
             seg[0] = pnums[i];
             seg[1] = pnums[i+1];
@@ -866,7 +866,7 @@ namespace netgen
                 {
                     auto edgenr = s.edgenr-1;
                     auto & edge = *edges[edgenr];
-                    ShapeIdentification *edge_mapping;
+                    // ShapeIdentification *edge_mapping;
 
                     // have edgenr first time, search for closesurface identification
 

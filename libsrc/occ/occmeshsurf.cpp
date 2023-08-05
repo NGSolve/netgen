@@ -37,7 +37,7 @@ namespace netgen
 
         double setu=geominfo.u,setv=geominfo.v;
 	double ustep = 0.01*(umax-umin);
-	double vstep = 0.01*(vmax-vmin);
+	// double vstep = 0.01*(vmax-vmin);
 
 	n=0;
 

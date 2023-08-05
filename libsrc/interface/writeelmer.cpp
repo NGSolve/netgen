@@ -57,7 +57,7 @@ void WriteElmerFormat (const Mesh &mesh,
   int ne = mesh.GetNE();
   int nse = mesh.GetNSE();
   int i, j;
-  char str[200];
+  // char str[200];
   
   int inverttets = mparam.inverttets;
   int invertsurf = mparam.inverttrigs;

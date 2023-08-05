@@ -199,9 +199,9 @@ namespace netgen
     int ez = int((maxp.Z()-minext.Z())/elemsize.Z()+1.);
     int ix,iy,iz,i,k;
 
-    int cnt1 = 0;  // test, how efficient hashtable is
-    int cnt2 = 0;
-    int cnt3 = 0;
+    [[maybe_unused]] int cnt1 = 0;  // test, how efficient hashtable is
+    [[maybe_unused]] int cnt2 = 0;
+    [[maybe_unused]] int cnt3 = 0;
   
     for (ix = sx; ix <= ex; ix++)
       {

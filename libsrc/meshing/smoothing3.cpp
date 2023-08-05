@@ -1001,7 +1001,6 @@ void JacobianPointFunction :: SetPointIndex (PointIndex aactpind)
 
 double JacobianPointFunction :: Func (const Vector & v) const
 {
-  int j;
   double badness = 0;
 
   Point<3> hp = points[actpind];
@@ -1027,7 +1026,7 @@ double JacobianPointFunction :: Func (const Vector & v) const
 double JacobianPointFunction :: 
 FuncGrad (const Vector & x, Vector & g) const
 {
-  int j, k;
+  int k;
   int lpi;
   double badness = 0;//, hbad;
 
@@ -1094,7 +1093,7 @@ FuncGrad (const Vector & x, Vector & g) const
 double JacobianPointFunction :: 
 FuncDeriv (const Vector & x, const Vector & dir, double & deriv) const
 {
-  int j, k;
+  int k;
   int lpi;
   double badness = 0;
 
@@ -1338,7 +1337,7 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
   (*testout) << "Improve Mesh" << "\n";
   PrintMessage (3, "ImproveMesh");
 
-  int np = GetNP();
+  // int np = GetNP();
   int ne = GetNE();
 
   PointFunction pf_glob(*this, mp);

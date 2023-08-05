@@ -670,7 +670,7 @@ IntersectionType Intersect( Spline p, Spline s, double &alpha, double &beta)
 
   if(have_intersection)
   {
-    for(auto i : IntRange(10))
+    for([[maybe_unused]] auto i : IntRange(10))
       NewtonIntersect(p, s, alpha, beta);
     return ClassifyNonOverlappingIntersection( alpha, beta );
   }
@@ -1733,7 +1733,7 @@ Solid2d ClipSolids ( Solid2d && s1, Solid2d && s2, char op)
 
   res.polys.Append(std::move(res_polys));
 
-  return std::move(res);
+  return res;
 }
 
 Vertex* Loop :: getNonIntersectionVertex()

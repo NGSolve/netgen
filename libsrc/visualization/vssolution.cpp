@@ -4736,7 +4736,7 @@ namespace netgen
   void VisualSceneSolution :: MouseDblClick (int px, int py)
   {
     auto mesh = GetMesh();
-    auto dim = mesh->GetDimension();
+    // auto dim = mesh->GetDimension();
     marker = nullopt;
 
     auto formatComplex = [](double real, double imag)
@@ -4817,7 +4817,7 @@ namespace netgen
           // marker = p;
 
           bool have_scal_func = scalfunction!=-1 && soldata[scalfunction]->draw_volume;
-          bool have_vec_func = vecfunction!=-1 && soldata[vecfunction]->draw_volume;
+          // bool have_vec_func = vecfunction!=-1 && soldata[vecfunction]->draw_volume;
 
           if(have_scal_func)
           {

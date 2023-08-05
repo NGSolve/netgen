@@ -353,7 +353,7 @@ STLGeometry *  STLTopology ::Load (istream & ist, bool surface)
        if(std::isblank(buf[istart])==0)
             break;
 
-    for (auto i : Range(buflen))
+    for ([[maybe_unused]] auto i : Range(buflen))
         ist.unget();
 
     // does not start with "solid" -> binary file
@@ -374,7 +374,7 @@ STLGeometry *  STLTopology ::Load (istream & ist, bool surface)
   Point<3> pts[3];
   Vec<3> normal;
 
-  int cntface = 0;
+  [[maybe_unused]] int cntface = 0;
   int vertex = 0;
   bool badnormals = false;
   ist >> buf; // skip first line

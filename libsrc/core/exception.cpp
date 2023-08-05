@@ -122,7 +122,7 @@ namespace ngcore
       auto libname = s.substr(0, brace_open_pos);
       auto funcname = s.substr(brace_open_pos+1, plus_pos - brace_open_pos - 1);
       auto offset = std::strtoul(s.substr(plus_pos+1, brace_close_pos - plus_pos - 1).c_str(), 0, 16);
-      auto position = std::strtoul(s.substr(bracket_open_pos+1, bracket_close_pos - bracket_open_pos - 1).c_str(), 0, 16);
+      // auto position = std::strtoul(s.substr(bracket_open_pos+1, bracket_close_pos - bracket_open_pos - 1).c_str(), 0, 16);
       std::stringstream out;
 
       if(!funcname.empty())
@@ -181,7 +181,7 @@ namespace ngcore
     for (i = 1; i < bt_size-1; i++)
       {
         dladdr(bt[i], &info);
-        size_t len = strlen(bt_syms[i]);
+        // size_t len = strlen(bt_syms[i]);
         result << '#'<< i << '\t' << detail::TranslateBacktrace( bt_syms[i], info.dli_fname );
       }
     free(bt_syms);

@@ -15,10 +15,10 @@ int main (int argc, char ** argv)
       exit(1);
     }
   
-
-  char line[maxlen], infile[maxlen], outfile[maxlen];\
+  
+  char line[maxlen]; // , infile[maxlen], outfile[maxlen];   
   char ch;
-  int i, j;
+  int i;
 
   /*
   cout << "infile: ";

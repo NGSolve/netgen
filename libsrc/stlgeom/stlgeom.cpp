@@ -536,7 +536,7 @@ void STLGeometry :: SmoothNormals(const STLParameters& stlparam)
 		    area2 += area;
 		}
 	      
-	    }
+                }
 
 	  (*testout) << "area1 = " << area1 << " area2 = " << area2 << endl;
 	  if (area1 < 0.1 * area2)
@@ -2630,10 +2630,10 @@ void STLGeometry :: FindEdgesFromAngles(const STLParameters& stlparam)
   if (stlparam.contyangle < stlparam.yangle)
     {
       int changed = 1;
-      int its = 0;
+      [[maybe_unused]] int its = 0;
       while (changed && stlparam.contyangle < stlparam.yangle)
 	{
-	  its++;
+          its++;
 	  //(*mycout) << "." << flush;
 	  changed = 0;
 	  for (int i = 1; i <= edgedata->Size(); i++)
@@ -3659,7 +3659,7 @@ void STLGeometry :: WriteChartToFile( ChartId chartnumber, filesystem::path file
         pts[k] = GetPoint(trig[k]);
         box.Add(pts[k]);
       }
-      Vec3d normal = Cross( pts[1]-pts[0], pts[2]-pts[0] );
+      // Vec3d normal = Cross( pts[1]-pts[0], pts[2]-pts[0] );
       readtrigs.Append(STLReadTriangle(pts, trig.Normal()));
     }
     auto dist = box.PMax() - box.PMin();

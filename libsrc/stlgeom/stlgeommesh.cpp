@@ -536,11 +536,11 @@ int STLGeometry :: Project(Point<3> & p3d) const
 {
   Point<3> p, pf;
 
-  int j;
+  // int j;
   int fi = 0;
-  int cnt = 0;
+  // int cnt = 0;
   int different = 0;
-  const double lamtol = 1e-6;
+  // const double lamtol = 1e-6;
 
   const STLChart& chart = GetChart(meshchart);
 

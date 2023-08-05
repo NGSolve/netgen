@@ -162,8 +162,9 @@ namespace netgen
             { // triangle
               INDEX_4 face(el[elfaces[j][0]], el[elfaces[j][1]], 
                            el[elfaces[j][2]], 0);
-              
-              int facedir = 0;
+
+
+              [[maybe_unused]] int facedir = 0;
               if (face.I1() > face.I2())
                 { swap (face.I1(), face.I2()); facedir += 1; }
               if (face.I2() > face.I3())
@@ -753,7 +754,7 @@ namespace netgen
               {
                 INT<2> paedge1, paedge2, paedge3;
                 int orient1 = 0, orient2 = 0, orient3=0;
-                int orient_inner = 0;
+                // int orient_inner = 0;
                 paedge1 = INT<2> (pa0[0], pa0[1]);
                 paedge2 = INT<2> (pa1[0], pa1[1]);
                 // find common vertex and the third pa edge

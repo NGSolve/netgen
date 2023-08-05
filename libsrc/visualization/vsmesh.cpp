@@ -873,7 +873,7 @@ namespace netgen
     int n = data.Size()/4;
     colors.width = min2(n, 1024);
     colors.height = (n+colors.width-1)/colors.width;
-    for(auto i: Range(n, colors.width*colors.height))
+    for([[maybe_unused]] auto i: Range(n, colors.width*colors.height))
       data.Append({0.0f, 0.0f, 0.0f, 0.0f});
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, colors.width, colors.height, 0, GL_RGBA, GL_FLOAT, data.Data());
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -986,8 +986,8 @@ namespace netgen
       glBindTexture(GL_TEXTURE_2D, colors.texture);
     }
 
-    GLfloat matcol[] = { 0, 1, 0, 1 };
-    GLfloat matcolsel[] = { 1, 0, 0, 1 };
+    // GLfloat matcol[] = { 0, 1, 0, 1 };
+    // GLfloat matcolsel[] = { 1, 0, 0, 1 };
 
     GLint rendermode;
     glGetIntegerv (GL_RENDER_MODE, &rendermode);
@@ -1021,7 +1021,7 @@ namespace netgen
 	    SurfaceElementIndex sei = seia[hi];
             const Element2d & el = (*mesh)[sei];
 
-            bool drawel = (!el.IsDeleted() & el.IsVisible());
+            bool drawel = (!el.IsDeleted() && el.IsVisible());
 
 #ifdef STLGEOM
             if (checkvicinity)
@@ -1364,7 +1364,7 @@ namespace netgen
       {
 	const Element2d & el = (*mesh)[sei];
 
-	bool drawel = (!el.IsDeleted() & el.IsVisible());
+	bool drawel = (!el.IsDeleted() && el.IsVisible());
 
 #ifdef STLGEOM
 	if (checkvicinity)
@@ -3135,7 +3135,7 @@ namespace netgen
     }
 
     glGetIntegerv (GL_VIEWPORT, select.viewport);
-    GLenum err;
+    // GLenum err;
     if(select.framebuffer == 0 || select.viewport[2] != select.width || select.viewport[3] != select.height)
     {
       select.width = select.viewport[2];

@@ -781,7 +781,7 @@ namespace netgen
     Point<2> p2d;
     faces[0]->CalcProj(p,p2d);
 
-    int intersections_before(0), intersections_after(0);
+    [[maybe_unused]] int intersections_before(0), intersections_after(0);
     double randomx = 7.42357;
     double randomy = 1.814756;
     double randomlen = sqrt(randomx*randomx+randomy*randomy);

@@ -602,7 +602,7 @@ namespace netgen
 
     auto elementsonnode = mesh.CreatePoint2SurfaceElementTable(faceindex);
 
-    int ntasks = ngcore::TaskManager::GetMaxThreads();
+    // int ntasks = ngcore::TaskManager::GetMaxThreads();
     Array<std::tuple<PointIndex, PointIndex>> edges;
 
     BuildEdgeList( mesh, elementsonnode, edges );

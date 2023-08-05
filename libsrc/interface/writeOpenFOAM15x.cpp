@@ -600,7 +600,7 @@ namespace netgen
    void WriteOpenFOAM15xFormat (const Mesh & mesh, const filesystem::path & dirname, const bool compressed)
    {
       bool error = false;
-      char casefiles[256];
+      // char casefiles[256];
 
       // Make sure that the mesh data has been updated
       const_cast<Mesh&> (mesh).Compress();

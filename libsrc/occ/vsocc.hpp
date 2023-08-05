@@ -14,7 +14,7 @@ namespace netgen
   {
     NgArray<int> trilists;
     NgArray<int> linelists;
-    int selsurf;
+    // int selsurf;
     class OCCGeometry * occgeometry;
   public:
     VisualSceneOCCGeometry ();

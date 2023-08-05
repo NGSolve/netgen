@@ -412,7 +412,7 @@ namespace ngcore
           }
 
       }
-    catch (Exception e)
+    catch (Exception & e)
       {
         {
           lock_guard<mutex> guard(copyex_mutex);
@@ -548,7 +548,7 @@ namespace ngcore
               }
 
           }
-        catch (Exception e)
+        catch (Exception & e)
           {
             {
               // cout << "got exception in TM" << endl; 

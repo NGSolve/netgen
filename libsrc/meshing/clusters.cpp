@@ -41,7 +41,7 @@ namespace netgen
     ned = top.GetNEdges();
     nfa = top.GetNFaces();
     ne = mesh.GetNE();
-    int nse = mesh.GetNSE();
+    // int nse = mesh.GetNSE();
 
     cluster_reps.SetSize (nv+ned+nfa+ne);
     cluster_reps = -1;
@@ -218,13 +218,13 @@ namespace netgen
     static const int tet_cluster34[] =
       { 2, 3, 1, 1, 4, 5, 1, 6, 4, 5, 5, 4, 7, 7, 7 };
 
-    int cnt = 0;
+    // int cnt = 0;
 
     do
       {
         static Timer t("update cluster, identify");
         RegionTimer rtr(t);
-	cnt++;
+	// cnt++;
 	changed = 0;
       
 	for (int i = 1; i <= ne; i++)

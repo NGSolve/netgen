@@ -340,7 +340,7 @@ namespace netgen
 		break;
 	      }
 
-            double dummyt;
+            double dummyt{0};
 	    stepper.StartNextValCalc(points.Last(),dummyt,h,true);
 	    stepper.FeedNextF(v);
             bool drawelem = false;

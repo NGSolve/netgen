@@ -357,12 +357,14 @@ void AdFront3 :: RebuildInternalTables ()
       faces.Elem(i).cluster =
 	points[faces.Get(i).Face().PNum(1)].cluster;
     }
+  /*
   int cntcl = 0;
   for (int i = PointIndex::BASE; 
        i < np+PointIndex::BASE; i++)
     if (usecl[i])
       cntcl++;
-
+  */
+  
   NgArray<double, PointIndex::BASE> clvol (np);
   clvol = 0.0;
 

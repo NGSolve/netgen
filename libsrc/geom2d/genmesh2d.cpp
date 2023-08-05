@@ -81,7 +81,7 @@ namespace netgen
 
     for (int j = 1; j <= n && i < nel; j++)
       {
-	double t = (j-0.5)*dt;
+	// double t = (j-0.5)*dt;
 	double fun = hi[j-1];
 
 	f = oldf + dt / fun;
@@ -92,7 +92,7 @@ namespace netgen
 	    i++;
 	  }
 	oldf = f;
-	t += dt;
+	// t += dt;
       }
     points.Append (len);
   }
@@ -511,7 +511,7 @@ namespace netgen
     t_h.Stop();
 
     int bnp = mesh->GetNP(); // boundary points
-    auto BndPntRange = mesh->Points().Range();
+    // auto BndPntRange = mesh->Points().Range();
 
     int hquad = mp.quad;
 

@@ -120,7 +120,7 @@ namespace netgen
     Array<Vec<3>> tangs(2);
     Vec<3> diff, f_uu, f_vv, f_uv;
     Vec<2> r, dx;
-    double norm_r, det, energy=0.0, new_energy=0.0, alpha=2.0,u=0.0,v=0.0,maxerr=1e-16;
+    double norm_r, energy=0.0, new_energy=0.0, alpha=2.0,u=0.0,v=0.0,maxerr=1e-16;
     Mat<2,2> mat, inv;
     int num=0, maxit=25;
     double damping=0.5;

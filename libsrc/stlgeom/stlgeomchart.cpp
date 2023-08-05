@@ -749,7 +749,7 @@ void STLGeometry :: GetDirtyChartTrigs(int chartnum, STLChart& chart,
   dirtytrigs.SetSize(0);
 
 
-  int cnt = 0;
+  // int cnt = 0;
 
   for (int j = 1; j <= chart.GetNChartT(); j++)
     {
@@ -766,13 +766,13 @@ void STLGeometry :: GetDirtyChartTrigs(int chartnum, STLChart& chart,
 	      if (!IsEdge(np1,np2))
 		{
 		  dirtytrigs.Append(j); //local numbers!!!
-		  cnt++;
+		  // cnt++;
 		  break; //only once per trig!!!
 		}
 	    }
 	}
     }
-  cnt = 0;
+  // cnt = 0;
 
   STLPointId ap1, ap2, pn;
   Array<STLTrigId> trigsaroundp;
@@ -832,7 +832,7 @@ void STLGeometry :: GetDirtyChartTrigs(int chartnum, STLChart& chart,
               if (problem && !dirtytrigs.Contains(j))
 		{
 		  dirtytrigs.Append(j);
-		  cnt++;
+		  // cnt++;
 		  break; //only once per triangle
 		}
 	    }

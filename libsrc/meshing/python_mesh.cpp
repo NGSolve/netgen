@@ -1058,13 +1058,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             
             self.Points().SetAllocSize(self.Points().Size()+info.shape[0]);
             if (info.shape[1]==2)
-              for (auto i : Range(info.shape[0]))
+              for ([[maybe_unused]] auto i : Range(info.shape[0]))
                 {
                   self.AddPoint (Point<3>(ptr[0], ptr[1], 0));
                   ptr += 2;
                 }
             if (info.shape[1]==3)
-              for (auto i : Range(info.shape[0]))
+              for ([[maybe_unused]] auto i : Range(info.shape[0]))
                 {
                   self.AddPoint (Point<3>(ptr[0], ptr[1], ptr[2]));
                   ptr += 3;
@@ -1089,10 +1089,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             int * ptr = static_cast<int*> (info.ptr);
             if (dim == 1)
               {
-                ELEMENT_TYPE type;
+                // ELEMENT_TYPE type;
                 int np = info.shape[1];
                 self.LineSegments().SetAllocSize(self.LineSegments().Size()+info.shape[0]);                
-                for (auto i : Range(info.shape[0]))
+                for ([[maybe_unused]] auto i : Range(info.shape[0]))
                   {
                     Segment el;
                     for (int j = 0; j < np; j++)
@@ -1116,7 +1116,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                     throw Exception("unsupported 2D element with "+ToString(np)+" points");
                   }
                 self.SurfaceElements().SetAllocSize(self.SurfaceElements().Size()+info.shape[0]);                
-                for (auto i : Range(info.shape[0]))
+                for ([[maybe_unused]] auto i : Range(info.shape[0]))
                   {
                     Element2d el(type);
                     for (int j = 0; j < np; j++)
@@ -1142,7 +1142,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                     throw Exception("unsupported 3D element with "+ToString(np)+" points");
                   }
                 self.VolumeElements().SetAllocSize(self.VolumeElements().Size()+info.shape[0]);
-                for (auto i : Range(info.shape[0]))
+                for ([[maybe_unused]] auto i : Range(info.shape[0]))
                   {
                     Element el(type);
                     for (int j = 0; j < np;j ++)
@@ -1350,7 +1350,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             
             size_t npts = ref_info.shape[0];
             size_t dim = ref_info.shape[1];
-            size_t nel = phys_info.shape[0];
+            // size_t nel = phys_info.shape[0];
             size_t dim_phys = phys_info.shape[2];            
 
             size_t stride_refpts = ref_info.strides[0]/sizeof(double);

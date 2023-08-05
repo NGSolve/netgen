@@ -393,9 +393,9 @@ namespace netgen
 	    glBitmap (7, 7, 3, 3, 0, 0, &knoedel[0]);
 	  }
         */
-        for (const Point3d & p : mesh->Points())
+        for (Point<3> p : mesh->Points())
           {
-	    glRasterPos3d (p.X(), p.Y(), p.Z());
+	    glRasterPos3d (p(0), p(1), p(2));
 	    glBitmap (7, 7, 3, 3, 0, 0, &knoedel[0]);
           }
       }

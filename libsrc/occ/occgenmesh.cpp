@@ -249,7 +249,7 @@ namespace netgen
     multithread.percent = 100 * k / (mesh.GetNFD() + VSMALL);
     geom.facemeshstatus[k-1] = -1;
 
-    FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
+    // FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
     auto face = TopoDS::Face(geom.fmap(k));
     const auto& occface = dynamic_cast<const OCCFace&>(geom.GetFace(k-1));
 
@@ -342,7 +342,7 @@ namespace netgen
         Array<PointGeomInfo> gis(2*segments.Size());
         gis.SetSize (0);
         glob2loc = 0;
-        int cntpt = 0;
+        // int cntpt = 0;
 
         Box<2> uv_box(Box<2>::EMPTY_BOX);
         for(auto & seg : segments)
@@ -735,7 +735,7 @@ namespace netgen
 
                 gp_Vec d0 = prop.D1().Normalized();
                 double s_start = s0;
-                int count = 0;
+                // int count = 0;
                 for (int j = 1; j <= sections; j++)
                   {
                     double s = s0 + (s1-s0)*(double)j/(double)sections;
@@ -744,7 +744,7 @@ namespace netgen
                     double cosalpha = fabs(d0*d1);
                     if ((j == sections) || (cosalpha < cos(10.0/180.0*M_PI)))
                       {
-                        count++;
+                        // count++;
                         gp_Pnt p0 = c->Value (s_start);
                         gp_Pnt p1 = c->Value (s);
                         lines[nlines].p0 = Point<3> (p0.X(), p0.Y(), p0.Z());

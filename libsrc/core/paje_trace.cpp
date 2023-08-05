@@ -199,7 +199,7 @@ namespace ngcore
             { }
 
           PajeEvent( int aevent_type, double atime, int atype, int acontainer, std::string as_value, int aid = 0 )
-            : time(atime), event_type(aevent_type), type(atype), container(acontainer), id(aid), s_value(as_value), value_is_alias(false), value_is_int(false)
+            : time(atime), event_type(aevent_type), type(atype), container(acontainer), s_value(as_value), id(aid), value_is_alias(false), value_is_int(false)
             { }
 
           PajeEvent( int aevent_type, double atime, int atype, int acontainer, int avalue, int astart_container, int akey )

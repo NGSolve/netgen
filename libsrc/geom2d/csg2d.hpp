@@ -602,7 +602,7 @@ struct Loop
 
     size_t cnt = 0;
 
-    for(auto v : Vertices(ALL))
+    for([[maybe_unused]] auto v : Vertices(ALL))
       cnt++;
 
     return cnt;

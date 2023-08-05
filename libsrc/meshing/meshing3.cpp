@@ -219,7 +219,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   
   float minerr;
   int hasfound;
-  double tetvol;
+  [[maybe_unused]] double tetvol;
   // int giveup = 0;
 
   

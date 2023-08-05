@@ -950,7 +950,7 @@ namespace netgen
   //  glEnable (GL_LIGHTING);
 
   double shine = vispar.shininess;
-  double transp = vispar.transp;
+  // double transp = vispar.transp;
 
   glMaterialf (GL_FRONT_AND_BACK, GL_SHININESS, shine);
   glLogicOp (GL_COPY);

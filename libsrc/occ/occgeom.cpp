@@ -1335,7 +1335,7 @@ namespace netgen
     const auto& occface = dynamic_cast<const OCCFace&>(face);
     for(auto& vert : GetVertices(occface.Shape()))
       verts.Append(&GetVertex(vert));
-    return std::move(verts);
+    return verts;
   }
 
 
@@ -2243,7 +2243,7 @@ namespace netgen
           auto & identifications = OCCGeometry::GetIdentifications(shape);
           if(identifications.size()==0)
               return;
-          auto n = identifications.size();
+          // auto n = identifications.size();
           Array<Handle(StepRepr_RepresentationItem)> ident_items;
           ident_items.Append(item);
 

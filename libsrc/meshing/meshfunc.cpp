@@ -54,7 +54,7 @@ namespace netgen
 
       Array<Array<PointIndex, PointIndex>> ipmap;
       ipmap.SetSize(num_domains);
-      auto dim = mesh.GetDimension();
+      // auto dim = mesh.GetDimension();
       auto num_points = mesh.GetNP();
       auto num_facedescriptors = mesh.GetNFD();
 
@@ -635,7 +635,7 @@ namespace netgen
     const char* savetask = multithread.task;
     multithread.task = "Optimize Volume";
     
-    int i;
+    // int i;
 
     PrintMessage (1, "Volume Optimization");
 

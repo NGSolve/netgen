@@ -1180,7 +1180,7 @@ namespace netgen
         throw NgException ("mesh file not found");
       }
 
-    int rank = GetCommunicator().Rank();
+    // int rank = GetCommunicator().Rank();
     int ntasks = GetCommunicator().Size();
     
     char str[100];
@@ -1215,7 +1215,7 @@ namespace netgen
           {
             int nfd;
             infile >> nfd;
-            for(auto i : Range(nfd))
+            for([[maybe_unused]] auto i : Range(nfd))
             {
                 int surfnr, domin, domout, tlosurf, bcprop;
                 infile >> surfnr >> domin >> domout >> tlosurf >> bcprop;
@@ -1439,7 +1439,7 @@ namespace netgen
         if (strcmp (str, "materials") == 0)
           {
             infile >> n;
-            for ( auto i : Range(n) )
+            for ([[maybe_unused]] auto i : Range(n) )
               {
                 int nr;
                 string mat;
@@ -1615,7 +1615,7 @@ namespace netgen
           {
             int cnt_facedesc = GetNFD();
             infile >> n;
-            int index = 1;
+            // int index = 1;
             if(n == cnt_facedesc)
               {
                 for(int index = 1; index <= n; index++)
@@ -1676,7 +1676,7 @@ namespace netgen
         if (comm.Rank() == 0)
           archive & dimension;
 
-        auto rank = comm.Rank();
+        // auto rank = comm.Rank();
         
         auto & partop = GetParallelTopology();
         
@@ -1833,7 +1833,7 @@ namespace netgen
     
     if (archive.Input())
       {
-	int rank = GetCommunicator().Rank();
+	// int rank = GetCommunicator().Rank();
 	int ntasks = GetCommunicator().Size();
 	
         RebuildSurfaceElementLists();
@@ -2391,8 +2391,8 @@ namespace netgen
         cerr << "Mesh::FixPoints: sizes don't fit" << endl;
         return;
       }
-    int np = GetNP();
     /*
+    int np = GetNP();
     for (int i = 1; i <= np; i++)
       if (fixpoints.Test(i))
         {
@@ -2412,7 +2412,7 @@ namespace netgen
     static Timer t_pointloop("Mesh::FindOpenElements - pointloop"); 
 
     int np = GetNP();
-    int ne = GetNE();
+    // int ne = GetNE();
     int nse = GetNSE();
     
     t_table.Start();
@@ -2957,7 +2957,7 @@ namespace netgen
             for (int j = 1; j <= el.GetNP(); j++)
               {
                 INDEX_3 seg (el.PNumMod(j), el.PNumMod(j+1), el.GetIndex());
-                int data;
+                // int data;
 
                 if (seg.I1() < PointIndex::BASE || seg.I2() < PointIndex::BASE)
                   cerr << "seg = " << seg << endl;
@@ -5710,7 +5710,7 @@ namespace netgen
                 
                 double delta=1;
                 
-                bool retval;
+                // bool retval;
                 
                 int i = 0;
                 
@@ -7413,7 +7413,7 @@ namespace netgen
       auto l = v.Length();
       if(l<eps) return true;
 
-      auto ret = fabs(v*n_plane)/l;
+      // auto ret = fabs(v*n_plane)/l;
       return fabs(v*n_plane) < eps;
     };
 
