@@ -25,7 +25,7 @@ namespace netgen
 }
 #include "parthreads.hpp"
 // #include "moveablemem.hpp"
-#include "dynamicmem.hpp"
+// #include "dynamicmem.hpp"
 
 #include "template.hpp"
 #include "ngarray.hpp"

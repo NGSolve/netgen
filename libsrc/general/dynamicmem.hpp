@@ -1,3 +1,6 @@
+not needed anymore ? 
+
+
 #ifndef FILE_DYNAMICMEM
 #define FILE_DYNAMICMEM
 

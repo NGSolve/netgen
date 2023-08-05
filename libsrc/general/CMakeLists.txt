@@ -1,5 +1,4 @@
 target_sources(nglib PRIVATE
-    dynamicmem.cpp
     gzstream.cpp
     hashtabl.cpp
     mystring.cpp
@@ -13,12 +12,15 @@ target_sources(nglib PRIVATE
     table.cpp
 )
 
+# dynamicmem.cpp
+
 install(FILES
   ngarray.hpp autodiff.hpp autoptr.hpp ngbitarray.hpp
-  dynamicmem.hpp hashtabl.hpp myadt.hpp
+  hashtabl.hpp myadt.hpp
   mystring.hpp netgenout.hpp ngpython.hpp
   optmem.hpp parthreads.hpp seti.hpp sort.hpp
   spbita2d.hpp stack.hpp table.hpp template.hpp
   gzstream.h
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/general COMPONENT netgen_devel
 )
+# dynamicmem.hpp 
