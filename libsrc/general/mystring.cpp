@@ -155,7 +155,7 @@ MyStr::MyStr(long l)
 MyStr::MyStr(size_t l)
 {
   char buffer[32];
-  snprintf(buffer, 32, "%ld", l);
+  snprintf(buffer, 32, "%zu", l);
   length = unsigned(strlen(buffer));
   if (length > SHORTLEN)
     str = new char[length + 1];
