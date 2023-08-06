@@ -286,6 +286,15 @@ namespace ngcore
     return arr;
   }
 
+  template <typename T>
+  py::object makePyTuple (FlatArray<T> ar)
+  {
+    py::tuple res(ar.Size());
+    for (auto i : Range(ar))
+      res[i] = py::cast(ar[i]);
+    return res;
+  }
+
   template <typename T, typename TIND=typename FlatArray<T>::index_type>
   void ExportArray (py::module &m)
   {
