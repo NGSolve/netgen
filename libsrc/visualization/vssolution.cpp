@@ -801,7 +801,7 @@ namespace netgen
 
     if (mesh->GetTimeStamp() > surfellinetimestamp ||
         subdivision_timestamp > surfellinetimestamp ||
-        (deform && solutiontimestamp > surfellinetimestamp) || 
+        (solutiontimestamp > surfellinetimestamp) ||
         zoomall)
       {      
         DrawSurfaceElementLines();      
@@ -1090,7 +1090,7 @@ namespace netgen
 
             NgArray<ClipPlaneTrig> cpt;
             NgArray<ClipPlanePoint> pts;
-            GetClippingPlaneTrigs (cpt, pts);  
+            GetClippingPlaneTrigs (sol, cpt, pts);
             bool drawelem;
           
             glNormal3d (-clipplane[0], -clipplane[1], -clipplane[2]);
@@ -1342,21 +1342,8 @@ namespace netgen
       {
         const Element2d & el = (*mesh)[sei];
 
-        if (vispar.drawdomainsurf > 0)
-          {
-            if (mesh->GetDimension() == 3)
-              {
-                if (vispar.drawdomainsurf != mesh->GetFaceDescriptor(el.GetIndex()).DomainIn() &&
-                    vispar.drawdomainsurf != mesh->GetFaceDescriptor(el.GetIndex()).DomainOut())
-                  continue;
-              }
-            else
-              {
-                if (el.GetIndex() != vispar.drawdomainsurf) continue;
-              }
-          }
-
-
+        if(!SurfaceElementActive(sol, *mesh, el))
+          continue;
 
         if ( el.GetType() == QUAD || el.GetType() == QUAD6 || el.GetType() == QUAD8 )
           {
@@ -1526,20 +1513,8 @@ namespace netgen
         const Element2d & el = (*mesh)[sei];
 	// if (el.GetIndex() <= 1) continue;
 
-        if(vispar.drawdomainsurf > 0)
-	  {
-	    if (mesh->GetDimension() == 3)
-	      {
-		if (vispar.drawdomainsurf != mesh->GetFaceDescriptor(el.GetIndex()).DomainIn() &&
-		    vispar.drawdomainsurf != mesh->GetFaceDescriptor(el.GetIndex()).DomainOut())
-		  continue;
-	      }
-	    else
-	      {
-		if (el.GetIndex() != vispar.drawdomainsurf)
-		  continue;
-	      }
-	  }
+        if(!SurfaceElementActive(sol, *mesh, el))
+          continue;
         
         if ( el.GetType() == TRIG || el.GetType() == TRIG6 )
           {
@@ -1846,6 +1821,10 @@ namespace netgen
       {
         Element2d & el = (*mesh)[sei];
 
+        if(scalfunction != -1)
+          if(!SurfaceElementActive(soldata[scalfunction], *mesh, el))
+            continue;
+
         int nv = (el.GetType() == TRIG || el.GetType() == TRIG6) ? 3 : 4;
         for (int k = 0; k < nv; k++)
           {
@@ -1946,11 +1925,13 @@ namespace netgen
         // if(vispar.clipdomain > 0 && vispar.clipdomain != (*mesh)[ei].GetIndex()) continue;
         // if(vispar.donotclipdomain > 0 && vispar.donotclipdomain == (*mesh)[ei].GetIndex()) continue;
 
-        ELEMENT_TYPE type = (*mesh)[ei].GetType();
+        const Element & el = (*mesh)[ei];
+        if(!VolumeElementActive(sol, *mesh, el))
+          continue;
+
+        ELEMENT_TYPE type = el.GetType();
         if (type == HEX || type == PRISM || type == TET || type == PYRAMID)
           {
-            const Element & el = (*mesh)[ei];
-            
             int ii = 0;
             int cnt_valid = 0;
             
@@ -3948,7 +3929,8 @@ namespace netgen
 
 
 
-  void VisualSceneSolution :: GetClippingPlaneTrigs (NgArray<ClipPlaneTrig> & trigs,
+  void VisualSceneSolution :: GetClippingPlaneTrigs (SolData * sol,
+                                                     NgArray<ClipPlaneTrig> & trigs,
                                                      NgArray<ClipPlanePoint> & pts)
   {
     shared_ptr<Mesh> mesh = GetMesh();
@@ -4014,6 +3996,11 @@ namespace netgen
     for (ElementIndex ei = 0; ei < ne; ei++)
       {
         // NgProfiler::RegionTimer reg1a (timer1a);
+
+        const Element & el = (*mesh)[ei];
+        if(!VolumeElementActive(sol, *mesh, el))
+          continue;
+
         int first_point_of_element = pts.Size();
 
 	locgrid.SetSize(n3);
@@ -4023,8 +4010,6 @@ namespace netgen
         ELEMENT_TYPE type = (*mesh)[ei].GetType();
         if (type == HEX || type == PRISM || type == TET || type == TET10 || type == PYRAMID || type == PYRAMID13 || type == PRISM15 || type == HEX20)
           {
-            const Element & el = (*mesh)[ei];
-
             int ii = 0;
             int cnt_valid = 0;
 
@@ -4400,7 +4385,6 @@ namespace netgen
 
     NgArray<ClipPlaneTrig> trigs;
     NgArray<ClipPlanePoint> points;
-    GetClippingPlaneTrigs (trigs, points);
 	    
     glNormal3d (-clipplane[0], -clipplane[1], -clipplane[2]);
     glColor3d (1.0, 1.0, 1.0);
@@ -4412,6 +4396,7 @@ namespace netgen
     if (scalfunction != -1) 
       sol = soldata[scalfunction];
 
+    GetClippingPlaneTrigs (sol, trigs, points);
     if (sol -> draw_volume)
       {
 	glBegin (GL_TRIANGLES);
@@ -4722,7 +4707,40 @@ namespace netgen
   }
 
 
+  bool VisualSceneSolution ::
+  SurfaceElementActive(const SolData *data, const Mesh & mesh, const Element2d & el)
+  {
+    if(data == nullptr) return true;
+    bool is_active = data->draw_surface;
+    if (vispar.drawdomainsurf > 0)
+      {
+        if (mesh.GetDimension() == 3)
+          {
+            if (vispar.drawdomainsurf != mesh.GetFaceDescriptor(el.GetIndex()).DomainIn() &&
+                vispar.drawdomainsurf != mesh.GetFaceDescriptor(el.GetIndex()).DomainOut())
+              is_active = false;
+          }
+        else
+          {
+            if (el.GetIndex() != vispar.drawdomainsurf)
+              is_active = false;
+          }
+      }
 
+    if(data->draw_surfaces)
+      is_active = is_active && (*data->draw_surfaces)[el.GetIndex()-1];
+
+    return is_active;
+  }
+
+  bool VisualSceneSolution ::
+  VolumeElementActive(const SolData *data, const Mesh & mesh, const Element & el)
+  {
+    bool is_active = true;
+    if(data->draw_volumes)
+      is_active = is_active && (*data->draw_volumes)[el.GetIndex()-1];
+    return is_active;
+  }
 
 
 
@@ -4970,6 +4988,8 @@ void Impl_Ng_InitSolutionData (Ng_SolutionData * soldata)
   soldata -> iscomplex = 0;
   soldata -> draw_surface = 1;
   soldata -> draw_volume = 1;
+  soldata -> draw_surfaces = nullptr;
+  soldata -> draw_volumes = nullptr;
   soldata -> soltype = NG_SOLUTION_NODAL;
   soldata -> solclass = 0;
 }
@@ -4994,6 +5014,8 @@ void Impl_Ng_SetSolutionData (Ng_SolutionData * soldata)
   vss->iscomplex = bool(soldata->iscomplex);
   vss->draw_surface = soldata->draw_surface;
   vss->draw_volume = soldata->draw_volume;
+  vss->draw_surfaces = soldata->draw_surfaces;
+  vss->draw_volumes = soldata->draw_volumes;
   vss->soltype = netgen::VisualSceneSolution::SolType (soldata->soltype);
   vss->solclass = soldata->solclass;
   // netgen::vssolution.AddSolutionData (vss);
