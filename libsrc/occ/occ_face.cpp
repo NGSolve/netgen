@@ -61,13 +61,19 @@ namespace netgen
         edge_on_face[FORWARD].SetSize(n_edges);
         edge_on_face[REVERSED].SetSize(n_edges);
 
-        for(auto edge_ : GetEdges(face))
+        // In case the face is INTERNAL, we need to orient it to FORWARD to get proper orientation for the edges
+        // (relative to the face) otherwise, all edges are also INTERNAL
+        auto oriented_face = TopoDS_Face(face);
+        if(oriented_face.Orientation() == TopAbs_INTERNAL)
+          oriented_face.Orientation(TopAbs_FORWARD);
+
+        for(auto edge_ : GetEdges(oriented_face))
         {
             auto edge = TopoDS::Edge(edge_);
             auto edgenr = geom.GetEdge(edge).nr;
             auto & orientation = edge_orientation[edgenr];
             double s0, s1;
-            auto cof = BRep_Tool::CurveOnSurface (edge, face, s0, s1);
+            auto cof = BRep_Tool::CurveOnSurface (edge, oriented_face, s0, s1);
             if(edge.Orientation() == TopAbs_FORWARD || edge.Orientation() == TopAbs_INTERNAL)
             {
                 curve_on_face[FORWARD][edgenr] = cof;
@@ -84,7 +90,7 @@ namespace netgen
             {
               // add reversed edge
               auto r_edge = TopoDS::Edge(edge.Reversed());
-              auto cof = BRep_Tool::CurveOnSurface (r_edge, face, s0, s1);
+              auto cof = BRep_Tool::CurveOnSurface (r_edge, oriented_face, s0, s1);
               curve_on_face[REVERSED][edgenr] = cof;
               orientation += REVERSED;
               edge_on_face[REVERSED][edgenr] = r_edge;

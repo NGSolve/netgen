@@ -1208,10 +1208,12 @@ namespace netgen
 
           for(auto f : GetFaces(s))
           {
-              auto & face = GetFace(f);
+              auto & face = static_cast<OCCFace&>(GetFace(f));
               if(face.domin==-1)
                   face.domin = k;
               else
+                  face.domout = k;
+              if(face.Shape().Orientation() == TopAbs_INTERNAL)
                   face.domout = k;
           }
       }
