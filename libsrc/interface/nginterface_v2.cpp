@@ -1149,6 +1149,7 @@ namespace netgen
   void Ngx_Mesh :: EnableTable (string name, bool set)
   {
     mesh->GetTopology().EnableTable (name, set);
+    mesh->SetNextTimeStamp();  // update topology will do work
   }
 
 

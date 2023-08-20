@@ -984,6 +984,38 @@ namespace netgen
                           }
                     }
                 }
+
+            for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+              {
+                const Element2d & sel = (*mesh)[sei];
+                INT<3,PointIndex> f3 = { sel[0], sel[1], sel[2] };
+                for (int j = 0; j < 3; j++)
+                  {
+                    PointIndex v = f3[j];
+                    if (v >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
+                      continue;
+                    
+                    auto pa = mesh->mlbetweennodes[v];
+                    for (int k = 0; k < 2; k++)
+                      if (f3.Contains(pa[k]))
+                        {
+                          PointIndex v0 = pa[k]; // also in face
+                          PointIndex v1 = pa[1-k];
+                          PointIndex v2 = f3[0]+f3[1]+f3[2] - v - v0;
+                          // if there is an edge connecting v1 and v2, accept
+                          // the new face
+                          INT<2> parentedge(v1, v2);
+                          parentedge.Sort();
+                          if (v2e.Used(parentedge)){ 
+                            INT<3> cf3 = { v0, v1, v2 };
+                            cf3.Sort();
+                            // cout << "intermediate: " << cf3 << " of " << f3 << endl;
+                            intermediate_faces.Append (cf3);
+                          }
+                        }
+                  }
+              }
+
           }
 	cnt = 0;
 	for (int i = 0; i < intermediate_faces.Size(); i++)
@@ -1355,7 +1387,7 @@ namespace netgen
               }
 
             // cout << "v2f:" << endl << v2f << endl;
-           
+            
             parent_faces.SetSize (nfa);
             parent_faces = { -1, { -1, -1, -1, -1 } };
 
@@ -2363,24 +2395,45 @@ namespace netgen
 
   int MeshTopology :: GetVerticesEdge ( int v1, int v2 ) const
   {
-    // NgArray<int> elementedges;
-    // Array<ElementIndex> elements_v1;
-    // GetVertexElements ( v1, elements_v1);
-    auto elements_v1 = GetVertexElements ( v1 );
-    // int edv1, edv2;
-
-    for ( int i = 0; i < elements_v1.Size(); i++ )
-      {
-	// GetElementEdges( elements_v1[i]+1, elementedges );
-        auto elementedges = GetEdges(ElementIndex(elements_v1[i]));
-	for ( int ed = 0; ed < elementedges.Size(); ed ++)
-	  {
-	    // GetEdgeVertices( elementedges[ed]+1, edv1, edv2 );
-            auto [edv1,edv2] = GetEdgeVertices (elementedges[ed]);
-	    if ( ( edv1 == v1 && edv2 == v2 ) || ( edv1 == v2 && edv2 == v1 ) )
-	      return elementedges[ed];
-	  }
+    /*
+    if (vert2element.Size() > 0)
+      {      
+        auto elements_v1 = GetVertexElements ( v1 );
+        // int edv1, edv2;
+        
+        for ( int i = 0; i < elements_v1.Size(); i++ )
+          {
+            // GetElementEdges( elements_v1[i]+1, elementedges );
+            auto elementedges = GetEdges(ElementIndex(elements_v1[i]));
+            for ( int ed = 0; ed < elementedges.Size(); ed ++)
+              {
+                // GetEdgeVertices( elementedges[ed]+1, edv1, edv2 );
+                auto [edv1,edv2] = GetEdgeVertices (elementedges[ed]);
+                if ( ( edv1 == v1 && edv2 == v2 ) || ( edv1 == v2 && edv2 == v1 ) )
+                  return elementedges[ed];
+              }
+          }
       }
+    */
+    
+    if (vert2element.Size() > 0)
+      for (auto ei : GetVertexElements ( v1 ))
+        for (auto ed : GetEdges(ei))
+          {
+            auto [edv1,edv2] = GetEdgeVertices (ed);
+            if ( ( edv1 == v1 && edv2 == v2 ) || ( edv1 == v2 && edv2 == v1 ) )
+              return ed;
+          }
+
+ 
+    if (vert2surfelement.Size() > 0)
+      for (auto sei : GetVertexSurfaceElements ( v1 ))
+        for (auto ed : GetEdges(sei))
+          {
+            auto [edv1,edv2] = GetEdgeVertices (ed);
+            if ( ( edv1 == v1 && edv2 == v2 ) || ( edv1 == v2 && edv2 == v1 ) )
+              return ed;
+          }
 
     return -1;
   }
