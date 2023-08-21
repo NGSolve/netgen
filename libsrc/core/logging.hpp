@@ -1,7 +1,6 @@
 #ifndef NETGEN_CORE_LOGGING_HPP
 #define NETGEN_CORE_LOGGING_HPP
 
-#undef NETGEN_USE_SPDLOG
 #include <iostream>
 #include <memory>
 #include <string>
@@ -10,15 +9,6 @@
 #include "exception.hpp"
 #include "ngcore_api.hpp"
 #include "utils.hpp"
-
-#ifdef NETGEN_USE_SPDLOG
-#include <spdlog/fmt/fmt.h>
-#include <spdlog/fmt/ostr.h> // to be able to parse anything to logger that implements operator << ostream
-#ifdef NETGEN_LOG_DEBUG
-#define SPDLOG_DEBUG_ON
-#define NETGEN_DEBUG_LOG(logger, ...) SPDLOG_DEBUG(logger, __VA_ARGS__)
-#endif // NETGEN_LOG_DEBUG
-#endif // NETGEN_USE_SPDLOG
 
 #ifndef NETGEN_DEBUG_LOG
 #define NETGEN_DEBUG_LOG(logger, ...)
@@ -60,13 +50,6 @@ namespace ngcore
 
     void NGCORE_API log( level::level_enum level, std::string && s);
 
-#ifdef NETGEN_USE_SPDLOG
-    template<typename ... Args>
-    void log( level::level_enum level, const char* str, Args ... args)
-    {
-      log(level, fmt::format(str, args...));
-    }
-#else // NETGEN_USE_SPDLOG
     template<typename T>
     std::string replace(std::string s, const T & t)
     {
@@ -100,7 +83,6 @@ namespace ngcore
     {
       log(level, log_helper(std::string(str), args...));
     }
-#endif // NETGEN_USE_SPDLOG
 
     template<typename ... Args>
     void trace( const char* str, Args ... args) { log(level::level_enum::trace, str, args...); }

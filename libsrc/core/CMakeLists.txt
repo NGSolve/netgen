@@ -55,19 +55,6 @@ if(TRACE_MEMORY)
   target_compile_definitions(ngcore PUBLIC NETGEN_TRACE_MEMORY)
 endif(TRACE_MEMORY)
 
-
-if(USE_SPDLOG)
-  include_directories(${SPDLOG_INCLUDE_DIR})
-  install(DIRECTORY ${SPDLOG_INCLUDE_DIR}
-    DESTINATION ${NG_INSTALL_DIR_INCLUDE}
-    )
-  add_dependencies(ngcore project_spdlog)
-  target_compile_definitions(ngcore PUBLIC NETGEN_USE_SPDLOG)
-  if(DEBUG_LOG)
-    target_compile_definitions(ngcore PUBLIC NETGEN_LOG_DEBUG)
-  endif(DEBUG_LOG)
-endif(USE_SPDLOG)
-
 if(USE_NUMA)
     find_library(NUMA_LIBRARY libnuma.so)
     target_compile_definitions(ngcore PUBLIC USE_NUMA)

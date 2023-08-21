@@ -185,13 +185,6 @@ test_build_ngsolve:
 #   when: always
 #   allow_failure: true
 
-# check if it compiles without spdlog
-test_noSpdlog:
-  <<: *ubuntu
-  stage: test
-  script:
-    - docker run -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_PIPELINE_ID}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_nospdlog.sh
-
 cleanup_ubuntu:
   stage: cleanup
   tags:
