@@ -71,7 +71,7 @@ namespace ngcore
     // sync start time when running in parallel
 #ifdef PARALLEL
     NgMPI_Comm comm(MPI_COMM_WORLD);
-    for(auto i : Range(5))
+    for([[maybe_unused]] auto i : Range(5))
         comm.Barrier();
 #endif // PARALLEL
 
@@ -489,7 +489,7 @@ namespace ngcore
 #ifdef PARALLEL
       // Hostnames
       NgMPI_Comm comm(MPI_COMM_WORLD);
-      auto rank = comm.Rank();
+      // auto rank = comm.Rank();
       auto nranks = comm.Size();
       if(nranks>1)
       {
@@ -608,7 +608,7 @@ namespace ngcore
 
           int id;
           std::string name;
-          for(auto i : IntRange(n_timers))
+          for([[maybe_unused]]auto i : IntRange(n_timers))
           {
             comm.Recv (id, src, 0);
             comm.Recv (name, src, 0);
@@ -855,8 +855,8 @@ namespace ngcore
 #ifdef PARALLEL
       // Hostname
       NgMPI_Comm comm(MPI_COMM_WORLD);
-      auto rank = comm.Rank();
-      auto nranks = comm.Size();
+      // auto rank = comm.Rank();
+      // auto nranks = comm.Size();
 
       std::string hostname;
         {
