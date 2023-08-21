@@ -19,7 +19,6 @@
 #include <vector>               // for vector
 
 #include "exception.hpp"        // for UnreachableCodeException, Exception
-#include "logging.hpp"          // for logger
 #include "ngcore_api.hpp"       // for NGCORE_API
 #include "type_traits.hpp"      // for all_of_tmpl
 #include "utils.hpp"            // for Demangle, unlikely
@@ -133,7 +132,6 @@ namespace ngcore
   protected:
     bool shallow_to_python = false;
     std::map<std::string, VersionInfo> version_map = GetLibraryVersions();
-    std::shared_ptr<Logger> logger = GetLogger("Archive");
   public:
     template<typename T>
       static constexpr bool is_archivable = detail::is_Archivable_struct<T>::value;
@@ -254,7 +252,6 @@ namespace ngcore
     // don't use it that often anyway)
     Archive& operator& (std::vector<bool>& v)
     {
-      logger->debug("In special archive for std::vector<bool>");
       size_t size;
       if(Output())
         size = v.size();
@@ -409,22 +406,15 @@ namespace ngcore
     {
       if(Output())
         {
-          logger->debug("Store shared ptr of type {}", Demangle(typeid(T).name()));
           // save -2 for nullptr
           if(!ptr)
-            {
-              logger->debug("Storing nullptr");
-              return (*this) << -2;
-            }
+            return (*this) << -2;
 
           void* reg_ptr = ptr.get();
           bool neededDowncast = false;
           // Downcasting is only possible for our registered classes
           if(typeid(T) != typeid(*ptr))
             {
-              logger->debug("Typids are different: {} vs {}",
-                            Demangle(typeid(T).name()),
-                            Demangle(typeid(*ptr).name()));
               if(!IsRegistered(Demangle(typeid(*ptr).name())))
                   throw Exception(std::string("Archive error: Polymorphic type ")
                                   + Demangle(typeid(*ptr).name())
@@ -432,17 +422,12 @@ namespace ngcore
               reg_ptr = GetArchiveRegister(Demangle(typeid(*ptr).name())).downcaster(typeid(T), ptr.get());
               // if there was a true downcast we have to store more information
               if(reg_ptr != static_cast<void*>(ptr.get()))
-                {
-                  logger->debug("Multiple/Virtual inheritance involved, need to cast pointer");
-                  neededDowncast = true;
-                }
+                neededDowncast = true;
             }
           auto pos = shared_ptr2nr.find(reg_ptr);
           // if not found store -1 and the pointer
           if(pos == shared_ptr2nr.end())
             {
-              logger->debug("Didn't find the shared_ptr, create new registry entry at {}",
-                            shared_ptr_count);
               auto p = ptr.get();
               (*this) << -1;
               (*this) & neededDowncast & p;
@@ -453,27 +438,23 @@ namespace ngcore
               return *this;
             }
           // if found store the position and if it has to be downcasted and how
-          logger->debug("Found shared_ptr at position {}", pos->second);
           (*this) << pos->second << neededDowncast;
           if(neededDowncast)
             (*this) << Demangle(typeid(*ptr).name());
         }
       else // Input
         {
-          logger->debug("Reading shared_ptr of type {}", Demangle(typeid(T).name()));
           int nr;
           (*this) & nr;
           // -2 restores a nullptr
           if(nr == -2)
             {
-              logger->debug("Reading a nullptr");
               ptr = nullptr;
               return *this;
             }
           // -1 restores a new shared ptr by restoring the inner pointer and creating a shared_ptr to it
           if (nr == -1)
             {
-              logger->debug("Creating new shared_ptr");
               T* p = nullptr;
               bool neededDowncast;
               (*this) & neededDowncast & p;
@@ -481,7 +462,6 @@ namespace ngcore
               // if we did downcast we need to store a shared_ptr<void> to the true object
               if(neededDowncast)
                 {
-                  logger->debug("Shared pointer needed downcasting");
                   std::string name;
                   (*this) & name;
                   auto info = GetArchiveRegister(name);
@@ -492,20 +472,15 @@ namespace ngcore
                                                                                 ptr.get())));
                 }
               else
-                {
-                  logger->debug("Shared pointer didn't need downcasting");
                   nr2shared_ptr.push_back(ptr);
-                }
             }
           else
             {
-              logger->debug("Reading already existing pointer at entry {}", nr);
               auto other = nr2shared_ptr[nr];
               bool neededDowncast;
               (*this) & neededDowncast;
               if(neededDowncast)
                 {
-                  logger->debug("Shared pointer needed pointer downcast");
                   // if there was a downcast we can expect the class to be registered (since archiving
                   // wouldn't have worked else)
                   std::string name;
@@ -519,7 +494,6 @@ namespace ngcore
                 }
               else
                 {
-                  logger->debug("Shared pointer didn't need pointer casts");
                   ptr = std::static_pointer_cast<T>(other);
                 }
             }
@@ -533,42 +507,26 @@ namespace ngcore
     {
       if (Output())
         {
-          logger->debug("Store pointer of type {}",Demangle(typeid(T).name()));
           // if the pointer is null store -2
           if (!p)
-            {
-              logger->debug("Storing nullptr");
               return (*this) << -2;
-            }
           auto reg_ptr = static_cast<void*>(p);
           if(typeid(T) != typeid(*p))
             {
-              logger->debug("Typeids are different: {} vs {}",
-                            Demangle(typeid(T).name()),
-                            Demangle(typeid(*p).name()));
               if(!IsRegistered(Demangle(typeid(*p).name())))
                 throw Exception(std::string("Archive error: Polymorphic type ")
                                 + Demangle(typeid(*p).name())
                                 + " not registered for archive");
               reg_ptr = GetArchiveRegister(Demangle(typeid(*p).name())).downcaster(typeid(T), static_cast<void*>(p));
-              if(reg_ptr != static_cast<void*>(p))
-                {
-                  logger->debug("Multiple/Virtual inheritance involved, need to cast pointer");
-                }
             }
           auto pos = ptr2nr.find(reg_ptr);
           // if the pointer is not found in the map create a new entry
           if (pos == ptr2nr.end())
             {
-              logger->debug("Didn't find pointer, create new registry entry at {}",
-                            ptr_count);
               ptr2nr[reg_ptr] = ptr_count++;
               if(typeid(*p) == typeid(T))
                 if (std::is_constructible<T>::value)
-                               {
-                                 logger->debug("Store standard class pointer (no virt. inh,...)");
-                                 return (*this) << -1 & (*p);
-                               }
+                  return (*this) << -1 & (*p);
                 else
                   throw Exception(std::string("Archive error: Class ") +
                                   Demangle(typeid(*p).name()) + " does not provide a default constructor!");
@@ -582,7 +540,6 @@ namespace ngcore
                     throw Exception(std::string("Archive error: Polymorphic type ")
                                     + Demangle(typeid(*p).name())
                                     + " not registered for archive");
-                  logger->debug("Store a possibly more complicated pointer");
                   return (*this) << -3 << Demangle(typeid(*p).name()) & (*p);
                 }
             }
@@ -590,37 +547,27 @@ namespace ngcore
             {
               (*this) & pos->second;
               bool downcasted = !(reg_ptr == static_cast<void*>(p) );
-              logger->debug("Store a the existing position in registry at {}", pos->second);
-              logger->debug("Pointer {} downcasting", downcasted ? "needs" : "doesn't need");
               // store if the class has been downcasted and the name
               (*this) << downcasted << Demangle(typeid(*p).name());
             }
         }
       else
         {
-          logger->debug("Reading pointer of type {}", Demangle(typeid(T).name()));
           int nr;
           (*this) & nr;
           if (nr == -2) // restore a nullptr
-            {
-              logger->debug("Loading a nullptr");
               p = nullptr;
-            }
           else if (nr == -1) // create a new pointer of standard type (no virtual or multiple inheritance,...)
             {
-              logger->debug("Load a new pointer to a simple class");
               p = detail::constructIfPossible<T>();
               nr2ptr.push_back(p);
               (*this) & *p;
             }
           else if(nr == -3) // restore one of our registered classes that can have multiple inheritance,...
             {
-              logger->debug("Load a new pointer to a potentially more complicated class "
-                            "(allows for multiple/virtual inheritance,...)");
               // As stated above, we want this special behaviour only for our classes that implement DoArchive
               std::string name;
               (*this) & name;
-              logger->debug("Name = {}", name);
               auto info = GetArchiveRegister(name);
               // the creator creates a new object of type name, and returns a void* pointing
               // to T (which may have an offset)
@@ -632,11 +579,9 @@ namespace ngcore
             }
           else
             {
-              logger->debug("Restoring pointer to already existing object at registry position {}", nr);
               bool downcasted;
               std::string name;
               (*this) & downcasted & name;
-              logger->debug("{} object of type {}", downcasted ? "Downcasted" : "Not downcasted", name);
               if(downcasted)
                 {
                   // if the class has been downcasted we can assume it is in the register

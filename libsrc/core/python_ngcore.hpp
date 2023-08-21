@@ -190,7 +190,6 @@ namespace ngcore
   protected:
     using ARCHIVE::stream;
     using ARCHIVE::version_map;
-    using ARCHIVE::logger;
   public:
     PyArchive(const pybind11::object& alst = pybind11::none()) :
       ARCHIVE(std::make_shared<std::stringstream>()),
@@ -202,7 +201,6 @@ namespace ngcore
           stream = std::make_shared<std::stringstream>
             (pybind11::cast<pybind11::bytes>(lst[pybind11::len(lst)-1]));
           *this & version_needed;
-          logger->debug("versions needed for unpickling = {}", version_needed);
           for(auto& libversion : version_needed)
             if(libversion.second > GetLibraryVersion(libversion.first))
               throw Exception("Error in unpickling data:\nLibrary " + libversion.first +
@@ -219,7 +217,6 @@ namespace ngcore
     {
       if(Output())
         {
-          logger->debug("Need version {} of library {}.", version, library);
           version_needed[library] = version_needed[library] > version ? version_needed[library] : version;
         }
     }
@@ -243,7 +240,6 @@ namespace ngcore
       FlushBuffer();
       lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
       stream = std::make_shared<std::stringstream>();
-      logger->debug("Writeout version needed = {}", version_needed);
       *this & version_needed;
       FlushBuffer();
       lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
