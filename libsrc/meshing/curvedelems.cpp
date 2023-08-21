@@ -3037,8 +3037,8 @@ namespace netgen
     const Element & el = mesh[info.elnr];
 
     // dshapes.SetSize(info.ndof);
-    if ( (long int)(&dshapes(0,0)) % alignof(T) != 0)
-      throw NgException ("alignment problem");
+    // if ( (long int)(&dshapes(0,0)) % alignof(T) != 0)
+    // throw NgException ("alignment problem");
     if (dshapes.Height() != info.ndof)
       throw NgException ("wrong height");
     if (rational && info.order >= 2)
