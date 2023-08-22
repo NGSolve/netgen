@@ -1,13 +1,26 @@
 #include "exception.hpp"
 #include "utils.hpp"
 
+#ifdef EMSCRIPTEN
+#include <iostream>
+#endif // EMSCRIPTEN
+
 namespace ngcore
 {
   Exception :: Exception(const std::string& s)
-    : m_what(s) {}
+    : m_what(s) {
+  #ifdef EMSCRIPTEN
+  std::cout << "THROW Exception " << s << std::endl;
+  #endif
+}
   
   Exception :: Exception(const char* s)
-    : m_what(s) {}
+    : m_what(s) {
+  #ifdef EMSCRIPTEN
+  std::cout << "THROW Exception " << s << std::endl;
+  #endif
+
+}
 
 
   void ThrowException(const std::string & s)
