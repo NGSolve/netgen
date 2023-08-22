@@ -76,14 +76,14 @@ namespace ngcore
     numa_run_on_node (0);
 #endif
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(EMSCRIPTEN)
     // master has maximal priority !
     int policy;
     struct sched_param param;
     pthread_getschedparam(pthread_self(), &policy, &param);
     param.sched_priority = sched_get_priority_max(policy);
     pthread_setschedparam(pthread_self(), policy, &param);
-#endif // WIN32
+#endif // !defined(WIN32) && !defined(EMSCRIPTEN)
 
     
     task_manager->StartWorkers();

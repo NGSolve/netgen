@@ -18,10 +18,7 @@ string(REPLACE "|" ";" ng_compile_flags_replace_sep "${NG_COMPILE_FLAGS}")
 target_compile_options(ngcore PUBLIC ${ng_compile_flags_replace_sep})
 
 if(EMSCRIPTEN)
-  target_link_options(ngcore PUBLIC -sALLOW_MEMORY_GROWTH)
-  # target_link_options(ngcore PUBLIC -sINITIAL_MEMORY=1gb)
-  target_link_options(ngcore PUBLIC -pthread -sPTHREAD_POOL_SIZE=16)
-  target_compile_options(ngcore PUBLIC -pthread)
+  target_link_options(nglib PUBLIC -sALLOW_MEMORY_GROWTH -sENVIRONMENT=web)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
