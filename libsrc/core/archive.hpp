@@ -714,11 +714,19 @@ namespace ngcore
     Archive & operator & (long & i) override
     {
       // for platform independence
-      int64_t tmp = i;
-      return Write(tmp);
+      if constexpr (sizeof(long) == 8)
+        return Write(i);
+      else
+        return Write(static_cast<int64_t>(i));
     }
     Archive & operator & (size_t & i) override
-    { return Write(i); }
+    {
+      // for platform independence
+      if constexpr (sizeof(size_t) == 8)
+        return Write(i);
+      else
+        return Write(static_cast<uint64_t>(i));
+    }
     Archive & operator & (unsigned char & i) override
     { return Write(i); }
     Archive & operator & (bool & b) override
@@ -797,13 +805,30 @@ namespace ngcore
     { Read(i); return *this; }
     Archive & operator & (long & i) override
     {
-      int64_t tmp;
-      Read(tmp);
-      i = tmp;
+      // for platform independence
+      if constexpr (sizeof(long) == 8)
+        Read(i);
+      else
+      {
+        int64_t tmp = 0;
+        Read(tmp);
+        i = tmp;
+      }
       return *this;
     }
     Archive & operator & (size_t & i) override
-    { Read(i); return *this; }
+    {
+      // for platform independence
+      if constexpr (sizeof(long) == 8)
+        Read(i);
+      else
+      {
+        uint64_t tmp = 0;
+        Read(tmp);
+        i = tmp;
+      }
+      return *this;
+    }
     Archive & operator & (unsigned char & i) override
     { Read(i); return *this; }
     Archive & operator & (bool & b) override
@@ -861,7 +886,7 @@ namespace ngcore
 
     using Archive::operator&;
     Archive & operator & (std::byte & d) override
-    { *stream << std::hex << int(d) << ' '; return *this; }
+    { *stream << int(d) << ' '; return *this; }
     Archive & operator & (float & f) override
     { *stream << f << '\n'; return *this; }
     Archive & operator & (double & d) override
@@ -916,7 +941,7 @@ namespace ngcore
 
     using Archive::operator&;
     Archive & operator & (std::byte & d) override
-    { int tmp; *stream >> std::hex >> tmp; d = std::byte(tmp); return *this; }
+    { int tmp; *stream >> tmp; d = std::byte(tmp); return *this; }
     Archive & operator & (float & f) override
     { *stream >> f; return *this; }
     Archive & operator & (double & d) override
