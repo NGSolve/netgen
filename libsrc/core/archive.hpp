@@ -864,7 +864,15 @@ namespace ngcore
     Archive & Do (int * i, size_t n) override
     { stream->read(reinterpret_cast<char*>(i), n*sizeof(int)); return *this; } // NOLINT
     Archive & Do (size_t * i, size_t n) override
-    { stream->read(reinterpret_cast<char*>(i), n*sizeof(size_t)); return *this; } // NOLINT
+    {
+      // for platform independence
+      if constexpr (sizeof(long) == 8)
+        stream->read(reinterpret_cast<char*>(i), n*sizeof(size_t)); // NOLINT
+      else
+        for(size_t j = 0; j < n; j++)
+          (*this) & i[j];
+      return *this;
+    }
 
   private:
     template<typename T>
