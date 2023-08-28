@@ -1105,6 +1105,6 @@ namespace netgen
   };
 
   SplineGeoInit sginit;
-  static RegisterClassForArchive<SplineGeometry2d, SplineGeometry<2>, NetgenGeometry> regspg2;
+  static RegisterClassForArchive<SplineGeometry2d, tuple<SplineGeometry<2>, NetgenGeometry>> regspg2;
   static RegisterClassForArchive<SplineSegExt, SplineSeg<2>> regssext;
 }

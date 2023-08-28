@@ -3756,5 +3756,5 @@ void STLGeometry :: WriteChartToFile( ChartId chartnumber, filesystem::path file
 
   STLInit stlinit;
 
-static RegisterClassForArchive<STLGeometry, NetgenGeometry, STLTopology> stlgeo;
+static RegisterClassForArchive<STLGeometry, std::tuple<NetgenGeometry, STLTopology>> stlgeo;
 }

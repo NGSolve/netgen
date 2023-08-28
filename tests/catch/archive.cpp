@@ -86,12 +86,32 @@ public:
   const int* getPtr() { return ptr; }
 };
 
-class OneMoreDerivedClass : public SharedPtrAndPtrHolder {};
+class ClassWithoutDefaultConstructor
+{
+public:
+  int a;
+  double b;
+  double c;
+  ClassWithoutDefaultConstructor(int aa, double c) : a(aa), c(c) {}
+
+  void DoArchive(Archive& ar)
+  {
+    ar & b;
+  }
+};
+
+static RegisterClassForArchive<ClassWithoutDefaultConstructor,
+                               tuple<>, tuple<int, double>>
+regwdc([](ClassWithoutDefaultConstructor& self)
+ { return make_tuple(self.a, self.c); });
+
+class OneMoreDerivedClass : public SharedPtrAndPtrHolder {
+};
 
 static RegisterClassForArchive<CommonBase> regb;
 static RegisterClassForArchive<SharedPtrHolder, CommonBase> regsp;
 static RegisterClassForArchive<PtrHolder, CommonBase> regp;
-static RegisterClassForArchive<SharedPtrAndPtrHolder, SharedPtrHolder, PtrHolder> regspp;
+static RegisterClassForArchive<SharedPtrAndPtrHolder, tuple<SharedPtrHolder, PtrHolder>> regspp;
 static RegisterClassForArchive<OneMoreDerivedClass, SharedPtrAndPtrHolder> regom;
 
 void testNullPtr(Archive& in, Archive& out)
@@ -333,6 +353,19 @@ void testArchive(Archive& in, Archive& out)
     {
       SharedPtrAndPtrHolder* p = new NotRegisteredForArchive;
       REQUIRE_THROWS(out & p, Catch::Contains("not registered for archive"));
+    }
+  SECTION("Non-default constructor")
+    {
+      ClassWithoutDefaultConstructor c(5, 2.2);
+      c.b = 3.2;
+      auto p = &c;
+      out & p;
+      out.FlushBuffer();
+      ClassWithoutDefaultConstructor* cin;
+      in & cin;
+      CHECK(cin->a == 5);
+      CHECK(cin->b == 3.2);
+      CHECK(cin->c == 2.2);
     }
   SECTION("nullptr")
     {

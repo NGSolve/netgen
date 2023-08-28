@@ -15,7 +15,7 @@ target_sources(nglib PRIVATE
         boundarylayer2d.cpp
 )
 
-target_link_libraries( nglib PRIVATE netgen_metis "$<BUILD_INTERFACE:netgen_python>" ${ZLIB_LIBRARIES} )
+target_link_libraries( nglib PRIVATE netgen_metis "$<BUILD_INTERFACE:netgen_python>" )
 
 install(FILES
   adfront2.hpp adfront3.hpp basegeom.hpp bcfunctions.hpp bisect.hpp

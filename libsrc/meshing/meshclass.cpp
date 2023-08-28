@@ -4,10 +4,7 @@
 #include "meshing.hpp"
 #include "../general/gzstream.h"
 
-#ifdef NG_PYTHON
-// must be included to instantiate Archive::Shallow(NetgenGeometry&)
-#include <core/python_ngcore.hpp>
-#endif
+#include <core/register_archive.hpp>
 
 namespace netgen
 {
@@ -4493,7 +4490,11 @@ namespace netgen
          double local_sum = 0.0;
          double teterrpow = mp.opterrpow;
 
-         std::array<int,n_classes> classes_local{};
+         // std::array<int,n_classes> classes_local{};
+         size_t n_classes = tets_in_qualclass.Size();
+         Array<int> classes_local(n_classes);
+         for (int i = 0; i < n_classes; i++)
+           classes_local[i] = 0;
 
          for (auto i : myrange)
            {

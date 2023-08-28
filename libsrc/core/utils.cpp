@@ -43,6 +43,14 @@ namespace ngcore
         {
             for(const auto & [r, sub] : demangle_regexes)
                 s = std::regex_replace (s,r,sub);
+#ifdef EMSCRIPTEN
+            // for some reason regex_replace is not working at all
+            std::string temp = s;
+            s = "";
+            for(auto c : temp)
+              if(c!=' ')
+                s+=c;
+#endif // EMSCRIPTEN
 
             return s;
         }
