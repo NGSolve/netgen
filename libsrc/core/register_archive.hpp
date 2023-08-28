@@ -2,6 +2,7 @@
 #define NETGEN_REGISTER_ARCHIVE_HPP
 
 #ifdef NETGEN_PYTHON
+#include <memory>
 #include <pybind11/pybind11.h>
 #include <pybind11/cast.h>
 #endif // NETGEN_PYTHON
@@ -32,6 +33,15 @@ namespace ngcore {
       *this & val;
     return *this;
   }
+
+  template <typename T>
+  struct has_shared_from_this
+  {
+    template <typename C> static std::true_type check( decltype( sizeof(&C::shared_from_this() )) ) { return std::true_type(); }
+    template <typename> static std::false_type check(...) { return std::false_type(); }
+    typedef decltype( check<T>(sizeof(char)) ) type;
+    static constexpr type value = type();
+  };
 #endif // NETGEN_PYTHON
 
 
@@ -65,8 +75,13 @@ namespace ngcore {
       };
 #ifdef NETGEN_PYTHON
     info.anyToPyCaster = [](const std::any &a) {
-      const T* val = std::any_cast<T>(&a);
-      return pybind11::cast(val);
+      if constexpr(has_shared_from_this<T>::value) {
+        std::shared_ptr<T> val = std::any_cast<std::shared_ptr<T>>(&a);
+        return pybind11::cast(val);
+      } else {
+        const T* val = std::any_cast<T>(&a);
+        return pybind11::cast(val);
+      }
     };
 #endif // NETGEN_PYTHON
     Archive::SetArchiveRegister(std::string(Demangle(typeid(T).name())),info);
