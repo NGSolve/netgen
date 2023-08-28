@@ -156,30 +156,6 @@ namespace ngcore
     { return std::string("sp_")+GetPyName<T>(); }
   };
 
-    // ***************  Archiving functionality  **************
-
-    template<typename T>
-    Archive& Archive :: Shallow(T& val)
-    {
-      static_assert(detail::is_any_pointer<T>, "ShallowArchive must be given pointer type!");
-#ifdef NETGEN_PYTHON
-      if(shallow_to_python)
-        {
-          if(is_output)
-            ShallowOutPython(pybind11::cast(val));
-          else
-          {
-            pybind11::object obj;
-            ShallowInPython(obj);
-            val = pybind11::cast<T>(obj);
-          }
-        }
-      else
-#endif // NETGEN_PYTHON
-        *this & val;
-      return *this;
-    }
-
   template<typename ARCHIVE>
   class NGCORE_API_EXPORT PyArchive : public ARCHIVE
   {

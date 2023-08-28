@@ -255,7 +255,6 @@ target_include_directories(nglib PRIVATE ${ZLIB_INCLUDE_DIRS})
 if(USE_GUI)
     target_include_directories(nggui PRIVATE ${ZLIB_INCLUDE_DIRS})
 endif(USE_GUI)
-target_link_libraries(nglib PRIVATE ${ZLIB_LIBRARIES})
 
 #######################################################################
 if(WIN32)

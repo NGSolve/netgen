@@ -41,16 +41,35 @@ namespace ngcore
   class NGCORE_API Archive;
   namespace detail
   {
+    template <class T, class Tuple, size_t... Is>
+    T* construct_from_tuple(Tuple&& tuple, std::index_sequence<Is...> ) {
+      return new T{std::get<Is>(std::forward<Tuple>(tuple))...};
+    }
+
+    template <class T, class Tuple>
+    T* construct_from_tuple(Tuple&& tuple) {
+      return construct_from_tuple<T>(std::forward<Tuple>(tuple),
+                                     std::make_index_sequence<std::tuple_size<std::decay_t<Tuple>>::value>{}
+                                     );
+    }
+
     // create new pointer of type T if it is default constructible, else throw
-    template<typename T, typename ...Rest>
-    T* constructIfPossible_impl(Rest... /*unused*/)
-    { throw Exception(std::string(Demangle(typeid(T).name())) + " is not default constructible!"); }
+    template<typename T, typename... TArgs>
+    T* constructIfPossible(std::tuple<TArgs...> args)
+    {
+      if constexpr(std::is_constructible_v<T, TArgs...>)
+        return construct_from_tuple<T>(args);
+          throw Exception(std::string(Demangle(typeid(T).name())) +
+                          " is not constructible!");
+    }
 
-    template<typename T, typename= std::enable_if_t<std::is_constructible<T>::value>>
-    T* constructIfPossible_impl(int /*unused*/) { return new T; } // NOLINT
-
-    template<typename T>
-    T* constructIfPossible() { return constructIfPossible_impl<T>(int{}); }
+    template <typename T> T *constructIfPossible()
+    {
+      if constexpr(std::is_constructible_v<T>)
+        return new T();
+      throw Exception(std::string(Demangle(typeid(T).name())) +
+                      " is not default constructible!");
+    }
 
     //Type trait to check if a class implements a 'void DoArchive(Archive&)' function
     template<typename T>
@@ -87,7 +106,7 @@ namespace ngcore
       // create new object of this type and return a void* pointer that is points to the location
       // of the (base)class given by type_info
       // std::function<void*(const std::type_info&)> creator;
-      void* (*creator)(const std::type_info&);
+      void* (*creator)(const std::type_info&, Archive&);
       // This caster takes a void* pointer to the type stored in this info and casts it to a
       // void* pointer pointing to the (base)class type_info
       // std::function<void*(const std::type_info&, void*)> upcaster;
@@ -96,6 +115,9 @@ namespace ngcore
       // to the type stored in this info
       // std::function<void*(const std::type_info&, void*)> downcaster;
       void* (*downcaster)(const std::type_info&, void*);
+
+      // Archive constructor arguments
+      std::function<void(Archive&, void*)> cargs_archiver;
 
 #ifdef NETGEN_PYTHON
       // std::function<pybind11::object(const std::any&)> anyToPyCaster;
@@ -528,8 +550,18 @@ namespace ngcore
                 if (std::is_constructible<T>::value)
                   return (*this) << -1 & (*p);
                 else
-                  throw Exception(std::string("Archive error: Class ") +
-                                  Demangle(typeid(*p).name()) + " does not provide a default constructor!");
+                  {
+                    if (IsRegistered(Demangle(typeid(*p).name())))
+                    {
+                      (*this) << -3 << Demangle(typeid(*p).name());
+                      GetArchiveRegister(Demangle(typeid(*p).name())).
+                        cargs_archiver(*this, p);
+                      return (*this) & (*p);
+                    }
+                    else
+                      throw Exception(std::string("Archive error: Class ") +
+                                      Demangle(typeid(*p).name()) + " does not provide a default constructor!");
+                  }
               else
                 {
                   // if a pointer to a base class is archived, the class hierarchy must be registered
@@ -540,7 +572,10 @@ namespace ngcore
                     throw Exception(std::string("Archive error: Polymorphic type ")
                                     + Demangle(typeid(*p).name())
                                     + " not registered for archive");
-                  return (*this) << -3 << Demangle(typeid(*p).name()) & (*p);
+                  (*this) << -3 << Demangle(typeid(*p).name());
+                  GetArchiveRegister(Demangle(typeid(*p).name())).
+                    cargs_archiver(*this, p);
+                  return (*this) & (*p);
                 }
             }
           else
@@ -571,7 +606,7 @@ namespace ngcore
               auto info = GetArchiveRegister(name);
               // the creator creates a new object of type name, and returns a void* pointing
               // to T (which may have an offset)
-              p = static_cast<T*>(info.creator(typeid(T)));
+              p = static_cast<T*>(info.creator(typeid(T), *this));
               // we store the downcasted pointer (to be able to find it again from
               // another class in a multiple inheritance tree)
               nr2ptr.push_back(info.downcaster(typeid(T),p));
@@ -592,6 +627,16 @@ namespace ngcore
                 p = static_cast<T*>(nr2ptr[nr]);
             }
         }
+      return *this;
+    }
+
+    Archive& operator&(std::tuple<>&) { return *this; }
+
+    template <typename... T>
+    Archive& operator&(std::tuple<T...> &t)
+    {
+      // call operator& for each element of the tuple
+      std::apply([this](auto&... arg) { std::make_tuple(((*this) & arg).IsParallel()...);}, t);
       return *this;
     }
 
@@ -618,7 +663,7 @@ namespace ngcore
     void SetParallel (bool _parallel) { parallel = _parallel; }
     
   private:
-    template<typename T, typename ... Bases>
+  template<typename T, typename Bases, typename CArgs>
     friend class RegisterClassForArchive;
 
 #ifdef NETGEN_PYTHON
@@ -637,7 +682,7 @@ namespace ngcore
     struct Caster{};
 
     template<typename T>
-    struct Caster<T>
+    struct Caster<T, std::tuple<>>
     {
       static void* tryUpcast (const std::type_info& /*unused*/, T* /*unused*/)
       {
@@ -649,8 +694,37 @@ namespace ngcore
       }
     };
 
+    template<typename T, typename B1>
+    struct Caster<T,B1>
+    {
+      static void* tryUpcast(const std::type_info& ti, T* p)
+      {
+        try {
+          return GetArchiveRegister(Demangle(typeid(B1).name()))
+            .upcaster(ti, static_cast<void *>(dynamic_cast<B1 *>(p)));
+        } catch (const Exception &) {
+        throw Exception("Upcast not successful, some classes are not "
+                                "registered properly for archiving!");
+        }
+      }
+
+      static void* tryDowncast(const std::type_info& ti, void* p)
+      {
+        if(typeid(B1) == ti)
+          return dynamic_cast<T*>(static_cast<B1*>(p));
+        try
+          {
+            return dynamic_cast<T*>(static_cast<B1*>(GetArchiveRegister(Demangle(typeid(B1).name())).
+                                                     downcaster(ti, p)));
+        } catch (const Exception &) {
+            throw Exception("Downcast not successful, some classes are not "
+                            "registered properly for archiving!");
+        }
+      }
+    };
+
     template<typename T, typename B1, typename ... Brest>
-    struct Caster<T,B1,Brest...>
+    struct Caster<T,std::tuple<B1, Brest...>>
     {
       static void* tryUpcast(const std::type_info& ti, T* p)
       {
@@ -658,7 +732,7 @@ namespace ngcore
           { return GetArchiveRegister(Demangle(typeid(B1).name())).
               upcaster(ti, static_cast<void*>(dynamic_cast<B1*>(p))); }
         catch(const Exception&)
-          { return Caster<T, Brest...>::tryUpcast(ti, p); }
+          { return Caster<T, std::tuple<Brest...>>::tryUpcast(ti, p); }
       }
 
       static void* tryDowncast(const std::type_info& ti, void* p)
@@ -672,7 +746,7 @@ namespace ngcore
           }
         catch(const Exception&)
           {
-            return Caster<T, Brest...>::tryDowncast(ti, p);
+            return Caster<T, std::tuple<Brest...>>::tryDowncast(ti, p);
           }
       }
     };
