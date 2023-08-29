@@ -158,6 +158,91 @@ namespace netgen
 
     limits.SetSize(np);
     limits = 1.0;
+   
+    // Function to calculate the dot product of two 3D vectors
+    // Is there netgen native function for this?
+    const auto Dot = [](Vec<3> a, Vec<3> b) {
+        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    };
+
+    auto parallel_limiter = [&](PointIndex pi1, PointIndex pi2, SurfaceElementIndex si) {
+        MeshPoint& a_base = mesh[pi1];
+        MeshPoint& b_base = mesh[pi2];
+        MeshPoint a_end = mesh[pi1] + height * limits[pi1] * growthvectors[pi1];
+        MeshPoint b_end = mesh[pi2] + height * limits[pi2] * growthvectors[pi2];
+
+        double ab_base = (b_base - a_base).Length();
+        Vec<3> a_vec = (a_end - a_base);
+        Vec<3> b_vec = (b_end - b_base);
+
+        // Calculate parallel projections
+        Vec<3> ab_base_norm = (b_base - a_base).Normalize();
+        double a_vec_x = Dot(a_vec, ab_base_norm);
+        double b_vec_x = Dot(b_vec, -ab_base_norm);
+        double ratio_parallel = (a_vec_x + b_vec_x) / ab_base;
+
+        double PARALLEL_RATIO_LIMIT = 0.85;
+        if (ratio_parallel > PARALLEL_RATIO_LIMIT) {
+            // Adjust limits, vectors, and projections if parallel ratio exceeds the limit
+            double corrector = PARALLEL_RATIO_LIMIT / ratio_parallel;
+            limits[pi1] *= corrector;
+            limits[pi2] *= corrector;
+        }
+    };      
+    
+    auto perpendicular_limiter = [&](PointIndex pi1, PointIndex pi2, SurfaceElementIndex si) {
+        // this part is same as in parallel limiter, but note that limits contents are already changed
+        MeshPoint& a_base = mesh[pi1];
+        MeshPoint& b_base = mesh[pi2];
+        MeshPoint a_end = mesh[pi1] + height * limits[pi1] * growthvectors[pi1];
+        MeshPoint b_end = mesh[pi2] + height * limits[pi2] * growthvectors[pi2];
+
+        double ab_base = (b_base - a_base).Length();
+        Vec<3> a_vec = (a_end - a_base);
+        Vec<3> b_vec = (b_end - b_base);
+
+        // Calculate parallel projections
+        Vec<3> ab_base_norm = (b_base - a_base).Normalize();
+        double a_vec_x = Dot(a_vec, ab_base_norm);
+        double b_vec_x = Dot(b_vec, -ab_base_norm);
+        double ratio_parallel = (a_vec_x + b_vec_x) / ab_base;
+
+        // Calculate surface normal at point si
+        Vec<3> surface_normal = getNormal(mesh[si]);
+
+        double a_vec_y = abs(Dot(a_vec, surface_normal));
+        double b_vec_y = abs(Dot(b_vec, surface_normal));
+        double diff_perpendicular = abs(a_vec_y - b_vec_y);
+        double tan_alpha = diff_perpendicular / (ab_base - a_vec_x - b_vec_x);
+
+        double TAN_ALPHA_LIMIT = 0.36397; // Approximately 20 degrees in radians
+        if (tan_alpha > TAN_ALPHA_LIMIT) {
+            if (a_vec_y > b_vec_y) {
+                double correction = (TAN_ALPHA_LIMIT / tan_alpha * diff_perpendicular + b_vec_y) / a_vec_y;
+                limits[pi1] *= correction;
+            }
+            else {
+                double correction = (TAN_ALPHA_LIMIT / tan_alpha * diff_perpendicular + a_vec_y) / b_vec_y;
+                limits[pi2] *= correction;
+            }
+        }
+    };
+
+    auto neighbour_limiter = [&](PointIndex pi1, PointIndex pi2, SurfaceElementIndex si) {
+        parallel_limiter(pi1, pi2, si);
+        perpendicular_limiter(pi1, pi2, si);
+    };
+    
+    auto modifiedsmooth = [&](size_t nsteps) {
+        for (auto i : Range(nsteps))
+            for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
+            {
+            // assuming triangle
+            neighbour_limiter(mesh[sei].PNum(1), mesh[sei].PNum(2), sei);
+            neighbour_limiter(mesh[sei].PNum(2), mesh[sei].PNum(3), sei);
+            neighbour_limiter(mesh[sei].PNum(3), mesh[sei].PNum(1), sei);  
+        }
+    };
 
     auto smooth = [&] (size_t nsteps) {
         for(auto i : Range(nsteps))
@@ -302,7 +387,7 @@ namespace netgen
     }
 
     self_intersection();
-    smooth(3);
+    modifiedsmooth(3);
 
     for(auto pi : Range(growthvectors))
         growthvectors[pi] *= limits[pi];
