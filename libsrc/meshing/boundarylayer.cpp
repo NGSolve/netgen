@@ -42,15 +42,26 @@ namespace netgen
       if(!isIntersectingPlane(seg, trig, lam))
           return false;
 
+
+      //buffer enlargement of triangle
+      auto pt0 = trig[0];
+      auto pt1 = trig[1];
+      auto pt2 = trig[2];
+      Point<3> center = { (pt0[0] + pt1[0] + pt2[0]) / 3.0, (pt0[1] + pt1[1] + pt2[1]) / 3.0, (pt0[2] + pt1[2] + pt2[2]) / 3.0 };
+      array<Point<3>, 3>  larger_trig = {
+      center + (pt0 - center) * 1.1,
+      center + (pt1 - center) * 1.1,
+      center + (pt2 - center) * 1.1, };
+
       auto p = seg[0] + lam/0.9*(seg[1]-seg[0]);
 
       auto n_trig = Cross(trig[1]-trig[0], trig[2]-trig[0]).Normalize();
       for(auto i : Range(3))
       {
           // check if p0 and p are on same side of segment p1-p2
-          auto p0 = trig[i];
-          auto p1 = trig[(i+1)%3];
-          auto p2 = trig[(i+2)%3];
+          auto p0 = larger_trig[i];
+          auto p1 = larger_trig[(i+1)%3];
+          auto p2 = larger_trig[(i+2)%3];
           auto n = Cross(p2-p1, n_trig);
 
           auto v0 = (p2-p1).Normalize();
