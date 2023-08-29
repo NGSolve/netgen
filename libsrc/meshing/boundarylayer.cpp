@@ -42,15 +42,26 @@ namespace netgen
       if(!isIntersectingPlane(seg, trig, lam))
           return false;
 
+
+      //buffer enlargement of triangle
+      auto pt0 = trig[0];
+      auto pt1 = trig[1];
+      auto pt2 = trig[2];
+      Point<3> center = { (pt0[0] + pt1[0] + pt2[0]) / 3.0, (pt0[1] + pt1[1] + pt2[1]) / 3.0, (pt0[2] + pt1[2] + pt2[2]) / 3.0 };
+      array<Point<3>, 3>  larger_trig = {
+      center + (pt0 - center) * 1.1,
+      center + (pt1 - center) * 1.1,
+      center + (pt2 - center) * 1.1, };
+
       auto p = seg[0] + lam/0.9*(seg[1]-seg[0]);
 
       auto n_trig = Cross(trig[1]-trig[0], trig[2]-trig[0]).Normalize();
       for(auto i : Range(3))
       {
           // check if p0 and p are on same side of segment p1-p2
-          auto p0 = trig[i];
-          auto p1 = trig[(i+1)%3];
-          auto p2 = trig[(i+2)%3];
+          auto p0 = larger_trig[i];
+          auto p1 = larger_trig[(i+1)%3];
+          auto p2 = larger_trig[(i+2)%3];
           auto n = Cross(p2-p1, n_trig);
 
           auto v0 = (p2-p1).Normalize();
@@ -147,6 +158,91 @@ namespace netgen
 
     limits.SetSize(np);
     limits = 1.0;
+   
+    // Function to calculate the dot product of two 3D vectors
+    // Is there netgen native function for this?
+    const auto Dot = [](Vec<3> a, Vec<3> b) {
+        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    };
+
+    auto parallel_limiter = [&](PointIndex pi1, PointIndex pi2, SurfaceElementIndex si) {
+        MeshPoint& a_base = mesh[pi1];
+        MeshPoint& b_base = mesh[pi2];
+        MeshPoint a_end = mesh[pi1] + height * limits[pi1] * growthvectors[pi1];
+        MeshPoint b_end = mesh[pi2] + height * limits[pi2] * growthvectors[pi2];
+
+        double ab_base = (b_base - a_base).Length();
+        Vec<3> a_vec = (a_end - a_base);
+        Vec<3> b_vec = (b_end - b_base);
+
+        // Calculate parallel projections
+        Vec<3> ab_base_norm = (b_base - a_base).Normalize();
+        double a_vec_x = Dot(a_vec, ab_base_norm);
+        double b_vec_x = Dot(b_vec, -ab_base_norm);
+        double ratio_parallel = (a_vec_x + b_vec_x) / ab_base;
+
+        double PARALLEL_RATIO_LIMIT = 0.85;
+        if (ratio_parallel > PARALLEL_RATIO_LIMIT) {
+            // Adjust limits, vectors, and projections if parallel ratio exceeds the limit
+            double corrector = PARALLEL_RATIO_LIMIT / ratio_parallel;
+            limits[pi1] *= corrector;
+            limits[pi2] *= corrector;
+        }
+    };      
+    
+    auto perpendicular_limiter = [&](PointIndex pi1, PointIndex pi2, SurfaceElementIndex si) {
+        // this part is same as in parallel limiter, but note that limits contents are already changed
+        MeshPoint& a_base = mesh[pi1];
+        MeshPoint& b_base = mesh[pi2];
+        MeshPoint a_end = mesh[pi1] + height * limits[pi1] * growthvectors[pi1];
+        MeshPoint b_end = mesh[pi2] + height * limits[pi2] * growthvectors[pi2];
+
+        double ab_base = (b_base - a_base).Length();
+        Vec<3> a_vec = (a_end - a_base);
+        Vec<3> b_vec = (b_end - b_base);
+
+        // Calculate parallel projections
+        Vec<3> ab_base_norm = (b_base - a_base).Normalize();
+        double a_vec_x = Dot(a_vec, ab_base_norm);
+        double b_vec_x = Dot(b_vec, -ab_base_norm);
+        double ratio_parallel = (a_vec_x + b_vec_x) / ab_base;
+
+        // Calculate surface normal at point si
+        Vec<3> surface_normal = getNormal(mesh[si]);
+
+        double a_vec_y = abs(Dot(a_vec, surface_normal));
+        double b_vec_y = abs(Dot(b_vec, surface_normal));
+        double diff_perpendicular = abs(a_vec_y - b_vec_y);
+        double tan_alpha = diff_perpendicular / (ab_base - a_vec_x - b_vec_x);
+
+        double TAN_ALPHA_LIMIT = 0.36397; // Approximately 20 degrees in radians
+        if (tan_alpha > TAN_ALPHA_LIMIT) {
+            if (a_vec_y > b_vec_y) {
+                double correction = (TAN_ALPHA_LIMIT / tan_alpha * diff_perpendicular + b_vec_y) / a_vec_y;
+                limits[pi1] *= correction;
+            }
+            else {
+                double correction = (TAN_ALPHA_LIMIT / tan_alpha * diff_perpendicular + a_vec_y) / b_vec_y;
+                limits[pi2] *= correction;
+            }
+        }
+    };
+
+    auto neighbour_limiter = [&](PointIndex pi1, PointIndex pi2, SurfaceElementIndex si) {
+        parallel_limiter(pi1, pi2, si);
+        perpendicular_limiter(pi1, pi2, si);
+    };
+    
+    auto modifiedsmooth = [&](size_t nsteps) {
+        for (auto i : Range(nsteps))
+            for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
+            {
+            // assuming triangle
+            neighbour_limiter(mesh[sei].PNum(1), mesh[sei].PNum(2), sei);
+            neighbour_limiter(mesh[sei].PNum(2), mesh[sei].PNum(3), sei);
+            neighbour_limiter(mesh[sei].PNum(3), mesh[sei].PNum(1), sei);  
+        }
+    };
 
     auto smooth = [&] (size_t nsteps) {
         for(auto i : Range(nsteps))
@@ -189,9 +285,11 @@ namespace netgen
     bool limit_reached = true;
     double lam_lower_limit = 1.0;
     int step = 0;
-    while(limit_reached || step<2)
+
+    while(limit_reached || step<3)
     {
-        if(step>0)
+
+        if(step>1)
             lam_lower_limit *= 0.8;
         limit_reached = false;
 
@@ -241,7 +339,18 @@ namespace netgen
                 double lam_ = 999;
                 bool is_bl_sel = params.surfid.Contains(sel.GetIndex());
 
-                if(step==0)
+                if (step == 0)
+                {
+                    face = GetMappedFace(sei, -1);
+                    if (isIntersectingFace(seg, face, lam_))
+                    {
+                        if (is_bl_sel)
+                            lam_ *= 0.5;
+                        lam = min(lam, lam_);
+                    }
+                }
+
+                if(step==1)
                 {
                     if(isIntersectingFace(seg, face, lam_))
                     {
@@ -251,7 +360,7 @@ namespace netgen
                     }
                 }
                 // if the opposing surface element has a boundary layer, we need to additionally intersect with the new faces 
-                if(step>0 && is_bl_sel)
+                if(step>1 && is_bl_sel)
                 {
                     for(auto facei : Range(-1, sel.GetNP()))
                     {
@@ -278,7 +387,7 @@ namespace netgen
     }
 
     self_intersection();
-    smooth(3);
+    modifiedsmooth(3);
 
     for(auto pi : Range(growthvectors))
         growthvectors[pi] *= limits[pi];
