@@ -98,12 +98,14 @@ public:
   {
     ar & b;
   }
+
+  auto GetCArgs()
+  {
+    return make_tuple(a, c);
+  }
 };
 
-static RegisterClassForArchive<ClassWithoutDefaultConstructor,
-                               tuple<>, tuple<int, double>>
-regwdc([](ClassWithoutDefaultConstructor& self)
- { return make_tuple(self.a, self.c); });
+static RegisterClassForArchive<ClassWithoutDefaultConstructor> regwdc;
 
 class OneMoreDerivedClass : public SharedPtrAndPtrHolder {
 };
