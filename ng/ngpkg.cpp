@@ -2644,6 +2644,10 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
       atoi (Tcl_GetVar (interp, "::viewoptions.drawfacenumbers", TCL_GLOBAL_ONLY));
     vispar.drawelementnumbers =
       atoi (Tcl_GetVar (interp, "::viewoptions.drawelementnumbers", TCL_GLOBAL_ONLY));
+    vispar.drawsurfaceelementnumbers =
+      atoi (Tcl_GetVar (interp, "::viewoptions.drawsurfaceelementnumbers", TCL_GLOBAL_ONLY));
+    vispar.drawsegmentnumbers =
+      atoi (Tcl_GetVar (interp, "::viewoptions.drawsegmentnumbers", TCL_GLOBAL_ONLY));
     vispar.drawdomainsurf =
       atoi (Tcl_GetVar (interp, "::viewoptions.drawdomainsurf", TCL_GLOBAL_ONLY));
 
