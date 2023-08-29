@@ -14,6 +14,7 @@
 #include <string>               // for string
 #include <type_traits>          // for declval, enable_if_t, false_type, is_co...
 #include <cstddef>              // for std::byte
+#include <set>                  // for set
 #include <typeinfo>             // for type_info
 #include <utility>              // for move, swap, pair
 #include <vector>               // for vector
@@ -33,6 +34,13 @@ namespace pybind11
 
 namespace ngcore
 {
+  template <typename T>
+  struct Shallow {
+    T val;
+    Shallow() = default;
+    Shallow(T aval) : val(aval) { ; }
+    operator T&() { return val; }
+  };
 
 #ifdef NETGEN_PYTHON
   pybind11::object CastAnyToPy(const std::any& a);
@@ -100,6 +108,31 @@ namespace ngcore
     public:
       NGCORE_API static constexpr bool value = type::value;
     };
+
+    template <typename T>
+    struct has_GetCArgs
+    {
+      template <typename C> static std::true_type check( decltype( sizeof(&C::GetCArgs )) ) { return std::true_type(); }
+      template <typename> static std::false_type check(...) { return std::false_type(); }
+      typedef decltype( check<T>(sizeof(char)) ) type;
+      static constexpr type value = type();
+    };
+    template<typename T>
+    constexpr bool has_GetCArgs_v = has_GetCArgs<T>::value;
+
+    template<typename T,
+    typename std::enable_if<!has_GetCArgs_v<T>>::type* = nullptr>
+    std::tuple<> GetCArgs(T&val) { return {}; }
+
+    template<typename T,
+    typename std::enable_if<has_GetCArgs_v<T>>::type* = nullptr>
+    auto GetCArgs(T&val) {
+      return val.GetCArgs();
+    }
+
+    template<typename T>
+    using TCargs = decltype(GetCArgs<T>(*static_cast<T*>(nullptr)));
+
 
     struct ClassArchiveInfo
     {
@@ -336,6 +369,26 @@ namespace ngcore
           }
       return (*this);
     }
+    template <typename T>
+    Archive& operator&(std::set<T> &s)
+    {
+      auto size = s.size();
+      (*this) & size;
+      if(Output())
+        for(const auto & val : s)
+          (*this) << val;
+      else
+      {
+          for(size_t i=0; i<size; i++)
+          {
+              T val;
+              (*this) & val;
+              s.insert(val);
+          }
+      }
+      return *this;
+    }
+
     // Archive arrays =====================================================
     // this functions can be overloaded in Archive implementations for more efficiency
     template <typename T, typename = std::enable_if_t<is_archivable<T>>>
@@ -420,6 +473,12 @@ namespace ngcore
 
       
 
+    template <typename T>
+    Archive& operator & (ngcore::Shallow<T>& shallow)
+    {
+      this->Shallow(shallow.val);
+      return *this;
+    }
       
 
     // Archive shared_ptrs =================================================
@@ -663,7 +722,7 @@ namespace ngcore
     void SetParallel (bool _parallel) { parallel = _parallel; }
     
   private:
-  template<typename T, typename Bases, typename CArgs>
+  template<typename T, typename Bases>
     friend class RegisterClassForArchive;
 
 #ifdef NETGEN_PYTHON

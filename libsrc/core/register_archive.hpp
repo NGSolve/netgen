@@ -37,7 +37,7 @@ namespace ngcore {
   template <typename T>
   struct has_shared_from_this
   {
-    template <typename C> static std::true_type check( decltype( sizeof(&C::shared_from_this() )) ) { return std::true_type(); }
+    template <typename C> static std::true_type check( decltype( sizeof(&C::shared_from_this )) ) { return std::true_type(); }
     template <typename> static std::false_type check(...) { return std::false_type(); }
     typedef decltype( check<T>(sizeof(char)) ) type;
     static constexpr type value = type();
@@ -45,14 +45,11 @@ namespace ngcore {
 #endif // NETGEN_PYTHON
 
 
-  template<typename T, typename Bases=std::tuple<>, typename CArgs=std::tuple<>>
+  template<typename T, typename Bases=std::tuple<>>
   class RegisterClassForArchive
   {
   public:
-    std::function<CArgs(T&)> get_cargs;
-    RegisterClassForArchive(std::function<CArgs(T&)> _get_cargs =
-                            [](T&) -> std::tuple<> { return std::tuple<>{}; }) :
-      get_cargs(_get_cargs)
+    RegisterClassForArchive()
     {
       static_assert(std::is_base_of<Bases, T>::value ||
                     detail::is_base_of_tuple<T, Bases>,
@@ -60,7 +57,7 @@ namespace ngcore {
       detail::ClassArchiveInfo info {};
       info.creator = [](const std::type_info& ti, Archive& ar) -> void*
       {
-        CArgs args;
+        detail::TCargs<T> args;
         ar &args;
         auto nT = detail::constructIfPossible<T>(args);
         return typeid(T) == ti ? nT
@@ -71,7 +68,8 @@ namespace ngcore {
       info.downcaster = [/*this*/](const std::type_info& ti, void* p) -> void*
       { return typeid(T) == ti ? p : Archive::Caster<T, Bases>::tryDowncast(ti, p); };
       info.cargs_archiver = [this](Archive &ar, void* p) {
-        ar << get_cargs(*static_cast<T*>(p));
+        if constexpr(detail::has_GetCArgs_v<T>)
+          ar << static_cast<T*>(p)->GetCArgs();
       };
 #ifdef NETGEN_PYTHON
     info.anyToPyCaster = [](const std::any &a) {
