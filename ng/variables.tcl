@@ -112,6 +112,8 @@ set viewoptions.drawpointnumbers 0
 set viewoptions.drawedgenumbers 0
 set viewoptions.drawfacenumbers 0
 set viewoptions.drawelementnumbers 0
+set viewoptions.drawsegmentnumbers 0
+set viewoptions.drawsurfaceelementnumbers 0
 set viewoptions.drawdomainsurf 0
 
 set viewoptions.drawededges 1

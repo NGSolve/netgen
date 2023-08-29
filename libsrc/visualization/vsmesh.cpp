@@ -209,6 +209,8 @@ namespace netgen
     if (vispar.drawpointnumbers ||
 	vispar.drawedgenumbers ||
 	vispar.drawfacenumbers ||
+        vispar.drawsegmentnumbers ||
+        vispar.drawsurfaceelementnumbers ||
 	vispar.drawelementnumbers)
       glCallList (pointnumberlist);
 
@@ -366,6 +368,8 @@ namespace netgen
     if (vispar.drawpointnumbers ||
 	vispar.drawedgenumbers ||
 	vispar.drawfacenumbers ||
+        vispar.drawsegmentnumbers ||
+        vispar.drawsurfaceelementnumbers ||
 	vispar.drawelementnumbers)
       {
 	//     	glEnable (GL_COLOR_MATERIAL);
@@ -427,8 +431,18 @@ namespace netgen
 
 	  }
 
+          if (vispar.drawsegmentnumbers)
+            {
+              for (auto si : Range(mesh->LineSegments())) {
+                const auto& seg = (*mesh)[si];
+                Point<3> c = Center((*mesh)[seg[0]], (*mesh)[seg[1]]);
+		glRasterPos3d (c[0], c[1], c[2]);
+		snprintf (buf, size(buf),  "%d", int(si));
+		MyOpenGLText (buf);
+              }
+            }
 
-	if (vispar.drawfacenumbers)
+          if (vispar.drawfacenumbers)
 	  {
 	    const MeshTopology & top = mesh->GetTopology();
 	    NgArray<int> v;
@@ -458,9 +472,28 @@ namespace netgen
 	      }
 	  }
 
+          if (vispar.drawsurfaceelementnumbers)
+            {
+              for (auto sei : Range(mesh->SurfaceElements()))
+                {
+                  const auto & sel = (*mesh)[sei];
+                  Point<3> c;
+                  if(sel.GetNV() == 3)
+                    c = Center((*mesh)[sel[0]],
+                               (*mesh)[sel[1]],
+                               (*mesh)[sel[2]]);
+                  else
+                    c = Center((*mesh)[sel[0]],
+                               (*mesh)[sel[1]],
+                               (*mesh)[sel[2]],
+                               (*mesh)[sel[3]]);
+                  glRasterPos3d (c[0], c[1], c[2]);
+                  snprintf (buf, size(buf),  "%d", int(sei));
+                  MyOpenGLText (buf);
+                }
+            }
 
-
-	if (vispar.drawelementnumbers)
+        if (vispar.drawelementnumbers)
 	  {
 	    NgArray<int> v;
 	    for (int i = 1; i <= mesh->GetNE(); i++)
