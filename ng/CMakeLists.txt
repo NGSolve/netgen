@@ -28,7 +28,7 @@ if(USE_GUI)
     if(APPLE)
         set_target_properties(netgen PROPERTIES OUTPUT_NAME netgen)
     endif(APPLE)
-    target_link_libraries( netgen ${PYTHON_LIBRARIES} ${TCL_LIBRARY} ${TK_LIBRARY})
+    target_link_libraries( netgen ${Python3_LIBRARIES} ${TCL_LIBRARY} ${TK_LIBRARY})
     endif(NOT BUILD_FOR_CONDA)
 
     install(TARGETS nggui ${NG_INSTALL_DIR})

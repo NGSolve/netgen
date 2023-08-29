@@ -85,12 +85,9 @@ endif()
 set(NG_INSTALL_SUFFIX netgen CACHE STRING "Suffix appended to install directories (project name)")
 
 if(USE_PYTHON)
-    find_package(PythonInterp 3 REQUIRED)
-    if(NOT BUILD_FOR_CONDA)
-      find_package(PythonLibs 3 REQUIRED)
-    endif()
+  find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1,0,''))" OUTPUT_VARIABLE PYTHON_PACKAGES_INSTALL_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+  execute_process(COMMAND ${Python3_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1,0,''))" OUTPUT_VARIABLE PYTHON_PACKAGES_INSTALL_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
     file(TO_CMAKE_PATH ${PYTHON_PACKAGES_INSTALL_DIR} PYTHON_PACKAGES_INSTALL_DIR)
 endif(USE_PYTHON)
 
@@ -316,11 +313,11 @@ if (USE_PYTHON)
       add_subdirectory(external_dependencies/pybind11)
     endif()
 
-    target_include_directories(netgen_python INTERFACE ${pybind11_INCLUDE_DIR} ${PYTHON_INCLUDE_DIRS})
-    target_include_directories(nglib PRIVATE ${pybind11_INCLUDE_DIR} ${PYTHON_INCLUDE_DIRS})
+    target_include_directories(netgen_python INTERFACE ${pybind11_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
+    target_include_directories(nglib PRIVATE ${pybind11_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
     if(NOT ${BUILD_FOR_CONDA} OR WIN32)
         # Don't link python libraries in conda environments
-        target_link_libraries(netgen_python INTERFACE ${PYTHON_LIBRARIES})
+        target_link_libraries(netgen_python INTERFACE ${Python3_LIBRARIES})
     endif()
 
     if(NG_INSTALL_PYBIND)
