@@ -7,7 +7,7 @@ else(LINUX)
 if(SKBUILD)
 # we are building a pip package - download the tcl/tk sources matching the tkinter version (for private headers not shipped with python)
 
-execute_process(COMMAND ${PYTHON_EXECUTABLE} -c 
+execute_process(COMMAND ${Python3_EXECUTABLE} -c
 "import tkinter;print(tkinter.Tcl().eval('info patchlevel').replace('.','-'))"
 OUTPUT_VARIABLE PYTHON_TCL_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 
@@ -39,7 +39,7 @@ set(TK_INCLUDE_PATH ${TK_DIR}/generic)
 list(APPEND NETGEN_DEPENDENCIES project_tcl project_tk)
 
 if(APPLE OR WIN32)
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys; print(sys.prefix)" OUTPUT_VARIABLE PYTHON_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND ${Python3_EXECUTABLE} -c "import sys; print(sys.prefix)" OUTPUT_VARIABLE PYTHON_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
     file(TO_CMAKE_PATH ${PYTHON_PREFIX} PYTHON_PREFIX)
 
     set(tcl_find_args

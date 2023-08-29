@@ -341,7 +341,7 @@ if (USE_MPI)
     target_compile_definitions(netgen_metis INTERFACE METIS )
 
     if(USE_MPI4PY AND USE_PYTHON)
-      execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import mpi4py;print(mpi4py.get_include())" OUTPUT_VARIABLE mpi4py_path OUTPUT_STRIP_TRAILING_WHITESPACE)
+      execute_process(COMMAND ${Python3_EXECUTABLE} -c "import mpi4py;print(mpi4py.get_include())" OUTPUT_VARIABLE mpi4py_path OUTPUT_STRIP_TRAILING_WHITESPACE)
       find_path(MPI4PY_INCLUDE_DIR mpi4py.h HINTS ${mpi4py_path}/mpi4py NO_DEFAULT_PATH REQUIRED)
       target_include_directories(netgen_metis INTERFACE ${MPI4PY_INCLUDE_DIR})
       target_compile_definitions(netgen_metis INTERFACE NG_MPI4PY )
