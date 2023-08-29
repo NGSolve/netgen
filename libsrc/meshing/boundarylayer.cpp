@@ -189,9 +189,11 @@ namespace netgen
     bool limit_reached = true;
     double lam_lower_limit = 1.0;
     int step = 0;
-    while(limit_reached || step<2)
+
+    while(limit_reached || step<3)
     {
-        if(step>0)
+
+        if(step>1)
             lam_lower_limit *= 0.8;
         limit_reached = false;
 
@@ -241,7 +243,18 @@ namespace netgen
                 double lam_ = 999;
                 bool is_bl_sel = params.surfid.Contains(sel.GetIndex());
 
-                if(step==0)
+                if (step == 0)
+                {
+                    face = GetMappedFace(sei, -1);
+                    if (isIntersectingFace(seg, face, lam_))
+                    {
+                        if (is_bl_sel)
+                            lam_ *= 0.5;
+                        lam = min(lam, lam_);
+                    }
+                }
+
+                if(step==1)
                 {
                     if(isIntersectingFace(seg, face, lam_))
                     {
@@ -251,7 +264,7 @@ namespace netgen
                     }
                 }
                 // if the opposing surface element has a boundary layer, we need to additionally intersect with the new faces 
-                if(step>0 && is_bl_sel)
+                if(step>1 && is_bl_sel)
                 {
                     for(auto facei : Range(-1, sel.GetNP()))
                     {
