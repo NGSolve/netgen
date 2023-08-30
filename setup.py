@@ -102,7 +102,7 @@ cmake_args += [
 ]
 
 pyprefix = pathlib.Path(sys.prefix).as_posix()
-cmake_args += [f'-DCMAKE_PREFIX_PATH={pyprefix}']
+cmake_args += [f'-DCMAKE_PREFIX_PATH={pyprefix}', f'-DPython3_ROOT_DIR={pyprefix}']
 
 setup(
     name=name,
