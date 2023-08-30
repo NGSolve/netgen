@@ -181,7 +181,11 @@ if (USE_PYTHON)
     else( PYBIND_INCLUDE_DIR )
         message(FATAL_ERROR "Could NOT find pybind11!")
     endif( PYBIND_INCLUDE_DIR )
-    find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.18)
+      find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+    else()
+      find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+    endif()
 
     set_vars(NETGEN_CMAKE_ARGS
       Python3_INCLUDE_DIRS

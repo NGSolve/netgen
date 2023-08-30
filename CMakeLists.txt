@@ -85,7 +85,11 @@ endif()
 set(NG_INSTALL_SUFFIX netgen CACHE STRING "Suffix appended to install directories (project name)")
 
 if(USE_PYTHON)
-  find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+  if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.18)
+    find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+  else()
+    find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+  endif()
 
   execute_process(COMMAND ${Python3_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1,0,''))" OUTPUT_VARIABLE PYTHON_PACKAGES_INSTALL_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
     file(TO_CMAKE_PATH ${PYTHON_PACKAGES_INSTALL_DIR} PYTHON_PACKAGES_INSTALL_DIR)
