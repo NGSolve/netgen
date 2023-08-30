@@ -181,7 +181,7 @@ if (USE_PYTHON)
     else( PYBIND_INCLUDE_DIR )
         message(FATAL_ERROR "Could NOT find pybind11!")
     endif( PYBIND_INCLUDE_DIR )
-    find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+    find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module Development.Embed)
 
     set_vars(NETGEN_CMAKE_ARGS
       Python3_INCLUDE_DIRS
