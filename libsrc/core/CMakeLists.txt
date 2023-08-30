@@ -78,7 +78,7 @@ endif(ENABLE_CPP_CORE_GUIDELINES_CHECK)
 add_dependencies(ngcore ng_generate_version_file)
 
 if(USE_PYTHON)
-  pybind11_add_module(pyngcore SHARED python_ngcore_export.cpp)
+  pybind11_add_module(pyngcore MODULE python_ngcore_export.cpp)
   target_link_libraries(pyngcore PUBLIC ngcore netgen_python)
   set_target_properties(pyngcore PROPERTIES INSTALL_RPATH "${NG_RPATH_TOKEN}/../${NETGEN_PYTHON_RPATH}")
   install(TARGETS pyngcore DESTINATION ${NG_INSTALL_DIR_PYTHON}/pyngcore COMPONENT netgen)

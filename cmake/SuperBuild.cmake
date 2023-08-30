@@ -181,16 +181,18 @@ if (USE_PYTHON)
     else( PYBIND_INCLUDE_DIR )
         message(FATAL_ERROR "Could NOT find pybind11!")
     endif( PYBIND_INCLUDE_DIR )
-    find_package(PythonInterp 3 REQUIRED)
-    if(NOT BUILD_FOR_CONDA)
-      find_package(PythonLibs 3 REQUIRED)
+    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.18)
+      find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+      find_package(Python3 COMPONENTS Interpreter Development.Embed)
+    else()
+      find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
     endif()
 
     set_vars(NETGEN_CMAKE_ARGS
-      PYTHON_INCLUDE_DIRS
-      PYTHON_LIBRARIES
-      PYTHON_EXECUTABLE
-      PYTHON_VERSION
+      Python3_INCLUDE_DIRS
+      Python3_LIBRARIES
+      Python3_EXECUTABLE
+      Python3_VERSION
       PYBIND_INCLUDE_DIR
       NG_INSTALL_PYBIND
       )

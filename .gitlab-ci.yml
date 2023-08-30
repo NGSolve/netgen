@@ -241,6 +241,7 @@ build_mac:
         -DCMAKE_OSX_SYSROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
         -DUSE_CGNS=ON
         -DUSE_OCC=ON
+        -DPython3_ROOT_DIR=/Library/Frameworks/Python.framework/Versions/3.8/
     - make -j5 install
 
 test_mac:
