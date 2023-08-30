@@ -86,7 +86,8 @@ set(NG_INSTALL_SUFFIX netgen CACHE STRING "Suffix appended to install directorie
 
 if(USE_PYTHON)
   if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.18)
-    find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+      find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+      find_package(Python3 COMPONENTS Interpreter Development.Embed)
   else()
     find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
   endif()
@@ -319,8 +320,7 @@ if (USE_PYTHON)
 
     target_include_directories(netgen_python INTERFACE ${pybind11_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
     target_include_directories(nglib PRIVATE ${pybind11_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
-    if(NOT ${BUILD_FOR_CONDA} OR WIN32)
-        # Don't link python libraries in conda environments
+    if(Python3_LIBRARIES)
         target_link_libraries(netgen_python INTERFACE ${Python3_LIBRARIES})
     endif()
 
