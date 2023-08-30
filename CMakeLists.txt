@@ -2,8 +2,8 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING INTERNAL)
 endif(NOT CMAKE_BUILD_TYPE)
 
-cmake_minimum_required(VERSION 3.18)
-cmake_policy(VERSION 3.18)
+cmake_minimum_required(VERSION 3.16)
+cmake_policy(VERSION 3.16)
 
 if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24.0")
   cmake_policy(SET CMP0135 NEW)
