@@ -383,7 +383,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 	  if(index<0 || index>2)
               throw py::index_error();
 	  self(index) = val;
-	})
+    })
+    .def_property("singular",
+                  [](const MeshPoint & pnt) { return pnt.Singularity(); },
+                  [](MeshPoint & pnt, double sing) { pnt.Singularity(sing); })
     ;
 
   py::class_<Element>(m, "Element3D")
@@ -608,6 +611,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 						     {
 						       return self.edgenr;
 						     }))
+    .def_property("singular",
+                  [](const Segment & seg) { return seg.singedge_left; },
+                  [](Segment & seg, double sing) { seg.singedge_left = sing; seg.singedge_right=sing; })
     ;
 
   if(ngcore_have_numpy)
