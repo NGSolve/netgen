@@ -288,6 +288,9 @@ namespace netgen
 
     while(limit_reached || step<3)
     {
+        Array<double, PointIndex> new_limits;
+        new_limits.SetSize(np);
+        new_limits = 1.0;
 
         if(step>1)
             lam_lower_limit *= 0.8;
@@ -382,8 +385,11 @@ namespace netgen
                 }
                 limits[pi] = min(limits[pi], lam);
             }
+
+            new_limits[pi] = min(limits[pi], lam* limits[pi]);
         }
         step++;
+        limits = new_limits;
     }
 
     self_intersection();
