@@ -383,7 +383,6 @@ namespace netgen
                     limit_reached = true;
                     lam = lam_lower_limit;
                 }
-                limits[pi] = min(limits[pi], lam);
             }
 
             new_limits[pi] = min(limits[pi], lam* limits[pi]);
