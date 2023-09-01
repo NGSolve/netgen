@@ -96,7 +96,7 @@ namespace netgen
 
   array<Point<3>, 2> BoundaryLayerTool :: GetMappedSeg( PointIndex pi )
   {
-      return { mesh[pi], mesh[pi] + height*limits[pi]*growthvectors[pi] };
+      return { mesh[pi], mesh[pi] + height*limits[pi]*growthvectors[pi] * 1.5 };
   }
 
   ArrayMem<Point<3>, 4> BoundaryLayerTool :: GetFace( SurfaceElementIndex sei )
@@ -348,7 +348,7 @@ namespace netgen
                     if (isIntersectingFace(seg, face, lam_))
                     {
                         if (is_bl_sel)
-                            lam_ *= 0.5;
+                            lam_ *= 0.3;
                         lam = min(lam, lam_);
                     }
                 }
@@ -358,7 +358,7 @@ namespace netgen
                     if(isIntersectingFace(seg, face, lam_))
                     {
                         if(is_bl_sel) // allow only half the distance if the opposing surface element has a boundary layer too
-                            lam_ *= 0.5;
+                            lam_ *= 0.3;
                         lam = min(lam, lam_);
                     }
                 }
@@ -378,7 +378,7 @@ namespace netgen
               });
             if(lam<1)
             {
-                if(lam<lam_lower_limit && step>0)
+                if(lam<lam_lower_limit && step>1)
                 {
                     limit_reached = true;
                     lam = lam_lower_limit;
@@ -389,6 +389,8 @@ namespace netgen
         }
         step++;
         limits = new_limits;
+        if (step > 0)
+           modifiedsmooth(1);
     }
 
     self_intersection();
@@ -1499,10 +1501,11 @@ namespace netgen
       auto segmap = BuildSegMap();
 
       auto in_surface_direction = ProjectGrowthVectorsOnSurface();
-      InterpolateGrowthVectors();
 
       if(params.limit_growth_vectors)
         LimitGrowthVectorLengths();
+
+      InterpolateGrowthVectors();
       FixVolumeElements();
       InsertNewElements(segmap, in_surface_direction);
       SetDomInOut();

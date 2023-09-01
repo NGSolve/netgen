@@ -1,0 +1,76 @@
+﻿{
+  "configurations": [
+    {
+      "name": "x64-Debug",
+      "generator": "Ninja",
+      "configurationType": "Debug",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": ""
+    },
+    {
+      "name": "x64-Release",
+      "generator": "Ninja",
+      "configurationType": "Release",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": [
+        {
+          "name": "OCC_DOWNLOAD_URL_WIN",
+          "value": "D:/source/netgen_occ/latest/occ_win64_cenos.zip",
+          "type": "STRING"
+        },
+        {
+          "name": "USE_NATIVE_ARCH",
+          "value": "False",
+          "type": "BOOL"
+        },
+        {
+          "name": "USE_OCC",
+          "value": "True",
+          "type": "BOOL"
+        }
+      ]
+    },
+    {
+      "name": "x64-RelWithDebInfo",
+      "generator": "Ninja",
+      "configurationType": "RelWithDebInfo",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": [
+        {
+          "name": "OCC_DOWNLOAD_URL_WIN",
+          "value": "D:/source/netgen_occ/latest/occ_win64_cenos.zip",
+          "type": "STRING"
+        },
+        {
+          "name": "USE_NATIVE_ARCH",
+          "value": "False",
+          "type": "BOOL"
+        },
+        {
+          "name": "USE_OCC",
+          "value": "True",
+          "type": "BOOL"
+        },
+        {
+          "name": "USE_PYTHON",
+          "value": "False",
+          "type": "BOOL"
+        }
+      ]
+    }
+  ]
+}
