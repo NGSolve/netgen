@@ -394,7 +394,7 @@ namespace netgen
     }
 
     self_intersection();
-    modifiedsmooth(3);
+    modifiedsmooth(1);
 
     for(auto pi : Range(growthvectors))
         growthvectors[pi] *= limits[pi];
