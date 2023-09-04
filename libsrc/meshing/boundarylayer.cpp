@@ -664,6 +664,10 @@ namespace netgen
               }
           }
       }
+
+    for(auto si : params.surfid)
+      if(surfacefacs[si] == 0.0)
+        throw Exception("Surface " + to_string(si) + " is not a boundary of the domain to be grown into!");
   }
 
   void BoundaryLayerTool ::CreateFaceDescriptorsSides()
