@@ -96,7 +96,7 @@ namespace netgen
 
   array<Point<3>, 2> BoundaryLayerTool :: GetMappedSeg( PointIndex pi )
   {
-      return { mesh[pi], mesh[pi] + height*limits[pi]*growthvectors[pi] };
+      return { mesh[pi], mesh[pi] + height*limits[pi]*growthvectors[pi] * 1.5 };
   }
 
   ArrayMem<Point<3>, 4> BoundaryLayerTool :: GetFace( SurfaceElementIndex sei )
@@ -288,6 +288,9 @@ namespace netgen
 
     while(limit_reached || step<3)
     {
+        Array<double, PointIndex> new_limits;
+        new_limits.SetSize(np);
+        new_limits = 1.0;
 
         if(step>1)
             lam_lower_limit *= 0.8;
@@ -345,7 +348,7 @@ namespace netgen
                     if (isIntersectingFace(seg, face, lam_))
                     {
                         if (is_bl_sel)
-                            lam_ *= 0.5;
+                            lam_ *= params.limit_safety;
                         lam = min(lam, lam_);
                     }
                 }
@@ -355,7 +358,7 @@ namespace netgen
                     if(isIntersectingFace(seg, face, lam_))
                     {
                         if(is_bl_sel) // allow only half the distance if the opposing surface element has a boundary layer too
-                            lam_ *= 0.5;
+                            lam_ *= params.limit_safety;
                         lam = min(lam, lam_);
                     }
                 }
@@ -375,19 +378,23 @@ namespace netgen
               });
             if(lam<1)
             {
-                if(lam<lam_lower_limit && step>0)
+                if(lam<lam_lower_limit && step>1)
                 {
                     limit_reached = true;
                     lam = lam_lower_limit;
                 }
-                limits[pi] = min(limits[pi], lam);
             }
+
+            new_limits[pi] = min(limits[pi], lam* limits[pi]);
         }
         step++;
+        limits = new_limits;
+        if (step > 0)
+           modifiedsmooth(1);
     }
 
     self_intersection();
-    modifiedsmooth(3);
+    modifiedsmooth(1);
 
     for(auto pi : Range(growthvectors))
         growthvectors[pi] *= limits[pi];
@@ -1498,10 +1505,11 @@ namespace netgen
       auto segmap = BuildSegMap();
 
       auto in_surface_direction = ProjectGrowthVectorsOnSurface();
-      InterpolateGrowthVectors();
 
       if(params.limit_growth_vectors)
         LimitGrowthVectorLengths();
+
+      InterpolateGrowthVectors();
       FixVolumeElements();
       InsertNewElements(segmap, in_surface_direction);
       SetDomInOut();

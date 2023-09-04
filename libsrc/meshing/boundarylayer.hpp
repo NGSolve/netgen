@@ -19,6 +19,7 @@ public:
   bool outside = false; // set the boundary layer on the outside
   bool grow_edges = false;
   bool limit_growth_vectors = true;
+  double limit_safety = 0.3; // alloow only 30% of the growth vector length
   bool sides_keep_surfaceindex = false;
   Array<size_t> project_boundaries;
 };
