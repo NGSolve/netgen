@@ -8,6 +8,10 @@
 /* Redesigned by Wolfram Muehlhuber, May 1998                              */
 /* *************************************************************************/
 
+#include <general/optmem.hpp>
+#include <general/template.hpp>
+
+#include "geomfuncs.hpp"
 
 namespace netgen
 {

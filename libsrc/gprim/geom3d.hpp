@@ -7,6 +7,9 @@
 /* Date:   5. Aug. 95                                                      */
 /* *************************************************************************/
 
+#include <mydefs.hpp>
+#include "geom2d.hpp"
+
 namespace netgen
 {
 

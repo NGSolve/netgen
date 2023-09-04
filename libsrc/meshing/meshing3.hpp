@@ -1,8 +1,11 @@
 #ifndef FILE_MESHING3
 #define FILE_MESHING3
 
+#include "adfront3.hpp"
+#include "ruler3.hpp"
 
-
+namespace netgen
+{
 
 enum MESHING3_RESULT
 {
@@ -114,18 +117,6 @@ extern int FindInnerPoint (POINTArray & grouppoints,
 
 */
 
-
-
-
+} // namespace netgen
 
 #endif
-
-
-
-
-
-
-
-
-
-

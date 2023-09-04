@@ -1,6 +1,8 @@
 #ifndef FILE_RULER3
 #define FILE_RULER3
 
+namespace netgen
+{
 
 /**
   3D element generation rule.
@@ -204,7 +206,6 @@ public:
   //  friend void Plot3DRule (const ROT3D & r, char key);
 };
 
-
-
+} // namespace netgen
 #endif
 

@@ -1,5 +1,13 @@
-#ifndef BISECT
-#define BISECT
+#ifndef NETGEN_BISECT_HPP
+#define NETGEN_BISECT_HPP
+
+#include <mydefs.hpp>
+#include <general/parthreads.hpp>
+#include "basegeom.hpp"
+#include "meshclass.hpp"
+
+namespace netgen
+{
 
 class BisectionOptions
 {
@@ -59,4 +67,6 @@ public:
   virtual void LocalizeEdgePoints(Mesh & /* mesh */) const {;}
 };
 
-#endif
+} // namespace netgen
+
+#endif // NETGEN_BISECT_HPP

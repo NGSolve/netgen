@@ -1,6 +1,8 @@
-#ifndef FILE_BOUNDARYLAYER
-#define FILE_BOUNDARYLAYER
+#ifndef NETGEN_BOUNDARYLAYER_HPP
+#define NETGEN_BOUNDARYLAYER_HPP
 
+namespace netgen
+{
 
 ///
 DLL_HEADER extern void InsertVirtualBoundaryLayer (Mesh & mesh);
@@ -88,4 +90,5 @@ class BoundaryLayerTool
     Vec<3> getEdgeTangent(PointIndex pi, int edgenr);
 };
 
-#endif
+} // namespace netgen
+#endif // NETGEN_BOUNDARYLAYER_HPP

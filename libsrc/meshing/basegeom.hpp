@@ -7,10 +7,18 @@
 /* Date:   23. Aug. 09                                                    */
 /**************************************************************************/
 
+#include <gprim/geomobjects.hpp>
+#include <gprim/transform3d.hpp>
+
+#include "meshtype.hpp"
+#include "meshclass.hpp"
+
 struct Tcl_Interp;
 
 namespace netgen
 {
+  class Refinement;
+
   struct ShapeProperties
   {
     optional<string> name;

@@ -11,7 +11,13 @@
   Advancing front class for volume meshing
 */
 
+#include <gprim/geomobjects.hpp>
+#include <gprim/adtree.hpp>
+#include "meshtype.hpp"
+#include "geomsearch.hpp"
 
+namespace netgen
+{
 
 /// Point in advancing front
 class FrontPoint3
@@ -315,7 +321,5 @@ private:
   void RebuildInternalTables();
 };
 
-
-
-
+} // namespace netgen
 #endif

@@ -7,6 +7,8 @@
 /* Date:   13. Feb. 98                                                     */
 /* *************************************************************************/
 
+#include "geom3d.hpp"
+#include "geomobjects.hpp"
 
 namespace netgen
 {

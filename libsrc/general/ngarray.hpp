@@ -7,12 +7,14 @@
 /* Date:   01. Jun. 95                                                    */
 /**************************************************************************/
 
+#include <core/array.hpp>
+#include <core/archive.hpp>
 
 namespace netgen
 {
 
   // template <class T, int B1, int B2> class IndirectArray;
-  template <class TA1, class TA2> class IndirectArray;
+  template <class TA1, class TA2> class NgIndirectArray;
 
 
 
@@ -119,9 +121,9 @@ namespace netgen
     }
 
     template <typename T2, int B2>
-    IndirectArray<NgFlatArray, NgFlatArray<T2,B2> > operator[] (const NgFlatArray<T2,B2> & ia) const
+    NgIndirectArray<NgFlatArray, NgFlatArray<T2,B2> > operator[] (const NgFlatArray<T2,B2> & ia) const
     {
-      return IndirectArray<NgFlatArray, NgFlatArray<T2,B2> > (*this, ia);
+      return NgIndirectArray<NgFlatArray, NgFlatArray<T2,B2> > (*this, ia);
     }
 
 
@@ -206,10 +208,10 @@ namespace netgen
       return ( Pos(elem) >= 0 );
     }
 
-    operator FlatArray<T> () const
+    operator ngcore::FlatArray<T> () const
     {
       static_assert (BASE==0);
-      return FlatArray<T>(size, data);
+      return ngcore::FlatArray<T>(size, data);
     }
   };
 
@@ -422,7 +424,7 @@ namespace netgen
 
     // Only provide this function if T is archivable
     template<typename T2=T>
-    auto DoArchive(Archive& archive) -> typename std::enable_if<is_archivable<T2>, void>::type
+    auto DoArchive(ngcore::Archive& archive) -> typename std::enable_if<ngcore::is_archivable<T2>, void>::type
     {
       if(archive.Output())
         archive << size;
@@ -531,13 +533,13 @@ namespace netgen
   */
 
   template <class TA1, class TA2>
-  class IndirectArray
+  class NgIndirectArray
   {
     const TA1 & array;
     const TA2 & ia; 
     
   public:
-    IndirectArray (const TA1 & aa, const TA2 & aia)
+    NgIndirectArray (const TA1 & aa, const TA2 & aia)
     : array(aa), ia(aia) { ; }
     int Size() const { return ia.Size(); }
     [[deprecated("Use *Range().begin() instead")]]    
@@ -553,7 +555,7 @@ namespace netgen
 
 
   template <typename T1, typename T2>
-  inline ostream & operator<< (ostream & s, const IndirectArray<T1,T2> & ia)
+  inline ostream & operator<< (ostream & s, const NgIndirectArray<T1,T2> & ia)
   {
     for (int i = ia.Begin(); i < ia.End(); i++)
       s << i << ": " << ia[i] << endl;

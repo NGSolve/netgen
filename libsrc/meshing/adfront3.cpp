@@ -1,6 +1,7 @@
 #include <mystdlib.h>
-#include "meshing.hpp"
 
+#include <gprim/geomtest3d.hpp>
+#include "adfront3.hpp"
 
 /* ********************** FrontPoint ********************** */
 

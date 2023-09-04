@@ -7,10 +7,14 @@
 /* Date:   20. Jul. 02                                                     */
 /* *************************************************************************/
 
+#include <core/archive.hpp>
+#include <core/array.hpp>
+
+#include <general/ngarray.hpp>
 
 namespace netgen
 {
-
+  using namespace ngcore;
 
   template <int D, typename T = double> class Vec;
   template <int D, typename T = double> class Point;
@@ -169,6 +173,26 @@ namespace netgen
 
     Vec<D> GetNormal () const;
   };
+
+  template <int D>
+  inline ostream & operator<< (ostream & ost, const Vec<D> & a)
+  {
+    ost << "(";
+    for (int i = 0; i < D-1; i++)
+      ost << a(i) << ", ";
+    ost << a(D-1) << ")";
+    return ost;
+  }
+
+  template <int D>
+  inline ostream & operator<< (ostream & ost, const Point<D> & a)
+  {
+    ost << "(";
+    for (int i = 0; i < D-1; i++)
+      ost << a(i) << ", ";
+    ost << a(D-1) << ")";
+    return ost;
+  }
 
   template<int D>
   inline Vec<D> operator-(const Point<D>& p1, const Point<D>& p2)
@@ -338,7 +362,7 @@ namespace netgen
     }
 
     template <typename T1, typename T2>
-    void Set (const IndirectArray<T1, T2> & points)
+    void Set (const NgIndirectArray<T1, T2> & points)
     {
       // Set (points[points.Begin()]);
       Set (points[*points.Range().begin()]);
@@ -348,7 +372,7 @@ namespace netgen
     }
 
     template <typename T1, typename T2>
-    void Add (const IndirectArray<T1, T2> & points)
+    void Add (const NgIndirectArray<T1, T2> & points)
     {
       // for (int i = points.Begin(); i < points.End(); i++)
       for (int i : points.Range())

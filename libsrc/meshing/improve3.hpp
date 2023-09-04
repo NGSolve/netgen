@@ -1,6 +1,8 @@
 #ifndef FILE_IMPROVE3
 #define FILE_IMPROVE3
 
+namespace netgen
+{
 
 extern double CalcTotalBad (const Mesh::T_POINTS & points, 
 			    const Array<Element, ElementIndex> & elements,
@@ -136,6 +138,5 @@ public:
   inline void UnSetNV(void) {onplane = false;}
 };
 
-
-
+} // namespace netgen
 #endif

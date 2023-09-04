@@ -1,11 +1,12 @@
 #include <mystdlib.h>
-#include "meshing.hpp"
+#include "global.hpp"
 #include <netgen_version.hpp>
-
+#include "msghandler.hpp"
+#include "meshtype.hpp"
 
 namespace netgen
 {
-
+  class NetgenGeometry;
   class TraceGlobal
   {
     string name;

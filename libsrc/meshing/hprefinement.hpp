@@ -11,7 +11,11 @@
   HP Refinement
 */
 
+#include "bisect.hpp"
+#include "meshtype.hpp"
 
+namespace netgen
+{
 
 
 enum HPREF_ELEMENT_TYPE {
@@ -324,5 +328,6 @@ inline void HPRefinement (Mesh & mesh, Refinement * ref, int levels,
   HPRefinement (mesh, ref, SPLIT_HP, levels, fac1, setorders, ref_level);
 }
 
+} // namespace netgen
 #endif
 

@@ -7,8 +7,11 @@
 /* Date:   01. Oct. 94                                                     */
 /* *************************************************************************/
 
+#include <core/archive.hpp>
 
-
+namespace netgen
+{
+  using namespace ngcore;
 
 template <typename T>
 class TFlatVector
@@ -209,7 +212,7 @@ inline ostream & operator<< (ostream & ost, const FlatVector & v)
   return ost;
 }
 
-
+} //namespace netgen
 
 #endif
 

@@ -8,6 +8,13 @@
 /* Date:   01. Okt. 95                                                    */
 /**************************************************************************/
 
+#include <mydefs.hpp>
+#include <general/template.hpp>
+#include <gprim/geom3d.hpp>
+#include <linalg.hpp>
+
+#include "msghandler.hpp"
+
 namespace netgen
 {
 

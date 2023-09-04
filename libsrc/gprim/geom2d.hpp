@@ -7,6 +7,12 @@
 /* Date:   5. Aug. 95                                                      */
 /* *************************************************************************/
 
+#include <mydefs.hpp>
+
+#include <general/template.hpp>
+#include "geomobjects.hpp"
+#include <meshing/global.hpp>
+
 namespace netgen 
 {
 
@@ -15,7 +21,7 @@ namespace netgen
 #define EPSGEOM 1E-5
 
 
-  // extern void MyError (const char * ch);
+  void MyError (const char * ch);
 
   class Point2d;
   class Vec2d;

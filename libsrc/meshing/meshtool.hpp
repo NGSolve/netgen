@@ -1,7 +1,13 @@
-#ifndef FILE_MESHTOOL
-#define FILE_MESHTOOL
+#ifndef NETGEN_MESHTOOL_HPP
+#define NETGEN_MESHTOOL_HPP
 
+// #include "../general/ngarray.hpp"
+// #include "../gprim/geom3d.hpp"
+// #include "../gprim/geomobjects.hpp"
+// #include "meshtype.hpp"
+// #include "meshclass.hpp"
 
+namespace netgen {
 ///
 extern void MeshQuality2d (const Mesh & mesh);
 
@@ -78,4 +84,6 @@ extern int CheckSurfaceMesh2 (const Mesh & mesh);
 extern int CheckMesh3D (const Mesh & mesh);
 ///
 extern void RemoveProblem (Mesh & mesh, int domainnr);
-#endif
+
+} // namespace netgen
+#endif // NETGEN_MESHTOOL_HPP

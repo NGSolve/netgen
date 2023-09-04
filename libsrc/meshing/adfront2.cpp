@@ -3,8 +3,9 @@
 */
 
 #include <mystdlib.h>
-#include "meshing.hpp"
-
+#include <gprim/geom2d.hpp>
+#include <gprim/geomfuncs.hpp>
+#include "adfront2.hpp"
 
 namespace netgen
 {

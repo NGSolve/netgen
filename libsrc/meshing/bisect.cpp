@@ -1,5 +1,7 @@
 #include <mystdlib.h>
-#include "meshing.hpp"
+#include <core/array.hpp>
+#include "bisect.hpp"
+#include "validate.hpp"
 
 #define noDEBUG
 

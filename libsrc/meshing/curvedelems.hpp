@@ -1,5 +1,5 @@
-#ifndef CURVEDELEMS
-#define CURVEDELEMS
+#ifndef NETGEN_CURVEDELEMS_HPP
+#define NETGEN_CURVEDELEMS_HPP
 
 /**************************************************************************/
 /* File:   curvedelems.hpp                                                */
@@ -8,11 +8,16 @@
 /* Date:   27. Sep. 02, Feb 2006                                          */
 /**************************************************************************/
 
+#include <mydefs.hpp>
+#include <general/ngarray.hpp>
+#include <gprim/geomobjects.hpp>
 
+#include "meshtype.hpp"
 
-
+namespace netgen
+{
 class Refinement;
-
+class Mesh;
 
 class CurvedElements
 {
@@ -259,6 +264,5 @@ private:
   bool EvaluateMapping (SurfaceElementInfo & info, const Point<2,T> xi, Point<DIM_SPACE,T> & x, Mat<DIM_SPACE,2,T> & jac) const;  
 };
 
-
-
-#endif
+} //namespace netgen
+#endif // NETGEN_CURVEDELEMS_HPP
