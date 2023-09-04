@@ -10,7 +10,7 @@ configure_file(version_template.py ${CMAKE_CURRENT_BINARY_DIR}/version.py @ONLY)
 install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/config.py
         ${CMAKE_CURRENT_BINARY_DIR}/version.py
-        __main__.py __init__.py
+        __main__.py __init__.py config_cli.py
         meshing.py csg.py geom2d.py stl.py gui.py NgOCC.py occ.py
         read_gmsh.py read_meshio.py
         webgui.py
