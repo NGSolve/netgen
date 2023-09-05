@@ -1628,7 +1628,9 @@ namespace netgen
         MeshOptimize3d meshopt(mp);
         tempmesh.Compress();
         tempmesh.FindOpenElements ();
+      #ifndef EMSCRIPTEN
         RegionTaskManager rtm(mp.parallel_meshing ? mp.nthreads : 0);
+      #endif // EMSCRIPTEN
         for (auto i : Range(10))
           {
             PrintMessage (5, "Num open: ", tempmesh.GetNOpenElements());
