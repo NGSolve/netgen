@@ -43,6 +43,21 @@ namespace ngcore
   template <> struct MPI_typetrait<bool> {
     static MPI_Datatype MPIType () { return MPI_C_BOOL; } };
 
+
+  template<int S, typename T>
+  struct MPI_typetrait<std::array<T,S>>
+  {
+    static MPI_Datatype MPIType () 
+    { 
+      static MPI_Datatype MPI_T = 0;
+      if (!MPI_T)
+	{
+	  MPI_Type_contiguous ( S, MPI_typetrait<T>::MPIType(), &MPI_T);
+	  MPI_Type_commit ( &MPI_T );
+	}
+      return MPI_T;
+    }
+  };
   
   template <class T, class T2 = decltype(MPI_typetrait<T>::MPIType())>
   inline MPI_Datatype GetMPIType () {
