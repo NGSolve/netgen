@@ -319,7 +319,7 @@ if (USE_PYTHON)
 
     target_include_directories(netgen_python INTERFACE ${pybind11_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
     target_include_directories(nglib PRIVATE ${pybind11_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
-    if(Python3_LIBRARIES)
+    if(Python3_LIBRARIES AND NOT BUILD_FOR_CONDA)
         target_link_libraries(netgen_python INTERFACE ${Python3_LIBRARIES})
     endif()
 
