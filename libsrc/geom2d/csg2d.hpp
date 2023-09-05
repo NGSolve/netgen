@@ -7,7 +7,7 @@
 
 namespace netgen
 {
-
+using namespace std;
 using namespace ngcore;
 using netgen::Point;
 using netgen::Vec;

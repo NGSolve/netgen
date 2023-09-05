@@ -1,6 +1,10 @@
+#ifndef NETGEN_FINDIP_HPP
+#define NETGEN_FINDIP_HPP
+
 // find inner point
 
-
+namespace netgen
+{
 
 inline void Minimize (const NgArray<Vec3d> & a,
 		      const NgArray<double> & c,
@@ -188,5 +192,7 @@ inline int FindInnerPoint (POINTArray & points,
   return (f < -1e-5 * hmax);
 }
 
+} // namespace netgen
+#endif // FILE_FINDINNERPOINT_HPP
 
 

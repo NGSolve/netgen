@@ -8,6 +8,11 @@
 /* Redesigned by Wolfram Muehlhuber, May 1998                              */
 /* *************************************************************************/
 
+#include <general/optmem.hpp>
+#include <general/template.hpp>
+#include <general/hashtabl.hpp>
+
+#include "geomfuncs.hpp"
 
 namespace netgen
 {
@@ -430,7 +435,7 @@ public:
     // float cmin[dim], cmax[dim];
     Point<dim> cmin, cmax;
     // NgArray<T_ADTreeNode<dim>*> ela;
-    ClosedHashTable<T, T_ADTreeNode<dim,T>*> ela;
+    NgClosedHashTable<T, T_ADTreeNode<dim,T>*> ela;
 
     BlockAllocator ball{sizeof(T_ADTreeNode<dim,T>)};
   public:
@@ -759,7 +764,7 @@ public:
     Leaf() : n_elements(0)
     { }
 
-    void Add( ClosedHashTable<T, Leaf*> &leaf_index, const Point<2*dim> &ap, T aindex )
+    void Add( NgClosedHashTable<T, Leaf*> &leaf_index, const Point<2*dim> &ap, T aindex )
       {
         p[n_elements] = ap;
         index[n_elements] = aindex;
@@ -794,7 +799,7 @@ public:
 private:
   Node root;
 
-  ClosedHashTable<T, Leaf*> leaf_index;
+  NgClosedHashTable<T, Leaf*> leaf_index;
 
   Point<dim> global_min, global_max;
   double tol;

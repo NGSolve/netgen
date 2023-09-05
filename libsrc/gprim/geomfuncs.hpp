@@ -7,6 +7,8 @@
 /* Date:   20. Jul. 02                                                     */
 /* *************************************************************************/
 
+#include "geomobjects.hpp"
+#include "geomops.hpp"
 
 namespace netgen 
 {

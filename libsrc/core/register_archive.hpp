@@ -63,11 +63,11 @@ namespace ngcore {
         return typeid(T) == ti ? nT
           : Archive::Caster<T, Bases>::tryUpcast(ti, nT);
       };
-      info.upcaster = [/*this*/](const std::type_info& ti, void* p) -> void*
+      info.upcaster = [](const std::type_info& ti, void* p) -> void*
       { return typeid(T) == ti ? p : Archive::Caster<T, Bases>::tryUpcast(ti, static_cast<T*>(p)); };
-      info.downcaster = [/*this*/](const std::type_info& ti, void* p) -> void*
+      info.downcaster = [](const std::type_info& ti, void* p) -> void*
       { return typeid(T) == ti ? p : Archive::Caster<T, Bases>::tryDowncast(ti, p); };
-      info.cargs_archiver = [this](Archive &ar, void* p) {
+      info.cargs_archiver = [](Archive &ar, void* p) {
         if constexpr(detail::has_GetCArgs_v<T>)
           ar << static_cast<T*>(p)->GetCArgs();
       };

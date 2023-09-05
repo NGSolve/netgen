@@ -7,8 +7,8 @@
 /* Date:   01. Oct. 94                                                     */
 /* *************************************************************************/
 
-
-
+namespace netgen
+{
 
 template <typename T>
 class TFlatVector
@@ -139,7 +139,8 @@ public:
   ~Vector ()
   { if (ownmem) delete [] data; }
 
-  virtual void DoArchive(Archive& ar)
+  template<typename ARCHIVE>
+  void DoArchive(ARCHIVE& ar)
   {
     auto size = s;
     ar & ownmem & size;
@@ -209,7 +210,7 @@ inline ostream & operator<< (ostream & ost, const FlatVector & v)
   return ost;
 }
 
-
+} //namespace netgen
 
 #endif
 

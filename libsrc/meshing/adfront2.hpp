@@ -1,5 +1,5 @@
-#ifndef FILE_ADFRONT2
-#define FILE_ADFRONT2
+#ifndef NETGEN_ADFRONT2_HPP
+#define NETGEN_ADFRONT2_HPP
 
 /**************************************************************************/
 /* File:   adfront2.hpp                                                   */
@@ -14,6 +14,12 @@
 
 */
 
+#include <gprim/geomobjects.hpp>
+#include <gprim/adtree.hpp>
+#include "meshtype.hpp"
+
+namespace netgen
+{
   ///
   class FrontPoint2
   {
@@ -275,9 +281,5 @@ public:
   void PrintOpenSegments (ostream & ost) const;
 };
 
-
-
-#endif
-
-
-
+} // namespace netgen
+#endif // NETGEN_ADFRONT2_HPP

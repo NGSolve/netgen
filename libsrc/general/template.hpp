@@ -7,9 +7,11 @@
 /* Date:   01. Jun. 95                                                    */
 /**************************************************************************/
 
+#include <core/utils.hpp>
+
 namespace netgen 
 {
-
+  using namespace ngcore;
 /*
    templates, global types, defines and variables
 */

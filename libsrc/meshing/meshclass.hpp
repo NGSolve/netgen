@@ -1,5 +1,5 @@
-#ifndef MESHCLASS
-#define MESHCLASS
+#ifndef NETGEN_MESHCLASS_HPP
+#define NETGEN_MESHCLASS_HPP
 
 /**************************************************************************/
 /* File:   meshclass.hpp                                                  */
@@ -13,8 +13,16 @@
 
 #include<filesystem>
 
+#include <gprim/adtree.hpp>
+#include <gprim/transform3d.hpp>
+
+#include "meshtype.hpp"
+#include "localh.hpp"
+#include "topology.hpp"
+
 namespace netgen
 {
+  class NetgenGeometry;
   using namespace std;
 
   static constexpr int  MPI_TAG_MESH = 210;
@@ -874,11 +882,7 @@ namespace netgen
     NgMutex & MajorMutex ()   { return majormutex; }
 
 
-    shared_ptr<NetgenGeometry> GetGeometry() const
-    {
-      static auto global_geometry = make_shared<NetgenGeometry>();
-      return geometry ? geometry : global_geometry;
-    }
+    DLL_HEADER shared_ptr<NetgenGeometry> GetGeometry() const;
     void SetGeometry (shared_ptr<NetgenGeometry> geom) 
     {
       geometry = geom;
@@ -993,6 +997,4 @@ namespace netgen
   
 }
 
-#endif
-
-
+#endif // NETGEN_MESHCLASS_HPP

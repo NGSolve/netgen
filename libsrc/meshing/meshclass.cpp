@@ -5,6 +5,7 @@
 #include "../general/gzstream.h"
 
 #include <core/register_archive.hpp>
+#include "basegeom.hpp"
 
 namespace netgen
 {
@@ -290,6 +291,12 @@ namespace netgen
     // #ifdef PARALLEL
     // delete paralleltop;
     // #endif
+  }
+
+  shared_ptr<NetgenGeometry> Mesh :: GetGeometry() const
+  {
+    static auto global_geometry = make_shared<NetgenGeometry>();
+    return geometry ? geometry : global_geometry;
   }
 
   void Mesh :: SetCommunicator(NgMPI_Comm acomm)

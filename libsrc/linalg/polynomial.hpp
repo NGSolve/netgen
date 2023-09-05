@@ -7,6 +7,8 @@
 /* Date:   25. Nov. 99                                                     */
 /* *************************************************************************/
 
+namespace netgen
+{
 
 class QuadraticPolynomial1V 
 {
@@ -41,5 +43,5 @@ public:
   double MaxUnitSquare ();
   double MaxUnitTriangle ();
 };
-
+} // namespace netgen
 #endif

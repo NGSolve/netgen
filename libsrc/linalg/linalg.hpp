@@ -21,12 +21,9 @@
 
 
 #include "../include/myadt.hpp"
-namespace netgen
-{
 #include "vector.hpp"
 #include "densemat.hpp"
 #include "polynomial.hpp"
-}
 #endif
 
 

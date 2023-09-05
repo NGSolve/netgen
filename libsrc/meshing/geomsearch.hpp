@@ -1,11 +1,16 @@
-#ifndef FILE_GEOMSEARCH
-#define FILE_GEOMSEARCH
+#ifndef NETGEN_GEOMSEARCH_HPP
+#define NETGEN_GEOMSEARCH_HPP
 
 /**************************************************************************/
 /* File:   geomsearch.hh                                                  */
 /* Author: Johannes Gerstmayr                                             */
 /* Date:   19. Nov. 97                                                    */
 /**************************************************************************/
+
+#include "meshtype.hpp"
+
+namespace netgen
+{
 
 class FrontPoint3;
 class FrontFace;
@@ -60,58 +65,5 @@ private:
   int reset;
   int hashcount;
 };
-
-#endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+} // namespace netgen
+#endif // NETGEN_GEOMSEARCH_HPP

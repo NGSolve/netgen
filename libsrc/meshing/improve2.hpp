@@ -1,5 +1,10 @@
-#ifndef FILE_IMPROVE2
-#define FILE_IMPROVE2
+#ifndef NETGEN_IMPROVE2_HPP
+#define NETGEN_IMPROVE2_HPP
+
+#include "meshtype.hpp"
+
+namespace netgen
+{
 
 inline void AppendEdges( const Element2d & elem, PointIndex pi, Array<std::tuple<PointIndex,PointIndex>> & edges )
 {
@@ -169,7 +174,5 @@ extern double CalcTriangleBadness (const Point<3> & p1,
 				   const Vec<3> & n,
 				   double metricweight,
 				   double h);
-
-#endif
-
-
+} // namespace netgen
+#endif // NETGEN_IMPROVE2_HPP

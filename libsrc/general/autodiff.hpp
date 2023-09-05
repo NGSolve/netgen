@@ -9,6 +9,8 @@
 
 // Automatic differentiation datatype
 
+namespace netgen
+{
 
 /**
    Datatype for automatic differentiation.
@@ -284,18 +286,6 @@ inline AutoDiff<D,SCAL> operator* (const AutoDiff<D,SCAL> & x, const AutoDiff<D,
   return res;
 }
 
-/// AutoDiff times AutoDiff
-template<int D, typename SCAL>
-inline AutoDiff<D,SCAL> sqr (const AutoDiff<D,SCAL> & x) throw()
-{
-  AutoDiff<D,SCAL> res;
-  SCAL hx = x.Value();
-  res.Value() = hx*hx;
-  hx *= 2;
-  for (int i = 0; i < D; i++)
-    res.DValue(i) = hx*x.DValue(i);
-  return res;
-}
 
 /// Inverse of AutoDiff
 template<int D, typename SCAL>
@@ -329,14 +319,31 @@ inline AutoDiff<D,SCAL> operator/ (double x, const AutoDiff<D,SCAL> & y)
   return x * Inv(y);
 }
 
+} // namespace netgen
 
-
-
+namespace ngcore
+{
+/// AutoDiff times AutoDiff
 template<int D, typename SCAL>
-inline AutoDiff<D,SCAL> fabs (const AutoDiff<D,SCAL> & x)
+inline netgen::AutoDiff<D,SCAL> sqr (const netgen::AutoDiff<D,SCAL> & x) throw()
+{
+  netgen::AutoDiff<D,SCAL> res;
+  SCAL hx = x.Value();
+  res.Value() = hx*hx;
+  hx *= 2;
+  for (int i = 0; i < D; i++)
+    res.DValue(i) = hx*x.DValue(i);
+  return res;
+}
+} // namespace ngcore
+
+namespace std
+{
+template<int D, typename SCAL>
+inline netgen::AutoDiff<D,SCAL> fabs (const netgen::AutoDiff<D,SCAL> & x)
 {
   double abs = fabs (x.Value());
-  AutoDiff<D,SCAL> res( abs );
+  netgen::AutoDiff<D,SCAL> res( abs );
   if (abs != 0.0)
     for (int i = 0; i < D; i++)
       res.DValue(i) = x.DValue(i) / abs;
@@ -345,7 +352,5 @@ inline AutoDiff<D,SCAL> fabs (const AutoDiff<D,SCAL> & x)
       res.DValue(i) = 0.0;
   return res;
 }
-
-//@}
-
+} // namespace std
 #endif

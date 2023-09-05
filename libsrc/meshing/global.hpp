@@ -1,5 +1,5 @@
-#ifndef FILE_GLOBAL
-#define FILE_GLOBAL
+#ifndef NETGEN_GLOBAL_HPP
+#define NETGEN_GLOBAL_HPP
 
 
 /**************************************************************************/
@@ -12,9 +12,11 @@
   global functions and variables
 */
 
+#include <mydefs.hpp>
+
 namespace netgen
 {
-
+  using namespace ngcore;
   ///
   DLL_HEADER extern double GetTime ();
   DLL_HEADER extern void ResetTime ();
@@ -47,6 +49,9 @@ namespace netgen
 
   DLL_HEADER extern volatile multithreadt multithread;
 
+  class DebugParameters;
+  class Mesh;
+
   DLL_HEADER extern string ngdir;
   DLL_HEADER extern DebugParameters debugparam;
   DLL_HEADER extern bool verbose;
@@ -61,6 +66,6 @@ namespace netgen
   // global communicator for netgen (dummy if no MPI)
   // extern DLL_HEADER NgMPI_Comm ng_comm;
   
-}
+} // namespace netgen
 
-#endif
+#endif // NETGEN_GLOBAL_HPP

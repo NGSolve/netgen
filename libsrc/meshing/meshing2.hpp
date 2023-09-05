@@ -1,5 +1,5 @@
-#ifndef FILE_MESHING2
-#define FILE_MESHING2
+#ifndef NETGEN_MESHING2_HPP
+#define NETGEN_MESHING2_HPP
 
 /**************************************************************************/
 /* File:   meshing2.hpp                                                   */
@@ -7,6 +7,8 @@
 /* Date:   01. Okt. 95                                                    */
 /**************************************************************************/
 
+namespace netgen
+{
 
 
 enum MESHING2_RESULT
@@ -151,19 +153,6 @@ protected:
   
 
 };
+} // namespace netgen
 
-
-
-
-
-
-
-
-#endif
-
-
-
-
-
-
-
+#endif // NETGEN_MESHING2_HPP

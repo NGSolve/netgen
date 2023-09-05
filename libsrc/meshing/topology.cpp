@@ -1059,7 +1059,7 @@ namespace netgen
               // auto begin = r.First();
               // auto end = r.Next();
               // INDEX_3_CLOSED_HASHTABLE<int> vert2face(2*max_face_on_vertex+10);
-              ClosedHashTable<INDEX_3, int> vert2face(2*max_face_on_vertex+10); 
+              NgClosedHashTable<INDEX_3, int> vert2face(2*max_face_on_vertex+10);
               // for (PointIndex v = begin+PointIndex::BASE;
               // v < end+PointIndex::BASE; v++)
               for (PointIndex v : r+PointIndex::BASE)                
@@ -1124,7 +1124,7 @@ namespace netgen
               // auto begin = r.First();
               // auto end = r.Next();
               // INDEX_3_CLOSED_HASHTABLE<int> vert2face(2*max_face_on_vertex+10);
-              ClosedHashTable<INDEX_3, int> vert2face(2*max_face_on_vertex+10);
+              NgClosedHashTable<INDEX_3, int> vert2face(2*max_face_on_vertex+10);
               /*
               for (PointIndex v = begin+PointIndex::BASE;
                    v < end+PointIndex::BASE; v++)
