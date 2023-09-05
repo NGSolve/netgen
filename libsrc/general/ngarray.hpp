@@ -8,7 +8,6 @@
 /**************************************************************************/
 
 #include <core/array.hpp>
-#include <core/archive.hpp>
 
 namespace netgen
 {
@@ -423,8 +422,9 @@ namespace netgen
     }
 
     // Only provide this function if T is archivable
-    template<typename T2=T>
-    auto DoArchive(ngcore::Archive& archive) -> typename std::enable_if<ngcore::is_archivable<T2>, void>::type
+    template<typename ARCHIVE>
+    auto DoArchive(ARCHIVE& archive)
+      -> typename std::enable_if_t<ARCHIVE::template is_archivable<T>, void>
     {
       if(archive.Output())
         archive << size;

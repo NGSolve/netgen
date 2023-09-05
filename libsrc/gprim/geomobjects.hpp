@@ -7,7 +7,6 @@
 /* Date:   20. Jul. 02                                                     */
 /* *************************************************************************/
 
-#include <core/archive.hpp>
 #include <core/array.hpp>
 
 #include <general/ngarray.hpp>
@@ -72,7 +71,8 @@ namespace netgen
 
     operator const T* () const { return x; }
 
-    void DoArchive(Archive& archive)
+    template<typename ARCHIVE>
+    void DoArchive(ARCHIVE& archive)
     {
       for(int i=0; i<D; i++)
         archive & x[i];
