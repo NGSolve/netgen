@@ -319,9 +319,9 @@ inline AutoDiff<D,SCAL> operator/ (double x, const AutoDiff<D,SCAL> & y)
   return x * Inv(y);
 }
 
-} //namespace netgen
+} // namespace netgen
 
-namespace std
+namespace ngcore
 {
 /// AutoDiff times AutoDiff
 template<int D, typename SCAL>
@@ -335,7 +335,10 @@ inline netgen::AutoDiff<D,SCAL> sqr (const netgen::AutoDiff<D,SCAL> & x) throw()
     res.DValue(i) = hx*x.DValue(i);
   return res;
 }
+} // namespace ngcore
 
+namespace std
+{
 template<int D, typename SCAL>
 inline netgen::AutoDiff<D,SCAL> fabs (const netgen::AutoDiff<D,SCAL> & x)
 {
@@ -349,8 +352,5 @@ inline netgen::AutoDiff<D,SCAL> fabs (const netgen::AutoDiff<D,SCAL> & x)
       res.DValue(i) = 0.0;
   return res;
 }
-
-} //namespace std
-//@}
-
+} // namespace std
 #endif
