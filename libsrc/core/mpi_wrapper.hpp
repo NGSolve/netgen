@@ -485,6 +485,9 @@ namespace ngcore
 
   inline void MPI_Type_contiguous ( int, MPI_Datatype, MPI_Datatype*) { ; } 
   inline void MPI_Type_commit ( MPI_Datatype * ) { ; }
+
+  template <class T>
+  inline MPI_Datatype GetMPIType () { return -1; }
   
   class NgMPI_Comm
   {
