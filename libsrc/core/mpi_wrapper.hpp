@@ -1,6 +1,8 @@
 #ifndef NGCORE_MPIWRAPPER_HPP
 #define NGCORE_MPIWRAPPER_HPP
 
+#include <array>
+
 #ifdef PARALLEL
 #define OMPI_SKIP_MPICXX
 #include <mpi.h>
