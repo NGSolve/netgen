@@ -5,7 +5,13 @@ if(USE_OCC)
     install(FILES nglib_occ.h DESTINATION ${NG_INSTALL_DIR_INCLUDE} COMPONENT netgen_devel)
 endif(USE_OCC)
 
-target_link_libraries(nglib PUBLIC ngcore)
+if(EMSCRIPTEN)
+  target_compile_options(nglib PUBLIC $<TARGET_PROPERTY:ngcore,INTERFACE_COMPILE_OPTIONS>)
+  target_compile_definitions(nglib PUBLIC $<TARGET_PROPERTY:ngcore,INTERFACE_COMPILE_DEFINITIONS>)
+  target_include_directories(nglib PUBLIC $<TARGET_PROPERTY:ngcore,INTERFACE_INCLUDE_DIRECTORIES>)
+else(EMSCRIPTEN)
+  target_link_libraries(nglib PUBLIC ngcore)
+endif(EMSCRIPTEN)
 
 target_link_libraries( nglib PRIVATE ${MPI_CXX_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${JPEG_LIBRARIES} ${MKL_LIBRARIES} ${ZLIB_LIBRARIES} ${OCC_LIBRARIES} netgen_cgns )
 
