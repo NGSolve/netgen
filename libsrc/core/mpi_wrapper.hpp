@@ -487,7 +487,7 @@ namespace ngcore
   inline void MPI_Type_commit ( MPI_Datatype * ) { ; }
 
   template <class T> struct MPI_typetrait  {
-    static MPI_Datatype MPIType () { return -1; } };    
+    static MPI_Datatype MPIType () { return -1; }    
   };
   template <class T, class T2=void>
   inline MPI_Datatype GetMPIType () { return -1; }
