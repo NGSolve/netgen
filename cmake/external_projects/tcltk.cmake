@@ -93,7 +93,7 @@ if(APPLE)
     )
 
   ExternalProject_Add(project_tkdnd
-    URL "http://sourceforge.net/projects/tkdnd/files/TkDND/TkDND%202.8/tkdnd2.8-src.tar.gz"
+    URL "https://src.fedoraproject.org/repo/pkgs/tkdnd/tkdnd2.8-src.tar.gz/a6d47a996ea957416469b12965d4db91/tkdnd2.8-src.tar.gz"
     URL_MD5 a6d47a996ea957416469b12965d4db91
     DEPENDS project_tcl project_tk
     DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
