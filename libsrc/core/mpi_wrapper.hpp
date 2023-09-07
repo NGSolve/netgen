@@ -46,7 +46,7 @@ namespace ngcore
     static MPI_Datatype MPIType () { return MPI_C_BOOL; } };
 
 
-  template<int S, typename T>
+  template<typename T, size_t S>
   struct MPI_typetrait<std::array<T,S>>
   {
     static MPI_Datatype MPIType () 
