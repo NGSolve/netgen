@@ -316,6 +316,7 @@ extern "C" {
     int iscomplex;    // complex vector ? 
     bool draw_surface;
     bool draw_volume;
+    std::shared_ptr<netgen::BitArray> draw_surfaces, draw_volumes;
     int order;        // order of elements, only partially supported 
     Ng_SolutionType soltype;  // type of solution function
     netgen::SolutionData * solclass;
