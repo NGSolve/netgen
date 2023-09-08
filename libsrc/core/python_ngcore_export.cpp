@@ -24,6 +24,10 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
   ExportArray<unsigned short>(m);
   ExportArray<unsigned char>(m);
 
+  // Compiler dependent implementation of size_t
+  if constexpr(!is_same_v<size_t, uint64_t>)
+    ExportArray<uint64_t>(m);
+
   ExportTable<int>(m);
   
   py::class_<BitArray, shared_ptr<BitArray>> (m, "BitArray")
