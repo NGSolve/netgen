@@ -10,7 +10,7 @@
 #include <string>
 #include <tuple>
 
-#include "mpi_wrapper.hpp"
+// #include "mpi_wrapper.hpp"
 #include "ngcore_api.hpp"
 #include "table.hpp"
 #include "utils.hpp"
@@ -1071,7 +1071,7 @@ namespace ngcore
 } // namespace ngcore
 
 
-
+/*
 #ifdef PARALLEL
 namespace ngcore {
   template<int S, typename T>
@@ -1092,6 +1092,19 @@ namespace ngcore {
   };
 }
 #endif
+*/
+
+namespace ngcore
+{
+  template<typename T> struct MPI_typetrait;
+  
+  template<int S, typename T>
+  struct MPI_typetrait<INT<S, T> > {
+    static auto MPIType () {
+      return MPI_typetrait<std::array<T,S>>::MPIType();
+    }
+  };
+}
 
 
 
