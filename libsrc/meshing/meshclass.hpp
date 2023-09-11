@@ -35,6 +35,30 @@ namespace netgen
   class CurvedElements;
   class AnisotropicClusters;
   class ParallelMeshTopology;
+
+  class MarkedTet;
+  class MarkedPrism;
+  class MarkedIdentification;
+  class MarkedTri;
+  class MarkedQuad;
+
+  typedef Array<MarkedTet> T_MTETS;
+  typedef NgArray<MarkedPrism> T_MPRISMS;
+  typedef NgArray<MarkedIdentification> T_MIDS;
+  typedef NgArray<MarkedTri> T_MTRIS;
+  typedef NgArray<MarkedQuad> T_MQUADS;
+
+  struct BisectionInfo
+  {
+    unique_ptr<T_MTETS> mtets;
+    unique_ptr<T_MPRISMS> mprisms;
+    unique_ptr<T_MIDS> mids;
+    unique_ptr<T_MTRIS> mtris;
+    unique_ptr<T_MQUADS> mquads;
+
+    BisectionInfo();
+    ~BisectionInfo();
+  };
   
   /// 2d/3d mesh
   class Mesh
@@ -186,6 +210,7 @@ namespace netgen
 
   public:
     Signal<> updateSignal;
+    BisectionInfo bisectioninfo;
 
     // store coarse mesh before hp-refinement
     unique_ptr<NgArray<HPRefElement>> hpelements;
