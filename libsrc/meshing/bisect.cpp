@@ -8,20 +8,6 @@
 
 namespace netgen
 {
-  class MarkedTet;
-  class MarkedPrism;
-  class MarkedIdentification;
-  class MarkedTri;
-  class MarkedQuad;
-  
-  typedef Array<MarkedTet> T_MTETS;
-  typedef NgArray<MarkedPrism> T_MPRISMS;
-  typedef NgArray<MarkedIdentification> T_MIDS;
-  typedef NgArray<MarkedTri> T_MTRIS;
-  typedef NgArray<MarkedQuad> T_MQUADS;
-
-  
-  
   class MarkedTet
   {
   public:
@@ -1867,20 +1853,25 @@ namespace netgen
       }
   }
 
+  BisectionInfo::BisectionInfo()
+  {
+    mtets = make_unique<T_MTETS>();
+    mprisms = make_unique<T_MPRISMS>();
+    mids = make_unique<T_MIDS>();
+    mtris = make_unique<T_MTRIS>();
+    mquads = make_unique<T_MQUADS>();
+  }
 
+  BisectionInfo::~BisectionInfo() {}
 
-
-  T_MTETS mtets;
-  T_MPRISMS mprisms;
-  T_MIDS mids;
-  T_MTRIS mtris;
-  T_MQUADS mquads;
-
-
-  void WriteMarkedElements(ostream & ost)
+  void WriteMarkedElements(const Mesh& mesh, ostream & ost)
   {
     ost << "Marked Elements\n";
-
+    const auto& mtets = *mesh.bisectioninfo.mtets;
+    const auto& mprisms = *mesh.bisectioninfo.mprisms;
+    const auto& mids = *mesh.bisectioninfo.mids;
+    const auto& mtris = *mesh.bisectioninfo.mtris;
+    const auto& mquads = *mesh.bisectioninfo.mquads;
     ost << mtets.Size() << "\n";
     for(int i=0; i<mtets.Size(); i++)
       ost << mtets[i];
@@ -1905,6 +1896,12 @@ namespace netgen
 
   bool ReadMarkedElements(istream & ist, const Mesh & mesh)
   {
+    auto& mtets = *mesh.bisectioninfo.mtets;
+    auto& mprisms = *mesh.bisectioninfo.mprisms;
+    auto& mids = *mesh.bisectioninfo.mids;
+    auto& mtris = *mesh.bisectioninfo.mtris;
+    auto& mquads = *mesh.bisectioninfo.mquads;
+
     string auxstring("");
     if(ist)
       ist >> auxstring;
@@ -1964,6 +1961,11 @@ namespace netgen
 			   const NgArray< NgArray<int,PointIndex::BASE>* > & idmaps,
 			   const string & refinfofile)
   {
+    auto& mtets = *mesh.bisectioninfo.mtets;
+    auto& mprisms = *mesh.bisectioninfo.mprisms;
+    auto& mids = *mesh.bisectioninfo.mids;
+    auto& mtris = *mesh.bisectioninfo.mtris;
+    auto& mquads = *mesh.bisectioninfo.mquads;
     if (mesh.GetDimension() < 2)
       throw Exception ("Mesh bisection is available in 2D and 3D");
     // mtets.SetName ("bisection, tets");
@@ -2475,6 +2477,13 @@ namespace netgen
     T_MTRIS mtris_old; mtris_old.Copy(mtris);
     T_MQUADS mquads_old; mquads_old.Copy(mquads);
     */
+
+    auto& mtets = *mesh.bisectioninfo.mtets;
+    auto& mprisms = *mesh.bisectioninfo.mprisms;
+    auto& mids = *mesh.bisectioninfo.mids;
+    auto& mtris = *mesh.bisectioninfo.mtris;
+    auto& mquads = *mesh.bisectioninfo.mquads;
+
     T_MTETS mtets_old (mtets);
     T_MPRISMS mprisms_old (mprisms);
     T_MIDS mids_old (mids);
@@ -2699,6 +2708,12 @@ namespace netgen
   {
     PrintMessage(1,"Mesh bisection");
     PushStatus("Mesh bisection");
+
+    auto& mtets = *mesh.bisectioninfo.mtets;
+    auto& mprisms = *mesh.bisectioninfo.mprisms;
+    auto& mids = *mesh.bisectioninfo.mids;
+    auto& mtris = *mesh.bisectioninfo.mtris;
+    auto& mquads = *mesh.bisectioninfo.mquads;
 
     static int timer = NgProfiler::CreateTimer ("Bisect");
     static int timer1 = NgProfiler::CreateTimer ("Bisect 1");
@@ -4104,7 +4119,7 @@ namespace netgen
 	PrintMessage(3,"writing marked-elements information to \"",refelementinfofilewrite,"\"");
 	ofstream ofst(refelementinfofilewrite.c_str());
 
-	WriteMarkedElements(ofst);
+	WriteMarkedElements(mesh, ofst);
 
 	ofst.close();
       }
