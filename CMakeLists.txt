@@ -86,14 +86,16 @@ set(NG_INSTALL_SUFFIX netgen CACHE STRING "Suffix appended to install directorie
 
 if(USE_PYTHON)
   if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.18)
-      find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+      find_package(Python3 REQUIRED COMPONENTS Development.Module)
       find_package(Python3 COMPONENTS Interpreter Development.Embed)
   else()
     find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
   endif()
 
-  execute_process(COMMAND ${Python3_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1,0,''))" OUTPUT_VARIABLE PYTHON_PACKAGES_INSTALL_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
-    file(TO_CMAKE_PATH ${PYTHON_PACKAGES_INSTALL_DIR} PYTHON_PACKAGES_INSTALL_DIR)
+  if(NOT CMAKE_CROSSCOMPILING)
+    execute_process(COMMAND ${Python3_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1,0,''))" OUTPUT_VARIABLE PYTHON_PACKAGES_INSTALL_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+      file(TO_CMAKE_PATH ${PYTHON_PACKAGES_INSTALL_DIR} PYTHON_PACKAGES_INSTALL_DIR)
+  endif(NOT CMAKE_CROSSCOMPILING)
 endif(USE_PYTHON)
 
 if(APPLE AND NOT EMSCRIPTEN)
