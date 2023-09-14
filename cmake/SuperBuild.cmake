@@ -89,8 +89,8 @@ if(BUILD_OCC)
   set(OCC_DIR ${CMAKE_CURRENT_BINARY_DIR}/dependencies/occ)
 
   ExternalProject_Add(project_occ
-    URL https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_6_1.zip
-    URL_MD5 e891d85cad61c5cc7ccba3d0110f0c8c
+    URL https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_7_2.zip
+    URL_MD5 533eb4f18af0f77ae321b158caeaee79
     DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
     ${SUBPROJECT_ARGS}
     CMAKE_ARGS
@@ -104,6 +104,7 @@ if(BUILD_OCC)
          -DBUILD_MODULE_Visualization:BOOL=OFF
          -DBUILD_MODULE_ApplicationFramework:BOOL=OFF
          -DBUILD_MODULE_Draw:BOOL=OFF
+         -DBUILD_MODULE_DETools:BOOL=OFF
          -DUSE_FREETYPE:BOOL=OFF
          -DUSE_OPENGL:BOOL=OFF
          -DUSE_XLIB:BOOL=OFF
