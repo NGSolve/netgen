@@ -235,7 +235,7 @@ namespace netgen
     ///
     DLL_HEADER ~Mesh();
 
-    Mesh & operator= (const Mesh & mesh2);
+    DLL_HEADER Mesh & operator= (const Mesh & mesh2);
   
     ///
     DLL_HEADER void DeleteMesh();
