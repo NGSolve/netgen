@@ -394,6 +394,11 @@ if (USE_OCC)
       TKXSBase
       TKernel
     )
+    if(UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
+      list(PREPEND OCC_LIBRARIES -Wl,--start-group)
+      list(APPEND OCC_LIBRARIES -Wl,--end-group)
+    endif()
+
     target_link_libraries(occ_libs INTERFACE ${OCC_LIBRARIES})
     include_directories(${OpenCASCADE_INCLUDE_DIR})
     if(NOT OpenCASCADE_BUILD_SHARED_LIBS)
