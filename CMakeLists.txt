@@ -394,7 +394,7 @@ if (USE_OCC)
       TKXSBase
       TKernel
     )
-    if(UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
+    if(UNIX AND NOT APPLE)
       list(PREPEND OCC_LIBRARIES -Wl,--start-group)
       list(APPEND OCC_LIBRARIES -Wl,--end-group)
     endif()
