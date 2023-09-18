@@ -5,7 +5,7 @@ namespace netgen
 {
   // extern DLL_HEADER MeshingParameters mparam;
 
-  extern void Optimize2d (Mesh & mesh, MeshingParameters & mp);
+  extern void Optimize2d (Mesh & mesh, MeshingParameters & mp, int faceindex=0);
 
 
 

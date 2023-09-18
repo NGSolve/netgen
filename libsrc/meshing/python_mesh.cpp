@@ -78,7 +78,7 @@ namespace netgen
 {
   extern bool netgen_executable_started;
   extern shared_ptr<NetgenGeometry> ng_geometry;
-  extern void Optimize2d (Mesh & mesh, MeshingParameters & mp);
+  extern void Optimize2d (Mesh & mesh, MeshingParameters & mp, int faceindex=0);
 }
 
 
@@ -1283,7 +1283,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             OptimizeVolume (mp, self);
           }, py::arg("mp"), py::call_guard<py::gil_scoped_release>())
 
-    .def ("OptimizeMesh2d", [](Mesh & self, MeshingParameters* pars)
+    .def ("OptimizeMesh2d", [](Mesh & self, MeshingParameters* pars, int faceindex)
           {
             self.CalcLocalH(0.5);
             MeshingParameters mp;
@@ -1291,8 +1291,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             else mp.optsteps2d = 5;
             if(!self.GetGeometry())
               throw Exception("Cannot optimize surface mesh without geometry!");
-            Optimize2d (self, mp);
-          }, py::arg("mp")=nullptr, py::call_guard<py::gil_scoped_release>())
+            Optimize2d (self, mp, faceindex);
+          }, py::arg("mp")=nullptr, py::arg("faceindex")=0, py::call_guard<py::gil_scoped_release>())
     
     .def ("Refine", FunctionPointer
           ([](Mesh & self, bool adaptive)
