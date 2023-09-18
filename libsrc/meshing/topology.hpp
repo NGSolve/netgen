@@ -51,8 +51,8 @@ public:
 
   MeshTopology () = default;
   MeshTopology (MeshTopology && top) = default;
-  MeshTopology (const Mesh & amesh);
-  ~MeshTopology ();
+  DLL_HEADER MeshTopology (const Mesh & amesh);
+  DLL_HEADER ~MeshTopology ();
   MeshTopology & operator= (MeshTopology && top) = default;
 
   void SetBuildVertex2Element (bool bv2e) { buildvertex2element = bv2e; }  
