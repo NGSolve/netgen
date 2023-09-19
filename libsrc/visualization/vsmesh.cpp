@@ -904,7 +904,7 @@ namespace netgen
       data.Append(cf);
     }
     int n = data.Size()/4;
-    colors.width = min2(n, 1024);
+    colors.width = max2(1,min2(n, 1024));
     colors.height = (n+colors.width-1)/colors.width;
     for([[maybe_unused]] auto i: Range(n, colors.width*colors.height))
       data.Append({0.0f, 0.0f, 0.0f, 0.0f});
