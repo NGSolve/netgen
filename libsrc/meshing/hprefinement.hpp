@@ -108,6 +108,7 @@ enum HPREF_ELEMENT_TYPE {
 
 
   HP_TET = 100,     // no singular vertex/edge
+  HP_NONETET,       // make void
   HP_TET_0E_1V,     // V1
   HP_TET_0E_2V,     // V1,2
   HP_TET_0E_3V,     // V1,2,3  
@@ -154,14 +155,27 @@ enum HPREF_ELEMENT_TYPE {
   HP_TET_3EC_0V = 430,  // 3 edges chain, alter
   HP_TET_3EC_1V,        // 3 edges chain, alter
   HP_TET_3EC_2V,        // 3 edges chain, alter
+  HP_TET_3ED_3V,        // 3 edges in a loop  e12, e13, e23     NEW .. done
 
 
   HP_TET_1F_0E_0V = 500,  // 1 singular face
-  HP_TET_1F_0E_1VA,       // 1 sing vertex in face (V2)
+  HP_TET_1F_0E_1VA,       // 1 sing vertex in face (V2)          NEEDS FIX (split to pyramids ?)
   HP_TET_1F_0E_1VB,       // 1 sing vertex not in face (V1)
+  HP_TET_1F_0E_2V,        // 2 sing vertex in face (V2,V3)       NEW .. done
   HP_TET_1F_1EA_0V,       // 1 sing edge not in face
   HP_TET_1F_1EB_0V,       // 1 sing edge in face
+  HP_TET_1F_1E_2VA,      //  1 sing edge not in face (e12), sing v2,v3      NEW
+  HP_TET_1F_1E_2VB,       // 1 sing edge not in face (e12), sing v2,v4      NEW  
+  HP_TET_1F_1E_2VC,       // 1 sing edge not in face (e12), sing v3,v4      NEW  
+  HP_TET_1F_2E_0VA,       // edge6 && fedge3  .. 1 in face, 1 not in face    NEW
+  HP_TET_1F_2E_0VB,       // edge6 && fedge2  .. 1 in face, 1 not in face    NEW  
+
   HP_TET_2F_0E_0V = 600,  // 2 singular faces
+  HP_TET_2F_0E_1V,      // 2 singular faces f234, f134, sing point V4     NEW
+  HP_TET_2F_1E_0VA,  // 2 singular faces, sing edge e4               NEW
+  HP_TET_2F_1E_0VB,  // 2 singular faces, sing edge e5               NEW
+  
+  HP_TET_3F_0E_0V = 700,  // 3 singular faces, no additional points or edges  NEW
 
   HP_PRISM = 1000,
   HP_PRISM_SINGEDGE,

@@ -678,6 +678,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def_property("surfnr", &FaceDescriptor::SurfNr, &FaceDescriptor::SetSurfNr)
     .def_property("domin", &FaceDescriptor::DomainIn, &FaceDescriptor::SetDomainIn)
     .def_property("domout", &FaceDescriptor::DomainOut, &FaceDescriptor::SetDomainOut)
+    .def_property("domin_singular", &FaceDescriptor::DomainInSingular, &FaceDescriptor::SetDomainInSingular)
+    .def_property("domout_singular", &FaceDescriptor::DomainOutSingular, &FaceDescriptor::SetDomainOutSingular)
+
     .def_property("bc", &FaceDescriptor::BCProperty, &FaceDescriptor::SetBCProperty)
     .def_property("bcname",
                   [](FaceDescriptor & self) -> string { return self.GetBCName(); },

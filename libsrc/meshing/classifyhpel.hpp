@@ -5,7 +5,7 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
   int ep1(0), ep2(0), ep3(0), ep4(0), cp1(0), cp2(0), cp3(0), cp4(0), fp1, fp2, fp3, fp4;
   int isedge1(0), isedge2(0), isedge3(0), isedge4(0), isedge5(0), isedge6(0);
   int isfedge1, isfedge2, isfedge3, isfedge4, isfedge5, isfedge6;
-  int isface1(0), isface2(0), isface3(0), isface4(0);
+  bool isface[4];
 
   HPREF_ELEMENT_TYPE type = HP_NONE; 
   
@@ -20,7 +20,6 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
     }
   if (debug < 4) debug = 0;
   
-
 
   for (int j = 0; j < 4; j++)
     for (int k = 0; k < 4; k++)
@@ -72,31 +71,23 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 	  }
 
 
-	isface1 = isface2 = isface3 = isface4 = 0;
+        for (int j = 0; j < 4; j++) isface[j] = false;
 	for (int l = 0; l < 4; l++)
 	  {
 	    INDEX_3 i3(0,0,0);
 	    switch (l)
 	      {
-              case 0: i3.I1() = el.pnums[k]; i3.I1() = el.pnums[pi3]; i3.I1() = el.pnums[pi4]; break;
-              case 1: i3.I1() = el.pnums[j]; i3.I1() = el.pnums[pi3]; i3.I1() = el.pnums[pi4]; break;
-              case 2: i3.I1() = el.pnums[j]; i3.I1() = el.pnums[k]; i3.I1() = el.pnums[pi4]; break;
-              case 3: i3.I1() = el.pnums[j]; i3.I1() = el.pnums[k]; i3.I1() = el.pnums[pi3]; break;
+              case 0: i3.I1() = el.pnums[k]; i3.I2() = el.pnums[pi3]; i3.I3() = el.pnums[pi4]; break;
+              case 1: i3.I1() = el.pnums[j]; i3.I2() = el.pnums[pi3]; i3.I3() = el.pnums[pi4]; break;
+              case 2: i3.I1() = el.pnums[j]; i3.I2() = el.pnums[k]; i3.I3() = el.pnums[pi4]; break;
+              case 3: i3.I1() = el.pnums[j]; i3.I2() = el.pnums[k]; i3.I3() = el.pnums[pi3]; break;
 	      }
 	    i3.Sort();
 	    if (faces.Used (i3))
 	      {
 		int domnr = faces.Get(i3);
 		if (domnr == -1 || domnr == el.GetIndex())
-		  {
-		    switch (l)
-		      {
-		      case 0: isface1 = 1; break;
-		      case 1: isface2 = 1; break;
-		      case 2: isface3 = 1; break;
-		      case 3: isface4 = 1; break;
-		      }
-		  }
+                  isface[l] = true;
 	      }
 	  }
 	/*
@@ -169,16 +160,55 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 		  }
 	      }
 	  }
-	
+
+        /*
+        ep1 |= cp1;
+        ep2 |= cp2;
+        ep3 |= cp3;
+        ep4 |= cp4;
+
+        fp1 |= ep1;
+        fp2 |= ep2;
+        fp3 |= ep3;
+        fp4 |= ep4;
+        */
+        
 	/*
 	  fp1 = facepoint[el.pnums[j]] != 0;
 	  fp2 = facepoint[el.pnums[k]] != 0;
 	  fp3 = facepoint[el.pnums[pi3]] != 0;
 	  fp4 = facepoint[el.pnums[pi4]] != 0;
 	*/
-	
-	
-	switch (isface1+isface2+isface3+isface4)
+
+        // cout << "marked faces: "
+            // << isface[0] << isface[1] << isface[2] << isface[3] 
+            // << ", num = " << isface[0]+isface[1]+isface[2]+isface[3] << endl;
+
+
+        bool sp1 = cp1 
+          || (ep1 && !isedge1 && !isedge2 && !isedge3)
+          || (fp1 && !isfedge1 && !isfedge2 && !isfedge3);
+
+        bool sp2 = cp2 
+          || (ep2 && !isedge1 && !isedge4 && !isedge5)
+          || (fp2 && !isfedge1 && !isfedge4 && !isfedge5);
+
+        bool sp3 = cp3 
+          || (ep3 && !isedge2 && !isedge4 && !isedge6)
+          || (fp3 && !isfedge2 && !isfedge4 && !isfedge6);
+
+        bool sp4 = cp4 
+          || (ep4 && !isedge3 && !isedge5 && !isedge6)
+          || (fp4 && !isfedge3 && !isfedge5 && !isfedge6);
+
+        bool se1 = isedge1 || (isfedge1 && !isface[2] && !isface[3]);
+        bool se2 = isedge2 || (isfedge2 && !isface[1] && !isface[3]);
+        bool se3 = isedge3 || (isfedge3 && !isface[1] && !isface[2]);
+        bool se4 = isedge4 || (isfedge4 && !isface[0] && !isface[3]);
+        bool se5 = isedge5 || (isfedge5 && !isface[0] && !isface[2]);
+        bool se6 = isedge6 || (isfedge6 && !isface[0] && !isface[1]);
+        
+	switch (isface[0]+isface[1]+isface[2]+isface[3])
 	  {
 	  case 0:
 	    {
@@ -327,6 +357,12 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 			if (cp3 && cp4)
 			  type = HP_TET_3EC_2V;
 		      }
+                    if (isedge1 && isedge2 && isedge4)
+                      {
+                        if (!cp4)
+                          type = HP_TET_3ED_3V; // a loop
+                      }
+
 		    break;
 		  }
 		}
@@ -337,9 +373,22 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 	    
 	  case 1:  // one singular face
 	    {
-	      if (!isface1) break;
-	      
-	      switch (isfedge1+isfedge2+isfedge3+isedge4+isedge5+isedge6)
+	      if (!isface[0]) break;
+
+              /*
+              cout << "1F and 1E, isedge = " << isedge1 << isedge2 << isedge3 << isedge4 << isedge5 << isedge6 << endl;
+              cout << "spoints = " << sp1 << sp2 << sp3 << sp4 << endl;
+              cout << "cpoints = " << cp1 << cp2 << cp3 << cp4 << endl;                    
+              cout << "epoints = " << ep1 << ep2 << ep3 << ep4 << endl;
+              cout << "fpoints = " << fp1 << fp2 << fp3 << fp4 << endl;                                  
+              */
+
+	      isedge1 |= isfedge1;
+	      isedge2 |= isfedge2;
+	      isedge3 |= isfedge3;
+              
+	      // switch (isedge1+isedge2+isedge3+isedge4+isedge5+isedge6)
+              switch (se1+se2+se3+se4+se5+se6)
 		{
 		case 0:
 		  {
@@ -349,22 +398,42 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 		      type = HP_TET_1F_0E_1VB;
 		    if (!fp1 && ep2 && !ep3 & !ep4)
 		      type = HP_TET_1F_0E_1VA;
+		    if (!fp1 && ep2 && ep3 & !ep4)
+		      type = HP_TET_1F_0E_2V;
 		    break;
 		  }
 		case 1:
 		  {
-		    if (isfedge1)
+		    if (se1)
 		      {
-			if (!ep1 && !ep3 && !ep4)
+			if (!sp1 && !sp3 && !sp4)
 			  type = HP_TET_1F_1EA_0V;
+			if (!sp1 && sp2 && sp3 && !sp4)
+			  type = HP_TET_1F_1E_2VA;
+			if (!sp1 && sp2 && !sp3 && sp4)
+			  type = HP_TET_1F_1E_2VB;
+			if (!sp1 && !sp2 && sp3 && sp4)
+			  type = HP_TET_1F_1E_2VC;
 		      }
-		    if (isedge4) // V1-V3
+		    if (se4) // V2-V3
 		      {
-			if (!ep1 && !cp2 && !cp3 && !ep4)
+			if (!sp1 && !sp2 && !sp3 && !sp4)
 			  type = HP_TET_1F_1EB_0V;
 		      }
 		    break;
 		  }
+                case 2:
+                  {
+                    if (isedge6 && isedge3)
+                      if (!cp1 && !cp2 && !cp3)
+                        type = HP_TET_1F_2E_0VA;
+                    if (isedge6 && isedge2)
+                      if (!cp1 && !cp2 && !cp4)
+                        type = HP_TET_1F_2E_0VB;
+                    break;
+                  }
+                default:
+                  ;
 		}
 	      break;
 	    }
@@ -372,21 +441,57 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 	    
 	  case 2:  // two singular faces
 	    {
-	      if (!isface1 || !isface2) break;
+	      if (!isface[0] || !isface[1]) break;
 	      
 	      switch (isfedge1+isedge2+isedge3+isedge4+isedge5)
 		{
 		case 0:
 		  {
 		    if (!ep1 && !ep2 && !cp3 && !cp4)
-		      type = HP_TET_2F_0E_0V;
-		    break;
+                      {
+                        type = HP_TET_2F_0E_0V;
+                        break;
+                      }
+		    if (!ep1 && !ep2 && !cp3 && cp4)
+                      {
+                        type = HP_TET_2F_0E_1V;
+                        break;
+                      }
 		  }
+                case 1:
+                  {
+                    if (isedge4 && !ep1 && !cp2 && !cp4)
+                      {
+                        type = HP_TET_2F_1E_0VA;
+                        break;
+                      }
+                    if (isedge5 && !ep1 && !cp2 && !cp3)
+                      {
+                        type = HP_TET_2F_1E_0VB;
+                        break;
+                      }
+                    
+                  }
+                default:
+                  ;
 		}
 	      break;
 	    }
-	    
-	    
+
+          case 3:
+            {
+              if (!isface[3])
+                if (!cp1 && !cp2 && !cp3)
+                  {
+                    type = HP_TET_3F_0E_0V;
+                    break;
+                  }
+              break;
+            }
+          case 4:  
+            {
+              *testout << "4 singular faces" << endl;
+            }
 	  }
 	
 	if (type != HP_NONE)
@@ -407,13 +512,20 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
   if (type == HP_NONE)
     {
       //     cnt_undef++;
-      (*testout) << "undefined element" << endl
+      (*testout) << "unclassified element " 
+                 << el.pnums[0] << " "
+                 << el.pnums[1] << " "
+                 << el.pnums[2] << " "
+                 << el.pnums[3] << endl
 		 << "cp = " << cp1 << cp2 << cp3 << cp4 << endl
 		 << "ep = " << ep1 << ep2 << ep3 << ep4 << endl
+		 << "fp = " << fp1 << fp2 << fp3 << fp4 << endl        
 		 << "isedge = " << isedge1 << isedge2 << isedge3 
 		 << isedge4 << isedge5 << isedge6 << endl
-		 << "isface = " << isface1 << isface2 << isface3 << isface4 << endl;
-      cout << "undefined element !!! " << endl;
+		 << "isfedge = " << isfedge1 << isfedge2 << isfedge3 
+		 << isfedge4 << isfedge5 << isfedge6 << endl
+		 << "isface = " << isface[0] << isface[1] << isface[2] << isface[3] << endl;
+      cout << "unclassified element !!! " << endl;
 
       
     }
