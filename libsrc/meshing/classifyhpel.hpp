@@ -1698,6 +1698,49 @@ HPREF_ELEMENT_TYPE ClassifyHex(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 
 }
 
+
+
+
+
+
+HPREF_ELEMENT_TYPE ClassifyHex7 (HPRefElement & el, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
+                                 NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
+                                 INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint)
+{
+  HPREF_ELEMENT_TYPE type = HP_NONE;
+  
+  // no singular
+  // singular bottom
+  // singular top
+  
+  // indices of bot,top-faces combinations
+  int index[6][2] = {{0,1},{1,0},{2,4},{4,2},{3,5},{5,3}}; 
+  int p[8]; 
+  const ELEMENT_FACE * elfaces  = MeshTopology::GetFaces1 (HEX);
+  const ELEMENT_EDGE * eledges = MeshTopology::GetEdges1 (HEX);
+
+  INDEX_3 fbot = { el.pnums[0], el.pnums[1], el.pnums[2] };
+  INDEX_3 ftop = { el.pnums[4], el.pnums[5], el.pnums[6] };
+  fbot.Sort();
+  ftop.Sort();
+  
+  bool singbot = faces.Used(fbot);
+  bool singtop = faces.Used(ftop);
+
+  if (singbot)
+    el.type =  HP_HEX7_1FA;
+  else if (singtop)
+    el.type = HP_HEX7_1FB;
+  else
+    el.type = HP_HEX7;
+
+  return el.type;
+}
+
+
+
+
+
 HPREF_ELEMENT_TYPE ClassifySegm(HPRefElement & hpel, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
                                 NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
                                 INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint)

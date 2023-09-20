@@ -2672,6 +2672,119 @@ namespace netgen
 	      }
 	  }
       }
+
+
+    for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
+      {
+	const Element & el = (*mesh)[ei];
+	if (el.GetType() == HEX7 && !el.IsDeleted())
+	  {
+            /*
+            CurvedElements & curv = mesh->GetCurvedElements();
+            if (curv.IsHighOrder()) 
+	      {
+		const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (HEX);
+		const Point3d * vertices = MeshTopology :: GetVertices (HEX);
+
+		Point<3> grid[11][11];
+		Point<3> fpts[4];
+		int order = subdivisions+1;
+
+		for (int quad = 0; quad<6; quad++)
+		  {
+		    for (int j = 0; j < 4; j++)
+		      fpts[j] = vertices[faces[quad][j]-1];
+
+		    static Point<3> c(0.5, 0.5, 0.5);
+		    if (vispar.shrink < 1)
+		      for (int j = 0; j < 4; j++)
+                        fpts[j] += (1-vispar.shrink) * (c-fpts[j]);
+
+		    for (int ix = 0; ix <= order; ix++)
+		      for (int iy = 0; iy <= order; iy++)
+			{
+			  double lami[4] =
+			    { (1-double(ix)/order) * (1-double(iy)/order),
+			      (  double(ix)/order) * (1-double(iy)/order),
+			      (  double(ix)/order) * (  double(iy)/order),
+			      (1-double(ix)/order) * (  double(iy)/order) };
+
+			  Point<3> xl;
+			  for (int l = 0; l < 3; l++)
+			    xl(l) = lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
+			      lami[2] * fpts[2](l) + lami[3] * fpts[3](l);
+
+			  curv.CalcElementTransformation (xl, ei, grid[ix][iy]);
+			}
+
+		    for (int j = 0; j <= order; j++)
+		      ToBernstein (order, &grid[j][0], &grid[0][1]-&grid[0][0]);
+		    for (int j = 0; j <= order; j++)
+		      ToBernstein (order, &grid[0][j], &grid[1][0]-&grid[0][0]);
+
+		    glMap2d(GL_MAP2_VERTEX_3,
+			    0.0, 1.0, &grid[0][1](0)-&grid[0][0](0), order+1,
+			    0.0, 1.0, &grid[1][0](0)-&grid[0][0](0), order+1,
+			    &grid[0][0](0));
+		    glEnable(GL_MAP2_VERTEX_3);
+		    glEnable(GL_AUTO_NORMAL);
+
+		    glMapGrid2f(8, 0.0, 1.0, 8, 0.0, 1.0);
+		    glEvalMesh2(GL_FILL, 0, 8, 0, 8);
+
+		    glDisable (GL_AUTO_NORMAL);
+		    glDisable (GL_MAP2_VERTEX_3);
+		  }
+	      }
+            else
+            */
+	      {
+		Point3d c(0,0,0);
+		if (vispar.shrink < 1)
+		  {
+		    for (int j = 1; j <= 7; j++)
+		      {
+			Point3d p = mesh->Point(el.PNum(j));
+			c.X() += p.X();
+			c.Y() += p.Y();
+			c.Z() += p.Z();
+		      }
+		    c.X() /= 7;
+		    c.Y() /= 7;
+		    c.Z() /= 7;
+		  }
+
+		glBegin (GL_TRIANGLES);
+
+		el.GetSurfaceTriangles (faces);
+		for (int j = 1; j <= faces.Size(); j++)
+		  {
+		    Element2d & face = faces.Elem(j);
+		    Point<3> lp1 = mesh->Point (el.PNum(face.PNum(1)));
+		    Point<3> lp2 = mesh->Point (el.PNum(face.PNum(2)));
+		    Point<3> lp3 = mesh->Point (el.PNum(face.PNum(3)));
+		    Vec<3> n = Cross (lp3-lp1, lp2-lp1);
+		    n.Normalize();
+		    glNormal3dv (n);
+
+		    if (vispar.shrink < 1)
+		      {
+			lp1 = c + vispar.shrink * (lp1 - c);
+			lp2 = c + vispar.shrink * (lp2 - c);
+			lp3 = c + vispar.shrink * (lp3 - c);
+		      }
+
+		    glVertex3dv (lp1);
+		    glVertex3dv (lp2);
+		    glVertex3dv (lp3);
+		  }
+
+		glEnd();
+	      }
+	  }
+      }
+
+    
     glEndList ();
   }
 

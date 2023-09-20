@@ -564,6 +564,13 @@ namespace netgen
       case HP_HEX_1FA_1FB_0E_0V: 
 	hps = &refhex_1fa_1fb_0e_0v; break; 
 
+      case HP_HEX7:
+	hps = &refhex7; break;
+      case HP_HEX7_1FA:
+	hps = &refhex7_1fa; break;
+      case HP_HEX7_1FB:
+	hps = &refhex7_1fb; break;
+       
 
 
       default:
@@ -740,6 +747,7 @@ namespace netgen
 	  case HP_PYRAMID: oldnp = 5; break;
 	  case HP_PRISM: oldnp = 6; break;
 	  case HP_HEX: oldnp = 8; break;
+	  case HP_HEX7: oldnp = 7; break;
             
           default:
             cerr << "HPRefElement: illegal type (3) " << hprs->geom << endl;
@@ -753,6 +761,7 @@ namespace netgen
 	    el.type == HP_TET ||
 	    el.type == HP_PRISM ||
 	    el.type == HP_HEX || 
+	    el.type == HP_HEX7 || 
 	    el.type == HP_PYRAMID)
 	  newlevel = el.levelx;
 
@@ -859,6 +868,7 @@ namespace netgen
                 newel.type == HP_TET ||
                 newel.type == HP_PRISM ||
                 newel.type == HP_HEX || 
+                newel.type == HP_HEX7 || 
                 newel.type == HP_PYRAMID)
               newel.levelx = newel.levely = newel.levelz = newlevel;
             else
@@ -870,6 +880,7 @@ namespace netgen
 	      case HP_QUAD:    newel.np=4; break;
 	      case HP_TRIG:    newel.np=3; break;
 	      case HP_HEX:     newel.np=8; break; 
+	      case HP_HEX7:    newel.np=7; break; 
 	      case HP_PRISM:   newel.np=6; break;
 	      case HP_TET:     newel.np=4; break; 
 	      case HP_PYRAMID: newel.np=5; break; 
@@ -1456,6 +1467,7 @@ namespace netgen
 		    break; 
 		  } 
 		case HP_HEX:
+		case HP_HEX7:
 		case HP_TET:
 		case HP_PRISM:
 		case HP_PYRAMID:
@@ -1515,7 +1527,10 @@ namespace netgen
 		for(int l=6;l<9;l++) edge_dir[l] = 2; 
 		ord_dir[2] = 2; 
 		ned = 9; 
-		break; 
+		break;
+	      case HEX7:
+                // ????
+                break;
 	      case HEX: 
 		/* cout << " HEX " ; 
 		for(int k=0;k<8;k++) cout << el[k] << "\t" ; 
@@ -1924,6 +1939,12 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	    
 	      break;
 	    }
+	  case HP_HEX7:
+	    { 
+	      hpel.type = ClassifyHex7(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, faces,
+                                       face_edges, surf_edges, facepoint); 	    	    
+	      break; 
+	    } 
 	  case HP_HEX:
 	    { 
 	      hpel.type = ClassifyHex(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, faces,

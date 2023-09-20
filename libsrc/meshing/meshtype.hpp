@@ -29,7 +29,7 @@ namespace netgen
     TRIG = 10, QUAD=11, TRIG6 = 12, QUAD6 = 13, QUAD8 = 14,
     TET = 20, TET10 = 21, 
     PYRAMID = 22, PRISM = 23, PRISM12 = 24, PRISM15 = 27, PYRAMID13 = 28,
-    HEX = 25, HEX20 = 26
+    HEX = 25, HEX20 = 26, HEX7 = 29
   };
 
   /*
@@ -796,7 +796,7 @@ namespace netgen
     ///
     uint8_t GetNV() const
     {
-      __assume(typ >= TET && typ <= PYRAMID13);
+      // __assume(typ >= TET && typ <= PYRAMID13);
       switch (typ)
 	{
         case TET: 
@@ -809,6 +809,8 @@ namespace netgen
 	case PYRAMID:
         case PYRAMID13:
 	  return 5;
+	case HEX7:
+	  return 7;
 	case HEX:
 	case HEX20:
 	  return 8;
@@ -915,6 +917,7 @@ namespace netgen
 	case PRISM:
         case PRISM15:
 	case PRISM12: return 5;
+        case HEX7: return 6;
         case HEX: case HEX20:
           return 6;
 	default:

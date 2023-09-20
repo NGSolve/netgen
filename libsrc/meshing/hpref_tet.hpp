@@ -3007,14 +3007,16 @@ int reftet_1f_0e_1va_splitedges[][3] =
 };
 HPREF_ELEMENT_TYPE reftet_1f_0e_1va_newelstypes[] =
 {
-  HP_HEX_1F_0E_0V,
+  // HP_HEX_1F_0E_0V,
+  HP_HEX7_1FA,
   HP_TET_1F_0E_1VA,
   HP_TET,
   HP_NONE,
 };
 int reftet_1f_0e_1va_newels[][8] =
 {
-  { 3, 6, 7, 4, 8, 5, 5, 9 },
+  // { 3, 6, 7, 4, 8, 5, 5, 9 },
+  { 4, 3, 6, 7, 9, 8, 5 },  
   { 5, 2, 6, 7 },
   { 5, 9, 8, 1 },
 };
@@ -3246,7 +3248,8 @@ HPREF_ELEMENT_TYPE reftet_1f_1e_2va_newelstypes[] =
   HP_TET_1F_0E_1VA,
   HP_TET_1F_0E_1VA,
   HP_TET_1E_1VA,  
-  HP_TET_1E_1VA,  
+  HP_TET_1E_1VA,
+  HP_HEX7_1FB,
   HP_NONE,  
 };
 int reftet_1f_1e_2va_newels[][8] =
@@ -3257,7 +3260,9 @@ int reftet_1f_1e_2va_newels[][8] =
   { 10, 3, 12, 11 },
   { 14, 2, 8, 9 },
   { 2, 7, 15, 14 },
-  { 2, 9, 14, 15 } 
+  { 2, 9, 14, 15 },
+  // { 13, 10, 14, 15, 4, 12, 9 }
+  { 10, 13, 15, 14, 12, 4, 9 }
 };
 HPRef_Struct reftet_1f_1e_2va =
 {

@@ -1057,6 +1057,7 @@ namespace netgen
       case 4: typ = TET; break;
       case 5: typ = PYRAMID; break;
       case 6: typ = PRISM; break;
+      case 7: typ = HEX7; break;
       case 8: typ = HEX; break;
       case 10: typ = TET10; break;
       case 13: typ = PYRAMID13; break;
@@ -1139,6 +1140,7 @@ namespace netgen
       case 4: typ = TET; break;
       case 5: typ = PYRAMID; break;
       case 6: typ = PRISM; break;
+      case 7: typ = HEX7; break;
       case 8: typ = HEX; break;
       case 10: typ = TET10; break;
       case 13: typ = PYRAMID13; break;
@@ -1160,6 +1162,7 @@ namespace netgen
       case TET: np = 4; break;
       case PYRAMID: np = 5; break;
       case PRISM: np = 6; break;
+      case HEX7: np = 7; break;
       case HEX: np = 8; break;
       case TET10: np = 10; break;
       case PYRAMID13: np = 13; break;
@@ -1256,6 +1259,16 @@ namespace netgen
         { 4, 3, 1, 4, 6 }
       };
     
+    static const int hex7faces[][5] =
+      {
+        { 4, 4, 3, 2, 1 },
+        { 4, 3, 7, 6, 2 },
+        { 3, 7, 5, 6 },
+        { 4, 7, 4, 1, 5 },
+        { 4, 1, 2, 6, 5 },
+        { 3, 3, 4, 7 }
+      };
+    
     static const int hexfaces[][5] =
       {
         { 4, 4, 3, 2, 1 },
@@ -1265,7 +1278,6 @@ namespace netgen
         { 4, 1, 2, 6, 5 },
         { 4, 3, 4, 8, 7 }
       };
-    
 
     switch (np)
       {
@@ -1299,6 +1311,14 @@ namespace netgen
           face.SetType ( (i >= 3) ? QUAD : TRIG);
           for (int j = 1; j <= face.GetNP(); j++)
             face.PNum(j) = PNum(prismfaces[i-1][j]);
+          break;
+        }
+      case 7: // hex7
+        {
+          //	face.SetNP(prismfaces[i-1][0]);
+          face.SetType ( ((i == 3) || (i==6)) ? TRIG : QUAD);
+          for (int j = 1; j <= face.GetNP(); j++)
+            face.PNum(j) = PNum(hex7faces[i-1][j]);
           break;
         }
       case 8:
@@ -1684,6 +1704,20 @@ namespace netgen
         { 6, 1, 4 }
       };
   
+    static int hex7trigs[][3] = 
+      {
+        { 1, 3, 2 },
+        { 1, 4, 3 }, 
+        { 5, 6, 7 },
+        { 1, 2, 6 },
+        { 1, 6, 5 },
+        { 2, 3, 7 },
+        { 2, 7, 6 },
+        { 3, 4, 7 },
+        { 4, 1, 7 },
+        { 1, 5, 7 }
+      };
+    
     static int hextrigs[][3] = 
       {
         { 1, 3, 2 },
@@ -1700,6 +1734,8 @@ namespace netgen
         { 1, 5, 8 }
       };
 
+
+    
     int j;
 
     int nf;
@@ -1730,6 +1766,12 @@ namespace netgen
         {
           nf = 16;
           fp = tet10trigs;
+          break;
+        }
+      case HEX7:
+        {
+          nf = 10;
+          fp = hex7trigs;
           break;
         }
       case HEX:

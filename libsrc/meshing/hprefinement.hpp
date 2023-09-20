@@ -246,7 +246,11 @@ enum HPREF_ELEMENT_TYPE {
   HP_HEX_1E_0V,
   HP_HEX_3E_0V,
   HP_HEX_1F_0E_0V,
-  HP_HEX_1FA_1FB_0E_0V
+  HP_HEX_1FA_1FB_0E_0V,
+
+  HP_HEX7 = 3100,
+  HP_HEX7_1FA,      // singular quad face 1,2,3,4
+  HP_HEX7_1FB       // singular trig face 5,6,7
 };
 
 

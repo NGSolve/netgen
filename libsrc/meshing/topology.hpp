@@ -262,6 +262,9 @@ inline short int MeshTopology :: GetNVertices (ELEMENT_TYPE et)
     case PRISM15:
       return 6;
 
+    case HEX7:
+      return 7;
+      
     case HEX:
     case HEX20:
       return 8;
@@ -311,6 +314,9 @@ inline short int MeshTopology :: GetNPoints (ELEMENT_TYPE et)
     case PRISM15:
       return 15;
 
+    case HEX7:
+      return 7;
+
     case HEX:
       return 8;
 
@@ -326,7 +332,7 @@ inline short int MeshTopology :: GetNPoints (ELEMENT_TYPE et)
 
 inline short int MeshTopology :: GetNEdges (ELEMENT_TYPE et)
 {
-  __assume(et >= SEGMENT && et <= PYRAMID13);
+  // __assume(et >= SEGMENT && et <= PYRAMID13);
   switch (et)
     {
     case SEGMENT:
@@ -355,11 +361,12 @@ inline short int MeshTopology :: GetNEdges (ELEMENT_TYPE et)
     case PRISM15:
       return 9;
 
+    case HEX7:
+      return 11;
+      
     case HEX:
     case HEX20:
       return 12;
-    default:
-      return 0;
       // default:
       // cerr << "Ng_ME_GetNEdges, illegal element type " << et << endl;
     }
@@ -369,7 +376,7 @@ inline short int MeshTopology :: GetNEdges (ELEMENT_TYPE et)
 
 inline short int MeshTopology :: GetNFaces (ELEMENT_TYPE et)
 {
-  __assume(et >= SEGMENT && et <= PYRAMID13);
+  // __assume(et >= SEGMENT && et <= PYRAMID13);
   switch (et)
     {
     case SEGMENT:
@@ -400,6 +407,7 @@ inline short int MeshTopology :: GetNFaces (ELEMENT_TYPE et)
 
     case HEX:
     case HEX20:
+    case HEX7:      
       return 6;
 
     default:
@@ -460,6 +468,21 @@ const ELEMENT_EDGE * MeshTopology :: GetEdges1 (ELEMENT_TYPE et)
       { 3, 5 },
       { 4, 5 }};
 
+  static ELEMENT_EDGE hex7_edges[11] =
+    {
+      { 1, 2 },
+      { 3, 4 },
+      { 4, 1 },
+      { 2, 3 },
+      { 5, 6 },
+      { 7, 5 },
+      { 6, 7 },
+      { 1, 5 },
+      { 2, 6 },
+      { 3, 7 },
+      { 4, 7 },
+    };
+
   static ELEMENT_EDGE hex_edges[12] =
     {
       { 1, 2 },
@@ -476,6 +499,7 @@ const ELEMENT_EDGE * MeshTopology :: GetEdges1 (ELEMENT_TYPE et)
       { 4, 8 },
     };
 
+  
   switch (et)
     {
     case SEGMENT:
@@ -504,6 +528,9 @@ const ELEMENT_EDGE * MeshTopology :: GetEdges1 (ELEMENT_TYPE et)
     case PRISM15:
       return prism_edges;
 
+    case HEX7:
+      return hex7_edges;
+      
     case HEX:
     case HEX20:
       return hex_edges;
@@ -561,6 +588,21 @@ const ELEMENT_EDGE * MeshTopology :: GetEdges0 (ELEMENT_TYPE et)
       { 2, 4 },
       { 3, 4 }};
 
+  static ELEMENT_EDGE hex7_edges[11] =
+    {
+      { 0, 1 },
+      { 2, 3 },
+      { 3, 0 },
+      { 1, 2 },
+      { 4, 5 },
+      { 6, 4 },
+      { 5, 6 },
+      { 0, 4 },
+      { 1, 5 },
+      { 2, 6 },
+      { 3, 6 },
+    };
+
   static ELEMENT_EDGE hex_edges[12] =
     {
       { 0, 1 },
@@ -576,6 +618,7 @@ const ELEMENT_EDGE * MeshTopology :: GetEdges0 (ELEMENT_TYPE et)
       { 2, 6 },
       { 3, 7 },
     };
+
   
   switch (et)
     {
@@ -605,6 +648,9 @@ const ELEMENT_EDGE * MeshTopology :: GetEdges0 (ELEMENT_TYPE et)
     case PRISM15:
       return prism_edges;
 
+    case HEX7:
+      return hex7_edges;
+      
     case HEX:
     case HEX20:
       return hex_edges;
@@ -661,6 +707,21 @@ FlatArray<ELEMENT_EDGE> MeshTopology :: GetEdges (ELEMENT_TYPE et)
       { 2, 4 },
       { 3, 4 }};
 
+  static ELEMENT_EDGE hex7_edges[11] =
+    {
+      { 0, 1 },
+      { 2, 3 },
+      { 3, 0 },
+      { 1, 2 },
+      { 4, 5 },
+      { 6, 4 },
+      { 5, 6 },
+      { 0, 4 },
+      { 1, 5 },
+      { 2, 6 },
+      { 3, 6 },
+    };
+
   static ELEMENT_EDGE hex_edges[12] =
     {
       { 0, 1 },
@@ -704,6 +765,9 @@ FlatArray<ELEMENT_EDGE> MeshTopology :: GetEdges (ELEMENT_TYPE et)
     case PRISM12:
     case PRISM15:
       return { 9, prism_edges };
+
+    case HEX7:
+      return { 11, hex7_edges };
 
     case HEX:
     case HEX20:
@@ -752,6 +816,17 @@ inline const ELEMENT_FACE * MeshTopology :: GetFaces1 (ELEMENT_TYPE et)
       { 1, 4, 3, 2 } 
     };
 
+  static const ELEMENT_FACE hex7_faces[6] =
+    {
+      { 1, 4, 3, 2 },
+      { 5, 6, 7, 0  },
+      { 1, 2, 6, 5 },
+      { 2, 3, 7, 6 },
+      { 3, 4, 7, 0 },
+      { 4, 1, 5, 7 }
+    };
+
+  
   static const ELEMENT_FACE hex_faces[6] =
     {
       { 1, 4, 3, 2 },
@@ -792,6 +867,9 @@ inline const ELEMENT_FACE * MeshTopology :: GetFaces1 (ELEMENT_TYPE et)
     case SEGMENT:
     case SEGMENT3:
 
+    case HEX7:
+      return hex7_faces;
+    
     case HEX:
     case HEX20:
       return hex_faces;
@@ -837,6 +915,16 @@ inline const ELEMENT_FACE * MeshTopology :: GetFaces0 (ELEMENT_TYPE et)
       { 0, 3, 2, 1 } 
     };
 
+  static const ELEMENT_FACE hex7_faces[6] =
+    {
+      { 0, 3, 2, 1 },
+      { 4, 5, 6, -1},
+      { 0, 1, 5, 4 },
+      { 1, 2, 6, 5 },
+      { 2, 3, 6, -1},
+      { 3, 0, 4, 6 }
+    };
+
   static const ELEMENT_FACE hex_faces[6] =
     {
       { 0, 3, 2, 1 },
@@ -876,6 +964,9 @@ inline const ELEMENT_FACE * MeshTopology :: GetFaces0 (ELEMENT_TYPE et)
 
     case SEGMENT:
     case SEGMENT3:
+
+    case HEX7:
+      return hex7_faces;
 
     case HEX:
     case HEX20:
