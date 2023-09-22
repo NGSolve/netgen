@@ -9,7 +9,6 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 
   HPREF_ELEMENT_TYPE type = HP_NONE; 
   
-
   int debug = 0;
   for (int j = 0;j < 4; j++)
     {
@@ -228,19 +227,19 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 		{
 		case 0:
 		  {		
-		    if (!ep1 && !ep2 && !ep3 && !ep4)
+		    if (!sp1 && !sp2 && !sp3 && !sp4)
 		      type = HP_TET;
 				
-		    if (ep1 && !ep2 && !ep3 && !ep4)
+		    if (sp1 && !sp2 && !sp3 && !sp4)
 		      type = HP_TET_0E_1V;
 		    
-		    if (ep1 && ep2 && !ep3 && !ep4)
+		    if (sp1 && sp2 && !sp3 && !sp4)
 		      type = HP_TET_0E_2V;
 		    
-		    if (ep1 && ep2 && ep3 && !ep4)
+		    if (sp1 && sp2 && sp3 && !sp4)
 		      type = HP_TET_0E_3V;
 		    
-		    if (ep1 && ep2 && ep3 && ep4)
+		    if (sp1 && sp2 && sp3 && sp4)
 		      type = HP_TET_0E_4V;
 		    
 		    break;
@@ -250,34 +249,34 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 		  {
 		    if (!isedge1) break;
 		    
-		    if (!cp1 && !cp2 && !ep3 && !ep4)
+		    if (!sp1 && !sp2 && !sp3 && !sp4)
 		      type = HP_TET_1E_0V;
 		    
-		    if (cp1 && !cp2 && !ep3 && !ep4)
+		    if (sp1 && !sp2 && !sp3 && !sp4)
 		      type = HP_TET_1E_1VA;
 		    
-		    if (!cp1 && !cp2 && !ep3 && ep4)
+		    if (!sp1 && !sp2 && !sp3 && sp4)
 		      type = HP_TET_1E_1VB;
 		    
-		    if (cp1 && cp2 && !ep3 && !ep4)
+		    if (sp1 && sp2 && !sp3 && !sp4)
 		      type = HP_TET_1E_2VA;
 		    
-		    if (cp1 && !cp2 && ep3 && !ep4)
+		    if (sp1 && !sp2 && sp3 && !sp4)
 		      type = HP_TET_1E_2VB;
 		    
-		    if (cp1 && !cp2 && !ep3 && ep4)
+		    if (sp1 && !sp2 && !sp3 && sp4)
 		      type = HP_TET_1E_2VC;
 		    
-		    if (!cp1 && !cp2 && ep3 && ep4)
+		    if (!sp1 && !sp2 && sp3 && sp4)
 		      type = HP_TET_1E_2VD;
 		    
-		    if (cp1 && cp2 && ep3 && !ep4)
+		    if (sp1 && sp2 && sp3 && !sp4)
 		      type = HP_TET_1E_3VA;
 		    
-		    if (cp1 && !cp2 && ep3 && ep4)
+		    if (sp1 && !sp2 && sp3 && sp4)
 		      type = HP_TET_1E_3VB;
 		    
-		    if (cp1 && cp2 && ep3 && ep4)
+		    if (sp1 && sp2 && sp3 && sp4)
 		      type = HP_TET_1E_4V;
 		    
 		    break;
@@ -286,42 +285,42 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 		  {
 		    if (isedge1 && isedge2)
 		      {
-			if (!cp2 && !cp3 && !ep4)
+			if (!sp2 && !sp3 && !sp4)
 			  type = HP_TET_2EA_0V;
 			
-			if (cp2 && !cp3 && !ep4)
+			if (sp2 && !sp3 && !sp4)
 			  type = HP_TET_2EA_1VA;
-			if (!cp2 && cp3 && !ep4)
+			if (!sp2 && sp3 && !sp4)
 			  type = HP_TET_2EA_1VB;
 			
-			if (!cp2 && !cp3 && ep4)
+			if (!sp2 && !sp3 && sp4)
 			  type = HP_TET_2EA_1VC;
 			
-			if (cp2 && cp3 && !ep4)
+			if (sp2 && sp3 && !sp4)
 			  type = HP_TET_2EA_2VA;
-			if (cp2 && !cp3 && ep4)
+			if (sp2 && !sp3 && sp4)
 			  type = HP_TET_2EA_2VB;
-			if (!cp2 && cp3 && ep4)
+			if (!sp2 && sp3 && sp4)
 			  type = HP_TET_2EA_2VC;
 			
-			if (cp2 && cp3 && ep4)
+			if (sp2 && sp3 && sp4)
 			  type = HP_TET_2EA_3V;
 		      }
 		    if (isedge1 && isedge6)
 		      {
-			if (!cp1 && !cp2 && !cp3 && !cp4)
+			if (!sp1 && !sp2 && !sp3 && !sp4)
 			  type = HP_TET_2EB_0V;
-			if (cp1 && !cp2 && !cp3 && !cp4)
+			if (sp1 && !sp2 && !sp3 && !sp4)
 			  type = HP_TET_2EB_1V;
-			if (cp1 && cp2 && !cp3 && !cp4)
+			if (sp1 && sp2 && !sp3 && !sp4)
 			  type = HP_TET_2EB_2VA;
-			if (cp1 && !cp2 && cp3 && !cp4)
+			if (sp1 && !sp2 && sp3 && !sp4)
 			  type = HP_TET_2EB_2VB;
-			if (cp1 && !cp2 && !cp3 && cp4)
+			if (sp1 && !sp2 && !sp3 && sp4)
 			  type = HP_TET_2EB_2VC;
-			if (cp1 && cp2 && cp3 && !cp4)
+			if (sp1 && sp2 && sp3 && !sp4)
 			  type = HP_TET_2EB_3V;
-			if (cp1 && cp2 && cp3 && cp4)
+			if (sp1 && sp2 && sp3 && sp4)
 			  type = HP_TET_2EB_4V;
 		      }
 		    break;
@@ -330,36 +329,36 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 		  {
 		    if (isedge1 && isedge2 && isedge3)
 		      {
-			if (!cp2 && !cp3 && !cp4)
+			if (!sp2 && !sp3 && !sp4)
 			  type = HP_TET_3EA_0V;
-			if (cp2 && !cp3 && !cp4)
+			if (sp2 && !sp3 && !sp4)
 			  type = HP_TET_3EA_1V;
-			if (cp2 && cp3 && !cp4)
+			if (sp2 && sp3 && !sp4)
 			  type = HP_TET_3EA_2V;
-			if (cp2 && cp3 && cp4)
+			if (sp2 && sp3 && sp4)
 			  type = HP_TET_3EA_3V;
 		      }
 		    if (isedge1 && isedge3 && isedge4)
 		      {
-			if (!cp3 && !cp4)
+			if (!sp3 && !sp4)
 			  type = HP_TET_3EB_0V;
-			if (cp3 && !cp4)
+			if (sp3 && !sp4)
                           type = HP_TET_3EB_1V;
-			if (cp3 && cp4)
+			if (sp3 && sp4)
 			  type = HP_TET_3EB_2V;
 		      }
 		    if (isedge1 && isedge2 && isedge5)
 		      {
-			if (!cp3 && !cp4)
+			if (!sp3 && !sp4)
 			  type = HP_TET_3EC_0V;
-			if (cp3 && !cp4)
+			if (sp3 && !sp4)
 			  type = HP_TET_3EC_1V;
-			if (cp3 && cp4)
+			if (sp3 && sp4)
 			  type = HP_TET_3EC_2V;
 		      }
                     if (isedge1 && isedge2 && isedge4)
                       {
-                        if (!cp4)
+                        if (!sp4)
                           type = HP_TET_3ED_3V; // a loop
                       }
 
@@ -419,7 +418,14 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 		      {
 			if (!sp1 && !sp2 && !sp3 && !sp4)
 			  type = HP_TET_1F_1EB_0V;
+			if (!sp1 && sp2 && !sp3 && !sp4)
+                          type = HP_TET_1F_1E_1VA;
 		      }
+                    if (se5) // V2-V4
+                      {
+			if (!sp1 && sp2 && !sp3 && !sp4)
+                          type = HP_TET_1F_1E_1VB;
+                      }
 		    break;
 		  }
                 case 2:

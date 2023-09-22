@@ -126,10 +126,9 @@ namespace netgen
     HPRef_Struct * hps = NULL;
     /*
     if (type >= 100 && type < 1000)
-      if (type != HP_TET_2F_1E_0VB)
-      type = HP_NONETET;
+      if (type != HP_TET_1F_0E_1VA)
+        type = HP_NONETET;
     */
-    
     switch (type)
       {
       case HP_SEGM:
@@ -398,37 +397,28 @@ namespace netgen
 	hps = &reftet_1f_1ea_0v; break;
       case HP_TET_1F_1EB_0V:
 	hps = &reftet_1f_1eb_0v; break;
+      case HP_TET_1F_1E_1VA:
+	hps = &reftet_1f_1e_1va; break;
+      case HP_TET_1F_1E_1VB:
+	hps = &reftet_1f_1e_1vb; break;
       case HP_TET_1F_1E_2VA:
 	hps = &reftet_1f_1e_2va; break;
+      case HP_TET_1F_1E_2VB:
+	hps = &reftet_1f_1e_2vb; break;
       case HP_TET_1F_2E_0VA:
-        {
-          *testout << "hp_tet_1f_2e_0v needs testing" << endl;
-          cout << "hp_tet_1f_2e_0v needs testing" << endl;
-          hps = &reftet_1f_2e_0va; break;
-        }
+        hps = &reftet_1f_2e_0va; break;
+      case HP_TET_1F_2E_0VB:
+        hps = &reftet_1f_2e_0vb; break;
       case HP_TET_2F_0E_0V:
 	hps = &reftet_2f_0e_0v; break;
-
+      case HP_TET_2F_0E_1V:
+	hps = &reftet_2f_0e_1v; break;
       case HP_TET_2F_1E_0VA:
-        {
-          *testout << "hp_tet_2f_1e_0va needs testing" << endl;                  
-          cout << "hp_tet_2f_1e_0va needs testing" << endl;        
-          hps = &reftet_2f_1e_0va; break;
-        }
+        hps = &reftet_2f_1e_0va; break;
       case HP_TET_2F_1E_0VB:
-        {
-          *testout << "hp_tet_2f_1e_0vb needs testing" << endl;                  
-          cout << "hp_tet_2f_1e_0vb needs testing" << endl;                  
-          hps = &reftet_2f_1e_0vb; break;
-        }
+        hps = &reftet_2f_1e_0vb; break;
       case HP_TET_3F_0E_0V:
-        {
-          *testout << "hp_tet_3f_0e_0v needs testing" << endl;                  
-          cout << "hp_tet_3f_0e_0v needs testing" << endl;                  
-          hps = &reftet_3f_0e_0v; break;
-        }
-
-        
+        hps = &reftet_3f_0e_0v; break;
 
       case HP_PRISM:
 	hps = &refprism; break;
@@ -1929,6 +1919,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	  case HP_TET:
 	    {
 	      hpel.type = ClassifyTet(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, faces,face_edges, surf_edges, facepoint);
+              // if (i != 20) hpel.type = HP_NONETET;
 	      break;
 	    }
 	  case HP_PRISM:

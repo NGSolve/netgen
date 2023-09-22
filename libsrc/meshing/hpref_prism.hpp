@@ -342,7 +342,7 @@
     };
 
 
-//  HP_PRISM_1FB_1EA_0V   ... quad face 1-2-4-5
+//  HP_PRISM_1FB_1EA_0V   ... quad face 1-2-4-5, edge is 1-4
   int refprism_1fb_1ea_0v_splitedges[][3] =
     {
       { 1, 3, 7 },
