@@ -479,7 +479,7 @@ namespace netgen
             continue;
           auto& identifications = OCCGeometry::GetIdentifications(s);
 
-          auto& shape_mapped = modifications[mod_indices.FindIndex(s)-1];
+          // auto& shape_mapped = modifications[mod_indices.FindIndex(s)-1];
   
           for(auto ident : identifications)
           {
