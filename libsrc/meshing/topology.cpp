@@ -1327,7 +1327,7 @@ namespace netgen
 		    else
 #endif
 		      {
-			(*testout) << "illegal face : " << i << endl;
+			(*testout) << "illegal face : " << i << ", cnt = " << face_els[i]+face_surfels[i] << endl;
 			(*testout) << "points = "
                                    << face2vert[i][0] << ","
                                    << face2vert[i][1] << ","
@@ -1348,7 +1348,7 @@ namespace netgen
 			    for (int l = 0; l < nf; l++)
 			      if (elfaces[l] == i)
 				{
-				  // (*testout) << "is face of element " << vertels[k] << endl;
+                                  (*testout) << "is face of element " << vertels[k] << endl;
 			    
 				  if (mesh->coarsemesh && mesh->hpelements->Size() == mesh->GetNE() )
 				    {

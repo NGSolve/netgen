@@ -1,4 +1,157 @@
 
+
+
+
+
+
+
+enum VNUM { V1, V2, V3, V4,
+            E12, E13, E14,
+            E21, E23, E24,
+            E31, E32, E34,
+            E41, E42, E43,
+            F123, F124, F134,
+            F213, F214, F234,
+            F312, F314, F324,
+            F412, F413, F423
+};
+
+class El
+{
+public:
+  HPREF_ELEMENT_TYPE type;
+  std::vector<VNUM> vertices;
+
+  El (HPREF_ELEMENT_TYPE atype,
+      std::vector<VNUM> avertices)
+    : type(atype), vertices(avertices) { } 
+};
+
+extern std::map<HPREF_ELEMENT_TYPE, HPRef_Struct*> & GetHPRegistry();
+
+template <HPREF_ELEMENT_TYPE GEOM>
+class HPRefStruct : public HPRef_Struct
+{
+  typedef int int3[3];
+  typedef int int4[4];
+  typedef int int8[8];  
+  std::vector<std::array<int,3>> refedges;
+  std::vector<std::array<int,4>> reffaces;
+  std::vector<HPREF_ELEMENT_TYPE> neweltypes_vec;
+  std::vector<std::array<int,8>> newelverts;
+
+public:
+  HPRefStruct(HPREF_ELEMENT_TYPE type,
+              std::vector<El> list)
+  {
+    GetHPRegistry()[type] = this;
+    
+    geom = GEOM;
+    std::map<VNUM, int> mapnums;
+    int ii = 0;
+    for (auto v : { V1, V2, V3, V4})
+      mapnums[v] = ++ii;
+    
+    for (auto el : list)
+      for (auto v : el.vertices)
+        if (mapnums.count(v)==0)
+          mapnums[v] = ++ii;
+
+    int elist[][3] =
+      { { 1, 2, E12 },
+        { 1, 3, E13 },
+        { 1, 4, E14 },
+        { 2, 1, E21 },
+        { 2, 3, E23 },
+        { 2, 4, E24 },
+        { 3, 1, E31 },
+        { 3, 2, E32 },
+        { 3, 4, E34 },
+        { 4, 1, E41 },
+        { 4, 2, E42 },
+        { 4, 3, E43 }
+      };
+    int flist[][4] =
+      { { 1, 2, 3, F123 },
+        { 1, 2, 4, F124 },
+        { 1, 3, 4, F134 },
+        { 2, 1, 3, F213 },
+        { 2, 1, 4, F214 },
+        { 2, 3, 4, F234 },
+        { 3, 1, 2, F312 },
+        { 3, 1, 4, F314 },
+        { 3, 2, 4, F324 },
+        { 4, 1, 2, F412 },
+        { 4, 1, 3, F413 },
+        { 4, 2, 3, F423 }
+      };
+      
+
+    for (auto [i1,i2,inew] : elist)
+      if (mapnums.count(VNUM(inew)))
+        refedges.push_back( { i1, i2, mapnums[VNUM(inew)] });
+    refedges.push_back( { 0, 0, 0 } );
+    splitedges = (int3*) &refedges[0][0];
+
+    for (auto [i1,i2,i3,inew] : flist)
+      if (mapnums.count(VNUM(inew)))
+        reffaces.push_back( { i1, i2, i3, mapnums[VNUM(inew)] });
+    reffaces.push_back( { 0, 0, 0 } );
+    splitfaces = (int4*) &reffaces[0][0];
+    
+
+
+    splitelements = nullptr;
+    
+    for (auto el : list)
+      {
+        neweltypes_vec.push_back (el.type);
+        std::array<int,8> verts;
+        for (int j = 0; j < std::min(verts.size(), el.vertices.size()); j++)
+          verts[j] = mapnums[VNUM(el.vertices[j])];
+        newelverts.push_back(verts);
+      }
+    
+    neweltypes_vec.push_back (HP_NONE);
+
+    neweltypes = &neweltypes_vec[0];
+    newels = (int8*) &newelverts[0][0];    
+
+    /*
+    int ind = 0;
+    cout << "rule, split edges:" << endl;
+    while (splitedges[ind][0])
+      {
+        cout << splitedges[ind][0] << "-" << splitedges[ind][1] << ": " << splitedges[ind][2] << endl;
+        ind++;
+      }
+    
+    ind = 0;
+    cout << "rule, split faces:" << endl;
+    while (splitfaces[ind][0])
+      {
+        cout << splitfaces[ind][0] << "-" << splitfaces[ind][1]
+             << "-" << splitfaces[ind][2] << ": " << splitfaces[ind][3] << endl;
+        ind++;
+      }
+
+    ind = 0;
+    cout << "rule, new els:" << endl;
+    while (neweltypes[ind] != HP_NONE)
+      {
+        cout << "new type " << neweltypes[ind] << ", verts: ";
+        for (int j = 0; j < 8; j++)
+          cout << newels[ind][j] << " ";
+        ind++;
+      }
+    */
+  }
+};
+
+
+
+
+
  
 // HP_NONETET
 int refnonetet_splitedges[][3] =
@@ -81,6 +234,16 @@ HPRef_Struct reftet_0e_1v =
   reftet_0e_1v_newelstypes, 
   reftet_0e_1v_newels
 };
+
+/*
+  // new syntax ???
+HPRef_Struct2 str =
+  {
+    HP_TET_0E_1V, HP_TET,
+    El(HP_TET_0E_1V, { V1, V12, V13, V14 })
+  };
+*/  
+
 
 
 
@@ -2994,7 +3157,7 @@ HPRef_Struct reftet_1f_0e_0v =
 
 
 
-
+/*
 // HP_TET_1F_0E_1VA    ... singular vertex in face
 int reftet_1f_0e_1va_splitedges[][3] =
 {
@@ -3028,8 +3191,18 @@ HPRef_Struct reftet_1f_0e_1va =
   reftet_1f_0e_1va_newelstypes, 
   reftet_1f_0e_1va_newels
 };
+*/
 
 
+HPRefStruct<HP_TET> reftet_1f_0e_1va
+  {
+    HP_TET_1F_0E_1VA,
+    {
+      El(HP_HEX7_1FA, { V4, V3, E23, E24, E41, E31, E21 }),
+      El(HP_TET_1F_0E_1VA, { E21, V2, E23, E24 }),
+      El(HP_TET, {  E21, E41, E31, V1 })
+    }
+  };
 
 
 
@@ -3109,6 +3282,33 @@ HPRef_Struct reftet_1f_0e_2v =
   reftet_1f_0e_2v_newelstypes, 
   reftet_1f_0e_2v_newels
 };
+
+
+
+
+
+
+
+
+HPRefStruct<HP_TET> reftet_1f_0e_3v
+  {
+    HP_TET_1F_0E_3V,
+    {
+      El(HP_TET,   { V1, E21, E31, E41 }),
+      El(HP_PRISM_1FA_0E_0V, { F234, F423, F324, E21, E41, E31 }),
+      El(HP_PRISM_1FB_1EA_0V, { E32, F324, E31, E23, F234, E21  }),
+      El(HP_PRISM_1FB_1EA_0V, { E43, F423, E41, E34, F324, E31  }),
+      El(HP_PRISM_1FB_1EA_0V, { E24, F234, E21, E42, F423, E41  }),
+      El(HP_TET_1F_0E_0V, { E21, E24, E23, F234 }),
+      El(HP_TET_1F_0E_1VA, { E21, V2, E23, E24 }),            
+      El(HP_TET_1F_0E_0V, { E31, E32, E34, F324 }),
+      El(HP_TET_1F_0E_1VA, { E31, V3, E34, E32 }),            
+      El(HP_TET_1F_0E_0V, { E41, E43, E42, F423 }),
+      El(HP_TET_1F_0E_1VA, { E41, V4, E42, E43 }),            
+    }
+  };
+
+
 
 
 
@@ -3428,12 +3628,49 @@ HPRef_Struct reftet_1f_1e_2vb =
 
 
 
+//  HP_TET_1F_1EA_3V
+HPRefStruct<HP_TET> reftet_1f_1ea_3v
+  {
+    HP_TET_1F_1EA_3V,
+    {
+      El(HP_PRISM,  { E14, E41, F214, E13, E31, F213 }),
+      El(HP_PRISM_SINGEDGE, { V1, E13, E14, E21, F213, F214 }),
+      El(HP_HEX7_1FB, { E31, E41, F214, F213, F324, F423, F234 }),
+      El(HP_PRISM_1FB_0E_0V, { F234, E23, F213, F324, E32, E31 }),
+      El(HP_PRISM_1FB_0E_0V, { F423, E42, E41, F234, E24, F214 }),
+      El(HP_PRISM_1FB_0E_0V, { F324, E34, E31, F423, E43, E41 }),
+      El(HP_TET_1F_0E_0V, { E31, E32, E34, F324 }),
+      El(HP_TET_1F_0E_1VA, { E31, V3, E34, E32 }),
+
+      El(HP_TET_1F_0E_0V, { E41, E43, E42, F423 }),
+      El(HP_TET_1F_0E_1VA, { E41, V4, E42, E43 }),
+      // El(HP_PYRAMID_1FB_0E_0V, {  E24, E23, F213, F214, F234 }),  // TODO
+      El(HP_PYRAMID, {  E24, E23, F213, F214, F234 }),
+      El(HP_PYRAMID_1FB_0E_1VA, { E23, E24, F214, F213, V2 }),
+      El(HP_TET_1E_1VA, { V2, E21, F214, F213 }),
+    }
+  };
 
 
+HPRefStruct<HP_TET> reftet_1f_2eoo_3v
+  {
+    HP_TET_1F_2Eoo_3V,
+    {
+      El(HP_TET,  { E14, E41, F214, F314 }),
+      El(HP_PRISM_1FA_0E_0V, { V4, E34, E24, E41, F314, F214 }),
+      El(HP_PRISM, { F123, F213, F312, E14, F214, F314 }),
+      El(HP_PRISM_SINGEDGE, { E12, F123, E14, E21, F213, F214 }), 
+      El(HP_PRISM_SINGEDGE, { E13, E14, F123, E31, F314, F312 }),
+      El(HP_HEX_1F_0E_0V, { E32, E23, E24, E34, F312, F213, F214, F314 }),
+      El(HP_TET_1E_1VA, { V1, E12, F123, E14 }),
+      El(HP_TET_1E_1VA, { V1, E13, E14, F123 }),
+      El(HP_PYRAMID_1FB_0E_1VA, { E34, E32, F312, F314, V3 }),
+      El(HP_PYRAMID_1FB_0E_1VA, { E23, E24, F214, F213, V2 }),
+      El(HP_TET_1E_1VA, { V2, E21, F214, F213 }),
+      El(HP_TET_1E_1VA, { V3, E31, F312, F314 }),
 
-
-
-
+    }
+  };
 
 // HP_TET_1F_2E_0VA    singular edge in face 234 is 34, and edge not in face is 14
 int reftet_1f_2e_0va_splitedges[][3] =
@@ -3545,6 +3782,21 @@ HPRef_Struct reftet_1f_2e_0vb =
 
 
 
+
+
+//  HP_TET_1F_2E_1V     e4,e5 (E23,E24), V2 
+HPRefStruct<HP_TET> reftet_1f_2e_1v
+  {
+    HP_TET_1F_2E_1V,
+    {
+      El(HP_TET,  { V1, E21, E31, E41 }),
+      El(HP_PRISM_1FA_0E_0V, { F234, E43, E34, E21, E41, E31 }),
+      El(HP_PRISM_1FB_1EA_0V, { V3, E34, E31, E23, F234, E21 }),
+      El(HP_PRISM_1FB_1EA_0V, { E24, F234, E21, V4, E43, E41 }),
+      El(HP_TET_1F_1E_1VA, { E21, V2, E23, F234 }),
+      El(HP_TET_1F_1E_1VB, { E21, V2, F234, E24 }),
+    }
+  };
 
 
 

@@ -162,15 +162,21 @@ enum HPREF_ELEMENT_TYPE {
   HP_TET_1F_0E_1VA,       // 1 sing vertex in face (V2)          FIX ... (needs HEX7)
   HP_TET_1F_0E_1VB,       // 1 sing vertex not in face (V1)
   HP_TET_1F_0E_2V,        // 2 sing vertex in face (V2,V3)       NEW .. done
+  HP_TET_1F_0E_3V,        // 3 sing vertex in face (V2,V3,V4)    NEWNEW 
   HP_TET_1F_1EA_0V,       // 1 sing edge not in face
   HP_TET_1F_1EB_0V,       // 1 sing edge in face
   HP_TET_1F_1E_1VA,       // 1 sing edge in face e23, sing vert 2        NEW  done
   HP_TET_1F_1E_1VB,       // 1 sing edge in face e24, sing vert 2        NEW  done
   HP_TET_1F_1E_2VA,      //  1 sing edge not in face (e12), sing v2,v3      NEW  done
   HP_TET_1F_1E_2VB,       // 1 sing edge not in face (e12), sing v2,v4      NEW  done
-  HP_TET_1F_1E_2VC,       // 1 sing edge not in face (e12), sing v3,v4      NEW  
+  HP_TET_1F_1E_2VC,       // 1 sing edge not in face (e12), sing v3,v4      NEW
+  HP_TET_1F_1EA_3V,        // 1 sing edge out of face e12, sing v2, v3, v4    NEWNEW   WIP, need Pyramid with 1 sing trig-face
+  HP_TET_1F_1E_3V,        // 1 sing edge in face e23, sing v2, v3, v4       NEWNEW
+  HP_TET_1F_2Eoo_3V,      // 2e out of face: f234, e12, e13, v1,v2,v3       NEWNEW
   HP_TET_1F_2E_0VA,       // edge6 && fedge3  .. 1 in face, 1 not in face    NEW done
   HP_TET_1F_2E_0VB,       // edge6 && fedge2  .. 1 in face, 1 not in face    NEW done
+  HP_TET_1F_2E_1V,        // e4,e5 (E23,E24), V2                            NEW NEW         WIP
+  HP_TET_1F_2E_3V,        // e4,e5 (E23,E24), V2,V3,V4                     NEW NEW  
 
   HP_TET_2F_0E_0V = 600,  // 2 singular faces
   HP_TET_2F_0E_1V,      // 2 singular faces f234, f134, sing point V4     NEW
@@ -240,6 +246,7 @@ enum HPREF_ELEMENT_TYPE {
   HP_PYRAMID = 2000,
   HP_PYRAMID_0E_1V,
   HP_PYRAMID_EDGES,
+  HP_PYRAMID_1FB_0E_0V,   // 1 trig face F125
   HP_PYRAMID_1FB_0E_1VA,  // 1 trig face, top vertex
 
   HP_HEX = 3000,
@@ -330,7 +337,7 @@ public:
   PointIndex & PNum(int i) {return pnums[(i-1)]; };
   int GetIndex () const { return index; }; 
   double singedge_left, singedge_right; 
-  
+  auto PNums() const { return FlatArray<const PointIndex>(np, &pnums[0]); }
 
   //  EdgePointGeomInfo epgeominfo[2];
   

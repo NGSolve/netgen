@@ -78,6 +78,42 @@
 
 
 
+// singular face 1-2-5 
+  // HP_PYRAMID_1FB_0E_0V
+  int refpyramid_1fb_0e_0v_splitedges[][3] =
+    {
+      { 1, 4, 6 },
+      { 2, 3, 7 },
+      { 5, 3, 8 },
+      { 5, 4, 9 },
+      { 0, 0, 0 },
+    };
+
+  HPREF_ELEMENT_TYPE refpyramid_1fb_0e_0v_newelstypes[] =
+    {
+      HP_HEX7_1FB,
+      HP_PRISM,
+      HP_NONE,
+    };
+  int refpyramid_1fb_0e_0v_newels[][8] =
+    {
+      { 6, 7, 8, 9, 1, 2, 5 },
+      { 3, 7, 8, 4, 6, 9 },
+    };
+  HPRef_Struct refpyramid_1fb_0e_0v =
+    {
+      HP_PYRAMID,
+      refpyramid_1fb_0e_0v_splitedges, 
+      0, 0,
+      refpyramid_1fb_0e_0v_newelstypes, 
+      refpyramid_1fb_0e_0v_newels
+    };
+
+
+
+
+
+
 // singular face 1-2-5 singular point 5
   // HP_PYRAMID_1FB_0E_1VA
   int refpyramid_1fb_0e_1va_splitedges[][3] =

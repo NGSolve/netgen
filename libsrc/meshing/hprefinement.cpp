@@ -119,7 +119,13 @@ namespace netgen
           param[k][l]=0.;
       }
   }
-  
+
+
+  std::map<HPREF_ELEMENT_TYPE, HPRef_Struct*> & GetHPRegistry()\
+  {
+    static std::map<HPREF_ELEMENT_TYPE, HPRef_Struct*> registry;
+    return registry;
+  }
 
   HPRef_Struct * Get_HPRef_Struct (HPREF_ELEMENT_TYPE type)
   {
@@ -387,12 +393,14 @@ namespace netgen
 
       case HP_TET_1F_0E_0V:
 	hps = &reftet_1f_0e_0v; break;
-      case HP_TET_1F_0E_1VA:
-	hps = &reftet_1f_0e_1va; break;
+        // case HP_TET_1F_0E_1VA:
+	// hps = &reftet_1f_0e_1va; break;
       case HP_TET_1F_0E_1VB:
 	hps = &reftet_1f_0e_1vb; break;
       case HP_TET_1F_0E_2V:
 	hps = &reftet_1f_0e_2v; break;
+        // case HP_TET_1F_0E_3V:
+	// hps = &reftet_1f_0e_3v; break;
       case HP_TET_1F_1EA_0V:
 	hps = &reftet_1f_1ea_0v; break;
       case HP_TET_1F_1EB_0V:
@@ -419,7 +427,7 @@ namespace netgen
         hps = &reftet_2f_1e_0vb; break;
       case HP_TET_3F_0E_0V:
         hps = &reftet_3f_0e_0v; break;
-
+        
       case HP_PRISM:
 	hps = &refprism; break;
       case HP_PRISM_SINGEDGE:
@@ -534,6 +542,8 @@ namespace netgen
 	hps = &refpyramid_0e_1v; break;
       case HP_PYRAMID_EDGES:
 	hps = &refpyramid_edges; break;
+      case HP_PYRAMID_1FB_0E_0V:
+	hps = &refpyramid_1fb_0e_0v; break;
       case HP_PYRAMID_1FB_0E_1VA:
 	hps = &refpyramid_1fb_0e_1va; break;
 
@@ -565,7 +575,10 @@ namespace netgen
 
       default:
         {
-          hps = NULL;
+          if (GetHPRegistry().count(type))
+            hps = GetHPRegistry()[type];
+          else
+            hps = NULL;
         }
       }
 
@@ -1919,7 +1932,13 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	  case HP_TET:
 	    {
 	      hpel.type = ClassifyTet(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, faces,face_edges, surf_edges, facepoint);
-              // if (i != 20) hpel.type = HP_NONETET;
+              /*
+              // if (i != 182)
+              if ( (!hpel.PNums().Contains(40)) || (!hpel.PNums().Contains(41))  )
+                hpel.type = HP_NONETET;
+              else
+                cout << "type = " << hpel.type << endl;
+              */
 	      break;
 	    }
 	  case HP_PRISM:

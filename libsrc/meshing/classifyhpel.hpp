@@ -20,6 +20,8 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
   if (debug < 4) debug = 0;
   
 
+  *testout << "new el" << endl;
+  
   for (int j = 0; j < 4; j++)
     for (int k = 0; k < 4; k++)
       {
@@ -183,7 +185,7 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
             // << isface[0] << isface[1] << isface[2] << isface[3] 
             // << ", num = " << isface[0]+isface[1]+isface[2]+isface[3] << endl;
 
-
+        
         bool sp1 = cp1 
           || (ep1 && !isedge1 && !isedge2 && !isedge3)
           || (fp1 && !isfedge1 && !isfedge2 && !isfedge3);
@@ -206,6 +208,11 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
         bool se4 = isedge4 || (isfedge4 && !isface[0] && !isface[3]);
         bool se5 = isedge5 || (isfedge5 && !isface[0] && !isface[2]);
         bool se6 = isedge6 || (isfedge6 && !isface[0] && !isface[1]);
+
+        *testout << "sp = " << sp1 << sp2 << sp3 << sp4 << endl;
+        *testout << "se = " << se1 << se2 << se3 << se4 << se5 << se6 << endl;        
+        *testout << "sf = " << isface[0] << isface[1] << isface[2] << isface[3] << endl;
+
         
 	switch (isface[0]+isface[1]+isface[2]+isface[3])
 	  {
@@ -399,6 +406,9 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 		      type = HP_TET_1F_0E_1VA;
 		    if (!fp1 && ep2 && ep3 & !ep4)
 		      type = HP_TET_1F_0E_2V;
+
+                    if (!sp1 && sp2 && sp3 && sp4)
+                      type = HP_TET_1F_0E_3V;                        
 		    break;
 		  }
 		case 1:
@@ -413,6 +423,8 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 			  type = HP_TET_1F_1E_2VB;
 			if (!sp1 && !sp2 && sp3 && sp4)
 			  type = HP_TET_1F_1E_2VC;
+			if (!sp1 && sp2 && sp3 && sp4)
+			  type = HP_TET_1F_1EA_3V;
 		      }
 		    if (se4) // V2-V3
 		      {
@@ -420,6 +432,8 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 			  type = HP_TET_1F_1EB_0V;
 			if (!sp1 && sp2 && !sp3 && !sp4)
                           type = HP_TET_1F_1E_1VA;
+			if (!sp1 && sp2 && sp3 && sp4)
+                          type = HP_TET_1F_1E_3V;
 		      }
                     if (se5) // V2-V4
                       {
@@ -430,12 +444,26 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 		  }
                 case 2:
                   {
+                    if (isedge1 && isedge2)
+                      {
+                        if (sp1 && sp2 && sp3 && !sp4)
+                          type = HP_TET_1F_2Eoo_3V;
+                      }
                     if (isedge6 && isedge3)
                       if (!cp1 && !cp2 && !cp3)
                         type = HP_TET_1F_2E_0VA;
                     if (isedge6 && isedge2)
-                      if (!cp1 && !cp2 && !cp4)
-                        type = HP_TET_1F_2E_0VB;
+                      {
+                        if (!cp1 && !cp2 && !cp4)
+                          type = HP_TET_1F_2E_0VB;
+                      }
+                    if (se4 && se5)
+                      { // 2 edges in face
+                        if (!sp1 && sp2 && !sp3 && !sp4)
+                          type = HP_TET_1F_2E_1V;
+                        if (!sp1 && sp2 && sp3 && sp4)
+                          type = HP_TET_1F_2E_3V;
+                      }
                     break;
                   }
                 default:
@@ -525,7 +553,7 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
                  << el.pnums[3] << endl
 		 << "cp = " << cp1 << cp2 << cp3 << cp4 << endl
 		 << "ep = " << ep1 << ep2 << ep3 << ep4 << endl
-		 << "fp = " << fp1 << fp2 << fp3 << fp4 << endl        
+		 << "fp = " << fp1 << fp2 << fp3 << fp4 << endl
 		 << "isedge = " << isedge1 << isedge2 << isedge3 
 		 << isedge4 << isedge5 << isedge6 << endl
 		 << "isfedge = " << isfedge1 << isfedge2 << isfedge3 
@@ -1713,17 +1741,17 @@ HPREF_ELEMENT_TYPE ClassifyHex7 (HPRefElement & el, INDEX_2_HASHTABLE<int> & edg
                                  NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
                                  INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint)
 {
-  HPREF_ELEMENT_TYPE type = HP_NONE;
+  // HPREF_ELEMENT_TYPE type = HP_NONE;
   
   // no singular
   // singular bottom
   // singular top
   
   // indices of bot,top-faces combinations
-  int index[6][2] = {{0,1},{1,0},{2,4},{4,2},{3,5},{5,3}}; 
-  int p[8]; 
-  const ELEMENT_FACE * elfaces  = MeshTopology::GetFaces1 (HEX);
-  const ELEMENT_EDGE * eledges = MeshTopology::GetEdges1 (HEX);
+  // int index[6][2] = {{0,1},{1,0},{2,4},{4,2},{3,5},{5,3}}; 
+  // int p[8]; 
+  // const ELEMENT_FACE * elfaces  = MeshTopology::GetFaces1 (HEX);
+  // const ELEMENT_EDGE * eledges = MeshTopology::GetEdges1 (HEX);
 
   INDEX_3 fbot = { el.pnums[0], el.pnums[1], el.pnums[2] };
   INDEX_3 ftop = { el.pnums[4], el.pnums[5], el.pnums[6] };
