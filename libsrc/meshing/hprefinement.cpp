@@ -1763,6 +1763,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 		i3 = INDEX_3(i4.I1(), i4.I2(), i4.I3());
 	      }
 	    faces.Set (i3, domnr);
+            *testout << "set face " << i3 << ", domnr = " << domnr << endl;
 	
 	    for (int j = 0; j < el.GetNP(); j++)
 	      {
@@ -1774,9 +1775,9 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	      }
 	   
 	  }
-	(*testout) << "singular edges = " << edges << endl;        
-	(*testout) << "singular faces = " << faces << endl;
-	(*testout) << "singular faces_edges = " << face_edges << endl;
+	// (*testout) << "singular edges = " << edges << endl;        
+	// (*testout) << "singular faces = " << faces << endl;
+	// (*testout) << "singular faces_edges = " << face_edges << endl;
       }
     else
       {
@@ -1901,7 +1902,8 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 
     bool sing = CheckSingularities(mesh, edges, edgepoint_dom, 
 			      cornerpoint, edgepoint, faces, face_edges, 
-			      surf_edges, facepoint, levels, act_ref); 
+			      surf_edges, facepoint, levels, act_ref);
+
     if (act_ref == 1 && split == SPLIT_ALFELD)
       sing = true;   
     if(sing==0) return(sing); 
@@ -1915,8 +1917,6 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
     
     for( int i = 0; i<elements.Size(); i++) 
       {
-	// *testout << "classify element " << i << endl;
-
 	HPRefElement & hpel = elements[i]; 
 	HPRef_Struct * hprs = Get_HPRef_Struct (hpel.type);
 	HPRefElement old_el = elements[i]; 
@@ -1995,8 +1995,6 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	    {
 	      hpel.type = ClassifyPyramid(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, faces,
 						  face_edges, surf_edges, facepoint); 	    	    
-	      
-	      cout << " ** Pyramid classified  " << hpel.type << endl; 
 	      break; 
 	    }
 	  default:

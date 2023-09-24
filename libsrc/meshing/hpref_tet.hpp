@@ -3644,8 +3644,7 @@ HPRefStruct<HP_TET> reftet_1f_1ea_3v
 
       El(HP_TET_1F_0E_0V, { E41, E43, E42, F423 }),
       El(HP_TET_1F_0E_1VA, { E41, V4, E42, E43 }),
-      // El(HP_PYRAMID_1FB_0E_0V, {  E24, E23, F213, F214, F234 }),  // TODO
-      El(HP_PYRAMID, {  E24, E23, F213, F214, F234 }),
+      El(HP_PYRAMID_1FB_0E_0V, {  E24, E23, F213, F214, F234 }),  // needs check
       El(HP_PYRAMID_1FB_0E_1VA, { E23, E24, F214, F213, V2 }),
       El(HP_TET_1E_1VA, { V2, E21, F214, F213 }),
     }

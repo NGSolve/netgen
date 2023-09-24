@@ -20,7 +20,7 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
   if (debug < 4) debug = 0;
   
 
-  *testout << "new el" << endl;
+  // *testout << "new el" << endl;
   
   for (int j = 0; j < 4; j++)
     for (int k = 0; k < 4; k++)
@@ -209,9 +209,9 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
         bool se5 = isedge5 || (isfedge5 && !isface[0] && !isface[2]);
         bool se6 = isedge6 || (isfedge6 && !isface[0] && !isface[1]);
 
-        *testout << "sp = " << sp1 << sp2 << sp3 << sp4 << endl;
-        *testout << "se = " << se1 << se2 << se3 << se4 << se5 << se6 << endl;        
-        *testout << "sf = " << isface[0] << isface[1] << isface[2] << isface[3] << endl;
+        // *testout << "sp = " << sp1 << sp2 << sp3 << sp4 << endl;
+        // *testout << "se = " << se1 << se2 << se3 << se4 << se5 << se6 << endl;        
+        // *testout << "sf = " << isface[0] << isface[1] << isface[2] << isface[3] << endl;
 
         
 	switch (isface[0]+isface[1]+isface[2]+isface[3])
@@ -943,7 +943,7 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 	if(cornerpoint.Test(el.PNum(p[k]))) 
 	  point_sing[p[k]-1] = 3;
       
-      *testout << "point_sing = " << point_sing[0] << point_sing[1] << point_sing[2] << endl;
+      // *testout << "point_sing = " << point_sing[0] << point_sing[1] << point_sing[2] << endl;
 
       if(edge_sing[0] + edge_sing[1] + edge_sing[2] == 0) 
         { 
@@ -1007,7 +1007,7 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
       if(type!=HP_NONE) break;
     }
 
-  *testout << "type = " << type << endl;
+  // *testout << "type = " << type << endl;
     
   for(int k=0;k<3;k++) el[k] = pnums[k]; 
   /*if(type != HP_NONE) 
@@ -1291,7 +1291,7 @@ HPREF_ELEMENT_TYPE ClassifyQuad(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
   int ep1(-1), ep2(-1), ep3(-1), ep4(-1), cp1(-1), cp2(-1), cp3(-1), cp4(-1);
   int isedge1, isedge2, isedge3, isedge4;
 
-  *testout << "edges = " << edges << endl;
+  // *testout << "edges = " << edges << endl;
   
   for (int j = 1; j <= 4; j++)
     {
@@ -1753,9 +1753,10 @@ HPREF_ELEMENT_TYPE ClassifyHex7 (HPRefElement & el, INDEX_2_HASHTABLE<int> & edg
   // const ELEMENT_FACE * elfaces  = MeshTopology::GetFaces1 (HEX);
   // const ELEMENT_EDGE * eledges = MeshTopology::GetEdges1 (HEX);
 
-  INDEX_3 fbot = { el.pnums[0], el.pnums[1], el.pnums[2] };
+  INDEX_4 fbot4 = { el.pnums[0], el.pnums[1], el.pnums[2], el.pnums[3] };
   INDEX_3 ftop = { el.pnums[4], el.pnums[5], el.pnums[6] };
-  fbot.Sort();
+  fbot4.Sort();
+  INDEX_3 fbot = { fbot4[0], fbot4[1], fbot4[2] };
   ftop.Sort();
   
   bool singbot = faces.Used(fbot);
@@ -1822,6 +1823,11 @@ HPREF_ELEMENT_TYPE ClassifyPyramid(HPRefElement & el, INDEX_2_HASHTABLE<int> & e
                                    NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
                                    INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint)
 {
+  // *testout << "classify pyramid, pnums = ";
+  // for (int i = 0; i < 5; i++) *testout << el.pnums[i] << " ";
+  // *testout << endl;
+
+  
   HPREF_ELEMENT_TYPE type = HP_NONE;
   
   // implementation only for HP_PYRAMID
@@ -1844,6 +1850,7 @@ HPREF_ELEMENT_TYPE ClassifyPyramid(HPRefElement & el, INDEX_2_HASHTABLE<int> & e
    
   for(int m=0;m<4 && type == HP_NONE;m++) 
     {
+      *testout << "m = " << m << endl;
       int p[5] = {m%4, m%4+1, m%4+2, m%4+3, 4}; 
 
       for(int l=0;l<5;l++) 
@@ -1874,12 +1881,27 @@ HPREF_ELEMENT_TYPE ClassifyPyramid(HPRefElement & el, INDEX_2_HASHTABLE<int> & e
   
       for (int k=0;k<5;k++)
 	{
-	  INDEX_3 i3; 
-	  INDEX_4  i4 = INDEX_4(el.pnums[p[elfaces[k][0]-1]], el.pnums[p[elfaces[k][1]-1]], el.pnums[p[elfaces[k][2]-1]],
+	  INDEX_3 i3;
+          /*
+	  INDEX_4 i4 = INDEX_4(el.pnums[p[elfaces[k][0]-1]], el.pnums[p[elfaces[k][1]-1]], el.pnums[p[elfaces[k][2]-1]],
 				el.pnums[p[elfaces[k][3]-1]]); 
 	  i4.Sort();
 	  i3 = INDEX_3(i4.I1(), i4.I2(), i4.I3()); 
-	  
+	  */
+          if (k < 4)
+            {
+              i3 = INDEX_3(el.pnums[p[elfaces[k][0]-1]], el.pnums[p[elfaces[k][1]-1]], el.pnums[p[elfaces[k][2]-1]]);
+              i3.Sort();
+            }
+          else
+            {
+              INDEX_4 i4 = INDEX_4(el.pnums[p[elfaces[k][0]-1]], el.pnums[p[elfaces[k][1]-1]], el.pnums[p[elfaces[k][2]-1]],
+                                   el.pnums[p[elfaces[k][3]-1]]); 
+              i4.Sort();
+              i3 = INDEX_3(i4.I1(), i4.I2(), i4.I3()); 
+            }
+
+          
 	  if (faces.Used (i3))
 	    {
 	      
@@ -1889,7 +1911,19 @@ HPREF_ELEMENT_TYPE ClassifyPyramid(HPRefElement & el, INDEX_2_HASHTABLE<int> & e
 	    } 
 	  sface +=face_sing[k]; 
 	} 
-  
+
+      *testout << "point_sing: ";
+      for (int k = 0; k < 5; k++) *testout << point_sing[k] << " ";
+      *testout << endl;
+      
+      *testout << "edge_sing: ";
+      for (int k = 0; k < 4; k++) *testout << edge_sing[k] << " ";
+      *testout << endl;
+      
+      *testout << "face_sing: ";
+      for (int k = 0; k < 5; k++) *testout << face_sing[k] << " ";
+      *testout << endl;
+      
       if(!sface && !spoint && !sedge) return(HP_PYRAMID); 
       
       if(!sface && !sedge && point_sing[p[0]] == spoint) 
@@ -1900,7 +1934,12 @@ HPREF_ELEMENT_TYPE ClassifyPyramid(HPRefElement & el, INDEX_2_HASHTABLE<int> & e
 	type = HP_PYRAMID_EDGES; 
       
       if(sface && sface == face_sing[0] && spoint == point_sing[4] + 2)
-	type = HP_PYRAMID_1FB_0E_1VA; 
+        {
+          if (point_sing[4] == 1)
+            type = HP_PYRAMID_1FB_0E_0V;
+          else
+            type = HP_PYRAMID_1FB_0E_1VA;
+        }
       
       
       if(type != HP_NONE) 
