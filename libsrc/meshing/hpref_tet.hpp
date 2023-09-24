@@ -86,16 +86,42 @@ public:
         { 4, 2, 3, F423 }
       };
       
-
+    /*
+      // too advanced ...
     for (auto [i1,i2,inew] : elist)
       if (mapnums.count(VNUM(inew)))
         refedges.push_back( { i1, i2, mapnums[VNUM(inew)] });
+    */
+    for (int i = 0; i < size(elist); i++)
+      {
+        int i1 = elist[i][0];
+        int i2 = elist[i][1];
+        int inew = elist[i][2];
+        if (mapnums.count(VNUM(inew)))
+          refedges.push_back( { i1, i2, mapnums[VNUM(inew)] });
+      }
+    
     refedges.push_back( { 0, 0, 0 } );
     splitedges = (int3*) &refedges[0][0];
 
+    /*
+      // too advanced ...
     for (auto [i1,i2,i3,inew] : flist)
       if (mapnums.count(VNUM(inew)))
         reffaces.push_back( { i1, i2, i3, mapnums[VNUM(inew)] });
+    */
+    for (int i = 0; i < size(flist); i++)
+      {
+        int i1 = flist[i][0];
+        int i2 = flist[i][1];
+        int i3 = flist[i][2];
+        int inew = flist[i][3];
+        if (mapnums.count(VNUM(inew)))
+          reffaces.push_back( { i1, i2, i3, mapnums[VNUM(inew)] });
+      }
+
+
+
     reffaces.push_back( { 0, 0, 0 } );
     splitfaces = (int4*) &reffaces[0][0];
     
