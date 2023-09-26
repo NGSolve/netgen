@@ -962,7 +962,7 @@ namespace netgen
 
     timestamp = NextTimeStamp();
 
-    if(!build_select && !vispar.colormeshsize && colors.texture==-1)
+    if(!build_select && !vispar.colormeshsize)
       BuildColorTexture();
 
     if (list)
