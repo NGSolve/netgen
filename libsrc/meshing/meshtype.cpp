@@ -2088,6 +2088,25 @@ namespace netgen
           shape[14] = 4 * y * lam * (2*z*z-z);
           break;
         }
+      case HEX7:
+        {
+          T y = p(1);
+          T z = p(2);
+          T den = (1-y)*(1-z);
+          den += T(1e-12);
+          
+          T x = p(0) / den;
+
+          shape(0) = (1-x)*(1-y)*(1-z);
+          shape(1) = (  x)*(1-y)*(1-z);
+          shape(2) = (  x)*(  y)*(1-z);
+          shape(3) = (1-x)*(  y)*(1-z);
+          shape(4) = (1-x)*(1-y)*(  z);
+          shape(5) = (  x)*(1-y)*(  z);
+          shape(6) =       (  y)*(  z);
+          break;
+        }
+
       case HEX:
         {
           shape(0) = (1-p(0))*(1-p(1))*(1-p(2));
