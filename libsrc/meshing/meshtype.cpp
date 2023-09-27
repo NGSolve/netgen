@@ -2092,7 +2092,8 @@ namespace netgen
         {
           T y = p(1);
           T z = p(2);
-          T den = (1-y)*(1-z);
+          // T den = (1-y)*(1-z);
+          T den = (1-y*z);
           den += T(1e-12);
           
           T x = p(0) / den;

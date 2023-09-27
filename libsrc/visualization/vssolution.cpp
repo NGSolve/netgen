@@ -4008,7 +4008,7 @@ namespace netgen
         if(vispar.donotclipdomain > 0 && vispar.donotclipdomain == (*mesh)[ei].GetIndex()) continue;
 
         ELEMENT_TYPE type = (*mesh)[ei].GetType();
-        if (type == HEX || type == PRISM || type == TET || type == TET10 || type == PYRAMID || type == PYRAMID13 || type == PRISM15 || type == HEX20)
+        if (type == HEX || type == PRISM || type == TET || type == TET10 || type == PYRAMID || type == PYRAMID13 || type == PRISM15 || type == HEX20 || type == HEX7)
           {
             int ii = 0;
             int cnt_valid = 0;
@@ -4087,6 +4087,13 @@ namespace netgen
                                            double(iz)/n);
                           if (iz == n) ploc = Point<3> (0,0,1-1e-8);
                           break;
+                        case HEX7:
+                          ploc = Point<3> (double(ix) / n * (1-double(iz)/n*double(iy)/n),
+                                           double(iy) / n,
+                                           double(iz)/n);
+                          if (iz == n && iy==n) ploc = Point<3> (0,1-1e-8,1-1e-8);
+                          break;
+                          
                         default:
                           cerr << "clip plane trigs not implemented" << endl;
                           ploc = Point<3> (0,0,0);
