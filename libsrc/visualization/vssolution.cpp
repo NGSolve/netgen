@@ -4059,6 +4059,10 @@ namespace netgen
                 for (int iy = 0; iy <= n; iy++)
                   for (int iz = 0; iz <= n; iz++, ii++)
                     {
+                      double x = double(ix)/n;
+                      double y = double(iy)/n;
+                      double z = double(iz)/n;
+                      
                       Point<3> ploc;
                       compress[ii] = ii;
                       
@@ -4088,12 +4092,13 @@ namespace netgen
                           if (iz == n) ploc = Point<3> (0,0,1-1e-8);
                           break;
                         case HEX7:
-                          ploc = Point<3> (double(ix) / n * (1-double(iz)/n*double(iy)/n),
-                                           double(iy) / n,
-                                           double(iz)/n);
-                          if (iz == n && iy==n) ploc = Point<3> (0,1-1e-8,1-1e-8);
-                          break;
-                          
+                          {
+                            if (iz == n && iy==n)
+                              { y -= 1e-7, z -= 1e-7; }
+                            ploc = Point<3> (x * (1-y*z), y, z);
+                            // if (iz == n && iy==n) ploc = Point<3> (0,1-1e-8,1-1e-8);
+                            break;
+                          }
                         default:
                           cerr << "clip plane trigs not implemented" << endl;
                           ploc = Point<3> (0,0,0);

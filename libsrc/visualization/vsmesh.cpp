@@ -2673,6 +2673,8 @@ namespace netgen
 	  }
       }
 
+    static float hex7col[] = { 1.0f, 0.65f, 0.0f, 1.0f };
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, hex7col);
 
     for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
       {
