@@ -2230,6 +2230,7 @@ namespace netgen
 
       default:
         {
+          /*
           int np = GetNP();
           double eps = 1e-6;
           NgArrayMem<T,100> mem(2*np);
@@ -2248,6 +2249,18 @@ namespace netgen
               for (int j = 0; j < np; j++)
                 dshape(j, i) = (shaper(j) - shapel(j)) / (2 * eps);
             }
+          */
+
+          AutoDiff<3,T> adx(p(0), 0);
+          AutoDiff<3,T> ady(p(1), 1);
+          AutoDiff<3,T> adz(p(2), 2);
+          Point<3,AutoDiff<3,T>> adp{adx, ady, adz};
+          NgArrayMem<AutoDiff<3,T>,100> mem(np);
+          TFlatVector<AutoDiff<3,T>> adshape(np, &mem[0]);
+          GetShapeNew (adp, adshape);
+          for (int j = 0; j < np; j++)
+            for (int k = 0; k < 3; k++)
+              dshape(j,k) = adshape(j).DValue(k);
         }
       }
   }

@@ -14,6 +14,8 @@
 #include "profiler.hpp"
 #include "signal.hpp"
 #include "simd.hpp"
+#include "autodiff.hpp"
+#include "autodiffdiff.hpp"
 #include "symboltable.hpp"
 #include "taskmanager.hpp"
 #include "version.hpp"

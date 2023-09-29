@@ -2,12 +2,13 @@
 
 #include "meshing.hpp"
 
-#include "../general/autodiff.hpp"
+// #include "../general/autodiff.hpp"
 
 
 namespace netgen
 {
   using namespace std;
+  
   //   bool rational = true;
   static void ComputeGaussRule (int n, NgArray<double> & xi, NgArray<double> & wi)
   {
