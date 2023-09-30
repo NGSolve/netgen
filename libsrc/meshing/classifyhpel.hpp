@@ -491,23 +491,40 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
                         type = HP_TET_2F_0E_1V;
                         break;
                       }
+                    break;
 		  }
                 case 1:
                   {
-                    if (isedge4 && !ep1 && !cp2 && !cp4)
+                    // *testout << "so far: 2F, 1E, sp = " << sp1 << sp2 << sp3 << sp4 << endl;
+
+                    if (isedge4)
                       {
-                        type = HP_TET_2F_1E_0VA;
-                        break;
+                        if (!ep1 && !cp2 && !cp4)
+                          {
+                            type = HP_TET_2F_1E_0VA;
+                            break;
+                          }
+                        if (!sp1 && sp2 && sp3 && sp4)
+                          {
+                            type = HP_TET_2F_1E_3VA;
+                            break;
+                          }
+                        if (sp1 && sp2 && sp3 && sp4)
+                          {
+                            type = HP_TET_2F_1E_4VA;
+                            break;
+                          }
                       }
+                    
                     if (isedge5 && !ep1 && !cp2 && !cp3)
                       {
                         type = HP_TET_2F_1E_0VB;
                         break;
                       }
-                    
+                    break;
                   }
                 default:
-                  ;
+                  *testout << "2F, 2E or more not implemented so far" << endl;
 		}
 	      break;
 	    }

@@ -3677,6 +3677,23 @@ HPRefStruct<HP_TET> reftet_1f_1ea_3v
   };
 
 
+
+//  HP_TET_1F_1E_3V     e4 (E23), V2, V3, V4
+HPRefStruct<HP_TET> reftet_1f_1e_3v
+  {
+    HP_TET_1F_1E_3V,
+    {
+      El(HP_TET,  { V1, E21, E31, E41 }),
+      El(HP_HEX7_1FA, { E34, E24, E42, E43, E31, E21, E41 }),
+      El(HP_PRISM_1FB_1EA_0V, { E32, E34, E31, E23, E24, E21 }),
+      El(HP_TET_1F_0E_1VA, { E41, V4, E42, E43 }),
+      El(HP_TET_1F_1E_1VB, { E21, V2, E23, E24 }),
+      El(HP_TET_1F_1E_1VA, { E31, V3, E34, E32 }),
+    }
+  };
+
+
+
 HPRefStruct<HP_TET> reftet_1f_2eoo_3v
   {
     HP_TET_1F_2Eoo_3V,
@@ -3820,6 +3837,24 @@ HPRefStruct<HP_TET> reftet_1f_2e_1v
       El(HP_PRISM_1FB_1EA_0V, { E24, F234, E21, V4, E43, E41 }),
       El(HP_TET_1F_1E_1VA, { E21, V2, E23, F234 }),
       El(HP_TET_1F_1E_1VB, { E21, V2, F234, E24 }),
+    }
+  };
+
+
+
+//  HP_TET_1F_2E_3V     e4,e5 (E23,E24), V2, V3, V4
+HPRefStruct<HP_TET> reftet_1f_2e_3v
+  {
+    HP_TET_1F_2E_3V,
+    {
+      El(HP_TET,  { V1, E21, E31, E41 }),
+      El(HP_PRISM_1FA_0E_0V, { F234, E43, E34, E21, E41, E31 }),
+      El(HP_PRISM_1FB_1EA_0V, { E32, E34, E31, E23, F234, E21 }),
+      El(HP_PRISM_1FB_1EA_0V, { E24, F234, E21, E42, E43, E41 }),
+      El(HP_TET_1F_1E_1VA, { E21, V2, E23, F234 }),
+      El(HP_TET_1F_1E_1VB, { E21, V2, F234, E24 }),
+      El(HP_TET_1F_1E_1VA, { E31, V3, E34, E32 }),
+      El(HP_TET_1F_1E_1VB, { E41, V4, E42, E43 }),
     }
   };
 

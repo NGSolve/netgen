@@ -171,17 +171,20 @@ enum HPREF_ELEMENT_TYPE {
   HP_TET_1F_1E_2VB,       // 1 sing edge not in face (e12), sing v2,v4      NEW  done
   HP_TET_1F_1E_2VC,       // 1 sing edge not in face (e12), sing v3,v4      NEW
   HP_TET_1F_1EA_3V,        // 1 sing edge out of face e12, sing v2, v3, v4    NEWNEW   WIP, need Pyramid with 1 sing trig-face
-  HP_TET_1F_1E_3V,        // 1 sing edge in face e23, sing v2, v3, v4       NEWNEW
+  HP_TET_1F_1E_3V,        // 1 sing edge in face e23, sing v2, v3, v4       NEWNEW  done
   HP_TET_1F_2Eoo_3V,      // 2e out of face: f234, e12, e13, v1,v2,v3       NEWNEW
   HP_TET_1F_2E_0VA,       // edge6 && fedge3  .. 1 in face, 1 not in face    NEW done
   HP_TET_1F_2E_0VB,       // edge6 && fedge2  .. 1 in face, 1 not in face    NEW done
   HP_TET_1F_2E_1V,        // e4,e5 (E23,E24), V2                            NEW NEW         WIP
-  HP_TET_1F_2E_3V,        // e4,e5 (E23,E24), V2,V3,V4                     NEW NEW  
+  HP_TET_1F_2E_3V,        // e4,e5 (E23,E24), V2,V3,V4                     NEW NEW  done
 
   HP_TET_2F_0E_0V = 600,  // 2 singular faces
   HP_TET_2F_0E_1V,      // 2 singular faces f234, f134, sing point V4     NEW
   HP_TET_2F_1E_0VA,  // 2 singular faces, sing edge e4               NEW  done 
   HP_TET_2F_1E_0VB,  // 2 singular faces, sing edge e5               NEW  done
+
+  HP_TET_2F_1E_3VA,  // 2 singular faces f234,f134, e23, v2,v3,v4        NEW3
+  HP_TET_2F_1E_4VA,  // 2 singular faces f234,f134, e23, v2,v3,v4        NEW3  
   
   HP_TET_3F_0E_0V = 700,  // 3 singular faces, no additional points or edges  NEW   done 
 
