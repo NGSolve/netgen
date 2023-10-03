@@ -1,12 +1,12 @@
 import glob
-import os
+import os.path
 import sys
 import pathlib
+import sysconfig
 
 from skbuild import setup
 import skbuild.cmaker
 from subprocess import check_output
-from distutils.sysconfig import get_python_lib;
 
 setup_requires = []
 
@@ -35,7 +35,7 @@ if len(version)>1:
 else:
     version = version[0]
 
-py_install_dir = get_python_lib(1,0,'').replace('\\','/')
+py_install_dir = os.path.relpath(sysconfig.get_path('platlib'), sysconfig.get_path('data')).replace('\\','/')
 
 name = "netgen-mesher"
 arch = None
