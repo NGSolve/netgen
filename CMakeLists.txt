@@ -417,7 +417,7 @@ if (USE_OCC)
     endif()
     message(STATUS "OCC DIRS ${OpenCASCADE_INCLUDE_DIR}")
     if(WIN32 AND USE_GUI)
-      target_link_libraries(nggui PRIVATE occ_libs)
+      target_link_libraries(nggui PRIVATE occ_libs Ws2_32.lib)
     endif(WIN32 AND USE_GUI)
 endif (USE_OCC)
 
