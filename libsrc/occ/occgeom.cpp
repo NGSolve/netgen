@@ -1166,6 +1166,8 @@ namespace netgen
           auto e = emap(i1);
           auto edge = TopoDS::Edge(e);
           auto verts = GetVertices(e);
+          if(verts.size() == 0)
+            continue;
           auto occ_edge = make_unique<OCCEdge>(edge, GetVertex(verts[0]), GetVertex(verts[1]) );
           occ_edge->properties = GetProperties(e);
           edges.Append(std::move(occ_edge));
