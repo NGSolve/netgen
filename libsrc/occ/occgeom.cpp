@@ -1469,6 +1469,7 @@ namespace netgen
 
       // Enable transfer of colours
       reader.SetColorMode(Standard_True);
+      reader.SetNameMode(Standard_True);
 
       reader.Transfer(iges_doc);
 
@@ -1480,22 +1481,66 @@ namespace netgen
       iges_shape_contents->GetShapes(iges_shapes);
 
       // List out the available colours in the IGES File as Colour Names
-      TDF_LabelSequence all_colours;
-      iges_colour_contents->GetColors(all_colours);
-      PrintMessage(1,"Number of colours in IGES File: ",all_colours.Length());
-      for(int i = 1; i <= all_colours.Length(); i++)
-      {
-         Quantity_Color col;
-         stringstream col_rgb;
-         iges_colour_contents->GetColor(all_colours.Value(i),col);
-         col_rgb << " : (" << col.Red() << "," << col.Green() << "," << col.Blue() << ")";
-         PrintMessage(1, "Colour [", i, "] = ",col.StringName(col.Name()),col_rgb.str());
-      }
+      // TDF_LabelSequence all_colours;
+      // iges_colour_contents->GetColors(all_colours);
+      // PrintMessage(1,"Number of colours in IGES File: ",all_colours.Length());
+      // for(int i = 1; i <= all_colours.Length(); i++)
+      // {
+      //    Quantity_Color col;
+      //    stringstream col_rgb;
+      //    iges_colour_contents->GetColor(all_colours.Value(i),col);
+      //    col_rgb << " : (" << col.Red() << "," << col.Green() << "," << col.Blue() << ")";
+      //    PrintMessage(1, "Colour [", i, "] = ",col.StringName(col.Name()),col_rgb.str());
+      // }
 
 
       // For the IGES Reader, all the shapes can be exported as one compound shape
       // using the "OneShape" member
-      occgeo->shape = reader.OneShape();
+      auto shape = reader.OneShape();
+      auto shapeTool = XCAFDoc_DocumentTool::ShapeTool(iges_doc->Main());
+      // load colors
+      for (auto typ : {TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
+        for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+          {
+            TDF_Label label;
+            shapeTool->Search(e.Current(), label);
+
+            if(label.IsNull())
+              continue;
+
+            XCAFPrs_IndexedDataMapOfShapeStyle set;
+            TopLoc_Location loc;
+            XCAFPrs::CollectStyleSettings(label, loc, set);
+            XCAFPrs_Style aStyle;
+            set.FindFromKey(e.Current(), aStyle);
+
+            auto & prop = OCCGeometry::GetProperties(e.Current());
+            if(aStyle.IsSetColorSurf())
+              prop.col = step_utils::ReadColor(aStyle.GetColorSurfRGBA());
+          }
+
+      // load names
+      auto workSession = reader.WS();
+      auto model = workSession->Model();
+      auto transProc = workSession->TransferReader()->TransientProcess();
+      Standard_Integer nb = model->NbEntities();
+      for (Standard_Integer i = 1; i <= nb; i++)
+        {
+          Handle(Standard_Transient) entity = model->Value(i);
+          auto item = Handle(StepRepr_RepresentationItem)::DownCast(entity);
+
+          if(item.IsNull())
+            continue;
+
+          TopoDS_Shape shape = TransferBRep::ShapeResult(transProc->Find(item));
+          string name = item->Name()->ToCString();
+          if (!transProc->IsBound(item))
+            continue;
+
+          OCCGeometry::GetProperties(shape).name = name;
+        }
+
+      occgeo->shape = shape;
       occgeo->changed = 1;
       occgeo->BuildFMap();
 
