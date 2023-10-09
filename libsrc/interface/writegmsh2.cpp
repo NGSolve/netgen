@@ -20,10 +20,10 @@
 #include <linalg.hpp>
 #include <csg.hpp>
 #include <meshing.hpp>
+#include "writeuser.hpp"
 
 namespace netgen
 {
-#include "writeuser.hpp"
 
   extern MeshingParameters mparam;
 
@@ -48,7 +48,6 @@ namespace netgen
    *
    */
    void WriteGmsh2Format (const Mesh & mesh,
-      const NetgenGeometry & geom,
       const filesystem::path & filename)
    {
       ofstream outfile (filename);
@@ -258,6 +257,7 @@ namespace netgen
          cout << " Invalid element type for Gmsh v2.xx Export Format !\n";
       }
    } // End: WriteGmsh2Format
+static RegisterUserFormat reg_gmsh2 ("Gmsh2 Format", {".gmsh2"}, nullopt, WriteGmsh2Format);
 } // End: namespace netgen
 
 

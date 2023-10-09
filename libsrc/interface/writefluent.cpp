@@ -10,11 +10,10 @@
 #include <csg.hpp>
 #include <meshing.hpp>
 
-namespace netgen
-{
-
 #include "writeuser.hpp"
 
+namespace netgen
+{
 
 
 void WriteFluentFormat (const Mesh & mesh,
@@ -190,4 +189,5 @@ void WriteFluentFormat (const Mesh & mesh,
   cout << "done" << endl;
 }
 
+static RegisterUserFormat reg_fluent ("Fluent Format", {".mesh"}, nullopt, WriteFluentFormat);
 }

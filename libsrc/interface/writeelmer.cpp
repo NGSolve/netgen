@@ -197,4 +197,6 @@ void WriteElmerFormat (const Mesh &mesh,
       outfile_h << tmap[eltype] << " " << count << "\n";
 }
 
+static RegisterUserFormat reg_elmer ("Elmer Format", {"*"}, nullopt, WriteElmerFormat);
+
 }

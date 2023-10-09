@@ -31,10 +31,10 @@
 #include <sys/stat.h>
 
 #include "../general/gzstream.h"
+#include "writeuser.hpp"
 
 namespace netgen
 {
-#include "writeuser.hpp"
 
   extern MeshingParameters mparam;
 
@@ -757,5 +757,11 @@ namespace netgen
          cout << "Error in OpenFOAM 1.5+ Export.... Aborted!\n";
       }
    }
+
+void WriteOpenFOAM15xFormatCompressed (const Mesh & mesh, const filesystem::path & dirname) { WriteOpenFOAM15xFormat(mesh, dirname, true); }
+void WriteOpenFOAM15xFormatUncompressed (const Mesh & mesh, const filesystem::path & dirname) { WriteOpenFOAM15xFormat(mesh, dirname, false); }
+
+static RegisterUserFormat reg_openfoam ("OpenFOAM 1.5+ Format", {"*"}, nullopt, WriteOpenFOAM15xFormatUncompressed);
+static RegisterUserFormat reg_openfoam_compressed ("OpenFOAM 1.5+ Compressed", {"*"}, nullopt, WriteOpenFOAM15xFormatCompressed);
 }
 

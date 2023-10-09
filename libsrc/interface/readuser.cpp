@@ -15,6 +15,12 @@
 
 namespace netgen
 {
+  extern void ReadTETFormat (Mesh & mesh, const filesystem::path & filename);
+  extern void ReadFNFFormat (Mesh & mesh, const filesystem::path & filename);
+#ifdef NG_CGNS
+  extern void ReadCGNSMesh (Mesh & mesh, const filesystem::path & filename);
+#endif // NG_CGNS
+
   void ReadFile (Mesh & mesh,
                  const filesystem::path & filename)
   {
@@ -665,9 +671,11 @@ namespace netgen
     if ( ext == ".fnf" )
         ReadFNFFormat (mesh, filename);
 
+#ifdef NG_CGNS
     // .cgns file - CFD General Notation System
     if ( ext == ".cgns" )
         ReadCGNSMesh (mesh, filename);
+#endif // NG_CGNS
 
     if ( ext == ".stl" || ext == ".stlb" )
       {
@@ -695,6 +703,24 @@ namespace netgen
         }
       }
   }
+
+  void ReadUserFormat(Mesh & mesh, const filesystem::path & filename, const string & format)
+  {
+    if(format == "")
+      return ReadFile(mesh, filename);
+
+    if(!UserFormatRegister::HaveFormat(format))
+      throw Exception("Unknown format: " + format);
+
+    const auto & entry = UserFormatRegister::Get(format);
+    if(!entry.read)
+      throw Exception("Reading format " + format + " is not implemented");
+
+    (*entry.read)(mesh, filename);
+  }
+
+static RegisterUserFormat reg_uni ("Universial Format", {".unv"}, ReadFile, nullopt);
+static RegisterUserFormat reg_olaf ("Olaf Format", {".emt"}, ReadFile, nullopt);
   
 }
 

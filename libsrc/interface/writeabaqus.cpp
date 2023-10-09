@@ -10,9 +10,10 @@
 #include <csg.hpp>
 #include <meshing.hpp>
 
+#include "writeuser.hpp"
+
 namespace netgen
 {
-#include "writeuser.hpp"
 
 
 
@@ -229,4 +230,5 @@ void WriteAbaqusFormat (const Mesh & mesh,
   cout << "done" << endl;
 }
 
+static RegisterUserFormat reg_abaqus ("Abaqus Format", {".mesh"}, nullopt, WriteAbaqusFormat);
 }

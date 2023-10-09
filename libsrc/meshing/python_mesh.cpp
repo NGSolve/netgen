@@ -79,6 +79,10 @@ namespace netgen
   extern bool netgen_executable_started;
   extern shared_ptr<NetgenGeometry> ng_geometry;
   extern void Optimize2d (Mesh & mesh, MeshingParameters & mp, int faceindex=0);
+#ifdef NG_CGNS
+  extern tuple<shared_ptr<Mesh>, vector<string>, vector<Array<double>>, vector<int>> ReadCGNSFile(const filesystem::path & filename, int base);
+  extern void WriteCGNSFile(shared_ptr<Mesh> mesh, const filesystem::path & filename, vector<string> fields, vector<Array<double>> values, vector<int> locations);
+#endif // NG_CGNS
 }
 
 
@@ -725,6 +729,20 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   ExportArray<MeshPoint,PointIndex>(m);
   ExportArray<FaceDescriptor>(m);
 
+  string export_docu = "Export mesh to other file format. Supported formats are:\n";
+  Array<string> export_formats;
+  for(auto & e : UserFormatRegister::entries)
+    if(e.write) {
+      string s = '\t'+e.format+"\t("+e.extensions[0];
+      for(auto & ext : e.extensions.Range(1, e.extensions.Size()))
+        s += ", "+ext;
+      s += ")\n";
+      export_formats.Append(s);
+    }
+  QuickSort(export_formats);
+  for(const auto & s : export_formats)
+    export_docu += s;
+
   py::implicitly_convertible< int, PointIndex>();
 
   py::class_<NetgenGeometry, shared_ptr<NetgenGeometry>> (m, "NetgenGeometry", py::dynamic_attr())
@@ -932,18 +950,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("Export",
          [] (Mesh & self, string filename, string format)
           {
-            if (WriteUserFormat (format, self, /* *self.GetGeometry(), */ filename))
-              {
-                string err = string ("nothing known about format")+format;
-                NgArray<const char*> names, extensions;
-                RegisterUserFormats (names, extensions);
-                err += "\navailable formats are:\n";
-                for (auto name : names)
-                  err += string("'") + name + "'\n";
-                throw NgException (err);
-              }
+            if (WriteUserFormat (format, self, filename))
+                throw Exception ("Nothing known about format"+format);
           },
-         py::arg("filename"), py::arg("format"),py::call_guard<py::gil_scoped_release>())
+         py::arg("filename"), py::arg("format"), export_docu.c_str(),
+         py::call_guard<py::gil_scoped_release>())
     
     .def_property("dim", &Mesh::GetDimension, &Mesh::SetDimension)
 
@@ -1672,20 +1683,21 @@ project_boundaries : Optional[str] = None
         })
     ;
 
-  m.def("ImportMesh", [](const string& filename)
+  string import_docu = "Import mesh from other file format. Leaving format parameter empty guesses based on file extension.\nSupported formats are:\n";
+  UserFormatRegister::IterateFormats([&](auto & e) {
+      string s = '\t'+e.format+"\t("+e.extensions[0];
+      for(auto & ext : e.extensions.Range(1, e.extensions.Size()))
+        s += ", "+ext;
+      s += ")\n";
+      import_docu += s;
+  }, true);
+
+  m.def("ImportMesh", [](const string& filename, const string & format)
                       {
                         auto mesh = make_shared<Mesh>();
-                        ReadFile(*mesh, filename);
+                        ReadUserFormat(*mesh, filename, format);
                         return mesh;
-                      }, py::arg("filename"),
-    R"delimiter(Import mesh from other file format, supported file formats are:
- Neutral format (*.mesh, *.emt)
- Surface file (*.surf)
- Universal format (*.unv)
- Olaf format (*.emt)
- Tet format (*.tet)
- Pro/ENGINEER format (*.fnf)
-)delimiter");
+                      }, py::arg("filename"), py::arg("format")="", import_docu.c_str());
   py::enum_<MESHING_STEP>(m,"MeshingStep")
     .value("ANALYSE", MESHCONST_ANALYSE)
     .value("MESHEDGES", MESHCONST_MESHEDGES)
@@ -1757,6 +1769,7 @@ project_boundaries : Optional[str] = None
 
   m.attr("debugparam") = py::cast(&debugparam);
 
+#ifdef NG_CGNS
   m.def("ReadCGNSFile", &ReadCGNSFile, py::arg("filename"), py::arg("base")=1, "Read mesh and solution vectors from CGNS file");
   m.def("WriteCGNSFile", &WriteCGNSFile, py::arg("mesh"), py::arg("filename"), py::arg("names"), py::arg("values"), py::arg("locations"),
       R"(Write mesh and solution vectors to CGNS file, possible values for locations:
@@ -1765,6 +1778,7 @@ project_boundaries : Optional[str] = None
       FaceCenter = 2
       CellCenter = 3
       )");
+#endif // NG_CGNS
 
     py::class_<SurfaceGeometry, NetgenGeometry, shared_ptr<SurfaceGeometry>> (m, "SurfaceGeometry")
     .def(py::init<>())

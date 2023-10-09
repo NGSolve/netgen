@@ -11,10 +11,10 @@
 #include <meshing.hpp>
 #include <sys/stat.h>
 
+#include "writeuser.hpp"
 
 namespace netgen
 {
-#include "writeuser.hpp"
 
   bool ReadLine (istream & in, string & buf)
   {
@@ -471,4 +471,5 @@ namespace netgen
       }
     mesh.ComputeNVertices();
   }
+static RegisterUserFormat reg_fnf ("Pro/ENGINEER Format", {".fnf"}, ReadFNFFormat, nullopt);
 }

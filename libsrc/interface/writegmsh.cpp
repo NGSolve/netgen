@@ -17,10 +17,10 @@
 #include <linalg.hpp>
 #include <csg.hpp>
 #include <meshing.hpp>
+#include "writeuser.hpp"
 
 namespace netgen
 {
-#include "writeuser.hpp"
 
   extern MeshingParameters mparam;
 
@@ -31,7 +31,6 @@ namespace netgen
  */
 
 void WriteGmshFormat (const Mesh & mesh,
-                      const NetgenGeometry & geom,
                       const filesystem::path & filename)
 {
   ofstream outfile (filename);
@@ -196,6 +195,7 @@ void WriteGmshFormat (const Mesh & mesh,
 
 
 }
+static RegisterUserFormat reg_gmsh ("Gmsh Format", {".gmsh"}, nullopt, WriteGmshFormat);
 }
 
 

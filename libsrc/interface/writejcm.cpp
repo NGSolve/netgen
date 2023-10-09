@@ -11,12 +11,12 @@
 #include <meshing.hpp>
 #include <sys/stat.h>
 
-namespace netgen
-{
 #include "writeuser.hpp"
 
+namespace netgen
+{
+
 void WriteJCMFormat (const Mesh & mesh,
-                     const NetgenGeometry & geom,
                      const filesystem::path & filename)
 {
   if (mesh.GetDimension() != 3)
@@ -426,5 +426,6 @@ void WriteJCMFormat (const Mesh & mesh,
   cout << " JCMwave grid file written." << endl;
 }
 
+static RegisterUserFormat reg_jcmwave ("JCMwave Format", {".jcm"}, nullopt, WriteJCMFormat);
 }
 

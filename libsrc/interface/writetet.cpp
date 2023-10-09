@@ -6,21 +6,20 @@
 #include <csg.hpp>
 #include <acisgeom.hpp>
 #include <meshing.hpp>
+#include "writeuser.hpp"
 
 namespace netgen
 {
-
-#include "writeuser.hpp"
-  
+  extern void ReadTETFormat (Mesh & mesh, const filesystem::path & filename);
   
   void WriteTETFormat (const Mesh & mesh,
-		       const string & filename)//, const string& problemType )
+		       const filesystem::path & filename)//, const string& problemType )
   {
     string problemType = "";
     if(!mesh.PureTetMesh())
       throw NgException("Can only export pure tet mesh in this format");
 
-    cout << "starting .tet export to file " << filename << endl;
+    cout << "starting .tet export to file " << filename.string() << endl;
 
 
     NgArray<int> point_ids,edge_ids,face_ids;
@@ -1095,4 +1094,5 @@ namespace netgen
 
     cout << ".tet export done" << endl;
   }
+static RegisterUserFormat reg_tet ("TET Format", {".tet"}, ReadTETFormat, WriteTETFormat);
 }

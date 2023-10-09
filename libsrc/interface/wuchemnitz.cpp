@@ -9,6 +9,8 @@
 #include <csg.hpp>
 #include <meshing.hpp>
 
+#include "writeuser.hpp"
+
 namespace netgen
 {
 
@@ -316,4 +318,5 @@ namespace netgen
     WriteFile (outfile);
     cout << "Wrote Chemnitz standard file" << endl;
   }
+static RegisterUserFormat reg_chemnitz ("Chemnitz Format", {"*"}, nullopt, WriteUserChemnitz );
 }

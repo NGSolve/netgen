@@ -282,17 +282,33 @@ namespace netgen
   }
 
 
+  int Ng_GetImportFormats (ClientData clientData,
+                           Tcl_Interp * interp,
+                           int argc, tcl_const char *argv[])
+  {
+    ostringstream fstr;
+    UserFormatRegister::IterateFormats([&](auto & entry) {
+      fstr << "{ {" << entry.format << "} {" << entry.extensions[0];
+      for(auto ext : entry.extensions.Range(1, entry.extensions.Size()))
+        fstr << ' ' << ext;
+      fstr << "} }\n";
+    }, true, false);
+    
+    Tcl_SetResult (interp, const_cast<char*>(fstr.str().c_str()), TCL_VOLATILE);
+    return TCL_OK;
+  }
+
   int Ng_GetExportFormats (ClientData clientData,
                            Tcl_Interp * interp,
                            int argc, tcl_const char *argv[])
   {
-    NgArray<const char*> userformats;
-    NgArray<const char*> extensions;
-    RegisterUserFormats (userformats, extensions);
-    
     ostringstream fstr;
-    for (int i = 1; i <= userformats.Size(); i++)
-      fstr << "{ {" << userformats.Get(i) << "} {" << extensions.Get(i) << "} }\n";
+    UserFormatRegister::IterateFormats([&](auto & entry) {
+      fstr << "{ {" << entry.format << "} {" << entry.extensions[0];
+      for(auto ext : entry.extensions.Range(1, entry.extensions.Size()))
+        fstr << ' ' << ext;
+      fstr << "} }\n";
+    }, false, true);
     
     Tcl_SetResult (interp, const_cast<char*>(fstr.str().c_str()), TCL_VOLATILE);
     return TCL_OK;
@@ -333,11 +349,12 @@ namespace netgen
 		     int argc, tcl_const char *argv[])
   {
     const string filename (argv[1]);
+    const string format (argv[2]);
     PrintMessage (1, "import mesh from ", filename);
 
     mesh = make_shared<Mesh>();
 
-    ReadFile (*mesh, filename);
+    ReadUserFormat (*mesh, filename, format);
     PrintMessage (2, mesh->GetNP(), " Points, ",
 		  mesh->GetNE(), " Elements.");
 
@@ -2874,6 +2891,10 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 		       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_MergeMesh", Ng_MergeMesh,
+		       (ClientData)NULL,
+		       (Tcl_CmdDeleteProc*) NULL);
+
+    Tcl_CreateCommand (interp, "Ng_GetImportFormats", Ng_GetImportFormats,
 		       (ClientData)NULL,
 		       (Tcl_CmdDeleteProc*) NULL);
 

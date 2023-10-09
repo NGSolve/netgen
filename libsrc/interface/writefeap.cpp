@@ -13,12 +13,13 @@
 #include <csg.hpp>
 #include <meshing.hpp>
 
+#include "writeuser.hpp"
+
 namespace netgen
 {
 
   extern MeshingParameters mparam;
 
-#include "writeuser.hpp"
 
 
 void WriteFEAPFormat (const Mesh & mesh,
@@ -219,4 +220,5 @@ void WriteFEAPFormat (const Mesh & mesh,
 
   cout << "done" << endl;
 }
+static RegisterUserFormat reg_feap ("FEAP Format", {".mesh"}, nullopt, WriteFEAPFormat);
 }

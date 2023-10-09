@@ -18,145 +18,34 @@ namespace netgen
 {
   extern MeshingParameters mparam;
 
+  Array<UserFormatRegister::UserFormatEntry> UserFormatRegister::entries;
+  std::map<string, int> UserFormatRegister::format_to_entry_index;
 
   void RegisterUserFormats (NgArray<const char*> & names,
 			    NgArray<const char*> & extensions)
 			    
 {
-  const char *types[] =
+  for (const auto & entry : UserFormatRegister::entries)
     {
-      "Neutral Format",  ".mesh",
-      "Surface Mesh Format", ".mesh" ,
-      "DIFFPACK Format", ".mesh",
-      "TecPlot Format", ".mesh",
-      "Tochnog Format", ".mesh",
-      "Abaqus Format", ".mesh",
-      "Fluent Format", ".mesh",
-      "Permas Format", ".mesh",
-      "FEAP Format", ".mesh",
-      "Elmer Format", "*",
-      "STL Format", ".stl",
-      "STL Extended Format", ".stl",
-      "VRML Format", ".*",
-      "Gmsh Format", ".gmsh",
-      "Gmsh2 Format", ".gmsh2",
-      "OpenFOAM 1.5+ Format", "*",
-	  "OpenFOAM 1.5+ Compressed", "*",
-      "JCMwave Format", ".jcm",
-      "TET Format", ".tet",
-      "CGNS Format", ".cgns",
-      //      { "Chemnitz Format" },
-      0
-    };
-  
-  for (int i = 0; types[2*i]; i++)
-    {
-      names.Append (types[2*i]);
-      extensions.Append (types[2*i+1]);
+      names.Append (entry.format.c_str());
+      extensions.Append (entry.extensions[0].c_str());
     }
 }
   
-
-
-bool WriteUserFormat (const filesystem::path & format,
+bool WriteUserFormat (const string & format,
 		      const Mesh & mesh,
 		      const filesystem::path & filename)
 {
-  // cout << "write user &hgeom = " << &hgeom << endl;
-  // const CSGeometry & geom = *dynamic_cast<const CSGeometry*> (&hgeom);
-  const CSGeometry & geom = *dynamic_pointer_cast<CSGeometry> (mesh.GetGeometry());  
+  if(!UserFormatRegister::HaveFormat(format))
+    return true;
 
-  PrintMessage (1, "Export mesh to file ", filename,
-		", format is ", format);
+  const auto & entry = UserFormatRegister::Get(format);
+  if(!entry.write)
+    return true;
 
-  if (format == "Neutral Format")
-    WriteNeutralFormat (mesh, geom, filename);
-
-  else if (format == "Surface Mesh Format")
-    WriteSurfaceFormat (mesh, filename);
-
-  else if (format == "DIFFPACK Format")
-    WriteDiffPackFormat (mesh, geom, filename);
-
-  else if (format == "Tochnog Format")
-    WriteTochnogFormat (mesh, filename);
-
-  else if (format == "TecPlot Format")
-    cerr << "ERROR: TecPlot format currently out of order" << endl;
-      // WriteTecPlotFormat (mesh, geom, filename);
-
-  else if (format == "Abaqus Format")
-    WriteAbaqusFormat (mesh, filename);
-
-  else if (format == "Fluent Format")
-    WriteFluentFormat (mesh, filename);
-
-  else if (format == "Permas Format")
-    WritePermasFormat (mesh, filename);
-
-  else if (format == "FEAP Format")
-    WriteFEAPFormat (mesh, filename);
-
-  else if (format == "Elmer Format")
-    WriteElmerFormat (mesh, filename);
-
-  else if (format == "STL Format")
-    WriteSTLFormat (mesh, filename);
-
-  // Philippose - 16 August 2010
-  // Added additional STL Export in which
-  // each face of the geometry is treated
-  // as a separate "solid" entity
-  else if (format == "STL Extended Format")
-	WriteSTLExtFormat (mesh, filename);
-
-  else if (format == "VRML Format")
-    WriteVRMLFormat (mesh, 1, filename);
-
-  else if (format == "Fepp Format")
-    WriteFEPPFormat (mesh, geom, filename);
-
-  else if (format ==  "EdgeElement Format")
-    WriteEdgeElementFormat (mesh, geom, filename);
-
-  else if (format == "Chemnitz Format")
-    WriteUserChemnitz (mesh, filename);
-
-  else if (format == "Gmsh Format")
-    WriteGmshFormat (mesh, geom, filename);
-
-  // Philippose - 29/01/2009
-  // Added Gmsh v2.xx Mesh export capability
-  else if (format == "Gmsh2 Format")
-    WriteGmsh2Format (mesh, geom, filename);
-
-  // Philippose - 25/10/2009
-  // Added OpenFOAM 1.5+ Mesh export capability
-  else if (format == "OpenFOAM 1.5+ Format")
-    WriteOpenFOAM15xFormat (mesh, filename, false);
-
-  else if (format == "OpenFOAM 1.5+ Compressed")
-    WriteOpenFOAM15xFormat (mesh, filename, true);
-
-  else if (format == "JCMwave Format")
-    WriteJCMFormat (mesh, geom, filename);
-
-#ifdef OLIVER
-  else if (format == "TET Format")
-    WriteTETFormat( mesh, filename);//, "High Frequency" );
-#endif
-
-  else if (format == "CGNS Format")
-    WriteCGNSMesh( mesh, filename);
-
-  else
-    {
-      return 1;
-    }
-
-  return 0;
+  (*entry.write)(mesh, filename);
+  return false;
 }
-
 
 
 
@@ -166,7 +55,6 @@ bool WriteUserFormat (const filesystem::path & format,
  */
 
 void WriteNeutralFormat (const Mesh & mesh,
-			 const NetgenGeometry & geom,
 			 const filesystem::path & filename)
 {
   cout << "write neutral, new" << endl;
@@ -631,6 +519,16 @@ void WriteVRMLFormat (const Mesh & mesh,
 
 }
 
+void WriteVRMLFormatLineset (const Mesh & mesh, const filesystem::path & filename)
+{
+  WriteVRMLFormat(mesh, false, filename);
+}
+
+void WriteVRMLFormatFaceset (const Mesh & mesh, const filesystem::path & filename)
+{
+  WriteVRMLFormat(mesh, true, filename);
+}
+
 
 
 
@@ -640,7 +538,6 @@ void WriteVRMLFormat (const Mesh & mesh,
  * FEPP .. a finite element package developed at University Linz, Austria
  */
 void WriteFEPPFormat (const Mesh & mesh,
-		      const NetgenGeometry & geom,
 		      const filesystem::path & filename)
 {
 
@@ -771,7 +668,6 @@ void WriteFEPPFormat (const Mesh & mesh,
  */
 
 void WriteEdgeElementFormat (const Mesh & mesh,
-			     const NetgenGeometry & geom,
 			     const filesystem::path & filename)
 {
   cout << "write edge element format" << endl;
@@ -898,169 +794,14 @@ void WriteEdgeElementFormat (const Mesh & mesh,
     }
 }
 
+static RegisterUserFormat reg_neutral("Neutral Format", {".mesh"}, ReadFile, WriteNeutralFormat);
+static RegisterUserFormat reg_surface("Surface Mesh Format", {".mesh", ".surf"} ,ReadFile, WriteSurfaceFormat);
+static RegisterUserFormat reg_stl ("STL Format", {".stl", ".stlb"}, ReadFile, WriteSTLFormat);
+static RegisterUserFormat reg_stlx ("STL Extended Format", {".stl", ".stlb"}, nullopt, WriteSTLExtFormat);
+static RegisterUserFormat reg_vrml ("VRML Format", {".*"}, nullopt, WriteVRMLFormatLineset);
+static RegisterUserFormat reg_vrml_faces ("VRML Format Faces", {".*"}, nullopt, WriteVRMLFormatFaceset);
+static RegisterUserFormat reg_fepp ("Fepp Format", {"*"}, nullopt, WriteFEPPFormat);
+static RegisterUserFormat reg_edgeelement ("EdgeElement Format", {"*"}, nullopt, WriteEdgeElementFormat);
 
-
-
-
-
-
-
-
-#ifdef OLDSTYLE_WRITE
-
-
-void WriteFile (int typ,
-		const Mesh & mesh,
-		const CSGeometry & geom,
-		const filesystem::path & filename,
-		const filesystem::path & geomfile,
-		double h)
-{
-
-
-  int inverttets = mparam.inverttets;
-  int invertsurf = mparam.inverttrigs;
-
-
-
-
-
-
-
-
-  if (typ == WRITE_EDGEELEMENT)
-    {
-      // write edge element file
-      // Peter Harscher, ETHZ
-
-      cout << "Write Edge-Element Format" << endl;
-
-      ofstream outfile (filename);
-
-      int i, j;
-      int ned;
-
-      // hash table representing edges;
-      INDEX_2_HASHTABLE<int> edgeht(mesh.GetNP());
-
-      // list of edges
-      NgArray<INDEX_2> edgelist;
-
-      // edge (point) on boundary ?
-      NgBitArray bedge, bpoint(mesh.GetNP());
-
-      static int eledges[6][2] = { { 1, 2 } , { 1, 3 } , { 1, 4 },
-				   { 2, 3 } , { 2, 4 } , { 3, 4 } };
-
-      // fill hashtable   (point1, point2)  ---->  edgenr
-      for (i = 1; i <= mesh.GetNE(); i++)
-	{
-	  const Element & el = mesh.VolumeElement (i);
-	  INDEX_2 edge;
-	  for (j = 1; j <= 6; j++)
-	    {
-	      edge.I1() = el.PNum (eledges[j-1][0]);
-	      edge.I2() = el.PNum (eledges[j-1][1]);
-	      edge.Sort();
-
-	      if (!edgeht.Used (edge))
-		{
-		  edgelist.Append (edge);
-		  edgeht.Set (edge, edgelist.Size());
-		}
-	    }
-	}
-
-
-      // set bedges, bpoints
-      bedge.SetSize (edgelist.Size());
-      bedge.Clear();
-      bpoint.Clear();
-
-      for (i = 1; i <= mesh.GetNSE(); i++)
-	{
-	  const Element2d & sel = mesh.SurfaceElement(i);
-	  for (j = 1; j <= 3; j++)
-	    {
-	      bpoint.Set (sel.PNum(j));
-
-	      INDEX_2 edge;
-	      edge.I1() = sel.PNum(j);
-	      edge.I2() = sel.PNum(j%3+1);
-	      edge.Sort();
-
-	      bedge.Set (edgeht.Get (edge));
-	    }
-	}
-
-
-
-      outfile << mesh.GetNE() << endl;
-      // write element ---> point
-      for (i = 1; i <= mesh.GetNE(); i++)
-	{
-	  const Element & el = mesh.VolumeElement(i);
-
-	  outfile.width(8);
-	  outfile << i;
-	  for (j = 1; j <= 4; j++)
-	    {
-	      outfile.width(8);
-	      outfile << el.PNum(j);
-	    }
-	  outfile << endl;
-	}
-
-      // write element ---> edge
-      for (i = 1; i <= mesh.GetNE(); i++)
-	{
-	  const Element & el = mesh.VolumeElement (i);
-	  INDEX_2 edge;
-	  for (j = 1; j <= 6; j++)
-	    {
-	      edge.I1() = el.PNum (eledges[j-1][0]);
-	      edge.I2() = el.PNum (eledges[j-1][1]);
-	      edge.Sort();
-
-	      outfile.width(8);
-	      outfile << edgeht.Get (edge);
-	    }
-	  outfile << endl;
-	}
-
-      // write points
-      outfile << mesh.GetNP() << endl;
-      outfile.precision (6);
-      for (i = 1; i <= mesh.GetNP(); i++)
-	{
-	  const Point3d & p = mesh.Point(i);
-
-	  for (j = 1; j <= 3; j++)
-	    {
-	      outfile.width(8);
-	      outfile << p.X(j);
-	    }
-	  outfile << "       "
-		  << (bpoint.Test(i) ? "1" : 0) << endl;
-	}
-
-      // write edges
-      outfile << edgelist.Size() << endl;
-      for (i = 1; i <= edgelist.Size(); i++)
-	{
-	  outfile.width(8);
-	  outfile << edgelist.Get(i).I1();
-	  outfile.width(8);
-	  outfile << edgelist.Get(i).I2();
-	  outfile << "       "
-		  << (bedge.Test(i) ? "1" : "0") << endl;
-	}
-    }
-
-
-
-
-}
-#endif
 }
 

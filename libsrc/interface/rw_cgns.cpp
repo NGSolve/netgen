@@ -808,32 +808,9 @@ namespace netgen
       cg_close(fn);
   }
 
-}
-
-#else // NG_CGNS
-
-namespace netgen
-{
-  void ReadCGNSMesh (Mesh & mesh, const filesystem::path & filename)
-    {
-      PrintMessage(1, "Could not import CGNS mesh: Netgen was built without CGNS support");
-    }
-
-  tuple<shared_ptr<Mesh>, vector<string>, vector<Array<double>>, vector<int>> ReadCGNSFile(const filesystem::path & filename, int base)
-    {
-      throw Exception("Netgen was built without CGNS support");
-    }
-
-  void WriteCGNSMesh (const Mesh & mesh, const filesystem::path & filename)
-    {
-      PrintMessage(1, "Could not write CGNS mesh: Netgen was built without CGNS support");
-    }
-
-  void WriteCGNSFile(shared_ptr<Mesh> mesh, const filesystem::path & filename, vector<string> fields, vector<Array<double>> values, vector<int> locations)
-    {
-      throw Exception("Netgen was built without CGNS support");
-    }
-
+  static RegisterUserFormat reg_cgns ("CGNS Format", {".cgns"},
+                                      static_cast<void(*)(Mesh &, const filesystem::path&)>(&ReadCGNSMesh),
+                                      static_cast<void(*)(const Mesh &, const filesystem::path&)>(&WriteCGNSMesh));
 }
 
 #endif // NG_CGNS

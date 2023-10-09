@@ -13,14 +13,13 @@
 #include <csg.hpp>
 #include <meshing.hpp>
 
+#include "writeuser.hpp"
 
 namespace netgen
 {
-#include "writeuser.hpp"
 
 
 void WriteDiffPackFormat (const Mesh & mesh,
-			  const NetgenGeometry & geom,
 			  const filesystem::path & filename)
 {
   //   double scale = globflags.GetNumFlag ("scale", 1);
@@ -322,4 +321,5 @@ void WriteDiffPackFormat (const Mesh & mesh,
         }
     }
 }
+static RegisterUserFormat reg_surface("DIFFPACK Format", {".mesh"}, nullopt, WriteDiffPackFormat);
 }
