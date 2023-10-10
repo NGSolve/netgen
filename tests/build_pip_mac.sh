@@ -1,10 +1,10 @@
 set -e
 rm -rf _skbuild dist
 
-export PATH=/Applications/CMake.app/Contents/bin:$PATH
+export PYDIR=/Library/Frameworks/Python.framework/Versions/$1/bin
+export PATH=$PYDIR:/Applications/CMake.app/Contents/bin:$PATH
 export NETGEN_CCACHE=1
 
-export PYDIR=/Library/Frameworks/Python.framework/Versions/$1/bin
 $PYDIR/python3 --version
 $PYDIR/pip3 install --user numpy twine scikit-build wheel pybind11-stubgen
 
