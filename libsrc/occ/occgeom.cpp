@@ -435,6 +435,12 @@ namespace netgen
       TopExp_Explorer exp0;
       TopExp_Explorer exp1;
 
+      const auto Apply = [](auto & rebuild, auto & shape) {
+        auto newshape = rebuild->Apply(shape);
+        PropagateProperties(*rebuild, newshape);
+        return newshape;
+      };
+
 
       for (exp0.Init(shape, TopAbs_COMPOUND); exp0.More(); exp0.Next()) nrc++;
       for (exp0.Init(shape, TopAbs_COMPSOLID); exp0.More(); exp0.Next()) nrcs++;
@@ -443,14 +449,14 @@ namespace netgen
       
       {
          Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
-         rebuild->Apply(shape);
+         Apply(rebuild, shape);
          for (exp1.Init (shape, TopAbs_EDGE); exp1.More(); exp1.Next())
          {
             TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
             if ( BRep_Tool::Degenerated(edge) )
                rebuild->Remove(edge);
          }
-         shape = rebuild->Apply(shape);
+         shape = Apply(rebuild, shape);
       }
 
       BuildFMap();
@@ -474,7 +480,7 @@ namespace netgen
 
          Handle(ShapeFix_Face) sff;
          Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
-         rebuild->Apply(shape);
+         Apply(rebuild, shape);
 
          for (exp0.Init (shape, TopAbs_FACE); exp0.More(); exp0.Next())
          {
@@ -512,20 +518,20 @@ namespace netgen
             // face (after the healing process)
             // GetProperties(face);
          }
-         shape = rebuild->Apply(shape);
+         shape = Apply(rebuild, shape);
       }
 
 
       {
          Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
-         rebuild->Apply(shape);
+         Apply(rebuild, shape);
          for (exp1.Init (shape, TopAbs_EDGE); exp1.More(); exp1.Next())
          {
             TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
             if ( BRep_Tool::Degenerated(edge) )
                rebuild->Remove(edge);
          }
-         shape = rebuild->Apply(shape);
+         shape = Apply(rebuild, shape);
       }
 
 
@@ -535,7 +541,7 @@ namespace netgen
 
          Handle(ShapeFix_Wire) sfw;
          Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
-         rebuild->Apply(shape);
+         Apply(rebuild, shape);
 
 
          for (exp0.Init (shape, TopAbs_FACE); exp0.More(); exp0.Next())
@@ -595,14 +601,14 @@ namespace netgen
             }
          }
 
-         shape = rebuild->Apply(shape);
+         shape = Apply(rebuild, shape);
 
 
 
          {
             BuildFMap();
             Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
-            rebuild->Apply(shape);
+            Apply(rebuild, shape);
 
             for (exp1.Init (shape, TopAbs_EDGE); exp1.More(); exp1.Next())
             {
@@ -621,7 +627,7 @@ namespace netgen
                   }
                }
             }
-            shape = rebuild->Apply(shape);
+            shape = Apply(rebuild, shape);
 
             //delete rebuild; rebuild = NULL;
          }
@@ -630,14 +636,14 @@ namespace netgen
 
          {
             Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
-            rebuild->Apply(shape);
+            Apply(rebuild, shape);
             for (exp1.Init (shape, TopAbs_EDGE); exp1.More(); exp1.Next())
             {
                TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
                if ( BRep_Tool::Degenerated(edge) )
                   rebuild->Remove(edge);
             }
-            shape = rebuild->Apply(shape);
+            shape = Apply(rebuild, shape);
          }
 
 
@@ -684,7 +690,9 @@ namespace netgen
 
 
 
-         shape = sfwf->Shape();
+         auto newshape = sfwf->Shape();
+         PropagateProperties(*sfwf->Context(), newshape);
+         shape = newshape;
 
          //delete sfwf; sfwf = NULL;
          //delete rebuild; rebuild = NULL;
@@ -716,7 +724,9 @@ namespace netgen
          sffsm -> SetPrecision (tolerance);
          sffsm -> Perform();
 
-         shape = sffsm -> FixShape();
+         auto newshape = sffsm -> FixShape();
+         PropagateProperties(*sffsm->Context(), newshape);
+         shape = newshape;
          //delete sffsm; sffsm = NULL;
       }
 
@@ -745,6 +755,7 @@ namespace netgen
          }
 
          sewedObj.Perform();
+         PropagateProperties(sewedObj, shape);
 
          if (!sewedObj.SewedShape().IsNull())
             shape = sewedObj.SewedShape();
@@ -763,7 +774,7 @@ namespace netgen
             if ( BRep_Tool::Degenerated(edge) )
                rebuild->Remove(edge);
          }
-         shape = rebuild->Apply(shape);
+         shape = Apply(rebuild, shape);
       }
 
 
@@ -981,6 +992,15 @@ namespace netgen
          }
       }
 
+      auto fixFaceOrientation = [=] (TopoDS_Shape & face)
+      {
+        if(dimension != 2) return;
+        auto occface = OCCFace(face);
+        auto normal = occface.GetNormal(occ2ng(GetVertices(face)[0]));
+        if(normal[2] < 0)
+          face.Reverse();
+      };
+
       // Free Shells
       for (exp1.Init(shape, TopAbs_SHELL, TopAbs_SOLID); exp1.More(); exp1.Next())
       {
@@ -998,6 +1018,7 @@ namespace netgen
                TopoDS_Face face = TopoDS::Face(exp2.Current());
                if (fmap.FindIndex(face) < 1)
                {
+                 fixFaceOrientation(face);
                  fmap.Add (face);
 
                   for (exp3.Init(face, TopAbs_WIRE); exp3.More(); exp3.Next())
@@ -1033,6 +1054,7 @@ namespace netgen
       for (auto face : MyExplorer(shape, TopAbs_FACE, TopAbs_SHELL))
         if (!fmap.Contains(face))
           {
+            fixFaceOrientation(face);
             fmap.Add (face);
             for (auto wire : MyExplorer(face, TopAbs_WIRE))
               if (!wmap.Contains(wire))

@@ -15,6 +15,10 @@
 #include "occ_utils.hpp"
 #include "occmeshsurf.hpp"
 
+#include <BOPAlgo_BuilderShape.hxx>
+#include <BRepTools_ReShape.hxx>
+#include <BRepBuilderAPI_MakeShape.hxx>
+#include <BRepBuilderAPI_Sewing.hxx>
 #include <Quantity_ColorRGBA.hxx>
 #include <STEPCAFControl_Reader.hxx>
 #include <StepBasic_MeasureValueMember.hxx>
@@ -434,6 +438,14 @@ namespace netgen
   DLL_HEADER extern bool OCCMeshFace (const OCCGeometry & geom, Mesh & mesh, FlatArray<int, PointIndex> glob2loc,
                        const MeshingParameters & mparam, int nr, int projecttype, bool delete_on_failure);
 
+  inline auto GetModified(BRepBuilderAPI_MakeShape & builder, TopoDS_Shape shape) { return builder.Modified(shape); }
+  inline auto GetModified(BRepTools_History & history, TopoDS_Shape shape) { return history.Modified(shape); }
+  inline auto GetModified(BOPAlgo_BuilderShape & builder, TopoDS_Shape shape) { return builder.Modified(shape); }
+  inline ArrayMem<TopoDS_Shape, 1> GetModified(BRepBuilderAPI_Sewing& builder, TopoDS_Shape shape) { return {builder.Modified(shape)}; }
+  inline auto GetModified(BRepTools_ReShape& reshape, TopoDS_Shape shape) {
+    auto history = reshape.History();
+    return history->Modified(shape);
+  }
 
   template <class TBuilder>
   void PropagateIdentifications (TBuilder & builder, TopoDS_Shape shape, std::optional<Transformation<3>> trafo = nullopt)
@@ -459,7 +471,7 @@ namespace netgen
       for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
         {
           auto s = e.Current();
-            for (auto mods : builder.Modified(s))
+            for (auto mods : GetModified(builder, s))
               {
                 auto index = mod_indices.FindIndex(s)-1;
                 modifications[index].Add(mods);
@@ -538,7 +550,7 @@ namespace netgen
           if(!OCCGeometry::HaveProperties(s))
             continue;
           auto prop = OCCGeometry::GetProperties(s);
-          for (auto mods : builder.Modified(s))
+          for (auto mods : GetModified(builder, s))
             OCCGeometry::GetProperties(mods).Merge(prop);
         }
     if(have_identifications)
