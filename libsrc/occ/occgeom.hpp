@@ -315,6 +315,7 @@ namespace netgen
 
     Array<const GeometryVertex*> GetFaceVertices(const GeometryFace& face) const override;
 
+    void FixFaceOrientation();
     void HealGeometry();
     void GlueGeometry();
 
