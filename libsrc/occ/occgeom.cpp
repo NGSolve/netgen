@@ -16,6 +16,7 @@
 
 #include <BOPAlgo_Builder.hxx>
 #include <BRepBndLib.hxx>
+#include <BRepBuilderAPI_Copy.hxx>
 #include <BRepBuilderAPI_MakeSolid.hxx>
 #include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepCheck_Analyzer.hxx>
@@ -70,6 +71,15 @@ namespace netgen
 {
   void LoadOCCInto(OCCGeometry* occgeo, const filesystem::path & filename);
   void PrintContents (OCCGeometry * geom);
+
+  // Utility function to apply builder and propagate properties
+  template <typename T>
+  static TopoDS_Shape Apply(T & builder, TopoDS_Shape & shape) {
+    auto newshape = builder->Apply(shape);
+    PropagateProperties(*builder, newshape);
+    return newshape;
+  };
+
 
   TopTools_IndexedMapOfShape OCCGeometry::global_shape_property_indices;
   std::vector<ShapeProperties> OCCGeometry::global_shape_properties;
@@ -434,12 +444,6 @@ namespace netgen
 
       TopExp_Explorer exp0;
       TopExp_Explorer exp1;
-
-      const auto Apply = [](auto & rebuild, auto & shape) {
-        auto newshape = rebuild->Apply(shape);
-        PropagateProperties(*rebuild, newshape);
-        return newshape;
-      };
 
 
       for (exp0.Init(shape, TopAbs_COMPOUND); exp0.More(); exp0.Next()) nrc++;
@@ -907,6 +911,30 @@ namespace netgen
    }
 
 
+   // For 2d geometries, make sure all faces have a normal vector with positive z-component
+   void OCCGeometry :: FixFaceOrientation()
+   {
+     if(dimension!=2) return;
+
+     bool needs_fix = false;
+     Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
+     for (auto face : GetFaces(shape))
+     {
+       auto occface = OCCFace(face);
+       auto normal = occface.GetNormal(occ2ng(GetVertices(face)[0]));
+       if(normal[2] < 0) {
+         needs_fix = true;
+         // Need do copy the face, otherwise replace is ignored
+         BRepBuilderAPI_Copy copy(face);
+         auto newface = copy.Shape().Reversed();
+         GetProperties(newface).Merge(GetProperties(face));
+         rebuild->Replace(face, newface);
+       }
+     }
+
+     if(needs_fix )
+       shape = Apply(rebuild, shape);
+   }
 
    void OCCGeometry :: BuildFMap()
    {
@@ -918,6 +946,9 @@ namespace netgen
       vmap.Clear();
 
       TopExp_Explorer exp0, exp1, exp2, exp3, exp4, exp5;
+
+      // Check face orientation in 2d geometries
+      FixFaceOrientation();
 
       for (exp0.Init(shape, TopAbs_COMPOUND);
          exp0.More(); exp0.Next())
@@ -992,15 +1023,6 @@ namespace netgen
          }
       }
 
-      auto fixFaceOrientation = [=] (TopoDS_Shape & face)
-      {
-        if(dimension != 2) return;
-        auto occface = OCCFace(face);
-        auto normal = occface.GetNormal(occ2ng(GetVertices(face)[0]));
-        if(normal[2] < 0)
-          face.Reverse();
-      };
-
       // Free Shells
       for (exp1.Init(shape, TopAbs_SHELL, TopAbs_SOLID); exp1.More(); exp1.Next())
       {
@@ -1018,7 +1040,6 @@ namespace netgen
                TopoDS_Face face = TopoDS::Face(exp2.Current());
                if (fmap.FindIndex(face) < 1)
                {
-                 fixFaceOrientation(face);
                  fmap.Add (face);
 
                   for (exp3.Init(face, TopAbs_WIRE); exp3.More(); exp3.Next())
@@ -1054,7 +1075,6 @@ namespace netgen
       for (auto face : MyExplorer(shape, TopAbs_FACE, TopAbs_SHELL))
         if (!fmap.Contains(face))
           {
-            fixFaceOrientation(face);
             fmap.Add (face);
             for (auto wire : MyExplorer(face, TopAbs_WIRE))
               if (!wmap.Contains(wire))
