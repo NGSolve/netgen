@@ -488,7 +488,7 @@ namespace netgen
 
         for ( auto pi : {seg0[0], seg0[1]} )
         {
-           if(growthvectors[pi] == 0.0)
+           if(growthvectors[pi].Length2() == 0.0)
               continue;
 
            PointIndex pi1 = seg0[0] + seg0[1] - pi;
@@ -523,7 +523,7 @@ namespace netgen
            {
               double safety = 1.3;
               double t = safety*total_thickness;
-              if(growthvectors[pi] == 0.0)
+              if(growthvectors[pi].Length2() == 0.0)
                  continue;
 
               Point<3> points[] = { p10, p10+t*growthvectors[seg1[0]], p11, p11+t*growthvectors[seg1[1]] };
@@ -534,16 +534,21 @@ namespace netgen
 
               double alpha, beta;
 
-              if(X_INTERSECTION == intersect( P2(p0), P2(p1), P2(points[0]), P2(points[2]), alpha, beta ))
+              auto checkIntersection = [] (Point<2> p0, Point<2> p1, Point<2> q0, Point<2> q1, double & alpha, double & beta) {
+                auto intersection_type = intersect( p0, p1, q0, q1, alpha, beta );
+                return intersection_type == X_INTERSECTION || intersection_type == T_INTERSECTION_P || intersection_type == T_INTERSECTION_Q;
+              };
+
+              if(checkIntersection( P2(p0), P2(p1), P2(points[0]), P2(points[2]), alpha, beta ))
                  intersections.Append({alpha, 0.0});
 
-              if(X_INTERSECTION == intersect( P2(p0), P2(p1), P2(points[1]), P2(points[3]), alpha, beta ))
+              if(checkIntersection( P2(p0), P2(p1), P2(points[1]), P2(points[3]), alpha, beta ))
                  intersections.Append({alpha, 1.0});
 
-              if(X_INTERSECTION == intersect( P2(p0), P2(p1), P2(points[0]), P2(points[1]), alpha, beta ))
+              if(checkIntersection( P2(p0), P2(p1), P2(points[0]), P2(points[1]), alpha, beta ))
                  intersections.Append({alpha, beta});
 
-              if(X_INTERSECTION == intersect( P2(p0), P2(p1), P2(points[2]), P2(points[3]), alpha, beta ))
+              if(checkIntersection( P2(p0), P2(p1), P2(points[2]), P2(points[3]), alpha, beta ))
                  intersections.Append({alpha, beta});
 
               QuickSort(intersections);
