@@ -21,7 +21,7 @@ namespace netgen
 #define EPSGEOM 1E-5
 
 
-  void MyError (const char * ch);
+  DLL_HEADER void MyError (const char * ch);
 
   class Point2d;
   class Vec2d;
