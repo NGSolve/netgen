@@ -3,15 +3,30 @@ import numpy as np
 from time import time
 import os
 
-import webgui_jupyter_widgets
-from webgui_jupyter_widgets import BaseWebGuiScene, encodeData, WebGuiDocuWidget
-import webgui_jupyter_widgets.widget as wg
+try:
+    import webgui_jupyter_widgets
+    from webgui_jupyter_widgets import BaseWebGuiScene, WebGuiDocuWidget
+    import webgui_jupyter_widgets.widget as wg
+except ImportError:
+    wg = None
+
+def encodeData( data, dtype=None, encoding='b64' ):
+    import numpy as np
+    from base64 import b64encode
+    dtype = dtype or data.dtype
+    values = np.array(data.flatten(), dtype=dtype)
+    if encoding=='b64':
+        return b64encode(values).decode("ascii")
+    elif encoding=='binary':
+        return values.tobytes()
+    else:
+        raise RuntimeError("unknown encoding" + str(encoding))
 
 from packaging.version import parse
 
 import netgen.meshing as ng
 
-if parse(webgui_jupyter_widgets.__version__) >= parse("0.2.18"):
+if wg is not None and parse(webgui_jupyter_widgets.__version__) >= parse("0.2.18"):
     _default_width = None
     _default_height = None
 else:
@@ -199,8 +214,8 @@ def GetData(mesh, args, kwargs):
         d[name] = pnew
     return d
 
-
-class WebGLScene(BaseWebGuiScene):
+base = object if wg is None else BaseWebGuiScene
+class WebGLScene(base):
     def __init__(self, obj, args=[], kwargs={}):
         self.obj = obj
         self.args = args
@@ -351,7 +366,7 @@ def Draw(obj, *args, **kwargs):
     kwargs_with_defaults.update(kwargs)
 
     scene = WebGLScene(obj, args, kwargs_with_defaults)
-    if wg._IN_IPYTHON:
+    if wg is not None and wg._IN_IPYTHON:
         if wg._IN_GOOGLE_COLAB:
             from IPython.display import display, HTML
 
