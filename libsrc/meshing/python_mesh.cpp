@@ -1334,7 +1334,27 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                  self.GetCurvedElements().SetIsHighOrder (false);
                }
            }), py::arg("adaptive")=false, py::call_guard<py::gil_scoped_release>())
-    
+
+    .def ("GetParentElements", [] (Mesh & self)
+          {
+            std::vector<int> parentelements;
+            for (auto elindex : self.mlparentelement)
+              {
+                parentelements.push_back(elindex);
+              }
+            return parentelements;
+          })
+
+    .def ("GetParentSurfaceElements", [] (Mesh & self)
+          {
+            std::vector<int> parentsurfelements;
+            for (auto elindex : self.mlparentsurfaceelement)
+              {
+                parentsurfelements.push_back(elindex);
+              }
+            return parentsurfelements;
+          })
+
     .def("ZRefine", &Mesh::ZRefine)
 
     .def ("SecondOrder", [](Mesh & self)
