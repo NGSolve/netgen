@@ -82,6 +82,8 @@ class BoundaryLayerTool
     ArrayMem<Point<3>, 4> GetMappedFace( SurfaceElementIndex sei );
     ArrayMem<Point<3>, 4> GetMappedFace( SurfaceElementIndex sei, int face );
 
+    void LimitGrowthVector(PointIndex pi, SurfaceElementIndex sei);
+
     Vec<3> getNormal(const Element2d & el)
     {
         auto v0 = mesh[el[0]];

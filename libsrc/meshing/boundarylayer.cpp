@@ -13,8 +13,11 @@
 namespace netgen
 {
   // checks if a segment is intersecting a plane, spanned by three points, lam will be set s.t. p_intersect = seg[0] + lam * (seg[1]-seg[0])
-  bool isIntersectingPlane ( const array<Point<3>, 2> & seg, const array<Point<3>, 3> & trig, double & lam)
+  // bool isIntersectingPlane ( const array<Point<3>, 2> & seg, const array<Point<3>, 3> & trig, const array<double, 3> trig_lams, double & lam, double & lam2)
+  bool isIntersectingPlane ( const array<Point<3>, 2> & seg, const array<Point<3>, 3> & trig, double & lam, array<double, 2> & lam2)
   {
+      auto t1 = trig[1]-trig[0];
+      auto t2 = trig[2]-trig[0];
       auto n = Cross(trig[1]-trig[0], trig[2]-trig[0]);
       auto v0n = (seg[0]-trig[0])*n;
       auto v1n = (seg[1]-trig[0])*n;
@@ -22,10 +25,23 @@ namespace netgen
           return false;
 
       lam = -v0n/(v1n-v0n);
+      auto p = seg[0] + lam*(seg[1]-seg[0]);
       lam *= 0.9;
       if(lam < -1e-8 || lam>1+1e-8)
           return false;
+      
+      const auto area = 0.5 * Cross(t1,t2).Length();
+      const auto area0 = 0.5 * Cross(t1,{p}).Length();
+      const auto area1 = 0.5 * Cross(t2,{p}).Length();
+      lam2[0] = area0/area;
+      lam2[1] = area1/area;
+
       return true;
+  }
+  bool isIntersectingPlane ( const array<Point<3>, 2> & seg, const array<Point<3>, 3> & trig, double & lam )
+  {
+    array<double,2> lam2;
+    return isIntersectingPlane(seg, trig, lam, lam2);
   }
 
   bool isIntersectingPlane ( const array<Point<3>, 2> & seg, const ArrayMem<Point<3>, 4> & face, double & lam)
@@ -154,6 +170,11 @@ namespace netgen
         throw Exception("Something went wrong in getEdgeTangent!");
       tangent = mesh[pts[1]] - mesh[pts[0]];
       return tangent.Normalize();
+  }
+
+  void BoundaryLayerTool :: LimitGrowthVector(PointIndex pi, SurfaceElementIndex sei)
+  {
+
   }
 
   void BoundaryLayerTool :: LimitGrowthVectorLengths()
@@ -296,6 +317,8 @@ namespace netgen
         new_limits.SetSize(np);
         new_limits = 1.0;
 
+    // if(step==1) break;
+
         if(step>1)
             lam_lower_limit *= 0.8;
         limit_reached = false;
@@ -332,6 +355,7 @@ namespace netgen
                 continue;
             if(growthvectors[pi].Length2() == 0.0)
                 continue;
+            const auto debug = pi == 48;
             Box<3> box(Box<3>::EMPTY_BOX);
             auto seg = GetMappedSeg(pi);
             box.Add(seg[0]);
@@ -348,11 +372,15 @@ namespace netgen
 
                 if (step == 0)
                 {
-                    face = GetMappedFace(sei, -1);
+                    face = GetFace(sei);
                     if (isIntersectingFace(seg, face, lam_))
                     {
-                        if (is_bl_sel)
-                            lam_ *= params.limit_safety;
+                        if(lam_ < lam) {
+                        if(debug) cout << "intersecting face " << sei << endl;
+                        if(debug) cout << "\t" << lam_ << endl;
+                                      }
+                        // if (is_bl_sel)
+                        //     lam_ *= params.limit_safety;
                         lam = min(lam, lam_);
                     }
                 }
@@ -361,8 +389,8 @@ namespace netgen
                 {
                     if(isIntersectingFace(seg, face, lam_))
                     {
-                        if(is_bl_sel) // allow only half the distance if the opposing surface element has a boundary layer too
-                            lam_ *= params.limit_safety;
+                        // if(is_bl_sel) // allow only half the distance if the opposing surface element has a boundary layer too
+                        //     lam_ *= params.limit_safety;
                         lam = min(lam, lam_);
                     }
                 }
@@ -764,6 +792,9 @@ namespace netgen
         // reduce to full rank of max 3
         while(true)
           {
+            // cout << "pi " << pi << endl;
+            // cout << "ns "  << endl;
+            // for (auto n : ns) cout << n << endl;
             if(ns.Size() <= 1)
               break;
             if(ns.Size() == 2 && ns[0] * ns[1] < 1 - 1e-6)
@@ -1519,10 +1550,11 @@ namespace netgen
 
       auto in_surface_direction = ProjectGrowthVectorsOnSurface();
 
+      InterpolateGrowthVectors();
+
       if(params.limit_growth_vectors)
         LimitGrowthVectorLengths();
 
-      InterpolateGrowthVectors();
       FixVolumeElements();
       InsertNewElements(segmap, in_surface_direction);
       SetDomInOut();
