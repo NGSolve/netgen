@@ -228,10 +228,10 @@ namespace netgen
     void BuildEdgeList();
     void BuildPointNumberList();
 
-    void BuildTetList();
-    void BuildPrismList();
-    void BuildPyramidList();
-    void BuildHexList();
+    void BuildTetList(const BitArray & shownode);
+    void BuildPrismList(const BitArray & shownode);
+    void BuildPyramidList(const BitArray & shownode);
+    void BuildHexList(const BitArray & shownode);
 
     void BuildBadelList();
     void BuildIdentifiedList();

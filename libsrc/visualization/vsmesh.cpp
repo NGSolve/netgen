@@ -134,27 +134,46 @@ namespace netgen
     if (vispar.drawbadels)
       glCallList (badellist);
 
+    BitArray shownode(mesh->GetNP()+1);
+    if (vispar.clipping.enable)
+      {
+	shownode.Clear();
+	for (PointIndex pi : mesh->Points().Range())
+	  {
+            Point<3> p = (*mesh)[pi];
+
+            double val =
+	      p[0] * clipplane[0] +
+	      p[1] * clipplane[1] +
+	      p[2] * clipplane[2] +
+	      clipplane[3];
+
+            if (val > 0) shownode.SetBit (pi);
+	  }
+      }
+    else
+      shownode.Set();
     if (vispar.drawprisms)
       {
-	BuildPrismList ();
+	BuildPrismList (shownode);
 	glCallList (prismlist);
       }
 
     if (vispar.drawpyramids)
       {
-	BuildPyramidList ();
+	BuildPyramidList (shownode);
 	glCallList (pyramidlist);
       }
 
     if (vispar.drawhexes)
       {
-	BuildHexList ();
+	BuildHexList (shownode);
 	glCallList (hexlist);
       }
 
     if (vispar.drawtets)
       {
-	BuildTetList ();
+	BuildTetList (shownode);
 	glCallList (tetlist);
       }
 
@@ -1789,7 +1808,7 @@ namespace netgen
 
 
 
-  void VisualSceneMesh :: BuildTetList()
+  void VisualSceneMesh :: BuildTetList(const BitArray & shownode)
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
@@ -1844,27 +1863,6 @@ namespace netgen
 
     NgArray<Element2d> faces;
 
-    NgBitArray shownode(mesh->GetNP());
-    if (vispar.clipping.enable)
-      {
-	shownode.Clear();
-	for (int i = 1; i <= shownode.Size(); i++)
-	  {
-            Point<3> p = mesh->Point(i);
-
-            double val =
-	      p[0] * clipplane[0] +
-	      p[1] * clipplane[1] +
-	      p[2] * clipplane[2] +
-	      clipplane[3];
-
-            if (val > 0) shownode.Set (i);
-	  }
-      }
-    else
-      shownode.Set();
-
-
     static float tetcols[][4] =
       {
 	{ 1.0f, 1.0f, 0.0f, 1.0f },
@@ -1907,12 +1905,11 @@ namespace netgen
 
 	if ((el.GetType() == TET || el.GetType() == TET10) && !el.IsDeleted())
 	  {
-
-            bool drawtet = 1;
-            for (int j = 0; j < 4; j++)
-	      if (!shownode.Test(el[j]))
-		drawtet = 0;
-            if (!drawtet) continue;
+            bool visible = true;
+            for (auto pi: el.PNums())
+              if (!shownode[pi])
+                visible = false;
+            if(!visible) continue;
 
             int ind = el.GetIndex() % 4;
 
@@ -2141,7 +2138,7 @@ namespace netgen
 
 
 
-  void VisualSceneMesh :: BuildPrismList()
+  void VisualSceneMesh :: BuildPrismList(const BitArray & shownode)
   {
     shared_ptr<Mesh> mesh = GetMesh();
     
@@ -2179,6 +2176,12 @@ namespace netgen
 	const Element & el = (*mesh)[ei];
 	if (el.GetType() == PRISM && !el.IsDeleted())
 	  {
+            bool visible = true;
+            for (auto pi: el.PNums())
+              if (!shownode[pi])
+                visible = false;
+            if(!visible) continue;
+
             int j;
             int i = ei + 1;
 
@@ -2472,7 +2475,7 @@ namespace netgen
 
 
 
-  void VisualSceneMesh :: BuildHexList()
+  void VisualSceneMesh :: BuildHexList(const BitArray & shownode)
   {
     shared_ptr<Mesh> mesh = GetMesh();
     
@@ -2507,6 +2510,11 @@ namespace netgen
 	const Element & el = (*mesh)[ei];
 	if (el.GetType() == HEX && !el.IsDeleted())
 	  {
+            bool visible = true;
+            for (auto pi: el.PNums())
+              if (!shownode[pi])
+                visible = false;
+            if(!visible) continue;
             CurvedElements & curv = mesh->GetCurvedElements();
             if (curv.IsHighOrder()) //  && curv.IsElementCurved(ei))
 	      {
@@ -2798,7 +2806,7 @@ namespace netgen
 
 
 
-  void VisualSceneMesh :: BuildPyramidList()
+  void VisualSceneMesh :: BuildPyramidList(const BitArray & shownode)
   {
     shared_ptr<Mesh> mesh = GetMesh();
     
@@ -2834,6 +2842,12 @@ namespace netgen
 	const Element & el = (*mesh)[ei];
 	if ((el.GetType() == PYRAMID || el.GetType() == PYRAMID13) && !el.IsDeleted())
 	  {
+            bool visible = true;
+            for (auto pi: el.PNums())
+              if (!shownode[pi])
+                visible = false;
+            if(!visible) continue;
+
             int i = ei + 1;
 
             CurvedElements & curv = mesh->GetCurvedElements();
