@@ -755,7 +755,7 @@ namespace netgen
 
         // combine normal vectors for each face to keep uniform distances
         auto & np = growthvectors[pi];
-        ArrayMem<Vec<3>, 3> ns;
+        ArrayMem<Vec<3>, 5> ns;
         for (auto &[facei, n] : normals) {
           ns.Append(n);
         }
@@ -784,7 +784,7 @@ namespace netgen
               {
                 for (auto j : Range(i + 1, ns.Size()))
                   {
-                    double ip = ns[i] * ns[j];
+                    double ip = fabs(ns[i] * ns[j]);
                     if(ip > val)
                       {
                         val = ip;
@@ -795,8 +795,17 @@ namespace netgen
               }
             removed.Append(ns[maxpos1]);
             removed.Append(ns[maxpos2]);
-            ns[maxpos1] = 0.5 * (ns[maxpos1] + ns[maxpos2]);
+            const auto dot = ns[maxpos1] * ns[maxpos2];
+            auto average = 0.5*(ns[maxpos1] + ns[maxpos2]);
+            average.Normalize();
             ns.DeleteElement(maxpos2);
+
+            // if vectors have nearly opposite directions -> remove both
+            // otherwise, replace both vectors with their average
+            if(dot < -1+1e-3)
+              ns.DeleteElement(maxpos1);
+            else
+              ns[maxpos1] = average;
           }
 
         if(ns.Size() == 0)
