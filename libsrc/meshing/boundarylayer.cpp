@@ -14,7 +14,7 @@ namespace netgen
 {
   // checks if a segment is intersecting a plane, spanned by three points, lam will be set s.t. p_intersect = seg[0] + lam * (seg[1]-seg[0])
   // bool isIntersectingPlane ( const array<Point<3>, 2> & seg, const array<Point<3>, 3> & trig, const array<double, 3> trig_lams, double & lam, double & lam2)
-  bool isIntersectingPlane ( const array<Point<3>, 2> & seg, const array<Point<3>, 3> & trig, double & lam, array<double, 2> & lam2)
+  bool isIntersectingPlane ( const array<Point<3>, 2> & seg, const array<Point<3>, 3> & trig, array<double, 3> & lam)
   {
       auto t1 = trig[1]-trig[0];
       auto t2 = trig[2]-trig[0];
@@ -24,24 +24,26 @@ namespace netgen
       if(v0n * v1n >= 0)
           return false;
 
-      lam = -v0n/(v1n-v0n);
-      auto p = seg[0] + lam*(seg[1]-seg[0]);
-      lam *= 0.9;
-      if(lam < -1e-8 || lam>1+1e-8)
+      lam[0] = -v0n/(v1n-v0n);
+      auto p = seg[0] + lam[0]*(seg[1]-seg[0]);
+      lam[0] *= 0.9;
+      if(lam[0] < -1e-8 || lam[0]>1+1e-8)
           return false;
       
       const auto area = 0.5 * Cross(t1,t2).Length();
       const auto area0 = 0.5 * Cross(t1,{p}).Length();
       const auto area1 = 0.5 * Cross(t2,{p}).Length();
-      lam2[0] = area0/area;
-      lam2[1] = area1/area;
+      lam[1] = area0/area;
+      lam[2] = area1/area;
 
       return true;
   }
   bool isIntersectingPlane ( const array<Point<3>, 2> & seg, const array<Point<3>, 3> & trig, double & lam )
   {
-    array<double,2> lam2;
-    return isIntersectingPlane(seg, trig, lam, lam2);
+    array<double,3> vlam;
+    auto result = isIntersectingPlane(seg, trig, vlam);
+    lam = vlam[0];
+    return result;
   }
 
   bool isIntersectingPlane ( const array<Point<3>, 2> & seg, const ArrayMem<Point<3>, 4> & face, double & lam)
@@ -174,6 +176,30 @@ namespace netgen
 
   void BoundaryLayerTool :: LimitGrowthVector(PointIndex pi, SurfaceElementIndex sei)
   {
+    auto sel = mesh[sei];
+    auto seg = GetMappedSeg(pi);
+    struct Face {
+      ArrayMem<Point<3>, 4> p;
+      ArrayMem<double, 4> lam;
+    };
+    ArrayMem<Face, 6> faces;
+    faces.Append({GetMappedFace(sei, -2), {0.0, 0.0, 0.0, 0.0}});
+    faces.Append({GetMappedFace(sei, -1), {1.0, 1.0, 1.0, 1.0}});
+    for(auto i : Range(sel.GetNP())) {
+      Face face;
+      face.p = GetMappedFace(sei, i);
+      face.lam = {0.0, 0.0, 1.0, 1.0};
+      faces.Append(face);
+    }
+    ArrayMem<tuple<double,double>, 6> intersections;
+
+    for(auto & face : faces) {
+      array<double, 3> lam;
+      if(isIntersectingPlane(seg, face.p, face.lam))
+        intersections.Append({face.lam[0], face.lam[1]});
+
+    }
+
 
   }
 
