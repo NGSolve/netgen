@@ -3448,7 +3448,13 @@ namespace netgen
             cout << endl << "select element " << selelement
               << " on face " << sel.GetIndex();
             // output face name
-            auto name = GetMesh()->GetFaceDescriptor(sel.GetIndex()).GetBCName();
+            auto mesh = GetMesh();
+            string name;
+            if(mesh->GetDimension() == 3)
+              name = mesh->GetFaceDescriptor(sel.GetIndex()).GetBCName();
+            else
+              name = mesh->GetMaterial(sel.GetIndex());
+
             if(name != "")
               cout << " with name " << name;
             cout << endl;
