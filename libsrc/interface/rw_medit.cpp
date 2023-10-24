@@ -1,11 +1,9 @@
 #include <meshing.hpp>
-#include "writeuser.hpp"
-
-#include <variant>
+#include "rw_medit.hpp"
 
 namespace netgen
 {
-void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename)
+void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<int, tuple<int,int>> & index_map)
 {
   static Timer tall("ReadMeditMesh"); RegionTimer rtall(tall);
   auto fin = ifstream(filename);
@@ -14,17 +12,18 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename)
   mesh.ClearFaceDescriptors();
 
   int index_cnt[4] = {0,0,0,0};
-  std::map<int, int>index_map[4];
-  auto getIndex = [&](int dim, int index) {
-    if(index_map[dim].count(index) == 0) {
-      index_map[dim][index] = ++index_cnt[dim];
-      if(dim==2) {
-        auto fd = FaceDescriptor(index_map[dim][index]-1,1,0,0);
-        fd.SetBCProperty(index_map[dim][index]);
+  auto getIndex = [&](int eldim, int index) {
+    if(index_map.count(index)==0) {
+      auto n = ++index_cnt[eldim];
+      cout << "index " << eldim <<'\t' << index << '\t' << n << endl;
+      index_map[index] = {eldim, n};
+      if(eldim==2) {
+        auto fd = FaceDescriptor(n-1,1,0,0);
+        fd.SetBCProperty(n);
         mesh.AddFaceDescriptor (fd);
       }
     }
-    return index_map[dim][index];
+    return get<1>(index_map[index]);
   };
 
   while(true) {
@@ -43,12 +42,12 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename)
     if(token == "Vertices") {
       int nvert;
       fin >> nvert;
-      Point<3> p;
+      Point<3> p{0.,0.,0.};
       for(auto k : Range(nvert)) {
         for(auto i : Range(dim))
-        fin >> p[i];
-        fin >> index;
-        mesh.AddPoint(p);
+          fin >> p[i];
+          fin >> index;
+          mesh.AddPoint(p);
       }
     }
     if(token == "Edges") {
@@ -57,11 +56,11 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename)
       Segment seg;
       for(auto k : Range(nedge)) {
         for(auto i : Range(2))
-        fin >> seg[i];
-        fin >> seg.edgenr;
-        seg.edgenr = getIndex(1, seg.edgenr);
-        seg.si = seg.edgenr;
-        mesh.AddSegment(seg);
+          fin >> seg[i];
+          fin >> seg.edgenr;
+          seg.edgenr = getIndex(1, seg.edgenr);
+          seg.si = seg.edgenr;
+          mesh.AddSegment(seg);
       }
     }
     if(token == "Triangles") {
@@ -70,10 +69,10 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename)
       Element2d sel;
       for(auto k : Range(ntrig)) {
         for(auto i : Range(3))
-        fin >> sel[i];
-        fin >> index;
-        sel.SetIndex(getIndex(2, index));
-        mesh.AddSurfaceElement(sel);
+          fin >> sel[i];
+          fin >> index;
+          sel.SetIndex(getIndex(2, index));
+          mesh.AddSurfaceElement(sel);
       }
     }
     if(token == "Tetrahedra") {
@@ -82,17 +81,24 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename)
       Element el(4);
       for(auto k : Range(ntet)) {
         for(auto i : Range(4))
-        fin >> el[i];
-        fin >> index;
-        el.SetIndex(getIndex(3, index));
-        el.Invert();
-        mesh.AddVolumeElement(el);
+          fin >> el[i];
+          fin >> index;
+          el.SetIndex(getIndex(3, index));
+          el.Invert();
+          mesh.AddVolumeElement(el);
       }
     }
   }
 }
 
-void WriteMeditFormat (const Mesh & mesh, const filesystem::path & filename)
+void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename)
+{
+  map<int, tuple<int,int>> index_map;
+  ReadMeditFormat(mesh, filename, index_map);
+}
+
+
+void WriteMeditFormat (const Mesh & mesh, const filesystem::path & filename, map<tuple<int,int>, int> & index_map)
 {
   static Timer tall("WriteMeditFormat"); RegionTimer rtall(tall);
   auto fout = ofstream(filename);
@@ -101,9 +107,11 @@ void WriteMeditFormat (const Mesh & mesh, const filesystem::path & filename)
   fout << "Vertices\n" << mesh.GetNP() << endl;
   int base_index = 0;
   int max_index = 0;
-  auto getIndex = [&](int i) {
+  auto getIndex = [&](int i, int dim) {
     max_index = max(max_index, i+base_index);
-    return base_index+i;
+    auto index = base_index+i;
+    index_map[{dim,i}] = index;
+    return index;
   };
   fout << setprecision(16);
 
@@ -111,26 +119,34 @@ void WriteMeditFormat (const Mesh & mesh, const filesystem::path & filename)
   {
     for(auto i : Range(mesh.GetDimension()))
       fout << setw(20) << p[i];
-    fout << setw(6) << getIndex(1) << endl;
+    fout << setw(6) << getIndex(1, 0) << endl;
   }
 
   base_index = max_index;
   fout << "Edges\n" << mesh.GetNSeg() << endl;
   for(const auto & seg : mesh.LineSegments())
-  fout << seg[0] << ' ' << seg[1] << ' ' << getIndex(seg.edgenr) << endl;
+    fout << seg[0] << ' ' << seg[1] << ' ' << getIndex(seg.edgenr, 1) << endl;
 
   base_index = max_index;
   fout << "Triangles\n" << mesh.GetNSE() << endl;
   for(const auto & sel : mesh.SurfaceElements())
-  fout << sel[0] << ' ' << sel[1] << ' ' << sel[2] << ' ' << getIndex(sel.GetIndex()) << endl;
+    fout << sel[0] << ' ' << sel[1] << ' ' << sel[2] << ' ' << getIndex(sel.GetIndex(), 2) << endl;
 
   base_index = max_index;
   fout << "Tetrahedra\n" << mesh.GetNE() << endl;
   for(const auto & el : mesh.VolumeElements())
-  fout << el[0] << ' ' << el[1] << ' ' << el[2] << ' ' << el[3] << '\t' << getIndex(el.GetIndex()) << endl;
+    fout << el[0] << ' ' << el[1] << ' ' << el[2] << ' ' << el[3] << '\t' << getIndex(el.GetIndex(), 3) << endl;
 
   fout << "End" << endl;
 }
 
-static RegisterUserFormat reg_medit ("Medit Format", {".mesh"}, ReadMeditFormat, WriteMeditFormat);
+void WriteMeditFormat (const Mesh & mesh, const filesystem::path & filename)
+{
+  map<tuple<int,int>,int> index_map;
+  WriteMeditFormat(mesh, filename, index_map);
+}
+
+static RegisterUserFormat reg_medit ("Medit Format", {".mesh"},
+                                     static_cast<void(*)(Mesh &, const filesystem::path&)>(ReadMeditFormat),
+                                     static_cast<void(*)(const Mesh &, const filesystem::path&)>(WriteMeditFormat));
 } // namespace netgen

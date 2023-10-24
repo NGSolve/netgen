@@ -10,6 +10,7 @@
 #include "meshing.hpp"
 // #include <csg.hpp>
 // #include <geometry2d.hpp>
+#include <../interface/rw_medit.hpp>
 #include <../interface/writeuser.hpp>
 #include <../include/nginterface.h>
 #include <../general/gzstream.h>
@@ -1692,6 +1693,17 @@ project_boundaries : Optional[str] = None
       import_docu += s;
   }, true);
 
+  m.def("ReadMedit", [](const string& filename) {
+          map<int, tuple<int,int>> index_map;
+          auto mesh = make_shared<Mesh>();
+          ReadMeditFormat(*mesh, filename, index_map);
+          return py::make_tuple(mesh, index_map);
+  });
+  m.def("WriteMedit", [](const Mesh& mesh, const string& filename) {
+          map<tuple<int,int>, int> index_map;
+          WriteMeditFormat(mesh, filename, index_map);
+          return index_map;
+  });
   m.def("ImportMesh", [](const string& filename, const string & format)
                       {
                         auto mesh = make_shared<Mesh>();

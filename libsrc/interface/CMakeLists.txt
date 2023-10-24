@@ -7,6 +7,6 @@ target_sources(nglib PRIVATE writeuser.cpp
 )
 
 install(FILES
-  writeuser.hpp
+  writeuser.hpp rw_medit.hpp
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/interface COMPONENT netgen_devel
 )
