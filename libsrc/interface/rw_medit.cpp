@@ -15,7 +15,6 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<int, t
   auto getIndex = [&](int eldim, int index) {
     if(index_map.count(index)==0) {
       auto n = ++index_cnt[eldim];
-      cout << "index " << eldim <<'\t' << index << '\t' << n << endl;
       index_map[index] = {eldim, n};
       if(eldim==2) {
         auto fd = FaceDescriptor(n-1,1,0,0);
