@@ -922,7 +922,7 @@ namespace netgen
 	  {
 	    pointcurvelist = glGenLists(1);
 	    glNewList(pointcurvelist,GL_COMPILE);
-	    //glColor3f (1.0f, 0.f, 0.f);
+            SetTextureMode(0); // disable all textures
 	    
 	    for(int i=0; i<mesh->GetNumPointCurves(); i++)
 	      {
