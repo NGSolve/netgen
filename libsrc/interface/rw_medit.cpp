@@ -3,7 +3,7 @@
 
 namespace netgen
 {
-void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<int, tuple<int,int>> & index_map)
+void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<int,int>, int> & index_map)
 {
   static Timer tall("ReadMeditMesh"); RegionTimer rtall(tall);
   auto fin = ifstream(filename);
@@ -13,16 +13,16 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<int, t
 
   int index_cnt[4] = {0,0,0,0};
   auto getIndex = [&](int eldim, int index) {
-    if(index_map.count(index)==0) {
+    if(index_map.count({eldim,index})==0) {
       auto n = ++index_cnt[eldim];
-      index_map[index] = {eldim, n};
+      index_map[{eldim, index}] = n;
       if(eldim==2) {
         auto fd = FaceDescriptor(n-1,1,0,0);
         fd.SetBCProperty(n);
         mesh.AddFaceDescriptor (fd);
       }
     }
-    return get<1>(index_map[index]);
+    return index_map[{eldim, index}];
   };
 
   while(true) {
@@ -31,14 +31,14 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<int, t
     if(token == "End")
       break;
 
-    if(token == "MeshVersionFormatted") {
+    else if(token == "MeshVersionFormatted") {
       fin >> version;
     }
-    if(token == "Dimension") {
+    else if(token == "Dimension") {
       fin >> dim;
       mesh.SetDimension(dim);
     }
-    if(token == "Vertices") {
+    else if(token == "Vertices") {
       int nvert;
       fin >> nvert;
       Point<3> p{0.,0.,0.};
@@ -49,7 +49,7 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<int, t
           mesh.AddPoint(p);
       }
     }
-    if(token == "Edges") {
+    else if(token == "Edges") {
       int nedge;
       fin >> nedge;
       Segment seg;
@@ -62,7 +62,7 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<int, t
           mesh.AddSegment(seg);
       }
     }
-    if(token == "Triangles") {
+    else if(token == "Triangles") {
       int ntrig, index;
       fin >> ntrig;
       Element2d sel;
@@ -74,7 +74,7 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<int, t
           mesh.AddSurfaceElement(sel);
       }
     }
-    if(token == "Tetrahedra") {
+    else if(token == "Tetrahedra") {
       int ntet;
       fin >> ntet;
       Element el(4);
@@ -87,12 +87,19 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<int, t
           mesh.AddVolumeElement(el);
       }
     }
+    else {
+      int nitems;
+      fin >> nitems;
+      string s;
+      for(auto i : Range(nitems))
+        fin >> s; // read one line
+    }
   }
 }
 
 void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename)
 {
-  map<int, tuple<int,int>> index_map;
+  map<tuple<int, int>, int> index_map;
   ReadMeditFormat(mesh, filename, index_map);
 }
 
@@ -141,7 +148,7 @@ void WriteMeditFormat (const Mesh & mesh, const filesystem::path & filename, map
 
 void WriteMeditFormat (const Mesh & mesh, const filesystem::path & filename)
 {
-  map<tuple<int,int>,int> index_map;
+  map<tuple<int,int>, int> index_map;
   WriteMeditFormat(mesh, filename, index_map);
 }
 
