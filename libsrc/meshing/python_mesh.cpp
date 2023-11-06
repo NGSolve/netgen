@@ -1694,7 +1694,7 @@ project_boundaries : Optional[str] = None
   }, true);
 
   m.def("ReadMedit", [](const string& filename) {
-          map<int, tuple<int,int>> index_map;
+          map<tuple<int, int>, int> index_map;
           auto mesh = make_shared<Mesh>();
           ReadMeditFormat(*mesh, filename, index_map);
           return py::make_tuple(mesh, index_map);
