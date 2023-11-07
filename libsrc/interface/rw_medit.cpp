@@ -1,3 +1,5 @@
+#include <regex>
+
 #include <meshing.hpp>
 #include "rw_medit.hpp"
 
@@ -6,6 +8,8 @@ namespace netgen
 void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<int,int>, int> & index_map)
 {
   static Timer tall("ReadMeditMesh"); RegionTimer rtall(tall);
+  if(!filesystem::exists(filename))
+    throw Exception("File does not exist: " + filename.string());
   auto fin = ifstream(filename);
   string token;
   int version, dim;
@@ -28,9 +32,12 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
   while(true) {
     fin >> token;
     int index;
-    if(token == "End")
+    if(token == "End") {
       break;
-
+    }
+    else if(token == "" || std::regex_match(token, std::regex("^[\\s]*$"))) {
+      continue;
+    }
     else if(token == "MeshVersionFormatted") {
       fin >> version;
     }
@@ -124,8 +131,8 @@ void WriteMeditFormat (const Mesh & mesh, const filesystem::path & filename, map
   for(const auto & p : mesh.Points())
   {
     for(auto i : Range(mesh.GetDimension()))
-      fout << setw(20) << p[i];
-    fout << setw(6) << getIndex(1, 0) << endl;
+      fout << p[i] << ' ';
+    fout << getIndex(1, 0) << endl;
   }
 
   base_index = max_index;
