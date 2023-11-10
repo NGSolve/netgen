@@ -34,6 +34,11 @@ DLL_HEADER int /* new_domain_number */ GenerateBoundaryLayer2 (Mesh & mesh, int 
 class BoundaryLayerTool
 {
   public:
+    struct Face {
+      ArrayMem<Point<3>, 4> p;
+      ArrayMem<double, 4> lam;
+    };
+
     BoundaryLayerTool(Mesh & mesh_, const BoundaryLayerParameters & params_);
     void Perform();
 
@@ -78,9 +83,9 @@ class BoundaryLayerTool
 
     // utility functions
     array<Point<3>, 2> GetMappedSeg( PointIndex pi );
-    ArrayMem<Point<3>, 4> GetFace( SurfaceElementIndex sei );
-    ArrayMem<Point<3>, 4> GetMappedFace( SurfaceElementIndex sei );
-    ArrayMem<Point<3>, 4> GetMappedFace( SurfaceElementIndex sei, int face );
+    Face GetFace( SurfaceElementIndex sei );
+    Face GetMappedFace( SurfaceElementIndex sei );
+    Face GetMappedFace( SurfaceElementIndex sei, int face );
 
     void LimitGrowthVector(PointIndex pi, SurfaceElementIndex sei);
 
