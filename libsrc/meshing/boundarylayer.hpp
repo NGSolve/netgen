@@ -87,7 +87,7 @@ class BoundaryLayerTool
     Face GetMappedFace( SurfaceElementIndex sei );
     Face GetMappedFace( SurfaceElementIndex sei, int face );
 
-    void LimitGrowthVector(PointIndex pi, SurfaceElementIndex sei);
+    void LimitGrowthVector(PointIndex pi, SurfaceElementIndex sei, FlatArray<double, PointIndex> new_limits, T_Range<int> range);
 
     Vec<3> getNormal(const Element2d & el)
     {
