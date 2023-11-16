@@ -512,6 +512,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def_property("index", &Element2d::GetIndex, &Element2d::SetIndex)
     .def_property("curved", &Element2d::IsCurved, &Element2d::SetCurved)
     .def_property("refine", &Element2d::TestRefinementFlag, &Element2d::SetRefinementFlag)
+    .def_property_readonly("geominfo", [](const Element2d& self) -> py::list
+    {
+      py::list li;
+      for (const auto &pgi : self.GeomInfo())
+        li.append(py::make_tuple(pgi.trignum, pgi.u, pgi.v));
+      return li;
+    })
     .def_property_readonly("vertices",
                   FunctionPointer([](const Element2d & self) -> py::list
                                   {
