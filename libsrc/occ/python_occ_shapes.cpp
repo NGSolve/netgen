@@ -841,11 +841,11 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                     hpref = max2(val, hpref);
                   }, "number of refinement levels for geometric refinement")
     
-    .def_property("col", [](const TopoDS_Shape & self) {
+    .def_property("col", [](const TopoDS_Shape & self) -> py::object {
       if(!OCCGeometry::HaveProperties(self) || !OCCGeometry::GetProperties(self).col)
-        return std::vector<double>({ 0.2, 0.2, 0.2, 1. });
+        return py::none();
       auto col = *OCCGeometry::GetProperties(self).col;
-      return std::vector<double>({ col(0), col(1), col(2), col(3) });
+      return py::cast(std::vector<double>({ col(0), col(1), col(2), col(3) }));
     }, [](const TopoDS_Shape & self, std::vector<double> c) {
         Vec<4> col(c[0], c[1], c[2], 1.0);
         if(c.size() == 4)
