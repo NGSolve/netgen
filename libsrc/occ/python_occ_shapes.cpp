@@ -424,7 +424,7 @@ public:
     return shared_from_this();
   }
 
-  auto ArcTo (double h, double v, const gp_Vec2d t)
+  auto ArcTo (double h, double v, const gp_Vec2d t, optional<string> name=nullopt)
   {
     gp_Pnt2d P1 = localpos.Location();
 
@@ -489,6 +489,8 @@ public:
     auto edge = BRepBuilderAPI_MakeEdge(curve2d, surf, lastvertex, endv).Edge();
     lastvertex = endv;
     BRepLib::BuildCurves3d(edge);
+    if(name.has_value())
+      OCCGeometry::GetProperties(edge).name = name;
     wire_builder.Add(edge);
 
     //compute angle of rotation
@@ -509,7 +511,7 @@ public:
     return shared_from_this();
   }
 
-  auto Arc(double radius, double angle)
+  auto Arc(double radius, double angle, optional<string> name)
   {
     double newAngle = fmod(angle,360)*M_PI/180;
 
@@ -540,7 +542,7 @@ public:
     cout << IM(6) << "t = (" << t.X() << ", " << t.Y() << ")" << endl;
 
     //add arc
-    return ArcTo (oldp.X(), oldp.Y(), t);
+    return ArcTo (oldp.X(), oldp.Y(), t, name);
   }
 
   auto Rectangle (double l, double w)
@@ -2534,8 +2536,9 @@ degen_tol : double
     // .def("LineTo", &WorkPlane::LineTo)
     .def("LineTo", [](WorkPlane&wp, double x, double y, optional<string> name) { return wp.LineTo(x, y, name); },
          py::arg("h"), py::arg("v"), py::arg("name")=nullopt, "draw line to position (h,v)")
-    .def("ArcTo", &WorkPlane::ArcTo)
-    .def("Arc", &WorkPlane::Arc, py::arg("r"), py::arg("ang"), "draw arc tangential to current pos/dir, of radius 'r' and angle 'ang', draw to the left/right if ang is positive/negative")
+    .def("ArcTo", &WorkPlane::ArcTo, py::arg("h"), py::arg("v"),
+         py::arg("t"), py::arg("name")=nullopt)
+    .def("Arc", &WorkPlane::Arc, py::arg("r"), py::arg("ang"), py::arg("name")=nullopt, "draw arc tangential to current pos/dir, of radius 'r' and angle 'ang', draw to the left/right if ang is positive/negative")
     .def("Rotate", &WorkPlane::Rotate, py::arg("ang"), "rotate current direction by 'ang' degrees")
     .def("Line", [](WorkPlane&wp,double l, optional<string> name) { return wp.Line(l, name); },
          py::arg("l"), py::arg("name")=nullopt)
