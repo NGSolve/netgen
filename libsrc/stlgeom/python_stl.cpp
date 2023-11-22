@@ -223,6 +223,65 @@ NGCORE_API_EXPORT void ExportSTL(py::module & m)
              ng_geometry = self;
           })
          )
+    .def("GetVicinity", [] (shared_ptr<STLGeometry> self, int node, int size, string type) {
+      NgArray<int> vic;
+
+      int trig;
+      if(type == "trig")
+        trig = node;
+
+      if(type == "point")
+        trig = self->TrigPerPoint(node, 1);
+
+      self->GetVicinity(trig, size, vic);
+      auto geo = make_shared<STLGeometry>();
+      NgArray<STLReadTriangle> trigs;
+
+      for(auto i : Range(vic.Size())) {
+        int trigi = vic[i];
+        STLReadTriangle t;
+        Vec<3> normal  = self->GetTriangle(trigi).Normal();
+        Point<3> pts[3];
+        auto trig = self->GetTriangle(trigi);
+        for(auto pi : Range(3))
+          pts[pi] = self->GetPoint(trig[pi]);
+        trigs.Append(STLReadTriangle(pts, normal));
+      }
+
+      geo->SetSurfaceSTL(true);
+      geo->InitSTLGeometry(trigs);
+      return geo;
+    }, py::arg("node"), py::arg("size"), py::arg("node_type") = "trig")
+    .def("SmoothDirtyTrigs", [] (shared_ptr<STLGeometry> self, py::kwargs kwargs) {
+      STLParameters stlparam;
+      CreateSTLParametersFromKwargs(stlparam, kwargs);
+      self->SmoothDirtyTrigs(stlparam);
+    })
+    .def("GetDirtyTrigs", [] (shared_ptr<STLGeometry> self, py::kwargs kwargs) {
+      STLParameters stlparam;
+      CreateSTLParametersFromKwargs(stlparam, kwargs);
+      self->MarkDirtyTrigs(stlparam);
+      py::list dirty;
+      for(auto i : Range(self->GetNT()))
+        if(self->IsMarkedTrig(i+1))
+          dirty.append(i);
+    })
+    .def("MovePointToMiddle", [] (shared_ptr<STLGeometry> self, int node, int count) {
+      auto trignr = self->TrigPerPoint(node, 1);
+      auto trig = self->GetTriangle(trignr);
+      int point_in_trig = -1;
+      for(auto i : Range(3))
+        if(trig[i] == node)
+          point_in_trig = i;
+
+      if(point_in_trig == -1)
+        throw Exception("Point not found in triangle");
+      self->SetSelectTrig(trignr);
+      self->SetNodeOfSelTrig(point_in_trig);
+      for(auto i : Range(count))
+        self->MoveSelectedPointToMiddle();
+    })
+    .def("Save", &STLGeometry::Save)
     ;
   m.def("LoadSTLGeometry", [] (const string & filename)
                            {
