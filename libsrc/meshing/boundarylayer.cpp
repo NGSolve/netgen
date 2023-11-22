@@ -12,213 +12,241 @@
 
 namespace netgen
 {
-  using Face = BoundaryLayerTool::Face;
-
-  // checks if a segment is intersecting a plane, spanned by three points, lam will be set s.t. p_intersect = seg[0] + lam * (seg[1]-seg[0])
-  // bool isIntersectingPlane ( const array<Point<3>, 2> & seg, const array<Point<3>, 3> & trig, const array<double, 3> trig_lams, double & lam, double & lam2)
-  bool isIntersectingPlane ( const array<Point<3>, 2> & seg, FlatArray<Point<3>> trig, FlatArray<double> lam, double & lam0, double & lam1)
-  {
-      if(trig.Size() == 4) {
-        return isIntersectingPlane(seg, trig.Range(3), lam.Range(3), lam0, lam1);
-        // TODO: quads
-      }
-      auto t1 = trig[1]-trig[0];
-      auto t2 = trig[2]-trig[0];
-      auto n = Cross(trig[1]-trig[0], trig[2]-trig[0]);
-      auto v0n = (seg[0]-trig[0])*n;
-      auto v1n = (seg[1]-trig[0])*n;
-      if(v0n * v1n >= 0)
-          return false;
-
-      lam0 = -v0n/(v1n-v0n);
-      // lam0 *= 0.9;
-      if(lam0 < -1e-8 || lam0>1+1e-8)
-          return false;
-
-      cout << "FOUND INTERSECTION " << lam0 << "\t" << seg[0] << seg[1] << trig[0] << trig[1] << trig[2] << endl;
-      
-      return true;
-  }
-
-  bool isIntersectingPlane ( const array<Point<3>, 2> & seg, const Face & face, double & lam0, double & lam1)
-  {
-    return isIntersectingPlane(seg, face.p, face.lam, lam0, lam1);
-  }
-
-  // bool isIntersectingPlane ( const array<Point<3>, 2> & seg, const array<Point<3>, 3> & trig, double & lam )
-  // {
-  //   array<double,3> vlam;
-  //   auto result = isIntersectingPlane(seg, trig, vlam);
-  //   lam = vlam[0];
-  //   return result;
-  // }
-
-  // bool isIntersectingPlane ( const array<Point<3>, 2> & seg, const ArrayMem<Point<3>, 4> & face, ArrayMem<double, 4> & lam)
-  // {
-  //    lam = 1.0;
-  //    bool intersect0 = isIntersectingPlane( seg, array<Point<3>, 3>{face[0], face[1], face[2]}, lam );
-  //    if(face.Size()==3)
-  //        return intersect0;
-
-  //    double lam1 = 1.0;
-  //    bool intersect1 = isIntersectingPlane( seg, array<Point<3>, 3>{face[2], face[3], face[0]}, lam1 );
-  //    lam = min(lam, lam1);
-  //    return intersect0 || intersect1;
-  // }
-
-  bool isIntersectingTrig ( const array<Point<3>, 2> & seg, FlatArray<Point<3>> trig, FlatArray<double> lam, double & lam0, double & lam1)
-  {
-      if(!isIntersectingPlane(seg, trig, lam, lam0, lam1))
-          return false;
-
-  // cout << "lam0 " << lam0 << endl;
-      auto p = seg[0] + lam0*(seg[1]-seg[0]) - trig[0];
-      // auto t1 = trig[1] - trig[0];
-      // auto t2 = trig[2] - trig[0];
-      // const auto area = 0.5 * Cross(t2,t1).Length();
-      // double bary[3];
-  // cout << "area " << area << endl;
-      // bary[2] = 0.5 * Cross(t1,{p}).Length()/area;
-      // bary[1] = 0.5 * Cross(t2,{p}).Length()/area;
-      // bary[0] = 1-bary[1]-bary[2];
-      // const auto volume = -(Cross(t1,t2) * p)/6;
-
-      Vec3d col1 = trig[1]-trig[0];
-      Vec3d col2 = trig[2]-trig[0];
-      Vec3d col3 = Cross(col1,col2);
-      Vec3d rhs = p;
-      Vec3d bary;
-      SolveLinearSystem (col1, col2, col3, rhs, bary);
-
-      // cout << "bary " << bary[0] << '\t' << bary[1] << '\t' << bary[2] << endl;
-      // if(volume > 1e-12)
-      //   cout << "volume " << volume << endl;
-      
-      lam1 = 0;
-      double eps = 0;
-      if (bary.X() >= -eps && bary.Y() >= -eps && 
-          bary.X() + bary.Y() <= 1+eps) 
-  {
-      // for(auto i : Range(3))
-      // {
-      //   if(bary[i] < 0 || bary[i] > 1)
-      //     return false;
-      //   lam1 += bary[i]*lam[i];
-      // }
-
-          return true;
-  }
-      else
-        return false;
-      // // cout << "lam " << lam0 << '\t' << lam1 << endl;
-      // return true;
-
-      // // for (auto l : lam)
-      // //   if(l<0 || l> 1)
-      // //     return false;
-
-      // //buffer enlargement of triangle
-      // auto pt0 = trig[0];
-      // auto pt1 = trig[1];
-      // auto pt2 = trig[2];
-      // Point<3> center = { (pt0[0] + pt1[0] + pt2[0]) / 3.0, (pt0[1] + pt1[1] + pt2[1]) / 3.0, (pt0[2] + pt1[2] + pt2[2]) / 3.0 };
-      // array<Point<3>, 3>  larger_trig = {
-      // center + (pt0 - center) * 1.1,
-      // center + (pt1 - center) * 1.1,
-      // center + (pt2 - center) * 1.1, };
-
-      // auto p = seg[0] + lam0*(seg[1]-seg[0]);
-
-      // auto n_trig = Cross(trig[1]-trig[0], trig[2]-trig[0]).Normalize();
-      // for(auto i : Range(3))
-      // {
-      //     // check if p0 and p are on same side of segment p1-p2
-      //     auto p0 = larger_trig[i];
-      //     auto p1 = larger_trig[(i+1)%3];
-      //     auto p2 = larger_trig[(i+2)%3];
-      //     auto n = Cross(p2-p1, n_trig);
-
-      //     auto v0 = (p2-p1).Normalize();
-      //     auto v1 = (p0-p1).Normalize();
-      //     auto inside_dir = (v1 - (v1*v0) * v0).Normalize();
-      //     auto v2 = (p-p1).Normalize();
-      //     if(inside_dir * v1 < 0)
-      //         inside_dir = -inside_dir;
-
-      //     if( (inside_dir*v2) < 0 )
-      //         return false;
-      // }
-      // return true;
+  struct Face {
+    ArrayMem<Point<3>, 4> p;
+    ArrayMem<double, 4> lam;
   };
 
-  bool isIntersectingFace( const array<Point<3>, 2> & seg,  const Face & face, double & lam0, double & lam1)
-  {
-      bool intersect0 = isIntersectingTrig( seg, ArrayMem<Point<3>, 3>{face.p[0], face.p[1], face.p[2]}, face.lam.Range(3), lam0, lam1 );
-      // if(intersect0)
-      //     lam = min(lam, lam0);
-      // if(face.p.Size()==3)
-      return intersect0;
+  struct Intersection_ {
+    bool is_intersecting=false;
+    double lam0=-1, lam1=-1;
+    Point<3> p;
+    double bary[3];
+    operator bool() const { return is_intersecting; }
+  };
 
-      //TODO: quads
 
-      ArrayMem<double, 3> lam_trig2{face.lam[2], face.lam[3], face.lam[0]};
-      bool intersect1 = isIntersectingTrig( seg, ArrayMem<Point<3>, 3>{face.p[2], face.p[3], face.p[0]}, lam_trig2, lam0, lam1 );
-      if(intersect1)
-          lam1 = lam_trig2[0];
-      return intersect0 || intersect1;
+struct GrowthVectorLimiter {
+  const BoundaryLayerParameters & params;
+  Mesh & mesh;
+  double height;
+  FlatArray<double, PointIndex> limits;
+  FlatArray<Vec<3>, PointIndex> growthvectors;
+  BitArray changed_domains;
+  unique_ptr<BoxTree<3>> tree;
+  ofstream debug;
+
+  GrowthVectorLimiter( Mesh & mesh_, const BoundaryLayerParameters & params_, FlatArray<double, PointIndex> limits_, FlatArray<Vec<3>, PointIndex> growthvectors_, double height_) :
+    params(params_), mesh(mesh_), height(height_), limits(limits_), growthvectors(growthvectors_), debug("debug.txt") {
+    changed_domains = params.domains;
+    if(!params.outside)
+      changed_domains.Invert();
   }
 
-  array<Point<3>, 2> BoundaryLayerTool :: GetMappedSeg( PointIndex pi )
-  {
-      return { mesh[pi], mesh[pi] + height*limits[pi]*growthvectors[pi] };
+  Face GetFace( SurfaceElementIndex sei );
+  Face GetMappedFace( SurfaceElementIndex sei );
+  Face GetMappedFace( SurfaceElementIndex sei, int face );
+
+  auto GetSeg(PointIndex pi) {
+    return std::array<Point<3>, 2>{mesh[pi], mesh[pi]+height*limits[pi]*growthvectors[pi]};
+  }
+  auto GetTrig(SurfaceElementIndex sei, bool shift = false) {
+    auto sel = mesh[sei];
+    auto trig = std::array<Point<3>, 3> { mesh[sel[0]], mesh[sel[1]], mesh[sel[2]] };
+    if(shift)
+      for (auto i : Range(3))
+      trig[i] += height * limits[sel[i]] * growthvectors[sel[i]];
+    return trig;
   }
 
-  Face BoundaryLayerTool :: GetFace( SurfaceElementIndex sei )
+  string DebugPoint(PointIndex pi, string col, bool shift=false ) {
+    stringstream ss;
+    auto p = mesh[pi];
+    auto p1 = mesh[pi]+height*growthvectors[pi];
+    // auto type = shift ? "lines" : "points";
+    string type = "points";
+    ss <<  "{\"name\": \"line\", \"color\": \"" << col << "\", \"type\": \"" << type << "\", \"position\": [";
+    ss << p[0] << "," << p[1] << "," << p[2];
+    if(shift)
+      ss << "," << p1[0] << "," << p1[1] << "," << p1[2];
+    ss << "]}";
+    return ss.str();
+  }
+
+
+  static constexpr double INTERSECTION_SAFETY = .99;
+  void LimitGrowthVector(PointIndex pi, SurfaceElementIndex sei, bool shift = false) {
+    auto intersection = isIntersectingTrig(pi, sei, shift);
+    auto lam = intersection.lam0;
+
+    if(!intersection) return;
+
+    if(shift) {
+      double dshift = 1.0;
+      while(intersection && dshift > 0.01 && dshift > intersection.lam0) {
+        dshift *= 0.9;
+        intersection = isIntersectingTrig(pi, sei, dshift);
+      }
+      dshift /= 0.9;
+      intersection = isIntersectingTrig(pi, sei, dshift);
+      if(dshift < 1)
+        cout << "final dshift " << dshift << "\t" << intersection.lam0 << endl;
+      limits[pi] *= intersection.lam0;
+      auto sel = mesh[sei];
+      for(auto i : Range(3))
+        limits[sel[i]] *= dshift;
+    }
+    else {
+      if(intersection && lam > 0 && lam < 1.0/INTERSECTION_SAFETY) {
+        // check with original surface elements
+        limits[pi] = min(limits[pi], INTERSECTION_SAFETY*intersection.lam0);
+        cout << "set limit " << pi << '\t' << limits[pi] << endl;
+        auto sel = mesh[sei];
+        debug << "[";
+        for(auto i : Range(3))
+          debug << DebugPoint(sel[i], "black", false) << ',';
+        debug << DebugPoint(pi, "red", true);
+        debug << "]" << endl;
+        return;
+      }
+    }
+
+    // check with shifted surface elements using growthvectors
+    return;
+  }
+
+  // checks if a segment is intersecting a plane, spanned by three points, lam will be set s.t. p_intersect = seg[0] + lam * (seg[1]-seg[0])
+  Intersection_ isIntersectingPlane ( PointIndex pi, SurfaceElementIndex sei, double shift = 0.0 )
   {
+    auto sel = mesh[sei];
+    // TODO: quads
+
+    auto seg = GetSeg(pi);
+    auto trig = GetTrig(sei, shift);
+    auto t1 = trig[1]-trig[0];
+    auto t2 = trig[2]-trig[0];
+    auto n = Cross(trig[1]-trig[0], trig[2]-trig[0]);
+    auto v0n = (seg[0]-trig[0])*n;
+    auto v1n = (seg[1]-trig[0])*n;
+    if(v0n * v1n >= 0)
+      return {false};
+
+    Intersection_ intersection;
+    intersection.lam0 = -v0n/(v1n-v0n);
+    if(intersection.lam0 < -1e-8 || intersection.lam0>1+1e-8)
+      return intersection;
+
+    intersection.is_intersecting = true;
+    intersection.p = seg[0] + intersection.lam0*(seg[1]-seg[0]);
+
+    return intersection;
+  }
+
+  Intersection_ isIntersectingTrig ( PointIndex pi, SurfaceElementIndex sei, double shift=0.0)
+  {
+    auto intersection = isIntersectingPlane(pi, sei, shift);
+    if(!intersection)
+      return intersection;
+
+    auto seg = GetSeg(pi);
+    auto trig = GetTrig(sei, shift);
+    auto p = seg[0] + intersection.lam0*(seg[1]-seg[0]) - trig[0];
+
+    Vec3d col1 = trig[1]-trig[0];
+    Vec3d col2 = trig[2]-trig[0];
+    Vec3d col3 = Cross(col1,col2);
+    Vec3d rhs = p;
+    Vec3d bary;
+    SolveLinearSystem (col1, col2, col3, rhs, bary);
+
+    intersection.lam1 = 0;
+    double eps = 0;
+    if (bary.X() >= -eps && bary.Y() >= -eps && 
+      bary.X() + bary.Y() <= 1+eps) 
+    {
+      intersection.bary[0] = bary.X();
+      intersection.bary[1] = bary.Y();
+      intersection.bary[2] = 1.0-bary.X()-bary.Y();
+      // cout << "\tFOUND INTERSECTION " << intersection.bary[0] << ", " << intersection.bary[1] << ", " << intersection.bary[2] << endl;
+    }
+    else
+      intersection.is_intersecting = false;
+    // cout << "return intersection " << intersection.is_intersecting << endl;
+    return intersection;
+  }
+
+  void BuildSearchTree(bool shift) {
+    Box<3> bbox(Box<3>::EMPTY_BOX);
+    for(auto pi : mesh.Points().Range())
+    {
+      bbox.Add(mesh[pi]);
+      bbox.Add(mesh[pi]+limits[pi]*height*growthvectors[pi]);
+    }
+
+    tree = make_unique<BoxTree<3>>(bbox);
+
+    for(auto sei : mesh.SurfaceElements().Range())
+    {
       const auto & sel = mesh[sei];
-      auto np = sel.GetNP();
-      Face face;
-      face.p.SetSize(np);
-      for(auto i : Range(np))
-          face.p[i] = mesh[sel[i]];
-      face.lam.SetSize(np);
-      face.lam = 0.0;
-      return face;
+      Box<3> box(Box<3>::EMPTY_BOX);
+      const auto& fd = mesh.GetFaceDescriptor(sel.GetIndex());
+      if(!changed_domains.Test(fd.DomainIn()) &&
+        !changed_domains.Test(fd.DomainOut()))
+        continue;
+      for(auto pi : sel.PNums())
+      box.Add(mesh[pi]);
+      // also add moved points to bounding box
+      if(shift && params.surfid.Contains(sel.GetIndex()))
+        for(auto pi : sel.PNums())
+          box.Add(mesh[pi]+limits[pi]*height*growthvectors[pi]);
+      tree->Insert(box, sei);
+    }
   }
 
-  Face BoundaryLayerTool :: GetMappedFace( SurfaceElementIndex sei )
-  {
-      const auto & sel = mesh[sei];
-      auto np = sel.GetNP();
-      Face face;
-      face.p.SetSize(np);
-      for(auto i : Range(np))
-          face.p[i] = mesh[sel[i]] + height * limits[sel[i]]*growthvectors[sel[i]];
-      face.lam.SetSize(np);
-      face.lam = 1.0;
-      return face;
+  template<typename TFunc>
+  void FindTreeIntersections( bool shift, TFunc f ) {
+    BuildSearchTree(shift);
+    for(auto pi : mesh.Points().Range()) {
+      if(mesh[pi].Type() == INNERPOINT)
+        continue;
+      if(growthvectors[pi].Length2() == 0.0)
+        continue;
+      Box<3> box(Box<3>::EMPTY_BOX);
+      auto seg = GetSeg(pi);
+      box.Add(seg[0]);
+      box.Add(seg[1]);
+      tree->GetFirstIntersecting(box.PMin(), box.PMax(), [&](SurfaceElementIndex sei) {
+        const auto & sel = mesh[sei];
+        if(sel.PNums().Contains(pi))
+          return false;
+        f(pi, sei);
+        return false;
+      });
+    }
   }
+};
 
-  Face BoundaryLayerTool :: GetMappedFace( SurfaceElementIndex sei, int face_nr )
-  {
-      if(face_nr == -1) return GetFace(sei);
-      if(face_nr == -2) return GetMappedFace(sei);
-      const auto & sel = mesh[sei];
-      auto np = sel.GetNP();
-      Face face;
-      face.p.SetSize(4);
-      face.lam.SetSize(4);
-      face.lam = 0;
-      auto pi0 = sel[face_nr % np];
-      auto pi1 = sel[(face_nr+1) % np];
-      face.p[0] = face.p[3] = mesh[pi0];
-      face.p[1] = face.p[2] = mesh[pi1];
-      face.p[3] += height * limits[pi0]*growthvectors[pi0];
-      face.p[2] += height * limits[pi1]*growthvectors[pi1];
-      face.lam[2] = 1.0;
-      face.lam[3] = 1.0;
-      return face;
-  }
+
+  // Face GrowthVectorLimiter :: GetMappedFace( SurfaceElementIndex sei, int face_nr )
+  // {
+  //     if(face_nr == -1) return GetFace(sei);
+  //     if(face_nr == -2) return GetMappedFace(sei);
+  //     const auto & sel = mesh[sei];
+  //     auto np = sel.GetNP();
+  //     Face face;
+  //     face.p.SetSize(4);
+  //     face.lam.SetSize(4);
+  //     face.lam = 0;
+  //     auto pi0 = sel[face_nr % np];
+  //     auto pi1 = sel[(face_nr+1) % np];
+  //     face.p[0] = face.p[3] = mesh[pi0];
+  //     face.p[1] = face.p[2] = mesh[pi1];
+  //     face.p[3] += height * limits[pi0]*growthvectors[pi0];
+  //     face.p[2] += height * limits[pi1]*growthvectors[pi1];
+  //     face.lam[2] = 1.0;
+  //     face.lam[3] = 1.0;
+  //     return face;
+  // }
 
   Vec<3> BoundaryLayerTool :: getEdgeTangent(PointIndex pi, int edgenr)
   {
@@ -239,366 +267,297 @@ namespace netgen
       return tangent.Normalize();
   }
 
-  void BoundaryLayerTool :: LimitGrowthVector(PointIndex pi, SurfaceElementIndex sei, FlatArray<double, PointIndex> new_limits, T_Range<int> range)
-  {
-    auto sel = mesh[sei];
-    auto seg = GetMappedSeg(pi);
-    ArrayMem<Face, 6> faces;
-    ArrayMem<tuple<double,double>, 6> intersections;
-    double lam0, lam1;
-    // for(auto i : Range(-2, sel.GetNP()))
-    // for(auto i : Range(0, sel.GetNP()))
-    for(auto i : range)
-      if(isIntersectingFace(seg, GetMappedFace(sei, i), lam0, lam1))
-        intersections.Append({lam0, lam1});
-
-    // double max_lam0 = 1, max_lam1 = 1;
-    // for( auto [lam0_, lam1_] : intersections )
-    // {
-    //   max_lam0 = max(max_lam0, lam0_);
-    //   max_lam1 = max(max_lam1, lam1_);
-    // }
-
-    // lam0 = min(new_limits[pi], max_lam0);
-    // lam1 = 1;
-    // for(auto spi: sel.PNums())
-    //   lam1 = max(lam1, new_limits[spi]);
-  if(pi==96) {
-    cout << "sei " << sei << endl;
-    cout << "seg0 " << seg[0] << endl;
-    cout << "seg1 " << seg[1] << endl;
-    auto face = GetMappedFace(sei, -2);
-    cout << "trig0 " << face.p[0] << endl;
-    cout << "trig1 " << face.p[1] << endl;
-    cout << "trig2 " << face.p[2] << endl;
-    cout << "lam0 " << lam0 << endl;
-  }
-
-    cout << "pi " << pi << '\t' << sei << endl;
-    for( auto [lam0_, lam1_] : intersections )
-      cout << "\tintersection " << lam0_ << '\t' << lam1_ << endl;
-
-    lam0 = new_limits[pi];
-    for( auto [lam0_, lam1_] : intersections )
-       lam0 = min(lam0, lam0_);
-    // for( auto [lam0_, lam1_] : intersections )
-    //   if(lam0_ < lam0 && lam1_ < lam1)
-    //   {
-    //     if(lam0_ > lam1_)
-    //       lam0 = lam0_;
-    //     else
-    //       lam1 = lam1_;
-    //     // // which one to limit? -> the one with smaller shift in lam
-    //     // auto diff_lam0 = lam0_-lam0;
-    //     // auto diff_lam1 = lam1_-lam1;
-    //     // if(diff_lam0 < diff_lam1)
-    //     //   lam0 = lam0_;
-    //     // else
-    //     //   lam1 = lam1_;
-    //   }
-
-    if(lam0 < new_limits[pi]) {
-      cout << "new limit " << pi << '\t' << new_limits[pi] << " -> " << lam0 << '\t' << new_limits[pi] - lam0 << endl;
-      new_limits[pi] = lam0;
-      // cout << "\t" << new_limits[pi] << '\t' << new_limits[pi]-lam0 << endl;
-    }
-
-    // for(auto spi: sel.PNums()) {
-    //   if(lam1 < new_limits[spi]) {
-    //     // cout << __LINE__ << endl;
-    //     // cout << "new limit " << spi << '\t' << new_limits[spi] << " -> " << lam1;
-    //     new_limits[spi] = lam1;
-    //     // cout << "\t" << new_limits[spi] << '\t' << new_limits[spi] - lam1 << endl;
-    //   }
-    // }
-  }
-
   void BoundaryLayerTool :: LimitGrowthVectorLengths()
-  {
+{
     static Timer tall("BoundaryLayerTool::LimitGrowthVectorLengths"); RegionTimer rtall(tall);
-
     limits.SetSize(np);
     limits = 1.0;
-   
-    // Function to calculate the dot product of two 3D vectors
-    // Is there netgen native function for this?
-    const auto Dot = [](Vec<3> a, Vec<3> b) {
-        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-    };
 
-    auto parallel_limiter = [&](PointIndex pi1, PointIndex pi2, SurfaceElementIndex si) {
-        MeshPoint& a_base = mesh[pi1];
-        MeshPoint& b_base = mesh[pi2];
-        MeshPoint a_end = mesh[pi1] + height * limits[pi1] * growthvectors[pi1];
-        MeshPoint b_end = mesh[pi2] + height * limits[pi2] * growthvectors[pi2];
+    GrowthVectorLimiter limiter(mesh, params, limits, growthvectors, height);
 
-        double ab_base = (b_base - a_base).Length();
-        Vec<3> a_vec = (a_end - a_base);
-        Vec<3> b_vec = (b_end - b_base);
+    // limit to not intersect with other surface elements
+    bool shift = false;
+    limiter.FindTreeIntersections(shift, [&] (PointIndex pi, SurfaceElementIndex sei) {
+      limiter.LimitGrowthVector(pi, sei, shift);
+    });
 
-        // Calculate parallel projections
-        Vec<3> ab_base_norm = (b_base - a_base).Normalize();
-        double a_vec_x = Dot(a_vec, ab_base_norm);
-        double b_vec_x = Dot(b_vec, -ab_base_norm);
-        double ratio_parallel = (a_vec_x + b_vec_x) / ab_base;
+    for(auto i : Range(growthvectors))
+      growthvectors[i] *= limits[i];
+    limits = 1.0;
 
-        double PARALLEL_RATIO_LIMIT = 0.85;
-        if (ratio_parallel > PARALLEL_RATIO_LIMIT) {
-            // Adjust limits, vectors, and projections if parallel ratio exceeds the limit
-            double corrector = PARALLEL_RATIO_LIMIT / ratio_parallel;
-            limits[pi1] *= corrector;
-            limits[pi2] *= corrector;
-        }
-    };      
-    
-    auto perpendicular_limiter = [&](PointIndex pi1, PointIndex pi2, SurfaceElementIndex si) {
-        // this part is same as in parallel limiter, but note that limits contents are already changed
-        MeshPoint& a_base = mesh[pi1];
-        MeshPoint& b_base = mesh[pi2];
-        MeshPoint a_end = mesh[pi1] + height * limits[pi1] * growthvectors[pi1];
-        MeshPoint b_end = mesh[pi2] + height * limits[pi2] * growthvectors[pi2];
+    // now limit again with shifted surace elements
+    shift = true;
+    limiter.FindTreeIntersections(shift, [&] (PointIndex pi, SurfaceElementIndex sei) {
+      limiter.LimitGrowthVector(pi, sei, shift);
+    });
+  cout << limits << endl;
 
-        double ab_base = (b_base - a_base).Length();
-        Vec<3> a_vec = (a_end - a_base);
-        Vec<3> b_vec = (b_end - b_base);
+    for(auto i : Range(growthvectors))
+      growthvectors[i] *= limits[i];
+}
 
-        // Calculate parallel projections
-        Vec<3> ab_base_norm = (b_base - a_base).Normalize();
-        double a_vec_x = Dot(a_vec, ab_base_norm);
-        double b_vec_x = Dot(b_vec, -ab_base_norm);
-        double ratio_parallel = (a_vec_x + b_vec_x) / ab_base;
+  // void BoundaryLayerTool :: LimitGrowthVectorLengths()
+  // {
+  //   static Timer tall("BoundaryLayerTool::LimitGrowthVectorLengths"); RegionTimer rtall(tall);
 
-        // Calculate surface normal at point si
-        Vec<3> surface_normal = getNormal(mesh[si]);
+  //   limits.SetSize(np);
+  //   limits = 1.0;
+  //  
+  //   // Function to calculate the dot product of two 3D vectors
+  //   // Is there netgen native function for this?
+  //   const auto Dot = [](Vec<3> a, Vec<3> b) {
+  //       return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  //   };
 
-        double a_vec_y = abs(Dot(a_vec, surface_normal));
-        double b_vec_y = abs(Dot(b_vec, surface_normal));
-        double diff_perpendicular = abs(a_vec_y - b_vec_y);
-        double tan_alpha = diff_perpendicular / (ab_base - a_vec_x - b_vec_x);
+  //   auto parallel_limiter = [&](PointIndex pi1, PointIndex pi2, SurfaceElementIndex si) {
+  //       MeshPoint& a_base = mesh[pi1];
+  //       MeshPoint& b_base = mesh[pi2];
+  //       MeshPoint a_end = mesh[pi1] + height * limits[pi1] * growthvectors[pi1];
+  //       MeshPoint b_end = mesh[pi2] + height * limits[pi2] * growthvectors[pi2];
 
-        double TAN_ALPHA_LIMIT = 0.36397; // Approximately 20 degrees in radians
-        if (tan_alpha > TAN_ALPHA_LIMIT) {
-            if (a_vec_y > b_vec_y) {
-                double correction = (TAN_ALPHA_LIMIT / tan_alpha * diff_perpendicular + b_vec_y) / a_vec_y;
-                limits[pi1] *= correction;
-            }
-            else {
-                double correction = (TAN_ALPHA_LIMIT / tan_alpha * diff_perpendicular + a_vec_y) / b_vec_y;
-                limits[pi2] *= correction;
-            }
-        }
-    };
+  //       double ab_base = (b_base - a_base).Length();
+  //       Vec<3> a_vec = (a_end - a_base);
+  //       Vec<3> b_vec = (b_end - b_base);
 
-    auto neighbour_limiter = [&](PointIndex pi1, PointIndex pi2, SurfaceElementIndex si) {
-        parallel_limiter(pi1, pi2, si);
-        perpendicular_limiter(pi1, pi2, si);
-    };
-    
-    auto modifiedsmooth = [&](size_t nsteps) {
-        for (auto i : Range(nsteps))
-            for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
-            {
-            // assuming triangle
-            neighbour_limiter(mesh[sei].PNum(1), mesh[sei].PNum(2), sei);
-            neighbour_limiter(mesh[sei].PNum(2), mesh[sei].PNum(3), sei);
-            neighbour_limiter(mesh[sei].PNum(3), mesh[sei].PNum(1), sei);  
-        }
-    };
+  //       // Calculate parallel projections
+  //       Vec<3> ab_base_norm = (b_base - a_base).Normalize();
+  //       double a_vec_x = Dot(a_vec, ab_base_norm);
+  //       double b_vec_x = Dot(b_vec, -ab_base_norm);
+  //       double ratio_parallel = (a_vec_x + b_vec_x) / ab_base;
 
-    auto smooth = [&] (size_t nsteps) {
-        for(auto i : Range(nsteps))
-            for(const auto & sel : mesh.SurfaceElements())
-            {
-                double min_limit = 999;
-                for(auto pi : sel.PNums())
-                    min_limit = min(min_limit, limits[pi]);
-                for(auto pi : sel.PNums())
-                    limits[pi] = min(limits[pi], 1.4*min_limit);
-            }
-    };
+  //       double PARALLEL_RATIO_LIMIT = 0.85;
+  //       if (ratio_parallel > PARALLEL_RATIO_LIMIT) {
+  //           // Adjust limits, vectors, and projections if parallel ratio exceeds the limit
+  //           double corrector = PARALLEL_RATIO_LIMIT / ratio_parallel;
+  //           limits[pi1] *= corrector;
+  //           limits[pi2] *= corrector;
+  //       }
+  //   };      
+  //   
+  //   auto perpendicular_limiter = [&](PointIndex pi1, PointIndex pi2, SurfaceElementIndex si) {
+  //       // this part is same as in parallel limiter, but note that limits contents are already changed
+  //       MeshPoint& a_base = mesh[pi1];
+  //       MeshPoint& b_base = mesh[pi2];
+  //       MeshPoint a_end = mesh[pi1] + height * limits[pi1] * growthvectors[pi1];
+  //       MeshPoint b_end = mesh[pi2] + height * limits[pi2] * growthvectors[pi2];
 
-    // check for self-intersection within new elements (prisms/hexes)
-    auto self_intersection = [&] () {
-        for(SurfaceElementIndex sei : mesh.SurfaceElements().Range())
-          {
-            auto facei = mesh[sei].GetIndex();
-            if(facei < nfd_old && !params.surfid.Contains(facei))
-                continue;
+  //       double ab_base = (b_base - a_base).Length();
+  //       Vec<3> a_vec = (a_end - a_base);
+  //       Vec<3> b_vec = (b_end - b_base);
 
-            auto sel = mesh[sei];
-            auto np = sel.GetNP();
-            // check if a new edge intesects the plane of any opposing face
-            double lam0, lam1;
-            for(auto i : Range(np))
-                for(auto fi : Range(np-2))
-                    if(isIntersectingPlane(GetMappedSeg(sel[i]), GetMappedFace(sei, i+fi+1), lam0, lam1))
-                        if(lam0 < 1.0)
-                            limits[sel[i]] *= lam0;
-          }
-    };
+  //       // Calculate parallel projections
+  //       Vec<3> ab_base_norm = (b_base - a_base).Normalize();
+  //       double a_vec_x = Dot(a_vec, ab_base_norm);
+  //       double b_vec_x = Dot(b_vec, -ab_base_norm);
+  //       double ratio_parallel = (a_vec_x + b_vec_x) / ab_base;
 
-    // first step: intersect with other surface elements that are boundary of domain the layer is grown into
-    // second (and subsequent) steps: intersect with other boundary layers, allow restriction by 20% in each step
-    auto changed_domains = domains;
-      if(!params.outside)
-          changed_domains.Invert();
+  //       // Calculate surface normal at point si
+  //       Vec<3> surface_normal = getNormal(mesh[si]);
 
-    bool limit_reached = true;
-    double lam_lower_limit = 1.0;
-    int step = 0;
+  //       double a_vec_y = abs(Dot(a_vec, surface_normal));
+  //       double b_vec_y = abs(Dot(b_vec, surface_normal));
+  //       double diff_perpendicular = abs(a_vec_y - b_vec_y);
+  //       double tan_alpha = diff_perpendicular / (ab_base - a_vec_x - b_vec_x);
 
-    while(step<2)
-    {
-        Array<double, PointIndex> new_limits;
-        new_limits.SetSize(np);
-        new_limits = 1.0;
+  //       double TAN_ALPHA_LIMIT = 0.36397; // Approximately 20 degrees in radians
+  //       if (tan_alpha > TAN_ALPHA_LIMIT) {
+  //           if (a_vec_y > b_vec_y) {
+  //               double correction = (TAN_ALPHA_LIMIT / tan_alpha * diff_perpendicular + b_vec_y) / a_vec_y;
+  //               limits[pi1] *= correction;
+  //           }
+  //           else {
+  //               double correction = (TAN_ALPHA_LIMIT / tan_alpha * diff_perpendicular + a_vec_y) / b_vec_y;
+  //               limits[pi2] *= correction;
+  //           }
+  //       }
+  //   };
 
-    // if(step==1) break;
+  //   auto neighbour_limiter = [&](PointIndex pi1, PointIndex pi2, SurfaceElementIndex si) {
+  //       parallel_limiter(pi1, pi2, si);
+  //       perpendicular_limiter(pi1, pi2, si);
+  //   };
+  //   
+  //   auto modifiedsmooth = [&](size_t nsteps) {
+  //       for (auto i : Range(nsteps))
+  //           for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
+  //           {
+  //           // assuming triangle
+  //           neighbour_limiter(mesh[sei].PNum(1), mesh[sei].PNum(2), sei);
+  //           neighbour_limiter(mesh[sei].PNum(2), mesh[sei].PNum(3), sei);
+  //           neighbour_limiter(mesh[sei].PNum(3), mesh[sei].PNum(1), sei);  
+  //       }
+  //   };
 
-        if(step>1)
-            lam_lower_limit *= 0.8;
-        limit_reached = false;
+  //   auto smooth = [&] (size_t nsteps) {
+  //       for(auto i : Range(nsteps))
+  //           for(const auto & sel : mesh.SurfaceElements())
+  //           {
+  //               double min_limit = 999;
+  //               for(auto pi : sel.PNums())
+  //                   min_limit = min(min_limit, limits[pi]);
+  //               for(auto pi : sel.PNums())
+  //                   limits[pi] = min(limits[pi], 1.4*min_limit);
+  //           }
+  //   };
 
-        // build search tree with all surface elements (bounding box of a surface element also covers the generated boundary layer)
-        Box<3> bbox(Box<3>::EMPTY_BOX);
-        for(auto pi : mesh.Points().Range())
-        {
-            bbox.Add(mesh[pi]);
-            bbox.Add(mesh[pi]+limits[pi]*height*growthvectors[pi]);
-        }
-        BoxTree<3> tree(bbox);
+  //   // check for self-intersection within new elements (prisms/hexes)
+  //   auto self_intersection = [&] () {
+  //       for(SurfaceElementIndex sei : mesh.SurfaceElements().Range())
+  //         {
+  //           auto facei = mesh[sei].GetIndex();
+  //           if(facei < nfd_old && !params.surfid.Contains(facei))
+  //               continue;
 
-        for(auto sei : mesh.SurfaceElements().Range())
-        {
-            const auto & sel = mesh[sei];
-            Box<3> box(Box<3>::EMPTY_BOX);
-            const auto& fd = mesh.GetFaceDescriptor(sel.GetIndex());
-            if(!changed_domains.Test(fd.DomainIn()) &&
-               !changed_domains.Test(fd.DomainOut()))
-              continue;
-            for(auto pi : sel.PNums())
-                box.Add(mesh[pi]);
-            // also add moved points to bounding box
-            if(params.surfid.Contains(sel.GetIndex()))
-                for(auto pi : sel.PNums())
-                    box.Add(mesh[pi]+limits[pi]*height*growthvectors[pi]);
-            tree.Insert(box, sei);
-        }
+  //           auto sel = mesh[sei];
+  //           auto np = sel.GetNP();
+  //           // check if a new edge intesects the plane of any opposing face
+  //           double lam0, lam1;
+  //           for(auto i : Range(np))
+  //               for(auto fi : Range(np-2))
+  //                   if(isIntersectingPlane(GetMappedSeg(sel[i]), GetMappedFace(sei, i+fi+1), lam0, lam1))
+  //                       if(lam0 < 1.0)
+  //                           limits[sel[i]] *= lam0;
+  //         }
+  //   };
 
-        for(auto pi : mesh.Points().Range())
-        {
-            if(mesh[pi].Type() == INNERPOINT)
-                continue;
-            if(growthvectors[pi].Length2() == 0.0)
-                continue;
-            const auto debug = false;
-            Box<3> box(Box<3>::EMPTY_BOX);
-            auto seg = GetMappedSeg(pi);
-            box.Add(seg[0]);
-            box.Add(seg[1]);
-            double lam = 1.0;
-            tree.GetFirstIntersecting(box.PMin(), box.PMax(), [&](SurfaceElementIndex sei)
-              {
-                const auto & sel = mesh[sei];
-                if(sel.PNums().Contains(pi))
-                    return false;
-                                      cout << "LIMIT STEP " << step << endl;
-                if(step == 0)
-                  LimitGrowthVector(pi, sei, new_limits, {-1, 0});
-                else
-                  LimitGrowthVector(pi, sei, new_limits, {-2, -1});
-                // auto face = GetMappedFace(sei, -2);
-                // double lam0_ = 999;
-                // double lam1_ = 999;
-                // bool is_bl_sel = params.surfid.Contains(sel.GetIndex());
+  //   // first step: intersect with other surface elements that are boundary of domain the layer is grown into
+  //   // second (and subsequent) steps: intersect with other boundary layers, allow restriction by 20% in each step
+  //   auto changed_domains = domains;
+  //     if(!params.outside)
+  //         changed_domains.Invert();
 
-                // if (step == 0)
-                // {
-                //     face = GetFace(sei);
-                //     if (isIntersectingFace(seg, face, lam0_, lam1_))
-                //     {
-                //         if(lam0_ < lam) {
-                //         if(debug) cout << "intersecting face " << sei << endl;
-                //         if(debug) cout << "\t" << lam0_ << endl;
-                //                       }
-                //         // if (is_bl_sel)
-                //         //     lam_ *= params.limit_safety;
-                //         lam = min(lam, lam0_);
-                //     }
-                // }
+  //   bool limit_reached = true;
+  //   double lam_lower_limit = 1.0;
+  //   int step = 0;
 
-                // if(step==1)
-                // {
-                //     if(isIntersectingFace(seg, face, lam0_, lam1_))
-                //     {
-                //         // if(is_bl_sel) // allow only half the distance if the opposing surface element has a boundary layer too
-                //         //     lam_ *= params.limit_safety;
-                //         lam = min(lam, lam0_);
-                //     }
-                // }
-                // // if the opposing surface element has a boundary layer, we need to additionally intersect with the new faces 
-                // if(step>1 && is_bl_sel)
-                // {
-                //     for(auto facei : Range(-1, sel.GetNP()))
-                //     {
-                //         auto face = GetMappedFace(sei, facei);
-                //         if(isIntersectingFace(seg, face, lam0_, lam1_)) // && lam_ > other_limit)
-                //         {
-                //             lam = min(lam, lam0_);
-                //         }
-                //     }
-                // }
-                return false;
-              });
-            // if(lam<1)
-            // {
-            //     if(lam<lam_lower_limit && step>1)
-            //     {
-            //         limit_reached = true;
-            //         lam = lam_lower_limit;
-            //     }
-            // }
+  //   while(step<2)
+  //   {
+  //       Array<double, PointIndex> new_limits;
+  //       new_limits.SetSize(np);
+  //       new_limits = 1.0;
 
-            // new_limits[pi] = min(limits[pi], lam* limits[pi]);
-        }
-        // cout << "new limits " << endl;
-        // cout << new_limits << endl;
-        // for(auto pi : mesh.Points().Range())
-        //   if(growthvectors[pi].Length2())
-        //   {
-        //     if(new_limits[pi] < 0.001) {
-        //       cout << pi << " " << new_limits[pi] << endl;
-        //       new_limits[pi] = 0.001;
-        //     }
-        //   }
+  //   // if(step==1) break;
 
-        if(step == 0) {
-      cout << "limit with 0.9" << endl;
-          for(auto & v : new_limits)
-            v *= 0.9;
-        }
-        for(auto i : Range(limits))
-          limits[i] *= new_limits[i];
-    cout << "new limits " << endl << limits << endl;
-        // for(auto pi : mesh.Points().Range())
-        //   if(growthvectors[pi].Length2())
-        //     cout << "apply limit " << pi << " \t" << limits[pi] << endl;
+  //       if(step>1)
+  //           lam_lower_limit *= 0.8;
+  //       limit_reached = false;
+
+  //       // build search tree with all surface elements (bounding box of a surface element also covers the generated boundary layer)
+
+  //       for(auto pi : mesh.Points().Range())
+  //       {
+  //           if(mesh[pi].Type() == INNERPOINT)
+  //               continue;
+  //           if(growthvectors[pi].Length2() == 0.0)
+  //               continue;
+  //           const auto debug = false;
+  //           Box<3> box(Box<3>::EMPTY_BOX);
+  //           auto seg = GetMappedSeg(pi);
+  //           box.Add(seg[0]);
+  //           box.Add(seg[1]);
+  //           double lam = 1.0;
+  //           tree.GetFirstIntersecting(box.PMin(), box.PMax(), [&](SurfaceElementIndex sei)
+  //             {
+  //               const auto & sel = mesh[sei];
+  //               if(sel.PNums().Contains(pi))
+  //                   return false;
+  //                                     cout << "LIMIT STEP " << step << endl;
+  //               if(step == 0)
+  //                 LimitGrowthVector(pi, sei, new_limits, {-1, 0});
+  //               else
+  //                 LimitGrowthVector(pi, sei, new_limits, {-2, -1});
+  //               // auto face = GetMappedFace(sei, -2);
+  //               // double lam0_ = 999;
+  //               // double lam1_ = 999;
+  //               // bool is_bl_sel = params.surfid.Contains(sel.GetIndex());
+
+  //               // if (step == 0)
+  //               // {
+  //               //     face = GetFace(sei);
+  //               //     if (isIntersectingFace(seg, face, lam0_, lam1_))
+  //               //     {
+  //               //         if(lam0_ < lam) {
+  //               //         if(debug) cout << "intersecting face " << sei << endl;
+  //               //         if(debug) cout << "\t" << lam0_ << endl;
+  //               //                       }
+  //               //         // if (is_bl_sel)
+  //               //         //     lam_ *= params.limit_safety;
+  //               //         lam = min(lam, lam0_);
+  //               //     }
+  //               // }
+
+  //               // if(step==1)
+  //               // {
+  //               //     if(isIntersectingFace(seg, face, lam0_, lam1_))
+  //               //     {
+  //               //         // if(is_bl_sel) // allow only half the distance if the opposing surface element has a boundary layer too
+  //               //         //     lam_ *= params.limit_safety;
+  //               //         lam = min(lam, lam0_);
+  //               //     }
+  //               // }
+  //               // // if the opposing surface element has a boundary layer, we need to additionally intersect with the new faces 
+  //               // if(step>1 && is_bl_sel)
+  //               // {
+  //               //     for(auto facei : Range(-1, sel.GetNP()))
+  //               //     {
+  //               //         auto face = GetMappedFace(sei, facei);
+  //               //         if(isIntersectingFace(seg, face, lam0_, lam1_)) // && lam_ > other_limit)
+  //               //         {
+  //               //             lam = min(lam, lam0_);
+  //               //         }
+  //               //     }
+  //               // }
+  //               return false;
+  //             });
+  //           // if(lam<1)
+  //           // {
+  //           //     if(lam<lam_lower_limit && step>1)
+  //           //     {
+  //           //         limit_reached = true;
+  //           //         lam = lam_lower_limit;
+  //           //     }
+  //           // }
+
+  //           // new_limits[pi] = min(limits[pi], lam* limits[pi]);
+  //       }
+  //       // cout << "new limits " << endl;
+  //       // cout << new_limits << endl;
+  //       // for(auto pi : mesh.Points().Range())
+  //       //   if(growthvectors[pi].Length2())
+  //       //   {
+  //       //     if(new_limits[pi] < 0.001) {
+  //       //       cout << pi << " " << new_limits[pi] << endl;
+  //       //       new_limits[pi] = 0.001;
+  //       //     }
+  //       //   }
+
+  //       if(step == 0) {
+  //     cout << "limit with 0.9" << endl;
+  //         for(auto & v : new_limits)
+  //           v *= 0.9;
+  //       }
+  //       for(auto i : Range(limits))
+  //         limits[i] *= new_limits[i];
+  //   cout << "new limits " << endl << limits << endl;
+  //       // for(auto pi : mesh.Points().Range())
+  //       //   if(growthvectors[pi].Length2())
+  //       //     cout << "apply limit " << pi << " \t" << limits[pi] << endl;
 
 
-        // break;
-        // if (step > 0)
-        //    modifiedsmooth(1);
-        step++;
-    }
+  //       // break;
+  //       // if (step > 0)
+  //       //    modifiedsmooth(1);
+  //       step++;
+  //   }
 
-    // self_intersection();
-    // modifiedsmooth(1);
+  //   // self_intersection();
+  //   // modifiedsmooth(1);
 
-  cout << "final limits " << limits << endl;
-    for(auto pi : Range(growthvectors))
-        growthvectors[pi] *= limits[pi];
+  // cout << "final limits " << limits << endl;
+  //   for(auto pi : Range(growthvectors))
+  //       growthvectors[pi] *= limits[pi];
 
-  }
+  // }
 
 
   // depending on the geometry type, the mesh contains segments multiple times (once for each face)
