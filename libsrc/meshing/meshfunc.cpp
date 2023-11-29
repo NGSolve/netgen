@@ -359,8 +359,10 @@ namespace netgen
 
    if (mesh.HasOpenQuads())
    {
-      if(debugparam.write_mesh_on_error)
+      if(debugparam.write_mesh_on_error) {
         md.mesh->Save("open_quads_"+ToString(md.domain)+".vol.gz");
+        GetOpenElements(*md.mesh, md.domain)->Save("open" + ToString(md.domain)+".vol");
+      }
       PrintSysError ("mesh has still open quads");
       throw NgException ("Stop meshing since too many attempts");
       // return MESHING3_GIVEUP;
