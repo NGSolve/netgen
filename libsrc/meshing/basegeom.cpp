@@ -1057,12 +1057,6 @@ namespace netgen
     }
 
     xbool do_invert = maybe;
-    if(dst.identifications[0].type == Identifications::PERIODIC)
-      {
-        auto other = static_cast<GeometryFace*>(dst.primary);
-        if(dst.domin != other->domout && dst.domout != other->domin)
-          do_invert = true;
-      }
 
     // now insert mapped surface elements
     for(auto sei : mesh.SurfaceElements().Range())
