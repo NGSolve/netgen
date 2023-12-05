@@ -3458,6 +3458,14 @@ namespace netgen
             if(name != "")
               cout << " with name " << name;
             cout << endl;
+            if(mesh->GetDimension() == 3) {
+              auto & fd = mesh->GetFaceDescriptor(sel.GetIndex());
+              auto domin = fd.DomainIn();
+              auto domout = fd.DomainOut();
+              string name_in = domin >0 ? mesh->GetMaterial(domin) : "";
+              string name_out = domout >0 ? mesh->GetMaterial(domout) : "";
+              cout << "\tadjacent domains " << domin << ": " << name_in << ", " << domout << ": " << name_out << endl;
+            }
             cout << "\tpoint: " << p << endl;;
             cout << "\tnodes: ";
             for (int i = 1; i <= sel.GetNP(); i++)
