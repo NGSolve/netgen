@@ -4723,7 +4723,7 @@ namespace netgen
   SurfaceElementActive(const SolData *data, const Mesh & mesh, const Element2d & el)
   {
     if(data == nullptr) return true;
-    bool is_active = data->draw_surface;
+    bool is_active = true;
     if (vispar.drawdomainsurf > 0)
       {
         if (mesh.GetDimension() == 3)
