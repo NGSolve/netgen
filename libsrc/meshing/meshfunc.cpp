@@ -275,7 +275,6 @@ namespace netgen
     auto & mesh = *md.mesh;
     auto domain = md.domain;
     MeshingParameters & mp = md.mp;
-    cout << "try to close open quads " << md.domain << endl;
 
     int oldne;
     if (multithread.terminate)
@@ -283,7 +282,6 @@ namespace netgen
     
     mesh.CalcSurfacesOfNode();
     mesh.FindOpenElements(domain);
-    cout << "\thave close open elements " << mesh.GetNOpenElements() << endl;
     
     if (!mesh.GetNOpenElements())
       return;
@@ -294,7 +292,6 @@ namespace netgen
        
        if (mesh.HasOpenQuads())
          {
-           cout << "\thave close open quads" << endl;
            string rulefile = ngdir;
            
            const char ** rulep = NULL;
@@ -356,7 +353,6 @@ namespace netgen
              << "mesh has " << mesh.GetNE() << " prism/pyramid elements" << endl;
            
            mesh.FindOpenElements(domain);
-           cout << "\thave close open elements " << mesh.GetNOpenElements() << endl;
          }
      }
    
@@ -364,8 +360,8 @@ namespace netgen
    if (mesh.HasOpenQuads())
    {
       if(debugparam.write_mesh_on_error) {
-        md.mesh->Save("open_quads_"+ToString(md.domain)+".vol.gz");
-        GetOpenElements(*md.mesh, md.domain)->Save("open" + ToString(md.domain)+".vol");
+        md.mesh->Save("open_quads_starting_mesh_"+ToString(md.domain)+".vol.gz");
+        GetOpenElements(*md.mesh, md.domain)->Save("open_quads_rest_" + ToString(md.domain)+".vol.gz");
       }
       PrintSysError ("mesh has still open quads");
       throw NgException ("Stop meshing since too many attempts");

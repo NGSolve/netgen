@@ -456,7 +456,7 @@ namespace netgen
                 const auto& seg = (*mesh)[si];
                 Point<3> c = Center((*mesh)[seg[0]], (*mesh)[seg[1]]);
 		glRasterPos3d (c[0], c[1], c[2]);
-		snprintf (buf, size(buf),  "%d", int(seg.edgenr));
+		snprintf (buf, size(buf),  "%d", int(si));
 		MyOpenGLText (buf);
               }
             }
@@ -507,10 +507,7 @@ namespace netgen
                                (*mesh)[sel[2]],
                                (*mesh)[sel[3]]);
                   glRasterPos3d (c[0], c[1], c[2]);
-                  // auto & fd = mesh->GetFaceDescriptor(sel.GetIndex());
-                  // string s = ToString(fd.DomainIn()) + "/" + ToString(fd.DomainOut());
-                  // snprintf (buf, size(buf),  "%s", s.c_str());
-                  snprintf (buf, size(buf),  "%d", int(sel.GetIndex()));
+                  snprintf (buf, size(buf),  "%d", int(sei));
                   MyOpenGLText (buf);
                 }
             }

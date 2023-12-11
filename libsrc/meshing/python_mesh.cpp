@@ -1298,7 +1298,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                CreateMPfromKwargs(mp, kwargs);
              }
              MeshVolume (mp, self);
-             // OptimizeVolume (mp, self);
+             OptimizeVolume (mp, self);
            }, py::arg("mp")=nullptr,
           meshingparameter_description.c_str(),
           py::call_guard<py::gil_scoped_release>())
