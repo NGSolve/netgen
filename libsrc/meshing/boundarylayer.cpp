@@ -1476,14 +1476,23 @@ struct GrowthVectorLimiter {
     mapto.SetSize(0);
     mapto.SetSize(np);
 
+    auto & identifications = mesh.GetIdentifications();
+    const int identnr = identifications.GetNr("boundarylayer");
+    identifications.SetType(identnr, Identifications::CLOSESURFACES);
+
     auto add_points = [&](PointIndex pi, Vec<3> & growth_vector, Array<PointIndex> & new_points)
     {
       Point<3> p = mesh[pi];
+      PointIndex pi_last = pi;
       for(auto i : Range(params.heights))
         {
           // p += params.heights[i] * growth_vector;
-          new_points.Append(mesh.AddPoint(p));
-          growth_vector_map[new_points.Last()] = { &growth_vector, params.heights[i] };
+          auto pi_new = mesh.AddPoint(p);
+          new_points.Append(pi_new);
+          growth_vector_map[pi_new] = { &growth_vector, params.heights[i] };
+          if(special_boundary_points.count(pi) == 0)
+            mesh.GetIdentifications().Add(pi_last, pi_new, identnr);
+          pi_last = pi_new;
         }
     };
 
@@ -1660,14 +1669,34 @@ struct GrowthVectorLimiter {
           }
       }
 
+    auto getClosestGroup = [&] (PointIndex pi, SurfaceElementIndex sei)
+    {
+      auto n = numGroups(pi);
+      if(n == 1) return 0;
+      const auto & sel = mesh[sei];
+      auto igroup = 0;
+      double distance = 1e99;
+      for(auto j : Range(n)) {
+        auto g = getGroups(pi, sel.GetIndex());
+        auto vcenter = Center(mesh[sel[0]], mesh[sel[1]], mesh[sel[2]]);
+        auto dist = (vcenter-(mesh[pi]+special_boundary_points[pi].growth_groups[j].growth_vector)).Length2();
+        if(dist < distance) {
+          distance = dist;
+          igroup = j;
+        }
+      }
+      return igroup;
+    };
+
     BitArray fixed_points(np+1);
     fixed_points.Clear();
     BitArray moveboundarypoint(np+1);
     moveboundarypoint.Clear();
+    auto p2el = mesh.CreatePoint2ElementTable();
     for(SurfaceElementIndex si = 0; si < nse; si++)
       {
         // copy because surfaceels array will be resized!
-        auto sel = mesh[si];
+        const auto sel = mesh[si];
         if(moved_surfaces.Test(sel.GetIndex()))
           {
             Array<PointIndex> points(sel.PNums());
@@ -1696,7 +1725,13 @@ struct GrowthVectorLimiter {
                 cout << getGroups(sel[i], sel.GetIndex()) << endl;
               }
               groups[i] = getGroups(sel[i], sel.GetIndex())[igroup];
+              // groups[i] = getClosestGroup(sel[i], sel.GetIndex());
+            
             }
+            bool add_volume_element = true;
+            for(auto pi : sel.PNums())
+              if(numGroups(pi)>1)
+                add_volume_element = false;
             for(auto j : Range(params.heights))
               {
                 auto eltype = points.Size() == 3 ? PRISM : HEX;
@@ -1709,13 +1744,42 @@ struct GrowthVectorLimiter {
                 for(auto i : Range(points))
                   el[sel.PNums().Size() + i] = points[i];
                 el.SetIndex(new_mat_nrs[sel.GetIndex()]);
-                mesh.AddVolumeElement(el);
+                if(add_volume_element)
+                  mesh.AddVolumeElement(el);
               }
             Element2d newel = sel;
             for(auto i: Range(points))
               newel[i] = newPoint(sel[i], -1, groups[i]);
             newel.SetIndex(si_map[sel.GetIndex()]);
             mesh.AddSurfaceElement(newel);
+
+            // also move volume element adjacent to this surface element accordingly
+            ElementIndex ei = -1;
+            // if(groups[0] || groups[1] || groups[2])
+            // for(auto ei_ : p2el[sel.PNums()[0]])
+            //   {
+            //     const auto & el = mesh[ei_];
+            //     // if(!domains.Test(el.GetIndex())) continue;
+            //     cout << "check " << ei_ << "\t" << el << "\t" << sel << endl;
+            //     auto pnums = el.PNums();
+            //     if(pnums.Contains(sel[1]) && pnums.Contains(sel[2])) {
+            //       ei = ei_;
+            //       break;
+            //     }
+            //   }
+            if(ei != -1) {
+              cout << "move " << ei << mesh[ei] << endl;
+              auto & el = mesh[ei];
+              for (auto i : Range(el.GetNP()))
+                for (auto j : Range(3)) 
+                {
+                  if(groups[j] && el[i] == sel[j]) {
+                    el[i] = newel[j];
+                    break;
+                  }
+                }
+              cout << "after " << ei << mesh[ei] << endl;
+            }
           }
         else
           {
@@ -1822,8 +1886,15 @@ struct GrowthVectorLimiter {
         if(do_move)
           {
             for(auto& p : mesh[ei].PNums())
-              if(hasMoved(p))
-                p = newPoint(p);
+              if(hasMoved(p)) {
+                if(special_boundary_points.count(p)) {
+                  auto & special_point = special_boundary_points[p];
+                  auto & group = special_point.growth_groups[0];
+                  p = group.new_points.Last();
+                }
+                else
+                  p = newPoint(p);
+              }
           }
         if(do_insert)
           {
@@ -2052,6 +2123,7 @@ struct GrowthVectorLimiter {
 
 
       FixVolumeElements();
+
       InsertNewElements(segmap, in_surface_direction);
 
       SetDomInOut();
@@ -2060,9 +2132,9 @@ struct GrowthVectorLimiter {
       mesh.CalcSurfacesOfNode();
       topo.SetBuildVertex2Element(true);
       mesh.UpdateTopology();
+      InterpolateGrowthVectors();
 
       // cout << "growthvectors before "  << endl<< growthvectors << endl;
-      InterpolateGrowthVectors();
       // cout << "growthvectors after " << endl << growthvectors << endl;
 
       if(params.limit_growth_vectors)

@@ -275,6 +275,7 @@ namespace netgen
     auto & mesh = *md.mesh;
     auto domain = md.domain;
     MeshingParameters & mp = md.mp;
+    cout << "try to close open quads " << md.domain << endl;
 
     int oldne;
     if (multithread.terminate)
@@ -282,6 +283,7 @@ namespace netgen
     
     mesh.CalcSurfacesOfNode();
     mesh.FindOpenElements(domain);
+    cout << "\thave close open elements " << mesh.GetNOpenElements() << endl;
     
     if (!mesh.GetNOpenElements())
       return;
@@ -292,6 +294,7 @@ namespace netgen
        
        if (mesh.HasOpenQuads())
          {
+           cout << "\thave close open quads" << endl;
            string rulefile = ngdir;
            
            const char ** rulep = NULL;
@@ -353,6 +356,7 @@ namespace netgen
              << "mesh has " << mesh.GetNE() << " prism/pyramid elements" << endl;
            
            mesh.FindOpenElements(domain);
+           cout << "\thave close open elements " << mesh.GetNOpenElements() << endl;
          }
      }
    
