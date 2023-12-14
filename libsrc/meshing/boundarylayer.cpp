@@ -1677,7 +1677,7 @@ struct GrowthVectorLimiter {
       auto igroup = 0;
       double distance = 1e99;
       for(auto j : Range(n)) {
-        auto g = getGroups(pi, sel.GetIndex());
+        // auto g = getGroups(pi, sel.GetIndex());
         auto vcenter = Center(mesh[sel[0]], mesh[sel[1]], mesh[sel[2]]);
         auto dist = (vcenter-(mesh[pi]+special_boundary_points[pi].growth_groups[j].growth_vector)).Length2();
         if(dist < distance) {
@@ -1685,7 +1685,7 @@ struct GrowthVectorLimiter {
           igroup = j;
         }
       }
-      return igroup;
+      return getGroups(pi, sel.GetIndex())[igroup];
     };
 
     BitArray fixed_points(np+1);
@@ -1701,33 +1701,9 @@ struct GrowthVectorLimiter {
           {
             Array<PointIndex> points(sel.PNums());
             if(surfacefacs[sel.GetIndex()] > 0) Swap(points[0], points[2]);
-            Array<int> groups(points.Size());
-            for(auto i : Range(points)) {
-              auto n = numGroups(sel[i]);
-              auto igroup = 0;
-              if(n > 1) {
-                double distance = 1e99;
-                for(auto j : Range(n)) {
-                  auto g = getGroups(sel[i], sel.GetIndex());
-                  auto vcenter = Center(mesh[sel[0]], mesh[sel[1]], mesh[sel[2]]);
-                  auto dist = (vcenter-(mesh[sel[i]]+special_boundary_points[sel[i]].growth_groups[j].growth_vector)).Length2();
-                  // cout << "check dist " << dist << ", " << distance << ", " << sel << endl;
-                  if(dist < distance) {
-                      distance = dist;
-                      igroup = j;
-                      // cout << "set igroup " << igroup << endl;
-                  }
-                }
-                
-                // if(g.Size()>1 && vcenter * special_boundary_points[sel[i]].growth_groups[0].growth_vector < 0)
-                //   igroup = 1;
-                cout<< "have " << n << " groups, choose " << igroup << endl;
-                cout << getGroups(sel[i], sel.GetIndex()) << endl;
-              }
-              groups[i] = getGroups(sel[i], sel.GetIndex())[igroup];
-              // groups[i] = getClosestGroup(sel[i], sel.GetIndex());
-            
-            }
+            ArrayMem<int, 4> groups(points.Size());
+            for(auto i : Range(points))
+              groups[i] = getClosestGroup(sel[i], si);
             bool add_volume_element = true;
             for(auto pi : sel.PNums())
               if(numGroups(pi)>1)
@@ -2137,8 +2113,8 @@ struct GrowthVectorLimiter {
       // cout << "growthvectors before "  << endl<< growthvectors << endl;
       // cout << "growthvectors after " << endl << growthvectors << endl;
 
-      if(params.limit_growth_vectors)
-        LimitGrowthVectorLengths();
+      // if(params.limit_growth_vectors)
+      //   LimitGrowthVectorLengths();
 
       for (auto [pi, data] : growth_vector_map) {
         auto [gw, height] = data;
