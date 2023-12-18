@@ -32,6 +32,7 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
   while(true) {
     fin >> token;
     int index;
+    // cout << "token: " << token << endl;
     if(token == "End") {
       break;
     }
@@ -94,7 +95,72 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
           mesh.AddVolumeElement(el);
       }
     }
+    else if(token == "Corners") {
+      int ncorners;
+      fin >> ncorners;
+      Element0d el;
+      for(auto k : Range(ncorners)) {
+          fin >> el.pnum;
+      }
+    }
+    else if(token == "RequiredVertices") {
+      int nverts;
+      fin >> nverts;
+      int vert;
+      for(auto k : Range(nverts)) {
+          fin >> vert;
+      }
+    }
+    else if(token == "Normals") {
+      int nnormals;
+      fin >> nnormals;
+      Vec<3> normal;
+      for(auto k : Range(nnormals)) {
+          fin >> normal[0];
+          fin >> normal[1];
+          fin >> normal[2];
+      }
+    }
+    else if(token == "NormalAtVertices") {
+      int nnormals;
+      fin >> nnormals;
+      int vert;
+      int normal;
+      for(auto k : Range(nnormals)) {
+        fin >> normal;
+        fin >> vert;
+      }
+    }
+    else if(token == "Tangents") {
+      int ntangents;
+      fin >> ntangents;
+      Vec<3> tangent;
+      for(auto k : Range(ntangents)) {
+        fin >> tangent[0];
+        fin >> tangent[1];
+        fin >> tangent[2];
+      }
+    }
+    else if(token == "TangentAtVertices") {
+      int ntangents;
+      fin >> ntangents;
+      int vert;
+      int tangent;
+      for(auto k : Range(ntangents)) {
+        fin >> tangent;
+        fin >> vert;
+      }
+    }
+    else if(token == "Ridges") {
+      int nridges;
+      fin >> nridges;
+      int ridge;
+      for(auto k : Range(nridges)) {
+        fin >> ridge;
+      }
+    }
     else {
+      cout << "unknown token " << token << endl;
       int nitems;
       fin >> nitems;
       string s;
