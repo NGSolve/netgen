@@ -2973,7 +2973,7 @@ namespace netgen
     haltsegment = 0;
     haltsegmentp1 = 0;
     haltsegmentp2 = 0;
-    write_mesh_on_error = false;
+    write_mesh_on_error = getenv("NG_WRITE_MESH_ON_ERROR");
   };
 
 
