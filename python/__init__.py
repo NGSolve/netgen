@@ -47,3 +47,14 @@ from netgen.libngpy._meshing import _Redraw
 
 def Redraw(*args, **kwargs):
     return _Redraw(*args, **kwargs)
+
+from pyngcore import Timer
+def TimeFunction(func, name=None):
+    name = name or func.__qualname__
+    timer = Timer(name)
+    def retfunc(*args,**kwargs):
+        with timer:
+            ret = func(*args, **kwargs)
+        return ret
+    return retfunc
+
