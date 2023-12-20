@@ -293,5 +293,35 @@ threads : int
 #endif // NETGEN_TRACE_MEMORY
     ;
 
-
+    py::class_<Timer<>> (m, "Timer")
+    .def(py::init<const string&>())
+    .def("Start", static_cast<void (Timer<>::*)()const>(&Timer<>::Start), "start timer")
+    .def("Stop", static_cast<void (Timer<>::*)()const>(&Timer<>::Stop), "stop timer")
+    .def_property_readonly("time", &Timer<>::GetTime, "returns time")
+    .def("__enter__", static_cast<void (Timer<>::*)()const>(&Timer<>::Start))
+    .def("__exit__", [](Timer<>& t, py::object, py::object, py::object)
+                     {
+                       t.Stop();
+                     })
+    ;
+  
+  m.def("Timers",
+	  []() 
+	   {
+	     py::list timers;
+	     for (int i = 0; i < NgProfiler::SIZE; i++)
+	       if (!NgProfiler::timers[i].name.empty())
+               {
+                 py::dict timer;
+                 timer["name"] = py::str(NgProfiler::timers[i].name);
+                 timer["time"] = py::float_(NgProfiler::GetTime(i));
+                 timer["counts"] = py::int_(NgProfiler::GetCounts(i));
+                 timer["flops"] = py::float_(NgProfiler::GetFlops(i));
+                 timer["Gflop/s"] = py::float_(NgProfiler::GetFlops(i)/NgProfiler::GetTime(i)*1e-9);
+                 timers.append(timer);
+               }
+	     return timers;
+	   }, "Returns list of timers"
+	   );
+  m.def("ResetTimers", &NgProfiler::Reset);
 }
