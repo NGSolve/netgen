@@ -256,8 +256,8 @@ namespace netgen
               auto &s = shapes[i];
               s->nr = i;
               for(auto & ident : s->identifications)
-                  if(s.get() == ident.from)
-                      ident.to->identifications.Append(ident);
+                if(s.get() == ident.from && s.get() != ident.to)
+                  ident.to->identifications.Append(ident);
           }
       };
 
@@ -313,23 +313,23 @@ namespace netgen
               {
                   bool need_inverse = ident.from == s.get();
                   auto other = need_inverse ? ident.to : ident.from;
-                  if(other->nr < s->primary->nr)
+                  if(other->nr <= s->primary->nr)
                   {
                       auto trafo = ident.trafo;
                       if(need_inverse)
                           trafo = trafo.CalcInverse();
                       s->primary = other;
                       s->primary_to_me.Combine(trafo, s->primary_to_me);
-                      changed = true;
+                      changed = other->nr != s->primary->nr;
                   }
-                  if(other->primary->nr < s->primary->nr)
+                  if(other->primary->nr <= s->primary->nr)
                   {
                       auto trafo = ident.trafo;
                       if(need_inverse)
                           trafo = trafo.CalcInverse();
                       s->primary = other->primary;
                       s->primary_to_me.Combine(trafo, other->primary_to_me);
-                      changed = true;
+                      changed = other->primary->nr != s->primary->nr;
                   }
               }
             }
@@ -1071,7 +1071,7 @@ namespace netgen
             auto n_dist = dst.GetNormal(trafo(mesh[sel[0]]));
             Mat<3> normal_matrix;
             CalcInverse(Trans(trafo.GetMatrix()), normal_matrix);
-            do_invert = n_src * (normal_matrix * n_dist) < 0.0;
+            do_invert = (normal_matrix * n_src) * n_dist < 0.0;
         }
         auto sel_new = sel;
         sel_new.SetIndex(dst.nr+1);
