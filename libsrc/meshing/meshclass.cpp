@@ -7415,6 +7415,7 @@ namespace netgen
     auto v = pmax-pmin;
     double eps = v.Length()*1e-8;
 
+    /*
     auto onPlane = [&] (const MeshPoint & p) -> bool
     {
       auto v = p_plane-p;
@@ -7424,6 +7425,7 @@ namespace netgen
       // auto ret = fabs(v*n_plane)/l;
       return fabs(v*n_plane) < eps;
     };
+    */
 
     /*
     auto mirror = [&] (PointIndex pi) -> PointIndex

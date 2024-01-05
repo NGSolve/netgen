@@ -278,7 +278,7 @@ NGCORE_API_EXPORT void ExportSTL(py::module & m)
         throw Exception("Point not found in triangle");
       self->SetSelectTrig(trignr);
       self->SetNodeOfSelTrig(point_in_trig);
-      for(auto i : Range(count))
+      for([[maybe_unused]] auto i : Range(count))
         self->MoveSelectedPointToMiddle();
     })
     .def("Save", &STLGeometry::Save)

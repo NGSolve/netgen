@@ -165,11 +165,12 @@ namespace netgen
      }
 
      auto oldnf = mesh.GetNSE();
-     auto res = meshing.GenerateMesh (mesh, mp, mp.maxh, domain);
+     // auto res =
+     meshing.GenerateMesh (mesh, mp, mp.maxh, domain);
      for (SurfaceElementIndex sei : Range(oldnf, mesh.GetNSE()))
         mesh[sei].SetIndex (domain);
-
-     int hsteps = mp.optsteps2d;
+     
+     // int hsteps = mp.optsteps2d;
 
      const char * optstr = mp.optimize2d.c_str();
      MeshOptimize2d meshopt(mesh);
@@ -219,7 +220,7 @@ namespace netgen
 
      int np = mesh.GetNP();
      int nseg = line_segments.Size();
-     int ne = mesh.GetNSE();
+     // int ne = mesh.GetNSE();
      mesh.UpdateTopology();
 
      double total_thickness = 0.0;
@@ -246,7 +247,7 @@ namespace netgen
     Array<int> si_map(mesh.GetNFD()+2);
     si_map = -1;
 
-    int fd_old = mesh.GetNFD();
+    // int fd_old = mesh.GetNFD();
 
     int max_edge_nr = -1;
     int max_domain = -1;
@@ -284,7 +285,8 @@ namespace netgen
     {
         FaceDescriptor new_fd(0, 0, 0, -1);
         new_fd.SetBCProperty(new_domain);
-        int new_fd_index = mesh.AddFaceDescriptor(new_fd);
+        // int new_fd_index =
+        mesh.AddFaceDescriptor(new_fd);
         if(should_make_new_domain)
            mesh.SetBCName(new_domain-1, "mapped_" + mesh.GetBCName(domain-1));
     }
@@ -625,7 +627,7 @@ namespace netgen
         auto & pm0 = mapto[seg[0]];
         auto & pm1 = mapto[seg[1]];
 
-        auto newindex = si_map[domain];
+        // auto newindex = si_map[domain];
 
         Segment s = seg;
         s.geominfo[0] = {};
@@ -663,7 +665,7 @@ namespace netgen
               auto p0 = mesh[pi0];
               auto p1 = mesh[pi1];
               auto q0 = mesh[pi2];
-              auto q1 = mesh[pi3];
+              // auto q1 = mesh[pi3];
 
               Vec<2> n = {-p1[1]+p0[1], p1[0]-p0[0]};
               Vec<2> v = { q0[0]-p0[0], q0[1]-p0[1]};

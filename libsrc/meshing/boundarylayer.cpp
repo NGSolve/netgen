@@ -66,7 +66,7 @@ namespace netgen
           auto p0 = larger_trig[i];
           auto p1 = larger_trig[(i+1)%3];
           auto p2 = larger_trig[(i+2)%3];
-          auto n = Cross(p2-p1, n_trig);
+          // auto n = Cross(p2-p1, n_trig);
 
           auto v0 = (p2-p1).Normalize();
           auto v1 = (p0-p1).Normalize();
@@ -209,7 +209,7 @@ namespace netgen
         Vec<3> ab_base_norm = (b_base - a_base).Normalize();
         double a_vec_x = Dot(a_vec, ab_base_norm);
         double b_vec_x = Dot(b_vec, -ab_base_norm);
-        double ratio_parallel = (a_vec_x + b_vec_x) / ab_base;
+        // double ratio_parallel = (a_vec_x + b_vec_x) / ab_base;
 
         // Calculate surface normal at point si
         Vec<3> surface_normal = getNormal(mesh[si]);
@@ -238,7 +238,7 @@ namespace netgen
     };
     
     auto modifiedsmooth = [&](size_t nsteps) {
-        for (auto i : Range(nsteps))
+        for ([[maybe_unused]] auto i : Range(nsteps))
             for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
             {
             // assuming triangle
@@ -248,8 +248,9 @@ namespace netgen
         }
     };
 
+    /*
     auto smooth = [&] (size_t nsteps) {
-        for(auto i : Range(nsteps))
+      for([[maybe_unused]] auto i : Range(nsteps))
             for(const auto & sel : mesh.SurfaceElements())
             {
                 double min_limit = 999;
@@ -259,7 +260,8 @@ namespace netgen
                     limits[pi] = min(limits[pi], 1.4*min_limit);
             }
     };
-
+    */
+    
     // check for self-intersection within new elements (prisms/hexes)
     auto self_intersection = [&] () {
         for(SurfaceElementIndex sei : mesh.SurfaceElements().Range())
@@ -446,7 +448,7 @@ namespace netgen
   Array<Segment> BuildSegments( Mesh & mesh )
   {
       Array<Segment> segments;
-      auto& topo = mesh.GetTopology();
+      // auto& topo = mesh.GetTopology();
 
       NgArray<SurfaceElementIndex> surf_els;
 
@@ -550,13 +552,13 @@ namespace netgen
 
     // smooth tangential part of growth vectors from edges to surface elements
     RegionTimer rtsmooth(tsmooth);
-    for(auto i : Range(10))
+    for([[maybe_unused]] auto i : Range(10))
     {
         for(auto pi : points)
         {
             auto sels = p2sel[pi];
             Vec<3> new_gw = growthvectors[pi];
-            int cnt = 1;
+            // int cnt = 1;
             std::set<PointIndex> suround;
             suround.insert(pi);
             auto normal = normals[pi];
@@ -691,20 +693,22 @@ namespace netgen
         if(face_done.Test(facei))
           continue;
         bool point_moved = false;
-        bool point_fixed = false;
+        // bool point_fixed = false;
         for(auto pi : sel.PNums())
           {
             if(growthvectors[pi].Length() > 0)
               point_moved = true;
+            /*
             else
               point_fixed = true;
+            */
           }
         if(point_moved && !moved_surfaces.Test(facei))
           {
             int new_si = mesh.GetNFD()+1;
             const auto& fd = mesh.GetFaceDescriptor(facei);
-            auto isIn = domains.Test(fd.DomainIn());
-            auto isOut = domains.Test(fd.DomainOut());
+            // auto isIn = domains.Test(fd.DomainIn());
+            // auto isOut = domains.Test(fd.DomainOut());
             int si = params.sides_keep_surfaceindex ? facei : -1;
             // domin and domout can only be set later
             FaceDescriptor new_fd(si, -1,
@@ -1101,7 +1105,7 @@ namespace netgen
           {
             // copy here since we will add segments and this would
             // invalidate a reference!
-            auto segi = segments[sei];
+            // auto segi = segments[sei];
             for(auto [sej, type] : segmap[sei])
               {
                 auto segj = segments[sej];
@@ -1473,9 +1477,9 @@ namespace netgen
               points.Append(pi);
 
       auto p2el = mesh.CreatePoint2ElementTable(is_inner_point);
-
+      
       // smooth growth vectors to shift additional element layers to the inside and fix flipped tets
-      for(auto step : Range(10))
+      for([[maybe_unused]] auto step : Range(10))
       {
           for(auto pi : points)
           {

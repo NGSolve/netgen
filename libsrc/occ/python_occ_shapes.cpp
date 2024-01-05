@@ -1935,7 +1935,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                     optional<TopoDS_Wire> auxspine) {
           if (twist)
             {
-              auto [pnt, angle] = *twist;
+              // auto [pnt, angle] = *twist;
 
               /*
                 cyl = Cylinder((0,0,0), Z, r=1, h=1).faces[0]
@@ -2230,7 +2230,7 @@ tangents : Dict[int, gp_Vec2d]
       TColgp_Array1OfPnt poles(0, vpoles.size()-1);
       TColStd_Array1OfReal knots(0, vpoles.size()+degree);
       TColStd_Array1OfInteger mult(0, vpoles.size()+degree);
-      int cnt = 0;
+      // int cnt = 0;
 
       for (int i = 0; i < vpoles.size(); i++)
         {

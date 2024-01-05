@@ -50,7 +50,7 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
       int nvert;
       fin >> nvert;
       Point<3> p{0.,0.,0.};
-      for(auto k : Range(nvert)) {
+      for([[maybe_unused]] auto k : Range(nvert)) {
         for(auto i : Range(dim))
           fin >> p[i];
           fin >> index;
@@ -61,7 +61,7 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
       int nedge;
       fin >> nedge;
       Segment seg;
-      for(auto k : Range(nedge)) {
+      for([[maybe_unused]] auto k : Range(nedge)) {
         for(auto i : Range(2))
           fin >> seg[i];
           fin >> seg.edgenr;
@@ -74,7 +74,7 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
       int ntrig, index;
       fin >> ntrig;
       Element2d sel;
-      for(auto k : Range(ntrig)) {
+      for([[maybe_unused]] auto k : Range(ntrig)) {
         for(auto i : Range(3))
           fin >> sel[i];
           fin >> index;
@@ -86,7 +86,7 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
       int ntet;
       fin >> ntet;
       Element el(4);
-      for(auto k : Range(ntet)) {
+      for([[maybe_unused]] auto k : Range(ntet)) {
         for(auto i : Range(4))
           fin >> el[i];
           fin >> index;
@@ -99,7 +99,7 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
       int ncorners;
       fin >> ncorners;
       Element0d el;
-      for(auto k : Range(ncorners)) {
+      for([[maybe_unused]] auto k : Range(ncorners)) {
           fin >> el.pnum;
       }
     }
@@ -107,7 +107,7 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
       int nverts;
       fin >> nverts;
       int vert;
-      for(auto k : Range(nverts)) {
+      for([[maybe_unused]] auto k : Range(nverts)) {
           fin >> vert;
       }
     }
@@ -115,7 +115,7 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
       int nnormals;
       fin >> nnormals;
       Vec<3> normal;
-      for(auto k : Range(nnormals)) {
+      for([[maybe_unused]] auto k : Range(nnormals)) {
           fin >> normal[0];
           fin >> normal[1];
           fin >> normal[2];
@@ -126,7 +126,7 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
       fin >> nnormals;
       int vert;
       int normal;
-      for(auto k : Range(nnormals)) {
+      for([[maybe_unused]] auto k : Range(nnormals)) {
         fin >> normal;
         fin >> vert;
       }
@@ -135,7 +135,7 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
       int ntangents;
       fin >> ntangents;
       Vec<3> tangent;
-      for(auto k : Range(ntangents)) {
+      for([[maybe_unused]] auto k : Range(ntangents)) {
         fin >> tangent[0];
         fin >> tangent[1];
         fin >> tangent[2];
@@ -146,7 +146,7 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
       fin >> ntangents;
       int vert;
       int tangent;
-      for(auto k : Range(ntangents)) {
+      for([[maybe_unused]] auto k : Range(ntangents)) {
         fin >> tangent;
         fin >> vert;
       }
@@ -155,7 +155,7 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
       int nridges;
       fin >> nridges;
       int ridge;
-      for(auto k : Range(nridges)) {
+      for([[maybe_unused]] auto k : Range(nridges)) {
         fin >> ridge;
       }
     }
@@ -164,7 +164,7 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
       int nitems;
       fin >> nitems;
       string s;
-      for(auto i : Range(nitems))
+      for([[maybe_unused]] auto i : Range(nitems))
         fin >> s; // read one line
     }
   }
