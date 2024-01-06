@@ -1856,13 +1856,15 @@ namespace netgen
 
   void Mesh :: PartHybridMesh () 
   {
-#ifdef METIS
+    throw Exception("PartHybridMesh not supported");    
+#ifdef METISxxx
     int ne = GetNE();
     
     int nn = GetNP();
     int nedges = topology.GetNEdges();
 
-    idxtype  *xadj, * adjacency, *v_weights = NULL, *e_weights = NULL;
+    idxtype *xadj, * adjacency;
+    // idxtype *v_weights = NULL, *e_weights = NULL;
 
     int weightflag = 0;
     int numflag = 0;
@@ -1953,6 +1955,8 @@ namespace netgen
 
   void Mesh :: PartDualHybridMesh ( ) // NgArray<int> & neloc ) 
   {
+    throw Exception("PartDualHybridMesh not supported");
+#ifdef OLD      
 #ifdef METIS
     int ne = GetNE();
     
@@ -2065,7 +2069,8 @@ namespace netgen
 #else
     cout << "partdualmesh not available" << endl;
 #endif
-
+#endif
+    
   }
 
 
@@ -2131,7 +2136,6 @@ namespace netgen
 
     idxtype *v_weights = NULL, *e_weights = NULL;
 
-    idxtype weightflag = 0;
     // int numflag = 0;
     idxtype nparts = ntasks - 1;
 
@@ -2142,6 +2146,7 @@ namespace netgen
       BubbleSort (adjacency.Range (xadj[el], xadj[el+1]));
 
 #ifdef METIS4	
+    idxtype weightflag = 0;
     int options[5];
     options[0] = 0;
     METIS_PartGraphKway ( &ne, &xadj[0], &adjacency[0], v_weights, e_weights, &weightflag, 
