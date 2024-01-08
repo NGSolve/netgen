@@ -50,6 +50,7 @@ namespace netgen
           ret[0].mp = mp;
           return ret;
       }
+  cout << "divide mesh" << endl;
       ret.SetSize(num_domains);
 
       Array<Array<PointIndex, PointIndex>> ipmap;
@@ -71,6 +72,7 @@ namespace netgen
 
           m.SetLocalH(mesh.GetLocalH());
 
+    cout << "set imap size " << i << " to " << num_points << endl;
           ipmap[i].SetSize(num_points);
           ipmap[i] = PointIndex::INVALID;
           m.SetDimension( mesh.GetDimension() );
@@ -155,6 +157,8 @@ namespace netgen
           auto & imap = ipmap[i];
           auto nmax = identifications.GetMaxNr ();
           auto & m_ident = m.GetIdentifications();
+          cout << "imap " << imap << endl;
+          cout << imap.Size() << endl;
 
           for (auto & sel : m.SurfaceElements())
             for(auto & pi : sel.PNums())
@@ -171,6 +175,7 @@ namespace netgen
 
               for(auto pair : pairs)
               {
+        // cout << "get pair " << pair[0] << ',' << pair[1] << endl;
                   auto pi0 = imap[pair[0]];
                   auto pi1 = imap[pair[1]];
                   if(!pi0.IsValid() || !pi1.IsValid())
@@ -289,6 +294,7 @@ namespace netgen
     for (int qstep = 0; qstep <= 3; qstep++)
      {
        if (qstep == 0 && !mp.try_hexes) continue;
+       if (qstep == 1) continue;
        
        if (mesh.HasOpenQuads())
          {
@@ -301,6 +307,7 @@ namespace netgen
                rulep = hexrules;
                break;
              case 1:
+               cout << "Apply prismrules " << endl;
                rulep = prismrules2;
                break;
              case 2: // connect pyramid to triangle
@@ -428,7 +435,11 @@ namespace netgen
          if (cntsteps > mp.maxoutersteps) 
          {
            if(debugparam.write_mesh_on_error)
+           {
              md.mesh->Save("meshing_error_domain_"+ToString(md.domain)+".vol.gz");
+             if(mesh.GetNOpenElements())
+               GetOpenElements(*md.mesh, md.domain)->Save("meshing_error_rest_" + ToString(md.domain)+".vol.gz");
+           }
            throw NgException ("Stop meshing since too many attempts in domain " + ToString(md.domain));
          }
 
@@ -532,6 +543,7 @@ namespace netgen
          md[0].mesh.release();
          return;
      }
+  cout << "divide mesh" << endl;
 
      mesh.VolumeElements().DeleteAll();
      for(auto & m_ : md)
@@ -584,7 +596,9 @@ namespace netgen
   {
     static Timer t("MeshVolume"); RegionTimer reg(t);
 
+  cout << "initial compress " << endl;
      mesh3d.Compress();
+  cout << "initial compress done" << endl;
 
 
 

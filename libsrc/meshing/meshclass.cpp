@@ -1657,7 +1657,7 @@ namespace netgen
 
 
     CalcSurfacesOfNode ();
- 
+
     if (ntasks == 1) // sequential run only
       {
 	topology.Update();
@@ -4081,6 +4081,7 @@ namespace netgen
           }
         else
           {
+            cout << "unused point " << pi << endl;
             op2np[pi].Invalidate(); 
           }
       

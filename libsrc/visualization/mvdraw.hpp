@@ -242,6 +242,9 @@ namespace netgen
     ngcore::INT<2> Project(Point<3> p);
   };
 
+  void DrawElement(const Mesh & mesh, SurfaceElementIndex sei);
+  void DrawElement(const Mesh & mesh, ElementIndex sei);
+
   NGGUI_API extern VisualSceneMesh vsmesh;
   
 

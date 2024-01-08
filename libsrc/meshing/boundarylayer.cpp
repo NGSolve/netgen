@@ -530,8 +530,12 @@ struct GrowthVectorLimiter {
           if(!pts.Contains(other))
             pts.Append(other);
       }
-      if(pts.Size() != 2)
+      if(pts.Size() != 2) {
+        cout << "getEdgeTangent pi = " << pi << ", edgenr = " << edgenr << endl;
+        for(auto segi : topo.GetVertexSegments(pi))
+          cout  << mesh[segi] << endl;
         throw Exception("Something went wrong in getEdgeTangent!");
+      }
       tangent = mesh[pts[1]] - mesh[pts[0]];
       return tangent.Normalize();
   }
@@ -1380,12 +1384,16 @@ struct GrowthVectorLimiter {
         new_max_edge_nr = seg.edgenr;
 
     auto getGW = [&] (PointIndex pi) -> Vec<3>& {
-         return *get<0>(growth_vector_map[pi]);
+        static Vec<3> zero(0.,0.,0.);
+        if(growth_vector_map.count(pi))
+          return *get<0>(growth_vector_map[pi]);
+        zero = {0.,0.,0.};
+        return zero;
     };
   // cout << "edge range " << max_edge_nr << ", " << new_max_edge_nr << endl;
 
     // interpolate tangential component of growth vector along edge
-    for(auto edgenr : Range(max_edge_nr, new_max_edge_nr))
+    for(auto edgenr : Range(max_edge_nr+1, new_max_edge_nr))
       {
     // cout << "SEARCH EDGE " << edgenr +1 << endl;
         // if(!is_edge_moved[edgenr+1]) continue;
@@ -1492,22 +1500,25 @@ struct GrowthVectorLimiter {
           //     gt2 = 0.;
           // }
 
+        // cout << "edgenr " << edgenr << endl;
+        // cout << "points " << endl << points << endl;
+
         double len = 0.;
-        for(size_t i = 1; i < points.Size()-1; i++)
+        for(auto i : IntRange(1, points.Size()-1))
           {
             auto pi = points[i];
             len += (mesh[pi] - mesh[points[i-1]]).Length();
             auto t = getEdgeTangent(pi, edgenr);
             auto lam = len/edge_len;
             auto interpol = (1-lam) * (gt1 * t) * t + lam * (gt2 * t) * t;
-      if(pi==89) {
-        cout << "points " << points << endl;
-        cout << "INTERPOL" << len << ',' << t << ',' << lam << ',' << interpol << endl;
-        cout << gt1 << endl;
-        cout << gt2 << endl;
-        cout << getGW(pi) << endl;
+      // if(pi==89) {
+      //   cout << "points " << points << endl;
+      //   cout << "INTERPOL" << len << ',' << t << ',' << lam << ',' << interpol << endl;
+      //   cout << gt1 << endl;
+      //   cout << gt2 << endl;
+      //   cout << getGW(pi) << endl;
 
-      }
+      // }
             getGW(pi) += interpol;
           }
       }
@@ -1537,6 +1548,11 @@ struct GrowthVectorLimiter {
           growth_vector_map[pi_new] = { &growth_vector, params.heights[i] };
           if(special_boundary_points.count(pi) == 0)
             mesh.GetIdentifications().Add(pi_last, pi_new, identnr);
+          else
+          {
+            cout << "add locked point " << pi_new << endl;
+            mesh.AddLockedPoint(pi_new);
+          }
           pi_last = pi_new;
         }
     };
