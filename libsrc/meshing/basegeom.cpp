@@ -829,7 +829,7 @@ namespace netgen
         if(face.primary == &face)
         {
             // check if this face connects two identified closesurfaces
-            auto & idents = mesh.GetIdentifications();
+            // auto & idents = mesh.GetIdentifications();
             std::set<int> relevant_edges;
             auto segments = face.GetBoundary(mesh);
             for(const auto &s : segments)

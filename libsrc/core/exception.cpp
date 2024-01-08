@@ -80,7 +80,7 @@ namespace ngcore
       // 1   libngcore.dylib                     0x000000010ddb298c _ZL21ngcore_signal_handleri + 316
       constexpr char reset_shell[] = "\033[0m";
       constexpr char green[] = "\033[32m";
-      constexpr char yellow[] = "\033[33m";
+      [[maybe_unused]] constexpr char yellow[] = "\033[33m";
 
       std::istringstream in(s);
 

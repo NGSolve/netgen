@@ -572,6 +572,7 @@ struct GrowthVectorLimiter {
       limiter.LimitGrowthVector(pi_to, sei, trig_shift, seg_shift);
     });
 
+<<<<<<< HEAD
   // for (auto i : Range(limits))
   // if(limits[i] < 1.0)
   //   cout << i << ": " << limits[i] << endl;
@@ -580,6 +581,200 @@ struct GrowthVectorLimiter {
       auto pi_from = limiter.map_from[pi_to];
       if(pi_from.IsValid())
         limits[pi_from] = min(limits[pi_from], limits[pi_to]);
+=======
+        // Calculate parallel projections
+        Vec<3> ab_base_norm = (b_base - a_base).Normalize();
+        double a_vec_x = Dot(a_vec, ab_base_norm);
+        double b_vec_x = Dot(b_vec, -ab_base_norm);
+        // double ratio_parallel = (a_vec_x + b_vec_x) / ab_base;
+
+        // Calculate surface normal at point si
+        Vec<3> surface_normal = getNormal(mesh[si]);
+
+        double a_vec_y = abs(Dot(a_vec, surface_normal));
+        double b_vec_y = abs(Dot(b_vec, surface_normal));
+        double diff_perpendicular = abs(a_vec_y - b_vec_y);
+        double tan_alpha = diff_perpendicular / (ab_base - a_vec_x - b_vec_x);
+
+        double TAN_ALPHA_LIMIT = 0.36397; // Approximately 20 degrees in radians
+        if (tan_alpha > TAN_ALPHA_LIMIT) {
+            if (a_vec_y > b_vec_y) {
+                double correction = (TAN_ALPHA_LIMIT / tan_alpha * diff_perpendicular + b_vec_y) / a_vec_y;
+                limits[pi1] *= correction;
+            }
+            else {
+                double correction = (TAN_ALPHA_LIMIT / tan_alpha * diff_perpendicular + a_vec_y) / b_vec_y;
+                limits[pi2] *= correction;
+            }
+        }
+    };
+
+    auto neighbour_limiter = [&](PointIndex pi1, PointIndex pi2, SurfaceElementIndex si) {
+        parallel_limiter(pi1, pi2, si);
+        perpendicular_limiter(pi1, pi2, si);
+    };
+    
+    auto modifiedsmooth = [&](size_t nsteps) {
+        for ([[maybe_unused]] auto i : Range(nsteps))
+            for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
+            {
+            // assuming triangle
+            neighbour_limiter(mesh[sei].PNum(1), mesh[sei].PNum(2), sei);
+            neighbour_limiter(mesh[sei].PNum(2), mesh[sei].PNum(3), sei);
+            neighbour_limiter(mesh[sei].PNum(3), mesh[sei].PNum(1), sei);  
+        }
+    };
+
+    /*
+    auto smooth = [&] (size_t nsteps) {
+      for([[maybe_unused]] auto i : Range(nsteps))
+            for(const auto & sel : mesh.SurfaceElements())
+            {
+                double min_limit = 999;
+                for(auto pi : sel.PNums())
+                    min_limit = min(min_limit, limits[pi]);
+                for(auto pi : sel.PNums())
+                    limits[pi] = min(limits[pi], 1.4*min_limit);
+            }
+    };
+    */
+    
+    // check for self-intersection within new elements (prisms/hexes)
+    auto self_intersection = [&] () {
+        for(SurfaceElementIndex sei : mesh.SurfaceElements().Range())
+          {
+            auto facei = mesh[sei].GetIndex();
+            if(facei < nfd_old && !params.surfid.Contains(facei))
+                continue;
+
+            auto sel = mesh[sei];
+            auto np = sel.GetNP();
+            // check if a new edge intesects the plane of any opposing face
+            double lam;
+            for(auto i : Range(np))
+                for(auto fi : Range(np-2))
+                    if(isIntersectingPlane(GetMappedSeg(sel[i]), GetMappedFace(sei, i+fi+1), lam))
+                        if(lam < 1.0)
+                            limits[sel[i]] *= lam;
+          }
+    };
+
+    // first step: intersect with other surface elements that are boundary of domain the layer is grown into
+    // second (and subsequent) steps: intersect with other boundary layers, allow restriction by 20% in each step
+    auto changed_domains = domains;
+      if(!params.outside)
+          changed_domains.Invert();
+
+    bool limit_reached = true;
+    double lam_lower_limit = 1.0;
+    int step = 0;
+
+    while(limit_reached || step<3)
+    {
+        Array<double, PointIndex> new_limits;
+        new_limits.SetSize(np);
+        new_limits = 1.0;
+
+        if(step>1)
+            lam_lower_limit *= 0.8;
+        limit_reached = false;
+
+        // build search tree with all surface elements (bounding box of a surface element also covers the generated boundary layer)
+        Box<3> bbox(Box<3>::EMPTY_BOX);
+        for(auto pi : mesh.Points().Range())
+        {
+            bbox.Add(mesh[pi]);
+            bbox.Add(mesh[pi]+limits[pi]*height*growthvectors[pi]);
+        }
+        BoxTree<3> tree(bbox);
+
+        for(auto sei : mesh.SurfaceElements().Range())
+        {
+            const auto & sel = mesh[sei];
+            Box<3> box(Box<3>::EMPTY_BOX);
+            const auto& fd = mesh.GetFaceDescriptor(sel.GetIndex());
+            if(!changed_domains.Test(fd.DomainIn()) &&
+               !changed_domains.Test(fd.DomainOut()))
+              continue;
+            for(auto pi : sel.PNums())
+                box.Add(mesh[pi]);
+            // also add moved points to bounding box
+            if(params.surfid.Contains(sel.GetIndex()))
+                for(auto pi : sel.PNums())
+                    box.Add(mesh[pi]+limits[pi]*height*growthvectors[pi]);
+            tree.Insert(box, sei);
+        }
+
+        for(auto pi : mesh.Points().Range())
+        {
+            if(mesh[pi].Type() == INNERPOINT)
+                continue;
+            if(growthvectors[pi].Length2() == 0.0)
+                continue;
+            Box<3> box(Box<3>::EMPTY_BOX);
+            auto seg = GetMappedSeg(pi);
+            box.Add(seg[0]);
+            box.Add(seg[1]);
+            double lam = 1.0;
+            tree.GetFirstIntersecting(box.PMin(), box.PMax(), [&](SurfaceElementIndex sei)
+              {
+                const auto & sel = mesh[sei];
+                if(sel.PNums().Contains(pi))
+                    return false;
+                auto face = GetMappedFace(sei, -2);
+                double lam_ = 999;
+                bool is_bl_sel = params.surfid.Contains(sel.GetIndex());
+
+                if (step == 0)
+                {
+                    face = GetMappedFace(sei, -1);
+                    if (isIntersectingFace(seg, face, lam_))
+                    {
+                        if (is_bl_sel)
+                            lam_ *= params.limit_safety;
+                        lam = min(lam, lam_);
+                    }
+                }
+
+                if(step==1)
+                {
+                    if(isIntersectingFace(seg, face, lam_))
+                    {
+                        if(is_bl_sel) // allow only half the distance if the opposing surface element has a boundary layer too
+                            lam_ *= params.limit_safety;
+                        lam = min(lam, lam_);
+                    }
+                }
+                // if the opposing surface element has a boundary layer, we need to additionally intersect with the new faces 
+                if(step>1 && is_bl_sel)
+                {
+                    for(auto facei : Range(-1, sel.GetNP()))
+                    {
+                        auto face = GetMappedFace(sei, facei);
+                        if(isIntersectingFace(seg, face, lam_)) // && lam_ > other_limit)
+                        {
+                            lam = min(lam, lam_);
+                        }
+                    }
+                }
+                return false;
+              });
+            if(lam<1)
+            {
+                if(lam<lam_lower_limit && step>1)
+                {
+                    limit_reached = true;
+                    lam = lam_lower_limit;
+                }
+            }
+
+            new_limits[pi] = min(limits[pi], lam* limits[pi]);
+        }
+        step++;
+        limits = new_limits;
+        if (step > 0)
+           modifiedsmooth(1);
+>>>>>>> origin/master
     }
 
     for(auto i : Range(growthvectors))
@@ -1012,8 +1207,12 @@ struct GrowthVectorLimiter {
         for(auto pi : points)
         {
             auto sels = p2sel[pi];
+<<<<<<< HEAD
             Vec<3> new_gw = getGW(pi);
       new_gw = 0.;
+=======
+            Vec<3> new_gw = growthvectors[pi];
+>>>>>>> origin/master
             // int cnt = 1;
             std::set<PointIndex> suround;
             suround.insert(pi);
@@ -2113,7 +2312,7 @@ struct GrowthVectorLimiter {
               points.Append(pi);
 
       auto p2el = mesh.CreatePoint2ElementTable(is_inner_point);
-
+      
       // smooth growth vectors to shift additional element layers to the inside and fix flipped tets
       for([[maybe_unused]] auto step : Range(10))
       {

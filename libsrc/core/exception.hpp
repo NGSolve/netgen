@@ -10,7 +10,6 @@
 
 namespace ngcore
 {
-
   NGCORE_API std::string GetBackTrace();
 
   // Exception for code that shouldn't be executed

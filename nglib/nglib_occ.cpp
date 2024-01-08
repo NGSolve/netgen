@@ -148,13 +148,15 @@ namespace nglib
       numpoints = me->GetNP();
 
       // Initially set up only for surface meshing without any optimisation
-      int perfstepsend = MESHCONST_MESHSURFACE;
+      // int perfstepsend = MESHCONST_MESHSURFACE;
 
       // Check and if required, enable surface mesh optimisation step
+      /*
       if(mp->optsurfmeshenable)
       {
-         perfstepsend = MESHCONST_OPTSURFACE;
+        perfstepsend = MESHCONST_OPTSURFACE;
       }
+      */
 
       occgeom->MeshSurface(*me, mparam);
       occgeom->OptimizeSurface(*me, mparam);

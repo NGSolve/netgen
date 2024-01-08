@@ -201,24 +201,24 @@ namespace netgen
               INDEX_4 face4(el[elfaces[j][0]], el[elfaces[j][1]],
                             el[elfaces[j][2]], el[elfaces[j][3]]);
               
-              int facedir = 0;
+              // int facedir = 0;
               if (min2 (face4.I1(), face4.I2()) > 
                   min2 (face4.I4(), face4.I3())) 
                 {  // z - flip
-                  facedir += 1; 
+                  // facedir += 1; 
                   swap (face4.I1(), face4.I4());
                   swap (face4.I2(), face4.I3());
                 }
               if (min2 (face4.I1(), face4.I4()) >
                   min2 (face4.I2(), face4.I3())) 
                 {  // x - flip
-                  facedir += 2; 
+                  // facedir += 2; 
                   swap (face4.I1(), face4.I2());
                   swap (face4.I3(), face4.I4());
                 }
               if (face4.I2() > face4.I4())
                 {  // diagonal flip
-                  facedir += 4; 
+                  // facedir += 4; 
                   swap (face4.I2(), face4.I4());
                 }
               
@@ -263,27 +263,27 @@ namespace netgen
           { // triangle
             
             // int facenum;
-            int facedir;
+            // int facedir;
             
             INDEX_4 face(el.PNum(elfaces[0][0]),
                          el.PNum(elfaces[0][1]),
                          el.PNum(elfaces[0][2]),0);
             
-            facedir = 0;
+            // facedir = 0;
             if (face.I1() > face.I2())
               {
                 swap (face.I1(), face.I2());
-                facedir += 1;
+                // facedir += 1;
               }
             if (face.I2() > face.I3())
               {
                 swap (face.I2(), face.I3());
-                facedir += 2;
+                // facedir += 2;
               }
             if (face.I1() > face.I2())
               {
                 swap (face.I1(), face.I2());
-                facedir += 4;
+                // facedir += 4;
               }
             
             if (face.I1() != v) continue;
@@ -312,31 +312,31 @@ namespace netgen
           {
             // quad
             // int facenum;
-            int facedir;
+            // int facedir;
             
             INDEX_4 face4(el.PNum(elfaces[0][0]),
                           el.PNum(elfaces[0][1]),
                           el.PNum(elfaces[0][2]),
                           el.PNum(elfaces[0][3]));
             
-            facedir = 0;
+            // facedir = 0;
             if (min2 (face4.I1(), face4.I2()) > 
                 min2 (face4.I4(), face4.I3())) 
               {  // z - orientation
-                facedir += 1; 
+                // facedir += 1; 
                 swap (face4.I1(), face4.I4());
                 swap (face4.I2(), face4.I3());
               }
             if (min2 (face4.I1(), face4.I4()) >
                 min2 (face4.I2(), face4.I3())) 
               {  // x - orientation
-                facedir += 2; 
+                // facedir += 2; 
                 swap (face4.I1(), face4.I2());
                 swap (face4.I3(), face4.I4());
               }
             if (face4.I2() > face4.I4())
               { 
-                facedir += 4; 
+                // facedir += 4; 
                 swap (face4.I2(), face4.I4());
               }
             
