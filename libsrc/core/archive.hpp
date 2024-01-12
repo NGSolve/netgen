@@ -150,7 +150,8 @@ namespace ngcore
       void* (*downcaster)(const std::type_info&, void*);
 
       // Archive constructor arguments
-      std::function<void(Archive&, void*)> cargs_archiver;
+      // std::function<void(Archive&, void*)> cargs_archiver;
+      void (*cargs_archiver)(Archive&, void*);
 
 #ifdef NETGEN_PYTHON
       // std::function<pybind11::object(const std::any&)> anyToPyCaster;
