@@ -501,11 +501,12 @@ namespace ngcore
     template <typename T>
     Archive& operator & (std::shared_ptr<T>& ptr)
     {
-      if (has_shared_from_this2<T>::value && shallow_to_python)
-        {
-          Shallow (ptr);
-          return *this;
-        }
+      if constexpr(has_shared_from_this2<T>::value)
+        if (shallow_to_python)
+          {
+            Shallow (ptr);
+            return *this;
+          }
           
       if(Output())
         {
