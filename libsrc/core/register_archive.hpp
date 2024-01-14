@@ -73,8 +73,8 @@ namespace ngcore {
       };
 #ifdef NETGEN_PYTHON
     info.anyToPyCaster = [](const std::any &a) {
-      if constexpr(has_shared_from_this<T>::value) {
-        std::shared_ptr<T> val = std::any_cast<std::shared_ptr<T>>(&a);
+      if constexpr(has_shared_from_this2<T>::value) {
+        std::shared_ptr<T> val = std::any_cast<std::shared_ptr<T>>(a);
         return pybind11::cast(val);
       } else {
         const T* val = std::any_cast<T>(&a);
