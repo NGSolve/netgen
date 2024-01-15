@@ -185,6 +185,8 @@ namespace netgen
  
       case HP_TRIG_ALFELD:
         hps = &reftrig_Alfeld; break;
+      case HP_TRIG_POWELL:
+        hps = &reftrig_Powell; break;
 
         
       case HP_QUAD:
@@ -1906,6 +1908,8 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 
     if (act_ref == 1 && split == SPLIT_ALFELD)
       sing = true;   
+    if (act_ref == 1 && split == SPLIT_POWELL)
+      sing = true;   
     if(sing==0) return(sing); 
 
     int cnt_undef = 0, cnt_nonimplement = 0;
@@ -1969,8 +1973,10 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
               if (split == SPLIT_HP)
                 hpel.type = ClassifyTrig(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, 
                                          faces, face_edges, surf_edges, facepoint, dim, fd);    
-              else
+              else if (split == SPLIT_ALFELD)
                 hpel.type = HP_TRIG_ALFELD;
+              else if (split == SPLIT_POWELL)
+                hpel.type = HP_TRIG_POWELL;
 
 	      dd = 2;
 	      break; 

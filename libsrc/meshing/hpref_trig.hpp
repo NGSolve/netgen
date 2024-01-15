@@ -775,18 +775,7 @@ HPRef_Struct reftrig_3singedges =
   reftrig_3singedges_newels
 };
 
-
-
-
-
-
-
-
-
-
-
-
-// HP_TRIG_3SINGEDGES
+// HP_TRIG_ALFELD
 int reftrig_Alfeld_splitedges[][3] =
 {
   { 0, 0, 0 }
@@ -816,5 +805,44 @@ HPRef_Struct reftrig_Alfeld =
   0,
   reftrig_Alfeld_newelstypes,
   reftrig_Alfeld_newels
+};
+
+
+// HP_TRIG_POWELL
+int reftrig_Powell_splitedges[][3] =
+{
+  { 1, 2, 4 },
+  { 2, 3, 5 },
+  { 3, 1, 6 },
+  { 0, 0, 0 },
+};
+int reftrig_Powell_splitfaces[][4] =
+{
+  { 1, 2, 3, 7 },
+  { 0, 0, 0, 0 }
+};
+
+HPREF_ELEMENT_TYPE reftrig_Powell_newelstypes[] =
+{
+  HP_TRIG, HP_TRIG, HP_TRIG, HP_TRIG, HP_TRIG, HP_TRIG,
+  HP_NONE, 
+};
+int reftrig_Powell_newels[][8] =
+{
+  { 1, 4, 7 }, 
+  { 4, 2, 7 }, 
+  { 2, 5, 7 },
+  { 5, 3, 7 },
+  { 3, 6, 7 },
+  { 6, 1, 7 },
+};
+HPRef_Struct reftrig_Powell =
+{
+  HP_TRIG,
+  reftrig_Powell_splitedges, 
+  reftrig_Powell_splitfaces,
+  0,
+  reftrig_Powell_newelstypes,
+  reftrig_Powell_newels
 };
 
