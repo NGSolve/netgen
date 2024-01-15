@@ -677,8 +677,9 @@ namespace netgen
     INDEX_3_HASHTABLE<int> newfacepts(elements.Size()+1);
 
     // prepare new points  
-    
     // fac1 = max(0.001,min(0.33,fac1));
+	double fac2;
+    fac2 = max(0.001,min(0.33,fac1));
     PrintMessage(3, " in HP-REFINEMENT with fac1 ", fac1); 
     *testout << " in HP-REFINEMENT with fac1 " << fac1 <<  endl; 
    
@@ -728,8 +729,8 @@ namespace netgen
 		{
 		  Point<3> np; 
 		  	for( int l=0;l<3;l++)
-			  np(l) = (1-2*fac1)*mesh.Point(i3.I1())(l) 
-			    + fac1*mesh.Point(i3.I2())(l)  + fac1*mesh.Point(i3.I3())(l);  
+			  np(l) = (1-2*fac2)*mesh.Point(i3.I1())(l) 
+			    + fac2*mesh.Point(i3.I2())(l)  + fac2*mesh.Point(i3.I3())(l);  
 		  int npi = mesh.AddPoint (np);
 		  newfacepts.Set (i3, npi);
 		}
@@ -817,9 +818,9 @@ namespace netgen
 
 	      for (int l = 0; l < 3; l++)
 		newparam[hprs->splitfaces[j][3]-1][l] =
-		  (1-2*fac1) * el.param[hprs->splitfaces[j][0]-1][l] + 
-		  fac1 * el.param[hprs->splitfaces[j][1]-1][l] + 
-		  fac1 * el.param[hprs->splitfaces[j][2]-1][l];
+		  (1-2*fac2) * el.param[hprs->splitfaces[j][0]-1][l] + 
+		  fac2 * el.param[hprs->splitfaces[j][1]-1][l] + 
+		  fac2 * el.param[hprs->splitfaces[j][2]-1][l];
 	      j++;
 	    }
 	// split elements
