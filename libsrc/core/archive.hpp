@@ -57,6 +57,17 @@ namespace ngcore
   };
   
   
+
+  
+  template <typename T, typename = void>
+  class has_shallow_archive : public std::false_type {};
+  
+  template <typename T>
+  class has_shallow_archive<T, std::void_t<decltype(T::shallow_archive)>>
+    : public std::is_same<decltype(T::shallow_archive), std::true_type> {};
+  
+
+  
 #ifdef NETGEN_PYTHON
   pybind11::object CastAnyToPy(const std::any& a);
 #endif // NETGEN_PYTHON
@@ -501,7 +512,7 @@ namespace ngcore
     template <typename T>
     Archive& operator & (std::shared_ptr<T>& ptr)
     {
-      if constexpr(has_shared_from_this2<T>::value)
+      if constexpr(has_shallow_archive<T>::value)
         if (shallow_to_python)
           {
             Shallow (ptr);

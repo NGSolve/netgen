@@ -61,7 +61,12 @@ namespace netgen
     void OCCEdge::ProjectPoint(Point<3>& p, EdgePointGeomInfo* gi) const
     {
         auto pnt = ng2occ(p);
-        GeomAPI_ProjectPointOnCurve proj(pnt, curve, s0, s1);
+        // extend the projection parameter range, else projection might fail
+        // for an endpoint
+        // see discussion here: https://forum.ngsolve.org/t/how-to-apply-occidentification-correctly/2555
+        // I do not see a better way using occ tolerances?
+        double eps = 1e-7 * (s1-s0);
+        GeomAPI_ProjectPointOnCurve proj(pnt, curve, s0-eps, s1+eps);
         pnt = proj.NearestPoint();
         if(gi)
             gi->dist = (proj.LowerDistanceParameter() - s0)/(s1-s0);

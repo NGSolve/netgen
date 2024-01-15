@@ -678,7 +678,7 @@ namespace netgen
 
     // prepare new points  
     
-    fac1 = max(0.001,min(0.33,fac1));
+    // fac1 = max(0.001,min(0.33,fac1));
     PrintMessage(3, " in HP-REFINEMENT with fac1 ", fac1); 
     *testout << " in HP-REFINEMENT with fac1 " << fac1 <<  endl; 
    
