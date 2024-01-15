@@ -1350,7 +1350,15 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
            }), py::arg("adaptive")=false, py::call_guard<py::gil_scoped_release>())
     
     .def("ZRefine", &Mesh::ZRefine)
-
+    .def("Split2Tets", &Mesh::Split2Tets)
+    .def ("SplitAlfeld", FunctionPointer
+          ([](Mesh & self)
+           {
+            NgLock meshlock (self.MajorMutex(), true);
+            Refinement & ref = const_cast<Refinement&> (self.GetGeometry()->GetRefinement());
+            ::netgen::HPRefinement (self, &ref, SPLIT_ALFELD, 1, 0.5, true, true);
+           }
+           ), py::call_guard<py::gil_scoped_release>())
     .def ("SecondOrder", [](Mesh & self)
           {
             self.GetGeometry()->GetRefinement().MakeSecondOrder(self);
