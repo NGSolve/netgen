@@ -2,6 +2,7 @@
 #define NGCORE_SIGNALS_HPP
 
 #include <list>
+#include <map>
 #include <functional>
 
 namespace ngcore
@@ -43,6 +44,36 @@ namespace ngcore
     }
     inline bool GetEmitting() const { return is_emitting; }
   };
+
+
+
+
+  class SimpleSignal
+  {
+  private:
+    std::map<void*,std::function<void()>> funcs;
+  public:
+    SimpleSignal() = default;
+
+    template<typename FUNC>
+    void Connect(void* var, FUNC f)
+    {
+      funcs[var] = f;
+    }
+
+    void Remove(void* var)
+    {
+      funcs.erase(var);
+    }
+
+    inline void Emit()
+    {
+      for (auto [key,f] : funcs)
+        f();
+    }
+  };
+
+  
 } // namespace ngcore
 
 #endif // NGCORE_SIGNALS_HPP
