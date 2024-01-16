@@ -92,10 +92,10 @@ namespace ngcore
       throw ngcore::RangeException(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t", int(value), int(min), int(max_plus_one)); }
 #define NETGEN_CHECK_SHAPE(a,b) \
   { if(a.Shape() != b.Shape()) \
-      throw ngcore::Exception(__FILE__": shape don't match"); }
+      throw ngcore::Exception(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t: shape don't match"); }
 #define NETGEN_CHECK_SAME(a,b) \
   { if(a != b) \
-      throw ngcore::Exception(__FILE__": not the same, a="+ToString(a) + ", b="+ToString(b)); }
+      throw ngcore::Exception(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t: not the same, a="+ToString(a) + ", b="+ToString(b)); }
 #define NETGEN_NOEXCEPT 
 #else // defined(NETGEN_ENABLE_CHECK_RANGE) && !defined(__CUDA_ARCH__)
 #define NETGEN_CHECK_RANGE(value, min, max)
