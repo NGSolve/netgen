@@ -1234,7 +1234,7 @@ namespace netgen
   {
     NgLock meshlock (mesh->MajorMutex(), true);
     Refinement & ref = const_cast<Refinement&> (mesh->GetGeometry()->GetRefinement());
-    ::netgen::HPRefinement (*mesh, &ref, SPLIT_ALFELD, 1, 0.5, true, true);
+    ::netgen::HPRefinement (*mesh, &ref, SPLIT_ALFELD, 1, 1.0/3.0, true, true);
   }
 
   
