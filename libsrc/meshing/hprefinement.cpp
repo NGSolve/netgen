@@ -676,10 +676,7 @@ namespace netgen
     INDEX_2_HASHTABLE<int> newpts(elements.Size()+1);
     INDEX_3_HASHTABLE<int> newfacepts(elements.Size()+1);
 
-    // prepare new points  
-    // fac1 = max(0.001,min(0.33,fac1));
-	double fac2;
-    fac2 = max(0.001,min(0.33,fac1));
+    double fac2 = max(0.001,min(1.0/3,fac1)); // factor for face points
     PrintMessage(3, " in HP-REFINEMENT with fac1 ", fac1); 
     *testout << " in HP-REFINEMENT with fac1 " << fac1 <<  endl; 
    
