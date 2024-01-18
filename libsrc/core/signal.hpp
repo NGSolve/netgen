@@ -51,19 +51,22 @@ namespace ngcore
   class SimpleSignal
   {
   private:
-    std::map<void*,std::function<void()>> funcs;
+    // std::map<void*,std::function<void()>> funcs;
+    std::list<std::pair<void*,std::function<void()>>> funcs;
   public:
     SimpleSignal() = default;
 
     template<typename FUNC>
     void Connect(void* var, FUNC f)
     {
-      funcs[var] = f;
+      // funcs[var] = f;
+      funcs.push_back ( { var, f } );
     }
 
     void Remove(void* var)
     {
-      funcs.erase(var);
+      // funcs.erase(var);
+      funcs.remove_if([&] (auto var_f) { return var_f.first==var; });
     }
 
     inline void Emit()
