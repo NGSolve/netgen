@@ -185,6 +185,8 @@ namespace netgen
  
       case HP_TRIG_ALFELD:
         hps = &reftrig_Alfeld; break;
+      case HP_TRIG_POWELL:
+        hps = &reftrig_Powell; break;
 
         
       case HP_QUAD:
@@ -674,9 +676,7 @@ namespace netgen
     INDEX_2_HASHTABLE<int> newpts(elements.Size()+1);
     INDEX_3_HASHTABLE<int> newfacepts(elements.Size()+1);
 
-    // prepare new points  
-    
-    fac1 = max(0.001,min(0.33,fac1));
+    double fac2 = max(0.001,min(1.0/3,fac1)); // factor for face points
     PrintMessage(3, " in HP-REFINEMENT with fac1 ", fac1); 
     *testout << " in HP-REFINEMENT with fac1 " << fac1 <<  endl; 
    
@@ -726,8 +726,8 @@ namespace netgen
 		{
 		  Point<3> np; 
 		  	for( int l=0;l<3;l++)
-			  np(l) = (1-2*fac1)*mesh.Point(i3.I1())(l) 
-			    + fac1*mesh.Point(i3.I2())(l)  + fac1*mesh.Point(i3.I3())(l);  
+			  np(l) = (1-2*fac2)*mesh.Point(i3.I1())(l) 
+			    + fac2*mesh.Point(i3.I2())(l)  + fac2*mesh.Point(i3.I3())(l);  
 		  int npi = mesh.AddPoint (np);
 		  newfacepts.Set (i3, npi);
 		}
@@ -815,9 +815,9 @@ namespace netgen
 
 	      for (int l = 0; l < 3; l++)
 		newparam[hprs->splitfaces[j][3]-1][l] =
-		  (1-2*fac1) * el.param[hprs->splitfaces[j][0]-1][l] + 
-		  fac1 * el.param[hprs->splitfaces[j][1]-1][l] + 
-		  fac1 * el.param[hprs->splitfaces[j][2]-1][l];
+		  (1-2*fac2) * el.param[hprs->splitfaces[j][0]-1][l] + 
+		  fac2 * el.param[hprs->splitfaces[j][1]-1][l] + 
+		  fac2 * el.param[hprs->splitfaces[j][2]-1][l];
 	      j++;
 	    }
 	// split elements
@@ -1906,6 +1906,8 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 
     if (act_ref == 1 && split == SPLIT_ALFELD)
       sing = true;   
+    if (act_ref == 1 && split == SPLIT_POWELL)
+      sing = true;   
     if(sing==0) return(sing); 
 
     int cnt_undef = 0, cnt_nonimplement = 0;
@@ -1969,8 +1971,10 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
               if (split == SPLIT_HP)
                 hpel.type = ClassifyTrig(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, 
                                          faces, face_edges, surf_edges, facepoint, dim, fd);    
-              else
+              else if (split == SPLIT_ALFELD)
                 hpel.type = HP_TRIG_ALFELD;
+              else if (split == SPLIT_POWELL)
+                hpel.type = HP_TRIG_POWELL;
 
 	      dd = 2;
 	      break; 

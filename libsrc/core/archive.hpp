@@ -42,6 +42,32 @@ namespace ngcore
     operator T&() { return val; }
   };
 
+  // Helper to detect shared_from_this
+  template <typename T>
+  class has_shared_from_this2
+    {
+    private:
+      // typedef T* T_ptr;
+      template <typename C> static std::true_type test(decltype(((C*)nullptr)->shared_from_this()));
+      template <typename C> static std::false_type test(...);
+      
+    public:
+      // If the test returns true_type, then T has shared_from_this
+      static constexpr bool value = decltype(test<T>(0))::value;
+  };
+  
+  
+
+  
+  template <typename T, typename = void>
+  class has_shallow_archive : public std::false_type {};
+  
+  template <typename T>
+  class has_shallow_archive<T, std::void_t<decltype(T::shallow_archive)>>
+    : public std::is_same<decltype(T::shallow_archive), std::true_type> {};
+  
+
+  
 #ifdef NETGEN_PYTHON
   pybind11::object CastAnyToPy(const std::any& a);
 #endif // NETGEN_PYTHON
@@ -486,6 +512,13 @@ namespace ngcore
     template <typename T>
     Archive& operator & (std::shared_ptr<T>& ptr)
     {
+      if constexpr(has_shallow_archive<T>::value)
+        if (shallow_to_python)
+          {
+            Shallow (ptr);
+            return *this;
+          }
+          
       if(Output())
         {
           // save -2 for nullptr
