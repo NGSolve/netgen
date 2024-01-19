@@ -543,9 +543,16 @@ namespace netgen
          md[0].mesh.release();
          return;
      }
-  cout << "divide mesh" << endl;
 
      mesh.VolumeElements().DeleteAll();
+     auto & ident_points = mesh.GetIdentifications().GetIdentifiedPoints();
+     ident_points.DeleteData();
+     
+     for(auto & m_ : md) {
+     m_.mesh->GetIdentifications().Delete();
+      m_.mesh->Save("mesh_domain_"+ToString(m_.domain)+".vol.gz");
+  }
+
      for(auto & m_ : md)
      {
          auto first_new_pi = m_.pmap.Range().Next();
@@ -565,6 +572,18 @@ namespace netgen
              el.SetIndex(m_.domain);
              mesh.AddVolumeElement(el);
          }
+
+         // auto & part_ident = m.GetIdentifications().GetIdentifiedPoints();
+         // for (auto i : IntRange(1, part_ident.GetNBags()+1))
+         //   for (auto j : IntRange(1, part_ident.GetBagSize(i)+1))
+         //   {
+         //     INDEX_2 i2;
+         //     int nr;
+         //     part_ident.GetData (i, j, i2, nr);
+         //     i2.I1() = pmap[i2.I1()];
+         //     i2.I2() = pmap[i2.I2()];
+         //     ident_points.Set(i2, nr);
+         //   }
      }
   }
 

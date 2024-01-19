@@ -4140,6 +4140,13 @@ namespace netgen
 
     for (int i = 0; i < lockedpoints.Size(); i++)
       lockedpoints[i] = op2np[lockedpoints[i]];
+
+  cout << "op2np " << endl;
+  for(auto i : Range(op2np)) {
+    if(i!=op2np[i])
+    cout << i << '\t'  << op2np[i] << endl;
+  }
+    GetIdentifications().MapPoints(op2np);
     /*
     for (int i = 0; i < facedecoding.Size(); i++)
       facedecoding[i].firstelement = -1;

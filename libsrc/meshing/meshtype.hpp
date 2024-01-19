@@ -1605,6 +1605,8 @@ namespace netgen
     /// remove secondorder
     void SetMaxPointNr (int maxpnum);
 
+    void MapPoints(FlatArray<PointIndex, PointIndex> op2np);
+
     DLL_HEADER void Print (ostream & ost) const;
 
     void DoArchive (Archive & ar);

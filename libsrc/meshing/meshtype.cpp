@@ -2661,6 +2661,7 @@ namespace netgen
   {
     identifiedpoints.DeleteData();
     identifiedpoints_nr.DeleteData();
+    idpoints_table.SetSize(0);
 
     /*
     delete identifiedpoints;
@@ -2831,6 +2832,33 @@ namespace netgen
         }
   }
 
+  void Identifications :: MapPoints(FlatArray<PointIndex, PointIndex> op2np)
+  {
+    Array<NgArray<INDEX_2>> pairs;
+    pairs.SetSize(maxidentnr+1);
+    for(auto i : Range(maxidentnr+1))
+      GetPairs(i, pairs[i]);
+    
+    Delete();
+    for (auto i : Range(maxidentnr+1))
+      for(auto pair : pairs[i]) {
+        pair.I1() = op2np[pair.I1()];
+        pair.I2() = op2np[pair.I2()];
+        auto invalid = PointIndex(PointIndex::INVALID);
+        if(pair.I1() != invalid && pair.I2() != invalid)
+          Add(pair.I1(), pair.I2(), i);
+      }
+    // for (auto i : IntRange(1, identifiedpoints.GetNBags()+1))
+    //   for (auto j : IntRange(1, identifiedpoints.GetBagSize(i)+1))
+    //     {
+    //       INDEX_2 i2;
+    //       int nr;
+    //       identifiedpoints.GetData (i, j, i2, nr);
+    //       i2.I1() = op2np[i2.I1()];
+    //       i2.I2() = op2np[i2.I2()];
+    //       identifiedpoints.SetData (i, j, i2, nr);	    
+    //     }
+  }
 
   void Identifications :: Print (ostream & ost) const
   {
