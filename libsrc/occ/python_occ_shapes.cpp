@@ -1233,20 +1233,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                // Handle(TopoDS_Face) face = e.Current();
                fmap.Add(face);
                ExtractFaceData(face, index, p, n, box);
-               auto & props = OCCGeometry::GetProperties(face);
-               if(props.col)
-               {
-                 auto & c = *props.col;
-                 colors.append(py::make_tuple(c[0], c[1], c[2]));
-               }
-               else
-                   colors.append(py::make_tuple(0.0, 1.0, 0.0));
-               if(props.name)
-               {
-                 names.append(*props.name);
-               }
-               else
-                   names.append("");
+
+               ShapeProperties props;
+               if(OCCGeometry::HaveProperties(face))
+                 props = OCCGeometry::GetProperties(face);
+
+               auto c = props.GetColor();
+               colors.append(py::make_tuple(c[0], c[1], c[2], c[3]));
+               names.append(props.GetName());
                index++;
            }
 
