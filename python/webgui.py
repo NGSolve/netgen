@@ -189,7 +189,7 @@ def GetData(mesh, args, kwargs):
     for i, el in enumerate(mesh.Elements2D()):
         pnts[i, :, 3] = el.index - 1
     fds = mesh.FaceDescriptors()
-    d["colors"] = [fd.color for fd in fds]
+    d["colors"] = [fd.color +(fd.transparency,) for fd in fds]
     d["mesh_regions_2d"] = len(fds)
     d["names"] = [fd.bcname for fd in fds]
 
