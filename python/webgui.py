@@ -222,6 +222,17 @@ class WebGLScene(base):
         self.kwargs = kwargs
         self.encoding = "b64"
 
+    def Redraw(self, *args, **kwargs):
+        if args or kwargs:
+            if 'show' not in kwargs:
+                kwargs['show'] = False
+
+            new_scene = Draw(*args, **kwargs)
+            self.obj = new_scene.obj
+            self.args = new_scene.args
+            self.kwargs = new_scene.kwargs
+        super().Redraw()
+
     def GetData(self, set_minmax=True):
         self.kwargs["encoding"] = self.encoding
         typ = type(self.obj)
