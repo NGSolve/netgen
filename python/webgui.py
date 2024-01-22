@@ -361,12 +361,12 @@ def _get_draw_default_args():
     )
 
 
-def Draw(obj, *args, **kwargs):
+def Draw(obj, *args, show=True, **kwargs):
     kwargs_with_defaults = _get_draw_default_args()
     kwargs_with_defaults.update(kwargs)
 
     scene = WebGLScene(obj, args, kwargs_with_defaults)
-    if wg is not None and wg._IN_IPYTHON:
+    if show and wg is not None and wg._IN_IPYTHON:
         if wg._IN_GOOGLE_COLAB:
             from IPython.display import display, HTML
 
