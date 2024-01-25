@@ -2308,6 +2308,8 @@ namespace netgen
         for (sei = 0; sei < nse; sei++)
           {
             const Element2d & el = (*mesh)[sei];
+            if(!SurfaceElementActive(vsol, *mesh, el))
+              continue;
           
             if (el.GetType() == TRIG || el.GetType() == TRIG6)
               {
