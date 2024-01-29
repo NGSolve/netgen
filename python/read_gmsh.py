@@ -22,7 +22,10 @@ def ReadGmsh(filename):
 
     pointmap = {}
     facedescriptormap = {}
-    namemap = { 0 : "default" }
+    namemap = { 0 : { 0 : "default" },
+                1: { 0 : "default" },
+                2: { 0 : "default" },
+                3: { 0 : "default" } }
     materialmap = {}
     bbcmap = {}
 
@@ -80,7 +83,7 @@ def ReadGmsh(filename):
             for i in range(numnames):
                 f.readline
                 line = f.readline()
-                namemap[int(line.split()[1])] = line.split()[2][1:-1]
+                namemap[int(line.split()[0])][int(line.split()[1])] = line.split()[2][1:-1]
 
         if line.split()[0] == "$Nodes":
             num = int(f.readline().split()[0])
@@ -115,7 +118,7 @@ def ReadGmsh(filename):
                         else:
                             index = len(bbcmap) + 1
                             if len(namemap):
-                                mesh.SetCD2Name(index, namemap[tags[0]])
+                                mesh.SetCD2Name(index, namemap[1][tags[0]])
                             else:
                                 mesh.SetCD2Name(index, "line" + str(tags[1]))
                             bbcmap[tags[1]] = index
@@ -127,7 +130,7 @@ def ReadGmsh(filename):
                             index = len(facedescriptormap) + 1
                             fd = FaceDescriptor(bc=index)
                             if len(namemap):
-                                fd.bcname = namemap[tags[0]]
+                                fd.bcname = namemap[1][tags[0]]
                             else:
                                 fd.bcname = 'line' + str(tags[1])
                             mesh.SetBCName(index - 1, fd.bcname)
@@ -139,7 +142,7 @@ def ReadGmsh(filename):
                         else:
                             index = len(materialmap) + 1
                             if len(namemap):
-                                mesh.SetMaterial(index, namemap[tags[0]])
+                                mesh.SetMaterial(index, namemap[1][tags[0]])
                             else:
                                 mesh.SetMaterial(index, "line" + str(tags[1]))
                             materialmap[tags[1]] = index
@@ -154,7 +157,7 @@ def ReadGmsh(filename):
                             index = len(facedescriptormap) + 1
                             fd = FaceDescriptor(bc=index)
                             if len(namemap):
-                                fd.bcname = namemap[tags[0]]
+                                fd.bcname = namemap[2][tags[0]]
                             else:
                                 fd.bcname = "surf" + str(tags[1])
                             mesh.SetBCName(index - 1, fd.bcname)
@@ -166,7 +169,7 @@ def ReadGmsh(filename):
                         else:
                             index = len(materialmap) + 1
                             if len(namemap):
-                                mesh.SetMaterial(index, namemap[tags[0]])
+                                mesh.SetMaterial(index, namemap[2][tags[0]])
                             else:
                                 mesh.SetMaterial(index, "surf" + str(tags[1]))
                             materialmap[tags[1]] = index
@@ -187,7 +190,7 @@ def ReadGmsh(filename):
                     else:
                         index = len(materialmap) + 1
                         if len(namemap):
-                            mesh.SetMaterial(index, namemap[tags[0]])
+                            mesh.SetMaterial(index, namemap[3][tags[0]])
                         else:
                             mesh.SetMaterial(index, "vol" + str(tags[1]))
                         materialmap[tags[1]] = index
