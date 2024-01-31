@@ -675,6 +675,11 @@ namespace netgen
                 moved_surfaces.SetBit(i);
                 mesh.SetBCName(new_si-1, "mapped_" + name);
               }
+            // curving of surfaces with boundary layers will often
+            // result in pushed through elements, since we do not (yet)
+            // curvature through layers.
+            // Therefore we disable curving for these surfaces.
+            mesh.GetFaceDescriptor(i).SetSurfNr(-1);
           }
       }
 
