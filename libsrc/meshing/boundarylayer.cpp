@@ -1145,6 +1145,11 @@ struct GrowthVectorLimiter {
                 moved_surfaces.SetBit(i);
                 mesh.SetBCName(new_si-1, "mapped_" + name);
               }
+            // curving of surfaces with boundary layers will often
+            // result in pushed through elements, since we do not (yet)
+            // curvature through layers.
+            // Therefore we disable curving for these surfaces.
+            mesh.GetFaceDescriptor(i).SetSurfNr(-1);
           }
       }
 
@@ -1782,6 +1787,9 @@ struct GrowthVectorLimiter {
                 if(surfacefacs[sel.GetIndex()] > 0) Swap(points[0], points[2]);
                 for(auto i : Range(points))
                   el[sel.PNums().Size() + i] = points[i];
+                auto new_index = new_mat_nrs[sel.GetIndex()];
+                if(new_index == -1)
+                  throw Exception("Boundary " + ToString(sel.GetIndex()) + " with name " + mesh.GetBCName(sel.GetIndex()-1) + " extruded, but no new material specified for it!");
                 el.SetIndex(new_mat_nrs[sel.GetIndex()]);
                 if(add_volume_element)
                   mesh.AddVolumeElement(el);

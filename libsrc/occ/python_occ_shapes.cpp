@@ -633,8 +633,12 @@ public:
   {
     TopoDS_Wire wire = wires.back();
     wires.pop_back();
-    BRepOffsetAPI_MakeOffset builder;
-    builder.AddWire(wire);
+
+    // handle wires containing a single edge correctly, see
+    // https://dev.opencascade.org/content/brepoffsetapimakeoffset-open-topodswire
+    BRepBuilderAPI_MakeFace makeFace{gp_Pln{axes}};
+    makeFace.Add(wire);
+    BRepOffsetAPI_MakeOffset builder(makeFace.Face());
     builder.Perform(d);
     auto shape = builder.Shape();
     wires.push_back (TopoDS::Wire(shape.Reversed()));

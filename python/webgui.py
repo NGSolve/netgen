@@ -189,7 +189,7 @@ def GetData(mesh, args, kwargs):
     for i, el in enumerate(mesh.Elements2D()):
         pnts[i, :, 3] = el.index - 1
     fds = mesh.FaceDescriptors()
-    d["colors"] = [fd.color for fd in fds]
+    d["colors"] = [fd.color +(fd.transparency,) for fd in fds]
     d["mesh_regions_2d"] = len(fds)
     d["names"] = [fd.bcname for fd in fds]
 
@@ -221,6 +221,17 @@ class WebGLScene(base):
         self.args = args
         self.kwargs = kwargs
         self.encoding = "b64"
+
+    def Redraw(self, *args, **kwargs):
+        if args or kwargs:
+            if 'show' not in kwargs:
+                kwargs['show'] = False
+
+            new_scene = Draw(*args, **kwargs)
+            self.obj = new_scene.obj
+            self.args = new_scene.args
+            self.kwargs = new_scene.kwargs
+        super().Redraw()
 
     def GetData(self, set_minmax=True):
         self.kwargs["encoding"] = self.encoding
@@ -361,12 +372,12 @@ def _get_draw_default_args():
     )
 
 
-def Draw(obj, *args, **kwargs):
+def Draw(obj, *args, show=True, **kwargs):
     kwargs_with_defaults = _get_draw_default_args()
     kwargs_with_defaults.update(kwargs)
 
     scene = WebGLScene(obj, args, kwargs_with_defaults)
-    if wg is not None and wg._IN_IPYTHON:
+    if show and wg is not None and wg._IN_IPYTHON:
         if wg._IN_GOOGLE_COLAB:
             from IPython.display import display, HTML
 
