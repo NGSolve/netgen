@@ -4043,6 +4043,9 @@ namespace netgen
           pused[seg[j]] = true;
       }
 
+    for(auto& pe : pointelements)
+      pused[pe.pnum] = true;
+
     for (int i = 0; i < openelements.Size(); i++)
       {
         const Element2d & el = openelements[i];
@@ -4128,6 +4131,9 @@ namespace netgen
         for (int j = 0; j < seg.GetNP(); j++)
           seg[j] = op2np[seg[j]];
       }
+
+    for(auto& pe : pointelements)
+      pe.pnum = op2np[pe.pnum];
 
     for (int i = 1; i <= openelements.Size(); i++)
       {
