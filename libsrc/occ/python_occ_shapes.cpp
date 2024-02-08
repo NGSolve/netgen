@@ -641,7 +641,7 @@ public:
     BRepOffsetAPI_MakeOffset builder(makeFace.Face());
     builder.Perform(d);
     auto shape = builder.Shape();
-    wires.push_back (TopoDS::Wire(shape.Reversed()));
+    wires.push_back (TopoDS::Wire(shape));
     return shared_from_this();
   }
   
