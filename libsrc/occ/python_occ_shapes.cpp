@@ -631,6 +631,7 @@ public:
   
   auto Offset(double d)
   {
+    Finish();
     TopoDS_Wire wire = wires.back();
     wires.pop_back();
 
