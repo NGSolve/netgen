@@ -1561,10 +1561,8 @@ struct GrowthVectorLimiter {
       if (growthvectors[pi].Length2() != 0) {
         if(special_boundary_points.count(pi))
         {
-          for(auto & group : special_boundary_points[pi].growth_groups) {
+          for(auto & group : special_boundary_points[pi].growth_groups)
             add_points(pi, group.growth_vector, group.new_points);
-            cout << "new points " << pi << endl << group.new_points << endl;
-          }
         }
         else
           add_points(pi, growthvectors[pi], mapto[pi]);
