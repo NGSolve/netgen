@@ -699,6 +699,8 @@ namespace netgen
 	  {
 	    INDEX_2 i2(el.pnums[hprs->splitedges[j][0]-1],
 		       el.pnums[hprs->splitedges[j][1]-1]);
+            if (fac1 == 0.5) i2.Sort();
+            
 	    if (!newpts.Used (i2))
 	      {
 		Point<3> np; 
@@ -787,7 +789,8 @@ namespace netgen
 	  {
 	    INDEX_2 i2(el.pnums[hprs->splitedges[j][0]-1],
 		       el.pnums[hprs->splitedges[j][1]-1]);
-
+            if (fac1 == 0.5) i2.Sort();
+            
 	    int npi = newpts.Get(i2);
 	    newpnums[hprs->splitedges[j][2]-1] = npi;
 
@@ -1990,8 +1993,11 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	    }
 	  case HP_SEGM: 
 	    {
-	      hpel.type = ClassifySegm(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, 
-				       faces, face_edges, surf_edges, facepoint);    
+              if (split == SPLIT_HP)
+                hpel.type = ClassifySegm(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, 
+                                         faces, face_edges, surf_edges, facepoint);
+              else if (split == SPLIT_POWELL)
+                hpel.type = HP_SEGM_SINGCORNERL;
 	      dd = 1; 
 	      break; 
 	    }

@@ -631,6 +631,7 @@ public:
   
   auto Offset(double d)
   {
+    Finish();
     TopoDS_Wire wire = wires.back();
     wires.pop_back();
 
@@ -641,7 +642,7 @@ public:
     BRepOffsetAPI_MakeOffset builder(makeFace.Face());
     builder.Perform(d);
     auto shape = builder.Shape();
-    wires.push_back (TopoDS::Wire(shape.Reversed()));
+    wires.push_back (TopoDS::Wire(shape));
     return shared_from_this();
   }
   
