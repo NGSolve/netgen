@@ -1592,6 +1592,7 @@ namespace netgen
     
     ///
     DLL_HEADER void GetPairs (int identnr, NgArray<INDEX_2> & identpairs) const;
+    DLL_HEADER Array<INDEX_3> GetPairs () const;
     ///
     int GetMaxNr () const { return maxidentnr; }  
 

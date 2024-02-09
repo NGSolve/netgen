@@ -2787,6 +2787,20 @@ namespace netgen
   }
 
 
+  Array<INDEX_3> Identifications :: GetPairs () const
+  {
+    Array<INDEX_3> pairs;
+    for (auto i : IntRange(1, identifiedpoints.GetNBags()+1))
+      for (auto j : IntRange(1, identifiedpoints.GetBagSize(i)+1))
+        {
+          INDEX_2 i2;
+          int nr;
+          identifiedpoints.GetData (i, j, i2, nr);
+          pairs.Append ({i2.I1(), i2.I2(), nr});
+        }
+    return pairs;
+  }
+
   void Identifications :: GetPairs (int identnr, 
                                     NgArray<INDEX_2> & identpairs) const
   {
@@ -2832,32 +2846,20 @@ namespace netgen
         }
   }
 
+  // Map points in the identifications to new point numbers
+  // deletes identifications with invalid (mapped) points
   void Identifications :: MapPoints(FlatArray<PointIndex, PointIndex> op2np)
   {
-    Array<NgArray<INDEX_2>> pairs;
-    pairs.SetSize(maxidentnr+1);
-    for(auto i : Range(maxidentnr+1))
-      GetPairs(i, pairs[i]);
-    
+    auto pairs = GetPairs();
     Delete();
-    for (auto i : Range(maxidentnr+1))
-      for(auto pair : pairs[i]) {
-        pair.I1() = op2np[pair.I1()];
-        pair.I2() = op2np[pair.I2()];
-        auto invalid = PointIndex(PointIndex::INVALID);
-        if(pair.I1() != invalid && pair.I2() != invalid)
-          Add(pair.I1(), pair.I2(), i);
+
+    for(auto pair : pairs)
+      {
+        auto p1 = op2np[pair.I1()];
+        auto p2 = op2np[pair.I2()];
+        if(p1.IsValid() && p2.IsValid())
+          Add(p1, p2, pair.I3());
       }
-    // for (auto i : IntRange(1, identifiedpoints.GetNBags()+1))
-    //   for (auto j : IntRange(1, identifiedpoints.GetBagSize(i)+1))
-    //     {
-    //       INDEX_2 i2;
-    //       int nr;
-    //       identifiedpoints.GetData (i, j, i2, nr);
-    //       i2.I1() = op2np[i2.I1()];
-    //       i2.I2() = op2np[i2.I2()];
-    //       identifiedpoints.SetData (i, j, i2, nr);	    
-    //     }
   }
 
   void Identifications :: Print (ostream & ost) const

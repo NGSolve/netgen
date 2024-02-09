@@ -548,10 +548,6 @@ namespace netgen
      auto & ident_points = mesh.GetIdentifications().GetIdentifiedPoints();
      ident_points.DeleteData();
      
-     for(auto & m_ : md) {
-     m_.mesh->GetIdentifications().Delete();
-      m_.mesh->Save("mesh_domain_"+ToString(m_.domain)+".vol.gz");
-  }
 
      for(auto & m_ : md)
      {
@@ -615,9 +611,7 @@ namespace netgen
   {
     static Timer t("MeshVolume"); RegionTimer reg(t);
 
-  cout << "initial compress " << endl;
      mesh3d.Compress();
-  cout << "initial compress done" << endl;
 
 
 

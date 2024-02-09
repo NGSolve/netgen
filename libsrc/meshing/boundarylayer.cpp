@@ -584,8 +584,6 @@ struct GrowthVectorLimiter {
 
     for(auto i : Range(growthvectors))
       growthvectors[i] *= limits[i];
-  cout << "limits " << limits << endl;
-  cout << "old np " << np << endl;
 
 }
 
@@ -1541,7 +1539,6 @@ struct GrowthVectorLimiter {
 
     auto & identifications = mesh.GetIdentifications();
     const int identnr = identifications.GetNr("boundarylayer");
-    identifications.SetType(identnr, Identifications::CLOSESURFACES);
 
     auto add_points = [&](PointIndex pi, Vec<3> & growth_vector, Array<PointIndex> & new_points)
     {
@@ -1553,13 +1550,8 @@ struct GrowthVectorLimiter {
           auto pi_new = mesh.AddPoint(p);
           new_points.Append(pi_new);
           growth_vector_map[pi_new] = { &growth_vector, params.heights[i] };
-          if(special_boundary_points.count(pi) == 0)
-            mesh.GetIdentifications().Add(pi_last, pi_new, identnr);
-          else
-          {
-            cout << "add locked point " << pi_new << endl;
+          if(special_boundary_points.count(pi) > 0)
             mesh.AddLockedPoint(pi_new);
-          }
           pi_last = pi_new;
         }
     };
@@ -1793,6 +1785,14 @@ struct GrowthVectorLimiter {
                 el.SetIndex(new_mat_nrs[sel.GetIndex()]);
                 if(add_volume_element)
                   mesh.AddVolumeElement(el);
+                else
+                {
+                  // Let the volume mesher fill the hole with pyramids/tets
+                  // To insert pyramids, we need close surface identifications on open quads
+                  for(auto i : Range(points))
+                    if(numGroups(sel[i]) == 1)
+                      identifications.Add(el[i], el[i+points.Size()], identnr);
+                }
               }
             Element2d newel = sel;
             for(auto i: Range(points))
