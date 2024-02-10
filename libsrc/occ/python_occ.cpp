@@ -1,6 +1,25 @@
 #ifdef NG_PYTHON
 #ifdef OCCGEOMETRY
 
+
+// for testing: copied from mystdlib.h
+#ifdef _MSC_VER
+# define WIN32_LEAN_AND_MEAN
+# ifndef NO_PARALLEL_THREADS
+#  ifdef MSVC_EXPRESS
+#  else
+#   include <afxwin.h>
+#   include <afxmt.h>
+#  endif // MSVC_EXPRESS
+# endif
+# include <windows.h>
+# undef WIN32_LEAN_AND_MEAN
+# include <winnt.h>
+#else // Not using MC VC++
+#endif
+
+
+
 #include <memory>
 
 #include <general/ngpython.hpp>
