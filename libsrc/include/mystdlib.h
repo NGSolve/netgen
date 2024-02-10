@@ -49,7 +49,7 @@ namespace metis { extern "C" {
 #define M_PI 3.14159265358979323846
 #endif
 
-
+#ifdef TESTWITHOUTWIN
 /*** Windows headers ***/
 #ifdef _MSC_VER
 # define WIN32_LEAN_AND_MEAN
@@ -67,6 +67,7 @@ namespace metis { extern "C" {
 #else // Not using MC VC++
 
 
+#endif
 #endif
 
 
