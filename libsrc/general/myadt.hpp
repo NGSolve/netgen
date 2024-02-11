@@ -45,5 +45,4 @@ namespace netgen
 // #include "mpi_interface.hpp"
 #include "netgenout.hpp"
 
-
 #endif
