@@ -13,13 +13,6 @@ Visualization
 
 */
 
-// #ifdef PARALLEL
-// #define PARALLELGL
-// #endif
-
-
-
-
 #include "visual_api.hpp"
 #include "../include/incopengl.hpp"
 

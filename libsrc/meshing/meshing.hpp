@@ -9,6 +9,12 @@
 #include "../include/opti.hpp"
 
 
+/*** Windows headers ***/
+#ifdef _MSC_VER
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>
+# undef WIN32_LEAN_AND_MEAN
+#endif
 
 namespace netgen
 {
@@ -61,5 +67,7 @@ namespace netgen
 #include "surfacegeom.hpp"
 
 #include "paralleltop.hpp"
+
+
 
 #endif

@@ -33,6 +33,11 @@ using netgen::verbose;
 using netgen::NgArray;
 using netgen::RegisterUserFormats;
 
+using std::string;
+using std::endl;
+using std::cout;
+using std::cerr;
+using std::ofstream;
 
 
 
