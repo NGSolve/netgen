@@ -59,7 +59,7 @@ namespace metis { extern "C" {
 // #   include <afxmt.h>
 #  endif // MSVC_EXPRESS
 # endif
-# include <windows.h>
+// # include <windows.h>
 # undef WIN32_LEAN_AND_MEAN
 // # include <winnt.h>
 #else // Not using MC VC++
