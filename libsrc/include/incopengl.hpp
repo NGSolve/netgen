@@ -5,6 +5,10 @@
 #include <mystdlib.h>
 #include <mydefs.hpp>
 
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
 
 #  ifdef __APPLE__
 #define GL_SILENCE_DEPRECATION
