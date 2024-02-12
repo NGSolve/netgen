@@ -6357,6 +6357,8 @@ namespace netgen
     for(auto si : Range(segments))
       {
         auto& seg = segments[si];
+        // Copy segment, as reference above might get invalidated in AddSegment()
+        auto reference_seg = seg;
         auto p1 = seg[0];
         auto p2 = seg[1];
 
@@ -6376,7 +6378,7 @@ namespace netgen
           seg[1] = ipts[1];
         for(auto i : Range(size_t(1), ipts.Size()-1))
           {
-            Segment snew = seg;
+            Segment snew = reference_seg;
             if(c2)
               {
                 snew[0] = ipts[ipts.Size()-1-i];
