@@ -3405,13 +3405,13 @@ namespace netgen
     return pz<1 && pz>0;
   }
 
-  ngcore::INT<2> VisualSceneMesh :: Project(Point<3> p)
+  ngcore::IVec<2> VisualSceneMesh :: Project(Point<3> p)
   {
     Point<3> pwin;
     gluProject(p[0], p[1], p[2], transformationmat, select.projmat, select.viewport,
         &pwin[0], &pwin[1], &pwin[2]);
 
-    return ngcore::INT<2>(pwin[0]+0.5, select.viewport[3]-pwin[1]+0.5);
+    return ngcore::IVec<2>(pwin[0]+0.5, select.viewport[3]-pwin[1]+0.5);
   }
 
 

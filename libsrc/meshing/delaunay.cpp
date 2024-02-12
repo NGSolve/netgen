@@ -840,12 +840,12 @@ namespace netgen
     tets_with_3_bnd_points.SetSize(cnt);
 
     static Timer t1("Build face table"); t1.Start();
-    ngcore::ClosedHashTable< ngcore::INT<3>, int > face_table( 4*cnt + 3 );
+    ngcore::ClosedHashTable< ngcore::IVec<3>, int > face_table( 4*cnt + 3 );
     for(auto ei : tets_with_3_bnd_points)
         for(auto j : Range(4))
         {
             auto i3_ = tempels[ei].GetFace (j);
-            ngcore::INT<3> i3 = {i3_[0], i3_[1], i3_[2]};
+            ngcore::IVec<3> i3 = {i3_[0], i3_[1], i3_[2]};
             if(bnd_points[i3[0]] && bnd_points[i3[1]] && bnd_points[i3[2]])
             {
                 i3.Sort();
@@ -860,7 +860,7 @@ namespace netgen
     for (int i = 1; i <= mesh.GetNOpenElements(); i++)
       {
 	const Element2d & tri = mesh.OpenElement(i);
-        ngcore::INT<3> i3(tri[0], tri[1], tri[2]);
+        ngcore::IVec<3> i3(tri[0], tri[1], tri[2]);
 	i3.Sort();
         if(!face_table.Used(i3))
             openels.Append(i);

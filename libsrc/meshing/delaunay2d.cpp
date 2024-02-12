@@ -38,7 +38,7 @@ namespace netgen
     if(p1<p0)
       Swap(p0,p1);
 
-    INT<2> hash = {p0,p1};
+    IVec<2> hash = {p0,p1};
 
     auto pos = edge_to_trig.Position(hash);
     if (pos == -1) return -1;
@@ -53,7 +53,7 @@ namespace netgen
     if(p1<p0)
       Swap(p0,p1);
 
-    INT<2> hash = {p0,p1};
+    IVec<2> hash = {p0,p1};
     auto pos = edge_to_trig.Position(hash);
     if (pos == -1)
       edge_to_trig[hash] = {eli, -1};
@@ -80,7 +80,7 @@ namespace netgen
       if(p1<p0)
         Swap(p0,p1);
 
-      INT<2> hash = {p0,p1};
+      IVec<2> hash = {p0,p1};
       auto pos = edge_to_trig.Position(hash);
       auto i2 = edge_to_trig.GetData(pos);
 
@@ -256,7 +256,7 @@ namespace netgen
       {
         int p1 = trig[k];
         int p2 = trig[(k+1)%3];
-        INT<2> edge{p1,p2};
+        IVec<2> edge{p1,p2};
         edge.Sort();
         bool found = false;
         for (int l = 0; l < edges.Size(); l++)
@@ -801,13 +801,13 @@ namespace netgen
     // Mark edges and trigs as inside or outside, starting with boundary edges
     enum POSITION { UNKNOWN, BOUNDARY, INSIDE, OUTSIDE };
     Array<POSITION, SurfaceElementIndex> trig_pos(tempmesh.SurfaceElements().Size());
-    ngcore::ClosedHashTable<INT<2>, POSITION> edge_pos(3*tempmesh.SurfaceElements().Size());
+    ngcore::ClosedHashTable<IVec<2>, POSITION> edge_pos(3*tempmesh.SurfaceElements().Size());
     trig_pos = UNKNOWN;
 
     for (auto & seg : tempmesh.LineSegments())
     {
       ArrayMem<SurfaceElementIndex, 2> els;
-      INT<2> edge{seg[0], seg[1]};
+      IVec<2> edge{seg[0], seg[1]};
       edge.Sort();
       edge_pos[edge] = BOUNDARY;
 
@@ -828,8 +828,8 @@ namespace netgen
         else
           pos = OUTSIDE;
 
-        INT<2> e1{seg[0], pi2};
-        INT<2> e2{seg[1], pi2};
+        IVec<2> e1{seg[0], pi2};
+        IVec<2> e2{seg[1], pi2};
         e1.Sort();
         e2.Sort();
         if(!edge_pos.Used(e1))
@@ -857,7 +857,7 @@ namespace netgen
           // any edge of unknown trig already marked?
           for(auto i : IntRange(3))
           {
-            INT<2> edge{el[(i+1)%3], el[(i+2)%3]};
+            IVec<2> edge{el[(i+1)%3], el[(i+2)%3]};
             edge.Sort();
             if(edge_pos.Used(edge) && edge_pos[edge]!=BOUNDARY)
             {
@@ -871,7 +871,7 @@ namespace netgen
         if(trig_pos[sei] != UNKNOWN)
           for(auto i : IntRange(3))
           {
-            INT<2> edge{el[(i+1)%3], el[(i+2)%3]};
+            IVec<2> edge{el[(i+1)%3], el[(i+2)%3]};
             edge.Sort();
             if(!edge_pos.Used(edge) || edge_pos[edge]==BOUNDARY)
               edge_pos[edge] = trig_pos[sei];
