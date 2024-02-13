@@ -679,7 +679,8 @@ namespace netgen
             // result in pushed through elements, since we do not (yet)
             // curvature through layers.
             // Therefore we disable curving for these surfaces.
-            mesh.GetFaceDescriptor(i).SetSurfNr(-1);
+            if(!params.keep_surfaceindex)
+              mesh.GetFaceDescriptor(i).SetSurfNr(-1);
           }
       }
 
@@ -984,7 +985,7 @@ namespace netgen
         Array<PointIndex> points;
         // find first vertex on edge
         double edge_len = 0.;
-        auto is_end_point = [&] (PointIndex pi)
+        auto is_end_point = [&] (PointIndex pi, const Segment& testseg)
         {
           // if(mesh[pi].Type() == FIXEDPOINT)
           //   return true;
@@ -992,13 +993,14 @@ namespace netgen
             auto segs = topo.GetVertexSegments(pi);
             auto first_edgenr = mesh[segs[0]].edgenr;
             for(auto segi : segs)
-                if(mesh[segi].edgenr != first_edgenr)
-                    return true;
+              if(auto& seg = mesh[segi]; seg.edgenr != first_edgenr || (testseg[0] == seg[1] && testseg[1] == seg[0]))
+                return true;
             return false;
         };
 
         bool any_grows = false;
         
+        const Segment* last_seg = nullptr;
         for(const auto& seg : segments)
           {
             if(seg.edgenr-1 == edgenr)
@@ -1006,8 +1008,9 @@ namespace netgen
                 if(growthvectors[seg[0]].Length2() != 0 ||
                    growthvectors[seg[1]].Length2() != 0)
                   any_grows = true;
-                if(points.Size() == 0 && is_end_point(seg[0]))
+                if(points.Size() == 0 && is_end_point(seg[0], seg))
                   {
+                    last_seg = &seg;
                     points.Append(seg[0]);
                     points.Append(seg[1]);
                     edge_len += (mesh[seg[1]] - mesh[seg[0]]).Length();
@@ -1034,6 +1037,7 @@ namespace netgen
                     edge_len += (mesh[points.Last()] - mesh[seg[1]]).Length();
                     points.Append(seg[1]);
                     point_found = true;
+                    last_seg = &seg;
                     break;
                   }
                 else if(seg[1] == points.Last() &&
@@ -1042,10 +1046,11 @@ namespace netgen
                     edge_len += (mesh[points.Last()] - mesh[seg[0]]).Length();
                     points.Append(seg[0]);
                     point_found = true;
+                    last_seg = &seg;
                     break;
                   }
               }
-            if(is_end_point(points.Last()))
+            if(last_seg && is_end_point(points.Last(), *last_seg))
               break;
             if(!point_found)
               {
