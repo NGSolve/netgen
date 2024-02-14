@@ -699,6 +699,8 @@ namespace netgen
     auto & GetCommunicator() const { return this->comm; }
     void SetCommunicator(NgMPI_Comm acomm);
     
+    DLL_HEADER void SplitFacesByAdjacentDomains();
+
     ///
     DLL_HEADER void SetMaterial (int domnr, const string & mat);
     ///
