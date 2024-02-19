@@ -5,7 +5,6 @@ namespace netgen
 {
   using ngcore::ParallelForRange;
   using ngcore::ParallelFor;
-  using ngcore::INT;
   using ngcore::TasksPerThread;
 
   /*
@@ -699,20 +698,20 @@ namespace netgen
               // edge is splitting edge in middle of triangle:
               for (int j = 1; j <= 2; j++)
               {
-                INT<2> paedge1, paedge2, paedge3;
+                IVec<2> paedge1, paedge2, paedge3;
                 int orient_inner = 0;
                 if (j == 1)
                 {
-                  paedge1 = INT<2> (pa0[0], verts[1]);
-                  paedge2 = INT<2> (pa0[1], verts[1]);
-                  paedge3 = INT<2> (pa0[0], pa0[1]);
+                  paedge1 = IVec<2> (pa0[0], verts[1]);
+                  paedge2 = IVec<2> (pa0[1], verts[1]);
+                  paedge3 = IVec<2> (pa0[0], pa0[1]);
                   orient_inner = 0;
                 }
                 else
                 {
-                  paedge1 = INT<2> (pa1[0], verts[0]);
-                  paedge2 = INT<2> (pa1[1], verts[0]);
-                  paedge3 = INT<2> (pa1[0], pa1[1]);
+                  paedge1 = IVec<2> (pa1[0], verts[0]);
+                  paedge2 = IVec<2> (pa1[1], verts[0]);
+                  paedge3 = IVec<2> (pa1[0], pa1[1]);
                   orient_inner = 1;
                 }
                 if (paedge1[0] > paedge1[1]) 
@@ -752,21 +751,21 @@ namespace netgen
 
               if (!bisect_edge) // not a bisect edge (then a red edge)
               {
-                INT<2> paedge1, paedge2, paedge3;
+                IVec<2> paedge1, paedge2, paedge3;
                 int orient1 = 0, orient2 = 0, orient3=0;
                 // int orient_inner = 0;
-                paedge1 = INT<2> (pa0[0], pa0[1]);
-                paedge2 = INT<2> (pa1[0], pa1[1]);
+                paedge1 = IVec<2> (pa0[0], pa0[1]);
+                paedge2 = IVec<2> (pa1[0], pa1[1]);
                 // find common vertex and the third pa edge
                 if (pa0[0]==pa1[0]){// 00
                   //orient1 = 0; 
                   orient2 = 1; 
                   if (pa0[1]<pa1[1]){
                     orient3 = 1;
-                    paedge3 = INT<2> (pa0[1], pa1[1]);
+                    paedge3 = IVec<2> (pa0[1], pa1[1]);
                   }else{
                     //orient3 = 0;
-                    paedge3 = INT<2> (pa1[1], pa0[1]);
+                    paedge3 = IVec<2> (pa1[1], pa0[1]);
                   }
                 }
                 else if (pa0[0]==pa1[1]){//01
@@ -774,10 +773,10 @@ namespace netgen
                   //orient2 = 0; 
                   if (pa0[1]<pa1[0]){
                     orient3 = 1;
-                    paedge3 = INT<2> (pa0[1], pa1[0]);
+                    paedge3 = IVec<2> (pa0[1], pa1[0]);
                   }else{
                     //orient3 = 0;
-                    paedge3 = INT<2> (pa1[0], pa0[1]);
+                    paedge3 = IVec<2> (pa1[0], pa0[1]);
                   }
                 }
                 else if (pa0[1]==pa1[0]){//10
@@ -785,10 +784,10 @@ namespace netgen
                   orient2 = 1; 
                   if (pa0[0]<pa1[1]){
                     orient3 = 1;
-                    paedge3 = INT<2> (pa0[0], pa1[1]);
+                    paedge3 = IVec<2> (pa0[0], pa1[1]);
                   }else{
                     //orient3 = 0;
-                    paedge3 = INT<2> (pa1[1], pa0[0]);
+                    paedge3 = IVec<2> (pa1[1], pa0[0]);
                   }
                 }
                 else if (pa0[1]==pa1[1]){//11
@@ -796,10 +795,10 @@ namespace netgen
                   //orient2 = 0; 
                   if (pa0[0]<pa1[0]){
                     orient3 = 1;
-                    paedge3 = INT<2> (pa0[0], pa1[0]);
+                    paedge3 = IVec<2> (pa0[0], pa1[0]);
                   }else{
                     //orient3 = 0;
-                    paedge3 = INT<2> (pa1[0], pa0[0]);
+                    paedge3 = IVec<2> (pa1[0], pa0[0]);
                   }
                 }
 
@@ -832,16 +831,16 @@ namespace netgen
               pa1[1] != pa2[1])
               for (int j = 1; j <= 2; j++)
               {
-              INT<2> paedge1, paedge2;
+              IVec<2> paedge1, paedge2;
               if (j == 1)
               {
-              paedge1 = INT<2> (pa1[0], pa2[0]);
-              paedge2 = INT<2> (pa1[1], pa2[1]);
+              paedge1 = IVec<2> (pa1[0], pa2[0]);
+              paedge2 = IVec<2> (pa1[1], pa2[1]);
               }
               else
               {
-              paedge1 = INT<2> (pa1[0], pa2[1]);
-              paedge2 = INT<2> (pa1[1], pa2[0]);
+              paedge1 = IVec<2> (pa1[0], pa2[1]);
+              paedge2 = IVec<2> (pa1[1], pa2[0]);
               }
 
               int paedgenr1 = 0, paedgenr2 = 0;
@@ -877,7 +876,7 @@ namespace netgen
               for (int j = 0; j < 2; j++)
               for (int k = 0; k < 2; k++)
               {
-              INT<2> paedge (pa1[1-j], pa2[1-k]);
+              IVec<2> paedge (pa1[1-j], pa2[1-k]);
               int orientpa = 1;
               if (paedge[0] > paedge[1]) 
               {
@@ -909,12 +908,12 @@ namespace netgen
     
 
     // edge hashtable:: needed for getting parent faces	
-    ngcore::ClosedHashTable<INT<2>, int> v2e(nv);
+    ngcore::ClosedHashTable<IVec<2>, int> v2e(nv);
     if (build_parent_faces)
       for (auto i : Range(edge2vert))
         {
           auto edge = edge2vert[i];
-          INT<2> e2(edge[0], edge[1]);
+          IVec<2> e2(edge[0], edge[1]);
           e2.Sort();
           v2e[e2] = i;
         }
@@ -947,7 +946,7 @@ namespace netgen
 	  vert2oldface.AddSave (face2vert[i][0], i);
 
         // find all potential intermediate faces
-        Array<INT<3>> intermediate_faces;
+        Array<IVec<3>> intermediate_faces;
         if (build_parent_faces)
           {
             for (ElementIndex ei = 0; ei < ne; ei++)
@@ -957,7 +956,7 @@ namespace netgen
                   // cout << "element: " << (*mesh)[ei].PNums() << endl;
                   (*mesh)[ei].GetFace(i+1, face);
                   // cout << "face " << face.PNums() << endl;
-                  INT<3,PointIndex> f3 = { face[0], face[1], face[2] };
+                  IVec<3,PointIndex> f3 = { face[0], face[1], face[2] };
                   for (int j = 0; j < 3; j++)
                     {
                       PointIndex v = f3[j];
@@ -973,10 +972,10 @@ namespace netgen
                             PointIndex v2 = f3[0]+f3[1]+f3[2] - v - v0;
                             // if there is an edge connecting v1 and v2, accept
                             // the new face
-                            INT<2> parentedge(v1, v2);
+                            IVec<2> parentedge(v1, v2);
                             parentedge.Sort();
                             if (v2e.Used(parentedge)){ 
-                              INT<3> cf3 = { v0, v1, v2 };
+                              IVec<3> cf3 = { v0, v1, v2 };
                               cf3.Sort();
                               // cout << "intermediate: " << cf3 << " of " << f3 << endl;
                               intermediate_faces.Append (cf3);
@@ -988,7 +987,7 @@ namespace netgen
             for (SurfaceElementIndex sei = 0; sei < nse; sei++)
               {
                 const Element2d & sel = (*mesh)[sei];
-                INT<3,PointIndex> f3 = { sel[0], sel[1], sel[2] };
+                IVec<3,PointIndex> f3 = { sel[0], sel[1], sel[2] };
                 for (int j = 0; j < 3; j++)
                   {
                     PointIndex v = f3[j];
@@ -1004,10 +1003,10 @@ namespace netgen
                           PointIndex v2 = f3[0]+f3[1]+f3[2] - v - v0;
                           // if there is an edge connecting v1 and v2, accept
                           // the new face
-                          INT<2> parentedge(v1, v2);
+                          IVec<2> parentedge(v1, v2);
                           parentedge.Sort();
                           if (v2e.Used(parentedge)){ 
-                            INT<3> cf3 = { v0, v1, v2 };
+                            IVec<3> cf3 = { v0, v1, v2 };
                             cf3.Sort();
                             // cout << "intermediate: " << cf3 << " of " << f3 << endl;
                             intermediate_faces.Append (cf3);
@@ -1377,11 +1376,11 @@ namespace netgen
 
             // cout << "f2v = " << face2vert << endl;
             
-            ngcore::ClosedHashTable<INT<3>, int> v2f(nv);
+            ngcore::ClosedHashTable<IVec<3>, int> v2f(nv);
             for (auto i : Range(face2vert))
               {
                 auto face = face2vert[i];
-                INT<3> f3(face[0], face[1], face[2]);
+                IVec<3> f3(face[0], face[1], face[2]);
                 f3.Sort();
                 v2f[f3] = i;
               }
@@ -1393,7 +1392,7 @@ namespace netgen
 
             for (auto i : Range(nfa))
               {
-                INT<3,PointIndex> f3(face2vert[i][0], face2vert[i][1], face2vert[i][2]);
+                IVec<3,PointIndex> f3(face2vert[i][0], face2vert[i][1], face2vert[i][2]);
 
 
                 // face on coarses level ?
@@ -1433,10 +1432,10 @@ namespace netgen
                             
                             // if there is an edge connecting v1 and v2, accept
                             // the new face
-                            INT<2> parentedge(v1, v2);
+                            IVec<2> parentedge(v1, v2);
                             parentedge.Sort();
                             if (v2e.Used(parentedge)){ 
-                              INT<3> parentverts(v0, v1, v2);
+                              IVec<3> parentverts(v0, v1, v2);
                               parentverts.Sort();
 
                               int classnr = 0;
@@ -1476,13 +1475,13 @@ namespace netgen
                       PointIndex v1 = parents[1];
                       PointIndex v2 = f3[(k+1)%3];
                       PointIndex v3 = f3[(k+2)%3];
-                      INT<3> parentedge1(v0, v2);
+                      IVec<3> parentedge1(v0, v2);
                       parentedge1.Sort();
-                      INT<3> parentedge2(v0, v3);
+                      IVec<3> parentedge2(v0, v3);
                       parentedge2.Sort();
-                      INT<3> parentedge3(v1, v2);
+                      IVec<3> parentedge3(v1, v2);
                       parentedge3.Sort();
-                      INT<3> parentedge4(v1, v3);
+                      IVec<3> parentedge4(v1, v3);
                       parentedge4.Sort();
                       // if edges [v0,v2], [v0, v3], [v1,v2], [v1,v3] exists
                       // then vb is the bisecting edge
@@ -1507,13 +1506,13 @@ namespace netgen
                           // by default v0 < v1 < vb <  v2 < v3
                           classnr=9;
                         }
-                        INT<3> parentverts1(v0, v2, v3);
+                        IVec<3> parentverts1(v0, v2, v3);
                         parentverts1.Sort();
-                        INT<3> parentverts2(v1, v2, v3);
+                        IVec<3> parentverts2(v1, v2, v3);
                         parentverts2.Sort();
-                        INT<3> parentverts3(v0, v1, v2);
+                        IVec<3> parentverts3(v0, v1, v2);
                         parentverts3.Sort();
-                        INT<3> parentverts4(v0, v1, v3);
+                        IVec<3> parentverts4(v0, v1, v3);
                         parentverts4.Sort();
                         int pafacenr1=-1, pafacenr2=-1, pafacenr3=-1, pafacenr4=-1;
                         if (v2f.Used(parentverts1))
@@ -1561,13 +1560,13 @@ namespace netgen
                       PointIndex v1 = parents[1];
                       PointIndex v2 = f3[(k+1)%3];
                       PointIndex v3 = f3[(k+2)%3];
-                      INT<2> parentedge1(v0, v2);
+                      IVec<2> parentedge1(v0, v2);
                       parentedge1.Sort();
-                      INT<2> parentedge2(v0, v3);
+                      IVec<2> parentedge2(v0, v3);
                       parentedge2.Sort();
-                      INT<2> parentedge3(v1, v2);
+                      IVec<2> parentedge3(v1, v2);
                       parentedge3.Sort();
-                      INT<2> parentedge4(v1, v3);
+                      IVec<2> parentedge4(v1, v3);
                       parentedge4.Sort();
 
                       // if edges [v0,v2], [v0, v3], [v1,v2], [v1,v3] exists
@@ -1595,13 +1594,13 @@ namespace netgen
                             }
                           // cout << "classnr = " << classnr << endl;
 
-                          INT<3> parentverts1(v1, v2, v3);
+                          IVec<3> parentverts1(v1, v2, v3);
                           parentverts1.Sort();
-                          INT<3> parentverts2(v0, v2, v3);
+                          IVec<3> parentverts2(v0, v2, v3);
                           parentverts2.Sort();
-                          INT<3> parentverts3(v0, v1, v3);
+                          IVec<3> parentverts3(v0, v1, v3);
                           parentverts3.Sort();
-                          INT<3> parentverts4(v0, v1, v2);
+                          IVec<3> parentverts4(v0, v1, v2);
                           parentverts4.Sort();
                           
                           if (!v2f.Used(parentverts1) || !v2f.Used(parentverts2) ||
@@ -1634,17 +1633,17 @@ namespace netgen
                   // v0 is a coarse vertex ==> f3 is a boundary face
                   if (v0==pa1[0] || v0==pa1[1]){
                     if (pa1[0]==v0){// type 0: bottom left corner
-                      INT<3> parentverts(v0, pa1[1], pa2[1]);
+                      IVec<3> parentverts(v0, pa1[1], pa2[1]);
                       int pafacenr = v2f[parentverts];
                       parent_faces[i] = { 16, { pafacenr, -1, -1, -1} };
                       //cout << "f "<<i<<":pf "<< pafacenr<< "A" <<endl;
                     }else if (pa2[0]==v0) {// type 1: bottom right corner
-                      INT<3> parentverts(pa1[0], v0, pa2[1]);
+                      IVec<3> parentverts(pa1[0], v0, pa2[1]);
                       int pafacenr = v2f[parentverts];
                       parent_faces[i] = { 17, { pafacenr, -1, -1, -1} };
                       //cout << "f "<<i<<":pf "<< pafacenr<< "B" <<endl;
                     }else if (pa1[1]==v0){// type 2: top left corner
-                      INT<3> parentverts(pa1[0], pa2[0], v0);
+                      IVec<3> parentverts(pa1[0], pa2[0], v0);
                       int pafacenr = v2f[parentverts];
                       parent_faces[i] = { 18, { pafacenr, -1, -1, -1} };
                       //cout << "f "<<i<<":pf "<< pafacenr<< "C" <<endl;
@@ -1655,7 +1654,7 @@ namespace netgen
                   else{// all vertices are on fine level [fff]
                     // Here we only work with boundary fff face
                     if (pa0[0]==pa1[0] && pa0[1]==pa2[0] && pa1[1]==pa2[1]){//type 3 bdry face
-                      INT<3> parentverts(pa0[0], pa0[1], pa1[1]);
+                      IVec<3> parentverts(pa0[0], pa0[1], pa1[1]);
                       int pafacenr = v2f[parentverts];
                       parent_faces[i] = { 19, { pafacenr, -1, -1, -1} };
                       //cout << "f "<<i<<":pf "<< pafacenr<< "D" <<endl;

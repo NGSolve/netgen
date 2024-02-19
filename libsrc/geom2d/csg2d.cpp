@@ -12,8 +12,6 @@
 
 namespace netgen
 {
-using ngcore::INT;
-
 constexpr static double EPSILON=0.000000001;
 
 void ComputeWeight( Spline & s, Point<2> p )
@@ -2037,13 +2035,13 @@ shared_ptr<netgen::SplineGeometry2d> CSG2d :: GenerateSplineGeometry()
     }
 
   netgen::BoxTree <2> solid_tree(box);
-  Array<INT<2>> loop_list;
+  Array<IVec<2>> loop_list;
 
   for(auto i : Range(solids))
     for(auto li : Range(solids[i].polys))
     {
       solid_tree.Insert(solids[i].polys[li].GetBoundingBox(), loop_list.Size());
-      loop_list.Append(INT<2>(i, li));
+      loop_list.Append(IVec<2>(i, li));
     }
 
   for(auto i1 : Range(solids))

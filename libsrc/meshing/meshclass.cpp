@@ -6359,6 +6359,8 @@ namespace netgen
     for(auto si : Range(segments))
       {
         auto& seg = segments[si];
+        // Copy segment, as reference above might get invalidated in AddSegment()
+        auto reference_seg = seg;
         auto p1 = seg[0];
         auto p2 = seg[1];
 
@@ -6378,7 +6380,7 @@ namespace netgen
           seg[1] = ipts[1];
         for(auto i : Range(size_t(1), ipts.Size()-1))
           {
-            Segment snew = seg;
+            Segment snew = reference_seg;
             if(c2)
               {
                 snew[0] = ipts[ipts.Size()-1-i];
@@ -7150,6 +7152,53 @@ namespace netgen
       (*this)[ei].SetCurved (GetCurvedElements().IsElementCurved (ei));
     
     SetNextMajorTimeStamp();
+  }
+
+  void Mesh :: SplitFacesByAdjacentDomains ()
+  {
+    UpdateTopology();
+    std::map<std::tuple<int, int, int>, int> face_doms_2_new_face;
+    int nfaces = FaceDescriptors().Size();
+    Array<bool> first_visit(nfaces);
+    first_visit = true;
+
+    for (auto sei : Range(SurfaceElements()))
+      {
+        int eli0, eli1;
+        GetTopology().GetSurface2VolumeElement(sei+1, eli0, eli1);
+        auto & sel = (*this)[sei];
+        int face = sel.GetIndex();
+        int domin = VolumeElement(eli0).GetIndex();
+        int domout = eli1 ? VolumeElement(eli1).GetIndex() : 0;
+        if(domin < domout)
+          swap(domin, domout);
+        auto key = std::make_tuple(face, domin, domout);
+        if(face_doms_2_new_face.find(key) == face_doms_2_new_face.end())
+          {
+            if(!first_visit[face-1]) {
+              nfaces++;
+              FaceDescriptor new_fd = FaceDescriptors()[face-1];
+              new_fd.bcprop = nfaces;
+              new_fd.domin = domin;
+              new_fd.domout = domout;
+              AddFaceDescriptor(new_fd);
+              SetBCName(nfaces-1, new_fd.GetBCName());
+              face_doms_2_new_face[key] = nfaces;
+            }
+            else {
+              face_doms_2_new_face[key] = face;
+              auto & fd = FaceDescriptors()[face-1];
+              fd.domin = domin;
+              fd.domout = domout;
+            }
+            first_visit[face-1] = false;
+          }
+          sel.SetIndex(face_doms_2_new_face[key]);
+      }
+    SetNextMajorTimeStamp();
+    RebuildSurfaceElementLists ();
+    CalcSurfacesOfNode();
+    UpdateTopology();
   }
 
   void Mesh :: SetMaterial (int domnr, const string & mat)

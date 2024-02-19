@@ -1,6 +1,7 @@
 #ifdef NG_PYTHON
 #ifdef OCCGEOMETRY
 
+
 #include <memory>
 
 #include <general/ngpython.hpp>

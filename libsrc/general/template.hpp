@@ -16,7 +16,7 @@ namespace netgen
    templates, global types, defines and variables
 */
 
-DLL_HEADER extern const string netgen_version;
+  DLL_HEADER extern const std::string netgen_version;
 
 ///	The following value may be adapted to the hardware !
 #ifndef CLOCKS_PER_SEC

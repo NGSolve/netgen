@@ -2,7 +2,6 @@
 
 namespace netgen
 {
-  using ngcore::INT;
 
   static inline Point<2> P2( Point<3> p )
   {
@@ -44,14 +43,14 @@ namespace netgen
 
   class DelaunayMesh
   {
-    ngcore::ClosedHashTable<INT<2>, INT<2>> edge_to_trig;
+    ngcore::ClosedHashTable<IVec<2>, IVec<2>> edge_to_trig;
     Array<DelaunayTrig> trigs;
     unique_ptr<DelaunayTree<2>> tree;
     Array<Point<2>, PointIndex> & points;
 
     Array<int> closeels;
     Array<int> intersecting;
-    Array<INT<2>> edges;
+    Array<IVec<2>> edges;
 
     int GetNeighbour( int eli, int edge );
 

@@ -1147,7 +1147,8 @@ struct GrowthVectorLimiter {
             // result in pushed through elements, since we do not (yet)
             // curvature through layers.
             // Therefore we disable curving for these surfaces.
-            mesh.GetFaceDescriptor(i).SetSurfNr(-1);
+            if(!params.keep_surfaceindex)
+              mesh.GetFaceDescriptor(i).SetSurfNr(-1);
           }
       }
 
@@ -1413,14 +1414,12 @@ struct GrowthVectorLimiter {
           //   return true;
           // return false;
             auto segs = topo.GetVertexSegments(pi);
-            // cout << "segs of " << pi << ", " << segs.Size() << endl;
+            if(segs.Size() == 1)
+              return true;
             auto first_edgenr = mesh[segs[0]].edgenr;
             for(auto segi : segs)
-                if(mesh[segi].edgenr != first_edgenr) {
-          // cout << "found corner point " << pi << endl;
-                    return true;
-        }
-          // cout << "no    corner point " << pi << endl;
+              if(mesh[segi].edgenr != first_edgenr)
+                return true;
             return false;
         };
 

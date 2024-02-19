@@ -5,6 +5,11 @@
 #include <mystdlib.h>
 #include <mydefs.hpp>
 
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+
 #  ifdef __APPLE__
 #define GL_SILENCE_DEPRECATION
 #define GL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED

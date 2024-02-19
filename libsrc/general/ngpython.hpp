@@ -8,7 +8,7 @@
 #include <iostream>
 #include <sstream>
 
-using namespace ngcore;
+// using namespace ngcore;
 
 template <typename T>
 py::array MoveToNumpy(std::vector<T>& vec)

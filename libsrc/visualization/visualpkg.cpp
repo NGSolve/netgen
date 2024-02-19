@@ -1,6 +1,5 @@
 #include <mystdlib.h>
 // #include <incopengl.hpp>
-#include <inctcl.hpp>
 
 
 #include <myadt.hpp>
@@ -8,7 +7,7 @@
 #include <csg.hpp>
 #include <stlgeom.hpp>
 
-
+#include <inctcl.hpp>
 // #include <parallel.hpp>
 #include <visual.hpp>
 

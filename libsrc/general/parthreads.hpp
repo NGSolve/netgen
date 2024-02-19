@@ -77,8 +77,8 @@ public:
 template<typename TFunc>
 void ParallelFor( int first, int next, const TFunc & f )
 {
-  int nthreads = thread::hardware_concurrency();
-  thread * threads = new thread[nthreads];
+  int nthreads = std::thread::hardware_concurrency();
+  std::thread * threads = new std::thread[nthreads];
   for (int i=0; i<nthreads; i++)
     {
       int myfirst = first + (next-first)*i/nthreads;
@@ -97,7 +97,7 @@ void ParallelFor( int first, int next, const TFunc & f )
 
   
   typedef void (*NgTaskManager)(std::function<void(int,int)>);
-  typedef void (*NgTracer)(string, bool);  // false .. start, true .. stop
+  typedef void (*NgTracer)(std::string, bool);  // false .. start, true .. stop
 
   inline void DummyTaskManager (std::function<void(int,int)> func)
   {
@@ -105,7 +105,7 @@ void ParallelFor( int first, int next, const TFunc & f )
     func(1,2);
   }
 
-  inline void DummyTracer (string, bool) { ; }
+  inline void DummyTracer (std::string, bool) { ; }
   
   template <typename FUNC>
   inline void ParallelFor (NgTaskManager tm, size_t n, FUNC func)

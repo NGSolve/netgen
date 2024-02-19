@@ -1,7 +1,12 @@
 #include <mystdlib.h> 
-#include <inctcl.hpp>
 #include <meshing.hpp>
+#include <inctcl.hpp>
 #include <core/ngcore_api.hpp>
+
+using std::string;
+using std::endl;
+using std::cout;
+using std::cerr;
 
 namespace netgen
 {

@@ -239,7 +239,7 @@ namespace netgen
 
     bool SelectSurfaceElement (int px, int py, Point<3> &p, bool select_on_clipping_plane);
     bool Unproject(int px, int py, Point<3> &p);
-    ngcore::INT<2> Project(Point<3> p);
+    ngcore::IVec<2> Project(Point<3> p);
   };
 
   void DrawElement(const Mesh & mesh, SurfaceElementIndex sei);
