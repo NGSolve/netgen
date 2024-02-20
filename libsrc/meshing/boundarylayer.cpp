@@ -542,6 +542,7 @@ struct GrowthVectorLimiter {
 
   void BoundaryLayerTool :: LimitGrowthVectorLengths()
 {
+  return;
     static Timer tall("BoundaryLayerTool::LimitGrowthVectorLengths"); RegionTimer rtall(tall);
     limits.SetSize(mesh.Points().Size());
     limits = 1.0;
@@ -992,31 +993,34 @@ struct GrowthVectorLimiter {
     for(PointIndex pi : mesh.Points().Range())
       {
         if(is_point_on_bl_surface[pi])
-        {
-            points.Append(pi);
-            getGW(pi) = 0.0;
-        }
-        if(is_point_on_other_surface[pi])
           {
             points.Append(pi);
           }
+        else if(is_point_on_other_surface[pi])
+          {
+            points.Append(pi);
+            getGW(pi) = 0.0;
+          }
+        // else
+        //     getGW(pi) = 0.0;
       }
 
     auto p2sel = mesh.CreatePoint2SurfaceElementTable();
     // smooth tangential part of growth vectors from edges to surface elements
     RegionTimer rtsmooth(tsmooth);
-    for([[maybe_unused]] auto i : Range(10))
+    for([[maybe_unused]] auto i : Range(3))
     {
         for(auto pi : points)
         {
             auto sels = p2sel[pi];
             Vec<3> new_gw = getGW(pi);
+            if(pi == 35) cout << "average " << pi << " " << new_gw << endl;
             new_gw = 0.;
             // int cnt = 1;
             std::set<PointIndex> suround;
             suround.insert(pi);
             double total_weight = 0;
-            auto normal = normals[pi];
+            // auto normal = normals[pi];
             for(auto sei: sels)
             {
                 const auto & sel = mesh[sei];
@@ -1032,7 +1036,7 @@ struct GrowthVectorLimiter {
           
                         if(is_point_on_bl_surface[pi]) {
                           if(mesh[pi1].Type() == FIXEDPOINT)
-                            weight *= 13-i;
+                            weight *= 1.0; //13-i;
                           else
                             weight = 1.0;
                           new_gw += weight * tangent_part;
@@ -1046,11 +1050,12 @@ struct GrowthVectorLimiter {
             // total_weight += suround.size();
 
             getGW(pi) = 1.0/total_weight * new_gw;
+            cout << "average " << pi << " " << getGW(pi) << endl;
         }
     }
 
-    for(auto pi : points) 
-        getGW(pi) += normals[pi];
+    // for(auto pi : points) 
+    //     getGW(pi) += normals[pi];
     // for(auto pi : mesh.Points().Range()) 
     //   cout << "point " << pi << " has type " << (int)(mesh[pi].Type()) << endl;
   }
@@ -1099,6 +1104,8 @@ struct GrowthVectorLimiter {
     mesh.UpdateTopology();
 
     have_single_segments = HaveSingleSegments(mesh);
+    cout << "HAVE_SINGLE_SEGMENTS " << have_single_segments << endl;
+    
     if(have_single_segments)
         segments = BuildSegments(mesh);
     else
@@ -1241,7 +1248,7 @@ struct GrowthVectorLimiter {
           growthvectors[pi] = CalcGrowthVector(ns);
         }
         catch(const Exception & e) {
-          cout << "caught excption for point " << pi << ":\t" << e.what() << endl;
+          cout << "caught exception for point " << pi << ":\t" << e.what() << endl;
           special_boundary_points.emplace(pi, normals);
           growthvectors[pi] = special_boundary_points[pi].growth_groups[0].growth_vector;
       }
@@ -1383,6 +1390,7 @@ struct GrowthVectorLimiter {
 
   void BoundaryLayerTool :: InterpolateGrowthVectors()
   {
+    // mesh.Save("interpolate.vol");
   // cout << "new number of line segments " << mesh.LineSegments().Size() << endl;
     int new_max_edge_nr = max_edge_nr;
     for(const auto& seg : mesh.LineSegments())
@@ -1488,7 +1496,7 @@ struct GrowthVectorLimiter {
         if(getGW(points[0]).Length2() == 0 &&
            getGW(points.Last()).Length2() == 0)
           continue;
-        // cout << "Points to average " << points << endl;
+        // cout << "Points to average " << endl << points << endl;
 
         // tangential part of growth vectors
         auto t1 = (mesh[points[1]]-mesh[points[0]]).Normalize();
@@ -1523,6 +1531,7 @@ struct GrowthVectorLimiter {
       //   cout << getGW(pi) << endl;
 
       // }
+            cout << "add gw " << pi << " " << interpol << endl;
             getGW(pi) += interpol;
           }
       }
@@ -1535,6 +1544,11 @@ struct GrowthVectorLimiter {
     static Timer timer("BoundaryLayerTool::InsertNewElements"); RegionTimer rt(timer);
     mapto.SetSize(0);
     mapto.SetSize(np);
+
+    auto changed_domains = domains;
+    if(!params.outside)
+        changed_domains.Invert();
+
 
     auto & identifications = mesh.GetIdentifications();
     const int identnr = identifications.GetNr("boundarylayer");
@@ -1639,6 +1653,7 @@ struct GrowthVectorLimiter {
                         s.edgenr = getEdgeNr(segj.edgenr);
                       s.si = si_map[segj.si];
                       new_segments.Append(s);
+                      // cout << __LINE__ <<"\t" << s << endl;
                       return s;
                     };
 
@@ -1675,6 +1690,7 @@ struct GrowthVectorLimiter {
                     s0.edgenr = segj.edgenr;
                     s0.si = segj.si;
                     new_segments.Append(s0);
+                    // cout << __LINE__ <<"\t" << s0 << endl;
 
                     for(auto i : Range(params.heights))
                       {
@@ -1701,7 +1717,8 @@ struct GrowthVectorLimiter {
                         auto pair = make_pair(p2, p3);
                         s1.edgenr = getEdgeNr(segj.edgenr);
                         s1.si = segj.si;
-                        new_segments.Append(s1);
+                        // new_segments.Append(s1);
+                        // cout << __LINE__ <<"\t" << s1 << endl;
                         Segment s2;
                         s2[0] = p4;
                         s2[1] = p1;
@@ -1709,7 +1726,8 @@ struct GrowthVectorLimiter {
                         pair = make_pair(p1, p4);
                         s2.edgenr = getEdgeNr(segj.edgenr);
                         s2.si = segj.si;
-                        new_segments.Append(s2);
+                        // new_segments.Append(s2);
+                        // cout << __LINE__ <<"\t" << s2 << endl;
                         p1 = p4;
                         p2 = p3;
                       }
@@ -1721,6 +1739,7 @@ struct GrowthVectorLimiter {
                     s3.edgenr = getEdgeNr(segj.edgenr);
                     s3.si = segj.si;
                     new_segments.Append(s3);
+                    // cout << __LINE__ << "\t" << s3 << endl;
                   }
               }
           }
@@ -1916,7 +1935,7 @@ struct GrowthVectorLimiter {
           }
 
         bool do_move, do_insert;
-        if(domains.Test(el.GetIndex()))
+        if(changed_domains.Test(el.GetIndex()))
           {
             do_move = fixed.Size() && moved_bnd;
             do_insert = do_move;
@@ -2040,8 +2059,14 @@ struct GrowthVectorLimiter {
                 else if(moved.Size() == 1)
                   throw Exception("This case is not implemented yet!");
               }
-            else
-              throw Exception("Boundarylayer only implemented for tets and pyramids outside yet!");
+              else if(do_move) {
+                cout << "have moved " << moved << endl;
+                cout << "do_insert " << do_insert << endl;
+                cout << "do_move " << do_move << endl;
+                cout << "el " << el << endl;
+                cout << "bl domain " << domains.Test(el.GetIndex()) << endl;
+                throw Exception("Boundarylayer only implemented for tets and pyramids outside yet!");
+              }
           }
       }
   }
@@ -2150,44 +2175,61 @@ struct GrowthVectorLimiter {
   {
       CreateNewFaceDescriptors();
       CalculateGrowthVectors();
+      cout << "growthvectors " << __LINE__ << endl << growthvectors << endl;
       CreateFaceDescriptorsSides();
       auto segmap = BuildSegMap();
 
       auto in_surface_direction = ProjectGrowthVectorsOnSurface();
+      cout << "growthvectors " << __LINE__ << endl << growthvectors << endl;
 
-      auto fout = ofstream("growthvectors.txt");
-      for (auto pi : Range(mesh.Points()))
-      {
-        for(auto i : Range(3))
-          fout << mesh[pi][i] << " ";
-        for(auto i : Range(3))
-          fout << mesh[pi][i]+height*growthvectors[pi][i] << " ";
-      }
-      fout << endl;
+      // auto fout = ofstream("growthvectors.txt");
+      // for (auto pi : Range(mesh.Points()))
+      // {
+      //   for(auto i : Range(3))
+      //     fout << mesh[pi][i] << " ";
+      //   for(auto i : Range(3))
+      //     fout << mesh[pi][i]+height*growthvectors[pi][i] << " ";
+      // }
+      // fout << endl;
 
 
-      FixVolumeElements();
+      // FixVolumeElements();
+      // mesh.Save("before_insert.vol");
 
       InsertNewElements(segmap, in_surface_direction);
+      cout << "growthvectors " << __LINE__ << endl << growthvectors << endl;
 
       SetDomInOut();
+      cout << "growthvectors " << __LINE__ << endl << growthvectors << endl;
       AddSegments();
+      cout << "growthvectors " << __LINE__ << endl << growthvectors << endl;
 
       mesh.CalcSurfacesOfNode();
+      cout << "growthvectors " << __LINE__ << endl << growthvectors << endl;
       topo.SetBuildVertex2Element(true);
       mesh.UpdateTopology();
+      cout << "growthvectors " << __LINE__ << endl << growthvectors << endl;
       InterpolateGrowthVectors();
+      cout << "growthvectors " << __LINE__ << endl << growthvectors << endl;
 
       // cout << "growthvectors before "  << endl<< growthvectors << endl;
       // cout << "growthvectors after " << endl << growthvectors << endl;
 
       if(params.limit_growth_vectors)
         LimitGrowthVectorLengths();
+      cout << "growthvectors " << __LINE__ << endl << growthvectors << endl;
 
+      for(PointIndex pi : Range(PointIndex::BASE, this->np + PointIndex::BASE))
+  {
+        cout << "move " << pi << " by " << 1.0 << " * " << growthvectors[pi] << endl;
+        mesh[pi] += growthvectors[pi];
+  }
       for (auto [pi, data] : growth_vector_map) {
         auto [gw, height] = data;
+        cout << "move " << pi << " by " << height << " * " << (*gw) << endl;
         mesh[pi] += height * (*gw);
       }
+
 
       
       mesh.GetTopology().ClearEdges();
