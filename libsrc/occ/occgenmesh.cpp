@@ -669,9 +669,15 @@ namespace netgen
                 BRepMesh_IncrementalMesh (geom.shape, 0.01, true);
                 triangulation = BRep_Tool::Triangulation (face, loc);
               }
+            
             if(triangulation.IsNull())
-              throw Exception("OCC-Triangulation could not be built. Do you have a bounded shape?");
-
+              {
+                if (geom.shape.Infinite())
+                  throw Exception("Cannot generate mesh for an infinite geometry");
+                else
+                  throw Exception("OCC-Triangulation could not be built");
+              }
+            
             BRepAdaptor_Surface sf(face, Standard_True);
             // one prop for evaluating and one for derivatives
             BRepLProp_SLProps prop(sf, 0, 1e-5);
