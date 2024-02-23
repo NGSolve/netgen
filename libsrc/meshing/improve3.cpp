@@ -339,7 +339,7 @@ void MeshOptimize3d :: CombineImprove ()
 
   UpdateBadness();
 
-  if (goal == OPT_QUALITY)
+  if (goal == OPT_QUALITY && testout->good())
     {
       double totalbad = mesh.CalcTotalBad (mp);
       (*testout) << "Total badness = " << totalbad << endl;
@@ -393,7 +393,7 @@ void MeshOptimize3d :: CombineImprove ()
   PrintMessage (5, cnt, " elements combined");
   (*testout) << "CombineImprove done" << "\n";
 
-  if (goal == OPT_QUALITY)
+  if (goal == OPT_QUALITY && testout->good())
     {
       double totalbad = mesh.CalcTotalBad (mp);
       (*testout) << "Total badness = " << totalbad << endl;
@@ -591,7 +591,7 @@ void MeshOptimize3d :: SplitImprove ()
 
   UpdateBadness();
 
-  if (goal == OPT_QUALITY)
+  if (goal == OPT_QUALITY && testout->good())
     {
       bad = mesh.CalcTotalBad (mp);
       (*testout) << "Total badness = " << bad << endl;
@@ -646,8 +646,11 @@ void MeshOptimize3d :: SplitImprove ()
 
   if (goal == OPT_QUALITY)
     {
-      bad = mesh.CalcTotalBad (mp);
-      (*testout) << "Total badness = " << bad << endl;
+      if(testout->good())
+      {
+        bad = mesh.CalcTotalBad (mp);
+        (*testout) << "Total badness = " << bad << endl;
+      }
 
       [[maybe_unused]] int cntill = 0;
       ne = mesh.GetNE();
@@ -1339,7 +1342,7 @@ void MeshOptimize3d :: SwapImprove (const NgBitArray * working_elements)
     }
 
   // Calculate total badness
-  if (goal == OPT_QUALITY)
+  if (goal == OPT_QUALITY && testout->good())
     {
       double bad1 = mesh.CalcTotalBad (mp);
       (*testout) << "Total badness = " << bad1 << endl;
@@ -2471,8 +2474,11 @@ void MeshOptimize3d :: SwapImprove2 ()
   PrintMessage (3, "SwapImprove2 ");
   (*testout) << "\n" << "Start SwapImprove2" << "\n";
 
-  double bad1 = mesh.CalcTotalBad (mp);
-  (*testout) << "Total badness = " << bad1 << endl;
+  if(testout->good())
+  {
+    double bad1 = mesh.CalcTotalBad (mp);
+    (*testout) << "Total badness = " << bad1 << endl;
+  }
 
   // find elements on node
 
@@ -2534,9 +2540,12 @@ void MeshOptimize3d :: SwapImprove2 ()
   PrintMessage (5, cnt, " swaps performed");
 
   mesh.Compress();
-  bad1 = mesh.CalcTotalBad (mp);
-  (*testout) << "Total badness = " << bad1 << endl;
-  (*testout) << "swapimprove2 done" << "\n";
+  if(testout->good())
+  {
+    double bad1 = mesh.CalcTotalBad (mp);
+    (*testout) << "Total badness = " << bad1 << endl;
+    (*testout) << "swapimprove2 done" << "\n";
+  }
 }
 
 double MeshOptimize3d :: SplitImprove2Element (
