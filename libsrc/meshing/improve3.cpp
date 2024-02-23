@@ -97,7 +97,7 @@ static ArrayMem<Element, 3> SplitElement (Element old, PointIndex pi0, PointInde
   }
 
   return new_elements;
-};
+}
 
 static double SplitElementBadness (const Mesh::T_POINTS & points, const MeshingParameters & mp, Element old, PointIndex pi0, PointIndex pi1, MeshPoint & pnew)
 {
@@ -151,8 +151,7 @@ static double SplitElementBadness (const Mesh::T_POINTS & points, const MeshingP
   Connect inner point to boundary point, if one
   point is inner point.
 */
-double MeshOptimize3d :: CombineImproveEdge (Mesh & mesh,
-                            const MeshingParameters & mp,
+double MeshOptimize3d :: CombineImproveEdge (
                             Table<ElementIndex, PointIndex> & elements_of_point,
                             Array<double> & elerrs,
                             PointIndex pi0, PointIndex pi1,
@@ -281,8 +280,7 @@ double MeshOptimize3d :: CombineImproveEdge (Mesh & mesh,
   return d_badness;
 }
 
-void MeshOptimize3d :: CombineImprove (Mesh & mesh,
-				       OPTIMIZEGOAL goal)
+void MeshOptimize3d :: CombineImprove ()
 {
   static Timer t("MeshOptimize3d::CombineImprove"); RegionTimer reg(t);
   static Timer topt("Optimize");
@@ -346,7 +344,7 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
     for(auto i : myrange)
     {
       auto [p0,p1] = edges[i];
-      double d_badness = CombineImproveEdge (mesh, mp, elementsonnode, elerrs, p0, p1, is_point_removed, true);
+      double d_badness = CombineImproveEdge (elementsonnode, elerrs, p0, p1, is_point_removed, true);
       if(d_badness<0.0)
       {
         int index = improvement_counter++;
@@ -368,7 +366,7 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
   for(auto [d_badness, ei] : edges_with_improvement)
   {
       auto [p0,p1] = edges[ei];
-      if (CombineImproveEdge (mesh, mp, elementsonnode, elerrs, p0, p1, is_point_removed, false) < 0.0)
+      if (CombineImproveEdge (elementsonnode, elerrs, p0, p1, is_point_removed, false) < 0.0)
         cnt++;
   }
   topt.Stop();
@@ -397,7 +395,7 @@ void MeshOptimize3d :: CombineImprove (Mesh & mesh,
 
 
 
-double MeshOptimize3d :: SplitImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, Table<ElementIndex,PointIndex> & elementsonnode, Array<double> &elerrs, NgArray<INDEX_3> &locfaces, double badmax, PointIndex pi1, PointIndex pi2, PointIndex ptmp, bool check_only)
+double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elementsonnode, Array<double> &elerrs, NgArray<INDEX_3> &locfaces, double badmax, PointIndex pi1, PointIndex pi2, PointIndex ptmp, bool check_only)
 {
   double d_badness = 0.0;
   // int cnt = 0;
@@ -556,8 +554,7 @@ double MeshOptimize3d :: SplitImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, Table
   return d_badness;
 }
 
-void MeshOptimize3d :: SplitImprove (Mesh & mesh,
-				     OPTIMIZEGOAL goal)
+void MeshOptimize3d :: SplitImprove ()
 {
   static Timer t("MeshOptimize3d::SplitImprove"); RegionTimer reg(t);
   static Timer topt("Optimize");
@@ -611,7 +608,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
     for(auto i : myrange)
     {
       auto [p0,p1] = edges[i];
-      double d_badness = SplitImproveEdge (mesh, goal, elementsonnode, elerrs, locfaces, badmax, p0, p1, ptmp, true);
+      double d_badness = SplitImproveEdge (elementsonnode, elerrs, locfaces, badmax, p0, p1, ptmp, true);
       if(d_badness<0.0)
       {
         int index = improvement_counter++;
@@ -634,7 +631,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
   for(auto [d_badness, ei] : edges_with_improvement)
   {
       auto [p0,p1] = edges[ei];
-      if (SplitImproveEdge (mesh, goal, elementsonnode, elerrs, locfaces, badmax, p0, p1, ptmp, false) < 0.0)
+      if (SplitImproveEdge (elementsonnode, elerrs, locfaces, badmax, p0, p1, ptmp, false) < 0.0)
         cnt++;
   }
   topt.Stop();
@@ -659,7 +656,7 @@ void MeshOptimize3d :: SplitImprove (Mesh & mesh,
 }
 
 
-double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
+double MeshOptimize3d :: SwapImproveEdge (
         const NgBitArray * working_elements,
         Table<ElementIndex, PointIndex> & elementsonnode,
         INDEX_3_HASHTABLE<int> & faces,
@@ -1283,8 +1280,7 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
   return d_badness;
 }
 
-void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
-				    const NgBitArray * working_elements)
+void MeshOptimize3d :: SwapImprove (const NgBitArray * working_elements)
 {
   static Timer t("MeshOptimize3d::SwapImprove"); RegionTimer reg(t);
   static Timer tloop("MeshOptimize3d::SwapImprove loop");
@@ -1362,7 +1358,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
         break;
 
       auto [pi0, pi1] = edges[i];
-      double d_badness = SwapImproveEdge (mesh, goal, working_elements, elementsonnode, faces, pi0, pi1, true);
+      double d_badness = SwapImproveEdge (working_elements, elementsonnode, faces, pi0, pi1, true);
       if(d_badness<0.0)
       {
         int index = improvement_counter++;
@@ -1377,7 +1373,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
   for(auto [d_badness, ei] : edges_with_improvement)
   {
       auto [pi0,pi1] = edges[ei];
-      if(SwapImproveEdge (mesh, goal, working_elements, elementsonnode, faces, pi0, pi1, false) < 0.0)
+      if(SwapImproveEdge (working_elements, elementsonnode, faces, pi0, pi1, false) < 0.0)
           cnt++;
   }
 
@@ -1419,7 +1415,7 @@ void MeshOptimize3d :: SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal,
 
 
 
-void MeshOptimize3d :: SwapImproveSurface (Mesh & mesh, OPTIMIZEGOAL goal,
+void MeshOptimize3d :: SwapImproveSurface (
 					   const NgBitArray * working_elements,
 					   const NgArray< NgArray<int,PointIndex::BASE>* > * idmaps)
 {
@@ -2279,7 +2275,7 @@ void MeshOptimize3d :: SwapImproveSurface (Mesh & mesh, OPTIMIZEGOAL goal,
   2 -> 3 conversion
 */
 
-double MeshOptimize3d :: SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementIndex eli1, int face,
+double MeshOptimize3d :: SwapImprove2 ( ElementIndex eli1, int face,
   Table<ElementIndex, PointIndex> & elementsonnode,
   TABLE<SurfaceElementIndex, PointIndex::BASE> & belementsonnode, bool check_only )
 {
@@ -2449,7 +2445,7 @@ double MeshOptimize3d :: SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementI
   2 -> 3 conversion
 */
 
-void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
+void MeshOptimize3d :: SwapImprove2 ()
 {
   static Timer t("MeshOptimize3d::SwapImprove2"); RegionTimer reg(t);
 
@@ -2510,7 +2506,7 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
 
             for (int j = 0; j < 4; j++)
               {
-                double d_badness = SwapImprove2( mesh, goal, eli1, j, elementsonnode, belementsonnode, true);
+                double d_badness = SwapImprove2( eli1, j, elementsonnode, belementsonnode, true);
                 if(d_badness<0.0)
                     my_faces_with_improvement.Append( std::make_tuple(d_badness, eli1, j) );
               }
@@ -2526,7 +2522,7 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
     {
       if(mesh[eli].IsDeleted())
           continue;
-      if(SwapImprove2( mesh, goal, eli, j, elementsonnode, belementsonnode, false) < 0.0)
+      if(SwapImprove2( eli, j, elementsonnode, belementsonnode, false) < 0.0)
           cnt++;
     }
 
@@ -2538,7 +2534,7 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
   (*testout) << "swapimprove2 done" << "\n";
 }
 
-double MeshOptimize3d :: SplitImprove2Element (Mesh & mesh,
+double MeshOptimize3d :: SplitImprove2Element (
                             ElementIndex ei,
                             const Table<ElementIndex, PointIndex> & elements_of_point,
                             const Array<double> & el_badness,
@@ -2672,7 +2668,7 @@ double MeshOptimize3d :: SplitImprove2Element (Mesh & mesh,
 
 // Split two opposite edges of very flat tet and let all 4 new segments have one common vertex
 // Imagine a square with 2 diagonals -> new point where diagonals cross, remove the flat tet
-void MeshOptimize3d :: SplitImprove2 (Mesh & mesh)
+void MeshOptimize3d :: SplitImprove2 ()
 {
   static Timer t("MeshOptimize3d::SplitImprove2"); RegionTimer reg(t);
   static Timer tsearch("Search");
@@ -2709,7 +2705,7 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh)
     {
       if(mp.only3D_domain_nr && mp.only3D_domain_nr != mesh[ei].GetIndex())
         continue;
-      double d_badness = SplitImprove2Element(mesh, ei, elements_of_point, el_badness, true);
+      double d_badness = SplitImprove2Element(ei, elements_of_point, el_badness, true);
       if(d_badness<0.0)
       {
         int index = improvement_counter++;
@@ -2726,7 +2722,7 @@ void MeshOptimize3d :: SplitImprove2 (Mesh & mesh)
   topt.Start();
   for(auto [d_badness, ei] : elements_with_improvement)
   {
-    if( SplitImprove2Element(mesh, ei, elements_of_point, el_badness, false) < 0.0)
+    if( SplitImprove2Element(ei, elements_of_point, el_badness, false) < 0.0)
       cnt++;
   }
   topt.Stop();
