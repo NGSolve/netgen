@@ -49,9 +49,11 @@ def Redraw(*args, **kwargs):
     return _Redraw(*args, **kwargs)
 
 from pyngcore import Timer
+from functools import wraps
 def TimeFunction(func, name=None):
     name = name or func.__qualname__
     timer = Timer(name)
+    @wraps(func)
     def retfunc(*args,**kwargs):
         with timer:
             ret = func(*args, **kwargs)
