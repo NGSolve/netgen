@@ -15,6 +15,11 @@ class MeshOptimize3d
   const MeshingParameters & mp;
   Mesh & mesh;
   OPTIMIZEGOAL goal = OPT_QUALITY;
+  double min_badness = 0;
+
+  tuple<double, double> UpdateBadness();
+  bool HasBadElement(FlatArray<ElementIndex> els);
+  bool HasIllegalElement(FlatArray<ElementIndex> els);
 
 public:
 
@@ -22,19 +27,20 @@ public:
       mesh(m), mp(amp), goal(agoal) { ; }
 
   void SetGoal(OPTIMIZEGOAL agoal) { goal = agoal; }
+  void SetMinBadness(double badness) { min_badness = badness; }
 
   double CombineImproveEdge (
             Table<ElementIndex, PointIndex> & elements_of_point,
-            Array<double> & elerrs, PointIndex pi0, PointIndex pi1,
+            PointIndex pi0, PointIndex pi1,
             FlatArray<bool, PointIndex> is_point_removed, bool check_only=false);
 
   void CombineImprove ();
 
   void SplitImprove ();
-  double SplitImproveEdge (Table<ElementIndex,PointIndex> & elementsonnode, Array<double> &elerrs, NgArray<INDEX_3> &locfaces, double badmax, PointIndex pi1, PointIndex pi2, PointIndex ptmp, bool check_only=false);
+  double SplitImproveEdge (Table<ElementIndex,PointIndex> & elementsonnode, NgArray<INDEX_3> &locfaces, double badmax, PointIndex pi1, PointIndex pi2, PointIndex ptmp, bool check_only=false);
 
   void SplitImprove2 ();
-  double SplitImprove2Element (ElementIndex ei, const Table<ElementIndex, PointIndex> & elements_of_point, const Array<double> & elerrs, bool check_only);
+  double SplitImprove2Element (ElementIndex ei, const Table<ElementIndex, PointIndex> & elements_of_point, bool check_only);
   
 
   double SwapImproveEdge (const NgBitArray * working_elements, Table<ElementIndex,PointIndex> & elementsonnode, INDEX_3_HASHTABLE<int> & faces, PointIndex pi1, PointIndex pi2, bool check_only=false);
