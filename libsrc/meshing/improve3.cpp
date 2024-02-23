@@ -136,29 +136,36 @@ static double SplitElementBadness (const Mesh::T_POINTS & points, const MeshingP
 }
 
 
-tuple<double, double> MeshOptimize3d :: UpdateBadness()
+tuple<double, double, int> MeshOptimize3d :: UpdateBadness()
 {
   static Timer tbad("UpdateBadness");
   RegionTimer reg(tbad);
 
   double totalbad = 0.0;
   double maxbad = 0.0;
+  atomic<int> bad_elements = 0;
+
   ParallelForRange(Range(mesh.GetNE()), [&] (auto myrange) {
     double totalbad_local = 0.0;
     double maxbad_local = 0.0;
+    int bad_elements_local = 0;
     for (ElementIndex ei : myrange)
     {
       auto & el = mesh[ei];
       if(mp.only3D_domain_nr && mp.only3D_domain_nr != el.GetIndex()) continue;
       if(!el.BadnessValid())
         el.SetBadness(CalcBad(mesh.Points(), el, 0));
-      totalbad_local += el.GetBadness();
-      maxbad_local = max(maxbad_local, static_cast<double>(el.GetBadness()));
+      double bad = el.GetBadness();
+      totalbad_local += bad;
+      maxbad_local = max(maxbad_local, bad);
+      if(bad > min_badness)
+        bad_elements_local++;
     }
     AtomicAdd(totalbad, totalbad_local);
     AtomicMax(maxbad, maxbad_local);
+    bad_elements += bad_elements_local;
   });
-  return {totalbad, maxbad};
+  return {totalbad, maxbad, bad_elements};
 }
 
 bool MeshOptimize3d :: HasBadElement(FlatArray<ElementIndex> els)
@@ -175,6 +182,13 @@ bool MeshOptimize3d :: HasIllegalElement(FlatArray<ElementIndex> els)
     if(!mesh.LegalTet(mesh[ei]))
       return true;
   return false;
+}
+
+bool MeshOptimize3d :: NeedsOptimization(FlatArray<ElementIndex> els)
+{
+  if(goal == OPT_LEGAL) return HasIllegalElement(els);
+  if(goal == OPT_QUALITY) return HasBadElement(els);
+  return true;
 }
 
 
@@ -440,7 +454,7 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
           if(mp.only3D_domain_nr != mesh[ei].GetIndex())
               return 0.0;
 
-  if ((goal == OPT_LEGAL) && !HasIllegalElement(hasbothpoints))
+  if (!NeedsOptimization(hasbothpoints))
     return 0.0;
 
   double bad1 = 0.0;
@@ -733,7 +747,7 @@ double MeshOptimize3d :: SwapImproveEdge (
           return 0.0;
     }
 
-  if ((goal == OPT_LEGAL) && !HasIllegalElement(hasbothpoints))
+  if(!NeedsOptimization(hasbothpoints))
     return 0.0;
 
   int nsuround = hasbothpoints.Size();
@@ -1353,6 +1367,8 @@ void MeshOptimize3d :: SwapImprove (const NgBitArray * working_elements)
 
   Array<std::tuple<double, int>> candidate_edges(edges.Size());
   std::atomic<int> improvement_counter(0);
+
+  UpdateBadness();
 
   tloop.Start();
 
@@ -2366,6 +2382,10 @@ double MeshOptimize3d :: SwapImprove2 ( ElementIndex eli1, int face,
           if (elem2.GetType() != TET)
               continue;
 
+          ArrayMem<ElementIndex, 2> elis = {eli1, eli2};
+          if(!NeedsOptimization(elis))
+            continue;
+
           int comnodes=0;
           for (int l = 1; l <= 4; l++)
               if (elem2.PNum(l) == pi1 || elem2.PNum(l) == pi2 ||
@@ -2380,8 +2400,7 @@ double MeshOptimize3d :: SwapImprove2 ( ElementIndex eli1, int face,
 
           if (comnodes == 3)
           {
-              bad1 = CalcBad (mesh.Points(), elem, 0) +
-                CalcBad (mesh.Points(), elem2, 0);
+              bad1 = elem.GetBadness() + elem2.GetBadness();
 
               if (!mesh.LegalTet(elem) ||
                   !mesh.LegalTet(elem2))
@@ -2493,6 +2512,8 @@ void MeshOptimize3d :: SwapImprove2 ()
 
   Array<std::tuple<double, ElementIndex, int>> faces_with_improvement;
   Array<Array<std::tuple<double, ElementIndex, int>>> faces_with_improvement_threadlocal(num_threads);
+
+  UpdateBadness();
 
   ParallelForRange( Range(ne), [&]( auto myrange )
       {

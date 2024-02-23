@@ -17,9 +17,9 @@ class MeshOptimize3d
   OPTIMIZEGOAL goal = OPT_QUALITY;
   double min_badness = 0;
 
-  tuple<double, double> UpdateBadness();
   bool HasBadElement(FlatArray<ElementIndex> els);
   bool HasIllegalElement(FlatArray<ElementIndex> els);
+  bool NeedsOptimization(FlatArray<ElementIndex> els);
 
 public:
 
@@ -28,6 +28,8 @@ public:
 
   void SetGoal(OPTIMIZEGOAL agoal) { goal = agoal; }
   void SetMinBadness(double badness) { min_badness = badness; }
+
+  tuple<double, double, int> UpdateBadness();
 
   double CombineImproveEdge (
             Table<ElementIndex, PointIndex> & elements_of_point,

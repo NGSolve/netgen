@@ -654,12 +654,27 @@ namespace netgen
     */
 
     mesh3d.CalcSurfacesOfNode();
+
+    MeshOptimize3d optmesh(mesh3d, mp);
+
+    // optimize only bad elements first
+    optmesh.SetMinBadness(1000.);
+    for(auto i : Range(mp.optsteps3d))
+      {
+        auto [total_badness, max_badness, bad_els] = optmesh.UpdateBadness();
+        if(bad_els==0) break;
+        optmesh.SplitImprove();
+        optmesh.SwapImprove();
+        optmesh.SwapImprove2();
+      }
+
+    // Now optimize all elements
+    optmesh.SetMinBadness(0);
+
     for (auto i : Range(mp.optsteps3d))
       {
 	if (multithread.terminate)
 	  break;
-
-	MeshOptimize3d optmesh(mesh3d, mp);
 
 	// teterrpow = mp.opterrpow;
 	// for (size_t j = 1; j <= strlen(mp.optimize3d); j++)

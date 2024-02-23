@@ -88,29 +88,34 @@ for bad1,bad2, f1, f2 in zip(data['#trigs'], data2['#trigs'], data['file'], data
     if bad2>0 and bad2<0.8*bad1:
         print(f"{GREEN}ntrigs {f1} got better: {bad1} -> {bad2}".ljust(w) + diff + RESET)
 
-n = len(data)+1
-fig,ax = plt.subplots(figsize=(10,7))
-for i,d in enumerate(['min trig angle','min tet angle','max trig angle','max tet angle']):
-    ax = plt.subplot(2,5,i+1)
+n = len(data) + 1
+fig, ax = plt.subplots(figsize=(15, 7))  # Adjust figsize as needed
+plt.xticks([])
+plt.yticks([])
+ax.yaxis.grid(False)
+ax.xaxis.grid(False)
+for i, d in enumerate(['min trig angle', 'min tet angle', 'max trig angle', 'max tet angle']):
+    plt.subplot(2, 4, i + 1)  # Remove ax = 
     plt.title(d)
-    ax.set_xticks([1,2])
-    if len(data[d])==0 or len(data2[d])==0:
+    # plt.xticks([1, 2])
+    if len(data[d]) == 0 or len(data2[d]) == 0:
         continue
 
-    plt.violinplot([data[d],data2[d]], showmedians=True)
+    plt.violinplot([data[d], data2[d]], showmedians=True)
     med = statistics.median(data[d])
-    plt.hlines(med, 1,2, linestyle='dotted')
-    if d=='badness':
-        ax.set_yscale('log')
-    ax.set_xticklabels([ref, ref2])
+    plt.hlines(med, 1, 2, linestyle='dotted')
+    if d == 'badness':
+        plt.yscale('log')
+    plt.xticks([1, 2], [ref, ref2])
 
+for i, d in enumerate(['badness', '#edges', '#trigs', '#tets']):
+    plt.xticks([])
+    plt.subplot(2, 4, 5 + i)
+    plt.title('difference ' + d + ' (in %)')
+    plt.boxplot([100.0 * (y - x) / x for x, y in zip(data[d], data2[d])])
+    plt.hlines(0.0, 0.5, 1.5, linestyle='dotted')
 
-for i,d in enumerate(['badness','#edges','#trigs','#tets']):
-    ax = plt.subplot(2,5,6+i)
-    plt.title('difference '+d+' (in %)')
-#     plt.violinplot([(y-x)/x for x,y in zip(data[d],data2[d])], showmedians=True)
-    plt.boxplot([100.0*(y-x)/x for x,y in zip(data[d],data2[d])])
-    plt.hlines(0.0, 0.5,1.5, linestyle='dotted')
+plt.tight_layout()  # Adjust layout
 
 
 # plt.savefig('comparison.png', dpi=100)
