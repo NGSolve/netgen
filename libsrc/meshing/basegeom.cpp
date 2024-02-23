@@ -1271,9 +1271,6 @@ namespace netgen
         if (res != MESHING3_OK) return 1;
         if (multithread.terminate) return 0;
 
-        RemoveIllegalElements (*mesh);
-        if (multithread.terminate) return 0;
-
         MeshQuality3d (*mesh);
       }
 

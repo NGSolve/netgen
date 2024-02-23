@@ -515,6 +515,7 @@ namespace netgen
            throw NgException ("Stop meshing since surface mesh not consistent");
         }
      }
+     RemoveIllegalElements (mesh);
   }
 
   void MergeMeshes( Mesh & mesh, Array<MeshingData> & md )
