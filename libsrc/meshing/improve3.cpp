@@ -23,6 +23,14 @@ static inline bool NotTooBad(double bad1, double bad2)
          (bad2 <= 1e8);
 }
 
+bool CheckAllLegal(Mesh & mesh, FlatArray<ElementIndex> els)
+  {
+    for(auto ei : els)
+      if(!mesh.LegalTet(mesh[ei]))
+        return false;
+    return true;
+  }
+
 // Calc badness of new element where pi1 and pi2 are replaced by pnew
 double CalcBadReplacePoints (const Mesh::T_POINTS & points, const MeshingParameters & mp, const Element & elem, double h, PointIndex &pi1, PointIndex &pi2, MeshPoint &pnew)
   {
@@ -418,15 +426,8 @@ double MeshOptimize3d :: SplitImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, Table
           if(mp.only3D_domain_nr != mesh[ei].GetIndex())
               return 0.0;
 
-  if (goal == OPT_LEGAL)
-    {
-      bool all_tets_legal = true;
-      for(auto ei : hasbothpoints)
-          if( !mesh.LegalTet (mesh[ei]) || elerrs[ei] > 1e3)
-              all_tets_legal = false;
-      if(all_tets_legal)
-          return 0.0;
-    }
+  if ((goal == OPT_LEGAL) && CheckAllLegal(mesh, hasbothpoints))
+    return 0.0;
 
   double bad1 = 0.0;
   double bad1_max = 0.0;
@@ -706,8 +707,6 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
         }
     }
 
-  bool have_bad_element = false;
-
   for (ElementIndex ei : hasbothpoints)
     {
       if (mesh[ei].GetType () != TET)
@@ -727,14 +726,9 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
 
       if (mesh[ei].IsDeleted())
           return 0.0;
-
-      if ((goal == OPT_LEGAL) &&
-              mesh.LegalTet (mesh[ei]) &&
-              CalcBad (mesh.Points(), mesh[ei], 0) >= 1e3)
-          have_bad_element = true;
     }
 
-  if ((goal == OPT_LEGAL) && !have_bad_element)
+  if ((goal == OPT_LEGAL) && CheckAllLegal(mesh, hasbothpoints))
     return 0.0;
 
   int nsuround = hasbothpoints.Size();
@@ -831,7 +825,7 @@ double MeshOptimize3d :: SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal,
           bad2 += 1e4;
 
 
-      if (goal == OPT_CONFORM && NotTooBad(bad1, bad2))
+      if ((goal == OPT_CONFORM) && NotTooBad(bad1, bad2))
         {
           INDEX_3 face(pi3, pi4, pi5);
           face.Sort();
@@ -1517,9 +1511,7 @@ void MeshOptimize3d :: SwapImproveSurface (Mesh & mesh, OPTIMIZEGOAL goal,
       if (mesh[ei].IsDeleted())
 	continue;
 
-      if ((goal == OPT_LEGAL) && 
-	  mesh.LegalTet (mesh[ei]) &&
-	  CalcBad (mesh.Points(), mesh[ei], 0) < 1e3)
+      if (goal == OPT_LEGAL && mesh.LegalTet (mesh[ei]))
 	continue;
 
       const Element & elemi = mesh[ei];
@@ -2510,9 +2502,7 @@ void MeshOptimize3d :: SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal)
             if (mesh[eli1].GetType() != TET)
               continue;
 
-            if ((goal == OPT_LEGAL) &&
-                mesh.LegalTet (mesh[eli1]) &&
-                CalcBad (mesh.Points(), mesh[eli1], 0) < 1e3)
+            if (goal == OPT_LEGAL && mesh.LegalTet (mesh[eli1]))
               continue;
 
             if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(eli1).GetIndex())
