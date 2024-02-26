@@ -37,8 +37,10 @@ namespace ngcore
   };
   
   
-  
 
+  // feature check macro for transition from INT to IVec
+#define NGCORE_HAS_IVEC
+  
   /// N integers
   template <int N, typename T = int>
   class IVec

@@ -111,6 +111,7 @@ namespace netgen
       int operator[] (size_t i) const { return ptr[i]-POINTINDEX_BASE; }
     };
 
+    /*
     class Ng_Edges
     {
     public:
@@ -130,6 +131,7 @@ namespace netgen
       size_t Size() const { return num; }
       int operator[] (size_t i) const { return ptr[i]; }
     };
+    */
 
     class Ng_Facets
     {
@@ -151,8 +153,10 @@ namespace netgen
     int GetIndex() const { return index-1; }
     Ng_Points points;      // all points
     Ng_Vertices vertices;
-    Ng_Edges edges;
-    Ng_Faces faces;
+    // Ng_Edges edges;
+    FlatArray<T_EDGE2> edges;
+    // Ng_Faces faces;
+    FlatArray<T_FACE2> faces;    
     Ng_Facets facets;
     bool is_curved;
   };

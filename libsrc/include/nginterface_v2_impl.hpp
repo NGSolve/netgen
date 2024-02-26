@@ -56,15 +56,20 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<0> (size_t nr) const
   
   ret.vertices.num = 1;
   ret.vertices.ptr = (int*)&el.pnum;
-  
+
+  /*
   ret.edges.num = 0;
   ret.edges.ptr = NULL;
-  
+  */
+  ret.edges.Assign ( FlatArray<T_EDGE2> (0, nullptr) );
+  /*
   ret.faces.num = 0;
   ret.faces.ptr = NULL;
-
+  */
+  ret.faces.Assign ( { 0, nullptr } );  
+  
   ret.facets.num = 1;
-  ret.facets.base = 1;
+  ret.facets.base = POINTINDEX_BASE;
   ret.facets.ptr = (int*)&el.pnum;
 
   if (mesh->GetDimension() == 1)
@@ -107,12 +112,18 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
   ret.vertices.num = 2;
   ret.vertices.ptr = (int*)&(el[0]);
 
+  /*
   ret.edges.num = 1;
   ret.edges.ptr = mesh->GetTopology().GetSegmentElementEdgesPtr (nr);
+  */
+  ret.edges.Assign ( FlatArray<T_EDGE2> (1, const_cast<T_EDGE2*>( mesh->GetTopology().GetSegmentElementEdgesPtr (nr))));
 
+  /*
   ret.faces.num = 0;
   ret.faces.ptr = NULL;
-
+  */
+  ret.faces.Assign ( { 0, nullptr });
+  
   if (mesh->GetDimension() == 3)
     {
       ret.facets.num = 0;
@@ -123,7 +134,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
     {
       ret.facets.num = 1;
       ret.facets.base = 0;
-      ret.facets.ptr = ret.edges.ptr;
+      ret.facets.ptr = ret.edges.Data();
     }
   else
     {
@@ -157,23 +168,27 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<2> (size_t nr) const
   ret.vertices.num = el.GetNV();
   ret.vertices.ptr = (int*)&(el[0]);
 
+  /*
   ret.edges.num = MeshTopology::GetNEdges (el.GetType());
   ret.edges.ptr = mesh->GetTopology().GetSurfaceElementEdgesPtr (nr);
-
+  */
+  ret.edges.Assign (mesh->GetTopology().GetEdges (SurfaceElementIndex(nr)));
+  /*
   ret.faces.num = MeshTopology::GetNFaces (el.GetType());
   ret.faces.ptr = mesh->GetTopology().GetSurfaceElementFacesPtr (nr);
-
+  */
+  ret.faces.Assign ( { 1, const_cast<int*>(mesh->GetTopology().GetSurfaceElementFacesPtr (nr)) });
   if (mesh->GetDimension() == 3)
     {
-      ret.facets.num = ret.faces.num;
+      ret.facets.num = ret.faces.Size();
       ret.facets.base = 0;
-      ret.facets.ptr = ret.faces.ptr;
+      ret.facets.ptr = ret.faces.Data();
     }
   else
     {
-      ret.facets.num = ret.edges.num;
+      ret.facets.num = ret.edges.Size();
       ret.facets.base = 0;      
-      ret.facets.ptr = ret.edges.ptr;
+      ret.facets.ptr = ret.edges.Data();
     }
   ret.is_curved = el.IsCurved();
   return ret;
@@ -194,15 +209,21 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<3> (size_t nr) const
   ret.vertices.num = el.GetNV();
   ret.vertices.ptr = (int*)&(el[0]);
 
+  /*
   ret.edges.num = MeshTopology::GetNEdges (el.GetType());
   ret.edges.ptr = mesh->GetTopology().GetElementEdgesPtr (nr);
+  */
+  ret.edges.Assign (mesh->GetTopology().GetEdges (ElementIndex(nr)));  
 
+  /*
   ret.faces.num = MeshTopology::GetNFaces (el.GetType());
   ret.faces.ptr = mesh->GetTopology().GetElementFacesPtr (nr);
-
-  ret.facets.num = ret.faces.num;
+  */
+  ret.faces.Assign (mesh->GetTopology().GetFaces (ElementIndex(nr)));
+  
+  ret.facets.num = ret.faces.Size();
   ret.facets.base = 0;
-  ret.facets.ptr = ret.faces.ptr;
+  ret.facets.ptr = ret.faces.Data();
 
   ret.is_curved = el.IsCurved();
   return ret;

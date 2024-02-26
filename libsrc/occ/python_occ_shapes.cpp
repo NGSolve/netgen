@@ -1219,7 +1219,26 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          {
            BRepTools::Clean (shape);
            double deflection = 0.01;
-           BRepMesh_IncrementalMesh (shape, deflection, true);
+
+           // BRepMesh_IncrementalMesh mesher(shape, deflection,Standard_True, 0.01, true);
+           // mesher.Perform();
+
+
+           // https://dev.opencascade.org/doc/overview/html/occt_user_guides__mesh.html
+           // from Standard_Boolean meshing_imeshtools_parameters()
+           IMeshTools_Parameters aMeshParams;
+           aMeshParams.Deflection               = 0.01;
+           aMeshParams.Angle                    = 0.5;
+           aMeshParams.Relative                 = Standard_False;
+           aMeshParams.InParallel               = Standard_True;
+           aMeshParams.MinSize                  = Precision::Confusion();
+           aMeshParams.InternalVerticesMode     = Standard_True;
+           aMeshParams.ControlSurfaceDeflection = Standard_True;
+           
+           BRepMesh_IncrementalMesh aMesher (shape, aMeshParams);
+           const Standard_Integer aStatus = aMesher.GetStatusFlags();
+           // cout << "status = " << aStatus << endl;
+           
            // triangulation = BRep_Tool::Triangulation (face, loc);
 
            std::vector<double> p[3];

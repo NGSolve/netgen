@@ -666,12 +666,34 @@ namespace netgen
             if (triangulation.IsNull())
               {
                 BRepTools::Clean (geom.shape);
-                BRepMesh_IncrementalMesh (geom.shape, 0.01, true);
-                triangulation = BRep_Tool::Triangulation (face, loc);
-              }
-            if(triangulation.IsNull())
-              throw Exception("OCC-Triangulation could not be built. Do you have a bounded shape?");
+                // BRepMesh_IncrementalMesh (geom.shape, 0.01, true);
 
+                // https://dev.opencascade.org/doc/overview/html/occt_user_guides__mesh.html
+                IMeshTools_Parameters aMeshParams;
+                aMeshParams.Deflection               = 0.01;
+                aMeshParams.Angle                    = 0.5;
+                aMeshParams.Relative                 = Standard_False;
+                aMeshParams.InParallel               = Standard_True;
+                aMeshParams.MinSize                  = Precision::Confusion();
+                aMeshParams.InternalVerticesMode     = Standard_True;
+                aMeshParams.ControlSurfaceDeflection = Standard_True;
+                
+                BRepMesh_IncrementalMesh aMesher (geom.shape, aMeshParams);
+                const Standard_Integer aStatus = aMesher.GetStatusFlags();
+                if (aStatus != 0)
+                  cout << "BRepMesh_IncrementalMesh.status = " << aStatus << endl;
+                
+                triangulation = BRep_Tool::Triangulation (face, loc);                
+              }
+            
+            if(triangulation.IsNull())
+              {
+                if (geom.shape.Infinite())
+                  throw Exception("Cannot generate mesh for an infinite geometry");
+                else
+                  throw Exception("OCC-Triangulation could not be built");
+              }
+            
             BRepAdaptor_Surface sf(face, Standard_True);
             // one prop for evaluating and one for derivatives
             BRepLProp_SLProps prop(sf, 0, 1e-5);
