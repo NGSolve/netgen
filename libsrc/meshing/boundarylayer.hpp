@@ -72,7 +72,7 @@ class BoundaryLayerTool
     Array<int> new_mat_nrs;
     BitArray moved_surfaces;
     int np, nseg, nse, ne;
-    double height;
+    double total_height;
 
     bool have_single_segments;
     Array<Segment> segments, new_segments;

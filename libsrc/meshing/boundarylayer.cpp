@@ -547,7 +547,7 @@ struct GrowthVectorLimiter {
     limits.SetSize(mesh.Points().Size());
     limits = 1.0;
 
-    GrowthVectorLimiter limiter(*this, mesh, params, limits, growthvectors, height);
+    GrowthVectorLimiter limiter(*this, mesh, params, limits, growthvectors, total_height);
 
     // limit to not intersect with other (original) surface elements
     double trig_shift = 0;
@@ -1070,9 +1070,9 @@ struct GrowthVectorLimiter {
     //for(auto & seg : mesh.LineSegments())
         //seg.edgenr = seg.epgeominfo[1].edgenr;
 
-    height = 0.0;
+    total_height = 0.0;
     for (auto h : params.heights)
-      height += h;
+      total_height += h;
 
     max_edge_nr = -1;
     for(const auto& seg : mesh.LineSegments())
@@ -1397,13 +1397,22 @@ struct GrowthVectorLimiter {
       if(seg.edgenr > new_max_edge_nr)
         new_max_edge_nr = seg.edgenr;
 
-    auto getGW = [&] (PointIndex pi) -> Vec<3>& {
-        static Vec<3> zero(0.,0.,0.);
+    auto getGW = [&] (PointIndex pi) -> Vec<3> {
+        // static Vec<3> zero(0.,0.,0.);
         if(growth_vector_map.count(pi))
-          return *get<0>(growth_vector_map[pi]);
-        zero = {0.,0.,0.};
-        return zero;
+        {
+          auto [gw, height] = growth_vector_map[pi];
+          return height * (*gw);
+        }
+        else
+          return growthvectors[pi];
+        // zero = {0.,0.,0.};
+        // return zero;
     };
+    // auto setGW = [&] (PointIndex pi, Vec<3> gw, double h) {
+    //     growthvectors[pi] = gw;
+    //     growth_vector_map[pi] = {&growthvectors[pi], h};
+    // };
   // cout << "edge range " << max_edge_nr << ", " << new_max_edge_nr << endl;
 
     // interpolate tangential component of growth vector along edge
@@ -1491,7 +1500,7 @@ struct GrowthVectorLimiter {
                 throw Exception(string("Could not find connected list of line segments for edge ") + edgenr);
               }
           }
-        // cout << "Points " << points << endl;
+        cout << "Points " << points << endl;
 
         if(getGW(points[0]).Length2() == 0 &&
            getGW(points.Last()).Length2() == 0)
@@ -1532,7 +1541,7 @@ struct GrowthVectorLimiter {
 
       // }
             cout << "add gw " << pi << " " << interpol << endl;
-            getGW(pi) += interpol;
+            growthvectors[pi] += interpol;
           }
       }
 
@@ -2145,7 +2154,7 @@ struct GrowthVectorLimiter {
       auto p2el = mesh.CreatePoint2ElementTable(is_inner_point);
       
       // smooth growth vectors to shift additional element layers to the inside and fix flipped tets
-      for([[maybe_unused]] auto step : Range(10))
+      for([[maybe_unused]] auto step : Range(0))
       {
           for(auto pi : points)
           {
@@ -2164,11 +2173,11 @@ struct GrowthVectorLimiter {
           }
       }
       
-      for(auto pi : points)
-      {
-          mesh[pi] += height * growthvectors[pi];
-          growthvectors[pi] = 0.0;
-      }
+      // for(auto pi : points)
+      // {
+      //     mesh[pi] += height * growthvectors[pi];
+      //     growthvectors[pi] = 0.0;
+      // }
   }
 
   void BoundaryLayerTool :: Perform()
@@ -2220,13 +2229,13 @@ struct GrowthVectorLimiter {
       cout << "growthvectors " << __LINE__ << endl << growthvectors << endl;
 
       for(PointIndex pi : Range(PointIndex::BASE, this->np + PointIndex::BASE))
-  {
-        cout << "move " << pi << " by " << 1.0 << " * " << growthvectors[pi] << endl;
-        mesh[pi] += growthvectors[pi];
-  }
+      {
+        cout << "move " << pi << "\tby " << total_height << " * " << growthvectors[pi] << endl;
+        mesh[pi] += total_height * growthvectors[pi];
+      }
       for (auto [pi, data] : growth_vector_map) {
         auto [gw, height] = data;
-        cout << "move " << pi << " by " << height << " * " << (*gw) << endl;
+        cout << "move " << pi << "\tby " << height << " * " << (*gw) << endl;
         mesh[pi] += height * (*gw);
       }
 
