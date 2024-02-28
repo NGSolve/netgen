@@ -1872,7 +1872,7 @@ struct GrowthVectorLimiter {
         if(is_boundary_moved.Test(sel.GetIndex()))
           {
             for(auto& p : mesh[si].PNums())
-              if(hasMoved(p))
+              if(hasMoved(p)) 
                 p = newPoint(p);
           }
       }
@@ -2206,20 +2206,14 @@ struct GrowthVectorLimiter {
       // mesh.Save("before_insert.vol");
 
       InsertNewElements(segmap, in_surface_direction);
-      cout << "growthvectors " << __LINE__ << endl << growthvectors << endl;
 
       SetDomInOut();
-      cout << "growthvectors " << __LINE__ << endl << growthvectors << endl;
       AddSegments();
-      cout << "growthvectors " << __LINE__ << endl << growthvectors << endl;
 
       mesh.CalcSurfacesOfNode();
-      cout << "growthvectors " << __LINE__ << endl << growthvectors << endl;
       topo.SetBuildVertex2Element(true);
       mesh.UpdateTopology();
-      cout << "growthvectors " << __LINE__ << endl << growthvectors << endl;
       InterpolateGrowthVectors();
-      cout << "growthvectors " << __LINE__ << endl << growthvectors << endl;
 
       // cout << "growthvectors before "  << endl<< growthvectors << endl;
       // cout << "growthvectors after " << endl << growthvectors << endl;
