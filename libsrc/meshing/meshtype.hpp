@@ -13,6 +13,7 @@
 #include <gprim/geom3d.hpp>
 #include <linalg.hpp>
 
+#include "core/exception.hpp"
 #include "msghandler.hpp"
 
 namespace netgen
@@ -994,7 +995,10 @@ namespace netgen
     { return flags.strongrefflag; }
 
     int Illegal () const
-    { return flags.illegal; }
+    {
+      NETGEN_CHECK_SAME(flags.illegal_valid, true);
+      return flags.illegal;
+    }
     int IllegalValid () const
     { return flags.illegal_valid; }
     void SetIllegal (int aillegal)
@@ -1006,6 +1010,26 @@ namespace netgen
     {
       flags.illegal = alegal ? 0 : 1;
       flags.illegal_valid = 1;
+    }
+
+    bool BadnessValid()
+    { return flags.badness_valid; }
+
+    float GetBadness()
+    {
+      NETGEN_CHECK_SAME(flags.badness_valid, true);
+      return badness;
+    }
+
+    void SetBadness(float value)
+    {
+      badness = value;
+      flags.badness_valid = 1;
+    }
+
+    void Touch() {
+      flags.illegal_valid = 0;
+      flags.badness_valid = 0;
     }
   
     void Delete () { flags.deleted = 1; }

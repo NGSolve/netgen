@@ -13,32 +13,46 @@ extern double CalcTotalBad (const Mesh::T_POINTS & points,
 class MeshOptimize3d
 {
   const MeshingParameters & mp;
+  Mesh & mesh;
+  OPTIMIZEGOAL goal = OPT_QUALITY;
+  double min_badness = 0;
+
+  bool HasBadElement(FlatArray<ElementIndex> els);
+  bool HasIllegalElement(FlatArray<ElementIndex> els);
+  bool NeedsOptimization(FlatArray<ElementIndex> els);
 
 public:
-  MeshOptimize3d (const MeshingParameters & amp) : mp(amp) { ; }
 
-  double CombineImproveEdge (Mesh & mesh, const MeshingParameters & mp,
+  MeshOptimize3d (Mesh & m, const MeshingParameters & amp, OPTIMIZEGOAL agoal = OPT_QUALITY) :
+      mesh(m), mp(amp), goal(agoal) { ; }
+
+  void SetGoal(OPTIMIZEGOAL agoal) { goal = agoal; }
+  void SetMinBadness(double badness) { min_badness = badness; }
+
+  tuple<double, double, int> UpdateBadness();
+
+  double CombineImproveEdge (
             Table<ElementIndex, PointIndex> & elements_of_point,
-            Array<double> & elerrs, PointIndex pi0, PointIndex pi1,
+            PointIndex pi0, PointIndex pi1,
             FlatArray<bool, PointIndex> is_point_removed, bool check_only=false);
 
-  void CombineImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
+  void CombineImprove ();
 
-  void SplitImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
-  double SplitImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, Table<ElementIndex,PointIndex> & elementsonnode, Array<double> &elerrs, NgArray<INDEX_3> &locfaces, double badmax, PointIndex pi1, PointIndex pi2, PointIndex ptmp, bool check_only=false);
+  void SplitImprove ();
+  double SplitImproveEdge (Table<ElementIndex,PointIndex> & elementsonnode, NgArray<INDEX_3> &locfaces, double badmax, PointIndex pi1, PointIndex pi2, PointIndex ptmp, bool check_only=false);
 
-  void SplitImprove2 (Mesh & mesh);
-  double SplitImprove2Element (Mesh & mesh, ElementIndex ei, const Table<ElementIndex, PointIndex> & elements_of_point, const Array<double> & elerrs, bool check_only);
+  void SplitImprove2 ();
+  double SplitImprove2Element (ElementIndex ei, const Table<ElementIndex, PointIndex> & elements_of_point, bool check_only);
   
 
-  double SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, const NgBitArray * working_elements, Table<ElementIndex,PointIndex> & elementsonnode, INDEX_3_HASHTABLE<int> & faces, PointIndex pi1, PointIndex pi2, bool check_only=false);
-  void SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
-		    const NgBitArray * working_elements = NULL);
-  void SwapImproveSurface (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
-			   const NgBitArray * working_elements = NULL,
+  double SwapImproveEdge (const NgBitArray * working_elements, Table<ElementIndex,PointIndex> & elementsonnode, INDEX_3_HASHTABLE<int> & faces, PointIndex pi1, PointIndex pi2, bool check_only=false);
+  void SwapImprove (const NgBitArray * working_elements = NULL);
+  void SwapImproveSurface (const NgBitArray * working_elements = NULL,
 			   const NgArray< NgArray<int,PointIndex::BASE>* > * idmaps = NULL);
-  void SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
-  double SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementIndex eli1, int face, Table<ElementIndex, PointIndex> & elementsonnode, TABLE<SurfaceElementIndex, PointIndex::BASE> & belementsonnode, bool check_only=false );
+  void SwapImprove2 ();
+  double SwapImprove2 (ElementIndex eli1, int face, Table<ElementIndex, PointIndex> & elementsonnode, TABLE<SurfaceElementIndex, PointIndex::BASE> & belementsonnode, bool check_only=false );
+
+  void ImproveMesh() { mesh.ImproveMesh(mp, goal); }
 
   double 
   CalcBad (const Mesh::T_POINTS & points, const Element & elem, double h)
