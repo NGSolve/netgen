@@ -76,6 +76,8 @@ namespace netgen
       bool opposite_direction;
     };
 
+    Standard_Integer BuildTriangulation( const TopoDS_Shape & shape );
+
 
     class MyExplorer
     {

@@ -9,6 +9,7 @@
 #include <meshing.hpp>
 
 #include "occgeom.hpp"
+#include "occ_utils.hpp"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
@@ -32,7 +33,6 @@
 #include <BRepGProp.hxx>
 #include <BRepLProp_SLProps.hxx>
 #include <BRepLib.hxx>
-#include <BRepMesh_IncrementalMesh.hxx>
 #include <BRepOffsetAPI_MakeOffset.hxx>
 #include <BRepOffsetAPI_MakePipe.hxx>
 #include <BRepOffsetAPI_MakePipeShell.hxx>
@@ -45,7 +45,6 @@
 #include <BRepPrimAPI_MakePrism.hxx>
 #include <BRepPrimAPI_MakeRevol.hxx>
 #include <BRepPrimAPI_MakeSphere.hxx>
-#include <BRepTools.hxx>
 #include <GCE2d_MakeArcOfCircle.hxx>
 #include <GCE2d_MakeCircle.hxx>
 #include <GCE2d_MakeSegment.hxx>
@@ -1150,9 +1149,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     
     .def("MakeTriangulation", [](const TopoDS_Shape & shape)
          {
-           BRepTools::Clean (shape);
-           double deflection = 0.01;
-           BRepMesh_IncrementalMesh (shape, deflection, true);
+           BuildTriangulation(shape);
          })
 
 
@@ -1181,12 +1178,6 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                throw NgException ("Triangulation: shape is not a face");
              }
 
-           /*
-           BRepTools::Clean (shape);
-           double deflection = 0.01;
-           BRepMesh_IncrementalMesh (shape, deflection, true);
-           */
-
            Handle(Geom_Surface) surf = BRep_Tool::Surface (face);
 
            TopLoc_Location loc;
@@ -1194,9 +1185,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            
            if (triangulation.IsNull())
              {
-               BRepTools::Clean (shape);
-               double deflection = 0.01;
-               BRepMesh_IncrementalMesh (shape, deflection, true);
+               BuildTriangulation(shape);
                triangulation = BRep_Tool::Triangulation (face, loc);               
              }
            // throw Exception("Don't have a triangulation, call 'MakeTriangulation' first");
@@ -1217,30 +1206,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          })
     .def("_webgui_data", [](const TopoDS_Shape & shape)
          {
-           BRepTools::Clean (shape);
-           double deflection = 0.01;
-
-           // BRepMesh_IncrementalMesh mesher(shape, deflection,Standard_True, 0.01, true);
-           // mesher.Perform();
-
-
-           // https://dev.opencascade.org/doc/overview/html/occt_user_guides__mesh.html
-           // from Standard_Boolean meshing_imeshtools_parameters()
-           IMeshTools_Parameters aMeshParams;
-           aMeshParams.Deflection               = 0.01;
-           aMeshParams.Angle                    = 0.5;
-           aMeshParams.Relative                 = Standard_False;
-           aMeshParams.InParallel               = Standard_True;
-           aMeshParams.MinSize                  = Precision::Confusion();
-           aMeshParams.InternalVerticesMode     = Standard_True;
-           aMeshParams.ControlSurfaceDeflection = Standard_True;
-           
-           BRepMesh_IncrementalMesh aMesher (shape, aMeshParams);
-           const Standard_Integer aStatus = aMesher.GetStatusFlags();
+           auto status = BuildTriangulation(shape);
            // cout << "status = " << aStatus << endl;
            
-           // triangulation = BRep_Tool::Triangulation (face, loc);
-
            std::vector<double> p[3];
            std::vector<double> n[3];
            py::list names, colors, solid_names;
