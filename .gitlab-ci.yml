@@ -279,6 +279,7 @@ pip_windows:
     - pip
     - windows
   script:
+    - .\tests\build_pip.ps1 C:\Python37
     - .\tests\build_pip.ps1 C:\Python38
     - .\tests\build_pip.ps1 C:\Python39
     - .\tests\build_pip.ps1 C:\Python310
