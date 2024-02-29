@@ -603,7 +603,7 @@ namespace netgen
       {
         volelements.Append (el);
       }
-    volelements.Last().Flags().illegal_valid = 0;
+    volelements.Last().Touch();
     volelements.Last().Flags().fixed = 0;
     volelements.Last().Flags().deleted = 0;
 
@@ -626,7 +626,7 @@ namespace netgen
     */
 
     volelements[ei]  = el;
-    volelements[ei].Flags().illegal_valid = 0;
+    volelements[ei].Touch();
     volelements[ei].Flags().fixed = 0;
     volelements[ei].Flags().deleted = 0;
   }

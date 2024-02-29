@@ -470,11 +470,11 @@ namespace netgen
 	   multithread.terminate != 1)
 	  {
 	    MeshingParameters dummymp;
-	    MeshOptimize3d optmesh(dummymp);
+	    MeshOptimize3d optmesh(mesh, dummymp, OPT_QUALITY);
 	    for(int i=0; i<numtopimprove; i++)
 	      {
-		optmesh.SwapImproveSurface(mesh,OPT_QUALITY,&working_elements,&idmaps);
-		optmesh.SwapImprove(mesh,OPT_QUALITY,&working_elements);
+		optmesh.SwapImproveSurface(&working_elements,&idmaps);
+		optmesh.SwapImprove(&working_elements);
 		
 	      }	    
 
@@ -518,11 +518,11 @@ namespace netgen
       }
 
     MeshingParameters dummymp;
-    MeshOptimize3d optmesh(dummymp);
+    MeshOptimize3d optmesh(mesh, dummymp, OPT_QUALITY);
     for(int i=0; i<numtopimprove && multithread.terminate != 1; i++)
       {
-	optmesh.SwapImproveSurface(mesh,OPT_QUALITY,NULL,&idmaps);
-	optmesh.SwapImprove(mesh,OPT_QUALITY);
+	optmesh.SwapImproveSurface(NULL,&idmaps);
+	optmesh.SwapImprove();
 	//mesh.UpdateTopology();
       }
     mesh.UpdateTopology();

@@ -1625,7 +1625,8 @@ namespace netgen
       // tempmesh.Save ("tempmesh.vol");
 
       {
-        MeshOptimize3d meshopt(mp);
+        MeshOptimize3d meshopt(tempmesh, mp);
+        meshopt.SetGoal(OPT_CONFORM);
         tempmesh.Compress();
         tempmesh.FindOpenElements ();
       #ifndef EMSCRIPTEN
@@ -1638,7 +1639,7 @@ namespace netgen
             if(i%5==0)
                 tempmesh.FreeOpenElementsEnvironment (1);
 
-            meshopt.SwapImprove(tempmesh, OPT_CONFORM);
+            meshopt.SwapImprove();
           }
         tempmesh.Compress();
       }

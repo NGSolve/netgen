@@ -480,7 +480,7 @@ namespace netgen
             meshed = 0;
             PrintMessage (5, mesh.GetNOpenElements(), " open faces found");
 
-            MeshOptimize3d optmesh(mp);
+            MeshOptimize3d optmesh(mesh, mp, OPT_REST);
 
             const char * optstr = "mcmstmcmstmcmstmcm";
             for (size_t j = 1; j <= strlen(optstr); j++)
@@ -492,11 +492,11 @@ namespace netgen
 
                switch (optstr[j-1])
                {
-               case 'c': optmesh.CombineImprove(mesh, OPT_REST); break;
-               case 'd': optmesh.SplitImprove(mesh, OPT_REST); break;
-               case 's': optmesh.SwapImprove(mesh, OPT_REST); break;
-               case 't': optmesh.SwapImprove2(mesh, OPT_REST); break;
-               case 'm': mesh.ImproveMesh(mp, OPT_REST); break;
+               case 'c': optmesh.CombineImprove(); break;
+               case 'd': optmesh.SplitImprove(); break;
+               case 's': optmesh.SwapImprove(); break;
+               case 't': optmesh.SwapImprove2(); break;
+               case 'm': optmesh.ImproveMesh(); break;
                }	  
 
             }
@@ -528,6 +528,7 @@ namespace netgen
            throw NgException ("Stop meshing since surface mesh not consistent");
         }
      }
+     RemoveIllegalElements (mesh);
   }
 
   void MergeMeshes( Mesh & mesh, Array<MeshingData> & md )
@@ -682,12 +683,27 @@ namespace netgen
     */
 
     mesh3d.CalcSurfacesOfNode();
+
+    MeshOptimize3d optmesh(mesh3d, mp);
+
+    // optimize only bad elements first
+    optmesh.SetMinBadness(1000.);
+    for(auto i : Range(mp.optsteps3d))
+      {
+        auto [total_badness, max_badness, bad_els] = optmesh.UpdateBadness();
+        if(bad_els==0) break;
+        optmesh.SplitImprove();
+        optmesh.SwapImprove();
+        optmesh.SwapImprove2();
+      }
+
+    // Now optimize all elements
+    optmesh.SetMinBadness(0);
+
     for (auto i : Range(mp.optsteps3d))
       {
 	if (multithread.terminate)
 	  break;
-
-	MeshOptimize3d optmesh(mp);
 
 	// teterrpow = mp.opterrpow;
 	// for (size_t j = 1; j <= strlen(mp.optimize3d); j++)
@@ -699,12 +715,16 @@ namespace netgen
 
 	    switch (mp.optimize3d[j])
 	      {
-	      case 'c': optmesh.CombineImprove(mesh3d, OPT_REST); break;
-	      case 'd': optmesh.SplitImprove(mesh3d); break;
-	      case 'D': optmesh.SplitImprove2(mesh3d); break;
-	      case 's': optmesh.SwapImprove(mesh3d); break;
+	      case 'c': 
+          optmesh.SetGoal(OPT_REST);
+          optmesh.CombineImprove();
+          optmesh.SetGoal(OPT_QUALITY);
+          break;
+	      case 'd': optmesh.SplitImprove(); break;
+	      case 'D': optmesh.SplitImprove2(); break;
+	      case 's': optmesh.SwapImprove(); break;
                 // case 'u': optmesh.SwapImproveSurface(mesh3d); break;
-	      case 't': optmesh.SwapImprove2(mesh3d); break;
+	      case 't': optmesh.SwapImprove2(); break;
 #ifdef SOLIDGEOM
 	      case 'm': mesh3d.ImproveMesh(*geometry); break;
 	      case 'M': mesh3d.ImproveMesh(*geometry); break;
@@ -744,19 +764,19 @@ namespace netgen
     nillegal = mesh3d.MarkIllegalElements();
 
     MeshingParameters dummymp;
-    MeshOptimize3d optmesh(dummymp);
+    MeshOptimize3d optmesh(mesh3d, dummymp, OPT_LEGAL);
     while (nillegal && (it--) > 0)
       {
 	if (multithread.terminate)
 	  break;
 
 	PrintMessage (5, nillegal, " illegal tets");
-        optmesh.SplitImprove (mesh3d, OPT_LEGAL);
+        optmesh.SplitImprove ();
 
 	mesh3d.MarkIllegalElements();  // test
-	optmesh.SwapImprove (mesh3d, OPT_LEGAL);
+	optmesh.SwapImprove ();
 	mesh3d.MarkIllegalElements();  // test
-	optmesh.SwapImprove2 (mesh3d, OPT_LEGAL);
+	optmesh.SwapImprove2 ();
 
 	oldn = nillegal;
 	nillegal = mesh3d.MarkIllegalElements();

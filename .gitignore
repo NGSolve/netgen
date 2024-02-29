@@ -1,3 +1,11 @@
 *.whl
 dist
 build
+*.vol.gz
+*.vol
+*.ini
+__pycache__
+*.json
+*.zip
+.cache
+*.patch
