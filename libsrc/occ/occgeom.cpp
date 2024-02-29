@@ -23,7 +23,6 @@
 #include <BRepExtrema_DistShapeShape.hxx>
 #include <BRepGProp.hxx>
 #include <BRepLib.hxx>
-#include <BRepMesh_IncrementalMesh.hxx>
 #include <BRepOffsetAPI_Sewing.hxx>
 #include <BRepTools.hxx>
 #include <IGESCAFControl_Reader.hxx>
@@ -1387,12 +1386,9 @@ namespace netgen
 
    void OCCGeometry :: BuildVisualizationMesh (double deflection)
    {
-      cout << "Preparing visualization (deflection = " << deflection << ") ... " << flush;
-
-      BRepTools::Clean (shape);
-      // BRepMesh_IncrementalMesh::
-      BRepMesh_IncrementalMesh (shape, deflection, true);
-      cout << "done" << endl;
+      // cout << IM(5) << "Preparing visualization (deflection = " << deflection << ") ... " << flush;
+      BuildTriangulation(shape);
+      // cout << IM(5) << "done" << endl;
    }
 
 
