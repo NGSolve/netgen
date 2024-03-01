@@ -1,6 +1,8 @@
 #include <Bnd_Box.hxx>
 #include <BRepBndLib.hxx>
 #include <BRep_TVertex.hxx>
+#include <BRepMesh_IncrementalMesh.hxx>
+#include <BRepTools.hxx>
 
 #include "occ_utils.hpp"
 
@@ -54,5 +56,25 @@ namespace netgen
         BRepBndLib::Add (shape, bb, true);
 #endif
         return {occ2ng(bb.CornerMin()), occ2ng(bb.CornerMax())};
+    }
+
+    Standard_Integer BuildTriangulation( const TopoDS_Shape & shape )
+    {
+       BRepTools::Clean (shape);
+       double deflection = 0.01;
+
+       // https://dev.opencascade.org/doc/overview/html/occt_user_guides__mesh.html
+       // from Standard_Boolean meshing_imeshtools_parameters()
+       IMeshTools_Parameters aMeshParams;
+       aMeshParams.Deflection               = 0.01;
+       aMeshParams.Angle                    = 0.5;
+       aMeshParams.Relative                 = Standard_False;
+       aMeshParams.InParallel               = Standard_True;
+       aMeshParams.MinSize                  = Precision::Confusion();
+       aMeshParams.InternalVerticesMode     = Standard_True;
+       aMeshParams.ControlSurfaceDeflection = Standard_True;
+
+       BRepMesh_IncrementalMesh aMesher (shape, aMeshParams);
+       return  aMesher.GetStatusFlags();
     }
 }
