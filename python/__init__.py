@@ -41,6 +41,7 @@ if sys.platform.startswith('win'):
 del sys
 del os
 
+from pyngcore import Timer
 from . import libngpy
 
 from netgen.libngpy._meshing import _Redraw
@@ -48,7 +49,6 @@ from netgen.libngpy._meshing import _Redraw
 def Redraw(*args, **kwargs):
     return _Redraw(*args, **kwargs)
 
-from pyngcore import Timer
 def TimeFunction(func, name=None):
     name = name or func.__qualname__
     timer = Timer(name)
