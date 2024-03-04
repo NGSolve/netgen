@@ -1784,7 +1784,7 @@ namespace netgen
    "Face", "Wire", "Edge", "Vertex"};
 
   const char * orientationstring[] =
-     {"+", "-"};
+    {"+", "-", "i", "e"};
 
 
 
