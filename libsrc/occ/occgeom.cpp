@@ -1843,6 +1843,16 @@ namespace netgen
          }
 
          str << "{" << shapename[l] << " " << count2;
+         if(HaveProperties(e.Current()))
+           {
+             const auto& props = GetProperties(e.Current());
+             if(props.name || props.maxh < 1e99)
+               str << " - ";
+             if(props.name)
+               str << props.GetName();
+             if(props.maxh < 1e99)
+               str << " maxh(" << props.maxh << ")";
+           }
 
          if (l <= TopAbs_EDGE)
          {
