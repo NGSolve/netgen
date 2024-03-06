@@ -559,12 +559,13 @@ namespace netgen
 
     auto & identifications = mesh.GetIdentifications();
 
-    std::map<size_t, PointIndex> vert2meshpt;
+    Array<PointIndex> vert2meshpt(vertices.Size());
+    vert2meshpt = PointIndex::INVALID;
     for(auto & vert : vertices)
       {
         auto pi = mesh.AddPoint(vert->GetPoint(), vert->properties.layer);
         tree.Insert(mesh[pi], pi);
-        vert2meshpt[vert->GetHash()] = pi;
+        vert2meshpt[vert->nr] = pi;
         mesh[pi].Singularity(vert->properties.hpref);
         mesh[pi].SetType(FIXEDPOINT);
 
@@ -576,8 +577,8 @@ namespace netgen
 
     for(auto & vert : vertices)
         for(auto & ident : vert->identifications)
-            identifications.Add(vert2meshpt[ident.from->GetHash()],
-                                vert2meshpt[ident.to->GetHash()],
+            identifications.Add(vert2meshpt[ident.from->nr],
+                                vert2meshpt[ident.to->nr],
                                 ident.name,
                                 ident.type);
 
@@ -591,8 +592,8 @@ namespace netgen
         auto edge = edges[edgenr].get();
         PointIndex startp, endp;
         // throws if points are not found
-        startp = vert2meshpt.at(edge->GetStartVertex().GetHash());
-        endp = vert2meshpt.at(edge->GetEndVertex().GetHash());
+        startp = vert2meshpt[edge->GetStartVertex().nr];
+        endp = vert2meshpt[edge->GetEndVertex().nr];
 
         // ignore collapsed edges
         if(startp == endp && edge->GetLength() < 1e-10 * bounding_box.Diam())

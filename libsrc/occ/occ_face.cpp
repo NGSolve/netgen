@@ -30,11 +30,6 @@ namespace netgen
         return 0;
     }
 
-    size_t OCCFace::GetHash() const
-    {
-      return face.HashCode(std::numeric_limits<Standard_Integer>::max());
-    }
-
     Point<3> OCCFace::GetCenter() const
     {
         return occ2ng( props.CentreOfMass() );

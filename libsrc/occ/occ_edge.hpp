@@ -36,7 +36,6 @@ namespace netgen
         Point<3> GetCenter() const override;
         Point<3> GetPoint(double t) const override;
         double CalcStep(double t, double sag) const override;
-        size_t GetHash() const override;
         void ProjectPoint(Point<3>& p, EdgePointGeomInfo* gi) const override;
         Vec<3> GetTangent(double t) const override;
         bool IsDegenerated(double) const override {

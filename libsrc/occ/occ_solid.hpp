@@ -16,8 +16,6 @@ namespace netgen
         OCCSolid(TopoDS_Shape dshape)
             : solid(TopoDS::Solid(dshape))
         { }
-
-        size_t GetHash() const override { return solid.HashCode(std::numeric_limits<Standard_Integer>::max()); }
     };
 }
 

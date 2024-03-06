@@ -68,7 +68,6 @@ namespace netgen
     Transformation<3> primary_to_me;
 
     virtual ~GeometryShape() {}
-    virtual size_t GetHash() const = 0;
     virtual bool IsMappedShape( const GeometryShape & other, const Transformation<3> & trafo, double tolerance ) const;
   };
 
@@ -320,13 +319,6 @@ namespace netgen
       throw Exception("Base geometry get tangent called");
     }
 
-    virtual size_t GetEdgeIndex(const GeometryEdge& edge) const
-    {
-      for(auto i : Range(edges))
-        if(edge.GetHash() == edges[i]->GetHash())
-          return i;
-      throw Exception("Couldn't find edge index");
-    }
     virtual void Save (const filesystem::path & filename) const;
     virtual void SaveToMeshFile (ostream & /* ost */) const { ; }
   };
