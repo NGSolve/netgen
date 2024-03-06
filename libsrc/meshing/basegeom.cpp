@@ -313,23 +313,14 @@ namespace netgen
               {
                   bool need_inverse = ident.from == s.get();
                   auto other = need_inverse ? ident.to : ident.from;
-                  if(other->nr <= s->primary->nr)
-                  {
-                      auto trafo = ident.trafo;
-                      if(need_inverse)
-                          trafo = trafo.CalcInverse();
-                      s->primary = other;
-                      s->primary_to_me.Combine(trafo, s->primary_to_me);
-                      changed = other->nr != s->primary->nr;
-                  }
-                  if(other->primary->nr <= s->primary->nr)
+                  if(other->primary->nr < s->primary->nr)
                   {
                       auto trafo = ident.trafo;
                       if(need_inverse)
                           trafo = trafo.CalcInverse();
                       s->primary = other->primary;
                       s->primary_to_me.Combine(trafo, other->primary_to_me);
-                      changed = other->primary->nr != s->primary->nr;
+                      changed = true;
                   }
               }
             }
