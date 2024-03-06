@@ -22,7 +22,7 @@ namespace netgen
           ArrayMem<int, 1> points;
           tree.GetIntersecting(p, p, points);
           if(points.Size()==0)
-              throw Exception("cannot find mapped point");
+              throw Exception("cannot find mapped point " + ToString(p));
           return points[0];
       }
 
@@ -944,11 +944,12 @@ namespace netgen
     }
 
     bool have_identifications = false;
+    std::map<tuple<PointIndex, int>, PointIndex> mapto;
     for(auto & face : faces)
         if(face->primary != face.get())
         {
             have_identifications = true;
-            MapSurfaceMesh(mesh, *face);
+            MapSurfaceMesh(mesh, *face, mapto);
         }
 
     // identify points on faces
@@ -992,7 +993,8 @@ namespace netgen
                 if(ident.from == face.get())
                     for(auto pi : pi_of_face[face->nr])
                     {
-                        auto pi_other = tree.Find(ident.trafo(mesh[pi]));
+                        auto pi_primary = ident.from->primary->nr == ident.from->nr ? pi : mapto[{pi, ident.to->primary->nr}];
+                        auto pi_other = ident.to->primary->nr == ident.to->nr ? pi_primary : mapto[{pi_primary, ident.to->nr}];
                         mesh_ident.Add(pi, pi_other, ident.name, ident.type);
                     }
             }
@@ -1002,7 +1004,7 @@ namespace netgen
     multithread.task = savetask;
   }
 
-  void NetgenGeometry :: MapSurfaceMesh( Mesh & mesh, const GeometryFace & dst ) const
+  void NetgenGeometry :: MapSurfaceMesh( Mesh & mesh, const GeometryFace & dst, std::map<tuple<PointIndex, int>, PointIndex> & mapto ) const
   {
     static Timer timer("MapSurfaceMesh");
     RegionTimer rt(timer);
@@ -1083,6 +1085,8 @@ namespace netgen
                 pmap[pi] = mesh.AddPoint(trafo(mesh[pi]), 1, SURFACEPOINT);
               }
               sel_new[i] = pmap[pi];
+              mapto[{pi, dst.nr}] = pmap[pi];
+              mapto[{pmap[pi], src.nr}] = pi;
           }
           if(do_invert.IsTrue())
               sel_new.Invert();

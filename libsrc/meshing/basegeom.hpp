@@ -243,7 +243,7 @@ namespace netgen
     virtual void MeshSurface(Mesh& mesh, const MeshingParameters& mparam) const;
     virtual bool MeshFace(Mesh& mesh, const MeshingParameters& mparam,
                      int nr, FlatArray<int, PointIndex> glob2loc) const;
-    virtual void MapSurfaceMesh( Mesh & mesh, const GeometryFace & dst ) const;
+    virtual void MapSurfaceMesh( Mesh & mesh, const GeometryFace & dst, std::map<tuple<PointIndex, int>, PointIndex> & mapto) const;
     virtual void OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam) const;
 
     virtual void FinalizeMesh(Mesh& mesh) const;
