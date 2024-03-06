@@ -70,6 +70,12 @@ public:
     return netgen::CalcTotalBad (points, elements, mp);
   }
 
+
+  double GetLegalPenalty()
+  {
+    return goal == OPT_LEGAL ? 1e15 : 1e6;
+  }
+
 };
 
 
