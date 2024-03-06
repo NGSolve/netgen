@@ -1710,13 +1710,6 @@ namespace netgen
         BRepTools::Read(shape, ss, builder);
       }
 
-    /*
-    // enumerate shapes and archive only integers
-    auto my_hash = [](const TopoDS_Shape & key) {
-        auto occ_hash = key.HashCode(1<<31UL);
-        return std::hash<decltype(occ_hash)>()(occ_hash);
-    };
-    */
     TopTools_IndexedMapOfShape shape_map;
     Array<TopoDS_Shape> shape_list;
 

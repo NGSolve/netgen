@@ -53,11 +53,6 @@ namespace netgen
         throw Exception(ToString("not implemented") + __FILE__ + ":" + ToString(__LINE__));
     }
 
-    size_t OCCEdge::GetHash() const
-    {
-      return edge.HashCode(std::numeric_limits<Standard_Integer>::max());
-    }
-
     void OCCEdge::ProjectPoint(Point<3>& p, EdgePointGeomInfo* gi) const
     {
         auto pnt = ng2occ(p);
