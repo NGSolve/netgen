@@ -317,6 +317,6 @@ namespace netgen
   {
     return Properties(shape).Mass();
   }
-
+  
 }
 #endif // FILE_OCC_UTILS_INCLUDED
