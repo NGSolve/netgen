@@ -12,8 +12,8 @@ extern double CalcTotalBad (const Mesh::T_POINTS & points,
 ///
 class MeshOptimize3d
 {
-  const MeshingParameters & mp;
   Mesh & mesh;
+  const MeshingParameters & mp;
   OPTIMIZEGOAL goal = OPT_QUALITY;
   double min_badness = 0;
 

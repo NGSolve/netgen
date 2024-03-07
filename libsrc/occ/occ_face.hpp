@@ -31,7 +31,6 @@ namespace netgen
 
         const TopoDS_Face Shape() const { return face; }
 
-        size_t GetHash() const override;
         Point<3> GetCenter() const override;
         virtual size_t GetNBoundaries() const override;
         virtual Array<Segment> GetBoundary(const Mesh& mesh) const override;

@@ -1710,13 +1710,6 @@ namespace netgen
         BRepTools::Read(shape, ss, builder);
       }
 
-    /*
-    // enumerate shapes and archive only integers
-    auto my_hash = [](const TopoDS_Shape & key) {
-        auto occ_hash = key.HashCode(1<<31UL);
-        return std::hash<decltype(occ_hash)>()(occ_hash);
-    };
-    */
     TopTools_IndexedMapOfShape shape_map;
     Array<TopoDS_Shape> shape_list;
 
@@ -1784,7 +1777,7 @@ namespace netgen
    "Face", "Wire", "Edge", "Vertex"};
 
   const char * orientationstring[] =
-     {"+", "-"};
+    {"+", "-", "i", "e"};
 
 
 
@@ -1843,6 +1836,16 @@ namespace netgen
          }
 
          str << "{" << shapename[l] << " " << count2;
+         if(HaveProperties(e.Current()))
+           {
+             const auto& props = GetProperties(e.Current());
+             if(props.name || props.maxh < 1e99)
+               str << " - ";
+             if(props.name)
+               str << props.GetName();
+             if(props.maxh < 1e99)
+               str << " maxh(" << props.maxh << ")";
+           }
 
          if (l <= TopAbs_EDGE)
          {
@@ -2338,21 +2341,25 @@ namespace netgen
 
           for(auto & ident : identifications)
           {
+              const auto& to = STEPConstruct::FindEntity(finder, ident.from == shape ? ident.to : ident.from);
+              if(to.IsNull())
+                  continue;
               Array<Handle(StepRepr_RepresentationItem)> items;
-              // items.Append(STEPConstruct::FindEntity(finder, ident.other)); // TODO!
+              items.Append(MakeReal(ident.from == shape ? 1 : 0));
+              items.Append(to);
               auto & m = ident.trafo.GetMatrix();
               for(auto i : Range(9))
                   items.Append(MakeReal(m(i)));
               auto & v = ident.trafo.GetVector();
               for(auto i : Range(3))
                   items.Append(MakeReal(v(i)));
-              for(auto & item : items.Range(1,items.Size()))
+              items.Append(MakeInt(ident.type));
+              for(auto & item : items.Range(0, items.Size()))
                   model->AddEntity(item);
               ident_items.Append(MakeCompound(items, ident.name));
           }
-
-          for(auto & item : ident_items.Range(1,ident_items.Size()))
-              model->AddEntity(item);
+          for(auto & item : ident_items.Range(1, ident_items.Size()))
+            model->AddEntity(item);
           auto comp = MakeCompound(ident_items, "netgen_geometry_identification");
           model->AddEntity(comp);
       }
@@ -2369,7 +2376,18 @@ namespace netgen
               auto id_item = Handle(StepRepr_CompoundRepresentationItem)::DownCast(idents->ItemElementValue(i));
               OCCIdentification ident;
               ident.name = id_item->Name()->ToCString();
-              // ident.other = TransferBRep::ShapeResult(transProc->Find(id_item->ItemElementValue(1))); /TODO!
+              auto is_from = ReadReal(id_item->ItemElementValue(1));
+              if(is_from)
+                {
+                  ident.from = shape_origin;
+                  ident.to = TransferBRep::ShapeResult(transProc->Find(id_item->ItemElementValue(2)));
+                }
+              else
+                {
+                  ident.from = TransferBRep::ShapeResult(
+                      transProc->Find(id_item->ItemElementValue(2)));
+                  ident.to = shape_origin;
+                }
 
               auto & m = ident.trafo.GetMatrix();
               for(auto i : Range(9))
@@ -2377,7 +2395,7 @@ namespace netgen
               auto & v = ident.trafo.GetVector();
               for(auto i : Range(3))
                   v(i) = ReadReal(id_item->ItemElementValue(12+i));
-
+              ident.type = Identifications::ID_TYPE(ReadInt(id_item->ItemElementValue(15)));
               result.push_back(ident);
           }
           OCCGeometry::GetIdentifications(shape_origin) = result;

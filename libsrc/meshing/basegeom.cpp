@@ -22,7 +22,7 @@ namespace netgen
           ArrayMem<int, 1> points;
           tree.GetIntersecting(p, p, points);
           if(points.Size()==0)
-              throw Exception("cannot find mapped point");
+              throw Exception("cannot find mapped point " + ToString(p));
           return points[0];
       }
 
@@ -313,23 +313,14 @@ namespace netgen
               {
                   bool need_inverse = ident.from == s.get();
                   auto other = need_inverse ? ident.to : ident.from;
-                  if(other->nr <= s->primary->nr)
-                  {
-                      auto trafo = ident.trafo;
-                      if(need_inverse)
-                          trafo = trafo.CalcInverse();
-                      s->primary = other;
-                      s->primary_to_me.Combine(trafo, s->primary_to_me);
-                      changed = other->nr != s->primary->nr;
-                  }
-                  if(other->primary->nr <= s->primary->nr)
+                  if(other->primary->nr < s->primary->nr)
                   {
                       auto trafo = ident.trafo;
                       if(need_inverse)
                           trafo = trafo.CalcInverse();
                       s->primary = other->primary;
                       s->primary_to_me.Combine(trafo, other->primary_to_me);
-                      changed = other->primary->nr != s->primary->nr;
+                      changed = true;
                   }
               }
             }
@@ -568,12 +559,13 @@ namespace netgen
 
     auto & identifications = mesh.GetIdentifications();
 
-    std::map<size_t, PointIndex> vert2meshpt;
+    Array<PointIndex> vert2meshpt(vertices.Size());
+    vert2meshpt = PointIndex::INVALID;
     for(auto & vert : vertices)
       {
         auto pi = mesh.AddPoint(vert->GetPoint(), vert->properties.layer);
         tree.Insert(mesh[pi], pi);
-        vert2meshpt[vert->GetHash()] = pi;
+        vert2meshpt[vert->nr] = pi;
         mesh[pi].Singularity(vert->properties.hpref);
         mesh[pi].SetType(FIXEDPOINT);
 
@@ -585,8 +577,8 @@ namespace netgen
 
     for(auto & vert : vertices)
         for(auto & ident : vert->identifications)
-            identifications.Add(vert2meshpt[ident.from->GetHash()],
-                                vert2meshpt[ident.to->GetHash()],
+            identifications.Add(vert2meshpt[ident.from->nr],
+                                vert2meshpt[ident.to->nr],
                                 ident.name,
                                 ident.type);
 
@@ -600,8 +592,8 @@ namespace netgen
         auto edge = edges[edgenr].get();
         PointIndex startp, endp;
         // throws if points are not found
-        startp = vert2meshpt.at(edge->GetStartVertex().GetHash());
-        endp = vert2meshpt.at(edge->GetEndVertex().GetHash());
+        startp = vert2meshpt[edge->GetStartVertex().nr];
+        endp = vert2meshpt[edge->GetEndVertex().nr];
 
         // ignore collapsed edges
         if(startp == endp && edge->GetLength() < 1e-10 * bounding_box.Diam())
@@ -944,11 +936,12 @@ namespace netgen
     }
 
     bool have_identifications = false;
+    std::map<tuple<PointIndex, int>, PointIndex> mapto;
     for(auto & face : faces)
         if(face->primary != face.get())
         {
             have_identifications = true;
-            MapSurfaceMesh(mesh, *face);
+            MapSurfaceMesh(mesh, *face, mapto);
         }
 
     // identify points on faces
@@ -992,7 +985,8 @@ namespace netgen
                 if(ident.from == face.get())
                     for(auto pi : pi_of_face[face->nr])
                     {
-                        auto pi_other = tree.Find(ident.trafo(mesh[pi]));
+                        auto pi_primary = ident.from->primary->nr == ident.from->nr ? pi : mapto[{pi, ident.to->primary->nr}];
+                        auto pi_other = ident.to->primary->nr == ident.to->nr ? pi_primary : mapto[{pi_primary, ident.to->nr}];
                         mesh_ident.Add(pi, pi_other, ident.name, ident.type);
                     }
             }
@@ -1002,7 +996,7 @@ namespace netgen
     multithread.task = savetask;
   }
 
-  void NetgenGeometry :: MapSurfaceMesh( Mesh & mesh, const GeometryFace & dst ) const
+  void NetgenGeometry :: MapSurfaceMesh( Mesh & mesh, const GeometryFace & dst, std::map<tuple<PointIndex, int>, PointIndex> & mapto ) const
   {
     static Timer timer("MapSurfaceMesh");
     RegionTimer rt(timer);
@@ -1083,6 +1077,8 @@ namespace netgen
                 pmap[pi] = mesh.AddPoint(trafo(mesh[pi]), 1, SURFACEPOINT);
               }
               sel_new[i] = pmap[pi];
+              mapto[{pi, dst.nr}] = pmap[pi];
+              mapto[{pmap[pi], src.nr}] = pi;
           }
           if(do_invert.IsTrue())
               sel_new.Invert();
