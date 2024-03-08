@@ -164,19 +164,35 @@ struct GrowthVectorLimiter {
         map_from[pi_to] = pi;
   }
 
-  Face GetFace( SurfaceElementIndex sei );
-  Face GetMappedFace( SurfaceElementIndex sei );
-  Face GetMappedFace( SurfaceElementIndex sei, int face );
+  // Face GetFace( SurfaceElementIndex sei );
+  // Face GetMappedFace( SurfaceElementIndex sei );
+  // Face GetMappedFace( SurfaceElementIndex sei, int face );
 
   Point<3> GetPoint(PointIndex pi_to, double shift=1.) {
-    if(shift == 1.) return mesh[pi_to];
-    auto pi_from = map_from[pi_to];
-    if(!pi_from.IsValid()) return mesh[pi_to];
-    if(shift == 0.) return mesh[pi_from];
-    Point<3> p_from = mesh[pi_from];
-    auto [gw_ptr, h] = tool.growth_vector_map.at(pi_to);
-    Point<3> p_to = mesh[pi_to] + h * limits[pi_to] * (*gw_ptr);
-    return p_from + shift * (p_to - p_from);
+    if(tool.growth_vector_map.count(pi_to) == 0)
+      return mesh[pi_to];
+
+    auto [gw, height] = tool.growth_vector_map[pi_to];
+    return mesh[pi_to] + shift * height * (*gw);
+
+    // if(shift == 1.) return mesh[pi_to];
+    // auto pi_from = map_from[pi_to];
+    // if(!pi_from.IsValid()) return mesh[pi_to];
+    // if(shift == 0.) return mesh[pi_from];
+    // Point<3> p_from = mesh[pi_from];
+    // auto [gw_ptr, h] = tool.growth_vector_map.at(pi_to);
+    // Point<3> p_to = mesh[pi_to] + h * limits[pi_to] * (*gw_ptr);
+    // return p_from + shift * (p_to - p_from);
+  }
+
+  Point<3> GetMappedPoint(PointIndex pi_from, double shift=1.) {
+    auto pi_to = tool.mapto[pi_from].Last();
+    return GetPoint(pi_to, shift);
+  }
+
+
+  std::array<Point<3>, 2> GetMappedSeg(PointIndex pi_from, double shift=1.) {
+    return {mesh[pi_from], GetMappedPoint(pi_from, shift)};
   }
 
   std::array<Point<3>, 2> GetSeg(PointIndex pi_to, double shift=1.) {
@@ -187,17 +203,26 @@ struct GrowthVectorLimiter {
     auto sel = mesh[sei];
     std::array<Point<3>, 3> trig;
     for (auto i : Range(3))
-      trig[i] = mesh[sel[i]];
+      trig[i] = GetPoint(sel[i], shift);
     return trig;
   }
 
-  auto GetSideTrig(SurfaceElementIndex sei, int index, double shift = 0.0) {
+  auto GetMappedTrig(SurfaceElementIndex sei, double shift = 0.0) {
+    auto sel = mesh[sei];
+    std::array<Point<3>, 3> trig;
+    for (auto i : Range(3))
+      trig[i] = GetMappedPoint(sel[i], shift);
+    return trig;
+  }
+
+  auto GetSideTrig(SurfaceElementIndex sei, int index, double shift = 0.0, bool grow_first = true) {
     auto trig = GetTrig(sei, 0.0);
     auto sel = mesh[sei];
     auto index1 = (index+1)%3;
-    trig[index] = trig[index1];
-    auto [gw_ptr, h] = tool.growth_vector_map.at(sel[index1]);
-    trig[index] += h * shift * (*gw_ptr);
+    if(!grow_first) index1 = (index+2)%3;
+    trig[index] = GetMappedPoint(sel[index1], shift);
+    // auto [gw_ptr, h] = tool.growth_vector_map.at(sel[index1]);
+    // trig[index] += h * shift * (*gw_ptr);
     return trig;
   }
 
@@ -281,13 +306,25 @@ struct GrowthVectorLimiter {
   void LimitSelfIntersection () {
     // check for self-intersection within new elements (prisms/hexes)
     auto isIntersecting = [&](SurfaceElementIndex sei, double shift) {
+      if(sei>=tool.nse) return false; // ignore new surface elements, side trigs are only built from original surface elements
       const auto sel = mesh[sei];
+      // cout << "check " << sei << " " << mesh[sei] << endl;
       auto np = sel.GetNP();
       for(auto i : Range(np)) {
-        auto seg = GetSeg(sel[i], shift);
+        auto seg = GetMappedSeg(sel[i], shift);
         for(auto fi : Range(np-2)) {
-          auto trig = GetSideTrig(sei, i+fi, 1.0);
-          if(isIntersectingPlane(seg, trig)) return true;
+          for(auto side : {true, false}) {
+            auto trig = GetSideTrig(sei, i+fi, 1.0, side);
+            if(sel.PNums().Contains(1)) {
+              cout << "check " << seg[0] << seg[1] << endl;
+              cout << "\t" << trig[0] << trig[1] << trig[2] << endl;
+            }
+            if(isIntersectingPlane(seg, trig)) {
+              if(sel.PNums().Contains(1))
+                cout << "found intersection " << sei << " " << mesh[sei] << endl;
+              return true;
+            }
+          }
         }
       }
       return false;
@@ -313,7 +350,7 @@ struct GrowthVectorLimiter {
     for(SurfaceElementIndex sei : mesh.SurfaceElements().Range()) {
       auto sel = mesh[sei];
       const auto& fd = mesh.GetFaceDescriptor(sel.GetIndex());
-      if(sei < tool.nse) continue;
+      if(sei >= tool.nse) continue;
       if(sel.GetNP()==4) continue;
       // if(sei >= tool.nse || (!changed_domains.Test(fd.DomainIn()) &&
       //   !changed_domains.Test(fd.DomainOut())))
@@ -337,7 +374,8 @@ struct GrowthVectorLimiter {
           if(max_limit == limits[sel[i]])
             limits[sel[i]] *= 0.9;
         if(max_limit < 0.01) {
-          cout << "self intersection" << endl;
+          if(sel.PNums().Contains(1))
+            cout << "self intersection" << endl;
           break;
         }
       }
@@ -367,7 +405,6 @@ struct GrowthVectorLimiter {
       //   }
       // }
     }
-    cout << __FILE__ << ":" << __LINE__ << endl;
   }
 
   // checks if a segment is intersecting a plane, spanned by three points, lam will be set s.t. p_intersect = seg[0] + lam * (seg[1]-seg[0])
@@ -544,44 +581,36 @@ struct GrowthVectorLimiter {
 
   void BoundaryLayerTool :: LimitGrowthVectorLengths()
   {
-    cout << __FILE__ << ":" << __LINE__ << endl;
     static Timer tall("BoundaryLayerTool::LimitGrowthVectorLengths"); RegionTimer rtall(tall);
   
-    cout << __FILE__ << ":" << __LINE__ << endl;
     limits.SetSize(mesh.Points().Size());
     limits = 1.0;
 
-    cout << __FILE__ << ":" << __LINE__ << endl;
     GrowthVectorLimiter limiter(*this); //, mesh, params, limits, growthvectors, total_height);
 
-    cout << __FILE__ << ":" << __LINE__ << endl;
     // limit to not intersect with other (original) surface elements
     double trig_shift = 0;
     double seg_shift = 2.1;
-    cout << __FILE__ << ":" << __LINE__ << endl;
-    limiter.FindTreeIntersections(trig_shift, seg_shift, [&] (PointIndex pi_to, SurfaceElementIndex sei) {
-    // cout << "found intersection 1 " << pi_to << ", " << sei << endl;
-      if(sei >= nse) return; // ignore new surface elements in first pass
-      limiter.LimitGrowthVector(pi_to, sei, trig_shift, seg_shift);
-    });
-    cout << __FILE__ << ":" << __LINE__ << endl;
+    // limiter.FindTreeIntersections(trig_shift, seg_shift, [&] (PointIndex pi_to, SurfaceElementIndex sei) {
+    // // cout << "found intersection 1 " << pi_to << ", " << sei << endl;
+    //   if(sei >= nse) return; // ignore new surface elements in first pass
+    //   limiter.LimitGrowthVector(pi_to, sei, trig_shift, seg_shift);
+    // });
 
     limiter.LimitSelfIntersection();
-    cout << __FILE__ << ":" << __LINE__ << endl;
 
     // for(auto i : Range(growthvectors))
     //   growthvectors[i] *= limits[i];
     // limits = 1.0;
 
-    // now limit again with shifted surace elements
-    trig_shift = 1.0;
-    seg_shift = 1.0;
-    limiter.FindTreeIntersections(trig_shift, seg_shift, [&] (PointIndex pi_to, SurfaceElementIndex sei) {
-      // cout << "Should not have intersection with original surface element anymore" << endl;
-      // cout << "found intersection 2 " << pi_to << ", " << sei << endl;
-      limiter.LimitGrowthVector(pi_to, sei, trig_shift, seg_shift);
-    });
-    cout << __FILE__ << ":" << __LINE__ << endl;
+    // // now limit again with shifted surace elements
+    // trig_shift = 1.0;
+    // seg_shift = 1.0;
+    // limiter.FindTreeIntersections(trig_shift, seg_shift, [&] (PointIndex pi_to, SurfaceElementIndex sei) {
+    //   // cout << "Should not have intersection with original surface element anymore" << endl;
+    //   // cout << "found intersection 2 " << pi_to << ", " << sei << endl;
+    //   limiter.LimitGrowthVector(pi_to, sei, trig_shift, seg_shift);
+    // });
 
   // for (auto i : Range(limits))
   // if(limits[i] < 1.0)
@@ -592,11 +621,9 @@ struct GrowthVectorLimiter {
       if(pi_from.IsValid())
         limits[pi_from] = min(limits[pi_from], limits[pi_to]);
     }
-    cout << __FILE__ << ":" << __LINE__ << endl;
 
     for(auto i : Range(growthvectors))
       growthvectors[i] *= limits[i];
-    cout << __FILE__ << ":" << __LINE__ << endl;
 
 }
 
@@ -2248,7 +2275,6 @@ struct GrowthVectorLimiter {
       topo.SetBuildVertex2Element(true);
       mesh.UpdateTopology();
       InterpolateGrowthVectors();
-      cout << __FILE__ << ":" << __LINE__ << endl;
 
 
       // cout << "growthvectors before "  << endl<< growthvectors << endl;
@@ -2256,7 +2282,6 @@ struct GrowthVectorLimiter {
 
       if(params.limit_growth_vectors)
         LimitGrowthVectorLengths();
-      cout << __FILE__ << ":" << __LINE__ << endl;
       // cout << "growthvectors " << __LINE__ << endl << growthvectors << endl;
 
       // for(PointIndex pi : Range(PointIndex::BASE, this->np + PointIndex::BASE))
@@ -2268,24 +2293,17 @@ struct GrowthVectorLimiter {
         auto [gw, height] = data;
         mesh[pi] += height * (*gw);
       }
-      cout << __FILE__ << ":" << __LINE__ << endl;
 
 
       
       mesh.GetTopology().ClearEdges();
-      cout << __FILE__ << ":" << __LINE__ << endl;
       mesh.SetNextMajorTimeStamp();
-      cout << __FILE__ << ":" << __LINE__ << endl;
       mesh.UpdateTopology();
-      cout << __FILE__ << ":" << __LINE__ << endl;
       SetDomInOutSides();
-      cout << __FILE__ << ":" << __LINE__ << endl;
       MeshingParameters mp;
-      cout << __FILE__ << ":" << __LINE__ << endl;
       mp.optimize3d ="m";
       mp.optsteps3d = 4;
       OptimizeVolume(mp, mesh);
-      cout << __FILE__ << ":" << __LINE__ << endl;
   }
 
   void GenerateBoundaryLayer(Mesh& mesh, const BoundaryLayerParameters& blp)
