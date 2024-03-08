@@ -132,6 +132,12 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
         return str.str();
       })
     ;
+
+
+  py::class_<gp_Mat>(m, "gp_Mat", "3d OCC matrix")
+    .def("__getitem__", [](const gp_Mat& mat, tuple<int,int> index)
+    { return mat.Row(get<0>(index)+1).Coord(get<1>(index)+1); })
+    ;
   
   py::class_<gp_Ax1>(m, "Axis", "an OCC axis in 3d") 
     .def(py::init([](gp_Pnt p, gp_Dir d) {

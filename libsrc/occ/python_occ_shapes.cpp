@@ -740,6 +740,10 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            return Mass(shape);
       }, "returns mass of shape, what is length, face, or volume")
 
+    .def_property_readonly("inertia", [](const TopoDS_Shape & shape) {
+           return Properties(shape).MatrixOfInertia();           
+      }, "returns matrix of inertia of shape")
+    
     .def("Move", [](const TopoDS_Shape & shape, const gp_Vec v)
          {
            // which one to choose ? 
