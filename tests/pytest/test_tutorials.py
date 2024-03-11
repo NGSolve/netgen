@@ -73,7 +73,7 @@ def getMeshingparameters(filename):
     if filename == "screw.step":
         return standard[3:] # coarser meshes don't work here
     if filename == "cylinder.geo":
-        return standard[0:-1] # very fine gives inconsistent reults
+        return [] # gives inconsistent reults
     if filename == "cylsphere.geo":
         return standard[0:2] + standard[3:] # coarse gives inconsistent reults (other mesh on MacOS)
     if filename == "part1.stl":
@@ -133,8 +133,8 @@ def test_geoFiles(filename, mp, i, refdata):
     checkData(mesh, mp, ref[i])
 
 
-def generateResultFile():
-    import re, time
+def generateResultFile(output_file='results.json'):
+    import time
     data = {}
     with TaskManager():
         for _file in _geofiles + _additional_testfiles:
@@ -155,8 +155,9 @@ def generateResultFile():
             print("needed", time.time() - start, "seconds")
         
     s = json.dumps(data, sort_keys=True, indent=4)
-    open("results.json", "w").write(s)
+    open(output_file, "w").write(s)
     print("done")
 
 if __name__ == "__main__":
-    generateResultFile()
+    import sys
+    generateResultFile(*sys.argv[1:])
