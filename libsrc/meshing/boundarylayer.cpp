@@ -216,8 +216,11 @@ struct GrowthVectorLimiter {
   }
 
   auto GetSideTrig(SurfaceElementIndex sei, int index, double shift = 0.0, bool grow_first = true) {
+    cout << "get side trig " << sei << "/" << mesh.SurfaceElements().Size() << endl;
     auto trig = GetTrig(sei, 0.0);
+    cout << "get side trig " << sei << "/" << mesh.SurfaceElements().Size() << endl;
     auto sel = mesh[sei];
+    cout << "get side trig " << sei << "/" << mesh.SurfaceElements().Size() << endl;
     auto index1 = (index+1)%3;
     if(!grow_first) index1 = (index+2)%3;
     trig[index] = GetMappedPoint(sel[index1], shift);
@@ -308,20 +311,28 @@ struct GrowthVectorLimiter {
     auto isIntersecting = [&](SurfaceElementIndex sei, double shift) {
       if(sei>=tool.nse) return false; // ignore new surface elements, side trigs are only built from original surface elements
       const auto sel = mesh[sei];
-      // cout << "check " << sei << " " << mesh[sei] << endl;
+      cout << "check " << sei << " " << mesh[sei] << " shift = " << shift << endl;
       auto np = sel.GetNP();
+      for(auto i : Range(np))
+      {
+        if(sel[i] > tool.np) continue;
+        if(tool.mapto[sel[i]].Size() == 0) return false;
+      }
       for(auto i : Range(np)) {
-        auto seg = GetMappedSeg(sel[i], shift);
+        auto seg = GetMappedSeg(sel[i], shift*limits[sel[i]]);
         for(auto fi : Range(np-2)) {
           for(auto side : {true, false}) {
             auto trig = GetSideTrig(sei, i+fi, 1.0, side);
-            if(sel.PNums().Contains(1)) {
-              cout << "check " << seg[0] << seg[1] << endl;
-              cout << "\t" << trig[0] << trig[1] << trig[2] << endl;
-            }
-            if(isIntersectingPlane(seg, trig)) {
-              if(sel.PNums().Contains(1))
-                cout << "found intersection " << sei << " " << mesh[sei] << endl;
+            // if(sel.PNums().Contains(1)) {
+            //   cout << "check " << seg[0] << seg[1] << endl;
+            //   cout << "\t" << trig[0] << trig[1] << trig[2] << endl;
+            // }
+            if(auto isect = isIntersectingPlane(seg, trig); isect) {
+              // if(sel.PNums().Contains(1))
+                cout << "found intersection " << shift << "\t"<< sei << " " << mesh[sei] << endl;
+              cout << isect.lam0 << ',' << isect.p << endl;
+                cout << "\t" << seg[0] << seg[1] << endl;
+                cout << "\t" << trig[0] << trig[1] << trig[2] << endl;
               return true;
             }
           }
@@ -356,37 +367,42 @@ struct GrowthVectorLimiter {
       //   !changed_domains.Test(fd.DomainOut())))
       //   continue;
 
-      ArrayMem<double, 4> ori_limits;
       auto np = sel.GetNP();
-      ori_limits.SetSize(np);
-      for(auto i : Range(np))
-          ori_limits[i] = limits[sel[i]];
+      // ArrayMem<double, 4> ori_limits;
+      // ori_limits.SetSize(np);
+      // for(auto i : Range(np))
+      //     ori_limits[i] = limits[sel[i]];
 
-      equalizeLimits(sei);
+      // equalizeLimits(sei);
       
       double shift = 1.0;
       double safety = 1.1;
+      const double step_factor = 0.9;
       while(shift>0.01 && isIntersecting(sei, shift*safety)) {
+        shift *= step_factor;
+        cout << "reduce " << sel << "\tshift = " << shift << endl;
         double max_limit = 0;
+        cout << "\tlimits before " << limits[sel[0]] << '\t' <<  limits[sel[1]] << '\t' <<  limits[sel[2]] << endl;
         for(auto i : Range(np))
           max_limit = max(max_limit, limits[sel[i]]);
         for(auto i : Range(np))
           if(max_limit == limits[sel[i]])
-            limits[sel[i]] *= 0.9;
+            limits[sel[i]] *= step_factor;
+        cout << "\tlimits after  " << limits[sel[0]] << '\t' <<  limits[sel[1]] << '\t' <<  limits[sel[2]] << endl;
         if(max_limit < 0.01) {
-          if(sel.PNums().Contains(1))
+          // if(sel.PNums().Contains(1))
             cout << "self intersection" << endl;
           break;
         }
       }
-      if(shift < 1) {
-        if(shift < 0.3) {
-          cout << "self intersection " << sel << "\t" << shift << endl;
-          cout << "\t" << limits[sel[0]] << '\t' <<  limits[sel[1]] << '\t' <<  limits[sel[2]] << endl;
-        }
-        for(auto pi : sel.PNums())
-        limits[pi] *= INTERSECTION_SAFETY*shift;
-      }
+      // if(shift < 1) {
+      //   if(shift < 0.3) {
+      //     cout << "self intersection " << sel << "\t" << shift << endl;
+      //     cout << "\t" << limits[sel[0]] << '\t' <<  limits[sel[1]] << '\t' <<  limits[sel[2]] << endl;
+      //   }
+      //   for(auto pi : sel.PNums())
+      //     limits[pi] *= INTERSECTION_SAFETY*shift;
+      // }
 
       // cout << 
       // auto np = sel.GetNP();
@@ -582,6 +598,7 @@ struct GrowthVectorLimiter {
   void BoundaryLayerTool :: LimitGrowthVectorLengths()
   {
     static Timer tall("BoundaryLayerTool::LimitGrowthVectorLengths"); RegionTimer rtall(tall);
+    mesh.Save("mesh_before_limit.vol");
   
     limits.SetSize(mesh.Points().Size());
     limits = 1.0;
@@ -589,8 +606,8 @@ struct GrowthVectorLimiter {
     GrowthVectorLimiter limiter(*this); //, mesh, params, limits, growthvectors, total_height);
 
     // limit to not intersect with other (original) surface elements
-    double trig_shift = 0;
-    double seg_shift = 2.1;
+    // double trig_shift = 0;
+    // double seg_shift = 2.1;
     // limiter.FindTreeIntersections(trig_shift, seg_shift, [&] (PointIndex pi_to, SurfaceElementIndex sei) {
     // // cout << "found intersection 1 " << pi_to << ", " << sei << endl;
     //   if(sei >= nse) return; // ignore new surface elements in first pass
@@ -616,12 +633,13 @@ struct GrowthVectorLimiter {
   // if(limits[i] < 1.0)
   //   cout << i << ": " << limits[i] << endl;
 
-    for (auto [pi_to, data] : growth_vector_map) {
-      auto pi_from = limiter.map_from[pi_to];
-      if(pi_from.IsValid())
-        limits[pi_from] = min(limits[pi_from], limits[pi_to]);
-    }
+    // for (auto [pi_to, data] : growth_vector_map) {
+    //   auto pi_from = limiter.map_from[pi_to];
+    //   if(pi_from.IsValid())
+    //     limits[pi_from] = min(limits[pi_from], limits[pi_to]);
+    // }
 
+  cout << "limits " << endl << limits << endl;
     for(auto i : Range(growthvectors))
       growthvectors[i] *= limits[i];
 
