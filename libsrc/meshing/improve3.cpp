@@ -288,7 +288,7 @@ double MeshOptimize3d :: CombineImproveEdge (
 
           elem.Touch();
           if (!mesh.LegalTet(elem))
-              badness_new += 1e4;
+              badness_new += GetLegalPenalty();
       }
   }
 
@@ -543,9 +543,9 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
           if (newel2[l] == pi1) newel2[l] = ptmp;
         }
 
-      if (!mesh.LegalTet (oldel)) bad1 += 1e6;
-      if (!mesh.LegalTet (newel1)) bad2 += 1e6;
-      if (!mesh.LegalTet (newel2)) bad2 += 1e6;
+      if (!mesh.LegalTet (oldel)) bad1 += GetLegalPenalty();
+      if (!mesh.LegalTet (newel1)) bad2 += GetLegalPenalty();
+      if (!mesh.LegalTet (newel2)) bad2 += GetLegalPenalty();
     }
 
   d_badness = bad2-bad1;
@@ -819,7 +819,7 @@ double MeshOptimize3d :: SwapImproveEdge (
       if (!mesh.LegalTet(el31) ||
               !mesh.LegalTet(el32) ||
               !mesh.LegalTet(el33))
-          bad1 += 1e4;
+          bad1 += GetLegalPenalty();
 
       el21[0] = pi3;
       el21[1] = pi4;
@@ -841,7 +841,7 @@ double MeshOptimize3d :: SwapImproveEdge (
 
       if (!mesh.LegalTet(el21) ||
               !mesh.LegalTet(el22))
-          bad2 += 1e4;
+          bad2 += GetLegalPenalty();
 
 
       if ((goal == OPT_CONFORM) && NotTooBad(bad1, bad2))
@@ -967,7 +967,7 @@ double MeshOptimize3d :: SwapImproveEdge (
                   !mesh.LegalTet(el2) ||
                   !mesh.LegalTet(el3) ||
                   !mesh.LegalTet(el4))
-              bad1 += 1e4;
+              bad1 += GetLegalPenalty();
         }
 
       el1[0] = pi3; el1[1] = pi5;
@@ -1002,7 +1002,7 @@ double MeshOptimize3d :: SwapImproveEdge (
                   !mesh.LegalTet(el2) ||
                   !mesh.LegalTet(el3) ||
                   !mesh.LegalTet(el4))
-              bad2 += 1e4;
+              bad2 += GetLegalPenalty();
         }
 
 
@@ -1038,7 +1038,7 @@ double MeshOptimize3d :: SwapImproveEdge (
                   !mesh.LegalTet(el2b) ||
                   !mesh.LegalTet(el3b) ||
                   !mesh.LegalTet(el4b))
-              bad3 += 1e4;
+              bad3 += GetLegalPenalty();
         }
 
       bool swap2, swap3;
@@ -1188,7 +1188,7 @@ double MeshOptimize3d :: SwapImproveEdge (
 
               bad2 += CalcBad (mesh.Points(), hel, 0);
               hel.Touch();
-              if (!mesh.LegalTet(hel)) bad2 += 1e4;
+              if (!mesh.LegalTet(hel)) bad2 += GetLegalPenalty();
 
               hel[2] = suroundpts[k % nsuround];
               hel[1] = suroundpts[(k+1) % nsuround];
@@ -1197,7 +1197,7 @@ double MeshOptimize3d :: SwapImproveEdge (
               bad2 += CalcBad (mesh.Points(), hel, 0);
 
               hel.Touch();
-              if (!mesh.LegalTet(hel)) bad2 += 1e4;
+              if (!mesh.LegalTet(hel)) bad2 += GetLegalPenalty();
             }
           // (*testout) << "bad2," << l << " = " << bad2 << endl;
 
@@ -2404,7 +2404,7 @@ double MeshOptimize3d :: SwapImprove2 ( ElementIndex eli1, int face,
 
               if (!mesh.LegalTet(elem) ||
                   !mesh.LegalTet(elem2))
-                  bad1 += 1e4;
+                  bad1 += GetLegalPenalty();
 
 
               el31.PNum(1) = pi1;
@@ -2437,7 +2437,7 @@ double MeshOptimize3d :: SwapImprove2 ( ElementIndex eli1, int face,
               if (!mesh.LegalTet(el31) ||
                   !mesh.LegalTet(el32) ||
                   !mesh.LegalTet(el33))
-                  bad2 += 1e4;
+                  bad2 += GetLegalPenalty();
 
 
               d_badness = bad2 - bad1;
