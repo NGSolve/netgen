@@ -66,3 +66,6 @@ def get_cmake_dir():
             NG_INSTALL_DIR_PYTHON
             )
     return p.normpath(p.join(d_python,py_to_cmake))
+
+if __name__ == '__main__':
+    print(get_cmake_dir(), end='')
