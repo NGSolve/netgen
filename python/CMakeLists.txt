@@ -4,13 +4,20 @@ if(have_options)
     get_target_property(ngcore_compile_options ngcore INTERFACE_COMPILE_OPTIONS)
 endif(have_options)
 
-configure_file(config_template.py ${CMAKE_CURRENT_BINARY_DIR}/config.py @ONLY)
+configure_file(config/config_template.py ${CMAKE_CURRENT_BINARY_DIR}/config.py @ONLY)
 configure_file(version_template.py ${CMAKE_CURRENT_BINARY_DIR}/version.py @ONLY)
 
 install(FILES
+        config/__init__.py
+        config/__main__.py
         ${CMAKE_CURRENT_BINARY_DIR}/config.py
+        DESTINATION ${NG_INSTALL_DIR_PYTHON}/${NG_INSTALL_SUFFIX}/config/
+        COMPONENT netgen
+        )
+
+install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/version.py
-        __main__.py __init__.py config_cli.py
+        __main__.py __init__.py
         meshing.py csg.py geom2d.py stl.py gui.py NgOCC.py occ.py
         read_gmsh.py read_meshio.py
         webgui.py
