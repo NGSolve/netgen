@@ -8,6 +8,7 @@
 /**************************************************************************/
 
 #include <core/array.hpp>
+#include <ostream>
 
 namespace netgen
 {
@@ -218,11 +219,11 @@ namespace netgen
 
   // print array
   template <typename T, int BASE, typename TIND>
-  inline ostream & operator<< (ostream & s, const NgFlatArray<T,BASE,TIND> & a)
+  inline std::ostream & operator<< (std::ostream & s, const NgFlatArray<T,BASE,TIND> & a)
   {
     // for (TIND i = a.Begin(); i < a.End(); i++)
     for (auto i : a.Range())
-      s << i << ": " << a[i] << endl;
+      s << i << ": " << a[i] << std::endl;
     return s;
   }
 
@@ -555,10 +556,10 @@ namespace netgen
 
 
   template <typename T1, typename T2>
-  inline ostream & operator<< (ostream & s, const NgIndirectArray<T1,T2> & ia)
+  inline std::ostream & operator<< (std::ostream & s, const NgIndirectArray<T1,T2> & ia)
   {
     for (int i = ia.Begin(); i < ia.End(); i++)
-      s << i << ": " << ia[i] << endl;
+      s << i << ": " << ia[i] << std::endl;
     return s;
   }
   
