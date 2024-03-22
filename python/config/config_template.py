@@ -60,7 +60,7 @@ version = NETGEN_VERSION_GIT
 
 def get_cmake_dir():
     import os.path as p
-    d_python = p.dirname(p.dirname(__file__))
+    d_python = p.dirname(p.dirname(p.dirname(__file__)))
     py_to_cmake = p.relpath(
             NG_INSTALL_DIR_CMAKE,
             NG_INSTALL_DIR_PYTHON

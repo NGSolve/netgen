@@ -69,10 +69,16 @@ test_win:
   script:
     - pip install pytest-check
     - cd tests\pytest
+    - python test_tutorials.py new_results.json
     - cd %NETGEN_BUILD_DIR%\netgen
     - ctest -C Release -V --output-on-failure
     - cd ..
   needs: ["build_win"]
+  artifacts:
+    paths:
+      - tests/pytest/new_results.json
+    when: always
+    expire_in: 1 week
 
 cleanup_win:
   <<: *win

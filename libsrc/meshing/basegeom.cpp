@@ -767,7 +767,10 @@ namespace netgen
         PointIndex pi = vert->nr + 1;
         if(glob2loc[pi] == 0)
           {
-            meshing.AddPoint(mesh[pi], pi);
+            auto gi = face.Project(mesh[pi]);
+            MultiPointGeomInfo mgi;
+            mgi.AddPointGeomInfo(gi);
+            meshing.AddPoint(mesh[pi], pi, &mgi);
             cntp++;
             glob2loc[pi] = cntp;
           }

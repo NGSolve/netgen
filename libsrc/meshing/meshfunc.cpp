@@ -753,7 +753,6 @@ namespace netgen
     int it = 10;
     int nillegal, oldn;
 
-    PrintMessage (1, "Remove Illegal Elements");
     // return, if non-pure tet-mesh
     /*
       if (!mesh3d.PureTetMesh())
@@ -762,6 +761,8 @@ namespace netgen
     mesh3d.CalcSurfacesOfNode();
 
     nillegal = mesh3d.MarkIllegalElements();
+    if(nillegal)
+      PrintMessage (1, "Remove Illegal Elements");
 
     MeshingParameters dummymp;
     MeshOptimize3d optmesh(mesh3d, dummymp, OPT_LEGAL);

@@ -14,6 +14,8 @@ def readData(a, files):
     ne3d=[]
     file=[]
     for f in files:
+        if f == 'cylinder.geo':
+            continue
         for t in a[f]:
             if t['ne1d']>0:
                 ne1d.append(t['ne1d'])

@@ -49,7 +49,7 @@ if 'NETGEN_ARCH' in os.environ and os.environ['NETGEN_ARCH'] == 'avx2':
     if 'darwin' in sys.platform:
         flag = "'-Xarch_x86_64;-march=core-avx2'"
     elif 'win' in sys.platform:
-        flag = '/AVX2'
+        flag = '/arch:AVX2'
     else:
         flag = '-march=core-avx2'
     cmake_args += [f'-DNG_COMPILE_FLAGS={flag}']
