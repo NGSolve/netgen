@@ -738,6 +738,8 @@ namespace netgen
 	// mesh3d.mglevels = 1;
 	MeshQuality3d (mesh3d);
       }
+
+    debug_gui.DrawMesh("Mesh", mesh3d);
   
     multithread.task = savetask;
     return MESHING3_OK;
