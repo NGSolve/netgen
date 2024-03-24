@@ -1,6 +1,6 @@
 #include "meshing.hpp"
 
-#define NETGEN_DEBUGGING_GUI
+// #define NETGEN_DEBUGGING_GUI
 
 #ifdef NETGEN_DEBUGGING_GUI
 #include "json.hpp"
@@ -24,22 +24,24 @@ class DebuggingGUI {
   void Start();
   void Stop();
 
-  void DrawMesh(const string& name, const Mesh& m);
-  void DrawPoints(const string& name, const Mesh& m,
-                  FlatArray<PointIndex> points);
-  void DrawLines(const string& name, const Mesh& m,
-                 FlatArray<SegmentIndex> lines);
-  void DrawTrigs(const string& name, const Mesh& m,
-                 FlatArray<SurfaceElementIndex> trigs);
-  void DrawTets(const string& name, const Mesh& m,
-                FlatArray<ElementIndex> tets);
-  void AddComponent(const Mesh& m);
+  void DrawMesh(const Mesh& m);
+  void DrawPoints(FlatArray<Point<3>> position, string name = "points",
+                  string color = "black");
+  void DrawLines(FlatArray<Point<3>> position, string name = "lines",
+                 string color = "black");
+  void DrawTrigs(FlatArray<Point<3>> position, string name = "trigs",
+                 string color = "black");
+
+  void DrawObject(FlatArray<Point<3>> position, string type, string name,
+                  string color);
+  void ResetObjects() { data["objects"] = json::array_t(); }
 
  private:
   thread gui_thread;
   void *app, *loop, *token;
   std::set<void*> websockets;
   json data;
+  shared_ptr<Mesh> mesh;
 
   void Send(const json& data) { Send(data.dump()); }
   void Send(const string& message);

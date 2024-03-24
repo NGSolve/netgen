@@ -192,28 +192,60 @@ void DebuggingGUI::Stop() {
   cout << "joined thread" << endl;
 }
 
-void DebuggingGUI::DrawMesh(const string& name, const Mesh& m) {
+void DebuggingGUI::DrawMesh(const Mesh& m) {
   py::gil_scoped_acquire acquire;
   const auto webgui = py::module::import("netgen.webgui");
   const auto dumps = py::module::import("json").attr("dumps");
-  auto smesh = make_shared<Mesh>();
-  *smesh = m;
+  mesh = make_shared<Mesh>();
+  *mesh = m;
   const auto py_data =
-      webgui.attr("Draw")(smesh, py::arg("show") = false).attr("GetData")();
+      webgui.attr("Draw")(mesh, py::arg("show") = false).attr("GetData")();
   const string d = py::cast<string>(dumps(py_data));
   data = json::parse(d);
   Send(d);
 }
 
-void DebuggingGUI::DrawPoints(const string& name, const Mesh& m,
-                              FlatArray<PointIndex> points) {}
-void DebuggingGUI::DrawLines(const string& name, const Mesh& m,
-                             FlatArray<SegmentIndex> lines) {}
-void DebuggingGUI::DrawTrigs(const string& name, const Mesh& m,
-                             FlatArray<SurfaceElementIndex> trigs) {}
-void DebuggingGUI::DrawTets(const string& name, const Mesh& m,
-                            FlatArray<ElementIndex> tets) {}
-void DebuggingGUI::AddComponent(const Mesh& m) {}
+void DebuggingGUI::DrawPoints(FlatArray<Point<3>> position, string name,
+                              string color) {
+  DrawObject(position, "points", name, color);
+}
+
+void DebuggingGUI::DrawLines(FlatArray<Point<3>> position, string name,
+                              string color) {
+  DrawObject(position, "lines", name, color);
+}
+void DebuggingGUI::DrawTrigs(FlatArray<Point<3>> position, string name,
+                              string color) {
+  // Array<Point<3>> pnts;
+  // cout << "trigs " << position << endl;
+  // for (auto i : Range(position.Size()/3)) {
+  //   pnts.Append(position[3*i+0]);
+  //   pnts.Append(position[3*i+1]);
+  //   pnts.Append(position[3*i+1]);
+  //   pnts.Append(position[3*i+2]);
+  //   pnts.Append(position[3*i+2]);
+  //   pnts.Append(position[3*i+0]);
+
+  // }
+  // cout << "pnts size " << pnts.Size() << endl;
+  DrawObject(position, "trigs", name, color);
+}
+
+void DebuggingGUI::DrawObject(FlatArray<Point<3>> position, string type, string name, string color) {
+  json p = json::array_t();
+  for (auto pnt : position) {
+    p.push_back(pnt[0]);
+    p.push_back(pnt[1]);
+    p.push_back(pnt[2]);
+  }
+  json d;
+  d["type"] = type;
+  d["name"] = name;
+  d["color"] = color;
+  d["position"] = p;
+  data["objects"].push_back(d);
+  Send(data);
+}
 
 void DebuggingGUI::Send(const string& message) {
   if (loop) {
