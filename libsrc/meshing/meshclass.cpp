@@ -1,5 +1,6 @@
 #include <mystdlib.h>
 #include <atomic>
+#include <regex>
 #include <set>
 #include "meshing.hpp"
 #include "../general/gzstream.h"
@@ -7198,6 +7199,83 @@ namespace netgen
     RebuildSurfaceElementLists ();
     CalcSurfacesOfNode();
     UpdateTopology();
+  }
+
+  shared_ptr<Mesh> Mesh :: GetSubMesh(string domains, string faces) const
+  {
+    // Copy the mesh into a new one, then delete unwanted elements
+    // Unused points are deleted by the Compress() function at the end
+    auto mesh_ptr = make_unique<Mesh>();
+    auto & mesh = *mesh_ptr;
+    mesh = (*this);
+
+    auto ndomains = GetNDomains();
+    auto nfaces = GetNFD();
+
+    BitArray keep_point(GetNP()+1);
+    BitArray keep_face(nfaces+1);
+    BitArray keep_domain(ndomains+1);
+    keep_point.Clear();
+    keep_face.Clear();
+    keep_domain.Clear();
+
+    regex regex_faces(faces);
+    regex regex_domains(domains);
+
+    for(auto dom : Range(ndomains))
+    {
+      if(regex_match(mesh.GetMaterial(dom), regex_domains))
+        keep_domain.SetBit(dom);
+    }
+
+    for(auto fi : Range(nfaces))
+    {
+      auto & fd = mesh.FaceDescriptors()[fi];
+      if (keep_domain[fd.DomainIn()] || keep_domain[fd.DomainOut()] || regex_match(fd.GetBCName(), regex_faces))
+        keep_face.SetBit(fd.BCProperty());
+    }
+
+    auto filter_elements = [&mesh, &keep_point](auto & elements, auto & keep_region)
+    {
+      for(auto & el : elements)
+      {
+        if(keep_region[el.GetIndex()])
+          for (auto pi : el.PNums())
+            keep_point.SetBit(pi);
+        else
+          el.Delete();
+      }
+    };
+
+    filter_elements(mesh.VolumeElements(), keep_domain);
+    filter_elements(mesh.SurfaceElements(), keep_face);
+
+    // Keep line segments only if all points are kept
+    // Check them in reverse order because they are deleted from the end
+    auto nsegments = mesh.LineSegments().Size();
+    for(auto i : Range(nsegments))
+    {
+      SegmentIndex segi = nsegments-i-1;
+      auto seg = mesh[segi];
+      bool keep = true;
+      for(auto pi : seg.PNums())
+        keep &= keep_point[pi];
+
+      if(!keep)
+        mesh.LineSegments().DeleteElement(segi);
+    }
+
+    // Check in reverse order because they are deleted from the end
+    auto npointelements = mesh.pointelements.Size();
+    for(auto i : Range(npointelements))
+    {
+      auto pel = mesh.pointelements[npointelements-i-1];
+      if(!keep_point[pel.pnum])
+        mesh.pointelements.DeleteElement(npointelements-i-1);
+    }
+
+    mesh.Compress();
+    return mesh_ptr;
   }
 
   void Mesh :: SetMaterial (int domnr, const string & mat)

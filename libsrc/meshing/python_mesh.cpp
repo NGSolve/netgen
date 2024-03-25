@@ -1251,6 +1251,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def ("GetCD3Name", &Mesh::GetCD3Name)
     .def ("SetCD3Name", &Mesh::SetCD3Name)
     .def ("SplitFacesByAdjacentDomains", &Mesh::SplitFacesByAdjacentDomains)
+    .def ("GetSubMesh", &Mesh::GetSubMesh, py::arg("domains")="", py::arg("faces")="")
     .def("GetIdentifications", [](Mesh & self) -> py::list
          {
            py::list points;
