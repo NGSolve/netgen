@@ -375,28 +375,34 @@ if (USE_OCC)
       TKGeomAlgo
       TKGeomBase
       TKHLR
-      TKIGES
       TKLCAF
       TKMath
       TKMesh
       TKOffset
       TKPrim
-      TKSTEP
-      TKSTEP209
-      TKSTEPAttr
-      TKSTEPBase
-      TKSTL
       TKService
       TKShHealing
       TKTopAlgo
       TKV3d
       TKVCAF
       TKXCAF
-      TKXDEIGES
-      TKXDESTEP
       TKXSBase
       TKernel
     )
+    if(${OpenCASCADE_MAJOR_VERSION}.${OpenCASCADE_MINOR_VERSION} VERSION_GREATER_EQUAL 7.8)
+      list(APPEND OCC_LIBRARIES TKDEIGES TKDESTEP TKDESTL)
+    else()
+      list(APPEND OCC_LIBRARIES
+        TKIGES
+        TKSTEP
+        TKSTL
+        TKXDEIGES
+        TKXDESTEP
+        TKSTEP209
+        TKSTEPAttr
+        TKSTEPBase
+        )
+    endif()
     if(UNIX AND NOT APPLE)
       list(PREPEND OCC_LIBRARIES -Wl,--start-group)
       list(APPEND OCC_LIBRARIES -Wl,--end-group)

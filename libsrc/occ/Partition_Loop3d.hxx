@@ -29,7 +29,6 @@
 #if OCC_VERSION_HEX < 0x070000
 #else
    #include <TopTools_ShapeMapHasher.hxx>
-   #include <TopTools_OrientedShapeMapHasher.hxx>
    #include <TopTools_MapOfOrientedShape.hxx>
 #endif
 
