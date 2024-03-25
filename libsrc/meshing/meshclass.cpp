@@ -319,25 +319,26 @@ namespace netgen
     hmin = mesh2.hmin;
     maxhdomain = mesh2.maxhdomain;
 
+    // Remap string* values to new mesh
+    std::map<const string*, string*> names_map;
+    for (auto fi : Range(facedecoding))
+      names_map[&mesh2.facedecoding[fi].bcname] = &facedecoding[fi].bcname;
 
     materials.SetSize( mesh2.materials.Size() );
     for ( int i = 0; i < mesh2.materials.Size(); i++ )
-      if ( mesh2.materials[i] ) materials[i] = new string ( *mesh2.materials[i] );
+    {
+      const string * old_name = mesh2.materials[i];
+      if ( old_name ) materials[i] = dimension == 2 ? names_map[old_name] : new string ( *old_name );
       else materials[i] = 0;
+    }
 
-    std::map<const string*, string*> bcmap;
     bcnames.SetSize( mesh2.bcnames.Size() );
     for ( int i = 0; i < mesh2.bcnames.Size(); i++ )
     {
-      if ( mesh2.bcnames[i] ) bcnames[i] = new string ( *mesh2.bcnames[i] );
+      const string * old_name = mesh2.bcnames[i];
+      if ( old_name ) bcnames[i] = dimension == 3 ? names_map[old_name] : new string ( *old_name );
       else bcnames[i] = 0;
-      bcmap[mesh2.bcnames[i]] = bcnames[i];
     }
-
-    // Remap string* members in FaceDescriptor to new mesh
-    for (auto & f : facedecoding)
-      f.SetBCName( bcmap[&f.GetBCName()] );
-
 
     cd2names.SetSize(mesh2.cd2names.Size());
     for (int i=0; i < mesh2.cd2names.Size(); i++)
