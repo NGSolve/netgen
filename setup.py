@@ -8,7 +8,7 @@ from skbuild import setup
 import skbuild.cmaker
 from subprocess import check_output
 
-setup_requires = []
+setup_requires = ['pybind11-stubgen==2.5']
 
 def install_filter(cmake_manifest):
     print(cmake_manifest)
@@ -98,7 +98,7 @@ cmake_args += [
         '-DUSE_OCC=ON',
         '-DBUILD_FOR_CONDA=ON',
         f'-DNETGEN_PYTHON_PACKAGE_NAME={name}',
-        '-DBUILD_STUB_FILES=OFF',
+        '-DBUILD_STUB_FILES=ON',
 ]
 
 pyprefix = pathlib.Path(sys.prefix).as_posix()
