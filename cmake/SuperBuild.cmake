@@ -89,10 +89,10 @@ if(BUILD_OCC)
   set(OCC_DIR ${CMAKE_CURRENT_BINARY_DIR}/dependencies/occ)
 
   ExternalProject_Add(project_occ
-    # URL https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_6_3.zip
-    # URL_MD5 2426e373903faabbd4f96a01a934b66d
-    URL https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_8_0.zip
-    URL_MD5 19d025bf6b4f6ba1b334d189529573cb
+    URL https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_6_3.zip
+    URL_MD5 2426e373903faabbd4f96a01a934b66d
+    # URL https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_8_0.zip
+    # URL_MD5 f4432df8e42cb6178ea09a7448427f6c
     DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
     ${SUBPROJECT_ARGS}
     CMAKE_ARGS
