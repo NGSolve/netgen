@@ -476,6 +476,20 @@ namespace netgen
     static Timer tdivide("Divide Edges");
     RegionTimer rt(tdivide);
     // -------------------- DivideEdge -----------------
+    if(properties.partition)
+      {
+        points.SetSize(properties.partition->Size());
+        params.SetSize(properties.partition->Size()+2);
+        params[0] = 0.0;
+        params.Last() = 1.0;
+        for(auto i : Range(properties.partition->Size()))
+          {
+            params[i+1] = (*properties.partition)[i];
+            points[i] = GetPoint(params[i+1]);
+          }
+        return;
+      }
+
     tdivedgesections.Start();
     auto layer = properties.layer;
     double safety = 0.5*(1.-mparam.grading);

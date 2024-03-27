@@ -27,10 +27,12 @@ namespace netgen
     double hpref = 0;  // number of hp refinement levels (will be multiplied by factor later)
     int layer = 1;
     optional<bool> quad_dominated;
+    optional<Array<double>> partition;
     void Merge(const ShapeProperties & prop2)
     {
       if (!name && prop2.name) name = prop2.name;
       if (!col && prop2.col) col = prop2.col;
+      if (!partition && prop2.partition) partition = prop2.partition;
       maxh = min2(maxh, prop2.maxh);
       hpref = max2(hpref, prop2.hpref);
       if(!quad_dominated.has_value()) quad_dominated = prop2.quad_dominated;
