@@ -6,7 +6,7 @@ if(USE_OCC)
 endif(USE_OCC)
 
 if(EMSCRIPTEN)
-  target_compile_options(nglib PUBLIC $<TARGET_PROPERTY:ngcore,INTERFACE_COMPILE_OPTIONS>)
+  target_compile_options(nglib PUBLIC $<BUILD_INTERFACE:$<TARGET_PROPERTY:ngcore,INTERFACE_COMPILE_OPTIONS>>)
   target_compile_definitions(nglib PUBLIC $<TARGET_PROPERTY:ngcore,INTERFACE_COMPILE_DEFINITIONS>)
   target_include_directories(nglib PUBLIC $<TARGET_PROPERTY:ngcore,INTERFACE_INCLUDE_DIRECTORIES>)
 else(EMSCRIPTEN)
