@@ -53,7 +53,7 @@ if(USE_PYTHON)
 endif(USE_PYTHON)
 
 if(WIN32)
-  target_compile_options(ngcore PUBLIC /bigobj /MP /W1 /wd4068)
+  target_compile_options(ngcore PUBLIC $<BUILD_INTERFACE:/bigobj;/MP;/W1;/wd4068>)
   get_WIN32_WINNT(ver)
   target_compile_definitions(ngcore PUBLIC _WIN32_WINNT=${ver} WNT WNT_WINDOW NOMINMAX MSVC_EXPRESS _CRT_SECURE_NO_WARNINGS HAVE_STRUCT_TIMESPEC WIN32)
   target_link_options(ngcore PUBLIC /ignore:4273 /ignore:4217 /ignore:4049)
