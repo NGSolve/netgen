@@ -683,6 +683,10 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .export_values()
     ;
   
+  m.def("ResetGlobalShapeProperties", [] () {
+    OCCGeometry::global_shape_properties.clear();
+    OCCGeometry::global_shape_property_indices.Clear();
+  });
   
   py::class_<TopoDS_Shape> (m, "TopoDS_Shape")
     .def("__str__", [] (const TopoDS_Shape & shape)
