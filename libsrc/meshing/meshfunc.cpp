@@ -659,13 +659,16 @@ namespace netgen
 
     // optimize only bad elements first
     optmesh.SetMinBadness(1000.);
+    bool do_split = mp.optimize3d.find('d') != string::npos;
+    bool do_swap = mp.optimize3d.find('s') != string::npos;
+    bool do_swap2 = mp.optimize3d.find('t') != string::npos;
     for(auto i : Range(mp.optsteps3d))
       {
         auto [total_badness, max_badness, bad_els] = optmesh.UpdateBadness();
         if(bad_els==0) break;
-        optmesh.SplitImprove();
-        optmesh.SwapImprove();
-        optmesh.SwapImprove2();
+        if(do_split) optmesh.SplitImprove();
+        if(do_swap) optmesh.SwapImprove();
+        if(do_swap2) optmesh.SwapImprove2();
       }
 
     // Now optimize all elements
