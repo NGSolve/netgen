@@ -120,7 +120,7 @@ public:
   
   /// Creates fixed maximal element size table
   inline TABLE (const NgFlatArray<int,BASE> & entrysizes)
-    : BASE_TABLE (NgFlatArray<int> (entrysizes.Size(), const_cast<int*>(&entrysizes[BASE])), 
+    : BASE_TABLE (NgFlatArray<int> (entrysizes.Size(), entrysizes.Size() ? const_cast<int*>(&entrysizes[BASE]) : nullptr), 
 		  sizeof(T))
   { ; }
 
