@@ -683,6 +683,10 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .export_values()
     ;
   
+  m.def("ResetGlobalShapeProperties", [] () {
+    OCCGeometry::global_shape_properties.clear();
+    OCCGeometry::global_shape_property_indices.Clear();
+  });
   
   py::class_<TopoDS_Shape> (m, "TopoDS_Shape")
     .def("__str__", [] (const TopoDS_Shape & shape)
@@ -1398,7 +1402,20 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                              return tuple(s0, s1);
                            },
                            "parameter interval of curve")
-    
+    .def_property("partition",
+       [](TopoDS_Shape & self) -> optional<Array<double>>
+       {
+         if (OCCGeometry::HaveProperties(self))
+           return OCCGeometry::GetProperties(self).partition;
+         return nullopt;
+       },
+       [](TopoDS_Shape &self, py::array_t<double> val)
+       {
+         Array<double> partition(val.size());
+         for(auto i : Range(partition))
+           partition[i] = val.at(i);
+         OCCGeometry::GetProperties(self).partition = std::move(partition);
+       })
     
     .def("Split", [](const TopoDS_Edge& self, py::args args)
     {
