@@ -259,7 +259,8 @@ namespace ngcore
   }
 
   template <typename T>
-  py::object makePyTuple (FlatArray<T> ar)
+  // py::object makePyTuple (FlatArray<T> ar)
+  py::object makePyTuple (const BaseArrayObject<T> & ar)
   {
     py::tuple res(ar.Size());
     for (auto i : Range(ar))
