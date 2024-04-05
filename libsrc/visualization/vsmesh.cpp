@@ -2,10 +2,20 @@
 
 #include <myadt.hpp>
 #include <meshing.hpp>
+// #include <csg.hpp>
+
+#ifdef STLGEOM
+#include <stlgeom.hpp>
+#endif
+
+
+// #include <parallel.hpp>
+
 #include <visual.hpp>
 
 namespace netgen
 {
+  // extern shared_ptr<Mesh> mesh;
   extern NetgenGeometry * ng_geometry;
 
   VisualSceneMesh vsmesh;
@@ -982,6 +992,10 @@ namespace netgen
 
     glBindTexture(GL_TEXTURE_2D, colors.texture);
       
+#ifdef STLGEOM
+    STLGeometry * stlgeometry = dynamic_cast<STLGeometry*> (ng_geometry);
+    bool checkvicinity = (stlgeometry != NULL) && stldoctor.showvicinity;
+#endif
     glEnable (GL_NORMALIZE);
 
     glLineWidth (1.0f);
@@ -1060,6 +1074,13 @@ namespace netgen
             const Element2d & el = (*mesh)[sei];
 
             bool drawel = (!el.IsDeleted() && el.IsVisible());
+
+#ifdef STLGEOM
+            if (checkvicinity)
+	      for (int j = 0; j < el.GetNP(); j++)
+		if (!stlgeometry->Vicinity(el.GeomInfoPi(j+1).trignum))
+		  drawel = 0;
+#endif
 
             if (!drawel)
 	      continue;
@@ -1372,6 +1393,11 @@ namespace netgen
 
     linetimestamp = NextTimeStamp();
 
+#ifdef STLGEOM
+    STLGeometry * stlgeometry = dynamic_cast<STLGeometry*> (ng_geometry);
+    bool checkvicinity = (stlgeometry != NULL) && stldoctor.showvicinity;
+#endif
+
     if (linelist)
       glDeleteLists (linelist, 1);
 
@@ -1392,6 +1418,12 @@ namespace netgen
 
 	bool drawel = (!el.IsDeleted() && el.IsVisible());
 
+#ifdef STLGEOM
+	if (checkvicinity)
+	  for (int j = 0; j < el.GetNP(); j++)
+	    if (!stlgeometry->Vicinity(el.GeomInfoPi(j+1).trignum))
+	      drawel = 0;
+#endif
 
 	if (!drawel)
 	  continue;
