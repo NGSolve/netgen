@@ -2,8 +2,8 @@
 #define NETGEN_BOUNDARYLAYER_HPP
 
 #include <core/array.hpp>
-#include "../include/myadt.hpp"
-#include "../include/gprim.hpp"
+#include <mystdlib.h>
+#include <meshing.hpp>
 
 namespace netgen
 {
