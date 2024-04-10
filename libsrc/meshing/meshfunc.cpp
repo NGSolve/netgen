@@ -50,7 +50,6 @@ namespace netgen
           ret[0].mp = mp;
           return ret;
       }
-  cout << "divide mesh" << endl;
       ret.SetSize(num_domains);
 
       Array<Array<PointIndex, PointIndex>> ipmap;
@@ -72,7 +71,6 @@ namespace netgen
 
           m.SetLocalH(mesh.GetLocalH());
 
-    cout << "set imap size " << i << " to " << num_points << endl;
           ipmap[i].SetSize(num_points);
           ipmap[i] = PointIndex::INVALID;
           m.SetDimension( mesh.GetDimension() );
@@ -157,8 +155,6 @@ namespace netgen
           auto & imap = ipmap[i];
           auto nmax = identifications.GetMaxNr ();
           auto & m_ident = m.GetIdentifications();
-          cout << "imap " << imap << endl;
-          cout << imap.Size() << endl;
 
           for (auto & sel : m.SurfaceElements())
             for(auto & pi : sel.PNums())
@@ -175,7 +171,6 @@ namespace netgen
 
               for(auto pair : pairs)
               {
-        // cout << "get pair " << pair[0] << ',' << pair[1] << endl;
                   auto pi0 = imap[pair[0]];
                   auto pi1 = imap[pair[1]];
                   if(!pi0.IsValid() || !pi1.IsValid())
@@ -307,7 +302,6 @@ namespace netgen
                rulep = hexrules;
                break;
              case 1:
-               cout << "Apply prismrules " << endl;
                rulep = prismrules2;
                break;
              case 2: // connect pyramid to triangle
