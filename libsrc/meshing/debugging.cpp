@@ -4,8 +4,6 @@
 
 #include <core/python_ngcore.hpp>
 
-#include "pybind11/gil.h"
-
 #ifdef NETGEN_DEBUGGING_GUI
 #include "websockets/App.h"
 #endif  // NETGEN_DEBUGGING_GUI
