@@ -441,6 +441,7 @@ Vec<3> BoundaryLayerTool ::getEdgeTangent(PointIndex pi, int edgenr) {
 void BoundaryLayerTool ::LimitGrowthVectorLengths() {
   static Timer tall("BoundaryLayerTool::LimitGrowthVectorLengths");
   RegionTimer rtall(tall);
+  return;
   mesh.Save("mesh_before_limit.vol");
 
   limits.SetSize(mesh.Points().Size());
@@ -994,9 +995,9 @@ void BoundaryLayerTool ::InterpolateGrowthVectors() {
     auto [gw, height] = growth_vector_map[pi];
     *gw += 1.0 / height * vec;
   };
-  // cout << "edge range " << max_edge_nr << ", " << new_max_edge_nr << endl;
 
   // interpolate tangential component of growth vector along edge
+  if(max_edge_nr < new_max_edge_nr)
   for (auto edgenr : Range(max_edge_nr + 1, new_max_edge_nr)) {
     // cout << "SEARCH EDGE " << edgenr +1 << endl;
     // if(!is_edge_moved[edgenr+1]) continue;
@@ -1489,17 +1490,17 @@ void BoundaryLayerTool ::InsertNewElements(
       do_insert = !do_move;
     }
 
-    if (do_move) {
-      for (auto& p : mesh[ei].PNums())
-        if (hasMoved(p)) {
-          if (special_boundary_points.count(p)) {
-            auto& special_point = special_boundary_points[p];
-            auto& group = special_point.growth_groups[0];
-            p = group.new_points.Last();
-          } else
-            p = newPoint(p);
-        }
-    }
+    // if (do_move) {
+    //   for (auto& p : mesh[ei].PNums())
+    //     if (hasMoved(p)) {
+    //       if (special_boundary_points.count(p)) {
+    //         auto& special_point = special_boundary_points[p];
+    //         auto& group = special_point.growth_groups[0];
+    //         p = group.new_points.Last();
+    //       } else
+    //         p = newPoint(p);
+    //     }
+    // }
     if (do_insert) {
       if (el.GetType() == TET) {
         if (moved.Size() == 3)  // inner corner
