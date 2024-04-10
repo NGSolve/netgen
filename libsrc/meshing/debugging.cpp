@@ -1,10 +1,9 @@
 #include "debugging.hpp"
 
-#include <libusockets.h>
-
 #include <core/python_ngcore.hpp>
 
 #ifdef NETGEN_DEBUGGING_GUI
+#include <libusockets.h>
 #include "websockets/App.h"
 #endif  // NETGEN_DEBUGGING_GUI
 
