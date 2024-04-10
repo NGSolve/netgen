@@ -576,17 +576,17 @@ void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors() {
   is_point_on_other_surface.Clear();
 
   auto getGW = [&](PointIndex pi) -> Vec<3> {
-    if (pi - PointIndex::BASE < np_old && mapto[pi].Size()) return {.0};
+    if (pi - PointIndex::BASE < np_old && mapto[pi].Size()==0) return {.0};
     if (growth_vector_map.count(pi) == 0)
       growth_vector_map[pi] = {&growthvectors[pi], total_height};
     auto [gw, height] = growth_vector_map[pi];
     return height * (*gw);
   };
-  auto setGW = [&](PointIndex pi, Vec<3> vec) {
+  auto addGW = [&](PointIndex pi, Vec<3> vec) {
     if (growth_vector_map.count(pi) == 0)
       growth_vector_map[pi] = {&growthvectors[pi], total_height};
     auto [gw, height] = growth_vector_map[pi];
-    *gw = 1.0 / height * vec;
+    *gw += 1.0 / height * vec;
   };
 
   Array<Vec<3>, PointIndex> normals(np);
@@ -599,51 +599,30 @@ void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors() {
            special_boundary_points.count(pi);
   };
 
-  ParallelForRange(Range(nse), [&](auto myrange) {
+  std::set<PointIndex> points_set;
+  ParallelForRange(Range((size_t)nse, mesh.SurfaceElements().Size()), [&](auto myrange) {
     for (SurfaceElementIndex sei : myrange) {
-      auto facei = mesh[sei].GetIndex();
-      if (facei < nfd_old && !params.surfid.Contains(facei)) {
-        for (auto pi : mesh[sei].PNums())
-          if (auto& p = mesh[pi]; p.Type() == SURFACEPOINT)
-            is_point_on_other_surface.SetBitAtomic(pi);
-      } else {
-        for (auto pi : mesh[sei].PNums())
-          if (pi >= np_old + PointIndex::BASE &&
-              mesh[pi].Type() == SURFACEPOINT)
-            is_point_on_bl_surface.SetBitAtomic(pi);
-      }
+      for (auto pi : mesh[sei].PNums())
+        if (auto& p = mesh[mapfrom[pi]]; p.Type() == SURFACEPOINT)
+          points_set.insert(pi);
     }
   });
 
   Array<PointIndex> points;
-  Array<bool> has_moved_points(max_edge_nr + 1);
-  has_moved_points = false;
-  std::set<PointIndex> moved_edge_points;
-
-  for (auto seg : segments) {
-    if (hasMoved(seg[0]) != hasMoved(seg[1]))
-      has_moved_points[seg.edgenr] = true;
-  }
-
-  for (auto seg : segments)
-    if (has_moved_points[seg.edgenr])
-      for (auto pi : seg.PNums())
-        if (mesh[pi].Type() == EDGEPOINT) moved_edge_points.insert(pi);
-
-  for (auto pi : moved_edge_points) points.Append(pi);
-
-  for (PointIndex pi : mesh.Points().Range())
-    if (is_point_on_bl_surface[pi] || is_point_on_other_surface[pi])
-      points.Append(pi);
+  for (auto pi : points_set)
+    points.Append(pi);
+  QuickSort(points);
 
   auto p2sel = mesh.CreatePoint2SurfaceElementTable();
   // smooth tangential part of growth vectors from edges to surface elements
+  Array<Vec<3>, PointIndex> corrections(mesh.GetNP());
+  corrections = 0.0;
   RegionTimer rtsmooth(tsmooth);
   for ([[maybe_unused]] auto i : Range(10)) {
     for (auto pi : points) {
       auto sels = p2sel[pi];
-      Vec<3> new_gw = getGW(pi);
-      new_gw = 0.;
+      auto & correction = corrections[pi];
+      correction = 0.0;
       std::set<PointIndex> suround;
       suround.insert(pi);
       double total_weight = 0;
@@ -652,35 +631,20 @@ void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors() {
         for (auto pi1 : sel.PNums())
           if (suround.count(pi1) == 0) {
             suround.insert(pi1);
-            auto gw_other = getGW(pi1);
+            auto gw_other = getGW(pi1)+corrections[pi1];
             auto normal_other = getNormal(mesh[sei]);
             auto tangent_part =
                 gw_other - (gw_other * normal_other) * normal_other;
             double weight = 1.0;
-
-            if (is_point_on_bl_surface[pi]) {
-              if (mesh[pi1].Type() == FIXEDPOINT)
-                weight *= 1.0;  // 13-i;
-              else
-                weight = 1.0;
-              new_gw += weight * tangent_part;
-            } else {
-              new_gw += weight * gw_other;
-            }
+            correction += weight * tangent_part;
             total_weight += weight;
           }
       }
-      // total_weight += suround.size();
-
-      setGW(pi, 1.0 / total_weight * new_gw);
-      // cout << "average " << pi << " " << getGW(pi) << endl;
+      correction *= 1.0 / total_weight;
     }
   }
-
-  // for(auto pi : points)
-  //     getGW(pi) += normals[pi];
-  // for(auto pi : mesh.Points().Range())
-  //   cout << "point " << pi << " has type " << (int)(mesh[pi].Type()) << endl;
+  for(auto pi: points)
+    addGW(pi, corrections[pi]);
 }
 
 BoundaryLayerTool::BoundaryLayerTool(Mesh& mesh_,
@@ -974,9 +938,6 @@ BitArray BoundaryLayerTool ::ProjectGrowthVectorsOnSurface() {
 }
 
 void BoundaryLayerTool ::InterpolateGrowthVectors() {
-  // mesh.Save("interpolate.vol");
-  // cout << "new number of line segments " << mesh.LineSegments().Size() <<
-  // endl;
   int new_max_edge_nr = max_edge_nr;
   for (const auto& seg : segments)
     if (seg.edgenr > new_max_edge_nr) new_max_edge_nr = seg.edgenr;
@@ -1688,38 +1649,20 @@ void BoundaryLayerTool ::FixVolumeElements() {
       growthvectors[pi] = 1.0 / cnt * average_gw;
     }
   }
-
-  // for(auto pi : points)
-  // {
-  //     mesh[pi] += height * growthvectors[pi];
-  //     growthvectors[pi] = 0.0;
-  // }
 }
 
 void BoundaryLayerTool ::Perform() {
   CreateNewFaceDescriptors();
   CalculateGrowthVectors();
-  // cout << "growthvectors " << __LINE__ << endl << growthvectors << endl;
   CreateFaceDescriptorsSides();
   auto segmap = BuildSegMap();
 
   auto in_surface_direction = ProjectGrowthVectorsOnSurface();
-  // cout << "growthvectors " << __LINE__ << endl << growthvectors << endl;
-
-  // auto fout = ofstream("growthvectors.txt");
-  // for (auto pi : Range(mesh.Points()))
-  // {
-  //   for(auto i : Range(3))
-  //     fout << mesh[pi][i] << " ";
-  //   for(auto i : Range(3))
-  //     fout << mesh[pi][i]+height*growthvectors[pi][i] << " ";
-  // }
-  // fout << endl;
-
-  // FixVolumeElements();
-  // mesh.Save("before_insert.vol");
 
   InsertNewElements(segmap, in_surface_direction);
+  mapfrom.SetSize(mesh.GetNP());
+  for (auto pi : mapto.Range())
+    for (auto pi_to : mapto[pi]) mapfrom[pi_to] = pi;
 
   SetDomInOut();
   AddSegments();
@@ -1729,17 +1672,8 @@ void BoundaryLayerTool ::Perform() {
   mesh.UpdateTopology();
   InterpolateGrowthVectors();
 
-  // cout << "growthvectors before "  << endl<< growthvectors << endl;
-  // cout << "growthvectors after " << endl << growthvectors << endl;
-
   if (params.limit_growth_vectors) LimitGrowthVectorLengths();
-  // cout << "growthvectors " << __LINE__ << endl << growthvectors << endl;
 
-  // for(PointIndex pi : Range(PointIndex::BASE, this->np + PointIndex::BASE))
-  // {
-  //   cout << "move " << pi << "\tby " << total_height << " * " <<
-  //   growthvectors[pi] << endl; mesh[pi] += total_height * growthvectors[pi];
-  // }
   for (auto [pi, data] : growth_vector_map) {
     auto [gw, height] = data;
     mesh[pi] += height * (*gw);
@@ -1759,16 +1693,8 @@ void GenerateBoundaryLayer(Mesh& mesh, const BoundaryLayerParameters& blp) {
   static Timer timer("Create Boundarylayers");
   RegionTimer regt(timer);
 
-  cout << "generate boundary layers" << endl;
-  cout << "points before " << mesh.GetNP() << endl;
-  cout << "sels before " << mesh.GetNSE() << endl;
-
-  // debug_gui.DrawMesh(mesh);
-
   BoundaryLayerTool tool(mesh, blp);
-  cout << tool.nse << ',' << tool.np << endl;
   tool.Perform();
-  mesh.Save("layer.vol");
 }
 
 }  // namespace netgen

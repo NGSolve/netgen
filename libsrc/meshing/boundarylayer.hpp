@@ -77,6 +77,7 @@ class BoundaryLayerTool
     bool have_single_segments;
     Array<Segment> segments, new_segments;
     Array<Array<PointIndex>, PointIndex> mapto;
+    Array<PointIndex, PointIndex> mapfrom;
 
     Array<double> surfacefacs;
     Array<int> si_map;
