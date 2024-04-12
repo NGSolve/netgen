@@ -20,6 +20,7 @@
 #include <mutex>
 #include <atomic>
 #include <optional>
+#include <cassert>
 
 #include <new>
 #include <string>
