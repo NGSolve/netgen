@@ -748,7 +748,7 @@ namespace netgen
     { return (bcnr < bcnames.Size() && bcnames[bcnr]) ? bcnames[bcnr] : &default_bc; }
 
 
-    NgArray<string*> & GetRegionNamesCD (int codim);
+    DLL_HEADER NgArray<string*> & GetRegionNamesCD (int codim);
     
     ///
     void ClearFaceDescriptors()
