@@ -1005,6 +1005,23 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
       return FlatArray<int>(self.mlparentsurfaceelement.Size(),
                             &self.mlparentsurfaceelement[0]);
     }, py::keep_alive<0,1>())
+    .def_property_readonly("macromesh", [](Mesh & self) {
+      auto coarsemesh = make_shared<Mesh>();
+      *coarsemesh = *self.coarsemesh;
+      return coarsemesh;
+    }, "mesh before hp-refinement")
+    .def("MacroElementNr", [](Mesh & self, int elnr, optional<int> dim) {
+      // cout << "hpels = " << self.hpelements->Size() << endl;
+      // return self[ElementIndex(elnr)].GetHpElnr();
+      if (!dim) dim = self.GetDimension();
+      switch (*dim)
+        {
+        case 2:
+          return (*self.hpelements)[self[SurfaceElementIndex(elnr)].GetHpElnr()].coarse_elnr;
+        case 3:
+          return (*self.hpelements)[self[ElementIndex(elnr)].GetHpElnr()].coarse_elnr;
+        }
+    }, py::arg("elnr"), py::arg("dim")=nullopt, "number of macro element of element number elnr")
     .def("FaceDescriptor", static_cast<FaceDescriptor&(Mesh::*)(int)> (&Mesh::GetFaceDescriptor),
          py::return_value_policy::reference)
     .def("GetNFaceDescriptors", &Mesh::GetNFD)
