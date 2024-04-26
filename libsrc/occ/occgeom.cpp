@@ -1261,6 +1261,24 @@ namespace netgen
           }
       }
 
+      // Propagate maxh to children
+      for(auto& solid : solids)
+      {
+        auto& shape = static_cast<OCCSolid&>(*solid).GetShape();
+        if(!OCCGeometry::HaveProperties(shape))
+          continue;
+        for(auto& f : GetFaces(shape))
+        {
+          auto& face = GetFace(f);
+          face.properties.maxh = min2(face.properties.maxh,
+                                      GetProperties(shape).maxh);
+        }
+      }
+      for(auto& face : faces)
+        for(auto& edge : face->edges)
+          edge->properties.maxh = min2(edge->properties.maxh,
+                                       face->properties.maxh);
+
       // Add identifications
       auto add_identifications = [&](auto & shapes, auto & shape_map)
       {

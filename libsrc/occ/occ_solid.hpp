@@ -16,6 +16,7 @@ namespace netgen
         OCCSolid(TopoDS_Shape dshape)
             : solid(TopoDS::Solid(dshape))
         { }
+        TopoDS_Solid& GetShape() { return solid; }
     };
 }
 
