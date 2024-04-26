@@ -836,12 +836,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                   },
                   [](TopoDS_Shape& self, double val)
                   {
-                    for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
-                      for (TopExp_Explorer e(self, typ); e.More(); e.Next())
-                      {
-                        auto & maxh = OCCGeometry::GetProperties(e.Current()).maxh;
-                        maxh = min2(val, maxh);
-                      }
+                    OCCGeometry::GetProperties(self).maxh = val;
                   }, "maximal mesh-size for shape")
     
     .def_property("hpref",
