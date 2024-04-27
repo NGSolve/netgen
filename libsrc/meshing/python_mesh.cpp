@@ -1021,6 +1021,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
         case 3:
           return (*self.hpelements)[self[ElementIndex(elnr)].GetHpElnr()].coarse_elnr;
         }
+      throw Exception ("MacroElementNr not implemented for dim");
     }, py::arg("elnr"), py::arg("dim")=nullopt, "number of macro element of element number elnr")
     .def("FaceDescriptor", static_cast<FaceDescriptor&(Mesh::*)(int)> (&Mesh::GetFaceDescriptor),
          py::return_value_policy::reference)
