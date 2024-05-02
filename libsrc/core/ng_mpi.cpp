@@ -8,13 +8,21 @@
 
 namespace ngcore {
 
-template <typename T>
-uintptr_t mpi2ng(T t) {
-  if constexpr (std::is_pointer_v<T>)
-    return reinterpret_cast<uintptr_t>(t);
-  else
-    return static_cast<uintptr_t>(t);
-}
+// template <typename T>
+// uintptr_t mpi2ng(T t) {
+//   if constexpr (std::is_pointer_v<T>)
+//     return reinterpret_cast<uintptr_t>(t);
+//   else
+//     return static_cast<uintptr_t>(t);
+// }
+
+int mpi2ng(int v) { return v; }
+void* mpi2ng(void*p) { return p; }
+
+// TODO: When we are dealing with arrays of multiple MPI_Status, we need to copy them together in continuous memory
+NG_MPI_Status* mpi2ng(MPI_Status*p) { return reinterpret_cast<NG_MPI_Status*>(p); }
+
+NG_MPI_Comm mpi2ng(MPI_Comm c) { return reinterpret_cast<uintptr_t>(c); }
 
 template <typename T>
 T cast_ng2mpi(uintptr_t t) {
@@ -37,7 +45,16 @@ MPI_Comm ng2mpi(NG_MPI_Comm c) {
   return cast_ng2mpi<MPI_Comm>(c.value);
 }
 
+MPI_Group ng2mpi(NG_MPI_Group c) {
+  static_assert(sizeof(MPI_Group) <= sizeof(c.value), "Size mismatch");
+  return cast_ng2mpi<MPI_Group>(c.value);
+}
+
 MPI_Comm* ng2mpi(NG_MPI_Comm* c) { return cast_ng2mpi<MPI_Comm*>(&c->value); }
+MPI_Group* ng2mpi(NG_MPI_Group* c) { return cast_ng2mpi<MPI_Group*>(&c->value); }
+MPI_Datatype* ng2mpi(NG_MPI_Datatype* c) { return cast_ng2mpi<MPI_Datatype*>(&c->value); }
+MPI_Request* ng2mpi(NG_MPI_Request* c) { return cast_ng2mpi<MPI_Request*>(&c->value); }
+MPI_Status* ng2mpi(NG_MPI_Status* c) { return cast_ng2mpi<MPI_Status*>(&c->data[0]); }
 
 MPI_Datatype ng2mpi(NG_MPI_Datatype c) {
   static_assert(sizeof(MPI_Datatype) <= sizeof(c.value), "Size mismatch");
@@ -49,7 +66,15 @@ MPI_Request ng2mpi(NG_MPI_Request c) {
   return cast_ng2mpi<MPI_Request>(c.value);
 }
 
+MPI_Status* ng2mpi(NG_MPI_Status c) {
+  return cast_ng2mpi<MPI_Status*>(&c.data[0]);
+}
+
+void* ng2mpi(void* c) { return c; }
+char* ng2mpi(char* c) { return c; }
+char*** ng2mpi(char*** c) { return c; }
 int* ng2mpi(int* c) { return c; }
+int ng2mpi(int c) { return c; }
 
 }  // namespace ngcore
 
