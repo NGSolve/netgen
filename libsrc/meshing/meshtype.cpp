@@ -216,7 +216,7 @@ namespace netgen
     orderx = ordery = 1;
     refflag = 1;
     strongrefflag = false;
-    is_curved = false;
+    is_curved = 0;
   } 
 
   Element2d :: Element2d (int anp)

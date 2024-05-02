@@ -423,7 +423,7 @@ namespace netgen
     // Set a new property for each element, to 
     // control whether it is visible or not
     bool visible:1;  // element visible
-    bool is_curved:1;   // element is (high order) curved
+    bool is_curved;   // element is (high order) curved
     /// order for hp-FEM
     unsigned int orderx:6;
     unsigned int ordery:6;
@@ -440,7 +440,8 @@ namespace netgen
           { "pnum", offsetof(Element2d, pnum)},
           { "index", offsetof(Element2d, index) },
           { "np", offsetof(Element2d, np) },
-          { "refine", offsetof(Element2d, refflag) }
+          { "refine", offsetof(Element2d, refflag) },
+          { "curved", offsetof(Element2d, is_curved)}
         });
     }
 
@@ -741,7 +742,7 @@ namespace netgen
        unsigned int levelz:6; */ 
     /// stored shape-badness of element
     float badness;
-    bool is_curved:1;   // element is (high order) curved
+    bool is_curved;   // element is (high order) curved
 
     class flagstruct {
     public:
@@ -767,7 +768,8 @@ namespace netgen
           { "pnum", offsetof(Element, pnum)},
           { "index", offsetof(Element, index) },
           { "np", offsetof(Element, np) },
-          { "refine", offsetof(Element, flags.refflag) }          
+          { "refine", offsetof(Element, flags.refflag) },
+          { "curved", offsetof(Element, is_curved)}
         });
     }
 
