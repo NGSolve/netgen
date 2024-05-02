@@ -12,6 +12,7 @@ add_library(ngcore ${NGCORE_LIBRARY_TYPE}
   taskmanager.cpp
   utils.cpp
   version.cpp
+  ng_mpi_wrapper.cpp
   )
 
 string(REPLACE "|" ";" ng_compile_flags_replace_sep "${NG_COMPILE_FLAGS}")
@@ -57,6 +58,8 @@ if(WIN32)
   get_WIN32_WINNT(ver)
   target_compile_definitions(ngcore PUBLIC _WIN32_WINNT=${ver} WNT WNT_WINDOW NOMINMAX MSVC_EXPRESS _CRT_SECURE_NO_WARNINGS HAVE_STRUCT_TIMESPEC WIN32)
   target_link_options(ngcore PUBLIC /ignore:4273 /ignore:4217 /ignore:4049)
+else(WIN32)
+  target_link_libraries(ngcore PUBLIC dl)
 endif(WIN32)
 
 target_compile_definitions(ngcore PRIVATE NGCORE_EXPORTS)
@@ -82,7 +85,7 @@ endif(USE_NUMA)
 
 install(TARGETS ngcore DESTINATION ${NG_INSTALL_DIR} COMPONENT netgen)
 
-target_link_libraries(ngcore PUBLIC netgen_mpi PRIVATE "$<BUILD_INTERFACE:netgen_python>" ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(ngcore PRIVATE "$<BUILD_INTERFACE:netgen_python>" ${CMAKE_THREAD_LIBS_INIT})
 
 install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp logging.hpp memtracer.hpp
   exception.hpp symboltable.hpp paje_trace.hpp utils.hpp profiler.hpp mpi_wrapper.hpp
@@ -90,6 +93,7 @@ install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp 
   xbool.hpp signal.hpp bitarray.hpp table.hpp hashtable.hpp ranges.hpp ngstream.hpp
   simd.hpp simd_avx.hpp simd_avx512.hpp simd_generic.hpp simd_sse.hpp simd_arm64.hpp
   register_archive.hpp autodiff.hpp autodiffdiff.hpp
+  ng_mpi.hpp ng_mpi_generated_declarations.hpp
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/core COMPONENT netgen_devel)
 
 if(ENABLE_CPP_CORE_GUIDELINES_CHECK)
@@ -107,4 +111,22 @@ if(USE_PYTHON)
   endif(EMSCRIPTEN)
   install(TARGETS pyngcore DESTINATION ${NG_INSTALL_DIR_PYTHON}/pyngcore COMPONENT netgen)
 endif(USE_PYTHON)
+
+if(USE_MPI)
+  target_compile_definitions(ngcore PUBLIC PARALLEL)
+
+  # assume openmpi here
+  add_library(ng_openmpi SHARED ng_mpi.cpp)
+  target_link_libraries(ng_openmpi PUBLIC ngcore)
+  install(TARGETS ng_openmpi DESTINATION ${NG_INSTALL_DIR} COMPONENT netgen)
+
+  # set(MPICH_INCLUDE_DIR /opt/mpich/include)
+  if(MPICH_INCLUDE_DIR)
+    add_library(ng_mpich SHARED ng_mpi.cpp)
+    target_include_directories(ng_mpich PRIVATE ${MPICH_INCLUDE_DIR})
+    target_link_libraries(ng_mpich PUBLIC ngcore)
+    install(TARGETS ng_mpich DESTINATION ${NG_INSTALL_DIR} COMPONENT netgen)
+  endif(MPICH_INCLUDE_DIR)
+
+endif(USE_MPI)
 

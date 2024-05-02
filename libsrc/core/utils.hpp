@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <map>
 #include <ostream>
+#include <optional>
 #include <sstream>
 #include <string>
 
@@ -346,6 +347,46 @@ namespace ngcore
   NGCORE_API bool IsRangeCheckEnabled();
 
   NGCORE_API std::filesystem::path GetTempFilename();
+
+  NGCORE_API void* GetRawSymbol( std::string func_name );
+
+  template <typename TFunc>
+  TFunc GetSymbol( std::string func_name )
+  {
+    return reinterpret_cast<TFunc>(GetRawSymbol(func_name));
+  }
+
+  // Class to handle/load shared libraries
+  class NGCORE_API SharedLibrary
+  {
+    std::filesystem::path lib_name;
+    std::optional<std::filesystem::path> directory_to_delete = std::nullopt;
+
+    // #ifdef WIN32
+    // HINSTANCE lib = nullptr;
+    // #else // WIN32
+    void *lib = nullptr;
+    // #endif // WIN32
+
+  public:
+    SharedLibrary() = default;
+    SharedLibrary(const std::filesystem::path & lib_name_, std::optional<std::filesystem::path> directory_to_delete_ = std::nullopt, bool global = false );
+
+    SharedLibrary(const SharedLibrary &) = delete;
+    SharedLibrary & operator =(const SharedLibrary &) = delete;
+
+    ~SharedLibrary();
+
+    template <typename TFunc>
+    TFunc GetSymbol( std::string func_name )
+    {
+      return reinterpret_cast<TFunc>(GetRawSymbol(func_name));
+    }
+
+    void Load( const std::filesystem::path & lib_name_, bool global);
+    void Unload();
+    void* GetRawSymbol( std::string func_name );
+  };
 
 } // namespace ngcore
 

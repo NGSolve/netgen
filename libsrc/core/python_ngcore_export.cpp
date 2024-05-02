@@ -6,6 +6,11 @@ using namespace ngcore;
 using namespace std;
 using namespace pybind11::literals;
 
+
+namespace ngcore {
+  NGCORE_API void InitMPI();
+}
+
 PYBIND11_MODULE(pyngcore, m) // NOLINT
 {
   try
@@ -328,4 +333,5 @@ threads : int
 	   }, "Returns list of timers"
 	   );
   m.def("ResetTimers", &NgProfiler::Reset);
+  m.def("InitMPI", &InitMPI);
 }
