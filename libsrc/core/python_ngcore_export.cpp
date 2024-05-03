@@ -1,15 +1,12 @@
 #include "python_ngcore.hpp"
 #include "bitarray.hpp"
 #include "taskmanager.hpp"
+#include "ng_mpi.hpp"
 
 using namespace ngcore;
 using namespace std;
 using namespace pybind11::literals;
 
-
-namespace ngcore {
-  NGCORE_API void InitMPI();
-}
 
 PYBIND11_MODULE(pyngcore, m) // NOLINT
 {
