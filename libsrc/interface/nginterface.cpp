@@ -31,7 +31,7 @@ void RunParallel ( void * (*fun)(void *), void * in)
 
 #ifdef PARALLEL
   int provided;
-  MPI_Query_thread(&provided);
+  netgen::NG_MPI_Query_thread(&provided);
   if (provided < 3)
     if (netgen::ntasks > 1) parthread = false;
   // cout << "runparallel = " << parthread << endl;

@@ -17,10 +17,13 @@ functions = [
         ("int", "MPI_Group_incl", "MPI_Group", "int", "int*", "MPI_Group*"),
         ("int", "MPI_Init", "int*", "char***"),
         ("int", "MPI_Initialized", "int*"),
+        ("int", "MPI_Iprobe", "int", "int", "MPI_Comm", "int*", "MPI_Status*"),
         ("int", "MPI_Irecv", "void*", "int", "MPI_Datatype", "int", "int", "MPI_Comm", "MPI_Request*"),
         ("int", "MPI_Isend", "void*", "int", "MPI_Datatype", "int", "int", "MPI_Comm", "MPI_Request*"),
         ("int", "MPI_Probe", "int", "int", "MPI_Comm", "MPI_Status*"),
+        ("int", "MPI_Query_thread", "int*"),
         ("int", "MPI_Recv", "void*", "int", "MPI_Datatype", "int", "int", "MPI_Comm", "MPI_Status*"),
+        ("int", "MPI_Reduce", "void*", "void*", "int", "MPI_Datatype", "MPI_Op", "int", "MPI_Comm"),
         ("int", "MPI_Reduce_local", "void*", "void*", "int", "MPI_Datatype", "MPI_Op"),
         ("int", "MPI_Request_free", "MPI_Request*"),
         ("int", "MPI_Scatter", "void*", "int", "MPI_Datatype", "void*", "int", "MPI_Datatype", "int", "MPI_Comm"),
@@ -35,8 +38,6 @@ functions = [
         ("int", "MPI_Wait", "MPI_Request*", "MPI_Status*"),
         ("int", "MPI_Waitall", "int", "MPI_Request*", "MPI_Status*"),
         ("int", "MPI_Waitany", "int", "MPI_Request*", "int*", "MPI_Status*"),
-        ("int", "MPI_Reduce", "void*", "void*", "int", "MPI_Datatype", "MPI_Op", "int", "MPI_Comm"),
-        ("int", "MPI_Iprobe", "int", "int", "MPI_Comm", "int*", "MPI_Status*"),
         ]
 
 constants = [
