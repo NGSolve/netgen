@@ -361,12 +361,7 @@ namespace ngcore
   {
     std::filesystem::path lib_name;
     std::optional<std::filesystem::path> directory_to_delete = std::nullopt;
-
-    // #ifdef WIN32
-    // HINSTANCE lib = nullptr;
-    // #else // WIN32
     void *lib = nullptr;
-    // #endif // WIN32
 
   public:
     SharedLibrary() = default;
@@ -383,7 +378,7 @@ namespace ngcore
       return reinterpret_cast<TFunc>(GetRawSymbol(func_name));
     }
 
-    void Load( const std::filesystem::path & lib_name_, bool global);
+    void Load( const std::filesystem::path & lib_name_, bool global = true);
     void Unload();
     void* GetRawSymbol( std::string func_name );
   };

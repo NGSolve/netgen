@@ -8,74 +8,94 @@
 
 namespace ngcore {
 
-// template <typename T>
-// uintptr_t mpi2ng(T t) {
-//   if constexpr (std::is_pointer_v<T>)
-//     return reinterpret_cast<uintptr_t>(t);
-//   else
-//     return static_cast<uintptr_t>(t);
-// }
-
 static_assert(sizeof(MPI_Status) <= sizeof(NG_MPI_Status), "Size mismatch");
 static_assert(alignof(MPI_Status) <= alignof(NG_MPI_Status), "Size mismatch");
 
-int mpi2ng(int v) { return v; }
-void* mpi2ng(void*p) { return p; }
+int mpi2ng(int value) { return value; }
+void* mpi2ng(void* ptr) { return ptr; }
 
-// TODO: When we are dealing with arrays of multiple MPI_Status, we need to copy them together in continuous memory
-NG_MPI_Status* mpi2ng(MPI_Status*p) { return reinterpret_cast<NG_MPI_Status*>(p); }
+// TODO: When we are dealing with arrays of multiple MPI_Statuses, we need to
+// copy them together in continuous memory
+NG_MPI_Status* mpi2ng(MPI_Status* status) {
+  return reinterpret_cast<NG_MPI_Status*>(status);
+}
 
-NG_MPI_Comm mpi2ng(MPI_Comm c) { return reinterpret_cast<uintptr_t>(c); }
+#ifndef MPICH
+NG_MPI_Comm mpi2ng(MPI_Comm comm) { return reinterpret_cast<uintptr_t>(comm); }
+#endif
 
 template <typename T>
-T cast_ng2mpi(uintptr_t t) {
+T cast_ng2mpi(uintptr_t obj) {
   if constexpr (std::is_pointer_v<T>)
-    return reinterpret_cast<T>(t);
+    return reinterpret_cast<T>(obj);
   else
-    return static_cast<T>(t);
+    return static_cast<T>(obj);
 }
 
 template <typename T>
-T cast_ng2mpi(uintptr_t* t) {
+T cast_ng2mpi(uintptr_t* ptr) {
   if constexpr (std::is_pointer_v<T>)
-    return reinterpret_cast<T>(t);
+    return reinterpret_cast<T>(ptr);
   else
-    return static_cast<T>(t);
+    return static_cast<T>(ptr);
 }
 
-MPI_Comm ng2mpi(NG_MPI_Comm c) {
-  static_assert(sizeof(MPI_Comm) <= sizeof(c.value), "Size mismatch");
+MPI_Comm ng2mpi(NG_MPI_Comm comm) {
+  static_assert(sizeof(MPI_Comm) <= sizeof(comm.value), "Size mismatch");
   static_assert(alignof(MPI_Comm) <= alignof(NG_MPI_Comm), "Size mismatch");
-  return cast_ng2mpi<MPI_Comm>(c.value);
+  return cast_ng2mpi<MPI_Comm>(comm.value);
 }
 
-MPI_Group ng2mpi(NG_MPI_Group c) {
-  static_assert(sizeof(MPI_Group) <= sizeof(c.value), "Size mismatch");
+MPI_Group ng2mpi(NG_MPI_Group group) {
+  static_assert(sizeof(MPI_Group) <= sizeof(group.value), "Size mismatch");
   static_assert(alignof(MPI_Group) <= alignof(NG_MPI_Group), "Size mismatch");
-  return cast_ng2mpi<MPI_Group>(c.value);
+  return cast_ng2mpi<MPI_Group>(group.value);
 }
 
-MPI_Comm* ng2mpi(NG_MPI_Comm* c) { return cast_ng2mpi<MPI_Comm*>(&c->value); }
-MPI_Group* ng2mpi(NG_MPI_Group* c) { return cast_ng2mpi<MPI_Group*>(&c->value); }
-MPI_Datatype* ng2mpi(NG_MPI_Datatype* c) { return cast_ng2mpi<MPI_Datatype*>(&c->value); }
-MPI_Request* ng2mpi(NG_MPI_Request* c) { return cast_ng2mpi<MPI_Request*>(&c->value); }
-MPI_Status* ng2mpi(NG_MPI_Status* c) { return reinterpret_cast<MPI_Status*>(c); }
-
-MPI_Datatype ng2mpi(NG_MPI_Datatype c) {
-  static_assert(sizeof(MPI_Datatype) <= sizeof(c.value), "Size mismatch");
-  return cast_ng2mpi<MPI_Datatype>(c.value);
+MPI_Comm* ng2mpi(NG_MPI_Comm* comm) {
+  return cast_ng2mpi<MPI_Comm*>(&comm->value);
+}
+MPI_Group* ng2mpi(NG_MPI_Group* group) {
+  return cast_ng2mpi<MPI_Group*>(&group->value);
+}
+MPI_Datatype* ng2mpi(NG_MPI_Datatype* type) {
+  return cast_ng2mpi<MPI_Datatype*>(&type->value);
+}
+MPI_Request* ng2mpi(NG_MPI_Request* request) {
+  return cast_ng2mpi<MPI_Request*>(&request->value);
+}
+MPI_Status* ng2mpi(NG_MPI_Status* status) {
+  return reinterpret_cast<MPI_Status*>(status);
+}
+MPI_Aint* ng2mpi(NG_MPI_Aint* aint) {
+  return reinterpret_cast<MPI_Aint*>(aint);
 }
 
-MPI_Request ng2mpi(NG_MPI_Request c) {
-  static_assert(sizeof(MPI_Request) <= sizeof(c.value), "Size mismatch");
-  return cast_ng2mpi<MPI_Request>(c.value);
+MPI_Datatype ng2mpi(NG_MPI_Datatype type) {
+  static_assert(sizeof(MPI_Datatype) <= sizeof(type.value), "Size mismatch");
+  return cast_ng2mpi<MPI_Datatype>(type.value);
 }
 
-void* ng2mpi(void* c) { return c; }
-char* ng2mpi(char* c) { return c; }
-char*** ng2mpi(char*** c) { return c; }
-int* ng2mpi(int* c) { return c; }
-int ng2mpi(int c) { return c; }
+MPI_Request ng2mpi(NG_MPI_Request request) {
+  static_assert(sizeof(MPI_Request) <= sizeof(request.value), "Size mismatch");
+  return cast_ng2mpi<MPI_Request>(request.value);
+}
+
+MPI_Op ng2mpi(NG_MPI_Op op) {
+  static_assert(sizeof(MPI_Op) <= sizeof(op.value), "Size mismatch");
+  return cast_ng2mpi<MPI_Op>(op.value);
+}
+
+MPI_Aint ng2mpi(NG_MPI_Aint aint) {
+  static_assert(sizeof(MPI_Aint) <= sizeof(aint.value), "Size mismatch");
+  return cast_ng2mpi<MPI_Aint>(aint.value);
+}
+
+void* ng2mpi(void* ptr) { return ptr; }
+char* ng2mpi(char* ptr) { return ptr; }
+char*** ng2mpi(char*** ptr) { return ptr; }
+int* ng2mpi(int* ptr) { return ptr; }
+int ng2mpi(int value) { return value; }
 
 }  // namespace ngcore
 

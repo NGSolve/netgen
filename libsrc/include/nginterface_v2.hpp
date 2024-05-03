@@ -9,6 +9,7 @@
 /**************************************************************************/
 
 #include "mydefs.hpp"
+#include <core/mpi_wrapper.hpp>
 
 /*
   C++ interface to Netgen

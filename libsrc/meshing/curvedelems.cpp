@@ -561,7 +561,7 @@ namespace netgen
 
     auto comm = mesh.GetCommunicator();
 #ifdef PARALLEL
-    enum { MPI_TAG_CURVE = MPI_TAG_MESH+20 };
+    enum { NG_MPI_TAG_CURVE = NG_MPI_TAG_MESH+20 };
     const ParallelMeshTopology & partop = mesh.GetParallelTopology ();
 #endif
     int ntasks = comm.Size();
@@ -654,8 +654,8 @@ namespace netgen
       }
 
     if (ntasks > 1)
-      //  MyMPI_ExchangeTable (send_orders, recv_orders, MPI_TAG_CURVE, comm);
-      comm.ExchangeTable (send_orders, recv_orders, MPI_TAG_CURVE);
+      //  MyMPI_ExchangeTable (send_orders, recv_orders, NG_MPI_TAG_CURVE, comm);
+      comm.ExchangeTable (send_orders, recv_orders, NG_MPI_TAG_CURVE);
 
     if (ntasks > 1 && working)
       {
@@ -770,8 +770,8 @@ namespace netgen
                       }
                   }
 	    
-            // MyMPI_ExchangeTable (senddata, recvdata, MPI_TAG_CURVE, comm);
-            comm.ExchangeTable (senddata, recvdata, MPI_TAG_CURVE);
+            // MyMPI_ExchangeTable (senddata, recvdata, NG_MPI_TAG_CURVE, comm);
+            comm.ExchangeTable (senddata, recvdata, NG_MPI_TAG_CURVE);
 
 	    NgArray<int> cnt(ntasks);
 	    cnt = 0;
@@ -976,8 +976,8 @@ namespace netgen
                   }
               }
 
-	// MyMPI_ExchangeTable (senddata, recvdata, MPI_TAG_CURVE, comm);
-        comm.ExchangeTable (senddata, recvdata, MPI_TAG_CURVE);
+	// MyMPI_ExchangeTable (senddata, recvdata, NG_MPI_TAG_CURVE, comm);
+        comm.ExchangeTable (senddata, recvdata, NG_MPI_TAG_CURVE);
         
 	NgArray<int> cnt(ntasks);
 	cnt = 0;
@@ -1166,8 +1166,8 @@ namespace netgen
       }
 
     if (ntasks > 1)
-      // MyMPI_ExchangeTable (send_surfnr, recv_surfnr, MPI_TAG_CURVE, comm);
-      comm.ExchangeTable (send_surfnr, recv_surfnr, MPI_TAG_CURVE);
+      // MyMPI_ExchangeTable (send_surfnr, recv_surfnr, NG_MPI_TAG_CURVE, comm);
+      comm.ExchangeTable (send_surfnr, recv_surfnr, NG_MPI_TAG_CURVE);
 
     if (ntasks > 1 && working)
       {

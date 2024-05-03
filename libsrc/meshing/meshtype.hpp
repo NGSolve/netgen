@@ -10,6 +10,7 @@
 
 #include <mydefs.hpp>
 #include <general/template.hpp>
+#include <core/mpi_wrapper.hpp>
 #include <gprim/geom3d.hpp>
 #include <linalg.hpp>
 
@@ -372,7 +373,7 @@ namespace netgen
     bool IsSingular() const { return (singular != 0.0); }
 
 #ifdef PARALLEL
-    static MPI_Datatype MyGetMPIType ( );
+    static NG_MPI_Datatype MyGetMPIType ( );
 #endif
 
     void DoArchive (Archive & ar)
@@ -583,7 +584,7 @@ namespace netgen
     }
 
 #ifdef PARALLEL
-    static MPI_Datatype MyGetMPIType();
+    static NG_MPI_Datatype MyGetMPIType();
 #endif
     
 
@@ -886,7 +887,7 @@ namespace netgen
     }
     
 #ifdef PARALLEL
-    static MPI_Datatype MyGetMPIType();
+    static NG_MPI_Datatype MyGetMPIType();
 #endif
 
     ///
@@ -1138,7 +1139,7 @@ namespace netgen
     
     void DoArchive (Archive & ar);
 #ifdef PARALLEL
-    static MPI_Datatype MyGetMPIType();
+    static NG_MPI_Datatype MyGetMPIType();
 #endif
     
   };
@@ -1642,25 +1643,25 @@ namespace netgen
 namespace ngcore
 {
   template <> struct MPI_typetrait<netgen::PointIndex> {
-    static MPI_Datatype MPIType ()  { return MPI_INT; }
+    static NG_MPI_Datatype MPIType ()  { return NG_MPI_INT; }
   };
 
   template <> struct MPI_typetrait<netgen::ELEMENT_TYPE> {
-    static MPI_Datatype MPIType ()  { return MPI_CHAR; }
+    static NG_MPI_Datatype MPIType ()  { return NG_MPI_CHAR; }
   };
 
   template <> struct MPI_typetrait<netgen::MeshPoint> {
-    static MPI_Datatype MPIType ()  { return netgen::MeshPoint::MyGetMPIType(); }
+    static NG_MPI_Datatype MPIType ()  { return netgen::MeshPoint::MyGetMPIType(); }
   };
 
   template <> struct MPI_typetrait<netgen::Element> {
-    static MPI_Datatype MPIType ()  { return netgen::Element::MyGetMPIType(); }
+    static NG_MPI_Datatype MPIType ()  { return netgen::Element::MyGetMPIType(); }
   };
   template <> struct MPI_typetrait<netgen::Element2d> {
-    static MPI_Datatype MPIType ()  { return netgen::Element2d::MyGetMPIType(); }
+    static NG_MPI_Datatype MPIType ()  { return netgen::Element2d::MyGetMPIType(); }
   };
   template <> struct MPI_typetrait<netgen::Segment> {
-    static MPI_Datatype MPIType ()  { return netgen::Segment::MyGetMPIType(); }
+    static NG_MPI_Datatype MPIType ()  { return netgen::Segment::MyGetMPIType(); }
   };
 
 }
