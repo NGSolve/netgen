@@ -32,7 +32,7 @@ void InitMPI(std::filesystem::path mpi_lib_path, std::filesystem::path ng_libs_d
     get_version = GetSymbol<get_version_handle>("MPI_Get_library_version");
   } catch (std::runtime_error &e) {
     cout << IM(3) << "MPI not loaded" << endl;
-    mpi_lib = std::make_unique<SharedLibrary>("/usr/lib/libmpi.so",
+    mpi_lib = std::make_unique<SharedLibrary>(mpi_lib_path,
                                               std::nullopt, true);
     mpi_init = mpi_lib->GetSymbol<init_handle>("MPI_Init");
     mpi_initialized =
@@ -57,10 +57,10 @@ void InitMPI(std::filesystem::path mpi_lib_path, std::filesystem::path ng_libs_d
   std::string libname = "";
   if (mpi_library_version.substr(0, 8) == "Open MPI") {
     cout << IM(3) << "Have Open MPI" << endl;
-    libname = "/opt/netgen/lib/libng_openmpi.so";
+    libname = std::string("libng_openmpi") + NETGEN_SHARED_LIBRARY_SUFFIX;
   } else if (mpi_library_version.substr(0, 5) == "MPICH") {
     cout << IM(3) << "Have MPICH" << endl;
-    libname = "/opt/netgen/lib/libng_mpich.so";
+    libname = std::string("libng_mpich.so") + NETGEN_SHARED_LIBRARY_SUFFIX;
   } else
     cout << IM(3) << "Unknown MPI" << endl;
 
