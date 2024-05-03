@@ -118,6 +118,7 @@ if(USE_MPI)
   # assume openmpi here
   add_library(ng_openmpi SHARED ng_mpi.cpp)
   target_link_libraries(ng_openmpi PUBLIC ngcore)
+  target_include_directories(ng_openmpi PRIVATE ${MPI_C_HEADER_DIR})
   install(TARGETS ng_openmpi DESTINATION ${NG_INSTALL_DIR} COMPONENT netgen)
 
   # set(MPICH_INCLUDE_DIR /opt/mpich/include)
