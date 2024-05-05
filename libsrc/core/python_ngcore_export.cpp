@@ -195,6 +195,10 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
     {
       return CreateDictFromFlags(flags);
     })
+    .def("items", [](const Flags& flags)
+    {
+      return CreateDictFromFlags(flags).attr("items")();
+    })
   ;
   py::implicitly_convertible<py::dict, Flags>();
 
