@@ -179,7 +179,7 @@ namespace ngcore
     lib_name = lib_name_;
 #ifdef WIN32
     lib = LoadLibrary(lib_name.wstring().c_str());
-    if (!lib) throw std::runtime_error(std::wstring("Could not load library ") + lib_name.wstring());
+    if (!lib) throw std::runtime_error(std::string("Could not load library ") + lib_name.string());
 #else // WIN32
     auto flags = RTLD_NOW;
     if (global) flags |= RTLD_GLOBAL;
@@ -205,7 +205,7 @@ namespace ngcore
 #ifdef WIN32
     void* func = GetProcAddress((HMODULE)lib, func_name.c_str());
     if(func == nullptr)
-      throw std::runtime_error(string("Could not find function ") + func_name + " in library " + lib_name.string());
+      throw std::runtime_error(std::string("Could not find function ") + func_name + " in library " + lib_name.string());
 #else // WIN32
     void* func = dlsym(lib, func_name.c_str());
     if(func == nullptr)
@@ -217,10 +217,11 @@ namespace ngcore
 
   void* GetRawSymbol( std::string func_name )
   {
+    void * func = nullptr;
 #ifdef WIN32
     throw std::runtime_error("GetRawSymbol not implemented on WIN32");
 #else // WIN32
-    void* func = dlsym(RTLD_DEFAULT, func_name.c_str());
+    func = dlsym(RTLD_DEFAULT, func_name.c_str());
     if(func == nullptr)
         throw std::runtime_error(dlerror());
 #endif // WIN32
