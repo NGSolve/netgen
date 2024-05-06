@@ -177,7 +177,7 @@ namespace ngcore
     Unload();
     lib_name = lib_name_;
 #ifdef WIN32
-    lib = LoadLibrary(lib_name.string().c_str());
+    lib = LoadLibrary(lib_name.wstring().c_str());
     if (!lib) throw std::runtime_error(string("Could not load library ") + lib_name.string());
 #else // WIN32
     auto flags = RTLD_NOW;
