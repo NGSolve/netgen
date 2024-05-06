@@ -1,3 +1,5 @@
+#ifdef PARALLEL
+
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
@@ -64,7 +66,7 @@ void InitMPI(std::filesystem::path mpi_lib_path,
     cout << IM(5) << "Have MPICH" << endl;
     libname = std::string("libng_mpich") + NETGEN_SHARED_LIBRARY_SUFFIX;
   } else
-    cerr << "Unknown MPI version, skipping init: " << version_string<< endl;
+    cerr << "Unknown MPI version, skipping init: " << version_string << endl;
 
   if (libname.size()) {
     ng_mpi_lib = std::make_unique<SharedLibrary>(libname);
@@ -89,3 +91,5 @@ decltype(NG_MPI_CommToMPI4Py) NG_MPI_CommToMPI4Py =
 #include "ng_mpi_generated_dummy_init.hpp"
 
 }  // namespace ngcore
+
+#endif  // PARALLEL

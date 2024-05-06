@@ -37,8 +37,11 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
 
   ExportTable<int>(m);
 
+  #ifdef PARALLEL
   py::class_<NG_MPI_Comm> (m, "_NG_MPI_Comm")
           ;
+  m.def("InitMPI", &InitMPI);
+  #endif // PARALLEL
 
   py::class_<BitArray, shared_ptr<BitArray>> (m, "BitArray")
     .def(py::init([] (size_t n) { return make_shared<BitArray>(n); }),py::arg("n"))
@@ -338,5 +341,4 @@ threads : int
 	   }, "Returns list of timers"
 	   );
   m.def("ResetTimers", &NgProfiler::Reset);
-  m.def("InitMPI", &InitMPI);
 }

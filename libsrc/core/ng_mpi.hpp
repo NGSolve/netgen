@@ -1,6 +1,8 @@
 #ifndef NG_MPI_HPP_INCLUDED
 #define NG_MPI_HPP_INCLUDED
 
+#ifdef PARALLEL
+
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -84,4 +86,5 @@ NGCORE_API extern py::handle (*NG_MPI_CommToMPI4Py)(NG_MPI_Comm);
 
 }  // namespace ngcore
 
+#endif // PARALLEL
 #endif  // NG_MPI_HPP_INCLUDED

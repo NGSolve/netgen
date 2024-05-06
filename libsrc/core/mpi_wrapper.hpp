@@ -15,6 +15,8 @@
 namespace ngcore
 {
 
+#ifdef PARALLEL
+
   template <class T> struct MPI_typetrait  { };
   
   template <> struct MPI_typetrait<int> {
@@ -462,6 +464,117 @@ namespace ngcore
     }
   };
   
+
+
+  
+
+#else // PARALLEL
+  class NG_MPI_Comm {
+    int nr;
+  public:
+    NG_MPI_Comm (int _nr = 0) : nr(_nr) { ; }
+    operator int() const { return nr; }
+    bool operator== (NG_MPI_Comm c2) const { return nr == c2.nr; }
+  };
+  static NG_MPI_Comm NG_MPI_COMM_WORLD = 12345, NG_MPI_COMM_NULL = 10000;
+
+  typedef int NG_MPI_Op;
+  typedef int NG_MPI_Datatype;  
+  typedef int NG_MPI_Request;
+  
+  enum { NG_MPI_SUM = 0, NG_MPI_MIN = 1, NG_MPI_MAX = 2, NG_MPI_LOR = 4711 };
+
+  inline void NG_MPI_Type_contiguous ( int, NG_MPI_Datatype, NG_MPI_Datatype*) { ; } 
+  inline void NG_MPI_Type_commit ( NG_MPI_Datatype * ) { ; }
+
+  template <class T> struct MPI_typetrait  {
+    static NG_MPI_Datatype MPIType () { return -1; }    
+  };
+  template <class T, class T2=void>
+  inline NG_MPI_Datatype GetMPIType () { return -1; }
+  
+  class NgMPI_Comm
+  {
+    
+  public:
+    NgMPI_Comm () { ; } 
+    NgMPI_Comm (NG_MPI_Comm _comm, bool owns = false) { ; }
+
+    size_t Rank() const { return 0; }
+    size_t Size() const { return 1; }
+    bool ValidCommunicator() const { return false; }
+    void Barrier() const { ; } 
+    operator NG_MPI_Comm() const { return NG_MPI_Comm(); }
+
+    template<typename T>
+    void Send( T & val, int dest, int tag) const { ; }
+    
+    template<typename T>
+    void Send(FlatArray<T> s, int dest, int tag) const { ; }
+
+    template<typename T>
+    void Recv (T & val, int src, int tag) const { ; }
+
+    template <typename T>
+    void Recv (FlatArray <T> s, int src, int tag) const { ; }
+
+    template <typename T>
+    void Recv (Array <T> & s, int src, int tag) const { ; }
+
+    template<typename T>
+    NG_MPI_Request ISend (T & val, int dest, int tag) const { return 0; } 
+    
+    template<typename T>
+    NG_MPI_Request ISend (FlatArray<T> s, int dest, int tag) const { return 0; }
+
+    template<typename T>
+    NG_MPI_Request IRecv (T & val, int dest, int tag) const { return 0; } 
+    
+    template<typename T>
+    NG_MPI_Request IRecv (FlatArray<T> s, int src, int tag) const { return 0; }
+
+    template <typename T>
+    T Reduce (T d, const NG_MPI_Op & op, int root = 0) const { return d; }
+    
+    template <typename T>
+    T AllReduce (T d, const NG_MPI_Op & op) const { return d; }
+
+    template <typename T>
+    void AllReduce (FlatArray<T> d, const NG_MPI_Op & op) const { ; }
+    
+    template <typename T>
+    void Bcast (T & s, int root = 0) const { ; } 
+
+    template <class T>
+    void Bcast (Array<T> & d, int root = 0) { ; } 
+
+    template <typename T>
+    void AllGather (T val, FlatArray<T> recv) const
+    {
+      recv[0] = val;
+    }
+
+    template <typename T>
+    void ExchangeTable (DynamicTable<T> & send_data, 
+                        DynamicTable<T> & recv_data, int tag) { ; }
+
+    
+    NgMPI_Comm SubCommunicator (FlatArray<int> procs) const
+    { return *this; }
+  };  
+
+  inline void MyMPI_WaitAll (FlatArray<NG_MPI_Request> requests) { ; }
+  inline int MyMPI_WaitAny (FlatArray<NG_MPI_Request> requests) { return 0; }
+
+  class MyMPI
+  {
+  public:
+    MyMPI(int argc, char ** argv) { ; }
+  };
+
+  
+#endif // PARALLEL
+
 } // namespace ngcore
 
 #endif // NGCORE_MPIWRAPPER_HPP
