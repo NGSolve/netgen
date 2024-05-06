@@ -26,24 +26,6 @@
 #include <string>
 #include <typeinfo>
 
-#ifdef PARALLEL
-// #undef SEEK_SET
-// #undef SEEK_CUR
-// #undef SEEK_END
-#include <unistd.h>  // for usleep (only for parallel)
-#endif
-
-
-
-/*
-#ifdef METIS
-namespace metis { extern "C" {
-#include <metis.h>
-} }
-#endif
-*/
-
-
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
