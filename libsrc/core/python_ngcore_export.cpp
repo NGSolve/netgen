@@ -7,6 +7,11 @@ using namespace ngcore;
 using namespace std;
 using namespace pybind11::literals;
 
+namespace pybind11 { namespace detail {
+}} // namespace pybind11::detail
+
+
+
 
 PYBIND11_MODULE(pyngcore, m) // NOLINT
 {
@@ -31,7 +36,10 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
     ExportArray<uint64_t>(m);
 
   ExportTable<int>(m);
-  
+
+  py::class_<NG_MPI_Comm> (m, "_NG_MPI_Comm")
+          ;
+
   py::class_<BitArray, shared_ptr<BitArray>> (m, "BitArray")
     .def(py::init([] (size_t n) { return make_shared<BitArray>(n); }),py::arg("n"))
     .def(py::init([] (const BitArray& a) { return make_shared<BitArray>(a); } ), py::arg("ba"))

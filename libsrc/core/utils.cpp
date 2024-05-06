@@ -117,7 +117,7 @@ namespace ngcore
 
   const std::chrono::time_point<TClock> wall_time_start = TClock::now();
 
-  int printmessage_importance = 0;
+  int printmessage_importance = getenv("NG_MESSAGE_LEVEL") ? atoi(getenv("NG_MESSAGE_LEVEL")) : 0;
   bool NGSOStream :: glob_active = true;
 
   NGCORE_API int GetCompiledSIMDSize()

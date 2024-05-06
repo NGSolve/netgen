@@ -14,6 +14,8 @@
 #include "flags.hpp"
 #include "ngcore_api.hpp"
 #include "profiler.hpp"
+#include "ng_mpi.hpp"
+
 namespace py = pybind11;
 
 namespace ngcore
@@ -38,6 +40,27 @@ namespace ngcore
 // automatic conversion of python list to Array<>
 namespace pybind11 {
 namespace detail {
+
+#ifdef NG_MPI4PY
+template <> struct type_caster<ngcore::NG_MPI_Comm> {
+  public:
+  PYBIND11_TYPE_CASTER(ngcore::NG_MPI_Comm, _("mpi4py_comm"));
+
+    // Python -> C++
+    bool load(handle src, bool) {
+      return ngcore::NG_MPI_CommFromMPI4Py(src, value);
+    }
+
+    // C++ -> Python
+    static handle cast(ngcore::NG_MPI_Comm src,
+                       return_value_policy /* policy */,
+                       handle /* parent */)
+    {
+      // Create an mpi4py handle
+      return ngcore::NG_MPI_CommToMPI4Py(src);
+    }
+};
+#endif // NG_MPI4PY
 
 template <typename Type, typename Value> struct ngcore_list_caster {
     using value_conv = make_caster<Value>;

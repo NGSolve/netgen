@@ -7,6 +7,12 @@
 
 #include "ngcore_api.hpp"
 
+#if defined(NG_PYTHON) && defined(NG_MPI4PY)
+#include <pybind11/pybind11.h>
+
+namespace py = pybind11;
+#endif
+
 namespace ngcore {
 
 NGCORE_API void InitMPI(
@@ -68,6 +74,11 @@ struct NG_MPI_Aint {
   NG_MPI_Aint(uintptr_t value_) : value(value_) {}
   NG_MPI_Aint() = default;
 };
+
+#if defined(NG_PYTHON) && defined(NG_MPI4PY)
+NGCORE_API extern bool (*NG_MPI_CommFromMPI4Py)(py::handle, NG_MPI_Comm &);
+NGCORE_API extern py::handle (*NG_MPI_CommToMPI4Py)(NG_MPI_Comm);
+#endif
 
 #include "ng_mpi_generated_declarations.hpp"
 

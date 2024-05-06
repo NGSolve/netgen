@@ -5,6 +5,15 @@
 #include <type_traits>
 
 #include "ngcore_api.hpp"
+#include "pybind11/pytypes.h"
+
+#if defined(NG_PYTHON) && defined(NG_MPI4PY)
+#include <mpi4py.h>
+
+#include "python_ngcore.hpp"
+
+namespace py = pybind11;
+#endif
 
 namespace ngcore {
 
@@ -103,6 +112,31 @@ using namespace ngcore;
 
 NGCORE_API_EXPORT extern "C" void ng_init_mpi();
 
+static bool imported_mpi4py = false;
+
 void ng_init_mpi() {
+#if defined(NG_PYTHON) && defined(NG_MPI4PY)
+  NG_MPI_CommFromMPI4Py = [](py::handle src, NG_MPI_Comm& dst) -> bool {
+    if (!imported_mpi4py) {
+      import_mpi4py();
+      imported_mpi4py = true;
+    }
+    PyObject* py_src = src.ptr();
+    auto type = Py_TYPE(py_src);
+    if (PyObject_TypeCheck(py_src, &PyMPIComm_Type)) {
+      dst = mpi2ng(*PyMPIComm_Get(py_src));
+      return !PyErr_Occurred();
+    }
+    return false;
+  };
+  NG_MPI_CommToMPI4Py = [](NG_MPI_Comm src) -> py::handle {
+    if (!imported_mpi4py) {
+      import_mpi4py();
+      imported_mpi4py = true;
+    }
+    return py::handle(PyMPIComm_New(ng2mpi(src)));
+  };
+#endif
+
 #include "ng_mpi_generated_init.hpp"
 }
