@@ -466,7 +466,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
         py::detail::field_descriptor {
           "refine", data_layout["refine"], sizeof(bool),
           py::format_descriptor<bool>::format(),
-          py::detail::npy_format_descriptor<bool>::dtype() }            
+          py::detail::npy_format_descriptor<bool>::dtype() },            
+        py::detail::field_descriptor {
+          "curved", data_layout["curved"], sizeof(bool),
+          py::format_descriptor<bool>::format(),
+          py::detail::npy_format_descriptor<bool>::dtype()}            
       });
   }
 
@@ -556,6 +560,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
         pybind11::dtype("int8") },
         py::detail::field_descriptor {
           "refine", data_layout["refine"], sizeof(bool),
+          py::format_descriptor<bool>::format(),
+          py::detail::npy_format_descriptor<bool>::dtype() },
+        py::detail::field_descriptor {
+          "curved", data_layout["curved"], sizeof(bool),
           py::format_descriptor<bool>::format(),
           py::detail::npy_format_descriptor<bool>::dtype() }
       });
