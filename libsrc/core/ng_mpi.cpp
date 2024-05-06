@@ -33,6 +33,20 @@ NG_MPI_Status* mpi2ng(MPI_Status* status) {
 NG_MPI_Comm mpi2ng(MPI_Comm comm) { return reinterpret_cast<uintptr_t>(comm); }
 #endif
 
+template <size_t size, size_t stride>
+void gather_strided_array(size_t count, char* data) {
+  static_assert(size <= stride, "Size must be less than or equal to stride");
+  if constexpr (size < stride) {
+    char* dst = data;
+    char* src = data;
+    for (auto i : Range(count)) {
+      memcpy(dst, src, size);
+      dst += size;
+      src += stride;
+    }
+  }
+}
+
 template <typename T>
 T cast_ng2mpi(uintptr_t obj) {
   if constexpr (std::is_pointer_v<T>)
@@ -47,6 +61,13 @@ T cast_ng2mpi(uintptr_t* ptr) {
     return reinterpret_cast<T>(ptr);
   else
     return static_cast<T>(ptr);
+}
+
+template <typename T, typename TSrc>
+T* cast_ng2mpi(TSrc* ptr, int count) {
+  gather_strided_array<sizeof(T), sizeof(TSrc)>(count,
+                                                reinterpret_cast<char*>(ptr));
+  return reinterpret_cast<T*>(ptr);
 }
 
 MPI_Comm ng2mpi(NG_MPI_Comm comm) {
@@ -70,14 +91,23 @@ MPI_Group* ng2mpi(NG_MPI_Group* group) {
 MPI_Datatype* ng2mpi(NG_MPI_Datatype* type) {
   return cast_ng2mpi<MPI_Datatype*>(&type->value);
 }
+MPI_Datatype* ng2mpi(NG_MPI_Datatype* type, int count) {
+  return cast_ng2mpi<MPI_Datatype>(&type->value, count);
+}
 MPI_Request* ng2mpi(NG_MPI_Request* request) {
   return cast_ng2mpi<MPI_Request*>(&request->value);
+}
+MPI_Request* ng2mpi(NG_MPI_Request* request, int count) {
+  return cast_ng2mpi<MPI_Request>(&request->value, count);
 }
 MPI_Status* ng2mpi(NG_MPI_Status* status) {
   return reinterpret_cast<MPI_Status*>(status);
 }
 MPI_Aint* ng2mpi(NG_MPI_Aint* aint) {
   return reinterpret_cast<MPI_Aint*>(aint);
+}
+MPI_Aint* ng2mpi(NG_MPI_Aint* aint, int count) {
+  return cast_ng2mpi<MPI_Aint>(aint, count);
 }
 
 MPI_Datatype ng2mpi(NG_MPI_Datatype type) {

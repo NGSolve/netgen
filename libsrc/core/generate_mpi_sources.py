@@ -32,13 +32,13 @@ functions = [
         ("int", "MPI_Type_commit", "MPI_Datatype*"),
         ("int", "MPI_Type_contiguous", "int", "MPI_Datatype", "MPI_Datatype*"),
         ("int", "MPI_Type_create_resized", "MPI_Datatype", "MPI_Aint", "MPI_Aint", "MPI_Datatype*"),
-        ("int", "MPI_Type_create_struct", "int", "int*", "MPI_Aint*", "MPI_Datatype*", "MPI_Datatype*"),
+        ("int", "MPI_Type_create_struct", "int", "int*:0", "MPI_Aint*:0", "MPI_Datatype*:0", "MPI_Datatype*"),
         ("int", "MPI_Type_free", "MPI_Datatype*"),
         ("int", "MPI_Type_get_extent", "MPI_Datatype", "MPI_Aint*", "MPI_Aint*"),
-        ("int", "MPI_Type_indexed", "int", "int*", "int*", "MPI_Datatype", "MPI_Datatype*"),
+        ("int", "MPI_Type_indexed", "int", "int*:0", "int*:0", "MPI_Datatype", "MPI_Datatype*"),
         ("int", "MPI_Wait", "MPI_Request*", "MPI_Status*"),
-        ("int", "MPI_Waitall", "int", "MPI_Request*", "MPI_Status*"),
-        ("int", "MPI_Waitany", "int", "MPI_Request*", "int*", "MPI_Status*"),
+        ("int", "MPI_Waitall", "int", "MPI_Request*:0", "MPI_Status*"),
+        ("int", "MPI_Waitany", "int", "MPI_Request*:0", "int*", "MPI_Status*"),
         ]
 
 constants = [
@@ -69,8 +69,23 @@ constants = [
         ("void*", "MPI_IN_PLACE"),
 ]
 
-def get_args(f):
-    return ["NG_"+a if a.startswith("MPI_") else a for a in f[2:]]
+def get_args(f, counts=False):
+    args = []
+    for arg in f[2:]:
+        has_count = ':' in arg
+        if has_count:
+            s, count = arg.split(':')
+            count = int(count)
+        else:
+            s = arg
+            count = None
+        if s.startswith("MPI_"):
+            s = "NG_" + s
+        if counts:
+            args.append((s, count))
+        else:
+            args.append(s)
+    return args
 
 def generate_declarations():
     code = ""
@@ -109,15 +124,24 @@ def generate_init():
     for f in functions:
         ret = f[0]
         name = f[1]
-        args = get_args(f)
+        args = get_args(f, counts=True)
         in_args  =''
         call_args = ''
-        for i, a in enumerate(args):
+        for i in range(len(args)):
+            arg, count = args[i]
             if i > 0:
                 in_args += ', '
                 call_args += ', '
-            in_args += a + f" arg{i}"
-            call_args += f" ng2mpi(arg{i})"
+            in_args += arg + f" arg{i}"
+            if not arg.startswith("NG_"):
+                # plain type (like int, int *, etc.), just pass the argument along
+                call_args += f" arg{i}"
+            elif count is None:
+                # MPI type (by value or pointer), but just one object, no arrays
+                call_args += f" ng2mpi(arg{i})"
+            else:
+                # arrays of MPI types, we need to copy them due to incompatible size
+                call_args += f" ng2mpi(arg{i}, arg{count})"
         code += f"NG_{name} = []({in_args})->{ret} {{ return {name}({call_args}); }};\n"
 
     for _, name in constants:
