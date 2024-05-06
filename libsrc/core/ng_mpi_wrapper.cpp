@@ -15,9 +15,18 @@ using std::endl;
 namespace ngcore {
 
 static std::unique_ptr<SharedLibrary> mpi_lib, ng_mpi_lib;
+static bool need_mpi_finalize = false;
 
-void InitMPI(std::filesystem::path mpi_lib_path,
-             std::filesystem::path ng_libs_dir) {
+struct MPIFinalizer {
+  ~MPIFinalizer() {
+    if (need_mpi_finalize) {
+      cout << IM(5) << "Calling MPI_Finalize" << endl;
+      NG_MPI_Finalize();
+    }
+  }
+} mpi_finalizer;
+
+void InitMPI(std::filesystem::path mpi_lib_path) {
   if (ng_mpi_lib) return;
   cout << IM(3) << "InitMPI" << endl;
 
@@ -50,6 +59,7 @@ void InitMPI(std::filesystem::path mpi_lib_path,
     pchar *argv = &args[0];
     cout << IM(5) << "Calling MPI_Init" << endl;
     mpi_init(&argc, (char ***)argv);
+    need_mpi_finalize = true;
   }
 
   char version_string[65536];

@@ -19,8 +19,7 @@ namespace ngcore {
 
 NGCORE_API void InitMPI(
     std::filesystem::path mpi_lib_path = std::string("libmpi") +
-                                         NETGEN_SHARED_LIBRARY_SUFFIX,
-    std::filesystem::path ng_libs_dir = "");
+                                         NETGEN_SHARED_LIBRARY_SUFFIX);
 NGCORE_API extern std::string mpi_library_version;
 
 inline void not_implemented() { throw std::runtime_error("Not implemented"); }
@@ -86,5 +85,5 @@ NGCORE_API extern py::handle (*NG_MPI_CommToMPI4Py)(NG_MPI_Comm);
 
 }  // namespace ngcore
 
-#endif // PARALLEL
+#endif  // PARALLEL
 #endif  // NG_MPI_HPP_INCLUDED

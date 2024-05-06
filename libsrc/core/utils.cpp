@@ -16,6 +16,7 @@
 #include <filesystem>
 #include <iostream>
 #include <regex>
+#include <string>
 #include <thread>
 
 #include "ngstream.hpp"
@@ -178,7 +179,7 @@ namespace ngcore
     lib_name = lib_name_;
 #ifdef WIN32
     lib = LoadLibrary(lib_name.wstring().c_str());
-    if (!lib) throw std::runtime_error(string("Could not load library ") + lib_name.string());
+    if (!lib) throw std::runtime_error(std::wstring("Could not load library ") + lib_name.wstring());
 #else // WIN32
     auto flags = RTLD_NOW;
     if (global) flags |= RTLD_GLOBAL;
