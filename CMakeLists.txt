@@ -338,7 +338,7 @@ endif (USE_PYTHON)
 add_library(netgen_metis INTERFACE)
 if (USE_MPI)
     set(MPI_DETERMINE_LIBRARY_VERSION TRUE)
-    find_package(MPI REQUIRED)
+    find_package(MPI)
 
     find_package(METIS REQUIRED)
     target_include_directories(netgen_metis INTERFACE ${METIS_INCLUDE_DIR})
