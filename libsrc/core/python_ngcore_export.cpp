@@ -40,7 +40,7 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
   #ifdef PARALLEL
   py::class_<NG_MPI_Comm> (m, "_NG_MPI_Comm")
           ;
-  m.def("InitMPI", &InitMPI);
+  m.def("InitMPI", &InitMPI, py::arg("mpi_library_path")=nullopt);
   #endif // PARALLEL
 
   py::class_<BitArray, shared_ptr<BitArray>> (m, "BitArray")

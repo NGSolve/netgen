@@ -6,6 +6,7 @@
 
 #include "ng_mpi.hpp"
 #include "ngstream.hpp"
+#include "python_ngcore.hpp"
 #include "utils.hpp"
 
 using std::cerr;
@@ -26,70 +27,95 @@ struct MPIFinalizer {
   }
 } mpi_finalizer;
 
-void InitMPI(std::filesystem::path mpi_lib_path) {
+void InitMPI(std::optional<std::filesystem::path> mpi_lib_path) {
   if (ng_mpi_lib) return;
+
   cout << IM(3) << "InitMPI" << endl;
 
-  typedef void (*get_version_handle)(char *, int *);
-  typedef int (*init_handle)(int *, char ***);
-  typedef int (*mpi_initialized_handle)(int *);
+  std::string vendor = "";
+  std::string ng_lib_name = "";
+  std::string mpi4py_lib_file = "";
+
+  if (mpi_lib_path) {
+    // Dynamic load of given shared MPI library
+    // Then call MPI_Init, read the library version and set the vender name
+    try {
+      typedef int (*init_handle)(int *, char ***);
+      typedef int (*mpi_initialized_handle)(int *);
+      mpi_lib =
+          std::make_unique<SharedLibrary>(*mpi_lib_path, std::nullopt, true);
+      auto mpi_init = mpi_lib->GetSymbol<init_handle>("MPI_Init");
+      auto mpi_initialized =
+          mpi_lib->GetSymbol<mpi_initialized_handle>("MPI_Initialized");
+
+      int flag = 0;
+      mpi_initialized(&flag);
+      if (!flag) {
+        typedef const char *pchar;
+        int argc = 1;
+        pchar args[] = {"netgen", nullptr};
+        pchar *argv = &args[0];
+        cout << IM(5) << "Calling MPI_Init" << endl;
+        mpi_init(&argc, (char ***)argv);
+        need_mpi_finalize = true;
+      }
+
+      char c_version_string[65536];
+      c_version_string[0] = '\0';
+      int result_len = 0;
+      typedef void (*get_version_handle)(char *, int *);
+      auto get_version =
+          mpi_lib->GetSymbol<get_version_handle>("MPI_Get_library_version");
+      get_version(c_version_string, &result_len);
+      std::string version = c_version_string;
+
+      if (version.substr(0, 8) == "Open MPI")
+        vendor = "Open MPI";
+      else if (version.substr(0, 5) == "MPICH")
+        vendor = "MPICH";
+      else if (version.substr(0, 5) == "Microsoft MPI")
+        vendor = "Microsoft MPI";
+      else
+        throw std::runtime_error(
+            std::string("Unknown MPI version: " + version));
+    } catch (std::runtime_error &e) {
+      cerr << "Could not load MPI: " << e.what() << endl;
+      throw e;
+    }
+  } else {
+    // Use mpi4py to init MPI library and get the vendor name
+    auto mpi4py = py::module::import("mpi4py.MPI");
+    vendor = mpi4py.attr("get_vendor")()[py::int_(0)].cast<std::string>();
+
+#ifndef WIN32
+    // Load mpi4py library (it exports all MPI symbols) to have all MPI symbols
+    // available before the ng_mpi wrapper is loaded This is not necessary on
+    // windows as the matching mpi dll is linked to the ng_mpi wrapper directly
+    mpi4py_lib_file = mpi4py.attr("__file__").cast<std::string>();
+    mpi_lib =
+        std::make_unique<SharedLibrary>(mpi4py_lib_file, std::nullopt, true);
+#endif  // WIN32
+  }
+
+  if (vendor == "Open MPI")
+    ng_lib_name = "ng_openmpi";
+  else if (vendor == "MPICH")
+    ng_lib_name = "ng_mpich";
+  else if (vendor == "Microsoft MPI")
+    ng_lib_name = "ng_msmpi";
+  else
+    throw std::runtime_error("Unknown MPI vendor: " + vendor);
+
+  // Load the ng_mpi wrapper and call ng_init_mpi to set all function pointers
   typedef void (*ng_init_handle)();
-
-  init_handle mpi_init;
-  mpi_initialized_handle mpi_initialized;
-  get_version_handle get_version;
-
-  mpi_lib = std::make_unique<SharedLibrary>(mpi_lib_path, std::nullopt, true);
-
-  try {
-    mpi_init = GetSymbol<init_handle>("MPI_Init");
-    mpi_initialized = GetSymbol<mpi_initialized_handle>("MPI_Initialized");
-    get_version = GetSymbol<get_version_handle>("MPI_Get_library_version");
-  } catch (std::runtime_error &e) {
-    cerr << "Could not load MPI symbols: " << e.what() << endl;
-    throw e;
-  }
-
-  int flag = 0;
-  mpi_initialized(&flag);
-  if (!flag) {
-    typedef const char *pchar;
-    int argc = 1;
-    pchar args[] = {"netgen", nullptr};
-    pchar *argv = &args[0];
-    cout << IM(5) << "Calling MPI_Init" << endl;
-    mpi_init(&argc, (char ***)argv);
-    need_mpi_finalize = true;
-  }
-
-  char version_string[65536];
-  int resultlen = 0;
-  get_version(version_string, &resultlen);
-  mpi_library_version = version_string;
-  cout << IM(7) << "MPI version: " << version_string << endl;
-
-  std::string libname = "";
-  if (mpi_library_version.substr(0, 8) == "Open MPI") {
-    cout << IM(5) << "Have Open MPI" << endl;
-    libname = std::string("libng_openmpi") + NETGEN_SHARED_LIBRARY_SUFFIX;
-  } else if (mpi_library_version.substr(0, 5) == "MPICH") {
-    cout << IM(5) << "Have MPICH" << endl;
-    libname = std::string("libng_mpich") + NETGEN_SHARED_LIBRARY_SUFFIX;
-  } else
-    cerr << "Unknown MPI version, skipping init: " << version_string << endl;
-
-  if (libname.size()) {
-    ng_mpi_lib = std::make_unique<SharedLibrary>(libname);
-    auto ng_init = ng_mpi_lib->GetSymbol<ng_init_handle>("ng_init_mpi");
-    ng_init();
-  }
+  ng_mpi_lib = std::make_unique<SharedLibrary>(ng_lib_name);
+  ng_mpi_lib->GetSymbol<ng_init_handle>("ng_init_mpi")();
+  std::cout << IM(3) << "MPI wrapper loaded, vendor: " << vendor << endl;
 }
 
 static std::runtime_error no_mpi() {
   return std::runtime_error("MPI not enabled");
 }
-
-std::string mpi_library_version = "";
 
 #if defined(NG_PYTHON) && defined(NG_MPI4PY)
 decltype(NG_MPI_CommFromMPI4Py) NG_MPI_CommFromMPI4Py =

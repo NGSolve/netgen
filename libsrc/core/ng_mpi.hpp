@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <optional>
 #include <string>
 
 #include "ngcore_api.hpp"
@@ -18,9 +19,7 @@ namespace py = pybind11;
 namespace ngcore {
 
 NGCORE_API void InitMPI(
-    std::filesystem::path mpi_lib_path = std::string("libmpi") +
-                                         NETGEN_SHARED_LIBRARY_SUFFIX);
-NGCORE_API extern std::string mpi_library_version;
+    std::optional<std::filesystem::path> mpi_lib_path = std::nullopt);
 
 inline void not_implemented() { throw std::runtime_error("Not implemented"); }
 

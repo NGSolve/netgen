@@ -15,6 +15,15 @@
 namespace py = pybind11;
 #endif
 
+#ifdef MSMPI_VER
+int MPI_Comm_create_group(MPI_Comm arg0, MPI_Group arg1, int arg2,
+                          MPI_Comm* arg3) {
+  throw std::runtime_error(
+      "MPI_Comm_create_group not supported on Microsoft MPI");
+}
+static MPI_Datatype MPI_CXX_DOUBLE_COMPLEX;
+#endif  // MSMPI_VER
+
 namespace ngcore {
 
 static_assert(sizeof(MPI_Status) <= sizeof(NG_MPI_Status), "Size mismatch");
@@ -29,7 +38,7 @@ NG_MPI_Status* mpi2ng(MPI_Status* status) {
   return reinterpret_cast<NG_MPI_Status*>(status);
 }
 
-#ifndef MPICH
+#if !defined(MPICH) && !defined(MSMPI_VER)
 NG_MPI_Comm mpi2ng(MPI_Comm comm) { return reinterpret_cast<uintptr_t>(comm); }
 #endif
 
@@ -140,7 +149,9 @@ int ng2mpi(int value) { return value; }
 
 using namespace ngcore;
 
-NGCORE_API_EXPORT extern "C" void ng_init_mpi();
+extern "C" {
+NGCORE_API_EXPORT void ng_init_mpi();
+}
 
 static bool imported_mpi4py = false;
 
