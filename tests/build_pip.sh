@@ -12,7 +12,7 @@ for pyversion in 312
 do
     export PYDIR="/opt/python/cp${pyversion}-cp${pyversion}/bin"
     echo $PYDIR
-    $PYDIR/pip install -U pytest-check numpy wheel scikit-build pybind11-stubgen
+    $PYDIR/pip install -U pytest-check numpy wheel scikit-build pybind11-stubgen mpi4py
 
     rm -rf _skbuild
     NETGEN_ARCH=avx2 $PYDIR/pip wheel .
