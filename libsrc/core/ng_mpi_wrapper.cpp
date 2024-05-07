@@ -72,8 +72,10 @@ void InitMPI(std::optional<std::filesystem::path> mpi_lib_path) {
         vendor = "Open MPI";
       else if (version.substr(0, 5) == "MPICH")
         vendor = "MPICH";
-      else if (version.substr(0, 5) == "Microsoft MPI")
+      else if (version.substr(0, 13) == "Microsoft MPI")
         vendor = "Microsoft MPI";
+      else if (version.substr(0, 12) == "Intel(R) MPI")
+        vendor = "Intel MPI";
       else
         throw std::runtime_error(
             std::string("Unknown MPI version: " + version));
@@ -102,7 +104,9 @@ void InitMPI(std::optional<std::filesystem::path> mpi_lib_path) {
   else if (vendor == "MPICH")
     ng_lib_name = "ng_mpich";
   else if (vendor == "Microsoft MPI")
-    ng_lib_name = "ng_msmpi";
+    ng_lib_name = "ng_microsoft_mpi";
+  else if (vendor == "Intel MPI")
+    ng_lib_name = "ng_intel_mpi";
   else
     throw std::runtime_error("Unknown MPI vendor: " + vendor);
 

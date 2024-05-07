@@ -141,6 +141,10 @@ if(USE_MPI)
     set(MPICH_INCLUDE_DIR ${MPI_C_INCLUDE_PATH})
   endif()
 
+  if(MPI_C_LIBRARY_VERSION_STRING MATCHES "Intel.*")
+    set(INTEL_MPI_INCLUDE_DIR ${MPI_C_INCLUDE_PATH})
+  endif()
+
   if(OPENMPI_INCLUDE_DIR)
     build_mpi_variant(openmpi ${OPENMPI_INCLUDE_DIR})
   endif()
