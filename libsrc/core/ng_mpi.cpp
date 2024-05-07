@@ -34,8 +34,6 @@ static_assert(alignof(MPI_Status) <= alignof(NG_MPI_Status), "Size mismatch");
 int mpi2ng(int value) { return value; }
 void* mpi2ng(void* ptr) { return ptr; }
 
-// TODO: When we are dealing with arrays of multiple MPI_Statuses, we need to
-// copy them together in continuous memory
 NG_MPI_Status* mpi2ng(MPI_Status* status) {
   return reinterpret_cast<NG_MPI_Status*>(status);
 }
