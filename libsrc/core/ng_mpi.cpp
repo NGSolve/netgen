@@ -1,3 +1,5 @@
+#define OMPI_SKIP_MPICXX
+
 #include "ng_mpi.hpp"
 
 #include <mpi.h>
