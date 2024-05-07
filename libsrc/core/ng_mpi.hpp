@@ -70,8 +70,8 @@ struct NG_MPI_Group {
 };
 
 struct NG_MPI_Aint {
-  uintptr_t value = 0;
-  NG_MPI_Aint(uintptr_t value_) : value(value_) {}
+  intptr_t value = 0;
+  NG_MPI_Aint(intptr_t value_) : value(value_) {}
   NG_MPI_Aint() = default;
 };
 
