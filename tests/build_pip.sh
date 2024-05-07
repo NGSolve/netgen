@@ -1,7 +1,7 @@
 set -e
 ulimit -n 1024000 # lower open file limit, seems to affect performance
 yum -y update
-yum -y install ninja-build fontconfig-devel tk-devel tcl-devel libXmu-devel mesa-libGLU-devel ccache
+yum -y install ninja-build fontconfig-devel tk-devel tcl-devel libXmu-devel mesa-libGLU-devel ccache mpich-3.2-devel openmpi-devel
 
 rm -rf wheelhouse
 export NETGEN_CCACHE=1
