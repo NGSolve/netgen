@@ -36,6 +36,7 @@ functions = [
         ("int", "MPI_Type_free", "MPI_Datatype*"),
         ("int", "MPI_Type_get_extent", "MPI_Datatype", "MPI_Aint*", "MPI_Aint*"),
         ("int", "MPI_Type_indexed", "int", "int*:0", "int*:0", "MPI_Datatype", "MPI_Datatype*"),
+        ("int", "MPI_Type_size", "MPI_Datatype*", "int*"),
         ("int", "MPI_Wait", "MPI_Request*", "MPI_Status*"),
         ("int", "MPI_Waitall", "int", "MPI_Request*:0", "MPI_Status*"),
         ("int", "MPI_Waitany", "int", "MPI_Request*:0", "int*", "MPI_Status*"),
