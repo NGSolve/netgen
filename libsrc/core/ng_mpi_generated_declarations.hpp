@@ -35,7 +35,7 @@ NGCORE_API extern int (*NG_MPI_Type_create_struct)(int, int*, NG_MPI_Aint*, NG_M
 NGCORE_API extern int (*NG_MPI_Type_free)(NG_MPI_Datatype*);
 NGCORE_API extern int (*NG_MPI_Type_get_extent)(NG_MPI_Datatype, NG_MPI_Aint*, NG_MPI_Aint*);
 NGCORE_API extern int (*NG_MPI_Type_indexed)(int, int*, int*, NG_MPI_Datatype, NG_MPI_Datatype*);
-NGCORE_API extern int (*NG_MPI_Type_size)(NG_MPI_Datatype*, int*);
+NGCORE_API extern int (*NG_MPI_Type_size)(NG_MPI_Datatype, int*);
 NGCORE_API extern int (*NG_MPI_Wait)(NG_MPI_Request*, NG_MPI_Status*);
 NGCORE_API extern int (*NG_MPI_Waitall)(int, NG_MPI_Request*, NG_MPI_Status*);
 NGCORE_API extern int (*NG_MPI_Waitany)(int, NG_MPI_Request*, int*, NG_MPI_Status*);
