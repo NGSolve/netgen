@@ -353,7 +353,6 @@ if (USE_MPI)
       message(STATUS "Found mpi4py: ${MPI4PY_INCLUDE_DIR}")
     endif(USE_MPI4PY AND USE_PYTHON)
 endif (USE_MPI)
-install(TARGETS netgen_metis ${NG_INSTALL_DIR})
 
 #######################################################################
 add_library(occ_libs INTERFACE IMPORTED)
