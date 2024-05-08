@@ -1,7 +1,18 @@
 set -e
 ulimit -n 1024000 # lower open file limit, seems to affect performance
 yum -y update
-yum -y install ninja-build fontconfig-devel tk-devel tcl-devel libXmu-devel mesa-libGLU-devel ccache mpich-3.2-devel openmpi-devel
+yum -y install ninja-build fontconfig-devel tk-devel tcl-devel libXmu-devel mesa-libGLU-devel ccache dpkg
+
+
+curl http://ftp.de.debian.org/debian/pool/main/o/openmpi/libopenmpi-dev_4.1.6-13.3_amd64.deb -o openmpi-dev.deb
+dpkg-deb -R openmpi-dev.deb /opt/openmpi
+mv /opt/openmpi/usr/lib/x86_64-linux-gnu/openmpi/include /opt/openmpi/include
+
+
+curl http://ftp.de.debian.org/debian/pool/main/m/mpich/libmpich-dev_4.2.0-5.1_amd64.deb -o mpich.deb
+dpkg-deb -R mpich.deb /opt/mpich
+mv /opt/mpich/usr/lib/x86_64-linux-gnu/mpich/include /opt/mpich/include
+
 
 rm -rf wheelhouse
 export NETGEN_CCACHE=1

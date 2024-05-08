@@ -98,8 +98,8 @@ elif 'linux' in sys.platform:
         '-DTCL_INCLUDE_PATH=/usr/include',
         '-DTK_INCLUDE_PATH=/usr/include',
     ]
-    mpich_include = '/usr/include/mpich-3.2-x86_64'
-    openmpi_include = '/usr/include/openmpi-x86_64'
+    mpich_include = '/opt/mpich/include'
+    openmpi_include = '/opt/openmpi/include'
     if os.path.exists(mpich_include+'/mpi.h'):
         have_mpi = True
         cmake_args += [
