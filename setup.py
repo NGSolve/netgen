@@ -10,6 +10,8 @@ from subprocess import check_output
 
 setup_requires = ['pybind11-stubgen==2.5']
 
+pyprefix = pathlib.Path(sys.prefix).as_posix()
+
 def install_filter(cmake_manifest):
     print(cmake_manifest)
     return cmake_manifest
@@ -83,11 +85,14 @@ elif 'win' in sys.platform:
         '-DNG_INSTALL_DIR_CMAKE=netgen/cmake',
         '-DNG_INSTALL_DIR_INCLUDE=netgen/include',
     ]
-    if os.path.exists('C:/python/312/Library/lib/impi.lib'):
+    py_libdir = pathlib.Path(sys.prefix) / 'Library'
+    lib_file = py_libdir / 'impi.lib'
+    include_dir = py_libdir / 'include'
+    if lib_file.exists():
         have_mpi = True
         cmake_args += [
-            '-DINTEL_MPI_INCLUDE_DIR=C:/python/312/Library/include',
-            '-DINTEL_MPI_LIBRARY=C:/python/312/Library/lib/impi.lib',
+            f'-DINTEL_MPI_INCLUDE_DIR={include_dir.as_posix()}',
+            f'-DINTEL_MPI_LIBRARY={lib_file.as_posix()}',
         ]
 elif 'linux' in sys.platform:
     name_dir = name.replace('-','_')
@@ -108,7 +113,7 @@ elif 'linux' in sys.platform:
     if os.path.exists(openmpi_include+'/mpi.h'):
         have_mpi = True
         cmake_args += [
-            f'-DOPENMPI_INCLUDE_DIR={mpich_include}',
+            f'-DOPENMPI_INCLUDE_DIR={openmpi_include}',
         ]
     packages = []
 
@@ -130,7 +135,6 @@ cmake_args += [
         '-DBUILD_STUB_FILES=ON',
 ]
 
-pyprefix = pathlib.Path(sys.prefix).as_posix()
 cmake_args += [f'-DCMAKE_PREFIX_PATH={pyprefix}', f'-DPython3_ROOT_DIR={pyprefix}']
 
 setup(
