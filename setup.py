@@ -86,7 +86,7 @@ elif 'win' in sys.platform:
         '-DNG_INSTALL_DIR_INCLUDE=netgen/include',
     ]
     py_libdir = pathlib.Path(sys.prefix) / 'Library'
-    lib_file = py_libdir / 'impi.lib'
+    lib_file = py_libdir / 'lib' / 'impi.lib'
     include_dir = py_libdir / 'include'
     if lib_file.exists():
         have_mpi = True
