@@ -3,15 +3,24 @@
 #include "logging.hpp"
 #include "simd_generic.hpp"
 
-#ifndef WIN32
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#undef WIN32_LEAN_AND_MEAN
+#else // WIN32
 #include <cxxabi.h>
-#endif
+#include <dlfcn.h>
+#endif //WIN32
+//
 #include <array>
 #include <filesystem>
 #include <iostream>
 #include <regex>
+#include <string>
+#include <thread>
 
 #include "ngstream.hpp"
+
 
 namespace ngcore
 {
@@ -109,7 +118,7 @@ namespace ngcore
 
   const std::chrono::time_point<TClock> wall_time_start = TClock::now();
 
-  int printmessage_importance = 0;
+  int printmessage_importance = getenv("NG_MESSAGE_LEVEL") ? atoi(getenv("NG_MESSAGE_LEVEL")) : 0;
   bool NGSOStream :: glob_active = true;
 
   NGCORE_API int GetCompiledSIMDSize()
@@ -133,6 +142,92 @@ namespace ngcore
       path += ".temp_netgen_file_"+ToString(counter++)+"_"+ToString(GetTimeCounter());
       return path;
   }
+
+
+  SharedLibrary :: SharedLibrary(const std::filesystem::path & lib_name_, std::optional<std::filesystem::path> directory_to_delete_, bool global )
+      : lib_name(lib_name_),directory_to_delete(directory_to_delete_)
+  {
+    Load(lib_name, global);
+  }
+
+  SharedLibrary :: ~SharedLibrary()
+  {
+    Unload();
+    if(directory_to_delete)
+      for([[maybe_unused]] auto i : Range(5))
+      {
+        // on Windows, a (detached?) child process of the compiler/linker might still block the directory
+        // wait for it to finish (up to a second)
+        try
+        {
+          std::filesystem::remove_all(*directory_to_delete);
+          directory_to_delete = std::nullopt;
+          break;
+        }
+        catch(const std::exception &e)
+        {
+          std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        }
+      }
+    if(directory_to_delete)
+      std::cerr << "Could not delete " << directory_to_delete->string() << std::endl;
+  }
+
+  void SharedLibrary :: Load( const std::filesystem::path & lib_name_, bool global )
+  {
+    Unload();
+    lib_name = lib_name_;
+#ifdef WIN32
+    lib = LoadLibraryW(lib_name.wstring().c_str());
+    if (!lib) throw std::runtime_error(std::string("Could not load library ") + lib_name.string());
+#else // WIN32
+    auto flags = RTLD_NOW;
+    if (global) flags |= RTLD_GLOBAL;
+    lib = dlopen(lib_name.c_str(), flags);
+    if(lib == nullptr) throw std::runtime_error(dlerror());
+#endif // WIN32
+  }
+
+  void SharedLibrary :: Unload() {
+    if(lib)
+    {
+#ifdef WIN32
+      FreeLibrary((HMODULE)lib);
+#else // WIN32
+      int rc = dlclose(lib);
+      if(rc != 0) std::cerr << "Failed to close library " << lib_name << std::endl;
+#endif // WIN32
+    }
+  }
+
+  void* SharedLibrary :: GetRawSymbol( std::string func_name )
+  {
+#ifdef WIN32
+    void* func = GetProcAddress((HMODULE)lib, func_name.c_str());
+    if(func == nullptr)
+      throw std::runtime_error(std::string("Could not find function ") + func_name + " in library " + lib_name.string());
+#else // WIN32
+    void* func = dlsym(lib, func_name.c_str());
+    if(func == nullptr)
+        throw std::runtime_error(dlerror());
+#endif // WIN32
+
+    return func;
+  }
+
+  void* GetRawSymbol( std::string func_name )
+  {
+    void * func = nullptr;
+#ifdef WIN32
+    throw std::runtime_error("GetRawSymbol not implemented on WIN32");
+#else // WIN32
+    func = dlsym(RTLD_DEFAULT, func_name.c_str());
+    if(func == nullptr)
+        throw std::runtime_error(dlerror());
+#endif // WIN32
+    return func;
+  }
+
 
 } // namespace ngcore
 

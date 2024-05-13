@@ -215,7 +215,6 @@ endif(USE_CGNS)
 
 #######################################################################
 if(USE_MPI)
-  if(UNIX)
     if (METIS_DIR)
       message(STATUS "Using external METIS at: ${METIS_DIR}")
     else (METIS_DIR)
@@ -226,9 +225,6 @@ if(USE_MPI)
 	include(cmake/external_projects/metis.cmake)
       endif(NOT METIS_FOUND)
     endif(METIS_DIR)
-  else(UNIX)
-    find_package(METIS REQUIRED)
-  endif(UNIX)
 endif(USE_MPI)
 
 
@@ -246,6 +242,7 @@ set_vars( NETGEN_CMAKE_ARGS
   USE_GUI
   USE_PYTHON
   USE_MPI
+  USE_MPI_WRAPPER
   USE_VT
   USE_VTUNE
   USE_NUMA

@@ -25,7 +25,7 @@ namespace netgen
   class NetgenGeometry;
   using namespace std;
 
-  static constexpr int  MPI_TAG_MESH = 210;
+  static constexpr int  NG_MPI_TAG_MESH = 210;
   
 
   enum resthtype { RESTRICTH_FACE, RESTRICTH_EDGE, 

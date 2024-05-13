@@ -13,6 +13,7 @@
 extern const char *header;
 
 constexpr int MPI_PAJE_WRITER = 1;
+constexpr int ASSUMED_MPI_MAX_PROCESSOR_NAME = 256;
 
 namespace ngcore
 {
@@ -24,7 +25,7 @@ namespace ngcore
     if(id<NgProfiler::SIZE)
       return NgProfiler::GetName(id);
 
-    NgMPI_Comm comm(MPI_COMM_WORLD);
+    NgMPI_Comm comm(NG_MPI_COMM_WORLD);
     return NgProfiler::GetName(id-NgProfiler::SIZE*comm.Rank());
 #endif // PARALLEL
   }
@@ -70,7 +71,7 @@ namespace ngcore
 
     // sync start time when running in parallel
 #ifdef PARALLEL
-    NgMPI_Comm comm(MPI_COMM_WORLD);
+    NgMPI_Comm comm(NG_MPI_COMM_WORLD);
     for([[maybe_unused]] auto i : Range(5))
         comm.Barrier();
 #endif // PARALLEL
@@ -112,7 +113,7 @@ namespace ngcore
     for(auto i : IntRange(n_memory_events_at_start, memory_events.size()))
       memory_events[i].time -= start_time;
 
-    NgMPI_Comm comm(MPI_COMM_WORLD);
+    NgMPI_Comm comm(NG_MPI_COMM_WORLD);
 
     if(comm.Size()==1)
     {
@@ -488,7 +489,7 @@ namespace ngcore
 
 #ifdef PARALLEL
       // Hostnames
-      NgMPI_Comm comm(MPI_COMM_WORLD);
+      NgMPI_Comm comm(NG_MPI_COMM_WORLD);
       // auto rank = comm.Rank();
       auto nranks = comm.Size();
       if(nranks>1)
@@ -496,9 +497,9 @@ namespace ngcore
         nthreads = nranks;
         thread_aliases.reserve(nthreads);
 
-        std::array<char, MPI_MAX_PROCESSOR_NAME+1> ahostname;
+        std::array<char, ASSUMED_MPI_MAX_PROCESSOR_NAME+1> ahostname;
         int len;
-        MPI_Get_processor_name(ahostname.data(), &len);
+        NG_MPI_Get_processor_name(ahostname.data(), &len);
         std::string hostname = ahostname.data();
 
         std::map<std::string, int> host_map;
@@ -854,15 +855,15 @@ namespace ngcore
     {
 #ifdef PARALLEL
       // Hostname
-      NgMPI_Comm comm(MPI_COMM_WORLD);
+      NgMPI_Comm comm(NG_MPI_COMM_WORLD);
       // auto rank = comm.Rank();
       // auto nranks = comm.Size();
 
       std::string hostname;
         {
-          std::array<char, MPI_MAX_PROCESSOR_NAME+1> ahostname;
+          std::array<char, ASSUMED_MPI_MAX_PROCESSOR_NAME+1> ahostname;
           int len;
-          MPI_Get_processor_name(ahostname.data(), &len);
+          NG_MPI_Get_processor_name(ahostname.data(), &len);
           hostname = ahostname.data();
         }
 

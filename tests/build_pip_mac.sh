@@ -1,4 +1,5 @@
 set -e
+
 rm -rf _skbuild dist
 
 export PYDIR=/Library/Frameworks/Python.framework/Versions/$1/bin
