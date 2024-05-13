@@ -10,7 +10,7 @@
 #include "hashtable.hpp"
 #include "localheap.hpp"
 #include "logging.hpp"
-#include "mpi_wrapper.hpp"
+// #include "mpi_wrapper.hpp"
 #include "profiler.hpp"
 #include "signal.hpp"
 #include "simd.hpp"

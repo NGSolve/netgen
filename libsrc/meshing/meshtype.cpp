@@ -18,125 +18,125 @@ namespace netgen
 
 
 #ifdef PARALLEL
-  MPI_Datatype MeshPoint :: MyGetMPIType ( )
+  NG_MPI_Datatype MeshPoint :: MyGetMPIType ( )
   { 
-    static MPI_Datatype type = MPI_DATATYPE_NULL;
-    static MPI_Datatype htype = MPI_DATATYPE_NULL;
-    if (type == MPI_DATATYPE_NULL)
+    static NG_MPI_Datatype type = NG_MPI_DATATYPE_NULL;
+    static NG_MPI_Datatype htype = NG_MPI_DATATYPE_NULL;
+    if (type == NG_MPI_DATATYPE_NULL)
       {
 	MeshPoint hp;
 	int blocklen[] = { 3, 1, 1 };
-	MPI_Aint displ[] = { (char*)&hp.x[0] - (char*)&hp,
+	NG_MPI_Aint displ[] = { (char*)&hp.x[0] - (char*)&hp,
 			     (char*)&hp.layer - (char*)&hp,
 			     (char*)&hp.singular - (char*)&hp };
-	MPI_Datatype types[] = { MPI_DOUBLE, MPI_INT, MPI_DOUBLE };
+	NG_MPI_Datatype types[] = { NG_MPI_DOUBLE, NG_MPI_INT, NG_MPI_DOUBLE };
 	// *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
 	// *testout << "sizeof = " << sizeof (MeshPoint) << endl;
-	MPI_Type_create_struct (3, blocklen, displ, types, &htype);
-	MPI_Type_commit ( &htype );
-	MPI_Aint lb, ext;
-	MPI_Type_get_extent (htype, &lb, &ext);
+	NG_MPI_Type_create_struct (3, blocklen, displ, types, &htype);
+	NG_MPI_Type_commit ( &htype );
+	NG_MPI_Aint lb, ext;
+	NG_MPI_Type_get_extent (htype, &lb, &ext);
 	// *testout << "lb = " << lb << endl;
 	// *testout << "ext = " << ext << endl;
 	ext = sizeof (MeshPoint);
-	MPI_Type_create_resized (htype, lb, ext, &type);
-	MPI_Type_commit ( &type );
+	NG_MPI_Type_create_resized (htype, lb, ext, &type);
+	NG_MPI_Type_commit ( &type );
 	
       }
     return type;
   }
 
 
-  MPI_Datatype Element2d :: MyGetMPIType ( )
+  NG_MPI_Datatype Element2d :: MyGetMPIType ( )
   { 
-    static MPI_Datatype type = MPI_DATATYPE_NULL;
-    static MPI_Datatype htype = MPI_DATATYPE_NULL;
-    if (type == MPI_DATATYPE_NULL)
+    static NG_MPI_Datatype type = NG_MPI_DATATYPE_NULL;
+    static NG_MPI_Datatype htype = NG_MPI_DATATYPE_NULL;
+    if (type == NG_MPI_DATATYPE_NULL)
       {
 	Element2d hel;
 	int blocklen[] = { ELEMENT2D_MAXPOINTS, 1, 1, 1 };
-	MPI_Aint displ[] =
+	NG_MPI_Aint displ[] =
           { (char*)&hel.pnum[0] - (char*)&hel,
             (char*)&hel.index - (char*)&hel,
             (char*)&hel.typ - (char*)&hel,
             (char*)&hel.np - (char*)&hel
           };
-	MPI_Datatype types[] = { GetMPIType<PointIndex>(), GetMPIType(hel.index),
+	NG_MPI_Datatype types[] = { GetMPIType<PointIndex>(), GetMPIType(hel.index),
                                  GetMPIType(hel.typ), GetMPIType(hel.np) };
 	// *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
 	// *testout << "sizeof = " << sizeof (MeshPoint) << endl;
-	MPI_Type_create_struct (4, blocklen, displ, types, &htype);
-	MPI_Type_commit ( &htype );
-	MPI_Aint lb, ext;
-	MPI_Type_get_extent (htype, &lb, &ext);
+	NG_MPI_Type_create_struct (4, blocklen, displ, types, &htype);
+	NG_MPI_Type_commit ( &htype );
+	NG_MPI_Aint lb, ext;
+	NG_MPI_Type_get_extent (htype, &lb, &ext);
 	// *testout << "lb = " << lb << endl;
 	// *testout << "ext = " << ext << endl;
 	ext = sizeof (Element2d);
-	MPI_Type_create_resized (htype, lb, ext, &type);
-	MPI_Type_commit ( &type );
+	NG_MPI_Type_create_resized (htype, lb, ext, &type);
+	NG_MPI_Type_commit ( &type );
       }
     return type;
   }
 
-  MPI_Datatype Element :: MyGetMPIType ( )
+  NG_MPI_Datatype Element :: MyGetMPIType ( )
   {
-    static MPI_Datatype type = MPI_DATATYPE_NULL;
-    static MPI_Datatype htype = MPI_DATATYPE_NULL;
-    if (type == MPI_DATATYPE_NULL)
+    static NG_MPI_Datatype type = NG_MPI_DATATYPE_NULL;
+    static NG_MPI_Datatype htype = NG_MPI_DATATYPE_NULL;
+    if (type == NG_MPI_DATATYPE_NULL)
       {
 	Element hel;
 	int blocklen[] = { ELEMENT_MAXPOINTS, 1, 1, 1 };
-	MPI_Aint displ[] =
+	NG_MPI_Aint displ[] =
           { (char*)&hel.pnum[0] - (char*)&hel,
             (char*)&hel.index - (char*)&hel,
             (char*)&hel.typ - (char*)&hel,
             (char*)&hel.np - (char*)&hel
           };
-	MPI_Datatype types[] = { GetMPIType<PointIndex>(), GetMPIType(hel.index),
+	NG_MPI_Datatype types[] = { GetMPIType<PointIndex>(), GetMPIType(hel.index),
                                  GetMPIType(hel.typ), GetMPIType(hel.np) };
 	// *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
 	// *testout << "sizeof = " << sizeof (MeshPoint) << endl;
-	MPI_Type_create_struct (4, blocklen, displ, types, &htype);
-	MPI_Type_commit ( &htype );
-	MPI_Aint lb, ext;
-	MPI_Type_get_extent (htype, &lb, &ext);
+	NG_MPI_Type_create_struct (4, blocklen, displ, types, &htype);
+	NG_MPI_Type_commit ( &htype );
+	NG_MPI_Aint lb, ext;
+	NG_MPI_Type_get_extent (htype, &lb, &ext);
 	// *testout << "lb = " << lb << endl;
 	// *testout << "ext = " << ext << endl;
 	ext = sizeof (Element);
-	MPI_Type_create_resized (htype, lb, ext, &type);
-	MPI_Type_commit ( &type );
+	NG_MPI_Type_create_resized (htype, lb, ext, &type);
+	NG_MPI_Type_commit ( &type );
       }
     return type;
   }
 
-  MPI_Datatype Segment :: MyGetMPIType ( )
+  NG_MPI_Datatype Segment :: MyGetMPIType ( )
   {
-    static MPI_Datatype type = MPI_DATATYPE_NULL;
-    static MPI_Datatype htype = MPI_DATATYPE_NULL;
-    if (type == MPI_DATATYPE_NULL)
+    static NG_MPI_Datatype type = NG_MPI_DATATYPE_NULL;
+    static NG_MPI_Datatype htype = NG_MPI_DATATYPE_NULL;
+    if (type == NG_MPI_DATATYPE_NULL)
       {
 	Segment hel;
 	int blocklen[] = { 3, 1, 1, 1 };
-	MPI_Aint displ[] =
+	NG_MPI_Aint displ[] =
           { (char*)&hel.pnums[0] - (char*)&hel,
             (char*)&hel.edgenr - (char*)&hel,
             (char*)&hel.cd2i - (char*)&hel,
             (char*)&hel.si - (char*)&hel
           };
-	MPI_Datatype types[] = {
+	NG_MPI_Datatype types[] = {
           GetMPIType<PointIndex>(), GetMPIType(hel.edgenr), GetMPIType(hel.cd2i), GetMPIType(hel.si)
         };
 	// *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
 	// *testout << "sizeof = " << sizeof (MeshPoint) << endl;
-	MPI_Type_create_struct (4, blocklen, displ, types, &htype);
-	MPI_Type_commit ( &htype );
-	MPI_Aint lb, ext;
-	MPI_Type_get_extent (htype, &lb, &ext);
+	NG_MPI_Type_create_struct (4, blocklen, displ, types, &htype);
+	NG_MPI_Type_commit ( &htype );
+	NG_MPI_Aint lb, ext;
+	NG_MPI_Type_get_extent (htype, &lb, &ext);
 	// *testout << "lb = " << lb << endl;
 	// *testout << "ext = " << ext << endl;
 	ext = sizeof (Segment);
-	MPI_Type_create_resized (htype, lb, ext, &type);
-	MPI_Type_commit ( &type );
+	NG_MPI_Type_create_resized (htype, lb, ext, &type);
+	NG_MPI_Type_commit ( &type );
       }
     return type;
   }

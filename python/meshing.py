@@ -1,4 +1,5 @@
 from .libngpy._meshing import *
+from pyngcore import MPI_Comm
 
 class _MeshsizeObject:
     @property

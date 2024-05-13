@@ -1,3 +1,4 @@
+#include "pybind11/pytypes.h"
 #ifdef NG_PYTHON
 
 #include <regex>
@@ -22,52 +23,6 @@ public:
   ClearSolutionClass() { } 
   ~ClearSolutionClass() { Ng_ClearSolutionData(); }
 };
-
-
-#ifdef NG_MPI4PY
-#include <mpi4py.h>
-
-struct mpi4py_comm {
-  mpi4py_comm() = default;
-  mpi4py_comm(MPI_Comm value) : value(value) {}
-  operator MPI_Comm () { return value; }
-
-  MPI_Comm value;
-};
-
-namespace pybind11 { namespace detail {
-  template <> struct type_caster<mpi4py_comm> {
-    public:
-    PYBIND11_TYPE_CASTER(mpi4py_comm, _("mpi4py_comm"));
-
-      // Python -> C++
-      bool load(handle src, bool) {
-        PyObject *py_src = src.ptr();
-        // Check that we have been passed an mpi4py communicator
-        if (PyObject_TypeCheck(py_src, &PyMPIComm_Type)) {
-          // Convert to regular MPI communicator
-          value.value = *PyMPIComm_Get(py_src);
-        } else {
-          return false;
-        }
-
-        return !PyErr_Occurred();
-      }
-
-      // C++ -> Python
-      static handle cast(mpi4py_comm src,
-                         return_value_policy /* policy */,
-                         handle /* parent */)
-      {
-        // Create an mpi4py handle
-        return PyMPIComm_New(src.value);
-      }
-  };
-}} // namespace pybind11::detail
-
-#endif // NG_MPI4PY
-
-
 
 
 
@@ -101,9 +56,6 @@ static Transformation<3> global_trafo(Vec<3> (0,0,0));
 
 DLL_HEADER void ExportNetgenMeshing(py::module &m) 
 {
-#ifdef NG_MPI4PY
-  import_mpi4py();
-#endif // NG_MPI4PY
   py::register_exception<NgException>(m, "NgException");
   m.attr("_netgen_executable_started") = py::cast(netgen::netgen_executable_started);
   string script;
@@ -130,47 +82,6 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     ;
 
   py::implicitly_convertible<int, Identifications::ID_TYPE>();
-
-  py::class_<NgMPI_Comm> (m, "MPI_Comm")
-#ifdef NG_MPI4PY
-    .def(py::init([] (mpi4py_comm comm)
-                  {
-                    return NgMPI_Comm(comm);
-                  }))
-    .def_property_readonly ("mpi4py", [] (NgMPI_Comm comm) { return mpi4py_comm(comm); })
-#endif // NG_MPI4PY
-    .def_property_readonly ("rank", &NgMPI_Comm::Rank)
-    .def_property_readonly ("size", &NgMPI_Comm::Size)
-    .def("Barrier", &NgMPI_Comm::Barrier)
-    
-#ifdef PARALLEL
-    .def("WTime", [](NgMPI_Comm  & c) { return MPI_Wtime(); })
-#else
-    .def("WTime", [](NgMPI_Comm  & c) { return -1.0; })
-#endif
-    .def("Sum", [](NgMPI_Comm  & c, double x) { return c.AllReduce(x, MPI_SUM); })
-    .def("Min", [](NgMPI_Comm  & c, double x) { return c.AllReduce(x, MPI_MIN); })
-    .def("Max", [](NgMPI_Comm  & c, double x) { return c.AllReduce(x, MPI_MAX); })
-    .def("Sum", [](NgMPI_Comm  & c, int x) { return c.AllReduce(x, MPI_SUM); })
-    .def("Min", [](NgMPI_Comm  & c, int x) { return c.AllReduce(x, MPI_MIN); })
-    .def("Max", [](NgMPI_Comm  & c, int x) { return c.AllReduce(x, MPI_MAX); })
-    .def("Sum", [](NgMPI_Comm  & c, size_t x) { return c.AllReduce(x, MPI_SUM); })
-    .def("Min", [](NgMPI_Comm  & c, size_t x) { return c.AllReduce(x, MPI_MIN); })
-    .def("Max", [](NgMPI_Comm  & c, size_t x) { return c.AllReduce(x, MPI_MAX); })
-    .def("SubComm", [](NgMPI_Comm & c, std::vector<int> proc_list) {
-        Array<int> procs(proc_list.size());
-        for (int i = 0; i < procs.Size(); i++)
-          { procs[i] = proc_list[i]; }
-        if (!procs.Contains(c.Rank()))
-          { throw Exception("rank "+ToString(c.Rank())+" not in subcomm"); }
-	return c.SubCommunicator(procs);
-      }, py::arg("procs"));
-  ;
-
-
-#ifdef NG_MPI4PY
-  py::implicitly_convertible<mpi4py_comm, NgMPI_Comm>();
-#endif // NG_MPI4PY
 
   
   py::class_<NGDummyArgument>(m, "NGDummyArgument")

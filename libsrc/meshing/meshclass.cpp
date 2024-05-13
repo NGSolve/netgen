@@ -1710,7 +1710,7 @@ namespace netgen
             maxglob = max(globnum[pi], maxglob);
           }
         
-        maxglob = comm.AllReduce (maxglob, MPI_MAX);
+        maxglob = comm.AllReduce (maxglob, NG_MPI_MAX);
         int numglob = maxglob+1-PointIndex::BASE;
         if (comm.Rank() > 0)
           {
