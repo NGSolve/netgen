@@ -60,23 +60,6 @@ int main(int argc, char ** argv)
 {
   netgen::netgen_executable_started = true;
 
-#ifdef PARALLEL
-  int mpi_required = netgen::NG_MPI_THREAD_MULTIPLE;
-#ifdef VTRACE
-  mpi_required = NG_MPI_THREAD_SINGLE;
-#endif
-  int mpi_provided;
-  netgen::InitMPI();
-  netgen::NG_MPI_Init_thread(&argc, &argv, mpi_required, &mpi_provided);
-
-  netgen::NG_MPI_Comm_size(netgen::NG_MPI_COMM_WORLD, &netgen::ntasks);
-  netgen::NG_MPI_Comm_rank(netgen::NG_MPI_COMM_WORLD, &netgen::id);
-  
-  if(netgen::ntasks!=1)
-      throw ngcore::Exception("Netgen GUI cannot run MPI-parallel");
-
-#endif
-
   if ( netgen::id == 0 )
     {
       cout << "NETGEN-" << netgen::netgen_version << endl;
@@ -102,11 +85,6 @@ int main(int argc, char ** argv)
 
 #ifdef DEBUG
       cout << "You are running the debug version !" << endl;
-#endif
-
-
-#ifdef PARALLEL
-      cout << "Including MPI version " << netgen::NG_MPI_VERSION << '.' << netgen::NG_MPI_SUBVERSION << endl;
 #endif
     }
 
@@ -276,15 +254,6 @@ int main(int argc, char ** argv)
       Tcl_Exit(0);
     }
 
-#ifdef PARALLEL
-  else
-    {
-      // ParallelRun();
-      netgen::NG_MPI_Finalize();
-    }  
-
-#endif
-  
   return 0;		
 }
 
