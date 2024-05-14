@@ -24,6 +24,7 @@ namespace py = pybind11;
 
 namespace ngcore {
 
+NGCORE_API bool MPI_Loaded();
 NGCORE_API void InitMPI(
     std::optional<std::filesystem::path> mpi_lib_path = std::nullopt);
 
