@@ -57,6 +57,7 @@ namespace netgen
     if (t2 == -1) return false;
     if (swapped[t1] || swapped[t2]) return false;
     if (mesh[t2].IsDeleted()) return false;
+    if (mesh[t2].GetNP() != 3) return false;
 
     const int faceindex = mesh[t1].GetIndex();
     const int surfnr = mesh.GetFaceDescriptor (faceindex).SurfNr();

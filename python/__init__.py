@@ -35,8 +35,7 @@ if sys.platform.startswith('win'):
     v = sys.version_info
     if v.major == 3 and v.minor >= 8:
         os.add_dll_directory(_netgen_bin_dir)
-    else:
-        os.environ['PATH'] += ';'+_netgen_bin_dir
+    os.environ['PATH'] += ';'+_netgen_bin_dir
 
 del sys
 del os

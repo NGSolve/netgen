@@ -42,7 +42,12 @@ namespace ngcore
     static NGCORE_API level::level_enum global_level;
 
   public:
-    static void SetGlobalLoggingLevel( level::level_enum level ) { global_level = level; }
+    static auto SetGlobalLoggingLevel( level::level_enum level )
+    {
+      auto oldval = global_level;
+      global_level = level;
+      return oldval;
+    }
 
     std::shared_ptr<spdlog::logger> logger;
 

@@ -10,6 +10,8 @@ from subprocess import check_output
 
 setup_requires = ['pybind11-stubgen==2.5']
 
+pyprefix = pathlib.Path(sys.prefix).as_posix()
+
 def install_filter(cmake_manifest):
     print(cmake_manifest)
     return cmake_manifest
@@ -59,6 +61,7 @@ if 'NETGEN_CCACHE' in os.environ:
 
 packages = ['netgen', 'pyngcore']
 
+have_mpi = False
 if 'darwin' in sys.platform:
     cmake_args += [
         '-DNG_INSTALL_DIR_LIB=netgen',
@@ -68,6 +71,11 @@ if 'darwin' in sys.platform:
         '-DNG_INSTALL_DIR_INCLUDE=netgen/include',
         '-DNG_INSTALL_DIR_RES=share',
     ]
+    if os.path.exists('/usr/local/include/mpi.h'):
+        have_mpi = True
+        cmake_args += [
+            '-DOPENMPI_INCLUDE_DIR=/usr/local/include',
+        ]
 elif 'win' in sys.platform:
     cmake_args += [
         '-A Win64',
@@ -77,6 +85,15 @@ elif 'win' in sys.platform:
         '-DNG_INSTALL_DIR_CMAKE=netgen/cmake',
         '-DNG_INSTALL_DIR_INCLUDE=netgen/include',
     ]
+    py_libdir = pathlib.Path(sys.prefix) / 'Library'
+    lib_file = py_libdir / 'lib' / 'impi.lib'
+    include_dir = py_libdir / 'include'
+    if lib_file.exists():
+        have_mpi = True
+        cmake_args += [
+            f'-DINTEL_MPI_INCLUDE_DIR={include_dir.as_posix()}',
+            f'-DINTEL_MPI_LIBRARY={lib_file.as_posix()}',
+        ]
 elif 'linux' in sys.platform:
     name_dir = name.replace('-','_')
     cmake_args += [
@@ -86,7 +103,24 @@ elif 'linux' in sys.platform:
         '-DTCL_INCLUDE_PATH=/usr/include',
         '-DTK_INCLUDE_PATH=/usr/include',
     ]
+    mpich_include = '/opt/mpich/include'
+    openmpi_include = '/opt/openmpi/include'
+    if os.path.exists(mpich_include+'/mpi.h'):
+        have_mpi = True
+        cmake_args += [
+            f'-DMPICH_INCLUDE_DIR={mpich_include}',
+        ]
+    if os.path.exists(openmpi_include+'/mpi.h'):
+        have_mpi = True
+        cmake_args += [
+            f'-DOPENMPI_INCLUDE_DIR={openmpi_include}',
+        ]
     packages = []
+
+if have_mpi:
+    cmake_args += [
+        '-DUSE_MPI=ON',
+    ]
 
 cmake_args += [
         '-DUSE_SUPERBUILD:BOOL=ON',
@@ -101,7 +135,6 @@ cmake_args += [
         '-DBUILD_STUB_FILES=ON',
 ]
 
-pyprefix = pathlib.Path(sys.prefix).as_posix()
 cmake_args += [f'-DCMAKE_PREFIX_PATH={pyprefix}', f'-DPython3_ROOT_DIR={pyprefix}']
 
 setup(

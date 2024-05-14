@@ -20,29 +20,11 @@
 #include <mutex>
 #include <atomic>
 #include <optional>
+#include <cassert>
 
 #include <new>
 #include <string>
 #include <typeinfo>
-
-#ifdef PARALLEL
-// #undef SEEK_SET
-// #undef SEEK_CUR
-// #undef SEEK_END
-#include <mpi.h>
-#include <unistd.h>  // for usleep (only for parallel)
-#endif
-
-
-
-/*
-#ifdef METIS
-namespace metis { extern "C" {
-#include <metis.h>
-} }
-#endif
-*/
-
 
 
 #ifndef M_PI

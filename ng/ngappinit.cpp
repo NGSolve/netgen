@@ -9,12 +9,7 @@
 #include <mystdlib.h> 
 #include <inctcl.hpp>
 #include <meshing.hpp>
-
-#ifdef PARALLEL
-#include <mpi.h>
-
-// extern void ParallelRun();
-#endif
+#include <core/mpi_wrapper.hpp>
 
 #include "../libsrc/interface/writeuser.hpp"
 
@@ -65,25 +60,6 @@ int main(int argc, char ** argv)
 {
   netgen::netgen_executable_started = true;
 
-#ifdef PARALLEL
-  int mpi_required = MPI_THREAD_MULTIPLE;
-#ifdef VTRACE
-  mpi_required = MPI_THREAD_SINGLE;
-#endif
-  int mpi_provided;
-  MPI_Init_thread(&argc, &argv, mpi_required, &mpi_provided);          
-
-  MPI_Comm_size(MPI_COMM_WORLD, &netgen::ntasks);
-  MPI_Comm_rank(MPI_COMM_WORLD, &netgen::id);
-  
-  if(netgen::ntasks!=1)
-      throw ngcore::Exception("Netgen GUI cannot run MPI-parallel");
-
-  // MPI_COMM_WORLD is just a local communicator
-  // netgen::ng_comm = ngcore::NgMPI_Comm{MPI_COMM_WORLD, false};
-
-#endif
-
   if ( netgen::id == 0 )
     {
       cout << "NETGEN-" << netgen::netgen_version << endl;
@@ -109,11 +85,6 @@ int main(int argc, char ** argv)
 
 #ifdef DEBUG
       cout << "You are running the debug version !" << endl;
-#endif
-
-
-#ifdef PARALLEL
-      cout << "Including MPI version " << MPI_VERSION << '.' << MPI_SUBVERSION << endl;
 #endif
     }
 
@@ -283,15 +254,6 @@ int main(int argc, char ** argv)
       Tcl_Exit(0);
     }
 
-#ifdef PARALLEL
-  else
-    {
-      // ParallelRun();
-      MPI_Finalize();
-    }  
-
-#endif
-  
   return 0;		
 }
 

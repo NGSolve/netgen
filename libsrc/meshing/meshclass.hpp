@@ -25,7 +25,7 @@ namespace netgen
   class NetgenGeometry;
   using namespace std;
 
-  static constexpr int  MPI_TAG_MESH = 210;
+  static constexpr int  NG_MPI_TAG_MESH = 210;
   
 
   enum resthtype { RESTRICTH_FACE, RESTRICTH_EDGE, 
@@ -748,7 +748,7 @@ namespace netgen
     { return (bcnr < bcnames.Size() && bcnames[bcnr]) ? bcnames[bcnr] : &default_bc; }
 
 
-    NgArray<string*> & GetRegionNamesCD (int codim);
+    DLL_HEADER NgArray<string*> & GetRegionNamesCD (int codim);
     
     ///
     void ClearFaceDescriptors()

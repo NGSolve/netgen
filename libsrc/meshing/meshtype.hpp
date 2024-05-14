@@ -10,6 +10,7 @@
 
 #include <mydefs.hpp>
 #include <general/template.hpp>
+#include <core/mpi_wrapper.hpp>
 #include <gprim/geom3d.hpp>
 #include <linalg.hpp>
 
@@ -372,7 +373,7 @@ namespace netgen
     bool IsSingular() const { return (singular != 0.0); }
 
 #ifdef PARALLEL
-    static MPI_Datatype MyGetMPIType ( );
+    static NG_MPI_Datatype MyGetMPIType ( );
 #endif
 
     void DoArchive (Archive & ar)
@@ -423,7 +424,7 @@ namespace netgen
     // Set a new property for each element, to 
     // control whether it is visible or not
     bool visible:1;  // element visible
-    bool is_curved:1;   // element is (high order) curved
+    bool is_curved;   // element is (high order) curved
     /// order for hp-FEM
     unsigned int orderx:6;
     unsigned int ordery:6;
@@ -440,7 +441,8 @@ namespace netgen
           { "pnum", offsetof(Element2d, pnum)},
           { "index", offsetof(Element2d, index) },
           { "np", offsetof(Element2d, np) },
-          { "refine", offsetof(Element2d, refflag) }
+          { "refine", offsetof(Element2d, refflag) },
+          { "curved", offsetof(Element2d, is_curved)}
         });
     }
 
@@ -582,7 +584,7 @@ namespace netgen
     }
 
 #ifdef PARALLEL
-    static MPI_Datatype MyGetMPIType();
+    static NG_MPI_Datatype MyGetMPIType();
 #endif
     
 
@@ -741,7 +743,7 @@ namespace netgen
        unsigned int levelz:6; */ 
     /// stored shape-badness of element
     float badness;
-    bool is_curved:1;   // element is (high order) curved
+    bool is_curved;   // element is (high order) curved
 
     class flagstruct {
     public:
@@ -767,7 +769,8 @@ namespace netgen
           { "pnum", offsetof(Element, pnum)},
           { "index", offsetof(Element, index) },
           { "np", offsetof(Element, np) },
-          { "refine", offsetof(Element, flags.refflag) }          
+          { "refine", offsetof(Element, flags.refflag) },
+          { "curved", offsetof(Element, is_curved)}
         });
     }
 
@@ -884,7 +887,7 @@ namespace netgen
     }
     
 #ifdef PARALLEL
-    static MPI_Datatype MyGetMPIType();
+    static NG_MPI_Datatype MyGetMPIType();
 #endif
 
     ///
@@ -1136,7 +1139,7 @@ namespace netgen
     
     void DoArchive (Archive & ar);
 #ifdef PARALLEL
-    static MPI_Datatype MyGetMPIType();
+    static NG_MPI_Datatype MyGetMPIType();
 #endif
     
   };
@@ -1643,25 +1646,25 @@ namespace netgen
 namespace ngcore
 {
   template <> struct MPI_typetrait<netgen::PointIndex> {
-    static MPI_Datatype MPIType ()  { return MPI_INT; }
+    static NG_MPI_Datatype MPIType ()  { return NG_MPI_INT; }
   };
 
   template <> struct MPI_typetrait<netgen::ELEMENT_TYPE> {
-    static MPI_Datatype MPIType ()  { return MPI_CHAR; }
+    static NG_MPI_Datatype MPIType ()  { return NG_MPI_CHAR; }
   };
 
   template <> struct MPI_typetrait<netgen::MeshPoint> {
-    static MPI_Datatype MPIType ()  { return netgen::MeshPoint::MyGetMPIType(); }
+    static NG_MPI_Datatype MPIType ()  { return netgen::MeshPoint::MyGetMPIType(); }
   };
 
   template <> struct MPI_typetrait<netgen::Element> {
-    static MPI_Datatype MPIType ()  { return netgen::Element::MyGetMPIType(); }
+    static NG_MPI_Datatype MPIType ()  { return netgen::Element::MyGetMPIType(); }
   };
   template <> struct MPI_typetrait<netgen::Element2d> {
-    static MPI_Datatype MPIType ()  { return netgen::Element2d::MyGetMPIType(); }
+    static NG_MPI_Datatype MPIType ()  { return netgen::Element2d::MyGetMPIType(); }
   };
   template <> struct MPI_typetrait<netgen::Segment> {
-    static MPI_Datatype MPIType ()  { return netgen::Segment::MyGetMPIType(); }
+    static NG_MPI_Datatype MPIType ()  { return netgen::Segment::MyGetMPIType(); }
   };
 
 }

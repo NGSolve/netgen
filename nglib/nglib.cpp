@@ -32,12 +32,6 @@ namespace netgen {
 
 
 
-#ifdef PARALLEL
-#include <mpi.h>
-
-#endif
-
-
 /*
 namespace netgen
 {
@@ -989,7 +983,7 @@ namespace netgen
    {
 #ifdef PARALLEL
      int id = 0;
-     MPI_Comm_rank(MPI_COMM_WORLD, &id);
+     NG_MPI_Comm_rank(NG_MPI_COMM_WORLD, &id);
      if (id != 0) return;
 #endif
      (*mycout) << s << flush;

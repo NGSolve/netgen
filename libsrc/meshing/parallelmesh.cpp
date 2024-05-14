@@ -53,15 +53,15 @@ namespace ngcore
   }; // class SurfPointPackage
 
   template<> struct MPI_typetrait<SurfPointPackage> {
-    static MPI_Datatype MPIType () {
-      static MPI_Datatype MPI_T = 0;
+    static NG_MPI_Datatype MPIType () {
+      static NG_MPI_Datatype MPI_T = 0;
       if (!MPI_T)
 	{
 	  int block_len[2] = { 2, 2 };
-	  MPI_Aint displs[3] = { 0, 2*sizeof(int) };
-	  MPI_Datatype types[2] = { MPI_INT, MPI_DOUBLE };
-	  MPI_Type_create_struct(2, block_len, displs, types, &MPI_T);
-	  MPI_Type_commit(&MPI_T);
+	  NG_MPI_Aint displs[3] = { 0, 2*sizeof(int) };
+	  NG_MPI_Datatype types[2] = { NG_MPI_INT, NG_MPI_DOUBLE };
+	  NG_MPI_Type_create_struct(2, block_len, displs, types, &MPI_T);
+	  NG_MPI_Type_commit(&MPI_T);
 	}
       return MPI_T;
     }
@@ -119,15 +119,15 @@ namespace ngcore
   }; // class SelPackage
 
   template<> struct MPI_typetrait<SelPackage> {
-    static MPI_Datatype MPIType () {
-      static MPI_Datatype MPI_T = 0;
+    static NG_MPI_Datatype MPIType () {
+      static NG_MPI_Datatype MPI_T = 0;
       if (!MPI_T)
 	{
 	  int block_len[2] = { 3, ELEMENT2D_MAXPOINTS };
-	  MPI_Aint displs[3] = { 0, 3*sizeof(int) };
-	  MPI_Datatype types[2] = { MPI_INT, GetMPIType<SurfPointPackage>() };
-	  MPI_Type_create_struct(2, block_len, displs, types, &MPI_T);
-	  MPI_Type_commit(&MPI_T);
+	  NG_MPI_Aint displs[3] = { 0, 3*sizeof(int) };
+	  NG_MPI_Datatype types[2] = { NG_MPI_INT, GetMPIType<SurfPointPackage>() };
+	  NG_MPI_Type_create_struct(2, block_len, displs, types, &MPI_T);
+	  NG_MPI_Type_commit(&MPI_T);
 	}
       return MPI_T;
     }
@@ -145,15 +145,15 @@ namespace ngcore
   }; // class PointElPackage
 
   template<> struct MPI_typetrait<PointElPackage> {
-    static MPI_Datatype MPIType () {
-      static MPI_Datatype MPI_T = 0;
+    static NG_MPI_Datatype MPIType () {
+      static NG_MPI_Datatype MPI_T = 0;
       if (!MPI_T)
 	{
 	  int block_len[2] = { 1, 1 };
-	  MPI_Aint displs[3] = { 0, sizeof(netgen::PointIndex) };
-	  MPI_Datatype types[2] = { GetMPIType<netgen::PointIndex>(), MPI_INT };
-	  MPI_Type_create_struct(2, block_len, displs, types, &MPI_T);
-	  MPI_Type_commit(&MPI_T);
+	  NG_MPI_Aint displs[3] = { 0, sizeof(netgen::PointIndex) };
+	  NG_MPI_Datatype types[2] = { GetMPIType<netgen::PointIndex>(), NG_MPI_INT };
+	  NG_MPI_Type_create_struct(2, block_len, displs, types, &MPI_T);
+	  NG_MPI_Type_commit(&MPI_T);
 	}
       return MPI_T;
     }
@@ -222,7 +222,7 @@ namespace netgen
     int dim = GetDimension();
     comm.Bcast(dim);
 
-    Array<MPI_Request> sendrequests(8*(ntasks-1));
+    Array<NG_MPI_Request> sendrequests(8*(ntasks-1));
     sendrequests.SetSize0();
     
     // If the topology is not already updated, we do not need to
@@ -452,27 +452,27 @@ namespace netgen
     tbuildvertex.Stop();    
     PrintMessage ( 3, "Sending Vertices - vertices");
 
-    Array<MPI_Datatype> point_types(ntasks-1);
+    Array<NG_MPI_Datatype> point_types(ntasks-1);
     for (int dest = 1; dest < ntasks; dest++)
       {
 	NgFlatArray<PointIndex> verts = verts_of_proc[dest];
-	// sendrequests.Append (MyMPI_ISend (verts, dest, MPI_TAG_MESH+1, comm));
-        sendrequests.Append (comm.ISend (FlatArray<PointIndex>(verts), dest, MPI_TAG_MESH+1));
+	// sendrequests.Append (MyMPI_ISend (verts, dest, NG_MPI_TAG_MESH+1, comm));
+        sendrequests.Append (comm.ISend (FlatArray<PointIndex>(verts), dest, NG_MPI_TAG_MESH+1));
 
-	MPI_Datatype mptype = MeshPoint::MyGetMPIType();
+	NG_MPI_Datatype mptype = MeshPoint::MyGetMPIType();
 
 	int numv = verts.Size();
 
 	NgArray<int> blocklen (numv);  
 	blocklen = 1;
 	
-	MPI_Type_indexed (numv, (numv == 0) ? nullptr : &blocklen[0], 
+	NG_MPI_Type_indexed (numv, (numv == 0) ? nullptr : &blocklen[0], 
 			  (numv == 0) ? nullptr : reinterpret_cast<int*> (&verts[0]), 
 			  mptype, &point_types[dest-1]);
-	MPI_Type_commit (&point_types[dest-1]);
+	NG_MPI_Type_commit (&point_types[dest-1]);
 
-	MPI_Request request;
-	MPI_Isend( points.Data(), 1, point_types[dest-1], dest, MPI_TAG_MESH+1, comm, &request);
+	NG_MPI_Request request;
+	NG_MPI_Isend( points.Data(), 1, point_types[dest-1], dest, NG_MPI_TAG_MESH+1, comm, &request);
 	sendrequests.Append (request);
       }
 
@@ -533,10 +533,10 @@ namespace netgen
 	      }
 	  }
       }
-    Array<MPI_Request> req_per;
+    Array<NG_MPI_Request> req_per;
     for(int dest = 1; dest < ntasks; dest++)
-      // req_per.Append(MyMPI_ISend(pp_data[dest], dest, MPI_TAG_MESH+1, comm));
-      req_per.Append(comm.ISend(FlatArray<int>(pp_data[dest]), dest, MPI_TAG_MESH+1));
+      // req_per.Append(MyMPI_ISend(pp_data[dest], dest, NG_MPI_TAG_MESH+1, comm));
+      req_per.Append(comm.ISend(FlatArray<int>(pp_data[dest]), dest, NG_MPI_TAG_MESH+1));
     MyMPI_WaitAll(req_per);
 
     PrintMessage ( 3, "Sending Vertices - distprocs");
@@ -570,7 +570,7 @@ namespace netgen
     tbuilddistpnums.Stop();
         
     for ( int dest = 1; dest < ntasks; dest ++ )
-      sendrequests.Append (comm.ISend (distpnums[dest], dest, MPI_TAG_MESH+1));
+      sendrequests.Append (comm.ISend (distpnums[dest], dest, NG_MPI_TAG_MESH+1));
 
 
 
@@ -604,7 +604,7 @@ namespace netgen
     tbuildelementtable.Stop();
     
     for (int dest = 1; dest < ntasks; dest ++ )
-      sendrequests.Append (comm.ISend (elementarrays[dest], dest, MPI_TAG_MESH+2));
+      sendrequests.Append (comm.ISend (elementarrays[dest], dest, NG_MPI_TAG_MESH+2));
 
 
     PrintMessage ( 3, "Sending Face Descriptors" );
@@ -621,7 +621,7 @@ namespace netgen
 	
       }
     for (int dest = 1; dest < ntasks; dest++)
-      sendrequests.Append (comm.ISend (fddata, dest, MPI_TAG_MESH+3));
+      sendrequests.Append (comm.ISend (fddata, dest, NG_MPI_TAG_MESH+3));
     
     /** Surface Elements **/
 
@@ -697,7 +697,7 @@ namespace netgen
       });
     // distribute sel data
     for (int dest = 1; dest < ntasks; dest++)
-      sendrequests.Append (comm.ISend(selbuf[dest], dest, MPI_TAG_MESH+4));
+      sendrequests.Append (comm.ISend(selbuf[dest], dest, NG_MPI_TAG_MESH+4));
     
 
     /** Segments **/
@@ -849,7 +849,7 @@ namespace netgen
 		  });
     // distribute segment data
     for (int dest = 1; dest < ntasks; dest++)
-      sendrequests.Append (comm.ISend(segm_buf[dest], dest, MPI_TAG_MESH+5));
+      sendrequests.Append (comm.ISend(segm_buf[dest], dest, NG_MPI_TAG_MESH+5));
 
     /** Point-Elements **/
     PrintMessage ( 3, "Point-Elements ...");
@@ -870,7 +870,7 @@ namespace netgen
     iterate_zdes([&](const auto & pack, auto dest) { zde_buf.Add(dest, pack); });
 
     for (int dest = 1; dest < ntasks; dest++)
-      { sendrequests.Append (comm.ISend(zde_buf[dest], dest, MPI_TAG_MESH+6)); }
+      { sendrequests.Append (comm.ISend(zde_buf[dest], dest, NG_MPI_TAG_MESH+6)); }
 
     PrintMessage ( 3, "now wait ...");
 
@@ -878,7 +878,7 @@ namespace netgen
 
     // clean up MPI-datatypes we allocated earlier
     for (auto t : point_types)
-      { MPI_Type_free(&t); }
+      { NG_MPI_Type_free(&t); }
 
     paralleltop -> SetNV_Loc2Glob (0);
     paralleltop -> SetNV (0);
@@ -895,8 +895,8 @@ namespace netgen
     nnames[3] = GetNCD3Names();
     int tot_nn = nnames[0] + nnames[1] + nnames[2] + nnames[3];
     for( int k = 1; k < ntasks; k++)
-      sendrequests[k] = comm.ISend(nnames, k, MPI_TAG_MESH+7);
-      // (void) MPI_Isend(nnames, 4, MPI_INT, k, MPI_TAG_MESH+6, comm, &sendrequests[k]);
+      sendrequests[k] = comm.ISend(nnames, k, NG_MPI_TAG_MESH+7);
+      // (void) NG_MPI_Isend(nnames, 4, NG_MPI_INT, k, NG_MPI_TAG_MESH+6, comm, &sendrequests[k]);
     auto iterate_names = [&](auto func) {
       for (int k = 0; k < nnames[0]; k++) func(materials[k]);
       for (int k = 0; k < nnames[1]; k++) func(bcnames[k]);
@@ -908,7 +908,7 @@ namespace netgen
     tot_nn = 0;
     iterate_names([&](auto ptr) { name_sizes[tot_nn++] = (ptr==NULL) ? 0 : ptr->size(); });
     for( int k = 1; k < ntasks; k++)
-      (void) MPI_Isend(&name_sizes[0], tot_nn, MPI_INT, k, MPI_TAG_MESH+7, comm, &sendrequests[ntasks+k]);
+      (void) NG_MPI_Isend(&name_sizes[0], tot_nn, NG_MPI_INT, k, NG_MPI_TAG_MESH+7, comm, &sendrequests[ntasks+k]);
     // names
     int strs = 0;
     iterate_names([&](auto ptr) { strs += (ptr==NULL) ? 0 : ptr->size(); });
@@ -920,7 +920,7 @@ namespace netgen
 	for (int j=0; j < name.size(); j++) compiled_names[strs++] = name[j];
       });
     for( int k = 1; k < ntasks; k++)
-      (void) MPI_Isend(&(compiled_names[0]), strs, MPI_CHAR, k, MPI_TAG_MESH+7, comm, &sendrequests[2*ntasks+k]);
+      (void) NG_MPI_Isend(&(compiled_names[0]), strs, NG_MPI_CHAR, k, NG_MPI_TAG_MESH+7, comm, &sendrequests[2*ntasks+k]);
 
     PrintMessage ( 3, "wait for names");
 
@@ -1006,7 +1006,7 @@ namespace netgen
     timer_pts.Start();
 
     Array<int> verts;
-    comm.Recv (verts, 0, MPI_TAG_MESH+1);
+    comm.Recv (verts, 0, NG_MPI_TAG_MESH+1);
 
     int numvert = verts.Size();
     paralleltop -> SetNV (numvert);
@@ -1026,12 +1026,12 @@ namespace netgen
     for (int i = 0; i < numvert; i++)
       AddPoint (netgen::Point<3> (0,0,0));
     
-    MPI_Datatype mptype = MeshPoint::MyGetMPIType();
-    MPI_Status status;
-    MPI_Recv( points.Data(), numvert, mptype, 0, MPI_TAG_MESH+1, comm, &status);
+    NG_MPI_Datatype mptype = MeshPoint::MyGetMPIType();
+    NG_MPI_Status status;
+    NG_MPI_Recv( points.Data(), numvert, mptype, 0, NG_MPI_TAG_MESH+1, comm, &status);
 
     Array<int> pp_data;
-    comm.Recv(pp_data, 0, MPI_TAG_MESH+1);
+    comm.Recv(pp_data, 0, NG_MPI_TAG_MESH+1);
 
     int maxidentnr = pp_data[0];
     auto & idents = GetIdentifications();
@@ -1052,7 +1052,7 @@ namespace netgen
       }
     
     Array<int> dist_pnums; 
-    comm.Recv (dist_pnums, 0, MPI_TAG_MESH+1);
+    comm.Recv (dist_pnums, 0, NG_MPI_TAG_MESH+1);
     
     for (int hi = 0; hi < dist_pnums.Size(); hi += 3)
       paralleltop ->
@@ -1067,7 +1067,7 @@ namespace netgen
       RegionTimer reg(timer_els);
 
       Array<int> elarray;
-      comm.Recv (elarray, 0, MPI_TAG_MESH+2);
+      comm.Recv (elarray, 0, NG_MPI_TAG_MESH+2);
 
       for (int ind = 0, elnum = 1; ind < elarray.Size(); elnum++)
 	{
@@ -1086,7 +1086,7 @@ namespace netgen
 
     {
       Array<double> fddata;
-      comm.Recv (fddata, 0, MPI_TAG_MESH+3);
+      comm.Recv (fddata, 0, NG_MPI_TAG_MESH+3);
       for (int i = 0; i < fddata.Size(); i += 6)
 	{
 	  int faceind = AddFaceDescriptor 
@@ -1101,7 +1101,7 @@ namespace netgen
       RegionTimer reg(timer_sels);
       Array<SelPackage> selbuf;
 
-      comm.Recv ( selbuf, 0, MPI_TAG_MESH+4);
+      comm.Recv ( selbuf, 0, NG_MPI_TAG_MESH+4);
       
       int nlocsel = selbuf.Size();
       paralleltop -> SetNSE ( nlocsel );
@@ -1124,9 +1124,9 @@ namespace netgen
 
     {
       // NgArray<double> segmbuf;
-      // MyMPI_Recv ( segmbuf, 0, MPI_TAG_MESH+5, comm);
+      // MyMPI_Recv ( segmbuf, 0, NG_MPI_TAG_MESH+5, comm);
       Array<double> segmbuf;
-      comm.Recv (segmbuf, 0, MPI_TAG_MESH+5);
+      comm.Recv (segmbuf, 0, NG_MPI_TAG_MESH+5);
 
       Segment seg;
       int globsegi;
@@ -1170,7 +1170,7 @@ namespace netgen
 
     { /** 0d-Elements **/
       Array<PointElPackage> zdes;
-      comm.Recv ( zdes, 0, MPI_TAG_MESH+6);
+      comm.Recv ( zdes, 0, NG_MPI_TAG_MESH+6);
       pointelements.SetSize(zdes.Size());
       for (auto k : Range(pointelements)) {
 	auto & el = pointelements[k];
@@ -1183,8 +1183,8 @@ namespace netgen
     paralleltop -> EnumeratePointsGlobally();
     /** Recv bc-names **/
     ArrayMem<int,4> nnames{0,0,0,0};
-    // MPI_Recv(nnames, 4, MPI_INT, 0, MPI_TAG_MESH+6, comm, MPI_STATUS_IGNORE);
-    comm.Recv(nnames, 0, MPI_TAG_MESH+7);
+    // NG_MPI_Recv(nnames, 4, NG_MPI_INT, 0, NG_MPI_TAG_MESH+6, comm, NG_MPI_STATUS_IGNORE);
+    comm.Recv(nnames, 0, NG_MPI_TAG_MESH+7);
     // cout << "nnames = " << FlatArray(nnames) << endl;
     materials.SetSize(nnames[0]);
     bcnames.SetSize(nnames[1]);
@@ -1193,12 +1193,12 @@ namespace netgen
 
     int tot_nn = nnames[0] + nnames[1] + nnames[2] + nnames[3];
     NgArray<int> name_sizes(tot_nn);
-    MPI_Recv(&name_sizes[0], tot_nn, MPI_INT, 0, MPI_TAG_MESH+7, comm, MPI_STATUS_IGNORE);
+    NG_MPI_Recv(&name_sizes[0], tot_nn, NG_MPI_INT, 0, NG_MPI_TAG_MESH+7, comm, NG_MPI_STATUS_IGNORE);
     int tot_size = 0;
     for (int k = 0; k < tot_nn; k++) tot_size += name_sizes[k];
     
     NgArray<char> compiled_names(tot_size);
-    MPI_Recv(&(compiled_names[0]), tot_size, MPI_CHAR, 0, MPI_TAG_MESH+7, comm, MPI_STATUS_IGNORE);
+    NG_MPI_Recv(&(compiled_names[0]), tot_size, NG_MPI_CHAR, 0, NG_MPI_TAG_MESH+7, comm, NG_MPI_STATUS_IGNORE);
 
     tot_nn = tot_size = 0;
     auto write_names = [&] (auto & array) {

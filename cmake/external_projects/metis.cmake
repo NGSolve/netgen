@@ -3,8 +3,8 @@ set(METIS_DIR ${CMAKE_CURRENT_BINARY_DIR}/dependencies/metis)
 
 ExternalProject_Add(project_metis
   PREFIX ${CMAKE_CURRENT_BINARY_DIR}/dependencies
-  URL https://bitbucket.org/petsc/pkg-metis/get/v5.1.0-p6.tar.gz
-  URL_MD5 55fc654bb838846b856ba898795143f1
+  URL https://bitbucket.org/petsc/pkg-metis/get/v5.1.0-p12.tar.gz
+  URL_MD5 6cd66f75f88dfa2cf043de011f85d8bc
   DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
   CMAKE_ARGS
          -DGKLIB_PATH=${METIS_SRC_DIR}/GKlib

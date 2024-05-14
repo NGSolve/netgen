@@ -1229,7 +1229,7 @@ namespace netgen
 	MyMPI_SendCmd ("solsurfellist");
 
 	for ( int dest = 1; dest < ntasks; dest++ )
-	  MyMPI_Recv (par_surfellists[dest], dest, MPI_TAG_VIS);
+	  MyMPI_Recv (par_surfellists[dest], dest, NG_MPI_TAG_VIS);
 
 	if (surfellist)
 	  glDeleteLists (surfellist, 1);
@@ -1760,7 +1760,7 @@ namespace netgen
 #ifdef PARALLELGL
     glFinish();
     if (id > 0)
-      MyMPI_Send (surfellist, 0, MPI_TAG_VIS);
+      MyMPI_Send (surfellist, 0, NG_MPI_TAG_VIS);
 #endif
   }
 
@@ -1780,7 +1780,7 @@ namespace netgen
 	MyMPI_SendCmd ("solsurfellinelist");
 
 	for ( int dest = 1; dest < ntasks; dest++ )
-	  MyMPI_Recv (par_surfellists[dest], dest, MPI_TAG_VIS);
+	  MyMPI_Recv (par_surfellists[dest], dest, NG_MPI_TAG_VIS);
 
 	if (linelist)
 	  glDeleteLists (linelist, 1);
@@ -1864,7 +1864,7 @@ namespace netgen
 #ifdef PARALLELGL
     glFinish();
     if (id > 0)
-      MyMPI_Send (linelist, 0, MPI_TAG_VIS);
+      MyMPI_Send (linelist, 0, NG_MPI_TAG_VIS);
 #endif
   }
 
@@ -2725,8 +2725,8 @@ namespace netgen
     if (ntasks > 1)
       {
         double hmin, hmax;
-        MPI_Reduce (&minv, &hmin, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
-        MPI_Reduce (&maxv, &hmax, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+        NG_MPI_Reduce (&minv, &hmin, 1, NG_MPI_DOUBLE, NG_MPI_MIN, 0, NG_MPI_COMM_WORLD);
+        NG_MPI_Reduce (&maxv, &hmax, 1, NG_MPI_DOUBLE, NG_MPI_MAX, 0, NG_MPI_COMM_WORLD);
         minv = hmin;
         maxv = hmax;
       }
@@ -4370,7 +4370,7 @@ namespace netgen
 	MyMPI_SendCmd ("clipplanetrigs");
 
 	for ( int dest = 1; dest < ntasks; dest++ )
-	  MyMPI_Recv (parlists[dest], dest, MPI_TAG_VIS);
+	  MyMPI_Recv (parlists[dest], dest, NG_MPI_TAG_VIS);
 
 	if (clipplanelist_scal)
 	  glDeleteLists (clipplanelist_scal, 1);
@@ -4515,7 +4515,7 @@ namespace netgen
 #ifdef PARALLELGLGL
     glFinish();
     if (id > 0)
-      MyMPI_Send (clipplanelist_scal, 0, MPI_TAG_VIS);
+      MyMPI_Send (clipplanelist_scal, 0, NG_MPI_TAG_VIS);
 #endif
   }
 
@@ -4928,7 +4928,7 @@ namespace netgen
 
   void VisualSceneSolution :: Broadcast ()
   {
-    MPI_Datatype type;
+    NG_MPI_Datatype type;
     int blocklen[] = 
       { 
 	1, 1, 1, 1,
@@ -4937,7 +4937,7 @@ namespace netgen
 	1, 4, 1, 1, 
 	1
       };
-    MPI_Aint displ[] = { (char*)&usetexture - (char*)this,
+    NG_MPI_Aint displ[] = { (char*)&usetexture - (char*)this,
 			 (char*)&clipsolution - (char*)this,
 			 (char*)&scalfunction - (char*)this,
 			 (char*)&scalcomp - (char*)this,
@@ -4961,19 +4961,19 @@ namespace netgen
     };
 
 
-    MPI_Datatype types[] = { 
-      MPI_INT, MPI_INT, MPI_INT, MPI_INT,
-      MPI_INT, MPI_INT, MPI_INT, MPI_INT,
-      MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_INT,
-      MPI_INT, MPI_DOUBLE, MPI_INT, MPI_INT,
-      MPI_DOUBLE
+    NG_MPI_Datatype types[] = { 
+      NG_MPI_INT, NG_MPI_INT, NG_MPI_INT, NG_MPI_INT,
+      NG_MPI_INT, NG_MPI_INT, NG_MPI_INT, NG_MPI_INT,
+      NG_MPI_DOUBLE, NG_MPI_DOUBLE, NG_MPI_INT, NG_MPI_INT,
+      NG_MPI_INT, NG_MPI_DOUBLE, NG_MPI_INT, NG_MPI_INT,
+      NG_MPI_DOUBLE
     };
 
-    MPI_Type_create_struct (17, blocklen, displ, types, &type);
-    MPI_Type_commit ( &type );
+    NG_MPI_Type_create_struct (17, blocklen, displ, types, &type);
+    NG_MPI_Type_commit ( &type );
 
-    MPI_Bcast (this, 1, type, 0, MPI_COMM_WORLD);
-    MPI_Type_free (&type);
+    NG_MPI_Bcast (this, 1, type, 0, NG_MPI_COMM_WORLD);
+    NG_MPI_Type_free (&type);
   }
   
 #endif
