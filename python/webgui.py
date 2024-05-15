@@ -321,6 +321,11 @@ class WebGLScene(base):
         if "gui_settings" not in d:
             d["gui_settings"] = self.kwargs["settings"]
 
+        if "euler_angles" in kwargs:
+            camera = d["gui_settings"].get("camera", {})
+            camera["euler_angles"] = kwargs["euler_angles"]
+            d["gui_settings"]['camera'] = camera
+
         d["objects"] = []
         for obj in kwargs["objects"]:
             if isinstance(obj, dict):
@@ -367,6 +372,7 @@ def _get_draw_default_args():
         nodal_p1=False,
         settings={},
         fullscreen=False,
+        scale=1.0,
         width=_default_width,
         height=_default_height,
     )
