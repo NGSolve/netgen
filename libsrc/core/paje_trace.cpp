@@ -498,7 +498,6 @@ namespace ngcore
   #ifdef PARALLEL
       if(MPI_Loaded())
         comm = NgMPI_Comm(NG_MPI_COMM_WORLD);
-  #endif
       if(comm.Size()>1)
       {
         auto comm = NgMPI_Comm(NG_MPI_COMM_WORLD);
@@ -528,6 +527,7 @@ namespace ngcore
         }
       }
       else
+  #endif
       {
         container_nodes.reserve(num_nodes);
         for(int i=0; i<num_nodes; i++)
