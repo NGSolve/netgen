@@ -117,8 +117,11 @@ namespace ngcore
     for(auto i : IntRange(n_memory_events_at_start, memory_events.size()))
       memory_events[i].time -= start_time;
 
-    NgMPI_Comm comm(NG_MPI_COMM_WORLD);
-
+    NgMPI_Comm comm;
+  #ifdef PARALLEL
+    if(MPI_Loaded())
+      comm = NgMPI_Comm(NG_MPI_COMM_WORLD);
+  #endif
     if(comm.Size()==1)
     {
       Write(tracefile_name);
@@ -491,14 +494,15 @@ namespace ngcore
       std::vector <int> thread_aliases;
       std::vector<int> container_nodes;
 
-#ifdef PARALLEL
-      // Hostnames
-      NgMPI_Comm comm(NG_MPI_COMM_WORLD);
-      // auto rank = comm.Rank();
-      auto nranks = comm.Size();
-      if(nranks>1)
+      NgMPI_Comm comm;
+  #ifdef PARALLEL
+      if(MPI_Loaded())
+        comm = NgMPI_Comm(NG_MPI_COMM_WORLD);
+  #endif
+      if(comm.Size()>1)
       {
-        nthreads = nranks;
+        auto comm = NgMPI_Comm(NG_MPI_COMM_WORLD);
+        nthreads = comm.Size();
         thread_aliases.reserve(nthreads);
 
         std::array<char, ASSUMED_MPI_MAX_PROCESSOR_NAME+1> ahostname;
@@ -509,7 +513,7 @@ namespace ngcore
         std::map<std::string, int> host_map;
 
         std::string name;
-        for(auto i : IntRange(0, nranks))
+        for(auto i : IntRange(0, comm.Size()))
         {
           if(i!=MPI_PAJE_WRITER)
             comm.Recv(name, i, 0);
@@ -524,7 +528,6 @@ namespace ngcore
         }
       }
       else
-#endif // PARALLEL
       {
         container_nodes.reserve(num_nodes);
         for(int i=0; i<num_nodes; i++)
@@ -600,10 +603,9 @@ namespace ngcore
       for(auto id : timer_ids)
           timer_names[id] = GetTimerName(id);
 
-#ifdef PARALLEL
-      if(nranks>1)
+      if(comm.Size()>1)
       {
-        for(auto src : IntRange(0, nranks))
+        for(auto src : IntRange(0, comm.Size()))
         {
           if(src==MPI_PAJE_WRITER)
             continue;
@@ -622,7 +624,6 @@ namespace ngcore
           }
         }
       }
-#endif // PARALLEL
 
       for(auto id : timer_ids)
           timer_aliases[id] = paje.DefineEntityValue( state_type_timer, timer_names[id], -1 );
@@ -747,7 +748,7 @@ namespace ngcore
         }
 
 #ifdef PARALLEL
-      if(nranks>1)
+      if(comm.Size()>1)
       {
         for(auto & event : timer_events)
         {
@@ -763,7 +764,7 @@ namespace ngcore
         Array<bool> is_start;
         Array<int> thread_id;
 
-        for(auto src : IntRange(0, nranks))
+        for(auto src : IntRange(0, comm.Size()))
         {
           if(src==MPI_PAJE_WRITER)
             continue;
