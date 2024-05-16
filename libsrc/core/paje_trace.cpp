@@ -7,6 +7,7 @@
 
 #include "archive.hpp"           // for Demangle
 #include "paje_trace.hpp"
+#include "ng_mpi.hpp"
 #include "profiler.hpp"
 #include "mpi_wrapper.hpp"
 
@@ -71,9 +72,12 @@ namespace ngcore
 
     // sync start time when running in parallel
 #ifdef PARALLEL
-    NgMPI_Comm comm(NG_MPI_COMM_WORLD);
-    for([[maybe_unused]] auto i : Range(5))
-        comm.Barrier();
+    if(MPI_Loaded())
+    {
+      NgMPI_Comm comm(NG_MPI_COMM_WORLD);
+      for([[maybe_unused]] auto i : Range(5))
+          comm.Barrier();
+    }
 #endif // PARALLEL
 
     start_time = GetTimeCounter();
