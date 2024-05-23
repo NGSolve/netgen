@@ -40,9 +40,11 @@ functions = [
         ("int", "MPI_Wait", "MPI_Request*", "MPI_Status*"),
         ("int", "MPI_Waitall", "int", "MPI_Request*:0", "MPI_Status*"),
         ("int", "MPI_Waitany", "int", "MPI_Request*:0", "int*", "MPI_Status*"),
+        ("int", "MPI_Comm_c2f", "MPI_Comm"),
         ]
 
 constants = [
+        ("MPI_Comm", "MPI_COMM_NULL"),
         ("MPI_Comm", "MPI_COMM_WORLD"),
         ("MPI_Datatype", "MPI_CHAR"),
         ("MPI_Datatype", "MPI_CXX_DOUBLE_COMPLEX"),
