@@ -27,17 +27,7 @@ namespace netgen
 static std::thread meshingthread;
 void RunParallel ( void * (*fun)(void *), void * in)
 {
-  bool parthread = netgen::mparam.parthread;
-
-#ifdef PARALLEL
-  int provided;
-  netgen::NG_MPI_Query_thread(&provided);
-  if (provided < 3)
-    if (netgen::ntasks > 1) parthread = false;
-  // cout << "runparallel = " << parthread << endl;
-#endif
-
-  if (parthread)
+  if (netgen::mparam.parthread)
     {
       meshingthread = std::thread(fun, in);
       meshingthread.detach();

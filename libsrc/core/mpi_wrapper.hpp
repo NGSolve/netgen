@@ -429,45 +429,6 @@ namespace ngcore
 
   }; // class NgMPI_Comm
 
-
-
-
-
-  
-  class MyMPI
-  {
-    bool initialized_by_me;
-  public:
-    MyMPI(int argc, char ** argv) 
-    {
-      int is_init = -1;
-      NG_MPI_Initialized(&is_init);
-      if (!is_init)
-        {
-          NG_MPI_Init (&argc, &argv);
-          initialized_by_me = true;
-        }
-      else
-        initialized_by_me = false;
-      
-      NgMPI_Comm comm(NG_MPI_COMM_WORLD);
-      NGSOStream::SetGlobalActive (comm.Rank() == 0);
-      
-      if (comm.Size() > 1)
-        TaskManager::SetNumThreads (1);
-    }
-    
-    ~MyMPI()
-    {
-      if (initialized_by_me)
-        NG_MPI_Finalize ();
-    }
-  };
-  
-
-
-  
-
 #else // PARALLEL
   class NG_MPI_Comm {
     int nr;
@@ -566,13 +527,6 @@ namespace ngcore
   inline void MyMPI_WaitAll (FlatArray<NG_MPI_Request> requests) { ; }
   inline int MyMPI_WaitAny (FlatArray<NG_MPI_Request> requests) { return 0; }
 
-  class MyMPI
-  {
-  public:
-    MyMPI(int argc, char ** argv) { ; }
-  };
-
-  
 #endif // PARALLEL
 
 } // namespace ngcore

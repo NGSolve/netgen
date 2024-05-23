@@ -28,6 +28,10 @@ struct MPIFinalizer {
   }
 } mpi_finalizer;
 
+bool MPI_Loaded() {
+  return ng_mpi_lib != nullptr;
+}
+
 void InitMPI(std::optional<std::filesystem::path> mpi_lib_path) {
   if (ng_mpi_lib) return;
 

@@ -497,7 +497,8 @@ namespace netgen
       {
 	ntexcols = ncols;
       
-	GLubyte colortexture[4*32];
+	ArrayMem<GLubyte, 4*32> colortexture;
+	colortexture.SetSize(4*ncols);
 
 	const double colp[][3] =
 	  {
@@ -532,8 +533,8 @@ namespace netgen
 
 	// glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
 
-     	glTexImage1D (GL_TEXTURE_1D, 0, 4, ncols, 0, GL_RGBA, GL_UNSIGNED_BYTE, colortexture);
-	glTexImage2D (GL_TEXTURE_2D, 0, 4, ncols, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, colortexture);
+	glTexImage1D (GL_TEXTURE_1D, 0, 4, ncols, 0, GL_RGBA, GL_UNSIGNED_BYTE, colortexture.Data());
+	glTexImage2D (GL_TEXTURE_2D, 0, 4, ncols, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, colortexture.Data());
 
 	glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, typ);  // DECAL or MODULATE
 	

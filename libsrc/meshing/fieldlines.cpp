@@ -206,13 +206,8 @@ namespace netgen
 
     int calculated = 0;
 
-    cout << endl;
-
-
     for(int i=0; i<potential_startpoints.Size(); i++)
       {
-	cout << "\rFieldline Calculation " << int(100.*i/potential_startpoints.Size()) << "%"; cout.flush();
-
 	if(randomized)
 	  SetCriticalValue((double(rand())/RAND_MAX)*crit);
 
@@ -235,7 +230,6 @@ namespace netgen
 
 	if(usable) calculated++;
       }
-    cout << "\rFieldline Calculation " << 100 << "%" << endl;
     
   }
 
