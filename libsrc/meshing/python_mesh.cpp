@@ -87,6 +87,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   py::class_<NGDummyArgument>(m, "NGDummyArgument")
     .def("__bool__", []( NGDummyArgument &self ) { return false; } )
     ;
+
+  py::class_<LocalH, shared_ptr<LocalH>>(m, "LocalH");
   
   py::class_<Point<2>> (m, "Point2d")
     .def(py::init<double,double>())
@@ -1249,7 +1251,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             else mp.optsteps3d = 5;
             OptimizeVolume (mp, self);
           }, py::arg("mp"), py::call_guard<py::gil_scoped_release>())
-
+    .def("SetLocalH",[](Mesh& self, shared_ptr<LocalH> localh, int layer)
+         {
+           self.SetLocalH(localh, layer);
+         }, py::arg("localh"), py::arg("layer")=1)
+    .def("GetLocalH", &Mesh::GetLocalH)
     .def ("OptimizeMesh2d", [](Mesh & self, MeshingParameters* pars, int faceindex)
           {
             self.CalcLocalH(0.5);
