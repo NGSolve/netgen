@@ -204,29 +204,56 @@ struct GrowthVectorLimiter {
     auto pi_from = map_from[pi_to];
     if (!pi_from.IsValid()) return;
 
+    auto seg = GetSeg(pi_to, seg_shift);
     if (trig_shift > 0) {
-      auto intersection = isIntersectingTrig(pi_from, pi_to, sei, trig_shift);
+      if(pi_from == 3523) cout << "check intersection " << mesh[sei] << endl;
+      auto intersection = isIntersectingTrig(seg, GetTrig(sei, trig_shift));
       if (!intersection) return;
+      if(pi_from == 3523) cout << "found intersection " << mesh[sei] << ", lam = " << intersection.lam0 << endl;
       double dshift = trig_shift;
-      while (intersection && dshift > 0.01 && dshift > intersection.lam0) {
+      while (dshift/trig_shift > intersection.lam0/seg_shift) {
         dshift *= 0.9;
-        intersection = isIntersectingTrig(pi_from, pi_to, sei, dshift);
+        auto reduced_intersection = isIntersectingPlane(seg, GetTrig(sei, dshift));
+        if(!reduced_intersection) break;
+        // cout << "still intersecting " << dshift << endl;
+        intersection = reduced_intersection;
       }
-      dshift /= 0.9;
-      intersection = isIntersectingTrig(pi_from, pi_to, sei, dshift);
-      limits[pi_from] *= intersection.lam0;
+      if(dshift/trig_shift < intersection.lam0/seg_shift) {
+        // cout << "unshift " << dshift << ',' << intersection.lam0 << endl;
+        dshift /= 0.9;
+        intersection = isIntersectingPlane(seg, GetTrig(sei, dshift));
+      }
+      double min_trig_limit = 1e99;
       auto sel = mesh[sei];
-      for (auto i : Range(3)) limits[sel[i]] *= dshift;
+      for (auto i : Range(3)) 
+        min_trig_limit = min(min_trig_limit, limits[sel[i]]*dshift);
+
+      double new_seg_limit = intersection.lam0*seg_shift;
+      double new_trig_limit = dshift*trig_shift;
+      if(new_trig_limit >= min_trig_limit || new_seg_limit >= limits[pi_from] )
+        return; // nothing to do
+
+      // decide what to limit (apply the larger limit)
+      if(new_seg_limit > new_trig_limit) 
+        limits[pi_from] = new_seg_limit;
+      else
+        for (auto pi : sel.PNums())
+          limits[pi] = new_trig_limit;
     } else {
-      auto seg = GetSeg(pi_to, seg_shift);
       auto trig = GetTrig(sei, 0.0);
       auto intersection = isIntersectingTrig(seg, trig);
-      auto lam = intersection.lam0;
-      if (intersection) {
-        // check with original surface elements
-        limits[pi_from] =
-            min(limits[pi_from], seg_shift * 0.45 * INTERSECTION_SAFETY * lam);
-        return;
+      // checking with original surface elements -> allow only half the distance
+      auto new_seg_limit = 0.40 * intersection.lam0*seg_shift;
+      if (intersection && new_seg_limit < limits[pi_from]) {
+        // cout << seg_shift << "\tlimiting " << pi_from << " from " << limits[pi_from] << " to " << new_seg_limit << endl;
+        auto p0 = seg[0];
+        auto p1 = seg[1];
+        auto d = Dist(p0, p1);
+        auto [gw, height] = tool.growth_vector_map[pi_to];
+        // cout << "gw = " << *gw << ", height = " << height << endl;
+        // cout << "p0 = " << p0 << ", p1 = " << p1 << ", gw = " << growthvectors[pi_from] << endl;
+        // cout << "\t" << intersection.p << ',' << d << ',' << Dist(intersection.p, p0)/d<< endl;
+        limits[pi_from] = new_seg_limit;
       }
     }
   }
@@ -291,18 +318,18 @@ struct GrowthVectorLimiter {
       // for(auto i : Range(np))
       //     ori_limits[i] = limits[sel[i]];
 
-      // equalizeLimits(sei);
+      equalizeLimits(sei);
 
       double shift = 1.0;
       double safety = 1.1;
       const double step_factor = 0.9;
-      while (shift > 0.01 && isIntersecting(sei, shift * safety)) {
+      while (isIntersecting(sei, shift * safety)) {
         shift *= step_factor;
         double max_limit = 0;
         for (auto i : Range(np)) max_limit = max(max_limit, limits[sel[i]]);
         for (auto i : Range(np))
           if (max_limit == limits[sel[i]]) limits[sel[i]] *= step_factor;
-        if (max_limit < 0.01) break;
+        // if (max_limit < 0.01) break;
       }
     }
   }
@@ -313,7 +340,7 @@ struct GrowthVectorLimiter {
                                     std::array<Point<3>, 3> trig) {
     auto t1 = trig[1] - trig[0];
     auto t2 = trig[2] - trig[0];
-    auto n = Cross(trig[1] - trig[0], trig[2] - trig[0]);
+    auto n = Cross(t1, t2);
     auto v0n = (seg[0] - trig[0]) * n;
     auto v1n = (seg[1] - trig[0]) * n;
 
@@ -327,11 +354,11 @@ struct GrowthVectorLimiter {
     return intersection;
   }
 
-  Intersection_ isIntersectingPlane(PointIndex pi, PointIndex pi_to,
-                                    SurfaceElementIndex sei,
-                                    double shift = 0.0) {
-    return isIntersectingPlane(GetSeg(pi, pi_to), GetTrig(sei, shift));
-  }
+  // Intersection_ isIntersectingPlane(PointIndex pi, PointIndex pi_to,
+  //                                   SurfaceElementIndex sei,
+  //                                   double shift = 0.0) {
+  //   return isIntersectingPlane(GetSeg(pi, pi_to), GetTrig(sei, shift));
+  // }
 
   Intersection_ isIntersectingTrig(std::array<Point<3>, 2> seg,
                                    std::array<Point<3>, 3> trig) {
@@ -441,7 +468,6 @@ Vec<3> BoundaryLayerTool ::getEdgeTangent(PointIndex pi, int edgenr) {
 void BoundaryLayerTool ::LimitGrowthVectorLengths() {
   static Timer tall("BoundaryLayerTool::LimitGrowthVectorLengths");
   RegionTimer rtall(tall);
-  return;
   mesh.Save("mesh_before_limit.vol");
 
   limits.SetSize(mesh.Points().Size());
@@ -465,7 +491,7 @@ void BoundaryLayerTool ::LimitGrowthVectorLengths() {
   //   growthvectors[i] *= limits[i];
   // limits = 1.0;
 
-  // // now limit again with shifted surface elements
+  // now limit again with shifted surface elements
   trig_shift = 1.1;
   seg_shift = 1.1;
   limiter.FindTreeIntersections(
@@ -479,6 +505,7 @@ void BoundaryLayerTool ::LimitGrowthVectorLengths() {
   //     limits[pi_from] = min(limits[pi_from], limits[pi_to]);
   // }
 
+  // cout << "limits " << endl << limits << endl;
   for (auto i : Range(growthvectors)) growthvectors[i] *= limits[i];
 }
 
