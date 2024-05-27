@@ -10,6 +10,10 @@
 #include "pybind11/pytypes.h"
 
 #if defined(NG_PYTHON) && defined(NG_MPI4PY)
+#define MPI4PY_LIMITED_API 1
+#define MPI4PY_LIMITED_API_SKIP_MESSAGE 1
+#define MPI4PY_LIMITED_API_SKIP_SESSION 1
+#include "mpi4py_pycapi.h" // mpi4py < 4.0.0
 #include <mpi4py.h>
 
 #include "python_ngcore.hpp"
