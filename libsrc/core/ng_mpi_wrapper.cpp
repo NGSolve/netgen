@@ -13,6 +13,14 @@ using std::cerr;
 using std::cout;
 using std::endl;
 
+#ifndef NG_MPI_WRAPPER
+#include <mpi.h>
+#define MPI4PY_LIMITED_API 1
+#define MPI4PY_LIMITED_API_SKIP_MESSAGE 1
+#define MPI4PY_LIMITED_API_SKIP_SESSION 1
+#include "mpi4py_pycapi.h"  // mpi4py < 4.0.0
+#endif // NG_MPI_WRAPPER
+
 namespace ngcore {
 
 #ifdef NG_MPI_WRAPPER
@@ -28,9 +36,7 @@ struct MPIFinalizer {
   }
 } mpi_finalizer;
 
-bool MPI_Loaded() {
-  return ng_mpi_lib != nullptr;
-}
+bool MPI_Loaded() { return ng_mpi_lib != nullptr; }
 
 void InitMPI(std::optional<std::filesystem::path> mpi_lib_path) {
   if (ng_mpi_lib) return;
@@ -128,7 +134,7 @@ static std::runtime_error no_mpi() {
   return std::runtime_error("MPI not enabled");
 }
 
-#if defined(NG_PYTHON) && defined(NG_MPI4PY)
+#ifdef NG_PYTHON
 decltype(NG_MPI_CommFromMPI4Py) NG_MPI_CommFromMPI4Py =
     [](py::handle py_obj, NG_MPI_Comm &ng_comm) -> bool {
   // If this gets called, it means that we want to convert an mpi4py
@@ -152,17 +158,17 @@ decltype(NG_MPI_CommFromMPI4Py) NG_MPI_CommFromMPI4Py =
 };
 decltype(NG_MPI_CommToMPI4Py) NG_MPI_CommToMPI4Py =
     [](NG_MPI_Comm) -> py::handle { throw no_mpi(); };
-#endif
+#endif  // NG_PYTHON
 
 #include "ng_mpi_generated_dummy_init.hpp"
 #else  // NG_MPI_WRAPPER
 
 static bool imported_mpi4py = false;
-#if defined(NG_PYTHON) && defined(NG_MPI4PY)
+#ifdef NG_PYTHON
 decltype(NG_MPI_CommFromMPI4Py) NG_MPI_CommFromMPI4Py =
     [](py::handle src, NG_MPI_Comm &dst) -> bool {
   if (!imported_mpi4py) {
-    import_mpi4py();
+    import_mpi4py__MPI();
     imported_mpi4py = true;
   }
   PyObject *py_src = src.ptr();
@@ -177,18 +183,18 @@ decltype(NG_MPI_CommFromMPI4Py) NG_MPI_CommFromMPI4Py =
 decltype(NG_MPI_CommToMPI4Py) NG_MPI_CommToMPI4Py =
     [](NG_MPI_Comm src) -> py::handle {
   if (!imported_mpi4py) {
-    import_mpi4py();
+    import_mpi4py__MPI();
     imported_mpi4py = true;
   }
   return py::handle(PyMPIComm_New(src));
 };
 
-#endif
+#endif  // NG_PYTHON
 
+bool MPI_Loaded() { return true; }
 void InitMPI(std::optional<std::filesystem::path>) {}
 
 #endif  // NG_MPI_WRAPPER
-
 
 }  // namespace ngcore
 

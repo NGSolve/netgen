@@ -93,7 +93,7 @@ install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp 
   xbool.hpp signal.hpp bitarray.hpp table.hpp hashtable.hpp ranges.hpp ngstream.hpp
   simd.hpp simd_avx.hpp simd_avx512.hpp simd_generic.hpp simd_sse.hpp simd_arm64.hpp
   register_archive.hpp autodiff.hpp autodiffdiff.hpp
-  ng_mpi.hpp ng_mpi_generated_declarations.hpp ng_mpi_native.hpp
+  ng_mpi.hpp ng_mpi_generated_declarations.hpp ng_mpi_native.hpp mpi4py_pycapi.h
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/core COMPONENT netgen_devel)
 
 if(ENABLE_CPP_CORE_GUIDELINES_CHECK)
@@ -166,6 +166,7 @@ if(USE_MPI)
     endif()
   else()
     target_link_libraries(ngcore PUBLIC ${MPI_C_LIBRARIES})
+    target_include_directories(ngcore PUBLIC ${MPI_C_INCLUDE_PATH})
   endif(USE_MPI_WRAPPER)
 
 endif(USE_MPI)

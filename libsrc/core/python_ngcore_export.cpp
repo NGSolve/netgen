@@ -371,5 +371,7 @@ threads : int
   ;
 
     
+#ifdef PARALLEL
   py::implicitly_convertible<mpi4py_comm, NgMPI_Comm>();
+#endif // PARALLEL
 }
