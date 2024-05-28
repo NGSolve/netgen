@@ -14,7 +14,6 @@ using std::cout;
 using std::endl;
 
 #ifndef NG_MPI_WRAPPER
-#include <mpi.h>
 #define MPI4PY_LIMITED_API 1
 #define MPI4PY_LIMITED_API_SKIP_MESSAGE 1
 #define MPI4PY_LIMITED_API_SKIP_SESSION 1

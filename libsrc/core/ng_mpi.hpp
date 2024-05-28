@@ -10,6 +10,7 @@
 #include "ngcore_api.hpp"
 
 #ifndef NG_MPI_WRAPPER
+#define OMPI_SKIP_MPICXX
 #include <mpi.h>
 #endif  // NG_MPI_WRAPPER
 

@@ -1,8 +1,7 @@
 #define OMPI_SKIP_MPICXX
+#include <mpi.h>
 
 #include "ng_mpi.hpp"
-
-#include <mpi.h>
 
 #include <type_traits>
 
