@@ -1,21 +1,22 @@
 #define OMPI_SKIP_MPICXX
+#include <mpi.h>
 
 #include "ng_mpi.hpp"
 
-#include <mpi.h>
-
 #include <type_traits>
 
+#include "array.hpp"
 #include "ngcore_api.hpp"
 #include "pybind11/pytypes.h"
 
-#if defined(NG_PYTHON) && defined(NG_MPI4PY)
-#include <mpi4py.h>
-
+#ifdef NG_PYTHON
 #include "python_ngcore.hpp"
-
-namespace py = pybind11;
 #endif
+
+#define MPI4PY_LIMITED_API 1
+#define MPI4PY_LIMITED_API_SKIP_MESSAGE 1
+#define MPI4PY_LIMITED_API_SKIP_SESSION 1
+#include "mpi4py_pycapi.h"  // mpi4py < 4.0.0
 
 #ifdef MSMPI_VER
 int MPI_Comm_create_group(MPI_Comm arg0, MPI_Group arg1, int arg2,
@@ -156,10 +157,10 @@ NGCORE_API_EXPORT void ng_init_mpi();
 static bool imported_mpi4py = false;
 
 void ng_init_mpi() {
-#if defined(NG_PYTHON) && defined(NG_MPI4PY)
+#ifdef NG_PYTHON
   NG_MPI_CommFromMPI4Py = [](py::handle src, NG_MPI_Comm& dst) -> bool {
     if (!imported_mpi4py) {
-      import_mpi4py();
+      import_mpi4py__MPI();
       imported_mpi4py = true;
     }
     PyObject* py_src = src.ptr();
@@ -172,12 +173,12 @@ void ng_init_mpi() {
   };
   NG_MPI_CommToMPI4Py = [](NG_MPI_Comm src) -> py::handle {
     if (!imported_mpi4py) {
-      import_mpi4py();
+      import_mpi4py__MPI();
       imported_mpi4py = true;
     }
     return py::handle(PyMPIComm_New(ng2mpi(src)));
   };
-#endif
+#endif  // NG_PYTHON
 
 #include "ng_mpi_generated_init.hpp"
 }
