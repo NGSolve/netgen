@@ -163,7 +163,6 @@ struct GrowthVectorLimiter {
     double & limit = (pi <= tool.np) ? limits[pi] : limits[map_from[pi]];
     if(limit <= new_limit)
       return false;
-    cout << "limit " << pi << "\t" << limit << " -> " << new_limit << endl;
     limit = new_limit;
     return true;
   }
@@ -220,22 +219,26 @@ struct GrowthVectorLimiter {
     return trig;
   }
 
-  static constexpr double INTERSECTION_SAFETY = .7;
+  static constexpr double INTERSECTION_SAFETY = .9;
   bool LimitGrowthVector(PointIndex pi_to, SurfaceElementIndex sei,
-                         double trig_shift, double seg_shift) {
+                         double trig_shift, double seg_shift, bool check_prism_sides = false) {
     auto pi_from = map_from[pi_to];
     if (!pi_from.IsValid()) return false;
 
-    bool debug= pi_from == 1059;
-    // debug = true;
-    // debug = false;
-
     auto seg = GetSeg(pi_to, seg_shift, true);
-    if (trig_shift > 0) {
-      // if(debug) cout << "check intersection " << mesh[sei] << endl;
+
+    if(check_prism_sides) {
+      for(auto i : Range(3)) {
+        auto side = GetSideTrig(sei, i, trig_shift, true);
+        auto intersection = isIntersectingTrig(seg, side);
+        if(intersection)
+          return ScaleLimit(pi_to, intersection.lam0 *INTERSECTION_SAFETY);
+      }
+      return false;
+    }
+    else if (trig_shift > 0) {
       auto intersection = isIntersectingTrig(seg, GetTrig(sei, trig_shift, true));
       if (!intersection) return false;
-      if(debug) cout << "found intersection " << pi_from << " sel = " << mesh[sei] << ", lam = " << intersection.lam0 << endl;
 
       double scaling_factor = 0.9;
       double s = 1.0;
@@ -246,13 +249,14 @@ struct GrowthVectorLimiter {
         if(!reduced_intersection) break;
       }
 
-      cout << "Scale limits " << s << endl;
+      // cout << "Scale limits " << s << endl;
 
 
-      ScaleLimit(pi_to, s);
+      bool result = false;
+      result |= ScaleLimit(pi_to, s);
       for(auto pi : mesh[sei].PNums())
-        ScaleLimit(pi, s);
-      return true;
+        result |= ScaleLimit(pi, s);
+      return result;
 
 
 
@@ -266,38 +270,22 @@ struct GrowthVectorLimiter {
         intersection = reduced_intersection;
       }
       lam0 = intersection.lam0*seg_shift;
-      // if(dshift*trig_shift < lam0) {
-      //   if(debug) cout << "unshift " << dshift << ',' << lam0 << endl;
-      //   dshift /= 0.9;
-      //   intersection = isIntersectingTrig(seg, GetTrig(sei, dshift));
-      // }
       double max_trig_limit = 1e99;
       auto sel = mesh[sei];
-      for (auto i : Range(3))  {
-        if(debug) cout << "current trig limit " << GetLimit(sel[i]) << endl;
+      for (auto i : Range(3))
         max_trig_limit = min(max_trig_limit, GetLimit(sel[i]));
-    }
 
       double new_seg_limit = lam0*INTERSECTION_SAFETY;
       double new_trig_limit = dshift*trig_shift*INTERSECTION_SAFETY;
 
-      if(debug) cout << "current limits " << GetLimit(pi_from) << ", " << max_trig_limit << endl;
-      if(debug) cout << "new limits " << new_seg_limit << ", " << new_trig_limit << endl;
-
       if(new_trig_limit >= max_trig_limit && new_seg_limit >= GetLimit(pi_from) )
         return false; // nothing to do
 
-      if(debug) cout << "apply intersection " << intersection.lam0*seg_shift  << endl;
-      if(debug) cout << "current limits " << GetLimit(pi_from) << ", " << max_trig_limit << endl;
-      if(debug) cout << "new limits " << new_seg_limit << ", " << new_trig_limit << endl;
-
-      // decide what to limit (apply the larger limit)
-      bool result = false;
+      result = false;
       result |= SetLimit(pi_from, new_seg_limit);
       for (auto pi : sel.PNums())
         result |= SetLimit(pi, new_trig_limit);
 
-      if(debug) cout << "new applied limits " << GetLimit(pi_from) << ", " << GetLimit(sel[0]) << ", " << GetLimit(sel[1]) << ", " << GetLimit(sel[2]) << endl;
       return result;
     } else {
       auto trig = GetTrig(sei, 0.0);
@@ -305,14 +293,10 @@ struct GrowthVectorLimiter {
       // checking with original surface elements -> allow only half the distance
       auto new_seg_limit = 0.40 * intersection.lam0*seg_shift;
       if (intersection && new_seg_limit < GetLimit(pi_from)) {
-        // cout << seg_shift << "\tlimiting " << pi_from << " from " << limits[pi_from] << " to " << new_seg_limit << endl;
         auto p0 = seg[0];
         auto p1 = seg[1];
         auto d = Dist(p0, p1);
         auto [gw, height] = tool.growth_vector_map[pi_to];
-        // cout << "gw = " << *gw << ", height = " << height << endl;
-        // cout << "p0 = " << p0 << ", p1 = " << p1 << ", gw = " << growthvectors[pi_from] << endl;
-        // cout << "\t" << intersection.p << ',' << d << ',' << Dist(intersection.p, p0)/d<< endl;
         return SetLimit(pi_from, new_seg_limit);
       }
       return false;
@@ -508,7 +492,6 @@ struct GrowthVectorLimiter {
                                    return false;
                                  });
     }
-    cout << "intersections counter " << counter << endl;
   }
 };
 
@@ -531,10 +514,8 @@ Vec<3> BoundaryLayerTool ::getEdgeTangent(PointIndex pi, int edgenr) {
 }
 
 void BoundaryLayerTool ::LimitGrowthVectorLengths() {
-  cout << "LIMIT GROWTH VECTOR LENGTHS" << endl;
   static Timer tall("BoundaryLayerTool::LimitGrowthVectorLengths");
   RegionTimer rtall(tall);
-  mesh.Save("mesh_before_limit.vol");
 
   limits.SetSize(mesh.Points().Size());
   limits = 1.0;
@@ -568,9 +549,15 @@ void BoundaryLayerTool ::LimitGrowthVectorLengths() {
         trig_shift, seg_shift, [&](PointIndex pi_to, SurfaceElementIndex sei) {
           if(limiter.LimitGrowthVector(pi_to, sei, trig_shift, seg_shift))
              limit_counter++;
+          auto sel = mesh[sei];
+          bool is_mapped = true;
+          for(auto pi : sel.PNums()) {
+            if (pi >= np) return;
+            if (mapto[pi].Size() == 0) return;
+          }
+          if(limiter.LimitGrowthVector(pi_to, sei, trig_shift, seg_shift, true))
+             limit_counter++;
         });
-    cout << "limit counter " << limit_counter << endl;
-    // break;
   }
 
   // for (auto [pi_to, data] : growth_vector_map) {
@@ -579,7 +566,6 @@ void BoundaryLayerTool ::LimitGrowthVectorLengths() {
   //     limits[pi_from] = min(limits[pi_from], limits[pi_to]);
   // }
 
-  // cout << "limits " << endl << limits << endl;
   for (auto i : Range(growthvectors)) growthvectors[i] *= limits[i];
 }
 
