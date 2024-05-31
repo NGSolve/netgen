@@ -729,9 +729,7 @@ namespace ngcore
     Archive& operator&(std::tuple<T...> &t)
     {
       // call operator& for each element of the tuple
-      // std::ignore to avoid MSVC warning 
-      std::ignore =     
-        std::apply([this](auto&... arg) { std::make_tuple(((*this) & arg).IsParallel()...);}, t);
+      std::apply([this](auto&... arg) { std::make_tuple(((*this) & arg).IsParallel()...);}, t);
       return *this;
     }
 
