@@ -49,7 +49,7 @@ void gather_strided_array(size_t count, char* data) {
   if constexpr (size < stride) {
     char* dst = data;
     char* src = data;
-    for (auto i : Range(count)) {
+    for ( [[maybe_unused]] auto i : Range(count)) {
       memcpy(dst, src, size);
       dst += size;
       src += stride;
