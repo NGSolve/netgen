@@ -120,6 +120,7 @@ elif 'linux' in sys.platform:
 if have_mpi:
     cmake_args += [
         '-DUSE_MPI=ON',
+        '-DUSE_MPI_WRAPPER=ON',
     ]
 
 cmake_args += [
