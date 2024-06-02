@@ -1149,6 +1149,52 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          py::arg("intersection") = false,py::arg("joinType")="arc",
          py::arg("removeIntersectingEdges") = false,
          "makes shell-like solid from faces")
+
+    .def("Offset", [](const TopoDS_Shape & shape, 
+                      double offset, double tol, bool intersection,
+                      string joinT, bool removeIntEdges) {
+           BRepOffsetAPI_MakeOffsetShape maker;
+           GeomAbs_JoinType joinType;
+           if(joinT == "arc")
+             joinType = GeomAbs_Arc;
+           else if(joinT == "intersection")
+             joinType = GeomAbs_Intersection;
+           else
+             throw Exception("Only joinTypes 'arc' and 'intersection' exist!");
+           
+           maker.PerformByJoin(shape, offset, tol,
+                               BRepOffset_Skin, intersection,
+                               false, joinType, removeIntEdges);
+
+           // PropagateProperties (maker, shape);
+
+           // bool have_identifications = false;
+           for (auto typ : { TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
+             for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+               {
+                 auto s = e.Current();
+                 // have_identifications |= OCCGeometry::HaveIdentifications(s);
+                 if(!OCCGeometry::HaveProperties(s))
+                   continue;
+                 auto prop = OCCGeometry::GetProperties(s);
+                 for (auto mods : maker.Generated(s))
+                   {
+                     // OCCGeometry::GetProperties(mods).Merge(prop);
+                     auto & props = OCCGeometry::GetProperties(mods);
+                     props.Merge(prop);
+                     if (prop.name) props.name = string("offset_")+(*prop.name);
+                   }
+               }
+           // if(have_identifications)
+           // PropagateIdentifications(builder, shape, trafo);
+           
+           return maker.Shape();
+       }, py::arg("offset"), py::arg("tol"),
+         py::arg("intersection") = false,py::arg("joinType")="arc",
+         py::arg("removeIntersectingEdges") = false,
+         "makes shell-like solid from faces")
+
+
     
     .def("MakeTriangulation", [](const TopoDS_Shape & shape)
          {
