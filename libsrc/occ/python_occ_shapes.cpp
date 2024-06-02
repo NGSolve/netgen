@@ -1479,6 +1479,24 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
               throw NgException("error in wire builder: "+errstr.str());
             }
         }))
+    .def("Offset", [](const TopoDS_Wire & wire, const TopoDS_Face & face, double dist,
+                      string joinT, bool openresult)
+    {
+      GeomAbs_JoinType joinType;
+      if(joinT == "arc")
+        joinType = GeomAbs_Arc;
+      else if(joinT == "intersection")
+        joinType = GeomAbs_Intersection;
+      else if(joinT == "tangent")
+        joinType = GeomAbs_Tangent;
+      else
+        throw Exception("Only joinTypes 'arc', 'tangent', and 'intersection' exist!");
+      BRepOffsetAPI_MakeOffset builder(face, joinType, openresult);
+      builder.AddWire(wire);
+      builder.Perform(dist);
+      auto shape = builder.Shape();    
+      return shape;
+    })
     ;
 
   py::class_<TopoDS_Face, TopoDS_Shape> (m, "Face")
