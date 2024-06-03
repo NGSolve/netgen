@@ -1072,7 +1072,19 @@ namespace netgen
               if(trafo)
                 p = (*trafo)(p);
               else
-                dst.Project(p);
+                for(auto& edge: dst.edges)
+                  if (edge->primary->nr == seg.edgenr-1)
+                    {
+                      if (mesh[pi].Type() == FIXEDPOINT) {
+                        if((edge->GetStartVertex().GetPoint() - p).Length2() >\
+                           (edge->GetEndVertex().GetPoint() - p).Length2())
+                          p = edge->GetEndVertex().GetPoint();
+                        else
+                          p = edge->GetStartVertex().GetPoint();
+                      }
+                      else
+                        edge->ProjectPoint(p, nullptr);
+                    }
               tree.Insert(p, pi);
               is_point_in_tree[pi] = true;
             }
