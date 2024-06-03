@@ -54,7 +54,7 @@ namespace netgen
   {
     GeometryShape * from;
     GeometryShape * to;
-    Transformation<3> trafo;
+    optional<Transformation<3>> trafo;
     Identifications::ID_TYPE type;
     string name = "";
   };
@@ -67,7 +67,7 @@ namespace netgen
     ShapeProperties properties;
     Array<ShapeIdentification> identifications;
     GeometryShape * primary;
-    Transformation<3> primary_to_me;
+    optional<Transformation<3>> primary_to_me = nullopt;
 
     virtual ~GeometryShape() {}
     virtual bool IsMappedShape( const GeometryShape & other, const Transformation<3> & trafo, double tolerance ) const;
