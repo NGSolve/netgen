@@ -1152,46 +1152,53 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 
     .def("Offset", [](const TopoDS_Shape & shape, 
                       double offset, double tol, bool intersection,
-                      string joinT, bool removeIntEdges) {
+                      string joinT, bool removeIntEdges, optional<string> identification_name) {
            BRepOffsetAPI_MakeOffsetShape maker;
            GeomAbs_JoinType joinType;
            if(joinT == "arc")
              joinType = GeomAbs_Arc;
            else if(joinT == "intersection")
              joinType = GeomAbs_Intersection;
+           else if(joinT == "tangent")
+            joinType = GeomAbs_Tangent;
            else
-             throw Exception("Only joinTypes 'arc' and 'intersection' exist!");
+             throw Exception("Only joinTypes 'arc', 'intersection' and 'tangent' exist!");
            
            maker.PerformByJoin(shape, offset, tol,
                                BRepOffset_Skin, intersection,
                                false, joinType, removeIntEdges);
 
            // PropagateProperties (maker, shape);
-
-           // bool have_identifications = false;
            for (auto typ : { TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
              for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
                {
                  auto s = e.Current();
-                 // have_identifications |= OCCGeometry::HaveIdentifications(s);
-                 if(!OCCGeometry::HaveProperties(s))
-                   continue;
                  auto prop = OCCGeometry::GetProperties(s);
                  for (auto mods : maker.Generated(s))
                    {
-                     // OCCGeometry::GetProperties(mods).Merge(prop);
-                     auto & props = OCCGeometry::GetProperties(mods);
-                     props.Merge(prop);
-                     if (prop.name) props.name = string("offset_")+(*prop.name);
+                     if(OCCGeometry::HaveProperties(s))
+                       {
+                         auto & new_props = OCCGeometry::GetProperties(mods);
+                         new_props.Merge(prop);
+                         if (prop.name) new_props.name = string("offset_")+(*prop.name);
+                       }
+                     if(identification_name)
+                       {
+                         OCCIdentification ident;
+                         ident.from = s;
+                         ident.to = mods;
+                         ident.name = *identification_name;
+                         ident.type = Identifications::CLOSESURFACES;
+                         OCCGeometry::GetIdentifications(s).push_back(ident);
+                       }
                    }
                }
-           // if(have_identifications)
-           // PropagateIdentifications(builder, shape, trafo);
            
            return maker.Shape();
        }, py::arg("offset"), py::arg("tol"),
          py::arg("intersection") = false,py::arg("joinType")="arc",
          py::arg("removeIntersectingEdges") = false,
+         py::arg("identification_name") = nullopt,
          "makes shell-like solid from faces")
 
 

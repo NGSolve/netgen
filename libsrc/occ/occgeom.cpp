@@ -2365,10 +2365,12 @@ namespace netgen
               Array<Handle(StepRepr_RepresentationItem)> items;
               items.Append(MakeReal(ident.from == shape ? 1 : 0));
               items.Append(to);
-              auto & m = ident.trafo.GetMatrix();
+              Transformation<3> trafo;
+              if(ident.trafo) trafo = *ident.trafo;
+              auto & m = trafo.GetMatrix();
               for(auto i : Range(9))
                   items.Append(MakeReal(m(i)));
-              auto & v = ident.trafo.GetVector();
+              auto & v = trafo.GetVector();
               for(auto i : Range(3))
                   items.Append(MakeReal(v(i)));
               items.Append(MakeInt(ident.type));
@@ -2407,12 +2409,15 @@ namespace netgen
                   ident.to = shape_origin;
                 }
 
-              auto & m = ident.trafo.GetMatrix();
+              Transformation<3> trafo;
+              auto & m = trafo.GetMatrix();
               for(auto i : Range(9))
                   m(i) = ReadReal(id_item->ItemElementValue(3+i));
-              auto & v = ident.trafo.GetVector();
+              auto & v = trafo.GetVector();
               for(auto i : Range(3))
                   v(i) = ReadReal(id_item->ItemElementValue(12+i));
+              if(FlatVector(9, &trafo.GetMatrix()(0,0)).L2Norm() != .0 && trafo.GetVector().Length2() != .0)
+                  ident.trafo = trafo;
               ident.type = Identifications::ID_TYPE(ReadInt(id_item->ItemElementValue(15)));
               result.push_back(ident);
           }
