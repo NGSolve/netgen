@@ -9,7 +9,7 @@ dpkg-deb -R openmpi-dev.deb /opt/openmpi
 mv /opt/openmpi/usr/lib/x86_64-linux-gnu/openmpi/include /opt/openmpi/include
 
 
-curl http://ftp.de.debian.org/debian/pool/main/m/mpich/libmpich-dev_4.2.0-5.1_amd64.deb -o mpich.deb
+curl http://ftp.de.debian.org/debian/pool/main/m/mpich/libmpich-dev_4.2.1-2_amd64.deb -o mpich.deb
 dpkg-deb -R mpich.deb /opt/mpich
 mv /opt/mpich/usr/lib/x86_64-linux-gnu/mpich/include /opt/mpich/include
 
