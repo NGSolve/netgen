@@ -625,6 +625,16 @@ if(UNIX)
     endif(temp)
 endif(UNIX)
 
+if(USE_PYTHON AND NOT SKBUILD)
+  # install egg file to let python/pip know that Netgen ist installed
+  file( WRITE "netgen_mesher-py3.egg-info"
+"Metadata-Version: 2.1
+Name: netgen-mesher
+Version: ${NETGEN_VERSION_MAJOR}.${NETGEN_VERSION_MINOR}.${NETGEN_VERSION_PATCH}.post${NETGEN_VERSION_TWEAK}
+")
+  install(FILES netgen_mesher-py3.egg-info DESTINATION ${NG_INSTALL_DIR_PYTHON} COMPONENT netgen)
+endif()
+
 if(APPLE AND NOT SKBUILD)
     # create some auxiliary files
     set(mac_startup ${CMAKE_CURRENT_BINARY_DIR}/startup.sh)
