@@ -780,7 +780,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            PropagateProperties(builder, shape, occ2ng(trafo));
            return builder.Shape();
          }, py::arg("axes"),
-         "copy shape, and mirror over plane defined by 'axes'")
+         "copy shape, and mirror over XY - plane defined by 'axes'")
     
     .def("Mirror", [] (const TopoDS_Shape & shape, const gp_Ax1 & ax)
          {
@@ -790,7 +790,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            PropagateProperties(builder, shape, occ2ng(trafo));
            return builder.Shape();
          }, py::arg("axes"),
-         "copy shape, and mirror around axis 'axis'")
+         "copy shape, and rotate by 180 deg around axis 'axis'")
     
     .def("Scale", [](const TopoDS_Shape & shape, const gp_Pnt p, double s)
          {

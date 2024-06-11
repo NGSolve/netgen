@@ -3,6 +3,9 @@
 #include "bisect.hpp"
 #include "validate.hpp"
 
+#include "meshing.hpp"  // quickfix for parallel 
+
+
 #define noDEBUG
 
 
@@ -2792,6 +2795,20 @@ namespace netgen
     int np = mesh.GetNV();
     mesh.SetNP(np);
 
+
+#ifdef PARALLEL
+    if (mesh.GetCommunicator().Size() > 1)
+      {
+        mesh.GetParallelTopology().IdentifyVerticesAfterRefinement();
+        mesh.GetCommunicator().Barrier();
+        mesh.GetParallelTopology().EnumeratePointsGlobally();
+      }
+#endif
+
+
+
+
+    
     // int ne = mesh.GetNE();
     // int nse = mesh.GetNSE();
     // int i, j, l;
