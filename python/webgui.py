@@ -389,6 +389,7 @@ def Draw(obj, *args, show=True, **kwargs):
 
             html = scene.GenerateHTML()
             display(HTML(html))
+            return
         else:
             import webgui_jupyter_widgets as wjw
             from packaging.version import parse
@@ -400,11 +401,9 @@ def Draw(obj, *args, show=True, **kwargs):
                 scene.Draw(
                     kwargs_with_defaults["width"], kwargs_with_defaults["height"]
                 )
-            return scene
-    else:
-        if "filename" in kwargs_with_defaults:
-            scene.GenerateHTML(filename=kwargs_with_defaults["filename"])
-        return scene
+    if "filename" in kwargs_with_defaults:
+        scene.GenerateHTML(filename=kwargs_with_defaults["filename"])
+    return scene
 
 
 def _DrawDocu(obj, *args, **kwargs):
