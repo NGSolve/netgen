@@ -1,30 +1,9 @@
 import os
 import sys
-import importlib.metadata
-from pathlib import Path
 
 from . import config
 _netgen_bin_dir=os.path.realpath(os.path.join(os.path.dirname(__file__),'..',config.NETGEN_PYTHON_RPATH_BIN))
 _netgen_lib_dir=os.path.realpath(os.path.join(os.path.dirname(__file__),'..',config.NETGEN_PYTHON_RPATH))
-
-def _add_shared_lib_path(p: Path):
-    print("Adding shared search path", f.locate().parent)
-    if sys.platform.startswith('win'):
-        os.add_dll_directory(p)
-    elif 'linux' in sys.platform:
-        if str(p) not in os.environ['LD_LIBRARY_PATH']:
-            os.environ['LD_LIBRARY_PATH'] = str(p) + ':' + os.environ['LD_LIBRARY_PATH']
-    elif 'darwin' in sys.platform:
-        if str(p) not in os.environ['DYLD_LIBRARY_PATH']:
-            os.environ['DYLD_LIBRARY_PATH'] = str(p) + ':' + os.environ['DYLD_LIBRARY_PATH']
-try:
-    importlib.metadata.metadata('netgen-occt')
-    for f in importlib.metadata.files('netgen-occt'):
-        if f.match('*libTKernel*'):
-            print("Adding shared search path", f.locate().parent)
-            _add_shared_lib_path(f.locate().parent)
-except importlib.metadata.PackageNotFoundError:
-    pass
 
 __diagnostics_template = """
 Netgen diagnostics:
