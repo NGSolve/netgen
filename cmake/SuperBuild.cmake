@@ -120,27 +120,14 @@ if(BUILD_OCC)
   list(APPEND NETGEN_DEPENDENCIES project_occ)
   set(OpenCascade_ROOT ${OCC_DIR})
 else(BUILD_OCC)
-    if(WIN32 AND NOT OCC_INCLUDE_DIR AND NOT OpenCASCADE_DIR)
-        # we can download prebuilt occ binaries for windows
-        ExternalProject_Add(win_download_occ
-          ${SUBPROJECT_ARGS}
-          URL ${OCC_DOWNLOAD_URL_WIN}
-          UPDATE_COMMAND "" # Disable update
-          BUILD_IN_SOURCE 1
-          CONFIGURE_COMMAND ""
-          BUILD_COMMAND ""
-          INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory . ${CMAKE_INSTALL_PREFIX}
-          )
-        list(APPEND NETGEN_DEPENDENCIES win_download_occ)
-    else()
-        find_package(OpenCascade NAMES OpenCasCade OpenCASCADE opencascade)
-        if(NOT OpenCascade_FOUND)
-          message(FATAL_ERROR "Opencascade not found, either\n\
-          - set OpenCascade_DIR to a directory containting opencascadeConfig.cmake\n\
-          - build OpenCascade automatically by passing -DBUILD_OCC=ON\n\
-          - disable OpenCascade by passing -DUSE_OCC=OFF\n\
-          ")
-        endif()
+    find_package(OpenCascade NAMES OpenCasCade OpenCASCADE opencascade)
+    if(NOT OpenCascade_FOUND)
+      message(FATAL_ERROR "Opencascade not found, either\n\
+      - install pip packages netgen-occt-devel netgen-occ\n\
+      - set OpenCascade_DIR to a directory containting opencascadeConfig.cmake\n\
+      - build OpenCascade automatically by passing -DBUILD_OCC=ON\n\
+      - disable OpenCascade by passing -DUSE_OCC=OFF\n\
+      ")
     endif()
 endif(BUILD_OCC)
 endif(USE_OCC)

@@ -4,14 +4,20 @@ import os
 import sys
 import pathlib
 import sysconfig
+import importlib.metadata
 
 from skbuild import setup
 import skbuild.cmaker
 from subprocess import check_output
 
-setup_requires = ['pybind11-stubgen==2.5']
+setup_requires = ['pybind11-stubgen>=2.5', 'netgen-occt-devel']
 
 pyprefix = pathlib.Path(sys.prefix).as_posix()
+
+def find_occt_dir():
+    for f in importlib.metadata.files("netgen-occt-devel"):
+        if f.match("OpenCASCADEConfig.cmake"):
+            return f.locate().parent.resolve().absolute().as_posix()
 
 def install_filter(cmake_manifest):
     print(cmake_manifest)
@@ -36,7 +42,7 @@ if len(version)>2:
 if len(version)>1:
     version = '.post'.join(version)
     if not 'NG_NO_DEV_PIP_VERSION' in os.environ:
-        version += '.dev'
+        version += '.dev0'
 else:
     version = version[0]
 
@@ -47,6 +53,7 @@ arch = None
 cmake_args = [
         f'-DNETGEN_VERSION_GIT={git_version}',
         f'-DNETGEN_VERSION_PYTHON={version}',
+        f'-DOpenCascade_DIR={find_occt_dir()}',
     ]
 
 if 'NETGEN_ARCH' in os.environ and os.environ['NETGEN_ARCH'] == 'avx2':
@@ -132,7 +139,7 @@ cmake_args += [
         '-DUSE_GUI=ON',
         '-DUSE_NATIVE_ARCH=OFF',
         '-DBUILD_ZLIB=ON',
-        '-DBUILD_OCC=ON',
+        '-DBUILD_OCC=OFF',
         '-DUSE_OCC=ON',
         '-DBUILD_FOR_CONDA=ON',
         f'-DNETGEN_PYTHON_PACKAGE_NAME={name}',
@@ -149,6 +156,7 @@ setup(
     license="LGPL2.1",
     packages=packages,
     #package_dir={'netgen': 'python'},
+    install_requires=[f"netgen-occt=={importlib.metadata.version('netgen-occt-devel')}"],
     tests_require=['pytest'],
     #include_package_data=True,
     cmake_process_manifest_hook=install_filter,

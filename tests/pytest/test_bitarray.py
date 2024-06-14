@@ -1,3 +1,4 @@
+import netgen
 from pyngcore import BitArray
 
 def test_bitarray():

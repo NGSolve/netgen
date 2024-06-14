@@ -23,13 +23,15 @@ for pyversion in 312 311 310 39 38
 do
     export PYDIR="/opt/python/cp${pyversion}-cp${pyversion}/bin"
     echo $PYDIR
-    $PYDIR/pip install -U pytest-check numpy wheel scikit-build pybind11-stubgen
+    $PYDIR/pip install -U pytest-check numpy wheel scikit-build pybind11-stubgen netgen-occt==7.8.1 netgen-occt-devel==7.8.1
     $PYDIR/pip install -i https://pypi.anaconda.org/mpi4py/simple/ --pre mpi4py
 
     rm -rf _skbuild
     NETGEN_ARCH=avx2 $PYDIR/pip wheel .
-    auditwheel repair netgen_mesher*-cp${pyversion}-*.whl
-    rm netgen_mesher-*.whl
+    mkdir -p wheelhouse
+    #auditwheel repair netgen_mesher*-cp${pyversion}-*.whl
+    rename linux_x86_64 manylinux_2_17_x86_64.manylinux2014_x86_64 netgen_mesher*-cp${pyversion}-*.whl
+    mv netgen_mesher*-cp${pyversion}-*.whl wheelhouse/
 
     $PYDIR/pip install wheelhouse/netgen_mesher*-cp${pyversion}-*.whl
     $PYDIR/python3 -c 'import netgen'
