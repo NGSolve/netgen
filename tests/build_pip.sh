@@ -19,7 +19,7 @@ export NETGEN_CCACHE=1
 
 /opt/python/cp39-cp39/bin/python tests/fix_auditwheel_policy.py
 
-for pyversion in 38 39 310 311 312
+for pyversion in 312 311 310 39 38
 do
     export PYDIR="/opt/python/cp${pyversion}-cp${pyversion}/bin"
     echo $PYDIR
@@ -33,9 +33,9 @@ do
 
     $PYDIR/pip install wheelhouse/netgen_mesher*-cp${pyversion}-*.whl
     $PYDIR/python3 -c 'import netgen'
+    $PYDIR/pip install -U twine
+    $PYDIR/twine upload --skip-existing wheelhouse/netgen_mesher*-cp${pyversion}*manylinux*.whl
     #cd ../tests/pytest
     #$PYDIR/python3 -m pytest
 done
 
-$PYDIR/pip install -U twine
-$PYDIR/twine upload wheelhouse/*manylinux*.whl
