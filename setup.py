@@ -1,5 +1,6 @@
 import glob
 import os.path
+import os
 import sys
 import pathlib
 import sysconfig
@@ -33,7 +34,9 @@ version = git_version[1:].split('-')
 if len(version)>2:
     version = version[:2]
 if len(version)>1:
-    version = '.post'.join(version) + '.dev'
+    version = '.post'.join(version)
+    if not 'NG_NO_DEV_PIP_VERSION' in os.environ:
+        version += '.dev'
 else:
     version = version[0]
 
