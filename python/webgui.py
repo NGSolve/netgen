@@ -333,6 +333,15 @@ class WebGLScene(base):
             else:
                 d["objects"].append(obj._GetWebguiData())
 
+        if 'center' in kwargs:
+            center = list(kwargs['center'])
+            if len(center) == 2:
+                center.append(0.)
+            d["mesh_center"] = center
+
+        if 'radius' in kwargs:
+            d["mesh_radius"] = kwargs['radius']
+
         return d
 
 
