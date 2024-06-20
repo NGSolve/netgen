@@ -1767,7 +1767,18 @@ namespace netgen
                   id_from = shape_map.FindIndex(id.from)-1;
                   id_to = shape_map.FindIndex(id.to)-1;
                 }
-                ar & id_from & id_to & id.trafo & id.name;
+                ar & id_from & id_to;
+
+                // trafo is now optional -> special treatment necessary for backward compatibility
+                if(ar.Output() || netgen_version >= "v6.2.2403-34-g571cbbe4")
+                  ar & id.trafo;
+                else
+                {
+                  auto trafo = Transformation<3>();
+                  ar & trafo;
+                  id.trafo = trafo;
+                }
+                ar & id.name;
                 if(ar.Input())
                 {
                     id.from = shape_list[id_from];
