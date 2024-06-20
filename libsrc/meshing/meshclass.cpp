@@ -7231,7 +7231,7 @@ namespace netgen
 
     for(auto dom : Range(ndomains))
     {
-      if(regex_match(mesh.GetMaterial(dom), regex_domains))
+      if(regex_match(mesh.GetMaterial(dom+1), regex_domains))
         keep_domain.SetBit(dom);
     }
 
