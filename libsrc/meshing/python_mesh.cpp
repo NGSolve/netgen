@@ -1234,15 +1234,12 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
            {
              MeshingParameters mp;
              if(pars) mp = *pars;
-             {
-               py::gil_scoped_acquire acquire;
-               CreateMPfromKwargs(mp, kwargs);
-             }
+             CreateMPfromKwargs(mp, kwargs);
+             py::gil_scoped_release gil_release;
              MeshVolume (mp, self);
              OptimizeVolume (mp, self);
            }, py::arg("mp")=nullptr,
-          meshingparameter_description.c_str(),
-          py::call_guard<py::gil_scoped_release>())
+          meshingparameter_description.c_str())
 
     .def ("OptimizeVolumeMesh", [](Mesh & self, MeshingParameters* pars)
           {

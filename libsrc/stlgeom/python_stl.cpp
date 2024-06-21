@@ -188,17 +188,16 @@ NGCORE_API_EXPORT void ExportSTL(py::module & m)
                          {
                            MeshingParameters mp;
                            STLParameters stlparam;
-                           { py::gil_scoped_acquire aq;
-                             if(pars)
-                             {
-                               auto mp_flags = pars->geometrySpecificParameters;
-                               auto mp_kwargs = CreateDictFromFlags(mp_flags);
-                               CreateSTLParametersFromKwargs(stlparam, mp_kwargs);
-                               mp = *pars;
-                             }
-                             CreateSTLParametersFromKwargs(stlparam, kwargs);
-                             CreateMPfromKwargs(mp, kwargs); // this will throw if any kwargs are not passed
+                           if(pars)
+                           {
+                             auto mp_flags = pars->geometrySpecificParameters;
+                             auto mp_kwargs = CreateDictFromFlags(mp_flags);
+                             CreateSTLParametersFromKwargs(stlparam, mp_kwargs);
+                             mp = *pars;
                            }
+                           CreateSTLParametersFromKwargs(stlparam, kwargs);
+                           CreateMPfromKwargs(mp, kwargs); // this will throw if any kwargs are not passed
+                           py::gil_scoped_release gil_release;
                            if(!mesh)
                              {
                                mesh = make_shared<Mesh>();
@@ -215,7 +214,6 @@ NGCORE_API_EXPORT void ExportSTL(py::module & m)
 
                            return mesh;
                          }, py::arg("mp") = nullptr, py::arg("mesh") = nullptr,
-      py::call_guard<py::gil_scoped_release>(),
          (meshingparameter_description + stlparameter_description).c_str())
     .def("Draw", FunctionPointer
          ([] (shared_ptr<STLGeometry> self)
