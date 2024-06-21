@@ -756,10 +756,8 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
            {
              MeshingParameters mp;
              if(pars) mp = *pars;
-             {
-               py::gil_scoped_acquire aq;
-               CreateMPfromKwargs(mp, kwargs);
-             }
+             CreateMPfromKwargs(mp, kwargs);
+             py::gil_scoped_release gil_rel;
              auto mesh = make_shared<Mesh>();
              SetGlobalMesh (mesh);
              mesh->SetGeometry(geo);
@@ -770,8 +768,7 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
                throw Exception("Meshing failed!");
              return mesh;
            }, py::arg("mp") = nullptr,
-       meshingparameter_description.c_str(),
-    py::call_guard<py::gil_scoped_release>())
+       meshingparameter_description.c_str())
     ;
 
   m.def("Save", FunctionPointer 

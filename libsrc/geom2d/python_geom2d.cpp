@@ -401,10 +401,8 @@ NGCORE_API_EXPORT void ExportGeom2d(py::module &m)
 		{
                   MeshingParameters mp;
                   if(pars) mp = *pars;
-                  {
-                    py::gil_scoped_acquire aq;
-                    CreateMPfromKwargs(mp, kwargs);
-                  }
+                  CreateMPfromKwargs(mp, kwargs);
+                  py::gil_scoped_release gil_release;
 		  auto mesh = make_shared<Mesh>();
                   mesh->SetGeometry(self);
                   SetGlobalMesh (mesh);
@@ -414,7 +412,6 @@ NGCORE_API_EXPORT void ExportGeom2d(py::module &m)
                     throw Exception("Meshing failed!");
 		  return mesh;
                 }, py::arg("mp") = nullopt,
-      py::call_guard<py::gil_scoped_release>(),
       meshingparameter_description.c_str())
     .def("_SetDomainTensorMeshing", &SplineGeometry2d::SetDomainTensorMeshing)
     ;
@@ -466,10 +463,8 @@ NGCORE_API_EXPORT void ExportGeom2d(py::module &m)
 		{
                   MeshingParameters mp;
                   if(pars) mp = *pars;
-                  {
-                    py::gil_scoped_acquire aq;
                     CreateMPfromKwargs(mp, kwargs);
-                  }
+                  py::gil_scoped_release gil_release;
 		  auto mesh = make_shared<Mesh>();
                   auto geo = self.GenerateSplineGeometry();
                   mesh->SetGeometry(geo);
@@ -480,7 +475,6 @@ NGCORE_API_EXPORT void ExportGeom2d(py::module &m)
                     throw Exception("Meshing failed!");
 		  return mesh;
                 }, py::arg("mp") = nullopt,
-      py::call_guard<py::gil_scoped_release>(),
       meshingparameter_description.c_str())
     ;
 
