@@ -14,6 +14,7 @@
 #include "occgeom.hpp"
 #include "Partition_Spliter.hxx"
 
+#include <BinTools.hxx>
 #include <BOPAlgo_Builder.hxx>
 #include <BRepBndLib.hxx>
 #include <BRepBuilderAPI_Copy.hxx>
@@ -1638,8 +1639,12 @@ namespace netgen
 
       if(!result)
       {
-         delete occgeo;
-         return NULL;
+        result = BinTools::Read(occgeo->shape, filename.string().c_str());
+        if (!result)
+          {
+            delete occgeo;
+            throw Exception("Could not read BREP file " + filename.string());
+          }
       }
 
       occgeo->changed = 1;
