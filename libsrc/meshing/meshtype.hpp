@@ -425,6 +425,7 @@ namespace netgen
     // control whether it is visible or not
     bool visible:1;  // element visible
     bool is_curved;   // element is (high order) curved
+    int8_t newest_vertex = -1; // from refinement via bisection
     /// order for hp-FEM
     unsigned int orderx:6;
     unsigned int ordery:6;
@@ -561,6 +562,9 @@ namespace netgen
     PointGeomInfo & GeomInfoPiMod (int i) { return geominfo[(i-1) % np]; }
     ///
     const PointGeomInfo & GeomInfoPiMod (int i) const { return geominfo[(i-1) % np]; }
+
+    auto & NewestVertex() { return newest_vertex; }
+    auto NewestVertex() const { return newest_vertex; }
 
     void DoArchive (Archive & ar)
     {
@@ -731,7 +735,8 @@ namespace netgen
     ELEMENT_TYPE typ;
     /// number of points (4..tet, 5..pyramid, 6..prism, 8..hex, 10..quad tet, 12..quad prism)
     int8_t np;
-
+    int8_t newest_vertex = -1; // from refinement via bisection
+    
     /// sub-domain index
     int index;
     /// order for hp-FEM
@@ -855,6 +860,9 @@ namespace netgen
     PointIndex & PNumMod (int i) { return pnum[(i-1) % np]; }
     ///
     const PointIndex & PNumMod (int i) const { return pnum[(i-1) % np]; }
+
+    auto & NewestVertex() { return newest_vertex; }
+    auto NewestVertex() const { return newest_vertex; }
 
     void DoArchive (Archive & ar)
     {

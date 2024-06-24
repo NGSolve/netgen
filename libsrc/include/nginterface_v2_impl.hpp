@@ -191,6 +191,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<2> (size_t nr) const
       ret.facets.ptr = ret.edges.Data();
     }
   ret.is_curved = el.IsCurved();
+  ret.newest_vertex = el.NewestVertex();
   return ret;
 }
 
@@ -226,6 +227,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<3> (size_t nr) const
   ret.facets.ptr = ret.faces.Data();
 
   ret.is_curved = el.IsCurved();
+  ret.newest_vertex = el.NewestVertex();
   return ret;
 }
 

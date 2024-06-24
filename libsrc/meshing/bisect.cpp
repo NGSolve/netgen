@@ -34,6 +34,7 @@ namespace netgen
     // unsigned char faceedges[4];
     bool incorder;
     unsigned int order:6;
+    int8_t newest_vertex;
 
     MarkedTet() = default;
     /*
@@ -195,6 +196,7 @@ namespace netgen
 
     bool incorder;
     unsigned int order:6;
+    int8_t newest_vertex;
   };
   
   ostream & operator<< (ostream & ost, const MarkedTri & mt)
@@ -1258,6 +1260,8 @@ namespace netgen
     newtet1.marked = nm;
     newtet2.marked = nm;
 
+    newtet1.newest_vertex = oldtet.newest_vertex;
+
 #ifdef DEBUG
     *testout << "newtet1,before = " << newtet1 << endl;
     *testout << "newtet2,before = " << newtet2 << endl;
@@ -1267,6 +1271,7 @@ namespace netgen
       {
 	if (i == oldtet.tetedge1)
 	  {
+            newtet2.newest_vertex = i;
 	    newtet2.pnums[i] = newp;
 	    newtet2.faceedges[i] = oldtet.faceedges[i];  // inherited face
 	    newtet2.faceedges[vis1] = i;        // cut faces
@@ -1463,11 +1468,12 @@ namespace netgen
     newtri1.pnums[pe2] = newp;
     newtri1.pgeominfo[pe2] = newpgi;
     newtri1.markededge = pe2;
+    newtri1.newest_vertex = oldtri.newest_vertex;
 
     newtri2.pnums[pe1] = newp;
     newtri2.pgeominfo[pe1] = newpgi;
     newtri2.markededge = pe1;
-
+    newtri2.newest_vertex = pe1;
 
     newtri1.surfid = oldtri.surfid;
     newtri2.surfid = oldtri.surfid;
@@ -3715,6 +3721,7 @@ namespace netgen
             el.SetOrder (tet.order);
             for (int j = 0; j < 4; j++)
               el[j] = tet.pnums[j];
+            el.NewestVertex() = tet.newest_vertex;
             mesh.SetVolumeElement (ElementIndex(i), el);
           }
        });
@@ -3811,6 +3818,7 @@ namespace netgen
                 el[j] = trig.pnums[j];
                 el.GeomInfoPi(j+1) = trig.pgeominfo[j];
               }
+            el.NewestVertex() = trig.newest_vertex;
             mesh.SetSurfaceElement (SurfaceElementIndex(i), el);
           }
        });
