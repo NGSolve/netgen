@@ -616,8 +616,8 @@ namespace netgen
         endp = vert2meshpt[edge->GetEndVertex().nr];
 
         // ignore collapsed edges
-        if(startp == endp && edge->GetLength() < 1e-10 * bounding_box.Diam())
-            continue;
+        if(edge->IsDegenerated())
+          continue;
 
         // ----------- Add Points to mesh and create segments -----
         auto & pnums = all_pnums[edgenr];
