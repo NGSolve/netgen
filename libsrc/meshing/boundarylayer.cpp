@@ -227,6 +227,11 @@ struct GrowthVectorLimiter {
 
     auto seg = GetSeg(pi_to, seg_shift, true);
 
+    for (auto pi : mesh[sei].PNums()) {
+      if (pi == pi_from) return false;
+      if (map_from[pi] == pi_from) return false;
+    }
+
     if(check_prism_sides) {
       for(auto i : Range(3)) {
         auto side = GetSideTrig(sei, i, trig_shift, true);
