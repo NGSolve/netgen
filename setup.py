@@ -35,13 +35,20 @@ def _patched_parse_manifests(self):
 # patch the parse_manifests function to point to the actual netgen cmake project within the superbuild
 skbuild.cmaker.CMaker._parse_manifests = _patched_parse_manifests
 
+def is_dev_build():
+    if 'NG_NO_DEV_PIP_VERSION' in os.environ:
+        return False
+    if 'CI_COMMIT_REF_NAME' in os.environ and os.environ['CI_COMMIT_REF_NAME'] == 'release':
+        return False
+    return True
+
 git_version = check_output(['git', 'describe', '--tags']).decode('utf-8').strip()
 version = git_version[1:].split('-')
 if len(version)>2:
     version = version[:2]
 if len(version)>1:
     version = '.post'.join(version)
-    if not 'NG_NO_DEV_PIP_VERSION' in os.environ:
+    if is_dev_build():
         version += '.dev0'
 else:
     version = version[0]
