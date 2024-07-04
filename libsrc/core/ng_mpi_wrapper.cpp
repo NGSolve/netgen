@@ -6,7 +6,9 @@
 
 #include "ng_mpi.hpp"
 #include "ngstream.hpp"
+#ifdef NG_PYTHON
 #include "python_ngcore.hpp"
+#endif // NG_PYTHON
 #include "utils.hpp"
 
 using std::cerr;
@@ -94,6 +96,7 @@ void InitMPI(std::optional<std::filesystem::path> mpi_lib_path) {
       throw e;
     }
   } else {
+#ifdef NG_PYTHON
     // Use mpi4py to init MPI library and get the vendor name
     auto mpi4py = py::module::import("mpi4py.MPI");
     vendor = mpi4py.attr("get_vendor")()[py::int_(0)].cast<std::string>();
@@ -106,6 +109,7 @@ void InitMPI(std::optional<std::filesystem::path> mpi_lib_path) {
     mpi_lib =
         std::make_unique<SharedLibrary>(mpi4py_lib_file, std::nullopt, true);
 #endif  // WIN32
+#endif // NG_PYTHON
   }
 
   std::string ng_lib_name = "";
