@@ -670,6 +670,7 @@ namespace netgen
                 FaceDescriptor new_fd(-1, isIn ? new_mat_nrs[i] : fd.DomainIn(),
                                       isIn ? fd.DomainOut() : new_mat_nrs[i], -1);
                 new_fd.SetBCProperty(new_si);
+                new_fd.SetSurfColour(fd.SurfColour());
                 mesh.AddFaceDescriptor(new_fd);
                 si_map[i] = new_si;
                 moved_surfaces.SetBit(i);
