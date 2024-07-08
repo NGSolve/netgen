@@ -16,10 +16,12 @@ using std::cout;
 using std::endl;
 
 #ifndef NG_MPI_WRAPPER
+#ifdef NG_PYTHON
 #define MPI4PY_LIMITED_API 1
 #define MPI4PY_LIMITED_API_SKIP_MESSAGE 1
 #define MPI4PY_LIMITED_API_SKIP_SESSION 1
 #include "mpi4py_pycapi.h"  // mpi4py < 4.0.0
+#endif // NG_PYTHON
 #endif // NG_MPI_WRAPPER
 
 namespace ngcore {
