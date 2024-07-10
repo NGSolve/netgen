@@ -1207,6 +1207,8 @@ namespace netgen
     facedecoding.SetSize(0);
 
     bool endmesh = false;
+
+    bool has_facedescriptors = false;
     
 
     while (infile.good() && !endmesh)
@@ -1226,6 +1228,7 @@ namespace netgen
 
         if (strcmp (str, "facedescriptors") == 0)
           {
+            has_facedescriptors = true;
             int nfd;
             infile >> nfd;
             for([[maybe_unused]] auto i : Range(nfd))
@@ -1610,7 +1613,11 @@ namespace netgen
 
                  surfnr--;
 
-                 if(surfnr > 0) 
+                 if(has_facedescriptors)
+                 {
+                    GetFaceDescriptor(i).SetSurfColour(surfcolour);
+                 }
+                 else if(surfnr > 0)
                  {
                     for(int facedesc = 1; facedesc <= cnt_facedesc; facedesc++)
                     {
@@ -1637,7 +1644,14 @@ namespace netgen
                     double transp;
                     infile >> surfnr >> transp;
                     surfnr--;
-                    if(surfnr > 0)
+                    if(has_facedescriptors)
+                    {
+                       auto& fd = GetFaceDescriptor(index);
+                       auto scol = fd.SurfColour();
+                       scol[3] = transp;
+                       fd.SetSurfColour(scol);
+                    }
+                    else if(surfnr > 0)
                       {
                         for(int facedesc = 1; facedesc <= cnt_facedesc; facedesc++)
                           {
