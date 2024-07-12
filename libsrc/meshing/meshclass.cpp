@@ -1839,6 +1839,7 @@ namespace netgen
     archive & surfelements;
     archive & volelements;
     archive & segments;
+    archive & pointelements;
     archive & facedecoding;
     archive & materials & bcnames & cd2names & cd3names;
     archive & numvertices;

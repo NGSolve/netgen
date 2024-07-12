@@ -145,6 +145,10 @@ namespace netgen
 
 
 
+ void Element0d :: DoArchive (Archive & ar)
+ {
+   ar & pnum & index;
+ }
 
   Segment :: Segment() 
     : is_curved(false)
