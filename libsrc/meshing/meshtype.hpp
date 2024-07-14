@@ -1163,7 +1163,12 @@ namespace netgen
     int index;
     Element0d () = default;
     Element0d (PointIndex _pnum, int _index)
-      : pnum(_pnum), index(_index) { ; } 
+      : pnum(_pnum), index(_index) { ; }
+
+#ifdef PARALLEL
+    static NG_MPI_Datatype MyGetMPIType();
+#endif
+    
     void DoArchive (Archive & ar);
   };
 
@@ -1671,6 +1676,9 @@ namespace ngcore
   };
   template <> struct MPI_typetrait<netgen::Segment> {
     static NG_MPI_Datatype MPIType ()  { return netgen::Segment::MyGetMPIType(); }
+  };
+  template <> struct MPI_typetrait<netgen::Element0d> {
+    static NG_MPI_Datatype MPIType ()  { return netgen::Element0d::MyGetMPIType(); }
   };
 
 }

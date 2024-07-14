@@ -1810,6 +1810,33 @@ namespace netgen
             archive & copy_el1d;
           }
 
+
+        // sending 0D elements
+        auto copy_el0d  (pointelements);
+        for (auto & el : copy_el0d)
+          {
+            auto & pi = el.pnum;
+            if (pi != PointIndex(PointIndex::INVALID))
+              pi = globnum[pi];
+          }
+        
+        if (comm.Rank() > 0)
+          comm.Send(copy_el0d, 0, 200);
+        else
+          {
+            Array<Element0d> el0di;
+            for (int j = 1; j < comm.Size(); j++)
+              {
+                comm.Recv(el0di, j, 200);
+                for (auto & el : el0di)
+                  copy_el0d += el;
+              }
+            archive & copy_el0d;
+          }
+
+
+
+        
         if (comm.Rank() == 0)
           {
             archive & facedecoding;
