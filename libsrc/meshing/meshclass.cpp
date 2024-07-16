@@ -7284,7 +7284,7 @@ namespace netgen
         keep_face.SetBit(fd.BCProperty());
     }
 
-    auto filter_elements = [&mesh, &keep_point](auto & elements, auto & keep_region)
+    auto filter_elements = [&keep_point](auto & elements, auto & keep_region)
     {
       for(auto & el : elements)
       {
