@@ -46,17 +46,26 @@ namespace ngcore
   class IVec
   {
     /// data
-    T i[(N>0)?N:1];
-    // std::array<T,N> i;
+    // T i[(N>0)?N:1];
 
+    HTArray<N,T> i;
+    
   public:
     ///
     NETGEN_INLINE IVec () { }
 
+    constexpr NETGEN_INLINE IVec (T ai1) : i(ai1) { }
+    
+    template <class... T2,
+              std::enable_if_t<N==1+sizeof...(T2),bool> = true>
+    constexpr IVec (const T &v, T2... rest)
+      : i{v,rest...} { } 
+
+    /*
     /// init all
     NETGEN_INLINE IVec (T ai1)
     { 
-      for (int j = 0; j < N; j++) { i[j] = ai1; }
+     for (int j = 0; j < N; j++) { i[j] = ai1; }
     }
 
     /// init i[0], i[1]
@@ -78,12 +87,13 @@ namespace ngcore
     /// init i[0], i[1], i[2]
     NETGEN_INLINE IVec (T ai1, T ai2, T ai3, T ai4, T ai5, T ai6, T ai7, T ai8, T ai9)
       : i{ai1, ai2, ai3, ai4, ai5, ai6, ai7, ai8, ai9 } { ; }            
-
+    */
+    
     template <typename ARCHIVE>
     void DoArchive(ARCHIVE& ar)
     {
       // ar.Do(i.begin(), N);
-      ar.Do(i, N);
+      ar.Do(i.Ptr(), N);
     }
 
     template <int N2, typename T2>

@@ -1528,6 +1528,8 @@ namespace ngcore
   }
                                
 
+  struct HTAHelp { };
+  
   // head-tail array
   template <size_t S, typename T>
   class HTArray
@@ -1535,10 +1537,22 @@ namespace ngcore
     HTArray<S-1,T> tail;
     T head;
   public:
-    HTArray () = default;
-    HTArray (const HTArray &) = default;
+    constexpr HTArray () = default;
+    constexpr HTArray (const HTArray &) = default;
     template <typename T2>
-    HTArray (const HTArray<S,T2> & a2) : tail(a2.Tail()), head(a2.Head()) { ; }
+    constexpr HTArray (const HTArray<S,T2> & a2) : tail(a2.Tail()), head(a2.Head()) { ; }
+
+    constexpr HTArray (T v) : tail(v), head(v) { } // all the same
+    
+    template <class... T2,
+              std::enable_if_t<S==1+sizeof...(T2),bool> = true>
+    constexpr HTArray (const T &v, T2... rest)
+      : tail{HTAHelp(), v,rest...}, head(std::get<S-2>(std::tuple(rest...))) { }
+
+    template <class... T2>
+    constexpr HTArray (HTAHelp h, const T &v, T2... rest)
+      : tail{h, v,rest...}, head(std::get<S-2>(std::tuple(rest...))) { }
+
     
     HTArray & operator= (const HTArray &) = default;
 
@@ -1559,10 +1573,15 @@ namespace ngcore
   {
     T head;
   public:
-    HTArray () = default;
-    HTArray (const HTArray &) = default;
+    constexpr HTArray () = default;
+    constexpr HTArray (const HTArray &) = default;
     template <typename T2>
-    HTArray (const HTArray<1,T2> & a2) : head(a2.Head()) { ; }
+    constexpr HTArray (const HTArray<1,T2> & a2) : head(a2.Head()) { ; }
+    constexpr HTArray (T v) : head(v) { } // all the same
+    template <class... T2>    
+    constexpr HTArray (HTAHelp h, const T &v, T2... rest)
+      : head(v) { } 
+
     
     HTArray & operator= (const HTArray &) = default;
 
@@ -1590,7 +1609,7 @@ namespace ngcore
     HTArray (const HTArray &) = default;
     template <typename T2>
     HTArray (const HTArray<0,T2> & a2) { ; }
-    
+    constexpr HTArray (T v) { } // all the same    
     HTArray & operator= (const HTArray &) = default;
 
     /*
