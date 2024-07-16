@@ -164,7 +164,7 @@ void ng_init_mpi() {
       imported_mpi4py = true;
     }
     PyObject* py_src = src.ptr();
-    auto type = Py_TYPE(py_src);
+    [[maybe_unused]] auto type = Py_TYPE(py_src);
     if (PyObject_TypeCheck(py_src, &PyMPIComm_Type)) {
       dst = mpi2ng(*PyMPIComm_Get(py_src));
       return !PyErr_Occurred();

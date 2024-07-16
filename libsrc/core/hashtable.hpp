@@ -46,7 +46,8 @@ namespace ngcore
   class IVec
   {
     /// data
-    T i[(N>0)?N:1];
+    // T i[(N>0)?N:1];
+    std::array<T,N> i;
 
   public:
     ///
@@ -81,7 +82,7 @@ namespace ngcore
     template <typename ARCHIVE>
     void DoArchive(ARCHIVE& ar)
     {
-      ar.Do(i, N);
+      ar.Do(i.begin(), N);
     }
 
     template <int N2, typename T2>
