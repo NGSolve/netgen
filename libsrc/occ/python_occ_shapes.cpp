@@ -1262,7 +1262,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          })
     .def("_webgui_data", [](const TopoDS_Shape & shape)
          {
-           auto status = BuildTriangulation(shape);
+           [[maybe_unused]] auto status = BuildTriangulation(shape);
            // cout << "status = " << aStatus << endl;
            
            std::vector<double> p[3];

@@ -61,7 +61,7 @@ namespace netgen
     Standard_Integer BuildTriangulation( const TopoDS_Shape & shape )
     {
        BRepTools::Clean (shape);
-       double deflection = 0.01;
+       // double deflection = 0.01;
 
        // https://dev.opencascade.org/doc/overview/html/occt_user_guides__mesh.html
        // from Standard_Boolean meshing_imeshtools_parameters()
