@@ -22,7 +22,22 @@ namespace ngcore
 
 }
 
+  RangeException :: RangeException (// const std::string & where,
+                                    const char * where,
+                                    int ind, int imin, int imax) : Exception("")
+  {
+    std::stringstream str;
+    str << where << ": index " << ind << " out of range [" << imin << "," << imax << ")\n";
+    Append (str.str());
+    Append (GetBackTrace());
+  }
+  
 
+  void ThrowRangeException(const char * s, int ind, int imin, int imax)
+  {
+    throw RangeException(s, ind, imin, imax);
+  }
+  
   void ThrowException(const std::string & s)
   {
     throw Exception (s);
@@ -32,6 +47,13 @@ namespace ngcore
   {
     throw Exception (s);
   }
+
+
+  void ThrowNotTheSameException(const char * s, long int a, long int b)
+  {
+    throw ngcore::Exception(std::string(s) + ", a="+ToString(a) + ", b="+ToString(b) + GetBackTrace());     
+  }
+  
 } // namespace ngcore
 
 
