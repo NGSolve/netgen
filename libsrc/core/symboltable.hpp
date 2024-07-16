@@ -45,7 +45,7 @@ namespace ngcore
     }
 
     /// INDEX of symbol name, throws exception if unused
-    size_t Index (const std::string & name) const
+    size_t Index (std::string_view name) const
     {
       for (size_t i = 0; i < names.size(); i++)
         if (names[i] == name) return i;
@@ -53,7 +53,7 @@ namespace ngcore
     }
 
     /// Index of symbol name, returns -1 if unused
-    int CheckIndex (const std::string & name) const
+    int CheckIndex (std::string_view name) const
     {
       for (int i = 0; i < names.size(); i++)
         if (names[i] == name) return i;
@@ -67,12 +67,12 @@ namespace ngcore
     }
 
     /// Returns reference to element. exception for unused identifier
-    reference operator[] (const std::string & name)
+    reference operator[] (std::string_view name)
     {
       return data[Index (name)];
     }
 
-    const_reference operator[] (const std::string & name) const
+    const_reference operator[] (std::string_view name) const
     {
       return data[Index (name)];
     }
@@ -99,7 +99,7 @@ namespace ngcore
     }
 
     /// Associates el to the string name, overrides if name is used
-    void Set (const std::string & name, const T & el)
+    void Set (std::string_view name, const T & el)
     {
       int i = CheckIndex (name);
       if (i >= 0)
@@ -107,15 +107,24 @@ namespace ngcore
       else
         {
           data.push_back(el);
-          names.push_back(name);
+          names.push_back(std::string(name));
         }
     }
 
+
+    
+    /*
     bool Used (const std::string & name) const
     {
       return CheckIndex(name) >= 0;
     }
-
+    */
+    
+    bool Used (std::string_view name) const
+    {
+      return CheckIndex(name) >= 0;
+    }
+    
     /// Deletes symboltable
     inline void DeleteAll ()
     {
