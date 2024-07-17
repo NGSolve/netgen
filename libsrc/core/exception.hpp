@@ -36,6 +36,10 @@ namespace ngcore
     Exception(std::string_view s1, std::string_view s2, std::string_view s3);
     ~Exception() override = default;
 
+    [[noreturn]] static void Throw (std::string_view s1);
+    [[noreturn]] static void Throw (std::string_view s1, std::string_view s2);
+    [[noreturn]] static void Throw (std::string_view s1, std::string_view s2, std::string_view s3);
+    
     Exception& operator =(const Exception&) = default;
     Exception& operator =(Exception&&) noexcept = default;
 
