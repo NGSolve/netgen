@@ -30,6 +30,23 @@ namespace ngcore
   Exception :: Exception(std::string_view s1, std::string_view s2, std::string_view s3)
     : Exception(std::string(s1)+std::string(s2)+std::string(s3))
   { }
+
+
+  void Exception :: Throw (std::string_view s1)
+  {
+    throw Exception(std::string(s1));
+  }
+
+  void Exception :: Throw (std::string_view s1, std::string_view s2)
+  {
+    throw Exception(std::string(s1)+std::string(s2));
+  }
+    
+  void Exception :: Throw (std::string_view s1, std::string_view s2, std::string_view s3)
+  {
+    throw Exception(std::string(s1)+std::string(s2)+std::string(s3));
+  }
+  
   
   RangeException :: RangeException (// const std::string & where,
                                     const char * where,
