@@ -22,6 +22,15 @@ namespace ngcore
 
 }
 
+
+  Exception :: Exception(std::string_view s1, std::string_view s2)
+    : Exception(std::string(s1)+std::string(s2))
+  { }
+
+  Exception :: Exception(std::string_view s1, std::string_view s2, std::string_view s3)
+    : Exception(std::string(s1)+std::string(s2)+std::string(s3))
+  { }
+  
   RangeException :: RangeException (// const std::string & where,
                                     const char * where,
                                     int ind, int imin, int imax) : Exception("")

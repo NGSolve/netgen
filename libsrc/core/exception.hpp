@@ -32,6 +32,8 @@ namespace ngcore
     Exception(Exception&&) = default;
     Exception(const std::string& s); //  : m_what(s) {}
     Exception(const char* s); //  : m_what(s) {}
+    Exception(std::string_view s1, std::string_view s2);
+    Exception(std::string_view s1, std::string_view s2, std::string_view s3);
     ~Exception() override = default;
 
     Exception& operator =(const Exception&) = default;
