@@ -182,7 +182,7 @@ namespace ngcore
   
   /// square element 
   template <class T>
-  NETGEN_INLINE T sqr (const T a)
+  NETGEN_INLINE constexpr T sqr (const T a)
   {
     return a * a; 
   }
