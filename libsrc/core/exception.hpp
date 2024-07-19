@@ -99,9 +99,17 @@ namespace ngcore
 // Convenience macro to append file name and line of exception origin to the string
 #define NG_EXCEPTION(s) ngcore::Exception(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t"+std::string(s))
 
+// template <typename T> constexpr bool IsSave() { return false; }
+template <typename T>
+struct IsSave
+{
+  constexpr operator bool() const { return false; }
+};
+
+
 #if defined(NETGEN_ENABLE_CHECK_RANGE) && !defined(__CUDA_ARCH__)
 #define NETGEN_CHECK_RANGE(value, min, max_plus_one) \
-  { if ((value)<(min) ||  (value)>=(max_plus_one))                  \
+  { if constexpr (!IsSave<decltype(value)>()) if ((value)<(min) ||  (value)>=(max_plus_one)) \
       ThrowRangeException(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t", int(value), int(min), int(max_plus_one)); }
 // #define NETGEN_CHECK_SHAPE(a,b)               \
 //  { if(a.Shape() != b.Shape()) \
