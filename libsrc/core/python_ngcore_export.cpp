@@ -141,8 +141,10 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
 
     .def(py::self | py::self)
     .def(py::self & py::self)
-    .def(py::self |= py::self)
-    .def(py::self &= py::self)
+    // .def(py::self |= py::self)   // false clang warnings,
+    // .def(py::self &= py::self)   // see https://github.com/pybind/pybind11/issues/1893
+    .def("__ior__", [](BitArray& lhs, const BitArray& rhs) { return lhs |= rhs; }, py::is_operator())
+    .def("__iand__", [](BitArray& lhs, const BitArray& rhs) { return lhs &= rhs; }, py::is_operator())    
     .def(~py::self)
     ;
 

@@ -424,7 +424,8 @@ NGCORE_API_EXPORT void ExportGeom2d(py::module &m)
     .def(py::self-py::self)
     .def(py::self*py::self)
     .def(py::self+=py::self)
-    .def(py::self-=py::self)
+    // .def(py::self-=py::self) // false clange warning, see  https://github.com/pybind/pybind11/issues/1893
+    .def("__isub__", [](Solid2d& lhs, const Solid2d& rhs) { return lhs -= rhs; }, py::is_operator())
     .def(py::self*=py::self)
 
     .def("Mat", &Solid2d::Mat)
