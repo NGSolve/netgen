@@ -36,8 +36,8 @@ namespace netgen
 
     
     void UpdateCoarseGrid();
-    [[deprecated("should not need it anymore")]]                    
-    void UpdateCoarseGridGlobal();
+    // [[deprecated("should not need it anymore")]]                    
+    // void UpdateCoarseGridGlobal();
     void IdentifyVerticesAfterRefinement();
     void EnumeratePointsGlobally ();
         

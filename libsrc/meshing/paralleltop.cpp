@@ -292,7 +292,7 @@ namespace netgen
 
 
 
-
+  /*
 
   void ParallelMeshTopology :: UpdateCoarseGridGlobal ()
   {
@@ -387,7 +387,8 @@ namespace netgen
     
     is_updated = true;
   }
-
+  */
+  
   
   void ParallelMeshTopology :: IdentifyVerticesAfterRefinement()
   {
