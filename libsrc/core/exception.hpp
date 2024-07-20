@@ -110,10 +110,6 @@ struct IsSafe {
   if ((value)<(min) ||  (value)>=(max_plus_one))                        \
     ThrowRangeException(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t", int(value), int(min), int(max_plus_one)); }  }
 
-// #define NETGEN_CHECK_SHAPE(a,b)               \
-//  { if(a.Shape() != b.Shape()) \
-//      ngcore::ThrowException(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t: shapes don't match"); }
-
 #define NETGEN_CHECK_SAME(a,b) \
   { if(a != b) {                                                        \
       if constexpr(std::is_same<decltype(a),size_t>() && std::is_same<decltype(b),size_t>()) \
