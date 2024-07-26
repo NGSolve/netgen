@@ -1201,11 +1201,12 @@ void BoundaryLayerTool ::InsertNewElements(
                         Array<PointIndex>& new_points) {
     Point<3> p = mesh[pi];
     PointIndex pi_last = pi;
+    double height = 0.0;
     for (auto i : Range(params.heights)) {
-      // p += params.heights[i] * growth_vector;
+      height += params.heights[i];
       auto pi_new = mesh.AddPoint(p);
       new_points.Append(pi_new);
-      growth_vector_map[pi_new] = {&growth_vector, params.heights[i]};
+      growth_vector_map[pi_new] = {&growth_vector, height};
       if (special_boundary_points.count(pi) > 0) mesh.AddLockedPoint(pi_new);
       pi_last = pi_new;
     }
