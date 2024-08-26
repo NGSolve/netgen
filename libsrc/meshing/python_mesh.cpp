@@ -568,14 +568,24 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                      li.append (py::cast(self.surfnr2));
                                      return li;
                                    }))
-    .def_property_readonly("index", FunctionPointer([](const Segment &self) -> size_t
-		  {
-		    return self.si;
-		  }))
-    .def_property_readonly("edgenr", FunctionPointer([](const Segment & self) -> size_t
-						     {
-						       return self.edgenr;
-						     }))
+    .def_property("index",
+                  [](const Segment &self) -> size_t
+                  {
+                    return self.si;
+                  },
+                  [](Segment& self, int index)
+                  {
+                    self.si = index;
+                  })
+    .def_property("edgenr",
+                  [](const Segment & self) -> size_t
+                  {
+                    return self.edgenr;
+                  },
+                  [](Segment& self, int edgenr)
+                  {
+                    self.edgenr = edgenr;
+                  })
     .def_property("singular",
                   [](const Segment & seg) { return seg.singedge_left; },
                   [](Segment & seg, double sing) { seg.singedge_left = sing; seg.singedge_right=sing; })
