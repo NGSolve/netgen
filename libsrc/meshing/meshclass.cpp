@@ -6838,11 +6838,12 @@ namespace netgen
               continue;
             auto pt = (*this)[pi];
             auto mapped_pt = mapping(pt);
-            auto other_nr = GetElementOfPoint(mapped_pt, lami, true);
+            // auto other_nr = GetElementOfPoint(mapped_pt, lami, true);
+            auto other_nr = GetSurfaceElementOfPoint(mapped_pt, lami);
             int index = -1;
             if(other_nr != 0)
               {
-                auto other_el = VolumeElement(other_nr);
+                auto other_el = SurfaceElement(other_nr);
                 for(auto i : Range(other_el.PNums().Size()))
                   if((mapped_pt - (*this)[other_el.PNums()[i]]).Length() < pointTolerance)
                     {
