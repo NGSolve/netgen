@@ -25,7 +25,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
     .def(py::init([] (py::tuple pnt)
                   {
                     if (py::len(pnt) != 3)
-                      throw Exception("need 3-tuple to create gp_Pnt");
+                      throw std::length_error("need 3-tuple to create gp_Pnt");
                     
                     return gp_Pnt(py::cast<double>(pnt[0]),
                                   py::cast<double>(pnt[1]),
