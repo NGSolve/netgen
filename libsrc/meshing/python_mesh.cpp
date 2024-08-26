@@ -179,6 +179,34 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   py::implicitly_convertible<py::tuple, Vec<3>>();
 
+  py::class_<Mat<3,3>>(m, "Mat33")
+    .def(py::init([](py::tuple m)
+    {
+      if(m.size() != 9)
+        throw std::length_error("Invalid dimension of input array!");
+      Mat<3,3> mat;
+      for(int i = 0; i < 3; i++)
+        for(int j = 0; j < 3; j++)
+          mat(i,j) = m[i*3+j].cast<double>();
+      return mat;
+    }))
+    .def("__getitem__", [](Mat<3,3>& mat, py::tuple index)
+    {
+      if(index.size() != 2)
+        throw std::length_error("Invalid dimension of input array!");
+      return mat(index[0].cast<int>(), index[1].cast<int>());
+    })
+    .def("__setitem__", [](Mat<3,3>& mat, py::tuple index, double val)
+    {
+      if(index.size() != 2)
+        throw std::length_error("Invalid dimension of input array!");
+      mat(index[0].cast<int>(), index[1].cast<int>()) = val;
+    })
+    .def("__str__", &ToString<Mat<3,3>>)
+    ;
+
+  py::implicitly_convertible<py::tuple, Mat<3,3>>();
+
   m.def ("Vec", FunctionPointer
            ([] (double x, double y, double z) { return global_trafo(Vec<3>(x,y,z)); }));
   m.def("Vec", [](py::array_t<double> np_array)
@@ -204,13 +232,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          { Transformation<3> res; res.Combine(a,b); return res; })
     .def("__call__", [] (Transformation<3> trafo, Point<3> p) { return trafo(p); })
     .def_property("mat", &Transformation<3>::GetMatrix,
-                  [](Transformation<3>& self, py::array_t<double> np_mat)
+                  [](Transformation<3>& self, const Mat<3,3>& mat)
                   {
-                    if(np_mat.size() != 9)
-                      throw Exception("Invalid dimension of input array!");
-                    for(int i = 0; i < 3; i++)
-                      for(int j = 0; j < 3; j++)
-                        self.GetMatrix()(i,j) = np_mat.at(i*3+j);
+                    self.GetMatrix() = mat;
                   })
     ;
 
