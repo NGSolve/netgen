@@ -86,7 +86,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     try {
       if(p) std::rethrow_exception(p);
     } catch (const Standard_Failure& e) {
-      exc((string(e.DynamicType()->Name()) + ": " + e.GetMessageString()).c_str());
+      py::set_error(PyExc_RuntimeError, (string(e.DynamicType()->Name()) + ": " + e.GetMessageString()).c_str());
     }
   });
   
