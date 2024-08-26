@@ -203,6 +203,15 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("__mul__", [](Transformation<3> a, Transformation<3> b)->Transformation<3>
          { Transformation<3> res; res.Combine(a,b); return res; })
     .def("__call__", [] (Transformation<3> trafo, Point<3> p) { return trafo(p); })
+    .def_property("mat", &Transformation<3>::GetMatrix,
+                  [](Transformation<3>& self, py::array_t<double> np_mat)
+                  {
+                    if(np_mat.size() != 9)
+                      throw Exception("Invalid dimension of input array!");
+                    for(int i = 0; i < 3; i++)
+                      for(int j = 0; j < 3; j++)
+                        self.GetMatrix()(i,j) = np_mat.at(i*3+j);
+                  })
     ;
 
   m.def ("GetTransformation", [] () { return global_trafo; });
