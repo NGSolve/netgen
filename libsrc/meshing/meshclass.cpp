@@ -6812,12 +6812,12 @@ namespace netgen
   //   }
   // #endif
 
-  int Mesh::IdentifyPeriodicBoundaries(const string &s1,
-                                       const string &s2,
+  int Mesh::IdentifyPeriodicBoundaries(const string& id_name,
+                                       const string &s1,
                                        const Transformation<3> &mapping,
                                        double pointTolerance)
   {
-    auto nr = ident->GetMaxNr() + 1;
+    auto nr = ident->GetNr(id_name);
     ident->SetType(nr, Identifications::PERIODIC);
     double lami[4];
     set<int> identified_points;
@@ -6827,44 +6827,38 @@ namespace netgen
         GetBox(pmin, pmax);
         pointTolerance = 1e-8 * (pmax-pmin).Length();
       }
-    for(const auto& se : surfelements)
+    size_t nse = GetDimension() == 3 ? surfelements.Size() : segments.Size();
+    for(auto sei : Range(nse))
       {
-        if(GetBCName(se.index-1) != s1)
+        auto name = GetDimension() == 3 ? GetBCName(surfelements[sei].index-1) :
+          GetBCName(segments[sei].edgenr-1);
+        if(name != s1)
           continue;
 
-        for(const auto& pi : se.PNums())
+        const auto& pnums = GetDimension() == 3 ? surfelements[sei].PNums() :
+          segments[sei].PNums();
+        for(const auto& pi : pnums)
           {
             if(identified_points.find(pi) != identified_points.end())
               continue;
             auto pt = (*this)[pi];
             auto mapped_pt = mapping(pt);
-            // auto other_nr = GetElementOfPoint(mapped_pt, lami, true);
-            auto other_nr = GetSurfaceElementOfPoint(mapped_pt, lami);
-            int index = -1;
-            if(other_nr != 0)
+            bool found = false;
+            for(auto other_pi : Range(points))
               {
-                auto other_el = SurfaceElement(other_nr);
-                for(auto i : Range(other_el.PNums().Size()))
-                  if((mapped_pt - (*this)[other_el.PNums()[i]]).Length() < pointTolerance)
-                    {
-                      index = i;
-                      break;
-                    }
-                if(index == -1)
+                if((mapped_pt - (*this)[other_pi]).Length() < pointTolerance)
                   {
-                    cout << "point coordinates = " << pt << endl;
-                    cout << "mapped coordinates = " << mapped_pt << endl;
-                    throw Exception("Did not find mapped point with nr " + ToString(pi) + ", are you sure your mesh is periodic?");
+                    identified_points.insert(pi);
+                    ident->Add(pi, other_pi, nr);
+                    found = true;
+                    break;
                   }
-                auto other_pi = other_el.PNums()[index];
-                identified_points.insert(pi);
-                ident->Add(pi, other_pi, nr);
               }
-            else
+            if(!found)
               {
                 cout << "point coordinates = " << pt << endl;
                 cout << "mapped coordinates = " << mapped_pt << endl;
-                throw Exception("Mapped point with nr " + ToString(pi) + " is outside of mesh, are you sure your mesh is periodic?");
+                throw Exception("Did not find mapped point with nr " + ToString(pi) + ", are you sure your mesh is periodic?");
               }
           }
       }
