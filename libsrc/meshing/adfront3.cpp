@@ -787,6 +787,54 @@ void AdFront3 :: SetStartFront (int /* baseelnp */)
     */
 }
 
+bool AdFront3 :: PointInsideGroup(const NgArray<PointIndex, PointIndex::BASE> &grouppindex,
+                                  const NgArray<MiniElement2d> &groupfaces) const
+{
+  for(auto pi : Range(points))
+    {
+      const auto& p = points[pi].P();
+      bool found = false;
+      for(const auto& f : groupfaces)
+        {
+          for(auto i : Range(3))
+            if(grouppindex.Get(f.PNum(i+1)) == pi)
+              {
+                found = true;
+                break;
+              }
+        }
+      if(found)
+        continue;
+
+      // "random" direction
+      Vec<3> dir = { 0.123871, 0.15432,-0.43989 };
+      DenseMatrix a(3), ainv(3);
+      Vector b(3), u(3);
+
+      int count = 0;
+      for(const auto& f : groupfaces)
+        {
+          const auto& p1 = points[grouppindex.Get(f.PNum(1))].P();
+          auto v1 = points[grouppindex.Get(f.PNum(2))].P() - p1;
+          auto v2 = points[grouppindex.Get(f.PNum(3))].P() - p1;
+          for(auto i : Range(3))
+            {
+              a(i,0) = v1[i];
+              a(i,1) = v2[i];
+              a(i,2) = -dir[i];
+              b(i) = p[i] - p1[i];
+            }
+          CalcInverse (a, ainv);
+          ainv.Mult (b, u);
+          if (u(0) >= 0 && u(1) >= 0 && u(0)+u(1) <= 1 &&
+	    u(2) > 0)
+	    count++;
+        }
+        if (count % 2 == 1)
+          return true;
+    }
+  return false;
+}
 
 bool AdFront3 :: Inside (const Point<3> & p) const
 {

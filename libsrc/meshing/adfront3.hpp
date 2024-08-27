@@ -262,6 +262,9 @@ public:
   void GetIntersectingFaces (const Point<3> & pmin, const Point<3> & pmax, 
 			     NgArray<int> & ifaces) const;
 
+  bool PointInsideGroup(const NgArray<PointIndex, PointIndex::BASE> &grouppindex,
+                        const NgArray<MiniElement2d>& groupfaces) const;
+
   ///
   void GetFaceBoundingBox (int i, Box3d & box) const;
 
