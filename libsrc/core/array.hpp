@@ -733,7 +733,7 @@ namespace ngcore
 
     NETGEN_INLINE Array (Array && a2) 
     {
-      mt.Swap(sizeof(T) * allocsize, a2.mt, sizeof(T) * a2.allocsize);
+      mt.Swap(0., a2.mt, sizeof(T) * a2.allocsize);
 
       size = a2.size; 
       data = a2.data;
