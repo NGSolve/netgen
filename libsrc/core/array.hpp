@@ -731,7 +731,7 @@ namespace ngcore
       mem_to_delete = nullptr;
     }
 
-    NETGEN_INLINE Array (Array && a2) 
+    NETGEN_INLINE Array (Array && a2) : allocsize(0)
     {
       mt.Swap(sizeof(T) * allocsize, a2.mt, sizeof(T) * a2.allocsize);
 
