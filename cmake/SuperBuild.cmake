@@ -151,9 +151,11 @@ if(BUILD_ZLIB)
     # force linking the static library
     set(ZLIB_INCLUDE_DIRS ${ZLIB_ROOT}/include)
     set(ZLIB_LIBRARIES ${ZLIB_ROOT}/lib/zlibstatic.lib)
+    set(ZLIB_LIBRARY_RELEASE ${ZLIB_ROOT}/lib/zlibstatic.lib)
   elseif(WIN32)
     set(ZLIB_INCLUDE_DIRS ${ZLIB_ROOT}/include)
     set(ZLIB_LIBRARIES ${ZLIB_ROOT}/lib/libz.a)
+    set(ZLIB_LIBRARY_RELEASE ${ZLIB_ROOT}/lib/libz.a)
   endif(WIN32)
 else()
     include(cmake/external_projects/zlib.cmake)
@@ -257,6 +259,7 @@ set_vars( NETGEN_CMAKE_ARGS
   OpenCascade_ROOT
   ZLIB_INCLUDE_DIRS
   ZLIB_LIBRARIES
+  ZLIB_LIBRARY_RELEASE
   ZLIB_ROOT
 
   NGLIB_LIBRARY_TYPE
