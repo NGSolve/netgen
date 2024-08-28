@@ -151,7 +151,7 @@ if(BUILD_ZLIB)
     # force linking the static library
     set(ZLIB_INCLUDE_DIRS ${ZLIB_ROOT}/include)
     set(ZLIB_LIBRARIES ${ZLIB_ROOT}/lib/zlibstatic.lib)
-  elseif(EMSCRIPTEN)
+  elseif(WIN32)
     set(ZLIB_INCLUDE_DIRS ${ZLIB_ROOT}/include)
     set(ZLIB_LIBRARIES ${ZLIB_ROOT}/lib/libz.a)
   endif(WIN32)
