@@ -23,6 +23,8 @@ for pyversion in 312 311 310 39 38
 do
     export PYDIR="/opt/python/cp${pyversion}-cp${pyversion}/bin"
     echo $PYDIR
+    $PYDIR/pip install requests packaging
+    $PYDIR/python3 ./tests/utils.py --check-pip || continue
     $PYDIR/pip install -U pytest-check numpy wheel scikit-build pybind11-stubgen netgen-occt==7.8.1 netgen-occt-devel==7.8.1
     $PYDIR/pip install -i https://pypi.anaconda.org/mpi4py/simple/ --pre mpi4py
 

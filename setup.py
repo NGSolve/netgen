@@ -42,16 +42,8 @@ def is_dev_build():
         return False
     return True
 
-git_version = check_output(['git', 'describe', '--tags']).decode('utf-8').strip()
-version = git_version[1:].split('-')
-if len(version)>2:
-    version = version[:2]
-if len(version)>1:
-    version = '.post'.join(version)
-    if is_dev_build():
-        version += '.dev0'
-else:
-    version = version[0]
+git_version = check_output([sys.executable, os.path.join('tests', 'utils.py'), '--get-git-version']).decode('utf-8').strip()
+version = check_output([sys.executable, os.path.join('tests', 'utils.py'), '--get-version']).decode('utf-8').strip()
 
 py_install_dir = os.path.relpath(sysconfig.get_path('platlib'), sysconfig.get_path('data')).replace('\\','/')
 

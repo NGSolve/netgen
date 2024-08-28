@@ -1,15 +1,32 @@
-from subprocess import check_output
+import argparse
 import os
-import platform
 import requests
 import sys
-import argparse
+from subprocess import check_output
+from packaging import tags
+from packaging.utils import parse_wheel_filename
+
+
+_sys_tags = None
+
+
+def _is_wheel_compatible(wheel_filename: str):
+    global _sys_tags
+    try:
+        if _sys_tags is None:
+            _sys_tags = set(tags.sys_tags())
+
+        for tag in parse_wheel_filename(wheel_filename)[-1]:
+            if tag in _sys_tags:
+                return True
+
+        return False
+    except Exception as e:
+        print(f"Error parsing wheel file: {e}")
+        return False
 
 
 def is_package_available(package_name, version):
-    architecture = platform.machine()
-    py_version = "cp" + "".join(platform.python_version_tuple()[:2])
-
     url = f"https://pypi.org/pypi/{package_name}/{version}/json"
 
     try:
@@ -21,7 +38,7 @@ def is_package_available(package_name, version):
 
         for file_info in data["urls"]:
             name = file_info.get("filename", "")
-            if name.endswith(".whl") and py_version in name and architecture in name:
+            if _is_wheel_compatible(name):
                 return True
 
         return False
@@ -42,10 +59,12 @@ def is_dev_build():
     return True
 
 
+def get_git_version(cwd):
+    return check_output(["git", "describe", "--tags"], cwd=cwd).decode("utf-8").strip()
+
+
 def get_version(cwd):
-    git_version = (
-        check_output(["git", "describe", "--tags"], cwd=cwd).decode("utf-8").strip()
-    )
+    git_version = get_git_version(cwd)
 
     version = git_version[1:].split("-")
     if len(version) > 2:
@@ -53,7 +72,7 @@ def get_version(cwd):
     if len(version) > 1:
         version = ".post".join(version)
         if is_dev_build():
-            version += ".dev0"
+            version += ".dev2"
     else:
         version = version[0]
 
@@ -66,6 +85,11 @@ def main():
         "--check-pip",
         action="store_true",
         help="Check if package is on pypi already, fails with exit code 1 if available",
+    )
+    parser.add_argument(
+        "--get-git-version",
+        action="store_true",
+        help="Generate the current package git version string",
     )
     parser.add_argument(
         "--get-version",
@@ -82,10 +106,12 @@ def main():
 
     args = parser.parse_args()
 
-    version = get_version(args.dir)
-    if args.get_version:
-        print(version)
+    if args.get_git_version:
+        print(get_git_version(args.dir))
+    elif args.get_version:
+        print(get_version(args.dir))
     elif args.check_pip:
+        version = get_version(args.dir)
         if is_package_available(args.package, version):
             print(f"{args.package}=={version} is already on pypi")
             sys.exit(1)
