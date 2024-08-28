@@ -8,25 +8,26 @@ namespace netgen
 {
   struct PointTree
   {
-      BoxTree<3> tree;
+      std::map<int, BoxTree<3>> tree;
+      Box<3> bounding_box;
 
-      PointTree( Box<3> bb ) : tree(bb) {}
+      PointTree( Box<3> bb ) : bounding_box(bb) {}
 
-      void Insert(Point<3> p, PointIndex n)
+      void Insert(Point<3> p, PointIndex n, int index)
       {
-          tree.Insert(p, p, n);
+        if(tree.count(index) == 0)
+          tree.emplace(index, bounding_box);
+        tree.at(index).Insert(p, p, n);
       }
 
-      PointIndex Find(Point<3> p) const
+      PointIndex Find(Point<3> p, int index) const
       {
           ArrayMem<int, 1> points;
-          tree.GetIntersecting(p, p, points);
+          tree.at(index).GetIntersecting(p, p, points);
           if(points.Size()==0)
               throw Exception("cannot find mapped point " + ToString(p));
           return points[0];
       }
-
-      double GetTolerance() { return tree.GetTolerance(); }
   };
 
   DLL_HEADER GeometryRegisterArray geometryregister;
@@ -584,7 +585,6 @@ namespace netgen
     for(auto & vert : vertices)
       {
         auto pi = mesh.AddPoint(vert->GetPoint(), vert->properties.layer);
-        tree.Insert(mesh[pi], pi);
         vert2meshpt[vert->nr] = pi;
         mesh[pi].Singularity(vert->properties.hpref);
         mesh[pi].SetType(FIXEDPOINT);
@@ -716,7 +716,8 @@ namespace netgen
         for(auto i : Range(edge_points))
         {
             auto pi = mesh.AddPoint(edge_points[i], edge->properties.layer);
-            tree.Insert(mesh[pi], pi);
+            if(edge->identifications.Size())
+              tree.Insert(mesh[pi], pi, edge->nr);
             pnums[i+1] = pi;
         }
 
@@ -757,7 +758,7 @@ namespace netgen
                   p_other = (*ident.trafo)(mesh[pi]);
                 else
                   static_cast<GeometryEdge*>(ident.to)->ProjectPoint(p_other, nullptr);
-                auto pi_other = tree.Find(p_other);
+                auto pi_other = tree.Find(p_other, ident.to->nr);
                 identifications.Add(pi, pi_other, ident.name, ident.type);
             }
           }
@@ -866,7 +867,7 @@ namespace netgen
                 for(auto pi : s.PNums())
                     if(!is_point_in_tree[pi])
                     {
-                        tree.Insert(mesh[pi], pi);
+                        tree.Insert(mesh[pi], pi, -1);
                         is_point_in_tree[pi] = true;
                     }
 
@@ -936,8 +937,8 @@ namespace netgen
                           edges[mapped_edges[edgenr]]->ProjectPoint(p2, nullptr);
                           edges[mapped_edges[edgenr]]->ProjectPoint(p3, nullptr);
                         }
-                        sel[2] = tree.Find(p2);
-                        sel[3] = tree.Find(p3);
+                        sel[2] = tree.Find(p2, -1);
+                        sel[3] = tree.Find(p3, -1);
 
                         // find mapped segment to set PointGeomInfo correctly
                         Segment s_other;
@@ -1017,7 +1018,7 @@ namespace netgen
                         if(mesh[pi].Type() == SURFACEPOINT && pi_to_face[pi]==-1)
                         {
                             pi_to_face[pi] = face->nr;
-                            tree.Insert(mesh[pi], pi);
+                            tree.Insert(mesh[pi], pi, -1);
                             pi_of_face[face->nr].Append(pi);
                         }
                     }
@@ -1085,7 +1086,7 @@ namespace netgen
                       else
                         edge->ProjectPoint(p, nullptr);
                     }
-              tree.Insert(p, pi);
+              tree.Insert(p, pi, -1);
               is_point_in_tree[pi] = true;
             }
           }
@@ -1097,7 +1098,7 @@ namespace netgen
           {
             auto pi = seg[i];
             if(!pmap[pi].IsValid())
-                pmap[tree.Find(mesh[pi])] = pi;
+              pmap[tree.Find(mesh[pi], -1)] = pi;
 
             // store uv values (might be different values for same point in case of internal edges)
             double u = seg.epgeominfo[i].u;
