@@ -72,7 +72,7 @@ def get_version(cwd):
     if len(version) > 1:
         version = ".post".join(version)
         if is_dev_build():
-            version += ".dev2"
+            version += ".dev0"
     else:
         version = version[0]
 
