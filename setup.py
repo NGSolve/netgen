@@ -138,6 +138,7 @@ cmake_args += [
         '-DUSE_GUI=ON',
         '-DUSE_NATIVE_ARCH=OFF',
         '-DBUILD_ZLIB=ON',
+        '-DZLIB_USE_STATIC_LIBS=ON',
         '-DBUILD_OCC=OFF',
         '-DUSE_OCC=ON',
         '-DBUILD_FOR_CONDA=ON',
