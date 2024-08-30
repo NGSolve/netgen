@@ -1642,6 +1642,19 @@ namespace netgen
          names.Append(name);
       return names.Pos(name)+1;
     }
+    string GetName(int nr) const
+    {
+      if (nr <= names.Size())
+        return names[nr - 1];
+      else
+        return "";
+    }
+    void SetName(int nr, string name)
+    {
+      while(names.Size() < nr)
+        names.Append("");
+      names[nr-1] = name;
+    }
 
     /// remove secondorder
     void SetMaxPointNr (int maxpnum);

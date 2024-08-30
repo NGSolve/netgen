@@ -901,6 +901,13 @@ namespace netgen
             outfile << " " << type;
           }
         outfile << "\n";
+        outfile << "identificationnames\n";
+        outfile << ident -> GetMaxNr() << "\n";
+        for (i = 1; i <= ident -> GetMaxNr(); i++)
+          {
+            string name = ident -> GetName(i);
+            outfile << ident->GetName(i) << "\n";
+          }
       }
 
     int cntmat = 0;
@@ -1449,6 +1456,17 @@ namespace netgen
                 int type;
                 infile >> type;
                 ident -> SetType(i,Identifications::ID_TYPE(type));
+              }
+          }
+        if (strcmp (str, "identificationnames") == 0)
+          {
+            infile >> n;
+            PrintMessage (3, n, " identificationnames");
+            for (i = 1; i <= n; i++)
+              {
+                string name;
+                infile >> name;
+                ident -> SetName(i,name);
               }
           }
 
