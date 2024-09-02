@@ -2725,6 +2725,8 @@ namespace netgen
           for (auto & t : type)
             ar & (unsigned char&)(t);
         }
+      if (ar.GetVersion("netgen") > "v6.2.2404-66")
+        ar & names;
     }    
 
   
