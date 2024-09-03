@@ -2078,7 +2078,6 @@ namespace netgen
       return TCL_ERROR;
     const char * filename = Tcl_GetString(argv[2]);
 
-    int len = strlen(filename);
     int w = Togl_PixelScale(togl)*Togl_Width (togl);
     int h = Togl_PixelScale(togl)*Togl_Height (togl);
 
@@ -2088,6 +2087,7 @@ namespace netgen
     glReadPixels (0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, &buffer[0]);
 
 #ifdef JPEGLIB
+    int len = strlen(filename);
     if (strcmp ("jpg", filename+len-3) == 0)
       {
         cout << "Snapshot to file '" << filename << "'" << endl;

@@ -6837,7 +6837,7 @@ namespace netgen
   {
     auto nr = ident->GetNr(id_name);
     ident->SetType(nr, Identifications::PERIODIC);
-    double lami[4];
+    // double lami[4];
     set<int> identified_points;
     if(pointTolerance < 0.)
       {
