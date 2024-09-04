@@ -44,6 +44,7 @@ struct SpecialBoundaryPoint {
   };
   // std::map<int, Vec<3>> normals;
   Array<GrowthGroup> growth_groups;
+  Vec<3> separating_direction;
 
   SpecialBoundaryPoint( const std::map<int, Vec<3>> & normals );
   SpecialBoundaryPoint() = default;

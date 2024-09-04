@@ -13,6 +13,10 @@ struct Face {
   ArrayMem<double, 4> lam;
 };
 
+struct SpecialPointException : public Exception {
+  SpecialPointException() : Exception("") {}
+};
+
 struct Intersection_ {
   bool is_intersecting = false;
   double lam0 = -1, lam1 = -1;
@@ -84,8 +88,7 @@ Vec<3> CalcGrowthVector(FlatArray<Vec<3>> ns) {
 
   for (auto n : ns)
     if (n * gw < 0)
-      throw Exception(
-          "Normals not pointing in same direction as growth vector");
+      throw SpecialPointException();
   return gw;
 }
 
@@ -112,6 +115,9 @@ SpecialBoundaryPoint ::SpecialBoundaryPoint(
   g1_faces.Append(minface1);
   Array<int> g2_faces;
   g2_faces.Append(minface2);
+  auto n1 = normals.at(minface1);
+  auto n2 = normals.at(minface2);
+  separating_direction = 0.5*( n2-n1 );
 
   Array<Vec<3>> normals1, normals2;
   for (auto [facei, normali] : normals)
@@ -149,9 +155,7 @@ struct GrowthVectorLimiter {
     changed_domains = params.domains;
     if (!params.outside) changed_domains.Invert();
 
-    map_from = PointIndex::INVALID;
-    for (auto pi : tool.mapto.Range())
-      for (auto pi_to : tool.mapto[pi]) map_from[pi_to] = pi;
+    map_from = tool.mapfrom;
   }
 
   double GetLimit(PointIndex pi) {
@@ -565,6 +569,77 @@ void BoundaryLayerTool ::LimitGrowthVectorLengths() {
         });
   }
 
+  // check if surface trigs are intersecting each other
+  {
+    Point3d pmin, pmax;
+    mesh.GetBox (pmin, pmax);
+    BoxTree<3, SurfaceElementIndex> setree(pmin, pmax);
+
+    for (auto sei : mesh.SurfaceElements().Range()) {
+      const Element2d & tri = mesh[sei];
+
+      Box<3> box(Box<3>::EMPTY_BOX);
+      for (PointIndex pi : tri.PNums())
+        box.Add (limiter.GetPoint(pi, 1.0, true));
+
+      box.Increase(1e-3*box.Diam());
+      setree.Insert (box, sei);
+    }
+    for (auto sei : mesh.SurfaceElements().Range()) {
+       const Element2d & tri = mesh[sei];
+
+       Box<3> box(Box<3>::EMPTY_BOX);
+       for (PointIndex pi : tri.PNums())
+         box.Add (limiter.GetPoint(pi, 1.0, true));
+
+       setree.GetFirstIntersecting
+         (box.PMin(), box.PMax(),
+          [&] (SurfaceElementIndex sej)
+          {
+            const Element2d & tri2 = mesh[sej];
+
+            if ( mesh[tri[0]].GetLayer() != mesh[tri2[0]].GetLayer())
+              return false;
+
+            netgen::Point<3> tri1_points[3], tri2_points[3];
+            const netgen::Point<3> *trip1[3], *trip2[3];
+            for (int k = 0; k < 3; k++) {
+              trip1[k] = &tri1_points[k];
+              trip2[k] = &tri2_points[k];
+            }
+            auto set_points = [&] () {
+              for (int k = 0; k < 3; k++) {
+                  tri1_points[k] = limiter.GetPoint(tri[k], 1.0, true);
+                  tri2_points[k] = limiter.GetPoint(tri2[k], 1.0, true);
+              }
+            };
+
+            set_points();
+
+            int counter = 0;
+            while(IntersectTriangleTriangle (&trip1[0], &trip2[0]))
+              {
+                PointIndex pi_max_limit = PointIndex::INVALID;
+                for(PointIndex pi : {tri[0], tri[1], tri[2], tri2[0], tri2[1], tri2[2]})
+                  if( pi > np && (!pi_max_limit.IsValid() || limits[mapfrom[pi]] > limits[pi_max_limit]))
+                    pi_max_limit = mapfrom[pi];
+
+                if(!pi_max_limit.IsValid())
+                  break;
+
+                limits[pi_max_limit] *= 0.9;
+                set_points();
+                counter++;
+                if(counter > 20 ) {
+                  cerr << "Limit intersecting sourface elements: too many limitation steps" << endl;
+                  break;
+                }
+              }
+            return false;
+          });
+       }
+  }
+
   // for (auto [pi_to, data] : growth_vector_map) {
   //   auto pi_from = limiter.map_from[pi_to];
   //   if(pi_from.IsValid())
@@ -572,6 +647,11 @@ void BoundaryLayerTool ::LimitGrowthVectorLengths() {
   // }
 
   for (auto i : Range(growthvectors)) growthvectors[i] *= limits[i];
+  for (auto& [special_pi, special_point] : special_boundary_points) {
+    for(auto & group  : special_point.growth_groups) {
+      group.growth_vector *= limits[special_pi];
+    }
+  }
 }
 
 // depending on the geometry type, the mesh contains segments multiple times
@@ -927,8 +1007,7 @@ void BoundaryLayerTool ::CalculateGrowthVectors() {
 
     try {
       growthvectors[pi] = CalcGrowthVector(ns);
-    } catch (const Exception& e) {
-      cout << "caught exception for point " << pi << ":\t" << e.what() << endl;
+    } catch (const SpecialPointException& e) {
       special_boundary_points.emplace(pi, normals);
       growthvectors[pi] =
           special_boundary_points[pi].growth_groups[0].growth_vector;
@@ -1190,6 +1269,8 @@ void BoundaryLayerTool ::InsertNewElements(
   RegionTimer rt(timer);
   mapto.SetSize(0);
   mapto.SetSize(np);
+  mapfrom.SetSize(mesh.GetNP());
+  mapfrom = PointIndex::INVALID;
 
   auto changed_domains = domains;
   if (!params.outside) changed_domains.Invert();
@@ -1205,6 +1286,7 @@ void BoundaryLayerTool ::InsertNewElements(
     for (auto i : Range(params.heights)) {
       height += params.heights[i];
       auto pi_new = mesh.AddPoint(p);
+      mapfrom.Append(pi);
       new_points.Append(pi_new);
       growth_vector_map[pi_new] = {&growth_vector, height};
       if (special_boundary_points.count(pi) > 0) mesh.AddLockedPoint(pi_new);
@@ -1377,21 +1459,15 @@ void BoundaryLayerTool ::InsertNewElements(
     auto n = numGroups(pi);
     if (n == 1) return 0;
     const auto& sel = mesh[sei];
-    auto igroup = 0;
-    double distance = 1e99;
-    for (auto j : Range(n)) {
-      // auto g = getGroups(pi, sel.GetIndex());
-      auto vcenter = Center(mesh[sel[0]], mesh[sel[1]], mesh[sel[2]]);
-      auto dist = (vcenter -
-                   (mesh[pi] +
-                    special_boundary_points[pi].growth_groups[j].growth_vector))
-                      .Length2();
-      if (dist < distance) {
-        distance = dist;
-        igroup = j;
-      }
-    }
-    return getGroups(pi, sel.GetIndex())[igroup];
+    auto groups = getGroups(pi, sel.GetIndex());
+    if (groups.Size() == 1) return groups[0];
+
+    auto & growth_groups = special_boundary_points[pi].growth_groups;
+
+    auto vdir = Center(mesh[sel[0]], mesh[sel[1]], mesh[sel[2]]) - mesh[pi];
+    auto dot = vdir * special_boundary_points[pi].separating_direction;
+
+    return dot > 0 ? 1 : 0;
   };
 
   BitArray fixed_points(np + 1);
@@ -1497,9 +1573,50 @@ void BoundaryLayerTool ::InsertNewElements(
     // }
   }
 
-  // fill holes in surface mesh at special boundary points (with >=4 adjacent
+  // fill holes in surface mesh at special boundary points (i.e. points with >=4 adjacent
   // boundary faces)
   auto p2sel = mesh.CreatePoint2SurfaceElementTable();
+  for (auto& [special_pi, special_point] : special_boundary_points) {
+    if (special_point.growth_groups.Size() != 2)
+      throw Exception("special_point.growth_groups.Size() != 2");
+
+    // Special points are split into two new points, when mapping a surface element, we choose the closer one to the center.
+    // Now, find points which are mapped to both new points (for different surface elements they belong to).
+    // At exactly these points we need to insert new surface elements to fill the hole.
+    std::map<int, std::array<std::set<PointIndex>, 2>> close_group;
+    for (auto sei : p2sel[special_pi]) {
+      const auto & sel = mesh[sei];
+      for (auto p : sel.PNums())
+        if (p != special_pi) close_group[sel.GetIndex()][getClosestGroup(special_pi, sei)].insert(p);
+    }
+
+    for( auto [fi, groups] : close_group )
+    {
+      const auto mapped_fi = si_map[fi];
+      std::set<PointIndex> common_points;
+      for (auto pi : groups[0])
+        if(groups[1].count(pi) == 1)
+          common_points.insert(pi);
+      if(common_points.size()>0) {
+        auto pi_common = mapto[*common_points.begin()].Last();
+        auto new_special_pi0 = special_point.growth_groups[0].new_points.Last();
+        auto new_special_pi1 = special_point.growth_groups[1].new_points.Last();
+        for (auto sei : p2sel[pi_common]) {
+          if(mesh[sei].GetIndex() == mapped_fi && mesh[sei].PNums().Contains(new_special_pi0)) {
+            auto sel = mesh[sei];
+            sel.Invert();
+            for (auto & pi : sel.PNums())
+            if(pi != pi_common && pi != new_special_pi0)
+              pi = new_special_pi1;
+            mesh.AddSurfaceElement(sel);
+          }
+        }
+      }
+    }
+  }
+
+
+
   for (auto& [pi, special_point] : special_boundary_points) {
     if (special_point.growth_groups.Size() != 2)
       throw Exception("special_point.growth_groups.Size() != 2");
@@ -1766,10 +1883,6 @@ void BoundaryLayerTool ::Perform() {
   auto in_surface_direction = ProjectGrowthVectorsOnSurface();
 
   InsertNewElements(segmap, in_surface_direction);
-  mapfrom.SetSize(mesh.GetNP());
-  mapfrom = PointIndex::INVALID;
-  for (auto pi : mapto.Range())
-    for (auto pi_to : mapto[pi]) mapfrom[pi_to] = pi;
 
   SetDomInOut();
   AddSegments();
