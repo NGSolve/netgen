@@ -16,6 +16,7 @@
 namespace ngcore
 {
   using std::string;
+  using std::string_view;
   using std::endl;
   Flags :: Flags () { ; }
 
@@ -209,18 +210,18 @@ namespace ngcore
   }
 
 
-  double Flags :: GetNumFlag (const string & name, double def) const
+  double Flags :: GetNumFlag (string_view name, double def) const
   {
     if (numflags.Used (name))
-      return numflags[name];
+      return numflags[string(name)];
     else
       return def;
   }
   
-  const double * Flags :: GetNumFlagPtr (const string & name) const
+  const double * Flags :: GetNumFlagPtr (string_view name) const
   {
     if (numflags.Used (name))
-      return & ((SymbolTable<double>&)numflags)[name];
+      return & ((SymbolTable<double>&)numflags)[string(name)];
     else
       return NULL;
   }
@@ -239,16 +240,16 @@ namespace ngcore
     return defflags.Used (name);
   }
   */
-  bool Flags :: GetDefineFlag (const string & name) const throw()
+  bool Flags :: GetDefineFlag (string_view name) const throw()
   {
-    if (!defflags.Used (name)) return false;
-    return defflags[name];
+    if (!defflags.Used (string(name))) return false;
+    return defflags[string(name)];
   }
 
-  xbool Flags :: GetDefineFlagX (const string & name) const throw()
+  xbool Flags :: GetDefineFlagX (string_view name) const throw()
   {
-    if (!defflags.Used (name)) return maybe;
-    return bool(defflags[name]);
+    if (!defflags.Used (string(name))) return maybe;
+    return bool(defflags[string(name)]);
   }
 
 
@@ -296,32 +297,32 @@ namespace ngcore
     return empty;
   }
 
-  bool Flags :: StringFlagDefined (const string & name) const
+  bool Flags :: StringFlagDefined (string_view name) const noexcept
   {
     return strflags.Used (name);
   }
 
-  bool Flags :: NumFlagDefined (const string &name) const
+  bool Flags :: NumFlagDefined (string_view name) const noexcept
   {
     return numflags.Used (name);
   }
 
-  bool Flags :: FlagsFlagDefined (const string &name) const
+  bool Flags :: FlagsFlagDefined (string_view name) const noexcept
   {
     return flaglistflags.Used (name);
   }
   
-  bool Flags :: StringListFlagDefined (const string & name) const
+  bool Flags :: StringListFlagDefined (string_view name) const noexcept
   {
     return strlistflags.Used (name);
   }
 
-  bool Flags :: NumListFlagDefined (const string & name) const
+  bool Flags :: NumListFlagDefined (string_view name) const noexcept
   {
     return numlistflags.Used (name);
   }
 
-  bool Flags :: AnyFlagDefined (const string& name) const
+  bool Flags :: AnyFlagDefined (string_view name) const noexcept
   {
     return anyflags.Used(name);
   }

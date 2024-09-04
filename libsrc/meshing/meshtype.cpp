@@ -144,7 +144,40 @@ namespace netgen
 #endif
 
 
+#ifdef PARALLEL
+  NG_MPI_Datatype Element0d :: MyGetMPIType()
+  {
+    static NG_MPI_Datatype type = NG_MPI_DATATYPE_NULL;
+    static NG_MPI_Datatype htype = NG_MPI_DATATYPE_NULL;
+    if (type == NG_MPI_DATATYPE_NULL)
+      {
+	Element0d hel;
+	int blocklen[] = { 1, 1 };
+	NG_MPI_Aint displ[] =
+          { (char*)&hel.pnum - (char*)&hel,
+            (char*)&hel.index - (char*)&hel,
+          };
+	NG_MPI_Datatype types[] = {
+          GetMPIType(hel.pnum), GetMPIType(hel.index)
+        };
+	NG_MPI_Type_create_struct (2, blocklen, displ, types, &htype);
+	NG_MPI_Type_commit ( &htype );
+	NG_MPI_Aint lb, ext;
+	NG_MPI_Type_get_extent (htype, &lb, &ext);
+	// *testout << "lb = " << lb << endl;
+	// *testout << "ext = " << ext << endl;
+	ext = sizeof (Element0d);
+	NG_MPI_Type_create_resized (htype, lb, ext, &type);
+	NG_MPI_Type_commit ( &type );
+      }
+    return type;
+  }
+#endif
 
+ void Element0d :: DoArchive (Archive & ar)
+ {
+   ar & pnum & index;
+ }
 
   Segment :: Segment() 
     : is_curved(false)
@@ -2693,6 +2726,8 @@ namespace netgen
           for (auto & t : type)
             ar & (unsigned char&)(t);
         }
+      if (ar.GetVersion("netgen") > "v6.2.2404-66")
+        ar & names;
     }    
 
   

@@ -35,7 +35,7 @@ namespace ngcore
 
   class MemoryTracer
   {
-    #ifdef NETGEN_TRACE_MEMORY
+    #if defined(NETGEN_TRACE_MEMORY) && !defined(__CUDA_ARCH__)
     NGCORE_API static std::vector<std::string> names;
     NGCORE_API static std::vector<int> parents;
 
@@ -148,7 +148,7 @@ namespace ngcore
 
     static const std::vector<std::string> & GetNames() { return names; }
     static const std::vector<int> & GetParents() { return parents; }
-#else // NETGEN_TRACE_MEMORY
+#else // defined(NETGEN_TRACE_MEMORY) && !defined(__CUDA_ARCH__)
   public:
     MemoryTracer() {}
     MemoryTracer( std::string /* name */ ) {}

@@ -372,7 +372,8 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	      onlytri = 0;
 	  
 	  if (onlytri && groupfaces.Size() <= 20 + 2*stat.qualclass &&
-	      FindInnerPoint (grouppoints, groupfaces, inp))
+	      FindInnerPoint (grouppoints, groupfaces, inp) &&
+              !adfront->PointInsideGroup(grouppindex, groupfaces))
 	    {
 	      (*testout) << "inner point found" << endl;
 

@@ -77,7 +77,8 @@ namespace ngcore
   {
     template <class T, class Tuple, size_t... Is>
     T* construct_from_tuple(Tuple&& tuple, std::index_sequence<Is...> ) {
-      return new T{std::get<Is>(std::forward<Tuple>(tuple))...};
+      // return new T{std::get<Is>(std::forward<Tuple>(tuple))...};
+      return new T{std::get<Is>(std::move(tuple))...};
     }
 
     template <class T, class Tuple>

@@ -6,7 +6,9 @@
 
 #include "ng_mpi.hpp"
 #include "ngstream.hpp"
+#ifdef NG_PYTHON
 #include "python_ngcore.hpp"
+#endif // NG_PYTHON
 #include "utils.hpp"
 
 using std::cerr;
@@ -14,10 +16,12 @@ using std::cout;
 using std::endl;
 
 #ifndef NG_MPI_WRAPPER
+#ifdef NG_PYTHON
 #define MPI4PY_LIMITED_API 1
 #define MPI4PY_LIMITED_API_SKIP_MESSAGE 1
 #define MPI4PY_LIMITED_API_SKIP_SESSION 1
 #include "mpi4py_pycapi.h"  // mpi4py < 4.0.0
+#endif // NG_PYTHON
 #endif // NG_MPI_WRAPPER
 
 namespace ngcore {
@@ -94,6 +98,7 @@ void InitMPI(std::optional<std::filesystem::path> mpi_lib_path) {
       throw e;
     }
   } else {
+#ifdef NG_PYTHON
     // Use mpi4py to init MPI library and get the vendor name
     auto mpi4py = py::module::import("mpi4py.MPI");
     vendor = mpi4py.attr("get_vendor")()[py::int_(0)].cast<std::string>();
@@ -106,6 +111,7 @@ void InitMPI(std::optional<std::filesystem::path> mpi_lib_path) {
     mpi_lib =
         std::make_unique<SharedLibrary>(mpi4py_lib_file, std::nullopt, true);
 #endif  // WIN32
+#endif // NG_PYTHON
   }
 
   std::string ng_lib_name = "";

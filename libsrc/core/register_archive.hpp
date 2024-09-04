@@ -34,6 +34,8 @@ namespace ngcore {
     return *this;
   }
 
+  /*
+    // now using has_shared_from_this2 in archive.hpp
   template <typename T>
   struct has_shared_from_this
   {
@@ -42,6 +44,7 @@ namespace ngcore {
     typedef decltype( check<T>(sizeof(char)) ) type;
     static constexpr type value = type();
   };
+  */
 #endif // NETGEN_PYTHON
 
 
@@ -59,7 +62,7 @@ namespace ngcore {
       {
         detail::TCargs<T> args;
         ar &args;
-        auto nT = detail::constructIfPossible<T>(args);
+        auto nT = detail::constructIfPossible<T>(std::move(args));
         return typeid(T) == ti ? nT
           : Archive::Caster<T, Bases>::tryUpcast(ti, nT);
       };

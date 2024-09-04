@@ -168,6 +168,12 @@ namespace ngcore
         trace = nullptr;
       }
     num_threads = 1;
+#ifdef USE_NUMA
+      for (int j = 0; j < num_nodes; j++)
+          numa_free (nodedata[j], sizeof(NodeData));
+#else
+      delete nodedata[0];
+#endif
   }
 
 #ifdef WIN32

@@ -145,16 +145,16 @@ namespace netgen
     int filledtimestamp = -1;
     int linetimestamp = -1;
     int edgetimestamp = -1;
-    int pointnumbertimestamp = -1;
+    // int pointnumbertimestamp = -1;
 
     int tettimestamp = -1;
     int prismtimestamp = -1;
     int pyramidtimestamp = -1;
     int hextimestamp = -1;
 
-    int badeltimestamp = -1;
-    int identifiedtimestamp = -1;
-    int domainsurftimestamp = -1;
+    // int badeltimestamp = -1;
+    // int identifiedtimestamp = -1;
+    // int domainsurftimestamp = -1;
 
     struct {
       unsigned texture = -1;

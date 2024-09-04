@@ -13,6 +13,10 @@
 
 #include "../libsrc/interface/writeuser.hpp"
 
+#ifdef NETGEN_PYTHON
+#include <core/python_ngcore.hpp>
+#endif
+
 namespace netgen
 {
   DLL_HEADER extern Flags parameters;
@@ -251,6 +255,10 @@ int main(int argc, char ** argv)
       // start event-loop
       Tk_MainLoop();
       Tcl_DeleteInterp (myinterp); 
+#ifdef NETGEN_PYTHON
+      py::gil_scoped_acquire ensure_gil;
+#endif
+
       Tcl_Exit(0);
     }
 

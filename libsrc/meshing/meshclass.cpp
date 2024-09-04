@@ -901,6 +901,13 @@ namespace netgen
             outfile << " " << type;
           }
         outfile << "\n";
+        outfile << "identificationnames\n";
+        outfile << ident -> GetMaxNr() << "\n";
+        for (i = 1; i <= ident -> GetMaxNr(); i++)
+          {
+            string name = ident -> GetName(i);
+            outfile << ident->GetName(i) << "\n";
+          }
       }
 
     int cntmat = 0;
@@ -1207,6 +1214,8 @@ namespace netgen
     facedecoding.SetSize(0);
 
     bool endmesh = false;
+
+    bool has_facedescriptors = false;
     
 
     while (infile.good() && !endmesh)
@@ -1226,6 +1235,7 @@ namespace netgen
 
         if (strcmp (str, "facedescriptors") == 0)
           {
+            has_facedescriptors = true;
             int nfd;
             infile >> nfd;
             for([[maybe_unused]] auto i : Range(nfd))
@@ -1448,6 +1458,17 @@ namespace netgen
                 ident -> SetType(i,Identifications::ID_TYPE(type));
               }
           }
+        if (strcmp (str, "identificationnames") == 0)
+          {
+            infile >> n;
+            PrintMessage (3, n, " identificationnames");
+            for (i = 1; i <= n; i++)
+              {
+                string name;
+                infile >> name;
+                ident -> SetName(i,name);
+              }
+          }
 
         if (strcmp (str, "materials") == 0)
           {
@@ -1610,7 +1631,11 @@ namespace netgen
 
                  surfnr--;
 
-                 if(surfnr > 0) 
+                 if(has_facedescriptors)
+                 {
+                    GetFaceDescriptor(i).SetSurfColour(surfcolour);
+                 }
+                 else if(surfnr > 0)
                  {
                     for(int facedesc = 1; facedesc <= cnt_facedesc; facedesc++)
                     {
@@ -1637,7 +1662,14 @@ namespace netgen
                     double transp;
                     infile >> surfnr >> transp;
                     surfnr--;
-                    if(surfnr > 0)
+                    if(has_facedescriptors)
+                    {
+                       auto& fd = GetFaceDescriptor(index);
+                       auto scol = fd.SurfColour();
+                       scol[3] = transp;
+                       fd.SetSurfColour(scol);
+                    }
+                    else if(surfnr > 0)
                       {
                         for(int facedesc = 1; facedesc <= cnt_facedesc; facedesc++)
                           {
@@ -1796,6 +1828,33 @@ namespace netgen
             archive & copy_el1d;
           }
 
+
+        // sending 0D elements
+        auto copy_el0d  (pointelements);
+        for (auto & el : copy_el0d)
+          {
+            auto & pi = el.pnum;
+            if (pi != PointIndex(PointIndex::INVALID))
+              pi = globnum[pi];
+          }
+        
+        if (comm.Rank() > 0)
+          comm.Send(copy_el0d, 0, 200);
+        else
+          {
+            Array<Element0d> el0di;
+            for (int j = 1; j < comm.Size(); j++)
+              {
+                comm.Recv(el0di, j, 200);
+                for (auto & el : el0di)
+                  copy_el0d += el;
+              }
+            archive & copy_el0d;
+          }
+
+
+
+        
         if (comm.Rank() == 0)
           {
             archive & facedecoding;
@@ -1825,6 +1884,7 @@ namespace netgen
     archive & surfelements;
     archive & volelements;
     archive & segments;
+    archive & pointelements;
     archive & facedecoding;
     archive & materials & bcnames & cd2names & cd3names;
     archive & numvertices;
@@ -6772,14 +6832,14 @@ namespace netgen
   //   }
   // #endif
 
-  int Mesh::IdentifyPeriodicBoundaries(const string &s1,
-                                       const string &s2,
+  int Mesh::IdentifyPeriodicBoundaries(const string& id_name,
+                                       const string &s1,
                                        const Transformation<3> &mapping,
                                        double pointTolerance)
   {
-    auto nr = ident->GetMaxNr() + 1;
+    auto nr = ident->GetNr(id_name);
     ident->SetType(nr, Identifications::PERIODIC);
-    double lami[4];
+    // double lami[4];
     set<int> identified_points;
     if(pointTolerance < 0.)
       {
@@ -6787,43 +6847,38 @@ namespace netgen
         GetBox(pmin, pmax);
         pointTolerance = 1e-8 * (pmax-pmin).Length();
       }
-    for(const auto& se : surfelements)
+    size_t nse = GetDimension() == 3 ? surfelements.Size() : segments.Size();
+    for(auto sei : Range(nse))
       {
-        if(GetBCName(se.index-1) != s1)
+        auto name = GetDimension() == 3 ? GetBCName(surfelements[sei].index-1) :
+          GetBCName(segments[sei].edgenr-1);
+        if(name != s1)
           continue;
 
-        for(const auto& pi : se.PNums())
+        const auto& pnums = GetDimension() == 3 ? surfelements[sei].PNums() :
+          segments[sei].PNums();
+        for(const auto& pi : pnums)
           {
             if(identified_points.find(pi) != identified_points.end())
               continue;
             auto pt = (*this)[pi];
             auto mapped_pt = mapping(pt);
-            auto other_nr = GetElementOfPoint(mapped_pt, lami, true);
-            int index = -1;
-            if(other_nr != 0)
+            bool found = false;
+            for(auto other_pi : Range(points))
               {
-                auto other_el = VolumeElement(other_nr);
-                for(auto i : Range(other_el.PNums().Size()))
-                  if((mapped_pt - (*this)[other_el.PNums()[i]]).Length() < pointTolerance)
-                    {
-                      index = i;
-                      break;
-                    }
-                if(index == -1)
+                if((mapped_pt - (*this)[other_pi]).Length() < pointTolerance)
                   {
-                    cout << "point coordinates = " << pt << endl;
-                    cout << "mapped coordinates = " << mapped_pt << endl;
-                    throw Exception("Did not find mapped point with nr " + ToString(pi) + ", are you sure your mesh is periodic?");
+                    identified_points.insert(pi);
+                    ident->Add(pi, other_pi, nr);
+                    found = true;
+                    break;
                   }
-                auto other_pi = other_el.PNums()[index];
-                identified_points.insert(pi);
-                ident->Add(pi, other_pi, nr);
               }
-            else
+            if(!found)
               {
                 cout << "point coordinates = " << pt << endl;
                 cout << "mapped coordinates = " << mapped_pt << endl;
-                throw Exception("Mapped point with nr " + ToString(pi) + " is outside of mesh, are you sure your mesh is periodic?");
+                throw Exception("Did not find mapped point with nr " + ToString(pi) + ", are you sure your mesh is periodic?");
               }
           }
       }
@@ -7233,7 +7288,7 @@ namespace netgen
 
     for(auto dom : Range(ndomains))
     {
-      if(regex_match(mesh.GetMaterial(dom), regex_domains))
+      if(regex_match(mesh.GetMaterial(dom+1), regex_domains))
         keep_domain.SetBit(dom);
     }
 
@@ -7244,7 +7299,7 @@ namespace netgen
         keep_face.SetBit(fd.BCProperty());
     }
 
-    auto filter_elements = [&mesh, &keep_point](auto & elements, auto & keep_region)
+    auto filter_elements = [&keep_point](auto & elements, auto & keep_region)
     {
       for(auto & el : elements)
       {

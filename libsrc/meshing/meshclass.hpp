@@ -776,8 +776,8 @@ namespace netgen
     { return facedecoding[i-1]; }      
     // { return facedecoding.Elem(i); }
 
-    int IdentifyPeriodicBoundaries(const string& s1,
-                                   const string& s2,
+    int IdentifyPeriodicBoundaries(const string& id_name,
+                                   const string& s1,
                                    const Transformation<3>& mapping,
                                    double pointTolerance);
 

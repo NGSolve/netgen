@@ -2078,7 +2078,6 @@ namespace netgen
       return TCL_ERROR;
     const char * filename = Tcl_GetString(argv[2]);
 
-    int len = strlen(filename);
     int w = Togl_PixelScale(togl)*Togl_Width (togl);
     int h = Togl_PixelScale(togl)*Togl_Height (togl);
 
@@ -2088,6 +2087,7 @@ namespace netgen
     glReadPixels (0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, &buffer[0]);
 
 #ifdef JPEGLIB
+    int len = strlen(filename);
     if (strcmp ("jpg", filename+len-3) == 0)
       {
         cout << "Snapshot to file '" << filename << "'" << endl;
@@ -2130,19 +2130,15 @@ namespace netgen
 #endif // JPEGLIB
     {
         string command;
-        string filename2;
+        std::filesystem::path filepath(filename);
 
-        filename2 = filename;
+        bool need_conversion = filepath.extension() != ".ppm";
+        if (need_conversion)
+          filepath += ".ppm";
 
-        if(filename2.substr(len-3) != ".ppm")
-            filename2 += ".ppm";
+        cout << IM(3) << "Snapshot to file '" << filepath.string() << endl;
 
-        cout << "Snapshot to file '" << filename << endl;
-
-        // int w = Togl_Width (togl);
-        // int h = Togl_Height (togl);
-
-        ofstream outfile(filename2);
+        ofstream outfile(filepath);
         outfile << "P6" << endl
           << "# CREATOR: Netgen" << endl
           << w << " " << h << endl
@@ -2153,12 +2149,10 @@ namespace netgen
                     outfile.put (buffer[k+3*j+3*w*(h-i-1)]);
         outfile << flush;
 
-        if (filename2 == string(filename))
-            return TCL_OK;
-        else
+        if (need_conversion)
         {
           // convert image file (Unix/Linux only):
-          command = string("convert -quality 100 ") + filename2 + " " + filename;
+          command = string("convert -quality 100 ") + filepath.string() + " " + filename;
 
           int err = system(command.c_str());
           if (err != 0)
@@ -2167,16 +2161,10 @@ namespace netgen
               return TCL_ERROR;
           }
 
-          command  = string("rm ") + filename2;
-          err = system(command.c_str());
-
-          if (err != 0)
-          {
-              Tcl_SetResult (Togl_Interp(togl), (char*)"Cannot delete temporary file", TCL_VOLATILE);
-              return TCL_ERROR;
-          }
-          return TCL_OK;
+          std::filesystem::remove(filepath);
         }
+
+        return TCL_OK;
     }
   }
 

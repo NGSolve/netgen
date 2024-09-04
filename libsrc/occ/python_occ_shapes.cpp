@@ -780,7 +780,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            PropagateProperties(builder, shape, occ2ng(trafo));
            return builder.Shape();
          }, py::arg("axes"),
-         "copy shape, and mirror over plane defined by 'axes'")
+         "copy shape, and mirror over XY - plane defined by 'axes'")
     
     .def("Mirror", [] (const TopoDS_Shape & shape, const gp_Ax1 & ax)
          {
@@ -790,7 +790,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            PropagateProperties(builder, shape, occ2ng(trafo));
            return builder.Shape();
          }, py::arg("axes"),
-         "copy shape, and mirror around axis 'axis'")
+         "copy shape, and rotate by 180 deg around axis 'axis'")
     
     .def("Scale", [](const TopoDS_Shape & shape, const gp_Pnt p, double s)
          {
@@ -1149,6 +1149,59 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          py::arg("intersection") = false,py::arg("joinType")="arc",
          py::arg("removeIntersectingEdges") = false,
          "makes shell-like solid from faces")
+
+    .def("Offset", [](const TopoDS_Shape & shape, 
+                      double offset, double tol, bool intersection,
+                      string joinT, bool removeIntEdges, optional<string> identification_name) {
+           BRepOffsetAPI_MakeOffsetShape maker;
+           GeomAbs_JoinType joinType;
+           if(joinT == "arc")
+             joinType = GeomAbs_Arc;
+           else if(joinT == "intersection")
+             joinType = GeomAbs_Intersection;
+           else if(joinT == "tangent")
+            joinType = GeomAbs_Tangent;
+           else
+             throw Exception("Only joinTypes 'arc', 'intersection' and 'tangent' exist!");
+           
+           maker.PerformByJoin(shape, offset, tol,
+                               BRepOffset_Skin, intersection,
+                               false, joinType, removeIntEdges);
+
+           // PropagateProperties (maker, shape);
+           for (auto typ : { TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
+             for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+               {
+                 auto s = e.Current();
+                 auto prop = OCCGeometry::GetProperties(s);
+                 for (auto mods : maker.Generated(s))
+                   {
+                     if(OCCGeometry::HaveProperties(s))
+                       {
+                         auto & new_props = OCCGeometry::GetProperties(mods);
+                         new_props.Merge(prop);
+                         if (prop.name) new_props.name = string("offset_")+(*prop.name);
+                       }
+                     if(identification_name)
+                       {
+                         OCCIdentification ident;
+                         ident.from = s;
+                         ident.to = mods;
+                         ident.name = *identification_name;
+                         ident.type = Identifications::CLOSESURFACES;
+                         OCCGeometry::GetIdentifications(s).push_back(ident);
+                       }
+                   }
+               }
+           
+           return maker.Shape();
+       }, py::arg("offset"), py::arg("tol"),
+         py::arg("intersection") = false,py::arg("joinType")="arc",
+         py::arg("removeIntersectingEdges") = false,
+         py::arg("identification_name") = nullopt,
+         "makes shell-like solid from faces")
+
+
     
     .def("MakeTriangulation", [](const TopoDS_Shape & shape)
          {
@@ -1209,7 +1262,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          })
     .def("_webgui_data", [](const TopoDS_Shape & shape)
          {
-           auto status = BuildTriangulation(shape);
+           [[maybe_unused]] auto status = BuildTriangulation(shape);
            // cout << "status = " << aStatus << endl;
            
            std::vector<double> p[3];
@@ -1479,6 +1532,24 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
               throw NgException("error in wire builder: "+errstr.str());
             }
         }))
+    .def("Offset", [](const TopoDS_Wire & wire, const TopoDS_Face & face, double dist,
+                      string joinT, bool openresult)
+    {
+      GeomAbs_JoinType joinType;
+      if(joinT == "arc")
+        joinType = GeomAbs_Arc;
+      else if(joinT == "intersection")
+        joinType = GeomAbs_Intersection;
+      else if(joinT == "tangent")
+        joinType = GeomAbs_Tangent;
+      else
+        throw Exception("Only joinTypes 'arc', 'tangent', and 'intersection' exist!");
+      BRepOffsetAPI_MakeOffset builder(face, joinType, openresult);
+      builder.AddWire(wire);
+      builder.Perform(dist);
+      auto shape = builder.Shape();    
+      return shape;
+    })
     ;
 
   py::class_<TopoDS_Face, TopoDS_Shape> (m, "Face")

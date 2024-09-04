@@ -86,7 +86,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     try {
       if(p) std::rethrow_exception(p);
     } catch (const Standard_Failure& e) {
-      exc((string(e.DynamicType()->Name()) + ": " + e.GetMessageString()).c_str());
+      py::set_error(PyExc_RuntimeError, (string(e.DynamicType()->Name()) + ": " + e.GetMessageString()).c_str());
     }
   });
   
@@ -243,17 +243,15 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                          {
                            MeshingParameters mp;
                            OCCParameters occparam;
-                           {
-                             py::gil_scoped_acquire aq;
-                             if(pars)
-                               {
-                                 auto mp_kwargs = CreateDictFromFlags(pars->geometrySpecificParameters);
-                                 CreateOCCParametersFromKwargs(occparam, mp_kwargs);
-                                 mp = *pars;
-                               }
-                             CreateOCCParametersFromKwargs(occparam, kwargs);
-                             CreateMPfromKwargs(mp, kwargs);
-                           }
+                           if(pars)
+                             {
+                               auto mp_kwargs = CreateDictFromFlags(pars->geometrySpecificParameters);
+                               CreateOCCParametersFromKwargs(occparam, mp_kwargs);
+                               mp = *pars;
+                             }
+                           CreateOCCParametersFromKwargs(occparam, kwargs);
+                           CreateMPfromKwargs(mp, kwargs);
+                           py::gil_scoped_release gil_release;
                            geo->SetOCCParameters(occparam);
                            if(!mesh)
                              mesh = make_shared<Mesh>();
@@ -279,7 +277,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                              }
                            return mesh;
                          }, py::arg("mp") = nullptr, py::arg("comm")=NgMPI_Comm{},
-         py::arg("mesh")=nullptr, py::call_guard<py::gil_scoped_release>(),
+         py::arg("mesh")=nullptr,
          (meshingparameter_description + occparameter_description).c_str())
     .def_property_readonly("shape", [](const OCCGeometry & self) { return self.GetShape(); })
     ;

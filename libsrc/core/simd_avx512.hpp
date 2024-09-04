@@ -111,7 +111,7 @@ namespace ngcore
     template <typename Function>
     void SIMD_function (const Function & func, std::true_type)
     {
-      data = (__m512){ func(7), func(6), func(5), func(4),
+      data = (__m512d){ func(7), func(6), func(5), func(4),
                        func(3), func(2), func(1), func(0) };
     }
 

@@ -425,6 +425,7 @@ namespace netgen
     // control whether it is visible or not
     bool visible:1;  // element visible
     bool is_curved;   // element is (high order) curved
+    int8_t newest_vertex = -1; // from refinement via bisection
     /// order for hp-FEM
     unsigned int orderx:6;
     unsigned int ordery:6;
@@ -561,6 +562,9 @@ namespace netgen
     PointGeomInfo & GeomInfoPiMod (int i) { return geominfo[(i-1) % np]; }
     ///
     const PointGeomInfo & GeomInfoPiMod (int i) const { return geominfo[(i-1) % np]; }
+
+    auto & NewestVertex() { return newest_vertex; }
+    auto NewestVertex() const { return newest_vertex; }
 
     void DoArchive (Archive & ar)
     {
@@ -731,7 +735,8 @@ namespace netgen
     ELEMENT_TYPE typ;
     /// number of points (4..tet, 5..pyramid, 6..prism, 8..hex, 10..quad tet, 12..quad prism)
     int8_t np;
-
+    int8_t newest_vertex = -1; // from refinement via bisection
+    
     /// sub-domain index
     int index;
     /// order for hp-FEM
@@ -855,6 +860,9 @@ namespace netgen
     PointIndex & PNumMod (int i) { return pnum[(i-1) % np]; }
     ///
     const PointIndex & PNumMod (int i) const { return pnum[(i-1) % np]; }
+
+    auto & NewestVertex() { return newest_vertex; }
+    auto NewestVertex() const { return newest_vertex; }
 
     void DoArchive (Archive & ar)
     {
@@ -1155,7 +1163,13 @@ namespace netgen
     int index;
     Element0d () = default;
     Element0d (PointIndex _pnum, int _index)
-      : pnum(_pnum), index(_index) { ; } 
+      : pnum(_pnum), index(_index) { ; }
+
+#ifdef PARALLEL
+    static NG_MPI_Datatype MyGetMPIType();
+#endif
+    
+    void DoArchive (Archive & ar);
   };
 
   ostream & operator<<(ostream  & s, const Element0d & el);
@@ -1629,6 +1643,19 @@ namespace netgen
          names.Append(name);
       return names.Pos(name)+1;
     }
+    string GetName(int nr) const
+    {
+      if (nr <= names.Size())
+        return names[nr - 1];
+      else
+        return "";
+    }
+    void SetName(int nr, string name)
+    {
+      while(names.Size() < nr)
+        names.Append("");
+      names[nr-1] = name;
+    }
 
     /// remove secondorder
     void SetMaxPointNr (int maxpnum);
@@ -1665,6 +1692,9 @@ namespace ngcore
   };
   template <> struct MPI_typetrait<netgen::Segment> {
     static NG_MPI_Datatype MPIType ()  { return netgen::Segment::MyGetMPIType(); }
+  };
+  template <> struct MPI_typetrait<netgen::Element0d> {
+    static NG_MPI_Datatype MPIType ()  { return netgen::Element0d::MyGetMPIType(); }
   };
 
 }

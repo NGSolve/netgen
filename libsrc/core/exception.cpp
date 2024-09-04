@@ -23,6 +23,47 @@ namespace ngcore
 }
 
 
+  Exception :: Exception(std::string_view s1, std::string_view s2)
+    : Exception(std::string(s1)+std::string(s2))
+  { }
+
+  Exception :: Exception(std::string_view s1, std::string_view s2, std::string_view s3)
+    : Exception(std::string(s1)+std::string(s2)+std::string(s3))
+  { }
+
+
+  void Exception :: Throw (std::string_view s1)
+  {
+    throw Exception(std::string(s1));
+  }
+
+  void Exception :: Throw (std::string_view s1, std::string_view s2)
+  {
+    throw Exception(std::string(s1)+std::string(s2));
+  }
+    
+  void Exception :: Throw (std::string_view s1, std::string_view s2, std::string_view s3)
+  {
+    throw Exception(std::string(s1)+std::string(s2)+std::string(s3));
+  }
+  
+  
+  RangeException :: RangeException (// const std::string & where,
+                                    const char * where,
+                                    int ind, int imin, int imax) : Exception("")
+  {
+    std::stringstream str;
+    str << where << ": index " << ind << " out of range [" << imin << "," << imax << ")\n";
+    Append (str.str());
+    Append (GetBackTrace());
+  }
+  
+
+  void ThrowRangeException(const char * s, int ind, int imin, int imax)
+  {
+    throw RangeException(s, ind, imin, imax);
+  }
+  
   void ThrowException(const std::string & s)
   {
     throw Exception (s);
@@ -32,6 +73,13 @@ namespace ngcore
   {
     throw Exception (s);
   }
+
+
+  void ThrowNotTheSameException(const char * s, long int a, long int b)
+  {
+    throw ngcore::Exception(std::string(s) + ", a="+ToString(a) + ", b="+ToString(b) + GetBackTrace());     
+  }
+  
 } // namespace ngcore
 
 

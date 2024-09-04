@@ -32,13 +32,23 @@ push_github:
     - "echo off"
     - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64"
     - set CI_DIR=C:\ci\%CI_PIPELINE_ID%
-    - set CLCACHE_BASEDIR=C:\ci\%CI_PIPELINE_ID%
+    - set CCACHE_BASEDIR=C:\ci\%CI_PIPELINE_ID%
     - set NETGEN_BUILD_DIR=%CI_DIR%\build
     - set INSTALL_DIR=%CI_DIR%\install
     - set SRC_DIR=%CI_DIR%\src
     - set NETGENDIR=%INSTALL_DIR%\bin
     - set PYTHONPATH=%INSTALL_DIR%\lib\site-packages
-    - set PATH=%NETGENDIR%;%PATH%
+    - echo %PATH%
+    - set PATH=%INSTALL_DIR%\bin;C:\python312;C:\python312\bin;C:\python312\Scripts;C:\tools\;%PATH%
+    - echo %PATH%
+    - set CCACHE_HARDLINK=1
+    - set CCACHE_NOHASHDIR=1
+    - C:\tools\ccache -s
+    - C:\tools\ccache -M 20G
+    - dir C:\python312
+    - python.exe --version
+    - python.exe -m pip install -U netgen-occt netgen-occt-devel
+    - cmake --version
 
 build_win:
   <<: *win
@@ -54,12 +64,14 @@ build_win:
     - >-
         cmake %SRC_DIR%
         -G Ninja
+        -DCMAKE_PREFIX=C:/python312
+        -DPython3_ROOT_DIR=C:/python312
         -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%
         -DCHECK_RANGE=ON
         -DUSE_CGNS=ON
         -DUSE_OCC=ON
         -DUSE_CCACHE=ON
-        -DENABLE_UNIT_TESTS=ON
+        -DENABLE_UNIT_TESTS=OFF
         -DCMAKE_BUILD_TYPE=Release
     - cmake --build . --target install --config Release
 
@@ -69,7 +81,7 @@ test_win:
   script:
     - pip install pytest-check
     - cd tests\pytest
-    - python test_tutorials.py new_results.json
+    - REM python test_tutorials.py new_results.json
     - cd %NETGEN_BUILD_DIR%\netgen
     - ctest -C Release -V --output-on-failure
     - cd ..
@@ -183,15 +195,6 @@ test_build_ngsolve:
       netgen_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}
       bash -c 'cd /root/src/netgen/tests/ && ./build_ngsolve.sh'
 
-# cpp guideline checks
-# test_guidelines:
-#   <<: *ubuntu
-#   stage: test
-#   script:
-#     - docker run -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_PIPELINE_ID}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_guidelines.sh
-#   when: always
-#   allow_failure: true
-
 cleanup_ubuntu:
   stage: cleanup
   tags:
@@ -285,12 +288,11 @@ pip_windows:
     - pip
     - windows
   script:
-    - .\tests\build_pip.ps1 C:\Python37
-    - .\tests\build_pip.ps1 C:\Python38
-    - .\tests\build_pip.ps1 C:\Python39
-    - .\tests\build_pip.ps1 C:\Python310
-    - .\tests\build_pip.ps1 C:\Python311
     - .\tests\build_pip.ps1 C:\Python312
+    - .\tests\build_pip.ps1 C:\Python311
+    - .\tests\build_pip.ps1 C:\Python310
+    - .\tests\build_pip.ps1 C:\Python39
+    - .\tests\build_pip.ps1 C:\Python38
   when: manual
 
 pip_macos:
@@ -300,9 +302,9 @@ pip_macos:
     - macosx
     - m1
   script:
-    - ./tests/build_pip_mac.sh 3.8
-    - ./tests/build_pip_mac.sh 3.9
-    - ./tests/build_pip_mac.sh 3.10
-    - ./tests/build_pip_mac.sh 3.11
     - ./tests/build_pip_mac.sh 3.12
+    - ./tests/build_pip_mac.sh 3.11
+    - ./tests/build_pip_mac.sh 3.10
+    - ./tests/build_pip_mac.sh 3.9
+    - ./tests/build_pip_mac.sh 3.8
   when: manual

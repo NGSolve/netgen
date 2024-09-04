@@ -9,7 +9,7 @@ dpkg-deb -R openmpi-dev.deb /opt/openmpi
 mv /opt/openmpi/usr/lib/x86_64-linux-gnu/openmpi/include /opt/openmpi/include
 
 
-curl http://ftp.de.debian.org/debian/pool/main/m/mpich/libmpich-dev_4.2.0-5.1_amd64.deb -o mpich.deb
+curl http://ftp.de.debian.org/debian/pool/main/m/mpich/libmpich-dev_4.2.1-2_amd64.deb -o mpich.deb
 dpkg-deb -R mpich.deb /opt/mpich
 mv /opt/mpich/usr/lib/x86_64-linux-gnu/mpich/include /opt/mpich/include
 
@@ -19,23 +19,27 @@ export NETGEN_CCACHE=1
 
 /opt/python/cp39-cp39/bin/python tests/fix_auditwheel_policy.py
 
-for pyversion in 38 39 310 311 312
+for pyversion in 312 311 310 39 38
 do
     export PYDIR="/opt/python/cp${pyversion}-cp${pyversion}/bin"
     echo $PYDIR
-    $PYDIR/pip install -U pytest-check numpy wheel scikit-build pybind11-stubgen
+    $PYDIR/pip install requests packaging
+    $PYDIR/python3 ./tests/utils.py --check-pip || continue
+    $PYDIR/pip install -U pytest-check numpy wheel scikit-build pybind11-stubgen netgen-occt==7.8.1 netgen-occt-devel==7.8.1
     $PYDIR/pip install -i https://pypi.anaconda.org/mpi4py/simple/ --pre mpi4py
 
     rm -rf _skbuild
     NETGEN_ARCH=avx2 $PYDIR/pip wheel .
-    auditwheel repair netgen_mesher*-cp${pyversion}-*.whl
-    rm netgen_mesher-*.whl
+    mkdir -p wheelhouse
+    #auditwheel repair netgen_mesher*-cp${pyversion}-*.whl
+    rename linux_x86_64 manylinux_2_17_x86_64.manylinux2014_x86_64 netgen_mesher*-cp${pyversion}-*.whl
+    mv netgen_mesher*-cp${pyversion}-*.whl wheelhouse/
 
     $PYDIR/pip install wheelhouse/netgen_mesher*-cp${pyversion}-*.whl
     $PYDIR/python3 -c 'import netgen'
+    $PYDIR/pip install -U twine
+    $PYDIR/twine upload --skip-existing wheelhouse/netgen_mesher*-cp${pyversion}*manylinux*.whl
     #cd ../tests/pytest
     #$PYDIR/python3 -m pytest
 done
 
-$PYDIR/pip install -U twine
-$PYDIR/twine upload wheelhouse/*manylinux*.whl

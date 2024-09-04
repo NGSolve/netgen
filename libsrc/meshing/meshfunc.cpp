@@ -685,7 +685,7 @@ namespace netgen
     bool do_split = mp.optimize3d.find('d') != string::npos;
     bool do_swap = mp.optimize3d.find('s') != string::npos;
     bool do_swap2 = mp.optimize3d.find('t') != string::npos;
-    for(auto i : Range(mp.optsteps3d))
+    for([[maybe_unused]] auto i : Range(mp.optsteps3d))
       {
         auto [total_badness, max_badness, bad_els] = optmesh.UpdateBadness();
         if(bad_els==0) break;

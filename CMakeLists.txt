@@ -164,6 +164,7 @@ if(USE_CCACHE)
   find_program(CCACHE_FOUND NAMES ccache ccache.bat)
   if(CCACHE_FOUND)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_FOUND})
+    message(STATUS "Using ccache ${CCACHE_FOUND}")
   endif(CCACHE_FOUND)
 endif(USE_CCACHE)
 
@@ -398,7 +399,12 @@ if (USE_OCC)
     endif()
 
     target_link_libraries(occ_libs INTERFACE ${OCC_LIBRARIES})
-    include_directories(${OpenCASCADE_INCLUDE_DIR})
+    get_target_property(occ_include_dir TKernel INTERFACE_INCLUDE_DIRECTORIES)
+    if(NOT occ_include_dir)
+      set(occ_include_dir ${OpenCASCADE_INCLUDE_DIR})
+    endif()
+    target_include_directories(occ_libs INTERFACE ${occ_include_dir})
+    message(STATUS "OpenCasCade include dirs: ${occ_include_dir}")
     if(NOT OpenCASCADE_BUILD_SHARED_LIBS)
       if(OpenCASCADE_WITH_FREETYPE)
         find_library( FREETYPE NAMES freetype HINTS ${OpenCASCADE_LIBRARY_DIR})
@@ -413,10 +419,12 @@ if (USE_OCC)
       find_package(Threads REQUIRED)
       target_link_libraries(occ_libs INTERFACE Threads::Threads)
     endif()
-    message(STATUS "OCC DIRS ${OpenCASCADE_INCLUDE_DIR}")
     if(WIN32 AND USE_GUI)
-      target_link_libraries(nggui PRIVATE occ_libs Ws2_32.lib)
+      target_link_libraries(nggui PRIVATE Ws2_32.lib)
     endif(WIN32 AND USE_GUI)
+    if(USE_GUI)
+      target_link_libraries(nggui PRIVATE occ_libs)
+    endif(USE_GUI)
 endif (USE_OCC)
 
 #######################################################################
@@ -624,6 +632,16 @@ if(UNIX)
         set(CPACK_PACKAGE_FILE_NAME "netgen-${PACKAGE_VERSION}_${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")   
     endif(temp)
 endif(UNIX)
+
+if(USE_PYTHON AND NOT SKBUILD)
+  # install egg file to let python/pip know that Netgen ist installed
+  file( WRITE "netgen_mesher-py3.egg-info"
+"Metadata-Version: 2.1
+Name: netgen-mesher
+Version: ${NETGEN_VERSION_MAJOR}.${NETGEN_VERSION_MINOR}.${NETGEN_VERSION_PATCH}.post${NETGEN_VERSION_TWEAK}
+")
+  install(FILES netgen_mesher-py3.egg-info DESTINATION ${NG_INSTALL_DIR_PYTHON} COMPONENT netgen)
+endif()
 
 if(APPLE AND NOT SKBUILD)
     # create some auxiliary files

@@ -7,16 +7,16 @@
 
 #include "array.hpp"
 #include "ngcore_api.hpp"
-#include "pybind11/pytypes.h"
 
 #ifdef NG_PYTHON
+#include "pybind11/pytypes.h"
 #include "python_ngcore.hpp"
-#endif
 
 #define MPI4PY_LIMITED_API 1
 #define MPI4PY_LIMITED_API_SKIP_MESSAGE 1
 #define MPI4PY_LIMITED_API_SKIP_SESSION 1
 #include "mpi4py_pycapi.h"  // mpi4py < 4.0.0
+#endif
 
 #ifdef MSMPI_VER
 int MPI_Comm_create_group(MPI_Comm arg0, MPI_Group arg1, int arg2,
@@ -49,7 +49,7 @@ void gather_strided_array(size_t count, char* data) {
   if constexpr (size < stride) {
     char* dst = data;
     char* src = data;
-    for (auto i : Range(count)) {
+    for ( [[maybe_unused]] auto i : Range(count)) {
       memcpy(dst, src, size);
       dst += size;
       src += stride;
@@ -164,7 +164,7 @@ void ng_init_mpi() {
       imported_mpi4py = true;
     }
     PyObject* py_src = src.ptr();
-    auto type = Py_TYPE(py_src);
+    [[maybe_unused]] auto type = Py_TYPE(py_src);
     if (PyObject_TypeCheck(py_src, &PyMPIComm_Type)) {
       dst = mpi2ng(*PyMPIComm_Get(py_src));
       return !PyErr_Occurred();

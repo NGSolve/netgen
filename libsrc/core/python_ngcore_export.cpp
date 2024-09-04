@@ -141,20 +141,28 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
 
     .def(py::self | py::self)
     .def(py::self & py::self)
-    .def(py::self |= py::self)
-    .def(py::self &= py::self)
+    // .def(py::self |= py::self)   // false clang warnings,
+    // .def(py::self &= py::self)   // see https://github.com/pybind/pybind11/issues/1893
+    .def("__ior__", [](BitArray& lhs, const BitArray& rhs) { return lhs |= rhs; }, py::is_operator())
+    .def("__iand__", [](BitArray& lhs, const BitArray& rhs) { return lhs &= rhs; }, py::is_operator())    
     .def(~py::self)
     ;
 
   py::class_<Flags>(m, "Flags")
     .def(py::init<>())
     .def("__str__", &ToString<Flags>)
-    .def(py::init([](py::object & obj) {
+    .def(py::init([](py::dict kwargs) {
           Flags flags;
-          py::dict d(obj);          
-          SetFlag (flags, "", d);
+          for (auto d : kwargs)
+            SetFlag(flags, d.first.cast<string>(), d.second.cast<py::object>());
           return flags;
-        }), py::arg("obj"), "Create Flags by given object")
+    }), "Create flags from dict")
+    .def(py::init([](py::kwargs kwargs) {
+          Flags flags;
+          for (auto d : kwargs)
+            SetFlag(flags, d.first.cast<string>(), d.second.cast<py::object>());
+          return flags;
+        }), "Create flags from kwargs")
     .def(py::pickle([] (const Flags& self)
         {
           std::stringstream str;

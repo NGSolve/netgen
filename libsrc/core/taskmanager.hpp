@@ -10,6 +10,7 @@
 #include <atomic>
 #include <functional>
 #include <list>
+#include <cmath>
 #include <ostream>
 #include <thread>
 
@@ -1010,7 +1011,7 @@ public:
     int num_nodes = numa_num_configured_nodes();
     size_t pagesize = numa_pagesize();
     
-    int npages = ceil ( double(s)*sizeof(T) / pagesize );
+    int npages = std::ceil ( double(s)*sizeof(T) / pagesize );
 
     // cout << "size = " << numa_size << endl;
     // cout << "npages = " << npages << endl;

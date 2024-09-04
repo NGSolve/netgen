@@ -516,11 +516,13 @@ namespace netgen
                       if(from.IsSame(from_mapped) && to.IsSame(to_mapped))
                         continue;
   
-                      Transformation<3> trafo_mapped = ident.trafo;
+                      if(!ident.trafo) continue;
+                      Transformation<3> trafo_mapped = *ident.trafo;
+
                       if(trafo)
                       {
                           Transformation<3> trafo_temp;
-                          trafo_temp.Combine(ident.trafo, trafo_inv);
+                          trafo_temp.Combine(*ident.trafo, trafo_inv);
                           trafo_mapped.Combine(*trafo, trafo_temp);
                       }
   
