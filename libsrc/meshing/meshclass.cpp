@@ -7284,17 +7284,27 @@ namespace netgen
     regex regex_faces(faces);
     regex regex_domains(domains);
 
-    for(auto dom : Range(ndomains))
-    {
-      if(regex_match(mesh.GetMaterial(dom+1), regex_domains))
-        keep_domain.SetBit(dom);
-    }
+    if(dimension == 3) {
+      for(auto dom : Range(ndomains))
+        if(regex_match(mesh.GetMaterial(dom+1), regex_domains))
+          keep_domain.SetBit(dom);
 
-    for(auto fi : Range(nfaces))
-    {
-      auto & fd = mesh.FaceDescriptors()[fi];
-      if (keep_domain[fd.DomainIn()] || keep_domain[fd.DomainOut()] || regex_match(fd.GetBCName(), regex_faces))
-        keep_face.SetBit(fd.BCProperty());
+      for(auto fi : Range(nfaces))
+      {
+        auto & fd = mesh.FaceDescriptors()[fi];
+        if (regex_match(fd.GetBCName(), regex_faces) 
+          || keep_domain[fd.DomainIn()] || keep_domain[fd.DomainOut()])
+            keep_face.SetBit(fd.BCProperty());
+      }
+    }
+    else {
+      for(auto fi : Range(nfaces))
+      {
+        auto & fd = mesh.FaceDescriptors()[fi];
+        auto mat = GetMaterial(fd.BCProperty());
+        if (regex_match(mat, regex_faces))
+            keep_face.SetBit(fd.BCProperty());
+      }
     }
 
     auto filter_elements = [&keep_point](auto & elements, auto & keep_region)
