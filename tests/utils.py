@@ -2,6 +2,7 @@ import argparse
 import os
 import requests
 import sys
+import time
 from subprocess import check_output
 from packaging import tags
 from packaging.utils import parse_wheel_filename
@@ -87,6 +88,11 @@ def main():
         help="Check if package is on pypi already, fails with exit code 1 if available",
     )
     parser.add_argument(
+        "--wait-pip",
+        action="store_true",
+        help="Wait until package is on pypi, fails with exit code 1 if still not available after 300s",
+    )
+    parser.add_argument(
         "--get-git-version",
         action="store_true",
         help="Generate the current package git version string",
@@ -114,6 +120,15 @@ def main():
         version = get_version(args.dir)
         if is_package_available(args.package, version):
             print(f"{args.package}=={version} is already on pypi")
+            sys.exit(1)
+    elif args.wait_pip:
+        version = get_version(args.dir)
+        t0 = time.time()
+        while time.time()-t0 < 300 and not is_package_available(args.package, version):
+            time.sleep(20)
+
+        if not is_package_available(args.package, version):
+            print(f"Timeout waiting for package {args.package}=={version} to be available on pypi")
             sys.exit(1)
     else:
         print("no action")
