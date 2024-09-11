@@ -546,6 +546,9 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
       if (!mesh.LegalTet (oldel)) bad1 += GetLegalPenalty();
       if (!mesh.LegalTet (newel1)) bad2 += GetLegalPenalty();
       if (!mesh.LegalTet (newel2)) bad2 += GetLegalPenalty();
+
+      if( newel1.Volume(mesh.Points()) < 0.0 || newel2.Volume(mesh.Points()) < 0.0)
+        return 0.0;
     }
 
   d_badness = bad2-bad1;
