@@ -141,10 +141,16 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
 
     .def(py::self | py::self)
     .def(py::self & py::self)
-    // .def(py::self |= py::self)   // false clang warnings,
-    // .def(py::self &= py::self)   // see https://github.com/pybind/pybind11/issues/1893
-    .def("__ior__", [](BitArray& lhs, const BitArray& rhs) { return lhs |= rhs; }, py::is_operator())
-    .def("__iand__", [](BitArray& lhs, const BitArray& rhs) { return lhs &= rhs; }, py::is_operator())    
+    #ifdef __clang__ 
+    // see https://github.com/pybind/pybind11/issues/1893
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wself-assign-overloaded"
+    #endif
+    .def(py::self |= py::self)
+    .def(py::self &= py::self)
+    #ifdef __clang__
+    #pragma GCC diagnostic pop
+    #endif
     .def(~py::self)
     ;
 
