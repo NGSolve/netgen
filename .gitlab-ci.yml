@@ -81,11 +81,20 @@ test_win:
   script:
     - pip install pytest-check
     - cd tests\pytest
-    - REM python test_tutorials.py new_results.json
     - cd %NETGEN_BUILD_DIR%\netgen
     - ctest -C Release -V --output-on-failure
     - cd ..
   needs: ["build_win"]
+
+generate_results:
+  <<: *win
+  stage: test
+  script:
+    - pip install pytest-check
+    - cd tests\pytest
+    - python test_tutorials.py new_results.json
+  needs: ["build_win"]
+  when: manual
   artifacts:
     paths:
       - tests/pytest/new_results.json
