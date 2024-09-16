@@ -416,16 +416,7 @@ namespace netgen
       }
 #endif
 
-#ifdef OCC_HAVE_HISTORY    
-    Handle(BRepTools_History) history = aBuilder.History ();
-    
-    for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
-      {
-        if (auto name = OCCGeometry::GetProperties(e.Current()).name)
-          for (auto mods : history->Modified(e.Current()))
-            OCCGeometry::GetProperties(mods).name = *name;
-      }
-#endif // OCC_HAVE_HISTORY    
+    PropagateProperties(aBuilder, shape);
     
     // result of the operation
     shape = aBuilder.Shape();
