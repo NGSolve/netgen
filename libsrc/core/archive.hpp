@@ -1,6 +1,7 @@
 #ifndef NETGEN_CORE_ARCHIVE_HPP
 #define NETGEN_CORE_ARCHIVE_HPP
 
+#include <algorithm>
 #include <any>
 #include <array>                // for array
 #include <complex>              // for complex
@@ -1136,15 +1137,32 @@ namespace ngcore
     { char c; *stream >> c; b = (c=='t'); return *this; }
     Archive & operator & (std::string & str) override
     {
+      // Ignore \r (carriage return) characters when reading strings
+      // this is necessary for instance when a file was written on Windows and is read on Unix
+
       int len;
       *stream >> len;
       char ch;
-      stream->get(ch); // '\n'
+      stream->get(ch); // read newline character
       if(ch == '\r') // windows line endings -> read \n as well
         stream->get(ch);
       str.resize(len);
       if(len)
         stream->get(&str[0], len+1, '\0');
+
+      // remove all \r characters from the string, check if size changed
+      // if so, read the remaining characters
+      str.erase(std::remove(str.begin(), str.end(), '\r'), str.cend());
+      size_t chars_to_read = len-str.size();
+      while (chars_to_read>0)
+      {
+        auto old_size = str.size();
+        str.resize(len);
+
+        stream->get(&str[old_size], chars_to_read+1, '\0');
+        str.erase(std::remove(str.begin()+old_size, str.end(), '\r'), str.cend());
+        chars_to_read = len - str.size();
+      }
       return *this;
     }
     Archive & operator & (char *& str) override
