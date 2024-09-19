@@ -64,18 +64,27 @@ def get_git_version(cwd):
     return check_output(["git", "describe", "--tags"], cwd=cwd).decode("utf-8").strip()
 
 
+def get_dev_extension(cwd):
+    if not is_dev_build():
+        return ""
+
+    # if the current commit does not belong to master, build a .dev1 package to avoid name conflicts for subsequent nightly builds from master
+    try:
+        check_output(["git", "merge-base", "--is-ancestor", "HEAD", "master"], cwd=cwd)
+        return ".dev0"
+    except:
+        return ".dev1"
+
+
 def get_version(cwd):
     git_version = get_git_version(cwd)
-    git_branch = check_output(["git", "branch", "--show-current"], cwd=cwd).decode("utf-8").strip()
-
 
     version = git_version[1:].split("-")
     if len(version) > 2:
         version = version[:2]
     if len(version) > 1:
         version = ".post".join(version)
-        if is_dev_build():
-            version += ".dev0" if git_branch in ['', 'master'] else '.dev1'
+        version += get_dev_extension(cwd)
     else:
         version = version[0]
 
@@ -126,11 +135,15 @@ def main():
     elif args.wait_pip:
         version = get_version(args.dir)
         t0 = time.time()
-        while time.time()-t0 < 300 and not is_package_available(args.package, version):
+        while time.time() - t0 < 300 and not is_package_available(
+            args.package, version
+        ):
             time.sleep(20)
 
         if not is_package_available(args.package, version):
-            print(f"Timeout waiting for package {args.package}=={version} to be available on pypi")
+            print(
+                f"Timeout waiting for package {args.package}=={version} to be available on pypi"
+            )
             sys.exit(1)
     else:
         print("no action")
