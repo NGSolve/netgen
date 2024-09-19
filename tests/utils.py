@@ -66,6 +66,8 @@ def get_git_version(cwd):
 
 def get_version(cwd):
     git_version = get_git_version(cwd)
+    git_branch = check_output(["git", "branch", "--show-current"], cwd=cwd).decode("utf-8").strip()
+
 
     version = git_version[1:].split("-")
     if len(version) > 2:
@@ -73,7 +75,7 @@ def get_version(cwd):
     if len(version) > 1:
         version = ".post".join(version)
         if is_dev_build():
-            version += ".dev0"
+            version += ".dev0" if git_branch in ['', 'master'] else '.dev1'
     else:
         version = version[0]
 
