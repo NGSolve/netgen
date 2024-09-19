@@ -281,7 +281,7 @@ cleanup_mac:
   needs: ["test_mac"]
 
 pip_linux:
-  image: quay.io/pypa/manylinux2014_x86_64
+  image: quay.io/pypa/manylinux_2_28_x86_64
   stage: build
   tags:
     - pip
