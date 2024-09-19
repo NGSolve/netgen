@@ -51,12 +51,17 @@ if(APPLE OR WIN32)
         NO_SYSTEM_ENVIRONMENT_PATH
         NO_CMAKE_SYSTEM_PATH
         NO_CMAKE_FIND_ROOT_PATH
-        HINTS ${PYTHON_PREFIX}/lib ${PYTHON_PREFIX}/tcl
+        HINTS
+        ${PYTHON_PREFIX}/lib
+        ${PYTHON_PREFIX}/tcl
+        ${PYTHON_PREFIX}/Frameworks
+        ${PYTHON_PREFIX}/Frameworks/Tcl.framework
+        ${PYTHON_PREFIX}/Frameworks/Tk.framework
         )
     find_library(TCL_STUB_LIBRARY NAMES tclstub85 tclstub8.5 tclstub86 tclstub8.6 ${tcl_find_args})
     find_library(TK_STUB_LIBRARY NAMES tkstub85 tkstub8.5 tkstub86 tkstub8.6 ${tcl_find_args})
-    find_library(TCL_LIBRARY NAMES tcl85 tcl8.5 tcl86 tcl8.6 tcl86t ${tcl_find_args})
-    find_library(TK_LIBRARY NAMES tk85 tk8.5 tk86 tk8.6 tk86t ${tcl_find_args})
+    find_library(TCL_LIBRARY NAMES tcl85 tcl8.5 tcl86 tcl8.6 tcl86t Tcl ${tcl_find_args})
+    find_library(TK_LIBRARY NAMES tk85 tk8.5 tk86 tk8.6 tk86t Tk ${tcl_find_args})
 else()
     # use system tcl/tk on linux
     find_package(TclStub REQUIRED)
