@@ -17,8 +17,6 @@ mv /opt/mpich/usr/lib/x86_64-linux-gnu/mpich/include /opt/mpich/include
 rm -rf wheelhouse
 export NETGEN_CCACHE=1
 
-/opt/python/cp39-cp39/bin/python tests/fix_auditwheel_policy.py
-
 for pyversion in 313 312 311 310 39 38
 do
     export PYDIR="/opt/python/cp${pyversion}-cp${pyversion}/bin"
@@ -31,7 +29,6 @@ do
     rm -rf _skbuild
     NETGEN_ARCH=avx2 $PYDIR/pip wheel .
     mkdir -p wheelhouse
-    #auditwheel repair netgen_mesher*-cp${pyversion}-*.whl
     rename linux_x86_64 manylinux_2_17_x86_64.manylinux2014_x86_64 netgen_mesher*-cp${pyversion}-*.whl
     mv netgen_mesher*-cp${pyversion}-*.whl wheelhouse/
 
