@@ -232,6 +232,7 @@ namespace netgen
     using NetgenGeometry::GetVertex;
     using NetgenGeometry::GetEdge;
     using NetgenGeometry::GetFace;
+    using NetgenGeometry::GetSolid;
 
     GeometryShape & GetShape(const TopoDS_Shape & shape)
     {
@@ -252,10 +253,16 @@ namespace netgen
         return const_cast<GeometryFace&>(as_const(*this).GetFace(shape));
     }
 
+    GeometrySolid & GetSolid(const TopoDS_Shape & shape)
+    {
+        return const_cast<GeometrySolid&>(as_const(*this).GetSolid(shape));
+    }
+
     const GeometryShape & GetShape(const TopoDS_Shape & shape) const;
     const GeometryVertex & GetVertex(const TopoDS_Shape & shape) const;
     const GeometryEdge & GetEdge(const TopoDS_Shape & shape) const;
     const GeometryFace & GetFace(const TopoDS_Shape & shape) const;
+    const GeometrySolid & GetSolid(const TopoDS_Shape & shape) const;
 
     void Analyse(Mesh& mesh,
                  const MeshingParameters& mparam) const override;

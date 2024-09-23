@@ -5,6 +5,7 @@
 #include <BRepTools.hxx>
 
 #include "occ_utils.hpp"
+#include "occgeom.hpp"
 
 namespace netgen
 {
