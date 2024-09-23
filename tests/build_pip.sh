@@ -1,22 +1,14 @@
 set -e
 ulimit -n 1024000 # lower open file limit, seems to affect performance
 yum -y update
-yum -y install ninja-build fontconfig-devel tk-devel tcl-devel libXmu-devel mesa-libGLU-devel
+yum -y install ninja-build fontconfig-devel tk-devel tcl-devel libXmu-devel mesa-libGLU-devel openmpi-devel mpich-devel
+
+mkdir -p /opt/openmpi/include /opt/mpich/include
+cp -a /usr/include/openmpi-x86_64/* /opt/openmpi/include/
+cp -a /usr/include/mpich-x86_64/* /opt/mpich/include/
 
 curl https://dl.fedoraproject.org/pub/epel/8/Everything/x86_64/Packages/c/ccache-3.7.7-1.el8.x86_64.rpm -o ccache.rpm
-curl https://dl.fedoraproject.org/pub/epel/8/Everything/x86_64/Packages/d/dpkg-1.20.9-4.el8.x86_64.rpm -o dpkg.rpm
-dnf -y install ccache.rpm dpkg.rpm
-
-
-curl http://ftp.de.debian.org/debian/pool/main/o/openmpi/libopenmpi-dev_4.1.6-13.3_amd64.deb -o openmpi-dev.deb
-dpkg-deb -R openmpi-dev.deb /opt/openmpi
-mv /opt/openmpi/usr/lib/x86_64-linux-gnu/openmpi/include /opt/openmpi/include
-
-
-curl http://ftp.de.debian.org/debian/pool/main/m/mpich/libmpich-dev_4.2.1-2_amd64.deb -o mpich.deb
-dpkg-deb -R mpich.deb /opt/mpich
-mv /opt/mpich/usr/lib/x86_64-linux-gnu/mpich/include /opt/mpich/include
-
+dnf -y install ccache.rpm
 
 rm -rf wheelhouse
 export NETGEN_CCACHE=1
