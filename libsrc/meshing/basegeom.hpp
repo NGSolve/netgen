@@ -212,10 +212,17 @@ namespace netgen
     size_t GetNVertices() const { return vertices.Size(); }
     size_t GetNEdges() const { return edges.Size(); }
     size_t GetNFaces() const { return faces.Size(); }
+    size_t GetNSolids() const { return solids.Size(); }
 
+    const GeometrySolid & GetSolid(int i) const { return *solids[i]; }
     const GeometryFace & GetFace(int i) const { return *faces[i]; }
     const GeometryEdge & GetEdge(int i) const { return *edges[i]; }
     const GeometryVertex & GetVertex(int i) const { return *vertices[i]; }
+
+    auto Solids() const { return FlatArray{solids}; }
+    auto Faces() const { return FlatArray{faces}; }
+    auto Edges() const { return FlatArray{edges}; }
+    auto Vertices() const { return FlatArray{vertices}; }
 
     virtual Array<const GeometryVertex*> GetFaceVertices(const GeometryFace& face) const { return Array<const GeometryVertex*>{}; }
 

@@ -170,6 +170,17 @@ namespace netgen
               common.push_back(shape);
         return common;
       }
+
+      ListOfShapes GetHighestDimShapes() const
+      {
+        for (auto type : {TopAbs_SOLID, TopAbs_FACE, TopAbs_EDGE, TopAbs_VERTEX})
+        {
+          auto ret = SubShapes(type);
+          if (ret.size() > 0)
+            return ret;
+        }
+        return ListOfShapes();
+      }
     };
 
     inline ListOfShapes GetSolids(const TopoDS_Shape & shape)
@@ -211,6 +222,16 @@ namespace netgen
         sub.push_back(e.Current());
       return sub;
     }
+
+    inline ListOfShapes GetHighestDimShapes(const TopoDS_Shape & shape)
+    {
+      auto ret = GetSolids(shape); if(ret.size() > 0) return ret;
+      ret = GetFaces(shape); if(ret.size() > 0) return ret;
+      ret = GetEdges(shape); if(ret.size() > 0) return ret;
+      ret = GetVertices(shape); if(ret.size() > 0) return ret;
+      return ListOfShapes();
+    }
+
 
   class DirectionalInterval
   {
