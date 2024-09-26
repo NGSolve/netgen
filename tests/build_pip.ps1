@@ -10,7 +10,7 @@ $env:NETGEN_ARCH = 'avx2'
 
 $pydir=$args[0]
 & $pydir\python.exe --version
-& $pydir\python.exe -m pip install packaging
+& $pydir\python.exe -m pip install packaging requests
 & $pydir\python.exe tests\utils.py --check-pip
 if ($LASTEXITCODE -ne 0) {
     exit 0

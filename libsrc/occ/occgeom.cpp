@@ -200,6 +200,11 @@ namespace netgen
       return *faces[fmap.FindIndex(shape)-1];
   }
 
+  const GeometrySolid & OCCGeometry :: GetSolid(const TopoDS_Shape & shape) const
+  {
+      return *solids[somap.FindIndex(shape)-1];
+  }
+
 
   string STEP_GetEntityName(const TopoDS_Shape & theShape, STEPCAFControl_Reader * aReader)
   {
@@ -416,16 +421,7 @@ namespace netgen
       }
 #endif
 
-#ifdef OCC_HAVE_HISTORY    
-    Handle(BRepTools_History) history = aBuilder.History ();
-    
-    for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
-      {
-        if (auto name = OCCGeometry::GetProperties(e.Current()).name)
-          for (auto mods : history->Modified(e.Current()))
-            OCCGeometry::GetProperties(mods).name = *name;
-      }
-#endif // OCC_HAVE_HISTORY    
+    PropagateProperties(aBuilder, shape);
     
     // result of the operation
     shape = aBuilder.Shape();
@@ -1248,11 +1244,11 @@ namespace netgen
           auto occ_solid = make_unique<OCCSolid>(s);
           if(HaveProperties(s))
             occ_solid->properties = GetProperties(s);
-          solids.Append(std::move(occ_solid));
-
           for(auto f : GetFaces(s))
           {
               auto & face = static_cast<OCCFace&>(GetFace(f));
+              face.properties.maxh = min2(face.properties.maxh, occ_solid->properties.maxh);
+
               if(face.domin==-1)
                   face.domin = k;
               else
@@ -1260,21 +1256,10 @@ namespace netgen
               if(face.Shape().Orientation() == TopAbs_INTERNAL)
                   face.domout = k;
           }
+          solids.Append(std::move(occ_solid));
       }
 
       // Propagate maxh to children
-      for(auto& solid : solids)
-      {
-        auto& shape = static_cast<OCCSolid&>(*solid).GetShape();
-        if(!OCCGeometry::HaveProperties(shape))
-          continue;
-        for(auto& f : GetFaces(shape))
-        {
-          auto& face = GetFace(f);
-          face.properties.maxh = min2(face.properties.maxh,
-                                      GetProperties(shape).maxh);
-        }
-      }
       for(auto& face : faces)
         for(auto& edge : face->edges)
           edge->properties.maxh = min2(edge->properties.maxh,

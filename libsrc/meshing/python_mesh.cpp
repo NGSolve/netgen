@@ -522,10 +522,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                     for (int i = 0; i < 2; i++)
                       (*newel)[i] = py::extract<PointIndex>(vertices[i])();
                     newel -> si = index;
-                    newel -> edgenr = edgenr;
                     newel -> epgeominfo[0].edgenr = edgenr;
                     newel -> epgeominfo[1].edgenr = edgenr;
-                    // needed for codim2 in 3d
                     newel -> edgenr = index;
                     for(auto i : Range(len(trignums)))
                       newel->geominfo[i].trignum = py::cast<int>(trignums[i]);
@@ -1030,10 +1028,22 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             return self.AddSurfaceElement (el);
           })
 
-    .def ("Add", [](Mesh & self, const Segment & el)
+    .def ("Add", [](Mesh & self, const Segment & el, bool project_geominfo)
           {
+            if (project_geominfo)
+              {
+                auto &p1 = self[el[0]];
+                auto &p2 = self[el[1]];
+                auto geo = self.GetGeometry();
+                geo->ProjectPointEdge
+                  (0,0,p1,
+                   const_cast<EdgePointGeomInfo*>(&el.epgeominfo[0]));
+                geo->ProjectPointEdge
+                  (0,0,p2,
+                   const_cast<EdgePointGeomInfo*>(&el.epgeominfo[1]));
+              }
             return self.AddSegment (el);
-          })
+          }, py::arg("el"), py::arg("project_geominfo")=false)
           
     .def ("Add", [](Mesh & self, const Element0d & el)
           {
@@ -1085,7 +1095,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   ptr += 3;
                 }
           })
-    .def ("AddElements", [](Mesh & self, int dim, int index, py::buffer b1, int base)
+    .def ("AddElements", [](Mesh & self, int dim, int index, py::buffer b1, int base,
+                            bool project_geometry)
           {
             static Timer timer("Mesh::AddElements");
             static Timer timercast("Mesh::AddElements casting");
@@ -1137,6 +1148,21 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                     for (int j = 0; j < np; j++)
                       el[j] = ptr[j]+PointIndex::BASE-base;
                     el.SetIndex(index);
+                    if(project_geometry)
+                      {
+                        // find some point in the mid of trig/quad for
+                        // quick + stable uv-projection of all points
+                        auto startp = Center(self[el[0]], self[el[1]], self[el[2]]);
+                        PointGeomInfo gi = self.GetGeometry()->ProjectPoint(index,
+                                                                            startp);
+                        for(auto i : Range(np))
+                          {
+                            el.GeomInfo()[i] = gi;
+                            self.GetGeometry()->ProjectPointGI(index,
+                                                               self[el[i]],
+                                                               el.GeomInfo()[i]);
+                          }
+                      }
                     self.AddSurfaceElement (el);
                     ptr += info.strides[0]/sizeof(int);
                   }
@@ -1168,7 +1194,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   }
               }
             
-          }, py::arg("dim"), py::arg("index"), py::arg("data"), py::arg("base")=0)
+          }, py::arg("dim"), py::arg("index"), py::arg("data"), py::arg("base")=0,
+          py::arg("project_geometry")=false)
     
     .def ("DeleteSurfaceElement",
           [](Mesh & self, SurfaceElementIndex i)

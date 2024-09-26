@@ -1,25 +1,19 @@
 set -e
 ulimit -n 1024000 # lower open file limit, seems to affect performance
 yum -y update
-yum -y install ninja-build fontconfig-devel tk-devel tcl-devel libXmu-devel mesa-libGLU-devel ccache dpkg
+yum -y install ninja-build fontconfig-devel tk-devel tcl-devel libXmu-devel mesa-libGLU-devel openmpi-devel mpich-devel
 
+mkdir -p /opt/openmpi/include /opt/mpich/include
+cp -a /usr/include/openmpi-x86_64/* /opt/openmpi/include/
+cp -a /usr/include/mpich-x86_64/* /opt/mpich/include/
 
-curl http://ftp.de.debian.org/debian/pool/main/o/openmpi/libopenmpi-dev_4.1.6-13.3_amd64.deb -o openmpi-dev.deb
-dpkg-deb -R openmpi-dev.deb /opt/openmpi
-mv /opt/openmpi/usr/lib/x86_64-linux-gnu/openmpi/include /opt/openmpi/include
-
-
-curl http://ftp.de.debian.org/debian/pool/main/m/mpich/libmpich-dev_4.2.1-2_amd64.deb -o mpich.deb
-dpkg-deb -R mpich.deb /opt/mpich
-mv /opt/mpich/usr/lib/x86_64-linux-gnu/mpich/include /opt/mpich/include
-
+curl https://dl.fedoraproject.org/pub/epel/8/Everything/x86_64/Packages/c/ccache-3.7.7-1.el8.x86_64.rpm -o ccache.rpm
+dnf -y install ccache.rpm
 
 rm -rf wheelhouse
 export NETGEN_CCACHE=1
 
-/opt/python/cp39-cp39/bin/python tests/fix_auditwheel_policy.py
-
-for pyversion in 312 311 310 39 38
+for pyversion in 313 312 311 310 39 38
 do
     export PYDIR="/opt/python/cp${pyversion}-cp${pyversion}/bin"
     echo $PYDIR
@@ -31,7 +25,6 @@ do
     rm -rf _skbuild
     NETGEN_ARCH=avx2 $PYDIR/pip wheel .
     mkdir -p wheelhouse
-    #auditwheel repair netgen_mesher*-cp${pyversion}-*.whl
     rename linux_x86_64 manylinux_2_17_x86_64.manylinux2014_x86_64 netgen_mesher*-cp${pyversion}-*.whl
     mv netgen_mesher*-cp${pyversion}-*.whl wheelhouse/
 
