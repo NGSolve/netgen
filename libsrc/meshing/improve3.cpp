@@ -526,8 +526,6 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
 
   double bad2 = pf.Func (px);
 
-  mesh[ptmp] = Point<3>(pnew);
-
   for (int k = 0; k < hasbothpoints.Size(); k++)
     {
       Element & oldel = mesh[hasbothpoints[k]];
@@ -543,11 +541,12 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
           if (newel2[l] == pi1) newel2[l] = ptmp;
         }
 
-      if (!mesh.LegalTet (oldel)) bad1 += GetLegalPenalty();
-      if (!mesh.LegalTet (newel1)) bad2 += GetLegalPenalty();
-      if (!mesh.LegalTet (newel2)) bad2 += GetLegalPenalty();
+      if (!mesh.LegalTet (oldel)) return 0.0;
+      if (!mesh.LegalTet (newel1)) return 0.0;
+      if (!mesh.LegalTet (newel2)) return 0.0;
     }
 
+  if(bad2 >= 1e24) return 0.0;
   d_badness = bad2-bad1;
   if(check_only)
       return d_badness;
@@ -572,9 +571,6 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
               if (newel1[l] == pi2) newel1[l] = pinew;
               if (newel2[l] == pi1) newel2[l] = pinew;
             }
-
-          if( newel1.Volume(mesh.Points()) < 0.0 || newel2.Volume(mesh.Points()) < 0.0)
-            return 0.0;
 
           oldel.Touch();
           oldel.Delete();
