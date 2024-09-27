@@ -359,8 +359,10 @@ namespace netgen
 
    if (mesh.HasOpenQuads())
    {
-      if(debugparam.write_mesh_on_error)
-        md.mesh->Save("open_quads_"+ToString(md.domain)+".vol.gz");
+      if(debugparam.write_mesh_on_error) {
+        md.mesh->Save("open_quads_starting_mesh_"+ToString(md.domain)+".vol.gz");
+        GetOpenElements(*md.mesh, md.domain)->Save("open_quads_rest_" + ToString(md.domain)+".vol.gz");
+      }
       PrintSysError ("mesh has still open quads");
       throw NgException ("Stop meshing since too many attempts");
       // return MESHING3_GIVEUP;
@@ -426,7 +428,11 @@ namespace netgen
          if (cntsteps > mp.maxoutersteps) 
          {
            if(debugparam.write_mesh_on_error)
+           {
              md.mesh->Save("meshing_error_domain_"+ToString(md.domain)+".vol.gz");
+             if(mesh.GetNOpenElements())
+               GetOpenElements(*md.mesh, md.domain)->Save("meshing_error_rest_" + ToString(md.domain)+".vol.gz");
+           }
            throw NgException ("Stop meshing since too many attempts in domain " + ToString(md.domain));
          }
 
