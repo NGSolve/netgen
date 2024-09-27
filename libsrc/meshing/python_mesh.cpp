@@ -1783,6 +1783,18 @@ project_boundaries : Optional[str] = None
   layer-ending should be projected to that boundary.
 
 )delimiter")
+    .def(py::init([]( const py::dict & d ) {
+      try {
+        // Call other constructor with named arguments by unpacking the dictionary
+        py::object cls = py::type::of<BoundaryLayerParameters>();
+        return cls(**d).cast<BoundaryLayerParameters>();
+      }
+      catch (py::error_already_set & e) {
+        cerr << "Error creating BoundaryLayerParameters from dict:" << endl;
+        cerr << e.what() << endl;
+        throw;
+      }
+    }))
     .def_readwrite("boundary", &BoundaryLayerParameters::boundary)
     .def_readwrite("thickness", &BoundaryLayerParameters::thickness)
     .def_readwrite("new_material", &BoundaryLayerParameters::new_material)
@@ -1795,6 +1807,7 @@ project_boundaries : Optional[str] = None
     .def_readwrite("keep_surfaceindex", &BoundaryLayerParameters::keep_surfaceindex)
     .def_readwrite("limit_safety", &BoundaryLayerParameters::limit_safety)
     ;
+  py::implicitly_convertible<py::dict, BoundaryLayerParameters>();
 
 #ifdef NG_CGNS
   m.def("ReadCGNSFile", &ReadCGNSFile, py::arg("filename"), py::arg("base")=1, "Read mesh and solution vectors from CGNS file");

@@ -335,8 +335,8 @@ namespace netgen
   {
     static Timer tim("PointFunction - build elementsonpoint table"); RegionTimer reg(tim);
 
-    Array<bool, PointIndex> bad_point(points.Size());
-    bad_point = false;
+    Array<bool, PointIndex> non_tet_points(points.Size());
+    non_tet_points = false;
     // Don't optimize if point is adjacent to a non-tet element
     ParallelForRange(elements.Range(), [&] (auto myrange)
         {
@@ -345,7 +345,7 @@ namespace netgen
               const auto & el = elements[ei];
               if(el.NP()!=4)
                 for(auto pi : el.PNums())
-                  bad_point[pi] = true;
+                  non_tet_points[pi] = true;
             }
        });
 
@@ -358,7 +358,7 @@ namespace netgen
                    return;
 
                  for (PointIndex pi : el.PNums())
-                   if(!bad_point[pi])
+                   if(!non_tet_points[pi])
                      table.Add (pi, ei);
                }, points.Size());
   }
