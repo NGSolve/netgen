@@ -539,6 +539,8 @@ namespace netgen
      }
 
      mesh.VolumeElements().DeleteAll();
+     mesh.GetIdentifications().GetIdentifiedPoints().DeleteData();
+
      for(auto & m_ : md)
      {
          auto first_new_pi = m_.pmap.Range().Next();

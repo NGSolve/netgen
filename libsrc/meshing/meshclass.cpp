@@ -4214,6 +4214,8 @@ namespace netgen
 
     for (int i = 0; i < lockedpoints.Size(); i++)
       lockedpoints[i] = op2np[lockedpoints[i]];
+
+    GetIdentifications().MapPoints(op2np);
     /*
     for (int i = 0; i < facedecoding.Size(); i++)
       facedecoding[i].firstelement = -1;
