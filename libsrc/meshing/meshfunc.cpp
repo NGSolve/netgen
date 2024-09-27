@@ -592,8 +592,8 @@ namespace netgen
     static Timer t("MeshVolume"); RegionTimer reg(t);
 
      mesh3d.Compress();
-
-
+     for (auto bl : mp.boundary_layers)
+       GenerateBoundaryLayer(mesh3d, bl);
 
      if(mesh3d.GetNDomains()==0)
          return MESHING3_OK;

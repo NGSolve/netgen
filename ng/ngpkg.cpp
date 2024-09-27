@@ -1108,7 +1108,7 @@ namespace netgen
      
      // Use an array to support creation of boundary 
      // layers for multiple surfaces in the future...
-     Array<int> surfid;
+     std::vector<int> surfid;
      int surfinp = 0;
      int prismlayers = 1;
      double hfirst = 0.01;
@@ -1119,13 +1119,13 @@ namespace netgen
        {
          cout << "Enter Surface ID (-1 to end list): ";
          cin >> surfinp;
-         if(surfinp >= 0) surfid.Append(surfinp);
+         if(surfinp >= 0) surfid.push_back(surfinp);
       }
 
-     cout << "Number of surfaces entered = " << surfid.Size() << endl; 
+     cout << "Number of surfaces entered = " << surfid.size() << endl; 
      cout << "Selected surfaces are:" << endl;
      
-     for(auto i : Range(surfid))
+     for(auto i : Range(surfid.size()))
        cout << "Surface " << i << ": " << surfid[i] << endl;
      
      cout << endl << "Enter number of prism layers: ";
@@ -1141,15 +1141,17 @@ namespace netgen
      if(growthfactor <= 0.0) growthfactor = 0.5;
      
      BoundaryLayerParameters blp;
-     blp.surfid = surfid;
+     blp.boundary = surfid;
+     std::vector<double> thickness;
      for(auto i : Range(prismlayers))
        {
          auto layer = i+1;
          if(growthfactor == 1)
-           blp.heights.Append(layer * hfirst);
+           thickness.push_back(layer * hfirst);
          else
-           blp.heights.Append(hfirst * (pow(growthfactor, (layer+1))-1)/(growthfactor-1));
+           thickness.push_back(hfirst * (pow(growthfactor, (layer+1))-1)/(growthfactor-1));
        }
+     blp.thickness = thickness;
      GenerateBoundaryLayer (*mesh, blp);
      return TCL_OK;
   }

@@ -10,23 +10,6 @@ DLL_HEADER extern void InsertVirtualBoundaryLayer (Mesh & mesh);
 /// Create a typical prismatic boundary layer on the given 
 /// surfaces
 
-class BoundaryLayerParameters
-{
-public:
-  // parameters by Philippose ..
-  Array<int> surfid;
-  Array<double> heights;
-  map<string, string> new_mat;
-  BitArray domains;
-  bool outside = false; // set the boundary layer on the outside
-  bool grow_edges = false;
-  bool limit_growth_vectors = true;
-  double limit_safety = 0.3; // alloow only 30% of the growth vector length
-  bool sides_keep_surfaceindex = false;
-  bool keep_surfaceindex = false;
-  Array<size_t> project_boundaries;
-};
-
 DLL_HEADER void GenerateBoundaryLayer (Mesh & mesh,
                                        const BoundaryLayerParameters & blp);
 
@@ -36,6 +19,7 @@ class BoundaryLayerTool
 {
   public:
     BoundaryLayerTool(Mesh & mesh_, const BoundaryLayerParameters & params_);
+    void ProcessParameters();
     void Perform();
 
   protected:
@@ -52,6 +36,12 @@ class BoundaryLayerTool
     BitArray moved_surfaces;
     int np, nseg, nse, ne;
     double height;
+
+    // These parameters are derived from given BoundaryLayerParameters and the Mesh
+    Array<double> par_heights;
+    Array<int> par_surfid;
+    map<string, string> par_new_mat;
+    Array<size_t> par_project_boundaries;
 
     bool have_single_segments;
     Array<Segment> segments, new_segments;

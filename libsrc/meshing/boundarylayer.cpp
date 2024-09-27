@@ -267,7 +267,7 @@ namespace netgen
         for(SurfaceElementIndex sei : mesh.SurfaceElements().Range())
           {
             auto facei = mesh[sei].GetIndex();
-            if(facei < nfd_old && !params.surfid.Contains(facei))
+            if(facei < nfd_old && !par_surfid.Contains(facei))
                 continue;
 
             auto sel = mesh[sei];
@@ -322,7 +322,7 @@ namespace netgen
             for(auto pi : sel.PNums())
                 box.Add(mesh[pi]);
             // also add moved points to bounding box
-            if(params.surfid.Contains(sel.GetIndex()))
+            if(par_surfid.Contains(sel.GetIndex()))
                 for(auto pi : sel.PNums())
                     box.Add(mesh[pi]+limits[pi]*height*growthvectors[pi]);
             tree.Insert(box, sei);
@@ -346,7 +346,7 @@ namespace netgen
                     return false;
                 auto face = GetMappedFace(sei, -2);
                 double lam_ = 999;
-                bool is_bl_sel = params.surfid.Contains(sel.GetIndex());
+                bool is_bl_sel = par_surfid.Contains(sel.GetIndex());
 
                 if (step == 0)
                 {
@@ -521,7 +521,7 @@ namespace netgen
         for(SurfaceElementIndex sei : myrange)
           {
             auto facei = mesh[sei].GetIndex();
-            if(facei < nfd_old && !params.surfid.Contains(facei))
+            if(facei < nfd_old && !par_surfid.Contains(facei))
               {
                 for(auto pi : mesh[sei].PNums())
                   if(mesh[pi].Type() == SURFACEPOINT)
@@ -593,12 +593,13 @@ namespace netgen
   {
     static Timer timer("BoundaryLayerTool::ctor");
     RegionTimer regt(timer);
+    ProcessParameters();
 
     //for(auto & seg : mesh.LineSegments())
         //seg.edgenr = seg.epgeominfo[1].edgenr;
 
     height = 0.0;
-    for (auto h : params.heights)
+    for (auto h : par_heights)
       height += h;
 
     max_edge_nr = -1;
@@ -611,7 +612,7 @@ namespace netgen
 
     new_mat_nrs.SetSize(mesh.FaceDescriptors().Size() + 1);
     new_mat_nrs = -1;
-    for(auto [bcname, matname] : params.new_mat)
+    for(auto [bcname, matname] : par_new_mat)
       {
         mesh.SetMaterial(++ndom, matname);
         regex pattern(bcname);
@@ -623,7 +624,6 @@ namespace netgen
           }
       }
 
-    domains = params.domains;
     if(!params.outside)
       domains.Invert();
 
@@ -660,7 +660,7 @@ namespace netgen
       {
         const auto& fd = mesh.GetFaceDescriptor(i);
         string name = fd.GetBCName();
-        if(params.surfid.Contains(i))
+        if(par_surfid.Contains(i))
           {
             if(auto isIn = domains.Test(fd.DomainIn()); isIn != domains.Test(fd.DomainOut()))
               {
@@ -685,7 +685,7 @@ namespace netgen
           }
       }
 
-    for(auto si : params.surfid)
+    for(auto si : par_surfid)
       if(surfacefacs[si] == 0.0)
         throw Exception("Surface " + to_string(si) + " is not a boundary of the domain to be grown into!");
   }
@@ -747,7 +747,7 @@ namespace netgen
         {
             const auto & sel = mesh[sei];
             auto facei = sel.GetIndex();
-            if(!params.surfid.Contains(facei))
+            if(!par_surfid.Contains(facei))
                 continue;
 
             auto n = surfacefacs[sel.GetIndex()] * getNormal(sel);
@@ -943,7 +943,7 @@ namespace netgen
                   else
                     continue;
 
-                  if(!params.project_boundaries.Contains(sel.GetIndex()))
+                  if(!par_project_boundaries.Contains(sel.GetIndex()))
                     continue;
                   auto& g = growthvectors[pi];
                   auto ng = n * g;
@@ -962,7 +962,7 @@ namespace netgen
           {
             int count = 0;
             for(const auto& seg2 : segments)
-              if(((seg[0] == seg2[0] && seg[1] == seg2[1]) || (seg[0] == seg2[1] && seg[1] == seg2[0])) && params.surfid.Contains(seg2.si))
+              if(((seg[0] == seg2[0] && seg[1] == seg2[1]) || (seg[0] == seg2[1] && seg[1] == seg2[0])) && par_surfid.Contains(seg2.si))
                 count++;
             if(count == 1)
               {
@@ -1099,9 +1099,9 @@ namespace netgen
       if (growthvectors[pi].Length2() != 0)
         {
           Point<3> p = mesh[pi];
-          for(auto i : Range(params.heights))
+          for(auto i : Range(par_heights))
             {
-              p += params.heights[i] * growthvectors[pi];
+              p += par_heights[i] * growthvectors[pi];
               mapto[pi].Append(mesh.AddPoint(p));
             }
         }
@@ -1152,7 +1152,7 @@ namespace netgen
                     s0.si = segj.si;
                     new_segments.Append(s0);
 
-                    for(auto i : Range(params.heights))
+                    for(auto i : Range(par_heights))
                       {
                         Element2d sel(QUAD);
                         p3 = mapto[pp2][i];
@@ -1220,7 +1220,7 @@ namespace netgen
           {
             Array<PointIndex> points(sel.PNums());
             if(surfacefacs[sel.GetIndex()] > 0) Swap(points[0], points[2]);
-            for(auto j : Range(params.heights))
+            for(auto j : Range(par_heights))
               {
                 auto eltype = points.Size() == 3 ? PRISM : HEX;
                 Element el(eltype);
@@ -1328,7 +1328,7 @@ namespace netgen
                     PointIndex p4 = p1;
                     PointIndex p5 = p2;
                     PointIndex p6 = p3;
-                    for(auto i : Range(params.heights))
+                    for(auto i : Range(par_heights))
                       {
                         Element nel(PRISM);
                         nel[0] = p4; nel[1] = p5; nel[2] = p6;
@@ -1344,7 +1344,7 @@ namespace netgen
                       {
                         PointIndex p1 = moved[0];
                         PointIndex p2 = moved[1];
-                        for(auto i : Range(params.heights))
+                        for(auto i : Range(par_heights))
                           {
                             PointIndex p3 = mapto[moved[1]][i];
                             PointIndex p4 = mapto[moved[0]][i];
@@ -1366,7 +1366,7 @@ namespace netgen
                 if(moved.Size() == 1 && fixed.Size() == 1)
                   {
                     PointIndex p1 = moved[0];
-                    for(auto i : Range(params.heights))
+                    for(auto i : Range(par_heights))
                       {
                         Element nel = el;
                         PointIndex p2 = mapto[moved[0]][i];
@@ -1390,7 +1390,7 @@ namespace netgen
                       throw Exception("This case is not implemented yet! Fixed size = " + ToString(fixed.Size()));
                     PointIndex p1 = moved[0];
                     PointIndex p2 = moved[1];
-                    for(auto i : Range(params.heights))
+                    for(auto i : Range(par_heights))
                       {
                         PointIndex p3 = mapto[moved[1]][i];
                         PointIndex p4 = mapto[moved[0]][i];
@@ -1515,6 +1515,94 @@ namespace netgen
           mesh[pi] += height * growthvectors[pi];
           growthvectors[pi] = 0.0;
       }
+  }
+
+  void BoundaryLayerTool :: ProcessParameters()
+  {
+      if(int* bc = get_if<int>(&params.boundary); bc)
+        {
+          for (int i = 1; i <= mesh.GetNFD(); i++)
+            if(mesh.GetFaceDescriptor(i).BCProperty() == *bc)
+              par_surfid.Append(i);
+        }
+      else if(string* s = get_if<string>(&params.boundary); s)
+        {
+          regex pattern(*s);
+          BitArray boundaries(mesh.GetNFD()+1);
+          boundaries.Clear();
+          for(int i = 1; i<=mesh.GetNFD(); i++)
+            {
+              auto& fd = mesh.GetFaceDescriptor(i);
+              if(regex_match(fd.GetBCName(), pattern))
+                {
+                  boundaries.SetBit(i);
+                  auto dom_pattern = get_if<string>(&params.domain);
+                  // only add if adjacent to domain
+                  if(dom_pattern)
+                    {
+                      regex pattern(*dom_pattern);
+                      bool mat1_match = fd.DomainIn() > 0 && regex_match(mesh.GetMaterial(fd.DomainIn()), pattern);
+                      bool mat2_match = fd.DomainOut() > 0 && regex_match(mesh.GetMaterial(fd.DomainOut()), pattern);
+                      // if boundary is inner or outer remove from list
+                      if(mat1_match == mat2_match)
+                        boundaries.Clear(i);
+                      // if((fd.DomainIn() > 0 && regex_match(mesh.GetMaterial(fd.DomainIn()), pattern)) || (fd.DomainOut() > 0 && regex_match(self.GetMaterial(fd.DomainOut()), pattern)))
+                      // boundaries.Clear(i);
+                      // par_surfid.Append(i);
+                    }
+                  // else
+                  //   par_surfid.Append(i);
+                }
+              }
+            for(int i = 1; i<=mesh.GetNFD(); i++)
+              if(boundaries.Test(i))
+                par_surfid.Append(i);
+        }
+      else
+        {
+          auto & surfids = *get_if<std::vector<int>>(&params.boundary);
+          for(auto id : surfids)
+            par_surfid.Append(id);
+        }
+      if(string* mat = get_if<string>(&params.new_material); mat)
+          par_new_mat = { { ".*", *mat } };
+      else
+          par_new_mat = *get_if<map<string, string>>(&params.new_material);
+
+      if(params.project_boundaries.has_value())
+        {
+          regex pattern(*params.project_boundaries);
+          for(int i = 1; i<=mesh.GetNFD(); i++)
+            if(regex_match(mesh.GetFaceDescriptor(i).GetBCName(), pattern))
+              par_project_boundaries.Append(i);
+        }
+
+      if(double* height = get_if<double>(&params.thickness); height)
+        {
+          par_heights.Append(*height);
+        }
+      else
+        {
+          auto & heights = *get_if<std::vector<double>>(&params.thickness);
+          for(auto val : heights)
+            par_heights.Append(val);
+        }
+
+      int nr_domains = mesh.GetNDomains();
+      domains.SetSize(nr_domains + 1); // one based
+      domains.Clear();
+      if(string* pdomain = get_if<string>(&params.domain); pdomain)
+        {
+          regex pattern(*pdomain);
+          for(auto i : Range(1, nr_domains+1))
+            if(regex_match(mesh.GetMaterial(i), pattern))
+              domains.SetBit(i);
+        }
+      else
+        {
+          auto idomain = *get_if<int>(&params.domain);
+          domains.SetBit(idomain);
+        }
   }
 
   void BoundaryLayerTool :: Perform()
