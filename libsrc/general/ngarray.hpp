@@ -11,6 +11,7 @@
 
 namespace netgen
 {
+  using namespace ngcore;
 
   // template <class T, int B1, int B2> class IndirectArray;
   template <class TA1, class TA2> class NgIndirectArray;
@@ -111,11 +112,7 @@ namespace netgen
     /// Access array. BASE-based
     T & operator[] (TIND i) const
     {
-#ifdef DEBUG
-      if (i-BASE < 0 || i-BASE >= size)
-	cout << "array<" << typeid(T).name() << "> out of range, i = " << i << ", s = " << size << endl;
-#endif
-
+      NETGEN_CHECK_RANGE(i,BASE,size+BASE);
       return data[i-BASE]; 
     }
 
@@ -130,13 +127,7 @@ namespace netgen
     /// Access array, one-based  (old fashioned)
     T & Elem (int i)
     {
-#ifdef DEBUG
-      if (i < 1 || i > size)
-	cout << "NgArray<" << typeid(T).name() 
-	     << ">::Elem out of range, i = " << i
-	     << ", s = " << size << endl;
-#endif
-
+      NETGEN_CHECK_RANGE(i,1,size+1);
       return ((T*)data)[i-1]; 
     }
   
@@ -144,30 +135,21 @@ namespace netgen
     // [[deprecated("Use operator[] instead")]]    
     const T & Get (int i) const 
     {
-#ifdef DEBUG
-      if (i < 1 || i > size)
-	cout << "NgArray<" << typeid(T).name() << ">::Get out of range, i = " << i
-	     << ", s = " << size << endl;
-#endif
-
+      NETGEN_CHECK_RANGE(i,1,size+1);
       return ((const T*)data)[i-1]; 
     }
 
     /// Access array, one-based  (old fashioned)
     void Set (int i, const T & el)
     { 
-#ifdef DEBUG
-      if (i < 1 || i > size)
-	cout << "NgArray<" << typeid(T).name() << ">::Set out of range, i = " << i
-	     << ", s = " << size << endl;
-#endif
-
+      NETGEN_CHECK_RANGE(i,1,size+1);
       ((T*)data)[i-1] = el; 
     }
 
     /// access first element
     T & First () const
     {
+      NETGEN_CHECK_RANGE(0,0,size);
       return data[0];
     }
 
@@ -175,6 +157,7 @@ namespace netgen
     /// access last element. check by macro CHECK_RANGE
     T & Last () const
     {
+      NETGEN_CHECK_RANGE(size-1,0,size);
       return data[size-1];
     }
 
@@ -345,10 +328,7 @@ namespace netgen
     /// Delete element i (0-based). Move last element to position i.
     void Delete (TIND i)
     {
-#ifdef CHECK_Array_RANGE
-      RangeCheck (i+1);
-#endif
-
+      NETGEN_CHECK_RANGE(i,0,size);
       data[i] = std::move(data[size-1]);
       size--;
       //    DeleteElement (i+1);
@@ -358,10 +338,7 @@ namespace netgen
     /// Delete element i (1-based). Move last element to position i.
     void DeleteElement (TIND i)
     {
-#ifdef CHECK_Array_RANGE
-      RangeCheck (i);
-#endif
-
+      NETGEN_CHECK_RANGE(i,1,size+1);
       data[i-1] = std::move(data[size-1]);
       size--;
     }
