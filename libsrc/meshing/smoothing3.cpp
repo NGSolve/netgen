@@ -1399,7 +1399,6 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
   multithread.task = "Optimize Volume: Smooth Mesh";
 
   topt.Start();
-  int counter = 0;
   for (auto icolor : Range(ncolors))
   {
       if (multithread.terminate)
@@ -1423,8 +1422,6 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
           PointIndex pi = color_table[icolor][i];
           if ( (*this)[pi].Type() == INNERPOINT )
           {
-            counter++;
-
             double lh = pointh[pi];
             pf.SetLocalH (lh);
             par.typx = lh;
