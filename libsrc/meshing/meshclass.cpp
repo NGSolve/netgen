@@ -1698,7 +1698,7 @@ namespace netgen
 
 
     CalcSurfacesOfNode ();
-
+ 
     if (ntasks == 1) // sequential run only
       {
 	topology.Update();

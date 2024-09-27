@@ -563,18 +563,6 @@ namespace netgen
              el.SetIndex(m_.domain);
              mesh.AddVolumeElement(el);
          }
-
-         // auto & part_ident = m.GetIdentifications().GetIdentifiedPoints();
-         // for (auto i : IntRange(1, part_ident.GetNBags()+1))
-         //   for (auto j : IntRange(1, part_ident.GetBagSize(i)+1))
-         //   {
-         //     INDEX_2 i2;
-         //     int nr;
-         //     part_ident.GetData (i, j, i2, nr);
-         //     i2.I1() = pmap[i2.I1()];
-         //     i2.I2() = pmap[i2.I2()];
-         //     ident_points.Set(i2, nr);
-         //   }
      }
   }
 
@@ -735,8 +723,6 @@ namespace netgen
 	// mesh3d.mglevels = 1;
 	MeshQuality3d (mesh3d);
       }
-
-    // debug_gui.DrawMesh("Mesh", mesh3d);
   
     multithread.task = savetask;
     return MESHING3_OK;
