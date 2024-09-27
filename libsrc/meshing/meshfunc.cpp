@@ -540,9 +540,7 @@ namespace netgen
      }
 
      mesh.VolumeElements().DeleteAll();
-     auto & ident_points = mesh.GetIdentifications().GetIdentifiedPoints();
-     ident_points.DeleteData();
-     
+     mesh.GetIdentifications().GetIdentifiedPoints().DeleteData();
 
      for(auto & m_ : md)
      {
