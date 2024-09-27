@@ -72,7 +72,6 @@ class BoundaryLayerTool
 
     Array<double> surfacefacs;
     Array<int> si_map;
-    Array<double, PointIndex> limits;
 
     std::map<PointIndex, SpecialBoundaryPoint> special_boundary_points;
     std::map<PointIndex, std::tuple<Vec<3>*, double>> growth_vector_map;

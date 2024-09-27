@@ -15,7 +15,7 @@ struct GrowthVectorLimiter {
   const BoundaryLayerParameters &params;
   Mesh &mesh;
   double height;
-  FlatArray<double, PointIndex> limits;
+  Array<double, PointIndex> limits;
   FlatArray<Vec<3>, PointIndex> growthvectors;
   BitArray changed_domains;
   unique_ptr<BoxTree<3>> tree;
@@ -24,7 +24,7 @@ struct GrowthVectorLimiter {
 
   GrowthVectorLimiter(BoundaryLayerTool &tool_)
       : tool(tool_), params(tool_.params), mesh(tool_.mesh),
-        height(tool_.total_height), limits(tool_.limits),
+        height(tool_.total_height),
         growthvectors(tool_.growthvectors), map_from(mesh.Points().Size()),
         debug("debug.txt") {
     changed_domains = tool.domains;
@@ -406,8 +406,8 @@ struct GrowthVectorLimiter {
   }
 
   void Perform() {
-    tool.limits.SetSize(mesh.Points().Size());
-    tool.limits = 1.0;
+    limits.SetSize(mesh.Points().Size());
+    limits = 1.0;
 
     // limit to not intersect with other (original) surface elements
     double trig_shift = 0;
