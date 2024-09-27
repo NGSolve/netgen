@@ -525,6 +525,7 @@ struct GrowthVectorLimiter {
 
     for (auto i : Range(growthvectors))
       growthvectors[i] *= limits[i];
+
     for (auto &[special_pi, special_point] : tool.special_boundary_points) {
       for (auto &group : special_point.growth_groups) {
         group.growth_vector *= limits[special_pi];
