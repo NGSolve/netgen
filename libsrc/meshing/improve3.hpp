@@ -4,10 +4,6 @@
 namespace netgen
 {
 
-extern double CalcTotalBad (const Mesh::T_POINTS & points, 
-			    const Array<Element, ElementIndex> & elements,
-			    const MeshingParameters & mp);
-
 
 ///
 class MeshOptimize3d
@@ -61,13 +57,6 @@ public:
       return CalcTetBadness (points[elem[0]], points[elem[1]],  
 			     points[elem[2]], points[elem[3]], h, mp);  
     return 0;
-  }
-
-
-  double CalcTotalBad (const Mesh::T_POINTS & points, 
-		       const Array<Element, ElementIndex> & elements)
-  {
-    return netgen::CalcTotalBad (points, elements, mp);
   }
 
 
