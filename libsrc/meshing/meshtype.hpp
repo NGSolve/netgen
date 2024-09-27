@@ -8,6 +8,8 @@
 /* Date:   01. Okt. 95                                                    */
 /**************************************************************************/
 
+#include <variant>
+
 #include <mydefs.hpp>
 #include <general/template.hpp>
 #include <core/mpi_wrapper.hpp>
@@ -1272,6 +1274,24 @@ namespace netgen
   };
 
 
+  struct BoundaryLayerParameters
+  {
+    std::variant<string, int, std::vector<int>> boundary;
+    std::variant<double, std::vector<double>> thickness;
+    std::variant<string, std::map<string, string>> new_material;
+    std::variant<string, int> domain;
+    bool outside;
+    std::optional<string> project_boundaries;
+    bool grow_edges;
+    bool limit_growth_vectors;
+    bool sides_keep_surfaceindex;
+    bool keep_surfaceindex;
+
+    double limit_safety = 0.3; // alloow only 30% of the growth vector length
+  };
+
+
+  ostream & operator<< (ostream & ost, const BoundaryLayerParameters & mp);
 
   class DLL_HEADER MeshingParameters
   {
@@ -1397,6 +1417,8 @@ namespace netgen
     int nthreads = 4;
 
     Flags geometrySpecificParameters;
+
+    Array<BoundaryLayerParameters> boundary_layers;
     ///
     MeshingParameters ();
     ///

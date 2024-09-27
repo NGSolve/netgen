@@ -1245,8 +1245,7 @@ namespace netgen
 
   void NetgenGeometry :: FinalizeMesh(Mesh& mesh) const
   {
-    if(solids.Size())
-      for (int i = 0; i < mesh.GetNDomains(); i++)
+      for (int i = 0; i < std::min(solids.Size(), (size_t)mesh.GetNDomains()); i++)
         if (auto name = solids[i]->properties.name)
           mesh.SetMaterial (i+1, *name);
 
