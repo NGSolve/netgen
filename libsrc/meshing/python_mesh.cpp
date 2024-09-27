@@ -1469,8 +1469,8 @@ py::arg("point_tolerance") = -1.)
     .def ("BuildSearchTree", &Mesh::BuildElementSearchTree,py::call_guard<py::gil_scoped_release>())
 
     .def ("BoundaryLayer2", GenerateBoundaryLayer2, py::arg("domain"), py::arg("thicknesses"), py::arg("make_new_domain")=true, py::arg("boundaries")=Array<int>{})
-    .def ("BoundaryLayer", [](Mesh & self, variant<string, int> boundary,
-                              variant<double, py::list> thickness,
+    .def ("BoundaryLayer", [](Mesh & self, variant<string, int, std::vector<int>> boundary,
+                              variant<double, std::vector<double>> thickness,
                               variant<string, map<string, string>> material,
                               variant<string, int> domain, bool outside,
                               optional<string> project_boundaries,
@@ -1479,127 +1479,22 @@ py::arg("point_tolerance") = -1.)
                               bool keep_surfaceindex)
            {
              BoundaryLayerParameters blp;
-             BitArray boundaries(self.GetNFD()+1);
-             boundaries.Clear();
-             if(int* bc = get_if<int>(&boundary); bc)
-               {
-                 for (int i = 1; i <= self.GetNFD(); i++)
-                   if(self.GetFaceDescriptor(i).BCProperty() == *bc)
-                     boundaries.SetBit(i);
-               }
-             else
-               {
-                 regex pattern(*get_if<string>(&boundary));
-                 for(int i = 1; i<=self.GetNFD(); i++)
-                   {
-                     auto& fd = self.GetFaceDescriptor(i);
-                     if(regex_match(fd.GetBCName(), pattern))
-                       {
-                         boundaries.SetBit(i);
-                         auto dom_pattern = get_if<string>(&domain);
-                         // only add if adjacent to domain
-                         if(dom_pattern)
-                           {
-                             regex pattern(*dom_pattern);
-                             bool mat1_match = fd.DomainIn() > 0 && regex_match(self.GetMaterial(fd.DomainIn()), pattern);
-                             bool mat2_match = fd.DomainOut() > 0 && regex_match(self.GetMaterial(fd.DomainOut()), pattern);
-                             // if boundary is inner or outer remove from list
-                             if(mat1_match == mat2_match)
-                               boundaries.Clear(i);
-                             // if((fd.DomainIn() > 0 && regex_match(self.GetMaterial(fd.DomainIn()), pattern)) || (fd.DomainOut() > 0 && regex_match(self.GetMaterial(fd.DomainOut()), pattern)))
-                             // boundaries.Clear(i);
-                             // blp.surfid.Append(i);
-                           }
-                         // else
-                         //   blp.surfid.Append(i);
-                       }
-                     }
-               }
-             for(int i = 1; i<=self.GetNFD(); i++)
-               if(boundaries.Test(i))
-                 blp.surfid.Append(i);
-             if(string* mat = get_if<string>(&material); mat)
-                 blp.new_mat = { { ".*", *mat } };
-             else
-                 blp.new_mat = *get_if<map<string, string>>(&material);
-
-             if(project_boundaries.has_value())
-               {
-                 regex pattern(*project_boundaries);
-                 for(int i = 1; i<=self.GetNFD(); i++)
-                   if(regex_match(self.GetFaceDescriptor(i).GetBCName(), pattern))
-                     blp.project_boundaries.Append(i);
-               }
-
-             if(double* pthickness = get_if<double>(&thickness); pthickness)
-               {
-                 blp.heights.Append(*pthickness);
-               }
-             else
-               {
-                 auto thicknesses = *get_if<py::list>(&thickness);
-                 for(auto val : thicknesses)
-                   blp.heights.Append(val.cast<double>());
-               }
-
-             int nr_domains = self.GetNDomains();
-             blp.domains.SetSize(nr_domains + 1); // one based
-             blp.domains.Clear();
-             if(string* pdomain = get_if<string>(&domain); pdomain)
-               {
-                 regex pattern(*pdomain);
-                 for(auto i : Range(1, nr_domains+1))
-                   if(regex_match(self.GetMaterial(i), pattern))
-                     blp.domains.SetBit(i);
-               }
-             else
-               {
-                 auto idomain = *get_if<int>(&domain);
-                 blp.domains.SetBit(idomain);
-               }
-
+             blp.boundary = boundary;
+             blp.thickness = thickness;
+             blp.new_material = material;
+             blp.domain = domain;
              blp.outside = outside;
+             blp.project_boundaries = project_boundaries;
              blp.grow_edges = grow_edges;
              blp.limit_growth_vectors = limit_growth_vectors;
              blp.sides_keep_surfaceindex = sides_keep_surfaceindex;
              blp.keep_surfaceindex = keep_surfaceindex;
-
              GenerateBoundaryLayer (self, blp);
              self.UpdateTopology();
            }, py::arg("boundary"), py::arg("thickness"), py::arg("material"),
           py::arg("domains") = ".*", py::arg("outside") = false,
           py::arg("project_boundaries")=nullopt, py::arg("grow_edges")=true, py::arg("limit_growth_vectors") = true, py::arg("sides_keep_surfaceindex")=false,
-          py::arg("keep_surfaceindex")=false,
-          R"delimiter(
-Add boundary layer to mesh.
-
-Parameters
-----------
-
-boundary : string or int
-  Boundary name or number.
-
-thickness : float or List[float]
-  Thickness of boundary layer(s).
-
-material : str or List[str]
-  Material name of boundary layer(s).
-
-domain : str or int
-  Regexp for domain boundarylayer is going into.
-
-outside : bool = False
-  If true add the layer on the outside
-
-grow_edges : bool = False
-  Grow boundary layer over edges.
-
-project_boundaries : Optional[str] = None
-  Project boundarylayer to these boundaries if they meet them. Set
-  to boundaries that meet boundarylayer at a non-orthogonal edge and
-  layer-ending should be projected to that boundary.
-
-)delimiter")
+          py::arg("keep_surfaceindex")=false, "Add boundary layer to mesh. see help(BoundaryLayerParameters) for details.")
 
     .def_static ("EnableTableClass", [] (string name, bool set)
           {
@@ -1824,6 +1719,82 @@ project_boundaries : Optional[str] = None
       ;
 
   m.attr("debugparam") = py::cast(&debugparam);
+
+  py::class_<BoundaryLayerParameters>(m, "BoundaryLayerParameters")
+    .def(py::init([]( 
+        std::variant<string, int, std::vector<int>> boundary,
+        std::variant<double, std::vector<double>> thickness,
+        std::variant<string, std::map<string, string>> new_material,
+        std::variant<string, int> domain,
+        bool outside,
+        std::optional<string> project_boundaries,
+        bool grow_edges,
+        bool limit_growth_vectors,
+        bool sides_keep_surfaceindex,
+        bool keep_surfaceindex,
+        double limit_safety)
+        {
+          BoundaryLayerParameters blp;
+          blp.boundary = boundary;
+          blp.thickness = thickness;
+          blp.new_material = new_material;
+          blp.domain = domain;
+          blp.outside = outside;
+          blp.project_boundaries = project_boundaries;
+          blp.grow_edges = grow_edges;
+          blp.limit_growth_vectors = limit_growth_vectors;
+          blp.sides_keep_surfaceindex = sides_keep_surfaceindex;
+          blp.keep_surfaceindex = keep_surfaceindex;
+          blp.limit_safety = limit_safety;
+          return blp;
+        }),
+           py::arg("boundary"), py::arg("thickness"), py::arg("new_material"),
+           py::arg("domain") = ".*", py::arg("outside") = false,
+           py::arg("project_boundaries")=nullopt, py::arg("grow_edges")=true,
+           py::arg("limit_growth_vectors") = true, py::arg("sides_keep_surfaceindex")=false,
+           py::arg("keep_surfaceindex")=false, py::arg("limit_safety")=0.3,
+           R"delimiter(
+Add boundary layer to mesh.
+
+Parameters
+----------
+
+boundary : string or int
+  Boundary name or number.
+
+thickness : float or List[float]
+  Thickness of boundary layer(s).
+
+material : str or List[str]
+  Material name of boundary layer(s).
+
+domain : str or int
+  Regexp for domain boundarylayer is going into.
+
+outside : bool = False
+  If true add the layer on the outside
+
+grow_edges : bool = False
+  Grow boundary layer over edges.
+
+project_boundaries : Optional[str] = None
+  Project boundarylayer to these boundaries if they meet them. Set
+  to boundaries that meet boundarylayer at a non-orthogonal edge and
+  layer-ending should be projected to that boundary.
+
+)delimiter")
+    .def_readwrite("boundary", &BoundaryLayerParameters::boundary)
+    .def_readwrite("thickness", &BoundaryLayerParameters::thickness)
+    .def_readwrite("new_material", &BoundaryLayerParameters::new_material)
+    .def_readwrite("domain", &BoundaryLayerParameters::domain)
+    .def_readwrite("outside", &BoundaryLayerParameters::outside)
+    .def_readwrite("project_boundaries", &BoundaryLayerParameters::project_boundaries)
+    .def_readwrite("grow_edges", &BoundaryLayerParameters::grow_edges)
+    .def_readwrite("limit_growth_vectors", &BoundaryLayerParameters::limit_growth_vectors)
+    .def_readwrite("sides_keep_surfaceindex", &BoundaryLayerParameters::sides_keep_surfaceindex)
+    .def_readwrite("keep_surfaceindex", &BoundaryLayerParameters::keep_surfaceindex)
+    .def_readwrite("limit_safety", &BoundaryLayerParameters::limit_safety)
+    ;
 
 #ifdef NG_CGNS
   m.def("ReadCGNSFile", &ReadCGNSFile, py::arg("filename"), py::arg("base")=1, "Read mesh and solution vectors from CGNS file");

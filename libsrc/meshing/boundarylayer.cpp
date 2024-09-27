@@ -152,7 +152,7 @@ struct GrowthVectorLimiter {
         growthvectors(tool_.growthvectors),
         map_from(mesh.Points().Size()),
         debug("debug.txt") {
-    changed_domains = params.domains;
+    changed_domains = tool.domains;
     if (!params.outside) changed_domains.Invert();
 
     map_from = tool.mapfrom;
@@ -851,12 +851,13 @@ BoundaryLayerTool::BoundaryLayerTool(Mesh& mesh_,
     : mesh(mesh_), topo(mesh_.GetTopology()), params(params_) {
   static Timer timer("BoundaryLayerTool::ctor");
   RegionTimer regt(timer);
+  ProcessParameters();
 
   // for(auto & seg : mesh.LineSegments())
   // seg.edgenr = seg.epgeominfo[1].edgenr;
 
   total_height = 0.0;
-  for (auto h : params.heights) total_height += h;
+  for (auto h : par_heights) total_height += h;
 
   max_edge_nr = -1;
   for (const auto& seg : mesh.LineSegments())
@@ -867,7 +868,7 @@ BoundaryLayerTool::BoundaryLayerTool(Mesh& mesh_,
 
   new_mat_nrs.SetSize(mesh.FaceDescriptors().Size() + 1);
   new_mat_nrs = -1;
-  for (auto [bcname, matname] : params.new_mat) {
+  for (auto [bcname, matname] : par_new_mat) {
     mesh.SetMaterial(++ndom, matname);
     regex pattern(bcname);
     for (auto i : Range(1, mesh.GetNFD() + 1)) {
@@ -876,7 +877,6 @@ BoundaryLayerTool::BoundaryLayerTool(Mesh& mesh_,
     }
   }
 
-  domains = params.domains;
   if (!params.outside) domains.Invert();
 
   topo.SetBuildVertex2Element(true);
@@ -910,7 +910,7 @@ void BoundaryLayerTool ::CreateNewFaceDescriptors() {
   for (auto i : Range(1, nfd_old + 1)) {
     const auto& fd = mesh.GetFaceDescriptor(i);
     string name = fd.GetBCName();
-    if (params.surfid.Contains(i)) {
+    if (par_surfid.Contains(i)) {
       if (auto isIn = domains.Test(fd.DomainIn());
           isIn != domains.Test(fd.DomainOut())) {
         int new_si = mesh.GetNFD() + 1;
@@ -933,7 +933,7 @@ void BoundaryLayerTool ::CreateNewFaceDescriptors() {
     }
   }
 
-  for (auto si : params.surfid)
+  for (auto si : par_surfid)
     if (surfacefacs[si] == 0.0)
       throw Exception("Surface " + to_string(si) +
                       " is not a boundary of the domain to be grown into!");
@@ -986,7 +986,7 @@ void BoundaryLayerTool ::CalculateGrowthVectors() {
     for (auto sei : p2sel[pi]) {
       const auto& sel = mesh[sei];
       auto facei = sel.GetIndex();
-      if (!params.surfid.Contains(facei)) continue;
+      if (!par_surfid.Contains(facei)) continue;
 
       auto n = surfacefacs[sel.GetIndex()] * getNormal(sel);
 
@@ -1107,7 +1107,7 @@ BitArray BoundaryLayerTool ::ProjectGrowthVectorsOnSurface() {
           else
             continue;
 
-          if (!params.project_boundaries.Contains(sel.GetIndex())) continue;
+          if (!par_project_boundaries.Contains(sel.GetIndex())) continue;
           auto& g = growthvectors[pi];
           auto ng = n * g;
           auto gg = g * g;
@@ -1124,7 +1124,7 @@ BitArray BoundaryLayerTool ::ProjectGrowthVectorsOnSurface() {
       for (const auto& seg2 : segments)
         if (((seg[0] == seg2[0] && seg[1] == seg2[1]) ||
              (seg[0] == seg2[1] && seg[1] == seg2[0])) &&
-            params.surfid.Contains(seg2.si))
+            par_surfid.Contains(seg2.si))
           count++;
       if (count == 1) {
         growthvectors[seg[0]] = {0., 0., 0.};
@@ -1284,8 +1284,8 @@ void BoundaryLayerTool ::InsertNewElements(
     Point<3> p = mesh[pi];
     PointIndex pi_last = pi;
     double height = 0.0;
-    for (auto i : Range(params.heights)) {
-      height += params.heights[i];
+    for (auto i : Range(par_heights)) {
+      height += par_heights[i];
       auto pi_new = mesh.AddPoint(p);
       mapfrom.Append(pi);
       new_points.Append(pi_new);
@@ -1309,7 +1309,7 @@ void BoundaryLayerTool ::InsertNewElements(
   // get point from mapto (or the group if point is mapped to multiple new
   // points) layer = -1 means last point (top of boundary layer)
   auto newPoint = [&](PointIndex pi, int layer = -1, int group = 0) {
-    if (layer == -1) layer = params.heights.Size() - 1;
+    if (layer == -1) layer = par_heights.Size() - 1;
     if (special_boundary_points.count(pi))
       return special_boundary_points[pi].growth_groups[group].new_points[layer];
     else
@@ -1408,7 +1408,7 @@ void BoundaryLayerTool ::InsertNewElements(
           s0.si = segj.si;
           new_segments.Append(s0);
 
-          for (auto i : Range(params.heights)) {
+          for (auto i : Range(par_heights)) {
             Element2d sel(QUAD);
             p3 = newPoint(pp2, i);
             p4 = newPoint(pp1, i);
@@ -1487,7 +1487,7 @@ void BoundaryLayerTool ::InsertNewElements(
       bool add_volume_element = true;
       for (auto pi : sel.PNums())
         if (numGroups(pi) > 1) add_volume_element = false;
-      for (auto j : Range(params.heights)) {
+      for (auto j : Range(par_heights)) {
         auto eltype = points.Size() == 3 ? PRISM : HEX;
         Element el(eltype);
         for (auto i : Range(points)) el[i] = points[i];
@@ -1700,7 +1700,7 @@ void BoundaryLayerTool ::InsertNewElements(
           PointIndex p4 = p1;
           PointIndex p5 = p2;
           PointIndex p6 = p3;
-          for (auto i : Range(params.heights)) {
+          for (auto i : Range(par_heights)) {
             Element nel(PRISM);
             nel[0] = p4;
             nel[1] = p5;
@@ -1719,7 +1719,7 @@ void BoundaryLayerTool ::InsertNewElements(
           if (fixed.Size() == 1) {
             PointIndex p1 = moved[0];
             PointIndex p2 = moved[1];
-            for (auto i : Range(params.heights)) {
+            for (auto i : Range(par_heights)) {
               PointIndex p3 = newPoint(moved[1], i);
               PointIndex p4 = newPoint(moved[0], i);
               Element nel(PYRAMID);
@@ -1742,7 +1742,7 @@ void BoundaryLayerTool ::InsertNewElements(
         }
         if (moved.Size() == 1 && fixed.Size() == 1) {
           PointIndex p1 = moved[0];
-          for (auto i : Range(params.heights)) {
+          for (auto i : Range(par_heights)) {
             Element nel = el;
             PointIndex p2 = newPoint(moved[0], i);
             for (auto& p : nel.PNums()) {
@@ -1762,7 +1762,7 @@ void BoundaryLayerTool ::InsertNewElements(
                             ToString(fixed.Size()));
           PointIndex p1 = moved[0];
           PointIndex p2 = moved[1];
-          for (auto i : Range(params.heights)) {
+          for (auto i : Range(par_heights)) {
             PointIndex p3 = newPoint(moved[1], i);
             PointIndex p4 = newPoint(moved[0], i);
             Element nel(PYRAMID);
@@ -1874,6 +1874,94 @@ void BoundaryLayerTool ::FixVolumeElements() {
     }
   }
 }
+
+  void BoundaryLayerTool :: ProcessParameters()
+  {
+      if(int* bc = get_if<int>(&params.boundary); bc)
+        {
+          for (int i = 1; i <= mesh.GetNFD(); i++)
+            if(mesh.GetFaceDescriptor(i).BCProperty() == *bc)
+              par_surfid.Append(i);
+        }
+      else if(string* s = get_if<string>(&params.boundary); s)
+        {
+          regex pattern(*s);
+          BitArray boundaries(mesh.GetNFD()+1);
+          boundaries.Clear();
+          for(int i = 1; i<=mesh.GetNFD(); i++)
+            {
+              auto& fd = mesh.GetFaceDescriptor(i);
+              if(regex_match(fd.GetBCName(), pattern))
+                {
+                  boundaries.SetBit(i);
+                  auto dom_pattern = get_if<string>(&params.domain);
+                  // only add if adjacent to domain
+                  if(dom_pattern)
+                    {
+                      regex pattern(*dom_pattern);
+                      bool mat1_match = fd.DomainIn() > 0 && regex_match(mesh.GetMaterial(fd.DomainIn()), pattern);
+                      bool mat2_match = fd.DomainOut() > 0 && regex_match(mesh.GetMaterial(fd.DomainOut()), pattern);
+                      // if boundary is inner or outer remove from list
+                      if(mat1_match == mat2_match)
+                        boundaries.Clear(i);
+                      // if((fd.DomainIn() > 0 && regex_match(mesh.GetMaterial(fd.DomainIn()), pattern)) || (fd.DomainOut() > 0 && regex_match(self.GetMaterial(fd.DomainOut()), pattern)))
+                      // boundaries.Clear(i);
+                      // par_surfid.Append(i);
+                    }
+                  // else
+                  //   par_surfid.Append(i);
+                }
+              }
+            for(int i = 1; i<=mesh.GetNFD(); i++)
+              if(boundaries.Test(i))
+                par_surfid.Append(i);
+        }
+      else
+        {
+          auto & surfids = *get_if<std::vector<int>>(&params.boundary);
+          for(auto id : surfids)
+            par_surfid.Append(id);
+        }
+      if(string* mat = get_if<string>(&params.new_material); mat)
+          par_new_mat = { { ".*", *mat } };
+      else
+          par_new_mat = *get_if<map<string, string>>(&params.new_material);
+
+      if(params.project_boundaries.has_value())
+        {
+          regex pattern(*params.project_boundaries);
+          for(int i = 1; i<=mesh.GetNFD(); i++)
+            if(regex_match(mesh.GetFaceDescriptor(i).GetBCName(), pattern))
+              par_project_boundaries.Append(i);
+        }
+
+      if(double* height = get_if<double>(&params.thickness); height)
+        {
+          par_heights.Append(*height);
+        }
+      else
+        {
+          auto & heights = *get_if<std::vector<double>>(&params.thickness);
+          for(auto val : heights)
+            par_heights.Append(val);
+        }
+
+      int nr_domains = mesh.GetNDomains();
+      domains.SetSize(nr_domains + 1); // one based
+      domains.Clear();
+      if(string* pdomain = get_if<string>(&params.domain); pdomain)
+        {
+          regex pattern(*pdomain);
+          for(auto i : Range(1, nr_domains+1))
+            if(regex_match(mesh.GetMaterial(i), pattern))
+              domains.SetBit(i);
+        }
+      else
+        {
+          auto idomain = *get_if<int>(&params.domain);
+          domains.SetBit(idomain);
+        }
+  }
 
 void BoundaryLayerTool ::Perform() {
   CreateNewFaceDescriptors();

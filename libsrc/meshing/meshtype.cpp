@@ -2905,6 +2905,69 @@ namespace netgen
     ost << "table: " << endl << idpoints_table << endl;
   }
 
+  ostream & operator<< (ostream & ost, const BoundaryLayerParameters & mp)
+  {
+    ost << "BoundaryLayerParameters" << endl;
+    ost << "  boundary: ";
+    switch(mp.boundary.index())
+      {
+        case 0:
+        ost << std::get<0>(mp.boundary);
+        break;
+        case 1:
+        ost << std::get<1>(mp.boundary);
+        break;
+        case 2:
+        ost << "[";
+        for (auto val : std::get<2>(mp.boundary))
+          ost << val << " ";
+        ost << "]";
+        break;
+      }
+    ost << "\n  thickness: ";
+    switch(mp.thickness.index())
+      {
+        case 0:
+        ost << std::get<0>(mp.thickness);
+        break;
+        case 1:
+        ost << "[";
+        for (auto val : std::get<1>(mp.thickness))
+          ost << val << " ";
+        ost << "]";
+        break;
+      }
+    ost <<"\n  new_material: ";
+    switch(mp.new_material.index())
+      {
+        case 0:
+        ost << std::get<0>(mp.new_material);
+        break;
+        case 1:
+        for (const auto & [key, value] : std::get<1>(mp.new_material))
+          ost << key << " -> " << value << ", ";
+        break;
+      }
+    ost << "\n  domain: ";
+    switch(mp.domain.index())
+      {
+        case 0:
+        ost << std::get<0>(mp.domain);
+        break;
+        case 1:
+        ost << std::get<1>(mp.domain);
+        break;
+      }
+    ost << "\n  outside: " << mp.outside;
+    ost << "\n  project_boundaries: " << (mp.project_boundaries ? ToString(*mp.project_boundaries) : "nullopt");
+    ost << "\n  grow_edges: " << mp.grow_edges;
+    ost << "\n  limit_growth_vectors: " << mp.limit_growth_vectors;
+    ost << "\n  sides_keep_surfaceindex: " << mp.sides_keep_surfaceindex;
+    ost << "\n  keep_surfaceindex: " << mp.keep_surfaceindex;
+    ost << "\n  limit_safety: " << mp.limit_safety;
+    ost << endl;
+    return ost;
+  }
 
   MeshingParameters :: MeshingParameters ()
   {

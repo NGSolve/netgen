@@ -185,6 +185,14 @@ inline void CreateMPfromKwargs(MeshingParameters& mp, py::kwargs kwargs, bool th
       mp.nthreads = py::cast<int>(kwargs.attr("pop")("nthreads"));
     if(kwargs.contains("closeedgefac"))
       mp.closeedgefac = py::cast<optional<double>>(kwargs.attr("pop")("closeedgefac"));
+
+    if(kwargs.contains("boundary_layers"))
+    {
+      auto layers = py::list(kwargs.attr("pop")("boundary_layers"));
+      for(auto layer : layers)
+        mp.boundary_layers.Append(py::cast<BoundaryLayerParameters>(layer));
+    }
+
     if(kwargs.size())
     {
       if(throw_if_not_all_parsed)
