@@ -1422,10 +1422,19 @@ void BoundaryLayerTool ::FixVolumeElements() {
 
       if(params.project_boundaries.has_value())
         {
-          regex pattern(*params.project_boundaries);
-          for(int i = 1; i<=mesh.GetNFD(); i++)
-            if(regex_match(mesh.GetFaceDescriptor(i).GetBCName(), pattern))
-              par_project_boundaries.Append(i);
+          auto proj_bnd = *params.project_boundaries;
+          if(string* s = get_if<string>(&proj_bnd); s)
+            {
+              regex pattern(*s);
+              for(int i = 1; i<=mesh.GetNFD(); i++)
+                if(regex_match(mesh.GetFaceDescriptor(i).GetBCName(), pattern))
+                  par_project_boundaries.Append(i);
+            }
+          else
+           {
+              for(auto id : *get_if<std::vector<int>>(&proj_bnd))
+                par_project_boundaries.Append(id);
+           }
         }
 
       if(double* height = get_if<double>(&params.thickness); height)
@@ -1449,10 +1458,14 @@ void BoundaryLayerTool ::FixVolumeElements() {
             if(regex_match(mesh.GetMaterial(i), pattern))
               domains.SetBit(i);
         }
+      else if(int *idomain = get_if<int>(&params.domain); idomain)
+        {
+          domains.SetBit(*idomain);
+        }
       else
         {
-          auto idomain = *get_if<int>(&params.domain);
-          domains.SetBit(idomain);
+          for (auto i : *get_if<std::vector<int>>(&params.domain))
+            domains.SetBit(i);
         }
   }
 

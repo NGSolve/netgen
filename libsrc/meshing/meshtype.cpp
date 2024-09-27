@@ -2907,42 +2907,30 @@ namespace netgen
 
   ostream & operator<< (ostream & ost, const BoundaryLayerParameters & mp)
   {
+    auto print_vec = [&ost](auto & v) {
+        ost << "[";
+        for (const auto & val : v)
+          ost << val << " ";
+        ost << "]";
+    };
     ost << "BoundaryLayerParameters" << endl;
     ost << "  boundary: ";
     switch(mp.boundary.index())
       {
-        case 0:
-        ost << std::get<0>(mp.boundary);
-        break;
-        case 1:
-        ost << std::get<1>(mp.boundary);
-        break;
-        case 2:
-        ost << "[";
-        for (auto val : std::get<2>(mp.boundary))
-          ost << val << " ";
-        ost << "]";
-        break;
+        case 0: ost << std::get<0>(mp.boundary); break;
+        case 1: ost << std::get<1>(mp.boundary); break;
+        case 2: print_vec(std::get<2>(mp.boundary)); break;
       }
     ost << "\n  thickness: ";
     switch(mp.thickness.index())
       {
-        case 0:
-        ost << std::get<0>(mp.thickness);
-        break;
-        case 1:
-        ost << "[";
-        for (auto val : std::get<1>(mp.thickness))
-          ost << val << " ";
-        ost << "]";
-        break;
+        case 0: ost << std::get<0>(mp.thickness); break;
+        case 1: print_vec(std::get<1>(mp.thickness)); break;
       }
     ost <<"\n  new_material: ";
     switch(mp.new_material.index())
       {
-        case 0:
-        ost << std::get<0>(mp.new_material);
-        break;
+        case 0: ost << std::get<0>(mp.new_material); break;
         case 1:
         for (const auto & [key, value] : std::get<1>(mp.new_material))
           ost << key << " -> " << value << ", ";
@@ -2951,15 +2939,22 @@ namespace netgen
     ost << "\n  domain: ";
     switch(mp.domain.index())
       {
-        case 0:
-        ost << std::get<0>(mp.domain);
-        break;
-        case 1:
-        ost << std::get<1>(mp.domain);
-        break;
+        case 0: ost << std::get<0>(mp.domain); break;
+        case 1: ost << std::get<1>(mp.domain); break;
+        case 2: print_vec(std::get<2>(mp.domain)); break;
       }
     ost << "\n  outside: " << mp.outside;
-    ost << "\n  project_boundaries: " << (mp.project_boundaries ? ToString(*mp.project_boundaries) : "nullopt");
+    ost << "\n  project_boundaries: ";
+    if(mp.project_boundaries) {
+      auto & proj_bnd = *mp.project_boundaries;
+      switch(proj_bnd.index())
+        {
+          case 0: ost << std::get<0>(proj_bnd); break;
+          case 1: print_vec(std::get<1>(proj_bnd)); break;
+        }
+    }
+    else
+      ost << "nullopt";
     ost << "\n  grow_edges: " << mp.grow_edges;
     ost << "\n  limit_growth_vectors: " << mp.limit_growth_vectors;
     ost << "\n  sides_keep_surfaceindex: " << mp.sides_keep_surfaceindex;
