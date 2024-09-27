@@ -289,7 +289,6 @@ namespace netgen
     for (int qstep = 0; qstep <= 3; qstep++)
      {
        if (qstep == 0 && !mp.try_hexes) continue;
-       if (qstep == 1) continue;
        
        if (mesh.HasOpenQuads())
          {
