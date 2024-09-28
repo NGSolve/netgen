@@ -1407,6 +1407,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           BRepLib::BuildCurves3d(edge);
           return edge;
         }))
+    .def(py::init([] (const TopoDS_Vertex & v1, const TopoDS_Vertex & v2) {
+      return BRepBuilderAPI_MakeEdge(v1, v2).Edge();
+    }))
     .def("Value", [](const TopoDS_Edge & e, double s) {
         double s0, s1;
         auto curve = BRep_Tool::Curve(e, s0, s1);
