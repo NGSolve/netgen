@@ -73,6 +73,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
     .def(py::init([] (double x, double y, double z) {
           return gp_Vec(x, y, z);
         }), py::arg("x"), py::arg("y"), py::arg("z"))
+    .def(py::init([](gp_Dir d) { return gp_Vec(d); }))
     .def_property("x", [](gp_Vec&p) { return p.X(); }, [](gp_Vec&p,double x) { p.SetX(x); })
     .def_property("y", [](gp_Vec&p) { return p.Y(); }, [](gp_Vec&p,double y) { p.SetY(y); })
     .def_property("z", [](gp_Vec&p) { return p.Z(); }, [](gp_Vec&p,double z) { p.SetZ(z); })
@@ -368,7 +369,8 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
   py::implicitly_convertible<py::tuple, gp_Pnt>();
   py::implicitly_convertible<py::tuple, gp_Vec>();
   py::implicitly_convertible<py::tuple, gp_Dir>();
-  py::implicitly_convertible<gp_Vec, gp_Dir>();  
+  py::implicitly_convertible<gp_Vec, gp_Dir>();
+  py::implicitly_convertible<gp_Dir, gp_Vec>();
   py::implicitly_convertible<py::tuple, gp_Pnt2d>();  
   py::implicitly_convertible<py::tuple, gp_Vec2d>();  
   py::implicitly_convertible<py::tuple, gp_Dir2d>();
