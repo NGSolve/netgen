@@ -613,7 +613,7 @@ namespace netgen
 				       const NgArray< NgArray<int,PointIndex::BASE>* > * idmaps = NULL);
     /**
        free nodes in environment of openelements 
-       for optimiztion
+       for optimization
     */
     void FreeOpenElementsEnvironment (int layers);
 

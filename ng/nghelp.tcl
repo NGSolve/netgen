@@ -124,7 +124,7 @@ proc sensitivehelpdialog { show } {
 set_menu_help "File"  "In File menu you can load and store geometries, meshes etc." 
 
 set_menu_help "New Geometry"  "Deletes current geometry"
-set_menu_help "Load Geometry"  "Loads Geometry file in one of the formats STL (ASCII or binary), Constructive Solid Geometry (.geo) or 2D geometry. Please have a look into Netgen User's manuel for more details."
+set_menu_help "Load Geometry"  "Loads Geometry file in one of the formats STL (ASCII or binary), Constructive Solid Geometry (.geo) or 2D geometry. Please have a look into Netgen User's manual for more details."
 set_menu_help "Save Geometry" "Saves STL Geometry in in either ASCII or binary STL format."
 set_menu_help "Load Mesh" "Loads surface and volume mesh in Netgen internal format."
 set_menu_help "Save Mesh" "Saves surface and volume mesh in Netgen internal format."
@@ -156,7 +156,7 @@ set_menu_help "Analyze Geometry" "Perform only first step in mesh generation. Ac
 set_menu_help "Mesh Edges" "Meshes edges"
 set_menu_help "Mesh Surface" "Generates surface mesh. Includes already surface optimization for some geometry types."
 set_menu_help "Optimize Surface" "Optimizes surface mesh."
-set_menu_help "Surface Optim. Step" "Performs a specific surface optimiztion step. Mesh smoothing moves nodes. edge swapping swaps the diagonal of a quadrilateral built by two triangles, criterion either by number of nodes, or anlges. Combine points eliminates triangles by combining points (in the center of gravity)."
+set_menu_help "Surface Optim. Step" "Performs a specific surface optimization step. Mesh smoothing moves nodes. edge swapping swaps the diagonal of a quadrilateral built by two triangles, criterion either by number of nodes, or anlges. Combine points eliminates triangles by combining points (in the center of gravity)."
 set_menu_help "Mesh Volume" "Performs volume meshing. Algorithm is a combination of Delaunay and Rule-based Advancing Front"
 set_menu_help "Optimize Volume" "Performs additional volume optimization steps"
 set_menu_help "Smooth Opt Volume" "Performs optimization steps by smoothing iterations"
