@@ -20,13 +20,13 @@ struct GrowthVectorLimiter {
   BitArray changed_domains;
   unique_ptr<BoxTree<3>> tree;
   Array<PointIndex, PointIndex> map_from;
-  ofstream debug;
+  Table<SurfaceElementIndex, PointIndex> p2sel;
 
   GrowthVectorLimiter(BoundaryLayerTool &tool_)
       : tool(tool_), params(tool_.params), mesh(tool_.mesh),
-        height(tool_.total_height),
-        growthvectors(tool_.growthvectors), map_from(mesh.Points().Size()),
-        debug("debug.txt") {
+        height(tool_.total_height), growthvectors(tool_.growthvectors),
+        map_from(mesh.Points().Size()),
+        p2sel(mesh.CreatePoint2SurfaceElementTable()) {
     changed_domains = tool.domains;
     if (!params.outside)
       changed_domains.Invert();
@@ -53,15 +53,20 @@ struct GrowthVectorLimiter {
     return SetLimit(pi, limit * factor);
   }
 
+  Vec<3> GetVector(PointIndex pi_to, double shift = 1.,
+                   bool apply_limit = false) {
+    auto [gw, height] = tool.growth_vector_map[pi_to];
+    if (apply_limit)
+      shift *= GetLimit(pi_to);
+    return shift * height * (*gw);
+  }
+
   Point<3> GetPoint(PointIndex pi_to, double shift = 1.,
                     bool apply_limit = false) {
     if (tool.growth_vector_map.count(pi_to) == 0)
       return mesh[pi_to];
 
-    auto [gw, height] = tool.growth_vector_map[pi_to];
-    if (apply_limit)
-      shift *= GetLimit(pi_to);
-    return mesh[pi_to] + shift * height * (*gw);
+    return mesh[pi_to] + GetVector(pi_to, shift, apply_limit);
   }
 
   Point<3> GetMappedPoint(PointIndex pi_from, double shift = 1.) {
@@ -204,9 +209,33 @@ struct GrowthVectorLimiter {
     }
   }
 
+  void EqualizeLimits(double factor = .5) {
+    if (factor == 0.0)
+      return;
+    for (PointIndex pi : IntRange(tool.np, mesh.GetNP())) {
+      std::set<PointIndex> pis;
+      for (auto sel : p2sel[pi])
+        for (auto pi_ : mesh[sel].PNums())
+          pis.insert(pi_);
+      ArrayMem<double, 20> limits;
+      for (auto pi : pis) {
+        auto limit = GetLimit(pi);
+        if (limit > 0.0)
+          limits.Append(GetLimit(pi));
+      }
+      if (limits.Size() == 0)
+        continue;
+      QuickSort(limits);
+      double mean_limit = limits[limits.Size() / 2];
+      if (limits.Size() % 2 == 0)
+        mean_limit = 0.5 * (mean_limit + limits[(limits.Size() - 1) / 2]);
+
+      SetLimit(pi, factor * mean_limit + (1.0 - factor) * GetLimit(pi));
+    }
+  }
+
   void LimitSelfIntersection() {
     // check for self-intersection within new elements (prisms/hexes)
-    bool found_debug_element = false;
     auto isIntersecting = [&](SurfaceElementIndex sei, double shift) {
       // checks if surface element is self intersecting when growing with factor
       // shift
@@ -236,23 +265,6 @@ struct GrowthVectorLimiter {
       return false;
     };
 
-    auto equalizeLimits = [&](SurfaceElementIndex sei) {
-      const auto sel = mesh[sei];
-      auto np = sel.GetNP();
-      double max_limit = 0;
-      double min_limit = 1e99;
-      for (auto i : Range(np)) {
-        max_limit = max(max_limit, limits[sel[i]]);
-        min_limit = min(min_limit, limits[sel[i]]);
-      }
-      // equalize
-      if (max_limit / min_limit > 1.2) {
-        max_limit = min_limit * 1.2;
-        for (auto i : Range(np))
-          SetLimit(sel[i], min(limits[sel[i]], max_limit));
-      }
-    };
-
     for (SurfaceElementIndex sei : mesh.SurfaceElements().Range()) {
       auto sel = mesh[sei];
       const auto &fd = mesh.GetFaceDescriptor(sel.GetIndex());
@@ -260,17 +272,8 @@ struct GrowthVectorLimiter {
         continue;
       if (sel.GetNP() == 4)
         continue;
-      // if(sei >= tool.nse || (!changed_domains.Test(fd.DomainIn()) &&
-      //   !changed_domains.Test(fd.DomainOut())))
-      //   continue;
 
       auto np = sel.GetNP();
-      // ArrayMem<double, 4> ori_limits;
-      // ori_limits.SetSize(np);
-      // for(auto i : Range(np))
-      //     ori_limits[i] = limits[sel[i]];
-
-      equalizeLimits(sei);
 
       double shift = 1.0;
       double safety = 1.4;
@@ -307,12 +310,6 @@ struct GrowthVectorLimiter {
 
     return intersection;
   }
-
-  // Intersection_ isIntersectingPlane(PointIndex pi, PointIndex pi_to,
-  //                                   SurfaceElementIndex sei,
-  //                                   double shift = 0.0) {
-  //   return isIntersectingPlane(GetSeg(pi, pi_to), GetTrig(sei, shift));
-  // }
 
   Intersection_ isIntersectingTrig(std::array<Point<3>, 2> seg,
                                    std::array<Point<3>, 3> trig) {
@@ -352,8 +349,6 @@ struct GrowthVectorLimiter {
     for (PointIndex pi : mesh.Points().Range()) {
       bbox.Add(mesh[pi]);
       bbox.Add(GetPoint(pi, 1.1));
-      // if(tool.mapto[pi].Size() >0)
-      // bbox.Add(mesh[tool.mapto[pi].Last()]);
     }
 
     tree = make_unique<BoxTree<3>>(bbox);
@@ -382,10 +377,6 @@ struct GrowthVectorLimiter {
       if (!pi_from.IsValid())
         throw Exception("Point not mapped");
 
-      // if(mesh[pi_to].Type() == INNERPOINT)
-      // continue;
-      // if(growthvectors[pi_to].Length2() == 0.0)
-      // continue;
       Box<3> box(Box<3>::EMPTY_BOX);
       auto seg = GetSeg(pi_to, seg_shift);
 
@@ -405,10 +396,80 @@ struct GrowthVectorLimiter {
     }
   }
 
-  void Perform() {
-    limits.SetSize(mesh.Points().Size());
-    limits = 1.0;
+  void FixIntersectingSurfaceTrigs() {
+    Point3d pmin, pmax;
+    mesh.GetBox(pmin, pmax);
+    BoxTree<3, SurfaceElementIndex> setree(pmin, pmax);
 
+    for (auto sei : mesh.SurfaceElements().Range()) {
+      const Element2d &tri = mesh[sei];
+
+      Box<3> box(Box<3>::EMPTY_BOX);
+      for (PointIndex pi : tri.PNums())
+        box.Add(GetPoint(pi, 1.0, true));
+
+      box.Increase(1e-3 * box.Diam());
+      setree.Insert(box, sei);
+    }
+
+    for (auto sei : mesh.SurfaceElements().Range()) {
+      const Element2d &tri = mesh[sei];
+
+      Box<3> box(Box<3>::EMPTY_BOX);
+      for (PointIndex pi : tri.PNums())
+        box.Add(GetPoint(pi, 1.0, true));
+
+      setree.GetFirstIntersecting(
+          box.PMin(), box.PMax(), [&](SurfaceElementIndex sej) {
+            const Element2d &tri2 = mesh[sej];
+
+            if (mesh[tri[0]].GetLayer() != mesh[tri2[0]].GetLayer())
+              return false;
+
+            netgen::Point<3> tri1_points[3], tri2_points[3];
+            const netgen::Point<3> *trip1[3], *trip2[3];
+            for (int k = 0; k < 3; k++) {
+              trip1[k] = &tri1_points[k];
+              trip2[k] = &tri2_points[k];
+            }
+            auto set_points = [&]() {
+              for (int k = 0; k < 3; k++) {
+                tri1_points[k] = GetPoint(tri[k], 1.0, true);
+                tri2_points[k] = GetPoint(tri2[k], 1.0, true);
+              }
+            };
+
+            set_points();
+
+            int counter = 0;
+            while (IntersectTriangleTriangle(&trip1[0], &trip2[0])) {
+              PointIndex pi_max_limit = PointIndex::INVALID;
+              for (PointIndex pi :
+                   {tri[0], tri[1], tri[2], tri2[0], tri2[1], tri2[2]})
+                if (pi > tool.np &&
+                    (!pi_max_limit.IsValid() ||
+                     limits[tool.mapfrom[pi]] > limits[pi_max_limit]))
+                  pi_max_limit = tool.mapfrom[pi];
+
+              if (!pi_max_limit.IsValid())
+                break;
+
+              limits[pi_max_limit] *= 0.9;
+              set_points();
+              counter++;
+              if (counter > 20) {
+                cerr << "Limit intersecting sourface elements: too many "
+                        "limitation steps"
+                     << endl;
+                break;
+              }
+            }
+            return false;
+          });
+    }
+  }
+
+  void LimitOriginalSurface() {
     // limit to not intersect with other (original) surface elements
     double trig_shift = 0;
     double seg_shift = 2.1;
@@ -418,16 +479,12 @@ struct GrowthVectorLimiter {
             return; // ignore new surface elements in first pass
           LimitGrowthVector(pi_to, sei, trig_shift, seg_shift);
         });
+  }
 
-    LimitSelfIntersection();
-
-    // for(auto i : Range(growthvectors))
-    //   growthvectors[i] *= limits[i];
-    // limits = 1.0;
-
+  void LimitBoundaryLayer() {
     // now limit again with shifted surface elements
-    trig_shift = 1.1;
-    seg_shift = 1.1;
+    double trig_shift = 1.1;
+    double seg_shift = 1.1;
     size_t limit_counter = 1;
 
     while (limit_counter) {
@@ -449,78 +506,22 @@ struct GrowthVectorLimiter {
               limit_counter++;
           });
     }
+  }
 
-    // check if surface trigs are intersecting each other
-    {
-      Point3d pmin, pmax;
-      mesh.GetBox(pmin, pmax);
-      BoxTree<3, SurfaceElementIndex> setree(pmin, pmax);
+  void Perform() {
+    limits.SetSize(mesh.Points().Size());
+    limits = 1.0;
 
-      for (auto sei : mesh.SurfaceElements().Range()) {
-        const Element2d &tri = mesh[sei];
-
-        Box<3> box(Box<3>::EMPTY_BOX);
-        for (PointIndex pi : tri.PNums())
-          box.Add(GetPoint(pi, 1.0, true));
-
-        box.Increase(1e-3 * box.Diam());
-        setree.Insert(box, sei);
-      }
-      for (auto sei : mesh.SurfaceElements().Range()) {
-        const Element2d &tri = mesh[sei];
-
-        Box<3> box(Box<3>::EMPTY_BOX);
-        for (PointIndex pi : tri.PNums())
-          box.Add(GetPoint(pi, 1.0, true));
-
-        setree.GetFirstIntersecting(
-            box.PMin(), box.PMax(), [&](SurfaceElementIndex sej) {
-              const Element2d &tri2 = mesh[sej];
-
-              if (mesh[tri[0]].GetLayer() != mesh[tri2[0]].GetLayer())
-                return false;
-
-              netgen::Point<3> tri1_points[3], tri2_points[3];
-              const netgen::Point<3> *trip1[3], *trip2[3];
-              for (int k = 0; k < 3; k++) {
-                trip1[k] = &tri1_points[k];
-                trip2[k] = &tri2_points[k];
-              }
-              auto set_points = [&]() {
-                for (int k = 0; k < 3; k++) {
-                  tri1_points[k] = GetPoint(tri[k], 1.0, true);
-                  tri2_points[k] = GetPoint(tri2[k], 1.0, true);
-                }
-              };
-
-              set_points();
-
-              int counter = 0;
-              while (IntersectTriangleTriangle(&trip1[0], &trip2[0])) {
-                PointIndex pi_max_limit = PointIndex::INVALID;
-                for (PointIndex pi :
-                     {tri[0], tri[1], tri[2], tri2[0], tri2[1], tri2[2]})
-                  if (pi > tool.np &&
-                      (!pi_max_limit.IsValid() ||
-                       limits[tool.mapfrom[pi]] > limits[pi_max_limit]))
-                    pi_max_limit = tool.mapfrom[pi];
-
-                if (!pi_max_limit.IsValid())
-                  break;
-
-                limits[pi_max_limit] *= 0.9;
-                set_points();
-                counter++;
-                if (counter > 20) {
-                  cerr << "Limit intersecting sourface elements: too many "
-                          "limitation steps"
-                       << endl;
-                  break;
-                }
-              }
-              return false;
-            });
-      }
+    // No smoothing in the last pass, to avoid generating new intersections
+    for (auto smoothing_factor : {1.0, 0.3, 0.0}) {
+      LimitOriginalSurface();
+      EqualizeLimits(smoothing_factor);
+      LimitSelfIntersection();
+      EqualizeLimits(smoothing_factor);
+      LimitBoundaryLayer();
+      EqualizeLimits(smoothing_factor);
+      FixIntersectingSurfaceTrigs();
+      EqualizeLimits(smoothing_factor);
     }
 
     for (auto i : Range(growthvectors))
