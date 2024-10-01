@@ -22,6 +22,7 @@
 #include <BRepAlgo_NormalProjection.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRepBuilderAPI_MakePolygon.hxx>
 #include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
@@ -1406,6 +1407,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           BRepLib::BuildCurves3d(edge);
           return edge;
         }))
+    .def(py::init([] (const TopoDS_Vertex & v1, const TopoDS_Vertex & v2) {
+      return BRepBuilderAPI_MakeEdge(v1, v2).Edge();
+    }))
     .def("Value", [](const TopoDS_Edge & e, double s) {
         double s0, s1;
         auto curve = BRep_Tool::Curve(e, s0, s1);
@@ -1671,8 +1675,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
   
   py::implicitly_convertible<TopoDS_Shape, TopoDS_Face>();
   py::implicitly_convertible<TopoDS_Edge, TopoDS_Wire>();
-  
 
+  m.def("MakePolygon", [](std::vector<TopoDS_Vertex> verts)
+  {
+    BRepBuilderAPI_MakePolygon builder;
+    for(auto& v : verts)
+      builder.Add(v);
+    return builder.Wire();
+  });
 
   class ListOfShapesIterator 
   {
