@@ -649,7 +649,7 @@ namespace netgen
       Marks elements which are dangerous to refine
       return: number of illegal elements
     */
-	DLL_HEADER int MarkIllegalElements ();
+	DLL_HEADER int MarkIllegalElements (int domain=0);
 
     /// orient surface mesh, for one sub-domain only
 	DLL_HEADER void SurfaceMeshOrientation ();

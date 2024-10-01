@@ -521,7 +521,7 @@ namespace netgen
            throw NgException ("Stop meshing since surface mesh not consistent");
         }
      }
-     RemoveIllegalElements (mesh);
+     RemoveIllegalElements (mesh, domain);
   }
 
   void MergeMeshes( Mesh & mesh, Array<MeshingData> & md )
@@ -728,13 +728,10 @@ namespace netgen
 
 
 
-  void RemoveIllegalElements (Mesh & mesh3d)
+  void RemoveIllegalElements (Mesh & mesh3d, int domain)
   {
     static Timer t("RemoveIllegalElements"); RegionTimer reg(t);
     
-    int it = 10;
-    int nillegal, oldn;
-
     // return, if non-pure tet-mesh
     /*
       if (!mesh3d.PureTetMesh())
@@ -742,12 +739,16 @@ namespace netgen
     */
     mesh3d.CalcSurfacesOfNode();
 
-    nillegal = mesh3d.MarkIllegalElements();
+    int nillegal = mesh3d.MarkIllegalElements(domain);
     if(nillegal)
       PrintMessage (1, "Remove Illegal Elements");
 
+    int oldn = nillegal;
+    int nillegal_min = nillegal;
+
     MeshingParameters dummymp;
     MeshOptimize3d optmesh(mesh3d, dummymp, OPT_LEGAL);
+    int it = 10;
     while (nillegal && (it--) > 0)
       {
 	if (multithread.terminate)
@@ -763,6 +764,9 @@ namespace netgen
 
 	oldn = nillegal;
 	nillegal = mesh3d.MarkIllegalElements();
+        nillegal_min = min(nillegal_min, nillegal);
+        if(nillegal > nillegal_min)
+          break;
 
 	if (oldn != nillegal)
 	  it = 10;
