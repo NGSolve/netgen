@@ -6739,7 +6739,7 @@ namespace netgen
   }
 
 
-  int Mesh :: MarkIllegalElements ()
+  int Mesh :: MarkIllegalElements (int domain)
   {
     if(!boundaryedges)
       BuildBoundaryEdges();
@@ -6749,7 +6749,7 @@ namespace netgen
     {
       int cnt_local = 0;
       for(auto & el : volelements.Range(myrange))
-        if (!LegalTet (el))
+        if ((domain==0 || el.GetIndex() == domain) && !LegalTet (el))
           cnt_local++;
       cnt += cnt_local;
     });
