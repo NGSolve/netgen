@@ -1564,10 +1564,6 @@ void BoundaryLayerTool ::Perform() {
   mesh.SetNextMajorTimeStamp();
   mesh.UpdateTopology();
   SetDomInOutSides();
-  MeshingParameters mp;
-  mp.optimize3d = "m";
-  mp.optsteps3d = 4;
-  OptimizeVolume(mp, mesh);
 }
 
 void GenerateBoundaryLayer(Mesh &mesh, const BoundaryLayerParameters &blp) {
