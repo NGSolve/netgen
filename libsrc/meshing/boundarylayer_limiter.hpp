@@ -449,10 +449,10 @@ struct GrowthVectorLimiter {
                 limits[pi_max_limit] *= 0.9;
                 set_points();
                 counter++;
-                if (counter > 20) {
+                if (counter > 30) {
                   cerr << "Limit intersecting surface elements: too many "
-                          "limitation steps"
-                       << endl;
+                          "limitation steps, sels: "
+                       << mesh[sei] << '\t' << mesh[sej] << endl;
                   break;
                 }
               }
@@ -515,7 +515,6 @@ struct GrowthVectorLimiter {
     std::array smoothing_factors = {0.8, 0.7, 0.5, 0.0};
 
     for (auto i_pass : Range(safeties.size())) {
-      bool last_pass = i_pass == safeties.size() - 1;
       double safety = safeties[i_pass];
 
       LimitOriginalSurface(2.1);
@@ -525,7 +524,7 @@ struct GrowthVectorLimiter {
       for (auto i : Range(3))
         EqualizeLimits(smoothing_factors[i_pass]);
 
-      if (last_pass)
+      if (i_pass == safeties.size() - 1)
         FixIntersectingSurfaceTrigs();
     }
 

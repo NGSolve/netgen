@@ -99,7 +99,7 @@ class BoundaryLayerTool
         return Cross(mesh[el[1]]-v0, mesh[el[2]]-v0).Normalize();
     }
 
-    Vec<3> getEdgeTangent(PointIndex pi, int edgenr);
+    Vec<3> getEdgeTangent(PointIndex pi, int edgenr, FlatArray<Segment *> segs);
 };
 
 } // namespace netgen

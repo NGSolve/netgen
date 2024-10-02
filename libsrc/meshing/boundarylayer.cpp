@@ -128,12 +128,13 @@ SpecialBoundaryPoint ::SpecialBoundaryPoint(
   growth_groups.Append(GrowthGroup(g2_faces, normals2));
 }
 
-Vec<3> BoundaryLayerTool ::getEdgeTangent(PointIndex pi, int edgenr) {
+Vec<3> BoundaryLayerTool ::getEdgeTangent(PointIndex pi, int edgenr,
+                                          FlatArray<Segment *> segs) {
   Vec<3> tangent = 0.0;
   ArrayMem<PointIndex, 2> pts;
-  for (auto segi : topo.GetVertexSegments(pi)) {
-    auto &seg = mesh[segi];
-    if (seg.edgenr != edgenr + 1)
+  for (auto *p_seg : segs) {
+    auto &seg = *p_seg;
+    if (seg.edgenr != edgenr)
       continue;
     PointIndex other = seg[0] + seg[1] - pi;
     if (!pts.Contains(other))
@@ -141,8 +142,9 @@ Vec<3> BoundaryLayerTool ::getEdgeTangent(PointIndex pi, int edgenr) {
   }
   if (pts.Size() != 2) {
     cout << "getEdgeTangent pi = " << pi << ", edgenr = " << edgenr << endl;
-    for (auto segi : topo.GetVertexSegments(pi))
-      cout << mesh[segi] << endl;
+    cout << pts << endl;
+    for (auto *p_seg : segs)
+      cout << *p_seg << endl;
     throw Exception("Something went wrong in getEdgeTangent!");
   }
   tangent = mesh[pts[1]] - mesh[pts[0]];
@@ -243,121 +245,6 @@ void MergeAndAddSegments(Mesh &mesh, FlatArray<Segment> segments,
 
   for (const auto &seg : new_segments)
     addSegment(seg);
-}
-
-// TODO: Hack, move this to the header or restructure the whole growth_vectors
-// storage
-static std::map<PointIndex, Vec<3>> non_bl_growth_vectors;
-
-void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors() {
-  static Timer tall("InterpolateSurfaceGrowthVectors");
-  RegionTimer rtall(tall);
-  static Timer tsmooth("InterpolateSurfaceGrowthVectors-Smoothing");
-  auto np_old = this->np;
-  auto np = mesh.GetNP();
-
-  non_bl_growth_vectors.clear();
-
-  auto getGW = [&](PointIndex pi) -> Vec<3> {
-    if (growth_vector_map.count(pi) == 0) {
-      non_bl_growth_vectors[pi] = .0;
-      growth_vector_map[pi] = {&non_bl_growth_vectors[pi], 1.0};
-    }
-    auto [gw, height] = growth_vector_map[pi];
-    return height * (*gw);
-  };
-  auto addGW = [&](PointIndex pi, Vec<3> vec) {
-    if (growth_vector_map.count(pi) == 0) {
-      non_bl_growth_vectors[pi] = .0;
-      growth_vector_map[pi] = {&non_bl_growth_vectors[pi], 1.0};
-    }
-    auto [gw, height] = growth_vector_map[pi];
-    *gw += 1.0 / height * vec;
-  };
-
-  Array<Vec<3>, PointIndex> normals(np);
-  for (auto pi = np_old; pi < np; pi++) {
-    normals[pi + PointIndex::BASE] = getGW(pi + PointIndex::BASE);
-  }
-
-  auto hasMoved = [&](PointIndex pi) {
-    return (pi - PointIndex::BASE >= np_old) || mapto[pi].Size() > 0 ||
-           special_boundary_points.count(pi);
-  };
-
-  std::set<PointIndex> points_set;
-  ParallelForRange(mesh.SurfaceElements().Range(), [&](auto myrange) {
-    for (SurfaceElementIndex sei : myrange) {
-      for (auto pi : mesh[sei].PNums()) {
-        auto pi_from = mapfrom[pi];
-        if ((pi_from.IsValid() && mesh[pi_from].Type() == SURFACEPOINT) ||
-            (!pi_from.IsValid() && mapto[pi].Size() == 0 &&
-             mesh[pi].Type() == SURFACEPOINT))
-          points_set.insert(pi);
-      }
-    }
-  });
-
-  Array<bool> has_moved_points(max_edge_nr + 1);
-  has_moved_points = false;
-  std::set<PointIndex> moved_edge_points;
-
-  for (auto seg : segments) {
-    if (hasMoved(seg[0]) != hasMoved(seg[1]))
-      has_moved_points[seg.edgenr] = true;
-  }
-
-  for (auto seg : segments)
-    if (has_moved_points[seg.edgenr])
-      for (auto pi : seg.PNums())
-        if (mesh[pi].Type() == EDGEPOINT)
-          points_set.insert(pi);
-
-  Array<PointIndex> points;
-  for (auto pi : points_set)
-    points.Append(pi);
-  QuickSort(points);
-
-  auto p2sel = mesh.CreatePoint2SurfaceElementTable();
-  // smooth tangential part of growth vectors from edges to surface elements
-  Array<Vec<3>, PointIndex> corrections(mesh.GetNP());
-  corrections = 0.0;
-  RegionTimer rtsmooth(tsmooth);
-  for ([[maybe_unused]] auto i : Range(10)) {
-    for (auto pi : points) {
-      auto sels = p2sel[pi];
-      auto &correction = corrections[pi];
-      std::set<PointIndex> suround;
-      suround.insert(pi);
-
-      // average only tangent component on new bl points, average whole growth
-      // vector otherwise
-      bool do_average_tangent = mapfrom[pi].IsValid();
-      correction = 0.0;
-      for (auto sei : sels) {
-        const auto &sel = mesh[sei];
-        for (auto pi1 : sel.PNums()) {
-          if (suround.count(pi1))
-            continue;
-          suround.insert(pi1);
-          auto gw_other = getGW(pi1) + corrections[pi1];
-          if (do_average_tangent) {
-            auto normal_other = getNormal(mesh[sei]);
-            auto tangent_part =
-                gw_other - (gw_other * normal_other) * normal_other;
-            correction += tangent_part;
-          } else {
-            correction += gw_other;
-          }
-        }
-      }
-      correction *= 1.0 / suround.size();
-      if (!do_average_tangent)
-        correction -= getGW(pi);
-    }
-  }
-  for (auto pi : points)
-    addGW(pi, corrections[pi]);
 }
 
 BoundaryLayerTool::BoundaryLayerTool(Mesh &mesh_,
@@ -665,143 +552,6 @@ BitArray BoundaryLayerTool ::ProjectGrowthVectorsOnSurface() {
   }
 
   return in_surface_direction;
-}
-
-void BoundaryLayerTool ::InterpolateGrowthVectors() {
-  int new_max_edge_nr = max_edge_nr;
-  for (const auto &seg : segments)
-    if (seg.edgenr > new_max_edge_nr)
-      new_max_edge_nr = seg.edgenr;
-  for (const auto &seg : new_segments)
-    if (seg.edgenr > new_max_edge_nr)
-      new_max_edge_nr = seg.edgenr;
-
-  auto getGW = [&](PointIndex pi) -> Vec<3> {
-    if (growth_vector_map.count(pi) == 0)
-      growth_vector_map[pi] = {&growthvectors[pi], total_height};
-    auto [gw, height] = growth_vector_map[pi];
-    return height * (*gw);
-  };
-  auto addGW = [&](PointIndex pi, Vec<3> vec) {
-    if (growth_vector_map.count(pi) == 0)
-      growth_vector_map[pi] = {&growthvectors[pi], total_height};
-    auto [gw, height] = growth_vector_map[pi];
-    *gw += 1.0 / height * vec;
-  };
-
-  // interpolate tangential component of growth vector along edge
-  if (max_edge_nr < new_max_edge_nr)
-    for (auto edgenr : Range(max_edge_nr + 1, new_max_edge_nr)) {
-      // cout << "SEARCH EDGE " << edgenr +1 << endl;
-      // if(!is_edge_moved[edgenr+1]) continue;
-
-      // build sorted list of edge
-      Array<PointIndex> points;
-      // find first vertex on edge
-      double edge_len = 0.;
-      auto is_end_point = [&](PointIndex pi) {
-        // if(mesh[pi].Type() == FIXEDPOINT)
-        //   return true;
-        // return false;
-        auto segs = topo.GetVertexSegments(pi);
-        if (segs.Size() == 1)
-          return true;
-        auto first_edgenr = mesh[segs[0]].edgenr;
-        for (auto segi : segs)
-          if (mesh[segi].edgenr != first_edgenr)
-            return true;
-        return false;
-      };
-
-      bool any_grows = false;
-
-      for (const auto &seg : segments) {
-        if (seg.edgenr - 1 == edgenr) {
-          if (getGW(seg[0]).Length2() != 0 || getGW(seg[1]).Length2() != 0)
-            any_grows = true;
-          if (points.Size() == 0 &&
-              (is_end_point(seg[0]) || is_end_point(seg[1]))) {
-            PointIndex seg0 = seg[0], seg1 = seg[1];
-            if (is_end_point(seg[1]))
-              Swap(seg0, seg1);
-            points.Append(seg0);
-            points.Append(seg1);
-            edge_len += (mesh[seg[1]] - mesh[seg[0]]).Length();
-          }
-        }
-      }
-
-      if (!any_grows) {
-        // cout << "skip edge " << edgenr+1 << endl;
-        continue;
-      }
-
-      if (!points.Size())
-        throw Exception("Could not find startpoint for edge " +
-                        ToString(edgenr));
-
-      while (true) {
-        bool point_found = false;
-        for (auto si : topo.GetVertexSegments(points.Last())) {
-          const auto &seg = mesh[si];
-          if (seg.edgenr - 1 != edgenr)
-            continue;
-          if (seg[0] == points.Last() && points[points.Size() - 2] != seg[1]) {
-            edge_len += (mesh[points.Last()] - mesh[seg[1]]).Length();
-            points.Append(seg[1]);
-            point_found = true;
-            break;
-          } else if (seg[1] == points.Last() &&
-                     points[points.Size() - 2] != seg[0]) {
-            edge_len += (mesh[points.Last()] - mesh[seg[0]]).Length();
-            points.Append(seg[0]);
-            point_found = true;
-            break;
-          }
-        }
-        if (is_end_point(points.Last()))
-          break;
-        if (!point_found) {
-          throw Exception(
-              string(
-                  "Could not find connected list of line segments for edge ") +
-              edgenr);
-        }
-      }
-
-      if (getGW(points[0]).Length2() == 0 &&
-          getGW(points.Last()).Length2() == 0)
-        continue;
-      // cout << "Points to average " << endl << points << endl;
-
-      // tangential part of growth vectors
-      auto t1 = (mesh[points[1]] - mesh[points[0]]).Normalize();
-      auto gt1 = getGW(points[0]) * t1 * t1;
-      auto t2 =
-          (mesh[points.Last()] - mesh[points[points.Size() - 2]]).Normalize();
-      auto gt2 = getGW(points.Last()) * t2 * t2;
-
-      // if(!is_edge_moved[edgenr+1])
-      // {
-      //   if(getGW(points[0]) * (mesh[points[1]] - mesh[points[0]]) < 0)
-      //     gt1 = 0.;
-      //   if(getGW(points.Last()) * (mesh[points[points.Size()-2]] -
-      //   mesh[points.Last()]) < 0)
-      //     gt2 = 0.;
-      // }
-
-      double len = 0.;
-      for (auto i : IntRange(1, points.Size() - 1)) {
-        auto pi = points[i];
-        len += (mesh[pi] - mesh[points[i - 1]]).Length();
-        auto t = getEdgeTangent(pi, edgenr);
-        auto lam = len / edge_len;
-        auto interpol = (1 - lam) * (gt1 * t) * t + lam * (gt2 * t) * t;
-        addGW(pi, interpol);
-      }
-    }
-
-  InterpolateSurfaceGrowthVectors();
 }
 
 void BoundaryLayerTool ::InsertNewElements(
@@ -1551,6 +1301,7 @@ void BoundaryLayerTool ::Perform() {
   topo.SetBuildVertex2Element(true);
   mesh.UpdateTopology();
   InterpolateGrowthVectors();
+  InterpolateSurfaceGrowthVectors();
 
   if (params.limit_growth_vectors)
     LimitGrowthVectorLengths();
