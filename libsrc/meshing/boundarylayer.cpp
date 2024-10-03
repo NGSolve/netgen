@@ -963,10 +963,8 @@ void BoundaryLayerTool ::AddSegments() {
 
 void BoundaryLayerTool ::AddSurfaceElements() {
   for (auto &sel :
-       insert_only_volume_elements ? new_sels_on_moved_bnd : new_sels) {
-    cout << "add surface element " << sel << endl;
+       insert_only_volume_elements ? new_sels_on_moved_bnd : new_sels)
     mesh.AddSurfaceElement(sel);
-  }
 }
 
 void BoundaryLayerTool ::ProcessParameters() {
@@ -1101,7 +1099,6 @@ void BoundaryLayerTool ::ProcessParameters() {
       }
     }
   }
-  cout << "new mat numbers " << endl << new_mat_nrs << endl;
 
   if (!params.outside)
     domains.Invert();
