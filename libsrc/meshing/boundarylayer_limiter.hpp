@@ -25,17 +25,31 @@ struct GrowthVectorLimiter {
   GrowthVectorLimiter(BoundaryLayerTool &tool_)
       : tool(tool_), params(tool_.params), mesh(tool_.mesh),
         height(tool_.total_height), growthvectors(tool_.growthvectors),
-        map_from(mesh.Points().Size()),
-        p2sel(mesh.CreatePoint2SurfaceElementTable()) {
+        map_from(mesh.Points().Size()) {
     changed_domains = tool.domains;
     if (!params.outside)
       changed_domains.Invert();
 
     map_from = tool.mapfrom;
+    p2sel = ngcore::CreateSortedTable<SurfaceElementIndex, PointIndex>(
+        tool.new_sels.Range(),
+        [&](auto &table, SurfaceElementIndex ei) {
+          for (PointIndex pi : tool.new_sels[ei].PNums())
+            table.Add(pi, ei);
+        },
+        mesh.GetNP());
+  }
+
+  auto SurfaceElementsRange() { return Range(tool.nse + tool.new_sels.Size()); }
+
+  const auto &Get(SurfaceElementIndex sei) {
+    if (sei < tool.nse)
+      return mesh[sei];
+    return tool.new_sels[sei - tool.nse];
   }
 
   std::pair<double, double> GetMinMaxLimit(SurfaceElementIndex sei) {
-    const auto &sel = mesh[sei];
+    const auto &sel = Get(sei);
     double min_limit = GetLimit(sel[0]);
     double max_limit = min_limit;
     for (auto i : IntRange(1, sel.GetNP())) {
@@ -75,7 +89,7 @@ struct GrowthVectorLimiter {
 
   Point<3> GetPoint(PointIndex pi_to, double shift = 1.,
                     bool apply_limit = false) {
-    if (tool.growth_vector_map.count(pi_to) == 0)
+    if (pi_to <= tool.np || tool.growth_vector_map.count(pi_to) == 0)
       return mesh[pi_to];
 
     return mesh[pi_to] + GetVector(pi_to, shift, apply_limit);
@@ -97,7 +111,7 @@ struct GrowthVectorLimiter {
 
   auto GetTrig(SurfaceElementIndex sei, double shift = 0.0,
                bool apply_limit = false) {
-    auto sel = mesh[sei];
+    auto sel = Get(sei);
     std::array<Point<3>, 3> trig;
     for (auto i : Range(3))
       trig[i] = GetPoint(sel[i], shift, apply_limit);
@@ -105,7 +119,7 @@ struct GrowthVectorLimiter {
   }
 
   auto GetMappedTrig(SurfaceElementIndex sei, double shift = 0.0) {
-    auto sel = mesh[sei];
+    auto sel = Get(sei);
     std::array<Point<3>, 3> trig;
     for (auto i : Range(3))
       trig[i] = GetMappedPoint(sel[i], shift);
@@ -115,7 +129,7 @@ struct GrowthVectorLimiter {
   auto GetSideTrig(SurfaceElementIndex sei, int index, double shift = 0.0,
                    bool grow_first_vertex = true) {
     auto trig = GetMappedTrig(sei, 0.0);
-    auto sel = mesh[sei];
+    auto sel = Get(sei);
     auto index1 = (index + 1) % 3;
     if (!grow_first_vertex)
       index1 = (index + 2) % 3;
@@ -133,7 +147,7 @@ struct GrowthVectorLimiter {
 
     auto seg = GetSeg(pi_to, seg_shift, true);
 
-    for (auto pi : mesh[sei].PNums()) {
+    for (auto pi : Get(sei).PNums()) {
       if (pi == pi_from)
         return false;
       if (map_from[pi] == pi_from)
@@ -172,7 +186,7 @@ struct GrowthVectorLimiter {
       double max_limit = max(GetLimit(pi_to), trig_max_limit);
       bool result = false;
       result = SetLimit(pi_to, s * max_limit);
-      for (auto pi : mesh[sei].PNums())
+      for (auto pi : Get(sei).PNums())
         result = SetLimit(pi, s * max_limit);
       return result;
     } else {
@@ -198,8 +212,8 @@ struct GrowthVectorLimiter {
       return;
     for (PointIndex pi : IntRange(tool.np, mesh.GetNP())) {
       std::set<PointIndex> pis;
-      for (auto sel : p2sel[pi])
-        for (auto pi_ : mesh[sel].PNums())
+      for (auto sei : p2sel[pi])
+        for (auto pi_ : Get(sei).PNums())
           pis.insert(pi_);
       ArrayMem<double, 20> limits;
       for (auto pi : pis) {
@@ -230,7 +244,7 @@ struct GrowthVectorLimiter {
       // from original surface elements
       if (sei >= tool.nse)
         return false;
-      const auto sel = mesh[sei];
+      const auto sel = Get(sei);
       auto np = sel.GetNP();
       for (auto i : Range(np)) {
         if (sel[i] > tool.np)
@@ -254,8 +268,6 @@ struct GrowthVectorLimiter {
     for (SurfaceElementIndex sei : mesh.SurfaceElements().Range()) {
       auto sel = mesh[sei];
       const auto &fd = mesh.GetFaceDescriptor(sel.GetIndex());
-      if (sei >= tool.nse)
-        continue;
       if (sel.GetNP() == 4)
         continue;
 
@@ -338,9 +350,9 @@ struct GrowthVectorLimiter {
 
     tree = make_unique<BoxTree<3>>(bbox);
 
-    for (auto sei : mesh.SurfaceElements().Range()) {
-      const auto &sel = mesh[sei];
-      auto sel_index = mesh[sei].GetIndex();
+    for (auto sei : SurfaceElementsRange()) {
+      const auto &sel = Get(sei);
+      auto sel_index = sel.GetIndex();
 
       Box<3> box(Box<3>::EMPTY_BOX);
       for (auto pi : sel.PNums()) {
@@ -369,7 +381,7 @@ struct GrowthVectorLimiter {
       box.Add(GetPoint(pi_to, GetLimit(pi_from)));
       tree->GetFirstIntersecting(box.PMin(), box.PMax(),
                                  [&](SurfaceElementIndex sei) {
-                                   const auto &sel = mesh[sei];
+                                   const auto &sel = Get(sei);
                                    if (sel.PNums().Contains(pi_from))
                                      return false;
                                    if (sel.PNums().Contains(pi_to))
@@ -392,8 +404,8 @@ struct GrowthVectorLimiter {
       mesh.GetBox(pmin, pmax);
       BoxTree<3, SurfaceElementIndex> setree(pmin, pmax);
 
-      for (auto sei : mesh.SurfaceElements().Range()) {
-        const Element2d &tri = mesh[sei];
+      for (auto sei : SurfaceElementsRange()) {
+        const Element2d &tri = Get(sei);
 
         Box<3> box(Box<3>::EMPTY_BOX);
         for (PointIndex pi : tri.PNums())
@@ -403,61 +415,71 @@ struct GrowthVectorLimiter {
         setree.Insert(box, sei);
       }
 
-      for (auto sei : mesh.SurfaceElements().Range()) {
-        const Element2d &tri = mesh[sei];
+      for (auto sei : SurfaceElementsRange()) {
+        const Element2d &tri = Get(sei);
 
         Box<3> box(Box<3>::EMPTY_BOX);
         for (PointIndex pi : tri.PNums())
           box.Add(GetPoint(pi, 1.0, true));
 
-        setree.GetFirstIntersecting(
-            box.PMin(), box.PMax(), [&](SurfaceElementIndex sej) {
-              const Element2d &tri2 = mesh[sej];
+        setree.GetFirstIntersecting(box.PMin(), box.PMax(), [&](size_t sej) {
+          const Element2d &tri2 = Get(sej);
 
-              if (mesh[tri[0]].GetLayer() != mesh[tri2[0]].GetLayer())
-                return false;
+          if (mesh[tri[0]].GetLayer() != mesh[tri2[0]].GetLayer())
+            return false;
 
-              netgen::Point<3> tri1_points[3], tri2_points[3];
-              const netgen::Point<3> *trip1[3], *trip2[3];
-              for (int k = 0; k < 3; k++) {
-                trip1[k] = &tri1_points[k];
-                trip2[k] = &tri2_points[k];
+          netgen::Point<3> tri1_points[3], tri2_points[3];
+          const netgen::Point<3> *trip1[3], *trip2[3];
+          for (int k = 0; k < 3; k++) {
+            trip1[k] = &tri1_points[k];
+            trip2[k] = &tri2_points[k];
+          }
+          auto set_points = [&]() {
+            for (int k = 0; k < 3; k++) {
+              tri1_points[k] = GetPoint(tri[k], 1.0, true);
+              tri2_points[k] = GetPoint(tri2[k], 1.0, true);
+            }
+          };
+
+          set_points();
+
+          int counter = 0;
+          while (IntersectTriangleTriangle(&trip1[0], &trip2[0])) {
+            changed = true;
+            PointIndex pi_max_limit = PointIndex::INVALID;
+            for (PointIndex pi :
+                 {tri[0], tri[1], tri[2], tri2[0], tri2[1], tri2[2]})
+              if (pi > tool.np && (!pi_max_limit.IsValid() ||
+                                   GetLimit(pi) > GetLimit(pi_max_limit)))
+                pi_max_limit = map_from[pi];
+
+            if (!pi_max_limit.IsValid())
+              break;
+
+            ScaleLimit(pi_max_limit, 0.9);
+            set_points();
+            counter++;
+            if (counter > 5) {
+              break;
+              cerr << "Limit intersecting surface elements: too many "
+                      "limitation steps, sels: "
+                   << Get(sei) << '\t' << Get(sej) << endl;
+              for (auto si : {sei, sej}) {
+                auto sel = Get(si);
+                cerr << "Limits: ";
+                for (auto pi : sel.PNums())
+                  cerr << GetLimit(pi) << ",\t";
+                cerr << endl;
+                for (auto pi : sel.PNums())
+                  cerr << GetPoint(pi, 1.0, true) << "\t";
+                cerr << endl;
               }
-              auto set_points = [&]() {
-                for (int k = 0; k < 3; k++) {
-                  tri1_points[k] = GetPoint(tri[k], 1.0, true);
-                  tri2_points[k] = GetPoint(tri2[k], 1.0, true);
-                }
-              };
-
-              set_points();
-
-              int counter = 0;
-              while (IntersectTriangleTriangle(&trip1[0], &trip2[0])) {
-                changed = true;
-                PointIndex pi_max_limit = PointIndex::INVALID;
-                for (PointIndex pi :
-                     {tri[0], tri[1], tri[2], tri2[0], tri2[1], tri2[2]})
-                  if (pi > tool.np &&
-                      (!pi_max_limit.IsValid() ||
-                       limits[tool.mapfrom[pi]] > limits[pi_max_limit]))
-                    pi_max_limit = tool.mapfrom[pi];
-
-                if (!pi_max_limit.IsValid())
-                  break;
-
-                limits[pi_max_limit] *= 0.9;
-                set_points();
-                counter++;
-                if (counter > 30) {
-                  cerr << "Limit intersecting surface elements: too many "
-                          "limitation steps, sels: "
-                       << mesh[sei] << '\t' << mesh[sej] << endl;
-                  break;
-                }
-              }
-              return false;
-            });
+              cerr << "pi_max_limit " << pi_max_limit << endl;
+              break;
+            }
+          }
+          return false;
+        });
       }
     }
   }
@@ -491,7 +513,7 @@ struct GrowthVectorLimiter {
           [&](PointIndex pi_to, SurfaceElementIndex sei) {
             if (LimitGrowthVector(pi_to, sei, trig_shift, seg_shift))
               limit_counter++;
-            auto sel = mesh[sei];
+            auto sel = Get(sei);
             bool is_mapped = true;
             for (auto pi : sel.PNums()) {
               if (pi >= tool.np)

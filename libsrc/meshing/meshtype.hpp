@@ -1276,18 +1276,16 @@ namespace netgen
 
   struct BoundaryLayerParameters
   {
-    std::variant<string, int, std::vector<int>> boundary;
     std::variant<double, std::vector<double>> thickness;
-    std::variant<string, std::map<string, string>> new_material;
     std::variant<string, int, std::vector<int>> domain;
-    bool outside;
-    std::optional<std::variant<string, std::vector<int>>> project_boundaries;
-    bool grow_edges;
-    bool limit_growth_vectors;
-    bool sides_keep_surfaceindex;
-    bool keep_surfaceindex;
-
-    double limit_safety = 0.3; // alloow only 30% of the growth vector length
+    std::variant<string, int, std::vector<int>> boundary = ".*";
+    std::optional<std::variant<string, std::map<string, string>>> new_material = nullopt;
+    std::optional<std::variant<string, std::vector<int>>> project_boundaries = nullopt;
+    bool outside = false;
+    bool grow_edges = true;
+    bool limit_growth_vectors = true;
+    std::optional<bool> sides_keep_surfaceindex = nullopt; // !outside by default
+    bool keep_surfaceindex = false;
   };
 
 

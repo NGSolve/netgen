@@ -2,10 +2,6 @@
 
 namespace netgen {
 
-// TODO: Hack, move this to the header or restructure the whole growth_vectors
-// storage
-static std::map<PointIndex, Vec<3>> non_bl_growth_vectors;
-
 void BoundaryLayerTool ::InterpolateGrowthVectors() {
   int new_max_edge_nr = max_edge_nr;
   for (const auto &seg : segments)
@@ -113,10 +109,10 @@ void BoundaryLayerTool ::InterpolateGrowthVectors() {
         if (plast != seg[0] && plast != seg[1])
           continue;
         auto pnew = plast == seg[0] ? seg[1] : seg[0];
-        if(pnew == points[0] && points.Size()>1) {
-
+        if (pnew == points[0] && points.Size() > 1) {
         }
-        if (points_set.count(pnew) > 0 && (pnew != points[0] || points.Size()==2))
+        if (points_set.count(pnew) > 0 &&
+            (pnew != points[0] || points.Size() == 2))
           continue;
         edge_len += (mesh[points.Last()] - mesh[pnew]).Length();
         points.Append(pnew);

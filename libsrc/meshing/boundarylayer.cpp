@@ -145,7 +145,7 @@ Vec<3> BoundaryLayerTool ::getEdgeTangent(PointIndex pi, int edgenr,
     cout << pts << endl;
     for (auto *p_seg : segs)
       cout << *p_seg << endl;
-    throw Exception("Something went wrong in getEdgeTangent!");
+    throw NG_EXCEPTION("Something went wrong in getEdgeTangent!");
   }
   tangent = mesh[pts[1]] - mesh[pts[0]];
   return tangent.Normalize();
@@ -253,36 +253,8 @@ BoundaryLayerTool::BoundaryLayerTool(Mesh &mesh_,
   static Timer timer("BoundaryLayerTool::ctor");
   RegionTimer regt(timer);
   ProcessParameters();
-
-  // for(auto & seg : mesh.LineSegments())
-  // seg.edgenr = seg.epgeominfo[1].edgenr;
-
-  total_height = 0.0;
-  for (auto h : par_heights)
-    total_height += h;
-
-  max_edge_nr = -1;
-  for (const auto &seg : mesh.LineSegments())
-    if (seg.edgenr > max_edge_nr)
-      max_edge_nr = seg.edgenr;
-
-  int ndom = mesh.GetNDomains();
-  ndom_old = ndom;
-
-  new_mat_nrs.SetSize(mesh.FaceDescriptors().Size() + 1);
-  new_mat_nrs = -1;
-  for (auto [bcname, matname] : par_new_mat) {
-    mesh.SetMaterial(++ndom, matname);
-    regex pattern(bcname);
-    for (auto i : Range(1, mesh.GetNFD() + 1)) {
-      auto &fd = mesh.GetFaceDescriptor(i);
-      if (regex_match(fd.GetBCName(), pattern))
-        new_mat_nrs[i] = ndom;
-    }
-  }
-
-  if (!params.outside)
-    domains.Invert();
+  if (domains.NumSet() == 0)
+    return;
 
   topo.SetBuildVertex2Element(true);
   mesh.UpdateTopology();
@@ -321,15 +293,17 @@ void BoundaryLayerTool ::CreateNewFaceDescriptors() {
           isIn != domains.Test(fd.DomainOut())) {
         int new_si = mesh.GetNFD() + 1;
         surfacefacs[i] = isIn ? 1. : -1.;
-        // -1 surf nr is so that curving does not do anything
-        FaceDescriptor new_fd(-1, isIn ? new_mat_nrs[i] : fd.DomainIn(),
-                              isIn ? fd.DomainOut() : new_mat_nrs[i], -1);
-        new_fd.SetBCProperty(new_si);
-        new_fd.SetSurfColour(fd.SurfColour());
-        mesh.AddFaceDescriptor(new_fd);
-        si_map[i] = new_si;
         moved_surfaces.SetBit(i);
-        mesh.SetBCName(new_si - 1, "mapped_" + name);
+        if (!insert_only_volume_elements) {
+          // -1 surf nr is so that curving does not do anything
+          FaceDescriptor new_fd(-1, isIn ? new_mat_nrs[i] : fd.DomainIn(),
+                                isIn ? fd.DomainOut() : new_mat_nrs[i], -1);
+          new_fd.SetBCProperty(new_si);
+          new_fd.SetSurfColour(fd.SurfColour());
+          mesh.AddFaceDescriptor(new_fd);
+          si_map[i] = new_si;
+          mesh.SetBCName(new_si - 1, "mapped_" + name);
+        }
       }
       // curving of surfaces with boundary layers will often
       // result in pushed through elements, since we do not (yet)
@@ -347,6 +321,8 @@ void BoundaryLayerTool ::CreateNewFaceDescriptors() {
 }
 
 void BoundaryLayerTool ::CreateFaceDescriptorsSides() {
+  if (insert_only_volume_elements)
+    return;
   BitArray face_done(mesh.GetNFD() + 1);
   face_done.Clear();
   for (const auto &sel : mesh.SurfaceElements()) {
@@ -717,7 +693,8 @@ void BoundaryLayerTool ::InsertNewElements(
               sel.GeomInfo()[i].v = 0.0;
             }
             sel.SetIndex(si_map[segj.si]);
-            mesh.AddSurfaceElement(sel);
+            new_sels.Append(sel);
+            new_sels_on_moved_bnd.Append(sel);
 
             // TODO: Too many, would be enough to only add outermost ones
             Segment s1;
@@ -771,8 +748,6 @@ void BoundaryLayerTool ::InsertNewElements(
 
   BitArray fixed_points(np + 1);
   fixed_points.Clear();
-  BitArray moveboundarypoint(np + 1);
-  moveboundarypoint.Clear();
   auto p2el = mesh.CreatePoint2ElementTable();
   for (SurfaceElementIndex si = 0; si < nse; si++) {
     // copy because surfaceels array will be resized!
@@ -820,44 +795,7 @@ void BoundaryLayerTool ::InsertNewElements(
       for (auto i : Range(points))
         newel[i] = newPoint(sel[i], -1, groups[i]);
       newel.SetIndex(si_map[sel.GetIndex()]);
-      mesh.AddSurfaceElement(newel);
-
-      // also move volume element adjacent to this surface element accordingly
-      ElementIndex ei = -1;
-      // if(groups[0] || groups[1] || groups[2])
-      // for(auto ei_ : p2el[sel.PNums()[0]])
-      //   {
-      //     const auto & el = mesh[ei_];
-      //     // if(!domains.Test(el.GetIndex())) continue;
-      //     cout << "check " << ei_ << "\t" << el << "\t" << sel << endl;
-      //     auto pnums = el.PNums();
-      //     if(pnums.Contains(sel[1]) && pnums.Contains(sel[2])) {
-      //       ei = ei_;
-      //       break;
-      //     }
-      //   }
-      if (ei != -1) {
-        auto &el = mesh[ei];
-        for (auto i : Range(el.GetNP()))
-          for (auto j : Range(3)) {
-            if (groups[j] && el[i] == sel[j]) {
-              el[i] = newel[j];
-              break;
-            }
-          }
-      }
-    } else {
-      bool has_moved = false;
-      for (auto p : sel.PNums())
-        has_moved |= hasMoved(p);
-      if (has_moved)
-        for (auto p : sel.PNums()) {
-          if (hasMoved(p)) {
-            fixed_points.SetBit(p);
-            if (is_boundary_moved.Test(sel.GetIndex()))
-              moveboundarypoint.SetBit(p);
-          }
-        }
+      new_sels.Append(newel);
     }
     if (is_boundary_moved.Test(sel.GetIndex())) {
       for (auto &p : mesh[si].PNums())
@@ -866,25 +804,27 @@ void BoundaryLayerTool ::InsertNewElements(
     }
   }
 
-  for (SegmentIndex sei = 0; sei < nseg; sei++) {
-    auto &seg = segments[sei];
-    if (is_boundary_moved.Test(seg.si))
-      for (auto &p : seg.PNums())
-        if (hasMoved(p))
-          p = newPoint(p);
-    // else if(hasMoved(seg[0]) || hasMoved(seg[1]))
-    // {
-    //   auto tangent = mesh[seg[1]] - mesh[seg[0]];
-    //   if(hasMoved(seg[0]) && growthvectors[seg[0]] * tangent > 0)
-    //     seg[0] = newPoint(seg[0]);
-    //   if(hasMoved(seg[1]) && growthvectors[seg[1]] * tangent < 0)
-    //     seg[1] = newPoint(seg[1]);
-    // }
-  }
+  // for (SegmentIndex sei = 0; sei < nseg; sei++) {
+  //   auto &seg = segments[sei];
+  //   if (is_boundary_moved.Test(seg.si)) {
+  //     if(insert_only_volume_elements) throw
+  //     Exception("insert_only_volume_elements and is_boundary_moved are
+  //     incompatible"); for (auto &p : seg.PNums())
+  //       if (hasMoved(p))
+  //         p = newPoint(p);
+  //   }
+  // }
 
   // fill holes in surface mesh at special boundary points (i.e. points with >=4
   // adjacent boundary faces)
-  auto p2sel = mesh.CreatePoint2SurfaceElementTable();
+  auto p2sel = ngcore::CreateSortedTable<SurfaceElementIndex, PointIndex>(
+      new_sels.Range(),
+      [&](auto &table, SurfaceElementIndex ei) {
+        for (PointIndex pi : new_sels[ei].PNums())
+          table.Add(pi, ei);
+      },
+      mesh.GetNP());
+
   for (auto &[special_pi, special_point] : special_boundary_points) {
     if (special_point.growth_groups.Size() != 2)
       throw Exception("special_point.growth_groups.Size() != 2");
@@ -921,7 +861,7 @@ void BoundaryLayerTool ::InsertNewElements(
             for (auto &pi : sel.PNums())
               if (pi != pi_common && pi != new_special_pi0)
                 pi = new_special_pi1;
-            mesh.AddSurfaceElement(sel);
+            new_sels.Append(sel);
           }
         }
       }
@@ -960,155 +900,17 @@ void BoundaryLayerTool ::InsertNewElements(
               sel[1] = seg[0];
               sel[2] = pi_new_other;
               sel.SetIndex(face);
-              mesh.AddSurfaceElement(sel);
+              new_sels.Append(sel);
             }
           }
         }
-    }
-  }
-
-  for (ElementIndex ei = 0; ei < ne; ei++) {
-    auto el = mesh[ei];
-    ArrayMem<PointIndex, 4> fixed;
-    ArrayMem<PointIndex, 4> moved;
-    bool moved_bnd = false;
-    for (const auto &p : el.PNums()) {
-      if (fixed_points.Test(p))
-        fixed.Append(p);
-      if (hasMoved(p))
-        moved.Append(p);
-      if (moveboundarypoint.Test(p))
-        moved_bnd = true;
-    }
-
-    bool do_move, do_insert;
-    if (changed_domains.Test(el.GetIndex())) {
-      do_move = fixed.Size() && moved_bnd;
-      do_insert = do_move;
-    } else {
-      do_move = !fixed.Size() || moved_bnd;
-      do_insert = !do_move;
-    }
-
-    // if (do_move) {
-    //   for (auto& p : mesh[ei].PNums())
-    //     if (hasMoved(p)) {
-    //       if (special_boundary_points.count(p)) {
-    //         auto& special_point = special_boundary_points[p];
-    //         auto& group = special_point.growth_groups[0];
-    //         p = group.new_points.Last();
-    //       } else
-    //         p = newPoint(p);
-    //     }
-    // }
-    if (do_insert) {
-      if (el.GetType() == TET) {
-        if (moved.Size() == 3) // inner corner
-        {
-          PointIndex p1 = moved[0];
-          PointIndex p2 = moved[1];
-          PointIndex p3 = moved[2];
-          auto v1 = mesh[p1];
-          auto n = Cross(mesh[p2] - v1, mesh[p3] - v1);
-          auto d = mesh[newPoint(p1, 0)] - v1;
-          if (n * d > 0)
-            Swap(p2, p3);
-          PointIndex p4 = p1;
-          PointIndex p5 = p2;
-          PointIndex p6 = p3;
-          for (auto i : Range(par_heights)) {
-            Element nel(PRISM);
-            nel[0] = p4;
-            nel[1] = p5;
-            nel[2] = p6;
-            p4 = newPoint(p1, i);
-            p5 = newPoint(p2, i);
-            p6 = newPoint(p3, i);
-            nel[3] = p4;
-            nel[4] = p5;
-            nel[5] = p6;
-            nel.SetIndex(el.GetIndex());
-            mesh.AddVolumeElement(nel);
-          }
-        }
-        if (moved.Size() == 2) {
-          if (fixed.Size() == 1) {
-            PointIndex p1 = moved[0];
-            PointIndex p2 = moved[1];
-            for (auto i : Range(par_heights)) {
-              PointIndex p3 = newPoint(moved[1], i);
-              PointIndex p4 = newPoint(moved[0], i);
-              Element nel(PYRAMID);
-              nel[0] = p1;
-              nel[1] = p2;
-              nel[2] = p3;
-              nel[3] = p4;
-              nel[4] = el[0] + el[1] + el[2] + el[3] - fixed[0] - moved[0] -
-                       moved[1];
-              if (Cross(mesh[p2] - mesh[p1], mesh[p4] - mesh[p1]) *
-                      (mesh[nel[4]] - mesh[nel[1]]) >
-                  0)
-                Swap(nel[1], nel[3]);
-              nel.SetIndex(el.GetIndex());
-              mesh.AddVolumeElement(nel);
-              p1 = p4;
-              p2 = p3;
-            }
-          }
-        }
-        if (moved.Size() == 1 && fixed.Size() == 1) {
-          PointIndex p1 = moved[0];
-          for (auto i : Range(par_heights)) {
-            Element nel = el;
-            PointIndex p2 = newPoint(moved[0], i);
-            for (auto &p : nel.PNums()) {
-              if (p == moved[0])
-                p = p1;
-              else if (p == fixed[0])
-                p = p2;
-            }
-            p1 = p2;
-            mesh.AddVolumeElement(nel);
-          }
-        }
-      } else if (el.GetType() == PYRAMID) {
-        if (moved.Size() == 2) {
-          if (fixed.Size() != 2)
-            throw Exception("This case is not implemented yet! Fixed size = " +
-                            ToString(fixed.Size()));
-          PointIndex p1 = moved[0];
-          PointIndex p2 = moved[1];
-          for (auto i : Range(par_heights)) {
-            PointIndex p3 = newPoint(moved[1], i);
-            PointIndex p4 = newPoint(moved[0], i);
-            Element nel(PYRAMID);
-            nel[0] = p1;
-            nel[1] = p2;
-            nel[2] = p3;
-            nel[3] = p4;
-            nel[4] = el[0] + el[1] + el[2] + el[3] + el[4] - fixed[0] -
-                     fixed[1] - moved[0] - moved[1];
-            if (Cross(mesh[p2] - mesh[p1], mesh[p4] - mesh[p1]) *
-                    (mesh[nel[4]] - mesh[nel[1]]) >
-                0)
-              Swap(nel[1], nel[3]);
-            nel.SetIndex(el.GetIndex());
-            mesh.AddVolumeElement(nel);
-            p1 = p4;
-            p2 = p3;
-          }
-        } else if (moved.Size() == 1)
-          throw Exception("This case is not implemented yet!");
-      } else if (do_move) {
-        throw Exception(
-            "Boundarylayer only implemented for tets and pyramids outside "
-            "yet!");
-      }
     }
   }
 }
 
 void BoundaryLayerTool ::SetDomInOut() {
+  if (insert_only_volume_elements)
+    return;
   for (auto i : Range(1, nfd_old + 1))
     if (moved_surfaces.Test(i)) {
       if (auto dom = mesh.GetFaceDescriptor(si_map[i]).DomainIn();
@@ -1121,6 +923,8 @@ void BoundaryLayerTool ::SetDomInOut() {
 }
 
 void BoundaryLayerTool ::SetDomInOutSides() {
+  if (insert_only_volume_elements)
+    return;
   BitArray done(mesh.GetNFD() + 1);
   done.Clear();
   for (auto sei : Range(mesh.SurfaceElements())) {
@@ -1146,6 +950,8 @@ void BoundaryLayerTool ::SetDomInOutSides() {
 }
 
 void BoundaryLayerTool ::AddSegments() {
+  if (insert_only_volume_elements)
+    return;
   if (have_single_segments)
     MergeAndAddSegments(mesh, segments, new_segments);
   else {
@@ -1155,45 +961,11 @@ void BoundaryLayerTool ::AddSegments() {
   }
 }
 
-void BoundaryLayerTool ::FixVolumeElements() {
-  static Timer timer("BoundaryLayerTool::FixVolumeElements");
-  RegionTimer rt(timer);
-  BitArray is_inner_point(mesh.GetNP() + 1);
-  is_inner_point.Clear();
-
-  auto changed_domains = domains;
-  if (!params.outside)
-    changed_domains.Invert();
-
-  for (ElementIndex ei : Range(ne))
-    if (changed_domains.Test(mesh[ei].GetIndex()))
-      for (auto pi : mesh[ei].PNums())
-        if (mesh[pi].Type() == INNERPOINT)
-          is_inner_point.SetBit(pi);
-
-  Array<PointIndex> points;
-  for (auto pi : mesh.Points().Range())
-    if (is_inner_point.Test(pi))
-      points.Append(pi);
-
-  auto p2el = mesh.CreatePoint2ElementTable(is_inner_point);
-
-  // smooth growth vectors to shift additional element layers to the inside and
-  // fix flipped tets
-  for ([[maybe_unused]] auto step : Range(0)) {
-    for (auto pi : points) {
-      Vec<3> average_gw = 0.0;
-      auto &els = p2el[pi];
-      size_t cnt = 0;
-      for (auto ei : els)
-        if (ei < ne)
-          for (auto pi1 : mesh[ei].PNums())
-            if (pi1 <= np) {
-              average_gw += growthvectors[pi1];
-              cnt++;
-            }
-      growthvectors[pi] = 1.0 / cnt * average_gw;
-    }
+void BoundaryLayerTool ::AddSurfaceElements() {
+  for (auto &sel :
+       insert_only_volume_elements ? new_sels_on_moved_bnd : new_sels) {
+    cout << "add surface element " << sel << endl;
+    mesh.AddSurfaceElement(sel);
   }
 }
 
@@ -1242,10 +1014,14 @@ void BoundaryLayerTool ::ProcessParameters() {
     for (auto id : surfids)
       par_surfid.Append(id);
   }
-  if (string *mat = get_if<string>(&params.new_material); mat)
-    par_new_mat = {{".*", *mat}};
-  else
-    par_new_mat = *get_if<map<string, string>>(&params.new_material);
+
+  insert_only_volume_elements = !params.new_material.has_value();
+  if (params.new_material) {
+    if (string *mat = get_if<string>(&*params.new_material); mat)
+      par_new_mat = {{".*", *mat}};
+    else
+      par_new_mat = *get_if<map<string, string>>(&*params.new_material);
+  }
 
   if (params.project_boundaries.has_value()) {
     auto proj_bnd = *params.project_boundaries;
@@ -1282,6 +1058,53 @@ void BoundaryLayerTool ::ProcessParameters() {
     for (auto i : *get_if<std::vector<int>>(&params.domain))
       domains.SetBit(i);
   }
+  if (domains.NumSet() == 0)
+    return;
+  total_height = 0.0;
+  for (auto h : par_heights)
+    total_height += h;
+
+  max_edge_nr = -1;
+  for (const auto &seg : mesh.LineSegments())
+    if (seg.edgenr > max_edge_nr)
+      max_edge_nr = seg.edgenr;
+
+  int ndom = mesh.GetNDomains();
+  ndom_old = ndom;
+
+  new_mat_nrs.SetSize(mesh.FaceDescriptors().Size() + 1);
+  new_mat_nrs = -1;
+  if (insert_only_volume_elements) {
+    for (auto i : Range(1, mesh.GetNFD() + 1)) {
+      auto &fd = mesh.GetFaceDescriptor(i);
+      auto domin = fd.DomainIn();
+      auto domout = fd.DomainOut();
+      for (int dom : {domin, domout})
+        if (domains.Test(dom)) {
+          if (params.outside) {
+            dom = domin + domout - dom;
+            if (dom == 0)
+              throw NG_EXCEPTION("No new material specified for boundarylayer "
+                                 "on the outside of domain");
+          }
+          new_mat_nrs[i] = dom;
+        }
+    }
+  } else {
+    for (auto [bcname, matname] : par_new_mat) {
+      mesh.SetMaterial(++ndom, matname);
+      regex pattern(bcname);
+      for (auto i : Range(1, mesh.GetNFD() + 1)) {
+        auto &fd = mesh.GetFaceDescriptor(i);
+        if (regex_match(fd.GetBCName(), pattern))
+          new_mat_nrs[i] = ndom;
+      }
+    }
+  }
+  cout << "new mat numbers " << endl << new_mat_nrs << endl;
+
+  if (!params.outside)
+    domains.Invert();
 }
 
 void BoundaryLayerTool ::Perform() {
@@ -1296,6 +1119,7 @@ void BoundaryLayerTool ::Perform() {
 
   SetDomInOut();
   AddSegments();
+  AddSurfaceElements();
 
   mesh.CalcSurfacesOfNode();
   topo.SetBuildVertex2Element(true);
@@ -1311,6 +1135,7 @@ void BoundaryLayerTool ::Perform() {
     mesh[pi] += height * (*gw);
   }
 
+  mesh.CalcSurfacesOfNode();
   mesh.GetTopology().ClearEdges();
   mesh.SetNextMajorTimeStamp();
   mesh.UpdateTopology();

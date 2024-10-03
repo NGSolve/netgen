@@ -49,6 +49,7 @@ class BoundaryLayerTool
     MeshTopology & topo;
     BoundaryLayerParameters params;
     Array<Vec<3>, PointIndex> growthvectors;
+    std::map<PointIndex, Vec<3>> non_bl_growth_vectors;
     Table<SurfaceElementIndex, PointIndex> p2sel;
 
     BitArray domains, is_edge_moved, is_boundary_projected, is_boundary_moved;
@@ -62,11 +63,13 @@ class BoundaryLayerTool
     // These parameters are derived from given BoundaryLayerParameters and the Mesh
     Array<double> par_heights;
     Array<int> par_surfid;
+    bool insert_only_volume_elements;
     map<string, string> par_new_mat;
     Array<size_t> par_project_boundaries;
 
     bool have_single_segments;
     Array<Segment> segments, new_segments;
+    Array<Element2d, SurfaceElementIndex> new_sels, new_sels_on_moved_bnd;
     Array<Array<PointIndex>, PointIndex> mapto;
     Array<PointIndex, PointIndex> mapfrom;
 
@@ -91,7 +94,7 @@ class BoundaryLayerTool
     void SetDomInOut();
     void SetDomInOutSides();
     void AddSegments();
-    void FixVolumeElements();
+    void AddSurfaceElements();
 
     Vec<3> getNormal(const Element2d & el)
     {

@@ -9,6 +9,7 @@ The interface between the GUI and the netgen library
 #include <linalg.hpp>
 
 #include <meshing.hpp>
+#include "../libsrc/meshing/boundarylayer.hpp"
 
 
 #include <inctcl.hpp>

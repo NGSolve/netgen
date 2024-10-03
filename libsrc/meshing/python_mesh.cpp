@@ -8,6 +8,7 @@
 
 #include <mystdlib.h>
 #include "meshing.hpp"
+#include "boundarylayer.hpp"
 // #include <csg.hpp>
 // #include <geometry2d.hpp>
 #include <../interface/rw_medit.hpp>
@@ -1730,9 +1731,8 @@ py::arg("point_tolerance") = -1.)
         std::optional<std::variant<string, std::vector<int>>> project_boundaries,
         bool grow_edges,
         bool limit_growth_vectors,
-        bool sides_keep_surfaceindex,
-        bool keep_surfaceindex,
-        double limit_safety)
+        std::optional<bool> sides_keep_surfaceindex,
+        bool keep_surfaceindex)
         {
           BoundaryLayerParameters blp;
           blp.boundary = boundary;
@@ -1745,14 +1745,13 @@ py::arg("point_tolerance") = -1.)
           blp.limit_growth_vectors = limit_growth_vectors;
           blp.sides_keep_surfaceindex = sides_keep_surfaceindex;
           blp.keep_surfaceindex = keep_surfaceindex;
-          blp.limit_safety = limit_safety;
           return blp;
         }),
            py::arg("boundary"), py::arg("thickness"), py::arg("new_material"),
            py::arg("domain") = ".*", py::arg("outside") = false,
            py::arg("project_boundaries")=nullopt, py::arg("grow_edges")=true,
-           py::arg("limit_growth_vectors") = true, py::arg("sides_keep_surfaceindex")=false,
-           py::arg("keep_surfaceindex")=false, py::arg("limit_safety")=0.3,
+           py::arg("limit_growth_vectors") = true, py::arg("sides_keep_surfaceindex")=nullopt,
+           py::arg("keep_surfaceindex")=false,
            R"delimiter(
 Add boundary layer to mesh.
 
@@ -1805,7 +1804,6 @@ project_boundaries : Optional[str] = None
     .def_readwrite("limit_growth_vectors", &BoundaryLayerParameters::limit_growth_vectors)
     .def_readwrite("sides_keep_surfaceindex", &BoundaryLayerParameters::sides_keep_surfaceindex)
     .def_readwrite("keep_surfaceindex", &BoundaryLayerParameters::keep_surfaceindex)
-    .def_readwrite("limit_safety", &BoundaryLayerParameters::limit_safety)
     ;
   py::implicitly_convertible<py::dict, BoundaryLayerParameters>();
 

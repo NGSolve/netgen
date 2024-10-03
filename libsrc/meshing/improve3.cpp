@@ -2637,6 +2637,7 @@ double MeshOptimize3d :: SplitImprove2Element (
     Element & elem = mesh[ei0];
     if (elem.IsDeleted()) return false;
     if (ei0 == ei) continue;
+    if (elem.GetType() != TET) return false;
 
     if (elem[0] == pi1 || elem[1] == pi1 || elem[2] == pi1 || elem[3] == pi1 || (elem.GetNP()==5 && elem[4]==pi1) )
       if(!has_both_points0.Contains(ei0))

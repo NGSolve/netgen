@@ -3,6 +3,7 @@
 #include <mystdlib.h>
 #include "meshing.hpp"
 #include "debugging.hpp"
+#include "boundarylayer.hpp"
 
 namespace netgen
 {
@@ -421,7 +422,7 @@ namespace netgen
          
          mesh.FindOpenElements(domain);
          PrintMessage (5, mesh.GetNOpenElements(), " open faces");
-         // GetOpenElements( mesh, domain )->Save("open_"+ToString(cntsteps)+".vol");
+         // GetOpenElements( mesh, domain )->Save("open_"+ToString(domain)+"_"+ToString(cntsteps)+".vol");
          cntsteps++;
 
 

@@ -2928,14 +2928,17 @@ namespace netgen
         case 1: print_vec(std::get<1>(mp.thickness)); break;
       }
     ost <<"\n  new_material: ";
-    switch(mp.new_material.index())
-      {
-        case 0: ost << std::get<0>(mp.new_material); break;
-        case 1:
-        for (const auto & [key, value] : std::get<1>(mp.new_material))
-          ost << key << " -> " << value << ", ";
-        break;
-      }
+    if(!mp.new_material) ost << "nullopt";
+    else {
+      switch(mp.new_material->index())
+        {
+          case 0: ost << std::get<0>(*mp.new_material); break;
+          case 1:
+          for (const auto & [key, value] : std::get<1>(*mp.new_material))
+            ost << key << " -> " << value << ", ";
+          break;
+        }
+    }
     ost << "\n  domain: ";
     switch(mp.domain.index())
       {
@@ -2957,9 +2960,8 @@ namespace netgen
       ost << "nullopt";
     ost << "\n  grow_edges: " << mp.grow_edges;
     ost << "\n  limit_growth_vectors: " << mp.limit_growth_vectors;
-    ost << "\n  sides_keep_surfaceindex: " << mp.sides_keep_surfaceindex;
+    ost << "\n  sides_keep_surfaceindex: " << (mp.sides_keep_surfaceindex ? ToString(*mp.sides_keep_surfaceindex) : "nullopt");
     ost << "\n  keep_surfaceindex: " << mp.keep_surfaceindex;
-    ost << "\n  limit_safety: " << mp.limit_safety;
     ost << endl;
     return ost;
   }
