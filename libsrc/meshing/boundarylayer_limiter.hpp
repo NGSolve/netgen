@@ -459,7 +459,7 @@ struct GrowthVectorLimiter {
             ScaleLimit(pi_max_limit, 0.9);
             set_points();
             counter++;
-            if (counter > 5) {
+            if (counter > 20) {
               break;
               cerr << "Limit intersecting surface elements: too many "
                       "limitation steps, sels: "

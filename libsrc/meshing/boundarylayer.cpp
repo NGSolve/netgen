@@ -462,6 +462,7 @@ BoundaryLayerTool ::BuildSegMap() {
                    !domains.Test(fd.DomainIn()) &&
                    !domains.Test(fd.DomainOut())) {
           type = 3;
+          // cout << "set is_moved boundary to type 3 for " << segj.si << endl;
           is_boundary_moved.SetBit(segj.si);
         } else {
           type = 1;
@@ -679,6 +680,7 @@ void BoundaryLayerTool ::InsertNewElements(
           s0.edgenr = segj.edgenr;
           s0.si = segj.si;
           new_segments.Append(s0);
+          if(type==3) new_segments_on_moved_bnd.Append(s0);
 
           for (auto i : Range(par_heights)) {
             Element2d sel(QUAD);
@@ -724,6 +726,41 @@ void BoundaryLayerTool ::InsertNewElements(
           s3.edgenr = getEdgeNr(segj.edgenr);
           s3.si = segj.si;
           new_segments.Append(s3);
+          if(type==3) new_segments_on_moved_bnd.Append(s0);
+        }
+        else if (type == 1) {
+          PointIndex pp1 = segj[1];
+          PointIndex pp2 = segj[0];
+          if (in_surface_direction.Test(segj.si)) {
+            Swap(pp1, pp2);
+          }
+          PointIndex p1 = pp1;
+          PointIndex p2 = pp2;
+          PointIndex p3, p4;
+          Segment s0;
+          s0[0] = p1;
+          s0[1] = p2;
+          s0[2] = PointIndex::INVALID;
+          s0.edgenr = segj.edgenr;
+          s0.si = segj.si;
+          new_segments.Append(s0);
+          if(type==3) new_segments_on_moved_bnd.Append(s0);
+
+          for (auto i : Range(par_heights)) {
+            Element2d sel(QUAD);
+            p3 = newPoint(pp2, i);
+            p4 = newPoint(pp1, i);
+            sel[0] = p1;
+            sel[1] = p2;
+            sel[2] = p3;
+            sel[3] = p4;
+            for (auto i : Range(4)) {
+              sel.GeomInfo()[i].u = 0.0;
+              sel.GeomInfo()[i].v = 0.0;
+            }
+            sel.SetIndex(si_map[segj.si]);
+            new_sels.Append(sel);
+            new_sels_on_moved_bnd.Append(sel);
         }
       }
     }
@@ -950,13 +987,13 @@ void BoundaryLayerTool ::SetDomInOutSides() {
 }
 
 void BoundaryLayerTool ::AddSegments() {
-  if (insert_only_volume_elements)
-    return;
+  auto & new_segs = insert_only_volume_elements ? new_segments_on_moved_bnd : new_segments;
+  cout << "add new segs " << endl << new_segs << endl;
   if (have_single_segments)
-    MergeAndAddSegments(mesh, segments, new_segments);
+    MergeAndAddSegments(mesh, segments, new_segs);
   else {
     mesh.LineSegments() = segments;
-    for (auto &seg : new_segments)
+    for (auto &seg : new_segs)
       mesh.AddSegment(seg);
   }
 }
