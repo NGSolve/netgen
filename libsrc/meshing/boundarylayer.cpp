@@ -556,11 +556,12 @@ void BoundaryLayerTool ::InsertNewElements(
     for (auto i : Range(par_heights)) {
       height += par_heights[i];
       auto pi_new = mesh.AddPoint(p);
+      // mesh.AddLockedPoint(pi_new);
       mapfrom.Append(pi);
       new_points.Append(pi_new);
       growth_vector_map[pi_new] = {&growth_vector, height};
-      if (special_boundary_points.count(pi) > 0)
-        mesh.AddLockedPoint(pi_new);
+      // if (special_boundary_points.count(pi) > 0)
+      //   mesh.AddLockedPoint(pi_new);
       pi_last = pi_new;
     }
   };
@@ -680,7 +681,8 @@ void BoundaryLayerTool ::InsertNewElements(
           s0.edgenr = segj.edgenr;
           s0.si = segj.si;
           new_segments.Append(s0);
-          if(type==3) new_segments_on_moved_bnd.Append(s0);
+          if (type == 3)
+            new_segments_on_moved_bnd.Append(s0);
 
           for (auto i : Range(par_heights)) {
             Element2d sel(QUAD);
@@ -726,25 +728,17 @@ void BoundaryLayerTool ::InsertNewElements(
           s3.edgenr = getEdgeNr(segj.edgenr);
           s3.si = segj.si;
           new_segments.Append(s3);
-          if(type==3) new_segments_on_moved_bnd.Append(s0);
-        }
-        else if (type == 1) {
+          if (type == 3)
+            new_segments_on_moved_bnd.Append(s0);
+        } else if (type == 3) {
           PointIndex pp1 = segj[1];
           PointIndex pp2 = segj[0];
-          if (in_surface_direction.Test(segj.si)) {
+          if (!in_surface_direction.Test(segj.si)) {
             Swap(pp1, pp2);
           }
           PointIndex p1 = pp1;
           PointIndex p2 = pp2;
           PointIndex p3, p4;
-          Segment s0;
-          s0[0] = p1;
-          s0[1] = p2;
-          s0[2] = PointIndex::INVALID;
-          s0.edgenr = segj.edgenr;
-          s0.si = segj.si;
-          new_segments.Append(s0);
-          if(type==3) new_segments_on_moved_bnd.Append(s0);
 
           for (auto i : Range(par_heights)) {
             Element2d sel(QUAD);
@@ -761,6 +755,9 @@ void BoundaryLayerTool ::InsertNewElements(
             sel.SetIndex(si_map[segj.si]);
             new_sels.Append(sel);
             new_sels_on_moved_bnd.Append(sel);
+            p1 = p4;
+            p2 = p3;
+          }
         }
       }
     }
@@ -841,16 +838,15 @@ void BoundaryLayerTool ::InsertNewElements(
     }
   }
 
-  // for (SegmentIndex sei = 0; sei < nseg; sei++) {
-  //   auto &seg = segments[sei];
-  //   if (is_boundary_moved.Test(seg.si)) {
-  //     if(insert_only_volume_elements) throw
-  //     Exception("insert_only_volume_elements and is_boundary_moved are
-  //     incompatible"); for (auto &p : seg.PNums())
-  //       if (hasMoved(p))
-  //         p = newPoint(p);
-  //   }
-  // }
+  for (SegmentIndex sei = 0; sei < nseg; sei++) {
+    auto &seg = segments[sei];
+    if (is_boundary_moved.Test(seg.si)) {
+      // cout << "moved setg " << seg << endl;
+       for (auto &p : seg.PNums())
+        if (hasMoved(p))
+          p = newPoint(p);
+    }
+  }
 
   // fill holes in surface mesh at special boundary points (i.e. points with >=4
   // adjacent boundary faces)
@@ -987,8 +983,9 @@ void BoundaryLayerTool ::SetDomInOutSides() {
 }
 
 void BoundaryLayerTool ::AddSegments() {
-  auto & new_segs = insert_only_volume_elements ? new_segments_on_moved_bnd : new_segments;
-  cout << "add new segs " << endl << new_segs << endl;
+  auto &new_segs =
+      insert_only_volume_elements ? new_segments_on_moved_bnd : new_segments;
+  // cout << "add new segs " << endl << new_segs << endl;
   if (have_single_segments)
     MergeAndAddSegments(mesh, segments, new_segs);
   else {
@@ -1153,13 +1150,19 @@ void BoundaryLayerTool ::Perform() {
 
   SetDomInOut();
   AddSegments();
-  AddSurfaceElements();
 
   mesh.CalcSurfacesOfNode();
   topo.SetBuildVertex2Element(true);
   mesh.UpdateTopology();
+
+  // cout << "GW 19911 " << growthvectors[19911] << endl;
   InterpolateGrowthVectors();
+  // cout << "GW 19911 " << growthvectors[19911] << endl;
   InterpolateSurfaceGrowthVectors();
+  // cout << "GW 19911 " << growthvectors[19911] << endl;
+
+  AddSurfaceElements();
+
 
   if (params.limit_growth_vectors)
     LimitGrowthVectorLengths();

@@ -1,3 +1,4 @@
+#include <core/array.hpp>
 #include "boundarylayer.hpp"
 
 namespace netgen {
@@ -207,33 +208,41 @@ struct GrowthVectorLimiter {
 
   void EqualizeLimits(double factor = .5) {
     static Timer t("GrowthVectorLimiter::EqualizeLimits");
+    PrintMessage(5, "GrowthVectorLimiter - equalize limits");
     RegionTimer reg(t);
     if (factor == 0.0)
       return;
     for (PointIndex pi : IntRange(tool.np, mesh.GetNP())) {
+      auto pi_from = map_from[pi];
+      // if(pi_from == 21110) cout << "equalize " << pi << "\tfactor " << factor << endl;
       std::set<PointIndex> pis;
       for (auto sei : p2sel[pi])
-        for (auto pi_ : Get(sei).PNums())
+        for (auto pi_ : tool.new_sels[sei].PNums())
           pis.insert(pi_);
       ArrayMem<double, 20> limits;
-      for (auto pi : pis) {
-        auto limit = GetLimit(pi);
+      for (auto pi1 : pis) {
+        auto limit = GetLimit(pi1);
         if (limit > 0.0)
-          limits.Append(GetLimit(pi));
+          limits.Append(GetLimit(pi1));
+        // if(pi_from == 21110) cout << "\tneighbor point " << map_from[pi1] << " -> " << pi1  << " with limit " << limit << endl;
       }
+      // if(pi_from == 21110) cout << "\town limit " << GetLimit(pi) << endl;
       if (limits.Size() == 0)
         continue;
       QuickSort(limits);
       double mean_limit = limits[limits.Size() / 2];
+      // if(pi_from == 21110) cout << "\tmean limit " << mean_limit << endl;
       if (limits.Size() % 2 == 0)
         mean_limit = 0.5 * (mean_limit + limits[(limits.Size() - 1) / 2]);
 
       SetLimit(pi, factor * mean_limit + (1.0 - factor) * GetLimit(pi));
+      // if(pi_from == 21110) cout << "\tnew limit " << GetLimit(pi) << endl;
     }
   }
 
   void LimitSelfIntersection(double safety = 1.4) {
     static Timer t("GrowthVectorLimiter::LimitSelfIntersection");
+    PrintMessage(5, "GrowthVectorLimiter - self intersection");
     RegionTimer reg(t);
     // check for self-intersection within new elements (prisms/hexes)
     auto isIntersecting = [&](SurfaceElementIndex sei, double shift) {
@@ -342,6 +351,7 @@ struct GrowthVectorLimiter {
   }
 
   void BuildSearchTree(double trig_shift) {
+    static Timer t("BuildSearchTree"); RegionTimer rt(t);
     Box<3> bbox(Box<3>::EMPTY_BOX);
     for (PointIndex pi : mesh.Points().Range()) {
       bbox.Add(mesh[pi]);
@@ -487,6 +497,7 @@ struct GrowthVectorLimiter {
   void LimitOriginalSurface(double safety) {
     static Timer t("GrowthVectorLimiter::LimitOriginalSurface");
     RegionTimer reg(t);
+    PrintMessage(5, "GrowthVectorLimiter - original surface");
     // limit to not intersect with other (original) surface elements
     double trig_shift = 0;
     double seg_shift = safety;
@@ -500,6 +511,7 @@ struct GrowthVectorLimiter {
 
   void LimitBoundaryLayer(double safety = 1.1) {
     static Timer t("GrowthVectorLimiter::LimitBoundaryLayer");
+    PrintMessage(5, "GrowthVectorLimiter - boundary layer");
     // now limit again with shifted surface elements
     double trig_shift = safety;
     double seg_shift = safety;
@@ -531,12 +543,13 @@ struct GrowthVectorLimiter {
     limits.SetSize(mesh.Points().Size());
     limits = 1.0;
 
-    std::array safeties = {0.5, 0.8, 1.1, 1.1};
+    std::array safeties = {0.5, 1.1, 1.5, 1.5};
 
     // No smoothing in the last pass, to avoid generating new intersections
     std::array smoothing_factors = {0.8, 0.7, 0.5, 0.0};
 
     for (auto i_pass : Range(safeties.size())) {
+      PrintMessage(4, "GrowthVectorLimiter pass ", i_pass);
       double safety = safeties[i_pass];
 
       LimitOriginalSurface(2.1);
@@ -549,6 +562,18 @@ struct GrowthVectorLimiter {
       if (i_pass == safeties.size() - 1)
         FixIntersectingSurfaceTrigs();
     }
+
+    // cout << "limits " << endl << limits << endl;
+    // double avg_limit = 0;
+    // for(auto pi : limits.Range()) {
+    //   avg_limit += limits[pi];
+    // }
+    // avg_limit = avg_limit / limits.Size();
+
+    // for(auto pi : limits.Range()) {
+    //   if(limits[pi] < 0.01 * avg_limit)
+    //     cout << "small limit " << pi << "\t" << limits[pi] << endl;
+    // }
 
     for (auto i : Range(growthvectors))
       growthvectors[i] *= limits[i];

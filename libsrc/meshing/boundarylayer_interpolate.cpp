@@ -158,22 +158,34 @@ void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors() {
   auto np = mesh.GetNP();
 
   non_bl_growth_vectors.clear();
+  // for(const auto & sel : new_sels) {
+  //   for(auto pi : sel.PNums()) {
+  //     if(mesh[pi].Type() == INNERPOINT)
+  //       mesh[pi].SetType(SURFACEPOINT);
+  //   }
+  // }
+  // cout << __FILE__ << ":" << __LINE__ << endl;
 
   auto getGW = [&](PointIndex pi) -> Vec<3> {
-    if (growth_vector_map.count(pi) == 0) {
-      non_bl_growth_vectors[pi] = .0;
-      growth_vector_map[pi] = {&non_bl_growth_vectors[pi], 1.0};
-    }
-    auto [gw, height] = growth_vector_map[pi];
-    return height * (*gw);
+    return growthvectors[pi];
+    // if (growth_vector_map.count(pi) == 0) {
+    //   non_bl_growth_vectors[pi] = .0;
+    //   growth_vector_map[pi] = {&non_bl_growth_vectors[pi], 1.0};
+    // }
+    // auto [gw, height] = growth_vector_map[pi];
+    // return height * (*gw);
   };
   auto addGW = [&](PointIndex pi, Vec<3> vec) {
-    if (growth_vector_map.count(pi) == 0) {
-      non_bl_growth_vectors[pi] = .0;
-      growth_vector_map[pi] = {&non_bl_growth_vectors[pi], 1.0};
-    }
-    auto [gw, height] = growth_vector_map[pi];
-    *gw += 1.0 / height * vec;
+    growthvectors[pi] += vec;
+    // // cout << "add gw " << pi << "\t" << vec << endl;
+    // if (growth_vector_map.count(pi) == 0) {
+    //   // cout << "\t make new entry" << endl;
+    //   non_bl_growth_vectors[pi] = .0;
+    //   growth_vector_map[pi] = {&non_bl_growth_vectors[pi], 1.0};
+    // }
+    // auto [gw, height] = growth_vector_map[pi];
+    // // cout << "\tcurrent gw " << *gw << "\t" << height << endl;
+    // *gw += 1.0 / height * vec;
   };
 
   auto hasMoved = [&](PointIndex pi) {
@@ -181,38 +193,47 @@ void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors() {
            special_boundary_points.count(pi);
   };
 
+  // cout << __FILE__ << ":" << __LINE__ << endl;
   std::set<PointIndex> points_set;
-  for (SurfaceElementIndex sei : mesh.SurfaceElements().Range()) {
-    for (auto pi : mesh[sei].PNums()) {
-      auto pi_from = mapfrom[pi];
-      if ((pi_from.IsValid() && mesh[pi_from].Type() == SURFACEPOINT) ||
-          (!pi_from.IsValid() && mapto[pi].Size() == 0 &&
-           mesh[pi].Type() == SURFACEPOINT))
+  for (const auto &sel: mesh.SurfaceElements())
+    for (auto pi : sel.PNums())
+      if(mesh[pi].Type() == SURFACEPOINT && hasMoved(pi))
         points_set.insert(pi);
-    }
-  }
 
-  Array<bool> has_moved_points(max_edge_nr + 1);
-  has_moved_points = false;
-  std::set<PointIndex> moved_edge_points;
+  // Array<bool> has_moved_points(max_edge_nr + 1);
+  // has_moved_points = false;
+  // std::set<PointIndex> moved_edge_points;
 
-  for (auto seg : segments) {
-    if (hasMoved(seg[0]) != hasMoved(seg[1]))
-      has_moved_points[seg.edgenr] = true;
-  }
+  // for (auto seg : segments) {
+  //   if (hasMoved(seg[0]) != hasMoved(seg[1]))
+  //     has_moved_points[seg.edgenr] = true;
+  // }
+  // cout << __FILE__ << ":" << __LINE__ << endl;
 
-  for (auto seg : segments)
-    if (has_moved_points[seg.edgenr])
-      for (auto pi : seg.PNums())
-        if (mesh[pi].Type() == EDGEPOINT)
-          points_set.insert(pi);
+  // for (auto seg : segments)
+  //   if (has_moved_points[seg.edgenr])
+  //     for (auto pi : seg.PNums())
+  //       if (mesh[pi].Type() == EDGEPOINT)
+  //         points_set.insert(pi);
 
   Array<PointIndex> points;
   for (auto pi : points_set)
     points.Append(pi);
   QuickSort(points);
 
+  // cout << __FILE__ << ":" << __LINE__ << endl;
+  // cout << "points to interpolate " << endl << points << endl;
+
+  // cout << __FILE__ << ":" << __LINE__ << endl;
   auto p2sel = mesh.CreatePoint2SurfaceElementTable();
+  // cout << __FILE__ << ":" << __LINE__ << endl;
+  // auto p2sel = ngcore::CreateSortedTable<SurfaceElementIndex, PointIndex>(
+  //       new_sels.Range(),
+  //       [&](auto &table, SurfaceElementIndex ei) {
+  //         for (PointIndex pi : new_sels[ei].PNums())
+  //           table.Add(pi, ei);
+  //       },
+  //       mesh.GetNP());
   // smooth tangential part of growth vectors from edges to surface elements
   Array<Vec<3>, PointIndex> corrections(mesh.GetNP());
   corrections = 0.0;
@@ -223,6 +244,7 @@ void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors() {
     double weight;
   };
   Array<ArrayMem<Neighbor, 20>> neighbors(points.Size());
+  // cout << __FILE__ << ":" << __LINE__ << endl;
 
   ArrayMem<double, 20> angles;
   ArrayMem<double, 20> inv_dists;
@@ -244,6 +266,9 @@ void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors() {
           }
         }
         p_neighbors.Append({pi1, sei, 0.0});
+        // if((mesh[pi1]-mesh[pi]).Length() < 1e-10) {
+        //   cout << "close points " << pi << "\t" << pi1 << endl;
+        // }
         inv_dists.Append(1.0 / (mesh[pi1] - mesh[pi]).Length());
         auto dot = (mesh[pi1] - mesh[pi]).Normalize() *
                    (mesh[pi2] - mesh[pi]).Normalize();
@@ -257,6 +282,9 @@ void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors() {
     for (auto angle : angles)
       sum_angle += angle;
 
+    // cout << "angles " << angles << endl;
+    // cout << "inv_dists " << inv_dists << endl;
+
     double sum_weight = 0.0;
     for (auto i : Range(inv_dists)) {
       p_neighbors[i].weight =
@@ -265,16 +293,38 @@ void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors() {
     }
     for (auto i : Range(inv_dists))
       p_neighbors[i].weight /= sum_weight;
+
+  //   if(pi == 19911) {
+  //     cout << "pi " << pi << endl;
+  //     for(auto & nb : p_neighbors) {
+  //       cout << "neighbor " << nb.pi << "\t" << nb.weight << endl;
+  //     }
+  //     cout << "inv_dist " << inv_dists << endl;
+  //     cout << "angles " << angles << endl;
+  //   }
   }
+  // cout << __FILE__ << ":" << __LINE__ << endl;
 
   Array<Vec<3>, SurfaceElementIndex> surf_normals(mesh.GetNSE());
   for (auto sei : mesh.SurfaceElements().Range())
     surf_normals[sei] = getNormal(mesh[sei]);
+  // cout << __FILE__ << ":" << __LINE__ << endl;
+
+  BitArray interpolate_tangent(mesh.GetNP()+1);
+  // cout << __FILE__ << ":" << __LINE__ << endl;
+  interpolate_tangent = false;
+  for(auto pi : points) {
+    for (auto sei : p2sel[pi])
+      if(is_boundary_moved[mesh[sei].GetIndex()])
+        interpolate_tangent.SetBit(pi);
+  }
+  // cout << __FILE__ << ":" << __LINE__ << endl;
 
   constexpr int N_STEPS = 64;
   for ([[maybe_unused]] auto i : Range(N_STEPS)) {
     for (auto i : points.Range()) {
       auto pi = points[i];
+      // cout << "AVERAGE " << pi << endl;
       auto &p_neighbors = neighbors[i];
 
       ArrayMem<Vec<3>, 20> g_vectors;
@@ -283,17 +333,21 @@ void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors() {
 
       // average only tangent component on new bl points, average whole growth
       // vector otherwise
-      bool do_average_tangent = mapfrom[pi].IsValid();
+      bool do_average_tangent = true;
       for (const auto &s : p_neighbors) {
         auto gw_other = getGW(s.pi) + corrections[s.pi];
+        // if(pi == 19911) cout << "neighbor " << s.pi << "\t" << s.weight << '\t' << gw_other << "\tdo avg: " << do_average_tangent << endl;
+        // if(pi == 19911) cout << "\tneighbor gw" << gw_other << endl;
         if (do_average_tangent) {
           auto n = surf_normals[s.sei];
           gw_other = gw_other - (gw_other * n) * n;
         }
+        // if(pi == 19911) cout << "\tneighbor gw" << gw_other << endl;
         auto v = gw_other;
         auto len = v.Length2();
         sum_len += len;
         max_len = max(max_len, len);
+        // if(pi == 19911) cout << "\tneighbor v" << v << endl;
         g_vectors.Append(v);
       }
 
@@ -311,11 +365,13 @@ void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors() {
         auto v = g_vectors[i];
         double weight = lambda * p_neighbors[i].weight +
                         (1.0 - lambda) * v.Length2() / sum_len;
+        // if(pi == 19911) cout << "pi " << pi << "\tneighbor " << p_neighbors[i].pi << "\tweight " << weight << endl;
         correction += weight * v;
       }
 
       if (!do_average_tangent)
         correction -= getGW(pi);
+      // if(pi == 19911) cout << "pi " << pi << "\tcorrection " << correction << endl;
     }
   }
 

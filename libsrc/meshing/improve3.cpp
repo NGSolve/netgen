@@ -1320,7 +1320,7 @@ void MeshOptimize3d :: SwapImprove (const NgBitArray * working_elements)
         for (ElementIndex eli : myrange)
           {
             const auto & el = mesh[eli];
-            if(el.Flags().fixed)
+            if(el.Flags().fixed || el.GetType() != TET)
               continue;
 
             if(mp.only3D_domain_nr && mp.only3D_domain_nr != el.GetIndex())
@@ -1381,12 +1381,20 @@ void MeshOptimize3d :: SwapImprove (const NgBitArray * working_elements)
         break;
 
       auto [pi0, pi1] = edges[i];
+      try {
       double d_badness = SwapImproveEdge (working_elements, elementsonnode, faces, pi0, pi1, true);
       if(d_badness<0.0)
       {
         int index = improvement_counter++;
         candidate_edges[index] = make_tuple(d_badness, i);
       }
+        }
+        catch(const ngcore::Exception &e) {
+                   cerr << "Error in SwapImproveEdge " << pi0 << '-' << pi1 << endl;
+                    if(debugparam.write_mesh_on_error)
+                        mesh.Save("error_swapimproveedge_" +ToString(pi0) + "_" + ToString(pi1) +".vol");
+                   throw;
+                   }
     }
   }, TasksPerThread (4));
 
@@ -2649,6 +2657,7 @@ double MeshOptimize3d :: SplitImprove2Element (
     Element & elem = mesh[ei1];
     if (elem.IsDeleted()) return false;
     if (ei1 == ei) continue;
+    if (elem.GetType() != TET) return false;
 
     if (elem[0] == pi3 || elem[1] == pi3 || elem[2] == pi3 || elem[3] == pi3 || (elem.GetNP()==5 && elem[4]==pi3))
       if(!has_both_points1.Contains(ei1))

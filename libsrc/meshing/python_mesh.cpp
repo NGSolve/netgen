@@ -1472,7 +1472,7 @@ py::arg("point_tolerance") = -1.)
     .def ("BoundaryLayer2", GenerateBoundaryLayer2, py::arg("domain"), py::arg("thicknesses"), py::arg("make_new_domain")=true, py::arg("boundaries")=Array<int>{})
     .def ("BoundaryLayer", [](Mesh & self, variant<string, int, std::vector<int>> boundary,
                               variant<double, std::vector<double>> thickness,
-                              variant<string, map<string, string>> material,
+                              optional<variant<string, map<string, string>>> material,
                               variant<string, int, std::vector<int>> domain, bool outside,
                               optional<variant<string, std::vector<int>>> project_boundaries,
                               bool grow_edges, bool limit_growth_vectors,
@@ -1492,7 +1492,7 @@ py::arg("point_tolerance") = -1.)
              blp.keep_surfaceindex = keep_surfaceindex;
              GenerateBoundaryLayer (self, blp);
              self.UpdateTopology();
-           }, py::arg("boundary"), py::arg("thickness"), py::arg("material"),
+           }, py::arg("boundary"), py::arg("thickness"), py::arg("material")=nullopt,
           py::arg("domains") = ".*", py::arg("outside") = false,
           py::arg("project_boundaries")=nullopt, py::arg("grow_edges")=true, py::arg("limit_growth_vectors") = true, py::arg("sides_keep_surfaceindex")=false,
           py::arg("keep_surfaceindex")=false, "Add boundary layer to mesh. see help(BoundaryLayerParameters) for details.")
@@ -1725,7 +1725,7 @@ py::arg("point_tolerance") = -1.)
     .def(py::init([]( 
         std::variant<string, int, std::vector<int>> boundary,
         std::variant<double, std::vector<double>> thickness,
-        std::variant<string, std::map<string, string>> new_material,
+        std::optional<std::variant<string, std::map<string, string>>> new_material,
         std::variant<string, int, std::vector<int>> domain,
         bool outside,
         std::optional<std::variant<string, std::vector<int>>> project_boundaries,
@@ -1747,7 +1747,7 @@ py::arg("point_tolerance") = -1.)
           blp.keep_surfaceindex = keep_surfaceindex;
           return blp;
         }),
-           py::arg("boundary"), py::arg("thickness"), py::arg("new_material"),
+           py::arg("boundary"), py::arg("thickness"), py::arg("new_material")=nullopt,
            py::arg("domain") = ".*", py::arg("outside") = false,
            py::arg("project_boundaries")=nullopt, py::arg("grow_edges")=true,
            py::arg("limit_growth_vectors") = true, py::arg("sides_keep_surfaceindex")=nullopt,
