@@ -25,6 +25,7 @@ namespace ngcore
       NGCORE_API static bool trace_thread_counter;
       NGCORE_API static bool trace_threads;
       NGCORE_API static bool mem_tracing_enabled;
+      NGCORE_API static bool write_paje_file;
 
       bool tracing_enabled;
       TTimePoint start_time;
@@ -32,6 +33,8 @@ namespace ngcore
       size_t n_memory_events_at_start;
 
     public:
+      NGCORE_API void Write();
+      NGCORE_API void WritePajeFile( const std::string & filename );
       NGCORE_API void WriteTimingChart();
 #ifdef NETGEN_TRACE_MEMORY
       NGCORE_API void WriteMemoryChart( std::string fname );
@@ -59,6 +62,11 @@ namespace ngcore
       static void SetMaxTracefileSize( size_t max_size )
         {
           max_tracefile_size = max_size;
+        }
+
+      static void SetWritePajeFile( bool write )
+        {
+          write_paje_file = write;
         }
 
       std::string tracefile_name;
@@ -261,8 +269,6 @@ namespace ngcore
             StopTracing();
           links[thread_id].push_back( ThreadLink{thread_id, key, GetTimeCounter(), false} );
         }
-
-      void Write( const std::string & filename );
 
       void SendData(); // MPI parallel data reduction
 

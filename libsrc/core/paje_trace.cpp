@@ -41,6 +41,7 @@ namespace ngcore
   bool PajeTrace::trace_thread_counter = false;
   bool PajeTrace::trace_threads = true;
   bool PajeTrace::mem_tracing_enabled = true;
+  bool PajeTrace::write_paje_file = true;
 
   PajeTrace :: PajeTrace(int anthreads, std::string aname)
   {
@@ -124,7 +125,7 @@ namespace ngcore
   #endif
     if(comm.Size()==1)
     {
-      Write(tracefile_name);
+      Write();
     }
     else
     {
@@ -136,7 +137,7 @@ namespace ngcore
         event.timer_id += NgProfiler::SIZE*comm.Rank();
 
       if(comm.Rank() == MPI_PAJE_WRITER)
-        Write(tracefile_name);
+        Write();
       else
         SendData();
     }
@@ -443,7 +444,16 @@ namespace ngcore
 
   NGCORE_API PajeTrace *trace;
 
-  void PajeTrace::Write( const std::string & filename )
+  void PajeTrace::Write( )
+    {
+      if(write_paje_file) WritePajeFile( tracefile_name );
+      WriteTimingChart();
+#ifdef NETGEN_TRACE_MEMORY
+      WriteMemoryChart("");
+#endif // NETGEN_TRACE_MEMORY
+    }
+
+  void PajeTrace::WritePajeFile( const std::string & filename )
     {
       auto n_events = jobs.size() + timer_events.size();
       for(auto & vtasks : tasks)
@@ -849,10 +859,6 @@ namespace ngcore
                 }
             }
         }
-      WriteTimingChart();
-#ifdef NETGEN_TRACE_MEMORY
-      WriteMemoryChart("");
-#endif // NETGEN_TRACE_MEMORY
       paje.WriteEvents();
     }
 
