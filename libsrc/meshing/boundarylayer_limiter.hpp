@@ -214,8 +214,6 @@ struct GrowthVectorLimiter {
       return;
     for (PointIndex pi : IntRange(tool.np, mesh.GetNP())) {
       auto pi_from = map_from[pi];
-      // if(pi_from == 21110) cout << "equalize " << pi << "\tfactor " << factor
-      // << endl;
       std::set<PointIndex> pis;
       for (auto sei : p2sel[pi])
         for (auto pi_ : tool.new_sels[sei].PNums())
@@ -225,20 +223,25 @@ struct GrowthVectorLimiter {
         auto limit = GetLimit(pi1);
         if (limit > 0.0)
           limits.Append(GetLimit(pi1));
-        // if(pi_from == 21110) cout << "\tneighbor point " << map_from[pi1] <<
-        // " -> " << pi1  << " with limit " << limit << endl;
       }
-      // if(pi_from == 21110) cout << "\town limit " << GetLimit(pi) << endl;
       if (limits.Size() == 0)
         continue;
       QuickSort(limits);
+
       double mean_limit = limits[limits.Size() / 2];
-      // if(pi_from == 21110) cout << "\tmean limit " << mean_limit << endl;
+      // if mean limit is the maximum limit, take the average of second-highest
+      // and highest value
+      if (mean_limit > limits[0] && mean_limit == limits.Last()) {
+        auto i = limits.Size() - 1;
+        while (limits[i] == limits.Last())
+          i--;
+        mean_limit = 0.5 * (limits[i] + limits.Last());
+      }
+
       if (limits.Size() % 2 == 0)
         mean_limit = 0.5 * (mean_limit + limits[(limits.Size() - 1) / 2]);
 
       SetLimit(pi, factor * mean_limit + (1.0 - factor) * GetLimit(pi));
-      // if(pi_from == 21110) cout << "\tnew limit " << GetLimit(pi) << endl;
     }
   }
 
@@ -377,7 +380,10 @@ struct GrowthVectorLimiter {
   }
 
   template <typename TFunc>
-  void FindTreeIntersections(double trig_shift, double seg_shift, TFunc f) {
+  void FindTreeIntersections(double trig_shift, double seg_shift, TFunc f,
+                             BitArray *relevant_points = nullptr) {
+    static Timer t("GrowthVectorLimiter::FindTreeIntersections");
+    RegionTimer rt(t);
     BuildSearchTree(trig_shift);
     auto np_new = mesh.Points().Size();
     int counter = 0;
@@ -386,6 +392,10 @@ struct GrowthVectorLimiter {
       PointIndex pi_from = map_from[pi_to];
       if (!pi_from.IsValid())
         throw Exception("Point not mapped");
+
+      if (relevant_points && !relevant_points->Test(pi_to) &&
+          !relevant_points->Test(pi_from))
+        continue;
 
       Box<3> box(Box<3>::EMPTY_BOX);
       auto seg = GetSeg(pi_to, seg_shift);
@@ -519,16 +529,35 @@ struct GrowthVectorLimiter {
     double seg_shift = safety;
     size_t limit_counter = 1;
 
+    BitArray relevant_points, relevant_points_next;
+    relevant_points.SetSize(mesh.Points().Size() + 1);
+    relevant_points_next.SetSize(mesh.Points().Size() + 1);
+    relevant_points.Set();
+
     while (limit_counter) {
       RegionTimer reg(t);
+      size_t find_counter = 0;
       limit_counter = 0;
+      relevant_points_next.Clear();
       FindTreeIntersections(
           trig_shift, seg_shift,
           [&](PointIndex pi_to, SurfaceElementIndex sei) {
-            if (LimitGrowthVector(pi_to, sei, trig_shift, seg_shift))
-              limit_counter++;
+            find_counter++;
             auto sel = Get(sei);
-            bool is_mapped = true;
+
+            if (LimitGrowthVector(pi_to, sei, trig_shift, seg_shift)) {
+              limit_counter++;
+              relevant_points_next.SetBit(pi_to);
+              relevant_points_next.SetBit(map_from[pi_to]);
+              for (auto pi : sel.PNums()) {
+                relevant_points_next.SetBit(pi);
+                if (pi >= tool.np)
+                  relevant_points_next.SetBit(map_from[pi]);
+                else
+                  relevant_points_next.SetBit(map_from[pi]);
+              }
+            }
+
             for (auto pi : sel.PNums()) {
               if (pi >= tool.np)
                 return;
@@ -537,7 +566,9 @@ struct GrowthVectorLimiter {
             }
             if (LimitGrowthVector(pi_to, sei, trig_shift, seg_shift, true))
               limit_counter++;
-          });
+          },
+          &relevant_points);
+      relevant_points = relevant_points_next;
     }
   }
 
