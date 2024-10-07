@@ -239,6 +239,7 @@ double MeshOptimize3d :: CombineImproveEdge (
   {
       Element & elem = mesh[ei];
       if (elem.IsDeleted()) return false;
+      if(elem.GetType() != TET) return false; // TODO: implement case where pi0 or pi1 is top of a pyramid
 
       if (elem[0] == pi0 || elem[1] == pi0 || elem[2] == pi0 || elem[3] == pi0)
       {
