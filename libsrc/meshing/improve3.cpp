@@ -1382,20 +1382,12 @@ void MeshOptimize3d :: SwapImprove (const NgBitArray * working_elements)
         break;
 
       auto [pi0, pi1] = edges[i];
-      try {
       double d_badness = SwapImproveEdge (working_elements, elementsonnode, faces, pi0, pi1, true);
       if(d_badness<0.0)
       {
         int index = improvement_counter++;
         candidate_edges[index] = make_tuple(d_badness, i);
       }
-        }
-        catch(const ngcore::Exception &e) {
-                   cerr << "Error in SwapImproveEdge " << pi0 << '-' << pi1 << endl;
-                    if(debugparam.write_mesh_on_error)
-                        mesh.Save("error_swapimproveedge_" +ToString(pi0) + "_" + ToString(pi1) +".vol");
-                   throw;
-                   }
     }
   }, TasksPerThread (4));
 

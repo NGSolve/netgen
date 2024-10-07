@@ -499,7 +499,6 @@ namespace netgen
             PrintMessage (3, "Call remove problem");
             RemoveProblem (mesh, domain);
             mesh.FindOpenElements(domain);
-            GetOpenElements( mesh, domain )->Save("open_"+ToString(domain)+"_"+ToString(cntsteps)+".vol");
          }
          else
            {
@@ -553,6 +552,7 @@ namespace netgen
          for (auto pi : Range(first_new_pi, m.Points().Range().Next()))
              pmap[pi] = mesh.AddPoint(m[pi]);
 
+
          for ( auto el : m.VolumeElements() )
          {
              for (auto i : Range(el.GetNP()))
@@ -589,7 +589,7 @@ namespace netgen
   // extern double teterrpow; 
   MESHING3_RESULT MeshVolume (const MeshingParameters & mp, Mesh& mesh3d)
   {
-    static Timer t("MeshVolume1"); RegionTimer reg(t);
+    static Timer t("MeshVolume"); RegionTimer reg(t);
 
      mesh3d.Compress();
      for (auto bl : mp.boundary_layers)
