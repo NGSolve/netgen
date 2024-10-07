@@ -842,7 +842,7 @@ void BoundaryLayerTool ::InsertNewElements(
     auto &seg = segments[sei];
     if (is_boundary_moved.Test(seg.si)) {
       // cout << "moved setg " << seg << endl;
-       for (auto &p : seg.PNums())
+      for (auto &p : seg.PNums())
         if (hasMoved(p))
           p = newPoint(p);
     }
@@ -1155,17 +1155,15 @@ void BoundaryLayerTool ::Perform() {
   topo.SetBuildVertex2Element(true);
   mesh.UpdateTopology();
 
-  // cout << "GW 19911 " << growthvectors[19911] << endl;
   InterpolateGrowthVectors();
-  // cout << "GW 19911 " << growthvectors[19911] << endl;
   InterpolateSurfaceGrowthVectors();
-  // cout << "GW 19911 " << growthvectors[19911] << endl;
 
   AddSurfaceElements();
 
-
   if (params.limit_growth_vectors)
     LimitGrowthVectorLengths();
+
+  FixSurfaceElements();
 
   for (auto [pi, data] : growth_vector_map) {
     auto [gw, height] = data;

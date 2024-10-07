@@ -1,5 +1,5 @@
-#include <core/array.hpp>
 #include "boundarylayer.hpp"
+#include <core/array.hpp>
 
 namespace netgen {
 
@@ -214,7 +214,8 @@ struct GrowthVectorLimiter {
       return;
     for (PointIndex pi : IntRange(tool.np, mesh.GetNP())) {
       auto pi_from = map_from[pi];
-      // if(pi_from == 21110) cout << "equalize " << pi << "\tfactor " << factor << endl;
+      // if(pi_from == 21110) cout << "equalize " << pi << "\tfactor " << factor
+      // << endl;
       std::set<PointIndex> pis;
       for (auto sei : p2sel[pi])
         for (auto pi_ : tool.new_sels[sei].PNums())
@@ -224,7 +225,8 @@ struct GrowthVectorLimiter {
         auto limit = GetLimit(pi1);
         if (limit > 0.0)
           limits.Append(GetLimit(pi1));
-        // if(pi_from == 21110) cout << "\tneighbor point " << map_from[pi1] << " -> " << pi1  << " with limit " << limit << endl;
+        // if(pi_from == 21110) cout << "\tneighbor point " << map_from[pi1] <<
+        // " -> " << pi1  << " with limit " << limit << endl;
       }
       // if(pi_from == 21110) cout << "\town limit " << GetLimit(pi) << endl;
       if (limits.Size() == 0)
@@ -351,7 +353,8 @@ struct GrowthVectorLimiter {
   }
 
   void BuildSearchTree(double trig_shift) {
-    static Timer t("BuildSearchTree"); RegionTimer rt(t);
+    static Timer t("BuildSearchTree");
+    RegionTimer rt(t);
     Box<3> bbox(Box<3>::EMPTY_BOX);
     for (PointIndex pi : mesh.Points().Range()) {
       bbox.Add(mesh[pi]);
@@ -470,7 +473,6 @@ struct GrowthVectorLimiter {
             set_points();
             counter++;
             if (counter > 20) {
-              break;
               cerr << "Limit intersecting surface elements: too many "
                       "limitation steps, sels: "
                    << Get(sei) << '\t' << Get(sej) << endl;

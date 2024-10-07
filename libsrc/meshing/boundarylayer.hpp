@@ -89,6 +89,7 @@ class BoundaryLayerTool
     void InterpolateSurfaceGrowthVectors();
     void InterpolateGrowthVectors();
     void LimitGrowthVectorLengths();
+    void FixSurfaceElements();
 
     void InsertNewElements(FlatArray<Array<pair<SegmentIndex, int>>, SegmentIndex> segmap, const BitArray & in_surface_direction);
     void SetDomInOut();
