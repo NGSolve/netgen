@@ -546,9 +546,10 @@ namespace netgen
      {
          auto first_new_pi = m_.pmap.Range().Next();
          auto & m = *m_.mesh;
-         Array<PointIndex, PointIndex> pmap; 
-         pmap = m_.pmap;
-         pmap.SetSize(mesh.GetNP() + m.GetNP() - first_new_pi);
+         Array<PointIndex, PointIndex> pmap(m.Points().Size());
+         for(auto pi : Range(PointIndex(PointIndex::BASE), first_new_pi))
+             pmap[pi] = m_.pmap[pi];
+
          for (auto pi : Range(first_new_pi, m.Points().Range().Next()))
              pmap[pi] = mesh.AddPoint(m[pi]);
 
