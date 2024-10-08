@@ -12,6 +12,9 @@ struct Intersection_ {
 };
 
 struct GrowthVectorLimiter {
+  typedef std::array<Point<3>, 2> Seg;
+  typedef std::array<Point<3>, 3> Trig;
+
   BoundaryLayerTool &tool;
   const BoundaryLayerParameters &params;
   Mesh &mesh;
@@ -101,33 +104,32 @@ struct GrowthVectorLimiter {
     return GetPoint(pi_to, shift);
   }
 
-  std::array<Point<3>, 2> GetMappedSeg(PointIndex pi_from, double shift = 1.) {
+  Seg GetMappedSeg(PointIndex pi_from, double shift = 1.) {
     return {mesh[pi_from], GetMappedPoint(pi_from, shift)};
   }
 
-  std::array<Point<3>, 2> GetSeg(PointIndex pi_to, double shift = 1.,
-                                 bool apply_limit = false) {
+  Seg GetSeg(PointIndex pi_to, double shift = 1., bool apply_limit = false) {
     return {GetPoint(pi_to, 0), GetPoint(pi_to, shift, apply_limit)};
   }
 
-  auto GetTrig(SurfaceElementIndex sei, double shift = 0.0,
+  Trig GetTrig(SurfaceElementIndex sei, double shift = 0.0,
                bool apply_limit = false) {
     auto sel = Get(sei);
-    std::array<Point<3>, 3> trig;
+    Trig trig;
     for (auto i : Range(3))
       trig[i] = GetPoint(sel[i], shift, apply_limit);
     return trig;
   }
 
-  auto GetMappedTrig(SurfaceElementIndex sei, double shift = 0.0) {
+  Trig GetMappedTrig(SurfaceElementIndex sei, double shift = 0.0) {
     auto sel = Get(sei);
-    std::array<Point<3>, 3> trig;
+    Trig trig;
     for (auto i : Range(3))
       trig[i] = GetMappedPoint(sel[i], shift);
     return trig;
   }
 
-  auto GetSideTrig(SurfaceElementIndex sei, int index, double shift = 0.0,
+  Trig GetSideTrig(SurfaceElementIndex sei, int index, double shift = 0.0,
                    bool grow_first_vertex = true) {
     auto trig = GetMappedTrig(sei, 0.0);
     auto sel = Get(sei);
@@ -155,41 +157,39 @@ struct GrowthVectorLimiter {
         return false;
     }
 
-    if (check_prism_sides) {
-      for (auto i : Range(3)) {
-        auto side = GetSideTrig(sei, i, trig_shift, true);
-        auto intersection = isIntersectingTrig(seg, side);
-        if (intersection)
-          return ScaleLimit(pi_to, intersection.lam0 * INTERSECTION_SAFETY);
-      }
-      return false;
-    } else if (trig_shift > 0) {
+    if (check_prism_sides || trig_shift > .0) {
       auto [trig_min_limit, trig_max_limit] = GetMinMaxLimit(sei);
       if (GetLimit(pi_to) < trig_min_limit)
         return false;
-      auto intersection =
-          isIntersectingTrig(seg, GetTrig(sei, trig_shift, true));
-      if (!intersection)
+
+      auto getTrigs = [&](double scaling = 1.0) -> ArrayMem<Trig, 3> {
+        ArrayMem<Trig, 3> trigs;
+        if (check_prism_sides)
+          for (auto i : Range(3))
+            trigs.Append(GetSideTrig(sei, i, scaling * trig_shift, true));
+        else
+          trigs.Append(GetTrig(sei, scaling * trig_shift, true));
+        return trigs;
+      };
+
+      double scaling = 1.0;
+      while (true) {
+        bool have_intersection = false;
+        auto seg = GetSeg(pi_to, scaling * seg_shift, true);
+        for (auto trig : getTrigs(scaling))
+          have_intersection |= isIntersectingTrig(seg, trig);
+        if (!have_intersection)
+          break;
+        scaling *= 0.9;
+      }
+      if (scaling == 1.0)
         return false;
 
-      double scaling_factor = 0.9;
-      double s = 1.0;
-
-      while (true) {
-        s *= scaling_factor;
-        auto reduced_intersection =
-            isIntersectingTrig(GetSeg(pi_to, s * seg_shift, true),
-                               GetTrig(sei, s * trig_shift, true));
-        if (!reduced_intersection)
-          break;
-      }
-
-      double max_limit = max(GetLimit(pi_to), trig_max_limit);
-      bool result = false;
-      result = SetLimit(pi_to, s * max_limit);
+      double new_limit = scaling * max(GetLimit(pi_to), trig_max_limit);
+      SetLimit(pi_to, new_limit);
       for (auto pi : Get(sei).PNums())
-        result = SetLimit(pi, s * max_limit);
-      return result;
+        SetLimit(pi, new_limit);
+      return true;
     } else {
       auto trig = GetTrig(sei, 0.0);
       auto intersection = isIntersectingTrig(seg, trig);
@@ -304,8 +304,8 @@ struct GrowthVectorLimiter {
 
   // checks if a segment is intersecting a plane, spanned by three points, lam
   // will be set s.t. p_intersect = seg[0] + lam * (seg[1]-seg[0])
-  Intersection_ isIntersectingPlane(std::array<Point<3>, 2> seg,
-                                    std::array<Point<3>, 3> trig) {
+  Intersection_ isIntersectingPlane(const Seg & seg,
+                                    const Trig & trig) {
     auto t1 = trig[1] - trig[0];
     auto t2 = trig[2] - trig[0];
     auto n = Cross(t1, t2);
@@ -322,8 +322,7 @@ struct GrowthVectorLimiter {
     return intersection;
   }
 
-  Intersection_ isIntersectingTrig(std::array<Point<3>, 2> seg,
-                                   std::array<Point<3>, 3> trig) {
+  Intersection_ isIntersectingTrig(const Seg &seg, const Trig &trig) {
     auto intersection = isIntersectingPlane(seg, trig);
     if (!intersection)
       return intersection;
@@ -584,9 +583,11 @@ struct GrowthVectorLimiter {
     for (auto i_pass : Range(safeties.size())) {
       PrintMessage(4, "GrowthVectorLimiter pass ", i_pass);
       double safety = safeties[i_pass];
-
+      // intersect segment with original surface elements
       LimitOriginalSurface(2.1);
+      // intersect prisms with themself
       LimitSelfIntersection(1.3 * safety);
+      // intesect segment with prism
       LimitBoundaryLayer(safety);
 
       for (auto i : Range(3))
@@ -595,18 +596,6 @@ struct GrowthVectorLimiter {
       if (i_pass == safeties.size() - 1)
         FixIntersectingSurfaceTrigs();
     }
-
-    // cout << "limits " << endl << limits << endl;
-    // double avg_limit = 0;
-    // for(auto pi : limits.Range()) {
-    //   avg_limit += limits[pi];
-    // }
-    // avg_limit = avg_limit / limits.Size();
-
-    // for(auto pi : limits.Range()) {
-    //   if(limits[pi] < 0.01 * avg_limit)
-    //     cout << "small limit " << pi << "\t" << limits[pi] << endl;
-    // }
 
     for (auto i : Range(growthvectors))
       growthvectors[i] *= limits[i];
