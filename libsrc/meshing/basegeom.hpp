@@ -265,7 +265,7 @@ namespace netgen
 
   virtual void ProjectPointEdge (int surfind, int surfind2, Point<3> & p, EdgePointGeomInfo* gi = nullptr) const
   {
-    if(gi && gi->edgenr < edges.Size())
+    if(gi && gi->edgenr < edges.Size() && gi->edgenr >= 0)
       edges[gi->edgenr]->ProjectPoint(p, gi);
   }
 
