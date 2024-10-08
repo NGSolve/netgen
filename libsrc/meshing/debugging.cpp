@@ -36,13 +36,13 @@ namespace netgen
         mesh->SetMaterial(2, "2_points");
         mesh->SetMaterial(3, "3_points");
         mesh->SetMaterial(4, "4_points");
-        mesh->Compress();
 
         mesh->ClearSurfaceElements();
 
         for (auto & el : openelements)
             mesh->AddSurfaceElement( el );
 
+        mesh->Compress();
         return mesh;
     }
 

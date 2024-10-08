@@ -239,6 +239,7 @@ double MeshOptimize3d :: CombineImproveEdge (
   {
       Element & elem = mesh[ei];
       if (elem.IsDeleted()) return false;
+      if(elem.GetType() != TET) return false; // TODO: implement case where pi0 or pi1 is top of a pyramid
 
       if (elem[0] == pi0 || elem[1] == pi0 || elem[2] == pi0 || elem[3] == pi0)
       {
@@ -1320,7 +1321,7 @@ void MeshOptimize3d :: SwapImprove (const NgBitArray * working_elements)
         for (ElementIndex eli : myrange)
           {
             const auto & el = mesh[eli];
-            if(el.Flags().fixed)
+            if(el.Flags().fixed || el.GetType() != TET)
               continue;
 
             if(mp.only3D_domain_nr && mp.only3D_domain_nr != el.GetIndex())
@@ -2637,6 +2638,7 @@ double MeshOptimize3d :: SplitImprove2Element (
     Element & elem = mesh[ei0];
     if (elem.IsDeleted()) return false;
     if (ei0 == ei) continue;
+    if (elem.GetType() != TET) return false;
 
     if (elem[0] == pi1 || elem[1] == pi1 || elem[2] == pi1 || elem[3] == pi1 || (elem.GetNP()==5 && elem[4]==pi1) )
       if(!has_both_points0.Contains(ei0))
@@ -2648,6 +2650,7 @@ double MeshOptimize3d :: SplitImprove2Element (
     Element & elem = mesh[ei1];
     if (elem.IsDeleted()) return false;
     if (ei1 == ei) continue;
+    if (elem.GetType() != TET) return false;
 
     if (elem[0] == pi3 || elem[1] == pi3 || elem[2] == pi3 || elem[3] == pi3 || (elem.GetNP()==5 && elem[4]==pi3))
       if(!has_both_points1.Contains(ei1))
