@@ -1306,7 +1306,6 @@ void BoundaryLayerTool ::Perform()
   if (params.limit_growth_vectors)
     LimitGrowthVectorLengths();
 
-  FixEdges();
   FixSurfaceElements();
 
   for (auto [pi, data] : growth_vector_map)
