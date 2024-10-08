@@ -365,6 +365,13 @@ void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors()
     addGW(pi, corrections[pi]);
 }
 
+void BoundaryLayerTool ::FixEdges()
+{
+  for (auto& seg : mesh.LineSegments())
+    if (seg.epgeominfo[0].edgenr == -1 && seg.epgeominfo[1].edgenr == -1)
+      seg.edgenr = -1;
+}
+
 void BoundaryLayerTool ::FixSurfaceElements()
 {
   static Timer tall("FixSurfaceElements");

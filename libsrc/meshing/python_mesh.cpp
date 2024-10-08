@@ -1477,7 +1477,7 @@ py::arg("point_tolerance") = -1.)
                               optional<variant<string, std::vector<int>>> project_boundaries,
                               bool grow_edges, bool limit_growth_vectors,
                               bool sides_keep_surfaceindex,
-                              bool keep_surfaceindex)
+                              bool disable_curving)
            {
              BoundaryLayerParameters blp;
              blp.boundary = boundary;
@@ -1489,13 +1489,13 @@ py::arg("point_tolerance") = -1.)
              blp.grow_edges = grow_edges;
              blp.limit_growth_vectors = limit_growth_vectors;
              blp.sides_keep_surfaceindex = sides_keep_surfaceindex;
-             blp.keep_surfaceindex = keep_surfaceindex;
+             blp.disable_curving = disable_curving;
              GenerateBoundaryLayer (self, blp);
              self.UpdateTopology();
            }, py::arg("boundary"), py::arg("thickness"), py::arg("material")=nullopt,
           py::arg("domains") = ".*", py::arg("outside") = false,
           py::arg("project_boundaries")=nullopt, py::arg("grow_edges")=true, py::arg("limit_growth_vectors") = true, py::arg("sides_keep_surfaceindex")=false,
-          py::arg("keep_surfaceindex")=false, "Add boundary layer to mesh. see help(BoundaryLayerParameters) for details.")
+          py::arg("disable_curving")=true, "Add boundary layer to mesh. see help(BoundaryLayerParameters) for details.")
 
     .def_static ("EnableTableClass", [] (string name, bool set)
           {
@@ -1732,7 +1732,7 @@ py::arg("point_tolerance") = -1.)
         bool grow_edges,
         bool limit_growth_vectors,
         std::optional<bool> sides_keep_surfaceindex,
-        bool keep_surfaceindex)
+        bool disable_curving)
         {
           BoundaryLayerParameters blp;
           blp.boundary = boundary;
@@ -1744,14 +1744,14 @@ py::arg("point_tolerance") = -1.)
           blp.grow_edges = grow_edges;
           blp.limit_growth_vectors = limit_growth_vectors;
           blp.sides_keep_surfaceindex = sides_keep_surfaceindex;
-          blp.keep_surfaceindex = keep_surfaceindex;
+          blp.disable_curving = disable_curving;
           return blp;
         }),
            py::arg("boundary"), py::arg("thickness"), py::arg("new_material")=nullopt,
            py::arg("domain") = ".*", py::arg("outside") = false,
            py::arg("project_boundaries")=nullopt, py::arg("grow_edges")=true,
            py::arg("limit_growth_vectors") = true, py::arg("sides_keep_surfaceindex")=nullopt,
-           py::arg("keep_surfaceindex")=false,
+           py::arg("disable_curving")=true,
            R"delimiter(
 Add boundary layer to mesh.
 
@@ -1803,7 +1803,7 @@ project_boundaries : Optional[str] = None
     .def_readwrite("grow_edges", &BoundaryLayerParameters::grow_edges)
     .def_readwrite("limit_growth_vectors", &BoundaryLayerParameters::limit_growth_vectors)
     .def_readwrite("sides_keep_surfaceindex", &BoundaryLayerParameters::sides_keep_surfaceindex)
-    .def_readwrite("keep_surfaceindex", &BoundaryLayerParameters::keep_surfaceindex)
+    .def_readwrite("disable_curving", &BoundaryLayerParameters::disable_curving)
     ;
   py::implicitly_convertible<py::dict, BoundaryLayerParameters>();
 

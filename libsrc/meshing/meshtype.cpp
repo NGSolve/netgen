@@ -2961,7 +2961,7 @@ namespace netgen
     ost << "\n  grow_edges: " << mp.grow_edges;
     ost << "\n  limit_growth_vectors: " << mp.limit_growth_vectors;
     ost << "\n  sides_keep_surfaceindex: " << (mp.sides_keep_surfaceindex ? ToString(*mp.sides_keep_surfaceindex) : "nullopt");
-    ost << "\n  keep_surfaceindex: " << mp.keep_surfaceindex;
+    ost << "\n  disable_curving: " << mp.disable_curving;
     ost << endl;
     return ost;
   }

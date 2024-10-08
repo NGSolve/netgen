@@ -339,7 +339,7 @@ void BoundaryLayerTool ::CreateNewFaceDescriptors()
           // result in pushed through elements, since we do not (yet)
           // curvature through layers.
           // Therefore we disable curving for these surfaces.
-          if (!params.keep_surfaceindex)
+          if (params.disable_curving)
             mesh.GetFaceDescriptor(i).SetSurfNr(-1);
         }
     }
@@ -1079,7 +1079,23 @@ void BoundaryLayerTool ::AddSegments()
 {
   auto& new_segs =
     insert_only_volume_elements ? new_segments_on_moved_bnd : new_segments;
-  // cout << "add new segs " << endl << new_segs << endl;
+
+  if (params.disable_curving)
+    {
+      for (auto& seg : segments)
+        if (is_edge_moved[seg.si])
+          {
+            seg.epgeominfo[0].edgenr = -1;
+            seg.epgeominfo[0].edgenr = -1;
+          }
+
+      for (auto& seg : new_segs)
+        {
+          seg.epgeominfo[0].edgenr = -1;
+          seg.epgeominfo[0].edgenr = -1;
+        }
+    }
+
   if (have_single_segments)
     MergeAndAddSegments(mesh, segments, new_segs);
   else
@@ -1264,6 +1280,8 @@ void BoundaryLayerTool ::ProcessParameters()
 
 void BoundaryLayerTool ::Perform()
 {
+  if (domains.NumSet() == 0)
+    return;
   CreateNewFaceDescriptors();
   CalculateGrowthVectors();
   CreateFaceDescriptorsSides();
@@ -1288,6 +1306,7 @@ void BoundaryLayerTool ::Perform()
   if (params.limit_growth_vectors)
     LimitGrowthVectorLengths();
 
+  FixEdges();
   FixSurfaceElements();
 
   for (auto [pi, data] : growth_vector_map)

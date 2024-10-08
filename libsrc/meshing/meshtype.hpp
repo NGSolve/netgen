@@ -1285,7 +1285,7 @@ namespace netgen
     bool grow_edges = true;
     bool limit_growth_vectors = true;
     std::optional<bool> sides_keep_surfaceindex = nullopt; // !outside by default
-    bool keep_surfaceindex = false;
+    bool disable_curving = true; // disable curving affected boundaries/edges (could lead to self-intersecting volume elements)
   };
 
 
