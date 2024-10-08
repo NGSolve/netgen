@@ -967,10 +967,18 @@ namespace ngcore
     f.precision(4);
     f << R"CODE_(
 <head>
-  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="https://unpkg.com/sunburst-chart"></script>
 
-  <style>body { margin: 0 }</style>
+  <style>
+    body { margin: 0 }
+    .tooltip {
+      white-space: pre-line !important;
+      max-width: 800px !important;
+      word-wrap: break-word !important;
+      padding: 10px !important;
+    }
+  </style>
 )CODE_";
     if(!time_or_memory)
       f << "<title>Maximum Memory Consumption</title>\n";
