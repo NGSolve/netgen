@@ -858,16 +858,17 @@ namespace netgen
 	  {
             // if (mesh->GetIdentifications().HasIdentifiedPoints())
 	      {
-                INDEX_2_HASHTABLE<int> & idpts =
+                auto & idpts =
                   mesh->GetIdentifications().GetIdentifiedPoints();
                 
 		for (int i = 1; i <= idpts.GetNBags(); i++)
                   for (int j = 1; j <= idpts.GetBagSize(i); j++)
 		    {
-		      INDEX_2 pts;
-		      int val;
+		      INDEX_3 pts;
+		      int dummy, val;
 
-		      idpts.GetData (i, j, pts, val);
+		      idpts.GetData (i, j, pts, dummy);
+                      val = pts[2];
 		      const Point3d & p1 = mesh->Point(pts.I1());
 		      const Point3d & p2 = mesh->Point(pts.I2());
 

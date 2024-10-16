@@ -560,8 +560,8 @@ namespace netgen
              el.SetIndex(m_.domain);
              mesh.AddVolumeElement(el);
          }
-         for(const auto& [p1p2, idnr] : m.GetIdentifications().GetIdentifiedPoints())
-           mesh.GetIdentifications().Add(pmap[p1p2[0]], pmap[p1p2[1]], idnr);
+         for(const auto& [p1p2, dummy] : m.GetIdentifications().GetIdentifiedPoints())
+           mesh.GetIdentifications().Add(pmap[p1p2[0]], pmap[p1p2[1]], p1p2[2]);
          for(auto i : Range(m.GetIdentifications().GetMaxNr()))
            {
              mesh.GetIdentifications().SetType(i+1, m.GetIdentifications().GetType(i+1));

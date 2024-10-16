@@ -6406,9 +6406,9 @@ namespace netgen
     mapped_points = false;
 
     // Add new points
-    for(auto [p1p2, idnr] : identpts)
+    for(auto [p1p2, dummy] : identpts)
       {
-        if(idnr != nr)
+        if(p1p2[2] != nr)
           continue;
         auto& ipts = inserted_points[{p1p2.I1(), p1p2.I2()}];
         auto p1 = Point(p1p2.I1());

@@ -2825,14 +2825,8 @@ namespace netgen
   Array<INDEX_3> Identifications :: GetPairs () const
   {
     Array<INDEX_3> pairs;
-    for (auto i : IntRange(1, identifiedpoints.GetNBags()+1))
-      for (auto j : IntRange(1, identifiedpoints.GetBagSize(i)+1))
-        {
-          INDEX_2 i2;
-          int nr;
-          identifiedpoints.GetData (i, j, i2, nr);
-          pairs.Append ({i2.I1(), i2.I2(), nr});
-        }
+    for(auto [i3, dummy] : identifiedpoints_nr)
+      pairs.Append(i3);
     return pairs;
   }
 
