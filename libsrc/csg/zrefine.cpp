@@ -121,7 +121,7 @@ namespace netgen
 		{
 		  INDEX_2 edge(el.PNum(j), el.PNum(k));
 		  edge.Sort();
-		  if (mesh.GetIdentifications().GetSymmetric (el.PNum(j), el.PNum(k)))
+		  if (mesh.GetIdentifications().UsedSymmetric (el.PNum(j), el.PNum(k)))
 		    {
 		      int pi3 = 1, pi4 = 1;
 		      while (pi3 == j || pi3 == k) pi3++;
@@ -157,8 +157,8 @@ namespace netgen
 		INDEX_2 edge2(pi2, pi3);
 		edge1.Sort();
 		edge2.Sort();
-		if (mesh.GetIdentifications().GetSymmetric (pi1, pi4) &&
-		    mesh.GetIdentifications().GetSymmetric (pi2, pi3))
+		if (mesh.GetIdentifications().UsedSymmetric (pi1, pi4) &&
+		    mesh.GetIdentifications().UsedSymmetric (pi2, pi3))
 		  {
 		    //int p3 = el.PNum(pi3);
 		    //int p4 = el.PNum(pi4);
@@ -186,7 +186,7 @@ namespace netgen
 	    INDEX_2 edge(el.PNum(j), el.PNum(k));
 	    edge.Sort();
 
-	    if (mesh.GetIdentifications().GetSymmetric (el.PNum(j), el.PNum(k)))
+	    if (mesh.GetIdentifications().UsedSymmetric (el.PNum(j), el.PNum(k)))
 	      {
 		int pi3 = 6-j-k;
 		int p3 = el.PNum(pi3);
@@ -261,15 +261,16 @@ namespace netgen
   
     // if (mesh.GetIdentifications().HasIdentifiedPoints())
       {
-        INDEX_2_HASHTABLE<int> & identpts = 
+        auto & identpts =
           mesh.GetIdentifications().GetIdentifiedPoints ();
         
 	for (i = 1; i <= identpts.GetNBags(); i++)
 	  for (j = 1; j <= identpts.GetBagSize(i); j++)
 	    {
-	      INDEX_2 pair;
-	      int idnr;
-	      identpts.GetData(i, j, pair, idnr);
+	      INDEX_3 pair;
+	      int dummy;
+	      identpts.GetData(i, j, pair, dummy);
+              auto idnr = pair[2];
 	      const CloseSurfaceIdentification * csid = 
 		dynamic_cast<const CloseSurfaceIdentification*> 
 		(geom->identifications.Get(idnr));

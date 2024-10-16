@@ -414,9 +414,14 @@ public:
     int BagNr() const { return bagnr; }
     int Pos() const { return pos; }
 
-    void operator++ (int)
+    Iterator operator++ (int)
     {
-      // cout << "begin Operator ++: bagnr = " << bagnr << " -  pos = " << pos << endl;
+      Iterator it(ht, bagnr, pos);
+      ++(*this);
+      return it;
+    }
+    Iterator& operator++()
+    {
       pos++;
       while (bagnr < ht.GetNBags() && 
 	     pos == ht.GetBagSize(bagnr+1))
@@ -424,7 +429,12 @@ public:
 	  pos = 0;
 	  bagnr++;
 	}
-      // cout << "end Operator ++: bagnr = " << bagnr << " - pos = " << pos << endl;
+      return *this;
+    }
+
+    std::pair<INDEX_3, T> operator*()
+    {
+      return std::make_pair(ht.hash[bagnr][pos], ht.cont[bagnr][pos]);
     }
 
     bool operator != (int i) const
@@ -442,6 +452,18 @@ public:
   }
 
   int End() const
+  {
+    return GetNBags();
+  }
+
+  Iterator begin () const
+  {
+    Iterator it(*this, 0, -1);
+    it++;
+    return it;
+  }
+
+  int end() const
   {
     return GetNBags();
   }

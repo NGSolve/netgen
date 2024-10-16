@@ -1619,9 +1619,9 @@ namespace netgen
 
     // bool HasIdentifiedPoints() const { return identifiedpoints != nullptr; } 
     ///
-    INDEX_2_HASHTABLE<int> & GetIdentifiedPoints () 
+    INDEX_3_HASHTABLE<int> & GetIdentifiedPoints ()
     { 
-      return identifiedpoints; 
+      return identifiedpoints_nr;
     }
 
     bool Used (PointIndex pi1, PointIndex pi2)

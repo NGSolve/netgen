@@ -396,15 +396,15 @@ void PeriodicIdentification :: IdentifyFaces (class Mesh & mesh)
 
 		    if (side == 1)
 		      {
-			if (mesh.GetIdentifications().Get (seg1[0], seg2[0]) &&
-			    mesh.GetIdentifications().Get (seg1[1], seg2[1]))
+			if (mesh.GetIdentifications().Used (seg1[0], seg2[0]) &&
+			    mesh.GetIdentifications().Used (seg1[1], seg2[1]))
 			  {
 			    foundother = 1;
 			    break;
 			  }
 			
-			if (mesh.GetIdentifications().Get (seg1[0], seg2[1]) &&
-			    mesh.GetIdentifications().Get (seg1[1], seg2[0]))
+			if (mesh.GetIdentifications().Used (seg1[0], seg2[1]) &&
+			    mesh.GetIdentifications().Used (seg1[1], seg2[0]))
 			  {
 			    foundother = 1;
 			    break;
@@ -412,15 +412,15 @@ void PeriodicIdentification :: IdentifyFaces (class Mesh & mesh)
 		      }
 		    else
 		      {
-			if (mesh.GetIdentifications().Get (seg2[0], seg1[0]) &&
-			    mesh.GetIdentifications().Get (seg2[1], seg1[1]))
+			if (mesh.GetIdentifications().Used (seg2[0], seg1[0]) &&
+			    mesh.GetIdentifications().Used (seg2[1], seg1[1]))
 			  {
 			    foundother = 1;
 			    break;
 			  }
 			
-			if (mesh.GetIdentifications().Get (seg2[0], seg1[1]) &&
-			    mesh.GetIdentifications().Get (seg2[1], seg1[0]))
+			if (mesh.GetIdentifications().Used (seg2[0], seg1[1]) &&
+			    mesh.GetIdentifications().Used (seg2[1], seg1[0]))
 			  {
 			    foundother = 1;
 			    break;
@@ -1168,15 +1168,15 @@ void CloseSurfaceIdentification :: IdentifyFaces (class Mesh & mesh)
 		      
 		      if (side == 1)
 			{
-			  if (mesh.GetIdentifications().Get (seg1[0], seg2[0]) &&
-			      mesh.GetIdentifications().Get (seg1[1], seg2[1]))
+			  if (mesh.GetIdentifications().Used (seg1[0], seg2[0]) &&
+			      mesh.GetIdentifications().Used (seg1[1], seg2[1]))
 			    {
 			      foundother = 1;
 			      break;
 			    }
 			  
-			  if (mesh.GetIdentifications().Get (seg1[0], seg2[1]) &&
-			      mesh.GetIdentifications().Get (seg1[1], seg2[0]))
+			  if (mesh.GetIdentifications().Used (seg1[0], seg2[1]) &&
+			      mesh.GetIdentifications().Used (seg1[1], seg2[0]))
 			    {
 			      foundother = 1;
 			      break;
@@ -1184,15 +1184,15 @@ void CloseSurfaceIdentification :: IdentifyFaces (class Mesh & mesh)
 			}
 		      else
 			{
-			  if (mesh.GetIdentifications().Get (seg2[0], seg1[0]) &&
-			      mesh.GetIdentifications().Get (seg2[1], seg1[1]))
+			  if (mesh.GetIdentifications().Used (seg2[0], seg1[0]) &&
+			      mesh.GetIdentifications().Used (seg2[1], seg1[1]))
 			    {
 			      foundother = 1;
 			      break;
 			    }
 			  
-			  if (mesh.GetIdentifications().Get (seg2[0], seg1[1]) &&
-			      mesh.GetIdentifications().Get (seg2[1], seg1[0]))
+			  if (mesh.GetIdentifications().Used (seg2[0], seg1[1]) &&
+			      mesh.GetIdentifications().Used (seg2[1], seg1[0]))
 			    {
 			      foundother = 1;
 			      break;
@@ -1650,8 +1650,8 @@ BuildSurfaceElements (NgArray<Segment> & segs,
       {
 	const Segment & s1 = segs.Get(i1);
 	const Segment & s2 = segs.Get(i2);
-	if (mesh.GetIdentifications().Get (s1[0], s2[1]) &&
-	    mesh.GetIdentifications().Get (s1[1], s2[0]))
+	if (mesh.GetIdentifications().Used (s1[0], s2[1]) &&
+	    mesh.GetIdentifications().Used (s1[1], s2[0]))
 	  {
 	    Element2d el(QUAD);
 	    el.PNum(1) = s1[0];
