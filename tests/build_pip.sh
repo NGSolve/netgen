@@ -13,7 +13,7 @@ dnf -y install ccache.rpm
 rm -rf wheelhouse
 export NETGEN_CCACHE=1
 
-for pyversion in 313 312 311 310 39 38
+for pyversion in 313 312 311 310 39
 do
     export PYDIR="/opt/python/cp${pyversion}-cp${pyversion}/bin"
     echo $PYDIR

@@ -86,7 +86,11 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     try {
       if(p) std::rethrow_exception(p);
     } catch (const Standard_Failure& e) {
+#if (PYBIND11_VERSION_MAJOR == 2 && PYBIND11_VERSION_MINOR < 12)
+      exc((string(e.DynamicType()->Name()) + ": " + e.GetMessageString()).c_str());
+#else
       py::set_error(PyExc_RuntimeError, (string(e.DynamicType()->Name()) + ": " + e.GetMessageString()).c_str());
+#endif
     }
   });
   
