@@ -48,6 +48,20 @@ struct GrowthVectorLimiter
 
   auto SurfaceElementsRange () { return Range(tool.nse + tool.new_sels.Size()); }
 
+  void WriteErrorMesh (string name)
+  {
+    if (!debugparam.write_mesh_on_error)
+      return;
+    Mesh out_mesh;
+    out_mesh = mesh;
+    for (auto [pi, data] : tool.growth_vector_map)
+      {
+        auto [gw, height] = data;
+        out_mesh[pi] += limits[pi] * height * (*gw);
+      }
+    out_mesh.Save(name);
+  }
+
   const auto& Get (SurfaceElementIndex sei)
   {
     if (sei < tool.nse)
@@ -525,6 +539,11 @@ struct GrowthVectorLimiter
                       cerr << "Limit intersecting surface elements: too many "
                               "limitation steps, sels: "
                            << Get(sei) << '\t' << Get(sej) << endl;
+                      if (GetLimit(pi_max_limit) < 1e-10)
+                        {
+                          WriteErrorMesh("error_blayer_self_intersection_pi" + ToString(pi_max_limit) + ".vol.gz");
+                          throw NgException("Stop meshing in boundary layer thickness limitation: overlapping regions detected at elements " + ToString(tri) + " and " + ToString(tri2));
+                        }
                       for (auto si : {sei, sej})
                         {
                           auto sel = Get(si);
@@ -619,9 +638,12 @@ struct GrowthVectorLimiter
 
   void CheckLimits ()
   {
-    for (auto i : Range(growthvectors))
-      if (limits[i] < 1e-10)
-        throw NgException("Stop meshing in boundary layer thickness limitation: overlapping regions detected");
+    for (auto [pi, data] : tool.growth_vector_map)
+      if (limits[pi] < 1e-10)
+        {
+          WriteErrorMesh("error_blayer_intersection_pi" + ToString(pi) + ".vol.gz");
+          throw NgException("Stop meshing in boundary layer thickness limitation: overlapping regions detected at point " + ToString(pi));
+        }
   }
 
   void Perform ()
