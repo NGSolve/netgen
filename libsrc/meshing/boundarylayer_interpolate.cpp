@@ -198,10 +198,13 @@ void BoundaryLayerTool ::InterpolateGrowthVectors()
         }
       if (!point_found)
         {
-          cerr << "Could not find connected list of line segments for edge "
-               << edgenr << endl;
-          cerr << "current points: " << endl
-               << points << endl;
+          if (debugparam.debugoutput)
+            {
+              cerr << "Could not find connected list of line segments for edge "
+                   << edgenr << endl;
+              cerr << "current points: " << endl
+                   << points << endl;
+            }
           continue;
         }
 
