@@ -484,7 +484,6 @@ namespace netgen
     maxhdom = mparam.maxh;
     int maxlayer = 1;
 
-    int dom = 0;
     for(auto dom : Range(geom.GetNSolids()))
     {
       auto & props = geom.GetSolid(dom).properties;
