@@ -534,16 +534,16 @@ struct GrowthVectorLimiter
                   ScaleLimit(pi_max_limit, 0.9);
                   set_points();
                   counter++;
+                  if (GetLimit(pi_max_limit) < 1e-10)
+                    {
+                      WriteErrorMesh("error_blayer_self_intersection_pi" + ToString(pi_max_limit) + ".vol.gz");
+                      throw NgException("Stop meshing in boundary layer thickness limitation: overlapping regions detected at elements " + ToString(tri) + " and " + ToString(tri2));
+                    }
                   if (debugparam.debugoutput && counter > 20)
                     {
                       cerr << "Limit intersecting surface elements: too many "
                               "limitation steps, sels: "
                            << Get(sei) << '\t' << Get(sej) << endl;
-                      if (GetLimit(pi_max_limit) < 1e-10)
-                        {
-                          WriteErrorMesh("error_blayer_self_intersection_pi" + ToString(pi_max_limit) + ".vol.gz");
-                          throw NgException("Stop meshing in boundary layer thickness limitation: overlapping regions detected at elements " + ToString(tri) + " and " + ToString(tri2));
-                        }
                       for (auto si : {sei, sej})
                         {
                           auto sel = Get(si);
