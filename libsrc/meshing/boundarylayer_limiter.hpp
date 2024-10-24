@@ -617,6 +617,13 @@ struct GrowthVectorLimiter
       }
   }
 
+  void CheckLimits ()
+  {
+    for (auto i : Range(growthvectors))
+      if (limits[i] < 1e-10)
+        throw NgException("Stop meshing in boundary layer thickness limitation: overlapping regions detected");
+  }
+
   void Perform ()
   {
     limits.SetSize(mesh.Points().Size());
@@ -631,22 +638,24 @@ struct GrowthVectorLimiter
       {
         PrintMessage(4, "GrowthVectorLimiter pass ", i_pass);
         double safety = safeties[i_pass];
+        CheckLimits();
         // intersect segment with original surface elements
         LimitOriginalSurface(2.1);
+        CheckLimits();
         // intersect prisms with themself
         LimitSelfIntersection(1.3 * safety);
+        CheckLimits();
         // intesect segment with prism
         LimitBoundaryLayer(safety);
+        CheckLimits();
 
         for (auto i : Range(3))
           EqualizeLimits(smoothing_factors[i_pass]);
-
-        for (auto i : Range(growthvectors))
-          if (limits[i] < 1e-10)
-            throw NgException("Stop meshing in boundary layer thickness limitation: overlapping regions detected");
+        CheckLimits();
 
         if (i_pass == safeties.size() - 1)
           FixIntersectingSurfaceTrigs();
+        CheckLimits();
       }
 
     for (auto i : Range(growthvectors))
