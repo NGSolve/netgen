@@ -308,10 +308,12 @@ struct GrowthVectorLimiter
     for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
       {
         auto sel = mesh[sei];
-        const auto& fd = mesh.GetFaceDescriptor(sel.GetIndex());
+        if (!tool.moved_surfaces[sel.GetIndex()])
+          continue;
         if (sel.GetNP() == 4)
           continue;
 
+        const auto& fd = mesh.GetFaceDescriptor(sel.GetIndex());
         auto np = sel.GetNP();
 
         double shift = 1.0;
