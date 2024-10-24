@@ -161,7 +161,8 @@ void BoundaryLayerTool ::InterpolateGrowthVectors()
 
       if (!points.Size())
         {
-          cerr << "Could not find startpoint for edge " << edgenr << endl;
+          if (debugparam.debugoutput)
+            cerr << "Could not find startpoint for edge " << edgenr << endl;
           continue;
         }
 
