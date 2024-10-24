@@ -639,6 +639,10 @@ struct GrowthVectorLimiter
         for (auto i : Range(3))
           EqualizeLimits(smoothing_factors[i_pass]);
 
+        for (auto i : Range(growthvectors))
+          if (limits[i] < 1e-10)
+            throw NgException("Stop meshing in boundary layer thickness limitation: overlapping regions detected");
+
         if (i_pass == safeties.size() - 1)
           FixIntersectingSurfaceTrigs();
       }
