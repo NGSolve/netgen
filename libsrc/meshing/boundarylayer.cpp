@@ -285,6 +285,7 @@ BoundaryLayerTool::BoundaryLayerTool(Mesh& mesh_,
   topo.SetBuildVertex2Element(true);
   mesh.UpdateTopology();
 
+  old_segments = mesh.LineSegments();
   have_single_segments = HaveSingleSegments(mesh);
 
   if (have_single_segments)
@@ -1082,6 +1083,13 @@ void BoundaryLayerTool ::AddSegments()
 
   if (params.disable_curving)
     {
+      for (auto& seg : old_segments)
+        if (mapto[seg[0]].Size() || mapto[seg[1]].Size())
+          {
+            seg.epgeominfo[0].edgenr = -1;
+            seg.epgeominfo[0].edgenr = -1;
+          }
+
       for (auto& seg : segments)
         if (is_edge_moved[seg.si])
           {
@@ -1312,6 +1320,11 @@ void BoundaryLayerTool ::Perform()
     {
       auto [gw, height] = data;
       mesh[pi] += height * (*gw);
+    }
+
+  if (insert_only_volume_elements)
+    {
+      mesh.LineSegments() = old_segments;
     }
 
   mesh.CalcSurfacesOfNode();

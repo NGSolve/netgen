@@ -69,7 +69,7 @@ public:
   Array<size_t> par_project_boundaries;
 
   bool have_single_segments;
-  Array<Segment> segments, new_segments, new_segments_on_moved_bnd;
+  Array<Segment> old_segments, segments, new_segments, new_segments_on_moved_bnd;
   Array<Element2d, SurfaceElementIndex> new_sels, new_sels_on_moved_bnd;
   Array<Array<PointIndex>, PointIndex> mapto;
   Array<PointIndex, PointIndex> mapfrom;
