@@ -700,7 +700,7 @@ struct GrowthVectorLimiter
 
     for (auto i_pass : Range(safeties.size()))
       {
-        PrintMessage(0, "GrowthVectorLimiter pass ", i_pass);
+        PrintMessage(4, "GrowthVectorLimiter pass ", i_pass);
         double safety = safeties[i_pass];
         CheckLimits(__LINE__);
         // intersect segment with original surface elements
