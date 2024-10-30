@@ -416,7 +416,7 @@ struct GrowthVectorLimiter
     SolveLinearSystem(col1, col2, col3, rhs, bary);
 
     intersection.lam1 = 0;
-    double eps = 0.1;
+    double eps = 1e-4;
     if (bary.X() >= -eps && bary.Y() >= -eps && bary.X() + bary.Y() <= 1 + eps)
       {
         intersection.bary[0] = bary.X();
