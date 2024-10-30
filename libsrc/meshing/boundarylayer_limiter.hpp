@@ -121,10 +121,10 @@ struct GrowthVectorLimiter
     return mesh[pi_to] + GetVector(pi_to, shift, apply_limit);
   }
 
-  Point<3> GetMappedPoint (PointIndex pi_from, double shift = 1.)
+  Point<3> GetMappedPoint (PointIndex pi_from, double shift = 1., bool apply_limit = false)
   {
     auto pi_to = tool.mapto[pi_from].Last();
-    return GetPoint(pi_to, shift);
+    return GetPoint(pi_to, shift, apply_limit);
   }
 
   Seg GetMappedSeg (PointIndex pi_from, double shift = 1.)
@@ -162,8 +162,37 @@ struct GrowthVectorLimiter
     auto index1 = (index + 1) % 3;
     if (!grow_first_vertex)
       index1 = (index + 2) % 3;
-    trig[index] = GetMappedPoint(sel[index1], shift);
+    trig[index] = GetMappedPoint(sel[index1], shift, true);
     return trig;
+  }
+
+  array<Trig, 4> GetSideTrigs (SurfaceElementIndex sei, int i0, double shift = 0.0)
+  {
+    auto trig = GetMappedTrig(sei, 0.0);
+    array<Trig, 4> trigs{trig, trig, trig, trig};
+
+    auto sel = Get(sei);
+    auto i1 = (i0 + 1) % 3;
+    auto i2 = (i0 + 2) % 3;
+    auto p1 = GetMappedPoint(sel[i1], shift, true);
+    auto p2 = GetMappedPoint(sel[i2], shift, true);
+
+    // create four trigs to span the quad from i1,i2 and their shifted points
+    // i1, i2, shifted i1
+    trigs[0][i0] = p1;
+
+    // i1, i2, shifted i2
+    trigs[1][i0] = p2;
+
+    // i1, shifted i1, shifted i2
+    trigs[2][i0] = p1;
+    trigs[2][i2] = p2;
+
+    // i2, shifted i1, shifted i2
+    trigs[2][i0] = p2;
+    trigs[2][i1] = p1;
+
+    return trigs;
   }
 
   static constexpr double INTERSECTION_SAFETY = .9;
@@ -172,8 +201,6 @@ struct GrowthVectorLimiter
     auto pi_from = map_from[pi_to];
     if (!pi_from.IsValid())
       return false;
-
-    auto seg = GetSeg(pi_to, seg_shift, true);
 
     for (auto pi : Get(sei).PNums())
       {
@@ -190,14 +217,36 @@ struct GrowthVectorLimiter
           return false;
 
         auto getTrigs = [&] (double scaling = 1.0) -> ArrayMem<Trig, 3> {
-          ArrayMem<Trig, 3> trigs;
+          ArrayMem<Trig, 12> trigs;
           if (check_prism_sides)
             for (auto i : Range(3))
-              trigs.Append(GetSideTrig(sei, i, scaling * trig_shift, true));
+              for (auto trig : GetSideTrigs(sei, i, scaling * trig_shift))
+                trigs.Append(trig);
           else
             trigs.Append(GetTrig(sei, scaling * trig_shift, true));
           return trigs;
         };
+
+        if (!check_prism_sides)
+          {
+            // If the growth vectors of all points are pointing in the same direction,
+            // an intersection means, we also have an intersection with a prism side face
+            // this is an extra check and handled later
+            auto seg = GetSeg(pi_to, 1.0, false);
+            auto gw = seg[1] - seg[0];
+            /*auto gw = GetVector(pi_to, 1.0, false);*/
+
+            bool have_same_growth_direction = true;
+            for (auto pi : Get(sei).PNums())
+              {
+                /*auto p_gw = GetVector(pi, 1.0, false);*/
+                auto p_seg = GetSeg(pi, 1.0, false);
+                auto p_gw = p_seg[1] - p_seg[0];
+                have_same_growth_direction &= (gw * p_gw) > 0;
+              }
+            if (have_same_growth_direction)
+              return false;
+          }
 
         double scaling = 1.0;
         while (true)
@@ -221,18 +270,13 @@ struct GrowthVectorLimiter
       }
     else
       {
+        auto seg = GetSeg(pi_to, seg_shift, false);
         auto trig = GetTrig(sei, 0.0);
         auto intersection = isIntersectingTrig(seg, trig);
         // checking with original surface elements -> allow only half the distance
         auto new_seg_limit = 0.40 * intersection.lam0 * seg_shift;
         if (intersection && new_seg_limit < GetLimit(pi_from))
-          {
-            auto p0 = seg[0];
-            auto p1 = seg[1];
-            auto d = Dist(p0, p1);
-            auto [gw, height] = tool.growth_vector_map[pi_to];
-            return SetLimit(pi_from, new_seg_limit);
-          }
+          return SetLimit(pi_from, new_seg_limit);
         return false;
       }
   }
@@ -258,25 +302,16 @@ struct GrowthVectorLimiter
             if (limit > 0.0)
               limits.Append(GetLimit(pi1));
           }
+
         if (limits.Size() == 0)
           continue;
-        QuickSort(limits);
 
-        double mean_limit = limits[limits.Size() / 2];
-        // if mean limit is the maximum limit, take the average of second-highest
-        // and highest value
-        if (mean_limit > limits[0] && mean_limit == limits.Last())
-          {
-            auto i = limits.Size() - 1;
-            while (limits[i] == limits.Last())
-              i--;
-            mean_limit = 0.5 * (limits[i] + limits.Last());
-          }
+        double average = 0.0;
+        for (auto l : limits)
+          average += l;
+        average /= limits.Size();
 
-        if (limits.Size() % 2 == 0)
-          mean_limit = 0.5 * (mean_limit + limits[(limits.Size() - 1) / 2]);
-
-        SetLimit(pi, factor * mean_limit + (1.0 - factor) * GetLimit(pi));
+        SetLimit(pi, factor * average + (1.0 - factor) * GetLimit(pi));
       }
   }
 
@@ -658,7 +693,7 @@ struct GrowthVectorLimiter
 
     for (auto i_pass : Range(safeties.size()))
       {
-        PrintMessage(4, "GrowthVectorLimiter pass ", i_pass);
+        PrintMessage(0, "GrowthVectorLimiter pass ", i_pass);
         double safety = safeties[i_pass];
         CheckLimits();
         // intersect segment with original surface elements
@@ -671,7 +706,7 @@ struct GrowthVectorLimiter
         LimitBoundaryLayer(safety);
         CheckLimits();
 
-        for (auto i : Range(3))
+        for (auto i : Range(10))
           EqualizeLimits(smoothing_factors[i_pass]);
         CheckLimits();
 
