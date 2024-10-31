@@ -63,22 +63,25 @@ Vec<3> CalcGrowthVector (FlatArray<Vec<3>> ns)
         for (auto j : Range(3))
           mat(i, j) = ns[i][j];
 
-      if (fabs(mat.Det()) > 1e-6)
+      if (fabs(mat.Det()) > 1e-2)
         {
           DenseMatrix mat(3, 3);
           for (auto i : Range(3))
             for (auto j : Range(3))
               mat(i, j) = ns[i] * ns[j];
-          Vector rhs(3);
-          rhs = 1.;
-          Vector res(3);
-          DenseMatrix inv(3, ns.Size());
-          CalcInverse(mat, inv);
-          inv.Mult(rhs, res);
-          Vec<3> growth = 0.;
-          for (auto i : Range(ns))
-            growth += res[i] * ns[i];
-          return growth;
+          if (fabs(mat.Det()) > 1e-2)
+            {
+              Vector rhs(3);
+              rhs = 1.;
+              Vector res(3);
+              DenseMatrix inv(3, ns.Size());
+              CalcInverse(mat, inv);
+              inv.Mult(rhs, res);
+              Vec<3> growth = 0.;
+              for (auto i : Range(ns))
+                growth += res[i] * ns[i];
+              return growth;
+            }
         }
     }
   auto [maxpos1, maxpos2] = FindCloseVectors(ns);
