@@ -363,6 +363,7 @@ namespace netgen
       if(debugparam.write_mesh_on_error) {
         md.mesh->Save("open_quads_starting_mesh_"+ToString(md.domain)+".vol.gz");
         GetOpenElements(*md.mesh, md.domain)->Save("open_quads_rest_" + ToString(md.domain)+".vol.gz");
+        GetOpenElements(*md.mesh, md.domain, true)->Save("open_quads_rest_" + ToString(md.domain)+"_only_quads.vol.gz");
       }
       PrintSysError ("mesh has still open quads");
       throw NgException ("Stop meshing since too many attempts");
