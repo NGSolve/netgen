@@ -692,6 +692,22 @@ struct GrowthVectorLimiter
   {
     limits.SetSize(mesh.Points().Size());
     limits = 1.0;
+    if (tool.special_boundary_points.size())
+      {
+        auto point_to_sel = tool.mesh.CreatePoint2SurfaceElementTable();
+        for (auto& [pi, special_point] : tool.special_boundary_points)
+          {
+            auto maxh = mesh.GetH(mesh[pi]);
+            auto new_limit = min(0.3 * maxh / tool.total_height, 1.0);
+            if (new_limit < 1.0)
+              {
+                limits[pi] = new_limit;
+                for (auto sei : point_to_sel[pi])
+                  for (auto pi_ : Get(sei).PNums())
+                    limits[pi_] = new_limit;
+              }
+          }
+      }
 
     std::array safeties = {0.5, 1.1, 1.5, 1.5};
 
