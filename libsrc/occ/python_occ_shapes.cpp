@@ -610,11 +610,11 @@ public:
     return Circle (pos.X(), pos.Y(), r);
   }
   
-  shared_ptr<WorkPlane> Close ()
+  shared_ptr<WorkPlane> Close (optional<string> name = nullopt)
   {
     if (startpnt.Distance(localpos.Location()) > 1e-10)
       {
-        LineTo (startpnt.X(), startpnt.Y());
+        LineTo (startpnt.X(), startpnt.Y(), name);
         return shared_from_this();                    
       }
 
@@ -2635,7 +2635,8 @@ degen_tol : double
     .def("NameVertex", &WorkPlane::NameVertex, py::arg("name"), "name vertex at current position")
     .def("Offset", &WorkPlane::Offset, py::arg("d"), "replace current wire by offset curve of distance 'd'")
     .def("Reverse", &WorkPlane::Reverse, "revert orientation of current wire")
-    .def("Close", &WorkPlane::Close, "draw line to start point of wire, and finish wire")
+    .def("Close", &WorkPlane::Close, py::arg("name")=nullopt,
+         "draw line to start point of wire, and finish wire")
     .def("Finish", &WorkPlane::Finish, "finish current wire without closing")
     .def("Last", &WorkPlane::Last, "(deprecated) returns current wire")
     .def("Wire", &WorkPlane::Last, "returns current wire")
