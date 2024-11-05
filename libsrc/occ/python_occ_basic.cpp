@@ -170,7 +170,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
     .def(py::init([] (py::tuple pnt)
                   {
                     if (py::len(pnt) != 2)
-                      throw Exception("need 2-tuple to create gp_Pnt2d");
+                      throw std::invalid_argument("need 2-tuple to create gp_Pnt2d");
                     return gp_Pnt2d(py::cast<double>(pnt[0]),
                                     py::cast<double>(pnt[1]));
                   }))
