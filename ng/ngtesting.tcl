@@ -125,7 +125,7 @@ proc ngtest { {t all} {f ""}} {
     }
     puts "*** stl tests complete"    
   } elseif {$t == "pde"} {
-    puts "\n*** preforming pde tests ***"
+    puts "\n*** performing pde tests ***"
 #    set logfile [open pdetest.log "w"]
     puts " ** writing results to $f"
     
