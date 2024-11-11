@@ -414,6 +414,21 @@ def Draw(obj, *args, show=True, **kwargs):
         scene.GenerateHTML(filename=kwargs_with_defaults["filename"])
     return scene
 
+def _MakeScreenshot(data, png_file, width=1200, height=600):
+    """Uses playwright to make a screenshot of the given html file."""
+    # pylint: disable=import-outside-toplevel
+    from playwright.sync_api import sync_playwright
+    from webgui_jupyter_widgets.html import GenerateHTML, getScreenshotHTML
+
+    html_file = png_file + ".html"
+    GenerateHTML(data, filename=html_file, template=getScreenshotHTML())
+
+    with sync_playwright() as play:
+        browser = play.chromium.launch()
+        page = browser.new_page(viewport={"width": width, "height": height})
+        page.goto(f"file://{os.path.abspath(html_file)}")
+        page.screenshot(path=png_file)
+        browser.close()
 
 def _DrawDocu(obj, *args, **kwargs):
     kwargs_with_defaults = _get_draw_default_args()
@@ -447,7 +462,7 @@ def _DrawDocu(obj, *args, **kwargs):
     scene.widget = widget
     data = scene.GetData()
     json.dump(data, open(data_file_abs, "w"))
-    scene.MakeScreenshot(preview_file_abs, 1200, 600)
+    _MakeScreenshot(data, preview_file_abs, 1200, 600)
     scene.Redraw = lambda: None
     from IPython.display import display, HTML
 
