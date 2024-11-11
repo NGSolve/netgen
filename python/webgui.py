@@ -414,27 +414,29 @@ def Draw(obj, *args, show=True, **kwargs):
         scene.GenerateHTML(filename=kwargs_with_defaults["filename"])
     return scene
 
-def _MakeScreenshot(data, png_file, width=1200, height=600):
+async def _MakeScreenshot(data, png_file, width=1200, height=600):
     """Uses playwright to make a screenshot of the given html file."""
     # pylint: disable=import-outside-toplevel
-    from playwright.sync_api import sync_playwright
+    from playwright.async_api import async_playwright
     from webgui_jupyter_widgets.html import GenerateHTML, getScreenshotHTML
 
     html_file = png_file + ".html"
     GenerateHTML(data, filename=html_file, template=getScreenshotHTML())
 
-    with sync_playwright() as play:
-        browser = play.chromium.launch()
-        page = browser.new_page(viewport={"width": width, "height": height})
-        page.goto(f"file://{os.path.abspath(html_file)}")
-        page.screenshot(path=png_file)
-        browser.close()
+    async with async_playwright() as play:
+        browser = await play.chromium.launch()
+        page = await browser.new_page(viewport={"width": width, "height": height})
+        await page.goto(f"file://{os.path.abspath(html_file)}")
+        await page.screenshot(path=png_file)
+        await browser.close()
 
 def _DrawDocu(obj, *args, **kwargs):
+    import json
+    import asyncio
+
     kwargs_with_defaults = _get_draw_default_args()
     kwargs_with_defaults.update(kwargs)
     scene = WebGLScene(obj, args, kwargs_with_defaults)
-    import json
 
     docu_path = os.environ["NETGEN_DOCUMENTATION_OUT_DIR"]
     src_path = os.environ["NETGEN_DOCUMENTATION_SRC_DIR"]
@@ -462,7 +464,7 @@ def _DrawDocu(obj, *args, **kwargs):
     scene.widget = widget
     data = scene.GetData()
     json.dump(data, open(data_file_abs, "w"))
-    _MakeScreenshot(data, preview_file_abs, 1200, 600)
+    asyncio.run(_MakeScreenshot(data, preview_file_abs, 1200, 600))
     scene.Redraw = lambda: None
     from IPython.display import display, HTML
 
@@ -471,6 +473,10 @@ def _DrawDocu(obj, *args, **kwargs):
 
 
 if "NETGEN_DOCUMENTATION_SRC_DIR" in os.environ:
+    # use nest_asyncio to allow reentrant asyncio when executing jupyter notebooks
+    import nest_asyncio
+    nest_asyncio.apply()
+
     # we are buiding the documentation, some things are handled differently:
     # 1) Draw() is generating a .png (using headless chromium via selenium) and a render_data.json
     #    to show a preview image and load the render_data only when requested by user
