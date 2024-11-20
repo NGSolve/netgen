@@ -6,6 +6,7 @@
 #include <string>          // for string
 
 #include "ngcore_api.hpp"  // for NGCORE_API
+#include "utils.hpp"       // for ToString
 
 
 namespace ngcore
@@ -91,6 +92,33 @@ namespace ngcore
   // Exception used if no simd implementation is available to fall back to standard evaluation
   class NGCORE_API ExceptionNOSIMD : public Exception
   { public: using Exception::Exception; };
+
+  template <typename T>
+  struct IsSafe {
+    constexpr operator bool() const { return false; } };
+
+  namespace detail {
+    template <typename T>
+    inline static void CheckRange(const char * s, const T& n, int first, int next)
+    {
+      if constexpr (!IsSafe<decltype(n)>())
+        if (n<first || n>=next)
+          ThrowRangeException(s, int(n), first, next);
+    }
+
+    template <typename Ta, typename Tb>
+    inline static void CheckSame(const char * s, const Ta& a, const Tb& b)
+    {
+     if constexpr (!IsSafe<decltype(a)>() || !IsSafe<decltype(b)>())
+      if(a != b)
+      {
+        if constexpr(std::is_same<decltype(a),size_t>() && std::is_same<decltype(b),size_t>())
+          ThrowNotTheSameException(s, long(a), long(b)); \
+        else
+          throw Exception(std::string(s) + "\t: not the same"+ToString(a) + ", b="+ngcore::ToString(b) + GetBackTrace());
+      }
+    }
+  } // namespace detail
 } // namespace ngcore
 
 #define NETGEN_CORE_NGEXEPTION_STR_HELPER(x) #x
@@ -99,24 +127,10 @@ namespace ngcore
 // Convenience macro to append file name and line of exception origin to the string
 #define NG_EXCEPTION(s) ngcore::Exception(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t"+std::string(s))
 
-
-template <typename T>
-struct IsSafe {
-  constexpr operator bool() const { return false; } };
-
 #if defined(NETGEN_ENABLE_CHECK_RANGE) && !defined(__CUDA_ARCH__)
-#define NETGEN_CHECK_RANGE(value, min, max_plus_one) \
-  { if constexpr (!IsSafe<decltype(value)>()) { \
-  if ((value)<(min) ||  (value)>=(max_plus_one))                        \
-    ThrowRangeException(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t", int(value), int(min), int(max_plus_one)); }  }
+#define NETGEN_CHECK_RANGE(value, min, max_plus_one) ngcore::detail::CheckRange(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t", value, int(min), int(max_plus_one));
+#define NETGEN_CHECK_SAME(a,b) ngcore::detail::CheckSame(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t", a, b);
 
-#define NETGEN_CHECK_SAME(a,b) \
-  { if(a != b) {                                                        \
-      if constexpr(std::is_same<decltype(a),size_t>() && std::is_same<decltype(b),size_t>()) \
-        ThrowNotTheSameException(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t: not the same, a=", long(a), long(b)); \
-      else \
-        throw ngcore::Exception(__FILE__ ":" NETGEN_CORE_NGEXEPTION_STR(__LINE__) "\t: not the same, a="+ToString(a) + ", b="+ToString(b) + GetBackTrace()); \
-    } }
 #define NETGEN_NOEXCEPT 
 #else // defined(NETGEN_ENABLE_CHECK_RANGE) && !defined(__CUDA_ARCH__)
 #define NETGEN_CHECK_RANGE(value, min, max)
