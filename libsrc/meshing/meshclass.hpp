@@ -749,6 +749,14 @@ namespace netgen
 
 
     DLL_HEADER NgArray<string*> & GetRegionNamesCD (int codim);
+
+    DLL_HEADER std::string_view GetRegionName(const Segment & el) const;
+    DLL_HEADER std::string_view GetRegionName(const Element2d & el) const;
+    DLL_HEADER std::string_view GetRegionName(const Element & el) const;
+
+    std::string_view GetRegionName(SegmentIndex ei) const { return GetRegionName((*this)[ei]); }
+    std::string_view GetRegionName(SurfaceElementIndex ei) const { return GetRegionName((*this)[ei]); }
+    std::string_view GetRegionName(ElementIndex ei) const { return GetRegionName((*this)[ei]); }
     
     ///
     void ClearFaceDescriptors()

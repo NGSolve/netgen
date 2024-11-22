@@ -60,6 +60,7 @@ public:
   MyStr(const Point3d& p);
   MyStr(const Vec3d& p);
   MyStr(const string & st);
+  MyStr(string_view sv);
   MyStr(const filesystem::path & st);
 
   ~MyStr();

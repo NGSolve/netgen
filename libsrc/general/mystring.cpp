@@ -223,6 +223,16 @@ MyStr::MyStr(const string & st)
   strcpy (str, st.c_str());
 }
 
+MyStr::MyStr(string_view sv)
+{
+  length = unsigned(sv.length());
+  if (length > SHORTLEN)
+    str = new char[length + 1];
+  else
+    str = shortstr;
+  strcpy (str, sv.data());
+}
+
 MyStr::MyStr(const filesystem::path & path)
     : MyStr(path.string())
 { }
