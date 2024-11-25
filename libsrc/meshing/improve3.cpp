@@ -14,6 +14,11 @@
 namespace netgen
 {
 
+static constexpr int tetedges[6][2] =
+  { { 0, 1 }, { 0, 2 }, { 0, 3 },
+    { 1, 2 }, { 1, 3 }, { 2, 3 } };
+
+
 static constexpr int IMPROVEMENT_CONFORMING_EDGE = -1e6;
 
 static inline bool NotTooBad(double bad1, double bad2)
@@ -257,6 +262,26 @@ double MeshOptimize3d :: CombineImproveEdge (
       badness_old += mesh[ei].GetBadness();
   for (auto ei : has_both_points)
       badness_old += mesh[ei].GetBadness();
+
+  if (goal == OPT_CONFORM && p0.Type() <= EDGEPOINT) {
+    // check if the optimization improves conformity with free segments
+    std::set<PointIndex> edges_before, edges_after;
+
+    for (auto ei : has_one_point) {
+        const auto el = mesh[ei];
+        for(auto i : Range(6)) {
+          auto e0 = el[tetedges[i][0]];
+          auto e1 = el[tetedges[i][1]];
+          if(e0 == pi0 || e1 == pi0) edges_before.insert(e0 == pi0 ? e1 : e0);
+          if(e0 == pi1 || e1 == pi1) edges_after.insert(e0 == pi1 ? e1 : e0);
+        }
+    }
+
+    for(auto new_edge : edges_after) {
+      if (edges_before.count(new_edge) == 0 && mesh[new_edge].Type() <= EDGEPOINT && mesh.BoundaryEdge (new_edge, pi0))
+        badness_old += GetLegalPenalty();
+    }
+  }
 
   MeshPoint pnew = p0;
   if (p0.Type() == INNERPOINT)
@@ -1548,10 +1573,6 @@ void MeshOptimize3d :: SwapImproveSurface (
 	  // loop over edges
 
 	  
-	  static const int tetedges[6][2] =
-	    { { 0, 1 }, { 0, 2 }, { 0, 3 },
-	      { 1, 2 }, { 1, 3 }, { 2, 3 } };
-
 	  pi1 = elemi[tetedges[j][0]];
 	  pi2 = elemi[tetedges[j][1]];
 
@@ -2406,6 +2427,8 @@ double MeshOptimize3d :: SwapImprove2 ( ElementIndex eli1, int face,
                   !mesh.LegalTet(elem2))
                   bad1 += GetLegalPenalty();
 
+              if(mesh.BoundaryEdge (pi4, pi5))
+                  bad1 += GetLegalPenalty();
 
               el31.PNum(1) = pi1;
               el31.PNum(2) = pi2;
@@ -2583,10 +2606,6 @@ double MeshOptimize3d :: SplitImprove2Element (
     return false;
 
   // search for very flat tets, with two disjoint edges nearly crossing, like a rectangle with diagonals
-  static constexpr int tetedges[6][2] =
-  { { 0, 1 }, { 0, 2 }, { 0, 3 },
-    { 1, 2 }, { 1, 3 }, { 2, 3 } };
-
   int minedge = -1;
   double mindist = 1e99;
   double minlam0, minlam1;

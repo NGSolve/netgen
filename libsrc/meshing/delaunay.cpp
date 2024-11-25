@@ -564,7 +564,7 @@ namespace netgen
 
 
 
-  void Delaunay1 (Mesh & mesh, const MeshingParameters & mp, AdFront3 * adfront,
+  void Delaunay1 (Mesh & mesh, int domainnr, const MeshingParameters & mp, AdFront3 * adfront,
 		  NgArray<DelaunayTet> & tempels,
 		  int oldnp, DelaunayTet & startel, Point3d & pmin, Point3d & pmax)
   {
@@ -623,6 +623,13 @@ namespace netgen
     for (PointIndex pi : mesh.LockedPoints())
       usep[pi] = true;
     
+    // mark points of free edge segments (no adjacent face)
+    for (auto & seg : mesh.LineSegments())
+      if(seg.domin == domainnr && seg.domout == domainnr)
+      {
+        usep[seg[0]] = true;
+        usep[seg[1]] = true;
+      }
 
     NgArray<int> freelist;
 
@@ -1554,7 +1561,7 @@ namespace netgen
 
     int np = mesh.GetNP();
 
-    Delaunay1 (mesh, mp, adfront, tempels, oldnp, startel, pmin, pmax);
+    Delaunay1 (mesh, domainnr, mp, adfront, tempels, oldnp, startel, pmin, pmax);
 
     {
       // improve delaunay - mesh by swapping !!!!

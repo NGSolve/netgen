@@ -31,6 +31,7 @@ DLL_HEADER MESHING3_RESULT OptimizeVolume (const MeshingParameters & mp, Mesh& m
 //			       const CSGeometry * geometry = NULL);
 
 DLL_HEADER void RemoveIllegalElements (Mesh & mesh3d, int domain = 0);
+DLL_HEADER void ConformToFreeSegments (Mesh & mesh3d, int domain);
 
 
 enum MESHING_STEP { 
