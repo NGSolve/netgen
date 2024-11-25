@@ -1204,7 +1204,7 @@ namespace netgen
     auto write_names = [&] (auto & array) {
       for (int k = 0; k < array.Size(); k++) {
 	int s = name_sizes[tot_nn];
-	array[k] = new string(&compiled_names[tot_size], s);
+	array[k] = s ? new string(&compiled_names[tot_size], s) : nullptr;
 	tot_nn++;
 	tot_size += s;
       }
