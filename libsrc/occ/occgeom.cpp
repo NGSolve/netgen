@@ -1132,6 +1132,21 @@ namespace netgen
          }
       }
       */
+
+      std::map<int, ArrayMem<int, 10>> free_edges_in_solid;
+      for(auto i1 : Range(1, somap.Extent()+1))
+      {
+          auto s = somap(i1);
+          for (auto edge : MyExplorer(s, TopAbs_EDGE, TopAbs_WIRE))
+            if (!emap.Contains(edge))
+              {
+                free_edges_in_solid[i1].Append(emap.Add (edge));
+                for (auto vertex : MyExplorer(edge, TopAbs_VERTEX))
+                  if (!vmap.Contains(vertex))
+                    vmap.Add (vertex);
+              }
+      }
+
       for (auto edge : MyExplorer(shape, TopAbs_EDGE, TopAbs_WIRE))
         if (!emap.Contains(edge))
           {
@@ -1256,6 +1271,16 @@ namespace netgen
               if(face.Shape().Orientation() == TopAbs_INTERNAL)
                   face.domout = k;
           }
+
+          if(free_edges_in_solid.count(i1))
+            for(auto ei : free_edges_in_solid[i1])
+            {
+              auto & edge = GetEdge(emap(ei));
+              edge.properties.maxh = min(edge.properties.maxh, occ_solid->properties.maxh);
+              edge.domin = k;
+              edge.domout = k;
+              occ_solid->free_edges.Append(&GetEdge(emap(ei)));
+            }
           solids.Append(std::move(occ_solid));
       }
 

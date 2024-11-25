@@ -86,6 +86,9 @@ namespace netgen
   protected:
       GeometryVertex *start, *end;
   public:
+    // Neighboring domains in 2d
+    // In 3d unused, EXCEPT for free floating edges in a domain,
+    // then both are pointing to the containing domain
     int domin=-1, domout=-1;
 
     GeometryEdge( GeometryVertex &start_, GeometryVertex &end_ )
@@ -187,7 +190,10 @@ namespace netgen
   };
 
   class DLL_HEADER GeometrySolid : public GeometryShape
-  { };
+  {
+  public:
+    Array<GeometryEdge*> free_edges; // edges with no adjacent face
+  };
 
   class DLL_HEADER NetgenGeometry
   {
