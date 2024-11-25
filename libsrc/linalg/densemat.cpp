@@ -49,7 +49,8 @@ namespace netgen
   {
     data = NULL; height = width = 0;
     SetSize (m2.Height(), m2.Width());
-    memcpy (data, m2.data, sizeof(double) * Height() * Width());
+    if (Height()*Width())
+      memcpy (data, m2.data, sizeof(double) * (Height() * Width()));
   }
 
   DenseMatrix :: ~DenseMatrix ()
