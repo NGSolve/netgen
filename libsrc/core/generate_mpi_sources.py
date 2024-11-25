@@ -105,13 +105,13 @@ def generate_declarations():
         name = f[1]
         args = ", ".join(get_args(f))
         code += f"NGCORE_API extern {ret} (*NG_{name})({args});\n"
-        nowrapper_code += f"static const auto NG_{name} = {name};\n"
+        nowrapper_code += f"#define NG_{name} {name}\n"
 
     for typ, name in constants:
         if typ.startswith("MPI_"):
             typ = "NG_" + typ
         code += f"NGCORE_API extern {typ} NG_{name};\n"
-        nowrapper_code += f"static const decltype({name}) NG_{name} = {name};\n"
+        nowrapper_code += f"#define NG_{name} {name}\n"
 
     with open("ng_mpi_generated_declarations.hpp", "w") as f:
         f.write("#ifdef NG_MPI_WRAPPER\n")

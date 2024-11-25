@@ -75,79 +75,79 @@ NGCORE_API extern int NG_MPI_THREAD_SINGLE;
 NGCORE_API extern int NG_MPI_VERSION;
 NGCORE_API extern void* NG_MPI_IN_PLACE;
 #else  // NG_MPI_WRAPPER
-static const auto NG_MPI_Wtime = MPI_Wtime;
-static const auto NG_MPI_Allgather = MPI_Allgather;
-static const auto NG_MPI_Allreduce = MPI_Allreduce;
-static const auto NG_MPI_Alltoall = MPI_Alltoall;
-static const auto NG_MPI_Barrier = MPI_Barrier;
-static const auto NG_MPI_Bcast = MPI_Bcast;
-static const auto NG_MPI_Comm_c2f = MPI_Comm_c2f;
-static const auto NG_MPI_Comm_create = MPI_Comm_create;
-static const auto NG_MPI_Comm_create_group = MPI_Comm_create_group;
-static const auto NG_MPI_Comm_free = MPI_Comm_free;
-static const auto NG_MPI_Comm_group = MPI_Comm_group;
-static const auto NG_MPI_Comm_rank = MPI_Comm_rank;
-static const auto NG_MPI_Comm_size = MPI_Comm_size;
-static const auto NG_MPI_Finalize = MPI_Finalize;
-static const auto NG_MPI_Gather = MPI_Gather;
-static const auto NG_MPI_Gatherv = MPI_Gatherv;
-static const auto NG_MPI_Get_count = MPI_Get_count;
-static const auto NG_MPI_Get_processor_name = MPI_Get_processor_name;
-static const auto NG_MPI_Group_incl = MPI_Group_incl;
-static const auto NG_MPI_Init = MPI_Init;
-static const auto NG_MPI_Init_thread = MPI_Init_thread;
-static const auto NG_MPI_Initialized = MPI_Initialized;
-static const auto NG_MPI_Iprobe = MPI_Iprobe;
-static const auto NG_MPI_Irecv = MPI_Irecv;
-static const auto NG_MPI_Isend = MPI_Isend;
-static const auto NG_MPI_Probe = MPI_Probe;
-static const auto NG_MPI_Query_thread = MPI_Query_thread;
-static const auto NG_MPI_Recv = MPI_Recv;
-static const auto NG_MPI_Recv_init = MPI_Recv_init;
-static const auto NG_MPI_Reduce = MPI_Reduce;
-static const auto NG_MPI_Reduce_local = MPI_Reduce_local;
-static const auto NG_MPI_Request_free = MPI_Request_free;
-static const auto NG_MPI_Scatter = MPI_Scatter;
-static const auto NG_MPI_Send = MPI_Send;
-static const auto NG_MPI_Send_init = MPI_Send_init;
-static const auto NG_MPI_Startall = MPI_Startall;
-static const auto NG_MPI_Type_commit = MPI_Type_commit;
-static const auto NG_MPI_Type_contiguous = MPI_Type_contiguous;
-static const auto NG_MPI_Type_create_resized = MPI_Type_create_resized;
-static const auto NG_MPI_Type_create_struct = MPI_Type_create_struct;
-static const auto NG_MPI_Type_free = MPI_Type_free;
-static const auto NG_MPI_Type_get_extent = MPI_Type_get_extent;
-static const auto NG_MPI_Type_indexed = MPI_Type_indexed;
-static const auto NG_MPI_Type_size = MPI_Type_size;
-static const auto NG_MPI_Wait = MPI_Wait;
-static const auto NG_MPI_Waitall = MPI_Waitall;
-static const auto NG_MPI_Waitany = MPI_Waitany;
-static const decltype(MPI_COMM_NULL) NG_MPI_COMM_NULL = MPI_COMM_NULL;
-static const decltype(MPI_COMM_WORLD) NG_MPI_COMM_WORLD = MPI_COMM_WORLD;
-static const decltype(MPI_CHAR) NG_MPI_CHAR = MPI_CHAR;
-static const decltype(MPI_CXX_DOUBLE_COMPLEX) NG_MPI_CXX_DOUBLE_COMPLEX = MPI_CXX_DOUBLE_COMPLEX;
-static const decltype(MPI_C_BOOL) NG_MPI_C_BOOL = MPI_C_BOOL;
-static const decltype(MPI_DATATYPE_NULL) NG_MPI_DATATYPE_NULL = MPI_DATATYPE_NULL;
-static const decltype(MPI_DOUBLE) NG_MPI_DOUBLE = MPI_DOUBLE;
-static const decltype(MPI_FLOAT) NG_MPI_FLOAT = MPI_FLOAT;
-static const decltype(MPI_INT) NG_MPI_INT = MPI_INT;
-static const decltype(MPI_SHORT) NG_MPI_SHORT = MPI_SHORT;
-static const decltype(MPI_UINT64_T) NG_MPI_UINT64_T = MPI_UINT64_T;
-static const decltype(MPI_LOR) NG_MPI_LOR = MPI_LOR;
-static const decltype(MPI_MAX) NG_MPI_MAX = MPI_MAX;
-static const decltype(MPI_MIN) NG_MPI_MIN = MPI_MIN;
-static const decltype(MPI_SUM) NG_MPI_SUM = MPI_SUM;
-static const decltype(MPI_REQUEST_NULL) NG_MPI_REQUEST_NULL = MPI_REQUEST_NULL;
-static const decltype(MPI_STATUSES_IGNORE) NG_MPI_STATUSES_IGNORE = MPI_STATUSES_IGNORE;
-static const decltype(MPI_STATUS_IGNORE) NG_MPI_STATUS_IGNORE = MPI_STATUS_IGNORE;
-static const decltype(MPI_ANY_SOURCE) NG_MPI_ANY_SOURCE = MPI_ANY_SOURCE;
-static const decltype(MPI_ANY_TAG) NG_MPI_ANY_TAG = MPI_ANY_TAG;
-static const decltype(MPI_MAX_PROCESSOR_NAME) NG_MPI_MAX_PROCESSOR_NAME = MPI_MAX_PROCESSOR_NAME;
-static const decltype(MPI_PROC_NULL) NG_MPI_PROC_NULL = MPI_PROC_NULL;
-static const decltype(MPI_ROOT) NG_MPI_ROOT = MPI_ROOT;
-static const decltype(MPI_SUBVERSION) NG_MPI_SUBVERSION = MPI_SUBVERSION;
-static const decltype(MPI_THREAD_MULTIPLE) NG_MPI_THREAD_MULTIPLE = MPI_THREAD_MULTIPLE;
-static const decltype(MPI_THREAD_SINGLE) NG_MPI_THREAD_SINGLE = MPI_THREAD_SINGLE;
-static const decltype(MPI_VERSION) NG_MPI_VERSION = MPI_VERSION;
-static const decltype(MPI_IN_PLACE) NG_MPI_IN_PLACE = MPI_IN_PLACE;
+#define NG_MPI_Wtime MPI_Wtime
+#define NG_MPI_Allgather MPI_Allgather
+#define NG_MPI_Allreduce MPI_Allreduce
+#define NG_MPI_Alltoall MPI_Alltoall
+#define NG_MPI_Barrier MPI_Barrier
+#define NG_MPI_Bcast MPI_Bcast
+#define NG_MPI_Comm_c2f MPI_Comm_c2f
+#define NG_MPI_Comm_create MPI_Comm_create
+#define NG_MPI_Comm_create_group MPI_Comm_create_group
+#define NG_MPI_Comm_free MPI_Comm_free
+#define NG_MPI_Comm_group MPI_Comm_group
+#define NG_MPI_Comm_rank MPI_Comm_rank
+#define NG_MPI_Comm_size MPI_Comm_size
+#define NG_MPI_Finalize MPI_Finalize
+#define NG_MPI_Gather MPI_Gather
+#define NG_MPI_Gatherv MPI_Gatherv
+#define NG_MPI_Get_count MPI_Get_count
+#define NG_MPI_Get_processor_name MPI_Get_processor_name
+#define NG_MPI_Group_incl MPI_Group_incl
+#define NG_MPI_Init MPI_Init
+#define NG_MPI_Init_thread MPI_Init_thread
+#define NG_MPI_Initialized MPI_Initialized
+#define NG_MPI_Iprobe MPI_Iprobe
+#define NG_MPI_Irecv MPI_Irecv
+#define NG_MPI_Isend MPI_Isend
+#define NG_MPI_Probe MPI_Probe
+#define NG_MPI_Query_thread MPI_Query_thread
+#define NG_MPI_Recv MPI_Recv
+#define NG_MPI_Recv_init MPI_Recv_init
+#define NG_MPI_Reduce MPI_Reduce
+#define NG_MPI_Reduce_local MPI_Reduce_local
+#define NG_MPI_Request_free MPI_Request_free
+#define NG_MPI_Scatter MPI_Scatter
+#define NG_MPI_Send MPI_Send
+#define NG_MPI_Send_init MPI_Send_init
+#define NG_MPI_Startall MPI_Startall
+#define NG_MPI_Type_commit MPI_Type_commit
+#define NG_MPI_Type_contiguous MPI_Type_contiguous
+#define NG_MPI_Type_create_resized MPI_Type_create_resized
+#define NG_MPI_Type_create_struct MPI_Type_create_struct
+#define NG_MPI_Type_free MPI_Type_free
+#define NG_MPI_Type_get_extent MPI_Type_get_extent
+#define NG_MPI_Type_indexed MPI_Type_indexed
+#define NG_MPI_Type_size MPI_Type_size
+#define NG_MPI_Wait MPI_Wait
+#define NG_MPI_Waitall MPI_Waitall
+#define NG_MPI_Waitany MPI_Waitany
+#define NG_MPI_COMM_NULL MPI_COMM_NULL
+#define NG_MPI_COMM_WORLD MPI_COMM_WORLD
+#define NG_MPI_CHAR MPI_CHAR
+#define NG_MPI_CXX_DOUBLE_COMPLEX MPI_CXX_DOUBLE_COMPLEX
+#define NG_MPI_C_BOOL MPI_C_BOOL
+#define NG_MPI_DATATYPE_NULL MPI_DATATYPE_NULL
+#define NG_MPI_DOUBLE MPI_DOUBLE
+#define NG_MPI_FLOAT MPI_FLOAT
+#define NG_MPI_INT MPI_INT
+#define NG_MPI_SHORT MPI_SHORT
+#define NG_MPI_UINT64_T MPI_UINT64_T
+#define NG_MPI_LOR MPI_LOR
+#define NG_MPI_MAX MPI_MAX
+#define NG_MPI_MIN MPI_MIN
+#define NG_MPI_SUM MPI_SUM
+#define NG_MPI_REQUEST_NULL MPI_REQUEST_NULL
+#define NG_MPI_STATUSES_IGNORE MPI_STATUSES_IGNORE
+#define NG_MPI_STATUS_IGNORE MPI_STATUS_IGNORE
+#define NG_MPI_ANY_SOURCE MPI_ANY_SOURCE
+#define NG_MPI_ANY_TAG MPI_ANY_TAG
+#define NG_MPI_MAX_PROCESSOR_NAME MPI_MAX_PROCESSOR_NAME
+#define NG_MPI_PROC_NULL MPI_PROC_NULL
+#define NG_MPI_ROOT MPI_ROOT
+#define NG_MPI_SUBVERSION MPI_SUBVERSION
+#define NG_MPI_THREAD_MULTIPLE MPI_THREAD_MULTIPLE
+#define NG_MPI_THREAD_SINGLE MPI_THREAD_SINGLE
+#define NG_MPI_VERSION MPI_VERSION
+#define NG_MPI_IN_PLACE MPI_IN_PLACE
 #endif // NG_MPI_WRAPPER
