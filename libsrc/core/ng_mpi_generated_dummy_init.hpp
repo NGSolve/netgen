@@ -4,6 +4,7 @@ decltype(NG_MPI_Allreduce) NG_MPI_Allreduce = [](void*, void*, int, NG_MPI_Datat
 decltype(NG_MPI_Alltoall) NG_MPI_Alltoall = [](void*, int, NG_MPI_Datatype, void*, int, NG_MPI_Datatype, NG_MPI_Comm)->int { throw no_mpi(); };
 decltype(NG_MPI_Barrier) NG_MPI_Barrier = [](NG_MPI_Comm)->int { throw no_mpi(); };
 decltype(NG_MPI_Bcast) NG_MPI_Bcast = [](void*, int, NG_MPI_Datatype, int, NG_MPI_Comm)->int { throw no_mpi(); };
+decltype(NG_MPI_Ibcast) NG_MPI_Ibcast = [](void*, int, NG_MPI_Datatype, int, NG_MPI_Comm, NG_MPI_Request*)->int { throw no_mpi(); };
 decltype(NG_MPI_Comm_c2f) NG_MPI_Comm_c2f = [](NG_MPI_Comm)->int { throw no_mpi(); };
 decltype(NG_MPI_Comm_create) NG_MPI_Comm_create = [](NG_MPI_Comm, NG_MPI_Group, NG_MPI_Comm*)->int { throw no_mpi(); };
 decltype(NG_MPI_Comm_create_group) NG_MPI_Comm_create_group = [](NG_MPI_Comm, NG_MPI_Group, int, NG_MPI_Comm*)->int { throw no_mpi(); };

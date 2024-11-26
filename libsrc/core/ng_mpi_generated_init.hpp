@@ -4,6 +4,7 @@ NG_MPI_Allreduce = [](void* arg0, void* arg1, int arg2, NG_MPI_Datatype arg3, NG
 NG_MPI_Alltoall = [](void* arg0, int arg1, NG_MPI_Datatype arg2, void* arg3, int arg4, NG_MPI_Datatype arg5, NG_MPI_Comm arg6)->int { return MPI_Alltoall( arg0,  arg1,  ng2mpi(arg2),  arg3,  arg4,  ng2mpi(arg5),  ng2mpi(arg6)); };
 NG_MPI_Barrier = [](NG_MPI_Comm arg0)->int { return MPI_Barrier( ng2mpi(arg0)); };
 NG_MPI_Bcast = [](void* arg0, int arg1, NG_MPI_Datatype arg2, int arg3, NG_MPI_Comm arg4)->int { return MPI_Bcast( arg0,  arg1,  ng2mpi(arg2),  arg3,  ng2mpi(arg4)); };
+NG_MPI_Ibcast = [](void* arg0, int arg1, NG_MPI_Datatype arg2, int arg3, NG_MPI_Comm arg4, NG_MPI_Request* arg5)->int { return MPI_Ibcast( arg0,  arg1,  ng2mpi(arg2),  arg3,  ng2mpi(arg4),  ng2mpi(arg5)); };
 NG_MPI_Comm_c2f = [](NG_MPI_Comm arg0)->int { return MPI_Comm_c2f( ng2mpi(arg0)); };
 NG_MPI_Comm_create = [](NG_MPI_Comm arg0, NG_MPI_Group arg1, NG_MPI_Comm* arg2)->int { return MPI_Comm_create( ng2mpi(arg0),  ng2mpi(arg1),  ng2mpi(arg2)); };
 NG_MPI_Comm_create_group = [](NG_MPI_Comm arg0, NG_MPI_Group arg1, int arg2, NG_MPI_Comm* arg3)->int { return MPI_Comm_create_group( ng2mpi(arg0),  ng2mpi(arg1),  arg2,  ng2mpi(arg3)); };

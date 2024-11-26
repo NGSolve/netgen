@@ -789,7 +789,7 @@ namespace netgen
       return count;
     };
 
-    for (auto i : Range(5)) {
+    for ([[maybe_unused]] auto i : Range(5)) {
       auto num_bad_segs = num_nonconforming();
       PrintMessage(1, "Non-conforming free segments in domain ", domain, ": ", num_bad_segs);
 
@@ -799,7 +799,7 @@ namespace netgen
       MeshingParameters dummymp;
       MeshOptimize3d optmesh(mesh, dummymp, OPT_CONFORM);
 
-      for (auto i : Range(3)) {
+      for ([[maybe_unused]] auto i : Range(3)) {
         optmesh.SwapImprove2 ();
         optmesh.SwapImprove();
         optmesh.CombineImprove();

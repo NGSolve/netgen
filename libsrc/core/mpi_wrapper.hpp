@@ -307,9 +307,18 @@ namespace ngcore
       NG_MPI_Bcast (&s, 1, GetMPIType<T>(), root, comm);
     }
 
+
+    template <class T, size_t S>
+    void Bcast (std::array<T,S> & d, int root = 0) const
+    {
+      if (size == 1) return;
+      if (S != 0)
+        NG_MPI_Bcast (&d[0], S, GetMPIType<T>(), root, comm);
+    }
+    
     
     template <class T>
-    void Bcast (Array<T> & d, int root = 0)
+    void Bcast (Array<T> & d, int root = 0) const
     {
       if (size == 1) return;
       
@@ -330,6 +339,25 @@ namespace ngcore
       NG_MPI_Bcast (&s[0], len, NG_MPI_CHAR, root, comm);
     }
 
+
+    template <class T, size_t S>
+    NG_MPI_Request IBcast (std::array<T,S> & d, int root = 0) const
+    {
+      NG_MPI_Request request;      
+      NG_MPI_Ibcast (&d[0], S, GetMPIType<T>(), root, comm, &request);
+      return request;
+    }
+
+    template <class T>
+    NG_MPI_Request IBcast (FlatArray<T> d, int root = 0) const
+    {
+      NG_MPI_Request request;      
+      int ds = d.Size();
+      NG_MPI_Ibcast (d.Data(), ds, GetMPIType<T>(), root, comm, &request);
+      return request;
+    }
+
+    
     template <typename T>
     void AllToAll (FlatArray<T> send, FlatArray<T> recv) const
     {
@@ -506,9 +534,18 @@ namespace ngcore
     template <typename T>
     void Bcast (T & s, int root = 0) const { ; } 
 
+    template <class T, size_t S>
+    void Bcast (std::array<T,S> & d, int root = 0) const {}
+    
     template <class T>
-    void Bcast (Array<T> & d, int root = 0) { ; } 
+    void Bcast (Array<T> & d, int root = 0) const { ; } 
 
+    template <class T, size_t S>
+    NG_MPI_Request IBcast (std::array<T,S> & d, int root = 0) const { return 0; }
+
+    template <class T>
+    NG_MPI_Request IBcast (FlatArray<T> d, int root = 0) const { return 0; } 
+    
     template <typename T>
     void AllGather (T val, FlatArray<T> recv) const
     {

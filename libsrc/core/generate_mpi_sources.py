@@ -5,6 +5,7 @@ functions = [
         ("int", "MPI_Alltoall", "void*", "int", "MPI_Datatype", "void*", "int", "MPI_Datatype", "MPI_Comm"),
         ("int", "MPI_Barrier", "MPI_Comm"),
         ("int", "MPI_Bcast", "void*", "int", "MPI_Datatype", "int", "MPI_Comm"),
+        ("int", "MPI_Ibcast", "void*", "int", "MPI_Datatype", "int", "MPI_Comm", "MPI_Request*"),    
         ("int", "MPI_Comm_c2f", "MPI_Comm"),
         ("int", "MPI_Comm_create", "MPI_Comm", "MPI_Group", "MPI_Comm*"),
         ("int", "MPI_Comm_create_group", "MPI_Comm", "MPI_Group", "int", "MPI_Comm*"),

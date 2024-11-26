@@ -5,6 +5,7 @@ NGCORE_API extern int (*NG_MPI_Allreduce)(void*, void*, int, NG_MPI_Datatype, NG
 NGCORE_API extern int (*NG_MPI_Alltoall)(void*, int, NG_MPI_Datatype, void*, int, NG_MPI_Datatype, NG_MPI_Comm);
 NGCORE_API extern int (*NG_MPI_Barrier)(NG_MPI_Comm);
 NGCORE_API extern int (*NG_MPI_Bcast)(void*, int, NG_MPI_Datatype, int, NG_MPI_Comm);
+NGCORE_API extern int (*NG_MPI_Ibcast)(void*, int, NG_MPI_Datatype, int, NG_MPI_Comm, NG_MPI_Request*);
 NGCORE_API extern int (*NG_MPI_Comm_c2f)(NG_MPI_Comm);
 NGCORE_API extern int (*NG_MPI_Comm_create)(NG_MPI_Comm, NG_MPI_Group, NG_MPI_Comm*);
 NGCORE_API extern int (*NG_MPI_Comm_create_group)(NG_MPI_Comm, NG_MPI_Group, int, NG_MPI_Comm*);
@@ -81,6 +82,7 @@ NGCORE_API extern void* NG_MPI_IN_PLACE;
 #define NG_MPI_Alltoall MPI_Alltoall
 #define NG_MPI_Barrier MPI_Barrier
 #define NG_MPI_Bcast MPI_Bcast
+#define NG_MPI_Ibcast MPI_Ibcast
 #define NG_MPI_Comm_c2f MPI_Comm_c2f
 #define NG_MPI_Comm_create MPI_Comm_create
 #define NG_MPI_Comm_create_group MPI_Comm_create_group
