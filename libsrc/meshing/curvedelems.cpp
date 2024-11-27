@@ -405,18 +405,24 @@ namespace netgen
       }
   }
 
-  
-  static NgArray<shared_ptr<RecPol>> jacpols2;
-
-  void CurvedElements::buildJacPols()
+  struct JacobiRecPols
   {
-    if (!jacpols2.Size())
-      {
-	jacpols2.SetSize (100);
-	for (int i = 0; i < 100; i++)
-	  jacpols2[i] = make_shared<JacobiRecPol> (100, i, 2);
-      }
-  }
+    static constexpr size_t N = 100;
+    ArrayMem<unique_ptr<JacobiRecPol>, N> jacpols;
+
+    JacobiRecPols()
+    {
+      jacpols.SetSize (N);
+      for (int i = 0; i < N; i++)
+        jacpols[i] = make_unique<JacobiRecPol>(N, i, 2);
+    }
+
+    const unique_ptr<JacobiRecPol> & operator[] (int i) { 
+      return jacpols[i];
+    }
+  };
+
+  static JacobiRecPols jacpols2;
 
   // compute face bubbles up to order n, 0 < y, y-x < 1, x+y < 1
   template <class Tx, class Ty, class Ts>
@@ -710,7 +716,6 @@ namespace netgen
 
     ComputeGaussRule (aorder+4, xi, weight);  // on (0,1)
 
-    buildJacPols();
     PrintMessage (3, "Curving edges");
 
     if (mesh.GetDimension() == 3 || rational)
