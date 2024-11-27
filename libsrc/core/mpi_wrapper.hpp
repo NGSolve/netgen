@@ -537,8 +537,8 @@ namespace ngcore
   class NgMPI_Requests
   {
   public:
-    NgMPI_Requests operator+= (NgMPI_Request &&) { ; }
-    NgMPI_Requests operator+= (NG_MPI_Request r) { ; }
+    NgMPI_Requests & operator+= (NgMPI_Request &&) { return *rhis; }
+    NgMPI_Requests & operator+= (NG_MPI_Request r) { return *this; }
     void WaitAll() { ; }
     int WaitAny() { return 0; }
   };
