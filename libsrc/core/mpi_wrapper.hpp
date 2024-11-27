@@ -72,6 +72,57 @@ namespace ngcore
     return GetMPIType<T>();
   }
 
+  class NgMPI_Request
+  {
+    NG_MPI_Request request;
+  public:
+    NgMPI_Request (NG_MPI_Request requ) : request{requ} { }
+    NgMPI_Request (const NgMPI_Request&) = delete;    
+    NgMPI_Request (NgMPI_Request&&) = default;
+    ~NgMPI_Request () { NG_MPI_Wait (&request, NG_MPI_STATUS_IGNORE); }
+    void Wait() {  NG_MPI_Wait (&request, NG_MPI_STATUS_IGNORE); }
+    operator NG_MPI_Request() &&
+    {
+      auto tmp = request;
+      request = NG_MPI_REQUEST_NULL;
+      return tmp;
+    }
+  };
+
+  class NgMPI_Requests
+  {
+    Array<NG_MPI_Request> requests;
+  public:
+    NgMPI_Requests() = default;
+    ~NgMPI_Requests() { WaitAll(); }
+    
+    NgMPI_Requests & operator+= (NgMPI_Request && r)
+    {
+      requests += NG_MPI_Request(std::move(r));
+      return *this;
+    }
+
+    NgMPI_Requests & operator+= (NG_MPI_Request r)
+    {
+      requests += r;
+      return *this;
+    }
+    
+    void WaitAll()
+    {
+      static Timer t("NgMPI - WaitAll"); RegionTimer reg(t);    
+      if (!requests.Size()) return;
+      NG_MPI_Waitall (requests.Size(), requests.Data(), NG_MPI_STATUSES_IGNORE);
+    }
+
+    int WaitAny ()
+    {
+      int nr;
+      NG_MPI_Waitany (requests.Size(), requests.Data(), &nr, NG_MPI_STATUS_IGNORE);
+      return nr;
+    }
+  };
+  
 
   inline void MyMPI_WaitAll (FlatArray<NG_MPI_Request> requests)
   {
@@ -341,7 +392,7 @@ namespace ngcore
 
 
     template <class T, size_t S>
-    NG_MPI_Request IBcast (std::array<T,S> & d, int root = 0) const
+    NgMPI_Request IBcast (std::array<T,S> & d, int root = 0) const
     {
       NG_MPI_Request request;      
       NG_MPI_Ibcast (&d[0], S, GetMPIType<T>(), root, comm, &request);
@@ -349,7 +400,7 @@ namespace ngcore
     }
 
     template <class T>
-    NG_MPI_Request IBcast (FlatArray<T> d, int root = 0) const
+    NgMPI_Request IBcast (FlatArray<T> d, int root = 0) const
     {
       NG_MPI_Request request;      
       int ds = d.Size();
@@ -481,6 +532,16 @@ namespace ngcore
   };
   template <class T, class T2=void>
   inline NG_MPI_Datatype GetMPIType () { return -1; }
+
+  class NgMPI_Request { };
+  class NgMPI_Requests
+  {
+  public:
+    NgMPI_Requests operator+= (NgMPI_Request &&) { ; }
+    NgMPI_Requests operator+= (NG_MPI_Request r) { ; }
+    void WaitAll() { ; }
+    int WaitAny() { return 0; }
+  };
   
   class NgMPI_Comm
   {

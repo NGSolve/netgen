@@ -138,16 +138,18 @@ namespace netgen
           for (auto p : dps)
             send_data[p][nsend[p]++] = L2G(pi);
 
-    Array<NG_MPI_Request> requests;
+    // Array<NG_MPI_Request> requests;
+    NgMPI_Requests requests;
     for (int i = 0; i < comm.Size(); i++)
       {
         if (nsend[i])
-          requests.Append (comm.ISend (send_data[i], i, 200));
+          requests += comm.ISend (send_data[i], i, 200);
         if (nrecv[i])
-          requests.Append (comm.IRecv (recv_data[i], i, 200));
+          requests += comm.IRecv (recv_data[i], i, 200);
       }
     
-    MyMPI_WaitAll (requests);
+    // MyMPI_WaitAll (requests);
+    requests.WaitAll();
     
     Array<int> cnt(comm.Size());
     cnt = 0;
