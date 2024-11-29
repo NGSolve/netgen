@@ -365,7 +365,7 @@ namespace netgen
     friend DLL_HEADER Point2d CrossPoint (const Line2d & l1, const Line2d & l2);
     /// returns 1 iff parallel
     friend int CrossPointBarycentric (const Line2d & l1, const Line2d & l2,
-				      double & lam1, double & lam2);
+				      double & lam1, double & lam2, double eps);
     
     ///
     friend int Parallel (const Line2d & l1, const Line2d & l2, double peps);

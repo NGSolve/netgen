@@ -128,7 +128,7 @@ Point2d CrossPoint (const Line2d & l1, const Line2d & l2)
 
 
 int CrossPointBarycentric (const Line2d & l1, const Line2d & l2,
-			   double & lam1, double & lam2)
+			   double & lam1, double & lam2, double eps)
 {
   // p = l1.1 + lam1 (l1.2-l1.1) = l2.1 + lam2 (l2.2-l2.1)
   double a11 = l1.p2.X() - l1.p1.X();
@@ -140,8 +140,11 @@ int CrossPointBarycentric (const Line2d & l1, const Line2d & l2,
   double b2 = l2.p1.Y() - l1.p1.Y();
   
   double det = a11*a22 - a12 * a21;
+  /*
   if (det == 0)
     return 1;
+  */
+  if (fabs (det) < eps * (fabs(a11*a22)+fabs(a12*a21))) return 1;
     
   lam1 = (a22 * b1 - a12 * b2) / det;
   lam2 = (a11 * b2 - a21 * b1) / det;
