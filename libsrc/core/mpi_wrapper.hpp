@@ -125,14 +125,15 @@ namespace ngcore
     }
   };
   
-
+  [[deprecated("use requests.WaitAll instread")]]
   inline void MyMPI_WaitAll (FlatArray<NG_MPI_Request> requests)
   {
     static Timer t("MPI - WaitAll"); RegionTimer reg(t);    
     if (!requests.Size()) return;
     NG_MPI_Waitall (requests.Size(), requests.Data(), NG_MPI_STATUSES_IGNORE);
   }
-  
+
+  [[deprecated("use requests.WaitAny instread")]]  
   inline int MyMPI_WaitAny (FlatArray<NG_MPI_Request> requests)
   {
     int nr;
@@ -403,7 +404,7 @@ namespace ngcore
     }
 
     template <class T>
-    NgMPI_Request IBcast (FlatArray<T> d, int root = 0) const
+     [[nodiscard]] NgMPI_Request IBcast (FlatArray<T> d, int root = 0) const
     {
       NG_MPI_Request request;      
       int ds = d.Size();
@@ -416,7 +417,7 @@ namespace ngcore
     void AllToAll (FlatArray<T> send, FlatArray<T> recv) const
     {
       NG_MPI_Alltoall (send.Data(), 1, GetMPIType<T>(),
-                    recv.Data(), 1, GetMPIType<T>(), comm);
+                       recv.Data(), 1, GetMPIType<T>(), comm);
     }
 
 
@@ -425,7 +426,7 @@ namespace ngcore
     {
       if (size == 1) return;
       NG_MPI_Scatter (send.Data(), 1, GetMPIType<T>(),
-                   NG_MPI_IN_PLACE, -1, GetMPIType<T>(), 0, comm);
+                      NG_MPI_IN_PLACE, -1, GetMPIType<T>(), 0, comm);
     }
     
     template <typename T>
@@ -433,7 +434,7 @@ namespace ngcore
     {
       if (size == 1) return;      
       NG_MPI_Scatter (NULL, 0, GetMPIType<T>(),
-                   &recv, 1, GetMPIType<T>(), 0, comm);
+                      &recv, 1, GetMPIType<T>(), 0, comm);
     }
 
     template <typename T>
@@ -442,7 +443,7 @@ namespace ngcore
       recv[0] = T(0);
       if (size == 1) return;      
       NG_MPI_Gather (NG_MPI_IN_PLACE, 1, GetMPIType<T>(),
-                  recv.Data(), 1, GetMPIType<T>(), 0, comm);
+                     recv.Data(), 1, GetMPIType<T>(), 0, comm);
     }
 
     template <typename T>
@@ -483,16 +484,16 @@ namespace ngcore
     
       recv_data = DynamicTable<T> (recv_sizes, true);
       
-      Array<NG_MPI_Request> requests;
+      NgMPI_Requests requests;
       for (int dest = 0; dest < size; dest++)
         if (dest != rank && send_data[dest].Size())
-          requests.Append (ISend (FlatArray<T>(send_data[dest]), dest, tag));
+          requests += ISend (FlatArray<T>(send_data[dest]), dest, tag);
       
       for (int dest = 0; dest < size; dest++)
         if (dest != rank && recv_data[dest].Size())
-          requests.Append (IRecv (FlatArray<T>(recv_data[dest]), dest, tag));
+          requests += IRecv (FlatArray<T>(recv_data[dest]), dest, tag);
 
-      MyMPI_WaitAll (requests);
+      requests.WaitAll();
     }
     
 
