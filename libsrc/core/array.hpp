@@ -959,7 +959,7 @@ namespace ngcore
     NETGEN_INLINE void RemoveElement (size_t i)
     {
       NETGEN_CHECK_RANGE(i, BASE, BASE+size);
-      for(size_t j = i; j < this->size-1; j++)
+      for(size_t j = i; j+1 < this->size; j++)
 	this->data[j] = this->data[j+1];
       this->size--;
     }
