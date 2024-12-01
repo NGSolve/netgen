@@ -286,25 +286,25 @@ namespace ngcore
     }
 
     /** --- non-blocking P2P --- **/
-    
+
     template<typename T, typename T2 = decltype(GetMPIType<T>())> 
-    NG_MPI_Request ISend (T & val, int dest, int tag) const
+    [[nodiscard]] NG_MPI_Request ISend (T & val, int dest, int tag) const
     {
       NG_MPI_Request request;
       NG_MPI_Isend (&val, 1, GetMPIType<T>(), dest, tag, comm, &request);
       return request;
     }
-
+    
     template<typename T, typename T2 = decltype(GetMPIType<T>())>
-    NG_MPI_Request ISend (FlatArray<T> s, int dest, int tag) const
+    [[nodiscard]] NG_MPI_Request ISend (FlatArray<T> s, int dest, int tag) const
     {
       NG_MPI_Request request;
       NG_MPI_Isend (s.Data(), s.Size(), GetMPIType<T>(), dest, tag, comm, &request);
       return request;
     }
-
+    
     template<typename T, typename T2 = decltype(GetMPIType<T>())> 
-    NG_MPI_Request IRecv (T & val, int dest, int tag) const
+    [[nodiscard]] NG_MPI_Request IRecv (T & val, int dest, int tag) const
     {
       NG_MPI_Request request;
       NG_MPI_Irecv (&val, 1, GetMPIType<T>(), dest, tag, comm, &request);
@@ -312,7 +312,7 @@ namespace ngcore
     }
     
     template<typename T, typename T2 = decltype(GetMPIType<T>())>
-    NG_MPI_Request IRecv (FlatArray<T> s, int src, int tag) const
+    [[nodiscard]] NG_MPI_Request IRecv (FlatArray<T> s, int src, int tag) const
     { 
       NG_MPI_Request request;
       NG_MPI_Irecv (s.Data(), s.Size(), GetMPIType<T>(), src, tag, comm, &request);
@@ -393,8 +393,9 @@ namespace ngcore
     }
 
 
+    
     template <class T, size_t S>
-    NgMPI_Request IBcast (std::array<T,S> & d, int root = 0) const
+    [[nodiscard]] NgMPI_Request IBcast (std::array<T,S> & d, int root = 0) const
     {
       NG_MPI_Request request;      
       NG_MPI_Ibcast (&d[0], S, GetMPIType<T>(), root, comm, &request);
@@ -535,7 +536,12 @@ namespace ngcore
   template <class T, class T2=void>
   inline NG_MPI_Datatype GetMPIType () { return -1; }
 
-  class NgMPI_Request { };
+  class NgMPI_Request {
+  public:
+    NgMPI_Request() = default;
+    NgMPI_Request(NgMPI_Request &&) { ; }    
+    NgMPI_Request(NG_MPI_Request &&) { ; }
+  };
   class NgMPI_Requests
   {
   public:

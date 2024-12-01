@@ -1220,7 +1220,8 @@ namespace netgen
     recvrequests[0] = comm.IBcast (nnames);
     MyMPI_WaitAll (recvrequests);
     */
-    comm.IBcast (nnames);  
+    NgMPI_Requests requ;
+    requ += comm.IBcast (nnames);
     
     // cout << "nnames = " << FlatArray(nnames) << endl;
     materials.SetSize(nnames[0]);
@@ -1235,7 +1236,7 @@ namespace netgen
     recvrequests[0] = comm.IBcast (name_sizes);
     MyMPI_WaitAll (recvrequests);
     */
-    comm.IBcast (name_sizes);  
+    requ += comm.IBcast (name_sizes);
     
     int tot_size = 0;
     for (int k = 0; k < tot_nn; k++) tot_size += name_sizes[k];
@@ -1245,7 +1246,8 @@ namespace netgen
     Array<char> compiled_names(tot_size);
     // recvrequests[0] = comm.IBcast (compiled_names);
     // MyMPI_WaitAll (recvrequests);
-    comm.IBcast (compiled_names);    
+    requ += comm.IBcast (compiled_names); 
+    requ.WaitAll();
     
     tot_nn = tot_size = 0;
     auto write_names = [&] (auto & array) {
