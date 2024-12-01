@@ -95,6 +95,8 @@ namespace ngcore
   public:
     NgMPI_Requests() = default;
     ~NgMPI_Requests() { WaitAll(); }
+
+    void Reset() { requests.SetSize0(); }
     
     NgMPI_Requests & operator+= (NgMPI_Request && r)
     {
@@ -539,6 +541,7 @@ namespace ngcore
   public:
     NgMPI_Requests & operator+= (NgMPI_Request &&) { return *this; }
     NgMPI_Requests & operator+= (NG_MPI_Request r) { return *this; }
+    void Reset() { ; }
     void WaitAll() { ; }
     int WaitAny() { return 0; }
   };
