@@ -1041,7 +1041,7 @@ namespace netgen
                                                         build_searchtree);
               return ind - 1;
             }
-          catch(NgException e) // quads not implemented curved yet
+          catch(const NgException & e) // quads not implemented curved yet
             {
           for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
             {

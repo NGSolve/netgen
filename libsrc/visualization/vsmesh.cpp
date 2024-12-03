@@ -266,7 +266,7 @@ namespace netgen
 
     
       }
-    catch (bad_weak_ptr e)
+    catch (const bad_weak_ptr & e)
       {
         // cout << "don't have a mesh to visualize" << endl;
         VisualScene::DrawScene();      
@@ -895,7 +895,7 @@ namespace netgen
 
     vstimestamp = meshtimestamp;
       }
-    catch (bad_weak_ptr e)
+    catch (const bad_weak_ptr & e)
       {
         PrintMessage (3, "vsmesh::buildscene: don't have a mesh to visualize");
         VisualScene::BuildScene (zoomall);

@@ -788,9 +788,9 @@ namespace netgen
                 if(fabs(mat.Det()) > 1e-6)
                   break;
               }
-            int maxpos1;
-            int maxpos2;
-            double val = 0;
+            int maxpos1 = 0;
+            int maxpos2 = 1;
+            double val = ns[0] * ns[1];
             for (auto i : Range(ns))
               {
                 for (auto j : Range(i + 1, ns.Size()))

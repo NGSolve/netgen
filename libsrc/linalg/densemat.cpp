@@ -49,7 +49,7 @@ namespace netgen
   {
     data = NULL; height = width = 0;
     SetSize (m2.Height(), m2.Width());
-    if (Height()*Width())
+    if (Height() && Width())
       memcpy (data, m2.data, sizeof(double) * (Height() * Width()));
   }
 
@@ -70,7 +70,7 @@ namespace netgen
     
     delete[] data;
     
-    if (h*w)  
+    if (h && w)  
       data = new double[h*w];
     else
       data = NULL;

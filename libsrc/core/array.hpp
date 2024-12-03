@@ -842,6 +842,9 @@ namespace ngcore
     NETGEN_INLINE void NothingToDelete () 
     { 
       mem_to_delete = nullptr;
+
+      // this memory is not managed by the Array anymore, so set the memory usage to 0
+      mt.Free(sizeof(T)*allocsize);
     }
 
     /// Change logical size. If necessary, do reallocation. Keeps contents.

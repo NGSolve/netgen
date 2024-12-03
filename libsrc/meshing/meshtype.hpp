@@ -175,7 +175,8 @@ namespace netgen
     }
     constexpr PointIndex (t_invalid inv) : i(PointIndex::BASE-1) { ; }
     // PointIndex & operator= (const PointIndex &ai) { i = ai.i; return *this; }
-    constexpr operator int () const { return i; }
+    constexpr operator const int& () const { return i; }
+    explicit constexpr operator int& () { return i; }
     PointIndex operator++ (int) { PointIndex hi(*this); i++; return hi; }
     PointIndex operator-- (int) { PointIndex hi(*this); i--; return hi; }
     PointIndex & operator++ () { i++; return *this; }
