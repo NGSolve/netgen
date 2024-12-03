@@ -2246,11 +2246,8 @@ int Ng_GetClosureNodes (int nt, int nodenr, int nodeset, int * nodes)
 
         if (nodeset & 2)  // Edges
           {
-            int edges[12];
-            // int ned;
-            // ned = mesh->GetTopology().GetElementEdges (nodenr+1, edges, 0);
-            int ned = mesh->GetTopology().GetEdges (ElementIndex(nodenr)).Size();
-            for (int i = 0; i < ned; i++)
+            auto edges = mesh->GetTopology().GetEdges (ElementIndex(nodenr));
+            for (int i = 0; i < edges.Size(); i++)
               {
                 nodes[cnt++] = 1;
                 nodes[cnt++] = edges[i]-1;
