@@ -130,6 +130,7 @@ namespace ngcore
     {
       for (size_t i : IntRange(size+1))
         index[i] = i*entrysize;
+      mt.Alloc(GetMemUsage());
     }
 
     /// Construct table of variable entrysize
@@ -141,6 +142,7 @@ namespace ngcore
       index = TablePrefixSum (FlatArray<TI> (entrysize.Size(), entrysize.Data()));
       size_t cnt = index[size];
       data = new T[cnt];
+      mt.Alloc(GetMemUsage());
     }
 
     explicit NETGEN_INLINE Table (const FlatTable<T,IndexType> & tab2)
@@ -157,6 +159,7 @@ namespace ngcore
       size_t cnt = index[size];
       data = new T[cnt];
       this->AsArray() = tab2.AsArray();
+      mt.Alloc(GetMemUsage());
       /*
       for (size_t i = 0; i < cnt; i++)
         data[i] = tab2.data[i];
@@ -177,12 +180,14 @@ namespace ngcore
       data = new T[cnt];
       for (size_t i = 0; i < cnt; i++)
         data[i] = tab2.data[i];
+
+      mt.Alloc(GetMemUsage());
     }
 
     NETGEN_INLINE Table (Table && tab2)
       : FlatTable<T,IndexType>(0, nullptr, nullptr)
     {
-      tab2.mt.Free(tab2.GetMemUsage());
+      mt = std::move(tab2.mt);
       Swap (size, tab2.size);
       Swap (index, tab2.index);
       Swap (data, tab2.data);
@@ -210,7 +215,7 @@ namespace ngcore
 
     NETGEN_INLINE Table & operator= (Table && tab2)
     {
-      mt.Swap(GetMemUsage(), tab2.mt, tab2.GetMemUsage());
+      mt = std::move(tab2.mt);
       Swap (size, tab2.size);
       Swap (index, tab2.index);
       Swap (data, tab2.data);

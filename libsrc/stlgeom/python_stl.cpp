@@ -224,7 +224,7 @@ NGCORE_API_EXPORT void ExportSTL(py::module & m)
     .def("GetVicinity", [] (shared_ptr<STLGeometry> self, int node, int size, string type) {
       NgArray<int> vic;
 
-      int trig;
+      int trig=-1;
       if(type == "trig")
         trig = node;
 

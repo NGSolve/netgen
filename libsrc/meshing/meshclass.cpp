@@ -196,8 +196,8 @@ namespace netgen
         auto& el = mesh.SurfaceElement(velement);
         if(el.GetType() == TRIG)
           {
-            double seg_lam;
-            double lam;
+            double seg_lam=-1;
+            double lam=-1;
             auto seg = mesh.LineSegment(segs[i]);
                 for(auto k : Range(3))
                   {

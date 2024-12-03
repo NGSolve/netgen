@@ -53,8 +53,8 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
       for([[maybe_unused]] auto k : Range(nvert)) {
         for(auto i : Range(dim))
           fin >> p[i];
-          fin >> index;
-          mesh.AddPoint(p);
+        fin >> index;
+        mesh.AddPoint(p);
       }
     }
     else if(token == "Edges") {
@@ -64,10 +64,10 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
       for([[maybe_unused]] auto k : Range(nedge)) {
         for(auto i : Range(2))
           fin >> seg[i];
-          fin >> seg.edgenr;
-          seg.edgenr = getIndex(1, seg.edgenr);
-          seg.si = seg.edgenr;
-          mesh.AddSegment(seg);
+        fin >> seg.edgenr;
+        seg.edgenr = getIndex(1, seg.edgenr);
+        seg.si = seg.edgenr;
+        mesh.AddSegment(seg);
       }
     }
     else if(token == "Triangles") {
@@ -77,9 +77,9 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
       for([[maybe_unused]] auto k : Range(ntrig)) {
         for(auto i : Range(3))
           fin >> sel[i];
-          fin >> index;
-          sel.SetIndex(getIndex(2, index));
-          mesh.AddSurfaceElement(sel);
+        fin >> index;
+        sel.SetIndex(getIndex(2, index));
+        mesh.AddSurfaceElement(sel);
       }
     }
     else if(token == "Tetrahedra") {
@@ -89,10 +89,10 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
       for([[maybe_unused]] auto k : Range(ntet)) {
         for(auto i : Range(4))
           fin >> el[i];
-          fin >> index;
-          el.SetIndex(getIndex(3, index));
-          el.Invert();
-          mesh.AddVolumeElement(el);
+        fin >> index;
+        el.SetIndex(getIndex(3, index));
+        el.Invert();
+        mesh.AddVolumeElement(el);
       }
     }
     else if(token == "Corners") {

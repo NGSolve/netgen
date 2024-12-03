@@ -1066,7 +1066,8 @@ double MeshOptimize3d :: SwapImproveEdge (
               bad3 += GetLegalPenalty();
         }
 
-      bool swap2, swap3;
+      bool swap2=false;
+      bool swap3=false;
 
       if (goal == OPT_CONFORM)
         {
@@ -2608,7 +2609,7 @@ double MeshOptimize3d :: SplitImprove2Element (
   // search for very flat tets, with two disjoint edges nearly crossing, like a rectangle with diagonals
   int minedge = -1;
   double mindist = 1e99;
-  double minlam0, minlam1;
+  double minlam0=0, minlam1=0;
 
   for (int i : Range(3))
   {

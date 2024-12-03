@@ -641,7 +641,7 @@ namespace netgen
     // delete lock;
     // mem_lock.UnLock();
       }
-    catch (bad_weak_ptr e)
+    catch (const bad_weak_ptr & e)
       {
         // cout << "don't have a mesh to visualize" << endl;
         VisualScene::DrawScene();      
@@ -1120,7 +1120,7 @@ namespace netgen
   
     clipplanetimestamp = max2 (vispar.clipping.timestamp, solutiontimestamp);
       }
-    catch (bad_weak_ptr e)
+    catch (const bad_weak_ptr & e)
       {
         PrintMessage (3, "vssolution::buildscene: don't have a mesh to visualize");
         VisualScene::BuildScene (zoomall);

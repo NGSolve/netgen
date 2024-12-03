@@ -324,6 +324,8 @@ threads : int
 #endif // NETGEN_TRACE_MEMORY
     ;
 
+    m.def("GetTotalMemory", MemoryTracer::GetTotalMemory);
+
     py::class_<Timer<>> (m, "Timer")
     .def(py::init<const string&>())
     .def("Start", static_cast<void (Timer<>::*)()const>(&Timer<>::Start), "start timer")

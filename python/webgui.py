@@ -8,6 +8,9 @@ try:
     from webgui_jupyter_widgets import BaseWebGuiScene, WebGuiDocuWidget
     import webgui_jupyter_widgets.widget as wg
 except ImportError:
+    class BaseWebGuiScene:
+        pass
+
     wg = None
 
 def encodeData( data, dtype=None, encoding='b64' ):
@@ -214,9 +217,13 @@ def GetData(mesh, args, kwargs):
         d[name] = pnew
     return d
 
-base = object if wg is None else BaseWebGuiScene
-class WebGLScene(base):
+class WebGLScene(BaseWebGuiScene):
+    class Widget:
+        def __init__(self):
+            self.value = {}
+
     def __init__(self, obj, args=[], kwargs={}):
+        self.widget = self.Widget()
         self.obj = obj
         self.args = args
         self.kwargs = kwargs

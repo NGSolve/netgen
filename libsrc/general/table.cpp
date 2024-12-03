@@ -109,7 +109,7 @@ namespace netgen
       {
 	void * p = new char [(line.maxsize+5) * elsize];
 
-        if (line.maxsize*elsize)
+        if (line.maxsize && elsize)
           memcpy (p, line.col, line.maxsize * elsize);
 	delete [] (char*)line.col;
 

@@ -301,7 +301,7 @@ namespace netgen
                     in >> name;
                     cout << IM(3)  << len << " element are in group " << name << endl;
                     int hi, index;
-                    int fdnr, ednr;
+                    int fdnr=-1, ednr=-1;
 
                     in >> hi >> index >> hi >> hi;
                     int codim = get<1>(element_map[index]);
@@ -712,7 +712,7 @@ namespace netgen
     if(!UserFormatRegister::HaveFormat(format))
       throw Exception("Unknown format: " + format);
 
-    const auto & entry = UserFormatRegister::Get(format);
+    const auto entry = UserFormatRegister::Get(format);
     if(!entry.read)
       throw Exception("Reading format " + format + " is not implemented");
 

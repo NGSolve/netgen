@@ -687,6 +687,7 @@ namespace ngcore
     size_t allocsize;
     /// that's the data we have to delete, nullptr for not owning the memory
     T * mem_to_delete;
+    MemoryTracer mt;
 
 
     using FlatArray<T,IndexType>::size;
@@ -708,6 +709,7 @@ namespace ngcore
     {
       allocsize = asize; 
       mem_to_delete = data;
+      mt.Alloc(sizeof(T)*asize);
     }
 
 
@@ -717,7 +719,10 @@ namespace ngcore
     {
       allocsize = asize;
       if(ownMemory)
+      {
         mem_to_delete = adata;
+        mt.Alloc(sizeof(T)*asize);
+      }
       else
         mem_to_delete = nullptr;
     }
@@ -733,8 +738,7 @@ namespace ngcore
 
     NETGEN_INLINE Array (Array && a2) 
     {
-      mt.Swap(0., a2.mt, sizeof(T) * a2.allocsize);
-
+      mt = std::move(a2.mt);
       size = a2.size; 
       data = a2.data;
       allocsize = a2.allocsize;
@@ -753,6 +757,7 @@ namespace ngcore
         {
           allocsize = size;
           mem_to_delete = data;
+          mt.Alloc(sizeof(T)*size);
           for (size_t i = 0; i < size; i++)
             data[i] = a2.data[i];
         }
@@ -772,6 +777,7 @@ namespace ngcore
     {
       allocsize = size;
       mem_to_delete = data;
+      mt.Alloc(sizeof(T)*size);
       /*
       for (size_t i = 0; i < size; i++)
         data[i] = a2[i];
@@ -788,6 +794,7 @@ namespace ngcore
     {
       allocsize = size;
       mem_to_delete = data;
+      mt.Alloc(sizeof(T)*size);
       size_t cnt = 0;
       for (auto val : list)
         data[cnt++] = val;
@@ -800,6 +807,7 @@ namespace ngcore
     {
       allocsize = size;
       mem_to_delete = data;
+      mt.Alloc(sizeof(T)*size);
       for(size_t i = 0; i <  a2.Size(); i++)
         data[i] = a2[i];
       for (size_t i = a2.Size(), j=0; i < size; i++,j++)
@@ -834,6 +842,9 @@ namespace ngcore
     NETGEN_INLINE void NothingToDelete () 
     { 
       mem_to_delete = nullptr;
+
+      // this memory is not managed by the Array anymore, so set the memory usage to 0
+      mt.Free(sizeof(T)*allocsize);
     }
 
     /// Change logical size. If necessary, do reallocation. Keeps contents.
@@ -1011,8 +1022,7 @@ namespace ngcore
     /// steal array 
     NETGEN_INLINE Array & operator= (Array && a2)
     {
-      mt.Swap(sizeof(T)*allocsize, a2.mt, sizeof(T)*a2.allocsize);
-
+      mt = std::move(a2.mt);
       ngcore::Swap (size, a2.size);
       ngcore::Swap (data, a2.data);
       ngcore::Swap (allocsize, a2.allocsize);
@@ -1086,8 +1096,7 @@ namespace ngcore
     
     NETGEN_INLINE void Swap (Array & b)
     {
-      mt.Swap(sizeof(T) * allocsize, b.mt, sizeof(T) * b.allocsize);
-
+      mt = std::move(b.mt);
       ngcore::Swap (size, b.size);
       ngcore::Swap (data, b.data);
       ngcore::Swap (allocsize, b.allocsize);
@@ -1096,7 +1105,8 @@ namespace ngcore
 
     NETGEN_INLINE void StartMemoryTracing () const
     {
-      mt.Alloc(sizeof(T) * allocsize);
+      if(mem_to_delete)
+        mt.Alloc(sizeof(T) * allocsize);
     }
 
     const MemoryTracer& GetMemoryTracer() const { return mt; }
@@ -1105,7 +1115,6 @@ namespace ngcore
 
     /// resize array, at least to size minsize. copy contents
     NETGEN_INLINE void ReSize (size_t minsize);
-    MemoryTracer mt;
   };
 
   
@@ -1158,6 +1167,7 @@ namespace ngcore
     using Array<T>::allocsize;
     using Array<T>::data;
     using Array<T>::mem_to_delete;
+    using Array<T>::mt;
     // using Array<T>::ownmem;
 
   public:
@@ -1171,6 +1181,7 @@ namespace ngcore
           data = new T[asize];
           allocsize = size;
           mem_to_delete = data;
+          mt.Alloc(sizeof(T)*asize);
         }
     }
 
@@ -1191,6 +1202,7 @@ namespace ngcore
     ArrayMem(ArrayMem && a2)
       : Array<T> (a2.Size(), (T*)mem)
     {
+      mt = std::move(a2.mt);
       if (a2.mem_to_delete)
         {
           mem_to_delete = a2.mem_to_delete;
@@ -1233,6 +1245,7 @@ namespace ngcore
 
     ArrayMem & operator= (ArrayMem && a2)
     {
+      mt = std::move(a2.mt);
       ngcore::Swap (mem_to_delete, a2.mem_to_delete);
       ngcore::Swap (allocsize, a2.allocsize);
       ngcore::Swap (size, a2.size);

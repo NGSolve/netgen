@@ -396,8 +396,8 @@ namespace netgen
     for (int i = 1; i <= mesh.GetNOpenElements(); i++)
        md.meshing->AddBoundaryElement (mesh.OpenElement(i));
 
-   if (mp.delaunay && mesh.GetNOpenElements())
-   {
+    if (mp.delaunay && mesh.GetNOpenElements())
+    {
       int oldne = mesh.GetNE();
 
       md.meshing->Delaunay (mesh, domain, mp);
@@ -408,22 +408,22 @@ namespace netgen
       PrintMessage (3, mesh.GetNP(), " points, ",
          mesh.GetNE(), " elements");
       mesh.FindOpenElements(domain);
-   }
+    }
 
-   Box<3> domain_bbox( Box<3>::EMPTY_BOX ); 
+    Box<3> domain_bbox( Box<3>::EMPTY_BOX ); 
    
-   for (auto & sel : mesh.SurfaceElements())
+    for (auto & sel : mesh.SurfaceElements())
      {
        if (sel.IsDeleted() ) continue;
 
        for (auto pi : sel.PNums())
          domain_bbox.Add (mesh[pi]);
      }
-   domain_bbox.Increase (0.01 * domain_bbox.Diam());
+    domain_bbox.Increase (0.01 * domain_bbox.Diam());
 
-   int cntsteps = 0;
-   int meshed;
-   if (mesh.GetNOpenElements())
+    int cntsteps = 0;
+    int meshed;
+    if (mesh.GetNOpenElements())
      do
        {
          if (multithread.terminate)
@@ -515,24 +515,22 @@ namespace netgen
             PrintMessage (1, "Success !");
            }
        }
-     while (!meshed);
-   
-     {
-        PrintMessage (3, "Check subdomain ", domain, " / ", mesh.GetNDomains());
+    while (!meshed);
 
-        mesh.FindOpenElements(domain);
+    PrintMessage (3, "Check subdomain ", domain, " / ", mesh.GetNDomains());
 
-        bool res = (mesh.CheckConsistentBoundary() != 0);
-        if (res)
-        {
-           if(debugparam.write_mesh_on_error)
-              md.mesh->Save("inconsistent_surface_domain_"+ToString(md.domain)+".vol.gz");
-           PrintError ("Surface mesh not consistent");
-           throw NgException ("Stop meshing since surface mesh not consistent");
-        }
-     }
-     RemoveIllegalElements (mesh, domain);
-     ConformToFreeSegments (mesh, domain);
+    mesh.FindOpenElements(domain);
+
+    bool res = (mesh.CheckConsistentBoundary() != 0);
+    if (res)
+    {
+      if(debugparam.write_mesh_on_error)
+        md.mesh->Save("inconsistent_surface_domain_"+ToString(md.domain)+".vol.gz");
+      PrintError ("Surface mesh not consistent");
+      throw NgException ("Stop meshing since surface mesh not consistent");
+    }
+    RemoveIllegalElements (mesh, domain);
+    ConformToFreeSegments (mesh, domain);
   }
 
   void MergeMeshes( Mesh & mesh, Array<MeshingData> & md )
