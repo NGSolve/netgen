@@ -865,10 +865,10 @@ namespace netgen
                   for (int j = 1; j <= idpts.GetBagSize(i); j++)
 		    {
 		      INDEX_3 pts;
-		      int dummy, val;
+		      int dummy; // , val;   
 
 		      idpts.GetData (i, j, pts, dummy);
-                      val = pts[2];
+                      // val = pts[2];   
 		      const Point3d & p1 = mesh->Point(pts.I1());
 		      const Point3d & p2 = mesh->Point(pts.I2());
 
