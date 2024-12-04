@@ -100,7 +100,7 @@ namespace ngcore
 
   namespace detail {
     template <typename T, typename Tmin, typename Tmax>
-    inline static void CheckRange(const char * s, const T& n, Tmin first, Tmax next)
+    inline static constexpr void CheckRange(const char * s, const T& n, Tmin first, Tmax next)
     {
       if constexpr (!IsSafe<decltype(n)>())
         if (n<first || n>=next)
@@ -108,7 +108,7 @@ namespace ngcore
     }
 
     template <typename Ta, typename Tb>
-    inline static void CheckSame(const char * s, const Ta& a, const Tb& b)
+    inline static constexpr void CheckSame(const char * s, const Ta& a, const Tb& b)
     {
      if constexpr (!IsSafe<decltype(a)>() || !IsSafe<decltype(b)>())
       if(a != b)
