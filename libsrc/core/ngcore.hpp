@@ -22,5 +22,6 @@
 #include "xbool.hpp"
 #include "ngstream.hpp"
 #include "utils.hpp"
+#include "ranges.hpp"
 
 #endif // NETGEN_CORE_NGCORE_HPP
