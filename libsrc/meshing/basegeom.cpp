@@ -214,22 +214,24 @@ namespace netgen
       }
   }
 
-  struct Line
-  {
-    Point<3> p0, p1;
-    inline double Length() const { return (p1-p0).Length(); }
-    inline double Dist(const Line& other) const
+  namespace {
+    struct Line
     {
-      Vec<3> n = p1-p0;
-      Vec<3> q = other.p1-other.p0;
-      double nq = n*q;
-      Point<3> p = p0 + 0.5*n;
-      double lambda = (p-other.p0)*n / (nq + 1e-10);
-      if (lambda >= 0 && lambda <= 1)
-        return (p-other.p0-lambda*q).Length();
-      return 1e99;
-    }
-  };
+      Point<3> p0, p1;
+      inline double Length() const { return (p1-p0).Length(); }
+      inline double Dist(const Line& other) const
+      {
+        Vec<3> n = p1-p0;
+        Vec<3> q = other.p1-other.p0;
+        double nq = n*q;
+        Point<3> p = p0 + 0.5*n;
+        double lambda = (p-other.p0)*n / (nq + 1e-10);
+        if (lambda >= 0 && lambda <= 1)
+          return (p-other.p0-lambda*q).Length();
+        return 1e99;
+      }
+    };
+  }
 
   void NetgenGeometry :: Clear()
   {
