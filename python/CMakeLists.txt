@@ -20,7 +20,7 @@ install(FILES
         __main__.py __init__.py
         meshing.py csg.py geom2d.py stl.py gui.py NgOCC.py occ.py
         read_gmsh.py read_meshio.py
-        webgui.py
+        webgui.py jupyter.py
         DESTINATION ${NG_INSTALL_DIR_PYTHON}/${NG_INSTALL_SUFFIX}
         COMPONENT netgen
         )

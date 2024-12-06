@@ -1,17 +1,17 @@
 import math
 import numpy as np
-from time import time
 import os
 
 try:
-    import webgui_jupyter_widgets
-    from webgui_jupyter_widgets import BaseWebGuiScene, WebGuiDocuWidget
-    import webgui_jupyter_widgets.widget as wg
-except ImportError:
-    class BaseWebGuiScene:
-        pass
+    __IPYTHON__
+    _IN_IPYTHON = True
 
-    wg = None
+    from .jupyter import render as _render
+except NameError:
+    _IN_IPYTHON = False
+
+    def _render(*args, **kwargs):
+        pass
 
 def encodeData( data, dtype=None, encoding='b64' ):
     import numpy as np
@@ -25,17 +25,7 @@ def encodeData( data, dtype=None, encoding='b64' ):
     else:
         raise RuntimeError("unknown encoding" + str(encoding))
 
-from packaging.version import parse
-
 import netgen.meshing as ng
-
-if wg is not None and parse(webgui_jupyter_widgets.__version__) >= parse("0.2.18"):
-    _default_width = None
-    _default_height = None
-else:
-    _default_width = "100%"
-    _default_height = "50vh"
-
 
 _registered_draw_types = {}
 
@@ -217,7 +207,7 @@ def GetData(mesh, args, kwargs):
         d[name] = pnew
     return d
 
-class WebGLScene(BaseWebGuiScene):
+class WebGLScene:
     class Widget:
         def __init__(self):
             self.value = {}
@@ -228,6 +218,7 @@ class WebGLScene(BaseWebGuiScene):
         self.args = args
         self.kwargs = kwargs
         self.encoding = "b64"
+        self.handle = None
 
     def Redraw(self, *args, **kwargs):
         if args or kwargs:
@@ -238,7 +229,8 @@ class WebGLScene(BaseWebGuiScene):
             self.obj = new_scene.obj
             self.args = new_scene.args
             self.kwargs = new_scene.kwargs
-        super().Redraw()
+        _render(self.GetData(), handle=self.handle)
+        # super().Redraw()
 
     def GetData(self, set_minmax=True):
         self.kwargs["encoding"] = self.encoding
@@ -389,8 +381,6 @@ def _get_draw_default_args():
         settings={},
         fullscreen=False,
         scale=1.0,
-        width=_default_width,
-        height=_default_height,
     )
 
 
@@ -399,27 +389,29 @@ def Draw(obj, *args, show=True, **kwargs):
     kwargs_with_defaults.update(kwargs)
 
     scene = WebGLScene(obj, args, kwargs_with_defaults)
-    if show and wg is not None and wg._IN_IPYTHON:
-        if wg._IN_GOOGLE_COLAB:
-            from IPython.display import display, HTML
-
-            html = scene.GenerateHTML()
-            display(HTML(html))
-            return
-        else:
-            import webgui_jupyter_widgets as wjw
-            from packaging.version import parse
-
-            # render scene using widgets.DOMWidget
-            if parse(wjw.__version__) < parse("0.2.15"):
-                scene.Draw()
-            else:
-                scene.Draw(
-                    kwargs_with_defaults["width"], kwargs_with_defaults["height"]
-                )
-    if "filename" in kwargs_with_defaults:
-        scene.GenerateHTML(filename=kwargs_with_defaults["filename"])
+    scene.handle = _render(scene.GetData())
     return scene
+    # if show and wg is not None and wg._IN_IPYTHON:
+    #     if wg._IN_GOOGLE_COLAB:
+    #         from IPython.display import display, HTML
+    #
+    #         html = scene.GenerateHTML()
+    #         display(HTML(html))
+    #         return
+    #     else:
+    #         import webgui_jupyter_widgets as wjw
+    #         from packaging.version import parse
+    #
+    #         # render scene using widgets.DOMWidget
+    #         if parse(wjw.__version__) < parse("0.2.15"):
+    #             scene.Draw()
+    #         else:
+    #             scene.Draw(
+    #                 kwargs_with_defaults["width"], kwargs_with_defaults["height"]
+    #             )
+    # if "filename" in kwargs_with_defaults:
+    #     scene.GenerateHTML(filename=kwargs_with_defaults["filename"])
+    # return scene
 
 async def _MakeScreenshot(data, png_file, width=1200, height=600):
     """Uses playwright to make a screenshot of the given html file."""
