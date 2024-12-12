@@ -72,6 +72,10 @@ BuildNeighbors (FlatArray<PointIndex> points, const Mesh& mesh)
 
 void BoundaryLayerTool ::InterpolateGrowthVectors()
 {
+  point_types.SetSize(mesh.GetNP());
+  for (auto p : mesh.Points().Range())
+    point_types[p] = mesh[p].Type();
+
   int new_max_edge_nr = max_edge_nr;
   for (const auto& seg : segments)
     if (seg.edgenr > new_max_edge_nr)
@@ -117,9 +121,49 @@ void BoundaryLayerTool ::InterpolateGrowthVectors()
     },
     mesh.GetNP());
 
+  for (auto edgenr : Range(1, new_max_edge_nr + 1))
+    {
+      // "inner" edges between two flat faces are not treated as edges for interpolation
+      bool no_angles = true;
+      ArrayMem<SurfaceElementIndex, 4> faces;
+
+      for (auto* p_seg : edgenr2seg[edgenr])
+        {
+          auto& seg = *p_seg;
+          faces.SetSize(0);
+          if (seg[0] <= p2sel.Size())
+            {
+              for (auto sei : p2sel[seg[0]])
+                if (moved_surfaces.Test(mesh[sei].GetIndex()) && p2sel[seg[1]].Contains(sei))
+                  faces.Append(sei);
+            }
+
+          if (faces.Size() == 2)
+            {
+              auto n0 = getNormal(mesh[faces[0]]);
+              auto n1 = getNormal(mesh[faces[1]]);
+              if (n0 * n1 < 0.999)
+                no_angles = false;
+            }
+          else
+            {
+              no_angles = false;
+            }
+        }
+      if (no_angles)
+        {
+          for (auto* p_seg : edgenr2seg[edgenr])
+            for (auto pi : p_seg->PNums())
+              if (pi <= np && point_types[pi] == EDGEPOINT)
+                point_types[pi] = SURFACEPOINT;
+          continue;
+        }
+    }
+
   for (auto edgenr : Range(max_edge_nr + 1, new_max_edge_nr + 1))
     {
       double edge_len = 0.;
+      bool any_grows = false;
 
       auto is_end_point = [&] (PointIndex pi) {
         auto segs = point2seg[pi];
@@ -131,8 +175,6 @@ void BoundaryLayerTool ::InterpolateGrowthVectors()
             return true;
         return false;
       };
-
-      bool any_grows = false;
 
       Array<PointIndex> points;
       for (auto* p_seg : edgenr2seg[edgenr])
@@ -280,7 +322,7 @@ void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors()
   for (const auto& sel : mesh.SurfaceElements())
     {
       for (auto pi : sel.PNums())
-        if (mesh[pi].Type() == SURFACEPOINT && hasMoved(pi))
+        if (point_types[pi] == SURFACEPOINT && hasMoved(pi))
           points_set.insert(pi);
     }
 
@@ -406,7 +448,7 @@ void BoundaryLayerTool ::FixSurfaceElements()
       const auto& sel = mesh[sei];
       if (sel.GetNP() == 3 && is_boundary_moved[sel.GetIndex()])
         for (auto pi : sel.PNums())
-          if (mesh[pi].Type() == SURFACEPOINT)
+          if (point_types[pi] == SURFACEPOINT)
             points_set.insert(pi);
     }
 

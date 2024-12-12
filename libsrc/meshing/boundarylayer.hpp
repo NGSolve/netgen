@@ -60,6 +60,7 @@ public:
   BitArray moved_surfaces;
   int np, nseg, nse, ne;
   double total_height;
+  Array<POINTTYPE, PointIndex> point_types;
 
   // These parameters are derived from given BoundaryLayerParameters and the Mesh
   Array<double> par_heights;
