@@ -39,7 +39,7 @@ bool WriteUserFormat (const string & format,
   if(!UserFormatRegister::HaveFormat(format))
     return true;
 
-  const auto & entry = UserFormatRegister::Get(format);
+  const auto entry = UserFormatRegister::Get(format);
   if(!entry.write)
     return true;
 

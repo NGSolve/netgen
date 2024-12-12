@@ -1,6 +1,3 @@
-// #ifdef PARALLEL
-
-
 #include <meshing.hpp>
 #include "paralleltop.hpp"
 
@@ -138,16 +135,17 @@ namespace netgen
           for (auto p : dps)
             send_data[p][nsend[p]++] = L2G(pi);
 
-    Array<NG_MPI_Request> requests;
+    NgMPI_Requests requests;
     for (int i = 0; i < comm.Size(); i++)
       {
         if (nsend[i])
-          requests.Append (comm.ISend (send_data[i], i, 200));
+          requests += comm.ISend (send_data[i], i, 200);
         if (nrecv[i])
-          requests.Append (comm.IRecv (recv_data[i], i, 200));
+          requests += comm.IRecv (recv_data[i], i, 200);
       }
     
-    MyMPI_WaitAll (requests);
+    // MyMPI_WaitAll (requests);
+    requests.WaitAll();
     
     Array<int> cnt(comm.Size());
     cnt = 0;
@@ -501,7 +499,6 @@ namespace netgen
 		}
 
 	    DynamicTable<int> recv_verts(ntasks);
-	    // MyMPI_ExchangeTable (send_verts, recv_verts, NG_MPI_TAG_MESH+9, comm);
             comm.ExchangeTable (send_verts, recv_verts, NG_MPI_TAG_MESH+9);
 
 	    for (int dest = 0; dest < ntasks; dest++)
@@ -694,12 +691,8 @@ namespace netgen
           }
       }
 
-    // cout << "UpdateCoarseGrid - edges mpi-exchange" << endl;
-    // TABLE<int> recv_edges(ntasks);
     DynamicTable<int> recv_edges(ntasks);
-    // MyMPI_ExchangeTable (send_edges, recv_edges, NG_MPI_TAG_MESH+9, comm);
     comm.ExchangeTable (send_edges, recv_edges, NG_MPI_TAG_MESH+9);
-    // cout << "UpdateCoarseGrid - edges mpi-exchange done" << endl;
 
     for (int dest = 0; dest < ntasks; dest++)
       {
@@ -804,12 +797,8 @@ namespace netgen
 		}
 	    }
 	
-	// cout << "UpdateCoarseGrid - faces mpi-exchange" << endl;
-	// TABLE<int> recv_faces(ntasks);
 	DynamicTable<int> recv_faces(ntasks);
-	// MyMPI_ExchangeTable (send_faces, recv_faces, NG_MPI_TAG_MESH+9, comm);
         comm.ExchangeTable (send_faces, recv_faces, NG_MPI_TAG_MESH+9);
-	// cout << "UpdateCoarseGrid - faces mpi-exchange done" << endl;
 	
 	for (int dest = 0; dest < ntasks; dest++)
 	  {
@@ -846,4 +835,3 @@ namespace netgen
 }
 
 
-// #endif

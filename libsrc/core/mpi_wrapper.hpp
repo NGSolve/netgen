@@ -72,14 +72,68 @@ namespace ngcore
     return GetMPIType<T>();
   }
 
+  class NgMPI_Request
+  {
+    NG_MPI_Request request;
+  public:
+    NgMPI_Request (NG_MPI_Request requ) : request{requ} { }
+    NgMPI_Request (const NgMPI_Request&) = delete;    
+    NgMPI_Request (NgMPI_Request&&) = default;
+    ~NgMPI_Request () { NG_MPI_Wait (&request, NG_MPI_STATUS_IGNORE); }
+    void Wait() {  NG_MPI_Wait (&request, NG_MPI_STATUS_IGNORE); }
+    operator NG_MPI_Request() &&
+    {
+      auto tmp = request;
+      request = NG_MPI_REQUEST_NULL;
+      return tmp;
+    }
+  };
 
+  class NgMPI_Requests
+  {
+    Array<NG_MPI_Request> requests;
+  public:
+    NgMPI_Requests() = default;
+    ~NgMPI_Requests() { WaitAll(); }
+
+    void Reset() { requests.SetSize0(); }
+    
+    NgMPI_Requests & operator+= (NgMPI_Request && r)
+    {
+      requests += NG_MPI_Request(std::move(r));
+      return *this;
+    }
+
+    NgMPI_Requests & operator+= (NG_MPI_Request r)
+    {
+      requests += r;
+      return *this;
+    }
+    
+    void WaitAll()
+    {
+      static Timer t("NgMPI - WaitAll"); RegionTimer reg(t);    
+      if (!requests.Size()) return;
+      NG_MPI_Waitall (requests.Size(), requests.Data(), NG_MPI_STATUSES_IGNORE);
+    }
+
+    int WaitAny ()
+    {
+      int nr;
+      NG_MPI_Waitany (requests.Size(), requests.Data(), &nr, NG_MPI_STATUS_IGNORE);
+      return nr;
+    }
+  };
+  
+  [[deprecated("use requests.WaitAll instread")]]
   inline void MyMPI_WaitAll (FlatArray<NG_MPI_Request> requests)
   {
     static Timer t("MPI - WaitAll"); RegionTimer reg(t);    
     if (!requests.Size()) return;
     NG_MPI_Waitall (requests.Size(), requests.Data(), NG_MPI_STATUSES_IGNORE);
   }
-  
+
+  [[deprecated("use requests.WaitAny instread")]]  
   inline int MyMPI_WaitAny (FlatArray<NG_MPI_Request> requests)
   {
     int nr;
@@ -233,25 +287,25 @@ namespace ngcore
     }
 
     /** --- non-blocking P2P --- **/
-    
+
     template<typename T, typename T2 = decltype(GetMPIType<T>())> 
-    NG_MPI_Request ISend (T & val, int dest, int tag) const
+    [[nodiscard]] NG_MPI_Request ISend (T & val, int dest, int tag) const
     {
       NG_MPI_Request request;
       NG_MPI_Isend (&val, 1, GetMPIType<T>(), dest, tag, comm, &request);
       return request;
     }
-
+    
     template<typename T, typename T2 = decltype(GetMPIType<T>())>
-    NG_MPI_Request ISend (FlatArray<T> s, int dest, int tag) const
+    [[nodiscard]] NG_MPI_Request ISend (FlatArray<T> s, int dest, int tag) const
     {
       NG_MPI_Request request;
       NG_MPI_Isend (s.Data(), s.Size(), GetMPIType<T>(), dest, tag, comm, &request);
       return request;
     }
-
+    
     template<typename T, typename T2 = decltype(GetMPIType<T>())> 
-    NG_MPI_Request IRecv (T & val, int dest, int tag) const
+    [[nodiscard]] NG_MPI_Request IRecv (T & val, int dest, int tag) const
     {
       NG_MPI_Request request;
       NG_MPI_Irecv (&val, 1, GetMPIType<T>(), dest, tag, comm, &request);
@@ -259,7 +313,7 @@ namespace ngcore
     }
     
     template<typename T, typename T2 = decltype(GetMPIType<T>())>
-    NG_MPI_Request IRecv (FlatArray<T> s, int src, int tag) const
+    [[nodiscard]] NG_MPI_Request IRecv (FlatArray<T> s, int src, int tag) const
     { 
       NG_MPI_Request request;
       NG_MPI_Irecv (s.Data(), s.Size(), GetMPIType<T>(), src, tag, comm, &request);
@@ -307,9 +361,18 @@ namespace ngcore
       NG_MPI_Bcast (&s, 1, GetMPIType<T>(), root, comm);
     }
 
+
+    template <class T, size_t S>
+    void Bcast (std::array<T,S> & d, int root = 0) const
+    {
+      if (size == 1) return;
+      if (S != 0)
+        NG_MPI_Bcast (&d[0], S, GetMPIType<T>(), root, comm);
+    }
+    
     
     template <class T>
-    void Bcast (Array<T> & d, int root = 0)
+    void Bcast (Array<T> & d, int root = 0) const
     {
       if (size == 1) return;
       
@@ -330,11 +393,31 @@ namespace ngcore
       NG_MPI_Bcast (&s[0], len, NG_MPI_CHAR, root, comm);
     }
 
+
+    
+    template <class T, size_t S>
+    [[nodiscard]] NgMPI_Request IBcast (std::array<T,S> & d, int root = 0) const
+    {
+      NG_MPI_Request request;      
+      NG_MPI_Ibcast (&d[0], S, GetMPIType<T>(), root, comm, &request);
+      return request;
+    }
+
+    template <class T>
+     [[nodiscard]] NgMPI_Request IBcast (FlatArray<T> d, int root = 0) const
+    {
+      NG_MPI_Request request;      
+      int ds = d.Size();
+      NG_MPI_Ibcast (d.Data(), ds, GetMPIType<T>(), root, comm, &request);
+      return request;
+    }
+
+    
     template <typename T>
     void AllToAll (FlatArray<T> send, FlatArray<T> recv) const
     {
       NG_MPI_Alltoall (send.Data(), 1, GetMPIType<T>(),
-                    recv.Data(), 1, GetMPIType<T>(), comm);
+                       recv.Data(), 1, GetMPIType<T>(), comm);
     }
 
 
@@ -343,7 +426,7 @@ namespace ngcore
     {
       if (size == 1) return;
       NG_MPI_Scatter (send.Data(), 1, GetMPIType<T>(),
-                   NG_MPI_IN_PLACE, -1, GetMPIType<T>(), 0, comm);
+                      NG_MPI_IN_PLACE, -1, GetMPIType<T>(), 0, comm);
     }
     
     template <typename T>
@@ -351,7 +434,7 @@ namespace ngcore
     {
       if (size == 1) return;      
       NG_MPI_Scatter (NULL, 0, GetMPIType<T>(),
-                   &recv, 1, GetMPIType<T>(), 0, comm);
+                      &recv, 1, GetMPIType<T>(), 0, comm);
     }
 
     template <typename T>
@@ -360,7 +443,7 @@ namespace ngcore
       recv[0] = T(0);
       if (size == 1) return;      
       NG_MPI_Gather (NG_MPI_IN_PLACE, 1, GetMPIType<T>(),
-                  recv.Data(), 1, GetMPIType<T>(), 0, comm);
+                     recv.Data(), 1, GetMPIType<T>(), 0, comm);
     }
 
     template <typename T>
@@ -401,16 +484,16 @@ namespace ngcore
     
       recv_data = DynamicTable<T> (recv_sizes, true);
       
-      Array<NG_MPI_Request> requests;
+      NgMPI_Requests requests;
       for (int dest = 0; dest < size; dest++)
         if (dest != rank && send_data[dest].Size())
-          requests.Append (ISend (FlatArray<T>(send_data[dest]), dest, tag));
+          requests += ISend (FlatArray<T>(send_data[dest]), dest, tag);
       
       for (int dest = 0; dest < size; dest++)
         if (dest != rank && recv_data[dest].Size())
-          requests.Append (IRecv (FlatArray<T>(recv_data[dest]), dest, tag));
+          requests += IRecv (FlatArray<T>(recv_data[dest]), dest, tag);
 
-      MyMPI_WaitAll (requests);
+      requests.WaitAll();
     }
     
 
@@ -453,6 +536,22 @@ namespace ngcore
   };
   template <class T, class T2=void>
   inline NG_MPI_Datatype GetMPIType () { return -1; }
+
+  class NgMPI_Request {
+  public:
+    NgMPI_Request() = default;
+    NgMPI_Request(NgMPI_Request &&) { ; }    
+    NgMPI_Request(NG_MPI_Request &&) { ; }
+  };
+  class NgMPI_Requests
+  {
+  public:
+    NgMPI_Requests & operator+= (NgMPI_Request &&) { return *this; }
+    NgMPI_Requests & operator+= (NG_MPI_Request r) { return *this; }
+    void Reset() { ; }
+    void WaitAll() { ; }
+    int WaitAny() { return 0; }
+  };
   
   class NgMPI_Comm
   {
@@ -506,9 +605,18 @@ namespace ngcore
     template <typename T>
     void Bcast (T & s, int root = 0) const { ; } 
 
+    template <class T, size_t S>
+    void Bcast (std::array<T,S> & d, int root = 0) const {}
+    
     template <class T>
-    void Bcast (Array<T> & d, int root = 0) { ; } 
+    void Bcast (Array<T> & d, int root = 0) const { ; } 
 
+    template <class T, size_t S>
+    NG_MPI_Request IBcast (std::array<T,S> & d, int root = 0) const { return 0; }
+
+    template <class T>
+    NG_MPI_Request IBcast (FlatArray<T> d, int root = 0) const { return 0; } 
+    
     template <typename T>
     void AllGather (T val, FlatArray<T> recv) const
     {

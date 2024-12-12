@@ -266,7 +266,7 @@ namespace netgen
 
     
       }
-    catch (bad_weak_ptr e)
+    catch (const bad_weak_ptr & e)
       {
         // cout << "don't have a mesh to visualize" << endl;
         VisualScene::DrawScene();      
@@ -865,10 +865,10 @@ namespace netgen
                   for (int j = 1; j <= idpts.GetBagSize(i); j++)
 		    {
 		      INDEX_3 pts;
-		      int dummy, val;
+		      int dummy; // , val;   
 
 		      idpts.GetData (i, j, pts, dummy);
-                      val = pts[2];
+                      // val = pts[2];   
 		      const Point3d & p1 = mesh->Point(pts.I1());
 		      const Point3d & p2 = mesh->Point(pts.I2());
 
@@ -895,7 +895,7 @@ namespace netgen
 
     vstimestamp = meshtimestamp;
       }
-    catch (bad_weak_ptr e)
+    catch (const bad_weak_ptr & e)
       {
         PrintMessage (3, "vsmesh::buildscene: don't have a mesh to visualize");
         VisualScene::BuildScene (zoomall);

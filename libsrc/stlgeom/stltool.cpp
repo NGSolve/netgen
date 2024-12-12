@@ -1369,7 +1369,7 @@ bool STLBoundary :: TestSegChartNV(const Point3d & p1, const Point3d& p2,
       Line2d l2 (sp1, sp2);
       double lam1, lam2;
 
-      int err = CrossPointBarycentric (l1, l2, lam1, lam2);
+      int err = CrossPointBarycentric (l1, l2, lam1, lam2, eps);
       bool in1 = (lam1 > eps) && (lam1 < 1-eps);
       bool on1 = (lam1 > -eps) && (lam1 < 1 + eps);
       bool in2 = (lam2 > eps) && (lam2 < 1-eps);

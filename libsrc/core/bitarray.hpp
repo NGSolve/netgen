@@ -49,6 +49,7 @@ public:
   {
     ba2.owns_data = false;
     ba2.data = nullptr;
+    mt = std::move(ba2.mt);
   }
 
   template <typename T>
@@ -59,13 +60,17 @@ public:
     int cnt = 0;
     for (auto i = list.begin(); i < list.end(); i++, cnt++)
       if (*i) SetBit(cnt);
+    StartMemoryTracing();
   }
 
   /// delete data
   ~BitArray ()
   {
     if (owns_data)
+    {
       delete [] data;
+      mt.Free(GetMemoryUsage());
+    }
   }
 
   /// Set size, loose values
@@ -150,11 +155,11 @@ public:
   
   NGCORE_API auto * Data() const { return data; }
 
+  const size_t GetMemoryUsage() const { return owns_data ? (size+CHAR_BIT-1)/CHAR_BIT : 0; }
   const MemoryTracer& GetMemoryTracer() const { return mt; }
   void StartMemoryTracing() const
   {
-    if(owns_data)
-      mt.Alloc(Addr(size)+1);
+    mt.Alloc(GetMemoryUsage());
   }
 
 private:

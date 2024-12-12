@@ -81,6 +81,16 @@ namespace netgen
               m.AddFaceDescriptor( mesh.GetFaceDescriptor(i) );
       }
 
+      // mark interior edge points
+      for(const auto& seg : mesh.LineSegments())
+        {
+          if(seg.domin > 0 && seg.domin == seg.domout)
+            {
+              ipmap[seg.domin-1][seg[0]] = 1;
+              ipmap[seg.domin-1][seg[1]] = 1;
+            }
+        }
+
       // mark used points for each domain, add surface elements (with wrong point numbers) to domain mesh
       for(const auto & sel : mesh.SurfaceElements())
       {
@@ -388,8 +398,8 @@ namespace netgen
     for (int i = 1; i <= mesh.GetNOpenElements(); i++)
        md.meshing->AddBoundaryElement (mesh.OpenElement(i));
 
-   if (mp.delaunay && mesh.GetNOpenElements())
-   {
+    if (mp.delaunay && mesh.GetNOpenElements())
+    {
       int oldne = mesh.GetNE();
 
       md.meshing->Delaunay (mesh, domain, mp);
@@ -400,22 +410,22 @@ namespace netgen
       PrintMessage (3, mesh.GetNP(), " points, ",
          mesh.GetNE(), " elements");
       mesh.FindOpenElements(domain);
-   }
+    }
 
-   Box<3> domain_bbox( Box<3>::EMPTY_BOX ); 
+    Box<3> domain_bbox( Box<3>::EMPTY_BOX ); 
    
-   for (auto & sel : mesh.SurfaceElements())
+    for (auto & sel : mesh.SurfaceElements())
      {
        if (sel.IsDeleted() ) continue;
 
        for (auto pi : sel.PNums())
          domain_bbox.Add (mesh[pi]);
      }
-   domain_bbox.Increase (0.01 * domain_bbox.Diam());
+    domain_bbox.Increase (0.01 * domain_bbox.Diam());
 
-   int cntsteps = 0;
-   int meshed;
-   if (mesh.GetNOpenElements())
+    int cntsteps = 0;
+    int meshed;
+    if (mesh.GetNOpenElements())
      do
        {
          if (multithread.terminate)
@@ -507,23 +517,22 @@ namespace netgen
             PrintMessage (1, "Success !");
            }
        }
-     while (!meshed);
-   
-     {
-        PrintMessage (3, "Check subdomain ", domain, " / ", mesh.GetNDomains());
+    while (!meshed);
 
-        mesh.FindOpenElements(domain);
+    PrintMessage (3, "Check subdomain ", domain, " / ", mesh.GetNDomains());
 
-        bool res = (mesh.CheckConsistentBoundary() != 0);
-        if (res)
-        {
-           if(debugparam.write_mesh_on_error)
-              md.mesh->Save("inconsistent_surface_domain_"+ToString(md.domain)+".vol.gz");
-           PrintError ("Surface mesh not consistent");
-           throw NgException ("Stop meshing since surface mesh not consistent");
-        }
-     }
-     RemoveIllegalElements (mesh, domain);
+    mesh.FindOpenElements(domain);
+
+    bool res = (mesh.CheckConsistentBoundary() != 0);
+    if (res)
+    {
+      if(debugparam.write_mesh_on_error)
+        md.mesh->Save("inconsistent_surface_domain_"+ToString(md.domain)+".vol.gz");
+      PrintError ("Surface mesh not consistent");
+      throw NgException ("Stop meshing since surface mesh not consistent");
+    }
+    RemoveIllegalElements (mesh, domain);
+    ConformToFreeSegments (mesh, domain);
   }
 
   void MergeMeshes( Mesh & mesh, Array<MeshingData> & md )
@@ -617,18 +626,24 @@ namespace netgen
        {
      ParallelFor( md.Range(), [&](int i)
        {
-         if (mp.checkoverlappingboundary)
-           if (md[i].mesh->CheckOverlappingBoundary())
-           {
-             if(debugparam.write_mesh_on_error)
-               md[i].mesh->Save("overlapping_mesh_domain_"+ToString(md[i].domain)+".vol.gz");
-             throw NgException ("Stop meshing since boundary mesh is overlapping");
-           }
+         try {
+           if (mp.checkoverlappingboundary)
+             if (md[i].mesh->CheckOverlappingBoundary())
+             {
+               if(debugparam.write_mesh_on_error)
+                 md[i].mesh->Save("overlapping_mesh_domain_"+ToString(md[i].domain)+".vol.gz");
+               throw NgException ("Stop meshing since boundary mesh is overlapping");
+             }
 
-         if(md[i].mesh->GetGeometry()->GetGeomType() == Mesh::GEOM_OCC)
-            FillCloseSurface( md[i] );
-         CloseOpenQuads( md[i] );
-         MeshDomain(md[i]);
+           if(md[i].mesh->GetGeometry()->GetGeomType() == Mesh::GEOM_OCC)
+              FillCloseSurface( md[i] );
+           CloseOpenQuads( md[i] );
+           MeshDomain(md[i]);
+         }
+         catch (const Exception & e) {
+           cerr << "Meshing of domain " << i+1 << " failed with error: " << e.what() << endl;
+           throw e;
+         }
        }, md.Size());
        }
      catch(...)
@@ -736,6 +751,65 @@ namespace netgen
   }
 
 
+  void ConformToFreeSegments (Mesh & mesh, int domain)
+  {
+    auto geo = mesh.GetGeometry();
+    if(!geo) return;
+    auto n_solids = geo->GetNSolids();
+    if(!n_solids) return;
+    if(geo->GetSolid(domain-1).free_edges.Size() == 0)
+      return;
+
+    Segment bad_seg;
+    Array<Segment> free_segs;
+    for (auto seg : mesh.LineSegments())
+      if(seg.domin == domain && seg.domout == domain)
+        free_segs.Append(seg);
+
+    auto num_nonconforming = [&] () {
+      size_t count = 0;
+
+      auto p2el = mesh.CreatePoint2ElementTable();
+
+      for (auto seg : free_segs) {
+
+        auto has_p0 = p2el[seg[0]];
+        bool has_both = false;
+
+        for(auto ei : has_p0) {
+          if(mesh[ei].PNums().Contains(seg[1]))
+            has_both = true;
+        }
+
+        if(!has_both) {
+          bad_seg = seg;
+          count++;
+        }
+      }
+      return count;
+    };
+
+    for ([[maybe_unused]] auto i : Range(5)) {
+      auto num_bad_segs = num_nonconforming();
+      PrintMessage(1, "Non-conforming free segments in domain ", domain, ": ", num_bad_segs);
+
+      if(num_bad_segs == 0)
+        return;
+
+      MeshingParameters dummymp;
+      MeshOptimize3d optmesh(mesh, dummymp, OPT_CONFORM);
+
+      for ([[maybe_unused]] auto i : Range(3)) {
+        optmesh.SwapImprove2 ();
+        optmesh.SwapImprove();
+        optmesh.CombineImprove();
+      }
+    }
+
+    if(debugparam.write_mesh_on_error)
+      mesh.Save("free_segment_not_conformed_dom_"+ToString(domain)+"_seg_"+ToString(bad_seg[0])+"_"+ToString(bad_seg[1])+".vol.gz");
+    throw Exception("Segment not resolved in volume mesh in domain " + ToString(domain)+ ", seg: " + ToString(bad_seg));
+  }
 
 
   void RemoveIllegalElements (Mesh & mesh3d, int domain)

@@ -20,8 +20,8 @@ struct SpecialPointException : public Exception
 std::tuple<int, int> FindCloseVectors (FlatArray<Vec<3>> ns,
                                        bool find_max = true)
 {
-  int maxpos1;
-  int maxpos2;
+  int maxpos1 = 0;
+  int maxpos2 = 0;
 
   double val = find_max ? -1e99 : 1e99;
   for (auto i : Range(ns))

@@ -195,7 +195,7 @@ namespace netgen
         if(mesh->GetGeometry())
           ng_geometry = mesh->GetGeometry();
       }
-    catch (NgException e)
+    catch (const NgException & e)
       {
 	PrintMessage (3, e.What());
 	return TCL_ERROR;
@@ -270,7 +270,7 @@ namespace netgen
 	      geometry -> LoadSurfaces(infile);
 	  }
       }
-    catch (NgException e)
+    catch (const NgException & e)
       {
 	PrintMessage (3, e.What());
 	return TCL_ERROR;
@@ -552,7 +552,7 @@ namespace netgen
 	  }
       }
 
-    catch (NgException e)
+    catch (const NgException & e)
       {
 	Tcl_SetResult (interp, const_cast<char*> (e.What().c_str()), TCL_VOLATILE);
 	return TCL_ERROR;
@@ -583,7 +583,7 @@ namespace netgen
 	  {
 	    ng_geometry -> Save (string (cfilename));
 	  }
-	catch (NgException e)
+	catch (const NgException & e)
 	  {
 	    Tcl_SetResult (interp, const_cast<char*> (e.What().c_str()), TCL_VOLATILE);
 	    return TCL_ERROR;
@@ -1441,7 +1441,7 @@ namespace netgen
 	PrintMessage (1, "Meshing done, time = ", GetTime(), " sec");
       }
 
-    catch (NgException e)
+    catch (const NgException & e)
       {
 	cout << e.What() << endl;
       }

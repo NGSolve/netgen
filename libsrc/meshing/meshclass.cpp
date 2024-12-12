@@ -196,8 +196,8 @@ namespace netgen
         auto& el = mesh.SurfaceElement(velement);
         if(el.GetType() == TRIG)
           {
-            double seg_lam;
-            double lam;
+            double seg_lam=-1;
+            double lam=-1;
             auto seg = mesh.LineSegment(segs[i]);
                 for(auto k : Range(3))
                   {
@@ -7528,6 +7528,21 @@ namespace netgen
       }
   }
   
+
+  std::string_view Mesh :: GetRegionName (const Segment & el) const
+  {
+    return *const_cast<Mesh&>(*this).GetRegionNamesCD(GetDimension()-1)[el.edgenr-1];
+  }
+
+  std::string_view Mesh :: GetRegionName (const Element2d & el) const
+  {
+    return *const_cast<Mesh&>(*this).GetRegionNamesCD(GetDimension()-2)[GetFaceDescriptor(el).BCProperty()-1];
+  }
+
+  std::string_view Mesh :: GetRegionName (const Element & el) const
+  {
+    return *const_cast<Mesh&>(*this).GetRegionNamesCD(GetDimension()-3)[el.GetIndex()-1];
+  }
   
 
   void Mesh :: SetUserData(const char * id, NgArray<int> & data)
