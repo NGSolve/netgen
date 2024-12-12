@@ -4838,10 +4838,6 @@ namespace netgen
       // check if we look at the clipping plane from the right direction
       if(n*view > 1e-8)
       {
-        double lam = vispar.clipping.dist - Vec<3>{eye}*n;
-        lam /= n*view;
-        p = eye + lam*view;
-
         double lami[3];
         if(auto el3d = mesh->GetElementOfPoint( p, lami ))
         {
