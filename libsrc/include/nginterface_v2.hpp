@@ -39,24 +39,9 @@ namespace netgen
   using namespace std;
   using namespace ngcore;
   
-  // extern DLL_HEADER NgMPI_Comm ng_comm;
   
   static constexpr int POINTINDEX_BASE = 1;
 
-  /*
-  struct T_EDGE2
-  {
-    // int orient:1;
-    // int nr:31;    // 0-based
-    int nr;    // 0-based
-  };
-  struct T_FACE2
-  {
-    // int orient:3;
-    // int nr:29;    // 0-based
-    int nr;    // 0-based
-  };
-  */
   typedef int T_EDGE2; 
   typedef int T_FACE2; 
 
@@ -112,28 +97,6 @@ namespace netgen
       int operator[] (size_t i) const { return ptr[i]-POINTINDEX_BASE; }
     };
 
-    /*
-    class Ng_Edges
-    {
-    public:
-      size_t num;
-      const T_EDGE2 * ptr;
-  
-      size_t Size() const { return num; }
-      int operator[] (size_t i) const { return ptr[i]; }
-    };
-
-    class Ng_Faces
-    {
-    public:
-      size_t num;
-      const T_FACE2 * ptr;
-  
-      size_t Size() const { return num; }
-      int operator[] (size_t i) const { return ptr[i]; }
-    };
-    */
-
     class Ng_Facets
     {
     public:
@@ -154,9 +117,7 @@ namespace netgen
     int GetIndex() const { return index-1; }
     Ng_Points points;      // all points
     Ng_Vertices vertices;
-    // Ng_Edges edges;
     FlatArray<T_EDGE2> edges;
-    // Ng_Faces faces;
     FlatArray<T_FACE2> faces;    
     Ng_Facets facets;
     bool is_curved;
