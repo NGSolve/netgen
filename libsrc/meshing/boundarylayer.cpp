@@ -1090,20 +1090,20 @@ void BoundaryLayerTool ::AddSegments()
         if (mapto[seg[0]].Size() || mapto[seg[1]].Size())
           {
             seg.epgeominfo[0].edgenr = -1;
-            seg.epgeominfo[0].edgenr = -1;
+            seg.epgeominfo[1].edgenr = -1;
           }
 
       for (auto& seg : segments)
-        if (is_edge_moved[seg.si])
+        if (is_edge_moved[seg.edgenr])
           {
             seg.epgeominfo[0].edgenr = -1;
-            seg.epgeominfo[0].edgenr = -1;
+            seg.epgeominfo[1].edgenr = -1;
           }
 
       for (auto& seg : new_segs)
         {
           seg.epgeominfo[0].edgenr = -1;
-          seg.epgeominfo[0].edgenr = -1;
+          seg.epgeominfo[1].edgenr = -1;
         }
     }
 
