@@ -1297,6 +1297,36 @@ int Ngx_Mesh::GetClusterRepElement (int pi) const
 }
 
 
+int Ngx_Mesh::GetElement_Faces (int elnr, int * faces, int * orient) const
+{
+  const MeshTopology & topology = mesh->GetTopology();
+  if (mesh->GetDimension() == 3)
+    {
+      int num = topology.GetElementFaces (elnr+1, faces, orient);
+      for (int i = 0; i < num; i++)
+        faces[i]--;
+      return num;
+    }
+  else
+    {
+      faces[0] = elnr;
+      if (orient) orient[0] = 0;
+      return 1;
+    }
+}
+
+int Ngx_Mesh::GetSurfaceElement_Face (int selnr, int * orient) const
+{
+  if (mesh->GetDimension() == 3)
+    {
+      const MeshTopology & topology = mesh->GetTopology();
+      if (orient)
+	*orient = topology.GetSurfaceElementFaceOrientation (selnr+1);
+      return topology.GetSurfaceElementFace (selnr+1)-1;
+    }
+  return -1;
+}
+
 
 
 //HERBERT: falsche Anzahl von Argumenten

@@ -374,6 +374,10 @@ namespace netgen
     int GetClusterRepEdge (int edi) const;
     int GetClusterRepFace (int fai) const;
     int GetClusterRepElement (int eli) const;
+
+    // just copied from nginterface, now 0-based
+    int GetElement_Faces (int elnr, int * faces, int * orient = 0) const;
+    int GetSurfaceElement_Face (int selnr, int * orient = 0) const;
   };
 
 
