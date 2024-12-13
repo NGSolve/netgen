@@ -1747,7 +1747,10 @@ namespace netgen
     Array<TopoDS_Shape> shape_list;
 
     ar & dimension;
-    for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
+    auto types = Array<TopAbs_ShapeEnum>{ TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE };
+    if(ar.GetVersion("netgen") >= "v6.2.2406-22")
+      types.Append(TopAbs_VERTEX);
+    for (auto typ : types)
       for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
         {
           auto ds = e.Current();
