@@ -151,7 +151,7 @@ namespace netgen
 
 
 
-
+  /*
   class PointIndex
   {
     int i;
@@ -191,8 +191,87 @@ namespace netgen
 #endif  
 
     void DoArchive (Archive & ar) { ar & i; }
-  };
+  }
+    */
 
+  
+  class PointIndex
+  {
+    int i;
+  public:
+    class t_invalid { public: constexpr t_invalid() = default; };
+    static constexpr t_invalid INVALID{};
+    
+    PointIndex () = default;
+    PointIndex (const PointIndex&) = default;
+    PointIndex (PointIndex &&) = default;
+    PointIndex & operator= (const PointIndex&) = default;
+    PointIndex & operator= (PointIndex&&) = default;
+
+    // private:
+    constexpr PointIndex (int ai) : i(ai)
+    {
+#ifdef DEBUG
+      if (ai < PointIndex::BASE)
+        cout << "illegal PointIndex, use PointIndex::INVALID instead" << endl;
+        // throw Exception("illegal PointIndex, use PointIndex::INVALID instead");
+#endif
+    }
+    friend constexpr netgen::PointIndex ngcore::IndexBASE<netgen::PointIndex> ();
+    friend istream & operator>> (istream &, PointIndex &);    
+    friend ostream & operator<< (ostream &, const PointIndex &);
+    template <int N> friend class PointIndices;
+
+    /*
+    friend PointIndex operator+ (PointIndex, int);
+    friend PointIndex operator+ (PointIndex, size_t);    
+    friend PointIndex operator+ (int, PointIndex);
+    friend PointIndex operator+ (size_t, PointIndex);
+    friend PointIndex operator- (PointIndex, int);
+    friend int operator- (PointIndex, PointIndex);
+    friend bool operator< (PointIndex a, PointIndex b);
+    friend bool operator> (PointIndex a, PointIndex b);
+    friend bool operator>= (PointIndex a, PointIndex b);
+    friend bool operator== (PointIndex a, PointIndex b);
+    friend bool operator!= (PointIndex a, PointIndex b);
+    */
+    
+  public:
+    constexpr PointIndex (t_invalid inv) : i(PointIndex::BASE-1) { ; }
+    // PointIndex & operator= (const PointIndex &ai) { i = ai.i; return *this; }
+    // private:
+    constexpr operator const int& () const { return i; }
+    explicit constexpr operator int& () { return i; }
+  public:
+    PointIndex operator++ (int) { PointIndex hi(*this); i++; return hi; }
+    PointIndex operator-- (int) { PointIndex hi(*this); i--; return hi; }
+    PointIndex & operator++ () { i++; return *this; }
+    PointIndex operator-- () { i--; return *this; }
+    PointIndex operator+= (int add) { i += add; return *this; }
+    void Invalidate() { i = PointIndex::BASE-1; }
+    bool IsValid() const { return i != PointIndex::BASE-1; }
+#ifdef BASE0
+    static constexpr size_t BASE = 0;
+#else
+    static constexpr size_t BASE = 1;
+#endif  
+
+    void DoArchive (Archive & ar) { ar & i; }
+  };
+  
+  /*
+  inline PointIndex operator+ (PointIndex pi, int i) { return PointIndex(pi.i+i); }
+  inline PointIndex operator+ (PointIndex pi, size_t i) { return PointIndex(pi.i+i); }  
+  inline PointIndex operator+ (int i, PointIndex pi) { return PointIndex(pi.i+i); }
+  inline PointIndex operator+ (size_t i, PointIndex pi) { return PointIndex(pi.i+i); }
+  inline PointIndex operator- (PointIndex pi, int i) { return PointIndex(pi.i-i); }
+  inline int operator- (PointIndex pa, PointIndex pb) { return PointIndex(pa.i-pb.i); }
+  inline bool operator< (PointIndex a, PointIndex b) { return a.i < b.i; }
+  inline bool operator> (PointIndex a, PointIndex b) { return a.i > b.i; }
+  inline bool operator>= (PointIndex a, PointIndex b) { return a.i >= b.i; }
+  inline bool operator== (PointIndex a, PointIndex b) { return a.i == b.i; }
+  inline bool operator!= (PointIndex a, PointIndex b) { return a.i != b.i; }
+  */
 }
 
 namespace ngcore
@@ -224,6 +303,7 @@ namespace netgen
     PointIndices (PointIndex i1, PointIndex i2) : INDEX_2(i1,i2) { ; } 
     PointIndex operator[] (int i) const { return PointIndex(INDEX_2::operator[](i)); }
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_2::operator[](i)); }
+    using INDEX_2::Sort;
     static PointIndices Sort(PointIndex i1, PointIndex i2) { return INDEX_2::Sort(i1, i2); }
     template <size_t J>
     PointIndex get() const { return PointIndex(INDEX_2::operator[](J)); }    
@@ -1627,14 +1707,15 @@ namespace netgen
 
     bool Used (PointIndex pi1, PointIndex pi2)
     {
-      return identifiedpoints.Used (INDEX_2 (pi1, pi2));
+      // return identifiedpoints.Used (INDEX_2 (pi1, pi2));
+      return identifiedpoints.Used (PointIndices<2>(pi1, pi2));
     }
 
     bool UsedSymmetric (PointIndex pi1, PointIndex pi2)
     {
       return 
-	identifiedpoints.Used (INDEX_2 (pi1, pi2)) ||
-	identifiedpoints.Used (INDEX_2 (pi2, pi1));
+	identifiedpoints.Used (PointIndices<2>(pi1, pi2)) ||
+	identifiedpoints.Used (PointIndices<2>(pi2, pi1));
     }
 
     ///

@@ -20,7 +20,7 @@ namespace netgen
       } 
   }
 
-  void GeomSearch3d :: Init (NgArray <FrontPoint3,PointIndex::BASE, PointIndex> *pointsi, NgArray <FrontFace> *facesi)
+  void GeomSearch3d :: Init (Array <FrontPoint3,PointIndex> *pointsi, NgArray <FrontFace> *facesi)
   {
     points = pointsi;
     faces = facesi;

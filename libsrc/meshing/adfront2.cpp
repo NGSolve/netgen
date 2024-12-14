@@ -152,15 +152,15 @@ namespace netgen
 
     if (allflines)
       {
-	if (allflines->Used (INDEX_2 (GetGlobalIndex (pi1), 
-				      GetGlobalIndex (pi2))))
+	if (allflines->Used (PointIndices<2>(GetGlobalIndex (pi1), 
+                                             GetGlobalIndex (pi2))))
 	  {
 	    cerr << "ERROR Adfront2::AddLine: line exists" << endl;
 	    (*testout) << "ERROR Adfront2::AddLine: line exists" << endl;
 	  }
 
-	allflines->Set (INDEX_2 (GetGlobalIndex (pi1), 
-				 GetGlobalIndex (pi2)), 1);
+	allflines->Set (PointIndices<2>(GetGlobalIndex (pi1), 
+                                        GetGlobalIndex (pi2)), 1);
       }
 
     return li;
@@ -194,8 +194,8 @@ namespace netgen
 
     if (allflines)
       {
-	allflines->Set (INDEX_2 (GetGlobalIndex (lines[li].L().I1()),
-				 GetGlobalIndex (lines[li].L().I2())), 2);
+	allflines->Set (PointIndices<2>(GetGlobalIndex (lines[li].L().I1()),
+                                        GetGlobalIndex (lines[li].L().I2())), 2);
       }
 
     lines[li].Invalidate();

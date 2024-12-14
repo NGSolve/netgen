@@ -181,14 +181,14 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   // NgProfiler::RegionTimer reg (meshing3_timer);
 
 
-  NgArray<Point3d, PointIndex::BASE> locpoints;      // local points
+  Array<Point3d, PointIndex> locpoints;      // local points
   NgArray<MiniElement2d> locfaces;                   // local faces
-  NgArray<PointIndex, PointIndex::BASE> pindex;      // mapping from local to front point numbering
-  NgArray<int, PointIndex::BASE> allowpoint;         // point is allowed ?
+  Array<PointIndex, PointIndex> pindex;      // mapping from local to front point numbering
+  Array<int, PointIndex> allowpoint;         // point is allowed ?
   NgArray<INDEX> findex;                             // mapping from local to front face numbering
   //INDEX_2_HASHTABLE<int> connectedpairs(100);    // connecgted pairs for prism meshing
 
-  NgArray<Point3d, PointIndex::BASE> plainpoints;    // points in reference coordinates
+  Array<Point3d, PointIndex> plainpoints;    // points in reference coordinates
   NgArray<int> delpoints, delfaces;   // points and lines to be deleted
   NgArray<Element> locelements;       // new generated elements
 
@@ -213,7 +213,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   // for star-shaped domain meshing
   NgArray<MeshPoint, PointIndex::BASE> grouppoints;      
   NgArray<MiniElement2d> groupfaces;
-  NgArray<PointIndex, PointIndex::BASE> grouppindex;
+  Array<PointIndex, PointIndex> grouppindex;
   NgArray<INDEX> groupfindex;
   
   
@@ -342,10 +342,11 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 
       allowpoint.SetSize(locpoints.Size());
       if (uselocalh && stat.qualclass <= 3)
-	for(int i = 1; i <= allowpoint.Size(); i++)
+	//for(int i = 1; i <= allowpoint.Size(); i++)
+        for(auto i : allowpoint.Range())
 	  {
-	    allowpoint.Elem(i) =
-	      (mesh.GetH (locpoints.Get(i)) > 0.4 * hshould / mp.sloppy) ? 2 : 1;
+	    allowpoint[i] =
+	      (mesh.GetH (locpoints[i]) > 0.4 * hshould / mp.sloppy) ? 2 : 1;
 	  }
       else
 	allowpoint = 2;
@@ -401,7 +402,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 		    {
 		      newel.PNum(j) = 
 			adfront->GetGlobalIndex 
-			(grouppindex.Get(groupfaces.Get(i).PNum(j)));
+			(grouppindex[groupfaces.Get(i).PNum(j)]);
 		    }
 		  mesh.AddVolumeElement (newel);
 		}
@@ -505,9 +506,13 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	  if (found) stat.cntsucc++;
 
 	  locpoints.SetSize (plainpoints.Size());
+          /*
 	  for (int i = oldnp+1; i <= plainpoints.Size(); i++)
 	    trans.FromPlain (plainpoints.Elem(i), locpoints.Elem(i));
-	  
+          */
+	  for (auto i : plainpoints.Range().Modify(oldnp,0))
+	    trans.FromPlain (plainpoints[i], locpoints[i]);
+          
 
 
 	  // avoid meshing from large to small mesh-size
@@ -565,14 +570,15 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	      if (testmode)
 		{
 		  (*testout) << "found is active, 3" << endl;
-		  for(int i = 1; i <= plainpoints.Size(); i++)
+		  //for(int i = 1; i <= plainpoints.Size(); i++)
+                  for(auto i : plainpoints.Range())
 		    {
 		      (*testout) << "p";
-		      if (i <= pindex.Size())
-			(*testout) << pindex.Get(i) << ": ";
+		      if (i < pindex.Range().Next())
+			(*testout) << pindex[i] << ": ";
 		      else
 			(*testout) << "new: ";
-		      (*testout) << plainpoints.Get(i) << endl;
+		      (*testout) << plainpoints[i] << endl;
 		    }
 		}
 	      
@@ -582,20 +588,24 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	      minerr = err;
 	      
 	      tempnewpoints.SetSize (0);
-	      for(int i = oldnp+1; i <= locpoints.Size(); i++)
-		tempnewpoints.Append (locpoints.Get(i));
+	      // for(int i = oldnp+1; i <= locpoints.Size(); i++)
+              for (auto i : locpoints.Range().Modify(oldnp,0))
+		tempnewpoints.Append (locpoints[i]);
 	      
 	      tempnewfaces.SetSize (0);
-	      for(int i = oldnf+1; i <= locfaces.Size(); i++)
-		tempnewfaces.Append (locfaces.Get(i));
+	      // for(int i = oldnf+1; i <= locfaces.Size(); i++)
+              for (auto i : locfaces.Range().Modify(oldnf,0))              
+		tempnewfaces.Append (locfaces[i]);
 	      
 	      tempdelfaces.SetSize (0);
-	      for(int i = 1; i <= delfaces.Size(); i++)
-		tempdelfaces.Append (delfaces.Get(i));
+	      // for(int i = 1; i <= delfaces.Size(); i++)
+              for (auto i : delfaces.Range())
+		tempdelfaces.Append (delfaces[i]);
 	      
 	      templocelements.SetSize (0);
-	      for(int i = 1; i <= locelements.Size(); i++)
-		templocelements.Append (locelements.Get(i));
+	      // for(int i = 1; i <= locelements.Size(); i++)
+              for (auto i : locelements.Range())
+		templocelements.Append (locelements[i]);
 
 	      /*
 	      optother =
@@ -637,14 +647,14 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	  if (loktestmode)
 	    {
 	      (*testout) << "apply rule" << endl;
-	      for(int i = 1; i <= locpoints.Size(); i++)
+	      for (auto i : locpoints.Range())
 		{
 		  (*testout) << "p";
-		  if (i <= pindex.Size())
-		    (*testout) << pindex.Get(i) << ": ";
+		  if (pindex.Range().Contains(i))
+		    (*testout) << pindex[i] << ": ";
 		  else
 		    (*testout) << "new: ";
-		  (*testout) << locpoints.Get(i) << endl;
+		  (*testout) << locpoints[i] << endl;
 		}
 	    }
 
@@ -652,10 +662,11 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 
 	  pindex.SetSize(locpoints.Size());
 
-	  for (int i = oldnp+1; i <= locpoints.Size(); i++)
+	  // for (int i = oldnp+1; i <= locpoints.Size(); i++)
+          for (auto i : locpoints.Range().Modify(oldnp,0))
 	    {
-	      PointIndex globind = mesh.AddPoint (locpoints.Get(i));
-	      pindex.Elem(i) = adfront -> AddPoint (locpoints.Get(i), globind);
+	      PointIndex globind = mesh.AddPoint (locpoints[i]);
+	      pindex[i] = adfront -> AddPoint (locpoints[i], globind);
 	    }
 
 	  for (int i = 1; i <= locelements.Size(); i++)

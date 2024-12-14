@@ -564,7 +564,7 @@ namespace netgen
 
     bool IsSegment (PointIndex pi1, PointIndex pi2) const
     {
-      INDEX_2 i2 (pi1, pi2);
+      PointIndices<2> i2 (pi1, pi2);
       i2.Sort();
       return segmentht->Used (i2);
     }

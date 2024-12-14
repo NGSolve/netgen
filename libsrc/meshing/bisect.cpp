@@ -2174,7 +2174,7 @@ namespace netgen
                 auto seg = mesh[j];
                 for (auto map : idmaps)
                   {
-                    if (seg[0] > 0 && seg[1] > 0 && (*map)[seg[0]] && (*map)[seg[1]])
+                    if (seg[0].IsValid() && seg[1].IsValid() && (*map)[seg[0]] && (*map)[seg[1]])
                       {
                         MarkedIdentification mi;
                         mi.np = 2;
@@ -4013,7 +4013,7 @@ namespace netgen
 	do_repair = false;
 	for(int ii=1; ii<=mesh.GetNP(); ii++)
 	  {
-	    if(isnewpoint.Test(ii) && mesh.mlbetweennodes[ii][0] > 0)
+	    if(isnewpoint.Test(ii) && mesh.mlbetweennodes[ii][0].IsValid())
 	      {
 		mesh.Point(ii) = Center(mesh.Point(mesh.mlbetweennodes[ii][0]),
                                         mesh.Point(mesh.mlbetweennodes[ii][1]));

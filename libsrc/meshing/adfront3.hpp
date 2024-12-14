@@ -31,7 +31,7 @@ class FrontPoint3
   /// distance to original boundary
   int frontnr;
   /// 
-  int cluster;
+  PointIndex cluster;
 public:
   ///
   FrontPoint3 ();
@@ -125,7 +125,7 @@ private:
   ///
   int hashvalue;
   ///
-  int cluster;
+  PointIndex cluster;
   
 public:
   ///
@@ -172,7 +172,7 @@ public:
   ///
   friend class AdFront3;
 
-  int Cluster () const { return cluster; }
+  PointIndex Cluster () const { return cluster; }
 };  
 
 
@@ -182,14 +182,16 @@ public:
 class AdFront3
 {
   ///
-  NgArray<FrontPoint3, PointIndex::BASE, PointIndex> points;
+  // NgArray<FrontPoint3, PointIndex::BASE, PointIndex> points;
+  Array<FrontPoint3, PointIndex> points;
   ///
   NgArray<FrontFace> faces;
   ///
-  NgArray<PointIndex> delpointl;
+  Array<PointIndex> delpointl;
   
   /// which points are connected to pi ?
-  TABLE<int, PointIndex::BASE> * connectedpairs;
+  // TABLE<PointIndex, PointIndex::BASE> * connectedpairs;
+  unique_ptr<DynamicTable<PointIndex, PointIndex>> connectedpairs;
   
   /// number of total front faces;
   int nff;
@@ -214,8 +216,8 @@ class AdFront3
   int lasti;
   /// minimal selection-value of baseelements
   int minval;
-  NgArray<PointIndex, PointIndex::BASE, PointIndex> invpindex;
-  NgArray<char, PointIndex::BASE> pingroup;
+  Array<PointIndex, PointIndex> invpindex;
+  Array<char, PointIndex> pingroup;
   
   ///
   class BoxTree<3> * facetree;
@@ -262,7 +264,7 @@ public:
   void GetIntersectingFaces (const Point<3> & pmin, const Point<3> & pmax, 
 			     NgArray<int> & ifaces) const;
 
-  bool PointInsideGroup(const NgArray<PointIndex, PointIndex::BASE> &grouppindex,
+  bool PointInsideGroup(const Array<PointIndex, PointIndex> &grouppindex,
                         const NgArray<MiniElement2d>& groupfaces) const;
 
   ///
@@ -270,9 +272,9 @@ public:
 
   ///
   int GetLocals (int baseelement,
-		 NgArray<Point3d, PointIndex::BASE> & locpoints,
+		 Array<Point3d, PointIndex> & locpoints,
                  NgArray<MiniElement2d> & locfaces,   // local index
-                 NgArray<PointIndex, PointIndex::BASE> & pindex,
+                 Array<PointIndex, PointIndex> & pindex,
                  NgArray<INDEX> & findex,
 		 INDEX_2_HASHTABLE<int> & connectedpairs,
                  float xh,
@@ -283,7 +285,7 @@ public:
   void GetGroup (int fi,
                  NgArray<MeshPoint, PointIndex::BASE> & grouppoints,
                  NgArray<MiniElement2d> & groupelements,
-                 NgArray<PointIndex, PointIndex::BASE> & pindex,
+                 Array<PointIndex, PointIndex> & pindex,
                  NgArray<INDEX> & findex);
 
   ///
@@ -293,7 +295,7 @@ public:
   ///
   INDEX AddFace (const MiniElement2d & e);
   ///
-  INDEX AddConnectedPair (const INDEX_2 & pair);
+  INDEX AddConnectedPair (PointIndices<2> pair);
   ///
   void IncrementClass (INDEX fi)
   { faces.Elem(fi).IncrementQualClass(); }

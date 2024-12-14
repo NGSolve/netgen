@@ -27,7 +27,7 @@ public:
   virtual ~GeomSearch3d();
 
   ///
-  void Init (NgArray <FrontPoint3,PointIndex::BASE, PointIndex> *pointsi, NgArray <FrontFace> *facesi);
+  void Init (Array <FrontPoint3,PointIndex> *pointsi, NgArray <FrontFace> *facesi);
 
   ///get elements max extension
   void ElemMaxExt(Point3d& minp, Point3d& maxp, const MiniElement2d& elem);
@@ -52,7 +52,7 @@ public:
 private:
   
   NgArray <FrontFace> *faces; // Pointers to Arrays in Adfront
-  NgArray <FrontPoint3,PointIndex::BASE, PointIndex> *points;
+  Array <FrontPoint3,PointIndex> *points;
 
   NgArray <NgArray <int>*> hashtable;
 

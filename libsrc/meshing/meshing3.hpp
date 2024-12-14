@@ -45,8 +45,8 @@ public:
   MESHING3_RESULT GenerateMesh (Mesh & mesh, const MeshingParameters & mp);
   
   ///
-  int ApplyRules (NgArray<Point3d, PointIndex::BASE> & lpoints,
-                  NgArray<int, PointIndex::BASE> & allowpoint,
+  int ApplyRules (Array<Point3d, PointIndex> & lpoints,
+                  Array<int, PointIndex> & allowpoint,
 		  NgArray<MiniElement2d> & lfaces, INDEX lfacesplit,
 		  INDEX_2_HASHTABLE<int> & connectedpairs,
 		  NgArray<Element> & elements,

@@ -8,7 +8,7 @@ extern double minother;
 extern double minwithoutother;
 
 
-  static double CalcElementBadness (const NgArray<Point3d, PointIndex::BASE> & points,
+  static double CalcElementBadness (const Array<Point3d, PointIndex> & points,
                                     const Element & elem)
 {
   double vol, l, l4, l5, l6;
@@ -49,8 +49,8 @@ extern double minwithoutother;
 
 int Meshing3 :: ApplyRules 
 (
- NgArray<Point3d, PointIndex::BASE> & lpoints,     // in: local points, out: old+new local points
- NgArray<int, PointIndex::BASE> & allowpoint,      // in: 2 .. it is allowed to use pointi, 1..will be allowed later, 0..no means
+ Array<Point3d, PointIndex> & lpoints,     // in: local points, out: old+new local points
+ Array<int, PointIndex> & allowpoint,      // in: 2 .. it is allowed to use pointi, 1..will be allowed later, 0..no means
  NgArray<MiniElement2d> & lfaces,    // in: local faces, out: old+new local faces
  INDEX lfacesplit,	       // for local faces in outer radius
  INDEX_2_HASHTABLE<int> & connectedpairs,  // connected pairs for prism-meshing
@@ -659,11 +659,12 @@ int Meshing3 :: ApplyRules
 
 		      // check freezone:
 		      
-		      for (int i = 1; i <= lpoints.Size(); i++)
+		      // for (int i = 1; i <= lpoints.Size(); i++)
+                      for (auto i : lpoints.Range())
 			{
 			  if ( !pused.Get(i) )
 			    {
-			      const Point3d & lp = lpoints.Get(i);
+			      const Point3d & lp = lpoints[i];
 
 			      if (rule->fzbox.IsIn (lp))
 				{
@@ -674,7 +675,7 @@ int Meshing3 :: ApplyRules
 					  (*testout) << "Point " << i 
 						     << " in Freezone" << endl;
 					  snprintf (problems.Elem(ri), 255,
-						   "locpoint %d in Freezone", i);
+                                                    "locpoint %d in Freezone", int(i));
 					}
 				      ok = 0;
 				      break;
@@ -933,11 +934,11 @@ int Meshing3 :: ApplyRules
 
 			  // new points in free-zone ?
 			  for (int i = rule->GetNOldP() + 1; i <= rule->GetNP() && ok; i++)
-			    if (!rule->IsInFreeZone (lpoints.Get(pmap.Get(i))))
+			    if (!rule->IsInFreeZone (lpoints[pmap.Get(i)]))
 			      {
 				if (loktestmode)
 				  {
-				    (*testout) << "Newpoint " << lpoints.Get(pmap.Get(i))
+				    (*testout) << "Newpoint " << lpoints[pmap.Get(i)]
 					       << " outside convex hull" << endl;
 				    snprintf (problems.Elem(ri), 255, "newpoint outside convex hull");
 				  }
@@ -958,9 +959,9 @@ int Meshing3 :: ApplyRules
 			  // Calculate Element badness
 			  
 			  teterr = 0;
-			  for (int i = 1; i <= elements.Size(); i++)
+			  for (auto i : elements.Range())
 			    {
-			      double hf = CalcElementBadness (lpoints, elements.Get(i));
+			      double hf = CalcElementBadness (lpoints, elements[i]);
 			      if (hf > teterr) teterr = hf;
 			    }
 
@@ -1066,25 +1067,29 @@ int Meshing3 :: ApplyRules
 				    {
 				      (*testout) << "P" << i << ": Ref: "
 						 << rule->GetPoint (i) << "  is: "
-						 << lpoints.Get(pmap.Get(i)) << endl;
+						 << lpoints[pmap.Get(i)] << endl;
 				    }
 				}
 			      
 			      tempnewpoints.SetSize (0);
-			      for (int i = noldlp+1; i <= lpoints.Size(); i++)
-				tempnewpoints.Append (lpoints.Get(i));
+			      // for (int i = noldlp+1; i <= lpoints.Size(); i++)
+                              for (auto i : lpoints.Range().Modify(noldlp, 0))
+				tempnewpoints.Append (lpoints[i]);
 			      
 			      tempnewfaces.SetSize (0);
-			      for (int i = noldlf+1; i <= lfaces.Size(); i++)
-				tempnewfaces.Append (lfaces.Get(i));
+			      // for (int i = noldlf+1; i <= lfaces.Size(); i++)
+                              for (auto i : lfaces.Range().Modify(noldlf,0))
+				tempnewfaces.Append (lfaces[i]);
 
 			      tempdelfaces.SetSize (0);
-			      for (int i = 1; i <= delfaces.Size(); i++)
-				tempdelfaces.Append (delfaces.Get(i));
+			      // for (int i = 1; i <= delfaces.Size(); i++)
+                              for (auto i : delfaces.Range())
+				tempdelfaces.Append (delfaces[i]);
 			      
 			      tempelements.SetSize (0);
-			      for (int i = 1; i <= elements.Size(); i++)
-				tempelements.Append (elements.Get(i));
+			      // for (int i = 1; i <= elements.Size(); i++)
+                              for (auto i : elements.Range())
+				tempelements.Append (elements[i]);
 			    }
 			  
 

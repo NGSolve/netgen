@@ -13,7 +13,7 @@ FrontPoint3 :: FrontPoint3 ()
   globalindex.Invalidate(); //  = -1;
   nfacetopoint = 0; 
   frontnr = 1000; 
-  cluster = 0;
+  cluster = PointIndex::INVALID;
 }
 
 
@@ -23,7 +23,7 @@ FrontPoint3 :: FrontPoint3 (const Point<3> & ap, PointIndex agi)
   globalindex = agi;
   nfacetopoint = 0; 
   frontnr = 1000; 
-  cluster = 0;
+  cluster = PointIndex::INVALID;
 }
 
 
@@ -35,7 +35,7 @@ FrontFace :: FrontFace ()
   qualclass = 1; 
   oldfront = 0; 
   hashvalue = 0;
-  cluster = 0;
+  cluster = PointIndex::INVALID;
 }
 
 FrontFace :: FrontFace (const MiniElement2d & af)
@@ -71,7 +71,7 @@ AdFront3 :: AdFront3 ()
     hashtable.Init(&points, &faces);
 
   facetree = NULL;
-  connectedpairs = NULL;
+  // connectedpairs = NULL;
 
   rebuildcounter = -1;
   lasti = 0;
@@ -82,7 +82,7 @@ AdFront3 :: AdFront3 ()
 AdFront3 :: ~AdFront3 ()
 {
   delete facetree;
-  delete connectedpairs;
+  // delete connectedpairs;
 }
 
 void AdFront3 :: GetPoints (NgArray<Point<3> > & apoints) const
@@ -153,10 +153,10 @@ INDEX AdFront3 :: AddFace (const MiniElement2d & aface)
     }
 
 
-  int cluster = 0;
+  PointIndex cluster = PointIndex::INVALID;
   for (i = 1; i <= aface.GetNP(); i++)
     {
-      if (points[aface.PNum(i)].cluster)
+      if (points[aface.PNum(i)].cluster.IsValid())
 	cluster = points[aface.PNum(i)].cluster;
     }
   for (i = 1; i <= aface.GetNP(); i++)
@@ -213,13 +213,13 @@ void AdFront3 :: DeleteFace (INDEX fi)
 }
 
 
-INDEX AdFront3 :: AddConnectedPair (const INDEX_2 & apair)
+INDEX AdFront3 :: AddConnectedPair (PointIndices<2> apair)
 {
   if (!connectedpairs)
-    connectedpairs = new TABLE<int, PointIndex::BASE> (GetNP());
+    connectedpairs = make_unique<DynamicTable<PointIndex, PointIndex>> (GetNP());
 
-  connectedpairs->Add (apair.I1(), apair.I2());
-  connectedpairs->Add (apair.I2(), apair.I1());
+  connectedpairs->Add (apair[0], apair[1]);
+  connectedpairs->Add (apair[1], apair[0]);
 
   return 0;
 }
@@ -231,11 +231,11 @@ void AdFront3 :: CreateTrees ()
   PointIndex pi;
   Point3d pmin, pmax;
 
-  for (pi = PointIndex::BASE; 
-       pi < GetNP()+PointIndex::BASE; pi++)
+  for (pi = IndexBASE<PointIndex>(); 
+       pi < GetNP()+IndexBASE<PointIndex>(); pi++)
     {
       const Point<3> & p = GetPoint(pi);
-      if (pi == PointIndex::BASE)
+      if (pi == IndexBASE<PointIndex>())
 	{
 	  pmin = p;
 	  pmax = p;
@@ -323,12 +323,12 @@ void AdFront3 :: RebuildInternalTables ()
 	{
 	  const MiniElement2d & el = faces.Get(i).Face();
 
-	  int mini = points[el.PNum(1)].cluster;
-	  int maxi = mini;
+	  PointIndex mini = points[el.PNum(1)].cluster;
+	  PointIndex maxi = mini;
 	  
 	  for (int j = 2; j <= 3; j++)
 	    {
-	      int ci = points[el.PNum(j)].cluster;
+	      PointIndex ci = points[el.PNum(j)].cluster;
 	      if (ci < mini) mini = ci;
 	      if (ci > maxi) maxi = ci;
 	    }
@@ -366,7 +366,7 @@ void AdFront3 :: RebuildInternalTables ()
       cntcl++;
   */
   
-  NgArray<double, PointIndex::BASE> clvol (np);
+  Array<double, PointIndex> clvol (np);
   clvol = 0.0;
 
   for (int i = 1; i <= faces.Size(); i++)
@@ -398,8 +398,11 @@ void AdFront3 :: RebuildInternalTables ()
 
 
   int negvol = 0;
+  /*
   for (int i = PointIndex::BASE; 
        i < clvol.Size()+PointIndex::BASE; i++)
+  */
+  for (auto i : clvol.Range())
     {
       if (clvol[i] < 0)
 	negvol = 1;
@@ -408,10 +411,10 @@ void AdFront3 :: RebuildInternalTables ()
   if (negvol)
     {
       for (int i = 1; i <= faces.Size(); i++)
-	faces.Elem(i).cluster = 1;
+	faces.Elem(i).cluster = IndexBASE<PointIndex>();
       // for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
       for (PointIndex pi : points.Range())
-	points[pi].cluster = 1;
+	points[pi].cluster = IndexBASE<PointIndex>();
     }
 
   if (hashon) 
@@ -495,9 +498,9 @@ int AdFront3 :: SelectBaseElement ()
 
 
 int AdFront3 :: GetLocals (int fstind,
-			   NgArray<Point3d, PointIndex::BASE> & locpoints,
+			   Array<Point3d, PointIndex> & locpoints,
 			   NgArray<MiniElement2d> & locfaces,   // local index
-			   NgArray<PointIndex, PointIndex::BASE> & pindex,
+			   Array<PointIndex, PointIndex> & pindex,
 			   NgArray<INDEX> & findex,
 			   INDEX_2_HASHTABLE<int> & getconnectedpairs,
 			   float xh,
@@ -529,7 +532,7 @@ int AdFront3 :: GetLocals (int fstind,
   locfaces3.SetSize(0);
   findex2.SetSize(0);
 
-  int cluster = faces.Get(fstind).cluster;
+  PointIndex cluster = faces.Get(fstind).cluster;
 
   pstind = faces.Get(fstind).Face().PNum(1);
   p0 = points[pstind].P();
@@ -612,7 +615,7 @@ int AdFront3 :: GetLocals (int fstind,
 	    {
 	      pindex.Append (pi);
               locpoints.Append (points[pi].P());
-	      invpindex[pi] = pindex.Size()-1+PointIndex::BASE;
+	      invpindex[pi] = pindex.Size()-1+IndexBASE<PointIndex>();
             }
           // locfaces.Elem(i).PNum(j) = locpoints.Append (points[pi].P());
           // }
@@ -625,22 +628,25 @@ int AdFront3 :: GetLocals (int fstind,
 
   if (connectedpairs)
     {
-      for (i = 1; i <= locpoints.Size(); i++)
+      // for (i = 1; i <= locpoints.Size(); i++)
+      for (auto i : locpoints.Range())
 	{
-	  int pind = pindex.Get(i);
-	  if (pind >= 1 && pind <= connectedpairs->Size ())
+	  PointIndex pind = pindex[i]; // .Get(i);
+	  // if (pind.IsValid() && pind <= connectedpairs->Size ())
+          if (connectedpairs->Range().Contains(pind))
 	    {
 	      for (j = 1; j <= connectedpairs->EntrySize(pind); j++)
 		{
-		  int oi = connectedpairs->Get(pind, j);
-		  int other = invpindex.Get(oi);
-		  if (other >= 1 && other <= pindex.Size() && 
-		      pindex.Get(other) == oi)
+		  PointIndex oi = connectedpairs->Get(pind, j);
+		  PointIndex other = invpindex[oi];
+		  // if (other >= 1 && other <= pindex.Size() &&
+                  if (pindex.Range().Contains(other) &&
+		      pindex[other] == oi)
 		    {
 		      // INDEX_2 coned(i, other);
 		      // coned.Sort();
 		      // (*testout) << "connected: " << locpoints.Get(i) << "-" << locpoints.Get(other) << endl;
-		      getconnectedpairs.Set (INDEX_2::Sort (i, other), 1);
+		      getconnectedpairs.Set (PointIndices<2>::Sort (i, other), 1);
 		    }
 		}
 	    }
@@ -669,7 +675,7 @@ int AdFront3 :: GetLocals (int fstind,
 void AdFront3 :: GetGroup (int fi,
 			   NgArray<MeshPoint, PointIndex::BASE> & grouppoints,
 			   NgArray<MiniElement2d> & groupelements,
-			   NgArray<PointIndex, PointIndex::BASE> & pindex,
+			   Array<PointIndex, PointIndex> & pindex,
 			   NgArray<INDEX> & findex) 
 {
   // static NgArray<char> pingroup;
@@ -734,8 +740,9 @@ void AdFront3 :: GetGroup (int fi,
     if (points[pi].Valid())
       {
 	grouppoints.Append (points[pi].P());
-	pindex.Append (pi);
-	invpindex[pi] = pindex.Size();
+        pindex.Append (pi);
+        // invpindex[pi] = pindex.Size();
+	invpindex[pi] = pindex.Size()-1 + IndexBASE<PointIndex>();
       }
 
   for (int i = 1; i <= faces.Size(); i++)
@@ -787,7 +794,7 @@ void AdFront3 :: SetStartFront (int /* baseelnp */)
     */
 }
 
-bool AdFront3 :: PointInsideGroup(const NgArray<PointIndex, PointIndex::BASE> &grouppindex,
+  bool AdFront3 :: PointInsideGroup(const Array<PointIndex, PointIndex> &grouppindex,
                                   const NgArray<MiniElement2d> &groupfaces) const
 {
   for(auto pi : Range(points))
@@ -797,7 +804,7 @@ bool AdFront3 :: PointInsideGroup(const NgArray<PointIndex, PointIndex::BASE> &g
       for(const auto& f : groupfaces)
         {
           for(auto i : Range(3))
-            if(grouppindex.Get(f.PNum(i+1)) == pi)
+            if(grouppindex[f.PNum(i+1)] == pi)
               {
                 found = true;
                 break;
@@ -814,9 +821,9 @@ bool AdFront3 :: PointInsideGroup(const NgArray<PointIndex, PointIndex::BASE> &g
       int count = 0;
       for(const auto& f : groupfaces)
         {
-          const auto& p1 = points[grouppindex.Get(f.PNum(1))].P();
-          auto v1 = points[grouppindex.Get(f.PNum(2))].P() - p1;
-          auto v2 = points[grouppindex.Get(f.PNum(3))].P() - p1;
+          const auto& p1 = points[grouppindex[f.PNum(1)]].P();
+          auto v1 = points[grouppindex[f.PNum(2)]].P() - p1;
+          auto v2 = points[grouppindex[f.PNum(3)]].P() - p1;
           for(auto i : Range(3))
             {
               a(i,0) = v1[i];

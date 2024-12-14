@@ -62,7 +62,7 @@ void BuildEdgeList( const Mesh & mesh, const Table<TINDEX, PointIndex> & element
         }
         QuickSort(local_edges);
 
-        auto edge_prev = std::make_tuple<PointIndex, PointIndex>(-1,-1);
+        auto edge_prev = std::make_tuple<PointIndex, PointIndex>(PointIndex::INVALID, PointIndex::INVALID);
 
         for(auto edge : local_edges)
             if(edge != edge_prev)
