@@ -635,9 +635,11 @@ int AdFront3 :: GetLocals (int fstind,
 	  // if (pind.IsValid() && pind <= connectedpairs->Size ())
           if (connectedpairs->Range().Contains(pind))
 	    {
-	      for (j = 1; j <= connectedpairs->EntrySize(pind); j++)
+	      // for (int j = 1; j <= connectedpairs->EntrySize(pind); j++)
+              for (auto j : (*connectedpairs)[pind].Range())
 		{
-		  PointIndex oi = connectedpairs->Get(pind, j);
+		  //PointIndex oi = connectedpairs->Get(pind, j);
+                  PointIndex oi = (*connectedpairs)[pind][j];
 		  PointIndex other = invpindex[oi];
 		  // if (other >= 1 && other <= pindex.Size() &&
                   if (pindex.Range().Contains(other) &&

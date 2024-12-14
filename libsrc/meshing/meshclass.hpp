@@ -269,17 +269,19 @@ namespace netgen
     auto GetNP () const { return points.Size(); }
 
     // [[deprecated("Use Point(PointIndex) instead of int !")]]        
-    MeshPoint & Point(int i)
+    MeshPoint & Point(int i) // 1-based
     {
       // return points.Elem(i);
-      return Point (PointIndex(i+PointIndex::BASE-1));
-    }
+      // return Point (PointIndex(i+PointIndex::BASE-1));
+      return Point (PointIndex(IndexBASE<PointIndex>()+i-1)); 
+    } 
     MeshPoint & Point(PointIndex pi) { return points[pi]; }
     // [[deprecated("Use Point(PointIndex) instead of int !")]]            
     const MeshPoint & Point(int i) const
     {
       // return points.Get(i);
-      return Point (PointIndex(i+PointIndex::BASE-1));      
+      // return Point (PointIndex(i+PointIndex::BASE-1));
+      return Point (PointIndex(IndexBASE<PointIndex>()+i-1));       
     }
     const MeshPoint & Point(PointIndex pi) const { return points[pi]; }
 
@@ -551,8 +553,8 @@ namespace netgen
     {
       if(!boundaryedges)
 	const_cast<Mesh *>(this)->BuildBoundaryEdges();
-
-      INDEX_2 i2 (pi1, pi2);
+      
+      PointIndices<2> i2(pi1, pi2);
       i2.Sort();
       return boundaryedges->Used (i2);
     }
@@ -571,7 +573,7 @@ namespace netgen
 
     SegmentIndex SegmentNr (PointIndex pi1, PointIndex pi2) const
     {
-      INDEX_2 i2 (pi1, pi2);
+      PointIndices<2> i2(pi1, pi2);
       i2.Sort();
       return segmentht->Get (i2);
     }

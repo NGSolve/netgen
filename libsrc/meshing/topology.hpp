@@ -148,7 +148,7 @@ public:
 
   ELEMENT_TYPE GetFaceType (int fnr) const
   // { return (face2vert.Get(fnr)[3] == 0) ? TRIG : QUAD; }
-  { return (face2vert[fnr-1][3] == 0) ? TRIG : QUAD; }    
+  { return (!face2vert[fnr-1][3].IsValid()) ? TRIG : QUAD; }    
 
   void GetSurfaceElementEdges (int elnr, NgArray<int> & edges) const;
   int GetSurfaceElementFace (int elnr) const;

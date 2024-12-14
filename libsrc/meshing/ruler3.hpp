@@ -172,7 +172,7 @@ public:
   int GetNP (int fn) const
   { return faces.Get(fn).GetNP(); }
   ///
-  int GetPointNr (int fn, int endp) const
+  PointIndex GetPointNr (int fn, int endp) const
   { return faces.Get(fn).PNum(endp); }
   ///
   int GetPointNrMod (int fn, int endp) const

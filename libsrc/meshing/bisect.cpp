@@ -373,7 +373,7 @@ namespace netgen
 	      
 	    for (j = 0; j < ned; j++)
 	      {
-		INDEX_2 i2(el.PNum(tip[j][0]), el.PNum(tip[j][1]));
+		PointIndices<2> i2(el.PNum(tip[j][0]), el.PNum(tip[j][1]));
 		i2.Sort();
 		//(*testout) << "edge " << i2 << endl;
 		if (!edgenumber.Used(i2))
@@ -428,7 +428,7 @@ namespace netgen
 	      
 	    for (j = 0; j < ned; j++)
 	      {
-		INDEX_2 i2(el.PNum(tip[j][0]), el.PNum(tip[j][1]));
+		PointIndices<2> i2(el.PNum(tip[j][0]), el.PNum(tip[j][1]));
 		i2.Sort();
 		if (!edgenumber.Used(i2))
 		  {
@@ -490,10 +490,10 @@ namespace netgen
 
 		for (j = 0; j < 3; j++)
 		  {
-		    INDEX_2 e1 (el.PNum(pairs[j][0]), 
-				el.PNum(pairs[j][1]));
-		    INDEX_2 e2 (el.PNum(pairs[j][2]), 
-				el.PNum(pairs[j][3]));
+		    PointIndices<2> e1 (el.PNum(pairs[j][0]), 
+                                        el.PNum(pairs[j][1]));
+		    PointIndices<2> e2 (el.PNum(pairs[j][2]), 
+                                        el.PNum(pairs[j][3]));
 		    e1.Sort();
 		    e2.Sort();
 		      
@@ -525,7 +525,7 @@ namespace netgen
 
 		for(i = 0; i < el2d.GetNP(); i++)
 		  {
-		    INDEX_2 e1(el2d[i], el2d[(i+1) % el2d.GetNP()]);
+		    PointIndices<2> e1(el2d[i], el2d[(i+1) % el2d.GetNP()]);
 		    e1.Sort();
 		    INDEX_2 e2;
 		    
@@ -759,7 +759,7 @@ namespace netgen
 	      
 		for (j = 0; j < ned; j++)
 		  {
-		    INDEX_2 i2(el.PNum(tip[j][0]), el.PNum(tip[j][1]));
+		    PointIndices<2> i2(el.PNum(tip[j][0]), el.PNum(tip[j][1]));
 		    i2.Sort();
 		    if (!edgenumber.Used(i2))
 		      {
@@ -819,10 +819,10 @@ namespace netgen
 
 			for (j = 0; j < 3; j++)
 			  {
-			    INDEX_2 e1 (el.PNum(pairs[j][0]), 
-					el.PNum(pairs[j][1]));
-			    INDEX_2 e2 (el.PNum(pairs[j][2]), 
-					el.PNum(pairs[j][3]));
+			    PointIndices<2> e1 (el.PNum(pairs[j][0]), 
+                                                el.PNum(pairs[j][1]));
+			    PointIndices<2> e2 (el.PNum(pairs[j][2]), 
+                                                el.PNum(pairs[j][3]));
 			    e1.Sort();
 			    e2.Sort();
 			  
@@ -874,7 +874,7 @@ namespace netgen
     for (int i = 0; i < 3; i++)
       for (int j = i+1; j < 4; j++)
 	{
-	  INDEX_2 i2(mt.pnums[i], mt.pnums[j]);
+	  PointIndices<2> i2(mt.pnums[i], mt.pnums[j]);
 	  i2.Sort();
 	  int hval = edgenumber.Get(i2);
 	  if (hval > val)
@@ -894,7 +894,7 @@ namespace netgen
 	  for (int j = i+1; j < 4; j++)
 	    if (i != k && j != k)
 	      {
-		INDEX_2 i2(mt.pnums[i], mt.pnums[j]);
+		PointIndices<2> i2(mt.pnums[i], mt.pnums[j]);
 		i2.Sort();
 		int hval = edgenumber.Get(i2);
 		if (hval > val)
@@ -973,7 +973,8 @@ namespace netgen
 
     bool identified = true;
     mi.np = el.GetNP();
-    int min1(0),min2(0);
+    // int min1(0),min2(0);
+    PointIndex min1(PointIndex::INVALID), min2(PointIndex::INVALID);
     for(int j = 0; identified && j < mi.np; j++)
       {
 	mi.pnums[j] = el[j];
@@ -999,7 +1000,7 @@ namespace netgen
 	int val = 0;
 	for (int i = 0; i < mi.np; i++)
 	  {
-	    INDEX_2 i2(mi.pnums[i], mi.pnums[(i+1)%mi.np]);
+	    PointIndices<2> i2(mi.pnums[i], mi.pnums[(i+1)%mi.np]);
 	    i2.Sort();
 	    int hval = edgenumber.Get(i2);
 	    if (hval > val)
