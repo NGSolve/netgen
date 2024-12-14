@@ -952,7 +952,7 @@ namespace netgen
     for (int i = 0; i < 2; i++)
       for (int j = i+1; j < 3; j++)
 	{
-	  INDEX_2 i2(mp.pnums[i], mp.pnums[j]);
+	  PointIndices<2> i2(mp.pnums[i], mp.pnums[j]);
 	  i2.Sort();
 	  int hval = edgenumber.Get(i2);
 	  if (hval > val)
@@ -1035,7 +1035,7 @@ namespace netgen
     for (int i = 0; i < 2; i++)
       for (int j = i+1; j < 3; j++)
 	{
-	  INDEX_2 i2(mt.pnums[i], mt.pnums[j]);
+	  PointIndices<2> i2(mt.pnums[i], mt.pnums[j]);
 	  i2.Sort();
 	  int hval = edgenumber.Get(i2);
 	  if (hval > val)
@@ -1124,7 +1124,7 @@ namespace netgen
 	    double hshould = 1e10;
 	    for (int j = 0; j < 4; j++)
 	      {
-		double hi = hv (mtets[i-1].pnums[j]-1);
+		double hi = hv (mtets[i-1].pnums[j]-IndexBASE<PointIndex>());
 		if (hi < hshould)
 		  hshould = hi;
 	      }
@@ -1164,7 +1164,7 @@ namespace netgen
 	    double hshould = 1e10;
 	    for (int j = 0; j < 6; j++)
 	      {
-		double hi = hv (mprisms.Get(i).pnums[j]-1);
+		double hi = hv (mprisms.Get(i).pnums[j]-IndexBASE<PointIndex>());
 		if (hi < hshould)
 		  hshould = hi;
 	      }
@@ -1215,7 +1215,7 @@ namespace netgen
 
 
 
-  void BTBisectTet (const MarkedTet & oldtet, int newp, 
+  void BTBisectTet (const MarkedTet & oldtet, PointIndex newp, 
 		    MarkedTet & newtet1, MarkedTet & newtet2)
   {
 #ifdef DEBUG
@@ -1356,7 +1356,7 @@ namespace netgen
 
   
 
-  void BTBisectPrism (const MarkedPrism & oldprism, int newp1, int newp2,
+  void BTBisectPrism (const MarkedPrism & oldprism, PointIndex newp1, PointIndex newp2,
 		      MarkedPrism & newprism1, MarkedPrism & newprism2)
   {
     for (int i = 0; i < 6; i++)
@@ -1450,7 +1450,7 @@ namespace netgen
 
 
 
-  void BTBisectTri (const MarkedTri & oldtri, int newp, const PointGeomInfo & newpgi,
+  void BTBisectTri (const MarkedTri & oldtri, PointIndex newp, const PointGeomInfo & newpgi,
 		    MarkedTri & newtri1, MarkedTri & newtri2)
   {
     for (int i = 0; i < 3; i++)
@@ -1492,8 +1492,8 @@ namespace netgen
 
 
   void BTBisectQuad (const MarkedQuad & oldquad, 
-		     int newp1, const PointGeomInfo & npgi1, 
-		     int newp2, const PointGeomInfo & npgi2, 
+		     PointIndex newp1, const PointGeomInfo & npgi1, 
+		     PointIndex newp2, const PointGeomInfo & npgi2, 
 		     MarkedQuad & newquad1, MarkedQuad & newquad2)
   {
     for (int i = 0; i < 4; i++)
@@ -1602,10 +1602,10 @@ namespace netgen
 	const int np = mids.Get(i).np;
 	for(int j = 0; j < np; j++)
 	  {
-	    INDEX_2 edge1(mids.Get(i).pnums[j],
-			  mids.Get(i).pnums[(j+1) % np]);
-	    INDEX_2 edge2(mids.Get(i).pnums[j+np],
-			  mids.Get(i).pnums[((j+1) % np) + np]);
+	    PointIndices<2> edge1(mids.Get(i).pnums[j],
+                                  mids.Get(i).pnums[(j+1) % np]);
+	    PointIndices<2> edge2(mids.Get(i).pnums[j+np],
+                                  mids.Get(i).pnums[((j+1) % np) + np]);
 
 	    edge1.Sort();
 	    edge2.Sort();
@@ -1707,8 +1707,8 @@ namespace netgen
              for (int j = 0; j < 3; j++)
                for (int k = j+1; k < 4; k++)
                  {
-                   INDEX_2 edge(teti.pnums[j],
-                                teti.pnums[k]);
+                   PointIndices<2> edge(teti.pnums[j],
+                                        teti.pnums[k]);
                    edge.Sort();
                    if (cutedges.Used (edge))
                      {
@@ -1740,10 +1740,10 @@ namespace netgen
 	for (int j = 0; j < 2; j++)
 	  for (int k = j+1; k < 3; k++)
 	    {
-	      INDEX_2 edge1(mprisms.Get(i).pnums[j],
-			    mprisms.Get(i).pnums[k]);
-	      INDEX_2 edge2(mprisms.Get(i).pnums[j+3],
-			    mprisms.Get(i).pnums[k+3]);
+	      PointIndices<2> edge1(mprisms.Get(i).pnums[j],
+                                    mprisms.Get(i).pnums[k]);
+	      PointIndices<2> edge2(mprisms.Get(i).pnums[j+3],
+                                    mprisms.Get(i).pnums[k+3]);
 	      edge1.Sort();
 	      edge2.Sort();
 	      if (cutedges.Used (edge1) ||
@@ -1781,8 +1781,8 @@ namespace netgen
              for (int j = 0; j < 2; j++)
                for (int k = j+1; k < 3; k++)
                  {
-                   INDEX_2 edge(tri.pnums[j],
-                                tri.pnums[k]);
+                   PointIndices<2> edge(tri.pnums[j],
+                                        tri.pnums[k]);
                    edge.Sort();
                    if (cutedges.Used (edge))
                      {
@@ -1810,10 +1810,10 @@ namespace netgen
 	    continue;
 	  }
 
-	INDEX_2 edge1(mquads.Get(i).pnums[0],
-		      mquads.Get(i).pnums[1]);
-	INDEX_2 edge2(mquads.Get(i).pnums[2],
-		      mquads.Get(i).pnums[3]);
+	PointIndices<2> edge1(mquads.Get(i).pnums[0],
+                              mquads.Get(i).pnums[1]);
+	PointIndices<2> edge2(mquads.Get(i).pnums[2],
+                              mquads.Get(i).pnums[3]);
 	edge1.Sort();
 	edge2.Sort();
 	if (cutedges.Used (edge1) ||
@@ -1826,10 +1826,10 @@ namespace netgen
 	  }
           
         // he/sz: second case: split horizontally
-        INDEX_2 edge3(mquads.Get(i).pnums[1],
-                      mquads.Get(i).pnums[3]);
-        INDEX_2 edge4(mquads.Get(i).pnums[2],
-                      mquads.Get(i).pnums[0]);
+        PointIndices<2> edge3(mquads.Get(i).pnums[1],
+                              mquads.Get(i).pnums[3]);
+        PointIndices<2> edge4(mquads.Get(i).pnums[2],
+                              mquads.Get(i).pnums[0]);
 
         edge3.Sort();
         edge4.Sort();
@@ -2024,7 +2024,7 @@ namespace netgen
 	      {
 		for (int j = 1; j <= 3; j++)
 		  {
-		    INDEX_2 se(el.PNum(j), el.PNum(j+3));
+		    PointIndices<2> se(el.PNum(j), el.PNum(j+3));
 		    se.Sort();
 		    shortedges.Set (se, 1);
 		  }
@@ -2054,7 +2054,7 @@ namespace netgen
 		  for (int j = 1; j <= 3; j++)
 		    for (int k = j+1; k <= 4; k++)
 		      {
-			INDEX_2 se(el.PNum(j), el.PNum(k));
+			PointIndices<2> se(el.PNum(j), el.PNum(k));
 			se.Sort();
 			if (shortedges.Used (se))
 			  {
@@ -2109,7 +2109,7 @@ namespace netgen
 		  // eventually rotate
 		  MarkedPrism mp;
 		  
-		  INDEX_2 se(el.PNum(1), el.PNum(2));
+		  PointIndices<2> se(el.PNum(1), el.PNum(2));
 		  se.Sort();
 		  if (shortedges.Used (se))
 		    {
@@ -2521,7 +2521,7 @@ namespace netgen
 
 	//(*testout) << "old mt " << mt;
 	
-	INDEX_2 edge (mt.pnums[mt.tetedge1],mt.pnums[mt.tetedge2]);
+	PointIndices<2> edge (mt.pnums[mt.tetedge1],mt.pnums[mt.tetedge2]);
 	edge.Sort();
 	if(edgenumber.Used(edge))
 	  {

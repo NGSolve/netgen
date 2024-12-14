@@ -41,18 +41,18 @@ namespace netgen
     void IdentifyVerticesAfterRefinement();
     void EnumeratePointsGlobally ();
         
-    void AddDistantProc    (PointIndex pi, int proc) { loc2distvert.AddUnique (pi-PointIndex::BASE, proc); }
+    void AddDistantProc    (PointIndex pi, int proc) { loc2distvert.AddUnique (pi-IndexBASE<PointIndex>(), proc); }
     void AddDistantFaceProc (int edge, int proc) { loc2distface.AddUnique (edge, proc); }
     void AddDistantEdgeProc (int face, int proc) { loc2distedge.AddUnique (face, proc); }
     
-    FlatArray<int> GetDistantProcs (PointIndex pi) const { return loc2distvert[pi-PointIndex::BASE]; }
+    FlatArray<int> GetDistantProcs (PointIndex pi) const { return loc2distvert[pi-IndexBASE<PointIndex>()]; }
     FlatArray<int> GetDistantFaceProcs (int locnum) const { return loc2distface[locnum]; }
     FlatArray<int> GetDistantEdgeProcs (int locnum) const { return loc2distedge[locnum]; }
 
 
     
-    auto & L2G (PointIndex pi) { return glob_vert[pi-PointIndex::BASE]; } 
-    auto L2G (PointIndex pi) const { return glob_vert[pi-PointIndex::BASE]; } 
+    auto & L2G (PointIndex pi) { return glob_vert[pi-IndexBASE<PointIndex>()]; } 
+    auto L2G (PointIndex pi) const { return glob_vert[pi-IndexBASE<PointIndex>()]; } 
 
 
     /// set number of local vertices, reset sizes of loc2dist_vert, isexchangevert...
@@ -90,7 +90,7 @@ namespace netgen
     void SetLoc2Glob_Segm   (int locnum, int globnum) { glob_segm[locnum-1] = globnum; }
 
     // [[deprecated("Try to avoid global enumration!")]]                    
-    int GetGlobalPNum    (PointIndex locnum) const { return glob_vert[locnum-PointIndex::BASE]; }
+    int GetGlobalPNum    (PointIndex locnum) const { return glob_vert[locnum-IndexBASE<PointIndex>()]; }
     [[deprecated("Try to avoid global enumration!")]]                
     int GetGlobalEdgeNum (int locnum) const { return glob_edge[locnum-1]; }
     [[deprecated("Try to avoid global enumration!")]]                

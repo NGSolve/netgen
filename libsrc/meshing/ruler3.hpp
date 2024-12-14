@@ -175,7 +175,7 @@ public:
   PointIndex GetPointNr (int fn, int endp) const
   { return faces.Get(fn).PNum(endp); }
   ///
-  int GetPointNrMod (int fn, int endp) const
+  PointIndex GetPointNrMod (int fn, int endp) const
   { return faces.Get(fn).PNumMod(endp); }
   ///
   const fourint & GetOrientation (int i) { return orientations.Get(i); }
