@@ -137,6 +137,8 @@ public:
   
   DLL_HEADER void GetFaceVertices (int fnr, NgArray<int> & vertices) const;
   DLL_HEADER void GetFaceVertices (int fnr, int * vertices) const;
+  auto GetFaceVertices (int fnr) const
+  { return FlatArray (face2vert[fnr][3].IsValid() ? 4 : 3, &face2vert[fnr][0]); }
   [[deprecated("use GetEdgeVertices -> tupe(v0,v1) instead")]]                            
   DLL_HEADER void GetEdgeVertices (int enr, int & v1, int & v2) const;
   [[deprecated("use GetEdgeVertices -> tupe(v0,v1) instead")]]

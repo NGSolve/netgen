@@ -10,6 +10,7 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
   HPREF_ELEMENT_TYPE type = HP_NONE; 
   
   int debug = 0;
+  /*
   for (int j = 0;j < 4; j++)
     {
       if (el.pnums[j] == 444) debug++;
@@ -18,7 +19,7 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
       if (el.pnums[j] == 281) debug++;
     }
   if (debug < 4) debug = 0;
-  
+  */
 
   // *testout << "new el" << endl;
   

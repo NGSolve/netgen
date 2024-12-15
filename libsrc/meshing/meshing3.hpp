@@ -47,7 +47,7 @@ public:
   ///
   int ApplyRules (Array<Point3d, PointIndex> & lpoints,
                   Array<int, PointIndex> & allowpoint,
-		  NgArray<MiniElement2d> & lfaces, INDEX lfacesplit,
+		  Array<MiniElement2d> & lfaces, INDEX lfacesplit,
 		  INDEX_2_HASHTABLE<int> & connectedpairs,
 		  NgArray<Element> & elements,
 		  NgArray<INDEX> & delfaces, int tolerance, 

@@ -226,7 +226,7 @@ namespace netgen
         */
         for (const Element2d & el : rule.oldels)
           for (PointIndex pi : el.PNums())
-            rule.incelsonnode[pi-PointIndex::BASE]--;
+            rule.incelsonnode[pi-IndexBASE<PointIndex>()]--;
 
 	for (int j = 1; j <= rule.newels.Size(); j++)
 	  {

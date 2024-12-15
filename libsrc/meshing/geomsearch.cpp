@@ -190,7 +190,7 @@ namespace netgen
     MinCoords(maxextreal,maxp);
 
 
-    int cluster = faces->Get(fstind).Cluster();
+    PointIndex cluster = faces->Get(fstind).Cluster();
   
     int sx = int((minp.X()-minext.X())/elemsize.X()+1.);
     int ex = int((maxp.X()-minext.X())/elemsize.X()+1.);

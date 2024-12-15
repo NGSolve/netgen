@@ -23,6 +23,7 @@ namespace netgen
     // static int timer2 = NgProfiler::CreateTimer ("clusters2");
     // static int timer3 = NgProfiler::CreateTimer ("clusters3");
     RegionTimer reg (timer);
+    constexpr auto PI0 = IndexBASE<PointIndex>();
 
     const MeshTopology & top = mesh.GetTopology();
 
@@ -103,7 +104,7 @@ namespace netgen
              
              nnums.SetSize(elnv+elned+elnfa+1);
              for (int j = 0; j < elnv; j++)
-               nnums[j] = el[j]+1-PointIndex::BASE;
+               nnums[j] = el[j]+1-PI0;
              for (int j = 0; j < elned; j++)
                nnums[elnv+j] = nv+ednums[j]+1;
              for (int j = 0; j < elnfa; j++)
@@ -131,7 +132,7 @@ namespace netgen
 	  
 	nnums.SetSize(elnv+elned+1);
 	for (int j = 1; j <= elnv; j++)
-	  nnums.Elem(j) = el.PNum(j)+1-PointIndex::BASE;
+	  nnums.Elem(j) = el.PNum(j)+1-PI0;
 	for (int j = 1; j <= elned; j++)
 	  nnums.Elem(elnv+j) = nv+ednums.Elem(j);
 	nnums.Elem(elnv+elned+1) = fanum;
@@ -162,7 +163,7 @@ namespace netgen
              
              nnums.SetSize(elnv+elned+1);
              for (int j = 0; j < elnv; j++)
-               nnums[j] = el[j]+1-PointIndex::BASE;
+               nnums[j] = el[j]+1-PI0;
              for (int j = 0; j < elned; j++)
                nnums[elnv+j] = nv+ednums[j]+1;
              nnums[elnv+elned] = fanum;             
@@ -219,7 +220,6 @@ namespace netgen
       { 2, 3, 1, 1, 4, 5, 1, 6, 4, 5, 5, 4, 7, 7, 7 };
 
     // int cnt = 0;
-
     do
       {
         static Timer t("update cluster, identify");
@@ -247,23 +247,23 @@ namespace netgen
 		break;
 	      case TET:
 	      case TET10:
-		if (cluster_reps.Get(el.PNum(1)+1-PointIndex::BASE) == 
-		    cluster_reps.Get(el.PNum(2)+1-PointIndex::BASE))
+		if (cluster_reps.Get(el.PNum(1)+1-PI0) == 
+		    cluster_reps.Get(el.PNum(2)+1-PI0))
 		  clustertab = tet_cluster12;
-		else if (cluster_reps.Get(el.PNum(1)+1-PointIndex::BASE) == 
-			 cluster_reps.Get(el.PNum(3)+1-PointIndex::BASE))
+		else if (cluster_reps.Get(el.PNum(1)+1-PI0) == 
+			 cluster_reps.Get(el.PNum(3)+1-PI0))
 		  clustertab = tet_cluster13;
-		else if (cluster_reps.Get(el.PNum(1)+1-PointIndex::BASE) == 
-			 cluster_reps.Get(el.PNum(4)+1-PointIndex::BASE))
+		else if (cluster_reps.Get(el.PNum(1)+1-PI0) == 
+			 cluster_reps.Get(el.PNum(4)+1-PI0))
 		  clustertab = tet_cluster14;
-		else if (cluster_reps.Get(el.PNum(2)+1-PointIndex::BASE) == 
-			 cluster_reps.Get(el.PNum(3)+1-PointIndex::BASE))
+		else if (cluster_reps.Get(el.PNum(2)+1-PI0) == 
+			 cluster_reps.Get(el.PNum(3)+1-PI0))
 		  clustertab = tet_cluster23;
-		else if (cluster_reps.Get(el.PNum(2)+1-PointIndex::BASE) == 
-			 cluster_reps.Get(el.PNum(4)+1-PointIndex::BASE))
+		else if (cluster_reps.Get(el.PNum(2)+1-PI0) == 
+			 cluster_reps.Get(el.PNum(4)+1-PI0))
 		  clustertab = tet_cluster24;
-		else if (cluster_reps.Get(el.PNum(3)+1-PointIndex::BASE) == 
-			 cluster_reps.Get(el.PNum(4)+1-PointIndex::BASE))
+		else if (cluster_reps.Get(el.PNum(3)+1-PI0) == 
+			 cluster_reps.Get(el.PNum(4)+1-PI0))
 		  clustertab = tet_cluster34;
 
 		else
@@ -286,7 +286,7 @@ namespace netgen
                 
                 nnums.SetSize(elnv+elned+elnfa+1);
                 for (int j = 0; j < elnv; j++)
-                  nnums[j] = el[j]+1-PointIndex::BASE;
+                  nnums[j] = el[j]+1-IndexBASE<PointIndex>();
                 for (int j = 0; j < elned; j++)
                   nnums[elnv+j] = nv+ednums[j]+1;
                 for (int j = 0; j < elnfa; j++)

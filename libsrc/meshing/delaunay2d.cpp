@@ -819,7 +819,7 @@ namespace netgen
       for(auto sei : els)
       {
         auto & el = tempmesh[sei];
-        PointIndex pi2 = el[0]+el[1]+el[2] - seg[0] - seg[1];
+        PointIndex pi2 = el[0]-seg[0]+el[1]-seg[1]+el[2];
         bool is_left = ::netgen::Area(P2(tempmesh[seg[0]]), P2(tempmesh[seg[1]]), P2(tempmesh[pi2]))>0.0;
         POSITION pos;
 

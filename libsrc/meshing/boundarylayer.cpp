@@ -146,7 +146,7 @@ namespace netgen
           auto & seg = mesh[segi];
           if(seg.edgenr != edgenr+1)
               continue;
-          PointIndex other = seg[0]+seg[1]-pi;
+          PointIndex other = seg[0]-pi+seg[1];
           if(!pts.Contains(other))
             pts.Append(other);
       }
@@ -1353,7 +1353,8 @@ namespace netgen
                             nel[1] = p2;
                             nel[2] = p3;
                             nel[3] = p4;
-                            nel[4] = el[0] + el[1] + el[2] + el[3] - fixed[0] - moved[0] - moved[1];
+                            // nel[4] = el[0] + el[1] + el[2] + el[3] - fixed[0] - moved[0] - moved[1];
+                            nel[4] = el[0]-fixed[0] + el[1]-moved[0] + el[2]-moved[1] + el[3];
                             if(Cross(mesh[p2]-mesh[p1], mesh[p4]-mesh[p1]) * (mesh[nel[4]]-mesh[nel[1]]) > 0)
                               Swap(nel[1], nel[3]);
                             nel.SetIndex(el.GetIndex());
@@ -1399,7 +1400,8 @@ namespace netgen
                         nel[1] = p2;
                         nel[2] = p3;
                         nel[3] = p4;
-                        nel[4] = el[0] + el[1] + el[2] + el[3] + el[4] - fixed[0] - fixed[1] - moved[0] - moved[1];
+                        // nel[4] = el[0] + el[1] + el[2] + el[3] + el[4] - fixed[0] - fixed[1] - moved[0] - moved[1];
+                        nel[4] = el[0]-fixed[0] + el[1]-fixed[1] + el[2]-moved[0] + el[3]-moved[1] + el[4];
                         if(Cross(mesh[p2] - mesh[p1], mesh[p4]-mesh[p1]) * (mesh[nel[4]]-mesh[nel[1]]) > 0)
                           Swap(nel[1], nel[3]);
                         nel.SetIndex(el.GetIndex());

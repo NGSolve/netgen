@@ -182,10 +182,10 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 
 
   Array<Point3d, PointIndex> locpoints;      // local points
-  NgArray<MiniElement2d> locfaces;                   // local faces
+  Array<MiniElement2d> locfaces;                   // local faces
   Array<PointIndex, PointIndex> pindex;      // mapping from local to front point numbering
   Array<int, PointIndex> allowpoint;         // point is allowed ?
-  NgArray<INDEX> findex;                             // mapping from local to front face numbering
+  Array<INDEX> findex;                             // mapping from local to front face numbering
   //INDEX_2_HASHTABLE<int> connectedpairs(100);    // connecgted pairs for prism meshing
 
   Array<Point3d, PointIndex> plainpoints;    // points in reference coordinates
@@ -195,7 +195,6 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   int j, oldnp, oldnf;
   int found;
   referencetransform trans;
-  int rotind;
   Point3d inp;
   float err;
 
@@ -211,10 +210,10 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 
   
   // for star-shaped domain meshing
-  NgArray<MeshPoint, PointIndex::BASE> grouppoints;      
-  NgArray<MiniElement2d> groupfaces;
+  Array<MeshPoint, PointIndex> grouppoints;      
+  Array<MiniElement2d> groupfaces;
   Array<PointIndex, PointIndex> grouppindex;
-  NgArray<INDEX> groupfindex;
+  Array<INDEX> groupfindex;
   
   
   float minerr;
@@ -313,7 +312,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 
       if (loktestmode)
 	{
-	  (*testout) << "baseel = " << baseelem << ", ind = " << findex.Get(1) << endl;
+	  (*testout) << "baseel = " << baseelem << ", ind = " << findex[0] << endl;
           int pi1 = pindex[locfaces[0].PNum(1)];
           int pi2 = pindex[locfaces[0].PNum(2)];
           int pi3 = pindex[locfaces[0].PNum(3)];
@@ -368,10 +367,11 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 			       grouppindex, groupfindex);
 
 	  bool onlytri = 1;
-	  for (auto i : groupfaces.Range())
-	    if (groupfaces[i].GetNP() != 3) 
-	      onlytri = 0;
-	  
+          for (auto & f : groupfaces)
+            if (f.GetNP() != 3) 
+              onlytri = 0;
+            
+              
 	  if (onlytri && groupfaces.Size() <= 20 + 2*stat.qualclass &&
 	      FindInnerPoint (grouppoints, groupfaces, inp) &&
               !adfront->PointInsideGroup(grouppindex, groupfaces))
@@ -379,11 +379,11 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	      (*testout) << "inner point found" << endl;
 
 	      for(int i = 1; i <= groupfaces.Size(); i++)
-		adfront -> DeleteFace (groupfindex.Get(i));
+		adfront -> DeleteFace (groupfindex[i-1]);
 	      
 	      for(int i = 1; i <= groupfaces.Size(); i++)
 		for (j = 1; j <= locfaces.Size(); j++)
-		  if (findex.Get(j) == groupfindex.Get(i))
+		  if (findex[j-1] == groupfindex[i-1])
 		    delfaces.Append (j);
 	      
 	      
@@ -396,13 +396,13 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	      newel.SetNP(4);
 	      newel.PNum(4) = npi;
 	      
-	      for(int i = 1; i <= groupfaces.Size(); i++)
+	      for(int i = 0; i < groupfaces.Size(); i++)
 		{
 		  for (j = 1; j <= 3; j++)
 		    {
 		      newel.PNum(j) = 
 			adfront->GetGlobalIndex 
-			(grouppindex[groupfaces.Get(i).PNum(j)]);
+			(grouppindex[groupfaces[i].PNum(j)]);
 		    }
 		  mesh.AddVolumeElement (newel);
 		}
@@ -437,7 +437,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 
       bool impossible = 1;
 
-      for (rotind = 1; rotind <= locfaces[0].GetNP(); rotind++)
+      for (int rotind = 1; rotind <= locfaces[0].GetNP(); rotind++)
 	{
 	  // set transformatino to reference coordinates
 
@@ -687,26 +687,26 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	      stat.cntelem++;
 	    }
 
-	  for(int i = oldnf+1; i <= locfaces.Size(); i++)
+	  for(int i = oldnf; i < locfaces.Size(); i++)
 	    {
-	      for (j = 1; j <= locfaces.Get(i).GetNP(); j++)
-		locfaces.Elem(i).PNum(j) = 
-		  pindex[locfaces.Get(i).PNum(j)];
+	      for (j = 1; j <= locfaces[i].GetNP(); j++)
+		locfaces[i].PNum(j) = 
+		  pindex[locfaces[i].PNum(j)];
 	      // (*testout) << "add face " << locfaces.Get(i) << endl;
-	      adfront->AddFace (locfaces.Get(i));
+	      adfront->AddFace (locfaces[i]);
 	    }
 	  
 	  for(int i = 1; i <= delfaces.Size(); i++)
-	    adfront->DeleteFace (findex.Get(delfaces.Get(i)));
+	    adfront->DeleteFace (findex[delfaces.Get(i)-1]);
 	}
       else
 	{
-	  adfront->IncrementClass (findex.Get(1));
+	  adfront->IncrementClass (findex[0]);
 	  if (impossible && mp.check_impossible)
 	    {
 	      (*testout) << "skip face since it is impossible" << endl;
 	      for (j = 0; j < 100; j++)
-		adfront->IncrementClass (findex.Get(1));
+		adfront->IncrementClass (findex[0]);
 	    }
 	}
 
@@ -938,7 +938,7 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
 
   for(int i = 1; i <= n; i++)
     {
-      pointnr.Elem(i) = 0;
+      pointnr.Elem(i) = PointIndex::INVALID;
       frontpointnr.Elem(i) = 0;
     }
   
@@ -954,7 +954,7 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
 		  for (j3 = i3; j3 <= i3+1; j3++)
 		    {
 		      j = j3 + (j2-1) * n3 + (j1-1) * n2 * n3;
-		      if (pointnr.Get(j) == 0)
+		      if (!pointnr.Get(j).IsValid())
 			{
 			  Point3d hp(xmin + (j1-1) * gh, 
 				     ymin + (j2-1) * gh, 

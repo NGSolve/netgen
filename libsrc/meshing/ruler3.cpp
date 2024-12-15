@@ -51,7 +51,7 @@ int Meshing3 :: ApplyRules
 (
  Array<Point3d, PointIndex> & lpoints,     // in: local points, out: old+new local points
  Array<int, PointIndex> & allowpoint,      // in: 2 .. it is allowed to use pointi, 1..will be allowed later, 0..no means
- NgArray<MiniElement2d> & lfaces,    // in: local faces, out: old+new local faces
+ Array<MiniElement2d> & lfaces,    // in: local faces, out: old+new local faces
  INDEX lfacesplit,	       // for local faces in outer radius
  INDEX_2_HASHTABLE<int> & connectedpairs,  // connected pairs for prism-meshing
  NgArray<Element> & elements,    // out: new elements
@@ -314,7 +314,7 @@ int Meshing3 :: ApplyRules
 		  
 		  if (fnearness.Get(locfi) > rule->GetFNearness (nfok) ||
 		      fused.Get(locfi) ||
-		      actfnp != lfaces.Get(locfi).GetNP() )
+		      actfnp != lfaces[locfi-1].GetNP() )
 		    {
 		      // face not feasible in any rotation
 
@@ -325,7 +325,7 @@ int Meshing3 :: ApplyRules
 		      
 		      ok = 1;
 		      
-		      locface = &lfaces.Get(locfi);
+		      locface = &lfaces[locfi-1];
 
 		      
 		      // reference point already mapped differently ?
@@ -528,7 +528,7 @@ int Meshing3 :: ApplyRules
 			    (*testout) << pi << " ";
 			  (*testout) << endl;
 			  snprintf (problems.Elem(ri), 255, "mapping found");
-			  (*testout) << rule->GetNP(1) << " = " << lfaces.Get(1).GetNP() << endl;
+			  (*testout) << rule->GetNP(1) << " = " << lfaces[0].GetNP() << endl;
 			}
 		      
 		      ok = 1;
@@ -691,7 +691,7 @@ int Meshing3 :: ApplyRules
 			  if (!fused.Get(i))
 			    { 
 			      int triin;
-			      const MiniElement2d & lfacei = lfaces.Get(i);
+			      const MiniElement2d & lfacei = lfaces[i-1];
 
 			      if (!triboxes.Elem(i).Intersect (rule->fzbox))
 				triin = 0;
@@ -744,19 +744,19 @@ int Meshing3 :: ApplyRules
 
 				  if (loktestmode)
 				    {
-				      (*testout) << "El with " << lfaces.Get(i).GetNP() << " points in freezone: "
-						 << lfaces.Get(i).PNum(1) << " - " 
-						 << lfaces.Get(i).PNum(2) << " - "
-						 << lfaces.Get(i).PNum(3) << " - "
-						 << lfaces.Get(i).PNum(4) << endl;
-				      for (int lj = 1; lj <= lfaces.Get(i).GetNP(); lj++)
-					(*testout) << lpoints[lfaces.Get(i).PNum(lj)] << " ";
+				      (*testout) << "El with " << lfaces[i-1].GetNP() << " points in freezone: "
+						 << lfaces[i-1].PNum(1) << " - " 
+						 << lfaces[i-1].PNum(2) << " - "
+						 << lfaces[i-1].PNum(3) << " - "
+						 << lfaces[i-1].PNum(4) << endl;
+				      for (int lj = 1; lj <= lfaces[i-1].GetNP(); lj++)
+					(*testout) << lpoints[lfaces[i-1].PNum(lj)] << " ";
 
 				      (*testout) << endl;
 
 				      sprintf (problems.Elem(ri), "triangle (%d, %d, %d) in Freezone",
-					       lfaces.Get(i).PNum(1), lfaces.Get(i).PNum(2),
-					       lfaces.Get(i).PNum(3));
+					       lfaces[i-1].PNum(1), lfaces[i-1].PNum(2),
+					       lfaces[i-1].PNum(3));
 				    }
 #else
 				  if (loktestmode)
@@ -789,9 +789,9 @@ int Meshing3 :: ApplyRules
 						     << endl;
 
 				      snprintf (problems.Elem(ri), 255, "triangle (%d, %d, %d) in Freezone",
-					       int(lfaces.Get(i).PNum(1)), 
-					       int(lfaces.Get(i).PNum(2)),
-					       int(lfaces.Get(i).PNum(3)));
+					       int(lfaces[i-1].PNum(1)), 
+					       int(lfaces[i-1].PNum(2)),
+					       int(lfaces[i-1].PNum(3)));
 				    }	
 
 				  hc = 0;
@@ -802,9 +802,9 @@ int Meshing3 :: ApplyRules
 					  rule->GetPointNr(k, 3) <= rule->GetNOldP())
 					{
 					  for (int j = 1; j <= 3; j++)
-					    if (lfaces.Get(i).PNumMod(j  ) == pmap.Get(rule->GetPointNr(k, 1)) &&
-						lfaces.Get(i).PNumMod(j+1) == pmap.Get(rule->GetPointNr(k, 3)) &&
-						lfaces.Get(i).PNumMod(j+2) == pmap.Get(rule->GetPointNr(k, 2)))
+					    if (lfaces[i-1].PNumMod(j  ) == pmap.Get(rule->GetPointNr(k, 1)) &&
+						lfaces[i-1].PNumMod(j+1) == pmap.Get(rule->GetPointNr(k, 3)) &&
+						lfaces[i-1].PNumMod(j+2) == pmap.Get(rule->GetPointNr(k, 2)))
 					      {
 						fmapi.Elem(k) = i;
 						hc = 1;
@@ -827,14 +827,14 @@ int Meshing3 :: ApplyRules
 				      if (loktestmode)
 					{
 					  (*testout) << "Triangle in freezone: "
-						     << lfaces.Get(i).PNum(1) << " - " 
-						     << lfaces.Get(i).PNum(2) << " - "
-						     << lfaces.Get(i).PNum(3) << endl;
+						     << lfaces[i-1].PNum(1) << " - " 
+						     << lfaces[i-1].PNum(2) << " - "
+						     << lfaces[i-1].PNum(3) << endl;
 
 					  snprintf (problems.Elem(ri), 255, "triangle (%d, %d, %d) in Freezone",
-						   int (lfaces.Get(i).PNum(1)), 
-						   int (lfaces.Get(i).PNum(2)),
-						   int (lfaces.Get(i).PNum(3)));
+						   int (lfaces[i-1].PNum(1)), 
+						   int (lfaces[i-1].PNum(2)),
+						   int (lfaces[i-1].PNum(3)));
 					}
 				      ok = 0;
 				    }

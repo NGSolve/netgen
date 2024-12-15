@@ -221,7 +221,6 @@ namespace netgen
     friend istream & operator>> (istream &, PointIndex &);    
     friend ostream & operator<< (ostream &, const PointIndex &);
     template <int N> friend class PointIndices;
-
     /*
     friend PointIndex operator+ (PointIndex, int);
     friend PointIndex operator+ (PointIndex, size_t);    
@@ -235,7 +234,6 @@ namespace netgen
     friend bool operator== (PointIndex a, PointIndex b);
     friend bool operator!= (PointIndex a, PointIndex b);
     */
-    
   public:
     constexpr PointIndex (t_invalid inv) : i(PointIndex::BASE-1) { ; }
     // PointIndex & operator= (const PointIndex &ai) { i = ai.i; return *this; }
@@ -250,6 +248,7 @@ namespace netgen
     PointIndex operator+= (int add) { i += add; return *this; }
     void Invalidate() { i = PointIndex::BASE-1; }
     bool IsValid() const { return i != PointIndex::BASE-1; }
+    // operator bool() const { return IsValid(); }
 #ifdef BASE0
     static constexpr size_t BASE = 0;
 #else
@@ -258,7 +257,7 @@ namespace netgen
 
     void DoArchive (Archive & ar) { ar & i; }
   };
-  
+
   /*
   inline PointIndex operator+ (PointIndex pi, int i) { return PointIndex(pi.i+i); }
   inline PointIndex operator+ (PointIndex pi, size_t i) { return PointIndex(pi.i+i); }  
@@ -307,6 +306,19 @@ namespace netgen
     static PointIndices Sort(PointIndex i1, PointIndex i2) { return INDEX_2::Sort(i1, i2); }
     template <size_t J>
     PointIndex get() const { return PointIndex(INDEX_2::operator[](J)); }    
+  };
+  template <> class PointIndices<3> : public INDEX_3
+  {
+  public:
+    PointIndices () = default;
+    PointIndices (INDEX_3 i3) : INDEX_3(i3) { ; }
+    PointIndices (PointIndex i1, PointIndex i2, PointIndex i3) : INDEX_3(i1,i2,i3) { ; } 
+    PointIndex operator[] (int i) const { return PointIndex(INDEX_3::operator[](i)); }
+    PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_3::operator[](i)); }
+    using INDEX_3::Sort;
+    static PointIndices Sort(PointIndex i1, PointIndex i2, PointIndex i3) { return INDEX_3::Sort(i1, i2, i3); }
+    template <size_t J>
+    PointIndex get() const { return PointIndex(INDEX_3::operator[](J)); }    
   };
 }
 

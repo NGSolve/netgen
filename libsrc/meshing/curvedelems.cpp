@@ -1194,9 +1194,10 @@ namespace netgen
 	    // if (el.GetType() == TRIG && order >= 3)
 	    if (top.GetFaceType(facenr+1) == TRIG && order >= 3)
 	      {
-		NgArrayMem<int, 3> verts(3);
-		top.GetFaceVertices (facenr+1, verts);
-
+                // NgArrayMem<PointIndex, 3> verts(3);
+                // top.GetFaceVertices (facenr+1, verts);
+                auto verts = top.GetFaceVertices(facenr);
+                                                 
 		int fnums[] = { 0, 1, 2 };
 		/*
 		if (el[fnums[0]] > el[fnums[1]]) swap (fnums[0], fnums[1]);

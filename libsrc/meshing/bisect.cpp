@@ -527,12 +527,12 @@ namespace netgen
 		  {
 		    PointIndices<2> e1(el2d[i], el2d[(i+1) % el2d.GetNP()]);
 		    e1.Sort();
-		    INDEX_2 e2;
+		    PointIndices<2> e2;
 		    
 		    for(k = 0; k < idmaps.Size(); k++)
 		      {
-			e2.I1() = (*idmaps[k])[e1.I1()];
-			e2.I2() = (*idmaps[k])[e1.I2()];
+			e2[0] = (*idmaps[k])[e1[0]];
+			e2[1] = (*idmaps[k])[e1[1]];
 			
 			if(e2.I1() == 0 || e2.I2() == 0 ||
 			   e1.I1() == e2.I1() || e1.I2() == e2.I2())
@@ -985,7 +985,7 @@ namespace netgen
 	if(j == 0 || mi.pnums[j+mi.np] < min2)
 	  min2 = mi.pnums[j+mi.np];
 
-	identified = (mi.pnums[j+mi.np] != 0 && mi.pnums[j+mi.np] != mi.pnums[j]);
+	identified = (mi.pnums[j+mi.np].IsValid() && mi.pnums[j+mi.np] != mi.pnums[j]);
       }
 
     identified = identified && (min1 < min2);
@@ -1929,13 +1929,14 @@ namespace netgen
 
     ist >> size;
     mtets.SetSize(size);
+    constexpr auto PI0 = IndexBASE<PointIndex>();
     for(int i=0; i<size; i++)
       {
         ist >> mtets[i];
-        if(mtets[i].pnums[0] > mesh.GetNV() || 
-           mtets[i].pnums[1] > mesh.GetNV() || 
-           mtets[i].pnums[2] > mesh.GetNV() || 
-           mtets[i].pnums[3] > mesh.GetNV())
+        if(mtets[i].pnums[0] >= PI0+mesh.GetNV() || 
+           mtets[i].pnums[1] >= PI0+mesh.GetNV() || 
+           mtets[i].pnums[2] >= PI0+mesh.GetNV() || 
+           mtets[i].pnums[3] >= PI0+mesh.GetNV())
           return false;
       }
 

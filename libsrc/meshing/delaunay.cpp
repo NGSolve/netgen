@@ -34,12 +34,10 @@ namespace netgen
     int NB(int i) const { return nb[i]; }
 
 
-    int FaceNr (INDEX_3 & face) const  // which face nr is it ?
+    int FaceNr (const PointIndices<3> & face) const  // which face nr is it ?
     {
       for (int i = 0; i < 3; i++)
-	if (pnums[i] != face.I1() && 
-	    pnums[i] != face.I2() && 
-	    pnums[i] != face.I3())
+	if (pnums[i] != face[0] && pnums[i] != face[1] && pnums[i] != face[2])
 	  return i;
       return 3;
     }
@@ -673,7 +671,7 @@ namespace netgen
     IndexSet closesphere(mesh.GetNP());
 
     // "random" reordering of points  (speeds a factor 3 - 5 !!!)
-    NgArray<PointIndex, PointIndex::BASE, PointIndex> mixed(np);
+    Array<PointIndex, PointIndex> mixed(np);
     // int prims[] = { 11, 13, 17, 19, 23, 29, 31, 37 };
     // int prims[] = { 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97 };
     int prims[] = { 211, 223, 227, 229, 233, 239, 241, 251, 257, 263 }; 
@@ -919,7 +917,7 @@ namespace netgen
                 {
                     auto & tri_other = mesh.OpenElement(i_other);
                     PointIndex pi2 = tri[(edge+2)%3];
-                    PointIndex pi3 = tri_other[0]+tri_other[1]+tri_other[2] - pi0 - pi1;
+                    PointIndex pi3 = tri_other[0]-pi0+tri_other[1]-pi1+tri_other[2];
                     if(pi2>pi3)
                         Swap(pi2, pi3);
 

@@ -95,7 +95,8 @@ public:
   const PointIndex PNum (int i) const { return pnum[i-1]; }
   PointIndex & PNum (int i) { return pnum[i-1]; }
   const PointIndex PNumMod (int i) const { return pnum[(i-1)%np]; }
-  auto PNums() const { return NgFlatArray<const PointIndex> (np, &pnum[0]); }
+  auto PNums() { return FlatArray<PointIndex> (np, &pnum[0]); }
+  auto PNums() const { return FlatArray<const PointIndex> (np, &pnum[0]); }
   void Delete () { deleted = true; for (PointIndex & p : pnum) p.Invalidate(); }
   bool IsDeleted () const { return deleted; }
 };
@@ -238,9 +239,9 @@ public:
   ///
   int GetNF() const
   { return nff; }
-  ///
+  /// 1-based
   const MiniElement2d & GetFace (int i) const
-  { return faces.Get(i).Face(); }
+  { return faces[i-1].Face(); }
   const auto & Faces() const { return faces; }
   ///
   void Print () const;
@@ -265,7 +266,7 @@ public:
 			     NgArray<int> & ifaces) const;
 
   bool PointInsideGroup(const Array<PointIndex, PointIndex> &grouppindex,
-                        const NgArray<MiniElement2d>& groupfaces) const;
+                        const Array<MiniElement2d>& groupfaces) const;
 
   ///
   void GetFaceBoundingBox (int i, Box3d & box) const;
@@ -273,9 +274,9 @@ public:
   ///
   int GetLocals (int baseelement,
 		 Array<Point3d, PointIndex> & locpoints,
-                 NgArray<MiniElement2d> & locfaces,   // local index
+                 Array<MiniElement2d> & locfaces,   // local index
                  Array<PointIndex, PointIndex> & pindex,
-                 NgArray<INDEX> & findex,
+                 Array<INDEX> & findex,
 		 INDEX_2_HASHTABLE<int> & connectedpairs,
                  float xh,
 		 float relh,
@@ -283,10 +284,10 @@ public:
   
   ///
   void GetGroup (int fi,
-                 NgArray<MeshPoint, PointIndex::BASE> & grouppoints,
-                 NgArray<MiniElement2d> & groupelements,
+                 Array<MeshPoint, PointIndex> & grouppoints,
+                 Array<MiniElement2d> & groupelements,
                  Array<PointIndex, PointIndex> & pindex,
-                 NgArray<INDEX> & findex);
+                 Array<INDEX> & findex);
 
   ///
   void DeleteFace (INDEX fi);
@@ -298,11 +299,11 @@ public:
   INDEX AddConnectedPair (PointIndices<2> pair);
   ///
   void IncrementClass (INDEX fi)
-  { faces.Elem(fi).IncrementQualClass(); }
+  { faces[fi-1].IncrementQualClass(); }
 
   ///
   void ResetClass (INDEX fi)
-  { faces.Elem(fi).ResetQualClass(); }
+  { faces[fi-1].ResetQualClass(); }
 
   ///
   void SetStartFront (int baseelnp = 0);

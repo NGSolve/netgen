@@ -1585,11 +1585,11 @@ void MeshOptimize3d :: SwapImproveSurface (
 	  bool found = false;
 	  for(int k=0; !found && k<used_idmaps->Size(); k++)
 	    {
-	      if(pi2 < (*used_idmaps)[k]->Size() + PointIndex::BASE)
+	      if(pi2 < (*used_idmaps)[k]->Size() + IndexBASE<PointIndex>())
 		{
 		  pi1other = (*(*used_idmaps)[k])[pi1];
 		  pi2other = (*(*used_idmaps)[k])[pi2];
-		  found = (pi1other != 0 && pi2other != 0 && pi1other != pi1 && pi2other != pi2);
+		  found = (pi1other.IsValid() && pi2other.IsValid() && pi1other != pi1 && pi2other != pi2);
 		  if(found)
 		    idnum = k;
 		}

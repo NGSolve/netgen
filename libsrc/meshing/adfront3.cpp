@@ -182,9 +182,13 @@ void AdFront3 :: DeleteFace (INDEX fi)
 {
   nff--;
 
+  /*
   for (int i = 1; i <= faces.Get(fi).Face().GetNP(); i++)
     {
       PointIndex pi = faces.Get(fi).Face().PNum(i);
+  */
+  for (PointIndex pi : faces.Get(fi).Face().PNums())
+    {
       points[pi].RemoveFace();
       if (!points[pi].Valid())
 	delpointl.Append (pi);
@@ -397,16 +401,10 @@ void AdFront3 :: RebuildInternalTables ()
 
 
 
-  int negvol = 0;
-  /*
-  for (int i = PointIndex::BASE; 
-       i < clvol.Size()+PointIndex::BASE; i++)
-  */
+  bool negvol = false;
   for (auto i : clvol.Range())
-    {
-      if (clvol[i] < 0)
-	negvol = 1;
-    }
+    if (clvol[i] < 0)
+      negvol = true;
   
   if (negvol)
     {
@@ -427,8 +425,6 @@ void AdFront3 :: RebuildInternalTables ()
 
 int AdFront3 :: SelectBaseElement ()
 {
-  int i, hi, fstind;
-
   /*
   static int minval = -1;
   static int lasti = 0;
@@ -453,12 +449,12 @@ int AdFront3 :: SelectBaseElement ()
     }
     */
   
-  fstind = 0;
+  int fstind = 0;
 
-  for (i = lasti+1; i <= faces.Size() && !fstind; i++)
+  for (int i = lasti+1; i <= faces.Size() && !fstind; i++)
     if (faces.Elem(i).Valid())
       {
-	hi = faces.Get(i).QualClass() +
+	int hi = faces.Get(i).QualClass() +
 	  points[faces.Get(i).Face().PNum(1)].FrontNr() +
 	  points[faces.Get(i).Face().PNum(2)].FrontNr() +
 	  points[faces.Get(i).Face().PNum(3)].FrontNr();
@@ -474,10 +470,10 @@ int AdFront3 :: SelectBaseElement ()
   if (!fstind)
     {
       minval = INT_MAX;
-      for (i = 1; i <= faces.Size(); i++)
+      for (int i = 1; i <= faces.Size(); i++)
 	if (faces.Elem(i).Valid())
 	  {
-	    hi = faces.Get(i).QualClass() +
+	    int hi = faces.Get(i).QualClass() +
 	      points[faces.Get(i).Face().PNum(1)].FrontNr() +
 	      points[faces.Get(i).Face().PNum(2)].FrontNr() +
 	      points[faces.Get(i).Face().PNum(3)].FrontNr();
@@ -499,9 +495,9 @@ int AdFront3 :: SelectBaseElement ()
 
 int AdFront3 :: GetLocals (int fstind,
 			   Array<Point3d, PointIndex> & locpoints,
-			   NgArray<MiniElement2d> & locfaces,   // local index
+			   Array<MiniElement2d> & locfaces,   // local index
 			   Array<PointIndex, PointIndex> & pindex,
-			   NgArray<INDEX> & findex,
+			   Array<INDEX> & findex,
 			   INDEX_2_HASHTABLE<int> & getconnectedpairs,
 			   float xh,
 			   float relh,
@@ -518,7 +514,7 @@ int AdFront3 :: GetLocals (int fstind,
       hashcreated=1;
     }
 
-  INDEX i, j;
+  INDEX i;
   PointIndex pstind;
   Point3d midp, p0;
 
@@ -599,28 +595,37 @@ int AdFront3 :: GetLocals (int fstind,
 
 
   invpindex.SetSize (points.Size());
+  /*
   for (i = 1; i <= locfaces.Size(); i++)
     for (j = 1; j <= locfaces.Get(i).GetNP(); j++)
       {
 	PointIndex pi = locfaces.Get(i).PNum(j);
         invpindex[pi] = PointIndex::INVALID;
       }
+  */
+  for (auto & f : locfaces)
+    for (int j = 1; j <= f.GetNP(); j++)
+      {
+	PointIndex pi = f.PNum(j);
+        invpindex[pi] = PointIndex::INVALID;
+      }
 
-  for (i = 1; i <= locfaces.Size(); i++)
+  // for (i = 1; i <= locfaces.Size(); i++)
+  for (auto & f : locfaces)
     {
-      for (j = 1; j <= locfaces.Get(i).GetNP(); j++)
+      // for (j = 1; j <= locfaces.Get(i).GetNP(); j++)
+      for (int j = 1; j <= f.GetNP(); j++)
 	{
-	  PointIndex pi = locfaces.Get(i).PNum(j);
+	  // PointIndex pi = locfaces.Get(i).PNum(j);
+          PointIndex pi = f.PNum(j);
 	  if (!invpindex[pi].IsValid())
 	    {
 	      pindex.Append (pi);
               locpoints.Append (points[pi].P());
 	      invpindex[pi] = pindex.Size()-1+IndexBASE<PointIndex>();
             }
-          // locfaces.Elem(i).PNum(j) = locpoints.Append (points[pi].P());
-          // }
-	  // else
-          locfaces.Elem(i).PNum(j) = invpindex[pi];
+          // locfaces.Elem(i).PNum(j) = invpindex[pi];
+          f.PNum(j) = invpindex[pi];          
 	}
     }
 
@@ -675,10 +680,10 @@ int AdFront3 :: GetLocals (int fstind,
 
 // returns all points connected with fi
 void AdFront3 :: GetGroup (int fi,
-			   NgArray<MeshPoint, PointIndex::BASE> & grouppoints,
-			   NgArray<MiniElement2d> & groupelements,
+			   Array<MeshPoint, PointIndex> & grouppoints,
+			   Array<MiniElement2d> & groupelements,
 			   Array<PointIndex, PointIndex> & pindex,
-			   NgArray<INDEX> & findex) 
+			   Array<INDEX> & findex) 
 {
   // static NgArray<char> pingroup;
   int changed;
@@ -796,8 +801,8 @@ void AdFront3 :: SetStartFront (int /* baseelnp */)
     */
 }
 
-  bool AdFront3 :: PointInsideGroup(const Array<PointIndex, PointIndex> &grouppindex,
-                                  const NgArray<MiniElement2d> &groupfaces) const
+bool AdFront3 :: PointInsideGroup(const Array<PointIndex, PointIndex> &grouppindex,
+                                  const Array<MiniElement2d> &groupfaces) const
 {
   for(auto pi : Range(points))
     {
