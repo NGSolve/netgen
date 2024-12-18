@@ -296,7 +296,7 @@ namespace ngcore
 
     NETGEN_INLINE T_Range Split (size_t nr, int tot) const
     {
-      T diff = next-first;
+      auto diff = next-first;
       return T_Range (first + nr * diff / tot,
                       first + (nr+1) * diff / tot);
     }
