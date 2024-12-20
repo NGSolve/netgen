@@ -723,7 +723,8 @@ namespace netgen
             new_fd.SetBCProperty(new_si);
             mesh.AddFaceDescriptor(new_fd);
             si_map[facei] = new_si;
-            mesh.SetBCName(new_si-1, fd.GetBCName());
+            // AddFaceDescriptor may reallocate, fd is invalidated
+            mesh.SetBCName(new_si-1, mesh.GetFaceDescriptor(facei).GetBCName());
             face_done.SetBit(facei);
           }
       }
