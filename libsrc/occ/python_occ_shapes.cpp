@@ -545,26 +545,26 @@ public:
     return ArcTo (oldp.X(), oldp.Y(), t, name);
   }
 
-  auto Rectangle (double l, double w)
+  auto Rectangle (double l, double w, optional<string> name)
   {
-    Line (l);
+    Line (l, name);
     Rotate (90);
-    Line(w);
+    Line(w, name);
     Rotate (90);
-    Line (l);
+    Line (l, name);
     Rotate (90);
-    Line(w);
+    Line(w, name);
     Rotate (90);
     return shared_from_this();            
   }
 
-  auto RectangleCentered (double l, double w)
+  auto RectangleCentered (double l, double w, optional<string> name)
   {
     Move(-l/2);
     Rotate(-90);
     Move(w/2);
     Rotate(90);
-    Rectangle(l,w);
+    Rectangle(l,w, name);
     Rotate(-90);
     Move(-w/2);
     Rotate(90);
@@ -2627,8 +2627,8 @@ degen_tol : double
     .def("Spline", &WorkPlane::Spline, py::arg("points"), py::arg("periodic")=false, py::arg("tol")=1e-8,
          py::arg("tangents")=std::map<int, gp_Vec2d>{}, py::arg("start_from_localpos")=true,
          "draw spline (default: starting from current position, which is implicitly added to given list of points), tangents can be specified for each point (0 refers to starting point)")
-    .def("Rectangle", &WorkPlane::Rectangle, py::arg("l"), py::arg("w"), "draw rectangle, with current position as corner, use current direction")
-    .def("RectangleC", &WorkPlane::RectangleCentered, py::arg("l"), py::arg("w"), "draw rectangle, with current position as center, use current direction")
+    .def("Rectangle", &WorkPlane::Rectangle, py::arg("l"), py::arg("w"), py::arg("name")=nullopt, "draw rectangle, with current position as corner, use current direction")
+    .def("RectangleC", &WorkPlane::RectangleCentered, py::arg("l"), py::arg("w"), py::arg("name")=nullopt, "draw rectangle, with current position as center, use current direction")
     .def("Circle", [](WorkPlane&wp, double x, double y, double r) {
         return wp.Circle(x,y,r); }, py::arg("h"), py::arg("v"), py::arg("r"), "draw circle with center (h,v) and radius 'r'")
     .def("Circle", [](WorkPlane&wp, double r) { return wp.Circle(r); }, py::arg("r"), "draw circle with center in current position")
