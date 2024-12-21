@@ -700,7 +700,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   string export_docu = "Export mesh to other file format. Supported formats are:\n";
   Array<string> export_formats;
-  for(auto & e : UserFormatRegister::entries)
+  for(auto & kv : UserFormatRegister::getFormats()) {
+    const auto e = kv.second;
     if(e.write) {
       string s = '\t'+e.format+"\t("+e.extensions[0];
       for(auto & ext : e.extensions.Range(1, e.extensions.Size()))
@@ -708,6 +709,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
       s += ")\n";
       export_formats.Append(s);
     }
+  }
   QuickSort(export_formats);
   for(const auto & s : export_formats)
     export_docu += s;
