@@ -1467,10 +1467,10 @@ void MeshOptimize3d :: SwapImprove (const NgBitArray * working_elements)
 
 void MeshOptimize3d :: SwapImproveSurface (
 					   const NgBitArray * working_elements,
-					   const NgArray< NgArray<int,PointIndex::BASE>* > * idmaps)
+					   const NgArray< idmap_type* > * idmaps)
 {
-  NgArray< NgArray<int,PointIndex::BASE>* > locidmaps;
-  const NgArray< NgArray<int,PointIndex::BASE>* > * used_idmaps;
+  NgArray< idmap_type* > locidmaps;
+  const NgArray< idmap_type* > * used_idmaps;
 
   if(idmaps)
     used_idmaps = idmaps;
@@ -1482,7 +1482,7 @@ void MeshOptimize3d :: SwapImproveSurface (
 	{
 	  if(mesh.GetIdentifications().GetType(i) == Identifications::PERIODIC)
 	    {
-	      locidmaps.Append(new NgArray<int,PointIndex::BASE>);
+	      locidmaps.Append(new idmap_type);
 	      mesh.GetIdentifications().GetMap(i,*locidmaps.Last(),true);
 	    }
 	}

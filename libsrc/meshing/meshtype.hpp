@@ -1653,8 +1653,9 @@ namespace netgen
 
 
 
-
-
+  // typedef NgArray<PointIndex,PointIndex::BASE> idmap_type;
+  typedef Array<PointIndex,PointIndex> idmap_type;
+  
 
 
   /**
@@ -1731,7 +1732,7 @@ namespace netgen
     }
 
     ///
-    void GetMap (int identnr, NgArray<int,PointIndex::BASE> & identmap, bool symmetric = false) const;
+    void GetMap (int identnr, idmap_type & identmap, bool symmetric = false) const;
     ///
     ID_TYPE GetType(int identnr) const
     {

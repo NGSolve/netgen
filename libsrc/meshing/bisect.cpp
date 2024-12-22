@@ -296,7 +296,7 @@ namespace netgen
 
 
   int BTSortEdges (const Mesh & mesh,
-		   const NgArray< NgArray<int,PointIndex::BASE>* > & idmaps,
+		   const NgArray<idmap_type*> & idmaps,
 		   INDEX_2_CLOSED_HASHTABLE<int> & edgenumber)
   {
     PrintMessage(4,"sorting ... ");
@@ -981,7 +981,7 @@ namespace netgen
 
   bool BTDefineMarkedId(const Element2d & el, 
 			INDEX_2_CLOSED_HASHTABLE<int> & edgenumber, 
-			const NgArray<int,PointIndex::BASE> & idmap,
+			const idmap_type & idmap,
 			MarkedIdentification & mi)
   {
 
@@ -1983,7 +1983,7 @@ namespace netgen
 
   void BisectTetsCopyMesh (Mesh & mesh, const NetgenGeometry *,
 			   BisectionOptions & opt,
-			   const NgArray< NgArray<int,PointIndex::BASE>* > & idmaps,
+			   const NgArray<idmap_type*> & idmaps,
 			   const string & refinfofile)
   {
     auto& mtets = *mesh.bisectioninfo.mtets;
@@ -2192,7 +2192,7 @@ namespace netgen
                 auto seg = mesh[j];
                 for (auto map : idmaps)
                   {
-                    if (seg[0].IsValid() && seg[1].IsValid() && (*map)[seg[0]] && (*map)[seg[1]])
+                    if (seg[0].IsValid() && seg[1].IsValid() && (*map)[seg[0]].IsValid() && (*map)[seg[1]].IsValid())
                       {
                         MarkedIdentification mi;
                         mi.np = 2;
@@ -2491,7 +2491,7 @@ namespace netgen
 
   
   void UpdateEdgeMarks (Mesh & mesh,
-			const NgArray< NgArray<int,PointIndex::BASE>* > & idmaps)
+			const NgArray< idmap_type* > & idmaps)
   //const NgArray < NgArray<Element>* > & elements_before,
   //const NgArray < NgArray<int>* > & markedelts_num,
   //		const NgArray < NgArray<Element2d>* > & surfelements_before,
@@ -2769,12 +2769,12 @@ namespace netgen
     LocalizeEdgePoints(mesh);
     delete loct;
 
-    NgArray< NgArray<int,PointIndex::BASE>* > idmaps;
+    NgArray< idmap_type* > idmaps;
     for(int i=1; i<=mesh.GetIdentifications().GetMaxNr(); i++)
       {
 	if(mesh.GetIdentifications().GetType(i) == Identifications::PERIODIC)
 	  {
-	    idmaps.Append(new NgArray<int,PointIndex::BASE>);
+	    idmaps.Append(new idmap_type);
 	    mesh.GetIdentifications().GetMap(i,*idmaps.Last(),true);
 	  }
       }
@@ -2873,7 +2873,8 @@ namespace netgen
 
 #ifndef SABINE //Nachbarelemente mit ordx,ordy,ordz 
         
-	  NgArray<int,PointIndex::BASE> v_order (mesh.GetNP());
+        // NgArray<int,PointIndex::BASE> v_order (mesh.GetNP());
+          Array<int,PointIndex> v_order (mesh.GetNP());
 	  v_order = 0;
 
 	  // for (ElementIndex ei = 0; ei < ne; ei++)
@@ -3978,7 +3979,7 @@ namespace netgen
     // update identification tables    
     for (int i = 1; i <= mesh.GetIdentifications().GetMaxNr(); i++)
       {
-	NgArray<int,PointIndex::BASE> identmap;
+	idmap_type identmap;
 
 	mesh.GetIdentifications().GetMap (i, identmap);
 
@@ -4004,11 +4005,11 @@ namespace netgen
 	for (int j = 0; j < cutedges.Size(); j++)
 	  if (cutedges.UsedPos0(j))
 	    {
-	      INDEX_2 i2;
+	      PointIndices<2> i2;
 	      PointIndex newpi;
 	      cutedges.GetData0 (j, i2, newpi);
-	      INDEX_2 oi2(identmap.Get(i2.I1()),
-			  identmap.Get(i2.I2()));
+	      PointIndices<2> oi2(identmap[i2[0]], 
+                                  identmap[i2[1]]);
 	      oi2.Sort();
 	      if (cutedges.Used (oi2))
 		{

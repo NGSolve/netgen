@@ -1827,7 +1827,7 @@ void Ng_GetPeriodicVertices (int idnr, int * pairs)
 
 int Ng_GetNPeriodicEdges (int idnr)
 {
-  NgArray<int,PointIndex::BASE> map;
+  idmap_type map;
   //const MeshTopology & top = mesh->GetTopology();
   int nse = mesh->GetNSeg();
 
@@ -1854,7 +1854,7 @@ int Ng_GetNPeriodicEdges (int idnr)
 
 void Ng_GetPeriodicEdges (int idnr, int * pairs)
 {
-  NgArray<int,PointIndex::BASE> map;
+  idmap_type map;
   const MeshTopology & top = mesh->GetTopology();
   int nse = mesh->GetNSeg();
 

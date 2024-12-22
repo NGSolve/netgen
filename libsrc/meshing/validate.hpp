@@ -14,7 +14,7 @@ namespace netgen
 		       const NgBitArray & isnewpoint, const Refinement & refinement,
 		       const NgArray<double> & pure_badness, 
 		       double max_worsening, const bool uselocalworsening,
-		       const NgArray< NgArray<int,PointIndex::BASE>* > & idmaps);
+		       const NgArray< idmap_type* > & idmaps);
 
 }
 

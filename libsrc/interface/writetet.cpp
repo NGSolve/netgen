@@ -366,12 +366,12 @@ namespace netgen
       uidpid = "UID";
     
 
-    NgArray< NgArray<int,PointIndex::BASE>* > idmaps;
+    NgArray< idmap_type* > idmaps;
     for(int i=1; i<=mesh.GetIdentifications().GetMaxNr(); i++)
       {
 	if(mesh.GetIdentifications().GetType(i) == Identifications::PERIODIC)
 	  {
-	    idmaps.Append(new NgArray<int,PointIndex::BASE>);
+	    idmaps.Append(new idmap_type);
 	    mesh.GetIdentifications().GetMap(i,*idmaps.Last(),true);
 	  }
       }

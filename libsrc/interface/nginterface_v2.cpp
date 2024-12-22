@@ -1361,7 +1361,7 @@ size_t Ngx_Mesh :: GetGlobalVertexNum (int locnum) const
   
 FlatArray<int>  Ngx_Mesh :: GetDistantProcs (int nodetype, int locnum) const
   {
-#ifdef PARALLEL
+    // #ifdef PARALLEL
     if (mesh->GetCommunicator().Size() == 1)
       return FlatArray<int>(0,nullptr);
     
@@ -1379,9 +1379,9 @@ FlatArray<int>  Ngx_Mesh :: GetDistantProcs (int nodetype, int locnum) const
       default:
 	return FlatArray<int>(0, nullptr);
       }
-#else
-    return FlatArray<int>(0,nullptr);
-#endif
+    // #else
+    //     return FlatArray<int>(0,nullptr);
+    // #endif
   }
 }
 

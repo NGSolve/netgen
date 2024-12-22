@@ -210,7 +210,7 @@ namespace netgen
       if(!have_closesurfaces)
           return;
 
-      NgArray<int, PointIndex::BASE> map;
+      idmap_type map;
       std::set<std::tuple<int,int,int>> hex_faces;
       for(auto identnr : Range(1,nmax+1))
       {

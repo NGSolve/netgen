@@ -749,17 +749,17 @@ namespace netgen
     // update identification tables
     for (int i = 1; i <= mesh.GetIdentifications().GetMaxNr(); i++)
       {
-	NgArray<int,PointIndex::BASE> identmap;
+	idmap_type identmap;
 	mesh.GetIdentifications().GetMap (i, identmap);
 
 	for (int j = 1; j <= between.GetNBags(); j++)
 	  for (int k = 1; k <= between.GetBagSize(j); k++)
 	    {
-	      INDEX_2 i2;
+	      PointIndices<2> i2;
 	      PointIndex newpi;
 	      between.GetData (j, k, i2, newpi);
-	      INDEX_2 oi2(identmap.Get(i2.I1()),
-			  identmap.Get(i2.I2()));
+	      PointIndices<2> oi2(identmap[i2[0]], 
+                                  identmap[i2[1]]);
 	      oi2.Sort();
 	      if (between.Used (oi2))
 		{

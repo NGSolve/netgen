@@ -56,7 +56,7 @@ namespace netgen
     virtual void IdentifyFaces (class Mesh & mesh);
 
     /// get point on other surface, add entry in mesh identifications
-    virtual int GetIdentifiedPoint (class Mesh & mesh, int pi1);
+    virtual PointIndex GetIdentifiedPoint (class Mesh & mesh, PointIndex pi1);
 
     /// copy surfaces, or fill rectangles
     virtual void BuildSurfaceElements (NgArray<class Segment> & segs,
@@ -97,7 +97,7 @@ namespace netgen
 			      const TABLE<int> & specpoint2surface) const override;
 
     virtual int Identifiable (const Point<3> & p1, const Point<3> & sp2) const override;
-    virtual int GetIdentifiedPoint (class Mesh & mesh, int pi1) override;
+    virtual PointIndex GetIdentifiedPoint (class Mesh & mesh, PointIndex pi1) override;
     virtual void IdentifyPoints (class Mesh & mesh) override;
     virtual void IdentifyFaces (class Mesh & mesh) override;
     virtual void BuildSurfaceElements (NgArray<class Segment> & segs,
@@ -153,7 +153,7 @@ namespace netgen
     virtual int Identifiable (const Point<3> & p1, const Point<3> & sp2) const;
     virtual int IdentifiableCandidate (const SpecialPoint & sp1) const;
     virtual int ShortEdge (const SpecialPoint & sp1, const SpecialPoint & sp2) const;
-    virtual int GetIdentifiedPoint (class Mesh & mesh, int pi1);
+    virtual PointIndex GetIdentifiedPoint (class Mesh & mesh, PointIndex pi1);
     const Array<double> & GetSlices () const { return slices; }
     virtual void IdentifyPoints (class Mesh & mesh);
     virtual void IdentifyFaces (class Mesh & mesh);

@@ -1611,7 +1611,7 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
 					   const NgBitArray & usepoint, 
 					   const NgArray< Vec<3>* > & nv,
 					   OPTIMIZEGOAL goal,
-					   const NgArray< NgArray<int,PointIndex::BASE>* > * idmaps)
+					   const NgArray< idmap_type* > * idmaps)
 {
   // int i, j;
   
@@ -1628,8 +1628,8 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
   
   JacobianPointFunction pf(points, volelements);
 
-  NgArray< NgArray<int,PointIndex::BASE>* > locidmaps;
-  const NgArray< NgArray<int,PointIndex::BASE>* > * used_idmaps;
+  NgArray< idmap_type* > locidmaps;
+  const NgArray< idmap_type* > * used_idmaps;
 
   if(idmaps)
     used_idmaps = idmaps;
@@ -1641,7 +1641,7 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
 	{
 	  if(GetIdentifications().GetType(i) == Identifications::PERIODIC)
 	    {
-	      locidmaps.Append(new NgArray<int,PointIndex::BASE>);
+	      locidmaps.Append(new idmap_type);
 	      GetIdentifications().GetMap(i,*locidmaps.Last(),true);
 	    }
 	}

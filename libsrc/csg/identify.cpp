@@ -65,10 +65,10 @@ ShortEdge (const SpecialPoint & sp1, const SpecialPoint & sp2) const
   return 0;
 }
 
-int Identification :: GetIdentifiedPoint (class Mesh & mesh, int pi)
+PointIndex Identification :: GetIdentifiedPoint (class Mesh & mesh, PointIndex pi)
 {
   cout << "Identification::GetIdentifiedPoint called for base-class" << endl;
-  return -1;
+  return PointIndex::INVALID;
 }
 
 void Identification :: IdentifyPoints (Mesh & mesh)
@@ -261,8 +261,8 @@ Identifiable (const Point<3> & p1, const Point<3> & p2) const
 
 
 
-int PeriodicIdentification :: 
-GetIdentifiedPoint (class Mesh & mesh,  int pi)
+PointIndex PeriodicIdentification :: 
+GetIdentifiedPoint (class Mesh & mesh, PointIndex pi)
 {
   const Surface *snew;
   const Point<3> & p = mesh.Point (pi);
@@ -885,17 +885,21 @@ ShortEdge (const SpecialPoint & sp1, const SpecialPoint & sp2) const
 
 
 
-int CloseSurfaceIdentification :: 
-GetIdentifiedPoint (class Mesh & mesh,  int pi)
+PointIndex CloseSurfaceIdentification :: 
+GetIdentifiedPoint (class Mesh & mesh, PointIndex pi)
 {
   const Surface *snew;
   const Point<3> & p = mesh.Point (pi);
 
-  NgArray<int,PointIndex::BASE> identmap(mesh.GetNP());
+  idmap_type identmap(mesh.GetNP());
   mesh.GetIdentifications().GetMap (nr, identmap);
+  /*
   if (identmap.Get(pi))
     return identmap.Get(pi);
-
+  */
+  if (identmap[pi].IsValid())
+    return identmap[pi];
+  
   
   if (s1->PointOnSurface (p))
     snew = s2;
@@ -1229,7 +1233,7 @@ BuildSurfaceElements (NgArray<Segment> & segs,
   bool found = 0;
   int cntquads = 0;
 
-  NgArray<int,PointIndex::BASE>  identmap;
+  idmap_type identmap;
   identmap = 0;
 
   mesh.GetIdentifications().GetMap (nr, identmap);

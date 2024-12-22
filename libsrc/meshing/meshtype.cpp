@@ -2785,7 +2785,7 @@ namespace netgen
   }
 
 
-  void Identifications :: GetMap (int identnr, NgArray<int,PointIndex::BASE> & identmap, bool symmetric) const
+  void Identifications :: GetMap (int identnr, idmap_type & identmap, bool symmetric) const
   {
     identmap.SetSize (mesh.GetNP());
     identmap = 0;
@@ -2812,9 +2812,14 @@ namespace netgen
 	    
               if (i3.I3() == identnr || !identnr)
                 {
+                  /*
                   identmap.Elem(i3.I1()) = i3.I2();
                   if(symmetric)
                     identmap.Elem(i3.I2()) = i3.I1();
+                  */
+                  identmap[i3.I1()] = i3.I2();
+                  if(symmetric)
+                    identmap[i3.I2()] = i3.I1();
                 }
             }  
       }

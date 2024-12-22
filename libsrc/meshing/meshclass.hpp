@@ -612,7 +612,7 @@ namespace netgen
 				       const NgBitArray & usepoint, 
 				       const NgArray< Vec<3>* > & nv,
 				       OPTIMIZEGOAL goal = OPT_QUALITY,
-				       const NgArray< NgArray<int,PointIndex::BASE>* > * idmaps = NULL);
+				       const NgArray< idmap_type* > * idmaps = NULL);
     /**
        free nodes in environment of openelements 
        for optimiztion
