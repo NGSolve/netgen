@@ -225,9 +225,9 @@ namespace netgen
   Mesh :: Mesh ()
     : topology(*this), surfarea(*this)
   {
-    boundaryedges = nullptr;
-    surfelementht = nullptr; 
-    segmentht = nullptr;
+    // boundaryedges = nullptr;
+    // surfelementht = nullptr; 
+    // segmentht = nullptr;
 
     lochfunc = {nullptr};
     // mglevels = 1;

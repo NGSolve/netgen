@@ -302,22 +302,27 @@ namespace netgen
     PrintMessage(4,"sorting ... ");
 
     //  if (mesh.PureTetMesh())
-    if (1)
+    if (true)
       {
 	// new, fast version
       
 	NgArray<INDEX_2> edges;
 	NgArray<int> eclasses;
       
-	int i, j, k;
+	// int i, j, k;
 	int cntedges = 0;
-	int go_on;
+	bool go_on;
 	int ned(0);
       
 	// enumerate edges:
-	for (i = 1; i <= mesh.GetNE(); i++)
+	// for (i = 1; i <= mesh.GetNE(); i++)
+        /*
+        for (auto ei : mesh.VolumeElements().Range())
 	  {
-	    const Element & el = mesh.VolumeElement (i);
+	    const Element & el = mesh[ei];
+        */
+        for (const Element & el : mesh.VolumeElements())
+          {
 	    static int tetedges[6][2] =
 	      { { 1, 2 },
 		{ 1, 3 },
@@ -371,7 +376,7 @@ namespace netgen
                 throw NgException("Bisect, element type not handled in switch");
 	      }
 	      
-	    for (j = 0; j < ned; j++)
+	    for (int j = 0; j < ned; j++)
 	      {
 		PointIndices<2> i2(el.PNum(tip[j][0]), el.PNum(tip[j][1]));
 		i2.Sort();
@@ -386,9 +391,13 @@ namespace netgen
 	  }
       
 	// additional surface edges:
-	for (i = 1; i <= mesh.GetNSE(); i++)
+        /*
+	for (int i = 1; i <= mesh.GetNSE(); i++)
 	  {
 	    const Element2d & el = mesh.SurfaceElement (i);
+        */
+        for (const Element2d & el : mesh.SurfaceElements())
+          {
 	    static int trigedges[3][2] =
 	      { { 1, 2 },
 		{ 2, 3 },
@@ -426,7 +435,7 @@ namespace netgen
 		}
 	      }
 	      
-	    for (j = 0; j < ned; j++)
+	    for (int j = 0; j < ned; j++)
 	      {
 		PointIndices<2> i2(el.PNum(tip[j][0]), el.PNum(tip[j][1]));
 		i2.Sort();
@@ -444,16 +453,16 @@ namespace netgen
 
 
 	eclasses.SetSize (cntedges);
-	for (i = 1; i <= cntedges; i++)
+	for (int i = 1; i <= cntedges; i++)
 	  eclasses.Elem(i) = i;
 
 	// identify edges in element stack
 	do
 	  {
-	    go_on = 0;
-	    for (i = 1; i <= mesh.GetNE(); i++)
+	    go_on = false;
+            for (auto ei : mesh.VolumeElements().Range())
 	      {
-		const Element & el = mesh.VolumeElement (i);	     
+		const Element & el = mesh[ei];
 	      
 		if (el.GetType() != PRISM &&
 		    el.GetType() != PRISM12 &&
@@ -488,7 +497,7 @@ namespace netgen
                     throw NgException("Bisect, element type not handled in switch, 2");
 		  }
 
-		for (j = 0; j < 3; j++)
+		for (int j = 0; j < 3; j++)
 		  {
 		    PointIndices<2> e1 (el.PNum(pairs[j][0]), 
                                         el.PNum(pairs[j][1]));
@@ -507,29 +516,32 @@ namespace netgen
 		      {
 			eclasses.Elem(eclass1) = 
 			  eclasses.Get(eclass2);
-			go_on = 1;
+			go_on = true;
 		      }
 		    else if (eclasses.Get(eclass2) >
 			     eclasses.Get(eclass1))
 		      {
 			eclasses.Elem(eclass2) = 
 			  eclasses.Get(eclass1);
-			go_on = 1;
+			go_on = true;
 		      }
 		  }
 	      }
 
+            /*
 	    for(SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
 	      {
 		const Element2d & el2d = mesh[sei];
-
-		for(i = 0; i < el2d.GetNP(); i++)
+            */
+            for (const Element2d & el2d : mesh.SurfaceElements())
+              {
+		for(int i = 0; i < el2d.GetNP(); i++)
 		  {
 		    PointIndices<2> e1(el2d[i], el2d[(i+1) % el2d.GetNP()]);
 		    e1.Sort();
 		    PointIndices<2> e2;
 		    
-		    for(k = 0; k < idmaps.Size(); k++)
+		    for(int k = 0; k < idmaps.Size(); k++)
 		      {
 			e2[0] = (*idmaps[k])[e1[0]];
 			e2[1] = (*idmaps[k])[e1[1]];
@@ -553,14 +565,14 @@ namespace netgen
 			      eclasses.Get(eclass2);
 
 
-			    go_on = 1;
+			    go_on = true;
 			  }
 			else if (eclasses.Get(eclass2) >
 				 eclasses.Get(eclass1))
 			  {
 			    eclasses.Elem(eclass2) = 
 			      eclasses.Get(eclass1);
-			    go_on = 1;
+			    go_on = true;
 			  }
 		      }		      
 		  }
@@ -585,7 +597,7 @@ namespace netgen
 	  edgelength.Elem(i) = 1e20;
 	*/
 
-	for (i = 1; i <= cntedges; i++)
+	for (int i = 1; i <= cntedges; i++)
 	  {
 	    INDEX_2 edge = edges.Get(i);
 	    double elen = Dist (mesh.Point(edge.I1()),
@@ -652,7 +664,7 @@ namespace netgen
 	*/
 
       
-	for (i = 1; i <= cntedges; i++)
+	for (int i = 1; i <= cntedges; i++)
 	  {
 	    if (eclasses.Get(i) != i)
 	      {
@@ -664,7 +676,7 @@ namespace netgen
 
 
 	TABLE<int> eclasstab(cntedges);
-	for (i = 1; i <= cntedges; i++)
+	for (int i = 1; i <= cntedges; i++)
 	  eclasstab.Add1 (eclasses.Get(i), i);
 
 
@@ -674,10 +686,10 @@ namespace netgen
 	QuickSort (edgelength, sorted);
       
 	int cnt = 0;
-	for (i = 1; i <= cntedges; i++)
+	for (int i = 1; i <= cntedges; i++)
 	  {
 	    int ii = sorted.Get(i);
-	    for (j = 1; j <= eclasstab.EntrySize(ii); j++)
+	    for (int j = 1; j <= eclasstab.EntrySize(ii); j++)
 	      {
 		cnt++;
 		edgenumber.Set (edges.Get(eclasstab.Get(ii, j)), cnt); 
@@ -691,7 +703,7 @@ namespace netgen
       {
 	// old version
       
-	int i, j;
+	// int i, j;
 	int cnt = 0;
 	int found;
 	double len2, maxlen2;
@@ -705,9 +717,10 @@ namespace netgen
 	    found = 0;
 	    maxlen2 = 1e30;
 	  
-	    for (i = 1; i <= mesh.GetNE(); i++)
+	    // for (int i = 1; i <= mesh.GetNE(); i++)
+            for (auto ei : mesh.VolumeElements().Range())
 	      {
-		const Element & el = mesh.VolumeElement (i);
+		const Element & el = mesh[ei]; // .VolumeElement (i);
 		int ned;
 		int tetedges[6][2] =
 		  { { 1, 2 },
@@ -757,7 +770,7 @@ namespace netgen
                     throw NgException("Bisect, element type not handled in switch, 3");
 		  }
 	      
-		for (j = 0; j < ned; j++)
+		for (int j = 0; j < ned; j++)
 		  {
 		    PointIndices<2> i2(el.PNum(tip[j][0]), el.PNum(tip[j][1]));
 		    i2.Sort();
@@ -781,13 +794,14 @@ namespace netgen
 	      
 	      
 		// find connected edges:
-		int go_on = 0;
+		bool go_on = false;
 		do
 		  {
-		    go_on = 0;
-		    for (i = 1; i <= mesh.GetNE(); i++)
+		    go_on = false;
+		    //for (int i = 1; i <= mesh.GetNE(); i++)
+                    for (auto ei : mesh.VolumeElements().Range())
 		      {
-			const Element & el = mesh.VolumeElement (i);	      
+			const Element & el = mesh[ei]; // .VolumeElement (i);	      
 			if (el.GetNP() != 6) continue;
 
 			int prismpairs[3][4] =
@@ -817,7 +831,7 @@ namespace netgen
                             throw NgException("Bisect, element type not handled in switch, 3a");
 			  }
 
-			for (j = 0; j < 3; j++)
+			for (int j = 0; j < 3; j++)
 			  {
 			    PointIndices<2> e1 (el.PNum(pairs[j][0]), 
                                                 el.PNum(pairs[j][1]));
@@ -833,13 +847,13 @@ namespace netgen
 			      {
 				cnt++;
 				edgenumber.Set (e2, cnt);
-				go_on = 1;
+				go_on = true;
 			      }
 			    if (used2 && !used1)
 			      {
 				cnt++;
 				edgenumber.Set (e1, cnt);
-				go_on = 1;
+				go_on = true;
 			      }
 			  }
 		      }
@@ -2017,9 +2031,10 @@ namespace netgen
 	
 	
 	INDEX_2_HASHTABLE<int> shortedges(100);
-	for (int i = 1; i <= ne; i++)
+	// for (int i = 1; i <= ne; i++)
+        for (auto ei : mesh.VolumeElements().Range())
 	  {
-	    const Element & el = mesh.VolumeElement(i);
+	    const Element & el = mesh[ei];
 	    if (el.GetType() == PRISM ||
 		el.GetType() == PRISM12)
 	      {
@@ -2040,9 +2055,10 @@ namespace netgen
 	BTSortEdges (mesh, idmaps, edgenumber);
 	
 	
-	for (int i = 1; i <= ne; i++)
+	// for (int i = 1; i <= ne; i++)
+        for (auto ei : mesh.VolumeElements().Range())
 	  {
-	    const Element & el = mesh.VolumeElement(i);
+	    const Element & el = mesh[ei];
 	    
 	    switch (el.GetType())
 	      {
@@ -2566,7 +2582,7 @@ namespace netgen
 	
     
     
-    for(ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+    for (auto ei : mesh.VolumeElements().Range())
       {
 	const Element & el = mesh[ei];
 	
@@ -2834,10 +2850,11 @@ namespace netgen
 
     if (opt.refine_p)   
       {
-	int ne = mesh.GetNE();
+	// int ne = mesh.GetNE();
 	int nse = mesh.GetNSE();
 	int ox,oy,oz; 
-	for (ElementIndex ei = 0; ei < ne; ei++)
+	// for (ElementIndex ei = 0; ei < ne; ei++)
+        for (auto ei : mesh.VolumeElements().Range())
 	  if (mesh[ei].TestRefinementFlag())
 	    {
 	      mesh[ei].GetOrder(ox,oy,oz);
@@ -2859,7 +2876,8 @@ namespace netgen
 	  NgArray<int,PointIndex::BASE> v_order (mesh.GetNP());
 	  v_order = 0;
 
-	  for (ElementIndex ei = 0; ei < ne; ei++)
+	  // for (ElementIndex ei = 0; ei < ne; ei++)
+          for (auto ei : mesh.VolumeElements().Range())
             for (int j = 0; j < mesh[ei].GetNP(); j++)
               if (mesh[ei].GetOrder() > v_order[mesh[ei][j]])
                 v_order[mesh[ei][j]] = mesh[ei].GetOrder();
@@ -2869,7 +2887,8 @@ namespace netgen
               if (mesh[sei].GetOrder() > v_order[mesh[sei][j]])
                 v_order[mesh[sei][j]] = mesh[sei].GetOrder();
 
-	  for (ElementIndex ei = 0; ei < ne; ei++)
+	  // for (ElementIndex ei = 0; ei < ne; ei++)
+          for (auto ei : mesh.VolumeElements().Range())          
             for (int j = 0; j < mesh[ei].GetNP(); j++)
               if (mesh[ei].GetOrder() < v_order[mesh[ei][j]]-1)
                 mesh[ei].SetOrder(v_order[mesh[ei][j]]-1);
@@ -2965,7 +2984,8 @@ namespace netgen
 			    
 			    int cnt = 0;
 
-			    for(ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+			    // for(ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+                            for (auto ei : mesh.VolumeElements().Range())
 			      {
 				const Element & el = mesh[ei];
 				

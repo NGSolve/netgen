@@ -1702,9 +1702,10 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 
 	// if 2 adjacent edges of an element are singular, the 
 	// common point must be a singular point
-	for (int i = 1; i <= mesh.GetNE(); i++)
+	// for (int i = 1; i <= mesh.GetNE(); i++)
+        for (auto ei : mesh.VolumeElements().Range())
 	  {
-	    const Element & el = mesh.VolumeElement(i);
+	    const Element & el = mesh[ei]; 
 	    const ELEMENT_EDGE * eledges = MeshTopology::GetEdges1 (el.GetType());
 	    int nedges = MeshTopology::GetNEdges (el.GetType());
 	    for (int j = 0; j < nedges; j++)

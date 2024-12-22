@@ -87,16 +87,18 @@ namespace netgen
        [&] (auto myrange)
        {
          NgArray<int> nnums; // , ednums, fanums;
-         for (int i_ : myrange)
+         for (auto i_ : myrange)
            {
              int i = i_+1;
-             const Element & el = mesh.VolumeElement(i);
+             const Element & el = mesh.VolumeElement(i_);
              ELEMENT_TYPE typ = el.GetType();
              
              // top.GetElementEdges (i, ednums);
-             auto ednums = top.GetEdges (ElementIndex(i_));
+             // auto ednums = top.GetEdges (ElementIndex(i_));
+             auto ednums = top.GetEdges (i_);
              // top.GetElementFaces (i, fanums);
-             auto fanums = top.GetFaces (ElementIndex(i_));
+             // auto fanums = top.GetFaces (ElementIndex(i_));
+             auto fanums = top.GetFaces (i_);
              
              int elnv = top.GetNVertices (typ);
              int elned = ednums.Size();
