@@ -3401,7 +3401,7 @@ namespace netgen
 
   double Mesh :: MaxHDomain (int dom) const
   {
-    if (maxhdomain.Size())
+    if (dom >= 0 && dom < maxhdomain.Size())
       return maxhdomain.Get(dom);
     else
       return 1e10;
