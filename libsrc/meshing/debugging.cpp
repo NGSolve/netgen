@@ -2,7 +2,7 @@
 
 namespace netgen
 {
-    unique_ptr<Mesh> GetOpenElements( const Mesh & m, int dom = 0 )
+    unique_ptr<Mesh> GetOpenElements( const Mesh & m, int dom = 0, bool only_quads = false )
     {
         static Timer t("GetOpenElements"); RegionTimer rt(t);
         auto mesh = make_unique<Mesh>();
@@ -40,7 +40,8 @@ namespace netgen
         mesh->ClearSurfaceElements();
 
         for (auto & el : openelements)
-            mesh->AddSurfaceElement( el );
+            if(!only_quads || el.GetNP() == 4)
+                mesh->AddSurfaceElement( el );
 
         mesh->Compress();
         return mesh;

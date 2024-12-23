@@ -3,6 +3,7 @@
 #include <mystdlib.h>
 #include "meshing.hpp"
 #include "debugging.hpp"
+#include "boundarylayer.hpp"
 
 namespace netgen
 {
@@ -372,6 +373,7 @@ namespace netgen
       if(debugparam.write_mesh_on_error) {
         md.mesh->Save("open_quads_starting_mesh_"+ToString(md.domain)+".vol.gz");
         GetOpenElements(*md.mesh, md.domain)->Save("open_quads_rest_" + ToString(md.domain)+".vol.gz");
+        GetOpenElements(*md.mesh, md.domain, true)->Save("open_quads_rest_" + ToString(md.domain)+"_only_quads.vol.gz");
       }
       PrintSysError ("mesh has still open quads");
       throw NgException ("Stop meshing since too many attempts");
@@ -431,7 +433,7 @@ namespace netgen
          
          mesh.FindOpenElements(domain);
          PrintMessage (5, mesh.GetNOpenElements(), " open faces");
-         // GetOpenElements( mesh, domain )->Save("open_"+ToString(cntsteps)+".vol");
+         // GetOpenElements( mesh, domain )->Save("open_"+ToString(domain)+"_"+ToString(cntsteps)+".vol");
          cntsteps++;
 
 
@@ -609,11 +611,17 @@ namespace netgen
     static Timer t("MeshVolume"); RegionTimer reg(t);
 
      mesh3d.Compress();
-     for (auto bl : mp.boundary_layers)
-       GenerateBoundaryLayer(mesh3d, bl);
 
      if(mesh3d.GetNDomains()==0)
          return MESHING3_OK;
+
+     auto geo = mesh3d.GetGeometry();
+     for (auto i : Range(std::min(geo->GetNSolids(), (size_t)mesh3d.GetNDomains())))
+       if (auto name = geo->GetSolid(i).properties.name)
+         mesh3d.SetMaterial (i+1, *name);
+
+     for (auto bl : mp.boundary_layers)
+       GenerateBoundaryLayer(mesh3d, bl);
 
      if (!mesh3d.HasLocalHFunction())
          mesh3d.CalcLocalH(mp.grading);
@@ -639,6 +647,8 @@ namespace netgen
            MeshDomain(md[i]);
          }
          catch (const Exception & e) {
+           if(debugparam.write_mesh_on_error)
+             md[i].mesh->Save("meshing_error_domain_"+ToString(md[i].domain)+".vol.gz");
            cerr << "Meshing of domain " << i+1 << " failed with error: " << e.what() << endl;
            throw e;
          }
@@ -754,7 +764,7 @@ namespace netgen
     auto geo = mesh.GetGeometry();
     if(!geo) return;
     auto n_solids = geo->GetNSolids();
-    if(!n_solids) return;
+    if(n_solids < domain) return;
     if(geo->GetSolid(domain-1).free_edges.Size() == 0)
       return;
 

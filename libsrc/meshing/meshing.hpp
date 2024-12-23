@@ -53,7 +53,6 @@ namespace netgen
 #include "bisect.hpp"
 #include "hprefinement.hpp"
 
-#include "boundarylayer.hpp"
 #include "specials.hpp"
 #include "validate.hpp"
 #include "basegeom.hpp"

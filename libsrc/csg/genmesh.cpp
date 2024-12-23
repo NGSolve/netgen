@@ -826,6 +826,9 @@ namespace netgen
       {
 	multithread.task = "Volume meshing";
 
+	for (int i = 0; i < geom.GetNTopLevelObjects(); i++)
+	  mesh->SetMaterial (i+1, geom.GetTopLevelObject(i)->GetMaterial().c_str());
+
 	MESHING3_RESULT res =
 	  MeshVolume (mparam, *mesh);
 
@@ -838,10 +841,6 @@ namespace netgen
 
 	MeshQuality3d (*mesh);
       
-	for (int i = 0; i < geom.GetNTopLevelObjects(); i++)
-	  mesh->SetMaterial (i+1, geom.GetTopLevelObject(i)->GetMaterial().c_str());
-      
-
 #ifdef STAT_STREAM
 	(*statout) << GetTime() << " & ";
 #endif      
