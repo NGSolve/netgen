@@ -4188,8 +4188,7 @@ namespace netgen
     NgProfiler::StopTimer (timer3);    
   }
 
-
-
+  
 
   BisectionOptions :: BisectionOptions ()
   {
