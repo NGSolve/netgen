@@ -6,7 +6,7 @@
 namespace netgen
 {
   void GetPureBadness(Mesh & mesh, NgArray<double> & pure_badness,
-		      const NgBitArray & isnewpoint)
+		      const TBitArray<PointIndex> & isnewpoint)
   {
     //const int ne = mesh.GetNE();
     const int np = mesh.GetNP();
@@ -152,7 +152,7 @@ namespace netgen
 
 
   void RepairBisection(Mesh & mesh, NgArray<ElementIndex> & bad_elements, 
-		       const NgBitArray & isnewpoint, const Refinement & refinement,
+		       const TBitArray<PointIndex> & isnewpoint, const Refinement & refinement,
 		       const NgArray<double> & pure_badness, 
 		       double max_worsening, const bool uselocalworsening,
 		       const NgArray< idmap_type* > & idmaps)

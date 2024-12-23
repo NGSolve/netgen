@@ -184,7 +184,7 @@ namespace netgen
 
         if (mesh.mlbetweennodes.Size() == mesh.Points().Size())
           {
-            NgArray<PointIndices<2>,PointIndex::BASE> hml { mesh.mlbetweennodes };
+            Array<PointIndices<2>,PointIndex> hml { mesh.mlbetweennodes };
             for (PointIndex pi : Range(mesh.Points()))
               mesh.mlbetweennodes[inv_index[pi]] = hml[pi];
           }

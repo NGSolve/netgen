@@ -349,12 +349,9 @@ NGX_INLINE DLL_HEADER Ng_Buffer<int[2]> Ngx_Mesh :: GetPeriodicVertices(int idnr
 
 NGX_INLINE void Ngx_Mesh :: GetParentNodes (int ni, int * parents) const
 {
-  ni++;
-  if (ni <= mesh->mlbetweennodes.Size())
-    {
-      parents[0] = mesh->mlbetweennodes.Get(ni).I1()-1;
-      parents[1] = mesh->mlbetweennodes.Get(ni).I2()-1;
-      }
+  if (ni < mesh->mlbetweennodes.Size())
+    for (int j = 0; j < 2; j++)
+      parents[j] = mesh->mlbetweennodes[IndexBASE<PointIndex>()+ni][j] - IndexBASE<PointIndex>();
   else
     parents[0] = parents[1] = -1;
 }

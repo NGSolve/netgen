@@ -222,7 +222,7 @@ namespace netgen
     // number of vertices on each refinement level:
     NgArray<size_t> level_nv;
     /// refinement hierarchy
-    NgArray<PointIndices<2>,PointIndex::BASE> mlbetweennodes;
+    Array<PointIndices<2>,PointIndex> mlbetweennodes;
     /// parent element of volume element
     NgArray<int> mlparentelement;
     /// parent element of surface element

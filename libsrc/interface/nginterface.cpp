@@ -1736,8 +1736,8 @@ void Ng_GetParentNodes (int ni, int * parents)
 {
   if (ni <= mesh->mlbetweennodes.Size())
     {
-      parents[0] = mesh->mlbetweennodes.Get(ni).I1();
-      parents[1] = mesh->mlbetweennodes.Get(ni).I2();
+      parents[0] = mesh->mlbetweennodes[ni].I1();
+      parents[1] = mesh->mlbetweennodes[ni].I2();
     }
   else
     parents[0] = parents[1] = 0;

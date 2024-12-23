@@ -3230,7 +3230,7 @@ namespace netgen
 	if (opt.refine_hp)
 	  {
 	    PrintMessage(3,"refine hp");
-	    NgBitArray singv(np);
+	    TBitArray<PointIndex> singv(np);
 	    singv.Clear();
 
 	    if (mesh.GetDimension() == 3)
@@ -3238,8 +3238,8 @@ namespace netgen
 		for (int i = 1; i <= mesh.GetNSeg(); i++)
 		  {
 		    const Segment & seg = mesh.LineSegment(i);
-		    singv.Set (seg[0]);
-		    singv.Set (seg[1]);
+		    singv.SetBit (seg[0]);
+		    singv.SetBit (seg[1]);
 		  }
 		/*
 		  for ( i=1; i<= mesh.GetNSE(); i++)
@@ -3253,18 +3253,18 @@ namespace netgen
 	    else
 	      {
 		// vertices with 2 different bnds
-		NgArray<int> bndind(np);
+		Array<int,PointIndex> bndind(np);
 		bndind = 0;
 		for (int i = 1; i <= mesh.GetNSeg(); i++)
 		  {
 		    const Segment & seg = mesh.LineSegment(i);
 		    for (int j = 0; j < 2; j++)
 		      {
-			int pi = (j == 0) ? seg[0] : seg[1];
-			if (bndind.Elem(pi) == 0)
-			  bndind.Elem(pi) = seg.edgenr;
-			else if (bndind.Elem(pi) != seg.edgenr)
-			  singv.Set (pi);
+			PointIndex pi = (j == 0) ? seg[0] : seg[1];
+			if (bndind[pi] == 0)
+			  bndind[pi] = seg.edgenr;
+			else if (bndind[pi] != seg.edgenr)
+			  singv.SetBit (pi);
 		      }
 		  }
 	      }
@@ -3339,8 +3339,8 @@ namespace netgen
 		{
 		  MarkedTet oldtet = mtets[i];
                   
-		  INDEX_2 edge(oldtet.pnums[oldtet.tetedge1],
-			       oldtet.pnums[oldtet.tetedge2]);
+		  PointIndices<2> edge(oldtet.pnums[oldtet.tetedge1],
+                                       oldtet.pnums[oldtet.tetedge2]);
 		  edge.Sort();
 
 		  PointIndex newp;
@@ -3350,8 +3350,7 @@ namespace netgen
                     }
 		  else
 		    {
-		      Point<3> npt = Center (mesh.Point (edge.I1()),
-                                             mesh.Point (edge.I2()));
+		      Point<3> npt = Center (mesh[edge[0]], mesh[edge[1]]);
                       newp = mesh.AddPoint (npt);
 		      cutedges.Set (edge, newp);
 		    }
@@ -3378,11 +3377,11 @@ namespace netgen
 		  if (pi1 == oldprism.markededge)
 		    pi1++;
 		  int pi2 = 3-pi1-oldprism.markededge;
-
-		  INDEX_2 edge1(oldprism.pnums[pi1],
-				oldprism.pnums[pi2]);
-		  INDEX_2 edge2(oldprism.pnums[pi1+3],
-				oldprism.pnums[pi2+3]);
+                  
+		  PointIndices<2> edge1(oldprism.pnums[pi1],
+                                        oldprism.pnums[pi2]);
+		  PointIndices<2> edge2(oldprism.pnums[pi1+3],
+                                        oldprism.pnums[pi2+3]);
 		  edge1.Sort();
 		  edge2.Sort();
 
@@ -3390,8 +3389,7 @@ namespace netgen
 		    newp1 = cutedges.Get(edge1);
 		  else
 		    {
-		      Point<3> npt = Center (mesh.Point (edge1.I1()),
-					    mesh.Point (edge1.I2()));
+		      Point<3> npt = Center (mesh[edge1[0]], mesh[edge1[1]]);
                       newp1 = mesh.AddPoint (npt);
 		      cutedges.Set (edge1, newp1);
 		    }
@@ -3399,8 +3397,7 @@ namespace netgen
 		    newp2 = cutedges.Get(edge2);
 		  else
 		    {
-		      Point<3> npt = Center (mesh.Point (edge2.I1()),
-					    mesh.Point (edge2.I2()));
+		      Point<3> npt = Center (mesh[edge2[0]], mesh[edge2[1]]);
                       newp2 = mesh.AddPoint (npt);
 		      cutedges.Set (edge2, newp2);
 		    }
@@ -3422,18 +3419,22 @@ namespace netgen
 
 		  oldid = mids.Get(i);
 		  
-		  NgArray<INDEX_2> edges;
-		  edges.Append(INDEX_2(oldid.pnums[oldid.markededge],
-				       oldid.pnums[(oldid.markededge+1)%oldid.np]));
-		  edges.Append(INDEX_2(oldid.pnums[oldid.markededge + oldid.np],
-				       oldid.pnums[(oldid.markededge+1)%oldid.np + oldid.np]));
-
+		  NgArray<PointIndices<2>> edges;
+		  edges.Append( {
+                      oldid.pnums[oldid.markededge],
+                      oldid.pnums[(oldid.markededge+1)%oldid.np] } );
+		  edges.Append( {
+                      oldid.pnums[oldid.markededge + oldid.np],
+                      oldid.pnums[(oldid.markededge+1)%oldid.np + oldid.np] } );
+                  
 		  if(oldid.np == 4)
 		    {
-		      edges.Append(INDEX_2(oldid.pnums[(oldid.markededge+2)%oldid.np],
-					   oldid.pnums[(oldid.markededge+3)%oldid.np]));
-		      edges.Append(INDEX_2(oldid.pnums[(oldid.markededge+2)%oldid.np + oldid.np],
-					   oldid.pnums[(oldid.markededge+3)%oldid.np + oldid.np]));
+		      edges.Append( {
+                          oldid.pnums[(oldid.markededge+2)%oldid.np],
+                          oldid.pnums[(oldid.markededge+3)%oldid.np]} );
+		      edges.Append( {
+                          oldid.pnums[(oldid.markededge+2)%oldid.np + oldid.np],
+                          oldid.pnums[(oldid.markededge+3)%oldid.np + oldid.np] } );
 		    }
 		  for (int j = 0; j < edges.Size(); j++)
 		    {
@@ -3479,7 +3480,7 @@ namespace netgen
 		  MarkedTri oldtri = mtris[i];
 		  PointIndex oldpi1 = oldtri.pnums[(oldtri.markededge+1)%3];
 		  PointIndex oldpi2 = oldtri.pnums[(oldtri.markededge+2)%3];
-		  INDEX_2 edge(oldpi1, oldpi2);
+		  PointIndices<2> edge(oldpi1, oldpi2);
 		  edge.Sort();
 
                   int si = mesh.GetFaceDescriptor (oldtri.surfid).SurfNr();
@@ -3529,21 +3530,21 @@ namespace netgen
 		  INDEX_2 edge2(oldquad.pnums[2],
 				oldquad.pnums[3]);
                   */
-                  INDEX_2 edge1, edge2;
+                  PointIndices<2> edge1, edge2;
                   PointGeomInfo pgi11, pgi12, pgi21, pgi22;
                   if (oldquad.markededge==0 || oldquad.markededge==2)
                   {
-                    edge1.I1()=oldquad.pnums[0]; pgi11=oldquad.pgeominfo[0];
-                    edge1.I2()=oldquad.pnums[1]; pgi12=oldquad.pgeominfo[1];
-                    edge2.I1()=oldquad.pnums[2]; pgi21=oldquad.pgeominfo[2];
-                    edge2.I2()=oldquad.pnums[3]; pgi22=oldquad.pgeominfo[3];
+                    edge1[0] = oldquad.pnums[0]; pgi11=oldquad.pgeominfo[0];
+                    edge1[1] = oldquad.pnums[1]; pgi12=oldquad.pgeominfo[1];
+                    edge2[0] = oldquad.pnums[2]; pgi21=oldquad.pgeominfo[2];
+                    edge2[1] = oldquad.pnums[3]; pgi22=oldquad.pgeominfo[3];
                   }
                   else // 3 || 1
                   {
-                    edge1.I1()=oldquad.pnums[0]; pgi11=oldquad.pgeominfo[0];
-                    edge1.I2()=oldquad.pnums[2]; pgi12=oldquad.pgeominfo[2];
-                    edge2.I1()=oldquad.pnums[1]; pgi21=oldquad.pgeominfo[1];
-                    edge2.I2()=oldquad.pnums[3]; pgi22=oldquad.pgeominfo[3];
+                    edge1[0] = oldquad.pnums[0]; pgi11=oldquad.pgeominfo[0];
+                    edge1[1] = oldquad.pnums[2]; pgi12=oldquad.pgeominfo[2];
+                    edge2[0] = oldquad.pnums[1]; pgi21=oldquad.pgeominfo[1];
+                    edge2[1] = oldquad.pnums[3]; pgi22=oldquad.pgeominfo[3];
                   }
                   
                   edge1.Sort();
@@ -3555,8 +3556,8 @@ namespace netgen
 		    }
 		  else
 		    {
-		      Point<3> np1 = Center (mesh.Point (edge1.I1()),
-					   mesh.Point (edge1.I2()));
+		      Point<3> np1 = Center (mesh.Point (edge1[0]),
+                                             mesh.Point (edge1[1]));
                       newp1 = mesh.AddPoint (np1);
 		      cutedges.Set (edge1, newp1);
                     }
@@ -3567,8 +3568,8 @@ namespace netgen
 		    }
 		  else
 		    {
-		      Point<3> np2 = Center (mesh.Point (edge2.I1()),
-					   mesh.Point (edge2.I2()));
+		      Point<3> np2 = Center (mesh.Point (edge2[0]),
+                                             mesh.Point (edge2[1]));
 		      newp2 = mesh.AddPoint (np2);
 		      cutedges.Set (edge2, newp2);
                     }
@@ -3606,7 +3607,7 @@ namespace netgen
 	    for (int i = 1; i <= nseg; i++)
 	      {
 		Segment & seg = mesh.LineSegment (i);
-		INDEX_2 edge(seg[0], seg[1]);
+		PointIndices<2> edge(seg[0], seg[1]);
 		edge.Sort();
 		if (cutedges.Used (edge))
 		  {
@@ -3614,7 +3615,7 @@ namespace netgen
 		    Segment nseg1 = seg;
 		    Segment nseg2 = seg;
 		  
-		    int newpi = cutedges.Get(edge);
+		    PointIndex newpi = cutedges.Get(edge);
 		  
 		    nseg1[1] = newpi;
 		    nseg2[0] = newpi;
@@ -3670,7 +3671,7 @@ namespace netgen
     if (opt.refine_hp)
       {
 	//
-	NgArray<int> v_order (mesh.GetNP());
+	Array<int,PointIndex> v_order (mesh.GetNP());
 	v_order = 0;
 	if (mesh.GetDimension() == 3)
 	  {
@@ -3680,12 +3681,12 @@ namespace netgen
       
 	    for (int i = 0; i < mtets.Size(); i++)
 	      for (int j = 0; j < 4; j++)
-		if (int(mtets[i].order) > v_order.Elem(mtets[i].pnums[j]))
-		  v_order.Elem(mtets[i].pnums[j]) = mtets[i].order;
+		if (int(mtets[i].order) > v_order[mtets[i].pnums[j]])
+		  v_order[mtets[i].pnums[j]] = mtets[i].order;
 	    for (int i = 0; i < mtets.Size(); i++)
 	      for (int j = 0; j < 4; j++)
-		if (int(mtets[i].order) < v_order.Elem(mtets[i].pnums[j])-1)
-		  mtets[i].order = v_order.Elem(mtets[i].pnums[j])-1;
+		if (int(mtets[i].order) < v_order[mtets[i].pnums[j]]-1)
+		  mtets[i].order = v_order[mtets[i].pnums[j]]-1;
 	  }
 	else
 	  {
@@ -3697,13 +3698,13 @@ namespace netgen
 
 	    for (int i = 0; i < mtris.Size(); i++)
 	      for (int j = 0; j < 3; j++)
-		if (int(mtris[i].order) > v_order.Elem(mtris[i].pnums[j]))
-		  v_order.Elem(mtris[i].pnums[j]) = mtris[i].order;
+		if (int(mtris[i].order) > v_order[mtris[i].pnums[j]])
+		  v_order[mtris[i].pnums[j]] = mtris[i].order;
 	    for (int i = 0; i < mtris.Size(); i++)
 	      {
 		for (int j = 0; j < 3; j++)
-		  if (int(mtris[i].order) < v_order.Elem(mtris[i].pnums[j])-1)
-		    mtris[i].order = v_order.Elem(mtris[i].pnums[j])-1;
+		  if (int(mtris[i].order) < v_order[mtris[i].pnums[j]]-1)
+		    mtris[i].order = v_order[mtris[i].pnums[j]]-1;
 	      }
 	  }
       }
@@ -3866,11 +3867,15 @@ namespace netgen
     if (mesh.level_nv.Size() <= 1)
       {
 	PrintMessage(4,"RESETTING mlbetweennodes");
+        /*
 	for (int i = 1; i <= np; i++)
 	  {
 	    mesh.mlbetweennodes.Elem(i).I1() = 0;
 	    mesh.mlbetweennodes.Elem(i).I2() = 0;
 	  }
+        */
+        for (auto i : mesh.mlbetweennodes.Range())
+          mesh.mlbetweennodes[i] = { PointIndex::INVALID, PointIndex::INVALID };
       }
 
     mesh.level_nv.Append (np);
@@ -3888,7 +3893,7 @@ namespace netgen
     */
 
     
-    NgBitArray isnewpoint(np);
+    TBitArray<PointIndex> isnewpoint(np);
     isnewpoint.Clear();
 
     {
@@ -3899,8 +3904,8 @@ namespace netgen
 	  INDEX_2 edge;
 	  PointIndex newpi;
 	  cutedges.GetData0 (i, edge, newpi);
-	  isnewpoint.Set(newpi);
-	  mesh.mlbetweennodes.Elem(newpi) = edge;
+	  isnewpoint.SetBit(newpi);
+	  mesh.mlbetweennodes[newpi] = edge;
 	}
     }
     /*
@@ -4034,7 +4039,8 @@ namespace netgen
     if(noprojection)
       {
 	do_repair = false;
-	for(int ii=1; ii<=mesh.GetNP(); ii++)
+	// for(int ii=1; ii<=mesh.GetNP(); ii++)
+        for (auto ii : mesh.Points().Range())
 	  {
 	    if(isnewpoint.Test(ii) && mesh.mlbetweennodes[ii][0].IsValid())
 	      {

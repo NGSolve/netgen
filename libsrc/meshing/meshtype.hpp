@@ -217,11 +217,11 @@ namespace netgen
         // throw Exception("illegal PointIndex, use PointIndex::INVALID instead");
 #endif
     }
+    /*
     friend constexpr netgen::PointIndex ngcore::IndexBASE<netgen::PointIndex> ();
     friend istream & operator>> (istream &, PointIndex &);    
     friend ostream & operator<< (ostream &, const PointIndex &);
     template <int N> friend class PointIndices;
-    /*
     friend PointIndex operator+ (PointIndex, int);
     friend PointIndex operator+ (PointIndex, size_t);    
     friend PointIndex operator+ (int, PointIndex);
@@ -234,6 +234,7 @@ namespace netgen
     friend bool operator== (PointIndex a, PointIndex b);
     friend bool operator!= (PointIndex a, PointIndex b);
     */
+    
   public:
     constexpr PointIndex (t_invalid inv) : i(PointIndex::BASE-1) { ; }
     // PointIndex & operator= (const PointIndex &ai) { i = ai.i; return *this; }

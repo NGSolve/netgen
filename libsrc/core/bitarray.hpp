@@ -210,6 +210,24 @@ private:
 
   NGCORE_API std::ostream & operator<<(std::ostream & s, const BitArray & ba);
 
+
+
+  template <typename IndexType>
+  class TBitArray : public BitArray
+  {
+  public:
+    using BitArray::BitArray;
+
+    void SetBit (IndexType i) { BitArray::SetBit(i-IndexBASE<IndexType>()); }
+    void Clear () { BitArray::Clear(); }
+    void Clear (IndexType i) { BitArray::Clear(i-IndexBASE<IndexType>()); }
+    void SetBitAtomic (IndexType i) { BitArray::SetBitAtomic(i-IndexBASE<IndexType>()); }
+    bool Test (IndexType i) const { return BitArray::Test(i-IndexBASE<IndexType>()); }
+    bool operator[] (IndexType i) const { return Test(i); } 
+
+  };
+
 } // namespace ngcore
 
+  
 #endif // NETGEN_CORE_BITARRAY
