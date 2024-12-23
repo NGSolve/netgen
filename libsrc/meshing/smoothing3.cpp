@@ -1485,7 +1485,7 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
 
 // Improve Condition number of Jacobian, any elements  
 void Mesh :: ImproveMeshJacobian (const MeshingParameters & mp,
-				  OPTIMIZEGOAL goal, const NgBitArray * usepoint)
+				  OPTIMIZEGOAL goal, const TBitArray<PointIndex> * usepoint)
 {
   // int i, j;
   
@@ -1507,7 +1507,7 @@ void Mesh :: ImproveMeshJacobian (const MeshingParameters & mp,
   par.maxit_linsearch = 20;
   par.maxit_bfgs = 20;
   
-  NgBitArray badnodes(np);
+  TBitArray<PointIndex> badnodes(np);
   badnodes.Clear();
 
   for (int i = 1; i <= ne; i++)
@@ -1516,7 +1516,7 @@ void Mesh :: ImproveMeshJacobian (const MeshingParameters & mp,
       double bad = el.CalcJacobianBadness (Points());
       if (bad > 1)
 	for (int j = 1; j <= el.GetNP(); j++)
-	  badnodes.Set (el.PNum(j));
+	  badnodes.SetBit (el.PNum(j));
     }
 
   NgArray<double, PointIndex::BASE, PointIndex> pointh (points.Size());
@@ -1608,7 +1608,7 @@ void Mesh :: ImproveMeshJacobian (const MeshingParameters & mp,
 
 // Improve Condition number of Jacobian, any elements  
 void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
-					   const NgBitArray & usepoint, 
+					   const TBitArray<PointIndex> & usepoint, 
 					   const NgArray< Vec<3>* > & nv,
 					   OPTIMIZEGOAL goal,
 					   const NgArray< idmap_type* > * idmaps)
@@ -1664,7 +1664,7 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
   par.maxit_linsearch = 20;
   par.maxit_bfgs = 20;
   
-  NgBitArray badnodes(np);
+  TBitArray<PointIndex> badnodes(np);
   badnodes.Clear();
 
   for (int i = 1; i <= ne; i++)
@@ -1673,7 +1673,7 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
       double bad = el.CalcJacobianBadness (Points());
       if (bad > 1)
 	for (int j = 1; j <= el.GetNP(); j++)
-	  badnodes.Set (el.PNum(j));
+	  badnodes.SetBit (el.PNum(j));
     }
 
   NgArray<double, PointIndex::BASE> pointh (points.Size());

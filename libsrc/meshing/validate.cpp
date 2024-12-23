@@ -104,7 +104,7 @@ namespace netgen
   }
 
 
-  void GetWorkingArea(NgBitArray & working_elements, NgBitArray & working_points,
+  void GetWorkingArea(BitArray & working_elements, TBitArray<PointIndex> & working_points,
 		      const Mesh & mesh, const NgArray<ElementIndex> & bad_elements,
 		      const int width)
   {
@@ -113,10 +113,10 @@ namespace netgen
 
     for(int i=0; i<bad_elements.Size(); i++)
       {
-	working_elements.Set(bad_elements[i]);
+	working_elements.SetBit(bad_elements[i]);
 	const Element & el = mesh[bad_elements[i]];
 	for(int j=1; j<=el.GetNP(); j++)
-	  working_points.Set(el.PNum(j));
+	  working_points.SetBit(el.PNum(j));
       }
     
 
@@ -133,7 +133,7 @@ namespace netgen
 		  set_active = working_points.Test(el.PNum(k));
 		
 		if(set_active)
-		  working_elements.Set(j);
+		  working_elements.SetBit(j);
 	      }
 	  }
 
@@ -143,7 +143,7 @@ namespace netgen
 	      {
 		const Element & el = mesh[j];
 		for(int k=1; k<=el.GetNP(); k++)
-		  working_points.Set(el.PNum(k));
+		  working_points.SetBit(el.PNum(k));
 	      }
 	  }
       }
@@ -185,15 +185,15 @@ namespace netgen
 	can[i] = new Point<3>;
       }
     
-    NgBitArray isboundarypoint(np),isedgepoint(np);
+    TBitArray<PointIndex> isboundarypoint(np),isedgepoint(np);
     isboundarypoint.Clear();
     isedgepoint.Clear();
 
     for(int i = 1; i <= mesh.GetNSeg(); i++)
       {
 	const Segment & seg = mesh.LineSegment(i);
-	isedgepoint.Set(seg[0]);
-	isedgepoint.Set(seg[1]);
+	isedgepoint.SetBit(seg[0]);
+	isedgepoint.SetBit(seg[1]);
       }
 
     NgArray<int> surfaceindex(np);
@@ -205,7 +205,7 @@ namespace netgen
 	for (int j = 1; j <= sel.GetNP(); j++)
 	  if(!isedgepoint.Test(sel.PNum(j)))
 	    {
-	      isboundarypoint.Set(sel.PNum(j));
+	      isboundarypoint.SetBit(sel.PNum(j));
 	      surfaceindex[sel.PNum(j) - PointIndex::BASE] = 
 		mesh.GetFaceDescriptor(sel.GetIndex()).SurfNr();
 	    }
@@ -216,8 +216,8 @@ namespace netgen
     Validate(mesh,bad_elements,pure_badness,
 	     ((uselocalworsening) ?  (0.8*(max_worsening-1.) + 1.) : (0.1*(max_worsening-1.) + 1.)),
 	     uselocalworsening); // -> larger working area
-    NgBitArray working_elements(ne);
-    NgBitArray working_points(np);
+    BitArray working_elements(ne+1);
+    TBitArray<PointIndex> working_points(np);
 
     GetWorkingArea(working_elements,working_points,mesh,bad_elements,numbadneighbours);
     //working_elements.Set();
@@ -240,10 +240,10 @@ namespace netgen
     PrintMessage(5,ostrstr.str());
     
 
-    NgBitArray isworkingboundary(np);
+    TBitArray<PointIndex> isworkingboundary(np);
     for(int i=1; i<=np; i++)
       if(working_points.Test(i) && isboundarypoint.Test(i))
-	isworkingboundary.Set(i);
+	isworkingboundary.SetBit(i);
       else
 	isworkingboundary.Clear(i);
 
@@ -497,7 +497,7 @@ namespace netgen
 	    GetWorkingArea(working_elements,working_points,mesh,bad_elements,numbadneighbours);
 	    for(int i=1; i<=np; i++)
 	      if(working_points.Test(i) && isboundarypoint.Test(i))
-		isworkingboundary.Set(i);
+		isworkingboundary.SetBit(i);
 	      else
 		isworkingboundary.Clear(i);
 	    auxnum=0;

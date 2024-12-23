@@ -704,7 +704,7 @@ void MeshOptimize3d :: SplitImprove ()
 
 
 double MeshOptimize3d :: SwapImproveEdge (
-        const NgBitArray * working_elements,
+        const BitArray * working_elements,
         Table<ElementIndex, PointIndex> & elementsonnode,
         INDEX_3_HASHTABLE<int> & faces,
         PointIndex pi1, PointIndex pi2, bool check_only)
@@ -1328,7 +1328,7 @@ double MeshOptimize3d :: SwapImproveEdge (
   return d_badness;
 }
 
-void MeshOptimize3d :: SwapImprove (const NgBitArray * working_elements)
+void MeshOptimize3d :: SwapImprove (const BitArray * working_elements)
 {
   static Timer t("MeshOptimize3d::SwapImprove"); RegionTimer reg(t);
   static Timer tloop("MeshOptimize3d::SwapImprove loop");
@@ -1466,7 +1466,7 @@ void MeshOptimize3d :: SwapImprove (const NgBitArray * working_elements)
 
 
 void MeshOptimize3d :: SwapImproveSurface (
-					   const NgBitArray * working_elements,
+					   const BitArray * working_elements,
 					   const NgArray< idmap_type* > * idmaps)
 {
   NgArray< idmap_type* > locidmaps;

@@ -1281,7 +1281,7 @@ namespace netgen
  
 
     auto ne = tempels.Size();
-    NgBitArray inner(ne), outer(ne);
+    BitArray inner(ne+1), outer(ne+1);
     inner.Clear();
     outer.Clear();
     NgArray<int> elstack;
@@ -1346,9 +1346,9 @@ namespace netgen
 	    if (!inner.Test(ei) && !outer.Test(ei))
 	      {
 		if (inside)
-		  inner.Set(ei);
+		  inner.SetBit(ei);
 		else
-		  outer.Set(ei);
+		  outer.SetBit(ei);
 
 
 		for (int j = 1; j <= 4; j++)
@@ -1439,7 +1439,7 @@ namespace netgen
 	    if (adfront->Inside(ci))
 	      outer.Clear(i);
 	    else
-	      outer.Set(i);
+	      outer.SetBit(i);
 	  }
       }
 

@@ -1632,8 +1632,8 @@ namespace netgen
       }
   }
 
-bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
-		       NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
+  bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
+		       TBitArray<PointIndex> & cornerpoint, TBitArray<PointIndex> & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
 			INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int & levels, int & act_ref)
 {
   bool sing = 0; 
@@ -1670,7 +1670,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	  {
 	    if (mesh.Point(i).Singularity() * levels >= act_ref)
 	      {
-		cornerpoint.Set(i);
+		cornerpoint.SetBit(i);
 		sing = 1; 
 	      } 
 	  }
@@ -1695,8 +1695,8 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	      edges.Set (i2s, 1);
 
 
-	      edgepoint.Set (i2.I1());
-	      edgepoint.Set (i2.I2());
+	      edgepoint.SetBit (i2.I1());
+	      edgepoint.SetBit (i2.I2());
 	      sing = 1; 
 	    }
 
@@ -1718,10 +1718,10 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 		    ek.Sort();
 		    if (edges.Used(ej) && edges.Used(ek))
 		      {
-			if (ej.I1() == ek.I1()) cornerpoint.Set (ek.I1());
-			if (ej.I1() == ek.I2()) cornerpoint.Set (ek.I2());
-			if (ej.I2() == ek.I1()) cornerpoint.Set (ek.I1());
-			if (ej.I2() == ek.I2()) cornerpoint.Set (ek.I2());
+			if (ej.I1() == ek.I1()) cornerpoint.SetBit (ek.I1());
+			if (ej.I1() == ek.I2()) cornerpoint.SetBit (ek.I2());
+			if (ej.I2() == ek.I1()) cornerpoint.SetBit (ek.I1());
+			if (ej.I2() == ek.I2()) cornerpoint.SetBit (ek.I2());
 		      }
 		  }
 	  }
@@ -1801,10 +1801,10 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	    if (seg.singedge_left * levels >= act_ref)
 	      {
 		INDEX_2 i2 = INDEX_2::Sort(mesh.LineSegment(i)[0], 
-			    mesh.LineSegment(i)[1]);
+                                           mesh.LineSegment(i)[1]);
 		edges.Set(i2,1); 
-		edgepoint.Set(i2.I1());
-		edgepoint.Set(i2.I2());
+		edgepoint.SetBit(i2.I1());
+		edgepoint.SetBit(i2.I2());
 		*testout << " singleft " << endl;  
 		*testout << " mesh.LineSegment(i).domout " << mesh.LineSegment(i).domout << endl;      
 		*testout << " mesh.LineSegment(i).domin " << mesh.LineSegment(i).domin << endl;      
@@ -1819,8 +1819,8 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 		INDEX_2 i2 = INDEX_2::Sort(mesh.LineSegment(i)[1], 
 			    mesh.LineSegment(i)[0]);  
 		edges.Set (i2, 1);
-		edgepoint.Set(i2.I1());
-		edgepoint.Set(i2.I2());
+		edgepoint.SetBit(i2.I1());
+		edgepoint.SetBit(i2.I2());
 		
 		*testout << " singright " << endl;  
 		*testout << " mesh.LineSegment(i).domout " << mesh.LineSegment(i).domout << endl;      
@@ -1858,14 +1858,14 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	    if (surfonpoint.Get(i).I1())
 	      {
 		// cornerpoint.Set(i);    // disabled by JS, Aug 2009
-		edgepoint.Set(i);
+		edgepoint.SetBit(i);
 	      }
 	
 	    // mark points for refinement that are explicitly specified in input file
 	    if (mesh.Point(i).Singularity()*levels >= act_ref)
 	      {
-		cornerpoint.Set(i);
-		edgepoint.Set(i);
+		cornerpoint.SetBit(i);
+		edgepoint.SetBit(i);
 		sing =  1; 
 	      }
 	  }
@@ -1890,11 +1890,11 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
   bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, SplittingType split, int & act_ref, int & levels)
   {
     INDEX_2_HASHTABLE<int> edges(mesh.GetNSeg()+1);
-    NgBitArray edgepoint(mesh.GetNP());
+    TBitArray<PointIndex> edgepoint(mesh.GetNP());
     INDEX_2_HASHTABLE<int> edgepoint_dom(mesh.GetNSeg()+1);
 
     edgepoint.Clear();
-    NgBitArray cornerpoint(mesh.GetNP());
+    TBitArray<PointIndex> cornerpoint(mesh.GetNP());
     cornerpoint.Clear();
 
     // value = nr > 0 ... refine elements in domain nr

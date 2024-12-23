@@ -481,7 +481,7 @@ namespace netgen
     double facok = 0;
     double factry;
 
-    NgBitArray illegalels(ne);
+    BitArray illegalels(ne+1);
     illegalels.Clear();
 
       
@@ -505,13 +505,13 @@ namespace netgen
 				    can.Elem(parents.Get(i).I2()));
 	  }
 
-	NgBitArray boundp(np);
+	TBitArray<PointIndex> boundp(np);
 	boundp.Clear();
 	for (int i = 1; i <= mesh.GetNSE(); i++)
 	  {
 	    const Element2d & sel = mesh.SurfaceElement(i);
 	    for (int j = 1; j <= sel.GetNP(); j++)
-	      boundp.Set(sel.PNum(j));
+	      boundp.SetBit(sel.PNum(j));
 	  }
 
 
@@ -563,7 +563,7 @@ namespace netgen
 		     
 		      
 			if (lam < 1e-4)
-			  illegalels.Set(i);
+			  illegalels.SetBit(i);
  
 
 			/*

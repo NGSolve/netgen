@@ -820,11 +820,11 @@ namespace netgen
 					can.Elem(parent.I2()));
 	    }
 
-	NgBitArray boundp(np);
+	TBitArray<PointIndex> boundp(np);
 	boundp.Clear();
 	for (auto & sel : mesh.SurfaceElements())
           for (auto pi : sel.PNums())
-            boundp.Set(pi);
+            boundp.SetBit(pi);
 
 
 	double lam = 0.5;
@@ -851,14 +851,14 @@ namespace netgen
 		    mesh.Point(i) = can.Get(i);
 	      
 
-		NgBitArray free (mesh.GetNP()), fhelp(mesh.GetNP());
+		TBitArray<PointIndex> free (mesh.GetNP()), fhelp(mesh.GetNP());
 		free.Clear();
 		for (int i = 1; i <= mesh.GetNE(); i++)
 		  {
 		    const Element & el = mesh.VolumeElement(i);
 		    if (el.Volume(mesh.Points()) < 0)
 		      for (int j = 1; j <= el.GetNP(); j++)
-			free.Set (el.PNum(j));
+			free.SetBit (el.PNum(j));
 		  }
 		for (int k = 1; k <= 3; k++)
 		  {
@@ -872,7 +872,7 @@ namespace netgen
 			    freeel = 1;
 			if (freeel)
 			  for (int j = 1; j <= el.GetNP(); j++)
-			    fhelp.Set (el.PNum(j));
+			    fhelp.SetBit (el.PNum(j));
 		      }
 		    free.Or (fhelp);
 		  }

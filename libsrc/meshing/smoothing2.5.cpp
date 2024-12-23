@@ -110,7 +110,7 @@ namespace netgen
     int np = mesh.GetNP();
     int ne = mesh.GetNE();
 
-    NgBitArray badnodes(np);
+    TBitArray<PointIndex> badnodes(np);
     badnodes.Clear();
 
     for (i = 1; i <= ne; i++)
@@ -119,7 +119,7 @@ namespace netgen
 	double bad = el.CalcJacobianBadness (mesh.Points());
 	if (bad > 1)
 	  for (j = 1; j <= el.GetNP(); j++)
-	    badnodes.Set (el.PNum(j));
+	    badnodes.SetBit (el.PNum(j));
       }
 
 

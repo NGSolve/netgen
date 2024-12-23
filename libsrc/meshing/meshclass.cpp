@@ -2457,7 +2457,7 @@ namespace netgen
   }
 
   // NgBitArray base is PointIndex::BASE ... 
-  void Mesh :: FixPoints (const NgBitArray & fixpoints)
+  void Mesh :: FixPoints (const TBitArray<PointIndex> & fixpoints)
   {
     if (fixpoints.Size() != GetNP())
       {
@@ -3219,14 +3219,14 @@ namespace netgen
     int np = GetNP();
 
     FindOpenSegments();
-    NgBitArray frontpoints(np+1);  // for 0- and 1-based
+    TBitArray<PointIndex> frontpoints(np);  // for 0- and 1-based
     frontpoints.Clear();
     
     for (int i = 1; i <= GetNOpenSegments(); i++)
       {
         const Segment & seg = GetOpenSegment(i);
-        frontpoints.Set (seg[0]);
-        frontpoints.Set (seg[1]);
+        frontpoints.SetBit (seg[0]);
+        frontpoints.SetBit (seg[1]);
       }
 
     for (int i = 1; i <= GetNSE(); i++)
@@ -4799,10 +4799,10 @@ namespace netgen
 
   void Mesh :: SurfaceMeshOrientation ()
   {
-    int i, j;
+    // int i, j;
     int nse = GetNSE();
 
-    NgBitArray used(nse);
+    BitArray used(nse+1);
     used.Clear();
     INDEX_2_HASHTABLE<int> edges(nse+1);
 
@@ -4810,12 +4810,12 @@ namespace netgen
 
 
     const Element2d & tri = SurfaceElement(1);
-    for (j = 1; j <= 3; j++)
+    for (int j = 1; j <= 3; j++)
       {
         INDEX_2 i2(tri.PNumMod(j), tri.PNumMod(j+1));
         edges.Set (i2, 1);
       }
-    used.Set(1);
+    used.SetBit(1);
 
     bool unused;
     do
@@ -4824,12 +4824,12 @@ namespace netgen
         do
           {
             changed = 0;
-            for (i = 1; i <= nse; i++)
+            for (int i = 1; i <= nse; i++)
               if (!used.Test(i))
                 {
                   Element2d & el = surfelements[i-1];
                   int found = 0, foundrev = 0;
-                  for (j = 1; j <= 3; j++)
+                  for (int j = 1; j <= 3; j++)
                     {
                       INDEX_2 i2(el.PNumMod(j), el.PNumMod(j+1));
                       if (edges.Used(i2))
@@ -4845,12 +4845,12 @@ namespace netgen
                         swap (el.PNum(2), el.PNum(3));
 
                       changed = 1;
-                      for (j = 1; j <= 3; j++)
+                      for (int j = 1; j <= 3; j++)
                         {
                           INDEX_2 i2(el.PNumMod(j), el.PNumMod(j+1));
                           edges.Set (i2, 1);
                         }
-                      used.Set (i);
+                      used.SetBit (i);
                     }
                 }
             if (changed)
@@ -4860,17 +4860,17 @@ namespace netgen
 
 
         unused = 0;
-        for (i = 1; i <= nse; i++)
+        for (int i = 1; i <= nse; i++)
           if (!used.Test(i))
             {
               unused = 1;
               const Element2d & tri = SurfaceElement(i);
-              for (j = 1; j <= 3; j++)
+              for (int j = 1; j <= 3; j++)
                 {
                   INDEX_2 i2(tri.PNumMod(j), tri.PNumMod(j+1));
                   edges.Set (i2, 1);
                 }
-              used.Set(i);
+              used.SetBit(i);
               break;
             }
       }
@@ -6105,17 +6105,17 @@ namespace netgen
 
   void Mesh :: SplitIntoParts()
   {
-    int i, j, dom;
+    // int i, j, dom;
     int ne = GetNE();
     int np = GetNP();
     int nse = GetNSE();
 
-    NgBitArray surfused(nse);
-    NgBitArray pused (np);
+    BitArray surfused(nse+1);
+    TBitArray<PointIndex> pused (np);
 
     surfused.Clear();
 
-    dom = 0;
+    int dom = 0;
 
     while (1)
       {
@@ -6126,15 +6126,15 @@ namespace netgen
         pused.Clear();
 
         int found = 0;
-        for (i = 1; i <= nse; i++)
+        for (int i = 1; i <= nse; i++)
           if (!surfused.Test(i))
             {
               SurfaceElement(i).SetIndex (dom);
-              for (j = 1; j <= 3; j++)
-                pused.Set (SurfaceElement(i).PNum(j));
+              for (int j = 1; j <= 3; j++)
+                pused.SetBit (SurfaceElement(i).PNum(j));
               found = 1;
               cntd = 1;
-              surfused.Set(i);
+              surfused.SetBit(i);
               break;
             }
 
@@ -6145,10 +6145,10 @@ namespace netgen
         do
           {
             change = 0;
-            for (i = 1; i <= nse; i++)
+            for (int i = 1; i <= nse; i++)
               {
                 int is = 0, isnot = 0;
-                for (j = 1; j <= 3; j++)
+                for (int j = 1; j <= 3; j++)
                   if (pused.Test(SurfaceElement(i).PNum(j)))
                     is = 1;
                   else
@@ -6157,15 +6157,15 @@ namespace netgen
                 if (is && isnot)
                   {
                     change = 1;
-                    for (j = 1; j <= 3; j++)
-                      pused.Set (SurfaceElement(i).PNum(j));
+                    for (int j = 1; j <= 3; j++)
+                      pused.SetBit (SurfaceElement(i).PNum(j));
                   }
 
                 if (is) 
                   {
                     if (!surfused.Test(i))
                       {
-                        surfused.Set(i);
+                        surfused.SetBit(i);
                         SurfaceElement(i).SetIndex (dom);
                         cntd++;
                       }
@@ -6173,10 +6173,10 @@ namespace netgen
               }
 
 
-            for (i = 1; i <= ne; i++)
+            for (int i = 1; i <= ne; i++)
               {
                 int is = 0, isnot = 0;
-                for (j = 1; j <= 4; j++)
+                for (int j = 1; j <= 4; j++)
                   if (pused.Test(VolumeElement(i).PNum(j)))
                     is = 1;
                   else
@@ -6185,8 +6185,8 @@ namespace netgen
                 if (is && isnot)
                   {
                     change = 1;
-                    for (j = 1; j <= 4; j++)
-                      pused.Set (VolumeElement(i).PNum(j));
+                    for (int j = 1; j <= 4; j++)
+                      pused.SetBit (VolumeElement(i).PNum(j));
                   }
 
                 if (is)
@@ -6210,7 +6210,7 @@ namespace netgen
       }
     */
     ClearFaceDescriptors();
-    for (i = 1; i <= dom; i++)
+    for (int i = 1; i <= dom; i++)
       AddFaceDescriptor (FaceDescriptor (0, i, 0, 0));
     CalcSurfacesOfNode();
     timestamp = NextTimeStamp();
@@ -6222,7 +6222,7 @@ namespace netgen
     int fdi;
     int np = GetNP();
 
-    NgBitArray usedp(np);
+    TBitArray<PointIndex> usedp(np);
     Array<SurfaceElementIndex> els_of_face;
 
     fdi = 1;
@@ -6240,7 +6240,7 @@ namespace netgen
 
         usedp.Clear();
         for (int j = 1; j <= SurfaceElement(firstel).GetNP(); j++)
-          usedp.Set (SurfaceElement(firstel).PNum(j));
+          usedp.SetBit (SurfaceElement(firstel).PNum(j));
 
         bool changed;
         do
@@ -6266,7 +6266,7 @@ namespace netgen
 
                 if (has)
                   for (int j = 0; j < el.GetNP(); j++)
-                    usedp.Set (el[j]);
+                    usedp.SetBit (el[j]);
               }
           }
         while (changed);
