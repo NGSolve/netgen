@@ -29,11 +29,10 @@ class NgBitArray
 
 public:
   
-  [[ deprecated ("use BitArray instead")]]  
+  // [[ deprecated ("use BitArray instead")]]  
   DLL_HEADER NgBitArray ();
   ///
-  [[ deprecated ("use BitArray instead")]]  
-  
+  // [[ deprecated ("use BitArray instead")]]  
   DLL_HEADER NgBitArray (INDEX asize);
   ///
   DLL_HEADER ~NgBitArray ();

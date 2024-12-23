@@ -22,7 +22,7 @@ enum MESHING3_RESULT
 class Meshing3
 {
   /// current state of front
-  AdFront3 * adfront;
+  unique_ptr<AdFront3> adfront;
   /// 3d generation rules
   NgArray<vnetrule*> rules;
   /// counts how often a rule is used

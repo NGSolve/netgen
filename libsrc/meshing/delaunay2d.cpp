@@ -427,7 +427,7 @@ namespace netgen
 	  }
 	tcut.Stop();
 
-	mesh.LocalHFunction().FindInnerBoxes (&adfront, NULL);
+	mesh.LocalHFunction().FindInnerBoxes (adfront, NULL);
 	
 	npoints.SetSize(0);
 	mesh.LocalHFunction().GetInnerPoints (npoints);
@@ -521,7 +521,7 @@ namespace netgen
 	loch2.CutBoundary (bbox);
       }
     
-    loch2.FindInnerBoxes (&adfront, NULL);
+    loch2.FindInnerBoxes (adfront, NULL);
 
       // outer points : smooth mesh-grading
     npoints.SetSize(0);

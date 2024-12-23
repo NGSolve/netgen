@@ -24,7 +24,7 @@ Meshing3 :: Meshing3 (const string & rulefilename)
   tolfak = 1;
 
   LoadRules (rulefilename.c_str(), NULL);
-  adfront = new AdFront3;
+  adfront = make_unique<AdFront3>();
 
   problems.SetSize (rules.Size());
   foundmap.SetSize (rules.Size());
@@ -46,7 +46,7 @@ Meshing3 :: Meshing3 (const char ** rulep)
   tolfak = 1;
 
   LoadRules (NULL, rulep);
-  adfront = new AdFront3;
+  adfront = make_unique<AdFront3>();
 
   problems.SetSize (rules.Size());
   foundmap.SetSize (rules.Size());
@@ -64,7 +64,7 @@ Meshing3 :: Meshing3 (const char ** rulep)
 
 Meshing3 :: ~Meshing3 ()
 {
-  delete adfront;
+  // delete adfront;
   for (int i = 0; i < rules.Size(); i++)
     {
       delete [] problems[i];
@@ -1185,7 +1185,7 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
       tbox.Stop();
 
       //      locadfront = adfront;
-      loch.FindInnerBoxes (adfront, NULL);
+      loch.FindInnerBoxes (*adfront, NULL);
 
       npoints.SetSize(0);
       loch.GetInnerPoints (npoints);
@@ -1271,7 +1271,7 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
   tloch2.Stop();
 
   // locadfront = adfront;
-  loch2.FindInnerBoxes (adfront, NULL);
+  loch2.FindInnerBoxes (*adfront, NULL);
 
   npoints.SetSize(0);
   loch2.GetOuterPoints (npoints);

@@ -341,8 +341,6 @@ namespace netgen
           pmin(i) = 1e99;
           pmax(i) = -1e99;
         }
-      // pmin = Point<D> (1e99, 1e99, 1e99);
-      // pmax = Point<D> (-1e99, -1e99, -1e99);
     }
 
     const Point<D> & PMin () const { return pmin; }

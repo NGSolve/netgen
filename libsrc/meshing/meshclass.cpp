@@ -2232,7 +2232,7 @@ namespace netgen
           cerr << "illegal element for buildboundaryedges" << endl;
       }
 
-
+    /*
     for (int i = 0; i < openelements.Size(); i++)
       {
         const Element2d & sel = openelements[i];
@@ -2247,7 +2247,18 @@ namespace netgen
             points[sel[j]].SetType(FIXEDPOINT);
           }
       }
+    */
+    for (const Element2d & sel : openelements)
+      for (int j = 0; j < sel.GetNP(); j++)
+        {
+          PointIndices<2> i2 { sel.PNumMod(j+1), sel.PNumMod(j+2) };
+          i2.Sort();
+          boundaryedges->Set (i2, 1);
 
+          points[sel[j]].SetType(FIXEDPOINT);
+        }
+
+    /*
     for (int i = 0; i < GetNSeg(); i++)
       {
         const Segment & seg = segments[i];
@@ -2257,7 +2268,15 @@ namespace netgen
         boundaryedges -> Set (i2, 2);
         //segmentht -> Set (i2, i);
       }
+    */
+    for (const Segment & seg : segments)
+      {
+        PointIndices<2> i2 { seg[0], seg[1] };
+        i2.Sort();
 
+        boundaryedges -> Set (i2, 2);
+        //segmentht -> Set (i2, i);
+      }
 
   }
 

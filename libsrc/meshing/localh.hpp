@@ -121,10 +121,10 @@ namespace netgen
     { CutBoundaryRec (box.PMin(), box.PMax(), root); }
   
     /// find inner boxes
-    void FindInnerBoxes (class AdFront3 * adfront,
+    void FindInnerBoxes (const class AdFront3 & adfront,
 			 int (*testinner)(const Point3d & p1));
 
-    void FindInnerBoxes (class AdFront2 * adfront,
+    void FindInnerBoxes (const class AdFront2 & adfront,
 			 int (*testinner)(const Point<2> & p1));
 
 
@@ -166,7 +166,7 @@ namespace netgen
 
     ///
     void FindInnerBoxesRec2 (GradingBox * box,
-			     class AdFront3 * adfront,
+			     const class AdFront3 & adfront,
 			     NgArray<Box3d> & faceboxes,
 			     NgArray<int> & finds, int nfinbox);
 
@@ -177,7 +177,7 @@ namespace netgen
 
     ///
     void FindInnerBoxesRec2 (GradingBox * box,
-			     class AdFront2 * adfront,
+			     const class AdFront2 & adfront,
 			     FlatArray<Box<2>> faceboxes,
 			     FlatArray<int> finds); // , int nfinbox);
 

@@ -210,8 +210,8 @@ public:
   ///
   int GetNFL () const { return nfl; }
 
-  const FrontLine & GetLine (int nr) { return lines[nr]; }
-  const FrontPoint2 & GetPoint (int nr) { return points[nr]; }
+  const FrontLine & GetLine (int nr) const { return lines[nr]; }
+  const FrontPoint2 & GetPoint (int nr) const { return points[nr]; }
   const auto & GetLines () const { return lines; }
 
   ///

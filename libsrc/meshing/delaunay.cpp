@@ -562,7 +562,7 @@ namespace netgen
 
 
 
-  void Delaunay1 (Mesh & mesh, int domainnr, const MeshingParameters & mp, AdFront3 * adfront,
+  void Delaunay1 (Mesh & mesh, int domainnr, const MeshingParameters & mp, const AdFront3 & adfront,
 		  NgArray<DelaunayTet> & tempels,
 		  int oldnp, DelaunayTet & startel, Point3d & pmin, Point3d & pmax)
   {
@@ -573,7 +573,7 @@ namespace netgen
   
     Box<3> bbox(Box<3>::EMPTY_BOX);
 
-    for (auto & face : adfront->Faces())
+    for (auto & face : adfront.Faces())
       for (PointIndex pi : face.Face().PNums())      
         bbox.Add (mesh.Point(pi));
 
@@ -610,7 +610,7 @@ namespace netgen
     Array<bool, PointIndex> usep(np);
     usep = false;
 
-    for (auto & face : adfront->Faces())
+    for (auto & face : adfront.Faces())
       for (PointIndex pi : face.Face().PNums())      
         usep[pi] = true;
 
@@ -1088,7 +1088,7 @@ namespace netgen
       }
   }
 
-  void DelaunayRemoveOuter( const Mesh & mesh, NgArray<DelaunayTet> & tempels, AdFront3 * adfront )
+  void DelaunayRemoveOuter( const Mesh & mesh, NgArray<DelaunayTet> & tempels, const AdFront3 & adfront )
   {
     static Timer trem_outer("Delaunay - remove outer"); RegionTimer rt(trem_outer);
 
@@ -1326,7 +1326,7 @@ namespace netgen
       
 	Point3d ci = Center (p1, p2, p3, p4);
 
-	inside = adfront->Inside (ci);
+	inside = adfront.Inside (ci);
 
 	/*
 	  cout << "startel: " << i << endl;
@@ -1408,7 +1408,7 @@ namespace netgen
 	    //       if (adfront->Inside (ci) != adfront->Inside (Center (ci, p1)))
 	    // 	cout << "ERROR: outer test unclear !!!" << endl;	
 	  
-	    if (inner.Test(i) != adfront->Inside (ci))
+	    if (inner.Test(i) != adfront.Inside (ci))
 	      {
 		/*
 		  cout << "ERROR: outer test wrong !!!" 
@@ -1436,7 +1436,7 @@ namespace netgen
 	      
 	      }
 	  
-	    if (adfront->Inside(ci))
+	    if (adfront.Inside(ci))
 	      outer.Clear(i);
 	    else
 	      outer.SetBit(i);
@@ -1565,7 +1565,7 @@ namespace netgen
 
     int np = mesh.GetNP();
 
-    Delaunay1 (mesh, domainnr, mp, adfront, tempels, oldnp, startel, pmin, pmax);
+    Delaunay1 (mesh, domainnr, mp, *adfront, tempels, oldnp, startel, pmin, pmax);
 
     {
       // improve delaunay - mesh by swapping !!!!
@@ -1668,7 +1668,7 @@ namespace netgen
     NgArray<int> openels;
     DelaunayRemoveTwoTriaTets(mesh, tempels, openels);
     DelaunayRemoveIntersecting(mesh, tempels, openels, pmin, pmax);
-    DelaunayRemoveOuter(mesh, tempels, adfront);
+    DelaunayRemoveOuter(mesh, tempels, *adfront);
 
     for (int i = 0; i < tempels.Size(); i++)
       {

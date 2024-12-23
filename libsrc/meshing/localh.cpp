@@ -489,14 +489,14 @@ namespace netgen
 
 
 
-  void LocalH :: FindInnerBoxes (AdFront3 * adfront,
+  void LocalH :: FindInnerBoxes (const AdFront3 & adfront,
 				 int (*testinner)(const Point3d & p1))
   {
     static Timer timer("LocalH::FindInnerBoxes");
     RegionTimer reg (timer);
 
 
-    int nf = adfront->GetNF();
+    int nf = adfront.GetNF();
 
     for (int i = 0; i < boxes.Size(); i++)
       boxes[i] -> flags.isinner = 0;
@@ -509,7 +509,7 @@ namespace netgen
     // Point3d rx1 = rpmid - rv;
 
 
-    root->flags.pinner = !adfront->SameSide (rpmid, rx2);
+    root->flags.pinner = !adfront.SameSide (rpmid, rx2);
     
     if (testinner)
       (*testout) << "inner = " << root->flags.pinner << " =?= " 
@@ -521,7 +521,7 @@ namespace netgen
     for (int i = 1; i <= nf; i++)
       {
 	faceinds.Elem(i) = i;
-	adfront->GetFaceBoundingBox(i, faceboxes.Elem(i));
+	adfront.GetFaceBoundingBox(i, faceboxes.Elem(i));
       }
   
     for (int i = 0; i < 8; i++)
@@ -531,7 +531,7 @@ namespace netgen
 
   void LocalH :: 
   FindInnerBoxesRec2 (GradingBox * box,
-		      class AdFront3 * adfront, 
+		      const AdFront3 & adfront, 
 		      NgArray<Box3d> & faceboxes,
 		      NgArray<int> & faceinds, int nfinbox)
   {
@@ -592,7 +592,7 @@ namespace netgen
 	  box->flags.pinner = 1;
 	else
 	  {
-	    if (adfront->SameSide (c, cf, &faceused2))
+	    if (adfront.SameSide (c, cf, &faceused2))
 	      box->flags.pinner = father->flags.pinner;
 	    else
 	      box->flags.pinner = 1 - father->flags.pinner;
@@ -644,7 +644,7 @@ namespace netgen
 
 
 
-  void LocalH :: FindInnerBoxes (AdFront2 * adfront,
+  void LocalH :: FindInnerBoxes (const AdFront2 & adfront,
 				 int (*testinner)(const Point<2> & p1))
   {
     static Timer t("LocalH::FindInnerBoxes 2d"); RegionTimer reg (t);
@@ -667,23 +667,23 @@ namespace netgen
     // Point<2> rx1 = rpmid - rv;
 
 
-    root->flags.pinner = !adfront->SameSide (rpmid, rx2);
+    root->flags.pinner = !adfront.SameSide (rpmid, rx2);
   
     if (testinner)
       (*testout) << "inner = " << root->flags.pinner << " =?= "
 		 << testinner(rpmid) << endl;
 
 
-    int nf = adfront->GetNFL();
+    int nf = adfront.GetNFL();
     Array<int> faceinds(nf);
     Array<Box<2>> faceboxes(nf);
 
     for (int i = 0; i < nf; i++)
       {
 	faceinds[i] = i;
-	const FrontLine & line = adfront->GetLine(i);
-        Point<3> p1 = adfront->GetPoint (line.L().I1());
-        Point<3> p2 = adfront->GetPoint (line.L().I2());
+	const FrontLine & line = adfront.GetLine(i);
+        Point<3> p1 = adfront.GetPoint (line.L().I1());
+        Point<3> p2 = adfront.GetPoint (line.L().I2());
         
 	faceboxes[i].Set (Point<2> (p1(0), p1(1)));
 	faceboxes[i].Add (Point<2> (p2(0), p2(1)));
@@ -697,7 +697,7 @@ namespace netgen
 
   void LocalH :: 
   FindInnerBoxesRec2 (GradingBox * box,
-		      class AdFront2 * adfront, 
+		      const class AdFront2 & adfront, 
 		      FlatArray<Box<2>> faceboxes,
 		      FlatArray<int> faceinds) // , int nfinbox)
   {
@@ -743,7 +743,7 @@ namespace netgen
 
             // bool sameside = adfront->SameSide (c2d, cf2d, &faceused2);
             auto sub = faceinds.Range(0, iused);
-            bool sameside = adfront->SameSide (c, fc, &sub);
+            bool sameside = adfront.SameSide (c, fc, &sub);
             if (sameside)
 	      box->flags.pinner = father->flags.pinner;
 	    else
