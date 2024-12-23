@@ -234,7 +234,6 @@ namespace netgen
     friend bool operator== (PointIndex a, PointIndex b);
     friend bool operator!= (PointIndex a, PointIndex b);
     */
-    
   public:
     constexpr PointIndex (t_invalid inv) : i(PointIndex::BASE-1) { ; }
     // PointIndex & operator= (const PointIndex &ai) { i = ai.i; return *this; }
@@ -258,7 +257,6 @@ namespace netgen
 
     void DoArchive (Archive & ar) { ar & i; }
   };
-
   /*
   inline PointIndex operator+ (PointIndex pi, int i) { return PointIndex(pi.i+i); }
   inline PointIndex operator+ (PointIndex pi, size_t i) { return PointIndex(pi.i+i); }  
@@ -321,6 +319,21 @@ namespace netgen
     template <size_t J>
     PointIndex get() const { return PointIndex(INDEX_3::operator[](J)); }    
   };
+  
+  template <> class PointIndices<4> : public INDEX_4
+  {
+  public:
+    PointIndices () = default;
+    PointIndices (INDEX_4 i4) : INDEX_4(i4) { ; }
+    PointIndices (PointIndex i1, PointIndex i2, PointIndex i3, PointIndex i4) : INDEX_4(i1,i2,i3,i4) { ; } 
+    PointIndex operator[] (int i) const { return PointIndex(INDEX_4::operator[](i)); }
+    PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_4::operator[](i)); }
+    using INDEX_4::Sort;
+    // static PointIndices Sort(PointIndex i1, PointIndex i2, PointIndex i3, PointIndex i4) { return INDEX_4::Sort(i1, i2, i3, i4); }
+    template <size_t J>
+    PointIndex get() const { return PointIndex(INDEX_4::operator[](J)); }    
+  };
+
 }
 
 namespace std
