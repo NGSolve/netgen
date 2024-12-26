@@ -713,7 +713,7 @@ namespace netgen
 
             if (mesh.IsSegment (pi1, pi2)) continue;
 
-            INDEX_2 ii2 (pi1, pi2);
+            PointIndices<2> ii2 (pi1, pi2);
             ii2.Sort();
             if (els_on_edge.Used (ii2))
               {
@@ -739,7 +739,7 @@ namespace netgen
         if (mesh.LegalTrig(sel)) continue;
 
         // find longest edge
-        INDEX_2 edge;
+        PointIndices<2> edge;
         double edge_len = 0;
         PointIndex pi1, pi2, pi3, pi4;
         PointGeomInfo gi1, gi2, gi3, gi4;

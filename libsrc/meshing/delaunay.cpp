@@ -851,16 +851,17 @@ namespace netgen
     tets_with_3_bnd_points.SetSize(cnt);
 
     static Timer t1("Build face table"); t1.Start();
-    ngcore::ClosedHashTable< ngcore::IVec<3>, int > face_table( 4*cnt + 3 );
-    for(auto ei : tets_with_3_bnd_points)
-        for(auto j : Range(4))
+    // ngcore::ClosedHashTable< ngcore::IVec<3>, int > face_table( 4*cnt + 3 );
+    ngcore::ClosedHashTable< PointIndices<3>, int > face_table( 4*cnt + 3 );
+    for (auto ei : tets_with_3_bnd_points)
+      for (auto j : Range(4))
         {
-          PointIndices<3> i3_ = tempels[ei].GetFace (j);
-            ngcore::IVec<3> i3 = {i3_[0], i3_[1], i3_[2]};
-            if(bnd_points[i3[0]] && bnd_points[i3[1]] && bnd_points[i3[2]])
+          PointIndices<3> i3 = tempels[ei].GetFace (j);
+          // ngcore::IVec<3> i3 = {i3_[0], i3_[1], i3_[2]};
+          if(bnd_points[i3[0]] && bnd_points[i3[1]] && bnd_points[i3[2]])
             {
-                i3.Sort();
-                face_table.Set( i3, true );
+              i3.Sort();
+              face_table.Set( i3, true );
             }
         }
     t1.Stop();
@@ -871,7 +872,8 @@ namespace netgen
     for (int i = 1; i <= mesh.GetNOpenElements(); i++)
       {
 	const Element2d & tri = mesh.OpenElement(i);
-        ngcore::IVec<3,PointIndex> i3(tri[0], tri[1], tri[2]);
+        // ngcore::IVec<3,PointIndex> i3(tri[0], tri[1], tri[2]);
+        PointIndices<3> i3(tri[0], tri[1], tri[2]);
 	i3.Sort();
         if(!face_table.Used(i3))
             openels.Append(i);
@@ -1016,7 +1018,7 @@ namespace netgen
 	    for (int j = 0; j < 4; j++)
 	      {
 		pp[j] = &mesh.Point(el[j]);
-		tetpi[j] = el[j];
+		tetpi[j] = el[j]-IndexBASE<PointIndex>()+1;
 	      }
 	  
 	    Point3d tetpmin(*pp[0]);
@@ -1045,7 +1047,7 @@ namespace netgen
 		for (int k = 1; k <= 3; k++)
 		  {
 		    tripp[k-1] = &mesh.Point (tri.PNum(k));
-		    tripi[k-1] = tri.PNum(k);
+		    tripi[k-1] = tri.PNum(k)-IndexBASE<PointIndex>()+1;
 		  }
 	      
 		if (IntersectTetTriangle (&pp[0], &tripp[0], tetpi, tripi))
@@ -1133,13 +1135,10 @@ namespace netgen
     for (auto & el : tempels)
       for (int j = 0; j < 4; j++)
 	el.NB(j) = 0;
-      
-    TABLE<int,PointIndex::BASE> elsonpoint(mesh.GetNP());
+
     /*
-    for (int i = 0; i < tempels.Size(); i++)
-      {
-	const DelaunayTet & el = tempels[i];
-    */
+    TABLE<int,PointIndex::BASE> elsonpoint(mesh.GetNP());
+
     for (const DelaunayTet & el : tempels)
       {
 	PointIndices<4> i4(el[0], el[1], el[2], el[3]);
@@ -1158,7 +1157,25 @@ namespace netgen
 	elsonpoint.Add (i4.I1(), i+1);
 	elsonpoint.Add (i4.I2(), i+1);
       }
+    */
 
+    TableCreator<int, PointIndex> creator(mesh.GetNP());
+    while (!creator.Done())
+      {
+        for (int i = 0; i < tempels.Size(); i++)
+          {
+            const DelaunayTet & el = tempels[i];
+            PointIndices<4> i4(el[0], el[1], el[2], el[3]);
+            i4.Sort();
+            creator.Add (i4[0], i+1);
+            creator.Add (i4[1], i+1);
+          }
+        creator++;
+      }
+    auto elsonpoint = creator.MoveTable();
+
+    
+    
     //  cout << "elsonpoint mem: ";
     //  elsonpoint.PrintMemInfo(cout);
 

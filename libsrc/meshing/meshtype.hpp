@@ -297,8 +297,13 @@ namespace netgen
   {
   public:
     PointIndices () = default;
-    PointIndices (INDEX_2 i2) : INDEX_2(i2) { ; }
-    PointIndices (PointIndex i1, PointIndex i2) : INDEX_2(i1,i2) { ; } 
+    PointIndices (const PointIndices&) = default;
+    PointIndices (PointIndices&&) = default;
+    PointIndices & operator= (const PointIndices&) = default;
+    PointIndices & operator= (PointIndices&&) = default;
+    
+    constexpr PointIndices (INDEX_2 i2) : INDEX_2(i2) { ; }
+    constexpr PointIndices (PointIndex i1, PointIndex i2) : INDEX_2(i1,i2) { ; } 
     PointIndex operator[] (int i) const { return PointIndex(INDEX_2::operator[](i)); }
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_2::operator[](i)); }
     using INDEX_2::Sort;
@@ -310,8 +315,12 @@ namespace netgen
   {
   public:
     PointIndices () = default;
-    PointIndices (INDEX_3 i3) : INDEX_3(i3) { ; }
-    PointIndices (PointIndex i1, PointIndex i2, PointIndex i3) : INDEX_3(i1,i2,i3) { ; } 
+    PointIndices (const PointIndices&) = default;
+    PointIndices (PointIndices&&) = default;
+    PointIndices & operator= (const PointIndices&) = default;
+    PointIndices & operator= (PointIndices&&) = default;
+    constexpr PointIndices (INDEX_3 i3) : INDEX_3(i3) { ; }
+    constexpr PointIndices (PointIndex i1, PointIndex i2, PointIndex i3) : INDEX_3(i1,i2,i3) { ; }
     PointIndex operator[] (int i) const { return PointIndex(INDEX_3::operator[](i)); }
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_3::operator[](i)); }
     using INDEX_3::Sort;
@@ -335,6 +344,20 @@ namespace netgen
   };
 
 }
+
+namespace ngcore
+{
+  template <typename T> constexpr inline T InvalidHash();
+  
+  template <>
+  constexpr inline netgen::PointIndices<2> InvalidHash<netgen::PointIndices<2>> ()
+  { return netgen::PointIndices<2>{netgen::PointIndex::INVALID, netgen::PointIndex::INVALID}; }
+
+  template <>
+  constexpr inline netgen::PointIndices<3> InvalidHash<netgen::PointIndices<3>> ()
+  { return netgen::PointIndices<3>{netgen::PointIndex::INVALID, netgen::PointIndex::INVALID, netgen::PointIndex::INVALID}; }
+}
+
 
 namespace std
 {
@@ -584,9 +607,9 @@ namespace netgen
     ///
     DLL_HEADER Element2d (ELEMENT_TYPE type);
     ///
-    DLL_HEADER Element2d (int pi1, int pi2, int pi3);
+    DLL_HEADER Element2d (PointIndex pi1, PointIndex pi2, PointIndex pi3);
     ///
-    DLL_HEADER Element2d (int pi1, int pi2, int pi3, int pi4);
+    DLL_HEADER Element2d (PointIndex pi1, PointIndex pi2, PointIndex pi3, PointIndex pi4);
     ///
     ELEMENT_TYPE GetType () const { return typ; }
     /// 

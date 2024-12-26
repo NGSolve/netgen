@@ -698,7 +698,7 @@ namespace netgen
       
 	// int i, j;
 	int cnt = 0;
-	int found;
+	bool found;
 	double len2, maxlen2;
 	INDEX_2 ep;
       
@@ -707,7 +707,7 @@ namespace netgen
       
 	do
 	  {
-	    found = 0;
+	    found = false;
 	    maxlen2 = 1e30;
 	  
 	    // for (int i = 1; i <= mesh.GetNE(); i++)
@@ -775,7 +775,7 @@ namespace netgen
 			  {
 			    maxlen2 = len2;
 			    ep = i2;
-			    found = 1;
+			    found = true;
 			  }
 		      }
 		  }
@@ -833,8 +833,8 @@ namespace netgen
 			    e1.Sort();
 			    e2.Sort();
 			  
-			    int used1 = edgenumber.Used (e1);
-			    int used2 = edgenumber.Used (e2);
+			    bool used1 = edgenumber.Used (e1);
+			    bool used2 = edgenumber.Used (e2);
 			  
 			    if (used1 && !used2)
 			      {
@@ -2906,7 +2906,8 @@ namespace netgen
 
     // INDEX_2_HASHTABLE<int> cutedges(10 + 5 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
     // INDEX_2_CLOSED_HASHTABLE<PointIndex> cutedges(10 + 9 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
-    ClosedHashTable<INDEX_2, PointIndex> cutedges(10 + 9 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
+    // ClosedHashTable<INDEX_2, PointIndex> cutedges(10 + 9 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
+    ClosedHashTable<PointIndices<2>, PointIndex> cutedges(10 + 9 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
 
     bool noprojection = false;
     NgProfiler::StopTimer (timer1a);

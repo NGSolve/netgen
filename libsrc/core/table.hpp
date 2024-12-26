@@ -329,8 +329,8 @@ namespace ngcore
 	case 1:
           {
             size_t oldval = nd;
-            while (blocknr+1>nd) {
-              nd.compare_exchange_weak (oldval, blocknr+1);
+            while (blocknr-IndexBASE<IndexType>()+1>nd) {
+              nd.compare_exchange_weak (oldval, blocknr-IndexBASE<IndexType>()+1);
               oldval = nd;
             }
             break;

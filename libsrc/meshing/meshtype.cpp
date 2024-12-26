@@ -299,7 +299,7 @@ namespace netgen
 
 
 
-  Element2d :: Element2d (int pi1, int pi2, int pi3)
+  Element2d :: Element2d (PointIndex pi1, PointIndex pi2, PointIndex pi3)
   {
     pnum[0] = pi1;
     pnum[1] = pi2;
@@ -322,7 +322,7 @@ namespace netgen
     is_curved = false;
   }
 
-  Element2d :: Element2d (int pi1, int pi2, int pi3, int pi4)
+  Element2d :: Element2d (PointIndex pi1, PointIndex pi2, PointIndex pi3, PointIndex pi4)
   {
     pnum[0] = pi1;
     pnum[1] = pi2;

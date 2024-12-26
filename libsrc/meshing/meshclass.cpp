@@ -452,8 +452,10 @@ namespace netgen
     lock.Lock();
     timestamp = NextTimeStamp();
 
-    int maxn = max2 (s[0], s[1]);
-    maxn += 1-PointIndex::BASE;
+    // int maxn = max2 (s[0], s[1]);
+    // maxn += 1-PointIndex::BASE;
+    int maxn = max2 (s[0]-IndexBASE<PointIndex>()+1,
+                     s[1]-IndexBASE<PointIndex>()+1);
 
     /*
       if (maxn > ptyps.Size())
@@ -540,12 +542,19 @@ namespace netgen
 
   void Mesh :: SetSurfaceElement (SurfaceElementIndex sei, const Element2d & el)
   {
+    /*
     int maxn = el[0];
     for (int i = 1; i < el.GetNP(); i++)
       if (el[i] > maxn) maxn = el[i];
 
     maxn += 1-PointIndex::BASE;
+    */
+    PointIndex maxpi = el[0];
+    for (int i = 1; i < el.GetNP(); i++)
+      if (el[i] > maxpi) maxpi = el[i];
+    int maxn = maxpi-IndexBASE<PointIndex>()+1;
 
+    
     if (maxn <= points.Size())
       {
         for (int i = 0; i < el.GetNP(); i++)
@@ -843,9 +852,12 @@ namespace netgen
     outfile.setf (ios::fixed, ios::floatfield);
     outfile.setf (ios::showpoint);
 
+    /*
     PointIndex pi;
     for (pi = PointIndex::BASE; 
          pi < GetNP()+PointIndex::BASE; pi++)
+    */
+    for (PointIndex pi : (*this).Points().Range())
       {
         outfile.width(22);
         outfile << (*this)[pi](0)/scale << "  ";
@@ -1743,7 +1755,7 @@ namespace netgen
           }
         
         maxglob = comm.AllReduce (maxglob, NG_MPI_MAX);
-        int numglob = maxglob+1-PointIndex::BASE;
+        int numglob = maxglob+1-IndexBASE<PointIndex>();
         if (comm.Rank() > 0)
           {
             comm.Send (globnum, 0, 200);
