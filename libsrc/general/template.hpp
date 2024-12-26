@@ -482,12 +482,12 @@ namespace ngcore
 
 namespace netgen
 {
-  constexpr inline size_t HashValue2 (const netgen::INDEX_2 & ind, size_t mask)
+  inline size_t HashValue2 (const netgen::INDEX_2 & ind, size_t mask)
   {
     return HashValue2(IVec<2,netgen::INDEX>(ind[0], ind[1]), mask);
   }
 
-  constexpr inline size_t HashValue2 (const netgen::INDEX_3 & ind, size_t mask)
+  inline size_t HashValue2 (const netgen::INDEX_3 & ind, size_t mask)
   {
     return HashValue2(IVec<3,netgen::INDEX>(ind[0], ind[1], ind[2]), mask);
   }
