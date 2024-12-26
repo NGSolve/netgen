@@ -593,7 +593,7 @@ namespace ngcore
 
 
   template <typename T>
-  constexpr inline T InvalidHash() { return T{-1}; }
+  constexpr inline T InvalidHash() { return T(-1); }
 
   /**
      A closed hash-table.
