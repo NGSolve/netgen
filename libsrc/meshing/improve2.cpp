@@ -212,7 +212,7 @@ namespace netgen
     }
 
     Array<Neighbour> neighbors(mesh.GetNSE());
-    auto elements_on_node = mesh.CreatePoint2SurfaceElementTable(faceindex);
+    auto elements_on_node = mesh.CreateCompressedPoint2SurfaceElementTable(faceindex);
 
     Array<bool> swapped(mesh.GetNSE());
     Array<int,PointIndex> pdef(mesh.GetNP());
@@ -366,9 +366,9 @@ namespace netgen
 
 
 
-
+  template <typename T_PI2SEI>
   double CombineImproveEdge( Mesh & mesh,
-                           const Table<SurfaceElementIndex, PointIndex> & elementsonnode,
+                           const T_PI2SEI & elementsonnode,
                            Array<Vec<3>, PointIndex> & normals,
                            Array<bool, PointIndex> & fixed,
                            PointIndex pi1, PointIndex pi2,
@@ -601,7 +601,7 @@ namespace netgen
 
     int np = mesh.GetNP();
 
-    auto elementsonnode = mesh.CreatePoint2SurfaceElementTable(faceindex);
+    auto elementsonnode = mesh.CreateCompressedPoint2SurfaceElementTable(faceindex);
 
     // int ntasks = ngcore::TaskManager::GetMaxThreads();
     Array<std::tuple<PointIndex, PointIndex>> edges;

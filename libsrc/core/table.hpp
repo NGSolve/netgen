@@ -17,6 +17,7 @@
 #include "ngcore_api.hpp"
 #include "profiler.hpp"
 
+
 namespace ngcore
 {
 
@@ -406,7 +407,7 @@ namespace ngcore
           pcreator = std::make_unique<TableCreator<TEntry, TIndex>>(*cnt);
       else
           pcreator = std::make_unique<TableCreator<TEntry, TIndex>>();
-
+      
       auto & creator = *pcreator;
 
       for ( ; !creator.Done(); creator++)
@@ -452,7 +453,9 @@ namespace ngcore
     void Add (size_t blocknr, FlatArray<int> dofs);
   };
 
+  
 
+  
 
   /**
      A dynamic table class.

@@ -1099,6 +1099,106 @@ namespace ngcore
     return ost;
   }
 
+
+
+
+
+
+
+
+
+  template <class T, class IndexType>
+  class CompressedTable
+  {
+    Table<T, size_t> table;
+    ClosedHashTable<IndexType, size_t> idmap;
+    
+  public:
+    CompressedTable (Table<T, size_t> && atable, ClosedHashTable<IndexType, size_t> && aidmap)
+      : table(std::move(atable)), idmap(std::move(aidmap)) { }
+
+    FlatArray<T> operator[](IndexType id) const
+    {
+      if (auto nr = idmap.GetIfUsed(id))
+        return table[*nr];
+      else
+        return { 0, nullptr };
+    }
+    auto & Table() { return table; }
+  };
+
+
+  template <class T, typename IndexType>
+  class CompressedTableCreator
+  {
+  protected:
+    int mode;    // 1 .. cnt, 2 .. cnt entries, 3 .. fill table
+    size_t nd;   // number of entries;
+    ClosedHashTable<IndexType, size_t> idmap;
+    Array<int,size_t> cnt;
+    Table<T,size_t> table;
+  public:
+    CompressedTableCreator()
+    { nd = 0; mode = 1; }
+
+    CompressedTable<T,IndexType> MoveTable()
+    {
+      return { std::move(table), std::move(idmap) };
+    }
+
+    bool Done () { return mode > 3; }
+    void operator++(int) { SetMode (mode+1); }
+
+    int GetMode () const { return mode; }
+    void SetMode (int amode)
+    {
+      mode = amode;
+      if (mode == 2)
+	{
+          cnt.SetSize(nd);  
+          cnt = 0;
+	}
+      if (mode == 3)
+	{
+          table = Table<T,size_t> (cnt);
+          cnt = 0;
+	}
+    }
+
+    void Add (IndexType blocknr, const T & data)
+    {
+      switch (mode)
+	{
+	case 1:
+          {
+            if (!idmap.Used (blocknr))
+              idmap[blocknr] = nd++;
+            break;
+          }
+	case 2:
+	  cnt[idmap.Get(blocknr)]++;
+	  break;
+	case 3:
+          size_t cblock = idmap.Get(blocknr);
+          int ci = cnt[cblock]++;
+          table[cblock][ci] = data;
+	  break;
+	}
+    }
+  };
+
+
+  
+
+
+
+
+
+
+
+
+
+  
 } // namespace ngcore
 
 

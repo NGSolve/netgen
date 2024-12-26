@@ -36,10 +36,10 @@ inline void AppendEdges( const Element & elem, PointIndex pi, Array<std::tuple<P
   }
 }
 
-template<typename TINDEX>
-void BuildEdgeList( const Mesh & mesh, const Table<TINDEX, PointIndex> & elementsonnode, Array<std::tuple<PointIndex, PointIndex>> & edges )
+template<typename T_PI2SEI>
+void BuildEdgeList( const Mesh & mesh, const T_PI2SEI & elementsonnode, Array<std::tuple<PointIndex, PointIndex>> & edges )
 {
-  static_assert(is_same_v<TINDEX, ElementIndex>||is_same_v<TINDEX,SurfaceElementIndex>, "Invalid type for TINDEX");
+  // static_assert(is_same_v<TINDEX, ElementIndex>||is_same_v<TINDEX,SurfaceElementIndex>, "Invalid type for TINDEX");
   static Timer tbuild_edges("Build edges"); RegionTimer reg(tbuild_edges);
 
   int ntasks = 4*ngcore::TaskManager::GetMaxThreads();

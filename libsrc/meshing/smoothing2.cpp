@@ -699,7 +699,8 @@ namespace netgen
     int ncolors;
     Array<int> colors;
     bool mixed = false;
-    auto elementsonpoint = mesh.CreatePoint2SurfaceElementTable( faceindex );
+    // auto elementsonpoint = mesh.CreatePoint2SurfaceElementTable( faceindex );
+    auto elementsonpoint = mesh.CreateCompressedPoint2SurfaceElementTable( faceindex );
     NgArray<MeshPoint, PointIndex::BASE> savepoints(mesh.GetNP());
 
     Table<PointIndex> color_table;

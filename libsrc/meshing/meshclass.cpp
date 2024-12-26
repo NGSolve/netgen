@@ -7016,6 +7016,8 @@ namespace netgen
 
   Table<ElementIndex, PointIndex> Mesh :: CreatePoint2ElementTable(std::optional<BitArray> points, int domain) const
   {
+    static Timer timer("Mesh::CreatePoint2VolumeElementTable"); RegionTimer rt(timer);
+    
     if(points)
       {
         const auto & free_points = *points;
@@ -7073,6 +7075,42 @@ namespace netgen
                table.Add (pi, face_els[i]);
            }, GetNP());
   }
+
+
+  CompressedTable<SurfaceElementIndex, PointIndex> Mesh :: CreateCompressedPoint2SurfaceElementTable( int faceindex ) const
+  {
+    static Timer timer("Mesh::CreatePoint2SurfaceElementTable"); RegionTimer rt(timer);
+
+    CompressedTableCreator<SurfaceElementIndex, PointIndex> creator;
+    
+    if(faceindex==0)
+      {
+        for ( ; !creator.Done(); creator++)
+          for (auto sei : SurfaceElements().Range())
+            for (auto pi : (*this)[sei].PNums())
+              creator.Add(pi, sei);
+      }
+    else
+      {
+        Array<SurfaceElementIndex> face_els;
+        GetSurfaceElementsOfFace(faceindex, face_els);
+
+        for ( ; !creator.Done(); creator++)
+          for (auto sei : face_els)
+            for (auto pi : (*this)[sei].PNums())
+              creator.Add(pi, sei);
+      }
+
+
+    auto compressed_table = creator.MoveTable();
+    
+    for (auto row : compressed_table.Table())
+      QuickSort (row);
+    
+    return compressed_table;
+  }
+
+
 
   
 
