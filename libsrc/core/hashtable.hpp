@@ -1124,7 +1124,7 @@ namespace ngcore
       else
         return { 0, nullptr };
     }
-    auto & Table() { return table; }
+    auto & GetTable() { return table; }
   };
 
 

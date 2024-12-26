@@ -7104,7 +7104,7 @@ namespace netgen
 
     auto compressed_table = creator.MoveTable();
     
-    for (auto row : compressed_table.Table())
+    for (auto row : compressed_table.GetTable())
       QuickSort (row);
     
     return compressed_table;
