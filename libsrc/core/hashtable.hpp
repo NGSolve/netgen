@@ -9,6 +9,7 @@
 
 #include <string>
 #include <tuple>
+#include <optional>
 
 // #include "mpi_wrapper.hpp"
 #include "ngcore_api.hpp"
@@ -591,6 +592,8 @@ namespace ngcore
   }
 
 
+  template <typename T>
+  constexpr inline T InvalidHash() { return T{-1}; }
 
   /**
      A closed hash-table.
@@ -611,14 +614,16 @@ namespace ngcore
     ///
     Array<T> cont;
     ///
-    T_HASH invalid = -1;
+    // T_HASH invalid = -1;
+    static constexpr T_HASH invalid = InvalidHash<T_HASH>();
   public:
     ///
     ClosedHashTable (size_t asize = 128)
       : size(RoundUp2(asize)), hash(size), cont(size)
     {
       mask = size-1;
-      hash = T_HASH(invalid);
+      // hash = T_HASH(invalid);
+      hash = InvalidHash<T_HASH>();
     }
 
     ClosedHashTable (ClosedHashTable && ht2) = default;
@@ -627,7 +632,8 @@ namespace ngcore
     ClosedHashTable (size_t asize, LocalHeap & lh)
       : size(RoundUp2(asize)), mask(size-1), hash(size, lh), cont(size, lh)
     {
-      hash = T_HASH(invalid);
+      // hash = T_HASH(invalid);
+      hash = InvalidHash<T_HASH>();
     }
 
     ClosedHashTable & operator= (ClosedHashTable && ht2) = default;
@@ -718,6 +724,16 @@ namespace ngcore
     {
       return (Position (ahash) != size_t(-1));
     }
+
+    inline std::optional<T> GetIfUsed (const T_HASH & ahash) const
+    {
+      size_t pos = Position (ahash);
+      if (pos != size_t(-1))
+        return cont[pos];
+      else
+        return std::nullopt;
+    }
+    
 
     void SetData (size_t pos, const T_HASH & ahash, const T & acont)
     {

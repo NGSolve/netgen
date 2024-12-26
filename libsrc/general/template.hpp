@@ -116,12 +116,15 @@ public:
   ///
   INDEX_2 () { }
   ///
-  INDEX_2 (INDEX ai1, INDEX ai2)
-    { i[0] = ai1; i[1] = ai2; }
+  constexpr INDEX_2 (INDEX ai1, INDEX ai2)
+    : i{ai1, ai2} { } 
+  // { i[0] = ai1; i[1] = ai2; }
 
   ///
-  INDEX_2 (const INDEX_2 & in2)
-    { i[0] = in2.i[0]; i[1] = in2.i[1]; }
+  constexpr INDEX_2 (const INDEX_2 & in2)
+    : i{in2.i[0], in2.i[1]} { } 
+  
+  // { i[0] = in2.i[0]; i[1] = in2.i[1]; }
 
   ///
   int operator== (const INDEX_2 & in2) const
@@ -165,7 +168,7 @@ public:
   ///
   int & operator[] (int j) { return i[j]; }
   ///
-  const int & operator[] (int j) const { return i[j]; }
+  constexpr const int & operator[] (int j) const { return i[j]; }
   ///
   friend ostream & operator<<(ostream  & s, const INDEX_2 & i2);
 };
@@ -464,4 +467,17 @@ void MergeSort (int size, T * data, T * help);
 
 }
 
+namespace ngcore
+{
+  template <>
+  constexpr inline netgen::INDEX_2 InvalidHash<netgen::INDEX_2> () { return netgen::INDEX_2{-1,-1}; }
+}
+
+namespace netgen
+{
+  constexpr inline size_t HashValue2 (const netgen::INDEX_2 & ind, size_t mask)
+  {
+    return HashValue2(IVec<2,netgen::INDEX>(ind[0], ind[1]), mask);
+  }
+}
 #endif

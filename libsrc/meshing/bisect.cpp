@@ -294,10 +294,11 @@ namespace netgen
 
 
 
-
+  template <typename HASHTABLE_EDGENUMBER>
   int BTSortEdges (const Mesh & mesh,
 		   const NgArray<idmap_type*> & idmaps,
-		   INDEX_2_CLOSED_HASHTABLE<int> & edgenumber)
+		   // INDEX_2_CLOSED_HASHTABLE<int> & edgenumber)
+                   HASHTABLE_EDGENUMBER & edgenumber)
   {
     PrintMessage(4,"sorting ... ");
 
@@ -305,8 +306,8 @@ namespace netgen
     if (true)
       {
 	// new, fast version
-      
-	NgArray<INDEX_2> edges;
+        cout  << "sort edges is used" << endl;
+	Array<PointIndices<2>> edges;
 	NgArray<int> eclasses;
       
 	// int i, j, k;
@@ -597,13 +598,8 @@ namespace netgen
 	  edgelength.Elem(i) = 1e20;
 	*/
 
-	for (int i = 1; i <= cntedges; i++)
-	  {
-	    INDEX_2 edge = edges.Get(i);
-	    double elen = Dist (mesh.Point(edge.I1()),
-				mesh.Point(edge.I2()));
-	    edgelength.Elem (i) = elen;
-	  }
+	for (int i = 0; i < cntedges; i++)
+          edgelength[i] = Dist (mesh[edges[i][0]], mesh[edges[i][1]]);
 
 	/*
 	  for (i = 1; i <= mesh.GetNE(); i++)
@@ -677,7 +673,7 @@ namespace netgen
 
 	TABLE<int> eclasstab(cntedges);
 	for (int i = 1; i <= cntedges; i++)
-	  eclasstab.Add1 (eclasses.Get(i), i);
+	  eclasstab.Add1 (eclasses.Get(i), i-1);
 
 
 	// sort edges:
@@ -690,10 +686,7 @@ namespace netgen
 	  {
 	    int ii = sorted.Get(i);
 	    for (int j = 1; j <= eclasstab.EntrySize(ii); j++)
-	      {
-		cnt++;
-		edgenumber.Set (edges.Get(eclasstab.Get(ii, j)), cnt); 
-	      }
+              edgenumber.Set (edges[eclasstab.Get(ii, j)], ++cnt); 
 	  }
 	return cnt;
       }
@@ -869,9 +862,9 @@ namespace netgen
 
 
 
-
+  template <typename T_EDGENUMBER>
   void BTDefineMarkedTet (const Element & el,
-			  INDEX_2_CLOSED_HASHTABLE<int> & edgenumber,
+			  T_EDGENUMBER & edgenumber,
 			  MarkedTet & mt)
   {
     for (int i = 0; i < 4; i++)
@@ -923,9 +916,9 @@ namespace netgen
 
 
 
-
+  template <typename T_EDGENUMBER>  
   void BTDefineMarkedPrism (const Element & el,
-			    INDEX_2_CLOSED_HASHTABLE<int> & edgenumber,
+			    T_EDGENUMBER & edgenumber,
 			    MarkedPrism & mp)
   {
     if (el.GetType() == PRISM ||
@@ -978,9 +971,9 @@ namespace netgen
   }
 
 
-
+  template <typename T_EDGENUMBER>
   bool BTDefineMarkedId(const Element2d & el, 
-			INDEX_2_CLOSED_HASHTABLE<int> & edgenumber, 
+			T_EDGENUMBER & edgenumber, 
 			const idmap_type & idmap,
 			MarkedIdentification & mi)
   {
@@ -1028,9 +1021,10 @@ namespace netgen
     return identified;
   }
 
-
+  
+  template <typename T_EDGENUMBER>
   void BTDefineMarkedTri (const Element2d & el,
-			  INDEX_2_CLOSED_HASHTABLE<int> & edgenumber,
+			  T_EDGENUMBER & edgenumber,
 			  MarkedTri & mt)
   {
     for (int i = 0; i < 3; i++)
@@ -1049,9 +1043,12 @@ namespace netgen
     for (int i = 0; i < 2; i++)
       for (int j = i+1; j < 3; j++)
 	{
+          /*
 	  PointIndices<2> i2(mt.pnums[i], mt.pnums[j]);
 	  i2.Sort();
 	  int hval = edgenumber.Get(i2);
+          */
+	  int hval = edgenumber.Get(PointIndices<2>(mt.pnums[i], mt.pnums[j]).Sort());
 	  if (hval > val)
 	    {
 	      val = hval;
@@ -1084,9 +1081,9 @@ namespace netgen
 
 
 
-
+  template <typename T_EDGENUMBER>
   void BTDefineMarkedQuad (const Element2d & el,
-			   INDEX_2_CLOSED_HASHTABLE<int> & edgenumber,
+			   T_EDGENUMBER & edgenumber,
 			   MarkedQuad & mq)
   {
     for (int i = 0; i < 4; i++)
@@ -1463,7 +1460,6 @@ namespace netgen
   }
 
 
-
   void BTBisectTri (const MarkedTri & oldtri, PointIndex newp, const PointGeomInfo & newpgi,
 		    MarkedTri & newtri1, MarkedTri & newtri2)
   {
@@ -1600,9 +1596,9 @@ namespace netgen
     
   }
 
-
+  template <typename HASHTABLE_CUTEDGES>
   int MarkHangingIdentifications(T_MIDS & mids, 
-				 const INDEX_2_CLOSED_HASHTABLE<PointIndex> & cutedges)
+				 const HASHTABLE_CUTEDGES & cutedges)
   {
     int hanging = 0;
     for (int i = 1; i <= mids.Size(); i++)
@@ -1695,8 +1691,9 @@ namespace netgen
   */
 
 
+  template <typename HASHTABLE_CUTEDGES>  
   int MarkHangingTets (T_MTETS & mtets, 
-		       const INDEX_2_CLOSED_HASHTABLE<PointIndex> & cutedges,
+		       const HASHTABLE_CUTEDGES & cutedges,
                        NgTaskManager tm)                       
   {
     static int timer = NgProfiler::CreateTimer ("MarkHangingTets");    
@@ -1738,9 +1735,9 @@ namespace netgen
   }
 
 
-
+  template <typename HASHTABLE_CUTEDGES>  
   int MarkHangingPrisms (T_MPRISMS & mprisms, 
-			 const INDEX_2_CLOSED_HASHTABLE<PointIndex> & cutedges)
+			 const HASHTABLE_CUTEDGES & cutedges)
   {
     int hanging = 0;
     for (int i = 1; i <= mprisms.Size(); i++)
@@ -1772,9 +1769,9 @@ namespace netgen
   }
 
 
-
+  template <typename HASHTABLE_CUTEDGES>
   bool MarkHangingTris (T_MTRIS & mtris, 
-                        const INDEX_2_CLOSED_HASHTABLE<PointIndex> & cutedges,
+                        const HASHTABLE_CUTEDGES & cutedges,
                         NgTaskManager tm)
   {
     bool hanging = false;
@@ -1811,9 +1808,9 @@ namespace netgen
   }
 
 
-
+  template <typename HASHTABLE_CUTEDGES>
   int MarkHangingQuads (T_MQUADS & mquads, 
-			const INDEX_2_CLOSED_HASHTABLE<PointIndex> & cutedges)
+			const HASHTABLE_CUTEDGES & cutedges)
   {
     int hanging = 0;
     for (int i = 1; i <= mquads.Size(); i++)
@@ -2050,8 +2047,8 @@ namespace netgen
 	
 	
 	// INDEX_2_HASHTABLE<int> edgenumber(np);
-	INDEX_2_CLOSED_HASHTABLE<int> edgenumber(9*ne+4*nse);  
-	
+        // INDEX_2_CLOSED_HASHTABLE<int> edgenumber(9*ne+4*nse);  
+        ClosedHashTable<INDEX_2, int> edgenumber(9*ne+4*nse);
 	BTSortEdges (mesh, idmaps, edgenumber);
 	
 	
@@ -2908,7 +2905,8 @@ namespace netgen
 
 
     // INDEX_2_HASHTABLE<int> cutedges(10 + 5 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
-    INDEX_2_CLOSED_HASHTABLE<PointIndex> cutedges(10 + 9 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
+    // INDEX_2_CLOSED_HASHTABLE<PointIndex> cutedges(10 + 9 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
+    ClosedHashTable<INDEX_2, PointIndex> cutedges(10 + 9 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
 
     bool noprojection = false;
     NgProfiler::StopTimer (timer1a);
@@ -3898,6 +3896,7 @@ namespace netgen
 
     {
     static Timer t("update mlbetween"); RegionTimer reg(t);
+    /*
     for (int i = 0; i < cutedges.Size(); i++)
       if (cutedges.UsedPos0(i))
 	{
@@ -3907,7 +3906,15 @@ namespace netgen
 	  isnewpoint.SetBit(newpi);
 	  mesh.mlbetweennodes[newpi] = edge;
 	}
+    */
+    for (auto [edge,newpi] : cutedges)
+      {
+        isnewpoint.SetBit(newpi);
+        mesh.mlbetweennodes[newpi] = edge;
+      }
     }
+
+    
     /*
       mesh.PrintMemInfo (cout);
       cout << "tets ";
@@ -4007,6 +4014,8 @@ namespace netgen
 	  }
 	*/
 
+
+        /*
 	for (int j = 0; j < cutedges.Size(); j++)
 	  if (cutedges.UsedPos0(j))
 	    {
@@ -4022,6 +4031,18 @@ namespace netgen
 		  mesh.GetIdentifications().Add (newpi, onewpi, i);
 		}
 	    }
+        */
+        for (auto [i2, newpi] : cutedges)
+          {
+            PointIndices<2> oi2(identmap[i2[0]], 
+                                identmap[i2[1]]);
+            oi2.Sort();
+            if (cutedges.Used (oi2))
+              {
+                PointIndex onewpi = cutedges.Get(oi2);
+                mesh.GetIdentifications().Add (newpi, onewpi, i);
+              }
+          }
       }
     
     (*opt.tracer)("Bisect", true);
