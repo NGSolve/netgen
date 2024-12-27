@@ -480,15 +480,15 @@ namespace netgen
 	// for (int i = mesh->mlbetweennodes.Begin(); i < mesh->mlbetweennodes.End(); i++)
         for (int i : mesh->mlbetweennodes.Range())
 	  {
-	    INDEX_2 parents = Sort (mesh->mlbetweennodes[i]);
-	    if (parents[0] >= PointIndex::BASE) cnt[parents[0]]++;
+	    PointIndices<2> parents = Sort (mesh->mlbetweennodes[i]);
+	    if (parents[0].IsValid()) cnt[parents[0]]++;
 	  }
 	TABLE<int,PointIndex::BASE> vert2vertcoarse (cnt);
 	// for (int i = mesh->mlbetweennodes.Begin(); i < mesh->mlbetweennodes.End(); i++)
         for (int i : mesh->mlbetweennodes.Range())
 	  {
-	    INDEX_2 parents = Sort (mesh->mlbetweennodes[i]);
-	    if (parents[0] >= PointIndex::BASE) vert2vertcoarse.AddSave (parents[0], parents[1]);
+	    PointIndices<2> parents = Sort (mesh->mlbetweennodes[i]);
+	    if (parents[0].IsValid()) vert2vertcoarse.AddSave (parents[0], parents[1]);
 	  }
 
 

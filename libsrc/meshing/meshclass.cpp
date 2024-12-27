@@ -4075,7 +4075,7 @@ namespace netgen
     */
 
     for (int i = 0; i < volelements.Size(); i++)
-      if (volelements[i][0] <= PointIndex::BASE-1 ||
+      if (!volelements[i][0].IsValid() ||
           volelements[i].IsDeleted())
         {
           volelements.DeleteElement(i);
@@ -4091,7 +4091,7 @@ namespace netgen
         }
 
     for (int i = 0; i < segments.Size(); i++)
-      if (segments[i][0] <= PointIndex::BASE-1)
+      if (!segments[i][0].IsValid())
         {
           segments.DeleteElement(i);
           i--;
@@ -7010,8 +7010,8 @@ namespace netgen
       for (int i = mlold+PointIndex::BASE; 
            i < np+PointIndex::BASE; i++)
         {
-          mlbetweennodes[i].I1() = PointIndex::BASE-1;
-          mlbetweennodes[i].I2() = PointIndex::BASE-1;
+          mlbetweennodes[i][0].Invalidate();
+          mlbetweennodes[i][1].Invalidate();
         }
 
     GetIdentifications().SetMaxPointNr (np + PointIndex::BASE-1);

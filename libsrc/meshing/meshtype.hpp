@@ -194,6 +194,8 @@ namespace netgen
   }
     */
 
+
+  // #define BASE0
   
   class PointIndex
   {

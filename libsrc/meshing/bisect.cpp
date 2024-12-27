@@ -3495,8 +3495,8 @@ namespace netgen
 		    }
 		  else
 		    {
-		      Point<3> npt = Center (mesh.Point (edge.I1()),
-                                             mesh.Point (edge.I2()));
+		      Point<3> npt = Center (mesh.Point (edge[0]),
+                                             mesh.Point (edge[1]));
 		      newp = mesh.AddPoint (npt);
                       cutedges.Set (edge, newp);
                       geo.PointBetween (mesh.Point (oldpi1), mesh.Point (oldpi2),

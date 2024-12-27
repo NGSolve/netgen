@@ -278,7 +278,7 @@ namespace netgen
           mesh2d.AddLockedPoint(npi);
           Element0d el(npi, npi);
           el.name = point.name;
-          mesh2d.SetCD2Name(npi, point.name);
+          mesh2d.SetCD2Name(npi-IndexBASE<PointIndex>()+1, point.name);
           mesh2d.pointelements.Append (el);
           searchtree.Insert (newp, npi);          
         }
@@ -303,9 +303,9 @@ namespace netgen
 		npi = mesh2d.AddPoint (newp, layer);
 		searchtree.Insert (newp, npi);
                 mesh2d.AddLockedPoint(npi);
-                Element0d el(npi, npi);
+                Element0d el(npi, npi-IndexBASE<PointIndex>()+1);
                 el.name = "";
-                mesh2d.SetCD2Name(npi, "");
+                mesh2d.SetCD2Name(npi-IndexBASE<PointIndex>()+1, "");
                 mesh2d.pointelements.Append (el);
 	      }
           }
