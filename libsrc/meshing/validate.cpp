@@ -209,7 +209,7 @@ namespace netgen
         if(!isedgepoint.Test(sel.PNum(j)))
           {
             isboundarypoint.SetBit(sel.PNum(j));
-            surfaceindex[sel.PNum(j) - PointIndex::BASE] = 
+            surfaceindex[sel.PNum(j) - IndexBASE<PointIndex>()] = 
               mesh.GetFaceDescriptor(sel.GetIndex()).SurfNr();
           }
     
@@ -259,8 +259,8 @@ namespace netgen
 	if(isnewpoint.Test(i+PointIndex::BASE) && 
 	   //working_points.Test(i+PointIndex::BASE) && 
 	   mesh.mlbetweennodes[i+PointIndex::BASE][0] > 0)
-	  *can[i] = Center(*can[mesh.mlbetweennodes[i+PointIndex::BASE][0]-PointIndex::BASE],
-			   *can[mesh.mlbetweennodes[i+PointIndex::BASE][1]-PointIndex::BASE]);
+	  *can[i] = Center(*can[mesh.mlbetweennodes[i+PointIndex::BASE][0]-IndexBASE<PointIndex>()],
+			   *can[mesh.mlbetweennodes[i+PointIndex::BASE][1]-IndexBASE<PointIndex>()]);
 	else
 	  *can[i] = mesh.Point(i+1);
       }
@@ -320,7 +320,7 @@ namespace netgen
 		auxvec.Normalize();
 		for (int j = 1; j <= sel.GetNP(); j++)
 		  if(!isedgepoint.Test(sel.PNum(j)))
-		    *nv[sel.PNum(j) - PointIndex::BASE] += auxvec;
+		    *nv[sel.PNum(j) - IndexBASE<PointIndex>()] += auxvec;
 	      }
 	    for(int i=0; i<nv.Size(); i++)
 	      nv[i]->Normalize();

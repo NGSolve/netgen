@@ -438,7 +438,8 @@ namespace netgen
 	local vertex numbers on distant procs 
 	(I think this was only used for debugging??) 
     **/
-    for (int vert = 1; vert <= GetNP(); vert++ )
+    // for (int vert = 1; vert <= GetNP(); vert++ )
+    for (PointIndex vert : Points().Range())
       {
 	NgFlatArray<int> procs = procs_of_vert[vert];
 	for (int j = 0; j < procs.Size(); j++)
@@ -1017,7 +1018,7 @@ namespace netgen
 
     for (int vert = 0; vert < numvert; vert++)
       {
-	int globvert = verts[vert] + IndexBASE<T_POINTS::index_type>();
+	PointIndex globvert = verts[vert] + IndexBASE<T_POINTS::index_type>();
         // paralleltop->SetLoc2Glob_Vert ( vert+1, globvert  );
         paralleltop->L2G (PointIndex(vert+PointIndex::BASE)) = globvert;
 	glob2loc_vert_ht.Set (globvert, vert+1);

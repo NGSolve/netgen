@@ -1170,10 +1170,7 @@ double MeshOptimize3d :: SwapImproveEdge (
                   for (int k2 = 0; k2 < 4 && !newpi.IsValid(); k2++)
                       if (nel[k2] == oldpi)
                         {
-                          newpi =
-                              nel[0] + nel[1] + nel[2] + nel[3]
-                              - pi1 - pi2 - oldpi;
-
+                          newpi = nel[0] - pi1 + nel[1] - pi2 + nel[2] - oldpi + nel[3];
                           tetused[k] = true;
                           suroundpts[l] = newpi;
                         }
@@ -1830,7 +1827,7 @@ void MeshOptimize3d :: SwapImproveSurface (
 	  int nsuround = hasbothpoints.Size();
 	  int nsuroundother = hasbothpointsother.Size();
 
-	  NgArray < int > outerpoints(nsuround+1);
+	  NgArray < PointIndex > outerpoints(nsuround+1);
 	  outerpoints[0] = sp1;
 
 	  for(int i=0; i<nsuround; i++)
@@ -1865,7 +1862,7 @@ void MeshOptimize3d :: SwapImproveSurface (
 		{
 		  (*testout) << mesh[hasbothpoints[ii]] << endl;
 		  for(int jj=0; jj<mesh[hasbothpoints[ii]].GetNP(); jj++)
-		    if(mesh.mlbetweennodes[mesh[hasbothpoints[ii]][jj]][0] > 0)
+		    if(mesh.mlbetweennodes[mesh[hasbothpoints[ii]][jj]][0].IsValid())
 		      (*testout) << mesh[hasbothpoints[ii]][jj] << " between "
 				 << mesh.mlbetweennodes[mesh[hasbothpoints[ii]][jj]][0] << " and "
 				 << mesh.mlbetweennodes[mesh[hasbothpoints[ii]][jj]][1] << endl;
@@ -1875,11 +1872,11 @@ void MeshOptimize3d :: SwapImproveSurface (
 			 << "sel2 " << mesh[sel2] << endl;
 	      for(int ii=0; ii<3; ii++)
 		{
-		  if(mesh.mlbetweennodes[mesh[sel1][ii]][0] > 0)
+		  if(mesh.mlbetweennodes[mesh[sel1][ii]][0].IsValid())
 		    (*testout) << mesh[sel1][ii] << " between "
 			       << mesh.mlbetweennodes[mesh[sel1][ii]][0] << " and "
 			       << mesh.mlbetweennodes[mesh[sel1][ii]][1] << endl;
-		  if(mesh.mlbetweennodes[mesh[sel2][ii]][0] > 0)
+		  if(mesh.mlbetweennodes[mesh[sel2][ii]][0].IsValid())
 		    (*testout) << mesh[sel2][ii] << " between "
 			       << mesh.mlbetweennodes[mesh[sel2][ii]][0] << " and "
 			       << mesh.mlbetweennodes[mesh[sel2][ii]][1] << endl;
@@ -1887,7 +1884,7 @@ void MeshOptimize3d :: SwapImproveSurface (
 	    }
 
 	  
-	  NgArray < int > outerpointsother;
+	  NgArray < PointIndex > outerpointsother;
 
 	  if(nsuroundother > 0)
 	    {
@@ -1928,7 +1925,7 @@ void MeshOptimize3d :: SwapImproveSurface (
 		{
 		  (*testout) << mesh[hasbothpoints[ii]] << endl;
 		  for(int jj=0; jj<mesh[hasbothpoints[ii]].GetNP(); jj++)
-		    if(mesh.mlbetweennodes[mesh[hasbothpoints[ii]][jj]][0] > 0)
+		    if(mesh.mlbetweennodes[mesh[hasbothpoints[ii]][jj]][0].IsValid())
 		      (*testout) << mesh[hasbothpoints[ii]][jj] << " between "
 				 << mesh.mlbetweennodes[mesh[hasbothpoints[ii]][jj]][0] << " and "
 				 << mesh.mlbetweennodes[mesh[hasbothpoints[ii]][jj]][1] << endl;
@@ -1938,11 +1935,11 @@ void MeshOptimize3d :: SwapImproveSurface (
 			 << "sel2 " << mesh[sel2] << endl;
 	      for(int ii=0; ii<3; ii++)
 		{
-		  if(mesh.mlbetweennodes[mesh[sel1][ii]][0] > 0)
+		  if(mesh.mlbetweennodes[mesh[sel1][ii]][0].IsValid())
 		    (*testout) << mesh[sel1][ii] << " between "
 			       << mesh.mlbetweennodes[mesh[sel1][ii]][0] << " and "
 			       << mesh.mlbetweennodes[mesh[sel1][ii]][1] << endl;
-		  if(mesh.mlbetweennodes[mesh[sel2][ii]][0] > 0)
+		  if(mesh.mlbetweennodes[mesh[sel2][ii]][0].IsValid())
 		    (*testout) << mesh[sel2][ii] << " between "
 			       << mesh.mlbetweennodes[mesh[sel2][ii]][0] << " and "
 			       << mesh.mlbetweennodes[mesh[sel2][ii]][1] << endl;
@@ -1954,7 +1951,7 @@ void MeshOptimize3d :: SwapImproveSurface (
 		{
 		  (*testout) << mesh[hasbothpointsother[ii]] << endl;
 		  for(int jj=0; jj<mesh[hasbothpointsother[ii]].GetNP(); jj++)
-		    if(mesh.mlbetweennodes[mesh[hasbothpointsother[ii]][jj]][0] > 0)
+		    if(mesh.mlbetweennodes[mesh[hasbothpointsother[ii]][jj]][0].IsValid())
 		      (*testout) << mesh[hasbothpointsother[ii]][jj] << " between "
 				 << mesh.mlbetweennodes[mesh[hasbothpointsother[ii]][jj]][0] << " and "
 				 << mesh.mlbetweennodes[mesh[hasbothpointsother[ii]][jj]][1] << endl;
@@ -1964,11 +1961,11 @@ void MeshOptimize3d :: SwapImproveSurface (
 			 << "sel2other " << mesh[sel2other] << endl;
 	      for(int ii=0; ii<3; ii++)
 		{
-		  if(mesh.mlbetweennodes[mesh[sel1other][ii]][0] > 0)
+		  if(mesh.mlbetweennodes[mesh[sel1other][ii]][0].IsValid())
 		    (*testout) << mesh[sel1other][ii] << " between "
 			       << mesh.mlbetweennodes[mesh[sel1other][ii]][0] << " and "
 			       << mesh.mlbetweennodes[mesh[sel1other][ii]][1] << endl;
-		  if(mesh.mlbetweennodes[mesh[sel2other][ii]][0] > 0)
+		  if(mesh.mlbetweennodes[mesh[sel2other][ii]][0].IsValid())
 		    (*testout) << mesh[sel2other][ii] << " between "
 			       << mesh.mlbetweennodes[mesh[sel2other][ii]][0] << " and "
 			       << mesh.mlbetweennodes[mesh[sel2other][ii]][1] << endl;

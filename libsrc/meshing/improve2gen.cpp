@@ -342,7 +342,7 @@ namespace netgen
 			    possible = 1;
 
 			    for (int k = 0; k < rel.GetNP(); k++)
-			      if (pmap.Elem(rel[k]) != -1 &&
+			      if (pmap.Elem(rel[k]).IsValid() && 
 				  pmap.Elem(rel[k]) != el.PNumMod (k+elrot[i]+1))
 				possible = 0;
 

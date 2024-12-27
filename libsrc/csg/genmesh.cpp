@@ -473,8 +473,8 @@ namespace netgen
 	  {
 	    PointGeomInfo gi;
 	    gi.trignum = k;
-	    meshing.AddBoundaryElement (segments[si][0] + 1 - PointIndex::BASE, 
-					segments[si][1] + 1 - PointIndex::BASE, 
+	    meshing.AddBoundaryElement (segments[si][0] + 1 - IndexBASE<PointIndex>(), 
+					segments[si][1] + 1 - IndexBASE<PointIndex>(), 
 					gi, gi);
 	  }
 

@@ -235,7 +235,7 @@ namespace netgen
     friend bool operator!= (PointIndex a, PointIndex b);
     */
   public:
-    constexpr PointIndex (t_invalid inv) : i(PointIndex::BASE-1) { ; }
+    constexpr PointIndex (t_invalid inv) : i(long(PointIndex::BASE)-1) { ; }
     // PointIndex & operator= (const PointIndex &ai) { i = ai.i; return *this; }
     // private:
     constexpr operator const int& () const { return i; }
@@ -246,8 +246,8 @@ namespace netgen
     PointIndex & operator++ () { i++; return *this; }
     PointIndex operator-- () { i--; return *this; }
     PointIndex operator+= (int add) { i += add; return *this; }
-    void Invalidate() { i = PointIndex::BASE-1; }
-    bool IsValid() const { return i != PointIndex::BASE-1; }
+    void Invalidate() { i = long(PointIndex::BASE)-1; }
+    bool IsValid() const { return i+1 != PointIndex::BASE; }
     // operator bool() const { return IsValid(); }
 #ifdef BASE0
     static constexpr size_t BASE = 0;
@@ -816,7 +816,7 @@ namespace netgen
     
     void Delete ()
     {
-      deleted = 1;
+      deleted = true;
       // for (PointIndex & p : pnum) p.Invalidate(); 
     }
     

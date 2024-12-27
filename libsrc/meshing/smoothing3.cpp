@@ -1736,7 +1736,7 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
 	  {
 	    for(int j=0; brother == -1 && j<used_idmaps->Size(); j++)
 	      {
-		if(pi < (*used_idmaps)[j]->Size() + PointIndex::BASE)
+		if(pi < (*used_idmaps)[j]->Size() + IndexBASE<PointIndex>())
 		  {
 		    brother = (*(*used_idmaps)[j])[pi];
 		    if(brother == pi || brother == 0)

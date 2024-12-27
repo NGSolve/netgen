@@ -2240,7 +2240,7 @@ int Ng_GetClosureNodes (int nt, int nodenr, int nodeset, int * nodes)
             for (int i = 0; i < el.GetNP(); i++)
               { 
                 nodes[cnt++] = 0;
-                nodes[cnt++] = el[i] - PointIndex::BASE;
+                nodes[cnt++] = el[i] - IndexBASE<PointIndex>();
               }
           }
 
@@ -2322,7 +2322,7 @@ int Ng_GetElementClosureNodes (int dim, int elementnr, int nodeset, int * nodes)
             for (int i = 0; i < el.GetNP(); i++)
               { 
                 nodes[cnt++] = 0;
-                nodes[cnt++] = el[i] - PointIndex::BASE;
+                nodes[cnt++] = el[i] - IndexBASE<PointIndex>();
               }
           }
 

@@ -189,8 +189,8 @@ namespace netgen
             mesh.Point(pinew) = pnew;
 	    // between.Set (i2, pinew);
 
-	    if (pinew >= epgi.Size()+PointIndex::BASE)
-	      epgi.SetSize (pinew+1-PointIndex::BASE);
+	    if (pinew >= epgi.Size()+IndexBASE<PointIndex>())
+	      epgi.SetSize (pinew+1-IndexBASE<PointIndex>());
 	    epgi[pinew] = ngi;
 	  }
 
@@ -208,7 +208,7 @@ namespace netgen
     PrintMessage (5, "have 1d elements");
     
     // refine surface elements
-    NgArray<PointGeomInfo,PointIndex::BASE> surfgi (8*mesh.GetNP());
+    Array<PointGeomInfo,PointIndex> surfgi (8*mesh.GetNP());
     for (int i = PointIndex::BASE;
 	 i < surfgi.Size()+PointIndex::BASE; i++)
       surfgi[i].trignum = -1;
@@ -273,9 +273,9 @@ namespace netgen
 		      between.Set (i2, pnums.Get(4+j));
 		    }
                   */
-		  if (surfgi.Size() < pnums.Elem(4+j))
-		    surfgi.SetSize (pnums.Elem(4+j));
-		  surfgi.Elem(pnums.Elem(4+j)) = pgis.Elem(4+j);
+		  if (surfgi.Size() < pnums.Elem(4+j)-IndexBASE<PointIndex>()+1)
+		    surfgi.SetSize (pnums.Elem(4+j)-IndexBASE<PointIndex>()+1);
+		  surfgi[pnums.Elem(4+j)] = pgis.Elem(4+j);
 		}
 
 
@@ -356,9 +356,9 @@ namespace netgen
                       mesh.Point(pinew) = pb;                      
                     }
                   
-                  if (surfgi.Size() < pnums[4+j])
-                    surfgi.SetSize (pnums[4+j]);
-                  surfgi.Elem(pnums[4+j]) = pgis[4+j];
+                  if (surfgi.Size() < pnums[4+j]-IndexBASE<PointIndex>()+1)
+                    surfgi.SetSize (pnums[4+j]-IndexBASE<PointIndex>()+1);
+                  surfgi[pnums[4+j]] = pgis[4+j];
                 }
 
 	      static int reftab[4][4] =

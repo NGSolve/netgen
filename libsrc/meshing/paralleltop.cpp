@@ -93,7 +93,7 @@ namespace netgen
     comm.AllGather (num_master_points, first_master_point);
     auto max_oldv = comm.AllReduce (Max (glob_vert.Range(0, oldnv)), NG_MPI_MAX);
     if (comm.AllReduce (oldnv, NG_MPI_SUM) == 0)
-      max_oldv = PointIndex::BASE-1;
+      max_oldv = long(PointIndex::BASE)-1;
     
     size_t num_glob_points = max_oldv+1;
     for (int i = 0; i < comm.Size(); i++)

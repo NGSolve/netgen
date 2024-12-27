@@ -541,8 +541,8 @@ namespace netgen
 
 	// problem recognition !
 	if (found && 
-	    (gpi1 < illegalpoint.Size()+PointIndex::BASE) && 
-	    (gpi2 < illegalpoint.Size()+PointIndex::BASE) )
+	    (gpi1 < illegalpoint.Size()+IndexBASE<PointIndex>()) && 
+	    (gpi2 < illegalpoint.Size()+IndexBASE<PointIndex>()) )
 	  {
 	    if (illegalpoint[gpi1] || illegalpoint[gpi2])
 	      found = 0;

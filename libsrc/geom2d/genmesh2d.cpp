@@ -564,13 +564,17 @@ namespace netgen
           NgArray<PointIndex> pts ( (nex+1) * (ney+1) );   // x ... inner loop
           pts = -1;
 
-          for (PointIndex pi = c1, i = 0; pi != c2; pi = nextpi[pi], i++)
+          int i = 0;
+          for (PointIndex pi = c1; pi != c2; pi = nextpi[pi], i++)
             pts[i] = pi;
-          for (PointIndex pi = c2, i = 0; pi != c3; pi = nextpi[pi], i++)
+          i = 0;
+          for (PointIndex pi = c2; pi != c3; pi = nextpi[pi], i++)
             pts[(nex+1)*i+nex] = pi;
-          for (PointIndex pi = c3, i = 0; pi != c4; pi = nextpi[pi], i++)
+          i = 0;
+          for (PointIndex pi = c3; pi != c4; pi = nextpi[pi], i++)
             pts[(nex+1)*(ney+1)-i-1] = pi;
-          for (PointIndex pi = c4, i = 0; pi != c1; pi = nextpi[pi], i++)
+          i = 0;
+          for (PointIndex pi = c4; pi != c1; pi = nextpi[pi], i++)
             pts[(nex+1)*(ney-i)] = pi;
 
 

@@ -584,16 +584,17 @@ namespace netgen
 
     Array<PointIndex> vert2meshpt(vertices.Size());
     vert2meshpt = PointIndex::INVALID;
+
     for(auto & vert : vertices)
       {
         auto pi = mesh.AddPoint(vert->GetPoint(), vert->properties.layer);
         vert2meshpt[vert->nr] = pi;
         mesh[pi].Singularity(vert->properties.hpref);
         mesh[pi].SetType(FIXEDPOINT);
-
-        Element0d el(pi, pi);
+        
+        Element0d el(pi, pi-IndexBASE<PointIndex>()+1);
         el.name = vert->properties.GetName();
-        mesh.SetCD3Name(pi, el.name);
+        mesh.SetCD3Name(pi-IndexBASE<PointIndex>()+1, el.name);
         mesh.pointelements.Append (el);
       }
 

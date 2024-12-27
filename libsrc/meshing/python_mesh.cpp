@@ -1561,7 +1561,7 @@ py::arg("point_tolerance") = -1.)
                 {
                     const auto & seg = segs[i];
                     for(auto k : Range(2))
-                        output[2*i+k] = seg[k]-PointIndex::BASE;
+                      output[2*i+k] = seg[k]-IndexBASE<PointIndex>();
                 } });
             return output;
           })
@@ -1580,8 +1580,8 @@ py::arg("point_tolerance") = -1.)
                   // PointIndex p0,p1;
                   // topo.GetEdgeVertices(i+1, p0, p1);
                   auto [p0,p1] = topo.GetEdgeVertices(i);
-                    output[2*i] = p0-PointIndex::BASE;
-                    output[2*i+1] = p1-PointIndex::BASE;
+                    output[2*i] = p0-IndexBASE<PointIndex>();
+                    output[2*i+1] = p1-IndexBASE<PointIndex>();
                 } });
             return output;
           })
@@ -1599,7 +1599,7 @@ py::arg("point_tolerance") = -1.)
                     const auto & sel = surfels[i];
                     auto * trig = &trigs[3*i];
                     for(auto k : Range(3))
-                        trig[k] = sel[k]-PointIndex::BASE;
+                        trig[k] = sel[k]-IndexBASE<PointIndex>();
                         // todo: quads (store the second trig in thread-local extra array, merge them at the end (mutex)
                 } });
             return trigs;
@@ -1617,7 +1617,7 @@ py::arg("point_tolerance") = -1.)
                     const auto & el = els[i];
                     auto * trig = &tets[4*i];
                     for(auto k : Range(4))
-                        trig[k] = el[k]-PointIndex::BASE;
+                        trig[k] = el[k]-IndexBASE<PointIndex>();
                         // todo: prisms etc (store the extra tets in thread-local extra array, merge them at the end (mutex)
                 } });
             return tets;

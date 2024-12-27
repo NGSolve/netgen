@@ -969,7 +969,7 @@ namespace netgen
                           {
                             PointIndex v0 = pa[k]; // also in face
                             PointIndex v1 = pa[1-k];
-                            PointIndex v2 = f3[0]+f3[1]+f3[2] - v - v0;
+                            PointIndex v2 = f3[0]-v+f3[1]-v0+f3[2];
                             // if there is an edge connecting v1 and v2, accept
                             // the new face
                             IVec<2> parentedge(v1, v2);
@@ -1000,7 +1000,7 @@ namespace netgen
                         {
                           PointIndex v0 = pa[k]; // also in face
                           PointIndex v1 = pa[1-k];
-                          PointIndex v2 = f3[0]+f3[1]+f3[2] - v - v0;
+                          PointIndex v2 = f3[0]-v+f3[1]-v0+f3[2];
                           // if there is an edge connecting v1 and v2, accept
                           // the new face
                           IVec<2> parentedge(v1, v2);
@@ -1428,7 +1428,7 @@ namespace netgen
                             PointIndex v1 = parents[1-j];
                             
                             // the third one, on the tip
-                            PointIndex v2 = f3[0]+f3[1]+f3[2] - v0 - vb;
+                            PointIndex v2 = f3[0]-v0+f3[1]-vb+f3[2];
                             
                             // if there is an edge connecting v1 and v2, accept
                             // the new face

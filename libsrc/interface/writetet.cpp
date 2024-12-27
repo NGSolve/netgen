@@ -502,7 +502,7 @@ namespace netgen
 		<< mesh[i](0) << " "
 		<< mesh[i](1) << " "
 		<< mesh[i](2) << " " << id_type[i] << " ";
-	if(i-PointIndex::BASE < point_ids.Size())
+	if(i-IndexBASE<PointIndex>() < point_ids.Size())
 	  outfile << point_ids[i];
 	else
 	  outfile << "0";
@@ -1066,13 +1066,13 @@ namespace netgen
     //     for(PointIndex i = mesh.Points().Begin(); i < mesh.Points().End(); i++)
     for(PointIndex i : mesh.Points().Range())
       {
-	if(i-PointIndex::BASE < point_ids.Size())
+	if(i-IndexBASE<PointIndex>() < point_ids.Size())
 	  {
 	    if(uid_to_group_0D[point_ids[i]] >= 0)
-	      groups[uid_to_group_0D[point_ids[i]]]->Append(i+1-PointIndex::BASE);
+	      groups[uid_to_group_0D[point_ids[i]]]->Append(i+1-IndexBASE<PointIndex>());
 	  }
 	else
-	  groups[uid_to_group_0D[0]]->Append(i+1-PointIndex::BASE);
+	  groups[uid_to_group_0D[0]]->Append(i+1-IndexBASE<PointIndex>());
       }
 
 

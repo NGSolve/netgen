@@ -2867,7 +2867,7 @@ namespace netgen
                                   tval i2 = faceht.Get(i3);
                                   if (i2.index == el.GetIndex())
                                     {
-                                      i2.index = PointIndex::BASE-1;
+                                      i2.index = long(PointIndex::BASE)-1;
                                       faceht.Set (i3, i2);
                                     }
                                   else
@@ -2911,7 +2911,7 @@ namespace netgen
                     faceht.GetData (i, i3, i2);
                     if (i2.index != PointIndex::BASE-1)
                       {
-                        Element2d tri ( (i2.p4 == PointIndex::BASE-1) ? TRIG : QUAD);
+                        Element2d tri ( (!i2.p4.IsValid()) ? TRIG : QUAD);
                         for (int l = 0; l < 3; l++)
                           tri[l] = i3.I(l+1);
                         tri.PNum(4) = i2.p4;
@@ -3323,7 +3323,7 @@ namespace netgen
       */
       for (auto & el : VolumeElements())
         {
-          if (el[0] == -1 || el.IsDeleted()) continue;
+          if (!el[0].IsValid() || el.IsDeleted()) continue;
 
           int elmin = large;
           for (int j = 0; j < el.GetNP(); j++)
@@ -3346,7 +3346,7 @@ namespace netgen
     */
     for (auto & el : VolumeElements())
       {
-        if (el[0] == -1 || el.IsDeleted()) continue;
+        if (!el[0].IsValid() || el.IsDeleted()) continue;
 
         int elmin = large;
         for (int j = 0; j < el.GetNP(); j++)
@@ -3363,8 +3363,8 @@ namespace netgen
     PrintMessage (5, "free: ", cntfree, ", fixed: ", GetNE()-cntfree);
     (*testout) << "free: " << cntfree << ", fixed: " << GetNE()-cntfree << endl;
 
-    for (PointIndex pi = PointIndex::BASE; 
-         pi < GetNP()+PointIndex::BASE; pi++)
+    for (PointIndex pi = IndexBASE<PointIndex>(); 
+         pi < GetNP()+IndexBASE<PointIndex>(); pi++)
       {
         if (dist[pi] > layers+1)
           points[pi].SetType(FIXEDPOINT);
@@ -3664,18 +3664,16 @@ namespace netgen
 	SetLocalH (pmin, pmax, grading, layer);
       }
 
-    PointIndex i,j;
-    double hl;
+    // double hl;
 
-
-    for (i = PointIndex::BASE; 
-         i < GetNP()+PointIndex::BASE; i++)
+    for (PointIndex i = IndexBASE<PointIndex>(); 
+         i < GetNP()+IndexBASE<PointIndex>(); i++)
       {
-        for(j=i+1; j<GetNP()+PointIndex::BASE; j++)
+        for(PointIndex j=i+1; j<GetNP()+IndexBASE<PointIndex>(); j++)
           {
             const Point3d & p1 = points[i];
             const Point3d & p2 = points[j];
-            hl = Dist(p1,p2);
+            double hl = Dist(p1,p2);
             RestrictLocalH(p1,hl);
             RestrictLocalH(p2,hl);
             //cout << "restricted h at " << p1 << " and " << p2 << " to " << hl << endl;
@@ -3718,7 +3716,7 @@ namespace netgen
           continue;
         for (j = 1; j <= 3; j++)
           {
-            INDEX_2 i2(sel.PNumMod(j), sel.PNumMod(j+1));
+            PointIndices<2> i2(sel.PNumMod(j), sel.PNumMod(j+1));
             i2.Sort();
             if (bedges.Used(i2)) continue;
 
@@ -3728,22 +3726,22 @@ namespace netgen
 
                 const Element2d & elother = SurfaceElement(other);
 
-                int pi3 = 1;
-                while ( (sel.PNum(pi3) == i2.I1()) || 
-                        (sel.PNum(pi3) == i2.I2()))
-                  pi3++;
-                pi3 = sel.PNum(pi3);
+                int pi3_ = 1;
+                while ( (sel.PNum(pi3_) == i2[0]) || 
+                        (sel.PNum(pi3_) == i2[1]))
+                  pi3_++;
+                PointIndex pi3 = sel.PNum(pi3_);
 
-                int pi4 = 1;
-                while ( (elother.PNum(pi4) == i2.I1()) || 
-                        (elother.PNum(pi4) == i2.I2()))
-                  pi4++;
-                pi4 = elother.PNum(pi4);
+                int pi4_ = 1;
+                while ( (elother.PNum(pi4_) == i2[0]) || 
+                        (elother.PNum(pi4_) == i2[1]))
+                  pi4_++;
+                PointIndex pi4 = elother.PNum(pi4_);
 
-                double rad = ComputeCylinderRadius (Point (PointIndex(i2.I1())),
-                                                    Point (PointIndex(i2.I2())),
-                                                    Point (PointIndex(pi3)),
-                                                    Point (PointIndex(pi4)));
+                double rad = ComputeCylinderRadius (Point (i2[0]),
+                                                    Point (i2[1]),
+                                                    Point (pi3),
+                                                    Point (pi4));
 
                 RestrictLocalHLine (Point(PointIndex(i2.I1())), Point(PointIndex(i2.I2())), rad/elperr);
 
@@ -6634,8 +6632,8 @@ namespace netgen
      SurfaceElementIndex si = facedecoding[facenr-1].firstelement;
      while (si != -1)
      {
-        if ( (*this)[si].GetIndex () == facenr && (*this)[si][0] >= PointIndex::BASE &&
-             !(*this)[si].IsDeleted() )
+       if ( (*this)[si].GetIndex () == facenr && (*this)[si][0].IsValid() &&
+            !(*this)[si].IsDeleted() )
         {
            sei.Append (si);
         }
