@@ -790,14 +790,15 @@ namespace netgen
 
     int cnttrials = 10;
     int wrongels = 0;
-    for (int i = 1; i <= mesh.GetNE(); i++)
-      if (mesh.VolumeElement(i).Volume(mesh.Points()) < 0)
+
+    for (auto & el : mesh.VolumeElements())
+      if (el.Volume(mesh.Points()) < 0)
 	{
 	  wrongels++;
-	  mesh.VolumeElement(i).Flags().badel = 1;
+	  el.Flags().badel = 1;
 	}
       else
-	mesh.VolumeElement(i).Flags().badel = 0;
+	el.Flags().badel = 0;
 
     if (wrongels)
       {

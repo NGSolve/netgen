@@ -1404,7 +1404,7 @@ namespace netgen
 
 
   void BTBisectIdentification (const MarkedIdentification & oldid,
-			       NgArray<PointIndex> & newp,
+			       Array<PointIndex> & newp,
 			       MarkedIdentification & newid1,
 			       MarkedIdentification & newid2)
   {
@@ -2157,9 +2157,10 @@ namespace netgen
 	      }
 	  }
 	
-	for (int i = 1; i <= nse; i++)
+	// for (int i = 1; i <= nse; i++)
+        for (SurfaceElementIndex sei = 0; sei < nse; sei++)
 	  {
-	    const Element2d & el = mesh.SurfaceElement(i);
+	    const Element2d & el = mesh[sei];
 	    if (el.GetType() == TRIG ||
 		el.GetType() == TRIG6)
 	      {
@@ -2907,7 +2908,7 @@ namespace netgen
     // INDEX_2_HASHTABLE<int> cutedges(10 + 5 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
     // INDEX_2_CLOSED_HASHTABLE<PointIndex> cutedges(10 + 9 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
     // ClosedHashTable<INDEX_2, PointIndex> cutedges(10 + 9 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
-    ClosedHashTable<PointIndices<2>, PointIndex> cutedges(10 + 9 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
+    ClosedHashTable<SortedPointIndices<2>, PointIndex> cutedges(10 + 9 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
 
     bool noprojection = false;
     NgProfiler::StopTimer (timer1a);
@@ -3125,14 +3126,15 @@ namespace netgen
 
 	    int cnttrig = 0;
 	    int cntquad = 0;
-	    for (int i = 1; i <= mesh.GetNSE(); i++)
+	    // for (int i = 1; i <= mesh.GetNSE(); i++)
+            for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
 	      {
-		if (mesh.SurfaceElement(i).GetType() == TRIG ||
-		    mesh.SurfaceElement(i).GetType() == TRIG6)
+		if (mesh[sei].GetType() == TRIG ||
+		    mesh[sei].GetType() == TRIG6)
 		  {
 		    cnttrig++;
 		    mtris.Elem(cnttrig).marked =
-		      mesh.SurfaceElement(i).TestRefinementFlag() ? (opt.onlyonce ? 1 : 2) : 0;
+		      mesh[sei].TestRefinementFlag() ? (opt.onlyonce ? 1 : 2) : 0;
 		    // mtris.Elem(cnttrig).marked = 0;
 		    if (mtris.Elem(cnttrig).marked)
 		      cntm++;
@@ -3142,7 +3144,7 @@ namespace netgen
 		    cntquad++;
                     // 2d: marked=2, 3d prisms: marked=1
 		    mquads.Elem(cntquad).marked =
-                        mesh.SurfaceElement(i).TestRefinementFlag() ? 4-mesh.GetDimension() : 0 ;
+                        mesh[sei].TestRefinementFlag() ? 4-mesh.GetDimension() : 0 ;
 		    // mquads.Elem(cntquad).marked = 0;
 		    if (mquads.Elem(cntquad).marked)
 		      cntm++;
@@ -3338,9 +3340,8 @@ namespace netgen
 		{
 		  MarkedTet oldtet = mtets[i];
                   
-		  PointIndices<2> edge(oldtet.pnums[oldtet.tetedge1],
-                                       oldtet.pnums[oldtet.tetedge2]);
-		  edge.Sort();
+		  SortedPointIndices<2> edge(oldtet.pnums[oldtet.tetedge1],
+                                             oldtet.pnums[oldtet.tetedge2]);
 
 		  PointIndex newp;
                   if (auto optnewp = cutedges.GetIfUsed(edge))
@@ -3377,12 +3378,10 @@ namespace netgen
 		    pi1++;
 		  int pi2 = 3-pi1-oldprism.markededge;
                   
-		  PointIndices<2> edge1(oldprism.pnums[pi1],
-                                        oldprism.pnums[pi2]);
-		  PointIndices<2> edge2(oldprism.pnums[pi1+3],
-                                        oldprism.pnums[pi2+3]);
-		  edge1.Sort();
-		  edge2.Sort();
+		  SortedPointIndices<2> edge1(oldprism.pnums[pi1],
+                                              oldprism.pnums[pi2]);
+		  SortedPointIndices<2> edge2(oldprism.pnums[pi1+3],
+                                              oldprism.pnums[pi2+3]);
 
 		  if (cutedges.Used (edge1))
 		    newp1 = cutedges.Get(edge1);
@@ -3414,7 +3413,7 @@ namespace netgen
 	      if (mids.Elem(i).marked)
 		{
 		  MarkedIdentification oldid,newid1,newid2;
-		  NgArray<PointIndex> newp;
+		  Array<PointIndex> newp;
 
 		  oldid = mids.Get(i);
 		  

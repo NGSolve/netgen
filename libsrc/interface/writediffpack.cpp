@@ -40,7 +40,7 @@ void WriteDiffPackFormat (const Mesh & mesh,
       int nse = mesh.GetNSE();
       NgArray <int> BIname;
       NgArray <int> BCsinpoint;
-      int i, j, k, l;
+      // int i, j, k, l;
 
 
       outfile.precision(6);
@@ -58,18 +58,18 @@ void WriteDiffPackFormat (const Mesh & mesh,
 	"  Only one subdomain               : dpFALSE\n"
 	"  Lattice data                     ? 0\n\n\n\n";
       
-      for (i = 1; i <= nse; i++) 
+      for (int i = 1; i <= nse; i++) 
 	{
 	  int BI=mesh.GetFaceDescriptor(mesh.SurfaceElement(i).GetIndex()).BCProperty();
 	  int nbi=BIname.Size();
 	  int found=0;
-	  for (j = 1; j <= nbi; j++)
+	  for (int j = 1; j <= nbi; j++)
 	    if(BI == BIname.Get(j)) found = 1;
 	  if( ! found ) BIname.Append(BI);	    	     
 	}
       
       outfile << "  " << BIname.Size() <<  " Boundary indicators:  ";
-      for (i =1 ; i <= BIname.Size(); i++)
+      for (int i =1 ; i <= BIname.Size(); i++)
 	outfile << BIname.Get(i) << " ";
       outfile << "\n\n\n";
       
@@ -92,7 +92,7 @@ void WriteDiffPackFormat (const Mesh & mesh,
 	}
 
 
-      for (i = 1; i <= np; i++)
+      for (int i = 1; i <= np; i++)
         {
           const Point3d & p = mesh.Point(i);
 
@@ -114,14 +114,14 @@ void WriteDiffPackFormat (const Mesh & mesh,
 	      NgFlatArray<SurfaceElementIndex> sels = point2sel[i];
 	      for (int jj = 0; jj < sels.Size(); jj++)
 		{
-		  for (k = 1; k <= mesh[sels[jj]].GetNP(); k++) 
+		  for (int k = 1; k <= mesh[sels[jj]].GetNP(); k++) 
 		    {
 		      if(mesh[sels[jj]].PNum(k)==i) 
 			{
 			  int BC=mesh.GetFaceDescriptor(mesh[sels[jj]].GetIndex()).BCProperty();
 			  int nbcsp=BCsinpoint.Size();
 			  int found = 0;
-			  for (l = 1; l <= nbcsp; l++)
+			  for (int l = 1; l <= nbcsp; l++)
 			    if(BC == BCsinpoint.Get(l)) found = 1;
 			  if( ! found ) BCsinpoint.Append(BC); 	    	     
 			}
@@ -129,7 +129,7 @@ void WriteDiffPackFormat (const Mesh & mesh,
 		}
 	      int nbcsp = BCsinpoint.Size();
 	      outfile << "[" << nbcsp << "] ";
-	      for (j = 1; j <= nbcsp; j++)
+	      for (int j = 1; j <= nbcsp; j++)
 		outfile << BCsinpoint.Get(j) << " ";
 	      outfile << "\n";
             }
@@ -146,7 +146,7 @@ void WriteDiffPackFormat (const Mesh & mesh,
 	"   - the global node numbers of the nodes in the element.\n"
 	"#\n";
 
-      for (i = 1; i <= ne; i++)
+      for (int i = 1; i <= ne; i++)
         {
           const Element & el = mesh.VolumeElement(i);
           outfile.width(5);

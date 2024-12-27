@@ -198,19 +198,21 @@ namespace netgen
 
     NgArray<int> surfaceindex(np);
     surfaceindex = -1;
-    
+
+    /*
     for (int i = 1; i <= mesh.GetNSE(); i++)
       {
 	const Element2d & sel = mesh.SurfaceElement(i);
-	for (int j = 1; j <= sel.GetNP(); j++)
-	  if(!isedgepoint.Test(sel.PNum(j)))
-	    {
-	      isboundarypoint.SetBit(sel.PNum(j));
-	      surfaceindex[sel.PNum(j) - PointIndex::BASE] = 
-		mesh.GetFaceDescriptor(sel.GetIndex()).SurfNr();
-	    }
-      }
-
+    */
+    for (auto & sel : mesh.SurfaceElements())
+      for (int j = 1; j <= sel.GetNP(); j++)
+        if(!isedgepoint.Test(sel.PNum(j)))
+          {
+            isboundarypoint.SetBit(sel.PNum(j));
+            surfaceindex[sel.PNum(j) - PointIndex::BASE] = 
+              mesh.GetFaceDescriptor(sel.GetIndex()).SurfNr();
+          }
+    
 
 
     Validate(mesh,bad_elements,pure_badness,
@@ -306,9 +308,13 @@ namespace netgen
 	  {
 	    for(int i=0; i<nv.Size(); i++)
 	      *nv[i] = Vec<3>(0,0,0);
+            /*
 	    for (int i = 1; i <= mesh.GetNSE(); i++)
 	      {
 		const Element2d & sel = mesh.SurfaceElement(i);
+            */
+            for (auto & sel : mesh.SurfaceElements())
+              {
 		Vec<3> auxvec = Cross(mesh.Point(sel.PNum(2))-mesh.Point(sel.PNum(1)),
                                       mesh.Point(sel.PNum(3))-mesh.Point(sel.PNum(1)));
 		auxvec.Normalize();

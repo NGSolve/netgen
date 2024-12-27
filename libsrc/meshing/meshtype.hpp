@@ -344,6 +344,22 @@ namespace netgen
     PointIndex get() const { return PointIndex(INDEX_4::operator[](J)); }    
   };
 
+
+  template <int N>
+  class SortedPointIndices : public PointIndices<N>
+  {
+    using PointIndices<N>::Sort;
+  public:
+    constexpr SortedPointIndices (PointIndices<N> pnts)
+      : PointIndices<N>(pnts.Sort()) { } 
+    
+      template <typename ...Pnts>
+    constexpr SortedPointIndices (Pnts ...pnts)
+      : PointIndices<N>(pnts...)
+    { Sort(); }
+  };
+  
+  
 }
 
 namespace ngcore
@@ -357,6 +373,11 @@ namespace ngcore
   template <>
   constexpr inline netgen::PointIndices<3> InvalidHash<netgen::PointIndices<3>> ()
   { return netgen::PointIndices<3>{netgen::PointIndex::INVALID, netgen::PointIndex::INVALID, netgen::PointIndex::INVALID}; }
+
+  template <>
+  constexpr inline netgen::SortedPointIndices<2> InvalidHash<netgen::SortedPointIndices<2>> ()
+  { return InvalidHash<netgen::PointIndices<2>>(); }
+
 }
 
 
@@ -376,7 +397,9 @@ namespace netgen
     int i;
   public:
     ElementIndex () = default;
+    // private:
     constexpr ElementIndex (int ai) : i(ai) { ; }
+  public:
     ElementIndex & operator= (const ElementIndex & ai) { i = ai.i; return *this; }
     ElementIndex & operator= (int ai) { i = ai; return *this; }
     constexpr operator int () const { return i; }

@@ -3303,47 +3303,53 @@ namespace netgen
   void Mesh :: FreeOpenElementsEnvironment (int layers)
   {
     static Timer timer("FreeOpenElementsEnvironment"); RegionTimer rt(timer);
-    int i, j, k;
-    PointIndex pi;
     const int large = 9999;
-    NgArray<int,PointIndex::BASE> dist(GetNP());
+    Array<int,PointIndex> dist(GetNP());
 
     dist = large;
 
     for (int i = 1; i <= GetNOpenElements(); i++)
       {
         const Element2d & face = OpenElement(i);
-        for (j = 0; j < face.GetNP(); j++)
+        for (int j = 0; j < face.GetNP(); j++)
           dist[face[j]] = 1;
       }
 
-    for (k = 1; k <= layers; k++)
+    for (int k = 1; k <= layers; k++)
+      /*
       for (i = 1; i <= GetNE(); i++)
         {
           const Element & el = VolumeElement(i);
+      */
+      for (auto & el : VolumeElements())
+        {
           if (el[0] == -1 || el.IsDeleted()) continue;
 
           int elmin = large;
-          for (j = 0; j < el.GetNP(); j++)
+          for (int j = 0; j < el.GetNP(); j++)
             if (dist[el[j]] < elmin)
               elmin = dist[el[j]];
-
+          
           if (elmin < large)
             {
-              for (j = 0; j < el.GetNP(); j++)
+              for (int j = 0; j < el.GetNP(); j++)
                 if (dist[el[j]] > elmin+1)
                   dist[el[j]] = elmin+1;
             }
         }
 
     int cntfree = 0;
-    for (i = 1; i <= GetNE(); i++)
+    /*
+    for (int i = 1; i <= GetNE(); i++)
       {
         Element & el = VolumeElement(i);
+    */
+    for (auto & el : VolumeElements())
+      {
         if (el[0] == -1 || el.IsDeleted()) continue;
 
         int elmin = large;
-        for (j = 0; j < el.GetNP(); j++)
+        for (int j = 0; j < el.GetNP(); j++)
           if (dist[el[j]] < elmin)
             elmin = dist[el[j]];
 
@@ -3357,7 +3363,7 @@ namespace netgen
     PrintMessage (5, "free: ", cntfree, ", fixed: ", GetNE()-cntfree);
     (*testout) << "free: " << cntfree << ", fixed: " << GetNE()-cntfree << endl;
 
-    for (pi = PointIndex::BASE; 
+    for (PointIndex pi = PointIndex::BASE; 
          pi < GetNP()+PointIndex::BASE; pi++)
       {
         if (dist[pi] > layers+1)

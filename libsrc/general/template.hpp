@@ -138,7 +138,7 @@ public:
   ///
 
 
-  INDEX_2 Sort ()
+  constexpr INDEX_2 Sort ()
   {
     if (i[0] > i[1]) 
       {

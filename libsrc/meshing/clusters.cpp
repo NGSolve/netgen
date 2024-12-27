@@ -231,7 +231,9 @@ namespace netgen
       
 	for (int i = 1; i <= ne; i++)
 	  {
-	    const Element & el = mesh.VolumeElement(i);
+            ElementIndex ei(i-1);
+            
+	    const Element & el = mesh[ei];
 	    ELEMENT_TYPE typ = el.GetType();
 	  	  
 	    const int * clustertab = NULL;
@@ -279,8 +281,8 @@ namespace netgen
               {
                 // top.GetElementEdges (i, ednums);
                 // top.GetElementFaces (i, fanums);
-                auto ednums = top.GetEdges (ElementIndex(i-1));
-                auto fanums = top.GetFaces (ElementIndex(i-1));                
+                auto ednums = top.GetEdges (ei);
+                auto fanums = top.GetFaces (ei);
                 
                 int elnv = top.GetNVertices (typ);
                 int elned = ednums.Size();

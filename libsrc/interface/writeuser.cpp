@@ -62,7 +62,7 @@ void WriteNeutralFormat (const Mesh & mesh,
   int ne = mesh.GetNE();
   int nse = mesh.GetNSE();
   int nseg = mesh.GetNSeg();
-  int i, j;
+  // int i, j;
 
   int inverttets = mparam.inverttets;
   int invertsurf = mparam.inverttrigs;
@@ -75,7 +75,7 @@ void WriteNeutralFormat (const Mesh & mesh,
 
   outfile << np << "\n";
 
-  for (i = 1; i <= np; i++)
+  for (int i = 1; i <= np; i++)
     {
       const Point3d & p = mesh.Point(i);
 
@@ -94,14 +94,14 @@ void WriteNeutralFormat (const Mesh & mesh,
   if (mesh.GetDimension() == 3)
     {
       outfile << ne << "\n";
-      for (i = 1; i <= ne; i++)
+      for (int i = 1; i <= ne; i++)
 	{
 	  Element el = mesh.VolumeElement(i);
 	  if (inverttets)
 	    el.Invert();
 	  outfile.width(4);
 	  outfile << el.GetIndex() << "  ";
-	  for (j = 1; j <= el.GetNP(); j++)
+	  for (int j = 1; j <= el.GetNP(); j++)
 	    {
 	      outfile << " ";
 	      outfile.width(8);
@@ -112,14 +112,14 @@ void WriteNeutralFormat (const Mesh & mesh,
     }
 
   outfile << nse << "\n";
-  for (i = 1; i <= nse; i++)
+  for (int i = 1; i <= nse; i++)
     {
       Element2d el = mesh.SurfaceElement(i);
       if (invertsurf)
 	el.Invert();
       outfile.width(4);
       outfile << mesh.GetFaceDescriptor (el.GetIndex()).BCProperty() << "    ";
-      for (j = 1; j <= el.GetNP(); j++)
+      for (int j = 1; j <= el.GetNP(); j++)
 	{
 	  outfile << " ";
 	  outfile.width(8);

@@ -507,12 +507,15 @@ namespace netgen
 
 	TBitArray<PointIndex> boundp(np);
 	boundp.Clear();
+        /*
 	for (int i = 1; i <= mesh.GetNSE(); i++)
 	  {
 	    const Element2d & sel = mesh.SurfaceElement(i);
-	    for (int j = 1; j <= sel.GetNP(); j++)
-	      boundp.SetBit(sel.PNum(j));
-	  }
+        */
+        for (auto & sel : mesh.SurfaceElements())
+          for (int j = 1; j <= sel.GetNP(); j++)
+            boundp.SetBit(sel.PNum(j));
+        // }
 
 
 	(*testout) << "bpoints:" << endl;
