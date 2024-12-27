@@ -257,6 +257,7 @@ namespace netgen
 
     void DoArchive (Archive & ar) { ar & i; }
   };
+
   /*
   inline PointIndex operator+ (PointIndex pi, int i) { return PointIndex(pi.i+i); }
   inline PointIndex operator+ (PointIndex pi, size_t i) { return PointIndex(pi.i+i); }  

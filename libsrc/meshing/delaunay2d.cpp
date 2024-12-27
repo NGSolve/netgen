@@ -38,7 +38,7 @@ namespace netgen
     if(p1<p0)
       Swap(p0,p1);
 
-    IVec<2> hash = {p0,p1};
+    PointIndices<2> hash = {p0,p1};
 
     auto pos = edge_to_trig.Position(hash);
     if (pos == -1) return -1;
@@ -53,7 +53,7 @@ namespace netgen
     if(p1<p0)
       Swap(p0,p1);
 
-    IVec<2> hash = {p0,p1};
+    PointIndices<2> hash = {p0,p1};
     auto pos = edge_to_trig.Position(hash);
     if (pos == -1)
       edge_to_trig[hash] = {eli, -1};
@@ -80,7 +80,7 @@ namespace netgen
       if(p1<p0)
         Swap(p0,p1);
 
-      IVec<2> hash = {p0,p1};
+      PointIndices<2> hash = {p0,p1};
       auto pos = edge_to_trig.Position(hash);
       auto i2 = edge_to_trig.GetData(pos);
 
@@ -93,7 +93,7 @@ namespace netgen
   }
 
 
-  void DelaunayMesh::AppendTrig( int pi0, int pi1, int pi2 )
+  void DelaunayMesh::AppendTrig( PointIndex pi0, PointIndex pi1, PointIndex pi2 )
   {
     DelaunayTrig el;
     el[0] = pi0;
@@ -174,7 +174,8 @@ namespace netgen
       {
         const auto trig = trigs[i_trig];
 
-        if(trig[0]==-1)
+        // if(trig[0]==-1)
+        if(!trig[0].IsValid())
           continue;
 
         double rad2 = trig.Radius2();
@@ -254,9 +255,9 @@ namespace netgen
       const DelaunayTrig & trig = trigs[j];
       for (int k = 0; k < 3; k++)
       {
-        int p1 = trig[k];
-        int p2 = trig[(k+1)%3];
-        IVec<2> edge{p1,p2};
+        PointIndex p1 = trig[k];
+        PointIndex p2 = trig[(k+1)%3];
+        PointIndices<2> edge{p1,p2};
         edge.Sort();
         bool found = false;
         for (int l = 0; l < edges.Size(); l++)
@@ -309,9 +310,9 @@ namespace netgen
       for (int j : intersecting)
         {
           UnsetNeighbours(j);
-          trigs[j][0] = -1;
-          trigs[j][1] = -1;
-          trigs[j][2] = -1;
+          trigs[j][0] = PointIndex::INVALID;
+          trigs[j][1] = PointIndex::INVALID;
+          trigs[j][2] = PointIndex::INVALID;
         }
 
       for (auto edge : edges)
@@ -331,7 +332,8 @@ namespace netgen
 
       for (DelaunayTrig & trig : trigs)
       {
-        if (trig[0] < 0) continue;
+        // if (trig[0] < 0) continue;
+        if (!trig[0].IsValid()) continue;
 
         Vec<3> n = Cross (P3(points[trig[1]])-P3(points[trig[0]]),
             P3(points[trig[2]])-P3(points[trig[0]]));
@@ -587,7 +589,7 @@ namespace netgen
 
     t2.Start();
     Array<PointIndex> old_points;
-    BitArray add_point(mesh.Points().Size()+1);
+    TBitArray<PointIndex> add_point(mesh.Points().Size()+1);
     Array<PointIndex> addpoints;
     add_point.Clear();
     /*
@@ -708,7 +710,8 @@ namespace netgen
     
     for (auto & trig : dmesh.GetElements())
     {
-      if (trig[0] < 0) continue;
+      // if (trig[0] < 0) continue;
+      if (!trig[0].IsValid()) continue;
 
       Element2d el(trig[0], trig[1], trig[2]);
       el.SetIndex (1);
@@ -719,7 +722,7 @@ namespace netgen
     while(!conforming)
     {
       conforming = true;
-      BitArray marked_points(tempmesh.Points().Size()+1);
+      TBitArray<PointIndex> marked_points(tempmesh.Points().Size()+1);
       marked_points = false;
       // Check for trigs cutting a boundary edge (non-conforming mesh)
       auto point_to_trigs = tempmesh.CreatePoint2SurfaceElementTable( 0 );
@@ -776,7 +779,7 @@ namespace netgen
           auto & el0 = tempmesh[cutting_trigs[0]];
           auto & el1 = tempmesh[cutting_trigs[1]];
 
-          pi1 = el1[0]+el1[1]+el1[2] - pi2-pi3;
+          pi1 = el1[0]-pi2+el1[1]-pi3+el1[2];
 
           if(marked_points.Test(pi1)) continue;
 
@@ -801,16 +804,16 @@ namespace netgen
     // Mark edges and trigs as inside or outside, starting with boundary edges
     enum POSITION { UNKNOWN, BOUNDARY, INSIDE, OUTSIDE };
     Array<POSITION, SurfaceElementIndex> trig_pos(tempmesh.SurfaceElements().Size());
-    ngcore::ClosedHashTable<IVec<2>, POSITION> edge_pos(3*tempmesh.SurfaceElements().Size());
+    ngcore::ClosedHashTable<PointIndices<2>, POSITION> edge_pos(3*tempmesh.SurfaceElements().Size());
     trig_pos = UNKNOWN;
 
     for (auto & seg : tempmesh.LineSegments())
     {
       ArrayMem<SurfaceElementIndex, 2> els;
-      IVec<2> edge{seg[0], seg[1]};
+      PointIndices<2> edge{seg[0], seg[1]};
       edge.Sort();
       edge_pos[edge] = BOUNDARY;
-
+      
       for(auto sei : point_to_trigs[seg[0]])
         for( auto i : Range(3))
           if(tempmesh[sei][i] == seg[1])
@@ -828,8 +831,8 @@ namespace netgen
         else
           pos = OUTSIDE;
 
-        IVec<2> e1{seg[0], pi2};
-        IVec<2> e2{seg[1], pi2};
+        PointIndices<2> e1{seg[0], pi2};
+        PointIndices<2> e2{seg[1], pi2};
         e1.Sort();
         e2.Sort();
         if(!edge_pos.Used(e1))
@@ -857,7 +860,7 @@ namespace netgen
           // any edge of unknown trig already marked?
           for(auto i : IntRange(3))
           {
-            IVec<2> edge{el[(i+1)%3], el[(i+2)%3]};
+            PointIndices<2> edge{el[(i+1)%3], el[(i+2)%3]};
             edge.Sort();
             if(edge_pos.Used(edge) && edge_pos[edge]!=BOUNDARY)
             {
@@ -871,7 +874,7 @@ namespace netgen
         if(trig_pos[sei] != UNKNOWN)
           for(auto i : IntRange(3))
           {
-            IVec<2> edge{el[(i+1)%3], el[(i+2)%3]};
+            PointIndices<2> edge{el[(i+1)%3], el[(i+2)%3]};
             edge.Sort();
             if(!edge_pos.Used(edge) || edge_pos[edge]==BOUNDARY)
               edge_pos[edge] = trig_pos[sei];

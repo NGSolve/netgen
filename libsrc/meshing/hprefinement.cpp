@@ -605,7 +605,7 @@ namespace netgen
 
   bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoiclt_dom, 
 		       NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-			INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int & levels, int & act_ref); 
+			INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex> & facepoint, int & levels, int & act_ref); 
 
   bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, SplittingType split, int & act_ref, int & levels);
   
@@ -1634,7 +1634,7 @@ namespace netgen
 
   bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
 		       TBitArray<PointIndex> & cornerpoint, TBitArray<PointIndex> & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-			INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int & levels, int & act_ref)
+			INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex> & facepoint, int & levels, int & act_ref)
 {
   bool sing = 0; 
   if (mesh.GetDimension() == 3)
@@ -1902,7 +1902,7 @@ namespace netgen
     INDEX_3_HASHTABLE<int> faces(mesh.GetNSE()+1);
     INDEX_2_HASHTABLE<int> face_edges(mesh.GetNSE()+1);
     INDEX_2_HASHTABLE<int> surf_edges(mesh.GetNSE()+1);
-    NgArray<int, PointIndex::BASE> facepoint(mesh.GetNP());
+    Array<int, PointIndex> facepoint(mesh.GetNP());
 
     bool sing = CheckSingularities(mesh, edges, edgepoint_dom, 
 			      cornerpoint, edgepoint, faces, face_edges, 

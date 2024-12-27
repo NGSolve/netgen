@@ -1,6 +1,6 @@
 HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
                                TBitArray<PointIndex> & cornerpoint, TBitArray<PointIndex> & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-                               INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint)
+                               INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex> & facepoint)
 {
   int ep1(0), ep2(0), ep3(0), ep4(0), cp1(0), cp2(0), cp3(0), cp4(0), fp1, fp2, fp3, fp4;
   int isedge1(0), isedge2(0), isedge3(0), isedge4(0), isedge5(0), isedge6(0);
@@ -56,12 +56,12 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 	cp3 = cornerpoint.Test (el.pnums[pi3]);
 	cp4 = cornerpoint.Test (el.pnums[pi4]);
 	
-	isedge1 = edges.Used (INDEX_2::Sort (el.pnums[j], el.pnums[k]));
-	isedge2 = edges.Used (INDEX_2::Sort (el.pnums[j], el.pnums[pi3]));
-	isedge3 = edges.Used (INDEX_2::Sort (el.pnums[j], el.pnums[pi4]));
-	isedge4 = edges.Used (INDEX_2::Sort (el.pnums[k], el.pnums[pi3]));
-	isedge5 = edges.Used (INDEX_2::Sort (el.pnums[k], el.pnums[pi4]));
-	isedge6 = edges.Used (INDEX_2::Sort (el.pnums[pi3], el.pnums[pi4]));
+	isedge1 = edges.Used (PointIndices<2>::Sort (el.pnums[j], el.pnums[k]));
+	isedge2 = edges.Used (PointIndices<2>::Sort (el.pnums[j], el.pnums[pi3]));
+	isedge3 = edges.Used (PointIndices<2>::Sort (el.pnums[j], el.pnums[pi4]));
+	isedge4 = edges.Used (PointIndices<2>::Sort (el.pnums[k], el.pnums[pi3]));
+	isedge5 = edges.Used (PointIndices<2>::Sort (el.pnums[k], el.pnums[pi4]));
+	isedge6 = edges.Used (PointIndices<2>::Sort (el.pnums[pi3], el.pnums[pi4]));
 	
 	if (debug)
 	  {
@@ -76,13 +76,13 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
         for (int j = 0; j < 4; j++) isface[j] = false;
 	for (int l = 0; l < 4; l++)
 	  {
-	    INDEX_3 i3(0,0,0);
+	    PointIndices<3> i3(PointIndex::INVALID, PointIndex::INVALID, PointIndex::INVALID);
 	    switch (l)
 	      {
-              case 0: i3.I1() = el.pnums[k]; i3.I2() = el.pnums[pi3]; i3.I3() = el.pnums[pi4]; break;
-              case 1: i3.I1() = el.pnums[j]; i3.I2() = el.pnums[pi3]; i3.I3() = el.pnums[pi4]; break;
-              case 2: i3.I1() = el.pnums[j]; i3.I2() = el.pnums[k]; i3.I3() = el.pnums[pi4]; break;
-              case 3: i3.I1() = el.pnums[j]; i3.I2() = el.pnums[k]; i3.I3() = el.pnums[pi3]; break;
+              case 0: i3[0] = el.pnums[k]; i3[1] = el.pnums[pi3]; i3[2] = el.pnums[pi4]; break;
+              case 1: i3[0] = el.pnums[j]; i3[1] = el.pnums[pi3]; i3[2] = el.pnums[pi4]; break;
+              case 2: i3[0] = el.pnums[j]; i3[1] = el.pnums[k]; i3[2] = el.pnums[pi4]; break;
+              case 3: i3[0] = el.pnums[j]; i3[1] = el.pnums[k]; i3[2] = el.pnums[pi3]; break;
 	      }
 	    i3.Sort();
 	    if (faces.Used (i3))
@@ -102,15 +102,15 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 	isfedge1 = isfedge2 = isfedge3 = isfedge4 = isfedge5 = isfedge6 = 0;
 	for (int l = 0; l < 6; l++)
 	  {
-	    INDEX_2 i2(0,0);
+	    PointIndices<2> i2(PointIndex::INVALID, PointIndex::INVALID);
 	    switch (l)
 	      {
-              case 0: i2.I1() = el.pnums[j]; i2.I2() = el[k]; break;
-              case 1: i2.I1() = el.pnums[j]; i2.I2() = el.pnums[pi3]; break;
-              case 2: i2.I1() = el.pnums[j]; i2.I2() = el.pnums[pi4]; break;
-              case 3: i2.I1() = el.pnums[k]; i2.I2() = el.pnums[pi3]; break;
-              case 4: i2.I1() = el.pnums[k]; i2.I2() = el.pnums[pi4]; break;
-              case 5: i2.I1() = el.pnums[pi3]; i2.I2() = el.pnums[pi4]; break;
+              case 0: i2[0] = el.pnums[j]; i2[1] = el[k]; break;
+              case 1: i2[0] = el.pnums[j]; i2[1] = el.pnums[pi3]; break;
+              case 2: i2[0] = el.pnums[j]; i2[1] = el.pnums[pi4]; break;
+              case 3: i2[0] = el.pnums[k]; i2[1] = el.pnums[pi3]; break;
+              case 4: i2[0] = el.pnums[k]; i2[1] = el.pnums[pi4]; break;
+              case 5: i2[0] = el.pnums[pi3]; i2[1] = el.pnums[pi4]; break;
 	      }
 	    i2.Sort();
 	    if (face_edges.Used (i2))
@@ -142,7 +142,7 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 	fp1 = fp2 = fp3 = fp4 = 0;
 	for (int l = 0; l < 4; l++)
 	  {
-	    int pti(0);
+	    PointIndex pti = PointIndex::INVALID;
 	    switch (l)
 	      {
 	      case 0: pti = el.pnums[j]; break;
@@ -548,7 +548,7 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 	
 	if (type != HP_NONE)
 	  {
-	    int pnums[4]; 
+	    PointIndex pnums[4]; 
 	    pnums[0] = el.pnums[j];
 	    pnums[1] = el.pnums[k];
 	    pnums[2] = el.pnums[pi3];
@@ -588,7 +588,7 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 
 HPREF_ELEMENT_TYPE ClassifyPrism(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
                                  TBitArray<PointIndex> & cornerpoint, TBitArray<PointIndex> & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-                                 INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint)
+                                 INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex> & facepoint)
 {
 
   HPREF_ELEMENT_TYPE type = HP_NONE;
@@ -622,7 +622,7 @@ HPREF_ELEMENT_TYPE ClassifyPrism(HPRefElement & el, INDEX_2_HASHTABLE<int> & edg
       const ELEMENT_EDGE * eledges = MeshTopology::GetEdges1 (PRISM);
       for(int k=0;k<9;k++)
 	{
-	  INDEX_2 i2 = INDEX_2 :: Sort(el.PNum(p[eledges[k][0]-1]),el.PNum(p[eledges[k][1]-1])); 
+	  PointIndices<2> i2 = PointIndices<2> :: Sort(el.PNum(p[eledges[k][0]-1]),el.PNum(p[eledges[k][1]-1])); 
 	  if (edges.Used(i2)) edge_sing[k] = 2;
 	  else edge_sing[k] = face_edges.Used(i2);
 	}
@@ -630,16 +630,17 @@ HPREF_ELEMENT_TYPE ClassifyPrism(HPRefElement & el, INDEX_2_HASHTABLE<int> & edg
       const ELEMENT_FACE * elfaces  = MeshTopology::GetFaces1 (PRISM);
       for (int k=0;k<5;k++)
 	{
-	  INDEX_3 i3; 
+	  PointIndices<3> i3; 
 	  
 	  if(k<2) 
-	    i3 = INDEX_3::Sort(el.pnums[p[elfaces[k][0]-1]-1], el.pnums[p[elfaces[k][1]-1]-1], 
-			       el.pnums[p[elfaces[k][2]-1]-1]); 
+	    i3 = PointIndices<3>::Sort(el.pnums[p[elfaces[k][0]-1]-1], el.pnums[p[elfaces[k][1]-1]-1], 
+                                       el.pnums[p[elfaces[k][2]-1]-1]); 
 	  else 
 	    { 
-	      INDEX_4  i4 = INDEX_4(el.pnums[p[elfaces[k][0]-1]-1], el.pnums[p[elfaces[k][1]-1]-1], el.pnums[p[elfaces[k][2]-1]-1],el.pnums[p[elfaces[k][3]-1]-1]); 
+	      PointIndices<4> i4 (el.pnums[p[elfaces[k][0]-1]-1], el.pnums[p[elfaces[k][1]-1]-1],
+                                  el.pnums[p[elfaces[k][2]-1]-1],el.pnums[p[elfaces[k][3]-1]-1]); 
 	      i4.Sort();
-	      i3 = INDEX_3(i4.I1(), i4.I2(), i4.I3()); 
+	      i3 = PointIndices<3>(i4[0], i4[1], i4[2]);
 	    }
 	  
 	  if (faces.Used (i3))
@@ -809,7 +810,7 @@ HPREF_ELEMENT_TYPE ClassifyPrism(HPRefElement & el, INDEX_2_HASHTABLE<int> & edg
   
   if(type != HP_NONE) 
     {
-      int pnums[6]; 
+      PointIndex pnums[6]; 
       for(int j=0;j<6;j++) pnums[j] = el.PNum (p[j]);
       for(int k=0;k<6;k++) el.pnums[k] = pnums[k]; 
     }
@@ -825,15 +826,15 @@ HPREF_ELEMENT_TYPE ClassifyPrism(HPRefElement & el, INDEX_2_HASHTABLE<int> & edg
 // #ifdef SABINE 
 HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
                                 TBitArray<PointIndex> & cornerpoint, TBitArray<PointIndex> & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int>  & face_edges, 
-				INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int dim, const FaceDescriptor & fd)
+				INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex> & facepoint, int dim, const FaceDescriptor & fd)
 
 {
   HPREF_ELEMENT_TYPE type = HP_NONE;
   
-  int pnums[3]; 
+  PointIndex pnums[3]; 
   int p[3];   
   
-  INDEX_3 i3 (el.pnums[0], el.pnums[1], el.pnums[2]);
+  PointIndices<3> i3 (el.pnums[0], el.pnums[1], el.pnums[2]);
   i3.Sort();
   bool sing_face = faces.Used (i3);
   
@@ -882,7 +883,7 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 	    { 
 	      int ep1=p[eledges[k][0]-1];  
 	      int ep2=p[eledges[k][1]-1];  
-	      INDEX_2 i2(el.PNum(ep1),el.PNum(ep2)); 
+	      PointIndices<2> i2(el.PNum(ep1),el.PNum(ep2)); 
 	      
 	      if(edges.Used(i2)) 
 		{
@@ -925,7 +926,7 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 	      int ep1=p[eledges[k][0]-1];  
 	      int ep2=p[eledges[k][1]-1];  
 	     
-	      INDEX_2 i2 = INDEX_2::Sort(el.PNum(ep1),el.PNum(ep2));
+	      PointIndices<2> i2 = PointIndices<2>::Sort(el.PNum(ep1),el.PNum(ep2));
 	     
 	      if(edges.Used(i2)) 
 		{
@@ -950,8 +951,8 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
             (dim==3 || edgepoint_dom.Used(INDEX_2(fd.SurfNr(),pnums[k])) || edgepoint_dom.Used(INDEX_2(-1,pnums[k]))))
           //edgepoint, but not member of sing_edge on trig -> cp
 	  {
-	    INDEX_2 i2a=INDEX_2::Sort(el.PNum(p[k]), el.PNum(p[(k+1)%3])); 
-            INDEX_2 i2b=INDEX_2::Sort(el.PNum(p[k]), el.PNum(p[(k+2)%3]));
+	    PointIndices<2> i2a = PointIndices<2>::Sort(el.PNum(p[k]), el.PNum(p[(k+1)%3])); 
+            PointIndices<2> i2b = PointIndices<2>::Sort(el.PNum(p[k]), el.PNum(p[(k+2)%3]));
 	    
 	    if(!edges.Used(i2a) && !edges.Used(i2b)) 
 	      point_sing[p[k]-1] = 3; 	
@@ -1302,7 +1303,7 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 #endif
 HPREF_ELEMENT_TYPE ClassifyQuad(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
                                 TBitArray<PointIndex> & cornerpoint, TBitArray<PointIndex> & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int>  & face_edges, 
-				INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int dim, const FaceDescriptor & fd)
+				INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex> & facepoint, int dim, const FaceDescriptor & fd)
 {
   HPREF_ELEMENT_TYPE type = HP_NONE; 
   
@@ -1320,10 +1321,10 @@ HPREF_ELEMENT_TYPE ClassifyQuad(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 
       if (dim == 2)
         {
-          ep1 = edgepoint_dom.Used (INDEX_2 (el.GetIndex(), el.PNumMod(j)));
-          ep2 = edgepoint_dom.Used (INDEX_2 (el.GetIndex(), el.PNumMod(j+1)));
-          ep3 = edgepoint_dom.Used (INDEX_2 (el.GetIndex(), el.PNumMod(j+2)));
-          ep4 = edgepoint_dom.Used (INDEX_2 (el.GetIndex(), el.PNumMod(j+3)));
+          ep1 = edgepoint_dom.Used (PointIndices<2>(el.GetIndex(), el.PNumMod(j)));
+          ep2 = edgepoint_dom.Used (PointIndices<2>(el.GetIndex(), el.PNumMod(j+1)));
+          ep3 = edgepoint_dom.Used (PointIndices<2>(el.GetIndex(), el.PNumMod(j+2)));
+          ep4 = edgepoint_dom.Used (PointIndices<2>(el.GetIndex(), el.PNumMod(j+3)));
         }
 
       cp1 = cornerpoint.Test (el.PNumMod (j));
@@ -1351,8 +1352,7 @@ HPREF_ELEMENT_TYPE ClassifyQuad(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 
       if(dim ==3) 
         { 
-          INDEX_2 i2;
-          i2 = INDEX_2(el.PNumMod (j), el.PNumMod (j+1));
+          PointIndices<2> i2 = PointIndices<2>(el.PNumMod (j), el.PNumMod (j+1));
           // i2.Sort();
           isedge1 = edges.Used (i2);
           i2.Sort();
@@ -1652,7 +1652,7 @@ HPREF_ELEMENT_TYPE ClassifyQuad(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 
 HPREF_ELEMENT_TYPE ClassifyHex(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
                                TBitArray<PointIndex> & cornerpoint, TBitArray<PointIndex> & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-                               INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint)
+                               INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex> & facepoint)
 {
   HPREF_ELEMENT_TYPE type = HP_NONE;
   
@@ -1758,7 +1758,7 @@ HPREF_ELEMENT_TYPE ClassifyHex(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges
 HPREF_ELEMENT_TYPE ClassifyHex7 (HPRefElement & el, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
                                  TBitArray<PointIndex> & cornerpoint, TBitArray<PointIndex> & edgepoint,
                                  INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-                                 INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint)
+                                 INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex> & facepoint)
 {
   // HPREF_ELEMENT_TYPE type = HP_NONE;
   
@@ -1798,7 +1798,7 @@ HPREF_ELEMENT_TYPE ClassifyHex7 (HPRefElement & el, INDEX_2_HASHTABLE<int> & edg
 HPREF_ELEMENT_TYPE ClassifySegm(HPRefElement & hpel, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
                                 TBitArray<PointIndex> & cornerpoint, TBitArray<PointIndex> & edgepoint,
                                 INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-                                INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint)
+                                INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex> & facepoint)
 {
   
   int cp1 = cornerpoint.Test (hpel[0]);
@@ -1842,7 +1842,7 @@ HPREF_ELEMENT_TYPE ClassifySegm(HPRefElement & hpel, INDEX_2_HASHTABLE<int> & ed
 HPREF_ELEMENT_TYPE ClassifyPyramid(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
                                    TBitArray<PointIndex> & cornerpoint, TBitArray<PointIndex> & edgepoint,
                                    INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-                                   INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint)
+                                   INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex> & facepoint)
 {
   // *testout << "classify pyramid, pnums = ";
   // for (int i = 0; i < 5; i++) *testout << el.pnums[i] << " ";
