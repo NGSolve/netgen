@@ -329,7 +329,7 @@ namespace netgen
         auto current_si = si;
 
         auto first = current_seg[0];
-        auto current = -1;
+        PointIndex current(PointIndex::INVALID);
         auto next =  current_seg[1];
 
         if(points_done.Test(first))
@@ -354,7 +354,7 @@ namespace netgen
                  current_si = sj;
                  current_seg = mesh[sj];
 
-                 next = current_seg[0] + current_seg[1] - current;
+                 next = current_seg[0]-current + current_seg[1];
                  break;
               }
            }
@@ -493,7 +493,7 @@ namespace netgen
            if(growthvectors[pi].Length2() == 0.0)
               continue;
 
-           PointIndex pi1 = seg0[0] + seg0[1] - pi;
+           PointIndex pi1 = seg0[0] - pi + seg0[1];
            auto p1 = mesh[pi1];
            auto p = mesh[pi];
 

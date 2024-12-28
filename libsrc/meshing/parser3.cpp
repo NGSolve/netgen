@@ -879,16 +879,16 @@ void vnetrule :: LoadRule (istream & ist)
       //      NgArray<int> & freeset = *freesets.Get(fs);
       NgArray<twoint> & freesetedges = *freeedges.Last();
       NgArray<threeint> & freesetfaces = *freefaces.Get(fs);
-      int k,l;
-      INDEX ind;
+      // int k,l;
+      // INDEX ind;
       
-      for (k = 1; k <= freesetfaces.Size(); k++)
+      for (int k = 1; k <= freesetfaces.Size(); k++)
 	{
           // threeint tr = freesetfaces.Get(k);
 
-	  for (l = k+1; l <= freesetfaces.Size(); l++)
+	  for (int l = k+1; l <= freesetfaces.Size(); l++)
 	    {
-	      ind = NeighbourTrianglePoint(freesetfaces.Get(k), freesetfaces.Get(l));
+	      INDEX ind = NeighbourTrianglePoint(freesetfaces.Get(k), freesetfaces.Get(l));
 	      if (!ind) continue;
 
 	      INDEX_3 f1(freesetfaces.Get(k).i1, 
@@ -897,7 +897,7 @@ void vnetrule :: LoadRule (istream & ist)
 	      INDEX_3 f2(freesetfaces.Get(l).i1, 
 			 freesetfaces.Get(l).i2, 
 			 freesetfaces.Get(l).i3);
-	      INDEX_2 ed(0, 0);
+	      PointIndices<2> ed(PointIndex::INVALID, PointIndex::INVALID);
 	      for (int f11 = 1; f11 <= 3; f11++)
 		for (int f12 = 1; f12 <= 3; f12++)
 		  if (f11 != f12)
@@ -916,8 +916,8 @@ void vnetrule :: LoadRule (istream & ist)
 		    {
 		      for (int elr = 1; elr <= 4; elr++)
 			{
-			  if (GetPointNrMod (eli, elr) == ed.I(1) &&
-			      GetPointNrMod (eli, elr+2) == ed.I(2))
+			  if (GetPointNrMod (eli, elr) == ed[0] &&
+			      GetPointNrMod (eli, elr+2) == ed[1])
 			    {
 			      /*
 			      (*testout) << "ed is diagonal of rectangle" << endl;

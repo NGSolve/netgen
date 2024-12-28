@@ -87,7 +87,7 @@ Vec<3> CalcGrowthVector (FlatArray<Vec<3>> ns)
   auto [maxpos1, maxpos2] = FindCloseVectors(ns);
   Array<Vec<3>> new_normals;
   new_normals = ns;
-  const auto dot = ns[maxpos1] * ns[maxpos2];
+  // const auto dot = ns[maxpos1] * ns[maxpos2];
   auto average = 0.5 * (ns[maxpos1] + ns[maxpos2]);
   average.Normalize();
   new_normals[maxpos1] = average;
@@ -154,7 +154,7 @@ Vec<3> BoundaryLayerTool ::getEdgeTangent(PointIndex pi, int edgenr, FlatArray<S
       auto& seg = *p_seg;
       if (seg.edgenr != edgenr)
         continue;
-      PointIndex other = seg[0] + seg[1] - pi;
+      PointIndex other = seg[0]-pi + seg[1];
       if (!pts.Contains(other))
         pts.Append(other);
     }
@@ -721,7 +721,7 @@ void BoundaryLayerTool ::InsertNewElements(
                   auto g1 = getGroups(p1, segj.si);
 
                   if (g0.Size() == 1 && g1.Size() == 1)
-                    auto s =
+                    [[maybe_unused]] auto s =
                       addSegment(newPoint(p0, -1, g0[0]), newPoint(p1, -1, g1[0]));
                   else
                     {
@@ -798,7 +798,7 @@ void BoundaryLayerTool ::InsertNewElements(
                   s3[0] = p3;
                   s3[1] = p4;
                   s3[2] = PointIndex::INVALID;
-                  auto pair = p3 < p4 ? make_pair(p3, p4) : make_pair(p4, p3);
+                  // auto pair = p3 < p4 ? make_pair(p3, p4) : make_pair(p4, p3);
                   s3.edgenr = getEdgeNr(segj.edgenr);
                   s3.si = segj.si;
                   new_segments.Append(s3);
@@ -853,7 +853,7 @@ void BoundaryLayerTool ::InsertNewElements(
     if (groups.Size() == 1)
       return groups[0];
 
-    auto& growth_groups = special_boundary_points[pi].growth_groups;
+    // auto& growth_groups = special_boundary_points[pi].growth_groups;
 
     auto vdir = Center(mesh[sel[0]], mesh[sel[1]], mesh[sel[2]]) - mesh[pi];
     auto dot = vdir * special_boundary_points[pi].separating_direction;

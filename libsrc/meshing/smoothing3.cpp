@@ -1731,26 +1731,31 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
 
 	pf.SetPointIndex (pi);
 
-	PointIndex brother (-1);
+        constexpr PointIndex state0(PointIndex::INVALID);
+        constexpr PointIndex statem1 = state0-1;
+        
+	PointIndex brother = statem1;
 	if(usesum)
 	  {
-	    for(int j=0; brother == -1 && j<used_idmaps->Size(); j++)
+	    for(int j=0; brother == statem1 && j<used_idmaps->Size(); j++)
 	      {
 		if(pi < (*used_idmaps)[j]->Size() + IndexBASE<PointIndex>())
 		  {
 		    brother = (*(*used_idmaps)[j])[pi];
-		    if(brother == pi || brother == 0)
-		      brother = -1;
+		    if(brother == pi || brother == state0)
+		      brother = statem1;
 		  }
 	      }
-	    if(brother >= pi)
+	    // if(brother >= pi)
+            if(brother-pi >= 0)
 	      {
 		pf2ptr->SetPointIndex(brother);
 		pf2ptr->SetNV(*nv[brother-1]);
 	      }
 	  }
 
-	if(usesum && brother < pi)
+	// if(usesum && brother < pi)
+        if(usesum && (brother-pi < 0))
 	  continue;
 
 	//pf.UnSetNV(); x = 0;
@@ -1759,12 +1764,12 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
 	pf.SetNV(*nv[pi-1]);
 
 	x = 0;
-	int pok = (brother == -1) ? (pf.Func (x) < 1e10) : (pf_sum.Func (x) < 1e10);
+	int pok = (brother == statem1) ? (pf.Func (x) < 1e10) : (pf_sum.Func (x) < 1e10);
 
 	if (pok)
 	  {
 	    
-	    if(brother == -1)
+	    if(brother == statem1)
 	      BFGS (x, pf, par);
 	    else
 	      BFGS (x, pf_sum, par);
@@ -1773,7 +1778,7 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
 	    for(int j=0; j<3; j++)
 	      points[pi](j) += x(j);// - scal*nv[i-1].X(j);
 
-	    if(brother != -1)
+	    if(brother != statem1)
 	      for(int j=0; j<3; j++)
 		points[brother](j) += x(j);// - scal*nv[brother-1].X(j);
 
@@ -1783,8 +1788,8 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
 	  {
 	    cout << "el not ok" << endl;
 	    (*testout) << "el not ok" << endl
-		       << "   func " << ((brother == -1) ? pf.Func(x) : pf_sum.Func (x)) << endl;
-	    if(brother != -1)
+		       << "   func " << ((brother == statem1) ? pf.Func(x) : pf_sum.Func (x)) << endl;
+	    if(brother != statem1)
 	      (*testout) << "   func1 " << pf.Func(x) << endl
 			 << "   func2 " << pf2ptr->Func(x) << endl;
 	  }

@@ -547,7 +547,7 @@ namespace netgen
 			e2[0] = (*idmaps[k])[e1[0]];
 			e2[1] = (*idmaps[k])[e1[1]];
 			
-			if(e2.I1() == 0 || e2.I2() == 0 ||
+			if(!e2.I1().IsValid() || !e2.I2().IsValid() ||
 			   e1.I1() == e2.I1() || e1.I2() == e2.I2())
 			  continue;
 			

@@ -139,7 +139,9 @@ namespace netgen
 	    mark = spline.GetPoint (edgelength);
 	  
 	    {
-	      PointIndex pi1 = -1, pi2 = -1;
+	      PointIndex pi1{PointIndex::INVALID};
+	      PointIndex pi2{PointIndex::INVALID};
+
 	  
 	      Point3d mark3(mark(0), mark(1), 0);
 	      Point3d oldmark3(oldmark(0), oldmark(1), 0);
@@ -157,12 +159,12 @@ namespace netgen
 		if ( mesh[PointIndex(locsearch[k])].GetLayer() == spline.layer)
 		  pi2 = locsearch[k];
 
-	      if (pi1 == -1)
+	      if (!pi1.IsValid())
 		{
 		  pi1 = mesh.AddPoint(oldmark3, spline.layer);
 		  searchtree.Insert (oldmark3, pi1);
 		}
-	      if (pi2 == -1)
+	      if (!pi2.IsValid())
 		{
 		  pi2 = mesh.AddPoint(mark3, spline.layer);
 		  searchtree.Insert (mark3, pi2);
@@ -292,13 +294,13 @@ namespace netgen
             Point<2> hnewp = (j == 1) ? splines[i]->StartPI() : splines[i]->EndPI();
             Point<3> newp(hnewp(0), hnewp(1), 0);
             int layer = GetSpline(i).layer;
-            int npi = -1;
-            for (PointIndex pi = PointIndex::BASE; 
-                 pi < mesh2d.GetNP()+PointIndex::BASE; pi++)
+            PointIndex npi(PointIndex::INVALID);
+            for (PointIndex pi = IndexBASE<PointIndex>(); 
+                 pi < mesh2d.GetNP()+IndexBASE<PointIndex>(); pi++)
               if (Dist2 (mesh2d.Point(pi), newp) < 1e-12 * diam2 && mesh2d.Point(pi).GetLayer() == layer)
                 npi = pi;
             
-	    if (npi == -1)
+	    if (!npi.IsValid())
 	      {
 		npi = mesh2d.AddPoint (newp, layer);
 		searchtree.Insert (newp, npi);

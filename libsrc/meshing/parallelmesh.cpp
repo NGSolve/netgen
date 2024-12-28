@@ -329,7 +329,9 @@ namespace netgen
     /** The same table as per_verts, but TRANSITIVE!! **/
     auto iterate_per_verts_trans = [&](auto f){
       NgArray<int> allvs;
-      for (int k = PointIndex::BASE; k < GetNV()+PointIndex::BASE; k++)
+      // for (int k = PointIndex::BASE; k < GetNV()+PointIndex::BASE; k++)
+      for (PointIndex k = IndexBASE<PointIndex>();
+           k < GetNV()+IndexBASE<PointIndex>(); k++)      
 	{
 	  allvs.SetSize(0);
 	  allvs.Append(per_verts[k]);

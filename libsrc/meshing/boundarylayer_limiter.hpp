@@ -288,7 +288,7 @@ struct GrowthVectorLimiter
       return;
     for (PointIndex pi : IntRange(tool.np, mesh.GetNP()))
       {
-        auto pi_from = map_from[pi];
+        // auto pi_from = map_from[pi];
         std::set<PointIndex> pis;
         for (auto sei : p2sel[pi])
           for (auto pi_ : tool.new_sels[sei].PNums())
@@ -360,7 +360,7 @@ struct GrowthVectorLimiter
         if (sel.GetNP() == 4)
           continue;
 
-        const auto& fd = mesh.GetFaceDescriptor(sel.GetIndex());
+        // const auto& fd = mesh.GetFaceDescriptor(sel.GetIndex());
         auto np = sel.GetNP();
 
         double shift = 1.0;
@@ -447,7 +447,7 @@ struct GrowthVectorLimiter
     for (auto sei : SurfaceElementsRange())
       {
         const auto& sel = Get(sei);
-        auto sel_index = sel.GetIndex();
+        // auto sel_index = sel.GetIndex();
 
         Box<3> box(Box<3>::EMPTY_BOX);
         for (auto pi : sel.PNums())
@@ -466,7 +466,7 @@ struct GrowthVectorLimiter
     RegionTimer rt(t);
     BuildSearchTree(trig_shift);
     auto np_new = mesh.Points().Size();
-    int counter = 0;
+    // int counter = 0;
     for (auto i : IntRange(tool.np, np_new))
       {
         PointIndex pi_to = i + PointIndex::BASE;
@@ -478,7 +478,7 @@ struct GrowthVectorLimiter
           continue;
 
         Box<3> box(Box<3>::EMPTY_BOX);
-        auto seg = GetSeg(pi_to, seg_shift);
+        // auto seg = GetSeg(pi_to, seg_shift);
 
         box.Add(GetPoint(pi_to, 0));
         box.Add(GetPoint(pi_to, GetLimit(pi_from)));
@@ -488,7 +488,7 @@ struct GrowthVectorLimiter
             return false;
           if (sel.PNums().Contains(pi_to))
             return false;
-          counter++;
+          // counter++;
           f(pi_to, sei);
           return false;
         });

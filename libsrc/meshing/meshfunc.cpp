@@ -59,6 +59,11 @@ namespace netgen
       auto num_points = mesh.GetNP();
       auto num_facedescriptors = mesh.GetNFD();
 
+
+      constexpr PointIndex state0 = IndexBASE<PointIndex>()-1; 
+      constexpr PointIndex state1 = state0+1;
+      constexpr PointIndex state2 = state0+2;
+      
       for(auto i : Range(ret))
       {
           auto & md = ret[i];
@@ -73,7 +78,7 @@ namespace netgen
           m.SetLocalH(mesh.GetLocalH());
 
           ipmap[i].SetSize(num_points);
-          ipmap[i] = 0; // PointIndex::INVALID;
+          ipmap[i] = state0;   // 0; // PointIndex::INVALID;
           m.SetDimension( mesh.GetDimension() );
           m.SetGeometry( mesh.GetGeometry() );
 
@@ -86,8 +91,8 @@ namespace netgen
         {
           if(seg.domin > 0 && seg.domin == seg.domout)
             {
-              ipmap[seg.domin-1][seg[0]] = 1;
-              ipmap[seg.domin-1][seg[1]] = 1;
+              ipmap[seg.domin-1][seg[0]] = state1; // 1;
+              ipmap[seg.domin-1][seg[1]] = state1; // 1;
             }
         }
 
@@ -105,7 +110,7 @@ namespace netgen
 
             auto & sels = ret[dom-1].mesh->SurfaceElements();
             for(auto pi : sel.PNums())
-                ipmap[dom-1][pi] = 1;
+              ipmap[dom-1][pi] = state1;  // 1;
             sels.Append(sel);
         }
       }
@@ -114,17 +119,17 @@ namespace netgen
       for(const auto & el : mesh.VolumeElements())
       {
         auto dom = el.GetIndex();
-
+        
         auto & els = ret[dom-1].mesh->VolumeElements();
         for(auto pi : el.PNums())
-            ipmap[dom-1][pi] = 1;
+          ipmap[dom-1][pi] = state1; // 1;
         els.Append(el);
       }
 
       // mark locked/fixed points for each domain TODO: domain bounding box to add only relevant points?
       for(auto pi : mesh.LockedPoints())
         for(auto i : Range(ret))
-          ipmap[i][pi] = 2;
+          ipmap[i][pi] = state2; // 2;
 
       // add used points to domain mesh, build point mapping
       for(auto i : Range(ret))
@@ -133,11 +138,11 @@ namespace netgen
           auto & pmap = ret[i].pmap;
 
           for(auto pi : Range(ipmap[i]))
-            if(ipmap[i][pi])
+            if(ipmap[i][pi] != state0)
             {
               const auto& mp = mesh[pi];
               auto pi_new = m.AddPoint( mp, mp.GetLayer(), mp.Type() );
-              if(ipmap[i][pi] == 2)
+              if(ipmap[i][pi] == state2) // 2)
                 mesh.AddLockedPoint(pi_new);
               ipmap[i][pi] = pi_new;
               pmap.Append( pi );

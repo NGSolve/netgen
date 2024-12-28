@@ -207,7 +207,7 @@ public:
   FlatArray<int> GetVertexPointElements (PointIndex vnr) const
   { return vert2pointelement[vnr]; }
   
-  DLL_HEADER int GetVerticesEdge ( int v1, int v2) const;
+  DLL_HEADER int GetVerticesEdge ( PointIndex v1, PointIndex v2) const;
   void GetSegmentVolumeElements ( int segnr, NgArray<ElementIndex> & els ) const;
   void GetSegmentSurfaceElements ( int segnr, NgArray<SurfaceElementIndex> & els ) const;
 

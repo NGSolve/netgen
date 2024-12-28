@@ -283,7 +283,7 @@ void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors()
   auto np = mesh.GetNP();
 
   auto hasMoved = [&] (PointIndex pi) {
-    return (pi - PointIndex::BASE >= np_old) || mapto[pi].Size() > 0 || special_boundary_points.count(pi);
+    return (pi - IndexBASE<PointIndex>() >= np_old) || mapto[pi].Size() > 0 || special_boundary_points.count(pi);
   };
 
   std::set<PointIndex> points_set;

@@ -248,7 +248,7 @@ namespace netgen
             const Element2d & el = (*mesh)[sei];
             surf_ost << el.GetNP();
             for (int j = 0; j < el.GetNP(); j++)
-              surf_ost << " " << el[j] - PointIndex::BASE;
+              surf_ost << " " << el[j] - IndexBASE<PointIndex>();
             surf_ost << "\n";
           }
         surf_ost << "\nCELL_TYPES " << mesh->GetNSE() << "\n";
@@ -291,7 +291,7 @@ namespace netgen
             const Element & el = (*mesh)[ei];
             ost << el.GetNP();
             for (int j = 0; j < el.GetNP(); j++)
-              ost << " " << el[j] - PointIndex::BASE;
+              ost << " " << el[j] - IndexBASE<PointIndex>();
             ost << "\n";
           }
         ost << "\nCELL_TYPES " << mesh->GetNE() << "\n";

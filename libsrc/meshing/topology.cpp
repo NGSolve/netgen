@@ -102,11 +102,11 @@ namespace netgen
         auto eledges = MeshTopology::GetEdges (el.GetType());
         for (int k = 0; k < eledges.Size(); k++)
           {
-            INDEX_2 edge(el[eledges[k][0]], el[eledges[k][1]]);
+            PointIndices<2> edge(el[eledges[k][0]], el[eledges[k][1]]);
 
-            int edgedir = (edge.I1() > edge.I2());
-            if (edgedir) swap (edge.I1(), edge.I2());
-            if (edge.I1() != v) continue;
+            bool edgedir = edge[0] > edge[1];
+            if (edgedir) swap (edge[0], edge[1]);
+            if (edge[0] != v) continue;
 
             func (edge, elnr, k, 3);
           }      
@@ -119,7 +119,7 @@ namespace netgen
         auto eledges = MeshTopology::GetEdges (el.GetType());
         for (int k = 0; k < eledges.Size(); k++)
           {
-            INDEX_2 edge(el[eledges[k][0]], el[eledges[k][1]]);
+            PointIndices<2> edge(el[eledges[k][0]], el[eledges[k][1]]);
 
             int edgedir = (edge.I1() > edge.I2());
             if (edgedir) swap (edge.I1(), edge.I2());
@@ -133,7 +133,7 @@ namespace netgen
     for (SegmentIndex elnr : top.GetVertexSegments(v))
       {
         const Segment & el = mesh[elnr];
-        INDEX_2 edge(el[0], el[1]);
+        PointIndices<2> edge(el[0], el[1]);
         int edgedir = (edge.I1() > edge.I2());
         if (edgedir) swap (edge.I1(), edge.I2());
         
@@ -159,8 +159,8 @@ namespace netgen
           if (elfaces[j][3] < 0)
             
             { // triangle
-              INDEX_4 face(el[elfaces[j][0]], el[elfaces[j][1]], 
-                           el[elfaces[j][2]], 0);
+              PointIndices<4> face(el[elfaces[j][0]], el[elfaces[j][1]], 
+                                   el[elfaces[j][2]], 0);
 
 
               [[maybe_unused]] int facedir = 0;
@@ -197,8 +197,8 @@ namespace netgen
             {
               // quad
               // int facenum;
-              INDEX_4 face4(el[elfaces[j][0]], el[elfaces[j][1]],
-                            el[elfaces[j][2]], el[elfaces[j][3]]);
+              PointIndices<4> face4(el[elfaces[j][0]], el[elfaces[j][1]],
+                                    el[elfaces[j][2]], el[elfaces[j][3]]);
               
               // int facedir = 0;
               if (min2 (face4.I1(), face4.I2()) > 
@@ -264,24 +264,24 @@ namespace netgen
             // int facenum;
             // int facedir;
             
-            INDEX_4 face(el.PNum(elfaces[0][0]),
-                         el.PNum(elfaces[0][1]),
-                         el.PNum(elfaces[0][2]),0);
+            PointIndices<4> face(el.PNum(elfaces[0][0]),
+                                 el.PNum(elfaces[0][1]),
+                                 el.PNum(elfaces[0][2]),0);
             
             // facedir = 0;
-            if (face.I1() > face.I2())
+            if (face[0] > face[1])
               {
-                swap (face.I1(), face.I2());
+                swap (face[0], face[1]);
                 // facedir += 1;
               }
-            if (face.I2() > face.I3())
+            if (face[1] > face[2])
               {
-                swap (face.I2(), face.I3());
+                swap (face[1], face[2]);
                 // facedir += 2;
               }
-            if (face.I1() > face.I2())
+            if (face.I1() > face[1])
               {
-                swap (face.I1(), face.I2());
+                swap (face.I1(), face[1]);
                 // facedir += 4;
               }
             
@@ -313,10 +313,10 @@ namespace netgen
             // int facenum;
             // int facedir;
             
-            INDEX_4 face4(el.PNum(elfaces[0][0]),
-                          el.PNum(elfaces[0][1]),
-                          el.PNum(elfaces[0][2]),
-                          el.PNum(elfaces[0][3]));
+            PointIndices<4> face4(el.PNum(elfaces[0][0]),
+                                  el.PNum(elfaces[0][1]),
+                                  el.PNum(elfaces[0][2]),
+                                  el.PNum(elfaces[0][3]));
             
             // facedir = 0;
             if (min2 (face4.I1(), face4.I2()) > 
@@ -698,7 +698,7 @@ namespace netgen
               // edge is splitting edge in middle of triangle:
               for (int j = 1; j <= 2; j++)
               {
-                IVec<2> paedge1, paedge2, paedge3;
+                IVec<2,PointIndex> paedge1, paedge2, paedge3;
                 int orient_inner = 0;
                 if (j == 1)
                 {
@@ -722,7 +722,7 @@ namespace netgen
                   Swap (paedge3[0], paedge3[1]);
 
                 // if first vertex number is -1, then don't try to find entry in node2edge hash table
-                if ( paedge1[0] == PointIndex::BASE-1 || paedge2[0] == PointIndex::BASE-1 )
+                if ( !paedge1[0].IsValid() || !paedge2[0].IsValid() )
                   continue;
 
                 int paedgenr1=-1, paedgenr2=-1, paedgenr3=-1, orient1 = 0, orient2 = 0;
@@ -751,21 +751,21 @@ namespace netgen
 
               if (!bisect_edge) // not a bisect edge (then a red edge)
               {
-                IVec<2> paedge1, paedge2, paedge3;
+                IVec<2,PointIndex> paedge1, paedge2, paedge3;
                 int orient1 = 0, orient2 = 0, orient3=0;
                 // int orient_inner = 0;
-                paedge1 = IVec<2> (pa0[0], pa0[1]);
-                paedge2 = IVec<2> (pa1[0], pa1[1]);
+                paedge1 = IVec<2,PointIndex> (pa0[0], pa0[1]);
+                paedge2 = IVec<2,PointIndex> (pa1[0], pa1[1]);
                 // find common vertex and the third pa edge
                 if (pa0[0]==pa1[0]){// 00
                   //orient1 = 0; 
                   orient2 = 1; 
                   if (pa0[1]<pa1[1]){
                     orient3 = 1;
-                    paedge3 = IVec<2> (pa0[1], pa1[1]);
+                    paedge3 = IVec<2,PointIndex> (pa0[1], pa1[1]);
                   }else{
                     //orient3 = 0;
-                    paedge3 = IVec<2> (pa1[1], pa0[1]);
+                    paedge3 = IVec<2,PointIndex> (pa1[1], pa0[1]);
                   }
                 }
                 else if (pa0[0]==pa1[1]){//01
@@ -773,10 +773,10 @@ namespace netgen
                   //orient2 = 0; 
                   if (pa0[1]<pa1[0]){
                     orient3 = 1;
-                    paedge3 = IVec<2> (pa0[1], pa1[0]);
+                    paedge3 = IVec<2,PointIndex> (pa0[1], pa1[0]);
                   }else{
                     //orient3 = 0;
-                    paedge3 = IVec<2> (pa1[0], pa0[1]);
+                    paedge3 = IVec<2,PointIndex> (pa1[0], pa0[1]);
                   }
                 }
                 else if (pa0[1]==pa1[0]){//10
@@ -784,10 +784,10 @@ namespace netgen
                   orient2 = 1; 
                   if (pa0[0]<pa1[1]){
                     orient3 = 1;
-                    paedge3 = IVec<2> (pa0[0], pa1[1]);
+                    paedge3 = IVec<2,PointIndex> (pa0[0], pa1[1]);
                   }else{
                     //orient3 = 0;
-                    paedge3 = IVec<2> (pa1[1], pa0[0]);
+                    paedge3 = IVec<2,PointIndex> (pa1[1], pa0[0]);
                   }
                 }
                 else if (pa0[1]==pa1[1]){//11
@@ -795,10 +795,10 @@ namespace netgen
                   //orient2 = 0; 
                   if (pa0[0]<pa1[0]){
                     orient3 = 1;
-                    paedge3 = IVec<2> (pa0[0], pa1[0]);
+                    paedge3 = IVec<2,PointIndex> (pa0[0], pa1[0]);
                   }else{
                     //orient3 = 0;
-                    paedge3 = IVec<2> (pa1[0], pa0[0]);
+                    paedge3 = IVec<2,PointIndex> (pa1[0], pa0[0]);
                   }
                 }
 
@@ -1836,7 +1836,7 @@ namespace netgen
         for(auto & face : elfaces)
         {
             auto v = face2vert[face-1];
-            if(v[3]!=0)
+            if(v[3].IsValid())
                 cerr << "GetElementFaces with orientation currently not supported for quads" << endl;
 
             int classnr = 0;
@@ -2270,12 +2270,13 @@ namespace netgen
 
   void MeshTopology :: GetFaceEdges (int fnr, NgArray<int> & fedges, bool withorientation) const
   {
-    NgArrayMem<int,4> pi(4);
+    // NgArrayMem<int,4> pi(4);
     // NgArrayMem<int,12> eledges;
   
     fedges.SetSize (0);
-    GetFaceVertices(fnr, pi);
-
+    // GetFaceVertices(fnr, pi);
+    auto pi = GetFaceVertices(fnr-1);
+    
     // Sort Edges according to global vertex numbers 
     // e1 = fmax, f2 
     // e2 = fmax, f1 
@@ -2345,8 +2346,8 @@ namespace netgen
 		    // fedges.Append (eledges[j]);
 		    for(int k=0;k<nfa_ref_edges;k++)
 		      {
-			int w1 = el[ref_faces[fa][fa_ref_edges[k][0]-1]-1]; 
-			int w2 = el[ref_faces[fa][fa_ref_edges[k][1]-1]-1]; 
+			PointIndex w1 = el[ref_faces[fa][fa_ref_edges[k][0]-1]-1]; 
+			PointIndex w2 = el[ref_faces[fa][fa_ref_edges[k][1]-1]-1]; 
 
 			if(withorientation)
 			  {
@@ -2392,7 +2393,7 @@ namespace netgen
   }
 
 
-  int MeshTopology :: GetVerticesEdge ( int v1, int v2 ) const
+  int MeshTopology :: GetVerticesEdge ( PointIndex v1, PointIndex v2 ) const
   {
     /*
     if (vert2element.Size() > 0)
