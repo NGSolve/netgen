@@ -219,10 +219,11 @@ namespace netgen
         // throw Exception("illegal PointIndex, use PointIndex::INVALID instead");
 #endif
     }
+
     /*
     friend constexpr netgen::PointIndex ngcore::IndexBASE<netgen::PointIndex> ();
-    friend istream & operator>> (istream &, PointIndex &);    
-    friend ostream & operator<< (ostream &, const PointIndex &);
+    // friend istream & operator>> (istream &, PointIndex &);    
+    // friend ostream & operator<< (ostream &, const PointIndex &);
     template <int N> friend class PointIndices;
     friend PointIndex operator+ (PointIndex, int);
     friend PointIndex operator+ (PointIndex, size_t);    
@@ -259,7 +260,6 @@ namespace netgen
 
     void DoArchive (Archive & ar) { ar & i; }
   };
-
   /*
   inline PointIndex operator+ (PointIndex pi, int i) { return PointIndex(pi.i+i); }
   inline PointIndex operator+ (PointIndex pi, size_t i) { return PointIndex(pi.i+i); }  
@@ -284,15 +284,21 @@ namespace ngcore
 namespace netgen
 {
 
-  
+  // input-output is 1-based
   inline istream & operator>> (istream & ist, PointIndex & pi)
   {
-    int i; ist >> i; pi = PointIndex(i); return ist;
+    // int i; ist >> i; pi = PointIndex(i); return ist;
+    int i; ist >> i;
+    // pi = PointIndex(i);
+    pi = IndexBASE<PointIndex>()+i-1;
+    return ist;
   }
 
   inline ostream & operator<< (ostream & ost, const PointIndex & pi)
   {
-    return (ost << int(pi));
+    int intpi = pi - IndexBASE<PointIndex>() + 1;
+    return (ost << intpi);    
+    // return (ost << int(pi));
   }
 
   template <int N> class PointIndices;

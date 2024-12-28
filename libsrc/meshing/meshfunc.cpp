@@ -73,7 +73,7 @@ namespace netgen
           m.SetLocalH(mesh.GetLocalH());
 
           ipmap[i].SetSize(num_points);
-          ipmap[i] = PointIndex::INVALID;
+          ipmap[i] = 0; // PointIndex::INVALID;
           m.SetDimension( mesh.GetDimension() );
           m.SetGeometry( mesh.GetGeometry() );
 

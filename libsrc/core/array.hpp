@@ -554,6 +554,13 @@ namespace ngcore
     // { return CArray<T> (data+pos); }
     NETGEN_INLINE T * operator+ (size_t pos) const { return data+pos; }
 
+    /// access first element. check by macro NETGEN_CHECK_RANGE
+    T & First () const
+    {
+      NETGEN_CHECK_RANGE(0,0,size);
+      return data[0];
+    }
+
     /// access last element. check by macro NETGEN_CHECK_RANGE
     T & Last () const
     {
