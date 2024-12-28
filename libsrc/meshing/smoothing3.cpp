@@ -1519,7 +1519,7 @@ void Mesh :: ImproveMeshJacobian (const MeshingParameters & mp,
 	  badnodes.SetBit (el.PNum(j));
     }
 
-  NgArray<double, PointIndex::BASE, PointIndex> pointh (points.Size());
+  Array<double, PointIndex> pointh (points.Size());
 
   if(HasLocalHFunction())
     {
