@@ -100,7 +100,7 @@ static double SplitElementBadness (const Mesh::T_POINTS & points, const MeshingP
 {
   double badness = 0;
   auto np = old.GetNP();
-  PointIndex dummy{-1};
+  PointIndex dummy{PointIndex::INVALID};
   if(np == 4)
   {
     // Split tet into two tets
@@ -451,7 +451,7 @@ void MeshOptimize3d :: CombineImprove ()
 
 
 
-double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elementsonnode, NgArray<INDEX_3> &locfaces, double badmax, PointIndex pi1, PointIndex pi2, PointIndex ptmp, bool check_only)
+double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elementsonnode, NgArray<PointIndices<3>> &locfaces, double badmax, PointIndex pi1, PointIndex pi2, PointIndex ptmp, bool check_only)
 {
   double d_badness = 0.0;
   // int cnt = 0;
@@ -512,11 +512,11 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
       for (int l = 0; l < 4; l++)
           if (el[l] == pi1 || el[l] == pi2)
             {
-              INDEX_3 i3;
+              PointIndices<3> i3;
               Element2d face(TRIG);
               el.GetFace (l+1, face);
-              for (int kk = 1; kk <= 3; kk++)
-                  i3.I(kk) = face.PNum(kk);
+              for (int kk = 0; kk < 3; kk++)
+                i3[kk] = face[kk];
               locfaces.Append (i3);
             }
     }
@@ -536,7 +536,7 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
     {
       int pok = pf.Func (px) < 1e10;
       if (!pok)
-          pok = FindInnerPoint (mesh.Points(), locfaces, pnew);
+        pok = FindInnerPoint (mesh.Points(), locfaces, pnew);
 
       if(pok)
         {
@@ -647,7 +647,7 @@ void MeshOptimize3d :: SplitImprove ()
   tsearch.Start();
   ParallelForRange(Range(edges), [&] (auto myrange)
   {
-    NgArray<INDEX_3> locfaces;
+    NgArray<PointIndices<3>> locfaces;
 
     for(auto i : myrange)
     {
@@ -671,7 +671,7 @@ void MeshOptimize3d :: SplitImprove ()
   // Apply actual optimizations
   topt.Start();
   int cnt = 0;
-  NgArray<INDEX_3> locfaces;
+  NgArray<PointIndices<3>> locfaces;
   for(auto [d_badness, ei] : edges_with_improvement)
   {
       auto [p0,p1] = edges[ei];
@@ -871,7 +871,7 @@ double MeshOptimize3d :: SwapImproveEdge (
 
       if ((goal == OPT_CONFORM) && NotTooBad(bad1, bad2))
         {
-          INDEX_3 face(pi3, pi4, pi5);
+          PointIndices<3> face(pi3, pi4, pi5);
           face.Sort();
           if (faces.Used(face))
             {
@@ -1237,9 +1237,9 @@ double MeshOptimize3d :: SwapImproveEdge (
 
               for (int k = l+1; k <= nsuround + l - 2; k++)
                 {
-                  INDEX_3 hi3(suroundpts[l],
-                          suroundpts[k % nsuround],
-                          suroundpts[(k+1) % nsuround]);
+                  PointIndices<3> hi3(suroundpts[l],
+                                      suroundpts[k % nsuround],
+                                      suroundpts[(k+1) % nsuround]);
                   hi3.Sort();
                   if (faces.Used(hi3))
                     {
@@ -1336,7 +1336,7 @@ void MeshOptimize3d :: SwapImprove (const BitArray * working_elements)
   // int ne = mesh.GetNE();
 
   mesh.BuildBoundaryEdges(false);
-  BitArray free_points(mesh.GetNP()+PointIndex::BASE);
+  TBitArray<PointIndex> free_points(mesh.GetNP());
   free_points.Clear();
 
   ParallelForRange(mesh.VolumeElements().Range(), [&] (auto myrange)
@@ -1372,7 +1372,7 @@ void MeshOptimize3d :: SwapImprove (const BitArray * working_elements)
       for (int i = 1; i <= mesh.GetNOpenElements(); i++)
 	{
 	  const Element2d & hel = mesh.OpenElement(i);
-	  INDEX_3 face(hel[0], hel[1], hel[2]);
+	  PointIndices<3> face(hel[0], hel[1], hel[2]);
 	  face.Sort();
 	  faces.Set (face, i);
 	}
@@ -1439,7 +1439,7 @@ void MeshOptimize3d :: SwapImprove (const BitArray * working_elements)
           {
               Element2d sel;
               el.GetFace(i, sel);
-              INDEX_3 face(sel[0], sel[1], sel[2]);
+              PointIndices<3> face(sel[0], sel[1], sel[2]);
               face.Sort();
               if(faces.Used(face))
                   open_els[faces.Get(face)-1].Delete();
@@ -1502,9 +1502,9 @@ void MeshOptimize3d :: SwapImproveSurface (
 
   
   // contains at least all elements at node
-  TABLE<ElementIndex,PointIndex::BASE> elementsonnode(np);
-  TABLE<SurfaceElementIndex,PointIndex::BASE> surfaceelementsonnode(np);
-  TABLE<int,PointIndex::BASE> surfaceindicesonnode(np);
+  DynamicTable<ElementIndex,PointIndex> elementsonnode(np);
+  DynamicTable<SurfaceElementIndex,PointIndex> surfaceelementsonnode(np);
+  DynamicTable<int,PointIndex> surfaceindicesonnode(np);
 
   NgArray<ElementIndex> hasbothpoints;
   NgArray<ElementIndex> hasbothpointsother;
@@ -1607,14 +1607,14 @@ void MeshOptimize3d :: SwapImproveSurface (
 	  othermattype = -1;
 
 	  
-	  INDEX_2 i2 (pi1, pi2);
+	  PointIndices<2> i2 (pi1, pi2);
 	  i2.Sort();
 	  if (edgeused.Used(i2)) continue;
 	  edgeused.Set (i2, 1);
 	  if(periodic)
 	    {
-	      i2.I1() = pi1other;
-	      i2.I2() = pi2other;
+	      i2[0] = pi1other;
+	      i2[1] = pi2other;
 	      i2.Sort();
 	      edgeused.Set(i2,1);
 	    }
@@ -1770,7 +1770,7 @@ void MeshOptimize3d :: SwapImproveSurface (
 
 	  //(*testout) << "sel1 " << sel1 << " sel2 " << sel2 << " el " << mesh[sel1] << " resp. " << mesh[sel2] << endl;
 
-	  PointIndex sp1(0), sp2(0);
+	  PointIndex sp1(PointIndex::INVALID), sp2(PointIndex::INVALID);
 	  PointIndex sp1other, sp2other;
 	  for(int l=0; l<mesh[sel1].GetNP(); l++)
 	    if(mesh[sel1][l] != pi1 && mesh[sel1][l] != pi2)
@@ -2319,8 +2319,8 @@ void MeshOptimize3d :: SwapImproveSurface (
 */
 
 double MeshOptimize3d :: SwapImprove2 ( ElementIndex eli1, int face,
-  Table<ElementIndex, PointIndex> & elementsonnode,
-  TABLE<SurfaceElementIndex, PointIndex::BASE> & belementsonnode, bool check_only )
+                                        Table<ElementIndex, PointIndex> & elementsonnode,
+                                        DynamicTable<SurfaceElementIndex, PointIndex> & belementsonnode, bool check_only )
 {
   PointIndex pi1, pi2, pi3, pi4, pi5;
   Element el21(TET), el22(TET), el31(TET), el32(TET), el33(TET);
@@ -2509,7 +2509,7 @@ void MeshOptimize3d :: SwapImprove2 ()
   int nse = mesh.GetNSE();
 
   // contains at least all elements at node
-  TABLE<SurfaceElementIndex, PointIndex::BASE> belementsonnode(np);
+  DynamicTable<SurfaceElementIndex, PointIndex> belementsonnode(np);
 
   PrintMessage (3, "SwapImprove2 ");
   (*testout) << "\n" << "Start SwapImprove2" << "\n";

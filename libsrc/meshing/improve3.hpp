@@ -35,7 +35,7 @@ public:
   void CombineImprove ();
 
   void SplitImprove ();
-  double SplitImproveEdge (Table<ElementIndex,PointIndex> & elementsonnode, NgArray<INDEX_3> &locfaces, double badmax, PointIndex pi1, PointIndex pi2, PointIndex ptmp, bool check_only=false);
+  double SplitImproveEdge (Table<ElementIndex,PointIndex> & elementsonnode, NgArray<PointIndices<3>> &locfaces, double badmax, PointIndex pi1, PointIndex pi2, PointIndex ptmp, bool check_only=false);
 
   void SplitImprove2 ();
   double SplitImprove2Element (ElementIndex ei, const Table<ElementIndex, PointIndex> & elements_of_point, bool check_only);
@@ -46,7 +46,7 @@ public:
   void SwapImproveSurface (const BitArray * working_elements = NULL,
 			   const NgArray< idmap_type* > * idmaps = NULL);
   void SwapImprove2 ();
-  double SwapImprove2 (ElementIndex eli1, int face, Table<ElementIndex, PointIndex> & elementsonnode, TABLE<SurfaceElementIndex, PointIndex::BASE> & belementsonnode, bool check_only=false );
+  double SwapImprove2 (ElementIndex eli1, int face, Table<ElementIndex, PointIndex> & elementsonnode, DynamicTable<SurfaceElementIndex, PointIndex> & belementsonnode, bool check_only=false );
 
   void ImproveMesh() { mesh.ImproveMesh(mp, goal); }
 
@@ -108,12 +108,12 @@ public:
 class PointFunction1 : public MinFunction
 {
   Mesh::T_POINTS & points;
-  const NgArray<INDEX_3> & faces;
+  const NgArray<PointIndices<3>> & faces;
   const MeshingParameters & mp;
   double h;
 public:
   PointFunction1 (Mesh::T_POINTS & apoints, 
-		  const NgArray<INDEX_3> & afaces,
+		  const NgArray<PointIndices<3>> & afaces,
 		  const MeshingParameters & amp,
 		  double ah);
   

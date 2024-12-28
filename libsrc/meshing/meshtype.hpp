@@ -220,11 +220,10 @@ namespace netgen
 #endif
     }
 
-    /*
     friend constexpr netgen::PointIndex ngcore::IndexBASE<netgen::PointIndex> ();
-    // friend istream & operator>> (istream &, PointIndex &);    
-    // friend ostream & operator<< (ostream &, const PointIndex &);
     template <int N> friend class PointIndices;
+    
+    /*
     friend PointIndex operator+ (PointIndex, int);
     friend PointIndex operator+ (PointIndex, size_t);    
     friend PointIndex operator+ (int, PointIndex);
@@ -237,6 +236,7 @@ namespace netgen
     friend bool operator== (PointIndex a, PointIndex b);
     friend bool operator!= (PointIndex a, PointIndex b);
     */
+    
   public:
     constexpr PointIndex (t_invalid inv) : i(long(PointIndex::BASE)-1) { ; }
     // PointIndex & operator= (const PointIndex &ai) { i = ai.i; return *this; }
@@ -260,6 +260,7 @@ namespace netgen
 
     void DoArchive (Archive & ar) { ar & i; }
   };
+
   /*
   inline PointIndex operator+ (PointIndex pi, int i) { return PointIndex(pi.i+i); }
   inline PointIndex operator+ (PointIndex pi, size_t i) { return PointIndex(pi.i+i); }  
@@ -367,12 +368,19 @@ namespace netgen
     { Sort(); }
   };
   
+  constexpr inline size_t HashValue2 (const PointIndex & ind, size_t mask)
+  { return (ind-IndexBASE<PointIndex>()) & mask; }
   
 }
 
 namespace ngcore
 {
   template <typename T> constexpr inline T InvalidHash();
+
+
+  template <>
+  constexpr inline netgen::PointIndex InvalidHash<netgen::PointIndex> ()
+  { return netgen::PointIndex::INVALID; }
   
   template <>
   constexpr inline netgen::PointIndices<2> InvalidHash<netgen::PointIndices<2>> ()

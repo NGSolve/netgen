@@ -1052,7 +1052,7 @@ namespace netgen
         // for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
         for (PointIndex pi : points.Range())
           if ((*this)[pi].Singularity()>=1.) 
-            outfile << int(pi) << "\t" << (*this)[pi].Singularity() << endl;
+            outfile << pi << "\t" << (*this)[pi].Singularity() << endl;
       }
 
     cnt_sing = 0;
@@ -1341,7 +1341,7 @@ namespace netgen
                 el.SetNP(nep);
                 el.SetCurved (nep != 4);
                 for (int j = 0; j < nep; j++)
-                  infile >> (int&)(el[j]);
+                  infile >> el[j];
 
                 if (inverttets)
                   el.Invert();
@@ -2113,7 +2113,7 @@ namespace netgen
 
                 for (int j = 0; j < nep; j++)
                   {
-                    infile >> (int&)(el[j]);
+                    infile >> el[j];
                     el[j] = el[j]+oldnp;
                   }
 
@@ -2182,7 +2182,7 @@ namespace netgen
     for (ElementIndex ei = 0; ei < volelements.Size(); ei++)
       {
         for (int j = 0; j < 4; j++)
-          if ( (*this)[ei][j] <= PointIndex::BASE-1)
+          if ( !(*this)[ei][j].IsValid())
             {
               (*testout) << "El " << ei << " has 0 nodes: ";
               for (int k = 0; k < 4; k++)
@@ -2223,9 +2223,9 @@ namespace netgen
         if (sel.GetNP() <= 4)
           for (int j = 0; j < sel.GetNP(); j++)
             {
-              INDEX_2 i2;
-              i2.I1() = sel.PNumMod(j+1);
-              i2.I2() = sel.PNumMod(j+2);
+              PointIndices<2> i2;
+              i2[0] = sel.PNumMod(j+1);
+              i2[1] = sel.PNumMod(j+2);
               i2.Sort();
               boundaryedges->Set (i2, 1);
             }
@@ -2233,9 +2233,9 @@ namespace netgen
           {
             for (int j = 0; j < 3; j++)
               {
-                INDEX_2 i2;
-                i2.I1() = sel[j];
-                i2.I2() = sel[(j+1)%3];
+                PointIndices<2> i2;
+                i2[0] = sel[j];
+                i2[1] = sel[(j+1)%3];
                 i2.Sort();
                 boundaryedges->Set (i2, 1);
               }
@@ -2298,7 +2298,7 @@ namespace netgen
     static Timer tn2se("Mesh::CalcSurfacesOfNode - surf on node");     
     static Timer tht("Mesh::CalcSurfacesOfNode - surfelementht"); 
     // surfacesonnode.SetSize (GetNP());
-    TABLE<int,PointIndex::BASE> surfacesonnode(GetNP());
+    DynamicTable<int,PointIndex> surfacesonnode(GetNP());
 
     // delete boundaryedges;
     // boundaryedges = NULL;
@@ -2379,10 +2379,10 @@ namespace netgen
         const Element2d & sel = surfelements[sei];
         if (sel.IsDeleted()) continue;
 
-        INDEX_3 i3;
-        i3.I1() = sel.PNum(1);
-        i3.I2() = sel.PNum(2);
-        i3.I3() = sel.PNum(3);
+        PointIndices<3> i3;
+        i3[0] = sel.PNum(1);
+        i3[1] = sel.PNum(2);
+        i3[2] = sel.PNum(3);
         i3.Sort();
         surfelementht -> Set (i3, sei);   // war das wichtig ???    sel.GetIndex());
       }
@@ -2479,7 +2479,7 @@ namespace netgen
     for (int i = 0; i < GetNSeg(); i++)
       {
         const Segment & seg = segments[i];
-        INDEX_2 i2(seg[0], seg[1]);
+        PointIndices<2> i2(seg[0], seg[1]);
         i2.Sort();
 
         //boundaryedges -> Set (i2, 2);
@@ -2817,7 +2817,7 @@ namespace netgen
                       hel.NormalizeNumbering();
                       if (hel.PNum(1) == pi)
                         {
-                          INDEX_3 i3(hel[0], hel[1], hel[2]);
+                          PointIndices<3> i3(hel[0], hel[1], hel[2]);
                           tval i2;
                           i2.index = GetFaceDescriptor(ind).DomainIn();
                           i2.p4 = (hel.GetNP() == 3)
@@ -2833,7 +2833,7 @@ namespace netgen
                       hel.NormalizeNumbering();
                       if (hel.PNum(1) == pi)
                         {
-                          INDEX_3 i3(hel[0], hel[1], hel[2]);
+                          PointIndices<3> i3(hel[0], hel[1], hel[2]);
                           tval i2;
                           i2.index = GetFaceDescriptor(ind).DomainOut();
                           i2.p4 = (hel.GetNP() == 3)
@@ -2860,7 +2860,7 @@ namespace netgen
                           
                           if (hel[0] == pi)
                             {
-                              INDEX_3 i3(hel[0], hel[1], hel[2]);
+                              PointIndices<3> i3(hel[0], hel[1], hel[2]);
                               
                               if (faceht.Used (i3))
                                 {
@@ -2889,7 +2889,7 @@ namespace netgen
                                 {
                                   hel.Invert();
                                   hel.NormalizeNumbering();
-                                  INDEX_3 i3(hel[0], hel[1], hel[2]);
+                                  PointIndices<3> i3(hel[0], hel[1], hel[2]);
                                   
                                   tval i2;
                                   i2.index = el.GetIndex();

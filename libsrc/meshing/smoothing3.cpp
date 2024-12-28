@@ -91,7 +91,7 @@ namespace netgen
   }
 
   PointFunction1 :: PointFunction1 (Mesh::T_POINTS & apoints, 
-				    const NgArray<INDEX_3> & afaces,
+				    const NgArray<PointIndices<3>> & afaces,
 				    const MeshingParameters & amp,
 				    double ah)
     : points(apoints), faces(afaces), mp(amp)
