@@ -457,7 +457,7 @@ int Meshing3 :: ApplyRules
 			  if (locpi.IsValid())
 			    pused[locpi]--;
 			  
-			  while (!ok && locpi < lpoints.Size()-1+PointIndex::BASE)
+			  while (!ok && locpi < lpoints.Size()-1+IndexBASE<PointIndex>())
 			    {
 			      ok = 1;
 			      locpi++;

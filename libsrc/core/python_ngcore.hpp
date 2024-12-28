@@ -319,8 +319,9 @@ namespace ngcore
         .def ("__getitem__",
               [](TFlat & self, TIND i) -> T&
                              {
-                               static constexpr int base = IndexBASE<TIND>();
-                               if (i < base || i >= self.Size()+base)
+                               // static constexpr int base = IndexBASE<TIND>();
+                               auto reli = i - IndexBASE<TIND>();
+                               if (reli < 0 || reli >= self.Size())
                                  throw py::index_error();
                                return self[i]; 
                              },
@@ -328,8 +329,9 @@ namespace ngcore
         .def ("__setitem__",
               [](TFlat & self, TIND i, T val) -> T&
                              {
-                               static constexpr int base = IndexBASE<TIND>();
-                               if (i < base || i >= self.Size()+base)
+                               // static constexpr int base = IndexBASE<TIND>();
+                               auto reli = i - IndexBASE<TIND>();                               
+                               if (reli < 0 || reli >= self.Size())
                                  throw py::index_error();
                                self[i] = val;
                                return self[i];

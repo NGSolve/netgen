@@ -507,7 +507,7 @@ NG_ELEMENT_TYPE Ng_GetSurfaceElement (int ei, int * epi, int * np)
     {
       const Segment & seg = mesh->LineSegment (ei);
 
-      if (seg[2] < 0)
+      if (!seg[2].IsValid())
 	{
 	  epi[0] = seg[0];
 	  epi[1] = seg[1];
@@ -866,7 +866,7 @@ NG_ELEMENT_TYPE Ng_GetSegment (int ei, int * epi, int * np)
   epi[0] = seg[0];
   epi[1] = seg[1];
 
-  if (seg[2] < 0)
+  if (!seg[2].IsValid())
     {
       if (np) *np = 2;
       return NG_SEGM;
@@ -1945,8 +1945,10 @@ int Ng_GetVertex_Elements( int vnr, int* elems )
 }
 
 ///// Added by Roman Stainko ....
-int Ng_GetVertex_SurfaceElements( int vnr, int* elems )
+int Ng_GetVertex_SurfaceElements( int vnr_, int* elems )
 {
+  PointIndex vnr = vnr_ + IndexBASE<PointIndex>()-1;
+  
   switch (mesh->GetDimension())
     {
     case 3:
@@ -1994,8 +1996,9 @@ int Ng_GetVertex_NElements( int vnr )
 }
 
 ///// Added by Roman Stainko ....
-int Ng_GetVertex_NSurfaceElements( int vnr )
+int Ng_GetVertex_NSurfaceElements( int vnr_ )
 {
+  PointIndex vnr = vnr_ + IndexBASE<PointIndex>()-1;
   switch (mesh->GetDimension())
     {
     case 3:

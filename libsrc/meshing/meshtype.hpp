@@ -229,13 +229,11 @@ namespace netgen
     friend constexpr PointIndex operator+ (size_t, PointIndex);
     friend constexpr PointIndex operator- (PointIndex, int);
     friend constexpr int operator- (PointIndex, PointIndex);
-    /*
     friend bool operator< (PointIndex a, PointIndex b);
     friend bool operator> (PointIndex a, PointIndex b);
     friend bool operator>= (PointIndex a, PointIndex b);
     friend constexpr bool operator== (PointIndex a, PointIndex b);
     friend constexpr bool operator!= (PointIndex a, PointIndex b);
-    */
     
   public:
     constexpr PointIndex (t_invalid inv) : i(long(PointIndex::BASE)-1) { ; }
@@ -266,15 +264,12 @@ namespace netgen
   constexpr inline PointIndex operator+ (int i, PointIndex pi) { return PointIndex(pi.i+i); }
   constexpr inline PointIndex operator+ (size_t i, PointIndex pi) { return PointIndex(pi.i+i); }
   constexpr inline PointIndex operator- (PointIndex pi, int i) { return PointIndex(pi.i-i); }
-  constexpr inline int operator- (PointIndex pa, PointIndex pb) { return PointIndex(pa.i-pb.i); }
-
-  /*
-  inline bool operator< (PointIndex a, PointIndex b) { return a.i < b.i; }
-  inline bool operator> (PointIndex a, PointIndex b) { return a.i > b.i; }
-  inline bool operator>= (PointIndex a, PointIndex b) { return a.i >= b.i; }
+  constexpr inline int operator- (PointIndex pa, PointIndex pb) { return pa.i-pb.i; }
+  inline bool operator< (PointIndex a, PointIndex b) { return a.i-b.i < 0; }
+  inline bool operator> (PointIndex a, PointIndex b) { return a.i-b.i > 0; }
+  inline bool operator>= (PointIndex a, PointIndex b) { return a.i-b.i >= 0; }
   inline constexpr bool operator== (PointIndex a, PointIndex b) { return a.i == b.i; }
   inline constexpr bool operator!= (PointIndex a, PointIndex b) { return a.i != b.i; }
-  */
 }
 
 namespace ngcore

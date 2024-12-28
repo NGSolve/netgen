@@ -92,7 +92,8 @@ void WriteDiffPackFormat (const Mesh & mesh,
 	}
 
 
-      for (int i = 1; i <= np; i++)
+      // for (int i = 1; i <= np; i++)
+      for (PointIndex i : mesh.Points().Range())
         {
           const Point3d & p = mesh.Point(i);
 
@@ -244,7 +245,8 @@ void WriteDiffPackFormat (const Mesh & mesh,
 	"   - the boundary indicators that are set (ON) if any.\n"
 	"#\n";
 
-      for (i = 1; i <= np; i++)
+      // for (i = 1; i <= np; i++)
+      for (PointIndex i : mesh.Points().Range())
         {
           const Point3d & p = mesh.Point(i);
 

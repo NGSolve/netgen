@@ -283,7 +283,7 @@ namespace netgen
     }
 
     {
-        FaceDescriptor new_fd(0, 0, 0, -1);
+      FaceDescriptor new_fd(0, 0, 0, -1);
         new_fd.SetBCProperty(new_domain);
         // int new_fd_index =
         mesh.AddFaceDescriptor(new_fd);

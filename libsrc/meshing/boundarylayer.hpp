@@ -58,6 +58,7 @@ public:
   Array<int> new_mat_nrs;
   BitArray moved_surfaces;
   int np, nseg, nse, ne;
+  PointIndex npi;  // IndexBASE<PointIndex>+np
   double total_height;
   Array<POINTTYPE, PointIndex> point_types;
 

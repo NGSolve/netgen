@@ -232,7 +232,7 @@ namespace netgen
 		 << "DATASET UNSTRUCTURED_GRID\n\n";
 
         surf_ost << "POINTS " << mesh->GetNP() << " float\n";
-        for (PointIndex pi = PointIndex::BASE; pi < mesh->GetNP()+PointIndex::BASE; pi++)
+        for (PointIndex pi = IndexBASE<PointIndex>(); pi < mesh->GetNP()+IndexBASE<PointIndex>(); pi++)
           {
             const MeshPoint & mp = (*mesh)[pi];
             surf_ost << mp(0) << " " << mp(1) << " " << mp(2) << "\n";
@@ -275,7 +275,7 @@ namespace netgen
             << "DATASET UNSTRUCTURED_GRID\n\n";
 
         ost << "POINTS " << mesh->GetNP() << " float\n";
-        for (PointIndex pi = PointIndex::BASE; pi < mesh->GetNP()+PointIndex::BASE; pi++)
+        for (PointIndex pi = IndexBASE<PointIndex>(); pi < mesh->GetNP()+IndexBASE<PointIndex>(); pi++)
           {
             const MeshPoint & mp = (*mesh)[pi];
             ost << mp(0) << " " << mp(1) << " " << mp(2) << "\n";
@@ -3891,12 +3891,13 @@ namespace netgen
     return def;
   }
 
-  void VisualSceneSolution :: GetPointDeformation (int pnum, Point<3> & p, 
+  void VisualSceneSolution :: GetPointDeformation (PointIndex pnum, Point<3> & p, 
                                                    SurfaceElementIndex elnr) const
   {
     shared_ptr<Mesh> mesh = GetMesh();
-
-    p = mesh->Point (pnum+1);
+    auto pnum_ = pnum-IndexBASE<PointIndex>();
+    
+    p = mesh->Point (pnum);
     if (deform && vecfunction != -1)
       {
         const SolData * vsol = soldata[vecfunction];
@@ -3904,15 +3905,15 @@ namespace netgen
         Vec<3> v(0,0,0);
         if (vsol->soltype == SOL_NODAL)
           {
-            v = Vec3d(vsol->data[pnum * vsol->dist],
-                      vsol->data[pnum * vsol->dist+1],
-                      vsol->data[pnum * vsol->dist+2]);
+            v = Vec3d(vsol->data[pnum_ * vsol->dist],
+                      vsol->data[pnum_ * vsol->dist+1],
+                      vsol->data[pnum_ * vsol->dist+2]);
           }
         else if (vsol->soltype == SOL_SURFACE_NONCONTINUOUS)
           {
             const Element2d & el = (*mesh)[elnr];
             for (int j = 0; j < el.GetNP(); j++)
-              if (el[j] == pnum+1)
+              if (el[j] == pnum)
                 {
                   int base = (4*elnr+j-1) * vsol->dist;
                   v = Vec3d(vsol->data[base],

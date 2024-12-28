@@ -20,11 +20,11 @@ namespace netgen
       {
 	backup[i] = new Point<3>(mesh.Point(i+1));
 
-	if(isnewpoint.Test(i+PointIndex::BASE) &&
-	   mesh.mlbetweennodes[i+PointIndex::BASE][0] > 0)
+	if(isnewpoint.Test(i+IndexBASE<PointIndex>()) &&
+	   mesh.mlbetweennodes[i+IndexBASE<PointIndex>()][0].IsValid())
 	  {
-	    mesh.Point(i+1) = Center(mesh.Point(mesh.mlbetweennodes[i+PointIndex::BASE][0]),
-				     mesh.Point(mesh.mlbetweennodes[i+PointIndex::BASE][1]));
+	    mesh.Point(i+1) = Center(mesh.Point(mesh.mlbetweennodes[i+IndexBASE<PointIndex>()][0]),
+				     mesh.Point(mesh.mlbetweennodes[i+IndexBASE<PointIndex>()][1]));
 	  }
       }
     for (ElementIndex i = 0; i < mesh.GetNE(); i++)
@@ -254,15 +254,16 @@ namespace netgen
       *should[i] = mesh.Point(i+1);
 
     
-    for(int i=0; i<np; i++)
+    // for(int i=0; i<np; i++)
+    for (PointIndex i = IndexBASE<PointIndex>(); i < IndexBASE<PointIndex>()+np; i++)
       {
-	if(isnewpoint.Test(i+PointIndex::BASE) && 
+	if(isnewpoint.Test(i) && 
 	   //working_points.Test(i+PointIndex::BASE) && 
-	   mesh.mlbetweennodes[i+PointIndex::BASE][0] > 0)
-	  *can[i] = Center(*can[mesh.mlbetweennodes[i+PointIndex::BASE][0]-IndexBASE<PointIndex>()],
-			   *can[mesh.mlbetweennodes[i+PointIndex::BASE][1]-IndexBASE<PointIndex>()]);
+	   mesh.mlbetweennodes[i][0].IsValid())
+	  *can[i-IndexBASE<PointIndex>()] = Center(*can[mesh.mlbetweennodes[i][0]-IndexBASE<PointIndex>()],
+                                                   *can[mesh.mlbetweennodes[i][1]-IndexBASE<PointIndex>()]);
 	else
-	  *can[i] = mesh.Point(i+1);
+	  *can[i-IndexBASE<PointIndex>()] = mesh[i];
       }
 
 

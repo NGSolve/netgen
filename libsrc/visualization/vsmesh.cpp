@@ -292,11 +292,11 @@ namespace netgen
       center.Y() = vispar.centery;
       center.Z() = vispar.centerz;
     }
-    else if (selpoint >= 1 && zoomall==2)
+    else if (selpoint-IndexBASE<PointIndex>() >= 1 && zoomall==2)
       center = mesh->Point (selpoint);
     else if (marker && zoomall==2)
       center = *marker;
-    else if (vispar.centerpoint >= 1 && zoomall==2)
+    else if (vispar.centerpoint-IndexBASE<PointIndex>() >= 0 && zoomall==2)
       center = mesh->Point (vispar.centerpoint);
     else
       center = Center (pmin, pmax);

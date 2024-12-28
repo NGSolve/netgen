@@ -319,7 +319,7 @@ private:
   Vec<3> GetDeformation (ElementIndex elnr, const Point<3> & p) const;
   Vec<3> GetSurfDeformation (SurfaceElementIndex selnr, int facetnr, double lam1, double lam2) const;
 
-  void GetPointDeformation (int pnum, Point<3> & p, SurfaceElementIndex elnr = -1) const;
+  void GetPointDeformation (PointIndex pnum, Point<3> & p, SurfaceElementIndex elnr = -1) const;
 
 public:
   /// draw elements (build lists)

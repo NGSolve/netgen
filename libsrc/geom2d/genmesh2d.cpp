@@ -465,8 +465,8 @@ namespace netgen
 	  PointIndex mpi(0);
 	  Point<2> gp = geometry.GetPoint(i);
 	  Point<3> gp3(gp(0), gp(1), 0);
-	  for (PointIndex pi = PointIndex::BASE; 
-	       pi < mesh->GetNP()+PointIndex::BASE; pi++)
+	  for (PointIndex pi = IndexBASE<PointIndex>(); 
+	       pi < mesh->GetNP()+IndexBASE<PointIndex>(); pi++)
 	    if (Dist2(gp3, (*mesh)[pi]) < mindist)
 	      {
 		mpi = pi;

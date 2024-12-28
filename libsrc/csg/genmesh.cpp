@@ -443,7 +443,7 @@ namespace netgen
 	meshing.SetStartTime (starttime);
 
         double eps = 1e-8 * geom.MaxSize();
-	for (PointIndex pi = PointIndex::BASE; pi < noldp+PointIndex::BASE; pi++)
+	for (PointIndex pi = IndexBASE<PointIndex>(); pi < noldp+IndexBASE<PointIndex>(); pi++)
 	  { 
 	    // if(surf->PointOnSurface(mesh[pi]))
 	    meshing.AddPoint (mesh[pi], pi, NULL,

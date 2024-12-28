@@ -513,8 +513,8 @@ namespace netgen
              auto end = r.Next();
              // INDEX_CLOSED_HASHTABLE<int> v2eht(2*max_edge_on_vertex+10);
              ngcore::ClosedHashTable<int, int> v2eht(2*max_edge_on_vertex+10);
-             for (PointIndex v = begin+PointIndex::BASE;
-                  v < end+PointIndex::BASE; v++)
+             for (PointIndex v = begin+IndexBASE<PointIndex>();
+                  v < end+IndexBASE<PointIndex>(); v++)
                {
                  v2eht.DeleteData();
                  for (int ednr : vert2edge[v])
@@ -553,7 +553,7 @@ namespace netgen
 
         // INDEX_CLOSED_HASHTABLE<int> v2eht(2*max_edge_on_vertex+10);
 	// NgArray<int> vertex2;
-	// for (PointIndex v = PointIndex::BASE; v < nv+PointIndex::BASE; v++)
+	// for (PointIndex v = IndexBASE<PointIndex>(); v < nv+IndexBASE<PointIndex>(); v++)
 
         ParallelForRange
           (mesh->GetNV(), // Points().Size(),
@@ -565,8 +565,8 @@ namespace netgen
              ngcore::ClosedHashTable<int, int> v2eht(2*max_edge_on_vertex+10);
 
              Array<int> vertex2;
-             for (PointIndex v = begin+PointIndex::BASE;
-                  v < end+PointIndex::BASE; v++)
+             for (PointIndex v = begin+IndexBASE<PointIndex>();
+                  v < end+IndexBASE<PointIndex>(); v++)
                {
                  int ned = cnt[v];
                  v2eht.DeleteData();            
@@ -659,8 +659,8 @@ namespace netgen
           {
             auto verts = edge2vert[i];  // 2 vertices of edge
 
-            if (verts[0] >= mesh->mlbetweennodes.Size()+PointIndex::BASE ||
-                verts[1] >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
+            if (verts[0] >= mesh->mlbetweennodes.Size()+IndexBASE<PointIndex>() ||
+                verts[1] >= mesh->mlbetweennodes.Size()+IndexBASE<PointIndex>())
               continue;
 
             auto pa0 = mesh->mlbetweennodes[verts[0]]; // two parent vertices of v0
@@ -960,7 +960,7 @@ namespace netgen
                   for (int j = 0; j < 3; j++)
                     {
                       PointIndex v = f3[j];
-                      if (v >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
+                      if (v >= mesh->mlbetweennodes.Size()+IndexBASE<PointIndex>())
                         continue;
 
                       auto pa = mesh->mlbetweennodes[v];
@@ -991,7 +991,7 @@ namespace netgen
                 for (int j = 0; j < 3; j++)
                   {
                     PointIndex v = f3[j];
-                    if (v >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
+                    if (v >= mesh->mlbetweennodes.Size()+IndexBASE<PointIndex>())
                       continue;
                     
                     auto pa = mesh->mlbetweennodes[v];
@@ -1031,7 +1031,7 @@ namespace netgen
 	
 
 	int max_face_on_vertex = 0;
-	for (int i = PointIndex::BASE; i < nv+PointIndex::BASE; i++)
+	for (PointIndex i = IndexBASE<PointIndex>(); i < nv+IndexBASE<PointIndex>(); i++)
 	  {
 	    int onv = vert2oldface[i].Size() + vert2element[i].Size() + vert2surfelement[i].Size();
 	    max_face_on_vertex = max (onv, max_face_on_vertex);
@@ -1335,7 +1335,7 @@ namespace netgen
                                    << endl;
 			(*testout) << "pos = ";
 			for (int j = 0; j < 4; j++)
-                          if (face2vert[i][j] >= 1)
+                          if (face2vert[i][j].IsValid())
                             (*testout) << (*mesh)[(PointIndex)face2vert[i][j]] << " ";
 			(*testout) << endl;
 
@@ -1400,10 +1400,10 @@ namespace netgen
                 for (int k = 0; k < 3; k++)
                   {
                     PointIndex vb = f3[k]; 
-                    if (vb >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
+                    if (vb >= mesh->mlbetweennodes.Size()+IndexBASE<PointIndex>())
                       continue;
                     auto parents = mesh->mlbetweennodes[vb];
-                    if (parents[0] >= PointIndex::BASE)
+                    if (parents[0] >= IndexBASE<PointIndex>())
                       all_vert_coarse = false;
                   }
                 if (all_vert_coarse) continue;
@@ -1415,7 +1415,7 @@ namespace netgen
                 for (int k = 0; k < 3; k++)
                   {
                     PointIndex vb = f3[k]; // assume vb as the new bisect vert
-                    if (vb >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
+                    if (vb >= mesh->mlbetweennodes.Size()+IndexBASE<PointIndex>())
                       continue;
                     auto parents = mesh->mlbetweennodes[vb];
                     
@@ -1552,7 +1552,7 @@ namespace netgen
                   for (int k = 0; k < 3; k++)
                     {
                       PointIndex vb = f3[k]; // assume vb as the new bisect vert
-                      if (vb >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
+                      if (vb >= mesh->mlbetweennodes.Size()+IndexBASE<PointIndex>())
                         continue;
                       auto parents = mesh->mlbetweennodes[vb];
 

@@ -153,8 +153,8 @@ void SingularPoint :: FindPoints (class Mesh & mesh)
   NgArray<int> surfk, surf;
 
 
-  for (PointIndex pi = PointIndex::BASE; 
-       pi < mesh.GetNP()+PointIndex::BASE; pi++)
+  for (PointIndex pi = IndexBASE<PointIndex>(); 
+       pi < mesh.GetNP()+IndexBASE<PointIndex>(); pi++)
     {
       if (mesh[pi].Type() != FIXEDPOINT) continue;
       const Point<3> p = mesh[pi];

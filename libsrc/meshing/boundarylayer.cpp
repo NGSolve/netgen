@@ -259,7 +259,7 @@ void MergeAndAddSegments (Mesh& mesh, FlatArray<Segment> segments, FlatArray<Seg
   mesh.LineSegments().SetSize0();
 
   auto addSegment = [&] (const auto& seg) {
-    INDEX_2 i2(seg[0], seg[1]);
+    PointIndices<2> i2(seg[0], seg[1]);
     i2.Sort();
     if (!already_added.Used(i2))
       {
@@ -297,6 +297,7 @@ BoundaryLayerTool::BoundaryLayerTool(Mesh& mesh_,
     segments = mesh.LineSegments();
 
   np = mesh.GetNP();
+  npi = IndexBASE<PointIndex>()+np;
   ne = mesh.GetNE();
   nse = mesh.GetNSE();
   nseg = segments.Size();
@@ -626,7 +627,9 @@ void BoundaryLayerTool ::InsertNewElements(
   };
 
   // insert new points
-  for (PointIndex pi = 1; pi <= np; pi++)
+  // for (PointIndex pi = 1; pi <= np; pi++)
+  for (PointIndex pi = IndexBASE<PointIndex>();
+       pi < IndexBASE<PointIndex>()+np; pi++)
     {
       if (growthvectors[pi].Length2() != 0)
         {

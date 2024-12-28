@@ -1161,7 +1161,7 @@ namespace netgen
 	  
 	  seg.domin = seg.surfnr1;
 	  seg.domout = seg.surfnr2;
-	  if ( seg.pnums[0] >0 && seg.pnums[1] > 0 )
+	  if ( seg.pnums[0].IsValid() && seg.pnums[1].IsValid() )
 	    {
 	      paralleltop-> SetLoc2Glob_Segm ( segi,  globsegi );
 	      

@@ -70,12 +70,12 @@ TEST_CASE("Array")
 
   // pointindex is still 1 based
   Array<double, netgen::PointIndex> piarray(2);
-  i = 1;
+  netgen::PointIndex pi = IndexBASE<netgen::PointIndex>();
   for(auto j : Range(piarray))
-    CHECK(j == i++);
-  i = 1;
+    CHECK(j == pi++);
+  pi = IndexBASE<netgen::PointIndex>();
   for(auto j : piarray.Range())
-    CHECK(j == i++);
+    CHECK(j == pi++);
   // a class can implement index_type and Size as well.
   ClsWithIndexType<int> clsi(3);
   CHECK(typeid(Range(clsi)) == typeid(T_Range<int>));

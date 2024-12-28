@@ -436,7 +436,7 @@ namespace netgen
 	      for (int dist : GetDistantProcs(pi))
 		dest2vert.Add (dist, pi);
             
-	    for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
+	    for (PointIndex pi = IndexBASE<PointIndex>(); pi < newnv+IndexBASE<PointIndex>(); pi++)
               if (auto [v1,v2] = mesh.mlbetweennodes[pi]; v1.IsValid())              
                 {
                   auto procs1 = GetDistantProcs(v1);
