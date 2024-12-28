@@ -457,14 +457,14 @@ namespace netgen
 
          for (PointIndex pi : mesh.Points().Range())
            if (domain_bbox.IsIn (mesh[pi]))
-               glob2loc[pi] = meshing.AddPoint (mesh[pi], pi);
+             glob2loc[pi] = meshing.AddPoint (mesh[pi], pi);
 
-         for (auto sel : mesh.OpenElements() )
-         {
-           for(auto & pi : sel.PNums())
+         for (auto sel : mesh.OpenElements())
+           {
+             for(auto & pi : sel.PNums())
                pi = glob2loc[pi];
-           meshing.AddBoundaryElement (sel);
-         }
+             meshing.AddBoundaryElement (sel);
+           }
 
          int oldne = mesh.GetNE();
 

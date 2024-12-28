@@ -31,7 +31,7 @@ namespace netgen
     if (mesh.mlbetweennodes.Size() < mesh.GetNV())
       {
         mesh.mlbetweennodes.SetSize(mesh.GetNV());
-        mesh.mlbetweennodes = INDEX_2(PointIndex::BASE-1,PointIndex::BASE-1);
+        mesh.mlbetweennodes = PointIndices<2>(PointIndex::INVALID, PointIndex::INVALID);
       }
 
     if (mesh.level_nv.Size() == 0)

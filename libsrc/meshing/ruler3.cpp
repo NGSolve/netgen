@@ -662,7 +662,7 @@ int Meshing3 :: ApplyRules
 		      // for (int i = 1; i <= lpoints.Size(); i++)
                       for (auto i : lpoints.Range())
 			{
-			  if ( !pused.Get(i) )
+			  if ( !pused[i] )
 			    {
 			      const Point3d & lp = lpoints[i];
 

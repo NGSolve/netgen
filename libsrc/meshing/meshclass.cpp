@@ -7018,7 +7018,7 @@ namespace netgen
   }
 
 
-  Table<ElementIndex, PointIndex> Mesh :: CreatePoint2ElementTable(std::optional<BitArray> points, int domain) const
+  Table<ElementIndex, PointIndex> Mesh :: CreatePoint2ElementTable(std::optional<TBitArray<PointIndex>> points, int domain) const
   {
     static Timer timer("Mesh::CreatePoint2VolumeElementTable"); RegionTimer rt(timer);
     

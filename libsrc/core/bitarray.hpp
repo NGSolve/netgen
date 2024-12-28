@@ -225,6 +225,12 @@ private:
     bool Test (IndexType i) const { return BitArray::Test(i-IndexBASE<IndexType>()); }
     bool operator[] (IndexType i) const { return Test(i); } 
 
+    NGCORE_API TBitArray & Or (const TBitArray & ba2)
+    {
+      BitArray::Or(ba2);
+      return *this;
+    }
+
   };
 
 } // namespace ngcore

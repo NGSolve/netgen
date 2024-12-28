@@ -214,7 +214,7 @@ namespace netgen
     { } ;
 
 
-    virtual double Func (const Vector & x) const
+    virtual double Func (const Vector & x) const override
     {
       double badness = 0;
       
@@ -243,7 +243,7 @@ namespace netgen
     }
 
 
-    virtual double FuncGrad (const Vector & x, Vector & g) const
+    virtual double FuncGrad (const Vector & x, Vector & g) const override
     {
       Vec<3> vgrad;
       Point<3> pp1;
@@ -278,7 +278,7 @@ namespace netgen
       return badness;
     }
 
-    virtual double FuncDeriv (const Vector & x, const Vector & dir, double & deriv) const
+    virtual double FuncDeriv (const Vector & x, const Vector & dir, double & deriv) const override
     {
       deriv = 0;
       double badness = 0;
@@ -479,8 +479,8 @@ namespace netgen
 			  Opti2dLocalData & ald)
       : mesh(amesh), ld(ald), geo(*amesh.GetGeometry()) { } ;
 
-    virtual double FuncGrad (const Vector & x, Vector & g) const;
-    virtual double Func (const Vector & x) const;
+    virtual double FuncGrad (const Vector & x, Vector & g) const override;
+    virtual double Func (const Vector & x) const override;
   };
 
   double Opti2EdgeMinFunction :: Func (const Vector & x) const
@@ -550,9 +550,9 @@ namespace netgen
 				     Opti2dLocalData & ald)
       : mesh(amesh), ld(ald), geo(*amesh.GetGeometry())
     { } ;
-    virtual double FuncGrad (const Vector & x, Vector & g) const;
-    virtual double FuncDeriv (const Vector & x, const Vector & dir, double & deriv) const;
-    virtual double Func (const Vector & x) const;
+    virtual double FuncGrad (const Vector & x, Vector & g) const override;
+    virtual double FuncDeriv (const Vector & x, const Vector & dir, double & deriv) const override;
+    virtual double Func (const Vector & x) const override;
   };
   
   double Opti2SurfaceMinFunctionJacobian :: 

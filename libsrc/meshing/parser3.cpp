@@ -177,16 +177,16 @@ void vnetrule :: LoadRule (istream & ist)
 	  while (ch == '(')
 	    {
 	      face.SetType(TRIG);
-	      ist >> face.PNum(1);
+	      ist >> (int&)face.PNum(1);
 	      ist >> ch;    // ','
-	      ist >> face.PNum(2);
+	      ist >> (int&)face.PNum(2);
 	      ist >> ch;    // ','
-	      ist >> face.PNum(3);
+	      ist >> (int&)face.PNum(3);
 	      ist >> ch;    // ')' or ','
 	      if (ch == COMMASIGN)
 		{
 		  face.SetType(QUAD);
-		  ist >> face.PNum(4);
+		  ist >> (int&)face.PNum(4);
 		  ist >> ch;    // ')' 
 		}
 	      faces.Append (face);
@@ -285,16 +285,16 @@ void vnetrule :: LoadRule (istream & ist)
 	  while (ch == '(')
 	    {
 	      face.SetType(TRIG);
-	      ist >> face.PNum(1);
+	      ist >> (int&)face.PNum(1);
 	      ist >> ch;    // ','
-	      ist >> face.PNum(2);
+	      ist >> (int&)face.PNum(2);
 	      ist >> ch;    // ','
-	      ist >> face.PNum(3);
+	      ist >> (int&)face.PNum(3);
 	      ist >> ch;    // ')' or ','
 	      if (ch == COMMASIGN)
 		{
 		  face.SetType(QUAD);
-		  ist >> face.PNum(4);
+		  ist >> (int&)face.PNum(4);
 		  ist >> ch;    // ')' 
 		}
 	      faces.Append (face);
@@ -494,40 +494,40 @@ void vnetrule :: LoadRule (istream & ist)
 	      elements.Append (Element(TET));
 
 	      //	      elements.Last().SetNP(1);
-	      ist >> elements.Last().PNum(1);
+	      ist >> (int&)elements.Last().PNum(1);
 	      ist >> ch;    // ','
 
 	      if (ch == COMMASIGN)
 		{
 		  //		  elements.Last().SetNP(2);
-		  ist >> elements.Last().PNum(2);
+		  ist >> (int&)elements.Last().PNum(2);
 		  ist >> ch;    // ','
 		}
 	      if (ch == COMMASIGN)
 		{
 		  //		  elements.Last().SetNP(3);
-		  ist >> elements.Last().PNum(3);
+		  ist >> (int&)elements.Last().PNum(3);
 		  ist >> ch;    // ','
 		}
 	      if (ch == COMMASIGN)
 		{
 		  //		  elements.Last().SetNP(4);
 		  elements.Last().SetType(TET);
-		  ist >> elements.Last().PNum(4);
+		  ist >> (int&)elements.Last().PNum(4);
 		  ist >> ch;    // ','
 		}
 	      if (ch == COMMASIGN)
 		{
 		  //		  elements.Last().SetNP(5);
 		  elements.Last().SetType(PYRAMID);
-		  ist >> elements.Last().PNum(5);
+		  ist >> (int&)elements.Last().PNum(5);
 		  ist >> ch;    // ','
 		}
 	      if (ch == COMMASIGN)
 		{
 		  //		  elements.Last().SetNP(6);
 		  elements.Last().SetType(PRISM);
-		  ist >> elements.Last().PNum(6);
+		  ist >> (int&)elements.Last().PNum(6);
 		  ist >> ch;    // ','
 		}
               
@@ -535,14 +535,14 @@ void vnetrule :: LoadRule (istream & ist)
 		{
 		  //		  elements.Last().SetNP(6);
 		  elements.Last().SetType(HEX);
-		  ist >> elements.Last().PNum(7);
+		  ist >> (int&)elements.Last().PNum(7);
 		  ist >> ch;    // ','
 		}
 	      if (ch == COMMASIGN)
 		{
 		  //		  elements.Last().SetNP(6);
 		  elements.Last().SetType(HEX);
-		  ist >> elements.Last().PNum(8);
+		  ist >> (int&)elements.Last().PNum(8);
 		  ist >> ch;    // ','
 		}
 

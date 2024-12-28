@@ -809,7 +809,7 @@ namespace netgen
     static Timer topenel("Delaunay - find openel"); RegionTimer rt(topenel);
 
     // find surface triangles which are no face of any tet
-    TBitArray<PointIndex> bnd_points( mesh.GetNP() + PointIndex::BASE );
+    TBitArray<PointIndex> bnd_points( mesh.GetNP() );
     bnd_points.Clear();
 
     for (int i = 1; i <= mesh.GetNOpenElements(); i++)
@@ -891,7 +891,7 @@ namespace netgen
              table.Add(tri[2], openel_i);
            }, mesh.GetNP());
 
-    TBitArray<PointIndex> badnode(mesh.GetNP()+PointIndex::BASE);
+    TBitArray<PointIndex> badnode(mesh.GetNP());
     badnode.Clear();
 
     ngcore::ParallelForRange(openels.Size(), [&] (auto myrange) {
