@@ -2530,10 +2530,10 @@ namespace netgen
                {
                  if (el.GetNP() == 4)
                    {
-                     INDEX_4 i4(el[0], el[1], el[2], el[3]);
+                     PointIndices<4> i4(el[0], el[1], el[2], el[3]);
                      i4.Sort();
-                     table.Add (PointIndex(i4.I1()), ei);
-                     table.Add (PointIndex(i4.I2()), ei);
+                     table.Add (i4.I1(), ei);
+                     table.Add (i4.I2(), ei);
                    }
                  else
                    {
@@ -3127,7 +3127,7 @@ namespace netgen
     for (int i = 1; i <= faceht.GetNBags(); i++)
       for (int j = 1; j <= faceht.GetBagSize(i); j++)
         {
-          INDEX_3 i2;
+          PointIndices<3> i2;
           int data;
           faceht.GetData (i, j, i2, data);
           if (data)  // surfnr
@@ -4178,7 +4178,7 @@ namespace netgen
     
     {
       Array<MeshPoint> hpoints;
-      int npi = PointIndex::BASE;
+      PointIndex npi = IndexBASE<PointIndex>();
       for (PointIndex pi : points.Range())
         if (pused[pi])
           {
@@ -4932,8 +4932,7 @@ namespace netgen
 
             // make minimal node to node 1
             int minpi=0;
-            PointIndex minpnum;
-            minpnum = GetNP() + 1;
+            PointIndex minpnum = IndexBASE<PointIndex>()+GetNP();
 
             for (int j = 1; j <= 6; j++)
               {
@@ -4953,10 +4952,9 @@ namespace netgen
 
             while (minpi > 1)
               {
-                int hi = 0;
                 for (int j = 0; j <= 3; j+= 3)
                   {
-                    hi = el.PNum(1+j);
+                    PointIndex hi = el.PNum(1+j);
                     el.PNum(1+j) = el.PNum(2+j);
                     el.PNum(2+j) = el.PNum(3+j);
                     el.PNum(3+j) = hi;
@@ -5028,8 +5026,7 @@ namespace netgen
 
             // make minimal node to node 1
             int minpi=0;
-            PointIndex minpnum;
-            minpnum = GetNP() + 1;
+            PointIndex minpnum = GetNP() + IndexBASE<PointIndex>();
 
             for (int j = 1; j <= 8; j++)
               {
@@ -5049,10 +5046,9 @@ namespace netgen
 
             while (minpi > 1)
               {
-                int hi = 0;
                 for (int j = 0; j <= 4; j+= 4)
                   {
-                    hi = el.PNum(1+j);
+                    PointIndex hi = el.PNum(1+j);
                     el.PNum(1+j) = el.PNum(2+j);
                     el.PNum(2+j) = el.PNum(3+j);
                     el.PNum(3+j) = el.PNum(4+j);
@@ -7007,8 +7003,8 @@ namespace netgen
     int mlold = mlbetweennodes.Size();
     mlbetweennodes.SetSize(np);
     if (np > mlold)
-      for (int i = mlold+PointIndex::BASE; 
-           i < np+PointIndex::BASE; i++)
+      for (PointIndex i = mlold+IndexBASE<PointIndex>(); 
+           i < np+IndexBASE<PointIndex>(); i++)
         {
           mlbetweennodes[i][0].Invalidate();
           mlbetweennodes[i][1].Invalidate();

@@ -562,7 +562,7 @@ namespace netgen
          auto first_new_pi = m_.pmap.Range().Next();
          auto & m = *m_.mesh;
          Array<PointIndex, PointIndex> pmap(m.Points().Size());
-         for(auto pi : Range(PointIndex(PointIndex::BASE), first_new_pi))
+         for(auto pi : Range(IndexBASE<PointIndex>(), first_new_pi))
              pmap[pi] = m_.pmap[pi];
 
          for (auto pi : Range(first_new_pi, m.Points().Range().Next()))
@@ -594,7 +594,7 @@ namespace netgen
      for(auto & m : meshes)
      {
          Array<PointIndex, PointIndex> pmap(m.Points().Size());
-         for(auto pi : Range(PointIndex(PointIndex::BASE), first_new_pi))
+         for(auto pi : Range(IndexBASE<PointIndex>(), first_new_pi))
              pmap[pi] = pi;
 
          for (auto pi : Range(first_new_pi, m.Points().Range().Next()))

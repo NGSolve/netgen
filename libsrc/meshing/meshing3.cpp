@@ -389,10 +389,9 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	      
 	      delfaces.SetSize (0);
 	      
-	      INDEX npi;
 	      Element newel(TET);
 	      
-	      npi = mesh.AddPoint (inp);
+	      PointIndex npi = mesh.AddPoint (inp);
 	      newel.SetNP(4);
 	      newel.PNum(4) = npi;
 	      

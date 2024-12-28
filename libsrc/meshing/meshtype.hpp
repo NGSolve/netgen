@@ -858,7 +858,7 @@ namespace netgen
     bool IsDeleted () const 
     {
 #ifdef DEBUG
-      if (pnum[0] < PointIndex::BASE && !deleted)
+      if ((pnum[0]-IndexBASE<PointIndex>() < 0) && !deleted)
 	cerr << "Surfelement has illegal pnum, but not marked as deleted" << endl;
 #endif    
       return deleted; 
@@ -1238,7 +1238,7 @@ namespace netgen
     bool IsDeleted () const 
     { 
 #ifdef DEBUG
-      if (pnum[0] < PointIndex::BASE && !flags.deleted)
+      if (pnum[0]-IndexBASE<PointIndex>() < 0 && !flags.deleted)
 	cerr << "Volelement has illegal pnum, but not marked as deleted" << endl;
 #endif    
 
