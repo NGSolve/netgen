@@ -858,7 +858,8 @@ namespace netgen
 	    const Element2d & el = locelements.Get(i);
 
 	    for (int j = 1; j <= el.GetNP(); j++)
-	      if (el.PNum(j) <= oldnp && pindex.Get(el.PNum(j)) == -1)
+	      // if (el.PNum(j) <= oldnp && pindex.Get(el.PNum(j)) == -1)
+              if (el.PNum(j) < IndexBASE<PointIndex>()+oldnp && pindex.Get(el.PNum(j)) == -1)
 		{
 		  found = 0;
 		  PrintSysError ("meshing2, index missing");

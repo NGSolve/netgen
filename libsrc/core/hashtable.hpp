@@ -591,9 +591,27 @@ namespace ngcore
     return res; 
   }
 
-
   template <typename T>
   constexpr inline T InvalidHash() { return T(-1); }
+
+  template <typename T_HASH>
+  struct CHT_trait
+  {
+    constexpr static inline T_HASH Invalid() { return InvalidHash<T_HASH>(); }
+    constexpr static inline size_t HashValue (const T_HASH & hash, size_t mask) { return HashValue2(hash, mask); }
+  };
+
+  template <typename T1, typename T2>
+  struct CHT_trait<std::tuple<T1,T2>>
+  {
+    constexpr static inline std::tuple<T1,T2> Invalid() { return { CHT_trait<T1>::Invalid(), CHT_trait<T2>::Invalid() } ; }
+    constexpr static inline size_t HashValue (const std::tuple<T1,T2> & hash, size_t mask)
+    {
+      return (CHT_trait<T1>::HashValue(std::get<0>(hash), mask) + CHT_trait<T2>::HashValue(std::get<1>(hash),mask)) & mask;
+    }
+  };
+
+  
 
   /**
      A closed hash-table.
@@ -615,7 +633,8 @@ namespace ngcore
     Array<T> cont;
     ///
     // T_HASH invalid = -1;
-    static constexpr T_HASH invalid = InvalidHash<T_HASH>();
+    // static constexpr T_HASH invalid = InvalidHash<T_HASH>();
+    static constexpr T_HASH invalid = CHT_trait<T_HASH>::Invalid();
   public:
     ///
     ClosedHashTable (size_t asize = 128)
@@ -623,7 +642,8 @@ namespace ngcore
     {
       mask = size-1;
       // hash = T_HASH(invalid);
-      hash = InvalidHash<T_HASH>();
+      // hash = InvalidHash<T_HASH>();
+      hash = CHT_trait<T_HASH>::Invalid();
     }
 
     ClosedHashTable (ClosedHashTable && ht2) = default;
@@ -658,7 +678,8 @@ namespace ngcore
 
     size_t Position (const T_HASH ind) const
     {
-      size_t i = HashValue2(ind, mask);
+      // size_t i = HashValue2(ind, mask);
+      size_t i = CHT_trait<T_HASH>::HashValue(ind, mask);
       while (true)
 	{
 	  if (hash[i] == ind) return i;
@@ -680,7 +701,8 @@ namespace ngcore
     {
       if (UsedElements()*2 > Size()) DoubleSize();
       
-      size_t i = HashValue2 (ind, mask);
+      // size_t i = HashValue2 (ind, mask);
+      size_t i = CHT_trait<T_HASH>::HashValue (ind, mask);
 
       while (true)
 	{

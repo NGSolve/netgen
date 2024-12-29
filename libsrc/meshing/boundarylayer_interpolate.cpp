@@ -131,7 +131,8 @@ void BoundaryLayerTool ::InterpolateGrowthVectors()
         {
           auto& seg = *p_seg;
           faces.SetSize(0);
-          if (seg[0] <= p2sel.Size())
+          // if (seg[0] <= p2sel.Size())
+          if (seg[0] < IndexBASE<PointIndex>()+p2sel.Size())
             {
               for (auto sei : p2sel[seg[0]])
                 if (moved_surfaces.Test(mesh[sei].GetIndex()) && p2sel[seg[1]].Contains(sei))
@@ -154,7 +155,8 @@ void BoundaryLayerTool ::InterpolateGrowthVectors()
         {
           for (auto* p_seg : edgenr2seg[edgenr])
             for (auto pi : p_seg->PNums())
-              if (pi <= np && point_types[pi] == EDGEPOINT)
+              // if (pi <= np && point_types[pi] == EDGEPOINT)
+              if (pi < npi && point_types[pi] == EDGEPOINT)
                 point_types[pi] = SURFACEPOINT;
           continue;
         }

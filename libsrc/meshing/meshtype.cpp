@@ -237,7 +237,7 @@ namespace netgen
   {
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
       {
-	pnum[i] = 0;
+	pnum[i].Invalidate();
 	geominfo[i].trignum = 0;
       }
     np = 3;
@@ -331,8 +331,8 @@ namespace netgen
     np = 4;
     typ = QUAD;
 
-    pnum[4] = 0;
-    pnum[5] = 0;
+    pnum[4].Invalidate();
+    pnum[5].Invalidate();
   
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
       geominfo[i].trignum = 0;
@@ -1038,7 +1038,7 @@ namespace netgen
   {
     s << "np = " << el.GetNP();
     for (int j = 0; j < el.GetNP(); j++)
-      s << " " << int(el[j]);
+      s << " " << el[j];
     return s;
   }
 

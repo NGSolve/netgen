@@ -376,7 +376,7 @@ int Meshing3 :: ApplyRules
 		    {
 		      PointIndex locpi = locface->PNumMod(j+locfr);
 		      
-		      if (rule->GetPointNr (nfok, j) <= 3 &&
+		      if (rule->GetPointNr (nfok, j) < IndexBASE<PointIndex>()+3 &&
 			  pmap.Get(rule->GetPointNr(nfok, j)) != locpi)
 			(*testout) << "change face1 point, mark1" << endl;
 		      
@@ -797,9 +797,9 @@ int Meshing3 :: ApplyRules
 				  hc = 0;
 				  for (int k = rule->GetNOldF() + 1; k <= rule->GetNF(); k++)
 				    {
-				      if (rule->GetPointNr(k, 1) <= rule->GetNOldP() &&
-					  rule->GetPointNr(k, 2) <= rule->GetNOldP() &&
-					  rule->GetPointNr(k, 3) <= rule->GetNOldP())
+				      if (rule->GetPointNr(k, 1) < IndexBASE<PointIndex>()+rule->GetNOldP() &&
+					  rule->GetPointNr(k, 2) < IndexBASE<PointIndex>()+rule->GetNOldP() &&
+					  rule->GetPointNr(k, 3) < IndexBASE<PointIndex>()+rule->GetNOldP())
 					{
 					  for (int j = 1; j <= 3; j++)
 					    if (lfaces[i-1].PNumMod(j  ) == pmap.Get(rule->GetPointNr(k, 1)) &&

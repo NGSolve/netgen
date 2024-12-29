@@ -53,7 +53,7 @@ void SingularEdge :: FindPointsOnEdge (class Mesh & mesh)
 
   for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
     {
-      INDEX_2 i2 (mesh[si][0], mesh[si][1]);
+      PointIndices<2> i2 (mesh[si][0], mesh[si][1]);
       /*
       
       bool onedge = 1;
@@ -93,8 +93,8 @@ void SingularEdge :: FindPointsOnEdge (class Mesh & mesh)
 	{
 	  segms.Append (i2);
 	  //	  PrintMessage (5, "sing segment ", i2.I1(), " - ", i2.I2());
-	  points.Append (mesh[ PointIndex (i2.I1())]);
-	  points.Append (mesh[ PointIndex (i2.I2())]);
+	  points.Append (mesh[i2.I1()]);
+	  points.Append (mesh[i2.I2()]);
 	  mesh[si].singedge_left = factor;
 	  mesh[si].singedge_right = factor;
 	}	    

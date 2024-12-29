@@ -232,6 +232,7 @@ namespace netgen
     friend bool operator< (PointIndex a, PointIndex b);
     friend bool operator> (PointIndex a, PointIndex b);
     friend bool operator>= (PointIndex a, PointIndex b);
+    friend bool operator<= (PointIndex a, PointIndex b);
     friend constexpr bool operator== (PointIndex a, PointIndex b);
     friend constexpr bool operator!= (PointIndex a, PointIndex b);
     
@@ -268,6 +269,7 @@ namespace netgen
   inline bool operator< (PointIndex a, PointIndex b) { return a.i-b.i < 0; }
   inline bool operator> (PointIndex a, PointIndex b) { return a.i-b.i > 0; }
   inline bool operator>= (PointIndex a, PointIndex b) { return a.i-b.i >= 0; }
+  inline bool operator<= (PointIndex a, PointIndex b) { return a.i-b.i <= 0; }
   inline constexpr bool operator== (PointIndex a, PointIndex b) { return a.i == b.i; }
   inline constexpr bool operator!= (PointIndex a, PointIndex b) { return a.i != b.i; }
 }
@@ -387,32 +389,66 @@ namespace netgen
     { Sort(); }
   };
   
-  constexpr inline size_t HashValue2 (const PointIndex & ind, size_t mask)
-  { return (ind-IndexBASE<PointIndex>()) & mask; }
+  // constexpr inline size_t HashValue2 (const PointIndex & ind, size_t mask)
+  // { return (ind-IndexBASE<PointIndex>()) & mask; }
   
 }
 
 namespace ngcore
 {
-  template <typename T> constexpr inline T InvalidHash();
+
+  template <>
+  struct CHT_trait<netgen::PointIndex>
+  {
+    constexpr static inline netgen::PointIndex Invalid() { return netgen::PointIndex::INVALID; }
+    constexpr static inline size_t HashValue (const netgen::PointIndex & hash, size_t mask)
+    { return (hash-IndexBASE<netgen::PointIndex>()) & mask; }
+  };
 
 
   template <>
-  constexpr inline netgen::PointIndex InvalidHash<netgen::PointIndex> ()
-  { return netgen::PointIndex::INVALID; }
+  struct CHT_trait<netgen::PointIndices<2>>
+  {
+    constexpr static inline netgen::PointIndices<2> Invalid() { return { netgen::PointIndex::INVALID, netgen::PointIndex::INVALID} ; }
+    constexpr static inline size_t HashValue (const netgen::PointIndices<2> & hash, size_t mask)
+    { return HashValue2(IVec<2>(hash[0]-IndexBASE<netgen::PointIndex>(),
+                                hash[1]-IndexBASE<netgen::PointIndex>()), mask); }
+  };
   
+
   template <>
-  constexpr inline netgen::PointIndices<2> InvalidHash<netgen::PointIndices<2>> ()
-  { return netgen::PointIndices<2>{netgen::PointIndex::INVALID, netgen::PointIndex::INVALID}; }
+  struct CHT_trait<netgen::SortedPointIndices<2>>
+  {
+    constexpr static inline netgen::SortedPointIndices<2> Invalid() { return { netgen::PointIndex::INVALID, netgen::PointIndex::INVALID} ; }
+    constexpr static inline size_t HashValue (const netgen::SortedPointIndices<2> & hash, size_t mask)
+    // { return HashValue2(IVec<2,netgen::INDEX>(hash[0], hash[1]), mask); }
+    { return CHT_trait<netgen::PointIndices<2>>::HashValue (hash, mask); }
+  };
+  
+
+
+  
+  // template <typename T> constexpr inline T InvalidHash();
+
+
+  // template <>
+  // constexpr inline netgen::PointIndex InvalidHash<netgen::PointIndex> ()
+  // { return netgen::PointIndex::INVALID; }
+  
+  // template <>
+  // constexpr inline netgen::PointIndices<2> InvalidHash<netgen::PointIndices<2>> ()
+  // { return netgen::PointIndices<2>{netgen::PointIndex::INVALID, netgen::PointIndex::INVALID}; }
 
   template <>
   constexpr inline netgen::PointIndices<3> InvalidHash<netgen::PointIndices<3>> ()
   { return netgen::PointIndices<3>{netgen::PointIndex::INVALID, netgen::PointIndex::INVALID, netgen::PointIndex::INVALID}; }
 
+  /*
   template <>
   constexpr inline netgen::SortedPointIndices<2> InvalidHash<netgen::SortedPointIndices<2>> ()
-  { return InvalidHash<netgen::PointIndices<2>>(); }
-
+  //   { return InvalidHash<netgen::PointIndices<2>>(); }
+  { return CHT_trait<netgen::PointIndices<2>>::Invalid(); }    
+  */
 }
 
 

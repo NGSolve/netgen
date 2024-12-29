@@ -603,7 +603,8 @@ namespace netgen
     return hps;
   }
 
-  bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoiclt_dom, 
+  template <typename HT_EDGEPOINT_DOM>
+  bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, HT_EDGEPOINT_DOM & edgepoiclt_dom, 
 		       NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
 			INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex> & facepoint, int & levels, int & act_ref); 
 
@@ -1632,7 +1633,8 @@ namespace netgen
       }
   }
 
-  bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
+  template <typename HT_EDGEPOINT_DOM>
+  bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, HT_EDGEPOINT_DOM & edgepoint_dom, 
 		       TBitArray<PointIndex> & cornerpoint, TBitArray<PointIndex> & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
 			INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex> & facepoint, int & levels, int & act_ref)
 {
@@ -1808,16 +1810,16 @@ namespace netgen
 		*testout << " singleft " << endl;  
 		*testout << " mesh.LineSegment(i).domout " << mesh.LineSegment(i).domout << endl;      
 		*testout << " mesh.LineSegment(i).domin " << mesh.LineSegment(i).domin << endl;      
-		edgepoint_dom.Set (INDEX_2(mesh.LineSegment(i).domin, i2.I1()), 1);
-		edgepoint_dom.Set (INDEX_2(mesh.LineSegment(i).domin, i2.I2()), 1);
+		edgepoint_dom.Set ( { mesh.LineSegment(i).domin, i2.I1() }, 1);
+		edgepoint_dom.Set ( { mesh.LineSegment(i).domin, i2.I2() }, 1);
 		sing = 1; 
 		
 	      }
 	    
 	    if (seg.singedge_right * levels >= act_ref)
 	      {
-		INDEX_2 i2 = INDEX_2::Sort(mesh.LineSegment(i)[1], 
-			    mesh.LineSegment(i)[0]);  
+		PointIndices<2> i2 = INDEX_2::Sort(mesh.LineSegment(i)[1], 
+                                                   mesh.LineSegment(i)[0]);  
 		edges.Set (i2, 1);
 		edgepoint.SetBit(i2.I1());
 		edgepoint.SetBit(i2.I2());
@@ -1826,8 +1828,8 @@ namespace netgen
 		*testout << " mesh.LineSegment(i).domout " << mesh.LineSegment(i).domout << endl;      
 		*testout << " mesh.LineSegment(i).domin " << mesh.LineSegment(i).domin << endl;      
 		
-		edgepoint_dom.Set (INDEX_2(mesh.LineSegment(i).domout, i2.I1()), 1);
-		edgepoint_dom.Set (INDEX_2(mesh.LineSegment(i).domout, i2.I2()), 1);
+		edgepoint_dom.Set ( { mesh.LineSegment(i).domout, i2.I1() }, 1);
+		edgepoint_dom.Set ( { mesh.LineSegment(i).domout, i2.I2() }, 1);
 		sing = 1;
 	      }
 	    
@@ -1891,8 +1893,10 @@ namespace netgen
   {
     INDEX_2_HASHTABLE<int> edges(mesh.GetNSeg()+1);
     TBitArray<PointIndex> edgepoint(mesh.GetNP());
-    INDEX_2_HASHTABLE<int> edgepoint_dom(mesh.GetNSeg()+1);
+    // INDEX_2_HASHTABLE<int> edgepoint_dom(mesh.GetNSeg()+1);
 
+    HT_EDGEPOINT_DOM edgepoint_dom;
+    
     edgepoint.Clear();
     TBitArray<PointIndex> cornerpoint(mesh.GetNP());
     cornerpoint.Clear();
@@ -1918,7 +1922,7 @@ namespace netgen
     NgArray<int> misses(10000);
     misses = 0;
 
-    (*testout) << "edgepoint_dom = " << endl << edgepoint_dom << endl;
+    // (*testout) << "edgepoint_dom = " << endl << edgepoint_dom << endl;
 
     
     for( int i = 0; i<elements.Size(); i++) 

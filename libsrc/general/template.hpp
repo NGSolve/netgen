@@ -476,17 +476,30 @@ void MergeSort (int size, T * data, T * help);
 
 namespace ngcore
 {
+  // template <>
+  // constexpr inline netgen::INDEX_2 InvalidHash<netgen::INDEX_2> () { return netgen::INDEX_2{-1,-1}; }
+
+
   template <>
-  constexpr inline netgen::INDEX_2 InvalidHash<netgen::INDEX_2> () { return netgen::INDEX_2{-1,-1}; }
+  struct CHT_trait<netgen::INDEX_2>
+  {
+    constexpr static inline netgen::INDEX_2 Invalid() { return { -1, -1 } ; }
+    constexpr static inline size_t HashValue (const netgen::INDEX_2 & hash, size_t mask)
+    { return HashValue2(IVec<2,netgen::INDEX>(hash[0], hash[1]), mask); }
+  };
+
+  
 }
 
 namespace netgen
 {
+  /*
   inline size_t HashValue2 (const netgen::INDEX_2 & ind, size_t mask)
   {
     return HashValue2(IVec<2,netgen::INDEX>(ind[0], ind[1]), mask);
   }
-
+  */
+  
   inline size_t HashValue2 (const netgen::INDEX_3 & ind, size_t mask)
   {
     return HashValue2(IVec<3,netgen::INDEX>(ind[0], ind[1], ind[2]), mask);

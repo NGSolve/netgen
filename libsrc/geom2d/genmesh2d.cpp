@@ -523,8 +523,8 @@ namespace netgen
         { // tensor product mesh
           RegionTimer rt(t_tensor);
           
-          NgArray<PointIndex, PointIndex::BASE> nextpi(bnp);
-          NgArray<int, PointIndex::BASE> si1(bnp), si2(bnp);
+          Array<PointIndex, PointIndex> nextpi(bnp);
+          Array<int, PointIndex> si1(bnp), si2(bnp);
           // PointIndex firstpi;
           
           nextpi = -1;
@@ -553,7 +553,8 @@ namespace netgen
           PointIndex c1(0), c2, c3, c4;  // 4 corner points
           int nex = 1, ney = 1;
 
-          for (PointIndex pi = 1; pi <= si2.Size(); pi++)
+          // for (PointIndex pi = 1; pi <= si2.Size(); pi++)
+          for (PointIndex pi : si2.Range())
             if (si2[pi] != -1)
               { c1 = pi; break; }      
 

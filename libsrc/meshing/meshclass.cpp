@@ -3705,14 +3705,14 @@ namespace netgen
     for (i = 1; i <= GetNSeg(); i++)
       {
         const Segment & seg = LineSegment(i);
-        INDEX_2 i2(seg[0], seg[1]);
+        PointIndices<2> i2(seg[0], seg[1]);
         i2.Sort();
         bedges.Set (i2, 1);
       }
     for (i = 1; i <= GetNSE(); i++)
       {
         const Element2d & sel = SurfaceElement(i);
-        if (!sel.PNum(1))
+        if (!sel.PNum(1).IsValid())
           continue;
         for (j = 1; j <= 3; j++)
           {

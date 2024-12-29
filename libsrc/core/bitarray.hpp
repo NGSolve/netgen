@@ -223,8 +223,9 @@ private:
     void Clear (IndexType i) { BitArray::Clear(i-IndexBASE<IndexType>()); }
     void SetBitAtomic (IndexType i) { BitArray::SetBitAtomic(i-IndexBASE<IndexType>()); }
     bool Test (IndexType i) const { return BitArray::Test(i-IndexBASE<IndexType>()); }
+    
     bool operator[] (IndexType i) const { return Test(i); } 
-
+    T_Range<IndexType> Range() const { return { IndexBASE<IndexType>(), IndexBASE<IndexType>()+Size() }; }
     NGCORE_API TBitArray & Or (const TBitArray & ba2)
     {
       BitArray::Or(ba2);

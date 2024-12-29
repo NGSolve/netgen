@@ -217,7 +217,7 @@ namespace netgen
           return;
 
       idmap_type map;
-      std::set<std::tuple<int,int,int>> hex_faces;
+      std::set<std::tuple<PointIndex,PointIndex,PointIndex>> hex_faces;
       for(auto identnr : Range(1,nmax+1))
       {
           if(identifications.GetType(identnr) != Identifications::CLOSESURFACES)
@@ -248,7 +248,7 @@ namespace netgen
               // insert prism/hex
               auto np = sel.GetNP();
               Element el(2*np);
-              std::set<int> pis;
+              std::set<PointIndex> pis;
               for(auto i : Range(np))
               {
                   el[i] = sel[i];
