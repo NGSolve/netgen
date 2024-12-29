@@ -305,14 +305,14 @@ namespace netgen
   {
   public:
     PointIndices () = default;
-    PointIndices (const PointIndices&) = default;
-    PointIndices (PointIndices&&) = default;
+    constexpr PointIndices (const PointIndices&) = default;
+    constexpr PointIndices (PointIndices&&) = default;
     PointIndices & operator= (const PointIndices&) = default;
     PointIndices & operator= (PointIndices&&) = default;
     
     constexpr PointIndices (INDEX_2 i2) : INDEX_2(i2) { ; }
     constexpr PointIndices (PointIndex i1, PointIndex i2) : INDEX_2(i1,i2) { ; } 
-    PointIndex operator[] (int i) const { return PointIndex(INDEX_2::operator[](i)); }
+    constexpr PointIndex operator[] (int i) const { return PointIndex(INDEX_2::operator[](i)); }
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_2::operator[](i)); }
 
     PointIndex & I1 () { return (*this)[0]; }
