@@ -1807,29 +1807,36 @@ namespace netgen
   void MeshTopology :: GetElementEdges (int elnr, NgArray<int> & eledges) const
   {
     int ned = GetNEdges (mesh->VolumeElement(elnr).GetType());
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);
     eledges.SetSize (ned);
     for (int i = 0; i < ned; i++)
-      eledges[i] = edges.Get(elnr)[i]+1;
-      // eledges[i] = abs (edges.Get(elnr)[i]);
+      // eledges[i] = edges.Get(elnr)[i]+1;
+      eledges[i] = edges[ei][i]+1;
   }
 
   void MeshTopology :: GetElementFaces (int elnr, NgArray<int> & elfaces) const
   {
     int nfa = GetNFaces (mesh->VolumeElement(elnr).GetType());
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);
+    
     elfaces.SetSize (nfa);
 
     for (auto i : Range(nfa))
-      elfaces[i] = faces.Get(elnr)[i]+1;
+      // elfaces[i] = faces.Get(elnr)[i]+1;
+      elfaces[i] = faces[ei][i]+1;
   }
 
   
   void MeshTopology :: GetElementFaces (int elnr, NgArray<int> & elfaces, bool withorientation) const
   {
     int nfa = GetNFaces (mesh->VolumeElement(elnr).GetType());
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);
+    
     elfaces.SetSize (nfa);
 
     for (auto i : Range(nfa))
-      elfaces[i] = faces.Get(elnr)[i]+1;
+      // elfaces[i] = faces.Get(elnr)[i]+1;
+      elfaces[i] = faces[ei][i]+1;
     
     if(withorientation)
     {
@@ -1875,7 +1882,7 @@ namespace netgen
   int MeshTopology :: GetElementEdges (int elnr, int * eledges, int * orient) const
   {
     //  int ned = GetNEdges (mesh.VolumeElement(elnr).GetType());
-    
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);
     if (mesh->GetDimension()==3 || 1)
       {
         if (orient)
@@ -1887,8 +1894,12 @@ namespace netgen
 		eledges[i] = abs (edges.Get(elnr)[i]);
 		orient[i] = (edges.Get(elnr)[i] > 0 ) ? 1 : -1;
                 */
-                if (edges.Get(elnr)[i] == -1) return i;
-                eledges[i] = edges.Get(elnr)[i]+1;
+                
+                // if (edges.Get(elnr)[i] == -1) return i;
+                // eledges[i] = edges[ei].Get(elnr)[i]+1;
+                if (edges[ei][i] == -1) return i;
+                eledges[i] = edges[ei][i]+1;
+                
 		// orient[i] = edges.Get(elnr)[i].orient ? -1 : 1;
                 orient[i] = GetElementEdgeOrientation(elnr, i) ? -1 : 1;
 	      }
@@ -1899,8 +1910,11 @@ namespace netgen
 	      {
 		// if (!edges.Get(elnr)[i]) return i;
 		// eledges[i] = abs (edges.Get(elnr)[i]);
-                if (edges.Get(elnr)[i] == -1) return i;
-                eledges[i] = edges.Get(elnr)[i]+1;
+                
+                // if (edges.Get(elnr)[i] == -1) return i;
+                //eledges[i] = edges.Get(elnr)[i]+1;
+                if (edges[ei][i] == -1) return i;
+                eledges[i] = edges[ei][i]+1;
 
 	      }
 	  }
@@ -1933,6 +1947,8 @@ namespace netgen
 
   int MeshTopology :: GetElementFaces (int elnr, int * elfaces, int * orient) const
   {
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);
+    
     //  int nfa = GetNFaces (mesh.VolumeElement(elnr).GetType());
     if (orient)
       {
@@ -1943,8 +1959,10 @@ namespace netgen
 	    elfaces[i] = (faces.Get(elnr)[i]-1) / 8 + 1;
 	    orient[i] = (faces.Get(elnr)[i]-1) % 8;
             */
-	    if (faces.Get(elnr)[i] == -1) return i;
-	    elfaces[i] = faces.Get(elnr)[i]+1;
+	    // if (faces.Get(elnr)[i] == -1) return i;
+	    // elfaces[i] = faces.Get(elnr)[i]+1;
+	    if (faces[ei][i] == -1) return i;
+	    elfaces[i] = faces[ei][i]+1;
 	    // orient[i] = faces.Get(elnr)[i].forient;
             orient[i] = GetElementFaceOrientation (elnr, i);
 	  }
@@ -1955,8 +1973,11 @@ namespace netgen
 	  {
 	    // if (!faces.Get(elnr)[i]) return i;
 	    // elfaces[i] = (faces.Get(elnr)[i]-1) / 8 + 1;
-	    if (faces.Get(elnr)[i] == -1) return i;
-	    elfaces[i] = faces.Get(elnr)[i]+1;
+
+	    // if (faces.Get(elnr)[i] == -1) return i;
+	    // elfaces[i] = faces.Get(elnr)[i]+1;
+	    if (faces[ei][i] == -1) return i;
+	    elfaces[i] = faces[ei][i]+1;
 	  }
       }
     return 6;
@@ -1966,9 +1987,11 @@ namespace netgen
   void MeshTopology :: GetSurfaceElementEdges (int elnr, NgArray<int> & eledges) const
   {
     int ned = GetNEdges (mesh->SurfaceElement(elnr).GetType());
+    SurfaceElementIndex sei = IndexBASE<SurfaceElementIndex>() +(elnr-1);    
     eledges.SetSize (ned);
     for (int i = 0; i < ned; i++)
-      eledges[i] = surfedges.Get(elnr)[i]+1;
+      // eledges[i] = surfedges.Get(elnr)[i]+1;
+      eledges[i] = surfedges[sei][i]+1;
   }
 
   void MeshTopology :: GetEdges (SurfaceElementIndex elnr, NgArray<int> & eledges) const
@@ -2030,6 +2053,7 @@ namespace netgen
 
   int MeshTopology :: GetSurfaceElementEdges (int elnr, int * eledges, int * orient) const
   {
+    SurfaceElementIndex sei = IndexBASE<SurfaceElementIndex>() +(elnr-1);        
     int i;
     if (mesh->GetDimension() == 3 || 1)
       {
@@ -2042,8 +2066,10 @@ namespace netgen
 		eledges[i] = abs (surfedges.Get(elnr)[i]);
 		orient[i] = (surfedges.Get(elnr)[i] > 0 ) ? 1 : -1;
                 */
-		if (surfedges.Get(elnr)[i] == -1) return i;
-		eledges[i] = surfedges.Get(elnr)[i]+1;
+		// if (surfedges.Get(elnr)[i] == -1) return i;
+		// eledges[i] = surfedges.Get(elnr)[i]+1;
+		if (surfedges[sei][i] == -1) return i;
+		eledges[i] = surfedges[sei][i]+1;
 		// orient[i] = (surfedges.Get(elnr)[i].orient) ? -1 : 1;
                 // orient[i] = GetSurfaceElementEdgeOrientation(elnr, i) ? -1 : 1;
                 orient[i] = 1;
@@ -2058,8 +2084,10 @@ namespace netgen
 		if (!surfedges.Get(elnr)[i]) return i;
 		eledges[i] = abs (surfedges.Get(elnr)[i]);
                 */
-		if (surfedges.Get(elnr)[i] == -1) return i;
-		eledges[i] = surfedges.Get(elnr)[i]+1;
+		// if (surfedges.Get(elnr)[i] == -1) return i;
+		// eledges[i] = surfedges.Get(elnr)[i]+1;
+		if (surfedges[sei][i] == -1) return i;
+		eledges[i] = surfedges[sei][i]+1;
 	      }
 	  }
 	return 4;

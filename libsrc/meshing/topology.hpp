@@ -32,9 +32,9 @@ class MeshTopology
   Array<std::array<PointIndex,2>> edge2vert;
   Array<std::array<PointIndex,4>> face2vert;
 
-  NgArray<std::array<T_EDGE,12>> edges;
-  NgArray<std::array<T_FACE,6>> faces;
-  NgArray<std::array<T_EDGE,4>> surfedges;
+  Array<std::array<T_EDGE,12>, ElementIndex> edges;
+  Array<std::array<T_FACE,6>, ElementIndex> faces;
+  Array<std::array<T_EDGE,4>, SurfaceElementIndex> surfedges;
   
   NgArray<T_EDGE> segedges;
   NgArray<T_FACE> surffaces;
@@ -170,11 +170,12 @@ public:
 
   int GetSurfaceElementEdges (int elnr, int * edges, int * orient) const;
 
-  const T_EDGE * GetElementEdgesPtr (int elnr) const { return &edges[elnr][0]; }
+  [[deprecated("use GetEdges(ElementIndex) instead")]]
+  const T_EDGE * GetElementEdgesPtr (int elnr) const { return &edges[IndexBASE<ElementIndex>()+elnr][0]; }
   const T_EDGE * GetSurfaceElementEdgesPtr (int selnr) const { return &surfedges[selnr][0]; }
   const T_EDGE * GetSegmentElementEdgesPtr (int selnr) const { return &segedges[selnr]; }
 
-  const T_FACE * GetElementFacesPtr (int elnr) const { return &faces[elnr][0]; }
+  const T_FACE * GetElementFacesPtr (int elnr) const { return &faces[IndexBASE<ElementIndex>()+elnr][0]; }
   const T_FACE * GetSurfaceElementFacesPtr (int selnr) const { return &surffaces[selnr]; }
 
 

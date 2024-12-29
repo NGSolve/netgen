@@ -388,9 +388,9 @@ namespace netgen
     auto GetNE () const { return volelements.Size(); }
 
     // [[deprecated("Use VolumeElement(ElementIndex) instead of int !")]]    
-    Element & VolumeElement(int i) { return volelements[i-1]; }
+    Element & VolumeElement(int i) { return volelements[IndexBASE<ElementIndex>()+(i-1)]; }
     // [[deprecated("Use VolumeElement(ElementIndex) instead of int !")]]        
-    const Element & VolumeElement(int i) const { return volelements[i-1]; }
+    const Element & VolumeElement(int i) const { return volelements[IndexBASE<ElementIndex>()+(i-1)]; }
     // [[deprecated("Use mesh[](VolumeElementIndex) instead !")]]
     Element & VolumeElement(ElementIndex i) { return volelements[i]; }
     // [[deprecated("Use mesh[](VolumeElementIndex) instead !")]]

@@ -473,11 +473,16 @@ namespace netgen
   public:
     ElementIndex & operator= (const ElementIndex & ai) { i = ai.i; return *this; }
     ElementIndex & operator= (int ai) { i = ai; return *this; }
+    // private:
     constexpr operator int () const { return i; }
+  public:
     ElementIndex operator++ (int) { return ElementIndex(i++); }    
     ElementIndex operator-- (int) { return ElementIndex(i--); }
     ElementIndex & operator++ () { ++i; return *this; }
     ElementIndex & operator-- () { --i; return *this; }
+
+    int operator- (ElementIndex ei2) const { return i-ei2.i; }
+    friend constexpr ElementIndex ngcore::IndexBASE<ElementIndex>();
   };
 
   inline istream & operator>> (istream & ist, ElementIndex & pi)
@@ -485,9 +490,9 @@ namespace netgen
     int i; ist >> i; pi = i; return ist;
   }
 
-  inline ostream & operator<< (ostream & ost, const ElementIndex & pi)
+  inline ostream & operator<< (ostream & ost, const ElementIndex & ei)
   {
-    return (ost << int(pi));
+    return (ost << ei-IndexBASE<ElementIndex>());
   }
 
 
