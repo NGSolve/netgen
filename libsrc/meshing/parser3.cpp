@@ -1014,14 +1014,15 @@ void Meshing3 :: LoadRules (const char * filename, const char ** prules)
 	
       if (strcmp (buf, "rule") == 0)
 	{
-	  vnetrule * rule = new vnetrule;
+	  // vnetrule * rule = new vnetrule;
+          auto rule = make_unique<vnetrule>();
 	  rule -> LoadRule(*ist);
-	  rules.Append (rule);
 	  if (!rule->TestOk())
 	    {
 	      PrintSysError ("Parser3d: Rule ", rules.Size(), " not ok");
 	      exit (1);
 	    }
+	  rules.Append (std::move(rule));
 	}
       else if (strcmp (buf, "tolfak") == 0)
 	{

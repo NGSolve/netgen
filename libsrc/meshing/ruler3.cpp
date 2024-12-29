@@ -226,16 +226,17 @@ int Meshing3 :: ApplyRules
   // check each rule:
   // tstart.Stop();
   // tloop.Start();
-  for (int ri = 1; ri <= rules.Size(); ri++)
+  for (int rim = 0; rim < rules.Size(); rim++)
     {
       int base = (lfaces[0].GetNP() == 3) ? 100 : 200;
       NgProfiler::RegionTimer regx1(base);
-      NgProfiler::RegionTimer regx(base+ri);
+      NgProfiler::RegionTimer regx(base+rim+1);
 
       // sprintf (problems.Elem(ri), "");
-      *problems.Elem(ri) = '\0';
+      // *problems.Elem(ri) = '\0';
+      problems[rim] = "";
 
-      vnetrule * rule = rules.Get(ri);
+      vnetrule * rule = rules[rim].get();
       
       if (rule->GetNP(1) != lfaces[0].GetNP())
 	continue;
@@ -245,17 +246,17 @@ int Meshing3 :: ApplyRules
 	  if (rule->GetQuality() < 100) impossible = 0;
 
 	  if (testmode)
-	    snprintf (problems.Elem(ri), 255, "Quality not ok");
+	    problems[rim] = "Quality not ok";
 	  continue;
 	}
       
       if (testmode)
-	snprintf (problems.Elem(ri), 255, "no mapping found");
+	problems[rim] = "no mapping found";
       
       loktestmode = testmode || rule->TestFlag ('t') || tolerance > 5;
 
       if (loktestmode)
-	(*testout) << "Rule " << ri << " = " << rule->Name() << endl;
+	(*testout) << "Rule " << rim+1 << " = " << rule->Name() << endl;
       
       pmap.SetSize (rule->GetNP());
       fmapi.SetSize (rule->GetNF());
@@ -287,7 +288,7 @@ int Meshing3 :: ApplyRules
 
       int nfok = 2;
       NgProfiler::RegionTimer regfa(300);
-      NgProfiler::RegionTimer regx2(base+50+ri);
+      NgProfiler::RegionTimer regx2(base+50+rim+1);
       while (nfok >= 2)
 	{
 	  
@@ -419,7 +420,7 @@ int Meshing3 :: ApplyRules
 	      if (loktestmode)
 		{
 		  (*testout) << "Faces Ok" << endl;
-		  snprintf (problems.Elem(ri), 255, "Faces Ok");
+		  problems[rim] = "Faces Ok";
 		}
 
 	      int npok = 1;
@@ -527,7 +528,7 @@ int Meshing3 :: ApplyRules
 			  for (auto pi : pmap)
 			    (*testout) << pi << " ";
 			  (*testout) << endl;
-			  snprintf (problems.Elem(ri), 255, "mapping found");
+			  problems[rim] = "mapping found";
 			  (*testout) << rule->GetNP(1) << " = " << lfaces[0].GetNP() << endl;
 			}
 		      
@@ -594,10 +595,7 @@ int Meshing3 :: ApplyRules
 		      
 
 		      if (ok)
-			{
-			  foundmap.Elem(ri)++;
-			}
-
+                        foundmap[rim]++;
 		      
 
 
@@ -642,7 +640,7 @@ int Meshing3 :: ApplyRules
 		      if (!rule->ConvexFreeZone())
 			{
 			  ok = 0;
-			  snprintf (problems.Elem(ri), 255, "Freezone not convex");
+			  problems[rim] = "Freezone not convex";
 
 			  if (loktestmode)
 			    (*testout) << "Freezone not convex" << endl;
@@ -674,8 +672,7 @@ int Meshing3 :: ApplyRules
 					{
 					  (*testout) << "Point " << i 
 						     << " in Freezone" << endl;
-					  snprintf (problems.Elem(ri), 255,
-                                                    "locpoint %d in Freezone", int(i));
+					  problems[rim] = "locpoint " + ToString(i) + " in Freezone";
 					}
 				      ok = 0;
 				      break;
@@ -788,10 +785,9 @@ int Meshing3 :: ApplyRules
 						     << lpoints[lfacei.PNum(4)] 
 						     << endl;
 
-				      snprintf (problems.Elem(ri), 255, "triangle (%d, %d, %d) in Freezone",
-					       int(lfaces[i-1].PNum(1)), 
-					       int(lfaces[i-1].PNum(2)),
-					       int(lfaces[i-1].PNum(3)));
+				      problems[rim] = "triangle ("+ToString(lfaces[i-1].PNum(1))+", "
+                                        + ToString(lfaces[i-1].PNum(2)) + ", "
+                                        + ToString(lfaces[i-1].PNum(3)) + ") in Freezone";
 				    }	
 
 				  hc = 0;
@@ -817,7 +813,7 @@ int Meshing3 :: ApplyRules
 //  							   << " - " << pmap.Get (rule->GetPointNr(k, 3)) << " ) "
 //  							   << endl;
 
-						strcpy (problems.Elem(ri), "other");
+						problems[rim] = "other";
 					      }
 					}
 				    }
@@ -831,10 +827,17 @@ int Meshing3 :: ApplyRules
 						     << lfaces[i-1].PNum(2) << " - "
 						     << lfaces[i-1].PNum(3) << endl;
 
+                                          /*
 					  snprintf (problems.Elem(ri), 255, "triangle (%d, %d, %d) in Freezone",
 						   int (lfaces[i-1].PNum(1)), 
 						   int (lfaces[i-1].PNum(2)),
 						   int (lfaces[i-1].PNum(3)));
+                                          */
+                                          problems[rim] = "triangle ("
+                                            + ToString(lfaces[i-1].PNum(1))+", "
+                                            + ToString(lfaces[i-1].PNum(2)) + ", "
+                                            + ToString(lfaces[i-1].PNum(3)) + ") in Freezone";
+                                          
 					}
 				      ok = 0;
 				    }
@@ -858,7 +861,7 @@ int Meshing3 :: ApplyRules
 			  if (loktestmode)
 			    {
 			      (*testout) << "Rule ok" << endl;
-			      snprintf (problems.Elem(ri), 255, "Rule ok, err = %f", err);
+			      problems[rim] = "Rule ok, err = "+ToString(err);
 			    }
 
 
@@ -923,7 +926,7 @@ int Meshing3 :: ApplyRules
 				{
 				  if (loktestmode)
 				    {
-				      snprintf (problems.Elem(ri), 255, "Orientation wrong");
+				      problems[rim] = "Orientation wrong";
 				      (*testout) << "Orientation wrong ("<< n*v3 << ")" << endl;
 				    }
 				  ok = 0;
@@ -940,7 +943,7 @@ int Meshing3 :: ApplyRules
 				  {
 				    (*testout) << "Newpoint " << lpoints[pmap.Get(i)]
 					       << " outside convex hull" << endl;
-				    snprintf (problems.Elem(ri), 255, "newpoint outside convex hull");
+				    problems[rim] = "newpoint outside convex hull";
 				  }
 				ok = 0;
 				
@@ -1015,7 +1018,7 @@ int Meshing3 :: ApplyRules
 				{
 				  ok = 0;
 				  if (loktestmode)
-				    snprintf (problems.Elem(ri), 255, "oldlen < newlen");
+				    problems[rim] = "oldlen < newlen";
 				}
 			    }
 			  
@@ -1028,7 +1031,7 @@ int Meshing3 :: ApplyRules
 
 			  if (ok && teterr < tolerance)
 			    {
-			      canuse.Elem(ri) ++;
+			      canuse[rim] ++;
 			      /*
 			      (*testout) << "can use rule " << rule->Name() 
 					 << ", err = " << teterr << endl;
@@ -1037,7 +1040,7 @@ int Meshing3 :: ApplyRules
 			      (*testout) << endl;
 			      */
 
-			      if (strcmp (problems.Elem(ri), "other") == 0)
+			      if (problems[rim] == "other")
 				{
 				  if (teterr < minother)
 				    minother = teterr;
@@ -1058,7 +1061,7 @@ int Meshing3 :: ApplyRules
 			      if (loktestmode)
 				(*testout) << "use rule" << endl;
 
-			      found = ri;
+			      found = rim+1;
 			      minteterr = teterr;
 			      
 			      if (testmode)

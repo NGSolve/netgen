@@ -24,11 +24,11 @@ class Meshing3
   /// current state of front
   unique_ptr<AdFront3> adfront;
   /// 3d generation rules
-  NgArray<vnetrule*> rules;
+  Array<unique_ptr<vnetrule>> rules;
   /// counts how often a rule is used
-  NgArray<int> ruleused, canuse, foundmap;
+  Array<int> ruleused, canuse, foundmap;
   /// describes, why a rule is not applied
-  NgArray<char*> problems;
+  Array<string> problems;
   /// tolerance criterion
   double tolfak;
 public:

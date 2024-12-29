@@ -300,7 +300,7 @@ namespace ngcore
 
   
   template <int N, typename TI>
-  NETGEN_INLINE size_t HashValue2 (const IVec<N,TI> & ind, size_t mask)
+  NETGEN_INLINE constexpr size_t HashValue2 (const IVec<N,TI> & ind, size_t mask)
   {
     IVec<N,size_t> lind = ind;    
     size_t sum = 0;
@@ -311,14 +311,14 @@ namespace ngcore
 
   /// hash value of 1 int
   template <typename TI>
-  NETGEN_INLINE size_t HashValue2 (const IVec<1,TI> & ind, size_t mask) 
+  NETGEN_INLINE constexpr size_t HashValue2 (const IVec<1,TI> & ind, size_t mask) 
   {
     return ind[0] & mask;
   }
 
   /// hash value of 2 int
   template <typename TI>  
-  NETGEN_INLINE size_t HashValue2 (const IVec<2,TI> & ind, size_t mask) 
+  NETGEN_INLINE constexpr size_t HashValue2 (const IVec<2,TI> & ind, size_t mask) 
   {
     IVec<2,size_t> lind = ind;
     return (113*lind[0]+lind[1]) & mask;
@@ -326,17 +326,17 @@ namespace ngcore
 
   /// hash value of 3 int
   template <typename TI>    
-  NETGEN_INLINE size_t HashValue2 (const IVec<3,TI> & ind, size_t mask) 
+  NETGEN_INLINE constexpr size_t HashValue2 (const IVec<3,TI> & ind, size_t mask) 
   {
     IVec<3,size_t> lind = ind;
     return (113*lind[0]+59*lind[1]+lind[2]) & mask;
   }
 
-  NETGEN_INLINE size_t HashValue2 (size_t ind, size_t mask)
+  NETGEN_INLINE constexpr size_t HashValue2 (size_t ind, size_t mask)
   {
     return ind & mask;
   }
-  NETGEN_INLINE size_t HashValue2 (int ind, size_t mask)
+  NETGEN_INLINE constexpr size_t HashValue2 (int ind, size_t mask)
   {
     return size_t(ind) & mask;
   }
