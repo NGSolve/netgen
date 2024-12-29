@@ -102,30 +102,30 @@ namespace netgen
 
     
 
-    [[deprecated("Use GetDistantPNums(locnum).Size() instead!")]]            
+    // [[deprecated("Use GetDistantPNums(locnum).Size() instead!")]]            
     int GetNDistantPNums (int locpnum) const { return loc2distvert[locpnum-1].Size(); }
 
-    [[deprecated("Use GetDistantFaceNums(locnum).Size() instead!")]]                
+    // [[deprecated("Use GetDistantFaceNums(locnum).Size() instead!")]]                
     int GetNDistantFaceNums (int locfacenum) const { return loc2distface[locfacenum-1].Size(); }
 
-    [[deprecated("Use GetDistantEdgeNums(locnum).Size() instead!")]]                    
+    // [[deprecated("Use GetDistantEdgeNums(locnum).Size() instead!")]]                    
     int GetNDistantEdgeNums ( int locedgenum) const { return loc2distedge[locedgenum-1].Size(); }
 
-    [[deprecated("Use GetDistantPNums(locnum) -> FlatArray instead!")]]                
+    // [[deprecated("Use GetDistantPNums(locnum) -> FlatArray instead!")]]                
     void GetDistantPNums (int locpnum, int * distpnums ) const
     {
       for (int i = 0; i < loc2distvert[locpnum-1].Size(); i++ )
 	distpnums[i] = loc2distvert[locpnum-1][i];
     } 
 
-    [[deprecated("Use GetDistantFaceNums(locnum) -> FlatArray instead!")]]                    
+    // [[deprecated("Use GetDistantFaceNums(locnum) -> FlatArray instead!")]]                    
     void GetDistantFaceNums (int locfacenum, int * distfacenums ) const
     {
       for ( int i = 0; i < loc2distface[locfacenum-1].Size(); i++ )
 	distfacenums[i] = loc2distface[locfacenum-1][i];
     } 
 
-    [[deprecated("Use GetDistantFaceNums(locnum) -> FlatArray instead!")]]                        
+    // [[deprecated("Use GetDistantFaceNums(locnum) -> FlatArray instead!")]]                        
     void GetDistantFaceNums (int locfacenum, NgArray<int> & distfacenums ) const
     {
       // distfacenums = loc2distface[locfacenum-1];
@@ -135,14 +135,14 @@ namespace netgen
         distfacenums[i] = loc[i];
     }
 
-    [[deprecated("Use GetDistantEdgeNums(locnum) -> FlatArray instead!")]]                            
+    // [[deprecated("Use GetDistantEdgeNums(locnum) -> FlatArray instead!")]]                            
     void GetDistantEdgeNums (int locedgenum, int * distedgenums ) const
     {
       for (int i = 0; i < loc2distedge[locedgenum-1].Size(); i++ )
 	distedgenums[i] = loc2distedge[locedgenum-1][i];
     } 
 
-    [[deprecated("Use GetDistantEdgeNums(locnum) -> FlatArray instead!")]]                                
+    // [[deprecated("Use GetDistantEdgeNums(locnum) -> FlatArray instead!")]]                                
     void GetDistantEdgeNums (int locedgenum, NgArray<int> & distedgenums ) const
     {
       // distedgenums = loc2distedge[locedgenum-1];

@@ -184,7 +184,8 @@ class AdFront3
 {
   ///
   // NgArray<FrontPoint3, PointIndex::BASE, PointIndex> points;
-  Array<FrontPoint3, PointIndex> points;
+  Array<FrontPoint3, PointIndex> points
+;
   ///
   NgArray<FrontFace> faces;
   ///

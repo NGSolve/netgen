@@ -171,21 +171,21 @@ class AdFront2
 {
 
   ///
-  NgArray<FrontPoint2> points;  /// front points
-  NgArray<FrontLine> lines;     /// front lines
+  Array<FrontPoint2> points;  /// front points
+  Array<FrontLine> lines;     /// front lines
 
   Box3d boundingbox;
   BoxTree<3> linesearchtree;       /// search tree for lines
   Point3dTree pointsearchtree;    /// search tree for points
   Point3dTree cpointsearchtree;   /// search tree for cone points (not used ???)
 
-  NgArray<int> delpointl;     /// list of deleted front points
-  NgArray<int> dellinel;      /// list of deleted front lines
+  Array<int> delpointl;     /// list of deleted front points
+  Array<int> dellinel;      /// list of deleted front lines
 
   int nfl;                  /// number of front lines;
   INDEX_2_HASHTABLE<int> * allflines; /// all front lines ever have been
 
-  NgArray<int> invpindex;
+  Array<int> invpindex;
 
   int minval;
   int starti;
