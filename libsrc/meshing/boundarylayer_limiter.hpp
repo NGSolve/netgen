@@ -738,7 +738,7 @@ struct GrowthVectorLimiter
         LimitBoundaryLayer(safety);
         CheckLimits(__LINE__);
 
-        for (auto i : Range(10))
+        for ([[maybe_unused]] auto i : Range(10))
           EqualizeLimits(smoothing_factors[i_pass]);
         CheckLimits(__LINE__);
 

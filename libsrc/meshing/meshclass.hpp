@@ -42,7 +42,7 @@ namespace netgen
   class MarkedTri;
   class MarkedQuad;
 
-  typedef Array<MarkedTet> T_MTETS;
+  typedef Array<MarkedTet,ElementIndex> T_MTETS;
   typedef NgArray<MarkedPrism> T_MPRISMS;
   typedef NgArray<MarkedIdentification> T_MIDS;
   typedef NgArray<MarkedTri> T_MTRIS;

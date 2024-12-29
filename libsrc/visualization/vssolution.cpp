@@ -4442,7 +4442,7 @@ namespace netgen
     for (int i = 0; i < trigs.Size(); i++)
       {
         const ClipPlaneTrig & trig = trigs[i];
-	if (trig.elnr != lastelnr)
+	if (trig.elnr != ElementIndex(lastelnr))
 	  {
 	    lastelnr = trig.elnr;
 	    nlp = -1;

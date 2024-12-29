@@ -614,7 +614,7 @@ namespace netgen
     
     if (aorder <= 1) 
       {
-	for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+	for (ElementIndex ei : mesh.VolumeElements().Range())
 	  if (mesh[ei].GetType() == TET10)
 	    ishighorder = 1;
 	return; 

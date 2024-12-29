@@ -278,7 +278,8 @@ namespace ngcore
     T first, next;
   public: 
     NETGEN_INLINE T_Range () { ; }
-    NETGEN_INLINE T_Range (T n) : first(0), next(n) {;}
+    // NETGEN_INLINE T_Range (T n) : first(0), next(n) {;}
+    NETGEN_INLINE explicit T_Range (size_t n) : first(IndexBASE<T>()), next(IndexBASE<T>()+n) {;}    
     NETGEN_INLINE T_Range (T f, T n) : first(f), next(n) {;}
     template <typename T2>
       NETGEN_INLINE T_Range(T_Range<T2> r2) : first(r2.First()), next(r2.Next()) { ; }

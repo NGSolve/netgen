@@ -317,6 +317,7 @@ namespace ngcore
     
   public:
     SharedLoop (IntRange ar) : r(ar) { cnt = r.begin(); }
+    SharedLoop (size_t s) : SharedLoop (IntRange{s}) { ; }
     SharedIterator begin() { return SharedIterator (cnt, r.end(), true); }
     SharedIterator end()   { return SharedIterator (cnt, r.end(), false); }
   };
@@ -623,6 +624,8 @@ public:
       Reset (r);
     }
 
+    SharedLoop2 (size_t s) : SharedLoop2 (IntRange{s}) { } 
+    
     void Reset (IntRange r)
     {
       for (size_t i = 0; i < ranges.Size(); i++)
@@ -632,6 +635,9 @@ public:
       participants.store(0, std::memory_order_relaxed);
       processed.store(0, std::memory_order_release);
     }
+
+    void Reset (size_t s) { Reset(IntRange{s}); }
+      
     
     SharedIterator begin()
     {

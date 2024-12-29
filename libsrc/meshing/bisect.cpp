@@ -1118,15 +1118,16 @@ namespace netgen
   
     for (int step = 1; step <= 2; step++)
       {
-	for (int i = 1; i <= mtets.Size(); i++)
+	// for (int i = 1; i <= mtets.Size(); i++)
+        for (ElementIndex ei : mtets.Range())
 	  {
 	    double h = 0;
 	  
 	    for (int j = 0; j < 3; j++)
 	      for (int k = j+1; k < 4; k++)
 		{
-		  const Point<3> & p1 = mesh.Point (mtets[i-1].pnums[j]);
-		  const Point<3> & p2 = mesh.Point (mtets[i-1].pnums[k]);
+		  const Point<3> & p1 = mesh.Point (mtets[ei].pnums[j]);
+		  const Point<3> & p2 = mesh.Point (mtets[ei].pnums[k]);
 		  double hh = Dist2 (p1, p2);
 		  if (hh > h) h = hh;
 		}
@@ -1135,7 +1136,7 @@ namespace netgen
 	    double hshould = 1e10;
 	    for (int j = 0; j < 4; j++)
 	      {
-		double hi = hv (mtets[i-1].pnums[j]-IndexBASE<PointIndex>());
+		double hi = hv (mtets[ei].pnums[j]-IndexBASE<PointIndex>());
 		if (hi < hshould)
 		  hshould = hi;
 	      }
@@ -1150,13 +1151,12 @@ namespace netgen
 	      {
 		if (h > hshould * hfac)
 		  {
-		    mtets[i-1].marked = 1;
+		    mtets[ei].marked = 1;
 		    marked = 1;
 		  }
 		else
-		  mtets[i-1].marked = 0;
+		  mtets[ei].marked = 0;
 	      }
-	  
 	  }
 	for (int i = 1; i <= mprisms.Size(); i++)
 	  {
@@ -1701,13 +1701,15 @@ namespace netgen
     
     int hanging = 0;
     // for (int i = 1; i <= mtets.Size(); i++)
-    ParallelForRange
-      (tm, mtets.Size(), [&] (size_t begin, size_t end)
+    ngcore::ParallelForRange
+      // (tm, mtets.Size(), [&] (size_t begin, size_t end)
+      (mtets.Range(), [&] (auto myrange)
        {
          bool my_hanging = false;
-         for (size_t i = begin; i < end; i++)
+         // for (size_t i = begin; i < end; i++)
+         for (auto ei : myrange)
            {
-             MarkedTet & teti = mtets[i];
+             MarkedTet & teti = mtets[ei];
              
              if (teti.marked)
                {
@@ -1894,8 +1896,8 @@ namespace netgen
     const auto& mtris = *mesh.bisectioninfo.mtris;
     const auto& mquads = *mesh.bisectioninfo.mquads;
     ost << mtets.Size() << "\n";
-    for(int i=0; i<mtets.Size(); i++)
-      ost << mtets[i];
+    for(auto ei : mtets.Range())
+      ost << mtets[ei];
 
     ost << mprisms.Size() << "\n";
     for(int i=0; i<mprisms.Size(); i++)
@@ -1941,13 +1943,14 @@ namespace netgen
     ist >> size;
     mtets.SetSize(size);
     constexpr auto PI0 = IndexBASE<PointIndex>();
-    for(int i=0; i<size; i++)
+    // for(int i=0; i<size; i++)
+    for (auto ei : ngcore::T_Range<ElementIndex>(size) )
       {
-        ist >> mtets[i];
-        if(mtets[i].pnums[0] >= PI0+mesh.GetNV() || 
-           mtets[i].pnums[1] >= PI0+mesh.GetNV() || 
-           mtets[i].pnums[2] >= PI0+mesh.GetNV() || 
-           mtets[i].pnums[3] >= PI0+mesh.GetNV())
+        ist >> mtets[ei];
+        if(mtets[ei].pnums[0] >= PI0+mesh.GetNV() || 
+           mtets[ei].pnums[1] >= PI0+mesh.GetNV() || 
+           mtets[ei].pnums[2] >= PI0+mesh.GetNV() || 
+           mtets[ei].pnums[3] >= PI0+mesh.GetNV())
           return false;
       }
 
@@ -2530,9 +2533,10 @@ namespace netgen
     
     int maxnum = BTSortEdges (mesh, idmaps, edgenumber);
 
-    for(int m = 0; m < mtets_old.Size(); m++)
+    // for(int m = 0; m < mtets_old.Size(); m++)
+    for (auto mi : mtets_old.Range())
       {
-	MarkedTet & mt = mtets_old[m];
+	MarkedTet & mt = mtets_old[mi];
 
 	//(*testout) << "old mt " << mt;
 	
@@ -2926,8 +2930,12 @@ namespace netgen
 	    if(st == "refinementinfo")
 	      // new version
 	      {
+                /*
 		for(int i=1; i<=mtets.Size(); i++)
 		  mtets[i-1].marked = 0;
+                */
+		for(auto ei : mtets.Range())
+		  mtets[ei].marked = 0;
 		for(int i=1; i<=mprisms.Size(); i++)
 		  mprisms.Elem(i).marked = 0;
 		for(int i=1; i<=mtris.Size(); i++)
@@ -2968,7 +2976,8 @@ namespace netgen
 			    
 			    while(inf && isint)
 			      {
-				mtets[atoi(st.c_str())-1].marked = 3;
+				// mtets[atoi(st.c_str())-1].marked = 3;
+                                mtets[IndexBASE<ElementIndex>()+(atoi(st.c_str())-1)].marked = 3;
 				marked = 1;
 
 				inf >> st;
@@ -3056,12 +3065,13 @@ namespace netgen
 		inf.open(opt.refinementfilename);
 
 		char ch;
-		for (int i = 1; i <= mtets.Size(); i++)
+		// for (int i = 1; i <= mtets.Size(); i++)
+                for (auto ei : mtets.Range())
 		  {
 		    inf >> ch;
 		    if(!inf)
 		      throw NgException("something wrong with refinementinfo file (old format)");
-		    mtets[i-1].marked = (ch == '1');
+		    mtets[ei].marked = (ch == '1');
 		  }
 		marked = 1;
 	      }
@@ -3075,18 +3085,18 @@ namespace netgen
 	    // all in one !
 	    if (mprisms.Size())
 	      {
-		int cnttet = 0;
+		ElementIndex cnttet = IndexBASE<ElementIndex>();
 		int cntprism = 0;
 		for (int i = 1; i <= mesh.GetNE(); i++)
 		  {
 		    if (mesh.VolumeElement(i).GetType() == TET ||
 			mesh.VolumeElement(i).GetType() == TET10)
 		      {
-			cnttet++;
-			mtets[cnttet-1].marked =
+			mtets[cnttet].marked =
 			  (opt.onlyonce ? 3 : 1) * mesh.VolumeElement(i).TestRefinementFlag();
-			if (mtets[cnttet-1].marked)
+			if (mtets[cnttet].marked)
 			  cntm++;
+			cnttet++;
 		      }
 		    else
 		      {
@@ -3100,11 +3110,12 @@ namespace netgen
 		  }
 	      }
 	    else
-	      for (int i = 1; i <= mtets.Size(); i++)
+	      // for (int i = 1; i <= mtets.Size(); i++)
+              for (auto ei : mtets.Range())
 		{
-		  mtets[i-1].marked =
-		    (opt.onlyonce ? 1 : 3) * mesh.VolumeElement(i).TestRefinementFlag();
-		  if (mtets[i-1].marked)
+		  mtets[ei].marked =
+		    (opt.onlyonce ? 1 : 3) * mesh.VolumeElement(ei).TestRefinementFlag();
+		  if (mtets[ei].marked)
 		    cntm++;
 		}
 
@@ -3202,12 +3213,12 @@ namespace netgen
 	  {
 	    PrintMessage(3,"refine p");
 
-	    for (int i = 1; i <= mtets.Size(); i++)
-	      mtets[i-1].incorder = mtets[i-1].marked ? 1 : 0;
+	    for (auto ei : mtets.Range())
+	      mtets[ei].incorder = mtets[ei].marked ? 1 : 0;
 
-	    for (int i = 1; i <= mtets.Size(); i++)
-	      if (mtets[i-1].incorder)
-		mtets[i-1].marked = 0;
+	    for (auto ei : mtets.Range())              
+	      if (mtets[ei].incorder)
+		mtets[ei].marked = 0;
 
 
 	    for (int i = 1; i <= mprisms.Size(); i++)
@@ -3272,19 +3283,22 @@ namespace netgen
 
 
 
-	    for (int i = 1; i <= mtets.Size(); i++)
-	      mtets[i-1].incorder = 1;
-	    for (int i = 1; i <= mtets.Size(); i++)
+	    // for (int i = 1; i <= mtets.Size(); i++)
+            for (auto ei : mtets.Range())
+	      mtets[ei].incorder = 1;
+	    // for (int i = 1; i <= mtets.Size(); i++)
+            for (auto ei : mtets.Range())              
 	      {
-		if (!mtets[i-1].marked)
-		  mtets[i-1].incorder = 0;
+		if (!mtets[ei].marked)
+		  mtets[ei].incorder = 0;
 		for (int j = 0; j < 4; j++)
-		  if (singv.Test (mtets[i-1].pnums[j]))
-		    mtets[i-1].incorder = 0;
+		  if (singv.Test (mtets[ei].pnums[j]))
+		    mtets[ei].incorder = 0;
 	      }
-	    for (int i = 1; i <= mtets.Size(); i++)
-	      if (mtets[i-1].incorder)
-		mtets[i-1].marked = 0;
+	    // for (int i = 1; i <= mtets.Size(); i++)
+            for (auto ei : mtets.Range())
+	      if (mtets[ei].incorder)
+		mtets[ei].marked = 0;
 
 
 	    for (int i = 1; i <= mprisms.Size(); i++)
@@ -3335,10 +3349,11 @@ namespace netgen
             NgProfiler::StartTimer (timer_bisecttet);
             (*opt.tracer)("bisecttet", false);
 	    size_t nel = mtets.Size();
-	    for (size_t i = 0; i < nel; i++)
-	      if (mtets[i].marked)
+	    // for (size_t i = 0; i < nel; i++)
+            for (auto ei : ngcore::T_Range<ElementIndex>(nel))
+	      if (mtets[ei].marked)
 		{
-		  MarkedTet oldtet = mtets[i];
+		  MarkedTet oldtet = mtets[ei];
                   
 		  SortedPointIndices<2> edge(oldtet.pnums[oldtet.tetedge1],
                                              oldtet.pnums[oldtet.tetedge2]);
@@ -3358,9 +3373,9 @@ namespace netgen
 		  MarkedTet newtet1, newtet2;
 		  BTBisectTet (oldtet, newp, newtet1, newtet2);
 
-		  mtets[i] = newtet1;
+		  mtets[ei] = newtet1;
 		  mtets.Append (newtet2);
-		  mesh.mlparentelement.Append (i+1);
+		  mesh.mlparentelement.Append (ei-IndexBASE<ElementIndex>()+1);
 		}
             NgProfiler::StopTimer (timer_bisecttet);
             (*opt.tracer)("bisecttet", true);            
@@ -3673,18 +3688,21 @@ namespace netgen
 	v_order = 0;
 	if (mesh.GetDimension() == 3)
 	  {
-	    for (int i = 1; i <= mtets.Size(); i++)
-	      if (mtets[i-1].incorder)
-		mtets[i-1].order++;
+	    // for (int i = 1; i <= mtets.Size(); i++)
+            for (auto ei : mtets.Range())
+	      if (mtets[ei].incorder)
+		mtets[ei].order++;
       
-	    for (int i = 0; i < mtets.Size(); i++)
+	    // for (int i = 0; i < mtets.Size(); i++)
+            for (auto ei : mtets.Range())              
 	      for (int j = 0; j < 4; j++)
-		if (int(mtets[i].order) > v_order[mtets[i].pnums[j]])
-		  v_order[mtets[i].pnums[j]] = mtets[i].order;
-	    for (int i = 0; i < mtets.Size(); i++)
+		if (int(mtets[ei].order) > v_order[mtets[ei].pnums[j]])
+		  v_order[mtets[ei].pnums[j]] = mtets[ei].order;
+	    // for (int i = 0; i < mtets.Size(); i++)
+            for (auto ei : mtets.Range())                            
 	      for (int j = 0; j < 4; j++)
-		if (int(mtets[i].order) < v_order[mtets[i].pnums[j]]-1)
-		  mtets[i].order = v_order[mtets[i].pnums[j]]-1;
+		if (int(mtets[ei].order) < v_order[mtets[ei].pnums[j]]-1)
+		  mtets[ei].order = v_order[mtets[ei].pnums[j]]-1;
 	  }
 	else
 	  {
@@ -3732,19 +3750,19 @@ namespace netgen
 	mesh.AddVolumeElement (el);
       }
     */
-    ParallelForRange
-      (opt.task_manager, mtets.Size(), [&] (size_t begin, size_t end)
+    ngcore::ParallelForRange
+      (mtets.Range(), [&] (auto myrange)
        {
-         for (size_t i = begin; i < end; i++)
+         for (auto ei : myrange)
           {
             Element el(TET);
-            auto & tet = mtets[i];
+            auto & tet = mtets[ei];
             el.SetIndex (tet.matindex);
             el.SetOrder (tet.order);
             for (int j = 0; j < 4; j++)
               el[j] = tet.pnums[j];
             el.NewestVertex() = tet.newest_vertex;
-            mesh.SetVolumeElement (ElementIndex(i), el);
+            mesh.SetVolumeElement (ei, el);
           }
        });
 

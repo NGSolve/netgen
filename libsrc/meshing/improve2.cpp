@@ -353,7 +353,7 @@ namespace netgen
                     improvement_candidates[cnt++]= std::make_pair(t1,o1);
           });
 
-        auto elements_with_improvement = improvement_candidates.Range(cnt.load());
+        auto elements_with_improvement = improvement_candidates.Range(0, cnt.load());
         QuickSort(elements_with_improvement);
 
         for (auto [t1,o1] : elements_with_improvement)

@@ -468,14 +468,11 @@ namespace netgen
     int i;
   public:
     ElementIndex () = default;
-    // private:
-    constexpr ElementIndex (int ai) : i(ai) { ; }
-  public:
+    constexpr /* explicit */ ElementIndex (int ai) : i(ai) { ; }
     ElementIndex & operator= (const ElementIndex & ai) { i = ai.i; return *this; }
     ElementIndex & operator= (int ai) { i = ai; return *this; }
-    // private:
-    constexpr operator int () const { return i; }
-  public:
+
+    constexpr /* explicit */ operator int () const { return i; }
     ElementIndex operator++ (int) { return ElementIndex(i++); }    
     ElementIndex operator-- (int) { return ElementIndex(i--); }
     ElementIndex & operator++ () { ++i; return *this; }
@@ -495,7 +492,24 @@ namespace netgen
     return (ost << ei-IndexBASE<ElementIndex>());
   }
 
+  inline ElementIndex operator+ (ElementIndex ei, int i) { return ElementIndex { int(ei) + i }; }
+  inline ElementIndex operator+ (size_t s, ElementIndex ei) { return ElementIndex(int(ei) + s); }  
+  inline ElementIndex operator+ (ElementIndex ei, size_t s) { return ElementIndex(int(ei) + s); }  
+  inline bool operator== (ElementIndex ei1, ElementIndex ei2) { return int(ei1) == int(ei2); };
+  inline bool operator!= (ElementIndex ei1, ElementIndex ei2) { return int(ei1) != int(ei2); };
+  inline bool operator< (ElementIndex ei1, ElementIndex ei2) { return int(ei1) < int(ei2); };  
+  inline bool operator> (ElementIndex ei1, ElementIndex ei2) { return int(ei1) > int(ei2); };  
+  inline bool operator>= (ElementIndex ei1, ElementIndex ei2) { return int(ei1) >= int(ei2); };
+  inline bool operator<= (ElementIndex ei1, ElementIndex ei2) { return int(ei1) <= int(ei2); };
+  // these should not be needed:
 
+  inline bool operator== (ElementIndex ei1, int ei2) { return int(ei1) == int(ei2); };  
+  inline bool operator< (size_t s, ElementIndex ei2) { return int(s) < int(ei2); };    
+  inline bool operator< (ElementIndex ei1, size_t s) { return int(ei1) < int(s); };   // should not need
+  inline bool operator< (ElementIndex ei1, int s) { return int(ei1) < int(s); };   // should not need
+  inline bool operator>= (size_t s, ElementIndex ei2) { return int(s) >= int(ei2); };
+
+  
   class SurfaceElementIndex
   {
     int i;

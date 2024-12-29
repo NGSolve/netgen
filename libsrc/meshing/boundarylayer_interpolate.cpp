@@ -282,7 +282,7 @@ void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors()
   RegionTimer rtall(tall);
   static Timer tsmooth("InterpolateSurfaceGrowthVectors-Smoothing");
   auto np_old = this->np;
-  auto np = mesh.GetNP();
+  [[maybe_unused]] auto np = mesh.GetNP();
 
   auto hasMoved = [&] (PointIndex pi) {
     return (pi - IndexBASE<PointIndex>() >= np_old) || mapto[pi].Size() > 0 || special_boundary_points.count(pi);
@@ -380,8 +380,8 @@ void BoundaryLayerTool ::FixSurfaceElements()
 {
   static Timer tall("FixSurfaceElements");
   RegionTimer rtall(tall);
-  auto np_old = this->np;
-  auto np = mesh.GetNP();
+  [[maybe_unused]] auto np_old = this->np;
+  [[maybe_unused]] auto np = mesh.GetNP();
 
   non_bl_growth_vectors.clear();
 

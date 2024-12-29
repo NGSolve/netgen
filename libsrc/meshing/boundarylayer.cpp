@@ -707,7 +707,7 @@ void BoundaryLayerTool ::InsertNewElements(
                     s[0] = p0;
                     s[1] = p1;
                     s[2] = PointIndex::INVALID;
-                    auto pair =
+                    [[maybe_unused]] auto pair =
                       s[0] < s[1] ? make_pair(s[0], s[1]) : make_pair(s[1], s[0]);
                     if (extra_edge_nr)
                       s.edgenr = ++edge_nr;

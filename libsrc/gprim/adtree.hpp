@@ -970,7 +970,7 @@ public:
           Leaf *leaf1 = (Leaf*) ball_leaves.Alloc(); new (leaf1) Leaf();
           Leaf *leaf2 = (Leaf*) ball_leaves.Alloc(); new (leaf2) Leaf();
 
-          for (auto i : order.Range(isplit))
+          for (auto i : order.Range(0, isplit))
               leaf1->Add(leaf_index, leaf->p[i], leaf->index[i] );
           for (auto i : order.Range(isplit, N))
               leaf2->Add(leaf_index, leaf->p[i], leaf->index[i] );
@@ -1334,7 +1334,7 @@ public:
             leaves.Append(leaf2);
             leaves[leaf1->nr] = leaf1;
 
-            for (auto i : order.Range(isplit))
+            for (auto i : order.Range(0,isplit))
                 leaf1->Add(leaves, leaf_index, leaf->p[i], leaf->index[i] );
             for (auto i : order.Range(isplit, N))
                 leaf2->Add(leaves, leaf_index, leaf->p[i], leaf->index[i] );
