@@ -439,7 +439,8 @@ void MeshOptimize3d :: CombineImprove ()
       (*testout) << "Total badness = " << totalbad << endl;
 
       int cntill = 0;
-      for (ElementIndex ei = 0; ei < ne; ei++)
+      // for (ElementIndex ei = 0; ei < ne; ei++)
+      for (ElementIndex ei : ngcore::T_Range<ElementIndex>(ne))
 	if(!(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex()))
 	  if (!mesh.LegalTet (mesh[ei]))
 	    cntill++;
@@ -693,7 +694,8 @@ void MeshOptimize3d :: SplitImprove ()
 
       [[maybe_unused]] int cntill = 0;
       ne = mesh.GetNE();
-      for (ElementIndex ei = 0; ei < ne; ei++)
+      // for (ElementIndex ei = 0; ei < ne; ei++)
+      for (auto ei : ngcore::T_Range<ElementIndex>(ne))
         if (!mesh.LegalTet (mesh[ei]))
           cntill++;
       //      cout << cntill << " illegal tets" << endl;
@@ -704,7 +706,7 @@ void MeshOptimize3d :: SplitImprove ()
 
 
 double MeshOptimize3d :: SwapImproveEdge (
-        const BitArray * working_elements,
+        const TBitArray<ElementIndex> * working_elements,
         Table<ElementIndex, PointIndex> & elementsonnode,
         INDEX_3_HASHTABLE<int> & faces,
         PointIndex pi1, PointIndex pi2, bool check_only)
@@ -765,7 +767,7 @@ double MeshOptimize3d :: SwapImproveEdge (
 
       if(working_elements &&
               ei < working_elements->Size() &&
-              !working_elements->Test(ei))
+         !working_elements->Test(ei))
           return 0.0;
 
       if (mesh[ei].IsDeleted())
@@ -1325,7 +1327,7 @@ double MeshOptimize3d :: SwapImproveEdge (
   return d_badness;
 }
 
-void MeshOptimize3d :: SwapImprove (const BitArray * working_elements)
+void MeshOptimize3d :: SwapImprove (const TBitArray<ElementIndex> * working_elements)
 {
   static Timer t("MeshOptimize3d::SwapImprove"); RegionTimer reg(t);
   static Timer tloop("MeshOptimize3d::SwapImprove loop");
@@ -1463,7 +1465,7 @@ void MeshOptimize3d :: SwapImprove (const BitArray * working_elements)
 
 
 void MeshOptimize3d :: SwapImproveSurface (
-					   const BitArray * working_elements,
+					   const TBitArray<ElementIndex> * working_elements,
 					   const NgArray< idmap_type* > * idmaps)
 {
   NgArray< idmap_type* > locidmaps;

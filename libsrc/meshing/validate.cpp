@@ -218,7 +218,7 @@ namespace netgen
     Validate(mesh,bad_elements,pure_badness,
 	     ((uselocalworsening) ?  (0.8*(max_worsening-1.) + 1.) : (0.1*(max_worsening-1.) + 1.)),
 	     uselocalworsening); // -> larger working area
-    BitArray working_elements(ne+1);
+    TBitArray<ElementIndex> working_elements(ne+1);
     TBitArray<PointIndex> working_points(np);
 
     GetWorkingArea(working_elements,working_points,mesh,bad_elements,numbadneighbours);

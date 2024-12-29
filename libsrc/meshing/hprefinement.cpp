@@ -613,10 +613,11 @@ namespace netgen
   
   void  InitHPElements(Mesh & mesh, NgArray<HPRefElement> & elements) 
   { 
-    for(ElementIndex i = 0; i < mesh.GetNE(); i++) 
+    // for(ElementIndex i = 0; i < mesh.GetNE(); i++)
+    for(ElementIndex i : mesh.VolumeElements().Range())
       {
 	HPRefElement hpel(mesh[i]); 
-	hpel.coarse_elnr = i; 
+	hpel.coarse_elnr = int(i); 
 	
 	switch (mesh[i].GetType()) 
 	  { 
@@ -1510,7 +1511,8 @@ namespace netgen
 
     if(act_ref>=1)
       { 
-	for(ElementIndex i=0;i<mesh.GetNE(); i++) 
+	// for(ElementIndex i=0;i<mesh.GetNE(); i++)
+        for (ElementIndex i : mesh.VolumeElements().Range())
 	  { 
 	    // Element el = mesh[i] ;
 	    HPRefElement & hpel = hpelements[mesh[i].GetHpElnr()];

@@ -472,7 +472,7 @@ namespace netgen
     ElementIndex & operator= (const ElementIndex & ai) { i = ai.i; return *this; }
     ElementIndex & operator= (int ai) { i = ai; return *this; }
 
-    constexpr /* explicit */ operator int () const { return i; }
+    constexpr /* explicit */  operator int () const { return i; }
     ElementIndex operator++ (int) { return ElementIndex(i++); }    
     ElementIndex operator-- (int) { return ElementIndex(i--); }
     ElementIndex & operator++ () { ++i; return *this; }

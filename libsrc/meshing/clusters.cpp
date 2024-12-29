@@ -89,7 +89,7 @@ namespace netgen
          NgArray<int> nnums; // , ednums, fanums;
          for (auto i_ : myrange)
            {
-             int i = i_+1;
+             int i = i_-IndexBASE<ElementIndex>()+1;
              const Element & el = mesh.VolumeElement(i_);
              ELEMENT_TYPE typ = el.GetType();
              

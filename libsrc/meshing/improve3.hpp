@@ -41,9 +41,9 @@ public:
   double SplitImprove2Element (ElementIndex ei, const Table<ElementIndex, PointIndex> & elements_of_point, bool check_only);
   
 
-  double SwapImproveEdge (const BitArray * working_elements, Table<ElementIndex,PointIndex> & elementsonnode, INDEX_3_HASHTABLE<int> & faces, PointIndex pi1, PointIndex pi2, bool check_only=false);
-  void SwapImprove (const BitArray * working_elements = NULL);
-  void SwapImproveSurface (const BitArray * working_elements = NULL,
+  double SwapImproveEdge (const TBitArray<ElementIndex> * working_elements, Table<ElementIndex,PointIndex> & elementsonnode, INDEX_3_HASHTABLE<int> & faces, PointIndex pi1, PointIndex pi2, bool check_only=false);
+  void SwapImprove (const TBitArray<ElementIndex> * working_elements = NULL);
+  void SwapImproveSurface (const TBitArray<ElementIndex> * working_elements = NULL,
 			   const NgArray< idmap_type* > * idmaps = NULL);
   void SwapImprove2 ();
   double SwapImprove2 (ElementIndex eli1, int face, Table<ElementIndex, PointIndex> & elementsonnode, DynamicTable<SurfaceElementIndex, PointIndex> & belementsonnode, bool check_only=false );

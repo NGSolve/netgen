@@ -2439,7 +2439,7 @@ namespace netgen
 	const HPRefElement & hpref_el =
 	  (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
 	
-	return mesh.coarsemesh->GetCurvedElements().IsElementCurved (hpref_el.coarse_elnr);
+	return mesh.coarsemesh->GetCurvedElements().IsElementCurved (ElementIndex(hpref_el.coarse_elnr));
       }
 
     const Element & el = mesh[elnr];
@@ -2491,7 +2491,7 @@ namespace netgen
 	const HPRefElement & hpref_el =
 	  (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
 	
-	return mesh.coarsemesh->GetCurvedElements().IsElementHighOrder (hpref_el.coarse_elnr);
+	return mesh.coarsemesh->GetCurvedElements().IsElementHighOrder (ElementIndex(hpref_el.coarse_elnr));
       }
 
     const Element & el = mesh[elnr];
@@ -2555,7 +2555,8 @@ namespace netgen
 	  for (int j = 0; j < 3; j++)
 	    coarse_xi(j) += hpref_el.param[i][j] * lami[i];
 
-	mesh.coarsemesh->GetCurvedElements().CalcElementTransformation (coarse_xi, hpref_el.coarse_elnr, x, &dxdxic /* , curved */);
+	mesh.coarsemesh->GetCurvedElements().
+          CalcElementTransformation (coarse_xi, ElementIndex(hpref_el.coarse_elnr), x, &dxdxic /* , curved */);
 
 	if (dxdxi)
 	  *dxdxi = dxdxic * trans;
@@ -4584,7 +4585,7 @@ namespace netgen
 	  }
 
 	mesh.coarsemesh->GetCurvedElements().
-	  CalcMultiPointElementTransformation (hpref_el.coarse_elnr, n, 
+	  CalcMultiPointElementTransformation (ElementIndex(hpref_el.coarse_elnr), n, 
 					       &coarse_xi[0], 3, 
 					       x, sx, 
 					       dxdxi, sdxdxi);
