@@ -139,7 +139,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
   else
     {
       ret.facets.num = 2;
-      ret.facets.base = 1;
+      ret.facets.base = POINTINDEX_BASE;
       ret.facets.ptr = (int*)&(el[0]);
     }
 
@@ -271,10 +271,10 @@ template <> NGX_INLINE DLL_HEADER int Ngx_Mesh :: GetNNodes<2> ()
   return mesh->GetTopology().GetNFaces();
 }
 
-template <> NGX_INLINE DLL_HEADER const Ng_Node<0> Ngx_Mesh :: GetNode<0> (int vnr) const
+template <> NGX_INLINE DLL_HEADER const Ng_Node<0> Ngx_Mesh :: GetNode<0> (int vnr_) const
 {
   Ng_Node<0> node;
-  vnr++;
+  PointIndex vnr = IndexBASE<PointIndex>() + vnr_;
   switch (mesh->GetDimension())
     {
     case 3:
