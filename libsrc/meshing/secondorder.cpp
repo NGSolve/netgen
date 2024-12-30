@@ -207,9 +207,10 @@ namespace netgen
 
 
     // refine volume elements
-    for (int i = 1; i <= mesh.GetNE(); i++)
+    // for (int i = 1; i <= mesh.GetNE(); i++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       {
-	const Element & el = mesh.VolumeElement(i);
+	const Element & el = mesh.VolumeElement(ei);
 	int onp = 0;
 
 	Element newel(TET);
@@ -342,7 +343,7 @@ namespace netgen
 	      }
 	  }
 
-	mesh.VolumeElement (i) = newel;
+	mesh.VolumeElement (ei) = newel;
       }
 
 
@@ -430,9 +431,10 @@ namespace netgen
     for (int i = 1; i <= np; i++)
       parents.Elem(i) = INDEX_2(0,0);
 
-    for (int i = 1; i <= ne; i++)
+    // for (int i = 1; i <= ne; i++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       {
-	const Element & el = mesh.VolumeElement(i);
+	const Element & el = mesh[ei];
 	if (el.GetType() == TET10)
 	  {
 	    static int betweentab[6][3] =
@@ -469,14 +471,15 @@ namespace netgen
 
     int cnttrials = 100;
     int wrongels = 0;
-    for (int i = 1; i <= ne; i++)
-      if (mesh.VolumeElement(i).CalcJacobianBadness (mesh.Points()) > 1e10)
+    // for (int i = 1; i <= ne; i++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
+      if (mesh.VolumeElement(ei).CalcJacobianBadness (mesh.Points()) > 1e10)
 	{
 	  wrongels++;
-	  mesh.VolumeElement(i).Flags().badel = 1;
+	  mesh.VolumeElement(ei).Flags().badel = 1;
 	}
       else
-	mesh.VolumeElement(i).Flags().badel = 0;
+	mesh.VolumeElement(ei).Flags().badel = 0;
 
     double facok = 0;
     double factry;

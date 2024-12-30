@@ -994,7 +994,7 @@ namespace netgen
       NgArray<int> & segment_weights){ }
 #endif
 
-    NgArray<int> vol_partition;
+    Array<int, ElementIndex> vol_partition;
     NgArray<int> surf_partition;
     NgArray<int> seg_partition;
 

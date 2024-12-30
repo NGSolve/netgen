@@ -362,7 +362,8 @@ namespace netgen
            
            meshing.GenerateMesh (mesh, mpquad);
            
-           for (int i = oldne + 1; i <= mesh.GetNE(); i++)
+           // for (int i = oldne + 1; i <= mesh.GetNE(); i++)
+           for (ElementIndex i : mesh.VolumeElements().Range().Modify(oldne, 0))
              mesh.VolumeElement(i).SetIndex (domain);
            
            (*testout) 
@@ -409,7 +410,8 @@ namespace netgen
 
       md.meshing->Delaunay (mesh, domain, mp);
 
-      for (int i = oldne + 1; i <= mesh.GetNE(); i++)
+      // for (int i = oldne + 1; i <= mesh.GetNE(); i++)
+      for (ElementIndex i : mesh.VolumeElements().Range().Modify(oldne, 0))
          mesh.VolumeElement(i).SetIndex (domain);
 
       PrintMessage (3, mesh.GetNP(), " points, ",

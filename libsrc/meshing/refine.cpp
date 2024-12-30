@@ -854,9 +854,10 @@ namespace netgen
 
 		TBitArray<PointIndex> free (mesh.GetNP()), fhelp(mesh.GetNP());
 		free.Clear();
-		for (int i = 1; i <= mesh.GetNE(); i++)
+		// for (int i = 1; i <= mesh.GetNE(); i++)
+                for (ElementIndex ei : mesh.VolumeElements().Range())
 		  {
-		    const Element & el = mesh.VolumeElement(i);
+		    const Element & el = mesh.VolumeElement(ei);
 		    if (el.Volume(mesh.Points()) < 0)
 		      for (int j = 1; j <= el.GetNP(); j++)
 			free.SetBit (el.PNum(j));

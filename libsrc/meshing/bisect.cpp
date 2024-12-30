@@ -3087,13 +3087,14 @@ namespace netgen
 	      {
 		ElementIndex cnttet = IndexBASE<ElementIndex>();
 		int cntprism = 0;
-		for (int i = 1; i <= mesh.GetNE(); i++)
+		// for (int i = 1; i <= mesh.GetNE(); i++)
+                for (auto ei : mesh.VolumeElements().Range())
 		  {
-		    if (mesh.VolumeElement(i).GetType() == TET ||
-			mesh.VolumeElement(i).GetType() == TET10)
+		    if (mesh.VolumeElement(ei).GetType() == TET ||
+			mesh.VolumeElement(ei).GetType() == TET10)
 		      {
 			mtets[cnttet].marked =
-			  (opt.onlyonce ? 3 : 1) * mesh.VolumeElement(i).TestRefinementFlag();
+			  (opt.onlyonce ? 3 : 1) * mesh.VolumeElement(ei).TestRefinementFlag();
 			if (mtets[cnttet].marked)
 			  cntm++;
 			cnttet++;
@@ -3102,7 +3103,7 @@ namespace netgen
 		      {
 			cntprism++;
 			mprisms.Elem(cntprism).marked =
-			  2 * mesh.VolumeElement(i).TestRefinementFlag();
+			  2 * mesh.VolumeElement(ei).TestRefinementFlag();
 			if (mprisms.Elem(cntprism).marked)
 			  cntm++;
 		      }
