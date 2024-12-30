@@ -1319,21 +1319,21 @@ namespace netgen
 	eptr.Append (eind.Size());
 	const Element & el = VolumeElement(i+1);
 	for (int j = 0; j < el.GetNP(); j++)
-	  eind.Append (el[j]-1);
+	  eind.Append (el[j]-IndexBASE<PointIndex>());
       }
     for (int i = 0; i < GetNSE(); i++)
       {
 	eptr.Append (eind.Size());
 	const Element2d & el = SurfaceElement(i+1);
 	for (int j = 0; j < el.GetNP(); j++)
-	  eind.Append (el[j]-1);
+	  eind.Append (el[j]-IndexBASE<PointIndex>());
       }
     for (int i = 0; i < GetNSeg(); i++)
       {
 	eptr.Append (eind.Size());
 	const Segment & el = LineSegment(i+1);
-	eind.Append (el[0]-1);
-	eind.Append (el[1]-1);
+	eind.Append (el[0]-IndexBASE<PointIndex>());
+	eind.Append (el[1]-IndexBASE<PointIndex>());
       }
     eptr.Append (eind.Size());
     NgArray<idx_t> epart(ne), npart(nn);
