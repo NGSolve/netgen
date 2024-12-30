@@ -449,7 +449,7 @@ namespace netgen
 	    int dest = procs[j];
 	    // !! we also use this as offsets for MPI-type, if this is changed, also change ReceiveParallelMesh
 	    verts_of_proc.Add (dest, vert - IndexBASE<T_POINTS::index_type>());
-	    loc_num_of_vert.Add (vert, verts_of_proc[dest].Size());
+	    loc_num_of_vert.Add (vert, verts_of_proc[dest].Size() -1+IndexBASE<T_POINTS::index_type>());
 	  }
       }
     tbuildvertex.Stop();    
@@ -547,8 +547,8 @@ namespace netgen
     tbuilddistpnums.Start();
     Array<int> num_distpnums(ntasks);
     num_distpnums = 0;
-    
-    for (int vert = 1; vert <= GetNP(); vert++)
+    // for (int vert = 1; vert <= GetNP(); vert++)
+    for (PointIndex vert : Points().Range())
       {
 	FlatArray<int> procs = procs_of_vert[vert];
 	for (auto p : procs)
@@ -556,8 +556,8 @@ namespace netgen
       }
 
     DynamicTable<int> distpnums (num_distpnums);
-
-    for (int vert = 1; vert <= GetNP(); vert++)
+    // for (int vert = 1; vert <= GetNP(); vert++)
+    for (PointIndex vert : Points().Range())
       {
 	NgFlatArray<int> procs = procs_of_vert[vert];
 	for (int j = 0; j < procs.Size(); j++)
@@ -582,11 +582,12 @@ namespace netgen
     tbuildelementtable.Start();
     Array<int> elarraysize (ntasks);
     elarraysize = 0;
-    for ( int ei = 1; ei <= GetNE(); ei++)
+    // for (int ei = 1; ei <= GetNE(); ei++)
+    for (ElementIndex ei : VolumeElements().Range())
       {
 	const Element & el = VolumeElement (ei);
 	// int dest = el.GetPartition();
-        int dest = vol_partition[ei-1];
+        int dest = vol_partition[ei];
 	elarraysize[dest] += 3 + el.GetNP();
       }
 
@@ -1023,7 +1024,7 @@ namespace netgen
 	PointIndex globvert = verts[vert] + IndexBASE<T_POINTS::index_type>();
         // paralleltop->SetLoc2Glob_Vert ( vert+1, globvert  );
         paralleltop->L2G (PointIndex(vert+PointIndex::BASE)) = globvert;
-	glob2loc_vert_ht.Set (globvert, vert+1);
+	glob2loc_vert_ht.Set (globvert, vert+PointIndex::BASE);
       }
     
     for (int i = 0; i < numvert; i++)
