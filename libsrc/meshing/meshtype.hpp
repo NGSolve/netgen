@@ -167,7 +167,7 @@ namespace netgen
     Index & operator= (Index&&) = default;
 
     // private:
-    constexpr Index (int ai) : i(ai)
+    constexpr Index (T ai) : i(ai)
     {
 #ifdef DEBUG
       if (ai < Base)
@@ -446,7 +446,12 @@ namespace netgen
   class ElementIndex : public Index<int,ElementIndex,0>
   {
   public:
-    using Index::Index;
+    using Index<int,ElementIndex,0>::Index;
+    /*
+    constexpr ElementIndex () = default;
+    constexpr ElementIndex (int i) : Index<int,ElementIndex,0>(i) { }     
+    constexpr ElementIndex (Index<int,ElementIndex,0> & ind) : Index<int,ElementIndex,0>(ind) { }
+    */
   };
   
   inline istream & operator>> (istream & ist, ElementIndex & pi)
@@ -472,6 +477,7 @@ namespace netgen
   {
   public:
     using Index::Index;
+    constexpr SurfaceElementIndex (Index<int,SurfaceElementIndex,0> & ind) : Index<int,SurfaceElementIndex,0>(ind) { }         
   };
 
   
