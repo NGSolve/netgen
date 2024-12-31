@@ -220,7 +220,7 @@ namespace netgen
 
   template <typename T, typename TIndex, int Base>  
   // constexpr auto operator+ (Index<T,TIndex,Base> ind, int i) { return TIndex(T(ind)+i); }
-  constexpr auto operator+ (Index<T,TIndex,Base> ind, int i) { return TIndex{ind}+=i; }
+  constexpr auto operator+ (Index<T,TIndex,Base> ind, int i) { return TIndex( Index<T,TIndex,Base>(ind) +=i ); }
   template <typename T, typename TIndex, int Base>    
   constexpr TIndex operator+ (Index<T,TIndex,Base> pi, size_t i) { return TIndex(pi.i+i); }
   template <typename T, typename TIndex, int Base>    
