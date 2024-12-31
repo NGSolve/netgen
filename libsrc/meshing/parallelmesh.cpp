@@ -592,18 +592,17 @@ namespace netgen
       }
 
     DynamicTable<int> elementarrays(elarraysize);
-
-    for (int ei = 1; ei <= GetNE(); ei++)
+    
+    for (ElementIndex ei : VolumeElements().Range())    
       {
 	const Element & el = VolumeElement (ei);
-	// int dest = el.GetPartition();
-        int dest = vol_partition[ei-1];
+        int dest = vol_partition[ei];
         
-	elementarrays.Add (dest, ei);
+	elementarrays.Add (dest, int(ei+1));
 	elementarrays.Add (dest, el.GetIndex());
 	elementarrays.Add (dest, el.GetNP());
-	for (int i = 0; i < el.GetNP(); i++)
-	  elementarrays.Add (dest, el[i]);
+        for (PointIndex pi : el.PNums())
+	  elementarrays.Add (dest, pi);
       }
     tbuildelementtable.Stop();
     

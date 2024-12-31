@@ -143,19 +143,21 @@ namespace netgen
 	  cluster_reps.Elem(nnums[j]) = nnums[j];
       }
     */
+
+    
     ngcore::ParallelForRange
       (mesh.SurfaceElements().Range(),
        [&] (auto myrange)
        {
          NgArrayMem<int,9> nnums; // , ednums;
-         for (int i_ : myrange)
+         for (SurfaceElementIndex i_ : myrange)
            {
              int i = i_+1;
-             const Element2d & el = mesh.SurfaceElement(i);
+             const Element2d & el = mesh[i_]; // .SurfaceElement(i);
              ELEMENT_TYPE typ = el.GetType();
              
              // top.GetSurfaceElementEdges (i, ednums);
-             auto ednums = top.GetEdges (SurfaceElementIndex(i_));
+             auto ednums = top.GetEdges (i_);
              // cout << "ednums = " << ednums << endl;
              
              int fanum = top.GetSurfaceElementFace (i);             

@@ -5,9 +5,7 @@
 
 #include "meshing.hpp"  // quickfix for parallel 
 
-
 #define noDEBUG
-
 
 namespace netgen
 {
