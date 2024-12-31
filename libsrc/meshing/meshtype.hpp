@@ -204,12 +204,12 @@ namespace netgen
     constexpr operator TIndex() const { return TIndex(i); }
     constexpr operator TIndex&() { return static_cast<TIndex&>(*this); }    
 
-    TIndex operator++ (int) { TIndex hi(*this); i++; return hi; }
+    TIndex operator++ (int) { TIndex hi{*this}; i++; return hi; }
     TIndex operator-- (int) { TIndex hi(*this); i--; return hi; }
     TIndex & operator++ () { i++; return *this; }
     TIndex operator-- () { i--; return *this; }
     constexpr TIndex & operator+= (T add) & { i += add; return *this; }
-    constexpr TIndex operator+= (T add) && { i += add; return *this; }
+    constexpr TIndex operator+= (T add) && { i += add; return TIndex(*this); }
     void Invalidate() { i = long(TIndex::BASE)-1; }
     bool IsValid() const { return i+1 != TIndex::BASE; }
     // operator bool() const { return IsValid(); }
@@ -230,7 +230,7 @@ namespace netgen
   template <typename T, typename TIndex, int Base>    
   constexpr inline auto operator- (Index<T,TIndex,Base> pi, int i) -> TIndex { return TIndex(pi.i-i); }
   template <typename T, typename TIndex, int Base>    
-  inline int operator- (Index<T,TIndex,Base> pa, Index<T,TIndex,Base> pb) { return pa.i-pb.i; }
+  constexpr inline int operator- (Index<T,TIndex,Base> pa, Index<T,TIndex,Base> pb) { return pa.i-pb.i; }
   template <typename T, typename TIndex, int Base>      
   inline bool operator< (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a.i-b.i < 0; }
   template <typename T, typename TIndex, int Base>      
