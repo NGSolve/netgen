@@ -202,14 +202,14 @@ namespace netgen
     explicit constexpr operator T& () { return i; }
   public:
     constexpr operator TIndex() const { return TIndex(i); }
-    constexpr operator TIndex&() { return static_cast<TIndex&>(*this); }    
+    operator TIndex&() { return static_cast<TIndex&>(*this); }    
 
     TIndex operator++ (int) { TIndex hi{*this}; i++; return hi; }
     TIndex operator-- (int) { TIndex hi(*this); i--; return hi; }
     TIndex & operator++ () { i++; return *this; }
     TIndex operator-- () { i--; return *this; }
     constexpr TIndex & operator+= (T add) & { i += add; return *this; }
-    constexpr TIndex operator+= (T add) && { i += add; return TIndex(*this); }
+    constexpr TIndex operator+= (T add) && { i += add; return TIndex{*this}; }
     void Invalidate() { i = long(TIndex::BASE)-1; }
     bool IsValid() const { return i+1 != TIndex::BASE; }
     // operator bool() const { return IsValid(); }
