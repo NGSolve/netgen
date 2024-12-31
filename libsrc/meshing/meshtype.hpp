@@ -206,8 +206,8 @@ namespace netgen
 
     TIndex operator++ (int) { TIndex hi{*this}; i++; return hi; }
     TIndex operator-- (int) { TIndex hi(*this); i--; return hi; }
-    TIndex operator++ () { i++; return TIndex{*this}; }
-    TIndex operator-- () { i--; return TIndex{*this}; }
+    TIndex & operator++ () { i++; return static_cast<TIndex&>(*this); }
+    TIndex & operator-- () { i--; return static_cast<TIndex&>(*this); }
     constexpr TIndex operator+= (T add) { i += add; return TIndex{*this}; }
     void Invalidate() { i = long(TIndex::BASE)-1; }
     bool IsValid() const { return i+1 != TIndex::BASE; }
@@ -218,9 +218,7 @@ namespace netgen
 
 
   template <typename T, typename TIndex, int Base>  
-  // constexpr auto operator+ (Index<T,TIndex,Base> ind, int i) { return TIndex(T(ind)+i); }
-  // constexpr auto operator+ (Index<T,TIndex,Base> ind, int i) { return TIndex{ Index<T,TIndex,Base>(ind) +=i }; }
-  constexpr auto operator+ (Index<T,TIndex,Base> ind, int i) { return ind += i; return TIndex(ind); }
+  constexpr auto operator+ (Index<T,TIndex,Base> ind, int i) { return TIndex(ind.i+i); }
   template <typename T, typename TIndex, int Base>    
   constexpr TIndex operator+ (Index<T,TIndex,Base> pi, size_t i) { return TIndex(pi.i+i); }
   template <typename T, typename TIndex, int Base>    
@@ -250,7 +248,6 @@ namespace netgen
   {
   public:
     using Index::Index;
-    constexpr PointIndex (Index<int,PointIndex,1> & ind) : Index<int,PointIndex,1>(ind) { } 
   };
 
 }
@@ -447,11 +444,6 @@ namespace netgen
   {
   public:
     using Index<int,ElementIndex,0>::Index;
-    /*
-    constexpr ElementIndex () = default;
-    constexpr ElementIndex (int i) : Index<int,ElementIndex,0>(i) { }     
-    constexpr ElementIndex (Index<int,ElementIndex,0> & ind) : Index<int,ElementIndex,0>(ind) { }
-    */
   };
   
   inline istream & operator>> (istream & ist, ElementIndex & pi)
@@ -477,7 +469,6 @@ namespace netgen
   {
   public:
     using Index::Index;
-    constexpr SurfaceElementIndex (Index<int,SurfaceElementIndex,0> & ind) : Index<int,SurfaceElementIndex,0>(ind) { }         
   };
 
   
