@@ -201,7 +201,7 @@ namespace netgen
     constexpr operator T () const { return i; }
     explicit constexpr operator T& () { return i; }
   public:
-    constexpr operator TIndex() const { return TIndex(i); }
+    // constexpr operator TIndex() const { return TIndex(i); }
     operator TIndex&() { return static_cast<TIndex&>(*this); }    
 
     TIndex operator++ (int) { TIndex hi{*this}; i++; return hi; }
@@ -250,6 +250,7 @@ namespace netgen
   {
   public:
     using Index::Index;
+    constexpr PointIndex (Index<int,PointIndex,1> & ind) : Index<int,PointIndex,1>(ind) { } 
   };
 
 }
