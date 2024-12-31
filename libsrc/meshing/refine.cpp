@@ -865,9 +865,10 @@ namespace netgen
 		for (int k = 1; k <= 3; k++)
 		  {
 		    fhelp.Clear();
-		    for (int i = 1; i <= mesh.GetNE(); i++)
+		    // for (int i = 1; i <= mesh.GetNE(); i++) 
+                    for (const Element & el : mesh.VolumeElements())
 		      {
-			const Element & el = mesh.VolumeElement(i);
+			// const Element & el = mesh.VolumeElement(i);
 			int freeel = 0;
 			for (int j = 1; j <= el.GetNP(); j++)
 			  if (free.Test(el.PNum(j)))
@@ -897,19 +898,19 @@ namespace netgen
 
 
 		wrongels = 0;
-		for (int i = 1; i <= mesh.GetNE(); i++)
+                for (ElementIndex ei : mesh.VolumeElements().Range())
 		  {
-		    if (mesh.VolumeElement(i).Volume(mesh.Points()) < 0)
+		    if (mesh.VolumeElement(ei).Volume(mesh.Points()) < 0)
 		      {
 			wrongels++;
-			mesh.VolumeElement(i).Flags().badel = 1;
+			mesh.VolumeElement(ei).Flags().badel = 1;
 			(*testout) << "wrong el: ";
 			for (int j = 1; j <= 4; j++)
-			  (*testout) << mesh.VolumeElement(i).PNum(j) << " ";
+			  (*testout) << mesh.VolumeElement(ei).PNum(j) << " ";
 			(*testout) << endl;
 		      }
 		    else
-		      mesh.VolumeElement(i).Flags().badel = 0;
+		      mesh.VolumeElement(ei).Flags().badel = 0;
 		  }
 		cout << "wrongels = " << wrongels << endl;
 	      }

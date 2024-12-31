@@ -9,8 +9,6 @@ double minwithoutother;
 
 
 
-
-
 MeshingStat3d :: MeshingStat3d ()
 {
   cntsucc = cnttrials = cntelem = qualclass = 0;

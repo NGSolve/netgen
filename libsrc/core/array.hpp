@@ -216,6 +216,10 @@ namespace ngcore
   template <typename  T>
   constexpr T IndexBASE () { return T(0); }
 
+  template <typename  T>
+  constexpr T IndexBASE (T ind) { return IndexBASE<T>(); }
+
+  
 
   class IndexFromEnd
   {

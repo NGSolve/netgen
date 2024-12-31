@@ -3051,6 +3051,7 @@ namespace netgen
     // bool buggy = false;
     // ofstream bout("buggy.out");
 
+
     for (int i = 1; i <= GetNSE(); i++)
       {
         const Element2d & el = SurfaceElement(i);
@@ -3060,10 +3061,10 @@ namespace netgen
           {
             for (int j = 1; j <= el.GetNP(); j++)
               {
-                INDEX_3 seg (el.PNumMod(j), el.PNumMod(j+1), el.GetIndex());
+                PointIndices<3> seg (el.PNumMod(j), el.PNumMod(j+1), el.GetIndex());
                 // int data;
 
-                if (seg.I1() < PointIndex::BASE || seg.I2() < PointIndex::BASE)
+                if (!seg.I1().IsValid() || !seg.I2().IsValid())
                   cerr << "seg = " << seg << endl;
 
                 if (faceht.Used(seg))
@@ -7299,6 +7300,7 @@ namespace netgen
       {
         int eli0, eli1;
         GetTopology().GetSurface2VolumeElement(sei+1, eli0, eli1);
+        // auto [ei0,ei1] = GetTopology().GetSurface2VolumeElement(sei); // the way to go
         auto & sel = (*this)[sei];
         int face = sel.GetIndex();
         int domin = VolumeElement(eli0).GetIndex();

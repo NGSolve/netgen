@@ -357,7 +357,7 @@ void MeshOptimize3d :: CombineImprove ()
 {
   static Timer t("MeshOptimize3d::CombineImprove"); RegionTimer reg(t);
   static Timer topt("Optimize");
-  static Timer tsearch("Search");
+  static Timer tsearch("Search-combine");
   static Timer tbuild_elements_table("Build elements table");
 
   mesh.BuildBoundaryEdges(false);
@@ -613,7 +613,7 @@ void MeshOptimize3d :: SplitImprove ()
 {
   static Timer t("MeshOptimize3d::SplitImprove"); RegionTimer reg(t);
   static Timer topt("Optimize");
-  static Timer tsearch("Search");
+  static Timer tsearch("Search-split");
 
   // int np = mesh.GetNP();
   int ne = mesh.GetNE();
