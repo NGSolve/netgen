@@ -185,6 +185,13 @@ public:
     elnr2 = surf2volelement.Get(selnr)[1];
   }
 
+  std::array<ElementIndex,2> GetSurface2VolumeElement (SurfaceElementIndex sei) 
+  {
+    return { ElementIndex( surf2volelement.Get(sei+1)[0] - 1),
+             ElementIndex( surf2volelement.Get(sei+1)[1] - 1) };
+  }
+
+  
   int GetFace2SurfaceElement (int fnr) const { return face2surfel[fnr-1]; }
 
   SegmentIndex GetSegmentOfEdge(int edgenr) const { return edge2segment[edgenr-1]; }

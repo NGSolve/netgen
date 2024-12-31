@@ -27,7 +27,6 @@ namespace netgen
   */
 
 
-
   enum ELEMENT_TYPE : unsigned char { 
     SEGMENT = 1, SEGMENT3 = 2,
     TRIG = 10, QUAD=11, TRIG6 = 12, QUAD6 = 13, QUAD8 = 14,
@@ -149,8 +148,107 @@ namespace netgen
   }
 
 
+  template <typename T, typename TIndex, int Base>
+  class Index
+  {
+  public:
+
+    T i;
+    static constexpr int BASE = Base;
+    
+  public:
+    class t_invalid { public: constexpr t_invalid() = default; };
+    static constexpr t_invalid INVALID{};
+    
+    constexpr Index () = default;
+    constexpr Index (const Index&) = default;
+    constexpr Index (Index &&) = default;
+    Index & operator= (const Index&) = default;
+    Index & operator= (Index&&) = default;
+
+    // private:
+    constexpr Index (int ai) : i(ai)
+    {
+#ifdef DEBUG
+      if (ai < Base)
+        cout << "illegal Index, use Index::INVALID instead" << endl;
+#endif
+    }
 
 
+    // friend constexpr netgen::TIndex ngcore::IndexBASE<netgen::TIndex> ();
+    // template <int N> friend class PointIndices;
+
+    /*
+    friend auto operator+ (Index, int) -> TIndex;
+    friend TIndex operator+ (Index, size_t);    
+    friend TIndex operator+ (int, Index);
+    friend TIndex operator+ (size_t, Index);
+    friend constexpr TIndex operator- (Index, int);
+    friend int operator- (Index, Index);
+    friend bool operator< (Index a, Index b);
+    friend bool operator> (Index a, Index b);
+    friend bool operator>= (Index a, Index b);
+    friend bool operator<= (Index a, Index b);
+    friend bool operator== (Index a, Index b);
+    friend bool operator!= (Index a, Index b);
+    */
+    
+  public:
+    constexpr Index (t_invalid inv) : i(long(BASE)-1) { ; }
+    // TIndex & operator= (const TIndex &ai) { i = ai.i; return *this; }
+    // private:
+    constexpr operator const int& () const { return i; }
+    explicit constexpr operator int& () { return i; }
+  public:
+    constexpr operator TIndex() const { return TIndex(i); }
+    constexpr operator TIndex&() { return static_cast<TIndex&>(*this); }    
+    TIndex operator++ (int) { TIndex hi(*this); i++; return hi; }
+    TIndex operator-- (int) { TIndex hi(*this); i--; return hi; }
+    TIndex & operator++ () { i++; return *this; }
+    TIndex operator-- () { i--; return *this; }
+    TIndex operator+= (int add) { i += add; return *this; }
+    void Invalidate() { i = long(TIndex::BASE)-1; }
+    bool IsValid() const { return i+1 != TIndex::BASE; }
+    // operator bool() const { return IsValid(); }
+
+    void DoArchive (Archive & ar) { ar & i; }
+  };
+
+
+  /*
+  template <typename T, typename TIndex, int Base>  
+  auto operator+ (Index<T,TIndex,Base> pi, int i) -> TIndex { return TIndex(pi.i+i); }
+  template <typename T, typename TIndex, int Base>    
+  inline TIndex operator+ (Index<T,TIndex,Base> pi, size_t i) { return TIndex(pi.i+i); }
+  template <typename T, typename TIndex, int Base>    
+  inline TIndex operator+ (int i, Index<T,TIndex,Base> pi) { return TIndex(pi.i+i); }
+  template <typename T, typename TIndex, int Base>    
+  inline TIndex operator+ (size_t i, Index<T,TIndex,Base> pi) { return TIndex(pi.i+i); }
+  
+  template <typename T, typename TIndex, int Base>    
+  constexpr inline auto operator- (Index<T,TIndex,Base> pi, int i) -> TIndex { return TIndex(pi.i-i); }
+  
+  template <typename T, typename TIndex, int Base>    
+  inline int operator- (Index<T,TIndex,Base> pa, Index<T,TIndex,Base> pb) { return pa.i-pb.i; }
+  template <typename T, typename TIndex, int Base>      
+  inline bool operator< (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a.i-b.i < 0; }
+  template <typename T, typename TIndex, int Base>      
+  inline bool operator> (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a.i-b.i > 0; }
+  template <typename T, typename TIndex, int Base>      
+  inline bool operator>= (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a.i-b.i >= 0; }
+  template <typename T, typename TIndex, int Base>      
+  inline bool operator<= (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a.i-b.i <= 0; }
+  template <typename T, typename TIndex, int Base>      
+  inline bool operator== (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a.i == b.i; }
+  template <typename T, typename TIndex, int Base>      
+  inline bool operator!= (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a.i != b.i; }
+  */
+  
+
+  
+
+    
   /*
   class PointIndex
   {
@@ -196,7 +294,9 @@ namespace netgen
 
 
   // #define BASE0
-  
+
+
+  /*
   class PointIndex
   {
     int i;
@@ -260,6 +360,14 @@ namespace netgen
     void DoArchive (Archive & ar) { ar & i; }
   };
 
+  */
+
+  class PointIndex : public Index<int,PointIndex,1>
+  {
+  public:
+    using Index::Index;
+  };
+    
   constexpr inline PointIndex operator+ (PointIndex pi, int i) { return PointIndex(pi.i+i); }
   constexpr inline PointIndex operator+ (PointIndex pi, size_t i) { return PointIndex(pi.i+i); }  
   constexpr inline PointIndex operator+ (int i, PointIndex pi) { return PointIndex(pi.i+i); }
@@ -501,8 +609,8 @@ namespace netgen
   inline bool operator> (ElementIndex ei1, ElementIndex ei2) { return int(ei1) > int(ei2); };  
   inline bool operator>= (ElementIndex ei1, ElementIndex ei2) { return int(ei1) >= int(ei2); };
   inline bool operator<= (ElementIndex ei1, ElementIndex ei2) { return int(ei1) <= int(ei2); };
-  // these should not be needed:
 
+  // these should not be needed:
   inline bool operator== (ElementIndex ei1, int ei2) { return int(ei1) == int(ei2); };  
   inline bool operator< (size_t s, ElementIndex ei2) { return int(s) < int(ei2); };    
   inline bool operator< (ElementIndex ei1, size_t s) { return int(ei1) < int(s); };   // should not need
@@ -530,6 +638,27 @@ namespace netgen
     SurfaceElementIndex & operator+= (int inc) { i+=inc; return *this; }
     void DoArchive (Archive & ar) { ar & i; }
   };
+
+  inline SurfaceElementIndex operator+ (SurfaceElementIndex ei, int i) { return SurfaceElementIndex { int(ei) + i }; }
+  inline SurfaceElementIndex operator+ (size_t s, SurfaceElementIndex ei) { return SurfaceElementIndex(int(ei) + s); }  
+  inline SurfaceElementIndex operator+ (SurfaceElementIndex ei, size_t s) { return SurfaceElementIndex(int(ei) + s); }  
+  inline bool operator== (SurfaceElementIndex ei1, SurfaceElementIndex ei2) { return int(ei1) == int(ei2); };
+  inline bool operator!= (SurfaceElementIndex ei1, SurfaceElementIndex ei2) { return int(ei1) != int(ei2); };
+  inline bool operator< (SurfaceElementIndex ei1, SurfaceElementIndex ei2) { return int(ei1) < int(ei2); };  
+  inline bool operator> (SurfaceElementIndex ei1, SurfaceElementIndex ei2) { return int(ei1) > int(ei2); };  
+  inline bool operator>= (SurfaceElementIndex ei1, SurfaceElementIndex ei2) { return int(ei1) >= int(ei2); };
+  inline bool operator<= (SurfaceElementIndex ei1, SurfaceElementIndex ei2) { return int(ei1) <= int(ei2); };
+
+  // these should not be needed:
+  inline bool operator== (SurfaceElementIndex ei1, int ei2) { return int(ei1) == int(ei2); };
+  inline bool operator== (int ei2, SurfaceElementIndex ei1) { return int(ei1) == int(ei2); };
+  inline bool operator!= (SurfaceElementIndex ei1, int ei2) { return int(ei1) != int(ei2); };    
+  inline bool operator< (size_t s, SurfaceElementIndex ei2) { return int(s) < int(ei2); };    
+  inline bool operator< (SurfaceElementIndex ei1, size_t s) { return int(ei1) < int(s); };   // should not need
+  inline bool operator< (SurfaceElementIndex ei1, int s) { return int(ei1) < int(s); };   // should not need
+  inline bool operator>= (size_t s, SurfaceElementIndex ei2) { return int(s) >= int(ei2); };
+  inline bool operator>= (SurfaceElementIndex ei1, int s) { return int(ei1) >= int(s); };
+
   
   inline void SetInvalid (SurfaceElementIndex & id) { id = -1; }
   inline bool IsInvalid (SurfaceElementIndex & id) { return id == -1; }

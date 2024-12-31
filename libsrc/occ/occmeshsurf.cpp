@@ -366,8 +366,11 @@ namespace netgen
 
   void OCCSurface :: Project (Point<3> & ap, PointGeomInfo & gi)
   {
-    // static Timer t("OccSurface::Project"); RegionTimer reg(t);
-    // static Timer t2("OccSurface::Project actual"); 
+    static Timer t("OccSurface::Project"); RegionTimer reg(t);
+    static Timer tanal("OccSurface::Project analysis"); 
+    static Timer ttol("OccSurface::Project approximation"); 
+
+    static Timer t2("OccSurface::Project actual"); 
 
 
     // try Newton's method ...
@@ -472,14 +475,18 @@ namespace netgen
     */
 
     // double u,v;
-    // JS : shouldn't we move these 2 lines to the constructor ? 
+    // JS : shouldn't we move these 2 lines to the constructor ?
+    // tanal.Start();
     Handle( ShapeAnalysis_Surface ) su = new ShapeAnalysis_Surface( occface );
+    // ShapeAnalysis_Surface su( occface );    
+    // tanal.Stop();
+    ttol.Start();
     auto toltool =  BRep_Tool::Tolerance( topods_face );
-
+    ttol.Stop();
     // gp_Pnt2d suval = su->ValueOfUV ( pnt, toltool);
-    // t2.Start();
+    t2.Start();
     gp_Pnt2d suval = su->NextValueOfUV (gp_Pnt2d(u,v), pnt, toltool);
-    // t2.Stop();
+    t2.Stop();
     suval.Coord( u, v);
     pnt = occface->Value( u, v );
     
