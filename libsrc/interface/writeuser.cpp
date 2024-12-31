@@ -94,9 +94,13 @@ void WriteNeutralFormat (const Mesh & mesh,
   if (mesh.GetDimension() == 3)
     {
       outfile << ne << "\n";
+      /*
       for (int i = 1; i <= ne; i++)
 	{
 	  Element el = mesh.VolumeElement(i);
+      */
+      for (Element el : mesh.VolumeElements())
+        {
 	  if (inverttets)
 	    el.Invert();
 	  outfile.width(4);
@@ -112,9 +116,13 @@ void WriteNeutralFormat (const Mesh & mesh,
     }
 
   outfile << nse << "\n";
+  /*
   for (int i = 1; i <= nse; i++)
     {
       Element2d el = mesh.SurfaceElement(i);
+  */
+  for (Element2d el : mesh.SurfaceElements())
+    {
       if (invertsurf)
 	el.Invert();
       outfile.width(4);
@@ -583,9 +591,13 @@ void WriteFEPPFormat (const Mesh & mesh,
 
 
       outfile << ne << "\n";
+      /*
       for (i = 1; i <= ne; i++)
 	{
 	  const Element & el = mesh.VolumeElement(i);
+      */
+      for (const Element & el : mesh.VolumeElements())
+        {
 	  outfile.width(4);
 	  outfile << el.GetIndex() << " ";
 	  outfile.width(4);
@@ -677,7 +689,6 @@ void WriteEdgeElementFormat (const Mesh & mesh,
   int nelements = mesh.GetNE();
   int nsurfelem = mesh.GetNSE();
   int nedges = top->GetNEdges();
-  int i, j;
 
   int inverttets = mparam.inverttets;
   int invertsurf = mparam.inverttrigs;
@@ -692,7 +703,7 @@ void WriteEdgeElementFormat (const Mesh & mesh,
 
   // vertices with coordinates
   outfile << npoints << "\n";
-  for (i = 1; i <= npoints; i++)
+  for (int i = 1; i <= npoints; i++)
     {
       const Point3d & p = mesh.Point(i);
 
@@ -706,16 +717,24 @@ void WriteEdgeElementFormat (const Mesh & mesh,
 
   // element - edge - list
   outfile << nelements << " " << nedges << "\n";
+  /*
   for (i = 1; i <= nelements; i++)
     {
       Element el = mesh.VolumeElement(i);
+  */
+  for (ElementIndex ei : Range(mesh.VolumeElements()))
+    {
+      int i = ei-IndexBASE(ei)+1;
+      
+      Element el = mesh.VolumeElement(ei);
+
       if (inverttets)
       	el.Invert();
       outfile.width(4);
       outfile << el.GetIndex() << "  ";
       outfile.width(8);
       outfile << el.GetNP();
-      for (j = 1; j <= el.GetNP(); j++)
+      for (int j = 1; j <= el.GetNP(); j++)
 	{
 	  outfile << " ";
 	  outfile.width(8);
@@ -723,11 +742,11 @@ void WriteEdgeElementFormat (const Mesh & mesh,
 	}
 
       // top->GetElementEdges(i,edges);
-      auto eledges = top->GetEdges(ElementIndex(i-1));
+      auto eledges = top->GetEdges(ei);
       outfile << endl << "      ";
       outfile.width(8);
       outfile << eledges.Size();
-      for (j=1; j <= eledges.Size(); j++)
+      for (int j=1; j <= eledges.Size(); j++)
 	{
 	  outfile << " ";
 	  outfile.width(8);
@@ -738,7 +757,7 @@ void WriteEdgeElementFormat (const Mesh & mesh,
       // orientation:
       top->GetElementEdgeOrientations(i,edges);
       outfile << "              ";
-      for (j=1; j <= edges.Size(); j++)
+      for (int j=1; j <= edges.Size(); j++)
 	{
 	  outfile << " ";
 	  outfile.width(8);
@@ -749,7 +768,7 @@ void WriteEdgeElementFormat (const Mesh & mesh,
 
   // surface element - edge - list (with boundary conditions)
   outfile << nsurfelem << "\n";
-  for (i = 1; i <= nsurfelem; i++)
+  for (int i = 1; i <= nsurfelem; i++)
     {
       Element2d el = mesh.SurfaceElement(i);
       if (invertsurf)
@@ -758,7 +777,7 @@ void WriteEdgeElementFormat (const Mesh & mesh,
       outfile << mesh.GetFaceDescriptor (el.GetIndex()).BCProperty() << "  ";
       outfile.width(8);
       outfile << el.GetNP();
-      for (j = 1; j <= el.GetNP(); j++)
+      for (int j = 1; j <= el.GetNP(); j++)
 	{
 	  outfile << " ";
 	  outfile.width(8);
@@ -769,7 +788,7 @@ void WriteEdgeElementFormat (const Mesh & mesh,
       outfile << endl << "      ";
       outfile.width(8);
       outfile << edges.Size();
-      for (j=1; j <= edges.Size(); j++)
+      for (int j=1; j <= edges.Size(); j++)
 	{
 	  outfile << " ";
 	  outfile.width(8);
@@ -782,7 +801,7 @@ void WriteEdgeElementFormat (const Mesh & mesh,
   // int v1, v2;
   // edge - vertex - list
   outfile << nedges << "\n";
-  for (i=1; i <= nedges; i++)
+  for (int i=1; i <= nedges; i++)
     {
       // top->GetEdgeVertices(i,v1,v2);
       auto [v1,v2] = top->GetEdgeVertices(i-1);

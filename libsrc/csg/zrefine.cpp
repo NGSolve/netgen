@@ -264,14 +264,21 @@ namespace netgen
       {
         auto & identpts =
           mesh.GetIdentifications().GetIdentifiedPoints ();
-        
+
+        /*
 	for (int i = 1; i <= identpts.GetNBags(); i++)
 	  for (int j = 1; j <= identpts.GetBagSize(i); j++)
 	    {
 	      INDEX_3 pair;
 	      int dummy;
 	      identpts.GetData(i, j, pair, dummy);
-              auto idnr = pair[2];
+        */
+        for (auto [hash, val] : identpts)\
+          {
+            auto [hash_pts, idnr] = hash;
+            auto [pi1, pi2] = hash_pts;
+            // auto idnr = pair[2];
+            
 	      const CloseSurfaceIdentification * csid = 
 		dynamic_cast<const CloseSurfaceIdentification*> 
 		(geom->identifications.Get(idnr));
@@ -282,17 +289,25 @@ namespace netgen
 		      if (first_id.Test (idnr))
 			{
 			  first_id.Clear(idnr);
+                          /*
 			  ref_uniform.Append (INDEX_3 (pair.I1(), pair.I2(), csid->RefLevels()));
 			  ref_singular.Append (INDEX_3 (pair.I1(), pair.I2(), csid->RefLevels1()));
 			  ref_singular.Append (INDEX_3 (pair.I2(), pair.I1(), csid->RefLevels2()));
+                          */
+			  ref_uniform.Append (INDEX_3 (pi1, pi2, csid->RefLevels()));
+			  ref_singular.Append (INDEX_3 (pi1, pi2, csid->RefLevels1()));
+			  ref_singular.Append (INDEX_3 (pi2, pi1, csid->RefLevels2()));
+                          
 			}
 		    }
 		  else
 		    {   
 		      //const NgArray<double> & slices = csid->GetSlices();
 		      INDEX_4 i4;
-		      i4[0] = pair.I1();
-		      i4[1] = pair.I2();
+		      // i4[0] = pair.I1();
+		      // i4[1] = pair.I2();
+		      i4[0] = pi1; 
+		      i4[1] = pi2; 
 		      i4[2] = idnr;
 		      i4[3] = csid->GetSlices().Size();
 		      ref_slices.Append (i4);

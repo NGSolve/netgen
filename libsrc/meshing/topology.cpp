@@ -1829,8 +1829,8 @@ namespace netgen
   
   void MeshTopology :: GetElementFaces (int elnr, NgArray<int> & elfaces, bool withorientation) const
   {
-    int nfa = GetNFaces (mesh->VolumeElement(elnr).GetType());
     ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);
+    int nfa = GetNFaces (mesh->VolumeElement(ei).GetType());
     
     elfaces.SetSize (nfa);
 
@@ -1859,7 +1859,8 @@ namespace netgen
 
   void MeshTopology :: GetElementEdgeOrientations (int elnr, NgArray<int> & eorient) const
   {
-    int ned = GetNEdges (mesh->VolumeElement(elnr).GetType());
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);    
+    int ned = GetNEdges (mesh->VolumeElement(ei).GetType());
     eorient.SetSize (ned);
     for (int i = 1; i <= ned; i++)
       // eorient.Elem(i) = (edges.Get(elnr)[i-1] > 0) ? 1 : -1;
@@ -1869,7 +1870,8 @@ namespace netgen
 
   void MeshTopology :: GetElementFaceOrientations (int elnr, NgArray<int> & forient) const
   {
-    int nfa = GetNFaces (mesh->VolumeElement(elnr).GetType());
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);    
+    int nfa = GetNFaces (mesh->VolumeElement(ei).GetType());
     forient.SetSize (nfa);
     for (int i = 1; i <= nfa; i++)
       // forient.Elem(i) = faces.Get(elnr)[i-1].forient;
@@ -2111,7 +2113,9 @@ namespace netgen
 
   int MeshTopology :: GetElementEdgeOrientation (int elnr, int locedgenr) const
   {
-    const Element & el = mesh->VolumeElement (elnr);
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);        
+    
+    const Element & el = mesh->VolumeElement (ei);
     const ELEMENT_EDGE * eledges = MeshTopology::GetEdges0 (el.GetType());    
 
     int k = locedgenr;
@@ -2123,7 +2127,8 @@ namespace netgen
   
   int MeshTopology :: GetElementFaceOrientation (int elnr, int locfacenr) const
   {
-    const Element & el = mesh->VolumeElement (elnr);
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);        
+    const Element & el = mesh->VolumeElement (ei);
     
     const ELEMENT_FACE * elfaces = MeshTopology::GetFaces0 (el.GetType());
 

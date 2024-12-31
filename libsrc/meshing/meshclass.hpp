@@ -377,7 +377,7 @@ namespace netgen
     const auto & SurfaceElements() const { return surfelements; }
     auto & SurfaceElements() { return surfelements; }
 
-  
+    
     DLL_HEADER void RebuildSurfaceElementLists ();
     DLL_HEADER void GetSurfaceElementsOfFace (int facenr, Array<SurfaceElementIndex> & sei) const;
 

@@ -244,7 +244,7 @@ namespace netgen
   
 
 
-  class PointIndex : public Index<int,PointIndex,1>
+  class PointIndex : public Index<int,PointIndex,0>
   {
   public:
     using Index::Index;
@@ -1763,13 +1763,15 @@ namespace netgen
     class Mesh & mesh;
 
     /// identify points (thin layers, periodic b.c.)  
-    INDEX_2_HASHTABLE<int> identifiedpoints;
+    // INDEX_2_HASHTABLE<int> identifiedpoints;
+    ClosedHashTable<PointIndices<2>, int> identifiedpoints;
   
     /// the same, with info about the id-nr
-    INDEX_3_HASHTABLE<int> identifiedpoints_nr;
+    // INDEX_3_HASHTABLE<int> identifiedpoints_nr;
+    ClosedHashTable<std::tuple<PointIndices<2>, int>, int> identifiedpoints_nr;
 
     /// sorted by identification nr
-    TABLE<INDEX_2> idpoints_table;
+    TABLE<PointIndices<2>> idpoints_table;
 
     NgArray<ID_TYPE> type;
 
@@ -1805,7 +1807,7 @@ namespace netgen
 
     // bool HasIdentifiedPoints() const { return identifiedpoints != nullptr; } 
     ///
-    INDEX_3_HASHTABLE<int> & GetIdentifiedPoints ()
+    auto & GetIdentifiedPoints ()
     { 
       return identifiedpoints_nr;
     }

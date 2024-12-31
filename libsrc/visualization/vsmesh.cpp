@@ -515,20 +515,21 @@ namespace netgen
         if (vispar.drawelementnumbers)
 	  {
 	    NgArray<int> v;
-	    for (int i = 1; i <= mesh->GetNE(); i++)
+	    // for (int i = 1; i <= mesh->GetNE(); i++)
+            for (ElementIndex ei : Range(mesh->VolumeElements()))
 	      {
 		// const ELEMENTTYPE & eltype = mesh->ElementType(i);
 		NgArray<int> pnums;
 
 		Point3d p;
-		const Element & el = mesh->VolumeElement (i);
+		const Element & el = mesh->VolumeElement (ei);
 
 		if ( ! el.PNum(5)) //  eltype == TET )
                   {
 
 		    pnums.SetSize(4);
 		    for( int j = 0; j < pnums.Size(); j++)
-		      pnums[j] = mesh->VolumeElement(i).PNum(j+1);
+		      pnums[j] = mesh->VolumeElement(ei).PNum(j+1);
 
 
 		    const Point3d & p1 = mesh->Point(pnums[0]);
@@ -541,7 +542,7 @@ namespace netgen
                   {
 		    pnums.SetSize(5);
 		    for( int j = 0; j < pnums.Size(); j++)
-		      pnums[j] = mesh->VolumeElement(i).PNum(j+1);
+		      pnums[j] = mesh->VolumeElement(ei).PNum(j+1);
 
 
 		    const Point3d & p1 = mesh->Point(pnums[0]);
@@ -559,7 +560,7 @@ namespace netgen
                   {
 		    pnums.SetSize(6);
 		    for( int j = 0; j < pnums.Size(); j++)
-		      pnums[j] = mesh->VolumeElement(i).PNum(j+1);
+		      pnums[j] = mesh->VolumeElement(ei).PNum(j+1);
 
 		    const Point3d & p1 = mesh->Point(pnums[0]);
 		    const Point3d & p2 = mesh->Point(pnums[1]);
@@ -574,7 +575,7 @@ namespace netgen
                   {
 		    pnums.SetSize(8);
 		    for( int j = 0; j < pnums.Size(); j++)
-		      pnums[j] = mesh->VolumeElement(i).PNum(j+1);
+		      pnums[j] = mesh->VolumeElement(ei).PNum(j+1);
 
 		    const Point3d & p1 = mesh->Point(pnums[0]);
 		    const Point3d & p2 = mesh->Point(pnums[1]);
@@ -589,7 +590,7 @@ namespace netgen
                   }
 
 		glRasterPos3d (p.X(), p.Y(), p.Z());
-		snprintf (buf, size(buf),  "%d", i);
+		snprintf (buf, size(buf),  "%d", ei-IndexBASE(ei));
 		// glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
 		MyOpenGLText (buf);
 
@@ -617,14 +618,15 @@ namespace netgen
 	static float badelcol[] = { 1.0f, 0.0f, 1.0f, 1.0f };
 	glLineWidth (1.0f);
 
-	for (int i = 1; i <= mesh->GetNE(); i++)
+	//for (int i = 1; i <= mesh->GetNE(); i++)
+        for (ElementIndex ei : Range(mesh->VolumeElements()))
 	  {
-            if (mesh->VolumeElement(i).Flags().badel ||
-		mesh->VolumeElement(i).Flags().illegal ||
-		(i == vispar.drawelement))
+            if (mesh->VolumeElement(ei).Flags().badel ||
+		mesh->VolumeElement(ei).Flags().illegal ||
+		(ei-IndexBASE(ei) == vispar.drawelement))
 	      {
 		// copy to be thread-safe
-		Element el = mesh->VolumeElement (i);
+		Element el = mesh->VolumeElement (ei);
 		el.GetSurfaceTriangles (faces);
 
 		glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, badelcol);
@@ -674,9 +676,9 @@ namespace netgen
 	  }
 
 
-	for (int i = 1; i <= mesh->GetNE(); i++)
+        for (ElementIndex ei : Range(mesh->VolumeElements()))
 	  {
-            Element el = mesh->VolumeElement (i);
+            Element el = mesh->VolumeElement (ei);
             int hascp = 0;
             for (int j = 1; j <= el.GetNP(); j++)
 	      if (el.PNum(j) == vispar.centerpoint)
@@ -684,7 +686,7 @@ namespace netgen
 
             if (hascp)
 	      {
-		(*testout) << "draw el " << i << " : ";
+		(*testout) << "draw el " << ei << " : ";
 		for (int j = 1; j <= el.GetNP(); j++)
                   (*testout) << el.PNum(j) << " ";
 		(*testout) << endl;
@@ -860,17 +862,22 @@ namespace netgen
 	      {
                 auto & idpts =
                   mesh->GetIdentifications().GetIdentifiedPoints();
-                
+
+                /*
 		for (int i = 1; i <= idpts.GetNBags(); i++)
                   for (int j = 1; j <= idpts.GetBagSize(i); j++)
 		    {
 		      INDEX_3 pts;
 		      int dummy; // , val;   
-
 		      idpts.GetData (i, j, pts, dummy);
+                */
+                for (auto [hash, val] : idpts)
+                  {
+                    auto [hash_pts, hash_nr] = hash;
+                    auto [pi1, pi2] = hash_pts;
                       // val = pts[2];   
-		      const Point3d & p1 = mesh->Point(pts.I1());
-		      const Point3d & p2 = mesh->Point(pts.I2());
+		      const Point3d & p1 = mesh->Point(pi1);
+		      const Point3d & p2 = mesh->Point(pi2);
 
 		      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,
 				    identifiedcol);

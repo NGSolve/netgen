@@ -558,6 +558,7 @@ namespace netgen
 		//	      (*testout) << "bad els: " << endl;
 		wrongels = 0;
 		for (int i = 1; i <= ne; i++)
+                  
 		  {
 		    if (!illegalels.Test(i) && 
 			mesh.VolumeElement(i).

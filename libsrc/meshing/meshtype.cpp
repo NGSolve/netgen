@@ -2708,8 +2708,9 @@ namespace netgen
     void Identifications :: DoArchive (Archive & ar)
     {
       ar & maxidentnr;
-      ar & identifiedpoints & identifiedpoints_nr;
-
+      // ar & identifiedpoints & identifiedpoints_nr;
+#pragma message( "Archive CloseHadhTable missing " __FILE__ )
+        
       ar & idpoints_table;
       if (ar.Output())
         {
@@ -2735,11 +2736,11 @@ namespace netgen
   void Identifications :: Add (PointIndex pi1, PointIndex pi2, int identnr)
   {
     //  (*testout) << "Identification::Add, pi1 = " << pi1 << ", pi2 = " << pi2 << ", identnr = " << identnr << endl;
-    INDEX_2 pair (pi1, pi2);
+    PointIndices<2> pair (pi1, pi2);
     identifiedpoints.Set (pair, identnr);
 
-    INDEX_3 tripl (pi1, pi2, identnr);
-    identifiedpoints_nr.Set (tripl, 1);
+    // INDEX_3 tripl (pi1, pi2, identnr);
+    identifiedpoints_nr.Set ( { { pi1, pi2 }, identnr }, 1);
 
     if (identnr > maxidentnr) maxidentnr = identnr;
     names.SetSize(maxidentnr);
@@ -2762,8 +2763,9 @@ namespace netgen
 
   bool Identifications :: Get (PointIndex pi1, PointIndex pi2, int nr) const
   {
-    INDEX_3 tripl(pi1, pi2, nr);
-    if (identifiedpoints_nr.Used (tripl))
+    // INDEX_3 tripl(pi1, pi2, nr);
+    // if (identifiedpoints_nr.Used (tripl))
+    if (identifiedpoints_nr.Used ( { { pi1, pi1 }, nr } ) )
       return 1;
     else
       return 0;
@@ -2803,23 +2805,30 @@ namespace netgen
       {
         cout << "getmap, identnr = " << identnr << endl;
 
+        /*
         for (int i = 1; i <= identifiedpoints_nr.GetNBags(); i++)
           for (int j = 1; j <= identifiedpoints_nr.GetBagSize(i); j++)
+        */
+        for (auto [hash, val] : identifiedpoints_nr)
             {
+              /*
               INDEX_3 i3;
               int dummy;
               identifiedpoints_nr.GetData (i, j, i3, dummy);
-	    
-              if (i3.I3() == identnr || !identnr)
+              */
+
+              auto [hash_pts, hash_nr] = hash;
+              
+              if (hash_nr == identnr || !identnr)
                 {
                   /*
                   identmap.Elem(i3.I1()) = i3.I2();
                   if(symmetric)
                     identmap.Elem(i3.I2()) = i3.I1();
                   */
-                  identmap[i3.I1()] = i3.I2();
+                  identmap[hash_pts.I1()] = hash_pts.I2();
                   if(symmetric)
-                    identmap[i3.I2()] = i3.I1();
+                    identmap[hash_pts.I2()] = hash_pts.I1();
                 }
             }  
       }
@@ -2830,8 +2839,12 @@ namespace netgen
   Array<INDEX_3> Identifications :: GetPairs () const
   {
     Array<INDEX_3> pairs;
-    for(auto [i3, dummy] : identifiedpoints_nr)
-      pairs.Append(i3);
+    for(auto [hash, dummy] : identifiedpoints_nr)
+      // pairs.Append(i3);
+      {
+        auto [pts,nr] = hash;
+        pairs.Append ( { pts[0], pts[1], nr } );
+      }
     return pairs;
   }
 
@@ -2841,6 +2854,8 @@ namespace netgen
     identpairs.SetSize(0);
   
     if (identnr == 0)
+      {
+        /*
       for (int i = 1; i <= identifiedpoints.GetNBags(); i++)
         for (int j = 1; j <= identifiedpoints.GetBagSize(i); j++)
           {
@@ -2848,8 +2863,14 @@ namespace netgen
             int nr;
             identifiedpoints.GetData (i, j, i2, nr);
             identpairs.Append (i2);
-          }  
+          }
+        */
+        for (auto [hash,val] : identifiedpoints)
+          identpairs.Append (hash);
+      }
     else
+      {
+        /*
       for (int i = 1; i <= identifiedpoints_nr.GetNBags(); i++)
         for (int j = 1; j <= identifiedpoints_nr.GetBagSize(i); j++)
           {
@@ -2859,12 +2880,21 @@ namespace netgen
 	  
             if (i3.I3() == identnr)
               identpairs.Append (INDEX_2(i3.I1(), i3.I2()));
-          }  
+          }
+        */
+        for (auto [hash,val] : identifiedpoints_nr)
+          {
+            auto [hash_pts, hash_nr] = hash;
+            if (hash_nr == identnr)
+              identpairs.Append (hash_pts);
+          }
+      }
   }
 
 
   void Identifications :: SetMaxPointNr (int maxpnum)
   {
+    /*
     for (int i = 1; i <= identifiedpoints.GetNBags(); i++)
       for (int j = 1; j <= identifiedpoints.GetBagSize(i); j++)
         {
@@ -2878,6 +2908,18 @@ namespace netgen
               identifiedpoints.SetData (i, j, i2, -1);	    
             }
         }
+    */
+
+    // can we get data by reference ? 
+    for (auto [hash,data] : identifiedpoints)
+      {
+        if (hash.I1() > IndexBASE<PointIndex>()+maxpnum-1 ||
+            hash.I2() > IndexBASE<PointIndex>()+maxpnum-1)
+          {
+            identifiedpoints[hash] = -1;
+          }
+            
+      }
   }
 
   // Map points in the identifications to new point numbers
@@ -2900,7 +2942,8 @@ namespace netgen
   {
     ost << "Identifications:" << endl;
     ost << "pairs: " << endl << identifiedpoints << endl;
-    ost << "pairs and nr: " << endl << identifiedpoints_nr << endl;
+    // ost << "pairs and nr: " << endl << identifiedpoints_nr << endl;
+#pragma message( "Can't ostream a tuple " __FILE__ )    
     ost << "table: " << endl << idpoints_table << endl;
   }
 
