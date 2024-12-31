@@ -161,7 +161,7 @@ namespace netgen
     static constexpr t_invalid INVALID{};
     
     constexpr Index () = default;
-    constexpr Index (const Index&) = default;
+    constexpr Index (const Index& i2) = default;
     constexpr Index (Index &&) = default;
     Index & operator= (const Index&) = default;
     Index & operator= (Index&&) = default;
@@ -202,14 +202,13 @@ namespace netgen
     explicit constexpr operator T& () { return i; }
   public:
     // constexpr operator TIndex() const { return TIndex(i); }
-    operator TIndex&() { return static_cast<TIndex&>(*this); }    
+    // operator TIndex&() { return static_cast<TIndex&>(*this); }    
 
     TIndex operator++ (int) { TIndex hi{*this}; i++; return hi; }
     TIndex operator-- (int) { TIndex hi(*this); i--; return hi; }
-    TIndex & operator++ () { i++; return *this; }
-    TIndex operator-- () { i--; return *this; }
-    constexpr TIndex & operator+= (T add) & { i += add; return *this; }
-    constexpr TIndex operator+= (T add) && { i += add; return TIndex{*this}; }
+    TIndex operator++ () { i++; return TIndex{*this}; }
+    TIndex operator-- () { i--; return TIndex{*this}; }
+    constexpr TIndex operator+= (T add) { i += add; return TIndex{*this}; }
     void Invalidate() { i = long(TIndex::BASE)-1; }
     bool IsValid() const { return i+1 != TIndex::BASE; }
     // operator bool() const { return IsValid(); }
@@ -220,7 +219,8 @@ namespace netgen
 
   template <typename T, typename TIndex, int Base>  
   // constexpr auto operator+ (Index<T,TIndex,Base> ind, int i) { return TIndex(T(ind)+i); }
-  constexpr auto operator+ (Index<T,TIndex,Base> ind, int i) { return TIndex{ Index<T,TIndex,Base>(ind) +=i }; }
+  // constexpr auto operator+ (Index<T,TIndex,Base> ind, int i) { return TIndex{ Index<T,TIndex,Base>(ind) +=i }; }
+  constexpr auto operator+ (Index<T,TIndex,Base> ind, int i) { return ind += i; return TIndex(ind); }
   template <typename T, typename TIndex, int Base>    
   constexpr TIndex operator+ (Index<T,TIndex,Base> pi, size_t i) { return TIndex(pi.i+i); }
   template <typename T, typename TIndex, int Base>    
