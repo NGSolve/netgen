@@ -174,8 +174,8 @@ namespace netgen
 	int nnp = newel.GetNP();
 	for (int j = 0; j < nnp-onp; j++)
 	  {
-	    int pi1 = newel[betw[j][0]];
-	    int pi2 = newel[betw[j][1]];
+	    PointIndex pi1 = newel[betw[j][0]];
+	    PointIndex pi2 = newel[betw[j][1]];
 	  
 	    INDEX_2 i2 = INDEX_2::Sort (pi1, pi2);
 	  

@@ -289,14 +289,14 @@ GetIdentifiedPoint (class Mesh & mesh, PointIndex pi)
   // project to other surface
   snew->Project (hp);
 
-  int newpi = 0;
-  for (int i = 1; i <= mesh.GetNP(); i++)
-    if (Dist2 (mesh.Point(i), hp) < 1e-12)
+  PointIndex newpi(PointIndex::INVALID);
+  for (PointIndex pi : Range(mesh.Points()))
+    if (Dist2 (mesh.Point(pi), hp) < 1e-12)
       {
-	newpi = i;
+	newpi = pi;
 	break;
       }
-  if (!newpi)
+  if (!newpi.IsValid())
     newpi = mesh.AddPoint (hp);
 
   if (snew == s2)
@@ -322,6 +322,7 @@ void PeriodicIdentification :: IdentifyPoints (class Mesh & mesh)
   mesh.GetBox(p1, p2);
   auto eps = 1e-6 * (p2-p1).Length();
 
+  /*
   for (int i = 1; i <= mesh.GetNP(); i++)
     {
       Point<3> p = mesh.Point(i);
@@ -334,11 +335,22 @@ void PeriodicIdentification :: IdentifyPoints (class Mesh & mesh)
 	    if (Dist2(mesh.Point(j), pp) < eps)
 	      {
 		mesh.GetIdentifications().Add (i, j, nr);
-		/*
-		(*testout) << "Identify points(periodic:), nr = " << nr << ": "
-			   << mesh.Point(i) << " - " << mesh.Point(j) << endl;
-		*/
 	      }
+	}
+    }
+  */
+
+  for (auto pi : Range(mesh.Points()))
+    {
+      Point<3> p = mesh[pi];
+      if (s1->PointOnSurface (p))
+	{
+	  Point<3> pp = p;
+          pp = trafo(pp);
+	  s2->Project (pp);
+          for (PointIndex pj : Range(mesh.Points()))
+	    if (Dist2(mesh[pj], pp) < eps)
+              mesh.GetIdentifications().Add (pi, pj, nr);
 	}
     }
 

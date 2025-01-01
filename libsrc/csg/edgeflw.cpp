@@ -1714,12 +1714,12 @@ namespace netgen
 	if (oldseg.seginfo == 0)
 	  continue;
 
-	int pi1 = oldseg[0];
-	int pi2 = oldseg[1];
+	PointIndex pi1 = oldseg[0];
+	PointIndex pi2 = oldseg[1];
 
-	int npi1 = geometry.identifications.Get(copyedgeidentification)
+	PointIndex npi1 = geometry.identifications.Get(copyedgeidentification)
 	  -> GetIdentifiedPoint (mesh, pi1);
-	int npi2 = geometry.identifications.Get(copyedgeidentification)
+	PointIndex npi2 = geometry.identifications.Get(copyedgeidentification)
 	  -> GetIdentifiedPoint (mesh, pi2);
 
 	//(*testout) << "copy edge, pts = " << npi1 << " - " << npi2 << endl;
