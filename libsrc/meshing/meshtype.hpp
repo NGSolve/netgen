@@ -244,7 +244,7 @@ namespace netgen
   
 
 
-  class PointIndex : public Index<int,PointIndex,0>
+  class PointIndex : public Index<int,PointIndex,1>
   {
   public:
     using Index::Index;
