@@ -424,7 +424,6 @@ namespace netgen
   {
     PrintMessage (3, "Validate mesh");
     int np = mesh.GetNP();
-    int ne = mesh.GetNE();
     // int i, j;
     NgArray<INDEX_2> parents(np);
   

@@ -2708,10 +2708,9 @@ namespace netgen
     void Identifications :: DoArchive (Archive & ar)
     {
       ar & maxidentnr;
-      // ar & identifiedpoints & identifiedpoints_nr;
-#pragma message( "Archive CloseHadhTable missing " __FILE__ )
-        
+      ar & identifiedpoints & identifiedpoints_nr;
       ar & idpoints_table;
+      
       if (ar.Output())
         {
           size_t s = type.Size();
