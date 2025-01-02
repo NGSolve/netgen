@@ -507,7 +507,7 @@ namespace netgen
     ///
     LocalH & LocalHFunction (int layer=1) { return * lochfunc[layer-1]; }
 
-    shared_ptr<LocalH> GetLocalH(int layer=1) const
+    shared_ptr<LocalH> & GetLocalH(int layer=1) const
     {
       if(lochfunc.Size() == 1)
         return lochfunc[0];
