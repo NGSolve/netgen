@@ -10,7 +10,6 @@
 
 namespace netgen
 {
-
   int Find3dElement (const Mesh& mesh,
                      const netgen::Point<3> & p,
 		     double * lami,
