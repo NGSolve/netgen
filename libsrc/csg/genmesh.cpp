@@ -35,7 +35,7 @@ namespace netgen
         auto up = geom.GetUserPoint(i);
 	auto pnum = mesh.AddPoint(up);
 	mesh.Points().Last().Singularity (geom.GetUserPointRefFactor(i));
-	mesh.AddLockedPoint (PointIndex (i+1));
+	mesh.AddLockedPoint (pnum);
         int index = up.GetIndex();
         if (index == -1)
           index = mesh.AddCD3Name (up.GetName())+1;

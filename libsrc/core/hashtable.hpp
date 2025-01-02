@@ -834,6 +834,12 @@ namespace ngcore
       hash = T_HASH(invalid);
       used = 0;
     }
+
+    void DoArchive (Archive & ar)
+    {
+      ar & hash & cont;
+      ar & size & mask & used;
+    }    
     
     class Iterator
     {

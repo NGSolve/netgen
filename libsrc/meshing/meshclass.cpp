@@ -6438,22 +6438,24 @@ namespace netgen
     mapped_points = false;
 
     // Add new points
-    for(auto [p1p2, dummy] : identpts)
+    for(auto [hash, dummy] : identpts)
       {
-        if(p1p2[2] != nr)
+        auto [hash_pts, hash_nr] = hash;
+        if(hash_nr != nr)
           continue;
-        auto& ipts = inserted_points[{p1p2.I1(), p1p2.I2()}];
-        auto p1 = Point(p1p2.I1());
-        auto p2 = Point(p1p2.I2());
-        ipts.Append(p1p2.I1());
-        mapped_points.SetBit(p1p2.I1());
+        // auto& ipts = inserted_points[{p1p2.I1(), p1p2.I2()}];
+        auto& ipts = inserted_points[ { hash_pts[0], hash_pts[1] }];
+        auto p1 = Point(hash_pts.I1());
+        auto p2 = Point(hash_pts.I2());
+        ipts.Append(hash_pts.I1());
+        mapped_points.SetBit(hash_pts.I1());
         for(auto slice : slices)
           {
             auto np = p1 + slice * (p2-p1);
             auto npi = AddPoint(np);
             ipts.Append(npi);
           }
-        ipts.Append(p1p2.I2());
+        ipts.Append(hash_pts.I2());
       }
 
     // Split segments
@@ -6644,21 +6646,21 @@ namespace netgen
 
   void Mesh :: CalcMinMaxAngle (double badellimit, double * retvalues) 
   {
-    int i, j;
     int lpi1, lpi2, lpi3, lpi4;
     double phimax = 0, phimin = 10;
     double facephimax = 0, facephimin = 10;
     int illegaltets = 0, negativetets = 0, badtets = 0;
 
-    for (i = 1; i <= GetNE(); i++)
+    // for (int i = 1; i <= GetNE(); i++)
+    for (ElementIndex ei : Range(VolumeElements()))
       {
         int badel = 0;
 
-        Element & el = VolumeElement(i);
+        Element & el = VolumeElement(ei);
 
         if (el.GetType() != TET)
           {
-            VolumeElement(i).Flags().badel = 0;
+            VolumeElement(ei).Flags().badel = 0;
             continue;
           }
 
@@ -6673,8 +6675,8 @@ namespace netgen
           {
             badel = 1;
             illegaltets++;
-            (*testout) << "illegal tet: " << i << " ";
-            for (j = 1; j <= el.GetNP(); j++)
+            (*testout) << "illegal tet: " << ei << " ";
+            for (int j = 1; j <= el.GetNP(); j++)
               (*testout) << el.PNum(j) << " ";
             (*testout) << endl;
           }
@@ -6713,7 +6715,7 @@ namespace netgen
 
 
         // angles in faces
-        for (j = 1; j <= 4; j++)
+        for (int j = 1; j <= 4; j++)
           {
             Element2d face(TRIG);
             el.GetFace (j, face);
@@ -6740,7 +6742,7 @@ namespace netgen
           }
 
 
-        VolumeElement(i).Flags().badel = badel;
+        VolumeElement(ei).Flags().badel = badel;
         if (badel) badtets++;
       }
 

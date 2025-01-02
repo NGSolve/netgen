@@ -327,7 +327,7 @@ template <> NGX_INLINE DLL_HEADER const Ng_Node<2> Ngx_Mesh :: GetNode<2> (int n
 {
   Ng_Node<2> node;
   node.vertices.ptr = (const int*)mesh->GetTopology().GetFaceVerticesPtr(nr);
-  node.vertices.nv = (node.vertices.ptr[3] == 0) ? 3 : 4;
+  node.vertices.nv = (node.vertices.ptr[3]+1 == PointIndex::BASE) ? 3 : 4;
   node.surface_el = mesh->GetTopology().GetFace2SurfaceElement (nr+1)-1;
   return node;
 }
@@ -339,8 +339,8 @@ NGX_INLINE DLL_HEADER Ng_Buffer<int[2]> Ngx_Mesh :: GetPeriodicVertices(int idnr
   mesh->GetIdentifications().GetPairs (idnr+1, apairs);
   for(auto& ind : apairs)
     {
-      ind.I1()--;
-      ind.I2()--;
+      ind.I1() -= IndexBASE<PointIndex>();
+      ind.I2() -= IndexBASE<PointIndex>();
     }
   typedef int ti2[2];
   return { apairs.Size(), (ti2*)(void*)apairs.Release() };

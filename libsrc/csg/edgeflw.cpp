@@ -1714,12 +1714,12 @@ namespace netgen
 	if (oldseg.seginfo == 0)
 	  continue;
 
-	int pi1 = oldseg[0];
-	int pi2 = oldseg[1];
+	PointIndex pi1 = oldseg[0];
+	PointIndex pi2 = oldseg[1];
 
-	int npi1 = geometry.identifications.Get(copyedgeidentification)
+	PointIndex npi1 = geometry.identifications.Get(copyedgeidentification)
 	  -> GetIdentifiedPoint (mesh, pi1);
-	int npi2 = geometry.identifications.Get(copyedgeidentification)
+	PointIndex npi2 = geometry.identifications.Get(copyedgeidentification)
 	  -> GetIdentifiedPoint (mesh, pi2);
 
 	//(*testout) << "copy edge, pts = " << npi1 << " - " << npi2 << endl;
@@ -1885,12 +1885,10 @@ namespace netgen
 
 	    if (seg1.domin != -1 || seg1.domout != -1)
 	      {
-		mesh.AddPoint (p1, layer, EDGEPOINT);
-		mesh.AddPoint (p2, layer, EDGEPOINT);
-		seg1[0] = mesh.GetNP()-1;
-		seg1[1] = mesh.GetNP();
-		seg2[1] = mesh.GetNP()-1;
-		seg2[0] = mesh.GetNP();
+                seg1[0] = mesh.AddPoint (p1, layer, EDGEPOINT);
+                seg1[1] = mesh.AddPoint (p2, layer, EDGEPOINT);
+                seg2[0] = seg1[1];
+                seg2[1] = seg1[0];
 		seg1.geominfo[0].trignum = 1;
 		seg1.geominfo[1].trignum = 1;
 		seg2.geominfo[0].trignum = 1;

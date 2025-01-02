@@ -160,7 +160,7 @@ namespace netgen
             
             { // triangle
               PointIndices<4> face(el[elfaces[j][0]], el[elfaces[j][1]], 
-                                   el[elfaces[j][2]], 0);
+                                   el[elfaces[j][2]], PointIndex(PointIndex::INVALID));
 
 
               [[maybe_unused]] int facedir = 0;
@@ -266,7 +266,7 @@ namespace netgen
             
             PointIndices<4> face(el.PNum(elfaces[0][0]),
                                  el.PNum(elfaces[0][1]),
-                                 el.PNum(elfaces[0][2]),0);
+                                 el.PNum(elfaces[0][2]), PointIndex(PointIndex::INVALID));
             
             // facedir = 0;
             if (face[0] > face[1])
@@ -1161,7 +1161,7 @@ namespace netgen
                       size_t pos;
                       if (vert2face.PositionCreate(face, pos))
                         {
-                          face2vert[nfa] = { face[0], face[1], face[2], 0 }; // i4;
+                          face2vert[nfa] = { face[0], face[1], face[2], PointIndex::BASE-1 }; // i4;
                           vert2face.SetData (pos, face, nfa);
                           nfa++;
                         }
@@ -1829,8 +1829,8 @@ namespace netgen
   
   void MeshTopology :: GetElementFaces (int elnr, NgArray<int> & elfaces, bool withorientation) const
   {
-    int nfa = GetNFaces (mesh->VolumeElement(elnr).GetType());
     ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);
+    int nfa = GetNFaces (mesh->VolumeElement(ei).GetType());
     
     elfaces.SetSize (nfa);
 
@@ -1859,7 +1859,8 @@ namespace netgen
 
   void MeshTopology :: GetElementEdgeOrientations (int elnr, NgArray<int> & eorient) const
   {
-    int ned = GetNEdges (mesh->VolumeElement(elnr).GetType());
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);    
+    int ned = GetNEdges (mesh->VolumeElement(ei).GetType());
     eorient.SetSize (ned);
     for (int i = 1; i <= ned; i++)
       // eorient.Elem(i) = (edges.Get(elnr)[i-1] > 0) ? 1 : -1;
@@ -1869,7 +1870,8 @@ namespace netgen
 
   void MeshTopology :: GetElementFaceOrientations (int elnr, NgArray<int> & forient) const
   {
-    int nfa = GetNFaces (mesh->VolumeElement(elnr).GetType());
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);    
+    int nfa = GetNFaces (mesh->VolumeElement(ei).GetType());
     forient.SetSize (nfa);
     for (int i = 1; i <= nfa; i++)
       // forient.Elem(i) = faces.Get(elnr)[i-1].forient;
@@ -2111,7 +2113,9 @@ namespace netgen
 
   int MeshTopology :: GetElementEdgeOrientation (int elnr, int locedgenr) const
   {
-    const Element & el = mesh->VolumeElement (elnr);
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);        
+    
+    const Element & el = mesh->VolumeElement (ei);
     const ELEMENT_EDGE * eledges = MeshTopology::GetEdges0 (el.GetType());    
 
     int k = locedgenr;
@@ -2123,7 +2127,8 @@ namespace netgen
   
   int MeshTopology :: GetElementFaceOrientation (int elnr, int locfacenr) const
   {
-    const Element & el = mesh->VolumeElement (elnr);
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);        
+    const Element & el = mesh->VolumeElement (ei);
     
     const ELEMENT_FACE * elfaces = MeshTopology::GetFaces0 (el.GetType());
 
@@ -2131,7 +2136,7 @@ namespace netgen
     if (elfaces[j][3] < 0)
       { // triangle
         INDEX_4 face(el[elfaces[j][0]], el[elfaces[j][1]], 
-                     el[elfaces[j][2]], 0);
+                     el[elfaces[j][2]], PointIndex::BASE-1 );
         
         int facedir = 0;
         if (face.I1() > face.I2())
@@ -2198,7 +2203,7 @@ namespace netgen
     if (elfaces[j][3] < 0)
       { // triangle
         INDEX_4 face(el[elfaces[j][0]], el[elfaces[j][1]], 
-                     el[elfaces[j][2]], 0);
+                     el[elfaces[j][2]], PointIndex(PointIndex::INVALID));
         
         int facedir = 0;
         if (face.I1() > face.I2())
@@ -2267,7 +2272,7 @@ namespace netgen
     vertices.SetSize(4);
     for (int i = 0; i < 4; i++)
       vertices[i] = face2vert[fnr-1][i];
-    if (vertices[3] == 0)
+    if (vertices[3]+1==PointIndex::BASE)
       vertices.SetSize(3);
   }
 

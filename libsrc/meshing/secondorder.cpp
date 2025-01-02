@@ -174,8 +174,8 @@ namespace netgen
 	int nnp = newel.GetNP();
 	for (int j = 0; j < nnp-onp; j++)
 	  {
-	    int pi1 = newel[betw[j][0]];
-	    int pi2 = newel[betw[j][1]];
+	    PointIndex pi1 = newel[betw[j][0]];
+	    PointIndex pi2 = newel[betw[j][1]];
 	  
 	    INDEX_2 i2 = INDEX_2::Sort (pi1, pi2);
 	  
@@ -424,7 +424,6 @@ namespace netgen
   {
     PrintMessage (3, "Validate mesh");
     int np = mesh.GetNP();
-    int ne = mesh.GetNE();
     // int i, j;
     NgArray<INDEX_2> parents(np);
   
@@ -558,6 +557,7 @@ namespace netgen
 		//	      (*testout) << "bad els: " << endl;
 		wrongels = 0;
 		for (int i = 1; i <= ne; i++)
+                  
 		  {
 		    if (!illegalels.Test(i) && 
 			mesh.VolumeElement(i).

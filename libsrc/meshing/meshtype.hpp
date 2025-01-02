@@ -292,6 +292,9 @@ namespace netgen
     constexpr PointIndex operator[] (int i) const { return PointIndex(INDEX_2::operator[](i)); }
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_2::operator[](i)); }
 
+    template <typename ARCHIVE>
+    void DoArchive(ARCHIVE& ar) { ar.Do(&I1(), 2); }
+    
     PointIndex & I1 () { return (*this)[0]; }
     PointIndex & I2 () { return (*this)[1]; }
     PointIndex I1 () const { return (*this)[0]; }
@@ -314,6 +317,10 @@ namespace netgen
     constexpr PointIndices (PointIndex i1, PointIndex i2, PointIndex i3) : INDEX_3(i1,i2,i3) { ; }
     PointIndex operator[] (int i) const { return PointIndex(INDEX_3::operator[](i)); }
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_3::operator[](i)); }
+
+    template <typename ARCHIVE>
+    void DoArchive(ARCHIVE& ar) { ar.Do(&I1(), 3); }
+    
     PointIndex & I1 () { return (*this)[0]; }
     PointIndex & I2 () { return (*this)[1]; }
     PointIndex & I3 () { return (*this)[2]; }
@@ -336,6 +343,9 @@ namespace netgen
     PointIndex operator[] (int i) const { return PointIndex(INDEX_4::operator[](i)); }
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_4::operator[](i)); }
 
+    template <typename ARCHIVE>
+    void DoArchive(ARCHIVE& ar) { ar.Do(&I1(), 4); }
+    
     PointIndex & I1 () { return (*this)[0]; }
     PointIndex & I2 () { return (*this)[1]; }
     PointIndex & I3 () { return (*this)[2]; }
@@ -1763,13 +1773,15 @@ namespace netgen
     class Mesh & mesh;
 
     /// identify points (thin layers, periodic b.c.)  
-    INDEX_2_HASHTABLE<int> identifiedpoints;
+    // INDEX_2_HASHTABLE<int> identifiedpoints;
+    ClosedHashTable<PointIndices<2>, int> identifiedpoints;
   
     /// the same, with info about the id-nr
-    INDEX_3_HASHTABLE<int> identifiedpoints_nr;
+    // INDEX_3_HASHTABLE<int> identifiedpoints_nr;
+    ClosedHashTable<std::tuple<PointIndices<2>, int>, int> identifiedpoints_nr;
 
     /// sorted by identification nr
-    TABLE<INDEX_2> idpoints_table;
+    TABLE<PointIndices<2>> idpoints_table;
 
     NgArray<ID_TYPE> type;
 
@@ -1805,7 +1817,7 @@ namespace netgen
 
     // bool HasIdentifiedPoints() const { return identifiedpoints != nullptr; } 
     ///
-    INDEX_3_HASHTABLE<int> & GetIdentifiedPoints ()
+    auto & GetIdentifiedPoints ()
     { 
       return identifiedpoints_nr;
     }

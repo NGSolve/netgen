@@ -1249,9 +1249,15 @@ int Ngx_Mesh::GetElementOrder (int enr) const
 void Ngx_Mesh::GetElementOrders (int enr, int * ox, int * oy, int * oz) const
 {
   if (mesh->GetDimension() == 3)
-    mesh->VolumeElement(enr).GetOrder(*ox, *oy, *oz);
+    {
+      ElementIndex ei = IndexBASE<ElementIndex>() + enr-1;
+      mesh->VolumeElement(ei).GetOrder(*ox, *oy, *oz);
+    }
   else
-    mesh->SurfaceElement(enr).GetOrder(*ox, *oy, *oz);
+    {
+      SurfaceElementIndex sei = IndexBASE<SurfaceElementIndex>() + enr-1;      
+      mesh->SurfaceElement(sei).GetOrder(*ox, *oy, *oz);
+    }
 }
 
 void Ngx_Mesh::SetElementOrder (int enr, int order)
