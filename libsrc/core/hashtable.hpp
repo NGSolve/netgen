@@ -835,7 +835,8 @@ namespace ngcore
       used = 0;
     }
 
-    void DoArchive (Archive & ar)
+    template <typename ARCHIVE>
+    void DoArchive (ARCHIVE& ar)
     {
       ar & hash & cont;
       ar & size & mask & used;
