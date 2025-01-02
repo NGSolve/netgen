@@ -454,6 +454,12 @@ namespace netgen
   {
   public:
     using Index<int,ElementIndex,0>::Index;
+    /*
+  private:
+    operator int() const { return i; }
+  public:
+    operator ptrdiff_t() const { return i; }
+    */
   };
   
   inline istream & operator>> (istream & ist, ElementIndex & pi)

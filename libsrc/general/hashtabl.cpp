@@ -292,7 +292,19 @@ namespace netgen
 
 
 
-
+  BASE_INDEX_3_CLOSED_HASHTABLE ::
+  BASE_INDEX_3_CLOSED_HASHTABLE (size_t size)
+    : hash(RoundUp2(size))
+  {
+    // cout << "orig size = " << size
+    // << ", roundup size = " << hash.Size();
+    size = hash.Size();
+    mask = size-1;
+    // cout << "mask = " << mask << endl;
+    invalid = -1;
+    for (size_t i = 0; i < size; i++)
+      hash[i].I1() = invalid;
+  }
 
 
   void BASE_INDEX_3_CLOSED_HASHTABLE ::

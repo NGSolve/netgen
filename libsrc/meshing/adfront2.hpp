@@ -95,7 +95,7 @@ namespace netgen
   {
   private:
     /// Point Indizes
-    INDEX_2 l;            
+    INDEX_2 l;  // want to replace by std::array<int,2> l;
     /// quality class 
     int lineclass;      
     /// geometry specific data
@@ -109,23 +109,12 @@ namespace netgen
 
     ///
     FrontLine (const INDEX_2 & al)
-    {
-      l = al;
-      lineclass = 1;
-    }
-
+      : l(al), lineclass(1) { } 
 
     ///
-    const INDEX_2 & L () const
-    {
-      return l;
-    }
-
+    const auto & L () const { return l; }
     ///
-    int LineClass() const
-    {
-      return lineclass;
-    }
+    int LineClass() const { return lineclass; }
 
     ///
     void IncrementClass ()
@@ -141,13 +130,13 @@ namespace netgen
     ///
     bool Valid () const
     {
-      return l.I1() != -1;
+      return l[0] != -1;
     }
     ///
     void Invalidate ()
     {
-      l.I1() = -1;
-      l.I2() = -1;
+      l[0] = -1;
+      l[1] = -1;
       lineclass = 1000;
     }
 
