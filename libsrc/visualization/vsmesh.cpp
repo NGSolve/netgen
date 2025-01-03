@@ -472,7 +472,7 @@ namespace netgen
 		const Point3d & p2 = mesh->Point(v.Elem(2));
 		const Point3d & p3 = mesh->Point(v.Elem(3));
 		Point3d p;
-		if (v.Elem(4) == 0)
+		if (v.Size() == 3)
                   {
 		    p = Center (p1, p2, p3);
                   }
