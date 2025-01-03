@@ -35,25 +35,10 @@ namespace netgen
     HEX = 25, HEX20 = 26, HEX7 = 29
   };
 
-  /*
-  typedef int ELEMENT_EDGE[2];      // initial point, end point
-  typedef int ELEMENT_FACE[4];      // points, last one is -1 for trig
-  */
 
-  struct ELEMENT_EDGE
-  {
-    int vals[2];
-    int & operator[] (size_t i) { return vals[i]; }
-    int operator[] (size_t i) const { return vals[i]; }
-  };
-  
-  struct ELEMENT_FACE
-  {
-    int vals[4];
-    int & operator[] (size_t i) { return vals[i]; }
-    int operator[] (size_t i) const { return vals[i]; }
-  };
-  
+  using ELEMENT_EDGE = std::array<int,2>;
+  using ELEMENT_FACE = std::array<int,4>;
+
 
 #define ELEMENT_MAXPOINTS 20
 #define ELEMENT2D_MAXPOINTS 8
@@ -76,10 +61,6 @@ namespace netgen
     return timestamp;
   }
   
-  /*
-  extern DLL_HEADER int GetTimeStamp();
-  extern DLL_HEADER int NextTimeStamp();
-  */
   class PointGeomInfo
   {
   public:
@@ -87,12 +68,10 @@ namespace netgen
     double u, v;   // for OCC Meshing
 
     PointGeomInfo () = default;
-    // : trignum(-1), u(0), v(0) { ; }
     PointGeomInfo (const PointGeomInfo&) = default;
     PointGeomInfo (PointGeomInfo &&) = default;
     PointGeomInfo & operator= (const PointGeomInfo&) = default;
     PointGeomInfo & operator= (PointGeomInfo&&) = default;
-    
   };
 
   inline ostream & operator<< (ostream & ost, const PointGeomInfo & gi)
@@ -148,18 +127,19 @@ namespace netgen
   }
 
 
-  template <typename T, typename TIndex, int Base>
+  template <typename T, typename TIndex, int BASE_>
   class Index
   {
   public:
-
     T i;
-    static constexpr int BASE = Base;
-    
-  public:
+
+    static constexpr int BASE = BASE_;
+    static constexpr TIndex Base() { return TIndex(BASE_); } 
+
     class t_invalid { public: constexpr t_invalid() = default; };
     static constexpr t_invalid INVALID{};
     
+  public:
     constexpr Index () = default;
     constexpr Index (const Index& i2) = default;
     constexpr Index (Index &&) = default;
@@ -170,16 +150,14 @@ namespace netgen
     constexpr Index (T ai) : i(ai)
     {
 #ifdef DEBUG
-      if (ai < Base)
+      if (ai < BASE_)
         cout << "illegal Index, use Index::INVALID instead" << endl;
 #endif
     }
 
 
-    // friend constexpr netgen::TIndex ngcore::IndexBASE<netgen::TIndex> ();
-    // template <int N> friend class PointIndices;
-
     /*
+      // didn't manage constexpr friend functions so far ???
     friend auto operator+ (Index, int) -> TIndex;
     friend TIndex operator+ (Index, size_t);    
     friend TIndex operator+ (int, Index);
@@ -196,14 +174,10 @@ namespace netgen
     
   public:
     constexpr Index (t_invalid inv) : i(long(BASE)-1) { ; }
-    // TIndex & operator= (const TIndex &ai) { i = ai.i; return *this; }
-    // private:
+    // private:  
     constexpr operator T () const { return i; }
     explicit constexpr operator T& () { return i; }
   public:
-    // constexpr operator TIndex() const { return TIndex(i); }
-    // operator TIndex&() { return static_cast<TIndex&>(*this); }    
-
     TIndex operator++ (int) { TIndex hi{*this}; i++; return hi; }
     TIndex operator-- (int) { TIndex hi(*this); i--; return hi; }
     TIndex & operator++ () { i++; return static_cast<TIndex&>(*this); }
@@ -255,7 +229,7 @@ namespace netgen
 namespace ngcore
 {
   template<> 
-  constexpr netgen::PointIndex IndexBASE<netgen::PointIndex> () { return netgen::PointIndex(netgen::PointIndex::BASE); }
+  constexpr netgen::PointIndex IndexBASE<netgen::PointIndex> () { return netgen::PointIndex::Base(); }
 }
 
 namespace netgen
@@ -277,6 +251,13 @@ namespace netgen
     return (ost << intpi);    
   }
 
+
+
+  /*
+    PointIndices<2> etc are derived from historic INDEX_2 etc to be useable in old HASHTABLEs.
+    Will change to IVec<2> or std::array when INDEX_2 is not needed anymore
+   */
+  
   template <int N> class PointIndices;
   template <> class PointIndices<2> : public INDEX_2
   {
@@ -305,6 +286,7 @@ namespace netgen
     template <size_t J>
     PointIndex get() const { return PointIndex(INDEX_2::operator[](J)); }    
   };
+  
   template <> class PointIndices<3> : public INDEX_3
   {
   public:
@@ -376,10 +358,9 @@ namespace netgen
     { Sort(); }
   };
   
-  // constexpr inline size_t HashValue2 (const PointIndex & ind, size_t mask)
-  // { return (ind-IndexBASE<PointIndex>()) & mask; }
-  
 }
+
+
 
 namespace ngcore
 {
@@ -412,19 +393,6 @@ namespace ngcore
     { return CHT_trait<netgen::PointIndices<2>>::HashValue (hash, mask); }
   };
   
-
-
-  
-  // template <typename T> constexpr inline T InvalidHash();
-
-
-  // template <>
-  // constexpr inline netgen::PointIndex InvalidHash<netgen::PointIndex> ()
-  // { return netgen::PointIndex::INVALID; }
-  
-  // template <>
-  // constexpr inline netgen::PointIndices<2> InvalidHash<netgen::PointIndices<2>> ()
-  // { return netgen::PointIndices<2>{netgen::PointIndex::INVALID, netgen::PointIndex::INVALID}; }
 
   template <>
   constexpr inline netgen::PointIndices<3> InvalidHash<netgen::PointIndices<3>> ()
@@ -513,6 +481,12 @@ namespace netgen
     using Index::Index;
   };
 
+  // these should not be needed soon  
+  inline bool operator== (Index<int, SegmentIndex,0> ei1, int ei2) { return int(ei1) == int(ei2); };  
+  inline bool operator< (size_t s, Index<int,SegmentIndex,0> ei2) { return int(s) < int(ei2); };
+  inline bool operator< (Index<int, SegmentIndex,0> ei1, size_t s) { return int(ei1) < int(s); };
+  inline bool operator< (Index<int, SegmentIndex,0> ei1, int s) { return int(ei1) < int(s); };   
+  
   inline void SetInvalid (SegmentIndex & id) { id = -1; }
   inline bool IsInvalid (SegmentIndex & id) { return id == -1; }
 

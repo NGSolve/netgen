@@ -970,7 +970,7 @@ namespace ngcore
 
 
     /// Delete element i. Move last element to position i.
-    NETGEN_INLINE void DeleteElement (size_t i)
+    NETGEN_INLINE void DeleteElement (IndexType i)
     {
       NETGEN_CHECK_RANGE(i,BASE,BASE+size);
       data[i-BASE] = std::move(data[size-1]);
@@ -979,10 +979,10 @@ namespace ngcore
 
 
     /// Delete element i. Move all remaining elements forward
-    NETGEN_INLINE void RemoveElement (size_t i)
+    NETGEN_INLINE void RemoveElement (IndexType i)
     {
       NETGEN_CHECK_RANGE(i, BASE, BASE+size);
-      for(size_t j = i; j+1 < this->size; j++)
+      for(size_t j = i-BASE; j+1 < this->size; j++)
 	this->data[j] = this->data[j+1];
       this->size--;
     }
