@@ -725,34 +725,32 @@ namespace netgen
   
   int Ngx_Mesh :: GetParentElement (int ei) const
   {
-      ei++;
-      if (mesh->GetDimension() == 3)
+    if (mesh->GetDimension() == 3)
       {
-          if (ei <= mesh->mlparentelement.Size())
-              return mesh->mlparentelement.Get(ei)-1;
+        if (ei < mesh->mlparentelement.Size())
+          return mesh->mlparentelement[ei];
       }
-      else
+    else
       {
-          if (ei <= mesh->mlparentsurfaceelement.Size())
-              return mesh->mlparentsurfaceelement.Get(ei)-1;
+        if (ei < mesh->mlparentsurfaceelement.Size())
+          return mesh->mlparentsurfaceelement[ei];
       }
-      return -1;
+    return -1;
   }
 
 
   int Ngx_Mesh :: GetParentSElement (int ei) const
   {
-      ei++;
-      if (mesh->GetDimension() == 3)
+    if (mesh->GetDimension() == 3)
       {
-          if (ei <= mesh->mlparentsurfaceelement.Size())
-              return mesh->mlparentsurfaceelement.Get(ei)-1;
+        if (ei < mesh->mlparentsurfaceelement.Size())
+          return mesh->mlparentsurfaceelement[ei];
       }
-      else
+    else
       {
-          return -1;
+        return -1;
       }
-      return -1;
+    return -1;
   }
 
   int Ngx_Mesh :: GetNIdentifications () const

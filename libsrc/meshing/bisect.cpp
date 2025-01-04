@@ -2203,11 +2203,14 @@ namespace netgen
 
 
     mesh.mlparentelement.SetSize(ne);
-    for (int i = 1; i <= ne; i++)
-      mesh.mlparentelement.Elem(i) = 0;
+    // for (int i = 1; i <= ne; i++)
+    // mesh.mlparentelement.Elem(i) = 0;
+    mesh.mlparentelement = ElementIndex::INVALID;
+    
     mesh.mlparentsurfaceelement.SetSize(nse);
-    for (int i = 1; i <= nse; i++)
-      mesh.mlparentsurfaceelement.Elem(i) = 0;
+    // for (int i = 1; i <= nse; i++)
+    // mesh.mlparentsurfaceelement.Elem(i) = 0;
+    mesh.mlparentsurfaceelement = SurfaceElementIndex::INVALID;    
   
     if (printmessage_importance>0)
     {
@@ -3361,7 +3364,7 @@ namespace netgen
 
 		  mtets[ei] = newtet1;
 		  mtets.Append (newtet2);
-		  mesh.mlparentelement.Append (ei-IndexBASE<ElementIndex>()+1);
+		  mesh.mlparentelement.Append (ei);
 		}
             NgProfiler::StopTimer (timer_bisecttet);
             (*opt.tracer)("bisecttet", true);            
@@ -3508,7 +3511,7 @@ namespace netgen
 		
 		  mtris[i] = newtri1;
 		  mtris.Append (newtri2);
-		  mesh.mlparentsurfaceelement.Append (i+1);
+		  mesh.mlparentsurfaceelement.Append (i);
 		}
 
             NgProfiler::StopTimer (timer_bisecttrig);

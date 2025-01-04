@@ -1749,12 +1749,12 @@ int Ng_GetParentElement (int ei)
   if (mesh->GetDimension() == 3)
     {
       if (ei <= mesh->mlparentelement.Size())
-	return mesh->mlparentelement.Get(ei);
+	return mesh->mlparentelement[ei-1]+1;
     }
   else
     {
       if (ei <= mesh->mlparentsurfaceelement.Size())
-	return mesh->mlparentsurfaceelement.Get(ei);
+	return mesh->mlparentsurfaceelement[ei-1]+1;
     }
   return 0;
 }
@@ -1765,7 +1765,7 @@ int Ng_GetParentSElement (int ei)
   if (mesh->GetDimension() == 3)
     {
       if (ei <= mesh->mlparentsurfaceelement.Size())
-	return mesh->mlparentsurfaceelement.Get(ei);
+	return mesh->mlparentsurfaceelement[ei-1]+1;
     }
   else
     {

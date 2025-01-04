@@ -224,9 +224,9 @@ namespace netgen
     /// refinement hierarchy
     Array<PointIndices<2>,PointIndex> mlbetweennodes;
     /// parent element of volume element
-    NgArray<int> mlparentelement;
+    Array<ElementIndex, ElementIndex> mlparentelement;
     /// parent element of surface element
-    NgArray<int> mlparentsurfaceelement;
+    Array<SurfaceElementIndex, SurfaceElementIndex> mlparentsurfaceelement;
 
 
 

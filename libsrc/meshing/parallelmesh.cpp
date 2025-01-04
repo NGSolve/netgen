@@ -959,8 +959,8 @@ namespace netgen
     self.opensegments = NgArray<Segment>(0);
     self.numvertices = 0;
     self.mlbetweennodes = Array<PointIndices<2>,PointIndex> (0);
-    self.mlparentelement = NgArray<int>(0);
-    self.mlparentsurfaceelement = NgArray<int>(0);
+    self.mlparentelement = Array<ElementIndex, ElementIndex>(0);
+    self.mlparentsurfaceelement = Array<SurfaceElementIndex, SurfaceElementIndex>(0);
     self.curvedelems = make_unique<CurvedElements> (self);
     self.clusters = make_unique<AnisotropicClusters> (self);
     self.ident = make_unique<Identifications> (self);
