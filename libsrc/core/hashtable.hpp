@@ -841,6 +841,8 @@ namespace ngcore
       ar & hash & cont;
       ar & size & mask & used;
     }    
+
+    class EndIterator { };
     
     class Iterator
     {
@@ -858,24 +860,21 @@ namespace ngcore
         while (nr < tab.Size() && !tab.UsedPos(nr)) nr++;
         return *this;
       }
-      bool operator!= (const Iterator & it2) { return nr != it2.nr; }
-      auto operator* () const
-      {
-        T_HASH hash;
-        T val;
-        tab.GetData(nr, hash,val);
-        return std::make_pair(hash,val);
-      }
+
+      bool operator!= (EndIterator & it2) { return nr != tab.Size(); }
+      
+      auto operator* () const { return tab.GetBoth(nr); }
     };
 
     Iterator begin() const { return Iterator(*this, 0); }
-    Iterator end() const { return Iterator(*this, Size()); } 
+    EndIterator end() const { return EndIterator(); }
   };
 
   template <class T_HASH, class T>  
   ostream & operator<< (ostream & ost,
                         const ClosedHashTable<T_HASH,T> & tab)
   {
+    /*
     for (size_t i = 0; i < tab.Size(); i++)
       if (tab.UsedPos(i))
         {
@@ -884,6 +883,9 @@ namespace ngcore
           tab.GetData (i, key, val);
           ost << key << ": " << val << ", ";
         }
+    */
+    for (auto [key,val] : tab)
+      ost << key << ": " << val << ", ";      
     return ost;
   }
 
