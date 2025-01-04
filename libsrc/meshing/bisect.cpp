@@ -295,7 +295,6 @@ namespace netgen
   template <typename HASHTABLE_EDGENUMBER>
   int BTSortEdges (const Mesh & mesh,
 		   const NgArray<idmap_type*> & idmaps,
-		   // INDEX_2_CLOSED_HASHTABLE<int> & edgenumber)
                    HASHTABLE_EDGENUMBER & edgenumber)
   {
     PrintMessage(4,"sorting ... ");
@@ -304,9 +303,7 @@ namespace netgen
     if (true)
       {
 	// new, fast version
-        cout  << "sort edges is used" << endl;
 	Array<PointIndices<2>> edges;
-	NgArray<int> eclasses;
       
 	// int i, j, k;
 	int cntedges = 0;
@@ -314,12 +311,7 @@ namespace netgen
 	int ned(0);
       
 	// enumerate edges:
-	// for (i = 1; i <= mesh.GetNE(); i++)
-        /*
-        for (auto ei : mesh.VolumeElements().Range())
-	  {
-	    const Element & el = mesh[ei];
-        */
+
         for (const Element & el : mesh.VolumeElements())
           {
 	    static int tetedges[6][2] =
@@ -379,7 +371,6 @@ namespace netgen
 	      {
 		PointIndices<2> i2(el.PNum(tip[j][0]), el.PNum(tip[j][1]));
 		i2.Sort();
-		//(*testout) << "edge " << i2 << endl;
 		if (!edgenumber.Used(i2))
 		  {
 		    cntedges++;
@@ -390,11 +381,7 @@ namespace netgen
 	  }
       
 	// additional surface edges:
-        /*
-	for (int i = 1; i <= mesh.GetNSE(); i++)
-	  {
-	    const Element2d & el = mesh.SurfaceElement (i);
-        */
+
         for (const Element2d & el : mesh.SurfaceElements())
           {
 	    static int trigedges[3][2] =
@@ -448,10 +435,7 @@ namespace netgen
 	  }
 
 
-
-
-
-	eclasses.SetSize (cntedges);
+	NgArray<int> eclasses(cntedges);
 	for (int i = 1; i <= cntedges; i++)
 	  eclasses.Elem(i) = i;
 
@@ -527,11 +511,6 @@ namespace netgen
 		  }
 	      }
 
-            /*
-	    for(SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
-	      {
-		const Element2d & el2d = mesh[sei];
-            */
             for (const Element2d & el2d : mesh.SurfaceElements())
               {
 		for(int i = 0; i < el2d.GetNP(); i++)
@@ -899,9 +878,12 @@ namespace netgen
 	  for (int j = i+1; j < 4; j++)
 	    if (i != k && j != k)
 	      {
+                /*
 		PointIndices<2> i2(mt.pnums[i], mt.pnums[j]);
 		i2.Sort();
 		int hval = edgenumber.Get(i2);
+                */
+		int hval = edgenumber[ { mt.pnums[i], mt.pnums[j] } ];
 		if (hval > val)
 		  {
 		    val = hval;
@@ -1037,7 +1019,7 @@ namespace netgen
     mt.incorder = 0;
     mt.order = 1;
 
-    int val = 0;
+    int val = -1;
     for (int i = 0; i < 2; i++)
       for (int j = i+1; j < 3; j++)
 	{
@@ -1046,7 +1028,8 @@ namespace netgen
 	  i2.Sort();
 	  int hval = edgenumber.Get(i2);
           */
-	  int hval = edgenumber.Get(PointIndices<2>(mt.pnums[i], mt.pnums[j]).Sort());
+	  // int hval = edgenumber[ SortedPointIndices<2>(mt.pnums[i], mt.pnums[j]) ];
+          int hval = edgenumber[ { mt.pnums[i], mt.pnums[j] }];
 	  if (hval > val)
 	    {
 	      val = hval;
@@ -1792,10 +1775,13 @@ namespace netgen
              for (int j = 0; j < 2; j++)
                for (int k = j+1; k < 3; k++)
                  {
+                   /*
                    PointIndices<2> edge(tri.pnums[j],
                                         tri.pnums[k]);
                    edge.Sort();
                    if (cutedges.Used (edge))
+                   */
+                   if (cutedges.Used( { tri.pnums[j], tri.pnums[k] } ))
                      {
                        tri.marked = 1;
                        my_hanging = true;
@@ -2527,7 +2513,8 @@ namespace netgen
     //int nv = mesh.GetNV();
 
 
-    INDEX_2_CLOSED_HASHTABLE<int> edgenumber(9*mesh.GetNE()+4*mesh.GetNSE());  
+    // INDEX_2_CLOSED_HASHTABLE<int> edgenumber(9*mesh.GetNE()+4*mesh.GetNSE());
+    ClosedHashTable<PointIndices<2>, int> edgenumber;
     
     int maxnum = BTSortEdges (mesh, idmaps, edgenumber);
 
