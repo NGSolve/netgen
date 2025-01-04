@@ -842,7 +842,7 @@ namespace ngcore
       ar & size & mask & used;
     }    
 
-    class EndIterator { };
+    struct EndIterator { };
     
     class Iterator
     {
@@ -861,7 +861,7 @@ namespace ngcore
         return *this;
       }
 
-      bool operator!= (EndIterator & it2) { return nr != tab.Size(); }
+      bool operator!= (EndIterator it2) { return nr != tab.Size(); }
       
       auto operator* () const { return tab.GetBoth(nr); }
     };
