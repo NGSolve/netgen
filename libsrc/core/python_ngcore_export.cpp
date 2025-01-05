@@ -1,3 +1,5 @@
+#include <cstdint>
+
 #include "python_ngcore.hpp"
 #include "bitarray.hpp"
 #include "taskmanager.hpp"
@@ -23,7 +25,9 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
   catch(...) {}
   ExportArray<int>(m);
   ExportArray<unsigned>(m);
+#if INTPTR_MAX != INT32_MAX
   ExportArray<size_t>(m);
+#endif
   ExportArray<double>(m);
   ExportArray<float>(m);
   ExportArray<signed short>(m);
